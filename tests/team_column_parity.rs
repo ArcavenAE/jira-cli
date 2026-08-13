@@ -27,7 +27,9 @@ fn jr_cmd_with_xdg(
     cmd.env("JR_BASE_URL", server_uri)
         .env("JR_AUTH_HEADER", "Basic dGVzdDp0ZXN0")
         .env("XDG_CACHE_HOME", cache_dir)
+        .env("JR_CACHE_DIR", cache_dir.join("jr"))
         .env("XDG_CONFIG_HOME", config_dir)
+        .env("JR_CONFIG_DIR", config_dir.join("jr"))
         .arg("--no-input")
         .arg("--output")
         .arg("table");
@@ -408,7 +410,175 @@ async fn sprint_current_falls_back_to_uuid_when_team_not_cached() {
         .assert()
         .success()
         .stdout(predicate::str::contains("Team"))
-        .stdout(predicate::str::contains("team-uuid-orphan"));
+        .stdout(predicate::str::contains("team-uuid-orphan"))
+        // BC-5.3.003 postcondition: bare UUID only — no parenthetical suffix.
+        // The suffix "(name not cached — run 'jr team list --refresh')" belongs
+        // exclusively to the single-issue view path (BC-2.3.035, src/cli/issue/view.rs).
+        // This assertion pins the sprint.rs render site. The board.rs site is
+        // covered by test_board_view_falls_back_to_uuid_when_team_not_cached
+        // (below); the list.rs site by
+        // test_list_team_column_falls_back_to_uuid_when_cache_missing in
+        // tests/cli_handler.rs.
+        .stdout(predicate::str::contains("name not cached").not());
+}
+
+/// `jr board view` (kanban) omits the Team column when `team_field_id` is NOT
+/// configured, even if the returned issue carries a team UUID in its response.
+/// Exercises the outer-true / inner-None path introduced by the S-626-1
+/// let-chain rewrite in `src/cli/board.rs::handle_view`: the outer
+/// `if matches!(output_format, OutputFormat::Table)` is true, but the inner
+/// `if let Some(field_id) = team_field_id` hits the new `else { Vec::new() }`
+/// branch. If that branch were broken (e.g. returned a populated vec),
+/// `show_team_col` would be true and the "Team" header would appear — causing
+/// this test to fail.
+#[tokio::test(flavor = "multi_thread", worker_threads = 2)]
+async fn test_board_view_omits_team_column_when_field_unconfigured() {
+    let server = MockServer::start().await;
+    mount_kanban_board_prereqs(&server).await;
+
+    // Issue deliberately carries a team UUID in the raw response. The point
+    // is that the handler ignores it entirely when team_field_id is absent
+    // from config — the UUID must not surface as a "Team" column.
+    let issues = vec![issue_with_team(
+        "PROJ-20",
+        "Unconfigured team ticket",
+        "To Do",
+        "team-uuid-platform",
+    )];
+    Mock::given(method("POST"))
+        .and(path("/rest/api/3/search/jql"))
+        .respond_with(
+            ResponseTemplate::new(200)
+                .set_body_json(common::fixtures::issue_search_response(issues)),
+        )
+        .mount(&server)
+        .await;
+
+    let cache_dir = tempfile::tempdir().unwrap();
+    let config_dir = tempfile::tempdir().unwrap();
+    // No team cache written — write_config_without_team_field leaves
+    // team_field_id absent, so the inner else { Vec::new() } fires.
+    write_config_without_team_field(config_dir.path());
+
+    jr_cmd_with_xdg(&server.uri(), cache_dir.path(), config_dir.path())
+        .args(["--project", "PROJ", "board", "view"])
+        .assert()
+        .success()
+        .stdout(predicate::str::contains("Unconfigured team ticket"))
+        // Positive anchors: verify other expected headers are present so the
+        // negative assertion below is not vacuously true on an empty/errored table.
+        .stdout(predicate::str::contains("Assignee"))
+        .stdout(predicate::str::contains("Summary"))
+        .stdout(predicate::str::contains("Team").not());
+}
+
+/// `jr issue list` omits the Team column when `team_field_id` is NOT
+/// configured, even if the returned issue carries a team UUID in its response.
+/// Exercises the outer-true / inner-None path introduced by the S-626-1
+/// let-chain rewrite in `src/cli/issue/list.rs::handle_list`: the outer
+/// `if matches!(output_format, OutputFormat::Table)` is true, but the inner
+/// `if let Some(field_id) = team_field_id` hits the new `else { Vec::new() }`
+/// branch. If that branch were broken (e.g. returned a populated vec),
+/// `show_team_col` would be true and the "Team" header would appear — causing
+/// this test to fail.
+#[tokio::test(flavor = "multi_thread", worker_threads = 2)]
+async fn test_issue_list_omits_team_column_when_field_unconfigured() {
+    let server = MockServer::start().await;
+
+    // `issue list --project PROJ` calls project_exists() before searching
+    // (list.rs::handle_list ~line 196). Mount a 200 so the check passes.
+    Mock::given(method("GET"))
+        .and(path("/rest/api/3/project/PROJ"))
+        .respond_with(
+            ResponseTemplate::new(200)
+                .set_body_json(serde_json::json!({"key": "PROJ", "name": "Test Project"})),
+        )
+        .mount(&server)
+        .await;
+
+    // Issue deliberately carries a team UUID in the raw response. The point
+    // is that the handler ignores it entirely when team_field_id is absent
+    // from config — the UUID must not surface as a "Team" column.
+    let issues = vec![issue_with_team(
+        "PROJ-30",
+        "Unconfigured team issue",
+        "In Progress",
+        "team-uuid-platform",
+    )];
+    Mock::given(method("POST"))
+        .and(path("/rest/api/3/search/jql"))
+        .respond_with(
+            ResponseTemplate::new(200)
+                .set_body_json(common::fixtures::issue_search_response(issues)),
+        )
+        .mount(&server)
+        .await;
+
+    let cache_dir = tempfile::tempdir().unwrap();
+    let config_dir = tempfile::tempdir().unwrap();
+    write_config_without_team_field(config_dir.path());
+
+    jr_cmd_with_xdg(&server.uri(), cache_dir.path(), config_dir.path())
+        .args(["--project", "PROJ", "issue", "list"])
+        .assert()
+        .success()
+        .stdout(predicate::str::contains("Unconfigured team issue"))
+        // Positive anchors: verify other expected headers are present so the
+        // negative assertion below is not vacuously true on an empty/errored table.
+        .stdout(predicate::str::contains("Assignee"))
+        .stdout(predicate::str::contains("Summary"))
+        .stdout(predicate::str::contains("Team").not());
+}
+
+/// `jr board view` (kanban path) falls back to the raw team UUID when the UUID
+/// is absent from the local team cache. Pins BC-5.3.003's no-suffix
+/// postcondition for the `src/cli/board.rs` render site: the table shows the
+/// raw UUID with no parenthetical "(name not cached — run 'jr team list
+/// --refresh')" suffix.
+///
+/// Positive anchors (Team column present, UUID cell value present) are
+/// asserted BEFORE the negative to eliminate vacuous passes on empty or
+/// errored output — the exact false-green class this story exists to fix.
+#[tokio::test(flavor = "multi_thread", worker_threads = 2)]
+async fn test_board_view_falls_back_to_uuid_when_team_not_cached() {
+    let server = MockServer::start().await;
+    mount_kanban_board_prereqs(&server).await;
+
+    let issues = vec![issue_with_team(
+        "PROJ-10",
+        "Orphan team ticket",
+        "To Do",
+        "team-uuid-orphan",
+    )];
+    Mock::given(method("POST"))
+        .and(path("/rest/api/3/search/jql"))
+        .respond_with(
+            ResponseTemplate::new(200)
+                .set_body_json(common::fixtures::issue_search_response(issues)),
+        )
+        .mount(&server)
+        .await;
+
+    // No team cache written — teams.json absent, so the UUID→name map is
+    // empty and the UUID falls through as the display value via
+    // board.rs::handle_view's `team_map.get(uuid).cloned().unwrap_or_else(|| uuid.clone())`.
+    let cache_dir = tempfile::tempdir().unwrap();
+    let config_dir = tempfile::tempdir().unwrap();
+    write_config_with_team_field(config_dir.path());
+
+    jr_cmd_with_xdg(&server.uri(), cache_dir.path(), config_dir.path())
+        .args(["--project", "PROJ", "board", "view"])
+        .assert()
+        .success()
+        // Positive anchors first: the table rendered, the Team column header
+        // is present, and the raw UUID appears as the cell value.
+        .stdout(predicate::str::contains("Team"))
+        .stdout(predicate::str::contains("team-uuid-orphan"))
+        // BC-5.3.003 postcondition: bare UUID only — no parenthetical suffix.
+        // The suffix "(name not cached — run 'jr team list --refresh')" belongs
+        // exclusively to the single-issue view path (BC-2.3.035,
+        // src/cli/issue/view.rs). This assertion pins the board.rs render site.
+        .stdout(predicate::str::contains("name not cached").not());
 }
 
 /// JSON mode keeps the raw team UUID and does not resolve it to a team name.
@@ -453,7 +623,9 @@ async fn sprint_current_json_output_keeps_team_uuid_without_resolution() {
     cmd.env("JR_BASE_URL", server.uri())
         .env("JR_AUTH_HEADER", "Basic dGVzdDp0ZXN0")
         .env("XDG_CACHE_HOME", cache_dir.path())
+        .env("JR_CACHE_DIR", cache_dir.path().join("jr"))
         .env("XDG_CONFIG_HOME", config_dir.path())
+        .env("JR_CONFIG_DIR", config_dir.path().join("jr"))
         .args([
             "--no-input",
             "--output",

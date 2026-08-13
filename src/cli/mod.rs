@@ -36,7 +36,7 @@ pub struct Cli {
     #[arg(long, global = true)]
     pub no_input: bool,
 
-    /// verbose mode (headers + status + URL only; use --verbose-bodies for full body inspection)
+    /// verbose mode (method + URL only; use --verbose-bodies for full body inspection)
     #[arg(long, global = true)]
     pub verbose: bool,
 
@@ -124,7 +124,7 @@ pub enum Command {
         path: String,
 
         /// HTTP method
-        #[arg(short = 'X', long, value_enum, default_value_t = api::HttpMethod::Get)]
+        #[arg(short = 'X', long, value_enum, ignore_case = true, default_value_t = api::HttpMethod::Get)]
         method: api::HttpMethod,
 
         /// Request body: inline JSON, @file to read from a file, or @- to read from stdin
@@ -395,12 +395,14 @@ pub enum IssueCommand {
         /// The project must be a Jira Service Management project.
         #[arg(long = "request-type")]
         request_type: Option<String>,
-        /// Additional request field values as NAME=VALUE pairs (repeatable).
+        /// Set a custom request field as NAME=VALUE (repeatable; JSM only;
+        /// requires --request-type).
         /// The first '=' splits; subsequent '=' characters are part of the value.
-        /// Duplicate keys use the last value provided. Applies to JSM requests only.
+        /// Duplicate keys use the last value provided.
         #[arg(long = "field", action = clap::ArgAction::Append)]
         field: Vec<String>,
-        /// Raise the JSM request on behalf of this accountId (JSM requests only).
+        /// Create the request on behalf of this accountId (JSM only; requires
+        /// --request-type).
         /// Maps to the top-level `raiseOnBehalfOf` field in the request body.
         #[arg(long = "on-behalf-of")]
         on_behalf_of: Option<String>,
@@ -536,27 +538,11 @@ pub enum IssueCommand {
         #[arg(long, conflicts_with_all = ["to", "account_id"])]
         unassign: bool,
     },
-    /// Add a comment
+    /// Comment operations: add, delete, edit, view.
+    /// To list all comments on an issue, use `jr issue comments`.
     Comment {
-        /// Issue key
-        key: String,
-        /// Comment text
-        #[arg(allow_hyphen_values = true)]
-        message: Option<String>,
-        /// Interpret input as Markdown
-        #[arg(long)]
-        markdown: bool,
-        /// Read comment from file
-        #[arg(long)]
-        file: Option<String>,
-        /// Read comment from stdin (for piping)
-        #[arg(long)]
-        stdin: bool,
-        /// Mark comment as internal — agent-only, not visible to the customer on the JSM
-        /// portal. Without this flag the comment is a public reply (the default). No-op on
-        /// standard (non-JSM) projects, where Jira ignores the `sd.public.comment` property.
-        #[arg(long)]
-        internal: bool,
+        #[command(subcommand)]
+        command: CommentSubcommand,
     },
     /// List comments on an issue
     Comments {
@@ -658,6 +644,248 @@ pub enum IssueCommand {
     Assets {
         /// Issue key (e.g., FOO-123)
         key: String,
+    },
+    /// Attachment operations: list. (S-576-1)
+    Attachment {
+        #[command(subcommand)]
+        command: AttachmentSubcommand,
+    },
+}
+
+/// Subcommands for `jr issue comment`.
+#[derive(Subcommand)]
+pub enum CommentSubcommand {
+    /// Add a comment (canonical form; replaces the old flat `jr issue comment KEY text`)
+    Add {
+        /// Issue key
+        key: String,
+        /// Comment text (leading-dash values accepted)
+        #[arg(allow_hyphen_values = true)]
+        message: Option<String>,
+        /// Interpret input as Markdown
+        #[arg(long)]
+        markdown: bool,
+        /// Read comment from file
+        #[arg(long)]
+        file: Option<String>,
+        /// Read comment from stdin (for piping)
+        #[arg(long)]
+        stdin: bool,
+        /// Mark comment as internal — agent-only, not visible to the customer on the JSM
+        /// portal. Without this flag the comment is a public reply (the default). No-op on
+        /// standard (non-JSM) projects, where Jira ignores the `sd.public.comment` property.
+        #[arg(long)]
+        internal: bool,
+    },
+    /// Delete a comment by ID — requires --yes or interactive confirmation
+    Delete {
+        /// Issue key
+        key: String,
+        /// Comment ID to delete
+        #[arg(long)]
+        id: String,
+        /// Skip interactive confirmation
+        #[arg(long)]
+        yes: bool,
+    },
+    /// Edit a comment body (optionally set visibility)
+    Edit {
+        /// Issue key
+        key: String,
+        /// New comment body text (leading-dash values accepted)
+        #[arg(allow_hyphen_values = true, conflicts_with_all = ["file", "stdin"])]
+        text: Option<String>,
+        /// Comment ID to edit
+        #[arg(long)]
+        id: String,
+        /// Read new body from file
+        #[arg(long, conflicts_with_all = ["stdin", "text"])]
+        file: Option<String>,
+        /// Read new body from stdin
+        #[arg(long, conflicts_with_all = ["file", "text"])]
+        stdin: bool,
+        /// Interpret body as Markdown
+        #[arg(long)]
+        markdown: bool,
+        /// Mark comment as internal (agent-only visibility)
+        #[arg(long, conflicts_with = "public")]
+        internal: bool,
+        /// Mark comment as public (visible to customers on JSM portal)
+        #[arg(long, conflicts_with = "internal")]
+        public: bool,
+        /// Skip interactive confirmation
+        #[arg(long)]
+        yes: bool,
+    },
+    /// View a single comment by ID
+    View {
+        /// Issue key
+        key: String,
+        /// Comment ID to view
+        #[arg(long)]
+        id: String,
+    },
+}
+
+/// Subcommands for `jr issue attachment`. (S-576-1)
+///
+/// Defined here (in `src/cli/mod.rs`) — NOT in `src/cli/issue/attachments.rs`.
+/// S-576-2, S-576-3, S-576-4, and S-576-5 add variants to this enum additively.
+///
+/// **Additive-only coordination:** each story appends its variant and dispatch arm;
+/// never remove or reorder a sibling story's variant or arm (P26-002).
+#[derive(Subcommand)]
+pub enum AttachmentSubcommand {
+    /// List attachments on an issue (table or JSON; client-side filters)
+    List {
+        /// Issue key (e.g., FOO-123)
+        key: String,
+        /// Client-side filter: `mime=<glob>`, `name=<glob>`, or `size-max=<bytes>`.
+        /// Repeatable; multiple filters combine with AND semantics.
+        #[arg(long = "filter")]
+        filter: Vec<String>,
+    },
+
+    /// Download one or more attachments from an issue (S-576-2; BC-2.7.007..012).
+    ///
+    /// Requires exactly one selector: `--id`, `--all`, or `--newest N`.
+    #[command(
+        group(clap::ArgGroup::new("selector").required(true).args(["id", "all", "newest"])),
+        group(clap::ArgGroup::new("batch").args(["all", "newest"])),
+    )]
+    Download {
+        /// Issue key (e.g., FOO-123)
+        key: String,
+
+        /// Attachment ID to download (numeric).
+        /// Mutually exclusive with `--all` and `--newest` (via `selector` group).
+        #[arg(long)]
+        id: Option<String>,
+
+        /// Download all attachments from the issue to `--out-dir` (or cwd when omitted).
+        /// Mutually exclusive with `--id` and `--newest` (via `selector` group).
+        #[arg(long)]
+        all: bool,
+
+        /// Download the N most-recent attachments by `created` descending.
+        /// Accepts negative integers — N ≤ 0 is rejected in the handler (exit 64,
+        /// `--newest requires a positive integer.`; EC-2.7.009-1; `allow_negative_numbers`
+        /// lets clap accept them so the handler can emit the canonical message).
+        /// Mutually exclusive with `--id` and `--all` (via `selector` group).
+        #[arg(long, allow_negative_numbers = true)]
+        newest: Option<i64>,
+
+        /// Output path for a single-file download (requires `--id`; not valid with
+        /// `--all` or `--newest`; EC-2.7.007-9 ~769).
+        #[arg(long, requires = "id", conflicts_with_all = ["all", "newest"])]
+        out: Option<std::path::PathBuf>,
+
+        /// Output directory for batch downloads.
+        /// Requires the `batch` group (`--all` or `--newest`; EC-2.7.008-9 ~812).
+        /// Conflicts with `--id`.
+        #[arg(long = "out-dir", requires = "batch", conflicts_with = "id")]
+        out_dir: Option<std::path::PathBuf>,
+
+        /// Client-side filter: `mime=<glob>`, `name=<glob>`, or `size-max=<bytes>`.
+        /// Repeatable; AND semantics. Conflicts with `--id` (EC-2.7.007-10 ~770).
+        #[arg(long = "filter", conflicts_with = "id")]
+        filter: Vec<String>,
+
+        /// Overwrite existing output files without error. Single-`--id`: bypasses
+        /// the `--out` collision check (EC-2.7.007-12, SEC-576-010). Batch (`--all`
+        /// / `--newest`): silently overwrites on filename collision (BC-2.7.008).
+        #[arg(long)]
+        force: bool,
+    },
+
+    /// Upload one or more files as attachments to a Jira issue (S-576-3; BC-3.9.001..020).
+    ///
+    /// Sends a single `multipart/form-data` POST with `X-Atlassian-Token: no-check`
+    /// (BC-3.9.001). Multiple files are sent as separate `file`-named parts in one
+    /// request (EC-3.9.001-2). stdin `-` as FILE → exit 64 before any HTTP call
+    /// (EC-3.9.001-6).
+    Upload {
+        /// Issue key (e.g., FOO-123)
+        key: String,
+
+        /// File path(s) to upload. Repeatable. stdin `-` is rejected with exit 64
+        /// (EC-3.9.001-6 canonical). Bare `-` passes through clap without
+        /// `allow_hyphen_values`; that flag is intentionally absent here to
+        /// prevent greedy consumption of `--output` and other trailing flags.
+        #[arg(required = true, num_args = 1..)]
+        file: Vec<std::path::PathBuf>,
+
+        /// Delete existing same-filename attachments before uploading (BC-3.9.017).
+        /// Requires interactive confirmation unless `--yes` is also supplied.
+        /// Multiple same-filename attachments are ALL deleted (JRACLOUD-96384).
+        #[arg(long)]
+        replace_existing: bool,
+
+        /// Skip the `--replace-existing` confirmation gate (non-interactive bypass;
+        /// BC-3.9.014 consumer 2). No-op when `--replace-existing` is absent.
+        #[arg(long)]
+        yes: bool,
+
+        /// Preview the upload without issuing any HTTP mutations (BC-3.9.020 path-c).
+        /// Requires `--replace-existing` — exit 2 at parse time without it (EC-3.9.020-6).
+        #[arg(long, requires = "replace_existing")]
+        dry_run: bool,
+
+        /// Mark the upload as customer-visible (public) on the JSM portal (BC-3.9.003).
+        /// Routes through the servicedeskapi two-step flow. Requires a JSM project;
+        /// exits 64 on non-JSM issues. Conflicts with --internal.
+        #[arg(long, conflicts_with = "internal")]
+        public: bool,
+
+        /// Mark the upload as internal (agent-only) on JSM (BC-3.9.004).
+        /// Routes through the servicedeskapi two-step flow on JSM issues.
+        /// Silent no-op on non-JSM issues (falls through to platform upload). Conflicts with --public.
+        #[arg(long, conflicts_with = "public")]
+        internal: bool,
+    },
+
+    /// Delete one or more attachments by ID (S-576-4; BC-3.9.008..020).
+    ///
+    /// Three forms:
+    ///   (1) Single-AID: `jr issue attachment delete <AID>` — confirmation gate (BC-3.9.015).
+    ///   (2) Multi-AID:  `jr issue attachment delete <AID1> <AID2>... --yes` — bulk, no gate.
+    ///   (3) Issue+age:  `jr issue attachment delete --issue <KEY> --older-than <DUR> --yes`.
+    ///
+    /// Clap constraints (EC-3.9.016-4/5/9/10):
+    ///   - Positional `<AID>...` conflicts with `--issue` and `--older-than`.
+    ///   - `--issue` requires `--older-than`; `--older-than` requires `--issue`.
+    ///   - Must supply at least one form; bare `delete` (no AID, no flags) → exit 2.
+    #[command(
+        group(
+            clap::ArgGroup::new("delete_target")
+                .required(true)
+                .multiple(true)
+                .args(["aids", "issue"])
+        ),
+    )]
+    Delete {
+        /// Attachment IDs to delete (numeric; repeatable).
+        /// Conflicts with `--issue` and `--older-than` (EC-3.9.016-4).
+        #[arg(conflicts_with_all = ["issue", "older_than"])]
+        aids: Vec<String>,
+
+        /// Issue key for age-based bulk delete.
+        /// Requires `--older-than`; conflicts with positional AIDs (EC-3.9.016-9).
+        #[arg(long, conflicts_with = "aids", requires = "older_than")]
+        issue: Option<String>,
+
+        /// Delete attachments older than this duration (e.g. 30d, 2w, 1h).
+        /// Requires `--issue`; conflicts with positional AIDs (EC-3.9.016-5).
+        #[arg(long, conflicts_with = "aids", requires = "issue")]
+        older_than: Option<String>,
+
+        /// Bypass the single-AID confirmation gate; required for bulk delete (BC-3.9.016).
+        #[arg(long)]
+        yes: bool,
+
+        /// Preview the delete without issuing any HTTP DELETEs (BC-3.9.020 EC-3.9.020-1/2/3).
+        #[arg(long)]
+        dry_run: bool,
     },
 }
 

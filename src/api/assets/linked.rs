@@ -31,7 +31,9 @@ pub async fn get_or_fetch_cmdb_fields(client: &JiraClient) -> Result<Vec<(String
     }
 
     let fields = client.find_cmdb_fields().await?;
-    let _ = cache::write_cmdb_fields_cache(profile, &fields);
+    // Best-effort cache write — writer is model-b (always Ok); .ok() discards the
+    // infallible Result without triggering "unused Result" warnings.
+    cache::write_cmdb_fields_cache(profile, &fields).ok();
     Ok(fields)
 }
 
@@ -220,7 +222,10 @@ pub async fn enrich_assets(client: &JiraClient, assets: &mut [LinkedAsset]) {
                 .clone()
                 .or_else(|| fallback_workspace_id.clone())
                 .expect("workspace_id must be available (checked above)");
-            let oid = assets[idx].id.clone().unwrap();
+            let oid = assets[idx]
+                .id
+                .clone()
+                .expect("id present — needs_enrichment filter guarantees id.is_some()");
             async move {
                 let result = client.get_asset(&wid, &oid, false).await;
                 (idx, result)

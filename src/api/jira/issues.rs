@@ -282,7 +282,7 @@ impl JiraClient {
     /// `BASE_ISSUE_FIELDS` incurs.
     ///
     /// Use this when the caller only needs keys (e.g., JQL-driven
-    /// bulk-edit selection at `cli/issue/create.rs::handle_edit`). For
+    /// bulk-edit selection at `cli/issue/edit.rs::handle_edit`). For
     /// body-bearing reads use [`Self::search_issues`].
     ///
     /// `has_more` is set to `true` in two cases: (1) the caller's `limit`
@@ -432,6 +432,53 @@ impl JiraClient {
             fields.join(",")
         );
         self.get(&path).await
+    }
+
+    /// Get the project key for an issue (P1-004, BC-3.9.003).
+    ///
+    /// Calls `GET /rest/api/3/issue/{key}?fields=project` and extracts
+    /// `fields.project.key`.  On 404 returns `JrError::UserError` (exit 64) with
+    /// the canonical message `"Issue {key} not found or not accessible."` so the
+    /// attachment upload handler can surface it clearly without leaking the raw API
+    /// error body.
+    pub async fn get_issue_project_key(&self, key: &str) -> anyhow::Result<String> {
+        use crate::error::JrError;
+
+        let path = format!(
+            "/rest/api/3/issue/{}?fields=project",
+            urlencoding::encode(key)
+        );
+        let result: anyhow::Result<serde_json::Value> = self.get(&path).await;
+
+        match result {
+            Ok(v) => {
+                let project_key = v
+                    .get("fields")
+                    .and_then(|f| f.get("project"))
+                    .and_then(|p| p.get("key"))
+                    .and_then(|k| k.as_str())
+                    .map(str::to_string)
+                    .ok_or_else(|| {
+                        anyhow::anyhow!(JrError::Internal(format!(
+                            "Issue {key} response missing fields.project.key"
+                        )))
+                    })?;
+                Ok(project_key)
+            }
+            Err(e) => {
+                let is_404 = e
+                    .downcast_ref::<JrError>()
+                    .is_some_and(|jr| matches!(jr, JrError::ApiError { status: 404, .. }));
+                if is_404 {
+                    Err(
+                        JrError::UserError(format!("Issue {key} not found or not accessible."))
+                            .into(),
+                    )
+                } else {
+                    Err(e)
+                }
+            }
+        }
     }
 
     /// Create a new issue.
@@ -588,6 +635,82 @@ impl JiraClient {
         self.post(&path, &payload).await
     }
 
+    /// Delete a comment from an issue.
+    ///
+    /// Sends `DELETE /rest/api/3/issue/{encoded_key}/comment/{id}`.
+    /// Returns `Ok(())` on 204 No Content.
+    ///
+    /// Traces to BC-3.5.002 (EC-3.5.002-2: `urlencoding::encode(key)` applied).
+    ///
+    /// # Preconditions
+    ///
+    /// Callers MUST validate `id` against `^[0-9A-Za-z_-]+$` (EC-3.5.002-1); it is interpolated raw into the URL path.
+    pub async fn delete_comment(&self, key: &str, id: &str) -> Result<()> {
+        let path = format!(
+            "/rest/api/3/issue/{}/comment/{}",
+            urlencoding::encode(key),
+            id
+        );
+        self.delete(&path).await
+    }
+
+    /// Update the body (and optionally visibility) of an existing comment.
+    ///
+    /// Sends `PUT /rest/api/3/issue/{encoded_key}/comment/{id}`.
+    ///
+    /// When `visibility_flag` is `None`, the request body contains only `"body"` —
+    /// the `"properties"` key MUST NOT be present (BC-3.5.005).
+    /// When `Some(true)`, adds `properties:[{key:"sd.public.comment",value:{internal:true}}]`
+    /// (BC-3.5.006). When `Some(false)`, sets `internal:false` (BC-3.5.007).
+    ///
+    /// Returns `Result<()>`; the response body is discarded — handlers construct
+    /// their success JSON from local state, not from the Jira response body.
+    ///
+    /// # Preconditions
+    ///
+    /// Callers MUST validate `id` against `^[0-9A-Za-z_-]+$` (EC-3.5.002-1); it is interpolated raw into the URL path.
+    pub async fn update_comment(
+        &self,
+        key: &str,
+        id: &str,
+        body: Value,
+        visibility_flag: Option<bool>,
+    ) -> Result<()> {
+        let path = format!(
+            "/rest/api/3/issue/{}/comment/{}",
+            urlencoding::encode(key),
+            id
+        );
+        let mut payload = serde_json::json!({ "body": body });
+        if let Some(internal) = visibility_flag {
+            payload["properties"] = serde_json::json!([{
+                "key": "sd.public.comment",
+                "value": { "internal": internal }
+            }]);
+        }
+        self.put(&path, &payload).await
+    }
+
+    /// Fetch a single comment with entity properties expanded.
+    ///
+    /// Sends `GET /rest/api/3/issue/{encoded_key}/comment/{id}?expand=properties`.
+    /// The `?expand=properties` query parameter is mandatory — without it Jira
+    /// silently omits the `properties` array (BC-3.5.010).
+    ///
+    /// Returns the raw `serde_json::Value` (no typed round-trip, per BC-3.5.010).
+    ///
+    /// # Preconditions
+    ///
+    /// Callers MUST validate `id` against `^[0-9A-Za-z_-]+$` (EC-3.5.002-1); it is interpolated raw into the URL path.
+    pub async fn get_comment(&self, key: &str, id: &str) -> Result<Value> {
+        let path = format!(
+            "/rest/api/3/issue/{}/comment/{}?expand=properties",
+            urlencoding::encode(key),
+            id
+        );
+        self.get(&path).await
+    }
+
     /// Fetch the full audit changelog for an issue.
     ///
     /// Offset-paginated under `values[]`. Always fetches every page;
@@ -613,10 +736,10 @@ impl JiraClient {
             if !has_more {
                 break;
             }
-            // Guard against an API response that advertises more pages but
-            // returns a page that wouldn't advance `startAt` — otherwise we'd
-            // infinite-loop on a malformed/empty page (JRACLOUD-94357-class
-            // schema-drift scenarios). Surface as an explicit error instead.
+            // Guard against a non-advancing/regressing offset (infinite-loop
+            // class): if `startAt` would not increase despite `has_more=true`,
+            // surface as an explicit error instead. Defensive-by-design — no
+            // external tracker ticket is cited.
             if next <= start_at {
                 return Err(anyhow::anyhow!(
                     "Jira changelog pagination did not advance (startAt {} → {}) \
@@ -668,6 +791,17 @@ impl JiraClient {
             if !has_more {
                 break;
             }
+            // Guard against an API response that advertises more pages but
+            // returns a page that wouldn't advance `startAt` — otherwise we'd
+            // infinite-loop on a malformed/empty page. Surface as an explicit
+            // error instead.
+            if next <= start_at {
+                return Err(anyhow::anyhow!(
+                    "Jira comment pagination did not advance (startAt {} → {}) — aborting to prevent infinite loop",
+                    start_at,
+                    next
+                ));
+            }
             start_at = next;
         }
         Ok(all)
@@ -690,7 +824,7 @@ impl JiraClient {
     ///   Most projects have ≤50 types (one page at `maxResults=200`); pagination
     ///   is a correctness guard for large enterprise type schemes.
     /// - Project-scoped: the same type name can have different IDs in different projects.
-    /// - Call site: `handle_edit_bulk_fields` in `src/cli/issue/create.rs` only.
+    /// - Call site: `handle_edit_bulk_fields` in `src/cli/issue/edit.rs` only.
     pub(crate) async fn get_issue_types_for_project(
         &self,
         project_key: &str,

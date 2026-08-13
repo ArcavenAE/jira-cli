@@ -47,10 +47,11 @@ pub(crate) fn resolve_credential(
     if let Some(v) = flag_value.filter(|v| !v.is_empty()) {
         return Ok(v);
     }
-    if let Ok(v) = std::env::var(env_name)
-        && !v.is_empty()
-    {
-        return Ok(v);
+    // Nested if (not a let-chain): let-chains require Rust >= 1.88 + edition 2024; MSRV is 1.85. See CLAUDE.md Conventions — No let-chains.
+    if let Ok(v) = std::env::var(env_name) {
+        if !v.is_empty() {
+            return Ok(v);
+        }
     }
     if no_input {
         let base = format!("{prompt_label} is required. Provide {flag_name} or set ${env_name}.");
@@ -166,7 +167,11 @@ pub(crate) fn resolve_oauth_app_credentials_for_test(
         .unwrap_or(false);
     match (flag_id_present, flag_secret_present) {
         (true, true) => {
-            return Ok((flag_id.unwrap(), flag_secret.unwrap(), OAuthAppSource::Flag));
+            return Ok((
+                flag_id.expect("flag_id_present checked above"),
+                flag_secret.expect("flag_secret_present checked above"),
+                OAuthAppSource::Flag,
+            ));
         }
         (true, false) => {
             return Err(JrError::UserError(
@@ -195,7 +200,11 @@ pub(crate) fn resolve_oauth_app_credentials_for_test(
         .unwrap_or(false);
     match (env_id_present, env_secret_present) {
         (true, true) => {
-            return Ok((env_id.unwrap(), env_secret.unwrap(), OAuthAppSource::Env));
+            return Ok((
+                env_id.expect("env_id_present checked above"),
+                env_secret.expect("env_secret_present checked above"),
+                OAuthAppSource::Env,
+            ));
         }
         (true, false) => {
             return Err(JrError::UserError(

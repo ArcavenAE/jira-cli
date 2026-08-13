@@ -1,7 +1,6 @@
 use super::json_output;
 use anyhow::{Result, bail};
 
-use crate::adf;
 use crate::api::client::JiraClient;
 use crate::api::jira::bulk::{BULK_MAX_KEYS, resolve_bulk_await_timeout};
 use crate::cli::{IssueCommand, OutputFormat};
@@ -291,7 +290,7 @@ async fn finish_transition(
         OutputFormat::Json => {
             println!(
                 "{}",
-                serde_json::to_string_pretty(&json_output::move_response(key, new_status, true))?
+                output::render_json(&json_output::move_response(key, new_status, true))?
             );
         }
         OutputFormat::Table => {
@@ -416,11 +415,7 @@ pub(super) async fn handle_move(
             OutputFormat::Json => {
                 println!(
                     "{}",
-                    serde_json::to_string_pretty(&json_output::move_response(
-                        key,
-                        &current_status,
-                        false,
-                    ))?
+                    output::render_json(&json_output::move_response(key, &current_status, false,))?
                 );
             }
             OutputFormat::Table => {
@@ -928,7 +923,7 @@ async fn handle_move_bulk(
                 "taskId": task_id,
                 "results": results,
             });
-            println!("{}", serde_json::to_string_pretty(&payload)?);
+            println!("{}", output::render_json(&payload)?);
         }
         OutputFormat::Table => {
             for entry in &results {
@@ -1034,7 +1029,7 @@ pub(super) async fn handle_assign(
                 OutputFormat::Json => {
                     println!(
                         "{}",
-                        serde_json::to_string_pretty(&json_output::unassign_response(&key, false))?
+                        output::render_json(&json_output::unassign_response(&key, false))?
                     );
                 }
                 OutputFormat::Table => {
@@ -1049,7 +1044,7 @@ pub(super) async fn handle_assign(
             OutputFormat::Json => {
                 println!(
                     "{}",
-                    serde_json::to_string_pretty(&json_output::unassign_response(&key, true))?
+                    output::render_json(&json_output::unassign_response(&key, true))?
                 );
             }
             OutputFormat::Table => {
@@ -1079,11 +1074,11 @@ pub(super) async fn handle_assign(
                 OutputFormat::Json => {
                     println!(
                         "{}",
-                        serde_json::to_string_pretty(&json_output::assign_unchanged_response(
+                        output::render_json(&json_output::assign_unchanged_response(
                             &key,
                             &display_name,
                             &account_id,
-                        ),)?
+                        ))?
                     );
                 }
                 OutputFormat::Table => {
@@ -1103,7 +1098,7 @@ pub(super) async fn handle_assign(
         OutputFormat::Json => {
             println!(
                 "{}",
-                serde_json::to_string_pretty(&json_output::assign_changed_response(
+                output::render_json(&json_output::assign_changed_response(
                     &key,
                     &display_name,
                     &account_id,
@@ -1118,70 +1113,7 @@ pub(super) async fn handle_assign(
     Ok(())
 }
 
-// ── Comment ───────────────────────────────────────────────────────────
-
-pub(super) async fn handle_comment(
-    command: IssueCommand,
-    output_format: &OutputFormat,
-    client: &JiraClient,
-) -> Result<()> {
-    let IssueCommand::Comment {
-        key,
-        message,
-        markdown,
-        file,
-        stdin,
-        internal,
-    } = command
-    else {
-        unreachable!()
-    };
-
-    // Resolve comment text from the various sources. spawn_blocking isolates
-    // the blocking stdin read from the tokio runtime.
-    let text = if stdin {
-        tokio::task::spawn_blocking(|| {
-            let mut buf = String::new();
-            std::io::Read::read_to_string(&mut std::io::stdin(), &mut buf)?;
-            Ok::<_, std::io::Error>(buf)
-        })
-        .await??
-    } else if let Some(ref path) = file {
-        std::fs::read_to_string(path)?
-    } else if let Some(ref msg) = message {
-        msg.clone()
-    } else {
-        bail!("Comment text is required. Use a positional argument, --file, or --stdin.");
-    };
-
-    let text = text.trim().to_string();
-    if text.is_empty() {
-        bail!("Comment text cannot be empty.");
-    }
-
-    let adf_body = if markdown {
-        adf::markdown_to_adf(&text)
-    } else {
-        adf::text_to_adf(&text)
-    };
-
-    let comment = client.add_comment(&key, adf_body, internal).await?;
-
-    match output_format {
-        OutputFormat::Json => {
-            println!("{}", serde_json::to_string_pretty(&comment)?);
-        }
-        OutputFormat::Table => {
-            output::print_success(&format!(
-                "Added comment to {} (id: {})",
-                key,
-                comment.id.as_deref().unwrap_or("unknown")
-            ));
-        }
-    }
-
-    Ok(())
-}
+// handle_comment relocated to src/cli/issue/interactions.rs as handle_comment_add (S-577-1 / ADR-0012 PF-017 shard).
 
 // ── Open ──────────────────────────────────────────────────────────────
 

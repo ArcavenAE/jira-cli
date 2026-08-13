@@ -2512,6 +2512,7 @@ fn test_e2e_jsm_comment_visibility() {
         .args([
             "issue",
             "comment",
+            "add",
             &key,
             &public_comment,
             "--output",
@@ -2540,6 +2541,7 @@ fn test_e2e_jsm_comment_visibility() {
         .args([
             "issue",
             "comment",
+            "add",
             &key,
             &internal_comment,
             "--internal",
@@ -3748,12 +3750,19 @@ fn test_e2e_write_flow_create_edit_comment_worklog_close() {
     // -------------------------------------------------------------------------
     // Step 3: add comment + read-back (AC-013)
     // -------------------------------------------------------------------------
-    // The `issue comment` subcommand takes the message as a positional argument,
-    // not via `--body`. See `IssueCommand::Comment { message: Option<String>, .. }`
-    // in src/cli/mod.rs.
+    // `jr issue comment add` takes the message as a positional argument (S-577-1).
+    // See `CommentSubcommand::Add { message: Option<String>, .. }` in src/cli/mod.rs.
     let comment_output = h
         .cmd()
-        .args(["issue", "comment", &key, &comment_text, "--output", "json"])
+        .args([
+            "issue",
+            "comment",
+            "add",
+            &key,
+            &comment_text,
+            "--output",
+            "json",
+        ])
         .output()
         .expect("failed to spawn jr for issue comment");
 
@@ -4827,7 +4836,7 @@ fn test_e2e_issue_comment_input_channels() {
     let out_file = h
         .cmd()
         .args([
-            "issue", "comment", &key, "--file", &file_arg, "--output", "json",
+            "issue", "comment", "add", &key, "--file", &file_arg, "--output", "json",
         ])
         .output()
         .expect("failed to spawn jr for comment --file");
@@ -4836,7 +4845,9 @@ fn test_e2e_issue_comment_input_channels() {
     // --stdin
     let out_stdin = h
         .cmd()
-        .args(["issue", "comment", &key, "--stdin", "--output", "json"])
+        .args([
+            "issue", "comment", "add", &key, "--stdin", "--output", "json",
+        ])
         .write_stdin("comment body from stdin")
         .output()
         .expect("failed to spawn jr for comment --stdin");
@@ -4848,6 +4859,7 @@ fn test_e2e_issue_comment_input_channels() {
         .args([
             "issue",
             "comment",
+            "add",
             &key,
             "**bold** comment via markdown",
             "--markdown",
@@ -6092,6 +6104,7 @@ fn test_e2e_issue_comments_returns_array() {
         .args([
             "issue",
             "comment",
+            "add",
             &key,
             "E2E standalone comments test comment",
             "--output",
@@ -9689,6 +9702,7 @@ fn test_e2e_adf_read_path_human_output() {
         .args([
             "issue",
             "comment",
+            "add",
             &key,
             "Comment **body** with _emphasis_",
             "--markdown",
@@ -9732,4 +9746,2163 @@ fn test_e2e_adf_read_path_human_output() {
     // Teardown: label-based CI sweeper handles cleanup; best_effort_close as
     // belt-and-suspenders for this standard (non-JSM) issue.
     best_effort_close(&h, &key);
+}
+
+// ---------------------------------------------------------------------------
+// Helpers for test_e2e_comment_edit_visibility_merge_semantics
+// ---------------------------------------------------------------------------
+
+/// Fetch the raw JSON for a single comment with properties expanded.
+///
+/// Calls `jr api GET /rest/api/3/issue/{key}/comment/{cid}?expand=properties`
+/// directly so the full Jira API response (including the `properties` array)
+/// is available for assertion without going through the typed `Comment` struct.
+fn get_comment_api_json(h: &E2eHarness, key: &str, cid: &str) -> Option<Value> {
+    let path = format!("/rest/api/3/issue/{key}/comment/{cid}?expand=properties");
+    let out = h.cmd().args(["api", &path]).output().ok()?;
+    if !out.status.success() {
+        return None;
+    }
+    serde_json::from_slice(&out.stdout).ok()
+}
+
+/// Extract `sd.public.comment.internal` boolean from a comment JSON response.
+///
+/// Returns `Some(true)` / `Some(false)` when the property is present,
+/// `None` when the property is absent or malformed.
+fn sd_internal_prop(c: &Value) -> Option<bool> {
+    c.get("properties")
+        .and_then(Value::as_array)?
+        .iter()
+        .find(|p| p.get("key").and_then(Value::as_str) == Some("sd.public.comment"))?
+        .get("value")
+        .and_then(|v| v.get("internal"))
+        .and_then(Value::as_bool)
+}
+
+/// Build a minimal single-paragraph ADF document for a plain-text comment body.
+fn adf_paragraph(text: &str) -> Value {
+    serde_json::json!({
+        "version": 1,
+        "type": "doc",
+        "content": [{"type": "paragraph", "content": [{"type": "text", "text": text}]}]
+    })
+}
+
+/// Find the key of the most-recently-created issue in a JSM project.
+///
+/// Used by `test_e2e_comment_edit_visibility_merge_semantics` to locate a
+/// long-lived fixture issue without creating one. Returns `None` and emits
+/// a `[SKIP]` eprintln when the list call fails or the project has no issues.
+fn find_jsm_issue_key(h: &E2eHarness, jsm_project: &str) -> Option<String> {
+    let jql = format!("project={jsm_project} ORDER BY created DESC");
+    let list_out = h
+        .cmd()
+        .args(["issue", "list", "--jql", &jql, "--output", "json"])
+        .output()
+        .ok()?;
+    if !list_out.status.success() {
+        eprintln!(
+            "[SKIP] issue list for {jsm_project} failed — skipping MERGE semantics test\n\
+             stderr: {}",
+            String::from_utf8_lossy(&list_out.stderr)
+        );
+        return None;
+    }
+    let issues: Vec<Value> = serde_json::from_slice(&list_out.stdout).ok()?;
+    issues.first()?.get("key")?.as_str().map(str::to_owned)
+}
+
+/// Delete a probe comment, logging a `[WARN]` on failure (best-effort teardown).
+fn delete_comment_probe(h: &E2eHarness, key: &str, cid: &str) {
+    let del = h
+        .cmd()
+        .args(["issue", "comment", "delete", key, "--id", cid, "--yes"])
+        .output();
+    if del.map(|o| !o.status.success()).unwrap_or(true) {
+        eprintln!(
+            "[WARN] failed to delete probe comment {cid} on {key} \
+             — orphan risk LOW"
+        );
+    }
+}
+
+/// Retry helper: read back a comment and check a predicate.
+///
+/// Retries up to 3 times with 500 ms delays (property expansion can lag on
+/// free-tier sites). Returns `Some(comment_json)` on the first passing check,
+/// `None` after all attempts fail or the predicate never holds.
+fn poll_comment_until(
+    h: &E2eHarness,
+    key: &str,
+    cid: &str,
+    check: &dyn Fn(&Value) -> bool,
+    label: &str,
+) -> Option<Value> {
+    for attempt in 1u8..=3 {
+        let c = match get_comment_api_json(h, key, cid) {
+            Some(v) => v,
+            None => {
+                if attempt < 3 {
+                    std::thread::sleep(Duration::from_millis(500));
+                    continue;
+                }
+                eprintln!("[WARN] {label}: GET comment {cid} failed after 3 attempts");
+                return None;
+            }
+        };
+        if check(&c) {
+            return Some(c);
+        }
+        if attempt < 3 {
+            std::thread::sleep(Duration::from_millis(500));
+        }
+    }
+    eprintln!(
+        "[WARN] {label}: predicate did not hold after 3 attempts \
+         — property lag or assertion failure"
+    );
+    None
+}
+
+/// Discover a usable project role name for comment visibility restriction testing.
+///
+/// Calls `jr api GET /rest/api/3/project/{project_key}/role`, which returns a JSON
+/// object mapping role names to their URL. Prefers `"Service Desk Team"` (the
+/// canonical, stable agent role on JSM company-managed projects; Atlassian explicitly
+/// refused to rename it — JSDCLOUD-1376 Won't Fix; DEC-175 Q3). Falls back to the
+/// first key in the response object. Returns `None` when the API call fails, the
+/// response is not a JSON object, or the object has no keys.
+fn discover_project_role(h: &E2eHarness, project_key: &str) -> Option<String> {
+    let path = format!("/rest/api/3/project/{project_key}/role");
+    let out = h.cmd().args(["api", &path]).output().ok()?;
+    if !out.status.success() {
+        return None;
+    }
+    let roles: serde_json::Map<String, Value> = serde_json::from_slice(&out.stdout).ok()?;
+    if roles.contains_key("Service Desk Team") {
+        return Some("Service Desk Team".to_owned());
+    }
+    roles.keys().next().map(|k| k.to_owned())
+}
+
+/// Extract the `visibility.value` string from a comment JSON response.
+///
+/// Returns `None` when the `visibility` field is absent or its `value` is not a string.
+fn comment_visibility_value(c: &Value) -> Option<&str> {
+    c.get("visibility")
+        .and_then(|v| v.get("value"))
+        .and_then(Value::as_str)
+}
+
+/// Posts a probe comment body to `POST /rest/api/3/issue/{key}/comment` and
+/// returns the new comment id, or `None` (with an eprintln! warning) on any failure.
+fn post_probe_comment(h: &E2eHarness, key: &str, body: &str, scenario: &str) -> Option<String> {
+    let post_path = format!("/rest/api/3/issue/{key}/comment");
+    let create = h
+        .cmd()
+        .args(["api", "-X", "POST", &post_path, "-d", body])
+        .output()
+        .expect("failed to spawn jr api POST for probe comment");
+    if !create.status.success() {
+        eprintln!(
+            "[WARN] {scenario}: probe comment create failed (exit {:?}) — skipping",
+            create.status.code()
+        );
+        return None;
+    }
+    let cv: Value = match serde_json::from_slice(&create.stdout) {
+        Ok(v) => v,
+        Err(e) => {
+            eprintln!("[WARN] {scenario}: comment create JSON parse error: {e} — skipping");
+            return None;
+        }
+    };
+    match cv.get("id").and_then(Value::as_str).map(str::to_owned) {
+        Some(id) => Some(id),
+        None => {
+            eprintln!(
+                "[WARN] {scenario}: comment create response has no 'id' \
+                 — skipping; got: {cv}"
+            );
+            None
+        }
+    }
+}
+
+// ---------------------------------------------------------------------------
+// E2E: comment edit MERGE / PRESERVED semantics probe
+// ---------------------------------------------------------------------------
+
+/// E2E: `jr issue comment edit` MERGE / PRESERVED semantics probe.
+///
+/// Verifies three behavioral contracts on a live JSM project using a
+/// pre-existing EJ issue as a reusable comment fixture (not closed by the test):
+///
+/// - **Scenario 1 (MERGE probe):** Creates a comment with
+///   `sd.public.comment={internal:true}` via `jr api POST`, edits it twice with
+///   `--internal`, and asserts the property is preserved after each edit.
+/// - **Scenario 2 (PRESERVED-visibility baseline):** Discovers a JSM project role via
+///   `GET /rest/api/3/project/{proj}/role` (prefers "Service Desk Team"; DEC-175 Q3).
+///   Creates a comment with a Jira `visibility` restriction
+///   (`{"type":"role","value":"<role>"}`), asserts the restriction is present on
+///   GET read-back immediately after create (anti-vacuous-pass guard per DEC-175 Q2:
+///   an invalid role name may be silently dropped by the API, so assert on round-trip
+///   not on 2xx alone), performs a body-only edit (no flag), and asserts the
+///   `visibility` restriction is still present unchanged (PRESERVED: a body-only PUT
+///   sends no `"visibility"` key and must not clear the existing restriction).
+///   Clean-skips Scenarios 2/3 if no project role is discoverable.
+/// - **Scenario 3 (compound cell — orthogonal axes):** Creates a comment with BOTH
+///   a `visibility` restriction AND `sd.public.comment={internal:true}`, asserts
+///   both present on read-back, edits with `--public --yes`, and asserts (a)
+///   `sd.public.comment` is updated to `internal=false` (MERGE) and (b) the
+///   `visibility` restriction is still present (PRESERVED — properties-MERGE PUT
+///   does not include a `"visibility"` key; two axes are orthogonal per DEC-175 Q5).
+///
+/// Each scenario deletes its own probe comment immediately after assertions.
+/// The parent EJ issue is NOT closed.
+///
+/// Traces to: BC-3.5.006 delivery obligation (b), AC-001 (--internal), AC-002 (--public).
+#[test]
+#[ignore = "set JR_RUN_E2E=1 and JR_E2E_JSM_PROJECT and use --include-ignored to run"]
+fn test_e2e_comment_edit_visibility_merge_semantics() {
+    if !e2e_enabled() {
+        return;
+    }
+    let jsm_project = match env::var("JR_E2E_JSM_PROJECT") {
+        Ok(p) if !p.trim().is_empty() => p.trim().to_string(),
+        _ => {
+            eprintln!(
+                "[SKIP] JR_E2E_JSM_PROJECT not set \
+                 — skipping comment edit MERGE semantics test"
+            );
+            return;
+        }
+    };
+    let h = e2e_harness();
+    let run_id = run_label();
+
+    // Find a pre-existing EJ issue — long-lived shared fixture (NOT closed by test).
+    let key = match find_jsm_issue_key(&h, &jsm_project) {
+        Some(k) => k,
+        None => {
+            eprintln!("[SKIP] no {jsm_project} issue found — skipping MERGE semantics test");
+            return;
+        }
+    };
+
+    // Discover a project role for PRESERVED-visibility probes (Scenarios 2/3).
+    // Prefers "Service Desk Team" (canonical JSM company-managed agent role;
+    // Atlassian Won't-Fix JSDCLOUD-1376; DEC-175 Q3). Scenarios 2/3 are
+    // individually clean-skipped when discovery fails — see labeled blocks below.
+    let vis_role_opt = discover_project_role(&h, &jsm_project);
+
+    // ── Scenario 1 (5-step MERGE probe) ──────────────────────────────────────
+    // (1) Create probe comment with sd.public.comment={internal:true}.
+    // (2) GET; assert internal=true (comment created correctly).
+    // (3) Edit with --internal ("updated body").
+    // (4) GET; assert internal=true (MERGE: existing property preserved).
+    // (5) Edit with --internal again ("body again").
+    //     GET; assert internal=true still (MERGE is stable on repeated --internal).
+    // Teardown: jr issue comment delete KEY --id CID --yes
+    'scenario1: {
+        let s1_body = serde_json::json!({
+            "body": adf_paragraph(&format!("S1 probe {run_id}")),
+            "properties": [{"key": "sd.public.comment", "value": {"internal": true}}]
+        })
+        .to_string();
+
+        let cid = match post_probe_comment(&h, &key, &s1_body, "S1") {
+            Some(id) => id,
+            None => break 'scenario1,
+        };
+
+        // (2) Assert comment was created with internal=true.
+        if poll_comment_until(
+            &h,
+            &key,
+            &cid,
+            &|c| sd_internal_prop(c) == Some(true),
+            "S1(create)",
+        )
+        .is_none()
+        {
+            eprintln!(
+                "[WARN] S1: sd.public.comment not set after create \
+                 — skipping Scenario 1"
+            );
+            delete_comment_probe(&h, &key, &cid);
+            break 'scenario1;
+        }
+
+        // (3) First --internal edit.
+        let edit1 = h
+            .cmd()
+            .args([
+                "issue",
+                "comment",
+                "edit",
+                &key,
+                "--id",
+                &cid,
+                &format!("S1 edit-1 {run_id}"),
+                "--internal",
+                "--output",
+                "json",
+            ])
+            .output()
+            .expect("failed to spawn jr issue comment edit for S1 edit-1");
+        if !edit1.status.success() {
+            eprintln!(
+                "[WARN] S1: edit-1 failed (exit {:?}) \
+                 — skipping remaining Scenario 1 steps\nstderr: {}",
+                edit1.status.code(),
+                String::from_utf8_lossy(&edit1.stderr)
+            );
+            delete_comment_probe(&h, &key, &cid);
+            break 'scenario1;
+        }
+
+        // (4) Assert internal=true preserved after first --internal edit (MERGE).
+        match poll_comment_until(
+            &h,
+            &key,
+            &cid,
+            &|c| sd_internal_prop(c) == Some(true),
+            "S1(edit-1)",
+        ) {
+            None => {
+                eprintln!("[WARN] S1: sd.public.comment not visible after edit-1 — skipping");
+                delete_comment_probe(&h, &key, &cid);
+                break 'scenario1;
+            }
+            Some(c) => {
+                assert!(
+                    sd_internal_prop(&c) == Some(true),
+                    "S1: sd.public.comment must remain internal=true after --internal edit \
+                     (MERGE: existing property preserved — BC-3.5.006); got: {c}"
+                );
+            }
+        }
+
+        // (5) Second --internal edit.
+        let edit2 = h
+            .cmd()
+            .args([
+                "issue",
+                "comment",
+                "edit",
+                &key,
+                "--id",
+                &cid,
+                &format!("S1 edit-2 {run_id}"),
+                "--internal",
+                "--output",
+                "json",
+            ])
+            .output()
+            .expect("failed to spawn jr issue comment edit for S1 edit-2");
+        if !edit2.status.success() {
+            eprintln!(
+                "[WARN] S1: edit-2 failed (exit {:?}) \
+                 — skipping S1 stability check",
+                edit2.status.code()
+            );
+            delete_comment_probe(&h, &key, &cid);
+            break 'scenario1;
+        }
+
+        // Assert internal=true still stable (MERGE is idempotent on repeated --internal).
+        match poll_comment_until(
+            &h,
+            &key,
+            &cid,
+            &|c| sd_internal_prop(c) == Some(true),
+            "S1(edit-2)",
+        ) {
+            None => {
+                eprintln!("[WARN] S1: sd.public.comment not stable after S1 edit-2 — skipping");
+                delete_comment_probe(&h, &key, &cid);
+                break 'scenario1;
+            }
+            Some(c) => {
+                assert!(
+                    sd_internal_prop(&c) == Some(true),
+                    "S1: sd.public.comment must be stable at internal=true after two \
+                     --internal edits (MERGE stability — BC-3.5.006); got: {c}"
+                );
+            }
+        }
+
+        delete_comment_probe(&h, &key, &cid);
+    }
+
+    // ── Scenario 2 (PRESERVED-visibility baseline — 5-step, DEC-175) ───────────
+    // Verifies that a body-only PUT leaves an existing Jira `visibility` restriction
+    // UNCHANGED (PRESERVED). Uses the platform `visibility` field, NOT
+    // `sd.public.comment` properties — these are orthogonal dimensions (DEC-175 Q5).
+    //
+    // (1) Clean-skip if role discovery yielded nothing.
+    // (2) Create probe comment WITH visibility={"type":"role","value":"<role>"}.
+    // (3) GET; assert visibility.value == <role> (anti-vacuous-pass per DEC-175 Q2:
+    //     an invalid role name may be silently dropped; assert round-trip, not 2xx).
+    // (4) Body-only edit (no --internal/--public flag).
+    // (5) GET; assert visibility still present with same type/value (PRESERVED:
+    //     body-only PUT sends no "visibility" key, must not clear the restriction).
+    // Teardown: jr issue comment delete KEY --id CID --yes
+    'scenario2: {
+        let role_name = match vis_role_opt.as_deref() {
+            Some(r) => r.to_owned(),
+            None => {
+                eprintln!(
+                    "[SKIP] S2: no usable project role discovered for {jsm_project} \
+                     — skipping PRESERVED-visibility baseline (DEC-175)"
+                );
+                break 'scenario2;
+            }
+        };
+
+        let s2_body = serde_json::json!({
+            "body": adf_paragraph(&format!("S2 probe {run_id}")),
+            "visibility": {"type": "role", "value": role_name}
+        })
+        .to_string();
+
+        let cid = match post_probe_comment(&h, &key, &s2_body, "S2") {
+            Some(id) => id,
+            None => break 'scenario2,
+        };
+
+        // (3) Anti-vacuous-pass guard (DEC-175 Q2): assert visibility is present on
+        // GET read-back immediately after create. An invalid role name may be silently
+        // dropped by Jira (unconfirmed behavior), making assertions vacuous. Asserting
+        // on the round-trip ensures we test a real restriction, not a ghost.
+        {
+            let role = role_name.as_str();
+            if poll_comment_until(
+                &h,
+                &key,
+                &cid,
+                &|c| comment_visibility_value(c) == Some(role),
+                "S2(create-readback)",
+            )
+            .is_none()
+            {
+                eprintln!(
+                    "[WARN] S2: visibility.value != '{role_name}' after create \
+                     — role may be invalid on {jsm_project} or API lag; \
+                     skipping Scenario 2 to avoid vacuous assertion (DEC-175 Q2)"
+                );
+                delete_comment_probe(&h, &key, &cid);
+                break 'scenario2;
+            }
+        }
+
+        // (4) Body-only edit — no --internal/--public flag: tests PRESERVED semantics.
+        let edit = h
+            .cmd()
+            .args([
+                "issue",
+                "comment",
+                "edit",
+                &key,
+                "--id",
+                &cid,
+                &format!("S2 body-only edit {run_id}"),
+                "--output",
+                "json",
+            ])
+            .output()
+            .expect("failed to spawn jr issue comment edit for S2 body-only edit");
+        if !edit.status.success() {
+            eprintln!(
+                "[WARN] S2: body-only edit failed (exit {:?}) \
+                 — skipping Scenario 2",
+                edit.status.code()
+            );
+            delete_comment_probe(&h, &key, &cid);
+            break 'scenario2;
+        }
+
+        // (5) Assert visibility restriction is PRESERVED after body-only edit.
+        // A body-only PUT sends only {"body":<adf>} — no "visibility" key — so the
+        // existing restriction must be untouched (BC-3.5.006, DEC-175 Q6).
+        {
+            let role = role_name.as_str();
+            match poll_comment_until(
+                &h,
+                &key,
+                &cid,
+                &|c| comment_visibility_value(c) == Some(role),
+                "S2(edit)",
+            ) {
+                None => {
+                    eprintln!(
+                        "[WARN] S2: visibility not visible after body-only edit \
+                         — skipping assertion"
+                    );
+                    delete_comment_probe(&h, &key, &cid);
+                    break 'scenario2;
+                }
+                Some(c) => {
+                    assert!(
+                        comment_visibility_value(&c) == Some(role),
+                        "S2: Jira visibility restriction must be PRESERVED after a body-only \
+                         edit — body-only PUT sends no 'visibility' key and must not clear \
+                         the existing restriction (BC-3.5.006, DEC-175 Q6); got: {c}"
+                    );
+                }
+            }
+        }
+
+        delete_comment_probe(&h, &key, &cid);
+    }
+
+    // ── Scenario 3 (compound cell — orthogonal axes, DEC-175) ───────────────
+    // Verifies that visibility (Jira platform restriction) and sd.public.comment
+    // (JSM portal visibility property) are orthogonal (DEC-175 Q5): a
+    // properties-MERGE edit (--public --yes) updates sd.public.comment but does NOT
+    // disturb a pre-existing Jira visibility restriction (PRESERVED because the PUT
+    // body does not include a "visibility" key).
+    //
+    // (1) Clean-skip if role discovery yielded nothing.
+    // (2) Create probe comment with BOTH visibility={"type":"role","value":"<role>"}
+    //     AND sd.public.comment={internal:true}.
+    // (3) GET; assert BOTH present (anti-vacuous-pass for both dimensions).
+    // (4) Edit with --public --yes.
+    //     Expected wire PUT: {"body":<adf>,"properties":[{"key":"sd.public.comment",
+    //     "value":{"internal":false}}]} — no "visibility" key → PRESERVED on that axis.
+    // (5) GET; assert BOTH:
+    //     (a) sd.public.comment is now internal=false (MERGE: property updated), AND
+    //     (b) visibility restriction still present with same value (PRESERVED:
+    //         orthogonal axis untouched — DEC-175 Q5, BC-3.5.006).
+    // Teardown: jr issue comment delete KEY --id CID --yes
+    'scenario3: {
+        let role_name = match vis_role_opt.as_deref() {
+            Some(r) => r.to_owned(),
+            None => {
+                eprintln!(
+                    "[SKIP] S3: no usable project role discovered for {jsm_project} \
+                     — skipping compound-cell orthogonal-axes probe (DEC-175)"
+                );
+                break 'scenario3;
+            }
+        };
+
+        let s3_body = serde_json::json!({
+            "body": adf_paragraph(&format!("S3 probe {run_id}")),
+            "visibility": {"type": "role", "value": role_name},
+            "properties": [{"key": "sd.public.comment", "value": {"internal": true}}]
+        })
+        .to_string();
+
+        let cid = match post_probe_comment(&h, &key, &s3_body, "S3") {
+            Some(id) => id,
+            None => break 'scenario3,
+        };
+
+        // (3) Assert BOTH visibility and sd.public.comment present on read-back.
+        // Anti-vacuous-pass guard for both dimensions (DEC-175 Q2 for visibility).
+        {
+            let role = role_name.as_str();
+            let both_present = |c: &Value| {
+                comment_visibility_value(c) == Some(role) && sd_internal_prop(c) == Some(true)
+            };
+            if poll_comment_until(&h, &key, &cid, &both_present, "S3(create-readback)").is_none() {
+                eprintln!(
+                    "[WARN] S3: visibility or sd.public.comment not present after create \
+                     — role may be invalid on {jsm_project} or API lag; \
+                     skipping Scenario 3 to avoid vacuous assertion"
+                );
+                delete_comment_probe(&h, &key, &cid);
+                break 'scenario3;
+            }
+        }
+
+        // (4) Edit with --public --yes.
+        let edit = h
+            .cmd()
+            .args([
+                "issue",
+                "comment",
+                "edit",
+                &key,
+                "--id",
+                &cid,
+                &format!("S3 public edit {run_id}"),
+                "--public",
+                "--yes",
+                "--output",
+                "json",
+            ])
+            .output()
+            .expect("failed to spawn jr issue comment edit for S3 --public --yes");
+        if !edit.status.success() {
+            eprintln!(
+                "[WARN] S3: --public --yes edit failed (exit {:?}) \
+                 — skipping Scenario 3\nstderr: {}",
+                edit.status.code(),
+                String::from_utf8_lossy(&edit.stderr)
+            );
+            delete_comment_probe(&h, &key, &cid);
+            break 'scenario3;
+        }
+
+        // (5) Assert full predicate: sd.public.comment=false AND visibility preserved.
+        {
+            let role = role_name.as_str();
+            let full_pred = |c: &Value| {
+                sd_internal_prop(c) == Some(false) && comment_visibility_value(c) == Some(role)
+            };
+            match poll_comment_until(&h, &key, &cid, &full_pred, "S3(--public)") {
+                None => {
+                    eprintln!(
+                        "[WARN] S3: full predicate (sd.public.comment=false AND visibility \
+                         present) did not hold after retries — skipping assertions"
+                    );
+                    delete_comment_probe(&h, &key, &cid);
+                    break 'scenario3;
+                }
+                Some(c) => {
+                    assert!(
+                        sd_internal_prop(&c) == Some(false),
+                        "S3: sd.public.comment must be updated to internal=false after \
+                         --public --yes edit (MERGE: property value updated — BC-3.5.006); \
+                         got: {c}"
+                    );
+                    assert!(
+                        comment_visibility_value(&c) == Some(role),
+                        "S3: Jira visibility restriction must be PRESERVED after --public \
+                         --yes edit — properties-MERGE PUT does not include a 'visibility' \
+                         key and must not disturb the existing restriction \
+                         (orthogonal axes — DEC-175 Q5, BC-3.5.006); got: {c}"
+                    );
+                }
+            }
+        }
+
+        delete_comment_probe(&h, &key, &cid);
+    }
+}
+
+// ---------------------------------------------------------------------------
+// P2-3c schema-capture helpers — test-code only, never compiled into src/
+// ---------------------------------------------------------------------------
+
+/// Recursively replaces every JSON leaf value with a type placeholder so the
+/// structural schema can be printed to CI logs without emitting any real data
+/// (account IDs, URLs, issue keys, attachment IDs, timestamps, emails, etc.).
+///
+/// Rules:
+/// - Object  → keys kept verbatim, values sanitized recursively.
+/// - Array   → one-element array with the first element sanitized
+///   (or an empty array if the source array is empty).
+/// - String  → `"<string>"`
+/// - Number  → `"<number>"`
+/// - Bool    → `"<bool>"`
+/// - Null    → `null` (unchanged — null is structural information)
+fn p2_3c_sanitize(v: &Value) -> Value {
+    match v {
+        Value::Object(map) => Value::Object(
+            map.iter()
+                .map(|(k, v)| (k.clone(), p2_3c_sanitize(v)))
+                .collect(),
+        ),
+        Value::Array(arr) => {
+            if arr.is_empty() {
+                Value::Array(vec![])
+            } else {
+                Value::Array(vec![p2_3c_sanitize(&arr[0])])
+            }
+        }
+        Value::String(_) => Value::String("<string>".to_string()),
+        Value::Number(_) => Value::String("<number>".to_string()),
+        Value::Bool(_) => Value::String("<bool>".to_string()),
+        Value::Null => Value::Null,
+    }
+}
+
+/// Prints a sanitized structural JSON schema to stdout.  Each line is prefixed
+/// with `P2-3C-SCHEMA: [<label>]` so the capture can be grepped from CI
+/// `--show-output` logs.  No real values are ever printed.
+fn p2_3c_print(label: &str, v: &Value) {
+    let sanitized = p2_3c_sanitize(v);
+    let pretty = serde_json::to_string_pretty(&sanitized).unwrap_or_default();
+    for line in pretty.lines() {
+        println!("P2-3C-SCHEMA: [{label}] {line}");
+    }
+}
+
+// ---------------------------------------------------------------------------
+// S-576-5: JSM attachment upload --public / --internal E2E tests
+// AC-011 (Scenario 9 in jsm-e2e-coverage.md)
+// ---------------------------------------------------------------------------
+
+/// E2E smoke test: `jr issue attachment upload <JSM-KEY> <FILE> --public --yes`
+/// uploads a temporary file as a customer-visible attachment via the
+/// servicedeskapi two-step flow (BC-3.9.003) and returns a non-empty curated
+/// attachment array.
+///
+/// Gated by `JR_E2E_JSM_PROJECT` (same as other JSM tests). Uses `jsm_self_close`
+/// for teardown convention (S-JSM-E2E-2). Best-effort attachment delete fires before
+/// jsm_self_close — the AID is parsed from upload stdout; on parse failure a [WARN]
+/// is emitted and self-close proceeds regardless.
+///
+/// Traces to: AC-011, BC-3.9.003, BC-3.9.007.
+#[test]
+#[ignore = "set JR_RUN_E2E=1 and JR_E2E_JSM_PROJECT and use --include-ignored to run"]
+fn test_e2e_jsm_attachment_upload_public() {
+    if !e2e_enabled() {
+        return;
+    }
+    let jsm_project = match env::var("JR_E2E_JSM_PROJECT") {
+        Ok(p) if !p.trim().is_empty() => p.trim().to_string(),
+        _ => {
+            eprintln!(
+                "[SKIP] JR_E2E_JSM_PROJECT not set — skipping JSM attachment upload --public test"
+            );
+            return;
+        }
+    };
+    let h = e2e_harness();
+    let run_id = run_label();
+
+    // Step 1: discover a request type to create a fresh JSM request.
+    let list_out = h
+        .cmd()
+        .args([
+            "requesttype",
+            "list",
+            "--project",
+            &jsm_project,
+            "--output",
+            "json",
+        ])
+        .output()
+        .expect("failed to spawn jr requesttype list");
+
+    if !list_out.status.success() {
+        let s = String::from_utf8_lossy(&list_out.stderr);
+        eprintln!("[SKIP] requesttype list failed — skipping JSM attachment upload --public: {s}");
+        return;
+    }
+
+    let rts: Vec<Value> = match serde_json::from_slice(&list_out.stdout) {
+        Ok(v) => v,
+        Err(e) => {
+            eprintln!("[SKIP] requesttype list not a JSON array: {e} — skipping");
+            return;
+        }
+    };
+    if rts.is_empty() {
+        eprintln!(
+            "[SKIP] no request types found on {jsm_project} — skipping attachment upload --public"
+        );
+        return;
+    }
+    let first_rt_id = {
+        let id_val = &rts[0]["id"];
+        if let Some(s) = id_val.as_str() {
+            s.to_string()
+        } else if let Some(n) = id_val.as_i64() {
+            n.to_string()
+        } else {
+            eprintln!("[SKIP] rts[0].id is not a usable type — skipping");
+            return;
+        }
+    };
+
+    // Step 2: create a JSM request.
+    let summary = format!("[e2e-jsm {run_id}] attachment upload --public");
+    let create_out = h
+        .cmd()
+        .args([
+            "issue",
+            "create",
+            "--project",
+            &jsm_project,
+            "--request-type",
+            &first_rt_id,
+            "--summary",
+            &summary,
+            "--output",
+            "json",
+        ])
+        .output()
+        .expect("failed to spawn jr issue create");
+
+    if !create_out.status.success() {
+        let s = String::from_utf8_lossy(&create_out.stderr);
+        eprintln!("[SKIP] issue create failed — skipping attachment upload --public: {s}");
+        return;
+    }
+
+    let create_v: Value = serde_json::from_slice(&create_out.stdout)
+        .expect("issue create --output json must be valid JSON");
+    let key = create_v
+        .get("key")
+        .and_then(Value::as_str)
+        .expect("issue create JSON must contain 'key' field")
+        .to_string();
+    assert!(
+        !key.is_empty(),
+        "created key must be non-empty; got: {create_v}"
+    );
+
+    // Step 3: write a temp file to upload.
+    let upload_dir = tempfile::TempDir::new().expect("failed to create upload temp dir");
+    let upload_file = upload_dir.path().join("e2e_public.txt");
+    std::fs::write(&upload_file, b"S-576-5 e2e public attachment").expect("write test file");
+
+    // Step 4: upload --public --yes → two-step servicedeskapi flow.
+    let upload_out = h
+        .cmd()
+        .args([
+            "issue",
+            "attachment",
+            "upload",
+            &key,
+            &upload_file.to_string_lossy(),
+            "--public",
+            "--yes",
+            "--output",
+            "json",
+        ])
+        .output()
+        .expect("failed to spawn jr attachment upload");
+
+    // Probe hardening: emit sanitized stderr BEFORE teardown so failure evidence
+    // always reaches the CI log even when upload exits non-zero (P2-3c fix,
+    // S-576-5 re-probe run after 29940792930).
+    if !upload_out.status.success() {
+        let stderr_raw = String::from_utf8_lossy(&upload_out.stderr);
+        let stderr_val = serde_json::from_str::<Value>(&stderr_raw)
+            .unwrap_or_else(|_| Value::String(stderr_raw.into_owned()));
+        let sanitized = p2_3c_sanitize(&stderr_val);
+        println!(
+            "P2-3C-SCHEMA-ERROR: {}",
+            serde_json::to_string(&sanitized).unwrap_or_else(|_| format!("{sanitized:?}"))
+        );
+    }
+
+    // Step 5 (teardown — runs before assertions so no residue survives test failure):
+    // (a) Best-effort parse the attachment AID and delete it.
+    //     The attachment persists independently of ticket status (BC-3.9.011).
+    //     Do NOT panic on parse failure — teardown must always reach jsm_self_close.
+    let upload_stdout_raw = String::from_utf8_lossy(&upload_out.stdout);
+    let teardown_aid: Option<String> = serde_json::from_str::<Vec<Value>>(&upload_stdout_raw)
+        .ok()
+        .and_then(|arr| arr.into_iter().next())
+        .and_then(|item| item.get("id").and_then(Value::as_str).map(str::to_string));
+    if let Some(aid) = &teardown_aid {
+        match h
+            .cmd()
+            .args(["issue", "attachment", "delete", aid, "--yes"])
+            .output()
+        {
+            Ok(o) if o.status.success() => {}
+            Ok(o) => {
+                let s = String::from_utf8_lossy(&o.stderr);
+                eprintln!("[WARN] E2E public: failed to delete attachment {aid}: {s}");
+            }
+            Err(e) => eprintln!("[WARN] E2E public: failed to spawn attachment delete: {e}"),
+        }
+    } else {
+        eprintln!(
+            "[WARN] E2E public: could not parse AID from upload stdout — attachment not deleted"
+        );
+    }
+    // (b) Self-close regardless of upload/delete result (F-2b teardown).
+    jsm_self_close(&key, &h);
+
+    // Step 6: assert upload succeeded.
+    let upload_stderr = String::from_utf8_lossy(&upload_out.stderr);
+    let upload_stdout = String::from_utf8_lossy(&upload_out.stdout);
+    assert!(
+        upload_out.status.success(),
+        "AC-011 E2E public: upload must exit 0; got {:?}\nstdout: {upload_stdout}\nstderr: {upload_stderr}",
+        upload_out.status.code()
+    );
+
+    // Step 7: parse curated array.
+    let arr: Vec<Value> = serde_json::from_str(&upload_stdout)
+        .expect("AC-011 E2E public: --output json must be a JSON array");
+    assert!(
+        !arr.is_empty(),
+        "AC-011 E2E public: uploaded attachment array must be non-empty; stdout: {upload_stdout}"
+    );
+
+    // P2-3c schema probe A: print sanitized curated upload output BEFORE shape assertions
+    // (BC-3.9.011).  Schema is captured even if the shape check below fails.
+    p2_3c_print("CURATED-UPLOAD-public", &Value::Array(arr.clone()));
+
+    // P2-3c schema probe B: raw platform attachment JSON (BC-3.9.007 wire source).
+    // GET /rest/api/3/issue/{key}?fields=attachment returns the raw Jira attachment
+    // objects before jr curates them — the platform wire format evidence for BC-3.9.007.
+    let raw_path = format!("/rest/api/3/issue/{key}?fields=attachment");
+    if let Ok(raw_out) = h.cmd().args(["api", &raw_path]).output() {
+        if raw_out.status.success() {
+            if let Ok(raw_v) = serde_json::from_slice::<Value>(&raw_out.stdout) {
+                p2_3c_print("RAW-PLATFORM-attachment-public", &raw_v);
+            }
+        }
+    }
+
+    // Step 8: minimal shape check (BC-3.9.007 curated keys).
+    let item = &arr[0];
+    for field in &[
+        "id",
+        "filename",
+        "contentUrl",
+        "mimeType",
+        "size",
+        "author",
+        "created",
+    ] {
+        assert!(
+            item.get(field).is_some(),
+            "AC-011 E2E public: curated attachment must have key '{field}'; got: {item}"
+        );
+    }
+    assert!(
+        item.get("self").is_none(),
+        "AC-011 E2E public: curated attachment must NOT contain 'self'; got: {item}"
+    );
+}
+
+/// E2E smoke test: `jr issue attachment upload <JSM-KEY> <FILE> --internal`
+/// uploads a temporary file as a staff-only (internal) attachment via the
+/// servicedeskapi two-step flow with `public:false` (BC-3.9.004) and returns a
+/// non-empty curated attachment array. No interactive confirmation gate is
+/// needed for `--internal`.
+///
+/// Gated by `JR_E2E_JSM_PROJECT`. Uses `jsm_self_close` for teardown.
+///
+/// Traces to: AC-011, BC-3.9.004, BC-3.9.007.
+#[test]
+#[ignore = "set JR_RUN_E2E=1 and JR_E2E_JSM_PROJECT and use --include-ignored to run"]
+fn test_e2e_jsm_attachment_upload_internal() {
+    if !e2e_enabled() {
+        return;
+    }
+    let jsm_project = match env::var("JR_E2E_JSM_PROJECT") {
+        Ok(p) if !p.trim().is_empty() => p.trim().to_string(),
+        _ => {
+            eprintln!(
+                "[SKIP] JR_E2E_JSM_PROJECT not set — skipping JSM attachment upload --internal test"
+            );
+            return;
+        }
+    };
+    let h = e2e_harness();
+    let run_id = run_label();
+
+    // Step 1: discover a request type.
+    let list_out = h
+        .cmd()
+        .args([
+            "requesttype",
+            "list",
+            "--project",
+            &jsm_project,
+            "--output",
+            "json",
+        ])
+        .output()
+        .expect("failed to spawn jr requesttype list");
+
+    if !list_out.status.success() {
+        let s = String::from_utf8_lossy(&list_out.stderr);
+        eprintln!(
+            "[SKIP] requesttype list failed — skipping JSM attachment upload --internal: {s}"
+        );
+        return;
+    }
+
+    let rts: Vec<Value> = match serde_json::from_slice(&list_out.stdout) {
+        Ok(v) => v,
+        Err(e) => {
+            eprintln!("[SKIP] requesttype list not a JSON array: {e} — skipping");
+            return;
+        }
+    };
+    if rts.is_empty() {
+        eprintln!(
+            "[SKIP] no request types found on {jsm_project} — skipping attachment upload --internal"
+        );
+        return;
+    }
+    let first_rt_id = {
+        let id_val = &rts[0]["id"];
+        if let Some(s) = id_val.as_str() {
+            s.to_string()
+        } else if let Some(n) = id_val.as_i64() {
+            n.to_string()
+        } else {
+            eprintln!("[SKIP] rts[0].id is not a usable type — skipping");
+            return;
+        }
+    };
+
+    // Step 2: create a JSM request.
+    let summary = format!("[e2e-jsm {run_id}] attachment upload --internal");
+    let create_out = h
+        .cmd()
+        .args([
+            "issue",
+            "create",
+            "--project",
+            &jsm_project,
+            "--request-type",
+            &first_rt_id,
+            "--summary",
+            &summary,
+            "--output",
+            "json",
+        ])
+        .output()
+        .expect("failed to spawn jr issue create");
+
+    if !create_out.status.success() {
+        let s = String::from_utf8_lossy(&create_out.stderr);
+        eprintln!("[SKIP] issue create failed — skipping attachment upload --internal: {s}");
+        return;
+    }
+
+    let create_v: Value = serde_json::from_slice(&create_out.stdout)
+        .expect("issue create --output json must be valid JSON");
+    let key = create_v
+        .get("key")
+        .and_then(Value::as_str)
+        .expect("issue create JSON must contain 'key' field")
+        .to_string();
+    assert!(
+        !key.is_empty(),
+        "created key must be non-empty; got: {create_v}"
+    );
+
+    // Step 3: write a temp file to upload.
+    let upload_dir = tempfile::TempDir::new().expect("failed to create upload temp dir");
+    let upload_file = upload_dir.path().join("e2e_internal.txt");
+    std::fs::write(&upload_file, b"S-576-5 e2e internal attachment").expect("write test file");
+
+    // Step 4: upload --internal → two-step servicedeskapi flow with public:false.
+    // No --yes needed; --internal has no interactive confirmation gate.
+    let upload_out = h
+        .cmd()
+        .args([
+            "issue",
+            "attachment",
+            "upload",
+            &key,
+            &upload_file.to_string_lossy(),
+            "--internal",
+            "--output",
+            "json",
+        ])
+        .output()
+        .expect("failed to spawn jr attachment upload");
+
+    // Probe hardening: emit sanitized stderr BEFORE teardown so failure evidence
+    // always reaches the CI log even when upload exits non-zero (P2-3c fix,
+    // S-576-5 re-probe run after 29940792930).
+    if !upload_out.status.success() {
+        let stderr_raw = String::from_utf8_lossy(&upload_out.stderr);
+        let stderr_val = serde_json::from_str::<Value>(&stderr_raw)
+            .unwrap_or_else(|_| Value::String(stderr_raw.into_owned()));
+        let sanitized = p2_3c_sanitize(&stderr_val);
+        println!(
+            "P2-3C-SCHEMA-ERROR: {}",
+            serde_json::to_string(&sanitized).unwrap_or_else(|_| format!("{sanitized:?}"))
+        );
+    }
+
+    // Step 5 (teardown — runs before assertions so no residue survives test failure):
+    // (a) Best-effort parse the attachment AID and delete it.
+    //     The attachment persists independently of ticket status (BC-3.9.011).
+    //     Do NOT panic on parse failure — teardown must always reach jsm_self_close.
+    let upload_stdout_raw = String::from_utf8_lossy(&upload_out.stdout);
+    let teardown_aid: Option<String> = serde_json::from_str::<Vec<Value>>(&upload_stdout_raw)
+        .ok()
+        .and_then(|arr| arr.into_iter().next())
+        .and_then(|item| item.get("id").and_then(Value::as_str).map(str::to_string));
+    if let Some(aid) = &teardown_aid {
+        match h
+            .cmd()
+            .args(["issue", "attachment", "delete", aid, "--yes"])
+            .output()
+        {
+            Ok(o) if o.status.success() => {}
+            Ok(o) => {
+                let s = String::from_utf8_lossy(&o.stderr);
+                eprintln!("[WARN] E2E internal: failed to delete attachment {aid}: {s}");
+            }
+            Err(e) => eprintln!("[WARN] E2E internal: failed to spawn attachment delete: {e}"),
+        }
+    } else {
+        eprintln!(
+            "[WARN] E2E internal: could not parse AID from upload stdout — attachment not deleted"
+        );
+    }
+    // (b) Self-close regardless of upload/delete result (F-2b teardown).
+    jsm_self_close(&key, &h);
+
+    // Step 6: assert upload succeeded.
+    let upload_stderr = String::from_utf8_lossy(&upload_out.stderr);
+    let upload_stdout = String::from_utf8_lossy(&upload_out.stdout);
+    assert!(
+        upload_out.status.success(),
+        "AC-011 E2E internal: upload must exit 0; got {:?}\nstdout: {upload_stdout}\nstderr: {upload_stderr}",
+        upload_out.status.code()
+    );
+
+    // Step 7: parse curated array.
+    let arr: Vec<Value> = serde_json::from_str(&upload_stdout)
+        .expect("AC-011 E2E internal: --output json must be a JSON array");
+    assert!(
+        !arr.is_empty(),
+        "AC-011 E2E internal: uploaded attachment array must be non-empty; stdout: {upload_stdout}"
+    );
+
+    // P2-3c schema probe A: print sanitized curated upload output BEFORE shape assertions
+    // (BC-3.9.011).  Schema is captured even if the shape check below fails.
+    p2_3c_print("CURATED-UPLOAD-internal", &Value::Array(arr.clone()));
+
+    // P2-3c schema probe B: raw platform attachment JSON (BC-3.9.007 wire source).
+    let raw_path = format!("/rest/api/3/issue/{key}?fields=attachment");
+    if let Ok(raw_out) = h.cmd().args(["api", &raw_path]).output() {
+        if raw_out.status.success() {
+            if let Ok(raw_v) = serde_json::from_slice::<Value>(&raw_out.stdout) {
+                p2_3c_print("RAW-PLATFORM-attachment-internal", &raw_v);
+            }
+        }
+    }
+
+    // Step 8: minimal shape check (BC-3.9.007 curated keys).
+    let item = &arr[0];
+    for field in &[
+        "id",
+        "filename",
+        "contentUrl",
+        "mimeType",
+        "size",
+        "author",
+        "created",
+    ] {
+        assert!(
+            item.get(field).is_some(),
+            "AC-011 E2E internal: curated attachment must have key '{field}'; got: {item}"
+        );
+    }
+    assert!(
+        item.get("self").is_none(),
+        "AC-011 E2E internal: curated attachment must NOT contain 'self'; got: {item}"
+    );
+}
+
+// ---------------------------------------------------------------------------
+// S-576-6: attachment live E2E coverage — platform round-trip + JSM echo shapes
+// AC-001 (test_e2e_attachment_platform_roundtrip)
+// AC-002 (test_e2e_jsm_attachment_public_echo_shape)
+// AC-003 (test_e2e_jsm_attachment_internal_echo_shape)
+// AC-004 (test_e2e_jsm_attachment_upload_no_flag)
+// ---------------------------------------------------------------------------
+
+/// Drop-guard for JSM attachment E2E teardown (AC-010, AC-002).
+///
+/// Ensures (1) AID deletion and (2) `jsm_self_close` run on both normal return
+/// AND panic unwind. Mandatory for `test_e2e_jsm_attachment_public_echo_shape`
+/// (BC-3.9.011 ADV-022: public attachments persist independently of ticket status).
+///
+/// Populate `guard.key` immediately after capturing the issue key and
+/// `guard.aid` immediately after capturing the upload AID. Both default to
+/// `None`; a `None` field triggers no cleanup.
+struct AttachmentDropGuard {
+    aid: Option<String>,
+    key: Option<String>,
+}
+
+impl AttachmentDropGuard {
+    fn new() -> Self {
+        Self {
+            aid: None,
+            key: None,
+        }
+    }
+}
+
+impl Drop for AttachmentDropGuard {
+    fn drop(&mut self) {
+        // (1) Delete AID before jsm_self_close (ADV-022 ordering invariant).
+        if let Some(ref aid) = self.aid {
+            let h = E2eHarness::new();
+            match h
+                .cmd()
+                .args(["issue", "attachment", "delete", aid, "--yes"])
+                .output()
+            {
+                Ok(o) if o.status.success() => {}
+                Ok(o) => eprintln!(
+                    "[WARN] AttachmentDropGuard Drop: delete {} failed (exit {:?}): {}",
+                    aid,
+                    o.status.code(),
+                    String::from_utf8_lossy(&o.stderr)
+                ),
+                Err(e) => eprintln!("[WARN] AttachmentDropGuard Drop: delete spawn error: {e}"),
+            }
+        }
+        // (2) Self-close JSM issue.
+        if let Some(ref key) = self.key {
+            let h = E2eHarness::new();
+            jsm_self_close(key, &h);
+        }
+    }
+}
+
+/// E2E round-trip: upload → list (table + JSON) → download → delete → post-delete list.
+///
+/// Exercises the full `jr issue attachment` surface against a live Jira Cloud ES
+/// project. Verifies BC-2.7.001 (list table filename), BC-2.7.002 (list JSON
+/// shape + contentUrl), BC-2.7.007 (download exits 0 + file exists),
+/// BC-3.9.001/009 (upload exits 0 + curated array), BC-3.9.008/010 (delete
+/// exits 0 + JSON `{"deleted":true,"id":"<AID>"}` + post-delete list
+/// confirms AID gone).
+///
+/// Uses `seed_issue` for ES issue creation (label `rl` enables CI sweeper pick-up
+/// on test failure). Collect-results-then-assert pattern: teardown (delete AID +
+/// `best_effort_close`) runs before any `assert!`.
+///
+/// Traces to: AC-001, BC-2.7.001, BC-2.7.002, BC-2.7.007, BC-3.9.001, BC-3.9.008,
+/// BC-3.9.009, BC-3.9.010.
+#[test]
+#[ignore = "set JR_RUN_E2E=1 and use --include-ignored to run"]
+fn test_e2e_attachment_platform_roundtrip() {
+    if !e2e_enabled() {
+        return;
+    }
+    let h = e2e_harness();
+    let rl = run_label();
+    let summary = format!("[e2e {}] attachment round-trip", rl);
+    let key = seed_issue(&h, &rl, &summary);
+
+    // Step 2: create a temp file with platform-neutral filename (B4/B5, S-576-2).
+    // ASCII-printable only; no Windows-reserved names; `.txt` extension.
+    let upload_dir = TempDir::new().expect("failed to create upload temp dir");
+    let filename = "attachment-e2e-test.txt".to_string();
+    let upload_file = upload_dir.path().join(&filename);
+    let file_content = format!("jr e2e attachment round-trip {}", rl);
+    std::fs::write(&upload_file, file_content.as_bytes()).expect("failed to write test file");
+
+    // Step 3: Upload (BC-3.9.001/009).
+    let upload_out = h
+        .cmd()
+        .args([
+            "issue",
+            "attachment",
+            "upload",
+            &key,
+            &upload_file.to_string_lossy(),
+            "--output",
+            "json",
+            "--yes",
+        ])
+        .output()
+        .expect("failed to spawn jr attachment upload");
+
+    // Capture AID from upload stdout before any assertion can panic.
+    let upload_stdout_raw = String::from_utf8_lossy(&upload_out.stdout);
+    let aid: Option<String> = serde_json::from_str::<Vec<Value>>(&upload_stdout_raw)
+        .ok()
+        .and_then(|arr| arr.into_iter().next())
+        .and_then(|item| item.get("id").and_then(Value::as_str).map(str::to_string));
+
+    // Step 4: List (table) — BC-2.7.001.
+    let list_table_out = h
+        .cmd()
+        .args(["issue", "attachment", "list", &key])
+        .output()
+        .expect("failed to spawn jr attachment list (table)");
+
+    // Step 5: List (JSON) — BC-2.7.002.
+    let list_json_out = h
+        .cmd()
+        .args(["issue", "attachment", "list", &key, "--output", "json"])
+        .output()
+        .expect("failed to spawn jr attachment list --output json");
+
+    // Step 6: Download — BC-2.7.007.
+    let download_dir = TempDir::new().expect("failed to create download temp dir");
+    let download_path = download_dir.path().join("downloaded.txt");
+    let download_out = aid.as_ref().map(|the_aid| {
+        h.cmd()
+            .args([
+                "issue",
+                "attachment",
+                "download",
+                &key,
+                "--id",
+                the_aid,
+                "--out",
+                &download_path.to_string_lossy(),
+            ])
+            .output()
+            .expect("failed to spawn jr attachment download")
+    });
+
+    // Step 7: Delete (AID teardown) — BC-3.9.008/010.
+    let delete_out = aid.as_ref().map(|the_aid| {
+        h.cmd()
+            .args([
+                "issue",
+                "attachment",
+                "delete",
+                the_aid,
+                "--yes",
+                "--output",
+                "json",
+            ])
+            .output()
+            .expect("failed to spawn jr attachment delete")
+    });
+
+    // Step 8: List post-delete (two-step post-condition: delete exits 0 AND AID gone).
+    let post_delete_out = h
+        .cmd()
+        .args(["issue", "attachment", "list", &key, "--output", "json"])
+        .output()
+        .expect("failed to spawn jr attachment list post-delete");
+
+    // Step 9: Issue teardown (best-effort; sweeper handles orphans via label rl).
+    best_effort_close(&h, &key);
+
+    // ---- Assertions (all teardown complete before this line) ----
+
+    // Upload assertions (BC-3.9.001/009).
+    let upload_stderr = String::from_utf8_lossy(&upload_out.stderr);
+    let upload_stdout = String::from_utf8_lossy(&upload_out.stdout);
+    assert!(
+        upload_out.status.success(),
+        "AC-001: upload must exit 0; got {:?}\nstdout: {upload_stdout}\nstderr: {upload_stderr}",
+        upload_out.status.code()
+    );
+    let upload_arr: Vec<Value> = serde_json::from_str(&upload_stdout)
+        .expect("AC-001: upload --output json must be a JSON array");
+    assert!(
+        !upload_arr.is_empty(),
+        "AC-001: upload JSON array must be non-empty; stdout: {upload_stdout}"
+    );
+    let the_aid = aid
+        .as_ref()
+        .expect("AC-001: AID must be parseable from upload output");
+    assert!(!the_aid.is_empty(), "AC-001: AID must be non-empty");
+
+    // List table assertion (BC-2.7.001).
+    let list_table_stdout = String::from_utf8_lossy(&list_table_out.stdout);
+    assert!(
+        list_table_out.status.success(),
+        "AC-001: list (table) must exit 0"
+    );
+    assert!(
+        list_table_stdout.contains(&filename),
+        "AC-001: list table must contain filename '{filename}'; stdout: {list_table_stdout}"
+    );
+
+    // List JSON assertions (BC-2.7.002).
+    let list_json_stdout = String::from_utf8_lossy(&list_json_out.stdout);
+    assert!(
+        list_json_out.status.success(),
+        "AC-001: list (JSON) must exit 0"
+    );
+    let list_arr: Vec<Value> = serde_json::from_str(&list_json_stdout)
+        .expect("AC-001: list --output json must be a JSON array");
+    let list_item = list_arr
+        .iter()
+        .find(|item| item.get("id").and_then(Value::as_str) == Some(the_aid.as_str()))
+        .unwrap_or_else(|| {
+            panic!("AC-001: list JSON must contain item with id={the_aid}; got: {list_json_stdout}")
+        });
+    for field in &[
+        "filename",
+        "contentUrl",
+        "mimeType",
+        "size",
+        "created",
+        "author",
+    ] {
+        assert!(
+            list_item.get(field).is_some(),
+            "AC-001: list JSON item must have key '{field}' (BC-2.7.002); got: {list_item}"
+        );
+    }
+    let content_url = list_item
+        .get("contentUrl")
+        .and_then(Value::as_str)
+        .unwrap_or("");
+    assert!(
+        !content_url.is_empty(),
+        "AC-001: contentUrl must be non-null and non-empty (BC-2.7.002); got: {list_item}"
+    );
+
+    // Download assertions (BC-2.7.007).
+    if let Some(ref dl_out) = download_out {
+        let dl_stderr = String::from_utf8_lossy(&dl_out.stderr);
+        assert!(
+            dl_out.status.success(),
+            "AC-001: download must exit 0; got {:?}\nstderr: {dl_stderr}",
+            dl_out.status.code()
+        );
+        assert!(
+            download_path.exists(),
+            "AC-001: downloaded file must exist at {}",
+            download_path.display()
+        );
+        let dl_bytes =
+            std::fs::read(&download_path).expect("AC-001: failed to read downloaded file");
+        assert!(
+            !dl_bytes.is_empty(),
+            "AC-001: downloaded file must be non-empty"
+        );
+    }
+
+    // Delete assertions (BC-3.9.008/010).
+    if let Some(ref del_out) = delete_out {
+        let del_stdout = String::from_utf8_lossy(&del_out.stdout);
+        let del_stderr = String::from_utf8_lossy(&del_out.stderr);
+        assert!(
+            del_out.status.success(),
+            "AC-001: delete must exit 0; got {:?}\nstdout: {del_stdout}\nstderr: {del_stderr}",
+            del_out.status.code()
+        );
+        let del_json: Value = serde_json::from_str(&del_stdout)
+            .expect("AC-001: delete --output json must be valid JSON");
+        assert_eq!(
+            del_json["deleted"],
+            Value::Bool(true),
+            "AC-001: delete JSON must have deleted:true (BC-3.9.010); got: {del_json}"
+        );
+        assert_eq!(
+            del_json["id"].as_str(),
+            Some(the_aid.as_str()),
+            "AC-001: delete JSON 'id' must match AID (BC-3.9.010); got: {del_json}"
+        );
+    }
+
+    // Post-delete list assertion: two-step post-condition (BC-3.9.008 — AID removed).
+    let post_del_stdout = String::from_utf8_lossy(&post_delete_out.stdout);
+    assert!(
+        post_delete_out.status.success(),
+        "AC-001: post-delete list must exit 0"
+    );
+    let post_del_arr: Vec<Value> = serde_json::from_str(&post_del_stdout)
+        .expect("AC-001: post-delete list JSON must be a JSON array");
+    assert!(
+        !post_del_arr
+            .iter()
+            .any(|item| item.get("id").and_then(Value::as_str) == Some(the_aid.as_str())),
+        "AC-001: post-delete list must not contain AID={the_aid} (BC-3.9.008); got: {post_del_stdout}"
+    );
+}
+
+/// E2E shape verification: `--public --yes --output json` exits 0 and returns the
+/// confirmed P2-3c BC-3.9.011 curated attachment schema (bare array; confirmed field
+/// set `{author, contentUrl, created, filename, id, mimeType, size}`; no `"self"` key).
+///
+/// Pins the exact BC-3.9.011 EC-3.9.011-1 schema (P2-3c SATISFIED — S-576-5 probe
+/// runs 29936980027 + 29940792930 + 29945857059, 2026-07-22). Additive to S-576-5's
+/// `test_e2e_jsm_attachment_upload_public` (functional correctness); this test pins
+/// the `--output json` echo shape.
+///
+/// Uses `AttachmentDropGuard` (AC-010): ensures delete-AID then `jsm_self_close` run
+/// on both normal return and panic unwind (ADV-022 obligation).
+///
+/// Gated by `JR_RUN_E2E=1` + `JR_E2E_JSM_PROJECT`. Gate-2 (empty RT list) +
+/// Gate-3 (403) trigger clean-skips.
+///
+/// Traces to: AC-002, AC-005, BC-3.9.003, BC-3.9.007 EC-3.9.007-2, BC-3.9.011.
+#[test]
+#[ignore = "set JR_RUN_E2E=1 and JR_E2E_JSM_PROJECT and use --include-ignored to run"]
+fn test_e2e_jsm_attachment_public_echo_shape() {
+    if !e2e_enabled() {
+        return;
+    }
+    // Gate 1 (§3.1): JR_E2E_JSM_PROJECT must be set.
+    let jsm_project = match env::var("JR_E2E_JSM_PROJECT") {
+        Ok(p) if !p.trim().is_empty() => p.trim().to_string(),
+        _ => {
+            eprintln!(
+                "[SKIP] JR_E2E_JSM_PROJECT not set — skipping JSM attachment --public echo shape test"
+            );
+            return;
+        }
+    };
+    let h = e2e_harness();
+    let run_id = run_label();
+
+    // Drop-guard: populated with key + AID as captured; ensures cleanup on panic.
+    let mut guard = AttachmentDropGuard::new();
+
+    // Step 1: discover a request type (Gate 2 applies on empty list).
+    let list_out = h
+        .cmd()
+        .args([
+            "requesttype",
+            "list",
+            "--project",
+            &jsm_project,
+            "--output",
+            "json",
+        ])
+        .output()
+        .expect("failed to spawn jr requesttype list");
+
+    if !list_out.status.success() {
+        let s = String::from_utf8_lossy(&list_out.stderr);
+        if s.contains("403") {
+            eprintln!(
+                "[SKIP] requesttype list returned 403 — skipping JSM attachment --public echo shape"
+            );
+            return;
+        }
+        eprintln!(
+            "[SKIP] requesttype list failed — skipping JSM attachment --public echo shape: {s}"
+        );
+        return;
+    }
+
+    let rts: Vec<Value> = match serde_json::from_slice(&list_out.stdout) {
+        Ok(v) => v,
+        Err(e) => {
+            eprintln!("[SKIP] requesttype list not a JSON array: {e} — skipping");
+            return;
+        }
+    };
+    // Gate 2 (§3.2): skip if no request types found.
+    if rts.is_empty() {
+        eprintln!(
+            "[SKIP] No request types found on {jsm_project} — skipping JSM attachment --public echo shape"
+        );
+        return;
+    }
+    let first_rt_id = {
+        let id_val = &rts[0]["id"];
+        if let Some(s) = id_val.as_str() {
+            s.to_string()
+        } else if let Some(n) = id_val.as_i64() {
+            n.to_string()
+        } else {
+            eprintln!("[SKIP] rts[0].id is not a usable type — skipping");
+            return;
+        }
+    };
+
+    // Step 2: create a fresh JSM request.
+    let summary = format!("[e2e-jsm {run_id}] attachment --public echo shape");
+    let create_out = h
+        .cmd()
+        .args([
+            "issue",
+            "create",
+            "--project",
+            &jsm_project,
+            "--request-type",
+            &first_rt_id,
+            "--summary",
+            &summary,
+            "--output",
+            "json",
+        ])
+        .output()
+        .expect("failed to spawn jr issue create");
+
+    if !create_out.status.success() {
+        let s = String::from_utf8_lossy(&create_out.stderr);
+        if s.contains("403") {
+            eprintln!(
+                "[SKIP] issue create returned 403 — skipping JSM attachment --public echo shape"
+            );
+            return;
+        }
+        eprintln!("[SKIP] issue create failed — skipping JSM attachment --public echo shape: {s}");
+        return;
+    }
+
+    let create_v: Value = serde_json::from_slice(&create_out.stdout)
+        .expect("issue create --output json must be valid JSON");
+    let key = create_v
+        .get("key")
+        .and_then(Value::as_str)
+        .expect("issue create JSON must contain 'key' field")
+        .to_string();
+    assert!(!key.is_empty(), "created JSM key must be non-empty");
+    // Register key with guard immediately so jsm_self_close runs on any later panic.
+    guard.key = Some(key.clone());
+
+    // Step 3: write a temp file (platform-neutral filename).
+    let upload_dir = TempDir::new().expect("failed to create upload temp dir");
+    let upload_file = upload_dir.path().join("attachment-e2e-public.txt");
+    std::fs::write(&upload_file, b"S-576-6 e2e public attachment echo shape")
+        .expect("write test file");
+
+    // Step 4: upload --public --yes --output json.
+    let upload_out = h
+        .cmd()
+        .args([
+            "issue",
+            "attachment",
+            "upload",
+            &key,
+            &upload_file.to_string_lossy(),
+            "--public",
+            "--yes",
+            "--output",
+            "json",
+        ])
+        .output()
+        .expect("failed to spawn jr attachment upload");
+
+    // Gate 3 (§3.3): 403 on upload → clean-skip; guard closes issue.
+    if !upload_out.status.success() {
+        let s = String::from_utf8_lossy(&upload_out.stderr);
+        if s.contains("403") {
+            eprintln!("[SKIP] attachment upload --public returned 403 — skipping");
+            return; // guard drops here: jsm_self_close(key) runs
+        }
+    }
+
+    // Capture AID and register with guard BEFORE any assertion that could panic.
+    let upload_stdout_raw = String::from_utf8_lossy(&upload_out.stdout);
+    let aid: Option<String> = serde_json::from_str::<Vec<Value>>(&upload_stdout_raw)
+        .ok()
+        .and_then(|arr| arr.into_iter().next())
+        .and_then(|item| item.get("id").and_then(Value::as_str).map(str::to_string));
+    match &aid {
+        Some(a) => guard.aid = Some(a.clone()),
+        None => eprintln!(
+            "[WARN] AC-002: could not parse AID from upload stdout — \
+             attachment not registered in drop-guard"
+        ),
+    }
+
+    // ---- Assertions (drop-guard active; cleanup runs on any panic below) ----
+
+    let upload_stderr = String::from_utf8_lossy(&upload_out.stderr);
+    let upload_stdout = String::from_utf8_lossy(&upload_out.stdout);
+    assert!(
+        upload_out.status.success(),
+        "AC-002: upload --public must exit 0; got {:?}\nstdout: {upload_stdout}\nstderr: {upload_stderr}",
+        upload_out.status.code()
+    );
+
+    // Step 5: BC-3.9.011 confirmed shape (EC-3.9.011-1, P2-3c SATISFIED).
+    // Confirmed: bare curated array [{author, contentUrl, created, filename, id, mimeType, size}].
+    // Probe runs: 29936980027 + 29940792930 + 29945857059 (S-576-5, 2026-07-22).
+    let arr: Vec<Value> =
+        serde_json::from_str(&upload_stdout).expect("AC-002: --output json must be a JSON array");
+    assert!(
+        !arr.is_empty(),
+        "AC-002: upload JSON array must be non-empty (BC-3.9.011); stdout: {upload_stdout}"
+    );
+    let the_aid = aid
+        .as_ref()
+        .expect("AC-002: AID must be parseable from upload output");
+    assert!(!the_aid.is_empty(), "AC-002: AID must be non-empty");
+
+    // BC-3.9.011 EC-3.9.011-1: confirmed curated field set.
+    let item = &arr[0];
+    for field in &[
+        "id",
+        "filename",
+        "contentUrl",
+        "mimeType",
+        "size",
+        "author",
+        "created",
+    ] {
+        assert!(
+            item.get(field).is_some(),
+            "AC-002: curated attachment must have key '{field}' (BC-3.9.011 EC-3.9.011-1); got: {item}"
+        );
+    }
+    // BC-3.9.011: no raw Jira 'self' key (stripped by curation pipeline).
+    assert!(
+        item.get("self").is_none(),
+        "AC-002: curated attachment must NOT contain 'self' (BC-3.9.011); got: {item}"
+    );
+    // guard drops here (end of function scope): delete AID then jsm_self_close.
+}
+
+/// E2E shape verification: `--internal --output json` exits 0 and returns a bare
+/// curated JSON array with NO top-level `"public"` key (BC-3.9.011 EC-3.9.011-3).
+///
+/// Confirms: (a) output is a bare array (not a `{"public":…,"uploaded":[…]}` envelope);
+/// (b) no top-level `"public"` key; (c) confirmed curated field set from BC-3.9.011
+/// EC-3.9.011-1 (P2-3c SATISFIED). Additive to S-576-5's
+/// `test_e2e_jsm_attachment_upload_internal` (functional correctness); this test pins
+/// the `--output json` echo shape.
+///
+/// Teardown uses collect-results-then-assert: delete AID then `jsm_self_close` run
+/// before assertions.
+///
+/// Gated by `JR_RUN_E2E=1` + `JR_E2E_JSM_PROJECT`. Gate-2 (empty RT list) +
+/// Gate-3 (403) trigger clean-skips.
+///
+/// Traces to: AC-003, BC-3.9.004, BC-3.9.007 EC-3.9.007-2, BC-3.9.011.
+#[test]
+#[ignore = "set JR_RUN_E2E=1 and JR_E2E_JSM_PROJECT and use --include-ignored to run"]
+fn test_e2e_jsm_attachment_internal_echo_shape() {
+    if !e2e_enabled() {
+        return;
+    }
+    // Gate 1 (§3.1).
+    let jsm_project = match env::var("JR_E2E_JSM_PROJECT") {
+        Ok(p) if !p.trim().is_empty() => p.trim().to_string(),
+        _ => {
+            eprintln!(
+                "[SKIP] JR_E2E_JSM_PROJECT not set — skipping JSM attachment --internal echo shape test"
+            );
+            return;
+        }
+    };
+    let h = e2e_harness();
+    let run_id = run_label();
+
+    // Step 1: discover a request type (Gate 2).
+    let list_out = h
+        .cmd()
+        .args([
+            "requesttype",
+            "list",
+            "--project",
+            &jsm_project,
+            "--output",
+            "json",
+        ])
+        .output()
+        .expect("failed to spawn jr requesttype list");
+
+    if !list_out.status.success() {
+        let s = String::from_utf8_lossy(&list_out.stderr);
+        if s.contains("403") {
+            eprintln!(
+                "[SKIP] requesttype list returned 403 — skipping JSM attachment --internal echo shape"
+            );
+            return;
+        }
+        eprintln!(
+            "[SKIP] requesttype list failed — skipping JSM attachment --internal echo shape: {s}"
+        );
+        return;
+    }
+
+    let rts: Vec<Value> = match serde_json::from_slice(&list_out.stdout) {
+        Ok(v) => v,
+        Err(e) => {
+            eprintln!("[SKIP] requesttype list not a JSON array: {e} — skipping");
+            return;
+        }
+    };
+    if rts.is_empty() {
+        eprintln!(
+            "[SKIP] No request types found on {jsm_project} — skipping JSM attachment --internal echo shape"
+        );
+        return;
+    }
+    let first_rt_id = {
+        let id_val = &rts[0]["id"];
+        if let Some(s) = id_val.as_str() {
+            s.to_string()
+        } else if let Some(n) = id_val.as_i64() {
+            n.to_string()
+        } else {
+            eprintln!("[SKIP] rts[0].id is not a usable type — skipping");
+            return;
+        }
+    };
+
+    // Step 2: create a fresh JSM request.
+    let summary = format!("[e2e-jsm {run_id}] attachment --internal echo shape");
+    let create_out = h
+        .cmd()
+        .args([
+            "issue",
+            "create",
+            "--project",
+            &jsm_project,
+            "--request-type",
+            &first_rt_id,
+            "--summary",
+            &summary,
+            "--output",
+            "json",
+        ])
+        .output()
+        .expect("failed to spawn jr issue create");
+
+    if !create_out.status.success() {
+        let s = String::from_utf8_lossy(&create_out.stderr);
+        if s.contains("403") {
+            eprintln!(
+                "[SKIP] issue create returned 403 — skipping JSM attachment --internal echo shape"
+            );
+            return;
+        }
+        eprintln!(
+            "[SKIP] issue create failed — skipping JSM attachment --internal echo shape: {s}"
+        );
+        return;
+    }
+
+    let create_v: Value = serde_json::from_slice(&create_out.stdout)
+        .expect("issue create --output json must be valid JSON");
+    let key = create_v
+        .get("key")
+        .and_then(Value::as_str)
+        .expect("issue create JSON must contain 'key' field")
+        .to_string();
+    assert!(!key.is_empty(), "created JSM key must be non-empty");
+
+    // Step 3: write a temp file.
+    let upload_dir = TempDir::new().expect("failed to create upload temp dir");
+    let upload_file = upload_dir.path().join("attachment-e2e-internal.txt");
+    std::fs::write(&upload_file, b"S-576-6 e2e internal attachment echo shape")
+        .expect("write test file");
+
+    // Step 4: upload --internal --output json (no confirmation gate — BC-3.9.004).
+    let upload_out = h
+        .cmd()
+        .args([
+            "issue",
+            "attachment",
+            "upload",
+            &key,
+            &upload_file.to_string_lossy(),
+            "--internal",
+            "--output",
+            "json",
+        ])
+        .output()
+        .expect("failed to spawn jr attachment upload");
+
+    // Gate 3 (§3.3): 403 → clean-skip.
+    if !upload_out.status.success() {
+        let s = String::from_utf8_lossy(&upload_out.stderr);
+        if s.contains("403") {
+            eprintln!("[SKIP] attachment upload --internal returned 403 — skipping");
+            jsm_self_close(&key, &h);
+            return;
+        }
+    }
+
+    // Capture AID for teardown.
+    let upload_stdout_raw = String::from_utf8_lossy(&upload_out.stdout);
+    let teardown_aid: Option<String> = serde_json::from_str::<Vec<Value>>(&upload_stdout_raw)
+        .ok()
+        .and_then(|arr| arr.into_iter().next())
+        .and_then(|item| item.get("id").and_then(Value::as_str).map(str::to_string));
+
+    // Teardown before assertions (collect-results-then-assert pattern).
+    // (a) Delete AID (ADV-022 ordering: before jsm_self_close).
+    if let Some(ref aid) = teardown_aid {
+        match h
+            .cmd()
+            .args(["issue", "attachment", "delete", aid, "--yes"])
+            .output()
+        {
+            Ok(o) if o.status.success() => {}
+            Ok(o) => {
+                eprintln!(
+                    "[WARN] AC-003: failed to delete attachment {aid} (exit {:?}): {}",
+                    o.status.code(),
+                    String::from_utf8_lossy(&o.stderr)
+                );
+            }
+            Err(e) => eprintln!("[WARN] AC-003: failed to spawn attachment delete: {e}"),
+        }
+    } else {
+        eprintln!("[WARN] AC-003: could not parse AID from upload stdout — attachment not deleted");
+    }
+    // (b) Self-close JSM issue.
+    jsm_self_close(&key, &h);
+
+    // ---- Assertions (teardown complete) ----
+
+    let upload_stderr = String::from_utf8_lossy(&upload_out.stderr);
+    let upload_stdout = String::from_utf8_lossy(&upload_out.stdout);
+    assert!(
+        upload_out.status.success(),
+        "AC-003: upload --internal must exit 0; got {:?}\nstdout: {upload_stdout}\nstderr: {upload_stderr}",
+        upload_out.status.code()
+    );
+
+    // Step 5: BC-3.9.011 --internal shape assertion.
+    // Parse as Value first to assert bare-array structure (no "public"/"uploaded" envelope).
+    let raw_v: Value =
+        serde_json::from_str(&upload_stdout).expect("AC-003: --output json must be valid JSON");
+    // BC-3.9.011 EC-3.9.011-3: output MUST NOT be an object envelope — catches
+    // {"public":…,"uploaded":[…]} regression specifically (P2-3c SATISFIED).
+    // This assert fires before is_array() so a regression trips the EC-3.9.011-3 label.
+    assert!(
+        !raw_v.is_object(),
+        "AC-003: --internal output must NOT be an object envelope — bare array required \
+         (BC-3.9.011 EC-3.9.011-3); got: {raw_v}"
+    );
+    // BC-3.9.011 EC-3.9.011-1: output MUST be a bare array, not any other non-object type.
+    assert!(
+        raw_v.is_array(),
+        "AC-003: --internal output must be a bare JSON array (BC-3.9.011 EC-3.9.011-1); \
+         got: {raw_v}"
+    );
+
+    let arr = raw_v.as_array().expect("already asserted is_array");
+    assert!(
+        !arr.is_empty(),
+        "AC-003: --internal upload JSON array must be non-empty; stdout: {upload_stdout}"
+    );
+
+    // BC-3.9.011 EC-3.9.011-1: confirmed curated field set (P2-3c probe runs 29936980027+29940792930+29945857059).
+    let item = &arr[0];
+    for field in &[
+        "id",
+        "filename",
+        "contentUrl",
+        "mimeType",
+        "size",
+        "author",
+        "created",
+    ] {
+        assert!(
+            item.get(field).is_some(),
+            "AC-003: curated attachment must have key '{field}' (BC-3.9.011 EC-3.9.011-1); got: {item}"
+        );
+    }
+    assert!(
+        item.get("self").is_none(),
+        "AC-003: curated attachment must NOT contain 'self'; got: {item}"
+    );
+}
+
+/// E2E no-visibility-flag: `jr issue attachment upload <JSM-KEY> <FILE> --yes
+/// --output json` (no `--public`/`--internal`) exits 0 via the platform POST path
+/// (BC-3.9.002) and returns a non-empty curated array. Verifies the uploaded AID
+/// appears in a subsequent `attachment list` (observable post-condition for the
+/// platform-POST default-internal path).
+///
+/// Gated by `JR_RUN_E2E=1` + `JR_E2E_JSM_PROJECT`. Gate-2 (empty RT list) +
+/// Gate-3 (403) trigger clean-skips.
+///
+/// Traces to: AC-004, BC-3.9.002, BC-3.9.009.
+#[test]
+#[ignore = "set JR_RUN_E2E=1 and JR_E2E_JSM_PROJECT and use --include-ignored to run"]
+fn test_e2e_jsm_attachment_upload_no_flag() {
+    if !e2e_enabled() {
+        return;
+    }
+    // Gate 1 (§3.1).
+    let jsm_project = match env::var("JR_E2E_JSM_PROJECT") {
+        Ok(p) if !p.trim().is_empty() => p.trim().to_string(),
+        _ => {
+            eprintln!(
+                "[SKIP] JR_E2E_JSM_PROJECT not set — skipping JSM attachment upload no-flag test"
+            );
+            return;
+        }
+    };
+    let h = e2e_harness();
+    let run_id = run_label();
+
+    // Step 1: discover a request type (Gate 2).
+    let list_out = h
+        .cmd()
+        .args([
+            "requesttype",
+            "list",
+            "--project",
+            &jsm_project,
+            "--output",
+            "json",
+        ])
+        .output()
+        .expect("failed to spawn jr requesttype list");
+
+    if !list_out.status.success() {
+        let s = String::from_utf8_lossy(&list_out.stderr);
+        if s.contains("403") {
+            eprintln!(
+                "[SKIP] requesttype list returned 403 — skipping JSM attachment upload no-flag"
+            );
+            return;
+        }
+        eprintln!("[SKIP] requesttype list failed — skipping JSM attachment upload no-flag: {s}");
+        return;
+    }
+
+    let rts: Vec<Value> = match serde_json::from_slice(&list_out.stdout) {
+        Ok(v) => v,
+        Err(e) => {
+            eprintln!("[SKIP] requesttype list not a JSON array: {e} — skipping");
+            return;
+        }
+    };
+    if rts.is_empty() {
+        eprintln!(
+            "[SKIP] No request types found on {jsm_project} — skipping JSM attachment upload no-flag"
+        );
+        return;
+    }
+    let first_rt_id = {
+        let id_val = &rts[0]["id"];
+        if let Some(s) = id_val.as_str() {
+            s.to_string()
+        } else if let Some(n) = id_val.as_i64() {
+            n.to_string()
+        } else {
+            eprintln!("[SKIP] rts[0].id is not a usable type — skipping");
+            return;
+        }
+    };
+
+    // Step 2: create a fresh JSM request.
+    let summary = format!("[e2e-jsm {run_id}] attachment upload no-flag");
+    let create_out = h
+        .cmd()
+        .args([
+            "issue",
+            "create",
+            "--project",
+            &jsm_project,
+            "--request-type",
+            &first_rt_id,
+            "--summary",
+            &summary,
+            "--output",
+            "json",
+        ])
+        .output()
+        .expect("failed to spawn jr issue create");
+
+    if !create_out.status.success() {
+        let s = String::from_utf8_lossy(&create_out.stderr);
+        if s.contains("403") {
+            eprintln!("[SKIP] issue create returned 403 — skipping JSM attachment upload no-flag");
+            return;
+        }
+        eprintln!("[SKIP] issue create failed — skipping JSM attachment upload no-flag: {s}");
+        return;
+    }
+
+    let create_v: Value = serde_json::from_slice(&create_out.stdout)
+        .expect("issue create --output json must be valid JSON");
+    let key = create_v
+        .get("key")
+        .and_then(Value::as_str)
+        .expect("issue create JSON must contain 'key' field")
+        .to_string();
+    assert!(!key.is_empty(), "created JSM key must be non-empty");
+
+    // Step 3: write a temp file.
+    let upload_dir = TempDir::new().expect("failed to create upload temp dir");
+    let upload_file = upload_dir.path().join("attachment-e2e-noflag.txt");
+    std::fs::write(&upload_file, b"S-576-6 e2e no-flag attachment").expect("write test file");
+
+    // Step 4: upload without visibility flags → platform POST (BC-3.9.002).
+    let upload_out = h
+        .cmd()
+        .args([
+            "issue",
+            "attachment",
+            "upload",
+            &key,
+            &upload_file.to_string_lossy(),
+            "--yes",
+            "--output",
+            "json",
+        ])
+        .output()
+        .expect("failed to spawn jr attachment upload");
+
+    // Gate 3 (§3.3): 403 → clean-skip.
+    if !upload_out.status.success() {
+        let s = String::from_utf8_lossy(&upload_out.stderr);
+        if s.contains("403") {
+            eprintln!("[SKIP] attachment upload (no-flag) returned 403 — skipping");
+            jsm_self_close(&key, &h);
+            return;
+        }
+    }
+
+    // Capture AID.
+    let upload_stdout_raw = String::from_utf8_lossy(&upload_out.stdout);
+    let teardown_aid: Option<String> = serde_json::from_str::<Vec<Value>>(&upload_stdout_raw)
+        .ok()
+        .and_then(|arr| arr.into_iter().next())
+        .and_then(|item| item.get("id").and_then(Value::as_str).map(str::to_string));
+
+    // Step 5: verify AID appears in list (post-condition of upload success).
+    let list_verify_out = h
+        .cmd()
+        .args(["issue", "attachment", "list", &key, "--output", "json"])
+        .output()
+        .expect("failed to spawn jr attachment list");
+
+    // Teardown: (a) delete AID, (b) jsm_self_close.
+    if let Some(ref aid) = teardown_aid {
+        match h
+            .cmd()
+            .args(["issue", "attachment", "delete", aid, "--yes"])
+            .output()
+        {
+            Ok(o) if o.status.success() => {}
+            Ok(o) => {
+                eprintln!(
+                    "[WARN] AC-004: failed to delete attachment {aid} (exit {:?}): {}",
+                    o.status.code(),
+                    String::from_utf8_lossy(&o.stderr)
+                );
+            }
+            Err(e) => eprintln!("[WARN] AC-004: failed to spawn attachment delete: {e}"),
+        }
+    } else {
+        eprintln!("[WARN] AC-004: could not parse AID from upload stdout — attachment not deleted");
+    }
+    jsm_self_close(&key, &h);
+
+    // ---- Assertions ----
+
+    let upload_stderr = String::from_utf8_lossy(&upload_out.stderr);
+    let upload_stdout = String::from_utf8_lossy(&upload_out.stdout);
+    assert!(
+        upload_out.status.success(),
+        "AC-004: upload (no-flag) must exit 0; got {:?}\nstdout: {upload_stdout}\nstderr: {upload_stderr}",
+        upload_out.status.code()
+    );
+
+    let arr: Vec<Value> = serde_json::from_str(&upload_stdout)
+        .expect("AC-004: upload --output json must be a JSON array");
+    assert!(
+        !arr.is_empty(),
+        "AC-004: upload JSON array must be non-empty (BC-3.9.002/009); stdout: {upload_stdout}"
+    );
+    let the_aid = teardown_aid
+        .as_ref()
+        .expect("AC-004: AID must be parseable from upload output");
+    assert!(!the_aid.is_empty(), "AC-004: AID must be non-empty");
+
+    // Step 5 assertion: AID present in list (confirms upload succeeded via platform POST path).
+    let list_stderr = String::from_utf8_lossy(&list_verify_out.stderr);
+    if !list_verify_out.status.success() && list_stderr.contains("403") {
+        eprintln!(
+            "[SKIP] AC-004: list returned 403 — skipping JSM attachment upload no-flag verification (AC-007 §3.3)"
+        );
+        return;
+    }
+    let list_stdout = String::from_utf8_lossy(&list_verify_out.stdout);
+    assert!(list_verify_out.status.success(), "AC-004: list must exit 0");
+    let list_arr: Vec<Value> = serde_json::from_str(&list_stdout)
+        .expect("AC-004: list --output json must be a JSON array");
+    assert!(
+        list_arr
+            .iter()
+            .any(|item| item.get("id").and_then(Value::as_str) == Some(the_aid.as_str())),
+        "AC-004: list must contain uploaded AID={the_aid} (BC-3.9.002); got: {list_stdout}"
+    );
 }

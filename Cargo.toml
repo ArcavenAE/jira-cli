@@ -1,6 +1,6 @@
 [package]
 name = "jr"
-version = "0.5.0"
+version = "0.6.0"
 edition = "2024"
 description = "A fast CLI for Jira Cloud"
 repository = "https://github.com/Zious11/jira-cli"
@@ -16,13 +16,20 @@ anyhow = "1"
 clap = { version = "4", features = ["derive"] }
 clap_complete = "4"
 colored = "3"
-comfy-table = "7"
+# Pinned to 7.2.1: 7.2.2 uses let-chains (edition 2024, requires Rust ≥1.88) and
+# deleted the rust-version manifest field, so a caret range resolves to an
+# incompatible version without any MSRV enforcement from cargo. Pin holds until
+# MSRV is raised to 1.88 in a dedicated story.
+# See: issue #626.
+comfy-table = "=7.2.1"
 dialoguer = "0.12"
 dirs = "6"
 figment = { version = "0.10", features = ["toml", "env"] }
-keyring = { version = "3", features = ["apple-native", "linux-native"] }
+keyring = { version = "3", features = ["apple-native", "linux-native", "windows-native"] }
 open = "5"
-reqwest = { version = "0.13", default-features = false, features = ["json", "rustls"] }
+reqwest = { version = "0.13", default-features = false, features = ["json", "multipart", "rustls", "stream"] }
+tokio-util = { version = "^0.7", features = ["io-util"] }
+sha1 = { version = "^0.11" }
 serde = { version = "1", features = ["derive"] }
 serde_json = "1"
 thiserror = "2"
@@ -51,6 +58,18 @@ tokio = { version = "1", features = ["test-util"] }
 temp-env = "0.3"
 # scopeguard: defer! for cleanup-on-panic in integration tests (L-7 / S-396)
 scopeguard = "1"
+# glob: expand examine_globs patterns for Guard 3 existence check (S-MUTANTS-SCOPE-GUARDS-1 / DEC-150)
+glob = "0.3"
+# sha1: compute batch-path prefixes in mutation-kill tests (PG-F4-10)
+sha1 = { version = "^0.11" }
+# saphyr-parser: event-stream-only YAML parsing for tests/ci_gate_completeness.rs (S-CIGATE-3).
+# Exact-version pin (not a caret range) — 0.0.x carries no semver guarantee by convention,
+# so a 0.0.x bump can be breaking; the exact pin forces any upgrade through a reviewed
+# Cargo.toml diff rather than a silent `cargo update`. (Note: this crate's own MSRV happens
+# to be exactly 1.85.0 against this repo's rust-version = "1.85", zero headroom — but that is
+# NOT enforced by the msrv CI job, since it's a dev-dependency and that job's `cargo check`
+# scope is lib + bins only, not --all-targets.) See CLAUDE.md ci-gate bullet / AC-006.
+saphyr-parser = "=0.0.11"
 
 [profile.release]
 opt-level = 3

@@ -42,7 +42,9 @@ fn jr_cmd_with_xdg(
     cmd.env("JR_BASE_URL", server_url)
         .env("JR_AUTH_HEADER", "Basic dGVzdDp0ZXN0")
         .env("XDG_CACHE_HOME", cache_dir)
-        .env("XDG_CONFIG_HOME", config_dir);
+        .env("JR_CACHE_DIR", cache_dir.join("jr"))
+        .env("XDG_CONFIG_HOME", config_dir)
+        .env("JR_CONFIG_DIR", config_dir.join("jr"));
     cmd
 }
 
@@ -1290,12 +1292,22 @@ fn test_write_fields_cache_swallows_io_error_and_returns_ok() {
     let fake_cache_home = xdg_root.path().join("fake_cache_home");
     std::fs::write(&fake_cache_home, "I am a file, not a dir").unwrap();
 
-    let result = temp_env::with_var("XDG_CACHE_HOME", Some(&fake_cache_home), || {
-        jr::cache::write_fields_cache(
-            "test-profile-swallow",
-            &[("customfield_10001".to_string(), "Severity".to_string())],
-        )
-    });
+    // Set both the XDG var and the cross-platform seam (BC-6.2.017) to the
+    // fake path so the swallow-on-error test exercises the same codepath on
+    // Windows (where JR_CACHE_DIR is the only active mechanism) as on Unix.
+    let fake_jr_cache_dir = fake_cache_home.join("jr");
+    let result = temp_env::with_vars(
+        [
+            ("XDG_CACHE_HOME", Some(fake_cache_home.as_os_str())),
+            ("JR_CACHE_DIR", Some(fake_jr_cache_dir.as_os_str())),
+        ],
+        || {
+            jr::cache::write_fields_cache(
+                "test-profile-swallow",
+                &[("customfield_10001".to_string(), "Severity".to_string())],
+            )
+        },
+    );
 
     // Best-effort writer MUST return Ok(()) even when the write fails.
     assert!(
@@ -1303,11 +1315,12 @@ fn test_write_fields_cache_swallows_io_error_and_returns_ok() {
         "write_fields_cache must return Ok(()) on I/O error; got: {result:?}"
     );
 
-    // The XDG override is verified by the primary assertion above; no need to
-    // inspect the real cache dir. (The secondary real-path check was removed per
-    // R2-C3: it could flake if ~/.cache/jr/v1/test-profile-swallow/ existed from
-    // a prior run, and cache_root() reads XDG_CACHE_HOME unconditionally first so
-    // there is no codepath where the override could be ignored while set.)
+    // The JR_CACHE_DIR override is verified by the primary assertion above; no
+    // need to inspect the real cache dir. (The secondary real-path check was
+    // removed per R2-C3: it could flake if ~/.cache/jr/v1/test-profile-swallow/
+    // existed from a prior run, and cache_root() reads JR_CACHE_DIR first (then
+    // XDG); both descend through the fake_cache_home file component, so the
+    // create_dir_all I/O failure is exercised either way.)
 }
 
 // ---------------------------------------------------------------------------
@@ -3307,5 +3320,641 @@ async fn test_label_plus_markdown_rejected_with_exit_64_no_http() {
         stderr.contains("--markdown"),
         "Stderr must contain '--markdown' (verifies --markdown push line cannot be deleted); \
          stderr={stderr}"
+    );
+}
+
+// ---------------------------------------------------------------------------
+// G-EDIT-FIELD-LABEL-GUARD (FIX-F5-001, BC-3.4.017 clause 6)
+// `jr issue edit <KEY> --field NAME=VALUE --label foo` → exit 64, offline.
+//
+// The mutual-exclusion block in `edit.rs::handle_edit`
+// § "--label cannot be combined with" fires BEFORE any HTTP call when --label
+// is combined with --field.  Without the block the --field write would silently
+// be dropped because the label→bulk routing fork does not honour --field.
+//
+// Non-tautology: removing the `if !field_pairs.is_empty()` arm from the
+// conflicting-flags block would let this invocation reach `handle_edit_bulk_labels`
+// which ignores field_pairs entirely → data loss with exit 0.
+// ---------------------------------------------------------------------------
+#[tokio::test(flavor = "multi_thread", worker_threads = 2)]
+async fn test_edit_field_and_label_combined_exits_64_with_guard_message() {
+    let server = MockServer::start().await;
+    // No mocks mounted — the mutual-exclusion guard fires before any HTTP call.
+    let cache_dir = tempfile::tempdir().unwrap();
+    let config_dir = tempfile::tempdir().unwrap();
+
+    let output = jr_cmd_with_xdg(&server.uri(), cache_dir.path(), config_dir.path())
+        .args([
+            "--no-input",
+            "issue",
+            "edit",
+            "FOO-1",
+            "--field",
+            "Severity=Critical",
+            "--label",
+            "add:foo",
+        ])
+        .output()
+        .unwrap();
+
+    let stderr = String::from_utf8_lossy(&output.stderr);
+    let stdout = String::from_utf8_lossy(&output.stdout);
+
+    // The FIX-F5-001 mutual-exclusion guard must fire.
+    assert_eq!(
+        output.status.code(),
+        Some(64),
+        "Expected exit 64 for --field + --label combination (FIX-F5-001); \
+         stderr={stderr} stdout={stdout}"
+    );
+
+    // The guard message must name the conflict.
+    assert!(
+        stderr.contains("--label cannot be combined with"),
+        "Stderr must contain '--label cannot be combined with' (guard message); stderr={stderr}"
+    );
+    assert!(
+        stderr.contains("--field"),
+        "Stderr must name '--field' as the conflicting flag; stderr={stderr}"
+    );
+
+    // stdout must be empty — no partial data.
+    assert!(
+        stdout.trim().is_empty(),
+        "stdout must be empty when guard fires pre-HTTP; stdout={stdout}"
+    );
+}
+
+// ---------------------------------------------------------------------------
+// G-EDIT-FIELD-C1-BULK (C-1 guard, BC-3.4.017 — single-key only for --field)
+// `jr issue edit FOO-1 FOO-2 --field NAME=VALUE` (multi-key / bulk) → exit 64.
+//
+// The C-1 guard in `edit.rs::handle_edit`
+// § "Multi-key bulk edit doesn't yet support" fires after the working-key-set
+// is resolved but before any API call to editmeta or PUT.  Without the guard,
+// --field would reach handle_edit_bulk_fields which ignores field_pairs
+// entirely → silent data loss.
+//
+// Non-tautology: removing the `if !field_pairs.is_empty()` arm from the
+// unsupported-flags block would allow the bulk path to run and silently discard
+// the --field write with exit 0.
+// ---------------------------------------------------------------------------
+#[tokio::test(flavor = "multi_thread", worker_threads = 2)]
+async fn test_edit_field_multi_key_bulk_exits_64_with_c1_message() {
+    let server = MockServer::start().await;
+    // No mocks — C-1 guard fires before any HTTP call.
+    let cache_dir = tempfile::tempdir().unwrap();
+    let config_dir = tempfile::tempdir().unwrap();
+
+    let output = jr_cmd_with_xdg(&server.uri(), cache_dir.path(), config_dir.path())
+        .args([
+            "--no-input",
+            "issue",
+            "edit",
+            "FOO-1",
+            "FOO-2",
+            "--field",
+            "Severity=Critical",
+        ])
+        .output()
+        .unwrap();
+
+    let stderr = String::from_utf8_lossy(&output.stderr);
+    let stdout = String::from_utf8_lossy(&output.stdout);
+
+    // The C-1 guard must fire.
+    assert_eq!(
+        output.status.code(),
+        Some(64),
+        "Expected exit 64 for multi-key + --field (C-1 guard); \
+         stderr={stderr} stdout={stdout}"
+    );
+
+    // C-1 message must identify --field and the single-key constraint.
+    assert!(
+        stderr.contains("--field"),
+        "Stderr must name '--field' in the C-1 rejection message; stderr={stderr}"
+    );
+    assert!(
+        stderr.contains("Multi-key bulk edit doesn't yet support"),
+        "Stderr must contain the C-1 bulk-rejection phrase; stderr={stderr}"
+    );
+
+    // stdout must be empty.
+    assert!(
+        stdout.trim().is_empty(),
+        "stdout must be empty when C-1 guard fires pre-HTTP; stdout={stdout}"
+    );
+}
+
+// ---------------------------------------------------------------------------
+// Test 45 — VP-589-001 / AC-001 / BC-3.4.015
+// editmeta with idless allowedValues on a non-targeted field: deserialization
+// succeeds; targeted string-type field edit proceeds normally. Exit 0.
+//
+// Pre-impl (Red Gate) failure mode: AllowedValue.id is required String →
+// serde fails with "missing field `id`" on customfield_99001's allowedValues
+// → jr exits 1 (serde error), NOT 0. The targeted Severity edit never runs.
+// After the fix (AllowedValue.id: Option<String>): id=None accepted silently;
+// targeted edit proceeds; PUT dispatched; stderr echoes "Severity → Critical".
+// ---------------------------------------------------------------------------
+#[tokio::test(flavor = "multi_thread", worker_threads = 2)]
+async fn test_bc_3_4_015_editmeta_idless_allowed_values_on_non_targeted_field_succeeds() {
+    let server = MockServer::start().await;
+    let cache_dir = tempfile::tempdir().unwrap();
+    let config_dir = tempfile::tempdir().unwrap();
+
+    // GET /rest/api/3/field — two fields: Severity (targeted) and Assignee
+    // (non-targeted user-picker with idless allowedValues in editmeta).
+    Mock::given(method("GET"))
+        .and(path("/rest/api/3/field"))
+        .respond_with(ResponseTemplate::new(200).set_body_json(serde_json::json!([
+            {
+                "id": "customfield_10001",
+                "name": "Severity",
+                "custom": true,
+                "schema": { "type": "string" }
+            },
+            {
+                "id": "customfield_99001",
+                "name": "Assignee",
+                "custom": true,
+                "schema": { "type": "user" }
+            }
+        ])))
+        .mount(&server)
+        .await;
+
+    // GET /rest/api/3/issue/TEST-1/editmeta — customfield_99001 has GDPR-era
+    // idless allowedValues: accountId + displayName but NO "id" key.
+    // This is the bug trigger: serde currently fails on these entries.
+    Mock::given(method("GET"))
+        .and(path("/rest/api/3/issue/TEST-1/editmeta"))
+        .respond_with(ResponseTemplate::new(200).set_body_json(serde_json::json!({
+            "fields": {
+                "customfield_10001": {
+                    "name": "Severity",
+                    "schema": { "type": "string", "system": null, "custom": null },
+                    "operations": ["set"],
+                    "required": false,
+                    "allowedValues": null
+                },
+                "customfield_99001": {
+                    "name": "Assignee",
+                    "schema": { "type": "user", "system": null, "custom": null },
+                    "operations": ["set"],
+                    "required": false,
+                    "allowedValues": [
+                        { "accountId": "abc123", "displayName": "Alice" },
+                        { "accountId": "def456", "displayName": "Bob" }
+                    ]
+                }
+            }
+        })))
+        .mount(&server)
+        .await;
+
+    // PUT /rest/api/3/issue/TEST-1 — must carry the targeted string field value.
+    Mock::given(method("PUT"))
+        .and(path("/rest/api/3/issue/TEST-1"))
+        .and(body_partial_json(serde_json::json!({
+            "fields": { "customfield_10001": "Critical" }
+        })))
+        .respond_with(ResponseTemplate::new(204))
+        .mount(&server)
+        .await;
+
+    let output = jr_cmd_with_xdg(&server.uri(), cache_dir.path(), config_dir.path())
+        .args([
+            "--no-input",
+            "issue",
+            "edit",
+            "TEST-1",
+            "--field",
+            "Severity=Critical",
+        ])
+        .output()
+        .unwrap();
+
+    let stderr = String::from_utf8_lossy(&output.stderr);
+    let stdout = String::from_utf8_lossy(&output.stdout);
+
+    assert!(
+        output.status.success(),
+        "Expected exit 0; idless allowedValues on non-targeted field must not block the edit \
+         (VP-589-001, BC-3.4.015); stderr={stderr} stdout={stdout}"
+    );
+
+    assert!(
+        stderr.contains("  Severity \u{2192} Critical"),
+        "Expected '  Severity \u{2192} Critical' in stderr (two-space indent, unicode arrow); \
+         stderr={stderr}"
+    );
+}
+
+// ---------------------------------------------------------------------------
+// Test 46 — EC-3.4.016-8 / AC-002 / BC-3.4.016
+// Targeted option field whose matched allowedValues entry has id=None:
+// exit 64, stderr contains "no machine-readable id" AND "--field".
+// PUT must NOT be called.
+//
+// Pre-impl (Red Gate) failure mode: AllowedValue.id required String → serde
+// fails with "missing field `id`" → jr exits 1 (serde error), NOT 64.
+// The message does not contain "no machine-readable id". Both the exit-code
+// assertion and message assertions fail.
+// After the fix: deserialization succeeds (id=None); resolve_edit_fields
+// detects None at wire-emission site → exits 64 with EC-3.4.016-8 message.
+// ---------------------------------------------------------------------------
+#[tokio::test(flavor = "multi_thread", worker_threads = 2)]
+async fn test_bc_3_4_016_option_idless_allowed_value_exits_64_with_actionable_message() {
+    let server = MockServer::start().await;
+    let cache_dir = tempfile::tempdir().unwrap();
+    let config_dir = tempfile::tempdir().unwrap();
+
+    // GET /rest/api/3/field — Urgency option field only.
+    Mock::given(method("GET"))
+        .and(path("/rest/api/3/field"))
+        .respond_with(ResponseTemplate::new(200).set_body_json(serde_json::json!([
+            {
+                "id": "customfield_10176",
+                "name": "Urgency",
+                "custom": true,
+                "schema": { "type": "option" }
+            }
+        ])))
+        .mount(&server)
+        .await;
+
+    // GET /rest/api/3/issue/TEST-1/editmeta — option field with allowedValues
+    // entries that have NO "id" key (only "value" present).
+    Mock::given(method("GET"))
+        .and(path("/rest/api/3/issue/TEST-1/editmeta"))
+        .respond_with(ResponseTemplate::new(200).set_body_json(serde_json::json!({
+            "fields": {
+                "customfield_10176": {
+                    "name": "Urgency",
+                    "schema": { "type": "option", "system": null, "custom": null },
+                    "operations": ["set"],
+                    "required": false,
+                    "allowedValues": [
+                        { "value": "High" },
+                        { "value": "Medium" },
+                        { "value": "Low" }
+                    ]
+                }
+            }
+        })))
+        .mount(&server)
+        .await;
+
+    // NO PUT mock — PUT must not be called (exit 64 before wire emission).
+
+    let output = jr_cmd_with_xdg(&server.uri(), cache_dir.path(), config_dir.path())
+        .args([
+            "--no-input",
+            "issue",
+            "edit",
+            "TEST-1",
+            "--field",
+            "Urgency=High",
+        ])
+        .output()
+        .unwrap();
+
+    let stderr = String::from_utf8_lossy(&output.stderr);
+    let stdout = String::from_utf8_lossy(&output.stdout);
+
+    assert_eq!(
+        output.status.code(),
+        Some(64),
+        "Expected exit 64 when targeted option has idless allowedValues entry \
+         (EC-3.4.016-8, BC-3.4.016); stderr={stderr} stdout={stdout}"
+    );
+
+    // Load-bearing substrings from BC-3.4.016 EC-3.4.016-8 — both must appear.
+    assert!(
+        stderr.contains("no machine-readable id"),
+        "Stderr must contain 'no machine-readable id' (EC-3.4.016-8 load-bearing substring); \
+         stderr={stderr}"
+    );
+    assert!(
+        stderr.contains("--field"),
+        "Stderr must contain '--field' (EC-3.4.016-8 load-bearing substring); stderr={stderr}"
+    );
+}
+
+// ---------------------------------------------------------------------------
+// Test 47 (adv-p2-F1) — BC-3.4.016 EC-3.4.016-8 substring-match arm
+// Fixture: single allowedValue with value="High-Priority", NO id.
+// Input: Urgency=high — "high" does NOT equal "high-priority" (exact miss),
+// but "high-priority".contains("high") is true (substring hit, sub_av.len()==1).
+// The resolver reaches field_resolve.rs::resolve_edit_fields §"Substring match"
+// → sub_av[0].id is None → exits 64 with actionable message.
+// No PUT dispatched.
+//
+// Branch verification: exact match filters `v.to_lowercase() == "high"` →
+// returns [] (len 0, not 1) → falls through to substring block. Substring
+// filters `v.to_lowercase().contains("high")` → "high-priority" matches →
+// sub_av.len() == 1 → hits the `let Some(ref option_id) = av.id else` guard.
+// ---------------------------------------------------------------------------
+#[tokio::test(flavor = "multi_thread", worker_threads = 2)]
+async fn test_bc_3_4_016_option_idless_substring_match_exits_64() {
+    let server = MockServer::start().await;
+    let cache_dir = tempfile::tempdir().unwrap();
+    let config_dir = tempfile::tempdir().unwrap();
+
+    Mock::given(method("GET"))
+        .and(path("/rest/api/3/field"))
+        .respond_with(ResponseTemplate::new(200).set_body_json(serde_json::json!([
+            {
+                "id": "customfield_10176",
+                "name": "Urgency",
+                "custom": true,
+                "schema": { "type": "option" }
+            }
+        ])))
+        .mount(&server)
+        .await;
+
+    // Single allowedValues entry with value only, NO "id" key.
+    // "High-Priority" is NOT equal to "high" (exact miss) but contains "high"
+    // (substring hit) — so the resolver lands in sub_av.len()==1 arm.
+    Mock::given(method("GET"))
+        .and(path("/rest/api/3/issue/TEST-1/editmeta"))
+        .respond_with(ResponseTemplate::new(200).set_body_json(serde_json::json!({
+            "fields": {
+                "customfield_10176": {
+                    "name": "Urgency",
+                    "schema": { "type": "option", "system": null, "custom": null },
+                    "operations": ["set"],
+                    "required": false,
+                    "allowedValues": [
+                        { "value": "High-Priority" }
+                    ]
+                }
+            }
+        })))
+        .mount(&server)
+        .await;
+
+    // NO PUT mock — PUT must not be called (exit 64 before wire emission).
+
+    let output = jr_cmd_with_xdg(&server.uri(), cache_dir.path(), config_dir.path())
+        .args([
+            "--no-input",
+            "issue",
+            "edit",
+            "TEST-1",
+            "--field",
+            "Urgency=high",
+        ])
+        .output()
+        .unwrap();
+
+    let stderr = String::from_utf8_lossy(&output.stderr);
+    let stdout = String::from_utf8_lossy(&output.stdout);
+
+    assert_eq!(
+        output.status.code(),
+        Some(64),
+        "Expected exit 64 when substring-matched option has no id (EC-3.4.016-8); \
+         stderr={stderr} stdout={stdout}"
+    );
+    assert!(
+        stderr.contains("no machine-readable id"),
+        "Stderr must contain 'no machine-readable id' (EC-3.4.016-8); stderr={stderr}"
+    );
+    assert!(
+        stderr.contains("--field"),
+        "Stderr must contain '--field' (EC-3.4.016-8); stderr={stderr}"
+    );
+}
+
+// ---------------------------------------------------------------------------
+// Test 48 — VP-396-008 extension / AC-003 / BC-3.4.015 EC-3.4.015-18
+// Dry-run with idless allowedValues on non-targeted field: exit 0, PUT not
+// called, planned-changes preview includes "Severity → Critical".
+//
+// Pre-impl (Red Gate) failure mode: same serde crash as test 45 → jr exits 1,
+// NOT 0. Dry-run path is irrelevant: editmeta deserialization fails before
+// the dry-run guard is reached. Both exit-code and preview assertions fail.
+// After the fix: deserialization succeeds; dry-run exits 0; PUT not called.
+// ---------------------------------------------------------------------------
+#[tokio::test(flavor = "multi_thread", worker_threads = 2)]
+async fn test_bc_3_4_015_field_dry_run_idless_nontargeted_allowedvalues_exits_0() {
+    let server = MockServer::start().await;
+    let cache_dir = tempfile::tempdir().unwrap();
+    let config_dir = tempfile::tempdir().unwrap();
+
+    // Same two-field mock as test 45 — idless Assignee alongside targeted Severity.
+    Mock::given(method("GET"))
+        .and(path("/rest/api/3/field"))
+        .respond_with(ResponseTemplate::new(200).set_body_json(serde_json::json!([
+            {
+                "id": "customfield_10001",
+                "name": "Severity",
+                "custom": true,
+                "schema": { "type": "string" }
+            },
+            {
+                "id": "customfield_99001",
+                "name": "Assignee",
+                "custom": true,
+                "schema": { "type": "user" }
+            }
+        ])))
+        .mount(&server)
+        .await;
+
+    Mock::given(method("GET"))
+        .and(path("/rest/api/3/issue/TEST-1/editmeta"))
+        .respond_with(ResponseTemplate::new(200).set_body_json(serde_json::json!({
+            "fields": {
+                "customfield_10001": {
+                    "name": "Severity",
+                    "schema": { "type": "string", "system": null, "custom": null },
+                    "operations": ["set"],
+                    "required": false,
+                    "allowedValues": null
+                },
+                "customfield_99001": {
+                    "name": "Assignee",
+                    "schema": { "type": "user", "system": null, "custom": null },
+                    "operations": ["set"],
+                    "required": false,
+                    "allowedValues": [
+                        { "accountId": "abc123", "displayName": "Alice" },
+                        { "accountId": "def456", "displayName": "Bob" }
+                    ]
+                }
+            }
+        })))
+        .mount(&server)
+        .await;
+
+    // NO PUT mock — dry-run must not call PUT.
+
+    let output = jr_cmd_with_xdg(&server.uri(), cache_dir.path(), config_dir.path())
+        .args([
+            "--no-input",
+            "issue",
+            "edit",
+            "TEST-1",
+            "--field",
+            "Severity=Critical",
+            "--dry-run",
+        ])
+        .output()
+        .unwrap();
+
+    let stderr = String::from_utf8_lossy(&output.stderr);
+    let stdout = String::from_utf8_lossy(&output.stdout);
+
+    assert!(
+        output.status.success(),
+        "Expected exit 0 for dry-run with idless non-targeted allowedValues \
+         (VP-396-008 extension, BC-3.4.015); stderr={stderr} stdout={stdout}"
+    );
+
+    // Table-mode dry-run emits planned-changes to stdout (H-3(a) convention).
+    // Adjacency form pins the exact arrow format emitted by edit.rs dry-run path.
+    assert!(
+        stdout.contains("Severity \u{2192} Critical"),
+        "Planned-changes preview must include 'Severity \u{2192} Critical' on stdout; \
+         stdout={stdout} stderr={stderr}"
+    );
+}
+
+// ---------------------------------------------------------------------------
+// Test 49 — AC-004 / BC-3.4.015 postcondition 1 — VP-589-001 regression pin
+// AllowedValue unit deserialization: an entry without an "id" field must
+// deserialize without error.
+//
+// Pre-impl (Red Gate) failure mode: AllowedValue.id is required String →
+// serde_json::from_str returns Err("missing field `id`") → result.is_ok()
+// is false → assertion panics with the serde error message.
+// After the fix (AllowedValue.id: Option<String>): deserializes cleanly;
+// value is Some("High"); the absent id key maps to None (confirmed by the
+// successful deserialize — serde would return Err if id were still required).
+// ---------------------------------------------------------------------------
+#[test]
+fn test_allowed_value_without_id_deserializes_to_none() {
+    let json = r#"{"value": "High"}"#;
+    // Red Gate: with id: String (required), from_str returns Err → is_ok() is false.
+    // After fix (id: Option<String>): from_str returns Ok with id=None.
+    let result: Result<jr::types::jira::AllowedValue, _> = serde_json::from_str(json);
+    assert!(
+        result.is_ok(),
+        "AllowedValue without id must deserialize without error (BC-3.4.015, VP-589-001); \
+         serde error: {:?}",
+        result.as_ref().err()
+    );
+    let av = result.unwrap();
+    assert_eq!(
+        av.value.as_deref(),
+        Some("High"),
+        "AllowedValue.value must be Some(\"High\")"
+    );
+    assert!(
+        av.id.is_none(),
+        "AllowedValue.id must be None when the JSON key is absent (BC-3.4.015, VP-589-001)"
+    );
+}
+
+// ---------------------------------------------------------------------------
+// Test 50 (adv-p4) — EC-006 / BC-3.4.016 id-bypass exclusion of idless entry
+// Fixture: single allowedValue with value="123" (numeric string), NO id.
+// Input: --field Priority=123 (all-digit user input).
+//
+// Branch trace:
+//   1. value="123", all-digits → id-bypass predicate activates.
+//   2. id-bypass: None.as_deref().map(|id| id=="123").unwrap_or(false) = false
+//      → id_match = None (idless entry EXCLUDED — must NOT produce {"id":null}).
+//   3. Falls through to exact-match-on-value:
+//      "123".to_lowercase()=="123" → exact_av.len()==1.
+//   4. av.id==None → let Some(ref option_id) = av.id else fires
+//      → exit 64 with EC-3.4.016-8 message.
+//
+// Pins unwrap_or(false)→unwrap_or(true) mutation in field_resolve.rs::
+// resolve_edit_fields §"Option id bypass": with the mutation, id_match would be
+// Some(av) for the idless entry, hitting the defensive guard (same exit 64), but
+// the test documents the correct fall-through path.  If the defensive guard were
+// also relaxed, the mutation would wire {"id": null} → Jira 400.
+// ---------------------------------------------------------------------------
+#[tokio::test(flavor = "multi_thread", worker_threads = 2)]
+async fn test_bc_3_4_016_option_idless_numeric_value_falls_through_to_label_matching() {
+    let server = MockServer::start().await;
+    let cache_dir = tempfile::tempdir().unwrap();
+    let config_dir = tempfile::tempdir().unwrap();
+
+    // GET /rest/api/3/field — single option field "Priority".
+    Mock::given(method("GET"))
+        .and(path("/rest/api/3/field"))
+        .respond_with(ResponseTemplate::new(200).set_body_json(serde_json::json!([
+            {
+                "id": "customfield_10200",
+                "name": "Priority",
+                "custom": true,
+                "schema": { "type": "option" }
+            }
+        ])))
+        .mount(&server)
+        .await;
+
+    // GET /rest/api/3/issue/TEST-1/editmeta — single allowedValues entry with
+    // value="123" and NO "id" key.  The numeric value exercises the id-bypass
+    // predicate; the absent id forces label-match fall-through.
+    Mock::given(method("GET"))
+        .and(path("/rest/api/3/issue/TEST-1/editmeta"))
+        .respond_with(ResponseTemplate::new(200).set_body_json(serde_json::json!({
+            "fields": {
+                "customfield_10200": {
+                    "name": "Priority",
+                    "schema": { "type": "option", "system": null, "custom": null },
+                    "operations": ["set"],
+                    "required": false,
+                    "allowedValues": [
+                        { "value": "123" }
+                    ]
+                }
+            }
+        })))
+        .mount(&server)
+        .await;
+
+    // NO PUT mock — must not be called (exit 64 before wire emission).
+
+    let output = jr_cmd_with_xdg(&server.uri(), cache_dir.path(), config_dir.path())
+        .args([
+            "--no-input",
+            "issue",
+            "edit",
+            "TEST-1",
+            "--field",
+            "Priority=123",
+        ])
+        .output()
+        .unwrap();
+
+    let stderr = String::from_utf8_lossy(&output.stderr);
+    let stdout = String::from_utf8_lossy(&output.stdout);
+
+    assert_eq!(
+        output.status.code(),
+        Some(64),
+        "Expected exit 64 when numeric user input triggers id-bypass but idless entry is \
+         excluded and label-match guard fires (EC-006, EC-3.4.016-8, BC-3.4.016); \
+         stderr={stderr} stdout={stdout}"
+    );
+
+    // Load-bearing EC-3.4.016-8 substrings — both must appear.
+    assert!(
+        stderr.contains("no machine-readable id"),
+        "Stderr must contain 'no machine-readable id' (EC-3.4.016-8 load-bearing substring \
+         confirming label-match guard fired); stderr={stderr}"
+    );
+    assert!(
+        stderr.contains("--field"),
+        "Stderr must contain '--field' (EC-3.4.016-8 load-bearing substring); stderr={stderr}"
     );
 }
