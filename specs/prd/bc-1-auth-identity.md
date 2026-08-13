@@ -26,7 +26,7 @@ Embedded OAuth app (1.3), Token keychain (1.4), OAuth state machine (1.5), Auth 
 #### BC-1.1.001: `auth list` against fresh-install returns empty JSON array
 
 **Confidence**: HIGH
-**Source**: `tests/auth_profiles.rs:53-60`
+**Source**: `tests/auth_profiles.rs:~53`
 **Subject**: Auth & Identity
 **Behavior**: When no `~/.config/jr/config.toml` exists (or no `[profiles.*]` keys), `jr auth list --output json` exits 0 and stdout is `[]`.
 **Effects**: stdout = `[]`, exit 0, no HTTP, no keychain access.
@@ -39,7 +39,7 @@ Embedded OAuth app (1.3), Token keychain (1.4), OAuth state machine (1.5), Auth 
 #### BC-1.1.002: `auth status` against fresh install exits 0 with helpful stderr
 
 **Confidence**: HIGH
-**Source**: `tests/auth_profiles.rs:62-75`
+**Source**: `tests/auth_profiles.rs:~62`
 **Subject**: Auth & Identity
 **Behavior**: `jr auth status` against an uninitialized config exits 0 and prints `No profiles configured` to stderr. Supports first-run probes by setup scripts/CI.
 **Edge cases**: no config.toml; no `[profiles]` section.
@@ -51,7 +51,7 @@ Embedded OAuth app (1.3), Token keychain (1.4), OAuth state machine (1.5), Auth 
 #### BC-1.1.003: `auth switch <unknown>` exits 64
 
 **Confidence**: HIGH
-**Source**: `tests/auth_profiles.rs:42-50`
+**Source**: `tests/auth_profiles.rs:~42`
 **Subject**: Auth & Identity
 **Behavior**: Switching to an unknown profile exits 64 (`UserError`) with no config mutation.
 **Error taxonomy**: `JrError::UserError` (exit 64).
@@ -62,7 +62,7 @@ Embedded OAuth app (1.3), Token keychain (1.4), OAuth state machine (1.5), Auth 
 #### BC-1.1.004: `auth status --profile <unknown>` exits 64 with "unknown profile"
 
 **Confidence**: HIGH
-**Source**: `tests/auth_profiles.rs:78-96`
+**Source**: `tests/auth_profiles.rs:~78`
 **Subject**: Auth & Identity
 **Behavior**: Explicit `--profile` flag naming absent profile → exit 64; stderr contains `unknown profile`.
 **Error taxonomy**: `JrError::UserError`.
@@ -73,7 +73,7 @@ Embedded OAuth app (1.3), Token keychain (1.4), OAuth state machine (1.5), Auth 
 #### BC-1.1.005: `auth logout --profile <unknown>` exits 64
 
 **Confidence**: HIGH
-**Source**: `tests/auth_profiles.rs:98-118`
+**Source**: `tests/auth_profiles.rs:~98`
 **Subject**: Auth & Identity
 **Behavior**: Logout against unknown profile exits 64 with `unknown profile` in stderr.
 **Error taxonomy**: `JrError::UserError`.
@@ -84,7 +84,7 @@ Embedded OAuth app (1.3), Token keychain (1.4), OAuth state machine (1.5), Auth 
 #### BC-1.1.006: `auth remove <active>` is rejected with exit 64
 
 **Confidence**: HIGH
-**Source**: `tests/auth_profiles.rs:120-140`
+**Source**: `tests/auth_profiles.rs:~120`
 **Subject**: Auth & Identity
 **Behavior**: Removing the currently-active profile exits 64 with stderr `cannot remove active`. No file changes, no keychain deletion.
 **Error taxonomy**: `JrError::UserError`.
@@ -95,7 +95,7 @@ Embedded OAuth app (1.3), Token keychain (1.4), OAuth state machine (1.5), Auth 
 #### BC-1.1.007: Profile resolution precedence: flag > JR_PROFILE env > config.default_profile > "default"
 
 **Confidence**: HIGH
-**Source**: `tests/auth_profiles.rs:142-186`; `src/config.rs:95-110`
+**Source**: `tests/auth_profiles.rs:~142`; `src/config.rs:~95`
 **Subject**: Auth & Identity
 **Behavior**: `Config::load_with(cli_profile)` resolves active profile via precedence chain. Test populates three profiles (from-config / from-env / from-flag) — flag wins. `Config.active_profile_name` set accordingly.
 **Effects**: `auth list --output json` returns exactly one element with `"active": true`.
@@ -106,7 +106,7 @@ Embedded OAuth app (1.3), Token keychain (1.4), OAuth state machine (1.5), Auth 
 #### BC-1.1.008: Global `--profile` flag propagates to `auth status` via main.rs composition
 
 **Confidence**: HIGH
-**Source**: `tests/auth_profiles.rs:193-231`
+**Source**: `tests/auth_profiles.rs:~193`
 **Subject**: Auth & Identity
 **Behavior**: `jr --profile sandbox auth status` (no subcommand-level `--profile`) targets sandbox. main.rs composes effective profile via `subcmd.profile.or(cli.profile)`.
 **Effects**: stderr/stdout reflect sandbox URL/name.
@@ -117,7 +117,7 @@ Embedded OAuth app (1.3), Token keychain (1.4), OAuth state machine (1.5), Auth 
 #### BC-1.1.009: `auth login --profile <new>` creates profile even when profile doesn't yet exist
 
 **Confidence**: HIGH (`#[ignore]`-gated by JR_RUN_KEYRING_TESTS)
-**Source**: `tests/auth_profiles.rs:241-280`
+**Source**: `tests/auth_profiles.rs:~241`
 **Subject**: Auth & Identity
 **Behavior**: Login uses lenient config load (skips strict active-profile-existence check), then writes `[profiles.NEW]` with URL + auth_method.
 **Effects**: writes config, writes shared `email`/`api-token` keychain keys.
@@ -128,7 +128,7 @@ Embedded OAuth app (1.3), Token keychain (1.4), OAuth state machine (1.5), Auth 
 #### BC-1.1.010: `auth login --profile X` succeeds even when JR_PROFILE points to absent profile
 
 **Confidence**: HIGH (`#[ignore]`-gated)
-**Source**: `tests/auth_profiles.rs:290-332`
+**Source**: `tests/auth_profiles.rs:~290`
 **Subject**: Auth & Identity
 **Behavior**: Login uses lenient load throughout — top-level + internal reloads in login_token/login_oauth. `JR_PROFILE=ghost` doesn't abort creation of a different profile.
 **Trace**: Pass 3 BC-010 → refined by BC-029 (R1)
@@ -138,7 +138,7 @@ Embedded OAuth app (1.3), Token keychain (1.4), OAuth state machine (1.5), Auth 
 #### BC-1.1.011: `auth refresh --no-input` against unconfigured profile exits 64 naming "no URL configured"
 
 **Confidence**: HIGH
-**Source**: `tests/auth_refresh.rs:43-106`
+**Source**: `tests/auth_refresh.rs:~43`
 **Subject**: Auth & Identity
 **Behavior**: With `--no-input` AND no profile URL configured, refresh exits 64 with stderr matching `no URL configured` + `jr auth login` + `--url`. Critically: stderr does NOT contain `panic`. Credentials NOT cleared on failure.
 **Error taxonomy**: `JrError::UserError`.
@@ -149,7 +149,7 @@ Embedded OAuth app (1.3), Token keychain (1.4), OAuth state machine (1.5), Auth 
 #### BC-1.1.012: Malformed config TOML errors exit 78 and does NOT overwrite the file
 
 **Confidence**: HIGH
-**Source**: `tests/auth_login_config_errors.rs:18-97`
+**Source**: `tests/auth_login_config_errors.rs:~18`
 **Subject**: Auth & Identity
 **Behavior**: When `~/.config/jr/config.toml` is malformed, `auth login --oauth ...` exits 78. Stderr contains `toml` or `parse`. The on-disk file is byte-identical to before (no silent overwrite). This is BC-1139 from Pass 3.
 **Error taxonomy**: `JrError::ConfigError` (exit 78).
@@ -162,7 +162,7 @@ Embedded OAuth app (1.3), Token keychain (1.4), OAuth state machine (1.5), Auth 
 #### BC-1.2.013: `auth logout` deletes only `<profile>:oauth-access-token` and `<profile>:oauth-refresh-token`
 
 **Confidence**: HIGH (PROMOTED from MEDIUM in R1)
-**Source**: `src/api/auth.rs:24-32, 88-97`; `src/cli/auth/logout.rs::handle_logout`
+**Source**: `src/api/auth.rs:~24, 88-97`; `src/cli/auth/logout.rs::handle_logout`
 **Subject**: Auth & Identity
 **Behavior**: Deletes `<profile>:oauth-access-token` and `<profile>:oauth-refresh-token` via `delete_credential`. Profile config entry preserved. Shared keys (`email`, `api-token`, `oauth_client_id`, `oauth_client_secret`) untouched. Re-login uses preserved API-token/OAuth credentials.
 **Trace**: Pass 3 BC-013-R
@@ -172,7 +172,7 @@ Embedded OAuth app (1.3), Token keychain (1.4), OAuth state machine (1.5), Auth 
 #### BC-1.2.014: `auth remove <name>` performs three-step delete: config entry, OAuth tokens, cache directory
 
 **Confidence**: HIGH (PROMOTED from MEDIUM in R1)
-**Source**: `src/cli/auth/remove.rs::handle_remove`; `src/cache.rs:82-88`; `tests/auth_profiles.rs:120-140`
+**Source**: `src/cli/auth/remove.rs::handle_remove`; `src/cache.rs:~82`; `tests/auth_profiles.rs:~120`
 **Subject**: Auth & Identity
 **Behavior**: Three-step: (1) remove `[profiles.<name>]` from config, (2) delete `<name>:oauth-*` keychain keys, (3) `cache::clear_profile_cache(name)` removes `~/.cache/jr/v1/<name>/`. Step (3) is no-op if dir absent. All three are best-effort; partial state does not cascade. Errors if name == active (exit 64 first).
 **Trace**: Pass 3 BC-014-R
@@ -182,7 +182,7 @@ Embedded OAuth app (1.3), Token keychain (1.4), OAuth state machine (1.5), Auth 
 #### BC-1.2.015: `auth refresh --help` includes the `--oauth` flag
 
 **Confidence**: HIGH
-**Source**: `tests/auth_refresh.rs:7-24`
+**Source**: `tests/auth_refresh.rs:~7`
 **Subject**: Auth & Identity
 **Behavior**: `jr auth refresh --help` exits 0; stdout contains both `refresh` and `--oauth`.
 **Trace**: Pass 3 BC-026 (R1)
@@ -192,7 +192,7 @@ Embedded OAuth app (1.3), Token keychain (1.4), OAuth state machine (1.5), Auth 
 #### BC-1.2.016: `auth refresh --oauth --help` is accepted in either flag order
 
 **Confidence**: HIGH
-**Source**: `tests/auth_refresh.rs:26-40`
+**Source**: `tests/auth_refresh.rs:~26`
 **Subject**: Auth & Identity
 **Behavior**: clap accepts both `--oauth --help` and `--help --oauth`, exit 0.
 **Trace**: Pass 3 BC-027 (R1)
@@ -202,7 +202,7 @@ Embedded OAuth app (1.3), Token keychain (1.4), OAuth state machine (1.5), Auth 
 #### BC-1.2.017: `auth login --profile X` against `JR_PROFILE=ghost` succeeds creating profile X
 
 **Confidence**: HIGH (`#[ignore]`-gated)
-**Source**: `tests/auth_profiles.rs:282-333`
+**Source**: `tests/auth_profiles.rs:~282`
 **Subject**: Auth & Identity
 **Behavior**: Round-5 regression fix. Both internal reloads in login flow use `load_lenient_with`. Test sets `JR_PROFILE=ghost`, runs `jr auth login --profile fresh --url https://fresh.example`, asserts `[profiles.fresh]` written.
 **Trace**: Pass 3 BC-029 (R1)
@@ -212,7 +212,7 @@ Embedded OAuth app (1.3), Token keychain (1.4), OAuth state machine (1.5), Auth 
 #### BC-1.2.018: Global `--profile` propagates to all auth subcommands via subcmd.profile.or(cli.profile)
 
 **Confidence**: HIGH
-**Source**: `tests/auth_profiles.rs:188-231`
+**Source**: `tests/auth_profiles.rs:~188`
 **Subject**: Auth & Identity
 **Behavior**: Round-10 regression fix. main.rs now composes `subcmd.profile.or(cli.profile)`.
 **Trace**: Pass 3 BC-030 (R1)
@@ -224,7 +224,7 @@ Embedded OAuth app (1.3), Token keychain (1.4), OAuth state machine (1.5), Auth 
 #### BC-1.3.019: Embedded OAuth app `Debug` redacts client_secret
 
 **Confidence**: HIGH
-**Source**: `src/api/auth_embedded.rs:34, 220-239`
+**Source**: `src/api/auth_embedded.rs:~34, 220-239`
 **Subject**: Auth & Identity
 **Behavior**: `format!("{:?}", EmbeddedOAuthApp{...})` never emits plaintext secret. Custom Debug impl substitutes `<redacted>`. This is BC-1168 from Pass 3 R4.
 **Trace**: Pass 3 BC-019; BC-1168 (R4)
@@ -234,7 +234,7 @@ Embedded OAuth app (1.3), Token keychain (1.4), OAuth state machine (1.5), Auth 
 #### BC-1.3.020: Build with empty XOR inputs → `embedded_oauth_app()` returns None
 
 **Confidence**: HIGH
-**Source**: `src/api/auth_embedded.rs:100-106`
+**Source**: `src/api/auth_embedded.rs:~100`
 **Subject**: Auth & Identity
 **Behavior**: Setting `JR_BUILD_OAUTH_CLIENT_ID=""` at build time → binary returns `None` from embedded accessor. BYO/prompt fallback proceeds.
 **Trace**: Pass 3 BC-020
@@ -244,7 +244,7 @@ Embedded OAuth app (1.3), Token keychain (1.4), OAuth state machine (1.5), Auth 
 #### BC-1.3.021: `embedded_oauth_app_present()` checks presence without decoding
 
 **Confidence**: HIGH
-**Source**: `src/api/auth_embedded.rs:132-136`
+**Source**: `src/api/auth_embedded.rs:~132`
 **Subject**: Auth & Identity
 **Behavior**: Presence check inspects only `EMBEDDED_ID.is_some_and(|s| !s.is_empty())`. Does NOT invoke `decode()`. Used by `auth status` to report `OAuthAppSource::Embedded` without materializing plaintext.
 **Trace**: Pass 3 BC-021; BC-022-R (R1)
@@ -254,7 +254,7 @@ Embedded OAuth app (1.3), Token keychain (1.4), OAuth state machine (1.5), Auth 
 #### BC-1.3.022: `OAuthAppSource` resolution chain: Flag > Env > Keychain > Embedded > Prompt > None
 
 **Confidence**: HIGH (PROMOTED from MEDIUM in R1)
-**Source**: `src/api/auth_embedded.rs:46-57`; `src/cli/auth/status.rs::peek_oauth_app_source`
+**Source**: `src/api/auth_embedded.rs:~46`; `src/cli/auth/status.rs::peek_oauth_app_source`
 **Subject**: Auth & Identity
 **Behavior**: First non-None-equivalent source wins; lower-priority sources never short-circuit higher. `auth status` reports source via this chain.
 **Trace**: Pass 3 BC-022-R
@@ -264,12 +264,12 @@ Embedded OAuth app (1.3), Token keychain (1.4), OAuth state machine (1.5), Auth 
 #### BC-1.3.023: DEFAULT_OAUTH_SCOPES includes `offline_access`, CMDB scopes, `write:jira-work`, and `write:servicedesk-request`
 
 **Confidence**: HIGH
-**Source**: `src/api/auth.rs:34-63` (line 59 is the concat! literal site)
+**Source**: `src/api/auth.rs:~34` (line 59 is the concat! literal site)
 **Subject**: Auth & Identity
-**Behavior**: DEFAULT_OAUTH_SCOPES is: `read:jira-work write:jira-work read:jira-user read:servicedesk-request write:servicedesk-request read:cmdb-object:jira read:cmdb-schema:jira offline_access`. The embedded `jr` OAuth app's Developer Console registration MUST include `write:servicedesk-request` or the authorize call will reject with `invalid_scope` for all new OAuth logins and token refreshes. The pinning test `default_oauth_scopes_pins_the_full_set_with_offline_access` in `src/cli/auth/tests/mod.rs` MUST be kept in lockstep with `auth.rs:59` — it must be updated in the same commit as any change to the scope constant. Regression test asserts no double spaces and the full exact scope string.
+**Behavior**: DEFAULT_OAUTH_SCOPES is: `read:jira-work write:jira-work read:jira-user read:servicedesk-request write:servicedesk-request read:cmdb-object:jira read:cmdb-schema:jira offline_access`. The embedded `jr` OAuth app's Developer Console registration MUST include `write:servicedesk-request` or the authorize call will reject with `invalid_scope` for all new OAuth logins and token refreshes. The pinning test `default_oauth_scopes_pins_the_full_set_with_offline_access` in `src/cli/auth/tests/mod.rs` MUST be kept in lockstep with `auth.rs:~59` — it must be updated in the same commit as any change to the scope constant. Regression test asserts no double spaces and the full exact scope string.
 **Effects**: Scope addition affects every OAuth-authenticated user on next token refresh or new login. CI cannot catch a Developer Console registration mismatch — manual staging validation is required before release when this constant is modified.
 
-**Maintainer coordination:** when changing `DEFAULT_OAUTH_SCOPES`, the maintainer also updates the embedded `jr` OAuth app's permissions in the Atlassian Developer Console (https://developer.atlassian.com/console/myapps/ → My apps → jr → Permissions → Configure → Add) before tagging a release. Existing users will be prompted to re-consent on their next OAuth login or token refresh (Atlassian auto-handles this UX; see [Atlassian managing-OAuth-apps docs](https://developer.atlassian.com/cloud/oauth/getting-started/managing-oauth-apps/)). CHANGELOG entries for any release that changes this constant MUST mention the re-consent prompt so users aren't surprised. No CI hook, no PR template; the existing code comment at `src/api/auth.rs:46-51` is the implementer-side reminder, the maintainer checklist lives in CLAUDE.md OAuth Gotcha section.
+**Maintainer coordination:** when changing `DEFAULT_OAUTH_SCOPES`, the maintainer also updates the embedded `jr` OAuth app's permissions in the Atlassian Developer Console (https://developer.atlassian.com/console/myapps/ → My apps → jr → Permissions → Configure → Add) before tagging a release. Existing users will be prompted to re-consent on their next OAuth login or token refresh (Atlassian auto-handles this UX; see [Atlassian managing-OAuth-apps docs](https://developer.atlassian.com/cloud/oauth/getting-started/managing-oauth-apps/)). CHANGELOG entries for any release that changes this constant MUST mention the re-consent prompt so users aren't surprised. No CI hook, no PR template; the existing code comment at `src/api/auth.rs:~46` is the implementer-side reminder, the maintainer checklist lives in CLAUDE.md OAuth Gotcha section.
 
 > **[UPDATED 2026-05-18 issue #288 + F1d pass-01 fix-applied + scope-simplified per research-validated risk profile]** `write:servicedesk-request` added to enable `jr issue create --request-type` JSM submission (BC-3.8.001).
 > - **Previous (pre-#288):** Scope string was `read:jira-work write:jira-work read:jira-user read:servicedesk-request read:cmdb-object:jira read:cmdb-schema:jira offline_access` (no `write:servicedesk-request`).
@@ -281,7 +281,7 @@ Embedded OAuth app (1.3), Token keychain (1.4), OAuth state machine (1.5), Auth 
 #### BC-1.3.024: Embedded OAuth integration test is `#[ignore]`-gated and stubs `unimplemented!()`
 
 **Confidence**: HIGH
-**Source**: `tests/oauth_embedded_login.rs:13-32`
+**Source**: `tests/oauth_embedded_login.rs:~13`
 **Subject**: Auth & Identity
 **Behavior**: Test intentionally `unimplemented!()` when `JR_RUN_OAUTH_INTEGRATION=1`. Without that env var, test early-returns. Guards against false coverage signals.
 **Trace**: Pass 3 BC-028 (R1)
@@ -293,7 +293,7 @@ Embedded OAuth app (1.3), Token keychain (1.4), OAuth state machine (1.5), Auth 
 #### BC-1.4.025: `default` profile lazy-migrates legacy flat OAuth keys; non-default profiles never inherit
 
 **Confidence**: HIGH (PROMOTED from MEDIUM in R1)
-**Source**: `src/api/auth.rs:111-169`
+**Source**: `src/api/auth.rs:~111`
 **Subject**: Auth & Identity
 **Behavior**: `load_oauth_tokens(profile)`: if both namespaced keys present → return. If both missing → ONLY `"default"` reads legacy flat keys, copies to namespaced, deletes legacy. Non-default profiles error on partial state with actionable message. Two `if profile == "default"` guards at lines 124 and 151.
 **Trace**: Pass 3 BC-023-R
@@ -303,7 +303,7 @@ Embedded OAuth app (1.3), Token keychain (1.4), OAuth state machine (1.5), Auth 
 #### BC-1.4.026: `refresh_oauth_token` signature is `(profile: &str)` only — resolves credentials internally
 
 **Confidence**: HIGH (PROMOTED from LOW in R1)
-**Source**: `src/api/auth.rs:700-770`; CLAUDE.md
+**Source**: `src/api/auth.rs:~700`; CLAUDE.md
 **Subject**: Auth & Identity
 **Behavior**: Function takes only `profile: &str`. Internally resolves keychain → embedded. No production callers as of v0.5.0-dev.7 — exists for future 401 auto-refresh. Re-introducing `client_id/_secret` would break embedded-OAuth path.
 **Trace**: Pass 3 BC-024-R
@@ -313,7 +313,7 @@ Embedded OAuth app (1.3), Token keychain (1.4), OAuth state machine (1.5), Auth 
 #### BC-1.4.027: Per-profile keychain keys: `<profile>:oauth-access-token` / `<profile>:oauth-refresh-token`
 
 **Confidence**: HIGH
-**Source**: `src/api/auth.rs:24-32`
+**Source**: `src/api/auth.rs:~24`
 **Subject**: Auth & Identity
 **Behavior**: All OAuth token storage/retrieval uses namespaced keys. Shared keys (`email`, `api-token`, `oauth_client_id`, `oauth_client_secret`) are NOT namespaced.
 **Trace**: Pass 3 BC-1153 (R4)
@@ -323,7 +323,7 @@ Embedded OAuth app (1.3), Token keychain (1.4), OAuth state machine (1.5), Auth 
 #### BC-1.4.028: `load_oauth_tokens` errors on PARTIAL state (one token present, other missing)
 
 **Confidence**: HIGH
-**Source**: `src/api/auth.rs:1249-1269`
+**Source**: `src/api/auth.rs:~1249`
 **Subject**: Auth & Identity
 **Behavior**: Access-token without refresh-token (or vice versa) → `Err`. Prevents silent half-credential use.
 **Trace**: Pass 3 BC-1156 (R4)
@@ -333,7 +333,7 @@ Embedded OAuth app (1.3), Token keychain (1.4), OAuth state machine (1.5), Auth 
 #### BC-1.4.029: `load_oauth_tokens("sandbox")` does NOT inherit legacy flat keys
 
 **Confidence**: HIGH
-**Source**: `src/api/auth.rs:1323-1341`
+**Source**: `src/api/auth.rs:~1323`
 **Subject**: Auth & Identity
 **Behavior**: Lazy migration is `default`-profile-only by design. "sandbox" only reads `sandbox:oauth-*` namespaced keys.
 **Trace**: Pass 3 BC-1158 (R4)
@@ -343,7 +343,7 @@ Embedded OAuth app (1.3), Token keychain (1.4), OAuth state machine (1.5), Auth 
 #### BC-1.4.030: `resolve_refresh_app_credentials` prefers KEYCHAIN over EMBEDDED
 
 **Confidence**: HIGH
-**Source**: `src/api/auth.rs:1347-1357`
+**Source**: `src/api/auth.rs:~1347`
 **Subject**: Auth & Identity
 **Behavior**: BYO user does NOT silently flip onto embedded mid-session. Keychain wins.
 **Trace**: Pass 3 BC-1159 (R4)
@@ -355,7 +355,7 @@ Embedded OAuth app (1.3), Token keychain (1.4), OAuth state machine (1.5), Auth 
 #### BC-1.5.031: Embedded OAuth callback URL is exactly `http://127.0.0.1:53682/callback`
 
 **Confidence**: HIGH
-**Source**: `src/api/auth.rs:374-477`; CLAUDE.md; ADR-0006
+**Source**: `src/api/auth.rs:~374`; CLAUDE.md; ADR-0006
 **Subject**: Auth & Identity
 **Behavior**: `EMBEDDED_CALLBACK_PORT: u16 = 53682`. IPv4 literal `127.0.0.1` (NOT `localhost` — avoids macOS/Chrome `localhost`→`::1` resolver pitfall). Atlassian validates `redirect_uri` by EXACT string match. Changing this is a breaking release.
 **Trace**: Pass 3 BC-031 (R1); BC-1140/1141 (R4)
@@ -365,7 +365,7 @@ Embedded OAuth app (1.3), Token keychain (1.4), OAuth state machine (1.5), Auth 
 #### BC-1.5.032: `RedirectUriStrategyRequest::Fixed(p)` produces EADDRINUSE friendly error
 
 **Confidence**: HIGH
-**Source**: `src/api/auth.rs:427-447`
+**Source**: `src/api/auth.rs:~427`
 **Subject**: Auth & Identity
 **Behavior**: On port-in-use: `"port {p} is in use; the jr OAuth callback needs this port. Set --client-id/--client-secret (or set JR_OAUTH_CLIENT_ID/JR_OAUTH_CLIENT_SECRET) to fall back to a dynamic port."` Contains 5 substrings: `port 53682 is in use`, `the jr OAuth callback needs this port`, `--client-id/--client-secret`, `JR_OAUTH_CLIENT_ID/JR_OAUTH_CLIENT_SECRET`, `dynamic port`.
 **Trace**: Pass 3 BC-032 (R1); BC-1161 (R4)
@@ -375,7 +375,7 @@ Embedded OAuth app (1.3), Token keychain (1.4), OAuth state machine (1.5), Auth 
 #### BC-1.5.033: `ResolvedRedirect` private fields prevent listener detachment from strategy
 
 **Confidence**: HIGH
-**Source**: `src/api/auth.rs:455-477`
+**Source**: `src/api/auth.rs:~455`
 **Subject**: Auth & Identity
 **Behavior**: Type-system-enforced TOCTOU-closure. Caller cannot move listener out and derive a redirect_uri from strategy that no longer matches.
 **Trace**: Pass 3 BC-033 (R1)
@@ -385,7 +385,7 @@ Embedded OAuth app (1.3), Token keychain (1.4), OAuth state machine (1.5), Auth 
 #### BC-1.5.034: BYO OAuth uses `DynamicPort` (dynamic `:0`); embedded uses `FixedPort(53682)`
 
 **Confidence**: HIGH
-**Source**: `src/api/auth.rs:927-937`
+**Source**: `src/api/auth.rs:~927`
 **Subject**: Auth & Identity
 **Behavior**: `RedirectUriStrategy::FixedPort(53682).redirect_uri() == "http://127.0.0.1:53682/callback"` (IPv4). `DynamicPort(54321).redirect_uri() == "http://localhost:54321/callback"` (localhost). The two literals differ; Atlassian validates by exact match.
 **Trace**: Pass 3 BC-1140 (R4)
@@ -395,7 +395,7 @@ Embedded OAuth app (1.3), Token keychain (1.4), OAuth state machine (1.5), Auth 
 #### BC-1.5.035: `generate_state()` produces 32 bytes from SysRng encoded as 64 hex chars
 
 **Confidence**: HIGH
-**Source**: `src/api/auth.rs:882`; Pass 3 R4 §3.10
+**Source**: `src/api/auth.rs:~882`; Pass 3 R4 §3.10
 **Subject**: Auth & Identity
 **Behavior**: CSRF state token generation. State is validated at callback step.
 **Trace**: Pass 3 BC-1146 (R4)
@@ -405,7 +405,7 @@ Embedded OAuth app (1.3), Token keychain (1.4), OAuth state machine (1.5), Auth 
 #### BC-1.5.036: OAuth flow has NO PKCE (`code_challenge`/`code_verifier` absent)
 
 **Confidence**: HIGH
-**Source**: `src/api/auth.rs:608-616`
+**Source**: `src/api/auth.rs:~608`
 **Subject**: Auth & Identity
 **Behavior**: `build_authorize_url` does not include PKCE parameters. NFR-S-A (MEDIUM): defense-in-depth gap per RFC 8252. Documented as POLICY-DECISION.
 **Trace**: Pass 3 BC-1148, BC-1149 (R4)
@@ -415,7 +415,7 @@ Embedded OAuth app (1.3), Token keychain (1.4), OAuth state machine (1.5), Auth 
 #### BC-1.5.037: `build_authorize_url` percent-encodes hostile `client_id` containing injection chars
 
 **Confidence**: HIGH
-**Source**: `src/api/auth.rs:1043-1060`
+**Source**: `src/api/auth.rs:~1043`
 **Subject**: Auth & Identity
 **Behavior**: `client_id` containing `&redirect_uri=evil.example#frag` → output has `client_id=real_id%26redirect_uri%3Devil.example%23frag` and MUST NOT contain `&redirect_uri=evil.example`.
 **Trace**: Pass 3 BC-1149 (R4); Top-30 BC rank #2
@@ -445,7 +445,7 @@ Embedded OAuth app (1.3), Token keychain (1.4), OAuth state machine (1.5), Auth 
 #### BC-1.5.040: OAuth callback validates state (CSRF check) before token exchange
 
 **Confidence**: HIGH
-**Source**: `src/api/auth.rs:898`; Pass 3 R4 §3.10
+**Source**: `src/api/auth.rs:~898`; Pass 3 R4 §3.10
 **Subject**: Auth & Identity
 **Behavior**: State mismatch → abort with error; keychain NOT touched.
 **Trace**: Pass 3 H-047 (holdout)
@@ -455,7 +455,7 @@ Embedded OAuth app (1.3), Token keychain (1.4), OAuth state machine (1.5), Auth 
 #### BC-1.5.041: `extract_query_param` parses `code` and `state` from HTTP GET request line
 
 **Confidence**: HIGH
-**Source**: `src/api/auth.rs:948-965`
+**Source**: `src/api/auth.rs:~948`
 **Subject**: Auth & Identity
 **Behavior**: `extract_query_param("GET /callback?code=abc123&state=xyz HTTP/1.1\r\n", "code")` → `Some("abc123")`. Missing param → `None`. No query string → `None`.
 **Trace**: Pass 3 BC-1142, BC-1143, BC-1144 (R4)
@@ -467,7 +467,7 @@ Embedded OAuth app (1.3), Token keychain (1.4), OAuth state machine (1.5), Auth 
 #### BC-1.6.042: 401 + `scope does not match` body → InsufficientScope with 5 required substrings
 
 **Confidence**: HIGH
-**Source**: `tests/api_client.rs:99-144`
+**Source**: `tests/api_client.rs:~99`
 **Subject**: Auth & Identity
 **Behavior**: 401 body containing `scope does not match` (case-insensitive) → `JrError::InsufficientScope`. Display MUST contain: `Insufficient token scope`, raw gateway message, **the resolved required scope name** (`write:jira-work` when `required_scope` is `None`, otherwise the call-site-supplied scope name such as `write:servicedesk-request`), `OAuth 2.0`, `github.com/Zious11/jira-cli/issues/185`. Exit code 2.
 
@@ -481,7 +481,7 @@ Embedded OAuth app (1.3), Token keychain (1.4), OAuth state machine (1.5), Auth 
 #### BC-1.6.043: 401 without scope-mismatch substring → NotAuthenticated, NOT InsufficientScope
 
 **Confidence**: HIGH
-**Source**: `tests/api_client.rs:146-181`
+**Source**: `tests/api_client.rs:~146`
 **Subject**: Auth & Identity
 **Behavior**: 401 with `Session expired` body → `Not authenticated`. MUST NOT contain `Insufficient token scope`.
 **Trace**: Pass 3 BC-016; BC-1086 (R4)
@@ -491,7 +491,7 @@ Embedded OAuth app (1.3), Token keychain (1.4), OAuth state machine (1.5), Auth 
 #### BC-1.6.044: 401 scope-mismatch match is case-insensitive (`to_ascii_lowercase`)
 
 **Confidence**: HIGH
-**Source**: `tests/api_client.rs:183-216`
+**Source**: `tests/api_client.rs:~183`
 **Subject**: Auth & Identity
 **Behavior**: `"Unauthorized; Scope Does Not Match"` (mixed case) → InsufficientScope.
 **Trace**: Pass 3 BC-017; BC-1087 (R4)
@@ -501,7 +501,7 @@ Embedded OAuth app (1.3), Token keychain (1.4), OAuth state machine (1.5), Auth 
 #### BC-1.6.045: Non-401 status with scope-mismatch substring does NOT dispatch to InsufficientScope
 
 **Confidence**: HIGH
-**Source**: `tests/api_client.rs:219-255`
+**Source**: `tests/api_client.rs:~219`
 **Subject**: Auth & Identity
 **Behavior**: 403 with `scope does not match policy` → `API error (403)`, NOT InsufficientScope. Status gate prevents broadening.
 **Trace**: Pass 3 BC-018; BC-1088 (R4)

@@ -11270,3 +11270,51 @@ artifacts only, no code touched). All committed to factory-artifacts in ONE atom
 (Single-Commit Burst Protocol, no Stage-2 backfill, no SHA placeholder), pushed via CAS.
 `regression-state.json`, `sidecar-learning.md`, and untracked `.claude/` left exactly as found,
 per standing instruction.
+
+## TD-VSDD-091-CITATION-REMEDIATION (2026-08-13)
+
+**Interstitial mechanical prep commit, dispatched by the orchestrator ahead of the
+`bucket1-defects` F2 spec delta, human-approved (approx-form remediation, separate commit).**
+Three spec files carried legacy volatile `<file>.<code-ext>:NNN`/`:NNN-MMM` line citations that
+predate the vsdd-factory rc.23 `validate-stable-anchors` PreToolUse guard (priority 155,
+on_error=block, Edit|Write|MultiEdit only) and would block any Edit/Write touch during F2:
+`bc-1-auth-identity.md` (47 sites), `bc-3-issue-write.md` (70 sites), `cross-cutting.md` (75
+sites) -- 192 sites total. `bc-2-issue-read.md` was confirmed to already carry zero legacy
+citations and was left untouched.
+
+**Transform: PURE mechanical, no semantic change.** Applied via `sed -E -i ''` (macOS/BSD sed,
+outside the guard's tool-matcher scope, legitimate here because it strictly REMOVES volatile
+pins rather than adding content): `<path>.<ext>:NN` / `<path>.<ext>:NN-MM` -> `<path>.<ext>:~NN`
+(approximate marker; range collapses to its start line) for the guard's full code/config/test
+extension allowlist (rs, toml, sh, bash, py, ts, tsx, js, jsx, go, bats, yaml, yml, json, lock,
+lobster, wasm, c, cpp, h, hpp, rb). `.md:NN` markdown cross-doc heading-anchor citations are
+explicitly out of the guard's scope and were left untouched (verified byte-identical before/after
+via `.md:[0-9]+` extraction diff on all three files). No BC text, count, structure, or semantics
+changed -- verified by pairing every removed/added diff line and confirming they differ ONLY in
+the citation-suffix shape (0 mismatches across all three files, 45+63+56=164 changed lines,
+covering the 192 citation sites -- several lines carry multiple citations). URL/host:port
+literals (e.g. `http://127.0.0.1:53682/callback`) were confirmed unaffected (`://` guard is
+inherent to the transform's `.ext:` anchor shape, not a URL shape). Idempotent on already-
+approximate `:~NN` citations already present in `bc-3-issue-write.md` (2 pre-existing) and
+`cross-cutting.md` (18 pre-existing) -- confirmed untouched by the transform.
+
+**Verification (all 5 checks green):**
+1. `git diff --stat` -- only the 3 target files changed within this commit.
+2. Every changed hunk is solely a citation-suffix change -- confirmed via automated diff-line
+   pairing (regex-normalize both sides, compare) across all 3 files, 0 mismatches.
+3. `grep -nE '\.(rs|toml|sh|bash|py|ts|tsx|js|jsx|go|bats|yaml|yml|json|lock|lobster|wasm|c|cpp|
+   h|hpp|rb):[0-9]'` over the 3 files returns zero matches (no remaining volatile citations).
+4. `scripts/check-spec-counts.sh` exits 0 -- "Check passed: 7 bc files validated" (no BC/EC
+   count drift from this transform).
+5. `bc-2-issue-read.md` confirmed NOT touched (0 legacy citations at baseline, diff empty).
+
+**Scope discipline:** `regression-state.json`, `sidecar-learning.md` (both pre-existing dirty
+from unrelated prior work), and untracked `.claude/` left exactly as found, per standing
+instruction. `bc-2-issue-read.md`'s own pre-existing unrelated dirty change (not from this
+remediation) is also left as found -- not staged by this commit. `STATE.md` intentionally NOT
+touched this burst (kept minimal per dispatch instruction; the `bucket1-defects` F1 cycle record
+is already in place from the prior burst and this is purely a mechanical prep step, not a phase
+transition). No architecture, PRD semantics, BC bodies, or spec structure changed by this
+commit -- tech-debt/hygiene only (TD-VSDD-091, closes the citation-hygiene blocker referenced in
+issue #408's citation-discipline convention), committed and pushed separately from, and strictly
+BEFORE, the `bucket1-defects` F2 spec delta.

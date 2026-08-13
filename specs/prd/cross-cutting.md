@@ -47,7 +47,7 @@ CI Guards (X.13).
 #### BC-X.1.001: Auth header injected on every API call via `req.header("Authorization", &self.auth_header)` at line 195
 
 **Confidence**: HIGH
-**Source**: `tests/api_client.rs:14-40`; `src/api/client.rs:195`
+**Source**: `tests/api_client.rs:~14`; `src/api/client.rs:~195`
 **Subject**: HTTP client
 **Behavior**: Header value is verbatim auth string (e.g., `Basic dGVzdEBleGFtcGxlLmNvbTpteS1hcGktdG9rZW4=`). Pinned by wiremock `header(...)` matcher. Injected on every retry attempt including the first.
 **Trace**: Pass 3 BC-1410-R (R1); BC-1082 (R4)
@@ -57,7 +57,7 @@ CI Guards (X.13).
 #### BC-X.1.002: `client.send(request)` retries 429 transparently; returns parsed response on 200
 
 **Confidence**: HIGH
-**Source**: `tests/api_client.rs:42-70`
+**Source**: `tests/api_client.rs:~42`
 **Behavior**: 429-then-200 → caller sees 200 (typed T). Retry is transparent.
 **Trace**: Pass 3 BC-1402; BC-1083 (R4)
 
@@ -66,7 +66,7 @@ CI Guards (X.13).
 #### BC-X.1.003: `client.send(request)` on exhausted 429 raises `JrError::ApiError{status: 429}` via `parse_error`
 
 **Confidence**: HIGH
-**Source**: `src/api/client.rs:184-253`
+**Source**: `src/api/client.rs:~184`
 **Behavior**: After MAX_RETRIES=3 (4 total calls), the last 429 response is parsed via `parse_error` → `JrError::ApiError`. Distinct from `send_raw` behavior (which returns 429, not raises).
 **Trace**: Pass 3 BC-1402-R (R1)
 
@@ -75,7 +75,7 @@ CI Guards (X.13).
 #### BC-X.1.004: `client.send(request)` requires `RequestBuilder::try_clone()` to succeed; non-cloneable bodies panic
 
 **Confidence**: HIGH
-**Source**: `src/api/client.rs:191-194`
+**Source**: `src/api/client.rs:~191`
 **Behavior**: `request.try_clone().expect("request should be cloneable (JSON body)")`. Streaming-body refactor would panic.
 **Trace**: Pass 3 BC-1402a (R1)
 
@@ -84,7 +84,7 @@ CI Guards (X.13).
 #### BC-X.1.005: `client.send_raw(request)` returns 429 to caller (NOT raises) after MAX_RETRIES=3; `expect(4)` pin
 
 **Confidence**: HIGH
-**Source**: `tests/api_client.rs:424-444`
+**Source**: `tests/api_client.rs:~424`
 **Subject**: HTTP client
 **Behavior**: 4 total calls (initial + 3 retries). FINAL response IS 429. `send_raw` returns it, not raises.
 **Trace**: Pass 3 BC-1401; BC-1092 (R4)
@@ -94,7 +94,7 @@ CI Guards (X.13).
 #### BC-X.1.006: `send_raw` 429-then-200 retries identically to `send`; caller sees 200
 
 **Confidence**: HIGH
-**Source**: `tests/api_client.rs:394-422`
+**Source**: `tests/api_client.rs:~394`
 **Trace**: Pass 3 BC-1091 (R4)
 
 ---
@@ -102,7 +102,7 @@ CI Guards (X.13).
 #### BC-X.1.007: `send_raw` preserves 404 as response (NOT converted to Err); used by `jr api` raw passthrough
 
 **Confidence**: HIGH
-**Source**: `tests/api_client.rs:367-392`
+**Source**: `tests/api_client.rs:~367`
 **Subject**: HTTP client
 **Behavior**: 404 response returned to caller with body intact. Error-conversion happens in `get`/`post`/etc., NOT `send_raw`.
 **Trace**: Pass 3 BC-1409-R (R1); BC-1090 (R4)
@@ -112,7 +112,7 @@ CI Guards (X.13).
 #### BC-X.1.008: `send_raw` non-cloneable body returns `anyhow::Error` with explicit message (NOT panic)
 
 **Confidence**: HIGH
-**Source**: `src/api/client.rs:267-272`
+**Source**: `src/api/client.rs:~267`
 **Behavior**: `req.try_clone().ok_or_else(|| anyhow::anyhow!("request cannot be retried..."))`. More defensive than `send`.
 **Trace**: Pass 3 BC-1402b (R1)
 
@@ -121,7 +121,7 @@ CI Guards (X.13).
 #### BC-X.1.009: 429-exhausted warning always emitted to stderr (not verbose-gated)
 
 **Confidence**: HIGH
-**Source**: `src/api/client.rs:233-237, 309-313`
+**Source**: `src/api/client.rs:~233, 309-313`
 **Behavior**: `"warning: rate limited by Jira — gave up after 3 retries. Wait a moment and try again."` — unconditional. Same from both `send` and `send_raw`.
 **Trace**: Pass 3 BC-1404; BC-1404-R (R1)
 
@@ -175,7 +175,7 @@ CI Guards (X.13).
 #### BC-X.2.001: Offset pagination: `startAt`/`maxResults` + `total` for issue comments, projects, worklogs
 
 **Confidence**: HIGH
-**Source**: `src/api/pagination.rs`; unit test suite (pagination module); `tests/comments.rs:104-158`
+**Source**: `src/api/pagination.rs`; unit test suite (pagination module); `tests/comments.rs:~104`
 **Trace**: Pass 3 BC-1406, BC-1407-R (R1)
 
 ---
@@ -207,7 +207,7 @@ CI Guards (X.13).
 #### BC-X.2.005: User pagination advances `startAt` by REQUESTED `maxResults` (NOT by returned count)
 
 **Confidence**: HIGH
-**Source**: `tests/user_pagination.rs:202-247`; `tests/all_flag_behavior.rs:155-208`
+**Source**: `tests/user_pagination.rs:~202`; `tests/all_flag_behavior.rs:~155`
 **Subject**: Pagination
 **Behavior**: Page 1 returns 35 users; page 2 startAt=100 (advanced by requested 100, NOT by 35). This is a deliberate workaround for JRACLOUD-71293.
 **Trace**: Pass 3 BC-702; BC-1119 (R4)
@@ -217,7 +217,7 @@ CI Guards (X.13).
 #### BC-X.2.006: `USER_PAGINATION_SAFETY_CAP = 1500` (15 pages × 100); emits stderr `"hit pagination safety cap"`; exits 0
 
 **Confidence**: HIGH
-**Source**: `tests/user_pagination.rs:459-520`
+**Source**: `tests/user_pagination.rs:~459`
 **Behavior**: Safety cap prevents infinite loops. Warning is observable; exit 0.
 **Trace**: Pass 3 BC-1124, BC-1125 (R4)
 
@@ -228,7 +228,7 @@ CI Guards (X.13).
 #### BC-X.3.001: Network drop → `Could not reach <host>; check your connection` exit 1
 
 **Confidence**: HIGH
-**Source**: `tests/issue_list_errors.rs:320-360`; `tests/issue_view_errors.rs:102-134`; `tests/assets_errors.rs:115-153`
+**Source**: `tests/issue_list_errors.rs:~320`; `tests/issue_view_errors.rs:~102`; `tests/assets_errors.rs:~115`
 **Behavior**: Connect-refused (port 1) → `JrError::NetworkError(host)`.
 **Trace**: Pass 3 BC-1206
 
@@ -255,7 +255,7 @@ CI Guards (X.13).
 #### BC-X.3.004: 400 with field-specific Jira error → stderr formatted as `field: message` (sorted alphabetically)
 
 **Confidence**: HIGH
-**Source**: `tests/issue_resolution.rs:124-158`
+**Source**: `tests/issue_resolution.rs:~124`
 **Trace**: Pass 3 BC-1211
 
 ---
@@ -263,7 +263,7 @@ CI Guards (X.13).
 #### BC-X.3.005: 401 + scope-mismatch (case-insensitive) → InsufficientScope with 5 substrings; 403 with substring NOT dispatched
 
 **Confidence**: HIGH
-**Source**: `tests/api_client.rs:99-255`
+**Source**: `tests/api_client.rs:~99`
 **Trace**: Pass 3 BC-015..018; BC-1085..1088 (R4)
 
 ---
@@ -271,7 +271,7 @@ CI Guards (X.13).
 #### BC-X.3.006: Ctrl+C exits 130 with `Interrupted` handling
 
 **Confidence**: MEDIUM
-**Source**: `src/main.rs:264`
+**Source**: `src/main.rs:~264`
 **Trace**: Pass 3 BC-1209
 
 ---
@@ -297,7 +297,7 @@ CI Guards (X.13).
 #### BC-X.4.001: MAX_RETRIES = 3 (initial + 3 = 4 total calls); `expect(4)` pin
 
 **Confidence**: HIGH
-**Source**: `tests/api_client.rs:424-444`; `src/api/client.rs:265-320`
+**Source**: `tests/api_client.rs:~424`; `src/api/client.rs:~265`
 **Trace**: Pass 3 BC-1401-R (R1)
 
 ---
@@ -305,7 +305,7 @@ CI Guards (X.13).
 #### BC-X.4.002: `Retry-After` header parsed as u64 INTEGER ONLY — HTTP-date format NOT supported
 
 **Confidence**: HIGH
-**Source**: `src/api/rate_limit.rs:14-18`; unit test suite (rate_limit module)
+**Source**: `src/api/rate_limit.rs:~14`; unit test suite (rate_limit module)
 **Subject**: Rate limiting
 **Behavior**: `header.parse::<u64>()`. HTTP-date format → `None` → falls back to `DEFAULT_RETRY_SECS = 1`. No upper bound — `Retry-After: 86400` is honored as 24h (NFR-R-NEW-1, LOW). CONV-ABS-001 correction.
 **Trace**: Pass 3 BC-1403-R (R1)
@@ -331,7 +331,7 @@ CI Guards (X.13).
 #### BC-X.5.001: `client.add_worklog(key, seconds, message)` POSTs `/issue/<key>/worklog`; returns Worklog; accepts 201
 
 **Confidence**: HIGH
-**Source**: `tests/worklog_commands.rs:8-26`
+**Source**: `tests/worklog_commands.rs:~8`
 **Trace**: Pass 3 BC-501
 
 ---
@@ -339,7 +339,7 @@ CI Guards (X.13).
 #### BC-X.5.002: `client.list_worklogs(key)` paginates via `/issue/<key>/worklog` [MUST-FIX: NFR-R-A — HIGH]
 
 **Confidence**: HIGH
-**Source**: `src/api/jira/worklogs.rs:25-30` (BUG SITE)
+**Source**: `src/api/jira/worklogs.rs:~25` (BUG SITE)
 
 > **MUST-FIX (HIGH — NFR-R-A):** Current code fetches ONE `OffsetPage<Worklog>` and discards
 > `total`/`start_at`/`max_results`. Issues with >50 worklogs silently truncate. This contract
@@ -356,7 +356,7 @@ CI Guards (X.13).
 #### BC-X.5.003: `worklog list` 5xx → exit 1 + `API error (500)`
 
 **Confidence**: HIGH
-**Source**: `tests/worklog_commands.rs:55-93`
+**Source**: `tests/worklog_commands.rs:~55`
 **Trace**: Pass 3 BC-503
 
 ---
@@ -364,7 +364,7 @@ CI Guards (X.13).
 #### BC-X.5.004: `worklog list` 401 → exit 2 + `Not authenticated` + `jr auth login`
 
 **Confidence**: HIGH
-**Source**: `tests/worklog_commands.rs:95-120`
+**Source**: `tests/worklog_commands.rs:~95`
 **Trace**: Pass 3 BC-504
 
 ---
@@ -382,7 +382,7 @@ CI Guards (X.13).
 #### BC-X.5.006: `parse_duration` is case-insensitive (input lowercased first)
 
 **Confidence**: HIGH
-**Source**: `src/duration.rs:6`
+**Source**: `src/duration.rs:~6`
 **Trace**: Pass 3 BC-506
 
 ---
@@ -390,7 +390,7 @@ CI Guards (X.13).
 #### BC-X.5.007: `parse_duration("")` errors `Duration cannot be empty`
 
 **Confidence**: HIGH
-**Source**: `src/duration.rs:7-9`
+**Source**: `src/duration.rs:~7`
 **Trace**: Pass 3 BC-507
 
 ---
@@ -398,7 +398,7 @@ CI Guards (X.13).
 #### BC-X.5.008: `parse_duration("5")` errors `Number without unit`
 
 **Confidence**: HIGH
-**Source**: `src/duration.rs:38-42`
+**Source**: `src/duration.rs:~38`
 **Trace**: Pass 3 BC-508
 
 ---
@@ -416,7 +416,7 @@ CI Guards (X.13).
 #### BC-X.5.010: Duration proptest: `valid_single_units_always_parse`; `combined_units_always_parse`; `garbage_input_never_panics`; `format_roundtrip` (sub-day)
 
 **Confidence**: HIGH
-**Source**: `src/duration.rs:128-157`
+**Source**: `src/duration.rs:~128`
 **Trace**: Pass 3 BC-1099..BC-1102 (R4)
 
 ---
@@ -426,7 +426,7 @@ CI Guards (X.13).
 #### BC-X.6.001: `client.get_org_metadata(hostname)` POSTs GraphQL `tenantContexts` query to `/gateway/api/graphql`
 
 **Confidence**: HIGH
-**Source**: `tests/team_commands.rs:8-26`
+**Source**: `tests/team_commands.rs:~8`
 **Subject**: Teams
 **Behavior**: Returns `TenantContext { org_id, cloud_id }` (ADR-0005).
 **Trace**: Pass 3 BC-601
@@ -436,7 +436,7 @@ CI Guards (X.13).
 #### BC-X.6.002: `client.list_teams(orgId)` GETs `/gateway/api/public/teams/v1/org/<orgId>/teams`
 
 **Confidence**: HIGH
-**Source**: `tests/team_commands.rs:28-46`
+**Source**: `tests/team_commands.rs:~28`
 **Trace**: Pass 3 BC-602
 
 ---
@@ -444,7 +444,7 @@ CI Guards (X.13).
 #### BC-X.6.003: `team list` 5xx → exit 1; 401 → exit 2; standard error paths
 
 **Confidence**: HIGH
-**Source**: `tests/team_commands.rs:62-`
+**Source**: `tests/team_commands.rs:~62-`
 **Trace**: Pass 3 BC-603, BC-604
 
 ---
@@ -462,7 +462,7 @@ CI Guards (X.13).
 #### BC-X.7.001: `user search Q` GETs `/rest/api/3/user/search?query=Q`
 
 **Confidence**: HIGH
-**Source**: `tests/user_commands.rs`; `tests/all_flag_behavior.rs:155-208`
+**Source**: `tests/user_commands.rs`; `tests/all_flag_behavior.rs:~155`
 **Trace**: Pass 3 BC-701
 
 ---
@@ -470,7 +470,7 @@ CI Guards (X.13).
 #### BC-X.7.002: `user list --project P` calls `/rest/api/3/user/assignable/multiProjectSearch?projectKeys=P`
 
 **Confidence**: HIGH
-**Source**: `tests/all_flag_behavior.rs:260-`
+**Source**: `tests/all_flag_behavior.rs:~260-`
 **Trace**: Pass 3 BC-704
 
 ---
@@ -478,7 +478,7 @@ CI Guards (X.13).
 #### BC-X.7.003: `user list` (default, no --all) uses single-call legacy path; no startAt/maxResults params
 
 **Confidence**: HIGH
-**Source**: `tests/all_flag_behavior.rs:271-275`
+**Source**: `tests/all_flag_behavior.rs:~271`
 **Behavior**: `query_param_is_missing("startAt")` assertion.
 **Trace**: Pass 3 BC-705
 
@@ -487,7 +487,7 @@ CI Guards (X.13).
 #### BC-X.7.004: Duplicate display names + `--no-input` → exit non-zero; stderr shows emails + accountIds + duplicate name
 
 **Confidence**: HIGH
-**Source**: `tests/duplicate_user_disambiguation.rs:21-275`
+**Source**: `tests/duplicate_user_disambiguation.rs:~21`
 **Subject**: Users
 **Behavior**: Three users "John Smith" x2 + "John Smithson" → disambiguation shows only the two Smiths (not Smithson).
 **Trace**: Pass 3 BC-706..BC-708
@@ -505,7 +505,7 @@ CI Guards (X.13).
 #### BC-X.7.006: `user search --all` advances startAt by REQUESTED maxResults (JRACLOUD-71293 workaround)
 
 **Confidence**: HIGH
-**Source**: `tests/user_pagination.rs:202-247`
+**Source**: `tests/user_pagination.rs:~202`
 **Trace**: Pass 3 BC-1119 (R4)
 
 ---
@@ -515,7 +515,7 @@ CI Guards (X.13).
 #### BC-X.8.001: `project_exists(key)` → true on 200; false on 404
 
 **Confidence**: HIGH
-**Source**: `tests/input_validation.rs:9-42`
+**Source**: `tests/input_validation.rs:~9`
 **Trace**: Pass 3 BC-801
 
 ---
@@ -523,7 +523,7 @@ CI Guards (X.13).
 #### BC-X.8.002: `get_project_statuses(key)` → 404 → `JrError::ApiError{status: 404}`
 
 **Confidence**: HIGH
-**Source**: `tests/input_validation.rs:233-253`
+**Source**: `tests/input_validation.rs:~233`
 **Trace**: Pass 3 BC-802
 
 ---
@@ -531,7 +531,7 @@ CI Guards (X.13).
 #### BC-X.8.003: `get_or_fetch_project_meta(client, key)` caches by project key with 7d TTL
 
 **Confidence**: HIGH
-**Source**: `tests/project_meta.rs:24-67`
+**Source**: `tests/project_meta.rs:~24`
 **Behavior**: Service-desk project → `service_desk_id = Some("15")`. Software project → `None`.
 **Trace**: Pass 3 BC-804
 
@@ -540,7 +540,7 @@ CI Guards (X.13).
 #### BC-X.8.004: `require_service_desk` errors for software project: "Jira Software project" + queue-command-specific error message
 
 **Confidence**: HIGH
-**Source**: `tests/project_meta.rs:99-126`
+**Source**: `tests/project_meta.rs:~99`
 **Trace**: Pass 3 BC-805
 
 > **[UPDATED 2026-05-18 issue #288]** The literal "Queue commands require…" error string is removed from `src/api/jsm/servicedesks.rs::require_service_desk` and replaced by a caller-supplied context label. BC-X.8.004 now defines the queue-command-specific message only: 'Project "<KEY>" is a <type> project. Queue commands (`jr queue`) require a Jira Service Management project. Run "jr project list" to find a JSM project.' For the `jr issue create --request-type` call site, the error message is: 'Project "<KEY>" is a <type> project. `--request-type` requires a Jira Service Management project. Run "jr project list" to find a JSM project.' (see BC-3.8.002). For `jr requesttype list/fields` call sites: 'Project "<KEY>" is a <type> project. `jr requesttype` commands require a Jira Service Management project. Run "jr project list" to find a JSM project.' (see BC-X.12.003). Previous version of this BC required only the common prefix "Jira Software project" — the call-site-specific suffix is now part of the contract.
@@ -552,7 +552,7 @@ CI Guards (X.13).
 #### BC-X.8.005: `list_projects` paginates via `startAt`; filter via `typeKey` query param
 
 **Confidence**: HIGH
-**Source**: `tests/project_commands.rs:1-323`
+**Source**: `tests/project_commands.rs:~1`
 **Trace**: Pass 3 BC-1133d, BC-1133e (R4)
 
 ---
@@ -592,12 +592,12 @@ Gate: `client.is_oauth_auth() == false` at the new `map_err` site on the `get_or
 3. The second GET arm (`list_service_desks()` → `GET /rest/servicedeskapi/servicedesk`) is covered **structurally** because the `map_err` wraps the entire `get_or_fetch_project_meta` future — it is NOT separately pinned by this test. A dedicated test for the service-desk-list 401 arm is not required; the `map_err` wraps both GETs uniformly. The canonical-vs-structural distinction is explicit: this test pins the project-GET arm; the service-desk-list arm is covered by the shared `map_err` on `get_or_fetch_project_meta`.
 4. Drive via: `jr issue create --project <KEY> --request-type <NAME> --summary "..." --no-input` (which calls `require_service_desk` first, triggering the 401 before reaching the JSM POST).
 **Trace**: `tests/issue_create_jsm.rs` (integration test `test_require_service_desk_basic_auth_401_surfaces_api_token_hint` — NEW; Basic-auth fixture, cache miss forced; asserts stderr `contains` "expired or revoked" and `contains` `id.atlassian.com/manage-profile/security/api-tokens` and `contains` `jr auth login`; asserts stderr does NOT contain `write:servicedesk-request`). The new `map_err` is placed inside `require_service_desk` (shared by `jr issue create`, `jr queue`, `jr requesttype`), so all three callers structurally benefit; this test pins the `create` caller path; existing `queue`/`requesttype` integration tests cover regression for those callers.
-**Source**: Issue #384 F2; O-08-05 CONFIRMED in `.factory/research/issue-288-pr4-deferred-validation.md` (lines 342-381); `src/api/client.rs:696-704` (body check before Bearer guard — same issue as BC-3.8.014); `src/api/jsm/servicedesks.rs:52-85` (get_or_fetch_project_meta issues TWO live GETs on a service_desk-type cache miss: GET /rest/api/3/project/{key} AND GET /rest/servicedeskapi/servicedesk; the new map_err must wrap the entire future, catching 401 from either GET); `src/api/jsm/servicedesks.rs:117` (raw `?` propagation — no existing map_err on get_or_fetch_project_meta call; the new map_err MUST be introduced here).
+**Source**: Issue #384 F2; O-08-05 CONFIRMED in `.factory/research/issue-288-pr4-deferred-validation.md` (lines 342-381); `src/api/client.rs:~696` (body check before Bearer guard — same issue as BC-3.8.014); `src/api/jsm/servicedesks.rs:~52` (get_or_fetch_project_meta issues TWO live GETs on a service_desk-type cache miss: GET /rest/api/3/project/{key} AND GET /rest/servicedeskapi/servicedesk; the new map_err must wrap the entire future, catching 401 from either GET); `src/api/jsm/servicedesks.rs:~117` (raw `?` propagation — no existing map_err on get_or_fetch_project_meta call; the new map_err MUST be introduced here).
 **Confidence**: HIGH
 
 [NEW 2026-05-19 issue #384 F2] Closes O-08-05: `require_service_desk` 401 on the project-GET/service-desk-list path had no JSM-specific hint. The auth-conditional `map_err` is placed inside `require_service_desk` itself (not at call sites), so all three JSM caller paths benefit. Gate is `is_oauth_auth() == false` alone; map_err must rewrite both `NotAuthenticated` and `InsufficientScope` to the API-token hint (shared constant with BC-3.8.014 site).
 
-[REVISED 2026-05-19 issue #384 F2 adversary correction] Previous version incorrectly stated `src/api/client.rs:711-722 (Basic-auth 401 → NotAuthenticated)` as the explanation. This is incomplete: a Basic-auth 401 with a "scope does not match" body lands in `InsufficientScope` (body check at line 696 fires before Bearer guard at line 718). The corrected model: gate is `is_oauth_auth() == false` alone; `map_err` rewrites any incoming variant.
+[REVISED 2026-05-19 issue #384 F2 adversary correction] Previous version incorrectly stated `src/api/client.rs:~711 (Basic-auth 401 → NotAuthenticated)` as the explanation. This is incomplete: a Basic-auth 401 with a "scope does not match" body lands in `InsufficientScope` (body check at line 696 fires before Bearer guard at line 718). The corrected model: gate is `is_oauth_auth() == false` alone; `map_err` rewrites any incoming variant.
 
 [REVISED 2026-05-19 issue #384 F2 adversary-pass-2 C-01/H-01/H-04/M-02/M-03] (C-01) Changed "map_err inside require_service_desk" to "MUST introduce a NEW map_err" — no existing map_err exists at line 117; the implementation must add one. (H-01) Dual exit codes documented explicitly: exit 64 (UserError, non-JSM) vs exit 2 (NotAuthenticated, 401). (M-02) Cache-warm suppression stated as user-facing behavioral boundary, not just a test-setup note. (M-03) API_TOKEN_EXPIRY_HINT constant location pinned to src/error.rs.
 
@@ -617,7 +617,7 @@ When a live GET inside `get_or_fetch_project_meta` returns 401 AND the active au
 
 For both sub-cases of OAuth 401, the implementation rewrites to `JrError::NotAuthenticated { hint }` (NOT `InsufficientScope` — the `InsufficientScope` Display is a fixed template purpose-built for the issue-#185 POST scenario; for a read GET it produces irrelevant POST-specific noise). Both arms of the `map_err` emit the SAME single canonical hint string — there is ONE pinnable hint text, not two. This makes the acceptance test unambiguous: both the `InsufficientScope` arm and the `NotAuthenticated` arm produce identical output.
 
-Rationale for hint content: `GET /rest/api/3/project/{key}` is a platform endpoint requiring `read:jira-work`; JSM service-desk context discovery additionally requires `read:servicedesk-request`. Both scopes are in `DEFAULT_OAUTH_SCOPES` (verified: `src/api/auth.rs:60-61`), so re-consent via `jr auth login` genuinely obtains them — the hint IS actionable. Because jr's default OAuth app already grants these scopes, expiry is the more common cause for default-scoped users. The hint therefore LEADS with session-expiry recovery (`jr auth refresh` / `jr auth login`) and SECOND mentions, for BYO-OAuth users, that `jr auth login` must be used to re-consent with `read:jira-work` and `read:servicedesk-request` — `jr auth refresh` alone cannot add missing scopes (it re-mints with the same granted scope set) (H-03: expiry-recovery leads; BYO-scope sentence is secondary and explicitly connects `jr auth login` to scope acquisition).
+Rationale for hint content: `GET /rest/api/3/project/{key}` is a platform endpoint requiring `read:jira-work`; JSM service-desk context discovery additionally requires `read:servicedesk-request`. Both scopes are in `DEFAULT_OAUTH_SCOPES` (verified: `src/api/auth.rs:~60`), so re-consent via `jr auth login` genuinely obtains them — the hint IS actionable. Because jr's default OAuth app already grants these scopes, expiry is the more common cause for default-scoped users. The hint therefore LEADS with session-expiry recovery (`jr auth refresh` / `jr auth login`) and SECOND mentions, for BYO-OAuth users, that `jr auth login` must be used to re-consent with `read:jira-work` and `read:servicedesk-request` — `jr auth refresh` alone cannot add missing scopes (it re-mints with the same granted scope set) (H-03: expiry-recovery leads; BYO-scope sentence is secondary and explicitly connects `jr auth login` to scope acquisition).
 
 NOTE: this does NOT change BC-3.8.015 — the JSM POST OAuth `InsufficientScope` arm is genuinely the #185 POST scenario, so keeping `InsufficientScope` there is correct and unchanged. Scopes are `read:jira-work` + `read:servicedesk-request` (NOT `write:servicedesk-request` — that applies to the subsequent POST, which `require_service_desk` never reaches).
 
@@ -641,11 +641,11 @@ This is the canonical pinnable string for `test_require_service_desk_oauth_401_s
 **Setup** (for `test_require_service_desk_oauth_401_surfaces_read_scope_hint`):
 0. **Isolated `XDG_CACHE_HOME` tempdir** (e.g., `tempfile::tempdir()`) — forces a project-meta cache miss so the live GET inside `get_or_fetch_project_meta` actually fires. A warm cache would bypass the HTTP call and the 401 would never be seen.
 1. Auth fixture: `JR_AUTH_HEADER=Bearer test-oauth-token` (capital B, single space — the established OAuth/Bearer fixture string used throughout `tests/issue_create_jsm.rs`).
-2. Mount `GET /rest/api/3/project/{KEY}` to return HTTP 401 with a **scope-mismatch body**: `{"errorMessages": ["Unauthorized; scope does not match"]}`. **WHY scope-mismatch body is required:** A Bearer client receiving a generic-expiry 401 body on this GET does NOT short-circuit to `JrError::InsufficientScope` — it enters the auto-refresh coordinator (client.rs:727+), which deterministically fails with a raw `anyhow::bail!` error (not a `JrError`) via the `JR_AUTH_HEADER` seam (no keychain tokens). That raw error propagates without entering the `map_err`'s `JrError` match arms, so the read-scope hint is never injected. The scope-mismatch body (`"scope does not match"` substring) triggers the short-circuit at client.rs:696-704 BEFORE the refresh coordinator, landing as `JrError::InsufficientScope` in the `map_err`, which then rewrites to `JrError::NotAuthenticated { hint }` with the read-scope hint. A generic-expiry body would produce a non-deterministic, non-`JrError` failure path — not a valid pin for this BC. **BC-X.8.006 (Basic) is NOT affected** by this constraint: a Basic 401 never enters the refresh path (gated on `Bearer` at client.rs:718), so any body deterministically yields a `JrError`; BC-X.8.006's Setup may use a generic-expiry body (as specified). This is the **canonical pinned 401 path** for this named test — the project GET is triggered first by `get_or_fetch_project_meta` on a cache miss. **URL-encoding note (adversary-pass-8 LOW):** the project key is URL-encoded by `get_or_fetch_project_meta` via `urlencoding::encode`, so a wiremock `path()` matcher is exact for plain-alphanumeric keys (the named test uses `HELP`); a project key containing special characters would require an encoded mock path.
+2. Mount `GET /rest/api/3/project/{KEY}` to return HTTP 401 with a **scope-mismatch body**: `{"errorMessages": ["Unauthorized; scope does not match"]}`. **WHY scope-mismatch body is required:** A Bearer client receiving a generic-expiry 401 body on this GET does NOT short-circuit to `JrError::InsufficientScope` — it enters the auto-refresh coordinator (client.rs:~727+), which deterministically fails with a raw `anyhow::bail!` error (not a `JrError`) via the `JR_AUTH_HEADER` seam (no keychain tokens). That raw error propagates without entering the `map_err`'s `JrError` match arms, so the read-scope hint is never injected. The scope-mismatch body (`"scope does not match"` substring) triggers the short-circuit at client.rs:~696 BEFORE the refresh coordinator, landing as `JrError::InsufficientScope` in the `map_err`, which then rewrites to `JrError::NotAuthenticated { hint }` with the read-scope hint. A generic-expiry body would produce a non-deterministic, non-`JrError` failure path — not a valid pin for this BC. **BC-X.8.006 (Basic) is NOT affected** by this constraint: a Basic 401 never enters the refresh path (gated on `Bearer` at client.rs:~718), so any body deterministically yields a `JrError`; BC-X.8.006's Setup may use a generic-expiry body (as specified). This is the **canonical pinned 401 path** for this named test — the project GET is triggered first by `get_or_fetch_project_meta` on a cache miss. **URL-encoding note (adversary-pass-8 LOW):** the project key is URL-encoded by `get_or_fetch_project_meta` via `urlencoding::encode`, so a wiremock `path()` matcher is exact for plain-alphanumeric keys (the named test uses `HELP`); a project key containing special characters would require an encoded mock path.
 3. The second GET arm (`list_service_desks()` → `GET /rest/servicedeskapi/servicedesk`) is covered **structurally** because the `map_err` wraps the entire `get_or_fetch_project_meta` future — it is NOT separately pinned by this test. The canonical-vs-structural distinction is explicit: this test pins the project-GET arm; the service-desk-list arm is covered by the shared `map_err` on `get_or_fetch_project_meta`. No dedicated test for the service-desk-list 401 arm is required; both arms emit the identical hint (as established in BC-X.8.007 body above).
 4. Drive via: `jr issue create --project <KEY> --request-type <NAME> --summary "..." --no-input` (which calls `require_service_desk` first, triggering the 401 before reaching the JSM POST). The test mounts only the 401 project-GET mock; no request-type resolution mock is needed because the command exits at the `require_service_desk` step.
 **Trace**: `tests/issue_create_jsm.rs` (integration test `test_require_service_desk_oauth_401_surfaces_read_scope_hint` — NEW; OAuth/Bearer fixture, cache miss forced; asserts stderr `contains` `read:jira-work` AND `contains` `read:servicedesk-request`; asserts stderr does NOT contain `write:servicedesk-request`). The new `map_err` is placed inside `require_service_desk` (shared by `jr issue create`, `jr queue`, `jr requesttype`), so all three callers structurally benefit; this test pins the `create` caller path; existing `queue`/`requesttype` integration tests cover regression for those callers.
-**Source**: Issue #384 F2; O-08-05 CONFIRMED; `src/api/auth.rs:60-61` (both `read:jira-work` and `read:servicedesk-request` in DEFAULT_OAUTH_SCOPES — hint IS actionable for default-scoped users); `src/api/client.rs:696-704` (scope-mismatch body detection → InsufficientScope); `src/api/jsm/servicedesks.rs:52-85` (get_or_fetch_project_meta issues TWO live GETs on a service_desk-type cache miss: GET /rest/api/3/project/{key} AND GET /rest/servicedeskapi/servicedesk; the new map_err must wrap the entire future); orchestrator decision: read-side scopes for this path, NOT write-scope; `src/api/jsm/servicedesks.rs:117` (new map_err must be introduced here — see BC-X.8.006).
+**Source**: Issue #384 F2; O-08-05 CONFIRMED; `src/api/auth.rs:~60` (both `read:jira-work` and `read:servicedesk-request` in DEFAULT_OAUTH_SCOPES — hint IS actionable for default-scoped users); `src/api/client.rs:~696` (scope-mismatch body detection → InsufficientScope); `src/api/jsm/servicedesks.rs:~52` (get_or_fetch_project_meta issues TWO live GETs on a service_desk-type cache miss: GET /rest/api/3/project/{key} AND GET /rest/servicedeskapi/servicedesk; the new map_err must wrap the entire future); orchestrator decision: read-side scopes for this path, NOT write-scope; `src/api/jsm/servicedesks.rs:~117` (new map_err must be introduced here — see BC-X.8.006).
 **Confidence**: HIGH
 
 [NEW 2026-05-19 issue #384 F2] Pins the OAuth read-scope hint for the require_service_desk 401 path. Prior to issue #384, no hint existed for this path. The read-side scope names differ from BC-3.8.015's write-scope name — a user whose token has `write:servicedesk-request` but not `read:jira-work` would fail at require_service_desk before ever reaching the POST. Both scopes are in DEFAULT_OAUTH_SCOPES, making `jr auth login` genuinely actionable for session-expiry cases.
@@ -656,7 +656,7 @@ This is the canonical pinnable string for `test_require_service_desk_oauth_401_s
 
 [REVISED 2026-05-19 issue #384 adversary-pass-6 F-07] BYO-OAuth sentence in hint reworded: for a BYO-OAuth user with genuinely missing scopes, `jr auth refresh` re-mints a token with the SAME deficient scope set — it cannot add scopes. Only `jr auth login` re-consents and can acquire `read:jira-work` + `read:servicedesk-request`. Hint text updated to connect `jr auth login` explicitly to scope acquisition; `jr auth refresh` positioned as expiry-recovery only. Rationale paragraph in BC body aligned.
 
-[REVISED 2026-05-19 issue #384 adversary-pass-9 C-01 CRITICAL design correction] Setup block corrected: the project-GET 401 mock body changed from generic-expiry to **scope-mismatch** (`{"errorMessages": ["Unauthorized; scope does not match"]}`). A Bearer client receiving a generic-expiry 401 on this GET routes through the refresh coordinator (client.rs:727+), which fails with a raw anyhow error (not a `JrError`) via the `JR_AUTH_HEADER` seam — the read-scope hint is never injected, making the test non-deterministic. The scope-mismatch body short-circuits to `JrError::InsufficientScope` at client.rs:696-704 BEFORE the refresh coordinator, deterministically reaching the `map_err`. BC-X.8.006 (Basic) is UNAFFECTED — Basic 401s never enter the refresh path and any body yields a `JrError` deterministically; BC-X.8.006's generic-expiry Setup remains as-is.
+[REVISED 2026-05-19 issue #384 adversary-pass-9 C-01 CRITICAL design correction] Setup block corrected: the project-GET 401 mock body changed from generic-expiry to **scope-mismatch** (`{"errorMessages": ["Unauthorized; scope does not match"]}`). A Bearer client receiving a generic-expiry 401 on this GET routes through the refresh coordinator (client.rs:~727+), which fails with a raw anyhow error (not a `JrError`) via the `JR_AUTH_HEADER` seam — the read-scope hint is never injected, making the test non-deterministic. The scope-mismatch body short-circuits to `JrError::InsufficientScope` at client.rs:~696 BEFORE the refresh coordinator, deterministically reaching the `map_err`. BC-X.8.006 (Basic) is UNAFFECTED — Basic 401s never enter the refresh path and any body yields a `JrError` deterministically; BC-X.8.006's generic-expiry Setup remains as-is.
 
 ---
 
@@ -768,7 +768,7 @@ The retry is a single-attempt guard — it does not loop.
 #### BC-X.9.001: `escape_value` proptest: for any printable Unicode up to 100 chars, output has NO unescaped quote
 
 **Confidence**: HIGH
-**Source**: `src/jql.rs:383-394`; `proptest-regressions/jql.txt` (seed: `s = ""`)
+**Source**: `src/jql.rs:~383`; `proptest-regressions/jql.txt` (seed: `s = ""`)
 **Subject**: JQL
 **Behavior**: `has_unescaped_quote` helper tracks backslash-runs. Regression corpus pinned.
 **Trace**: Pass 3 BC-1094 (R4)
@@ -778,7 +778,7 @@ The retry is a single-attempt guard — it does not loop.
 #### BC-X.9.002: `validate_duration("4w2d")` → Err; single unit `"7d"` → Ok
 
 **Confidence**: HIGH
-**Source**: `src/jql.rs:16-34`
+**Source**: `src/jql.rs:~16`
 **Behavior**: JQL relative-date validator (distinct from worklog parser).
 **Trace**: Pass 3 BC-131 (R1)
 
@@ -819,7 +819,7 @@ The retry is a single-attempt guard — it does not loop.
 #### BC-X.10.002: `partial_match(s, &candidates)` proptest: exact match always found; never panics on arbitrary input; empty candidates → None
 
 **Confidence**: HIGH
-**Source**: `src/partial_match.rs:153-198`
+**Source**: `src/partial_match.rs:~153`
 **Trace**: Pass 3 BC-1095..BC-1097 (R4)
 
 ---
@@ -827,7 +827,7 @@ The retry is a single-attempt guard — it does not loop.
 #### BC-X.10.003: Duplicate candidates → `MatchResult::ExactMultiple(name)` with `name.to_lowercase() == input.to_lowercase()`
 
 **Confidence**: HIGH
-**Source**: `src/partial_match.rs:182-198`
+**Source**: `src/partial_match.rs:~182`
 **Trace**: Pass 3 BC-1098 (R4)
 
 ---
@@ -1175,7 +1175,7 @@ e. **Path::exists() check**: only tokens surviving steps (a)-(d) reach this chec
 - EC-CITE-024 (mixed trailing punct, LOW-2): Token is `(src/adf.rs).` — fixpoint pass 1: sub-step (3) strips `(` → `src/adf.rs).`; sub-step (4) strips `.` → `src/adf.rs)`; sub-step (5) `count('(')=0 < count(')')=1` → strips `)` → `src/adf.rs`; pass 2: stable → checked. Demonstrates sub-step (4) plain-punct stripping runs before the bracket balance checks within one pass.
 - EC-CITE-025 (double-wrap, LOW-3): Token is `((src/x.rs))` — fixpoint pass 1: sub-step (3) strips leading `(` → `(src/x.rs))`; sub-step (5) `count('(')=1, count(')')=2` → strips one `)` → `(src/x.rs)`; pass 2: sub-step (3) strips `(` → `src/x.rs)`; sub-step (5) `count('(')=0, count(')')=1` → strips `)` → `src/x.rs`; pass 3: stable → checked. Single-fixpoint rule handles arbitrarily nested wraps deterministically.
 - EC-CITE-026 (paren-wrap + line-ref — F-PASS6-01 fix): Token is `(src/config.rs:~42)` — fixpoint pass 1: sub-steps (1)/(2) find no suffix to strip (still has leading `(`); sub-step (3) strips leading `(` → `src/config.rs:~42)`; sub-step (5) `count('(')=0 < count(')')=1` → strips `)` → `src/config.rs:~42`; pass 2: sub-step (2) strips `:~42` → `src/config.rs`; pass 3: stable → checked → pass. Under the former separated pipeline this token was a false-negative: the one-shot line-ref strip ran on `(src/config.rs:~42)` (no match, trailing `)`), leaving `:~42` after paren trim completed.
-- EC-CITE-027 (line-ref + trailing comma): Token is `src/api/client.rs:195,` — fixpoint pass 1: sub-step (4) strips trailing `,` → `src/api/client.rs:195`; pass 2: sub-step (2) strips `:195` → `src/api/client.rs`; pass 3: stable → checked → pass.
+- EC-CITE-027 (line-ref + trailing comma): Token is `src/api/client.rs:~195,` — fixpoint pass 1: sub-step (4) strips trailing `,` → `src/api/client.rs:~195`; pass 2: sub-step (2) strips `:195` → `src/api/client.rs`; pass 3: stable → checked → pass.
 - EC-CITE-028 (symbol-form + trailing punct): Token is `src/foo.rs::bar().` — fixpoint pass 1: sub-step (1) strips from first `::` → `src/foo.rs`; sub-steps (2)-(6) find nothing to strip on `src/foo.rs`; pass 2: stable → checked → pass. (The trailing `.` is inside the `::bar().` suffix and is eliminated together with it by sub-step (1); no separate plain-punct pass is needed.)
 - EC-CITE-029 (ROOT_FILES inclusion — Cargo.toml): Token is `Cargo.toml` — no known dir prefix; exactly matches ROOT_FILES member → IN-SCOPE at step (c) → passes extension filter at step (d) (`.toml`) → checked. `Cargo.toml` exists at repo root → pass. Demonstrates that root-level file citations without a dir prefix ARE checked when in ROOT_FILES.
 - EC-CITE-030 (ROOT_FILES exclusion — ci.yml shorthand): Token is `ci.yml` — no known dir prefix; does NOT exactly match any ROOT_FILES member → EXCLUDED at step (c). The file `.github/workflows/ci.yml` exists, but the bare `ci.yml` shorthand is a path shorthand, not a root file; checking it at root would false-positive. Correct citation is `.github/workflows/ci.yml`.
@@ -1202,7 +1202,7 @@ e. **Path::exists() check**: only tokens surviving steps (a)-(d) reach this chec
 | `(src/adf.rs).` | `src/adf.rs` (fixpoint pass 1: sub-step (3) strips `(` → `src/adf.rs).`; sub-step (4) strips `.` → `src/adf.rs)`; sub-step (5) strips `)` → `src/adf.rs`; pass 2: stable) | YES |
 | `((src/x.rs))` | `src/x.rs` (fixpoint pass 1: sub-step (3) strips `(` → `(src/x.rs))`; sub-step (5) strips one `)` → `(src/x.rs)`; pass 2: sub-step (3) strips `(` → `src/x.rs)`; sub-step (5) strips `)` → `src/x.rs`; pass 3: stable) | YES |
 | `(src/config.rs:~42)` | `src/config.rs` (fixpoint pass 1: sub-step (3) strips `(` → `src/config.rs:~42)`; sub-step (5) strips `)` → `src/config.rs:~42`; pass 2: sub-step (2) strips `:~42` → `src/config.rs`; pass 3: stable — NEW, EC-CITE-026, F-PASS6-01 fix) | YES |
-| `src/api/client.rs:195,` | `src/api/client.rs` (fixpoint pass 1: sub-step (4) strips `,` → `src/api/client.rs:195`; pass 2: sub-step (2) strips `:195` → `src/api/client.rs`; pass 3: stable — NEW, EC-CITE-027) | YES |
+| `src/api/client.rs:~195,` | `src/api/client.rs` (fixpoint pass 1: sub-step (4) strips `,` → `src/api/client.rs:~195`; pass 2: sub-step (2) strips `:195` → `src/api/client.rs`; pass 3: stable — NEW, EC-CITE-027) | YES |
 | `src/foo.rs::bar().` | `src/foo.rs` (fixpoint pass 1: sub-step (1) strips `::bar().` → `src/foo.rs`; pass 2: stable — NEW, EC-CITE-028) | YES |
 | `Cargo.toml` | `Cargo.toml` (no dir prefix; exactly matches ROOT_FILES member → step (c) passes; `.toml` passes step (d) → checked — NEW, EC-CITE-029) | YES |
 | `ci.yml` | excluded (no dir prefix; NOT in ROOT_FILES — bare shorthand for `.github/workflows/ci.yml`; step (c) excludes — NEW, EC-CITE-030) | NO |
@@ -1356,8 +1356,8 @@ There is NO `is_off_working_branch_allowlisted` function in the final implementa
 **Step 1 — Extraction**: From each Trace/Source line, all backtick-quoted tokens starting with `src/` are extracted via a space-tolerant two-pass extractor (DEC-154 F-B2-02 fix):
 
 - **Pass 1** — extract every full backtick-quoted token that begins with `src/`, including internal spaces: `` grep -oE '`src/[^`]+`' | tr -d '`' `` — MUST be `|| true`-guarded at the call site (i.e., `… | tr -d '`' || true`) so zero-match Trace/Source lines return empty string rather than aborting under `set -euo pipefail`; zero matches is a legitimate state that must flow to the SCOPE-EMPTY/coverage-floor guards, not abort extraction (Story A pipefail-safety precedent)
-- **Pass 2** — for each extracted token, split on the first space (if present) and keep only the portion before the space. This correctly reduces: `` `src/file.rs § "section"` `` → `src/file.rs`; `` `src/config.rs:269-282, 308-310` `` → `src/config.rs:269-282` (further reduced at Step 2 line-ref strip); `` `src/api/jira/issues.rs::add_comment(internal: bool)` `` → `src/api/jira/issues.rs::add_comment(internal:` (Step 5 strip-from-first-`(` normalizes to `add_comment`).
-- **Pass 2 — comma-lineref normalization**: after the space-split, strip any trailing `, NN` or `, NN-MM` groups that appear in the file component (comma-space line-ref list form, e.g., `src/cache.rs:7, 30-32` → after space-split already reduced to `src/cache.rs:7`; Step 2 line-ref strip then reduces to `src/cache.rs`).
+- **Pass 2** — for each extracted token, split on the first space (if present) and keep only the portion before the space. This correctly reduces: `` `src/file.rs § "section"` `` → `src/file.rs`; `` `src/config.rs:~269, 308-310` `` → `src/config.rs:~269` (further reduced at Step 2 line-ref strip); `` `src/api/jira/issues.rs::add_comment(internal: bool)` `` → `src/api/jira/issues.rs::add_comment(internal:` (Step 5 strip-from-first-`(` normalizes to `add_comment`).
+- **Pass 2 — comma-lineref normalization**: after the space-split, strip any trailing `, NN` or `, NN-MM` groups that appear in the file component (comma-space line-ref list form, e.g., `src/cache.rs:~7, 30-32` → after space-split already reduced to `src/cache.rs:~7`; Step 2 line-ref strip then reduces to `src/cache.rs`).
 
 **Why the fix matters**: the prior single-pass regex `` `src/[^` ]+` `` used a stop-on-backtick-OR-space character class. Any backtick-quoted token containing an internal space (10 comma-space line-ref lists + 1 fn-with-space-args, 11 tokens total in the corpus) failed to match at all and was silently dropped — these citations were neither checked nor counted. The two-pass form recovers all 11 tokens. N increases from ~315 to ~326; FLOOR increases from 236 to 244 (adjudication §4 census, 2026-07-06).
 
@@ -1447,8 +1447,8 @@ The `[<[:space:](]` end-anchor handles: generics (`struct Foo<T>`), unit-struct 
 - EC-CITE-054 [DEC-154 branch (e) positive]: `src/types/jira/bulk.rs::BulkTransitionRequest` — fn-grep fails (no `fn BulkTransitionRequest`); not `tests`; not `tests::*`; UPPER_CASE check fails (has mixed-case); CamelCase check fires → type-def grep finds `pub struct BulkTransitionRequest {` at line 297 → ALIVE via (e). Self-test Fixture K.
 - EC-CITE-055 [DEC-154 branch (e) negative]: `src/adf.rs::NonexistentType` (fabricated) — fn-grep fails; UPPER_CASE fails; CamelCase check fires → type-def grep finds no `struct|enum|type|trait|union NonexistentType` → DEAD.
 - EC-CITE-056 [DEC-154 branch (c) — defense-in-depth]: `src/types/assets/linked.rs::tests::display_id_fallback_with_hint` — post-file component is `tests::display_id_fallback_with_hint` (matches `^tests::[a-z_][a-z0-9_]*$`); fn-grep (a) already finds `fn display_id_fallback_with_hint` at line 100 → ALIVE via (a); branch (c) additionally confirms `mod tests` at line 68. Both paths concur: ALIVE.
-- EC-CITE-057 [DEC-154 F-B2-02 extraction recovery]: `src/config.rs:269-282, 308-310` on a Trace/Source line — Pass 1 extracts full token `src/config.rs:269-282, 308-310`; Pass 2 splits on first space → `src/config.rs:269-282`; comma-lineref normalization strips trailing `, 308-310` residue if present before Step 2; Step 2 line-ref strip → bare file `src/config.rs` → file-existence check only. Previously silently MISSED by single-pass regex (one of 10 comma-space line-ref list tokens recovered by the fix; adjudication §1.2 class 14).
-- EC-CITE-058 [Pre-AC-001 hygiene dependency]: 3 truly-dead citation clusters that the guard CORRECTLY flags as DEAD — (a) `src/cli/auth.rs::*` (~7-8 tokens across bc-7 and bc-1): file does not exist; `auth` was refactored to directory `src/cli/auth/mod.rs` + siblings; (b) `src/cli/assets.rs:303-321` (bc-4): file does not exist; `assets` refactored to `src/cli/assets/`; (c) `src/cli/snapshots/jr__cli__auth__tests__list_table_snapshot.snap` (bc-1): moved to `src/cli/auth/tests/snapshots/` — under the two-tier shape guard (Step 3b), this `.snap` citation passes the shape guard (extension `.snap` matches `[a-zA-Z0-9]+`) and is routed to tier (ii) file-existence-only; the file does NOT exist at the cited stale path → `DEAD: src/cli/snapshots/jr__cli__auth__tests__list_table_snapshot.snap not found`. These are not grammar failures — they are citation hygiene issues that must be resolved in the story PR's `files_modified` list BEFORE Guard 1 can reach GREEN on develop HEAD. The guard catching (c) via the tier (ii) file-existence check is correct behavior (see EC-CITE-060 for the 5 alive `.snap` corpus cases that prove this tier works for both pass and fail).
+- EC-CITE-057 [DEC-154 F-B2-02 extraction recovery]: `src/config.rs:~269, 308-310` on a Trace/Source line — Pass 1 extracts full token `src/config.rs:~269, 308-310`; Pass 2 splits on first space → `src/config.rs:~269`; comma-lineref normalization strips trailing `, 308-310` residue if present before Step 2; Step 2 line-ref strip → bare file `src/config.rs` → file-existence check only. Previously silently MISSED by single-pass regex (one of 10 comma-space line-ref list tokens recovered by the fix; adjudication §1.2 class 14).
+- EC-CITE-058 [Pre-AC-001 hygiene dependency]: 3 truly-dead citation clusters that the guard CORRECTLY flags as DEAD — (a) `src/cli/auth.rs::*` (~7-8 tokens across bc-7 and bc-1): file does not exist; `auth` was refactored to directory `src/cli/auth/mod.rs` + siblings; (b) `src/cli/assets.rs:~303` (bc-4): file does not exist; `assets` refactored to `src/cli/assets/`; (c) `src/cli/snapshots/jr__cli__auth__tests__list_table_snapshot.snap` (bc-1): moved to `src/cli/auth/tests/snapshots/` — under the two-tier shape guard (Step 3b), this `.snap` citation passes the shape guard (extension `.snap` matches `[a-zA-Z0-9]+`) and is routed to tier (ii) file-existence-only; the file does NOT exist at the cited stale path → `DEAD: src/cli/snapshots/jr__cli__auth__tests__list_table_snapshot.snap not found`. These are not grammar failures — they are citation hygiene issues that must be resolved in the story PR's `files_modified` list BEFORE Guard 1 can reach GREEN on develop HEAD. The guard catching (c) via the tier (ii) file-existence check is correct behavior (see EC-CITE-060 for the 5 alive `.snap` corpus cases that prove this tier works for both pass and fail).
 - EC-CITE-059 [F-B3-01 class-15 normalization — fn with space args]: `src/api/jira/issues.rs::add_comment(internal: bool)` (bc-3:~2100) — Pass 2 space-split reduces the full backtick-quoted token to `src/api/jira/issues.rs::add_comment(internal:`; Step 5 strip-from-first-`(` (`symbol="${symbol%%\(*}"`) then reduces `add_comment(internal:` → `add_comment`; fn-grep finds `fn add_comment` at `src/api/jira/issues.rs:~579` → ALIVE via (a). Under the prior bare-`()` strip (`symbol="${symbol%()}"`) the symbol `add_comment(internal:` had no trailing `)` to strip — the strip was a no-op → symbol `add_comment(internal:` was emitted to the fn-grep ERE → malformed pattern → DEAD → AC-001 blocked. The F-B3-01 fix (`%%\(*` strip-from-first-`(`) subsumes both the bare-`()` case (EC-CITE-042) and the class-15 space-args case, making the two classes a single strip rule. Note: Fixture F's sub-probe citation must use a SPACE-ARGS form (e.g., `src/mock_f.rs::mock_f_fn_selftest(args: T)`) to give Step-5 strip-from-first-`(` mutation coverage. A bare-`()` form is UNSOUND: under a delete-strip mutation `()` is a valid empty ERE group, so `fn name() {}` still matches → mutation ALIVE → not caught; only the space-args form forces Pass 2 to yield `name(args:` (unbalanced `(`) → fn-grep ERE malformed (grep exits 2) → mutation DEAD → caught. This fixture content detail is story-writer scope (the BC does not pin the exact mock file text).
 
 - EC-CITE-060 [F-01 two-tier — tier (ii) `.snap` file-existence, positive and negative]: **Positive (ALIVE)**: 5 `.snap` citations in bc-*.md Trace/Source fields that resolve to real on-disk files — bc-1:514, bc-5:205, bc-5:214, bc-7:97, bc-7:107 (verified present on develop @ ab78a2d). Under tier (ii): shape guard accepts the `.snap` extension (`[a-zA-Z0-9]+` matches `snap`), Step 4 file-existence check passes → token classified ALIVE and **counted** (+1 to `total_citations` for each, contributing to N and the coverage floor denominator). Step 5 symbol check is skipped. **Negative (DEAD)**: see EC-CITE-058(c) — `src/cli/snapshots/jr__cli__auth__tests__list_table_snapshot.snap` cited in bc-1 (pre-hygiene stale path); tier (ii) file-existence check fails → `DEAD: src/cli/snapshots/jr__cli__auth__tests__list_table_snapshot.snap not found`. **N impact**: these 5 alive `.snap` tokens raise N from 304 (`.rs`-only on 2b09313) to 309 (two-tier), FLOOR from 228 to 231.
@@ -1530,7 +1530,7 @@ The `spec-guard` job already mounts the `factory-artifacts` worktree via `git wo
 - EC-CITE-047: Guard runs on develop HEAD where all citations are alive → exit 0; `Check passed: N citations checked` with N ≥ FLOOR
 - EC-CITE-048: A stale citation is introduced (file renamed, symbol moved) in a PR → guard fires → exit 1 with `DEAD:` offender list → CI blocked
 - EC-CITE-049: BC-INDEX.md has zero `^\*\*(Trace|Source)\*\*:` lines → excluded by anchor pattern; no extraction; no false positive (research cross-cutting finding F2)
-- EC-CITE-050: `tests/issue_commands.rs:1646-1703` appears on a Trace/Source line → NOT extracted; canonical regex only matches `src/`-prefixed backtick tokens; excluded from scope
+- EC-CITE-050: `tests/issue_commands.rs:~1646` appears on a Trace/Source line → NOT extracted; canonical regex only matches `src/`-prefixed backtick tokens; excluded from scope
 
 **Canonical Test Vectors**:
 
