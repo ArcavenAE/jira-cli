@@ -11165,3 +11165,36 @@ UNTOUCHED by this burst — it remains the standing next-priority once a human d
 work. All committed to factory-artifacts in ONE atomic commit (Single-Commit Burst Protocol, no
 Stage-2 backfill, no SHA placeholder), pushed via CAS. `regression-state.json`,
 `sidecar-learning.md`, and untracked `.claude/` left exactly as found, per standing instruction.
+
+## SESSION-WRAP-POST-668-MERGE (2026-08-13)
+
+**This burst's own work (2026-08-13, state-manager, Single-Commit Burst Protocol, dispatched by
+the orchestrator after the human ran `/wrap` to pause the factory for a session clear):**
+lightweight wrap-confirmation burst, not a content change. Confirmed `pipeline: PAUSED` was
+already correctly set (unchanged from the prior burst, `5fc6b445`, which closed the #668 feature
+cycle). Confirmed SOH-DX-1's F4 next-priority (`S-TRAIL-DERIVATION-GUARD-1`, P2/draft, status
+unresolved) is unchanged and untouched.
+
+**One post-cycle-close release-ops action recorded since the prior burst:** the `v0.6.0` GitHub
+Release notes were corrected. The release body had been left as GitHub's auto-generated
+boilerplate (a commit-list summary) rather than curated release notes; it was replaced with the
+actual `CHANGELOG.md [0.6.0]` entry — Breaking/Added/Fixed/Changed sections, ~5.4KB of real
+release-notes content. The release tag (`93d422fd`), its 10 attached assets, and the
+Latest-release flag are all unchanged by this action. This is a GitHub-release-metadata-only
+edit — no repository content, spec, or code changed; nothing on `develop`/`main` moved.
+
+**This session's material work, for context (already recorded in the prior burst, restated here
+only as a pointer):** issue #668 (surface Jira `duedate` in `jr issue view`/`jr issue list`) was
+delivered end-to-end through the full VSDD Feature Mode pipeline F1–F7 and merged as PR #691
+(`1a298e24`), closing #668. Full narrative: `cycles/cycle-001/burst-log.md` §
+S-668-1-MERGED-CYCLE-CLOSED (2026-08-13, prior burst, immediately above).
+
+**`STATE.md`** updated: `version` 2.51→2.52, `timestamp` refreshed, `pipeline` reconfirmed
+`PAUSED` (no change), one Phase-Progress row swapped (the S-668-1-MERGED-CYCLE-CLOSED row
+replaced by this burst's row; the pass-60/pass-61 structural row and the S-626-1-MERGE fix-burst
+structural row are retained live, per the standing Phase-Progress retention requirement), one
+Current-Phase-Steps row swapped, Session Resume Checkpoint replaced (prior checkpoint archived
+verbatim to `session-checkpoints.md`). No Decisions Log, Drift Items, Skip Log, Blocking Issues,
+or Open Issues Tracker changes — nothing in those tables changed this burst. SOH-DX-1's own
+records are untouched. `regression-state.json`, `sidecar-learning.md`, and untracked `.claude/`
+left exactly as found, per standing instruction.
