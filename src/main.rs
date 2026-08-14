@@ -228,33 +228,6 @@ async fn run(cli: Cli) -> anyhow::Result<()> {
         return Ok(());
     }
 
-    // VP-MUTANTS-SCOPE-1-001 readiness-handshake seam (debug+unix only). See
-    // tests/interrupt_signal.rs module doc for the full contract. This
-    // branch short-circuits real command dispatch entirely — the seam only
-    // needs to exercise run_until_shutdown's Interrupted arm deterministically.
-    #[cfg(all(debug_assertions, unix))]
-    if std::env::var("JR_TEST_BLOCK_UNTIL_SIGINT")
-        .map(|v| v == "1")
-        .unwrap_or(false)
-    {
-        // No `return` here: both match arms diverge (the `Completed` arm can
-        // never actually be reached at runtime since `work` is
-        // `std::future::pending()`; the `Interrupted` arm always calls
-        // `std::process::exit`), so the match itself never yields control
-        // back — an explicit `return` in front is redundant and trips
-        // rustc's `unreachable_code` lint.
-        match run_until_shutdown(std::future::pending::<()>(), block_until_sigint_test_seam()).await
-        {
-            RunOutcome::Completed(()) => {
-                unreachable!("test-seam work future is pending() and never resolves")
-            }
-            RunOutcome::Interrupted => {
-                eprintln!("\nInterrupted");
-                std::process::exit(130);
-            }
-        }
-    }
-
     // Set up Ctrl+C handler
     let main_task = async {
         match cli.command {
@@ -500,11 +473,57 @@ async fn run(cli: Cli) -> anyhow::Result<()> {
         }
     };
 
-    match run_until_shutdown(main_task, async {
+    // VP-MUTANTS-SCOPE-1-001 readiness-handshake seam (debug+unix only). See
+    // tests/interrupt_signal.rs module doc for the full contract.
+    //
+    // This gates only WHICH shutdown/work futures are selected below — there
+    // is exactly one `RunOutcome::Interrupted` arm in this function (the
+    // `match` at the bottom), reached by both the seam path and the
+    // production path. That is deliberate: it is what lets VP-001's SIGINT
+    // exercise the real `eprintln!("\nInterrupted")` + `std::process::exit(130)`
+    // lines instead of a parallel seam-only copy of them.
+    //
+    // Always `false` outside debug+unix builds, so release/non-unix builds
+    // always take the production branches below with zero behavior change.
+    #[cfg(all(debug_assertions, unix))]
+    let test_seam_active = std::env::var("JR_TEST_BLOCK_UNTIL_SIGINT")
+        .map(|v| v == "1")
+        .unwrap_or(false);
+    #[cfg(not(all(debug_assertions, unix)))]
+    let test_seam_active = false;
+
+    // WORK future: the seam blocks forever (`pending()`, typed to match
+    // `main_task`'s `anyhow::Result<()>` output so both branches share one
+    // type) so the process can only end via the shutdown/interrupt arm below;
+    // production dispatches the real command via `main_task`. Boxed because
+    // the two branches are different concrete future types.
+    let work: std::pin::Pin<Box<dyn std::future::Future<Output = anyhow::Result<()>>>> =
+        if test_seam_active {
+            Box::pin(std::future::pending())
+        } else {
+            Box::pin(main_task)
+        };
+
+    // SHUTDOWN future: the seam's unix-signal future prints the
+    // `JR-TEST-READY` marker immediately after synchronously registering its
+    // listener (see `block_until_sigint_test_seam`'s doc comment for why that
+    // ordering is race-free); production uses the real `ctrl_c()` adapter.
+    #[cfg(all(debug_assertions, unix))]
+    let shutdown: std::pin::Pin<Box<dyn std::future::Future<Output = ()>>> = if test_seam_active {
+        Box::pin(block_until_sigint_test_seam())
+    } else {
+        Box::pin(async {
+            let _ = tokio::signal::ctrl_c().await;
+        })
+    };
+    #[cfg(not(all(debug_assertions, unix)))]
+    let shutdown = async {
         let _ = tokio::signal::ctrl_c().await;
-    })
-    .await
-    {
+    };
+
+    // The ONE interrupt branch, reached by both the seam and production
+    // paths — see the comment above `test_seam_active`.
+    match run_until_shutdown(work, shutdown).await {
         RunOutcome::Completed(result) => result,
         RunOutcome::Interrupted => {
             eprintln!("\nInterrupted");
@@ -520,10 +539,11 @@ async fn run(cli: Cli) -> anyhow::Result<()> {
 // files link against via `lib.rs`. Items here, even `pub(crate)`, are not
 // reachable from `tests/`.
 //
-// RED-GATE NOTE (S-MUTANTS-SCOPE-1, F4 Test Writer): `run_until_shutdown` and
-// `RunOutcome` do not exist yet in this file — that is the point. This module
-// is written first, against the interface contract the implementer will
-// build to match:
+// IMPLEMENTED (S-MUTANTS-SCOPE-1, F4 Test Writer -> implementer): `run_until_shutdown`
+// and `RunOutcome` above match the interface contract this module was written
+// against, and `run()` is now their sole production call site (see the single
+// `RunOutcome::Interrupted` arm at the bottom of `run()`, shared by both the
+// debug+unix test seam and real production dispatch):
 //
 //     pub(crate) enum RunOutcome<T> { Completed(T), Interrupted }
 //
@@ -533,9 +553,10 @@ async fn run(cli: Cli) -> anyhow::Result<()> {
 //         S: std::future::Future<Output = ()>,
 //     { ... }
 //
-// `run_until_shutdown` must contain NO `eprintln!` and NO `std::process::exit`
-// call — both stay at the `run()` call site (AC-006). This file will fail to
-// compile until the implementer adds both items above.
+// `run_until_shutdown` contains NO `eprintln!` and NO `std::process::exit`
+// call — both stay at the `run()` call site (AC-006), which is what lets the
+// tests below inject `std::future::{ready, pending}` and assert on
+// `RunOutcome` in-process without tearing down the test harness.
 #[cfg(test)]
 mod tests {
     use super::RunOutcome;

@@ -43,13 +43,12 @@
 //! readiness wait and fails via a bounded-timeout panic (never an unbounded
 //! hang) — see `READY_TIMEOUT` below.
 //!
-//! No helper function/const in this file is used exclusively by the
-//! `#[cfg(unix)]` test below is declared *outside* that test's own function
-//! body — everything the test needs lives inline inside the single
-//! `#[cfg(unix)] #[test]` function, so there is nothing left over to orphan
-//! on a non-Unix build (round-15 CLAUDE.md Windows dead-code-lint hazard;
-//! see `docs/specs/cargo-mutants-policy.md` history and S-MUTANTS-SCOPE-1
-//! AC-011).
+//! Everything the `#[cfg(unix)]` test below needs lives inline inside that
+//! single `#[cfg(unix)] #[test]` function — no helper function or const is
+//! declared outside of it — so there is nothing left over to orphan as
+//! dead code on a non-Unix build (round-15 CLAUDE.md Windows dead-code-lint
+//! hazard; see `docs/specs/cargo-mutants-policy.md` history and
+//! S-MUTANTS-SCOPE-1 AC-011).
 
 #[cfg(unix)]
 #[test]
