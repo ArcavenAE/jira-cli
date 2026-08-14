@@ -4,8 +4,50 @@ All notable changes to jr will be documented here.
 
 ## [Unreleased]
 
+### Breaking Changes
+
+- **`jr auth switch --profile <X> <NAME>` now exits 64** (S-663-1,
+  BC-1.2.047). `--profile` was previously *accepted* and had no effect on
+  which profile was activated — the positional `<NAME>` always won — though
+  it did force an active-profile existence check via `Config::load_with`,
+  producing the confusing "both values must be real profiles, only one
+  matters" incantation the issue reports. Migration: drop `--profile` and
+  run `jr auth switch <NAME>`. All other `auth` subcommands (`list`, `remove`,
+  `login`, `status`, `refresh`, `logout`) continue to honor `--profile`
+  unchanged. (#663)
+- **`jr issue edit --dry-run` now reads stdin and renders an ADF preview
+  (S-692-1, DEC-274).** Previously `--dry-run --description-stdin` never read
+  stdin and emitted a fixed placeholder string
+  (`"<from stdin — not yet read in dry-run>"`) for
+  `plannedChanges.description`, and bare `--description` had no ADF preview at
+  all. Both `--description` and `--description-stdin` now render the actual
+  ADF document via the same `markdown_to_adf`/`text_to_adf` conversion the
+  live (non-dry-run) path uses, exposed as a new additive
+  `plannedChanges.descriptionAdf` field (`--output json`) / a
+  `"  description (ADF): rendered OK"` line (table mode).
+  `plannedChanges.description` still carries the raw input string verbatim
+  (BC-3.4.013/#398 unaffected). A `markdown_to_adf` `MAX_ADF_DEPTH` recursion
+  failure now exits 64 from `--dry-run` too, closing a false-OK regression
+  where a pathologically nested description previously returned exit 0 under
+  `--dry-run` while the corresponding live edit would exit 64. Any automation
+  asserting on the old literal placeholder string will observe a different
+  value. Note: `--dry-run --description-stdin` now performs a blocking read
+  of stdin (matching the live path). Invocations that previously returned
+  immediately without stdin attached will now wait for EOF — pipe input, or
+  redirect from /dev/null. (#692)
+
 ### Added
 
+- **`jr queue view` surfaces queue-configured custom fields in `--output json`**
+  (S-693-1, BC-X.8.009 AMENDED): the resolved queue's declared `fields[]`
+  (filtered to `customfield_<digits>` tokens only) now flow into the batch
+  issue fetch, so `customfield_*` values configured as queue columns appear
+  in JSON output via the existing `IssueFields` flatten mechanism. Table
+  output is unchanged (no new column; render-side work tracked separately as
+  #575). The `--id` path incurs one additional `list_queues` call to obtain
+  this field config that the `<name>` path already has in hand; on failure
+  it degrades to base fields only with a stderr warning rather than failing
+  the command. (#693)
 - **Due date visibility (S-668-1):** `jr issue view` and `jr issue list --output json`
   now include the `duedate` field. `jr issue view` shows a Due Date row; `jr issue list
   --duedate` adds an opt-in Due Date column. (#668)
