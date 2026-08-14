@@ -3,9 +3,10 @@ context: bc-x
 title: "Cross-cutting (HTTP client, Runtime, Users, Teams, Worklogs, Projects, Queues, JQL, Partial-match, JSM Request Types, CI Guards)"
 total_bcs: 151   # cumulative claim (incl. range-collapsed); definitional_count below is individually-bodied headings
 definitional_count: 85   # count of `#### BC-` headings in this file
-last_updated: 2026-08-13
+last_updated: 2026-08-14
 source_pass: 3
 trace: |
+  - F2 spec evolution (2026-08-14, S-MUTANTS-SCOPE-1): BC-X.3.006 AMENDED — promoted from thin semport stub (Confidence MEDIUM; only title/Confidence/Source/Trace; stale `src/main.rs:~264` citation) to a fully-specified BC (Subject/Behavior/Edge Cases EC-1..EC-3/Verification Properties added; Confidence HIGH; Source corrected to `src/main.rs::run` ~415). Pins the exact byte-level contract (`stderr == "\nInterrupted\n"`, `exit == 130`) that S-MUTANTS-SCOPE-1's F4 will exercise via a new `#[cfg(unix)]` subprocess SIGINT test (VP-MUTANTS-SCOPE-1-001) and a portable `run_until_shutdown` arm-selection unit test (VP-MUTANTS-SCOPE-1-002), ahead of `src/main.rs` entering `.cargo/mutants.toml::examine_globs`. No BC count change (still 85 individually-bodied / 151 cumulative). Also fixed a pre-existing stale cross-reference in `.factory/specs/prd/edge-case-catalog.md` EC-HTTP-005 ("Covered by BC-X.1.009" — wrong; BC-X.1.009 is the unrelated 429-exhausted-warning BC — corrected to BC-X.3.006). See `.factory/phase-f2-spec-evolution/S-MUTANTS-SCOPE-1-spec-delta.md`.
   - F2 spec evolution, bucket1-defects bundle (2026-08-13, issue #693): BC-X.8.009 AMENDED — Issue fetch pipeline step 3 now threads the resolved `Queue`'s declared `fields[]` (filtered to drop `issuekey` and any `BASE_ISSUE_FIELDS` member) into `search_issues`'s `extra_fields` argument, surfacing queue-configured custom fields in `--output json` via `IssueFields`'s existing `#[serde(flatten)] extra` mechanism. Table output unchanged (no new column; issue #575 tracks render-side work separately, out of scope here). `--id` path costs one additional `list_queues` call to obtain `queue.fields` that the `<name>` path does not incur (already has the `Queue` in hand from `resolve_queue_by_name`). Pre-#693 text (empty `extra_fields`) retained inline for audit trail. No BC count change (still 85 individually-bodied). See `.factory/research/bucket1-693-queue-view-fields-2026-08-13.md`.
   - L2: .factory/specs/domain-spec/cross-cutting.md
   - Source broad: .factory/semport/jira-cli/jira-cli-pass-3-behavioral-contracts.md §2.6-2.15
@@ -269,11 +270,46 @@ CI Guards (X.13).
 
 ---
 
-#### BC-X.3.006: Ctrl+C exits 130 with `Interrupted` handling
+#### BC-X.3.006: Ctrl+C during a running command exits 130 with stderr `"\nInterrupted\n"` — `tokio::select!` graceful-shutdown race between the in-flight command and `tokio::signal::ctrl_c()`
 
-**Confidence**: MEDIUM
-**Source**: `src/main.rs:~264`
-**Trace**: Pass 3 BC-1209
+**STATUS: UPDATED (2026-08-14, S-MUTANTS-SCOPE-1)** — promoted from a thin semport-extracted stub (Confidence MEDIUM, stale `src/main.rs:~264` citation, no Subject/Behavior/Edge Cases/Verification Properties) to a fully-specified BC as part of adding `src/main.rs` to `.cargo/mutants.toml::examine_globs`. This block previously had ZERO test coverage (confirmed: grep for `ctrl_c`/`SIGINT`/`signal::` across `tests/` returns no hits) — S-MUTANTS-SCOPE-1's F4 closes that gap per the Verification Properties below. Previous version retained for audit trail below.
+
+**Confidence**: HIGH
+**Source**: `src/main.rs::run` — the `tokio::select!` block near `src/main.rs:~415` (citation corrected; previous `~264` was stale)
+**Subject**: Runtime / Cross-cutting error handling
+**Behavior**: `run()`'s single top-level `tokio::select!` races two futures for the lifetime of any `jr` invocation:
+1. `main_task` — the dispatched subcommand's own async work (the full `match cli.command { … }` handler chain).
+2. `tokio::signal::ctrl_c()` — resolves when the process receives `SIGINT` (Unix) / `CTRL_C_EVENT` (Windows; `tokio::signal::ctrl_c()` itself is a portable, cross-platform primitive, though this BC's own verification below is Unix-scoped).
+
+If `main_task` completes first, its `Result` is returned normally (existing per-command exit-code/JSON-error handling downstream in `main()` is unaffected by this BC). If `tokio::signal::ctrl_c()` resolves first (the user pressed Ctrl+C / sent SIGINT while a command was in flight), `run()` takes the interrupt branch, which does exactly two things, in order:
+1. Writes the literal string `"\nInterrupted"` to stderr via `eprintln!("\nInterrupted")` — `eprintln!` appends its own trailing `\n`, so the byte-exact stderr contribution is `"\nInterrupted\n"` (leading blank line, then `Interrupted`, then newline).
+2. Calls `std::process::exit(130)` — terminates the process immediately with exit code 130 (`128 + SIGINT`, the POSIX convention `jr` follows for signal-terminated processes; matches the `JrError::exit_code()` `Interrupted` mapping in `src/error.rs` and `error-taxonomy.md` §Exit Code Semantics, row `130 | Interrupted (Ctrl+C) | Interrupted`).
+
+**No cleanup/drop logic runs between steps 1 and 2** — `std::process::exit` does not unwind the stack or run destructors. This is a pre-existing characteristic of the block (not a new decision introduced by this amendment); no in-flight resource (HTTP connection, file handle, keychain session) requires graceful teardown on interrupt in the current codebase.
+
+**Race condition (documented, not a defect)**: `tokio::signal::ctrl_c()` only registers its OS-level signal listener the first time it is polled inside the `select!`. A signal delivered before that registration completes falls through to the process's default `SIGINT` disposition (immediate termination — NOT exit 130, NOT the `"\nInterrupted\n"` message). This is a narrow, real-world-negligible window and is exactly why the Unix subprocess Verification Property below requires a deterministic readiness handshake rather than a fixed sleep — see VP-MUTANTS-SCOPE-1-001.
+
+**Edge cases**:
+- **(EC-1) SIGINT arrives before the `select!` first polls (registration race)**: Falls through to default OS disposition; process terminates by signal, not via this BC's graceful path. Documented limitation, not exercised by VP-MUTANTS-SCOPE-1-001 (which is specifically designed to avoid triggering this window via a readiness handshake, not a fixed sleep).
+- **(EC-2) SIGINT arrives after `main_task` has already won the race**: Not reachable — `select!` only polls remaining arms until ONE resolves; once `main_task` wins, the `ctrl_c` arm is dropped and no further signal handling occurs through this path for that invocation (a second SIGINT hits the OS default disposition, same as any ordinary already-exiting process).
+- **(EC-3) Ctrl+C during a JSON-output (`--output json`) invocation**: The interrupt path is unconditional — it always writes plain-text `"\nInterrupted\n"` to stderr, never the `{"error": "…", "code": 130}` JSON-error envelope (BC-7.3.010's JSON render invariant governs `JrError` results returned from `main_task`; it does NOT apply to this out-of-band `process::exit` path, since no `JrError` value is ever constructed for a signal interrupt). This asymmetry is intentional and pre-existing, not newly introduced by this amendment.
+
+**Verification Properties**:
+- VP-MUTANTS-SCOPE-1-001: Out-of-process SIGINT observation (`#[cfg(unix)]` subprocess test) — spawns the compiled `jr` binary (`env!("CARGO_BIN_EXE_jr")`), waits for a deterministic readiness signal (NOT a fixed sleep — must avoid the EC-1 registration race), sends `SIGINT` via `libc::kill` (libc 0.2.183 already resolved in `Cargo.lock`; no new dependency), and asserts on the REAL child process's exit code (`== 130`) and REAL stderr (`== "\nInterrupted\n"`, byte-exact). This is the only test shape capable of killing the `130` literal-substitution mutant and the `eprintln!` statement-deletion mutant — both require observing the actual OS-level process boundary, which no in-process test can do. Runs on the `mutants` CI job's `ubuntu-latest` runner (Unix-gated, consistent with the existing `#[cfg(unix)]` convention in `tests/ci_gate_completeness.rs`), so it counts toward the `src/main.rs` PR-diff kill rate once `main.rs` enters `examine_globs`. Detail + full mechanism-selection rationale: `.factory/research/S-MUTANTS-SCOPE-1-ctrl-c-mutation-testing.md`.
+- VP-MUTANTS-SCOPE-1-002: Portable arm-selection unit test — the `select!`'s two-arm race is refactored (behavior-preserving) into a small generic `run_until_shutdown(work: impl Future<Output = T>, shutdown: impl Future<Output = ()>) -> RunOutcome<T>` fn, with a `#[tokio::test]` injecting `std::future::pending::<()>()` for `work` and `std::future::ready(())` for `shutdown`, asserting the shutdown arm is selected (`RunOutcome::Interrupted`). Runs on every platform (deterministic future resolution only, no signal delivery), giving cross-platform coverage of the arm-selection decision itself. Does NOT and cannot kill the `eprintln!`/`exit(130)` mutants at the `main` boundary (an in-process test cannot observe a `process::exit` call, nor deterministically a sibling process's own stderr) — VP-MUTANTS-SCOPE-1-001 remains load-bearing for those. `process::exit(130)` and the `eprintln!` stay at the thin `main`/`run` boundary, outside `run_until_shutdown` itself.
+- **Explicitly rejected**: `#[mutants::skip]` on this block. `docs/specs/cargo-mutants-policy.md` §Whitelist Convention lists "It's hard to test" and "Tests don't cover this" as invalid justifications verbatim; a signal-handler fork does not fit any of the three valid categories (defensive-unreachable-guard, performance-only-optimization, debug-only-assertion). A skip here would violate repo policy and must be rejected in review.
+
+**Previous version (superseded by S-MUTANTS-SCOPE-1, retained for audit trail):**
+> **Confidence**: MEDIUM
+> **Source**: `src/main.rs:~264`
+> No Subject/Behavior/Edge Cases/Verification Properties sections existed; the BC was a range-collapsed-style semport stub consisting only of a title, Confidence, Source, and Trace.
+
+**Trace**: Pass 3 BC-1209; F2 amended (2026-08-14, S-MUTANTS-SCOPE-1) — promoted from thin semport stub to fully-specified BC with exact behavior, edge cases, and two Verification Properties (VP-MUTANTS-SCOPE-1-001/002), ahead of `src/main.rs` entering `.cargo/mutants.toml::examine_globs` in F4; stale `~264` source citation corrected to `~415`; see `.factory/phase-f2-spec-evolution/S-MUTANTS-SCOPE-1-spec-delta.md`
+
+| Version | Date | Author | Change |
+|---------|------|--------|--------|
+| 1.0.0 | (semport Pass 3) | — | Initial stub extraction: title + Confidence (MEDIUM) + stale Source (`~264`) + Trace only |
+| 1.1.0 | 2026-08-14 | product-owner | S-MUTANTS-SCOPE-1 F2: promoted to full BC — Subject/Behavior/Edge Cases sections added; exact stderr text (`"\nInterrupted\n"`) and exit code (130) pinned; Source citation corrected to `~415`; Confidence MEDIUM→HIGH; added `**Verification Properties**:` subsection (VP-MUTANTS-SCOPE-1-001 subprocess SIGINT test, VP-MUTANTS-SCOPE-1-002 portable arm-selection test) |
 
 ---
 

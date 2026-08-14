@@ -1,9 +1,10 @@
 ---
 context: edge-case-catalog
 title: "Edge Case Catalog"
-last_updated: 2026-05-04
+last_updated: 2026-08-14
 source_pass: 3
 trace: |
+  - F2 spec evolution (2026-08-14, S-MUTANTS-SCOPE-1): EC-HTTP-005 citation corrected — was mis-cited as "Covered by BC-X.1.009" (the unrelated 429-exhausted-warning BC); corrected to BC-X.3.006 (the actual Ctrl+C/SIGINT BC, amended in the same change to a full BC with exact stderr/exit-code contract and Verification Properties). Confidence label MEDIUM→HIGH.
   - L2: .factory/specs/domain-spec/
   - Source broad: .factory/semport/jira-cli/jira-cli-pass-3-behavioral-contracts.md §3 (cross-ref), §5
   - Source R1: .factory/semport/jira-cli/jira-cli-pass-3-deep-r1.md §3.3 (assets), §3.4 (auth)
@@ -134,7 +135,7 @@ Categories:
 ### EC-HTTP-005: Ctrl+C during API call — graceful exit 130
 **Boundary**: User presses Ctrl+C while HTTP call in flight.
 **Expected**: `tokio::select!` in main.rs wins; exit 130; no panic.
-**Status**: Covered by BC-X.1.009. MEDIUM confidence (CLAUDE.md: medium-frequency path).
+**Status**: Covered by BC-X.3.006 [CORRECTED 2026-08-14, S-MUTANTS-SCOPE-1 — was mis-cited as BC-X.1.009, which is the unrelated 429-exhausted-warning BC; BC-X.3.006 is the actual Ctrl+C/SIGINT BC and was promoted to a full BC (exact stderr `"\nInterrupted\n"`, exit 130, EC-1..EC-3, Verification Properties) in the same change]. HIGH confidence as of the BC-X.3.006 promotion (previously MEDIUM; CLAUDE.md: medium-frequency path).
 
 ---
 

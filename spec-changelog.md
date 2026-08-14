@@ -9,6 +9,91 @@ Track all spec version changes. Most recent version first.
 
 > **Type legend:** Type classifies the SPEC document delta: MINOR = new BCs/VPs/sections; PATCH = amendments to existing bodies/ACs/ECs. Product-semver impact is recorded in the Summary line, independent of Type.
 
+## [1.3.181] - 2026-08-14
+
+### Type: PATCH
+
+### Summary
+
+F2 spec evolution for **S-MUTANTS-SCOPE-1** (Feature Mode; CI mutation-scope gap fix — adds
+`src/cli/queue.rs` and `src/main.rs` to `.cargo/mutants.toml::examine_globs` in F4, closing a
+confirmed false-green where PRs touching only those two files got a silent "0 mutants" pass
+from the `mutants` CI gate — see PRs #696/#698/#700). No new BC is minted; this entry is
+PATCH-only per the Type legend above. F1's delta analysis found no BC governs
+`examine_globs` membership itself (consistent with how the existing 16-entry list was built
+incrementally without per-addition BCs), so no spec change was needed for the `queue.rs`
+half of the story. But F1 also flagged the `main.rs` half's `tokio::select!` SIGINT
+graceful-shutdown fork (`src/main.rs:~415`) as having ZERO existing test coverage and as
+the single highest-risk item in the story — the adopted F4 approach (behavior-preserving
+`run_until_shutdown` extraction + a `#[cfg(unix)]` subprocess SIGINT test + a portable
+arm-selection unit test, per `.factory/research/S-MUTANTS-SCOPE-1-ctrl-c-mutation-testing.md`)
+gives that block, for the first time, a real regression-test suite — and a governing BC
+already existed for it (`BC-X.3.006`, cross-cutting.md), just as a thin, MEDIUM-confidence,
+semport-extracted stub with no Behavior/Edge Cases/Verification Properties and a stale
+`src/main.rs:~264` source citation. This entry promotes BC-X.3.006 in place to a fully
+specified BC: exact byte-level contract (`stderr == "\nInterrupted\n"`, `exit == 130`),
+Subject/Behavior narrative, EC-1..EC-3, a corrected `~415` source citation, Confidence
+MEDIUM→HIGH, and a new `**Verification Properties**:` subsection (VP-MUTANTS-SCOPE-1-001 —
+the load-bearing out-of-process SIGINT subprocess test; VP-MUTANTS-SCOPE-1-002 — the
+portable `run_until_shutdown` arm-selection test) so F4's test-writer/implementer has a
+locked contract to trace the new tests to, per VSDD. Also fixed a pre-existing, unrelated
+stale cross-reference discovered while working this area: `edge-case-catalog.md`'s
+EC-HTTP-005 cited "Covered by BC-X.1.009" (the 429-exhausted-warning BC — unrelated) instead
+of BC-X.3.006 (the actual Ctrl+C/SIGINT BC); corrected in the same change.
+
+### Changed Requirements
+
+- `cross-cutting.md` (AMENDED): BC-X.3.006 — promoted from a thin semport stub (Confidence
+  MEDIUM; title + Confidence + Source + Trace only; stale `src/main.rs:~264` citation) to a
+  fully-specified BC: Subject/Behavior narrative (the `tokio::select!` race between
+  `main_task` and `tokio::signal::ctrl_c()`, exact stderr `"\nInterrupted\n"`, exact exit
+  code 130, no cleanup/drop between the two interrupt-branch statements), EC-1 (SIGINT
+  registration race — falls through to default OS disposition, documented not fixed), EC-2
+  (SIGINT after `main_task` already won — unreachable), EC-3 (interrupt path never emits the
+  `--output json` error envelope — intentional pre-existing asymmetry), a new
+  `**Verification Properties**:` subsection (VP-MUTANTS-SCOPE-1-001, VP-MUTANTS-SCOPE-1-002,
+  plus an explicit rejected-`#[mutants::skip]` note citing the policy doc's Whitelist
+  Convention), Confidence MEDIUM→HIGH, Source corrected `~264`→`~415`, and a
+  Version/Date/Author changelog table (1.0.0 stub → 1.1.0 this promotion). Previous version
+  retained inline for audit trail per this repo's amendment convention (mirrors BC-1.2.018's
+  2026-08-13 amendment format).
+- `BC-INDEX.md` (MODIFIED): §X.3 row for BC-X.3.006 — summary text, Source (`~264`→`~415`),
+  Confidence (MEDIUM→HIGH), `[AMENDED 2026-08-14 S-MUTANTS-SCOPE-1]` tag; frontmatter
+  `total_bcs`/`last_updated` provenance narrative appended (no count change — still 661);
+  `index_version` v6.77→v6.78.
+- `edge-case-catalog.md` (CORRECTED, unrelated pre-existing drift found in-area): EC-HTTP-005
+  "Status" line — citation corrected from BC-X.1.009 (wrong; unrelated 429-warning BC) to
+  BC-X.3.006 (the actual Ctrl+C/SIGINT BC); confidence label MEDIUM→HIGH to match the BC's
+  new Confidence; frontmatter `trace:` narrative entry added.
+
+### Non-Spec Follow-up (tracked, NOT part of this F2 change)
+
+- `docs/specs/cargo-mutants-policy.md` §Scope — two new bullets (`src/cli/queue.rs`,
+  `src/main.rs`) + `examine_globs` count line 16→18 — is an **F4 implementation artifact**,
+  not a spec-evolution change; not touched here.
+- `.cargo/mutants.toml::examine_globs` — the two-entry addition itself lands in F4.
+
+### Impact Assessment
+
+| Artifact | Change Type | Notes |
+|----------|-------------|-------|
+| `.factory/specs/prd/cross-cutting.md` | MODIFIED (BC-X.3.006 amended in place) | No count change (85 individually-bodied / 151 cumulative, unchanged) |
+| `.factory/specs/prd/BC-INDEX.md` | MODIFIED | §X.3 row + frontmatter provenance; no count change (661 total, unchanged) |
+| `.factory/specs/prd/edge-case-catalog.md` | MODIFIED (citation fix, pre-existing drift) | EC-HTTP-005 now cites the correct BC |
+| `scripts/check-bc-cumulative-counts.sh` | Verified green (0 exit) | No count drift introduced |
+| `scripts/check-spec-counts.sh` | Verified green (0 exit) | No count drift introduced |
+| `scripts/check-bc-citation-symbols.sh` | Verified green (376 citations checked) | New/corrected citations are valid symbol-form/approximate-line citations |
+
+- **Affected stories:** S-MUTANTS-SCOPE-1 (F3/F4 — test-writer and implementer now have a
+  locked BC + two VPs to trace the new `main.rs` tests to). No other existing story
+  references BC-X.3.006 by ID (grepped `.factory/stories/` — none found at F2 authoring
+  time); no story cross-reference update required.
+- **Migration needed:** NO — this is a spec-only amendment of an existing BC's body; no
+  `src/` production behavior changes (confirmed unchanged in F1 §2 and re-confirmed here:
+  this F2 burst touched only `.factory/specs/prd/*.md` files).
+
+---
+
 ## [1.3.180] - 2026-08-13
 
 ### Type: MINOR
