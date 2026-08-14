@@ -9,9 +9,15 @@
 //! `.factory/research/S-MUTANTS-SCOPE-1-ctrl-c-mutation-testing.md`,
 //! "Why refactor alone is insufficient").
 //!
-//! `#[cfg(unix)]`-gated (`SIGINT`/`libc::kill` are Unix-only; `tokio::signal::
-//! ctrl_c()` itself is portable, but the *test delivery mechanism* is not —
-//! see BC-X.3.006 and the Out of Scope section of S-MUTANTS-SCOPE-1). Raw
+//! `#[cfg(all(debug_assertions, unix))]`-gated (`SIGINT`/`libc::kill` are
+//! Unix-only; `tokio::signal::ctrl_c()` itself is portable, but the *test
+//! delivery mechanism* is not — see BC-X.3.006 and the Out of Scope section
+//! of S-MUTANTS-SCOPE-1). The `debug_assertions` conjunct matches the seam's
+//! own gate in `src/main.rs` (see below): the seam this test exercises is
+//! compiled out entirely in release builds, so the test must be too, or
+//! `cargo test --release` would spawn a real (non-seamed) `jr` process that
+//! never prints the readiness marker and this test would hang/panic on a
+//! correct tree. Raw
 //! `std::process::Command` is used instead of `assert_cmd`, because
 //! `assert_cmd` exposes no running-`Child` handle and cannot deliver a
 //! mid-run signal.
@@ -46,14 +52,15 @@
 //! never arrives, this test fails via a bounded-timeout panic rather than
 //! hanging the suite — see `READY_TIMEOUT` below.
 //!
-//! Everything the `#[cfg(unix)]` test below needs lives inline inside that
-//! single `#[cfg(unix)] #[test]` function — no helper function or const is
-//! declared outside of it — so there is nothing left over to orphan as
-//! dead code on a non-Unix build (round-15 CLAUDE.md Windows dead-code-lint
-//! hazard; see `docs/specs/cargo-mutants-policy.md` history and
-//! S-MUTANTS-SCOPE-1 AC-011).
+//! Everything the `#[cfg(all(debug_assertions, unix))]` test below needs
+//! lives inline inside that single `#[cfg(all(debug_assertions, unix))]
+//! #[test]` function — no helper function or const is declared outside of
+//! it — so there is nothing left over to orphan as dead code on a non-Unix
+//! build, nor on a Unix release build (round-15 CLAUDE.md Windows
+//! dead-code-lint hazard; see `docs/specs/cargo-mutants-policy.md` history
+//! and S-MUTANTS-SCOPE-1 AC-011).
 
-#[cfg(unix)]
+#[cfg(all(debug_assertions, unix))]
 #[test]
 fn test_sigint_during_run_exits_130_with_byte_exact_interrupted_stderr() {
     use std::io::{BufRead, BufReader, Read};
