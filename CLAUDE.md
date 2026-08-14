@@ -363,21 +363,19 @@ When adding a new feature:
   compile the code path out entirely and never read the env var. When set to `1`, `run()`
   selects a `signal(SIGINT)`-based shutdown future instead of `tokio::signal::ctrl_c()`,
   prints a `JR-TEST-READY` marker (flushed) once the listener is registered, then blocks
-  so the test can send SIGINT deterministically — no fixed `sleep`. This seam
-  deliberately carries no `tests/*_release_gate.rs` pin, unlike the sibling seams above
-  (`JR_STDIN_IS_TTY`, `JR_BASE_URL`, `JR_CONFIG_DIR`, `JR_CACHE_DIR`, `JR_SERVICE_NAME`) —
-  every one of those is ALSO `#[cfg(debug_assertions)]`-gated at compile time (the same
-  pattern this seam uses, just without the extra `unix` conjunct), so "compile-time vs
-  runtime gating" is NOT what distinguishes this entry from them. The actual reasons the
-  pin is omitted here: (1) this seam only makes `run()` block awaiting SIGINT and print a
-  readiness marker — it does not redirect I/O, auth, or any config/cache path, and has no
-  security-relevant blast radius (contrast `JR_BASE_URL`, whose release-gate pin is
-  SECURITY-CRITICAL — redirecting authenticated requests to an attacker-controlled host —
-  and must never be waived by analogy to this entry); (2) it is additionally narrowed by
-  the `unix` conjunct on top of `debug_assertions`. The omission is a deliberate, flagged
-  deviation from the "every `JR_*` seam gets a release-gate pin" convention, justified by
-  this seam's non-security, test-only, doubly-narrowed nature — not by any runtime/
-  compile-time distinction, which does not exist between this seam and its siblings.
+  so the test can send SIGINT deterministically — no fixed `sleep`. Like every sibling
+  seam above (`JR_STDIN_IS_TTY`, `JR_BASE_URL`, `JR_CONFIG_DIR`, `JR_CACHE_DIR`,
+  `JR_SERVICE_NAME`), this seam carries a `tests/*_release_gate.rs` pin —
+  `tests/jr_test_block_until_sigint_release_gate.rs` — asserting `#[cfg(debug_assertions)]`
+  (present here as part of the seam's stricter `#[cfg(all(debug_assertions, unix))]` gate)
+  appears within 5 source lines of the `JR_TEST_BLOCK_UNTIL_SIGINT` env-var read in
+  `src/main.rs`, closing adversarial pass-8 finding LOW-2 and making this seam fully
+  convention-consistent with its siblings. This seam remains non-security (contrast
+  `JR_BASE_URL`, whose release-gate pin is SECURITY-CRITICAL — redirecting authenticated
+  requests to an attacker-controlled host): it only makes `run()` block awaiting SIGINT and
+  print a readiness marker, and does not redirect I/O, auth, or any config/cache path. It
+  is additionally narrowed by the `unix` conjunct on top of `debug_assertions`, unlike its
+  siblings' bare `debug_assertions` gate.
 - **Release-ops repo-variable gates** — `SIGNING_ENABLED`, `HOMEBREW_TAP_REPO`, `RELEASE_GAP_FILL_ENABLED`, `SYNC_UPSTREAM_REPO` (all GitHub Actions repository variables, never read by `src/` code) gate the opt-in signing/backfill/gap-fill/fork-sync workflows. All unset in the canonical repo → those workflows are no-ops; downstream forks opt in. Same fail-safe pattern as `JR_E2E_ENABLED`. See `docs/specs/fork-friendly-release-ops.md`.
 - **When adding a new `JR_*` test-seam env var:** grep `CLAUDE.md` for existing `JR_*` entries and add a parallel line in the SAME commit as the code change. This is the codified doc-fallout pattern from #335/#357; first applied retroactively when `JR_BULK_UNKNOWN_GRACE_SECS` and `JR_BULK_AWAIT_TIMEOUT_SECS` shipped without documentation.
 - **Citation discipline for external-tracker IDs in user-facing strings:** before citing a JRACLOUD-*/GitHub/community ID in anything a user sees (stderr, errors, JSON, hints) or in literal rustdoc, Perplexity-validate the source actually documents the symptom — issue #361 had three misattributed JRACLOUD tickets survive multiple PRs. Also ensure the string is valid in the user's env (e.g. JQL allows one ORDER BY) and keep paraphrasing rustdoc in lockstep.
