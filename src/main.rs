@@ -527,6 +527,10 @@ async fn run(cli: Cli) -> anyhow::Result<()> {
         RunOutcome::Completed(result) => result,
         RunOutcome::Interrupted => {
             eprintln!("\nInterrupted");
+            // 130 is the conventional exit code for a SIGINT-terminated process
+            // (128 + SIGINT's signal number, 2). This is an explicit literal
+            // chosen to match that convention, not a value the OS computes for
+            // us — `std::process::exit` always takes exactly the code given.
             std::process::exit(130);
         }
     }
