@@ -339,7 +339,8 @@ pub async fn resolve_queue_by_name(
 #[cfg(test)]
 mod tests {
     use super::{
-        build_key_in_jql, extra_fields_allow_list, is_customfield_token, reorder_by_queue_position,
+        MAX_CAUSE_LEN, build_key_in_jql, collapse_and_truncate, extra_fields_allow_list,
+        is_customfield_token, reorder_by_queue_position,
     };
     use crate::types::jira::Issue;
     use crate::types::jsm::Queue;
@@ -553,5 +554,39 @@ mod tests {
             extra_fields_allow_list(Some(&fields)),
             vec!["customfield_10050", "customfield_20099"]
         );
+    }
+
+    // Pins the `collapsed.chars().count() > MAX_CAUSE_LEN` boundary in
+    // `collapse_and_truncate` (F6 mutation survivors: `>` -> `==`, `>` -> `>=`).
+    // Both inputs below are single-line (no whitespace to collapse) so the
+    // `split_whitespace().join(" ")` step is a byte-for-byte no-op, isolating
+    // the truncation predicate itself.
+
+    #[test]
+    fn test_collapse_and_truncate_boundary_exact_length_is_not_truncated() {
+        // Exactly MAX_CAUSE_LEN (200) chars — must pass through unchanged.
+        // Under the `>=` mutant, this 200-char input would be wrongly
+        // truncated to 199 chars + '…', catching that mutant.
+        let input = "a".repeat(MAX_CAUSE_LEN);
+        let result = collapse_and_truncate(&input);
+        assert_eq!(result, input);
+        assert_eq!(result.chars().count(), MAX_CAUSE_LEN);
+        assert!(!result.contains('\u{2026}'));
+    }
+
+    #[test]
+    fn test_collapse_and_truncate_boundary_over_length_is_truncated() {
+        // 250 chars (> MAX_CAUSE_LEN) — must be truncated to exactly 200
+        // chars plus a trailing '…' marker. Under the `==` mutant, a
+        // 250-char input (250 != 200) would NOT be truncated, catching that
+        // mutant.
+        let input = "b".repeat(250);
+        let result = collapse_and_truncate(&input);
+        let expected: String = std::iter::repeat_n('b', MAX_CAUSE_LEN)
+            .chain(std::iter::once('\u{2026}'))
+            .collect();
+        assert_eq!(result, expected);
+        assert_eq!(result.chars().count(), MAX_CAUSE_LEN + 1);
+        assert!(result.ends_with('\u{2026}'));
     }
 }
