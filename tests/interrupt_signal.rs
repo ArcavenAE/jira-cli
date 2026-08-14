@@ -155,17 +155,44 @@ fn test_sigint_during_run_exits_130_with_byte_exact_interrupted_stderr() {
         buf
     });
 
-    let status = child
-        .wait()
-        .expect("failed to wait on child jr process after sending SIGINT");
+    // Bounded wait: a regression that makes the interrupt path HANG (rather
+    // than exit with the wrong code) must fail this test fast, not stall
+    // until the outer test harness/`--timeout` kills it. Poll `try_wait`
+    // instead of the blocking `wait()` so we can enforce our own deadline.
+    const POST_SIGINT_TIMEOUT: Duration = Duration::from_secs(10);
+    let post_sigint_deadline = Instant::now() + POST_SIGINT_TIMEOUT;
+    let status = loop {
+        match child.try_wait() {
+            Ok(Some(status)) => break status,
+            Ok(None) => {
+                if Instant::now() >= post_sigint_deadline {
+                    let _ = child.kill();
+                    let _ = child.wait();
+                    let _ = stdout_reader_handle.join();
+                    let _ = stderr_reader_handle.join();
+                    panic!(
+                        "interrupt path did not exit within {POST_SIGINT_TIMEOUT:?} after \
+                         SIGINT — the interrupt branch may hang"
+                    );
+                }
+                std::thread::sleep(Duration::from_millis(20));
+            }
+            Err(e) => panic!("failed to poll child jr process after sending SIGINT: {e}"),
+        }
+    };
     let _ = stdout_reader_handle.join();
     let captured_stderr = stderr_reader_handle.join().unwrap_or_default();
 
-    // AC-009 / BC-X.3.006 Behavior item 2: exit code == 128 + SIGINT.
+    // AC-009 / BC-X.3.006 Behavior item 2: `run()` explicitly calls
+    // `std::process::exit(130)` — the OS does not compute this value for us.
+    // 130 is the conventional exit code for a SIGINT-terminated process
+    // (128 + SIGINT's signal number, 2), and `run()` hard-codes that literal
+    // rather than deriving it from the signal at runtime.
     assert_eq!(
         status.code(),
         Some(130),
-        "expected exit code 130 (128 + SIGINT) on graceful Ctrl+C interrupt, got {:?} \
+        "expected exit code 130 (the conventional 128 + SIGINT(2) value, returned via an \
+         explicit std::process::exit(130) call) on graceful Ctrl+C interrupt, got {:?} \
          (captured stderr: {captured_stderr:?})",
         status.code()
     );
