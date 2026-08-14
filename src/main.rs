@@ -148,6 +148,67 @@ async fn main() {
     }
 }
 
+/// Outcome of racing a work future against a shutdown-signal future via
+/// [`run_until_shutdown`]. See BC-X.3.006 (`run()`'s Ctrl+C/SIGINT contract).
+pub(crate) enum RunOutcome<T> {
+    /// `work` resolved first; carries its result.
+    Completed(T),
+    /// `shutdown` resolved first; `work` was abandoned mid-flight.
+    Interrupted,
+}
+
+/// Races `work` against `shutdown`, returning whichever resolves first.
+///
+/// Deliberately contains NO side effects (no `eprintln!`, no
+/// `std::process::exit`) — those stay at the `run()` call site so this
+/// function can be unit-tested in-process via injected
+/// `std::future::{ready, pending}` without tearing down the test harness
+/// (BC-X.3.006 VP-MUTANTS-SCOPE-1-002).
+pub(crate) async fn run_until_shutdown<W, S, T>(work: W, shutdown: S) -> RunOutcome<T>
+where
+    W: std::future::Future<Output = T>,
+    S: std::future::Future<Output = ()>,
+{
+    tokio::pin!(work);
+    tokio::pin!(shutdown);
+    tokio::select! {
+        v = &mut work => RunOutcome::Completed(v),
+        _ = &mut shutdown => RunOutcome::Interrupted,
+    }
+}
+
+/// VP-MUTANTS-SCOPE-1-001 (BC-X.3.006 EC-1) readiness-handshake seam. Debug+Unix only.
+///
+/// `tokio::signal::ctrl_c()` (the production signal future used by `run()`'s
+/// normal ctrl_c fork, below) only registers its OS-level listener on first
+/// poll — that makes it unsuitable for guaranteeing "listener installed"
+/// ordering to an external test process without a fixed `sleep` (forbidden,
+/// BC-X.3.006 EC-1). `tokio::signal::unix::signal(...)` registers its
+/// listener synchronously at call time, before this function ever awaits
+/// anything, so printing the readiness marker immediately afterward is a
+/// genuine ordering guarantee rather than a race. This function is used only
+/// by the `JR_TEST_BLOCK_UNTIL_SIGINT` seam in `run()` below — production
+/// dispatch is untouched and continues to use `tokio::signal::ctrl_c()`.
+#[cfg(all(debug_assertions, unix))]
+async fn block_until_sigint_test_seam() {
+    use std::io::Write;
+    use tokio::signal::unix::{SignalKind, signal};
+
+    let mut sig = signal(SignalKind::interrupt())
+        .expect("failed to register SIGINT handler for JR_TEST_BLOCK_UNTIL_SIGINT seam");
+
+    // The listener above is registered synchronously (see doc comment), so
+    // it is safe to print the readiness marker now — the caller is
+    // guaranteed the signal will be observed once sent.
+    println!("JR-TEST-READY");
+    // Ensure the marker reaches the reading test process promptly: stdout is
+    // piped (not a TTY) under the test harness, where line-buffering is not
+    // guaranteed.
+    let _ = std::io::stdout().flush();
+
+    sig.recv().await;
+}
+
 async fn run(cli: Cli) -> anyhow::Result<()> {
     // Validate --profile here (not in main) so a bad name flows through
     // the unified error-reporting block — `--output json` callers get
@@ -165,6 +226,33 @@ async fn run(cli: Cli) -> anyhow::Result<()> {
         let mut cmd = Cli::command();
         clap_complete::generate(*shell, &mut cmd, "jr", &mut std::io::stdout());
         return Ok(());
+    }
+
+    // VP-MUTANTS-SCOPE-1-001 readiness-handshake seam (debug+unix only). See
+    // tests/interrupt_signal.rs module doc for the full contract. This
+    // branch short-circuits real command dispatch entirely — the seam only
+    // needs to exercise run_until_shutdown's Interrupted arm deterministically.
+    #[cfg(all(debug_assertions, unix))]
+    if std::env::var("JR_TEST_BLOCK_UNTIL_SIGINT")
+        .map(|v| v == "1")
+        .unwrap_or(false)
+    {
+        // No `return` here: both match arms diverge (the `Completed` arm can
+        // never actually be reached at runtime since `work` is
+        // `std::future::pending()`; the `Interrupted` arm always calls
+        // `std::process::exit`), so the match itself never yields control
+        // back — an explicit `return` in front is redundant and trips
+        // rustc's `unreachable_code` lint.
+        match run_until_shutdown(std::future::pending::<()>(), block_until_sigint_test_seam()).await
+        {
+            RunOutcome::Completed(()) => {
+                unreachable!("test-seam work future is pending() and never resolves")
+            }
+            RunOutcome::Interrupted => {
+                eprintln!("\nInterrupted");
+                std::process::exit(130);
+            }
+        }
     }
 
     // Set up Ctrl+C handler
@@ -412,11 +500,77 @@ async fn run(cli: Cli) -> anyhow::Result<()> {
         }
     };
 
-    tokio::select! {
-        result = main_task => result,
-        _ = tokio::signal::ctrl_c() => {
+    match run_until_shutdown(main_task, async {
+        let _ = tokio::signal::ctrl_c().await;
+    })
+    .await
+    {
+        RunOutcome::Completed(result) => result,
+        RunOutcome::Interrupted => {
             eprintln!("\nInterrupted");
             std::process::exit(130);
         }
+    }
+}
+
+// VP-MUTANTS-SCOPE-1-002 (BC-X.3.006): portable, cross-platform coverage of the
+// `run_until_shutdown` arm-selection decision. This module is inline (not in
+// `tests/`) because `src/main.rs` is the binary crate's entry point — a
+// separate compilation unit from the `jr` library crate that `tests/*.rs`
+// files link against via `lib.rs`. Items here, even `pub(crate)`, are not
+// reachable from `tests/`.
+//
+// RED-GATE NOTE (S-MUTANTS-SCOPE-1, F4 Test Writer): `run_until_shutdown` and
+// `RunOutcome` do not exist yet in this file — that is the point. This module
+// is written first, against the interface contract the implementer will
+// build to match:
+//
+//     pub(crate) enum RunOutcome<T> { Completed(T), Interrupted }
+//
+//     pub(crate) async fn run_until_shutdown<W, S, T>(work: W, shutdown: S) -> RunOutcome<T>
+//     where
+//         W: std::future::Future<Output = T>,
+//         S: std::future::Future<Output = ()>,
+//     { ... }
+//
+// `run_until_shutdown` must contain NO `eprintln!` and NO `std::process::exit`
+// call — both stay at the `run()` call site (AC-006). This file will fail to
+// compile until the implementer adds both items above.
+#[cfg(test)]
+mod tests {
+    use super::RunOutcome;
+
+    /// AC-008 (1/2): when `work` resolves first, `run_until_shutdown` returns
+    /// `RunOutcome::Completed(value)` — the shutdown arm must NOT be selected
+    /// even though it is also injected (as a never-resolving future).
+    #[tokio::test]
+    async fn test_run_until_shutdown_returns_completed_when_work_finishes_first() {
+        let work = std::future::ready(42_u32);
+        let shutdown = std::future::pending::<()>();
+
+        let outcome = super::run_until_shutdown(work, shutdown).await;
+
+        match outcome {
+            RunOutcome::Completed(value) => assert_eq!(value, 42),
+            RunOutcome::Interrupted => panic!(
+                "expected RunOutcome::Completed(42) when work resolves first, got Interrupted"
+            ),
+        }
+    }
+
+    /// AC-008 (2/2): when `shutdown` resolves first, `run_until_shutdown`
+    /// returns `RunOutcome::Interrupted` — a mutant that always returns
+    /// `Completed` regardless of which arm won must be killable by this test.
+    #[tokio::test]
+    async fn test_run_until_shutdown_returns_interrupted_when_shutdown_fires_first() {
+        let work = std::future::pending::<()>();
+        let shutdown = std::future::ready(());
+
+        let outcome = super::run_until_shutdown(work, shutdown).await;
+
+        assert!(
+            matches!(outcome, RunOutcome::Interrupted),
+            "expected RunOutcome::Interrupted when shutdown resolves first"
+        );
     }
 }
