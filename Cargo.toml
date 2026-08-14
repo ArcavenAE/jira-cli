@@ -70,6 +70,11 @@ sha1 = { version = "^0.11" }
 # NOT enforced by the msrv CI job, since it's a dev-dependency and that job's `cargo check`
 # scope is lib + bins only, not --all-targets.) See CLAUDE.md ci-gate bullet / AC-006.
 saphyr-parser = "=0.0.11"
+# libc: already a resolved transitive dependency (pulled in by tokio/reqwest on
+# Unix; 0.2.183 in Cargo.lock) but Rust requires an explicit Cargo.toml edge
+# before `use libc::...` compiles from test code. Adds ZERO new crates to the
+# dependency graph — see tests/interrupt_signal.rs (VP-MUTANTS-SCOPE-1-001).
+libc = "0.2"
 
 [profile.release]
 opt-level = 3
