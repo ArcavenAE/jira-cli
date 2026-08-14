@@ -39,9 +39,10 @@
 //!   short-circuits before real dispatch) — `me` is used because it needs no
 //!   positional arguments.
 //!
-//! Until the implementer wires up this seam, this test hangs on the
-//! readiness wait and fails via a bounded-timeout panic (never an unbounded
-//! hang) — see `READY_TIMEOUT` below.
+//! The seam is implemented in `src/main.rs` (see `block_until_sigint_test_seam`
+//! / `JR_TEST_BLOCK_UNTIL_SIGINT`, S-MUTANTS-SCOPE-1). If the readiness marker
+//! never arrives, this test fails via a bounded-timeout panic rather than
+//! hanging the suite — see `READY_TIMEOUT` below.
 //!
 //! Everything the `#[cfg(unix)]` test below needs lives inline inside that
 //! single `#[cfg(unix)] #[test]` function — no helper function or const is
@@ -124,12 +125,14 @@ fn test_sigint_during_run_exits_130_with_byte_exact_interrupted_stderr() {
         let _ = stdout_reader_handle.join();
         panic!(
             "child jr process never printed the '{READY_MARKER}' readiness marker \
-             within {READY_TIMEOUT:?}. Expected a #[cfg(debug_assertions)]-gated seam \
-             (env var JR_TEST_BLOCK_UNTIL_SIGINT=1) to print this marker to stdout \
-             immediately after entering run_until_shutdown, then block on a \
+             within {READY_TIMEOUT:?}. The #[cfg(debug_assertions)]-gated seam \
+             (env var JR_TEST_BLOCK_UNTIL_SIGINT=1) is expected to print this marker \
+             to stdout immediately after entering run_until_shutdown, then block on a \
              never-resolving work future until interrupted. See VP-MUTANTS-SCOPE-1-001 \
              / BC-X.3.006 EC-1 and this file's module doc comment for the full contract. \
-             This fn/const does not exist in src/main.rs yet — expected RED."
+             This failure indicates the seam (block_until_sigint_test_seam / \
+             JR_TEST_BLOCK_UNTIL_SIGINT in src/main.rs) has regressed, or that signal \
+             registration/stdout flushing broke — not a missing implementation."
         );
     }
 
