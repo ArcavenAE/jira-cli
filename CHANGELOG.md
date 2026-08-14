@@ -52,6 +52,10 @@ All notable changes to jr will be documented here.
   now include the `duedate` field. `jr issue view` shows a Due Date row; `jr issue list
   --duedate` adds an opt-in Due Date column. (#668)
 
+### Internal
+
+- chore(git): reconnect the v0.6.0 release commit (93d422fd) into develop's ancestry — graph-only, no code change (#699).
+
 ## [0.6.0] - 2026-08-13
 
 First stable release of the 0.6.0 line, consolidating the `0.6.0-dev.1`
