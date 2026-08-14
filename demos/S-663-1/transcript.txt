@@ -1,0 +1,38 @@
+$ export JR_CONFIG_DIR=/tmp/jr-demo-config
+$ cat $JR_CONFIG_DIR/config.toml
+default_profile = "acme"
+
+[profiles.acme]
+url = "https://acme-demo.atlassian.net"
+auth_method = "api_token"
+
+[profiles.sandbox]
+url = "https://sandbox-demo.atlassian.net"
+auth_method = "api_token"
+
+
+# 1) --profile on "auth switch" exits 64 with a guard message (stderr)
+$ jr auth switch --profile sandbox sandbox
+Error: --profile is not valid for 'auth switch'. The profile to activate is the positional argument. Try: jr auth switch <NAME>
+exit code: 64
+
+# 2) Same guard under --output json: envelope on stderr, stdout empty
+$ jr --output json auth switch --profile sandbox sandbox
+--- stdout ---
+(stdout empty, as expected)
+--- stderr ---
+{"code":64,"error":"--profile is not valid for 'auth switch'. The profile to activate is the positional argument. Try: jr auth switch <NAME>"}
+exit code: 64
+
+# 3) Correct usage: positional NAME, no --profile flag (still works, exit 0)
+$ jr auth switch sandbox
+Active profile set to "sandbox"
+exit code: 0
+$ jr auth switch acme
+Active profile set to "acme"
+exit code: 0
+
+# 4) JR_PROFILE env var is unaffected -- only the CLI flag trips the guard
+$ JR_PROFILE=sandbox jr auth switch acme
+Active profile set to "acme"
+exit code: 0

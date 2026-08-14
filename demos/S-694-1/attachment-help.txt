@@ -1,0 +1,81 @@
+$ jr issue attachment --help
+Attachment operations: list, download, upload, delete. (S-576-1..4)
+
+Usage: jr issue attachment [OPTIONS] <COMMAND>
+
+Commands:
+  list      List attachments on an issue (table or JSON; client-side filters)
+  download  Download one or more attachments from an issue (S-576-2; BC-2.7.007..012)
+  upload    Upload one or more files as attachments to a Jira issue (S-576-3; BC-3.9.001..020)
+  delete    Delete one or more attachments by ID (S-576-4; BC-3.9.008..020)
+  help      Print this message or the help of the given subcommand(s)
+
+Options:
+      --output <OUTPUT>    Output format [default: table] [possible values: table, json]
+      --project <PROJECT>  Override project key
+      --no-color           Disable colored output
+      --no-input           Disable interactive prompts (auto-enabled when stdin is not a TTY)
+      --verbose            verbose mode (method + URL only; use --verbose-bodies for full body inspection)
+      --verbose-bodies     print full HTTP request/response bodies to stderr (PII warning emitted; use with care — see CLAUDE.md)
+      --profile <PROFILE>  Override the active profile (precedence: this flag > JR_PROFILE > config > "default")
+  -h, --help               Print help
+
+$ jr issue attachment download --help
+Download one or more attachments from an issue (S-576-2; BC-2.7.007..012).
+
+Requires exactly one selector: `--id`, `--all`, or `--newest N`.
+
+Usage: jr issue attachment download [OPTIONS] <--id <ID>|--all|--newest <NEWEST>> <KEY>
+
+Arguments:
+  <KEY>
+          Issue key (e.g., FOO-123)
+
+Options:
+      --id <ID>
+          Attachment ID to download (numeric). Mutually exclusive with `--all` and `--newest` (via `selector` group)
+
+      --all
+          Download all attachments from the issue to `--out-dir` (or cwd when omitted). Mutually exclusive with `--id` and `--newest` (via `selector` group)
+
+      --newest <NEWEST>
+          Download the N most-recent attachments by `created` descending. `--filter` predicates (if any) are applied BEFORE this truncation — the surviving set is sorted by `created` descending (most recent first), then truncated to the first N. Accepts negative integers — N ≤ 0 is rejected in the handler (exit 64, `--newest requires a positive integer.`; EC-2.7.009-1; `allow_negative_numbers` lets clap accept them so the handler can emit the canonical message). Mutually exclusive with `--id` and `--all` (via `selector` group)
+
+      --out <OUT>
+          Output path for a single-file download (requires `--id`; not valid with `--all` or `--newest`; EC-2.7.007-9 ~769)
+
+      --out-dir <OUT_DIR>
+          Output directory for batch downloads. Requires the `batch` group (`--all` or `--newest`; EC-2.7.008-9 ~812). Conflicts with `--id`. Files land as `<40-char-SHA-1-of-the-attachment-id>_<sanitized-filename>` — the on-disk name is NOT predictable from `list` output; recover it by parsing the `path` field of this command's JSON manifest
+
+      --filter <FILTER>
+          Client-side filter: `mime=<glob>`, `name=<glob>`, or `size-max=<bytes>`. Repeatable; AND semantics. Conflicts with `--id` (EC-2.7.007-10 ~770)
+
+      --force
+          Overwrite existing output files without error. Single-`--id`: bypasses the `--out` collision check (EC-2.7.007-12, SEC-576-010). Batch (`--all` / `--newest`): silently overwrites on filename collision (BC-2.7.008)
+
+      --output <OUTPUT>
+          Output format
+
+          [default: table]
+          [possible values: table, json]
+
+      --project <PROJECT>
+          Override project key
+
+      --no-color
+          Disable colored output
+
+      --no-input
+          Disable interactive prompts (auto-enabled when stdin is not a TTY)
+
+      --verbose
+          verbose mode (method + URL only; use --verbose-bodies for full body inspection)
+
+      --verbose-bodies
+          print full HTTP request/response bodies to stderr (PII warning emitted; use with care — see CLAUDE.md)
+
+      --profile <PROFILE>
+          Override the active profile (precedence: this flag > JR_PROFILE > config > "default")
+
+  -h, --help
+          Print help (see a summary with '-h')

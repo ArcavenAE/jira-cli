@@ -1,13 +1,13 @@
 ---
 document_type: lessons-learned
 level: ops
-version: "1.0"
+version: "1.1"
 status: in-progress
 producer: state-manager
-timestamp: 2026-05-07T00:00:00
+timestamp: 2026-08-14T00:00:00Z
 cycle: "cycle-001"
 inputs: [STATE.md]
-input-hash: "6661f17"
+input-hash: "e213c24"
 traces_to: STATE.md
 ---
 
@@ -7048,3 +7048,21 @@ Two independent process gaps surfaced during PR #680's review lifecycle, both on
 
 _Trigger: S-CIGATE-3-MERGED-CYCLE-CLOSED burst (2026-08-12), S-7.02 cycle-closing checklist — both observations made during PR #680's review lifecycle this session, reported by the orchestrator at cycle-close rather than fixed in-flight (no story opened, both deferred pending human ruling)._
 _Tagged: [ci-gate] [s-cigate-3] [pr-review] [orchestrator-process] [gate-design] [codified]_
+
+## A fix INSTRUCTION carries the same claim-accuracy burden as any other spec/code claim — verify the channel/mechanism BEFORE routing it as a fix
+
+The orchestrator's own dispatch instructions are not exempt from the verification discipline applied to specs and code. During bucket1-defects' F2 gate, the orchestrator's pass-2 fix instruction asserted that `jr issue edit --dry-run --output json`'s error envelope for the ADF depth-guard failure path is written to **stdout**. It is actually written to **stderr** — this is the pre-existing, load-bearing `#526` JSON-render invariant (`CLAUDE.md`'s "JSON render invariant" note: every `--output json` path routes through `output::render_json`, which writes success data to stdout and errors to stderr; stdout stays empty on any error path). The instruction was followed as given until a fresh-context pass-3 adversarial review, checking the claim against `src/output.rs` and `src/cli/issue/edit.rs` directly rather than against the prior instruction's own text, caught the inversion and corrected it same-day. This is instance 2 of this exact defect shape in this cycle (instance 1: 2026-08-10, closed by `f656f873`) — a second occurrence of the identical mechanism, not a new discovery, which is itself the more concerning signal: an orchestrator fix instruction is not self-verifying just because it reads confidently, and a prior close-out of "instance 1" did not prevent "instance 2" from an unrelated orchestrator dispatch a few days later.
+
+**Disposition:** treat an orchestrator-authored fix instruction with the same skepticism as a story's own claimed acceptance criterion — before routing it downstream as an implementation directive, verify the channel/mechanism assertion (stdout vs stderr, sync vs async, which function actually owns the behavior) against the current source, not against the instruction's own confident phrasing. This general rule remains DEFERRED as a standing review-checklist item (not yet enforced by any automated guard) — tracked as `ORCHESTRATOR-FIX-INSTRUCTION-CAUSED-REGRESSION`, now 2 confirmed instances.
+
+_Trigger: bucket1-defects F2 spec-scoped adversarial review, pass-2→pass-3 (2026-08-13); restated at the bundle's F4-F7 close-out (2026-08-14, BUCKET1-DEFECTS-COMPLETE) as a standing lesson, not merely a per-pass finding, because a second orchestrator-authored claim discrepancy surfaced again at close (see the next lesson below) — the pattern is recurring across different claim types, not confined to stdout/stderr specifically._
+_Tagged: [orchestrator-process] [verification-discipline] [bucket1-defects] [json-output] [codified]_
+
+## Verify artifact PROVENANCE (timestamp, source command, actual body content), not just that a number or claim EXISTS somewhere
+
+Two independent instances surfaced within the bucket1-defects cycle of a measurement or mechanism being reported as fact without checking where it actually came from. **(a)** An earlier burst read a stale, pre-existing `mutants.out` file (dated 2026-07-24, from an unrelated prior story's run) and reported its 27/0 kill-rate figures as if they were this delta's own F6 mutation-testing result — caught by a later verification pass that checked the file's own timestamp and content provenance against the delta actually under review, not just its existence on disk. **(b)** A burst's closing summary claimed a push to `factory-artifacts` via a script named `factory-cas-push.sh`; no such script exists anywhere on this machine (confirmed twice, independently, by targeted filesystem searches in two separate bursts) — the actual push used a plain fetch-verified fast-forward `git push` both times, which worked correctly, but the summary named a specific, plausible-sounding mechanism that was never actually invoked. **(c), this burst's own close-out:** the dispatch instruction for this very burst cited a "32/32 effective kill" mutation-testing figure for the bucket1-defects delta; tracing it against the two available sources (the F7 convergence report's own D2 detail section, and PR #700's body via `gh pr view`) produced two different, smaller, non-matching numbers (`edit.rs` 4/4 CI-verified; `collapse_and_truncate` 5/5 per PR #700's own text) and one incomplete out-of-band local run (30 mutants attempted, never finished verifying end-to-end) — no single source actually says "32/32." Rather than repeat the unreconciled figure forward into DEC-276 and `STATE.md` (which would have made this the THIRD instance of exactly this pattern, this time self-inflicted rather than merely observed), this burst recorded only the source-traceable numbers and noted the discrepancy explicitly.
+
+**Disposition:** a number, filename, or mechanism name is not verified merely because it appears in a prior summary, a dispatch instruction, or even this session's own earlier output — verify PROVENANCE (which command produced it, when, against what exact input) before restating it as fact in a durable record. This is now the standing rule for every close-out burst in this project, applied reflexively to the closing burst's own inputs, not only to what it inherits from delivery agents.
+
+_Trigger: (a) an earlier F6-verification burst correcting a stale-artifact claim mid-cycle; (b) two separate bursts (`sm-f1`, an earlier close-out) independently hitting the nonexistent-script claim; (c) this burst (BUCKET1-DEFECTS-COMPLETE, 2026-08-14) applying the same discipline to its own dispatch instruction's "32/32" figure rather than propagating it unverified. Fifth-plus instance of the `MEASUREMENT-METHOD-PRODUCES-FALSE-CLAIM` drift item overall._
+_Tagged: [measurement-provenance] [orchestrator-process] [bucket1-defects] [mutation-testing] [codified]_

@@ -5,7 +5,7 @@ epic_id: "BUCKET1-DEFECTS"
 story_id: "S-692-1"
 title: "issue edit --dry-run reads stdin/renders ADF preview for --description and --description-stdin (closes #692, DEC-274)"
 wave: feature-followup
-status: draft
+status: done
 intent: enhancement
 feature_type: backend
 mode: feature
@@ -55,7 +55,7 @@ acceptance_criteria_count: 14
 assumption_validations: []
 risk_mitigations: []
 created: "2026-08-13"
-version: "1.0"
+version: "1.1"
 last_updated: "2026-08-13"
 breaking_change: true
 retroactive: false
@@ -376,3 +376,32 @@ No new crate dependencies.
 - Commit style: `feat(edit)!: --dry-run reads stdin and renders ADF preview (#692, DEC-274)` (breaking change `!`)
 - PR closes #692
 - `CHANGELOG.md` `### Breaking Changes` entry in same commit (AC-14)
+
+---
+
+## Close-Out (v1.1, 2026-08-14)
+
+**DELIVERED AND MERGED.**
+
+- Implemented on branch `feat/692-dry-run-adf-preview` (final branch name; the plan above's
+  `feat/692-dry-run-stdin-adf-preview` was the pre-delivery working name), full VSDD Feature
+  Mode pipeline F1–F7 as part of the `bucket1-defects` bundle (issues #692, #663, #693, #694).
+- F5 scoped adversarial review: reviewer verdict APPROVE / no blocking findings (COMMENT-state
+  only — reviewer account == PR author, the standing `VALIDATE-PR-REVIEW-POSTED-ASSUMES-DISTINCT-REVIEWER`
+  structural gap). Zero CRIT/HIGH findings.
+- F6 targeted hardening: `src/cli/issue/edit.rs` is in `.cargo/mutants.toml examine_globs` —
+  CI's in-diff mutation gate reported **4/4 mutants caught (100%)**, read directly from the
+  CI job log (job `94634768193`).
+- F7 delta convergence: **5/5 dimensions PASS** (D1 Spec, D2 Test, D3 Implementation,
+  D4 Verification, D5 Holdout) — full report:
+  `.factory/phase-f7-convergence/bucket1-defects-delta-convergence-report.md`.
+- PR #697 (`feat(edit)!: --dry-run reads stdin and renders ADF preview (#692, DEC-274)`)
+  squash-merged into `develop` as `83b529d2` (2026-08-14T00:38:19Z), **closing #692**. All
+  15 CI checks green including CI Gate.
+- 4 demo artifacts captured at `.factory/demos/S-692-1/` (AC-001..AC-004, GIF + WebM pairs
+  plus an INDEX.md), covering stdin markdown ADF preview, bare-`--description` ADF preview,
+  the depth-guard preflight catch, and table-mode rendering.
+- `CHANGELOG.md` `### Breaking Changes` entry present in the merged commit (AC-14 satisfied).
+
+Full detail: `STATE.md`, `cycles/cycle-001/burst-log.md` § BUCKET1-DEFECTS-COMPLETE,
+`cycles/cycle-001/decisions-archive.md` DEC-276.

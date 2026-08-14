@@ -5,7 +5,7 @@ epic_id: "BUCKET1-DEFECTS"
 story_id: "S-663-1"
 title: "auth switch --profile <X> exits 64 (closes #663)"
 wave: feature-followup
-status: draft
+status: done
 intent: enhancement
 feature_type: backend
 mode: feature
@@ -55,7 +55,7 @@ acceptance_criteria_count: 9
 assumption_validations: []
 risk_mitigations: []
 created: "2026-08-13"
-version: "1.0"
+version: "1.1"
 last_updated: "2026-08-13"
 breaking_change: true
 retroactive: false
@@ -315,3 +315,27 @@ orchestrator).
   change `!`)
 - PR closes #663
 - `CHANGELOG.md` `### Breaking Changes` entry in same commit (AC-9)
+
+---
+
+## Close-Out (v1.1, 2026-08-14)
+
+**DELIVERED AND MERGED.**
+
+- Implemented on branch `feat/663-auth-switch-profile-guard` (matches the plan above), full
+  VSDD Feature Mode pipeline F1–F7 as part of the `bucket1-defects` bundle.
+- F5 scoped adversarial review: reviewer verdict APPROVE / no blocking findings (COMMENT-state
+  only — reviewer==author, standing structural gap). Zero CRIT/HIGH findings.
+- F6 targeted hardening: `src/main.rs` is **not** in `.cargo/mutants.toml examine_globs` — CI's
+  in-diff mutation gate correctly reported 0 mutants (a real, pre-existing scope gap, not a
+  defect introduced by this story; tracked as drift item `MUTANTS-SCOPE-GAP-QUEUE-MAIN`).
+- F7 delta convergence: **5/5 dimensions PASS** — full report:
+  `.factory/phase-f7-convergence/bucket1-defects-delta-convergence-report.md`.
+- PR #696 (`feat(auth)!: reject --profile on auth switch (#663) [BREAKING]`) squash-merged into
+  `develop` as `c9218389` (2026-08-14T00:14:39Z), **closing #663**. All 15 CI checks green
+  including CI Gate.
+- 1 demo artifact (`demo.gif`) captured at `.factory/demos/S-663-1/`.
+- `CHANGELOG.md` `### Breaking Changes` entry present in the merged commit (AC-9 satisfied).
+
+Full detail: `STATE.md`, `cycles/cycle-001/burst-log.md` § BUCKET1-DEFECTS-COMPLETE,
+`cycles/cycle-001/decisions-archive.md` DEC-276.

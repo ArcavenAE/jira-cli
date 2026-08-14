@@ -5,7 +5,7 @@ epic_id: "BUCKET1-DEFECTS"
 story_id: "S-693-1"
 title: "queue view threads queue-declared customfield_* columns into search_issues extra_fields (closes #693)"
 wave: feature-followup
-status: draft
+status: done
 intent: enhancement
 feature_type: backend
 mode: feature
@@ -50,7 +50,7 @@ acceptance_criteria_count: 8
 assumption_validations: []
 risk_mitigations: []
 created: "2026-08-13"
-version: "1.0"
+version: "1.1"
 last_updated: "2026-08-13"
 breaking_change: false
 retroactive: false
@@ -318,3 +318,34 @@ discards `fields` — by design, unaffected); `src/types/jira/issue.rs::IssueFie
 - Target: `develop`
 - Commit style: `feat(queue): surface queue-declared custom fields in queue view JSON (#693)`
 - PR closes #693
+
+---
+
+## Close-Out (v1.1, 2026-08-14)
+
+**DELIVERED AND MERGED.**
+
+- Implemented on branch `feat/693-queue-view-custom-fields` (matches the plan above), full
+  VSDD Feature Mode pipeline F1–F7 as part of the `bucket1-defects` bundle.
+- F5 scoped adversarial review: reviewer verdict APPROVE / no blocking findings (COMMENT-state
+  only — reviewer==author, standing structural gap). Zero CRIT/HIGH findings.
+- F6 targeted hardening: `src/cli/queue.rs` is **not** in `.cargo/mutants.toml examine_globs` —
+  CI's in-diff mutation gate correctly reported 0 mutants at merge time (real, pre-existing
+  scope gap, tracked as drift item `MUTANTS-SCOPE-GAP-QUEUE-MAIN`). A subsequent out-of-band
+  F6 mutation run found 2 surviving mutants in `collapse_and_truncate` (the exactly-200-char
+  boundary of the truncation-length check); closed by follow-on PR #700
+  (`89164b8d`, test-only), which brought that function to 5/5 mutants caught (was 3/5, per
+  PR #700's own body).
+- F7 delta convergence: **5/5 dimensions PASS** — full report:
+  `.factory/phase-f7-convergence/bucket1-defects-delta-convergence-report.md`.
+- PR #698 (`feat(queue): surface queue-declared custom fields in queue view JSON (#693)`)
+  squash-merged into `develop` as `c34f4db9` (2026-08-14T00:15:12Z), **closing #693**. All 15
+  CI checks green including CI Gate.
+- Demo evidence at `.factory/demos/S-693-1/demo-transcript.md`.
+- Two DEFERRED, non-blocking follow-ups noted at F7 (not actioned): (S1) a single-queue GET
+  endpoint for `queue view --id` instead of paginating `list_queues`; (S2) hoist the duplicate
+  `^customfield_\d+$` predicate now shared with `src/cli/issue/field_resolve.rs` to one
+  `pub(crate)` helper. Recorded as drift item `BUCKET1-DEFECTS-FOLLOWUP-S1-S2`.
+
+Full detail: `STATE.md`, `cycles/cycle-001/burst-log.md` § BUCKET1-DEFECTS-COMPLETE,
+`cycles/cycle-001/decisions-archive.md` DEC-276.

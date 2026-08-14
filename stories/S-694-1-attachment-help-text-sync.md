@@ -5,7 +5,7 @@ epic_id: "BUCKET1-DEFECTS"
 story_id: "S-694-1"
 title: "Sync attachment command help-text/doc comments to already-ratified behavior (closes #694)"
 wave: feature-followup
-status: draft
+status: done
 intent: docs
 feature_type: backend
 mode: feature
@@ -54,7 +54,7 @@ acceptance_criteria_count: 5
 assumption_validations: []
 risk_mitigations: []
 created: "2026-08-13"
-version: "1.0"
+version: "1.1"
 last_updated: "2026-08-13"
 breaking_change: false
 retroactive: false
@@ -291,3 +291,28 @@ out-of-scope drift, escalate to orchestrator).
 - Target: `develop`
 - Commit style: `docs(attachment): sync help text to ratified behavior (#694)`
 - PR closes #694
+
+---
+
+## Close-Out (v1.1, 2026-08-14)
+
+**DELIVERED AND MERGED.**
+
+- Implemented on branch `docs/694-attachment-help-text` (final branch name; the plan above's
+  `docs/694-attachment-help-text-sync` was the pre-delivery working name), full VSDD Feature
+  Mode pipeline F1–F7 as part of the `bucket1-defects` bundle. Merged commit title:
+  `docs(attachment): sync clap help text with verified behavior (#694)` (final wording; the
+  plan above's title was the pre-delivery working title — content/intent unchanged).
+- F5 scoped adversarial review: reviewer verdict APPROVE / no blocking findings (COMMENT-state
+  only — reviewer==author, standing structural gap). Zero CRIT/HIGH findings.
+- F6: N/A — docs-only change, no mutable production code touched, no mutation-testing
+  applicability.
+- F7 delta convergence: **5/5 dimensions PASS** — full report:
+  `.factory/phase-f7-convergence/bucket1-defects-delta-convergence-report.md`.
+- PR #695 squash-merged into `develop` as `241e8a7a` (2026-08-14T00:14:29Z), **closing #694**.
+  All 15 CI checks green including CI Gate.
+- 1 demo artifact (`attachment-help.gif`) captured at `.factory/demos/S-694-1/`.
+- No BC body change (matches F2's original determination — docs-alignment only).
+
+Full detail: `STATE.md`, `cycles/cycle-001/burst-log.md` § BUCKET1-DEFECTS-COMPLETE,
+`cycles/cycle-001/decisions-archive.md` DEC-276.
