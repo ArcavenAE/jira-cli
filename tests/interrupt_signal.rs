@@ -27,9 +27,11 @@
 //! this test instead requires a deterministic, debug-only readiness seam:
 //!
 //! - Env var `JR_TEST_BLOCK_UNTIL_SIGINT=1`, read only in
-//!   `#[cfg(debug_assertions)]` builds (same debug-only-seam convention as
-//!   `JR_STDIN_IS_TTY` / `JR_BASE_URL` / etc. — see CLAUDE.md "AI Agent
-//!   Notes").
+//!   `#[cfg(all(debug_assertions, unix))]` builds — stricter than the
+//!   `#[cfg(debug_assertions)]`-only seam convention used by `JR_STDIN_IS_TTY`
+//!   / `JR_BASE_URL` / etc. (see CLAUDE.md "AI Agent Notes"): this seam adds
+//!   a `unix` conjunct because `SIGINT` delivery via `libc::kill` is
+//!   Unix-only.
 //! - When set, `run()` — after entering `run_until_shutdown` (i.e. once the
 //!   `ctrl_c` future has actually been polled at least once) — prints the
 //!   literal line `JR-TEST-READY` to stdout, then blocks using a `work`
@@ -125,8 +127,8 @@ fn test_sigint_during_run_exits_130_with_byte_exact_interrupted_stderr() {
         let _ = stdout_reader_handle.join();
         panic!(
             "child jr process never printed the '{READY_MARKER}' readiness marker \
-             within {READY_TIMEOUT:?}. The #[cfg(debug_assertions)]-gated seam \
-             (env var JR_TEST_BLOCK_UNTIL_SIGINT=1) is expected to print this marker \
+             within {READY_TIMEOUT:?}. The #[cfg(all(debug_assertions, unix))]-gated \
+             seam (env var JR_TEST_BLOCK_UNTIL_SIGINT=1) is expected to print this marker \
              to stdout immediately after entering run_until_shutdown, then block on a \
              never-resolving work future until interrupted. See VP-MUTANTS-SCOPE-1-001 \
              / BC-X.3.006 EC-1 and this file's module doc comment for the full contract. \
