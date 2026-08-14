@@ -15,6 +15,26 @@ All notable changes to jr will be documented here.
   run `jr auth switch <NAME>`. All other `auth` subcommands (`list`, `remove`,
   `login`, `status`, `refresh`, `logout`) continue to honor `--profile`
   unchanged. (#663)
+- **`jr issue edit --dry-run` now reads stdin and renders an ADF preview
+  (S-692-1, DEC-274).** Previously `--dry-run --description-stdin` never read
+  stdin and emitted a fixed placeholder string
+  (`"<from stdin — not yet read in dry-run>"`) for
+  `plannedChanges.description`, and bare `--description` had no ADF preview at
+  all. Both `--description` and `--description-stdin` now render the actual
+  ADF document via the same `markdown_to_adf`/`text_to_adf` conversion the
+  live (non-dry-run) path uses, exposed as a new additive
+  `plannedChanges.descriptionAdf` field (`--output json`) / a
+  `"  description (ADF): rendered OK"` line (table mode).
+  `plannedChanges.description` still carries the raw input string verbatim
+  (BC-3.4.013/#398 unaffected). A `markdown_to_adf` `MAX_ADF_DEPTH` recursion
+  failure now exits 64 from `--dry-run` too, closing a false-OK regression
+  where a pathologically nested description previously returned exit 0 under
+  `--dry-run` while the corresponding live edit would exit 64. Any automation
+  asserting on the old literal placeholder string will observe a different
+  value. Note: `--dry-run --description-stdin` now performs a blocking read
+  of stdin (matching the live path). Invocations that previously returned
+  immediately without stdin attached will now wait for EOF — pipe input, or
+  redirect from /dev/null. (#692)
 
 ### Added
 
