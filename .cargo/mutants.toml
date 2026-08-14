@@ -45,6 +45,16 @@ examine_globs = [
     # S-576-5 — JSM project meta resolution (get_or_fetch_project_meta, resolve_service_desk_id).
     # HIGH-value: TTL logic, project_id string equality match, service_desk_id resolution chain.
     "src/api/jsm/servicedesks.rs",
+    # HIGH-value: collapse_and_truncate's F6-hardened 200-char truncation boundary (PR #700)
+    # and resolve_queue_by_name's partial-match resolution. Whole-file scope — cargo-mutants
+    # examine_globs has no sub-file targeting. (added S-MUTANTS-SCOPE-1)
+    "src/cli/queue.rs",
+    # HIGH-value: previously-zero-coverage run_until_shutdown ctrl_c/SIGINT fork (closed by
+    # this story — VP-MUTANTS-SCOPE-1-001/002) and the InvalidSubcommand intercept.
+    # Whole-file scope — cargo-mutants examine_globs has no sub-file targeting; other
+    # branch-dense regions of main.rs (init_tracing, stdin-TTY flip) become mutation
+    # targets too as an accepted, tracked risk. (added S-MUTANTS-SCOPE-1)
+    "src/main.rs",
 ]
 
 # The absolute per-mutant test ceiling is set via `--timeout 240` on the CLI
