@@ -21,19 +21,21 @@
 //! Story: S-MUTANTS-SCOPE-1 (adversarial pass-8 finding LOW-2)
 //! BC anchor: BC-X.3.006
 
-/// Verifies that `#[cfg(debug_assertions)]` (as part of the seam's actual
+/// Verifies that the `debug_assertions` cfg token (part of the seam's actual
 /// `#[cfg(all(debug_assertions, unix))]` gate) appears adjacent to the
 /// `JR_TEST_BLOCK_UNTIL_SIGINT` env-var read in `src/main.rs`.
 ///
 /// Strategy: locate the `std::env::var("JR_TEST_BLOCK_UNTIL_SIGINT")` line;
-/// assert `#[cfg(debug_assertions)]` exists within 5 source lines before it.
-/// Whitespace-tolerant. This deliberately accepts the presence of
-/// `debug_assertions` in that window as the load-bearing assertion (matching
-/// the sibling gate tests' string-matching approach) rather than requiring
-/// the full literal `#[cfg(all(debug_assertions, unix))]` string, so the
-/// test is robust to minor formatting/reordering of the cfg attribute's
-/// internals while still catching the case that actually matters: the read
-/// compiling into a release binary at all.
+/// assert the `debug_assertions` cfg TOKEN appears within 5 source lines
+/// before it. This is a genuine token-presence check, not a match against a
+/// fixed set of exact bracketed literals: it accepts any spelling of the
+/// seam's actual gate, `#[cfg(all(debug_assertions, unix))]` — including a
+/// reordered `all(unix, debug_assertions)` or different comma spacing —
+/// because it only requires the substring `debug_assertions` to appear
+/// somewhere in the window, not a byte-for-byte attribute match. It still
+/// catches the case that actually matters: an UN-gated read (no
+/// `debug_assertions` anywhere in the window) compiling into a release
+/// binary at all.
 ///
 /// This is a cross-platform STATIC source-scan test (string matching over
 /// `include_str!`-ed source) — it is NOT `#[cfg]`-gated and runs on every
@@ -59,9 +61,7 @@ fn test_jr_test_block_until_sigint_cfg_gate_present_in_main_source() {
 
     let window_start = env_read_line.saturating_sub(5);
     let window = &lines[window_start..=env_read_line];
-    let gate_present = window.iter().any(|l| {
-        l.contains("#[cfg(debug_assertions)]") || l.contains("#[cfg(all(debug_assertions, unix))]")
-    });
+    let gate_present = window.iter().any(|l| l.contains("debug_assertions"));
 
     assert!(
         gate_present,
