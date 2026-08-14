@@ -29,6 +29,13 @@ high line coverage but untested assertion strength at the time of the F6 review.
 - `src/cache.rs` — TTL logic, per-profile path construction, model-a vs model-b error-handling split
   (`write_cmdb_fields_cache` / `write_object_type_attr_cache` swallow errors; others propagate)
   (added MAINT-MUTANTS-GLOBS-01)
+- `src/cli/issue/interactions.rs` — `handle_comment_add`, `handle_comment_delete`, `handle_comment_edit`, `handle_comment_view` (comment CRUD handlers: ADF conversion fork, internal/public visibility flags, stdin/file/positional source resolution; extracted from `workflow.rs` by ADR-0012 Seam, S-577-1/PF-017) (backfilled S-MUTANTS-SCOPE-1; originally added S-577-1)
+- `src/cli/issue/attachments.rs` — `handle_attachment_list`, `display_sanitize_filename` (CWE-116 display-safety sanitization), `sanitize_attachment_filename` (CWE-22 disk-path sanitization), `handle_single_download`, `handle_batch_download` (backfilled S-MUTANTS-SCOPE-1; originally added S-576-1)
+- `src/api/jira/attachments.rs` — `get_attachment_metadata`, `upload_attachments`, `delete_attachment`, `delete_attachment_targeted`, `list_attachments`, `get_attachment_content` (backfilled S-MUTANTS-SCOPE-1; originally added S-576-1/S-576-3/S-576-4)
+- `src/api/jsm/attachments.rs` — `attach_temporary_file`, `post_request_attachment` (JSM two-step upload; SEC-576-005 `X-Atlassian-Token`, SEC-576-006 stale-ID self-heal, BC-3.9.006 step-2 error taxonomy) (backfilled S-MUTANTS-SCOPE-1; originally added S-576-5)
+- `src/api/jsm/servicedesks.rs` — `get_or_fetch_project_meta`, `resolve_service_desk_id`, `require_service_desk` (TTL logic, project_id string-equality match, service-desk-id resolution chain) (backfilled S-MUTANTS-SCOPE-1; originally added S-576-5)
+- `src/cli/queue.rs` — `handle`, `handle_list`, `handle_view`, `resolve_queue_by_name`, `extra_fields_allow_list`, `is_customfield_token`, `reorder_by_queue_position`, `collapse_and_truncate` (F6-hardened 200-char truncation boundary, PR #700; partial-match queue-name resolution) (added S-MUTANTS-SCOPE-1)
+- `src/main.rs` — `init_tracing`, `run`, `run_until_shutdown` (previously-zero-coverage `tokio::select!` ctrl_c/SIGINT fork, now covered by VP-MUTANTS-SCOPE-1-001/002; `InvalidSubcommand` intercept) (added S-MUTANTS-SCOPE-1)
 
 Configured in `.cargo/mutants.toml::examine_globs`. The CI job relies on this
 configuration alone (no `--file` CLI flags) for scope enforcement; `--in-diff` further
@@ -37,7 +44,7 @@ narrows to lines changed in the PR diff.
 Note: cargo-mutants v27+ reads its config from `.cargo/mutants.toml` (not `.mutants.toml`
 at repo root). This is the canonical config location for this project.
 
-Current `examine_globs` count: 16 entries (verify against `.cargo/mutants.toml` before citing
+Current `examine_globs` count: 18 entries (verify against `.cargo/mutants.toml` before citing
 this number elsewhere — it has drifted before and will drift again as scope changes).
 
 ### Sibling Candidates Considered and Deferred (MAINT-MUTANTS-GLOBS-01)
@@ -731,6 +738,7 @@ Path B is deferred until Path A's 240-minute budget proves insufficient in pract
 
 | Date | Cycle | Change |
 |------|-------|--------|
+| 2026-08-14 | S-MUTANTS-SCOPE-1 | Scope widening + drift backfill: added `src/cli/queue.rs` and `src/main.rs` to `examine_globs` (16 → 18 entries). Backfilled §Scope bullets for 5 previously-undocumented `examine_globs` members: `src/cli/issue/interactions.rs`, `src/cli/issue/attachments.rs`, `src/api/jira/attachments.rs`, `src/api/jsm/attachments.rs`, `src/api/jsm/servicedesks.rs`. Closes drift item MUTANTS-SCOPE-GAP-QUEUE-MAIN. |
 | 2026-07-02 | DEC-149 / S-MUTANTS-EXAMINE-GLOBS-1 | Scope widening: added `src/cli/issue/edit.rs` (~99 mutants) and `src/cli/issue/jsm_create.rs` (~9 mutants) to `examine_globs`. Root cause: ADR-0012 Seam A (PR #556) and Seam B (PR #558) relocated `handle_edit`, `handle_edit_bulk_labels`, `handle_edit_bulk_fields` → `edit.rs` and `handle_jsm_create` → `jsm_create.rs` from `create.rs`, but `examine_globs` was not updated. Total scope: 594 → ~702 mutants (+18%). Corrected `create.rs` entry to reflect remaining functions (`parse_field_kv`, thin dispatcher) only. |
 | 2026-06-28 | MUTATION-CI-TIMEOUT (F5 doc-completeness, pass 3) | Added "Schema-Drift and False-Green Guards" section documenting @27 pin rationale + evidence basis, malformed-JSON guard, integer-validation guard, H-1 runtime schema-drift guard, and M-2 total_mutants reconciliation warning-only design decision. Disambiguated timeout_multiplier history (3.0 in S-346 original; 2.0 in pass-1; removed in pass-2). Softened .factory/cicd-setup.md reference from "canonical" to "historical/pending refresh." F5 final blocker F1 (HIGH) + O1 + O3. |
 | 2026-06-28 | MUTATION-CI-TIMEOUT (F5 adversarial correction, pass 2) | HIGH false-RED fix: replaced SCOPED_DIFF_LINES-based drift guard with OVERALL_DIFF_LINES check. Old guard incorrectly failed comment-only/whitespace/reformat edits to scoped files. New guard: FAIL only when overall diff is EMPTY (genuine base-ref drift); PASS for any non-empty diff that yields 0 mutants. Grounded --timeout in measured baseline (133–145s on ubuntu-latest, 5 green develop runs 2026-06-28). Bumped --timeout 180 → 240 (old 180s gave only 3–6% headroom over worst-case 174s; 240s gives 38% headroom). Updated all --timeout references in policy doc, CLAUDE.md, and CI YAML. |

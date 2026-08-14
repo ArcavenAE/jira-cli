@@ -356,6 +356,26 @@ When adding a new feature:
   Used by interactive confirmation tests in `tests/comment_delete.rs` (VP-577-013,
   VP-577-030) and `tests/comment_edit.rs` (VP-577-029 — S-577-5 interactive `--public`
   confirmation gate).
+- `JR_TEST_BLOCK_UNTIL_SIGINT` env var is the readiness-handshake seam for the SIGINT
+  subprocess test (`tests/interrupt_signal.rs`, VP-MUTANTS-SCOPE-1-001). Debug builds
+  AND Unix only — gated `#[cfg(all(debug_assertions, unix))]` at BOTH the env read and
+  the seam fn (`src/main.rs::block_until_sigint_test_seam`); release and non-Unix builds
+  compile the code path out entirely and never read the env var. When set to `1`, `run()`
+  selects a `signal(SIGINT)`-based shutdown future instead of `tokio::signal::ctrl_c()`,
+  prints a `JR-TEST-READY` marker (flushed) once the listener is registered, then blocks
+  so the test can send SIGINT deterministically — no fixed `sleep`. Like every sibling
+  seam above (`JR_STDIN_IS_TTY`, `JR_BASE_URL`, `JR_CONFIG_DIR`, `JR_CACHE_DIR`,
+  `JR_SERVICE_NAME`), this seam carries a `tests/*_release_gate.rs` pin —
+  `tests/jr_test_block_until_sigint_release_gate.rs` — asserting `#[cfg(debug_assertions)]`
+  (present here as part of the seam's stricter `#[cfg(all(debug_assertions, unix))]` gate)
+  appears within 5 source lines of the `JR_TEST_BLOCK_UNTIL_SIGINT` env-var read in
+  `src/main.rs`, closing adversarial pass-8 finding LOW-2 and making this seam fully
+  convention-consistent with its siblings. This seam remains non-security (contrast
+  `JR_BASE_URL`, whose release-gate pin is SECURITY-CRITICAL — redirecting authenticated
+  requests to an attacker-controlled host): it only makes `run()` block awaiting SIGINT and
+  print a readiness marker, and does not redirect I/O, auth, or any config/cache path. It
+  is additionally narrowed by the `unix` conjunct on top of `debug_assertions`, unlike its
+  siblings' bare `debug_assertions` gate.
 - **Release-ops repo-variable gates** — `SIGNING_ENABLED`, `HOMEBREW_TAP_REPO`, `RELEASE_GAP_FILL_ENABLED`, `SYNC_UPSTREAM_REPO` (all GitHub Actions repository variables, never read by `src/` code) gate the opt-in signing/backfill/gap-fill/fork-sync workflows. All unset in the canonical repo → those workflows are no-ops; downstream forks opt in. Same fail-safe pattern as `JR_E2E_ENABLED`. See `docs/specs/fork-friendly-release-ops.md`.
 - **When adding a new `JR_*` test-seam env var:** grep `CLAUDE.md` for existing `JR_*` entries and add a parallel line in the SAME commit as the code change. This is the codified doc-fallout pattern from #335/#357; first applied retroactively when `JR_BULK_UNKNOWN_GRACE_SECS` and `JR_BULK_AWAIT_TIMEOUT_SECS` shipped without documentation.
 - **Citation discipline for external-tracker IDs in user-facing strings:** before citing a JRACLOUD-*/GitHub/community ID in anything a user sees (stderr, errors, JSON, hints) or in literal rustdoc, Perplexity-validate the source actually documents the symptom — issue #361 had three misattributed JRACLOUD tickets survive multiple PRs. Also ensure the string is valid in the user's env (e.g. JQL allows one ORDER BY) and keep paraphrasing rustdoc in lockstep.
