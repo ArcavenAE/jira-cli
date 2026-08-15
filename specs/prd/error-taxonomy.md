@@ -1,7 +1,7 @@
 ---
 context: error-taxonomy
 title: "Error Taxonomy"
-last_updated: 2026-07-27
+last_updated: 2026-08-15
 source_pass: 3
 trace: |
   - L2: .factory/specs/domain-spec/
@@ -11,6 +11,7 @@ trace: |
   - F2 amendment (2026-07-11, issue #577 SOH-COMMENT-CRUD-1, adversary pass-44 fix round 47 F-2): Section 3 — comment 403/404 override rows added (UserError exit 64, body surfaced; BC-3.5.004/BC-3.5.005/BC-3.5.010); TD-031 pre-existing violation corrected (volatile line cite replaced with stable symbol anchor src/api/client.rs::extract_error_message); pre-existing table-cell pipe escaped in BC-CITE-001 False-positive risk row
   - F2 amendment (2026-07-16, issue #576 SOH-ATTACHMENTS-1, adversary pass-16 fix round 16 P16-001): Section 3 — attachment 404 override rows added (BC-2.7.006/BC-2.7.012/BC-3.9.008/BC-3.9.013/BC-3.9.015); first 413 surface added (attachment upload, BC-3.9.001/BC-3.9.012); perimeter-scan [process-gap] recorded in impact-boundary-576.md
   - F2 amendment (2026-07-27, issue #639 SOH-DX-1, F52-001): Section 6 — Issue Commands subsection added; three pre-flight JrError::UserError exit-64 conditions registered (BC-3.8.012: --field without --request-type; BC-3.8.013: --on-behalf-of without --request-type; combined: both flags without --request-type, BC-3.8.012 governs)
+  - F2 amendment (2026-08-15, issues #604/#605/#606/#608 component-management bundle): Section 3 — component 404 override rows added, splitting the SAME HTTP 404 into two exit codes by cause (resolver-layer/confirming-GET not-found → UserError exit 64, NOT idempotent; concurrent-delete race on the DELETE call itself → ApiError(404) exit 1; BC-8.1.008/BC-8.2.008); 400 name-collision row added (BC-8.1.005/BC-8.1.007/BC-8.3.007). Section 6 — Component Commands subsection added, mirroring the full condition/exit-code table from `.factory/phase-f2-spec-evolution/prd-delta-components.md` §"Error Taxonomy / Exit-Code Mapping" (authoritative source), including the JRACLOUD-95368 snapshot drift-abort (→ new `JrError::SnapshotIncomplete` variant, exit 1, F4) and the numeric `--move-to` cross-project mismatch (→ UserError exit 64, BC-8.2.003).
 ---
 
 # Error Taxonomy — jira-cli
@@ -88,6 +89,7 @@ Source: `src/api/client.rs::extract_error_message`. Corrected from broad pass pe
 |---|---|---|---|
 | 400 | `ApiError(400, extracted_msg)` | 1 | Extracted message or `"Bad request"` |
 | 400 with `resolution` field | `UserError(...)` | 64 | `"Field 'resolution' is required"` → hint: `--resolution`, `jr issue resolutions` |
+| 400 — `component create`/`edit`/`rename` name collision (server-side) | `ApiError(400, ...)` | 1 | Extracted message (server-side uniqueness constraint on component name within a project; BC-8.1.005/BC-8.1.007/BC-8.3.007) |
 | 401 (general) | `NotAuthenticated` | 2 | stderr contains `"Not authenticated"` and `"jr auth login"` (full literal: `Not authenticated. Run "jr auth login" to connect.` — `src/error.rs::JrError` + `src/api/client.rs`) |
 | 401 with scope mismatch | `InsufficientScope` | 2 | `"Insufficient token scope. <details>. Run: jr auth login"` |
 | 403 | `ApiError(403, ...)` | 1 | `"Forbidden"` or extracted body message |
@@ -100,6 +102,8 @@ Source: `src/api/client.rs::extract_error_message`. Corrected from broad pass pe
 | 404 — `attachment list` (issue KEY) | `UserError(...)` | 64 | `"Issue <KEY> not found or not accessible."` (canonical string only; Jira body NOT surfaced; BC-2.7.006) |
 | 404 — `attachment download` (KEY or AID) | `UserError(...)` | 64 | `"Issue <KEY> not found or not accessible."` or `"Attachment <AID> not found or not accessible."` (canonical string only; Jira body NOT surfaced — read-path convention; BC-2.7.012 / EC-2.7.007-1) |
 | 404 — `attachment delete` (single AID, DELETE or pre-prompt metadata-GET) | `UserError(...)` | 64 | DELETE 404: canonical string + Jira body surfaced (DEC-168; BC-3.9.008/BC-3.9.013). Pre-prompt metadata-GET 404: canonical string only, no body (BC-3.9.015 — read GET, not write). Multi/bulk/`--replace-existing` 404 = benign-skip exception, NOT exit 64 (BC-3.9.013) |
+| 404 — `component edit`/`delete`/`rename` (`NAME\|ID` resolver lookup or numeric-source confirming `GET`) | `UserError(...)` | 64 | Resolver-layer not-found, zero mutating HTTP calls issued. Project known (via `--project`, config, or a prior confirming `GET` in the same invocation): `"Component '<input>' not found in project <key>. Run: jr component list"`. No project known: `"Component '<input>' not found. Run: jr component list --project <KEY> to see valid components."` (BC-8.1.008; component-management bundle, DEC-278/279, issues #604/#605/#606/#608) |
+| 404 — `component delete` DELETE call itself (concurrent race — source or `--move-to` target deleted between resolution and the DELETE) | `ApiError(404, ...)` | 1 | **Distinct exit code from the resolver-layer row above, same HTTP 404 status split by cause:** `component delete` is deliberately NOT idempotent — a source `NAME\|ID` that fails resolution is the ordinary exit-64 not-found path (row above), never treated as "already deleted"; a `DELETE` that itself 404s AFTER a successful resolution is a genuine race, surfaced as `ApiError(404)` exit 1 (BC-8.2.008, EC-8.2.008-1; VP-COMPONENT-024) |
 | 413 — `attachment upload` | `ApiError(413, ...)` | 1 | `"Attachment too large: the file exceeds the server-configured limit."` (no numeric limit stated; first 413 surface in the product; BC-3.9.001/BC-3.9.012) |
 | 409 | `ApiError(409, ...)` | 1 | Extracted message |
 | 422 | `ApiError(422, ...)` | 1 | Extracted message |
@@ -192,6 +196,49 @@ Pre-flight `JrError::UserError` conditions for `jr issue create` (DEC-188, BC-3.
 | `issue create --field` without `--request-type` (BC-3.8.012) | `"--field is only valid with --request-type (JSM service-desk requests). Add --request-type <NAME> to submit a JSM request with custom fields, or drop --field to create a standard platform issue."` | 64 |
 | `issue create --on-behalf-of` without `--request-type` (BC-3.8.013) | `"--on-behalf-of is only valid with --request-type (JSM service-desk requests). Add --request-type <NAME> to raise a request on behalf of another user, or drop --on-behalf-of to create a standard platform issue."` | 64 |
 | `issue create --field` AND `--on-behalf-of` without `--request-type` combined — BC-3.8.012 governs; ONE error fires, not two | `"--field and --on-behalf-of are only valid with --request-type (JSM service-desk requests). Add --request-type <NAME> to use these flags, or drop them to create a standard platform issue."` | 64 |
+
+### Component Commands
+
+Component management command family (`jr component list/create/edit/delete/rename`, plus
+`issue list/create/edit --component`) — DEC-278/279/280, issues #604/#605/#606/#608. This table
+mirrors the canonical mapping in
+`.factory/phase-f2-spec-evolution/prd-delta-components.md` §"Error Taxonomy / Exit-Code
+Mapping" (authoritative source for this bundle) — consult that file for full row-by-row
+adversarial-review correction history.
+
+| Condition | Error | Exit Code |
+|---|---|---|
+| `component list`/`edit`/`delete` (single-project forms) with no `--project` and no configured project | `JrError::UserError` | 64 |
+| `component create` with no `--project` | clap (missing required argument) | 2 |
+| Unknown component `NAME\|ID` on `edit`/`delete`/`rename` | `JrError::UserError` | 64 |
+| Ambiguous component name (2+ matches) | `JrError::UserError` | 64 |
+| `component delete` without `--move-to`/`--orphan` | `JrError::UserError` | 64 |
+| `--move-to`/`--orphan` both supplied | clap conflict | 2 |
+| `--move-to` target out-of-project (numeric-source cross-project mismatch) or self-reference | `JrError::UserError` | 64 |
+| `--orphan` non-interactive without `--yes` | `JrError::UserError` | 64 |
+| Delete-snapshot JQL search fails before delete (genuine 5xx/network fetch error) | `JrError::ApiError`/`JrError::NetworkError` propagated verbatim from the read-only snapshot search | typically 1 |
+| Delete-snapshot JQL search aborts on JRACLOUD-95368 anti-loop drift (partial result, NOT an `Err`) | new, purpose-built `JrError::SnapshotIncomplete` variant (added at F4) — fail-closed, aborts before the `DELETE` | 1 |
+| `component delete` DELETE itself 404s (concurrent race) | `JrError::ApiError(404)` | 1 |
+| `component create`/`edit`/`rename` name collision (server-side) | `JrError::ApiError(400)` | 1 |
+| `rename` without `--project`/`--all-projects` | `JrError::UserError` | 64 |
+| `rename --project`/`--all-projects` both supplied | clap conflict | 2 |
+| `rename --all-projects` partial failure | manual `exit(1)` — NOT a `JrError` variant, computed from the per-project outcome array | 1 |
+| `--lead` ambiguous/no-match | `JrError::UserError` | 64 |
+| `component create --lead ""` (empty string, no lead to clear) | `JrError::UserError` | 64 |
+| `component create --assignee-type` out-of-enum value | clap `ValueEnum` conflict | 2 |
+| `issue list --component` unresolvable/ambiguous | `JrError::UserError` | 64 |
+| `issue list --component none` combined with other `--component` | `JrError::UserError` | 64 |
+| `issue list --component all:` repeated or mixed with bare/`not:`/`none` | `JrError::UserError` | 64 |
+| `issue create/edit --component` unresolvable/ambiguous | `JrError::UserError` | 64 |
+| `issue create --component` combined with `--request-type` | `JrError::UserError` | 64 |
+| `issue edit --component` + multi-project bulk keys | `JrError::UserError` | 64 |
+| `issue edit --field components=...` combined with `--component` (Gate B) | `JrError::UserError` | 64 |
+| `issue edit --label` combined with `--component` (conflict block) | `JrError::UserError` | 64 |
+
+All component-command error paths follow the universal actionable-error convention (CLAUDE.md:
+every error suggests a next step) and the existing `JrError::exit_code()` mapping — no new exit
+codes were introduced by this bundle; `JrError::SnapshotIncomplete` is a new *variant* that
+falls to the same `_ => 1` exit-code default as `ApiError`/`NetworkError`/`Internal`.
 
 ---
 

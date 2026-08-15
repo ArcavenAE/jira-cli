@@ -202,3 +202,78 @@ types::jsm::request_type (L5) → serde, std              [NEW — pure serde st
 **Cross-check with purity boundary:** `api::jsm::requests` and `api::jsm::request_types` are I/O-effectful (HTTP), same boundary class as `api::jsm::queues`. `types::jsm::request_type` is pure (serde structs, no I/O). `cli::requesttype` is effectful (HTTP + cache + stdin). All consistent with the existing purity boundary map in `system-overview.md §Purity Boundary`.
 
 Source: ADR-0014 (2026-05-18).
+
+---
+
+## Component Management Delta — DAG Verification (Issues #604/#605/#606/#608, F2 2026-08-15)
+
+**Status:** Spec-level delta only — no `src/` code exists yet for this bundle. Recorded here
+ahead of F4 implementation so the DAG/purity cross-check is available to `implementer` and
+`consistency-validator` before Wave 1 lands. Source: `.factory/phase-f1-delta-analysis/
+impact-boundary-components.md`; ADR-0018.
+
+**New modules (3, all `[PLANNED]`):**
+
+```
+cli::component            (L2, new file src/cli/component.rs)   — jr component list/create/edit/delete/rename
+api::jira::components      (L4, new file src/api/jira/components.rs) — 5 endpoints + relatedIssueCounts
+types::jira::component     (L5, new file src/types/jira/component.rs) — full Component resource shape
+```
+
+**Delta edges (all additions; no edges removed; no existing edges modified):**
+
+```
+ADDED — new L4 module (api::jira subgraph expanded):
+  api::jira::components  → api::client (L3)             [HTTP: list/get/create/update/delete/relatedIssueCounts]
+  api::jira::components  → api::pagination (L3)          [NOT used — component list is non-paginated; cited for completeness, no edge drawn]
+  api::jira::components  → types::jira::component (L5)   [new full-resource type]
+  api::jira::components  → types::jira::issue (L5)       [Component (embedded, name-only) gains `id` field — BC-2.3.040; existing type amended in place, not replaced]
+
+ADDED — new L5 type:
+  types::jira::component → serde, std                    [pure serde struct, no upward deps]
+
+ADDED — new L2 handler (cli::component):
+  cli::component → api::jira::components
+  cli::component → cache (L6)                             [new components cache family]
+  cli::component → partial_match (L6)                     [via resolve_component]
+  cli::component → jql (L6)                                [BC-8.2.007 pre-delete affected-issue JQL snapshot]
+
+ADDED — modified L2 handlers (existing files, additive changes only):
+  cli::issue::helpers → api::jira::components             [new fn resolve_component, structural clone of resolve_team_field — NOT a shared/generic fn]
+  cli::issue::helpers → cache (L6)                         [components cache reads, mirrors resolve_team_field's TeamCache read]
+  cli::issue::edit    → cli::issue::helpers                [--component add:/remove: resolution, already-existing edge, no new edge — cited for completeness]
+  cli::issue::edit    → api::jira::issues                  [multiselectComponents bulk POST — reuses the EXISTING api::jira::issues → api::client edge; no new L2→L4 edge, only a new call pattern within it]
+  cli::issue::create  → cli::issue::helpers                [--component resolution, already-existing edge]
+  cli::issue::list    → jql (L6)                            [--component filter clause — already-existing edge (cli_issue_list → jql is drawn above), new clause-building call only]
+
+ADDED — modified L6 utility (cache.rs, additive struct + fns only, no signature changes to existing fns):
+  cache::ComponentsCacheEntry, cache::CachedComponent (new structs)
+  cache::{read,write,invalidate}_components_cache (new fns, profile: &str first arg — ProjectMeta pattern)
+```
+
+**Cycle check:** All new/modified edges follow the existing layer direction (L2 → L4 → L3 → L6,
+L4 → L5; L2 → L6 directly for cache/jql/partial_match, matching the existing `cli_requesttype`
+precedent). No upward edges (L4/L5/L6 → L2). No new L6 → L3/L4 edges. `cli::component` mirrors
+`cli::requesttype`'s exact edge shape (L2 → new-L4, L2 → cache, L2 → partial_match) plus one
+addition (L2 → jql, for the delete-safety snapshot, BC-8.2.007) not present in the `requesttype`
+precedent. **DAG remains acyclic.**
+
+**Purity boundary cross-check (see also `system-overview.md §Purity Boundary` update below):**
+- `types::jira::component` — **pure** (serde struct family: id/name/description/lead/
+  assigneeType/project, no I/O). Same class as `types::jira::team`/`types::jira::board`.
+- `api::jira::components` — **effectful shell** (HTTP via `JiraClient`). Same class as
+  `api::jira::teams`/`api::jira::boards`.
+- `cli::component` — **effectful shell** (HTTP + cache + stdin/stdout + JQL snapshot search).
+  Same class as `cli::team`.
+- `cli::issue::helpers::resolve_component` — **effectful shell**, NOT pure, despite being a
+  "resolver": it performs a cache-or-fetch HTTP round-trip before calling the pure
+  `partial_match::partial_match` primitive. The underlying `partial_match` fn itself remains
+  pure and unmodified — `resolve_component` is a thin effectful wrapper around it, exactly the
+  same shape as the existing `resolve_team_field`.
+- `cache::{read,write,invalidate}_components_cache` — **effectful shell** (filesystem I/O).
+  Same class as `cache::{read,write}_project_meta`.
+
+All classifications are consistent with the existing Purity Boundary Map — no reclassification
+of any existing module was required by this bundle.
+
+Source: F1 delta analysis §2, §3, §6; ADR-0018 (2026-08-15).

@@ -152,6 +152,8 @@ Decision rationale: ADR-0014.
 
 **I/O-bound (effectful shell):** `main.rs`, all `cli::*::handle*`, `api::client::JiraClient` methods, `api::auth` (keychain + OAuth network + listener), `cache::{read_*,write_*,clear_*}`, `config::Config::{load,save_global,find_project_config}`, all L4 resource impls (HTTP), `api::assets::workspace::get_or_fetch_workspace_id` (HTTP + cache), `api::assets::linked::get_or_fetch_cmdb_fields` (HTTP + cache).
 
+**[PLANNED, F2 2026-08-15 — Component Management, issues #604/#605/#606/#608, ADR-0018; no `src/` code exists yet]:** Pure additions — `types::jira::component` (full Component resource struct family: id/name/description/lead/assigneeType/project). Effectful-shell additions — `cli::component::handle*`, `api::jira::components::*` (5 endpoints + relatedIssueCounts), `cache::{read,write,invalidate}_components_cache`, `cli::issue::helpers::resolve_component` (thin effectful wrapper — the underlying `partial_match::partial_match` primitive it calls remains pure and unmodified). See `component-graph.md §Component Management Delta` for the full DAG/purity cross-check.
+
 ---
 
 ## Multi-Profile Model

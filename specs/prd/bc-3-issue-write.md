@@ -1,11 +1,12 @@
 ---
 context: bc-3
 title: "Issue Write (create/edit/move/assign/comment/link/open/remote-link)"
-total_bcs: 140   # cumulative claim (incl. range-collapsed); definitional_count below is individually-bodied headings
-definitional_count: 111   # count of `#### BC-` headings in this file
-last_updated: 2026-08-13
+total_bcs: 144   # cumulative claim (incl. range-collapsed); definitional_count below is individually-bodied headings
+definitional_count: 115   # count of `#### BC-` headings in this file
+last_updated: 2026-08-15
 source_pass: 3
 trace: |
+  - F2 spec evolution, component-management bundle (2026-08-15, issues #604/#605/#606/#608): BC-3.4.022..025 ADDED — `issue create/edit --component` (issue #605): single-key native `update`-verb wire shape (022), multi-key bulk `multiselectComponents`/integer `componentId` wire shape (023, DEC-280), `create`'s bare additive body composition (024), and the resolver-mechanism decision (one round-trip via project components list, not duplicated with editmeta, 025). BC-3.4.017 UPDATED — Gate B scope extended 4→5 fields (`components` added), EC-3.4.017-15 added. BC-3.4.020 UPDATED — `--label` conflict-block flag list extended 12→13 (`--component` added). BC-3.4.012/013 UPDATED — `components` joins the field-echo key table (table-mode comma-joined action:name pairs; JSON-mode `changed_fields["components"]` is also a comma-joined `add:name`/`remove:name` string, matching the shared `BTreeMap<String,String>` model — the array-of-`{action,name}` shape is the dry-run `plannedChanges.components` form only, not `changed_fields`). BC-3.4.021 UPDATED — `plannedChanges.components` dry-run preview added (flat array, same convention as `labels`), EC-3.4.021-20 added. +4 new individually-bodied BCs (111→115); total_bcs 140→144. See `.factory/phase-f1-delta-analysis/delta-analysis-components.md`, `.factory/research/component-delete-and-bulk-wire-2026-08-15.md`.
   - F2 spec evolution, bucket1-defects bundle (2026-08-13, issue #692, DEC-274; adversary passes 1-4): BC-3.4.021 UPDATED — DEC-274 REVERSES Invariant 3: `--dry-run --description-stdin` now reads stdin and renders ADF (previously a placeholder, pinned as correct-not-a-bug); adversary pass-3 MEDIUM-1 extended the ADF-preview half to bare `--description` too (both flags now produce a `descriptionAdf` preview, closing a false-OK regression where a bare-flag depth-guard trip returned exit 0). New additive `plannedChanges.descriptionAdf` field (nested, preserves the "exactly three top-level keys" postcondition); `plannedChanges.description` continues to carry the raw input string verbatim for either flag (BC-3.4.013/#398 unaffected, no body edit). ECs: EC-3.4.021-6 rewritten; EC-3.4.021-15/-16 added pass-1/-2 (depth-guard Err → exit 64 in dry-run, split by `--output` mode after a pass-2→pass-3 channel correction — stderr carries the error envelope, stdout is always empty; successful multi-line/markdown render); EC-3.4.021-17 added pass-1 (empty-stdin, mirrors EC-3.4.013-13); EC-3.4.021-18/-19 added pass-3 (bare-`--description` happy path and depth-guard regression pin, mirroring -6/-15). VPs: VP-DRY-RUN-001 amended (derived-key carve-out); VP-692-001..004 added across pass-1/pass-3 (stdin happy-path, stdin depth-guard error [channel-corrected pass-3], bare-description happy path, bare-description depth-guard error). Pre-DEC-274 text retained inline in the BC's "Previous version" block; each corrected pass-2 error also retained inline as "INCORRECT, do NOT re-implement." No BC count change (still 111 individually-bodied). See `.factory/research/bucket1-692-dry-run-stdin-2026-08-13.md`.
   - L2: .factory/specs/domain-spec/bc-03-issue-write.md
   - Source broad: .factory/semport/jira-cli/jira-cli-pass-3-behavioral-contracts.md §2.3
@@ -175,7 +176,7 @@ trace: |
 
 # BC-3 — Issue Write
 
-140 behavioral contracts across 9 subdomains: Assign (3.1), Move/Transition (3.2),
+144 behavioral contracts across 9 subdomains: Assign (3.1), Move/Transition (3.2),
 Create (3.3), Edit+Open (3.4), Comment (3.5), Links (3.6), Remote links (3.7),
 JSM Request Create + Platform-Path Pre-flight Guards + Auth-Conditional 401 Hints (3.8),
 Attachment Write (3.9).
@@ -940,8 +941,49 @@ On either Indeterminate cause:
   - **`--no-points` branch** (`if no_points`): `changed_fields` receives an insertion `"points" → "(cleared)"` at the `if no_points` site. No numeric formatting applies here — the value is the literal string `"(cleared)"`. Key is always `points` in both cases; no separate `no_points` key is ever inserted.
 - `team` → the RESOLVED team name (not the user's partial-match query, not the UUID); sourced from the third element of the updated `resolve_team_field` return tuple `(field_id, team_id, team_name)`. When `--team` value was passed as a raw UUID and the UUID-bypass path fires, `team_name` is the UUID itself (echo of the raw value the caller supplied). The UUID-bypass predicate (`is_team_uuid`) checks exactly 36 chars in 8-4-4-4-12 hyphen-separated groups of ASCII hex digits (case-insensitive). A team name that resembles a UUID but fails this predicate still resolves via partial-match.
 - `description` → the literal marker `(updated)` — the content is an ADF blob and is NEVER echoed inline. This asymmetry is intentional: the `(updated)` marker tells the user that description changed without flooding the terminal. See the research rationale in `.factory/research/issue-398-field-echo-conventions.md §4` (table/human channel: marker; JSON channel: raw user-supplied input string).
+- `components` **[NEW, issue #605 F2]** **[UPDATED 2026-08-15, H1 fix-burst]** → comma-joined
+  `add:name`/`remove:name` pairs in CLI input order (e.g. `add:Backend, remove:Frontend`) —
+  mirrors `--label`'s absence from this list only because `--label` routes through the
+  separate `handle_edit_bulk_labels` path (see the exclusion note below); `--component` stays
+  on the single-key `handle_edit` path (BC-3.4.022) and IS covered by this echo mechanism.
+  This STRING format is now shared byte-for-byte between the table-mode echo (this BC) and
+  the JSON-mode `changed_fields["components"]` value (BC-3.4.013) — see BC-3.4.013's Behavior
+  for the H1 resolution rationale (a prior draft had JSON emit a `components` JSON ARRAY,
+  which was structurally incompatible with the shared `BTreeMap<String, String>` model this
+  BC's own Postconditions describe; corrected here so both channels emit the identical
+  lowercase `add:`/`remove:` string). **[PINNED 2026-08-15, L2 fix-burst — pass 3, closes an
+  unspecified-echo gap found by adversarial spec-delta review pass 3]** A BARE `--component
+  Backend` (no `add:`/`remove:` prefix) is internally normalized to an ADD entry BEFORE this
+  echo mechanism runs — the SAME normalization EC-3.4.022-2 already documents for the wire
+  body (`--component Backend` produces `{"add":{"name":"Backend"}}`, identical to `--component
+  add:Backend`). The echo therefore shows the NORMALIZED form, `add:Backend`, never the raw,
+  unprefixed `Backend` — a bare entry and an explicit `add:`-prefixed entry for the same
+  component name are INDISTINGUISHABLE in the echo, by design (both mean the same thing to the
+  wire body). This holds for BOTH the table-mode echo (this BC) and the JSON-mode
+  `changed_fields["components"]` value (BC-3.4.013), and is the SAME normalized string the
+  `--dry-run` TABLE preview (BC-3.4.021 Postconditions — `--output table` item 1, `components →
+  add:X, remove:Y`) shows for a bare entry. **[SCOPED 2026-08-15, P4 fix-burst — resolves an
+  overbroad claim found by adversarial spec-delta review pass 4, LOW-2]** This byte-for-byte
+  consistency holds across exactly THREE surfaces: the live table-mode echo (this BC), the live
+  JSON-mode `changed_fields["components"]` value (BC-3.4.013), and the **dry-run TABLE**
+  preview line — all three are the identical lowercase `add:`/`remove:` comma-joined STRING.
+  It does NOT extend to the **dry-run JSON** surface: `plannedChanges.components` (BC-3.4.021
+  Postconditions — `--output json` item 3) is a JSON ARRAY of `{"action": "ADD"|"REMOVE",
+  "name": "..."}` objects — a deliberately different, simplified-preview TYPE from the shared
+  string format the other three surfaces use (BC-3.4.021's own Description explicitly documents
+  `plannedChanges` shapes as simplified previews that do NOT match live wire/echo payloads, the
+  same convention `labels` already follows). **Previous version (superseded, retained for audit
+  trail):** "...the three surfaces (live table echo, live JSON echo, dry-run preview) are
+  byte-for-byte consistent for a bare input, not merely for an explicitly-prefixed one." — this
+  named "dry-run preview" without disambiguating table vs. JSON output mode, which reads as
+  covering both; it covers only the dry-run TABLE preview. The dry-run JSON preview was never
+  byte-for-byte consistent with the other three (it is array-of-objects vs. string, a type
+  difference, not merely a formatting one) — this was the H1-fix-burst's own deliberate design
+  choice for `plannedChanges` (mirroring `labels`), not a defect, but the "three surfaces"
+  wording here did not say so explicitly. The user-visible BEHAVIOR is unchanged; only this
+  sentence's scope is corrected.
 
-Map keys are always the literal lowercase identifiers in the key table (`summary`, `issue_type`, `priority`, `parent`, `points`, `team`, `description`) — never `customfield_*` IDs. The issue-type key is the literal `issue_type` (matching the Rust field identifier), NOT `type` and NOT `issuetype`.
+Map keys are always the literal lowercase identifiers in the key table (`summary`, `issue_type`, `priority`, `parent`, `points`, `team`, `description`, `components`) — never `customfield_*` IDs. The issue-type key is the literal `issue_type` (matching the Rust field identifier), NOT `type` and NOT `issuetype`.
 
 `--label` edits (single OR multi key) route through `handle_edit_bulk_labels` and are NOT covered by this contract; no `label` key appears in `changed_fields`.
 
@@ -988,6 +1030,7 @@ Only fields that were actually changed in the invocation are echoed. The field-e
 - EC-3.4.012-14: `jr issue edit KEY --markdown --description "**bold**"` → table-mode echo is still `  description → (updated)` regardless of `--markdown`. The Markdown content is never surfaced in table mode; the `(updated)` marker applies uniformly to all description-change paths.
 - EC-3.4.012-15: `--team` value matches no team at all (`MatchResult::None(_)`) → `resolve_team_field` errors via `JrError::UserError` before the PUT (exit code per `src/error.rs::exit_code()`, currently 64); no team echo line is emitted and the changed-fields echo does not fire. The error text contains the stable substring `No team matching` (exact wording varies by `fetched_fresh` cache state; assert only the substring). Note: the `None` variant carries a `Vec<String>` of candidate names, unused by this contract.
 - EC-3.4.012-16: `jr issue edit KEY --description-stdin < /dev/null` → `desc_text = Some("")`. The edit proceeds — `--description-stdin` is itself a field flag so the no-fields-specified bail (the `has_any_field_change` guard, the pre-HTTP guard at `edit.rs::has_any_field_change` ~line 106) does not fire regardless of stdin content; an empty description is a valid change. (Note: there are two distinct no-fields guards in `handle_edit` — `has_any_field_change` at ~line 106 bails before any HTTP/JQL, and `has_updates` at line 634 bails inside the field-resolution block. The bail described in this EC is the FORMER — `has_any_field_change` — because `--description-stdin` is an unconditional flag predicate in that `let` binding.) Table-mode echo is `  description → (updated)` (same as any non-empty description). The empty description string is still converted to ADF for the PUT body. Exit code 0.
+- EC-3.4.012-17 **[NEW 2026-08-15, L2 fix-burst — pass 3]**: `jr issue edit KEY --component Backend` (bare, no `add:`/`remove:` prefix) → stderr echo is `  components → add:Backend` — the bare entry is normalized to the `add:` form (per the `components` bullet's L2-fix-burst pin above) before the echo line is composed, NOT `  components → Backend`. Identical normalization applies if `--component Backend` is combined with a prefixed entry, e.g. `--component Backend --component remove:Frontend` → `  components → add:Backend, remove:Frontend`.
 
 **Verification Properties**:
 - VP-398-001: Resolved team name in `edit` table output is the display name, not a UUID substring. Negative case (DECISION LOCKED — round 5 F-1): write a **direct unit-level assertion on `is_team_uuid`** — call `is_team_uuid("36885b3c-1bf0-4f85-a357-c5b858c31de")` (35 chars, one short of UUID length) and assert the return value is `false`. Reuse or cite the existing `is_team_uuid_rejects_wrong_length` test at `src/cli/issue/helpers.rs` (~line 617). Do NOT write an integration test routing this probe through `partial_match` — that tests `partial_match` fallback behavior, not the `is_team_uuid` predicate boundary. **PLACEMENT (DECISION LOCKED — round 7 F-1): `is_team_uuid` has no `pub` visibility — it is module-private. The `is_team_uuid` negative-case assertion is a UNIT test that MUST be placed in the `#[cfg(test)] mod tests` block inside `src/cli/issue/helpers.rs` (because `is_team_uuid` is module-private and not exported via lib.rs). Do NOT place it in `tests/`. The team-echo positive cases (verifying that a resolved display name, not a UUID, appears in stderr or JSON) remain wiremock integration tests in `tests/`.**
@@ -1040,8 +1083,9 @@ Only fields that were actually changed in the invocation are echoed. The field-e
 | `"priority"` | Verbatim string passed to `--priority` |
 | `"summary"` | Verbatim string passed to `--summary` |
 | `"team"` | RESOLVED team display name (not UUID, not partial-match query); from the `team_name` element of the updated `resolve_team_field` return tuple |
+| `"components"` **[NEW, issue #605 F2]** **[UPDATED 2026-08-15, H1 fix-burst — resolves a structural contradiction found by adversarial spec-delta review pass 1]** | Comma-joined `add:name`/`remove:name` pairs in CLI input order (e.g. `"add:Backend, remove:Frontend"`) — a JSON STRING, identical format and CLI-input-order semantics to the table-mode echo (BC-3.4.012's `components` bullet). NOT a JSON array. **Previous version (superseded, retained for audit trail — do NOT re-implement):** "JSON array of `{"action":"ADD"\|"REMOVE","name":"<name>"}` objects, one per `--component` spec, in CLI input order — same flat-array shape convention as the dry-run `plannedChanges.components` preview (BC-3.4.021)... This is a JSON ARRAY value, not a string — the sole exception to 'all values are JSON strings' noted above." That design was structurally impossible: `edit_response`'s signature (`changed_fields: &BTreeMap<String, String>`, confirmed below) and BC-3.4.012 Postconditions ("Both table-mode echo and JSON-mode `changed_fields` iterate the same `BTreeMap`, guaranteeing identical ordering") both require every value to be a `String` — an array-valued entry cannot exist in a `BTreeMap<String, String>`. Corrected here so the JSON channel emits the SAME string this BC's table-mode sibling emits — no exception to "all values are JSON strings" remains. The dry-run preview (BC-3.4.021 `plannedChanges.components`) and the two wire-body shapes (BC-3.4.022's `update`-verb object form, BC-3.4.023's bulk integer `componentId` form) are UNCHANGED by this correction — they are separate JSON payloads (dry-run preview, HTTP request bodies) governed by their own BCs, not by `changed_fields`. **[PINNED 2026-08-15, L2 fix-burst — pass 3, closes an unspecified-echo gap found by adversarial spec-delta review pass 3]** A BARE `--component Backend` (no `add:`/`remove:` prefix) is normalized to `"add:Backend"` before this value is composed — same normalization as the table-mode echo (BC-3.4.012's L2-fix-burst pin) and the same normalization EC-3.4.022-2 documents for the wire body; `changed_fields["components"]` for a bare entry is therefore `"add:Backend"`, never the raw `"Backend"`. |
 
-`--label` edits (single OR multi key) route through `handle_edit_bulk_labels` and are NOT covered by this contract; no `"label"` key appears in `changed_fields`.
+`--label` edits (single OR multi key) route through `handle_edit_bulk_labels` and are NOT covered by this contract; no `"label"` key appears in `changed_fields`. `--component` (issue #605) stays on the single-key `handle_edit` path (BC-3.4.022) and IS covered — see the `"components"` row above.
 
 The deliberate asymmetry between BC-3.4.012 (table: `(updated)` marker for description) and BC-3.4.013 (JSON: raw input string for description) is intentional: the human channel optimizes for scannability; the machine channel must be complete and faithful. This asymmetry MUST NOT be "fixed" to make them match. A CLAUDE.md Gotcha entry should accompany the implementation.
 
@@ -1087,6 +1131,7 @@ The deliberate asymmetry between BC-3.4.012 (table: `(updated)` marker for descr
 - EC-3.4.013-11: `jr issue edit KEY --markdown --description "**bold**"` → `changed_fields["description"]` is the literal raw string `**bold**` (raw Markdown), NOT ADF JSON and NOT plain-text-rendered. The `--markdown` flag causes `markdown_to_adf("**bold**")` to be invoked for the PUT body sent to Jira, but the raw input string `"**bold**"` is captured BEFORE that conversion and stored in `changed_fields`. The `src/adf.rs` converter is not involved in populating `changed_fields["description"]` in any way.
 - EC-3.4.013-12: `--team` value matches no team at all (`MatchResult::None(_)`) → `resolve_team_field` errors via `JrError::UserError` before the PUT (exit code per `src/error.rs::exit_code()`, currently 64); no JSON is emitted and the changed-fields echo does not fire. The error text contains the stable substring `No team matching` (exact wording varies by `fetched_fresh` cache state; assert only the substring). Note: the `None` variant carries a `Vec<String>` of candidate names, unused by this contract.
 - EC-3.4.013-13: `jr issue edit KEY --description-stdin < /dev/null` → `desc_text = Some("")`. The edit proceeds — `--description-stdin` is itself a field flag so the no-fields-specified bail (the `has_any_field_change` guard, the pre-HTTP guard at `edit.rs::has_any_field_change` ~line 106) does not fire regardless of stdin content; an empty description is a valid change. (Note: there are two distinct no-fields guards in `handle_edit` — `has_any_field_change` at ~line 106 bails before any HTTP/JQL, and `has_updates` at line 634 bails inside the field-resolution block. The bail described in this EC is the FORMER — `has_any_field_change` — because `--description-stdin` is an unconditional flag predicate in that `let` binding.) JSON output: `changed_fields["description"]` is `""` (empty string). The `"description"` key IS present in `changed_fields`. Exit code 0.
+- EC-3.4.013-14 **[NEW 2026-08-15, L2 fix-burst — pass 3]**: `jr issue edit KEY --component Backend --output json` (bare, no `add:`/`remove:` prefix) → `changed_fields["components"] == "add:Backend"` — the bare entry is normalized to the `add:` form (per the `"components"` row's L2-fix-burst pin above) before the JSON value is composed, NOT `"Backend"`.
 
 **Verification Properties**:
 - VP-398-001: Resolved team name in `edit` JSON `changed_fields.team` is the display name, not a UUID substring. Negative case (DECISION LOCKED — round 5 F-1): write a **direct unit-level assertion on `is_team_uuid`** — call `is_team_uuid("36885b3c-1bf0-4f85-a357-c5b858c31de")` (35 chars, one short of UUID length) and assert the return value is `false`. Reuse or cite the existing `is_team_uuid_rejects_wrong_length` test at `src/cli/issue/helpers.rs` (~line 617). Do NOT write an integration test routing this probe through `partial_match` — that tests `partial_match` fallback behavior, not the `is_team_uuid` predicate boundary. **PLACEMENT (DECISION LOCKED — round 7 F-1): `is_team_uuid` has no `pub` visibility — it is module-private. The `is_team_uuid` negative-case assertion is a UNIT test that MUST be placed in the `#[cfg(test)] mod tests` block inside `src/cli/issue/helpers.rs` (because `is_team_uuid` is module-private and not exported via lib.rs). Do NOT place it in `tests/`. The team-echo positive cases (verifying that a resolved display name, not a UUID, appears in JSON `changed_fields.team`) remain wiremock integration tests in `tests/`.**
@@ -1692,7 +1737,20 @@ option `id`. Exception: when the id-bypass path fires, `changed_fields` value is
 
 ---
 
-#### BC-3.4.017: `--field` multi-key/`--jql` multi-issue rejection (C-1 guard) + flag-overlap hard error for `summary`/`description`/`issuetype`/`priority`
+#### BC-3.4.017: `--field` multi-key/`--jql` multi-issue rejection (C-1 guard) + flag-overlap hard error for `summary`/`description`/`issuetype`/`priority`/`components`
+
+**[UPDATED 2026-08-15 issue #605 F2]** Gate B's scope is extended from four fields to FIVE:
+`components` joins `summary`/`description`/`issuetype`/`priority`. `--component add:X --field
+components=Y` (or `--field Components=Y`, case-insensitive) → Gate B fires identically to the
+other four fields: `JrError::UserError`, exit 64, no HTTP. Rationale: `components` is a real
+Jira system field name reachable via the generic `--field` escape hatch (unlike `--team`/
+`--points`, which use dynamically-resolved custom field IDs and remain deliberately excluded
+from Gate B per the existing "Scope of Gate B" paragraph below). **Previous version (four
+fields, superseded, retained for audit trail):** "Exactly four first-party system fields
+(`summary`, `description`, `issuetype`, `priority`)." New EC-3.4.017-15 below documents the
+`components` case. `--field NAME` values are matched case-insensitively against the five
+canonical keys `summary`, `description`, `issuetype`, `priority`, `components` — unchanged
+matching mechanism, one more member in the set.
 
 **Confidence**: HIGH
 **Source**: issue #396 F2 spec evolution; `src/cli/issue/edit.rs::handle_edit` (C-1 guard, `REJECTED_IN_BULK` set); `.factory/phase-f2-spec-evolution/prd-delta-396.md §3`
@@ -1732,10 +1790,13 @@ Gate B is evaluated at the top of `handle_edit`, after clap parsing (so both fla
 values are in scope), but before any field resolution or HTTP calls. This ensures the
 guard is O(1) and never causes a latency penalty.
 
-**Scope of Gate B**: Exactly four first-party system fields (`summary`, `description`,
-`issuetype`, `priority`). Team (`--team`) and points (`--points`/`--no-points`) use
-dynamically-resolved custom field IDs; overlap detection for those would require an
-API call, violating the "no HTTP before the guard" invariant. These are deferred to v2.
+**Scope of Gate B**: Exactly five first-party system fields (`summary`, `description`,
+`issuetype`, `priority`, `components` — the last added 2026-08-15 issue #605 F2). Team
+(`--team`) and points (`--points`/`--no-points`) use dynamically-resolved custom field IDs;
+overlap detection for those would require an API call, violating the "no HTTP before the
+guard" invariant. These are deferred to v2. Unlike team/points, `components` needs no API
+call to detect an overlap — `--component` is a first-party static flag exactly like
+`--summary`/`--type`, so it fits Gate B's O(1) invariant cleanly.
 
 **Scope of Gate A**: `--field` is REJECTED_IN_BULK (not BULK_SUPPORTED). This is
 intentional: the Jira Cloud Bulk API does not support arbitrary custom field writes;
@@ -1746,9 +1807,15 @@ adding bulk `--field` support would require a separate design pass.
 - `--field` is present.
 
 **Preconditions for Gate B error**:
-- At least one of the four dedicated flags (`--summary`, `--description`, `--type`,
-  `--priority`) is present AND the corresponding system field key is targeted by a
-  `--field NAME=VALUE` pair (case-insensitive key comparison).
+- **[UPDATED 2026-08-15 issue #605 F2, M5 fix-burst]** At least one of the FIVE dedicated
+  flags (`--summary`, `--description`, `--type`, `--priority`, `--component`) is present AND
+  the corresponding system field key (`summary`/`description`/`issuetype`/`priority`/
+  `components`) is targeted by a `--field NAME=VALUE` pair (case-insensitive key comparison).
+  **Previous version (superseded, retained for audit trail):** "At least one of the four
+  dedicated flags (`--summary`, `--description`, `--type`, `--priority`)..." — this text was
+  never updated when the "Scope of Gate B" paragraph and EC-3.4.017-15 below were extended to
+  five fields, leaving the Preconditions section internally inconsistent with the rest of this
+  BC; corrected here to match.
 
 **Postconditions (Gate A)**:
 - Exit code 64.
@@ -1781,10 +1848,14 @@ adding bulk `--field` support would require a separate design pass.
    (see EC-3.4.017-14).
 3. `--jql` matching exactly ONE issue routes to the single-key path — this is NOT an
    error. Gate A only fires when `--jql` matches 2+ issues.
-4. The flag-overlap comparison on the `--field NAME` side is case-insensitive against
-   the canonical system field keys (`summary`, `description`, `issuetype`, `priority`).
-   A `--field SUMMARY=X` or `--field Summary=X` is detected as an overlap for
-   `--summary Y`.
+4. **[UPDATED 2026-08-15 issue #605 F2, M5 fix-burst]** The flag-overlap comparison on the
+   `--field NAME` side is case-insensitive against the FIVE canonical system field keys
+   (`summary`, `description`, `issuetype`, `priority`, `components`). A `--field SUMMARY=X` or
+   `--field Summary=X` is detected as an overlap for `--summary Y`; `--field COMPONENTS=X` or
+   `--field Components=X` is detected as an overlap for `--component X` (EC-3.4.017-15).
+   **Previous version (superseded):** "...the canonical system field keys (`summary`,
+   `description`, `issuetype`, `priority`)." — four-member enumeration, stale since
+   `components` joined Gate B's scope.
 
 **Edge Cases**:
 - EC-3.4.017-1: `jr issue edit KEY1 KEY2 --field Urgency=High` → Gate A fires → exit
@@ -1824,7 +1895,7 @@ adding bulk `--field` support would require a separate design pass.
 - EC-3.4.017-11: `jr issue edit KEY --field type=Bug` (using `type` as the field name,
   not `issuetype`) → Gate B does NOT fire. The Gate B comparison checks whether the
   `--field NAME` key, lowercased, matches the canonical system field keys `summary`,
-  `description`, `issuetype`, `priority`. The key `type` does NOT match `issuetype`.
+  `description`, `issuetype`, `priority`, `components`. The key `type` does NOT match `issuetype`.
   `--field type=Bug` is treated as an ordinary name lookup in `resolve_edit_fields` and
   proceeds to field-name resolution (Step 2b). Note: `--type` maps to the `issuetype`
   system field key in Jira; a `--field` pair targeting `issuetype` directly WOULD trigger
@@ -1861,28 +1932,28 @@ adding bulk `--field` support would require a separate design pass.
   failure diffs across runs, mirrors `test_343_every_edit_field_is_categorized`) from
   `(BULK_SUPPORTED \ {"label"}) ∪ REJECTED_IN_BULK`. For each field, the kebab-case CLI
   flag name is the explicit `long = "<literal>"` value when present, otherwise the field
-  name with underscores replaced by hyphens (clap's implicit default). Of the 12 fields
+  name with underscores replaced by hyphens (clap's implicit default). Of the 13 fields
   currently in scope: `issue_type` carries `#[arg(long = "type")]` and maps to `--type`
-  (NOT `--issue-type`); the other 11 (`summary`, `priority`, `team`, `points`,
+  (NOT `--issue-type`); the other 12 (`summary`, `priority`, `team`, `points`,
   `no_points`, `parent`, `no_parent`, `description`, `description_stdin`, `markdown`,
-  `field`) use the implicit snake→kebab transform. Any future field added to
+  `field`, `component`) use the implicit snake→kebab transform. Any future field added to
   `BULK_SUPPORTED`/`REJECTED_IN_BULK` with a non-mechanical `long = "..."` rename will
-  be caught by the R2 pin's 12-flag enumeration — the extractor side and the expected
+  be caught by the R2 pin's 13-flag enumeration — the extractor side and the expected
   side must be reconciled together.
   **Assertion**: assert extracted `BTreeSet<String>` equals expected `BTreeSet<String>`.
   A regression that drops any `conflicting.push` line OR adds a new Edit field to
   `BULK_SUPPORTED`/`REJECTED_IN_BULK` without extending the conflict block fails this
   meta-test at `cargo test` time.
   **R2 pin**: include at least one pin test asserting the extractor correctly parses a
-  known-good input string (e.g., assert extracted set has exactly 12 members for the
+  known-good input string (e.g., assert extracted set has exactly 13 members for the
   current block: `--field`, `--summary`, `--priority`, `--type`, `--team`, `--points`,
   `--no-points`, `--parent`, `--no-parent`, `--description`, `--description-stdin`,
-  `--markdown`. `--label` itself is the guard condition on the outer `if`, not a pushed
-  entry).
-  **Co-author**: 10 positive regression tests in `tests/issue_edit_field.rs`
+  `--markdown`, `--component`. `--label` itself is the guard condition on the outer `if`,
+  not a pushed entry).
+  **Co-author**: 11 positive regression tests in `tests/issue_edit_field.rs`
   (`test_label_plus_<flag>_rejected_with_exit_64_no_http` for each of: `priority`, `type`,
   `team`, `points`, `no-points`, `parent`, `no-parent`, `description`, `description-stdin`,
-  `markdown`). Test names use snake_case substitution for kebab-case flags
+  `markdown`, `component`). Test names use snake_case substitution for kebab-case flags
   (e.g., `--no-points` → `test_label_plus_no_points_...`; Rust identifiers cannot contain
   hyphens). Each test asserts exit 64, stderr contains `"--label cannot be combined with"`,
   and stderr contains the specific flag name as a SEPARATE assertion — not as one
@@ -1898,10 +1969,17 @@ adding bulk `--field` support would require a separate design pass.
   `--markdown` alone triggers an earlier guard at `edit.rs` ~line 87 before the conflict
   block; pairing with `--description` bypasses the early guard and reaches the conflict block,
   verifying the `--markdown` row. [Issue #407]
+- EC-3.4.017-15 (NEW, issue #605 F2): `jr issue edit KEY --component add:X --field components=Y`
+  → Gate B fires for `components` (fifth field, added 2026-08-15) → exit 64, overlap error
+  naming `components`, no HTTP. Symmetric with EC-3.4.017-4..7 for the other four fields.
+  `jr issue edit KEY --component add:X --field Components=Y` (capitalized field name) also
+  fires — the case-insensitive match applies uniformly.
 
 **Verification Properties**:
-- VP-396-005: Multi-key/`--jql`-multi-issue rejection exits 64; flag-overlap hard error
-  for `summary`, `description`, `issuetype`, `priority` exits 64 before any HTTP call.
+- VP-396-005 **[UPDATED 2026-08-15 issue #605 F2, M5 fix-burst]**: Multi-key/`--jql`-multi-
+  issue rejection exits 64; flag-overlap hard error for `summary`, `description`, `issuetype`,
+  `priority`, `components` exits 64 before any HTTP call. **Previous version (superseded):**
+  "...for `summary`, `description`, `issuetype`, `priority`..." (four-member enumeration).
 - VP-396-008: `--field` + `--dry-run` → success path exits 0; Gate A/B still fire;
   read-only HTTP executes for preview; PUT NOT issued; resolution failure still exits 64;
   dry-run succeeds when editmeta contains allowedValues entries with absent `id` on
@@ -2037,7 +2115,7 @@ HTTP 400 on real Jira Cloud when applied to the single-key PUT endpoint.
 **Preconditions**:
 1. `jr issue edit --label <spec>` is invoked with 1 to N positional keys (or `--jql` resolving to 1..N keys).
 2. At least one `--label` value is supplied.
-3. None of the `--label` mutual-exclusion flags are supplied alongside `--label`. The full set (verified from `src/cli/issue/edit.rs::handle_edit` lines 180-227, CLAUDE.md FIX-F5-001): `--summary`, `--priority`, `--type`, `--team`, `--points`, `--no-points`, `--parent`, `--no-parent`, `--description`, `--description-stdin`, `--markdown`, `--field`. Combining `--label` with any of these flags causes the block to exit 64 before this contract's routing logic fires; the block fires unconditionally on `!labels.is_empty() && !conflicting.is_empty()` (NOT only on `!field_pairs.is_empty()`) regardless of key count. This gate is **distinct from BC-3.4.017 Gate B** — Gate B covers multi-key (`--jql` or 2+ positional keys) + flag-overlap for `--summary`/`--description`/`--type`/`--priority` only; the `--label` conflict block is a separate earlier-return covering all 12 flags at any key count.
+3. None of the `--label` mutual-exclusion flags are supplied alongside `--label`. The full set (verified from `src/cli/issue/edit.rs::handle_edit` lines 180-227, CLAUDE.md FIX-F5-001; **[UPDATED 2026-08-15 issue #605 F2] `--component` added — 12 → 13 flags**): `--summary`, `--priority`, `--type`, `--team`, `--points`, `--no-points`, `--parent`, `--no-parent`, `--description`, `--description-stdin`, `--markdown`, `--field`, `--component`. Combining `--label` with any of these flags causes the block to exit 64 before this contract's routing logic fires; the block fires unconditionally on `!labels.is_empty() && !conflicting.is_empty()` (NOT only on `!field_pairs.is_empty()`) regardless of key count. This gate is **distinct from BC-3.4.017 Gate B** — Gate B covers multi-key (`--jql` or 2+ positional keys) + flag-overlap for `--summary`/`--description`/`--type`/`--priority`/`--component` only; the `--label` conflict block is a separate earlier-return covering all 13 flags at any key count. Rationale for including `--component`: without this guard, `--label add:foo --component add:bar` on a single key would route through `handle_edit_bulk_labels` (Path A/B of this BC), which does not accept a `components` payload — the `--component` write would silently drop (exit 0, data loss), the exact FIX-F5-001 hazard class this conflict block exists to prevent for `--field`.
 4. `--dry-run` is NOT set. When `--dry-run` is present, `handle_edit` short-circuits at the dry-run block (`src/cli/issue/edit.rs` ~lines 366-559, verified: `if dry_run {` at line 366, `return Ok(());` at line 559) BEFORE the label-routing branch at line 603 (`if !labels.is_empty()`). No PUT or bulk POST is issued under `--dry-run`. The label dry-run preview (plannedChanges with action/name entries) is owned by BC-3.4.021 Invariant 4. Path A and Path B of this contract apply only to live, non-dry-run label edits.
 
 **Postconditions — Path A (single key, `keys.len() == 1`)**:
@@ -2091,14 +2169,30 @@ HTTP 400 on real Jira Cloud when applied to the single-key PUT endpoint.
 **Verification Properties**:
 - VP-LABEL-FORK-001: Single-key `--label` invocation calls PUT exactly once; bulk POST mock is not hit (`.expect(0)`); PUT body contains bare-string `{"add":"..."}` (not `{"name":"..."}`).
 - VP-LABEL-FORK-002: Two-key `--label` invocation calls bulk POST exactly once; PUT mock is not hit (`.expect(0)`); bulk body `labelsFields[0].labels[0]` is an object with a `name` key (not a bare string).
+- VP-COMPONENT-027 **[NEW 2026-08-15, P7 fix-burst — resolves MEDIUM-3 found by adversarial
+  spec-delta review pass 7]**: `jr issue edit KEY --label add:foo --component add:bar` (single
+  key, or any key count) → Precondition 3's mutual-exclusion conflict block fires → exit 64,
+  stderr contains `"--label cannot be combined with"` AND `"--component"` as two separate
+  substring assertions (mirrors EC-3.4.017-14's co-author test pattern for the other 12 flags in
+  this same conflict block); `PUT /rest/api/3/issue/{key}` is NOT called (`.expect(0)`);
+  `POST /rest/api/3/bulk/issues/fields` is NOT called (`.expect(0)`) — i.e. NEITHER this BC's
+  Path A nor Path B ever fires for this combination, so the `--component` write cannot silently
+  drop (the exact FIX-F5-001 hazard class Precondition 3's rationale describes). This closes the
+  gap where Precondition 3 documented the `--component`-inclusion rationale in prose but carried
+  no dedicated Verification Property of its own — the guard was previously pinned only by the
+  general 13-flag `test_label_conflict_block_lists_every_relevant_flag` meta-test's set-membership
+  check (EC-3.4.017-14/BC-3.4.017), not by a behavioral `.expect(0)` HTTP-call-arity assertion at
+  this BC.
 
-**Trace**: CLAUDE.md Gotcha BUG-LABEL-400; `src/cli/issue/edit.rs::handle_edit_bulk_labels`; `src/api/jira/issues.rs::update_issue_labels`; BC-3.4.006 (complementary: `build_labels_edited_fields` pure-function shape); H-NEW-LABEL-FORK-001 (holdout unblocked by this BC)
+**Trace**: CLAUDE.md Gotcha BUG-LABEL-400; `src/cli/issue/edit.rs::handle_edit_bulk_labels`; `src/api/jira/issues.rs::update_issue_labels`; BC-3.4.006 (complementary: `build_labels_edited_fields` pure-function shape); H-NEW-LABEL-FORK-001 (holdout unblocked by this BC); BC-3.4.017 EC-3.4.017-14 (sibling meta-test enforcing the conflict block's flag-set completeness, of which VP-COMPONENT-027 pins the `--component` member's HTTP-arity behavior specifically)
 
 [NEW 2026-06-30 BC-subclause-pass F2]
 
 ---
 
 #### BC-3.4.021: `jr issue edit --dry-run` emits `plannedChanges` JSON or table preview on stdout without issuing any mutation HTTP call; `--output json` schema is `{dryRun: true, issues: [...], plannedChanges: {...}}`
+
+**[UPDATED 2026-08-15 issue #605 F2]** `plannedChanges` gains a `components` key for `--component add:/remove:` (flat array, same simplified-preview convention as `labels` — see Postconditions — `--output json` item 3, Postconditions — `--output table` item 6b, and EC-3.4.021-20). No other clause of this BC changes.
 
 **STATUS: UPDATED (DEC-274, 2026-08-13, issue #692; scope extended by adversary pass-3 MEDIUM-1, flagged for human ratification at this same F2 gate)** — DEC-274 supersedes this BC's Invariant 3 (a REVERSAL, not a silent amend): `--dry-run` now reads stdin for `--description-stdin` and renders an ADF preview, where it previously did neither. **Pass-3 MEDIUM-1 extends the ADF-preview half of this reversal to bare `--description <str>` as well** — the live (non-dry-run) path already renders ADF for BOTH `--description` and `--description-stdin` (`edit.rs`'s `desc_text` block covers either source uniformly), so scoping the dry-run preview to stdin only left a false-OK gap: `jr issue edit KEY --description "<pathologically nested markdown>" --markdown --dry-run` returned exit 0 with a misleading success preview while the corresponding live edit would exit 64 on the depth guard. This is a small, strictly-better coverage expansion beyond the literal `--description-stdin` scope of the original #692 report — the product-owner is surfacing it for explicit human ratification at this F2 gate rather than silently broadening scope. The pre-DEC-274 text of Invariant 3, the `--description-stdin` bullets of both Postconditions blocks, and EC-3.4.021-6 is retained verbatim in the "Previous version (superseded by DEC-274)" block near the end of this BC, for audit trail. **(DEC-274 is RATIFIED AT THIS F2 GATE**, not merely proposed — the record is self-consistent as written: this reversal is a deliberate, human-approved decision superseding a prior ratified invariant, not a silent amend. STATE.md's own DEC-274 status flip from PENDING to RATIFIED is finalized by the state-manager at F2 commit, immediately following the same human gate this BC text assumes; that ordering is the correct flow and is out of scope for this BC file to perform.)
 
@@ -2168,6 +2262,7 @@ proposed fix incorrectly assumed one exists (research brief `.factory/research/b
    - `--description-stdin` **[REVERSED, DEC-274]** → `"description"` = the RAW stdin string, read verbatim (BC-3.4.013's raw-input invariant preserved unchanged — see cross-reference below), PLUS a new, additive `"descriptionAdf"` key nested inside `plannedChanges` (sibling to `description`, NOT a replacement of it) carrying the actual rendered ADF document — the real `adf::markdown_to_adf`/`adf::text_to_adf` output described in Postconditions — Common item 6, byte-identical to what the live (non-dry-run) path would POST for the same input. Pre-DEC-274 this bullet emitted a literal placeholder string and never read stdin; see "Previous version" below.
    - `--markdown` → `"markdown": true` (boolean)
    - `--label add:foo` → `"labels": [{"action": "ADD", "name": "foo"}]` (flat array; NOT the `labelsFields` bulk schema)
+   - `--component add:X --component remove:Y` **[NEW, issue #605 F2]** → `"components": [{"action": "ADD", "name": "X"}, {"action": "REMOVE", "name": "Y"}]` (flat array, SAME shape convention as `labels` above; NOT the live single-key `update`-verb shape of BC-3.4.022 and NOT the live bulk `multiselectComponents`/`componentId` shape of BC-3.4.023 — intentionally simplified per Invariant 1).
    - `--field NAME=VALUE` (resolved) → `"<field display-name>": "<display value>"` merged into `plannedChanges` as string key/value pairs. The key is the HUMAN display name (e.g. `"Story Points"`), NOT the `customfield_NNNNN` wire ID. The value is the display value (e.g. `"5"` for a number field; the matched option label for a select field). Source: `src/cli/issue/field_resolve.rs::resolve_edit_fields` step 6 inserts `(human_name, display_value)` into `changed_fields`, which is the same map merged into `plannedChanges` via `dr_changed` at `edit.rs`.
 4. `dryRun: true` is always present as a boolean top-level key.
 5. `issues` is always present as a string array of the resolved keys.
@@ -2183,6 +2278,7 @@ proposed fix incorrectly assumed one exists (research brief `.factory/research/b
      summary → <value>
      priority → <value>
      labels → add:foo, remove:bar
+     components → add:X, remove:Y
      type → <value>
      parent → <value> | (clear)
      points → <value> | (clear)
@@ -2198,6 +2294,7 @@ proposed fix incorrectly assumed one exists (research brief `.factory/research/b
 4. `--no-parent` → `"  parent → (clear)"`.
 5. `--no-points` → `"  points → (clear)"`.
 6. `--label add:foo --label remove:bar` → `"  labels → add:foo, remove:bar"` (comma-joined, prefix preserved).
+6b. **[NEW, issue #605 F2]** `--component add:X --component remove:Y` → `"  components → add:X, remove:Y"` (comma-joined, prefix preserved — identical convention to item 6's `labels` line). **[PINNED 2026-08-15, L2 fix-burst — pass 3, aligns this preview with the live-edit echo, closing a divergence-risk gap found by adversarial spec-delta review pass 3]** "Prefix preserved" describes the explicitly-prefixed case; a BARE `--component X` (no `add:`/`remove:` prefix) is normalized to `add:X` in this table preview line — the SAME normalization BC-3.4.012's `components` bullet (live table echo) and BC-3.4.013's `"components"` row (live JSON echo) pin, and the SAME normalization EC-3.4.022-2 documents for the live wire body. `jr issue edit KEY --component X --dry-run` therefore renders `"  components → add:X"`, never `"  components → X"` — the bare input is rendered IDENTICALLY whether the invocation is `--dry-run` or a live edit.
 7. All output is on stdout (output-channel profile 1 for dry-run path per source comment).
 
 **Invariants**:
@@ -2239,6 +2336,7 @@ proposed fix incorrectly assumed one exists (research brief `.factory/research/b
 - EC-3.4.021-17 (NEW, DEC-274, adversary pass-1 INFO-1 — empty stdin, mirrors the live-path EC-3.4.013-13; **[CLARIFIED, adversary pass-3 LOW-1]**): `jr issue edit KEY --description-stdin --dry-run < /dev/null` → `desc_text = Some("")` (identical empty-stdin handling to the live path — dry-run does not special-case an empty read; per Postconditions — Common item 6 the same `spawn_blocking` + `read_to_string` idiom is reused verbatim). `--description-stdin` is itself a field flag, so the pre-HTTP zero-flag guard (Precondition 2) does not fire regardless of stdin content. `--output json`: `plannedChanges.description = ""` (empty string, KEY PRESENT — not absent, not null) AND `plannedChanges.descriptionAdf` = `adf::text_to_adf("")` — because THIS EC's command supplies no `--markdown`, the `text_to_adf` branch of Postconditions — Common item 6's general `markdown_to_adf` if `--markdown` else `text_to_adf` rule is selected (this EC does NOT imply `text_to_adf` is used regardless of `--markdown`; the general rule is unchanged). `text_to_adf` is infallible for any input including empty strings and never consults `MAX_ADF_DEPTH`; had `--markdown` been passed alongside genuinely empty stdin, `markdown_to_adf("")` would run instead — also infallible for empty input (nothing to nest), producing an equivalent minimal `doc` node. `--output table`: the `"  description → <preview>"` line renders with an empty preview (zero-length truncation input, no `"..."` suffix — 0 codepoints is never `> 60`) followed by `"  description (ADF): rendered OK"` (Postconditions — table item 3) — the render-OK line still appears because the selected conversion function cannot fail on empty input. PUT not called; exit 0.
 - EC-3.4.021-18 (NEW, adversary pass-3 MEDIUM-1 — bare `--description` happy path, mirrors EC-3.4.021-6 for the non-stdin flag): `jr issue edit KEY --description "Fixed the bug" --dry-run --output json` → `plannedChanges.description = "Fixed the bug"` (the raw CLI-argument string, unchanged from pre-pass-3 behavior) AND `plannedChanges.descriptionAdf` = the `adf::text_to_adf("Fixed the bug")` output (nested inside `plannedChanges`, NOT top-level, and NEW as of pass-3 — this key did not exist for bare `--description` before this fix round); no stdin involved at all; PUT not called; exit 0. Symmetric with EC-3.4.021-6, differing only in the description-input source (CLI argument vs. piped stdin).
 - EC-3.4.021-19 (NEW, adversary pass-3 MEDIUM-1 — bare `--description` depth-guard error, the exact false-OK scenario this finding closes): `jr issue edit KEY --description "<content engineered to trip MAX_ADF_DEPTH>" --markdown --dry-run` → exit 64 BEFORE any `plannedChanges` output, via the SAME split-by-`--output`-mode contract as EC-3.4.021-15 (`--output json`: stdout empty, stderr carries the `{"error","code":64}` envelope; `--output table`: stdout empty, stderr carries `Error: ...`). No PUT/POST in either mode. This is the exact scenario MEDIUM-1 identified as a regression: before this fix, this invocation returned exit 0 with `"  description (ADF): rendered OK"` — a FALSE OK — while `jr issue edit KEY --description "<same content>" --markdown` (the live, non-dry-run edit) would exit 64 on this same `MAX_ADF_DEPTH` guard. Symmetric with EC-3.4.021-15/16, differing only in the description-input source.
+- EC-3.4.021-20 (NEW, issue #605 F2): `jr issue edit FOO-1 --component add:X --component remove:Y --dry-run --output json` → `plannedChanges.components = [{"action":"ADD","name":"X"},{"action":"REMOVE","name":"Y"}]` (flat array, same convention as `labels`); NEITHER the single-key `update`-verb PUT (BC-3.4.022) NOR the bulk `POST /bulk/issues/fields` (BC-3.4.023) is called; exit 0. `--output table` equivalent: stdout contains `"  components → add:X, remove:Y"`. Component NAME resolution (BC-8.4) still fires during dry-run (it is a read-only GET, consistent with Postconditions — Common item 3's `--field` editmeta precedent) — an unresolvable/ambiguous component name still exits 64 before any `plannedChanges` output, `--dry-run` does not suppress this resolution error.
 
 **Previous version (superseded by DEC-274, retained for audit trail — do NOT re-implement)**:
 
@@ -2276,10 +2374,399 @@ proposed fix incorrectly assumed one exists (research brief `.factory/research/b
 - VP-692-002 (NEW, DEC-274; **[CORRECTED, adversary pass-3 HIGH-1 — reverts an incorrect pass-2 "fix"]**): `--dry-run --description-stdin --markdown` with stdin content engineered to trip `MAX_ADF_DEPTH` (BC-7.2.012 fixture) → exit code 64 in both output modes; PUT mock not hit in either; **stdout is EMPTY in BOTH modes** (channel-separation invariant #526). `--output json`: stderr parses as JSON matching the standard `{"error","code"}` envelope shape (`code == 64`); no `plannedChanges`/`dryRun`/`issues` keys present anywhere (stdout or stderr). `--output table` (default): stderr carries `Error: ...`; stdout is empty. **Previous version (adversary pass-2, INCORRECT, retained for audit trail — do NOT re-implement):** "`--output json`: stdout parses as JSON matching the standard `{"error","code"}` envelope shape" — WRONG channel; source-verified (`src/main.rs`'s error-exit handler, `tests/common/assertions.rs::assert_json_error_envelope`) that the JSON error envelope is ALWAYS on stderr, and stdout is ALWAYS empty on any exit-64 (or other non-zero) error, regardless of `--output` mode.
 - VP-692-003 (NEW, adversary pass-3 MEDIUM-1): `--dry-run --output json --description "Fixed it"` (bare flag, no stdin involved) → `plannedChanges.description == "Fixed it"` (raw, unchanged from the flag value) AND `plannedChanges.descriptionAdf` is present, is a valid ADF `doc` node, and is byte-identical to the value `adf::text_to_adf("Fixed it")` would produce; top-level JSON keys remain exactly `{dryRun, issues, plannedChanges}`; PUT mock not hit. Mirrors VP-692-001 but exercises the bare `--description` path instead of `--description-stdin`.
 - VP-692-004 (NEW, adversary pass-3 MEDIUM-1 — the exact false-OK regression this finding closes): `--dry-run --description "<content engineered to trip MAX_ADF_DEPTH>" --markdown` (bare flag; BC-7.2.012 fixture content, no stdin involved) → exit code 64 in both output modes; stdout EMPTY in both; stderr carries the standard error envelope (`--output json`) or `Error: ...` (`--output table`); PUT mock not hit in either mode. Before this MEDIUM-1 fix, this exact invocation returned exit 0 with a misleading success preview while the corresponding live (non-dry-run) edit of the same input would exit 64 on the depth guard — this VP is the regression pin for that false-OK gap.
+- VP-COMPONENT-028 **[NEW 2026-08-15, P7 fix-burst — resolves MEDIUM-3 found by adversarial
+  spec-delta review pass 7]**: `--dry-run --output json FOO-1 --component add:X --component
+  remove:Y` → `plannedChanges.components == [{"action":"ADD","name":"X"},{"action":"REMOVE","name":"Y"}]`
+  (flat-array form, mirroring VP-DRY-RUN-003's assertion shape for `labels` — NOT the live
+  single-key `update`-verb shape of BC-3.4.022 and NOT the live bulk `multiselectComponents`/
+  `componentId` shape of BC-3.4.023); `--output table` equivalent asserts stdout contains
+  `"  components → add:X, remove:Y"`; NEITHER `PUT /rest/api/3/issue/{key}` NOR
+  `POST /rest/api/3/bulk/issues/fields` is called (`.expect(0)` on both mocks); exit 0. Pins
+  EC-3.4.021-20, which previously had no dedicated Verification Property of its own (the BC's
+  pre-existing VP-DRY-RUN-001/002/003/VP-692-001..004 cover the description/label/parent/points
+  previews, none of which exercise the `components` key).
 
 **Trace**: `src/cli/issue/edit.rs::handle_edit` dry-run block (implementation-defined; no external Atlassian API spec); CLAUDE.md `--dry-run is implemented on issue edit`; BC-3.4.015 EC-3.4.015-19 (preserved); BC-3.4.020 (label wire asymmetry); BC-7.3.010 (JSON render invariant); H-NEW-DRY-RUN-001 (holdout unblocked by this BC); **DEC-274 (2026-08-13, issue #692) — supersedes Invariant 3, RATIFIED at this F2 gate (see "Previous version" above)**; BC-3.4.013 (cross-reference, unaffected — raw-input invariant, issue #398); BC-7.2.012 (cross-reference, unaffected — `MAX_ADF_DEPTH` depth guard, newly reachable from this call site only); research brief `.factory/research/bucket1-692-dry-run-stdin-2026-08-13.md`; F2 adversary pass-1 fix round (2026-08-13): EC-3.4.021-17 added (INFO-1, empty-stdin edge case mirroring EC-3.4.013-13); STATUS note extended with explicit DEC-274-ratified-at-this-gate parenthetical (MEDIUM-1); F2 adversary pass-2 fix round (2026-08-13): EC-3.4.021-15 + the depth-guard Canonical Test Vector row + VP-692-002 all split by `--output` mode to reconcile with the #526 JSON-error-envelope invariant and BC-1.2.047 Postcondition 4 (HIGH-1); Postconditions-json item 2 + VP-DRY-RUN-001 amended to carve out `descriptionAdf` as a derived key present iff `--description-stdin` is supplied (HIGH-2, both marked UPDATED with prior text retained); Invariant 1's volatile `edit.rs lines 675, 681, 712` prose citation converted to symbol-form + `:~NN` (LOW-2); F2 adversary pass-3 fix round (2026-08-13, fresh context): pass-2's HIGH-1 fix REVERTED as itself incorrect — source-verified (`src/main.rs`'s error-exit handler; `tests/common/assertions.rs::assert_json_error_envelope`) that the `--output json` error envelope is on STDERR, not stdout, in every output mode; EC-3.4.021-15, the depth-guard test-vector rows, and VP-692-002 all corrected back (pass-3 HIGH-1); ADF-preview scope EXTENDED from `--description-stdin`-only to ANY description input (`--description` too), closing a false-OK regression where `--description "<nested>" --markdown --dry-run` returned exit 0 while the live edit would exit 64 — touches Description, Postconditions-Common item 6, Postconditions-json items 2/3, Postconditions-table item 2, Invariants 2/3, and adds EC-3.4.021-18/-19 + VP-692-003/-004 (pass-3 MEDIUM-1, flagged for explicit human ratification at this F2 gate per the STATUS note); EC-3.4.021-17's `--markdown`-gating parenthetical scoped to "this EC's command supplies no `--markdown`" rather than implying `text_to_adf` is used regardless of the flag (pass-3 LOW-1); F2 adversary pass-5 fix round (2026-08-13): Postconditions-table item 2 reworded to detach the `"description (ADF): rendered OK"` line from the truncation clause — it is unconditional on description length, not only emitted when truncation fires — and EC-3.4.021-7/-13 updated to state this explicitly (LOW-1); the example stdout fence and Postconditions-table item 1 gained a pinned ordering note — when both `--markdown` and a description input are supplied, `"markdown rendering: enabled"` precedes `"description (ADF): rendered OK"` (INFO-2); F2 adversary pass-6 fix round (2026-08-13): Postconditions-Common item 6 and Invariant 3 gained a MANDATED-ORDERING hardening pin — the stdin-read + ADF-conversion step (and its possible `Err` → exit 64) MUST complete before the `match output_format` block begins printing ANY output, structurally guaranteeing "stdout empty on error" holds for the table arm's incremental `println!` structure too, not merely by coincidence in the JSON arm (LOW-1); EC-3.4.021-13's bare `edit.rs line 537` prose citation converted to symbol-form + `:~537` (INFO-1)
 
 [NEW 2026-06-30 BC-subclause-pass F2] [UPDATED 2026-08-13 DEC-274 issue #692]
+
+---
+
+#### BC-3.4.022: `issue edit KEY --component add:X --component remove:Y` (single-key) interprets prefix, sends native Jira `update`-verb wire shape
+
+**Confidence**: HIGH
+**Source**: DEC-280; `.factory/research/component-delete-and-bulk-wire-2026-08-15.md` §Cross-cutting ("single-issue component `update` verbs quirk"); BC-3.4.006 (direct label structural twin); `src/cli/issue/edit.rs` (pending F4)
+**Subject**: Issue write — `--component` (issue #605)
+**Description**: `--component add:X`/`--component remove:Y` (repeatable, same `add:`/`remove:`
+prefix grammar as `--label`) on a SINGLE-key `issue edit` invocation (or a `--jql` query
+matching exactly one issue) sends the native Jira v3 `update`-verb PUT body — structurally
+identical in SHAPE to BC-3.4.006's label contract, but with `{"add":{"name":"X"}}`/
+`{"remove":{"name":"Y"}}` OBJECT operations (component operations always take an object with
+`name` or `id`, never a bare string — this is the asymmetry class already known from labels'
+bare-string vs. components' object form).
+**Preconditions**:
+1. `jr issue edit <key> --component <spec>...` invoked, `keys.len() == 1` (after `--jql`
+   resolution, mirroring BC-3.4.020 Invariant 2's "keys.len() == 1 determined AFTER --jql
+   resolution" rule).
+2. At least one `--component` value supplied.
+3. None of the `--label` mutual-exclusion flags are supplied alongside `--component` in a
+   way that would trip BC-3.4.020's conflict block (that block does not include `--component`
+   as a TARGET flag being combined with `--label` — see BC-3.4.020 Precondition 3's updated
+   13-flag list, which is about `--label` conflicting with `--component`, not the reverse).
+**Postconditions**:
+1. `PUT /rest/api/3/issue/{key}` body: `{"update":{"components":[{"add":{"name":"X"}}, {"remove":{"name":"Y"}}]}}` — `add:` prefix entries produce `{"add":{"name":"..."}}`; `remove:`
+   prefix entries produce `{"remove":{"name":"..."}}`; bare entries (no prefix) produce
+   `{"add":{"name":"..."}}` (mirrors BC-3.4.006's bare-label-is-ADD convention).
+2. When BOTH add and remove entries are present, ADD elements precede REMOVE elements in the
+   `components` array (mirrors BC-3.4.006 Invariant 4).
+3. Component NAMES are resolved/validated via §8.4 (`resolve_component`, scoped to the
+   issue's own project — extracted from the KEY via the last-hyphen split, BC-3.4.018
+   Invariant 4) BEFORE the PUT fires. **Editmeta-gated fallback**: `jr` first checks
+   `GET /rest/api/3/issue/{key}/editmeta` for `fields.components.operations` containing
+   `"add"`/`"remove"` (mirroring BC-3.4.015's editmeta-gated `--field` pattern); if the
+   operations ARE present, the native `update`-verb shape above is used directly. If a given
+   Jira instance's editmeta does NOT list `add`/`remove` for `components` (an atypical
+   instance configuration), `jr` falls back to a read-modify-write: `GET` the issue's current
+   `fields.components`, compute the new full array client-side, and `PUT` it via the `set`
+   verb (`{"fields":{"components":[...]}}`) instead — this fallback exists because community
+   reports (research file, Cross-cutting section) note the `add`/`remove` verbs have
+   historically been flakier than `set` on some instances; `jr` prefers the cheaper
+   `update`-verb path and only pays the extra `GET` cost when editmeta signals it is needed.
+4. Returns HTTP 204 → exit 0. `changed_fields`/table echo gains a `components` entry (see
+   BC-3.4.012/013 UPDATE notes below).
+**Invariants**:
+1. This is the single-key path ONLY. 2+ keys (or `--jql` matching 2+) route to BC-3.4.023.
+2. The editmeta-gated fallback (Postcondition 3) is evaluated ONCE per invocation and does
+   not retry — if the `update`-verb PUT itself 400s despite editmeta advertising the
+   operations, that is an ordinary 400 surfaced via the standard error-taxonomy chain, NOT a
+   trigger for the read-modify-write fallback (no automatic retry-with-different-shape).
+**Edge Cases**:
+- EC-3.4.022-1: `--component add:Backend` only → `components: [{"add":{"name":"Backend"}}]`
+  (no `remove` element).
+- EC-3.4.022-2: `--component Backend` (bare, no prefix) → treated as ADD, identical shape to
+  EC-3.4.022-1.
+- EC-3.4.022-3: Unknown component name → exit 64 via §8.4 (BC-8.4.002), zero PUT calls (the
+  editmeta/list-components GET used for resolution is the only HTTP that fires).
+**Verification Properties**:
+- VP-COMPONENT-011: Single-key `--component` invocation calls `PUT /rest/api/3/issue/{key}`
+  exactly once with the native `update`-verb object-form body; the bulk endpoint
+  (`POST /bulk/issues/fields`) is never hit (`.expect(0)`).
+- VP-COMPONENT-016: Postcondition 3's add/remove don't-clobber + editmeta-gated fallback:
+  single-key `--component add:X --component remove:Y` preserves every OTHER component already
+  on the issue (the `update`-verb body touches only X/Y); when editmeta advertises
+  `components.operations` containing `add`/`remove`, the native `update`-verb PUT is used
+  directly; when editmeta does NOT, `jr` falls back to GET-current → compute → `set`-verb PUT
+  (`{"fields":{"components":[…]}}`). The editmeta gate is evaluated at most once (no
+  retry-with-different-shape on a subsequent 400).
+**Trace**: DEC-280; BC-3.4.006 (label structural twin); BC-3.4.015 (editmeta-gated pattern
+precedent); research file Cross-cutting section (add/remove flakiness note, fallback
+rationale)
+
+[NEW 2026-08-15 issue #605 F2]
+
+---
+
+#### BC-3.4.023: `issue edit KEY1 KEY2 --component add:X` (multi-key/`--jql` bulk path) — `POST /bulk/issues/fields` with `multiselectComponents`/integer `componentId`
+
+**Confidence**: HIGH
+**Source**: DEC-280; `.factory/research/component-delete-and-bulk-wire-2026-08-15.md` §Q2
+(CONFIRMED per Atlassian docs, triple-corroborated: doc example + swagger OpenAPI + apidog
+mirror); `src/cli/issue/edit.rs::handle_edit_bulk_fields` (pending F4)
+**Subject**: Issue write — `--component` (issue #605)
+**Description**: Multi-key (or `--jql` matching 2+ issues) `--component` edits route through
+the bulk-fields endpoint, mirroring BC-3.4.018's (`--type`) and BC-3.4.020 Path B's
+(`--label`) bulk-routing shape at the CLI-surface level, but with a THIRD distinct wire shape:
+components requires an INTEGER `componentId`, not a name/id string object — this is a
+stronger asymmetry than either the label or issue-type bulk cases (research §Q2.3: "more
+pronounced than the labels/issuetype cases").
+
+> **Delivery note (not a spec conditional):** per DEC-280/research §Q2.4, this wire shape is
+> well-documented (triple-corroborated) but has NOT yet been confirmed against a live Jira
+> run at spec-authoring time. Implementation (F4) MUST gate shipping this path behind a live
+> smoke test (one ADD, one REMOVE, against ≥2 issues in one project — the two operations `jr`
+> actually emits per Postcondition 3 below; `REPLACE`/`REMOVE_ALL` are wire-schema-completeness
+> enum values the endpoint accepts but `jr` has no `set:`/`replace:`/`clear:` CLI grammar to
+> generate them with, so they are intentionally OUT of scope for this smoke test — do NOT add
+> such a grammar to close this gap, that is `#607` territory) before release, per the
+> `FIX-BULK-TRANSITION-001`/#446 precedent. **[SCOPED 2026-08-15, pass-10 fix-burst — resolves
+> MEDIUM-1 found by adversarial spec-delta review pass 10; previous version, superseded,
+> retained for audit trail: "one ADD, one REMOVE, one REPLACE against ≥2 issues in one
+> project" — mandated a REPLACE call `jr` never issues in production, an unsatisfiable
+> acceptance criterion]** If the live smoke test contradicts the shape documented below, this
+> BC must be corrected to the observed true shape (exactly as `FIX-BULK-TRANSITION-001` did
+> for bulk transitions) — this note does NOT relax the BC's normative content below, which is
+> what F4 implements against until/unless a live-run correction is required.
+
+**Preconditions**:
+1. 2+ positional keys are supplied, OR `--jql` resolves to 2+ issues, all in the SAME
+   project (cross-project guard — see EC below, mirroring BC-3.4.019's `--type` guard).
+2. At least one `--component` value supplied.
+**Postconditions**:
+1. `selectedActions` contains `"components"` (lowercase field id).
+2. `editedFieldsInput.multiselectComponents` is a SINGLE OBJECT (not an array, NOT
+   `componentsFields`):
+   ```json
+   {
+     "selectedActions": ["components"],
+     "editedFieldsInput": {
+       "multiselectComponents": {
+         "fieldId": "components",
+         "components": [{"componentId": 10001}, {"componentId": 10002}],
+         "bulkEditMultiSelectFieldOption": "ADD"
+       }
+     }
+   }
+   ```
+3. **[CORRECTED 2026-08-15, pass-14 fix-burst — resolves a self-contradictory postcondition
+   found by adversarial spec-delta review pass 14]** `bulkEditMultiSelectFieldOption` is one
+   of `ADD` | `REMOVE` | `REPLACE` | `REMOVE_ALL`. When BOTH `add:` and `remove:` specs are
+   present in one invocation, `jr` mirrors BC-3.4.006/BC-3.4.020's ADD-then-REMOVE ORDERING
+   convention (the ADD action is resolved and sent before the REMOVE action) — but explicitly
+   NOT their single-POST coalescing: the endpoint's documented shape allows only one
+   `multiselectComponents` object per request (unlike labels' `labelsFields`
+   array-of-elements shape), so `jr` performs TWO sequential bulk POSTs when both add: and
+   remove: specs are present in one invocation (ADD POST first, REMOVE POST second) — this is
+   a DELIBERATE divergence from the label bulk path's single-POST coalescing, forced by the
+   `multiselectComponents` schema being a single object rather than an array of elements.
+   **Previous version (superseded, retained for audit trail):** "`jr` issues TWO coalesced
+   entries in a single POST — mirroring BC-3.4.006/BC-3.4.020's ADD-then-REMOVE coalescing
+   convention — by sending `multiselectComponents` as the FIRST resolved action" — this
+   opening clause was self-contradictory with the very next sentence, which correctly concludes
+   with TWO SEQUENTIAL POSTS. The single-POST "coalescing" framing is valid only for the
+   label bulk path (`labelsFields`'s array-of-elements shape can hold both an ADD element and
+   a REMOVE element in one POST); `multiselectComponents`'s single-object schema forbids
+   carrying both ADD and REMOVE in one POST, which is exactly why this BC exists to specify
+   the divergent two-POST behavior. Only the ORDERING (ADD before REMOVE) is mirrored from
+   BC-3.4.006/BC-3.4.020 — the single-POST coalescing itself is not.
+4. Component NAMES are resolved to NUMERIC `componentId`s client-side via §8.4 BEFORE the
+   POST is built — the bulk endpoint rejects name/id-string objects (research §Q2.2/§Q2.3).
+5. The async bulk task is polled via the EXISTING `await_bulk_task`/poll-loop machinery
+   (`JR_BULK_AWAIT_TIMEOUT_SECS`, unknown-status grace) — no new polling mechanism.
+6. **[NEW 2026-08-15, M9 fix-burst]** `POST /rest/api/3/bulk/issues/fields` caps a single
+   request at 1000 issues and 200 total field-edit entries (Atlassian Bulk Operations limits).
+   The 200-field cap is a non-issue for this BC — a `--component` bulk edit contributes
+   exactly ONE `multiselectComponents` entry to `editedFieldsInput` per POST (Postcondition
+   2), far below 200, regardless of how many component ids are inside that one entry's
+   `components` array. The 1000-ISSUE cap is the one that matters: when the resolved key set
+   (positional keys or `--jql` match) exceeds 1000 issues, `jr` splits `selectedIssueIdsOrKeys`
+   into sequential chunks of ≤1000, issuing one bulk POST per chunk, each fully polled to
+   completion (Postcondition 5) BEFORE the next chunk's POST is issued — chunk order follows
+   the resolved key-set order (positional order, or `--jql` result order). This is the SAME
+   sequential-chunking mechanism Postcondition 3 already establishes for the add:+remove:
+   two-POST case; when BOTH >1000 issues AND mixed add:/remove: specs occur together, `jr`
+   chunks first, then within EACH chunk issues the ADD-then-REMOVE POST pair (chunk-major,
+   action-minor ordering) — so N>1000 issues with mixed add:/remove: produces
+   `2 * ceil(N/1000)` sequential POSTs total.
+**Invariants**:
+1. `selectedActions: ["components"]` (lowercase) and `editedFieldsInput.multiselectComponents`
+   (camelCase, DIFFERENT WORD — not `"components"`) intentionally differ, same asymmetry
+   class already documented in CLAUDE.md for `labelsFields`/`"labels"` and
+   `issueType`/`"issuetype"`. Do NOT "fix" them to match.
+2. `components[].componentId` is always a JSON INTEGER, never a string, never `{"name":...}`.
+   **[NEW 2026-08-15, L3 fix-burst — specifies a conversion left implicit, found by
+   adversarial spec-delta review pass 2]** The §8.4 resolver (`resolve_component`,
+   BC-8.4.001) — the SAME resolver Postcondition 4 above cites — returns component ids typed
+   as `String` **[CORRECTED 2026-08-15, M2 fix-burst — pass 3, fixes a mis-anchored citation
+   found by adversarial spec-delta review pass 3]** (the full component RESOURCE type's
+   required, non-`Option` `id: String` field — `src/types/jira/component.rs::Component`, used
+   by the `jr component` command group and read by `resolve_component` itself, per BC-2.3.040
+   Precondition 1). **Previous version (superseded, retained for audit trail):** "the
+   `Component.id: Option<String>` shape established by BC-2.3.040" — this cited the WRONG
+   `Component` type: BC-2.3.040 is explicit (its own Precondition 1) that the `Option<String>`
+   relaxation applies ONLY to the separate, EMBEDDED `Component` struct used for an `Issue`'s
+   `fields.components[]` array (`src/types/jira/issue.rs::Component`) — a type
+   `resolve_component` never reads. `resolve_component` reads the full resource type's
+   candidate list (`GET /rest/api/3/project/{key}/components`, BC-8.1.001), whose `id` field
+   BC-2.3.040 Precondition 1 itself states "remains required, non-optional `String` ... because
+   §8.4's resolver depends on a real id." The BEHAVIORAL claim this Invariant makes — the
+   resolver returns a `String`, requiring an explicit parse step to reach a JSON integer — was
+   and remains correct; only the citation identifying WHICH `Component.id` shape backs that
+   `String` was wrong, and is corrected here to the full resource type's required `id`, matching
+   the codebase-wide convention that every `jr` resource id is a `String` regardless of
+   Jira's own wire representation. Building this BC's `componentId` JSON integer therefore
+   requires an explicit `String` → `u64`/`i64` PARSE step, performed client-side immediately
+   after resolution and BEFORE the POST body is assembled: `id.parse::<u64>()`. Every
+   resolved id this codebase produces for a component is itself derived from a Jira-returned
+   numeric id serialized as a string (`Component`/component-resource `id` fields are always
+   digit strings on the wire — Jira never returns a non-numeric component id) — so this parse
+   is expected to succeed on every resolver-returned id in practice. If it were ever to fail
+   (a resolver-returned id that is not parseable as an integer, which would itself indicate a
+   deserialization or resolver defect elsewhere), `jr` treats this identically to any other
+   internal-invariant violation this codebase already has no dedicated user-facing taxonomy
+   entry for: it surfaces as an unexpected internal error (not a `JrError::UserError`
+   exit-64 — the input was never user-supplied at this point, it is the resolver's own
+   output) rather than silently truncating or coercing the value. This parse step is entirely
+   separate from, and unrelated to, BC-8.2.007's snapshot JQL clause (`component =
+   <resolvedId>`), which composes the SAME resolved id as an unquoted numeric literal directly
+   into a JQL string — that call site needs no typed integer, only the same guarantee that the
+   resolved id is digit-only text, which the resolver's contract already provides.
+3. This bulk path is entirely SEPARATE from BC-3.4.022's single-key `update`-verb path — the
+   two are never mixed within one invocation (routing is purely on `keys.len()`, identical
+   fork mechanics to BC-3.4.020).
+**Edge Cases**:
+- EC-3.4.023-1: Keys span 2+ projects with `--component` → exit 64 BEFORE any HTTP
+  (cross-project guard, mirrors BC-3.4.019 exactly — component ids are project-scoped, so a
+  single `componentId` cannot correctly apply across projects).
+- EC-3.4.023-2: `--component add:X --component remove:Y` on 2+ keys → two sequential POSTs
+  (ADD then REMOVE), each independently polled to completion before the next begins.
+- EC-3.4.023-3: `--jql` matching exactly 1 issue → single-key path (BC-3.4.022), NOT this BC
+  (mirrors BC-3.4.020 Invariant 2).
+- EC-3.4.023-4 **[NEW 2026-08-15, M9 fix-burst]** **[REWORDED 2026-08-15, L5 fix-burst — pass
+  3, repairs a garbled sentence and specifies partial-chunk-success reporting, closing a gap
+  found by adversarial spec-delta review pass 3]**: `--jql` resolves 1500 issues in one
+  project, `--component add:Backend` → `jr` issues TWO sequential bulk POSTs, the first with
+  1000 issues' worth of `selectedIssueIdsOrKeys`, the second with the remaining 500, each
+  polled to completion before the next starts (Postcondition 6). Exit 0 iff BOTH chunks
+  succeed. Unlike rename `--all-projects` (BC-8.3.003), which continues attempting every
+  remaining target after a per-target failure and reports a structured per-target
+  `renamed[]`/`failed[]` outcome array, this chunked bulk-fields path does NOT continue past a
+  failing chunk: the chunk sequence is aborted at the FIRST chunk failure and no further chunks
+  are attempted (chunk 3 of a 3-chunk sequence is never POSTed if chunk 2 fails) — a bulk-fields
+  chunk failure is surfaced as an ordinary bulk-task failure via the existing `await_bulk_task`
+  error path (the same error shape ANY single bulk POST failure already produces), NOT the
+  rename `--all-projects` per-target report shape. **Non-transactional reality across chunks
+  (explicitly surfaced, not merely implied):** a chunk that already completed successfully
+  BEFORE the failing chunk is NOT rolled back — those issues' components are genuinely changed
+  on the Jira side and stay changed. However, `jr`'s `--output json`/table error output for
+  this failure does NOT itemize which chunk(s) succeeded or which issue keys they covered; it
+  surfaces only the failing chunk's `await_bulk_task` error. A caller who needs to know
+  precisely which issues were already updated before an aborted chunk sequence must
+  independently re-query those issues (e.g. `jr issue list --jql "<original query> AND
+  component = Backend"`) — there is no dedicated reconstruction record for this path (contrast
+  BC-8.2.007/BC-8.2.008's snapshot-based `affectedIssues` record for `component delete`, which
+  this bulk-fields path does not have and is not required to have, since it is not a delete).
+**Verification Properties**:
+- VP-COMPONENT-012: Multi-key `--component` invocation issues zero single-key `PUT
+  /rest/api/3/issue/{key}` calls (`.expect(0)`); the bulk POST body's `components[].componentId`
+  values are JSON integers (not strings, not objects). A resolved key set exceeding 1000
+  issues is split into `ceil(N/1000)` sequential POSTs PER ACTION (Postcondition 6,
+  EC-3.4.023-4) — `ceil(N/1000)` for a single-action invocation (only `add:` or only
+  `remove:` specs), `2 * ceil(N/1000)` when BOTH `add:` and `remove:` specs are present in one
+  invocation (Postcondition 6's chunk-major, action-minor ordering), each fully polled before
+  the next begins.
+**Trace**: DEC-280; research §Q2 (full verdict); BC-3.4.018 (bulk `--type` structural
+precedent); BC-3.4.019 (cross-project guard precedent); BC-3.4.020 Path B (bulk `--label`
+structural precedent — coalescing DIVERGES per Postcondition 3 above)
+
+[NEW 2026-08-15 issue #605 F2]
+
+---
+
+#### BC-3.4.024: `issue create --component X --component Y` (bare, no add:/remove: prefix) sets the initial components array on POST
+
+**Confidence**: HIGH
+**Source**: DEC-280 (create-path is additive body composition, not update-verb); BC-3.3.001
+(`issue create` body composition pattern); `src/cli/issue/create.rs` (pending F4)
+**Subject**: Issue write — `--component` (issue #605)
+**Behavior**: `issue create` has no existing issue state to diff against, so `--component`
+(repeatable) on `create` carries NO `add:`/`remove:` prefix grammar — every value is simply
+included in the initial `components` array on the `POST /rest/api/3/issue` body:
+`"components": [{"name":"X"},{"name":"Y"}]` (object-with-name form, matching the single-key
+`update`-verb object convention of BC-3.4.022, NOT the bulk integer-id form of BC-3.4.023 —
+`create` is never a bulk operation). Component names are resolved/validated via §8.4 (scoped
+to the target project, resolved the same way `--project`/other create-time fields resolve)
+BEFORE the POST fires — an unknown name aborts pre-flight, consistent with every other
+`issue create` validation.
+**Preconditions**:
+1. `jr issue create --project KEY ... --component NAME...` (repeatable) invoked on the
+   PLATFORM create path (NOT the JSM `--request-type` dispatch fork).
+2. **[UPDATED 2026-08-15, M11 fix-burst — resolves a previously-unspecified combination]**
+   `--component` is NOT combined with `--request-type` in the same invocation. **Previous
+   version (superseded, retained for audit trail):** Precondition 1 said only "`--component`
+   on the JSM path is out of scope for this cycle, same posture as other platform-only create
+   flags" — this described SCOPE but never specified the actual runtime behavior when both
+   flags ARE supplied together (silent-ignore? exit 64? forwarded anyway?), leaving the
+   combination genuinely undefined. Resolved here per the DEC-188 precedent (S-639-1,
+   `--field`/`--on-behalf-of` without `--request-type` → exit 64 pre-flight, NOT silent
+   warn-and-proceed): `--component` + `--request-type` together exits 64 pre-flight, BEFORE
+   project-key resolution, interactive prompts, or any HTTP call — mirroring DEC-188's
+   ordering exactly (`handle_create` checks this immediately after the JSM dispatch-fork
+   check, before any of the other pre-flight work). Rationale for exit-64 over `--type`'s
+   existing silent-ignore precedent (BC-3.8.010): a JSM request has no `fields.components`
+   array in the same shape a platform issue does — silently dropping `--component` would be a
+   silent data-loss footgun (the user believes components were set; they were not), the same
+   class of hazard DEC-188 was introduced to close for `--field`/`--on-behalf-of`, and unlike
+   `--type` (whose JSM behavior is a documented, deliberate simplification — request type IS
+   the type on the JSM path), there is no analogous "component is implied by request type"
+   substitute here.
+**Postconditions**:
+1. `POST /rest/api/3/issue` body's `fields.components` array contains one `{"name": "<X>"}`
+   object per supplied `--component` value, in CLI input order.
+2. An `add:`/`remove:` prefix on a `create --component` value is NOT special-cased — if a
+   user types `--component add:X` on `create`, the LITERAL string `"add:X"` is sent as the
+   component name (which will 400 as an unknown component, surfacing the ordinary
+   unknown-name error) — `create` never interprets these prefixes, unlike `edit`.
+3. **[NEW 2026-08-15, M11 fix-burst]** `--component ... --request-type X` → exit 64, stderr
+   naming both flags (e.g. `"--component is set but --request-type routes to the JSM
+   request-creation path, which does not support --component. Drop --component, or create the
+   issue on the platform path (without --request-type) and add components via a follow-up
+   \`jr issue edit --component\`."`); zero HTTP calls (no service-desk lookup, no RT-id
+   resolution, no component resolution).
+**Edge Cases**:
+- EC-3.4.024-1: `jr issue create --project FOO --component Backend --component Frontend` →
+  `fields.components = [{"name":"Backend"},{"name":"Frontend"}]`.
+- EC-3.4.024-2: `jr issue create --project FOO --component add:Backend` → resolver attempts to
+  match a component literally named `"add:Backend"` → unknown-name exit 64 (§8.4) — the
+  prefix grammar is `edit`-only; this is intentional, not a bug.
+- EC-3.4.024-3 **[NEW 2026-08-15, M11 fix-burst]**: `jr issue create --request-type "IT
+  Request" --component Backend` → exit 64 per Postcondition 3, BEFORE service-desk/RT
+  resolution — the guard fires at the same pre-flight point DEC-188's `--field`/
+  `--on-behalf-of` checks fire, immediately after the `request_type.is_some()` dispatch-fork
+  check and before any of the JSM path's own HTTP calls.
+**Verification Properties**:
+- VP-COMPONENT-025: `issue create --component X --component Y` composes
+  `fields.components = [{"name":"X"},{"name":"Y"}]` on the `POST /rest/api/3/issue` body
+  (object-with-name form, CLI input order, no `add:`/`remove:` interpretation) and resolves
+  each name via the SAME resolver contract as BC-3.4.025 (one round-trip via the project
+  component-list GET, zero mutating HTTP on an unknown/ambiguous name). Also covers the
+  `--component` + `--request-type` combination guard (Postcondition 3): exit 64 pre-flight,
+  zero HTTP calls of any kind (no service-desk lookup, no RT-id resolution, no component
+  resolution).
+**Trace**: DEC-280; BC-3.3.001; §8.4 resolver contracts; DEC-188/S-639-1 (exit-64 pre-flight
+guard precedent for platform-only create flags combined with `--request-type`); BC-3.8.010
+(contrast — `--type`'s existing silent-ignore precedent on the JSM path, deliberately NOT
+followed here per the rationale in Precondition 2)
+
+[NEW 2026-08-15 issue #605 F2]
+
+---
+
+#### BC-3.4.025: `--component` name resolution — unknown/ambiguous name exits 64 pre-flight; one round-trip via the project component-list GET (not editmeta) on `issue list`/`create`, editmeta-gated on `issue edit` per BC-3.4.022
+
+**Confidence**: HIGH
+**Source**: §8.4 resolver contracts; DEC-280; `src/cli/issue/helpers.rs::resolve_component`
+(pending F4)
+**Subject**: Issue write — `--component` (issue #605)
+**Behavior**: This BC pins the SINGLE resolution mechanism decision the F1 delta analysis
+flagged as open (§2, BA note "choose one, must not duplicate both"): `issue create`'s
+`--component` resolution uses `GET /rest/api/3/project/{key}/components` (BC-8.1.001's
+endpoint, warm-cacheable via the Wave-1 components cache family) — NOT editmeta — because
+`create`'s editmeta call (`GET /issue/createmeta/{proj}/issuetypes/{type}`) is already a
+separate, differently-shaped call that does not cleanly extend to a per-project component
+list. `issue edit --component`'s resolution ALSO uses the project component-list GET for
+NAME→existence validation (§8.4), while the wire-shape decision (native `update`-verb vs.
+read-modify-write fallback, BC-3.4.022 Postcondition 3) separately consults editmeta — these
+are two DIFFERENT questions (does this name exist? vs. does this Jira instance support the
+add/remove verb shape?) answered by two different calls, not a duplicated resolution of the
+same question. Unknown/ambiguous component name on ANY of `create`/`edit`/bulk-edit → exit 64
+via §8.4 (BC-8.4.002/003), zero mutating HTTP calls, BEFORE the create POST / edit PUT / bulk
+POST fires.
+**Invariants**:
+1. Component-name resolution NEVER duplicates the same HTTP call twice within one invocation
+   — the project component-list GET (for name validation) and the editmeta GET (for
+   `edit`'s wire-shape decision, BC-3.4.022 Postcondition 3 only) are answering different
+   questions and are each called at most once.
+**Verification Properties**:
+- VP-COMPONENT-025: The resolution-mechanism decision this BC pins (project component-list
+  GET for name validation on `create`/`list`; editmeta consulted separately, and only, for
+  `edit`'s wire-shape decision) is verified together with BC-3.4.024's create-path body
+  composition — one property, two homes. `.expect(1)` on the project component-list GET per
+  invocation (never duplicated with the editmeta GET); `.expect(0)` on the create POST for an
+  unknown/ambiguous name.
+**Trace**: F1 delta analysis §2 (BA-flagged open decision, resolved here); §8.4; BC-3.4.022
+Postcondition 3 (editmeta's distinct purpose)
+
+[NEW 2026-08-15 issue #605 F2]
 
 ---
 
@@ -4137,6 +4624,6 @@ When `jr issue attachment upload <KEY> <FILE> --replace-existing` is invoked and
 **Trace**: F2 spec evolution (2026-07-15 SOH-ATTACHMENTS-1, DEC-179); impact-boundary-576.md R3.2 (--dry-run scope + output shape); BC-3.4.021 (`issue edit --dry-run` output precedent); adversary pass-1 human ruling R1 (2026-07-15); #526 JSON render invariant; P14-009 (--replace-existing --dry-run --public gate suppression + EC-3.9.020-7); P14-010 (BC-3.9.020 retitle to cover upload path c); P23-002 (EC-3.9.020-7 GATES vs ELIGIBILITY GUARDS distinction; EC-3.9.020-8 --dry-run non-suppression of eligibility guard); P28-001 (EC-3.9.020-8 wire enumeration corrected: "step-0 issue GET" replaced with accurate description — only project-meta GET fires; no issue GET on --replace-existing step-0 path; no servicedeskapi pagination for non-JSM project); P3-007 (EC-3.9.020-9 added: three-category dry-run taxonomy — pre-flight checks are a distinct third category not suppressed by --dry-run; EC-3.9.020-7/8 narrow eligibility-guard definition preserved)
 
 
-## Total BCs in this file: 111 individually-bodied (cumulative 140 incl. range-collapsed; see BC-INDEX.md)
+## Total BCs in this file: 115 individually-bodied (cumulative 144 incl. range-collapsed; see BC-INDEX.md)
 
 _Last updated 2026-07-29 (SOH-DX-1 version retarget v1.3.169): 0 new BCs / 0 new VPs / 0 new holdouts — SOH-DX-1 breaking-change version target corrected to v0.6.0-dev.12 (human ruling 2026-07-29; supersedes DEC-188 clause (d)'s 0.7-train reasoning; see spec-changelog.md [1.3.169]); 4 `[AMENDED … DEC-188]` banners updated (~:539, ~:3049, ~:3137, ~:3149); BC count unchanged (140/111). Previous update 2026-07-29 (SOH-DX-1 F2 holdout authoring v1.3.164, #639, DEC-188): 6 new holdouts / 0 new BCs / 0 new VPs — H-NEW-PREFLIGHT-001..006 added to holdout-scenarios.md Group 20 (BC-3.8.012 --field pre-flight guard; BC-3.8.013 --on-behalf-of pre-flight guard); BC-3.8.012/013 Trace fields updated with holdout IDs; Note (coverage non-goal) in both BCs updated to acknowledge F2 gate human ruling override of F51-001 non-goal; holdout count 100→106; CANONICAL-COUNTS.md, README.md, spec-changelog.md updated; spec v1.3.164; BC count unchanged (140/111). Previous update 2026-07-28 (P73-001 LOW v1.3.162 pending-revert annotations for hyphenation workarounds): 0 new BCs / 0 new VPs / 0 new holdouts — BC-3.9.001 Trace and BC-3.9.003 Trace: inline pending-revert notes added flagging "encoding-test" and "wiremock-test" hyphenation (8a0a2422 workaround 2026-07-15) as pending revert by S-627-1 once scripts/check-bc-no-numeric-test-counts.sh guard-regex fix merges to develop; do NOT un-hyphenate until then; no BC behavioral changes; spec v1.3.162; BC count unchanged (140/111). Revert completed 2026-08-12 (S-627-1 Phase 2, after Phase 1 guard-regex fix merged to develop at c3edf216): BC-3.9.001 Trace and BC-3.9.003 Trace un-hyphenated back to "encoding test" and "wiremock test"; the inline pending-revert markers were removed from both sites; no BC behavioral changes. Previous update 2026-07-28 (P72-001 HIGH v1.3.160 EC-3.4.015-4a false-serde_json-claim correction): 0 new BCs / 0 new VPs / 0 new holdouts — EC-3.4.015-4a rewritten: false claim that `serde_json::Number::from_f64(5.0)` serializes as `5` removed; correct mechanism stated (`src/cli/issue/field_resolve.rs::parsed_number_to_wire_value` integer branch `Number::from(parsed as i64)` when `fract() == 0.0` AND strictly within i64 bounds); callers MUST NOT use `from_f64` for whole numbers; `5e3`→`5000` and `5.5`→`5.5` re-attributed; VP-396-010 pin retained; spec v1.3.160; BC count unchanged (140/111). Previous update 2026-07-28 (F67-001/F67-002 LOW v1.3.159 ordering-sentence precision + AC .current_dir() rationale corrections): 0 new BCs / 0 new VPs / 0 new holdouts — F67-001 (LOW, delta-attributable): BC-3.8.012 combined-check ordering sentence broadened to constrain BOTH single-flag checks (the `--field`-only check and the `--on-behalf-of`-only check); BC-3.8.013 carries no mirrored ordering statement (no change required); F67-002 (LOW, delta-attributable): AC-9/AC-11/AC-16/AC-17 `.current_dir()` rationale corrected from false "degrades discriminating power" to hygiene-isolation (ancestor-config isolation prevents inherited credentials from enabling a live HTTP escape); AC-10 not corrected (would-otherwise-succeed invocation, no false language); spec v1.3.159; BC count unchanged (140/111). Previous update 2026-07-28 (F66-001 LOW v1.3.158 malformed-field literal propagation completion): 0 new BCs / 0 new VPs / 0 new holdouts — F66-001 (LOW, delta-attributable): BC-3.8.012 Behavior block (~:3076) and EC-3.8.012-3 (~:3088) aligned to current literal `bareflagnoequals`; completes v1.3.142 F44-003 LOW-1 propagation; three historical records (lines 138, 149, 4069) deliberately preserved; spec v1.3.158; BC count unchanged (140/111). Previous update 2026-07-28 (F65-001 MEDIUM/F65-002 LOW v1.3.157 citation correction + AC-expansion directive): 0 new BCs / 0 new VPs / 0 new holdouts — F65-001 (MEDIUM, delta-attributable): BC-3.8.012 Trace obligation (g) citation corrected — ambiguous bare `delta-analysis.md` line 81 (introduced v1.3.156) replaced with `.factory/phase-f1-delta/SOH-DX-1/delta-analysis.md § "2. Regression Risk Assessment" (#639 row, `src/cli/issue/create.rs`); F65-002 (LOW, delta-attributable): AC namespace note gains F3 expansion-format directive — "verbatim" governs content not line formatting; `.factory/stories/S-576-3.md` named as format reference; spec v1.3.157; BC count unchanged (140/111). Previous update 2026-07-28 (F64-001 LOW v1.3.156 E2E scan obligation discharged at F2): 0 new BCs / 0 new VPs / 0 new holdouts — F64-001 (LOW): delta-attributable; `tests/e2e_live.rs` scanned for `issue create` invocations carrying `--field` or `--on-behalf-of` without `--request-type` (F1 obligation, `delta-analysis.md` line 81, #639 regression-risk row); zero found; all 8 `--field` occurrences are `issue edit --field`; zero `--on-behalf-of` occurrences; no E2E test changes required at F4; item (g) added to S-639-1 delivery (F4) obligations in BC-3.8.012 Trace; spec v1.3.156; BC count unchanged (140/111). Previous update 2026-07-27 (F63-001 MEDIUM/F63-002 LOW v1.3.155 README H-NEW-JSM-RT range terminus correction): 0 new BCs / 0 new VPs / 0 new holdouts — F63-001 (MEDIUM): README.md line 48 and line 108 `H-NEW-JSM-RT-001..006` → `H-NEW-JSM-RT-001..007` (maximum verified against holdout-scenarios.md; line 48 wrong since v1.3.143; line 108 introduced by v1.3.154 orchestrator instruction — orchestrator inferred terminus without verifying, correction belongs here); F63-002 (LOW): informational caveat added to line 108 matching line 48 wording; twin-artifact sweep recurrence 16: CANONICAL-COUNTS.md `..007` correct; historical snapshots and STORY-INDEX records out-of-scope; H-018 absent from bare-H span flagged as observation only; spec v1.3.155; BC count unchanged (140/111). Previous update 2026-07-27 (F62-001 MEDIUM/F62-002 LOW v1.3.154 holdout-count partial-propagation fix and changelog BC Count completion): 0 new BCs / 0 new VPs / 0 new holdouts — F62-001 (MEDIUM): README.md Supplement Index holdout row count `55` → `100`, range `H-NEW-JSM-RT-001..005` → `H-NEW-JSM-RT-001..006` (stale since v1.3.143/F45-003 which only fixed the Files-table row, line 48; Supplement Index row, line 108, was the Holdout-evaluator consumer, understating scope by 45 scenarios); F62-002 (LOW): spec-changelog [1.3.113] and [1.3.114] entries gain `### BC Count` sections after their `### Changed` blocks, matching [1.3.112] structural pattern (0 new BCs; 657/140/111 unchanged); twin-artifact sweep recurrence 15: all other holdout-count and `H-NEW-JSM-RT` range occurrences confirmed correct or out-of-scope (historical adversarial reviews, completed-story STORY-INDEX records); spec v1.3.154; BC count unchanged (140/111). Previous update 2026-07-27 (F60-001 LOW v1.3.153 README L3 BCs metric correction): 0 new BCs / 0 new VPs / 0 new holdouts — F60-001 (LOW): README.md bc-3-issue-write.md row "L3 BCs" column corrected `(111)` → `(140)` (column reports `total_bcs`, not `definitional_count`; bc-3 was the only row using the wrong metric; bc-1 `(57)` and bc-4 `(32)` confirm `total_bcs` is the column convention); spec v1.3.153; BC count unchanged (140/111). Previous update 2026-07-27 (F57-001 LOW v1.3.152 AC-17 assertion-substring narrowing): 0 new BCs / 0 new VPs / 0 new holdouts — F57-001 (LOW): AC-17 negative assertion narrowed from bare `"cannot be combined with"` to `` "cannot be combined with `--markdown`" ``; HYGIENE label and all other AC-17 assertions unchanged; spec v1.3.152; BC count unchanged (140/111). Previous update 2026-07-27 (F56-001 MEDIUM v1.3.151 false-assert_cmd-premise fix in AC-18): 0 new BCs / 0 new VPs / 0 new holdouts — F56-001 (MEDIUM): AC-18 non-normative rationale corrected — false "assert_cmd provides no timeout primitive" premise deleted; "process exits promptly" IS testable via assert_cmd `Command::timeout` (present in assert_cmd 2.2.2, verified against Cargo.lock); "stdin NOT consumed" correctly kept non-normative — a timeout proves no hang but does NOT prove stdin was never read; design decision (ii) explicitly recorded: timeout assertion declined on CI-flakiness + no-discriminating-power grounds; spec v1.3.151; BC count unchanged (140/111). Previous update 2026-07-27 (SOH-DX-1 F2 v1.3.150 F52-001 error-taxonomy DEC-188 registration): 0 new BCs / 0 new VPs / 0 new holdouts — F52-001 (LOW): error-taxonomy.md Section 6 gains new Issue Commands subsection registering three DEC-188 pre-flight exit-64 error conditions (BC-3.8.012: --field without --request-type; BC-3.8.013: --on-behalf-of without --request-type; combined: both flags present, BC-3.8.012 governs); all three are JrError::UserError, zero HTTP on each path; spec v1.3.150; BC count unchanged (140/111). Previous update 2026-07-27 (SOH-DX-1 F2 v1.3.149 F51-001 coverage non-goal documentation): 0 new BCs / 0 new VPs / 0 new holdouts — F51-001 (LOW): holdout-scenario and VP coverage documented as deliberate non-goal in BC-3.8.012 and BC-3.8.013 — terminal **Note (coverage non-goal)** added to each BC after **Confidence**: HIGH; 21 ACs cover every observable exit path (exit code, both output modes, all three verbatim error strings, zero-HTTP proof, idempotency, ordering precedence, JSM-path non-mis-fire); pure pre-flight input validation with no network interaction excludes holdout surface; contrast with VP-331-003 (BC-3.4.019) cited; spec v1.3.149; BC count unchanged (140/111). Previous update 2026-07-27 (SOH-DX-1 F2 v1.3.148 F49-001 BC-3.8.013 doc-fallout enumeration fix): 0 new BCs / 0 new VPs / 0 new holdouts — F49-001 (LOW): BC-3.8.013 doc-fallout deliverables sentence corrected — obligation (d) (`src/cli/mod.rs` `--on-behalf-of` first doc line ~:403 `"requires --request-type"` substring, pinned by AC-12) added to illustrative parenthetical; delegation marked NORMATIVE; enumeration marked non-exhaustive; BC-3.8.012 Trace (a)–(f) declared authoritative and binding; spec v1.3.148; BC count unchanged (140/111). Previous update 2026-07-27 (SOH-DX-1 F2 v1.3.147 AC-7 EC-3.8.012-3 linkage fix): 0 new BCs / 0 new VPs / 0 new holdouts — F48-001 (LOW): EC-3.8.012-3 as test linkage marker added to AC-7 (`test_platform_create_malformed_field_without_request_type_exits_64`); malformed `--field` case was the only testable EC in BC-3.8.012/013 with no explicit AC citation; traceability only, no behavioral change; spec v1.3.147; BC count unchanged (140/111). Previous update 2026-07-27 (SOH-DX-1 F2 round-47 v1.3.146 write_profile_config-placement fix): 0 new BCs / 0 new VPs / 0 new holdouts — F47-001 (LOW): write_profile_config destination corrected in both Test Note Config fixture contracts (BC-3.8.012 §"Config fixture contract" + BC-3.8.013 §"Config fixture contract"); tests/common/assertions.rs → tests/common/fixtures.rs; "same promotion target as assert_json_error_envelope" phrase removed and replaced with DIFFERENT-destinations rationale (fixtures.rs is the home for non-assertion test fixtures including config writers; F46-003 "pure-JSON" charter narrowed to payload fixtures only); secondary historical-record cleanup: footer v1.3.137 description corrected (assertions.rs → fixtures.rs for write_profile_config; same F46-003 sweep class, not restored by v1.3.145 which fixed frontmatter trail entries only); spec v1.3.146; BC count unchanged (140/111). Previous update 2026-07-27 (SOH-DX-1 F2 round-46 v1.3.145 trail-anachronism remediation): 0 new BCs / 0 new VPs / 0 new holdouts — F1: v1.3.114 trail entry restored (fixtures.rs ~:76 reverted from assertions.rs; unintended replace_all sweep from v1.3.144 F46-003); F2: v1.3.108 trail entry restored (assert_json_error_envelope promotion directive fixtures.rs reverted; same sweep); F3: v1.3.137 trail entry restored (write_profile_config fixture contract description fixtures.rs reverted; same sweep); F4: spec-changelog [1.3.144] F46-003 scope statement corrected ("replace_all on all promotion-target path references" → "(9 sites: 5 spec body + 3 historical trail entries + 1 footer)"); unintended-anachronism note added; F5: v1.3.144 frontmatter trail entry F46-003 clause corrected (scope corrected + unintended-anachronism note added); spec v1.3.145; BC count unchanged (140/111). Previous update 2026-07-26 (SOH-DX-1 DEC-188 v1.3.144 round-46 adversary-pass corrections, #639): 0 new BCs / 0 new VPs / 0 new holdouts — F46-001 (MED): AC-2 + AC-7 gain would-otherwise-succeed clause + mount_platform_create_stubs MUST; F46-002 (LOW): both body-range labels reworded to "BEFORE all pre-POST helper HTTP (steps 3–5) and BEFORE the platform POST (step 6)" (replace_all, 2 sites); F46-003 (LOW): promotion target fixtures.rs→assertions.rs (replace_all); convention note updated; mod.rs registration note added (both Test Notes); spec v1.3.144; BC count unchanged (140/111). Previous update 2026-07-26 (SOH-DX-1 DEC-188 v1.3.143 round-45 adversary-pass corrections, #639): 0 new BCs / 0 new VPs / 0 new holdouts — F45-001 (MED): deliverable (e) gains THIRD stale-parity site tests/issue_create_jsm.rs ~:2373-2374 (false platform-parity claim + dead "create.rs lines 333-343" citation); F45-002 (MED): banner-rewrite obligation extended to FAMILY-level banner ~:2381-2391 (THREE false clauses enumerated); F45-003 (MED): README.md holdout row 55→100 + H-NEW-JSM-RT-006 + caveat; spec v1.3.143; BC count unchanged (140/111). Previous update 2026-07-26 (SOH-DX-1 DEC-188 v1.3.142 round-44 adversary-pass corrections, #639): 0 new BCs / 0 new VPs / 0 new holdouts — F44-001 (MED): false json_error_shape.rs Hygiene premise deleted from both Test Notes (verified-false; issue_create_jsm.rs gains statement retained); F44-002 (MED): "BC-3.8.011 direction" → "BC-3.8.010 + BC-3.8.011 directions" at both sites; F44-003 (MED): AC-11 (4) DISCRIMINATING→HYGIENE (projectless; matches AC-9/AC-17); intro "Required discriminators" → "Required assertions" with (1)+(2) discriminating/(3)/(4)/(5) hygiene; LOW-1: AC-7 KEPT note bareflagnoequals; LOW-2: "steps 3–6" → "steps 3–5…step 6 excluded terminal" at both sites; spec v1.3.142; BC count unchanged (140/111). Previous update 2026-07-26 (SOH-DX-1 DEC-188 v1.3.141 round-43 adversary-pass corrections, #639): 0 new BCs / 0 new VPs / 0 new holdouts — F43-01 (MED): AC-11 discriminator list extended to five (adds (4) exit 64 DISCRIMINATING + (5) stdout.trim().is_empty() hygiene); F43-02 (MED): AC-16 gains .current_dir(<per-test TempDir>) MUST precondition (find_project_config walk-up; doubly critical: projectless + FULL-STRING single source); Obs: "steps 3–5" → "steps 3–6" at both [CURRENT BEHAVIOR] sites; spec v1.3.141; BC count unchanged (140/111). Previous update 2026-07-26 (SOH-DX-1 DEC-188 v1.3.140 round-42 adversary-pass corrections, #639): 0 new BCs / 0 new VPs / 0 new holdouts — F42-01 (MED): [1.3.139] changelog gains ### Changed block + correct BC Count; O-1 (LOW): mode-agnosticism invariant restored to both [CURRENT BEHAVIOR] Behavior blocks (guard fires regardless of --no-input/--output json); O-2 (LOW): MUST-NOT falsifier enumeration softened at both [CURRENT BEHAVIOR] sites (non-exhaustively; AC-15 alone is insensitive); spec v1.3.140; BC count unchanged (140/111). Previous update 2026-07-26 (SOH-DX-1 DEC-188 v1.3.139 round-41 adversary-pass corrections, #639): 0 new BCs / 0 new VPs / 0 new holdouts — F41-01 (MED): AC-13 invocation upgraded to would-otherwise-succeed (--project PROJ --type Task --summary "test" added); zero-HTTP received_requests().is_empty() now NORMATIVE (guard-absent path reaches HTTP); mount_platform_create_stubs NOT called; F41-02 (MED): AC-1 REGRESSION PIN gains "(DISCRIMINATING subtype)" at first use + policy note (later ACs may keep or drop; both correct); F41-04 (nit): write_profile_config param dir → config_home at both Config fixture contract sites; spec v1.3.139; BC count unchanged (140/111). Previous update 2026-07-26 (SOH-DX-1 DEC-188 v1.3.138 round-40 adversary-pass corrections, #639): 0 new BCs / 0 new VPs / 0 new holdouts — F40-001 (HIGH): REGRESSION PIN added to AC-9/10/11/17/18 bodies; AC-19 added to non-vacuity sentence enumeration (13 ACs fully propagated); F40-002 (MED): Definition (unconditional remedy) added inline to uniform rule — depends only on user's own invocation; 'Add --request-type <NAME>' qualifies; 'jr issue edit --field' does NOT qualify; closes two-ways reading without changing verbatim strings; Obs: [1.3.133] F35-1 correction note appended; spec v1.3.138; BC count unchanged (140/111). Previous update 2026-07-26 (SOH-DX-1 DEC-188 v1.3.137 round-39 adversary-pass corrections, #639): 0 new BCs / 0 new VPs / 0 new holdouts — F-1: Removal postcondition uniform rule qualified to "every AC that reaches handle_create with a guarded flag and no --request-type"; AC-15 exclusion added (clap conflicts_with exit-2 pre-handler; guard never evaluated); F-2: write_profile_config specified in both Test Note Config fixture contracts (lives in tests/common/fixtures.rs; signature write_profile_config(config_home: &Path, base_url: &str); shape modeled on tests/issue_create_jsm.rs ~:1959-1966); F-3: EC-3.8.012-10 gains transitively-falsified sentence (received_requests().is_empty()); Obs-1: [1.3.136] changelog gains ### BC Count + ---; Obs-2: frontmatter trace v1.3.114 moved to correct descending position; Obs-3: README bc-3 (107)→(111); spec v1.3.137; BC count unchanged (140/111). Previous update 2026-07-26 (SOH-DX-1 DEC-188 v1.3.136 round-38 adversary-pass corrections, #639): 0 new BCs / 0 new VPs / 0 new holdouts — F-1: write_minimal_config REPLACED note added to AC-2/AC-5/AC-7 DELETE mandates; F-2: conditional tail stripped from BC-3.8.012 verbatim string + AC-1 FULL-STRING pin; uniform rule added; F-3: EC-3.8.012-10 §42-45 mis-scoped claim corrected; deliverable (a) five→four sites; F-4: deliverable (f) feature spec added; F-5: REGRESSION-PIN mandate extended to AC-1/2/3/5/7/8/9/10/11/13/17/18/19; AC-8 both invocations gain REGRESSION PIN (in-round residual); F-6: AC-13 zero-HTTP assertion added; spec v1.3.136; BC count unchanged (140/111). Previous update 2026-07-26 (SOH-DX-1 DEC-188 v1.3.131 round-33 adversary-pass corrections, #639): 0 new BCs / 0 new VPs / 0 new holdouts — F33-1 (MED): AC-3 two single-flag-absence negatives labeled FALSIFIABLE-COARSE; AC-9 !stderr.contains("Project key") labeled DISCRIMINATING (guard fires step 2 before project-key resolution step 3; --project NOT required); F33-2 (MED): AC-10 invocation completed to would-otherwise-succeed (--project PROJ --type Task --summary "test" --field a=b --output json + mount_platform_create_stubs MUST be called; stdout.trim().is_empty() now genuinely DISCRIMINATING); pairing note updated to "symmetric twins for the would-otherwise-succeed invocation class"; F33-3 (LOW): AC-10 TempDir precondition added (find_project_config ancestor-walk hygiene; matches AC-8); F33-4 (LOW): BC-3.8.013 Trace gains AC-8 invocation (ii) zero-HTTP pin note; F33-5 (LOW): AC-7 example value bare-name-no-equals → bareflagnoequals (match KEPT body ~:2845); spec v1.3.131; BC count unchanged (140/111). Previous update 2026-07-26 (SOH-DX-1 DEC-188 v1.3.130 round-32 adversary-pass corrections, #639): 0 new BCs / 0 new VPs / 0 new holdouts — F32-1 (MED): EC-3.8.012-10 added (guard project-type-agnostic; step-2 fires before require_service_desk; MUST NOT gate on project type; ADR-0014 §42-45 reversed per deliverable (a); BC-3.8.011 direction contrast); F32-2 (MED): stdout.trim().is_empty() DISCRIMINATING label added in AC-2/7/10 (json mode; create.rs ~:249/:265 success stdout); F32-3 (MED): AC-16 REGRESSION PIN added; BC-3.8.013 Removal postcondition extended to AC-2 + AC-16; O-1 (LOW): delivery obligation (e) jsm_create.rs ~:171-172 comment fix; O-2 (LOW): BC-3.8.012+013 Behavior "BEFORE interactive prompts" → "BEFORE project-key resolution, BEFORE interactive prompts" (both BCs); spec v1.3.130; BC count unchanged (140/111). Previous update 2026-07-26 (SOH-DX-1 DEC-188 v1.3.129 round-31 adversary-pass corrections, #639): 0 new BCs / 0 new VPs / 0 new holdouts — F31-1 (HIGH): BC-3.3.001 H1 + BC-INDEX row 274 retitled from stale `{"key":"FOO-123"}` → follow-up-GET shape (created issue object + url; {key,url,fetch_error} on fetch failure); F31-2 (MED): AC-8 normative zero-HTTP proof added (`server.received_requests().await.unwrap().is_empty()` on each isolated MockServer; tests/issue_create_json.rs ~:411 primitive; (d) relabeled DEFENSE-IN-DEPTH; all (a)-(e) now DEFENSE-IN-DEPTH; invocation (ii) reference updated); LOW: SSOT step 7 "NOT intercepted by the guards" → "not reached on the guarded path (the handler returns at step 2)"; spec v1.3.129; BC count unchanged (140/111). Previous update 2026-07-26 (SOH-DX-1 DEC-188 v1.3.128 round-30 adversary-pass corrections, #639): 0 new BCs / 0 new VPs / 0 new holdouts — F30-1 (MED): AC-11 rationale corrected: dialoguer 0.12 interact_text() short-circuits on non-TTY stderr under assert_cmd (prompt never renders); discriminator (2) rewritten as ERROR-absence proof (create.rs ~:102-108); "fires BEFORE interactive prompt" claim deleted; Non-goal + purpose statement added (PTY harness required for true interactive branch; AC-11's value = JR_STDIN_IS_TTY=1 no-auto-flip path); Obs (folded): AC-12 coupling note added (count==2 assumes no other flag help contains substring); spec v1.3.128; BC count unchanged (140/111). Previous update 2026-07-26 (SOH-DX-1 DEC-188 v1.3.127 round-29 adversary-pass corrections, #639): 0 new BCs / 0 new VPs / 0 new holdouts — F-1 (HIGH): AC-20 + AC-21 raiseOnBehalfOf citation corrected BC-3.8.007 → BC-3.8.009; F-2 (MED): cwd precondition propagated to AC-11 and AC-17 (find_project_config ~:362 ancestor-walk isolation; both use !stderr.contains("Project key") as named discriminator); Obs-1: BC-3.8.013 Behavior "(at most one occurrence on the command line)" → "(repeats accepted by clap, last-wins; contract keys on is_some())"; Obs-2: BC-3.8.013 Asymmetry rationale gains Error-string completeness note (create-then-edit remedy omission is deliberate — factually conditional on Modify Reporter permission; unconditional remedies inline and sufficient); spec v1.3.127; BC count unchanged (140/111). Previous update 2026-07-26 (SOH-DX-1 DEC-188 v1.3.126 round-28 adversary-pass corrections, #639): 0 new BCs / 0 new VPs / 0 new holdouts — F-1: AC-1 FULL-STRING pin Rust-literal note (backticks are ordinary — no escaping; `\`` is Markdown artifact; verbatim from ~:3024); F-2: BC-3.8.012+BC-3.8.013 Behavior gain MUST-NOT clap-requires directive (hand-rolled JrError::UserError in handle_create only); F-3: AC-1 renderer cite extended (_ => arm; JSON arm ~:134-140 emits no prefix); F-4: AC-5 anchor rationale corrected (guard absent → SUCCEED + identical "Created issue PROJ-123" stderr at ~:272; byte-identity cannot distinguish; anchor pins error); F-5: SSOT anchor ~:2971 → ~:2980; Obs: AC-4 follow-up-GET note (unstubbed → fetch-warning; negatives unaffected; no stderr-cleanliness assertions); spec v1.3.126; BC count unchanged (140/111). Previous update 2026-07-26 (SOH-DX-1 DEC-188 v1.3.125 round-27 adversary-pass corrections, #639): 0 new BCs / 0 new VPs / 0 new holdouts — F-27-01: AC-17 !stderr.contains("cannot be combined with") relabeled DISCRIMINATING→HYGIENE (BC-3.8.017 string unreachable without --request-type; same structural class as AC-15); real discriminating pair: positive stderr.contains("--field is only valid with") AND !stderr.contains("Project key") (DISCRIMINATING — proves step-2 guard-before-project-lookup ordering); F-27-02: AC-8 Mock ResponseTemplate note added (each expect(0) mock MUST include respond_with e.g. ResponseTemplate::new(200); response irrelevant; expect(0) count is the assertion); LOW: ~:3047/~:3132 helper cite rephrased (fn at ~:63; stdout.trim().is_empty() semantics at ~:76); spec v1.3.125; BC count unchanged (140/111). Previous update 2026-07-26 (SOH-DX-1 DEC-188 v1.3.124 round-26 adversary-pass corrections, #639): 0 new BCs / 0 new VPs / 0 new holdouts — F-1: AC-1/AC-3/AC-16 full-string pins (single-source per verbatim error string; other ACs use prefix pins only); LOW-2 embedded in AC-1: "Error: " prefix pin annotated as single-source from `src/main.rs` ~:143 unconditional error renderer; F-2: AC-8 split into two sub-invocations each against a separate isolated MockServer instance — invocation (i) = --field a=b (BC-3.8.012 prefix pin); invocation (ii) = --on-behalf-of X replacing --field a=b (BC-3.8.013 prefix pin; same expect(0) mock set (a)–(e)); F-3: delivery item (d) --on-behalf-of first doc line "another user" → "this accountId" (accountId value-format signal from -h preserved); LOW-1: BC-3.3.001 Behavior cite BC-3.4.014 line 1122 → ~:1122 (TD-031 citation form); LOW-3: AC-2/AC-7 gain `assert_json_error_envelope` note (shape only — `error` field contains-assertion at call site; mirrors AC-10 note (ii)); spec v1.3.124; BC count unchanged (140/111). Previous update 2026-07-26 (SOH-DX-1 DEC-188 v1.3.123 round-25 adversary-pass corrections, #639): 0 new BCs / 0 new VPs / 0 new holdouts — F25-01: AC-5 DELETE mandate adds existing 3-field invocation (~:2712-2717; collapses n=1 vs n>1 discriminator; two-invocation spec: (i) exactly one `--field`, (ii) exactly two); invocation (i) annotated "(MUST be exactly one `--field`)"; F25-02+F25-03: 3-tier taxonomy (DISCRIMINATING/FALSIFIABLE-COARSE/HYGIENE) encoded in codified-rule sentence; AC-6 combined-string HYGIENE→FALSIFIABLE-COARSE; AC-13 single-flag absent pair labeled FALSIFIABLE-COARSE; AC-14 DISCRIMINATING on `!stderr.contains("--field is only valid with")`; AC-15 HYGIENE on `!stderr.contains("--field is only valid with")`; AC-16 FALSIFIABLE-COARSE on combined-string; AC-17 DISCRIMINATING on `!stderr.contains("cannot be combined with")`; AC-20 combined-string HYGIENE→FALSIFIABLE-COARSE; F25-04: BC-3.3.001 Behavior line corrected (stale `{"key":"FOO-123"}` → follow-up GET full issue object + url per create.rs ~:243-249; applied in prior burst); LOW-1: AC-2/AC-7 KEPT clauses gain shorthand-vs-canonical note; LOW-2: preamble "BCs 002..011" → "BCs 002..011 and 014..017 (JSM-path contracts)"; spec v1.3.123; BC count unchanged (140/111). Previous update 2026-07-26 (SOH-DX-1 DEC-188 v1.3.122 round-24 adversary-pass corrections, #639): 0 new BCs / 0 new VPs / 0 new holdouts — F24-01: KEPT exclusion clauses deleted from AC-18 and AC-19 (NEW tests — no existing body; over-applied by round-22 replace_all); F24-02: AC-4 invocation added (jr issue create --project PROJ --type Task --summary "test" --output json + mount_platform_create_stubs; exit 0); KEPT + S-639-1 story deliverable added to AC-4 and AC-6; F24-03: SSOT header "complete guard/HTTP ordering" → "guard-relevant ordering (authoritative for step numbering)"; completeness caveat: type/summary fallbacks are step 4's failure arms; --markdown→ADF between step 4a and step 5; AC namespace note SSOT cross-ref updated; LOW-1: fourth ADR-0014 site added to doc-fallout obligation (a) (~:42-45; "three"→"four" sites); LOW-2: fourth stub named in AC-20/AC-21 (POST /rest/servicedeskapi/request returning jsm_created_response() per ~:2758-2763); spec v1.3.122; BC count unchanged (140/111). Previous update 2026-07-26 (SOH-DX-1 DEC-188 v1.3.121 round-23 adversary-pass corrections, #639): 0 new BCs / 0 new VPs / 0 new holdouts — F23-03: AC-8 anchors refreshed (teams.rs ~:12/~:33; fields.rs ~:26); F23-04: promotion directive adds `pub fn` qualifier (fixtures.rs convention); F23-01: BC-INDEX index_version v6.45→v6.50; F23-02: README.md 603→657 + provenance note; spec v1.3.121; BC count unchanged (140/111). Previous update 2026-07-26 (SOH-DX-1 DEC-188 v1.3.120 round-22 adversary-pass corrections, #639): 0 new BCs / 0 new VPs / 0 new holdouts — in-round residual: AC-20 RT name "password-reset" → "Password Reset" (fixture tests/issue_create_jsm.rs ~:135; partial_match rejects hyphenated form); KEPT clauses rewritten to exclusion form in AC-1/2/3/5/7/18/19; AC-1 notes: presence-only guard (!field_pairs.is_empty() ~:81) + --no-input deliberate (AC-11 is TTY test); AC-2: no line-range anchor (old ~:2537 collided with DELETE target); EC-3.8.012-2: whitespace-only variant added (trim-guard at jsm_create.rs ~:145); spec v1.3.120; BC count unchanged (140/111). Previous update 2026-07-26 (SOH-DX-1 DEC-188 v1.3.119 round-21 adversary-pass corrections, #639): 0 new BCs / 0 new VPs / 0 new holdouts — F21-01: AC-20/21 invocations add `--project HELP --summary "test"` (realizable JSM exit-0); F21-02: real stubs named in AC-20+21 (mount_project_meta_help ~:24, mount_service_desk_list ~:52, mount_request_types_password_reset ~:121); F21-03: AC-5 DISCRIMINATING NEGATIVE added; F21-04: AC-2/AC-7 KEPT clauses added; LOW-1: SSOT completeness caveat; LOW-2: AC-8 team_field_id precondition; LOW-3: no change (deliberate); spec v1.3.119; BC count unchanged (140/111). Previous update 2026-07-26 (SOH-DX-1 DEC-188 v1.3.118 round-20 adversary-pass corrections, #639): 0 new BCs / 0 new VPs / 0 new holdouts — F20-1+F20-2(a): AC-1/3/5/18/19 complete invocations (--project PROJ --type Task --summary "test" + mount_platform_create_stubs KEPT); would-otherwise-succeed falsifiability rationale; KEPT-note for existing args/stubs; !stderr.contains("Created issue") remains DISCRIMINATING; F20-2(b): AC-9 "Created issue" HYGIENE (projectless BY DESIGN); F20-2(c): AC-11 "Created issue" HYGIENE (bare-MockServer + projectless); F20-2(d): AC-8 mock labels: (d) GET /rest/api/3/field DISCRIMINATING; (a)-(c)+(e) DEFENSE-IN-DEPTH; "Created issue" HYGIENE; F20-4: AC-8 call-site corrected (create.rs ~:213); F20-5: EC-3.8.013-2 added (--on-behalf-of X --request-type "" → JSM route; BC-3.8.016 fires; BC-3.8.013 MUST NOT fire); spec v1.3.118; BC count unchanged (140/111). Previous update 2026-07-26 (SOH-DX-1 DEC-188 v1.3.117 round-19 adversary-pass corrections, #639): 0 new BCs / 0 new VPs / 0 new holdouts — F-1: AC-21 added (test_jsm_create_with_both_flags_and_request_type_does_not_fire_guards [mode: --output json] — JSM path combined non-mis-fire, all three new-error negatives FALSIFIABLE); AC-6/AC-20 HYGIENE labels; AC namespace note AC-1..20→AC-1..21 + SSOT pointer + falsifiability rule; BC-3.8.013 Trace range + AC-21 reference; F-2: five ':3036' cites → section-form §"Removal postcondition (single-site, DEC-188)"; F-3: --output json removal mandates to AC-1/AC-3/AC-5 invocations; F-5: AC-17 negatives rescoped to BC-3.8.017 rival string "cannot be combined with"; spec v1.3.117; BC count unchanged (140/111). Previous update 2026-07-26 (SOH-DX-1 DEC-188 v1.3.116 round-18 adversary-pass corrections, #639): 0 new BCs / 0 new VPs / 0 new holdouts — F18-001: AC-2 DELETE mandate for !stdout.contains("warning: --on-behalf-of is ignored") (~:2551); AC-4 NORMATIVE DELETE mandates for ~:2671 + ~:2675 (vacuous negatives); AC-6 NORMATIVE DELETE mandate for ~:2799 (vacuous negative); F18-002: AC-4 third negative !stderr.contains("--field and --on-behalf-of are only valid with") added (all three new-error strings pinned on clean path); F18-003: AC-20 (NEW) test_jsm_create_with_on_behalf_of_and_request_type_does_not_fire_bc_3_8_013 [mode: --output json] (JSM path non-mis-fire pin for BC-3.8.013, mirrors AC-6); AC namespace note AC-1..19→AC-1..20; BC-3.8.013 Trace range + AC-20 reference added; LOW-1: preamble BCs 001..011→002..011 + BC-3.8.001 governs absent case; spec v1.3.116; BC count unchanged (140/111). Previous update 2026-07-26 (SOH-DX-1 DEC-188 v1.3.115 round-17 adversary-pass corrections, #639): 0 new BCs / 0 new VPs / 0 new holdouts — F17-01: AC-8 and AC-11 MockServer isolation constraint (MUST NOT call mount_platform_create_stubs; FIFO rationale per CLAUDE.md §BC-3.9.006); F17-02: AC-1/2/3/5 OLD ASSERTIONS completion (verbatim-warn + stdout PROJ-123 removals; tilde line cites); F17-03: AC-1 (ii) corrected from .count() form to verbatim contains form (~:2470-2473); F17-04: AC-1/3/8/9/11/18/19 DISCRIMINATING NEGATIVE !stderr.contains("Created issue") + stdout.trim() hygiene note (BC-3.4.014 non-discriminating in human mode); AC-11 discriminators "two"→"three"; LOW-1: BC-INDEX BC-3.8.012/013 rows H1 title prepended; LOW-2: spec-changelog [1.3.110]-[1.3.115] Summary lines "(DEC-188 ratified 2026-07-25)" appended; spec v1.3.115; BC count unchanged (140/111). Previous update 2026-07-26 (SOH-DX-1 DEC-188 v1.3.114 round-16 adversary-pass corrections, #639): 0 new BCs / 0 new VPs / 0 new holdouts — F16-01: AC-3 self-contradiction resolved (postcondition wins; OLD ASSERTION MUST BE REMOVED → REGRESSION PIN); AC-1/2/5/7 regression pins added; F16-02: AC-14 invocation adds --project PROJ + stderr.contains("request type cannot be empty"); AC-13/16/17/18/19 per-AC discrimination notes; F16-03: Outputs/Effects file cite corrected (fixtures.rs ~:76 → json_error_shape.rs ~:76 current); F16-04 (folded in F16-01): AC-5 re-tagged [mode: human] + byte-identity note; F16-05: SSOT step 3 extended (includes project-key interactive prompt); step 4 deduplicated (type+summary only); AC-11 step 4→step 3; spec v1.3.114; BC count unchanged (140/111). Previous update 2026-07-26 (SOH-DX-1 DEC-188 v1.3.113 round-15 adversary-pass corrections, #639): 0 new BCs / 0 new VPs / 0 new holdouts — F15-01: AC-1 re-scoped to [mode: human] (invocation jr issue create --field a=b; exit 64 + stderr.contains("Error: ") + stderr.contains("--field is only valid with") + stdout.trim().is_empty(); pairing note with AC-10); AC-10 annotated [mode: --output json] + pairing note; F15-02: AC-3 invocation added (jr issue create --field a=b --on-behalf-of X) + exit 64 + OLD ASSERTION removal pin; F15-03: Outputs/Effects lines updated (stdout.trim().is_empty() normative predicate + helper reference); all stdout.is_empty() → stdout.trim().is_empty() globally; F15-04: AC-18 demoted "stdin NOT consumed" to non-normative rationale; normative assertions now exit 64 + stderr + stdout.trim().is_empty(); F15-05: AC-8 team-resolution endpoints enumerated (3 specific endpoints with file~:line cites); Obs-1: BC-3.3.001 H1 DEC-188 qualifier; Obs-2: EC-3.8.012-6 no-AC rationale; spec v1.3.113; BC count unchanged (140/111). Previous update 2026-07-26 (SOH-DX-1 DEC-188 v1.3.112 round-14 adversary-pass corrections, #639): 0 new BCs / 0 new VPs / 0 new holdouts — AC-1/2/7 fully re-specified (F14-01: exit 64 + positive substring + assert_json_error_envelope + old-assertion removal mandates); AC-11 discriminators corrected (F14-02: dialoguer-stderr note; expect(0) non-discriminating note; !stderr.contains("Project key") added); Removal postcondition LOW-1 extension (AC-1 stdout negative vacuity at ~:2479-2482); EC-3.8.012-9 re-scoped to --field a= (LOW-2; AC-19 invocation updated); mode annotations completed AC-4/6/8/9/11/12/13..18 (LOW-3); spec v1.3.112; BC count unchanged (140/111). Previous update 2026-07-26 (SOH-DX-1 DEC-188 v1.3.111 round-13 adversary-pass corrections, #639): 0 new BCs / 0 new VPs / 0 new holdouts — AC-8 citation corrected (F13-01: get_myself cite → resolve_assignee_by_project ~:436/~:443 → JiraClient::get_myself users.rs ~:19); AC-11 false-green hardened (F13-02: MUST NOT --no-input + MUST NOT --project explicit preconditions; discriminators enumerated; main.rs ~:103-114 cite); AC-12 wrap-fragility fixed (F13-03: whitespace-normalization mandatory before count assertion); AC-9 second precondition added (F13-04: profile config must lack project key; write_minimal_config ~:165-173 cite); spec v1.3.111; BC count unchanged (140/111). Previous update 2026-07-26 (SOH-DX-1 DEC-188 v1.3.110 round-12 adversary-pass corrections, #639): 0 new BCs / 0 new VPs / 0 new holdouts — output-mode annotation per AC (F12-05: AC-1/2/5/7 [mode: --output json]; AC-3/AC-19 [mode: human]; AC-3 and AC-19 stdout.trim().is_empty() assertions added); SSOT step 4a added (F12-06: --description-stdin blocking read cite, create.rs::handle_create ~:132-145, between step 4 and step 5; EC-3.8.012-7 guard fires at step 2 so step 4a unreachable on guarded path); helper-promotion directive extended in both BC-3.8.012 and BC-3.8.013 Test Notes (LOW-1: stale doc-comment fix note — {"error":…,"code":…} → {"code":…,"error":…} BTreeMap alphabetical); BC-INDEX section 3.8 header "superseded"→"amended" (LOW-2); spec v1.3.110; BC count unchanged (140/111). Previous update 2026-07-26 (SOH-DX-1 DEC-188 v1.3.109 round-11 adversary-pass corrections, #639): 0 new BCs / 0 new VPs / 0 new holdouts — combined error string parenthetical trimmed (F11-01: "(then use jr issue edit --field for custom fields; --on-behalf-of has no platform equivalent)" removed; same citation-discipline class as round-10 BC-3.8.013 single-flag fix); BC-3.8.013 prose hedged (F11-01: permission-dependent remedy replaces false "must be set at creation time" claim); AC-12 dual-assertion re-spec (F11-02: two per-flag scoped occurrences, not single contains()); delivery item (d) FIRST-LINE-ONLY clarification (F11-03); vacuity rationale at Removal postcondition (F11-04: regression-pin explanation + AC-4 asymmetry); AC-17/18/19 added (F11-05: EC-3.8.012-5/7/9 coverage); AC namespace note range AC-1..16→AC-1..19; BC-INDEX BC-3.4.014 DEC-188 qualifier (F11-06); spec-changelog [1.3.107] Type MINOR→PATCH (process-gap); spec v1.3.109; BC count unchanged (140/111). Previous update 2026-07-26 (SOH-DX-1 DEC-188 v1.3.108 round-10 spec-text corrections, #639): 0 new BCs / 0 new VPs / 0 new holdouts — BC-3.8.013 error string parenthetical removed ("reporter identity is not settable post-creation via platform" factually wrong per CLAUDE.md citation discipline); AC-12 renamed + help-text pin (verbatim "requires --request-type" per delivery item (d)); ADR-0014 delivery section corrected to enumerate all 3 amendment sites explicitly; AC namespace note added (BC-3.8.012 Trace + BC-3.8.013 Trace pointer: S-639-1 ACs supersede S-383 same-numbered ACs); assert_json_error_envelope promotion directive finalized (DELETE original fn from tests/json_error_shape.rs; three call sites re-import from tests/common/assertions.rs); spec v1.3.108; BC count unchanged (140/111). Previous update 2026-07-25 (SOH-DX-1 DEC-188 F2 supersession, #639): 0 new BCs / 0 new VPs / 0 new holdouts — BC-3.8.012 superseded: warn-and-proceed (exit 0) → pre-flight JrError::UserError exit 64 BEFORE any HTTP; ONE error regardless of --field count; combined error when both --field and --on-behalf-of present without --request-type; verbatim error strings drafted; BC-3.8.013 superseded: same pattern for --on-behalf-of; asymmetry rationale encoded (self-declared JSM-only flags → exit 64 caller-error; general platform flags → warn-and-degrade); BC-3.3.001 amendment note updated (exit-64 supersedes warn-and-continue per DEC-188); BC-INDEX v6.44→v6.45; spec v1.3.107; BC count unchanged (140/111). Previous update 2026-07-18 (SOH-ATTACHMENTS-1 P20-ROUND micro-fix 1.3.87→1.3.88): 0 new BCs / 0 new VPs / 0 new holdouts — BC-3.9.012/BC-3.9.013 error-table 401/network stderr cells corrected to loose-substring form (P20-002 root cause + INFO three-way divergence); stale quoted 401 cell `"Not authenticated. Run \`jr auth login\`."` (backtick/no-tail) replaced with `stderr contains "Not authenticated" and "jr auth login"` + full literal from `src/error.rs::JrError`; stale network cell `"Could not reach <instance>: <reason>"` (colon form) replaced with `stderr contains "Could not reach"` + full literal `Could not reach <host> — check your connection` from `src/error.rs::JrError::NetworkError`; BC-3.9.012 and BC-3.9.013 Trace fields updated with P20-ROUND citation; frontmatter trace v1.3.88 added; spec v1.3.88. Previous update 2026-07-18 (SOH-ATTACHMENTS-1 F3 adversary pass-12 micro-round 1.3.86→1.3.87): 0 new BCs / 0 new VPs / 0 new holdouts — BC-3.9.001 403 body text hedged (P12-003): prior unverified "Websudo required" string replaced with XSRF-related-rejection hedge; research file `.factory/research/issue-576-attachments-api-2026-07-15.md` §1e+§P2-1 documents XSRF guard but is SILENT on specific 403 body text; BC-3.9.001 Trace updated with §1e citation + P12-003; frontmatter trace v1.3.87 added; spec v1.3.87. Previous update 2026-07-17 (SOH-ATTACHMENTS-1 F3 adversary pass-3 micro-round 1.3.81→1.3.82): 0 new BCs / 0 new VPs / 0 new holdouts — BC-3.9.020 EC-3.9.020-9 added: three-category dry-run taxonomy (pre-flight checks are NOT suppressed by --dry-run; distinct from gates and eligibility guards; P3-007); BC-3.9.010 EC-3.9.010-5 added: all-404 bulk-delete human-mode HINT message `"No attachments deleted (all were already removed or not found)."` to stderr (§3.9 HINT classification, JSON-suppressed; P3-011); BC-3.9.010 and BC-3.9.020 Trace fields updated; frontmatter trace v1.3.82 added; spec v1.3.82. Previous update 2026-07-17 (SOH-ATTACHMENTS-1 closing micro-round 1.3.77→1.3.78): 0 new BCs / 0 new VPs / 0 new holdouts — VP-576-003 assertion (b) reworded (P40-I1); BC-3.9.008 CWE-88/CWE-22 dual-mapping note added at P7-001 definition site (P40-I2); BC-3.9.009 Trace P24-001 appended (INFO-NEW-5); bc-3 frontmatter trace v1.3.78 added; spec v1.3.78. Previous update 2026-07-17 (SOH-ATTACHMENTS-1 adversary pass-36 fix round, P36-002): 0 new BCs / 0 new VPs / 0 new holdouts — BC-3.9.015 step 3 clarified: --yes path skips pre-prompt metadata GET (its sole purpose is the prompt filename; DELETE only, per BC-3.9.008; P36-002); BC-3.9.015 Trace updated; BC-INDEX BC-3.9.015 row updated + index_version v6.33; spec v1.3.76. Previous update 2026-07-17 (SOH-ATTACHMENTS-1 adversary pass-33 fix round, P33-001): 0 new BCs / 0 new VPs / 0 new holdouts — footer corrected: "Last updated" advanced to pass-31 (was stale at pass-30); P26/P27/P28 entries inserted between pass-30 and pass-24 (previously omitted from footer sequence; evidence: frontmatter trace v1.3.66/v1.3.67/v1.3.68 confirm bc-3 touched by P26-004/P27-001/P28-001 respectively; P25 and P29 confirmed absent — no frontmatter trace entries and zero body Trace citations; P32 confirmed absent — only touched bc-2-issue-read.md); P33-001; spec v1.3.73. Previous update 2026-07-17 (SOH-ATTACHMENTS-1 adversary pass-31 fix round, P31-003): 0 new BCs / 0 new VPs / 0 new holdouts — BC-3.9.012 step-1 carve-out extended: post-retry 401/5xx/network sentence added (a post-retry 401/5xx/network response maps per BC-X.8.010 step 4: 401 → exit 2; 5xx/network → exit 1 — same universal codes as first-occurrence; eliminates "first occurrence" ambiguity; P31-003); BC-3.9.012 Trace updated; BC count unchanged (140/35); VP count 35 (unchanged); spec v1.3.71. Previous update 2026-07-17 (SOH-ATTACHMENTS-1 adversary pass-30 fix round, P30-001..P30-I01): 0 new BCs / 0 new VPs / 0 new holdouts — BC-3.9.003 step 1 self-heal sentence added (SEC-576-006/BC-X.8.010: step-1 404/403 triggers invalidate+retry-once before BC-3.9.012 mapping; post-retry exit codes per BC-X.8.010 step 4; P30-001); BC-3.9.012 step-1 carve-out added (BC-X.8.010 self-heal first; post-retry 404→exit 64, 403→exit 1; P30-001); BC-3.9.019 pre-deletion summary classified HINT (JSON-suppressed; count in JSON `"count"` field; EC-2.7.008-6; P30-002); BC-3.9.016 CLI flags `<AID>...` annotated (positional 1+ when used, optional under required selector group, bare `delete` → exit 2; P30-I01); BC count unchanged (140/35); VP count 35 (unchanged); spec v1.3.70. Previous update 2026-07-17 (SOH-ATTACHMENTS-1 adversary pass-28 fix round, P28-001): 0 new BCs / 0 new VPs / 0 new holdouts — EC-3.9.020-8 wire enumeration corrected (P28-001): terminal clause "no HTTP calls beyond step-0 issue GET and meta fetch" replaced — no issue GET fires on the --replace-existing step-0 path (project key derived from issue-key string prefix); only project-meta fetch (`GET /rest/api/3/project/{key}`) fires; no `GET /rest/servicedeskapi/servicedesk` pagination since project is NOT `service_desk`; BC-3.9.020 Trace updated; BC-INDEX.md BC-3.9.020 row updated; BC count unchanged (140/35); VP count 35 (unchanged); spec v1.3.68. Previous update 2026-07-17 (SOH-ATTACHMENTS-1 adversary pass-27 fix round, P27-001): 0 new BCs / 0 new VPs / 0 new holdouts — JSON Output Shape Contracts download-row Notes updated: `filename` = RAW Jira name (pre-sanitization); `path` basename = on-disk name (post-sanitization; post-SHA-1-prefix for batch); single-id row references EC-2.7.007-7 (P27-001); batch row references EC-2.7.008-6 (P27-001); BC count unchanged (140/35); VP count 35 (unchanged); spec v1.3.67. Previous update 2026-07-17 (SOH-ATTACHMENTS-1 adversary pass-26 fix round, P26-004): 0 new BCs / 0 new VPs / 0 new holdouts — BC-3.9.019 Source field softened: `parse_age_duration` location TBD (`src/cli/issue/attachments.rs` private helper or `src/duration.rs` pub(crate) sibling, per impact-boundary R3.9a); BC-3.9.019 Trace updated (P26-004); BC count unchanged (140/35); VP count 35 (unchanged); spec v1.3.66. Previous update 2026-07-17 (SOH-ATTACHMENTS-1 adversary pass-24 fix round, P24-001..P24-002): 0 new BCs / 0 new VPs / 0 new holdouts — BC-3.9.009 body download-exclusion fix: 'canonical attachment-object JSON shape across all `jr` attachment operations — upload, list, and download' narrowed to 'upload and list operations — upload and list JSON outputs use this shape (download is excluded — it uses the distinct `{"downloaded":[...]}` manifest per the BC-2.7.002 authority clause and BC-2.7.007 EC-2.7.007-7)' (P24-001); VP-576-004 story-allocation annotation added to bc-2-issue-read.md: list half verified at S1 (BC-2.7.002 home); upload-platform-POST half verified at S3 (BC-3.9.009); full cross-path test lands at S3; S3 depends_on S1 for shared curated-serialization plumbing (R3.13 earliest-consumer principle); NOT part of S1 acceptance matrix as a whole; S1 matrix includes only the list half (P24-002); BC count unchanged (140/35); VP count 35 (unchanged); spec v1.3.64. Previous update 2026-07-17 (SOH-ATTACHMENTS-1 adversary pass-23 fix round, P23-001..P23-004): 0 new BCs / 0 new VPs / 0 new holdouts — VP-576-005 explicit servicedesk-list mount (2) added (GET /rest/servicedeskapi/servicedesk, BC-X.8.010 cache-miss GET-2; was vaguely attributed to mount (1) as '+ service desk meta'; mounts renumbered 1→7; wire-completeness ECHO-BREAKER LIST-B enumeration added; P23-001); EC-3.9.020-8 added (--replace-existing --dry-run --public on non-JSM → eligibility guard fires at BC-3.9.017 step 0 before any list GET, exit 64, no preview emitted; P23-002); GATES vs ELIGIBILITY GUARDS distinction sentence added to EC-3.9.020-7 (P23-002); EC-3.9.005-3 extended with dry-run non-suppression cross-ref to EC-3.9.020-8 (P23-002); VP-576-005 story-allocation annotation added (verified in S5 not S3; textual home BC-3.9.017; P23-003); JSON Output Shape Contracts --replace-existing --dry-run row: --public wouldUpload visibility:public note appended per EC-3.9.020-7 (P23-004); BC count unchanged (140/35); VP count 35 (unchanged); spec v1.3.63. Previous update 2026-07-16 (SOH-ATTACHMENTS-1 adversary pass-22 fix round, P22-001..P22-003): 0 new BCs / 0 new VPs / 0 new holdouts — BC-3.9.003 non-interactive exit-64 bullet corrected ('exit 64 before any HTTP' → 'exit 64 before any servicedeskapi call and before any upload POST'; Step-0 issue GET and project-meta resolution already ran; P22-001(a)); BC-3.9.012 non-interactive row trigger corrected ('local' → 'local (after Step-0 issue GET + meta fetch)'; P22-001(b)); mechanical sweep confirmed remaining 'before any HTTP' instances are genuinely pre-HTTP across .factory/ (P22-001(c)); H-NEW-ATTACHMENT-008/010 coherent with corrected phrasing (P22-001(d)); EC-3.9.016-6 reworded: 'proceed to BC-3.9.008' → 'issue the DELETE wire call of BC-3.9.008'; 404 handling per BC-3.9.013 bulk exception (benign skip) added (P22-002); VP count 35 (unchanged); spec v1.3.62. Previous update 2026-07-16 (SOH-ATTACHMENTS-1 adversary pass-21 fix round, P21-001..P21-006): 0 new BCs / 0 new VPs / 1 new holdout — BC-3.9.010 bulk-404 body corrected (benign-skip per EC-3.9.010-4/BC-3.9.013; P21-001); VP-576-005 fixture corrected (plain issue GET removed; strict-mode assertion added; P21-002); BC-3.9.004 branch-(a) wire sequence expanded (BC-X.8.010 servicedesk pagination; P21-004); EC-3.9.004-4 Step-0 suppression added (P21-005); BC-3.9.017 step 4 cross-ref BC-3.9.004 EC-3.9.004-4 (P21-005); VP count 35 (unchanged); spec v1.3.61. Previous update 2026-07-16 (SOH-ATTACHMENTS-1 adversary pass-20 fix round, P20-001..P20-006): 0 new BCs / 2 new VPs / 1 new holdout — BC-3.9.004 Step 0 inheritance + full HTTP sequence for JSM (a) and non-JSM OQ-9 (b) branches (P20-001); BC-3.9.014 N≤3 prompt template `, ...` removed (P20-002); VP-576-005 (combined-gate single-prompt pin) added to BC-3.9.017 (P20-006); VP count 33→35; spec v1.3.60. Previous update 2026-07-16 (SOH-ATTACHMENTS-1 adversary pass-19 fix round, P19-001..I1): 0 new BCs — BC-3.9.001 `--dry-run` CLI-flag annotated with clap-requires constraint (P19-004); BC-3.9.001 4-column upload echo vs 6-column list table note (P19-I1); BC-3.9.009 key-order enumeration updated to BTreeMap-alphabetical (P19-001); spec v1.3.59. Previous update 2026-07-16 (SOH-ATTACHMENTS-1 adversary pass-18 fix round, P18-001..I2): 0 new BCs — upload cancel JSON shape table row label scoped to interactive-only (P18-001); JSON Output Shape Contracts header S1–S5 pending note (P18-I1); spec v1.3.58. Previous update 2026-07-16 (SOH-ATTACHMENTS-1 adversary pass-17 fix round, P17-001..007): 0 new BCs — BC-3.9.014 Source field corrected S5→S3 (P17-001; R3.13); EC-3.9.003-5 extended with Step-0 suppression on --replace-existing --public combined path (P17-003); EC-3.9.017-9 extended with combined --public+≥1-match non-interactive sub-variant B (P17-004a); BC-3.9.014 Non-interactive path section extended with three message variants (P17-004b); BC-3.9.007 EC-3.9.007-1 extended with S3/S5 allocation note (P17-005); upload cancel row added to JSON Output Shape Contracts table (P17-006); spec v1.3.57. Previous update 2026-07-16 (SOH-ATTACHMENTS-1 adversary pass-16 fix round, P16-001..005): 0 new BCs — BC-3.9.003 Step 0 added (issue GET existence validation + projectTypeKey source pinned to get_or_fetch_project_meta NOT issue GET; key-derivation asymmetry note extended; P16-003); BC-3.9.003 Trace updated (P16-003); BC-3.9.015 metadata-fetch-failure clause extended (403 exit 1 + 401 exit 2 + 5xx/network exit 1; all fire before gate presentation; P16-005); BC-3.9.015 Trace updated (P16-005); BC-3.9.014 story allocation moved S5→S3 per ORCHESTRATOR RULING (R3.13; P16-002 — see prd-delta-576.md Scope table); spec v1.3.56. Previous update 2026-07-16 (SOH-ATTACHMENTS-1 adversary pass-15 fix round, P15-001..007+INFO): 0 new BCs — BC-3.9.017 step-2 gate rewrite: ≥1 same-filename match → confirmation gate (P15-002/R3.12); EC-3.9.017-9..12 added (non-interactive exit 64; zero-match gate no-op; combined single-prompt; --yes single-bypass); BC-3.9.014 expanded to THREE consumers with additional prompt variants; EC-3.9.003-5 extended to cover three BC-3.9.017 entry points; EC-3.9.020-7 extended to cover ALL gate consumers; BC-3.9.018 P15-002 zero-match alignment note; VP-576-003 --yes flag rationale updated; spec v1.3.55. Previous update 2026-07-16 (SOH-ATTACHMENTS-1 adversary pass-14 fix round, P14-001..011): 0 new BCs — BC-3.9.003 three-way branch (EOF→exit 130, cancel→stderr) + EC-3.9.003-6/7 (P14-001/P14-002/P14-003); BC-3.9.012 error-row wording (P14-005); BC-3.9.014 EC-3.9.014-2 cancel channel (P14-003); BC-3.9.015 cancel-channel divergence note + VP-576-002 (P14-003/P14-007); BC-3.9.017 VP-576-003 (P14-007); BC-3.9.020 retitled + EC-3.9.020-7 (P14-009/P14-010); double-`---` removed (P14-011); VP count 30→33; spec v1.3.54. Previous update 2026-07-16 (SOH-ATTACHMENTS-1 adversary pass-10 fix round, P10-001): 0 new BCs — BC-3.9.001 Content-Disposition filename clause (basename invariant; P10-001); BC-3.9.017 step 1 cross-ref added; spec v1.3.50. Previous update 2026-07-16 (SOH-ATTACHMENTS-1 adversary pass-9 fix round, P9-002): 0 new BCs — BC-3.9.017 step 0 function citation corrected (`get_or_fetch_project_meta(client, project_key)`, `src/api/jsm/servicedesks.rs:~41`); key-derivation equivalence note added; spec v1.3.49. Previous update 2026-07-16 (SOH-ATTACHMENTS-1 adversary pass-8 fix round, P8-001..P8-005 + changelog sync): 0 new BCs — BC-3.9.017 pre-flight step 0 + destruction invariant generalization (P8-002); BC-3.9.005 --replace-existing pre-flight note + EC-3.9.005-3 (P8-002); BC-3.9.012 400 row + BC-3.9.006 step-2 rationale reworded (P8-003); BC-3.9.020 single-ID AID validation (P8-004); spec v1.3.48. Previous update 2026-07-16 (SOH-ATTACHMENTS-1 adversary pass-7 fix round, P7-001..P7-003 + minor fold-in): 0 new BCs — AID validation reversed across BC-3.9.008/013/015/016/020 (P7-001 CWE-88); EC-3.9.018-4 + EC-3.9.003-5 extension (P7-002 gate suppression); BC-X.8.010 self-heal language softened (minor fold-in); GAP-R17-001 placeholder sync `<AID>`→`<VALUE>` (3 sites); spec v1.3.47. Previous update 2026-07-15 (SOH-ATTACHMENTS-1 adversary pass-1 fix rounds A+B, DEC-179): +6 BCs (BC-3.9.015..020) — delete confirmation gate (BC-3.9.015, DEC-174 mirror), bulk --older-than always-requires-yes + clap mutual-exclusion (BC-3.9.016), --replace-existing non-atomic delete-ALL + race documented (BC-3.9.017, JRACLOUD-96384/-78388), --replace-existing zero-match idempotent (BC-3.9.018), --older-than duration.rs + chrono client-side + bulk JSON (BC-3.9.019), --dry-run preview + JSON + single-ID hint (BC-3.9.020); Section 3.9 now 20 contracts; spec v1.3.45. Previous update 2026-07-15 (SOH-ATTACHMENTS-1 F2, DEC-179, issues #576+#585): +14 BCs (BC-3.9.001..BC-3.9.014) — attachment upload platform POST (BC-3.9.001: multipart, `X-Atlassian-Token: no-check`, streaming, no client-side cap, 413/400 handling), JSM upload no-flag path (BC-3.9.002: platform POST = internal by default, P2-4a), `--public` servicedeskapi two-step + DEC-174 confirmation gate (BC-3.9.003), `--internal` two-step public:false + OQ-9 non-JSM silent no-op (BC-3.9.004), `--public` non-JSM exit 64 (BC-3.9.005), temporaryAttachmentId ~1h TTL + stale-ID self-healing (BC-3.9.006, BC-X.8.010), post-upload echo + P2-3c deferred probe obligation (BC-3.9.007, BC-3.9.011), attachment delete DELETE/id + 404 = exit 64 + surface body (BC-3.9.008, DEC-168 precedent), JSON shapes (BC-3.9.009..010), upload/delete error taxonomies (BC-3.9.012..013), `--public` confirmation gate mechanics eprint!+read_line NOT dialoguer (BC-3.9.014, DEC-174); Section 3.9 header added (14 contracts); spec versions v1.3.43 (BCs) + v1.3.44 (security fix round, SEC-576-001..007). Previous update 2026-07-09 (issue #577 SOH-COMMENT-CRUD-1 F2, DEC-168): +11 BCs (BC-3.5.002..BC-3.5.012) — comment delete (BC-3.5.002..BC-3.5.004: endpoint/exit-codes, confirmation, 404-exit-64+body-surface), comment edit (BC-3.5.005..BC-3.5.009: body-only-PUT invariant, --internal wire, --public wire+always-confirm, --public confirmation gate, body sources), comment view (BC-3.5.010: GET+expand=properties, table+JSON, 404-exit-64), mutual exclusion (BC-3.5.011), CLI breaking change (BC-3.5.012: comment→subcommand group, old flat form → clap error with migration hint); §3.5 header updated to 12 contracts. Previous update 2026-06-30 (BC-subclause-pass F2): +2 BCs (BC-3.4.020..021) — BC-3.4.020 (`issue edit --label` routing fork: single-key PUT bare-string vs 2+ key bulk POST `{"name":...}` objects; BUG-LABEL-400), BC-3.4.021 (`issue edit --dry-run` `plannedChanges` output structure + `--output json` schema `{dryRun, issues, plannedChanges}`; intentionally simplified preview shapes); Section 3.4 header updated to 21 contracts. Previous update 2026-06-08 (fix-bulk-transition-schema F2): +1 BC (BC-3.2.014) — BC-3.2.014 (multi-key bulk move `bulkTransitionInputs` nested wrapper wire schema; documents correctness bug fix commit acca854; live run 27156639337); Section 3.2 header updated to 14 contracts. Previous update 2026-06-03 (jsm-resolution-required F2): +1 BC (BC-3.2.013) — BC-3.2.013 (proactive resolution enforcement on done-category transitions: REQUIRED and OPTIONAL branches, --no-resolution flag, isConditional coverage, conservative gate, BC-3.2.009 backstop retained; single-key only; breaking change); Section 3.2 header updated to 13 contracts. Previous update 2026-06-01 (issue #331 F2): +2 BCs (BC-3.4.018..019) — BC-3.4.018 (multi-key `--type` bulk wire shape: camelCase `issueType` key, `issueTypeId` string value, name resolved via createmeta issuetypes), BC-3.4.019 (cross-project guard: keys spanning >1 project exit 64 before any API call); Section 3.4 header updated to 19 contracts. Previous update 2026-05-27 (issue #421 F2): BC-3.4.015 invariant 5 rewritten (two-stage i64-first strategy); EC-3.4.015-4b added (i64-boundary regression pin); no BC count changes (103/74 unchanged). Previous update (2026-05-25 issue #407 F2): +EC-3.4.017-14 — mechanical enforcement meta-test for BC-3.4.017 invariant 2 (conflict block completeness via `test_label_conflict_block_lists_every_relevant_flag`); BC-3.4.017 invariant 2 cross-reference added; no BC count changes (103/74 unchanged). Previous update (2026-05-22 issue #396 F2): +3 BCs (BC-3.4.015..017) — BC-3.4.015 (`issue edit --field` string/number/date/datetime/user field single-key path, with editmeta validation, fields.json cache, and dry-run invariants), BC-3.4.016 (`issue edit --field` single-select `option` field), BC-3.4.017 (`--field` multi-key/`--jql` rejection Gate A and flag-overlap Gate B); Section 3.4 header updated to 17 contracts. Previous update (2026-05-21 issue #398 F2): +3 BCs (BC-3.4.012..014) — BC-3.4.012 (issue edit table-mode success echo), BC-3.4.013 (issue edit JSON-mode success echo with changed_fields), BC-3.4.014 (issue create table-mode all-fields echo (broadened from team-only at the 2026-05-22 human-gate to mirror BC-3.4.012)); BC-3.4.003 Success output cross-reference added; Section 3.4 header updated to 14 contracts. Previous update (2026-05-20 issue #388): +2 BCs (BC-3.4.010..011): BC-3.4.010 (cross-hierarchy `edit --type` 400 → CROSS_HIERARCHY_HINT citing JRACLOUD-27893) and BC-3.4.011 (same-hierarchy/indeterminate `edit --type` 400 → typo hint or raw error, no JRACLOUD-27893 hint) added in F2 delta (issue #388). BC-3.4.003 Errors cross-reference updated (annotation only, no behavioral change). Section 3.4 header updated to 11 contracts. Previous update (2026-05-20 issue #385): +2 BCs (BC-3.8.016..017); BC-3.8.002/010/011 modified._

@@ -9,6 +9,91 @@ Track all spec version changes. Most recent version first.
 
 > **Type legend:** Type classifies the SPEC document delta: MINOR = new BCs/VPs/sections; PATCH = amendments to existing bodies/ACs/ECs. Product-semver impact is recorded in the Summary line, independent of Type.
 
+## [1.4.0] - 2026-08-15
+
+### Type: MINOR
+
+### Summary
+
+F2 spec evolution for the **component-management bundle** (Feature Mode cycle
+`component-mgmt`, DEC-278/DEC-279/DEC-280; issues #604/#605/#606/#608, #607/#609 deferred).
+Adds a brand-new `jr component` command group (list/create/edit/delete/rename) plus
+`issue create/edit --component` and `issue list --component` filter support. New file
+`bc-8-components.md` (28 BCs) mints Section 8 of the BC-INDEX; `bc-2-issue-read.md` gains 6
+new BCs (`--component` filter grammar + a shared `Component.id` struct prerequisite) and
+`bc-3-issue-write.md` gains 4 new BCs (`--component` write-path wire shapes, single-key vs.
+bulk). 38 new BCs total (661 → 699 grand total); 7 existing BCs amended in place (no separate
+count) plus one cross-file citation amendment in `cross-cutting.md`. This entry reconciles a
+prior burst that died mid-completion (BC bodies were already written; this entry, the count
+propagation, and the PRD delta summary complete the burst). See
+`.factory/phase-f2-spec-evolution/prd-delta-components.md` for the full delta record and
+`.factory/phase-f1-delta-analysis/delta-analysis-components.md` for the F1 analysis this
+delta implements.
+
+### Changed Requirements
+
+- `bc-8-components.md` (NEW FILE): 28 BCs across 4 subdomains — Component Read & CRUD (8.1,
+  BC-8.1.001..008), Component Delete Safety (8.2, BC-8.2.001..008, DEC-279), Component Rename
+  (8.3, BC-8.3.001..007, issue #608), Component Name/ID Resolution & Disambiguation (8.4,
+  BC-8.4.001..005).
+- `bc-2-issue-read.md` (NEW): BC-2.1.018..022 — `issue list --component` filter (OR-list,
+  `not:` with OR-EMPTY, reserved `none` keyword, `all:` AND-form, unresolvable/ambiguous
+  exit-64 pre-search). BC-2.3.040 — `Component` struct gains a REQUIRED `id: String` field
+  (breaking deserialization change; shared prerequisite for all four issues).
+  (AMENDED): BC-2.1.006 — filter-source count 13 → 14 (`--component` added to the no-filters
+  guard's enumerated stderr list). BC-2.1.007 — `--component`'s stable clause position pinned
+  (after `asset`, before date-range clauses).
+- `bc-3-issue-write.md` (NEW): BC-3.4.022 — single-key `issue edit --component` native
+  `update`-verb wire shape with editmeta-gated read-modify-write fallback. BC-3.4.023 —
+  multi-key/bulk `--component` via `POST /bulk/issues/fields` with `multiselectComponents`/
+  integer `componentId` (DEC-280; live-smoke-test-gated per `FIX-BULK-TRANSITION-001`
+  precedent). BC-3.4.024 — `issue create --component` additive body composition (no
+  add:/remove: prefix grammar). BC-3.4.025 — resolution-mechanism decision (project
+  component-list GET for name validation, distinct from editmeta's wire-shape-decision role).
+  (AMENDED): BC-3.4.012/013 — `components` joins the field-echo key table (table: comma-joined
+  action:name pairs; JSON: array of `{action,name}` objects, the sole array-valued
+  `changed_fields` entry). BC-3.4.017 — Gate B scope extended 4 → 5 fields (`components`
+  added; EC-3.4.017-15). BC-3.4.020 — `--label` conflict-block flag list extended 12 → 13
+  (`--component` added, preventing a silent-drop data-loss hazard). BC-3.4.021 —
+  `plannedChanges.components` dry-run preview added (flat array, `labels` convention;
+  EC-3.4.021-20).
+- `cross-cutting.md` (AMENDED): BC-X.10.001 — EC-1 caller-example list and Trace field gain a
+  citation for the new `src/cli/issue/helpers.rs::resolve_component` caller (project-scoped
+  component resolution, numeric-ID-bypass convention). Citation-only; the shared
+  `partial_match` primitive's own contract is unchanged. No BC count change.
+- `BC-INDEX.md` (MODIFIED): new `## Section 8` (28-row index across 4 subsections);
+  Section 2/3 header counts and subsection headers updated; frontmatter `total_bcs`
+  661 → 699, `index_version` v6.78 → v6.79.
+- `CANONICAL-COUNTS.md` (MODIFIED): per-file definitional-count and total_bcs tables updated
+  (bc-2, bc-3, new bc-8 row); Sum row 661 → 699; grand-total prose and breakdown note updated;
+  L2-alignment table rows for bc-02/bc-03 marked PENDING (L2 domain spec not bumped — this
+  delta is L3-only, same posture as prior L3-only F2 deltas); Bounded-contexts count 7 → 8.
+- `README.md` (MODIFIED): Document Map gains a `bc-8-components.md` row; bc-2/bc-3 counts and
+  BC-INDEX total updated; BC-numbering-scheme `S` range 1-7 → 1-8.
+
+### Impact Assessment
+
+| Artifact | Change Type | Notes |
+|----------|-------------|-------|
+| `.factory/specs/prd/bc-8-components.md` | NEW | 28 individually-bodied BCs; `src/cli/component.rs` pending F4 |
+| `.factory/specs/prd/bc-2-issue-read.md` | MODIFIED | 66 → 72 individually-bodied (108 → 114 cumulative) |
+| `.factory/specs/prd/bc-3-issue-write.md` | MODIFIED | 111 → 115 individually-bodied (140 → 144 cumulative) |
+| `.factory/specs/prd/cross-cutting.md` | MODIFIED (citation only) | 85 individually-bodied / 151 cumulative unchanged |
+| `.factory/specs/prd/BC-INDEX.md` | MODIFIED | New Section 8; grand total 661 → 699 |
+| `.factory/specs/prd/CANONICAL-COUNTS.md` | MODIFIED | All count surfaces reconciled to 699 |
+| `.factory/specs/prd/README.md` | MODIFIED | Document Map + numbering scheme updated |
+| `scripts/check-spec-counts.sh` | Verified | Exit 0 — `8 bc files validated` |
+| `scripts/check-bc-cumulative-counts.sh` | Verified | Exit 0 — `699 total across 9 files` |
+
+- **Affected stories:** None yet — story decomposition (F3) has not run for this bundle; F1
+  scope is #604+#605+#606+#608 (full F1-F7), #607/#609 deferred to subsystem-level follow-up.
+- **Migration needed:** NO (net-new command surface + additive filter/write flags; no existing
+  BC's postconditions were reversed). BC-2.3.040's `Component` struct change IS a breaking
+  DESERIALIZATION change for any test fixture supplying `fields.components` without an `id`
+  key — flagged explicitly in that BC's postconditions as mandatory fixture updates for F4.
+
+---
+
 ## [1.3.182] - 2026-08-14
 
 ### Type: PATCH

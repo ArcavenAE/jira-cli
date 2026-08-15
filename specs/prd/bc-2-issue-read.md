@@ -1,11 +1,25 @@
 ---
 context: bc-2
 title: "Issue Read (list/view/comments/changelog)"
-total_bcs: 108   # cumulative claim (incl. range-collapsed); definitional_count below is individually-bodied headings
-definitional_count: 66   # count of `#### BC-` headings in this file
-last_updated: 2026-08-13
+total_bcs: 114   # cumulative claim (incl. range-collapsed); definitional_count below is individually-bodied headings
+definitional_count: 72   # count of `#### BC-` headings in this file
+last_updated: 2026-08-15
 source_pass: 3
 trace: |
+  - F2 spec evolution, component-management bundle (2026-08-15, issue #606, plus the shared
+    prerequisite for #604/#605/#608): BC-2.1.018..022 ADDED — `issue list --component` filter:
+    OR-list (018), `not:` with OR-EMPTY (019), reserved `none` keyword (020), `all:` AND-form
+    (021), unresolvable/ambiguous exit-64 pre-search (022). BC-2.1.006 UPDATED — filter-source
+    count 13→14 (`--component` added to the enumerated stderr list). BC-2.1.007 UPDATED —
+    `--component`'s stable clause position pinned (after `asset`, before date-range clauses).
+    BC-2.3.040 ADDED — `Component` struct gains `id: Option<String>` (shared prerequisite all
+    four component-management issues depend on; precedent: 2026-08-13 `duedate` amendment
+    shape; `Option<String>`, not `String` — this trace line previously said `String`, drifting
+    from the BC-2.3.040 body's `Option<String>` M8 fix-burst correction; fixed here 2026-08-15,
+    M-4, adversarial spec-delta review pass 2).
+    +6 new individually-bodied BCs (66→72); total_bcs 108→114. See
+    `.factory/phase-f1-delta-analysis/delta-analysis-components.md`,
+    `.factory/phase-f1-delta-analysis/business-analyst-input-components.md`.
   - v1.3.180 — F2 spec evolution, bucket1-defects bundle (2026-08-13, issue #694): 0 new BCs — docs-only help-text sync between `src/cli/mod.rs` clap doc comments (the `IssueCommand::Attachment` parent `about` string, the `Download` subcommand's `--out-dir` help, and its `--newest` help) and the behavior these BCs already specify. No BC body text changed; the three doc-comment sites were stale/incomplete relative to already-ratified behavior: (1) parent `about` under-enumerated the four `AttachmentSubcommand` variants (List/Download/Upload/Delete) — behavior already implicit in the enum itself, no owning BC; (2) `--out-dir` help did not mention the batch on-disk naming scheme `<40-char-SHA-1-of-attachment-id>_<sanitized-filename>`, already specified by BC-2.7.010; (3) `--newest` help did not state the filter-before-sort-before-truncate order (filter → sort by `created` descending → truncate to N), already specified by BC-2.7.009 (cross-referencing BC-2.7.008). See `.factory/research/bucket1-694-attachment-docs-2026-08-13.md` for the full claim-by-claim verification. BC count unchanged (66/108).
   - v1.3.177 — F2 spec evolution (2026-08-13, issue #668, duedate feature): BC-2.2.028 AMENDED (search_issues default fields list 16→17, `duedate` inserted after `updated`/before `resolution`); BC-2.3.036 AMENDED (get_issue field enumeration gains `duedate`, dedicated date-only semantics documented, named-field-not-flatten confirmed); BC-2.2.032 NEW (`issue list --duedate` opt-in column, position/formatter/empty-rendering policy); BC-2.3.039 NEW (`issue view` always-on Due Date row, position/formatter/empty-rendering policy); BC count 106→108 (64→66 individually-bodied); BC-INDEX v6.75→v6.76.
   - v1.3.177 fix-round — scoped adversarial review (2026-08-13, issue #668) found 1 HIGH + 6 MEDIUM + 2 LOW real findings, all fixed same-day, no BC count change: F1 (HIGH) BC-2.3.039 hallucinated a `Resolution` row precedent that does not exist in `handle_view` — corrected to `Created`/`Updated` only; F2 (MED) BC-2.2.032 parse-failure warning corrected to name the real `log_parse_failure_once` chokepoint, its `--verbose` gating, and the resulting `format_issue_row`/`format_issue_rows_public` signature change (new `verbose: bool` param) as a normative part of the BC; F3 (MED) BC-2.2.032 gained a Scope clause naming `board.rs`/`queue.rs`/`sprint.rs` as other callers of the shared row/header builders that do NOT gain the column; F4 (MED) `cross-cutting.md` BC-X.8.009 amended — its stale 3-arg `issue_table_headers` citation and unconditional "same column set as `jr issue list`" claim corrected against BC-2.2.032; F5 (MED) BC-2.3.039's "raw JSON passthrough" claim corrected to "typed struct serialization via `output::render_json`," with the two conditions (`BASE_ISSUE_FIELDS` request + no `skip_serializing_if`) stated explicitly; F6 (MED) BC-2.3.039's citation for the request-field-list amendment corrected from BC-2.3.036 to BC-2.2.028 (the BC that actually amends `BASE_ISSUE_FIELDS`); F7 (MED) BC-2.2.032 gained an explicit JSON-mode clause (`--duedate` has no effect on `--output json` shape); F8 (MED) BC-2.2.032's `--points` precedent citation corrected to distinguish "same code mechanism" from "same contracted behavior" (BC-2.2.021/022 do not themselves contract column-rendering); F9 (LOW) Column-set backfill deferral note reworded with a normativity caveat (BC-2.2.032's Column position clause is now the sole written column-list contract); F10 (LOW) both BCs gained a defensive `Some("")`-treated-as-`-` empty-string clause. F11 (BC-ID near-miss collision across subsystems, e.g. BC-2.2.032/BC-2.3.032) and F12 (a physical mis-placement of BC-2.2.032 between BC-2.2.028 and BC-2.2.029, now corrected to sit after BC-2.2.031) — F12 fixed as a drafting-error correction (BC-2.2.032 moved to its correct sequential position); F11 is a pre-existing file-wide numbering-convention property (also present at BC-2.4.043/BC-2.5.043) and is not fixed by this delta.
@@ -42,7 +56,7 @@ trace: |
 
 # BC-2 — Issue Read (list / view / comments / changelog)
 
-108 behavioral contracts across 7 subdomains: JQL composition (2.1), Issue list
+114 behavioral contracts across 7 subdomains: JQL composition (2.1), Issue list
 behavior (2.2), Issue view (2.3), Comments (2.4), Changelog (2.5), API layer (2.6),
 Attachment Read (2.7).
 
@@ -101,18 +115,23 @@ Attachment Read (2.7).
 
 ---
 
-#### BC-2.1.006: No project AND no filters AND no `--jql` → exit 64 listing all 13 filter sources
+#### BC-2.1.006: No project AND no filters AND no `--jql` → exit 64 listing all 14 filter sources
 
 **Confidence**: HIGH
 **Source**: `src/cli/issue/list.rs:~344-351`
 **Subject**: Issue read
-**Behavior**: stderr contains literal `"No project or filters specified. Use --project, --assignee, --reporter, --status, --open, --team, --recent, --created-after, --created-before, --updated-after, --updated-before, --asset, or --jql. You can also set a default project in .jr.toml or run \"jr init\"."`.
+**Behavior**: stderr contains literal `"No project or filters specified. Use --project, --assignee, --reporter, --status, --open, --team, --recent, --created-after, --created-before, --updated-after, --updated-before, --asset, --component, or --jql. You can also set a default project in .jr.toml or run \"jr init\"."`.
 **Error taxonomy**: `JrError::UserError` (exit 64).
+
+**[UPDATED 2026-08-15 issue #606 F2]** `--component` joins the enumerated filter-source list
+as source #14 (13 → 14). **Previous version (superseded, retained for audit trail):** stderr
+literal ended `"... --updated-before, --asset, or --jql. ..."` (13 sources, no `--component`).
+
 **Trace**: Pass 3 BC-129 (R1)
 
 ---
 
-#### BC-2.1.007: `build_filter_clauses` emits in stable order: assignee, reporter, status, open, team, recent, asset, created-after/before, updated-after/before
+#### BC-2.1.007: `build_filter_clauses` emits in stable order: assignee, reporter, status, open, team, recent, asset, component, created-after/before, updated-after/before
 
 **Confidence**: HIGH
 **Source**: `src/cli/issue/list.rs:~613-649`; unit tests covering `build_jql_parts_*` clause variants
@@ -123,6 +142,27 @@ Attachment Read (2.7).
 - `created >= -7d` (for `--recent 7d`)
 - `statusCategory != Done` (for `--open`)
 - `status = "He said \"hi\" \\o/"` (JQL-escaped)
+- `component in (10001, 10002)` / `(component not in (10001) OR component is EMPTY)` /
+  `component is EMPTY` / `component = 10001 AND component = 10002` — one of the four
+  `--component` operator shapes, per BC-2.1.018..021.
+
+**[UPDATED 2026-08-15 issue #606 F2]** `--component` is inserted into the stable-order list
+immediately AFTER `asset` and BEFORE the created/updated date-range clauses — i.e. between
+BC-2.1.011..017's asset-filter clause and BC-2.1.008..010's date-range clauses in emission
+order. This position is pinned by the same exact-clause-order test discipline as every other
+member of this list (`Vec<String>` positional equality, not membership — see F1 delta
+analysis §3 regression-risk note on this function). **Previous version (superseded, retained
+for audit trail):** "assignee, reporter, status, open, team, recent, asset, created-after/
+before, updated-after/before" (no `component` member).
+
+**Verification Properties**:
+- VP-COMPONENT-015: `build_filter_clauses` emits the four `--component` operator shapes
+  exactly (bare/repeated → `component in (id1, id2, …)` in input order; `not:` → the single
+  `(component not in (…) OR component is EMPTY)` group; `none` → `component is EMPTY` with
+  zero resolver HTTP; `all:` → `component = id1 AND component = id2 …`), and the `--component`
+  clause holds its pinned position (after `asset`, before date-range) via `Vec<String>`
+  positional equality.
+
 **Trace**: Pass 3 BC-130 (R1); BC-1093 (R4 enumeration)
 
 ---
@@ -221,6 +261,261 @@ Attachment Read (2.7).
 **Source**: `src/cli/issue/list.rs:~357-371`
 **Behavior**: stderr: `"warning: --assets ignored. No Assets custom fields found on this Jira instance."`.
 **Trace**: Pass 3 BC-146 (R1)
+
+---
+
+#### BC-2.1.018: `--component <NAME>` (repeated) → OR-combined `component in (id1, id2, ...)`; each name resolved independently BEFORE composition
+
+**Confidence**: HIGH
+**Source**: F1 delta analysis §2 (BA precedent BC-2.1.011 asset-key resolution pattern);
+`src/cli/issue/list.rs` (pending F4)
+**Subject**: Issue read — `--component` filter (issue #606)
+**Behavior**: `--component <NAME>` is repeatable; each occurrence independently resolves via
+§8.4 (`bc-8-components.md`, scoped to the `issue list` invocation's resolved project — the
+SAME project scope `--asset`/other project-scoped filters already use) to a numeric
+component id BEFORE JQL composition. Multiple `--component` values OR-combine into a single
+`component in (id1, id2, ...)` clause (NOT one clause per value) — this is the natural
+semantics of Jira's `IN` operator and matches how a user expects repeated `--component` flags
+to behave (any-of, not all-of; `all:` is the explicit AND-form, BC-2.1.021).
+**Preconditions**:
+1. At least one `--component <NAME>` (no `not:`/`none`/`all:` prefix) is supplied.
+2. Every supplied name resolves to exactly one component within the resolved project scope
+   (§8.4) — see BC-2.1.022 for the failure path.
+3. **[NEW 2026-08-15, M3 fix-burst]** Bare `--component <NAME>` values MAY coexist with
+   `--component not:<NAME>` values in the SAME invocation (see BC-2.1.019 Postcondition 2) —
+   composition is DEFINED, not rejected. Coexistence with `--component none` (BC-2.1.020
+   Precondition 1) or `--component all:...` (BC-2.1.021 Precondition 2) remains rejected;
+   only bare+`not:` may combine. Rationale: bare (inclusion, OR-list) and `not:` (exclusion,
+   OR-EMPTY) are ADDITIVE, non-contradictory constraints — "must have Backend AND must not
+   have Deprecated" is a coherent filter — unlike combining `all:`'s AND-semantics with
+   `in`'s OR-semantics in the same logical dimension (rejected by BC-2.1.021 Precondition 2),
+   or `none`'s "zero components" statement with any positive/negative constraint (rejected by
+   BC-2.1.020 Precondition 1).
+**Postconditions**:
+1. The composed clause is `component in (<id1>, <id2>, ...)` where ids are numeric, comma-
+   space-joined, in the order names were resolved (input order preserved).
+2. This clause takes the ordered position established by BC-2.1.007's amendment (after
+   `asset`, before the date-range clauses). When BC-2.1.019's `not:` clause is ALSO present
+   (Precondition 3), the bare `in (...)` clause emits FIRST, immediately followed by the
+   `not:` group's `(component not in (...) OR component is EMPTY)` clause — both clauses
+   occupy two consecutive slots at the position BC-2.1.007 pins, and the overall JQL AND-joins
+   them via `build_filter_clauses`' existing `parts.join(" AND ")` composition (no special
+   merge logic — each shape independently pushes its own `String` onto `parts`).
+**Edge Cases**:
+- EC-2.1.018-1: Single `--component Backend` → `component in (10001)` (a one-element `IN`
+  list is valid JQL, not rewritten to `component = 10001`).
+- EC-2.1.018-2 **[NEW 2026-08-15, M3 fix-burst]**: `--component Backend --component
+  not:Frontend` → composes `component in (10001) AND (component not in (10002) OR component
+  is EMPTY)` (two clauses, bare first, AND-joined at the top-level JQL by the normal
+  `build_filter_clauses` mechanism); exit 0.
+**Verification Properties**:
+- VP-COMPONENT-015: Repeated `--component <NAME>` composes `component in (id1, id2, …)` in
+  input order (single clause, not one clause per value); a bare-list and a `not:`-list MAY
+  coexist in one invocation, emitting two AND-joined clauses in bare-then-not: order
+  (EC-2.1.018-2).
+**Trace**: F1 delta analysis §2; BC-2.1.011 (structural resolve-before-compose precedent);
+BC-8.4.001 (resolver)
+
+---
+
+#### BC-2.1.019: `--component not:<NAME>` → `(component not in (id) OR component is EMPTY)`
+
+**Confidence**: HIGH
+**Source**: F1 delta analysis §validated API facts ("JQL `not in`/`!=` exclude EMPTY, so
+`not:` MUST emit the OR-EMPTY form"); `src/cli/issue/list.rs` (pending F4)
+**Subject**: Issue read — `--component` filter (issue #606)
+**Behavior**: A bare `component not in (id)` clause would silently EXCLUDE issues that have
+NO component at all — a well-documented JQL surprise (Jira's `NOT IN`/`!=` operators do not
+match `EMPTY` values). To give `not:` its intuitive meaning ("show me issues NOT tagged with
+this component" — which should include untagged issues), `jr` composes the parenthesized
+OR-form: `(component not in (<id>) OR component is EMPTY)`. Multiple `not:` values combine
+within the SAME parenthesized group: `(component not in (id1, id2) OR component is EMPTY)` —
+NOT a separate OR-EMPTY clause per value.
+**Postconditions**:
+1. The emitted clause is ALWAYS the full parenthesized `(component not in (...) OR component
+   is EMPTY)` form — `jr` never emits a bare `component not in (...)` for `not:` input.
+2. **[NEW 2026-08-15, M3 fix-burst]** `not:` values MAY coexist with bare `--component <NAME>`
+   values in the same invocation — see BC-2.1.018 Precondition 3/Postcondition 2 for the
+   defined composition (bare clause first, `not:` clause second, both AND-joined). `not:`
+   coexistence with `none`/`all:` remains rejected (BC-2.1.020/BC-2.1.021).
+**Edge Cases**:
+- EC-2.1.019-1: `--component not:Backend --component not:Frontend` → single clause
+  `(component not in (10001, 10002) OR component is EMPTY)`, not two separate clauses.
+- EC-2.1.019-2 **[NEW 2026-08-15, M3 fix-burst]**: `--component Backend --component
+  not:Frontend` (bare + `not:` mixed) → BOTH clauses compose, per BC-2.1.018 Postcondition 2:
+  `component in (10001) AND (component not in (10002) OR component is EMPTY)`. This is NOT
+  rejected — contrast `all:`/`none`, which DO reject mixing with any other `--component`
+  value.
+- EC-2.1.019-3 **[NEW 2026-08-15, P6 fix-burst — documents a reserved-syntax collision found
+  by adversarial spec-delta review pass 6, LOW-1]**: a component literally NAMED `not:Deprecated`
+  is UNREACHABLE via `--component not:Deprecated` — the leading `not:` prefix is always
+  interpreted as the reserved negation syntax (Behavior above) and the remainder is resolved as
+  the NAME to negate, never as a literal name containing a colon. This is the SAME class of gap
+  documented for `none` (EC-2.1.020-4) and `all:` (EC-2.1.021-3) — symmetric shape, different
+  trigger (a reserved prefix vs. a reserved keyword vs. a reserved separator). **Workaround**:
+  filter on the component's numeric id via the raw JQL escape hatch: `jr issue list --jql
+  "component = <id>"` (look up the id via `jr component list --output json | jq`). There is no
+  `--component`-flag workaround, since the `not:` prefix is unconditionally reserved.
+**Verification Properties**:
+- VP-COMPONENT-015: `not:` composes the single, always-parenthesized `(component not in (…)
+  OR component is EMPTY)` group — multiple `not:` values combine within the SAME group, never
+  one OR-EMPTY clause per value; a `not:`-list MAY coexist with a bare-list in one invocation
+  (EC-2.1.019-2).
+**Trace**: F1 delta analysis §Validated API facts
+
+---
+
+#### BC-2.1.020: `--component none` → `component is EMPTY`
+
+**Confidence**: HIGH
+**Source**: F1 delta analysis §2 (BA note: "the real payoff of #606"); `src/cli/issue/list.rs`
+(pending F4)
+**Subject**: Issue read — `--component` filter (issue #606)
+**Behavior**: The literal value `none` (case-insensitive: `none`/`None`/`NONE`) is a RESERVED
+keyword meaning "issues with zero components" — it composes `component is EMPTY` directly,
+with NO name-resolution round-trip (unlike every other `--component` value, `none` never
+consults the project component list or §8.4). `--component none` combined with other
+`--component` values (bare OR `not:`/`all:`) in the SAME invocation is rejected: exit 64
+pre-flight, `"--component none cannot be combined with other --component values."` — `none`
+is a complete, standalone filter statement; combining it with an OR-list or an AND-list would
+be either redundant or contradictory in every case, so `jr` rejects rather than silently
+picking one interpretation.
+**Preconditions**:
+1. `--component none` is the ONLY `--component` occurrence in the invocation.
+2. **[NEW 2026-08-15, M2 fix-burst]** Like every other `--component` value, `none` requires a
+   resolved project scope — the same `--project` flag > `.jr.toml` configured-project
+   precedence as `list`'s other project-scoped operations (BC-2.1.001 family). Unlike bare/
+   `not:`/`all:` (whose §8.4 resolver GET against `/project/{key}/components` fails
+   structurally without a project key, so those forms are naturally project-gated by their
+   own resolution step), `none` skips resolution entirely (Postcondition 1) and could
+   otherwise compose an UNSCOPED `component is EMPTY` clause with no `project = X`
+   restriction — an accidental org-wide search across every project the caller can see. This
+   precondition exists specifically to prevent that: see BC-2.1.022 EC-2.1.022-2 for the
+   exit-64 behavior when no project scope is available.
+**Postconditions**:
+1. `component is EMPTY` is composed with ZERO resolver HTTP calls (no project component-list
+   GET fires for `none` specifically) — but ONLY once Precondition 2's project-scope
+   requirement is satisfied; see BC-2.1.022 EC-2.1.022-2 for the no-project-scope failure
+   path.
+**Edge Cases**:
+- EC-2.1.020-1: `--component none --component Backend` (combined with a bare value) → exit 64
+  pre-flight, zero HTTP.
+- EC-2.1.020-2: `--component none --component not:Backend` → exit 64 pre-flight (same
+  combination guard — `none` rejects ANY other `--component` occurrence, regardless of that
+  occurrence's own prefix).
+- EC-2.1.020-3 **[NEW 2026-08-15, M2 fix-burst]**: `jr issue list --component none` with no
+  `--project` and no configured default project → exit 64 pre-flight, zero HTTP (see
+  BC-2.1.022 EC-2.1.022-2 for the exact message and rationale). `none` is NOT exempt from
+  project-scoping just because it skips name resolution.
+- EC-2.1.020-4 **[NEW 2026-08-15, L1 fix-burst — documents a reserved-keyword collision found
+  by adversarial spec-delta review pass 2]**: a component literally NAMED `"none"` (or any
+  case variant: `"None"`, `"NONE"`) is UNREACHABLE via `--component none` — the reserved
+  keyword (Precondition 1/Postcondition 1) always short-circuits to `component is EMPTY` and
+  never reaches §8.4 name resolution, so there is no code path by which a literal component
+  named `"none"` could ever be selected through this positional. This is the SAME class of gap
+  CLAUDE.md already documents for `jr requesttype fields <NAME|ID>`'s numeric-bypass ("100" is
+  unreachable by name) — symmetric shape, different trigger (a reserved keyword vs. an
+  all-digit string). **Workaround**: filter on the component's numeric id instead, via the raw
+  JQL escape hatch already available on `issue list`: `jr issue list --jql "component = <id>"`
+  (look up the id via `jr component list --output json | jq`). There is no `--component`-flag
+  workaround, since the flag's `none` value is unconditionally reserved.
+**Verification Properties**:
+- VP-COMPONENT-015: `none` composes `component is EMPTY` with zero resolver HTTP, PROVIDED a
+  project scope is available (Precondition 2); the `none`+any-other-value combination guard
+  is exit-64 pre-flight (no HTTP); `none` with no project scope at all is ALSO exit-64
+  pre-flight (EC-2.1.020-3 / BC-2.1.022 EC-2.1.022-2), never an unscoped org-wide search.
+**Trace**: F1 delta analysis §2
+
+---
+
+#### BC-2.1.021: `--component all:<NAME1>,<NAME2>` → AND-combined `component = id1 AND component = id2`
+
+**Confidence**: HIGH
+**Source**: F1 delta analysis §2 (BA note: distinct JQL shape from the OR-list form, since
+Jira issues can carry multiple components); `src/cli/issue/list.rs` (pending F4)
+**Subject**: Issue read — `--component` filter (issue #606)
+**Behavior**: `all:<NAME1>,<NAME2>,...` (comma-separated names after the `all:` prefix, ONE
+`--component all:...` occurrence) requires an issue to carry EVERY listed component
+simultaneously — this needs `AND`, not `IN`, because `component in (...)` is inherently an
+OR/any-of test. Each comma-separated name resolves independently via §8.4 (same project
+scope, same failure handling as BC-2.1.018) before composition. The composed clause is
+`component = <id1> AND component = <id2> AND ...` (repeated equality, AND-joined — NOT
+`component in (...) AND` anything, since Jira has no native "array contains all of" JQL
+operator for a multi-valued field; repeated equality on the same field is the correct JQL
+idiom for "has both X and Y" per Jira's documented multi-select field semantics).
+`--component all:X` (a SINGLE name after `all:`, no comma) degenerates to a one-term AND —
+`component = id1` — functionally identical to `--component X` (BC-2.1.018 with one value)
+but composed via a DIFFERENT code path; both are valid, equivalent JQL.
+**Preconditions**:
+1. At most ONE `--component all:...` occurrence per invocation (repeating `all:` — e.g.
+   `--component all:X --component all:Y` — is rejected: exit 64, `"--component all: may only
+   be specified once; comma-separate multiple names within one all: value."`).
+2. `all:` is NOT combined with bare/`not:`/`none` `--component` values in the same invocation
+   (mirrors BC-2.1.020's `none` isolation guard — mixing AND-semantics with OR/negation
+   semantics in one filter dimension is rejected rather than given an implicit precedence).
+**Postconditions**:
+1. The composed clause is `component = <id1> AND component = <id2> AND ...`, resolved names
+   in the CLI-supplied comma-separated order.
+**Edge Cases**:
+- EC-2.1.021-1: `--component all:Backend,Frontend` → `component = 10001 AND component =
+  10002` (two-term AND).
+- EC-2.1.021-2: `--component all:Backend --component Frontend` (mixing `all:` with a bare
+  value) → exit 64 pre-flight (Precondition 2), zero HTTP.
+- EC-2.1.021-3 **[NEW 2026-08-15, P6 fix-burst — documents reserved-syntax collisions found by
+  adversarial spec-delta review pass 6, LOW-1]**: two distinct collisions, symmetric with
+  `none`'s documented gap (EC-2.1.020-4) and `not:`'s (EC-2.1.019-3): (a) a component literally
+  NAMED `all:Backend` is UNREACHABLE via `--component all:Backend` — the leading `all:` prefix
+  is always interpreted as the reserved AND-list syntax (Behavior above), never as a literal
+  name containing a colon; (b) a component whose NAME itself contains a comma (e.g.
+  `"Backend, Legacy"`) is UNREACHABLE within an `all:` list — the comma-separated parser
+  (Behavior above) always splits on every comma in the `all:` value, so such a name is silently
+  misinterpreted as two separate names to resolve rather than one name containing a comma, and
+  either fails to resolve (exit 64, not-found) or — in the unlikely case both split fragments
+  happen to independently resolve to real components — silently composes the WRONG AND-clause.
+  **Workaround (both cases)**: filter on the component's numeric id via the raw JQL escape
+  hatch: `jr issue list --jql "component = <id>"` (look up the id via `jr component list
+  --output json | jq`). There is no `--component`-flag workaround for either collision, since
+  the `all:` prefix and the comma separator are both unconditionally reserved.
+**Verification Properties**:
+- VP-COMPONENT-015: `all:` composes `component = id1 AND component = id2 …` (AND-joined, not
+  `IN`); the repeated-`all:` and `all:`+bare/`not:`/`none` combination guards are exit-64
+  pre-flight (no HTTP).
+**Trace**: F1 delta analysis §2
+
+---
+
+#### BC-2.1.022: Unresolvable or ambiguous `--component` name → exit 64 BEFORE any JQL search fires, listing valid names or candidates for the resolved project scope
+
+**Confidence**: HIGH
+**Source**: Precedent BC-2.1.012 (asset ambiguity, no issue search fired), BC-2.1.014
+(status NOMATCH listing pattern); §8.4 resolver contracts (BC-8.4.002/003);
+`src/cli/issue/list.rs` (pending F4)
+**Subject**: Issue read — `--component` filter (issue #606)
+**Behavior**: Any `--component` value that is NOT the reserved `none` keyword resolves via
+§8.4 BEFORE JQL composition. Zero matches (BC-8.4.002) → exit 64, `"Component '<input>' not
+found in project <key>. Available: <comma-joined alphabetical list>."` — mirrors BC-2.1.014's
+shape exactly. 2+ matches (BC-8.4.003) → exit 64, `"Ambiguous component '<input>'. Matches:
+<candidates>."` — mirrors BC-2.1.013's shape exactly. In BOTH cases, `POST /rest/api/3/
+search/jql` is NEVER called — the resolution failure short-circuits before the issue search
+fires, matching BC-2.1.012's "no issue search fired" invariant for the analogous asset case.
+**Edge Cases** **[NEW 2026-08-15, M2 fix-burst]**:
+- EC-2.1.022-1: `--component <NAME>` (bare/`not:`/`all:`) with no `--project` and no
+  configured default project → the project-scoped §8.4 resolver GET
+  (`/rest/api/3/project/{key}/components`) has no project key to target. `jr` exits 64
+  pre-flight BEFORE attempting the call, naming `--project` (same "no default scope" posture
+  as BC-2.1.006), rather than issuing a malformed request or guessing a project.
+- EC-2.1.022-2: `--component none` with no `--project` and no configured default project →
+  despite requiring zero resolver HTTP (BC-2.1.020 Postcondition 1), `none` is NOT exempt
+  from the project-scope requirement (BC-2.1.020 Precondition 2): `jr` exits 64 pre-flight,
+  `"--component none requires --project (or a configured default project) to avoid an
+  unrestricted org-wide search."` This prevents `component is EMPTY` from ever composing as
+  an unscoped, unbounded cross-project JQL clause. `POST /rest/api/3/search/jql` is never
+  called.
+**Verification Properties**:
+- VP-COMPONENT-013: Unresolvable/ambiguous `--component` value (bare, `not:`, or within an
+  `all:` list) → `POST /rest/api/3/search/jql` is never called (`.expect(0)`), mirroring
+  BC-2.1.012's `.expect(0)` pattern for `--asset`.
+**Trace**: BC-2.1.012; BC-2.1.013; BC-2.1.014; BC-8.4.002; BC-8.4.003
 
 ---
 
@@ -462,6 +757,113 @@ Attachment Read (2.7).
 **JSON output (corrected)**: unaffected by this BC, but NOT because JSON output is "raw passthrough" — `issue view --output json` serializes the TYPED `Issue`/`IssueFields` struct via `output::render_json` (`src/cli/issue/view.rs`: `render_json(&issue)`), not the raw Jira response body. `duedate` surfaces there because (a) `BASE_ISSUE_FIELDS` requests it from Jira — that amendment is contracted by **BC-2.2.028**, not BC-2.3.036 (BC-2.3.036 contracts `get_issue`'s DEserialization of the response Jira sends back, which is a consequence of BC-2.2.028's request-field change, not the request change itself; `get_issue` and `search_issues` share the one `BASE_ISSUE_FIELDS` constant per BC-2.2.028's amendment note) — and (b) `IssueFields.duedate` is a plain `Option<String>` field with no `#[serde(skip_serializing_if)]` attribute, matching the existing `created`/`updated` fields' serialization behavior (serializes as JSON `null` when `None`, never omitted). Both conditions must hold for the JSON path to work; this BC does not introduce a renderer change (see JSON-render-invariant confirmation below), but "no renderer change" is not the same claim as "raw passthrough."
 
 **Trace**: F2 spec evolution (issue #668, 2026-08-13); precedent: `Created`/`Updated` rows in `handle_view`; `.factory/feature-delta/668-duedate/delta-analysis.md` Open Questions #3, #4; adversarial F2 review (2026-08-13) F1/F5/F6 corrections; human-directed simplification fix-round (2026-08-13) — parse/reformat machinery removed, verbatim-display substituted
+
+---
+
+#### BC-2.3.040: `Component` struct (`src/types/jira/issue.rs`) gains an `id: Option<String>` field alongside the existing `name: String`
+
+**[UPDATED 2026-08-15, M8 fix-burst]** `id` is `Option<String>`, NOT a required `String`.
+**Previous version (superseded, retained for audit trail):** "`id: String` field... REQUIRED
+(non-`Option`)... A fixture with `components: [{"name": "Backend"}]` (no `id` key)... FAILS to
+deserialize... a BREAKING change to the deserialization contract." That design made a single
+component missing `id` on ANY issue (e.g. Compass-adjacent drift, a non-standard third-party
+add-on's edge response, or any future Jira response shape this BC did not anticipate) hard-fail
+`get_issue`/`search_issues` deserialization for the ENTIRE issue — including `issue view`
+and `issue list` for issues that have nothing to do with the `jr component` command group.
+That blast radius is disproportionate to what `id` is needed for (see Behavior below), so the
+field is corrected to `Option<String>` here, with enforcement pushed to the specific call
+sites that actually need a real id, per Invariant 2.
+
+**Confidence**: HIGH
+**Source**: F1 delta analysis §2 ("`Component` struct currently lacks an `id` field — every
+one of the four issues needs it"); F1 delta analysis §2 (precedent: the 2026-08-13 `duedate`
+amendment shape, BC-2.2.028/BC-2.3.036 — additive field on an existing nullable struct,
+amend-in-place); adversarial spec-delta review pass 1 M8 (2026-08-15) — non-Option `id`
+hard-fails `issue view`/`issue list` deserialization for ALL issues-with-components on a
+single absent id, disproportionate for a display-only struct; `src/types/jira/issue.rs::
+Component` (pending F4)
+**Subject**: Issue read — shared prerequisite for #604/#605/#606/#608
+**Behavior**: `src/types/jira/issue.rs::Component` currently deserializes ONLY `name: String`
+(`fields.components[].name`). This BC amends it to ALSO deserialize `id: Option<String>`
+(`fields.components[].id`), matching the wire shape Jira actually returns (every component
+object in a real API response carries both `id` and `name` in the documented case, but this
+field is tolerant of the id being absent — see Description above for why non-optional was
+rejected). This is the SINGLE shared prerequisite change every one of the four
+component-management issues (#604/#605/#606/#608) implicitly depends on: without a
+struct-level `id`, `jr` cannot distinguish two same-named components across projects
+(BC-8.4.004's core invariant) purely from a deserialized `Issue`/component-list response — but
+that distinguishing need is scoped to the specific call sites that consume `id` for
+identity/disambiguation purposes (Invariant 2), not to `Issue` deserialization as a whole.
+**Preconditions**:
+1. This amendment applies to the standalone `Component` struct used for the `fields.
+   components` array on an `Issue` (the "embedded, name-plus-id" shape) — it is DISTINCT from
+   the fuller component RESOURCE shape (id, name, description, lead, assigneeType, project)
+   introduced by `src/types/jira/component.rs` for the `jr component` command group (BC-8.1.*)
+   — the two types serve different call sites and are NOT unified by this BC. `Component`
+   (this file) is embedded on an `Issue`; the new `types/jira/component.rs` type is the
+   full resource returned by `/rest/api/3/component/*` and `/rest/api/3/project/{key}/
+   components`. **This BC's `Option<String>` relaxation applies ONLY to the embedded
+   `Component` struct.** The full resource type (`types/jira/component.rs::Component`, used by
+   the `jr component` command group's list/create/edit/delete/rename endpoints and by §8.4's
+   `resolve_component` resolver) is UNCHANGED by this BC — its `id` field stays a required,
+   non-optional `String`, because `GET /rest/api/3/project/{key}/components` (the endpoint
+   that populates the resolver's candidate list) is documented to always return `id` on every
+   element, and §8.4's resolver depends on a real id to construct numeric JQL/wire values;
+   relaxing THAT type would silently weaken the resolver's guarantees, which is not this BC's
+   intent.
+**Postconditions**:
+1. `Component { id: Option<String>, name: String }` deserializes both fields from any fixture
+   containing `{"id": "...", "name": "..."}` inside `fields.components[]` (`id` populated as
+   `Some(...)`).
+2. A fixture with `components: [{"name": "Backend"}]` (no `id` key) deserializes SUCCESSFULLY,
+   with `id: None` — this is NOT a breaking change (reversing the prior, superseded
+   Postcondition 2, which required a serde failure here). `tests/common/fixtures.rs` and any
+   inline test fixture supplying `components` are NOT required to add an `id` key as a
+   correctness matter, though existing fixtures that already carry realistic `id` values are
+   unaffected and continue to deserialize as `Some(...)`.
+**Invariants**:
+1. `Component.name` remains non-optional `String`; `Component.id` is `Option<String>` —
+   these are asymmetric, not "both non-optional" as the prior version stated.
+2. **Resolver-side enforcement.** Any code path that NEEDS a real component id for identity
+   or cross-project disambiguation (BC-8.4.004's invariant; e.g. a future `issue view --output
+   json` consumer that wants to feed a displayed component's id into `--component` filtering,
+   or any equivalent identity-sensitive use of THIS embedded struct) MUST treat `id: None` as
+   "cannot disambiguate this component reference" and handle it explicitly (e.g. exclude it
+   from an id-keyed lookup, or surface it distinctly in rendering) — it MUST NOT `.unwrap()`
+   or otherwise assume `Some`. This BC does not itself define such a consumer; it only
+   establishes that the type permits `None` and that consumers are responsible for handling
+   it. §8.4's `resolve_component` resolver is UNAFFECTED (Precondition 1) since it never reads
+   THIS struct's `id` — it reads the full resource type's `id`, which remains required.
+   **[CLARIFIED 2026-08-15, L4 fix-burst — pass 3, states this honestly rather than implying an
+   active driver, per a gap found by adversarial spec-delta review pass 3]** To be explicit:
+   this embedded struct's `id: Option<String>` field has NO in-cycle consumer as of this F2
+   burst. Every consumer of a component id across the four component-management issues
+   (#604/#605/#606/#608) reads the FULL resource type's required `String` id (via
+   `resolve_component`/§8.4, per Precondition 1 above) — `issue view`/`issue list`'s rendering
+   of `fields.components[]` (this embedded struct) displays `name` only and never reads `id`
+   (EC-2.3.040-2). This field is added as a FORWARD-LOOKING prerequisite (matching the wire
+   shape Jira actually returns, so a future consumer does not require another struct amendment)
+   and to keep this codebase's `Issue` deserialization tolerant of a component entry that
+   omits `id`; it is not backing any consumer this cycle implements or requires.
+**Edge Cases**:
+- EC-2.3.040-1: Existing test fixtures asserting `components[0].name == "Backend"` continue to
+  compile and pass unchanged (BC-2.3.036's `get_issue` deserialization test family,
+  `src/types/jira/issue.rs::tests`) — no fixture update is required by this BC (contrast the
+  prior, superseded version, which mandated one).
+- EC-2.3.040-2 **[NEW 2026-08-15, M8 fix-burst]**: A fixture/live response where a component
+  entry inside `fields.components[]` omits `id` (Compass-adjacent drift or any non-standard
+  edge response) → `issue view`/`issue list` deserialization SUCCEEDS for the whole issue;
+  that one component's `id` is `None`; display rendering (issue view/list's components
+  column) is unaffected since it renders `name` only and never reads `id`.
+**Verification Properties**:
+- VP-COMPONENT-020: `Component { id: Option<String>, name: String }` deserializes both fields
+  from `{"id":"…","name":"…"}` (`id: Some(...)`) AND from `{"name":"…"}` alone (`id: None`,
+  no deserialization error); the embedded (`fields.components[]`) type stays distinct from the
+  full `types/jira/component.rs` resource type, whose `id` remains required (Precondition 1).
+**Trace**: F1 delta analysis §2; BC-2.2.028/BC-2.3.036 (structural amendment precedent,
+`duedate`); BC-8.4.004 (the cross-project-id-non-collision invariant this field supports, via
+the SEPARATE full-resource `Component` type, not this embedded one); adversarial spec-delta
+review pass 1 M8
 
 ---
 
@@ -1046,4 +1448,4 @@ All issue-read errors follow the universal pattern (BC-X.3.012):
 
 Pass 3 sources: `tests/issue_list_errors.rs`, `tests/issue_view_errors.rs`, `tests/comments.rs`
 
-## Total BCs in this file: 66 individually-bodied (cumulative 108 incl. range-collapsed; see BC-INDEX.md)
+## Total BCs in this file: 72 individually-bodied (cumulative 114 incl. range-collapsed; see BC-INDEX.md)

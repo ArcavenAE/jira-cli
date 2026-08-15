@@ -35,20 +35,21 @@ the gap between current code and these contracts.
 | File | Bounded Context | L3 BCs | Pass 3 source |
 |------|----------------|--------|--------------|
 | [bc-1-auth-identity.md](bc-1-auth-identity.md) | Auth & Identity | BC-1.*.* (57) | BC-001..024 + BC-025..035 + BC-1140..1178 |
-| [bc-2-issue-read.md](bc-2-issue-read.md) | Issue Read | BC-2.*.* (94) | BC-101..124 + BC-125..150 + BC-1036..1055 |
-| [bc-3-issue-write.md](bc-3-issue-write.md) | Issue Write | BC-3.*.* (140) | BC-201..225 + BC-1056..1081 + BC-3.8.001..017 |
+| [bc-2-issue-read.md](bc-2-issue-read.md) | Issue Read | BC-2.*.* (114) | BC-101..124 + BC-125..150 + BC-1036..1055 |
+| [bc-3-issue-write.md](bc-3-issue-write.md) | Issue Write | BC-3.*.* (144) | BC-201..225 + BC-1056..1081 + BC-3.8.001..017 |
 | [bc-4-assets-cmdb.md](bc-4-assets-cmdb.md) | Assets & CMDB | BC-4.*.* (32) | BC-301..315 + BC-316..324 + BC-1136..1137 |
 | [bc-5-boards-sprints.md](bc-5-boards-sprints.md) | Boards & Sprints | BC-5.*.* (35) | BC-401..410 + BC-1138 |
 | [bc-6-config-cache.md](bc-6-config-cache.md) | Configuration & Cache | BC-6.*.* (42) | BC-901..911 + BC-1001..1016 + BC-6.3.001 (NFR-R-D) + BC-6.2.015 (profile-fence) |
 | [bc-7-output-render.md](bc-7-output-render.md) | Output Rendering | BC-7.*.* (90) | BC-1101..1118 + BC-1104..1118 (snapshots) + ADF (54) |
+| [bc-8-components.md](bc-8-components.md) | Component Management | BC-8.*.* (28) | F1 delta analysis + research (component-delete-and-bulk-wire-2026-08-15.md), issues #604/#605/#606/#608 — new 2026-08-15 |
 | [cross-cutting.md](cross-cutting.md) | Cross-cutting | BC-X.*.* (145) | BC-601..606 + BC-701..709 + BC-801..808 + BC-1082..1103 + BC-1201..1214 + BC-1401..1411 + Worklogs/Teams/Users/Projects + BC-X.12.001..008 + BC-X.8.006..007 |
 | [nfr-catalog.md](nfr-catalog.md) | NFR Catalog | 41 NFRs | Pass 4 R4 + ADV-P3-007 (1C/6H/15M/19L); NFR-O-K merged into NFR-S-D per ADV-P7-002 |
 | [error-taxonomy.md](error-taxonomy.md) | Error taxonomy | 11 variants | BC-1204 + exit code table |
 | [edge-case-catalog.md](edge-case-catalog.md) | Edge cases | cross-cutting | Pass 3 §5 untested gaps |
 | [holdout-scenarios.md](holdout-scenarios.md) | Holdout scenarios | 106 | H-001..H-047 + H-NEW-MP-001 + H-NEW-VERBOSE-001 + H-NEW-VERBOSE-002 + H-NEW-AUTH-002 + H-NEW-JSM-RT-001..H-NEW-JSM-RT-007 + H-CITE-001..H-CITE-003 + H-NEW-ADF-001..H-NEW-ADF-008 + H-NEW-SEC-001..H-NEW-SEC-002 + H-NEW-ADF-009..H-NEW-ADF-010 + H-NEW-EDIT-FIELD-001..H-NEW-EDIT-FIELD-002 + H-NEW-EDIT-TYPE-001..H-NEW-EDIT-TYPE-002 + H-NEW-CHANGELOG-001 + H-NEW-WORKLOG-ADD-001 + H-NEW-LINK-001 + H-NEW-QUEUE-VIEW-001 + H-NEW-LABEL-FORK-001 + H-NEW-DRY-RUN-001 + H-NEW-BOARD-VIEW-001 + H-NEW-COMMENT-001..H-NEW-COMMENT-005 + H-NEW-ATTACHMENT-001..H-NEW-ATTACHMENT-012 + H-NEW-PREFLIGHT-001..H-NEW-PREFLIGHT-006 (informational; canonical count is `total_holdouts:` frontmatter in holdout-scenarios.md) |
-| [BC-INDEX.md](BC-INDEX.md) | Master BC index | 657 | All BCs with traceability; count maintained by check-bc-cumulative-counts.sh 8 surfaces; README is informational — see BC-INDEX.md |
+| [BC-INDEX.md](BC-INDEX.md) | Master BC index | 699 | All BCs with traceability; count maintained by check-bc-cumulative-counts.sh 8 surfaces; README is informational — see BC-INDEX.md |
 
-**Total BCs in PRD:** 657 (538 imported range-collapsed + 3 formalized: BC-6.3.001 from NFR-R-D draft + BC-6.2.015 profile-fence + BC-X.4.009 from ADV-P1-029; +4 BC-7.4.013-016; +2 BC-2.6.050-051; +1 BC-3.4.009; +18 BC-3.8.001..010 + BC-X.12.001..008; +1 BC-3.8.011 #288 F1d; +2 BC-3.8.012..013 #383 F2; +4 BC-3.8.014..015 + BC-X.8.006..007 #384 F2; +2 BC-3.8.016..017 #385 F2; +2 BC-3.4.010..011 #388 F2; +3 BC-3.4.012..014 #398 F2; +3 BC-3.4.015..017 #396 F2; +2 BC-3.4.018..019 #331 F2; +1 BC-3.2.013 jsm-resolution-required F2; +1 BC-7.2.006 #470; +2 BC-X.8.008..009 S-QUEUE-BC-1; +1 BC-3.2.014 fix-bulk-transition-schema; +2 BC-7.2.007..008 #474; +1 BC-7.2.009 #483; +1 BC-7.2.010 #471; +3 BC-6.1.014 + BC-6.2.016..017 windows-build F2; +1 BC-7.2.011 #492; +1 BC-2.4.043 2026-06-17 Bundle C CR-001; +3 BC-X.13.001..003 2026-06-19 PG-A/DRIFT-README; +1 BC-7.2.012 2026-06-24 SEC-001 ADF recursion depth limit)
+**Total BCs in PRD:** 699 — see [BC-INDEX.md](BC-INDEX.md) and [CANONICAL-COUNTS.md](CANONICAL-COUNTS.md) for the authoritative, script-verified grand total and full addition history (this README table is informational and has known pre-existing drift on some per-file counts predating this note; BC-INDEX.md/CANONICAL-COUNTS.md are the enforced sources of truth per `scripts/check-bc-cumulative-counts.sh`). Most recent addition: +38 BCs 2026-08-15 via F2 spec evolution, component-management bundle, issues #604/#605/#606/#608 — new `bc-8-components.md` (+28, `jr component` command group) + BC-2.1.018..022 + BC-2.3.040 (+6, `issue list --component` filter + Component.id prerequisite) + BC-3.4.022..025 (+4, `issue create/edit --component`).
 
 ---
 
@@ -56,7 +57,7 @@ the gap between current code and these contracts.
 
 ```
 BC-S.SS.NNN where:
-  S   = Bounded context (1-7; X = cross-cutting)
+  S   = Bounded context (1-8; X = cross-cutting)
   SS  = Subdomain within context (01-99)
   NNN = Sequence within subdomain (001-999)
 
