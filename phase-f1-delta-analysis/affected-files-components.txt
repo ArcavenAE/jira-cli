@@ -1,0 +1,15 @@
+NEW src/cli/component.rs
+NEW src/api/jira/components.rs
+NEW src/types/jira/component.rs
+MODIFIED src/cli/mod.rs
+MODIFIED src/cache.rs
+MODIFIED src/cli/issue/helpers.rs
+MODIFIED src/cli/issue/edit.rs
+MODIFIED src/cli/issue/create.rs
+MODIFIED src/cli/issue/list.rs
+MODIFIED src/jql.rs
+MODIFIED src/api/jira/issues.rs
+DEPENDENT src/types/jira/mod.rs
+DEPENDENT src/api/jira/mod.rs
+DEPENDENT src/types/jira/editmeta.rs
+DEPENDENT src/partial_match.rs
