@@ -9,6 +9,42 @@ Track all spec version changes. Most recent version first.
 
 > **Type legend:** Type classifies the SPEC document delta: MINOR = new BCs/VPs/sections; PATCH = amendments to existing bodies/ACs/ECs. Product-semver impact is recorded in the Summary line, independent of Type.
 
+## [1.3.182] - 2026-08-14
+
+### Type: PATCH
+
+### Summary
+
+Trivial citation refresh for **S-MUTANTS-SCOPE-1**, closing adversarial finding F-3 (LOW).
+BC-X.3.006's `Source:` field still pointed at the pre-refactor `tokio::select!` block inline
+in `run()` (`src/main.rs::run` `~415`) after F4's behavior-preserving refactor (delivered on
+branch `test/mutants-scope-queue-main`, not yet merged) moved that block into a new
+`run_until_shutdown` function and shifted the `RunOutcome::Interrupted` match arm. No BC/VP
+count change, no behavioral change — string-only citation fix.
+
+### Changed Requirements
+
+- `cross-cutting.md` (AMENDED): BC-X.3.006 `**Source**:` field updated to point at the
+  `RunOutcome::Interrupted` match arm and note the current post-refactor locations —
+  `run_until_shutdown` at `src/main.rs:~174`, interrupt arm at `src/main.rs:~526` (branch
+  `test/mutants-scope-queue-main` line numbers; correct and intended since this BC ships
+  with the story). Symbol-form `src/main.rs::run` citation retained (present on both
+  develop and the story branch) per the project's citation-form convention (#408 — prefer
+  `<file>::<fn>` over line numbers, which drift); any retained line hints use the
+  approximate `:~NN` form, never a bare `:415`.
+
+### Impact Assessment
+
+| Artifact | Change Type | Notes |
+|----------|-------------|-------|
+| `.factory/specs/prd/cross-cutting.md` | MODIFIED (BC-X.3.006 Source citation only) | No count change (85 individually-bodied / 151 cumulative, unchanged) |
+| `scripts/check-bc-citation-symbols.sh` | Verified against develop `src/` | See guard-run note below — passes; `run_until_shutdown`/`~526` are branch-only locations, kept out of guard-scanned backtick `src/...` symbol tokens by design |
+
+- **Affected stories:** S-MUTANTS-SCOPE-1 (adversarial finding F-3 closure only).
+- **Migration needed:** NO — citation-string-only change, no `src/` production behavior touched.
+
+---
+
 ## [1.3.181] - 2026-08-14
 
 ### Type: PATCH
