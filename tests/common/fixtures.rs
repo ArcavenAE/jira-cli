@@ -482,3 +482,98 @@ pub fn write_profile_config(config_home: &std::path::Path, base_url: &str) {
     )
     .unwrap();
 }
+
+// ── S-604-1: Component fixtures ──────────────────────────────────────────────
+
+/// Build one component resource object as returned by
+/// `GET /rest/api/3/project/{key}/components` and
+/// `GET /rest/api/3/component/{id}`.
+///
+/// Includes all fields BC-8.1.002 lists as part of the component resource:
+/// id, name, description, lead, assigneeType, project.  Fields passed as
+/// `None` appear in the JSON as `null` (never omitted) — mirroring Jira's
+/// actual response shape and making BC-8.1.002's "no field is dropped"
+/// assertion testable.
+pub fn component_response(
+    id: &str,
+    name: &str,
+    description: Option<&str>,
+    lead_name: Option<&str>,
+    assignee_type: Option<&str>,
+) -> Value {
+    let lead = lead_name.map(|n| {
+        json!({
+            "accountId": format!("acc-{}", id),
+            "displayName": n,
+        })
+    });
+    json!({
+        "id": id,
+        "name": name,
+        "description": description,
+        "lead": lead,
+        "assigneeType": assignee_type,
+        "project": serde_json::Value::Null,
+    })
+}
+
+/// Array response for `GET /rest/api/3/project/{key}/components`.
+/// Jira returns a plain JSON array (no envelope wrapper).
+pub fn component_list_response(components: Vec<Value>) -> Value {
+    json!(components)
+}
+
+/// Response for `GET /rest/api/3/component/{id}/relatedIssueCounts`.
+///
+/// The live Jira Cloud endpoint returns `{"self": "…", "issueCount": N}` —
+/// the `"id"` field is NOT present (F-3 fix: mock-vs-live drift). This fixture
+/// exercises the real id-absent shape so tests catch any revert of the
+/// `#[serde(default)]` guard on `RelatedIssueCounts.id`.
+pub fn related_issue_counts_response(count: u64) -> Value {
+    json!({ "issueCount": count })
+}
+
+/// Extended component response fixture supporting populated `project` and
+/// `isAssigneeTypeValid` fields.
+///
+/// Used by F-B2 (adversarial pass-3 — counts JSON superset invariant) and
+/// F-B3 (populated-project round-trip coverage).  All fields passed as `None`
+/// behave identically to `component_response` — this fixture is a strict
+/// superset of that one.
+///
+/// `is_assignee_type_valid: Some(true/false)` causes `"isAssigneeTypeValid"`
+/// to appear in the JSON body so `Component.is_assignee_type_valid` deserializes
+/// as `Some(...)` and is then re-emitted by the Component serializer (which has
+/// `skip_serializing_if = "Option::is_none"`).
+pub fn component_response_with_flags(
+    id: &str,
+    name: &str,
+    description: Option<&str>,
+    lead_name: Option<&str>,
+    assignee_type: Option<&str>,
+    project: Option<&str>,
+    is_assignee_type_valid: Option<bool>,
+) -> Value {
+    let lead = lead_name.map(|n| {
+        json!({
+            "accountId": format!("acc-{}", id),
+            "displayName": n,
+        })
+    });
+    let project_value: Value = match project {
+        Some(p) => json!(p),
+        None => Value::Null,
+    };
+    let mut obj = json!({
+        "id": id,
+        "name": name,
+        "description": description,
+        "lead": lead,
+        "assigneeType": assignee_type,
+        "project": project_value,
+    });
+    if let Some(v) = is_assignee_type_valid {
+        obj["isAssigneeTypeValid"] = json!(v);
+    }
+    obj
+}
