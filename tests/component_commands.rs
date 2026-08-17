@@ -3660,8 +3660,9 @@ async fn test_bc_8_1_007_component_edit_name_collision_400_surfaced() {
 // S-604-3: `jr component delete` — disposition-required, snapshot-before-delete
 // safety (DEC-279). SAFETY-CRITICAL — tdd_mode: strict.
 //
-// BC anchors: BC-8.2.001–BC-8.2.008. All tests below are RED at Red Gate:
-// `handle_delete` is `todo!()`.
+// BC anchors: BC-8.2.001–BC-8.2.008. `handle_delete` (`src/cli/component.rs`)
+// is fully implemented; all tests below are green against the shipped
+// disposition-required, snapshot-before-delete handler.
 //
 // Ordering assertions (BC-8.2.007 "a mutant that reorders snapshot/DELETE
 // must fail") use `server.received_requests()` position comparison — the
@@ -3771,14 +3772,12 @@ async fn test_bc_8_2_001_component_delete_neither_flag_exits_64_zero_http() {
 /// `conflicts_with` violation, structurally distinct from AC-001's
 /// application-level exit-64 guard.
 ///
-/// NOTE (Red Gate): unlike every other S-604-3 test, this one PASSES both
-/// before and after `handle_delete` is implemented — `conflicts_with` on
-/// `ComponentSubcommand::Delete` (`src/cli/mod.rs`) is clap-derive parse-time
-/// validation, already wired independently of the still-`todo!()` handler
-/// body; the handler is never reached for a conflicting pair. Same
-/// pre-existing pattern as `test_bc_8_1_005_component_create_bad_assignee_type_exits_2`
-/// above. This is the one test in this Red Gate report that is expected to
-/// be green at Red Gate, not a false/tautological pass.
+/// NOTE: this case is enforced entirely at the clap-derive layer —
+/// `conflicts_with` on `ComponentSubcommand::Delete` (`src/cli/mod.rs`) is
+/// parse-time validation, independent of `handle_delete`'s (now fully
+/// implemented, `src/cli/component.rs`) body; the handler is never reached
+/// for a conflicting pair. Same pre-existing pattern as
+/// `test_bc_8_1_005_component_create_bad_assignee_type_exits_2` above.
 #[tokio::test]
 async fn test_bc_8_2_001_component_delete_both_flags_clap_exit_2() {
     let cache = TempDir::new().unwrap();
@@ -4132,6 +4131,145 @@ async fn test_bc_8_2_002_component_delete_honors_global_project_flag() {
         Some(0),
         "BC-8.2.002 S-604-3: expected exit 0 when project is supplied via the \
          global --project flag; got {:?}\nstderr: {}",
+        output.status.code(),
+        String::from_utf8_lossy(&output.stderr)
+    );
+}
+
+// ── F5-A-L2 (BC-8.1.005 — global --project flag propagation for create) ──────
+
+/// F5-A-L2 coverage pin / fix: prior to this fix, `ComponentSubcommand::Create`
+/// declared its local `project` field as a clap `required = true` `String`
+/// (not `Option<String>`), which meant clap's normal global-arg-value
+/// propagation into a subcommand's OWN field (the same mechanism proven for
+/// `component edit`/`component delete` in the two sibling tests above) could
+/// NOT satisfy the LOCAL required-arg check: a value supplied ONLY in the
+/// global position (`jr --project FOO component create Backend`) failed with
+/// clap's own "required arguments were not provided: --project" (exit 2) —
+/// EMPIRICALLY VERIFIED against a live binary before this fix — even though
+/// the exact same global-position flag already worked for every other `jr
+/// component` subcommand. `handle()`'s dispatch now explicitly merges
+/// `project.or_else(|| project_flag.map(str::to_string))` before calling
+/// `handle_create`, which itself enforces presence (exit 64, no `.jr.toml`
+/// config fallback per BC-8.1.004/BC-8.1.005) — restoring parity with
+/// list/edit/delete's already-working global-flag support. This is the ONE
+/// real (non-false-positive) divergence found in the F5-A-L2 sweep.
+#[tokio::test]
+async fn test_bc_8_1_005_component_create_honors_global_project_flag() {
+    let cache = TempDir::new().unwrap();
+    let config = TempDir::new().unwrap();
+    let server = MockServer::start().await;
+    // Write a profile config with NO default project — the global --project
+    // flag is the ONLY source of the project key.
+    write_profile_config(config.path(), &server.uri());
+
+    Mock::given(method("POST"))
+        .and(path("/rest/api/3/component"))
+        .and(body_json(json!({"name": "Backend", "project": "FOO"})))
+        .respond_with(
+            ResponseTemplate::new(201)
+                .set_body_json(component_create_response("10001", "Backend", "FOO")),
+        )
+        .expect(1)
+        .mount(&server)
+        .await;
+
+    // Global flag BEFORE the subcommand — no per-subcommand --project.
+    let output = jr_cmd(&server.uri(), cache.path(), config.path())
+        .args(["--project", "FOO", "component", "create", "Backend"])
+        .output()
+        .unwrap();
+
+    server.verify().await;
+    assert_eq!(
+        output.status.code(),
+        Some(0),
+        "F5-A-L2: expected exit 0 when project is supplied via the global \
+         --project flag; got {:?}\nstderr: {}",
+        output.status.code(),
+        String::from_utf8_lossy(&output.stderr)
+    );
+}
+
+/// F5-A-L2 regression: `component create` with NEITHER local nor global
+/// `--project` must exit 64 with an actionable `--project`-naming message
+/// (the new app-level guard in `handle_create`), NOT clap's exit 2 "required
+/// arguments were not provided" — that clap-level enforcement was REMOVED by
+/// the F5-A-L2 fix (the field is now `Option<String>` so a global-position
+/// value can satisfy it), so presence is now enforced by `handle_create`
+/// itself, after the merge. Also pins BC-8.1.004/BC-8.1.005's "no `.jr.toml`
+/// config fallback" invariant for create specifically: a configured default
+/// project in `.jr.toml` must NOT satisfy this guard, unlike `component list`
+/// (see `test_bc_8_1_001_component_list_falls_back_to_configured_project`).
+#[tokio::test]
+async fn test_bc_8_1_005_component_create_no_project_exits_64_not_clap_exit_2() {
+    let cache = TempDir::new().unwrap();
+    let config = TempDir::new().unwrap();
+    let cwd = TempDir::new().unwrap();
+    let server = MockServer::start().await;
+    write_profile_config(config.path(), &server.uri());
+    // .jr.toml DOES configure a default project — create must NOT fall back to it.
+    std::fs::write(cwd.path().join(".jr.toml"), "project = \"FOO\"\n").unwrap();
+
+    Mock::given(method("POST"))
+        .and(path("/rest/api/3/component"))
+        .respond_with(ResponseTemplate::new(201))
+        .expect(0)
+        .mount(&server)
+        .await;
+
+    let output = jr_cmd(&server.uri(), cache.path(), config.path())
+        .args(["component", "create", "Backend"])
+        .current_dir(cwd.path())
+        .output()
+        .unwrap();
+
+    server.verify().await;
+    assert_eq!(
+        output.status.code(),
+        Some(64),
+        "F5-A-L2: expected exit 64 (app-level guard, no .jr.toml fallback for \
+         create), not clap's exit 2; got {:?}\nstderr: {}",
+        output.status.code(),
+        String::from_utf8_lossy(&output.stderr)
+    );
+    let stderr = String::from_utf8_lossy(&output.stderr);
+    assert!(
+        stderr.contains("--project"),
+        "F5-A-L2: expected '--project' mentioned in stderr; got: {stderr}"
+    );
+}
+
+/// F5-A-L2 coverage pin (list side): `component list` already merged the
+/// global `--project` flag via `.or(project_flag)` in `handle()`'s dispatch —
+/// this test pins that global-position `--project` (placed BEFORE the
+/// subcommand, no local `--project`) reaches `handle_list`, completing the
+/// four-subcommand empirical sweep alongside the create/edit/delete siblings
+/// above.
+#[tokio::test]
+async fn test_bc_8_1_001_component_list_honors_global_project_flag() {
+    let cache = TempDir::new().unwrap();
+    let config = TempDir::new().unwrap();
+    let server = MockServer::start().await;
+    write_profile_config(config.path(), &server.uri());
+
+    Mock::given(method("GET"))
+        .and(path("/rest/api/3/project/FOO/components"))
+        .respond_with(ResponseTemplate::new(200).set_body_json(component_list_response(vec![])))
+        .expect(1)
+        .mount(&server)
+        .await;
+
+    let output = jr_cmd(&server.uri(), cache.path(), config.path())
+        .args(["--project", "FOO", "component", "list"])
+        .output()
+        .unwrap();
+
+    server.verify().await;
+    assert!(
+        output.status.success(),
+        "F5-A-L2: expected exit 0 when project is supplied via the global \
+         --project flag; got {:?}\nstderr: {}",
         output.status.code(),
         String::from_utf8_lossy(&output.stderr)
     );
