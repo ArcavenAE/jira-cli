@@ -3,9 +3,26 @@ context: bc-2
 title: "Issue Read (list/view/comments/changelog)"
 total_bcs: 114   # cumulative claim (incl. range-collapsed); definitional_count below is individually-bodied headings
 definitional_count: 72   # count of `#### BC-` headings in this file
-last_updated: 2026-08-15
+last_updated: 2026-08-17
 source_pass: 3
 trace: |
+  - v1.4.1 — F5 scoped-adversarial fix round (2026-08-17, component-mgmt, `issue list
+    --component` filter): resolves findings F5-A-M1/F5-C-001 (human-adjudicated: UNION).
+    `MatchResult::ExactMultiple` (2+ same-project components sharing a case-insensitive name,
+    e.g. `Backend` id 10001 + `backend` id 10005) was underspecified on the read path — a
+    naive reuse of `partial_match`'s first-match-wins return value would silently union to
+    only ONE id, dropping issues tagged with the other duplicate from `issue list --component`
+    results. BC-2.1.018 gains Precondition/Postcondition 3 + EC-2.1.018-3 + VP-COMPONENT-022
+    (bare `in (...)` UNION, ascending-id order within a duplicate's own slot); BC-2.1.019
+    gains Postcondition 3 + EC-2.1.019-4 (`not:` OR-EMPTY-group UNION); BC-2.1.021 gains
+    Postcondition 2 + EC-2.1.021-4 (`all:` parenthesized-OR-of-equalities term per duplicated
+    name); BC-2.1.022 gains EC-2.1.022-3 + a new "ExactMultiple read-path disposition"
+    subsection documenting the deliberate divergence from the mutating path's fail-closed
+    disposition (`component edit`/`delete`/`--move-to`, BC-8.1.008 branch (0), unchanged by
+    this fix — mutations still exit 64 and require the numeric id). Cross-references
+    bc-8-components.md BC-8.4.005, amended in the same round to state both caller-specific
+    dispositions explicitly instead of implying a single universal outcome. No new BC IDs; no
+    count change (114/72). BC-INDEX v6.79→v6.80; spec v1.4.0→v1.4.1 (PATCH).
   - F2 spec evolution, component-management bundle (2026-08-15, issue #606, plus the shared
     prerequisite for #604/#605/#608): BC-2.1.018..022 ADDED — `issue list --component` filter:
     OR-list (018), `not:` with OR-EMPTY (019), reserved `none` keyword (020), `all:` AND-form
@@ -301,6 +318,27 @@ to behave (any-of, not all-of; `all:` is the explicit AND-form, BC-2.1.021).
    occupy two consecutive slots at the position BC-2.1.007 pins, and the overall JQL AND-joins
    them via `build_filter_clauses`' existing `parts.join(" AND ")` composition (no special
    merge logic — each shape independently pushes its own `String` onto `parts`).
+3. **[NEW 2026-08-15, F5-A-M1/F5-C-001 fix — human-adjudicated: UNION]** When a single
+   `--component <NAME>` value resolves to `MatchResult::ExactMultiple` (BC-X.10.003 — the
+   resolved project has 2+ components sharing the same case-insensitive name, e.g. `Backend`
+   id `10001` and `backend` id `10005`; see BC-8.4.005), `jr` does NOT pick one id and does
+   NOT error. It UNIONS every id sharing that case-insensitive name into the SAME `in (...)`
+   list this Postcondition already builds. Concretely: after `partial_match` reports
+   `ExactMultiple(matched_name)`, the resolver re-scans the ALREADY-FETCHED project component
+   list (the same `Vec<Component>` `partial_match`'s candidate names were drawn from — no
+   second HTTP call) for every entry whose `name.to_lowercase() == matched_name.to_lowercase()`,
+   and contributes ALL of their ids — not just the first — to this `--component` value's slot
+   in the `in (...)` list. A single `--component NAME` that resolves to ExactMultiple therefore
+   contributes MULTIPLE ids from ONE CLI occurrence (contrast the ordinary case, where one
+   occurrence contributes exactly one id). Within one value's contributed ids, order is
+   ASCENDING NUMERIC by id (ids are parsed as integers for comparison; this is independent of,
+   and does not disturb, the across-values input-order preservation this Postcondition already
+   specifies — ascending-by-id applies ONLY to sort the ids contributed by a single
+   ExactMultiple value, since `partial_match`/the resolver has no other stable ordering signal
+   for same-named duplicates per BC-8.4.005's confidence rationale). This is a DELIBERATE
+   divergence from the mutating-path disposition for the identical `MatchResult::ExactMultiple`
+   (`component edit`/`delete`/`--move-to` fail closed, exit 64 — BC-8.1.008 branch (0)): see
+   BC-2.1.022's "ExactMultiple read-path disposition" subsection for the full rationale.
 **Edge Cases**:
 - EC-2.1.018-1: Single `--component Backend` → `component in (10001)` (a one-element `IN`
   list is valid JQL, not rewritten to `component = 10001`).
@@ -308,13 +346,30 @@ to behave (any-of, not all-of; `all:` is the explicit AND-form, BC-2.1.021).
   not:Frontend` → composes `component in (10001) AND (component not in (10002) OR component
   is EMPTY)` (two clauses, bare first, AND-joined at the top-level JQL by the normal
   `build_filter_clauses` mechanism); exit 0.
+- EC-2.1.018-3 **[NEW 2026-08-15, F5-A-M1/F5-C-001 fix]**: Project ENG has `Backend` (id
+  `10001`) and `backend` (id `10005`) — a case-only duplicate pair. `--component Backend` →
+  `partial_match` returns `ExactMultiple("Backend")` → per Postcondition 3, `jr` unions BOTH
+  ids: `component in (10001, 10005)`; exit 0. This is a SUPERSET filter (returns issues
+  carrying EITHER duplicate) — the deliberately safe choice for a read-only filter, since
+  the two entries are indistinguishable by name to the user typing `--component Backend`.
+  `--component Backend --component Frontend` where `Frontend` resolves to a single id
+  `10002` (no duplicate) → `component in (10001, 10005, 10002)` — the ExactMultiple value's
+  two ids are contiguous within their own slot; the ordinary single-id value's contribution is
+  unaffected by ExactMultiple handling elsewhere in the list.
 **Verification Properties**:
 - VP-COMPONENT-015: Repeated `--component <NAME>` composes `component in (id1, id2, …)` in
   input order (single clause, not one clause per value); a bare-list and a `not:`-list MAY
   coexist in one invocation, emitting two AND-joined clauses in bare-then-not: order
   (EC-2.1.018-2).
+- VP-COMPONENT-022 **[NEW 2026-08-15, F5-A-M1/F5-C-001 fix]**: A wiremock fixture with two
+  same-project components differing only by case (`Backend`/10001, `backend`/10005) —
+  `--component Backend` composes `component in (10001, 10005)` (both ids present, ascending
+  numeric order), never a single-id clause and never an exit-64 error; the project component-
+  list GET fires exactly once (no second HTTP call to re-derive the duplicate set).
 **Trace**: F1 delta analysis §2; BC-2.1.011 (structural resolve-before-compose precedent);
-BC-8.4.001 (resolver)
+BC-8.4.001 (resolver); BC-8.4.005 (ExactMultiple definition); BC-X.10.003 (`MatchResult::
+ExactMultiple` primitive); BC-2.1.022 (read-vs-mutating divergence documentation);
+F5 adversarial review findings F5-A-M1/F5-C-001 (2026-08-17, human-adjudicated: UNION)
 
 ---
 
@@ -338,6 +393,22 @@ NOT a separate OR-EMPTY clause per value.
    values in the same invocation — see BC-2.1.018 Precondition 3/Postcondition 2 for the
    defined composition (bare clause first, `not:` clause second, both AND-joined). `not:`
    coexistence with `none`/`all:` remains rejected (BC-2.1.020/BC-2.1.021).
+3. **[NEW 2026-08-15, F5-A-M1/F5-C-001 fix — human-adjudicated: UNION]** When a single
+   `--component not:<NAME>` value resolves to `MatchResult::ExactMultiple` (BC-X.10.003; see
+   BC-8.4.005), the SAME UNION rule BC-2.1.018 Postcondition 3 specifies for the bare form
+   applies here: ALL ids sharing that case-insensitive name (re-scanned from the already-
+   fetched candidate list, zero extra HTTP) are unioned into the `not:` group's `not in
+   (id1, id2, ...)` list — the group still emits its single, always-parenthesized
+   `(component not in (...) OR component is EMPTY)` form (Postcondition 1 is unchanged; only
+   the population of `not in (...)`'s id list gains the ExactMultiple union). Ids contributed
+   by one ExactMultiple `not:` value are ordered ascending numeric within their own slot,
+   identical to BC-2.1.018 Postcondition 3's rule. Rationale for UNION here specifically (as
+   opposed to picking one duplicate to exclude): excluding only ONE of the two same-named
+   duplicates would leave issues tagged with the OTHER duplicate incorrectly matching the
+   filter — a silent-incorrect exclusion, the exact class of bug this whole amendment closes
+   for the read path. Unioning both into the exclusion set makes `not:Backend` mean "excludes
+   every component a user would call Backend," which is the intuitive reading `not:` already
+   promises for the untagged/EMPTY case (Behavior above).
 **Edge Cases**:
 - EC-2.1.019-1: `--component not:Backend --component not:Frontend` → single clause
   `(component not in (10001, 10002) OR component is EMPTY)`, not two separate clauses.
@@ -356,12 +427,24 @@ NOT a separate OR-EMPTY clause per value.
   filter on the component's numeric id via the raw JQL escape hatch: `jr issue list --jql
   "component = <id>"` (look up the id via `jr component list --output json | jq`). There is no
   `--component`-flag workaround, since the `not:` prefix is unconditionally reserved.
+- EC-2.1.019-4 **[NEW 2026-08-15, F5-A-M1/F5-C-001 fix]**: Project ENG has `Backend` (id
+  `10001`) and `backend` (id `10005`). `--component not:Backend` → `partial_match` returns
+  `ExactMultiple("Backend")` → per Postcondition 3, `jr` unions both ids into the exclusion
+  set: `(component not in (10001, 10005) OR component is EMPTY)`; exit 0. An issue carrying
+  ONLY `backend` (id 10005) is correctly excluded by this clause — under a hypothetical
+  first-pick-only disposition it would have incorrectly matched (the exact silent-incomplete
+  defect class this fix-round closes, mirrored onto the negated form).
 **Verification Properties**:
 - VP-COMPONENT-015: `not:` composes the single, always-parenthesized `(component not in (…)
   OR component is EMPTY)` group — multiple `not:` values combine within the SAME group, never
   one OR-EMPTY clause per value; a `not:`-list MAY coexist with a bare-list in one invocation
   (EC-2.1.019-2).
-**Trace**: F1 delta analysis §Validated API facts
+- VP-COMPONENT-022: (see BC-2.1.018) also covers the `not:` form — a same-project case-only
+  duplicate pair resolved via `--component not:<NAME>` unions both ids into the `not in (...)`
+  list (EC-2.1.019-4), with the group's OR-EMPTY form unaffected.
+**Trace**: F1 delta analysis §Validated API facts; BC-8.4.005 (ExactMultiple definition);
+BC-2.1.018 Postcondition 3 (shared UNION rule); F5 adversarial review findings
+F5-A-M1/F5-C-001 (2026-08-17, human-adjudicated: UNION)
 
 ---
 
@@ -456,6 +539,30 @@ but composed via a DIFFERENT code path; both are valid, equivalent JQL.
 **Postconditions**:
 1. The composed clause is `component = <id1> AND component = <id2> AND ...`, resolved names
    in the CLI-supplied comma-separated order.
+2. **[NEW 2026-08-15, F5-A-M1/F5-C-001 fix — human-adjudicated: UNION]** Each comma-separated
+   NAME within the `all:` list resolves INDEPENDENTLY (Behavior above). When one of those
+   names resolves to `MatchResult::ExactMultiple` (BC-X.10.003; see BC-8.4.005 — 2+ same-
+   project components share that case-insensitive name), that name's term in the AND-chain is
+   NOT a bare `component = id` equality — it becomes a PARENTHESIZED OR-of-equalities group
+   covering every id sharing the name: `(component = id1 OR component = id2)`. This group is
+   then AND-joined with the other `all:` names' terms exactly as an ordinary single-id term
+   would be. This is the precise, general composition rule: for name `N` at position `i` in
+   the comma-separated list, resolving to id set `{id_a, id_b, ...}` —
+   - `{id_a}` (ordinary, single id) → the term is `component = id_a` (unchanged from
+     Postcondition 1, unparenthesized).
+   - `{id_a, id_b, ...}` (ExactMultiple, 2+ ids) → the term is `(component = id_a OR
+     component = id_b OR ...)`, ids in ascending numeric order within the group, the WHOLE
+     parenthesized group standing in for that one name's position in the AND-chain.
+   The overall clause is therefore `<term_1> AND <term_2> AND ...` in comma-supplied order,
+   where each `<term_i>` is independently either a bare equality or a parenthesized OR-group
+   per the id-set size resolved for that position — never a mix of AND and un-parenthesized OR
+   at the same nesting level (JQL precedence would otherwise misgroup an unparenthesized
+   `component = id1 OR component = id2 AND component = id3` chain). Semantically this
+   preserves the `all:` contract's promise — "the issue must carry EVERY listed component" —
+   because an issue satisfies `(component = id_a OR component = id_b)` if it carries EITHER
+   same-named duplicate, and `all:` only requires that the issue carry SOME component matching
+   each listed NAME, not a specific duplicate's id (the user cannot distinguish `id_a` from
+   `id_b` by name in the first place).
 **Edge Cases**:
 - EC-2.1.021-1: `--component all:Backend,Frontend` → `component = 10001 AND component =
   10002` (two-term AND).
@@ -476,11 +583,26 @@ but composed via a DIFFERENT code path; both are valid, equivalent JQL.
   hatch: `jr issue list --jql "component = <id>"` (look up the id via `jr component list
   --output json | jq`). There is no `--component`-flag workaround for either collision, since
   the `all:` prefix and the comma separator are both unconditionally reserved.
+- EC-2.1.021-4 **[NEW 2026-08-15, F5-A-M1/F5-C-001 fix]**: Project ENG has `Backend` (id
+  `10001`), `backend` (id `10005`), and `Frontend` (id `10002`, no duplicate).
+  `--component all:Backend,Frontend` → `Backend` resolves `ExactMultiple` (two ids),
+  `Frontend` resolves `Exact` (one id) → per Postcondition 2: `(component = 10001 OR
+  component = 10005) AND component = 10002`; exit 0. An issue carrying `backend` (10005) and
+  `Frontend` (10002) — but NOT the `Backend` (10001) spelling — correctly satisfies this
+  clause (it has SOME component the user would call "Backend", plus "Frontend"), matching the
+  `all:` contract's name-level (not id-level) promise.
 **Verification Properties**:
 - VP-COMPONENT-015: `all:` composes `component = id1 AND component = id2 …` (AND-joined, not
   `IN`); the repeated-`all:` and `all:`+bare/`not:`/`none` combination guards are exit-64
   pre-flight (no HTTP).
-**Trace**: F1 delta analysis §2
+- VP-COMPONENT-022: (see BC-2.1.018) also covers the `all:` form — a same-project case-only
+  duplicate pair named within an `all:` list contributes a parenthesized `(component = id_a OR
+  component = id_b)` term at that position, AND-joined with the list's other terms
+  (EC-2.1.021-4), never a bare single-id equality and never an exit-64 error solely because of
+  the duplicate.
+**Trace**: F1 delta analysis §2; BC-8.4.005 (ExactMultiple definition); BC-2.1.018
+Postcondition 3 (sibling UNION rule, `in (...)` form); F5 adversarial review findings
+F5-A-M1/F5-C-001 (2026-08-17, human-adjudicated: UNION)
 
 ---
 
@@ -511,11 +633,97 @@ fires, matching BC-2.1.012's "no issue search fired" invariant for the analogous
   unrestricted org-wide search."` This prevents `component is EMPTY` from ever composing as
   an unscoped, unbounded cross-project JQL clause. `POST /rest/api/3/search/jql` is never
   called.
+- EC-2.1.022-3 **[NEW 2026-08-17, F5-A-M1/F5-C-001 fix — human-adjudicated: UNION]**: `--component
+  <NAME>` (bare, `not:`, or a name inside an `all:` list) resolves to `MatchResult::
+  ExactMultiple` (2+ same-project components sharing the case-insensitive name) → this is
+  explicitly **NOT** a member of this BC's "unresolvable or ambiguous" family and does **NOT**
+  exit 64. See the "ExactMultiple read-path disposition" subsection immediately below for the
+  full contract (owned by BC-2.1.018 Postcondition 3, BC-2.1.019 Postcondition 3, and
+  BC-2.1.021 Postcondition 2 respectively) — it is cross-referenced here only so a reader
+  scanning this BC's error/exit-64 enumeration does not mistake ExactMultiple for a fourth
+  failure mode alongside zero-match and ambiguous-substring.
+
+### ExactMultiple read-path disposition (UNION, exit 0) — divergence from the mutating path
+
+**[NEW 2026-08-17, F5-A-M1/F5-C-001 fix — human-adjudicated: UNION]**
+
+**The defect this resolves**: prior to this fix, `--component <NAME>` resolving to
+`MatchResult::ExactMultiple` (BC-X.10.003 — 2+ components in the resolved project share the
+same case-insensitive name, e.g. `Backend` id `10001` and `backend` id `10005`; see
+BC-8.4.005) was underspecified for `issue list --component` specifically. Naively reusing
+`partial_match`'s own first-match-wins return value (`ExactMultiple(String)` carries only the
+FIRST matching name, not the full duplicate id set — see `src/partial_match.rs`) would compose
+a single-id clause (e.g. `component in (10001)` only), silently EXCLUDING issues tagged with
+the other duplicate (`backend`/10005) from the result set — a silent-incomplete filter with no
+error, no warning, and no indication to the user that a second component shared the name they
+typed. This is the class of bug flagged by adversarial review findings **F5-A-M1** and
+**F5-C-001**.
+
+**Disposition (human-adjudicated 2026-08-17): UNION.** On every read-path `--component`
+resolution path — bare (BC-2.1.018 Postcondition 3), `not:` (BC-2.1.019 Postcondition 3), and
+each name within an `all:` list (BC-2.1.021 Postcondition 2) — `MatchResult::ExactMultiple` is
+resolved by re-scanning the ALREADY-FETCHED project component list (zero additional HTTP) for
+every entry whose name matches case-insensitively, and folding ALL of their ids into that
+value's contribution to the composed JQL clause. The result is exit 0, a normal (superset)
+search, and no user-visible error — the query becomes "any component a reasonable person would
+call `<NAME>`," which is the safe, non-lossy reading for a FILTER (a read never destroys data
+by matching a superset of intended issues; at worst it shows the user one extra duplicate
+component's issues, which is self-evidently correct once the two same-named components are
+understood to exist).
+
+**Why this correctly diverges from the mutating path.** `component edit`/`delete`/
+`--move-to`'s `NAME|ID` positional resolving to the SAME `MatchResult::ExactMultiple` FAILS
+CLOSED instead: BC-8.1.008 branch (0) routes it to BC-8.4.003's ambiguity handling — exit 64,
+zero mutating HTTP, requiring the numeric id (`jr component edit 10001 …` / `jr component edit
+10005 …`) to disambiguate. The two dispositions are not in tension; they are the correct
+answer to two different questions with different safety profiles:
+- **A read/filter (`issue list --component`) asks "which issues match?"** Unioning both
+  duplicate ids answers this SAFELY — the operation is idempotent, non-destructive, and a
+  superset result is a correct (if slightly broader than the user may have anticipated)
+  answer. There is no safe way to "fail closed" on a filter without reintroducing the
+  original silent-drop defect (dropping the filter, or exiting 64 and blocking the whole `jr
+  issue list` invocation, would be strictly WORSE UX than showing a superset).
+- **A mutation (`edit`/`delete`/`--move-to`) asks "which ONE component do I change/delete/move
+  issues off of?"** This question has no safe superset answer — guessing which of `10001`/
+  `10005` the user meant and silently modifying (or deleting) the WRONG one is a data-loss-
+  adjacent, non-reversible mistake (component delete in particular can move or orphan issues
+  irrecoverably — see §8.2). Requiring the numeric id is the only sound resolution; there is
+  no "union the mutation" analogue.
+This mirrors the general shape of `jr`'s error-taxonomy default for `ExactMultiple`
+(`error-taxonomy.md` §5: "No error — use any (or first)") being narrowed to fail-closed by
+specific mutating callers with irreversible consequences — the SAME pattern already
+established for `jr requesttype fields`/`jr queue view` (both exit 64 on ExactMultiple,
+cross-cutting.md BC-X.10.003 callers) versus `--status <ExactMultiple>` (BC-2.1.015, a
+read-only list filter, which auto-resolves without erroring). `issue list --component`'s
+UNION disposition is a THIRD point on this spectrum, distinct from both precedents: BC-2.1.015
+auto-resolves to a SINGLE status (Jira issues carry exactly one status, so "pick one" and
+"union" coincide for a single-valued field); `--component` cannot coincide the same way
+because an issue can legitimately carry multiple components, so "pick one" and "union" are
+OBSERVABLY DIFFERENT result sets here, and the F5 finding is precisely that the single-pick
+choice was silently wrong. UNION, not "treat as Exact," is therefore the correct generalization
+of BC-2.1.015's read-path leniency for a filter over a multi-valued field.
+
+**Cross-reference**: BC-8.4.005 (the resolver's case-insensitive `ExactMultiple` definition,
+now amended to state both dispositions explicitly rather than leaving caller behavior
+implicit); BC-8.1.008 branch (0) (the mutating-path fail-closed disposition this subsection
+contrasts against).
+
 **Verification Properties**:
 - VP-COMPONENT-013: Unresolvable/ambiguous `--component` value (bare, `not:`, or within an
   `all:` list) → `POST /rest/api/3/search/jql` is never called (`.expect(0)`), mirroring
-  BC-2.1.012's `.expect(0)` pattern for `--asset`.
-**Trace**: BC-2.1.012; BC-2.1.013; BC-2.1.014; BC-8.4.002; BC-8.4.003
+  BC-2.1.012's `.expect(0)` pattern for `--asset`. **[CLARIFIED 2026-08-17]** `ExactMultiple`
+  is explicitly OUT of this VP's scope (EC-2.1.022-3) — it is a superset-search success case,
+  not a zero-match/ambiguous failure case; `POST /rest/api/3/search/jql` DOES fire for an
+  ExactMultiple resolution, exactly as it would for any other successful `--component`
+  resolution.
+- VP-COMPONENT-022: (see BC-2.1.018) is the canonical UNION verification property covering all
+  three read-path forms (bare/`not:`/`all:`); this BC's role is the explicit non-membership
+  statement (EC-2.1.022-3) plus the read-vs-mutating divergence documentation above.
+**Trace**: BC-2.1.012; BC-2.1.013; BC-2.1.014; BC-8.4.002; BC-8.4.003; BC-8.4.005 (ExactMultiple
+definition, amended); BC-8.1.008 branch (0) (mutating-path fail-closed contrast); BC-2.1.018
+Postcondition 3, BC-2.1.019 Postcondition 3, BC-2.1.021 Postcondition 2 (the three read-path
+UNION implementations this subsection documents the shared rationale for); F5 adversarial
+review findings F5-A-M1/F5-C-001 (2026-08-17, human-adjudicated: UNION)
 
 ---
 

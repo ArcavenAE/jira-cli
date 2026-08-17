@@ -3,9 +3,20 @@ context: bc-8
 title: "Component Management"
 total_bcs: 28   # brand-new file — no range-collapsed entries; total_bcs == definitional_count
 definitional_count: 28   # count of `#### BC-` headings in this file
-last_updated: 2026-08-15
+last_updated: 2026-08-17
 source_pass: F2
 trace: |
+  - v1.4.1 — F5 scoped-adversarial fix round (2026-08-17, component-mgmt): resolves findings
+    F5-A-M1/F5-C-001 (human-adjudicated: UNION). BC-8.4.005 amended — H1 extended to state the
+    `MatchResult::ExactMultiple` disposition is caller-specific; Behavior section corrected
+    (previously implied a single universal "treat as Exact, no error" outcome for every
+    caller, citing BC-2.1.015 as an equating precedent) to explicitly distinguish: mutating
+    callers (`component edit`/`delete`/`--move-to`, BC-8.1.008 branch (0)) FAIL CLOSED, exit
+    64, unchanged by this round; read/filter callers (`issue list --component`, bc-2-issue-
+    read.md BC-2.1.018/019/021/022) UNION all duplicate ids into the composed JQL clause, new
+    this round. New VP-COMPONENT-022 (cross-referencing the canonical UNION assertions in
+    bc-2-issue-read.md). No new BC IDs; no count change (28/28). See bc-2-issue-read.md's own
+    v1.4.1 trace entry for the full read-path amendment detail.
   - L1: GitHub issues #604 (jr component list/create/edit/delete), #608 (jr component rename)
   - F1: .factory/phase-f1-delta-analysis/delta-analysis-components.md
   - F1: .factory/phase-f1-delta-analysis/business-analyst-input-components.md
@@ -2011,12 +2022,13 @@ project's component list before calling `partial_match`, never a cross-project u
 
 ---
 
-#### BC-8.4.005: Client-side resolver case-insensitivity agrees with JQL's case-insensitive component-name matching
+#### BC-8.4.005: Client-side resolver case-insensitivity agrees with JQL's case-insensitive component-name matching; `MatchResult::ExactMultiple` disposition is caller-specific (mutating fail-closed, read-path UNION)
 
 **Confidence**: MEDIUM
 **Source**: F1 delta analysis §6 edge-case item 2; BC-X.10.003 (`partial_match`
 case-insensitive `ExactMultiple` handling); `src/cli/issue/helpers.rs::resolve_component`
-(pending F4)
+(pending F4); F5 adversarial review findings F5-A-M1/F5-C-001 (2026-08-17, human-adjudicated:
+UNION)
 **Subject**: Component Management — shared resolver
 **Behavior**: `partial_match`'s existing case-insensitive exact-match handling
 (`name.to_lowercase() == input.to_lowercase()`, BC-X.10.003) means the CLIENT-SIDE resolver
@@ -2025,15 +2037,46 @@ already agrees with JQL's own case-insensitive `component = "..."` matching — 
 `"Backend"`. Two components with names differing ONLY by case within the SAME project (e.g.
 "Backend" and "backend" both present) are a degenerate input Jira's own component-creation
 validation may or may not permit; this BC does NOT assert whether Jira allows that state to
-exist — only that IF it exists, `partial_match`'s `ExactMultiple` path (BC-X.10.003) treats
-both as valid exact matches (no false Ambiguous), consistent with how any other
-case-variant-duplicate resolution already behaves elsewhere in this codebase (e.g. `--status`
-resolution, BC-2.1.015).
+exist — only that IF it exists, `partial_match` reports `MatchResult::ExactMultiple` (BC-X.10.003
+— note the variant itself carries only the FIRST matching name, not the full duplicate id set;
+a caller wanting all duplicate ids must re-scan its own already-fetched candidate list by
+case-insensitive name).
+
+**[AMENDED 2026-08-17, F5-A-M1/F5-C-001 fix-round — resolves a prior ambiguity in this BC's
+own text]** This BC previously stated only that ExactMultiple "treats both as valid exact
+matches (no false Ambiguous), consistent with … `--status` resolution, BC-2.1.015" — implying
+a SINGLE, universal disposition (auto-resolve-and-proceed) for every caller. That implication
+is corrected here: `resolve_component`'s core algorithm (BC-8.4.001) does not itself decide
+what to DO with an `ExactMultiple` result — disposition is caller-specific, and the two
+caller families genuinely diverge:
+- **Mutating callers** (`component edit`/`delete`/`--move-to`'s `NAME|ID` positional; `rename`'s
+  `OLD`) FAIL CLOSED: BC-8.1.008 branch (0) routes `ExactMultiple` through BC-8.4.003's
+  ambiguity handling — exit 64, zero mutating HTTP, requiring the caller to supply a numeric id
+  to disambiguate which of the duplicate components to actually modify or delete. This mirrors
+  the established `jr requesttype fields`/`jr queue view` precedent (cross-cutting.md
+  BC-X.10.003 callers, both exit 64 on `ExactMultiple`) — an irreversible or single-target
+  mutation cannot safely guess which duplicate the user meant.
+- **Read/filter callers** (`issue list --component`, bare/`not:`/`all:` forms) UNION: per
+  BC-2.1.018 Postcondition 3, BC-2.1.019 Postcondition 3, and BC-2.1.021 Postcondition 2
+  (human-adjudicated 2026-08-17, F5-A-M1/F5-C-001), every id sharing the case-insensitive
+  matched name is folded into the composed JQL clause — exit 0, no error, a superset (safe,
+  non-lossy) search result. See BC-2.1.022's "ExactMultiple read-path disposition" subsection
+  for the full rationale and the contrast with the mutating disposition above.
+The `--status` precedent this BC previously cited (BC-2.1.015, "`--status <ExactMultiple>`
+treated as Exact") is a DIFFERENT, narrower case that happens to coincide with the "pick one"
+outcome only because `status` is single-valued per issue (an issue has exactly one status, so
+auto-resolving to either duplicate produces the identical JQL result). `component` is
+multi-valued per issue, so "pick one" and "union all" are OBSERVABLY DIFFERENT result sets —
+BC-2.1.015's precedent does not, and never did, generalize safely to `--component`; UNION
+(not "treat as Exact") is `--component`'s correct generalization of read-path leniency. This
+was the root ambiguity F5-A-M1/F5-C-001 flagged: this BC's prior wording did not distinguish
+these cases and could be (mis)read as licensing a silent first-pick on the read path, which is
+exactly the defect BC-2.1.018/019/021/022 close.
 **Confidence rationale**: MEDIUM — the case-insensitive AGREEMENT between the client resolver
 and JQL is confirmed by existing code behavior (BC-X.10.003) and is not new; whether Jira
 itself permits two same-project components differing only by case is unconfirmed (out of
-scope for this BC to assert) and does not change this resolver's documented behavior either
-way.
+scope for this BC to assert) and does not change either caller-specific disposition documented
+above.
 **Verification Properties**:
 - VP-COMPONENT-021 **[RENUMBERED 2026-08-15, M4 fix-burst — was erroneously VP-COMPONENT-014,
   duplicating BC-8.4.001's distinct VP-COMPONENT-014 definition]**: The resolver's
@@ -2046,8 +2089,16 @@ way.
   divergent definitions. VP-COMPONENT-014 (BC-8.4.001) is the canonical determinism/
   numeric-bypass claim; this BC's case-insensitive-agreement claim is split out to the new,
   sequentially-next id VP-COMPONENT-021. No behavioral content changed — only the id.
-**Trace**: BC-X.10.003; BC-2.1.015 (case-variant-duplicate precedent); F1 delta analysis §6
-item 2
+- VP-COMPONENT-022 **[NEW 2026-08-17, F5-A-M1/F5-C-001 fix]**: the read-path UNION disposition
+  (see BC-2.1.018/019/021's own Verification Properties sections for the canonical assertion
+  text) is cross-referenced here as the counterpart to VP-COMPONENT-009's mutating-path
+  fail-closed assertion (BC-8.4.003) — the two VPs together cover both caller-specific
+  dispositions for the identical `MatchResult::ExactMultiple` input.
+**Trace**: BC-X.10.003; BC-2.1.015 (single-valued-field precedent — cited and DISTINGUISHED,
+not equated, as of the 2026-08-17 amendment); BC-8.1.008 branch (0) (mutating fail-closed
+disposition); BC-2.1.018 Postcondition 3, BC-2.1.019 Postcondition 3, BC-2.1.021 Postcondition 2
+(read-path UNION disposition); BC-2.1.022 (divergence rationale); F1 delta analysis §6 item 2;
+F5 adversarial review findings F5-A-M1/F5-C-001 (2026-08-17, human-adjudicated: UNION)
 
 ---
 
