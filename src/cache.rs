@@ -663,6 +663,160 @@ pub fn write_request_type_fields_cache(
     Ok(())
 }
 
+/// Slim representation of a project component stored in the cache.
+///
+/// Holds only `id` and `name` — just enough for name-based resolution
+/// (`resolve_component`) without round-tripping the full resource on every
+/// resolver invocation. ADR-0018 Decision §2.
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct CachedComponent {
+    pub id: String,
+    pub name: String,
+}
+
+/// One project's component list plus the timestamp for TTL checks.
+///
+/// Stored as a map entry: `components_<profile>.json` →
+/// `HashMap<project_key, ComponentsCacheEntry>`. Mirrors the `ProjectMeta`
+/// keyed-cache pattern — TTL is checked per-entry. ADR-0018 Decision §2.
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct ComponentsCacheEntry {
+    pub components: Vec<CachedComponent>,
+    pub fetched_at: DateTime<Utc>,
+}
+
+/// Read the cached component list for a single project.
+///
+/// Returns `Ok(None)` on missing file, missing key, expired entry, or corrupt
+/// JSON (self-heal via cache-miss → re-fetch). ADR-0018 Decision §2.
+/// Profile is FIRST arg per ADR-0007 multi-profile invariant.
+pub fn read_components_cache(
+    profile: &str,
+    project_key: &str,
+) -> Result<Option<ComponentsCacheEntry>> {
+    let path = cache_dir(profile).join(format!("components_{profile}.json"));
+    if !path.exists() {
+        return Ok(None);
+    }
+
+    let content = std::fs::read_to_string(&path)?;
+    let map: HashMap<String, ComponentsCacheEntry> = match serde_json::from_str(&content) {
+        Ok(m) => m,
+        Err(e) => {
+            eprintln!("warning: components_{profile}.json unreadable ({e}); will refetch");
+            return Ok(None);
+        }
+    };
+
+    match map.get(project_key) {
+        Some(entry) => {
+            let age = Utc::now() - entry.fetched_at;
+            if age.num_days() >= CACHE_TTL_DAYS {
+                Ok(None)
+            } else {
+                Ok(Some(entry.clone()))
+            }
+        }
+        None => Ok(None),
+    }
+}
+
+/// Write the component list for a project into the components cache.
+///
+/// Merges into the existing `components_<profile>.json` map, preserving
+/// entries for other projects (same merge strategy as `write_project_meta`).
+///
+/// **Model-b writer (ADR-0018 Decision §2):** a failed disk write is swallowed
+/// with `eprintln!("warning: …")` and `Ok(())` is returned unconditionally — a
+/// failed cache write must never break a successful `component list`. Callers
+/// MUST use `.ok()` to discard the infallible return value.
+/// Profile is FIRST arg per ADR-0007 multi-profile invariant.
+pub fn write_components_cache(
+    profile: &str,
+    project_key: &str,
+    components: &[CachedComponent],
+) -> Result<()> {
+    let dir = cache_dir(profile);
+
+    let result = (|| -> Result<()> {
+        std::fs::create_dir_all(&dir)?;
+        let path = dir.join(format!("components_{profile}.json"));
+
+        let mut map: HashMap<String, ComponentsCacheEntry> = if path.exists() {
+            let content = std::fs::read_to_string(&path)?;
+            serde_json::from_str(&content).unwrap_or_else(|e| {
+                eprintln!(
+                    "warning: components_{profile}.json unreadable ({e}); starting fresh — other cached projects will be lost"
+                );
+                HashMap::new()
+            })
+        } else {
+            HashMap::new()
+        };
+
+        map.insert(
+            project_key.to_string(),
+            ComponentsCacheEntry {
+                components: components.to_vec(),
+                fetched_at: Utc::now(),
+            },
+        );
+
+        let content = serde_json::to_string_pretty(&map)?;
+        std::fs::write(&path, content)?;
+        Ok(())
+    })();
+
+    // Model-b writer: swallow disk errors, never propagate (ADR-0018 Decision §2).
+    if let Err(e) = result {
+        eprintln!("warning: failed to write components cache: {e}");
+    }
+    Ok(())
+}
+
+/// Invalidate the cached component list for a specific project.
+///
+/// Removes the `project_key` entry from `components_<profile>.json`.
+/// Called by S-604-2 / S-604-3 / S-608-1 mutating commands before or after
+/// they change components on the project, so the next `list` fetches fresh data.
+///
+/// **Model-b invalidator:** disk errors are swallowed with `eprintln!` so a
+/// failed invalidation never breaks the mutating command. Returns `()`.
+/// Profile is FIRST arg per ADR-0007 multi-profile invariant.
+pub fn invalidate_components_cache(profile: &str, project_key: &str) {
+    let path = cache_dir(profile).join(format!("components_{profile}.json"));
+    if !path.exists() {
+        return;
+    }
+    let content = match std::fs::read_to_string(&path) {
+        Ok(c) => c,
+        Err(e) => {
+            eprintln!("warning: failed to invalidate components cache for {project_key}: {e}");
+            return;
+        }
+    };
+    let mut map: HashMap<String, ComponentsCacheEntry> = match serde_json::from_str(&content) {
+        Ok(m) => m,
+        Err(e) => {
+            eprintln!("warning: failed to invalidate components cache for {project_key}: {e}");
+            return;
+        }
+    };
+    if map.remove(project_key).is_none() {
+        return;
+    }
+    let new_content = match serde_json::to_string_pretty(&map) {
+        Ok(c) => c,
+        Err(e) => {
+            eprintln!("warning: failed to invalidate components cache for {project_key}: {e}");
+            return;
+        }
+    };
+    if let Err(e) = std::fs::write(&path, new_content) {
+        eprintln!("warning: failed to invalidate components cache for {project_key}: {e}");
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -1703,6 +1857,96 @@ mod tests {
             result.is_ok(),
             "write_request_type_fields_cache must return Ok(()) on I/O error \
              (model-b best-effort writer, BC-X.12.008); got: {result:?}"
+        );
+    }
+
+    // ── S-604-1: AC-019 / ADR-0018 Decision §2 — components cache round-trip ─
+
+    /// AC-019 / ADR-0018 Decision §2: write then read returns the same component set
+    /// within the 7-day TTL; invalidate removes it; a failed write (model-b) returns
+    /// Ok(()) and does NOT propagate an Err.
+    ///
+    /// `read_components_cache` / `write_components_cache` / `invalidate_components_cache`
+    /// are implemented (ADR-0018 §2, see src/cache.rs). Part 1 asserts a successful
+    /// write→read→invalidate round-trip within TTL; Part 2 asserts the model-b writer
+    /// swallows an I/O error and returns `Ok(())`.
+    #[test]
+    fn test_adr_0018_components_cache_round_trip_and_model_b_writer() {
+        // Part 1: round-trip write → read → invalidate
+        with_temp_cache(|| {
+            let components = vec![
+                CachedComponent {
+                    id: "10001".to_string(),
+                    name: "Backend".to_string(),
+                },
+                CachedComponent {
+                    id: "10002".to_string(),
+                    name: "Frontend".to_string(),
+                },
+            ];
+
+            write_components_cache("default", "FOO", &components)
+                .expect("write_components_cache must succeed in a writable temp dir");
+
+            let entry = read_components_cache("default", "FOO")
+                .expect("read_components_cache must not error");
+            assert!(
+                entry.is_some(),
+                "read_components_cache must return Some after a write (within TTL)"
+            );
+            let entry = entry.unwrap();
+            assert_eq!(
+                entry.components.len(),
+                2,
+                "Round-trip must preserve both components"
+            );
+            assert_eq!(entry.components[0].id, "10001");
+            assert_eq!(entry.components[0].name, "Backend");
+            assert_eq!(entry.components[1].id, "10002");
+            assert_eq!(entry.components[1].name, "Frontend");
+
+            // Invalidate must clear the cache
+            invalidate_components_cache("default", "FOO");
+            let after = read_components_cache("default", "FOO")
+                .expect("read_components_cache must not error after invalidation");
+            assert!(
+                after.is_none(),
+                "read_components_cache must return None after invalidation"
+            );
+        });
+
+        // Part 2: model-b writer — I/O error must NOT propagate (swallow + warn)
+        // Force an I/O error by pointing JR_CACHE_DIR at a file (not a directory),
+        // causing create_dir_all to fail with ENOTDIR — same pattern used by
+        // test_write_cmdb_fields_cache_swallow_io_error_returns_ok above.
+        let outer_dir = tempfile::TempDir::new().unwrap();
+        let fake_cache_home = outer_dir.path().join("i_am_a_file");
+        std::fs::write(&fake_cache_home, "file, not a dir").unwrap();
+
+        let guard = ENV_MUTEX.lock().unwrap_or_else(|e| e.into_inner());
+        // SAFETY: ENV_MUTEX serialises all tests that touch XDG_CACHE_HOME / JR_CACHE_DIR.
+        unsafe {
+            std::env::set_var("XDG_CACHE_HOME", &fake_cache_home);
+            std::env::set_var("JR_CACHE_DIR", &fake_cache_home);
+        }
+        let components = vec![CachedComponent {
+            id: "10001".to_string(),
+            name: "Backend".to_string(),
+        }];
+        let result = std::panic::catch_unwind(std::panic::AssertUnwindSafe(|| {
+            write_components_cache("default", "FOO", &components)
+        }));
+        unsafe {
+            std::env::remove_var("XDG_CACHE_HOME");
+            std::env::remove_var("JR_CACHE_DIR");
+        }
+        drop(guard);
+
+        let result = result.expect("write_components_cache must not panic on I/O error");
+        assert!(
+            result.is_ok(),
+            "Model-b writer must return Ok(()) on I/O error (ADR-0018 Decision §2 swallow-+warn); \
+             got: {result:?}"
         );
     }
 }
