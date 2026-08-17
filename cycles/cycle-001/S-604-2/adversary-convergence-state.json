@@ -1,0 +1,152 @@
+{
+  "story": "S-604-2",
+  "cycle": "cycle-001",
+  "feature_mode_bundle": "component-mgmt",
+  "perimeter": 1,
+  "perimeter_label": "per-story Step 4.5 (BC-5.39.001)",
+  "convergence_bar": "DEC-245-strict",
+  "convergence_bar_description": "Zero HIGH + zero MEDIUM + zero LOW required for a CLEAN pass; INFO-only still counts as CLEAN; LOW findings reset the window regardless of classification",
+  "total_passes": 11,
+  "passes": ["P1", "P2", "P3", "P4", "P5", "P6", "P7", "P8", "A", "B", "C"],
+  "convergence_window_passes": ["A", "B", "C"],
+  "passes_clean": 3,
+  "converged": true,
+  "last_classification": "CLEAN",
+  "converged_sha": "4f48def5",
+  "feature_branch": "feature/S-604-2-component-create-edit",
+  "develop_base_sha": "e2c403e8",
+  "finding_trajectory": {
+    "P1": {
+      "classification": "FINDINGS",
+      "findings_count": 8,
+      "findings": [
+        {"id": "F-01", "severity": "MED", "category": "output-contract", "description": "JSON output shape mismatch on `jr component create` — emitted flat string instead of BC-specified object with `id`/`name`/`projectId` keys"},
+        {"id": "F-02", "severity": "MED", "category": "output-contract", "description": "Missing `Run: jr component list --project <KEY>` suffix on create success human-text output (BC-8.1.003 exact wording)"},
+        {"id": "F-03", "severity": "MED", "category": "output-contract", "description": "Edit success message did not match BC-8.1.006 exact wording; test asserted loose `contains` and passed against drifted output"},
+        {"id": "F-04", "severity": "MED", "category": "output-contract", "description": "Dry-run output missing `Would create component` prefix; test used loose `contains_key` on JSON shape"},
+        {"id": "F-05", "severity": "MED", "category": "output-contract", "description": "Edit dry-run JSON shape omitted `action` field required by BC-8.1.007"},
+        {"id": "F-06", "severity": "LOW", "category": "output-contract", "description": "Component list not sorted alphabetically by name on create output echo; BC-8.1.004 requires sorted output"},
+        {"id": "F-07", "severity": "LOW", "category": "output-contract", "description": "Create success table missing trailing period in description column per BC-8.1.003"},
+        {"id": "F-08", "severity": "LOW", "category": "output-contract", "description": "Error path on 409 Conflict used non-canonical message wording (test asserted loose contains)"}
+      ],
+      "window_eligible": false,
+      "notes": "Command LOGIC correct from Pass 1; all findings are output-contract, message wording, or test assertion precision"
+    },
+    "P2": {
+      "classification": "FINDINGS",
+      "findings_count": 2,
+      "findings": [
+        {"id": "B-01", "severity": "MED", "category": "output-contract", "description": "List echo on create not sorted; BC-8.1.004 sort invariant"},
+        {"id": "B-02", "severity": "LOW", "category": "output-contract", "description": "Missing trailing period in component description display; BC-8.1.003"}
+      ],
+      "window_eligible": false,
+      "notes": "P1 F-01..F-08 all fixed; P2 found residual sort and period issues"
+    },
+    "P3": {
+      "classification": "FINDINGS",
+      "findings_count": 1,
+      "findings": [
+        {"id": "LOW-1", "severity": "LOW", "category": "output-contract", "description": "Empty `--lead` resolution message used wrong wording; BC-8.1.005 specifies exact message"}
+      ],
+      "window_eligible": false,
+      "notes": "P2 B-01/B-02 fixed; P3 found residual message wording in empty-lead path"
+    },
+    "P4": {
+      "classification": "FINDINGS",
+      "findings_count": 1,
+      "findings": [
+        {"id": "F-P4-01", "severity": "HIGH", "category": "bc-citation", "description": "BC-citation mis-anchoring: `jr component create` and `jr component edit` rustdoc referenced §8.2 Delete and §8.3 Rename instead of §8.1 Create/Edit; incorrect section anchors in all docstring citations"}
+      ],
+      "window_eligible": false,
+      "notes": "P3 LOW-1 fixed; P4 independently found HIGH citation error in docstrings"
+    },
+    "P5": {
+      "classification": "FINDINGS",
+      "findings_count": 2,
+      "findings": [
+        {"id": "F-P5-01", "severity": "LOW", "category": "documentation", "description": "`get_component` rustdoc inaccurate: claimed it returns a list, but returns a single component"},
+        {"id": "F-P5-02", "severity": "LOW", "category": "test-coverage", "description": "Edit `--lead` resolution path lacked explicit coverage test; AC-013 pin asserted wrong behavior"}
+      ],
+      "window_eligible": false,
+      "notes": "P4 F-P4-01 fixed; P5 found documentation and coverage precision findings"
+    },
+    "P6": {
+      "classification": "FINDINGS",
+      "findings_count": 0,
+      "findings": [],
+      "window_eligible": true,
+      "notes": "P5 findings fixed; P6 CLEAN — window starts (1/3)"
+    },
+    "P7": {
+      "classification": "FINDINGS",
+      "findings_count": 1,
+      "findings": [
+        {"id": "F-P7-01", "severity": "MED", "category": "test-coverage", "description": "Edit `--lead` resolution coverage gap: the exact-match-wins path for `--lead` was untested; AC-012 assertion was mislabeled (tested partial match, not exact match wins)"}
+      ],
+      "window_eligible": false,
+      "notes": "P6 was CLEAN but P7 found a MEDIUM; window reset at 0/3. P7 and P8 independently dual-found the same finding class"
+    },
+    "P8": {
+      "classification": "FINDINGS",
+      "findings_count": 1,
+      "findings": [
+        {"id": "F-P8-01", "severity": "MED", "category": "test-coverage", "description": "AC-012 mislabel: test named `test_component_edit_lead_exact_match_wins` but body exercised partial-match path; exact-match-wins semantics unverified"}
+      ],
+      "window_eligible": false,
+      "notes": "P7/P8 both caught the AC-012 mislabel independently; fixed; window reset"
+    },
+    "A": {
+      "classification": "CLEAN",
+      "findings_count": 0,
+      "findings": [],
+      "window_eligible": true,
+      "window_position": "1/3",
+      "notes": "P7/P8 findings fixed; Pass A CLEAN — convergence window restarts (1/3)"
+    },
+    "B": {
+      "classification": "CLEAN",
+      "findings_count": 0,
+      "findings": [],
+      "window_eligible": true,
+      "window_position": "2/3",
+      "notes": "Pass B CLEAN — convergence window at 2/3"
+    },
+    "C": {
+      "classification": "CLEAN",
+      "findings_count": 0,
+      "findings": [],
+      "window_eligible": true,
+      "window_position": "3/3",
+      "notes": "Pass C CLEAN — convergence window COMPLETE (3/3 CLEAN). CONVERGED."
+    }
+  },
+  "residual_info_non_blocking": [
+    {
+      "id": "OBS-1",
+      "severity": "INFO",
+      "description": "len()-based `--lead` vs issue-assign exact-match-wins resolution; OBS rather than LOW per DEC-245 (INFO-only is CLEAN)"
+    },
+    {
+      "id": "OBS-2",
+      "severity": "INFO",
+      "description": "Component.id has no lenient string-or-int deserializer (FIX-576-DL class); Jira Cloud returns id as string on this endpoint, so not a live correctness risk"
+    },
+    {
+      "id": "OBS-3",
+      "severity": "INFO",
+      "description": "assignee_type_to_api_str: 3 of 4 arms untested by mutation pickup (F6 finding class); the 4th arm is covered"
+    },
+    {
+      "id": "OBS-4",
+      "severity": "INFO",
+      "description": "BC-8.4.003 sort-comment over-claim in inline comment; no behavior impact"
+    },
+    {
+      "id": "OBS-5",
+      "severity": "INFO",
+      "description": "Cross-story NAME-path message consistency with #606 (`jr component list` output); wave-gate item, not a per-story convergence blocker"
+    }
+  ],
+  "convergence_summary": "S-604-2 (`jr component create`/`edit`, 8pts) converged to the DEC-245 strict bar after 11 total passes (P1-P8 + A/B/C). Command logic was correct from Pass 1; all non-INFO findings were output-contract precision, message wording, BC-citation anchoring, documentation accuracy, and test assertion precision. Three consecutive CLEAN passes (A/B/C) on byte-identical content at SHA 4f48def5. Residual INFO items are non-blocking per DEC-245.",
+  "timestamp": "2026-08-16T21:00:00Z"
+}
