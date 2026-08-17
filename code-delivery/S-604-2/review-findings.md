@@ -33,13 +33,14 @@ timestamp: "2026-08-16T00:00:00"
 
 | ID | Severity | Finding | Routed To | Status |
 |----|----------|---------|-----------|--------|
-| PRF-001 | BLOCKING | `--assignee-type PROJECT_LEAD` exits 2 — ValueEnum derives kebab-case (`project-lead`) but BC-8.1.005/AC-002 specifies SCREAMING_SNAKE (`PROJECT_LEAD`). Fix: `#[clap(rename_all = "SCREAMING_SNAKE_CASE")]` on AssigneeType or `ignore_case = true` plus aliases. CI missed it because AC-002 test was written against the implementation (kebab) not the spec (SCREAMING_SNAKE). | implementer | PENDING |
-| PRF-002 | MINOR | 20 stale `Red Gate: todo!()` comments in tests/component_commands.rs contradicting reality | implementer | PENDING |
-| PRF-003 | MINOR | no-fields guard message has no verbatim pin test | implementer | PENDING |
-| PRF-004 | MINOR | `--description ""` help text promises "clear" with no test | implementer | PENDING |
-| PRF-005 | MINOR | No success-path demo recording (all 5 are error/help) | demo-recorder | PENDING |
-| PRF-006 | MINOR | CLAUDE.md fallout: numeric-ID bypass gotcha not documented | pr-manager | PENDING |
-| PRF-C1 | COSMETIC | AssigneeType rustdoc cites "BC-8.1.007 edit" but Edit has no such flag | implementer | PENDING |
+| PRF-001 | BLOCKING | `--assignee-type PROJECT_LEAD` exits 2 — ValueEnum derives kebab-case (`project-lead`) but BC-8.1.005/AC-002 specifies SCREAMING_SNAKE (`PROJECT_LEAD`). Fixed: `#[clap(rename_all = "SCREAMING_SNAKE_CASE")]` added. Commit `6f286f10`. | implementer | FIXED |
+| PRF-001b | MAJOR | `component edit` table output printed only `  name → NewName` with no verb/subject/id/project — asymmetric with `create`. Fixed: added `Updated component "..." (id ...) in project ...` header. Commit `781af0f0`. | pr-manager | FIXED |
+| PRF-002 | MINOR | Stale `Red Gate: todo!()` header comment in tests/component_commands.rs contradicting reality | implementer | FIXED (commit 6f286f10) |
+| PRF-003 | MINOR | no-fields guard message has no verbatim pin test | implementer | DEFERRED |
+| PRF-004 | MINOR | `--description ""` help text promises "clear" with no test | implementer | DEFERRED |
+| PRF-005 | MINOR | No success-path demo recording (all 5 are error/help) | demo-recorder | DEFERRED |
+| PRF-006 | MINOR | CLAUDE.md fallout: numeric-ID bypass gotcha not documented | pr-manager | DEFERRED |
+| PRF-C1 | COSMETIC | AssigneeType rustdoc cites "BC-8.1.007 edit" but Edit has no such flag | implementer | DEFERRED |
 
 ## Finding Detail
 
