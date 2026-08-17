@@ -2,11 +2,20 @@
 document_type: story-index
 phase: phase-2-story-decomposition
 producer: story-writer
-version: "1.5.96"
+version: "1.5.97"
 total_stories: 140
 total_waves: 4
 status: complete
 last_updated: |-
+  2026-08-17 (COMPONENT-MGMT-F4-WAVE2-S-604-3-MERGED): S-604-3 status `draft`→`done` — merged
+  2026-08-17, PR #706, squash 49a927fd. DEC-128 human-authorized (DEC-285). Step-4.5 CONVERGED
+  3/3 CLEAN then RE-CONVERGED 3/3 CLEAN after security-hardening commit 80a56c23 (10 adversary
+  passes total; P1 LOW coverage-gap fixed; P4 LOW clap-inference false positive refuted +
+  regression-pinned). Security-reviewer APPROVE (LOW-1 CWE-116 unencoded-id-in-DELETE-URL
+  fixed via urlencoding::encode). Fresh pr-reviewer APPROVE. CI 15/15 green. Wave 2 serialized
+  component.rs sub-track position 2 of 3 COMPLETE (S-608-1 position 3 next if resumed).
+  STORY-INDEX v1.5.96→v1.5.97. No other rows touched.
+  Prior:
   2026-08-17 (COMPONENT-MGMT-F4-WAVE2-S-604-2-MERGED): S-604-2 status `in-progress`→`done` —
   merged 2026-08-17, PR #704, squash 1f8ba3e4. DEC-128 human-authorized. PR-review-caught
   BLOCKING (--assignee-type ValueEnum kebab vs SCREAMING_SNAKE) + HIGH (ExactMultiple fold,
@@ -791,7 +800,7 @@ They have `wave: feature-followup` in frontmatter and live under `.factory/code-
 | S-SOH-589-1 | tolerate id-absent editmeta allowedValues in `issue edit --field` — `AllowedValue.id` String→Option<String>, 7 Option-aware call sites in `field_resolve.rs`, EC-3.4.016-8 id=None exit-64 with actionable message; new idless-allowedValues test set (closes #589) | BC-3.4.015, BC-3.4.016, BC-3.4.017 | VP-589-001 | **completed** — PR #601 @ 081187ae (2026-07-09, DEC-128 honored); fix-PR #602 @ bf3b3382 (clippy 1.97 unblock); Step 4.5 STRICT 7-pass window p5/p6/p7; APPROVE cycle 1; 2016/0/93; issue #589 closes on release; DEC-166 | small (2 SP) |
 | S-604-1 | Component foundation: types, API client, cache family, resolver, CLI scaffold, and `jr component list` (closes #604 part 1 of 3) | BC-8.1.001, BC-8.1.002, BC-8.1.003, BC-8.1.004, BC-8.4.001, BC-8.4.002, BC-8.4.003, BC-8.4.004, BC-8.4.005, BC-2.3.040 | VP-COMPONENT-001, VP-COMPONENT-009, VP-COMPONENT-010, VP-COMPONENT-014, VP-COMPONENT-020, VP-COMPONENT-021 | **done** — merged 2026-08-16, PR #703, squash e2c403e8; COMPONENT-MGMT bundle story 1 of 7; Wave 1 hard gate COMPLETE (no deps; blocks S-604-2/S-604-3/S-605-1/S-606-1/S-608-1); target `src/cli/component.rs` (+types/api/cache/resolver); priority P0 | large (13 SP) |
 | S-604-2 | `jr component create` and `jr component edit` (closes #604 part 2 of 3) | BC-8.1.004, BC-8.1.005, BC-8.1.006, BC-8.1.007, BC-8.1.008 | VP-COMPONENT-002, VP-COMPONENT-004, VP-COMPONENT-022, VP-COMPONENT-023, VP-COMPONENT-024 | **done** — merged 2026-08-17, PR #704, squash 1f8ba3e4; COMPONENT-MGMT bundle story 2 of 7; Wave 2, serialized component.rs sub-track position 1 of 3 COMPLETE; depends_on:[S-604-1]; target `src/cli/component.rs`; priority P0 | medium (8 SP) |
-| S-604-3 | `jr component delete` — disposition-required, snapshot-before-delete safety (closes #604 part 3 of 3) | BC-8.2.001, BC-8.2.002, BC-8.2.003, BC-8.2.004, BC-8.2.005, BC-8.2.006, BC-8.2.007, BC-8.2.008 | VP-COMPONENT-003, VP-COMPONENT-004, VP-COMPONENT-005, VP-COMPONENT-006, VP-COMPONENT-007, VP-COMPONENT-017, VP-COMPONENT-024 | **draft** — F3 COMPLETE (2026-08-15); COMPONENT-MGMT bundle story 3 of 7; SAFETY-CRITICAL; Wave 2, serialized sub-track position 2 of 3 (isolated for review bandwidth); depends_on:[S-604-1]; target `src/cli/component.rs`; priority P0; awaiting F4 dispatch | large (13 SP) |
+| S-604-3 | `jr component delete` — disposition-required, snapshot-before-delete safety (closes #604 part 3 of 3) | BC-8.2.001, BC-8.2.002, BC-8.2.003, BC-8.2.004, BC-8.2.005, BC-8.2.006, BC-8.2.007, BC-8.2.008 | VP-COMPONENT-003, VP-COMPONENT-004, VP-COMPONENT-005, VP-COMPONENT-006, VP-COMPONENT-007, VP-COMPONENT-017, VP-COMPONENT-024 | **done** — merged 2026-08-17, PR #706, squash 49a927fd; COMPONENT-MGMT bundle story 3 of 7; SAFETY-CRITICAL; Wave 2, serialized component.rs sub-track position 2 of 3 COMPLETE; depends_on:[S-604-1]; target `src/cli/component.rs`; priority P0 | large (13 SP) |
 | S-605-1 | `issue create`/`issue edit --component` (single-key path) (closes #605 part 1 of 2) | BC-3.4.022, BC-3.4.024, BC-3.4.025, BC-3.4.012, BC-3.4.013, BC-3.4.017, BC-3.4.020, BC-3.4.021 | VP-COMPONENT-011, VP-COMPONENT-016, VP-COMPONENT-025, VP-COMPONENT-027, VP-COMPONENT-028 | **draft** — F3 COMPLETE (2026-08-15); COMPONENT-MGMT bundle story 4 of 7; Wave 2, parallel Track A position 1 of 2 (no file overlap with component.rs serialized trio); depends_on:[S-604-1]; blocks:[S-605-2]; target `src/cli/issue/{edit,create}.rs`; priority P0; awaiting F4 dispatch | medium (8 SP) |
 | S-605-2 | `issue edit --component` (multi-key/`--jql` bulk path) (closes #605 part 2 of 2) | BC-3.4.023 | VP-COMPONENT-012 | **draft** — F3 COMPLETE (2026-08-15); COMPONENT-MGMT bundle story 5 of 7; Wave 2, parallel Track A position 2 of 2; LIVE-JIRA-gated; depends_on:[S-605-1]; target `src/cli/issue/edit.rs`; priority P0; awaiting F4 dispatch | small (5 SP) |
 | S-606-1 | `issue list --component` filter (bare/`not:`/`none`/`all:`) (closes #606) | BC-2.1.018, BC-2.1.019, BC-2.1.020, BC-2.1.021, BC-2.1.022 | VP-COMPONENT-013, VP-COMPONENT-015 | **draft** — F3 COMPLETE (2026-08-15); COMPONENT-MGMT bundle story 6 of 7; Wave 2, parallel Track B (singleton, no file overlap with component.rs serialized trio or Track A); depends_on:[S-604-1]; target `src/cli/issue/list.rs`; priority P0; awaiting F4 dispatch | medium (8 SP) |
