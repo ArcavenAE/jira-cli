@@ -6,125 +6,159 @@
   "perimeter_label": "per-story Step 4.5 (BC-5.39.001)",
   "convergence_bar": "DEC-245-strict",
   "convergence_bar_description": "Zero HIGH + zero MEDIUM + zero LOW required for a CLEAN pass; INFO-only still counts as CLEAN; LOW findings reset the window regardless of classification",
-  "total_passes": 11,
-  "passes": ["P1", "P2", "P3", "P4", "P5", "P6", "P7", "P8", "A", "B", "C"],
-  "convergence_window_passes": ["A", "B", "C"],
+
+  "superseded_prior_convergence": {
+    "burst_sha": "b694198c",
+    "factory_artifacts_sha": "4f48def5",
+    "total_passes": 11,
+    "passes": ["P1", "P2", "P3", "P4", "P5", "P6", "P7", "P8", "A", "B", "C"],
+    "convergence_window_passes": ["A", "B", "C"],
+    "passes_clean": 3,
+    "converged": true,
+    "converged_sha": "4f48def5",
+    "reopened_reason": "PR #704 fresh-eyes review found BLOCKING + HIGH issues missed by all 11 Step-4.5 passes",
+    "reopened_by_pr_review": true,
+    "missed_findings": [
+      {
+        "id": "MISSED-1",
+        "severity": "BLOCKING",
+        "category": "cli-contract",
+        "description": "--assignee-type ValueEnum used clap default kebab-case serialization (e.g. 'component-lead') instead of contract-required SCREAMING_SNAKE_CASE ('COMPONENT_LEAD'/'PROJECT_LEAD'/'UNASSIGNED'); AC-002 test encoded the wrong value so the suite stayed green while the real CLI contract was violated; all 11 prior Step-4.5 passes missed it",
+        "root_cause": "AC-002 test assertion encoded clap's default kebab serialization instead of the story's literal AC command string; adversary passes trusted the test without independently verifying the ValueEnum serde shape"
+      },
+      {
+        "id": "MISSED-2",
+        "severity": "HIGH",
+        "category": "safety-contract",
+        "description": "handle_edit folded MatchResult::ExactMultiple into Exact, silently editing the first of multiple duplicate-named components instead of failing closed; BC-X.10.003 (ExactMultiple on mutating commands must be fail-closed) violated; prior adversary mis-adjudicated this as BC-8.4.005 (name uniqueness enforcement) and marked it a non-finding",
+        "root_cause": "Adversary mis-adjudicated BC-8.4.005 as covering this case; BC-X.10.003 fail-closed invariant was not independently applied to the ExactMultiple code path in handle_edit"
+      }
+    ]
+  },
+
+  "re_convergence": {
+    "triggered_by": "PR #704 fresh-eyes review (feature/S-604-2-component-create-edit -> develop)",
+    "prior_converged_sha": "4f48def5",
+    "re_convergence_passes": [
+      {
+        "id": "R1",
+        "classification": "FINDINGS",
+        "findings": [
+          {"id": "R1-F1", "severity": "LOW", "category": "lint", "description": "Clippy false-positive on assignee_type_to_api_str; dismissed after investigation"},
+          {"id": "R1-F2", "severity": "HIGH", "category": "safety-contract", "description": "ExactMultiple fold in handle_edit -- same as MISSED-2; confirmed as the real BC-X.10.003 violation"},
+          {"id": "R1-F3", "severity": "LOW", "category": "ux", "description": "Error message stuttered: 'Error: error:' double-prefix"},
+          {"id": "R1-F4", "severity": "MEDIUM", "category": "cli-contract", "description": "Global --project flag may not propagate to component edit subcommand (empirical test pending)"}
+        ],
+        "window_eligible": false
+      },
+      {
+        "id": "R2",
+        "classification": "FINDINGS",
+        "findings": [
+          {"id": "R2-F1", "severity": "BLOCKING", "category": "cli-contract", "description": "--assignee-type ValueEnum using kebab instead of SCREAMING_SNAKE confirmed; AC-002 test encoding was wrong value"}
+        ],
+        "window_eligible": false
+      },
+      {
+        "id": "R3",
+        "classification": "FINDINGS",
+        "findings": [
+          {"id": "R3-F1", "severity": "MEDIUM", "category": "cli-contract", "description": "Global --project propagation still unresolved; empirical test still pending"}
+        ],
+        "window_eligible": false,
+        "notes": "Fixes applied: --assignee-type SCREAMING_SNAKE, ExactMultiple fail-closed, error-stutter removed"
+      },
+      {
+        "id": "RC1",
+        "classification": "FINDINGS",
+        "findings": [
+          {"id": "RC1-F1", "severity": "MEDIUM", "category": "test-coverage", "description": "Stale comments in test assertions referencing pre-fix behavior; test bodies correct but comments misleading"}
+        ],
+        "window_eligible": false,
+        "notes": "Stale comment sweep pass"
+      },
+      {
+        "id": "RC2",
+        "classification": "FINDINGS",
+        "findings": [
+          {"id": "RC2-F1", "severity": "MEDIUM", "category": "cli-contract", "description": "Global --project flag: clap global=true propagation not empirically verified for component edit path"}
+        ],
+        "window_eligible": false
+      },
+      {
+        "id": "RC3",
+        "classification": "FINDINGS",
+        "findings": [
+          {"id": "RC3-F1", "severity": "MEDIUM", "category": "cli-contract", "description": "Global --project: empirical test test_bc_8_1_007_component_edit_honors_global_project_flag written and run -- PASSES; clap global propagation confirmed; RC2-F1 REFUTED"}
+        ],
+        "window_eligible": false,
+        "notes": "RC3 refutes RC2-F1 finding; global-project MEDIUM empirically closed; window eligible to restart"
+      },
+      {
+        "id": "FA",
+        "classification": "CLEAN",
+        "findings_count": 0,
+        "findings": [],
+        "window_eligible": true,
+        "window_position": "1/3",
+        "notes": "All R1-R3 + RC1-RC3 fixes applied; global-project MEDIUM empirically refuted; Pass FA CLEAN -- convergence window starts (1/3)"
+      },
+      {
+        "id": "FB",
+        "classification": "CLEAN",
+        "findings_count": 0,
+        "findings": [],
+        "window_eligible": true,
+        "window_position": "2/3",
+        "notes": "Pass FB CLEAN -- convergence window at 2/3"
+      },
+      {
+        "id": "FC",
+        "classification": "CLEAN",
+        "findings_count": 0,
+        "findings": [],
+        "window_eligible": true,
+        "window_position": "3/3",
+        "notes": "Pass FC CLEAN -- convergence window COMPLETE (3/3 CLEAN). RE-CONVERGED."
+      }
+    ],
+    "passes_clean": 3,
+    "bar": "DEC-245-strict",
+    "converged": true,
+    "final_converged_sha": "05743729",
+    "feature_branch": "feature/S-604-2-component-create-edit",
+    "develop_base_sha": "e2c403e8"
+  },
+
+  "total_passes": 14,
+  "passes": ["P1", "P2", "P3", "P4", "P5", "P6", "P7", "P8", "A", "B", "C", "FA", "FB", "FC"],
+  "convergence_window_passes": ["FA", "FB", "FC"],
   "passes_clean": 3,
   "converged": true,
   "last_classification": "CLEAN",
-  "converged_sha": "4f48def5",
+  "converged_sha": "05743729",
   "feature_branch": "feature/S-604-2-component-create-edit",
   "develop_base_sha": "e2c403e8",
-  "finding_trajectory": {
-    "P1": {
-      "classification": "FINDINGS",
-      "findings_count": 8,
-      "findings": [
-        {"id": "F-01", "severity": "MED", "category": "output-contract", "description": "JSON output shape mismatch on `jr component create` — emitted flat string instead of BC-specified object with `id`/`name`/`projectId` keys"},
-        {"id": "F-02", "severity": "MED", "category": "output-contract", "description": "Missing `Run: jr component list --project <KEY>` suffix on create success human-text output (BC-8.1.003 exact wording)"},
-        {"id": "F-03", "severity": "MED", "category": "output-contract", "description": "Edit success message did not match BC-8.1.006 exact wording; test asserted loose `contains` and passed against drifted output"},
-        {"id": "F-04", "severity": "MED", "category": "output-contract", "description": "Dry-run output missing `Would create component` prefix; test used loose `contains_key` on JSON shape"},
-        {"id": "F-05", "severity": "MED", "category": "output-contract", "description": "Edit dry-run JSON shape omitted `action` field required by BC-8.1.007"},
-        {"id": "F-06", "severity": "LOW", "category": "output-contract", "description": "Component list not sorted alphabetically by name on create output echo; BC-8.1.004 requires sorted output"},
-        {"id": "F-07", "severity": "LOW", "category": "output-contract", "description": "Create success table missing trailing period in description column per BC-8.1.003"},
-        {"id": "F-08", "severity": "LOW", "category": "output-contract", "description": "Error path on 409 Conflict used non-canonical message wording (test asserted loose contains)"}
-      ],
-      "window_eligible": false,
-      "notes": "Command LOGIC correct from Pass 1; all findings are output-contract, message wording, or test assertion precision"
-    },
-    "P2": {
-      "classification": "FINDINGS",
-      "findings_count": 2,
-      "findings": [
-        {"id": "B-01", "severity": "MED", "category": "output-contract", "description": "List echo on create not sorted; BC-8.1.004 sort invariant"},
-        {"id": "B-02", "severity": "LOW", "category": "output-contract", "description": "Missing trailing period in component description display; BC-8.1.003"}
-      ],
-      "window_eligible": false,
-      "notes": "P1 F-01..F-08 all fixed; P2 found residual sort and period issues"
-    },
-    "P3": {
-      "classification": "FINDINGS",
-      "findings_count": 1,
-      "findings": [
-        {"id": "LOW-1", "severity": "LOW", "category": "output-contract", "description": "Empty `--lead` resolution message used wrong wording; BC-8.1.005 specifies exact message"}
-      ],
-      "window_eligible": false,
-      "notes": "P2 B-01/B-02 fixed; P3 found residual message wording in empty-lead path"
-    },
-    "P4": {
-      "classification": "FINDINGS",
-      "findings_count": 1,
-      "findings": [
-        {"id": "F-P4-01", "severity": "HIGH", "category": "bc-citation", "description": "BC-citation mis-anchoring: `jr component create` and `jr component edit` rustdoc referenced §8.2 Delete and §8.3 Rename instead of §8.1 Create/Edit; incorrect section anchors in all docstring citations"}
-      ],
-      "window_eligible": false,
-      "notes": "P3 LOW-1 fixed; P4 independently found HIGH citation error in docstrings"
-    },
-    "P5": {
-      "classification": "FINDINGS",
-      "findings_count": 2,
-      "findings": [
-        {"id": "F-P5-01", "severity": "LOW", "category": "documentation", "description": "`get_component` rustdoc inaccurate: claimed it returns a list, but returns a single component"},
-        {"id": "F-P5-02", "severity": "LOW", "category": "test-coverage", "description": "Edit `--lead` resolution path lacked explicit coverage test; AC-013 pin asserted wrong behavior"}
-      ],
-      "window_eligible": false,
-      "notes": "P4 F-P4-01 fixed; P5 found documentation and coverage precision findings"
-    },
-    "P6": {
-      "classification": "FINDINGS",
-      "findings_count": 0,
-      "findings": [],
-      "window_eligible": true,
-      "notes": "P5 findings fixed; P6 CLEAN — window starts (1/3)"
-    },
-    "P7": {
-      "classification": "FINDINGS",
-      "findings_count": 1,
-      "findings": [
-        {"id": "F-P7-01", "severity": "MED", "category": "test-coverage", "description": "Edit `--lead` resolution coverage gap: the exact-match-wins path for `--lead` was untested; AC-012 assertion was mislabeled (tested partial match, not exact match wins)"}
-      ],
-      "window_eligible": false,
-      "notes": "P6 was CLEAN but P7 found a MEDIUM; window reset at 0/3. P7 and P8 independently dual-found the same finding class"
-    },
-    "P8": {
-      "classification": "FINDINGS",
-      "findings_count": 1,
-      "findings": [
-        {"id": "F-P8-01", "severity": "MED", "category": "test-coverage", "description": "AC-012 mislabel: test named `test_component_edit_lead_exact_match_wins` but body exercised partial-match path; exact-match-wins semantics unverified"}
-      ],
-      "window_eligible": false,
-      "notes": "P7/P8 both caught the AC-012 mislabel independently; fixed; window reset"
-    },
-    "A": {
-      "classification": "CLEAN",
-      "findings_count": 0,
-      "findings": [],
-      "window_eligible": true,
-      "window_position": "1/3",
-      "notes": "P7/P8 findings fixed; Pass A CLEAN — convergence window restarts (1/3)"
-    },
-    "B": {
-      "classification": "CLEAN",
-      "findings_count": 0,
-      "findings": [],
-      "window_eligible": true,
-      "window_position": "2/3",
-      "notes": "Pass B CLEAN — convergence window at 2/3"
-    },
-    "C": {
-      "classification": "CLEAN",
-      "findings_count": 0,
-      "findings": [],
-      "window_eligible": true,
-      "window_position": "3/3",
-      "notes": "Pass C CLEAN — convergence window COMPLETE (3/3 CLEAN). CONVERGED."
-    }
+
+  "original_finding_trajectory": {
+    "P1": {"classification": "FINDINGS", "findings_count": 8, "window_eligible": false, "notes": "8 output-contract findings; command logic correct from Pass 1"},
+    "P2": {"classification": "FINDINGS", "findings_count": 2, "window_eligible": false, "notes": "P1 F-01..F-08 all fixed; P2 found residual sort and period issues"},
+    "P3": {"classification": "FINDINGS", "findings_count": 1, "window_eligible": false, "notes": "P2 B-01/B-02 fixed; P3 found residual message wording in empty-lead path"},
+    "P4": {"classification": "FINDINGS", "findings_count": 1, "window_eligible": false, "notes": "P3 LOW-1 fixed; P4 independently found HIGH citation error in docstrings"},
+    "P5": {"classification": "FINDINGS", "findings_count": 2, "window_eligible": false, "notes": "P4 F-P4-01 fixed; P5 found documentation and coverage precision findings"},
+    "P6": {"classification": "CLEAN", "findings_count": 0, "window_eligible": true, "window_position": "1/3", "notes": "P5 findings fixed; P6 CLEAN -- window starts (1/3)"},
+    "P7": {"classification": "FINDINGS", "findings_count": 1, "window_eligible": false, "notes": "P6 was CLEAN but P7 found a MEDIUM; window reset at 0/3"},
+    "P8": {"classification": "FINDINGS", "findings_count": 1, "window_eligible": false, "notes": "P7/P8 both caught the AC-012 mislabel independently; fixed; window reset"},
+    "A": {"classification": "CLEAN", "findings_count": 0, "window_eligible": true, "window_position": "1/3", "notes": "Pass A CLEAN -- convergence window restarts (1/3)"},
+    "B": {"classification": "CLEAN", "findings_count": 0, "window_eligible": true, "window_position": "2/3", "notes": "Pass B CLEAN -- convergence window at 2/3"},
+    "C": {"classification": "CLEAN", "findings_count": 0, "window_eligible": true, "window_position": "3/3", "notes": "Pass C CLEAN -- convergence window COMPLETE (3/3 CLEAN) -- SUPERSEDED by PR #704 review"}
   },
+
   "residual_info_non_blocking": [
     {
       "id": "OBS-1",
       "severity": "INFO",
-      "description": "len()-based `--lead` vs issue-assign exact-match-wins resolution; OBS rather than LOW per DEC-245 (INFO-only is CLEAN)"
+      "description": "len()-based --lead vs issue-assign exact-match-wins resolution; OBS rather than LOW per DEC-245 (INFO-only is CLEAN)"
     },
     {
       "id": "OBS-2",
@@ -144,9 +178,10 @@
     {
       "id": "OBS-5",
       "severity": "INFO",
-      "description": "Cross-story NAME-path message consistency with #606 (`jr component list` output); wave-gate item, not a per-story convergence blocker"
+      "description": "Cross-story NAME-path message consistency with #606 (jr component list output); wave-gate item, not a per-story convergence blocker"
     }
   ],
-  "convergence_summary": "S-604-2 (`jr component create`/`edit`, 8pts) converged to the DEC-245 strict bar after 11 total passes (P1-P8 + A/B/C). Command logic was correct from Pass 1; all non-INFO findings were output-contract precision, message wording, BC-citation anchoring, documentation accuracy, and test assertion precision. Three consecutive CLEAN passes (A/B/C) on byte-identical content at SHA 4f48def5. Residual INFO items are non-blocking per DEC-245.",
-  "timestamp": "2026-08-16T21:00:00Z"
+
+  "convergence_summary": "S-604-2 (jr component create/edit, 8pts) RE-CONVERGED to the DEC-245 strict bar after 14 total passes. Original convergence (11 passes P1-P8 + A/B/C at SHA 4f48def5) was SUPERSEDED by PR #704 fresh-eyes review which found BLOCKING (--assignee-type ValueEnum kebab vs SCREAMING_SNAKE, masked by AC-002 test encoding wrong value -- all 11 Step-4.5 passes missed this) and HIGH (ExactMultiple fold in handle_edit, BC-X.10.003 fail-closed violated, prior adversary mis-adjudicated as BC-8.4.005). All issues fixed on-branch. Re-convergence: R1-R3 (BLOCKING + HIGH confirmed + error-stutter), RC1-RC3 (stale comments + global-project MEDIUM empirically refuted via test_bc_8_1_007_component_edit_honors_global_project_flag). Three consecutive CLEAN passes FA/FB/FC on byte-identical content at SHA 05743729. Residual INFO items are non-blocking per DEC-245.",
+  "timestamp": "2026-08-17T04:00:00Z"
 }
