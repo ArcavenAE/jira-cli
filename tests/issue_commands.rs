@@ -2886,3 +2886,1363 @@ async fn test_queue_view_no_due_date_column_regardless_of_duedate_value() {
         "AC-16: queue view must not show a Due Date column, got:\n{stdout}"
     );
 }
+
+// ═══════════════════════════════════════════════════════════════════════
+// S-606-1: `jr issue list --component` filter (BC-2.1.018..022)
+// ═══════════════════════════════════════════════════════════════════════
+//
+// 17 acceptance-criteria tests (AC-001..017) covering:
+//   - bare `--component <NAME>` OR-composition (AC-001, AC-002)
+//   - `not:<NAME>` OR-EMPTY exclusion form (AC-003, AC-004)
+//   - bare + `not:` coexistence (AC-005)
+//   - `none` reserved keyword (AC-006, AC-007, AC-008)
+//   - `all:<N1>,<N2>` AND-composition (AC-009, AC-010, AC-011, AC-012)
+//   - resolver failure zero-search guarantee (AC-013, AC-014, AC-015)
+//   - BC-2.1.007 clause ordering (AC-016)
+//   - reserved-syntax collision documentation (AC-017)
+//
+// All tests exercise the full CLI (`assert_cmd`) rather than the private
+// `build_filter_clauses`/`resolve_component_clauses` functions directly —
+// the composed JQL is observed via the actual outbound
+// `POST /rest/api/3/search/jql` request body captured through
+// `MockServer::received_requests()`, mirroring the pattern established in
+// `tests/component_commands.rs` (AC-017 snapshot-JQL assertion).
+//
+// Implementation status: `resolve_component_clauses` and `build_filter_clauses`'s
+// component branch are implemented; all 18 integration tests below are green,
+// exercising the shipped `--component` filter behavior (BC-2.1.018..022).
+
+/// Shared harness: `jr` CLI invocation pre-wired with an isolated cache and
+/// config directory (per-test tempdirs) so the ADR-0018 components-cache
+/// layer never leaks across tests or picks up a developer's real
+/// `~/.cache/jr` / `~/.config/jr` state.
+fn s606_1_cmd(
+    server_uri: &str,
+    cache_dir: &std::path::Path,
+    config_dir: &std::path::Path,
+) -> assert_cmd::Command {
+    let mut cmd = assert_cmd::Command::cargo_bin("jr").unwrap();
+    cmd.env("JR_BASE_URL", server_uri)
+        .env("JR_AUTH_HEADER", "Basic dGVzdDp0ZXN0")
+        .env("JR_CACHE_DIR", cache_dir)
+        .env("JR_CONFIG_DIR", config_dir);
+    cmd
+}
+
+/// Mounts `GET /rest/api/3/project/{key}` (the `project_exists` pre-flight
+/// check `handle_list` runs whenever `--project`/a configured project is
+/// present and `--status` is absent) so tests using `--project FOO` don't
+/// fail on an unrelated 404 before ever reaching `--component` logic.
+async fn s606_1_mock_project_exists(server: &MockServer, key: &str) {
+    Mock::given(method("GET"))
+        .and(path(format!("/rest/api/3/project/{key}")))
+        .respond_with(
+            ResponseTemplate::new(200).set_body_json(common::fixtures::project_response(
+                key,
+                "Test Project",
+                "software",
+                None,
+            )),
+        )
+        .mount(server)
+        .await;
+}
+
+/// Mounts `GET /rest/api/3/project/{key}/components` (the §8.4 resolver's
+/// candidate-list fetch, BC-8.4.001) with the given component fixtures.
+async fn s606_1_mock_components(
+    server: &MockServer,
+    key: &str,
+    components: Vec<serde_json::Value>,
+) {
+    Mock::given(method("GET"))
+        .and(path(format!("/rest/api/3/project/{key}/components")))
+        .respond_with(
+            ResponseTemplate::new(200)
+                .set_body_json(common::fixtures::component_list_response(components)),
+        )
+        .mount(server)
+        .await;
+}
+
+/// Mounts a normal (unrestricted call-count) `POST /rest/api/3/search/jql`
+/// response so the happy-path tests can complete and their composed JQL can
+/// be inspected afterward via `s606_1_composed_jql`.
+async fn s606_1_mock_search_empty(server: &MockServer) {
+    Mock::given(method("POST"))
+        .and(path("/rest/api/3/search/jql"))
+        .respond_with(
+            ResponseTemplate::new(200)
+                .set_body_json(common::fixtures::issue_search_response(vec![])),
+        )
+        .mount(server)
+        .await;
+}
+
+/// Extracts the `jql` string field from the single captured
+/// `POST /rest/api/3/search/jql` request body.
+async fn s606_1_composed_jql(server: &MockServer) -> String {
+    let received = server.received_requests().await.unwrap();
+    let search_req = received
+        .iter()
+        .find(|r| r.url.path() == "/rest/api/3/search/jql")
+        .expect("S-606-1: search/jql request must have fired");
+    let body: serde_json::Value =
+        serde_json::from_slice(&search_req.body).expect("S-606-1: body must be valid JSON");
+    body["jql"]
+        .as_str()
+        .expect("S-606-1: jql field must be a string")
+        .to_string()
+}
+
+/// VP-COMPONENT-013 zero-search guarantee: mounts a catch-all
+/// `.expect(0)` on `POST /rest/api/3/search/jql` — any component
+/// resolution failure or precondition rejection MUST short-circuit before
+/// the issue search ever fires.
+async fn s606_1_expect_zero_search(server: &MockServer) {
+    Mock::given(method("POST"))
+        .and(path("/rest/api/3/search/jql"))
+        .respond_with(
+            ResponseTemplate::new(200)
+                .set_body_json(common::fixtures::issue_search_response(vec![])),
+        )
+        .expect(0)
+        .mount(server)
+        .await;
+}
+
+/// Strongest form of the zero-HTTP guarantee: registers catch-all
+/// `.expect(0)` mocks for ANY GET and ANY POST request. Used for the
+/// pre-flight precondition guards (`none` combination, repeated `all:`,
+/// `all:`+bare mixing, no-project-scope) which BC-2.1.020/021/022 document
+/// as firing with literally ZERO HTTP calls — not merely zero resolver/
+/// search calls — because the guard is evaluated purely from the CLI-
+/// supplied `--component` values, before project validation or resolution.
+async fn s606_1_expect_zero_http(server: &MockServer) {
+    Mock::given(method("GET"))
+        .respond_with(ResponseTemplate::new(200).set_body_json(serde_json::json!({})))
+        .expect(0)
+        .mount(server)
+        .await;
+    Mock::given(method("POST"))
+        .respond_with(ResponseTemplate::new(200).set_body_json(serde_json::json!({})))
+        .expect(0)
+        .mount(server)
+        .await;
+}
+
+// ── AC-001 (BC-2.1.018 postcondition 1 — OR composition) ─────────────────
+
+/// `--component Backend --component Frontend` composes ONE clause
+/// `component in (10001, 10002)` (input order preserved), not two separate
+/// clauses.
+#[tokio::test]
+async fn test_bc_2_1_018_issue_list_component_repeated_or_composed_single_clause() {
+    let server = MockServer::start().await;
+    let cache_dir = tempfile::tempdir().unwrap();
+    let config_dir = tempfile::tempdir().unwrap();
+
+    s606_1_mock_project_exists(&server, "FOO").await;
+    s606_1_mock_components(
+        &server,
+        "FOO",
+        vec![
+            common::fixtures::component_response("10001", "Backend", None, None, None),
+            common::fixtures::component_response("10002", "Frontend", None, None, None),
+        ],
+    )
+    .await;
+    s606_1_mock_search_empty(&server).await;
+
+    let output = s606_1_cmd(&server.uri(), cache_dir.path(), config_dir.path())
+        .args([
+            "--no-input",
+            "issue",
+            "list",
+            "--project",
+            "FOO",
+            "--component",
+            "Backend",
+            "--component",
+            "Frontend",
+        ])
+        .output()
+        .unwrap();
+
+    assert!(
+        output.status.success(),
+        "AC-001: expected exit 0, stderr: {}",
+        String::from_utf8_lossy(&output.stderr)
+    );
+
+    let jql = s606_1_composed_jql(&server).await;
+    assert!(
+        jql.contains("component in (10001, 10002)"),
+        "AC-001: expected single OR-composed clause 'component in (10001, 10002)' in jql: {jql}"
+    );
+    assert!(
+        !jql.contains("component in (10001) AND component in (10002)"),
+        "AC-001: must NOT emit two separate clauses, got jql: {jql}"
+    );
+}
+
+/// Step-4.5 LOW-1: `--component Frontend --component Backend` (input order
+/// INVERTED relative to id-ascending order) must compose `component in
+/// (10002, 10001)` — INPUT order preserved, not sorted to id-ascending
+/// `(10001, 10002)`. Every other multi-value test in this suite supplies
+/// Backend before Frontend, where input order happens to coincide with
+/// id-ascending order, so a wrong impl that sorted ids (e.g. via a
+/// `BTreeSet`/`.sort()`) would still pass those tests undetected. This test
+/// inverts the order to catch exactly that regression.
+#[tokio::test]
+async fn test_bc_2_1_018_issue_list_component_or_preserves_input_order_not_sorted() {
+    let server = MockServer::start().await;
+    let cache_dir = tempfile::tempdir().unwrap();
+    let config_dir = tempfile::tempdir().unwrap();
+
+    s606_1_mock_project_exists(&server, "FOO").await;
+    s606_1_mock_components(
+        &server,
+        "FOO",
+        vec![
+            common::fixtures::component_response("10001", "Backend", None, None, None),
+            common::fixtures::component_response("10002", "Frontend", None, None, None),
+        ],
+    )
+    .await;
+    s606_1_mock_search_empty(&server).await;
+
+    let output = s606_1_cmd(&server.uri(), cache_dir.path(), config_dir.path())
+        .args([
+            "--no-input",
+            "issue",
+            "list",
+            "--project",
+            "FOO",
+            "--component",
+            "Frontend",
+            "--component",
+            "Backend",
+        ])
+        .output()
+        .unwrap();
+
+    assert!(
+        output.status.success(),
+        "LOW-1: expected exit 0, stderr: {}",
+        String::from_utf8_lossy(&output.stderr)
+    );
+
+    let jql = s606_1_composed_jql(&server).await;
+    assert!(
+        jql.contains("component in (10002, 10001)"),
+        "LOW-1: expected input-order-preserved clause 'component in (10002, 10001)' in jql: {jql}"
+    );
+    assert!(
+        !jql.contains("component in (10001, 10002)"),
+        "LOW-1: must NOT sort ids to id-ascending order, got jql: {jql}"
+    );
+}
+
+// ── AC-002 (BC-2.1.018 EC-2.1.018-1 — single value) ───────────────────────
+
+/// `--component Backend` alone → `component in (10001)`, NOT rewritten to
+/// `component = 10001`.
+#[tokio::test]
+async fn test_bc_2_1_018_issue_list_component_single_value_stays_in_clause() {
+    let server = MockServer::start().await;
+    let cache_dir = tempfile::tempdir().unwrap();
+    let config_dir = tempfile::tempdir().unwrap();
+
+    s606_1_mock_project_exists(&server, "FOO").await;
+    s606_1_mock_components(
+        &server,
+        "FOO",
+        vec![common::fixtures::component_response(
+            "10001", "Backend", None, None, None,
+        )],
+    )
+    .await;
+    s606_1_mock_search_empty(&server).await;
+
+    let output = s606_1_cmd(&server.uri(), cache_dir.path(), config_dir.path())
+        .args([
+            "--no-input",
+            "issue",
+            "list",
+            "--project",
+            "FOO",
+            "--component",
+            "Backend",
+        ])
+        .output()
+        .unwrap();
+
+    assert!(
+        output.status.success(),
+        "AC-002: expected exit 0, stderr: {}",
+        String::from_utf8_lossy(&output.stderr)
+    );
+
+    let jql = s606_1_composed_jql(&server).await;
+    assert!(
+        jql.contains("component in (10001)"),
+        "AC-002: expected 'component in (10001)' in jql: {jql}"
+    );
+    assert!(
+        !jql.contains("component = 10001"),
+        "AC-002: single value must NOT be rewritten to 'component = 10001', got jql: {jql}"
+    );
+}
+
+// ── AC-003 (BC-2.1.019 Postcondition 1 — OR-EMPTY form) ──────────────────
+
+/// `--component not:Frontend` → the FULL parenthesized `(component not in
+/// (10002) OR component is EMPTY)` form, never a bare `not in`.
+#[tokio::test]
+async fn test_bc_2_1_019_issue_list_component_not_composes_or_empty_form() {
+    let server = MockServer::start().await;
+    let cache_dir = tempfile::tempdir().unwrap();
+    let config_dir = tempfile::tempdir().unwrap();
+
+    s606_1_mock_project_exists(&server, "FOO").await;
+    s606_1_mock_components(
+        &server,
+        "FOO",
+        vec![common::fixtures::component_response(
+            "10002", "Frontend", None, None, None,
+        )],
+    )
+    .await;
+    s606_1_mock_search_empty(&server).await;
+
+    let output = s606_1_cmd(&server.uri(), cache_dir.path(), config_dir.path())
+        .args([
+            "--no-input",
+            "issue",
+            "list",
+            "--project",
+            "FOO",
+            "--component",
+            "not:Frontend",
+        ])
+        .output()
+        .unwrap();
+
+    assert!(
+        output.status.success(),
+        "AC-003: expected exit 0, stderr: {}",
+        String::from_utf8_lossy(&output.stderr)
+    );
+
+    let jql = s606_1_composed_jql(&server).await;
+    assert!(
+        jql.contains("(component not in (10002) OR component is EMPTY)"),
+        "AC-003: expected full OR-EMPTY form in jql: {jql}"
+    );
+    // Step-4.5 AC-003 tidy: the two negatives this replaced (a stray-space
+    // variant and a double-paren variant) could never match regardless of
+    // correctness, so they added no protection. This meaningful negative
+    // instead proves the OR-EMPTY wrapper is actually present: every
+    // occurrence of the bare inner clause `component not in (10002)` must
+    // be part of the full wrapped form — a regression that emitted the bare
+    // `not in` clause without the OR-EMPTY wrapper would desync these two
+    // counts.
+    let bare_not_count = jql.matches("component not in (10002)").count();
+    let wrapped_count = jql
+        .matches("(component not in (10002) OR component is EMPTY)")
+        .count();
+    assert_eq!(
+        bare_not_count, wrapped_count,
+        "AC-003: every 'component not in (10002)' occurrence must be wrapped in the OR-EMPTY form, got jql: {jql}"
+    );
+}
+
+// ── AC-004 (BC-2.1.019 EC-2.1.019-1 — multiple not: in one group) ────────
+
+/// `--component not:Backend --component not:Frontend` → ONE clause
+/// `(component not in (10001, 10002) OR component is EMPTY)`, not two.
+#[tokio::test]
+async fn test_bc_2_1_019_issue_list_component_multiple_not_single_group() {
+    let server = MockServer::start().await;
+    let cache_dir = tempfile::tempdir().unwrap();
+    let config_dir = tempfile::tempdir().unwrap();
+
+    s606_1_mock_project_exists(&server, "FOO").await;
+    s606_1_mock_components(
+        &server,
+        "FOO",
+        vec![
+            common::fixtures::component_response("10001", "Backend", None, None, None),
+            common::fixtures::component_response("10002", "Frontend", None, None, None),
+        ],
+    )
+    .await;
+    s606_1_mock_search_empty(&server).await;
+
+    let output = s606_1_cmd(&server.uri(), cache_dir.path(), config_dir.path())
+        .args([
+            "--no-input",
+            "issue",
+            "list",
+            "--project",
+            "FOO",
+            "--component",
+            "not:Backend",
+            "--component",
+            "not:Frontend",
+        ])
+        .output()
+        .unwrap();
+
+    assert!(
+        output.status.success(),
+        "AC-004: expected exit 0, stderr: {}",
+        String::from_utf8_lossy(&output.stderr)
+    );
+
+    let jql = s606_1_composed_jql(&server).await;
+    assert!(
+        jql.contains("(component not in (10001, 10002) OR component is EMPTY)"),
+        "AC-004: expected single grouped OR-EMPTY clause in jql: {jql}"
+    );
+    assert!(
+        jql.matches("OR component is EMPTY").count() == 1,
+        "AC-004: expected exactly ONE OR-EMPTY group, got jql: {jql}"
+    );
+}
+
+// ── AC-005 (BC-2.1.018 Precondition 3 / BC-2.1.019 Postcondition 2 —
+//    bare+not: coexist) ────────────────────────────────────────────────
+
+/// `--component Backend --component not:Frontend` → BOTH clauses compose,
+/// AND-joined, bare FIRST: `component in (10001) AND (component not in
+/// (10002) OR component is EMPTY)`.
+#[tokio::test]
+async fn test_bc_2_1_018_issue_list_component_bare_and_not_coexist_bare_first() {
+    let server = MockServer::start().await;
+    let cache_dir = tempfile::tempdir().unwrap();
+    let config_dir = tempfile::tempdir().unwrap();
+
+    s606_1_mock_project_exists(&server, "FOO").await;
+    s606_1_mock_components(
+        &server,
+        "FOO",
+        vec![
+            common::fixtures::component_response("10001", "Backend", None, None, None),
+            common::fixtures::component_response("10002", "Frontend", None, None, None),
+        ],
+    )
+    .await;
+    s606_1_mock_search_empty(&server).await;
+
+    let output = s606_1_cmd(&server.uri(), cache_dir.path(), config_dir.path())
+        .args([
+            "--no-input",
+            "issue",
+            "list",
+            "--project",
+            "FOO",
+            "--component",
+            "Backend",
+            "--component",
+            "not:Frontend",
+        ])
+        .output()
+        .unwrap();
+
+    assert!(
+        output.status.success(),
+        "AC-005: expected exit 0, stderr: {}",
+        String::from_utf8_lossy(&output.stderr)
+    );
+
+    let jql = s606_1_composed_jql(&server).await;
+    assert!(
+        jql.contains("component in (10001) AND (component not in (10002) OR component is EMPTY)"),
+        "AC-005: expected bare-then-not: AND-joined composition in jql: {jql}"
+    );
+}
+
+// ── AC-006 (BC-2.1.020 Postcondition 1 — reserved keyword, zero resolver
+//    HTTP) ─────────────────────────────────────────────────────────────
+
+/// `--component none` → `component is EMPTY`, ZERO §8.4 resolver HTTP (no
+/// candidate-list GET fires for `none` specifically).
+#[tokio::test]
+async fn test_bc_2_1_020_issue_list_component_none_zero_resolver_http() {
+    let server = MockServer::start().await;
+    let cache_dir = tempfile::tempdir().unwrap();
+    let config_dir = tempfile::tempdir().unwrap();
+
+    s606_1_mock_project_exists(&server, "FOO").await;
+    // The resolver GET must NEVER fire for `none` — VP-COMPONENT-015.
+    Mock::given(method("GET"))
+        .and(path("/rest/api/3/project/FOO/components"))
+        .respond_with(ResponseTemplate::new(200).set_body_json(
+            common::fixtures::component_list_response(vec![common::fixtures::component_response(
+                "10001", "Backend", None, None, None,
+            )]),
+        ))
+        .expect(0)
+        .mount(&server)
+        .await;
+    s606_1_mock_search_empty(&server).await;
+
+    let output = s606_1_cmd(&server.uri(), cache_dir.path(), config_dir.path())
+        .args([
+            "--no-input",
+            "issue",
+            "list",
+            "--project",
+            "FOO",
+            "--component",
+            "none",
+        ])
+        .output()
+        .unwrap();
+
+    assert!(
+        output.status.success(),
+        "AC-006: expected exit 0, stderr: {}",
+        String::from_utf8_lossy(&output.stderr)
+    );
+
+    let jql = s606_1_composed_jql(&server).await;
+    assert!(
+        jql.contains("component is EMPTY"),
+        "AC-006: expected 'component is EMPTY' in jql: {jql}"
+    );
+}
+
+// INFO-1 (Step-4.5 adversarial finding, cheap coverage add): BC-2.1.020's
+// `none` keyword match is documented case-insensitive, but AC-006 only
+// exercises the exact lowercase spelling `"none"`. Pins `--component NONE`
+// (uppercase) and `--component None` (mixed case) against the same
+// zero-resolver-HTTP / `component is EMPTY` behavior as AC-006.
+
+/// `--component NONE` (uppercase) and `--component None` (mixed case) both
+/// compose `component is EMPTY` with ZERO §8.4 resolver HTTP, identically to
+/// `--component none` (AC-006) — BC-2.1.020 case-insensitivity.
+#[tokio::test]
+async fn test_bc_2_1_020_issue_list_component_none_case_insensitive() {
+    for spelling in ["NONE", "None"] {
+        let server = MockServer::start().await;
+        let cache_dir = tempfile::tempdir().unwrap();
+        let config_dir = tempfile::tempdir().unwrap();
+
+        s606_1_mock_project_exists(&server, "FOO").await;
+        // The resolver GET must NEVER fire for any case-variant of `none` —
+        // VP-COMPONENT-015 / BC-2.1.020 case-insensitivity.
+        Mock::given(method("GET"))
+            .and(path("/rest/api/3/project/FOO/components"))
+            .respond_with(ResponseTemplate::new(200).set_body_json(
+                common::fixtures::component_list_response(vec![
+                    common::fixtures::component_response("10001", "Backend", None, None, None),
+                ]),
+            ))
+            .expect(0)
+            .mount(&server)
+            .await;
+        s606_1_mock_search_empty(&server).await;
+
+        let output = s606_1_cmd(&server.uri(), cache_dir.path(), config_dir.path())
+            .args([
+                "--no-input",
+                "issue",
+                "list",
+                "--project",
+                "FOO",
+                "--component",
+                spelling,
+            ])
+            .output()
+            .unwrap();
+
+        assert!(
+            output.status.success(),
+            "INFO-1 ({spelling}): expected exit 0, stderr: {}",
+            String::from_utf8_lossy(&output.stderr)
+        );
+
+        let jql = s606_1_composed_jql(&server).await;
+        assert!(
+            jql.contains("component is EMPTY"),
+            "INFO-1 ({spelling}): expected 'component is EMPTY' in jql: {jql}"
+        );
+    }
+}
+
+// ── AC-007 (BC-2.1.020 Behavior — combination rejection) ─────────────────
+
+/// `--component none --component Backend` → exit 64 pre-flight, ZERO HTTP —
+/// `none` rejects ANY other `--component` occurrence.
+#[tokio::test]
+async fn test_bc_2_1_020_issue_list_component_none_combination_rejected() {
+    let server = MockServer::start().await;
+    let cache_dir = tempfile::tempdir().unwrap();
+    let config_dir = tempfile::tempdir().unwrap();
+
+    s606_1_expect_zero_http(&server).await;
+
+    let output = s606_1_cmd(&server.uri(), cache_dir.path(), config_dir.path())
+        .args([
+            "--no-input",
+            "issue",
+            "list",
+            "--project",
+            "FOO",
+            "--component",
+            "none",
+            "--component",
+            "Backend",
+        ])
+        .output()
+        .unwrap();
+
+    let stderr = String::from_utf8_lossy(&output.stderr);
+    assert_eq!(
+        output.status.code(),
+        Some(64),
+        "AC-007: expected exit 64, got {:?}, stderr: {stderr}",
+        output.status.code()
+    );
+    assert!(
+        stderr.contains("--component none cannot be combined with other --component values."),
+        "AC-007: expected exact BC-2.1.020 message, got stderr: {stderr}"
+    );
+}
+
+// ── AC-008 (BC-2.1.020 Precondition 2 / EC-2.1.020-3 — project-scope
+//    requirement) ─────────────────────────────────────────────────────
+
+/// `--component none` with no `--project` and no configured project → exit
+/// 64 pre-flight, ZERO HTTP — `none` is NOT exempt from project-scoping.
+#[tokio::test]
+async fn test_bc_2_1_020_issue_list_component_none_requires_project_scope() {
+    let server = MockServer::start().await;
+    let cache_dir = tempfile::tempdir().unwrap();
+    let config_dir = tempfile::tempdir().unwrap();
+    // No .jr.toml written — cwd carries no default project.
+    let project_dir = tempfile::tempdir().unwrap();
+
+    s606_1_expect_zero_http(&server).await;
+
+    let output = s606_1_cmd(&server.uri(), cache_dir.path(), config_dir.path())
+        .current_dir(project_dir.path())
+        .args(["--no-input", "issue", "list", "--component", "none"])
+        .output()
+        .unwrap();
+
+    let stderr = String::from_utf8_lossy(&output.stderr);
+    assert_eq!(
+        output.status.code(),
+        Some(64),
+        "AC-008: expected exit 64, got {:?}, stderr: {stderr}",
+        output.status.code()
+    );
+    assert!(
+        stderr.contains(
+            "--component none requires --project (or a configured default project) to avoid an unrestricted org-wide search."
+        ),
+        "AC-008: expected exact BC-2.1.022 EC-2.1.022-2 message, got stderr: {stderr}"
+    );
+}
+
+// ── AC-009 (BC-2.1.021 Postcondition 1 — AND composition) ────────────────
+
+/// `--component all:Backend,Frontend` → `component = 10001 AND component =
+/// 10002` (repeated equality, NOT `IN`).
+#[tokio::test]
+async fn test_bc_2_1_021_issue_list_component_all_and_composed_repeated_equality() {
+    let server = MockServer::start().await;
+    let cache_dir = tempfile::tempdir().unwrap();
+    let config_dir = tempfile::tempdir().unwrap();
+
+    s606_1_mock_project_exists(&server, "FOO").await;
+    s606_1_mock_components(
+        &server,
+        "FOO",
+        vec![
+            common::fixtures::component_response("10001", "Backend", None, None, None),
+            common::fixtures::component_response("10002", "Frontend", None, None, None),
+        ],
+    )
+    .await;
+    s606_1_mock_search_empty(&server).await;
+
+    let output = s606_1_cmd(&server.uri(), cache_dir.path(), config_dir.path())
+        .args([
+            "--no-input",
+            "issue",
+            "list",
+            "--project",
+            "FOO",
+            "--component",
+            "all:Backend,Frontend",
+        ])
+        .output()
+        .unwrap();
+
+    assert!(
+        output.status.success(),
+        "AC-009: expected exit 0, stderr: {}",
+        String::from_utf8_lossy(&output.stderr)
+    );
+
+    let jql = s606_1_composed_jql(&server).await;
+    assert!(
+        jql.contains("component = 10001 AND component = 10002"),
+        "AC-009: expected repeated-equality AND clause in jql: {jql}"
+    );
+    assert!(
+        !jql.contains("component in ("),
+        "AC-009: must NOT use IN for all:, got jql: {jql}"
+    );
+}
+
+// ── AC-010 (BC-2.1.021 Precondition 1 — repeated all: rejected) ──────────
+
+/// `--component all:X --component all:Y` (two `all:` occurrences) → exit
+/// 64, exact BC-2.1.021 message.
+#[tokio::test]
+async fn test_bc_2_1_021_issue_list_component_repeated_all_prefix_rejected() {
+    let server = MockServer::start().await;
+    let cache_dir = tempfile::tempdir().unwrap();
+    let config_dir = tempfile::tempdir().unwrap();
+
+    s606_1_expect_zero_http(&server).await;
+
+    let output = s606_1_cmd(&server.uri(), cache_dir.path(), config_dir.path())
+        .args([
+            "--no-input",
+            "issue",
+            "list",
+            "--project",
+            "FOO",
+            "--component",
+            "all:X",
+            "--component",
+            "all:Y",
+        ])
+        .output()
+        .unwrap();
+
+    let stderr = String::from_utf8_lossy(&output.stderr);
+    assert_eq!(
+        output.status.code(),
+        Some(64),
+        "AC-010: expected exit 64, got {:?}, stderr: {stderr}",
+        output.status.code()
+    );
+    assert!(
+        stderr.contains(
+            "--component all: may only be specified once; comma-separate multiple names within one all: value."
+        ),
+        "AC-010: expected exact BC-2.1.021 Precondition 1 message, got stderr: {stderr}"
+    );
+}
+
+// ── AC-011 (BC-2.1.021 Precondition 2 / EC-2.1.021-2 — all:+bare
+//    rejected) ─────────────────────────────────────────────────────────
+
+/// `--component all:Backend --component Frontend` (mixing `all:` with a
+/// bare value) → exit 64 pre-flight, zero HTTP.
+#[tokio::test]
+async fn test_bc_2_1_021_issue_list_component_all_mixed_with_bare_rejected() {
+    let server = MockServer::start().await;
+    let cache_dir = tempfile::tempdir().unwrap();
+    let config_dir = tempfile::tempdir().unwrap();
+
+    s606_1_expect_zero_http(&server).await;
+
+    let output = s606_1_cmd(&server.uri(), cache_dir.path(), config_dir.path())
+        .args([
+            "--no-input",
+            "issue",
+            "list",
+            "--project",
+            "FOO",
+            "--component",
+            "all:Backend",
+            "--component",
+            "Frontend",
+        ])
+        .output()
+        .unwrap();
+
+    let stderr = String::from_utf8_lossy(&output.stderr);
+    assert_eq!(
+        output.status.code(),
+        Some(64),
+        "AC-011: expected exit 64, got {:?}, stderr: {stderr}",
+        output.status.code()
+    );
+    assert!(
+        !stderr.is_empty(),
+        "AC-011: expected a non-empty rejection message"
+    );
+    assert!(
+        stderr.contains("--component all: cannot be combined with other --component values."),
+        "AC-011: expected exact all:+bare-combination rejection message, got stderr: {stderr}"
+    );
+}
+
+// ── AC-012 (BC-2.1.021 EC-2.1.021-1 — single-name all: degenerates) ──────
+
+/// `--component all:Backend` (single name, no comma) → `component = 10001`
+/// (one-term AND, a DIFFERENT code path from `--component Backend`).
+#[tokio::test]
+async fn test_bc_2_1_021_issue_list_component_all_single_name_degenerates() {
+    let server = MockServer::start().await;
+    let cache_dir = tempfile::tempdir().unwrap();
+    let config_dir = tempfile::tempdir().unwrap();
+
+    s606_1_mock_project_exists(&server, "FOO").await;
+    s606_1_mock_components(
+        &server,
+        "FOO",
+        vec![common::fixtures::component_response(
+            "10001", "Backend", None, None, None,
+        )],
+    )
+    .await;
+    s606_1_mock_search_empty(&server).await;
+
+    let output = s606_1_cmd(&server.uri(), cache_dir.path(), config_dir.path())
+        .args([
+            "--no-input",
+            "issue",
+            "list",
+            "--project",
+            "FOO",
+            "--component",
+            "all:Backend",
+        ])
+        .output()
+        .unwrap();
+
+    assert!(
+        output.status.success(),
+        "AC-012: expected exit 0, stderr: {}",
+        String::from_utf8_lossy(&output.stderr)
+    );
+
+    let jql = s606_1_composed_jql(&server).await;
+    assert!(
+        jql.contains("component = 10001"),
+        "AC-012: expected 'component = 10001' in jql: {jql}"
+    );
+    assert!(
+        !jql.contains("component in (10001)"),
+        "AC-012: all:'s single-name degenerate form must NOT go through the bare IN path, got jql: {jql}"
+    );
+}
+
+// ── AC-013 (BC-2.1.022 Behavior — zero-match resolver failure) ───────────
+
+/// `--component BadName` (zero matches) → exit 64, exact BC-8.4.002
+/// message; `POST /rest/api/3/search/jql` NEVER called (VP-COMPONENT-013).
+#[tokio::test]
+async fn test_bc_2_1_022_issue_list_component_unknown_name_zero_search() {
+    let server = MockServer::start().await;
+    let cache_dir = tempfile::tempdir().unwrap();
+    let config_dir = tempfile::tempdir().unwrap();
+
+    s606_1_mock_project_exists(&server, "FOO").await;
+    // Deliberately unsorted fixture order to prove the "Available:" list is
+    // sorted alphabetically by the implementation, not passed through as-is.
+    s606_1_mock_components(
+        &server,
+        "FOO",
+        vec![
+            common::fixtures::component_response("10002", "Frontend", None, None, None),
+            common::fixtures::component_response("10001", "Backend", None, None, None),
+        ],
+    )
+    .await;
+    s606_1_expect_zero_search(&server).await;
+
+    let output = s606_1_cmd(&server.uri(), cache_dir.path(), config_dir.path())
+        .args([
+            "--no-input",
+            "issue",
+            "list",
+            "--project",
+            "FOO",
+            "--component",
+            "BadName",
+        ])
+        .output()
+        .unwrap();
+
+    let stderr = String::from_utf8_lossy(&output.stderr);
+    assert_eq!(
+        output.status.code(),
+        Some(64),
+        "AC-013: expected exit 64, got {:?}, stderr: {stderr}",
+        output.status.code()
+    );
+    assert!(
+        stderr.contains(
+            "Component 'BadName' not found in project FOO. Available: Backend, Frontend."
+        ),
+        "AC-013: expected exact BC-8.4.002 message with alphabetically-sorted \
+         Available list, got stderr: {stderr}"
+    );
+}
+
+// ── AC-014 (BC-2.1.022 Behavior — ambiguous resolver failure) ────────────
+
+/// `--component Amb` (2+ matches) → exit 64, exact BC-8.4.003 message; zero
+/// JQL search calls.
+#[tokio::test]
+async fn test_bc_2_1_022_issue_list_component_ambiguous_name_zero_search() {
+    let server = MockServer::start().await;
+    let cache_dir = tempfile::tempdir().unwrap();
+    let config_dir = tempfile::tempdir().unwrap();
+
+    s606_1_mock_project_exists(&server, "FOO").await;
+    // Deliberately reverse-alphabetical fixture order (mirrors AC-013's
+    // "Available:" test above) so the "Matches:" assertion below can only
+    // pass if the implementation actually sorts the candidates — with the
+    // fixture already alphabetical, deleting `candidates.sort_by_key` at
+    // `list.rs`'s ambiguous-match branch would go undetected.
+    s606_1_mock_components(
+        &server,
+        "FOO",
+        vec![
+            common::fixtures::component_response("20002", "Ambition", None, None, None),
+            common::fixtures::component_response("20001", "Amber", None, None, None),
+        ],
+    )
+    .await;
+    s606_1_expect_zero_search(&server).await;
+
+    let output = s606_1_cmd(&server.uri(), cache_dir.path(), config_dir.path())
+        .args([
+            "--no-input",
+            "issue",
+            "list",
+            "--project",
+            "FOO",
+            "--component",
+            "Amb",
+        ])
+        .output()
+        .unwrap();
+
+    let stderr = String::from_utf8_lossy(&output.stderr);
+    assert_eq!(
+        output.status.code(),
+        Some(64),
+        "AC-014: expected exit 64, got {:?}, stderr: {stderr}",
+        output.status.code()
+    );
+    assert!(
+        stderr.contains("Ambiguous component 'Amb'. Matches: Amber, Ambition."),
+        "AC-014: expected exact BC-8.4.003 message, got stderr: {stderr}"
+    );
+}
+
+// ── AC-015 (BC-2.1.022 EC-2.1.022-1 — no project scope, bare/not:/all:) ──
+
+/// `--component <NAME>` (bare) with no `--project` and no configured
+/// project → exit 64 pre-flight BEFORE attempting the resolver GET, naming
+/// `--project`.
+#[tokio::test]
+async fn test_bc_2_1_022_issue_list_component_no_project_scope_exits_64_before_get() {
+    let server = MockServer::start().await;
+    let cache_dir = tempfile::tempdir().unwrap();
+    let config_dir = tempfile::tempdir().unwrap();
+    let project_dir = tempfile::tempdir().unwrap();
+
+    s606_1_expect_zero_http(&server).await;
+
+    let output = s606_1_cmd(&server.uri(), cache_dir.path(), config_dir.path())
+        .current_dir(project_dir.path())
+        .args(["--no-input", "issue", "list", "--component", "Backend"])
+        .output()
+        .unwrap();
+
+    let stderr = String::from_utf8_lossy(&output.stderr);
+    assert_eq!(
+        output.status.code(),
+        Some(64),
+        "AC-015: expected exit 64, got {:?}, stderr: {stderr}",
+        output.status.code()
+    );
+    assert!(
+        stderr.contains(
+            "--component requires --project (or a configured default project) to resolve component names."
+        ),
+        "AC-015: expected exact BC-2.1.022 message, got stderr: {stderr}"
+    );
+}
+
+// ── AC-016 (BC-2.1.007 amendment — clause ordering) ───────────────────────
+
+/// `--assignee me --component Backend --created-after 2026-01-01` composes
+/// clauses in the stable order with `component` positioned AFTER `asset`
+/// (absent here) and BEFORE `created-after`/`updated-after`.
+#[tokio::test]
+async fn test_bc_2_1_007_issue_list_component_clause_ordering_after_asset_before_dates() {
+    let server = MockServer::start().await;
+    let cache_dir = tempfile::tempdir().unwrap();
+    let config_dir = tempfile::tempdir().unwrap();
+
+    s606_1_mock_project_exists(&server, "FOO").await;
+    s606_1_mock_components(
+        &server,
+        "FOO",
+        vec![common::fixtures::component_response(
+            "10001", "Backend", None, None, None,
+        )],
+    )
+    .await;
+    s606_1_mock_search_empty(&server).await;
+
+    let output = s606_1_cmd(&server.uri(), cache_dir.path(), config_dir.path())
+        .args([
+            "--no-input",
+            "issue",
+            "list",
+            "--project",
+            "FOO",
+            "--assignee",
+            "me",
+            "--component",
+            "Backend",
+            "--created-after",
+            "2026-01-01",
+        ])
+        .output()
+        .unwrap();
+
+    assert!(
+        output.status.success(),
+        "AC-016: expected exit 0, stderr: {}",
+        String::from_utf8_lossy(&output.stderr)
+    );
+
+    let jql = s606_1_composed_jql(&server).await;
+    let assignee_idx = jql
+        .find("assignee = currentUser()")
+        .expect("AC-016: assignee clause must be present");
+    let component_idx = jql
+        .find("component in (10001)")
+        .expect("AC-016: component clause must be present");
+    let created_idx = jql
+        .find("created >= \"2026-01-01\"")
+        .expect("AC-016: created-after clause must be present");
+
+    assert!(
+        assignee_idx < component_idx,
+        "AC-016: component must come AFTER assignee, got jql: {jql}"
+    );
+    assert!(
+        component_idx < created_idx,
+        "AC-016: component must come BEFORE created-after, got jql: {jql}"
+    );
+}
+
+// ── AC-017 (BC-2.1.019/020/021 reserved-syntax collision documentation) ──
+
+/// A component literally named `"none"`, `"not:Deprecated"`, or
+/// `"all:Backend"` is unreachable via the corresponding `--component`
+/// form — the reserved prefix/keyword always short-circuits before the
+/// literal name could ever be selected. Verified structurally across all
+/// three reserved forms in one test.
+#[tokio::test]
+async fn test_bc_2_1_019_020_021_reserved_syntax_collisions_short_circuit_documented() {
+    // ── (a) `none` — literal component named "none" is unreachable; zero
+    //    resolver HTTP proves the keyword short-circuits before any name
+    //    lookup could even see the literal "none" component. ──
+    {
+        let server = MockServer::start().await;
+        let cache_dir = tempfile::tempdir().unwrap();
+        let config_dir = tempfile::tempdir().unwrap();
+
+        s606_1_mock_project_exists(&server, "FOO").await;
+        Mock::given(method("GET"))
+            .and(path("/rest/api/3/project/FOO/components"))
+            .respond_with(ResponseTemplate::new(200).set_body_json(
+                common::fixtures::component_list_response(vec![
+                    common::fixtures::component_response("40001", "none", None, None, None),
+                ]),
+            ))
+            .expect(0)
+            .mount(&server)
+            .await;
+        s606_1_mock_search_empty(&server).await;
+
+        let output = s606_1_cmd(&server.uri(), cache_dir.path(), config_dir.path())
+            .args([
+                "--no-input",
+                "issue",
+                "list",
+                "--project",
+                "FOO",
+                "--component",
+                "none",
+            ])
+            .output()
+            .unwrap();
+
+        assert!(
+            output.status.success(),
+            "AC-017a: expected exit 0, stderr: {}",
+            String::from_utf8_lossy(&output.stderr)
+        );
+        let jql = s606_1_composed_jql(&server).await;
+        assert!(
+            jql.contains("component is EMPTY"),
+            "AC-017a: 'none' keyword must short-circuit to 'component is EMPTY' \
+             even when a literal component named \"none\" exists, got jql: {jql}"
+        );
+    }
+
+    // ── (b) `not:Deprecated` — literal component named "not:Deprecated"
+    //    is unreachable; the prefix strips and resolves "Deprecated"
+    //    (id 30001), never the literal "not:Deprecated" (id 30002). ──
+    {
+        let server = MockServer::start().await;
+        let cache_dir = tempfile::tempdir().unwrap();
+        let config_dir = tempfile::tempdir().unwrap();
+
+        s606_1_mock_project_exists(&server, "FOO").await;
+        s606_1_mock_components(
+            &server,
+            "FOO",
+            vec![
+                common::fixtures::component_response("30001", "Deprecated", None, None, None),
+                common::fixtures::component_response("30002", "not:Deprecated", None, None, None),
+            ],
+        )
+        .await;
+        s606_1_mock_search_empty(&server).await;
+
+        let output = s606_1_cmd(&server.uri(), cache_dir.path(), config_dir.path())
+            .args([
+                "--no-input",
+                "issue",
+                "list",
+                "--project",
+                "FOO",
+                "--component",
+                "not:Deprecated",
+            ])
+            .output()
+            .unwrap();
+
+        assert!(
+            output.status.success(),
+            "AC-017b: expected exit 0, stderr: {}",
+            String::from_utf8_lossy(&output.stderr)
+        );
+        let jql = s606_1_composed_jql(&server).await;
+        assert!(
+            jql.contains("(component not in (30001) OR component is EMPTY)"),
+            "AC-017b: 'not:Deprecated' must resolve to the id of the component \
+             named \"Deprecated\" (30001), never the literal \
+             \"not:Deprecated\" component (30002), got jql: {jql}"
+        );
+        assert!(
+            !jql.contains("30002"),
+            "AC-017b: literal 'not:Deprecated' component (30002) must never \
+             appear in the composed clause, got jql: {jql}"
+        );
+    }
+
+    // ── (c) `all:Backend` — literal component named "all:Backend" is
+    //    unreachable; the prefix strips and resolves "Backend" (id 50001),
+    //    never the literal "all:Backend" (id 50002). ──
+    {
+        let server = MockServer::start().await;
+        let cache_dir = tempfile::tempdir().unwrap();
+        let config_dir = tempfile::tempdir().unwrap();
+
+        s606_1_mock_project_exists(&server, "FOO").await;
+        s606_1_mock_components(
+            &server,
+            "FOO",
+            vec![
+                common::fixtures::component_response("50001", "Backend", None, None, None),
+                common::fixtures::component_response("50002", "all:Backend", None, None, None),
+            ],
+        )
+        .await;
+        s606_1_mock_search_empty(&server).await;
+
+        let output = s606_1_cmd(&server.uri(), cache_dir.path(), config_dir.path())
+            .args([
+                "--no-input",
+                "issue",
+                "list",
+                "--project",
+                "FOO",
+                "--component",
+                "all:Backend",
+            ])
+            .output()
+            .unwrap();
+
+        assert!(
+            output.status.success(),
+            "AC-017c: expected exit 0, stderr: {}",
+            String::from_utf8_lossy(&output.stderr)
+        );
+        let jql = s606_1_composed_jql(&server).await;
+        assert!(
+            jql.contains("component = 50001"),
+            "AC-017c: 'all:Backend' must resolve to the id of the component \
+             named \"Backend\" (50001), never the literal \"all:Backend\" \
+             component (50002), got jql: {jql}"
+        );
+        assert!(
+            !jql.contains("50002"),
+            "AC-017c: literal 'all:Backend' component (50002) must never \
+             appear in the composed clause, got jql: {jql}"
+        );
+    }
+}
+
+// ── SEC-707-1 (PR #707 fast-follow, LOW — injection-safety regression pin) ─
+
+/// Pins the injection-safety guarantee noted in the PR #707 review: only the
+/// resolved NUMERIC `Component.id` ever reaches the composed JQL — never a
+/// raw, potentially attacker-influenced component NAME — even when that name
+/// is itself crafted with JQL metacharacters. A component whose NAME embeds
+/// a JQL-breakout attempt (`Back"end) OR 1=1--`) must still resolve to
+/// nothing but its numeric id (10001) in the final clause; none of the raw
+/// metachar substrings from the name may leak into the composed JQL string.
+/// This is injection-safe by construction today (`resolve_one_component_id`
+/// only ever pushes the resolved `id` into the clause, never `name`) — this
+/// test pins that guarantee as a regression check.
+#[tokio::test]
+async fn test_bc_2_1_018_issue_list_component_name_with_jql_metachars_uses_numeric_id_only() {
+    let server = MockServer::start().await;
+    let cache_dir = tempfile::tempdir().unwrap();
+    let config_dir = tempfile::tempdir().unwrap();
+
+    let metachar_name = "Back\"end) OR 1=1--";
+
+    s606_1_mock_project_exists(&server, "FOO").await;
+    s606_1_mock_components(
+        &server,
+        "FOO",
+        vec![
+            common::fixtures::component_response("10001", metachar_name, None, None, None),
+            common::fixtures::component_response("10002", "Frontend", None, None, None),
+        ],
+    )
+    .await;
+    s606_1_mock_search_empty(&server).await;
+
+    let output = s606_1_cmd(&server.uri(), cache_dir.path(), config_dir.path())
+        .args([
+            "--no-input",
+            "issue",
+            "list",
+            "--project",
+            "FOO",
+            "--component",
+            metachar_name,
+        ])
+        .output()
+        .unwrap();
+
+    assert!(
+        output.status.success(),
+        "SEC-707-1: expected exit 0, stderr: {}",
+        String::from_utf8_lossy(&output.stderr)
+    );
+
+    let jql = s606_1_composed_jql(&server).await;
+    assert!(
+        jql.contains("component in (10001)"),
+        "SEC-707-1: expected the resolved numeric-id clause \
+         'component in (10001)' in jql: {jql}"
+    );
+    assert!(
+        !jql.contains("OR 1=1"),
+        "SEC-707-1: raw JQL-breakout substring 'OR 1=1' from the component \
+         NAME must never reach the composed JQL, got jql: {jql}"
+    );
+    assert!(
+        !jql.contains("Back\"end"),
+        "SEC-707-1: raw component NAME substring 'Back\"end' must never \
+         reach the composed JQL, got jql: {jql}"
+    );
+    assert!(
+        !jql.contains("Back\"end)"),
+        "SEC-707-1: raw component NAME substring 'Back\"end)' (including the \
+         literal ')' embedded in the attacker-controlled name) must never \
+         reach the composed JQL verbatim, got jql: {jql}"
+    );
+}
+
+// ── --component + --jql interaction (PR #707 fast-follow, LOW) ───────────
+
+/// Pins the CURRENT `--component` + `--jql` interaction (pr-reviewer LOW
+/// finding — previously untested): both flags compose via a plain AND —
+/// `--jql` does NOT silently override or ignore `--component`, nor does
+/// `--component` ever suppress `--jql`. `handle_list` (`src/cli/issue/
+/// list.rs`) builds the JQL base from `--jql` unconditionally of
+/// `--component`'s presence (`build_jql_base_parts`: project-scope-prefixed,
+/// then the user's raw `--jql` expression parenthesized), and separately
+/// resolves `--component` into `component_clauses` before ever branching on
+/// whether `--jql` was supplied; `all_parts = base_parts + filter_parts`
+/// (which includes `component_clauses`) is then AND-joined unconditionally.
+/// There is no `if jql.is_some() { skip component }`-shaped special case —
+/// `--component` composes with `--jql` exactly the same way every other
+/// filter flag already does (`--assignee`, `--status`, `--created-after`,
+/// ...; see the BC-2.1.007 clause-ordering test above and
+/// `tests/issue_read_holdouts.rs::test_s_2_01_h_035_...`).
+#[tokio::test]
+async fn test_bc_2_1_018_issue_list_component_with_jql_flag_current_behavior() {
+    let server = MockServer::start().await;
+    let cache_dir = tempfile::tempdir().unwrap();
+    let config_dir = tempfile::tempdir().unwrap();
+
+    s606_1_mock_project_exists(&server, "FOO").await;
+    s606_1_mock_components(
+        &server,
+        "FOO",
+        vec![
+            common::fixtures::component_response("10001", "Backend", None, None, None),
+            common::fixtures::component_response("10002", "Frontend", None, None, None),
+        ],
+    )
+    .await;
+    s606_1_mock_search_empty(&server).await;
+
+    let output = s606_1_cmd(&server.uri(), cache_dir.path(), config_dir.path())
+        .args([
+            "--no-input",
+            "issue",
+            "list",
+            "--project",
+            "FOO",
+            "--component",
+            "Backend",
+            "--jql",
+            "status = \"Open\"",
+        ])
+        .output()
+        .unwrap();
+
+    assert!(
+        output.status.success(),
+        "expected exit 0, stderr: {}",
+        String::from_utf8_lossy(&output.stderr)
+    );
+
+    let jql = s606_1_composed_jql(&server).await;
+    assert_eq!(
+        jql,
+        "project = \"FOO\" AND (status = \"Open\") AND component in (10001) ORDER BY updated DESC",
+        "current behavior: --component and --jql compose via AND, neither \
+         overrides the other; got jql: {jql}"
+    );
+}
