@@ -442,6 +442,25 @@ pub fn multi_project_user_search_response(users: Vec<(&str, &str)>) -> Value {
     json!(user_objects)
 }
 
+/// Multi-project assignable user search response with emailAddress fields.
+/// Like `multi_project_user_search_response` but each entry includes an
+/// `emailAddress`, enabling BC-X.7.004 "email + accountId" candidate list
+/// assertions (used in BC-8.1.006 ambiguous-lead tests).
+pub fn multi_project_user_search_response_with_email(users: Vec<(&str, &str, &str)>) -> Value {
+    let user_objects: Vec<Value> = users
+        .into_iter()
+        .map(|(account_id, display_name, email)| {
+            json!({
+                "accountId": account_id,
+                "displayName": display_name,
+                "emailAddress": email,
+                "active": true,
+            })
+        })
+        .collect();
+    json!(user_objects)
+}
+
 /// Create issue response.
 pub fn create_issue_response(key: &str) -> Value {
     json!({
@@ -576,4 +595,83 @@ pub fn component_response_with_flags(
         obj["isAssigneeTypeValid"] = json!(v);
     }
     obj
+}
+
+// ── S-604-2: Component create/edit fixtures ───────────────────────────────────
+
+/// 201 response body returned by `POST /rest/api/3/component` on success.
+///
+/// Used by BC-8.1.005 create tests to satisfy the wiremock mock and to verify
+/// the success output shape (`{"id","name","project"}`).
+pub fn component_create_response(id: &str, name: &str, project_key: &str) -> Value {
+    json!({
+        "id": id,
+        "name": name,
+        "description": Value::Null,
+        "lead": Value::Null,
+        "assigneeType": Value::Null,
+        "project": project_key,
+    })
+}
+
+/// 200 response body returned by `PUT /rest/api/3/component/{id}` on success.
+///
+/// Used by BC-8.1.007 edit tests.
+pub fn component_edit_response(id: &str, name: &str, project_key: &str) -> Value {
+    json!({
+        "id": id,
+        "name": name,
+        "description": Value::Null,
+        "lead": Value::Null,
+        "assigneeType": Value::Null,
+        "project": project_key,
+    })
+}
+
+/// Component list response with two components sharing the same name
+/// case-insensitively (e.g. "Backend" and "backend").
+///
+/// Used by BC-X.10.003 ExactMultiple fail-closed tests (Finding A, PR#704):
+/// `partial_match` returns `ExactMultiple` when two candidates match the input
+/// exactly (case-insensitively).  The handler MUST refuse to pick one silently.
+pub fn component_list_two_same_name(id1: &str, name1: &str, id2: &str, name2: &str) -> Value {
+    json!([
+        {
+            "id": id1,
+            "name": name1,
+            "description": Value::Null,
+            "lead": Value::Null,
+            "assigneeType": Value::Null,
+            "project": Value::Null,
+        },
+        {
+            "id": id2,
+            "name": name2,
+            "description": Value::Null,
+            "lead": Value::Null,
+            "assigneeType": Value::Null,
+            "project": Value::Null,
+        }
+    ])
+}
+
+/// Component GET body that deliberately omits the `"project"` key entirely.
+///
+/// Used by the BC-8.1.007 numeric-missing-project test (Finding C, PR#704):
+/// when the confirming GET returns no project field AND the user supplies
+/// `--project`, the handler must fail closed (exit 64) rather than silently
+/// adopting the unverified `--project` value as the component's project.
+///
+/// Note: `#[serde(default)]` on `Component.project: Option<String>` treats
+/// both an absent key and `"project": null` as `None`; this fixture uses
+/// the absent-key form for maximum fidelity to the stated finding.
+pub fn component_response_no_project_field(id: &str, name: &str) -> Value {
+    json!({
+        "id": id,
+        "name": name,
+        "description": Value::Null,
+        "lead": Value::Null,
+        "assigneeType": Value::Null,
+        // "project" key intentionally absent — triggers the null-project path
+    })
 }
