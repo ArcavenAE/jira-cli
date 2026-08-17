@@ -1096,6 +1096,23 @@ pub enum RequestTypeCommand {
     },
 }
 
+/// Assignee-type policy for issues filed against a component.
+///
+/// Maps to Jira's `assigneeType` field on the component resource
+/// (BC-8.1.005 — component create only; `component edit` has no `--assignee-type` flag).
+#[derive(clap::ValueEnum, Clone, Debug)]
+#[clap(rename_all = "SCREAMING_SNAKE_CASE")]
+pub enum AssigneeType {
+    /// Use the component lead as the default assignee.
+    ComponentLead,
+    /// Use the project lead as the default assignee.
+    ProjectLead,
+    /// Leave issues unassigned by default.
+    Unassigned,
+    /// Inherit the project's default assignee policy.
+    ProjectDefault,
+}
+
 /// Subcommands for `jr component`.
 ///
 /// Only `List` is implemented in S-604-1.  Create, edit, delete, and rename
@@ -1113,6 +1130,47 @@ pub enum ComponentSubcommand {
         /// Issues one extra HTTP call per component (N+1). BC-8.1.003.
         #[arg(long)]
         counts: bool,
+    },
+    /// Create a new component in a project (BC-8.1.005 + BC-8.1.006 for --lead)
+    Create {
+        /// Project key. Required; no config fallback (BC-8.1.004 + BC-8.1.005).
+        #[arg(long, required = true)]
+        project: String,
+        /// Component name (BC-8.1.005).
+        /// Leading-dash values accepted (e.g. `-legacy`).
+        #[arg(allow_hyphen_values = true)]
+        name: String,
+        /// Component description (leading-dash values accepted).
+        #[arg(long, allow_hyphen_values = true)]
+        description: Option<String>,
+        /// Component lead: account ID, display-name substring, or email
+        /// (resolved via `search_assignable_users_by_project`; BC-8.1.006).
+        #[arg(long)]
+        lead: Option<String>,
+        /// Default assignee policy for issues in this component (BC-8.1.005).
+        #[arg(long)]
+        assignee_type: Option<AssigneeType>,
+    },
+    /// Edit an existing component's fields (BC-8.1.007)
+    Edit {
+        /// Component name (partial match) or numeric ID (BC-8.1.007 + BC-8.1.008 + BC-8.4.001).
+        /// Leading-dash names accepted (e.g. `-legacy`).
+        #[arg(allow_hyphen_values = true)]
+        name_or_id: String,
+        /// Project key (required for name-based lookup; BC-8.1.004 + BC-8.1.007).
+        #[arg(long)]
+        project: Option<String>,
+        /// New component name (leading-dash values accepted, e.g. `--name -legacy`).
+        #[arg(long, allow_hyphen_values = true)]
+        name: Option<String>,
+        /// New description (leading-dash values accepted).
+        /// Pass an empty string (`--description ""`) to clear the description.
+        #[arg(long, allow_hyphen_values = true)]
+        description: Option<String>,
+        /// New lead: account ID, display-name substring, email, or empty string
+        /// to clear the lead (`--lead ""`; BC-8.1.007).
+        #[arg(long)]
+        lead: Option<String>,
     },
 }
 
