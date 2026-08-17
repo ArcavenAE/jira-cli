@@ -2,11 +2,21 @@
 document_type: story-index
 phase: phase-2-story-decomposition
 producer: story-writer
-version: "1.5.97"
+version: "1.5.98"
 total_stories: 140
 total_waves: 4
 status: complete
 last_updated: |-
+  2026-08-17 (COMPONENT-MGMT-F4-WAVE2-S-606-1-MERGED): S-606-1 status `draft`→`done` — merged
+  2026-08-17, PR #707, squash b1610d55. DEC-128 human-authorized (DEC-286). Step-4.5 CONVERGED
+  3/3 CLEAN across 11 adversary passes using 3 diverse lenses in parallel (correctness /
+  fail-closed-security / test-quality); findings decayed P1 LOW → P5 MED+LOW → P8 LOW×2 → P9/
+  P10/P11 CLEAN. Security-reviewer APPROVE (0 CRIT/HIGH/MED). Fresh pr-reviewer APPROVE (0
+  BLOCKING/HIGH). Fast-follow test-only pins (SEC-707-1 injection-safety regression +
+  `--component`/`--jql` interaction) added post-review. CI 14/14 + required CI Gate green.
+  Wave 2 parallel Track B (singleton) COMPLETE. STORY-INDEX v1.5.97→v1.5.98. No other rows
+  touched.
+  Prior:
   2026-08-17 (COMPONENT-MGMT-F4-WAVE2-S-604-3-MERGED): S-604-3 status `draft`→`done` — merged
   2026-08-17, PR #706, squash 49a927fd. DEC-128 human-authorized (DEC-285). Step-4.5 CONVERGED
   3/3 CLEAN then RE-CONVERGED 3/3 CLEAN after security-hardening commit 80a56c23 (10 adversary
@@ -803,7 +813,7 @@ They have `wave: feature-followup` in frontmatter and live under `.factory/code-
 | S-604-3 | `jr component delete` — disposition-required, snapshot-before-delete safety (closes #604 part 3 of 3) | BC-8.2.001, BC-8.2.002, BC-8.2.003, BC-8.2.004, BC-8.2.005, BC-8.2.006, BC-8.2.007, BC-8.2.008 | VP-COMPONENT-003, VP-COMPONENT-004, VP-COMPONENT-005, VP-COMPONENT-006, VP-COMPONENT-007, VP-COMPONENT-017, VP-COMPONENT-024 | **done** — merged 2026-08-17, PR #706, squash 49a927fd; COMPONENT-MGMT bundle story 3 of 7; SAFETY-CRITICAL; Wave 2, serialized component.rs sub-track position 2 of 3 COMPLETE; depends_on:[S-604-1]; target `src/cli/component.rs`; priority P0 | large (13 SP) |
 | S-605-1 | `issue create`/`issue edit --component` (single-key path) (closes #605 part 1 of 2) | BC-3.4.022, BC-3.4.024, BC-3.4.025, BC-3.4.012, BC-3.4.013, BC-3.4.017, BC-3.4.020, BC-3.4.021 | VP-COMPONENT-011, VP-COMPONENT-016, VP-COMPONENT-025, VP-COMPONENT-027, VP-COMPONENT-028 | **draft** — F3 COMPLETE (2026-08-15); COMPONENT-MGMT bundle story 4 of 7; Wave 2, parallel Track A position 1 of 2 (no file overlap with component.rs serialized trio); depends_on:[S-604-1]; blocks:[S-605-2]; target `src/cli/issue/{edit,create}.rs`; priority P0; awaiting F4 dispatch | medium (8 SP) |
 | S-605-2 | `issue edit --component` (multi-key/`--jql` bulk path) (closes #605 part 2 of 2) | BC-3.4.023 | VP-COMPONENT-012 | **draft** — F3 COMPLETE (2026-08-15); COMPONENT-MGMT bundle story 5 of 7; Wave 2, parallel Track A position 2 of 2; LIVE-JIRA-gated; depends_on:[S-605-1]; target `src/cli/issue/edit.rs`; priority P0; awaiting F4 dispatch | small (5 SP) |
-| S-606-1 | `issue list --component` filter (bare/`not:`/`none`/`all:`) (closes #606) | BC-2.1.018, BC-2.1.019, BC-2.1.020, BC-2.1.021, BC-2.1.022 | VP-COMPONENT-013, VP-COMPONENT-015 | **draft** — F3 COMPLETE (2026-08-15); COMPONENT-MGMT bundle story 6 of 7; Wave 2, parallel Track B (singleton, no file overlap with component.rs serialized trio or Track A); depends_on:[S-604-1]; target `src/cli/issue/list.rs`; priority P0; awaiting F4 dispatch | medium (8 SP) |
+| S-606-1 | `issue list --component` filter (bare/`not:`/`none`/`all:`) (closes #606) | BC-2.1.018, BC-2.1.019, BC-2.1.020, BC-2.1.021, BC-2.1.022 | VP-COMPONENT-013, VP-COMPONENT-015 | **done** — merged 2026-08-17, PR #707, squash b1610d55; COMPONENT-MGMT bundle story 6 of 7; Wave 2, parallel Track B (singleton, no file overlap with component.rs serialized trio or Track A) COMPLETE; depends_on:[S-604-1]; target `src/cli/issue/list.rs`; priority P0 | medium (8 SP) |
 | S-608-1 | `jr component rename` — single-project and `--all-projects` fan-out, `--dry-run` (closes #608) | BC-8.3.001, BC-8.3.002, BC-8.3.003, BC-8.3.004, BC-8.3.005, BC-8.3.006, BC-8.3.007 | VP-COMPONENT-008, VP-COMPONENT-018, VP-COMPONENT-019, VP-COMPONENT-024, VP-COMPONENT-026 | **draft** — F3 COMPLETE (2026-08-15); COMPONENT-MGMT bundle story 7 of 7; Wave 2, serialized sub-track position 3 of 3 (lowest urgency of the trio, sequenced last); depends_on:[S-604-1]; target `src/cli/component.rs`; priority P1; AC-017 VP-COMPONENT-024 frontmatter↔body sync fixed 2026-08-15; awaiting F4 dispatch | medium (8 SP) |
 
 Feature-followup story files: `.factory/code-delivery/issue-NNN/story.md`. COMPONENT-MGMT bundle stories live under

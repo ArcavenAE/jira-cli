@@ -1,1 +1,1 @@
-{"status":"pass","timestamp":"2026-08-17T18:22:00Z","command":"jobs -l 2>&1; ps aux | grep -i \"cargo test\" | grep -v grep"}
+{"status":"pass","timestamp":"2026-08-17T21:30:50Z","command":"cargo test --test issue_commands -- test_bc_2_1_018_issue_list_component_name_with_jql_metachars_uses_numeric_id_only test_bc_2_1_018_issue_list_component_with_jql_flag_current_behavior --nocapture 2>&1 | tail -20"}
