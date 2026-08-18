@@ -1,1 +1,1 @@
-{"status":"pass","timestamp":"2026-08-17T21:30:50Z","command":"cargo test --test issue_commands -- test_bc_2_1_018_issue_list_component_name_with_jql_metachars_uses_numeric_id_only test_bc_2_1_018_issue_list_component_with_jql_flag_current_behavior --nocapture 2>&1 | tail -20"}
+{"status":"pass","timestamp":"2026-08-17T23:38:04Z","command":"cd /tmp/pr709-worktree && cargo test --test component_commands -- --nocapture bc_8_1_005 bc_8_1_001_component_list_honors_global 2>&1 | tail -30"}
