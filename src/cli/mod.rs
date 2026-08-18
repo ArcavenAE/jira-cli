@@ -340,6 +340,13 @@ pub enum IssueCommand {
         /// Filter by linked asset object key (e.g., CUST-5)
         #[arg(long)]
         asset: Option<String>,
+        /// Filter by component name (repeatable, OR-combined). Prefix forms:
+        /// `not:<NAME>` excludes (issues with no component are still included),
+        /// `none` matches issues with zero components (must be the only
+        /// occurrence), `all:<N1>,<N2>` requires every listed component
+        /// (AND-combined; at most one `all:` occurrence). See BC-2.1.018..022.
+        #[arg(long = "component")]
+        component: Vec<String>,
         /// Show issues created on or after this date (YYYY-MM-DD)
         #[arg(long, conflicts_with = "recent")]
         created_after: Option<String>,
@@ -1133,9 +1140,13 @@ pub enum ComponentSubcommand {
     },
     /// Create a new component in a project (BC-8.1.005 + BC-8.1.006 for --lead)
     Create {
-        /// Project key. Required; no config fallback (BC-8.1.004 + BC-8.1.005).
-        #[arg(long, required = true)]
-        project: String,
+        /// Project key. Required (no `.jr.toml` config fallback — BC-8.1.004 +
+        /// BC-8.1.005); may be supplied here OR via the global `--project`
+        /// flag (F5-A-L2 — clap's local-required-arg check does not see a
+        /// value supplied only in the global position, so `handle_create`
+        /// merges the two and enforces presence itself, exit 64).
+        #[arg(long)]
+        project: Option<String>,
         /// Component name (BC-8.1.005).
         /// Leading-dash values accepted (e.g. `-legacy`).
         #[arg(allow_hyphen_values = true)]
