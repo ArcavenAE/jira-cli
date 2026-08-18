@@ -24,7 +24,8 @@ use common::fixtures::{
     component_list_response, component_list_two_same_name, component_response,
     component_response_no_project_field, component_response_with_flags,
     multi_project_user_search_response, multi_project_user_search_response_with_email,
-    related_issue_counts_response, write_profile_config,
+    n_projects_search_response, projects_search_response_for_keys, related_issue_counts_response,
+    write_profile_config,
 };
 
 // ── Harness ──────────────────────────────────────────────────────────────────
@@ -6408,5 +6409,3428 @@ async fn test_delete_component_percent_encodes_ids_in_url() {
         "an unencoded '&' in target_id must not smuggle in an extra 'x' \
          query parameter; got query: {:?}",
         url.query()
+    );
+}
+
+// =============================================================================
+// S-608-1: `jr component rename` — single-project + `--all-projects` fan-out,
+// `--dry-run`. LANDED: `handle_rename` / `JiraClient::rename_component` are
+// fully implemented (see `src/cli/component.rs`). All tests below are GREEN:
+// the AC-scoped tests, the global `--project` flag consistency test
+// (F5-A-L2), and the Step-4.5 fix-burst additions that followed (see each
+// test's own doc comment for its originating finding). Do not hardcode a
+// test count here — it drifts every time a fix burst adds coverage; see
+// CLAUDE.md's "BC Trace and Source fields must not contain numeric test
+// counts" convention (same rationale applies to suite header comments).
+//
+// BC anchors: BC-8.3.001–BC-8.3.007 (`bc-8-components.md` §8.3).
+//
+// Literal message strings pinned below are copied verbatim from the BC text
+// (BC-8.3.001 M1 / EC-8.3.001-1/2, BC-8.3.002 "Numeric `OLD` under
+// `--all-projects` is REJECTED" paragraph) — see the story's own citation of
+// each.
+// =============================================================================
+
+/// Verbatim rejection message for a numeric `OLD` under `--all-projects`
+/// (BC-8.3.002 Precondition 2). Shared by AC-007 (live) and AC-012
+/// (`--dry-run`) since the BC states the two must be byte-identical outcomes.
+const ALL_PROJECTS_NUMERIC_OLD_REJECTED_MSG: &str = "rename --all-projects requires OLD to be a component NAME, not a numeric id (component ids are project-scoped and cannot be used to select across multiple projects). Use rename OLD NEW --project KEY to target a single project by id.";
+
+// ── AC-001 (BC-8.3.001 Postcondition 1 — single-project PUT body) ────────────
+
+/// AC-001 / BC-8.3.001 Postcondition 1: `rename Backend NewName --project FOO`
+/// resolves `Backend` scoped to FOO via the §8.4 resolver (project component
+/// list GET), then issues `PUT /rest/api/3/component/{id}` with body EXACTLY
+/// `{"name":"NewName"}` — no other fields (this is a pure rename, not a
+/// general edit).
+#[tokio::test]
+async fn test_bc_8_3_001_component_rename_single_project_put_body() {
+    let cache = TempDir::new().unwrap();
+    let config = TempDir::new().unwrap();
+    let server = MockServer::start().await;
+    write_profile_config(config.path(), &server.uri());
+
+    Mock::given(method("GET"))
+        .and(path("/rest/api/3/project/FOO/components"))
+        .respond_with(
+            ResponseTemplate::new(200).set_body_json(component_list_response(vec![
+                component_response("10001", "Backend", None, None, None),
+            ])),
+        )
+        .expect(1)
+        .mount(&server)
+        .await;
+
+    // Exact PUT body — no "description"/"lead" keys, only "name".
+    Mock::given(method("PUT"))
+        .and(path("/rest/api/3/component/10001"))
+        .and(body_json(json!({"name": "NewName"})))
+        .respond_with(
+            ResponseTemplate::new(200)
+                .set_body_json(component_edit_response("10001", "NewName", "FOO")),
+        )
+        .expect(1)
+        .mount(&server)
+        .await;
+
+    let output = jr_cmd(&server.uri(), cache.path(), config.path())
+        .args([
+            "component",
+            "rename",
+            "Backend",
+            "NewName",
+            "--project",
+            "FOO",
+        ])
+        .output()
+        .unwrap();
+
+    server.verify().await;
+    assert!(
+        output.status.success(),
+        "AC-001: expected exit 0; got {:?}\nstderr: {}",
+        output.status.code(),
+        String::from_utf8_lossy(&output.stderr)
+    );
+}
+
+// ── AC-002 (BC-8.3.001 Postcondition 2 — JSON success shape) ─────────────────
+
+/// AC-002 / BC-8.3.001 Postcondition 2: success under `--output json` returns
+/// EXACTLY `{"renamed": {"id":"<id>","from":"Backend","to":"NewName",
+/// "project":"FOO"}}` — a SINGULAR object (not an array), distinct from the
+/// `--all-projects` fan-out's plural `renamed`/`failed` ARRAY shape
+/// (BC-8.3.003, AC-008/AC-009).
+#[tokio::test]
+async fn test_bc_8_3_001_component_rename_success_json_shape() {
+    let cache = TempDir::new().unwrap();
+    let config = TempDir::new().unwrap();
+    let server = MockServer::start().await;
+    write_profile_config(config.path(), &server.uri());
+
+    Mock::given(method("GET"))
+        .and(path("/rest/api/3/project/FOO/components"))
+        .respond_with(
+            ResponseTemplate::new(200).set_body_json(component_list_response(vec![
+                component_response("10001", "Backend", None, None, None),
+            ])),
+        )
+        .mount(&server)
+        .await;
+
+    Mock::given(method("PUT"))
+        .and(path("/rest/api/3/component/10001"))
+        .respond_with(
+            ResponseTemplate::new(200)
+                .set_body_json(component_edit_response("10001", "NewName", "FOO")),
+        )
+        .mount(&server)
+        .await;
+
+    let output = jr_cmd(&server.uri(), cache.path(), config.path())
+        .args([
+            "component",
+            "rename",
+            "Backend",
+            "NewName",
+            "--project",
+            "FOO",
+            "--output",
+            "json",
+        ])
+        .output()
+        .unwrap();
+
+    assert!(
+        output.status.success(),
+        "AC-002: expected exit 0; got {:?}\nstderr: {}",
+        output.status.code(),
+        String::from_utf8_lossy(&output.stderr)
+    );
+    let stdout = String::from_utf8_lossy(&output.stdout);
+    let parsed: Value =
+        serde_json::from_str(&stdout).expect("AC-002: --output json stdout must be valid JSON");
+    assert_eq!(
+        parsed,
+        json!({
+            "renamed": {
+                "id": "10001",
+                "from": "Backend",
+                "to": "NewName",
+                "project": "FOO",
+            }
+        }),
+        "AC-002: BC-8.3.001 Postcondition 2 exact JSON shape mismatch; got: {parsed}"
+    );
+}
+
+// ── AC-003 (BC-8.3.001 M1 / EC-8.3.001-1 — numeric project mismatch) ─────────
+
+/// AC-003 / EC-8.3.001-1: `rename 10042 NewName --project A` where numeric id
+/// `10042` actually belongs to project B → confirming GET reveals
+/// `"project":"B"`, mismatching `--project A` → exit 64 pre-flight, verbatim
+/// `"Component 10042 belongs to project B, not A."`, ZERO `PUT` calls.
+#[tokio::test]
+async fn test_bc_8_3_001_component_rename_numeric_old_project_mismatch() {
+    let cache = TempDir::new().unwrap();
+    let config = TempDir::new().unwrap();
+    let server = MockServer::start().await;
+    write_profile_config(config.path(), &server.uri());
+
+    Mock::given(method("GET"))
+        .and(path("/rest/api/3/component/10042"))
+        .respond_with(
+            ResponseTemplate::new(200).set_body_json(component_response_with_flags(
+                "10042",
+                "Backend",
+                None,
+                None,
+                None,
+                Some("B"),
+                None,
+            )),
+        )
+        .expect(1)
+        .mount(&server)
+        .await;
+
+    Mock::given(method("PUT"))
+        .and(path("/rest/api/3/component/10042"))
+        .respond_with(
+            ResponseTemplate::new(200)
+                .set_body_json(component_edit_response("10042", "NewName", "B")),
+        )
+        .expect(0)
+        .mount(&server)
+        .await;
+
+    let output = jr_cmd(&server.uri(), cache.path(), config.path())
+        .args(["component", "rename", "10042", "NewName", "--project", "A"])
+        .output()
+        .unwrap();
+
+    server.verify().await;
+    assert_eq!(
+        output.status.code(),
+        Some(64),
+        "AC-003: expected exit 64 for numeric project mismatch; got {:?}\nstderr: {}",
+        output.status.code(),
+        String::from_utf8_lossy(&output.stderr)
+    );
+    let stderr = String::from_utf8_lossy(&output.stderr);
+    assert!(
+        stderr.contains("Component 10042 belongs to project B, not A."),
+        "AC-003: expected BC-8.3.001 M1 verbatim message \
+         \"Component 10042 belongs to project B, not A.\"; got: {stderr}"
+    );
+}
+
+// ── AC-004 (BC-8.3.001 EC-8.3.001-2 — numeric not-found, always project-qualified) ─
+
+/// AC-004 / EC-8.3.001-2: `rename 999999999 NewName --project A` (numeric,
+/// nonexistent) → confirming GET 404s → exit 64, ALWAYS the
+/// project-QUALIFIED message `"Component '999999999' not found in project A.
+/// Run: jr component list"` — never the project-less variant, since
+/// `--project` is Precondition-1-required and thus always known for `rename`.
+#[tokio::test]
+async fn test_bc_8_3_001_component_rename_numeric_notfound_always_project_qualified() {
+    let cache = TempDir::new().unwrap();
+    let config = TempDir::new().unwrap();
+    let server = MockServer::start().await;
+    write_profile_config(config.path(), &server.uri());
+
+    Mock::given(method("GET"))
+        .and(path("/rest/api/3/component/999999999"))
+        .respond_with(
+            ResponseTemplate::new(404).set_body_json(json!({"errorMessages": ["Not found"]})),
+        )
+        .expect(1)
+        .mount(&server)
+        .await;
+
+    Mock::given(method("PUT"))
+        .and(path("/rest/api/3/component/999999999"))
+        .respond_with(ResponseTemplate::new(200))
+        .expect(0)
+        .mount(&server)
+        .await;
+
+    let output = jr_cmd(&server.uri(), cache.path(), config.path())
+        .args([
+            "component",
+            "rename",
+            "999999999",
+            "NewName",
+            "--project",
+            "A",
+        ])
+        .output()
+        .unwrap();
+
+    server.verify().await;
+    assert_eq!(
+        output.status.code(),
+        Some(64),
+        "AC-004: expected exit 64 for numeric not-found; got {:?}\nstderr: {}",
+        output.status.code(),
+        String::from_utf8_lossy(&output.stderr)
+    );
+    let stderr = String::from_utf8_lossy(&output.stderr);
+    assert!(
+        stderr.contains("Component '999999999' not found in project A. Run: jr component list"),
+        "AC-004: expected the ALWAYS project-qualified message \
+         \"Component '999999999' not found in project A. Run: jr component list\"; \
+         got: {stderr}"
+    );
+}
+
+// ── AC-005 (BC-8.3.002 — exact-equality matching, not substring) ─────────────
+
+/// AC-005 / EC-8.3.002-3: `--all-projects` with Project A having a component
+/// named exactly `"Back"` and Project B having `"Backend"` (substring, not
+/// equal) → Project A renames; Project B is SKIPPED (not ambiguous, not an
+/// error) — exact-equality, NOT `partial_match`'s substring semantics.
+#[tokio::test]
+async fn test_bc_8_3_002_component_rename_all_projects_exact_equality_not_substring() {
+    let cache = TempDir::new().unwrap();
+    let config = TempDir::new().unwrap();
+    let server = MockServer::start().await;
+    write_profile_config(config.path(), &server.uri());
+
+    Mock::given(method("GET"))
+        .and(path("/rest/api/3/project/search"))
+        .respond_with(
+            ResponseTemplate::new(200)
+                .set_body_json(projects_search_response_for_keys(&["A", "B"])),
+        )
+        .expect(1)
+        .mount(&server)
+        .await;
+
+    Mock::given(method("GET"))
+        .and(path("/rest/api/3/project/A/components"))
+        .respond_with(
+            ResponseTemplate::new(200).set_body_json(component_list_response(vec![
+                component_response("10001", "Back", None, None, None),
+            ])),
+        )
+        .expect(1)
+        .mount(&server)
+        .await;
+
+    Mock::given(method("GET"))
+        .and(path("/rest/api/3/project/B/components"))
+        .respond_with(
+            ResponseTemplate::new(200).set_body_json(component_list_response(vec![
+                component_response("20001", "Backend", None, None, None),
+            ])),
+        )
+        .expect(1)
+        .mount(&server)
+        .await;
+
+    // Project A's "Back" (exact match) renames.
+    Mock::given(method("PUT"))
+        .and(path("/rest/api/3/component/10001"))
+        .and(body_json(json!({"name": "NewName"})))
+        .respond_with(
+            ResponseTemplate::new(200)
+                .set_body_json(component_edit_response("10001", "NewName", "A")),
+        )
+        .expect(1)
+        .mount(&server)
+        .await;
+
+    // Project B's "Backend" (substring only) must NOT be touched.
+    Mock::given(method("PUT"))
+        .and(path("/rest/api/3/component/20001"))
+        .respond_with(ResponseTemplate::new(200))
+        .expect(0)
+        .mount(&server)
+        .await;
+
+    let output = jr_cmd(&server.uri(), cache.path(), config.path())
+        .args(["component", "rename", "Back", "NewName", "--all-projects"])
+        .output()
+        .unwrap();
+
+    server.verify().await;
+    assert!(
+        output.status.success(),
+        "AC-005: expected exit 0; got {:?}\nstderr: {}",
+        output.status.code(),
+        String::from_utf8_lossy(&output.stderr)
+    );
+}
+
+// ── AC-006 (BC-8.3.002 EC-8.3.002-1 — zero matches exits zero) ───────────────
+
+/// AC-006 / EC-8.3.002-1: `--all-projects` where zero projects contain a
+/// component named `OLD` → exit 0 (not an error), zero `PUT` calls, and
+/// `--output json` reports the empty fan-out shape `{"renamed":[],"failed":[]}`.
+/// Table mode's summary also reports "0 renamed" per the BC's own wording.
+#[tokio::test]
+async fn test_bc_8_3_002_component_rename_all_projects_zero_matches_exits_zero() {
+    let cache = TempDir::new().unwrap();
+    let config = TempDir::new().unwrap();
+
+    // ── Part A: --output json → exact empty-fan-out shape ────────────────────
+    let server = MockServer::start().await;
+    write_profile_config(config.path(), &server.uri());
+
+    Mock::given(method("GET"))
+        .and(path("/rest/api/3/project/search"))
+        .respond_with(
+            ResponseTemplate::new(200)
+                .set_body_json(projects_search_response_for_keys(&["A", "B"])),
+        )
+        .expect(1)
+        .mount(&server)
+        .await;
+
+    Mock::given(method("GET"))
+        .and(path("/rest/api/3/project/A/components"))
+        .respond_with(
+            ResponseTemplate::new(200).set_body_json(component_list_response(vec![
+                component_response("10001", "Frontend", None, None, None),
+            ])),
+        )
+        .expect(1)
+        .mount(&server)
+        .await;
+
+    Mock::given(method("GET"))
+        .and(path("/rest/api/3/project/B/components"))
+        .respond_with(ResponseTemplate::new(200).set_body_json(component_list_response(vec![])))
+        .expect(1)
+        .mount(&server)
+        .await;
+
+    Mock::given(method("PUT"))
+        .respond_with(ResponseTemplate::new(200))
+        .expect(0)
+        .mount(&server)
+        .await;
+
+    let json_output = jr_cmd(&server.uri(), cache.path(), config.path())
+        .args([
+            "component",
+            "rename",
+            "Nonexistent",
+            "NewName",
+            "--all-projects",
+            "--output",
+            "json",
+        ])
+        .output()
+        .unwrap();
+
+    server.verify().await;
+    assert!(
+        json_output.status.success(),
+        "AC-006 Part A: expected exit 0; got {:?}\nstderr: {}",
+        json_output.status.code(),
+        String::from_utf8_lossy(&json_output.stderr)
+    );
+    let stdout = String::from_utf8_lossy(&json_output.stdout);
+    let parsed: Value =
+        serde_json::from_str(&stdout).expect("AC-006: --output json stdout must be valid JSON");
+    assert_eq!(
+        parsed,
+        json!({"renamed": [], "failed": []}),
+        "AC-006 Part A: zero-match fan-out must report {{\"renamed\":[],\"failed\":[]}}; got: {parsed}"
+    );
+
+    // ── Part B: table mode → summary reports "0 renamed" ─────────────────────
+    let server_b = MockServer::start().await;
+    write_profile_config(config.path(), &server_b.uri());
+
+    Mock::given(method("GET"))
+        .and(path("/rest/api/3/project/search"))
+        .respond_with(
+            ResponseTemplate::new(200)
+                .set_body_json(projects_search_response_for_keys(&["A", "B"])),
+        )
+        .mount(&server_b)
+        .await;
+    Mock::given(method("GET"))
+        .and(path("/rest/api/3/project/A/components"))
+        .respond_with(
+            ResponseTemplate::new(200).set_body_json(component_list_response(vec![
+                component_response("10001", "Frontend", None, None, None),
+            ])),
+        )
+        .mount(&server_b)
+        .await;
+    Mock::given(method("GET"))
+        .and(path("/rest/api/3/project/B/components"))
+        .respond_with(ResponseTemplate::new(200).set_body_json(component_list_response(vec![])))
+        .mount(&server_b)
+        .await;
+
+    let table_output = jr_cmd(&server_b.uri(), cache.path(), config.path())
+        .args([
+            "component",
+            "rename",
+            "Nonexistent",
+            "NewName",
+            "--all-projects",
+        ])
+        .output()
+        .unwrap();
+
+    assert!(
+        table_output.status.success(),
+        "AC-006 Part B: expected exit 0; got {:?}\nstderr: {}",
+        table_output.status.code(),
+        String::from_utf8_lossy(&table_output.stderr)
+    );
+    let stderr_b = String::from_utf8_lossy(&table_output.stderr);
+    assert!(
+        stderr_b.contains("0 renamed"),
+        "AC-006 Part B: table-mode summary must report \"0 renamed\"; got: {stderr_b}"
+    );
+}
+
+// ── Step-4.5 fix burst 5, Test 1 (Lens C LOW — dry-run zero-match sibling) ──
+
+/// Step-4.5 fix burst 5, Test 1: the `--all-projects` zero-match branch is
+/// pinned live by `test_bc_8_3_002_component_rename_all_projects_zero_matches_exits_zero`
+/// above, but its `--dry-run` sibling was untested. Mirrors that test's
+/// structure: no project contains a component named "Nonexistent" → exit 0,
+/// `--output json` reports the verbatim empty preview shape
+/// `{"dryRun":true,"targets":[],"wouldFail":[]}` (see
+/// `handle_rename_all_projects`'s `dry_run` JSON branch, which always emits
+/// `wouldFail` alongside `targets`), and zero `PUT` calls (it's a dry run).
+#[tokio::test]
+async fn test_bc_8_3_004_component_rename_dry_run_all_projects_zero_matches_json() {
+    let cache = TempDir::new().unwrap();
+    let config = TempDir::new().unwrap();
+    let server = MockServer::start().await;
+    write_profile_config(config.path(), &server.uri());
+
+    Mock::given(method("GET"))
+        .and(path("/rest/api/3/project/search"))
+        .respond_with(
+            ResponseTemplate::new(200)
+                .set_body_json(projects_search_response_for_keys(&["A", "B"])),
+        )
+        .expect(1)
+        .mount(&server)
+        .await;
+
+    Mock::given(method("GET"))
+        .and(path("/rest/api/3/project/A/components"))
+        .respond_with(
+            ResponseTemplate::new(200).set_body_json(component_list_response(vec![
+                component_response("10001", "Frontend", None, None, None),
+            ])),
+        )
+        .expect(1)
+        .mount(&server)
+        .await;
+
+    Mock::given(method("GET"))
+        .and(path("/rest/api/3/project/B/components"))
+        .respond_with(ResponseTemplate::new(200).set_body_json(component_list_response(vec![])))
+        .expect(1)
+        .mount(&server)
+        .await;
+
+    Mock::given(method("PUT"))
+        .respond_with(ResponseTemplate::new(200))
+        .expect(0)
+        .mount(&server)
+        .await;
+
+    let output = jr_cmd(&server.uri(), cache.path(), config.path())
+        .args([
+            "component",
+            "rename",
+            "Nonexistent",
+            "NewName",
+            "--all-projects",
+            "--dry-run",
+            "--output",
+            "json",
+        ])
+        .output()
+        .unwrap();
+
+    server.verify().await;
+    assert!(
+        output.status.success(),
+        "Test 1: expected exit 0; got {:?}\nstderr: {}",
+        output.status.code(),
+        String::from_utf8_lossy(&output.stderr)
+    );
+    let stdout = String::from_utf8_lossy(&output.stdout);
+    let parsed: Value =
+        serde_json::from_str(&stdout).expect("Test 1: --output json stdout must be valid JSON");
+    assert_eq!(
+        parsed,
+        json!({"dryRun": true, "targets": [], "wouldFail": []}),
+        "Test 1: zero-match dry-run preview must report \
+         {{\"dryRun\":true,\"targets\":[],\"wouldFail\":[]}}; got: {parsed}"
+    );
+}
+
+/// Step-4.5 fix burst 5, Test 1 (table-mode sibling): same zero-match
+/// scenario as the JSON variant above, verified against the human-readable
+/// table output — the dry-run header still prints, the summary line reads
+/// "0 components would be renamed." (the `targets.is_empty() &&
+/// ambiguous.is_empty()` branch in `handle_rename_all_projects`), and zero
+/// `PUT` calls are made.
+#[tokio::test]
+async fn test_bc_8_3_004_component_rename_dry_run_all_projects_zero_matches_table() {
+    let cache = TempDir::new().unwrap();
+    let config = TempDir::new().unwrap();
+    let server = MockServer::start().await;
+    write_profile_config(config.path(), &server.uri());
+
+    Mock::given(method("GET"))
+        .and(path("/rest/api/3/project/search"))
+        .respond_with(
+            ResponseTemplate::new(200)
+                .set_body_json(projects_search_response_for_keys(&["A", "B"])),
+        )
+        .expect(1)
+        .mount(&server)
+        .await;
+
+    Mock::given(method("GET"))
+        .and(path("/rest/api/3/project/A/components"))
+        .respond_with(
+            ResponseTemplate::new(200).set_body_json(component_list_response(vec![
+                component_response("10001", "Frontend", None, None, None),
+            ])),
+        )
+        .expect(1)
+        .mount(&server)
+        .await;
+
+    Mock::given(method("GET"))
+        .and(path("/rest/api/3/project/B/components"))
+        .respond_with(ResponseTemplate::new(200).set_body_json(component_list_response(vec![])))
+        .expect(1)
+        .mount(&server)
+        .await;
+
+    Mock::given(method("PUT"))
+        .respond_with(ResponseTemplate::new(200))
+        .expect(0)
+        .mount(&server)
+        .await;
+
+    // Deliberately NOT --output json.
+    let output = jr_cmd(&server.uri(), cache.path(), config.path())
+        .args([
+            "component",
+            "rename",
+            "Nonexistent",
+            "NewName",
+            "--all-projects",
+            "--dry-run",
+        ])
+        .output()
+        .unwrap();
+
+    server.verify().await;
+    assert!(
+        output.status.success(),
+        "Test 1 (table): expected exit 0; got {:?}\nstderr: {}",
+        output.status.code(),
+        String::from_utf8_lossy(&output.stderr)
+    );
+    let stderr = String::from_utf8_lossy(&output.stderr);
+    let stderr_lines: Vec<&str> = stderr.lines().collect();
+    assert!(
+        stderr_lines.contains(&"DRY RUN — no changes will be made."),
+        "Test 1 (table): expected verbatim dry-run header; got stderr:\n{stderr}"
+    );
+    assert!(
+        stderr_lines.contains(&"0 components would be renamed."),
+        "Test 1 (table): expected verbatim zero-match summary line; got stderr:\n{stderr}"
+    );
+}
+
+// ── AC-007 (BC-8.3.002 Precondition 2 / EC-8.3.002-2 — numeric OLD rejected) ─
+
+/// AC-007 / EC-8.3.002-2: `rename 10042 NewName --all-projects` (all-digit
+/// `OLD`) → exit 64 pre-flight, ZERO HTTP calls of any kind (no
+/// `list_projects`, no per-project GETs). Contrast the SAME `OLD` with
+/// `--project FOO` (single-project form) → numeric bypass fires normally,
+/// unaffected (covered by AC-003/AC-004 above).
+#[tokio::test]
+async fn test_bc_8_3_002_component_rename_all_projects_numeric_old_rejected_zero_http() {
+    let cache = TempDir::new().unwrap();
+    let config = TempDir::new().unwrap();
+    let server = MockServer::start().await;
+    write_profile_config(config.path(), &server.uri());
+
+    let output = jr_cmd(&server.uri(), cache.path(), config.path())
+        .args(["component", "rename", "10042", "NewName", "--all-projects"])
+        .output()
+        .unwrap();
+
+    assert_eq!(
+        output.status.code(),
+        Some(64),
+        "AC-007: expected exit 64 for numeric OLD under --all-projects; got {:?}\nstderr: {}",
+        output.status.code(),
+        String::from_utf8_lossy(&output.stderr)
+    );
+    let stderr = String::from_utf8_lossy(&output.stderr);
+    assert!(
+        stderr.contains(ALL_PROJECTS_NUMERIC_OLD_REJECTED_MSG),
+        "AC-007: expected BC-8.3.002 verbatim rejection message; got: {stderr}"
+    );
+
+    let received = server.received_requests().await.unwrap();
+    assert!(
+        received.is_empty(),
+        "AC-007: expected ZERO HTTP calls of any kind (no list_projects call); \
+         got {} request(s): {:?}",
+        received.len(),
+        received
+            .iter()
+            .map(|r| r.url.path().to_string())
+            .collect::<Vec<_>>()
+    );
+}
+
+// ── AC-008 (BC-8.3.003 postconditions 1/2 — per-project atomicity) ──────────
+
+/// AC-008 / EC-8.3.003-2: 2 of 5 matched projects fail (one name-collision
+/// 400) → the other 3 STILL rename; exit 1; JSON `failed[]` names both
+/// failures with raw error messages; `renamed[]` lists the 3 successes — the
+/// successes are NOT rolled back by the 2 failures (continue-on-error).
+#[tokio::test]
+async fn test_bc_8_3_003_component_rename_all_projects_partial_failure_no_rollback() {
+    let cache = TempDir::new().unwrap();
+    let config = TempDir::new().unwrap();
+    let server = MockServer::start().await;
+    write_profile_config(config.path(), &server.uri());
+
+    let keys = ["A", "B", "C", "D", "E"];
+    Mock::given(method("GET"))
+        .and(path("/rest/api/3/project/search"))
+        .respond_with(
+            ResponseTemplate::new(200).set_body_json(projects_search_response_for_keys(&keys)),
+        )
+        .expect(1)
+        .mount(&server)
+        .await;
+
+    // Each project has exactly one "Backend" component, ids 30001..30005.
+    let ids = ["30001", "30002", "30003", "30004", "30005"];
+    for (key, id) in keys.iter().zip(ids.iter()) {
+        Mock::given(method("GET"))
+            .and(path(format!("/rest/api/3/project/{key}/components")))
+            .respond_with(
+                ResponseTemplate::new(200).set_body_json(component_list_response(vec![
+                    component_response(id, "Backend", None, None, None),
+                ])),
+            )
+            .expect(1)
+            .mount(&server)
+            .await;
+    }
+
+    // A, C, E succeed.
+    for (key, id) in [("A", "30001"), ("C", "30003"), ("E", "30005")] {
+        Mock::given(method("PUT"))
+            .and(path(format!("/rest/api/3/component/{id}")))
+            .respond_with(
+                ResponseTemplate::new(200)
+                    .set_body_json(component_edit_response(id, "NewName", key)),
+            )
+            .expect(1)
+            .mount(&server)
+            .await;
+    }
+
+    // B, D fail with a 400 name collision.
+    for (key, id) in [("B", "30002"), ("D", "30004")] {
+        Mock::given(method("PUT"))
+            .and(path(format!("/rest/api/3/component/{id}")))
+            .respond_with(ResponseTemplate::new(400).set_body_json(json!({
+                "errorMessages": [format!("A component with the name 'NewName' already exists in project {key}.")]
+            })))
+            .expect(1)
+            .mount(&server)
+            .await;
+    }
+
+    let output = jr_cmd(&server.uri(), cache.path(), config.path())
+        .args([
+            "component",
+            "rename",
+            "Backend",
+            "NewName",
+            "--all-projects",
+            "--output",
+            "json",
+        ])
+        .output()
+        .unwrap();
+
+    server.verify().await;
+    assert_eq!(
+        output.status.code(),
+        Some(1),
+        "AC-008: expected exit 1 for a partial-failure batch; got {:?}\nstderr: {}",
+        output.status.code(),
+        String::from_utf8_lossy(&output.stderr)
+    );
+
+    let stdout = String::from_utf8_lossy(&output.stdout);
+    let parsed: Value =
+        serde_json::from_str(&stdout).expect("AC-008: --output json stdout must be valid JSON");
+    let obj = parsed
+        .as_object()
+        .expect("AC-008: JSON output must be an object");
+    let actual_keys: BTreeSet<&str> = obj.keys().map(|s| s.as_str()).collect();
+    assert_eq!(
+        actual_keys,
+        ["renamed", "failed"]
+            .iter()
+            .copied()
+            .collect::<BTreeSet<&str>>(),
+        "AC-008: top-level JSON must be exactly {{\"renamed\",\"failed\"}}; got: {parsed}"
+    );
+
+    let renamed = parsed["renamed"]
+        .as_array()
+        .expect("renamed must be an array");
+    assert_eq!(
+        renamed.len(),
+        3,
+        "AC-008: expected 3 successes; got: {renamed:?}"
+    );
+    let renamed_projects: BTreeSet<String> = renamed
+        .iter()
+        .map(|e| e["project"].as_str().unwrap().to_string())
+        .collect();
+    assert_eq!(
+        renamed_projects,
+        ["A", "C", "E"]
+            .iter()
+            .map(|s| s.to_string())
+            .collect::<BTreeSet<String>>(),
+        "AC-008: renamed[] must name exactly the 3 successful projects; got: {renamed:?}"
+    );
+    for e in renamed {
+        let eo = e.as_object().expect("renamed entry must be an object");
+        let entry_keys: BTreeSet<&str> = eo.keys().map(|s| s.as_str()).collect();
+        assert_eq!(
+            entry_keys,
+            ["project", "id", "status"]
+                .iter()
+                .copied()
+                .collect::<BTreeSet<&str>>(),
+            "AC-008: each renamed[] entry must be exactly {{\"project\",\"id\",\"status\"}}; got: {e}"
+        );
+        assert_eq!(
+            e["status"], "ok",
+            "AC-008: renamed[] status must be \"ok\"; got: {e}"
+        );
+    }
+
+    let failed = parsed["failed"]
+        .as_array()
+        .expect("failed must be an array");
+    assert_eq!(
+        failed.len(),
+        2,
+        "AC-008: expected 2 failures; got: {failed:?}"
+    );
+    let failed_projects: BTreeSet<String> = failed
+        .iter()
+        .map(|e| e["project"].as_str().unwrap().to_string())
+        .collect();
+    assert_eq!(
+        failed_projects,
+        ["B", "D"]
+            .iter()
+            .map(|s| s.to_string())
+            .collect::<BTreeSet<String>>(),
+        "AC-008: failed[] must name exactly the 2 failed projects; got: {failed:?}"
+    );
+    for e in failed {
+        let eo = e.as_object().expect("failed entry must be an object");
+        let entry_keys: BTreeSet<&str> = eo.keys().map(|s| s.as_str()).collect();
+        assert_eq!(
+            entry_keys,
+            ["project", "error"]
+                .iter()
+                .copied()
+                .collect::<BTreeSet<&str>>(),
+            "AC-008: each failed[] entry must be exactly {{\"project\",\"error\"}}; got: {e}"
+        );
+        let error_text = e["error"].as_str().unwrap();
+        assert!(
+            error_text.contains("already exists"),
+            "AC-008: failed[].error must carry the raw Jira collision message \
+             (not a generic placeholder); got: {error_text}"
+        );
+    }
+}
+
+// ── AC-009 (BC-8.3.003 postcondition 2 — exit code reflects any failure) ────
+
+/// AC-009 / EC-8.3.003-1: all matched projects succeed → exit 0, `failed: []`.
+/// A single failure among matched projects → exit 1 (partial success is NOT
+/// reported as exit 0).
+#[tokio::test]
+async fn test_bc_8_3_003_component_rename_all_projects_exit_code_reflects_any_failure() {
+    let cache = TempDir::new().unwrap();
+    let config = TempDir::new().unwrap();
+
+    // ── Part A: both projects succeed → exit 0, failed: [] ───────────────────
+    let server_a = MockServer::start().await;
+    write_profile_config(config.path(), &server_a.uri());
+
+    Mock::given(method("GET"))
+        .and(path("/rest/api/3/project/search"))
+        .respond_with(
+            ResponseTemplate::new(200)
+                .set_body_json(projects_search_response_for_keys(&["A", "B"])),
+        )
+        .mount(&server_a)
+        .await;
+    Mock::given(method("GET"))
+        .and(path("/rest/api/3/project/A/components"))
+        .respond_with(
+            ResponseTemplate::new(200).set_body_json(component_list_response(vec![
+                component_response("10001", "Backend", None, None, None),
+            ])),
+        )
+        .mount(&server_a)
+        .await;
+    Mock::given(method("GET"))
+        .and(path("/rest/api/3/project/B/components"))
+        .respond_with(
+            ResponseTemplate::new(200).set_body_json(component_list_response(vec![
+                component_response("20001", "Backend", None, None, None),
+            ])),
+        )
+        .mount(&server_a)
+        .await;
+    Mock::given(method("PUT"))
+        .and(path("/rest/api/3/component/10001"))
+        .respond_with(
+            ResponseTemplate::new(200)
+                .set_body_json(component_edit_response("10001", "NewName", "A")),
+        )
+        .mount(&server_a)
+        .await;
+    Mock::given(method("PUT"))
+        .and(path("/rest/api/3/component/20001"))
+        .respond_with(
+            ResponseTemplate::new(200)
+                .set_body_json(component_edit_response("20001", "NewName", "B")),
+        )
+        .mount(&server_a)
+        .await;
+
+    let output_a = jr_cmd(&server_a.uri(), cache.path(), config.path())
+        .args([
+            "component",
+            "rename",
+            "Backend",
+            "NewName",
+            "--all-projects",
+            "--output",
+            "json",
+        ])
+        .output()
+        .unwrap();
+
+    assert_eq!(
+        output_a.status.code(),
+        Some(0),
+        "AC-009 Part A: all-succeed batch must exit 0; got {:?}\nstderr: {}",
+        output_a.status.code(),
+        String::from_utf8_lossy(&output_a.stderr)
+    );
+    let stdout_a = String::from_utf8_lossy(&output_a.stdout);
+    let parsed_a: Value =
+        serde_json::from_str(&stdout_a).expect("AC-009 Part A: stdout must be valid JSON");
+    assert_eq!(
+        parsed_a["failed"],
+        json!([]),
+        "AC-009 Part A: all-succeed batch must report failed: []; got: {parsed_a}"
+    );
+
+    // ── Part B: one of two fails → exit 1 (not 0) ─────────────────────────────
+    let server_b = MockServer::start().await;
+    write_profile_config(config.path(), &server_b.uri());
+
+    Mock::given(method("GET"))
+        .and(path("/rest/api/3/project/search"))
+        .respond_with(
+            ResponseTemplate::new(200)
+                .set_body_json(projects_search_response_for_keys(&["A", "B"])),
+        )
+        .mount(&server_b)
+        .await;
+    Mock::given(method("GET"))
+        .and(path("/rest/api/3/project/A/components"))
+        .respond_with(
+            ResponseTemplate::new(200).set_body_json(component_list_response(vec![
+                component_response("10001", "Backend", None, None, None),
+            ])),
+        )
+        .mount(&server_b)
+        .await;
+    Mock::given(method("GET"))
+        .and(path("/rest/api/3/project/B/components"))
+        .respond_with(
+            ResponseTemplate::new(200).set_body_json(component_list_response(vec![
+                component_response("20001", "Backend", None, None, None),
+            ])),
+        )
+        .mount(&server_b)
+        .await;
+    Mock::given(method("PUT"))
+        .and(path("/rest/api/3/component/10001"))
+        .respond_with(
+            ResponseTemplate::new(200)
+                .set_body_json(component_edit_response("10001", "NewName", "A")),
+        )
+        .mount(&server_b)
+        .await;
+    Mock::given(method("PUT"))
+        .and(path("/rest/api/3/component/20001"))
+        .respond_with(ResponseTemplate::new(400).set_body_json(json!({
+            "errorMessages": ["A component with the name 'NewName' already exists in project B."]
+        })))
+        .mount(&server_b)
+        .await;
+
+    let output_b = jr_cmd(&server_b.uri(), cache.path(), config.path())
+        .args([
+            "component",
+            "rename",
+            "Backend",
+            "NewName",
+            "--all-projects",
+            "--output",
+            "json",
+        ])
+        .output()
+        .unwrap();
+
+    assert_eq!(
+        output_b.status.code(),
+        Some(1),
+        "AC-009 Part B: a single failure among matched projects must exit 1, \
+         NOT 0 (partial success != full success); got {:?}\nstderr: {}",
+        output_b.status.code(),
+        String::from_utf8_lossy(&output_b.stderr)
+    );
+}
+
+// ── AC-010 (BC-8.3.004 postcondition — dry-run JSON, zero mutation, both scopes) ─
+
+/// AC-010 / BC-8.3.004: `--dry-run` (either scope) issues ZERO `PUT` calls
+/// (`.expect(0)`, VP-COMPONENT-008) and `--output json` returns
+/// `{"dryRun":true,"targets":[...]}`.
+#[tokio::test]
+async fn test_bc_8_3_004_component_rename_dry_run_zero_mutation_both_scopes() {
+    let cache = TempDir::new().unwrap();
+    let config = TempDir::new().unwrap();
+
+    // ── Part A: single-project --dry-run ──────────────────────────────────────
+    let server_a = MockServer::start().await;
+    write_profile_config(config.path(), &server_a.uri());
+
+    Mock::given(method("GET"))
+        .and(path("/rest/api/3/project/FOO/components"))
+        .respond_with(
+            ResponseTemplate::new(200).set_body_json(component_list_response(vec![
+                component_response("10001", "Backend", None, None, None),
+            ])),
+        )
+        .expect(1)
+        .mount(&server_a)
+        .await;
+    Mock::given(method("PUT"))
+        .respond_with(ResponseTemplate::new(200))
+        .expect(0)
+        .mount(&server_a)
+        .await;
+
+    let output_a = jr_cmd(&server_a.uri(), cache.path(), config.path())
+        .args([
+            "component",
+            "rename",
+            "Backend",
+            "NewName",
+            "--project",
+            "FOO",
+            "--dry-run",
+            "--output",
+            "json",
+        ])
+        .output()
+        .unwrap();
+
+    server_a.verify().await;
+    assert!(
+        output_a.status.success(),
+        "AC-010 Part A: expected exit 0; got {:?}\nstderr: {}",
+        output_a.status.code(),
+        String::from_utf8_lossy(&output_a.stderr)
+    );
+    let stdout_a = String::from_utf8_lossy(&output_a.stdout);
+    let parsed_a: Value =
+        serde_json::from_str(&stdout_a).expect("AC-010 Part A: stdout must be valid JSON");
+    assert_eq!(
+        parsed_a,
+        json!({
+            "dryRun": true,
+            "targets": [
+                {"project": "FOO", "id": "10001", "from": "Backend", "to": "NewName"}
+            ]
+        }),
+        "AC-010 Part A: single-project --dry-run JSON shape mismatch; got: {parsed_a}"
+    );
+
+    // ── Part B: --all-projects --dry-run ──────────────────────────────────────
+    let server_b = MockServer::start().await;
+    write_profile_config(config.path(), &server_b.uri());
+
+    Mock::given(method("GET"))
+        .and(path("/rest/api/3/project/search"))
+        .respond_with(
+            ResponseTemplate::new(200)
+                .set_body_json(projects_search_response_for_keys(&["A", "B"])),
+        )
+        .expect(1)
+        .mount(&server_b)
+        .await;
+    Mock::given(method("GET"))
+        .and(path("/rest/api/3/project/A/components"))
+        .respond_with(
+            ResponseTemplate::new(200).set_body_json(component_list_response(vec![
+                component_response("10001", "Backend", None, None, None),
+            ])),
+        )
+        .expect(1)
+        .mount(&server_b)
+        .await;
+    Mock::given(method("GET"))
+        .and(path("/rest/api/3/project/B/components"))
+        .respond_with(
+            ResponseTemplate::new(200).set_body_json(component_list_response(vec![
+                component_response("20001", "Backend", None, None, None),
+            ])),
+        )
+        .expect(1)
+        .mount(&server_b)
+        .await;
+    Mock::given(method("PUT"))
+        .respond_with(ResponseTemplate::new(200))
+        .expect(0)
+        .mount(&server_b)
+        .await;
+
+    let output_b = jr_cmd(&server_b.uri(), cache.path(), config.path())
+        .args([
+            "component",
+            "rename",
+            "Backend",
+            "NewName",
+            "--all-projects",
+            "--dry-run",
+            "--output",
+            "json",
+        ])
+        .output()
+        .unwrap();
+
+    server_b.verify().await;
+    assert!(
+        output_b.status.success(),
+        "AC-010 Part B: expected exit 0; got {:?}\nstderr: {}",
+        output_b.status.code(),
+        String::from_utf8_lossy(&output_b.stderr)
+    );
+    let stdout_b = String::from_utf8_lossy(&output_b.stdout);
+    let parsed_b: Value =
+        serde_json::from_str(&stdout_b).expect("AC-010 Part B: stdout must be valid JSON");
+    assert_eq!(
+        parsed_b["dryRun"], true,
+        "AC-010 Part B: dryRun must be true; got: {parsed_b}"
+    );
+    let targets = parsed_b["targets"]
+        .as_array()
+        .expect("targets must be an array");
+    assert_eq!(
+        targets.len(),
+        2,
+        "AC-010 Part B: expected 2 targets (A, B); got: {targets:?}"
+    );
+    let target_projects: BTreeSet<String> = targets
+        .iter()
+        .map(|t| t["project"].as_str().unwrap().to_string())
+        .collect();
+    assert_eq!(
+        target_projects,
+        ["A", "B"]
+            .iter()
+            .map(|s| s.to_string())
+            .collect::<BTreeSet<String>>(),
+        "AC-010 Part B: targets must name projects A and B; got: {targets:?}"
+    );
+}
+
+// ── AC-011 (BC-8.3.004 Invariant 1 — discovery-scope parity) ────────────────
+
+/// AC-011 / BC-8.3.004 Invariant 1: the `--dry-run --all-projects` discovery
+/// scope (which projects are checked, which match) is IDENTICAL to what the
+/// corresponding live `--all-projects` run would discover — including a
+/// non-matching project (`"Otherwise"`, substring-only, excluded under the
+/// BC-8.3.002 exact-equality rule) that must appear in NEITHER the dry-run
+/// preview NOR the live rename set.
+#[tokio::test]
+async fn test_bc_8_3_004_component_rename_dry_run_discovery_scope_matches_live() {
+    let cache = TempDir::new().unwrap();
+    let config = TempDir::new().unwrap();
+    let keys = ["A", "B", "C"];
+
+    // ── Dry-run pass ───────────────────────────────────────────────────────
+    let server_dry = MockServer::start().await;
+    write_profile_config(config.path(), &server_dry.uri());
+
+    Mock::given(method("GET"))
+        .and(path("/rest/api/3/project/search"))
+        .respond_with(
+            ResponseTemplate::new(200).set_body_json(projects_search_response_for_keys(&keys)),
+        )
+        .mount(&server_dry)
+        .await;
+    Mock::given(method("GET"))
+        .and(path("/rest/api/3/project/A/components"))
+        .respond_with(
+            ResponseTemplate::new(200).set_body_json(component_list_response(vec![
+                component_response("50001", "Backend", None, None, None),
+            ])),
+        )
+        .mount(&server_dry)
+        .await;
+    Mock::given(method("GET"))
+        .and(path("/rest/api/3/project/B/components"))
+        .respond_with(
+            ResponseTemplate::new(200).set_body_json(component_list_response(vec![
+                component_response("50002", "Backend", None, None, None),
+            ])),
+        )
+        .mount(&server_dry)
+        .await;
+    Mock::given(method("GET"))
+        .and(path("/rest/api/3/project/C/components"))
+        .respond_with(
+            ResponseTemplate::new(200).set_body_json(component_list_response(vec![
+                component_response("50003", "Otherwise", None, None, None),
+            ])),
+        )
+        .mount(&server_dry)
+        .await;
+
+    let dry_output = jr_cmd(&server_dry.uri(), cache.path(), config.path())
+        .args([
+            "component",
+            "rename",
+            "Backend",
+            "Renamed",
+            "--all-projects",
+            "--dry-run",
+            "--output",
+            "json",
+        ])
+        .output()
+        .unwrap();
+    assert!(
+        dry_output.status.success(),
+        "AC-011: dry-run pass expected exit 0; got {:?}\nstderr: {}",
+        dry_output.status.code(),
+        String::from_utf8_lossy(&dry_output.stderr)
+    );
+    let dry_parsed: Value = serde_json::from_str(&String::from_utf8_lossy(&dry_output.stdout))
+        .expect("AC-011: dry-run stdout must be valid JSON");
+    let dry_targets: BTreeSet<(String, String)> = dry_parsed["targets"]
+        .as_array()
+        .unwrap()
+        .iter()
+        .map(|t| {
+            (
+                t["project"].as_str().unwrap().to_string(),
+                t["id"].as_str().unwrap().to_string(),
+            )
+        })
+        .collect();
+
+    // ── Live pass — identical fixtures, plus PUT mocks for the two matches ──
+    let server_live = MockServer::start().await;
+    write_profile_config(config.path(), &server_live.uri());
+
+    Mock::given(method("GET"))
+        .and(path("/rest/api/3/project/search"))
+        .respond_with(
+            ResponseTemplate::new(200).set_body_json(projects_search_response_for_keys(&keys)),
+        )
+        .mount(&server_live)
+        .await;
+    Mock::given(method("GET"))
+        .and(path("/rest/api/3/project/A/components"))
+        .respond_with(
+            ResponseTemplate::new(200).set_body_json(component_list_response(vec![
+                component_response("50001", "Backend", None, None, None),
+            ])),
+        )
+        .mount(&server_live)
+        .await;
+    Mock::given(method("GET"))
+        .and(path("/rest/api/3/project/B/components"))
+        .respond_with(
+            ResponseTemplate::new(200).set_body_json(component_list_response(vec![
+                component_response("50002", "Backend", None, None, None),
+            ])),
+        )
+        .mount(&server_live)
+        .await;
+    Mock::given(method("GET"))
+        .and(path("/rest/api/3/project/C/components"))
+        .respond_with(
+            ResponseTemplate::new(200).set_body_json(component_list_response(vec![
+                component_response("50003", "Otherwise", None, None, None),
+            ])),
+        )
+        .mount(&server_live)
+        .await;
+    Mock::given(method("PUT"))
+        .and(path("/rest/api/3/component/50001"))
+        .respond_with(
+            ResponseTemplate::new(200)
+                .set_body_json(component_edit_response("50001", "Renamed", "A")),
+        )
+        .expect(1)
+        .mount(&server_live)
+        .await;
+    Mock::given(method("PUT"))
+        .and(path("/rest/api/3/component/50002"))
+        .respond_with(
+            ResponseTemplate::new(200)
+                .set_body_json(component_edit_response("50002", "Renamed", "B")),
+        )
+        .expect(1)
+        .mount(&server_live)
+        .await;
+    // Project C's non-matching component must never be touched.
+    Mock::given(method("PUT"))
+        .and(path("/rest/api/3/component/50003"))
+        .respond_with(ResponseTemplate::new(200))
+        .expect(0)
+        .mount(&server_live)
+        .await;
+
+    let live_output = jr_cmd(&server_live.uri(), cache.path(), config.path())
+        .args([
+            "component",
+            "rename",
+            "Backend",
+            "Renamed",
+            "--all-projects",
+            "--output",
+            "json",
+        ])
+        .output()
+        .unwrap();
+
+    server_live.verify().await;
+    assert!(
+        live_output.status.success(),
+        "AC-011: live pass expected exit 0; got {:?}\nstderr: {}",
+        live_output.status.code(),
+        String::from_utf8_lossy(&live_output.stderr)
+    );
+    let live_parsed: Value = serde_json::from_str(&String::from_utf8_lossy(&live_output.stdout))
+        .expect("AC-011: live stdout must be valid JSON");
+    let live_renamed: BTreeSet<(String, String)> = live_parsed["renamed"]
+        .as_array()
+        .unwrap()
+        .iter()
+        .map(|e| {
+            (
+                e["project"].as_str().unwrap().to_string(),
+                e["id"].as_str().unwrap().to_string(),
+            )
+        })
+        .collect();
+
+    assert_eq!(
+        dry_targets, live_renamed,
+        "AC-011: dry-run's discovered target set must be IDENTICAL to the \
+         live run's renamed set (same projects, same ids) — got dry-run: \
+         {dry_targets:?}, live: {live_renamed:?}"
+    );
+    assert_eq!(
+        dry_targets,
+        [
+            ("A".to_string(), "50001".to_string()),
+            ("B".to_string(), "50002".to_string())
+        ]
+        .into_iter()
+        .collect::<BTreeSet<_>>(),
+        "AC-011: project C's non-matching component must appear in NEITHER \
+         set; got: {dry_targets:?}"
+    );
+}
+
+// ── AC-012 (BC-8.3.002 EC-8.3.002-4 / BC-8.3.004 EC-8.3.004-2 — numeric rejection precedes dry-run preview) ─
+
+/// AC-012 / EC-8.3.002-4 / EC-8.3.004-2: `--dry-run --all-projects` with an
+/// all-digit `OLD` → BC-8.3.002 Precondition 2's rejection fires FIRST, exit
+/// 64, ZERO HTTP of any kind (no `list_projects` call even under
+/// `--dry-run`) — the rejection and the dry-run preview are mutually
+/// exclusive outcomes for this input.
+#[tokio::test]
+async fn test_bc_8_3_004_component_rename_dry_run_numeric_old_rejection_precedes_preview() {
+    let cache = TempDir::new().unwrap();
+    let config = TempDir::new().unwrap();
+    let server = MockServer::start().await;
+    write_profile_config(config.path(), &server.uri());
+
+    let output = jr_cmd(&server.uri(), cache.path(), config.path())
+        .args([
+            "component",
+            "rename",
+            "10042",
+            "NewName",
+            "--all-projects",
+            "--dry-run",
+        ])
+        .output()
+        .unwrap();
+
+    assert_eq!(
+        output.status.code(),
+        Some(64),
+        "AC-012: expected exit 64; got {:?}\nstderr: {}",
+        output.status.code(),
+        String::from_utf8_lossy(&output.stderr)
+    );
+    let stderr = String::from_utf8_lossy(&output.stderr);
+    assert!(
+        stderr.contains(ALL_PROJECTS_NUMERIC_OLD_REJECTED_MSG),
+        "AC-012: expected the SAME BC-8.3.002 verbatim rejection message as \
+         the live form (AC-007); got: {stderr}"
+    );
+
+    let received = server.received_requests().await.unwrap();
+    assert!(
+        received.is_empty(),
+        "AC-012: --dry-run must NOT get a chance to preview a rejected \
+         fan-out — ZERO HTTP calls of any kind, including list_projects; \
+         got {} request(s): {:?}",
+        received.len(),
+        received
+            .iter()
+            .map(|r| r.url.path().to_string())
+            .collect::<Vec<_>>()
+    );
+}
+
+/// Step-4.5 fix burst 9, Finding LOW-1 (VP-COMPONENT-008 zero-mutation gap):
+/// every OTHER single-project dry-run test uses a NAME `OLD` (e.g.
+/// "Backend") — none exercised a NUMERIC `OLD`. The numeric single-project
+/// dry-run path fires a confirming `GET /rest/api/3/component/{id}` during
+/// `resolve_rename_source`, then `handle_rename_single_project` short-circuits
+/// on `if dry_run` BEFORE the `rename_component` PUT — this is the one
+/// dry-run entry that first performs a mutating-adjacent confirming GET, so a
+/// regression that leaked a PUT (or failed to short-circuit) on the numeric
+/// path only would pass every existing dry-run test (all name-based) while
+/// still mutating live Jira. Pins: exactly one confirming GET, ZERO PUT, exit
+/// 0, and the exact BC-8.3.001-shaped dry-run JSON (`targets[].id` echoes the
+/// numeric OLD's resolved id, `targets[].from` echoes OLD verbatim — mirrors
+/// `handle_rename_single_project`'s dry-run JSON branch).
+#[tokio::test]
+async fn test_bc_8_3_004_component_rename_numeric_old_single_project_dry_run_zero_mutation() {
+    let cache = TempDir::new().unwrap();
+    let config = TempDir::new().unwrap();
+    let server = MockServer::start().await;
+    write_profile_config(config.path(), &server.uri());
+
+    Mock::given(method("GET"))
+        .and(path("/rest/api/3/component/10042"))
+        .respond_with(
+            ResponseTemplate::new(200).set_body_json(component_response_with_flags(
+                "10042",
+                "Backend",
+                None,
+                None,
+                None,
+                Some("FOO"),
+                None,
+            )),
+        )
+        .expect(1)
+        .mount(&server)
+        .await;
+    Mock::given(method("PUT"))
+        .respond_with(ResponseTemplate::new(200))
+        .expect(0)
+        .mount(&server)
+        .await;
+
+    let output = jr_cmd(&server.uri(), cache.path(), config.path())
+        .args([
+            "component",
+            "rename",
+            "10042",
+            "NewName",
+            "--project",
+            "FOO",
+            "--dry-run",
+            "--output",
+            "json",
+        ])
+        .output()
+        .unwrap();
+
+    server.verify().await;
+    assert!(
+        output.status.success(),
+        "LOW-1: numeric-OLD single-project dry-run must exit 0; got {:?}\nstderr: {}",
+        output.status.code(),
+        String::from_utf8_lossy(&output.stderr)
+    );
+
+    let stdout: serde_json::Value =
+        serde_json::from_slice(&output.stdout).expect("stdout must be valid JSON");
+    assert_eq!(
+        stdout,
+        json!({
+            "dryRun": true,
+            "targets": [
+                {"project": "FOO", "id": "10042", "from": "10042", "to": "NewName"}
+            ]
+        }),
+        "LOW-1: verbatim dry-run JSON shape for a numeric OLD; got: {stdout}"
+    );
+}
+
+// ── AC-013 (BC-8.3.005 — clap conflict + app-level neither-guard) ───────────
+
+/// AC-013 / BC-8.3.005 Behavior: `--project X --all-projects` together → clap
+/// exit 2 (mutual exclusion, `conflicts_with`). Supplying NEITHER →
+/// application-level exit 64 (NOT clap `ArgGroup::required(true)`, which
+/// would wrongly exit 2), naming both flags.
+#[tokio::test]
+async fn test_bc_8_3_005_component_rename_scope_selection_clap_conflict_and_app_guard() {
+    let cache = TempDir::new().unwrap();
+    let config = TempDir::new().unwrap();
+
+    // ── Part A: both flags together → clap exit 2, zero HTTP ─────────────────
+    let server_a = MockServer::start().await;
+    write_profile_config(config.path(), &server_a.uri());
+
+    let output_a = jr_cmd(&server_a.uri(), cache.path(), config.path())
+        .args([
+            "component",
+            "rename",
+            "Backend",
+            "NewName",
+            "--project",
+            "FOO",
+            "--all-projects",
+        ])
+        .output()
+        .unwrap();
+
+    assert_eq!(
+        output_a.status.code(),
+        Some(2),
+        "AC-013 Part A: both flags together must be a clap mutual-exclusion \
+         exit 2, NOT the app-level exit 64; got {:?}\nstderr: {}",
+        output_a.status.code(),
+        String::from_utf8_lossy(&output_a.stderr)
+    );
+    let received_a = server_a.received_requests().await.unwrap();
+    assert!(
+        received_a.is_empty(),
+        "AC-013 Part A: clap parse-time rejection must fire before any HTTP; \
+         got {} request(s)",
+        received_a.len()
+    );
+
+    // ── Part B: neither flag → application-level exit 64, naming both flags ──
+    let server_b = MockServer::start().await;
+    write_profile_config(config.path(), &server_b.uri());
+
+    let output_b = jr_cmd(&server_b.uri(), cache.path(), config.path())
+        .args(["component", "rename", "Backend", "NewName"])
+        .output()
+        .unwrap();
+
+    assert_eq!(
+        output_b.status.code(),
+        Some(64),
+        "AC-013 Part B: neither flag supplied must be app-level exit 64, \
+         NOT clap's exit 2; got {:?}\nstderr: {}",
+        output_b.status.code(),
+        String::from_utf8_lossy(&output_b.stderr)
+    );
+    let stderr_b = String::from_utf8_lossy(&output_b.stderr);
+    assert!(
+        stderr_b.contains("--project") && stderr_b.contains("--all-projects"),
+        "AC-013 Part B: neither-flag error must name BOTH --project and \
+         --all-projects; got: {stderr_b}"
+    );
+    assert!(
+        stderr_b.contains("supply exactly one"),
+        "AC-013 Part B: neither-flag error must include the actionable \
+         remediation \"supply exactly one\", not merely name the flags; \
+         got: {stderr_b}"
+    );
+    let received_b = server_b.received_requests().await.unwrap();
+    assert!(
+        received_b.is_empty(),
+        "AC-013 Part B: application-level guard must fire before any HTTP; \
+         got {} request(s)",
+        received_b.len()
+    );
+}
+
+// ── AC-014 (BC-8.3.006 EC-8.3.006-1 — case-only rename, single-project) ─────
+
+/// AC-014 / EC-8.3.006-1 / VP-COMPONENT-019: `rename Backend backend
+/// --project FOO` → PUT fires with body `{"name":"backend"}`, exit 0 — NOT
+/// treated as "OLD == NEW, nothing to do."
+#[tokio::test]
+async fn test_bc_8_3_006_component_rename_case_only_single_project_not_skipped() {
+    let cache = TempDir::new().unwrap();
+    let config = TempDir::new().unwrap();
+    let server = MockServer::start().await;
+    write_profile_config(config.path(), &server.uri());
+
+    Mock::given(method("GET"))
+        .and(path("/rest/api/3/project/FOO/components"))
+        .respond_with(
+            ResponseTemplate::new(200).set_body_json(component_list_response(vec![
+                component_response("10001", "Backend", None, None, None),
+            ])),
+        )
+        .expect(1)
+        .mount(&server)
+        .await;
+
+    Mock::given(method("PUT"))
+        .and(path("/rest/api/3/component/10001"))
+        .and(body_json(json!({"name": "backend"})))
+        .respond_with(
+            ResponseTemplate::new(200)
+                .set_body_json(component_edit_response("10001", "backend", "FOO")),
+        )
+        .expect(1)
+        .mount(&server)
+        .await;
+
+    let output = jr_cmd(&server.uri(), cache.path(), config.path())
+        .args([
+            "component",
+            "rename",
+            "Backend",
+            "backend",
+            "--project",
+            "FOO",
+        ])
+        .output()
+        .unwrap();
+
+    server.verify().await;
+    assert!(
+        output.status.success(),
+        "AC-014: case-only rename must NOT be short-circuited; expected \
+         exit 0 with the PUT firing; got {:?}\nstderr: {}",
+        output.status.code(),
+        String::from_utf8_lossy(&output.stderr)
+    );
+}
+
+// ── AC-015 (BC-8.3.006 EC-8.3.006-2 — case-only rename, all-projects) ───────
+
+/// AC-015 / EC-8.3.006-2 / VP-COMPONENT-019 (extended): `rename Backend
+/// backend --all-projects` where Projects A and B both have a component
+/// named exactly `"Backend"` → BOTH projects' matching components get a
+/// `PUT {"name":"backend"}` (2 total calls) — not skipped for either.
+#[tokio::test]
+async fn test_bc_8_3_006_component_rename_case_only_all_projects_both_renamed() {
+    let cache = TempDir::new().unwrap();
+    let config = TempDir::new().unwrap();
+    let server = MockServer::start().await;
+    write_profile_config(config.path(), &server.uri());
+
+    Mock::given(method("GET"))
+        .and(path("/rest/api/3/project/search"))
+        .respond_with(
+            ResponseTemplate::new(200)
+                .set_body_json(projects_search_response_for_keys(&["A", "B"])),
+        )
+        .expect(1)
+        .mount(&server)
+        .await;
+    Mock::given(method("GET"))
+        .and(path("/rest/api/3/project/A/components"))
+        .respond_with(
+            ResponseTemplate::new(200).set_body_json(component_list_response(vec![
+                component_response("10001", "Backend", None, None, None),
+            ])),
+        )
+        .expect(1)
+        .mount(&server)
+        .await;
+    Mock::given(method("GET"))
+        .and(path("/rest/api/3/project/B/components"))
+        .respond_with(
+            ResponseTemplate::new(200).set_body_json(component_list_response(vec![
+                component_response("20001", "Backend", None, None, None),
+            ])),
+        )
+        .expect(1)
+        .mount(&server)
+        .await;
+
+    Mock::given(method("PUT"))
+        .and(path("/rest/api/3/component/10001"))
+        .and(body_json(json!({"name": "backend"})))
+        .respond_with(
+            ResponseTemplate::new(200)
+                .set_body_json(component_edit_response("10001", "backend", "A")),
+        )
+        .expect(1)
+        .mount(&server)
+        .await;
+    Mock::given(method("PUT"))
+        .and(path("/rest/api/3/component/20001"))
+        .and(body_json(json!({"name": "backend"})))
+        .respond_with(
+            ResponseTemplate::new(200)
+                .set_body_json(component_edit_response("20001", "backend", "B")),
+        )
+        .expect(1)
+        .mount(&server)
+        .await;
+
+    let output = jr_cmd(&server.uri(), cache.path(), config.path())
+        .args([
+            "component",
+            "rename",
+            "Backend",
+            "backend",
+            "--all-projects",
+        ])
+        .output()
+        .unwrap();
+
+    server.verify().await;
+    assert!(
+        output.status.success(),
+        "AC-015: case-only rename under --all-projects must fire BOTH PUTs \
+         (2 total); expected exit 0; got {:?}\nstderr: {}",
+        output.status.code(),
+        String::from_utf8_lossy(&output.stderr)
+    );
+}
+
+// ── AC-016 (BC-8.3.007 — collision surfaced verbatim, not pre-validated) ────
+
+/// AC-016 / BC-8.3.007: `NEW` collides with an existing component name in
+/// the target project → Jira 400 surfaced verbatim (`ApiError(400,...)`,
+/// exit 1) — NOT pre-validated client-side: exactly ONE GET fires (the §8.4
+/// resolver for `OLD`), never a second pre-flight existence-check GET for
+/// `NEW` before the PUT.
+#[tokio::test]
+async fn test_bc_8_3_007_component_rename_name_collision_verbatim_400() {
+    let cache = TempDir::new().unwrap();
+    let config = TempDir::new().unwrap();
+    let server = MockServer::start().await;
+    write_profile_config(config.path(), &server.uri());
+
+    Mock::given(method("GET"))
+        .and(path("/rest/api/3/project/FOO/components"))
+        .respond_with(
+            ResponseTemplate::new(200).set_body_json(component_list_response(vec![
+                component_response("10001", "Backend", None, None, None),
+            ])),
+        )
+        .expect(1)
+        .mount(&server)
+        .await;
+
+    Mock::given(method("PUT"))
+        .and(path("/rest/api/3/component/10001"))
+        .respond_with(ResponseTemplate::new(400).set_body_json(json!({
+            "errorMessages": ["A component with the name 'NewName' already exists."]
+        })))
+        .expect(1)
+        .mount(&server)
+        .await;
+
+    let output = jr_cmd(&server.uri(), cache.path(), config.path())
+        .args([
+            "component",
+            "rename",
+            "Backend",
+            "NewName",
+            "--project",
+            "FOO",
+        ])
+        .output()
+        .unwrap();
+
+    server.verify().await;
+    assert_eq!(
+        output.status.code(),
+        Some(1),
+        "AC-016: expected exit 1 (ApiError) for a 400 name collision; got {:?}\nstderr: {}",
+        output.status.code(),
+        String::from_utf8_lossy(&output.stderr)
+    );
+    let stderr = String::from_utf8_lossy(&output.stderr);
+    assert!(
+        stderr.contains("A component with the name 'NewName' already exists."),
+        "AC-016: Jira's raw 400 body must be surfaced verbatim in stderr; \
+         got: {stderr}"
+    );
+
+    // No pre-flight existence check for NEW: exactly one GET total (the §8.4
+    // resolver for OLD), zero additional GETs before the PUT.
+    let received = server.received_requests().await.unwrap();
+    let get_count = received
+        .iter()
+        .filter(|r| r.method == wiremock::http::Method::GET)
+        .count();
+    assert_eq!(
+        get_count,
+        1,
+        "AC-016: exactly one GET (the §8.4 resolver) must fire — no \
+         additional pre-flight existence-check GET for NEW; got {get_count} \
+         GET request(s): {:?}",
+        received
+            .iter()
+            .map(|r| r.url.path().to_string())
+            .collect::<Vec<_>>()
+    );
+}
+
+// ── AC-017 (BC-8.3.001 Idempotency section — PUT-race 404 taxonomy) ─────────
+
+/// AC-017 / VP-COMPONENT-024: a fixture where the resolver succeeds but the
+/// follow-up `PUT` races to 404 (concurrent delete) → `ApiError(404)`, exit
+/// 1 — DISTINCT from AC-004's exit-64 not-found (resolver-layer) path.
+#[tokio::test]
+async fn test_bc_8_3_001_component_rename_put_race_404_exits_1_distinct_from_resolver_404() {
+    let cache = TempDir::new().unwrap();
+    let config = TempDir::new().unwrap();
+    let server = MockServer::start().await;
+    write_profile_config(config.path(), &server.uri());
+
+    Mock::given(method("GET"))
+        .and(path("/rest/api/3/project/FOO/components"))
+        .respond_with(
+            ResponseTemplate::new(200).set_body_json(component_list_response(vec![
+                component_response("10001", "Backend", None, None, None),
+            ])),
+        )
+        .expect(1)
+        .mount(&server)
+        .await;
+
+    // PUT races and returns 404 — component deleted between resolve and mutate.
+    Mock::given(method("PUT"))
+        .and(path("/rest/api/3/component/10001"))
+        .respond_with(
+            ResponseTemplate::new(404).set_body_json(json!({"errorMessages": ["Not found"]})),
+        )
+        .expect(1)
+        .mount(&server)
+        .await;
+
+    let output = jr_cmd(&server.uri(), cache.path(), config.path())
+        .args([
+            "component",
+            "rename",
+            "Backend",
+            "NewName",
+            "--project",
+            "FOO",
+        ])
+        .output()
+        .unwrap();
+
+    server.verify().await;
+    assert_eq!(
+        output.status.code(),
+        Some(1),
+        "AC-017: expected exit 1 (ApiError) for PUT-race 404, distinct from \
+         AC-004's exit-64 resolver-404 path; got {:?}\nstderr: {}",
+        output.status.code(),
+        String::from_utf8_lossy(&output.stderr)
+    );
+}
+
+// ── AC-018 (BC-8.3.002 Behavior — O(N) scale, no new rate-limit logic) ──────
+
+/// AC-018: a fixture with N=20 accessible projects, all matching `OLD` →
+/// exactly 20 `PUT` calls (one per match) plus N per-project component-list
+/// GETs (plus one `list_projects` call) — no additional page/rate-limit
+/// handling beyond `jr`'s existing 429-retry machinery is exercised or
+/// required by this story.
+#[tokio::test]
+async fn test_bc_8_3_002_component_rename_all_projects_scale_no_new_rate_limit_logic() {
+    let cache = TempDir::new().unwrap();
+    let config = TempDir::new().unwrap();
+    let server = MockServer::start().await;
+    write_profile_config(config.path(), &server.uri());
+
+    const N: u32 = 20;
+
+    Mock::given(method("GET"))
+        .and(path("/rest/api/3/project/search"))
+        .respond_with(ResponseTemplate::new(200).set_body_json(n_projects_search_response(N)))
+        .expect(1)
+        .mount(&server)
+        .await;
+
+    for i in 0..N {
+        let key = format!("P{i}");
+        let id = format!("400{i:02}");
+        Mock::given(method("GET"))
+            .and(path(format!("/rest/api/3/project/{key}/components")))
+            .respond_with(
+                ResponseTemplate::new(200).set_body_json(component_list_response(vec![
+                    component_response(&id, "Backend", None, None, None),
+                ])),
+            )
+            .expect(1)
+            .mount(&server)
+            .await;
+
+        Mock::given(method("PUT"))
+            .and(path(format!("/rest/api/3/component/{id}")))
+            .respond_with(
+                ResponseTemplate::new(200)
+                    .set_body_json(component_edit_response(&id, "NewName", &key)),
+            )
+            .expect(1)
+            .mount(&server)
+            .await;
+    }
+
+    let output = jr_cmd(&server.uri(), cache.path(), config.path())
+        .args([
+            "component",
+            "rename",
+            "Backend",
+            "NewName",
+            "--all-projects",
+        ])
+        .output()
+        .unwrap();
+
+    server.verify().await;
+    assert!(
+        output.status.success(),
+        "AC-018: expected exit 0 for a fully-successful 20-project fan-out; \
+         got {:?}\nstderr: {}",
+        output.status.code(),
+        String::from_utf8_lossy(&output.stderr)
+    );
+
+    let received = server.received_requests().await.unwrap();
+    // 1 list_projects + 20 per-project component-list GETs + 20 PUTs = 41.
+    assert_eq!(
+        received.len(),
+        41,
+        "AC-018: expected exactly 41 total HTTP calls (1 list_projects + \
+         20 component-list GETs + 20 PUTs); got {}: {:?}",
+        received.len(),
+        received
+            .iter()
+            .map(|r| (r.method.to_string(), r.url.path().to_string()))
+            .collect::<Vec<_>>()
+    );
+}
+
+// ── Consistency: global --project flag (F5-A-L2 precedent) ──────────────────
+
+/// `rename`-side analog of `test_bc_8_1_007_component_edit_honors_global_project_flag`
+/// / `test_bc_8_2_002_component_delete_honors_global_project_flag`: the
+/// single-project form's `--project` is honored whether it is supplied
+/// locally (after `rename`) or in the global position (before `component`).
+/// Clap's `global = true` top-level `--project` flag (`src/cli/mod.rs`)
+/// already propagates into any subcommand variant with its own `project:
+/// Option<String>` field of the same name — verified here for `Rename`
+/// exactly as it already is for `Edit`/`Delete`, with no additional merge
+/// code required in the dispatch arm (unlike `create`'s F5-A-L2 fix, which
+/// merges explicitly because `handle_create` enforces `--project` presence
+/// itself before any HTTP call).
+///
+/// Config carries NO default project — the global `--project` flag is the
+/// ONLY source of the project key — and `--project` is placed BEFORE the
+/// subcommand (no per-subcommand `--project`). If a future refactor ever
+/// broke global-flag propagation into the rename dispatch arm,
+/// `handle_rename`'s single-project branch would see `project: None` and
+/// hit BC-8.3.005's neither-supplied exit-64 guard before any HTTP call —
+/// failing both `.expect(1)` mocks below.
+#[tokio::test]
+async fn test_bc_8_3_001_component_rename_honors_global_project_flag() {
+    let cache = TempDir::new().unwrap();
+    let config = TempDir::new().unwrap();
+    let server = MockServer::start().await;
+    // Write a profile config with NO default project — the global --project
+    // flag is the ONLY source of the project key.
+    write_profile_config(config.path(), &server.uri());
+
+    Mock::given(method("GET"))
+        .and(path("/rest/api/3/project/FOO/components"))
+        .respond_with(
+            ResponseTemplate::new(200).set_body_json(component_list_response(vec![
+                component_response("10001", "Backend", None, None, None),
+            ])),
+        )
+        .expect(1)
+        .mount(&server)
+        .await;
+
+    // PUT MUST fire — rename proceeds with the global-flag project.
+    Mock::given(method("PUT"))
+        .and(path("/rest/api/3/component/10001"))
+        .and(body_json(json!({"name": "NewName"})))
+        .respond_with(
+            ResponseTemplate::new(200)
+                .set_body_json(component_edit_response("10001", "NewName", "FOO")),
+        )
+        .expect(1)
+        .mount(&server)
+        .await;
+
+    // Global flag BEFORE the subcommand — no per-subcommand --project.
+    let output = jr_cmd(&server.uri(), cache.path(), config.path())
+        .args([
+            "--project",
+            "FOO",
+            "component",
+            "rename",
+            "Backend",
+            "NewName",
+        ])
+        .output()
+        .unwrap();
+
+    server.verify().await;
+    assert!(
+        output.status.success(),
+        "expected exit 0 when project is supplied via the global --project \
+         flag; got {:?}\nstderr: {}",
+        output.status.code(),
+        String::from_utf8_lossy(&output.stderr)
+    );
+}
+
+// =============================================================================
+// S-608-1 Step-4.5 fix burst (fresh-context adversarial review, 4 LOW
+// findings). New, additive tests only — no existing rename test above this
+// marker was modified for these findings.
+// =============================================================================
+
+// ── F-2 (BC-8.3.003 table-mode fan-out — previously unasserted) ─────────────
+
+/// F-2 companion to AC-008
+/// (`test_bc_8_3_003_component_rename_all_projects_partial_failure_no_rollback`):
+/// BC-8.3.003 pins the human (table-mode) fan-out rendering — per-project
+/// `<KEY>: renamed` / `<KEY>: FAILED — <message>` lines plus a `{N} renamed`
+/// summary — but every existing fan-out test asserted `--output json` only,
+/// leaving the table renderer in `handle_rename_all_projects` unasserted.
+/// Reuses AC-008's exact fixture (5 projects, 3 succeed, 2 fail on a 400 name
+/// collision) without `--output json`, and pins the table lines verbatim for
+/// the literal prefixes/summary (the per-failure `<message>` suffix is
+/// server-supplied, so it is `contains`-checked, matching AC-008's own
+/// precedent for the same text).
+#[tokio::test]
+async fn test_bc_8_3_003_component_rename_all_projects_partial_failure_table_mode() {
+    let cache = TempDir::new().unwrap();
+    let config = TempDir::new().unwrap();
+    let server = MockServer::start().await;
+    write_profile_config(config.path(), &server.uri());
+
+    let keys = ["A", "B", "C", "D", "E"];
+    Mock::given(method("GET"))
+        .and(path("/rest/api/3/project/search"))
+        .respond_with(
+            ResponseTemplate::new(200).set_body_json(projects_search_response_for_keys(&keys)),
+        )
+        .expect(1)
+        .mount(&server)
+        .await;
+
+    let ids = ["30001", "30002", "30003", "30004", "30005"];
+    for (key, id) in keys.iter().zip(ids.iter()) {
+        Mock::given(method("GET"))
+            .and(path(format!("/rest/api/3/project/{key}/components")))
+            .respond_with(
+                ResponseTemplate::new(200).set_body_json(component_list_response(vec![
+                    component_response(id, "Backend", None, None, None),
+                ])),
+            )
+            .expect(1)
+            .mount(&server)
+            .await;
+    }
+
+    for (key, id) in [("A", "30001"), ("C", "30003"), ("E", "30005")] {
+        Mock::given(method("PUT"))
+            .and(path(format!("/rest/api/3/component/{id}")))
+            .respond_with(
+                ResponseTemplate::new(200)
+                    .set_body_json(component_edit_response(id, "NewName", key)),
+            )
+            .expect(1)
+            .mount(&server)
+            .await;
+    }
+
+    for (key, id) in [("B", "30002"), ("D", "30004")] {
+        Mock::given(method("PUT"))
+            .and(path(format!("/rest/api/3/component/{id}")))
+            .respond_with(ResponseTemplate::new(400).set_body_json(json!({
+                "errorMessages": [format!("A component with the name 'NewName' already exists in project {key}.")]
+            })))
+            .expect(1)
+            .mount(&server)
+            .await;
+    }
+
+    // Deliberately NOT --output json — this is the table-mode rendering.
+    let output = jr_cmd(&server.uri(), cache.path(), config.path())
+        .args([
+            "component",
+            "rename",
+            "Backend",
+            "NewName",
+            "--all-projects",
+        ])
+        .output()
+        .unwrap();
+
+    server.verify().await;
+    assert_eq!(
+        output.status.code(),
+        Some(1),
+        "F-2: table-mode partial-failure batch must still exit 1; got {:?}\nstderr: {}",
+        output.status.code(),
+        String::from_utf8_lossy(&output.stderr)
+    );
+
+    let stderr = String::from_utf8_lossy(&output.stderr);
+    let stderr_lines: Vec<&str> = stderr.lines().collect();
+
+    for key in ["A", "C", "E"] {
+        let line = format!("{key}: renamed");
+        assert!(
+            stderr_lines.contains(&line.as_str()),
+            "F-2: expected verbatim success line \"{line}\"; got stderr:\n{stderr}"
+        );
+    }
+
+    for key in ["B", "D"] {
+        let prefix = format!("{key}: FAILED — ");
+        let matching = stderr_lines.iter().find(|l| l.starts_with(&prefix));
+        let line = matching.unwrap_or_else(|| {
+            panic!("F-2: expected a line starting with \"{prefix}\"; got stderr:\n{stderr}")
+        });
+        assert!(
+            line.contains("already exists"),
+            "F-2: FAILED line for {key} must carry the raw Jira collision \
+             message; got: {line}"
+        );
+    }
+
+    assert!(
+        stderr_lines.contains(&"3 renamed, 2 failed"),
+        "F-2: expected verbatim summary line \"3 renamed, 2 failed\"; got stderr:\n{stderr}"
+    );
+}
+
+/// F-2 companion to AC-010
+/// (`test_bc_8_3_004_component_rename_dry_run_zero_mutation_both_scopes`):
+/// BC-8.3.004 pins the table-mode dry-run preview — a `DRY RUN — no changes
+/// will be made.` header plus one `  <KEY>: <OLD> → <NEW> (id N)` row per
+/// target — for both the single-project and `--all-projects` scopes, but
+/// every existing dry-run test asserted `--output json` only. This pins the
+/// single-project scope's table rendering.
+#[tokio::test]
+async fn test_bc_8_3_004_component_rename_dry_run_single_project_table_mode() {
+    let cache = TempDir::new().unwrap();
+    let config = TempDir::new().unwrap();
+    let server = MockServer::start().await;
+    write_profile_config(config.path(), &server.uri());
+
+    Mock::given(method("GET"))
+        .and(path("/rest/api/3/project/FOO/components"))
+        .respond_with(
+            ResponseTemplate::new(200).set_body_json(component_list_response(vec![
+                component_response("10001", "Backend", None, None, None),
+            ])),
+        )
+        .expect(1)
+        .mount(&server)
+        .await;
+    Mock::given(method("PUT"))
+        .respond_with(ResponseTemplate::new(200))
+        .expect(0)
+        .mount(&server)
+        .await;
+
+    // Deliberately NOT --output json.
+    let output = jr_cmd(&server.uri(), cache.path(), config.path())
+        .args([
+            "component",
+            "rename",
+            "Backend",
+            "NewName",
+            "--project",
+            "FOO",
+            "--dry-run",
+        ])
+        .output()
+        .unwrap();
+
+    server.verify().await;
+    assert!(
+        output.status.success(),
+        "F-2: single-project dry-run table mode must exit 0; got {:?}\nstderr: {}",
+        output.status.code(),
+        String::from_utf8_lossy(&output.stderr)
+    );
+
+    let stderr = String::from_utf8_lossy(&output.stderr);
+    let stderr_lines: Vec<&str> = stderr.lines().collect();
+    assert!(
+        stderr_lines.contains(&"DRY RUN — no changes will be made."),
+        "F-2: expected verbatim dry-run header; got stderr:\n{stderr}"
+    );
+    assert!(
+        stderr_lines.contains(&"  FOO: Backend \u{2192} NewName (id 10001)"),
+        "F-2: expected verbatim single-project dry-run row; got stderr:\n{stderr}"
+    );
+}
+
+/// F-2 companion to AC-010, `--all-projects` scope (see the single-project
+/// sibling test above for the full rationale).
+#[tokio::test]
+async fn test_bc_8_3_004_component_rename_dry_run_all_projects_table_mode() {
+    let cache = TempDir::new().unwrap();
+    let config = TempDir::new().unwrap();
+    let server = MockServer::start().await;
+    write_profile_config(config.path(), &server.uri());
+
+    Mock::given(method("GET"))
+        .and(path("/rest/api/3/project/search"))
+        .respond_with(
+            ResponseTemplate::new(200)
+                .set_body_json(projects_search_response_for_keys(&["A", "B"])),
+        )
+        .expect(1)
+        .mount(&server)
+        .await;
+    Mock::given(method("GET"))
+        .and(path("/rest/api/3/project/A/components"))
+        .respond_with(
+            ResponseTemplate::new(200).set_body_json(component_list_response(vec![
+                component_response("10001", "Backend", None, None, None),
+            ])),
+        )
+        .expect(1)
+        .mount(&server)
+        .await;
+    Mock::given(method("GET"))
+        .and(path("/rest/api/3/project/B/components"))
+        .respond_with(
+            ResponseTemplate::new(200).set_body_json(component_list_response(vec![
+                component_response("20001", "Backend", None, None, None),
+            ])),
+        )
+        .expect(1)
+        .mount(&server)
+        .await;
+    Mock::given(method("PUT"))
+        .respond_with(ResponseTemplate::new(200))
+        .expect(0)
+        .mount(&server)
+        .await;
+
+    // Deliberately NOT --output json.
+    let output = jr_cmd(&server.uri(), cache.path(), config.path())
+        .args([
+            "component",
+            "rename",
+            "Backend",
+            "NewName",
+            "--all-projects",
+            "--dry-run",
+        ])
+        .output()
+        .unwrap();
+
+    server.verify().await;
+    assert!(
+        output.status.success(),
+        "F-2: --all-projects dry-run table mode must exit 0; got {:?}\nstderr: {}",
+        output.status.code(),
+        String::from_utf8_lossy(&output.stderr)
+    );
+
+    let stderr = String::from_utf8_lossy(&output.stderr);
+    let stderr_lines: Vec<&str> = stderr.lines().collect();
+    assert!(
+        stderr_lines.contains(&"DRY RUN — no changes will be made."),
+        "F-2: expected verbatim dry-run header; got stderr:\n{stderr}"
+    );
+    assert!(
+        stderr_lines.contains(&"  A: Backend \u{2192} NewName (id 10001)"),
+        "F-2: expected verbatim dry-run row for project A; got stderr:\n{stderr}"
+    );
+    assert!(
+        stderr_lines.contains(&"  B: Backend \u{2192} NewName (id 20001)"),
+        "F-2: expected verbatim dry-run row for project B; got stderr:\n{stderr}"
+    );
+}
+
+// ── F-A-LOW-001 (spec-silent, LOW — discovery-phase fail-closed posture) ───
+
+/// F-A-LOW-001: `discover_rename_targets` (`src/cli/component.rs`) is
+/// intentionally FAIL-CLOSED on a discovery-phase HTTP error — a single
+/// project's `GET /project/{key}/components` failure aborts the WHOLE
+/// `--all-projects` fan-out before any `PUT` is attempted, unlike the
+/// mutation phase's per-project continue-on-error (BC-8.3.003, no
+/// rollback). This is the SAFE direction for a mutation command (both
+/// adversary lenses agreed): BC-8.3.003's continue-on-error contract is
+/// scoped to the PUT phase only, never to discovery. This test locks that
+/// intentional behavior against silent regression — see the rustdoc on
+/// `discover_rename_targets` for the full rationale.
+#[tokio::test]
+async fn test_bc_8_3_002_component_rename_all_projects_discovery_phase_error_aborts_fanout_zero_put()
+ {
+    let cache = TempDir::new().unwrap();
+    let config = TempDir::new().unwrap();
+    let server = MockServer::start().await;
+    write_profile_config(config.path(), &server.uri());
+
+    let keys = ["A", "B", "C"];
+    Mock::given(method("GET"))
+        .and(path("/rest/api/3/project/search"))
+        .respond_with(
+            ResponseTemplate::new(200).set_body_json(projects_search_response_for_keys(&keys)),
+        )
+        .expect(1)
+        .mount(&server)
+        .await;
+
+    Mock::given(method("GET"))
+        .and(path("/rest/api/3/project/A/components"))
+        .respond_with(
+            ResponseTemplate::new(200).set_body_json(component_list_response(vec![
+                component_response("10001", "Backend", None, None, None),
+            ])),
+        )
+        .mount(&server)
+        .await;
+
+    // B's component-list call fails mid-fan-out.
+    Mock::given(method("GET"))
+        .and(path("/rest/api/3/project/B/components"))
+        .respond_with(ResponseTemplate::new(500).set_body_json(json!({
+            "errorMessages": ["Internal server error"]
+        })))
+        .mount(&server)
+        .await;
+
+    Mock::given(method("GET"))
+        .and(path("/rest/api/3/project/C/components"))
+        .respond_with(
+            ResponseTemplate::new(200).set_body_json(component_list_response(vec![
+                component_response("30001", "Backend", None, None, None),
+            ])),
+        )
+        .mount(&server)
+        .await;
+
+    // Zero PUT calls of ANY kind — discovery must abort before mutation.
+    Mock::given(method("PUT"))
+        .respond_with(ResponseTemplate::new(200))
+        .expect(0)
+        .mount(&server)
+        .await;
+
+    let output = jr_cmd(&server.uri(), cache.path(), config.path())
+        .args([
+            "component",
+            "rename",
+            "Backend",
+            "NewName",
+            "--all-projects",
+            "--output",
+            "json",
+        ])
+        .output()
+        .unwrap();
+
+    server.verify().await;
+    assert_eq!(
+        output.status.code(),
+        Some(1),
+        "F-A-LOW-001: a discovery-phase list_components error must abort \
+         the whole fan-out with exit 1, zero PUT calls; got {:?}\nstderr: {}",
+        output.status.code(),
+        String::from_utf8_lossy(&output.stderr)
+    );
+
+    // No renamed/failed JSON should ever reach stdout — discovery failed
+    // before the mutation phase (and its stdout-printing) was ever reached.
+    let stdout = String::from_utf8_lossy(&output.stdout);
+    assert!(
+        stdout.trim().is_empty(),
+        "F-A-LOW-001: no renamed/failed JSON should be printed when \
+         discovery itself fails; got stdout: {stdout}"
+    );
+}
+
+// ── Step-4.5 fix burst 2, Finding 1 (LOW, sibling consistency) ───────────────
+
+/// F-08 / BC-8.3.001: `rename 10042 NewName --project A` where the
+/// confirming GET `/rest/api/3/component/10042` returns a component with NO
+/// `project` field at all (`null`/absent) → `resolve_rename_source` must
+/// fail closed BEFORE the mismatch comparison, with a clear "no project
+/// field" message — not the misleading "belongs to project , not A."
+/// message an empty `unwrap_or_default()` would otherwise produce. Mirrors
+/// `handle_edit`'s F-07 / PR#704 Finding C guard and `handle_delete`'s
+/// identical guard (both in `src/cli/component.rs`). Exit 64, ZERO `PUT`.
+#[tokio::test]
+async fn test_bc_8_3_001_component_rename_numeric_no_project_field_fails_closed() {
+    let cache = TempDir::new().unwrap();
+    let config = TempDir::new().unwrap();
+    let server = MockServer::start().await;
+    write_profile_config(config.path(), &server.uri());
+
+    Mock::given(method("GET"))
+        .and(path("/rest/api/3/component/10042"))
+        .respond_with(
+            ResponseTemplate::new(200)
+                .set_body_json(component_response_no_project_field("10042", "Backend")),
+        )
+        .expect(1)
+        .mount(&server)
+        .await;
+
+    Mock::given(method("PUT"))
+        .and(path("/rest/api/3/component/10042"))
+        .respond_with(
+            ResponseTemplate::new(200)
+                .set_body_json(component_edit_response("10042", "NewName", "A")),
+        )
+        .expect(0)
+        .mount(&server)
+        .await;
+
+    let output = jr_cmd(&server.uri(), cache.path(), config.path())
+        .args(["component", "rename", "10042", "NewName", "--project", "A"])
+        .output()
+        .unwrap();
+
+    server.verify().await;
+    assert_eq!(
+        output.status.code(),
+        Some(64),
+        "F-08: expected exit 64 when the confirming GET returns no project \
+         field; got {:?}\nstderr: {}",
+        output.status.code(),
+        String::from_utf8_lossy(&output.stderr)
+    );
+    let stderr = String::from_utf8_lossy(&output.stderr);
+    assert!(
+        stderr.contains(
+            "Component 10042 returned no project field; cannot verify --project A for the rename."
+        ),
+        "F-08: expected the verbatim no-project-field guard message; got: {stderr}"
+    );
+}
+
+// ── Step-4.5 fix burst 3, Finding LOW-1 (cache invalidation, derived key) ───
+
+/// LOW-1: for a numeric OLD, `resolve_rename_source` must invalidate the
+/// components cache using the confirming GET's DERIVED (canonical-cased)
+/// project — not the caller's `--project` flag casing — mirroring
+/// `handle_edit`'s numeric path (`final_project_key = derived_project`,
+/// PR#704 Finding C). The components cache is a case-sensitive `HashMap`
+/// (`components_<profile>.json`), so this test pre-writes a cache entry
+/// keyed by the CANONICAL-cased project "FOO", runs a numeric rename with
+/// `--project foo` (lowercase — accepted by the `eq_ignore_ascii_case`
+/// mismatch check), and asserts the "FOO" entry is gone afterward. Before
+/// the fix, invalidation would have called
+/// `invalidate_components_cache(profile, "foo")`, which — being a
+/// case-sensitive `HashMap::remove` — would silently leave "FOO" untouched.
+#[tokio::test]
+async fn test_bc_8_3_001_component_rename_numeric_cache_invalidation_uses_derived_project_key() {
+    let cache = TempDir::new().unwrap();
+    let config = TempDir::new().unwrap();
+    let server = MockServer::start().await;
+    write_profile_config(config.path(), &server.uri());
+
+    // Pre-write a components cache entry keyed by the CANONICAL-cased
+    // project "FOO" (as a real fetch/list would key it).
+    let cache_dir_path = cache.path().join("v1").join("default");
+    std::fs::create_dir_all(&cache_dir_path).unwrap();
+    let cache_file = cache_dir_path.join("components_default.json");
+    std::fs::write(
+        &cache_file,
+        r#"{"FOO":{"components":[{"id":"10001","name":"Backend"}],"fetched_at":"2026-01-01T00:00:00Z"}}"#,
+    )
+    .unwrap();
+
+    let before: serde_json::Value =
+        serde_json::from_str(&std::fs::read_to_string(&cache_file).unwrap()).unwrap();
+    assert!(
+        before.get("FOO").is_some(),
+        "LOW-1 precondition: FOO entry must be present in cache before command"
+    );
+
+    // Confirming GET: component 10001 belongs to canonical-cased project "FOO".
+    Mock::given(method("GET"))
+        .and(path("/rest/api/3/component/10001"))
+        .respond_with(
+            ResponseTemplate::new(200).set_body_json(component_response_with_flags(
+                "10001",
+                "Backend",
+                None,
+                None,
+                None,
+                Some("FOO"),
+                None,
+            )),
+        )
+        .expect(1)
+        .mount(&server)
+        .await;
+
+    Mock::given(method("PUT"))
+        .and(path("/rest/api/3/component/10001"))
+        .respond_with(
+            ResponseTemplate::new(200)
+                .set_body_json(component_edit_response("10001", "NewName", "FOO")),
+        )
+        .expect(1)
+        .mount(&server)
+        .await;
+
+    // User supplies --project in LOWERCASE ("foo"); resolve_rename_source's
+    // eq_ignore_ascii_case check accepts it as a match against the
+    // canonical-cased "FOO" the confirming GET returned.
+    let output = jr_cmd(&server.uri(), cache.path(), config.path())
+        .args([
+            "component",
+            "rename",
+            "10001",
+            "NewName",
+            "--project",
+            "foo",
+        ])
+        .output()
+        .unwrap();
+
+    server.verify().await;
+    assert!(
+        output.status.success(),
+        "LOW-1: expected exit 0; got {:?}\nstderr: {}",
+        output.status.code(),
+        String::from_utf8_lossy(&output.stderr)
+    );
+
+    // The cache entry under the CANONICAL key "FOO" must be gone — proving
+    // invalidation used the confirming-GET-derived project, not the user's
+    // lowercase flag casing "foo" (which would leave "FOO" untouched in the
+    // case-sensitive HashMap).
+    let after_content = std::fs::read_to_string(&cache_file).unwrap_or_default();
+    let after: serde_json::Value = serde_json::from_str(&after_content).unwrap_or(json!({}));
+    assert!(
+        after.get("FOO").is_none(),
+        "LOW-1: after a successful numeric rename with --project foo (lowercase), \
+         the canonical-cased FOO cache entry must be removed (cache invalidation \
+         must use the confirming-GET-derived project key, not the caller's flag \
+         casing); cache after: {after}"
+    );
+}
+
+// ── Step-4.5 fix burst 3, Finding LOW-2 (--all-projects fail-closed dupes) ──
+
+/// LOW-2: `--all-projects` discovery must not silently first-pick when one
+/// project has MORE THAN ONE component whose name exactly case-insensitively
+/// matches OLD. Project A has both "Backend" and "BACKEND" (two exact,
+/// distinct-case matches) → A is skipped fail-closed at discovery (ZERO
+/// `PUT` for either of its components) and reported in `failed[]`; Project B
+/// has a single "Backend" → renames normally; Project C has no match at all
+/// → silently skipped as usual (not an error, not in `failed[]`). Overall
+/// exit stays 1 (BC-8.3.003 continue-on-error: B still renames despite A's
+/// failure).
+#[tokio::test]
+async fn test_bc_8_3_002_component_rename_all_projects_intra_project_duplicate_fails_closed_not_first_picked()
+ {
+    let cache = TempDir::new().unwrap();
+    let config = TempDir::new().unwrap();
+    let server = MockServer::start().await;
+    write_profile_config(config.path(), &server.uri());
+
+    let keys = ["A", "B", "C"];
+    Mock::given(method("GET"))
+        .and(path("/rest/api/3/project/search"))
+        .respond_with(
+            ResponseTemplate::new(200).set_body_json(projects_search_response_for_keys(&keys)),
+        )
+        .expect(1)
+        .mount(&server)
+        .await;
+
+    // Project A: TWO exact case-insensitive matches for "Backend".
+    Mock::given(method("GET"))
+        .and(path("/rest/api/3/project/A/components"))
+        .respond_with(
+            ResponseTemplate::new(200).set_body_json(component_list_two_same_name(
+                "10001", "Backend", "10002", "BACKEND",
+            )),
+        )
+        .expect(1)
+        .mount(&server)
+        .await;
+
+    // Project B: exactly one match — renames normally.
+    Mock::given(method("GET"))
+        .and(path("/rest/api/3/project/B/components"))
+        .respond_with(
+            ResponseTemplate::new(200).set_body_json(component_list_response(vec![
+                component_response("20001", "Backend", None, None, None),
+            ])),
+        )
+        .expect(1)
+        .mount(&server)
+        .await;
+
+    // Project C: no match at all.
+    Mock::given(method("GET"))
+        .and(path("/rest/api/3/project/C/components"))
+        .respond_with(
+            ResponseTemplate::new(200).set_body_json(component_list_response(vec![
+                component_response("30001", "Frontend", None, None, None),
+            ])),
+        )
+        .expect(1)
+        .mount(&server)
+        .await;
+
+    // Neither of project A's ambiguous components may ever receive a PUT.
+    Mock::given(method("PUT"))
+        .and(path("/rest/api/3/component/10001"))
+        .respond_with(ResponseTemplate::new(200))
+        .expect(0)
+        .mount(&server)
+        .await;
+    Mock::given(method("PUT"))
+        .and(path("/rest/api/3/component/10002"))
+        .respond_with(ResponseTemplate::new(200))
+        .expect(0)
+        .mount(&server)
+        .await;
+
+    // Project B's single match DOES rename.
+    Mock::given(method("PUT"))
+        .and(path("/rest/api/3/component/20001"))
+        .respond_with(
+            ResponseTemplate::new(200)
+                .set_body_json(component_edit_response("20001", "NewName", "B")),
+        )
+        .expect(1)
+        .mount(&server)
+        .await;
+
+    let output = jr_cmd(&server.uri(), cache.path(), config.path())
+        .args([
+            "component",
+            "rename",
+            "Backend",
+            "NewName",
+            "--all-projects",
+            "--output",
+            "json",
+        ])
+        .output()
+        .unwrap();
+
+    server.verify().await;
+    assert_eq!(
+        output.status.code(),
+        Some(1),
+        "LOW-2: expected exit 1 (project A's ambiguity counts as a failure); \
+         got {:?}\nstderr: {}",
+        output.status.code(),
+        String::from_utf8_lossy(&output.stderr)
+    );
+
+    let stdout = String::from_utf8_lossy(&output.stdout);
+    let parsed: Value =
+        serde_json::from_str(&stdout).expect("LOW-2: --output json stdout must be valid JSON");
+
+    let renamed = parsed["renamed"]
+        .as_array()
+        .expect("renamed must be an array");
+    assert_eq!(
+        renamed.len(),
+        1,
+        "LOW-2: expected exactly 1 success (project B); got: {renamed:?}"
+    );
+    assert_eq!(
+        renamed[0]["project"], "B",
+        "LOW-2: the single success must be project B; got: {renamed:?}"
+    );
+
+    let failed = parsed["failed"]
+        .as_array()
+        .expect("failed must be an array");
+    assert_eq!(
+        failed.len(),
+        1,
+        "LOW-2: expected exactly 1 failure (project A's ambiguity); got: {failed:?}"
+    );
+    let a_entry = &failed[0];
+    assert_eq!(
+        a_entry["project"], "A",
+        "LOW-2: the failure must be reported against project A; got: {a_entry}"
+    );
+    assert_eq!(
+        a_entry["error"],
+        "Multiple components named 'Backend' in project A — rename it via the \
+         single-project form with the numeric component ID.",
+        "LOW-2: expected the verbatim per-project ambiguity message; got: {a_entry}"
+    );
+}
+
+// ── Step-4.5 fix burst 4, Finding 1 (dry-run must surface ambiguous) ───────
+
+/// Finding 1: the `--dry-run` preview must faithfully predict the live run's
+/// outcome (BC-8.3.004 Invariant 1). Project A has TWO exact
+/// case-insensitive matches ("Backend"+"BACKEND") — an ambiguous project the
+/// live path seeds into `failed[]` (Step-4.5 fix burst 3, LOW-2). Before
+/// this fix, dry-run silently dropped project A from BOTH `targets` and any
+/// warning and exited 0. This test locks: A appears as a `wouldFail` JSON
+/// entry with the verbatim ambiguity message; B appears as a normal
+/// `targets` entry; ZERO `PUT` is ever attempted for ANY project (it's a dry
+/// run); and the command exits 1 (parity with the live run's exit 1 on ≥1
+/// failure).
+#[tokio::test]
+async fn test_bc_8_3_004_component_rename_dry_run_all_projects_surfaces_ambiguous_as_would_fail_json()
+ {
+    let cache = TempDir::new().unwrap();
+    let config = TempDir::new().unwrap();
+    let server = MockServer::start().await;
+    write_profile_config(config.path(), &server.uri());
+
+    let keys = ["A", "B", "C"];
+    Mock::given(method("GET"))
+        .and(path("/rest/api/3/project/search"))
+        .respond_with(
+            ResponseTemplate::new(200).set_body_json(projects_search_response_for_keys(&keys)),
+        )
+        .expect(1)
+        .mount(&server)
+        .await;
+
+    // Project A: TWO exact case-insensitive matches for "Backend".
+    Mock::given(method("GET"))
+        .and(path("/rest/api/3/project/A/components"))
+        .respond_with(
+            ResponseTemplate::new(200).set_body_json(component_list_two_same_name(
+                "10001", "Backend", "10002", "BACKEND",
+            )),
+        )
+        .expect(1)
+        .mount(&server)
+        .await;
+
+    // Project B: exactly one match.
+    Mock::given(method("GET"))
+        .and(path("/rest/api/3/project/B/components"))
+        .respond_with(
+            ResponseTemplate::new(200).set_body_json(component_list_response(vec![
+                component_response("20001", "Backend", None, None, None),
+            ])),
+        )
+        .expect(1)
+        .mount(&server)
+        .await;
+
+    // Project C: no match at all.
+    Mock::given(method("GET"))
+        .and(path("/rest/api/3/project/C/components"))
+        .respond_with(
+            ResponseTemplate::new(200).set_body_json(component_list_response(vec![
+                component_response("30001", "Frontend", None, None, None),
+            ])),
+        )
+        .expect(1)
+        .mount(&server)
+        .await;
+
+    // ZERO PUT for ALL projects — it's a dry run.
+    Mock::given(method("PUT"))
+        .respond_with(ResponseTemplate::new(200))
+        .expect(0)
+        .mount(&server)
+        .await;
+
+    let output = jr_cmd(&server.uri(), cache.path(), config.path())
+        .args([
+            "component",
+            "rename",
+            "Backend",
+            "NewName",
+            "--all-projects",
+            "--dry-run",
+            "--output",
+            "json",
+        ])
+        .output()
+        .unwrap();
+
+    server.verify().await;
+    assert_eq!(
+        output.status.code(),
+        Some(1),
+        "Finding 1: expected exit 1 (project A's ambiguity would fail on a live \
+         run); got {:?}\nstderr: {}",
+        output.status.code(),
+        String::from_utf8_lossy(&output.stderr)
+    );
+
+    let stdout = String::from_utf8_lossy(&output.stdout);
+    let parsed: Value =
+        serde_json::from_str(&stdout).expect("Finding 1: dry-run stdout must be valid JSON");
+
+    assert_eq!(parsed["dryRun"], json!(true), "got: {parsed}");
+
+    let targets = parsed["targets"].as_array().expect("targets must be array");
+    assert_eq!(
+        targets.len(),
+        1,
+        "Finding 1: expected exactly 1 target (project B); got: {targets:?}"
+    );
+    assert_eq!(
+        targets[0]["project"], "B",
+        "Finding 1: the single target must be project B; got: {targets:?}"
+    );
+
+    let would_fail = parsed["wouldFail"]
+        .as_array()
+        .expect("wouldFail must be array");
+    assert_eq!(
+        would_fail.len(),
+        1,
+        "Finding 1: expected exactly 1 wouldFail entry (project A's ambiguity); \
+         got: {would_fail:?}"
+    );
+    let a_entry = &would_fail[0];
+    assert_eq!(
+        a_entry["project"], "A",
+        "Finding 1: the wouldFail entry must be reported against project A; got: {a_entry}"
+    );
+    assert_eq!(
+        a_entry["error"],
+        "Multiple components named 'Backend' in project A — rename it via the \
+         single-project form with the numeric component ID.",
+        "Finding 1: expected the verbatim per-project ambiguity message (same as the \
+         live path's failed[] message); got: {a_entry}"
+    );
+}
+
+/// Finding 1 (table mode): same scenario as the JSON test above, verified
+/// against the human-readable table output — project A's ambiguity renders
+/// as a `WOULD FAIL —` line (not silently dropped), project B renders as a
+/// normal preview row, ZERO `PUT` is ever attempted, and the command exits
+/// 1.
+#[tokio::test]
+async fn test_bc_8_3_004_component_rename_dry_run_all_projects_surfaces_ambiguous_as_would_fail_table()
+ {
+    let cache = TempDir::new().unwrap();
+    let config = TempDir::new().unwrap();
+    let server = MockServer::start().await;
+    write_profile_config(config.path(), &server.uri());
+
+    let keys = ["A", "B"];
+    Mock::given(method("GET"))
+        .and(path("/rest/api/3/project/search"))
+        .respond_with(
+            ResponseTemplate::new(200).set_body_json(projects_search_response_for_keys(&keys)),
+        )
+        .expect(1)
+        .mount(&server)
+        .await;
+
+    Mock::given(method("GET"))
+        .and(path("/rest/api/3/project/A/components"))
+        .respond_with(
+            ResponseTemplate::new(200).set_body_json(component_list_two_same_name(
+                "10001", "Backend", "10002", "BACKEND",
+            )),
+        )
+        .expect(1)
+        .mount(&server)
+        .await;
+
+    Mock::given(method("GET"))
+        .and(path("/rest/api/3/project/B/components"))
+        .respond_with(
+            ResponseTemplate::new(200).set_body_json(component_list_response(vec![
+                component_response("20001", "Backend", None, None, None),
+            ])),
+        )
+        .expect(1)
+        .mount(&server)
+        .await;
+
+    Mock::given(method("PUT"))
+        .respond_with(ResponseTemplate::new(200))
+        .expect(0)
+        .mount(&server)
+        .await;
+
+    // Deliberately NOT --output json.
+    let output = jr_cmd(&server.uri(), cache.path(), config.path())
+        .args([
+            "component",
+            "rename",
+            "Backend",
+            "NewName",
+            "--all-projects",
+            "--dry-run",
+        ])
+        .output()
+        .unwrap();
+
+    server.verify().await;
+    assert_eq!(
+        output.status.code(),
+        Some(1),
+        "Finding 1 (table): expected exit 1; got {:?}\nstderr: {}",
+        output.status.code(),
+        String::from_utf8_lossy(&output.stderr)
+    );
+
+    let stderr = String::from_utf8_lossy(&output.stderr);
+    let stderr_lines: Vec<&str> = stderr.lines().collect();
+    assert!(
+        stderr_lines.contains(&"DRY RUN — no changes will be made."),
+        "Finding 1 (table): expected verbatim dry-run header; got stderr:\n{stderr}"
+    );
+    assert!(
+        stderr_lines.contains(&"  B: Backend \u{2192} NewName (id 20001)"),
+        "Finding 1 (table): expected verbatim dry-run row for project B; got stderr:\n{stderr}"
+    );
+    assert!(
+        stderr_lines.contains(
+            &"  A: WOULD FAIL — Multiple components named 'Backend' in project A — rename it \
+              via the single-project form with the numeric component ID."
+        ),
+        "Finding 1 (table): expected verbatim WOULD FAIL row for project A; got stderr:\n{stderr}"
+    );
+}
+
+// ── Step-4.5 fix burst 4, Finding 2 (affirm BC-literal JSON project echo) ───
+
+/// Finding 2 (AFFIRMED behavior, not a regression fix): for a numeric OLD
+/// resolved via a case-variant `--project` flag, the success JSON `project`
+/// field echoes the SUPPLIED FLAG VALUE verbatim (BC-8.3.001 Postcondition
+/// 2's literal wording — `"project": KEY`), NOT the confirming-GET-derived
+/// canonical-cased project key. This is deliberately asymmetric with cache
+/// invalidation (Step-4.5 fix burst 3, LOW-1), which DOES use the derived
+/// canonical key, and deliberately diverges from `handle_edit`'s sibling
+/// behavior, which canonicalizes its own echoed project value. This test
+/// pins the BC-literal casing so it cannot silently regress into
+/// canonicalization.
+#[tokio::test]
+async fn test_bc_8_3_001_component_rename_numeric_success_json_project_echoes_flag_value_not_canonical()
+ {
+    let cache = TempDir::new().unwrap();
+    let config = TempDir::new().unwrap();
+    let server = MockServer::start().await;
+    write_profile_config(config.path(), &server.uri());
+
+    // Confirming GET: component 10001 belongs to canonical-cased project "FOO".
+    Mock::given(method("GET"))
+        .and(path("/rest/api/3/component/10001"))
+        .respond_with(
+            ResponseTemplate::new(200).set_body_json(component_response_with_flags(
+                "10001",
+                "Backend",
+                None,
+                None,
+                None,
+                Some("FOO"),
+                None,
+            )),
+        )
+        .expect(1)
+        .mount(&server)
+        .await;
+
+    Mock::given(method("PUT"))
+        .and(path("/rest/api/3/component/10001"))
+        .respond_with(
+            ResponseTemplate::new(200)
+                .set_body_json(component_edit_response("10001", "NewName", "FOO")),
+        )
+        .expect(1)
+        .mount(&server)
+        .await;
+
+    // User supplies --project in LOWERCASE ("foo").
+    let output = jr_cmd(&server.uri(), cache.path(), config.path())
+        .args([
+            "component",
+            "rename",
+            "10001",
+            "NewName",
+            "--project",
+            "foo",
+            "--output",
+            "json",
+        ])
+        .output()
+        .unwrap();
+
+    server.verify().await;
+    assert!(
+        output.status.success(),
+        "Finding 2: expected exit 0; got {:?}\nstderr: {}",
+        output.status.code(),
+        String::from_utf8_lossy(&output.stderr)
+    );
+
+    let stdout = String::from_utf8_lossy(&output.stdout);
+    let parsed: Value =
+        serde_json::from_str(&stdout).expect("Finding 2: stdout must be valid JSON");
+
+    assert_eq!(
+        parsed["renamed"]["project"], "foo",
+        "Finding 2: success JSON `project` must echo the supplied flag value \
+         verbatim ('foo'), NOT the confirming-GET-derived canonical casing \
+         ('FOO') — BC-8.3.001 Postcondition 2 pins the flag KEY; got: {parsed}"
+    );
+}
+
+// ── Step-4.5 fix burst 5, Test 2 (Lens A LOW — no config-fallback for --project) ─
+
+/// Step-4.5 fix burst 5, Test 2 / BC-8.3.001 Precondition 1 / EC-8.1.004-2:
+/// `component rename` has NO `.jr.toml` config fallback for its scope
+/// selection, unlike `component list` (see
+/// `test_bc_8_1_001_component_list_falls_back_to_configured_project`) — the
+/// neither-`--project`-nor-`--all-projects` guard
+/// (`test_bc_8_3_005_component_rename_scope_selection_clap_conflict_and_app_guard`
+/// Part B) was previously only exercised with NO configured default project
+/// at all, leaving the "does a configured default silently satisfy the
+/// guard?" question unanswered. This is the same pattern as
+/// `test_bc_8_1_005_component_create_no_project_exits_64_not_clap_exit_2`
+/// (create's sibling no-fallback regression test). Here: a `.jr.toml` in CWD
+/// DOES configure `project = "FOO"`, yet `rename OLD NEW` with neither flag
+/// must still exit 64 (the app-level neither-guard, NOT clap's exit 2) with
+/// ZERO HTTP calls — proving the configured default did not leak into
+/// rename's scope resolution.
+#[tokio::test]
+async fn test_bc_8_3_001_component_rename_no_config_fallback_for_project_neither_guard_still_fires()
+{
+    let cache = TempDir::new().unwrap();
+    let config = TempDir::new().unwrap();
+    let cwd = TempDir::new().unwrap();
+    let server = MockServer::start().await;
+    write_profile_config(config.path(), &server.uri());
+    // .jr.toml DOES configure a default project — rename must NOT fall back to it.
+    std::fs::write(cwd.path().join(".jr.toml"), "project = \"FOO\"\n").unwrap();
+
+    let output = jr_cmd(&server.uri(), cache.path(), config.path())
+        .args(["component", "rename", "OLD", "NewName"])
+        .current_dir(cwd.path())
+        .output()
+        .unwrap();
+
+    assert_eq!(
+        output.status.code(),
+        Some(64),
+        "Test 2: expected app-level exit 64 (no .jr.toml fallback for rename's \
+         neither-scope guard), NOT clap's exit 2; got {:?}\nstderr: {}",
+        output.status.code(),
+        String::from_utf8_lossy(&output.stderr)
+    );
+    let stderr = String::from_utf8_lossy(&output.stderr);
+    assert!(
+        stderr.contains("--project") && stderr.contains("--all-projects"),
+        "Test 2: neither-flag error must name BOTH --project and \
+         --all-projects even with a configured default project; got: {stderr}"
+    );
+    assert!(
+        stderr.contains("supply exactly one"),
+        "Test 2: neither-flag error must include the actionable remediation \
+         \"supply exactly one\", not merely name the flags; got: {stderr}"
+    );
+    let received = server.received_requests().await.unwrap();
+    assert!(
+        received.is_empty(),
+        "Test 2: application-level guard must fire before any HTTP — the \
+         configured .jr.toml default project must not have been resolved \
+         and used to make a request; got {} request(s)",
+        received.len()
+    );
+}
+
+// =============================================================================
+// Step-4.5 fix burst 7 (fresh-context adversarial review, 1 MEDIUM coverage
+// gap + 2 LOW findings — one code fix, one test-only). New, additive tests
+// only — no existing rename test above this marker was modified for these
+// findings.
+// =============================================================================
+
+// ── F-1 (MEDIUM — single-project NAME-resolution-failure branches, untested) ─
+
+/// F-1 (a): `resolve_rename_source`'s name-branch `MatchResult::None` arm
+/// (`src/cli/component.rs`) was previously exercised only for `edit`
+/// (AC-015/`test_bc_8_1_008_component_edit_name_notfound_and_ambiguous_messages`),
+/// never for `rename`'s single-project form. `rename xyz NewName --project
+/// FOO` where `xyz` matches nothing in FOO's component list → exit 64,
+/// verbatim `"Component 'xyz' not found in project FOO. Available: Backend,
+/// Frontend."` (alphabetically sorted), ZERO `PUT`.
+#[tokio::test]
+async fn test_bc_8_3_001_component_rename_single_project_name_not_found_exit_64() {
+    let cache = TempDir::new().unwrap();
+    let config = TempDir::new().unwrap();
+    let server = MockServer::start().await;
+    write_profile_config(config.path(), &server.uri());
+
+    Mock::given(method("GET"))
+        .and(path("/rest/api/3/project/FOO/components"))
+        .respond_with(
+            ResponseTemplate::new(200).set_body_json(component_list_response(vec![
+                component_response("10001", "Frontend", None, None, None),
+                component_response("10002", "Backend", None, None, None),
+            ])),
+        )
+        .expect(1)
+        .mount(&server)
+        .await;
+
+    Mock::given(method("PUT"))
+        .respond_with(ResponseTemplate::new(200).set_body_json(json!({})))
+        .expect(0)
+        .mount(&server)
+        .await;
+
+    let output = jr_cmd(&server.uri(), cache.path(), config.path())
+        .args(["component", "rename", "xyz", "NewName", "--project", "FOO"])
+        .output()
+        .unwrap();
+
+    server.verify().await;
+    assert_eq!(
+        output.status.code(),
+        Some(64),
+        "F-1(a): expected exit 64 for single-project NAME not-found; \
+         got {:?}\nstderr: {}",
+        output.status.code(),
+        String::from_utf8_lossy(&output.stderr)
+    );
+    let stderr = String::from_utf8_lossy(&output.stderr);
+    assert!(
+        stderr.contains("Component 'xyz' not found in project FOO. Available: Backend, Frontend."),
+        "F-1(a): expected verbatim \"Component 'xyz' not found in project FOO. \
+         Available: Backend, Frontend.\"; got: {stderr}"
+    );
+}
+
+/// F-1 (b): `resolve_rename_source`'s name-branch `MatchResult::Ambiguous`
+/// arm, previously untested for `rename`'s single-project form. `rename back
+/// NewName --project FOO` where FOO has both "Backend" and "Backoffice"
+/// (both substring-match "back") → exit 64, verbatim `"Ambiguous component
+/// 'back'. Matches: Backend, Backoffice."`, ZERO `PUT`.
+#[tokio::test]
+async fn test_bc_8_3_001_component_rename_single_project_name_ambiguous_exit_64() {
+    let cache = TempDir::new().unwrap();
+    let config = TempDir::new().unwrap();
+    let server = MockServer::start().await;
+    write_profile_config(config.path(), &server.uri());
+
+    Mock::given(method("GET"))
+        .and(path("/rest/api/3/project/FOO/components"))
+        .respond_with(
+            ResponseTemplate::new(200).set_body_json(component_list_response(vec![
+                component_response("10001", "Backend", None, None, None),
+                component_response("10002", "Backoffice", None, None, None),
+            ])),
+        )
+        .expect(1)
+        .mount(&server)
+        .await;
+
+    Mock::given(method("PUT"))
+        .respond_with(ResponseTemplate::new(200).set_body_json(json!({})))
+        .expect(0)
+        .mount(&server)
+        .await;
+
+    let output = jr_cmd(&server.uri(), cache.path(), config.path())
+        .args(["component", "rename", "back", "NewName", "--project", "FOO"])
+        .output()
+        .unwrap();
+
+    server.verify().await;
+    assert_eq!(
+        output.status.code(),
+        Some(64),
+        "F-1(b): expected exit 64 for single-project NAME ambiguous; \
+         got {:?}\nstderr: {}",
+        output.status.code(),
+        String::from_utf8_lossy(&output.stderr)
+    );
+    let stderr = String::from_utf8_lossy(&output.stderr);
+    assert!(
+        stderr.contains("Ambiguous component 'back'. Matches: Backend, Backoffice."),
+        "F-1(b): expected verbatim \"Ambiguous component 'back'. Matches: \
+         Backend, Backoffice.\"; got: {stderr}"
+    );
+}
+
+/// F-1 (c): `resolve_rename_source`'s name-branch `MatchResult::ExactMultiple`
+/// arm, previously untested for `rename`'s single-project form. `rename
+/// backend NewName --project FOO` where FOO has both "Backend" (10001) and
+/// "backend" (10002) (both exact case-insensitive matches for "backend") →
+/// exit 64, verbatim `"Multiple components named \"Backend\" found (IDs:
+/// 10001, 10002). Pass the numeric ID directly."` (matched_name takes the
+/// FIRST exact match's casing, list order — `partial_match`'s documented
+/// behavior), ZERO `PUT`.
+#[tokio::test]
+async fn test_bc_8_3_001_component_rename_single_project_name_exact_multiple_exit_64() {
+    let cache = TempDir::new().unwrap();
+    let config = TempDir::new().unwrap();
+    let server = MockServer::start().await;
+    write_profile_config(config.path(), &server.uri());
+
+    Mock::given(method("GET"))
+        .and(path("/rest/api/3/project/FOO/components"))
+        .respond_with(
+            ResponseTemplate::new(200).set_body_json(component_list_two_same_name(
+                "10001", "Backend", "10002", "backend",
+            )),
+        )
+        .expect(1)
+        .mount(&server)
+        .await;
+
+    Mock::given(method("PUT"))
+        .respond_with(ResponseTemplate::new(200).set_body_json(json!({})))
+        .expect(0)
+        .mount(&server)
+        .await;
+
+    let output = jr_cmd(&server.uri(), cache.path(), config.path())
+        .args([
+            "component",
+            "rename",
+            "backend",
+            "NewName",
+            "--project",
+            "FOO",
+        ])
+        .output()
+        .unwrap();
+
+    server.verify().await;
+    assert_eq!(
+        output.status.code(),
+        Some(64),
+        "F-1(c): expected exit 64 for single-project NAME ExactMultiple; \
+         got {:?}\nstderr: {}",
+        output.status.code(),
+        String::from_utf8_lossy(&output.stderr)
+    );
+    let stderr = String::from_utf8_lossy(&output.stderr);
+    assert!(
+        stderr.contains(
+            "Multiple components named \"Backend\" found (IDs: 10001, 10002). \
+             Pass the numeric ID directly."
+        ),
+        "F-1(c): expected verbatim 'Multiple components named \"Backend\" found \
+         (IDs: 10001, 10002). Pass the numeric ID directly.'; got: {stderr}"
+    );
+}
+
+// ── Lens A (LOW — global-position --project + --all-projects conflict) ──────
+
+/// Step-4.5 fix burst 7, Lens A finding: the pre-existing AC-013
+/// (`test_bc_8_3_005_component_rename_scope_selection_clap_conflict_and_app_guard`)
+/// only covered the LOCAL-position form of `--project X --all-projects`
+/// (clap `conflicts_with`, exit 2). It did NOT cover the GLOBAL-position
+/// form `jr --project FOO component rename A B --all-projects`.
+///
+/// Empirically verified (Step-4.5 fix burst 7): this was a REAL BUG, not
+/// merely a test gap. `--project` is ALSO a `global = true` flag on `Cli`;
+/// clap copies a global-position value down into a subcommand's same-named
+/// local field automatically, so `project` was already `Some("FOO")` by the
+/// time `ComponentSubcommand::Rename`'s handler ran — but clap's
+/// `conflicts_with` does NOT fire for that value source (it only rejects a
+/// LOCALLY, directly-matched `--project`). Pre-fix, this exited 0 and
+/// silently fanned the rename out across EVERY accessible project while
+/// `--project FOO` sat completely unused — the exact "silently proceeds"
+/// outcome this finding was written to catch, verified via a temporary
+/// debug print during triage (since removed) showing `project=Some("FOO")`
+/// reaching the handler with no clap rejection.
+///
+/// Fixed by an explicit application-level guard in `src/cli/component.rs`'s
+/// `ComponentSubcommand::Rename` dispatch arm (`component::handle`):
+/// `project.is_some() && all_projects` → `JrError::UserError` (exit 64) —
+/// this condition can, by construction, only be reached via the
+/// global-inherited path, since the genuine local-both-flags case is already
+/// intercepted by clap itself (exit 2) before this code ever runs.
+#[tokio::test]
+async fn test_bc_8_3_005_component_rename_global_position_project_all_projects_conflict_exit_64() {
+    let cache = TempDir::new().unwrap();
+    let config = TempDir::new().unwrap();
+    let server = MockServer::start().await;
+    write_profile_config(config.path(), &server.uri());
+
+    let output = jr_cmd(&server.uri(), cache.path(), config.path())
+        .args([
+            "--project",
+            "FOO",
+            "component",
+            "rename",
+            "Backend",
+            "NewName",
+            "--all-projects",
+        ])
+        .output()
+        .unwrap();
+
+    assert_eq!(
+        output.status.code(),
+        Some(64),
+        "Lens A: global-position --project combined with --all-projects must \
+         be rejected exit 64 (application-level guard) before any HTTP; \
+         got {:?}\nstderr: {}",
+        output.status.code(),
+        String::from_utf8_lossy(&output.stderr)
+    );
+    let stderr = String::from_utf8_lossy(&output.stderr);
+    assert!(
+        stderr.contains("--project") && stderr.contains("--all-projects"),
+        "Lens A: rejection message must name both --project and \
+         --all-projects; got: {stderr}"
+    );
+    assert!(
+        stderr.contains("supply exactly one"),
+        "Lens A: rejection message must include the actionable remediation \
+         \"supply exactly one\", not merely name the flags; got: {stderr}"
+    );
+    let received = server.received_requests().await.unwrap();
+    assert!(
+        received.is_empty(),
+        "Lens A: the guard must fire before any HTTP call; got {} request(s)",
+        received.len()
+    );
+}
+
+// ── Lens B (LOW — retry hint quoting for space-containing component names) ──
+
+/// Step-4.5 fix burst 7, Lens B finding: `handle_rename_all_projects`'s
+/// partial-failure retry hint (`src/cli/component.rs`) previously
+/// interpolated `old`/`new` UNQUOTED into the suggested retry command
+/// (`jr component rename {old} {new} --project <KEY>`). For a
+/// space-containing component name (e.g. "My Backend"), the emitted hint was
+/// not copy-pasteable — clap would see too many positionals. Fixed by
+/// quoting both interpolated values (`jr component rename "{old}" "{new}"
+/// --project <KEY>`).
+///
+/// This test drives a single-project, single-failure `--all-projects` batch
+/// with a space-containing OLD name and asserts the stderr retry hint
+/// contains the QUOTED form.
+#[tokio::test]
+async fn test_bc_8_3_003_component_rename_all_projects_retry_hint_quotes_space_containing_name() {
+    let cache = TempDir::new().unwrap();
+    let config = TempDir::new().unwrap();
+    let server = MockServer::start().await;
+    write_profile_config(config.path(), &server.uri());
+
+    let keys = ["A"];
+    Mock::given(method("GET"))
+        .and(path("/rest/api/3/project/search"))
+        .respond_with(
+            ResponseTemplate::new(200).set_body_json(projects_search_response_for_keys(&keys)),
+        )
+        .expect(1)
+        .mount(&server)
+        .await;
+
+    Mock::given(method("GET"))
+        .and(path("/rest/api/3/project/A/components"))
+        .respond_with(
+            ResponseTemplate::new(200).set_body_json(component_list_response(vec![
+                component_response("40001", "My Backend", None, None, None),
+            ])),
+        )
+        .expect(1)
+        .mount(&server)
+        .await;
+
+    Mock::given(method("PUT"))
+        .and(path("/rest/api/3/component/40001"))
+        .respond_with(ResponseTemplate::new(400).set_body_json(json!({
+            "errorMessages": ["A component with the name 'New Name' already exists in project A."]
+        })))
+        .expect(1)
+        .mount(&server)
+        .await;
+
+    let output = jr_cmd(&server.uri(), cache.path(), config.path())
+        .args([
+            "component",
+            "rename",
+            "My Backend",
+            "New Name",
+            "--all-projects",
+        ])
+        .output()
+        .unwrap();
+
+    server.verify().await;
+    assert_eq!(
+        output.status.code(),
+        Some(1),
+        "Lens B: expected exit 1 for a partial-failure batch; got {:?}\nstderr: {}",
+        output.status.code(),
+        String::from_utf8_lossy(&output.stderr)
+    );
+    let stderr = String::from_utf8_lossy(&output.stderr);
+    assert!(
+        stderr.contains("jr component rename \"My Backend\" \"New Name\" --project <KEY>"),
+        "Lens B: retry hint must quote space-containing OLD/NEW so the \
+         suggested command is copy-pasteable; expected substring \
+         'jr component rename \"My Backend\" \"New Name\" --project <KEY>'; \
+         got: {stderr}"
     );
 }
