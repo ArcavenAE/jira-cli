@@ -10,7 +10,9 @@ use crate::cli::{IssueCommand, OutputFormat};
 use crate::config::Config;
 use crate::error::JrError;
 use crate::output;
+use crate::partial_match::MatchResult;
 
+use super::format;
 use super::helpers;
 use super::jsm_create::{JsmCreateArgs, handle_jsm_create};
 
@@ -30,6 +32,7 @@ pub(super) async fn handle_create(
         description_stdin,
         priority,
         label: labels,
+        component: components,
         team,
         points,
         markdown,
@@ -43,6 +46,26 @@ pub(super) async fn handle_create(
     else {
         unreachable!()
     };
+
+    // Pre-flight guard (BC-3.4.024 Postcondition 3, DEC-188 precedent —
+    // mirrors the --field/--on-behalf-of guard below): --component is a
+    // platform-path-only flag. It MUST be checked BEFORE the JSM
+    // dispatch-fork immediately below, because that fork returns
+    // unconditionally on `request_type.is_some()` — by the time execution
+    // reaches the --field/--on-behalf-of guard, request_type is already
+    // guaranteed None, too late to catch this combination. Exit 64, ZERO
+    // HTTP (no service-desk lookup, no RT-id resolution, no component
+    // resolution) — AC-009.
+    if request_type.is_some() && !components.is_empty() {
+        return Err(JrError::UserError(
+            "--component is only valid on the platform create path and cannot be combined \
+             with --request-type (JSM service-desk requests). Drop --request-type to create \
+             a standard platform issue with --component, or drop --component and set it \
+             afterward with `jr issue edit --component`."
+                .into(),
+        )
+        .into());
+    }
 
     // Dispatch fork: when --request-type is set, route to JSM path.
     // Platform path (when flag absent) is structurally unchanged. (BC-3.8.001, BC-3.3.001)
@@ -205,6 +228,15 @@ pub(super) async fn handle_create(
         create_echo.insert("label".into(), labels.join(", "));
     }
 
+    if !components.is_empty() {
+        // BC-3.4.024 Postcondition 1: fields.components = [{"name":"X"},...],
+        // CLI input order. NO add:/remove: prefix grammar on create
+        // (EC-3.4.024-2) — resolve_create_components resolves each value
+        // literally; a stray "add:X" 400s as an unknown component name.
+        let resolved = resolve_create_components(client, &project_key, &components).await?;
+        fields["components"] = json!(resolved);
+    }
+
     if let Some(ref team_name) = team {
         let (field_id, team_id, resolved_team_name) =
             helpers::resolve_team_field(config, client, team_name, no_input).await?;
@@ -300,6 +332,88 @@ pub(super) async fn handle_create(
     }
 
     Ok(())
+}
+
+/// Resolve `--component` values into the `fields.components` array for
+/// `issue create` (BC-3.4.024 Postcondition 1 / BC-3.4.025).
+///
+/// NO add:/remove: prefix grammar on create (EC-3.4.024-2, edit-only grammar)
+/// — each value in `components` is resolved literally via
+/// `helpers::resolve_component` (BC-8.4.001) against the project's component
+/// list (`client.list_components(project_key)`, BC-3.4.025 — NEVER editmeta;
+/// create's editmeta call is differently-shaped and doesn't cleanly extend to
+/// a per-project component list). The list-components GET fires EXACTLY ONCE
+/// per invocation regardless of how many `--component` values are supplied
+/// (AC-010, VP-COMPONENT-025) — callers must not fetch it again elsewhere in
+/// the same command. Unknown name → exit 64, zero POST (AC-008 variant).
+///
+/// Returns one entry per input value, in CLI input order (AC-007) --
+/// `{"name": "<resolved-name>"}` for a NAME input, `{"id": "<n>"}` for a
+/// numeric input (Step-4.5 Round 3, F1 fix: BC-8.4.001's numeric bypass
+/// means all-ASCII-digit `--component` input is always a component id,
+/// never a name -- BC-8.1.008; Jira's issue components field accepts
+/// `{"id":...}`). Deliberately NOT confirmed against `GET /component/{id}`
+/// before use -- Jira validates the id on the POST itself (an invalid id →
+/// Jira 4xx → exit 1, same treatment as an unknown name today). Accepted
+/// edge (BC-8.1.008's established gap): a component literally NAMED e.g.
+/// `"10001"` is unreachable by name via `--component`.
+async fn resolve_create_components(
+    client: &JiraClient,
+    project_key: &str,
+    components: &[String],
+) -> Result<Vec<serde_json::Value>> {
+    let component_list = client.list_components(project_key).await?;
+    let candidate_names: Vec<String> = component_list.iter().map(|c| c.name.clone()).collect();
+
+    let mut resolved: Vec<serde_json::Value> = Vec::with_capacity(components.len());
+    for input in components {
+        // BC-3.4.024 EC-2: NO add:/remove: prefix stripping on create -- the
+        // raw value is resolved LITERALLY against the project component list.
+        // F1 fix: the ref kind is determined from the RAW input text, before
+        // resolution -- mirrors edit.rs's resolve_component_change_names.
+        let ref_kind = format::ComponentRefKind::for_input(input);
+        let matched_name = match helpers::resolve_component(input, project_key, &candidate_names) {
+            MatchResult::Exact(matched) => matched,
+            MatchResult::ExactMultiple(matched_name) => {
+                let ids: Vec<String> = component_list
+                    .iter()
+                    .filter(|c| c.name.to_lowercase() == matched_name.to_lowercase())
+                    .map(|c| c.id.clone())
+                    .collect();
+                return Err(JrError::UserError(format!(
+                    "Multiple components named \"{}\" found (IDs: {}). \
+                     Pass the numeric ID directly.",
+                    matched_name,
+                    ids.join(", ")
+                ))
+                .into());
+            }
+            MatchResult::Ambiguous(mut candidates) => {
+                candidates.sort_by_key(|s| s.to_lowercase());
+                return Err(JrError::UserError(format!(
+                    "Ambiguous component '{}'. Matches: {}.",
+                    input,
+                    candidates.join(", ")
+                ))
+                .into());
+            }
+            MatchResult::None(mut available) => {
+                available.sort_by_key(|s| s.to_lowercase());
+                return Err(JrError::UserError(format!(
+                    "Component '{}' not found in project {}. Available: {}.",
+                    input,
+                    project_key,
+                    available.join(", ")
+                ))
+                .into());
+            }
+        };
+        resolved.push(match ref_kind {
+            format::ComponentRefKind::Id => json!({"id": matched_name}),
+            format::ComponentRefKind::Name => json!({"name": matched_name}),
+        });
+    }
+    Ok(resolved)
 }
 
 /// Parse `--field NAME=VALUE` pairs into a `HashMap<String, String>`.

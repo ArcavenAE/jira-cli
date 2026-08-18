@@ -736,3 +736,70 @@ pub fn n_projects_search_response(n: u32) -> Value {
     let key_refs: Vec<&str> = keys.iter().map(String::as_str).collect();
     projects_search_response_for_keys(&key_refs)
 }
+
+// ── S-605-1: `issue create/edit --component` (single-key) fixtures ─────────
+
+/// `GET /rest/api/3/issue/{key}/editmeta` response scoped to the `components`
+/// system field only (BC-3.4.022 Postcondition 3's wire-shape-decision gate).
+///
+/// `operations` controls which of the two wire-shape paths
+/// `edit_issue_components` selects: `&["add", "remove"]` → the native
+/// `update`-verb PUT path fires directly (AC-004); any set NOT containing
+/// both `"add"` and `"remove"` (e.g. `&["set"]`) → the read-modify-write
+/// fallback fires instead (AC-005). Mirrors the shape of
+/// `mount_editmeta_string` in `tests/issue_edit_field.rs`, scoped to the
+/// `"components"` field id instead of a custom field.
+pub fn editmeta_components_response(operations: &[&str]) -> Value {
+    json!({
+        "fields": {
+            "components": {
+                "name": "Component/s",
+                "schema": {
+                    "type": "array",
+                    "system": "components",
+                    "custom": Value::Null
+                },
+                "allowedValues": Value::Null,
+                "operations": operations,
+                "required": false
+            }
+        }
+    })
+}
+
+/// `GET /rest/api/3/issue/{key}` response carrying `fields.components` as an
+/// array of `{"name": ...}` objects (no `id` — mirrors the embedded
+/// `types/jira/issue::Component`'s `Option<String>` id, absent on a minimal
+/// fixture) — used by the read-modify-write fallback path's current-
+/// components GET (BC-3.4.022 Postcondition 3, AC-005).
+pub fn issue_response_with_components(key: &str, summary: &str, component_names: &[&str]) -> Value {
+    let mut response = issue_response(key, summary, "To Do");
+    let components: Vec<Value> = component_names.iter().map(|n| json!({"name": n})).collect();
+    response["fields"]["components"] = json!(components);
+    response
+}
+
+/// `GET /rest/api/3/issue/{key}` response carrying `fields.components` as an
+/// array of `{"name":..., "id":...}` objects -- the LIVE-Jira-CORRECT shape
+/// (real Jira ALWAYS returns an id for an issue's embedded components; only
+/// a minimal/stripped fixture omits it). Distinct from
+/// `issue_response_with_components` (name-only, `id` absent → `None`) --
+/// that function's id=None coverage is intentionally preserved, not
+/// replaced, by this one. Added for Step-4.5 Round 6 (HIGH-1): the
+/// name-only fixture masked a FIX-576-DL-class mock-vs-live drift bug in
+/// the RMW fallback's remove-matching, because it could never exercise a
+/// NAME remove target against an id-bearing existing component (the
+/// production-common case).
+pub fn issue_response_with_components_and_ids(
+    key: &str,
+    summary: &str,
+    components: &[(&str, &str)],
+) -> Value {
+    let mut response = issue_response(key, summary, "To Do");
+    let components: Vec<Value> = components
+        .iter()
+        .map(|(name, id)| json!({"name": name, "id": id}))
+        .collect();
+    response["fields"]["components"] = json!(components);
+    response
+}
