@@ -1,1 +1,1 @@
-{"status":"pass","timestamp":"2026-08-18T13:09:39Z","command":"echo \"=== fmt ===\" && cargo fmt --all -- --check && echo FMT_CLEAN && echo \"=== component_commands ===\" && cargo test --test component_commands 2>&1 | tail -3 && echo \"=== clippy ===\" && cargo clippy --all-targets -- -D warnings 2>&1 | tail -2"}
+{"status":"pass","timestamp":"2026-08-18T19:45:38Z","command":"ps aux | grep \"cargo test --all-targets\" | grep -v grep; wc -l /tmp/r8_full_test.log 2>/dev/null"}
