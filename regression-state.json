@@ -1,1 +1,1 @@
-{"status":"pass","timestamp":"2026-08-17T23:38:04Z","command":"cd /tmp/pr709-worktree && cargo test --test component_commands -- --nocapture bc_8_1_005 bc_8_1_001_component_list_honors_global 2>&1 | tail -30"}
+{"status":"pass","timestamp":"2026-08-18T13:09:39Z","command":"echo \"=== fmt ===\" && cargo fmt --all -- --check && echo FMT_CLEAN && echo \"=== component_commands ===\" && cargo test --test component_commands 2>&1 | tail -3 && echo \"=== clippy ===\" && cargo clippy --all-targets -- -D warnings 2>&1 | tail -2"}

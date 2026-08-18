@@ -2,11 +2,34 @@
 document_type: story-index
 phase: phase-2-story-decomposition
 producer: story-writer
-version: "1.5.98"
+version: "1.5.99"
 total_stories: 140
 total_waves: 4
 status: complete
 last_updated: |-
+  2026-08-18 (COMPONENT-MGMT-F4-WAVE2-S-608-1-MERGED): S-608-1 status `draft`→`done` — merged
+  2026-08-18, PR #710, squash 23cc83aa. DEC-128 human-authorized (DEC-289). Wave 2 serialized
+  component.rs sub-track position 3 of 3 COMPLETE — the full trio (S-604-2/S-604-3/S-608-1) is
+  now COMPLETE. Step-4.5 CONVERGED 3/3 CLEAN (DEC-245 strict; 10 rounds / 30 fresh-context
+  diverse-lens passes: Lens A spec-fidelity, Lens B regression/security, Lens C
+  convention/test-quality / 9 fix bursts; finding trajectory decayed 4 LOW (R1) → clean (R10)).
+  Real bug caught+fixed at R7: global-position `--project` combined with `--all-projects`
+  bypassed clap's `conflicts_with` (which only fires for a LOCAL `--project`) and silently
+  fanned out across every accessible project; fixed with an app-level exit-64 guard
+  (DEC-188 mechanism) before any HTTP call — clap `conflicts_with` does not cover a
+  global-position/global-inherited flag value. security-reviewer APPROVE (0 blocking);
+  pr-reviewer APPROVE (0 BLOCKING/HIGH). CI 15/15 green. Pre-merge NIT hardening (human-
+  requested): fan-out table summary now shows `{N} renamed, {M} failed` on failures (commit
+  83373222). Repo-wide CI blocker RUSTSEC-2026-0258 (h2 unbounded empty DATA frames) resolved
+  in-PR via a surgical 2-line Cargo.lock bump h2 0.4.13→0.4.16 (commit bf0c0341) to avoid the
+  incidental windows-sys edge reshuffle `cargo update -p h2` otherwise causes. 18 demo
+  recordings + evidence-report.md committed to `.factory/demos/S-608-1/` (factory-artifacts,
+  placeholder data only). Issue #608 CLOSED. Worktree `.worktrees/S-608-1` removed; branch
+  `feat/component-rename` deleted local+remote. STORY-INDEX v1.5.98→v1.5.99. No other rows
+  touched. A feature-level F5/F7 pass covering S-605-1/S-605-2/S-608-1 remains OWED once
+  S-605-1/S-605-2 deliver — S-608-1's F5 obligation was satisfied at the STORY (Step-4.5)
+  level only.
+  Prior:
   2026-08-17 (COMPONENT-MGMT-F4-WAVE2-S-606-1-MERGED): S-606-1 status `draft`→`done` — merged
   2026-08-17, PR #707, squash b1610d55. DEC-128 human-authorized (DEC-286). Step-4.5 CONVERGED
   3/3 CLEAN across 11 adversary passes using 3 diverse lenses in parallel (correctness /
@@ -814,7 +837,7 @@ They have `wave: feature-followup` in frontmatter and live under `.factory/code-
 | S-605-1 | `issue create`/`issue edit --component` (single-key path) (closes #605 part 1 of 2) | BC-3.4.022, BC-3.4.024, BC-3.4.025, BC-3.4.012, BC-3.4.013, BC-3.4.017, BC-3.4.020, BC-3.4.021 | VP-COMPONENT-011, VP-COMPONENT-016, VP-COMPONENT-025, VP-COMPONENT-027, VP-COMPONENT-028 | **draft** — F3 COMPLETE (2026-08-15); COMPONENT-MGMT bundle story 4 of 7; Wave 2, parallel Track A position 1 of 2 (no file overlap with component.rs serialized trio); depends_on:[S-604-1]; blocks:[S-605-2]; target `src/cli/issue/{edit,create}.rs`; priority P0; awaiting F4 dispatch | medium (8 SP) |
 | S-605-2 | `issue edit --component` (multi-key/`--jql` bulk path) (closes #605 part 2 of 2) | BC-3.4.023 | VP-COMPONENT-012 | **draft** — F3 COMPLETE (2026-08-15); COMPONENT-MGMT bundle story 5 of 7; Wave 2, parallel Track A position 2 of 2; LIVE-JIRA-gated; depends_on:[S-605-1]; target `src/cli/issue/edit.rs`; priority P0; awaiting F4 dispatch | small (5 SP) |
 | S-606-1 | `issue list --component` filter (bare/`not:`/`none`/`all:`) (closes #606) | BC-2.1.018, BC-2.1.019, BC-2.1.020, BC-2.1.021, BC-2.1.022 | VP-COMPONENT-013, VP-COMPONENT-015 | **done** — merged 2026-08-17, PR #707, squash b1610d55; COMPONENT-MGMT bundle story 6 of 7; Wave 2, parallel Track B (singleton, no file overlap with component.rs serialized trio or Track A) COMPLETE; depends_on:[S-604-1]; target `src/cli/issue/list.rs`; priority P0 | medium (8 SP) |
-| S-608-1 | `jr component rename` — single-project and `--all-projects` fan-out, `--dry-run` (closes #608) | BC-8.3.001, BC-8.3.002, BC-8.3.003, BC-8.3.004, BC-8.3.005, BC-8.3.006, BC-8.3.007 | VP-COMPONENT-008, VP-COMPONENT-018, VP-COMPONENT-019, VP-COMPONENT-024, VP-COMPONENT-026 | **draft** — F3 COMPLETE (2026-08-15); COMPONENT-MGMT bundle story 7 of 7; Wave 2, serialized sub-track position 3 of 3 (lowest urgency of the trio, sequenced last); depends_on:[S-604-1]; target `src/cli/component.rs`; priority P1; AC-017 VP-COMPONENT-024 frontmatter↔body sync fixed 2026-08-15; awaiting F4 dispatch | medium (8 SP) |
+| S-608-1 | `jr component rename` — single-project and `--all-projects` fan-out, `--dry-run` (closes #608) | BC-8.3.001, BC-8.3.002, BC-8.3.003, BC-8.3.004, BC-8.3.005, BC-8.3.006, BC-8.3.007 | VP-COMPONENT-008, VP-COMPONENT-018, VP-COMPONENT-019, VP-COMPONENT-024, VP-COMPONENT-026 | **done** — merged 2026-08-18, PR #710, squash 23cc83aa; COMPONENT-MGMT bundle story 7 of 7; Wave 2, serialized component.rs sub-track position 3 of 3 COMPLETE — full trio (S-604-2/S-604-3/S-608-1) COMPLETE; depends_on:[S-604-1]; target `src/cli/component.rs`; priority P1 | medium (8 SP) |
 
 Feature-followup story files: `.factory/code-delivery/issue-NNN/story.md`. COMPONENT-MGMT bundle stories live under
 `.factory/stories/S-604-1-component-foundation-list.md` etc. (flat `.factory/stories/` path, not `code-delivery/`,
