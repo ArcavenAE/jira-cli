@@ -49,7 +49,7 @@ acceptance_criteria_count: 10
 assumption_validations: []
 risk_mitigations: []
 created: "2026-08-15"
-version: "1.1"
+version: "1.2"
 last_updated: "2026-08-19"
 breaking_change: false
 retroactive: false
@@ -70,11 +70,12 @@ files_modified:
 test_files:
   - tests/issue_commands.rs
   - tests/common/fixtures.rs
-# input-hash recomputed 2026-08-19 (was 8b8d571) — bc-3-issue-write.md, a listed input,
-# was amended with the BC-3.4.023 clarifications this story propagates. New value below
-# was reported by the validate-input-hash factory-dispatcher hook itself (computed 9e1c71f)
-# after this edit; not hand-derived.
-input-hash: "9e1c71f"
+# input-hash recomputed 2026-08-19 (was 9e1c71f) — bc-3-issue-write.md, a listed input,
+# was amended with the BC-3.4.023 Invariant 2 error-taxonomy clarification (S-605-2 Step-4.5
+# adversarial finding) this story propagates. New value below was reported by the
+# validate-input-hash factory-dispatcher hook itself (computed d4fba74, confirmed via
+# `compute-input-hash <file> --check`) after this edit; not hand-derived.
+input-hash: "d4fba74"
 ---
 
 > **tdd_mode:** `strict`.
@@ -190,6 +191,11 @@ one coalesced POST.
 The resolved `String` component id is explicitly parsed to a `u64`/`i64` before body
 assembly — `components[].componentId` in the POST body is a JSON integer, never a string or
 `{"name":...}` object.
+**Clarifying note (2026-08-19, S-605-2 Step-4.5 adversarial finding — error-taxonomy):**
+Invariant 2 distinguishes two distinct parse-failure origins — see "Edge Cases" below for
+the full split. A resolver-returned id that fails to parse is `JrError::Internal`
+(defensive test, not expected reachable); a numeric-bypass user-supplied digit string
+exceeding `u64::MAX` is `JrError::UserError`, exit 64, zero POSTs (covered, user-facing).
 **Test:** `test_bc_3_4_023_issue_edit_bulk_component_id_is_json_integer_not_string()`
 
 ### AC-004 (traces to BC-3.4.023 postcondition 4 — resolution before POST)
@@ -251,9 +257,23 @@ conventions) — NOT part of the standard `cargo test` suite.
 
 ## Edge Cases
 
-Covered by dedicated ACs: EC-3.4.023-1, EC-3.4.023-3, EC-3.4.023-4. `componentId` parse
-failure (internal-invariant case, not user-facing) should have a defensive unit test even
-though it is not expected to be reachable via any resolver-returned id in practice.
+Covered by dedicated ACs: EC-3.4.023-1, EC-3.4.023-3, EC-3.4.023-4.
+
+**`componentId` parse failure — TWO distinct origins [CLARIFIED 2026-08-19, S-605-2 Step-4.5
+adversarial finding — error-taxonomy; BC-3.4.023 Invariant 2]:**
+- **(a) Numeric-bypass user input (user-facing, covered):** an all-ASCII-digit
+  `--component add:<digits>`/`remove:<digits>` value takes BC-8.4.001 step (1)'s
+  numeric-bypass path (no existence check, no name-list GET) and is passed through
+  unchanged; if that digit string exceeds `u64::MAX` (e.g. a 26-digit value) it fails
+  `id.parse::<u64>()`. This is user-supplied text, not resolver output — `jr` surfaces
+  `JrError::UserError`, exit 64, with ZERO bulk-fields POSTs issued (the parse happens
+  client-side before Postcondition 4's POST body is built). Needs a covered unit test
+  asserting exit 64 + zero POSTs, same rigor as AC-004's unknown-name case.
+- **(b) Resolver-returned lookup result (internal-invariant case, not user-facing):** a
+  genuine §8.4 resolver-returned name→id lookup result (BC-8.4.001 step (2), the
+  non-digit `partial_match` path) that unexpectedly fails to parse remains
+  `JrError::Internal`, not expected to be reachable with a real resolver. Should have a
+  defensive unit test even though it is not expected to be reachable in practice.
 
 ## Purity Classification
 
@@ -310,6 +330,7 @@ though it is not expected to be reachable via any resolver-returned id in practi
 | `selectedActions: ["components"]` (lowercase) vs `editedFieldsInput.multiselectComponents` (camelCase, different word) — do NOT unify | BC-3.4.023 Invariant 1 | AC-001; code review |
 | Mixed add:/remove: is TWO sequential POSTs, never one coalesced POST — do not copy the label bulk path's coalescing shape | BC-3.4.023 Postcondition 3 (pass-14 correction) | AC-002 |
 | `componentId` is ALWAYS a JSON integer — explicit `String`→`u64` parse required, resolver output is never sent as-is | BC-3.4.023 Invariant 2 | AC-003 |
+| Parse-failure origin split: numeric-bypass oversized user digits → `JrError::UserError` exit 64 zero-POST; resolver-returned lookup parse failure → `JrError::Internal` (defensive test only) — do NOT collapse both into one internal-error outcome | BC-3.4.023 Invariant 2 clarification (2026-08-19, S-605-2 Step-4.5 adversarial finding) | AC-003 clarifying note; Edge Cases |
 | This bulk path is entirely SEPARATE from S-605-1's single-key `update`-verb path — routing is purely `keys.len()`, never mixed within one invocation | BC-3.4.023 Invariant 3 | AC-006 |
 | A chunk failure aborts the remaining sequence (no continue-on-error) — do NOT reuse `rename --all-projects`'s per-target fail-soft shape here | BC-3.4.023 Edge Case EC-3.4.023-4 | AC-009 |
 | This path MUST NOT ship to release until the live smoke test passes | BC-3.4.023 Delivery note, DEC-280 | AC-010 (release gate, not `cargo test`) |

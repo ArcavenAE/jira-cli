@@ -1,1 +1,1 @@
-{"status":"pass","timestamp":"2026-08-18T19:45:38Z","command":"ps aux | grep \"cargo test --all-targets\" | grep -v grep; wc -l /tmp/r8_full_test.log 2>/dev/null"}
+{"status":"pass","timestamp":"2026-08-19T02:30:11Z","command":"cargo test 2>&1 | grep -E \"^test result:|error\\[|error:|FAILED|running [0-9]+ tests\" | grep -vE \"running 0 tests\" | tail -60"}

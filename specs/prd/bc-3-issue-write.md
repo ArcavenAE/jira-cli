@@ -15,6 +15,18 @@ trace: |
     defined, else `components` is absent from the bulk-edit field allowlist and the test
     false-negatives. Source: `.factory/research/S-605-2-bulk-component-wire-2026-08-19.md`
     (8/8 CONFIRM, 0 REFUTE against current Atlassian primary docs).
+  - F2 targeted wording clarification (2026-08-19, S-605-2 Step-4.5 adversarial finding, LOW,
+    error-taxonomy — no BC added/removed/retired, no count change): BC-3.4.023 Invariant 2
+    CLARIFIED — distinguishes the TWO distinct origins of a `componentId` `String`→`u64` parse
+    failure, which the prior wording collapsed into a single "internal error" outcome. (a) A
+    user-supplied all-ASCII-digit `--component add:<digits>`/`remove:<digits>` value that takes
+    BC-8.4.001's numeric-bypass path (no existence check, no name-list GET) and fails to parse
+    as `u64` (e.g. a value >26 digits, exceeding `u64::MAX`) is user-input text, not resolver
+    output — surfaces as `JrError::UserError`, exit 64, zero POSTs issued. (b) A genuine
+    resolver-returned name→id lookup result (BC-8.4.001 step (2)) that unexpectedly fails to
+    parse remains the pre-existing `JrError::Internal` outcome, unreachable with a real
+    resolver. Implementation fix landing in parallel (S-605-2). Source: adversarial Step-4.5
+    review finding.
   - F2 spec evolution, component-management bundle (2026-08-15, issues #604/#605/#606/#608): BC-3.4.022..025 ADDED — `issue create/edit --component` (issue #605): single-key native `update`-verb wire shape (022), multi-key bulk `multiselectComponents`/integer `componentId` wire shape (023, DEC-280), `create`'s bare additive body composition (024), and the resolver-mechanism decision (one round-trip via project components list, not duplicated with editmeta, 025). BC-3.4.017 UPDATED — Gate B scope extended 4→5 fields (`components` added), EC-3.4.017-15 added. BC-3.4.020 UPDATED — `--label` conflict-block flag list extended 12→13 (`--component` added). BC-3.4.012/013 UPDATED — `components` joins the field-echo key table (table-mode comma-joined action:name pairs; JSON-mode `changed_fields["components"]` is also a comma-joined `add:name`/`remove:name` string, matching the shared `BTreeMap<String,String>` model — the array-of-`{action,name}` shape is the dry-run `plannedChanges.components` form only, not `changed_fields`). BC-3.4.021 UPDATED — `plannedChanges.components` dry-run preview added (flat array, same convention as `labels`), EC-3.4.021-20 added. +4 new individually-bodied BCs (111→115); total_bcs 140→144. See `.factory/phase-f1-delta-analysis/delta-analysis-components.md`, `.factory/research/component-delete-and-bulk-wire-2026-08-15.md`.
   - F2 spec evolution, bucket1-defects bundle (2026-08-13, issue #692, DEC-274; adversary passes 1-4): BC-3.4.021 UPDATED — DEC-274 REVERSES Invariant 3: `--dry-run --description-stdin` now reads stdin and renders ADF (previously a placeholder, pinned as correct-not-a-bug); adversary pass-3 MEDIUM-1 extended the ADF-preview half to bare `--description` too (both flags now produce a `descriptionAdf` preview, closing a false-OK regression where a bare-flag depth-guard trip returned exit 0). New additive `plannedChanges.descriptionAdf` field (nested, preserves the "exactly three top-level keys" postcondition); `plannedChanges.description` continues to carry the raw input string verbatim for either flag (BC-3.4.013/#398 unaffected, no body edit). ECs: EC-3.4.021-6 rewritten; EC-3.4.021-15/-16 added pass-1/-2 (depth-guard Err → exit 64 in dry-run, split by `--output` mode after a pass-2→pass-3 channel correction — stderr carries the error envelope, stdout is always empty; successful multi-line/markdown render); EC-3.4.021-17 added pass-1 (empty-stdin, mirrors EC-3.4.013-13); EC-3.4.021-18/-19 added pass-3 (bare-`--description` happy path and depth-guard regression pin, mirroring -6/-15). VPs: VP-DRY-RUN-001 amended (derived-key carve-out); VP-692-001..004 added across pass-1/pass-3 (stdin happy-path, stdin depth-guard error [channel-corrected pass-3], bare-description happy path, bare-description depth-guard error). Pre-DEC-274 text retained inline in the BC's "Previous version" block; each corrected pass-2 error also retained inline as "INCORRECT, do NOT re-implement." No BC count change (still 111 individually-bodied). See `.factory/research/bucket1-692-dry-run-stdin-2026-08-13.md`.
   - L2: .factory/specs/domain-spec/bc-03-issue-write.md
@@ -2631,6 +2643,24 @@ pronounced than the labels/issuetype cases").
    <resolvedId>`), which composes the SAME resolved id as an unquoted numeric literal directly
    into a JQL string — that call site needs no typed integer, only the same guarantee that the
    resolved id is digit-only text, which the resolver's contract already provides.
+   **[CLARIFIED 2026-08-19, S-605-2 Step-4.5 adversarial finding — error taxonomy]** The
+   internal-error framing two sentences above applies ONLY to a genuine resolver-returned id —
+   i.e. an id reached via BC-8.4.001 step (2), the non-digit `partial_match` name→id lookup —
+   that unexpectedly fails to parse; this is not expected to be reachable with a real resolver
+   and remains an internal-invariant violation (`JrError::Internal`, not `JrError::UserError`).
+   It does NOT apply to BC-8.4.001 step (1), the all-ASCII-digit numeric-bypass path: an
+   `--component add:<digits>`/`remove:<digits>` value that is entirely ASCII digits is passed
+   through by the resolver UNCHANGED, with NO existence check and NO name-list GET fired
+   (BC-8.4.001 Behavior step (1); VP-COMPONENT-014). A numeric-bypass value is therefore
+   user-supplied text, not resolver output — an oversized digit string that fails
+   `id.parse::<u64>()` (e.g. a 26-digit value exceeding `u64::MAX`) is a genuine user-input
+   error, not an internal one: `jr` surfaces it as `JrError::UserError`, exit 64, with ZERO
+   POSTs issued (the parse happens client-side before any bulk-fields POST is built, per
+   Postcondition 4). Summary of the two parse-failure origins this Invariant now
+   distinguishes: (a) numeric-bypass user input failing `u64` parse → `JrError::UserError`
+   (exit 64, zero HTTP calls); (b) a resolver-returned name→id lookup result failing to parse
+   → `JrError::Internal` (unexpected internal error; not expected reachable with a real
+   resolver, per the paragraph above).
 3. This bulk path is entirely SEPARATE from BC-3.4.022's single-key `update`-verb path — the
    two are never mixed within one invocation (routing is purely on `keys.len()`, identical
    fork mechanics to BC-3.4.020).
