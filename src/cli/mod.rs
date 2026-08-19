@@ -439,20 +439,31 @@ pub enum IssueCommand {
     /// Edit issue fields
     Edit {
         /// Issue keys (positional; omit when using --jql). Mutually exclusive with --jql.
-        /// Up to 1000 keys per call (Atlassian Bulk API limit).
-        #[arg(num_args = 0..=1001, conflicts_with = "jql")]
+        /// Non-`--component` bulk edits are capped at 1000 keys per call (Atlassian Bulk
+        /// API limit, enforced in `handle_edit`). `--component` bulk edits (S-605-2,
+        /// BC-3.4.023 Postcondition 6) chunk internally into <=1000-key POSTs, so the CLI
+        /// surface allows a much larger key set for that flag — widened from the prior
+        /// `0..=1001` cap so a >1000-key `--component` invocation can reach the handler.
+        #[arg(num_args = 0..=10000, conflicts_with = "jql")]
         keys: Vec<String>,
         /// JQL query to select issues for bulk edit. Mutually exclusive with positional keys.
         #[arg(long, conflicts_with = "keys")]
         jql: Option<String>,
-        /// Maximum number of issues to match via --jql (default 50, hard ceiling 1000).
-        /// Requires --jql; cannot be used with positional keys. If the JQL match count
-        /// exceeds this value, the command errors without mutating.
+        /// Maximum number of issues to match via --jql (default 50, hard ceiling 1000
+        /// for non-`--component` bulk edits; `--component` bulk edits chunk internally
+        /// into <=1000-key POSTs (S-605-2, BC-3.4.023 Postcondition 6) and accept up to
+        /// 10000). Requires --jql; cannot be used with positional keys. If the JQL
+        /// match count exceeds this value, the command errors without mutating.
         ///
         /// Values above 100 trigger cursor pagination on /rest/api/3/search/jql (Jira
-        /// caps maxResults at 100 per page), so --max 1000 triggers up to ~10 search
+        /// caps maxResults at 100 per page), so a large --max triggers multiple search
         /// requests before the bulk call. Use the smallest --max that fits your workflow.
-        #[arg(long, value_parser = clap::value_parser!(u32).range(1..=1000))]
+        ///
+        /// The clap-level range here is widened to 1..=10000 so a >1000 `--component`
+        /// invocation can reach the handler at all; `handle_edit` enforces the tighter
+        /// 1000 ceiling at runtime for every OTHER bulk field flag (it cannot see
+        /// --component's presence from a value_parser alone).
+        #[arg(long, value_parser = clap::value_parser!(u32).range(1..=10_000))]
         max: Option<u32>,
         /// Skip the interactive confirmation prompt for large JQL match sets.
         #[arg(long)]
@@ -475,10 +486,14 @@ pub enum IssueCommand {
         label: Vec<String>,
         /// Add or remove components (e.g., --component add:backend --component
         /// remove:frontend). Bare values (no prefix) are treated as ADD
-        /// (BC-3.4.022). Single-key path only — mirrors --field's single-key
-        /// restriction; multi-key/--jql bulk edits reject this flag (S-605-2
-        /// implements the bulk wire shape, BC-3.4.023). Cannot be combined
-        /// with --label on the same call (BC-3.4.020 amendment).
+        /// (BC-3.4.022). A single key uses the native `update`-verb PUT path;
+        /// 2+ keys (positional or --jql-resolved) route to a dedicated bulk
+        /// multiselectComponents path (BC-3.4.023, S-605-2), chunked
+        /// internally into <=1000-key POSTs. On 2+ keys, --component cannot
+        /// be combined with --summary/--priority/--type in the same call
+        /// (the bulk path has no way to also carry those fields). Cannot be
+        /// combined with --label on the same call at any key count
+        /// (BC-3.4.020 amendment).
         #[arg(long = "component")]
         component: Vec<String>,
         /// Team assignment
