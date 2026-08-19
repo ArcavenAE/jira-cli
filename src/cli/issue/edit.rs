@@ -5,7 +5,10 @@ use serde_json::json;
 
 use crate::adf;
 use crate::api::client::JiraClient;
-use crate::api::jira::bulk::{BULK_MAX_KEYS, resolve_bulk_await_timeout};
+use crate::api::jira::bulk::{
+    BULK_MAX_KEYS, BulkMultiSelectFieldOption, build_component_edited_fields,
+    resolve_bulk_await_timeout,
+};
 use crate::api::jira::issues::ComponentRef;
 use crate::cli::{IssueCommand, OutputFormat};
 use crate::config::Config;
@@ -26,6 +29,16 @@ use super::json_output;
 /// issues from a saved JQL filter, so users will hit this prompt routinely. If
 /// product feedback indicates the threshold is too aggressive, raise to 25-50.
 const JQL_CONFIRM_THRESHOLD: usize = 5;
+
+/// Sanity ceiling on `--max`/the resolved `--jql` match-set size for the
+/// `--component` bulk path only (Step-4.5 Round-1 F3 fix, BC-3.4.023
+/// Postcondition 6). Mirrors the `num_args = 0..=10000` widening already
+/// applied to the positional `keys` argument in `src/cli/mod.rs` for the
+/// same reason: `--component`'s bulk path chunks internally into
+/// `<=BULK_MAX_KEYS`-key POSTs, so it can safely accept a much larger
+/// resolved key set than every other bulk field path, which issues a
+/// single un-chunked POST and stays hard-capped at `BULK_MAX_KEYS`.
+const JQL_MAX_CEILING: u32 = 10_000;
 
 pub(super) async fn handle_edit(
     command: IssueCommand,
@@ -256,7 +269,33 @@ pub(super) async fn handle_edit(
     // clap's `requires` attribute interacts poorly with the keys/jql `conflicts_with`
     // relationship. By the time we reach this branch we know jql.is_some() so the
     // unwrap_or(50) default is the right behavior.
-    let effective_max = max.unwrap_or(50).min(BULK_MAX_KEYS as u32);
+    //
+    // Step-4.5 Round-1 F3 fix: --component's bulk path chunks internally into
+    // <=1000-key POSTs (BC-3.4.023 Postcondition 6) and therefore accepts a
+    // --jql match set larger than the per-POST Atlassian limit, up to the
+    // same sanity ceiling the positional `keys` argument already allows
+    // (JQL_MAX_CEILING, mirroring src/cli/mod.rs's `num_args = 0..=10000`).
+    // Every other bulk field path issues a single un-chunked POST, so --max
+    // stays hard-capped at BULK_MAX_KEYS for them. clap's value_parser alone
+    // cannot see whether --component is present, so it now accepts up to
+    // JQL_MAX_CEILING unconditionally (src/cli/mod.rs); this runtime check
+    // is what actually enforces the tighter ceiling for every other flag.
+    if let Some(m) = max {
+        if components.is_empty() && m > BULK_MAX_KEYS as u32 {
+            return Err(JrError::UserError(format!(
+                "--max {m} exceeds the {BULK_MAX_KEYS}-issue hard ceiling for this edit. \
+                 --component bulk edits chunk internally and accept up to {JQL_MAX_CEILING}; \
+                 every other bulk field is capped at {BULK_MAX_KEYS} per Atlassian's bulk \
+                 API limit."
+            ))
+            .into());
+        }
+    }
+    let effective_max = max.unwrap_or(50).min(if components.is_empty() {
+        BULK_MAX_KEYS as u32
+    } else {
+        JQL_MAX_CEILING
+    });
 
     // Resolve the working set of keys.
     // For --jql: execute the search (read-only), then enforce --max cap.
@@ -286,20 +325,29 @@ pub(super) async fn handle_edit(
         }
 
         if matched_keys.len() > effective_max as usize {
+            let ceiling = if components.is_empty() {
+                BULK_MAX_KEYS as u32
+            } else {
+                JQL_MAX_CEILING
+            };
             return Err(JrError::UserError(format!(
                 "JQL matched at least {} issues, which exceeds --max {}. \
                  Use --max <N> to allow up to {} issues, or refine your JQL.",
                 matched_keys.len(),
                 effective_max,
-                BULK_MAX_KEYS,
+                ceiling,
             ))
             .into());
         }
 
         matched_keys
     } else {
-        // Positional keys: enforce the Atlassian hard ceiling.
-        if keys.len() > BULK_MAX_KEYS {
+        // Positional keys: enforce the Atlassian hard ceiling -- EXCEPT for
+        // `--component`, whose bulk path (S-605-2, BC-3.4.023 Postcondition 6)
+        // chunks internally into <=1000-key POSTs and therefore accepts a
+        // larger resolved key set. Every other bulk field path below issues
+        // a single un-chunked POST, so the hard ceiling still applies to them.
+        if keys.len() > BULK_MAX_KEYS && components.is_empty() {
             return Err(JrError::UserError(format!(
                 "Too many issue keys: {} provided, maximum is {}. \
                  Split into batches of {} or fewer and run multiple times.",
@@ -346,19 +394,97 @@ pub(super) async fn handle_edit(
         if !field_pairs.is_empty() {
             unsupported.push("--field");
         }
-        // BC-3.4.022: --component is single-key path ONLY — 2+ keys route to
-        // S-605-2's BC-3.4.023 bulk wire shape (not implemented by this
-        // story). Reject here rather than silently dropping the flag when
-        // forwarded to handle_edit_bulk_fields, which has no components
-        // parameter (mirrors the --field precedent immediately above).
-        if !components.is_empty() {
-            unsupported.push("--component");
-        }
+        // BC-3.4.022/BC-3.4.023: --component on 2+ keys no longer falls into
+        // this "unsupported on bulk" bucket (S-605-2) — it now routes to its
+        // own bulk multiselectComponents path (`handle_edit_bulk_components`,
+        // dispatched below, near the --label routing). Intentionally NOT
+        // added to `unsupported` here.
         if !unsupported.is_empty() {
             return Err(JrError::UserError(format!(
                 "Multi-key bulk edit doesn't yet support: {}. \
                  Use a single key, or open an issue if this matters for your workflow.",
                 unsupported.join(", ")
+            ))
+            .into());
+        }
+    }
+
+    // --- Step-4.5 Round-1 F1 fix: --component bulk route mutual exclusion. ---
+    // `handle_edit_bulk_components` (dispatched near the --label routing,
+    // below) issues its OWN, separate multiselectComponents POST sequence
+    // and returns immediately -- it never reaches `handle_edit_bulk_fields`,
+    // which is the only place --summary/--priority/--type are honored on a
+    // multi-key edit. Without this guard, `--component add:X --summary Y`
+    // on 2+ keys would silently drop `--summary` (exit 0, data loss) because
+    // the --component routing check (below) returns before the bulk-fields
+    // routing is ever reached. --label is already covered by the
+    // BC-3.4.020 amendment conflict block above (fires unconditionally on
+    // any key count) -- included here too for defense-in-depth documentation
+    // parity, though it is unreachable in practice (that earlier block
+    // already returns before this point whenever both --label and
+    // --component are set).
+    //
+    // NOTE: deliberately NOT named `conflicting` -- that identifier is
+    // reserved by the `--label` conflict block above for
+    // `test_label_conflict_block_lists_every_relevant_flag`'s global
+    // `conflicting.push("--...")` source scan (see that block's own
+    // guard comment). A second `conflicting` here would be picked up by
+    // that scan and desync it from the `--label` block it actually audits.
+    if !components.is_empty() && effective_keys.len() > 1 {
+        let mut component_bulk_conflicts: Vec<&str> = Vec::new();
+        if summary.is_some() {
+            component_bulk_conflicts.push("--summary");
+        }
+        if priority.is_some() {
+            component_bulk_conflicts.push("--priority");
+        }
+        if issue_type.is_some() {
+            component_bulk_conflicts.push("--type");
+        }
+        if !labels.is_empty() {
+            component_bulk_conflicts.push("--label");
+        }
+        if !component_bulk_conflicts.is_empty() {
+            return Err(JrError::UserError(format!(
+                "--component on multiple issues cannot be combined with {} in the \
+                 same call -- the bulk component path issues its own, separate POST \
+                 sequence and cannot also carry those fields. Run separate \
+                 `jr issue edit` commands.",
+                component_bulk_conflicts.join(", ")
+            ))
+            .into());
+        }
+    }
+
+    // --- BC-3.4.023 cross-project guard for --component (fires in BOTH live
+    // and dry-run; Step-4.5 Round-2 fix). Mirrors the `--type` guard
+    // directly below -- component ids are project-scoped, and the bulk
+    // `multiselectComponents` endpoint takes a single project's ids for the
+    // entire batch. Before this hoist, this check lived ONLY inside
+    // `handle_edit_bulk_components` (the live path), which the `--dry-run`
+    // short-circuit below never reaches -- so a multi-key
+    // `--component --dry-run` spanning 2+ projects previewed success
+    // (resolved against only `effective_keys[0]`'s project) for an input
+    // the live run refuses with exit 64. The check inside
+    // `handle_edit_bulk_components` itself is KEPT as defense-in-depth --
+    // this hoisted copy and that one are deliberately duplicated, not
+    // shared, mirroring the `--type` guard's own precedent one block below.
+    if !components.is_empty() && effective_keys.len() > 1 {
+        let mut project_keys: Vec<&str> = effective_keys
+            .iter()
+            .map(|k| project_key_from_issue_key(k))
+            .collect();
+        project_keys.sort_unstable();
+        project_keys.dedup();
+        if project_keys.len() > 1 {
+            return Err(JrError::UserError(format!(
+                "--component requires all issues to be in the same project; \
+                 the provided keys span {} distinct projects: {}. \
+                 Component IDs differ per project, so a single bulk edit cannot \
+                 target all of them — split the keys by project and run separate \
+                 `jr issue edit` commands.",
+                project_keys.len(),
+                project_keys.join(", "),
             ))
             .into());
         }
@@ -479,7 +605,40 @@ pub(super) async fn handle_edit(
             let dr_key = &effective_keys[0];
             let dr_project_key = project_key_from_issue_key(dr_key);
             let dr_changes = format::normalize_component_changes(&components);
-            Some(resolve_component_change_names(client, dr_project_key, &dr_changes).await?)
+            // Step-4.5 Round-3 fix (F2): fetch the project's component
+            // candidate list ONCE and reuse it for both the name-resolution
+            // preview below and the numeric-id/parse validation that
+            // follows -- previously each call independently re-fetched the
+            // SAME `GET …/project/{key}/components` for the SAME project,
+            // doubling the dry-run's HTTP cost on every multi-key
+            // `--component --dry-run` invocation for no behavioral benefit.
+            let dr_component_list = client.list_components(dr_project_key).await?;
+            let resolved = resolve_component_change_names_with_list(
+                &dr_component_list,
+                dr_project_key,
+                &dr_changes,
+            )?;
+            // Step-4.5 Round-2 fix (F2): the multi-key bulk LIVE path
+            // additionally resolves each change to a numeric componentId via
+            // `resolve_bulk_component_ids` (Invariant 2), which performs an
+            // explicit `String -> u64` parse that can fail on an
+            // oversized/non-parseable numeric-bypass id (e.g.
+            // `add:99999999999999999999999999`) even when the NAME-only
+            // resolution above succeeds. The dry-run preview must exercise
+            // the SAME check -- by the cross-project guard hoisted above
+            // this block, `effective_keys` is guaranteed single-project here
+            // -- so it never promises success for an input the live run
+            // rejects. Single-key dry-run doesn't need this: the single-key
+            // live path wires a NAME, never a numeric id (see
+            // `resolve_bulk_component_ids`'s doc comment).
+            if effective_keys.len() > 1 {
+                resolve_bulk_component_ids_with_list(
+                    &dr_component_list,
+                    dr_project_key,
+                    &dr_changes,
+                )?;
+            }
+            Some(resolved)
         } else {
             None
         };
@@ -725,6 +884,20 @@ pub(super) async fn handle_edit(
     // --- Route: labels → bulk API. ---
     if !labels.is_empty() {
         return handle_edit_bulk_labels(&effective_keys, labels, output_format, client, no_input)
+            .await;
+    }
+
+    // --- Route: --component on 2+ keys → BC-3.4.023 bulk multiselectComponents
+    // path (S-605-2). Entirely separate from `handle_edit_bulk_fields` below —
+    // the `multiselectComponents` wire shape requires its own POST sequencing
+    // (two sequential POSTs for mixed add:/remove:, plus 1000-issue chunking)
+    // that cannot be folded into that function's generic
+    // {summary,priority,issueType} single-POST composition (BC-3.4.023
+    // Postcondition 2/3). A single effective key falls through to the
+    // existing single-key `update`-verb path below (EC-3.4.023-3,
+    // BC-3.4.022) — this branch only fires for 2+ keys.
+    if !components.is_empty() && effective_keys.len() > 1 {
+        return handle_edit_bulk_components(&effective_keys, &components, output_format, client)
             .await;
     }
 
@@ -1297,6 +1470,21 @@ async fn resolve_component_change_names(
     changes: &[format::ComponentChange],
 ) -> Result<Vec<format::ComponentChange>> {
     let component_list = client.list_components(project_key).await?;
+    resolve_component_change_names_with_list(&component_list, project_key, changes)
+}
+
+/// Core of [`resolve_component_change_names`], parameterized on an
+/// already-fetched `component_list` so a caller that needs BOTH this
+/// resolution AND [`resolve_bulk_component_ids_with_list`] (the `--dry-run`
+/// multi-key preview, Step-4.5 Round-3 F2) can fetch
+/// `GET …/project/{key}/components` exactly ONCE and reuse the result for
+/// both, instead of each function independently re-fetching the identical
+/// list for the identical project.
+fn resolve_component_change_names_with_list(
+    component_list: &[crate::types::jira::component::Component],
+    project_key: &str,
+    changes: &[format::ComponentChange],
+) -> Result<Vec<format::ComponentChange>> {
     let candidate_names: Vec<String> = component_list.iter().map(|c| c.name.clone()).collect();
 
     let mut resolved_changes: Vec<format::ComponentChange> = Vec::with_capacity(changes.len());
@@ -1535,6 +1723,433 @@ fn project_key_from_issue_key(key: &str) -> &str {
         Some(pos) => &key[..pos],
         None => key,
     }
+}
+
+/// `jr issue edit KEY1 KEY2 ... --component add:X` — multi-key/`--jql` bulk
+/// `--component` edit (BC-3.4.023, S-605-2). Entirely separate wire path from
+/// `handle_edit_bulk_fields`: the `multiselectComponents` schema holds only
+/// ONE `bulkEditMultiSelectFieldOption` per POST (unlike `labelsFields`'
+/// array-of-elements shape), so mixed `add:`/`remove:` specs require TWO
+/// sequential POSTs rather than one coalesced POST (Postcondition 3).
+///
+/// Precondition (enforced by the caller, `handle_edit`): `keys.len() > 1`.
+/// A single effective key is routed to the existing single-key `update`-verb
+/// path (`edit_issue_components`, BC-3.4.022) instead — EC-3.4.023-3.
+///
+/// What this function does, step by step:
+///
+/// 1. **EC-3.4.023-1 cross-project guard**: `keys` spanning 2+ distinct
+///    projects (via [`project_key_from_issue_key`]) → exit 64
+///    (`JrError::UserError`) BEFORE any HTTP call — component ids are
+///    project-scoped, mirroring `handle_edit_bulk_fields`'s `--type` guard
+///    (BC-3.4.019).
+/// 2. **Postcondition 4 / Invariant 2 — resolve + parse**: parse `components`
+///    via [`format::normalize_component_changes`], resolve each NAME to a
+///    numeric id via §8.4 ([`resolve_bulk_component_ids`],
+///    `helpers::resolve_component`), then an explicit `String` -> `u64`
+///    parse (`id.parse::<u64>()`) immediately before body assembly — the
+///    bulk endpoint requires a JSON integer `componentId`, never a string or
+///    `{"name":...}` object. A parse failure on the numeric-id-bypass path
+///    (user input) surfaces as `JrError::UserError`; a parse failure on a
+///    resolver-returned name's looked-up id (which should be unreachable)
+///    surfaces as `JrError::Internal` (Step-4.5 Round-1 F4 fix).
+/// 3. **Postcondition 1/2 — wire shape**: build the `editedFieldsInput` body
+///    via [`crate::api::jira::bulk::build_component_edited_fields`] with
+///    `selectedActions == ["components"]` (lowercase field id).
+/// 4. **Postcondition 3 — two sequential POSTs for mixed add:/remove:**: when
+///    both `add:` and `remove:` specs are present, the ADD POST is issued
+///    first (fully polled via `await_bulk_task` to completion), THEN the
+///    REMOVE POST — never coalesced into one POST.
+/// 5. **Postcondition 6 / EC-3.4.023-4 — 1000-issue chunking**: `keys` is
+///    split into sequential chunks of <= [`crate::api::jira::bulk::BULK_MAX_KEYS`],
+///    each fully polled to completion before the next chunk's POST fires
+///    (chunk-major, action-minor ordering when combined with item 4 above —
+///    `2 * ceil(N/1000)` POSTs total for N>1000 issues with mixed
+///    add:/remove:). A chunk failure ABORTS the remaining sequence (no
+///    continue-on-error, unlike `component rename --all-projects`) —
+///    surfaced via the existing `await_bulk_task` error path. Already-
+///    successful earlier chunks are NOT rolled back.
+/// 6. Every (chunk, action) cycle's outcome is accumulated into a
+///    [`BulkComponentOpResult`] and rendered ONCE, after the loop, via
+///    [`render_bulk_component_results`] — a single coherent `--output json`
+///    document (or table-mode row sequence) for the whole invocation,
+///    never one document per cycle (Step-4.5 Round-1 F2 fix).
+///
+/// **Mutual exclusion (Step-4.5 Round-1 F1 fix):** the caller (`handle_edit`)
+/// rejects `--component` on 2+ keys combined with `--summary`/`--priority`/
+/// `--type`/`--label` before this function is ever reached — this path's
+/// POST sequence has no way to also carry those fields, so silently
+/// proceeding would drop them.
+///
+/// **Release gate (DEC-280, BC-3.4.023 Delivery note):** this path MUST NOT
+/// ship to release until a live smoke test (one ADD, one REMOVE, >= 2 issues,
+/// one project with >= 1 component already defined) confirms the
+/// `multiselectComponents` wire shape documented above (AC-010).
+async fn handle_edit_bulk_components(
+    keys: &[String],
+    components: &[String],
+    output_format: &OutputFormat,
+    client: &JiraClient,
+) -> Result<()> {
+    // 1. EC-3.4.023-1: cross-project guard, BEFORE any HTTP call. Mirrors
+    // `handle_edit_bulk_fields`'s `--type` guard (BC-3.4.019) exactly --
+    // component ids are project-scoped.
+    let mut project_keys: Vec<&str> = keys.iter().map(|k| project_key_from_issue_key(k)).collect();
+    project_keys.sort_unstable();
+    project_keys.dedup();
+    if project_keys.len() > 1 {
+        return Err(JrError::UserError(format!(
+            "--component requires all issues to be in the same project; \
+             the provided keys span {} distinct projects: {}. \
+             Component IDs differ per project, so a single bulk edit cannot \
+             target all of them — split the keys by project and run separate \
+             `jr issue edit` commands.",
+            project_keys.len(),
+            project_keys.join(", "),
+        ))
+        .into());
+    }
+    // `keys.len() > 1` is guaranteed by the caller (`handle_edit`'s routing
+    // block), so `project_keys` is non-empty here.
+    let project_key = project_keys[0];
+
+    // 2. Postcondition 4 / Invariant 2: resolve NAMEs to numeric componentIds
+    // via §8.4 BEFORE any bulk POST is built (AC-004: an unknown/ambiguous
+    // name must produce ZERO bulk POSTs).
+    let (add_ids, remove_ids) = resolve_bulk_component_ids(client, project_key, components).await?;
+
+    if add_ids.is_empty() && remove_ids.is_empty() {
+        bail!("No component changes specified.");
+    }
+
+    // 3. Postcondition 6: split `keys` into sequential <= BULK_MAX_KEYS
+    // chunks, chunk-major ordering. Within each chunk, ADD is issued (fully
+    // polled) BEFORE REMOVE when both are present (Postcondition 3) -- never
+    // coalesced into one POST, unlike the label bulk path. A chunk (or
+    // action-within-chunk) failure propagates immediately via `?`, aborting
+    // the remaining sequence (EC-3.4.023-4) -- already-successful earlier
+    // chunks are NOT rolled back.
+    //
+    // Step-4.5 Round-1 F2 fix: each (chunk, action) cycle used to call
+    // `render_bulk_edit_results` directly, which prints its own top-level
+    // JSON document via `println!` -- a mixed add:/remove: edit (or a
+    // >1000-issue chunked edit) therefore printed MULTIPLE concatenated
+    // JSON documents on stdout, which no single `serde_json::from_str` call
+    // can parse, and doubled up the table-mode success lines. Results are
+    // now accumulated across every (chunk, action) cycle and rendered ONCE,
+    // after the loop, as a single coherent output.
+    let mut ops: Vec<BulkComponentOpResult> = Vec::new();
+    for chunk in keys.chunks(BULK_MAX_KEYS) {
+        if !add_ids.is_empty() {
+            ops.push(
+                run_bulk_component_action(chunk, &add_ids, BulkMultiSelectFieldOption::Add, client)
+                    .await?,
+            );
+        }
+        if !remove_ids.is_empty() {
+            ops.push(
+                run_bulk_component_action(
+                    chunk,
+                    &remove_ids,
+                    BulkMultiSelectFieldOption::Remove,
+                    client,
+                )
+                .await?,
+            );
+        }
+    }
+
+    render_bulk_component_results(&ops, output_format)
+}
+
+/// One (chunk, action) bulk POST + poll cycle's outcome, accumulated across
+/// the whole `handle_edit_bulk_components` invocation (Step-4.5 Round-1 F2
+/// fix) so the caller can render a single, coherent result once every cycle
+/// has completed, instead of once per cycle.
+struct BulkComponentOpResult {
+    task_id: String,
+    action: BulkMultiSelectFieldOption,
+    keys: Vec<String>,
+    progress: crate::types::jira::bulk::BulkOperationProgress,
+}
+
+/// Resolve `--component` add:/remove: specs to numeric `componentId`s for
+/// the bulk `multiselectComponents` wire shape (BC-3.4.023 Postcondition 4,
+/// Invariant 2). Returns `(add_ids, remove_ids)`, each in CLI input order
+/// within its own action bucket.
+///
+/// Distinct from [`resolve_component_change_names`] (the single-key path's
+/// resolver): that function returns canonical NAMEs (or a passed-through
+/// numeric id string) for the `update`-verb wire shape, which wires a name
+/// as `{"name": ...}` and never needs the id. This bulk path needs a numeric
+/// `componentId` for EVERY resolved change -- name-resolved or
+/// id-passed-through alike -- so it performs the name -> id lookup inline
+/// against the SAME fetched candidate list, then the explicit `String` ->
+/// `u64` parse Invariant 2 requires. A parse failure's error type depends on
+/// WHICH branch produced the id string (Step-4.5 Round-1 F4 fix): a
+/// resolver-returned NAME whose looked-up id is non-numeric is a genuine
+/// internal-invariant violation (every candidate list entry's id is itself
+/// a digit-only string on the wire) -- surfaced as `JrError::Internal`.
+/// A value from the §8.4 numeric-id bypass (BC-8.4.001 step 1 --
+/// all-ASCII-digit CLI input forwarded verbatim, skipping `partial_match`
+/// entirely) IS user input, and CAN overflow `u64` (e.g.
+/// `--component add:99999999999999999999999999`) -- that failure surfaces
+/// as `JrError::UserError` (exit 64), never `JrError::Internal`.
+async fn resolve_bulk_component_ids(
+    client: &JiraClient,
+    project_key: &str,
+    components: &[String],
+) -> Result<(Vec<u64>, Vec<u64>)> {
+    let changes = format::normalize_component_changes(components);
+    let component_list = client.list_components(project_key).await?;
+    resolve_bulk_component_ids_with_list(&component_list, project_key, &changes)
+}
+
+/// Core of [`resolve_bulk_component_ids`], parameterized on an
+/// already-fetched `component_list` and already-normalized `changes` so a
+/// caller that needs BOTH this AND [`resolve_component_change_names_with_list`]
+/// (the `--dry-run` multi-key preview, Step-4.5 Round-3 F2) can fetch
+/// `GET …/project/{key}/components` exactly ONCE and reuse the result for
+/// both, instead of each function independently re-fetching the identical
+/// list for the identical project.
+fn resolve_bulk_component_ids_with_list(
+    component_list: &[crate::types::jira::component::Component],
+    project_key: &str,
+    changes: &[format::ComponentChange],
+) -> Result<(Vec<u64>, Vec<u64>)> {
+    let candidate_names: Vec<String> = component_list.iter().map(|c| c.name.clone()).collect();
+
+    let mut add_ids: Vec<u64> = Vec::new();
+    let mut remove_ids: Vec<u64> = Vec::new();
+
+    for change in changes {
+        let matched_name =
+            match helpers::resolve_component(&change.name, project_key, &candidate_names) {
+                MatchResult::Exact(matched) => matched,
+                MatchResult::ExactMultiple(matched_name) => {
+                    let ids: Vec<String> = component_list
+                        .iter()
+                        .filter(|c| c.name.to_lowercase() == matched_name.to_lowercase())
+                        .map(|c| c.id.clone())
+                        .collect();
+                    return Err(JrError::UserError(format!(
+                        "Multiple components named \"{}\" found (IDs: {}). \
+                         Pass the numeric ID directly.",
+                        matched_name,
+                        ids.join(", ")
+                    ))
+                    .into());
+                }
+                MatchResult::Ambiguous(mut candidates) => {
+                    candidates.sort_by_key(|s| s.to_lowercase());
+                    return Err(JrError::UserError(format!(
+                        "Ambiguous component '{}'. Matches: {}.",
+                        change.name,
+                        candidates.join(", ")
+                    ))
+                    .into());
+                }
+                MatchResult::None(mut available) => {
+                    available.sort_by_key(|s| s.to_lowercase());
+                    return Err(JrError::UserError(format!(
+                        "Component '{}' not found in project {}. Available: {}.",
+                        change.name,
+                        project_key,
+                        available.join(", ")
+                    ))
+                    .into());
+                }
+            };
+
+        // `matched_name` is either the passed-through numeric id
+        // (BC-8.4.001 step-1 bypass -- USER input, verbatim) or the resolved
+        // canonical component NAME (resolver output). The bulk wire shape
+        // needs a numeric componentId either way (Invariant 2) -- resolve a
+        // name to its id via the same fetched candidate list.
+        //
+        // Step-4.5 Round-1 F4 fix: track WHICH of the two branches produced
+        // `id_str` so a subsequent parse failure can be attributed
+        // correctly. The numeric bypass forwards raw user input verbatim
+        // (an all-ASCII-digit CLI value can still overflow u64, e.g.
+        // `--component add:99999999999999999999999999`) -- that failure
+        // came from user input and must be a `JrError::UserError` (exit
+        // 64), not `JrError::Internal`. `JrError::Internal` is reserved for
+        // the OTHER branch: a resolver-returned NAME whose looked-up id is
+        // somehow non-numeric, which genuinely should be unreachable.
+        let (id_str, id_is_user_input) =
+            if !matched_name.is_empty() && matched_name.chars().all(|c| c.is_ascii_digit()) {
+                (matched_name, true)
+            } else {
+                let id = component_list
+                    .iter()
+                    .find(|c| c.name.eq_ignore_ascii_case(&matched_name))
+                    .map(|c| c.id.clone())
+                    .ok_or_else(|| {
+                        JrError::Internal(format!(
+                            "Internal error: resolved component name {matched_name:?} was not \
+                             found in the fetched component list for project {project_key} -- \
+                             this should be unreachable (the resolver only returns names present \
+                             in the same list)."
+                        ))
+                    })?;
+                (id, false)
+            };
+
+        let id: u64 = id_str.parse().map_err(|e| {
+            if id_is_user_input {
+                JrError::UserError(format!(
+                    "component id out of range or not found: {id_str} ({e})"
+                ))
+            } else {
+                JrError::Internal(format!(
+                    "Internal error: resolved componentId {id_str:?} is not numeric ({e}) -- \
+                     every resolver-returned component id should be a digit-only string on the \
+                     wire (BC-3.4.023 Invariant 2)."
+                ))
+            }
+        })?;
+
+        match change.action {
+            format::ComponentAction::Add => add_ids.push(id),
+            format::ComponentAction::Remove => remove_ids.push(id),
+        }
+    }
+
+    Ok((add_ids, remove_ids))
+}
+
+/// Issue ONE bulk `multiselectComponents` POST for `chunk_keys` + `option`
+/// and poll it to completion via the existing `await_bulk_task` machinery.
+/// Returns the raw [`BulkComponentOpResult`] for the caller to accumulate --
+/// this function does NOT render anything itself. Rendering is deferred to
+/// a single call to [`render_bulk_component_results`], made once every
+/// (chunk, action) cycle in `handle_edit_bulk_components` has completed
+/// (Step-4.5 Round-1 F2 fix), so a multi-cycle invocation (a mixed
+/// add:/remove: edit, or a >1000-issue chunked edit) never emits more than
+/// one coherent result document. Shared by every (chunk, action) pair
+/// `handle_edit_bulk_components` iterates over (BC-3.4.023 Postcondition 3
+/// / Postcondition 6).
+async fn run_bulk_component_action(
+    chunk_keys: &[String],
+    ids: &[u64],
+    option: BulkMultiSelectFieldOption,
+    client: &JiraClient,
+) -> Result<BulkComponentOpResult> {
+    let edited_fields = build_component_edited_fields(ids, option);
+    let task_id = client
+        .bulk_edit_fields(chunk_keys, vec!["components".to_string()], edited_fields)
+        .await?;
+    let progress = client
+        .await_bulk_task(&task_id, resolve_bulk_await_timeout())
+        .await?;
+    Ok(BulkComponentOpResult {
+        task_id,
+        action: option,
+        keys: chunk_keys.to_vec(),
+        progress,
+    })
+}
+
+/// Render every accumulated (chunk, action) cycle's outcome as ONE coherent
+/// result (Step-4.5 Round-1 F2 fix) -- a single top-level JSON document in
+/// `--output json` mode, or a single flat sequence of per-key table rows in
+/// table mode. Distinct from [`render_bulk_edit_results`] (used by the
+/// labels and generic-fields bulk paths, which only ever issue ONE bulk
+/// POST + poll cycle per invocation and therefore have no multi-cycle
+/// aggregation concern).
+fn render_bulk_component_results(
+    ops: &[BulkComponentOpResult],
+    output_format: &OutputFormat,
+) -> Result<()> {
+    let mut any_failed = false;
+    let mut operations_json: Vec<serde_json::Value> = Vec::new();
+
+    for op in ops {
+        let processed: std::collections::HashSet<&str> = op
+            .progress
+            .processed_accessible_issues
+            .iter()
+            .map(String::as_str)
+            .collect();
+
+        let mut results: Vec<serde_json::Value> = Vec::new();
+        for key in &op.keys {
+            if let Some(err) = op.progress.failed_accessible_issues.get(key.as_str()) {
+                results.push(json!({
+                    "key": key,
+                    "status": "error",
+                    "error": err.summary(),
+                }));
+                any_failed = true;
+            } else if processed.contains(key.as_str()) {
+                results.push(json!({
+                    "key": key,
+                    "status": "success",
+                }));
+            } else {
+                results.push(json!({
+                    "key": key,
+                    "status": "inaccessible",
+                }));
+            }
+        }
+        // Also capture any failed keys that weren't in this op's chunk
+        // (shouldn't happen, but Atlassian may return unexpected keys).
+        for (failed_key, err) in &op.progress.failed_accessible_issues {
+            if !op.keys.iter().any(|k| k == failed_key) {
+                results.push(json!({
+                    "key": failed_key,
+                    "status": "error",
+                    "error": err.summary(),
+                }));
+                any_failed = true;
+            }
+        }
+
+        let action_str = match op.action {
+            BulkMultiSelectFieldOption::Add => "ADD",
+            BulkMultiSelectFieldOption::Remove => "REMOVE",
+        };
+        operations_json.push(json!({
+            "taskId": op.task_id,
+            "action": action_str,
+            "results": results,
+        }));
+    }
+
+    match output_format {
+        OutputFormat::Json => {
+            // Single top-level JSON document for the ENTIRE invocation --
+            // never one `println!` per (chunk, action) cycle (Step-4.5
+            // Round-1 F2 fix; JSON render invariant #526).
+            let payload = json!({ "operations": operations_json });
+            println!("{}", output::render_json(&payload)?);
+        }
+        OutputFormat::Table => {
+            for op in &operations_json {
+                for entry in op["results"]
+                    .as_array()
+                    .expect("results is always an array")
+                {
+                    let key = entry["key"].as_str().unwrap_or("?");
+                    match entry["status"].as_str().unwrap_or("?") {
+                        "success" => output::print_success(&format!("Updated {key}")),
+                        "error" => {
+                            let err_msg = entry["error"].as_str().unwrap_or("unknown error");
+                            eprintln!("error: {key}: {err_msg}");
+                        }
+                        status => eprintln!("warning: {key}: {status}"),
+                    }
+                }
+            }
+        }
+    }
+
+    if any_failed {
+        bail!("One or more issues failed during bulk edit. See output above for details.");
+    }
+
+    Ok(())
 }
 
 /// Supports 2..=1000 keys with --summary, --priority, --type.
@@ -2498,10 +3113,9 @@ mod is_cross_hierarchy_type_error_proptests {
 
 // ---------------------------------------------------------------------------
 // AC-006 (BC-3.4.018 invariant 4): project key extraction unit tests.
-// RED GATE: `project_key_from_issue_key` does not yet exist. These tests will
-// fail to compile until the Green step adds the helper. The integration test
-// binaries (tests/*.rs) compile separately and are unaffected by this compile
-// failure — only `cargo test --lib` / `cargo test --doc` will fail to compile.
+// `project_key_from_issue_key` is defined above and used by the BC-3.4.019
+// `--type` cross-project guard, the BC-3.4.023 `--component` bulk-edit
+// cross-project guard (S-605-2), and the dry-run preview path.
 // ---------------------------------------------------------------------------
 #[cfg(test)]
 mod test_project_key_extraction {

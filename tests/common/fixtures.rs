@@ -803,3 +803,128 @@ pub fn issue_response_with_components_and_ids(
     response["fields"]["components"] = json!(components);
     response
 }
+
+// ── S-605-2: bulk `issue edit --component` (multi-key) fixtures ────────────
+//
+// `POST /rest/api/3/bulk/issues/fields` is async: the endpoint returns a
+// `taskId` immediately, then the client polls `GET /rest/api/3/bulk/queue/
+// {taskId}` until a terminal status. These three fixtures cover the three
+// terminal/non-terminal shapes S-605-2's chunking + mixed add:/remove:
+// tests need: ENQUEUED (immediate POST response), COMPLETE (successful
+// poll), and FAILED (a chunk-sequence abort, EC-3.4.023-4).
+//
+// Field shapes mirror the existing local `bulk_enqueued`/`bulk_complete`
+// helpers in `tests/issue_bulk_pr2.rs` (kept private/local there per that
+// file's own convention) — centralized here as `pub` fixtures per S-605-2's
+// File Structure Requirements ("Multi-chunk bulk-fields fixtures").
+
+/// `POST /rest/api/3/bulk/issues/fields` immediate-response body: task
+/// accepted, not yet started.
+pub fn bulk_task_enqueued(task_id: &str) -> Value {
+    json!({
+        "taskId": task_id,
+        "status": "ENQUEUED",
+        "progressPercent": 0,
+        "totalIssueCount": 0,
+        "processedAccessibleIssues": [],
+        "failedAccessibleIssues": {},
+        "invalidOrInaccessibleIssueCount": 0
+    })
+}
+
+/// `GET /rest/api/3/bulk/queue/{taskId}` terminal-success response — every
+/// key in `processed_keys` succeeded.
+pub fn bulk_task_complete(task_id: &str, processed_keys: &[&str]) -> Value {
+    json!({
+        "taskId": task_id,
+        "status": "COMPLETE",
+        "progressPercent": 100,
+        "totalIssueCount": processed_keys.len(),
+        "processedAccessibleIssues": processed_keys,
+        "failedAccessibleIssues": {},
+        "invalidOrInaccessibleIssueCount": 0
+    })
+}
+
+/// `GET /rest/api/3/bulk/queue/{taskId}` terminal-failure response
+/// (`FAILED`) — used to exercise AC-009 / EC-3.4.023-4's chunk-sequence
+/// abort: a chunk that ends `FAILED` must surface via the existing
+/// `await_bulk_task` error path and stop the remaining chunk sequence from
+/// ever being attempted.
+pub fn bulk_task_failed(task_id: &str, failure_reason: &str) -> Value {
+    json!({
+        "taskId": task_id,
+        "status": "FAILED",
+        "progressPercent": 100,
+        "totalIssueCount": 0,
+        "processedAccessibleIssues": [],
+        "failedAccessibleIssues": {},
+        "invalidOrInaccessibleIssueCount": 0,
+        "failureReason": failure_reason
+    })
+}
+
+/// `GET /rest/api/3/bulk/queue/{taskId}` terminal `PARTIAL_FAILURE` response
+/// -- distinct from `bulk_task_failed`'s `FAILED` status: `is_terminal()`
+/// treats `PARTIAL_FAILURE` (and `PROCESSED_WITH_ERRORS`) as a SUCCESSFUL
+/// poll (`await_bulk_task` returns `Ok(progress)`, never `Err`), with the
+/// per-key outcome split across `processed_keys` (succeeded) and
+/// `failed_keys` (failed, each paired with an error message). Used to
+/// exercise the previously-untested `render_bulk_component_results` partial-
+/// failure render branch (Step-4.5 Round-3 F1) -- `bulk_task_failed`'s
+/// FAILED status errors out of `await_bulk_task` via `?` before rendering is
+/// ever reached, so it cannot exercise this branch.
+pub fn bulk_task_partial_failure(
+    task_id: &str,
+    processed_keys: &[&str],
+    failed_keys: &[(&str, &str)],
+) -> Value {
+    let failed_accessible_issues: serde_json::Map<String, Value> = failed_keys
+        .iter()
+        .map(|(key, message)| {
+            (
+                (*key).to_string(),
+                json!({"errorMessages": [message], "errors": {}}),
+            )
+        })
+        .collect();
+    json!({
+        "taskId": task_id,
+        "status": "PARTIAL_FAILURE",
+        "progressPercent": 100,
+        "totalIssueCount": processed_keys.len() + failed_keys.len(),
+        "processedAccessibleIssues": processed_keys,
+        "failedAccessibleIssues": failed_accessible_issues,
+        "invalidOrInaccessibleIssueCount": 0
+    })
+}
+
+/// `GET /rest/api/3/bulk/queue/{taskId}` terminal-success response where one
+/// or more of the originally-submitted keys are INACCESSIBLE -- present in
+/// the POST's issue list but absent from BOTH `processedAccessibleIssues`
+/// AND `failedAccessibleIssues`, counted only via
+/// `invalidOrInaccessibleIssueCount`. Distinct from `bulk_task_partial_failure`
+/// (which puts every submitted key in one of those two maps): here
+/// `inaccessible_count` keys are dropped from the response entirely, mirroring
+/// Atlassian's actual behavior for issues the acting user can no longer see
+/// (e.g. deleted or permission-revoked between submission and poll).
+/// Exercises the previously-untested `render_bulk_component_results`
+/// "inaccessible" render branch (Step-4.5 Round-6 coverage gap) -- every
+/// other poll fixture in this module accounts for 100% of submitted keys via
+/// processed/failed, so the `else` arm (`status: "inaccessible"`) was
+/// production-reachable but never hit by a test.
+pub fn bulk_task_inaccessible(
+    task_id: &str,
+    processed_keys: &[&str],
+    inaccessible_count: usize,
+) -> Value {
+    json!({
+        "taskId": task_id,
+        "status": "COMPLETE",
+        "progressPercent": 100,
+        "totalIssueCount": processed_keys.len() + inaccessible_count,
+        "processedAccessibleIssues": processed_keys,
+        "failedAccessibleIssues": {},
+        "invalidOrInaccessibleIssueCount": inaccessible_count
+    })
+}
