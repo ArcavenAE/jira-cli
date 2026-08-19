@@ -3,9 +3,18 @@ context: bc-3
 title: "Issue Write (create/edit/move/assign/comment/link/open/remote-link)"
 total_bcs: 144   # cumulative claim (incl. range-collapsed); definitional_count below is individually-bodied headings
 definitional_count: 115   # count of `#### BC-` headings in this file
-last_updated: 2026-08-15
+last_updated: 2026-08-19
 source_pass: 3
 trace: |
+  - F2 targeted wording amendment (2026-08-19, S-605-2, post-research clarification — no BC
+    added/removed/retired, no count change): BC-3.4.023 CLARIFIED — Postcondition 2 gains an
+    explicit note that the wire body deliberately OMITS `sendBulkNotification` (the Atlassian
+    doc example shows it; the live-proven, reused `bulk_edit_fields` helper omits it, per the
+    issue #446 precedent) — implementers MUST NOT add it to mirror the doc example. Delivery
+    note gains a precondition that the AC-010 live smoke-test project MUST have ≥1 component
+    defined, else `components` is absent from the bulk-edit field allowlist and the test
+    false-negatives. Source: `.factory/research/S-605-2-bulk-component-wire-2026-08-19.md`
+    (8/8 CONFIRM, 0 REFUTE against current Atlassian primary docs).
   - F2 spec evolution, component-management bundle (2026-08-15, issues #604/#605/#606/#608): BC-3.4.022..025 ADDED — `issue create/edit --component` (issue #605): single-key native `update`-verb wire shape (022), multi-key bulk `multiselectComponents`/integer `componentId` wire shape (023, DEC-280), `create`'s bare additive body composition (024), and the resolver-mechanism decision (one round-trip via project components list, not duplicated with editmeta, 025). BC-3.4.017 UPDATED — Gate B scope extended 4→5 fields (`components` added), EC-3.4.017-15 added. BC-3.4.020 UPDATED — `--label` conflict-block flag list extended 12→13 (`--component` added). BC-3.4.012/013 UPDATED — `components` joins the field-echo key table (table-mode comma-joined action:name pairs; JSON-mode `changed_fields["components"]` is also a comma-joined `add:name`/`remove:name` string, matching the shared `BTreeMap<String,String>` model — the array-of-`{action,name}` shape is the dry-run `plannedChanges.components` form only, not `changed_fields`). BC-3.4.021 UPDATED — `plannedChanges.components` dry-run preview added (flat array, same convention as `labels`), EC-3.4.021-20 added. +4 new individually-bodied BCs (111→115); total_bcs 140→144. See `.factory/phase-f1-delta-analysis/delta-analysis-components.md`, `.factory/research/component-delete-and-bulk-wire-2026-08-15.md`.
   - F2 spec evolution, bucket1-defects bundle (2026-08-13, issue #692, DEC-274; adversary passes 1-4): BC-3.4.021 UPDATED — DEC-274 REVERSES Invariant 3: `--dry-run --description-stdin` now reads stdin and renders ADF (previously a placeholder, pinned as correct-not-a-bug); adversary pass-3 MEDIUM-1 extended the ADF-preview half to bare `--description` too (both flags now produce a `descriptionAdf` preview, closing a false-OK regression where a bare-flag depth-guard trip returned exit 0). New additive `plannedChanges.descriptionAdf` field (nested, preserves the "exactly three top-level keys" postcondition); `plannedChanges.description` continues to carry the raw input string verbatim for either flag (BC-3.4.013/#398 unaffected, no body edit). ECs: EC-3.4.021-6 rewritten; EC-3.4.021-15/-16 added pass-1/-2 (depth-guard Err → exit 64 in dry-run, split by `--output` mode after a pass-2→pass-3 channel correction — stderr carries the error envelope, stdout is always empty; successful multi-line/markdown render); EC-3.4.021-17 added pass-1 (empty-stdin, mirrors EC-3.4.013-13); EC-3.4.021-18/-19 added pass-3 (bare-`--description` happy path and depth-guard regression pin, mirroring -6/-15). VPs: VP-DRY-RUN-001 amended (derived-key carve-out); VP-692-001..004 added across pass-1/pass-3 (stdin happy-path, stdin depth-guard error [channel-corrected pass-3], bare-description happy path, bare-description depth-guard error). Pre-DEC-274 text retained inline in the BC's "Previous version" block; each corrected pass-2 error also retained inline as "INCORRECT, do NOT re-implement." No BC count change (still 111 individually-bodied). See `.factory/research/bucket1-692-dry-run-stdin-2026-08-13.md`.
   - L2: .factory/specs/domain-spec/bc-03-issue-write.md
@@ -2495,7 +2504,16 @@ pronounced than the labels/issuetype cases").
 > acceptance criterion]** If the live smoke test contradicts the shape documented below, this
 > BC must be corrected to the observed true shape (exactly as `FIX-BULK-TRANSITION-001` did
 > for bulk transitions) — this note does NOT relax the BC's normative content below, which is
-> what F4 implements against until/unless a live-run correction is required.
+> what F4 implements against until/unless a live-run correction is required. **[PRECONDITION
+> ADDED 2026-08-19, S-605-2 wire-shape research —
+> `.factory/research/S-605-2-bulk-component-wire-2026-08-19.md`, "What the story may have
+> MISSED" item 4]** The target project for this live smoke test MUST have at least one
+> component already defined. Jira's `GET /rest/api/3/bulk/issues/fields` field-discovery
+> response only includes `components` in the bulk-edit allowlist when the selected issues'
+> project actually has components configured — a componentless project surfaces `components`
+> with an `unavailableMessage` instead, so the field would never be selectable and the smoke
+> test would false-negative for a reason unrelated to wire-shape correctness. This is a
+> precondition of the smoke test itself, not a new BC behavior.
 
 **Preconditions**:
 1. 2+ positional keys are supplied, OR `--jql` resolves to 2+ issues, all in the SAME
@@ -2517,6 +2535,19 @@ pronounced than the labels/issuetype cases").
      }
    }
    ```
+   **[CLARIFIED 2026-08-19, S-605-2 wire-shape research —
+   `.factory/research/S-605-2-bulk-component-wire-2026-08-19.md`]** The body above
+   deliberately OMITS a top-level `sendBulkNotification` key. The upstream Atlassian doc's
+   own worked example for this endpoint shows `"sendBulkNotification": false` alongside the
+   body — but the live-proven helper this story reuses, `bulk_edit_fields`
+   (`src/api/jira/bulk.rs`), builds its `BulkEditRequest` with only
+   `selectedIssueIdsOrKeys`, `selectedActions`, and `editedFieldsInput`, and already omits
+   `sendBulkNotification` entirely — an omission already live-validated via the issue #446
+   bulk labels/type path. `sendBulkNotification` is a documented OPTIONAL field, so this
+   omission is spec-conformant, not an oversight. Implementers MUST NOT add
+   `sendBulkNotification` to the components body merely to mirror the Atlassian doc example
+   — the live-proven `bulk_edit_fields` composition, not the doc example, is the source of
+   truth for this BC's wire body.
 3. **[CORRECTED 2026-08-15, pass-14 fix-burst — resolves a self-contradictory postcondition
    found by adversarial spec-delta review pass 14]** `bulkEditMultiSelectFieldOption` is one
    of `ADD` | `REMOVE` | `REPLACE` | `REMOVE_ALL`. When BOTH `add:` and `remove:` specs are

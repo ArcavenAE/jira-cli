@@ -49,8 +49,8 @@ acceptance_criteria_count: 10
 assumption_validations: []
 risk_mitigations: []
 created: "2026-08-15"
-version: "1.0"
-last_updated: "2026-08-15"
+version: "1.1"
+last_updated: "2026-08-19"
 breaking_change: false
 retroactive: false
 origin: >
@@ -70,7 +70,11 @@ files_modified:
 test_files:
   - tests/issue_commands.rs
   - tests/common/fixtures.rs
-input-hash: "8b8d571"
+# input-hash recomputed 2026-08-19 (was 8b8d571) — bc-3-issue-write.md, a listed input,
+# was amended with the BC-3.4.023 clarifications this story propagates. New value below
+# was reported by the validate-input-hash factory-dispatcher hook itself (computed 9e1c71f)
+# after this edit; not hand-derived.
+input-hash: "9e1c71f"
 ---
 
 > **tdd_mode:** `strict`.
@@ -116,6 +120,19 @@ component-delete-and-bulk-wire-2026-08-15.md` §Q2 in full and **ADR-0018 Decisi
   "bulkEditMultiSelectFieldOption":"ADD"}`. `bulkEditMultiSelectFieldOption` is one of `ADD` |
   `REMOVE` | `REPLACE` | `REMOVE_ALL` — `jr` only ever emits `ADD`/`REMOVE` (no `set:`/
   `replace:`/`clear:` CLI grammar exists; that is `#607` territory, explicitly out of scope).
+- **`sendBulkNotification` is deliberately OMITTED from the POST body** **[CLARIFIED
+  2026-08-19, S-605-2 wire-shape research —
+  `.factory/research/S-605-2-bulk-component-wire-2026-08-19.md`, "What the story may have
+  MISSED" item 1]**: the Atlassian doc's worked example for this endpoint shows
+  `"sendBulkNotification": false` alongside the body, but `jr` reuses the EXISTING
+  `bulk_edit_fields` composition (`src/api/jira/bulk.rs`) as-is, which builds
+  `BulkEditRequest` with only `selectedIssueIdsOrKeys`, `selectedActions`, and
+  `editedFieldsInput` — no `sendBulkNotification` key at all. That omission is already
+  live-proven via the issue #446 bulk labels/type path; `sendBulkNotification` is a
+  documented OPTIONAL field, so omitting it is spec-conformant, not an oversight.
+  Implementers MUST NOT add `sendBulkNotification` to the components body merely to mirror
+  the Atlassian doc example — the live-proven `bulk_edit_fields` composition, not the doc
+  example, is the source of truth for this wire body.
 - **TWO sequential POSTs for mixed add:/remove:, NOT single-POST coalescing** (this is the
   key divergence from the label bulk path — do NOT copy `handle_edit_bulk_labels`'s
   single-POST-per-request shape here): the `multiselectComponents` schema holds only ONE
@@ -156,6 +173,11 @@ component-delete-and-bulk-wire-2026-08-15.md` §Q2 in full and **ADR-0018 Decisi
 body: `selectedActions == ["components"]`; `editedFieldsInput.multiselectComponents ==
 {"fieldId":"components","components":[{"componentId":10001}],
 "bulkEditMultiSelectFieldOption":"ADD"}` (single object, not array).
+**Clarifying note (2026-08-19):** the test's wire-shape assertion should also assert the
+POST body's top-level key SET is exactly `{selectedIssueIdsOrKeys, selectedActions,
+editedFieldsInput}` — i.e. it does NOT include `sendBulkNotification` (see the "Behavior
+Summary" bullet above; `.factory/research/S-605-2-bulk-component-wire-2026-08-19.md` item
+1).
 **Test:** `test_bc_3_4_023_issue_edit_bulk_component_add_wire_shape()`
 
 ### AC-002 (traces to BC-3.4.023 postcondition 3 — two sequential POSTs)
@@ -208,7 +230,14 @@ each against ≥2 real issues in one project, confirms the `multiselectComponent
 matches this BC's documented body exactly. MUST PASS before this path ships to release; a
 mismatch requires correcting this BC (and re-running test-writer/implementer against the
 corrected shape) rather than silently adjusting the implementation around an unconfirmed
-guess.
+guess. **Precondition [ADDED 2026-08-19, S-605-2 wire-shape research —
+`.factory/research/S-605-2-bulk-component-wire-2026-08-19.md`, "What the story may have
+MISSED" item 4]:** the smoke-test project MUST have ≥1 component already defined. Jira's
+`GET /rest/api/3/bulk/issues/fields` field-discovery response only includes `components` in
+the bulk-edit allowlist when the selected issues' project actually has components
+configured — a componentless project surfaces `components` with an `unavailableMessage`
+instead, so the field would never be selectable and the test would false-negative for a
+reason unrelated to wire-shape correctness.
 **Test:** live smoke test, gated behind `JR_RUN_E2E=1` (mirrors `tests/e2e_live.rs`
 conventions) — NOT part of the standard `cargo test` suite.
 
@@ -262,7 +291,11 @@ though it is not expected to be reachable via any resolver-returned id in practi
 8. [ ] Implement chunking loop
 9. [ ] Refactor; full suite green
 10. [ ] **Gate: schedule and run the live smoke test (JR_RUN_E2E) BEFORE marking this story
-    done** — correct BC-3.4.023 first if the live shape diverges
+    done** — correct BC-3.4.023 first if the live shape diverges. **Precondition [ADDED
+    2026-08-19]:** confirm the target project has ≥1 component already defined BEFORE
+    running the smoke test — a componentless project makes `components` unselectable in
+    the bulk-edit field allowlist (`unavailableMessage`) and false-negatives the test for a
+    reason unrelated to wire-shape correctness.
 
 ## Previous Story Intelligence (MANDATORY)
 
@@ -280,6 +313,7 @@ though it is not expected to be reachable via any resolver-returned id in practi
 | This bulk path is entirely SEPARATE from S-605-1's single-key `update`-verb path — routing is purely `keys.len()`, never mixed within one invocation | BC-3.4.023 Invariant 3 | AC-006 |
 | A chunk failure aborts the remaining sequence (no continue-on-error) — do NOT reuse `rename --all-projects`'s per-target fail-soft shape here | BC-3.4.023 Edge Case EC-3.4.023-4 | AC-009 |
 | This path MUST NOT ship to release until the live smoke test passes | BC-3.4.023 Delivery note, DEC-280 | AC-010 (release gate, not `cargo test`) |
+| Do NOT add `sendBulkNotification` to the bulk-component body — reuse `bulk_edit_fields` as-is (the #446-live-proven composition is source of truth, not the Atlassian doc example) | BC-3.4.023 Postcondition 2 clarification (2026-08-19) | code review; AC-001 wire-shape assertion asserts the exact body key set |
 
 ## Library & Framework Requirements (MANDATORY)
 
