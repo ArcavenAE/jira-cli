@@ -6,6 +6,15 @@ definitional_count: 115   # count of `#### BC-` headings in this file
 last_updated: 2026-08-19
 source_pass: 3
 trace: |
+  - F5 feature-level wording amendment (2026-08-19, F-CS-1 — no BC added/removed/retired, no
+    count change): BC-3.4.022 gains EC-3.4.022-4 and BC-3.4.024 gains EC-3.4.024-4, each
+    documenting the all-ASCII-digit numeric-bypass wire shape (§8.4/BC-8.1.008/BC-8.4.001) the
+    code already implements but the prior BC text omitted: single-key edit wires a numeric
+    `--component` value as `{"id":"<n>"}` inside the `add`/`remove` object
+    (`src/cli/issue/edit.rs`, `ComponentRefKind::Id`/`ComponentRef::Id`/`to_wire_object`);
+    create wires it as an `{"id":"<n>"}` array element in `fields.components`
+    (`src/cli/issue/create.rs::resolve_create_components`). Mirrors BC-3.4.023's existing
+    numeric-bypass wording for the bulk path.
   - F2 targeted wording amendment (2026-08-19, S-605-2, post-research clarification — no BC
     added/removed/retired, no count change): BC-3.4.023 CLARIFIED — Postcondition 2 gains an
     explicit note that the wire body deliberately OMITS `sendBulkNotification` (the Atlassian
@@ -2468,6 +2477,17 @@ bare-string vs. components' object form).
   EC-3.4.022-1.
 - EC-3.4.022-3: Unknown component name → exit 64 via §8.4 (BC-8.4.002), zero PUT calls (the
   editmeta/list-components GET used for resolution is the only HTTP that fires).
+- EC-3.4.022-4 **[CLARIFIED 2026-08-19, feature-level F5, F-CS-1]**: `--component` values are
+  not required to be names — an all-ASCII-digit `--component add:<digits>`/`remove:<digits>`
+  value (or a bare all-digit value, treated as ADD per Postcondition 1) is a component ID under
+  §8.4's numeric bypass (BC-8.1.008/BC-8.4.001) and is passed through to the wire body
+  UNCHANGED, with no name-list GET fired for resolution. On this single-key path the numeric id
+  wires as `{"id":"<n>"}` inside the `add`/`remove` object — `{"add":{"id":"<n>"}}` /
+  `{"remove":{"id":"<n>"}}` — NEVER `{"add":{"name":"<n>"}}` / `{"remove":{"name":"<n>"}}`. This
+  mirrors BC-3.4.023's existing numeric-bypass wording for the bulk path (integer `componentId`,
+  never a name/id-string object) — the object-key differs (`id` vs. `name`) because the two
+  branches of Postcondition 1's `add`/`remove` object accept either key, and a numeric-bypass
+  value is unambiguously an id, not a name.
 **Verification Properties**:
 - VP-COMPONENT-011: Single-key `--component` invocation calls `PUT /rest/api/3/issue/{key}`
   exactly once with the native `update`-verb object-form body; the bulk endpoint
@@ -2774,6 +2794,17 @@ BEFORE the POST fires — an unknown name aborts pre-flight, consistent with eve
   resolution — the guard fires at the same pre-flight point DEC-188's `--field`/
   `--on-behalf-of` checks fire, immediately after the `request_type.is_some()` dispatch-fork
   check and before any of the JSM path's own HTTP calls.
+- EC-3.4.024-4 **[CLARIFIED 2026-08-19, feature-level F5, F-CS-1]**: `--component` values on
+  `create` are not required to be names — an all-ASCII-digit `--component` value (bare, no
+  `add:`/`remove:` prefix — `create` never interprets those prefixes per Postcondition 2) is a
+  component ID under §8.4's numeric bypass (BC-8.1.008/BC-8.4.001) and is passed through
+  UNCHANGED, with no name-list GET fired for resolution. On the create path a numeric value
+  wires as an `{"id":"<n>"}` array element in `fields.components` — e.g. `jr issue create
+  --project FOO --component 10042` → `fields.components = [{"id":"10042"}]` — NEVER
+  `{"name":"10042"}`. This mirrors BC-3.4.023's existing numeric-bypass wording for the bulk
+  path (integer `componentId`, never a name/id-string object); unlike the bulk path's parsed
+  JSON integer, this single-issue POST body carries the id as a string, matching
+  BC-3.4.022's `{"id":"<n>"}` object form on the sibling single-key edit path.
 **Verification Properties**:
 - VP-COMPONENT-025: `issue create --component X --component Y` composes
   `fields.components = [{"name":"X"},{"name":"Y"}]` on the `POST /rest/api/3/issue` body

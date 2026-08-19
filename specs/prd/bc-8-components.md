@@ -3,9 +3,20 @@ context: bc-8
 title: "Component Management"
 total_bcs: 28   # brand-new file — no range-collapsed entries; total_bcs == definitional_count
 definitional_count: 28   # count of `#### BC-` headings in this file
-last_updated: 2026-08-17
+last_updated: 2026-08-19
 source_pass: F2
 trace: |
+  - v1.4.2 — F5 feature-level wording amendments (2026-08-19, component-mgmt; no BC
+    added/removed/retired, no count change, 28/28): BC-8.4.005 CLARIFIED (O-CS-1) — pins the
+    ACTUAL id-listing message all five mutating call sites emit on `ExactMultiple`
+    (`Multiple components named "<name>" found (IDs: <ids>). Pass the numeric ID directly.`)
+    in place of the prior, inaccurate deferral to BC-8.4.003's `Ambiguous` message shape.
+    BC-8.3.002 AMENDED (behavioral, human-approved) — EC-8.3.002-1 changes `rename
+    --all-projects` with zero project matches from exit 0 (silent no-op) to exit 64
+    ("not found"), matching the single-project form's not-found behavior; implementer landing
+    the matching code change in parallel. See ADR-0018 §1 for the companion O-CS-2
+    exit-code-divergence documentation note (component-family numeric-id 404: exit 64 on
+    `jr component edit/delete/rename`, exit 1 on `jr issue create/edit --component`).
   - v1.4.1 — F5 scoped-adversarial fix round (2026-08-17, component-mgmt): resolves findings
     F5-A-M1/F5-C-001 (human-adjudicated: UNION). BC-8.4.005 amended — H1 extended to state the
     `MatchResult::ExactMultiple` disposition is caller-specific; Behavior section corrected
@@ -1642,8 +1653,18 @@ EC-8.1.008-2, now explicitly extended to this fan-out form.)
    is opportunistic, not a strict "every project must have it" requirement.
 3. A project WITH a matching component gets exactly one `PUT` renaming it.
 **Edge Cases**:
-- EC-8.3.002-1: Zero projects contain a component named `OLD` → exit 0 (not an error — the
-  operation ran to completion with zero renames performed), summary reports `0 renamed`.
+- EC-8.3.002-1 **[AMENDED 2026-08-19, feature-level F5, human-approved]**: Zero projects
+  contain a component named `OLD` → exit 64 ("not found"), consistent with the single-project
+  form's (BC-8.3.001) "not found" behavior on the same typo/nonexistent-name input. **Previous
+  version (superseded, retained for audit trail):** "exit 0 (not an error — the operation ran
+  to completion with zero renames performed), summary reports `0 renamed`." That behavior
+  diverged from single-project rename, which exits 64 on an unknown `OLD` — a `--all-projects`
+  invocation with a typo'd `OLD` silently succeeded with zero renames instead of surfacing the
+  mistake. This amendment aligns the fan-out form with the single-project form: a genuinely
+  zero-match fan-out is now treated as a resolution failure, not a no-op success. This is
+  distinct from Postcondition 2 (a project WITHOUT a matching component is silently skipped
+  while at least one OTHER project DOES match — that per-project skip behavior is unchanged;
+  only the all-projects-zero-match case changes).
 - EC-8.3.002-2 **[NEW 2026-08-15, H4 fix-burst]**: `jr component rename 10042 NewName
   --all-projects` (all-digit `OLD`) → exit 64 pre-flight per Precondition 2, zero HTTP calls
   (no `list_projects`, no per-project component-list GETs). Contrast `jr component rename
@@ -2049,13 +2070,31 @@ a SINGLE, universal disposition (auto-resolve-and-proceed) for every caller. Tha
 is corrected here: `resolve_component`'s core algorithm (BC-8.4.001) does not itself decide
 what to DO with an `ExactMultiple` result — disposition is caller-specific, and the two
 caller families genuinely diverge:
-- **Mutating callers** (`component edit`/`delete`/`--move-to`'s `NAME|ID` positional; `rename`'s
-  `OLD`) FAIL CLOSED: BC-8.1.008 branch (0) routes `ExactMultiple` through BC-8.4.003's
-  ambiguity handling — exit 64, zero mutating HTTP, requiring the caller to supply a numeric id
-  to disambiguate which of the duplicate components to actually modify or delete. This mirrors
-  the established `jr requesttype fields`/`jr queue view` precedent (cross-cutting.md
-  BC-X.10.003 callers, both exit 64 on `ExactMultiple`) — an irreversible or single-target
-  mutation cannot safely guess which duplicate the user meant.
+- **Mutating callers** (`component edit`; `component delete`'s SOURCE `NAME|ID` and
+  `--move-to` TARGET; `rename`'s single-project `OLD`; `issue create --component`; `issue edit
+  --component`) FAIL CLOSED on `ExactMultiple`: exit 64, zero mutating HTTP, requiring the
+  caller to supply a numeric id to disambiguate which of the duplicate components to actually
+  modify, delete, or attach. **[CLARIFIED 2026-08-19, feature-level F5, O-CS-1]** This does NOT
+  route through BC-8.4.003's `Ambiguous` message shape — these five mutating command paths
+  (`src/cli/component.rs` ×4 call sites covering `edit`/`delete` SOURCE/`--move-to`
+  TARGET/`rename`; `src/cli/issue/edit.rs` ×2 call sites for the single-key `issue edit
+  --component` path; `src/cli/issue/create.rs` ×1 call site for `issue create --component`)
+  emit a DISTINCT, id-listing message instead, pinned here verbatim (`{name}` = the matched
+  component name, `{ids}` = comma-joined numeric ids of every candidate sharing that
+  case-insensitive name):
+  ```
+  Multiple components named "{name}" found (IDs: {ids}). Pass the numeric ID directly.
+  ```
+  This mirrors the established `jr requesttype fields` precedent (`src/cli/requesttype.rs`,
+  the byte-identical `"Multiple request types named … Pass the numeric ID directly."` shape) —
+  an irreversible or single-target mutation cannot safely guess which duplicate the user meant,
+  and the message's own wording steers the caller toward the numeric-bypass escape hatch
+  (BC-8.4.001) rather than merely reporting the ambiguity. **Previous version (superseded,
+  retained for audit trail):** "BC-8.1.008 branch (0) routes `ExactMultiple` through
+  BC-8.4.003's ambiguity handling" — this deferred to BC-8.4.003's `"Ambiguous component
+  '<input>'. Matches: <names>."` shape, which is NOT what any mutating call site actually
+  emits; the disposition (exit 64, zero mutating HTTP, fail-closed) was and remains correct,
+  only the cited message shape was wrong.
 - **Read/filter callers** (`issue list --component`, bare/`not:`/`all:` forms) UNION: per
   BC-2.1.018 Postcondition 3, BC-2.1.019 Postcondition 3, and BC-2.1.021 Postcondition 2
   (human-adjudicated 2026-08-17, F5-A-M1/F5-C-001), every id sharing the case-insensitive

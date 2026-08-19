@@ -115,6 +115,20 @@ as one decision:
    product-owner in the same cycle as this ADR revision). See BC-8.2.002 (M1) and BC-8.2.006
    (Precondition 4).
 
+   **Exit-code divergence on a nonexistent numeric id [2026-08-19, feature-level F5, O-CS-2,
+   human-approved to document]**: a nonexistent NUMERIC component id exits 64 on
+   `jr component edit`/`delete`/`rename` (the confirming `GET /rest/api/3/component/{id}`
+   described immediately above 404s, which is treated as the ordinary not-found path,
+   BC-8.1.008) but exits 1 on `jr issue create --component`/`jr issue edit --component` (no
+   confirming GET fires on those two commands — the numeric id is a plain field value, passed
+   through unresolved, and is validated server-side only when the POST/PUT itself is sent,
+   surfacing Jira's own 4xx as an ordinary `ApiError`). This is INTENTIONAL, not an
+   inconsistency to reconcile: the numeric bypass's whole rationale (Decision §1 above) is to
+   avoid an extra round-trip, and the issue-write commands deliberately do not pay for a
+   confirming GET the way the four `jr component` mutation paths do — the two families accept
+   different exit-code outcomes for the identical "id doesn't exist" input as the direct,
+   accepted cost of that asymmetric round-trip decision.
+
 2. **Caching: a new keyed-map-per-project cache family in `cache.rs`, structurally identical
    to `ProjectMeta`/`ObjectTypeAttrCache`, not the whole-file `TeamCache` shape.** Components
    are stored as `components_<profile>.json` holding `HashMap<project_key,
