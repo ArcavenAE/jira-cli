@@ -30,6 +30,43 @@ const BASE_ISSUE_FIELDS: &[&str] = &[
     "issuelinks",
 ];
 
+/// A resolved `--component` add/remove target's WIRE identity (Step-4.5
+/// Round 3, F1 fix; BC-3.4.022/BC-3.4.024, BC-8.4.001, BC-8.1.008).
+///
+/// BC-8.4.001's numeric bypass means all-ASCII-digit `--component` input is
+/// ALWAYS a component id, never a name — identical to the
+/// `component edit`/`delete`/`rename` command family convention
+/// (BC-8.1.008). This determines whether a wire entry is `{"id":...}` or
+/// `{"name":...}`. Constructed by callers (`cli::issue::edit`,
+/// `cli::issue::create`) from their own name/id resolution — this module
+/// only renders the wire shape from an already-decided `ComponentRef`.
+///
+/// Deliberately NOT confirmed against `GET /component/{id}` before use on
+/// the issue-write path — Jira validates the id on the create/edit write
+/// itself (an invalid id → Jira 4xx → exit 1, same treatment as an unknown
+/// name today). This intentionally differs from `component edit`/`delete`,
+/// which DO confirm the id first; that extra confirmation is unnecessary
+/// here because the write call itself is the validation.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub enum ComponentRef {
+    /// Wired as `{"name": <value>}`.
+    Name(String),
+    /// Wired as `{"id": <value>}`.
+    Id(String),
+}
+
+impl ComponentRef {
+    /// Render this target as the JSON object nested under the `add`/`remove`
+    /// wire-verb key (or, for the read-modify-write fallback's `adds` side,
+    /// directly as a `fields.components[]` array element).
+    pub(crate) fn to_wire_object(&self) -> Value {
+        match self {
+            ComponentRef::Name(name) => serde_json::json!({"name": name}),
+            ComponentRef::Id(id) => serde_json::json!({"id": id}),
+        }
+    }
+}
+
 /// Result of a paginated issue search, including a flag indicating whether
 /// the result set may be incomplete (caller-limit truncation OR
 /// repeated-cursor guard abort).
@@ -493,6 +530,56 @@ impl JiraClient {
         let path = format!("/rest/api/3/issue/{}", urlencoding::encode(key));
         let body = serde_json::json!({ "fields": fields });
         self.put(&path, &body).await
+    }
+
+    /// PUT `/rest/api/3/issue/{key}` with an optional native `update` object
+    /// combined with a `fields` object in ONE request (Step-4.5 Round 7,
+    /// MEDIUM-1 fix). Jira officially supports both `update` and `fields` in
+    /// one PUT as long as no single field appears in both — see
+    /// `.factory/research/S-605-1-atomic-component-field-put.md` Q1/Q3. This
+    /// codebase's only user of `update` (issue components, via
+    /// `cli::issue::edit::edit_issue_components`'s native add/remove path)
+    /// never also appears under `fields` in the same invocation — the RMW
+    /// fallback path puts `components` under `fields` INSTEAD of `update`;
+    /// the two paths are mutually exclusive per invocation (one editmeta
+    /// gate selects exactly one), so `components` never lands in both.
+    ///
+    /// This is a SINGLE request — Jira validates all fields up front, so a
+    /// field-validation error (e.g. an invalid priority) rejects the WHOLE
+    /// edit, including any component change carried in `update` or folded
+    /// into `fields` — closing the two-PUT partial-write window a prior
+    /// design had, where a separate, earlier component-only PUT could land
+    /// before a later field-only PUT failed. Atlassian publishes no broader
+    /// atomic/transactional/rollback guarantee beyond this documented
+    /// validate-then-apply behavior for validation errors (research Q2,
+    /// INCONCLUSIVE for non-validation failure modes) — do not describe this
+    /// method as providing blanket atomicity.
+    ///
+    /// `update` is included only when `Some` (a `None` omits the `"update"`
+    /// key entirely); `fields` is included only when non-empty (an empty
+    /// object is omitted, not sent as `{}`) — both to keep the wire body
+    /// byte-for-byte minimal. A `--component`-only edit therefore still
+    /// sends exactly `{"update":{"components":[...]}}` (native) or
+    /// `{"fields":{"components":[...]}}` (fallback) with no extra top-level
+    /// key, matching the single-PUT shape AC-001/004/005 assert.
+    ///
+    /// Returns `Ok(())` on HTTP 204 No Content. Any other status propagates
+    /// as an error.
+    pub async fn edit_issue_combined(
+        &self,
+        key: &str,
+        fields: Value,
+        update: Option<Value>,
+    ) -> Result<()> {
+        let mut body = serde_json::Map::new();
+        if let Some(update_val) = update {
+            body.insert("update".into(), update_val);
+        }
+        if !fields.as_object().is_some_and(|m| m.is_empty()) {
+            body.insert("fields".into(), fields);
+        }
+        let path = format!("/rest/api/3/issue/{}", urlencoding::encode(key));
+        self.put(&path, &Value::Object(body)).await
     }
 
     /// Update a single issue's labels using the `update` verb (PUT issue).

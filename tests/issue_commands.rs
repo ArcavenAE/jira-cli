@@ -1,7 +1,7 @@
 #[allow(dead_code)]
 mod common;
 
-use wiremock::matchers::{body_partial_json, method, path, query_param};
+use wiremock::matchers::{any, body_partial_json, method, path, query_param};
 use wiremock::{Mock, MockServer, ResponseTemplate};
 
 #[tokio::test]
@@ -4483,5 +4483,3635 @@ async fn test_bc_2_1_018_issue_list_component_with_jql_flag_current_behavior() {
         "project = \"FOO\" AND (status = \"Open\") AND component in (10001) ORDER BY updated DESC",
         "current behavior: --component and --jql compose via AND, neither \
          overrides the other; got jql: {jql}"
+    );
+}
+
+// =============================================================================
+// S-605-1: `issue create --component` / `issue edit --component` (single-key)
+// =============================================================================
+//
+// 17 acceptance criteria (AC-001..AC-017) covering:
+//   - BC-3.4.022: single-key `edit --component add:/remove:` native
+//     `update`-verb wire shape + editmeta-gated read-modify-write fallback
+//     (AC-001..006)
+//   - BC-3.4.024: `create --component` bare additive body composition +
+//     the `--request-type` pre-flight guard (AC-007..009)
+//   - BC-3.4.025: resolution-mechanism invariant — ONE project component-
+//     list GET, never duplicated with editmeta (AC-010)
+//   - BC-3.4.012/013 amendments: table/JSON changed-fields echo, prefixed
+//     and bare-normalized (AC-011..013)
+//   - BC-3.4.017 amendment: Gate B's flag-overlap set gains `components`
+//     as its 5th member (AC-014)
+//   - BC-3.4.020 amendment: `--label` + `--component` mutual exclusion
+//     (AC-015)
+//   - BC-3.4.021 amendment: `--dry-run` `plannedChanges.components` +
+//     table preview, bare-normalization parity with the live echo
+//     (AC-016..017)
+//
+// These tests were authored red against `todo!()` stubs in
+// `format::normalize_component_changes`, `format::format_component_changes_echo`,
+// `format::component_changes_dry_run_json`, `format::ComponentAction::as_wire_str`,
+// `edit_issue_components`, `resolve_create_components`, and three inline guard
+// sites in `edit.rs`/`create.rs` — every cited call site is now implemented.
+// See story `.factory/stories/S-605-1-issue-component-single-key.md`.
+//
+// Step-4.5 Round 1 review (F1/F2) added three further tests below AC-017:
+// dry-run --component now resolves names (exits 64 on an unresolvable name,
+// same as the live path) instead of skipping resolution, and the components
+// echo/dry-run preview render in CLI input order rather than the wire's
+// ADD-before-REMOVE reordering (labels precedent, EC-3.4.020-8).
+
+/// Shared harness: plain `jr` CLI invocation, no XDG isolation needed —
+/// component resolution has no cache wired into this read/resolve path yet
+/// (CLAUDE.md `cache.rs` note: the ADR-0018 §2 components-cache functions
+/// exist but are "not yet wired into any read/resolve path this cycle").
+fn s605_1_cmd(server_uri: &str) -> assert_cmd::Command {
+    let mut cmd = assert_cmd::Command::cargo_bin("jr").unwrap();
+    cmd.env("JR_BASE_URL", server_uri)
+        .env("JR_AUTH_HEADER", "Basic dGVzdDp0ZXN0");
+    cmd
+}
+
+/// Mounts `GET /rest/api/3/project/{key}/components` (the §8.4 resolver's
+/// candidate-list fetch, BC-8.4.001/BC-3.4.025) with the given component
+/// fixtures. Mirrors `s606_1_mock_components`.
+async fn s605_1_mock_components(
+    server: &MockServer,
+    key: &str,
+    components: Vec<serde_json::Value>,
+) {
+    Mock::given(method("GET"))
+        .and(path(format!("/rest/api/3/project/{key}/components")))
+        .respond_with(
+            ResponseTemplate::new(200)
+                .set_body_json(common::fixtures::component_list_response(components)),
+        )
+        .mount(server)
+        .await;
+}
+
+/// Mounts `GET /rest/api/3/issue/{key}/editmeta`, scoped to the
+/// `components` field only, with the given `operations` list (BC-3.4.022
+/// Postcondition 3's wire-shape-decision gate — `&["add","remove"]` selects
+/// the native path, anything else selects the read-modify-write fallback).
+async fn s605_1_mock_editmeta(server: &MockServer, key: &str, operations: &[&str]) {
+    Mock::given(method("GET"))
+        .and(path(format!("/rest/api/3/issue/{key}/editmeta")))
+        .respond_with(
+            ResponseTemplate::new(200)
+                .set_body_json(common::fixtures::editmeta_components_response(operations)),
+        )
+        .mount(server)
+        .await;
+}
+
+/// Mounts a decoy `GET /rest/api/3/project/{key}/components` for a
+/// DIFFERENT project than the one under test, `.expect(0)` — the
+/// cross-project non-collision fixture the story's Edge Cases section
+/// calls for ("`--component` name resolution reuses the SAME resolver
+/// contract as `component edit`/`delete` … a cross-project non-collision
+/// fixture … scoped to the issue-write call sites"). Proves
+/// `resolve_component`'s project scoping is honored end-to-end: a
+/// same-named component in another project must never be queried, let
+/// alone matched, by an issue-write `--component` resolution.
+async fn s605_1_mock_decoy_project_components(server: &MockServer, decoy_key: &str) {
+    Mock::given(method("GET"))
+        .and(path(format!("/rest/api/3/project/{decoy_key}/components")))
+        .respond_with(ResponseTemplate::new(200).set_body_json(
+            common::fixtures::component_list_response(vec![common::fixtures::component_response(
+                "99001", "Backend", None, None, None,
+            )]),
+        ))
+        .expect(0)
+        .mount(server)
+        .await;
+}
+
+/// Captures every request received at `PUT /rest/api/3/issue/{key}`,
+/// parsed as JSON, in arrival order. Deliberately does NOT filter by body
+/// shape — a stray extra PUT (e.g. `handle_edit`'s generic post-component
+/// `client.edit_issue(key, fields)` call firing with an empty `fields`
+/// object when `--component` is the only flag supplied) must be visible
+/// here, not silently swallowed by a shape filter.
+async fn s605_1_captured_puts(server: &MockServer, key: &str) -> Vec<serde_json::Value> {
+    let received = server.received_requests().await.unwrap();
+    let want_path = format!("/rest/api/3/issue/{key}");
+    received
+        .iter()
+        .filter(|r| r.method == wiremock::http::Method::PUT && r.url.path() == want_path)
+        .map(|r| {
+            serde_json::from_slice(&r.body)
+                .unwrap_or_else(|e| panic!("PUT body must be valid JSON: {e}"))
+        })
+        .collect()
+}
+
+/// Captures every request received at `POST /rest/api/3/issue`, parsed as
+/// JSON, in arrival order.
+async fn s605_1_captured_posts(server: &MockServer) -> Vec<serde_json::Value> {
+    let received = server.received_requests().await.unwrap();
+    received
+        .iter()
+        .filter(|r| r.method == wiremock::http::Method::POST && r.url.path() == "/rest/api/3/issue")
+        .map(|r| {
+            serde_json::from_slice(&r.body)
+                .unwrap_or_else(|e| panic!("POST body must be valid JSON: {e}"))
+        })
+        .collect()
+}
+
+// ── AC-001 (BC-3.4.022 Postcondition 1 — native wire shape) ────────────────
+
+/// `jr issue edit FOO-1 --component add:Backend --component remove:Frontend`
+/// (single key) → exactly ONE `PUT /rest/api/3/issue/FOO-1` with body
+/// `{"update":{"components":[{"add":{"name":"Backend"}},
+/// {"remove":{"name":"Frontend"}}]}}` (VP-COMPONENT-011). The bulk endpoint
+/// is never hit. Also proves cross-project non-collision: a decoy project
+/// "BAR" carrying a same-named "Backend" component is never queried.
+#[tokio::test]
+async fn test_bc_3_4_022_issue_edit_component_add_remove_native_wire_shape() {
+    let server = MockServer::start().await;
+
+    s605_1_mock_components(
+        &server,
+        "FOO",
+        vec![
+            common::fixtures::component_response("10001", "Backend", None, None, None),
+            common::fixtures::component_response("10002", "Frontend", None, None, None),
+        ],
+    )
+    .await;
+    s605_1_mock_decoy_project_components(&server, "BAR").await;
+    s605_1_mock_editmeta(&server, "FOO-1", &["add", "remove"]).await;
+
+    Mock::given(method("PUT"))
+        .and(path("/rest/api/3/issue/FOO-1"))
+        .respond_with(ResponseTemplate::new(204))
+        .expect(1)
+        .mount(&server)
+        .await;
+
+    // VP-COMPONENT-011: the bulk endpoint is never hit by the single-key path.
+    Mock::given(method("POST"))
+        .and(path("/rest/api/3/bulk/issues/fields"))
+        .respond_with(ResponseTemplate::new(501).set_body_string("must not be called"))
+        .expect(0)
+        .mount(&server)
+        .await;
+
+    let output = s605_1_cmd(&server.uri())
+        .args([
+            "--no-input",
+            "issue",
+            "edit",
+            "FOO-1",
+            "--component",
+            "add:Backend",
+            "--component",
+            "remove:Frontend",
+        ])
+        .output()
+        .unwrap();
+
+    let stderr = String::from_utf8_lossy(&output.stderr);
+    assert!(
+        output.status.success(),
+        "AC-001: expected exit 0; stderr={stderr}"
+    );
+
+    let puts = s605_1_captured_puts(&server, "FOO-1").await;
+    assert_eq!(
+        puts.len(),
+        1,
+        "AC-001: expected exactly 1 PUT to FOO-1; got {puts:?}"
+    );
+    assert_eq!(
+        puts[0],
+        serde_json::json!({
+            "update": {
+                "components": [
+                    {"add": {"name": "Backend"}},
+                    {"remove": {"name": "Frontend"}}
+                ]
+            }
+        }),
+        "AC-001: PUT body must be the exact native update-verb shape"
+    );
+}
+
+// ── AC-002 (BC-3.4.022 Edge Case EC-3.4.022-2 — bare treated as ADD) ───────
+
+/// `--component Backend` (bare, no prefix) → `{"add":{"name":"Backend"}}`.
+#[tokio::test]
+async fn test_bc_3_4_022_issue_edit_bare_component_treated_as_add() {
+    let server = MockServer::start().await;
+
+    s605_1_mock_components(
+        &server,
+        "FOO",
+        vec![common::fixtures::component_response(
+            "10001", "Backend", None, None, None,
+        )],
+    )
+    .await;
+    s605_1_mock_editmeta(&server, "FOO-1", &["add", "remove"]).await;
+
+    Mock::given(method("PUT"))
+        .and(path("/rest/api/3/issue/FOO-1"))
+        .respond_with(ResponseTemplate::new(204))
+        .expect(1)
+        .mount(&server)
+        .await;
+
+    let output = s605_1_cmd(&server.uri())
+        .args([
+            "--no-input",
+            "issue",
+            "edit",
+            "FOO-1",
+            "--component",
+            "Backend",
+        ])
+        .output()
+        .unwrap();
+
+    let stderr = String::from_utf8_lossy(&output.stderr);
+    assert!(
+        output.status.success(),
+        "AC-002: expected exit 0; stderr={stderr}"
+    );
+
+    let puts = s605_1_captured_puts(&server, "FOO-1").await;
+    assert_eq!(
+        puts.len(),
+        1,
+        "AC-002: expected exactly 1 PUT; got {puts:?}"
+    );
+    assert_eq!(
+        puts[0],
+        serde_json::json!({
+            "update": {
+                "components": [
+                    {"add": {"name": "Backend"}}
+                ]
+            }
+        }),
+        "AC-002: bare --component must normalize to an ADD element, never a bare string"
+    );
+}
+
+// ── AC-003 (BC-3.4.022 Postcondition 2 — ADD-before-REMOVE ordering) ──────
+
+/// `--component remove:Gadget --component add:Widget` (remove specified
+/// FIRST on the CLI) → the wire `components` array still emits the ADD
+/// element (Widget) before the REMOVE element (Gadget), regardless of CLI
+/// input order.
+#[tokio::test]
+async fn test_bc_3_4_022_issue_edit_component_add_precedes_remove_regardless_of_cli_order() {
+    let server = MockServer::start().await;
+
+    s605_1_mock_components(
+        &server,
+        "FOO",
+        vec![
+            common::fixtures::component_response("10001", "Widget", None, None, None),
+            common::fixtures::component_response("10002", "Gadget", None, None, None),
+        ],
+    )
+    .await;
+    s605_1_mock_editmeta(&server, "FOO-1", &["add", "remove"]).await;
+
+    Mock::given(method("PUT"))
+        .and(path("/rest/api/3/issue/FOO-1"))
+        .respond_with(ResponseTemplate::new(204))
+        .expect(1)
+        .mount(&server)
+        .await;
+
+    let output = s605_1_cmd(&server.uri())
+        .args([
+            "--no-input",
+            "issue",
+            "edit",
+            "FOO-1",
+            "--component",
+            "remove:Gadget",
+            "--component",
+            "add:Widget",
+        ])
+        .output()
+        .unwrap();
+
+    let stderr = String::from_utf8_lossy(&output.stderr);
+    assert!(
+        output.status.success(),
+        "AC-003: expected exit 0; stderr={stderr}"
+    );
+
+    let puts = s605_1_captured_puts(&server, "FOO-1").await;
+    assert_eq!(
+        puts.len(),
+        1,
+        "AC-003: expected exactly 1 PUT; got {puts:?}"
+    );
+    assert_eq!(
+        puts[0],
+        serde_json::json!({
+            "update": {
+                "components": [
+                    {"add": {"name": "Widget"}},
+                    {"remove": {"name": "Gadget"}}
+                ]
+            }
+        }),
+        "AC-003: ADD element must precede REMOVE element regardless of CLI order"
+    );
+}
+
+// ── AC-004 (BC-3.4.022 Postcondition 3 — editmeta native path) ────────────
+
+/// editmeta advertises `fields.components.operations` containing
+/// `add`/`remove` → the native `update`-verb PUT fires directly, ZERO
+/// extra `GET /rest/api/3/issue/{key}` for current components.
+#[tokio::test]
+async fn test_bc_3_4_022_issue_edit_component_editmeta_native_path() {
+    let server = MockServer::start().await;
+
+    s605_1_mock_components(
+        &server,
+        "FOO",
+        vec![common::fixtures::component_response(
+            "10001", "Backend", None, None, None,
+        )],
+    )
+    .await;
+    s605_1_mock_editmeta(&server, "FOO-1", &["add", "remove"]).await;
+
+    Mock::given(method("PUT"))
+        .and(path("/rest/api/3/issue/FOO-1"))
+        .respond_with(ResponseTemplate::new(204))
+        .expect(1)
+        .mount(&server)
+        .await;
+
+    // AC-004's core assertion: zero extra full-issue GET for the fallback's
+    // current-components read — the native path never needs it.
+    Mock::given(method("GET"))
+        .and(path("/rest/api/3/issue/FOO-1"))
+        .respond_with(
+            ResponseTemplate::new(200)
+                .set_body_json(common::fixtures::issue_response("FOO-1", "Test", "To Do")),
+        )
+        .expect(0)
+        .mount(&server)
+        .await;
+
+    let output = s605_1_cmd(&server.uri())
+        .args([
+            "--no-input",
+            "issue",
+            "edit",
+            "FOO-1",
+            "--component",
+            "add:Backend",
+        ])
+        .output()
+        .unwrap();
+
+    let stderr = String::from_utf8_lossy(&output.stderr);
+    assert!(
+        output.status.success(),
+        "AC-004: expected exit 0; stderr={stderr}"
+    );
+
+    let puts = s605_1_captured_puts(&server, "FOO-1").await;
+    assert_eq!(
+        puts.len(),
+        1,
+        "AC-004: expected exactly 1 PUT; got {puts:?}"
+    );
+    assert_eq!(
+        puts[0],
+        serde_json::json!({
+            "update": {
+                "components": [
+                    {"add": {"name": "Backend"}}
+                ]
+            }
+        })
+    );
+}
+
+// ── AC-005 (BC-3.4.022 Postcondition 3 — read-modify-write fallback) ──────
+
+/// editmeta does NOT advertise `add`/`remove` for `components` (only
+/// `set`) → `jr` GETs current `fields.components`, computes the new full
+/// array client-side (existing components + newly-resolved adds, existing
+/// order preserved, new adds appended), and `PUT`s via the `set` verb
+/// `{"fields":{"components":[...]}}`. MED-1 fix (Step-4.5 Round 4): a
+/// RETAINED existing component is re-emitted by IDENTITY -- `{"id":...}`
+/// when it has one (the normal case for a real Jira component) -- not by
+/// bare name, since Jira allows multiple same-named components and a bare
+/// name is ambiguous on the wire. The newly-added component ("Backend",
+/// resolved from a NAME input) is unaffected and still wires as
+/// `{"name":...}`.
+#[tokio::test]
+async fn test_bc_3_4_022_issue_edit_component_editmeta_fallback_read_modify_write() {
+    let server = MockServer::start().await;
+
+    s605_1_mock_components(
+        &server,
+        "FOO",
+        vec![common::fixtures::component_response(
+            "10001", "Backend", None, None, None,
+        )],
+    )
+    .await;
+    // editmeta advertises ONLY "set" — no add/remove — so the fallback path
+    // must fire.
+    s605_1_mock_editmeta(&server, "FOO-1", &["set"]).await;
+
+    // MED-1: the existing retained component carries a concrete id
+    // ("30001") so the assertion below can pin the exact identity-based
+    // re-emission -- {"id":"30001"}, not the ambiguous {"name":"Existing"}.
+    let mut issue_with_existing = common::fixtures::issue_response("FOO-1", "Test", "To Do");
+    issue_with_existing["fields"]["components"] = serde_json::json!([
+        {"name": "Existing", "id": "30001"}
+    ]);
+    Mock::given(method("GET"))
+        .and(path("/rest/api/3/issue/FOO-1"))
+        .respond_with(ResponseTemplate::new(200).set_body_json(issue_with_existing))
+        .expect(1)
+        .mount(&server)
+        .await;
+
+    Mock::given(method("PUT"))
+        .and(path("/rest/api/3/issue/FOO-1"))
+        .respond_with(ResponseTemplate::new(204))
+        .expect(1)
+        .mount(&server)
+        .await;
+
+    let output = s605_1_cmd(&server.uri())
+        .args([
+            "--no-input",
+            "issue",
+            "edit",
+            "FOO-1",
+            "--component",
+            "add:Backend",
+        ])
+        .output()
+        .unwrap();
+
+    let stderr = String::from_utf8_lossy(&output.stderr);
+    assert!(
+        output.status.success(),
+        "AC-005: expected exit 0; stderr={stderr}"
+    );
+
+    let puts = s605_1_captured_puts(&server, "FOO-1").await;
+    assert_eq!(
+        puts.len(),
+        1,
+        "AC-005: expected exactly 1 PUT; got {puts:?}"
+    );
+    assert_eq!(
+        puts[0],
+        serde_json::json!({
+            "fields": {
+                "components": [
+                    {"id": "30001"},
+                    {"name": "Backend"}
+                ]
+            }
+        }),
+        "AC-005 (MED-1): fallback PUT must use the set-verb fields.components \
+         shape, with the retained existing component re-emitted by IDENTITY \
+         ({{\"id\":\"30001\"}}, not bare name) and the newly-resolved add \
+         appended by its own resolved shape"
+    );
+}
+
+// ── AC-006 (BC-3.4.022 Edge Case EC-3.4.022-3 — unknown name, zero PUT) ───
+
+/// Unknown component name → exit 64 via §8.4 (BC-8.4.002), ZERO `PUT`
+/// calls (the editmeta/list-components GET used for resolution is the
+/// only HTTP that fires).
+#[tokio::test]
+async fn test_bc_3_4_022_issue_edit_unknown_component_zero_put() {
+    let server = MockServer::start().await;
+
+    s605_1_mock_components(
+        &server,
+        "FOO",
+        vec![
+            common::fixtures::component_response("10001", "Backend", None, None, None),
+            common::fixtures::component_response("10002", "Frontend", None, None, None),
+        ],
+    )
+    .await;
+    // Mounted defensively — the resolution-vs-editmeta call ordering is not
+    // pinned by the BC, so this must not become a spurious failure mode
+    // regardless of which the implementation checks first.
+    s605_1_mock_editmeta(&server, "FOO-1", &["add", "remove"]).await;
+
+    Mock::given(method("PUT"))
+        .and(path("/rest/api/3/issue/FOO-1"))
+        .respond_with(ResponseTemplate::new(204))
+        .expect(0)
+        .mount(&server)
+        .await;
+
+    let output = s605_1_cmd(&server.uri())
+        .args([
+            "--no-input",
+            "issue",
+            "edit",
+            "FOO-1",
+            "--component",
+            "add:Nonexistent",
+        ])
+        .output()
+        .unwrap();
+
+    let stderr = String::from_utf8_lossy(&output.stderr);
+    assert_eq!(
+        output.status.code(),
+        Some(64),
+        "AC-006: expected exit 64; stderr={stderr}"
+    );
+    assert!(
+        stderr.contains(
+            "Component 'Nonexistent' not found in project FOO. Available: Backend, Frontend."
+        ),
+        "AC-006: expected BC-8.4.002 canonical not-found message; stderr={stderr}"
+    );
+}
+
+// ── AC-007 (BC-3.4.024 Postcondition 1 — create body composition) ─────────
+
+/// `jr issue create --project FOO --component Backend --component Frontend`
+/// → `fields.components = [{"name":"Backend"},{"name":"Frontend"}]`, CLI
+/// input order. Also proves cross-project non-collision via a decoy "BAR"
+/// project.
+#[tokio::test]
+async fn test_bc_3_4_024_issue_create_component_body_composition() {
+    let server = MockServer::start().await;
+
+    s605_1_mock_components(
+        &server,
+        "FOO",
+        vec![
+            common::fixtures::component_response("10001", "Backend", None, None, None),
+            common::fixtures::component_response("10002", "Frontend", None, None, None),
+        ],
+    )
+    .await;
+    s605_1_mock_decoy_project_components(&server, "BAR").await;
+
+    Mock::given(method("POST"))
+        .and(path("/rest/api/3/issue"))
+        .respond_with(
+            ResponseTemplate::new(201)
+                .set_body_json(common::fixtures::create_issue_response("FOO-1")),
+        )
+        .expect(1)
+        .mount(&server)
+        .await;
+
+    let output = s605_1_cmd(&server.uri())
+        .args([
+            "--no-input",
+            "issue",
+            "create",
+            "--project",
+            "FOO",
+            "--type",
+            "Task",
+            "--summary",
+            "Test create components",
+            "--component",
+            "Backend",
+            "--component",
+            "Frontend",
+        ])
+        .output()
+        .unwrap();
+
+    let stderr = String::from_utf8_lossy(&output.stderr);
+    assert!(
+        output.status.success(),
+        "AC-007: expected exit 0; stderr={stderr}"
+    );
+
+    let posts = s605_1_captured_posts(&server).await;
+    assert_eq!(
+        posts.len(),
+        1,
+        "AC-007: expected exactly 1 POST; got {posts:?}"
+    );
+    assert_eq!(
+        posts[0]["fields"]["components"],
+        serde_json::json!([{"name": "Backend"}, {"name": "Frontend"}]),
+        "AC-007: fields.components must be object-with-name form, CLI input order"
+    );
+}
+
+// ── AC-008 (BC-3.4.024 Edge Case EC-3.4.024-2 — no prefix interpretation) ─
+
+/// `jr issue create --project FOO --component add:Backend` → the resolver
+/// attempts to match a component LITERALLY named `"add:Backend"` →
+/// unknown-name exit 64 (prefix grammar is `edit`-only).
+#[tokio::test]
+async fn test_bc_3_4_024_issue_create_component_no_prefix_interpretation() {
+    let server = MockServer::start().await;
+
+    s605_1_mock_components(
+        &server,
+        "FOO",
+        vec![
+            common::fixtures::component_response("10001", "Backend", None, None, None),
+            common::fixtures::component_response("10002", "Frontend", None, None, None),
+        ],
+    )
+    .await;
+
+    Mock::given(method("POST"))
+        .and(path("/rest/api/3/issue"))
+        .respond_with(ResponseTemplate::new(501).set_body_string("must not be called"))
+        .expect(0)
+        .mount(&server)
+        .await;
+
+    let output = s605_1_cmd(&server.uri())
+        .args([
+            "--no-input",
+            "issue",
+            "create",
+            "--project",
+            "FOO",
+            "--type",
+            "Task",
+            "--summary",
+            "Test no prefix",
+            "--component",
+            "add:Backend",
+        ])
+        .output()
+        .unwrap();
+
+    let stderr = String::from_utf8_lossy(&output.stderr);
+    assert_eq!(
+        output.status.code(),
+        Some(64),
+        "AC-008: expected exit 64; stderr={stderr}"
+    );
+    assert!(
+        stderr.contains(
+            "Component 'add:Backend' not found in project FOO. Available: Backend, Frontend."
+        ),
+        "AC-008: 'add:Backend' must be resolved LITERALLY (no prefix stripping on create); stderr={stderr}"
+    );
+}
+
+// ── AC-009 (BC-3.4.024 Postcondition 3 / EC-3.4.024-3 — request-type guard) ─
+
+/// `jr issue create --request-type "IT Request" --component Backend` →
+/// exit 64, stderr names both `--component` and `--request-type`, ZERO
+/// HTTP calls (no service-desk lookup, no RT-id resolution, no component
+/// resolution).
+#[tokio::test]
+async fn test_bc_3_4_024_issue_create_component_request_type_guard_zero_http() {
+    let server = MockServer::start().await;
+
+    // Strongest zero-HTTP guarantee: catch-all .expect(0) for ANY request.
+    Mock::given(any())
+        .respond_with(ResponseTemplate::new(500).set_body_string("must not be called"))
+        .expect(0)
+        .mount(&server)
+        .await;
+
+    let output = s605_1_cmd(&server.uri())
+        .args([
+            "--no-input",
+            "issue",
+            "create",
+            "--request-type",
+            "IT Request",
+            "--component",
+            "Backend",
+        ])
+        .output()
+        .unwrap();
+
+    let stderr = String::from_utf8_lossy(&output.stderr);
+    assert_eq!(
+        output.status.code(),
+        Some(64),
+        "AC-009: expected exit 64; stderr={stderr}"
+    );
+    assert!(
+        stderr.contains("--component"),
+        "AC-009: stderr must name --component; stderr={stderr}"
+    );
+    assert!(
+        stderr.contains("--request-type"),
+        "AC-009: stderr must name --request-type; stderr={stderr}"
+    );
+    // Step-4.5 Round 6 (INFO, Lens C): BC-3.4.024's Behavior Summary
+    // requires the guard to "suggest a follow-up `jr issue edit
+    // --component`" (SOUL: "always suggest what to do next") -- pin the
+    // exact suggestion substring the code emits, not just that the two
+    // flags are named.
+    assert!(
+        stderr.contains("`jr issue edit --component`"),
+        "AC-009: stderr must suggest the follow-up `jr issue edit \
+         --component` path per BC-3.4.024's Behavior Summary; stderr={stderr}"
+    );
+}
+
+// ── AC-010 (BC-3.4.025 Invariant 1 — one GET, not duplicated) ─────────────
+
+/// Within one `issue create --component X --component Y` invocation, the
+/// project component-list GET fires EXACTLY once — never duplicated (not
+/// once per `--component` value, and never duplicated with an editmeta
+/// GET — `create` never consults editmeta at all).
+#[tokio::test]
+async fn test_bc_3_4_025_issue_create_component_resolution_one_get_not_duplicated() {
+    let server = MockServer::start().await;
+
+    Mock::given(method("GET"))
+        .and(path("/rest/api/3/project/FOO/components"))
+        .respond_with(ResponseTemplate::new(200).set_body_json(
+            common::fixtures::component_list_response(vec![
+                common::fixtures::component_response("10001", "Backend", None, None, None),
+                common::fixtures::component_response("10002", "Frontend", None, None, None),
+            ]),
+        ))
+        .expect(1)
+        .mount(&server)
+        .await;
+
+    // Step-4.5 Round 2 LOW-1: the prior decoy here mounted
+    // `GET /rest/api/3/issue/createmeta/FOO/issuetypes/components` with
+    // `.expect(0)` to "prove create never consults editmeta" -- but that path
+    // is not the real editmeta shape (`GET /rest/api/3/issue/{key}/editmeta`)
+    // and no create code path could ever construct or call it (create has no
+    // issue key before the POST succeeds), so the guard passed vacuously
+    // under every implementation. There is no real editmeta-shaped path to
+    // repoint the decoy at (no key exists pre-POST), so it is deleted rather
+    // than fabricated at a fake path -- the load-bearing `.expect(1)` on the
+    // component-list GET above is what actually proves the resolution
+    // mechanism (BC-3.4.025), and `.expect(1)` on the POST below is the only
+    // other HTTP call this invocation may make.
+    Mock::given(method("POST"))
+        .and(path("/rest/api/3/issue"))
+        .respond_with(
+            ResponseTemplate::new(201)
+                .set_body_json(common::fixtures::create_issue_response("FOO-1")),
+        )
+        .expect(1)
+        .mount(&server)
+        .await;
+
+    let output = s605_1_cmd(&server.uri())
+        .args([
+            "--no-input",
+            "issue",
+            "create",
+            "--project",
+            "FOO",
+            "--type",
+            "Task",
+            "--summary",
+            "Test one GET",
+            "--component",
+            "Backend",
+            "--component",
+            "Frontend",
+        ])
+        .output()
+        .unwrap();
+
+    let stderr = String::from_utf8_lossy(&output.stderr);
+    assert!(
+        output.status.success(),
+        "AC-010: expected exit 0; stderr={stderr}"
+    );
+    // `.expect(1)` on the component-list GET mock verifies the exactly-once
+    // invariant on server drop.
+}
+
+// ── AC-011 (BC-3.4.012 amendment — table echo, prefixed) ──────────────────
+
+/// Single-key success (table mode) with `--component add:X --component
+/// remove:Y` → stderr contains `  components → add:X, remove:Y`.
+#[tokio::test]
+async fn test_bc_3_4_012_issue_edit_component_table_echo_prefixed() {
+    let server = MockServer::start().await;
+
+    s605_1_mock_components(
+        &server,
+        "FOO",
+        vec![
+            common::fixtures::component_response("10001", "Backend", None, None, None),
+            common::fixtures::component_response("10002", "Frontend", None, None, None),
+        ],
+    )
+    .await;
+    s605_1_mock_editmeta(&server, "FOO-1", &["add", "remove"]).await;
+    Mock::given(method("PUT"))
+        .and(path("/rest/api/3/issue/FOO-1"))
+        .respond_with(ResponseTemplate::new(204))
+        .expect(1)
+        .mount(&server)
+        .await;
+
+    let output = s605_1_cmd(&server.uri())
+        .args([
+            "--no-input",
+            "issue",
+            "edit",
+            "FOO-1",
+            "--component",
+            "add:Backend",
+            "--component",
+            "remove:Frontend",
+        ])
+        .output()
+        .unwrap();
+
+    let stderr = String::from_utf8_lossy(&output.stderr);
+    assert!(
+        output.status.success(),
+        "AC-011: expected exit 0; stderr={stderr}"
+    );
+    assert!(
+        stderr.contains("  components \u{2192} add:Backend, remove:Frontend"),
+        "AC-011: expected the components echo line verbatim; stderr={stderr}"
+    );
+}
+
+// ── AC-012 (BC-3.4.012 EC-3.4.012-17 — bare normalization) ────────────────
+
+/// `--component Backend` (bare) → stderr echo is `  components →
+/// add:Backend`, NOT `  components → Backend`.
+#[tokio::test]
+async fn test_bc_3_4_012_issue_edit_component_table_echo_bare_normalized_to_add() {
+    let server = MockServer::start().await;
+
+    s605_1_mock_components(
+        &server,
+        "FOO",
+        vec![common::fixtures::component_response(
+            "10001", "Backend", None, None, None,
+        )],
+    )
+    .await;
+    s605_1_mock_editmeta(&server, "FOO-1", &["add", "remove"]).await;
+    Mock::given(method("PUT"))
+        .and(path("/rest/api/3/issue/FOO-1"))
+        .respond_with(ResponseTemplate::new(204))
+        .expect(1)
+        .mount(&server)
+        .await;
+
+    let output = s605_1_cmd(&server.uri())
+        .args([
+            "--no-input",
+            "issue",
+            "edit",
+            "FOO-1",
+            "--component",
+            "Backend",
+        ])
+        .output()
+        .unwrap();
+
+    let stderr = String::from_utf8_lossy(&output.stderr);
+    assert!(
+        output.status.success(),
+        "AC-012: expected exit 0; stderr={stderr}"
+    );
+    assert!(
+        stderr.contains("  components \u{2192} add:Backend"),
+        "AC-012: bare input must normalize to 'add:Backend' in the echo; stderr={stderr}"
+    );
+    assert!(
+        !stderr.contains("  components \u{2192} Backend\n")
+            && !stderr.trim_end().ends_with("components \u{2192} Backend"),
+        "AC-012: echo must never render the bare, unprefixed name; stderr={stderr}"
+    );
+}
+
+// ── AC-013 (BC-3.4.013 amendment / EC-3.4.013-14 — JSON echo) ─────────────
+
+/// `--component Backend --output json` (bare) →
+/// `changed_fields["components"] == "add:Backend"` — a STRING, not a JSON
+/// array.
+#[tokio::test]
+async fn test_bc_3_4_013_issue_edit_component_json_echo_normalized_string() {
+    let server = MockServer::start().await;
+
+    s605_1_mock_components(
+        &server,
+        "FOO",
+        vec![common::fixtures::component_response(
+            "10001", "Backend", None, None, None,
+        )],
+    )
+    .await;
+    s605_1_mock_editmeta(&server, "FOO-1", &["add", "remove"]).await;
+    Mock::given(method("PUT"))
+        .and(path("/rest/api/3/issue/FOO-1"))
+        .respond_with(ResponseTemplate::new(204))
+        .expect(1)
+        .mount(&server)
+        .await;
+
+    let output = s605_1_cmd(&server.uri())
+        .args([
+            "--no-input",
+            "issue",
+            "edit",
+            "FOO-1",
+            "--component",
+            "Backend",
+            "--output",
+            "json",
+        ])
+        .output()
+        .unwrap();
+
+    let stderr = String::from_utf8_lossy(&output.stderr);
+    let stdout = String::from_utf8_lossy(&output.stdout);
+    assert!(
+        output.status.success(),
+        "AC-013: expected exit 0; stderr={stderr}"
+    );
+
+    let body: serde_json::Value = serde_json::from_str(&stdout)
+        .unwrap_or_else(|e| panic!("AC-013: stdout is not valid JSON: {e}; stdout={stdout}"));
+    assert_eq!(
+        body["changed_fields"]["components"],
+        serde_json::json!("add:Backend"),
+        "AC-013: changed_fields.components must be the normalized string \
+         'add:Backend', not an array; body={body}"
+    );
+    assert!(
+        body["changed_fields"]["components"].is_string(),
+        "AC-013: changed_fields.components must be a JSON string; body={body}"
+    );
+}
+
+// ── AC-014 (BC-3.4.017 amendment / EC-3.4.017-15 — Gate B fifth field) ────
+
+/// `jr issue edit KEY1 KEY2 --component add:X --field components=Y` →
+/// exit 64 (Gate B fires for `components`, the fifth field), no HTTP.
+/// `--field Components=Y` (capitalized) triggers the same guard.
+///
+/// C-MED-1 fix (Step-4.5 Round 5): this 2-KEY input ALSO trips the C-1
+/// multi-key rejection (edit.rs, "Multi-key bulk edit doesn't yet
+/// support: --component") with the identical observable (exit 64, zero
+/// HTTP) -- so exit-code-only assertions here cannot distinguish Gate B
+/// from C-1; deleting Gate B's `components` clause would leave this test
+/// green (C-1 alone would still catch this 2-key input). Asserting the
+/// VERBATIM Gate B message closes that gap for the 2-key case; the
+/// genuinely Gate-B-only scenario (single key, where C-1 never fires) is
+/// covered separately by
+/// `test_bc_3_4_017_issue_edit_single_key_component_field_overlap_gate_b`
+/// below.
+#[tokio::test]
+async fn test_bc_3_4_017_issue_edit_bulk_component_field_overlap_gate_b() {
+    let server = MockServer::start().await;
+
+    // Strongest zero-HTTP guarantee, shared across both invocations below.
+    Mock::given(any())
+        .respond_with(ResponseTemplate::new(500).set_body_string("must not be called"))
+        .expect(0)
+        .mount(&server)
+        .await;
+
+    let lower = s605_1_cmd(&server.uri())
+        .args([
+            "--no-input",
+            "issue",
+            "edit",
+            "KEY-1",
+            "KEY-2",
+            "--component",
+            "add:X",
+            "--field",
+            "components=Y",
+        ])
+        .output()
+        .unwrap();
+    let lower_stderr = String::from_utf8_lossy(&lower.stderr);
+    assert_eq!(
+        lower.status.code(),
+        Some(64),
+        "AC-014 (lowercase 'components'): expected exit 64; stderr={lower_stderr}"
+    );
+    assert!(
+        lower_stderr.contains("components is set by both --component and --field; use only one."),
+        "C-MED-1: expected the verbatim Gate B message (distinguishing it \
+         from the C-1 multi-key rejection, which would also exit 64 on \
+         this same 2-key input); stderr={lower_stderr}"
+    );
+
+    let capitalized = s605_1_cmd(&server.uri())
+        .args([
+            "--no-input",
+            "issue",
+            "edit",
+            "KEY-1",
+            "KEY-2",
+            "--component",
+            "add:X",
+            "--field",
+            "Components=Y",
+        ])
+        .output()
+        .unwrap();
+    let cap_stderr = String::from_utf8_lossy(&capitalized.stderr);
+    assert_eq!(
+        capitalized.status.code(),
+        Some(64),
+        "AC-014 (capitalized 'Components'): expected exit 64; stderr={cap_stderr}"
+    );
+    assert!(
+        cap_stderr.contains("components is set by both --component and --field; use only one."),
+        "C-MED-1: expected the verbatim Gate B message for the capitalized \
+         'Components' variant too; stderr={cap_stderr}"
+    );
+    // `.expect(0)` on the catch-all mock verifies zero HTTP across BOTH
+    // invocations cumulatively on server drop.
+}
+
+// ── C-MED-1 — Gate B's genuinely-untested scenario: SINGLE-KEY overlap ───
+
+/// `jr issue edit FOO-1 --component add:X --field components=Y` (SINGLE
+/// key) → exit 64, the verbatim Gate B message, ZERO HTTP. Single-key
+/// input never reaches the C-1 multi-key rejection block, so Gate B is
+/// the ONLY guard preventing a --component/--field-components double-write
+/// here -- this is the scenario AC-014 (2-key input) cannot exercise.
+#[tokio::test]
+async fn test_bc_3_4_017_issue_edit_single_key_component_field_overlap_gate_b() {
+    let server = MockServer::start().await;
+
+    // Strongest zero-HTTP guarantee.
+    Mock::given(any())
+        .respond_with(ResponseTemplate::new(500).set_body_string("must not be called"))
+        .expect(0)
+        .mount(&server)
+        .await;
+
+    let output = s605_1_cmd(&server.uri())
+        .args([
+            "--no-input",
+            "issue",
+            "edit",
+            "FOO-1",
+            "--component",
+            "add:X",
+            "--field",
+            "components=Y",
+        ])
+        .output()
+        .unwrap();
+    let stderr = String::from_utf8_lossy(&output.stderr);
+    assert_eq!(
+        output.status.code(),
+        Some(64),
+        "C-MED-1 (single-key): expected exit 64; stderr={stderr}"
+    );
+    assert!(
+        stderr.contains("components is set by both --component and --field; use only one."),
+        "C-MED-1 (single-key): expected the verbatim Gate B message; stderr={stderr}"
+    );
+    // `.expect(0)` on the catch-all mock verifies zero HTTP.
+}
+
+// ── AC-015 (BC-3.4.020 amendment — label/component mutual exclusion) ──────
+
+/// `jr issue edit KEY --label add:foo --component add:bar` (single key) →
+/// exit 64, stderr contains both `"--label cannot be combined with"` and
+/// `"--component"` as separate substrings; NEITHER the label-bulk path
+/// nor the component wire path fires — zero HTTP (VP-COMPONENT-027).
+#[tokio::test]
+async fn test_bc_3_4_020_issue_edit_label_component_mutual_exclusion_zero_http() {
+    let server = MockServer::start().await;
+
+    Mock::given(any())
+        .respond_with(ResponseTemplate::new(500).set_body_string("must not be called"))
+        .expect(0)
+        .mount(&server)
+        .await;
+
+    let output = s605_1_cmd(&server.uri())
+        .args([
+            "--no-input",
+            "issue",
+            "edit",
+            "FOO-1",
+            "--label",
+            "add:foo",
+            "--component",
+            "add:bar",
+        ])
+        .output()
+        .unwrap();
+
+    let stderr = String::from_utf8_lossy(&output.stderr);
+    assert_eq!(
+        output.status.code(),
+        Some(64),
+        "AC-015: expected exit 64; stderr={stderr}"
+    );
+    assert!(
+        stderr.contains("--label cannot be combined with"),
+        "AC-015: expected the canonical conflict-block message; stderr={stderr}"
+    );
+    assert!(
+        stderr.contains("--component"),
+        "AC-015: expected --component named in the conflict message; stderr={stderr}"
+    );
+}
+
+// ── AC-016 (BC-3.4.021 amendment — dry-run JSON + table) ───────────────────
+
+/// `--dry-run --output json FOO-1 --component add:X --component remove:Y`
+/// → `plannedChanges.components == [{"action":"ADD","name":"X"},
+/// {"action":"REMOVE","name":"Y"}]`; table mode →
+/// `"  components → add:X, remove:Y"`; ZERO `PUT`/editmeta-fallback `GET`
+/// calls (VP-COMPONENT-028).
+///
+/// Step-4.5 Round 1 F1 fix: component NAME resolution (BC-8.4) DOES fire
+/// during dry-run (EC-3.4.021-20 -- it's a read-only GET) -- each of the two
+/// invocations below uses its OWN `MockServer` so the resolution GET can be
+/// pinned to EXACTLY `.expect(1)` per invocation, rather than tolerating an
+/// unbounded/absent call as the pre-F1 version of this test did.
+#[tokio::test]
+async fn test_bc_3_4_021_issue_edit_component_dry_run_json_and_table_zero_mutation() {
+    async fn mount_resolution_and_zero_mutation_guards(server: &MockServer) {
+        Mock::given(method("GET"))
+            .and(path("/rest/api/3/project/FOO/components"))
+            .respond_with(ResponseTemplate::new(200).set_body_json(
+                common::fixtures::component_list_response(vec![
+                    common::fixtures::component_response("10001", "X", None, None, None),
+                    common::fixtures::component_response("10002", "Y", None, None, None),
+                ]),
+            ))
+            .expect(1)
+            .mount(server)
+            .await;
+
+        // Zero-mutation guarantee: no PUT of any kind may occur under --dry-run.
+        Mock::given(method("PUT"))
+            .respond_with(ResponseTemplate::new(500).set_body_string("must not be called"))
+            .expect(0)
+            .mount(server)
+            .await;
+    }
+
+    let json_server = MockServer::start().await;
+    mount_resolution_and_zero_mutation_guards(&json_server).await;
+
+    let json_out = s605_1_cmd(&json_server.uri())
+        .args([
+            "--no-input",
+            "issue",
+            "edit",
+            "FOO-1",
+            "--component",
+            "add:X",
+            "--component",
+            "remove:Y",
+            "--dry-run",
+            "--output",
+            "json",
+        ])
+        .output()
+        .unwrap();
+    let json_stderr = String::from_utf8_lossy(&json_out.stderr);
+    let json_stdout = String::from_utf8_lossy(&json_out.stdout);
+    assert!(
+        json_out.status.success(),
+        "AC-016 (json): expected exit 0; stderr={json_stderr}"
+    );
+    let body: serde_json::Value = serde_json::from_str(&json_stdout).unwrap_or_else(|e| {
+        panic!("AC-016 (json): stdout is not valid JSON: {e}; stdout={json_stdout}")
+    });
+    assert_eq!(
+        body["plannedChanges"]["components"],
+        serde_json::json!([
+            {"action": "ADD", "name": "X"},
+            {"action": "REMOVE", "name": "Y"}
+        ]),
+        "AC-016 (json): plannedChanges.components must be the structured \
+         ADD/REMOVE array; body={body}"
+    );
+
+    let table_server = MockServer::start().await;
+    mount_resolution_and_zero_mutation_guards(&table_server).await;
+
+    let table_out = s605_1_cmd(&table_server.uri())
+        .args([
+            "--no-input",
+            "issue",
+            "edit",
+            "FOO-1",
+            "--component",
+            "add:X",
+            "--component",
+            "remove:Y",
+            "--dry-run",
+        ])
+        .output()
+        .unwrap();
+    let table_stderr = String::from_utf8_lossy(&table_out.stderr);
+    let table_stdout = String::from_utf8_lossy(&table_out.stdout);
+    assert!(
+        table_out.status.success(),
+        "AC-016 (table): expected exit 0; stderr={table_stderr}"
+    );
+    assert!(
+        table_stdout.contains("  components \u{2192} add:X, remove:Y"),
+        "AC-016 (table): expected the dry-run preview line verbatim; stdout={table_stdout}"
+    );
+    // `.expect(1)` on each server's resolution GET and `.expect(0)` on each
+    // server's PUT catch-all verify both invariants per-invocation.
+}
+
+// ── AC-017 (BC-3.4.021 amendment — dry-run bare normalization parity) ─────
+
+/// `jr issue edit FOO-1 --component X --dry-run` (bare) → table preview
+/// renders `"  components → add:X"` — IDENTICAL normalization to the
+/// live-edit echo (AC-012), not `"  components → X"`.
+#[tokio::test]
+async fn test_bc_3_4_021_issue_edit_component_dry_run_bare_normalization_matches_live() {
+    let server = MockServer::start().await;
+
+    // Step-4.5 Round 1 F1 fix: resolution now fires during dry-run --
+    // pinned to exactly 1 call (one invocation in this test).
+    Mock::given(method("GET"))
+        .and(path("/rest/api/3/project/FOO/components"))
+        .respond_with(ResponseTemplate::new(200).set_body_json(
+            common::fixtures::component_list_response(vec![common::fixtures::component_response(
+                "10001", "X", None, None, None,
+            )]),
+        ))
+        .expect(1)
+        .mount(&server)
+        .await;
+
+    Mock::given(method("PUT"))
+        .respond_with(ResponseTemplate::new(500).set_body_string("must not be called"))
+        .expect(0)
+        .mount(&server)
+        .await;
+
+    let output = s605_1_cmd(&server.uri())
+        .args([
+            "--no-input",
+            "issue",
+            "edit",
+            "FOO-1",
+            "--component",
+            "X",
+            "--dry-run",
+        ])
+        .output()
+        .unwrap();
+
+    let stderr = String::from_utf8_lossy(&output.stderr);
+    let stdout = String::from_utf8_lossy(&output.stdout);
+    assert!(
+        output.status.success(),
+        "AC-017: expected exit 0; stderr={stderr}"
+    );
+    assert!(
+        stdout.contains("  components \u{2192} add:X"),
+        "AC-017: bare --component must normalize to 'add:X' in the dry-run \
+         table preview, matching the live-edit echo; stdout={stdout}"
+    );
+    assert!(
+        !stdout.contains("  components \u{2192} X\n")
+            && !stdout.trim_end().ends_with("components \u{2192} X"),
+        "AC-017: dry-run preview must never render the bare, unprefixed name; stdout={stdout}"
+    );
+}
+
+// =============================================================================
+// Step-4.5 Round 1 (F1/F2) — additional tests, adjudicated against verbatim
+// BC text
+// =============================================================================
+
+// ── F1 (BC-3.4.021 EC-3.4.021-20) — dry-run unresolvable name exits 64 ────
+
+/// `jr issue edit FOO-1 --component add:Nonexistent --dry-run` → exit 64
+/// via the same BC-8.4.002 canonical not-found message the live path emits
+/// (AC-006), BEFORE any `plannedChanges` output. The resolution GET still
+/// fires (it's read-only); the mutating PUT never does.
+#[tokio::test]
+async fn test_bc_3_4_021_issue_edit_component_dry_run_unknown_name_exits_64() {
+    let server = MockServer::start().await;
+
+    Mock::given(method("GET"))
+        .and(path("/rest/api/3/project/FOO/components"))
+        .respond_with(ResponseTemplate::new(200).set_body_json(
+            common::fixtures::component_list_response(vec![common::fixtures::component_response(
+                "10001", "Backend", None, None, None,
+            )]),
+        ))
+        .expect(1)
+        .mount(&server)
+        .await;
+
+    Mock::given(method("PUT"))
+        .respond_with(ResponseTemplate::new(500).set_body_string("must not be called"))
+        .expect(0)
+        .mount(&server)
+        .await;
+
+    let output = s605_1_cmd(&server.uri())
+        .args([
+            "--no-input",
+            "issue",
+            "edit",
+            "FOO-1",
+            "--component",
+            "add:Nonexistent",
+            "--dry-run",
+        ])
+        .output()
+        .unwrap();
+
+    let stderr = String::from_utf8_lossy(&output.stderr);
+    let stdout = String::from_utf8_lossy(&output.stdout);
+    assert_eq!(
+        output.status.code(),
+        Some(64),
+        "F1: dry-run with an unresolvable component name must exit 64; stderr={stderr}"
+    );
+    assert!(
+        stderr.contains("Component 'Nonexistent' not found in project FOO. Available: Backend."),
+        "F1: expected the canonical BC-8.4.002 not-found message; stderr={stderr}"
+    );
+    assert!(
+        stdout.is_empty(),
+        "F1: stdout must be EMPTY on this exit-64 -- zero plannedChanges output \
+         (BC-3.4.021 EC-3.4.021-20); stdout={stdout}"
+    );
+}
+
+// ── F2 (BC-3.4.012/013/021 amendments) — echo/preview in CLI input order ──
+
+/// `--component remove:Y --component add:X` (remove specified FIRST on the
+/// CLI) → the table echo renders `remove:Y, add:X` -- CLI input order, NOT
+/// reordered to `add:X, remove:Y` -- while the live PUT wire body still
+/// emits ADD-before-REMOVE regardless of CLI order (AC-003 precedent).
+/// Mirrors labels' EC-3.4.020-8: only the wire reorders, never the echo.
+#[tokio::test]
+async fn test_bc_3_4_012_issue_edit_component_echo_preserves_cli_input_order() {
+    let server = MockServer::start().await;
+
+    s605_1_mock_components(
+        &server,
+        "FOO",
+        vec![
+            common::fixtures::component_response("10001", "X", None, None, None),
+            common::fixtures::component_response("10002", "Y", None, None, None),
+        ],
+    )
+    .await;
+    s605_1_mock_editmeta(&server, "FOO-1", &["add", "remove"]).await;
+
+    Mock::given(method("PUT"))
+        .and(path("/rest/api/3/issue/FOO-1"))
+        .respond_with(ResponseTemplate::new(204))
+        .expect(1)
+        .mount(&server)
+        .await;
+
+    let output = s605_1_cmd(&server.uri())
+        .args([
+            "--no-input",
+            "issue",
+            "edit",
+            "FOO-1",
+            "--component",
+            "remove:Y",
+            "--component",
+            "add:X",
+        ])
+        .output()
+        .unwrap();
+
+    let stderr = String::from_utf8_lossy(&output.stderr);
+    assert!(
+        output.status.success(),
+        "F2: expected exit 0; stderr={stderr}"
+    );
+    assert!(
+        stderr.contains("  components \u{2192} remove:Y, add:X"),
+        "F2: table echo must preserve CLI input order (remove specified \
+         first) -- NOT reordered to add:X, remove:Y; stderr={stderr}"
+    );
+
+    let puts = s605_1_captured_puts(&server, "FOO-1").await;
+    assert_eq!(puts.len(), 1, "F2: expected exactly 1 PUT; got {puts:?}");
+    assert_eq!(
+        puts[0],
+        serde_json::json!({
+            "update": {
+                "components": [
+                    {"add": {"name": "X"}},
+                    {"remove": {"name": "Y"}}
+                ]
+            }
+        }),
+        "F2: the live PUT wire body must stay ADD-before-REMOVE regardless \
+         of CLI input order -- only the echo/preview render in CLI order"
+    );
+}
+
+/// `--component remove:Y --component add:X --output json` (remove specified
+/// FIRST on the CLI) → `changed_fields["components"] == "remove:Y, add:X"`
+/// -- CLI input order, same as the table echo (BC-3.4.013 amendment:
+/// "identical format and CLI-input-order semantics to the table-mode echo").
+#[tokio::test]
+async fn test_bc_3_4_013_issue_edit_component_json_echo_preserves_cli_input_order() {
+    let server = MockServer::start().await;
+
+    s605_1_mock_components(
+        &server,
+        "FOO",
+        vec![
+            common::fixtures::component_response("10001", "X", None, None, None),
+            common::fixtures::component_response("10002", "Y", None, None, None),
+        ],
+    )
+    .await;
+    s605_1_mock_editmeta(&server, "FOO-1", &["add", "remove"]).await;
+
+    Mock::given(method("PUT"))
+        .and(path("/rest/api/3/issue/FOO-1"))
+        .respond_with(ResponseTemplate::new(204))
+        .expect(1)
+        .mount(&server)
+        .await;
+
+    let output = s605_1_cmd(&server.uri())
+        .args([
+            "--no-input",
+            "issue",
+            "edit",
+            "FOO-1",
+            "--component",
+            "remove:Y",
+            "--component",
+            "add:X",
+            "--output",
+            "json",
+        ])
+        .output()
+        .unwrap();
+
+    let stderr = String::from_utf8_lossy(&output.stderr);
+    let stdout = String::from_utf8_lossy(&output.stdout);
+    assert!(
+        output.status.success(),
+        "F2: expected exit 0; stderr={stderr}"
+    );
+    let body: serde_json::Value = serde_json::from_str(&stdout)
+        .unwrap_or_else(|e| panic!("F2: stdout is not valid JSON: {e}; stdout={stdout}"));
+    assert_eq!(
+        body["changed_fields"]["components"],
+        serde_json::json!("remove:Y, add:X"),
+        "F2: changed_fields.components must preserve CLI input order \
+         (remove specified first) -- NOT reordered to add:X, remove:Y; body={body}"
+    );
+}
+
+/// `--dry-run --component remove:Y --component add:X` (remove specified
+/// FIRST on the CLI) → `plannedChanges.components ==
+/// [{"action":"REMOVE","name":"Y"},{"action":"ADD","name":"X"}]` and the
+/// table preview renders `remove:Y, add:X` -- both in CLI input order,
+/// identical to the live echo (F2), not reordered ADD-before-REMOVE.
+#[tokio::test]
+async fn test_bc_3_4_021_issue_edit_component_dry_run_preserves_cli_input_order() {
+    async fn mount_resolution_and_zero_mutation_guards(server: &MockServer) {
+        Mock::given(method("GET"))
+            .and(path("/rest/api/3/project/FOO/components"))
+            .respond_with(ResponseTemplate::new(200).set_body_json(
+                common::fixtures::component_list_response(vec![
+                    common::fixtures::component_response("10001", "X", None, None, None),
+                    common::fixtures::component_response("10002", "Y", None, None, None),
+                ]),
+            ))
+            .expect(1)
+            .mount(server)
+            .await;
+        Mock::given(method("PUT"))
+            .respond_with(ResponseTemplate::new(500).set_body_string("must not be called"))
+            .expect(0)
+            .mount(server)
+            .await;
+    }
+
+    let json_server = MockServer::start().await;
+    mount_resolution_and_zero_mutation_guards(&json_server).await;
+
+    let json_out = s605_1_cmd(&json_server.uri())
+        .args([
+            "--no-input",
+            "issue",
+            "edit",
+            "FOO-1",
+            "--component",
+            "remove:Y",
+            "--component",
+            "add:X",
+            "--dry-run",
+            "--output",
+            "json",
+        ])
+        .output()
+        .unwrap();
+    let json_stderr = String::from_utf8_lossy(&json_out.stderr);
+    let json_stdout = String::from_utf8_lossy(&json_out.stdout);
+    assert!(
+        json_out.status.success(),
+        "F2 (json): expected exit 0; stderr={json_stderr}"
+    );
+    let body: serde_json::Value = serde_json::from_str(&json_stdout).unwrap_or_else(|e| {
+        panic!("F2 (json): stdout is not valid JSON: {e}; stdout={json_stdout}")
+    });
+    assert_eq!(
+        body["plannedChanges"]["components"],
+        serde_json::json!([
+            {"action": "REMOVE", "name": "Y"},
+            {"action": "ADD", "name": "X"}
+        ]),
+        "F2 (json): plannedChanges.components must preserve CLI input order \
+         (remove specified first); body={body}"
+    );
+
+    let table_server = MockServer::start().await;
+    mount_resolution_and_zero_mutation_guards(&table_server).await;
+
+    let table_out = s605_1_cmd(&table_server.uri())
+        .args([
+            "--no-input",
+            "issue",
+            "edit",
+            "FOO-1",
+            "--component",
+            "remove:Y",
+            "--component",
+            "add:X",
+            "--dry-run",
+        ])
+        .output()
+        .unwrap();
+    let table_stderr = String::from_utf8_lossy(&table_out.stderr);
+    let table_stdout = String::from_utf8_lossy(&table_out.stdout);
+    assert!(
+        table_out.status.success(),
+        "F2 (table): expected exit 0; stderr={table_stderr}"
+    );
+    assert!(
+        table_stdout.contains("  components \u{2192} remove:Y, add:X"),
+        "F2 (table): expected the dry-run preview line in CLI input order; \
+         stdout={table_stdout}"
+    );
+}
+
+// =============================================================================
+// Step-4.5 Round 2 — additional coverage: RMW fallback REMOVE branch (MEDIUM-1)
+// and resolver ExactMultiple/Ambiguous error branches on the edit AND create
+// paths (MEDIUM-2)
+// =============================================================================
+
+// ── MEDIUM-1 (BC-3.4.022 Postcondition 3) — RMW fallback REMOVE branch ────
+
+/// editmeta advertises ONLY `set` (no add/remove) → the read-modify-write
+/// fallback fires. `--component add:X --component remove:Y`, where the
+/// issue's CURRENT `fields.components` already contains `Y` and an
+/// untouched `Z`: the computed `set`-verb array must retain `Z`, drop `Y`,
+/// and append `X` -- `Z` first (existing, order-preserved), `X` second
+/// (newly resolved add). Prior to this test, the `current.retain(|name|
+/// !removes.contains(name))` removal computation (edit.rs) was exercised
+/// ONLY by AC-005, which passes solely `--component add:Backend` -- zero
+/// coverage on the removal path itself. A mutation inverting or deleting
+/// that `retain` predicate would have stayed green (a real data-loss risk
+/// on a fallback PUT that silently keeps a component the user asked to
+/// remove).
+#[tokio::test]
+async fn test_bc_3_4_022_issue_edit_component_fallback_remove_computes_correct_set_array() {
+    let server = MockServer::start().await;
+
+    // Project component list: X and Y must resolve (they're the CLI
+    // --component inputs); Z is pre-existing on the issue and is never
+    // resolved -- it must not need to appear in this list.
+    s605_1_mock_components(
+        &server,
+        "FOO",
+        vec![
+            common::fixtures::component_response("10001", "X", None, None, None),
+            common::fixtures::component_response("10002", "Y", None, None, None),
+        ],
+    )
+    .await;
+    // editmeta advertises ONLY "set" -- no add/remove -- so the fallback
+    // path must fire (same gate condition as AC-005).
+    s605_1_mock_editmeta(&server, "FOO-1", &["set"]).await;
+
+    Mock::given(method("GET"))
+        .and(path("/rest/api/3/issue/FOO-1"))
+        .respond_with(ResponseTemplate::new(200).set_body_json(
+            common::fixtures::issue_response_with_components("FOO-1", "Test", &["Z", "Y"]),
+        ))
+        .expect(1)
+        .mount(&server)
+        .await;
+
+    Mock::given(method("PUT"))
+        .and(path("/rest/api/3/issue/FOO-1"))
+        .respond_with(ResponseTemplate::new(204))
+        .expect(1)
+        .mount(&server)
+        .await;
+
+    let output = s605_1_cmd(&server.uri())
+        .args([
+            "--no-input",
+            "issue",
+            "edit",
+            "FOO-1",
+            "--component",
+            "add:X",
+            "--component",
+            "remove:Y",
+        ])
+        .output()
+        .unwrap();
+
+    let stderr = String::from_utf8_lossy(&output.stderr);
+    assert!(
+        output.status.success(),
+        "MEDIUM-1: expected exit 0; stderr={stderr}"
+    );
+
+    let puts = s605_1_captured_puts(&server, "FOO-1").await;
+    assert_eq!(
+        puts.len(),
+        1,
+        "MEDIUM-1: expected exactly 1 PUT; got {puts:?}"
+    );
+    assert_eq!(
+        puts[0],
+        serde_json::json!({
+            "fields": {
+                "components": [
+                    {"name": "Z"},
+                    {"name": "X"}
+                ]
+            }
+        }),
+        "MEDIUM-1: fallback set-verb PUT must retain the untouched \
+         pre-existing component (Z), drop the removed one (Y), and append \
+         the newly-resolved add (X) -- in that order"
+    );
+}
+
+// ── MEDIUM-2 (BC-8.4.003) — ExactMultiple / Ambiguous on edit AND create ──
+
+/// `issue edit`: a component-list GET returning two components whose names
+/// are identical case-insensitively ("Backend" id 10001, "backend" id
+/// 10002) → `MatchResult::ExactMultiple` → exit 64, zero PUT, exact
+/// BC-8.4.003 message (pinned verbatim, including the LIST-ORDER id list --
+/// mirrors `component.rs`'s `test_bc_x_10_003_component_edit_exact_multiple_fails_closed`
+/// precedent, applied to the issue-edit copy of the resolver call).
+#[tokio::test]
+async fn test_bc_8_4_003_issue_edit_component_exact_multiple_exits_64() {
+    let server = MockServer::start().await;
+
+    s605_1_mock_components(
+        &server,
+        "FOO",
+        vec![
+            common::fixtures::component_response("10001", "Backend", None, None, None),
+            common::fixtures::component_response("10002", "backend", None, None, None),
+        ],
+    )
+    .await;
+    // Mounted defensively -- the resolution-vs-editmeta call ordering is
+    // not pinned by the BC (mirrors AC-006's precedent).
+    s605_1_mock_editmeta(&server, "FOO-1", &["add", "remove"]).await;
+
+    Mock::given(method("PUT"))
+        .and(path("/rest/api/3/issue/FOO-1"))
+        .respond_with(ResponseTemplate::new(204))
+        .expect(0)
+        .mount(&server)
+        .await;
+
+    let output = s605_1_cmd(&server.uri())
+        .args([
+            "--no-input",
+            "issue",
+            "edit",
+            "FOO-1",
+            "--component",
+            "add:Backend",
+        ])
+        .output()
+        .unwrap();
+
+    let stderr = String::from_utf8_lossy(&output.stderr);
+    assert_eq!(
+        output.status.code(),
+        Some(64),
+        "MEDIUM-2 (edit ExactMultiple): expected exit 64; stderr={stderr}"
+    );
+    assert!(
+        stderr.contains(
+            "Multiple components named \"Backend\" found (IDs: 10001, 10002). \
+             Pass the numeric ID directly."
+        ),
+        "MEDIUM-2 (edit ExactMultiple): expected exact BC-8.4.003 message; \
+         stderr={stderr}"
+    );
+}
+
+/// `issue edit`: `--component add:Amb` where the project component list
+/// has two partial matches ("Ambition" id 20002, "Amber" id 20001, mounted
+/// in reverse-alphabetical fixture order so the assertion can only pass if
+/// the implementation actually sorts the candidates) → `MatchResult::Ambiguous`
+/// → exit 64, zero PUT, exact BC-8.4.003 message (mirrors the
+/// `issue list --component` precedent, `test_bc_2_1_022_issue_list_component_ambiguous_name_zero_search`,
+/// applied to the issue-edit copy of the resolver call).
+#[tokio::test]
+async fn test_bc_8_4_003_issue_edit_component_ambiguous_exits_64() {
+    let server = MockServer::start().await;
+
+    s605_1_mock_components(
+        &server,
+        "FOO",
+        vec![
+            common::fixtures::component_response("20002", "Ambition", None, None, None),
+            common::fixtures::component_response("20001", "Amber", None, None, None),
+        ],
+    )
+    .await;
+    s605_1_mock_editmeta(&server, "FOO-1", &["add", "remove"]).await;
+
+    Mock::given(method("PUT"))
+        .and(path("/rest/api/3/issue/FOO-1"))
+        .respond_with(ResponseTemplate::new(204))
+        .expect(0)
+        .mount(&server)
+        .await;
+
+    let output = s605_1_cmd(&server.uri())
+        .args([
+            "--no-input",
+            "issue",
+            "edit",
+            "FOO-1",
+            "--component",
+            "add:Amb",
+        ])
+        .output()
+        .unwrap();
+
+    let stderr = String::from_utf8_lossy(&output.stderr);
+    assert_eq!(
+        output.status.code(),
+        Some(64),
+        "MEDIUM-2 (edit Ambiguous): expected exit 64; stderr={stderr}"
+    );
+    assert!(
+        stderr.contains("Ambiguous component 'Amb'. Matches: Amber, Ambition."),
+        "MEDIUM-2 (edit Ambiguous): expected exact BC-8.4.003 message \
+         (alphabetically-sorted Matches list); stderr={stderr}"
+    );
+}
+
+/// `issue create`: same case-only-duplicate fixture as the edit test above,
+/// via `resolve_create_components` (create.rs's own copy of the resolver
+/// call) → exit 64, zero POST, exact BC-8.4.003 message.
+#[tokio::test]
+async fn test_bc_8_4_003_issue_create_component_exact_multiple_exits_64() {
+    let server = MockServer::start().await;
+
+    s605_1_mock_components(
+        &server,
+        "FOO",
+        vec![
+            common::fixtures::component_response("10001", "Backend", None, None, None),
+            common::fixtures::component_response("10002", "backend", None, None, None),
+        ],
+    )
+    .await;
+
+    Mock::given(method("POST"))
+        .and(path("/rest/api/3/issue"))
+        .respond_with(ResponseTemplate::new(501).set_body_string("must not be called"))
+        .expect(0)
+        .mount(&server)
+        .await;
+
+    let output = s605_1_cmd(&server.uri())
+        .args([
+            "--no-input",
+            "issue",
+            "create",
+            "--project",
+            "FOO",
+            "--type",
+            "Task",
+            "--summary",
+            "Test exact multiple",
+            "--component",
+            "Backend",
+        ])
+        .output()
+        .unwrap();
+
+    let stderr = String::from_utf8_lossy(&output.stderr);
+    assert_eq!(
+        output.status.code(),
+        Some(64),
+        "MEDIUM-2 (create ExactMultiple): expected exit 64; stderr={stderr}"
+    );
+    assert!(
+        stderr.contains(
+            "Multiple components named \"Backend\" found (IDs: 10001, 10002). \
+             Pass the numeric ID directly."
+        ),
+        "MEDIUM-2 (create ExactMultiple): expected exact BC-8.4.003 message; \
+         stderr={stderr}"
+    );
+}
+
+/// `issue create`: same reverse-alphabetical-fixture partial-match setup as
+/// the edit Ambiguous test above, via `resolve_create_components` → exit
+/// 64, zero POST, exact BC-8.4.003 message.
+#[tokio::test]
+async fn test_bc_8_4_003_issue_create_component_ambiguous_exits_64() {
+    let server = MockServer::start().await;
+
+    s605_1_mock_components(
+        &server,
+        "FOO",
+        vec![
+            common::fixtures::component_response("20002", "Ambition", None, None, None),
+            common::fixtures::component_response("20001", "Amber", None, None, None),
+        ],
+    )
+    .await;
+
+    Mock::given(method("POST"))
+        .and(path("/rest/api/3/issue"))
+        .respond_with(ResponseTemplate::new(501).set_body_string("must not be called"))
+        .expect(0)
+        .mount(&server)
+        .await;
+
+    let output = s605_1_cmd(&server.uri())
+        .args([
+            "--no-input",
+            "issue",
+            "create",
+            "--project",
+            "FOO",
+            "--type",
+            "Task",
+            "--summary",
+            "Test ambiguous",
+            "--component",
+            "Amb",
+        ])
+        .output()
+        .unwrap();
+
+    let stderr = String::from_utf8_lossy(&output.stderr);
+    assert_eq!(
+        output.status.code(),
+        Some(64),
+        "MEDIUM-2 (create Ambiguous): expected exit 64; stderr={stderr}"
+    );
+    assert!(
+        stderr.contains("Ambiguous component 'Amb'. Matches: Amber, Ambition."),
+        "MEDIUM-2 (create Ambiguous): expected exact BC-8.4.003 message \
+         (alphabetically-sorted Matches list); stderr={stderr}"
+    );
+}
+
+// =============================================================================
+// Step-4.5 Round 3 — F1: numeric --component input wires as {"id":...}, not
+// {"name":...} (BC-8.4.001 numeric bypass / BC-8.1.008); F2: --field
+// validation must run before the --component mutation (partial-write fix)
+// =============================================================================
+
+// ── F1 — numeric --component on `issue create` wires as {"id":...} ───────
+
+/// `jr issue create --project FOO --component 10001` (numeric, no prefix
+/// grammar on create) → `fields.components == [{"id":"10001"}]` -- NOT
+/// `{"name":"10001"}`. BC-8.4.001's numeric bypass means all-ASCII-digit
+/// input is always a component id (BC-8.1.008), and Jira's issue
+/// components field accepts `{"id":...}`.
+#[tokio::test]
+async fn test_bc_3_4_024_issue_create_component_numeric_wires_as_id() {
+    let server = MockServer::start().await;
+
+    // The project component-list GET still fires (BC-3.4.025's resolution
+    // mechanism runs unconditionally), but its contents are irrelevant to a
+    // numeric value -- BC-8.4.001's bypass short-circuits before any
+    // candidate-list matching.
+    s605_1_mock_components(
+        &server,
+        "FOO",
+        vec![common::fixtures::component_response(
+            "99999",
+            "Unrelated",
+            None,
+            None,
+            None,
+        )],
+    )
+    .await;
+
+    Mock::given(method("POST"))
+        .and(path("/rest/api/3/issue"))
+        .respond_with(
+            ResponseTemplate::new(201)
+                .set_body_json(common::fixtures::create_issue_response("FOO-1")),
+        )
+        .expect(1)
+        .mount(&server)
+        .await;
+
+    let output = s605_1_cmd(&server.uri())
+        .args([
+            "--no-input",
+            "issue",
+            "create",
+            "--project",
+            "FOO",
+            "--type",
+            "Task",
+            "--summary",
+            "Test numeric component id",
+            "--component",
+            "10001",
+        ])
+        .output()
+        .unwrap();
+
+    let stderr = String::from_utf8_lossy(&output.stderr);
+    assert!(
+        output.status.success(),
+        "F1 (create numeric): expected exit 0; stderr={stderr}"
+    );
+
+    let posts = s605_1_captured_posts(&server).await;
+    assert_eq!(
+        posts.len(),
+        1,
+        "F1 (create numeric): expected exactly 1 POST; got {posts:?}"
+    );
+    assert_eq!(
+        posts[0]["fields"]["components"],
+        serde_json::json!([{"id": "10001"}]),
+        "F1 (create numeric): a numeric --component value must wire as \
+         {{\"id\":...}}, never {{\"name\":...}}"
+    );
+}
+
+// ── F1 — numeric --component on `issue edit` (single-key, native path) ───
+
+/// `jr issue edit FOO-1 --component add:10001 --component remove:20002`
+/// (both numeric) → `PUT /rest/api/3/issue/FOO-1` body
+/// `{"update":{"components":[{"add":{"id":"10001"}},{"remove":{"id":"20002"}}]}}`
+/// -- id-keyed objects, not name-keyed. The wire's ADD-before-REMOVE
+/// ordering (AC-003) is unaffected by the id-vs-name discriminator.
+#[tokio::test]
+async fn test_bc_3_4_022_issue_edit_component_numeric_wires_as_id_native_path() {
+    let server = MockServer::start().await;
+
+    // As above: the component-list GET fires but its contents are
+    // irrelevant to numeric inputs.
+    s605_1_mock_components(
+        &server,
+        "FOO",
+        vec![common::fixtures::component_response(
+            "99999",
+            "Unrelated",
+            None,
+            None,
+            None,
+        )],
+    )
+    .await;
+    s605_1_mock_editmeta(&server, "FOO-1", &["add", "remove"]).await;
+
+    Mock::given(method("PUT"))
+        .and(path("/rest/api/3/issue/FOO-1"))
+        .respond_with(ResponseTemplate::new(204))
+        .expect(1)
+        .mount(&server)
+        .await;
+
+    let output = s605_1_cmd(&server.uri())
+        .args([
+            "--no-input",
+            "issue",
+            "edit",
+            "FOO-1",
+            "--component",
+            "add:10001",
+            "--component",
+            "remove:20002",
+        ])
+        .output()
+        .unwrap();
+
+    let stderr = String::from_utf8_lossy(&output.stderr);
+    assert!(
+        output.status.success(),
+        "F1 (edit numeric native): expected exit 0; stderr={stderr}"
+    );
+
+    let puts = s605_1_captured_puts(&server, "FOO-1").await;
+    assert_eq!(
+        puts.len(),
+        1,
+        "F1 (edit numeric native): expected exactly 1 PUT; got {puts:?}"
+    );
+    assert_eq!(
+        puts[0],
+        serde_json::json!({
+            "update": {
+                "components": [
+                    {"add": {"id": "10001"}},
+                    {"remove": {"id": "20002"}}
+                ]
+            }
+        }),
+        "F1 (edit numeric native): numeric add/remove targets must wire as \
+         {{\"id\":...}}, never {{\"name\":...}}"
+    );
+}
+
+// ── F1 — numeric --component remove on the RMW fallback path ─────────────
+
+/// editmeta advertises ONLY `set` (fallback fires). The issue's CURRENT
+/// `fields.components` has an id-bearing component (id `"20002"`) and an
+/// untouched other component. `--component remove:20002` (numeric) → the
+/// computed set-verb array drops the id-MATCHED component (not a name
+/// match) and keeps the untouched one, re-emitted by its own id (MED-1
+/// fix, Step-4.5 Round 4) rather than an ambiguous bare name.
+#[tokio::test]
+async fn test_bc_3_4_022_issue_edit_component_numeric_remove_fallback_matches_by_id() {
+    let server = MockServer::start().await;
+
+    // Unused for a numeric input's resolution, but resolve_component_change_names
+    // fetches it unconditionally.
+    Mock::given(method("GET"))
+        .and(path("/rest/api/3/project/FOO/components"))
+        .respond_with(
+            ResponseTemplate::new(200)
+                .set_body_json(common::fixtures::component_list_response(vec![])),
+        )
+        .mount(&server)
+        .await;
+    s605_1_mock_editmeta(&server, "FOO-1", &["set"]).await;
+
+    let mut issue_with_ids = common::fixtures::issue_response("FOO-1", "Test", "To Do");
+    issue_with_ids["fields"]["components"] = serde_json::json!([
+        {"name": "Untouched", "id": "30001"},
+        {"name": "ToRemove", "id": "20002"}
+    ]);
+    Mock::given(method("GET"))
+        .and(path("/rest/api/3/issue/FOO-1"))
+        .respond_with(ResponseTemplate::new(200).set_body_json(issue_with_ids))
+        .expect(1)
+        .mount(&server)
+        .await;
+
+    Mock::given(method("PUT"))
+        .and(path("/rest/api/3/issue/FOO-1"))
+        .respond_with(ResponseTemplate::new(204))
+        .expect(1)
+        .mount(&server)
+        .await;
+
+    let output = s605_1_cmd(&server.uri())
+        .args([
+            "--no-input",
+            "issue",
+            "edit",
+            "FOO-1",
+            "--component",
+            "remove:20002",
+        ])
+        .output()
+        .unwrap();
+
+    let stderr = String::from_utf8_lossy(&output.stderr);
+    assert!(
+        output.status.success(),
+        "F1 (fallback numeric remove): expected exit 0; stderr={stderr}"
+    );
+
+    let puts = s605_1_captured_puts(&server, "FOO-1").await;
+    assert_eq!(
+        puts.len(),
+        1,
+        "F1 (fallback numeric remove): expected exactly 1 PUT; got {puts:?}"
+    );
+    assert_eq!(
+        puts[0],
+        serde_json::json!({
+            "fields": {
+                "components": [
+                    {"id": "30001"}
+                ]
+            }
+        }),
+        "F1/MED-1 (fallback numeric remove): the id-matched component (id \
+         \"20002\") must be dropped by ID match, not name match; the \
+         untouched component must be retained and re-emitted by IDENTITY \
+         ({{\"id\":\"30001\"}}, MED-1 fix -- not the ambiguous bare name)"
+    );
+}
+
+// ── F2 — --field validation must run before the --component mutation ────
+
+/// `jr issue edit FOO-1 --component add:X --field bogusfield=Y` (single
+/// key, unresolvable --field name) → exit 64, ZERO component mutation.
+/// Before the F2 fix, `edit_issue_components` fired its PUT BEFORE
+/// `resolve_edit_fields` validated `--field`, so an invalid `--field`
+/// landed the component change, THEN exited 64 -- a partial write.
+#[tokio::test]
+async fn test_bc_3_4_022_issue_edit_field_validated_before_component_put() {
+    let server = MockServer::start().await;
+    let cache_dir = tempfile::tempdir().unwrap();
+    let config_dir = tempfile::tempdir().unwrap();
+
+    // --field resolution's fields-list GET returns no field matching
+    // "bogusfield" -- resolution fails BEFORE editmeta, BEFORE any
+    // --component HTTP call (mirrors tests/issue_edit_field.rs's
+    // test_bc_3_4_017_ec_11_field_type_key_not_rejected_by_gate_b pattern:
+    // "No editmeta, no PUT — resolution fails before reaching editmeta").
+    Mock::given(method("GET"))
+        .and(path("/rest/api/3/field"))
+        .respond_with(ResponseTemplate::new(200).set_body_json(serde_json::json!([
+            { "id": "customfield_10001", "name": "Severity", "custom": true }
+        ])))
+        .mount(&server)
+        .await;
+
+    // F2's core assertion: edit_issue_components must never even be
+    // entered -- its first HTTP call would be this component-list GET.
+    Mock::given(method("GET"))
+        .and(path("/rest/api/3/project/FOO/components"))
+        .respond_with(ResponseTemplate::new(501).set_body_string("must not be called"))
+        .expect(0)
+        .mount(&server)
+        .await;
+
+    // Zero mutation guarantee: no PUT of any kind (component's native/
+    // fallback PUT, or the generic client.edit_issue PUT) may occur.
+    Mock::given(method("PUT"))
+        .respond_with(ResponseTemplate::new(500).set_body_string("must not be called"))
+        .expect(0)
+        .mount(&server)
+        .await;
+
+    let output = s606_1_cmd(&server.uri(), cache_dir.path(), config_dir.path())
+        .args([
+            "--no-input",
+            "issue",
+            "edit",
+            "FOO-1",
+            "--component",
+            "add:X",
+            "--field",
+            "bogusfield=Y",
+        ])
+        .output()
+        .unwrap();
+
+    let stderr = String::from_utf8_lossy(&output.stderr);
+    assert_eq!(
+        output.status.code(),
+        Some(64),
+        "F2: expected exit 64 for an unresolvable --field; stderr={stderr}"
+    );
+    // `.expect(0)` on both the component-list GET and the PUT catch-all
+    // verify the component mutation never started -- the invalid --field
+    // is caught first, so there is no partial write.
+}
+
+// =============================================================================
+// Step-4.5 Round 4 — MED-1: RMW fallback re-emits RETAINED components by
+// IDENTITY (id when present), not by ambiguous bare name, on an issue
+// carrying multiple same-named components
+// =============================================================================
+
+/// editmeta advertises ONLY `set` (fallback fires). The issue's CURRENT
+/// `fields.components` has TWO same-named components: "Backend" id
+/// `"10001"` and "Backend" id `"10002"` (Jira allows this -- the entire
+/// reason F1 added numeric-id targeting).
+///
+/// (a) `--component remove:10001` (numeric) → the set-verb array retains
+///     ONLY id `"10002"`, re-emitted by its own id -- the survivor is
+///     unambiguous, the removed one is gone.
+/// (b) `--component add:Frontend` (no remove) → BOTH Backends survive and
+///     must be re-emitted by id, never by the ambiguous bare name
+///     "Backend" twice (which Jira would silently dedupe to one --
+///     component "10002" silently dropped from the issue, exit 0 -- the
+///     data-loss bug MED-1 closes), plus the newly-resolved Frontend.
+#[tokio::test]
+async fn test_bc_3_4_022_issue_edit_component_rmw_retains_duplicate_named_by_id() {
+    let mut issue_dup = common::fixtures::issue_response("FOO-1", "Test", "To Do");
+    issue_dup["fields"]["components"] = serde_json::json!([
+        {"name": "Backend", "id": "10001"},
+        {"name": "Backend", "id": "10002"}
+    ]);
+
+    // --- (a) remove:10001 -> only id 10002 survives, emitted by id. ---
+    let remove_server = MockServer::start().await;
+    Mock::given(method("GET"))
+        .and(path("/rest/api/3/project/FOO/components"))
+        .respond_with(
+            ResponseTemplate::new(200)
+                .set_body_json(common::fixtures::component_list_response(vec![])),
+        )
+        .mount(&remove_server)
+        .await;
+    s605_1_mock_editmeta(&remove_server, "FOO-1", &["set"]).await;
+
+    Mock::given(method("GET"))
+        .and(path("/rest/api/3/issue/FOO-1"))
+        .respond_with(ResponseTemplate::new(200).set_body_json(issue_dup.clone()))
+        .expect(1)
+        .mount(&remove_server)
+        .await;
+
+    Mock::given(method("PUT"))
+        .and(path("/rest/api/3/issue/FOO-1"))
+        .respond_with(ResponseTemplate::new(204))
+        .expect(1)
+        .mount(&remove_server)
+        .await;
+
+    let remove_output = s605_1_cmd(&remove_server.uri())
+        .args([
+            "--no-input",
+            "issue",
+            "edit",
+            "FOO-1",
+            "--component",
+            "remove:10001",
+        ])
+        .output()
+        .unwrap();
+    let remove_stderr = String::from_utf8_lossy(&remove_output.stderr);
+    assert!(
+        remove_output.status.success(),
+        "MED-1 (remove): expected exit 0; stderr={remove_stderr}"
+    );
+    let remove_puts = s605_1_captured_puts(&remove_server, "FOO-1").await;
+    assert_eq!(
+        remove_puts.len(),
+        1,
+        "MED-1 (remove): expected exactly 1 PUT; got {remove_puts:?}"
+    );
+    assert_eq!(
+        remove_puts[0],
+        serde_json::json!({
+            "fields": {
+                "components": [
+                    {"id": "10002"}
+                ]
+            }
+        }),
+        "MED-1 (remove): only id 10002 must survive, re-emitted by id -- \
+         a bare-name re-emission would be ambiguous with the removed \
+         same-named component"
+    );
+
+    // --- (b) add:Frontend (no remove) -> both Backends survive, each
+    // emitted by id (never by the ambiguous bare name "Backend" twice). ---
+    let add_server = MockServer::start().await;
+    Mock::given(method("GET"))
+        .and(path("/rest/api/3/project/FOO/components"))
+        .respond_with(ResponseTemplate::new(200).set_body_json(
+            common::fixtures::component_list_response(vec![common::fixtures::component_response(
+                "40001", "Frontend", None, None, None,
+            )]),
+        ))
+        .mount(&add_server)
+        .await;
+    s605_1_mock_editmeta(&add_server, "FOO-1", &["set"]).await;
+
+    Mock::given(method("GET"))
+        .and(path("/rest/api/3/issue/FOO-1"))
+        .respond_with(ResponseTemplate::new(200).set_body_json(issue_dup))
+        .expect(1)
+        .mount(&add_server)
+        .await;
+
+    Mock::given(method("PUT"))
+        .and(path("/rest/api/3/issue/FOO-1"))
+        .respond_with(ResponseTemplate::new(204))
+        .expect(1)
+        .mount(&add_server)
+        .await;
+
+    let add_output = s605_1_cmd(&add_server.uri())
+        .args([
+            "--no-input",
+            "issue",
+            "edit",
+            "FOO-1",
+            "--component",
+            "add:Frontend",
+        ])
+        .output()
+        .unwrap();
+    let add_stderr = String::from_utf8_lossy(&add_output.stderr);
+    assert!(
+        add_output.status.success(),
+        "MED-1 (add): expected exit 0; stderr={add_stderr}"
+    );
+    let add_puts = s605_1_captured_puts(&add_server, "FOO-1").await;
+    assert_eq!(
+        add_puts.len(),
+        1,
+        "MED-1 (add): expected exactly 1 PUT; got {add_puts:?}"
+    );
+    assert_eq!(
+        add_puts[0],
+        serde_json::json!({
+            "fields": {
+                "components": [
+                    {"id": "10001"},
+                    {"id": "10002"},
+                    {"name": "Frontend"}
+                ]
+            }
+        }),
+        "MED-1 (add): BOTH same-named Backends must survive, each \
+         re-emitted by its own id -- two bare {{\"name\":\"Backend\"}} \
+         entries would silently dedupe to one on Jira's side (data loss)"
+    );
+}
+
+// =============================================================================
+// Step-4.5 Round 5 — B-LOW-1: RMW fallback add-before-remove parity with the
+// native path
+// =============================================================================
+
+/// RMW fallback (editmeta lacks add/remove) with `--component add:Backend
+/// --component remove:Backend` (the SAME component both added and
+/// removed) → the set-verb body must NOT contain Backend, matching the
+/// native update-verb path's add-before-remove semantics (BC-3.4.022 Post
+/// 2: Jira applies `[{"add":X},{"remove":X}]` in order, leaving X absent).
+/// An untouched pre-existing component survives unaffected.
+#[tokio::test]
+async fn test_bc_3_4_022_issue_edit_component_rmw_add_remove_same_matches_native() {
+    let server = MockServer::start().await;
+
+    s605_1_mock_components(
+        &server,
+        "FOO",
+        vec![common::fixtures::component_response(
+            "10001", "Backend", None, None, None,
+        )],
+    )
+    .await;
+    s605_1_mock_editmeta(&server, "FOO-1", &["set"]).await;
+
+    let mut issue_with_other = common::fixtures::issue_response("FOO-1", "Test", "To Do");
+    issue_with_other["fields"]["components"] = serde_json::json!([
+        {"name": "Other", "id": "50001"}
+    ]);
+    Mock::given(method("GET"))
+        .and(path("/rest/api/3/issue/FOO-1"))
+        .respond_with(ResponseTemplate::new(200).set_body_json(issue_with_other))
+        .expect(1)
+        .mount(&server)
+        .await;
+
+    Mock::given(method("PUT"))
+        .and(path("/rest/api/3/issue/FOO-1"))
+        .respond_with(ResponseTemplate::new(204))
+        .expect(1)
+        .mount(&server)
+        .await;
+
+    let output = s605_1_cmd(&server.uri())
+        .args([
+            "--no-input",
+            "issue",
+            "edit",
+            "FOO-1",
+            "--component",
+            "add:Backend",
+            "--component",
+            "remove:Backend",
+        ])
+        .output()
+        .unwrap();
+
+    let stderr = String::from_utf8_lossy(&output.stderr);
+    assert!(
+        output.status.success(),
+        "B-LOW-1: expected exit 0; stderr={stderr}"
+    );
+
+    let puts = s605_1_captured_puts(&server, "FOO-1").await;
+    assert_eq!(
+        puts.len(),
+        1,
+        "B-LOW-1: expected exactly 1 PUT; got {puts:?}"
+    );
+    assert_eq!(
+        puts[0],
+        serde_json::json!({
+            "fields": {
+                "components": [
+                    {"id": "50001"}
+                ]
+            }
+        }),
+        "B-LOW-1: add:Backend + remove:Backend (same component) must leave \
+         Backend ABSENT from the set-verb body, matching the native \
+         add-before-remove wire semantics; the untouched 'Other' component \
+         must survive"
+    );
+}
+
+// =============================================================================
+// Step-4.5 Round 5 — C-LOW-1: editmeta native-vs-fallback gate is
+// mutation-survivable at the "add" ONLY (no "remove") boundary
+// =============================================================================
+
+/// editmeta advertises `add` ONLY (no `remove`) for `components` → the
+/// RMW fallback fires (`GET` current components, `set`-verb PUT), NOT the
+/// native update-verb path. Only the two extremes -- `["add","remove"]`
+/// (AC-004, native) and `["set"]` (AC-005, fallback) -- were previously
+/// tested; a `native_supported = ops.any(=="add") && ops.any(=="remove")`
+/// -> `||` mutation would misclassify this `["add"]`-only case as
+/// native-supported and survive both of those tests untouched. This test
+/// pins the `&&`.
+#[tokio::test]
+async fn test_bc_3_4_022_issue_edit_component_editmeta_add_only_uses_fallback() {
+    let server = MockServer::start().await;
+
+    s605_1_mock_components(
+        &server,
+        "FOO",
+        vec![common::fixtures::component_response(
+            "10001", "Backend", None, None, None,
+        )],
+    )
+    .await;
+    // editmeta advertises "add" ONLY -- no "remove" -- must select the
+    // fallback, not the native path.
+    s605_1_mock_editmeta(&server, "FOO-1", &["add"]).await;
+
+    Mock::given(method("GET"))
+        .and(path("/rest/api/3/issue/FOO-1"))
+        .respond_with(ResponseTemplate::new(200).set_body_json(
+            common::fixtures::issue_response_with_components("FOO-1", "Test", &[]),
+        ))
+        .expect(1)
+        .mount(&server)
+        .await;
+
+    Mock::given(method("PUT"))
+        .and(path("/rest/api/3/issue/FOO-1"))
+        .respond_with(ResponseTemplate::new(204))
+        .expect(1)
+        .mount(&server)
+        .await;
+
+    let output = s605_1_cmd(&server.uri())
+        .args([
+            "--no-input",
+            "issue",
+            "edit",
+            "FOO-1",
+            "--component",
+            "add:Backend",
+        ])
+        .output()
+        .unwrap();
+
+    let stderr = String::from_utf8_lossy(&output.stderr);
+    assert!(
+        output.status.success(),
+        "C-LOW-1: expected exit 0; stderr={stderr}"
+    );
+
+    let puts = s605_1_captured_puts(&server, "FOO-1").await;
+    assert_eq!(
+        puts.len(),
+        1,
+        "C-LOW-1: expected exactly 1 PUT; got {puts:?}"
+    );
+    assert_eq!(
+        puts[0],
+        serde_json::json!({
+            "fields": {
+                "components": [
+                    {"name": "Backend"}
+                ]
+            }
+        }),
+        "C-LOW-1: editmeta advertising 'add' only (no 'remove') must use \
+         the set-verb RMW fallback shape (fields.components), NOT the \
+         native update-verb PUT shape (update.components) -- pins the && \
+         (not ||) in the native_supported gate. The GET current-issue \
+         call's .expect(1) above independently proves the fallback path \
+         (not the native path, which never calls get_issue) actually ran."
+    );
+}
+
+/// editmeta advertises `remove` ONLY (no `add`) for `components` → the RMW
+/// fallback fires, NOT the native update-verb path. Mirror of the add-only
+/// test above (Step-4.5 Round 6, LOW/Lens C): without this, a mutation
+/// replacing the first conjunct of `native_supported = ops.any(=="add") &&
+/// ops.any(=="remove")` with `true` would survive every other editmeta
+/// test (add-only→fallback still holds via the second conjunct, set→
+/// fallback still holds, add+remove→native still holds).
+#[tokio::test]
+async fn test_bc_3_4_022_issue_edit_component_editmeta_remove_only_uses_fallback() {
+    let server = MockServer::start().await;
+
+    s605_1_mock_components(
+        &server,
+        "FOO",
+        vec![common::fixtures::component_response(
+            "10001", "Backend", None, None, None,
+        )],
+    )
+    .await;
+    // editmeta advertises "remove" ONLY -- no "add" -- must select the
+    // fallback, not the native path.
+    s605_1_mock_editmeta(&server, "FOO-1", &["remove"]).await;
+
+    Mock::given(method("GET"))
+        .and(path("/rest/api/3/issue/FOO-1"))
+        .respond_with(ResponseTemplate::new(200).set_body_json(
+            common::fixtures::issue_response_with_components("FOO-1", "Test", &["Backend"]),
+        ))
+        .expect(1)
+        .mount(&server)
+        .await;
+
+    Mock::given(method("PUT"))
+        .and(path("/rest/api/3/issue/FOO-1"))
+        .respond_with(ResponseTemplate::new(204))
+        .expect(1)
+        .mount(&server)
+        .await;
+
+    let output = s605_1_cmd(&server.uri())
+        .args([
+            "--no-input",
+            "issue",
+            "edit",
+            "FOO-1",
+            "--component",
+            "remove:Backend",
+        ])
+        .output()
+        .unwrap();
+
+    let stderr = String::from_utf8_lossy(&output.stderr);
+    assert!(
+        output.status.success(),
+        "LOW (Lens C): expected exit 0; stderr={stderr}"
+    );
+
+    let puts = s605_1_captured_puts(&server, "FOO-1").await;
+    assert_eq!(
+        puts.len(),
+        1,
+        "LOW (Lens C): expected exactly 1 PUT; got {puts:?}"
+    );
+    assert_eq!(
+        puts[0],
+        serde_json::json!({
+            "fields": {
+                "components": []
+            }
+        }),
+        "LOW (Lens C): editmeta advertising 'remove' only (no 'add') must \
+         use the set-verb RMW fallback shape (fields.components), NOT the \
+         native update-verb PUT shape (update.components) -- pins the && \
+         (not a first-conjunct-elided variant) in the native_supported \
+         gate. The GET current-issue call's .expect(1) above independently \
+         proves the fallback path actually ran."
+    );
+}
+
+// =============================================================================
+// Step-4.5 Round 6 — HIGH-1 (F-A-001): RMW fallback silently failed to
+// remove a NAME-specified component against a live (id-bearing) issue
+// component. A COMPLETE test matrix (a)-(f) below closes this definitively.
+// =============================================================================
+
+/// (a) THE BUG, RED-then-GREEN proof. RMW fallback (editmeta lacks
+/// add/remove) on an issue whose current "Backend" component HAS an id
+/// (`"10050"` -- the LIVE-Jira-correct shape) with `--component
+/// remove:Backend` (a NAME remove target) → the set-verb body must NOT
+/// contain Backend.
+///
+/// THE BUG (pre-fix): the RMW fallback mapped each existing component to a
+/// SINGLE `ComponentRef` (`Id` when it has one, else `Name`), so an
+/// id-bearing Backend became `ComponentRef::Id("10050")` — a NAME remove
+/// target (`ComponentRef::Name("Backend")`) never matches an `Id`-variant
+/// candidate under `ComponentRef`'s derived, variant-sensitive `PartialEq`,
+/// so `retain` kept it: Backend was silently NOT removed, exit 0, a false
+/// `components → remove:Backend` success echo — silent data loss on the
+/// COMMON case (name remove + live Jira + RMW fallback).
+#[tokio::test]
+async fn test_bc_3_4_022_issue_edit_component_rmw_name_remove_matches_id_bearing_existing() {
+    let server = MockServer::start().await;
+
+    s605_1_mock_components(
+        &server,
+        "FOO",
+        vec![common::fixtures::component_response(
+            "10050", "Backend", None, None, None,
+        )],
+    )
+    .await;
+    s605_1_mock_editmeta(&server, "FOO-1", &["set"]).await;
+
+    let issue_with_id_bearing = common::fixtures::issue_response_with_components_and_ids(
+        "FOO-1",
+        "Test",
+        &[("Backend", "10050")],
+    );
+    Mock::given(method("GET"))
+        .and(path("/rest/api/3/issue/FOO-1"))
+        .respond_with(ResponseTemplate::new(200).set_body_json(issue_with_id_bearing))
+        .expect(1)
+        .mount(&server)
+        .await;
+
+    Mock::given(method("PUT"))
+        .and(path("/rest/api/3/issue/FOO-1"))
+        .respond_with(ResponseTemplate::new(204))
+        .expect(1)
+        .mount(&server)
+        .await;
+
+    let output = s605_1_cmd(&server.uri())
+        .args([
+            "--no-input",
+            "issue",
+            "edit",
+            "FOO-1",
+            "--component",
+            "remove:Backend",
+        ])
+        .output()
+        .unwrap();
+
+    let stderr = String::from_utf8_lossy(&output.stderr);
+    assert!(
+        output.status.success(),
+        "HIGH-1 (a): expected exit 0; stderr={stderr}"
+    );
+
+    let puts = s605_1_captured_puts(&server, "FOO-1").await;
+    assert_eq!(
+        puts.len(),
+        1,
+        "HIGH-1 (a): expected exactly 1 PUT; got {puts:?}"
+    );
+    assert_eq!(
+        puts[0],
+        serde_json::json!({
+            "fields": {
+                "components": []
+            }
+        }),
+        "HIGH-1 (a): a NAME remove target must drop an id-bearing existing \
+         component by matching NAME, not just id -- the set-verb body must \
+         NOT contain Backend"
+    );
+}
+
+/// (b) existing id-bearing "Backend"(10050) + `remove:10050` (numeric
+/// remove target) → drops Backend. Regression guard: this must KEEP
+/// passing under the HIGH-1 fix (it already passed under the buggy Round-5
+/// code, since an id-remove against an id-bearing component happened to
+/// still match).
+#[tokio::test]
+async fn test_bc_3_4_022_issue_edit_component_rmw_numeric_remove_matches_id_bearing_existing() {
+    let server = MockServer::start().await;
+
+    s605_1_mock_components(
+        &server,
+        "FOO",
+        vec![common::fixtures::component_response(
+            "10050", "Backend", None, None, None,
+        )],
+    )
+    .await;
+    s605_1_mock_editmeta(&server, "FOO-1", &["set"]).await;
+
+    let issue_with_id_bearing = common::fixtures::issue_response_with_components_and_ids(
+        "FOO-1",
+        "Test",
+        &[("Backend", "10050")],
+    );
+    Mock::given(method("GET"))
+        .and(path("/rest/api/3/issue/FOO-1"))
+        .respond_with(ResponseTemplate::new(200).set_body_json(issue_with_id_bearing))
+        .expect(1)
+        .mount(&server)
+        .await;
+
+    Mock::given(method("PUT"))
+        .and(path("/rest/api/3/issue/FOO-1"))
+        .respond_with(ResponseTemplate::new(204))
+        .expect(1)
+        .mount(&server)
+        .await;
+
+    let output = s605_1_cmd(&server.uri())
+        .args([
+            "--no-input",
+            "issue",
+            "edit",
+            "FOO-1",
+            "--component",
+            "remove:10050",
+        ])
+        .output()
+        .unwrap();
+
+    let stderr = String::from_utf8_lossy(&output.stderr);
+    assert!(
+        output.status.success(),
+        "HIGH-1 (b): expected exit 0; stderr={stderr}"
+    );
+
+    let puts = s605_1_captured_puts(&server, "FOO-1").await;
+    assert_eq!(
+        puts.len(),
+        1,
+        "HIGH-1 (b): expected exactly 1 PUT; got {puts:?}"
+    );
+    assert_eq!(
+        puts[0],
+        serde_json::json!({
+            "fields": {
+                "components": []
+            }
+        }),
+        "HIGH-1 (b): a numeric remove target must drop the id-matched \
+         existing component"
+    );
+}
+
+/// (c) existing id=None "Legacy" (the `issue_response_with_components`
+/// minimal-fixture shape) + `remove:Legacy` (name remove) → drops Legacy.
+/// Regression guard preserving the MED-1/Round-4 id=None coverage: adding
+/// `issue_response_with_components_and_ids` for HIGH-1 must NOT retire the
+/// id=None code path.
+#[tokio::test]
+async fn test_bc_3_4_022_issue_edit_component_rmw_name_remove_matches_id_absent_existing() {
+    let server = MockServer::start().await;
+
+    s605_1_mock_components(
+        &server,
+        "FOO",
+        vec![common::fixtures::component_response(
+            "10070", "Legacy", None, None, None,
+        )],
+    )
+    .await;
+    s605_1_mock_editmeta(&server, "FOO-1", &["set"]).await;
+
+    Mock::given(method("GET"))
+        .and(path("/rest/api/3/issue/FOO-1"))
+        .respond_with(ResponseTemplate::new(200).set_body_json(
+            common::fixtures::issue_response_with_components("FOO-1", "Test", &["Legacy"]),
+        ))
+        .expect(1)
+        .mount(&server)
+        .await;
+
+    Mock::given(method("PUT"))
+        .and(path("/rest/api/3/issue/FOO-1"))
+        .respond_with(ResponseTemplate::new(204))
+        .expect(1)
+        .mount(&server)
+        .await;
+
+    let output = s605_1_cmd(&server.uri())
+        .args([
+            "--no-input",
+            "issue",
+            "edit",
+            "FOO-1",
+            "--component",
+            "remove:Legacy",
+        ])
+        .output()
+        .unwrap();
+
+    let stderr = String::from_utf8_lossy(&output.stderr);
+    assert!(
+        output.status.success(),
+        "HIGH-1 (c): expected exit 0; stderr={stderr}"
+    );
+
+    let puts = s605_1_captured_puts(&server, "FOO-1").await;
+    assert_eq!(
+        puts.len(),
+        1,
+        "HIGH-1 (c): expected exactly 1 PUT; got {puts:?}"
+    );
+    assert_eq!(
+        puts[0],
+        serde_json::json!({
+            "fields": {
+                "components": []
+            }
+        }),
+        "HIGH-1 (c): a name remove target must drop an id=None existing \
+         component matching by name"
+    );
+}
+
+/// (d) existing id-bearing "Backend"(10050) + `add:Backend --component
+/// remove:Backend` (name add==remove, targeting a component that ALSO
+/// already exists on the issue with an id) → Backend ABSENT (net), matching
+/// the native path's add-before-remove semantics (B-LOW-1 parity). Distinct
+/// from the Round-5 B-LOW-1 test, whose existing-components fixture did NOT
+/// contain a pre-existing Backend at all -- this proves the pre-existing,
+/// id-bearing instance is ALSO removed, not just the would-be add
+/// short-circuited.
+#[tokio::test]
+async fn test_bc_3_4_022_issue_edit_component_rmw_add_remove_same_id_bearing_existing() {
+    let server = MockServer::start().await;
+
+    s605_1_mock_components(
+        &server,
+        "FOO",
+        vec![common::fixtures::component_response(
+            "10050", "Backend", None, None, None,
+        )],
+    )
+    .await;
+    s605_1_mock_editmeta(&server, "FOO-1", &["set"]).await;
+
+    let issue_with_id_bearing = common::fixtures::issue_response_with_components_and_ids(
+        "FOO-1",
+        "Test",
+        &[("Backend", "10050")],
+    );
+    Mock::given(method("GET"))
+        .and(path("/rest/api/3/issue/FOO-1"))
+        .respond_with(ResponseTemplate::new(200).set_body_json(issue_with_id_bearing))
+        .expect(1)
+        .mount(&server)
+        .await;
+
+    Mock::given(method("PUT"))
+        .and(path("/rest/api/3/issue/FOO-1"))
+        .respond_with(ResponseTemplate::new(204))
+        .expect(1)
+        .mount(&server)
+        .await;
+
+    let output = s605_1_cmd(&server.uri())
+        .args([
+            "--no-input",
+            "issue",
+            "edit",
+            "FOO-1",
+            "--component",
+            "add:Backend",
+            "--component",
+            "remove:Backend",
+        ])
+        .output()
+        .unwrap();
+
+    let stderr = String::from_utf8_lossy(&output.stderr);
+    assert!(
+        output.status.success(),
+        "HIGH-1 (d): expected exit 0; stderr={stderr}"
+    );
+
+    let puts = s605_1_captured_puts(&server, "FOO-1").await;
+    assert_eq!(
+        puts.len(),
+        1,
+        "HIGH-1 (d): expected exactly 1 PUT; got {puts:?}"
+    );
+    assert_eq!(
+        puts[0],
+        serde_json::json!({
+            "fields": {
+                "components": []
+            }
+        }),
+        "HIGH-1 (d): add:Backend + remove:Backend against a pre-existing, \
+         id-bearing Backend must leave the set NET ABSENT -- matching the \
+         native path's add-before-remove semantics"
+    );
+}
+
+/// (e) existing id-bearing Backend(10050) AND Frontend(10060) + BOTH
+/// `remove:Backend` and `remove:Frontend` (two disjoint name removes) →
+/// both dropped, matched by name against their own id-bearing entries.
+#[tokio::test]
+async fn test_bc_3_4_022_issue_edit_component_rmw_disjoint_name_removes_id_bearing_existing() {
+    let server = MockServer::start().await;
+
+    s605_1_mock_components(
+        &server,
+        "FOO",
+        vec![
+            common::fixtures::component_response("10050", "Backend", None, None, None),
+            common::fixtures::component_response("10060", "Frontend", None, None, None),
+        ],
+    )
+    .await;
+    s605_1_mock_editmeta(&server, "FOO-1", &["set"]).await;
+
+    let issue_with_id_bearing = common::fixtures::issue_response_with_components_and_ids(
+        "FOO-1",
+        "Test",
+        &[("Backend", "10050"), ("Frontend", "10060")],
+    );
+    Mock::given(method("GET"))
+        .and(path("/rest/api/3/issue/FOO-1"))
+        .respond_with(ResponseTemplate::new(200).set_body_json(issue_with_id_bearing))
+        .expect(1)
+        .mount(&server)
+        .await;
+
+    Mock::given(method("PUT"))
+        .and(path("/rest/api/3/issue/FOO-1"))
+        .respond_with(ResponseTemplate::new(204))
+        .expect(1)
+        .mount(&server)
+        .await;
+
+    let output = s605_1_cmd(&server.uri())
+        .args([
+            "--no-input",
+            "issue",
+            "edit",
+            "FOO-1",
+            "--component",
+            "remove:Backend",
+            "--component",
+            "remove:Frontend",
+        ])
+        .output()
+        .unwrap();
+
+    let stderr = String::from_utf8_lossy(&output.stderr);
+    assert!(
+        output.status.success(),
+        "HIGH-1 (e): expected exit 0; stderr={stderr}"
+    );
+
+    let puts = s605_1_captured_puts(&server, "FOO-1").await;
+    assert_eq!(
+        puts.len(),
+        1,
+        "HIGH-1 (e): expected exactly 1 PUT; got {puts:?}"
+    );
+    assert_eq!(
+        puts[0],
+        serde_json::json!({
+            "fields": {
+                "components": []
+            }
+        }),
+        "HIGH-1 (e): two disjoint name-remove targets must each drop their \
+         own id-bearing existing component"
+    );
+}
+
+/// (f) untouched components (not targeted by any remove) always survive,
+/// re-emitted by identity (`{"id":...}`) -- an id-bearing "Other" component
+/// survives a `remove:Backend` that targets a DIFFERENT, disjoint
+/// component.
+#[tokio::test]
+async fn test_bc_3_4_022_issue_edit_component_rmw_untouched_survives_by_identity() {
+    let server = MockServer::start().await;
+
+    s605_1_mock_components(
+        &server,
+        "FOO",
+        vec![common::fixtures::component_response(
+            "10050", "Backend", None, None, None,
+        )],
+    )
+    .await;
+    s605_1_mock_editmeta(&server, "FOO-1", &["set"]).await;
+
+    let issue_with_id_bearing = common::fixtures::issue_response_with_components_and_ids(
+        "FOO-1",
+        "Test",
+        &[("Backend", "10050"), ("Other", "30001")],
+    );
+    Mock::given(method("GET"))
+        .and(path("/rest/api/3/issue/FOO-1"))
+        .respond_with(ResponseTemplate::new(200).set_body_json(issue_with_id_bearing))
+        .expect(1)
+        .mount(&server)
+        .await;
+
+    Mock::given(method("PUT"))
+        .and(path("/rest/api/3/issue/FOO-1"))
+        .respond_with(ResponseTemplate::new(204))
+        .expect(1)
+        .mount(&server)
+        .await;
+
+    let output = s605_1_cmd(&server.uri())
+        .args([
+            "--no-input",
+            "issue",
+            "edit",
+            "FOO-1",
+            "--component",
+            "remove:Backend",
+        ])
+        .output()
+        .unwrap();
+
+    let stderr = String::from_utf8_lossy(&output.stderr);
+    assert!(
+        output.status.success(),
+        "HIGH-1 (f): expected exit 0; stderr={stderr}"
+    );
+
+    let puts = s605_1_captured_puts(&server, "FOO-1").await;
+    assert_eq!(
+        puts.len(),
+        1,
+        "HIGH-1 (f): expected exactly 1 PUT; got {puts:?}"
+    );
+    assert_eq!(
+        puts[0],
+        serde_json::json!({
+            "fields": {
+                "components": [
+                    {"id": "30001"}
+                ]
+            }
+        }),
+        "HIGH-1 (f): the untouched 'Other' component must survive, \
+         re-emitted by its own identity"
+    );
+}
+
+// =============================================================================
+// Step-4.5 Round 7 — MEDIUM-1: merge the single-key --component edit into
+// ONE PUT with other field changes (close the two-PUT partial-write window)
+// =============================================================================
+
+/// THE KEY RED-then-GREEN TEST. `--component add:Backend --priority Bogus`
+/// on the NATIVE update-verb path (editmeta advertises add+remove), where
+/// Jira rejects the invalid priority with 400: exactly ONE PUT must fire,
+/// carrying BOTH `update.components` and `fields.priority` in the SAME
+/// request body -- so the whole edit (including the component change) is
+/// rejected together, never landing a partial write.
+///
+/// This test was run against the PRE-FIX (two-PUT) code first and
+/// confirmed RED: the component-only PUT (`{"update":{"components":[...]}}`)
+/// succeeded (204) -- the component change LANDED -- and only the
+/// SEPARATE, SECOND field-only PUT (`{"fields":{"priority":...}}`) 400'd,
+/// producing a false-negative partial write (component change applied,
+/// user told the edit failed). After the fix, only ONE PUT fires, with the
+/// combined body, and it alone determines success/failure -- no separate
+/// component-only PUT can ever land.
+#[tokio::test]
+async fn test_bc_3_4_022_issue_edit_component_and_invalid_field_one_put_rejects_whole_edit() {
+    let server = MockServer::start().await;
+
+    s605_1_mock_components(
+        &server,
+        "FOO",
+        vec![common::fixtures::component_response(
+            "10001", "Backend", None, None, None,
+        )],
+    )
+    .await;
+    s605_1_mock_editmeta(&server, "FOO-1", &["add", "remove"]).await;
+
+    // Decoy (Round-7 pre-fix shape): a PUT whose body is EXACTLY the
+    // component-only native update -- this is what the OLD two-PUT code's
+    // FIRST PUT looked like. Mounted so a pre-fix regression is caught by a
+    // count assertion below (any real hit here means a second, separate PUT
+    // fired) -- NOT mounted with .expect(1)/.expect(0) here because its
+    // count is asserted indirectly via the total-PUT-count check.
+    Mock::given(method("PUT"))
+        .and(path("/rest/api/3/issue/FOO-1"))
+        .and(wiremock::matchers::body_json(serde_json::json!({
+            "update": {
+                "components": [
+                    {"add": {"name": "Backend"}}
+                ]
+            }
+        })))
+        .respond_with(ResponseTemplate::new(204))
+        .mount(&server)
+        .await;
+
+    // Decoy (Round-7 pre-fix shape): a PUT whose body is EXACTLY the
+    // field-only set -- the OLD two-PUT code's SECOND PUT.
+    Mock::given(method("PUT"))
+        .and(path("/rest/api/3/issue/FOO-1"))
+        .and(wiremock::matchers::body_json(serde_json::json!({
+            "fields": {
+                "priority": {"name": "Bogus"}
+            }
+        })))
+        .respond_with(
+            ResponseTemplate::new(400)
+                .set_body_json(serde_json::json!({"errorMessages": ["Invalid priority"]})),
+        )
+        .mount(&server)
+        .await;
+
+    // THE FIXED shape: one PUT, combined body.
+    Mock::given(method("PUT"))
+        .and(path("/rest/api/3/issue/FOO-1"))
+        .and(wiremock::matchers::body_json(serde_json::json!({
+            "update": {
+                "components": [
+                    {"add": {"name": "Backend"}}
+                ]
+            },
+            "fields": {
+                "priority": {"name": "Bogus"}
+            }
+        })))
+        .respond_with(
+            ResponseTemplate::new(400)
+                .set_body_json(serde_json::json!({"errorMessages": ["Invalid priority"]})),
+        )
+        .mount(&server)
+        .await;
+
+    let output = s605_1_cmd(&server.uri())
+        .args([
+            "--no-input",
+            "issue",
+            "edit",
+            "FOO-1",
+            "--component",
+            "add:Backend",
+            "--priority",
+            "Bogus",
+        ])
+        .output()
+        .unwrap();
+
+    let stderr = String::from_utf8_lossy(&output.stderr);
+    assert_eq!(
+        output.status.code(),
+        Some(1),
+        "MEDIUM-1: expected exit 1 (raw ApiError, no --type enrichment path); \
+         stderr={stderr}"
+    );
+
+    let puts = s605_1_captured_puts(&server, "FOO-1").await;
+    assert_eq!(
+        puts.len(),
+        1,
+        "MEDIUM-1: expected EXACTLY ONE PUT to the issue -- a second, \
+         separate component-only PUT landing before the field-validation \
+         error is exactly the partial-write bug this fix closes; got {puts:?}"
+    );
+    assert_eq!(
+        puts[0],
+        serde_json::json!({
+            "update": {
+                "components": [
+                    {"add": {"name": "Backend"}}
+                ]
+            },
+            "fields": {
+                "priority": {"name": "Bogus"}
+            }
+        }),
+        "MEDIUM-1: the single PUT must carry BOTH update.components and \
+         fields.priority in one body"
+    );
+}
+
+/// Happy-path native combined PUT: `--component add:Backend --summary
+/// "New"` → ONE PUT with both `update.components` and `fields.summary`,
+/// 204, exit 0.
+#[tokio::test]
+async fn test_bc_3_4_022_issue_edit_component_and_summary_one_put_native() {
+    let server = MockServer::start().await;
+
+    s605_1_mock_components(
+        &server,
+        "FOO",
+        vec![common::fixtures::component_response(
+            "10001", "Backend", None, None, None,
+        )],
+    )
+    .await;
+    s605_1_mock_editmeta(&server, "FOO-1", &["add", "remove"]).await;
+
+    Mock::given(method("PUT"))
+        .and(path("/rest/api/3/issue/FOO-1"))
+        .respond_with(ResponseTemplate::new(204))
+        .expect(1)
+        .mount(&server)
+        .await;
+
+    let output = s605_1_cmd(&server.uri())
+        .args([
+            "--no-input",
+            "issue",
+            "edit",
+            "FOO-1",
+            "--component",
+            "add:Backend",
+            "--summary",
+            "New",
+        ])
+        .output()
+        .unwrap();
+
+    let stderr = String::from_utf8_lossy(&output.stderr);
+    assert!(
+        output.status.success(),
+        "MEDIUM-1 (happy path native): expected exit 0; stderr={stderr}"
+    );
+
+    let puts = s605_1_captured_puts(&server, "FOO-1").await;
+    assert_eq!(
+        puts.len(),
+        1,
+        "MEDIUM-1 (happy path native): expected exactly 1 PUT; got {puts:?}"
+    );
+    assert_eq!(
+        puts[0],
+        serde_json::json!({
+            "update": {
+                "components": [
+                    {"add": {"name": "Backend"}}
+                ]
+            },
+            "fields": {
+                "summary": "New"
+            }
+        }),
+        "MEDIUM-1 (happy path native): the single PUT must carry BOTH \
+         update.components and fields.summary"
+    );
+}
+
+/// Happy-path RMW-fallback combined PUT: editmeta lacks add/remove +
+/// `--component add:Backend --summary "New"` → ONE PUT with
+/// `fields.components` folded into the SAME `fields` object as the other
+/// field change.
+#[tokio::test]
+async fn test_bc_3_4_022_issue_edit_component_and_summary_one_put_fallback() {
+    let server = MockServer::start().await;
+
+    s605_1_mock_components(
+        &server,
+        "FOO",
+        vec![common::fixtures::component_response(
+            "10001", "Backend", None, None, None,
+        )],
+    )
+    .await;
+    s605_1_mock_editmeta(&server, "FOO-1", &["set"]).await;
+
+    Mock::given(method("GET"))
+        .and(path("/rest/api/3/issue/FOO-1"))
+        .respond_with(ResponseTemplate::new(200).set_body_json(
+            common::fixtures::issue_response_with_components("FOO-1", "Test", &[]),
+        ))
+        .expect(1)
+        .mount(&server)
+        .await;
+
+    Mock::given(method("PUT"))
+        .and(path("/rest/api/3/issue/FOO-1"))
+        .respond_with(ResponseTemplate::new(204))
+        .expect(1)
+        .mount(&server)
+        .await;
+
+    let output = s605_1_cmd(&server.uri())
+        .args([
+            "--no-input",
+            "issue",
+            "edit",
+            "FOO-1",
+            "--component",
+            "add:Backend",
+            "--summary",
+            "New",
+        ])
+        .output()
+        .unwrap();
+
+    let stderr = String::from_utf8_lossy(&output.stderr);
+    assert!(
+        output.status.success(),
+        "MEDIUM-1 (happy path fallback): expected exit 0; stderr={stderr}"
+    );
+
+    let puts = s605_1_captured_puts(&server, "FOO-1").await;
+    assert_eq!(
+        puts.len(),
+        1,
+        "MEDIUM-1 (happy path fallback): expected exactly 1 PUT; got {puts:?}"
+    );
+    assert_eq!(
+        puts[0],
+        serde_json::json!({
+            "fields": {
+                "components": [
+                    {"name": "Backend"}
+                ],
+                "summary": "New"
+            }
+        }),
+        "MEDIUM-1 (happy path fallback): fields.components must be folded \
+         into the SAME fields object as the other field change, in one PUT"
+    );
+}
+
+// ── LOW-2 — dedup an add already present in the existing set (RMW) ───────
+
+/// RMW fallback (editmeta lacks add/remove): `--component add:Backend`
+/// where "Backend" is ALREADY present on the issue (with an id) → the
+/// set-verb array must NOT contain Backend twice -- the add is deduped
+/// against the already-surviving existing entry.
+#[tokio::test]
+async fn test_bc_3_4_022_issue_edit_component_rmw_add_already_present_deduped() {
+    let server = MockServer::start().await;
+
+    s605_1_mock_components(
+        &server,
+        "FOO",
+        vec![common::fixtures::component_response(
+            "10050", "Backend", None, None, None,
+        )],
+    )
+    .await;
+    s605_1_mock_editmeta(&server, "FOO-1", &["set"]).await;
+
+    let issue_with_id_bearing = common::fixtures::issue_response_with_components_and_ids(
+        "FOO-1",
+        "Test",
+        &[("Backend", "10050")],
+    );
+    Mock::given(method("GET"))
+        .and(path("/rest/api/3/issue/FOO-1"))
+        .respond_with(ResponseTemplate::new(200).set_body_json(issue_with_id_bearing))
+        .expect(1)
+        .mount(&server)
+        .await;
+
+    Mock::given(method("PUT"))
+        .and(path("/rest/api/3/issue/FOO-1"))
+        .respond_with(ResponseTemplate::new(204))
+        .expect(1)
+        .mount(&server)
+        .await;
+
+    let output = s605_1_cmd(&server.uri())
+        .args([
+            "--no-input",
+            "issue",
+            "edit",
+            "FOO-1",
+            "--component",
+            "add:Backend",
+        ])
+        .output()
+        .unwrap();
+
+    let stderr = String::from_utf8_lossy(&output.stderr);
+    assert!(
+        output.status.success(),
+        "LOW-2: expected exit 0; stderr={stderr}"
+    );
+
+    let puts = s605_1_captured_puts(&server, "FOO-1").await;
+    assert_eq!(puts.len(), 1, "LOW-2: expected exactly 1 PUT; got {puts:?}");
+    assert_eq!(
+        puts[0],
+        serde_json::json!({
+            "fields": {
+                "components": [
+                    {"id": "10050"}
+                ]
+            }
+        }),
+        "LOW-2: Backend must appear exactly ONCE -- the add must be deduped \
+         against the already-surviving existing entry, not appended a \
+         second time"
+    );
+}
+
+// =============================================================================
+// Step-4.5 Round 8 — F-LOW-001: accepted, documented divergence for
+// cross-identifier contradictory add/remove of the SAME component (docs +
+// pinning tests only -- NO behavioral change)
+// =============================================================================
+
+/// RMW fallback (editmeta lacks add/remove): the issue's current Backend
+/// component has id `"100"`. `--component remove:100 --component
+/// add:Backend` (cross-identifier: id `100` IS the component named
+/// Backend) → the resulting `fields.components` array CONTAINS Backend --
+/// net PRESENT. This is the ACCEPTED-DIVERGENCE contract documented in
+/// edit.rs's RMW fallback comment block (point 4, F-LOW-001): this
+/// contradictory cross-identifier input is NOT reconciled between the
+/// native and RMW-fallback wire paths -- native nets Backend ABSENT (see
+/// `test_bc_3_4_022_issue_edit_component_native_cross_identifier_add_remove_nets_absent`
+/// below) via Jira's fixed add-before-remove ops ordering, while this RMW
+/// path nets Backend PRESENT because its add-survivor filter only excludes
+/// a same-`ComponentRef` remove or a surviving-existing id-OR-name match --
+/// neither catches a cross-identifier collision (id `100` is never
+/// resolved to the name `Backend` here). Accepted because the input is
+/// self-contradictory, native's ordering is Jira-fixed, reconciling would
+/// require fragile cross-identifier resolution in a path that has already
+/// regressed three times, and no UNRELATED component is ever lost on
+/// either path.
+#[tokio::test]
+async fn test_bc_3_4_022_issue_edit_component_rmw_cross_identifier_add_remove_accepted_divergence()
+{
+    let server = MockServer::start().await;
+
+    s605_1_mock_components(
+        &server,
+        "FOO",
+        vec![common::fixtures::component_response(
+            "100", "Backend", None, None, None,
+        )],
+    )
+    .await;
+    s605_1_mock_editmeta(&server, "FOO-1", &["set"]).await;
+
+    let issue_with_id_bearing = common::fixtures::issue_response_with_components_and_ids(
+        "FOO-1",
+        "Test",
+        &[("Backend", "100")],
+    );
+    Mock::given(method("GET"))
+        .and(path("/rest/api/3/issue/FOO-1"))
+        .respond_with(ResponseTemplate::new(200).set_body_json(issue_with_id_bearing))
+        .expect(1)
+        .mount(&server)
+        .await;
+
+    Mock::given(method("PUT"))
+        .and(path("/rest/api/3/issue/FOO-1"))
+        .respond_with(ResponseTemplate::new(204))
+        .expect(1)
+        .mount(&server)
+        .await;
+
+    let output = s605_1_cmd(&server.uri())
+        .args([
+            "--no-input",
+            "issue",
+            "edit",
+            "FOO-1",
+            "--component",
+            "remove:100",
+            "--component",
+            "add:Backend",
+        ])
+        .output()
+        .unwrap();
+
+    let stderr = String::from_utf8_lossy(&output.stderr);
+    assert!(
+        output.status.success(),
+        "F-LOW-001 (RMW): expected exit 0; stderr={stderr}"
+    );
+
+    let puts = s605_1_captured_puts(&server, "FOO-1").await;
+    assert_eq!(
+        puts.len(),
+        1,
+        "F-LOW-001 (RMW): expected exactly 1 PUT; got {puts:?}"
+    );
+    assert_eq!(
+        puts[0],
+        serde_json::json!({
+            "fields": {
+                "components": [
+                    {"name": "Backend"}
+                ]
+            }
+        }),
+        "F-LOW-001 (RMW): ACCEPTED DIVERGENCE -- cross-identifier \
+         remove:100 + add:Backend (same real component) must net PRESENT \
+         on the RMW fallback path, the opposite of the native path's net \
+         ABSENT. This is documented, intentional, contradictory-input \
+         behavior (edit.rs RMW fallback comment, point 4) -- not a bug."
+    );
+}
+
+/// Native path (editmeta advertises add+remove) counterpart to the RMW
+/// test above: the SAME cross-identifier input, `--component remove:100
+/// --component add:Backend`, on the native path → the ops array is
+/// `[{"add":{"name":"Backend"}},{"remove":{"id":"100"}}]` (add-before-
+/// remove, BC-3.4.022 Post 2, unaffected by the id-vs-name discriminator)
+/// -- Jira applies this in order, so Backend ends net ABSENT. Pins the
+/// OTHER side of the F-LOW-001 accepted divergence.
+#[tokio::test]
+async fn test_bc_3_4_022_issue_edit_component_native_cross_identifier_add_remove_nets_absent() {
+    let server = MockServer::start().await;
+
+    s605_1_mock_components(
+        &server,
+        "FOO",
+        vec![common::fixtures::component_response(
+            "100", "Backend", None, None, None,
+        )],
+    )
+    .await;
+    s605_1_mock_editmeta(&server, "FOO-1", &["add", "remove"]).await;
+
+    Mock::given(method("PUT"))
+        .and(path("/rest/api/3/issue/FOO-1"))
+        .respond_with(ResponseTemplate::new(204))
+        .expect(1)
+        .mount(&server)
+        .await;
+
+    let output = s605_1_cmd(&server.uri())
+        .args([
+            "--no-input",
+            "issue",
+            "edit",
+            "FOO-1",
+            "--component",
+            "remove:100",
+            "--component",
+            "add:Backend",
+        ])
+        .output()
+        .unwrap();
+
+    let stderr = String::from_utf8_lossy(&output.stderr);
+    assert!(
+        output.status.success(),
+        "F-LOW-001 (native): expected exit 0; stderr={stderr}"
+    );
+
+    let puts = s605_1_captured_puts(&server, "FOO-1").await;
+    assert_eq!(
+        puts.len(),
+        1,
+        "F-LOW-001 (native): expected exactly 1 PUT; got {puts:?}"
+    );
+    assert_eq!(
+        puts[0],
+        serde_json::json!({
+            "update": {
+                "components": [
+                    {"add": {"name": "Backend"}},
+                    {"remove": {"id": "100"}}
+                ]
+            }
+        }),
+        "F-LOW-001 (native): cross-identifier remove:100 + add:Backend \
+         (same real component) must emit add-before-remove per BC-3.4.022 \
+         Post 2 -- Jira applies this in order, netting Backend ABSENT, the \
+         opposite of the RMW fallback's net PRESENT (documented \
+         accepted divergence, edit.rs point 4)"
     );
 }
