@@ -1,1 +1,1 @@
-{"status":"pass","timestamp":"2026-08-19T14:25:11Z","command":"cargo test --test issue_commands test_bc_3_4_023 2>&1 | tail -25"}
+{"status":"pass","timestamp":"2026-08-19T17:07:56Z","command":"echo \"=== cargo test line in e2e run step ===\" && grep -nE \"cargo test|--nocapture|--include-ignored|--test e2e\" .github/workflows/e2e.yml 2>/dev/null"}
