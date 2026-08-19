@@ -2,11 +2,44 @@
 document_type: story-index
 phase: phase-2-story-decomposition
 producer: story-writer
-version: "1.6.00"
+version: "1.6.01"
 total_stories: 140
 total_waves: 4
 status: complete
 last_updated: |-
+  2026-08-19 (COMPONENT-MGMT-F4-TRACKA-S-605-2-MERGED): S-605-2 status `draft`→`done` — merged
+  2026-08-19, PR #714, squash 4a4cd1fd128d47ff8878312ed7ff8947d1901688 (DEC-292; develop HEAD
+  f1ff9151→4a4cd1fd, merged by Zious11). Wave 2 parallel Track A position 2 of 2 COMPLETE — Track
+  A now FULLY COMPLETE (S-605-1 then S-605-2); depends_on:[S-605-1] satisfied. F4 delta delivery
+  is now COMPLETE — ALL 7 component-mgmt stories `done`. Step-4.5 CONVERGED 3/3 CLEAN (DEC-245
+  strict; 11 rounds / 33 fresh-context diverse-lens passes: Lens A spec-fidelity, Lens B
+  regression/security, Lens C convention/test-quality / 8 fix bursts; clean rounds R4/R5/R9/R10/
+  R11, final 3 consecutive R9/R10/R11). Real defects caught+fixed across the window: R1 (3x MED
+  co-specified `--summary`/`--priority`/`--type`/`--label` silently dropped on multi-key
+  `--component` → exit-64 mutual-exclusion guard; MED `--output json` multi-doc on mixed/chunked
+  edits → single-render aggregation; MED `--jql` >1000 chunking spec/impl fork, HUMAN-ADJUDICATED
+  MAKE IMPL MATCH SPEC → `--max` ceiling lifted to 10000 for the `--component` path, DEC-291; MED
+  AC-004 ExactMultiple branch uncovered → tests added; LOW oversized numeric-bypass id surfaced
+  as Internal/exit-1 → corrected to UserError/exit-64 + BC-3.4.023 Invariant-2 wording clarified);
+  R2 (dry-run cross-project guard + oversized-id parse both lived only in the live path → hoisted
+  before the dry-run block for dry-run==live parity, recurrence of the S-605-1 R1 class); R3/R6/
+  R7/R8 (`render_bulk_component_results` per-key status branches had silent-success mutation
+  surfaces → partial-failure/inaccessible/out-of-chunk-failed/duplicate-row all mutation-pinned).
+  security-reviewer APPROVE (0 CRIT/HIGH/MED/LOW); pr-reviewer APPROVE (0 BLOCKING/HIGH/MED; 1
+  unreachable-LOW nit + 2 nits, non-blocking); CI 15/15 green incl. CI Gate PASS and Mutation
+  testing PASS (2h18m). Full regression suite 4326 passed/0 failed; clippy -D warnings + fmt
+  clean. 6 mock-based per-AC demo recordings + evidence-report.md at `.factory/demos/S-605-2/`
+  (factory-artifacts `f1ca5b2a`, placeholder-only data 127.0.0.1:9999). HUMAN-ADJUDICATED
+  RENDER-COVERAGE BAR: `render_bulk_component_results` test coverage is bounded to
+  normal-Jira-reachable branches (all-success/partial-failure/inaccessible/out-of-chunk-failed/
+  mixed/row-count — all test-pinned); cosmetic table-mode stream-routing assertions and truly-
+  unreachable defensive branches are ACCEPTED deferrals matching the shipped
+  `render_bulk_edit_results` sibling's bar. Issue #605 remains OPEN (PR #714 used "Relates to",
+  not "Closes" — closes only after the feature-level F5/F7 pass AND the AC-010 live smoke test).
+  STORY-INDEX v1.6.00→v1.6.01. No other rows touched. The final feature-level F5/F7 pass covering
+  S-605-1/S-605-2/S-608-1 is now the ONLY remaining component-mgmt work, plus the AC-010 live
+  smoke test.
+  Prior:
   2026-08-18 (COMPONENT-MGMT-F4-TRACKA-S-605-1-MERGED): S-605-1 status `draft`→`done` — merged
   2026-08-18, PR #712, squash f1ff9151fe129061d0d04e03b5c3ecee16a40300 (DEC-290; develop HEAD
   23cc83aa→f1ff9151). DEC-128 human-authorized — the `gh pr merge` call was denied by the
@@ -862,7 +895,7 @@ They have `wave: feature-followup` in frontmatter and live under `.factory/code-
 | S-604-2 | `jr component create` and `jr component edit` (closes #604 part 2 of 3) | BC-8.1.004, BC-8.1.005, BC-8.1.006, BC-8.1.007, BC-8.1.008 | VP-COMPONENT-002, VP-COMPONENT-004, VP-COMPONENT-022, VP-COMPONENT-023, VP-COMPONENT-024 | **done** — merged 2026-08-17, PR #704, squash 1f8ba3e4; COMPONENT-MGMT bundle story 2 of 7; Wave 2, serialized component.rs sub-track position 1 of 3 COMPLETE; depends_on:[S-604-1]; target `src/cli/component.rs`; priority P0 | medium (8 SP) |
 | S-604-3 | `jr component delete` — disposition-required, snapshot-before-delete safety (closes #604 part 3 of 3) | BC-8.2.001, BC-8.2.002, BC-8.2.003, BC-8.2.004, BC-8.2.005, BC-8.2.006, BC-8.2.007, BC-8.2.008 | VP-COMPONENT-003, VP-COMPONENT-004, VP-COMPONENT-005, VP-COMPONENT-006, VP-COMPONENT-007, VP-COMPONENT-017, VP-COMPONENT-024 | **done** — merged 2026-08-17, PR #706, squash 49a927fd; COMPONENT-MGMT bundle story 3 of 7; SAFETY-CRITICAL; Wave 2, serialized component.rs sub-track position 2 of 3 COMPLETE; depends_on:[S-604-1]; target `src/cli/component.rs`; priority P0 | large (13 SP) |
 | S-605-1 | `issue create`/`issue edit --component` (single-key path) (closes #605 part 1 of 2) | BC-3.4.022, BC-3.4.024, BC-3.4.025, BC-3.4.012, BC-3.4.013, BC-3.4.017, BC-3.4.020, BC-3.4.021 | VP-COMPONENT-011, VP-COMPONENT-016, VP-COMPONENT-025, VP-COMPONENT-027, VP-COMPONENT-028 | **done** — merged 2026-08-18, PR #712, squash f1ff9151fe129061d0d04e03b5c3ecee16a40300; COMPONENT-MGMT bundle story 4 of 7; Wave 2, parallel Track A position 1 of 2 COMPLETE (no file overlap with component.rs serialized trio); depends_on:[S-604-1]; blocks:[S-605-2] (now unblocked); target `src/cli/issue/{edit,create}.rs`; priority P0 | medium (8 SP) |
-| S-605-2 | `issue edit --component` (multi-key/`--jql` bulk path) (closes #605 part 2 of 2) | BC-3.4.023 | VP-COMPONENT-012 | **draft** — F3 COMPLETE (2026-08-15); COMPONENT-MGMT bundle story 5 of 7; Wave 2, parallel Track A position 2 of 2; LIVE-JIRA-gated; depends_on:[S-605-1]; target `src/cli/issue/edit.rs`; priority P0; awaiting F4 dispatch | small (5 SP) |
+| S-605-2 | `issue edit --component` (multi-key/`--jql` bulk path) (closes #605 part 2 of 2) | BC-3.4.023 | VP-COMPONENT-012 | **done** — merged 2026-08-19, PR #714, squash 4a4cd1fd128d47ff8878312ed7ff8947d1901688; COMPONENT-MGMT bundle story 5 of 7; Wave 2, parallel Track A position 2 of 2 COMPLETE — Track A FULLY COMPLETE; LIVE-JIRA-gated (DEC-280, AC-010 live smoke test still owed); depends_on:[S-605-1]; target `src/cli/issue/edit.rs`; priority P0 | small (5 SP) |
 | S-606-1 | `issue list --component` filter (bare/`not:`/`none`/`all:`) (closes #606) | BC-2.1.018, BC-2.1.019, BC-2.1.020, BC-2.1.021, BC-2.1.022 | VP-COMPONENT-013, VP-COMPONENT-015 | **done** — merged 2026-08-17, PR #707, squash b1610d55; COMPONENT-MGMT bundle story 6 of 7; Wave 2, parallel Track B (singleton, no file overlap with component.rs serialized trio or Track A) COMPLETE; depends_on:[S-604-1]; target `src/cli/issue/list.rs`; priority P0 | medium (8 SP) |
 | S-608-1 | `jr component rename` — single-project and `--all-projects` fan-out, `--dry-run` (closes #608) | BC-8.3.001, BC-8.3.002, BC-8.3.003, BC-8.3.004, BC-8.3.005, BC-8.3.006, BC-8.3.007 | VP-COMPONENT-008, VP-COMPONENT-018, VP-COMPONENT-019, VP-COMPONENT-024, VP-COMPONENT-026 | **done** — merged 2026-08-18, PR #710, squash 23cc83aa; COMPONENT-MGMT bundle story 7 of 7; Wave 2, serialized component.rs sub-track position 3 of 3 COMPLETE — full trio (S-604-2/S-604-3/S-608-1) COMPLETE; depends_on:[S-604-1]; target `src/cli/component.rs`; priority P1 | medium (8 SP) |
 

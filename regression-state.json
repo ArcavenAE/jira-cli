@@ -1,1 +1,1 @@
-{"status":"pass","timestamp":"2026-08-19T02:30:11Z","command":"cargo test 2>&1 | grep -E \"^test result:|error\\[|error:|FAILED|running [0-9]+ tests\" | grep -vE \"running 0 tests\" | tail -60"}
+{"status":"pass","timestamp":"2026-08-19T14:25:11Z","command":"cargo test --test issue_commands test_bc_3_4_023 2>&1 | tail -25"}
