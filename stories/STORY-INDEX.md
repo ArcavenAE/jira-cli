@@ -2,11 +2,31 @@
 document_type: story-index
 phase: phase-2-story-decomposition
 producer: story-writer
-version: "1.6.02"
-total_stories: 148
+version: "1.6.04"
+total_stories: 149
 total_waves: 4
 status: complete
 last_updated: |-
+  2026-08-20 (S-COMP-E2E-1 prepared for delivery): status draft→ready — added the missing
+  Architecture Mapping section (template-compliance gate), bumped story version 1.0→1.1.
+  Spec-First Gate (S-7.01) already satisfied: behavioral_contracts is non-empty with 14
+  canonical BC-S.SS.NNN entries, every AC cites a BC via `(traces to BC-...)`, every BC in
+  frontmatter is cited by at least one AC — no further BC authorship required for this
+  status transition. STORY-INDEX v1.6.03→v1.6.04.
+  Prior:
+  2026-08-20 (S-COMP-E2E-1): 1 new DRAFT story added — live-Jira E2E coverage for the
+  component command family (component create/list/edit/delete lifecycle round-trip,
+  component rename single-project round-trip, issue create/edit --component single-key
+  round-trips, issue list --component filter grammar). Test-hardening only: zero new BCs
+  (traces to 14 existing BC-8.1.*/8.2.*/8.3.*/3.4.*/2.1.* clauses), zero new env vars
+  (auto-discovery per the existing AC-010 bulk-test precedent), zero src/ changes. New
+  ComponentDropGuard best-effort teardown helper planned (mirrors AttachmentDropGuard,
+  S-576-6). epic_id: "none" (matches the S-604-1..S-608-1 component-mgmt siblings and the
+  S-E2E-*/S-JSM-E2E-* test-hardening precedent — NOT the SELF-IMPROVEMENT epic, which is
+  reserved for engine/process-gap stories with no product BC surface; this story has an
+  explicit product BC surface). depends_on:[S-604-1, S-604-2, S-604-3, S-605-1, S-606-1,
+  S-608-1] (all done); blocks:[]. 148→149; STORY-INDEX v1.6.02→v1.6.03.
+  Prior:
   2026-08-20 (SELF-IMPROVEMENT-F7-PROCESS-GAP-FOLLOWUPS): 8 new DRAFT stories added, opened from
   the F7 component-mgmt cycle's §6 Keep-Deferred Disposition table
   (`.factory/phase-f7-convergence/components-delta-convergence-report.md`), per the human's F7
@@ -922,10 +942,11 @@ They have `wave: feature-followup` in frontmatter and live under `.factory/code-
 | S-605-2 | `issue edit --component` (multi-key/`--jql` bulk path) (closes #605 part 2 of 2) | BC-3.4.023 | VP-COMPONENT-012 | **done** — merged 2026-08-19, PR #714, squash 4a4cd1fd128d47ff8878312ed7ff8947d1901688; COMPONENT-MGMT bundle story 5 of 7; Wave 2, parallel Track A position 2 of 2 COMPLETE — Track A FULLY COMPLETE; LIVE-JIRA-gated (DEC-280, AC-010 live smoke test still owed); depends_on:[S-605-1]; target `src/cli/issue/edit.rs`; priority P0 | small (5 SP) |
 | S-606-1 | `issue list --component` filter (bare/`not:`/`none`/`all:`) (closes #606) | BC-2.1.018, BC-2.1.019, BC-2.1.020, BC-2.1.021, BC-2.1.022 | VP-COMPONENT-013, VP-COMPONENT-015 | **done** — merged 2026-08-17, PR #707, squash b1610d55; COMPONENT-MGMT bundle story 6 of 7; Wave 2, parallel Track B (singleton, no file overlap with component.rs serialized trio or Track A) COMPLETE; depends_on:[S-604-1]; target `src/cli/issue/list.rs`; priority P0 | medium (8 SP) |
 | S-608-1 | `jr component rename` — single-project and `--all-projects` fan-out, `--dry-run` (closes #608) | BC-8.3.001, BC-8.3.002, BC-8.3.003, BC-8.3.004, BC-8.3.005, BC-8.3.006, BC-8.3.007 | VP-COMPONENT-008, VP-COMPONENT-018, VP-COMPONENT-019, VP-COMPONENT-024, VP-COMPONENT-026 | **done** — merged 2026-08-18, PR #710, squash 23cc83aa; COMPONENT-MGMT bundle story 7 of 7; Wave 2, serialized component.rs sub-track position 3 of 3 COMPLETE — full trio (S-604-2/S-604-3/S-608-1) COMPLETE; depends_on:[S-604-1]; target `src/cli/component.rs`; priority P1 | medium (8 SP) |
+| S-COMP-E2E-1 | Live E2E coverage for the component command family — `component create`/`list`/`edit`/`delete` lifecycle round-trip, `component rename` single-project round-trip, `issue create --component` single-key round-trip, `issue edit --component` single-key native `update`-verb round-trip (distinct from the existing bulk-path live test), `issue list --component` bare/`not:`/`none` filter-grammar composition; new `ComponentDropGuard` best-effort teardown helper (mirrors `AttachmentDropGuard`); zero new BCs, zero new env vars, zero `src/` changes | BC-8.1.001, BC-8.1.002, BC-8.1.005, BC-8.1.007, BC-8.2.001, BC-8.2.006, BC-8.2.008, BC-8.3.001, BC-3.4.022, BC-3.4.024, BC-3.4.025, BC-2.1.018, BC-2.1.019, BC-2.1.020 | VP-COMPONENT-029, VP-COMPONENT-030, VP-COMPONENT-031, VP-COMPONENT-032, VP-COMPONENT-033 | **ready** — opened 2026-08-20 per human request following S-605-2's merge, to cover component-family surfaces with no dedicated live E2E test; prepared for per-story delivery 2026-08-20 (Architecture Mapping section added, story v1.0→v1.1); depends_on:[S-604-1, S-604-2, S-604-3, S-605-1, S-606-1, S-608-1] (all done); target `tests/e2e_live.rs`; priority P2 | medium (8 SP) |
 
 Feature-followup story files: `.factory/code-delivery/issue-NNN/story.md`. COMPONENT-MGMT bundle stories live under
 `.factory/stories/S-604-1-component-foundation-list.md` etc. (flat `.factory/stories/` path, not `code-delivery/`,
-per the S-604-1/S-604-2/S-604-3/S-605-1/S-605-2/S-606-1/S-608-1 file paths in the Story Manifest below).
+per the S-604-1/S-604-2/S-604-3/S-605-1/S-605-2/S-606-1/S-608-1/S-COMP-E2E-1 file paths in the Story Manifest below).
 
 ---
 
@@ -1258,3 +1279,4 @@ Total rows: 133 (matches `total_stories: 133` in frontmatter — updated 2026-08
 | S-PG-FIX-SCOPE-VERIFY-1 | feature-followup (self-improvement epic; F7 component-mgmt §6 disposition follow-up; ORCHESTRATOR-FIX-INSTRUCTION-CAUSED-REGRESSION; draft; no deps; 2026-08-20) | /Users/zious/Documents/GITHUB/jira-cli/.factory/stories/S-PG-FIX-SCOPE-VERIFY-1-orchestrator-fix-guard.md |
 | S-PG-PRMANAGER-AWAIT-1 | feature-followup (self-improvement epic; F7 component-mgmt §6 disposition follow-up; PR-MANAGER-RETURNS-BLOCKED-WITHOUT-AWAITING-GRANDCHILDREN; draft; no deps; 2026-08-20) | /Users/zious/Documents/GITHUB/jira-cli/.factory/stories/S-PG-PRMANAGER-AWAIT-1-grandchild-agents.md |
 | S-PG-REVIEW-DISTINCT-1 | feature-followup (self-improvement epic; F7 component-mgmt §6 disposition follow-up; VALIDATE-PR-REVIEW-POSTED-ASSUMES-DISTINCT-REVIEWER; draft; no deps; 2026-08-20) | /Users/zious/Documents/GITHUB/jira-cli/.factory/stories/S-PG-REVIEW-DISTINCT-1-same-account-reviewer.md |
+| S-COMP-E2E-1 | feature-followup (test-hardening, not self-improvement epic; live E2E coverage for the component command family — component CRUD/rename lifecycle round-trips, issue create/edit --component single-key round-trips, issue list --component filter grammar; zero new BCs, zero new env vars; ComponentDropGuard teardown helper; ready (prepared for per-story delivery 2026-08-20); depends_on:[S-604-1, S-604-2, S-604-3, S-605-1, S-606-1, S-608-1] (all done); 148→149; 2026-08-20) | /Users/zious/Documents/GITHUB/jira-cli/.factory/stories/S-COMP-E2E-1-component-family-live-e2e-coverage.md |

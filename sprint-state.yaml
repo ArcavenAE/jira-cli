@@ -810,6 +810,26 @@ feature_followup_standalone:
     phase: F4
     notes: "DELIVERED 2026-07-23. PR #643 squash-merged by human @ 9da03d5b (DEC-128 honored). CI 15/15 green; mutation job 0 mutants (test-only-diff path). Live validation: run 30031724733 (96/97 — found FIX-576-DL bug: integer id in /rest/api/3/attachment/{id} metadata vs string in mocks); run 30041659024 (97/97 GREEN post-fix, rebased). Fresh-eyes APPROVE (0 C/H). Security APPROVE with SEC-S576-6-001 (CWE-703 Drop expect, MEDIUM) accepted as tech debt. Step 4.5 CONVERGED STRICT (8 passes / 5 fix rounds; window p6/p7/p8 CLEAN×3; story v1.9→v1.15). Facade delivery (zero src/ delta): 4 gated E2E tests + AttachmentDropGuard + docs. story v1.16 (delivery record). SOH-ATTACHMENTS-1 BUNDLE COMPLETE (6/6 stories + FIX-576-DL emergent fix). Cycle-closing: PG-576-1/PG-576-2 logged."
 
+  - id: S-COMP-E2E-1
+    title: "Live E2E coverage for the component command family — component create/edit/delete/rename lifecycle round-trips, issue create/edit --component single-key round-trips, issue list --component filter grammar (BC-8.1/8.2/8.3, BC-3.4.022/024/025, BC-2.1.018/019/020)"
+    status: pending
+    pr: null
+    merge_sha: null
+    merged_at: null
+    depends_on: [S-604-1, S-604-2, S-604-3, S-605-1, S-606-1, S-608-1]
+    bc_anchors: [BC-8.1.001, BC-8.1.002, BC-8.1.005, BC-8.1.007, BC-8.2.001, BC-8.2.006, BC-8.2.008, BC-8.3.001, BC-3.4.022, BC-3.4.024, BC-3.4.025, BC-2.1.018, BC-2.1.019, BC-2.1.020]
+    verification_properties: [VP-COMPONENT-029, VP-COMPONENT-030, VP-COMPONENT-031, VP-COMPONENT-032, VP-COMPONENT-033]
+    issue: TBD
+    points: 8
+    criticality: LOW
+    implementation_strategy: tdd
+    tdd_mode: facade
+    phase: F3
+    story_file: ".factory/stories/S-COMP-E2E-1-component-family-live-e2e-coverage.md"
+    story_status: ready
+    story_version: "1.1"
+    notes: "PREPARED FOR PER-STORY DELIVERY 2026-08-20. Story status flipped draft→ready (Spec-First Gate S-7.01 already satisfied: 14 canonical BC-S.SS.NNN entries, bidirectional AC↔BC traces present); Architecture Mapping section added (template-compliance gate); story version 1.0→1.1. Zero-src/ facade-mode test-hardening story (mirrors S-576-6's precedent): 5 new live E2E test fns + ComponentDropGuard best-effort Drop-guard teardown helper in tests/e2e_live.rs, SURFACE table update in tests/e2e_cli_surface_guard.rs, doc-fallout in docs/specs/e2e-live-jira-testing.md + CLAUDE.md. Zero new BCs, zero new env vars. All 6 depends_on stories (S-604-1/2/3, S-605-1, S-606-1, S-608-1) are done. Not yet dispatched to implementer — status pending, awaiting delivery-cycle kickoff."
+
   - id: FIX-576-DL
     title: "fix: attachment download integer-id serde drift (S-576-2 latent, found by S-576-6 live validation)"
     status: completed
