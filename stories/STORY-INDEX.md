@@ -2,11 +2,35 @@
 document_type: story-index
 phase: phase-2-story-decomposition
 producer: story-writer
-version: "1.6.01"
-total_stories: 140
+version: "1.6.02"
+total_stories: 148
 total_waves: 4
 status: complete
 last_updated: |-
+  2026-08-20 (SELF-IMPROVEMENT-F7-PROCESS-GAP-FOLLOWUPS): 8 new DRAFT stories added, opened from
+  the F7 component-mgmt cycle's §6 Keep-Deferred Disposition table
+  (`.factory/phase-f7-convergence/components-delta-convergence-report.md`), per the human's F7
+  final-authorization gate ratifying the recommendation to open follow-up stories for the 8
+  engine/process-gap keep-deferred items (S-7.02 Cycle-Closing Checklist). All 8 are anchored to
+  the SELF-IMPROVEMENT epic (the informal "engine self-improvement" scope this repo's manifest
+  history already used for `S-PG-MERGE-AUTH-BYPASS`, now formalized as `epic_id: "SELF-IMPROVEMENT"`
+  going forward — see the new "Self-Improvement — Engine/Process-Gap Follow-ups" section below).
+  New stories: S-PG-RED-GREEN-SWEEP-1 (mechanical pre-convergence stale RED/GREEN comment sweep
+  gate, MEDIUM, 5 SP), S-PG-VERBATIM-PIN-1 (verbatim-pin test convention for BC-specified exact
+  strings, MEDIUM, 5 SP), S-PG-VP-REGISTRY-1 (L4 Verification Property registry, MEDIUM, 8 SP),
+  S-PG-DELTA-DOC-RESYNC-1 (mechanical resync gate between mid-review BC edits and phase delta
+  docs, MEDIUM, 5 SP), S-PG-VP-CITATION-RECONCILE-1 (reconcile prd-delta-components.md VP
+  citations against verification-delta-components.md §3's map + add a consistency check, MEDIUM,
+  3 SP), S-PG-FIX-SCOPE-VERIFY-1 (scope-and-verify guard for orchestrator fix instructions
+  targeting matching/identity code paths, MEDIUM, 5 SP), S-PG-PRMANAGER-AWAIT-1 (fix pr-manager
+  returning BLOCKED without awaiting its spawned grandchild review agents, LOW, 3 SP),
+  S-PG-REVIEW-DISTINCT-1 (fix or document validate-pr-review-posted's same-account-reviewer
+  assumption, LOW, 3 SP). All 8: `status: draft`, `behavioral_contracts: []` with a "BC status:
+  no product BCs" frontmatter comment (S-7.01 gate — engine/process-tooling stories with no
+  jira-cli behavioral-contract surface, following the no-BC precedent already established by
+  `S-PG-MERGE-AUTH-BYPASS`), `wave: feature-followup`, `depends_on: []`, `blocks: []`. Total
+  points added: 37. 140→148 (this burst adds only these 8 rows; no other row touched).
+  Prior:
   2026-08-19 (COMPONENT-MGMT-F4-TRACKA-S-605-2-MERGED): S-605-2 status `draft`→`done` — merged
   2026-08-19, PR #714, squash 4a4cd1fd128d47ff8878312ed7ff8947d1901688 (DEC-292; develop HEAD
   f1ff9151→4a4cd1fd, merged by Zious11). Wave 2 parallel Track A position 2 of 2 COMPLETE — Track
@@ -905,6 +929,43 @@ per the S-604-1/S-604-2/S-604-3/S-605-1/S-605-2/S-606-1/S-608-1 file paths in th
 
 ---
 
+## Self-Improvement — Engine/Process-Gap Follow-ups (Added 2026-08-20)
+
+**Epic:** `SELF-IMPROVEMENT`. This section holds engine/process-gap improvement stories about
+the VSDD factory pipeline's own discipline — NOT jira-cli product features. Precedent:
+`S-PG-MERGE-AUTH-BYPASS` (2026-06-20, this repo's only prior story of this shape) established the
+`scope: dark-factory-engine` / `feature_type: pipeline-governance` / `intent: process-codification`
+convention and the "engine self-improvement" framing this section formalizes as an explicit
+epic (`epic_id: "SELF-IMPROVEMENT"`). All stories in this section carry `wave: feature-followup`
+in frontmatter (same wave mechanism as the Feature Followup table above) and live flat under
+`.factory/stories/`.
+
+**Origin:** all 8 stories below were opened in one burst from the F7 component-mgmt cycle's §6
+Keep-Deferred Disposition table
+(`.factory/phase-f7-convergence/components-delta-convergence-report.md`), per the human's F7
+final-authorization gate ratifying the recommendation to open follow-up stories for the 8
+engine/process-gap keep-deferred items (S-7.02 Cycle-Closing Checklist). None of these 8 stories
+has behavioral contracts yet (`behavioral_contracts: []`, S-7.01 gate — PO authorship required
+before `status: ready`); all remain `draft`.
+
+| Story ID | Title | Severity | Drift Item | Status | Est. Effort |
+|----------|-------|----------|------------|--------|-------------|
+| S-PG-RED-GREEN-SWEEP-1 | Mechanical pre-convergence sweep gate for stale RED/GREEN TDD comments | MEDIUM | RED-GREEN-STALE-COMMENT-SWEEP-MISSING | **draft** — opened 2026-08-20 from F7 component-mgmt §6 disposition; no deps | small (5 SP) |
+| S-PG-VERBATIM-PIN-1 | Verbatim-pin test convention for BC-specified exact strings (close loose-contains drift class) | MEDIUM | LOOSE-CONTAINS-MASKS-BC-VERBATIM-MESSAGE-DRIFT | **draft** — opened 2026-08-20 from F7 component-mgmt §6 disposition; no deps | small (5 SP) |
+| S-PG-VP-REGISTRY-1 | Build an L4 Verification Property registry (ARCH-INDEX-equivalent for VPs) | MEDIUM | NO-VP-REGISTRY-VERIFICATION-ARCHITECTURE | **draft** — opened 2026-08-20 from F7 component-mgmt §6 disposition; no deps | medium (8 SP) |
+| S-PG-DELTA-DOC-RESYNC-1 | Mechanical resync gate between mid-review BC edits and their phase delta docs | MEDIUM | DELTA-DOC-RESYNC-NOT-ENFORCED-ON-BC-FIX-BURST | **draft** — opened 2026-08-20 from F7 component-mgmt §6 disposition; no deps | small (5 SP) |
+| S-PG-VP-CITATION-RECONCILE-1 | Reconcile PRD-delta VP citations against the verification-delta map + add a citation-consistency check | MEDIUM | PRD-DELTA-VP-CITATION-HANDOFF-DRIFTS-FROM-MAP | **draft** — opened 2026-08-20 from F7 component-mgmt §6 disposition; no deps | xsmall (3 SP) |
+| S-PG-FIX-SCOPE-VERIFY-1 | Scope-and-verify guard for orchestrator-issued fix instructions (prevent fix-caused regressions) | MEDIUM | ORCHESTRATOR-FIX-INSTRUCTION-CAUSED-REGRESSION | **draft** — opened 2026-08-20 from F7 component-mgmt §6 disposition; no deps | small (5 SP) |
+| S-PG-PRMANAGER-AWAIT-1 | Fix pr-manager returning BLOCKED without awaiting its spawned grandchild review agents | LOW | PR-MANAGER-RETURNS-BLOCKED-WITHOUT-AWAITING-GRANDCHILDREN | **draft** — opened 2026-08-20 from F7 component-mgmt §6 disposition; no deps | xsmall (3 SP) |
+| S-PG-REVIEW-DISTINCT-1 | Fix or document validate-pr-review-posted's assumption of a distinct (non-same-account) reviewer | LOW | VALIDATE-PR-REVIEW-POSTED-ASSUMES-DISTINCT-REVIEWER | **draft** — opened 2026-08-20 from F7 component-mgmt §6 disposition; no deps | xsmall (3 SP) |
+
+Total: 8 stories, 37 story points. Self-improvement story files:
+`.factory/stories/S-PG-{RED-GREEN-SWEEP,VERBATIM-PIN,VP-REGISTRY,DELTA-DOC-RESYNC,
+VP-CITATION-RECONCILE,FIX-SCOPE-VERIFY,PRMANAGER-AWAIT,REVIEW-DISTINCT}-1-*.md` (flat
+`.factory/stories/` path, listed individually with full paths in the Story Manifest below).
+
+---
+
 ## Cycle 1 (windows-build) — Feature: Windows Build Target
 
 Feature cycle: windows-build (cycle-001). Adds `x86_64-pc-windows-msvc` as a supported
@@ -1189,3 +1250,11 @@ Total rows: 133 (matches `total_stories: 133` in frontmatter — updated 2026-08
 | S-605-2 | feature-followup | /Users/zious/Documents/GITHUB/jira-cli/.factory/stories/S-605-2-issue-component-bulk-edit.md |
 | S-606-1 | feature-followup | /Users/zious/Documents/GITHUB/jira-cli/.factory/stories/S-606-1-issue-list-component-filter.md |
 | S-608-1 | feature-followup | /Users/zious/Documents/GITHUB/jira-cli/.factory/stories/S-608-1-component-rename.md |
+| S-PG-RED-GREEN-SWEEP-1 | feature-followup (self-improvement epic; F7 component-mgmt §6 disposition follow-up; RED-GREEN-STALE-COMMENT-SWEEP-MISSING; draft; no deps; 2026-08-20) | /Users/zious/Documents/GITHUB/jira-cli/.factory/stories/S-PG-RED-GREEN-SWEEP-1-stale-comment-gate.md |
+| S-PG-VERBATIM-PIN-1 | feature-followup (self-improvement epic; F7 component-mgmt §6 disposition follow-up; LOOSE-CONTAINS-MASKS-BC-VERBATIM-MESSAGE-DRIFT; draft; no deps; 2026-08-20) | /Users/zious/Documents/GITHUB/jira-cli/.factory/stories/S-PG-VERBATIM-PIN-1-bc-message-convention.md |
+| S-PG-VP-REGISTRY-1 | feature-followup (self-improvement epic; F7 component-mgmt §6 disposition follow-up; NO-VP-REGISTRY-VERIFICATION-ARCHITECTURE; draft; no deps; 2026-08-20) | /Users/zious/Documents/GITHUB/jira-cli/.factory/stories/S-PG-VP-REGISTRY-1-l4-verification-registry.md |
+| S-PG-DELTA-DOC-RESYNC-1 | feature-followup (self-improvement epic; F7 component-mgmt §6 disposition follow-up; DELTA-DOC-RESYNC-NOT-ENFORCED-ON-BC-FIX-BURST; draft; no deps; 2026-08-20) | /Users/zious/Documents/GITHUB/jira-cli/.factory/stories/S-PG-DELTA-DOC-RESYNC-1-bc-fix-burst-sync.md |
+| S-PG-VP-CITATION-RECONCILE-1 | feature-followup (self-improvement epic; F7 component-mgmt §6 disposition follow-up; PRD-DELTA-VP-CITATION-HANDOFF-DRIFTS-FROM-MAP; draft; no deps; 2026-08-20) | /Users/zious/Documents/GITHUB/jira-cli/.factory/stories/S-PG-VP-CITATION-RECONCILE-1-prd-delta-map.md |
+| S-PG-FIX-SCOPE-VERIFY-1 | feature-followup (self-improvement epic; F7 component-mgmt §6 disposition follow-up; ORCHESTRATOR-FIX-INSTRUCTION-CAUSED-REGRESSION; draft; no deps; 2026-08-20) | /Users/zious/Documents/GITHUB/jira-cli/.factory/stories/S-PG-FIX-SCOPE-VERIFY-1-orchestrator-fix-guard.md |
+| S-PG-PRMANAGER-AWAIT-1 | feature-followup (self-improvement epic; F7 component-mgmt §6 disposition follow-up; PR-MANAGER-RETURNS-BLOCKED-WITHOUT-AWAITING-GRANDCHILDREN; draft; no deps; 2026-08-20) | /Users/zious/Documents/GITHUB/jira-cli/.factory/stories/S-PG-PRMANAGER-AWAIT-1-grandchild-agents.md |
+| S-PG-REVIEW-DISTINCT-1 | feature-followup (self-improvement epic; F7 component-mgmt §6 disposition follow-up; VALIDATE-PR-REVIEW-POSTED-ASSUMES-DISTINCT-REVIEWER; draft; no deps; 2026-08-20) | /Users/zious/Documents/GITHUB/jira-cli/.factory/stories/S-PG-REVIEW-DISTINCT-1-same-account-reviewer.md |
