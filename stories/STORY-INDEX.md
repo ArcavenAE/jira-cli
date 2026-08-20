@@ -2,11 +2,39 @@
 document_type: story-index
 phase: phase-2-story-decomposition
 producer: story-writer
-version: "1.6.05"
-total_stories: 149
+version: "1.6.07"
+total_stories: 150
 total_waves: 4
 status: complete
 last_updated: |-
+  2026-08-20 (S-COMP-E2E-SWEEP-1 merged, drift resolved): status ready→done. PR #722
+  (squash 21622d1a, develop 4c1201f1→21622d1a) merged — new "Sweep orphaned E2E
+  components" step in `.github/workflows/e2e-sweeper.yml` (list → jq filter on
+  `-lifecycle-`/`-rename-src-`/`-rename-dst-` fixture markers → `jr component delete
+  <name> --orphan --yes`, best-effort). Marker-only filter provably preserves the
+  permanent AC-010 component (jq sanity test excluded PermanentComp/Backend/
+  AC-010-permanent/rename-manager). Workflow-only diff, no new secret/action/egress
+  change; 15/15 CI green, pr-review+security APPROVE. Drift item
+  COMPONENT-E2E-NO-SWEEPER-BACKSTOP (LOW) RESOLVED — see Drift Items in STATE.md.
+  `e2e-sweeper.yml` is schedule/workflow_dispatch-only (not exercised by normal PR CI);
+  step is proven safe offline (YAML/actionlint/jq-filter) and rides the daily 07:00 UTC
+  schedule for its first live exercise. 150→150 (status-only change, no count delta).
+  STORY-INDEX v1.6.06→v1.6.07.
+  Prior:
+  2026-08-20 (S-COMP-E2E-SWEEP-1 opened): 1 new READY story added — extends
+  `.github/workflows/e2e-sweeper.yml` with a new "Sweep orphaned E2E components" step,
+  closing the drift item COMPONENT-E2E-NO-SWEEPER-BACKSTOP (LOW, surfaced 2026-08-20 by
+  S-COMP-E2E-1). CI-infra-only story: touches ONLY `.github/workflows/e2e-sweeper.yml`;
+  zero new BCs (`behavioral_contracts: []` with a "no product BCs — CI-infra story"
+  frontmatter comment, same shape as S-PG-MERGE-AUTH-BYPASS); status set directly to
+  `ready` (not `draft`) since S-7.01's BC-authorship gate does not apply to a story with
+  no product BC surface and the ACs are fully specified. epic_id: "none" (matches
+  S-COMP-E2E-1/S-E2E-*/S-JSM-E2E-* test/CI-infra precedent, not the SELF-IMPROVEMENT
+  epic). depends_on:[]; blocks:[]. 6 ACs, the load-bearing one being AC-003: the sweep's
+  jq filter must match ONLY the `-lifecycle-`/`-rename-src-`/`-rename-dst-` fixture-marker
+  substrings and must NEVER match the permanent AC-010 component (DEC-280/DEC-293) that a
+  human added to the ES E2E project. 149→150; STORY-INDEX v1.6.05→v1.6.06.
+  Prior:
   2026-08-20 (S-COMP-E2E-1 delivered + live-validated GREEN): status ready→done. PR #719
   (d467f95a) merged to develop — 5 e2e tests + ComponentDropGuard + surface-guard + docs;
   per-story Step-4.5 CONVERGED (4 rounds → 3 clean passes). Two follow-on fix PRs closed
@@ -952,10 +980,11 @@ They have `wave: feature-followup` in frontmatter and live under `.factory/code-
 | S-606-1 | `issue list --component` filter (bare/`not:`/`none`/`all:`) (closes #606) | BC-2.1.018, BC-2.1.019, BC-2.1.020, BC-2.1.021, BC-2.1.022 | VP-COMPONENT-013, VP-COMPONENT-015 | **done** — merged 2026-08-17, PR #707, squash b1610d55; COMPONENT-MGMT bundle story 6 of 7; Wave 2, parallel Track B (singleton, no file overlap with component.rs serialized trio or Track A) COMPLETE; depends_on:[S-604-1]; target `src/cli/issue/list.rs`; priority P0 | medium (8 SP) |
 | S-608-1 | `jr component rename` — single-project and `--all-projects` fan-out, `--dry-run` (closes #608) | BC-8.3.001, BC-8.3.002, BC-8.3.003, BC-8.3.004, BC-8.3.005, BC-8.3.006, BC-8.3.007 | VP-COMPONENT-008, VP-COMPONENT-018, VP-COMPONENT-019, VP-COMPONENT-024, VP-COMPONENT-026 | **done** — merged 2026-08-18, PR #710, squash 23cc83aa; COMPONENT-MGMT bundle story 7 of 7; Wave 2, serialized component.rs sub-track position 3 of 3 COMPLETE — full trio (S-604-2/S-604-3/S-608-1) COMPLETE; depends_on:[S-604-1]; target `src/cli/component.rs`; priority P1 | medium (8 SP) |
 | S-COMP-E2E-1 | Live E2E coverage for the component command family — `component create`/`list`/`edit`/`delete` lifecycle round-trip, `component rename` single-project round-trip, `issue create --component` single-key round-trip, `issue edit --component` single-key native `update`-verb round-trip (distinct from the existing bulk-path live test), `issue list --component` bare/`not:`/`none` filter-grammar composition; new `ComponentDropGuard` best-effort teardown helper (mirrors `AttachmentDropGuard`); zero new BCs, zero new env vars, zero `src/` changes | BC-8.1.001, BC-8.1.002, BC-8.1.005, BC-8.1.007, BC-8.2.001, BC-8.2.006, BC-8.2.008, BC-8.3.001, BC-3.4.022, BC-3.4.024, BC-3.4.025, BC-2.1.018, BC-2.1.019, BC-2.1.020 | VP-COMPONENT-029, VP-COMPONENT-030, VP-COMPONENT-031, VP-COMPONENT-032, VP-COMPONENT-033 | **done** — MERGED 2026-08-20, PR #719 (`d467f95a`); per-story Step-4.5 CONVERGED (4 rounds → 3 clean passes); LIVE-VALIDATED GREEN via e2e run 32391992968 (103 passed/0 failed) after two follow-on fix PRs (#720 `bd1849b1`, #721 `4c1201f1`) closed live poll-lag false-REDs; depends_on:[S-604-1, S-604-2, S-604-3, S-605-1, S-606-1, S-608-1] (all done); target `tests/e2e_live.rs` | medium (8 SP) |
+| S-COMP-E2E-SWEEP-1 | Extend `e2e-sweeper.yml` to reap orphaned E2E component fixtures — new "Sweep orphaned E2E components" step (list + filter by `-lifecycle-`/`-rename-src-`/`-rename-dst-` fixture-marker name + `--orphan --yes` delete), closing the daily-sweeper backstop parity gap between issues (already swept) and components (`ComponentDropGuard`-only, no backstop for SIGKILL/lost-runner/force-cancel). CI-infra only — no BCs, no `src/`/`tests/` changes, one workflow file | — (no BCs; CI-infra-only, `.github/workflows/e2e-sweeper.yml` only) | — | **done** — MERGED 2026-08-20, PR #722, squash `21622d1a` (develop `4c1201f1`→`21622d1a`); closed drift item COMPONENT-E2E-NO-SWEEPER-BACKSTOP (LOW, RESOLVED); 15/15 CI green, pr-review+security APPROVE; live `workflow_dispatch` exercise deferred to the next daily schedule; no deps; target `.github/workflows/e2e-sweeper.yml` | xsmall (2 SP) |
 
 Feature-followup story files: `.factory/code-delivery/issue-NNN/story.md`. COMPONENT-MGMT bundle stories live under
 `.factory/stories/S-604-1-component-foundation-list.md` etc. (flat `.factory/stories/` path, not `code-delivery/`,
-per the S-604-1/S-604-2/S-604-3/S-605-1/S-605-2/S-606-1/S-608-1/S-COMP-E2E-1 file paths in the Story Manifest below).
+per the S-604-1/S-604-2/S-604-3/S-605-1/S-605-2/S-606-1/S-608-1/S-COMP-E2E-1/S-COMP-E2E-SWEEP-1 file paths in the Story Manifest below).
 
 ---
 
@@ -1289,3 +1318,4 @@ Total rows: 133 (matches `total_stories: 133` in frontmatter — updated 2026-08
 | S-PG-PRMANAGER-AWAIT-1 | feature-followup (self-improvement epic; F7 component-mgmt §6 disposition follow-up; PR-MANAGER-RETURNS-BLOCKED-WITHOUT-AWAITING-GRANDCHILDREN; draft; no deps; 2026-08-20) | /Users/zious/Documents/GITHUB/jira-cli/.factory/stories/S-PG-PRMANAGER-AWAIT-1-grandchild-agents.md |
 | S-PG-REVIEW-DISTINCT-1 | feature-followup (self-improvement epic; F7 component-mgmt §6 disposition follow-up; VALIDATE-PR-REVIEW-POSTED-ASSUMES-DISTINCT-REVIEWER; draft; no deps; 2026-08-20) | /Users/zious/Documents/GITHUB/jira-cli/.factory/stories/S-PG-REVIEW-DISTINCT-1-same-account-reviewer.md |
 | S-COMP-E2E-1 | feature-followup (test-hardening, not self-improvement epic; live E2E coverage for the component command family — component CRUD/rename lifecycle round-trips, issue create/edit --component single-key round-trips, issue list --component filter grammar; zero new BCs, zero new env vars; ComponentDropGuard teardown helper; **done** — MERGED 2026-08-20 PR #719 `d467f95a`, LIVE-VALIDATED GREEN (e2e run 32391992968, 103/0) after fix PRs #720/#721; depends_on:[S-604-1, S-604-2, S-604-3, S-605-1, S-606-1, S-608-1] (all done); 148→149; 2026-08-20) | /Users/zious/Documents/GITHUB/jira-cli/.factory/stories/S-COMP-E2E-1-component-family-live-e2e-coverage.md |
+| S-COMP-E2E-SWEEP-1 | feature-followup (CI-infra only, not self-improvement epic — touches this repo's own CI configuration for a jira-cli product-testing concern; extends e2e-sweeper.yml with a new "Sweep orphaned E2E components" step, list + filter-by-fixture-marker-name (`-lifecycle-`/`-rename-src-`/`-rename-dst-`) + `--orphan --yes` delete, mirroring the existing issue-sweep step's best-effort/per-item-isolation shape; CRITICAL SAFETY: filter predicate must never match the permanent AC-010 component (DEC-280/DEC-293); no age filter — safety instead comes from the `jira-e2e` concurrency group serializing the sweeper against live e2e.yml runs; no new BCs, no `src/`/`tests/` changes, zero new secrets/actions/egress; **done** — MERGED 2026-08-20, PR #722, squash `21622d1a`; drift item COMPONENT-E2E-NO-SWEEPER-BACKSTOP (LOW) RESOLVED; 15/15 CI green, pr-review+security APPROVE; live `workflow_dispatch` exercise deferred to the next daily 07:00 UTC schedule; depends_on:[]; 150→150 (status-only); 2026-08-20) | /Users/zious/Documents/GITHUB/jira-cli/.factory/stories/S-COMP-E2E-SWEEP-1-extend-sweeper-for-components.md |
