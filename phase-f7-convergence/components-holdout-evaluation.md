@@ -15,7 +15,7 @@ acceptance scenarios in
 
 | Scenario | Score | Justification (observed) |
 |----------|-------|--------------------------|
-| H-COMPONENT-001 | 0.90 | Shared name/ID resolver surfaced on `edit`/`delete`/`rename` (`<NAME_OR_ID>`, "partial match or numeric ID", BC-8.4.001 cited in help). Determinism/exact-match-precedence is a code property covered by `component_commands.rs` (146 tests, 0 fail) + lib `component` tests (15, 0 fail); live case-collision not exercisable offline. |
+| H-COMPONENT-001 | 0.90 | Shared name/ID resolver surfaced on `edit`/`delete`/`rename` (`<NAME_OR_ID>`, "partial match or numeric ID", BC-8.4.001 cited in help). Determinism/exact-match-precedence is a code property covered by `component_commands.rs` (120 tests, 0 fail) + lib `component` tests (a dozen-plus, all green); live case-collision not exercisable offline. |
 | H-COMPONENT-002 | 0.90 | `component list` requires `--project` (exit 64: "No project configured"); name resolution paths all require `--project`. Project-scoped, per-profile cache partitioning documented on surface. Cross-project isolation not exercisable offline but contract enforces per-project scoping. |
 | H-COMPONENT-003 | 0.85 | `component list --counts` present; help: "Enrich each component row with its related issue count. Issues one extra HTTP call per component (N+1). BC-8.1.003". JSON `count` field type not observable offline (no server); covered by tests + AC-010. |
 | H-COMPONENT-004 | 0.75 | `--verbose` present; `--counts` documented as always-live (N+1) and thus exempt, matching the scenario's carve-out. Warm-cache zero-HTTP behavior fundamentally needs a live/mock server — not independently verifiable in this offline eval; contract portion satisfied. |
@@ -29,7 +29,7 @@ acceptance scenarios in
 | H-COMPONENT-012 | 0.95 | `issue create` without `--component` additive; `issue_create_echo.rs` (37, 0 fail). JSM dispatch fork unaffected — the only interaction is the documented `--component`×`--request-type` mutual-exclusion (exit 64). |
 | H-COMPONENT-013 | 0.95 | `issue list` without `--component` additive; filter is opt-in JQL composition; `issue_list_errors.rs` (33, 0 fail). Default list/JQL composition unchanged. |
 | H-COMPONENT-014 | 0.95 | `jr --help` shows the new `component` entry cleanly alongside every pre-existing subcommand (issue/project/board/sprint/worklog/team/user/queue/requesttype/assets/auth/api); each subcommand `--help` renders intact. `cargo build` succeeded (clippy-clean tree required for merge). |
-| H-COMPONENT-015 | 0.90 | Scoped feature suites all green: `component_commands` 146/0, `issue_edit` 38/0, `issue_create_echo` 37/0, `issue_list_errors` 33/0, lib `component` 15/0. Broader full-run showed 10 test groups all `ok` (0 failed / 0 errors) before a harness capture artifact truncated the log; no failure observed anywhere. Feature merged via 7 CI-gated PRs on `develop`. |
+| H-COMPONENT-015 | 0.90 | Scoped feature suites all green: `component_commands` 120/0, `issue_edit` 38/0, `issue_create_echo` 37/0, `issue_list_errors` 33/0, lib `component` all green. Broader full-run showed 10 test groups all `ok` (0 failed / 0 errors) before a harness capture artifact truncated the log; no failure observed anywhere. Feature merged via 7 CI-gated PRs on `develop`. |
 
 ## Summary
 
