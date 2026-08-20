@@ -2588,3 +2588,21 @@ below for full detail.
 | Remaining open item | The manual `v0.7.0-dev.1` release tag push (`git tag -a v0.7.0-dev.1 4d1c3e54 && git push origin v0.7.0-dev.1`) is UNCHANGED and still outstanding -- note its target SHA `4d1c3e54` is now TWO merges behind the current `develop` tip `21622d1a` (S-COMP-E2E-1's 3 PRs, then S-COMP-E2E-SWEEP-1's 1 PR, all merged on top of it); the human should confirm whether the tag should still point at `4d1c3e54` (the CHANGELOG-promotion commit matching the `v0.7.0-dev.1` version string) or be re-pointed, before pushing. |
 | Resume command (at time of this checkpoint) | Open a fresh session and run `/vsdd-factory:next-step`. STATE.md shows `pipeline: PAUSED`. NEXT on resume: confirm with the human whether `v0.7.0-dev.1` has been tagged and pushed yet (still outstanding, target-SHA ancestry now needs re-confirmation); otherwise await the human's next dispatch decision -- candidates unchanged: the 8 `SELF-IMPROVEMENT` epic stories (all `draft`, need PO BC-authorship before `ready` per S-7.01), `ADOPT-MERGE-METHOD-RULESETS` (MEDIUM, standing), `S-TRAIL-DERIVATION-GUARD-1` (P2/draft), AX23-001 ratification, the still-owed F7-GATE-SYSTEMIC-INPUT-HASH-DRIFT-BOOKKEEPING hygiene sweep, and (optionally) triggering a `workflow_dispatch` run of `e2e-sweeper.yml` for S-COMP-E2E-SWEEP-1's first live exercise. |
 | Superseded by | **SESSION-WRAP-PAUSE (2026-08-20, v2.90→v2.91):** light human `/wrap` checkpoint. No pipeline work performed -- pure bookkeeping refresh. pipeline stays PAUSED, position/resume facts unchanged in substance (component-mgmt cycle CLOSED, all component-e2e follow-ups delivered/merged, nothing in flight). See the live checkpoint in `STATE.md` for the current state. |
+
+---
+
+### Archived Session Resume Checkpoint (superseded by RELEASE-TAG-PUSH-CONFIRMED-CLOSEOUT burst, 2026-08-20)
+
+| Field | Value |
+|-------|-------|
+| **Date** | 2026-08-20 |
+| Position | component-mgmt cycle CLOSED; all component-e2e follow-ups delivered/merged (S-COMP-E2E-1 #719 live-green 103/0; poll fixes #720/#721; sweeper S-COMP-E2E-SWEEP-1 #722, drift COMPONENT-E2E-NO-SWEEPER-BACKSTOP RESOLVED); pipeline PAUSED; nothing in flight. |
+| Convergence counter | None active. |
+| `develop` tip | `21622d1a` |
+| `activation_head` | `21622d1a` |
+| `activation_version` | `v0.7.0-dev.1` |
+| Open items (optional/non-blocking) | (1) Manual `v0.7.0-dev.1` release tag push remains outstanding -- target SHA `4d1c3e54` is now two merges behind the current tip `21622d1a`; confirm the intended target with the human before running `git tag -a v0.7.0-dev.1 4d1c3e54 && git push origin v0.7.0-dev.1`. (2) `e2e-sweeper.yml`'s new component-sweep step (S-COMP-E2E-SWEEP-1) validates on the next daily 07:00 UTC schedule, or an optional human-triggered `workflow_dispatch` -- not blocking. (3) The main product checkout used by this session is on the stale merged branch `chore/release-v0.7.0-dev.1` -- a fresh checkout of `develop` is recommended on resume. |
+| Standing deferred items | 8 `SELF-IMPROVEMENT` epic `S-PG-*` stories (all `draft`, need PO BC-authorship before `ready` per S-7.01) + F5-era JUSTIFIED-DEFERRAL/KEEP-DEFERRED items (component-mgmt-scoped rename-wording, ADR-0018 §2 cache-key canonicalization, `--all-projects` discovery-error-posture, S-605-1/S-605-2 acceptance items, F7-GATE-SYSTEMIC-INPUT-HASH-DRIFT-BOOKKEEPING hygiene sweep) -- carry forward unchanged from the prior checkpoint. |
+| Resume command | Open a fresh session and run `/vsdd-factory:next-step`. STATE.md shows `pipeline: PAUSED`. |
+| Superseded checkpoint | Prior Session Resume Checkpoint (S-COMP-E2E-SWEEP-1-MERGED-DRIFT-RESOLVED position, 2026-08-20) archived verbatim to `cycles/cycle-001/session-checkpoints.md`. |
+| Superseded by | **RELEASE-TAG-PUSH-CONFIRMED-CLOSEOUT (2026-08-20, v2.91→v2.92):** confirms the `v0.7.0-dev.1` annotated git tag has been PUSHED to `origin` (`0e5b7409`→`4d1c3e54`), closing the "manual tag push remains outstanding" open item recorded above -- release `v0.7.0-dev.1` is now COMPLETE for the develop/dev-release scope. Pure bookkeeping close-out burst, no pipeline work performed. See the live checkpoint in `STATE.md` for the current state. |
