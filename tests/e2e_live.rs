@@ -194,6 +194,39 @@ fn run_label() -> String {
     }
 }
 
+/// Returns a per-invocation-unique suffix for a component fixture NAME
+/// (distinct from `run_label()` itself, which stays a stable per-run/per-
+/// project marker used elsewhere for label-based sweeper cleanup).
+///
+/// **MED-2 (S-COMP-E2E-1 adversarial review):** in CI, `run_label()` is
+/// `e2e-{GITHUB_RUN_ID}` -- constant across "re-run failed jobs" (only
+/// `GITHUB_RUN_ATTEMPT` increments, `GITHUB_RUN_ID` does not). If a run is
+/// cancelled or killed before `ComponentDropGuard`'s best-effort `Drop`
+/// teardown fires, the component it created leaks under a name derived
+/// solely from `run_label()`; the re-run's `component create` call for that
+/// same fixture then collides on the still-live name and fails with a real
+/// (non-permission) HTTP 400 -- which under the OLD panic-on-any-non-403/404
+/// discipline would incorrectly read as a genuine regression rather than a
+/// leaked-fixture collision.
+///
+/// Deliberately scoped to component fixture NAMES only (`{label}-lifecycle`,
+/// `{label}-rename-src`/`-dst`) rather than changing `run_label()` itself,
+/// which many other tests in this suite depend on for label-based JQL
+/// filtering and sweeper-driven cleanup -- widening its shape is out of scope
+/// for this fix. Incorporates `GITHUB_RUN_ATTEMPT` (increments on every
+/// GitHub Actions re-run; absent locally) plus a nanosecond timestamp
+/// (guarantees uniqueness for local runs, which have no `GITHUB_RUN_ATTEMPT`
+/// at all, and adds defense-in-depth even in CI) so a leaked fixture from an
+/// earlier attempt can never collide with the current one's create call.
+fn component_fixture_suffix() -> String {
+    let attempt = env::var("GITHUB_RUN_ATTEMPT").unwrap_or_else(|_| "0".to_string());
+    let nanos = SystemTime::now()
+        .duration_since(UNIX_EPOCH)
+        .unwrap_or(Duration::from_secs(0))
+        .as_nanos();
+    format!("{attempt}-{nanos}")
+}
+
 /// Returns the E2E project key from the `JR_E2E_PROJECT` env var.
 ///
 /// Panics if the var is unset, empty, or whitespace-only — every live test
@@ -9169,6 +9202,1146 @@ fn test_e2e_issue_edit_component_multikey_bulk_roundtrip() {
             component_names(&after_remove)
         );
     }
+}
+
+// ────────────────────────────────────────────────────────────────────────────
+// S-COMP-E2E-1: live E2E coverage for the component command family
+//
+// Every other command in the family — `component create`/`list`/`edit`/
+// `delete`/`rename`, `issue create --component` (single-key), `issue edit
+// --component` (single-key native `update`-verb path, distinct from the bulk
+// `multiselectComponents` path already covered above), and `issue list
+// --component` (bare/`not:`/`none` JQL-composition grammar) — had ZERO
+// live-Jira verification before this story. This section closes that gap
+// with pure test-hardening: no new product behavior, no new BCs.
+//
+// Traces to: S-COMP-E2E-1, BC-8.1.001/002/005/007, BC-8.2.001/006/008,
+// BC-8.3.001, BC-3.4.022/024/025, BC-2.1.018/019/020.
+// ────────────────────────────────────────────────────────────────────────────
+
+/// Returns `true` (and emits a `SKIP:` message) when `out` failed with a 403
+/// -- or, when `allow_404` is `true`, also a 404 -- the shared clean-skip
+/// predicate for this story's component-family E2E tests (EC-COMP-E2E-3,
+/// AC-014). Any OTHER non-zero exit is NOT a skip signal; callers must treat
+/// it as a genuine test failure and `panic!` with full stdout/stderr context,
+/// mirroring `test_e2e_issue_edit_component_multikey_bulk_roundtrip`'s
+/// release-gate discipline above.
+///
+/// **MED-1 finding 1 (S-COMP-E2E-1 adversarial review):** the match is
+/// anchored to the exact rendered status-code token -- `"API error (403)"` /
+/// `"API error (404)"`, per `src/error.rs`'s `JrError::ApiError` Display impl
+/// (`"API error ({status}): {message}"`) and `main.rs`'s `eprintln!("Error:
+/// {e}")` / `--output json` error envelope, both of which route through that
+/// same Display -- rather than a bare `contains("403")` / `contains("404")`
+/// substring search. The bare form collided with digits appearing ANYWHERE
+/// in the error body (a component id like `10403`/`10404`, or a run-label
+/// fixture name echoed back by Jira), misclassifying a genuine 500/400
+/// failure as a permission skip.
+///
+/// **MED-1 finding 2:** `allow_404` distinguishes precondition probes -- where
+/// a 404 is a legitimate "feature/permission absent" signal (e.g.
+/// `discover_component`, or a `… create` call that has not yet created
+/// anything this test depends on existing) -- from post-create mutations
+/// (edit, delete, rename, or an issue-edit acting on a key this SAME test
+/// already created), where a 404 means the resource vanished mid-test: a real
+/// bug, never a permission gate. Post-create-mutation call sites MUST pass
+/// `allow_404: false`.
+fn skip_on_403_404(out: &std::process::Output, context: &str, allow_404: bool) -> bool {
+    if out.status.success() {
+        return false;
+    }
+    let stderr = String::from_utf8_lossy(&out.stderr);
+    let is_403 = stderr.contains("API error (403)");
+    let is_404 = allow_404 && stderr.contains("API error (404)");
+    if out.status.code() == Some(1) && (is_403 || is_404) {
+        eprintln!(
+            "SKIP: {context} returned {code} -- permission/plan gate; skipping.\nstderr: {stderr}",
+            code = if is_403 { "403" } else { "404" }
+        );
+        true
+    } else {
+        false
+    }
+}
+
+/// Discover the first component defined on `proj` via `jr component list
+/// --project <proj> --output json`.
+///
+/// Clean-skip (returns `None` + `eprintln!("SKIP: ...")`) when the project has
+/// zero components or the discovery call fails with a 403/404 permission/plan
+/// gate. Any OTHER non-zero exit is a genuine test failure (panics) — mirrors
+/// `test_e2e_issue_edit_component_multikey_bulk_roundtrip`'s precondition-check
+/// discipline, reused here for AC-009/AC-010/AC-011 (S-COMP-E2E-1).
+fn discover_component(h: &E2eHarness, proj: &str, context: &str) -> Option<String> {
+    let out = h
+        .cmd()
+        .args(["component", "list", "--project", proj, "--output", "json"])
+        .output()
+        .expect("failed to spawn jr for component list (discovery)");
+    if !out.status.success() {
+        if skip_on_403_404(&out, context, /* allow_404 */ true) {
+            return None;
+        }
+        panic!(
+            "{context}: component list failed (non-403/404 -- not a permission skip):\n\
+             stdout: {}\nstderr: {}",
+            String::from_utf8_lossy(&out.stdout),
+            String::from_utf8_lossy(&out.stderr)
+        );
+    }
+    let components: Value =
+        serde_json::from_slice(&out.stdout).expect("component list output must be valid JSON");
+    match components.as_array().and_then(|arr| arr.first()) {
+        Some(c) => Some(
+            c.get("name")
+                .and_then(Value::as_str)
+                .expect("component list entry must have a 'name' field")
+                .to_string(),
+        ),
+        None => {
+            eprintln!("SKIP: {context} -- project {proj} has zero components defined");
+            None
+        }
+    }
+}
+
+/// Bounded-backoff poll for `jr issue list --project <proj> --component <comp>
+/// --output json`, returning `true` once `key` appears in the results.
+///
+/// Reuses `poll_schedule`'s exponential-backoff SCHEDULE (EC-COMP-E2E-5) —
+/// 5 attempts, 250ms initial delay doubling each retry (250/500/1000/2000ms,
+/// ~3.75s total budget) — and drives the `--project`/`--component` flag form
+/// rather than `--jql`, since AC-011..AC-013 test the flag-composition
+/// grammar directly, not JQL string composition.
+///
+/// **LOW-2 (S-COMP-E2E-1 adversarial review) — this does NOT mirror
+/// `poll_jql`'s CALLER-FACING behavior**, only its backoff schedule.
+/// `poll_jql` offers a `PollJqlMode::SkipOnEmpty` / `FailOnShort` distinction
+/// so a caller can choose "clean-skip on empty" vs. "panic if results stay
+/// short of a minimum". This function has no such mode parameter: on budget
+/// exhaustion (empty OR non-matching results through all 5 attempts) it
+/// simply returns `false`, and its sole caller treats that as a hard
+/// `assert!` failure (AC-011), never a clean skip. That is intentional here —
+/// AC-014 documents this suite as a release gate, not a best-effort probe —
+/// but it means the two functions are NOT interchangeable and a caller
+/// expecting `poll_jql`-style skip semantics from this function will get a
+/// panic instead.
+fn poll_component_filter(h: &E2eHarness, proj: &str, comp: &str, key: &str) -> bool {
+    const MAX_ATTEMPTS: usize = 5;
+    let schedule = poll_schedule(MAX_ATTEMPTS, 250);
+    for attempt in 1..=MAX_ATTEMPTS {
+        let out = h
+            .cmd()
+            .args([
+                "issue",
+                "list",
+                "--project",
+                proj,
+                "--component",
+                comp,
+                "--output",
+                "json",
+            ])
+            .output()
+            .expect("failed to spawn jr for issue list --component (poll)");
+        if out.status.success() {
+            if let Ok(v) = serde_json::from_slice::<Value>(&out.stdout) {
+                if let Some(arr) = v.as_array() {
+                    if arr
+                        .iter()
+                        .any(|i| i.get("key").and_then(Value::as_str) == Some(key))
+                    {
+                        return true;
+                    }
+                }
+            }
+        }
+        if attempt < MAX_ATTEMPTS {
+            std::thread::sleep(Duration::from_millis(schedule[attempt - 1]));
+        }
+    }
+    false
+}
+
+/// Best-effort `Drop`-guard teardown for a throwaway component created during
+/// this story's E2E tests (AC-015).
+///
+/// Modeled verbatim on `AttachmentDropGuard` (S-576-6): a fresh
+/// `E2eHarness::new()` is spawned inside `drop()` rather than borrowing the
+/// test's own harness across a potential panic-unwind, and every failure path
+/// emits `eprintln!("[WARN] ...")` and returns — `drop()` must never panic.
+///
+/// `component_id` defaults to `None` (no cleanup performed) and must be
+/// populated IMMEDIATELY after the corresponding `component create` call
+/// succeeds — never before, and never skipped even on an early return (an
+/// unpopulated guard performs no cleanup by design). `project` must be
+/// populated alongside `component_id`; if `component_id` is `Some` while
+/// `project` is `None`, `drop()` warns and skips instead of attempting a
+/// malformed delete.
+struct ComponentDropGuard {
+    project: Option<String>,
+    component_id: Option<String>,
+}
+
+impl ComponentDropGuard {
+    fn new() -> Self {
+        Self {
+            project: None,
+            component_id: None,
+        }
+    }
+}
+
+impl Drop for ComponentDropGuard {
+    fn drop(&mut self) {
+        let Some(ref id) = self.component_id else {
+            return;
+        };
+        let Some(ref proj) = self.project else {
+            eprintln!(
+                "[WARN] ComponentDropGuard Drop: component_id {id} set but project is None -- \
+                 cannot delete; this is a test bug, not a live-Jira condition."
+            );
+            return;
+        };
+        let h = E2eHarness::new();
+        match h
+            .cmd()
+            .args([
+                "component",
+                "delete",
+                id,
+                "--project",
+                proj,
+                "--orphan",
+                "--yes",
+            ])
+            .output()
+        {
+            Ok(o) if o.status.success() => {}
+            Ok(o) => eprintln!(
+                "[WARN] ComponentDropGuard Drop: delete {id} failed (exit {:?}): {}",
+                o.status.code(),
+                String::from_utf8_lossy(&o.stderr)
+            ),
+            Err(e) => eprintln!("[WARN] ComponentDropGuard Drop: delete spawn error: {e}"),
+        }
+    }
+}
+
+/// E2E: `jr component create` → `list` → `edit` → `list` → `delete` → `list`
+/// full lifecycle round-trip against a live Jira Cloud project.
+///
+/// Traces to: AC-001..AC-006, BC-8.1.001, BC-8.1.002, BC-8.1.005, BC-8.1.007,
+/// BC-8.2.001, BC-8.2.006, BC-8.2.008.
+#[test]
+#[ignore = "set JR_RUN_E2E=1 and use --include-ignored to run against a live Jira site"]
+fn test_e2e_component_lifecycle_roundtrip() {
+    if !e2e_enabled() {
+        return;
+    }
+    let h = e2e_harness();
+    let proj = project();
+    let label = run_label();
+    // MED-2: unique per invocation so a leaked fixture from a killed/cancelled
+    // prior CI attempt can never collide with this run's create call.
+    let name = format!("{label}-lifecycle-{}", component_fixture_suffix());
+    let mut guard = ComponentDropGuard::new();
+
+    // AC-001: create.
+    let create_out = h
+        .cmd()
+        .args([
+            "component",
+            "create",
+            "--project",
+            &proj,
+            &name,
+            "--description",
+            "S-COMP-E2E-1 lifecycle fixture",
+            "--output",
+            "json",
+        ])
+        .output()
+        .expect("failed to spawn jr for component create");
+    if !create_out.status.success() {
+        if skip_on_403_404(&create_out, "component create", /* allow_404 */ true) {
+            return;
+        }
+        panic!(
+            "component create failed (non-403/404 -- not a permission skip):\n\
+             stdout: {}\nstderr: {}",
+            String::from_utf8_lossy(&create_out.stdout),
+            String::from_utf8_lossy(&create_out.stderr)
+        );
+    }
+    let created: Value = serde_json::from_slice(&create_out.stdout)
+        .expect("component create output must be valid JSON");
+    let id = created
+        .get("id")
+        .and_then(Value::as_str)
+        .expect("component create JSON must contain an 'id' field")
+        .to_string();
+
+    // Arm the guard IMMEDIATELY after create succeeds, before any further assertion --
+    // a panic in the shape/name/project assertions below must still trigger cleanup.
+    guard.project = Some(proj.clone());
+    guard.component_id = Some(id.clone());
+
+    assert_eq!(
+        created.as_object().map(|o| o.len()),
+        Some(3),
+        "component create JSON must have exactly 3 keys (id, name, project); got: {created}"
+    );
+    assert_eq!(
+        created.get("name").and_then(Value::as_str),
+        Some(name.as_str())
+    );
+    assert_eq!(
+        created.get("project").and_then(Value::as_str),
+        Some(proj.as_str())
+    );
+
+    // AC-002: list reflects the created component.
+    let list_out_1 = h
+        .cmd()
+        .args(["component", "list", "--project", &proj, "--output", "json"])
+        .output()
+        .expect("failed to spawn jr for component list (AC-002)");
+    assert!(
+        list_out_1.status.success(),
+        "component list (AC-002) failed:\nstdout: {}\nstderr: {}",
+        String::from_utf8_lossy(&list_out_1.stdout),
+        String::from_utf8_lossy(&list_out_1.stderr)
+    );
+    let list1: Value = serde_json::from_slice(&list_out_1.stdout)
+        .expect("component list (AC-002) output must be valid JSON");
+    let arr1 = list1
+        .as_array()
+        .expect("component list (AC-002) must be a JSON array");
+    assert!(
+        arr1.iter()
+            .any(|c| c.get("id").and_then(Value::as_str) == Some(id.as_str())
+                && c.get("name").and_then(Value::as_str) == Some(name.as_str())),
+        "component list (AC-002) must contain id={id} name={name}; got: {list1}"
+    );
+
+    // AC-003: edit (only-supplied-fields; JSON result shape).
+    //
+    // LOW-3 (S-COMP-E2E-1 adversarial review): this is a BLACK-BOX assertion —
+    // it verifies the edit's observable result shape (id/name/project keys)
+    // and that `name` was actually updated, but it supplies BOTH `--name` and
+    // `--description` on this call, so it cannot distinguish "only supplied
+    // fields were sent on the wire" from "all fields were sent and happened
+    // to match". BC-8.1.007's "only-supplied-fields" wire-contract guarantee
+    // (e.g. that editing just `--name` does NOT also re-send `description`)
+    // is covered by wiremock/unit tests elsewhere, not by this live E2E test.
+    let new_name = format!("{name}-renamed");
+    let edit_out = h
+        .cmd()
+        .args([
+            "component",
+            "edit",
+            &id,
+            "--project",
+            &proj,
+            "--name",
+            &new_name,
+            "--description",
+            "S-COMP-E2E-1 lifecycle fixture (edited)",
+            "--output",
+            "json",
+        ])
+        .output()
+        .expect("failed to spawn jr for component edit");
+    if !edit_out.status.success() {
+        if skip_on_403_404(&edit_out, "component edit", /* allow_404 */ false) {
+            return;
+        }
+        panic!(
+            "component edit failed (non-403/404 -- not a permission skip):\n\
+             stdout: {}\nstderr: {}",
+            String::from_utf8_lossy(&edit_out.stdout),
+            String::from_utf8_lossy(&edit_out.stderr)
+        );
+    }
+    let edited: Value =
+        serde_json::from_slice(&edit_out.stdout).expect("component edit output must be valid JSON");
+    assert_eq!(
+        edited.as_object().map(|o| o.len()),
+        Some(3),
+        "component edit JSON must have exactly 3 keys (id, name, project); got: {edited}"
+    );
+    assert_eq!(edited.get("id").and_then(Value::as_str), Some(id.as_str()));
+    assert_eq!(
+        edited.get("name").and_then(Value::as_str),
+        Some(new_name.as_str())
+    );
+
+    // AC-004: list reflects the edit.
+    let list_out_2 = h
+        .cmd()
+        .args(["component", "list", "--project", &proj, "--output", "json"])
+        .output()
+        .expect("failed to spawn jr for component list (AC-004)");
+    assert!(
+        list_out_2.status.success(),
+        "component list (AC-004) failed:\nstdout: {}\nstderr: {}",
+        String::from_utf8_lossy(&list_out_2.stdout),
+        String::from_utf8_lossy(&list_out_2.stderr)
+    );
+    let list2: Value = serde_json::from_slice(&list_out_2.stdout)
+        .expect("component list (AC-004) output must be valid JSON");
+    let arr2 = list2
+        .as_array()
+        .expect("component list (AC-004) must be a JSON array");
+    assert!(
+        arr2.iter()
+            .any(|c| c.get("id").and_then(Value::as_str) == Some(id.as_str())
+                && c.get("name").and_then(Value::as_str) == Some(new_name.as_str())),
+        "component list (AC-004) must contain id={id} name={new_name}; got: {list2}"
+    );
+    assert!(
+        !arr2
+            .iter()
+            .any(|c| c.get("name").and_then(Value::as_str) == Some(name.as_str())),
+        "component list (AC-004) must NOT contain the original name {name}; got: {list2}"
+    );
+
+    // AC-005: delete (--orphan --yes; JSON result shape).
+    let delete_out = h
+        .cmd()
+        .args([
+            "component",
+            "delete",
+            &id,
+            "--project",
+            &proj,
+            "--orphan",
+            "--yes",
+            "--output",
+            "json",
+        ])
+        .output()
+        .expect("failed to spawn jr for component delete");
+    if !delete_out.status.success() {
+        if skip_on_403_404(&delete_out, "component delete", /* allow_404 */ false) {
+            return;
+        }
+        panic!(
+            "component delete failed (non-403/404 -- not a permission skip):\n\
+             stdout: {}\nstderr: {}",
+            String::from_utf8_lossy(&delete_out.stdout),
+            String::from_utf8_lossy(&delete_out.stderr)
+        );
+    }
+    let deleted: Value = serde_json::from_slice(&delete_out.stdout)
+        .expect("component delete output must be valid JSON");
+    let mut delete_keys: Vec<&str> = deleted
+        .as_object()
+        .map(|o| o.keys().map(String::as_str).collect())
+        .unwrap_or_default();
+    delete_keys.sort_unstable();
+    assert_eq!(
+        delete_keys,
+        vec![
+            "affectedIssueCount",
+            "affectedIssues",
+            "deleted",
+            "movedIssuesTo"
+        ],
+        "component delete JSON must have exactly these 4 keys; got: {deleted}"
+    );
+    assert_eq!(
+        deleted.get("deleted").and_then(Value::as_str),
+        Some(id.as_str())
+    );
+    assert!(
+        deleted
+            .get("movedIssuesTo")
+            .map(Value::is_null)
+            .unwrap_or(false),
+        "movedIssuesTo must be JSON null under --orphan; got: {deleted}"
+    );
+
+    // Disarm the guard -- the delete above already succeeded (AC-005).
+    guard.component_id = None;
+
+    // AC-006: list reflects the deletion.
+    let list_out_3 = h
+        .cmd()
+        .args(["component", "list", "--project", &proj, "--output", "json"])
+        .output()
+        .expect("failed to spawn jr for component list (AC-006)");
+    assert!(
+        list_out_3.status.success(),
+        "component list (AC-006) failed:\nstdout: {}\nstderr: {}",
+        String::from_utf8_lossy(&list_out_3.stdout),
+        String::from_utf8_lossy(&list_out_3.stderr)
+    );
+    let list3: Value = serde_json::from_slice(&list_out_3.stdout)
+        .expect("component list (AC-006) output must be valid JSON");
+    let arr3 = list3
+        .as_array()
+        .expect("component list (AC-006) must be a JSON array");
+    assert!(
+        !arr3
+            .iter()
+            .any(|c| c.get("id").and_then(Value::as_str) == Some(id.as_str())),
+        "component list (AC-006) must NOT contain id={id} after delete; got: {list3}"
+    );
+}
+
+/// E2E: `jr component rename OLD NEW --project <proj>` round-trip against a
+/// live Jira Cloud project — id-preservation + PUT wire shape (BC-8.3.001).
+///
+/// Traces to: AC-007, AC-008, BC-8.3.001.
+#[test]
+#[ignore = "set JR_RUN_E2E=1 and use --include-ignored to run against a live Jira site"]
+fn test_e2e_component_rename_roundtrip() {
+    if !e2e_enabled() {
+        return;
+    }
+    let h = e2e_harness();
+    let proj = project();
+    let label = run_label();
+    // MED-2: unique per invocation (shared suffix across src/dst so the pair
+    // reads as one fixture) so a leaked fixture from a killed/cancelled prior
+    // CI attempt can never collide with this run's create call.
+    let suffix = component_fixture_suffix();
+    let old_name = format!("{label}-rename-src-{suffix}");
+    let new_name = format!("{label}-rename-dst-{suffix}");
+    let mut guard = ComponentDropGuard::new();
+
+    // Fresh throwaway component fixture (own guard instance, tracked by
+    // numeric id so cleanup survives the rename below).
+    let create_out = h
+        .cmd()
+        .args([
+            "component",
+            "create",
+            "--project",
+            &proj,
+            &old_name,
+            "--output",
+            "json",
+        ])
+        .output()
+        .expect("failed to spawn jr for component create (rename fixture)");
+    if !create_out.status.success() {
+        if skip_on_403_404(
+            &create_out,
+            "component create (rename fixture)",
+            /* allow_404 */ true,
+        ) {
+            return;
+        }
+        panic!(
+            "component create (rename fixture) failed (non-403/404 -- not a permission skip):\n\
+             stdout: {}\nstderr: {}",
+            String::from_utf8_lossy(&create_out.stdout),
+            String::from_utf8_lossy(&create_out.stderr)
+        );
+    }
+    let created: Value = serde_json::from_slice(&create_out.stdout)
+        .expect("component create (rename fixture) output must be valid JSON");
+    let id = created
+        .get("id")
+        .and_then(Value::as_str)
+        .expect("component create (rename fixture) JSON must contain an 'id' field")
+        .to_string();
+    guard.project = Some(proj.clone());
+    guard.component_id = Some(id.clone());
+
+    // AC-007: rename.
+    let rename_out = h
+        .cmd()
+        .args([
+            "component",
+            "rename",
+            &old_name,
+            &new_name,
+            "--project",
+            &proj,
+            "--output",
+            "json",
+        ])
+        .output()
+        .expect("failed to spawn jr for component rename");
+    if !rename_out.status.success() {
+        if skip_on_403_404(&rename_out, "component rename", /* allow_404 */ false) {
+            return;
+        }
+        panic!(
+            "component rename failed (non-403/404 -- not a permission skip):\n\
+             stdout: {}\nstderr: {}",
+            String::from_utf8_lossy(&rename_out.stdout),
+            String::from_utf8_lossy(&rename_out.stderr)
+        );
+    }
+    let renamed_out: Value = serde_json::from_slice(&rename_out.stdout)
+        .expect("component rename output must be valid JSON");
+    let renamed = renamed_out
+        .get("renamed")
+        .expect("component rename JSON must contain a top-level 'renamed' key");
+    assert_eq!(
+        renamed.get("id").and_then(Value::as_str),
+        Some(id.as_str()),
+        "renamed.id must equal the id captured at creation (BC-8.3.001 id-preservation); got: {renamed_out}"
+    );
+    assert_eq!(
+        renamed.get("from").and_then(Value::as_str),
+        Some(old_name.as_str())
+    );
+    assert_eq!(
+        renamed.get("to").and_then(Value::as_str),
+        Some(new_name.as_str())
+    );
+    assert_eq!(
+        renamed.get("project").and_then(Value::as_str),
+        Some(proj.as_str())
+    );
+
+    // AC-008: list reflects the rename.
+    let list_out = h
+        .cmd()
+        .args(["component", "list", "--project", &proj, "--output", "json"])
+        .output()
+        .expect("failed to spawn jr for component list (AC-008)");
+    assert!(
+        list_out.status.success(),
+        "component list (AC-008) failed:\nstdout: {}\nstderr: {}",
+        String::from_utf8_lossy(&list_out.stdout),
+        String::from_utf8_lossy(&list_out.stderr)
+    );
+    let list: Value = serde_json::from_slice(&list_out.stdout)
+        .expect("component list (AC-008) output must be valid JSON");
+    let arr = list
+        .as_array()
+        .expect("component list (AC-008) must be a JSON array");
+    assert!(
+        arr.iter()
+            .any(|c| c.get("id").and_then(Value::as_str) == Some(id.as_str())
+                && c.get("name").and_then(Value::as_str) == Some(new_name.as_str())),
+        "component list (AC-008) must contain id={id} name={new_name}; got: {list}"
+    );
+    assert!(
+        !arr.iter()
+            .any(|c| c.get("name").and_then(Value::as_str) == Some(old_name.as_str())),
+        "component list (AC-008) must NOT contain the original name {old_name}; got: {list}"
+    );
+
+    // Teardown handled by `guard`'s Drop impl (component delete --orphan --yes,
+    // by the stable numeric id — survives the rename above per AC-015).
+}
+
+/// E2E: `jr issue create --project <proj> --component <comp>` sets the
+/// initial `components` array on a live Jira Cloud issue (BC-3.4.024).
+///
+/// Component discovery mirrors
+/// `test_e2e_issue_edit_component_multikey_bulk_roundtrip`'s precondition
+/// check — clean-skip if the project has zero components. No throwaway
+/// component is created by this test (independent of the lifecycle fixtures
+/// above).
+///
+/// Traces to: AC-009, BC-3.4.024, BC-3.4.025.
+#[test]
+#[ignore = "set JR_RUN_E2E=1 and use --include-ignored to run against a live Jira site"]
+fn test_e2e_issue_create_component_single_key_roundtrip() {
+    if !e2e_enabled() {
+        return;
+    }
+    let h = e2e_harness();
+    let proj = project();
+    let itype = issue_type();
+    let label = run_label();
+
+    let comp = match discover_component(&h, &proj, "issue create --component discovery") {
+        Some(c) => c,
+        None => return,
+    };
+
+    let summary = format!("[e2e {label}] create --component single-key");
+    let create_out = h
+        .cmd()
+        .args([
+            "issue",
+            "create",
+            "--project",
+            &proj,
+            "--type",
+            &itype,
+            "--summary",
+            &summary,
+            "--label",
+            &label,
+            "--component",
+            &comp,
+            "--output",
+            "json",
+        ])
+        .output()
+        .expect("failed to spawn jr for issue create --component");
+    if !create_out.status.success() {
+        if skip_on_403_404(
+            &create_out,
+            "issue create --component",
+            /* allow_404 */ true,
+        ) {
+            return;
+        }
+        panic!(
+            "issue create --component failed (non-403/404 -- not a permission skip):\n\
+             stdout: {}\nstderr: {}",
+            String::from_utf8_lossy(&create_out.stdout),
+            String::from_utf8_lossy(&create_out.stderr)
+        );
+    }
+    let created: Value = serde_json::from_slice(&create_out.stdout)
+        .expect("issue create --component output must be valid JSON");
+    let key = created
+        .get("key")
+        .and_then(Value::as_str)
+        .expect("issue create --component JSON must contain a 'key' field")
+        .to_string();
+
+    let view = poll_view(&key, &h);
+    let names: Vec<String> = view
+        .get("fields")
+        .and_then(|f| f.get("components"))
+        .and_then(Value::as_array)
+        .map(|arr| {
+            arr.iter()
+                .filter_map(|c| c.get("name").and_then(Value::as_str))
+                .map(str::to_string)
+                .collect()
+        })
+        .unwrap_or_default();
+    assert!(
+        names.contains(&comp),
+        "fields.components[].name must contain '{comp}' on {key}; got: {names:?}"
+    );
+
+    best_effort_close(&h, &key);
+}
+
+/// E2E: `jr issue edit <key> --component add:<comp>` / `remove:<comp>` on
+/// EXACTLY ONE key — the single-key native `update`-verb wire shape
+/// (BC-3.4.022), distinct from
+/// `test_e2e_issue_edit_component_multikey_bulk_roundtrip` above, which
+/// always supplies 2+ keys and therefore only ever exercises BC-3.4.023's
+/// `multiselectComponents` bulk shape.
+///
+/// Architecture Compliance Rule 3: this test MUST supply exactly ONE key on
+/// the `issue edit --component` command line — using 2+ keys would silently
+/// re-exercise the bulk path instead of the single-key native path this test
+/// targets.
+///
+/// Traces to: AC-010, BC-3.4.022.
+#[test]
+#[ignore = "set JR_RUN_E2E=1 and use --include-ignored to run against a live Jira site"]
+fn test_e2e_issue_edit_component_single_key_roundtrip() {
+    if !e2e_enabled() {
+        return;
+    }
+    let h = e2e_harness();
+    let proj = project();
+    let label = run_label();
+
+    let comp = match discover_component(&h, &proj, "issue edit --component single-key discovery") {
+        Some(c) => c,
+        None => return,
+    };
+
+    // Fresh, comp-free issue (--component NOT supplied at create time).
+    let summary = format!("[e2e {label}] edit --component single-key");
+    let key = seed_issue(&h, &label, &summary);
+
+    let component_names = |v: &Value| -> Vec<String> {
+        v.get("fields")
+            .and_then(|f| f.get("components"))
+            .and_then(Value::as_array)
+            .map(|arr| {
+                arr.iter()
+                    .filter_map(|c| c.get("name").and_then(Value::as_str))
+                    .map(str::to_string)
+                    .collect()
+            })
+            .unwrap_or_default()
+    };
+
+    let before = poll_view(&key, &h);
+    assert!(
+        !component_names(&before).contains(&comp),
+        "component '{comp}' must be ABSENT on {key} before add; got: {:?}",
+        component_names(&before)
+    );
+
+    // Single-key add (exactly ONE key on the command line -- BC-3.4.022, not
+    // BC-3.4.023's bulk multiselectComponents shape).
+    let add_out = h
+        .cmd()
+        .args(["issue", "edit", &key, "--component", &format!("add:{comp}")])
+        .output()
+        .expect("failed to spawn jr for single-key issue edit --component add");
+    if !add_out.status.success() {
+        if skip_on_403_404(
+            &add_out,
+            "single-key issue edit --component add",
+            /* allow_404 */ false,
+        ) {
+            best_effort_close(&h, &key);
+            return;
+        }
+        panic!(
+            "single-key issue edit --component add failed (non-403/404 -- not a permission \
+             skip):\nstdout: {}\nstderr: {}",
+            String::from_utf8_lossy(&add_out.stdout),
+            String::from_utf8_lossy(&add_out.stderr)
+        );
+    }
+    let after_add = poll_view(&key, &h);
+    assert!(
+        component_names(&after_add).contains(&comp),
+        "component '{comp}' must be PRESENT on {key} after add; got: {:?}",
+        component_names(&after_add)
+    );
+
+    // Single-key remove.
+    let remove_out = h
+        .cmd()
+        .args([
+            "issue",
+            "edit",
+            &key,
+            "--component",
+            &format!("remove:{comp}"),
+        ])
+        .output()
+        .expect("failed to spawn jr for single-key issue edit --component remove");
+    if !remove_out.status.success() {
+        if skip_on_403_404(
+            &remove_out,
+            "single-key issue edit --component remove",
+            /* allow_404 */ false,
+        ) {
+            best_effort_close(&h, &key);
+            return;
+        }
+        panic!(
+            "single-key issue edit --component remove failed (non-403/404 -- not a permission \
+             skip):\nstdout: {}\nstderr: {}",
+            String::from_utf8_lossy(&remove_out.stdout),
+            String::from_utf8_lossy(&remove_out.stderr)
+        );
+    }
+    let after_remove = poll_view(&key, &h);
+    assert!(
+        !component_names(&after_remove).contains(&comp),
+        "component '{comp}' must be ABSENT on {key} after remove; got: {:?}",
+        component_names(&after_remove)
+    );
+
+    best_effort_close(&h, &key);
+}
+
+/// E2E: `jr issue list --project <proj> --component <comp>` bare/`not:`/`none`
+/// filter grammar composition against a live JQL search (BC-2.1.018/019/020).
+///
+/// Component discovery mirrors AC-009/AC-010 (independent call, clean-skip on
+/// empty). A fresh issue is created WITH `--component <comp>` at create time,
+/// then polled via a bounded backoff loop (`poll_component_filter`, mirrors
+/// the suite's `poll_jql` convention) before the filter assertions, to absorb
+/// JQL search indexing lag (EC-COMP-E2E-5).
+///
+/// Traces to: AC-011, AC-012, AC-013, BC-2.1.018, BC-2.1.019, BC-2.1.020.
+#[test]
+#[ignore = "set JR_RUN_E2E=1 and use --include-ignored to run against a live Jira site"]
+fn test_e2e_issue_list_component_filter_grammar() {
+    if !e2e_enabled() {
+        return;
+    }
+    let h = e2e_harness();
+    let proj = project();
+    let itype = issue_type();
+    let label = run_label();
+
+    let comp = match discover_component(&h, &proj, "issue list --component filter discovery") {
+        Some(c) => c,
+        None => return,
+    };
+
+    let summary = format!("[e2e {label}] list --component filter grammar");
+    let create_out = h
+        .cmd()
+        .args([
+            "issue",
+            "create",
+            "--project",
+            &proj,
+            "--type",
+            &itype,
+            "--summary",
+            &summary,
+            "--label",
+            &label,
+            "--component",
+            &comp,
+            "--output",
+            "json",
+        ])
+        .output()
+        .expect("failed to spawn jr for issue create --component (filter fixture)");
+    if !create_out.status.success() {
+        if skip_on_403_404(
+            &create_out,
+            "issue create --component (filter fixture)",
+            /* allow_404 */ true,
+        ) {
+            return;
+        }
+        panic!(
+            "issue create --component (filter fixture) failed (non-403/404 -- not a permission \
+             skip):\nstdout: {}\nstderr: {}",
+            String::from_utf8_lossy(&create_out.stdout),
+            String::from_utf8_lossy(&create_out.stderr)
+        );
+    }
+    let created: Value = serde_json::from_slice(&create_out.stdout)
+        .expect("issue create --component (filter fixture) output must be valid JSON");
+    let key = created
+        .get("key")
+        .and_then(Value::as_str)
+        .expect("issue create --component (filter fixture) JSON must contain a 'key' field")
+        .to_string();
+    let _ = poll_view(&key, &h);
+
+    // LOW-A / flaky-risk fix (S-COMP-E2E-1 adversarial review, round 2): seed
+    // a SECOND, throwaway CONTROL issue that carries NO component. Without
+    // it, the bare-filter assertion below is positive-only (a regression
+    // that dropped the component constraint on the bare path would still
+    // contain `key`), and the `not:`/`none` non-empty assertions further
+    // down are only ever satisfied by externally-accumulated component-less
+    // issues in the project rather than anything this test controls. The
+    // control issue makes all three self-sufficient from this test's own
+    // fixtures.
+    let control_summary =
+        format!("[e2e {label}] list --component filter grammar (control, no component)");
+    let control_create_out = h
+        .cmd()
+        .args([
+            "issue",
+            "create",
+            "--project",
+            &proj,
+            "--type",
+            &itype,
+            "--summary",
+            &control_summary,
+            "--label",
+            &label,
+            "--output",
+            "json",
+        ])
+        .output()
+        .expect("failed to spawn jr for issue create (filter fixture control, no component)");
+    if !control_create_out.status.success() {
+        if skip_on_403_404(
+            &control_create_out,
+            "issue create (filter fixture control, no component)",
+            /* allow_404 */ true,
+        ) {
+            best_effort_close(&h, &key);
+            return;
+        }
+        panic!(
+            "issue create (filter fixture control, no component) failed (non-403/404 -- not a \
+             permission skip):\nstdout: {}\nstderr: {}",
+            String::from_utf8_lossy(&control_create_out.stdout),
+            String::from_utf8_lossy(&control_create_out.stderr)
+        );
+    }
+    let control_created: Value = serde_json::from_slice(&control_create_out.stdout)
+        .expect("issue create (filter fixture control, no component) output must be valid JSON");
+    let control_key = control_created
+        .get("key")
+        .and_then(Value::as_str)
+        .expect(
+            "issue create (filter fixture control, no component) JSON must contain a 'key' field",
+        )
+        .to_string();
+    let _ = poll_view(&control_key, &h);
+
+    let key_in_results = |v: &Value, target: &str| -> bool {
+        v.as_array()
+            .map(|arr| {
+                arr.iter()
+                    .any(|i| i.get("key").and_then(Value::as_str) == Some(target))
+            })
+            .unwrap_or(false)
+    };
+
+    // AC-011: bare --component finds the tagged key. Bounded poll to absorb
+    // JQL search indexing lag (EC-COMP-E2E-5).
+    let found = poll_component_filter(&h, &proj, &comp, &key);
+    assert!(
+        found,
+        "issue list --component {comp} must contain {key} (AC-011); \
+         search indexing may not have caught up"
+    );
+    // LOW-A (S-COMP-E2E-1 adversarial review): the assertion above is
+    // positive-only -- it never proves the bare filter EXCLUDES a
+    // component-less issue. A regression that dropped the component
+    // constraint on the bare path (returning all project issues unfiltered)
+    // would still contain `key` and pass the assertion above. Re-query the
+    // same bare filter and assert the component-less CONTROL key is absent.
+    //
+    // MEDIUM fix (S-COMP-E2E-1 follow-up review): the poll above proves
+    // GET-by-key consistency for `key` via `poll_view` (issue view), NOT
+    // JQL-search-index consistency for `control_key` (issue list). Without
+    // an independent proof that `control_key` is actually JQL-searchable,
+    // the absence assertion below is vacuous: if a bare-filter regression
+    // dropped the component constraint AND `control_key` simply hasn't hit
+    // the search index yet, the assertion would pass for the wrong reason
+    // (not indexed, not "correctly excluded"). Prove indexing first, via a
+    // filter `control_key` MUST satisfy (`not:{comp}` -- it has no
+    // component) -- mirrors the discipline already used at AC-012/AC-013
+    // below. This poll doubles as AC-012's own control-indexing proof, so
+    // its result is reused there instead of polling a second time.
+    let control_found_not = poll_component_filter(&h, &proj, &format!("not:{comp}"), &control_key);
+    assert!(
+        control_found_not,
+        "issue list --component not:{comp} must contain the component-less control key \
+         {control_key} (AC-011/AC-012 indexing proof); search indexing may not have caught up"
+    );
+    let bare_out = h
+        .cmd()
+        .args([
+            "issue",
+            "list",
+            "--project",
+            &proj,
+            "--component",
+            &comp,
+            "--output",
+            "json",
+        ])
+        .output()
+        .expect("failed to spawn jr for issue list --component (AC-011 control check)");
+    assert!(
+        bare_out.status.success(),
+        "issue list --component {comp} (AC-011 control check) failed:\nstdout: {}\nstderr: {}",
+        String::from_utf8_lossy(&bare_out.stdout),
+        String::from_utf8_lossy(&bare_out.stderr)
+    );
+    let bare_v: Value = serde_json::from_slice(&bare_out.stdout)
+        .expect("issue list --component (AC-011 control check) output must be valid JSON");
+    assert!(
+        !key_in_results(&bare_v, &control_key),
+        "issue list --component {comp} must NOT contain the component-less control key \
+         {control_key} (AC-011); got: {bare_v}"
+    );
+
+    // AC-012: not:<comp> excludes the tagged key (issue HAS the component)
+    // and includes the control key (issue has NO component). `control_found_not`
+    // was already proven true above (hoisted as the AC-011 indexing proof) --
+    // it absorbs indexing lag for the control issue AND doubles as the
+    // "provably non-empty, self-controlled" evidence the LOW-1 non-empty
+    // check below used to lack. Reused here rather than polling a second
+    // time for the identical filter/key pair.
+    let not_out = h
+        .cmd()
+        .args([
+            "issue",
+            "list",
+            "--project",
+            &proj,
+            "--component",
+            &format!("not:{comp}"),
+            "--output",
+            "json",
+        ])
+        .output()
+        .expect("failed to spawn jr for issue list --component not: (AC-012)");
+    assert!(
+        not_out.status.success(),
+        "issue list --component not:{comp} failed:\nstdout: {}\nstderr: {}",
+        String::from_utf8_lossy(&not_out.stdout),
+        String::from_utf8_lossy(&not_out.stderr)
+    );
+    let not_v: Value = serde_json::from_slice(&not_out.stdout)
+        .expect("issue list --component not: output must be valid JSON");
+    assert!(
+        !key_in_results(&not_v, &key),
+        "issue list --component not:{comp} must NOT contain {key} (AC-012); got: {not_v}"
+    );
+    // LOW-1 (S-COMP-E2E-1 adversarial review): the assertion above is
+    // vacuously true if the filter returns an EMPTY result set — that would
+    // also be a real regression (the filter over-excluding, or JQL
+    // composition breaking outright), not evidence the exclusion worked. The
+    // control_found_not poll above already proves this test's OWN
+    // control fixture composes real, non-empty `not:` results; this
+    // assertion remains as a second, independent signal (and stays correct
+    // even in projects that also accumulate external component-less
+    // issues).
+    assert!(
+        not_v.as_array().is_some_and(|arr| !arr.is_empty()),
+        "issue list --component not:{comp} must return a NON-EMPTY result set (AC-012); \
+         an empty set would vacuously satisfy the exclusion check above without \
+         proving the not: filter is composing real results; got: {not_v}"
+    );
+
+    // AC-013: none excludes the tagged key (issue HAS a component) and
+    // includes the control key (issue has NO component). Same poll-first
+    // rationale as AC-012 above.
+    let control_found_none = poll_component_filter(&h, &proj, "none", &control_key);
+    assert!(
+        control_found_none,
+        "issue list --component none must contain the component-less control key \
+         {control_key} (AC-013); search indexing may not have caught up"
+    );
+    let none_out = h
+        .cmd()
+        .args([
+            "issue",
+            "list",
+            "--project",
+            &proj,
+            "--component",
+            "none",
+            "--output",
+            "json",
+        ])
+        .output()
+        .expect("failed to spawn jr for issue list --component none (AC-013)");
+    assert!(
+        none_out.status.success(),
+        "issue list --component none failed:\nstdout: {}\nstderr: {}",
+        String::from_utf8_lossy(&none_out.stdout),
+        String::from_utf8_lossy(&none_out.stderr)
+    );
+    let none_v: Value = serde_json::from_slice(&none_out.stdout)
+        .expect("issue list --component none output must be valid JSON");
+    assert!(
+        !key_in_results(&none_v, &key),
+        "issue list --component none must NOT contain {key} (AC-013); got: {none_v}"
+    );
+    // LOW-1 (S-COMP-E2E-1 adversarial review): same vacuous-empty-set concern
+    // as the AC-012 assertion above — `none` returning zero results would
+    // also (incorrectly) satisfy "target key absent" without proving the
+    // filter did any real exclusion. The control_found_none poll above
+    // already proves this test's OWN control fixture composes real,
+    // non-empty `none` results; this assertion remains as a second,
+    // independent signal.
+    assert!(
+        none_v.as_array().is_some_and(|arr| !arr.is_empty()),
+        "issue list --component none must return a NON-EMPTY result set (AC-013); \
+         an empty set would vacuously satisfy the exclusion check above without \
+         proving the none filter is composing real results; got: {none_v}"
+    );
+
+    best_effort_close(&h, &key);
+    best_effort_close(&h, &control_key);
 }
 
 // ────────────────────────────────────────────────────────────────────────────
