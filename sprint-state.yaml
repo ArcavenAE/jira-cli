@@ -812,10 +812,12 @@ feature_followup_standalone:
 
   - id: S-COMP-E2E-1
     title: "Live E2E coverage for the component command family — component create/edit/delete/rename lifecycle round-trips, issue create/edit --component single-key round-trips, issue list --component filter grammar (BC-8.1/8.2/8.3, BC-3.4.022/024/025, BC-2.1.018/019/020)"
-    status: pending
-    pr: null
-    merge_sha: null
-    merged_at: null
+    status: completed
+    pr: 719
+    merge_sha: "d467f95a"
+    merged_at: "2026-08-20"
+    merged_via: "squash-merge by human (DEC-128 honored)"
+    f4_delivered_at: "2026-08-20"
     depends_on: [S-604-1, S-604-2, S-604-3, S-605-1, S-606-1, S-608-1]
     bc_anchors: [BC-8.1.001, BC-8.1.002, BC-8.1.005, BC-8.1.007, BC-8.2.001, BC-8.2.006, BC-8.2.008, BC-8.3.001, BC-3.4.022, BC-3.4.024, BC-3.4.025, BC-2.1.018, BC-2.1.019, BC-2.1.020]
     verification_properties: [VP-COMPONENT-029, VP-COMPONENT-030, VP-COMPONENT-031, VP-COMPONENT-032, VP-COMPONENT-033]
@@ -824,10 +826,11 @@ feature_followup_standalone:
     criticality: LOW
     implementation_strategy: tdd
     tdd_mode: facade
-    phase: F3
+    phase: F4
     story_file: ".factory/stories/S-COMP-E2E-1-component-family-live-e2e-coverage.md"
-    story_status: ready
+    story_status: done
     story_version: "1.1"
+    notes: "DELIVERED, MERGED, LIVE-VALIDATED GREEN 2026-08-20. PR #719 (d467f95a) merged to develop: 5 e2e tests + ComponentDropGuard + surface-guard + docs; per-story adversarial Step-4.5 CONVERGED (4 rounds → 3 clean passes; real defects found+fixed: anchored 403/404 skip, per-attempt fixture uniqueness, guard-arming leak-window, non-vacuous exclusion + control-key indexing proof). Two follow-on fix PRs closed live false-REDs: PR #720 (bd1849b1, fix(e2e): widened poll_component_filter budget + JR_E2E_POLL_* env honor) and PR #721 (4c1201f1, fix(ci): JR_E2E_POLL_MAX_ATTEMPTS=7/JR_E2E_POLL_INITIAL_MS=500 in e2e.yml, also fixed a pre-existing test_e2e_pagination_dedup flaky false-RED). Live validation: GitHub Actions e2e run 32391992968 (push to develop @ 4c1201f1) = SUCCESS, 103 passed/0 failed. Open follow-up (DEFERRED, not closed): Drift Item COMPONENT-E2E-NO-SWEEPER-BACKSTOP (LOW) — components have no CI label-sweeper backstop, only the Drop-guard."
     notes: "PREPARED FOR PER-STORY DELIVERY 2026-08-20. Story status flipped draft→ready (Spec-First Gate S-7.01 already satisfied: 14 canonical BC-S.SS.NNN entries, bidirectional AC↔BC traces present); Architecture Mapping section added (template-compliance gate); story version 1.0→1.1. Zero-src/ facade-mode test-hardening story (mirrors S-576-6's precedent): 5 new live E2E test fns + ComponentDropGuard best-effort Drop-guard teardown helper in tests/e2e_live.rs, SURFACE table update in tests/e2e_cli_surface_guard.rs, doc-fallout in docs/specs/e2e-live-jira-testing.md + CLAUDE.md. Zero new BCs, zero new env vars. All 6 depends_on stories (S-604-1/2/3, S-605-1, S-606-1, S-608-1) are done. Not yet dispatched to implementer — status pending, awaiting delivery-cycle kickoff."
 
   - id: FIX-576-DL
