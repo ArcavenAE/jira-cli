@@ -74,7 +74,7 @@ test_files:
   - tests/issue_list_errors.rs
   - tests/issue_view_errors.rs
   - tests/cli_smoke.rs
-input-hash: "c02d8a6"
+input-hash: "676bf41"
 ---
 
 > **tdd_mode:** `strict`.
@@ -101,7 +101,7 @@ typed-struct serialization mechanism, reused unchanged).
 |-------|-------|
 | BC-2.2.033 | `issue list --fields <CSV>` replaces the requested `fields=` set; requires `--output json` (exit 64 otherwise); pre-HTTP CSV validation |
 | BC-2.3.041 | `issue view --fields <CSV>` — same semantics as BC-2.2.033, via a new `get_issue`-family client method |
-| BC-2.6.052 | `JiraClient` gains field-override client methods (additive; existing `get_issue`/`search_issues` signatures and their 11 other call sites unchanged) |
+| BC-2.6.052 | `JiraClient` gains field-override client methods (additive; existing `get_issue`/`search_issues` signatures and their 10 other call sites (8 `get_issue` + 2 `search_issues`) unchanged) |
 
 ## Behavior Summary (verbatim per BC — do not deviate)
 
@@ -131,10 +131,10 @@ typed-struct serialization mechanism, reused unchanged).
 - **Additive client methods only (BC-2.6.052)**: new sibling methods (e.g.
   `get_issue_with_fields`, `search_issues_with_fields` — exact names/shapes at implementer
   discretion) accept an explicit field list and send it VERBATIM, comma-joined, as `fields=`.
-  The EXISTING `get_issue`/`search_issues` signatures are UNCHANGED. The 11 existing call
-  sites outside `list.rs`/`view.rs` (`edit.rs` x2, `links.rs`, `create.rs`, `assets.rs`,
-  `workflow.rs` x3, `board.rs`, `queue.rs`) compile and behave IDENTICALLY — zero code change
-  at any of these sites.
+  The EXISTING `get_issue`/`search_issues` signatures are UNCHANGED. The 10 existing call
+  sites (8 `get_issue` + 2 `search_issues`) outside `list.rs`/`view.rs` (`edit.rs` x2,
+  `links.rs`, `create.rs`, `assets.rs`, `workflow.rs` x3, `board.rs`, `queue.rs`) compile and
+  behave IDENTICALLY — zero code change at any of these sites.
 - **Empty field slice at the client layer (BC-2.6.052 EC-1)**: an empty field slice reaching
   the new method(s) is NOT a client-layer error — the CLI-layer pre-HTTP validation
   (Precondition 3 above) is the sole enforcement point; the client method is a thin,
@@ -184,9 +184,10 @@ added to the request (REPLACE semantics wins); no warning emitted.
 **Test:** `test_bc_2_2_033_issue_list_fields_csv_segments_are_trimmed()`
 
 ### AC-009 (traces to BC-2.6.052 postcondition 1 — additive, zero regression)
-The 11 existing `get_issue`/`search_issues` call sites outside `list.rs`/`view.rs`
-(`edit.rs` x2, `links.rs`, `create.rs`, `assets.rs`, `workflow.rs` x3, `board.rs`, `queue.rs`)
-compile and behave identically — existing test suites for those files pass unmodified.
+The 10 existing `get_issue`/`search_issues` call sites (8 `get_issue` + 2 `search_issues`)
+outside `list.rs`/`view.rs` (`edit.rs` x2, `links.rs`, `create.rs`, `assets.rs`,
+`workflow.rs` x3, `board.rs`, `queue.rs`) compile and behave identically — existing test
+suites for those files pass unmodified.
 **Test:** full regression suite green (no new test; verified via `cargo test`).
 
 ### AC-010 (traces to BC-2.6.052 postcondition 2 / EC-2.6.052-1 — thin pass-through)
@@ -244,7 +245,7 @@ Covered by dedicated ACs: EC-2.2.033-1..6, EC-2.3.041-1..3, EC-2.6.052-1.
 3. [ ] Write failing tests for empty/malformed CSV pre-HTTP rejection
 4. [ ] Write failing tests for `--points`/`--assets`/`--duedate` silent-no-op interaction
 5. [ ] Write failing tests for `key`-always-present and CSV whitespace-trimming
-6. [ ] Write failing tests for the 11-call-site additive-method regression guarantee
+6. [ ] Write failing tests for the 10-call-site additive-method regression guarantee
 7. [ ] Verify Red Gate
 8. [ ] Add `get_issue_with_fields`/`search_issues_with_fields`-shaped methods to `src/api/jira/issues.rs`
 9. [ ] Wire `--fields` CLI flag into `cli/mod.rs` (List + View)

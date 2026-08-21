@@ -37,7 +37,7 @@ behavioral_contracts:
 bcs:
   - "BC-2.1.024"
   - "BC-2.1.025"
-verification_properties: ["VP-SORT-001"]
+verification_properties: ["VP-SORT-001", "VP-SORT-002"]
 holdout_anchors: []
 nfr_anchors: []
 adr_refs: []
@@ -72,7 +72,7 @@ test_files:
   - tests/issue_commands.rs
   - tests/all_flag_behavior.rs
   - tests/issue_list_errors.rs
-input-hash: "c02d8a6"
+input-hash: "676bf41"
 ---
 
 > **tdd_mode:** `strict`.
