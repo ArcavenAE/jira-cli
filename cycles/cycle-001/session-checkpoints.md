@@ -2606,3 +2606,21 @@ below for full detail.
 | Resume command | Open a fresh session and run `/vsdd-factory:next-step`. STATE.md shows `pipeline: PAUSED`. |
 | Superseded checkpoint | Prior Session Resume Checkpoint (S-COMP-E2E-SWEEP-1-MERGED-DRIFT-RESOLVED position, 2026-08-20) archived verbatim to `cycles/cycle-001/session-checkpoints.md`. |
 | Superseded by | **RELEASE-TAG-PUSH-CONFIRMED-CLOSEOUT (2026-08-20, v2.91→v2.92):** confirms the `v0.7.0-dev.1` annotated git tag has been PUSHED to `origin` (`0e5b7409`→`4d1c3e54`), closing the "manual tag push remains outstanding" open item recorded above -- release `v0.7.0-dev.1` is now COMPLETE for the develop/dev-release scope. Pure bookkeeping close-out burst, no pipeline work performed. See the live checkpoint in `STATE.md` for the current state. |
+
+---
+
+### Archived Session Resume Checkpoint (superseded by LIST-READ-ERGONOMICS-CYCLE-OPENED-F1-APPROVED burst, 2026-08-21)
+
+| Field | Value |
+|-------|-------|
+| **Date** | 2026-08-20 |
+| Position | component-mgmt cycle CLOSED; all component-e2e follow-ups delivered/merged (S-COMP-E2E-1 #719 live-green 103/0; poll fixes #720/#721; sweeper S-COMP-E2E-SWEEP-1 #722, drift COMPONENT-E2E-NO-SWEEPER-BACKSTOP RESOLVED); release `v0.7.0-dev.1` annotated tag CONFIRMED PUSHED to `origin` (`0e5b7409`→`4d1c3e54`), closing the sole remaining manual human action tracked since DEC-295; pipeline PAUSED; nothing in flight. |
+| Convergence counter | None active. |
+| `develop` tip | `21622d1a` |
+| `activation_head` | `21622d1a` |
+| `activation_version` | `v0.7.0-dev.1` |
+| Open items (optional/non-blocking) | (1) `e2e-sweeper.yml`'s new component-sweep step (S-COMP-E2E-SWEEP-1) validates on the next daily 07:00 UTC schedule, or an optional human-triggered `workflow_dispatch` -- not blocking. (2) The main product checkout used by this session is on the stale merged branch `chore/release-v0.7.0-dev.1` -- a fresh checkout of `develop` is recommended on resume. (3) Whether/when to promote `v0.7.0-dev.1` to a `main`-branch stable release is a SEPARATE future decision, not owed now. |
+| Standing deferred items | 8 `SELF-IMPROVEMENT` epic `S-PG-*` stories (all `draft`, need PO BC-authorship before `ready` per S-7.01) + F5-era JUSTIFIED-DEFERRAL/KEEP-DEFERRED items (component-mgmt-scoped rename-wording, ADR-0018 §2 cache-key canonicalization, `--all-projects` discovery-error-posture, S-605-1/S-605-2 acceptance items, F7-GATE-SYSTEMIC-INPUT-HASH-DRIFT-BOOKKEEPING hygiene sweep) -- carry forward unchanged from the prior checkpoint. |
+| Resume command | Open a fresh session and run `/vsdd-factory:next-step`. STATE.md shows `pipeline: PAUSED`. |
+| Superseded checkpoint | Prior Session Resume Checkpoint (SESSION-WRAP-PAUSE position, 2026-08-20) archived verbatim to `cycles/cycle-001/session-checkpoints.md`. |
+| Superseded by | **LIST-READ-ERGONOMICS-CYCLE-OPENED-F1-APPROVED (2026-08-21, v2.92→v2.93):** a new Feature Mode cycle, `list-read-ergonomics` (issues #575/#584/#579/#588, 18pts), is OPENED -- F1 delta analysis COMPLETE and human-APPROVED (DEC-298); pipeline transitions PAUSED→ACTIVE, phase→F2. Separately, DEC-299 records a standing Confluence-out-of-scope decision, closing #581/#669 (not-planned) and #604 (completed). `activation_head` refreshed `21622d1a`→`67c5a6d0` (5 Dependabot/CI-action PRs merged this session, unrelated to either cycle). New Drift Item RESOLVED-RECENT-DEFERRED (LOW). See the live checkpoint in `STATE.md` for the current state. |
