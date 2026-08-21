@@ -1,11 +1,45 @@
 ---
 context: bc-2
 title: "Issue Read (list/view/comments/changelog)"
-total_bcs: 114   # cumulative claim (incl. range-collapsed); definitional_count below is individually-bodied headings
-definitional_count: 72   # count of `#### BC-` headings in this file
-last_updated: 2026-08-17
+total_bcs: 122   # cumulative claim (incl. range-collapsed); definitional_count below is individually-bodied headings
+definitional_count: 80   # count of `#### BC-` headings in this file
+last_updated: 2026-08-21
 source_pass: 3
 trace: |
+  - v1.5.0 — F2 spec evolution, list-read-ergonomics bundle (2026-08-21, issues #575/#584/#579/#588):
+    +8 new individually-bodied BCs (72→80); total_bcs 114→122. S-1 (#575, `--fields <CSV>`
+    on `issue list`/`issue view`): BC-2.2.033 ADDED (list, REPLACE-semantics `fields=`
+    override, JSON-only, pre-HTTP CSV validation), BC-2.3.041 ADDED (view, same semantics),
+    BC-2.6.052 ADDED (additive `JiraClient` field-override methods; existing `get_issue`/
+    `search_issues` signatures and their 11 other call sites unchanged). S-2 (#584, raw ADF
+    for `--fields comment`): BC-2.2.034 ADDED (list) + BC-2.3.042 ADDED (view) — invariant-
+    style confirmatory BCs: `IssueFields.extra`'s pre-existing `#[serde(flatten)]` catch-all
+    already passes `fields.comment.comments[].body` through as raw ADF once BC-2.2.033/
+    BC-2.3.041's REPLACE-semantics request reaches Jira; zero incremental transformation
+    code; `issue comments <KEY>`'s independent `adf_to_text` flattening path is unaffected.
+    S-3 (#579, `--updated-recent <duration>`): BC-2.1.023 ADDED (`updated >= -{d}` clause via
+    the existing `jql::validate_duration` validator — same grammar `--recent`/BC-2.1.008
+    uses, NOT `duration.rs`); BC-2.1.006 AMENDED (filter-source enumeration 14→15,
+    `--updated-recent` appended before `or --jql`, same shape as the 2026-08-15 `--component`
+    addition); BC-2.1.007 AMENDED (stable clause order gains `updated-recent` immediately
+    after `recent` and before `asset` — mirroring `--recent`'s own position). `conflicts_with`
+    is `updated_after` only, deliberately mirroring the pre-existing `--recent`×
+    `--created-after` asymmetry (not silently fixed — human-locked DEC-298). `--resolved-recent`
+    is explicitly DEFERRED, not specified by any BC in this delta (NULL-semantics design
+    question, out of scope per DEC-298/F1 Decision 3). S-4 (#588, `--sort <field>:asc|desc`):
+    BC-2.1.024 ADDED (syntax parse/validate: exactly one `:` separator, case-insensitive
+    direction, pre-HTTP exit 64 on malformed input, NO field-name allowlist); BC-2.1.025
+    ADDED (`--sort` overrides `order_by` uniformly in ALL 4 composition branches — `--jql`,
+    scrum-active-sprint, kanban, default-project — including board-driven `rank ASC`
+    branches, human-locked "always wins" per DEC-298; appends `, key ASC` secondary stable
+    sort unless the field is `key` itself; field name passed through to Jira UNVALIDATED,
+    mirroring `--jql`'s trust posture; unsortable field → Jira's own 400 `JrError::ApiError`,
+    exit 1; NOT added to BC-2.1.006's filter-source enumeration — it doesn't restrict the
+    result set). No amendment to BC-2.1.002/003/004/005 themselves — their pinned default
+    literals describe the absent-`--sort` case, byte-for-byte unchanged. See
+    `.factory/phase-f1-delta-analysis/list-read-ergonomics/delta-analysis.md`,
+    `.factory/phase-f2-spec-evolution/list-read-ergonomics/prd-delta.md`. BC-INDEX v6.80→v6.81;
+    spec v1.4.1→v1.5.0 (MINOR — new BCs).
   - v1.4.1 — F5 scoped-adversarial fix round (2026-08-17, component-mgmt, `issue list
     --component` filter): resolves findings F5-A-M1/F5-C-001 (human-adjudicated: UNION).
     `MatchResult::ExactMultiple` (2+ same-project components sharing a case-insensitive name,
@@ -73,7 +107,7 @@ trace: |
 
 # BC-2 — Issue Read (list / view / comments / changelog)
 
-114 behavioral contracts across 7 subdomains: JQL composition (2.1), Issue list
+122 behavioral contracts across 7 subdomains: JQL composition (2.1), Issue list
 behavior (2.2), Issue view (2.3), Comments (2.4), Changelog (2.5), API layer (2.6),
 Attachment Read (2.7).
 
@@ -132,23 +166,33 @@ Attachment Read (2.7).
 
 ---
 
-#### BC-2.1.006: No project AND no filters AND no `--jql` → exit 64 listing all 14 filter sources
+#### BC-2.1.006: No project AND no filters AND no `--jql` → exit 64 listing all 15 filter sources
 
 **Confidence**: HIGH
 **Source**: `src/cli/issue/list.rs:~344-351`
 **Subject**: Issue read
-**Behavior**: stderr contains literal `"No project or filters specified. Use --project, --assignee, --reporter, --status, --open, --team, --recent, --created-after, --created-before, --updated-after, --updated-before, --asset, --component, or --jql. You can also set a default project in .jr.toml or run \"jr init\"."`.
+**Behavior**: stderr contains literal `"No project or filters specified. Use --project, --assignee, --reporter, --status, --open, --team, --recent, --created-after, --created-before, --updated-after, --updated-before, --asset, --component, --updated-recent, or --jql. You can also set a default project in .jr.toml or run \"jr init\"."`.
 **Error taxonomy**: `JrError::UserError` (exit 64).
+
+**[UPDATED 2026-08-21 issue #579 F2]** `--updated-recent` joins the enumerated filter-source
+list as source #15 (14 → 15), appended immediately before `or --jql` — the same mechanical
+shape as the 2026-08-15 `--component` addition. **Previous version (superseded, retained for
+audit trail):** stderr literal ended `"... --asset, --component, or --jql. ..."` (14 sources,
+no `--updated-recent`).
 
 **[UPDATED 2026-08-15 issue #606 F2]** `--component` joins the enumerated filter-source list
 as source #14 (13 → 14). **Previous version (superseded, retained for audit trail):** stderr
 literal ended `"... --updated-before, --asset, or --jql. ..."` (13 sources, no `--component`).
 
+**Note**: `--sort` (BC-2.1.025, issue #588 F2) is deliberately NOT a member of this
+enumeration — it does not restrict the result set, only its order, so it is excluded from
+the "no filters specified" guard by design.
+
 **Trace**: Pass 3 BC-129 (R1)
 
 ---
 
-#### BC-2.1.007: `build_filter_clauses` emits in stable order: assignee, reporter, status, open, team, recent, asset, component, created-after/before, updated-after/before
+#### BC-2.1.007: `build_filter_clauses` emits in stable order: assignee, reporter, status, open, team, recent, updated-recent, asset, component, created-after/before, updated-after/before
 
 **Confidence**: HIGH
 **Source**: `src/cli/issue/list.rs:~613-649`; unit tests covering `build_jql_parts_*` clause variants
@@ -157,11 +201,20 @@ literal ended `"... --updated-before, --asset, or --jql. ..."` (13 sources, no `
 - `assignee = currentUser()` (for `--assignee me`)
 - `reporter = <accountId>` (raw, not quoted)
 - `created >= -7d` (for `--recent 7d`)
+- `updated >= -60d` (for `--updated-recent 60d`, BC-2.1.023)
 - `statusCategory != Done` (for `--open`)
 - `status = "He said \"hi\" \\o/"` (JQL-escaped)
 - `component in (10001, 10002)` / `(component not in (10001) OR component is EMPTY)` /
   `component is EMPTY` / `component = 10001 AND component = 10002` — one of the four
   `--component` operator shapes, per BC-2.1.018..021.
+
+**[UPDATED 2026-08-21 issue #579 F2]** `--updated-recent` is inserted into the stable-order
+list immediately AFTER `recent` and BEFORE `asset` — mirroring `--recent`'s own position
+exactly (the two duration-based clauses, `created`-based then `updated`-based, sit adjacent).
+This position is pinned by the same exact-clause-order test discipline as every other member
+of this list. **Previous version (superseded, retained for audit trail):** "assignee,
+reporter, status, open, team, recent, asset, component, created-after/before, updated-after/
+before" (no `updated-recent` member).
 
 **[UPDATED 2026-08-15 issue #606 F2]** `--component` is inserted into the stable-order list
 immediately AFTER `asset` and BEFORE the created/updated date-range clauses — i.e. between
@@ -172,6 +225,10 @@ analysis §3 regression-risk note on this function). **Previous version (superse
 for audit trail):** "assignee, reporter, status, open, team, recent, asset, created-after/
 before, updated-after/before" (no `component` member).
 
+**Note**: `--sort` (BC-2.1.025) does NOT push a clause via `build_filter_clauses` — it
+overrides the separate `order_by` value composed after this function returns, in all 4 JQL
+composition branches (BC-2.1.002/003/004/005). It has no position in this stable-order list.
+
 **Verification Properties**:
 - VP-COMPONENT-015: `build_filter_clauses` emits the four `--component` operator shapes
   exactly (bare/repeated → `component in (id1, id2, …)` in input order; `not:` → the single
@@ -179,6 +236,8 @@ before, updated-after/before" (no `component` member).
   zero resolver HTTP; `all:` → `component = id1 AND component = id2 …`), and the `--component`
   clause holds its pinned position (after `asset`, before date-range) via `Vec<String>`
   positional equality.
+- VP-UPDATED-RECENT-001: (see BC-2.1.023) `--updated-recent` holds its pinned position
+  (immediately after `recent`, before `asset`) via `Vec<String>` positional equality.
 
 **Trace**: Pass 3 BC-130 (R1); BC-1093 (R4 enumeration)
 
@@ -727,6 +786,194 @@ review findings F5-A-M1/F5-C-001 (2026-08-17, human-adjudicated: UNION)
 
 ---
 
+#### BC-2.1.023: `--updated-recent <duration>` → `updated >= -{d}` clause, validated via `jql::validate_duration`, positioned immediately after `--recent`'s slot
+
+**Confidence**: HIGH
+**Source**: F1 delta analysis §S-3, Decision 3; `src/jql.rs::validate_duration` (BC-2.1.008's
+validator, reused unchanged); `src/cli/issue/list.rs:~90-92, ~952-954` (`--recent`'s
+clause-building line — the direct structural template); `src/cli/issue/list.rs` (pending F4)
+**Subject**: Issue read — `--updated-recent` filter (issue #579)
+**Behavior**: `--updated-recent <duration>` mirrors `--recent` (BC-2.1.008) exactly, with the
+JQL field swapped from `created` to `updated`. It reuses `jql::validate_duration` — the SAME
+validator `--recent` uses — NOT `src/duration.rs` (that parser is worklog-duration syntax,
+`1h30m`/`2d 3h 30m`, a different grammar entirely). `--resolved-recent`
+(`resolutiondate`-based) is explicitly OUT OF SCOPE for this BC and this bundle — deferred per
+DEC-298/F1 Decision 3, owing to `resolutiondate`'s different NULL semantics (unresolved issues
+have `resolutiondate = null`) requiring its own design conversation.
+**Preconditions**:
+1. `--updated-recent <duration>` is supplied.
+2. The duration is validated via `jql::validate_duration` BEFORE any HTTP call — combined
+   units (e.g. `4w2d`) are rejected, identically to BC-2.1.008's validation discipline.
+**Postconditions**:
+1. Composes the clause `updated >= -{d}` (the direct field-swapped analogue of `--recent`'s
+   `created >= -{d}` template).
+2. This clause occupies the stable-order slot immediately after `--recent`'s clause and
+   before `--asset`'s clause, per BC-2.1.007's amendment.
+3. Composes freely (AND-joined via `build_filter_clauses`' existing `parts.join(" AND ")`)
+   with `--recent`, `--created-after/before`, `--updated-after/before`, `--status`,
+   `--component`, and every other filter — no new conflicts beyond Edge Case
+   EC-2.1.023-2 below.
+**Edge Cases**:
+- EC-2.1.023-1: `--updated-recent 4w2d` (combined units, rejected by `validate_duration`) →
+  `JrError::UserError("Invalid duration '4w2d'. Use a number followed by y, M, w, d, h, or m
+  (e.g., 7d, 4w, 2M).")`. Exit 64, pre-HTTP — the identical error shape BC-2.1.008 already
+  contracts for `--recent`.
+- EC-2.1.023-2: `--updated-recent 60d --updated-after 2026-01-01` → clap `conflicts_with`
+  rejection (exit 2, clap-native). `--updated-recent`'s `conflicts_with` covers
+  `--updated-after` ONLY — it does NOT conflict with `--updated-before` — deliberately
+  mirroring the pre-existing, asymmetric `--recent`×`--created-after` pattern (`--recent`
+  conflicts with `--created-after` but not `--created-before`). This is a pre-existing
+  codebase inconsistency this BC does not silently "fix" (human-locked DEC-298).
+- EC-2.1.023-3: `--updated-recent 30d --recent 30d` (both present) → both clauses compose,
+  AND-joined: `... AND created >= -30d AND updated >= -30d ...` (the `recent` clause emits
+  before the `updated-recent` clause, per BC-2.1.007's stable order). No error.
+- EC-2.1.023-4: `--updated-recent` with no `--project` and no configured default project and
+  no other filter → falls through to BC-2.1.006's amended "no filters specified" exit-64
+  guard exactly as every other filter source does (it is filter source #15 in that
+  enumeration, per BC-2.1.006's amendment) — it does NOT independently satisfy the "at least
+  one filter" requirement in a way that bypasses project scoping; it simply counts as one of
+  the enumerated filter sources.
+**Verification Properties**:
+- VP-UPDATED-RECENT-001: `build_filter_clauses` composes `updated >= -{d}` for
+  `--updated-recent <duration>`, positioned immediately after the `--recent` clause slot and
+  before `--asset` (`Vec<String>` positional equality, same discipline as VP-COMPONENT-015);
+  combined-unit durations are rejected pre-HTTP with zero `POST /rest/api/3/search/jql` calls
+  (`.expect(0)`), via the identical `jql::validate_duration` error shape BC-2.1.008 already
+  pins for `--recent`.
+**Trace**: F1 delta analysis §S-3, Decision 3; BC-2.1.008 (`--recent` — direct structural
+template, shared validator); BC-2.1.006 (amended, filter-source #15); BC-2.1.007 (amended,
+stable-order position)
+
+---
+
+#### BC-2.1.024: `--sort <field>:asc|desc` syntax parse/validate: case-insensitive direction, exit 64 on malformed input, pre-HTTP, no field-name allowlist
+
+**Confidence**: HIGH
+**Source**: F1 delta analysis §S-4, Decision 4; `src/cli/issue/list.rs:~95-114` (BC-2.1.009's
+pre-HTTP validation discipline — the precedent this BC follows); `src/cli/issue/list.rs`
+(pending F4)
+**Subject**: Issue read — `--sort` shorthand (issue #588)
+**Behavior**: New CLI flag `--sort <field>:<direction>` on `jr issue list`. Local validation is
+limited to SYNTAX ONLY — there is no local field-name allowlist (see BC-2.1.025 for the
+pass-through rationale). The value is split on its FIRST `:` into a field segment and a
+direction segment; the direction segment is matched case-insensitively against `asc`/`desc`.
+**Preconditions**:
+1. `--sort <value>` is supplied.
+2. `<value>` contains at least one `:`, splitting into a non-empty field segment and a
+   non-empty remainder (direction segment).
+3. The direction segment, matched case-insensitively, is exactly `asc` or `desc`.
+**Postconditions**:
+1. Valid input parses to `(field: String, direction)` with `field` preserved VERBATIM
+   (original casing, no trimming beyond the split) and `direction` normalized to `ASC`/`DESC`
+   for JQL composition (feeds BC-2.1.025).
+2. Any Precondition 2/3 violation — missing `:` (EC-2.1.024-3), empty field segment
+   (EC-2.1.024-4), empty direction segment (EC-2.1.024-5), or a direction segment that is not
+   `asc`/`desc` case-insensitively, including a direction segment containing a second `:`
+   (EC-2.1.024-6/7) — produces `JrError::UserError` exit 64, PRE-HTTP (before any board/sprint/
+   project resolution or issue search), stderr literal: `Invalid --sort "<value>". Use
+   <field>:asc or <field>:desc (e.g., updated:desc).`
+**Edge Cases**:
+- EC-2.1.024-1: `--sort updated:desc` → valid, `(field="updated", direction=DESC)`.
+- EC-2.1.024-2: `--sort key:ASC` (uppercase direction) → valid, case-insensitive direction
+  matching; `--sort key:AsC` also valid.
+- EC-2.1.024-3: `--sort updated` (no `:`) → exit 64, pinned stderr string, zero HTTP calls.
+- EC-2.1.024-4: `--sort :desc` (empty field segment) → exit 64, pinned stderr string.
+- EC-2.1.024-5: `--sort updated:` (empty direction segment) → exit 64, pinned stderr string.
+- EC-2.1.024-6: `--sort updated:sideways` (direction not `asc`/`desc`) → exit 64, pinned
+  stderr string.
+- EC-2.1.024-7: `--sort updated:desc:extra` (a second `:` inside the direction segment) →
+  the direction segment after the first split is `"desc:extra"`, which does not
+  case-insensitively equal `asc`/`desc` → exit 64, pinned stderr string. No special-case
+  handling for a second `:` is needed — Precondition 3's direction-match check rejects it
+  naturally.
+**Verification Properties**:
+- VP-SORT-001: `--sort` syntax validation runs PRE-HTTP — zero `POST /rest/api/3/search/jql`
+  calls and zero board/sprint API calls on any malformed `--sort` value (`.expect(0)`
+  pattern, mirroring BC-2.1.012/BC-2.1.013's discipline); direction matching is verified
+  case-insensitive; every malformed-input shape in EC-2.1.024-3..7 produces the exact pinned
+  stderr string, verified by full-string (not substring) assertion.
+**Trace**: F1 delta analysis §S-4, Decision 4; BC-2.1.008/BC-2.1.009 (pre-HTTP validation
+discipline precedent); BC-2.1.025 (the composition BC this validation feeds)
+
+---
+
+#### BC-2.1.025: `--sort` overrides `order_by` uniformly in all 4 composition branches; appends `, key ASC` secondary stable sort unless the field is `key`; field name passed through to Jira unvalidated
+
+**Confidence**: HIGH
+**Source**: F1 delta analysis §S-4, Decision 4; `src/api/jira/issues.rs:~277-303` (JRACLOUD-95368
+advisory-only `key ASC` recommendation — confirms nothing proactively appends it today);
+`src/cli/issue/list.rs:~301-371` (the 4-branch `order_by`-producing match/if block);
+`src/cli/issue/list.rs:~387-388` (`effective_jql = format!("{where_clause} ORDER BY
+{order_by}")` — the single composition point this BC's override feeds); `src/cli/issue/list.rs`
+(pending F4)
+**Subject**: Issue read — `--sort` shorthand (issue #588)
+**Behavior**: When `--sort <field>:<dir>` is present (syntax validated by BC-2.1.024), it
+OVERRIDES the `order_by` value computed by ALL FOUR JQL-composition branches — `--jql`
+(BC-2.1.002), scrum-active-sprint (BC-2.1.003), kanban (BC-2.1.004), and default-project
+(BC-2.1.005) — applied UNIFORMLY, with no board-specific exception (human-locked DEC-298:
+"always wins" for predictability). When `--sort` is ABSENT, every branch's `order_by` value
+is BYTE-FOR-BYTE UNCHANGED from BC-2.1.002/003/004/005's pinned literals — `--sort` is a
+strictly additive, opt-in override with zero effect on default behavior.
+**Preconditions**:
+1. Field name is passed through to Jira UNVALIDATED — there is no local field-name allowlist.
+   BC-2.1.024's syntax check is the ONLY pre-HTTP validation; whether the field is actually
+   orderable on this Jira instance is determined solely by Jira's own response. This mirrors
+   the trust posture `--jql`'s free-form WHERE clause already receives (BC-2.1.002) — a local
+   allowlist would either wrongly reject valid instance-specific/custom fields or wrongly
+   accept fields that turn out not to be orderable, since Jira exposes no "orderable fields"
+   discovery endpoint to validate against.
+**Postconditions**:
+1. `order_by = "<FIELD> <DIR>, key ASC"` where `<FIELD>` is the field name VERBATIM as
+   supplied (original casing preserved, no local validation) and `<DIR>` is `ASC`/`DESC` per
+   BC-2.1.024's normalized direction.
+2. EXCEPTION: when the supplied field name matches `key` case-insensitively, the secondary
+   `, key ASC` sort is OMITTED — `order_by = "<FIELD> <DIR>"` only — avoiding a redundant/
+   self-conflicting `key DESC, key ASC` when the primary sort is already key-based.
+3. This override REPLACES whatever `order_by` value the 4-branch match/if block would
+   otherwise have produced (`"updated DESC"` for the `--jql`/default-project branches,
+   `"rank ASC"` for the scrum/kanban branches) — including on the `--jql` branch, where
+   `--jql`'s own embedded `ORDER BY` is ALREADY unconditionally stripped/replaced by
+   BC-2.1.002; `--sort`, when present, becomes the new replacement value in place of the
+   hardcoded `"updated DESC"`.
+4. This override applies UNIFORMLY to the scrum-active-sprint and kanban board branches —
+   `--sort`, when given, always wins over the board-driven `rank ASC` default. No silent
+   exception, no additional flag required to opt in on a board-scoped invocation.
+5. `--sort` does NOT push a clause via `build_filter_clauses` (BC-2.1.007) and is NOT added
+   to BC-2.1.006's "no filters specified" exit-64 enumeration — it does not restrict the
+   result set, only its order.
+**Edge Cases**:
+- EC-2.1.025-1: `--sort updated:desc` → `order_by = "updated DESC, key ASC"`.
+- EC-2.1.025-2: `--sort key:asc` → `order_by = "key ASC"` (no redundant secondary clause —
+  Postcondition 2).
+- EC-2.1.025-3: `--sort KEY:desc` (case-variant field name matching `key`) → the same
+  omission rule applies (case-insensitive match on the FIELD name for the `key`-omission
+  special case only); the field name's OWN casing, once past this check, is still passed
+  through verbatim to Jira per Postcondition 1 — `order_by = "KEY DESC"`, not lowercased.
+- EC-2.1.025-4: `--sort rank:asc` on a kanban board (which defaults to `order_by = "rank
+  ASC"` when `--sort` is absent, BC-2.1.004) → `order_by = "rank ASC, key ASC"` — NOT
+  collapsed to the board-default `"rank ASC"` with no secondary clause, because the
+  `key`-omission rule (Postcondition 2/EC-2.1.025-2) is scoped to literally the field name
+  `key`, not to whatever a branch's own default field happens to be.
+- EC-2.1.025-5: `--sort customfield_10099:desc` (unknown/unorderable field) → `POST
+  /rest/api/3/search/jql` IS called (no local rejection, Precondition 1); Jira's 400 response
+  propagates as `JrError::ApiError { status: 400, .. }` (exit 1) via the existing generic
+  HTTP-error path (`src/api/client.rs`).
+- EC-2.1.025-6: `--sort` ABSENT on any of the 4 branches → `order_by` is byte-for-byte
+  identical to BC-2.1.002/003/004/005's pinned literals; zero risk to those BCs' existing
+  pinned-literal test coverage.
+**Verification Properties**:
+- VP-SORT-002: `--sort <field>:<dir>` overrides `order_by` identically across all 4
+  composition branches (`--jql`, scrum-active-sprint, kanban, default-project) when present,
+  verified by exact-string equality (not substring containment); every branch's `order_by`
+  is byte-for-byte unchanged from its BC-2.1.002/003/004/005 pinned literal when `--sort` is
+  absent; the `key`-field secondary-sort omission (EC-2.1.025-2/3) is separately verified.
+**Trace**: F1 delta analysis §S-4, Decision 4; BC-2.1.002/003/004/005 (the 4 branches' pinned
+default literals, unchanged when `--sort` is absent); BC-2.1.024 (syntax validation this BC
+consumes); `src/api/jira/issues.rs` JRACLOUD-95368 advisory-only precedent (the `key ASC`
+recommendation this BC turns into opt-in default behavior for the new flag only)
+
+---
+
 ### 2.2 Issue List Behavior
 
 #### BC-2.2.018: `--all` passes `maxResults=50`; default passes `maxResults=30`
@@ -882,6 +1129,130 @@ review findings F5-A-M1/F5-C-001 (2026-08-17, human-adjudicated: UNION)
 **Column-set backfill note (F1 Open Question #7 disposition)**: no BC in this file enumerates `issue list`'s full table column set (Key/Type/Status/Priority/[Points]/Assignee/[Team]/[Assets]/Summary) as a contract in its own right — only this BC and the pre-existing row-builder code define it implicitly. **Disposition: DEFERRED, with a normativity caveat.** This BC's Column position clause is, by necessity, now the only WRITTEN contract that states the full ordered column list — it is normative for Due Date's placement within that list, but is NOT a retroactive backfill contract for the pre-existing columns' own behavior (their config/warning semantics remain contracted elsewhere: BC-2.2.021/022 for Points, BC-2.1.016/017 for Assets). A future standalone column-set BC, if written, supersedes this clause's column-list enumeration without needing to touch Due Date's own policy. Tracked as pre-existing spec debt, not a blocker for this feature.
 
 **Trace**: F2 spec evolution (issue #668, 2026-08-13); precedent mechanism BC-2.2.021/BC-2.2.022 (`--points` config/warning contract — mechanism precedent only, see Behavior clause for the contract-scope correction); precedent BC-2.1.016/BC-2.1.017 (`--assets` opt-in column); `.factory/feature-delta/668-duedate/delta-analysis.md` Open Questions #1, #2, #3, #7; adversarial F2 review (2026-08-13) F2/F3/F7/F8/F9/F10 corrections; human-directed simplification fix-round (2026-08-13) — parse/reformat/verbose machinery removed, verbatim-display + shared trivial helper substituted
+
+---
+
+#### BC-2.2.033: `issue list --fields <CSV>` replaces the requested `fields=` set; requires `--output json` (exit 64 otherwise); pre-HTTP CSV validation
+
+**Confidence**: HIGH
+**Source**: F1 delta analysis §S-1, Decision 1; `src/types/jira/issue.rs::IssueFields` (`extra:
+HashMap<String, Value>` `#[serde(flatten)]`); `src/api/jira/issues.rs::search_issues`
+(`BASE_ISSUE_FIELDS`/`extra_fields` union point this BC bypasses); `src/cli/issue/list.rs`
+(pending F4)
+**Subject**: Issue read — `--fields` (issue #575)
+**Behavior**: New CLI flag `--fields <CSV>` on `jr issue list`. When present, it FULLY
+REPLACES `BASE_ISSUE_FIELDS` (BC-2.2.028) plus any config-driven extras (`--points`'s
+`customfield_NNNNN`, `--assets`'s CMDB field ids, the team field id) in the Jira `fields=`
+request parameter sent via BC-2.6.052's field-override client method — it does NOT union
+with them (human-locked DEC-298: REPLACE, not UNION). `--fields` requires `--output json`;
+combined with table mode (default, or explicit `--output table`) → exit 64 pre-HTTP.
+**Preconditions**:
+1. `--fields <CSV>` is supplied (comma-separated field names, e.g.
+   `"summary,status,comment"`).
+2. `--output json` is also set. If NOT set → exit 64, PRE-HTTP, stderr: `--fields requires
+   --output json.`
+3. The CSV, after whitespace-trimming each comma-separated segment, contains at least one
+   non-empty segment. `--fields ""` (empty string) or `--fields ","` (all segments empty
+   after trim) → exit 64, PRE-HTTP.
+**Postconditions**:
+1. The `fields=` parameter sent to `POST /rest/api/3/search/jql` is EXACTLY the trimmed,
+   comma-joined CSV segments, in supplied order — no `BASE_ISSUE_FIELDS` union, no
+   config-driven extras injected.
+2. Output remains the TYPED `Issue`/`IssueFields` struct serialization via `render_json`
+   (BC-2.2.030's mechanism, unchanged) — NOT a bespoke raw-JSON shape. Named `IssueFields`
+   struct fields NOT covered by the `--fields` request deserialize as `None` (missing-key →
+   `None`, standard serde behavior for `Option<T>`, no `#[serde(default)]` needed) and
+   serialize as JSON `null` (no field in `IssueFields` carries `#[serde(skip_serializing_if)]`
+   — same mechanism already established by BC-2.3.039's analysis for `duedate`). Unnamed
+   fields (`comment`, `customfield_NNNNN`, `attachment`, etc.) that ARE requested flow
+   through `IssueFields.extra: HashMap<String, Value>` (`#[serde(flatten)]`) verbatim — see
+   BC-2.2.034 for the `comment` case specifically.
+3. `key` is present in the output regardless of whether `key` appears in the `--fields` CSV —
+   Jira always returns `key` top-level on every issue object independent of the `fields=`
+   request parameter.
+4. `--points`/`--assets`/`--duedate`, if also supplied alongside `--fields`, become SILENT
+   no-ops — their extra-field request injection and column-rendering logic never executes
+   (table mode is already blocked by Precondition 2; JSON mode has no columns to render for
+   `--duedate` to gate). No warning, no error.
+**Edge Cases**:
+- EC-2.2.033-1: `jr issue list --jql "..." --fields "summary,status,comment" --output json`
+  → `fields=summary,status,comment` requested exactly; `IssueFields.summary`/`.status`
+  populate normally, all other named fields (`priority`, `assignee`, `duedate`, etc.)
+  serialize as `null`, `comment` flows through `extra`.
+- EC-2.2.033-2: `--fields "summary, status"` (embedded whitespace around the comma) behaves
+  identically to `--fields "summary,status"` — each CSV segment is trimmed before use.
+- EC-2.2.033-3: `--fields "summary,status" --output table` (or default, no `--output` flag)
+  → exit 64, stderr `--fields requires --output json.`; zero HTTP calls.
+- EC-2.2.033-4: `--fields ""` → exit 64 pre-HTTP; zero HTTP calls.
+- EC-2.2.033-5: `--fields "summary,,status"` (empty embedded segment) → exit 64 — an empty
+  segment between two non-empty ones is rejected, not silently dropped; same pre-HTTP class
+  as EC-2.2.033-4.
+- EC-2.2.033-6: `--fields "summary,status" --points --output json` → `--points`'s
+  `customfield_NNNNN` is NOT added to the request (`--fields` REPLACE semantics wins); no
+  warning emitted (silent no-op per Postcondition 4).
+**Verification Properties**:
+- VP-FIELDS-001: `--fields <CSV>` composes the exact, trimmed, comma-joined field list as the
+  sole `fields=` request parameter (no `BASE_ISSUE_FIELDS` union, no `--points`/`--assets`/
+  `--duedate` extras injected); table-mode combination is rejected pre-HTTP with zero `POST
+  /rest/api/3/search/jql` calls (`.expect(0)`); empty/all-empty-segment CSV is rejected
+  pre-HTTP with zero HTTP calls.
+**Trace**: F1 delta analysis §S-1, Decision 1; BC-2.2.028 (`BASE_ISSUE_FIELDS` default path
+this BC bypasses when present — unchanged when `--fields` absent); BC-2.2.030 (`render_json`
+typed-struct serialization mechanism, reused unchanged); BC-2.6.052 (client-layer
+field-override method this BC's request flows through)
+
+---
+
+#### BC-2.2.034: `issue list --fields comment --output json` returns `.fields.comment.comments[].body` as raw ADF via the pre-existing `extra` flatten — zero incremental transformation code
+
+**Confidence**: HIGH
+**Source**: F1 delta analysis §S-2, Decision 2; `src/types/jira/issue.rs::IssueFields`
+(`extra: HashMap<String, Value>` `#[serde(flatten)]`); `src/cli/issue/comments.rs`,
+`src/cli/issue/interactions.rs`, `src/cli/issue/view.rs::handle_view` (the 3 other
+`adf_to_text` call sites in the codebase, confirmed to not touch `extra`)
+**Subject**: Issue read — `--fields comment` raw-ADF passthrough (issue #584)
+**Behavior**: `comment` is not a named field on `IssueFields` — requesting it via `--fields`
+(BC-2.2.033) routes Jira's response through `IssueFields.extra` (`#[serde(flatten)]`,
+untyped `serde_json::Value`), which performs NO transformation. Jira's wire response for
+`fields.comment.comments[].body` is ALREADY raw ADF (`{"type":"doc",...}`) — `extra` passes
+it through byte-for-byte. This is an INVARIANT-style BC: it documents a guarantee about an
+EXISTING code path (BC-2.2.033's `extra` flatten), not new transformation logic. No call
+site of `adf::adf_to_text` (the ADF→plain-text flattener used by `issue comments`, `issue
+comment` interactions, and `issue view`'s table-mode description row) runs on `issue list`'s
+JSON output path.
+**Preconditions**:
+1. `--fields` includes `comment` (bare or among other names) AND `--output json` is set
+   (BC-2.2.033's Preconditions 1-2).
+**Postconditions**:
+1. `.fields.comment.comments[].body` in the JSON output is the RAW ADF object Jira returned
+   — `{"type":"doc","version":1,"content":[...]}` — never a flattened plain-text string.
+2. The pre-existing `issue comments <KEY>` command (`src/cli/issue/comments.rs`), which DOES
+   flatten comment bodies via `adf_to_text`, is UNAFFECTED by this BC — the two code paths
+   (`issue list`'s `extra` flatten vs. `issue comments`'s dedicated `adf_to_text` call) remain
+   fully independent; this BC does not change `issue comments`'s existing rendering.
+3. This mechanism is ZERO INCREMENTAL TRANSFORMATION CODE — it is a consequence of
+   BC-2.2.033's REPLACE-semantics `--fields` request routing an unnamed field through the
+   pre-existing `#[serde(flatten)] extra` catch-all; no new ADF-handling code is introduced.
+**Edge Cases**:
+- EC-2.2.034-1: `jr issue list --jql "..." --fields "summary,comment" --output json` →
+  `.fields.comment.comments[].body` is a JSON object with `"type":"doc"`, never a string.
+- EC-2.2.034-2: `jr issue comments FOO-123` (the pre-existing, unrelated command) run
+  separately against the SAME issue still renders plain text via `adf_to_text`, confirming
+  the two paths do not regress each other.
+- EC-2.2.034-3: A future maintainer's attempt to "helpfully" post-process `extra` for
+  consistency with `issue comments`'s flattened rendering is explicitly OUT OF SCOPE and
+  would violate Postcondition 1 — flagged as a defensive code-comment obligation at the
+  `--fields` wiring site (BC-2.2.033).
+**Verification Properties**:
+- VP-FIELDS-004: A wiremock fixture with a non-trivial ADF comment body, requested via
+  `--fields comment --output json` on `issue list`, asserts `.fields.comment.comments[].body`
+  deep-equals the fixture's raw ADF object (not a string, not a flattened rendering); a
+  companion assertion on `issue comments <KEY>` against the SAME fixture confirms its
+  plain-text output is unchanged.
+**Trace**: F1 delta analysis §S-2, Decision 2; BC-2.2.033 (the `--fields`/`extra`-flatten
+mechanism this BC is confirmatory of); `src/cli/issue/comments.rs`,
+`src/cli/issue/interactions.rs`, `src/cli/issue/view.rs` (the 3 other `adf_to_text` call
+sites, none affected)
 
 ---
 
@@ -1075,6 +1446,82 @@ review pass 1 M8
 
 ---
 
+#### BC-2.3.041: `issue view --fields <CSV>` — same semantics as BC-2.2.033, via a new `get_issue`-family client method
+
+**Confidence**: HIGH
+**Source**: F1 delta analysis §S-1, Decision 1; BC-2.2.033 (the `issue list` twin this BC
+mirrors); `src/cli/issue/view.rs` (pending F4)
+**Subject**: Issue read — `--fields` (issue #575)
+**Behavior**: Mirrors BC-2.2.033 exactly, applied to `jr issue view <KEY>` via a new
+`get_issue_with_fields`-shaped client method (BC-2.6.052). `--fields` requires `--output
+json`; table-mode combination → exit 64 pre-HTTP. REPLACE semantics (not UNION), same as the
+list twin (human-locked DEC-298).
+**Preconditions**:
+1. `--fields <CSV>` is supplied.
+2. `--output json` is also set. If NOT set → exit 64, PRE-HTTP, stderr: `--fields requires
+   --output json.`
+3. The CSV, after whitespace-trimming each segment, has at least one non-empty segment. Else
+   → exit 64, PRE-HTTP.
+**Postconditions**:
+1. The `fields=` parameter sent to `GET /rest/api/3/issue/<KEY>` is exactly the trimmed,
+   comma-joined CSV — no `BASE_ISSUE_FIELDS` union.
+2. Output is the typed `Issue`/`IssueFields` struct via `render_json(&issue)` (BC-2.3.032's
+   JSON mechanism, unchanged) — unrequested named fields serialize as `null`; unnamed
+   requested fields (e.g. `comment`) flow through `extra` (see BC-2.3.042).
+3. `key` is present regardless of `--fields` CSV contents — same Jira guarantee as
+   BC-2.2.033 Postcondition 3.
+**Edge Cases**:
+- EC-2.3.041-1: `jr issue view FOO-123 --fields "summary,comment" --output json` →
+  `fields=summary,comment`; `.fields.summary` populated, all other named fields `null`,
+  `comment` in `extra`.
+- EC-2.3.041-2: `jr issue view FOO-123 --fields "summary,comment"` (no `--output json`, table
+  mode default) → exit 64, stderr `--fields requires --output json.`; zero HTTP calls.
+- EC-2.3.041-3: `--fields ""` → exit 64 pre-HTTP, zero HTTP calls.
+**Verification Properties**:
+- VP-FIELDS-002: `issue view --fields <CSV>` composes the exact trimmed CSV as the sole
+  `fields=` request parameter; table-mode combination rejected pre-HTTP with zero `GET
+  /rest/api/3/issue/<KEY>` calls; empty/all-empty CSV rejected pre-HTTP.
+**Trace**: BC-2.2.033 (list twin — identical semantics, mirrored contract); BC-2.3.032
+(`render_json` mechanism, reused unchanged); BC-2.6.052 (client-layer field-override method)
+
+---
+
+#### BC-2.3.042: `issue view --fields comment --output json` returns `.fields.comment.comments[].body` as raw ADF via `IssueFields.extra` — same mechanism as BC-2.2.034
+
+**Confidence**: HIGH
+**Source**: F1 delta analysis §S-2, Decision 2; BC-2.2.034 (the `issue list` twin this BC
+mirrors); `src/cli/issue/view.rs::handle_view` (the one other `adf_to_text` call site in this
+file, table-mode description row only)
+**Subject**: Issue read — `--fields comment` raw-ADF passthrough (issue #584)
+**Behavior**: Identical mechanism to BC-2.2.034 (via BC-2.3.041's `--fields` REPLACE-semantics
+request), applied to `jr issue view <KEY> --fields comment --output json`. `comment` routes
+through `IssueFields.extra` untouched — Jira's raw ADF passes through byte-for-byte, zero
+incremental transformation code.
+**Preconditions**:
+1. `--fields` includes `comment` AND `--output json` is set (BC-2.3.041's Preconditions 1-2).
+**Postconditions**:
+1. `.fields.comment.comments[].body` in `issue view`'s JSON output is the RAW ADF object Jira
+   returned — same guarantee as BC-2.2.034 Postcondition 1.
+2. `issue comments <KEY>` remains unaffected — same independence guarantee as BC-2.2.034
+   Postcondition 2.
+3. Zero incremental transformation code — same as BC-2.2.034 Postcondition 3.
+**Edge Cases**:
+- EC-2.3.042-1: `jr issue view FOO-123 --fields "summary,comment" --output json` →
+  `.fields.comment.comments[].body` is a raw ADF object, not a string.
+- EC-2.3.042-2: `issue view`'s TABLE-mode description row (the one existing `adf_to_text`
+  call site inside `view.rs::handle_view`) is unaffected — `--fields` is JSON-only
+  (BC-2.3.041 Precondition 2), so the table-mode description-rendering code path is never
+  reached when `--fields comment` is combined with JSON output.
+**Verification Properties**:
+- VP-FIELDS-005: A wiremock fixture with a non-trivial ADF comment body, requested via
+  `--fields comment --output json` on `issue view`, asserts `.fields.comment.comments[].body`
+  deep-equals the fixture's raw ADF object.
+**Trace**: BC-2.2.034 (list twin); BC-2.3.041 (the `--fields`/`extra`-flatten mechanism this
+BC confirms); `src/cli/issue/view.rs::handle_view` (the one other `adf_to_text` call site in
+this file, confirmed unaffected — table-mode only)
+
+---
+
 ### 2.4 Comments
 
 #### BC-2.4.039: `issue comments <key>` paginates at 100/page with `expand=properties`
@@ -1209,6 +1656,49 @@ review pass 1 M8
 **Subject**: Issue read (API layer — full-body JQL search)
 **Behavior**: On every page-fetch iteration, after extending `all_issues` and before any break-decision check, `search_issues` deduplicates `all_issues` in-place using order-preserving, first-occurrence-wins deduplication keyed on `issue.key` (HashSet<String> of cloned keys, because `Issue` does not impl `Hash`). All exit paths (guard-abort, limit-truncation, cursor-exhaustion) therefore return a duplicate-free `issues` vec. `SearchResult.has_more` semantics are unchanged. As of issue #365, `has_more = true` on the guard-abort path no longer implies that `issues` contains duplicates. Symmetric to BC-2.6.050.
 **Trace**: `src/api/jira/issues.rs::search_issues` (impl); `tests/rate_limit_cap_tests.rs` (dedupe regression suite added in #365: `test_search_issues_repeated_cursor_abort_dedupes`, `test_search_issues_dedupes_non_consecutive_across_pages`, `test_search_issues_limit_truncation_dedupes_under_drift`, `test_search_issues_apr2025_overshoot_silenced_by_drift_dedupe`)
+
+---
+
+#### BC-2.6.052: `JiraClient` gains field-override client methods (additive; existing `get_issue`/`search_issues` signatures and their 11 other call sites unchanged)
+
+**Confidence**: HIGH
+**Source**: F1 delta analysis §1.2/§1.3 (call-site census, additive-methods recommendation);
+`src/api/jira/issues.rs::get_issue`, `::search_issues` (the two existing methods this BC does
+NOT modify); `src/api/jira/issues.rs` (pending F4)
+**Subject**: Issue read — API layer, `--fields` support (issue #575)
+**Behavior**: `src/api/jira/issues.rs` gains new sibling methods — e.g.
+`get_issue_with_fields(key, fields: &[&str])` and `search_issues_with_fields(jql, limit,
+fields: &[&str])` (exact names/shapes at implementer discretion; the contract is
+additive-only) — that accept an explicit field list and send it VERBATIM, comma-joined, as
+the `fields=` request parameter, bypassing `BASE_ISSUE_FIELDS` and any config-driven extras
+entirely. The EXISTING `get_issue`/`search_issues` signatures are UNCHANGED — this BC does
+NOT widen or modify them. This keeps the blast radius of `--fields` (BC-2.2.033/BC-2.3.041)
+scoped to `list.rs`/`view.rs` only, per F1's regression-risk analysis.
+**Preconditions**:
+1. The new method(s) are additive siblings — not signature modifications — to `get_issue`/
+   `search_issues`.
+**Postconditions**:
+1. The 9 existing `get_issue` call sites outside `list.rs`/`view.rs` (`edit.rs` ×2,
+   `links.rs`, `create.rs`, `assets.rs`, `workflow.rs` ×3) and the 2 existing `search_issues`
+   call sites outside `list.rs` (`board.rs`, `queue.rs`) — 11 call sites total — compile and
+   behave IDENTICALLY: zero code change required at any of these 11 sites.
+2. The new method(s) send the caller-supplied field list exactly, comma-joined, as `fields=`
+   — no `BASE_ISSUE_FIELDS` union, no `extra_fields` injection.
+**Edge Cases**:
+- EC-2.6.052-1: A future caller reaching for the new method(s) with an EMPTY field slice
+  sends `fields=` (an empty parameter value) — this BC does NOT define that as a client-layer
+  error; the CLI-layer pre-HTTP validation (BC-2.2.033/BC-2.3.041 Precondition 3) is the sole
+  enforcement point for a non-empty field list, so the client method itself is a thin,
+  unvalidated pass-through.
+**Verification Properties**:
+- VP-FIELDS-003: All 11 existing `get_issue`/`search_issues` call sites outside
+  `list.rs`/`view.rs` are unchanged (regression: the existing test suites for `edit.rs`,
+  `links.rs`, `create.rs`, `assets.rs`, `workflow.rs`, `board.rs`, `queue.rs` pass unmodified);
+  the new field-override method(s) send the caller's field list verbatim with no
+  `BASE_ISSUE_FIELDS` union.
+**Trace**: F1 delta analysis §1.2/§1.3 (call-site census, additive-methods recommendation);
+BC-2.2.028 (`BASE_ISSUE_FIELDS` — the constant this BC's methods bypass); BC-2.2.033/
+BC-2.3.041 (the two CLI-layer consumers of this client-layer addition)
 
 ---
 
@@ -1656,4 +2146,4 @@ All issue-read errors follow the universal pattern (BC-X.3.012):
 
 Pass 3 sources: `tests/issue_list_errors.rs`, `tests/issue_view_errors.rs`, `tests/comments.rs`
 
-## Total BCs in this file: 72 individually-bodied (cumulative 114 incl. range-collapsed; see BC-INDEX.md)
+## Total BCs in this file: 80 individually-bodied (cumulative 122 incl. range-collapsed; see BC-INDEX.md)
