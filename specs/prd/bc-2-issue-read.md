@@ -1678,10 +1678,10 @@ scoped to `list.rs`/`view.rs` only, per F1's regression-risk analysis.
 1. The new method(s) are additive siblings — not signature modifications — to `get_issue`/
    `search_issues`.
 **Postconditions**:
-1. The 9 existing `get_issue` call sites outside `list.rs`/`view.rs` (`edit.rs` ×2,
-   `links.rs`, `create.rs`, `assets.rs`, `workflow.rs` ×3) and the 2 existing `search_issues`
-   call sites outside `list.rs` (`board.rs`, `queue.rs`) — 11 call sites total — compile and
-   behave IDENTICALLY: zero code change required at any of these 11 sites.
+1. The 8 existing `get_issue` call sites outside `list.rs`/`view.rs` (`edit.rs` ×2,
+   `links.rs`, `create.rs`, `workflow.rs` ×3, `assets.rs`) and the 2 existing `search_issues`
+   call sites outside `list.rs` (`board.rs`, `queue.rs`) — 10 call sites total — compile and
+   behave IDENTICALLY: zero code change required at any of these 10 sites.
 2. The new method(s) send the caller-supplied field list exactly, comma-joined, as `fields=`
    — no `BASE_ISSUE_FIELDS` union, no `extra_fields` injection.
 **Edge Cases**:
@@ -1691,9 +1691,9 @@ scoped to `list.rs`/`view.rs` only, per F1's regression-risk analysis.
   enforcement point for a non-empty field list, so the client method itself is a thin,
   unvalidated pass-through.
 **Verification Properties**:
-- VP-FIELDS-003: All 11 existing `get_issue`/`search_issues` call sites outside
+- VP-FIELDS-003: All 10 existing `get_issue`/`search_issues` call sites outside
   `list.rs`/`view.rs` are unchanged (regression: the existing test suites for `edit.rs`,
-  `links.rs`, `create.rs`, `assets.rs`, `workflow.rs`, `board.rs`, `queue.rs` pass unmodified);
+  `links.rs`, `create.rs`, `workflow.rs`, `assets.rs`, `board.rs`, `queue.rs` pass unmodified);
   the new field-override method(s) send the caller's field list verbatim with no
   `BASE_ISSUE_FIELDS` union.
 **Trace**: F1 delta analysis §1.2/§1.3 (call-site census, additive-methods recommendation);

@@ -49,7 +49,7 @@
 ### 1.3 `get_issue`/`search_issues` existing call-site census (for the additive-methods argument)
 
 ```
-get_issue:      edit.rs (×2), links.rs, create.rs, assets.rs, workflow.rs (×3), view.rs   → 9 call sites outside this bundle's direct scope + view.rs (in scope)
+get_issue:      edit.rs (×2), links.rs, create.rs, assets.rs, workflow.rs (×3), view.rs   → 8 call sites outside this bundle's direct scope + view.rs (in scope)
 search_issues:  board.rs, queue.rs, list.rs                                                → 2 call sites outside scope + list.rs (in scope)
 search_issue_keys: component.rs, edit.rs                                                   → untouched by this bundle (keys-only search, no `fields=` concept applies)
 ```
@@ -134,7 +134,7 @@ search_issue_keys: component.rs, edit.rs                                        
 |---|---|---|
 | BC-2.2.033 | `issue list --fields <CSV>` replaces the requested `fields=` set; requires `--output json` (exit 64 otherwise); pre-HTTP CSV validation | NEW |
 | BC-2.3.041 | `issue view --fields <CSV>` — same semantics as BC-2.2.033, via a new `get_issue`-family client method | NEW |
-| BC-2.6.052 | `JiraClient` gains field-override client methods (additive; existing `get_issue`/`search_issues` signatures and their 12 other call sites unchanged) | NEW |
+| BC-2.6.052 | `JiraClient` gains field-override client methods (additive; existing `get_issue`/`search_issues` signatures and their 10 other call sites unchanged) | NEW |
 | BC-2.2.034 | `issue list --fields comment --output json` returns `.fields.comment.comments[].body` as raw ADF via the pre-existing `extra` flatten — zero incremental transformation code | NEW |
 | BC-2.3.042 | `issue view --fields comment --output json` — same, via `IssueFields.extra` | NEW |
 | BC-2.1.023 | `--updated-recent <duration>` → `updated >= -{d}` clause, validated via `jql::validate_duration`, positioned after `--recent`'s slot | NEW |
