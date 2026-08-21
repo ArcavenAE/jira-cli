@@ -1190,6 +1190,13 @@ combined with table mode (default, or explicit `--output table`) → exit 64 pre
 - EC-2.2.033-6: `--fields "summary,status" --points --output json` → `--points`'s
   `customfield_NNNNN` is NOT added to the request (`--fields` REPLACE semantics wins); no
   warning emitted (silent no-op per Postcondition 4).
+- EC-2.2.033-7: `--fields "status" --output json` (the CSV OMITS a typed `IssueFields` field,
+  e.g. `summary` is not named) → the command MUST succeed (exit 0), returning exactly the
+  requested fields per Postcondition 1; the omitted typed field (`summary`) serializes as
+  JSON `null` — NOT a deserialize error and NOT a command failure — per Postcondition 2. This
+  holds for every named `IssueFields` field, including `summary`: the typed model treats all
+  such fields as optional (`Option<T>`) specifically so an arbitrary `--fields` subset never
+  fails deserialization regardless of which typed fields are left out of the request.
 **Verification Properties**:
 - VP-FIELDS-001: `--fields <CSV>` composes the exact, trimmed, comma-joined field list as the
   sole `fields=` request parameter (no `BASE_ISSUE_FIELDS` union, no `--points`/`--assets`/
@@ -1477,6 +1484,12 @@ list twin (human-locked DEC-298).
 - EC-2.3.041-2: `jr issue view FOO-123 --fields "summary,comment"` (no `--output json`, table
   mode default) → exit 64, stderr `--fields requires --output json.`; zero HTTP calls.
 - EC-2.3.041-3: `--fields ""` → exit 64 pre-HTTP, zero HTTP calls.
+- EC-2.3.041-4: `jr issue view FOO-123 --fields "status" --output json` (the CSV OMITS a typed
+  `IssueFields` field, e.g. `summary` is not named) → the command MUST succeed (exit 0),
+  returning exactly the requested fields per Postcondition 1; the omitted typed field
+  (`summary`) serializes as JSON `null` — NOT a deserialize error — per Postcondition 2, same
+  guarantee as BC-2.2.033's EC-2.2.033-7. The typed model treats all named `IssueFields`
+  fields, including `summary`, as optional (`Option<T>`) for this reason.
 **Verification Properties**:
 - VP-FIELDS-002: `issue view --fields <CSV>` composes the exact trimmed CSV as the sole
   `fields=` request parameter; table-mode combination rejected pre-HTTP with zero `GET
