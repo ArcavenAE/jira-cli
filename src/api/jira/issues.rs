@@ -312,6 +312,95 @@ impl JiraClient {
         })
     }
 
+    /// Search issues using JQL with an explicit, caller-supplied field list —
+    /// REPLACES [`BASE_ISSUE_FIELDS`] entirely rather than unioning with it
+    /// (BC-2.2.033, BC-2.6.052, human-locked DEC-298). Additive sibling to
+    /// [`Self::search_issues`] — that method's signature and behavior are
+    /// unchanged.
+    ///
+    /// Thin, unvalidated pass-through: an empty `fields` slice is NOT
+    /// rejected here. CLI-layer pre-HTTP validation (BC-2.2.033
+    /// Precondition 3) is the sole enforcement point for a non-empty field
+    /// list (EC-2.6.052-1).
+    ///
+    /// Mirrors [`Self::search_issues`]'s cursor-pagination, dedupe, and
+    /// anti-loop-guard behavior, but sends the caller's `fields` verbatim
+    /// on each page request instead of [`BASE_ISSUE_FIELDS`]. Traces to
+    /// BC-2.2.033 / BC-2.6.052.
+    pub async fn search_issues_with_fields(
+        &self,
+        jql: &str,
+        limit: Option<u32>,
+        fields: &[&str],
+    ) -> Result<SearchResult> {
+        let max_per_page = limit.unwrap_or(50).min(100);
+        let mut all_issues: Vec<Issue> = Vec::new();
+        let mut next_page_token: Option<String> = None;
+
+        let mut more_available = false;
+        let mut seen_keys: HashSet<String> = HashSet::new();
+        let mut prev_cursor: Option<String> = None;
+
+        loop {
+            let mut body = serde_json::json!({
+                "jql": jql,
+                "maxResults": max_per_page,
+                "fields": fields
+            });
+
+            if let Some(ref token) = next_page_token {
+                body["nextPageToken"] = serde_json::json!(token);
+            }
+
+            let page: CursorPage<Issue> = self.post("/rest/api/3/search/jql", &body).await?;
+
+            let page_has_more = page.has_more();
+            let next_cursor = page.next_page_token.clone();
+
+            for issue in page.issues {
+                if seen_keys.insert(issue.key.clone()) {
+                    all_issues.push(issue);
+                }
+            }
+
+            if let Some(max) = limit {
+                if all_issues.len() >= max as usize {
+                    more_available = all_issues.len() > max as usize || page_has_more;
+                    all_issues.truncate(max as usize);
+                    break;
+                }
+            }
+
+            if !page_has_more {
+                break;
+            }
+
+            // Anti-loop guard: same rationale as `search_issues` — see that
+            // method's rustdoc for the full JRACLOUD-95368 explanation.
+            if next_cursor.is_some() && next_cursor == prev_cursor {
+                eprintln!(
+                    "[jr] WARNING: Atlassian /rest/api/3/search/jql returned the same \
+                     nextPageToken twice — aborting pagination to prevent an infinite \
+                     loop. Some results may be missing. Likely cause: live data \
+                     mutation between page fetches (snapshot-instability, \
+                     JRACLOUD-95368). Mitigation: end your JQL with `key ASC` in the \
+                     ORDER BY (append `, key ASC` to an existing sort, or use \
+                     `ORDER BY key ASC` if none)."
+                );
+                more_available = true;
+                break;
+            }
+
+            prev_cursor = next_cursor.clone();
+            next_page_token = next_cursor;
+        }
+
+        Ok(SearchResult {
+            issues: all_issues,
+            has_more: more_available,
+        })
+    }
+
     /// Search issues using JQL and return ONLY the matching issue keys.
     ///
     /// Lightweight variant of [`Self::search_issues`] — requests
@@ -468,6 +557,42 @@ impl JiraClient {
             "/rest/api/3/issue/{}?fields={}",
             urlencoding::encode(key),
             fields.join(",")
+        );
+        self.get(&path).await
+    }
+
+    /// Get a single issue by key with an explicit, caller-supplied field
+    /// list — REPLACES [`BASE_ISSUE_FIELDS`] entirely rather than unioning
+    /// with it (BC-2.3.041, BC-2.6.052, human-locked DEC-298). Additive
+    /// sibling to [`Self::get_issue`] — that method's signature and
+    /// behavior are unchanged.
+    ///
+    /// Thin, unvalidated pass-through: an empty `fields` slice is NOT
+    /// rejected here. CLI-layer pre-HTTP validation (BC-2.3.041
+    /// Precondition 3) is the sole enforcement point for a non-empty field
+    /// list (EC-2.6.052-1).
+    ///
+    /// Each field name is percent-encoded individually via
+    /// `urlencoding::encode` before being joined with a literal `,` (F1,
+    /// adversary review S-575-1). A user-supplied field name can contain
+    /// URL-significant characters (e.g. `&`, `#`, a space) — without
+    /// per-segment encoding, such a character would corrupt the query
+    /// string and silently break REPLACE fidelity by truncating or
+    /// misrouting the `fields` param. This restores parity with the
+    /// list/POST path (which sends `fields` as a JSON array body and is
+    /// therefore already safe): Jira receives each field name verbatim and
+    /// 400s on a genuinely-unknown field, exactly as before. The `,`
+    /// separator itself is intentionally NOT encoded — it is the field-list
+    /// delimiter Jira's `fields` query param expects.
+    pub async fn get_issue_with_fields(&self, key: &str, fields: &[&str]) -> Result<Issue> {
+        let encoded_fields: Vec<String> = fields
+            .iter()
+            .map(|f| urlencoding::encode(f).into_owned())
+            .collect();
+        let path = format!(
+            "/rest/api/3/issue/{}?fields={}",
+            urlencoding::encode(key),
+            encoded_fields.join(",")
         );
         self.get(&path).await
     }

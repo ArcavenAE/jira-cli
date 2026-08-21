@@ -10693,3 +10693,673 @@ async fn test_bc_3_4_023_issue_edit_bulk_component_success_renders_full_json_str
         }
     }
 }
+
+// ─── S-575-1: `--fields <CSV>` on `issue list` / `issue view` (Red Gate) ───
+//
+// BC-2.2.033 (list), BC-2.3.041 (view), BC-2.6.052 (additive client
+// methods). Covers the REPLACE-semantics request composition (not UNION),
+// the typed-output null/extra-flatten postconditions, `key`-always-present,
+// CSV whitespace-trimming, and the new client methods' verbatim
+// pass-through. Table-mode rejection and empty-CSV pre-HTTP rejection are
+// covered separately in tests/issue_list_errors.rs and
+// tests/issue_view_errors.rs; the `--points` silent-no-op interaction is
+// covered in tests/all_flag_behavior.rs. AC-009 (the 10 existing
+// get_issue/search_issues call sites are unaffected) is explicitly
+// "no new test — verified via full regression suite" per the story, so no
+// dedicated test is added here for it.
+
+/// AC-001 / BC-2.2.033 Postcondition 1: `--fields` on `issue list` REPLACES
+/// `BASE_ISSUE_FIELDS` entirely — the `fields` array sent to
+/// `POST /rest/api/3/search/jql` must be EXACTLY the requested, trimmed,
+/// comma-joined CSV, in supplied order — no union, no config-driven extras.
+#[tokio::test]
+async fn test_bc_2_2_033_issue_list_fields_replaces_requested_field_set() {
+    let server = MockServer::start().await;
+
+    // F2 (adversary review, S-575-1): match on method+path only. The old
+    // `body_partial_json` matcher was INCLUSIVE (assert-json-diff) — it
+    // ignores trailing actual elements, so a future append-union regression
+    // (e.g. re-injecting a config-driven extra field onto the end of the
+    // array) would still satisfy it. The EXACT full-array assertion — the
+    // one that actually guards BC-2.2.033 Postcondition 1's REPLACE-not-UNION
+    // invariant — happens below via `server.received_requests()`.
+    Mock::given(method("POST"))
+        .and(path("/rest/api/3/search/jql"))
+        .respond_with(ResponseTemplate::new(200).set_body_json(
+            common::fixtures::issue_search_response(vec![serde_json::json!({
+                "key": "PROJ-1",
+                "fields": {
+                    "summary": "Narrow fields issue",
+                    "status": {"name": "To Do"},
+                    "comment": {"comments": []}
+                }
+            })]),
+        ))
+        .mount(&server)
+        .await;
+
+    let output = assert_cmd::Command::cargo_bin("jr")
+        .unwrap()
+        .env("JR_BASE_URL", server.uri())
+        .env("JR_AUTH_HEADER", "Basic dGVzdDp0ZXN0")
+        .args([
+            "issue",
+            "list",
+            "--jql",
+            "project = PROJ",
+            "--fields",
+            "summary,status,comment",
+            "--output",
+            "json",
+        ])
+        .output()
+        .unwrap();
+
+    assert!(
+        output.status.success(),
+        "Expected success, stderr: {}",
+        String::from_utf8_lossy(&output.stderr)
+    );
+    let stdout = output.stdout.clone();
+    let parsed: serde_json::Value = serde_json::from_slice(&stdout).unwrap_or_else(|e| {
+        panic!(
+            "stdout not valid JSON: {e}\n{}",
+            String::from_utf8_lossy(&stdout)
+        )
+    });
+    assert_eq!(parsed[0]["key"], "PROJ-1");
+    assert_eq!(parsed[0]["fields"]["summary"], "Narrow fields issue");
+
+    let requests = server.received_requests().await.expect("requests recorded");
+    let search_request = requests
+        .iter()
+        .find(|r| r.url.path() == "/rest/api/3/search/jql")
+        .expect("search POST must have been made");
+    let body: serde_json::Value =
+        serde_json::from_slice(&search_request.body).expect("request body must be valid JSON");
+    assert_eq!(
+        body["fields"],
+        serde_json::json!(["summary", "status", "comment"]),
+        "fields array must be EXACTLY [\"summary\", \"status\", \"comment\"] \
+         (REPLACE semantics, no union) — got: {}",
+        body["fields"]
+    );
+}
+
+/// AC-002 / BC-2.3.041 Postcondition 1: `--fields` on `issue view` mirrors
+/// the list twin exactly — the `fields=` query param sent to
+/// `GET /rest/api/3/issue/<KEY>` (via the new `get_issue_with_fields`
+/// client method, BC-2.6.052) must be EXACTLY the requested CSV.
+#[tokio::test]
+async fn test_bc_2_3_041_issue_view_fields_replaces_requested_field_set() {
+    let server = MockServer::start().await;
+
+    Mock::given(method("GET"))
+        .and(path("/rest/api/3/issue/PROJ-5"))
+        .and(query_param("fields", "summary,comment"))
+        .respond_with(ResponseTemplate::new(200).set_body_json(serde_json::json!({
+            "key": "PROJ-5",
+            "fields": {
+                "summary": "View narrow fields",
+                "comment": {"comments": []}
+            }
+        })))
+        .mount(&server)
+        .await;
+
+    let output = assert_cmd::Command::cargo_bin("jr")
+        .unwrap()
+        .env("JR_BASE_URL", server.uri())
+        .env("JR_AUTH_HEADER", "Basic dGVzdDp0ZXN0")
+        .args([
+            "issue",
+            "view",
+            "PROJ-5",
+            "--fields",
+            "summary,comment",
+            "--output",
+            "json",
+        ])
+        .output()
+        .unwrap();
+
+    assert!(
+        output.status.success(),
+        "Expected success, stderr: {}",
+        String::from_utf8_lossy(&output.stderr)
+    );
+    let parsed: serde_json::Value =
+        serde_json::from_slice(&output.stdout).expect("stdout must be valid JSON");
+    assert_eq!(parsed["key"], "PROJ-5");
+    assert_eq!(parsed["fields"]["summary"], "View narrow fields");
+}
+
+/// AC-003 / BC-2.2.033 Postcondition 2: named `IssueFields` struct fields
+/// NOT covered by the `--fields` request serialize as JSON `null`
+/// (missing-key -> `None`, standard serde `Option<T>` behavior); unnamed
+/// requested fields (e.g. a `customfield_NNNNN`) flow through
+/// `IssueFields.extra` (`#[serde(flatten)]`) verbatim.
+#[tokio::test]
+async fn test_bc_2_2_033_issue_list_fields_unrequested_named_fields_are_null() {
+    let server = MockServer::start().await;
+
+    Mock::given(method("POST"))
+        .and(path("/rest/api/3/search/jql"))
+        .and(body_partial_json(serde_json::json!({
+            "fields": ["summary", "status", "customfield_10084"]
+        })))
+        .respond_with(ResponseTemplate::new(200).set_body_json(
+            common::fixtures::issue_search_response(vec![serde_json::json!({
+                "key": "PROJ-1",
+                "fields": {
+                    "summary": "Narrow fields issue",
+                    "status": {"name": "To Do"},
+                    "customfield_10084": "custom-value-xyz"
+                }
+            })]),
+        ))
+        .mount(&server)
+        .await;
+
+    let output = assert_cmd::Command::cargo_bin("jr")
+        .unwrap()
+        .env("JR_BASE_URL", server.uri())
+        .env("JR_AUTH_HEADER", "Basic dGVzdDp0ZXN0")
+        .args([
+            "issue",
+            "list",
+            "--jql",
+            "project = PROJ",
+            "--fields",
+            "summary,status,customfield_10084",
+            "--output",
+            "json",
+        ])
+        .output()
+        .unwrap();
+
+    assert!(
+        output.status.success(),
+        "stderr: {}",
+        String::from_utf8_lossy(&output.stderr)
+    );
+    let parsed: serde_json::Value =
+        serde_json::from_slice(&output.stdout).expect("stdout must be valid JSON");
+    let issue = &parsed[0];
+    assert_eq!(issue["fields"]["summary"], "Narrow fields issue");
+    assert!(
+        issue["fields"]["priority"].is_null(),
+        "unrequested named field 'priority' must serialize as null, got: {issue}"
+    );
+    assert!(
+        issue["fields"]["assignee"].is_null(),
+        "unrequested named field 'assignee' must serialize as null, got: {issue}"
+    );
+    assert!(
+        issue["fields"]["duedate"].is_null(),
+        "unrequested named field 'duedate' must serialize as null, got: {issue}"
+    );
+    assert_eq!(
+        issue["fields"]["customfield_10084"], "custom-value-xyz",
+        "unnamed requested field must round-trip verbatim through the extra flatten, got: {issue}"
+    );
+}
+
+/// AC-007 / BC-2.2.033 Postcondition 3: `key` is present in `issue list`
+/// JSON output regardless of whether `key` appears in the `--fields` CSV —
+/// Jira always returns it top-level. (The typed `Issue` struct has no
+/// top-level `id` field — only `key` is part of this contract; BC-2.2.033
+/// Postcondition 3 names `key` exclusively.)
+#[tokio::test]
+async fn test_bc_2_2_033_issue_list_fields_key_always_present_regardless_of_csv() {
+    let server = MockServer::start().await;
+
+    // F2 (adversary review, S-575-1): method+path only — see the exact
+    // full-array assertion on `server.received_requests()` below, which is
+    // what actually guards REPLACE-not-UNION here (a `body_partial_json`
+    // match against `["summary"]` would not catch a trailing append).
+    Mock::given(method("POST"))
+        .and(path("/rest/api/3/search/jql"))
+        .respond_with(ResponseTemplate::new(200).set_body_json(
+            common::fixtures::issue_search_response(vec![serde_json::json!({
+                "key": "PROJ-7",
+                "fields": { "summary": "Key-only fields request" }
+            })]),
+        ))
+        .mount(&server)
+        .await;
+
+    let output = assert_cmd::Command::cargo_bin("jr")
+        .unwrap()
+        .env("JR_BASE_URL", server.uri())
+        .env("JR_AUTH_HEADER", "Basic dGVzdDp0ZXN0")
+        .args([
+            "issue",
+            "list",
+            "--jql",
+            "project = PROJ",
+            "--fields",
+            "summary",
+            "--output",
+            "json",
+        ])
+        .output()
+        .unwrap();
+
+    assert!(
+        output.status.success(),
+        "stderr: {}",
+        String::from_utf8_lossy(&output.stderr)
+    );
+    let parsed: serde_json::Value =
+        serde_json::from_slice(&output.stdout).expect("stdout must be valid JSON");
+    assert_eq!(
+        parsed[0]["key"], "PROJ-7",
+        "'key' must be present at issue top level even though 'key' does not \
+         appear in the --fields CSV"
+    );
+
+    let requests = server.received_requests().await.expect("requests recorded");
+    let search_request = requests
+        .iter()
+        .find(|r| r.url.path() == "/rest/api/3/search/jql")
+        .expect("search POST must have been made");
+    let body: serde_json::Value =
+        serde_json::from_slice(&search_request.body).expect("request body must be valid JSON");
+    assert_eq!(
+        body["fields"],
+        serde_json::json!(["summary"]),
+        "fields array must be EXACTLY [\"summary\"] (REPLACE semantics, no \
+         union) — got: {}",
+        body["fields"]
+    );
+}
+
+/// AC-012 / BC-2.3.041 Postcondition 3: `key` is present in `issue view`
+/// JSON output regardless of `--fields` CSV contents — same Jira guarantee
+/// as AC-007, verified independently on the view path.
+#[tokio::test]
+async fn test_bc_2_3_041_issue_view_fields_key_always_present() {
+    let server = MockServer::start().await;
+
+    Mock::given(method("GET"))
+        .and(path("/rest/api/3/issue/PROJ-8"))
+        .and(query_param("fields", "summary"))
+        .respond_with(ResponseTemplate::new(200).set_body_json(serde_json::json!({
+            "key": "PROJ-8",
+            "fields": { "summary": "View key-only fields request" }
+        })))
+        .mount(&server)
+        .await;
+
+    let output = assert_cmd::Command::cargo_bin("jr")
+        .unwrap()
+        .env("JR_BASE_URL", server.uri())
+        .env("JR_AUTH_HEADER", "Basic dGVzdDp0ZXN0")
+        .args([
+            "issue", "view", "PROJ-8", "--fields", "summary", "--output", "json",
+        ])
+        .output()
+        .unwrap();
+
+    assert!(
+        output.status.success(),
+        "stderr: {}",
+        String::from_utf8_lossy(&output.stderr)
+    );
+    let parsed: serde_json::Value =
+        serde_json::from_slice(&output.stdout).expect("stdout must be valid JSON");
+    assert_eq!(
+        parsed["key"], "PROJ-8",
+        "'key' must be present at issue top level even though 'key' does not \
+         appear in the --fields CSV"
+    );
+}
+
+/// AC-008 / BC-2.2.033 Edge Case EC-2.2.033-2: `--fields "summary, status"`
+/// (embedded whitespace around the comma) behaves identically to
+/// `--fields "summary,status"` — each CSV segment is trimmed before use.
+#[tokio::test]
+async fn test_bc_2_2_033_issue_list_fields_csv_segments_are_trimmed() {
+    let server = MockServer::start().await;
+
+    // F2 (adversary review, S-575-1): method+path only — the exact
+    // full-array assertion below on `server.received_requests()` is what
+    // actually proves BOTH trimming ("summary, status" -> "summary"/"status"
+    // with no embedded whitespace) AND REPLACE-not-UNION (no trailing
+    // append); a `body_partial_json` inclusive match can't distinguish
+    // either from a superset.
+    Mock::given(method("POST"))
+        .and(path("/rest/api/3/search/jql"))
+        .respond_with(ResponseTemplate::new(200).set_body_json(
+            common::fixtures::issue_search_response(vec![serde_json::json!({
+                "key": "PROJ-9",
+                "fields": {
+                    "summary": "Trimmed CSV",
+                    "status": {"name": "To Do"}
+                }
+            })]),
+        ))
+        .mount(&server)
+        .await;
+
+    let output = assert_cmd::Command::cargo_bin("jr")
+        .unwrap()
+        .env("JR_BASE_URL", server.uri())
+        .env("JR_AUTH_HEADER", "Basic dGVzdDp0ZXN0")
+        .args([
+            "issue",
+            "list",
+            "--jql",
+            "project = PROJ",
+            "--fields",
+            "summary, status",
+            "--output",
+            "json",
+        ])
+        .output()
+        .unwrap();
+
+    assert!(
+        output.status.success(),
+        "embedded whitespace in --fields CSV must be trimmed before use, stderr: {}",
+        String::from_utf8_lossy(&output.stderr)
+    );
+    let parsed: serde_json::Value =
+        serde_json::from_slice(&output.stdout).expect("stdout must be valid JSON");
+    assert_eq!(parsed[0]["key"], "PROJ-9");
+
+    let requests = server.received_requests().await.expect("requests recorded");
+    let search_request = requests
+        .iter()
+        .find(|r| r.url.path() == "/rest/api/3/search/jql")
+        .expect("search POST must have been made");
+    let body: serde_json::Value =
+        serde_json::from_slice(&search_request.body).expect("request body must be valid JSON");
+    assert_eq!(
+        body["fields"],
+        serde_json::json!(["summary", "status"]),
+        "fields array must be EXACTLY [\"summary\", \"status\"] — trimmed, \
+         REPLACE semantics, no union — got: {}",
+        body["fields"]
+    );
+}
+
+/// AC-010 / BC-2.6.052 Postcondition 2: the new field-override client
+/// methods (`get_issue_with_fields`, `search_issues_with_fields`) send the
+/// caller-supplied field list EXACTLY — comma-joined for the GET query
+/// param, as a JSON array for the POST body — with no `BASE_ISSUE_FIELDS`
+/// union. Exercised at the client layer directly (not via the CLI) so this
+/// pins the method contract independent of the CLI-layer wiring in
+/// list.rs/view.rs.
+#[tokio::test]
+async fn test_bc_2_6_052_field_override_methods_send_verbatim_field_list() {
+    let server = MockServer::start().await;
+
+    Mock::given(method("GET"))
+        .and(path("/rest/api/3/issue/PROJ-1"))
+        .and(query_param("fields", "summary,comment"))
+        .respond_with(ResponseTemplate::new(200).set_body_json(serde_json::json!({
+            "key": "PROJ-1",
+            "fields": { "summary": "Narrow", "comment": {"comments": []} }
+        })))
+        .mount(&server)
+        .await;
+
+    // F2 (adversary review, S-575-1): method+path only — the old
+    // `body_partial_json` matcher was inclusive and could not detect a
+    // trailing append-union regression. The exact full-array assertion
+    // below on `server.received_requests()` is the actual guard for
+    // BC-2.6.052 Postcondition 2's verbatim-pass-through contract.
+    Mock::given(method("POST"))
+        .and(path("/rest/api/3/search/jql"))
+        .respond_with(ResponseTemplate::new(200).set_body_json(
+            common::fixtures::issue_search_response(vec![serde_json::json!({
+                "key": "PROJ-2",
+                "fields": { "summary": "Narrow2", "comment": {"comments": []} }
+            })]),
+        ))
+        .mount(&server)
+        .await;
+
+    let client =
+        jr::api::client::JiraClient::new_for_test(server.uri(), "Basic dGVzdDp0ZXN0".to_string());
+
+    let issue = client
+        .get_issue_with_fields("PROJ-1", &["summary", "comment"])
+        .await
+        .expect("get_issue_with_fields must send exactly the caller-supplied fields");
+    assert_eq!(issue.key, "PROJ-1");
+
+    let result = client
+        .search_issues_with_fields("project = PROJ", Some(10), &["summary", "comment"])
+        .await
+        .expect("search_issues_with_fields must send exactly the caller-supplied fields");
+    assert_eq!(result.issues.len(), 1);
+    assert_eq!(result.issues[0].key, "PROJ-2");
+
+    let requests = server.received_requests().await.expect("requests recorded");
+    let search_request = requests
+        .iter()
+        .find(|r| r.url.path() == "/rest/api/3/search/jql")
+        .expect("search POST must have been made");
+    let body: serde_json::Value =
+        serde_json::from_slice(&search_request.body).expect("request body must be valid JSON");
+    assert_eq!(
+        body["fields"],
+        serde_json::json!(["summary", "comment"]),
+        "search_issues_with_fields must send fields EXACTLY [\"summary\", \"comment\"] \
+         with no BASE_ISSUE_FIELDS union — got: {}",
+        body["fields"]
+    );
+}
+
+/// AC-010 / BC-2.6.052 Edge Case EC-2.6.052-1: an empty field slice reaching
+/// the new client method(s) is NOT a client-layer error — the method is a
+/// thin, unvalidated pass-through; CLI-layer pre-HTTP validation
+/// (BC-2.2.033/BC-2.3.041 Precondition 3) is the sole enforcement point for
+/// a non-empty field list.
+#[tokio::test]
+async fn test_bc_2_6_052_field_override_methods_empty_slice_is_not_a_client_error() {
+    let server = MockServer::start().await;
+
+    Mock::given(method("GET"))
+        .and(path("/rest/api/3/issue/PROJ-1"))
+        .and(query_param("fields", ""))
+        .respond_with(ResponseTemplate::new(200).set_body_json(serde_json::json!({
+            "key": "PROJ-1",
+            "fields": { "summary": "Empty fields slice" }
+        })))
+        .mount(&server)
+        .await;
+
+    let client =
+        jr::api::client::JiraClient::new_for_test(server.uri(), "Basic dGVzdDp0ZXN0".to_string());
+
+    let issue = client
+        .get_issue_with_fields("PROJ-1", &[])
+        .await
+        .expect("an empty field slice must not be rejected at the client layer");
+    assert_eq!(issue.key, "PROJ-1");
+}
+
+/// F1 (adversary review, S-575-1): a user-supplied field name containing a
+/// URL-significant character (`&`, `#`, or a literal space) must be
+/// percent-encoded PER SEGMENT before being joined into the `fields` query
+/// param on `get_issue_with_fields`'s GET request — otherwise the raw
+/// character corrupts the query string (e.g. an unescaped `&` starts a new
+/// query param, silently dropping every field after it). This asserts the
+/// RAW (still-encoded) query string on the wire, not just the
+/// wiremock-decoded `query_param` matcher, so a regression that stops
+/// encoding would fail this test even though a naive decoded-value
+/// comparison might still appear to match.
+#[tokio::test]
+async fn test_get_issue_with_fields_url_encodes_special_characters_in_field_names() {
+    let server = MockServer::start().await;
+
+    Mock::given(method("GET"))
+        .and(path("/rest/api/3/issue/PROJ-1"))
+        .and(query_param("fields", "summary,field&name,with space"))
+        .respond_with(ResponseTemplate::new(200).set_body_json(serde_json::json!({
+            "key": "PROJ-1",
+            "fields": { "summary": "Encoded fields" }
+        })))
+        .mount(&server)
+        .await;
+
+    let client =
+        jr::api::client::JiraClient::new_for_test(server.uri(), "Basic dGVzdDp0ZXN0".to_string());
+
+    let issue = client
+        .get_issue_with_fields("PROJ-1", &["summary", "field&name", "with space"])
+        .await
+        .expect("special characters in field names must not break the request");
+    assert_eq!(issue.key, "PROJ-1");
+
+    // Inspect the RAW (still percent-encoded) query string actually sent on
+    // the wire — this is the assertion that would catch a regression back to
+    // unencoded `fields.join(",")`, since an unencoded `&`/space would still
+    // happen to round-trip through wiremock's decoded `query_param` matcher
+    // above in some cases but would corrupt a real Jira request.
+    let requests = server.received_requests().await.expect("requests recorded");
+    let request = requests
+        .iter()
+        .find(|r| r.url.path() == "/rest/api/3/issue/PROJ-1")
+        .expect("GET request must have been made");
+    let raw_query = request
+        .url
+        .query()
+        .expect("request must carry a query string");
+
+    assert!(
+        raw_query.contains("field%26name"),
+        "literal '&' in a field name must be percent-encoded as %26 on the wire; got: {raw_query}"
+    );
+    assert!(
+        !raw_query.contains("field&name"),
+        "an unencoded '&' would start a new query param and corrupt the fields list; got: {raw_query}"
+    );
+    assert!(
+        raw_query.contains("with%20space") || raw_query.contains("with+space"),
+        "literal space in a field name must be percent-encoded on the wire; got: {raw_query}"
+    );
+
+    // Decoded round-trip: the three original field names, and only those
+    // three, must survive encode -> Jira-side decode.
+    let fields_query = request
+        .url
+        .query_pairs()
+        .find(|(k, _)| k == "fields")
+        .map(|(_, v)| v.into_owned())
+        .expect("request must carry a `fields` query parameter");
+    assert_eq!(fields_query, "summary,field&name,with space");
+}
+
+/// Adversary Pass 5 regression: `IssueFields.summary` was the only
+/// non-`Option` typed field on `IssueFields` — every sibling is
+/// `Option<...>`. Under REPLACE semantics a `--fields` CSV that omits
+/// `summary` (e.g. `--fields status`) makes Jira's response `.fields` omit
+/// the `summary` key entirely, which previously failed deserialization with
+/// `missing field \`summary\`` and errored the command instead of returning
+/// the requested projection. `summary` is now `Option<String>` like every
+/// other named field; this pins `jr issue list --fields status` succeeding
+/// with `summary` absent/null in the mocked response.
+#[tokio::test]
+async fn test_issue_list_fields_omitting_summary_does_not_error() {
+    let server = MockServer::start().await;
+
+    // Reproduces live Jira: the `fields` array requested is `["status"]`
+    // only, so the mocked `.fields` response object OMITS `summary`
+    // entirely — this is the exact shape that previously broke
+    // deserialization.
+    Mock::given(method("POST"))
+        .and(path("/rest/api/3/search/jql"))
+        .respond_with(ResponseTemplate::new(200).set_body_json(
+            common::fixtures::issue_search_response(vec![serde_json::json!({
+                "key": "PROJ-11",
+                "fields": {
+                    "status": {"name": "To Do"}
+                }
+            })]),
+        ))
+        .mount(&server)
+        .await;
+
+    let output = assert_cmd::Command::cargo_bin("jr")
+        .unwrap()
+        .env("JR_BASE_URL", server.uri())
+        .env("JR_AUTH_HEADER", "Basic dGVzdDp0ZXN0")
+        .args([
+            "issue",
+            "list",
+            "--jql",
+            "project = PROJ",
+            "--fields",
+            "status",
+            "--output",
+            "json",
+        ])
+        .output()
+        .unwrap();
+
+    assert!(
+        output.status.success(),
+        "issue list --fields status (summary omitted from the CSV and from \
+         Jira's response) must not error, stderr: {}",
+        String::from_utf8_lossy(&output.stderr)
+    );
+    let parsed: serde_json::Value =
+        serde_json::from_slice(&output.stdout).expect("stdout must be valid JSON");
+    assert_eq!(parsed[0]["key"], "PROJ-11");
+    assert_eq!(parsed[0]["fields"]["status"]["name"], "To Do");
+    assert!(
+        parsed[0]["fields"]["summary"].is_null(),
+        "summary must serialize as null when omitted from the --fields CSV, got: {}",
+        parsed[0]
+    );
+}
+
+/// View-path twin of `test_issue_list_fields_omitting_summary_does_not_error`
+/// — `jr issue view <KEY> --fields status` must not error when Jira's
+/// response `.fields` omits `summary`.
+#[tokio::test]
+async fn test_issue_view_fields_omitting_summary_does_not_error() {
+    let server = MockServer::start().await;
+
+    Mock::given(method("GET"))
+        .and(path("/rest/api/3/issue/PROJ-12"))
+        .and(query_param("fields", "status"))
+        .respond_with(ResponseTemplate::new(200).set_body_json(serde_json::json!({
+            "key": "PROJ-12",
+            "fields": {
+                "status": {"name": "In Progress"}
+            }
+        })))
+        .mount(&server)
+        .await;
+
+    let output = assert_cmd::Command::cargo_bin("jr")
+        .unwrap()
+        .env("JR_BASE_URL", server.uri())
+        .env("JR_AUTH_HEADER", "Basic dGVzdDp0ZXN0")
+        .args([
+            "issue", "view", "PROJ-12", "--fields", "status", "--output", "json",
+        ])
+        .output()
+        .unwrap();
+
+    assert!(
+        output.status.success(),
+        "issue view --fields status (summary omitted from the CSV and from \
+         Jira's response) must not error, stderr: {}",
+        String::from_utf8_lossy(&output.stderr)
+    );
+    let parsed: serde_json::Value =
+        serde_json::from_slice(&output.stdout).expect("stdout must be valid JSON");
+    assert_eq!(parsed["key"], "PROJ-12");
+    assert_eq!(parsed["fields"]["status"]["name"], "In Progress");
+    assert!(
+        parsed["fields"]["summary"].is_null(),
+        "summary must serialize as null when omitted from the --fields CSV, got: {parsed}"
+    );
+}
