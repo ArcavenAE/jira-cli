@@ -11,7 +11,7 @@ trace: |
     on `issue list`/`issue view`): BC-2.2.033 ADDED (list, REPLACE-semantics `fields=`
     override, JSON-only, pre-HTTP CSV validation), BC-2.3.041 ADDED (view, same semantics),
     BC-2.6.052 ADDED (additive `JiraClient` field-override methods; existing `get_issue`/
-    `search_issues` signatures and their 11 other call sites unchanged). S-2 (#584, raw ADF
+    `search_issues` signatures and their 10 other call sites unchanged). S-2 (#584, raw ADF
     for `--fields comment`): BC-2.2.034 ADDED (list) + BC-2.3.042 ADDED (view) — invariant-
     style confirmatory BCs: `IssueFields.extra`'s pre-existing `#[serde(flatten)]` catch-all
     already passes `fields.comment.comments[].body` through as raw ADF once BC-2.2.033/
@@ -1659,7 +1659,7 @@ this file, confirmed unaffected — table-mode only)
 
 ---
 
-#### BC-2.6.052: `JiraClient` gains field-override client methods (additive; existing `get_issue`/`search_issues` signatures and their 11 other call sites unchanged)
+#### BC-2.6.052: `JiraClient` gains field-override client methods (additive; existing `get_issue`/`search_issues` signatures and their 10 other call sites unchanged)
 
 **Confidence**: HIGH
 **Source**: F1 delta analysis §1.2/§1.3 (call-site census, additive-methods recommendation);

@@ -228,7 +228,7 @@ R1/R4 prefix = deepening round that introduced it.
 | BC-2.6.049 | `search_users` accepts FOUR distinct response shapes (bare array, paginated, empty, error) | BC-1051 (R4) | tests/issue_commands.rs:~388-490 | HIGH |
 | BC-2.6.050 | `client.search_issue_keys(jql, limit)` posts `/rest/api/3/search/jql` with body `fields: ["key"]` and returns `KeySearchResult { keys, has_more }` | — (issue #350) | tests/search_issue_keys.rs | HIGH |
 | BC-2.6.051 | `client.search_issues(jql, limit, fields)` deduplicates results in-place on all exit paths (JRACLOUD-95368 mitigation, per-iteration HashSet retain keyed on issue.key) | — (issue #365) | tests/rate_limit_cap_tests.rs | HIGH |
-| BC-2.6.052 | `JiraClient` gains field-override client methods (additive; existing `get_issue`/`search_issues` signatures and their 11 other call sites unchanged) | — (issue #575 F2) | src/api/jira/issues.rs (pending F4) | HIGH |
+| BC-2.6.052 | `JiraClient` gains field-override client methods (additive; existing `get_issue`/`search_issues` signatures and their 10 other call sites unchanged) | — (issue #575 F2) | src/api/jira/issues.rs (pending F4) | HIGH |
 
 
 ### 2.7 Attachment Read (12 BCs: BC-2.7.001..012) [Added 2026-07-15 SOH-ATTACHMENTS-1 F2 DEC-179 issues #576 #585]
