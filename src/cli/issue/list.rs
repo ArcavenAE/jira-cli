@@ -56,6 +56,72 @@ fn extract_unique_status_names(issue_types: &[IssueTypeWithStatuses]) -> Vec<Str
 /// raised on drift between the message text and any guard's conjunction.
 const NO_FILTERS_SPECIFIED_MSG: &str = "No project or filters specified. Use --project, --assignee, --reporter, --status, --open, --team, --recent, --created-after, --created-before, --updated-after, --updated-before, --asset, --component, --updated-recent, or --jql. You can also set a default project in .jr.toml or run \"jr init\".";
 
+/// Sort direction for `--sort <field>:<direction>` (BC-2.1.024 postcondition 1).
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub(super) enum SortDirection {
+    Asc,
+    Desc,
+}
+
+/// Parsed `--sort <field>:<direction>` value (BC-2.1.024 postcondition 1):
+/// `field` is preserved VERBATIM (original casing, no trimming beyond the
+/// split); `direction` is normalized to `Asc`/`Desc`.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub(super) struct SortSpec {
+    pub(super) field: String,
+    pub(super) direction: SortDirection,
+}
+
+/// Parse and validate `--sort <field>:asc|desc` per BC-2.1.024.
+///
+/// Splits on the FIRST `:` only; the direction segment is matched
+/// case-insensitively against `asc`/`desc`. `field` is preserved verbatim
+/// (original casing, no trimming beyond the split) -- no local allowlist.
+/// Any other shape (no `:`, empty field, empty direction, non-asc/desc
+/// direction, or an extra `:` inside the direction segment) is rejected
+/// pre-HTTP with a `JrError::UserError` (exit 64).
+fn parse_sort(raw: &str) -> Result<SortSpec, JrError> {
+    let invalid = || {
+        JrError::UserError(format!(
+            "Invalid --sort \"{raw}\". Use <field>:asc or <field>:desc (e.g., updated:desc)."
+        ))
+    };
+
+    let (field, direction_str) = raw.split_once(':').ok_or_else(invalid)?;
+    if field.is_empty() || direction_str.is_empty() {
+        return Err(invalid());
+    }
+
+    let direction = if direction_str.eq_ignore_ascii_case("asc") {
+        SortDirection::Asc
+    } else if direction_str.eq_ignore_ascii_case("desc") {
+        SortDirection::Desc
+    } else {
+        return Err(invalid());
+    };
+
+    Ok(SortSpec {
+        field: field.to_string(),
+        direction,
+    })
+}
+
+/// Compose the `order_by` JQL fragment for an overriding `--sort` value per
+/// BC-2.1.025: `"<FIELD> <DIR>, key ASC"`, except when `field` matches `key`
+/// case-insensitively, where the secondary sort is omitted.
+fn compose_order_by_with_sort(spec: &SortSpec) -> String {
+    let dir = match spec.direction {
+        SortDirection::Asc => "ASC",
+        SortDirection::Desc => "DESC",
+    };
+
+    if spec.field.eq_ignore_ascii_case("key") {
+        format!("{} {}", spec.field, dir)
+    } else {
+        format!("{} {}, key ASC", spec.field, dir)
+    }
+}
+
 /// Build base JQL parts when `--jql` is provided.
 ///
 /// Returns `(base_parts, order_by)`. Strips any trailing `ORDER BY` clause
@@ -103,6 +169,7 @@ pub(super) async fn handle_list(
         updated_after,
         updated_before,
         fields,
+        sort,
     } = command
     else {
         unreachable!()
@@ -122,6 +189,14 @@ pub(super) async fn handle_list(
         }
         None => None,
     };
+
+    // S-588-1 (BC-2.1.024 postcondition 2): `--sort <field>:asc|desc` syntax
+    // parse/validate. Runs before ANY network call (project resolution,
+    // component resolution, `project_exists`, the search itself) so a
+    // malformed `--sort` value costs zero HTTP requests. The parsed
+    // `SortSpec` is reused later (order_by override hook, below) rather than
+    // re-parsing -- `sort` itself is not consumed here.
+    let sort_spec: Option<SortSpec> = sort.as_deref().map(parse_sort).transpose()?;
 
     // Resolve project key once, before any HTTP call. Moved up from its
     // original position (immediately before the `project_exists` check)
@@ -471,6 +546,17 @@ pub(super) async fn handle_list(
             }
             (parts, "updated DESC")
         }
+    };
+
+    // S-588-1 (BC-2.1.025): `--sort`, when present, OVERRIDES the `order_by`
+    // value computed by every branch above -- `--jql`, scrum-active-sprint,
+    // kanban, and default-project alike -- uniformly, including the
+    // board-driven `rank ASC` defaults (DEC-298 "always wins"). Absent
+    // `--sort`, `order_by` is byte-for-byte unchanged from the branches
+    // above (BC-2.1.002/003/004/005's pinned default literals).
+    let order_by: String = match sort_spec {
+        Some(ref spec) => compose_order_by_with_sort(spec),
+        None => order_by.to_string(),
     };
 
     // S-579-1 pr-review cycle 1 Finding 1 (EC-2.1.023-4 backstop): closes the
@@ -1183,6 +1269,133 @@ mod tests {
     fn resolve_show_points_flag_true_config_missing() {
         // Warning emitted to stderr (not captured), but function returns None without error
         assert_eq!(resolve_show_points(true, None), None);
+    }
+
+    // ── S-588-1 (BC-2.1.024): `parse_sort` syntax parse/validate ──────────
+
+    #[test]
+    fn test_bc_2_1_024_parse_sort_valid_updated_desc() {
+        // EC-2.1.024-1
+        let spec = parse_sort("updated:desc").expect("valid --sort value must parse");
+        assert_eq!(
+            spec,
+            SortSpec {
+                field: "updated".to_string(),
+                direction: SortDirection::Desc,
+            }
+        );
+    }
+
+    #[test]
+    fn test_bc_2_1_024_parse_sort_direction_case_insensitive() {
+        // AC-003 / EC-2.1.024-2: --sort key:ASC and --sort key:AsC parse
+        // identically to --sort key:asc.
+        let lower = parse_sort("key:asc").expect("lowercase direction must parse");
+        let upper = parse_sort("key:ASC").expect("uppercase direction must parse");
+        let mixed = parse_sort("key:AsC").expect("mixed-case direction must parse");
+        assert_eq!(lower, upper);
+        assert_eq!(lower, mixed);
+        assert_eq!(
+            lower,
+            SortSpec {
+                field: "key".to_string(),
+                direction: SortDirection::Asc,
+            }
+        );
+    }
+
+    #[test]
+    fn test_bc_2_1_024_parse_sort_field_preserved_verbatim_original_casing() {
+        // BC-2.1.024 postcondition 1: field preserved VERBATIM (original
+        // casing, no trimming beyond the split) -- no local allowlist.
+        let spec = parse_sort("CustomField_10099:DESC").expect("valid value must parse");
+        assert_eq!(spec.field, "CustomField_10099");
+        assert_eq!(spec.direction, SortDirection::Desc);
+    }
+
+    #[test]
+    fn test_bc_2_1_024_parse_sort_malformed_input_exits_64_pre_http() {
+        // AC-004 / EC-2.1.024-3..7: missing `:`, empty field segment, empty
+        // direction segment, a direction that isn't asc/desc, and a second
+        // `:` embedded in the direction segment all produce the exact pinned
+        // `JrError::UserError` message (mapped to exit 64 by
+        // `JrError::exit_code`).
+        for bad in [
+            "updated",            // EC-2.1.024-3: no `:`
+            ":desc",              // EC-2.1.024-4: empty field segment
+            "updated:",           // EC-2.1.024-5: empty direction segment
+            "updated:sideways",   // EC-2.1.024-6: direction not asc/desc
+            "updated:desc:extra", // EC-2.1.024-7: second `:` in direction
+        ] {
+            let err = parse_sort(bad).unwrap_err();
+            match err {
+                JrError::UserError(msg) => {
+                    assert_eq!(
+                        msg,
+                        format!(
+                            "Invalid --sort \"{bad}\". Use <field>:asc or <field>:desc (e.g., updated:desc)."
+                        ),
+                        "unexpected message for --sort {bad:?}: {msg}"
+                    );
+                    // BC-2.1.024 postcondition 2 maps to exit 64 via
+                    // `JrError::exit_code` (unit-pinned in `src/error.rs`);
+                    // re-asserted here so this test alone documents the
+                    // full contract for a `--sort` malformed-input value.
+                    assert_eq!(JrError::UserError(msg).exit_code(), 64);
+                }
+                other => panic!("expected JrError::UserError for --sort {bad:?}, got: {other:?}"),
+            }
+        }
+    }
+
+    // ── S-588-1 (BC-2.1.025): `compose_order_by_with_sort` composition ────
+
+    #[test]
+    fn test_bc_2_1_025_compose_order_by_with_sort_appends_key_asc_secondary() {
+        // AC-001 / EC-2.1.025-1
+        let spec = SortSpec {
+            field: "updated".to_string(),
+            direction: SortDirection::Desc,
+        };
+        assert_eq!(compose_order_by_with_sort(&spec), "updated DESC, key ASC");
+    }
+
+    #[test]
+    fn test_bc_2_1_025_compose_order_by_with_sort_key_field_omits_secondary_clause() {
+        // AC-002 / EC-2.1.025-2
+        let spec = SortSpec {
+            field: "key".to_string(),
+            direction: SortDirection::Asc,
+        };
+        assert_eq!(compose_order_by_with_sort(&spec), "key ASC");
+    }
+
+    #[test]
+    fn test_bc_2_1_025_compose_order_by_with_sort_key_omission_case_insensitive_field_casing_preserved()
+     {
+        // AC-010 / EC-2.1.025-3: the omission check matches the field name
+        // against "key" case-insensitively, but the field's OWN casing is
+        // preserved verbatim in the composed order_by once past that check.
+        let spec = SortSpec {
+            field: "KEY".to_string(),
+            direction: SortDirection::Desc,
+        };
+        assert_eq!(compose_order_by_with_sort(&spec), "KEY DESC");
+    }
+
+    #[test]
+    fn test_bc_2_1_025_compose_order_by_with_sort_arbitrary_field_passthrough_verbatim() {
+        // BC-2.1.025 Precondition 1: no local field-name allowlist -- an
+        // arbitrary/unknown field name is composed into order_by verbatim,
+        // with the standard key ASC secondary sort appended.
+        let spec = SortSpec {
+            field: "customfield_10099".to_string(),
+            direction: SortDirection::Desc,
+        };
+        assert_eq!(
+            compose_order_by_with_sort(&spec),
+            "customfield_10099 DESC, key ASC"
+        );
     }
 
     #[test]
