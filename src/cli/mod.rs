@@ -325,6 +325,9 @@ pub enum IssueCommand {
         /// Show issues created within duration (e.g., 7d, 4w, 2M)
         #[arg(long)]
         recent: Option<String>,
+        /// Show issues updated within duration (e.g., 7d, 4w, 2M)
+        #[arg(long)]
+        updated_recent: Option<String>,
         /// Show only open issues (excludes Done status category)
         #[arg(long, conflicts_with = "status")]
         open: bool,
@@ -354,11 +357,19 @@ pub enum IssueCommand {
         #[arg(long)]
         created_before: Option<String>,
         /// Show issues updated on or after this date (YYYY-MM-DD)
-        #[arg(long)]
+        #[arg(long, conflicts_with = "updated_recent")]
         updated_after: Option<String>,
         /// Show issues updated on or before this date (YYYY-MM-DD)
         #[arg(long)]
         updated_before: Option<String>,
+        /// Comma-separated list of fields to request from Jira (e.g.
+        /// "summary,status,comment"), REPLACING the default field set
+        /// (BASE_ISSUE_FIELDS plus any --points/--assets/--duedate extras)
+        /// rather than unioning with it (DEC-298). Requires --output json;
+        /// combined with table mode (default or --output table) exits 64
+        /// pre-HTTP. See BC-2.2.033.
+        #[arg(long)]
+        fields: Option<String>,
     },
     /// Create a new issue
     Create {
@@ -435,6 +446,13 @@ pub enum IssueCommand {
     View {
         /// Issue key (e.g., FOO-123)
         key: String,
+        /// Comma-separated list of fields to request from Jira (e.g.
+        /// "summary,comment"), REPLACING the default field set rather than
+        /// unioning with it (DEC-298). Requires --output json; combined with
+        /// table mode (default or --output table) exits 64 pre-HTTP. See
+        /// BC-2.3.041.
+        #[arg(long)]
+        fields: Option<String>,
     },
     /// Edit issue fields
     Edit {

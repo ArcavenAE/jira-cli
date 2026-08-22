@@ -10693,3 +10693,1551 @@ async fn test_bc_3_4_023_issue_edit_bulk_component_success_renders_full_json_str
         }
     }
 }
+
+// ─── S-575-1: `--fields <CSV>` on `issue list` / `issue view` (Red Gate) ───
+//
+// BC-2.2.033 (list), BC-2.3.041 (view), BC-2.6.052 (additive client
+// methods). Covers the REPLACE-semantics request composition (not UNION),
+// the typed-output null/extra-flatten postconditions, `key`-always-present,
+// CSV whitespace-trimming, and the new client methods' verbatim
+// pass-through. Table-mode rejection and empty-CSV pre-HTTP rejection are
+// covered separately in tests/issue_list_errors.rs and
+// tests/issue_view_errors.rs; the `--points` silent-no-op interaction is
+// covered in tests/all_flag_behavior.rs. AC-009 (the 10 existing
+// get_issue/search_issues call sites are unaffected) is explicitly
+// "no new test — verified via full regression suite" per the story, so no
+// dedicated test is added here for it.
+
+/// AC-001 / BC-2.2.033 Postcondition 1: `--fields` on `issue list` REPLACES
+/// `BASE_ISSUE_FIELDS` entirely — the `fields` array sent to
+/// `POST /rest/api/3/search/jql` must be EXACTLY the requested, trimmed,
+/// comma-joined CSV, in supplied order — no union, no config-driven extras.
+#[tokio::test]
+async fn test_bc_2_2_033_issue_list_fields_replaces_requested_field_set() {
+    let server = MockServer::start().await;
+
+    // F2 (adversary review, S-575-1): match on method+path only. The old
+    // `body_partial_json` matcher was INCLUSIVE (assert-json-diff) — it
+    // ignores trailing actual elements, so a future append-union regression
+    // (e.g. re-injecting a config-driven extra field onto the end of the
+    // array) would still satisfy it. The EXACT full-array assertion — the
+    // one that actually guards BC-2.2.033 Postcondition 1's REPLACE-not-UNION
+    // invariant — happens below via `server.received_requests()`.
+    Mock::given(method("POST"))
+        .and(path("/rest/api/3/search/jql"))
+        .respond_with(ResponseTemplate::new(200).set_body_json(
+            common::fixtures::issue_search_response(vec![serde_json::json!({
+                "key": "PROJ-1",
+                "fields": {
+                    "summary": "Narrow fields issue",
+                    "status": {"name": "To Do"},
+                    "comment": {"comments": []}
+                }
+            })]),
+        ))
+        .mount(&server)
+        .await;
+
+    let output = assert_cmd::Command::cargo_bin("jr")
+        .unwrap()
+        .env("JR_BASE_URL", server.uri())
+        .env("JR_AUTH_HEADER", "Basic dGVzdDp0ZXN0")
+        .args([
+            "issue",
+            "list",
+            "--jql",
+            "project = PROJ",
+            "--fields",
+            "summary,status,comment",
+            "--output",
+            "json",
+        ])
+        .output()
+        .unwrap();
+
+    assert!(
+        output.status.success(),
+        "Expected success, stderr: {}",
+        String::from_utf8_lossy(&output.stderr)
+    );
+    let stdout = output.stdout.clone();
+    let parsed: serde_json::Value = serde_json::from_slice(&stdout).unwrap_or_else(|e| {
+        panic!(
+            "stdout not valid JSON: {e}\n{}",
+            String::from_utf8_lossy(&stdout)
+        )
+    });
+    assert_eq!(parsed[0]["key"], "PROJ-1");
+    assert_eq!(parsed[0]["fields"]["summary"], "Narrow fields issue");
+
+    let requests = server.received_requests().await.expect("requests recorded");
+    let search_request = requests
+        .iter()
+        .find(|r| r.url.path() == "/rest/api/3/search/jql")
+        .expect("search POST must have been made");
+    let body: serde_json::Value =
+        serde_json::from_slice(&search_request.body).expect("request body must be valid JSON");
+    assert_eq!(
+        body["fields"],
+        serde_json::json!(["summary", "status", "comment"]),
+        "fields array must be EXACTLY [\"summary\", \"status\", \"comment\"] \
+         (REPLACE semantics, no union) — got: {}",
+        body["fields"]
+    );
+}
+
+/// AC-002 / BC-2.3.041 Postcondition 1: `--fields` on `issue view` mirrors
+/// the list twin exactly — the `fields=` query param sent to
+/// `GET /rest/api/3/issue/<KEY>` (via the new `get_issue_with_fields`
+/// client method, BC-2.6.052) must be EXACTLY the requested CSV.
+#[tokio::test]
+async fn test_bc_2_3_041_issue_view_fields_replaces_requested_field_set() {
+    let server = MockServer::start().await;
+
+    Mock::given(method("GET"))
+        .and(path("/rest/api/3/issue/PROJ-5"))
+        .and(query_param("fields", "summary,comment"))
+        .respond_with(ResponseTemplate::new(200).set_body_json(serde_json::json!({
+            "key": "PROJ-5",
+            "fields": {
+                "summary": "View narrow fields",
+                "comment": {"comments": []}
+            }
+        })))
+        .mount(&server)
+        .await;
+
+    let output = assert_cmd::Command::cargo_bin("jr")
+        .unwrap()
+        .env("JR_BASE_URL", server.uri())
+        .env("JR_AUTH_HEADER", "Basic dGVzdDp0ZXN0")
+        .args([
+            "issue",
+            "view",
+            "PROJ-5",
+            "--fields",
+            "summary,comment",
+            "--output",
+            "json",
+        ])
+        .output()
+        .unwrap();
+
+    assert!(
+        output.status.success(),
+        "Expected success, stderr: {}",
+        String::from_utf8_lossy(&output.stderr)
+    );
+    let parsed: serde_json::Value =
+        serde_json::from_slice(&output.stdout).expect("stdout must be valid JSON");
+    assert_eq!(parsed["key"], "PROJ-5");
+    assert_eq!(parsed["fields"]["summary"], "View narrow fields");
+}
+
+/// AC-003 / BC-2.2.033 Postcondition 2: named `IssueFields` struct fields
+/// NOT covered by the `--fields` request serialize as JSON `null`
+/// (missing-key -> `None`, standard serde `Option<T>` behavior); unnamed
+/// requested fields (e.g. a `customfield_NNNNN`) flow through
+/// `IssueFields.extra` (`#[serde(flatten)]`) verbatim.
+#[tokio::test]
+async fn test_bc_2_2_033_issue_list_fields_unrequested_named_fields_are_null() {
+    let server = MockServer::start().await;
+
+    Mock::given(method("POST"))
+        .and(path("/rest/api/3/search/jql"))
+        .and(body_partial_json(serde_json::json!({
+            "fields": ["summary", "status", "customfield_10084"]
+        })))
+        .respond_with(ResponseTemplate::new(200).set_body_json(
+            common::fixtures::issue_search_response(vec![serde_json::json!({
+                "key": "PROJ-1",
+                "fields": {
+                    "summary": "Narrow fields issue",
+                    "status": {"name": "To Do"},
+                    "customfield_10084": "custom-value-xyz"
+                }
+            })]),
+        ))
+        .mount(&server)
+        .await;
+
+    let output = assert_cmd::Command::cargo_bin("jr")
+        .unwrap()
+        .env("JR_BASE_URL", server.uri())
+        .env("JR_AUTH_HEADER", "Basic dGVzdDp0ZXN0")
+        .args([
+            "issue",
+            "list",
+            "--jql",
+            "project = PROJ",
+            "--fields",
+            "summary,status,customfield_10084",
+            "--output",
+            "json",
+        ])
+        .output()
+        .unwrap();
+
+    assert!(
+        output.status.success(),
+        "stderr: {}",
+        String::from_utf8_lossy(&output.stderr)
+    );
+    let parsed: serde_json::Value =
+        serde_json::from_slice(&output.stdout).expect("stdout must be valid JSON");
+    let issue = &parsed[0];
+    assert_eq!(issue["fields"]["summary"], "Narrow fields issue");
+    assert!(
+        issue["fields"]["priority"].is_null(),
+        "unrequested named field 'priority' must serialize as null, got: {issue}"
+    );
+    assert!(
+        issue["fields"]["assignee"].is_null(),
+        "unrequested named field 'assignee' must serialize as null, got: {issue}"
+    );
+    assert!(
+        issue["fields"]["duedate"].is_null(),
+        "unrequested named field 'duedate' must serialize as null, got: {issue}"
+    );
+    assert_eq!(
+        issue["fields"]["customfield_10084"], "custom-value-xyz",
+        "unnamed requested field must round-trip verbatim through the extra flatten, got: {issue}"
+    );
+}
+
+/// AC-007 / BC-2.2.033 Postcondition 3: `key` is present in `issue list`
+/// JSON output regardless of whether `key` appears in the `--fields` CSV —
+/// Jira always returns it top-level. (The typed `Issue` struct has no
+/// top-level `id` field — only `key` is part of this contract; BC-2.2.033
+/// Postcondition 3 names `key` exclusively.)
+#[tokio::test]
+async fn test_bc_2_2_033_issue_list_fields_key_always_present_regardless_of_csv() {
+    let server = MockServer::start().await;
+
+    // F2 (adversary review, S-575-1): method+path only — see the exact
+    // full-array assertion on `server.received_requests()` below, which is
+    // what actually guards REPLACE-not-UNION here (a `body_partial_json`
+    // match against `["summary"]` would not catch a trailing append).
+    Mock::given(method("POST"))
+        .and(path("/rest/api/3/search/jql"))
+        .respond_with(ResponseTemplate::new(200).set_body_json(
+            common::fixtures::issue_search_response(vec![serde_json::json!({
+                "key": "PROJ-7",
+                "fields": { "summary": "Key-only fields request" }
+            })]),
+        ))
+        .mount(&server)
+        .await;
+
+    let output = assert_cmd::Command::cargo_bin("jr")
+        .unwrap()
+        .env("JR_BASE_URL", server.uri())
+        .env("JR_AUTH_HEADER", "Basic dGVzdDp0ZXN0")
+        .args([
+            "issue",
+            "list",
+            "--jql",
+            "project = PROJ",
+            "--fields",
+            "summary",
+            "--output",
+            "json",
+        ])
+        .output()
+        .unwrap();
+
+    assert!(
+        output.status.success(),
+        "stderr: {}",
+        String::from_utf8_lossy(&output.stderr)
+    );
+    let parsed: serde_json::Value =
+        serde_json::from_slice(&output.stdout).expect("stdout must be valid JSON");
+    assert_eq!(
+        parsed[0]["key"], "PROJ-7",
+        "'key' must be present at issue top level even though 'key' does not \
+         appear in the --fields CSV"
+    );
+
+    let requests = server.received_requests().await.expect("requests recorded");
+    let search_request = requests
+        .iter()
+        .find(|r| r.url.path() == "/rest/api/3/search/jql")
+        .expect("search POST must have been made");
+    let body: serde_json::Value =
+        serde_json::from_slice(&search_request.body).expect("request body must be valid JSON");
+    assert_eq!(
+        body["fields"],
+        serde_json::json!(["summary"]),
+        "fields array must be EXACTLY [\"summary\"] (REPLACE semantics, no \
+         union) — got: {}",
+        body["fields"]
+    );
+}
+
+/// AC-012 / BC-2.3.041 Postcondition 3: `key` is present in `issue view`
+/// JSON output regardless of `--fields` CSV contents — same Jira guarantee
+/// as AC-007, verified independently on the view path.
+#[tokio::test]
+async fn test_bc_2_3_041_issue_view_fields_key_always_present() {
+    let server = MockServer::start().await;
+
+    Mock::given(method("GET"))
+        .and(path("/rest/api/3/issue/PROJ-8"))
+        .and(query_param("fields", "summary"))
+        .respond_with(ResponseTemplate::new(200).set_body_json(serde_json::json!({
+            "key": "PROJ-8",
+            "fields": { "summary": "View key-only fields request" }
+        })))
+        .mount(&server)
+        .await;
+
+    let output = assert_cmd::Command::cargo_bin("jr")
+        .unwrap()
+        .env("JR_BASE_URL", server.uri())
+        .env("JR_AUTH_HEADER", "Basic dGVzdDp0ZXN0")
+        .args([
+            "issue", "view", "PROJ-8", "--fields", "summary", "--output", "json",
+        ])
+        .output()
+        .unwrap();
+
+    assert!(
+        output.status.success(),
+        "stderr: {}",
+        String::from_utf8_lossy(&output.stderr)
+    );
+    let parsed: serde_json::Value =
+        serde_json::from_slice(&output.stdout).expect("stdout must be valid JSON");
+    assert_eq!(
+        parsed["key"], "PROJ-8",
+        "'key' must be present at issue top level even though 'key' does not \
+         appear in the --fields CSV"
+    );
+}
+
+/// AC-008 / BC-2.2.033 Edge Case EC-2.2.033-2: `--fields "summary, status"`
+/// (embedded whitespace around the comma) behaves identically to
+/// `--fields "summary,status"` — each CSV segment is trimmed before use.
+#[tokio::test]
+async fn test_bc_2_2_033_issue_list_fields_csv_segments_are_trimmed() {
+    let server = MockServer::start().await;
+
+    // F2 (adversary review, S-575-1): method+path only — the exact
+    // full-array assertion below on `server.received_requests()` is what
+    // actually proves BOTH trimming ("summary, status" -> "summary"/"status"
+    // with no embedded whitespace) AND REPLACE-not-UNION (no trailing
+    // append); a `body_partial_json` inclusive match can't distinguish
+    // either from a superset.
+    Mock::given(method("POST"))
+        .and(path("/rest/api/3/search/jql"))
+        .respond_with(ResponseTemplate::new(200).set_body_json(
+            common::fixtures::issue_search_response(vec![serde_json::json!({
+                "key": "PROJ-9",
+                "fields": {
+                    "summary": "Trimmed CSV",
+                    "status": {"name": "To Do"}
+                }
+            })]),
+        ))
+        .mount(&server)
+        .await;
+
+    let output = assert_cmd::Command::cargo_bin("jr")
+        .unwrap()
+        .env("JR_BASE_URL", server.uri())
+        .env("JR_AUTH_HEADER", "Basic dGVzdDp0ZXN0")
+        .args([
+            "issue",
+            "list",
+            "--jql",
+            "project = PROJ",
+            "--fields",
+            "summary, status",
+            "--output",
+            "json",
+        ])
+        .output()
+        .unwrap();
+
+    assert!(
+        output.status.success(),
+        "embedded whitespace in --fields CSV must be trimmed before use, stderr: {}",
+        String::from_utf8_lossy(&output.stderr)
+    );
+    let parsed: serde_json::Value =
+        serde_json::from_slice(&output.stdout).expect("stdout must be valid JSON");
+    assert_eq!(parsed[0]["key"], "PROJ-9");
+
+    let requests = server.received_requests().await.expect("requests recorded");
+    let search_request = requests
+        .iter()
+        .find(|r| r.url.path() == "/rest/api/3/search/jql")
+        .expect("search POST must have been made");
+    let body: serde_json::Value =
+        serde_json::from_slice(&search_request.body).expect("request body must be valid JSON");
+    assert_eq!(
+        body["fields"],
+        serde_json::json!(["summary", "status"]),
+        "fields array must be EXACTLY [\"summary\", \"status\"] — trimmed, \
+         REPLACE semantics, no union — got: {}",
+        body["fields"]
+    );
+}
+
+/// AC-010 / BC-2.6.052 Postcondition 2: the new field-override client
+/// methods (`get_issue_with_fields`, `search_issues_with_fields`) send the
+/// caller-supplied field list EXACTLY — comma-joined for the GET query
+/// param, as a JSON array for the POST body — with no `BASE_ISSUE_FIELDS`
+/// union. Exercised at the client layer directly (not via the CLI) so this
+/// pins the method contract independent of the CLI-layer wiring in
+/// list.rs/view.rs.
+#[tokio::test]
+async fn test_bc_2_6_052_field_override_methods_send_verbatim_field_list() {
+    let server = MockServer::start().await;
+
+    Mock::given(method("GET"))
+        .and(path("/rest/api/3/issue/PROJ-1"))
+        .and(query_param("fields", "summary,comment"))
+        .respond_with(ResponseTemplate::new(200).set_body_json(serde_json::json!({
+            "key": "PROJ-1",
+            "fields": { "summary": "Narrow", "comment": {"comments": []} }
+        })))
+        .mount(&server)
+        .await;
+
+    // F2 (adversary review, S-575-1): method+path only — the old
+    // `body_partial_json` matcher was inclusive and could not detect a
+    // trailing append-union regression. The exact full-array assertion
+    // below on `server.received_requests()` is the actual guard for
+    // BC-2.6.052 Postcondition 2's verbatim-pass-through contract.
+    Mock::given(method("POST"))
+        .and(path("/rest/api/3/search/jql"))
+        .respond_with(ResponseTemplate::new(200).set_body_json(
+            common::fixtures::issue_search_response(vec![serde_json::json!({
+                "key": "PROJ-2",
+                "fields": { "summary": "Narrow2", "comment": {"comments": []} }
+            })]),
+        ))
+        .mount(&server)
+        .await;
+
+    let client =
+        jr::api::client::JiraClient::new_for_test(server.uri(), "Basic dGVzdDp0ZXN0".to_string());
+
+    let issue = client
+        .get_issue_with_fields("PROJ-1", &["summary", "comment"])
+        .await
+        .expect("get_issue_with_fields must send exactly the caller-supplied fields");
+    assert_eq!(issue.key, "PROJ-1");
+
+    let result = client
+        .search_issues_with_fields("project = PROJ", Some(10), &["summary", "comment"])
+        .await
+        .expect("search_issues_with_fields must send exactly the caller-supplied fields");
+    assert_eq!(result.issues.len(), 1);
+    assert_eq!(result.issues[0].key, "PROJ-2");
+
+    let requests = server.received_requests().await.expect("requests recorded");
+    let search_request = requests
+        .iter()
+        .find(|r| r.url.path() == "/rest/api/3/search/jql")
+        .expect("search POST must have been made");
+    let body: serde_json::Value =
+        serde_json::from_slice(&search_request.body).expect("request body must be valid JSON");
+    assert_eq!(
+        body["fields"],
+        serde_json::json!(["summary", "comment"]),
+        "search_issues_with_fields must send fields EXACTLY [\"summary\", \"comment\"] \
+         with no BASE_ISSUE_FIELDS union — got: {}",
+        body["fields"]
+    );
+}
+
+/// AC-010 / BC-2.6.052 Edge Case EC-2.6.052-1: an empty field slice reaching
+/// the new client method(s) is NOT a client-layer error — the method is a
+/// thin, unvalidated pass-through; CLI-layer pre-HTTP validation
+/// (BC-2.2.033/BC-2.3.041 Precondition 3) is the sole enforcement point for
+/// a non-empty field list.
+#[tokio::test]
+async fn test_bc_2_6_052_field_override_methods_empty_slice_is_not_a_client_error() {
+    let server = MockServer::start().await;
+
+    Mock::given(method("GET"))
+        .and(path("/rest/api/3/issue/PROJ-1"))
+        .and(query_param("fields", ""))
+        .respond_with(ResponseTemplate::new(200).set_body_json(serde_json::json!({
+            "key": "PROJ-1",
+            "fields": { "summary": "Empty fields slice" }
+        })))
+        .mount(&server)
+        .await;
+
+    let client =
+        jr::api::client::JiraClient::new_for_test(server.uri(), "Basic dGVzdDp0ZXN0".to_string());
+
+    let issue = client
+        .get_issue_with_fields("PROJ-1", &[])
+        .await
+        .expect("an empty field slice must not be rejected at the client layer");
+    assert_eq!(issue.key, "PROJ-1");
+}
+
+/// F1 (adversary review, S-575-1): a user-supplied field name containing a
+/// URL-significant character (`&`, `#`, or a literal space) must be
+/// percent-encoded PER SEGMENT before being joined into the `fields` query
+/// param on `get_issue_with_fields`'s GET request — otherwise the raw
+/// character corrupts the query string (e.g. an unescaped `&` starts a new
+/// query param, silently dropping every field after it). This asserts the
+/// RAW (still-encoded) query string on the wire, not just the
+/// wiremock-decoded `query_param` matcher, so a regression that stops
+/// encoding would fail this test even though a naive decoded-value
+/// comparison might still appear to match.
+#[tokio::test]
+async fn test_get_issue_with_fields_url_encodes_special_characters_in_field_names() {
+    let server = MockServer::start().await;
+
+    Mock::given(method("GET"))
+        .and(path("/rest/api/3/issue/PROJ-1"))
+        .and(query_param("fields", "summary,field&name,with space"))
+        .respond_with(ResponseTemplate::new(200).set_body_json(serde_json::json!({
+            "key": "PROJ-1",
+            "fields": { "summary": "Encoded fields" }
+        })))
+        .mount(&server)
+        .await;
+
+    let client =
+        jr::api::client::JiraClient::new_for_test(server.uri(), "Basic dGVzdDp0ZXN0".to_string());
+
+    let issue = client
+        .get_issue_with_fields("PROJ-1", &["summary", "field&name", "with space"])
+        .await
+        .expect("special characters in field names must not break the request");
+    assert_eq!(issue.key, "PROJ-1");
+
+    // Inspect the RAW (still percent-encoded) query string actually sent on
+    // the wire — this is the assertion that would catch a regression back to
+    // unencoded `fields.join(",")`, since an unencoded `&`/space would still
+    // happen to round-trip through wiremock's decoded `query_param` matcher
+    // above in some cases but would corrupt a real Jira request.
+    let requests = server.received_requests().await.expect("requests recorded");
+    let request = requests
+        .iter()
+        .find(|r| r.url.path() == "/rest/api/3/issue/PROJ-1")
+        .expect("GET request must have been made");
+    let raw_query = request
+        .url
+        .query()
+        .expect("request must carry a query string");
+
+    assert!(
+        raw_query.contains("field%26name"),
+        "literal '&' in a field name must be percent-encoded as %26 on the wire; got: {raw_query}"
+    );
+    assert!(
+        !raw_query.contains("field&name"),
+        "an unencoded '&' would start a new query param and corrupt the fields list; got: {raw_query}"
+    );
+    assert!(
+        raw_query.contains("with%20space") || raw_query.contains("with+space"),
+        "literal space in a field name must be percent-encoded on the wire; got: {raw_query}"
+    );
+
+    // Decoded round-trip: the three original field names, and only those
+    // three, must survive encode -> Jira-side decode.
+    let fields_query = request
+        .url
+        .query_pairs()
+        .find(|(k, _)| k == "fields")
+        .map(|(_, v)| v.into_owned())
+        .expect("request must carry a `fields` query parameter");
+    assert_eq!(fields_query, "summary,field&name,with space");
+}
+
+/// Adversary Pass 5 regression: `IssueFields.summary` was the only
+/// non-`Option` typed field on `IssueFields` — every sibling is
+/// `Option<...>`. Under REPLACE semantics a `--fields` CSV that omits
+/// `summary` (e.g. `--fields status`) makes Jira's response `.fields` omit
+/// the `summary` key entirely, which previously failed deserialization with
+/// `missing field \`summary\`` and errored the command instead of returning
+/// the requested projection. `summary` is now `Option<String>` like every
+/// other named field; this pins `jr issue list --fields status` succeeding
+/// with `summary` absent/null in the mocked response.
+#[tokio::test]
+async fn test_issue_list_fields_omitting_summary_does_not_error() {
+    let server = MockServer::start().await;
+
+    // Reproduces live Jira: the `fields` array requested is `["status"]`
+    // only, so the mocked `.fields` response object OMITS `summary`
+    // entirely — this is the exact shape that previously broke
+    // deserialization.
+    Mock::given(method("POST"))
+        .and(path("/rest/api/3/search/jql"))
+        .respond_with(ResponseTemplate::new(200).set_body_json(
+            common::fixtures::issue_search_response(vec![serde_json::json!({
+                "key": "PROJ-11",
+                "fields": {
+                    "status": {"name": "To Do"}
+                }
+            })]),
+        ))
+        .mount(&server)
+        .await;
+
+    let output = assert_cmd::Command::cargo_bin("jr")
+        .unwrap()
+        .env("JR_BASE_URL", server.uri())
+        .env("JR_AUTH_HEADER", "Basic dGVzdDp0ZXN0")
+        .args([
+            "issue",
+            "list",
+            "--jql",
+            "project = PROJ",
+            "--fields",
+            "status",
+            "--output",
+            "json",
+        ])
+        .output()
+        .unwrap();
+
+    assert!(
+        output.status.success(),
+        "issue list --fields status (summary omitted from the CSV and from \
+         Jira's response) must not error, stderr: {}",
+        String::from_utf8_lossy(&output.stderr)
+    );
+    let parsed: serde_json::Value =
+        serde_json::from_slice(&output.stdout).expect("stdout must be valid JSON");
+    assert_eq!(parsed[0]["key"], "PROJ-11");
+    assert_eq!(parsed[0]["fields"]["status"]["name"], "To Do");
+    assert!(
+        parsed[0]["fields"]["summary"].is_null(),
+        "summary must serialize as null when omitted from the --fields CSV, got: {}",
+        parsed[0]
+    );
+}
+
+/// View-path twin of `test_issue_list_fields_omitting_summary_does_not_error`
+/// — `jr issue view <KEY> --fields status` must not error when Jira's
+/// response `.fields` omits `summary`.
+#[tokio::test]
+async fn test_issue_view_fields_omitting_summary_does_not_error() {
+    let server = MockServer::start().await;
+
+    Mock::given(method("GET"))
+        .and(path("/rest/api/3/issue/PROJ-12"))
+        .and(query_param("fields", "status"))
+        .respond_with(ResponseTemplate::new(200).set_body_json(serde_json::json!({
+            "key": "PROJ-12",
+            "fields": {
+                "status": {"name": "In Progress"}
+            }
+        })))
+        .mount(&server)
+        .await;
+
+    let output = assert_cmd::Command::cargo_bin("jr")
+        .unwrap()
+        .env("JR_BASE_URL", server.uri())
+        .env("JR_AUTH_HEADER", "Basic dGVzdDp0ZXN0")
+        .args([
+            "issue", "view", "PROJ-12", "--fields", "status", "--output", "json",
+        ])
+        .output()
+        .unwrap();
+
+    assert!(
+        output.status.success(),
+        "issue view --fields status (summary omitted from the CSV and from \
+         Jira's response) must not error, stderr: {}",
+        String::from_utf8_lossy(&output.stderr)
+    );
+    let parsed: serde_json::Value =
+        serde_json::from_slice(&output.stdout).expect("stdout must be valid JSON");
+    assert_eq!(parsed["key"], "PROJ-12");
+    assert_eq!(parsed["fields"]["status"]["name"], "In Progress");
+    assert!(
+        parsed["fields"]["summary"].is_null(),
+        "summary must serialize as null when omitted from the --fields CSV, got: {parsed}"
+    );
+}
+
+// ═══════════════════════════════════════════════════════════════════════
+// S-579-1: `jr issue list --updated-recent <duration>` filter
+// (BC-2.1.023, amended BC-2.1.006/BC-2.1.007)
+// ═══════════════════════════════════════════════════════════════════════
+//
+// Red Gate: `--updated-recent` is a compilable stub in
+// `src/cli/issue/list.rs::handle_list` — `if updated_recent.is_some() {
+// todo!("S-579-1: --updated-recent") }` — so every test below MUST fail
+// today (panic/exit 101, or an assertion mismatch against the pre-amendment
+// 14-source stderr enumeration) until the real clause-composition logic
+// lands. Reuses the S-606-1 harness helpers (`s606_1_cmd`,
+// `s606_1_mock_project_exists`, `s606_1_mock_search_empty`,
+// `s606_1_composed_jql`, `s606_1_expect_zero_http`) defined above in this
+// same file — same isolated-cache/config pattern, same
+// `MockServer::received_requests()` JQL-capture technique.
+//
+// 8 acceptance-criteria tests (AC-001..008), one per story AC:
+//   - AC-001: clause composition (`updated >= -{d}`)
+//   - AC-002: pre-HTTP combined-units rejection via shared `jql::validate_duration`
+//   - AC-003: asymmetric `conflicts_with` (--updated-after only, not --updated-before)
+//   - AC-004: free composition with --recent (recent's clause precedes updated-recent's)
+//   - AC-005: BC-2.1.007 stable-order position (after recent, before asset)
+//   - AC-006: BC-2.1.006 15-source "no filters" stderr enumeration
+//   - AC-007: --updated-recent alone still requires project/filter scope
+//   - AC-008: field-swap fidelity (`updated`, not `created`)
+
+/// AC-001 / BC-2.1.023 Postcondition 1: `--updated-recent 60d` composes the
+/// clause `updated >= -60d` — the direct field-swapped analogue of
+/// `--recent`'s `created >= -{d}` template.
+#[tokio::test]
+async fn test_bc_2_1_023_issue_list_updated_recent_composes_clause() {
+    let server = MockServer::start().await;
+    let cache_dir = tempfile::tempdir().unwrap();
+    let config_dir = tempfile::tempdir().unwrap();
+
+    s606_1_mock_project_exists(&server, "FOO").await;
+    s606_1_mock_search_empty(&server).await;
+
+    let output = s606_1_cmd(&server.uri(), cache_dir.path(), config_dir.path())
+        .args([
+            "--no-input",
+            "issue",
+            "list",
+            "--project",
+            "FOO",
+            "--updated-recent",
+            "60d",
+        ])
+        .output()
+        .unwrap();
+
+    assert!(
+        output.status.success(),
+        "AC-001: expected exit 0, stderr: {}",
+        String::from_utf8_lossy(&output.stderr)
+    );
+
+    let jql = s606_1_composed_jql(&server).await;
+    assert!(
+        jql.contains("updated >= -60d"),
+        "AC-001: expected clause 'updated >= -60d' in composed JQL, got: {jql}"
+    );
+}
+
+/// AC-002 / BC-2.1.023 Precondition 2: `--updated-recent` is validated via
+/// the SAME `jql::validate_duration` validator `--recent` uses — combined
+/// units (`4w2d`) are rejected pre-HTTP with the identical error shape
+/// BC-2.1.008 pins for `--recent`, and zero HTTP calls are issued.
+#[tokio::test]
+async fn test_bc_2_1_023_issue_list_updated_recent_rejects_combined_units_pre_http() {
+    let server = MockServer::start().await;
+    let cache_dir = tempfile::tempdir().unwrap();
+    let config_dir = tempfile::tempdir().unwrap();
+
+    s606_1_expect_zero_http(&server).await;
+
+    let output = s606_1_cmd(&server.uri(), cache_dir.path(), config_dir.path())
+        .args([
+            "--no-input",
+            "issue",
+            "list",
+            "--project",
+            "FOO",
+            "--updated-recent",
+            "4w2d",
+        ])
+        .output()
+        .unwrap();
+
+    let stderr = String::from_utf8_lossy(&output.stderr);
+    assert!(
+        !output.status.success(),
+        "AC-002: expected failure on combined-unit duration, got stdout: {}",
+        String::from_utf8_lossy(&output.stdout)
+    );
+    assert_eq!(
+        output.status.code(),
+        Some(64),
+        "AC-002: invalid --updated-recent duration should exit 64 (UserError), \
+         got: {:?} (stderr: {stderr})",
+        output.status.code()
+    );
+    assert!(
+        stderr.contains(
+            "Invalid duration '4w2d'. Use a number followed by y, M, w, d, h, or m (e.g., 7d, 4w, 2M)."
+        ),
+        "AC-002: expected the shared jql::validate_duration error shape in stderr, got: {stderr}"
+    );
+}
+
+/// AC-003 / BC-2.1.023 Edge Case EC-2.1.023-2 (human-locked DEC-298):
+/// `--updated-recent` + `--updated-after` is a clap `conflicts_with`
+/// rejection (exit 2). `--updated-recent` + `--updated-before` does NOT
+/// conflict — deliberate asymmetry mirroring the pre-existing
+/// `--recent` x `--created-after` pattern, not a bug to "fix".
+#[tokio::test]
+async fn test_bc_2_1_023_issue_list_updated_recent_conflicts_with_updated_after_only() {
+    // (a) --updated-recent + --updated-after -> clap conflict, exit 2,
+    // native clap-level rejection (no HTTP, no handler code reached). Given
+    // its OWN MockServer (not shared with part (b)'s mounted mocks) so the
+    // "no HTTP" claim is actually asserted, not just stated in prose
+    // (pr-review cycle 1 Finding 4).
+    let server_conflict = MockServer::start().await;
+    let cache_dir1 = tempfile::tempdir().unwrap();
+    let config_dir1 = tempfile::tempdir().unwrap();
+    s606_1_expect_zero_http(&server_conflict).await;
+
+    let output_conflict = s606_1_cmd(
+        &server_conflict.uri(),
+        cache_dir1.path(),
+        config_dir1.path(),
+    )
+    .args([
+        "--no-input",
+        "issue",
+        "list",
+        "--project",
+        "FOO",
+        "--updated-recent",
+        "60d",
+        "--updated-after",
+        "2026-01-01",
+    ])
+    .output()
+    .unwrap();
+    assert_eq!(
+        output_conflict.status.code(),
+        Some(2),
+        "AC-003a: --updated-recent + --updated-after must be a clap conflict \
+         (exit 2), got: {:?} (stderr: {})",
+        output_conflict.status.code(),
+        String::from_utf8_lossy(&output_conflict.stderr)
+    );
+
+    // (b) --updated-recent + --updated-before -> NO conflict, composes both
+    // clauses successfully (exit 0). This is the half that exercises the
+    // still-`todo!()`'d clause-composition logic and so is the part that
+    // fails Red Gate today. Its own MockServer, distinct from (a)'s.
+    let server_no_conflict = MockServer::start().await;
+    let cache_dir2 = tempfile::tempdir().unwrap();
+    let config_dir2 = tempfile::tempdir().unwrap();
+    s606_1_mock_project_exists(&server_no_conflict, "FOO").await;
+    s606_1_mock_search_empty(&server_no_conflict).await;
+
+    let output_no_conflict = s606_1_cmd(
+        &server_no_conflict.uri(),
+        cache_dir2.path(),
+        config_dir2.path(),
+    )
+    .args([
+        "--no-input",
+        "issue",
+        "list",
+        "--project",
+        "FOO",
+        "--updated-recent",
+        "60d",
+        "--updated-before",
+        "2026-01-01",
+    ])
+    .output()
+    .unwrap();
+    assert!(
+        output_no_conflict.status.success(),
+        "AC-003b: --updated-recent + --updated-before must NOT conflict \
+         (asymmetric per DEC-298), expected exit 0, got: {:?} (stderr: {})",
+        output_no_conflict.status.code(),
+        String::from_utf8_lossy(&output_no_conflict.stderr)
+    );
+}
+
+/// AC-004 / BC-2.1.023 Postcondition 3 / Edge Case EC-2.1.023-3:
+/// `--updated-recent 30d --recent 30d` composes BOTH clauses, AND-joined,
+/// with `recent`'s clause emitted before `updated-recent`'s (per
+/// BC-2.1.007's stable order) — no error.
+#[tokio::test]
+async fn test_bc_2_1_023_issue_list_updated_recent_composes_freely_with_recent() {
+    let server = MockServer::start().await;
+    let cache_dir = tempfile::tempdir().unwrap();
+    let config_dir = tempfile::tempdir().unwrap();
+
+    s606_1_mock_project_exists(&server, "FOO").await;
+    s606_1_mock_search_empty(&server).await;
+
+    let output = s606_1_cmd(&server.uri(), cache_dir.path(), config_dir.path())
+        .args([
+            "--no-input",
+            "issue",
+            "list",
+            "--project",
+            "FOO",
+            "--updated-recent",
+            "30d",
+            "--recent",
+            "30d",
+        ])
+        .output()
+        .unwrap();
+
+    assert!(
+        output.status.success(),
+        "AC-004: expected exit 0, stderr: {}",
+        String::from_utf8_lossy(&output.stderr)
+    );
+
+    let jql = s606_1_composed_jql(&server).await;
+    let recent_idx = jql
+        .find("created >= -30d")
+        .expect("AC-004: --recent clause 'created >= -30d' must be present");
+    let updated_recent_idx = jql
+        .find("updated >= -30d")
+        .expect("AC-004: --updated-recent clause 'updated >= -30d' must be present");
+    assert!(
+        recent_idx < updated_recent_idx,
+        "AC-004: 'recent' clause must precede 'updated-recent' clause \
+         per BC-2.1.007's stable order, got jql: {jql}"
+    );
+}
+
+/// AC-005 / BC-2.1.007 amendment (stable-order position): `--recent 7d
+/// --updated-recent 60d --asset CUST-5` composes clauses with
+/// `updated-recent` positioned immediately AFTER `recent` and BEFORE
+/// `asset`. This end-to-end integration test verifies only RELATIVE order,
+/// via `jql.find()` substring-index comparison — a smoke check that the
+/// composed JQL string contains the clauses in the right relative order,
+/// not a positional guarantee. The authoritative `Vec<String>`
+/// positional-equality check (AC-005's mandated discipline) lives in the
+/// unit test
+/// `test_bc_2_1_007_build_filter_clauses_updated_recent_immediately_after_recent_before_asset`
+/// in `src/cli/issue/list.rs`, which asserts exact `Vec<String>` equality
+/// on `build_filter_clauses`'s output.
+#[tokio::test]
+async fn test_bc_2_1_007_issue_list_updated_recent_clause_ordering_after_recent_before_asset() {
+    let server = MockServer::start().await;
+    let cache_dir = tempfile::tempdir().unwrap();
+    let config_dir = tempfile::tempdir().unwrap();
+
+    s606_1_mock_project_exists(&server, "FOO").await;
+
+    // CMDB fields discovery, required by build_asset_clause for a direct
+    // asset-key passthrough (mirrors tests/cli_handler.rs's
+    // test_handler_list_asset_key_passthrough_skips_assets_api pattern).
+    Mock::given(method("GET"))
+        .and(path("/rest/api/3/field"))
+        .respond_with(ResponseTemplate::new(200).set_body_json(serde_json::json!([
+            {
+                "id": "customfield_10191",
+                "name": "Client",
+                "custom": true,
+                "schema": {
+                    "type": "any",
+                    "custom": "com.atlassian.jira.plugins.cmdb:cmdb-object-cftype",
+                    "customId": 10191
+                }
+            }
+        ])))
+        .mount(&server)
+        .await;
+
+    s606_1_mock_search_empty(&server).await;
+
+    let output = s606_1_cmd(&server.uri(), cache_dir.path(), config_dir.path())
+        .args([
+            "--no-input",
+            "issue",
+            "list",
+            "--project",
+            "FOO",
+            "--recent",
+            "7d",
+            "--updated-recent",
+            "60d",
+            "--asset",
+            "CUST-5",
+        ])
+        .output()
+        .unwrap();
+
+    assert!(
+        output.status.success(),
+        "AC-005: expected exit 0, stderr: {}",
+        String::from_utf8_lossy(&output.stderr)
+    );
+
+    let jql = s606_1_composed_jql(&server).await;
+    let recent_idx = jql
+        .find("created >= -7d")
+        .expect("AC-005: --recent clause must be present");
+    let updated_recent_idx = jql
+        .find("updated >= -60d")
+        .expect("AC-005: --updated-recent clause must be present");
+    let asset_idx = jql
+        .find("aqlFunction")
+        .expect("AC-005: --asset clause must be present");
+
+    assert!(
+        recent_idx < updated_recent_idx,
+        "AC-005: updated-recent must come AFTER recent, got jql: {jql}"
+    );
+    assert!(
+        updated_recent_idx < asset_idx,
+        "AC-005: updated-recent must come BEFORE asset, got jql: {jql}"
+    );
+}
+
+/// AC-006 / BC-2.1.006 amendment: with no project, no filters, and no
+/// `--jql`, exit 64 with stderr enumerating all 15 filter sources —
+/// `--updated-recent` appended as source #15, immediately before `or --jql`.
+#[tokio::test]
+async fn test_bc_2_1_006_issue_list_no_filters_stderr_enumerates_15_sources() {
+    let server = MockServer::start().await;
+    let cache_dir = tempfile::tempdir().unwrap();
+    let config_dir = tempfile::tempdir().unwrap();
+
+    s606_1_expect_zero_http(&server).await;
+
+    let output = s606_1_cmd(&server.uri(), cache_dir.path(), config_dir.path())
+        .args(["--no-input", "issue", "list"])
+        .output()
+        .unwrap();
+
+    let stderr = String::from_utf8_lossy(&output.stderr);
+    assert!(
+        !output.status.success(),
+        "AC-006: expected failure with no project/filters, got stdout: {}",
+        String::from_utf8_lossy(&output.stdout)
+    );
+    assert_eq!(
+        output.status.code(),
+        Some(64),
+        "AC-006: no-filters guard should exit 64 (UserError), got: {:?} (stderr: {stderr})",
+        output.status.code()
+    );
+    assert!(
+        stderr.contains(
+            "No project or filters specified. Use --project, --assignee, --reporter, --status, \
+             --open, --team, --recent, --created-after, --created-before, --updated-after, \
+             --updated-before, --asset, --component, --updated-recent, or --jql. \
+             You can also set a default project in .jr.toml or run \"jr init\"."
+        ),
+        "AC-006: expected the amended 15-source stderr enumeration (with \
+         --updated-recent inserted immediately before 'or --jql'), got: {stderr}"
+    );
+}
+
+/// AC-007 / BC-2.1.023 Edge Case EC-2.1.023-4: `--updated-recent` alone
+/// (no `--project`/configured project, no other filter) falls through to
+/// BC-2.1.006's amended "no filters specified" exit-64 guard exactly as
+/// every other filter source does — it does NOT independently satisfy the
+/// "at least one filter source" requirement by bypassing project scoping.
+#[tokio::test]
+async fn test_bc_2_1_023_issue_list_updated_recent_alone_still_requires_project_scope() {
+    let server = MockServer::start().await;
+    let cache_dir = tempfile::tempdir().unwrap();
+    let config_dir = tempfile::tempdir().unwrap();
+
+    s606_1_expect_zero_http(&server).await;
+
+    let output = s606_1_cmd(&server.uri(), cache_dir.path(), config_dir.path())
+        .args(["--no-input", "issue", "list", "--updated-recent", "60d"])
+        .output()
+        .unwrap();
+
+    let stderr = String::from_utf8_lossy(&output.stderr);
+    assert!(
+        !output.status.success(),
+        "AC-007: --updated-recent alone with no project must still fail the \
+         no-filters guard, got stdout: {}",
+        String::from_utf8_lossy(&output.stdout)
+    );
+    assert_eq!(
+        output.status.code(),
+        Some(64),
+        "AC-007: expected exit 64 (UserError) from BC-2.1.006's no-filters \
+         guard, got: {:?} (stderr: {stderr})",
+        output.status.code()
+    );
+    assert!(
+        stderr.contains("No project or filters specified"),
+        "AC-007: expected the canonical no-filters-specified message, got: {stderr}"
+    );
+}
+
+/// Pass 2 MEDIUM regression guard: a `.jr.toml` configuring only `board_id`
+/// (no `project` key -- a valid state per `Config::board_id`/
+/// `test_board_id_cli_override` in `src/config.rs`) is a genuinely scoped
+/// configuration. `jr issue list --updated-recent 60d` must NOT trip the
+/// EC-2.1.023-4 "no filters specified" guard in that configuration -- it
+/// must fall through to the same active-sprint board resolution that a bare
+/// `jr issue list` and `jr issue list --recent 60d` both already succeed
+/// under, and the final composed JQL must contain both the sprint scope and
+/// the `updated >= -60d` clause.
+#[tokio::test]
+async fn test_bc_2_1_023_issue_list_updated_recent_with_configured_board_falls_through_to_sprint_scope()
+ {
+    let server = MockServer::start().await;
+    let cache_dir = tempfile::tempdir().unwrap();
+    let config_dir = tempfile::tempdir().unwrap();
+    let project_dir = tempfile::tempdir().unwrap();
+
+    // .jr.toml with ONLY board_id set -- no `project` key.
+    std::fs::write(project_dir.path().join(".jr.toml"), "board_id = 42\n").unwrap();
+
+    Mock::given(method("GET"))
+        .and(path("/rest/agile/1.0/board/42/configuration"))
+        .respond_with(
+            ResponseTemplate::new(200)
+                .set_body_json(common::fixtures::board_config_response("scrum")),
+        )
+        .mount(&server)
+        .await;
+
+    Mock::given(method("GET"))
+        .and(path("/rest/agile/1.0/board/42/sprint"))
+        .and(query_param("state", "active"))
+        .respond_with(ResponseTemplate::new(200).set_body_json(
+            common::fixtures::sprint_list_response(vec![common::fixtures::sprint(
+                100, "Sprint 1", "active",
+            )]),
+        ))
+        .mount(&server)
+        .await;
+
+    s606_1_mock_search_empty(&server).await;
+
+    let output = s606_1_cmd(&server.uri(), cache_dir.path(), config_dir.path())
+        .current_dir(project_dir.path())
+        .args(["--no-input", "issue", "list", "--updated-recent", "60d"])
+        .output()
+        .unwrap();
+
+    let stderr = String::from_utf8_lossy(&output.stderr);
+    assert!(
+        output.status.success(),
+        "board-scoped --updated-recent must NOT exit 64, got: {:?} (stderr: {stderr})",
+        output.status.code()
+    );
+
+    let jql = s606_1_composed_jql(&server).await;
+    assert!(
+        jql.contains("sprint = 100"),
+        "expected the active-sprint scope clause in the composed JQL, got: {jql}"
+    );
+    assert!(
+        jql.contains("updated >= -60d"),
+        "expected the --updated-recent clause in the composed JQL, got: {jql}"
+    );
+}
+
+/// AC-008 / BC-2.1.023 Postcondition 1 (field-swap fidelity): `--updated-recent
+/// 7d` produces `updated >= -7d` — NOT `created >= -7d` — confirming the
+/// field name is correctly swapped from `--recent`'s template rather than
+/// copy-pasted verbatim.
+#[tokio::test]
+async fn test_bc_2_1_023_issue_list_updated_recent_uses_updated_field_not_created() {
+    let server = MockServer::start().await;
+    let cache_dir = tempfile::tempdir().unwrap();
+    let config_dir = tempfile::tempdir().unwrap();
+
+    s606_1_mock_project_exists(&server, "FOO").await;
+    s606_1_mock_search_empty(&server).await;
+
+    let output = s606_1_cmd(&server.uri(), cache_dir.path(), config_dir.path())
+        .args([
+            "--no-input",
+            "issue",
+            "list",
+            "--project",
+            "FOO",
+            "--updated-recent",
+            "7d",
+        ])
+        .output()
+        .unwrap();
+
+    assert!(
+        output.status.success(),
+        "AC-008: expected exit 0, stderr: {}",
+        String::from_utf8_lossy(&output.stderr)
+    );
+
+    let jql = s606_1_composed_jql(&server).await;
+    assert!(
+        jql.contains("updated >= -7d"),
+        "AC-008: expected 'updated >= -7d' in composed JQL, got: {jql}"
+    );
+    assert!(
+        !jql.contains("created >= -7d"),
+        "AC-008: must NOT emit 'created >= -7d' (field-swap fidelity — \
+         --updated-recent must not be copy-pasted from --recent's template \
+         verbatim), got: {jql}"
+    );
+}
+
+/// pr-review cycle 1 Finding 1 regression guard (EC-2.1.023-4 backstop):
+/// a `.jr.toml` configuring only `board_id` (no `project` key), a scrum
+/// board, with NO active sprint is the one narrow configuration where the
+/// early guard's `board_id.is_none()` conjunct is too coarse — it lets
+/// `--updated-recent` alone through (a board IS configured), but the
+/// scrum "no active sprint" fallback then resolves `base_parts` to an EMPTY
+/// Vec (seeded only from `project_key`, which is `None` here), and
+/// `--updated-recent`'s own clause would otherwise make the final `all_parts`
+/// non-empty and silently bypass the end-of-function guard too — producing
+/// an unbounded, cross-project query. `jr issue list --updated-recent 60d`
+/// in this exact configuration MUST now exit 64 via the `base_parts`
+/// backstop guard, with the canonical no-filters-specified message.
+#[tokio::test]
+async fn test_bc_2_1_023_issue_list_updated_recent_board_scrum_no_active_sprint_no_project_exits_64()
+ {
+    let server = MockServer::start().await;
+    let cache_dir = tempfile::tempdir().unwrap();
+    let config_dir = tempfile::tempdir().unwrap();
+    let project_dir = tempfile::tempdir().unwrap();
+
+    // .jr.toml with ONLY board_id set -- no `project` key.
+    std::fs::write(project_dir.path().join(".jr.toml"), "board_id = 42\n").unwrap();
+
+    Mock::given(method("GET"))
+        .and(path("/rest/agile/1.0/board/42/configuration"))
+        .respond_with(
+            ResponseTemplate::new(200)
+                .set_body_json(common::fixtures::board_config_response("scrum")),
+        )
+        .mount(&server)
+        .await;
+
+    // NO active sprint -- empty `values` array.
+    Mock::given(method("GET"))
+        .and(path("/rest/agile/1.0/board/42/sprint"))
+        .and(query_param("state", "active"))
+        .respond_with(
+            ResponseTemplate::new(200)
+                .set_body_json(common::fixtures::sprint_list_response(vec![])),
+        )
+        .mount(&server)
+        .await;
+
+    // The composed JQL must never reach the search endpoint — the backstop
+    // guard must fire before any issue search is attempted.
+    Mock::given(method("POST"))
+        .and(path("/rest/api/3/search/jql"))
+        .respond_with(
+            ResponseTemplate::new(200)
+                .set_body_json(common::fixtures::issue_search_response(vec![])),
+        )
+        .expect(0)
+        .mount(&server)
+        .await;
+
+    let output = s606_1_cmd(&server.uri(), cache_dir.path(), config_dir.path())
+        .current_dir(project_dir.path())
+        .args(["--no-input", "issue", "list", "--updated-recent", "60d"])
+        .output()
+        .unwrap();
+
+    let stderr = String::from_utf8_lossy(&output.stderr);
+    assert!(
+        !output.status.success(),
+        "board-scrum-no-active-sprint --updated-recent must exit 64, got stdout: {}",
+        String::from_utf8_lossy(&output.stdout)
+    );
+    assert_eq!(
+        output.status.code(),
+        Some(64),
+        "expected exit 64 (UserError) from the base_parts backstop guard, \
+         got: {:?} (stderr: {stderr})",
+        output.status.code()
+    );
+    assert!(
+        stderr.contains("No project or filters specified"),
+        "expected the canonical no-filters-specified message, got: {stderr}"
+    );
+}
+
+// ── pr-review cycle 1 Finding 2: guard-conjunction coverage for the 9
+// filter flags not already exercised by an existing --updated-recent AC
+// test (project/recent/asset/updated_before/board_id are already covered
+// by AC-001/AC-004/AC-005/AC-003b/the board regression tests above). Each
+// test below pairs `--updated-recent 60d` with exactly one of the 9 flags
+// and asserts the combination does NOT trip the "no filters specified"
+// guard (BC-2.1.006) — assertions are minimal (exit code / stderr content
+// for the guard message only), since each flag's own clause composition is
+// already covered elsewhere.
+
+fn pr1_write_team_config(config_dir: &std::path::Path, team_field_id: &str) {
+    std::fs::write(
+        config_dir.join("config.toml"),
+        format!(
+            "default_profile = \"default\"\n\n[profiles.default]\nurl = \"https://acme.atlassian.net\"\nteam_field_id = \"{team_field_id}\"\n"
+        ),
+    )
+    .unwrap();
+}
+
+/// Asserts `output` did NOT trip the BC-2.1.006 "no filters specified"
+/// guard: neither an exit-64 UserError carrying the canonical message.
+/// A later, unrelated failure (e.g. a missing mock) is not what this
+/// assertion is checking — see each test's own success assertion for that.
+fn pr1_assert_guard_not_tripped(output: &std::process::Output, flag_desc: &str) {
+    let stderr = String::from_utf8_lossy(&output.stderr);
+    assert!(
+        output.status.success(),
+        "Finding 2: --updated-recent + {flag_desc} must not trip the \
+         no-filters guard, expected exit 0, got: {:?} (stderr: {stderr})",
+        output.status.code()
+    );
+    assert!(
+        !stderr.contains("No project or filters specified"),
+        "Finding 2: --updated-recent + {flag_desc} must not emit the \
+         no-filters-specified message, got: {stderr}"
+    );
+}
+
+#[tokio::test]
+async fn test_bc_2_1_023_issue_list_updated_recent_with_assignee_does_not_trip_no_filters_guard() {
+    let server = MockServer::start().await;
+    let cache_dir = tempfile::tempdir().unwrap();
+    let config_dir = tempfile::tempdir().unwrap();
+
+    s606_1_mock_search_empty(&server).await;
+
+    let output = s606_1_cmd(&server.uri(), cache_dir.path(), config_dir.path())
+        .args([
+            "--no-input",
+            "issue",
+            "list",
+            "--updated-recent",
+            "60d",
+            "--assignee",
+            "me",
+        ])
+        .output()
+        .unwrap();
+
+    pr1_assert_guard_not_tripped(&output, "--assignee me");
+}
+
+#[tokio::test]
+async fn test_bc_2_1_023_issue_list_updated_recent_with_reporter_does_not_trip_no_filters_guard() {
+    let server = MockServer::start().await;
+    let cache_dir = tempfile::tempdir().unwrap();
+    let config_dir = tempfile::tempdir().unwrap();
+
+    s606_1_mock_search_empty(&server).await;
+
+    let output = s606_1_cmd(&server.uri(), cache_dir.path(), config_dir.path())
+        .args([
+            "--no-input",
+            "issue",
+            "list",
+            "--updated-recent",
+            "60d",
+            "--reporter",
+            "me",
+        ])
+        .output()
+        .unwrap();
+
+    pr1_assert_guard_not_tripped(&output, "--reporter me");
+}
+
+#[tokio::test]
+async fn test_bc_2_1_023_issue_list_updated_recent_with_status_does_not_trip_no_filters_guard() {
+    let server = MockServer::start().await;
+    let cache_dir = tempfile::tempdir().unwrap();
+    let config_dir = tempfile::tempdir().unwrap();
+
+    Mock::given(method("GET"))
+        .and(path("/rest/api/3/status"))
+        .respond_with(ResponseTemplate::new(200).set_body_json(serde_json::json!([
+            {"id": "1", "name": "To Do", "statusCategory": {"key": "new"}},
+            {"id": "2", "name": "In Progress", "statusCategory": {"key": "indeterminate"}},
+            {"id": "3", "name": "Done", "statusCategory": {"key": "done"}}
+        ])))
+        .mount(&server)
+        .await;
+    s606_1_mock_search_empty(&server).await;
+
+    let output = s606_1_cmd(&server.uri(), cache_dir.path(), config_dir.path())
+        .args([
+            "--no-input",
+            "issue",
+            "list",
+            "--updated-recent",
+            "60d",
+            "--status",
+            "To Do",
+        ])
+        .output()
+        .unwrap();
+
+    pr1_assert_guard_not_tripped(&output, "--status \"To Do\"");
+}
+
+#[tokio::test]
+async fn test_bc_2_1_023_issue_list_updated_recent_with_team_does_not_trip_no_filters_guard() {
+    let server = MockServer::start().await;
+    let cache_dir = tempfile::tempdir().unwrap();
+    let config_dir = tempfile::tempdir().unwrap();
+
+    // team_field_id configured + a UUID team value: both skip every HTTP
+    // resolution step (find_team_field_id, cache load, GraphQL discovery)
+    // via the UUID pass-through in `resolve_team_field`/`is_team_uuid`.
+    pr1_write_team_config(config_dir.path(), "customfield_10100");
+    s606_1_mock_search_empty(&server).await;
+
+    let output = s606_1_cmd(&server.uri(), cache_dir.path(), config_dir.path())
+        .args([
+            "--no-input",
+            "issue",
+            "list",
+            "--updated-recent",
+            "60d",
+            "--team",
+            "12345678-1234-1234-1234-123456789012",
+        ])
+        .output()
+        .unwrap();
+
+    pr1_assert_guard_not_tripped(&output, "--team <uuid>");
+}
+
+#[tokio::test]
+async fn test_bc_2_1_023_issue_list_updated_recent_with_open_does_not_trip_no_filters_guard() {
+    let server = MockServer::start().await;
+    let cache_dir = tempfile::tempdir().unwrap();
+    let config_dir = tempfile::tempdir().unwrap();
+
+    s606_1_mock_search_empty(&server).await;
+
+    let output = s606_1_cmd(&server.uri(), cache_dir.path(), config_dir.path())
+        .args([
+            "--no-input",
+            "issue",
+            "list",
+            "--updated-recent",
+            "60d",
+            "--open",
+        ])
+        .output()
+        .unwrap();
+
+    pr1_assert_guard_not_tripped(&output, "--open");
+}
+
+#[tokio::test]
+async fn test_bc_2_1_023_issue_list_updated_recent_with_component_does_not_trip_no_filters_guard() {
+    let server = MockServer::start().await;
+    let cache_dir = tempfile::tempdir().unwrap();
+    let config_dir = tempfile::tempdir().unwrap();
+
+    // --component requires --project (BC-2.1.022) regardless of
+    // --updated-recent, so --project is included here — this test pins
+    // that the `component.is_empty()` conjunct does not ALSO independently
+    // trip the no-filters guard once the component preflight has passed.
+    s606_1_mock_project_exists(&server, "FOO").await;
+    s606_1_mock_components(
+        &server,
+        "FOO",
+        vec![common::fixtures::component_response(
+            "10001", "Backend", None, None, None,
+        )],
+    )
+    .await;
+    s606_1_mock_search_empty(&server).await;
+
+    let output = s606_1_cmd(&server.uri(), cache_dir.path(), config_dir.path())
+        .args([
+            "--no-input",
+            "issue",
+            "list",
+            "--project",
+            "FOO",
+            "--updated-recent",
+            "60d",
+            "--component",
+            "Backend",
+        ])
+        .output()
+        .unwrap();
+
+    pr1_assert_guard_not_tripped(&output, "--project FOO --component Backend");
+}
+
+#[tokio::test]
+async fn test_bc_2_1_023_issue_list_updated_recent_with_created_after_does_not_trip_no_filters_guard()
+ {
+    let server = MockServer::start().await;
+    let cache_dir = tempfile::tempdir().unwrap();
+    let config_dir = tempfile::tempdir().unwrap();
+
+    s606_1_mock_search_empty(&server).await;
+
+    let output = s606_1_cmd(&server.uri(), cache_dir.path(), config_dir.path())
+        .args([
+            "--no-input",
+            "issue",
+            "list",
+            "--updated-recent",
+            "60d",
+            "--created-after",
+            "2026-01-01",
+        ])
+        .output()
+        .unwrap();
+
+    pr1_assert_guard_not_tripped(&output, "--created-after 2026-01-01");
+}
+
+#[tokio::test]
+async fn test_bc_2_1_023_issue_list_updated_recent_with_created_before_does_not_trip_no_filters_guard()
+ {
+    let server = MockServer::start().await;
+    let cache_dir = tempfile::tempdir().unwrap();
+    let config_dir = tempfile::tempdir().unwrap();
+
+    s606_1_mock_search_empty(&server).await;
+
+    let output = s606_1_cmd(&server.uri(), cache_dir.path(), config_dir.path())
+        .args([
+            "--no-input",
+            "issue",
+            "list",
+            "--updated-recent",
+            "60d",
+            "--created-before",
+            "2026-01-01",
+        ])
+        .output()
+        .unwrap();
+
+    pr1_assert_guard_not_tripped(&output, "--created-before 2026-01-01");
+}
+
+#[tokio::test]
+async fn test_bc_2_1_023_issue_list_updated_recent_with_jql_does_not_trip_no_filters_guard() {
+    let server = MockServer::start().await;
+    let cache_dir = tempfile::tempdir().unwrap();
+    let config_dir = tempfile::tempdir().unwrap();
+
+    s606_1_mock_search_empty(&server).await;
+
+    let output = s606_1_cmd(&server.uri(), cache_dir.path(), config_dir.path())
+        .args([
+            "--no-input",
+            "issue",
+            "list",
+            "--updated-recent",
+            "60d",
+            "--jql",
+            "project = FOO",
+        ])
+        .output()
+        .unwrap();
+
+    pr1_assert_guard_not_tripped(&output, "--jql \"project = FOO\"");
+}

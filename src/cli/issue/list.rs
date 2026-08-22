@@ -35,6 +35,27 @@ fn extract_unique_status_names(issue_types: &[IssueTypeWithStatuses]) -> Vec<Str
 
 // ── List ──────────────────────────────────────────────────────────────
 
+/// BC-2.1.006 (amended, S-579-1): "no project or filters specified" guard
+/// message -- the amended 15-source enumeration, with `--updated-recent`
+/// appended immediately before `or --jql`. Shared between THREE call sites
+/// in `handle_list`, all of which must stay in sync with each other and with
+/// this message's enumerated list:
+///   1. The early EC-2.1.023-4 guard (`--updated-recent` alone, no project,
+///      no configured board, no other filter) -- fires before any HTTP call.
+///   2. The `base_parts.is_empty()` backstop guard added by pr-review cycle 1
+///      Finding 1, immediately after `base_parts` is resolved -- closes the
+///      narrow board-configured-but-empty-scoping-clause gap the early
+///      guard's `board_id.is_none()` proxy cannot see (see the comment above
+///      guard #1 for the full explanation).
+///   3. The end-of-function `all_parts.is_empty()` guard -- the original
+///      BC-2.1.006 backstop for every other filter source.
+///
+/// Adding a 16th filter flag to `IssueCommand::List` requires updating this
+/// message's enumerated list AND all three guards' conjunctions above.
+/// Nothing currently enforces this mechanically -- no compile error is
+/// raised on drift between the message text and any guard's conjunction.
+const NO_FILTERS_SPECIFIED_MSG: &str = "No project or filters specified. Use --project, --assignee, --reporter, --status, --open, --team, --recent, --created-after, --created-before, --updated-after, --updated-before, --asset, --component, --updated-recent, or --jql. You can also set a default project in .jr.toml or run \"jr init\".";
+
 /// Build base JQL parts when `--jql` is provided.
 ///
 /// Returns `(base_parts, order_by)`. Strips any trailing `ORDER BY` clause
@@ -70,6 +91,7 @@ pub(super) async fn handle_list(
         assignee,
         reporter,
         recent,
+        updated_recent,
         open,
         points: show_points,
         assets: show_assets,
@@ -80,9 +102,25 @@ pub(super) async fn handle_list(
         created_before,
         updated_after,
         updated_before,
+        fields,
     } = command
     else {
         unreachable!()
+    };
+
+    // S-575-1 (BC-2.2.033): `--fields <CSV>` output-format gate + pre-HTTP
+    // CSV validation. Both run before ANY network call (project resolution,
+    // component resolution, `project_exists`, the search itself) so a
+    // rejected combination costs zero HTTP requests. Default behavior
+    // (fields == None) is untouched below.
+    let field_list: Option<Vec<String>> = match &fields {
+        Some(csv) => {
+            if !matches!(output_format, OutputFormat::Json) {
+                return Err(JrError::UserError("--fields requires --output json.".into()).into());
+            }
+            Some(helpers::parse_fields_csv(csv)?)
+        }
+        None => None,
     };
 
     // Resolve project key once, before any HTTP call. Moved up from its
@@ -111,6 +149,70 @@ pub(super) async fn handle_list(
     // Validate --recent duration format early
     if let Some(ref d) = recent {
         crate::jql::validate_duration(d).map_err(JrError::UserError)?;
+    }
+
+    // S-579-1 (BC-2.1.023 Precondition 2): --updated-recent duration filter,
+    // the `updated` field parallel to --recent (`created`). Reuses the SAME
+    // validator --recent uses (jql::validate_duration, NOT duration.rs) --
+    // combined units like `4w2d` are rejected pre-HTTP with the identical
+    // error shape --recent's own validation produces (AC-002).
+    if let Some(ref d) = updated_recent {
+        crate::jql::validate_duration(d).map_err(JrError::UserError)?;
+    }
+
+    // S-579-1 (BC-2.1.023 Edge Case EC-2.1.023-4): unlike `--recent`,
+    // `--updated-recent` does not by itself satisfy the "at least one filter
+    // source" requirement when used with no --project/configured project,
+    // no configured board (`.jr.toml`'s `board_id`), and no other filter --
+    // it falls through to the same BC-2.1.006 "no filters specified" guard a
+    // completely bare `jr issue list` invocation hits. This must be checked
+    // here (zero HTTP so far) rather than relying on the end-of-function
+    // "guard against unbounded query" below, because `--updated-recent`'s
+    // own composed clause would otherwise make the final assembled clause
+    // list non-empty and silently bypass that guard.
+    //
+    // `config.project.board_id` MUST be part of this conjunction (Pass 2
+    // MEDIUM fix): a `.jr.toml` with only `board_id` set (no `project` key)
+    // is a valid, board-scoped configuration -- see
+    // `Config::board_id`/`test_board_id_cli_override` in `src/config.rs`.
+    //
+    // CORRECTION (pr-review cycle 1, Finding 1): `board_id.is_none()` is only
+    // a COARSE proxy for "the board contributes scoping" -- it does NOT hold
+    // in one narrow, verified subcase: a scrum board with NO active sprint,
+    // in a config with `board_id` set and no `project` key. In that exact
+    // configuration a completely bare `jr issue list` ALREADY exits 64 via
+    // this SAME guard (it does not "succeed by falling through" as an
+    // earlier revision of this comment incorrectly claimed) -- the scrum
+    // "no active sprint" fallback (below, ~line 392) seeds `base_parts` from
+    // `project_key` alone, which is `None` here, so `base_parts` ends up
+    // empty regardless of what tripped or didn't trip this early guard.
+    // `--updated-recent` alone in that same configuration is different: this
+    // early guard lets it through (a board IS configured), but the
+    // downstream scrum-no-active-sprint fallback still produces an empty
+    // `base_parts`, and `--updated-recent`'s own clause then makes the final
+    // `all_parts` non-empty, silently bypassing the end-of-function guard too
+    // -- an unbounded, cross-project query. A second, narrower backstop
+    // guard (below, immediately after `base_parts` is resolved) closes this
+    // specific hole by checking `base_parts.is_empty()` directly instead of
+    // trying to predict it from `board_id` alone.
+    if updated_recent.is_some()
+        && project_key.is_none()
+        && config.project.board_id.is_none()
+        && jql.is_none()
+        && status.is_none()
+        && team.is_none()
+        && recent.is_none()
+        && !open
+        && asset_key.is_none()
+        && component.is_empty()
+        && created_after.is_none()
+        && created_before.is_none()
+        && updated_after.is_none()
+        && updated_before.is_none()
+        && assignee.is_none()
+        && reporter.is_none()
+    {
+        return Err(JrError::UserError(NO_FILTERS_SPECIFIED_MSG.into()).into());
     }
 
     // Validate date filter flags early (before any network calls)
@@ -288,6 +390,7 @@ pub(super) async fn handle_list(
         status: resolved_status.as_deref(),
         team_clause: team_clause.as_deref(),
         recent: recent.as_deref(),
+        updated_recent: updated_recent.as_deref(),
         open,
         asset_clause: asset_clause.as_deref(),
         component_clauses: &component_clauses,
@@ -370,22 +473,97 @@ pub(super) async fn handle_list(
         }
     };
 
+    // S-579-1 pr-review cycle 1 Finding 1 (EC-2.1.023-4 backstop): closes the
+    // narrow gap the early guard above cannot see -- a `.jr.toml` with only
+    // `board_id` set (no `project` key), a scrum board, and NO active sprint
+    // resolves `base_parts` to an EMPTY Vec (the scrum "no active sprint"
+    // fallback above seeds `parts` from `project_key`, which is `None` in
+    // this exact config). The early guard's `board_id.is_none()` conjunct
+    // already let `--updated-recent` alone through in this configuration
+    // (a board IS configured), so this check is a direct, non-predictive
+    // test of the thing that actually matters: did the base-JQL resolution
+    // above actually produce a scoping clause? Checking `base_parts` itself
+    // rather than re-deriving "should it be empty" from `board_id`/board
+    // type/sprint state avoids the same coarse-proxy mistake the early guard
+    // made. This does not affect AC-007's zero-HTTP guarantee for the
+    // no-board case -- the early guard above already rejects that
+    // configuration before any HTTP call; every path that reaches here with
+    // an empty `base_parts` has a board configured, so the board-config and
+    // sprint-list HTTP calls above have already legitimately happened.
+    //
+    // Conjunction mirrors the early guard's, MINUS `config.project.board_id`
+    // (a board is always configured by the time `base_parts` can be empty
+    // here) and PLUS `base_parts.is_empty()`. See `NO_FILTERS_SPECIFIED_MSG`'s
+    // doc comment for the full three-call-site sync requirement.
+    if base_parts.is_empty()
+        && updated_recent.is_some()
+        && project_key.is_none()
+        && jql.is_none()
+        && status.is_none()
+        && team.is_none()
+        && recent.is_none()
+        && !open
+        && asset_key.is_none()
+        && component.is_empty()
+        && created_after.is_none()
+        && created_before.is_none()
+        && updated_after.is_none()
+        && updated_before.is_none()
+        && assignee.is_none()
+        && reporter.is_none()
+    {
+        return Err(JrError::UserError(NO_FILTERS_SPECIFIED_MSG.into()).into());
+    }
+
     // Combine base + filters
     let mut all_parts = base_parts;
     all_parts.extend(filter_parts);
 
     // Guard against unbounded query
     if all_parts.is_empty() {
-        return Err(JrError::UserError(
-            "No project or filters specified. Use --project, --assignee, --reporter, --status, --open, --team, --recent, --created-after, --created-before, --updated-after, --updated-before, --asset, --component, or --jql. \
-             You can also set a default project in .jr.toml or run \"jr init\"."
-                .into(),
-        )
-        .into());
+        return Err(JrError::UserError(NO_FILTERS_SPECIFIED_MSG.into()).into());
     }
 
     let where_clause = all_parts.join(" AND ");
     let effective_jql = format!("{where_clause} ORDER BY {order_by}");
+
+    // S-575-1 (BC-2.2.033 Postcondition 1/4, human-locked DEC-298): when
+    // `--fields` is present it REPLACES BASE_ISSUE_FIELDS entirely — no
+    // union with `extra` (story points / team field ids), and `--points` /
+    // `--assets` / `--duedate` become silent no-ops by never reaching any of
+    // the cmdb-field-fetch, asset-enrichment, or column-rendering logic
+    // below (that logic is entirely skipped, not merely made inert).
+    if let Some(field_list) = &field_list {
+        let field_refs: Vec<&str> = field_list.iter().map(String::as_str).collect();
+        let search_result = client
+            .search_issues_with_fields(&effective_jql, effective_limit, &field_refs)
+            .await?;
+        let has_more = search_result.has_more;
+        let issues = search_result.issues;
+
+        output::print_output(output_format, &[], &[], &issues)?;
+
+        if has_more && !all {
+            let count_jql = crate::jql::strip_order_by(&effective_jql);
+            match client.approximate_count(count_jql).await {
+                Ok(total) if total > 0 => {
+                    eprintln!(
+                        "Showing {} of ~{} results. Use --limit or --all to see more.",
+                        issues.len(),
+                        total
+                    );
+                }
+                Ok(_) | Err(_) => {
+                    eprintln!(
+                        "Showing {} results. Use --limit or --all to see more.",
+                        issues.len()
+                    );
+                }
+            }
+        }
+
+        return Ok(());
+    }
 
     let cmdb_fields = if show_assets {
         if let Some(fields) = asset_cmdb_fields {
@@ -918,6 +1096,9 @@ struct FilterOptions<'a> {
     status: Option<&'a str>,
     team_clause: Option<&'a str>,
     recent: Option<&'a str>,
+    /// S-579-1 (BC-2.1.007 amendment): slots in immediately after `recent`
+    /// (`created >= -{d}`), before `asset_clause`.
+    updated_recent: Option<&'a str>,
     open: bool,
     asset_clause: Option<&'a str>,
     /// Zero, one, or two pre-composed `--component` clause fragments, already
@@ -951,6 +1132,11 @@ fn build_filter_clauses(opts: FilterOptions<'_>) -> Vec<String> {
     }
     if let Some(d) = opts.recent {
         parts.push(format!("created >= -{d}"));
+    }
+    // S-579-1 (BC-2.1.007 amendment): --updated-recent's clause slots in
+    // immediately after `recent`, before `asset`.
+    if let Some(d) = opts.updated_recent {
+        parts.push(format!("updated >= -{d}"));
     }
     if let Some(a) = opts.asset_clause {
         parts.push(a.to_string());
@@ -1007,6 +1193,7 @@ mod tests {
             status: None,
             team_clause: None,
             recent: None,
+            updated_recent: None,
             open: false,
             asset_clause: None,
             component_clauses: &[],
@@ -1026,6 +1213,7 @@ mod tests {
             status: None,
             team_clause: None,
             recent: None,
+            updated_recent: None,
             open: false,
             asset_clause: None,
             component_clauses: &[],
@@ -1045,6 +1233,7 @@ mod tests {
             status: None,
             team_clause: None,
             recent: Some("7d"),
+            updated_recent: None,
             open: false,
             asset_clause: None,
             component_clauses: &[],
@@ -1064,6 +1253,7 @@ mod tests {
             status: Some("In Progress"),
             team_clause: Some(r#"customfield_10001 = "uuid-123""#),
             recent: Some("30d"),
+            updated_recent: None,
             open: false,
             asset_clause: None,
             component_clauses: &[],
@@ -1088,6 +1278,7 @@ mod tests {
             status: None,
             team_clause: None,
             recent: None,
+            updated_recent: None,
             open: false,
             asset_clause: None,
             component_clauses: &[],
@@ -1107,6 +1298,7 @@ mod tests {
             status: Some("Done"),
             team_clause: None,
             recent: None,
+            updated_recent: None,
             open: false,
             asset_clause: None,
             component_clauses: &[],
@@ -1129,6 +1321,7 @@ mod tests {
             status: Some(r#"He said "hi" \o/"#),
             team_clause: None,
             recent: None,
+            updated_recent: None,
             open: false,
             asset_clause: None,
             component_clauses: &[],
@@ -1148,6 +1341,7 @@ mod tests {
             status: None,
             team_clause: None,
             recent: None,
+            updated_recent: None,
             open: true,
             asset_clause: None,
             component_clauses: &[],
@@ -1167,6 +1361,7 @@ mod tests {
             status: None,
             team_clause: None,
             recent: None,
+            updated_recent: None,
             open: true,
             asset_clause: None,
             component_clauses: &[],
@@ -1188,6 +1383,7 @@ mod tests {
             status: None, // status conflicts with open, so None here
             team_clause: Some(r#"customfield_10001 = "uuid-123""#),
             recent: Some("30d"),
+            updated_recent: None,
             open: true,
             asset_clause: None,
             component_clauses: &[],
@@ -1213,6 +1409,7 @@ mod tests {
             status: None,
             team_clause: None,
             recent: None,
+            updated_recent: None,
             open: false,
             asset_clause: Some(clause),
             component_clauses: &[],
@@ -1233,6 +1430,7 @@ mod tests {
             status: None,
             team_clause: None,
             recent: None,
+            updated_recent: None,
             open: false,
             asset_clause: Some(clause),
             component_clauses: &[],
@@ -1267,6 +1465,7 @@ mod tests {
             status: None,
             team_clause: None,
             recent: None,
+            updated_recent: None,
             open: false,
             asset_clause: Some(asset_clause),
             component_clauses: &component_clauses,
@@ -1287,6 +1486,41 @@ mod tests {
         );
     }
 
+    /// VP-UPDATED-RECENT-001 / AC-005 (M1 gap fix): `--recent`, `--updated-recent`,
+    /// and `--asset` together compose clauses with `updated >= -{d}` positioned
+    /// IMMEDIATELY AFTER `created >= -{d}` (recent) and BEFORE the asset clause.
+    /// Verified via exact `Vec<String>` positional equality — NOT substring-index
+    /// comparison — per AC-005's mandated discipline (mirrors
+    /// `test_bc_2_1_007_build_filter_clauses_component_immediately_after_asset`'s
+    /// style, the existing precedent for this discipline in this module).
+    #[test]
+    fn test_bc_2_1_007_build_filter_clauses_updated_recent_immediately_after_recent_before_asset() {
+        let asset_clause = r#""Client" IN aqlFunction("Key = \"CUST-5\"")"#;
+        let parts = build_filter_clauses(FilterOptions {
+            assignee_jql: None,
+            reporter_jql: None,
+            status: None,
+            team_clause: None,
+            recent: Some("7d"),
+            updated_recent: Some("60d"),
+            open: false,
+            asset_clause: Some(asset_clause),
+            component_clauses: &[],
+            created_after_clause: None,
+            created_before_clause: None,
+            updated_after_clause: None,
+            updated_before_clause: None,
+        });
+        assert_eq!(
+            parts,
+            vec![
+                "created >= -7d".to_string(),
+                "updated >= -60d".to_string(),
+                asset_clause.to_string(),
+            ]
+        );
+    }
+
     #[test]
     fn build_jql_parts_created_after_clause() {
         let parts = build_filter_clauses(FilterOptions {
@@ -1295,6 +1529,7 @@ mod tests {
             status: None,
             team_clause: None,
             recent: None,
+            updated_recent: None,
             open: false,
             asset_clause: None,
             component_clauses: &[],
@@ -1314,6 +1549,7 @@ mod tests {
             status: None,
             team_clause: None,
             recent: None,
+            updated_recent: None,
             open: false,
             asset_clause: None,
             component_clauses: &[],
@@ -1335,6 +1571,7 @@ mod tests {
             status: None,
             team_clause: None,
             recent: None,
+            updated_recent: None,
             open: false,
             asset_clause: None,
             component_clauses: &[],
