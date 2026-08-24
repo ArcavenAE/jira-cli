@@ -1,1 +1,1 @@
-{"status":"pass","timestamp":"2026-08-24T16:59:00Z","command":"cargo test --test issue_commands no_filters 2>&1 | tail -12 && echo \"===NEW COMBINED TEST===\" && cargo test --test issue_commands fields_and_sort_compose 2>&1 | tail -8"}
+{"status":"pass","timestamp":"2026-08-24T19:54:08Z","command":"cd /Users/zious/Documents/GITHUB/jira-cli/.worktrees/FIX-F6-LRE-1 && cargo test --lib jql:: 2>&1 | tail -25"}
