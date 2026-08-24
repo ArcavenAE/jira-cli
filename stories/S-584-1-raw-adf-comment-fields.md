@@ -50,8 +50,8 @@ acceptance_criteria_count: 5
 assumption_validations: []
 risk_mitigations: []
 created: "2026-08-21"
-version: "1.0"
-last_updated: "2026-08-21"
+version: "1.2"
+last_updated: "2026-08-24"
 breaking_change: false
 retroactive: false
 origin: >
@@ -62,14 +62,17 @@ origin: >
   implementation-heavy — `IssueFields.extra: HashMap<String, Value>` is `#[serde(flatten)]`
   and no code path calls `adf::adf_to_text` on `issue list`/`issue view`'s JSON output, so
   requesting `comment` via S-575-1's `--fields` mechanism already returns Jira's raw ADF
-  untouched. No src/ changes anticipated unless S-575-1's implementation needs an
+  untouched. No src/ *logic* changes anticipated unless S-575-1's implementation needs an
   `extra`-cleanup pass for some other field (unlikely per Decision 2 in the F1 delta
-  analysis).
-files_modified: []
+  analysis) — superseded in scope only by AC-005's mandated defensive code comment at the
+  `--fields` wiring site in `list.rs`/`view.rs` (comment-only, not a logic change; see
+  `files_modified`).
+files_modified:
+  - "src/cli/issue/list.rs"  # AC-005: defensive comment only, no logic change
+  - "src/cli/issue/view.rs"  # AC-005: defensive comment only, no logic change
 test_files:
   - tests/issue_commands.rs
-  - tests/all_flag_behavior.rs
-input-hash: "c02d8a6"
+input-hash: "dd4ed73"
 ---
 
 > **tdd_mode:** `strict`.
@@ -136,7 +139,7 @@ non-trivial ADF comment body asserts deep-equality with the fixture's raw ADF ob
 `adf_to_text`, confirming the two paths do not regress each other.
 **Test:** `test_bc_2_2_034_issue_comments_command_unaffected_by_fields_comment_path()`
 
-### AC-004 (traces to BC-2.3.042 postcondition 2 — view table mode unaffected)
+### AC-004 (traces to BC-2.3.042 Edge Case EC-2.3.042-2 — view table mode unaffected)
 `issue view`'s table-mode description row (the one existing `adf_to_text` call site inside
 `view.rs::handle_view`) is unaffected — `--fields` is JSON-only (BC-2.3.041 Precondition 2),
 so this table-mode code path is never reached when `--fields comment` is combined with JSON
@@ -155,7 +158,7 @@ dedicated test function — verified via `git grep` in CI review, not `cargo tes
 | Component | Module | Pure/Effectful |
 |-----------|--------|-----------------|
 | `IssueFields.extra` flatten (pre-existing, no change) | `src/types/jira/issue.rs` | N/A (serde derive) |
-| Confirmatory tests + fixture | `tests/issue_commands.rs`, `tests/all_flag_behavior.rs` | N/A (test-only) |
+| Confirmatory tests + fixture | `tests/issue_commands.rs` | N/A (test-only) |
 
 ## Edge Cases
 
@@ -204,7 +207,7 @@ Covered by dedicated ACs: EC-2.2.034-1, EC-2.2.034-2, EC-2.2.034-3, EC-2.3.042-1
 |------|--------|--------------|
 | No new ADF transformation code — `extra` passthrough only | BC-2.2.034 Postcondition 3 | AC-001, AC-002 |
 | `issue comments <KEY>`'s `adf_to_text` rendering MUST NOT be touched | BC-2.2.034 Postcondition 2 | AC-003 |
-| `view.rs`'s table-mode `adf_to_text` call site MUST NOT be touched | BC-2.3.042 Postcondition 2 | AC-004 |
+| `view.rs`'s table-mode `adf_to_text` call site MUST NOT be touched | BC-2.3.042 Edge Case EC-2.3.042-2 | AC-004 |
 | Defensive comment required at the `--fields` wiring site, not new logic | BC-2.2.034 Edge Case EC-2.2.034-3 | AC-005 |
 
 ## Library & Framework Requirements (MANDATORY)
@@ -220,11 +223,24 @@ No new crate dependencies.
 
 | File | Action | Purpose |
 |------|--------|----------|
-| `tests/issue_commands.rs` | MODIFY | New fixture + confirmatory/negative tests |
-| `tests/all_flag_behavior.rs` | MODIFY | Cross-check with existing `--fields` flag-behavior suite |
+| `tests/issue_commands.rs` | MODIFY | New fixture + confirmatory/negative tests (AC-001 through AC-004) |
 | `src/cli/issue/list.rs`, `src/cli/issue/view.rs` (S-575-1 wiring sites) | MODIFY (comment only) | Defensive code comment; no logic change |
 
 **MUST NOT change**: `src/adf.rs` (no new ADF logic needed); `src/cli/issue/comments.rs`,
 `src/cli/issue/interactions.rs` (the two OTHER `adf_to_text` call sites, unrelated to this
 story); `src/types/jira/issue.rs` (the `extra` field itself is unchanged — this story only
 confirms its existing behavior).
+
+**Traceability note (adjudicated, Step-4.5 pass 1, ADV-S584-P1-LOW-001):** the original
+decomposition also listed `tests/all_flag_behavior.rs` as a MODIFY target for a
+cross-check against the existing `--fields` flag-behavior suite. A fresh-context
+adversarial review confirmed the delivered suite — all 4 confirmatory tests
+(AC-001–AC-004) plus the wiremock fixture, entirely in `tests/issue_commands.rs` — has
+COMPLETE coverage mapping to every postcondition and edge case of BC-2.2.034 and
+BC-2.3.042; no AC, BC, or VP referenced an `all_flag_behavior.rs` assertion, making that
+entry redundant rather than a gap. The orchestrator adjudicated this as
+aspirational/redundant and corrected the story rather than adding a redundant test —
+same pattern as drift item S-579-1-TEST-FILES-FRONTMATTER-STALE (frontmatter over-listed
+test files) recorded earlier in this cycle. `tests/all_flag_behavior.rs` is removed from
+this story's file inventory; no `src/` or test coverage changed as a result of this
+correction.
