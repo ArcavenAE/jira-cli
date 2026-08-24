@@ -39,7 +39,7 @@ bcs:
   - "BC-2.1.023"
   - "BC-2.1.006"
   - "BC-2.1.007"
-verification_properties: ["VP-UPDATED-RECENT-001"]
+verification_properties: ["VP-UPDATED-RECENT-001", "VP-UPDATED-RECENT-002"]
 holdout_anchors: []
 nfr_anchors: []
 adr_refs: []
@@ -52,8 +52,8 @@ acceptance_criteria_count: 8
 assumption_validations: []
 risk_mitigations: []
 created: "2026-08-21"
-version: "1.0"
-last_updated: "2026-08-21"
+version: "1.1"
+last_updated: "2026-08-24"
 breaking_change: false
 retroactive: false
 origin: >
@@ -76,7 +76,7 @@ test_files:
   - tests/issue_commands.rs
   - tests/all_flag_behavior.rs
   - tests/issue_list_errors.rs
-input-hash: "c02d8a6"
+input-hash: "11b8082"
 ---
 
 > **tdd_mode:** `strict`.
@@ -96,11 +96,20 @@ Read **BC-2.1.023** in `bc-2-issue-read.md` §2.1 in full, plus the **BC-2.1.006
 not the pre-amendment "Previous version" blocks retained for audit trail only). Also read
 BC-2.1.008 (`--recent`, the direct structural template this story mirrors field-swapped).
 
+**DEC-306 reconciliation (2026-08-24, read this before implementing):** BC-2.1.023's
+Behavior clause and its Postcondition 4 / EC-2.1.023-4 were AMENDED on 2026-08-24 (F5 finding
+ADV-LRE-F5-A-MED-001, human-adjudicated). Read the **AMENDED** text — not the "Previous
+version (superseded 2026-08-24, retained for audit trail)" block beneath EC-2.1.023-4. The
+amendment removes an implementer-level exit-64 guard that this story's Step-4.5 had
+introduced for `--updated-recent` used ALONE; that guard was never ratified by DEC-298 and
+directly contradicted BC-2.1.023's own "mirrors `--recent` exactly" claim. See the
+Traceability Note at the end of this story for what changed in this file as a result.
+
 ## Behavioral Contracts
 
 | BC ID | Title |
 |-------|-------|
-| BC-2.1.023 | `--updated-recent <duration>` -> `updated >= -{d}` clause, validated via `jql::validate_duration`, positioned immediately after `--recent`'s slot |
+| BC-2.1.023 | `--updated-recent <duration>` -> `updated >= -{d}` clause, validated via `jql::validate_duration`, positioned immediately after `--recent`'s slot; AMENDED 2026-08-24 (DEC-306) so its Behavior clause and new Postcondition 4 make the pre-existing "mirrors `--recent` exactly" claim explicit for the no-scope/alone case too |
 | BC-2.1.006 | AMENDED: filter-source enumeration 14 -> 15 (`--updated-recent` added as source #15, immediately before `or --jql`) |
 | BC-2.1.007 | AMENDED: stable clause order gains `updated-recent` (immediately after `recent`, before `asset`) |
 
@@ -132,10 +141,22 @@ BC-2.1.008 (`--recent`, the direct structural template this story mirrors field-
 - **Filter-source enumeration (BC-2.1.006 amendment)**: `--updated-recent` joins the
   enumerated filter-source list as source #15 (14 -> 15), appended immediately before
   `or --jql` — the same mechanical shape as the 2026-08-15 `--component` addition.
-- **`--updated-recent` alone satisfies the filter requirement (Edge Case EC-2.1.023-4)**: it
-  counts as one of the enumerated filter sources per BC-2.1.006's amendment; without
-  `--project`/configured project AND no other filter, falls through to BC-2.1.006's amended
-  "no filters specified" exit-64 guard exactly as every other filter source does.
+- **`--updated-recent` alone mirrors `--recent` exactly and PROCEEDS (Postcondition 4 /
+  Edge Case EC-2.1.023-4, REWRITTEN 2026-08-24 by DEC-306)**: used with no `--project`, no
+  configured default `project`/`board_id`, and no other filter, `--updated-recent` exits 0
+  and composes `updated >= -{d} ORDER BY updated DESC` (or the board/sprint-aware order-by
+  branch when a `board_id` IS configured — BC-2.1.004/BC-2.1.005), with NO project/board
+  restriction clause — an unbounded cross-project query, exactly mirroring `--recent`-alone's
+  behavior (BC-2.1.008). It independently satisfies BC-2.1.006's "at least one filter"
+  requirement as filter source #15, exactly as `--recent` and the other 13 filter sources do
+  when used alone. It does **not** fall through to BC-2.1.006's "no filters specified"
+  exit-64 guard. **This corrects this story's original text**, which asserted the opposite
+  (that `--updated-recent` alone tripped the exit-64 guard "exactly as every other filter
+  source does") — that claim was factually backwards: every OTHER filter source used alone
+  already proceeds; `--updated-recent` was the sole exception, via an implementer-level guard
+  added at this story's own Step-4.5 that was never ratified by DEC-298. That guard is REMOVED
+  by this reconciliation (implementer task, tracked under the same DEC-306). See the
+  Traceability Note at the end of this story.
 
 ## Acceptance Criteria
 
@@ -170,11 +191,17 @@ verified via `Vec<String>` positional equality (substring-index comparison insuf
 before `or --jql`).
 **Test:** `test_bc_2_1_006_issue_list_no_filters_stderr_enumerates_15_sources()`
 
-### AC-007 (traces to BC-2.1.023 Edge Case EC-2.1.023-4 — counts as a filter source)
-`jr issue list --updated-recent 60d` with no `--project`/configured project and no other
-filter falls through to BC-2.1.006's amended "no filters specified" exit-64 guard exactly as
-every other filter source does — it does not bypass project scoping.
-**Test:** `test_bc_2_1_023_issue_list_updated_recent_alone_still_requires_project_scope()`
+### AC-007 (traces to BC-2.1.023 postcondition 4 / Edge Case EC-2.1.023-4, REWRITTEN
+2026-08-24 by DEC-306 — alone-case mirrors `--recent` and proceeds)
+`jr issue list --updated-recent 60d` with no `--project`, no configured default
+`project`/`board_id`, and no other filter -> exit 0. Exactly ONE
+`POST /rest/api/3/search/jql` call is issued, the request body contains `updated >= -60d`
+and NO `project = ` clause, and results are ordered `updated DESC` (or the board/sprint-aware
+order-by branch when a `board_id` IS configured, per BC-2.1.004/BC-2.1.005). This
+independently satisfies BC-2.1.006's "at least one filter" requirement as filter source #15 —
+`--updated-recent` alone does NOT trip the "no filters specified" exit-64 guard, mirroring
+`--recent`-alone's existing behavior exactly. Also exercises VP-UPDATED-RECENT-002.
+**Test:** `test_bc_2_1_023_issue_list_updated_recent_alone_proceeds_like_recent()`
 
 ### AC-008 (traces to BC-2.1.023 postcondition 1 — field-swap fidelity)
 `--updated-recent 7d` produces `updated >= -7d` (NOT `created >= -7d`) — confirms the field
@@ -221,7 +248,9 @@ Covered by dedicated ACs: EC-2.1.023-1, EC-2.1.023-2, EC-2.1.023-3, EC-2.1.023-4
 3. [ ] Write failing test for asymmetric `conflicts_with` (`--updated-after` only)
 4. [ ] Write failing test for free composition with `--recent` and clause ordering
 5. [ ] Write failing test for BC-2.1.006's 15-source stderr enumeration
-6. [ ] Write failing test for the no-project/no-other-filter fallthrough guard
+6. [ ] Write failing test for `--updated-recent` alone PROCEEDING (exit 0, mirrors `--recent`)
+   with no `--project`/configured `project`/`board_id` and no other filter — DEC-306; do NOT
+   implement a dedicated `--updated-recent`-alone exit-64 guard
 7. [ ] Verify Red Gate
 8. [ ] Add `updated_recent: Option<String>` field + `conflicts_with = "updated_after"` to `cli/mod.rs`
 9. [ ] Wire validation + `FilterOptions` field + `build_filter_clauses` insertion in `list.rs`
@@ -244,6 +273,7 @@ Covered by dedicated ACs: EC-2.1.023-1, EC-2.1.023-2, EC-2.1.023-3, EC-2.1.023-4
 | `conflicts_with` covers `--updated-after` only — do NOT add `--updated-before` (pre-existing asymmetric pattern, not this story's to fix) | BC-2.1.023 Edge Case EC-2.1.023-2, human-locked DEC-298 | AC-003 |
 | `--sort` is explicitly NOT part of this story's scope and NOT added to BC-2.1.006's enumeration | BC-2.1.006 amendment Note | N/A — cross-reference guard for S-588-1 |
 | `--resolved-recent` is OUT OF SCOPE — do not implement | F1 delta-analysis Decision 3 | Code review; no `resolutiondate` clause introduced |
+| Do NOT implement a dedicated `--updated-recent`-alone exit-64 guard — used alone it PROCEEDS (exit 0), mirroring `--recent`-alone exactly | BC-2.1.023 postcondition 4 / EC-2.1.023-4, REWRITTEN 2026-08-24 by DEC-306 | AC-007 |
 
 ## Library & Framework Requirements (MANDATORY)
 
@@ -267,3 +297,44 @@ uses); `src/cli/issue/edit.rs`/`src/cli/issue/create.rs` (unrelated); the alread
 clause order for `assignee`/`reporter`/`status`/`open`/`team`/`recent`/`asset`/`component`
 (only `updated-recent`'s slot is new, between `recent` and `asset`); `--sort`'s region of
 `list.rs` (S-588-1, separate story, separate delivery slot).
+
+## Traceability Note — DEC-306 F5-Reconciliation Propagation (2026-08-24)
+
+This story was updated (v1.0 -> v1.1) to propagate the DEC-306 human ruling (F5 finding
+ADV-LRE-F5-A-MED-001) into the story body, after the product-owner amended
+`.factory/specs/prd/bc-2-issue-read.md` (BC-2.1.023 Behavior + new Postcondition 4;
+EC-2.1.023-4 rewritten; BC-2.1.006 gained a clarifying Note; new VP-UPDATED-RECENT-002).
+This story's original v1.0 text was itself the source of the contradiction the reconciliation
+fixes: its Step-4.5 delivery had introduced an implementer-level `--updated-recent`-alone
+exit-64 guard that was never ratified by DEC-298 and directly contradicted this same story's
+own "mirrors `--recent` exactly" framing.
+
+Changes made in this pass (story-body/AC propagation only — no BC files edited):
+
+- **Behavior Summary** — the `--updated-recent`-alone bullet was rewritten from "falls through
+  to the no-filters-specified exit-64 guard exactly as every other filter source does" to
+  "PROCEEDS (exit 0), mirrors `--recent`-alone exactly, does NOT trip the exit-64 guard."
+- **AC-007** — re-pointed from asserting the alone-case requires project scope (exit-64) to
+  asserting the alone-case PROCEEDS (exit 0, exactly one search call, `updated >= -60d` in the
+  body, no `project =` clause, `updated DESC` ordering); now also traces to BC-2.1.023
+  postcondition 4 and exercises VP-UPDATED-RECENT-002. Test name changed from
+  `test_bc_2_1_023_issue_list_updated_recent_alone_still_requires_project_scope()` to
+  `test_bc_2_1_023_issue_list_updated_recent_alone_proceeds_like_recent()`.
+- **Task 6** — rewritten to specify writing a failing test for the PROCEED behavior, with an
+  explicit "do NOT implement a dedicated alone-guard" note.
+- **Architecture Compliance Rules** — added a row codifying "do NOT implement a dedicated
+  `--updated-recent`-alone exit-64 guard," sourced to the amended BC-2.1.023
+  postcondition 4 / EC-2.1.023-4.
+- **Behavioral Contracts table** — BC-2.1.023 row annotated with the 2026-08-24 DEC-306
+  amendment pointer.
+- **Source of Truth** — added a pointer instructing implementers to read the AMENDED
+  BC-2.1.023 text (not the superseded "Previous version" block under EC-2.1.023-4).
+- **Frontmatter** — `verification_properties` gained `VP-UPDATED-RECENT-002` (this story now
+  owns/traces it, alongside the pre-existing VP-UPDATED-RECENT-001); `version` bumped
+  `1.0 -> 1.1`; `last_updated` set to `2026-08-24`.
+
+Everything else in this story (AC-001 through AC-006, AC-008, the `conflicts_with` asymmetry
+in AC-003, the stable-order ACs, Architecture Mapping, Purity Classification, Token Budget,
+Previous Story Intelligence, Library & Framework Requirements, and File Structure
+Requirements) is unchanged — none of it asserted or implied the exit-64-alone behavior, so
+none of it was touched by this propagation.

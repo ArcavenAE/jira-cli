@@ -3,9 +3,32 @@ context: bc-2
 title: "Issue Read (list/view/comments/changelog)"
 total_bcs: 122   # cumulative claim (incl. range-collapsed); definitional_count below is individually-bodied headings
 definitional_count: 80   # count of `#### BC-` headings in this file
-last_updated: 2026-08-21
+last_updated: 2026-08-24
 source_pass: 3
 trace: |
+  - v1.5.1 — F5 scoped-adversarial reconciliation, list-read-ergonomics cycle (2026-08-24,
+    DEC-306, F5 finding ADV-LRE-F5-A-MED-001, human-adjudicated): resolves a 3-layer spec
+    self-contradiction discovered during cycle-level F5 review (research:
+    `.factory/research/recent-vs-updated-recent-asymmetry-2026-08-24.md`). The HUMAN ruling
+    (Option 1 of the research's 4 enumerated options): `--updated-recent` used ALONE (no
+    `--project`, no configured default `project`/`board_id`, no other filter) now PROCEEDS to
+    a query exactly like `--recent` and every other filter source — the dedicated
+    `--updated-recent`-alone exit-64 guard added during S-579-1 Step-4.5 (an implementer-level
+    choice, never human-ratified by DEC-298) is REMOVED at the code level (separate implementer
+    task, same DEC-306). Spec-side: BC-2.1.023 Behavior clause amended to make its pre-existing
+    "mirrors `--recent` exactly" claim explicit and genuinely accurate for the no-scope case;
+    new Postcondition 4 states the alone-case independently satisfies BC-2.1.006's "at least
+    one filter" requirement; EC-2.1.023-4 rewritten (previous text was factually backwards —
+    it claimed the alone-case exits 64 "exactly as every other filter source does," when every
+    OTHER filter source used alone actually proceeds; only `--updated-recent` was the
+    exception, and this amendment removes that exception). BC-2.1.006 gains a Note clarifying
+    that "no project" in its guard title/behavior means no `--project` flag AND no configured
+    `project`/`board_id` in `.jr.toml`, and that `--updated-recent` (filter source #15) is a
+    full, non-special-cased peer of the other 14 sources — this also closes the LOW drift item
+    `BC-2.1.023-BOARD-ID-CLARIFICATION-NEEDED` (STATE.md, surfaced 2026-08-22: EC-2.1.023-4's
+    prose previously enumerated project scope only, though the code was already correctly
+    board-aware). No BC added or removed (amendment-in-place only); BC-INDEX unaffected in
+    count. spec v1.5.0→v1.5.1 (PATCH — amendment-in-place, no new/removed BCs).
   - v1.5.0 — F2 spec evolution, list-read-ergonomics bundle (2026-08-21, issues #575/#584/#579/#588):
     +8 new individually-bodied BCs (72→80); total_bcs 114→122. S-1 (#575, `--fields <CSV>`
     on `issue list`/`issue view`): BC-2.2.033 ADDED (list, REPLACE-semantics `fields=`
@@ -179,6 +202,25 @@ list as source #15 (14 → 15), appended immediately before `or --jql` — the s
 shape as the 2026-08-15 `--component` addition. **Previous version (superseded, retained for
 audit trail):** stderr literal ended `"... --asset, --component, or --jql. ..."` (14 sources,
 no `--updated-recent`).
+
+**[AMENDED 2026-08-24, DEC-306 — F5 finding ADV-LRE-F5-A-MED-001, human-adjudicated]**
+`--updated-recent` (filter source #15) is a full, non-special-cased peer of the other 14
+filter sources in this enumeration: supplying it alone (no `--project`, no configured default
+`project`/`board_id`, and no other filter) satisfies this guard's "at least one filter"
+requirement and the command PROCEEDS to a query — it does NOT exit 64. A dedicated
+`--updated-recent`-alone guard existed in code from S-579-1 (an implementer-level Step-4.5
+choice, never ratified by DEC-298) and made `--updated-recent` the sole exception to this
+enumeration's own logic; that guard is REMOVED by this reconciliation. See BC-2.1.023
+EC-2.1.023-4 for the corrected alone-case contract.
+
+**Note (board scope, closes drift item `BC-2.1.023-BOARD-ID-CLARIFICATION-NEEDED`):** "No
+project" in this guard's title and behavior means no `--project` flag, no configured default
+`project` in `.jr.toml`, **and** no configured `board_id` in `.jr.toml` — a `.jr.toml` with
+only `board_id` set (no `project` key) is a valid, board-scoped configuration that
+independently satisfies scope for this guard, the same as a configured `project` (see
+BC-2.1.004's board-driven active-sprint branch and BC-2.1.005). This applies uniformly to all
+15 filter sources in this enumeration, including `--updated-recent` — there is no
+filter-source-specific carve-out on the board-scope question.
 
 **[UPDATED 2026-08-15 issue #606 F2]** `--component` joins the enumerated filter-source list
 as source #14 (13 → 14). **Previous version (superseded, retained for audit trail):** stderr
@@ -794,7 +836,14 @@ validator, reused unchanged); `src/cli/issue/list.rs:~90-92, ~952-954` (`--recen
 clause-building line — the direct structural template); `src/cli/issue/list.rs` (pending F4)
 **Subject**: Issue read — `--updated-recent` filter (issue #579)
 **Behavior**: `--updated-recent <duration>` mirrors `--recent` (BC-2.1.008) exactly, with the
-JQL field swapped from `created` to `updated`. It reuses `jql::validate_duration` — the SAME
+JQL field swapped from `created` to `updated` — including the no-scope ("alone") case
+**[AMENDED 2026-08-24, DEC-306 — F5 finding ADV-LRE-F5-A-MED-001, human-adjudicated]**: used
+with no `--project`, no configured default `project` or `board_id`, and no other filter,
+`--updated-recent` proceeds to a query exactly as `--recent` does, with no dedicated guard of
+its own (see EC-2.1.023-4). This supersedes the S-579-1 Step-4.5 guard that briefly made
+`--updated-recent` the sole one of the 15 filter sources (BC-2.1.006) that refused when used
+alone — that guard was an implementer-level choice, never ratified by DEC-298, and is REMOVED
+by this reconciliation. It reuses `jql::validate_duration` — the SAME
 validator `--recent` uses — NOT `src/duration.rs` (that parser is worklog-duration syntax,
 `1h30m`/`2d 3h 30m`, a different grammar entirely). `--resolved-recent`
 (`resolutiondate`-based) is explicitly OUT OF SCOPE for this BC and this bundle — deferred per
@@ -813,6 +862,12 @@ have `resolutiondate = null`) requiring its own design conversation.
    with `--recent`, `--created-after/before`, `--updated-after/before`, `--status`,
    `--component`, and every other filter — no new conflicts beyond Edge Case
    EC-2.1.023-2 below.
+4. **[AMENDED 2026-08-24, DEC-306 — F5 finding ADV-LRE-F5-A-MED-001, human-adjudicated]**
+   `--updated-recent` used ALONE — no `--project`, no configured default `project` or
+   `board_id`, and no other filter — independently satisfies BC-2.1.006's "at least one
+   filter" requirement. It is filter source #15 in that enumeration and, like the other 14
+   sources, proceeds to a query with no project/board restriction clause when used alone,
+   exactly as `--recent` (BC-2.1.008) does. See EC-2.1.023-4.
 **Edge Cases**:
 - EC-2.1.023-1: `--updated-recent 4w2d` (combined units, rejected by `validate_duration`) →
   `JrError::UserError("Invalid duration '4w2d'. Use a number followed by y, M, w, d, h, or m
@@ -827,12 +882,28 @@ have `resolutiondate = null`) requiring its own design conversation.
 - EC-2.1.023-3: `--updated-recent 30d --recent 30d` (both present) → both clauses compose,
   AND-joined: `... AND created >= -30d AND updated >= -30d ...` (the `recent` clause emits
   before the `updated-recent` clause, per BC-2.1.007's stable order). No error.
-- EC-2.1.023-4: `--updated-recent` with no `--project` and no configured default project and
-  no other filter → falls through to BC-2.1.006's amended "no filters specified" exit-64
-  guard exactly as every other filter source does (it is filter source #15 in that
-  enumeration, per BC-2.1.006's amendment) — it does NOT independently satisfy the "at least
-  one filter" requirement in a way that bypasses project scoping; it simply counts as one of
-  the enumerated filter sources.
+- EC-2.1.023-4 **[AMENDED 2026-08-24, DEC-306 — F5 finding ADV-LRE-F5-A-MED-001,
+  human-adjudicated]**: `--updated-recent 7d` with no `--project`, no configured default
+  `project`, no configured `board_id`, and no other filter → exit 0, proceeds to a query
+  composing `updated >= -7d ORDER BY updated DESC` (or the board/sprint-aware order-by branch
+  when a `board_id` IS configured with no active sprint restriction applying — see
+  BC-2.1.004/BC-2.1.005; board scope, not just project scope, participates in the base-clause
+  resolution `--updated-recent`'s clause composes against) with NO project/board restriction
+  clause — an unbounded cross-project query, exactly mirroring `--recent`-alone's behavior
+  (BC-2.1.008). `--updated-recent` independently satisfies BC-2.1.006's "at least one filter"
+  requirement as filter source #15, exactly as `--recent` and the other 13 filter sources do
+  when used alone. **Previous version (superseded 2026-08-24, retained for audit trail):**
+  claimed `--updated-recent` alone fell through to BC-2.1.006's "no filters specified" exit-64
+  guard "exactly as every other filter source does." This was factually backwards — every
+  OTHER filter source used alone actually proceeds to exit 0 (see
+  `.factory/research/recent-vs-updated-recent-asymmetry-2026-08-24.md` §A.4);
+  `--updated-recent` was, before this amendment, the SOLE exception among the 15 filter
+  sources — and it directly contradicted both BC-2.1.023's own "mirrors `--recent` exactly"
+  Behavior clause and BC-2.1.006's filter-source enumeration (which already listed
+  `--updated-recent` as a satisfying source). The dedicated `--updated-recent`-alone guard
+  (plus its scrum-no-active-sprint backstop) was an implementer-level choice introduced during
+  S-579-1 Step-4.5, never ratified by DEC-298, and is REMOVED by this reconciliation (code-side
+  removal tracked as a separate implementer task under this same DEC-306).
 **Verification Properties**:
 - VP-UPDATED-RECENT-001: `build_filter_clauses` composes `updated >= -{d}` for
   `--updated-recent <duration>`, positioned immediately after the `--recent` clause slot and
@@ -840,9 +911,17 @@ have `resolutiondate = null`) requiring its own design conversation.
   combined-unit durations are rejected pre-HTTP with zero `POST /rest/api/3/search/jql` calls
   (`.expect(0)`), via the identical `jql::validate_duration` error shape BC-2.1.008 already
   pins for `--recent`.
+- VP-UPDATED-RECENT-002 **[NEW 2026-08-24, DEC-306]**: `jr issue list --updated-recent 7d`
+  invoked with no `--project`, no configured default `project`/`board_id`, and no other
+  filter → exit 0, exactly ONE `POST /rest/api/3/search/jql` call fired, with the request body
+  containing `updated >= -7d` and NO `project = ` clause — proving `--updated-recent` alone
+  independently satisfies BC-2.1.006's guard and does not exit 64. Symmetric with the existing
+  (implicit) `--recent`-alone behavior; both flags asserted identical on this dimension.
 **Trace**: F1 delta analysis §S-3, Decision 3; BC-2.1.008 (`--recent` — direct structural
 template, shared validator); BC-2.1.006 (amended, filter-source #15); BC-2.1.007 (amended,
-stable-order position)
+stable-order position); DEC-306 (2026-08-24, F5 finding ADV-LRE-F5-A-MED-001,
+human-adjudicated — removed the `--updated-recent`-alone exit-64 guard, see
+`.factory/research/recent-vs-updated-recent-asymmetry-2026-08-24.md`)
 
 ---
 

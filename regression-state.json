@@ -1,1 +1,1 @@
-{"status":"pass","timestamp":"2026-08-24T14:50:13Z","command":"cd /Users/zious/Documents/GITHUB/jira-cli/.worktrees/S-584-1 && cargo test --test issue_commands 2>&1 | grep -iE \"s584|2_2_034|2_3_042|test result|error\\[\" | tail -30"}
+{"status":"pass","timestamp":"2026-08-24T16:59:00Z","command":"cargo test --test issue_commands no_filters 2>&1 | tail -12 && echo \"===NEW COMBINED TEST===\" && cargo test --test issue_commands fields_and_sort_compose 2>&1 | tail -8"}
