@@ -50,8 +50,8 @@ acceptance_criteria_count: 10
 assumption_validations: []
 risk_mitigations: []
 created: "2026-08-21"
-version: "1.0"
-last_updated: "2026-08-21"
+version: "1.1"
+last_updated: "2026-08-24"
 breaking_change: false
 retroactive: false
 origin: >
@@ -72,7 +72,7 @@ test_files:
   - tests/issue_commands.rs
   - tests/all_flag_behavior.rs
   - tests/issue_list_errors.rs
-input-hash: "676bf41"
+input-hash: "11b8082"
 ---
 
 > **tdd_mode:** `strict`.
@@ -154,7 +154,11 @@ override must leave byte-for-byte unchanged when `--sort` is absent) and BC-2.1.
 direction), `--sort updated:sideways` (invalid direction), and `--sort updated:desc:extra`
 (second `:` in direction) all -> exit 64 pre-HTTP, exact stderr string `Invalid --sort
 "<value>". Use <field>:asc or <field>:desc (e.g., updated:desc).`; zero HTTP calls.
-**Test:** `test_bc_2_1_024_issue_list_sort_malformed_input_exits_64_pre_http()`
+**Test:** `test_bc_2_1_024_parse_sort_malformed_input_exits_64_pre_http()` (unit test,
+`src/cli/issue/list.rs`) and `issue_list_sort_malformed_input_exits_64_pre_http()`
+(integration test, `tests/issue_list_errors.rs`, pinned stderr) — the integration test's
+bare name (no `test_bc_*` prefix) follows this file's local naming convention (accepted
+deviation, F5 C-LOW-001; see note at end of Acceptance Criteria)
 
 ### AC-005 (traces to BC-2.1.025 postcondition 3 — overrides --jql branch default)
 `jr issue list --jql "project = FOO" --sort updated:desc` -> `order_by` becomes `"updated
@@ -177,7 +181,8 @@ regression suite green, no test modification to those 4 BCs' existing pinned-lit
 `--sort customfield_10099:desc` (unknown/unorderable field) -> zero local rejection; `POST
 /rest/api/3/search/jql` IS called; Jira's 400 response propagates as `JrError::ApiError
 {status: 400}` (exit 1) via the existing generic HTTP-error path.
-**Test:** `test_bc_2_1_025_issue_list_sort_unknown_field_propagates_jira_400()`
+**Test:** `issue_list_sort_unknown_field_propagates_jira_400()` (tests/issue_list_errors.rs) —
+bare name per this file's local naming convention (accepted deviation, F5 C-LOW-001)
 
 ### AC-009 (traces to BC-2.1.025 postcondition 5 / BC-2.1.006 Note — not a filter source)
 `--sort` is NOT added to BC-2.1.006's "no filters specified" stderr enumeration; `jr issue
@@ -190,6 +195,13 @@ guard fires regardless of `--sort`'s presence, since `--sort` does not count as 
 (case-insensitive match on the FIELD name for the omission check), but the field's OWN
 casing is passed through verbatim: `order_by = "KEY DESC"`, not lowercased.
 **Test:** `test_bc_2_1_025_issue_list_sort_key_omission_case_insensitive_field_casing_preserved()`
+
+**Note on bare-name `**Test:**` citations (AC-004, AC-008):** the error-path integration
+tests in `tests/issue_list_errors.rs` intentionally follow that file's local bare-naming
+convention (no `test_bc_*` prefix) rather than this story's `test_bc_2_1_024_*`/
+`test_bc_2_1_025_*` naming pattern — an accepted deviation adjudicated in F5 (C-LOW-001).
+Citations above were corrected (F7 pre-gate consistency cleanup, 2026-08-24) to name the
+actual functions.
 
 ## Architecture Mapping
 

@@ -52,8 +52,8 @@ acceptance_criteria_count: 12
 assumption_validations: []
 risk_mitigations: []
 created: "2026-08-21"
-version: "1.0"
-last_updated: "2026-08-21"
+version: "1.1"
+last_updated: "2026-08-24"
 breaking_change: false
 retroactive: false
 origin: >
@@ -74,7 +74,7 @@ test_files:
   - tests/issue_list_errors.rs
   - tests/issue_view_errors.rs
   - tests/cli_smoke.rs
-input-hash: "676bf41"
+input-hash: "11b8082"
 ---
 
 > **tdd_mode:** `strict`.
@@ -161,18 +161,22 @@ unnamed fields requested (e.g. `comment`) flow through `extra` verbatim as raw J
 `--fields "summary,status"` without `--output json` (table mode, default or explicit
 `--output table`) on both `list` and `view` -> exit 64, stderr `--fields requires --output
 json.`; zero HTTP calls.
-**Test:** `test_bc_2_2_033_issue_list_fields_table_mode_exits_64()`,
-`test_bc_2_3_041_issue_view_fields_table_mode_exits_64()`
+**Test:** `issue_list_fields_table_mode_exits_64()` (tests/issue_list_errors.rs),
+`issue_view_fields_table_mode_exits_64()` (tests/issue_view_errors.rs) — bare names per
+this file's local naming convention (accepted deviation, F5 C-LOW-001; see note at end of
+Acceptance Criteria)
 
 ### AC-005 (traces to BC-2.2.033 Edge Case EC-2.2.033-4/EC-2.2.033-5 — empty/malformed CSV)
 `--fields ""`, `--fields ","`, and `--fields "summary,,status"` (empty embedded segment) all
 exit 64 PRE-HTTP on both `list` and `view`; zero HTTP calls.
-**Test:** `test_bc_2_2_033_issue_list_fields_empty_csv_exits_64_pre_http()`
+**Test:** `issue_list_fields_empty_csv_exits_64_pre_http()` (tests/issue_list_errors.rs) —
+bare name per this file's local naming convention (accepted deviation, F5 C-LOW-001)
 
 ### AC-006 (traces to BC-2.2.033 Edge Case EC-2.2.033-6 — extra-flag no-op)
 `--fields "summary,status" --points --output json` -> `--points`'s `customfield_NNNNN` is NOT
 added to the request (REPLACE semantics wins); no warning emitted.
-**Test:** `test_bc_2_2_033_issue_list_fields_points_flag_becomes_silent_noop()`
+**Test:** `issue_list_fields_points_flag_becomes_silent_noop()` (tests/all_flag_behavior.rs) —
+bare name per this file's local naming convention (accepted deviation, F5 C-LOW-001)
 
 ### AC-007 (traces to BC-2.2.033 postcondition 3 — key always present)
 `key` is present in output regardless of whether `key` appears in `--fields`.
@@ -198,12 +202,20 @@ CLI-layer validation is the sole enforcement point).
 
 ### AC-011 (traces to BC-2.3.041 Edge Case EC-2.3.041-3 — empty CSV on view)
 `jr issue view <KEY> --fields ""` -> exit 64 pre-HTTP, zero HTTP calls.
-**Test:** `test_bc_2_3_041_issue_view_fields_empty_csv_exits_64_pre_http()`
+**Test:** `issue_view_fields_empty_csv_exits_64_pre_http()` (tests/issue_view_errors.rs) —
+bare name per this file's local naming convention (accepted deviation, F5 C-LOW-001)
 
 ### AC-012 (traces to BC-2.3.041 postcondition 3 — key always present, view)
 `jr issue view <KEY> --fields "summary"` -> `key` present in output regardless of CSV
 contents (same Jira guarantee as AC-007, verified independently on the view path).
 **Test:** `test_bc_2_3_041_issue_view_fields_key_always_present()`
+
+**Note on bare-name `**Test:**` citations (AC-004, AC-005, AC-006, AC-011):** the error-path
+integration tests in `tests/issue_list_errors.rs`, `tests/issue_view_errors.rs`, and
+`tests/all_flag_behavior.rs` intentionally follow their file's local bare-naming convention
+(no `test_bc_*` prefix) rather than this story's `test_bc_2_2_033_*`/`test_bc_2_3_041_*`
+naming pattern — an accepted deviation adjudicated in F5 (C-LOW-001). Citations above were
+corrected (F7 pre-gate consistency cleanup, 2026-08-24) to name the actual functions.
 
 ## Architecture Mapping
 

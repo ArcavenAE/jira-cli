@@ -1,1 +1,1 @@
-{"status":"pass","timestamp":"2026-08-24T19:54:08Z","command":"cd /Users/zious/Documents/GITHUB/jira-cli/.worktrees/FIX-F6-LRE-1 && cargo test --lib jql:: 2>&1 | tail -25"}
+{"status":"pass","timestamp":"2026-08-25T00:21:34Z","command":"cd /Users/zious/Documents/GITHUB/jira-cli\nSP=/private/tmp/claude-501/-Users-zious-Documents-GITHUB-jira-cli/9bab8252-896e-401f-947c-8524ea51fa8a/scratchpad\n: > \"$SP/int.log\"\ncargo test --no-fail-fast --tests >> \"$SP/int.log\" 2>&1\necho \"INT_EXIT=$?\" >> \"$SP/int.log\""}

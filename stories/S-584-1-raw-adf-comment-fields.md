@@ -72,7 +72,7 @@ files_modified:
   - "src/cli/issue/view.rs"  # AC-005: defensive comment only, no logic change
 test_files:
   - tests/issue_commands.rs
-input-hash: "dd4ed73"
+input-hash: "11b8082"
 ---
 
 > **tdd_mode:** `strict`.
