@@ -1,0 +1,232 @@
+=== cargo audit (2026-08-25T14:49:45Z) ===
+    Fetching advisory database from `https://github.com/RustSec/advisory-db.git`
+      Loaded 1226 security advisories (from /Users/zious/.cargo/advisory-db)
+    Updating crates.io index
+    Scanning Cargo.lock for vulnerabilities (358 crate dependencies)
+
+=== cargo deny check (2026-08-25T14:49:57Z) ===
+warning[license-not-encountered]: license was not encountered
+  ┌─ /Users/zious/Documents/GITHUB/jira-cli/deny.toml:8:6
+  │
+8 │     "BSD-2-Clause",
+  │      ━━━━━━━━━━━━ unmatched license allowance
+
+warning[license-not-encountered]: license was not encountered
+   ┌─ /Users/zious/Documents/GITHUB/jira-cli/deny.toml:15:6
+   │
+15 │     "OpenSSL",
+   │      ━━━━━━━ unmatched license allowance
+
+warning[license-not-encountered]: license was not encountered
+   ┌─ /Users/zious/Documents/GITHUB/jira-cli/deny.toml:13:6
+   │
+13 │     "Unicode-DFS-2016",
+   │      ━━━━━━━━━━━━━━━━ unmatched license allowance
+
+warning[unmatched-skip]: skipped crate 'cpufeatures = ^0.2' was not encountered
+    ┌─ /Users/zious/Documents/GITHUB/jira-cli/deny.toml:280:9
+    │
+280 │ name = "cpufeatures"
+    │         ━━━━━━━━━━━ unmatched skip configuration
+281 │ version = "0.2"
+282 │ reason = "sha1 v0.10.7 (ADR-0017 S-576-2 dependency for BC-2.7.010 batch-download SHA-1 path prefix) requires cpufeatures 0.2.17; chacha20 v0.10.0 (via rand v0.10.1) requires cpufeatures 0.3.0. Unavoidable until sha1 0.11 or rand's chacha20 unify on the same cpufeatures major. Authorized DEC-185."
+    │           ─────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────── reason
+
+advisories ok, bans ok, licenses ok, sources ok
+cargo deny exit code: 0
+
+=== cargo update --dry-run (2026-08-25T14:50:08Z) ===
+    Updating crates.io index
+     Locking 117 packages to latest Rust 1.85 compatible versions
+    Updating aho-corasick v1.1.4 -> v1.1.5
+    Updating android_system_properties v0.1.5 -> v0.1.6
+    Updating autocfg v1.5.0 -> v1.5.1
+    Updating aws-lc-rs v1.16.2 -> v1.18.0
+    Updating aws-lc-sys v0.39.0 -> v0.44.0
+    Updating bitflags v2.11.0 -> v2.13.1
+    Updating bstr v1.12.1 -> v1.13.1
+    Updating bumpalo v3.20.2 -> v3.20.3
+    Updating bytemuck v1.25.0 -> v1.25.2
+    Updating bytes v1.11.1 -> v1.12.1
+    Updating cc v1.2.57 -> v1.4.4
+    Removing cesu8 v1.1.0
+    Updating cfg_aliases v0.2.1 -> v0.2.2
+    Updating chacha20 v0.10.0 -> v0.10.1
+    Updating clap v4.6.1 -> v4.6.6
+    Updating clap_builder v4.6.0 -> v4.6.6
+    Updating clap_derive v4.6.1 -> v4.6.4
+    Updating cmake v0.1.57 -> v0.1.58
+    Updating console v0.16.3 -> v0.16.4
+    Updating displaydoc v0.2.5 -> v0.2.7
+    Updating fastrand v2.3.0 -> v2.5.0
+    Updating find-msvc-tools v0.1.9 -> v0.1.11
+    Removing foldhash v0.1.5
+    Updating futures v0.3.32 -> v0.3.34
+    Updating futures-channel v0.3.32 -> v0.3.34
+    Updating futures-core v0.3.32 -> v0.3.34
+    Updating futures-executor v0.3.32 -> v0.3.34
+    Updating futures-io v0.3.32 -> v0.3.34
+    Updating futures-macro v0.3.32 -> v0.3.34
+    Updating futures-sink v0.3.32 -> v0.3.34
+    Updating futures-task v0.3.32 -> v0.3.34
+    Updating futures-util v0.3.32 -> v0.3.34
+    Updating getrandom v0.4.2 -> v0.4.3
+    Updating glob v0.3.3 -> v0.3.4
+    Updating h2 v0.4.16 -> v0.4.19
+    Removing hashbrown v0.15.5
+    Removing hashbrown v0.16.1
+      Adding hashbrown v0.17.1
+    Updating http v1.4.0 -> v1.5.0
+    Updating http-body v1.0.1 -> v1.1.0
+    Updating http-body-util v0.1.3 -> v0.1.5
+    Updating hybrid-array v0.4.13 -> v0.4.14
+    Updating hyper v1.8.1 -> v1.11.0
+    Updating hyper-rustls v0.27.7 -> v0.27.9
+    Removing id-arena v2.3.0
+    Updating indexmap v2.13.0 -> v2.14.0
+    Updating ipnet v2.12.0 -> v2.12.1
+    Removing iri-string v0.7.11
+    Updating jni v0.21.1 -> v0.22.4
+      Adding jni-macros v0.22.4
+    Removing jni-sys v0.3.1
+    Updating jobserver v0.1.34 -> v0.1.35
+    Updating js-sys v0.3.91 -> v0.3.104
+    Removing leb128fmt v0.1.0
+    Updating libc v0.2.183 -> v0.2.189
+    Updating libredox v0.1.14 -> v0.1.20
+    Updating litemap v0.8.1 -> v0.8.3
+    Updating log v0.4.29 -> v0.4.34
+    Updating memchr v2.8.0 -> v2.8.3
+    Updating mio v1.2.0 -> v1.2.2
+    Updating open v5.4.0 -> v5.4.2
+    Removing pin-utils v0.1.0
+      Adding pkg-config v0.3.34
+    Updating potential_utf v0.1.4 -> v0.1.6
+    Removing prettyplease v0.2.37
+    Updating proc-macro2 v1.0.106 -> v1.0.107
+    Updating pulldown-cmark v0.13.3 -> v0.13.4
+    Updating quinn v0.11.9 -> v0.11.11
+    Updating quinn-proto v0.11.15 -> v0.11.17
+    Updating quinn-udp v0.5.14 -> v0.5.15
+    Updating quote v1.0.45 -> v1.0.47
+    Updating rand v0.9.4 -> v0.9.5
+      Adding rand_pcg v0.10.2
+    Updating regex v1.12.3 -> v1.13.1
+    Updating regex-automata v0.4.14 -> v0.4.18
+    Updating regex-syntax v0.8.10 -> v0.8.11
+    Updating rustc-hash v2.1.1 -> v2.1.3
+      Adding rustc_version v0.4.1
+    Updating rustls v0.23.37 -> v0.23.43
+    Updating rustls-native-certs v0.8.3 -> v0.8.4
+    Updating rustls-pki-types v1.14.0 -> v1.15.1
+    Updating rustls-platform-verifier v0.6.2 -> v0.7.0
+    Updating rustls-webpki v0.103.13 -> v0.103.15
+    Updating rustversion v1.0.22 -> v1.0.23
+    Updating semver v1.0.27 -> v1.0.28
+    Updating serde v1.0.228 -> v1.0.229
+    Updating serde_core v1.0.228 -> v1.0.229
+    Updating serde_derive v1.0.228 -> v1.0.229
+    Updating serde_json v1.0.150 -> v1.0.151
+    Updating shlex v1.3.0 -> v2.0.1
+      Adding simd_cesu8 v1.2.0
+      Adding simdutf8 v0.1.5
+    Updating smallvec v1.15.1 -> v1.15.2
+    Updating socket2 v0.6.3 -> v0.6.5
+    Removing syn v2.0.117
+      Adding syn v2.0.119
+      Adding syn v3.0.4
+    Removing thiserror v1.0.69
+    Removing thiserror v2.0.18
+      Adding thiserror v2.0.20
+    Removing thiserror-impl v1.0.69
+    Removing thiserror-impl v2.0.18
+      Adding thiserror-impl v2.0.20
+    Updating thread_local v1.1.9 -> v1.1.10
+    Updating tinystr v0.8.2 -> v0.8.4
+    Updating tinyvec v1.11.0 -> v1.12.0
+    Updating tokio-macros v2.7.0 -> v2.7.2
+    Updating tokio-util v0.7.18 -> v0.7.19
+    Updating toml v1.1.3+spec-1.1.0 -> v1.1.4+spec-1.1.0
+    Updating toml_parser v1.1.2+spec-1.1.0 -> v1.1.3+spec-1.1.0
+    Updating tower-http v0.6.8 -> v0.6.11
+    Updating unicode-segmentation v1.12.0 -> v1.13.3
+    Removing unicode-xid v0.2.6
+    Removing wasip3 v0.4.0+wasi-0.3.0-rc-2026-01-06
+    Updating wasm-bindgen v0.2.114 -> v0.2.127
+    Updating wasm-bindgen-futures v0.4.64 -> v0.4.77
+    Updating wasm-bindgen-macro v0.2.114 -> v0.2.127
+    Updating wasm-bindgen-macro-support v0.2.114 -> v0.2.127
+    Updating wasm-bindgen-shared v0.2.114 -> v0.2.127
+    Removing wasm-encoder v0.244.0
+    Removing wasm-metadata v0.244.0
+    Removing wasmparser v0.244.0
+    Updating web-sys v0.3.91 -> v0.3.104
+    Updating webpki-root-certs v1.0.6 -> v1.0.9
+    Removing windows-sys v0.45.0
+    Removing windows-targets v0.42.2
+    Removing windows_aarch64_gnullvm v0.42.2
+    Removing windows_aarch64_msvc v0.42.2
+    Removing windows_i686_gnu v0.42.2
+    Removing windows_i686_msvc v0.42.2
+    Removing windows_x86_64_gnu v0.42.2
+    Removing windows_x86_64_gnullvm v0.42.2
+    Removing windows_x86_64_msvc v0.42.2
+    Updating winnow v1.0.0 -> v1.0.4
+    Removing wit-bindgen v0.51.0
+    Removing wit-bindgen-core v0.51.0
+    Removing wit-bindgen-rust v0.51.0
+    Removing wit-bindgen-rust-macro v0.51.0
+    Removing wit-component v0.244.0
+    Removing wit-parser v0.244.0
+    Updating writeable v0.6.2 -> v0.6.4
+    Updating yoke v0.8.1 -> v0.8.3
+    Updating yoke-derive v0.8.1 -> v0.8.2
+    Updating zerocopy v0.8.47 -> v0.8.56
+    Updating zerocopy-derive v0.8.47 -> v0.8.56
+    Updating zerofrom v0.1.6 -> v0.1.8
+    Updating zerofrom-derive v0.1.6 -> v0.1.7
+    Updating zeroize v1.8.2 -> v1.9.0
+    Updating zerotrie v0.2.3 -> v0.2.5
+    Updating zerovec v0.11.5 -> v0.11.8
+    Updating zerovec-derive v0.11.2 -> v0.11.6
+    Updating zmij v1.0.21 -> v1.0.23
+note: pass `--verbose` to see 13 unchanged dependencies behind latest
+warning: not updating lockfile due to dry run
+cargo update --dry-run exit code: 0
+
+=== cargo outdated availability check (2026-08-25T14:50:15Z) ===
+cargo-outdated not installed; skipping per instructions (do not install)
+
+=== benches/ + criterion check (2026-08-25T14:50:21Z) ===
+-- ls benches/ --
+ls: benches/: No such file or directory
+-- grep criterion in Cargo.toml --
+
+=== gh pr list --author app/dependabot (2026-08-25T14:50:21Z) ===
+[{"createdAt":"2026-08-25T13:56:03Z","number":735,"title":"chore(deps): bump taiki-e/install-action from 2.85.13 to 2.86.3"},{"createdAt":"2026-08-24T13:57:28Z","number":730,"title":"chore(deps): bump futures from 0.3.32 to 0.3.34"},{"createdAt":"2026-08-24T13:57:19Z","number":729,"title":"chore(deps): bump thiserror from 2.0.18 to 2.0.20"},{"createdAt":"2026-08-24T13:56:42Z","number":728,"title":"chore(deps): bump toml from 1.1.3+spec-1.1.0 to 1.1.4+spec-1.1.0"},{"createdAt":"2026-08-24T13:56:29Z","number":727,"title":"chore(deps): bump clap from 4.6.1 to 4.6.6"},{"createdAt":"2026-08-13T13:53:57Z","number":688,"title":"chore(deps): bump serde from 1.0.228 to 1.0.229"}]
+
+=== Dependabot PR blocking detail (2026-08-25) ===
+PR #727 (clap bump) CI checks:
+CI Gate	fail	13s	https://github.com/Zious11/jira-cli/actions/runs/32735648887/job/97460951503	
+Deny (licenses + vulnerabilities)	fail	1m0s	https://github.com/Zious11/jira-cli/actions/runs/32735648887/job/97457635146	
+Clippy (ubuntu-latest)	pass	1m6s	https://github.com/Zious11/jira-cli/actions/runs/32735648887/job/97457635275	
+Clippy (windows-latest)	pass	3m15s	https://github.com/Zious11/jira-cli/actions/runs/32735648887/job/97457635164	
+Coverage	pass	4m10s	https://github.com/Zious11/jira-cli/actions/runs/32735648887/job/97457635530	
+Format	pass	28s	https://github.com/Zious11/jira-cli/actions/runs/32735648887/job/97457635147	
+MSRV (1.85.0)	pass	1m3s	https://github.com/Zious11/jira-cli/actions/runs/32735648887/job/97457634944	
+Mutation testing	pass	38s	https://github.com/Zious11/jira-cli/actions/runs/32735648887/job/97457635216	
+Secret Scan (gitleaks)	pass	20s	https://github.com/Zious11/jira-cli/actions/runs/32735648887/job/97457635233	
+Signing Workflow Injection Guard	pass	14s	https://github.com/Zious11/jira-cli/actions/runs/32735648887/job/97457635316	
+Spec Guards (BC counts, numeric-count lint, citation checks, mutants policy scope)	pass	28s	https://github.com/Zious11/jira-cli/actions/runs/32735648887/job/97457635469	
+Test (macos-latest)	pass	4m10s	https://github.com/Zious11/jira-cli/actions/runs/32735648887/job/97457635074	
+Test (ubuntu-latest)	pass	4m0s	https://github.com/Zious11/jira-cli/actions/runs/32735648887/job/97457635242	
+Test (windows-latest)	pass	9m50s	https://github.com/Zious11/jira-cli/actions/runs/32735648887/job/97457635135	
+dependency-review	pass	16s	https://github.com/Zious11/jira-cli/actions/runs/32735648856/job/97457634470	
+
+PR #727 'Deny' job failure excerpt (syn duplicate-version):
+error[duplicate]: found 2 duplicate entries for crate 'syn'
+  syn 2.0.117 registry+https://github.com/rust-lang/crates.io-index
+  syn 3.0.4 registry+https://github.com/rust-lang/crates.io-index
+  syn v2.0.117 <- (many deps, e.g. synstructure v0.13.2 chain)
+  syn v3.0.4 <- (separate chain)
+
