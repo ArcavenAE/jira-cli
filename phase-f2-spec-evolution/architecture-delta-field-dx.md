@@ -322,15 +322,17 @@ introduce one unprompted.
 
 ---
 
-## 9. Amendment (2026-08-26) — F2 Adversary Convergence: D1/D2/D3
+## 9. Amendment (2026-08-26) — F2 Adversary Convergence: D1/D2/D3/F-B
 
-**Trigger:** F2's mandatory adversarial spec-convergence loop ran three fresh-context adversary
-passes against the frozen deltas (§0-8 above, `prd-delta-field-dx.md`,
+**Trigger:** F2's mandatory adversarial spec-convergence loop ran three round-1 fresh-context
+adversary passes against the frozen deltas (§0-8 above, `prd-delta-field-dx.md`,
 `verification-delta-field-dx.md`) and surfaced three defects this delta's own architecture
-decisions own the resolution of. Full decision text and rationale: ADR-0019 § Amendment
-(2026-08-26). This section is the delta-doc-level record of the same three decisions, kept in
-sync per this repo's convention that `architecture-delta-*.md` mirrors its governing ADR's
-decisions rather than merely cross-referencing them.
+decisions own the resolution of (D1/D2/D3). A subsequent round-2 adversary *completeness* pass
+found a fourth, independent gap (**F-B**, below) in the same frozen deltas. Full decision text and
+rationale for all four: ADR-0019 § Amendment (2026-08-26). This section is the delta-doc-level
+record of the same four decisions, kept in sync per this repo's convention that
+`architecture-delta-*.md` mirrors its governing ADR's decisions rather than merely
+cross-referencing them.
 
 **File updated:** `.factory/specs/architecture/decisions/ADR-0019-field-dx-context-hint-shape-delimiter.md`
 (EDITED — amendment appended, frontmatter `amended: 2026-08-26` added; §1/§2/§3's original text
@@ -404,10 +406,59 @@ obligation on functions §3/§4 above already classify (the `:option` cascading 
 arbitrary UTF-8 input, one per call site, mirroring `validate_duration`'s FIX-F6-LRE-1 proptest and
 the existing `parse_field_kv_proptests` precedent — extending or sibling to VP-578-008.
 
+### F-B — degenerate option entry (missing `id`/`label`) read-path normalization (new architectural element, second-round adversary completeness pass)
+
+**Trigger:** a second-round adversary *completeness* pass (not one of the three round-1 D1/D2/D3
+findings above) found that neither this delta, ADR-0019, nor VP-580-005 §2 specifies what
+`id`/`label` a source `allowedValues`/`validValues` entry with a **missing** `id` or `label`/
+`value` receives once normalized into `FieldOption`. This is reachable in practice (a
+GDPR-restricted user-picker option, or a config-broken option, both lack one or both fields) and
+was previously undefined — three equally spec-conformant implementations (`""` sentinel, silent
+drop, or label-as-id substitution) were all possible under the existing text. Full decision text
+and rationale: ADR-0019 § Amendment (2026-08-26), subsection **F-B**.
+
+**Decision:** `FieldOption.id` and `FieldOption.label` (currently both non-optional `String` in
+§2(b)'s type sketch above) become `Option<String>` — a faithful pass-through of the already-optional
+input shape (`types::jira::editmeta::AllowedValue.id`/`.value` are already `Option<String>`), not a
+new sentinel invented at the `FieldOption` layer. Both normalizers (`normalize_from_allowed_values`,
+`normalize_from_valid_values`) MUST emit exactly one `FieldOption` per source item regardless of
+which fields that item carries — a missing `id`/`label` degrades that entry's own fields to `None`,
+it MUST NEVER cause the entry to be dropped from the returned `Vec<FieldOption>` (the never-drop
+invariant this decision adds on top of VP-580-005 §2's existing "never unwrap a missing field").
+Table-mode rendering reuses existing glyphs rather than inventing new ones: `NULL_GLYPH` (`"—"`,
+already used by `changelog.rs`/`user.rs`/`requesttype.rs`) for a missing id, the literal
+`"(unnamed)"` for a missing label (deliberately not a fallback-to-id, since id may also be absent on
+the same degenerate entry). JSON mode performs no substitution — the field stays `null`.
+
+**Dependency-graph / purity-table impact (§3/§4 above):** none. This is a field-type refinement on
+an already-`[PLANNED]` pure data type (`cli::field::FieldOption`, §4's first table row) and a
+behavioral refinement of two already-`[PLANNED]` pure functions
+(`normalize_from_allowed_values`/`normalize_from_valid_values`, §4's third table row) — no new
+module, function, or dependency edge. Both remain classified exactly as §4 already has them: pure
+core, no I/O. The table-mode glyph substitution (`"—"`/`"(unnamed)"`) belongs to the render/output
+layer (`cli::field::handle*` or wherever table formatting is composed, an already-`[PLANNED]`
+effectful-shell row), not to the pure normalizers themselves, which only ever produce
+`Option<String>` — no new purity classification is introduced by this split.
+
+**Not touched:** `component-graph.md`, `system-overview.md`, `ARCH-INDEX.md`,
+`.factory/architecture/adr-index.md`, `module-criticality.md`, `risk-register.md` — same reasoning
+as D1/D3's "not touched" notes: this is a signature/behavior refinement inside an already-`[PLANNED]`
+type and pair of functions, not a new module, dependency edge, or HIGH-impact risk surface.
+
+**BC-body / VP propagation flagged, not made here (product-owner and verifier scope):**
+- Product-owner: BC-X.14.001's `FieldOption` contract (`id: String, label: String` →
+  `id: Option<String>, label: Option<String>`) plus a new edge case documenting the never-drop
+  invariant (sibling to EC-X.14.001-4's "`children` always present" contract); BC-X.14.003's
+  Behavior/Postconditions gain the pinned `"—"`/`"(unnamed)"` rendering strings.
+- Verifier: VP-580-005 §2 is strengthened from "no panic" to also assert entry-count preservation
+  (never fewer `FieldOption`s than source items), the exact `Option::None`→JSON-`null` shape, and
+  (integration-level) the two pinned table-rendering strings for a fixture item missing id/label
+  respectively.
+
 ### Files NOT touched by this amendment burst
 
 `ARCH-INDEX.md` (no new ADR row — this is an amendment to the existing ADR-0019 row, not a new
 ADR), `.factory/architecture/adr-index.md` (same reasoning), `module-criticality.md` (still no
 implementation module to classify — unchanged from §1 above), `risk-register.md` (no new
-HIGH-impact R-NNN risk introduced by any of D1/D2/D3 — these are correctness/consistency fixes to
-already-planned behavior, not new risk surface).
+HIGH-impact R-NNN risk introduced by any of D1/D2/D3/F-B — these are correctness/consistency fixes
+to already-planned behavior, not new risk surface).

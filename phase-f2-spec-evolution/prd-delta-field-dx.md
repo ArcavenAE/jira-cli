@@ -472,8 +472,13 @@ A fresh 3-pass adversarial streak against the round-1 amendments above (D1/D2/D3
 amendments left behind, **none requiring a new design decision**. Fixed in `bc-3-issue-write.md`
 and `cross-cutting.md` only; `verification-delta-field-dx.md`, `ADR-0019`/architecture-delta,
 `BC-INDEX.md`, and `CANONICAL-COUNTS.md` are unchanged this round (verifier and state-manager own
-those next). No BC added/removed/retired; `total_bcs` stays 719, VP total stays 29, holdout total
-stays 106.
+those next). No BC added/removed/retired; `total_bcs` stays 719, holdout total stays 106.
+**[CORRECTED 2026-08-26, F2 adversary-convergence round-3, F-LOW-2/F-LOW-3]** The VP total was
+originally recorded here as "stays 29" — that was accurate only at the moment this round-2 section
+was first drafted; by the time Pass2-F2's flagged item below was resolved into a concretely-minted
+VP (VP-580-012, `cross-cutting.md` BC-X.14.004 — "`--project` not found (404)" taxonomy-row
+coverage), the round-2 VP total was actually **30**, not 29. Corrected here to avoid a stale count
+surviving into cycle-close reconciliation.
 
 ### Pass2-F1 (MEDIUM) — `:asset` cold-cache taxonomy widened to all three call sites
 
@@ -503,9 +508,16 @@ just to the wrong type). Fixed: added a new taxonomy-table row ("`--project not 
 accessible`", exit 64) plus companion EC-X.14.004-6, which explicitly distinguishes the new row
 from the three other project-related rows it could otherwise be confused with (EC-X.14.004-4's
 M2 unknown-`--type`-for-a-valid-project case; the companion-absent row/EC-X.14.004-5; the
-non-JSM-project row). **Flagged for the verifier, not resolved here**: whether this new row
-warrants a dedicated new VP number, or is adequately covered by VP-580-004's existing "each row of
-the error taxonomy table is independently exercised" per-row coverage clause.
+non-JSM-project row). **[RESOLVED 2026-08-26, F2 adversary-convergence round-3, F-LOW-2/F-LOW-3]**
+The "dedicated new VP number, or fold into VP-580-004" question this section originally left
+open (below) is now settled: `cross-cutting.md` mints a dedicated **VP-580-012** for this row
+(`--project` not found (404) on both the M2 and M3 enumeration paths, zero mutating HTTP, exact
+message assertion), rather than folding it into VP-580-004's generic per-row clause — this is the
+VP whose minting corrects the round-2 "VP total stays 29" line above to 30. **Original,
+now-superseded framing (retained for audit trail):** "Flagged for the verifier, not resolved
+here: whether this new row warrants a dedicated new VP number, or is adequately covered by
+VP-580-004's existing 'each row of the error taxonomy table is independently exercised' per-row
+coverage clause."
 
 ### Pass2-F3 (MEDIUM) — `:asset` `WORKSPACE:OBJECTID` first-colon split needs its own `str::split_once` MUST
 
@@ -567,13 +579,191 @@ registry file — these three BC-side pointers were the only remaining mismatch.
 
 - **VP-580-006** (`cross-cutting.md`) — already correctly rewritten in this file's own inline body
   to the post-D1 3-boolean `resolve_field_context(has_type, has_request_type, has_issue)`
-  signature (no `has_project` parameter). The STALE pre-D1 4-boolean signature + the
-  `!has_type||has_project` clause survives only inside `verification-delta-field-dx.md` §2 (out of
-  this agent's write scope) — the verifier's job to rewrite there, not a gap in either PRD file.
+  signature (no `has_project` parameter). **[DONE — 2026-08-26, F2 adversary-convergence round-3,
+  F-LOW-2/F-LOW-3]** The stale pre-D1 4-boolean signature + the `!has_type||has_project` clause
+  that previously survived inside `verification-delta-field-dx.md` §2 has since been rewritten by
+  the verifier in that frozen delta — this item is CLOSED, not an open flag any longer. (Original
+  framing, retained for audit trail: "survives only inside `verification-delta-field-dx.md` §2
+  (out of this agent's write scope) — the verifier's job to rewrite there, not a gap in either PRD
+  file.")
 - **VP-578-022** (`bc-3-issue-write.md`) — now must assert wiremock coverage on all THREE `:asset`
   cold-cache call sites (edit, platform-create, JSM-create), not two. See Pass2-F1 above.
-- **New `--project` 404 row** (`cross-cutting.md`, BC-X.14.004) — possible new VP, or fold into
-  VP-580-004's existing per-row coverage clause. See Pass2-F2 above; genuinely undecided here.
+- **New `--project` 404 row** (`cross-cutting.md`, BC-X.14.004) — **[RESOLVED, F-LOW-2/F-LOW-3]**
+  minted as dedicated VP-580-012, not folded into VP-580-004. See Pass2-F2's updated resolution
+  note above.
+
+## 2026-08-26 F2 adversary-convergence round-3 amendments
+
+A fresh 3-pass adversarial streak against round-1/round-2's amendments found one HIGH
+contradiction, three MEDIUMs, and several LOWs (mostly partial-fix stragglers) — one design item
+(F-B) was pre-decided by the architect (ADR-0019 § Amendment F-B / `architecture-delta-field-dx.md`
+§9) and propagated here; everything else is a BC-body/spec-text fix made directly. Fixed in
+`bc-3-issue-write.md` and `cross-cutting.md` only, per this round's write scope;
+`verification-delta-field-dx.md`, ADR-0019/architecture-delta (architect-owned, already done), and
+`BC-INDEX.md`/`CANONICAL-COUNTS.md` (state-manager reconciles last) are untouched by this agent
+this round. **No BCs added, removed, or retired — counts are unchanged: `bc-3-issue-write.md`
+stays 123/152, `cross-cutting.md` stays 89/155, `total_bcs` stays 719.**
+
+### F-A (HIGH) — empty value on `:id=`/`:name=`/`:asset=` contradiction resolved consistently
+
+**Defect:** VP-578-013 §3 mandated exit-64 for an empty value on ANY of `:id=`/`:name=`/`:asset=`,
+but BC-3.4.028/029 ("server is SOLE validator, ZERO client-side matching") and ADR-0019 §2(b)
+("`parse_field_kv`'s value is deliberately uninterpreted") contradicted a client-side empty-value
+rejection for `:id`/`:name` specifically.
+
+**Fix (existing decisions applied consistently, no parser kind-specific validation added):**
+- `bc-3-issue-write.md`, BC-3.4.028: new EC-3.4.028-3 — empty `:id=` value PASSES THROUGH
+  verbatim as `{"id": ""}`; server validates; NOT a `jr`-side exit-64.
+- `bc-3-issue-write.md`, BC-3.4.029: new EC-3.4.029-3 — identical pass-through posture for
+  empty `:name=`.
+- `bc-3-issue-write.md`, BC-3.4.031: EC-2's scope note now states `:asset` is the ONLY kind in
+  the catalog whose empty-value form is a client-side exit-64, and explains WHY — a STRUCTURAL
+  composer failure (cannot build `[{workspaceId,id,objectId}]` with no `objectId`), not a
+  value-validation rejection. New EC-8 (empty `:id=`) and EC-9 (empty `:name=`) added to the
+  malformed-hint catalog, both explicitly marked PASS-THROUGH, cross-referencing BC-3.4.028
+  EC-3.4.028-3 / BC-3.4.029 EC-3.4.029-3.
+- VP-578-013's own text (`bc-3-issue-write.md`) now carries a scope note pinning its empty-value
+  exit-64 assertion to `:asset` (EC-2a) ONLY, and flags the verifier to (a) not assert exit-64 for
+  EC-8/EC-9 and (b) fix the `prop_oneof!` strategy, which currently omits `:name` from its
+  generated kind space.
+
+### F-MED-1 (MEDIUM) — `parse_field_kv`'s own exit-64 pinned in the Platform-Path Guard Ordering SSOT
+
+**Defect:** the D2 collision guard (step 2a) consumes the already-parsed
+`HashMap<String, FieldValueSpec>`, so `parse_field_kv` (BC-3.4.031's unknown-kind/malformed exit-64
+— a THIRD pre-HTTP exit-64 path on `jr issue create`) must run before it, but the SSOT block never
+numbered this dependency.
+
+**Fix:** `bc-3-issue-write.md`'s `#### Platform-Path Guard Ordering — handle_create` SSOT block now
+pins a deterministic THREE-step pre-HTTP guard order: **step 2** (BC-3.8.013 `--on-behalf-of`,
+presence-only, position unchanged) → **step 2a** (NEW — `parse_field_kv`'s hint-syntax parse pass,
+BC-3.4.026/031; a hard data-dependency prerequisite of step 2b, not merely an ordering preference)
+→ **step 2b** (RENUMBERED from step 2a — the D2 create-path collision guard, ADR-0019 § Amendment
+D2). Propagated to every current-contract citation of the old "step 2a" label: BC-3.3.010's
+Preconditions guard-ordering sentence, EC-3.3.010-6, and BC-3.3.011's Postconditions
+evaluation-order note (all `bc-3-issue-write.md`). Historical changelog/trace entries describing
+the pre-existing round-2 state are left as accurate audit trail, per this repo's append-only
+convention. The SSOT's "guard-ordering consequence" paragraph now states the deterministic
+precedence across all three pre-HTTP exit-64 paths, extending BC-X.14.004's own "fixing one
+reported error deterministically encounters the next" principle from one taxonomy table to this
+three-guard chain.
+
+### F-MED-2 (MEDIUM) — BC-X.14.001 H1 showed M2's `--project` as mandatory
+
+**Defect:** the H1 synopsis read `--type <T> --project <P>` (unbracketed) while M3 read
+`--request-type <RT> [--project <P>]` (bracketed) — contradicting D1's own M2/M3 parity decision
+(flag-OR-profile-default, never a hard requirement).
+
+**Fix:** `cross-cutting.md`, BC-X.14.001 H1 changed to `--type <T> [--project <P>]`, mirroring M3.
+**State-manager propagation flag:** the BC-INDEX.md title row for BC-X.14.001 must be updated to
+match this new H1 verbatim — flagged here per this doc's H1-title-source-of-truth convention;
+NOT edited by this agent (state-manager reconciles BC-INDEX.md/CANONICAL-COUNTS.md last).
+
+### F-C (MEDIUM) — `:asset=W:Y:Z` (extra colon) under-documented, misleading message
+
+**Defect:** BC-3.4.031 EC-2 enumerated only three `:asset` malformed sub-cases; VP-578-012 claimed
+a `W:Y:Z` case with no BC backing. Under `str::split_once(':')`, `W:Y:Z` → workspace `W`, objectId
+candidate `Y:Z` → fails the ASCII `[0-9]+` check, but the existing generic "objectId must be
+numeric" message is misleading for a caller who supplied three colon-separated segments (a
+distinct mistake from a genuinely non-numeric two-segment objectId).
+
+**Fix:** `bc-3-issue-write.md`, BC-3.4.031 — new EC-2d documents the `W:Y:Z` shape, its
+`split_once`-derived resolution, and requires a message naming the actual mistake (e.g.
+`"unexpected extra ':' in :asset value — expected WORKSPACE:OBJECTID"`) instead of reusing EC-3's
+generic wording. EC-2's stale "three sub-cases" corrected to "FOUR sub-cases." EC-3 cross-references
+EC-2d to prevent message-reuse confusion. VP-578-012 (BC-3.4.030) gains a verifier flag requiring
+its §2 message-assertion be aligned to EC-2d's specific wording, not EC-3's generic one — a
+message-content assertion, not merely an exit-code assertion.
+
+### F-B (architect-decided, propagated) — degenerate `FieldOption` entries never dropped
+
+Per ADR-0019 § Amendment F-B / `architecture-delta-field-dx.md` §9 F-B (architect-owned design
+decision, already landed — this round propagates the BC-body consequences only):
+
+- `cross-cutting.md`, BC-X.14.001: `FieldOption.id`/`.label` contract changed from `String` to
+  `Option<String>` (faithful pass-through of the already-optional `AllowedValue.id`/`.value`
+  input shape, not a new sentinel). New EC-X.14.001-7 (never-drop invariant, sibling to
+  EC-X.14.001-4's `children`-always-present contract): both normalizers MUST emit exactly one
+  `FieldOption` per source item regardless of which fields it carries — a missing `id`/`label`
+  degrades that entry's OWN field(s) to `None`, never causes the entry to be dropped from the
+  array. VP-580-005 flagged (STRENGTHENED note added) to additionally assert entry-count
+  preservation, the exact `None`→JSON-`null` shape, and the two pinned rendering strings.
+- `cross-cutting.md`, BC-X.14.003: new "Degenerate-entry rendering" subsection — table mode:
+  missing `id` → `NULL_GLYPH` (`"—"`, reusing `changelog.rs`'s existing convention); missing
+  `label` → literal `"(unnamed)"` (never a fallback to `id`, since `id` may also be absent on the
+  same entry). JSON mode performs NO substitution — `null` stays `null`. VP-580-008 gains a (d)
+  sub-point asserting both pinned strings and the JSON `null` counterpart.
+
+### F-LOW-1 — BC-X.14.004 incomplete-M2 message widened
+
+`cross-cutting.md`. `"--type requires --project"` contradicted D1's own "no flag AND no default"
+trigger by naming only the flag as the fix. Widened to `"--type needs a resolvable project — pass
+--project <P> or configure a default"` at both sites (the taxonomy table row and VP-580-004's own
+regression-guard description).
+
+### F-LOW-4 — BC-3.3.010 EC-3.3.010-6 create-path example used edit-only `add:` prefix
+
+`bc-3-issue-write.md`. The example `--component add:X --field components:name=Y` used `add:`/
+`remove:` prefix syntax, which is `issue edit`-only (BC-3.4.006); on `issue create`, `--component`
+takes a bare name/id with no prefix grammar, so `add:X` would be treated literally as a component
+named `"add:X"` rather than illustrating the collision. Changed to `--component X --field
+components:name=Y`, with an inline note explaining why.
+
+### O-1 — cascading `>` unsupported on the JSM `:option` path, documented
+
+`bc-3-issue-write.md`, BC-3.8.008: new EC-3.8.008-1. `--request-type RT --field
+cf:option=Parent>Child` has no JSM `>`-split site anywhere in the dispatch — the whole
+`"Parent>Child"` string is wrapped verbatim as `{"cf": {"value": "Parent>Child"}}` (best case:
+server-side 400 or silent no-match). Cascading selects are explicitly NOT supported on the JSM
+path this cycle; tracked as an open design question in this document, not a defect.
+
+### O-2 — hinted `--field cf:option` with no `=` documented as the pre-existing missing-`=` case
+
+`bc-3-issue-write.md`, BC-3.8.008: new EC-3.8.008-2. `--field cf:option` (no `=` at all) never
+reaches hint-kind parsing (BC-3.4.026 step 2) — `parse_field_kv` step 1 fails to find `=` first,
+so this resolves to the pre-existing "invalid field format: expected NAME=VALUE" exit-64, not a
+BC-3.4.031 hint-syntax error. Applies identically on the platform path.
+
+### O-3 — createmeta/enumeration 400 row added to BC-X.14.004
+
+`cross-cutting.md`. New taxonomy-table row + EC-X.14.004-7: an M2 invocation where BOTH earlier
+lookups (project resolution, `--type` name→id resolution) already succeeded, but the SAME
+`issueTypeId` is then rejected (400) by the later `get_createmeta_fields` call — e.g. the issue
+type is removed from the project's scheme in the window between the two calls. Distinct from the
+existing 404-project-not-found row (F-Pass2-F2) and the unknown-`--type` row (EC-X.14.004-4,
+which fires on the FIRST call, before any `issueTypeId` exists) — this row's precondition is that
+two earlier calls already succeeded against the same identifiers. Propagated as a standard
+`JrError` API-error mapping (exit 1), not a `jr`-produced exit-64.
+
+### prd-delta cleanup (F-LOW-2 / F-LOW-3)
+
+This document's own round-2 section, above: the "VP total stays 29" line corrected to reflect the
+reconciled **30** (VP-580-012, minted for the `--project` 404 taxonomy row, was the missing
+count); the "flagged for the verifier... whether this new row warrants a dedicated new VP number"
+open question is RESOLVED (VP-580-012 minted, not folded into VP-580-004); the stale "verifier's
+job to rewrite VP-580-006 §2's 4-boolean signature" note is marked DONE (that rewrite is already
+reflected in the frozen `verification-delta-field-dx.md`, per this round's briefing).
+
+### Verifier flags (this round)
+
+- **VP-578-013** (`bc-3-issue-write.md`) — MUST be rewritten to scope its empty-value→exit-64
+  assertion to `:asset` (EC-2a) ONLY; its `prop_oneof!` strategy MUST generate all four kinds
+  (currently omits `:name`). VP-578-005 (empty value allowed at the parser) stays green and is
+  now the consistent, general-case counterpart.
+- **VP-578-012** (`bc-3-issue-write.md`, BC-3.4.030) — §2 must be aligned to the new EC-2d
+  (`W:Y:Z`) fixture and its extra-colon-specific message wording, not EC-3's generic "objectId
+  must be numeric" substring.
+- **VP-580-005** (`cross-cutting.md`, BC-X.14.001) — strengthen from "no panic" to also assert
+  entry-count preservation, the exact `Option::None`→JSON-`null` shape, and (integration-level,
+  paired with BC-X.14.003's VP-580-008(d)) the two pinned table-rendering strings.
+
+### Counts confirmed unchanged
+
+`bc-3-issue-write.md`: 123 individually-bodied / 152 cumulative (frontmatter unchanged this
+round). `cross-cutting.md`: 89 individually-bodied / 155 cumulative (frontmatter unchanged this
+round). `total_bcs`: 719. Zero BCs added, removed, or retired this round — every change above is
+an in-place body amendment, an embedded edge case (EC-N addition), or a message/H1-text
+correction.
 
 ## Traceability
 

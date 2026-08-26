@@ -417,14 +417,17 @@ types instead of one shared `normalize_from_allowed_values`.
   already-drafted BC rather than confirming/refining it, a strictly worse outcome for F3 story
   authoring than resolving it here.
 
-## Amendment (2026-08-26) — F2 Adversary Convergence: D1, D2, D3
+## Amendment (2026-08-26) — F2 Adversary Convergence: D1, D2, D3, F-B
 
-Three fresh-context adversary passes against the frozen `architecture-delta-field-dx.md`,
+Fresh-context adversary passes against the frozen `architecture-delta-field-dx.md`,
 `prd-delta-field-dx.md`, and `verification-delta-field-dx.md` surfaced defects this ADR owns the
 architecture-decision half of. Per the F2 adversarial spec-convergence loop's division of labor,
 this amendment resolves only the architectural fork in each finding; the corresponding BC-body
 and VP text changes are flagged below for the product-owner and verifier passes that follow, not
-made here.
+made here. D1/D2/D3 (below) are the first (round-1) convergence pass; **F-B** is a second-round
+adversary *completeness* pass finding, added in this same amendment section per this repo's
+convention that one ADR amendment section accumulates all rounds against the same frozen delta
+rather than spawning a new amendment header per round.
 
 ### D1 (adversary MEDIUM-1) — M2 default-project resolution parity
 
@@ -596,6 +599,132 @@ hand-rolled index arithmetic.**
   FIX-F6-LRE-1 was introduced in the first place. Naming `split_once` removes that discretion
   rather than trusting each future call site to independently rediscover the same safe pattern.
 
+### F-B (adversary completeness pass) — degenerate option entry: `FieldOption.id`/`.label` become `Option<String>`, entries are never dropped
+
+**Defect.** §1's normalizer contract (`normalize_from_allowed_values` for M1/M2,
+`normalize_from_valid_values` for M3) and VP-580-005 §2 both require the normalizer to "tolerate
+arbitrary `serde_json::Value` items without panicking … never unwrap a missing field," but neither
+this ADR nor any BC/VP text specifies what `id`/`label` a source entry with a genuinely **missing**
+`id` or `label`/`value` receives once normalized into `FieldOption { id: String, label: String,
+children: Vec<FieldOption> }` (both currently non-optional, §"Why does the normalization component
+belong in `cli/field.rs`" above). This is a real, not hypothetical, input: a GDPR-restricted
+user-picker option or a config-broken option can arrive in `allowedValues`/`validValues` lacking
+`id` or `label` — the input type itself already models this
+(`types::jira::editmeta::AllowedValue.id: Option<String>`, `.value: Option<String>`,
+`src/types/jira/editmeta.rs`). The **write** path already has a defined answer for a missing `id`
+on a *matched* entry (BC-3.4.016 EC / BC-3.3.011 EC: "no machine-readable id" → exit 64) — but the
+**read**/enumeration path, whose entire purpose (#580) is *discoverability*, has none. Three
+equally spec-conformant implementations are possible today: render `id: ""`, silently DROP the
+entry (the opposite of discoverability), or substitute the label text as the id. This ADR decides
+among them.
+
+**Decision 1 — model shape: `Option<String>`, not `String` + sentinel.**
+
+`FieldOption.id` and `FieldOption.label` both become `Option<String>`:
+
+```rust
+pub(crate) struct FieldOption {
+    pub id: Option<String>,
+    pub label: Option<String>,
+    pub children: Vec<FieldOption>,   // unchanged — always present, possibly empty (EC-X.14.001-4)
+}
+```
+
+- **Faithful translation of an already-optional input, not a new sentinel invented at this layer.**
+  `AllowedValue.id`/`.value` are already `Option<String>` one layer below `FieldOption` — the
+  normalizer's job is to carry that same absence through, not to invent a lossy encoding of it. A
+  `""`-sentinel would be a SECOND representation of "absent" this codebase does not otherwise use
+  for this exact "wire says the field is missing" concept.
+- **Scripted-consumer correctness is the deciding weight.** #580's stated purpose is a caller
+  piping `--output json` into `jq` to grab an id before `--field NAME:id=<id>`. A `.id`-keyed
+  script MUST be able to distinguish "this option genuinely has no id" from "id happens to be an
+  empty string" — Jira does not guarantee the latter never occurs legitimately, so an empty-string
+  sentinel is ambiguous by construction; `null` (via `Option::None`) is the unambiguous, standard
+  JSON/Rust idiom for absence and needs no second, out-of-band convention documented alongside it.
+- **Churn is not a real cost here, unlike the general case the model-shape question warns about.**
+  `src/cli/field.rs` does not exist in `src/` yet (F2 stage, per this ADR's own placement note) —
+  there are no existing VP-580 rendering assertions to retrofit. VP-580-005's proptest and
+  VP-580-008's rendering unit tests are written against this shape from their first draft, not
+  migrated onto it later. The "touches every VP-580 rendering assertion" cost is real in general
+  but zero in this specific case, which is why `Option<String>` — the objectively cleaner contract
+  — is not merely preferred but essentially free to adopt now.
+- **Rejected: `String` + pinned `""` sentinel.** Lower textual diff today, but (a) ambiguous to a
+  `.id`-keyed scripted consumer without an additional documented rule, and once shipped as a public
+  JSON contract that rule cannot be walked back without a breaking change — this is the cheapest
+  point in the project's lifecycle (pre-F4, no code written) to make the stricter call; (b) it
+  would require this codebase to newly document and test a sentinel convention it does not use
+  elsewhere for "wire says absent" (contrast `AllowedValue.id` itself, and the existing
+  `Option<String>` idiom used throughout `types::jira::`).
+
+**Exact JSON shape.** No `#[serde(skip_serializing_if = "Option::is_none")]` on either field — the
+key stays present with a JSON `null` value, exactly mirroring `children`'s own existing "always
+present, never dropped/absent" contract (EC-X.14.001-4: "a non-cascading field always has
+`children: []`, never `null`/absent" — the same *presence* discipline, applied to a different
+per-field *value* state). A source entry missing `id` renders:
+```json
+{"id": null, "label": "Some Label", "children": []}
+```
+A source entry missing `label`/`value` renders:
+```json
+{"id": "10042", "label": null, "children": []}
+```
+A source entry missing both (the GDPR-restricted worst case) renders `{"id": null, "label": null,
+"children": []}` — see the never-drop invariant immediately below for why this entry still appears
+in the array at all rather than being silently absent from it.
+
+**Decision 2 — never-drop invariant, and table-mode rendering.**
+
+**Invariant (new, extends VP-580-005 §2's "never unwrap a missing field"):** both normalizers MUST
+emit exactly one `FieldOption` for every source item they are given, regardless of which fields
+that source item carries. A missing `id` and/or missing `label`/`value` degrades that entry's own
+`id`/`label` field to `None` — it MUST NEVER cause the entry to be omitted from the returned
+`Vec<FieldOption>`. Discoverability (#580's whole reason for existing) requires every enumerable
+option to be shown, even one `jr` cannot fully identify; silently dropping it is strictly worse
+than showing an entry the user can visually recognize as degenerate and follow up on (e.g. via `jr
+field options --output json` cross-referenced against the resolved request-type/issue-type screen
+directly in the Jira UI).
+
+**Table-mode rendering** (reuses existing, not newly invented, glyphs/placeholders):
+- **Missing `id`** → the ID column renders `NULL_GLYPH` (`"—"`) — the exact glyph and convention
+  already established by `src/cli/issue/changelog.rs::NULL_GLYPH` and reused by `src/cli/user.rs`
+  and `src/cli/requesttype.rs` for "this field is genuinely absent from the source data," not a new
+  glyph invented for this command.
+- **Missing `label`** → the Label column renders the literal string `"(unnamed)"`, deliberately
+  distinct from `"—"` and from the sibling id's own rendering: an absent id is inert (nothing
+  actionable for the user), but an absent label still names a real, selectable option — a
+  distinguishing placeholder keeps the row visibly present and signals "resolve this one via its
+  id," rather than reading as blank/nothing-there.
+- **Rejected: fall back to `id` for a missing label.** Rejected because `id` may ALSO be missing on
+  the same degenerate entry (the GDPR-restricted case) — a conditional fallback would then have
+  nothing to fall back to, forcing a second-level fallback rule anyway. An unconditional, literal
+  `"(unnamed)"` is simpler to specify and test (never depends on the sibling field's state) and
+  never produces a confusing "label equals a bare numeric id" row.
+- **JSON mode performs no substitution** — `null` stays `null`; the entire point of the
+  `Option<String>` model shape is that a scripted consumer receives the real absence signal, not a
+  human-rendered string standing in for it. The `"—"`/`"(unnamed)"` substitutions are a table-mode
+  rendering concern only, applied at the point the `Vec<FieldOption>` is formatted for a terminal.
+
+**Downstream implications (flagged for the product-owner and verifier, not made here):**
+- **Product-owner, BC-X.14.001** (`FieldOption` contract, currently `id: String, label: String`):
+  update to `id: Option<String>, label: Option<String>`; add the never-drop invariant as a new
+  Invariant or a new Edge Case (e.g. EC-X.14.001-7, sibling to EC-X.14.001-4's "`children` always
+  present" contract) documenting the degenerate-entry case explicitly.
+- **Product-owner, BC-X.14.003** (table/JSON rendering): add the pinned `"—"` (missing id) /
+  `"(unnamed)"` (missing label) rendering strings to Behavior/Postconditions; VP-580-008 needs a
+  companion assertion for these two cases (currently VP-580-008 only covers the happy-path
+  two-column shape and cascading-indentation rendering).
+- **Product-owner, BC-X.14.004**: consider a worked edge case citing the GDPR-restricted /
+  config-broken option scenario as the motivating example, cross-referencing this decision.
+- **Verifier, VP-580-005 §2**: currently asserts only "no panic … tolerates arbitrary
+  `serde_json::Value` … never unwraps a missing field." This must be strengthened to also assert
+  (a) **entry presence** — a source item missing `id` and/or `label`/`value` still yields exactly
+  one `FieldOption` in the output `Vec` (never fewer entries than source items), not merely "does
+  not panic"; (b) the exact `Option::None` → JSON `null` shape (not `""`, not an omitted key); and
+  (c) as an integration-level companion, the pinned table-rendering strings (`"—"`, `"(unnamed)"`)
+  for a fixture item missing id/label respectively. "No panic" alone, as currently worded, is
+  satisfied by an implementation that silently filters the degenerate entry out of the `Vec` before
+  returning it — that must be closed off explicitly, not left implied.
+
 ## Source / Origin
 
 - F1 delta analysis: `.factory/phase-f1-delta-analysis/delta-analysis-field-dx.md` (§3
@@ -634,3 +763,14 @@ hand-rolled index arithmetic.**
   EC-3.4.029-2 (the "adversary pass-13 F-1" cross-reference already present in both ECs, which
   this amendment's D2 further corrects by removing the create-path asymmetry those ECs currently
   describe).
+- **F-B (adversary completeness pass) source:** the `.factory/phase-f2-spec-evolution/
+  verification-delta-field-dx.md`-declared **VP-580-005** §2 text ("tolerate arbitrary
+  `serde_json::Value` items without panicking … never unwrap a missing field") and this ADR's own
+  §1 Rationale (the `{id, label, children}` normalized model) — the finding was relayed directly by
+  the orchestrator's task brief for this amendment burst, labeled `F-B`; no separate adversary-pass
+  artifact file exists on disk for it at time of writing, same disclosure as D1/D2/D3 above.
+  Write-path precedent cited: BC-3.4.016 EC / BC-3.3.011 EC ("no machine-readable id" → exit 64 on
+  a matched entry with `id: None`). Input-type precedent cited: `types::jira::editmeta::AllowedValue
+  { id: Option<String>, value: Option<String>, name: Option<String> }` (`src/types/jira/editmeta.rs`).
+  Table-rendering precedent cited: `src/cli/issue/changelog.rs::NULL_GLYPH` (`"—"`), reused by
+  `src/cli/user.rs` and `src/cli/requesttype.rs`.

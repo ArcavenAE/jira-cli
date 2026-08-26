@@ -82,4 +82,34 @@ current STATE.md for the live checkpoint.
 
 ---
 
+## Session Resume Checkpoint (2026-08-26) — F2-ROUND2-FRESH-STREAK (superseded by round-3)
+
+Archived verbatim from STATE.md v3.09 before the round-3 fix burst overwrote it.
+
+**Cycle:** Field DX Feature Mode cycle (`cycle-002`) -- GitHub issues #580 (`jr field options <field>` -- enumerate custom-field options) + #578 (`--field` value-kind hint syntax `:option`/`:id`/`:name`/`:asset` + non-JSM `issue create --field`). 2-story bundle, full F1-F7 lifecycle, DTU not required.
+
+**Position:** Phase F2 (spec evolution), inside the MANDATORY adversarial spec-convergence loop. Pipeline ACTIVE -- loop in progress, not paused.
+
+**F1:** COMPLETE + human-approved. See `phase-f1-delta-analysis/delta-analysis-field-dx.md`.
+
+**F2 authoring:** COMPLETE plus round-1's fix-burst amendments, the DEC propagation sweep, and round-2's fix-chain. 12 new BCs (`§X.14` Field Option Discovery + BC-3.3.010/011 + BC-3.4.026-031), ADR-0019 (Accepted 2026-08-25, § Amendment 2026-08-26 D1/D2/D3), BC-3.8.012 reversed (governance flag **DEC-310**, fully propagated). Counts: **719 total BCs** (BC-INDEX v6.82), **30 VPs** (VP-580-012 minted round-2), **106 holdout scenarios**.
+
+**Round-2's work (2026-08-26):** after the DEC-307->DEC-310 propagation sweep closed, a second fresh 3-pass adversary streak was run against the delta -- all three again returned NOT-CLEAN, 5 MEDIUM + 2 LOW findings. Fixed via a PO -> verifier -> PO back-fill chain: VP-580-006 3-boolean signature rewrite, `:asset` cold-cache failure taxonomy widened to 3 call sites (BC-3.4.030/VP-578-022), new `--project` 404 taxonomy row + VP-580-012 minted (BC-X.14.004), `str::split_once(':')` MUST on the `:asset` split, `objectId` ASCII-only `[0-9]+` fix, D2/BC-3.8.013 guard-ordering pin, dangling `verification-delta/` path citation fixed at 3 sites. No BC change (719 stays). VP total 29 -> 30. 106 holdouts unchanged.
+
+**Convergence counter at archival:** clean-pass streak was **0/3** -- second consecutive fresh-streak attempt to fail to reach 3/3 CLEAN. Superseded by round-3's streak (see current STATE.md).
+
+**Decisions of record:** DEC-310 (reverses DEC-188; proposed, propagation complete) -- still needs formal registration at cycle close. ADR-0019 (Accepted 2026-08-25; § Amendment 2026-08-26).
+
+**Process-gap follow-ups owed at cycle close (as of round-2, carried forward to round-3):**
+1. Register DEC-310 formally.
+2. DEC-namespace disambiguation question (still open).
+3. No guard exists on CANONICAL-COUNTS ADR-count prose.
+4. No guard exists on the amended-BC roster prose across its 5 surfaces.
+5. Need a reversal-propagation checklist for the PO/state-manager workflow.
+6. DEC-survey-scope gap: future "next sequential DEC number" surveys MUST scan the whole `.factory/` tree.
+
+**Resume command (as of round-2):** `/vsdd-factory:next-step` (or resume the F2 adversarial convergence loop directly -- run a fresh adversary pass first).
+
+---
+
 <!-- Repeat for each archived checkpoint. Maintain chronological order. -->

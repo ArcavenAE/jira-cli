@@ -4,7 +4,7 @@ phase: phase-f2-spec-evolution
 cycle: field-dx
 issues: [580, 578]
 producer: formal-verifier
-timestamp: 2026-08-26   # F2 adversary-convergence round-2 fix-chain (Pass1-F1 VP-580-006 3-bool rewrite; Pass2-F1 VP-578-022 3 call sites; Pass2-F3 VP-578-012 `:`-split; Pass2-F2 VP-580-012 minted). Prior round-1 F2 pass same day (D1/D2/D3 + C-LOW/B-F1); F5-pass-1 revision was 2026-08-25. VP total 29 → 30.
+timestamp: 2026-08-26   # F2 adversary-convergence round-3 (VP amendments only, NO new VP — total stays 30): F-A VP-578-013 §3 empty-value→exit-64 scoped to `:asset` ONLY (`:id`/`:name` PASS-THROUGH, EC-8/EC-9) + `prop_oneof!` adds `:name`; F-C VP-578-012 §2 `W:Y:Z` distinct extra-colon message (EC-2d); F-B VP-580-005 §2 strengthened (never-drop count + None→null + pinned `"—"`/`"(unnamed)"`) and VP-580-008 gains (d) degenerate-entry rendering. Prior round-2 fix-chain same day (Pass1-F1 VP-580-006 3-bool rewrite; Pass2-F1 VP-578-022 3 call sites; Pass2-F3 VP-578-012 `:`-split; Pass2-F2 VP-580-012 minted); round-1 F2 pass (D1/D2/D3 + C-LOW/B-F1); F5-pass-1 revision was 2026-08-25. VP total 29 → 30 (unchanged by round-3).
 status: complete
 convention: inline-proptest   # this repo has NO centralized VP-NNN registry — see §0
 # ONE authoritative VP id per guarantee. The parallel `VP-*-04x` band an earlier revision of
@@ -579,6 +579,16 @@ UTF-8, arbitrary colon placement/count, empty segments, control characters):
    — **never** a partially-built or structurally-invalid JSON body that would reach Jira and
    produce an opaque 400. Malformed shapes per BC-3.4.030 / BC-3.4.031 EC-2/EC-3 (empty segment
    `W:`/`:Y`, extra colon `W:Y:Z`, non-numeric/empty `objectId`) → clean exit 64 before any HTTP.
+   **Extra-colon `W:Y:Z` — DISTINCT message (F2 round-3, F-C / BC-3.4.031 EC-2d).** Because the
+   composer splits on the **first** `:` via `str::split_once(':')`, `cf:asset=W:Y:Z` yields workspace
+   `W` and objectId candidate **`Y:Z`**, which then fails the ASCII `[0-9]+` numeric check. The
+   emitted message MUST name the **actual** mistake — an extra colon-separated segment, e.g.
+   `"unexpected extra ':' in :asset value — expected WORKSPACE:OBJECTID"` (BC-3.4.031 EC-2d) — and
+   MUST **NOT** reuse EC-3's generic `"objectId must be numeric"` wording (misleading for a caller
+   who supplied three colon-separated segments, a distinct mistake from a genuinely non-numeric
+   two-segment objectId). This is a **message-CONTENT** assertion (a `.contains(...)` on the EC-2d
+   wording), not merely an exit-code assertion — the F-C flag on VP-578-012 §2 requires the
+   specific-wording pin.
 3. **No injection into structure.** No input can cause the composed value to gain/lose keys or
    change from array-of-object shape (the shape is a function of code, never of input bytes).
 
@@ -613,7 +623,10 @@ VP-578-008). Add a **named regression unit test** pinning the concrete Pass2-F3 
 `"Wé:123"` (multibyte scalar immediately before the first `:`) — asserting it resolves without
 panicking (mirrors `validate_duration_multibyte_unit_returns_err_not_panic` and VP-578-008's
 `"Pré>Bñ"` pin), plus companions `"世:123"`, `":123"` (empty workspace), `"W:"` (empty objectId) →
-each a clean `Ok`/`Err(UserError)`, never an unwind. The `objectId` numeric-shape check (BC-3.4.030
+each a clean `Ok`/`Err(UserError)`, never an unwind. **Add a dedicated `"W:Y:Z"` (extra-colon)
+regression pin (F-C / EC-2d)** asserting the `Err(UserError)` message **contains** the extra-colon
+wording (`"unexpected extra ':'"` / `"expected WORKSPACE:OBJECTID"`) and does **NOT** contain EC-3's
+generic `"objectId must be numeric"` — the message-content half of §2 above. The `objectId` numeric-shape check (BC-3.4.030
 Parsing rule 3 / BC-3.4.031 EC-3) is **ASCII-only `[0-9]+`** (equivalently `(?-u)\d+`) — a companion
 regression pin should confirm non-ASCII digits (`"W:١٢٣"`, `"W:１２３"`) are rejected client-side
 (exit 64), not passed through to a server-side 400.
@@ -639,10 +652,30 @@ fail-fast):
 2. **Unknown `:kind`** — `--field cf:frobnicate=V` (kind ∉ {option,id,name,asset}) → exit 64,
    message lists the valid kinds (BC-3.4.031 EC-1). Case matters: `:Option`/`:OPTION` are
    unknown kinds (BC-3.4.026 Invariant 3), not the `option` kind.
-3. **Empty value** — `--field cf:id=` / `cf:name=` / `cf:asset=` (kind requires a value) →
-   exit 64. (Note: bare `NAME=` empty value stays **allowed** per the existing
-   `prop_parse_field_kv_empty_value_allowed` — the empty-value rejection is **kind-scoped**,
-   not universal; F4 must not regress the bare-form allowance.)
+3. **Empty value — `:asset` ONLY is exit-64 (STRUCTURAL), NOT `:id`/`:name` (F2 round-3, F-A).**
+   `--field cf:asset=` (empty value) → exit 64 (BC-3.4.031 **EC-2a**), and for a **STRUCTURAL**
+   reason — the composer cannot build the `[{workspaceId,id,objectId}]` object reference with no
+   `objectId` — **not** a value-validation rejection. `:asset` is the **only** kind in the catalog
+   whose empty-value form is a client-side exit-64. (This structural rejection surfaces at the
+   composer, jointly covered with **VP-578-012**; the kind-tag defects in items 1–2 surface at
+   `parse_field_kv` itself.)
+   - **Empty `:id=` / `:name=` PASS THROUGH — NOT exit-64 (F-A; ADR-0019 §2(b) + BC-3.4.028/029
+     "server is sole validator").** `--field cf:id=` composes `{"id":""}` and `--field cf:name=`
+     composes `{"name":""}`, each sent verbatim for the server to validate. `parse_field_kv`'s value
+     is deliberately **uninterpreted** (ADR-0019 §2(b)), and BC-3.4.028/029 perform **zero**
+     client-side matching, so an empty `:id`/`:name` value is **not** a `jr`-side rejection
+     (BC-3.4.031 **EC-8** [empty `:id=`] / **EC-9** [empty `:name=`], both marked PASS-THROUGH).
+     F4 **MUST NOT** assert exit-64 for EC-8/EC-9.
+   - **Positive coverage required (F-A).** Add explicit unit/integration assertions that empty
+     `:id=` parses successfully and composes `{"id":""}`, and empty `:name=` parses successfully and
+     composes `{"name":""}` (each **exit 0** at the parse/compose layer), so the pass-through is a
+     pinned regression guard, not merely an absence of the old exit-64 assertion.
+   - (Bare `NAME=` empty value likewise stays **allowed** per the existing
+     `prop_parse_field_kv_empty_value_allowed` — consistent with the `:id`/`:name` pass-through
+     above; F4 must not regress the bare-form allowance. This makes **VP-578-005 §4** — empty value
+     allowed at the parser — the general-case counterpart, with **no contradiction**: the parser
+     never rejects an empty value for the bare form OR for `:id`/`:name`; only `:asset`'s downstream
+     composer does, structurally.)
 4. **Malformed `:asset`** — `WORKSPACE:OBJECTID` shape violations (empty segment `:asset=:Y` /
    `:asset=W:`, extra colon `:asset=W:Y:Z`, non-numeric/empty `objectId`) each → exit 64
    (BC-3.4.031 EC-2/EC-3). Jointly covered with VP-578-012.
@@ -655,19 +688,43 @@ vector of `--field` pairs containing ≥1 malformed hinted pair, `parse_field_kv
 existing "repeated `--field` occurrences still yield exactly one error" guarantee documented
 for DEC-188 and the bare parser.
 
-**Recommended strategy**:
+**Recommended strategy** — the `prop_oneof!` MUST generate **all four valid kind markers** plus the
+two kind-tag defects; the empty-value assertion is **per-kind**, NOT a blanket `.is_err()` (the
+pre-round-3 blanket form was the F-A defect — it asserted exit-64 for empty `:id=`/`:name=`, which
+now pass through):
 ```rust
-// proptest (create.rs): a generated malformed hint always Err, never panic, never Ok
-fn prop_malformed_hint_is_clean_err(
-    name in "[a-z]{1,10}",
-    bad  in prop_oneof![Just(":"), Just(":frob"), Just(":id"), Just(":asset")],  // e.g. empty val
-) {
-    let pair = format!("{name}{bad}=");   // empty value on a kind that requires one
-    prop_assert!(parse_field_kv(&[pair]).is_err());
+proptest! {
+    /// VP-578-013 (F-A): each kind-marker's empty-value form classifies deterministically and
+    /// never panics. `:` (empty kind) and `:frob` (unknown kind) → exit 64 at `parse_field_kv`
+    /// for ANY value. `:asset=` (empty) → exit 64 too, but STRUCTURALLY at the COMPOSER
+    /// (EC-2a; jointly VP-578-012). Empty `:id=`/`:name=` PASS THROUGH (F-A / EC-8 / EC-9 →
+    /// `{"id":""}` / `{"name":""}`) — never a jr-side rejection.
+    #[test]
+    fn prop_hint_kind_empty_value_classification(
+        name in "[a-z]{1,10}",
+        kind in prop_oneof![                       // all four valid kinds + the two kind-tag defects;
+            Just(":"), Just(":frob"),              //   `:name` added this round (was omitted)
+            Just(":option"), Just(":id"), Just(":name"), Just(":asset"),
+        ],
+    ) {
+        // resolve_field_end_to_end(...) spans parse_field_kv → the kind-specific value composer
+        // (F4 wiring); it is total (Ok | Err(UserError)), never panics.
+        let outcome = resolve_field_end_to_end(&format!("{name}{kind}="));
+        match kind {
+            ":" | ":frob" | ":asset" => prop_assert!(outcome.is_err()),  // exit 64: kind-defect or STRUCTURAL
+            ":option" | ":id" | ":name" => prop_assert!(outcome.is_ok()), // F-A pass-through (empty value OK)
+            _ => unreachable!(),
+        }
+    }
 }
 ```
-Plus an explicit **table-driven unit test** enumerating each EC-3.4.031-N shape → asserted
-exit code 64 and a substring of the expected message (the durable, human-reviewable catalog).
+(`:option` with an empty value is likewise not a parse-time rejection — its emptiness is an
+`allowedValues`-match miss resolved downstream, not a client-side empty-value exit-64; only `:asset`
+fails structurally on empty.) Plus an explicit **table-driven unit test** enumerating each
+EC-3.4.031-N shape → asserted exit code 64 and a substring of the expected message for the exit-64
+rows (**EC-2a** empty `:asset`, EC-1 unknown kind, EC-5 empty kind, EC-2b/2c/2d malformed `:asset`),
+**and** the exit-0 PASS-THROUGH rows (**EC-8** empty `:id=` → `{"id":""}`, **EC-9** empty `:name=` →
+`{"name":""}`) — the durable, human-reviewable catalog, now covering both exit classes.
 
 **Target**: proptest in `src/cli/issue/create.rs`; table-driven catalog test in
 `tests/issue_field_hint_kinds.rs` (new) covering exit code + JSON envelope. **F6**: `create.rs`
@@ -695,6 +752,28 @@ label VP-580-041 — retired.)*
    `{id?}`). The normalizer must tolerate **arbitrary `serde_json::Value`** items without
    panicking: missing keys, unexpected key sets, null, nested arrays, deeply-nested cascading. It
    renders what it can and degrades the rest — it never unwraps a missing field.
+   **STRENGTHENED (F2 round-3, F-B / ADR-0019 § Amendment F-B; `FieldOption.id`/`.label` are now
+   `Option<String>`, never-drop invariant EC-X.14.001-7).** "No panic" alone is satisfied by an
+   implementation that silently *filters out* a degenerate entry — that loophole is closed
+   explicitly. VP-580-005 §2 additionally asserts:
+   - **(a) Entry-count preservation (never-drop).** Both normalizers emit **exactly one**
+     `FieldOption` per source item — `output.len() == input.len()` — regardless of which fields the
+     source item carries. A source item missing `id` and/or `label`/`value` degrades **that entry's
+     own** field(s) to `None`; it is **never** omitted from the returned `Vec<FieldOption>`. The
+     no-panic proptests below MUST be extended with this length assertion (e.g.
+     `prop_assert_eq!(normalize_from_valid_values(&items).len(), items.len())`), so a
+     silently-filtering mutant fails.
+   - **(b) Exact `Option::None` → JSON `null` shape.** For a source item missing `id`, the emitted
+     `FieldOption.id` serializes to JSON **`null`** (not `""`, not an omitted key); identically for a
+     missing `label` → `label: null`. Asserted against the `render_json` output shape (JSON mode
+     performs **no** substitution — the scripted consumer receives the real absence signal).
+   - **(c) Pinned table-rendering strings (integration-level, paired with BC-X.14.003 /
+     VP-580-008(d)).** In **table** mode a missing `id` renders `NULL_GLYPH` (**`"—"`**, reusing
+     `src/cli/issue/changelog.rs::NULL_GLYPH`) and a missing `label` renders the literal
+     **`"(unnamed)"`** (never a fallback to `id`, which may also be absent). These two exact strings
+     are pinned by a table-capture fixture item missing id/label respectively. (The rendering half
+     is co-owned by VP-580-008(d) — §VP-580-008 — this VP owns the normalizer-side never-drop +
+     `None` origin of those cells.)
 3. **JSON parity.** Under `--output json`, an empty option set returns an **empty normalized
    array** (`[]`) via `render_json`, exit 0, with the hint text on STDERR (not stdout, per
    BC-X.14.004 EC-2) — not an error envelope, not a null.
@@ -714,13 +793,18 @@ label VP-580-041 — retired.)*
   These two pure functions are the heart of the degrade guarantee, and VP-580-005's
   property-test realization.
   ```rust
-  fn prop_normalize_from_valid_values_never_panics(items in prop::collection::vec(arb_json_value(), 0..8)) {
-      let _ = normalize_from_valid_values(&items);   // total, no panic, for any JSON items (M3)
+  fn prop_normalize_from_valid_values_total_and_never_drops(items in prop::collection::vec(arb_json_value(), 0..8)) {
+      let out = normalize_from_valid_values(&items);   // total, no panic, for any JSON items (M3)
+      prop_assert_eq!(out.len(), items.len());         // (a) never-drop: one FieldOption per source item
   }
-  fn prop_normalize_from_allowed_values_never_panics(items in prop::collection::vec(arb_allowed_value(), 0..8)) {
-      let _ = normalize_from_allowed_values(&items); // total, no panic, incl. GDPR-absent items (M1/M2)
+  fn prop_normalize_from_allowed_values_total_and_never_drops(items in prop::collection::vec(arb_allowed_value(), 0..8)) {
+      let out = normalize_from_allowed_values(&items); // total, no panic, incl. GDPR-absent items (M1/M2)
+      prop_assert_eq!(out.len(), items.len());         // (a) never-drop: no degenerate item filtered out
   }
   ```
+  Plus a deterministic unit test on a GDPR-absent fixture item (`AllowedValue { id: None, value: None }`)
+  asserting the emitted `FieldOption` serializes to `{"id": null, "label": null, "children": []}` via
+  `render_json` — the **(b)** `None`→`null` shape (not `""`, not an omitted key).
   (`arb_json_value()` = a recursive `serde_json::Value` strategy — bounded depth — the same
   technique used to fuzz ADF shapes; `arb_allowed_value()` = an `AllowedValue` strategy exercising
   the optional-field / missing-key variants ADR-0019 §Rationale calls out.)
@@ -868,6 +952,24 @@ found BC-X.14.003 had no VP anywhere; added to the BC-X.14.003 body this pass (�
    success path (BC-X.14.004) legitimately emits a hint line to stderr while still exiting 0.
    That degrade-hint-on-stderr case is a distinct path owned by BC-X.14.004 / VP-580-005, not
    this ordinary success path.
+4. **(d) Degenerate-entry rendering (F2 round-3, F-B / ADR-0019 § Amendment F-B; BC-X.14.003
+   "Degenerate-entry rendering" subsection).** With `FieldOption.id`/`.label` now `Option<String>`
+   (never-drop invariant EC-X.14.001-7), the rendering layer MUST assert both pinned strings and the
+   JSON counterpart:
+   - **Table mode:** a `FieldOption` with `id: None` renders the ID column as `NULL_GLYPH`
+     (**`"—"`**, the exact glyph from `src/cli/issue/changelog.rs::NULL_GLYPH`); a `FieldOption` with
+     `label: None` renders the Label column as the literal **`"(unnamed)"`** (never a fallback to
+     `id` — `id` may also be `None` on the same entry).
+   - **JSON mode:** performs **NO** substitution — `id: None` / `label: None` serialize to JSON
+     **`null`**, never `"—"` / `"(unnamed)"` (those are table-mode-only). The scripted consumer
+     receives the real absence signal.
+   - **Never-drop at the render layer.** A degenerate entry still occupies exactly one table row /
+     one JSON array element (mirrors VP-580-005(a) at the output-shape layer — the entry is present,
+     just visibly degraded).
+   Asserted by a table-capture fixture and a `render_json`-capture fixture, each containing one item
+   missing `id` and one missing `label`. This is the companion the PO's F-B flag requires on
+   VP-580-008; it pairs with VP-580-005(c) (which owns the normalizer-side `None` origin of these
+   cells).
 
 **Recommended strategy**: unit tests over the render function for a flat fixture and a cascading
 fixture (assert column headers, child indentation, verbatim nested JSON); an integration test in
@@ -1190,6 +1292,33 @@ M2 + M3 enumeration paths.
   EC-X.14.004-6. Until then, VP-580-012's authoritative definition lives in this delta (§0.1, §1,
   frontmatter `new_properties`) and its BC-body anchor is VP-580-004's per-row taxonomy-coverage
   clause.
+
+**Round-3 amendments (F2 adversary-convergence round-3, 2026-08-26) — verification-delta-only edits,
+NO BC-body edits, NO new VP (total stays 30).** This pass aligned the verification delta to the
+architect's ADR-0019 § Amendment **F-B** and the product-owner's round-3 BC amendments
+(`bc-3-issue-write.md` / `cross-cutting.md`, already landed). A grep confirmed **no** "verifier to
+assign VP id" placeholder markers exist in either BC file, so per this round's write scope **no BC
+file was touched**. All four fixes are amendments to EXISTING VPs:
+(1) **F-A** — **VP-578-013 §3** rewritten: the empty-value→exit-64 assertion is scoped to `:asset`
+ONLY (a STRUCTURAL composer failure, EC-2a), and empty `:id=`/`:name=` are pinned as PASS-THROUGH
+(`{"id":""}`/`{"name":""}`, EC-8/EC-9, per ADR-0019 §2(b) + BC-3.4.028/029); the `prop_oneof!`
+strategy now generates **all four valid kinds** (adds the previously-omitted `:name`, plus `:option`)
+with a **per-kind** classification replacing the old blanket `.is_err()` (the blanket form was the
+F-A defect). VP-578-005 §4 (empty value allowed at parser) stays green as the consistent general-case
+counterpart — **no contradiction**.
+(2) **F-C** — **VP-578-012 §2** now asserts the DISTINCT extra-colon message for `:asset=W:Y:Z`
+(`str::split_once(':')` → objectId candidate `Y:Z` → `"unexpected extra ':' … expected
+WORKSPACE:OBJECTID"`, BC-3.4.031 EC-2d), a message-CONTENT assertion, NOT EC-3's generic "objectId
+must be numeric"; a dedicated `"W:Y:Z"` regression pin was added to the EXTENDED companion list.
+(3) **F-B** — **VP-580-005 §2** strengthened from "no panic" to also assert (a) entry-count
+preservation / never-drop (`output.len() == input.len()`), (b) the exact `Option::None`→JSON-`null`
+shape for missing id/label, and (c) the pinned table strings `"—"`/`"(unnamed)"` (integration-level,
+paired with VP-580-008(d)); the proptests gained the length assertion.
+(4) **F-B** — **VP-580-008** gained sub-point **(d)** (degenerate-entry rendering): table `"—"`
+(missing id) / `"(unnamed)"` (missing label), JSON `null` (no substitution), never-drop at the render
+layer.
+VP-580-006 §2 was re-checked and remains the post-D1 **3-boolean** `resolve_field_context(has_type,
+has_request_type, has_issue)` form — not regressed by this round.
 
 **Task item 4 (B-F1) — verified, no edit required:** the verification delta contains **no** VP
 asserting M3 (`--request-type`) field-enumeration pagination. VP-578-020 is scoped to the two M2

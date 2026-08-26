@@ -6,6 +6,24 @@ definitional_count: 89   # count of `#### BC-` headings in this file
 last_updated: 2026-08-26
 source_pass: 3
 trace: |
+  - F2 adversary-convergence round-3 amendments (2026-08-26, cycle field-dx — no BC
+    added/removed/retired, no count change, still 89 individually-bodied / 155 cumulative in this
+    file): fix round following a fresh 3-pass adversarial streak that found a HIGH contradiction,
+    3 MEDIUMs, and several LOWs. F-MED-2 (MEDIUM): BC-X.14.001 H1 corrected from `--type <T>
+    --project <P>` (unbracketed) to `--type <T> [--project <P>]` (bracketed), mirroring M3 and
+    matching D1's flag-OR-default parity decision; BC-INDEX title-row propagation flagged for
+    state-manager. F-B (architect-decided, propagated): `FieldOption.id`/`.label` changed
+    `String` → `Option<String>` per ADR-0019 § Amendment F-B; new EC-X.14.001-7 never-drop
+    invariant; BC-X.14.003 gains a degenerate-entry rendering contract (`NULL_GLYPH`/`"—"` for
+    missing id, `"(unnamed)"` for missing label, JSON `null` with no substitution); VP-580-005
+    and VP-580-008 flagged/strengthened for the verifier. F-LOW-1 (LOW): BC-X.14.004's
+    incomplete-M2 message widened from "--type requires --project" to "--type needs a resolvable
+    project — pass --project <P> or configure a default". O-3 (LOW): new createmeta/enumeration
+    400 taxonomy row + EC-X.14.004-7 (issue type rejected by `get_createmeta_fields` after both
+    earlier resolution calls already succeeded). Full rationale and the companion
+    `bc-3-issue-write.md` fixes (F-A, F-MED-1, F-C, F-LOW-4, O-1, O-2):
+    `.factory/phase-f2-spec-evolution/prd-delta-field-dx.md` "2026-08-26 F2 adversary-convergence
+    round-3 amendments" section.
   - F2 adversary-convergence round-2 amendments (2026-08-26, cycle field-dx — no BC
     added/removed/retired, no count change, still 89 individually-bodied / 155 cumulative in this
     file): fix round following a fresh 3-pass adversarial streak that found residual partial-fix/
@@ -2163,7 +2181,9 @@ rationale and the enumerated arity error cases.
 
 ---
 
-#### BC-X.14.001: `jr field options <field> (--type <T> --project <P> | --request-type <RT> [--project <P>] | --issue <KEY>)` resolves `<field>` and enumerates its allowed options into a normalized `{id, label, children}` model
+#### BC-X.14.001: `jr field options <field> (--type <T> [--project <P>] | --request-type <RT> [--project <P>] | --issue <KEY>)` resolves `<field>` and enumerates its allowed options into a normalized `{id, label, children}` model
+
+> **[H1 CORRECTED 2026-08-26, F2 adversary-convergence round-3, F-MED-2]** M2's synopsis changed from `--type <T> --project <P>` (unbracketed, implying `--project` is mandatory alongside `--type`) to `--type <T> [--project <P>]` (bracketed, mirroring M3's own `[--project <P>]`) — per ADR-0019 § Amendment D1, `--project` on M2 is a flag-OR-profile-default resolution, not a hard requirement; the unbracketed H1 synopsis contradicted D1's own parity decision. **State-manager propagation flag:** the BC-INDEX.md title row for BC-X.14.001 mirrors this H1 verbatim per this doc's own H1-title-source-of-truth convention — the product-owner does not edit BC-INDEX.md directly (state-manager reconciles it last); this note flags that row for the state-manager's next reconciliation pass.
 
 **Confidence**: HIGH
 **Subject**: Field option discovery (issue #580)
@@ -2229,11 +2249,12 @@ id-bearing `value` key and M1/M2's label-bearing `value` key is deliberate Atlas
 inconsistency, not a `jr` bug). `jr` normalizes BOTH shapes into one internal model:
 ```rust
 struct FieldOption {
-    id: String,
-    label: String,
+    id: Option<String>,
+    label: Option<String>,
     children: Vec<FieldOption>,   // cascading-select children; empty for non-cascading
 }
 ```
+**[CONTRACT AMENDED 2026-08-26, ADR-0019 § Amendment F-B, propagated by product-owner F2 adversary-convergence round-3]** `id` and `label` changed from `String` to `Option<String>` — a faithful pass-through of the already-optional input shape (`types::jira::editmeta::AllowedValue.id`/`.value` are already `Option<String>` one layer below `FieldOption`), NOT a new sentinel invented at this layer. A source `allowedValues`/`validValues` entry with a genuinely missing `id` and/or `label`/`value` (e.g. a GDPR-restricted user-picker option, or a config-broken option) degrades that entry's own field(s) to `None` rather than being coerced to an empty string or dropped. See EC-X.14.001-7 (never-drop invariant) and BC-X.14.003 (rendering) below. `children` is UNCHANGED — always present, never `Option`, per EC-X.14.001-4's existing "always present, never `null`/absent" contract; F-B extends the same *presence* discipline to a different per-field *value* state, it does not alter `children`'s own shape.
 Cascading fields (`option-with-child` / JSM `children[]`) are enumerable — child options are
 nested under their parent's `children` array in the normalized model, recursively (both M1/M2's
 `allowedValues[].children[]` and M3's `validValues[].children` are read into the same shape).
@@ -2367,6 +2388,22 @@ CONFIRMed read shape here does not imply a verified write shape there.
   limitation, not a `jr` defect: `jr field options` cannot resolve-by-name a field the global
   field list itself does not expose a name for; the caller falls back to `jr requesttype fields
   <RT> --output json` (which lists the request type's own field ids directly) to discover the id.
+- EC-X.14.001-7 **[ADDED 2026-08-26, ADR-0019 § Amendment F-B, propagated by product-owner F2
+  adversary-convergence round-3 — sibling to EC-X.14.001-4's `children` "always present, never
+  absent" contract]**: a source `allowedValues`/`validValues` entry that is missing `id` and/or
+  `label`/`value` (the GDPR-restricted or config-broken option case) is NEVER dropped from the
+  normalizer's output. Both normalizers (M1/M2's `normalize_from_allowed_values`, M3's
+  `normalize_from_valid_values`) MUST emit exactly one `FieldOption` per source item, regardless of
+  which fields that item carries — a missing `id`/`label` degrades that entry's OWN `id`/`label`
+  field to `None`, it MUST NEVER cause the entry to be omitted from the returned
+  `Vec<FieldOption>`. This is the never-drop invariant: discoverability (#580's whole reason for
+  existing) requires every enumerable option to be shown, even one `jr` cannot fully identify —
+  silently dropping it is strictly worse than showing a visibly degenerate entry the caller can
+  follow up on (e.g. cross-referencing `jr field options --output json` against the resolved
+  request-type/issue-type screen directly in the Jira UI). A source item missing BOTH `id` and
+  `label` still produces exactly one `FieldOption { id: None, label: None, children: [] }` entry
+  in the array — it is never silently absent from the result. See BC-X.14.001's `FieldOption`
+  contract amendment above and BC-X.14.003 for the corresponding table/JSON rendering rules.
 
 **Verification Properties**:
 - VP-580-001: `customfield_NNNNN` literal bypass skips `list_fields()` entirely (zero HTTP for
@@ -2375,6 +2412,16 @@ CONFIRMed read shape here does not imply a verified write shape there.
   children}` shape for equivalent input fixtures — the output shape is source-independent.
 - VP-580-003: Cascading `children[]` nesting round-trips correctly from both the M1/M2
   (`allowedValues[].children[]`) and M3 (`validValues[].children`) wire shapes.
+- VP-580-005 **[STRENGTHENED 2026-08-26, ADR-0019 § Amendment F-B, propagated by product-owner F2
+  adversary-convergence round-3 — FLAGGED FOR VERIFIER]**: beyond its existing "no panic" tolerance
+  assertion (BC-X.14.004's graceful-degrade coverage), this VP's normalizer-tolerance section must
+  additionally assert (a) entry-count preservation — the normalizer NEVER emits fewer
+  `FieldOption`s than source items, for a fixture mixing well-formed and degenerate (missing
+  id/label/both) entries; (b) the exact `Option::None` → JSON `null` shape on `--output json`
+  (no `#[serde(skip_serializing_if)]`, key always present); (c) the two pinned table-rendering
+  strings from BC-X.14.003 (`NULL_GLYPH`/`"—"` for a missing id, `"(unnamed)"` for a missing
+  label) against a fixture item missing id and a fixture item missing label respectively. See
+  EC-X.14.001-7 (never-drop invariant) and BC-X.14.003 (rendering contract).
 - VP-580-006: Mode-selector mutual-exclusion (Invariant 1). **[REWRITTEN 2026-08-26, ADR-0019 §
   Amendment D1]** The arity decision is extracted to a pure function,
   `resolve_field_context(has_type, has_request_type, has_issue) -> Result<Mode, ArityError>`,
@@ -2512,6 +2559,35 @@ the hint on stderr rather than folding it into the JSON payload (EC-X.14.004-2),
 **Errors**: N/A (output-shape only; see BC-X.14.004 for error taxonomy and the graceful-degrade
 hint contract).
 
+**Degenerate-entry rendering (missing `id`/`label`) [ADDED 2026-08-26, ADR-0019 § Amendment F-B,
+propagated by product-owner F2 adversary-convergence round-3]**: per BC-X.14.001's `FieldOption`
+contract amendment (`id`/`label` now `Option<String>`) and EC-X.14.001-7's never-drop invariant, a
+degenerate entry (missing `id` and/or `label`) is never omitted from either output mode — it
+renders with an explicit placeholder instead:
+- **Table mode, missing `id`** → the ID column renders `NULL_GLYPH` (`"—"`) — the SAME glyph and
+  convention already established by `src/cli/issue/changelog.rs::NULL_GLYPH` and reused by
+  `src/cli/user.rs`/`src/cli/requesttype.rs` for "this field is genuinely absent from the source
+  data," not a new glyph invented for this command.
+- **Table mode, missing `label`** → the Label column renders the literal string `"(unnamed)"`,
+  deliberately distinct from `"—"` and from the sibling id's own rendering: an absent id is inert
+  (nothing actionable), but an absent label still names a real, selectable option — a
+  distinguishing placeholder keeps the row visibly present and signals "resolve this one via its
+  id," rather than reading as blank/nothing-there. This is NEVER a fallback to the entry's `id`
+  value (rejected — `id` may ALSO be missing on the same degenerate entry, so a conditional
+  fallback would need a second-level fallback rule anyway; an unconditional literal is simpler to
+  specify and test).
+- **JSON mode** performs NO substitution for either field — `--output json` emits the raw
+  `Option::None` as JSON `null` (`{"id": null, "label": "Some Label", "children": []}` /
+  `{"id": "10042", "label": null, "children": []}` / `{"id": null, "label": null, "children":
+  []}`), never `NULL_GLYPH`/`"(unnamed)"` — those two strings are table-mode-only presentation,
+  not part of the machine-readable JSON contract. This preserves `--output json`'s
+  scripted-consumer contract (a `.id`-keyed `jq` script sees a real `null`, not an ambiguous
+  placeholder string it would need to special-case).
+- The glyph substitution belongs to the render/output layer (wherever table formatting is
+  composed), NOT to the pure normalizers (`normalize_from_allowed_values`/
+  `normalize_from_valid_values`), which only ever produce `Option<String>` — the normalizers never
+  see or emit `NULL_GLYPH`/`"(unnamed)"` themselves.
+
 **Verification Properties**:
 - VP-580-008: Output-shape correctness. (a) Default table output has exactly two columns
   **ID**, **Label**; cascading children render as additional rows indented under their parent
@@ -2524,7 +2600,13 @@ hint contract).
   BC-X.14.002's empty-match convention), but is NOT asserted empty on the graceful-degrade
   success path — that path's stderr hint is covered separately by BC-X.14.004's VP-580-005.
   Realized as unit tests over the render fn plus an integration test capturing stdout/stderr
-  separately for both the ordinary and graceful-degrade success outcomes.
+  separately for both the ordinary and graceful-degrade success outcomes. (d) **[ADDED
+  2026-08-26, ADR-0019 § Amendment F-B]** Degenerate-entry rendering: a fixture `FieldOption`
+  missing `id` renders `NULL_GLYPH` (`"—"`) in the table's ID column; a fixture missing `label`
+  renders the literal `"(unnamed)"` in the Label column; `--output json` on both fixtures emits
+  `null` for the missing field(s), never the table-mode placeholder strings. This sub-point is
+  the render-layer counterpart to BC-X.14.001's VP-580-005 §2 strengthening (entry-count
+  preservation + exact `None`→`null` shape live there; the table-string assertions live here).
 
 **Trace**: issue #580; CLAUDE.md "JSON render invariant (#526)"; CLAUDE.md "Output channels"
 Profile 2 (Read-only)
@@ -2545,7 +2627,7 @@ fields with no enumerable option set (per `.factory/research/field-dx-context-me
 | Condition | Behavior | Source parallel |
 |---|---|---|
 | Zero mode selectors (`--type`/`--request-type`/`--issue` all absent) — this row also covers a BARE `--project` supplied with no mode selector at all (`--project` is never itself a mode selector, so that invocation still has zero of the three present) | Exit 64: "specify exactly one of --type, --request-type, --issue" | BC-X.14.001 Invariant 1 / ADR-0019 §1 |
-| `--type` present with no resolvable project — neither an explicit `--project` flag nor a profile/config default (**[CORRECTED 2026-08-26, ADR-0019 § Amendment D1]** trigger widened from "no flag" to "no flag AND no default") | Exit 64, the incomplete-M2 error: "--type requires --project" | BC-X.14.001 Invariant 1 / ADR-0019 § Amendment (2026-08-26) D1 |
+| `--type` present with no resolvable project — neither an explicit `--project` flag nor a profile/config default (**[CORRECTED 2026-08-26, ADR-0019 § Amendment D1]** trigger widened from "no flag" to "no flag AND no default") | Exit 64, the incomplete-M2 error **[MESSAGE WIDENED 2026-08-26, F2 adversary-convergence round-3, F-LOW-1 — "--type requires --project" contradicted D1's own "no flag AND no default" trigger by naming only the flag as the fix]**: `"--type needs a resolvable project — pass --project <P> or configure a default"` | BC-X.14.001 Invariant 1 / ADR-0019 § Amendment (2026-08-26) D1 |
 | Two or more mode selectors (`--type`/`--request-type`/`--issue`) supplied simultaneously | Exit 64, same message as the zero-mode-selector row, listing the conflicting flags | BC-X.14.001 Invariant 1 / ADR-0019 §1 |
 | `--request-type` present with NO resolvable ambient project (no `--project` companion, no profile/config default) | Exit 64 via `require_service_desk`'s "project required" error, unchanged from `jr requesttype fields`'s own behavior on the same condition | BC-X.12.003 parallel / ADR-0019 §1 |
 | `<field>` resolves to zero matches | Exit 64, hint naming `jr project fields` | EC-3.4.015-1 parallel |
@@ -2556,6 +2638,7 @@ fields with no enumerable option set (per `.factory/research/field-dx-context-me
 | **[ADDED 2026-08-26, F2 adversary-convergence round-2, Pass2-F2]** `--project <P>` supplied but the project does NOT exist / is not accessible (404, not 401) — on M2 this surfaces from EITHER of the two createmeta-family calls `jr field options` reuses (`get_issue_types_for_project`'s own `GET .../createmeta/{project}/issuetypes` list call, or `get_createmeta_fields`'s per-issue-type fields call, whichever runs first and 404s/400s on the bad project key); on M3 this surfaces from `get_or_fetch_project_meta`'s own `GET /rest/api/3/project/{key}` call (the SAME project-existence GET already documented elsewhere for its 401 behavior — see BC-X.8.006/007 — this row covers its 404 outcome instead) | Exit 64, "project not found or not accessible" (actionable, names the supplied project key) | New — no direct predecessor; `jr field options` performs no client-side project-existence pre-check on either path, so this is a genuine, previously-undocumented HTTP-failure row, distinct from the "no resolvable project" (companion-absent) and "non-JSM project" (resolves, wrong type) rows above |
 | `--issue <KEY>` not found (404) | Exit 64, "issue not found or not accessible" | EC-3.4.015-7 parallel |
 | createmeta/editmeta/requesttype-fields HTTP failure (401/403/5xx) | Propagated via standard `JrError` auth/API hint | EC-3.4.015-6 parallel |
+| **[ADDED 2026-08-26, F2 adversary-convergence round-3, O-3]** M2 path createmeta/enumeration-family HTTP 400 — distinct from the {401,403,5xx} row above AND the project-404 row above: the resolved project and `--type` name both resolved successfully (a valid `issueTypeId` was obtained), but the SAME `issueTypeId` is then rejected by a LATER createmeta-family call in the same invocation — e.g. the issue type is deleted/removed from the project's issue-type scheme in the window between `get_issue_types_for_project`'s name→id resolution and `get_createmeta_fields`'s own `GET .../createmeta/{project}/issuetypes/{issueTypeId}` call, or the resolved `issueTypeId` is otherwise malformed/rejected by that second call | Propagated via standard `JrError` API-error mapping (exit 1, NOT exit 64 — this is a genuine server-side 400 on an already-resolved identifier, not a `jr`-side pre-flight validation failure; contrast the 404 project-not-found row above, which IS a `jr`-produced exit-64 with actionable wording) | New — no direct predecessor; distinguishes a mid-invocation TOCTOU-style resource removal from both the up-front project-404 case and the generic HTTP-failure row, since this row's precondition is that TWO EARLIER calls in the SAME invocation already succeeded against the SAME identifiers |
 | `<field>` resolves in the global `GET /field` list (or via `customfield_NNNNN` bypass) but is ABSENT from the selected context's field set | Exit 64, "field not available in this context" — per-context wording: "is not on the Create screen" (M2/createmeta), "is not on the Edit screen" (M1/editmeta), "is not a field on this request type" (M3/requesttype-fields) | BC-3.3.010 EC-3.3.010-2 parallel; see EC-X.14.001-5 |
 
 **Precedence when an invocation matches more than one taxonomy-table condition**: mode-selector
@@ -2663,13 +2746,25 @@ reported via any taxonomy-table error row.
   client-side existence pre-check on either M2 or M3 — this is a first-class HTTP-failure
   outcome, not a resolution-shape failure, mirroring how `--issue <KEY>` not found (the row
   immediately below) is a first-class HTTP-failure outcome for M1.
+- EC-X.14.004-7 **[ADDED 2026-08-26, F2 adversary-convergence round-3, O-3]**: `jr field options
+  <field> --type <T> --project <P>` where `--type` resolves cleanly to an `issueTypeId` (the
+  `get_issue_types_for_project` name→id call succeeds), but the SUBSEQUENT
+  `get_createmeta_fields` call against that same `issueTypeId` returns HTTP 400 — e.g. the issue
+  type was removed from the project's issue-type scheme between the two calls, or the resolved id
+  is otherwise rejected. Distinct from EC-X.14.004-4 (unknown/ambiguous `--type` NAME, caught by
+  the FIRST call, before any `issueTypeId` exists to pass to the second) and from EC-X.14.004-6
+  (the PROJECT itself 404s, not the issue type) — this edge case's precondition is that BOTH
+  earlier lookups already succeeded against the same identifiers, so the failure is a genuine
+  server-side rejection propagated as a standard `JrError` (exit 1), not a `jr`-produced
+  exit-64.
 
 **Verification Properties**:
 - VP-580-004: Each row of the error taxonomy table is independently exercised, asserting exit
   64, zero mutating HTTP, and the documented message shape. This includes a dedicated case for
   a BARE `--project` supplied with no mode selector at all: it asserts the zero-mode-selector
   message ("specify exactly one of --type, --request-type, --issue"), NOT the incomplete-M2
-  message ("--type requires --project") — a regression guard for the doubly-specified,
+  message (**[MESSAGE WIDENED 2026-08-26, F2 adversary-convergence round-3, F-LOW-1]** "--type
+  needs a resolvable project — pass --project <P> or configure a default") — a regression guard for the doubly-specified,
   self-contradictory routing found in adversary pass-25 (HIGH), fixed via Option A
   (canonicalized as the zero-mode-selector case, consistent with `resolve_field_context`'s
   3-boolean arity signature — VP-580-006, per ADR-0019 § Amendment D1 — which does not take

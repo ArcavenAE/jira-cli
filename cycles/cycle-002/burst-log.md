@@ -155,3 +155,57 @@ No BCs added or removed — total stays **719** (bc-3-issue-write.md 123/152 ind
 | verifier | Realize/extend VPs (VP-580-006 rewrite, VP-578-022 3-site widening, VP-580-012 minted, VP-578-012 extension), re-verify counts | `phase-f2-spec-evolution/verification-delta-field-dx.md` |
 | product-owner | Back-fill VP-580-012's one-line BC-body Verification Properties declaration in cross-cutting.md (was pending after verifier's pass) | `specs/prd/cross-cutting.md` |
 | state-manager | Re-run guard scripts, reconcile VP count 29→30, log this burst, update STATE.md, commit | This file; `STATE.md` v3.09 |
+
+## Burst: Burst 3 — F2 adversary-convergence round-3, second fresh 3-pass streak (1 pass CLEAN), 1 HIGH + 3 MEDIUM + several LOW fixed (2026-08-26)
+
+**Parent-commit:** 7a3125c50afd941a13f8a0ffe4d4959fa18b2ef2 (factory(F2): field-dx convergence round-2 -- first fresh streak all NOT-CLEAN, 5 MED+2 LOW fixed, VP 29->30)
+
+**Adversary verdict:** Pass 1 NOT-CLEAN, Pass 2 NOT-CLEAN, **Pass 3 CLEAN** — the first CLEAN verdict recorded within this round-2 fresh-streak attempt (findings continue to decay: round-1 6 MED+~9 LOW all-NOT-CLEAN → round-2 5 MED+2 LOW all-NOT-CLEAN → round-3 1 HIGH+3 MED+several LOW with 1/3 passes CLEAN). Fixed via a fix chain (architect → PO → verifier, no new architect design decision beyond the one pre-decided item F-B). **Clean-pass streak REMAINS 0/3** — a single CLEAN pass inside a streak that also produced NOT-CLEAN passes does not count toward the mandatory 3-CONSECUTIVE-CLEAN requirement; a fresh, fully-clean 3-pass run is still required before F2 Step 5/8.
+
+**Files touched (Dim-1): 6 unique files**
+
+- phase-f2-spec-evolution/architecture-delta-field-dx.md
+- phase-f2-spec-evolution/prd-delta-field-dx.md
+- phase-f2-spec-evolution/verification-delta-field-dx.md
+- specs/prd/bc-3-issue-write.md
+- specs/prd/cross-cutting.md
+- sidecar-learning.md
+
+**Codifications:** ADR-0019 gains § Amendment **F-B** (architect-decided): `FieldOption.id`/`.label` change `String` → `Option<String>` (never-drop invariant for degenerate option entries — an option with a missing id or label must still surface, not be silently dropped). No new VP minted — all four verification fixes (VP-578-013 rewrite, VP-578-012 extension, VP-580-005 strengthening, VP-580-008 extension) are amendments to existing VPs; VP total stays **30**. No new BC minted — all fixes are amendments to existing BC bodies (BC-3.4.028/029/031, BC-X.14.001/003); BC count stays **719**.
+
+**Dim-2 Attestation:** N/A for this burst — spec-only F2 convergence burst (no `src/` changes). `scripts/check-spec-counts.sh` → exit 0 ("Check passed: 8 bc files validated"). `scripts/check-bc-cumulative-counts.sh` → exit 0 ("OK: all cumulative BC counts verified (719 total across 9 files; Surface H footer checked where present)"). Both re-run post-burst by state-manager.
+
+**Dim-5 Attestation:** N/A — no binary/WASM artifact produced by this burst (spec/documentation delta only).
+
+**Dim-6 Attestation:** N/A — no `src/` code changed this burst; `cargo fmt`/`cargo clippy` not applicable.
+
+**Dim-7 Attestation:** N/A — no test suite changed this burst. Spec-level verification is `scripts/check-spec-counts.sh` and `scripts/check-bc-cumulative-counts.sh` (both PASS, see Dim-2 above); BC/VP realization tests remain deferred to F4 implementation per this repo's `convention: inline-proptest`.
+
+**Findings routed and fixed this burst:**
+
+| Finding | Severity | Description | Fix |
+|---------|----------|--------------|-----|
+| F-A | HIGH | VP-578-013 §3 mandated exit-64 for an empty value on ANY of `:id=`/`:name=`/`:asset=`, contradicting BC-3.4.028/029 ("server is SOLE validator, ZERO client-side matching") and ADR-0019 §2(b) ("`parse_field_kv`'s value is deliberately uninterpreted") | Empty `:id=`/`:name=` now PASS-THROUGH verbatim (`{"id":""}`/`{"name":""}`, server-validated) — new EC-3.4.028-3, EC-3.4.029-3; only `:asset=` empty stays a client-side structural exit-64 (cannot build `[{workspaceId,id,objectId}]` with no `objectId`) — BC-3.4.031 EC-2's scope note + new EC-8/EC-9 (PASS-THROUGH cross-refs); VP-578-013 rewritten to scope its exit-64 assertion to `:asset` (EC-2a) ONLY, `prop_oneof!` strategy extended to generate all four kinds (adds the previously-omitted `:name`) with per-kind classification replacing the old blanket `.is_err()` |
+| F-MED-1 | MEDIUM | The D2 collision guard (step 2a) consumes the already-parsed `HashMap<String, FieldValueSpec>`, so `parse_field_kv`'s own exit-64 (BC-3.4.031's unknown-kind/malformed path) must run before it, but the Platform-Path Guard Ordering SSOT never numbered this dependency | `parse_field_kv` pinned as step 2a in the guard-ordering SSOT; the pre-existing D2 collision guard renumbered 2a→2b |
+| F-MED-2 | MEDIUM | BC-X.14.001's H1 title read `--type <T> --project <P>` (unbracketed, implying `--project` is REQUIRED for M2), contradicting M2's actual flag-OR-profile-default resolution (ADR-0019 § Amendment D1, round-2) and inconsistent with M3's bracketed `[--project <P>]` | H1 corrected to `--type <T> [--project <P>]` in `cross-cutting.md`; **BC-INDEX.md title row propagated by state-manager this burst** (see Current Phase Steps) |
+| F-C | MEDIUM | BC-3.4.031's `:asset` malformed-hint catalog described "three sub-cases" for colon-count errors but a fourth (`:asset=W:Y:Z`, extra colon) existed with an ambiguous message, conflated with EC-3's generic "objectId must be numeric" | New EC-2d — distinct message for the extra-colon case (`str::split_once(':')` → objectId candidate `Y:Z` → `"unexpected extra ':' … expected WORKSPACE:OBJECTID"`); catalog description corrected "three sub-cases"→"four"; VP-578-012 §2 aligned with a dedicated `"W:Y:Z"` regression pin, distinct from EC-3's numeric-objectId assertion |
+| F-B | (architect-decided) | `FieldOption.id`/`.label` were plain `String`, which cannot represent a Jira option missing an id or label (both fields are optional on the wire per some custom-field configurations) — risked either a deserialization failure or a silent drop | `FieldOption.id`/`.label` changed `String` → `Option<String>` (ADR-0019 § Amendment F-B); new never-drop invariant EC-X.14.001-7 (a degenerate entry still surfaces, never silently dropped); table rendering uses `"—"` for missing id, `"(unnamed)"` for missing label; JSON emits `null`, no substitution — BC-X.14.001/003 amended, VP-580-005 §2 strengthened (entry-count preservation + exact `None`→`null` shape + pinned table strings) and VP-580-008 gains sub-point (d) |
+| LOW (several) | LOW | Message widening; `add:X`→`--component X` corrected example; JSM cascading `>` edge cases; missing-`=` edge case; createmeta 400 error-taxonomy row; prd-delta "29→30" VP-count correction + stale-note cleanup | Applied directly in `bc-3-issue-write.md`/`cross-cutting.md`/`prd-delta-field-dx.md`; no new BC/VP ids |
+
+**Closes:** F-A (empty-value contradiction), F-MED-1 (guard-ordering SSOT gap), F-MED-2 (BC-X.14.001 H1 bracket inconsistency + BC-INDEX propagation), F-C (extra-colon distinct message), F-B (never-drop `Option<String>` invariant), several LOWs. **Does NOT close:** the F2 mandatory adversarial spec-convergence loop itself (streak remains 0/3 — Pass 3's CLEAN verdict does not carry over into a new streak attempt; a fresh 3-pass run starting from Pass 1 is required).
+
+### Counts reconciled this burst
+
+No BCs added or removed — total stays **719** (bc-3-issue-write.md 123/152 individually-bodied/cumulative; cross-cutting.md 89/155). VP total stays **30** (all four fixes are amendments to existing VPs — VP-578-012, VP-578-013, VP-580-005, VP-580-008 — no new VP id minted). Holdouts unchanged (106). BC-INDEX.md title row for BC-X.14.001 corrected to match the amended H1 (state-manager, this burst) — no count field touched.
+
+### Details
+
+| Agent | Task | Output |
+|-------|------|--------|
+| adversary | Fresh-context pass #1 | NOT-CLEAN — routed F-A |
+| adversary | Fresh-context pass #2 | NOT-CLEAN — routed F-MED-1, F-MED-2, F-C, F-B (flagged for architect), several LOWs |
+| architect | Decide F-B (`FieldOption.id`/`.label` → `Option<String>`, never-drop invariant) | ADR-0019 § Amendment F-B, `architecture-delta-field-dx.md` |
+| product-owner | Propagate all fixes into PRD/BC bodies (`bc-3-issue-write.md`, `cross-cutting.md`) | `prd-delta-field-dx.md` "2026-08-26 F2 adversary-convergence round-3 amendments" section |
+| verifier | Amend existing VPs (VP-578-013 rewrite, VP-578-012 extension, VP-580-005 strengthening, VP-580-008 extension); confirm no new VP needed | `phase-f2-spec-evolution/verification-delta-field-dx.md` |
+| adversary | Fresh-context pass #3 | **CLEAN** |
+| state-manager | Propagate BC-INDEX.md title row, re-run guard scripts, confirm VP-580-012 presence, log this burst, update STATE.md, commit | `BC-INDEX.md`; this file; `STATE.md` v3.10 |
