@@ -272,4 +272,20 @@ Archived verbatim from STATE.md v3.14 before the F2-GATE-APPROVED-F3-TRANSITION 
 
 ---
 
+## Archived Checkpoint: F2-GATE-APPROVED-F3-TRANSITION (STATE.md v3.16, 2026-08-26)
+
+**SUPERSEDING NOTE:** This checkpoint is superseded by F3 story decomposition completing later the same day (STATE.md v3.17) -- see current `STATE.md` Session Resume Checkpoint for the live position.
+
+**Position (as of this checkpoint):** Phase **F3** (incremental stories) -- not yet started. F2 (spec evolution) CLOSED, human-approved 2026-08-26 at the Step 8 gate; spec version APPLIED as v2.0.0 (MAJOR) under human delegation to the orchestrator (DEC-188->DEC-310 governance-flagged reversal).
+
+**F1/F2 status (as of this checkpoint):** both COMPLETE + human-approved. F2: 12 new BCs (`§X.14` Field Option Discovery + BC-3.3.010/011 + BC-3.4.026-031), ADR-0019 (Accepted 2026-08-25, 6 amendment rounds), BC-3.8.012 reversed (DEC-310, REGISTERED). Mandatory adversarial spec-convergence loop CONVERGED (streak-6, 3/3 consecutive clean). Counts: 719 total BCs (BC-INDEX v6.82), 32 VPs, 106 holdout scenarios.
+
+**This session's work (as of this checkpoint, 2026-08-26 F2 gate close + spec-version reconciliation):** human delivered 4 decisions at the F2 gate -- (1) gate APPROVED -> F3; (2) spec version initially deferred, then delegated to orchestrator, determined MAJOR (v2.0.0); (3) F-3 (JSM D2 collision-guard extension) RESOLVED -- retain last-wins, no extension; (4) DEC-310 REGISTERED. Full detail: `cycles/cycle-002/burst-log.md` Burst 8.
+
+**Cycle-closing checklist owed (as of this checkpoint):** DEC-namespace disambiguation question (open); reversal-propagation checklist for PO/state-manager workflow (not built); `COUNT-RECONCILIATION-FORCED-CONSISTENCY-PATTERN` lesson (not actioned); 4 residual LOW doc-hygiene items from streak-6 (non-blocking); `F7-GATE-SYSTEMIC-INPUT-HASH-DRIFT` (standing, not field-dx-scoped).
+
+**Resume command (as of this checkpoint):** `/vsdd-factory:next-step` (proceed to F3 story decomposition). *(Superseded -- F3 story decomposition has since completed; see current `STATE.md`.)*
+
+---
+
 <!-- Repeat for each archived checkpoint. Maintain chronological order. -->

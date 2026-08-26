@@ -492,3 +492,47 @@ No BCs added or removed -- total stays **719** (`bc-3-issue-write.md` 123/152 in
 | human | F2 Step 8 gate review; delivered 4 decisions (gate APPROVED, spec version DEFERRED, F-3 RESOLVED, DEC-310 REGISTER NOW) | verbal/session decision, recorded here and in `STATE.md` |
 | product-owner | Flip inline spec surfaces (`bc-3-issue-write.md`, `BC-INDEX.md`, `CANONICAL-COUNTS.md`, `prd-delta-field-dx.md`) DEC-310 proposed -> registered | those 4 files (uncommitted at burst start, committed together with this burst) |
 | state-manager | Re-verify guard scripts (PASS, 719/no drift), update `STATE.md` (phase F2->F3, DEC-310 REGISTERED, F-3 RESOLVED, spec version DEFERRED), reconcile `spec-changelog.md`'s `[1.6.0]` entry, archive the prior streak-6 checkpoint to `session-checkpoints.md`, log this burst, commit all 8 touched files, push | `STATE.md`; `spec-changelog.md`; this file; `cycles/cycle-002/session-checkpoints.md`; the 4 PO-edited spec files |
+
+## Burst: Burst 9 — F3 story decomposition COMPLETE: 5 stories, 19 BCs + 32 VPs covered, acyclic wave plan (2026-08-26)
+
+**Dispatched:** story-writer (fresh context, F3 incremental-stories workflow).
+
+**What happened:** story-writer decomposed the field-dx F2-converged spec (v2.0.0 MAJOR) into 5 new stories, all `status: ready`:
+
+| Story | Wave | Deps | Points | BCs | VPs |
+|-------|------|------|--------|-----|-----|
+| S-580-1 (`jr field options <field>` command) | 1 | [] | 8 | BC-X.14.001-004 | VP-580-005..012 |
+| S-578-1 (field value-kind hint-syntax parser) | 1 | [] | 5 | BC-3.4.026 | (parser foundation) |
+| S-578-2 (`issue edit --field` hint dispatch) | 2 | [S-578-1] | 13 | BC-3.4.015/016/021/027/028/029/030/031 | VP-578-* |
+| S-578-3 (JSM `issue create --field` hint dispatch) | 2 | [S-578-1] | 8 | BC-3.8.008 | VP-578-* |
+| S-578-4 (platform `issue create --field` support) | 3 | [S-580-1, S-578-2] | — | BC-3.3.010/011, BC-3.8.012/013 (DEC-310 reversal), BC-3.4.014 | VP-578-* |
+
+Topological order: {S-580-1, S-578-1} → {S-578-2, S-578-3} → S-578-4. Acyclic (verified). All 19 BCs traced by at least one AC across the 5 stories; VP-578-001..024 + VP-580-005..012 (32 total) realized. `STORY-INDEX.md` `total_stories` bumped 156→161 (5 new Feature-Followup rows), version v1.6.09→v1.6.10.
+
+**Files touched:**
+- `stories/S-580-1-field-options-command.md` (new)
+- `stories/S-578-1-field-value-kind-hint-parser.md` (new)
+- `stories/S-578-2-edit-field-hint-dispatch.md` (new)
+- `stories/S-578-3-jsm-create-field-hint-dispatch.md` (new)
+- `stories/S-578-4-platform-create-field-support.md` (new)
+- `stories/STORY-INDEX.md` (5 new rows, `total_stories` 156→161)
+- `STATE.md` (phase F3 story-decomposition COMPLETE; pipeline AWAITING human decision on F4)
+- `cycles/cycle-002/burst-log.md` (this entry)
+- `cycles/cycle-002/session-checkpoints.md` (prior F2-GATE-APPROVED-F3-TRANSITION checkpoint archived)
+
+**Sanity check (state-manager, not a deep audit):** `STORY-INDEX.md` frontmatter `total_stories: 161` is internally consistent with the changelog's `156→161` narration and each new row's individual `156→157`...`160→161` increments; all 5 story IDs appear exactly once as manifest rows; all 5 files exist on disk. No dedicated story-count guard script exists in `scripts/` (only `check-spec-counts.sh` and `check-bc-cumulative-counts.sh`, both BC/VP-scoped, not story-scoped) — those two guards are unaffected since no BC/VP/holdout counts changed (719/32/106 unchanged).
+
+**Codifications:** F3 (incremental stories) is **COMPLETE**. Pipeline is now **AWAITING human decision** on whether to proceed to **F4** (TDD implementation, scoped to the 5 new stories). No wave has started.
+
+**Closes:** F3 story-decomposition phase. **Does NOT close:** the DEC-namespace disambiguation question (open, tracked debt); the 4 residual LOW doc-hygiene items from streak-6 (non-blocking, tracked); `F7-GATE-SYSTEMIC-INPUT-HASH-DRIFT` (standing, not field-dx-scoped); the pre-existing `STORY-INDEX-DECLARED-VS-FILE-COUNT-MISMATCH` LOW item (unrelated to this burst's additions, which were verified consistent).
+
+### Counts reconciled this burst
+
+No BCs/VPs/holdouts added or removed by this burst — 719 BCs / 32 VPs / 106 holdouts unchanged (all 19 BCs + 32 VPs cited by the new stories were already counted at F2 close). `total_stories` 156→161.
+
+### Details
+
+| Agent | Task | Output |
+|-------|------|--------|
+| story-writer | Decompose field-dx F2 spec into 5 stories with full BC/VP traceability and acyclic wave plan | 5 story files + `STORY-INDEX.md` update |
+| state-manager | Sanity-check story count consistency, update `STATE.md` (F3 COMPLETE, awaiting human F4 decision), archive prior checkpoint, log this burst, commit + push | `STATE.md`; this file; `cycles/cycle-002/session-checkpoints.md`; commit of all F3 artifacts |
