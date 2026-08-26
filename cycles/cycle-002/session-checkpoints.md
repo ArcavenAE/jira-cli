@@ -288,4 +288,26 @@ Archived verbatim from STATE.md v3.14 before the F2-GATE-APPROVED-F3-TRANSITION 
 
 ---
 
+## Archived Checkpoint: F4-WAVE-1-COMPLETE (STATE.md v3.19, 2026-08-26)
+
+**SUPERSEDING NOTE:** This checkpoint is superseded by a human-requested `/wrap` during Wave 2 S-578-2 dispatch later the same day (STATE.md v3.20) -- see current `STATE.md` Session Resume Checkpoint for the live position.
+
+**Cycle:** Field DX Feature Mode cycle (`cycle-002`) -- GitHub issues #580 (`jr field options <field>`) + #578 (`--field` value-kind hint syntax + non-JSM `issue create --field`). 5-story decomposition, full F1-F7 lifecycle, DTU not required.
+
+**Position (as of this checkpoint):** Phase **F4** (delta implementation) **IN PROGRESS**. Wave 1 of 3: **COMPLETE** -- S-578-1 (PR #739 @ `993de833`) and S-580-1 (PR #740 @ `74221bbc`) both DELIVERED + MERGED. Wave 2 (S-578-2, S-578-3) is next.
+
+**F1/F2/F3 (as of this checkpoint):** COMPLETE + human-approved (unchanged). F2 closed 2026-08-26 at the Step 8 gate: 12 new BCs, ADR-0019, BC-3.8.012 reversed (DEC-310, REGISTERED), spec v2.0.0 MAJOR applied. F3 decomposed 5 stories, acyclic 3-wave plan. Counts: 719 total BCs (BC-INDEX v6.82), 32 VPs, 106 holdout scenarios -- unchanged by S-580-1's delivery.
+
+**F4 Wave 1 (as of this checkpoint, COMPLETE 2026-08-26):** S-578-1 (field value-kind hint-syntax parser, BC-3.4.026/031, 5 pts) delivered first via the per-story-delivery pipeline: Red Gate PASS, `parse_field_kv` return type changed `HashMap<String,String>` -> `HashMap<String,FieldValueSpec>` (`FieldValueSpec{kind,value}`/`FieldValueKind{Option,Id,Name,Asset}` -- SHARED type consumed verbatim by S-578-2/S-578-3/S-578-4), 3/3 per-story adversary convergence CLEAN, PR #739 squash-merged @ `993de833`. S-580-1 (`jr field options <field>` command, BC-X.14.001-004, 8 pts) delivered second: new `src/cli/field.rs` + `Command::Field` dispatch, M1/M2/M3 context resolution (createmeta/editmeta/requesttype-fields), NEW `get_createmeta_fields` (REUSED VERBATIM by S-578-4), 5-round adversarial convergence (29->24->21->7->4->3->0 findings) including a CWE-835 infinite-loop fix and a BC-3.3.010 citation-unblock detour (reworded to prose during S-578-1's CI unblock; now upgrade-eligible to enforced symbol-form since `get_createmeta_fields` is implemented). PR #740 squash-merged @ `74221bbc`. `activation_head` advanced `993de833` -> `74221bbc`.
+
+**Wave 2 (as of this checkpoint, ready for dispatch):** S-578-2 (`issue edit --field` hint-kind dispatch, 13 pts) + S-578-3 (JSM `issue create --field` hint-kind dispatch, 8 pts), both `depends_on:[S-578-1]` (satisfied). Both will REPLACE the interim `reject_unsupported_hint_kinds` guard with real dispatch. Wave 3 (blocked on Wave 2): S-578-4 (platform `issue create --field` support + DEC-188 reversal via DEC-310, 13 pts) -- implements the platform path using S-580-1's `get_createmeta_fields` verbatim.
+
+**Decisions of record (as of this checkpoint):** DEC-310 (reverses DEC-188) -- REGISTERED 2026-08-26. ADR-0019 (Accepted 2026-08-25; 6 amendment rounds). F-3 (D2-JSM-extension) -- RESOLVED, retain last-wins. Spec version -- v2.0.0 (MAJOR), APPLIED 2026-08-26.
+
+**Cycle-closing checklist owed (as of this checkpoint):** DEC-namespace disambiguation question (open); reversal-propagation checklist for PO/state-manager workflow (not built); `COUNT-RECONCILIATION-FORCED-CONSISTENCY-PATTERN` lesson (not actioned); 4 residual LOW doc-hygiene items from streak-6 (non-blocking); 6 PR #740 pr-reviewer NON-BLOCKING follow-ups (new that burst); `F7-GATE-SYSTEMIC-INPUT-HASH-DRIFT` (standing, not field-dx-scoped).
+
+**Resume command (as of this checkpoint):** `/vsdd-factory:deliver-story S-578-2` (or `/vsdd-factory:next-step`). *(Superseded -- Wave 2 dispatch of S-578-2 has since begun and was paused mid-Step-2 by human `/wrap`; see current `STATE.md`.)*
+
+---
+
 <!-- Repeat for each archived checkpoint. Maintain chronological order. -->
