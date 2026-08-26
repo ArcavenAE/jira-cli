@@ -606,3 +606,62 @@ No BCs/VPs/holdouts added or removed — 719 BCs / 32 VPs / 106 holdouts unchang
 | pr-manager | Open PR #739, triage citation-guard CI failure, coordinate the BC-3.3.010 citation-fix detour, drive to merge | PR #739 |
 | devops-engineer | Squash-merge PR #739 to `develop` | `develop` @ `993de833` |
 | state-manager | Record S-578-1 delivery: update `sprint-state.yaml`, `STORY-INDEX.md`, `STATE.md`; log this burst; commit + push | `STATE.md`; `sprint-state.yaml`; `stories/STORY-INDEX.md`; this file |
+
+---
+
+## Burst: Burst 11 — F4 Wave 1: S-580-1 (`jr field options <field>`) DELIVERED + MERGED (PR #740 @ 74221bbc) — **WAVE 1 COMPLETE** (2026-08-26)
+
+**Parent-commit:** 993de833 (S-578-1 merge, Burst 10)
+
+**Trigger:** S-578-1 (Wave 1 story 1/2) merged; S-580-1 (Wave 1 story 2/2, no deps) dispatched next to close out Wave 1.
+
+**Dispatched:** per-story-delivery pipeline for S-580-1 (test-writer → implementer → demo-recorder → pr-manager → devops-engineer).
+
+**Adversary verdict:** 5-round per-story adversary convergence, trajectory 29→24→21→7→4→3→0 findings, converging CLEAN. Round included a CWE-835 (uncontrolled infinite loop) fix in the M1/M2/M3 context-resolution pagination path.
+
+**What happened:** S-580-1 (`jr field options <field>` command, BC-X.14.001-004, 8 pts) implemented as a new `src/cli/field.rs` + `Command::Field` dispatch. M1/M2/M3 exactly-one-mode-selector context resolution (createmeta PRIMARY platform / requesttype-fields PRIMARY JSM / editmeta FALLBACK, per ADR-0019). Normalized `FieldOption{id: Option<String>, label: Option<String>, children: Vec<FieldOption>}` model, never-drop degenerate entries, `--value` client-side filter, table/JSON output. New `get_createmeta_fields` method added to `src/api/jira/issues.rs` — reused verbatim by S-578-4 (Wave 3).
+
+**Pipeline detail:**
+- **Red Gate:** PASS.
+- **Per-story adversary convergence:** 5 rounds to CLEAN (29→24→21→7→4→3→0), including a CWE-835 infinite-loop fix in pagination handling.
+- **Citation-unblock detour:** BC-3.3.010's `get_createmeta_fields` citation (reworded to prose during S-578-1's CI unblock, Burst 10) is now upgrade-eligible back to enforced symbol-form, since the function is implemented — tracked as a spec-hygiene follow-up, not actioned in this burst (no scope change).
+- **Demos:** recorded.
+- **PR:** #740, squash-merged to `develop` @ `74221bbc` (2026-08-26T17:17:25-05:00).
+
+**Six PR #740 pr-reviewer NON-BLOCKING follow-ups** recorded as tracked debt (see STATE.md Drift/Standing Items): S1 (`get_createmeta_fields` total-absent short-page pagination truncation risk, defensive-only), S2 (`.or(project_override)` global `--project` override untested at unit level — mutation survivor, full `cargo mutants` CI passed), S3 (test name references `partial_match` but exercises `search_field_list` — rename), N1 (`#[serde(alias="results")]` citation unverified), N2 (CLAUDE.md `src/cli/` tree missing `field.rs`/`jr field` family).
+
+**Files touched (Dim-1): 4 unique files (factory-artifacts, this burst)**
+
+- sprint-state.yaml
+- stories/STORY-INDEX.md
+- STATE.md
+- cycles/cycle-002/burst-log.md
+
+(develop-side, via PR #740, not counted in Dim-1 above: `src/cli/field.rs` (new), `Command::Field` dispatch wiring, `get_createmeta_fields` in `src/api/jira/issues.rs`, associated test files (test-writer's Red Gate suite + 5-round adversary fixes), demo evidence.)
+
+**Dim-2 Attestation:** `scripts/check-spec-counts.sh` → exit 0. `scripts/check-bc-cumulative-counts.sh` → exit 0 (719 total across 9 files, unchanged). S-580-1 consumed already-counted BC-X.14.001-004 — no BC/VP/holdout count change.
+
+**Dim-5 Attestation:** N/A — no binary/WASM artifact produced by this burst.
+
+**Dim-6 Attestation:** PASS (delegated) — `cargo fmt --all -- --check` and `cargo clippy -- -D warnings` enforced on PR #740 by jira-cli's `ci-gate`; green before squash-merge.
+
+**Dim-7 Attestation:** PASS (delegated) — test-writer's Red Gate suite plus the 5-round adversary fix suite for S-580-1 ran green in `ci-gate`'s `test` job before merge.
+
+**Codifications:** F4 Wave 1 is now **COMPLETE** — both S-578-1 (PR #739) and S-580-1 (PR #740) delivered and merged. Wave 2 (S-578-2, S-578-3) is unblocked and ready for dispatch (both `depends_on:[S-578-1]`, satisfied). Wave 3 (S-578-4) remains blocked on Wave 2. `activation_head` advanced `993de833` → `74221bbc`.
+
+**Closes:** F4 Wave 1 (both stories). **Does NOT close:** Wave 2/3 (S-578-2, S-578-3, S-578-4 still `ready`, not yet dispatched); the DEC-namespace disambiguation question; the 4 residual LOW doc-hygiene items from streak-6; the 6 new PR #740 pr-reviewer follow-ups; `F7-GATE-SYSTEMIC-INPUT-HASH-DRIFT` (standing, not field-dx-scoped).
+
+### Counts reconciled this burst
+
+No BCs/VPs/holdouts added or removed — 719 BCs / 32 VPs / 106 holdouts unchanged (BC-X.14.001-004 were already counted at F2 close). `total_stories` unchanged at 161 (status transition only).
+
+### Details
+
+| Agent | Task | Output |
+|-------|------|--------|
+| test-writer | Write failing tests for `jr field options <field>` M1/M2/M3 context resolution (Red Gate) | Red Gate test suite for S-580-1 |
+| implementer | Implement `src/cli/field.rs`, `Command::Field` dispatch, `get_createmeta_fields`, `FieldOption` model | `src/cli/field.rs` (new) + `src/api/jira/issues.rs` changes |
+| demo-recorder | Record demo evidence for S-580-1 ACs | demo artifacts |
+| pr-manager | Open PR #740, triage 5-round adversarial review incl. CWE-835 fix, drive to merge | PR #740 |
+| devops-engineer | Squash-merge PR #740 to `develop` | `develop` @ `74221bbc` |
+| state-manager | Record S-580-1 delivery + Wave 1 closure: update `sprint-state.yaml`, `STORY-INDEX.md`, `STATE.md`; log this burst; commit + push | `STATE.md`; `sprint-state.yaml`; `stories/STORY-INDEX.md`; this file |

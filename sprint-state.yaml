@@ -1031,9 +1031,9 @@ cycle_002_field_dx:
   title: "field-dx bundle (issues #580 + #578)"
   bundle: field-dx
   cycle: cycle-002
-  wave_1_status: "IN PROGRESS — S-578-1 delivered/merged; S-580-1 still to deliver"
-  wave_2_status: "blocked — depends_on wave 1 complete (S-578-2, S-578-3 depend_on S-578-1)"
-  wave_3_status: "blocked — S-578-4 depends_on [S-580-1, S-578-2]"
+  wave_1_status: "COMPLETE — S-578-1 (PR #739 @ 993de833) + S-580-1 (PR #740 @ 74221bbc) both merged. develop advanced to 74221bbc."
+  wave_2_status: "unblocked — wave 1 complete; S-578-2/S-578-3 depend_on S-578-1 (merged); ready for dispatch"
+  wave_3_status: "blocked — S-578-4 depends_on [S-580-1, S-578-2]; S-580-1 satisfied, S-578-2 still pending"
   wave_1:
     stories:
       - id: S-578-1
@@ -1051,16 +1051,17 @@ cycle_002_field_dx:
         notes: "Wave 1 story 1/2. `parse_field_kv` return type changed HashMap<String,String> -> HashMap<String,FieldValueSpec>; FieldValueSpec{kind,value}/FieldValueKind{Option,Id,Name,Asset} — SHARED type consumed by S-578-2/S-578-3/S-578-4. Unicode-scalar-safe splitting (FIX-F6-LRE-1 class). Red Gate PASS; 3/3 per-story adversary convergence CLEAN; interim guard applied; demos recorded; PR #739 squash-merged to develop @ 993de833. Citation-fix detour (BC-3.3.010 citation form) resolved pre-merge, no scope change. Single-file change src/cli/issue/create.rs. Closes #578 item 1 part 2 of field-dx bundle."
       - id: S-580-1
         title: "jr field options <field> command"
-        status: ready
-        pr: null
-        merge_sha: null
-        merged_at: null
+        status: completed
+        pr: 740
+        merge_sha: 74221bbcc34de0c4aa5ea427eff56a0e78a7728b
+        merged_at: "2026-08-26T17:17:25-05:00"
+        merged_via: "gh pr merge --squash (base develop)"
         depends_on: []
         bc_anchors: [BC-X.14.001, BC-X.14.002, BC-X.14.003, BC-X.14.004]
         vp_anchors: [VP-580-005, VP-580-006, VP-580-007, VP-580-008, VP-580-009, VP-580-010, VP-580-011, VP-580-012]
         holdout_anchors: []
         points: 8
-        notes: "Wave 1 story 2/2, no deps, blocks S-578-4 (get_createmeta_fields REUSED VERBATIM). Not yet delivered — remaining Wave 1 story."
+        notes: "Wave 1 story 2/2, no deps, blocks S-578-4 (get_createmeta_fields REUSED VERBATIM). Delivered via 5-round adversarial convergence + CWE-835 infinite-loop fix + a BC-3.3.010 citation-unblock detour (reworded to prose during S-578-1's CI unblock; now eligible for upgrade to enforced symbol-form since get_createmeta_fields is implemented). PR #740 squash-merged to develop @ 74221bbc. WAVE 1 COMPLETE (both stories merged)."
   wave_2:
     stories:
       - id: S-578-2
