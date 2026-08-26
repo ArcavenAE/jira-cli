@@ -1,6 +1,9 @@
 use crate::api::client::JiraClient;
 use crate::api::pagination::{CursorPage, OffsetPage};
-use crate::types::jira::{Comment, CreateIssueResponse, EditMeta, Issue, TransitionsResponse};
+use crate::types::jira::{
+    AllowedValue, Comment, CreateIssueResponse, EditMeta, EditMetaFieldSchema, Issue,
+    TransitionsResponse,
+};
 use anyhow::Result;
 use serde::Deserialize;
 use serde_json::Value;
@@ -29,6 +32,20 @@ const BASE_ISSUE_FIELDS: &[&str] = &[
     "parent",
     "issuelinks",
 ];
+
+/// Hard cap on the number of pages [`JiraClient::get_createmeta_fields`] will
+/// fetch (S-580-1, SEC-001, CWE-400/770 — "no hard iteration cap").
+///
+/// At `page_size = 200` this comfortably exceeds any realistic Jira
+/// project's create-screen field count (`500 * 200 = 100,000` fields), so it
+/// never fires in real usage or in the existing test suite — it exists
+/// purely as a fail-loud backstop against an unbounded loop, the same
+/// TRUNCATE-vs-cap tradeoff class as
+/// [`crate::cli::field::MAX_FIELD_OPTION_DEPTH`], except here the response
+/// is a loud `Err` rather than a silent truncation, since a runaway
+/// pagination loop (unlike option-tree depth) has no sensible "leaf" to
+/// stop at.
+const MAX_CREATEMETA_PAGES: u32 = 500;
 
 /// A resolved `--component` add/remove target's WIRE identity (Step-4.5
 /// Round 3, F1 fix; BC-3.4.022/BC-3.4.024, BC-8.4.001, BC-8.1.008).
@@ -1069,6 +1086,137 @@ impl JiraClient {
         }
         Ok(all)
     }
+
+    /// Enumerate a custom field's allowed options via project+issue-type
+    /// createmeta (M2, `jr field options --type <T>`, ADR-0019 §1).
+    ///
+    /// Calls `GET /rest/api/3/issue/createmeta/{projectIdOrKey}/issuetypes/{issueTypeId}`
+    /// — the current, non-deprecated createmeta-fields-by-issue-type form
+    /// (CHANGE-1304 deprecated the old `createmeta?expand=` shape). This is
+    /// a DIFFERENT endpoint from [`get_issue_types_for_project`], which
+    /// resolves the issue-type NAME to an id BEFORE this call — the two are
+    /// distinct, independently offset-paginated calls (Architecture
+    /// Compliance Rule 7).
+    ///
+    /// Offset-paginated internally (`startAt`/`maxResults`/`total`), same
+    /// pagination family as [`get_issue_types_for_project`]'s sibling call —
+    /// one or more `GET`s until all field pages are collected, so a target
+    /// field on page ≥2 still resolves (AC-008). Not cached — this is a
+    /// read-only, per-invocation enumeration.
+    ///
+    /// Bounded by [`MAX_CREATEMETA_PAGES`] (S-580-1, SEC-001, CWE-400/770):
+    /// the `done` computation below combines two independently-derived
+    /// signals (`total`-driven vs `page_size`-driven) and is therefore not
+    /// the sole termination guarantee — a mutated/degenerate `done`
+    /// expression, or a malicious/misbehaving server that never reports a
+    /// short or empty page, would otherwise loop forever, repeating the
+    /// identical GET. The iteration count is checked at the TOP of every
+    /// loop pass, independent of `done`, so it terminates the loop even if
+    /// `done`'s logic is defeated entirely.
+    pub(crate) async fn get_createmeta_fields(
+        &self,
+        project_key: &str,
+        issue_type_id: &str,
+    ) -> Result<Vec<CreateMetaField>> {
+        use crate::error::JrError;
+
+        let page_size: u32 = 200;
+        let mut all: Vec<CreateMetaField> = Vec::new();
+        let mut start_at: u32 = 0;
+        let mut pages_fetched: u32 = 0;
+        loop {
+            if pages_fetched >= MAX_CREATEMETA_PAGES {
+                return Err(anyhow::anyhow!(JrError::Internal(format!(
+                    "Internal error: createmeta field pagination for project '{project_key}' \
+                     issue type '{issue_type_id}' exceeded {MAX_CREATEMETA_PAGES} pages \
+                     without completing — aborting to avoid an unbounded loop. This should \
+                     not happen against a well-behaved Jira instance; if it does, please \
+                     report it as a bug."
+                ))));
+            }
+            pages_fetched += 1;
+            let response: CreateMetaFieldsResponse = self
+                .get(&format!(
+                    "/rest/api/3/issue/createmeta/{}/issuetypes/{}?startAt={}&maxResults={}",
+                    urlencoding::encode(project_key),
+                    urlencoding::encode(issue_type_id),
+                    start_at,
+                    page_size,
+                ))
+                .await?;
+            let total = response.total;
+            let page_len = response.fields.len() as u32;
+            all.extend(response.fields);
+            // `total` is `#[serde(default)]`, so a MISSING `total` in the
+            // wire response deserializes to 0 — indistinguishable from a
+            // genuinely-empty result set at the type level. When `total` is
+            // present (`> 0`), trust it: a page can legitimately be shorter
+            // than `page_size` while more pages remain (see the existing
+            // 2-page fixture, which returns 1-field pages against a
+            // `total: 2`). When `total` is absent/zero, fall back to the
+            // full-page heuristic: only stop once a page comes back short
+            // of `page_size` (or empty) — a MISSING `total` on a FULL page
+            // must not silently truncate to page 1 (C-LOW-2).
+            //
+            // `page_len == 0` is checked in BOTH branches (S-580-1, CWE-835):
+            // an empty page while `start_at < total` is reachable via
+            // permission-filtered short/empty pages (the JRACLOUD-71293/95368
+            // class — see `get_issue_types_for_project`'s identical guard
+            // above) and previously left `done` false in the `total > 0`
+            // branch, so `start_at += page_len` added 0 and the identical GET
+            // repeated forever.
+            let done = if total > 0 {
+                page_len == 0 || start_at + page_len >= total
+            } else {
+                page_len == 0 || page_len < page_size
+            };
+            if done {
+                break;
+            }
+            start_at += page_len;
+        }
+        Ok(all)
+    }
+}
+
+/// A single field descriptor returned by
+/// `GET /rest/api/3/issue/createmeta/{projectIdOrKey}/issuetypes/{issueTypeId}`
+/// (M2 enumeration, ADR-0019 §1, `jr field options --type <T>`).
+///
+/// Reuses [`AllowedValue`]/[`EditMetaFieldSchema`] from
+/// `types::jira::editmeta` rather than redefining a second, structurally
+/// identical pair — both createmeta and editmeta's `allowedValues[].id`
+/// shape are the same "observed-not-typed" structure per Jira's v3 OpenAPI
+/// (ADR-0019 §1 "Type reuse" note). Kept inline in `issues.rs`, following
+/// the exact precedent [`IssueTypeEntry`]/[`CreatemetaIssueTypesResponse`]
+/// already established for the sibling createmeta-issuetypes call.
+#[derive(Debug, Deserialize)]
+pub(crate) struct CreateMetaField {
+    #[serde(rename = "fieldId")]
+    pub field_id: String,
+    pub name: String,
+    pub schema: EditMetaFieldSchema,
+    #[serde(rename = "allowedValues")]
+    pub allowed_values: Option<Vec<AllowedValue>>,
+    /// See [`EditMetaField::auto_complete_url`] — same wire shape, same
+    /// BC-X.14.004 graceful-degrade consumer (`jr field options --type`).
+    #[serde(rename = "autoCompleteUrl", default)]
+    pub auto_complete_url: Option<String>,
+}
+
+/// Response wrapper for
+/// `GET /rest/api/3/issue/createmeta/{projectIdOrKey}/issuetypes/{issueTypeId}`.
+///
+/// Offset-paginated (`startAt`/`maxResults`/`total`); prefers the `fields`
+/// key, tolerates the OpenAPI-synonymous `results` key (AC-008) — no
+/// `values`, no `nextPageToken`, same pagination family as the sibling
+/// [`CreatemetaIssueTypesResponse`].
+#[derive(Debug, Deserialize)]
+struct CreateMetaFieldsResponse {
+    #[serde(alias = "results", default)]
+    pub fields: Vec<CreateMetaField>,
+    #[serde(default)]
+    pub total: u32,
 }
 
 /// Issue type entry returned by `GET /rest/api/3/issue/createmeta/{projectKey}/issuetypes`.
