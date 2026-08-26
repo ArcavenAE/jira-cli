@@ -606,8 +606,9 @@ hand-rolled index arithmetic.**
 - Research: `.factory/research/field-dx-context-mechanism-2026-08-25.md` (ranked recommendation,
   per-mechanism verdict table, Q-A/Q-B graceful-degradation findings).
 - Behavioral contracts: `bc-3-issue-write.md` (BC-3.3.010/011, BC-3.4.026-031, BC-3.8.008
-  amendment, BC-3.8.012 reversal — governance-flagged separately as DEC-307, not an architecture
-  decision this ADR covers); `cross-cutting.md` §X.14 (BC-X.14.001-004).
+  amendment, BC-3.8.012 reversal — governance-flagged separately as DEC-310 (renumbered from the
+  initially-proposed DEC-307, which was already cycle-001's), not an architecture decision this
+  ADR covers); `cross-cutting.md` §X.14 (BC-X.14.001-004).
 - Structural precedent code (as-built, cited for pattern only — not yet extended by this
   bundle): `src/api/jira/issues.rs::get_issue_types_for_project` + its inline
   `IssueTypeEntry`/`CreatemetaIssueTypesResponse` types (createmeta-family, in-file-type

@@ -36,9 +36,9 @@ realizes_inline_vps:       # proptest/unit REALIZATIONS of EXISTING inline VPs �
   - VP-578-012   # :asset composer safety proptest — never malformed JSON body (BC-3.4.030) — absorbs former VP-578-046 + malformed-:asset part of VP-578-045
   - VP-578-013   # malformed-hint edge-case catalog: exit-64, one-error-per-invocation (BC-3.4.031) — absorbs former VP-578-045
   - VP-578-014   # EC-6/EC-7 regression pins: colon-in-VALUE resolves normally, unknown-kind fires the specific error (BC-3.4.031)
-  - VP-578-017   # DEC-307 reversal: `--field` alone (no `--request-type`, well-formed) → exit 0, platform POST with field merged (BC-3.8.012) — realized §1.1 (rewritten holdouts H-NEW-PREFLIGHT-001/006 + create.rs guard-removal regression tests)
-  - VP-578-018   # DEC-307 reversal: `--field --on-behalf-of` (no `--request-type`) → exit 64 via BC-3.8.013 standalone guard only, combined guard REMOVED (BC-3.8.012/013) — realized §1.1 (rewritten holdout H-NEW-PREFLIGHT-003 + create.rs guard-removal/combined-narrowing regression tests)
-  - VP-578-019   # DEC-307 reversal regression pin: `--on-behalf-of` alone → exit 64 via BC-3.8.013, unchanged wire-for-wire (BC-3.8.013) — realized §1.1 (unchanged holdout H-NEW-PREFLIGHT-002 + create.rs guard-removal regression tests)
+  - VP-578-017   # DEC-310 reversal: `--field` alone (no `--request-type`, well-formed) → exit 0, platform POST with field merged (BC-3.8.012) — realized §1.1 (rewritten holdouts H-NEW-PREFLIGHT-001/006 + create.rs guard-removal regression tests)
+  - VP-578-018   # DEC-310 reversal: `--field --on-behalf-of` (no `--request-type`) → exit 64 via BC-3.8.013 standalone guard only, combined guard REMOVED (BC-3.8.012/013) — realized §1.1 (rewritten holdout H-NEW-PREFLIGHT-003 + create.rs guard-removal/combined-narrowing regression tests)
+  - VP-578-019   # DEC-310 reversal regression pin: `--on-behalf-of` alone → exit 64 via BC-3.8.013, unchanged wire-for-wire (BC-3.8.013) — realized §1.1 (unchanged holdout H-NEW-PREFLIGHT-002 + create.rs guard-removal regression tests)
   - VP-580-005   # graceful-degrade: no enumerable options → exit 0, no panic on untyped allowedValues (BC-X.14.004) — absorbs former VP-580-041
 related_bcs:
   - BC-3.3.010
@@ -131,7 +131,7 @@ twenty-two ids are declared inline in `bc-3-issue-write.md`): VP-578-001/002/003
 guarantees this delta realizes (§1), VP-578-015/016 the JSM parity pair (frontmatter
 `aligns_with_inline_vps`; VP-578-016 is **UNVERIFIED / parity-PENDING** — its `requestFieldValues`
 write shapes are realized at F4 against live JSM, not pinned firm by this delta — see §1.1),
-VP-578-017/018/019 the DEC-307 reversal's own VPs on BC-3.8.012/013, VP-578-020 the createmeta-family
+VP-578-017/018/019 the DEC-310 reversal's own VPs on BC-3.8.012/013, VP-578-020 the createmeta-family
 offset-pagination guarantee on BC-3.3.010 — covering **BOTH** the FIELDS (`get_createmeta_fields`, `--field`)
 and ISSUE-TYPES (`get_issue_types_for_project`, `--type`) createmeta endpoints — and VP-578-021/022 the
 two F2-amendment additions (create-path Gate-B guard on BC-3.3.010; `:asset` cold-cache failure taxonomy
@@ -159,7 +159,7 @@ Eighteen authoritative VP guarantees form this delta's **core proptest/unit surf
 realizations of existing inline VPs + seven new inline VPs — the F5-pass-1 trio VP-580-006/007/008
 plus the four F2 adversary-convergence additions VP-578-021, VP-578-022, VP-580-010, VP-580-011),
 grouped by concern. **All ids are the canonical inline ids** (§0.1). A further **eight** declared
-#578 inline VPs (VP-578-001..004, 017..020) are realized by reuse, by the DEC-307 reversal's
+#578 inline VPs (VP-578-001..004, 017..020) are realized by reuse, by the DEC-310 reversal's
 holdout/regression work, and (VP-578-020) by the new createmeta-pagination tests (**both** the
 FIELDS and ISSUE-TYPES createmeta endpoints) — catalogued separately in **§1.1** — as is the
 JSM-parity pair VP-578-015/016 (frontmatter
@@ -215,7 +215,7 @@ not here). For completeness, the remaining **eight** declared `VP-578-0xx` ids r
 §1 core surface — the full #578 inline span is now **VP-578-001..022** — are realized as follows.
 **None is left without a realization pointer.**
 VP-578-001..004 are the platform-**create** path VPs (realized largely by reuse of the VP-396-009
-**edit**-path realizations, transplanted to create); VP-578-017/018/019 are the **DEC-307 reversal's**
+**edit**-path realizations, transplanted to create); VP-578-017/018/019 are the **DEC-310 reversal's**
 own VPs (realized by the rewritten holdout scenarios + the `create.rs` guard-removal regression
 tests); **VP-578-020** (FIELDS half = adversary pass-28 F-1; ISSUE-TYPES half = adversary pass-29 F-1)
 is the createmeta-family offset-pagination guarantee across **both** createmeta endpoints (FIELDS via
@@ -1052,7 +1052,7 @@ cleared this pass (§5).
 eighteen core VP guarantees (§1) are realized as **new** inline `proptest!`/unit/integration tests
 at the cited locations in F4, and as `examine_globs` additions in F6; the remaining eight declared
 #578 inline VPs realized outside the core surface (§1.1 — VP-578-001..004, 017..020) are realized by
-reuse of the VP-396-009 edit-path realizations transplanted to the create path, by the DEC-307
+reuse of the VP-396-009 edit-path realizations transplanted to the create path, by the DEC-310
 reversal's rewritten holdout scenarios + `create.rs` guard-removal regression tests, and (VP-578-020)
 by new two-page createmeta wiremock tests (**both** the FIELDS and ISSUE-TYPES createmeta endpoints)
 in `tests/issue_create.rs`. The full declared inline inventory

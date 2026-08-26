@@ -39,8 +39,9 @@ already recorded by the product-owner in the prior F2 burst; see
 `risk-register.md` were left untouched: no HIGH-impact R-NNN risk item references field
 enumeration or `--field` hint syntax (grep-verified against `risk-register.md`), and module
 criticality classification is deferred to Wave 1/2 story decomposition (F3), since no
-implementation module exists yet to classify a kill-rate tier against. The DEC-307 governance
-flag (BC-3.8.012's reversal of a deliberate breaking change, DEC-188) is the product-owner's/
+implementation module exists yet to classify a kill-rate tier against. The DEC-310 governance
+flag (renumbered from the initially-proposed DEC-307, which was already cycle-001's;
+BC-3.8.012's reversal of a deliberate breaking change, DEC-188) is the product-owner's/
 orchestrator's registration responsibility, not an architecture decision — this ADR's Source/
 Origin section cites it for context only and does not attempt to resolve it.
 
