@@ -4,7 +4,7 @@ phase: phase-f2-spec-evolution
 cycle: field-dx
 issues: [580, 578]
 producer: formal-verifier
-timestamp: 2026-08-26   # F2 adversary-convergence round-3 (VP amendments only, NO new VP — total stays 30): F-A VP-578-013 §3 empty-value→exit-64 scoped to `:asset` ONLY (`:id`/`:name` PASS-THROUGH, EC-8/EC-9) + `prop_oneof!` adds `:name`; F-C VP-578-012 §2 `W:Y:Z` distinct extra-colon message (EC-2d); F-B VP-580-005 §2 strengthened (never-drop count + None→null + pinned `"—"`/`"(unnamed)"`) and VP-580-008 gains (d) degenerate-entry rendering. Prior round-2 fix-chain same day (Pass1-F1 VP-580-006 3-bool rewrite; Pass2-F1 VP-578-022 3 call sites; Pass2-F3 VP-578-012 `:`-split; Pass2-F2 VP-580-012 minted); round-1 F2 pass (D1/D2/D3 + C-LOW/B-F1); F5-pass-1 revision was 2026-08-25. VP total 29 → 30 (unchanged by round-3).
+timestamp: 2026-08-26   # F2 adversary-convergence round-3 (VP amendments only, NO new VP — total stays 30): F-A VP-578-013 §3 empty-value→exit-64 scoped to `:asset` ONLY (`:id`/`:name` PASS-THROUGH, EC-8/EC-9) + `prop_oneof!` adds `:name`; F-C VP-578-012 §2 `W:Y:Z` distinct extra-colon message (EC-2d); F-B VP-580-005 §2 strengthened (never-drop count + None→null + pinned `"—"`/`"(unnamed)"`) and VP-580-008 gains (d) degenerate-entry rendering. Prior round-2 fix-chain same day (Pass1-F1 VP-580-006 3-bool rewrite; Pass2-F1 VP-578-022 3 call sites; Pass2-F3 VP-578-012 `:`-split; Pass2-F2 VP-580-012 minted); round-1 F2 pass (D1/D2/D3 + C-LOW/B-F1); F5-pass-1 revision was 2026-08-25. VP total 29 → 30 (unchanged by round-3). F2 adversary-convergence round-4 (VP total 30 → 31, ONE new VP): MED-3 VP-578-013 §3 proptest splits `:option` empty → `is_err()` (downstream `allowedValues` match-miss, EC-3.4.016-2) vs `:id`/`:name` → `is_ok()` pass-through vs `:asset` → `is_err()` structural; F-1 VP-580-007 gains sub-points (g)/(h)/(i) reconciling the `--value` filter with F-B's `Option<String>` (None not a match source, never-drop, `--value ""`≡absent incl. degenerate entry); F-2/D4 **VP-578-023 MINTED** (non-cascading `>`-collision message EC-3.4.027-7 + bare-form `>`-literal + `AllowedValue.children: Vec` type dep; sibling to VP-578-008); item-4 VP-580-012 BC-body back-fill confirmed DONE (cross-cutting.md ~L2805); O-3 decision: transitive VP-578-020 coverage sufficient for field-options M2 page≥2, no new VP. VP-578-023's BC-body anchor is now the sole pending one-line back-fill (VP-580-012's closed).
 status: complete
 convention: inline-proptest   # this repo has NO centralized VP-NNN registry — see §0
 # ONE authoritative VP id per guarantee. The parallel `VP-*-04x` band an earlier revision of
@@ -15,13 +15,14 @@ new_properties:            # genuinely NEW inline VPs — extend the existing VP
   - VP-578-020   # createmeta-family multi-page resolution (BC-3.3.010) — FIELDS half: adversary pass-28 F-1; ISSUE-TYPES extension: adversary pass-29 F-1 (C-LOW attribution sync — BC-3.3.010 attributes the issuetypes half to pass-29); ADR-0019 §1 offset-pagination across BOTH createmeta endpoints: (a) FIELDS (`get_createmeta_fields`) — a `--field` target on fields-page ≥2 is collected and resolves (exit 0), not dropped; AND (b) ISSUE-TYPES (`get_issue_types_for_project`, the `--type` name→id resolution in src/api/jira/issues.rs) — a `--type` entry on issuetypes-page ≥2 resolves to its issueTypeId (exit 0), not dropped; added inline to BC-3.3.010
   - VP-578-021   # create-path Gate-B collision guard (BC-3.3.010, ADR-0019 § Amendment 2026-08-26 D2) — D2 gap; shared `field_resolve::detect_flag_field_overlap` on the create path (any argv order, any hint kind, every Gate-B-governed field) → exit 64, ZERO HTTP, symmetric with edit's EC-3.4.017-16; modeled on the edit-path Gate-B VP (VP-396-005); added inline to BC-3.3.010 (back-fills the PO's D2 placeholder)
   - VP-578-022   # :asset cold-cache workspace-discovery FAILURE taxonomy (BC-3.4.030, B-LOW; Pass2-F1 widened) — each row (403/404 → Assets-unavailable exit 64; 200 + empty `values` → no-workspace exit 64; 401 → standard auth mapping; 5xx/network → standard API/network mapping) exercised via wiremock on ALL THREE call sites (edit, platform-create, and JSM `handle_jsm_create`) — all three share `get_or_fetch_workspace_id`, and this taxonomy is wire-shape-INDEPENDENT (fires during workspace-id resolution, before any :asset array is composed on any path). The JSM :asset HAPPY-PATH `requestFieldValues` WIRE shape stays UNVERIFIED/deferred (VP-578-016) — only the failure taxonomy is asserted on all 3; added inline to BC-3.4.030 (back-fills the PO's B-LOW placeholder)
+  - VP-578-023   # non-cascading `>`-collision message + bare-form `>`-literal behavior (BC-3.4.027 EC-3.4.027-7 / BC-3.4.015, ADR-0019 § Amendment 2026-08-26 D4, adversary tag F-2) — sibling to VP-578-008: (i) `--field cf:option=A>B` on a PLAIN (non-cascading) `option` field whose parent `A` resolves but whose matched parent's `children` collection is EMPTY → exit 64 with pinned substrings "is not a cascading select" + "remove the" (EC-3.4.027-7; detected STRUCTURALLY via the empty-`children` check, NEVER a `schema.type` lookup); (ii) bare `--field cf=Parent>Child` treats `>` as a LITERAL character (no split) → the whole-string `"Parent>Child"` match-miss falls through to the EXISTING EC-3.4.016-2 unresolvable-value error, never attempting a cascading split (D4 cell b). Type dependency: `src/types/jira/editmeta.rs::AllowedValue` gains `#[serde(default)] pub children: Vec<AllowedValue>` (Vec, not Option<Vec>). NOTE: no PO "verifier to assign VP id" placeholder existed in the BC files (grep-confirmed) — so VP-578-023's inline BC-body anchor (BC-3.4.027's VP-578-008 [EXTENDED D4] note + BC-3.4.015's `>`-literal note) is a pending one-line back-fill for state-manager/PO (see §5), not an edit this verifier made to a BC file
   - VP-580-006   # context mutual-exclusion arity guard (BC-X.14.001 Invariant 1) — was the gap; added inline to BC-X.14.001. NARROWED per ADR-0019 § Amendment D1: pure fn is now `resolve_field_context(has_type, has_request_type, has_issue) -> Result<Mode, ArityError>` — 3-bool domain, `has_project` axis DROPPED
   - VP-580-007   # --value client-side filter correctness (BC-X.14.002) — was the gap; added inline to BC-X.14.002
   - VP-580-008   # table/JSON output-shape (BC-X.14.003) — was the gap; added inline to BC-X.14.003
   - VP-580-009   # `--project --request-type` valid M3, NOT an arity error (BC-X.14.004) — adversary pass-20 M1 / ADR-0019 §1 regression guard; realized as the positive `--project --request-type → Ok` case of VP-580-006's arity proptest
   - VP-580-010   # M2 post-arity project resolution (BC-X.14.001, ADR-0019 § Amendment 2026-08-26 D1) — separate SIBLING pure fn `resolve_m2_project(cli_project: Option<&str>, config: &Config) -> Option<String>`; M2 succeeds when EITHER an explicit `--project` OR a profile/config-default project exists, exits 64 pre-HTTP only when NEITHER exists; mirrors BC-3.3.010's create-path flag-or-default project-resolution VP shape; added inline to BC-X.14.001 (back-fills the PO's D1 placeholder)
   - VP-580-011   # --value + graceful-degrade interaction (BC-X.14.002, B-LOW) — `--value` present against a zero-enumerable-options field: filter applies POST-fetch, degrade hint still fires on stderr, stdout stays `[]`/empty table, exit 0; VP-580-005 companion; added inline to BC-X.14.002 (back-fills the PO's B-LOW placeholder)
-  - VP-580-012   # `--project` not-found (404) taxonomy on `jr field options` M2 + M3 enumeration paths (BC-X.14.004, F2 adversary-convergence round-2 Pass2-F2) — a nonexistent/inaccessible `--project` yields a genuine HTTP 404 (NOT a pre-HTTP arity failure): on M2 from whichever createmeta-family call runs first (`get_issue_types_for_project`'s `GET .../createmeta/{project}/issuetypes`, or `get_createmeta_fields`), on M3 from `get_or_fetch_project_meta`'s `GET /rest/api/3/project/{key}` → exit 64, "project not found or not accessible", zero mutating HTTP. Distinct HTTP-failure class from the pre-HTTP arity/companion-absent rejections (VP-580-006/010) and the non-JSM wrong-type row. Realized WITHIN VP-580-004's per-row taxonomy coverage (EC-X.14.004-6 + the new taxonomy row) as a durable regression pin — NOT a separate §1 core-surface row (mirrors VP-580-009's relationship to VP-580-006). NOTE: no PO placeholder marker existed in cross-cutting.md this round, so its inline BC-body declaration is a pending one-line back-fill for state-manager/PO (see §5)
+  - VP-580-012   # `--project` not-found (404) taxonomy on `jr field options` M2 + M3 enumeration paths (BC-X.14.004, F2 adversary-convergence round-2 Pass2-F2) — a nonexistent/inaccessible `--project` yields a genuine HTTP 404 (NOT a pre-HTTP arity failure): on M2 from whichever createmeta-family call runs first (`get_issue_types_for_project`'s `GET .../createmeta/{project}/issuetypes`, or `get_createmeta_fields`), on M3 from `get_or_fetch_project_meta`'s `GET /rest/api/3/project/{key}` → exit 64, "project not found or not accessible", zero mutating HTTP. Distinct HTTP-failure class from the pre-HTTP arity/companion-absent rejections (VP-580-006/010) and the non-JSM wrong-type row. Realized WITHIN VP-580-004's per-row taxonomy coverage (EC-X.14.004-6 + the new taxonomy row) as a durable regression pin — NOT a separate §1 core-surface row (mirrors VP-580-009's relationship to VP-580-006). DONE — the inline BC-body declaration now exists in `cross-cutting.md` BC-X.14.004's Verification Properties (~line 2805, alongside VP-580-004/005/009); the round-2/round-3 "pending back-fill" flag is CLOSED (F2 round-4)
 realizes_inline_vps:       # proptest/unit REALIZATIONS of EXISTING inline VPs — no new id, no duplicate
   - VP-578-001   # platform-create `--field` resolves via createmeta (never editmeta) (BC-3.3.010) — realized §1.1 (tests/issue_create.rs createmeta path, reuses VP-396-009 edit-path realization transplanted to create)
   - VP-578-002   # fields.json cache SHARED between `edit --field` and `create --field`, same profile (BC-3.3.010) — realized §1.1 (tests/issue_create.rs warm-cache reuse; shares resolve_edit_fields/write_fields_cache from VP-396-009)
@@ -108,8 +109,8 @@ reconciliation note covered):
 | VP-580-040 | BC-X.14.001 Inv 1 | **VP-580-006** *(NEW)* | **Gap, not a duplicate.** No inline VP covered Invariant 1's mutual-exclusion; VP-580-006 is added inline to BC-X.14.001. |
 | VP-580-041 | BC-X.14.004 | **VP-580-005** | Same guarantee — graceful degrade (empty options → exit 0; the no-panic-on-arbitrary-`serde_json::Value` normalizer proptest is VP-580-005's property-test realization). |
 
-**Seven genuinely-new VP-580 ids** are minted this delta (each ADDED to — or, for VP-580-012, still
-PENDING a one-line back-fill to — its BC body; see §5). The F5-pass-1 set (four): three F5-gap
+**Seven genuinely-new VP-580 ids** are minted this delta (each ADDED to its BC body — VP-580-012's
+own one-line back-fill to `cross-cutting.md` BC-X.14.004 is now DONE, ~line 2805; see §5). The F5-pass-1 set (four): three F5-gap
 VPs — **VP-580-006** (BC-X.14.001 Invariant 1 mutual-exclusion), **VP-580-007** (BC-X.14.002
 `--value` filter), **VP-580-008** (BC-X.14.003 output shape) — plus the pass-20 regression pin
 **VP-580-009** (BC-X.14.004 `--project --request-type` is a VALID M3, not an arity error; realized
@@ -123,14 +124,18 @@ enumeration paths; realized WITHIN VP-580-004's per-row taxonomy coverage, not a
 core-surface row, mirroring VP-580-009). All seven **extend** the existing `VP-580-0xx`
 sequence (prior max was `005`, now `012`); they are NOT a parallel band.
 
-**Three VP-578-0xx ids are newly minted across this cycle** — **VP-578-020** (createmeta-family
+**Four VP-578-0xx ids are newly minted across this cycle** — **VP-578-020** (createmeta-family
 multi-page resolution, BC-3.3.010; FIELDS half = adversary pass-28 F-1, ISSUE-TYPES half = adversary
-pass-29 F-1 — C-LOW attribution now synced to BC-3.3.010's own pass-29 attribution), plus the two
-**F2 adversary-convergence (2026-08-26)** additions: **VP-578-021** (BC-3.3.010, ADR-0019 § Amendment
+pass-29 F-1 — C-LOW attribution now synced to BC-3.3.010's own pass-29 attribution), the two
+**F2 adversary-convergence (2026-08-26)** additions **VP-578-021** (BC-3.3.010, ADR-0019 § Amendment
 D2 — the create-path Gate-B collision guard via shared `detect_flag_field_overlap`) and **VP-578-022**
-(BC-3.4.030, B-LOW — the `:asset` cold-cache workspace-discovery failure taxonomy). Every other #578
-guarantee already had an inline id. The full declared inline span is now **VP-578-001..022** (all
-twenty-two ids are declared inline in `bc-3-issue-write.md`): VP-578-001/002/003 on BC-3.3.010
+(BC-3.4.030, B-LOW — the `:asset` cold-cache workspace-discovery failure taxonomy), plus the
+**F2 adversary-convergence round-4 (2026-08-26)** addition **VP-578-023** (BC-3.4.027 EC-3.4.027-7 /
+BC-3.4.015, ADR-0019 § Amendment D4 — the non-cascading `>`-collision message + bare-form
+`>`-literal behavior; sibling to VP-578-008). Every other #578
+guarantee already had an inline id. The full declared inline span is now **VP-578-001..023** (all
+twenty-three ids are declared inline in `bc-3-issue-write.md`, EXCEPT VP-578-023 whose BC-body
+declaration is a pending one-line back-fill — see §5): VP-578-001/002/003 on BC-3.3.010
 (platform-create createmeta resolution / cache-sharing / all-or-nothing), VP-578-004 on BC-3.3.011
 (create-path error taxonomy), VP-578-005..014 the value-kind / hint-splitter / malformed-catalog
 guarantees this delta realizes (§1), VP-578-015/016 the JSM parity pair (frontmatter
@@ -138,11 +143,15 @@ guarantees this delta realizes (§1), VP-578-015/016 the JSM parity pair (frontm
 write shapes are realized at F4 against live JSM, not pinned firm by this delta — see §1.1),
 VP-578-017/018/019 the DEC-310 reversal's own VPs on BC-3.8.012/013, VP-578-020 the createmeta-family
 offset-pagination guarantee on BC-3.3.010 — covering **BOTH** the FIELDS (`get_createmeta_fields`, `--field`)
-and ISSUE-TYPES (`get_issue_types_for_project`, `--type`) createmeta endpoints — and VP-578-021/022 the
-two F2-amendment additions (create-path Gate-B guard on BC-3.3.010; `:asset` cold-cache failure taxonomy
-on BC-3.4.030). Note **D3** (cascading `>`-split multibyte safety) mints **no** new id: its no-panic
+and ISSUE-TYPES (`get_issue_types_for_project`, `--type`) createmeta endpoints — VP-578-021/022 the
+two earlier F2-amendment additions (create-path Gate-B guard on BC-3.3.010; `:asset` cold-cache failure
+taxonomy on BC-3.4.030), and **VP-578-023** the round-4 D4/F-2 addition (non-cascading `>`-collision
+message + bare-form `>`-literal, BC-3.4.027 EC-3.4.027-7 / BC-3.4.015). Note **D3** (cascading
+`>`-split multibyte safety) mints **no** new id: its no-panic
 call-site proptest is folded into **VP-578-008** as an extension (matching BC-3.4.027's own [EXTENDED]
-note — see §2 VP-578-008 and §0.2). Apart from VP-578-020/021/022, the delta only supplies proptest/unit
+note — see §2 VP-578-008 and §0.2); D4 (cell a/b) DOES mint a new id (VP-578-023) because it pins a
+distinct error message + a bare-form behavioral contract + a type change, none covered by VP-578-008.
+Apart from VP-578-020/021/022/023, the delta only supplies proptest/unit
 realizations; it mints no other new #578 id. §1.1 catalogs where each of the ten #578 ids NOT in
 the §1 core table (VP-578-001..004, 017..022) is realized — none is left without a realization
 pointer.
@@ -160,9 +169,10 @@ inline VP-578-008 marker in `bc-3-issue-write.md` was cleared this pass.
 
 ## 1. Scope
 
-Eighteen authoritative VP guarantees form this delta's **core proptest/unit surface** (eleven
-realizations of existing inline VPs + seven new inline VPs — the F5-pass-1 trio VP-580-006/007/008
-plus the four F2 adversary-convergence additions VP-578-021, VP-578-022, VP-580-010, VP-580-011),
+Nineteen authoritative VP guarantees form this delta's **core proptest/unit surface** (eleven
+realizations of existing inline VPs + eight new inline VPs — the F5-pass-1 trio VP-580-006/007/008
+plus the four F2 adversary-convergence additions VP-578-021, VP-578-022, VP-580-010, VP-580-011,
+plus the round-4 D4/F-2 addition VP-578-023),
 grouped by concern. **All ids are the canonical inline ids** (§0.1). A further **eight** declared
 #578 inline VPs (VP-578-001..004, 017..020) are realized by reuse, by the DEC-310 reversal's
 holdout/regression work, and (VP-578-020) by the new createmeta-pagination tests (**both** the
@@ -170,8 +180,8 @@ FIELDS and ISSUE-TYPES createmeta endpoints) — catalogued separately in **§1.
 JSM-parity pair VP-578-015/016 (frontmatter
 `aligns_with_inline_vps`; **VP-578-016's `:id`/`:name`/`:asset` `requestFieldValues` write shapes
 are UNVERIFIED / parity-PENDING — realized at F4 against live JSM, not pinned firm by this delta;
-see §1.1**). The full declared inline inventory this delta touches is **thirty**
-VPs: the twenty-two #578 ids (VP-578-001..022) plus VP-580-005..012 (VP-580-001..004 were declared
+see §1.1**). The full declared inline inventory this delta touches is **thirty-one**
+VPs: the twenty-three #578 ids (VP-578-001..023) plus VP-580-005..012 (VP-580-001..004 were declared
 inline by the product-owner pass — not minted by this verifier delta — and are realized at F4
 alongside the new `src/cli/field.rs` command, still unimplemented; this delta adds no further
 realization work for them, so they fall outside its realization surface). **D3** adds no id — its
@@ -195,6 +205,7 @@ cascading-`>`-split no-panic proptest is folded into VP-578-008 (§2, §0.1).
 | **VP-580-008** | Table/JSON output shape (`{id,label,children}`) | BC-X.14.003 | unit + integration | new `src/cli/field.rs` + `tests/field_options.rs` (new) | **NEW inline** |
 | **VP-578-021** | Create-path Gate-B collision guard (any argv order × any hint kind × every Gate-B-governed field → exit 64, ZERO HTTP; symmetric with edit's EC-3.4.017-16) | BC-3.3.010 | unit + integration | `src/cli/issue/field_resolve.rs` (`detect_flag_field_overlap`) + integration per call site (edit + create) | **NEW inline (F2 D2)** |
 | **VP-578-022** | `:asset` cold-cache workspace-discovery FAILURE taxonomy (each row exercised on ALL THREE call sites: edit, platform-create, JSM-create) | BC-3.4.030 | wiremock (per-row) | `src/api/assets/workspace.rs::get_or_fetch_workspace_id` call sites (edit `field_resolve.rs`, platform `create.rs`, JSM `jsm_create.rs`) + `tests/issue_field_hint_kinds.rs` (new) | **NEW inline (F2 B-LOW, Pass2-F1)** |
+| **VP-578-023** | Non-cascading `>`-collision message (`:option` on a plain `option` field, empty `children` → exit 64, pinned `"is not a cascading select"` + `"remove the"`) + bare-form `>`-literal (no split → EC-3.4.016-2 fall-through) + `AllowedValue.children: Vec` type dep | BC-3.4.027 (EC-3.4.027-7), BC-3.4.015 | unit + wiremock/fixture + serde | `src/cli/issue/field_resolve.rs` + `create.rs` platform-create path + `src/types/jira/editmeta.rs` (`AllowedValue.children`) | **NEW inline (F2 round-4 D4 / F-2)** |
 | **VP-580-010** | M2 post-arity project resolution (`resolve_m2_project`): flag OR profile/config default → Ok; NEITHER → exit 64 pre-HTTP | BC-X.14.001 | unit + proptest | new `src/cli/field.rs` (`resolve_m2_project`) + `tests/field_options.rs` (new) | **NEW inline (F2 D1)** |
 | **VP-580-011** | `--value` + graceful-degrade interaction (filter post-fetch; degrade hint still fires; stdout `[]`, exit 0) | BC-X.14.002 | wiremock + unit | new `src/cli/field.rs` + `tests/field_options.rs` (new) | **NEW inline (F2 B-LOW)** |
 
@@ -222,23 +233,27 @@ zero mutating HTTP**. Like VP-580-009, it is a **newly-minted inline VP this cyc
 VP-580-004's** "each row of the error taxonomy table is independently exercised" per-row coverage
 (the new taxonomy row + EC-X.14.004-6 the product-owner added this round), carrying its own id
 purely as a durable regression pin for this distinct two-path HTTP-failure class. The PO left the
-"new row → own VP?" question explicitly open (Pass2-F2); this verifier **decides YES** — a distinct
+"new row → own VP?" question explicitly open (Pass2-F2); this verifier **decided YES** — a distinct
 error class with a pinned message ("project not found or not accessible") on two enumeration paths
-warrants a dedicated regression id — but because **no PO placeholder marker existed in
-cross-cutting.md this round**, VP-580-012's inline BC-body declaration is a **pending one-line
-back-fill** for state-manager/PO (§5), not an edit this verifier made to that BC file.
+warrants a dedicated regression id. **DONE (F2 round-4):** VP-580-012's inline BC-body declaration
+now exists in `cross-cutting.md` BC-X.14.004's Verification Properties (~line 2805, alongside
+VP-580-004/005/009, anchored to the new `--project not found (404)` taxonomy row + EC-X.14.004-6) —
+the round-2/round-3 "pending one-line back-fill" flag is CLOSED; no further state-manager/PO action
+is required for VP-580-012's BC anchor.
 
-This is why the delta's full declared inline inventory is **thirty** (twenty-two #578
-[VP-578-001..022] + VP-580-005..012) while the §1 core surface is **eighteen** new
-proptest/unit/integration realizations (VP-580-009 remains realized within VP-580-006, and
-VP-580-012 within VP-580-004 — neither is a separate core-surface row).
+This is why the delta's full declared inline inventory is **thirty-one** (twenty-three #578
+[VP-578-001..023] + VP-580-005..012) while the §1 core surface is **nineteen** new
+proptest/unit/integration realizations (VP-578-023 is a new core-surface row this round; VP-580-009
+remains realized within VP-580-006, and VP-580-012 within VP-580-004 — neither of those two is a
+separate core-surface row).
 
 ### 1.1 Remaining declared #578 inline VPs — realization pointers (realized outside the §1 core surface)
 
-The §1 table lists the eighteen guarantees this delta realizes as **new** proptest/unit/integration
-work (including the two F2-amendment #578 additions VP-578-021/022, which sit in the §1 core surface,
-not here). For completeness, the remaining **eight** declared `VP-578-0xx` ids realized OUTSIDE the
-§1 core surface — the full #578 inline span is now **VP-578-001..022** — are realized as follows.
+The §1 table lists the nineteen guarantees this delta realizes as **new** proptest/unit/integration
+work (including the three F2-amendment #578 additions VP-578-021/022/023, which sit in the §1 core
+surface, not here). For completeness, the remaining **eight** declared `VP-578-0xx` ids realized
+OUTSIDE the §1 core surface — the full #578 inline span is now **VP-578-001..023** (VP-578-023's
+BC-body declaration is a pending one-line back-fill, §5) — are realized as follows.
 **None is left without a realization pointer.**
 VP-578-001..004 are the platform-**create** path VPs (realized largely by reuse of the VP-396-009
 **edit**-path realizations, transplanted to create); VP-578-017/018/019 are the **DEC-310 reversal's**
@@ -452,6 +467,84 @@ split site, plus a named regression unit test pinning `"Pré>Bñ"` (mirrors
 **Target**: `src/cli/issue/field_resolve.rs` (cascading composer + unit tests) AND the analogous
 `create.rs` platform-create split site (D3 proptest per call site). **F6**: `create.rs` already ∈
 `examine_globs`; add `field_resolve.rs` (§4).
+
+---
+
+### VP-578-023 — Non-cascading `>`-collision message + bare-form `>`-literal behavior *(NEW inline VP — F2 adversary convergence round-4, ADR-0019 § Amendment D4 / adversary F-2)*
+
+**Applies to**: BC-3.4.027 EC-3.4.027-7 (non-cascading collision) and BC-3.4.015 (bare-form
+`>`-literal). **Genuinely NEW inline VP, sibling to VP-578-008** — ADR-0019 § Amendment (2026-08-26)
+D4 resolves the two undefined cells of the cascading-`>`-split × field-schema-type matrix that
+VP-578-008 (cascading composition) and its D3 no-panic extension do NOT cover: (a) an explicit
+`:option` hint carrying a `>` against a PLAIN (non-cascading) `option` field, and (b) the bare form's
+treatment of a literal `>`. Minted (not folded into VP-578-008) because it pins two genuinely new
+guarantees — a distinct exit-64 error **message** (EC-3.4.027-7) and a bare-form **behavioral
+contract** (D4 cell b) — plus a new type dependency, none of which VP-578-008's "cascading
+composition produces the correct wire shape" guarantee asserts. *(D4's cell (a) is detected
+STRUCTURALLY via an empty `children` collection, NOT via a `schema.type` lookup — the parser/composer
+stays schema-agnostic by construction.)*
+
+**Property statement**:
+1. **(i) Non-cascading `>`-collision → distinct exit-64 message.** `--field cf:option=A>B` where the
+   parent segment `A` resolves successfully against a PLAIN (`schema.type == "option"`, non-cascading)
+   field's `allowedValues[].value`, the child segment `B` is non-empty (per EC-3.4.027-6's
+   empty-segment handling), AND the matched parent's `children` collection is **EMPTY** → exit **64**
+   (`JrError::UserError`) with a message carrying the load-bearing substrings **`"is not a cascading
+   select"`** and **`"remove the"`** (EC-3.4.027-7). The message is **DISTINCT** from EC-3.4.027-3's
+   "resolvable parent, unresolvable child → list allowed child values" shape (which would otherwise
+   degenerate into a confusing empty enumeration here — there ARE no allowed child values, the field
+   isn't cascading). The distinguishing signal is the **structural** empty-`children` check, read at
+   the SAME point EC-3.4.027-3's existing "unresolvable child" check inspects `children` — never a
+   `schema.type` inspection.
+2. **(ii) Bare form treats `>` as a LITERAL character — no split.** A bare `--field cf=Parent>Child`
+   (no `:option` hint) against a cascading (`option-with-child`) field **never** attempts a `>` split
+   — the ENTIRE string `"Parent>Child"` is matched as one opaque candidate against
+   `allowedValues[].value` (BC-3.4.015 Step 4 → BC-3.4.016 Step 4a, unchanged). Since a cascading
+   parent's own `.value` does not contain a literal `>` in ordinary use, the whole-string match
+   fails and falls through to the **EXISTING EC-3.4.016-2** "unresolvable value, list allowed values"
+   error — **no new error path**; the ordinary bare-form mismatch. A cascading child can ONLY be set
+   via the explicit `:option` form (BC-3.4.027) — there is no bare-form path to a cascading child.
+3. **Type dependency (pinned, VP-assertable at the type level).** Cell (a)'s structural detection
+   requires the write-path `AllowedValue` type (`src/types/jira/editmeta.rs::AllowedValue`, currently
+   `{id, value, name}` only — verified against the as-built struct) to gain a `children` field, pinned
+   by ADR-0019 § Amendment D4 as **`#[serde(default)] pub children: Vec<AllowedValue>`** — `Vec`, NOT
+   `Option<Vec<AllowedValue>>` (deliberately different from F-B's `Option<String>` choice: here
+   wire-absent and wire-present-but-empty carry the identical "no cascading children" semantic, so
+   `#[serde(default)]` → empty `Vec` loses no information). A round-trip serde unit test asserts a
+   createmeta `allowedValues` entry with no `children` key deserializes to an empty `Vec`, and one
+   with `"children": [...]` populates it.
+
+**Recommended strategy**:
+- **(i)** a **wiremock/fixture** unit test (edit path `field_resolve.rs`; and the analogous
+  `create.rs` platform-create path) whose createmeta/editmeta fixture returns a PLAIN `option` field
+  whose matched parent has `children: []`; assert exit 64 AND that the message CONTAINS both pinned
+  substrings `"is not a cascading select"` and `"remove the"` — a **message-content** assertion, not
+  merely an exit-code assertion (an exit-64-and-any-message test would pass even if the implementation
+  regressed to EC-3.4.027-3's misleading empty-child-enumeration message this EC exists to replace).
+- **(ii)** a **fixture** assertion (edit + platform-create) that bare `--field cf=Parent>Child`
+  against a cascading field **never attempts a split** and falls through to the EXISTING EC-3.4.016-2
+  unresolvable-value error shape — a behavioral/regression pin against a future reader making the
+  bare form `>`-aware (which D4 cell b explicitly forbids). The clean observable: the bare-form error
+  is EC-3.4.016-2 (unresolvable whole-string value listing allowed values), NOT EC-3.4.027-7 (which is
+  reachable only via the `:option` hint).
+- **(iii)** the type-level serde round-trip unit test for `AllowedValue.children` (rule 3).
+
+**Target**: `src/cli/issue/field_resolve.rs` (edit-path `:option` composer + bare-form dispatch)
+AND the analogous `create.rs` platform-create path; serde unit test co-located with
+`src/types/jira/editmeta.rs`; integration fixtures in `tests/issue_field_hint_kinds.rs` (new) /
+`tests/issue_edit_field.rs`. **F6**: `create.rs` already ∈ `examine_globs`; add `field_resolve.rs`
+and (for the type change) `src/types/jira/editmeta.rs`.
+
+**BC-body anchor — PENDING one-line back-fill (state-manager/PO action).** BC-3.4.027's VP-578-008
+`[EXTENDED 2026-08-26, ADR-0019 § Amendment D4]` note (~body line 3291) and BC-3.4.015's
+`>`-literal note (~body line 1893) both flag "a new/extended VP (sibling to VP-578-008) … not
+authored here, flagged for realization" WITHOUT a concrete id. A grep of `bc-3-issue-write.md`
+confirmed **no** "verifier to assign VP id" placeholder marker exists at either site, so — per this
+round's write scope — VP-578-023's inline BC-body declaration was NOT made by this verifier. The
+state-manager/PO should back-fill the id `VP-578-023` into those two BC-body notes (and add it to
+BC-3.4.027's / BC-3.4.015's Verification-Properties list) — mirroring VP-580-012's pending-back-fill
+treatment (§5). Until then, VP-578-023's authoritative definition lives in this delta (frontmatter
+`new_properties`, §0.1, §1, and here).
 
 ---
 
@@ -694,11 +787,14 @@ pre-round-3 blanket form was the F-A defect — it asserted exit-64 for empty `:
 now pass through):
 ```rust
 proptest! {
-    /// VP-578-013 (F-A): each kind-marker's empty-value form classifies deterministically and
-    /// never panics. `:` (empty kind) and `:frob` (unknown kind) → exit 64 at `parse_field_kv`
-    /// for ANY value. `:asset=` (empty) → exit 64 too, but STRUCTURALLY at the COMPOSER
-    /// (EC-2a; jointly VP-578-012). Empty `:id=`/`:name=` PASS THROUGH (F-A / EC-8 / EC-9 →
-    /// `{"id":""}` / `{"name":""}`) — never a jr-side rejection.
+    /// VP-578-013 (F-A + round-4 MED-3): each kind-marker's empty-value form classifies
+    /// deterministically and never panics. `:` (empty kind) and `:frob` (unknown kind) → exit 64
+    /// at `parse_field_kv` for ANY value. `:asset=` (empty) → exit 64 too, but STRUCTURALLY at the
+    /// COMPOSER (EC-2a; jointly VP-578-012). `:option=` (empty) → exit 64 too, but DOWNSTREAM at the
+    /// `allowedValues` MATCH (an empty value is a match-miss, BC-3.4.016 EC-3.4.016-2) — a distinct
+    /// ORIGIN from `:asset`'s structural composer failure, NOT a parser rejection. Empty
+    /// `:id=`/`:name=` PASS THROUGH (F-A / EC-8 / EC-9 → `{"id":""}` / `{"name":""}`) — never a
+    /// jr-side rejection.
     #[test]
     fn prop_hint_kind_empty_value_classification(
         name in "[a-z]{1,10}",
@@ -711,20 +807,36 @@ proptest! {
         // (F4 wiring); it is total (Ok | Err(UserError)), never panics.
         let outcome = resolve_field_end_to_end(&format!("{name}{kind}="));
         match kind {
-            ":" | ":frob" | ":asset" => prop_assert!(outcome.is_err()),  // exit 64: kind-defect or STRUCTURAL
-            ":option" | ":id" | ":name" => prop_assert!(outcome.is_ok()), // F-A pass-through (empty value OK)
+            ":" | ":frob" | ":asset" => prop_assert!(outcome.is_err()),  // exit 64: kind-defect or STRUCTURAL (composer)
+            ":option" => prop_assert!(outcome.is_err()),  // exit 64 DOWNSTREAM: allowedValues match-miss (EC-3.4.016-2), NOT a parser rejection — distinct origin from :asset's structural failure
+            ":id" | ":name" => prop_assert!(outcome.is_ok()), // F-A pass-through (empty value OK — verbatim {"id":""}/{"name":""})
             _ => unreachable!(),
         }
     }
 }
 ```
-(`:option` with an empty value is likewise not a parse-time rejection — its emptiness is an
-`allowedValues`-match miss resolved downstream, not a client-side empty-value exit-64; only `:asset`
-fails structurally on empty.) Plus an explicit **table-driven unit test** enumerating each
+**Round-4 MED-3 — `:option` empty value is `is_err()`, not `is_ok()` (the pre-round-4 form grouped
+`:option` with `:id`/`:name` in the `is_ok()` arm — WRONG).** An empty `:option` value is NOT a
+verbatim pass-through the way `:id`/`:name` are: `:option` still runs the `allowedValues` resolution
+(only the numeric-id auto-detect is bypassed vs. the bare form — see VP-578-007), so an empty value
+is an `allowedValues` **match-miss** resolved **downstream** (BC-3.4.016 EC-3.4.016-2 → exit 64),
+hence `is_err()`. Its exit-64 **origin is distinct** from `:asset`'s: `:asset` fails **structurally**
+at the composer (cannot build `[{workspaceId,id,objectId}]` with no `objectId`, EC-2a), whereas
+`:option` fails at the **`allowedValues` match** — and both differ from `:id`/`:name`, which never
+match at all and pass the empty value through verbatim for the server to validate. The `:option`
+end-to-end `Err` is robust to fixture presence: with no resolvable field context it is a
+field-not-found `Err`, with a resolvable field it is the empty-value match-miss `Err` — either way
+never `Ok`, so the `is_err()` arm holds without needing a specific fixture in the pure proptest;
+the exact EC-3.4.016-2 message-miss shape is pinned separately in the table-driven catalog test
+below with a resolvable-field fixture. Plus an explicit **table-driven unit test** enumerating each
 EC-3.4.031-N shape → asserted exit code 64 and a substring of the expected message for the exit-64
-rows (**EC-2a** empty `:asset`, EC-1 unknown kind, EC-5 empty kind, EC-2b/2c/2d malformed `:asset`),
-**and** the exit-0 PASS-THROUGH rows (**EC-8** empty `:id=` → `{"id":""}`, **EC-9** empty `:name=` →
-`{"name":""}`) — the durable, human-reviewable catalog, now covering both exit classes.
+rows (**EC-2a** empty `:asset` [STRUCTURAL], EC-1 unknown kind, EC-5 empty kind, EC-2b/2c/2d
+malformed `:asset`), the **downstream** exit-64 row (**empty `:option`** → EC-3.4.016-2
+`allowedValues` match-miss, asserted with a resolvable-field fixture so the empty value reaches and
+misses the match rather than failing as field-not-found), **and** the exit-0 PASS-THROUGH rows
+(**EC-8** empty `:id=` → `{"id":""}`, **EC-9** empty `:name=` → `{"name":""}`) — the durable,
+human-reviewable catalog, now covering all three exit classes (parser/structural exit-64, downstream
+match-miss exit-64, and verbatim pass-through exit-0).
 
 **Target**: proptest in `src/cli/issue/create.rs`; table-driven catalog test in
 `tests/issue_field_hint_kinds.rs` (new) covering exit code + JSON envelope. **F6**: `create.rs`
@@ -917,12 +1029,39 @@ added to the BC-X.14.002 body this pass (§5).
 5. **Absent flag → identity.** `--value` absent → the full enumerated list unchanged.
 6. **Totality.** The filter never panics and never fails — it can only narrow (a pure function).
 
+**`Option<String>` reconciliation (F2 round-4, F-1 / ADR-0019 § Amendment F-B).** BC-X.14.001's
+F-B decision made `FieldOption.id`/`.label` `Option<String>` (a never-dropped `{id:None,label:None}`
+entry is legal, EC-X.14.001-7), so the substring-match semantics against a `None` field and the
+`--value ""` identity claim's interaction with a fully-degenerate entry must be pinned. The PO
+extended inline VP-580-007 with sub-points **(g)/(h)/(i)**; this definition adds them:
+
+- **(g) `None` fields are not a match source.** A `None` `id` or `label` is simply **skipped** in the
+  substring test — never a panic, never itself a reason to drop the entry. For a **non-empty**
+  `--value`, an entry with one `None` field can still match via its remaining `Some` field.
+- **(h) Never-drop under filtering.** Filtering is an ordinary substring narrowing over the entry's
+  available `Some` field(s); it does **not** violate the normalizer's never-drop invariant
+  (BC-X.14.001 / VP-580-005), which governs the **enumerator's output**, not this separate
+  client-side filter's expected narrowing. A fully-degenerate `{id:None,label:None}` entry has no
+  candidate string, so a **non-empty** `--value` filters it out as an **ordinary substring miss** —
+  explicitly **not** a never-drop violation.
+- **(i) `--value "" == --value absent` (identity, including degenerate entries).** The empty
+  substring matches **every** entry **unconditionally** — INCLUDING a `{id:None,label:None}` entry
+  that has no `Some` string to test — so `--value ""` output is byte-identical to `--value`-absent
+  output, preserving never-drop through the filter. This is a deliberate special case (an
+  unconditional match when the substring itself is empty), **not** a restatement of "every
+  `Some(String)` contains the empty substring" (which alone would NOT cover a fully-`None` entry that
+  has no `Some` string to test at all).
+
 **Recommended strategy**: extract the filter to a **pure function**
 `filter_options(&[FieldOption], substr: &str) -> Vec<FieldOption>`; unit tests over a fixture
-tree covering each rule above (including a cascading fixture for rules 2–3); one proptest
-asserting totality (`filter_options` never panics, result length ≤ input length at top level) and
-that `--value ""` / an absent filter is the identity. Wiremock integration in
-`tests/field_options.rs` asserting exit 0 + empty table / `[]` on a zero-match run.
+tree covering each rule above (including a cascading fixture for rules 2–3, **and a degenerate
+fixture containing a `{id:None,label:None}` entry plus entries with exactly one field `None`** for
+sub-points g/h/i); one proptest asserting totality (`filter_options` never panics, result length ≤
+input length at top level, never a panic on a `None` field) and that `--value ""` / an absent filter
+is the identity **including any degenerate entry** (output len == input len for the empty-substring
+case). Wiremock integration in `tests/field_options.rs` asserting exit 0 + empty table / `[]` on a
+zero-match run, and a `--value ""`-vs-absent identity run over an enumeration containing a
+degenerate entry.
 
 **Target**: pure `filter_options` in the new `jr field options` handler (`src/cli/field.rs`);
 proptest + unit co-located; integration in `tests/field_options.rs` (new). **F6**: add handler
@@ -1157,7 +1296,7 @@ and the degrade hint present on stderr in both runs. A unit assertion on the pur
 | Task item | VP(s) (canonical) | Covered |
 |---|---|---|
 | 1. Hint-splitter multibyte safety (BC-3.4.026) | VP-578-005 | ✅ no-panic + clean-exit-64 + VALUE byte round-trip + bare-form invariance |
-| 2. Value-kind mapping correctness (BC-3.4.027–031) | VP-578-007/008/009/010/011 (correctness) + VP-578-013 (malformed → exit 64, one error/invocation) | ✅ per-kind JSON shape + cascading + `--priority` parity + malformed catalog |
+| 2. Value-kind mapping correctness (BC-3.4.027–031) | VP-578-007/008/009/010/011 (correctness) + VP-578-013 (malformed → exit 64, one error/invocation) + **VP-578-023** (non-cascading `>`-collision message + bare-form `>`-literal, D4) | ✅ per-kind JSON shape + cascading + `--priority` parity + malformed catalog + non-cascading-collision message + bare-`>`-literal fall-through |
 | 3. Context mutual-exclusion (BC-X.14.001) | **VP-580-006** (arity) + **VP-580-010** (M2 project) | ✅ **[D1-updated]** `resolve_field_context` is now 3-bool (`has_type, has_request_type, has_issue`) — exactly-one MODE-SELECTOR accepted, 0/2+ → exit 64, pre-HTTP; `has_project` axis DROPPED. M2's project requirement is now the SEPARATE post-arity `resolve_m2_project` (VP-580-010): flag OR profile/config default → Ok, NEITHER → exit 64 pre-HTTP. `--project --request-type` valid M3 (VP-580-009). |
 | 4. Graceful-degrade invariant (BC-X.14.004) | VP-580-005 | ✅ empty/absent options → exit 0; no panic on untyped `allowedValues.items` |
 | 5. Assets-ref composer safety | VP-578-012 (safety) + VP-578-011 (correctness) | ✅ malformed `W:Y` → clean error, never malformed JSON body (sanitize-proptest parallel) |
@@ -1173,10 +1312,31 @@ edit, platform-create, JSM-create), **VP-580-010** (D1 — M2 `resolve_m2_projec
 **VP-580-012** (Pass2-F2 — `--project` not-found (404) HTTP-failure class on the M2 + M3
 enumeration paths, BC-X.14.004; realized within VP-580-004's per-row coverage, not a core-surface
 row), plus the D3 no-panic call-site `>`-split proptest folded into **VP-578-008** and the Pass2-F3
-no-panic `:`-split proptest folded into **VP-578-012** (neither mints a new id). Task item 4
+no-panic `:`-split proptest folded into **VP-578-012** (neither mints a new id). **F2
+adversary-convergence round-4 (2026-08-26)** adds one further new id: **VP-578-023** (D4/F-2 —
+BC-3.4.027 EC-3.4.027-7 non-cascading `>`-collision message + BC-3.4.015 bare-form `>`-literal;
+sibling to VP-578-008, a core-surface row). Task item 4
 (B-F1) confirmed: **no** VP asserts M3 (`--request-type`) field-enumeration pagination — VP-578-020
 covers only the two M2 createmeta endpoints (FIELDS + ISSUE-TYPES); `get_request_type_fields` is a
 single non-paginated GET, so nothing to correct or remove.
+
+**Task item 5 (O-3) — `jr field options` M2 page-≥2 coverage: DECISION — transitive VP-578-020
+coverage is SUFFICIENT; NO dedicated VP minted.** The pagination correctness for the M2 path is a
+property of the two shared client functions `get_issue_types_for_project` and `get_createmeta_fields`
+(`src/api/jira/issues.rs`), which VP-578-020 already pins directly with two-page wiremock fixtures
+(FIELDS + ISSUE-TYPES). `jr field options` M2 (BC-X.14.001) invokes those exact functions **unchanged**
+to (a) resolve `--type` name→`issueTypeId` and (b) fetch the createmeta field whose options it
+enumerates — a target field on fields-page ≥2 is collected, not dropped, precisely by VP-578-020(a),
+and a `--type` on issuetypes-page ≥2 resolves precisely by VP-578-020(b). The options being enumerated
+are the resolved field's OWN inline `allowedValues` (carried inside the createmeta field object, NOT a
+separately-paginated collection), so `jr field options` M2 introduces **no additional pagination
+surface** beyond what VP-578-020 covers. A dedicated `tests/field_options.rs` two-page fixture would
+re-exercise the same shared pagination code through a different entry point — redundant, not new
+coverage. **Reliance made explicit (so a future reader does not read field-options M2 pagination as
+unverified):** VP-580-006's / VP-580-010's M2 wiremock realizations in `tests/field_options.rs`
+SHOULD include at least one happy-path M2 run whose target field/`--type` resolves normally, but the
+page-≥2-specifically-not-dropped guarantee is owned transitively by VP-578-020, not re-pinned here.
+No new VP id, no VP-count change from O-3.
 
 ---
 
@@ -1191,9 +1351,14 @@ covers:
   VP-578-005/013; the platform-create `>`-split site's D3 no-panic proptest, VP-578-008;
   the create-path Gate-B guard call site, VP-578-021).
 - `src/cli/issue/field_resolve.rs` — **ADD** (the value-kind emission dispatch, the cascading
-  composer with its D3 `str::split_once('>')` split, the `:asset` composer, and the new **shared
-  pure `detect_flag_field_overlap`** — VP-578-007/008/009/010/011/012/013/021). This file is core to
-  #578 and is **not currently** in the glob list — a key F6 addition of this cycle.
+  composer with its D3 `str::split_once('>')` split, the `:asset` composer, the new **shared
+  pure `detect_flag_field_overlap`**, and the D4 non-cascading-collision structural `children`-empty
+  branch + bare-form `>`-literal dispatch — VP-578-007/008/009/010/011/012/013/021/**023**). This
+  file is core to #578 and is **not currently** in the glob list — a key F6 addition of this cycle.
+- `src/types/jira/editmeta.rs` — **consider** for the D4 `AllowedValue.children` field (VP-578-023
+  rule 3); a serde `#[serde(default)]` default is a thin data-shape change with a dedicated round-trip
+  unit test, so a mutation glob here is optional (the round-trip test is the primary pin) — flagged
+  for F4/F6 judgment, not mandated.
 - The new `jr field options` handler file (`src/cli/field.rs` if F4 creates one) — **ADD at
   file-creation time**, per the S-576-1 / S-577-1 precedent ("new CLI handler file → add to
   mutants.toml at creation"). Covers the pure `normalize_from_allowed_values` /
@@ -1220,14 +1385,14 @@ cleared this pass (§5).
 ## 5. Index / registry + BC-body actions
 
 **Registry**: None. No VP-NNN registry or verification ARCH-INDEX exists to update (§0). The
-eighteen core VP guarantees (§1) are realized as **new** inline `proptest!`/unit/integration tests
+nineteen core VP guarantees (§1) are realized as **new** inline `proptest!`/unit/integration tests
 at the cited locations in F4, and as `examine_globs` additions in F6; the remaining eight declared
 #578 inline VPs realized outside the core surface (§1.1 — VP-578-001..004, 017..020) are realized by
 reuse of the VP-396-009 edit-path realizations transplanted to the create path, by the DEC-310
 reversal's rewritten holdout scenarios + `create.rs` guard-removal regression tests, and (VP-578-020)
 by new two-page createmeta wiremock tests (**both** the FIELDS and ISSUE-TYPES createmeta endpoints)
 in `tests/issue_create.rs`. The full declared inline inventory
-this delta touches is **thirty** VPs (twenty-two #578 [VP-578-001..022] + VP-580-005..012). If
+this delta touches is **thirty-one** VPs (twenty-three #578 [VP-578-001..023] + VP-580-005..012). If
 the state-manager later stands up the `S-PG-VP-REGISTRY-1` registry, these are its seed rows for the
 field-dx cycle.
 
@@ -1283,15 +1448,13 @@ UNVERIFIED/deferred (VP-578-016); (3) Pass2-F3 — VP-578-012 extended with a `s
 no-panic proptest note for the `WORKSPACE:OBJECTID` first-colon split (folded in, no new id);
 (4) Pass2-F2 — **VP-580-012 minted** for the `--project` not-found (404) HTTP-failure class on the
 M2 + M3 enumeration paths.
-- **VP-580-012 — pending BC-body back-fill (state-manager/PO action).** Because Pass2-F2 left the
-  "new row → own VP?" question open **without** a placeholder marker in `cross-cutting.md`,
-  VP-580-012's inline BC-body declaration was NOT made this round (the task's write scope permits a
-  targeted BC edit only where an explicit placeholder marker exists). The state-manager/PO should
-  add a one-line VP-580-012 entry to **`cross-cutting.md` BC-X.14.004's Verification Properties**
-  (alongside VP-580-004/005/009), anchoring it to the new `--project not found (404)` taxonomy row +
-  EC-X.14.004-6. Until then, VP-580-012's authoritative definition lives in this delta (§0.1, §1,
-  frontmatter `new_properties`) and its BC-body anchor is VP-580-004's per-row taxonomy-coverage
-  clause.
+- **VP-580-012 — BC-body back-fill NOW DONE (was pending in round-2/round-3).** Pass2-F2 left the
+  "new row → own VP?" question open without a placeholder marker in `cross-cutting.md`, so
+  VP-580-012's inline BC-body declaration could not be made in round-2/round-3. **As of F2 round-4 it
+  IS declared** in `cross-cutting.md` BC-X.14.004's Verification Properties (~line 2805, alongside
+  VP-580-004/005/009), anchored to the `--project not found (404)` taxonomy row + EC-X.14.004-6 — text
+  verified present during this round-4 pass. The round-2/round-3 "pending one-line back-fill" flag is
+  **CLOSED**; no further state-manager/PO action is required for VP-580-012's BC anchor.
 
 **Round-3 amendments (F2 adversary-convergence round-3, 2026-08-26) — verification-delta-only edits,
 NO BC-body edits, NO new VP (total stays 30).** This pass aligned the verification delta to the
@@ -1325,7 +1488,39 @@ asserting M3 (`--request-type`) field-enumeration pagination. VP-578-020 is scop
 createmeta endpoints only; `get_request_type_fields` is a single non-paginated GET (flat envelope).
 Nothing to correct or remove.
 
+**Round-4 amendments (F2 adversary-convergence round-4, 2026-08-26) — verification-delta-only edits,
+ONE new VP (total 30 → 31).** This pass aligned the verification delta to the product-owner's round-4
+BC amendments (`bc-3-issue-write.md` / `cross-cutting.md`, already landed) and the architect's
+ADR-0019 § Amendment **D4** (adversary tag F-2). A grep of both BC files confirmed **no** "verifier to
+assign VP id" placeholder markers exist, so per this round's write scope **no BC file was touched**.
+Changes, all inside this delta file:
+(1) **MED-3 / F-A follow-through** — **VP-578-013 §3** proptest split: `:option` empty value moved
+from the `is_ok()` arm to a dedicated `is_err()` arm — an empty `:option` is an `allowedValues`
+match-miss resolved **downstream** (BC-3.4.016 EC-3.4.016-2 → exit 64), distinct in ORIGIN from
+`:asset`'s STRUCTURAL composer failure; `:id`/`:name` remain `is_ok()` verbatim pass-through. Added a
+comment noting the distinct downstream-vs-structural origin and a downstream exit-64 row to the
+table-driven catalog test.
+(2) **F-1** — **VP-580-007** aligned to F-B's `Option<String>`: three new sub-points **(g)/(h)/(i)** —
+a `None` id/label is not a match source (skipped, no panic); filtering never violates never-drop; and
+`--value "" == --value absent` identity holds INCLUDING a fully-degenerate `{id:None,label:None}`
+entry. Degenerate-fixture requirement added to the recommended strategy.
+(3) **F-2/D4** — **VP-578-023 MINTED** (the ONE new id this round): non-cascading `>`-collision
+message (`:option` on a plain `option` field whose matched parent's `children` is empty → exit 64,
+pinned `"is not a cascading select"` + `"remove the"`, EC-3.4.027-7) + bare-form `>`-literal behavior
+(no split → EC-3.4.016-2 fall-through, D4 cell b) + the `AllowedValue.children: Vec<AllowedValue>`
+(`#[serde(default)]`) type dependency. Sibling to VP-578-008, a new §1 core-surface row. **Because no
+PO "verifier to assign VP id" placeholder existed in the BC files, VP-578-023's inline BC-body anchor
+(BC-3.4.027's VP-578-008 [EXTENDED D4] note ~line 3291 + BC-3.4.015's `>`-literal note ~line 1893)
+is a pending one-line back-fill for state-manager/PO** — the same treatment VP-580-012 received in
+round-2/round-3 (now the sole pending back-fill, replacing VP-580-012 which closed this round).
+(4) **Item 4** — VP-580-012's BC-body back-fill confirmed DONE (verified present in
+`cross-cutting.md` BC-X.14.004 ~line 2805); its round-2/round-3 "pending" flag CLOSED.
+(5) **O-3** — DECISION recorded (§3): transitive VP-578-020 coverage is SUFFICIENT for `jr field
+options` M2 page-≥2 (the shared `get_issue_types_for_project`/`get_createmeta_fields` functions carry
+the guarantee); NO dedicated VP minted, no count change from O-3.
+
 These edits, plus this reconciled delta, leave **exactly one authoritative VP id per
-guarantee** (VP-580-012's inline BC-body declaration is the sole pending back-fill, flagged above),
-**zero PROVISIONAL markers**, and **zero unfilled "assign a VP id" placeholders** across the
-field-dx verification surface.
+guarantee**, **zero PROVISIONAL markers**, and — across the field-dx verification surface — a single
+outstanding item: **VP-578-023's inline BC-body declaration is the sole pending one-line back-fill**
+(state-manager/PO, flagged above), VP-580-012's having closed this round. There are **zero unfilled
+"assign a VP id" placeholders** (VP-578-023 was minted, not left as a placeholder).

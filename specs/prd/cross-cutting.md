@@ -2241,6 +2241,8 @@ error taxonomy for the exact row. This resolution call fires AT MOST ONCE per in
 ONLY on the M3 path (mirroring the M2 `--type` resolution call's at-most-once/single-path
 scoping above).
 
+**M3 `--request-type` numeric-bypass edge, inherited [ADDED 2026-08-26, F2 adversary-convergence round-4, O-2]:** M3 reuses `jr requesttype fields`'s existing plumbing verbatim (§ context-mechanism decision above), including its all-ASCII-digit numeric-bypass convention (CLAUDE.md "AI Agent Notes" § `jr requesttype fields <NAME|ID>` numeric-bypass edge case): a `--request-type` value consisting entirely of ASCII digits is treated as a numeric request-type ID and skips `partial_match` name resolution entirely. Consequence, inherited unmodified by `jr field options`: a request type NAMED e.g. `"100"` is unreachable by name on the M3 path — the caller must discover its numeric ID via `jr requesttype list --output json | jq` and pass that ID directly via `--request-type`. This is a pre-existing, documented `jr` behavior (not a new defect introduced by BC-X.14.001), noted here in the `jr field options` M3 path/taxonomy per this cycle's own documentation discipline.
+
 The three sources return option entries under two different key spellings — `M1`/`M2`
 (createmeta/editmeta) use `allowedValues[].id`; `M3` (JSM requesttype fields) uses
 `validValues[].value` as the option id, with `.label` as display text (`.value` for M1/M2's
@@ -2488,17 +2490,28 @@ does not match; a parent matching `--value` retains ALL its children (no further
 within an already-matched parent's children). No server-side filtering exists for any of the
 three enumeration mechanisms (`allowedValues`/`validValues` are always returned in full) — the
 filter is purely client-side, applied after the full fetch.
+
+**Filtering against `Option<String>` fields (`id`/`label`) [ADDED 2026-08-26, F2 adversary-convergence round-4, F-1]**: per BC-X.14.001's ADR-0019 § Amendment F-B contract, `id` and `label` are `Option<String>` (a `None` entry is legal and NEVER dropped by the normalizer — EC-X.14.001-7). This filter treats a `None` field as simply NOT a match source — it is SKIPPED when testing the substring, never causing a panic and never itself causing the entry to be dropped. Consequence, spelled out precisely: (a) for a NON-EMPTY `--value` substring, an entry with exactly one of `id`/`label` as `None` can still match via its remaining `Some` field; an entry with BOTH `id: None` AND `label: None` has no candidate string to test at all, so it does NOT match a non-empty substring and is filtered out of the result — this is an ordinary substring MISS, not a violation of the never-drop invariant (that invariant governs the NORMALIZER's output, BC-X.14.001 EC-X.14.001-7, not this separate client-side filter's expected narrowing of genuinely non-matching entries); (b) for the EMPTY-STRING `--value ""` case specifically, see the identity-filter note below — it is a deliberate, unconditional special case that does NOT follow rule (a).
 **Inputs**: `--value <substring>` (optional — **[CORRECTED 2026-08-26, A-M2]** "bare" here means
 absence of `--value` specifically, NOT absence of a mode-selector context flag, which remains
 MANDATORY per BC-X.14.001 Invariant 1 regardless of whether `--value` is supplied; when
 `--value` is absent, all options are printed, e.g. `jr field options customfield_10084 --issue
 FOO-1` with no `--value` — a full, valid invocation still requires one of `--type`,
-`--request-type`, or `--issue`). **[ADDED 2026-08-26, B-LOW]** `--value ""` (an explicit empty
-string) is the IDENTITY filter — every label/id contains the empty substring, so it matches
-everything, identical output to `--value` being absent entirely. This is a reachable scripted
-invocation (e.g., a caller building the flag programmatically from a possibly-empty variable)
-distinct from omitting the flag, and is documented here so it is not mistaken for a "match
-nothing" filter.
+`--request-type`, or `--issue`). **[ADDED 2026-08-26, B-LOW; RECONCILED WITH F-B's `Option<String>` MODEL 2026-08-26, F2
+adversary-convergence round-4, F-1]** `--value ""` (an explicit empty
+string) is the IDENTITY filter — it matches EVERY entry unconditionally, including an entry
+with `id: None`/`label: None` (both fields absent), producing output IDENTICAL to `--value`
+being absent entirely — never-drop is preserved through the filter for this specific case. This
+is a deliberate special case, not a restatement of "every `Some(String)` contains the empty
+substring": a degenerate `{id: None, label: None}` entry has no `Some` string for the general
+substring-match rule (see the "Filtering against `Option<String>` fields" paragraph above) to
+test at all, so under that general rule alone it would be — incorrectly — filtered out even for
+an empty substring. `--value ""` is therefore implemented as an unconditional match (bypassing
+the per-field `None`-is-not-a-match-source rule entirely when the substring itself is empty),
+which is exactly what makes it equal to the absent-flag case for EVERY entry, degenerate ones
+included. This is a reachable scripted invocation (e.g., a caller building the flag
+programmatically from a possibly-empty variable) distinct from omitting the flag, and is
+documented here so it is not mistaken for a "match nothing" filter.
 **Outputs/Effects**: Filtered `Vec<FieldOption>`; an empty result (zero matches) is a valid
 success (exit 0, empty table / `[]` JSON) — NOT an error, consistent with `jr`'s existing
 empty-result convention (e.g., BC-X.12.002's `--search` empty-result behavior). **[ADDED
@@ -2522,6 +2535,14 @@ unaffected by `--value`.
   enumerated list is returned unchanged; (f) **[ADDED 2026-08-26, B-LOW]** `--value ""` (explicit
   empty string) produces the SAME output as `--value` absent (identity filter — every entry
   matches). The filter is a total function (never panics, never fails — it can only narrow).
+  **[ADDED 2026-08-26, F2 adversary-convergence round-4, F-1 — FLAGGED FOR VERIFIER]** (g) a
+  fixture entry with `id: None` (label present) matches on a non-empty `--value` substring
+  contained in its `label` but is correctly excluded when the substring is contained in neither
+  field; (h) a fixture entry with `label: None` (id present) matches symmetrically via `id`; (i)
+  a fixture entry with BOTH `id: None` AND `label: None` is excluded from the result for any
+  NON-EMPTY `--value` substring (no match source exists), but IS included (never dropped) when
+  `--value` is `""` or absent — asserting the degenerate entry specifically, not merely a
+  well-formed one, for cases (e)/(f) above.
 - VP-580-011 **[NEW 2026-08-26, B-LOW]**: `--value` supplied
   alongside a field with no enumerable options still exits 0 with the graceful-degrade hint on
   stderr and `[]`/empty table on stdout, identical to the no-`--value` case (BC-X.14.004

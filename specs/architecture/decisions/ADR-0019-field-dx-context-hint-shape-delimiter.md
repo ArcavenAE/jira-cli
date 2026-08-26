@@ -151,7 +151,7 @@ selector is present:
   4. `--request-type` present with no resolvable ambient project (no `--project`, no
      profile/config default) → the existing `require_service_desk` "project required" error,
      unchanged from `jr requesttype fields`'s own behavior.
-- **`has_project` note for the M2 arity check:** where implementation or test code refers to a
+- **`has_project` note for the M2 arity check** **[superseded 2026-08-26 — see Amendment D1]:** where implementation or test code refers to a
   boolean `has_project` in the context of the M2 (createmeta) arity check specifically, it means
   "`--project` is present *as M2's companion*, i.e. accompanying `--type`" — not "`--project` is
   present at all" (which is also true, harmlessly, in the M3-with-explicit-project case, but
@@ -417,7 +417,7 @@ types instead of one shared `normalize_from_allowed_values`.
   already-drafted BC rather than confirming/refining it, a strictly worse outcome for F3 story
   authoring than resolving it here.
 
-## Amendment (2026-08-26) — F2 Adversary Convergence: D1, D2, D3, F-B
+## Amendment (2026-08-26) — F2 Adversary Convergence: D1, D2, D3, D4, F-B
 
 Fresh-context adversary passes against the frozen `architecture-delta-field-dx.md`,
 `prd-delta-field-dx.md`, and `verification-delta-field-dx.md` surfaced defects this ADR owns the
@@ -425,9 +425,10 @@ architecture-decision half of. Per the F2 adversarial spec-convergence loop's di
 this amendment resolves only the architectural fork in each finding; the corresponding BC-body
 and VP text changes are flagged below for the product-owner and verifier passes that follow, not
 made here. D1/D2/D3 (below) are the first (round-1) convergence pass; **F-B** is a second-round
-adversary *completeness* pass finding, added in this same amendment section per this repo's
-convention that one ADR amendment section accumulates all rounds against the same frozen delta
-rather than spawning a new amendment header per round.
+adversary *completeness* pass finding, and **D4** is a third-round adversary
+*completeness+correctness* pass finding (adversary tag `F-2`) — both added in this same amendment
+section per this repo's convention that one ADR amendment section accumulates all rounds against
+the same frozen delta rather than spawning a new amendment header per round.
 
 ### D1 (adversary MEDIUM-1) — M2 default-project resolution parity
 
@@ -725,6 +726,121 @@ directly in the Jira UI).
   satisfied by an implementation that silently filters the degenerate entry out of the `Vec` before
   returning it — that must be closed off explicitly, not left implied.
 
+### D4 (adversary F-2) — cascading `>`-split × field-schema-type matrix: non-cascading-field collision, and bare-form `>`-literal asymmetry
+
+**Defect.** §3/D3 confirm the `Parent>Child` split is performed unconditionally at each `:option`
+call site (`field_resolve.rs` edit path; `create.rs` platform-create path) via `str::split_once('>')`,
+but two cells of the split × field-schema-type matrix are undefined:
+
+- **(a) `--field cf:option=A>B` where `cf` is a PLAIN (non-cascading) single-select `option` field**
+  (`schema.type == "option"`, never `"option-with-child"`). If the split is unconditional (as D3
+  requires), parent segment `"A"` may legitimately resolve against that field's
+  `allowedValues[].value` — but a non-cascading entry has no children to resolve `"B"` against.
+  EC-3.4.027-3's existing "resolvable parent, unresolvable child → exit 64 listing that parent's
+  allowed child values" shape degenerates into a confusing empty-list message here (there are no
+  "allowed child values" to list — the field isn't cascading at all), and neither this ADR nor
+  BC-3.4.027 names a distinct error for this cell.
+- **(b) bare `--field cf=Parent>Child` on a CASCADING field.** BC-3.4.015/BC-3.4.016 (bare-form
+  dispatch) predate cascading and are pinned UNCHANGED by BC-3.4.016's own text — implying the bare
+  form cannot set a cascading child. But whether `>` is literal in the bare form (vs. silently
+  split the same way `:option` does) is nowhere stated. This asymmetry (only `:option` splits `>`)
+  is real either way; the defect is that it is undocumented, not that either answer is wrong.
+
+**Decision for (a): the split stays UNCONDITIONAL (confirms D3); the non-cascading case is detected
+during `allowedValues` resolution, not by the parser inspecting `schema.type`.**
+
+- The call site (`field_resolve.rs`, `create.rs`) does not change: it still performs
+  `str::split_once('>')` on the raw `VALUE` with no awareness of the field's schema type — D3's
+  "the split is call-site/composer-level" framing is preserved exactly. The parser/composer layer
+  remains schema-agnostic by construction; it never needs to know `schema.type` at all.
+- The distinguishing signal is **structural, not a schema.type lookup**: whether the matched
+  parent's `children` collection is empty. This is read at the SAME point EC-3.4.027-3's existing
+  "unresolvable child" check already inspects `children` — a new branch inserted alongside that
+  check, not a second resolution pass or a new dependency on `EditMetaField.schema.field_type`.
+- **Type-level prerequisite (implicit in §3 already, made explicit here):** resolving a cascading
+  child at all requires the write-path `AllowedValue` type
+  (`src/types/jira/editmeta.rs::AllowedValue`, currently `{id, value, name}` only — verified against
+  the as-built struct, no `children` field exists there yet) to gain a `children` field. This ADR
+  pins its shape: `#[serde(default)] pub children: Vec<AllowedValue>` — **`Vec`, not
+  `Option<Vec<AllowedValue>>`.** This deliberately differs from F-B's `Option<String>` choice for
+  `FieldOption.id`/`.label`: there, wire-absence was a MEANINGFUL distinct state from
+  wire-present-but-empty (a genuinely missing identifier vs. an empty string), so `Option` carried
+  real information. Here, Jira omitting the `children` key entirely vs. sending `"children": []`
+  carry the IDENTICAL semantic — "this option has no cascading children" — so collapsing both into
+  an empty `Vec` via `#[serde(default)]` loses no information and avoids inventing a meaningless
+  `None`-vs-`Some(vec![])` distinction no caller would ever need to branch on. This mirrors
+  `FieldOption.children: Vec<FieldOption>`'s own "always present, possibly empty" contract
+  (EC-X.14.001-4) on the read-path sibling type — same presence discipline, applied to the
+  write-path type that already implicitly needed it for BC-3.4.027's happy path to be resolvable at
+  all.
+- **Error condition:** child segment present (non-empty, per EC-3.4.027-6's existing empty-segment
+  handling) AND parent segment resolves successfully AND the matched parent's `children` is empty →
+  exit 64 with a NEW, distinct message — sibling to, not a reuse or widening of, EC-3.4.027-2
+  (unresolvable parent) or EC-3.4.027-3 (resolvable parent, unresolvable child on an ACTUALLY
+  cascading field).
+- **Exact message shape (VP-assertable, mirrors EC-3.4.016-8's pinned-substring precedent):**
+  ```
+  field '<NAME>' is not a cascading select — remove the '>Child' segment from the value.
+  ```
+  Load-bearing substrings for a VP to assert (not the full literal, per this project's existing
+  pinned-substring convention): `"is not a cascading select"` and `"remove the"`. `<NAME>` is the
+  same resolved field name/label already used in this call site's other error messages (consistent
+  with EC-3.4.016-2/3/8's existing `<NAME>`-in-message convention).
+- **Why not reuse EC-3.4.027-3's shape with an empty list:** an exit-64 message that says "allowed
+  child values: " with nothing after the colon names the wrong problem — it implies the user chose
+  an invalid child value, when the actual problem is that the field cannot take a child value at
+  all. Naming the real problem (not a cascading select) gives the user the correct next action
+  (drop the `>Child` segment, or discover the field's real values via `jr field options`) instead of
+  an empty enumeration that looks like a bug.
+
+**Decision for (b): the bare form does NOT split on `>` — `>` is a literal character in the bare
+value. This is now a STATED contract, not an accident.**
+
+- Scope confirmation: D3's own "Scope" bullet already restricts the `str::split_once('>')`
+  obligation to the two named `:option`-hint call sites and explicitly excludes `parse_field_kv`
+  (the bare-form parser) — this decision does not change that scope, it removes the remaining
+  ambiguity about what happens INSTEAD at the bare-form dispatch point (BC-3.4.016's existing,
+  unmodified resolution path).
+- **Consequence, not a new code path:** because the bare form never splits, a bare
+  `--field cf=Parent>Child` against a cascading field is resolved exactly as BC-3.4.016 already
+  resolves any bare value — the ENTIRE string `"Parent>Child"` is matched as one opaque candidate
+  against `allowedValues[].value`. Since a cascading parent's own `.value` never itself contains a
+  literal `>` in ordinary use, this whole-string match fails and falls through to the EXISTING
+  EC-3.4.016-2 "unresolvable value, list allowed values" error — no new error path is introduced for
+  cell (b); it is the ordinary bare-form mismatch case, reached because the bare form treats `>` as
+  just another character in the candidate string.
+- **Consequence for setting a cascading child:** a cascading field's child value can ONLY be set via
+  the explicit `--field cf:option=Parent>Child` form (BC-3.4.027) — this closes the open question
+  BC-3.4.016's "predates cascading, unchanged" framing left implicit. There is no bare-form path to
+  a cascading child, by design, not by oversight.
+- **Why this is the right default (not merely the cheaper one):** the bare form's whole-contract is
+  "one opaque display-value candidate, whatever it contains" — BC-3.4.016 Invariant coverage
+  (case-insensitive exact/substring match) never special-cases any character in `VALUE` today. Making
+  the bare form `>`-aware would be a silent, hint-independent behavior change to a dispatch path this
+  bundle's own scoping (§2, §3) deliberately keeps untouched; asymmetry between "explicit hint splits,
+  bare form doesn't" is the same shape as `:id`/`:name` bypassing lookup entirely while the bare form
+  performs it (BC-3.4.028/029 Invariant 1 vs. BC-3.4.016) — `jr`'s hint syntax already establishes
+  the convention that opting into a hint changes parsing behavior the bare form does not share.
+
+**Downstream implications (flagged for the product-owner and verifier, not made here):**
+
+- **Product-owner, BC-3.4.027:** add a new Edge Case (e.g. EC-3.4.027-7, sibling to EC-3.4.027-2/3,
+  NOT a widening of either) documenting cell (a)'s trigger condition and the exact pinned message
+  substrings above; update Postconditions/Invariants to reference the `children`-empty structural
+  detection rule (no `schema.type` inspection required) and the `AllowedValue.children:
+  Vec<AllowedValue>` (`#[serde(default)]`) type extension this decision pins.
+- **Product-owner, BC-3.4.015:** add a note near the bare-form dispatch text (or as a new Edge Case
+  sibling to EC-3.4.015-9/10/11) stating explicitly that `>` is a literal character in the bare
+  form — no split is ever attempted — cross-referencing BC-3.4.027 EC-3.4.027-7 and this ADR's D4 so
+  the platform bare-vs-`:option` asymmetry is a stated contract at the bare-form BC's own site, not
+  discoverable only from BC-3.4.027's text.
+- **Verifier:** a new/extended VP (sibling to VP-578-008) asserting (i) cell (a)'s exact error
+  message substrings (`"is not a cascading select"`, `"remove the"`) on a plain (non-cascading)
+  `option` field whose `VALUE` contains a `>` where the parent segment resolves successfully; (ii)
+  cell (b)'s bare-form-treats-`>`-as-literal behavior — a wiremock/fixture assertion that bare
+  `--field cf=Parent>Child` against a cascading field never attempts a split and instead falls
+  through to the existing EC-3.4.016-2 unresolvable-value error shape.
+
 ## Source / Origin
 
 - F1 delta analysis: `.factory/phase-f1-delta-analysis/delta-analysis-field-dx.md` (§3
@@ -772,5 +888,16 @@ directly in the Jira UI).
   Write-path precedent cited: BC-3.4.016 EC / BC-3.3.011 EC ("no machine-readable id" → exit 64 on
   a matched entry with `id: None`). Input-type precedent cited: `types::jira::editmeta::AllowedValue
   { id: Option<String>, value: Option<String>, name: Option<String> }` (`src/types/jira/editmeta.rs`).
+- **D4 (adversary completeness+correctness pass) source:** relayed directly by the orchestrator's
+  task brief for this amendment burst, labeled `F-2`; no separate adversary-pass artifact file
+  exists on disk for it at time of writing, same disclosure as D1/D2/D3/F-B above. Defect surface
+  cited: §3's confirmed cascading split (D3's `str::split_once('>')` MUST) crossed against
+  BC-3.4.016's Preconditions ("`schema.type == \"option\"`" — plain, non-cascading — is an equally
+  valid dispatch target for `:option` per BC-3.4.027's own Preconditions, "Same as BC-3.4.016...
+  `schema.type == \"option\"` or `\"option-with-child\"`"). EC-3.4.027-3 precedent cited for the
+  shape D4 deliberately does NOT reuse for cell (a). `types::jira::editmeta::AllowedValue`
+  (`src/types/jira/editmeta.rs`, verified as-built to currently carry no `children` field) is the
+  type D4 pins the `#[serde(default)] Vec<AllowedValue>` extension on. FIX-F6-LRE-1 precedent
+  (same as D3): commit `37850b26` (#734), `src/jql.rs::validate_duration`.
   Table-rendering precedent cited: `src/cli/issue/changelog.rs::NULL_GLYPH` (`"—"`), reused by
   `src/cli/user.rs` and `src/cli/requesttype.rs`.

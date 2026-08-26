@@ -765,6 +765,178 @@ round). `total_bcs`: 719. Zero BCs added, removed, or retired this round — eve
 an in-place body amendment, an embedded edge case (EC-N addition), or a message/H1-text
 correction.
 
+## 2026-08-26 F2 adversary-convergence round-4 amendments
+
+A 3-pass adversarial streak plus a comprehensive consistency-validator sweep against round-1/2/3's
+amendments found six residual defects — mostly partial-fix propagation gaps of this same session's
+own D1/D2/D3/F-B fixes — plus one architect-resolved design fork (D4, ADR-0019 § Amendment
+2026-08-26, propagated here). Fixed in `bc-3-issue-write.md` and `cross-cutting.md` only, per this
+round's write scope, plus ONE targeted one-line edit to
+`.factory/specs/architecture/decisions/ADR-0019-field-dx-context-hint-shape-delimiter.md` (§1's
+`has_project` note — nothing else in that file touched; the architect's D4 content is final and
+unmodified). `verification-delta-field-dx.md`, `architecture-delta-field-dx.md`,
+`BC-INDEX.md`/`CANONICAL-COUNTS.md` are untouched by this agent this round (verifier and
+state-manager reconcile those next). **No BCs added, removed, or retired — counts are unchanged:
+`bc-3-issue-write.md` stays 123/152, `cross-cutting.md` stays 89/155, `total_bcs` stays 719.**
+
+### MED-1/F-3 — platform-vs-JSM collision-guard scope, made explicit everywhere it was implicit
+
+**Defect:** EC-3.4.029-2 (`bc-3-issue-write.md`, BC-3.4.029) stated "the CREATE path... does NOT
+last-wins" UNQUALIFIED — contradicting BC-3.8.008, where JSM create IS last-wins (the D2 guard was
+always intended as platform/non-JSM-only, per ADR-0019 § Amendment D2's own framing of "extend Gate
+B to the create path," which — read in isolation, without BC-3.8.008's own unchanged text — could
+be misread as covering the JSM create path too, since `jr issue create` is one command with a
+dispatch fork inside it, not two separate commands).
+
+**Fix:**
+- `bc-3-issue-write.md`, BC-3.4.029 EC-3.4.029-2: explicitly scoped to "the PLATFORM (non-JSM)
+  CREATE path (`jr issue create` WITHOUT `--request-type`)"; added an explicit statement that the
+  JSM create path does NOT get this guard and cross-referenced BC-3.8.008.
+- `bc-3-issue-write.md`, BC-3.4.017 (Gate B): the D2 amendment paragraph and EC-3.4.017-16's
+  cross-reference to BC-3.4.029 EC-3.4.029-2 both gained explicit "PLATFORM (non-JSM)" qualifiers
+  and a sentence stating the JSM path is unaffected.
+- `bc-3-issue-write.md`, BC-3.3.010 Invariant 5: added an explicit sentence stating this BC (and
+  therefore its D2 guard) governs the platform path only, per the BC's own title/Preconditions,
+  and that the JSM path retains BC-3.8.008's last-wins behavior.
+- `bc-3-issue-write.md`, BC-3.3.011: the D2 error-taxonomy row gained an explicit
+  "PLATFORM (non-JSM) path only" qualifier plus a "does NOT apply on the JSM create path" clause.
+- `bc-3-issue-write.md`, BC-3.4.014: the D2 amendment sentence in the `--field NAME[:kind]=VALUE`
+  echo bullet gained an explicit platform-only scope statement.
+- `bc-3-issue-write.md`, BC-3.8.008: **new paragraph** ("D2 collision guard does NOT apply on this
+  (JSM) path — this BC's 'duplicate NAME → last wins' behavior is UNCHANGED and retained")
+  explicitly justifying JSM's retained last-wins behavior: JSM's dedicated-flag semantics already
+  diverge from the platform path (several dedicated flags are silently IGNORED on JSM per
+  BC-3.8.010/BC-3.8.011, not merged onto the wire at all), so a platform-shaped "same wire key, two
+  sources" collision does not arise identically for those flags. Extending the D2 guard to the JSM
+  flags that ARE merged onto the wire (`--summary`/`--description`/`--priority`/`--label`) is
+  explicitly flagged as an open, DEFERRED decision for the F2 human gate — not silently decided
+  either way by this round.
+- **Proactive grep performed** (per task instruction) across `bc-3-issue-write.md` for every other
+  unqualified "create path"/"create-path collision guard" mention of the D2 guard — all remaining
+  occurrences live inside BC-3.3.010/BC-3.3.011 (whose own titles/Preconditions already scope them
+  to the platform path structurally) or the `Platform-Path Guard Ordering — handle_create` SSOT
+  block (whose own heading already says "Platform-Path"); no further unqualified occurrence found
+  outside the ones fixed above.
+
+### F-1 — `--value` filter × F-B's `Option<String>` reconciled
+
+**Defect:** BC-X.14.002's `--value` filter was written as if `id`/`label` are always populated
+strings, but F-B (round-3) made them `Option<String>` (a never-dropped `{id:None,label:None}` entry
+is legal per EC-X.14.001-7). The filter's substring-match semantics against a `None` field, and the
+`--value ""` IDENTITY claim's interaction with a fully-degenerate entry, were both unspecified.
+
+**Fix (`cross-cutting.md`, BC-X.14.002):**
+- New "Filtering against `Option<String>` fields" paragraph: a `None` field is simply NOT a match
+  source — skipped in the substring test, never causing a panic, never itself causing the entry to
+  be dropped. For a NON-EMPTY `--value`, an entry with one `None` field can still match via its
+  remaining `Some` field; an entry with BOTH fields `None` cannot match a non-empty substring (no
+  candidate string exists) and is filtered out as an ORDINARY substring miss — explicitly stated
+  NOT to be a violation of the never-drop invariant, which governs the normalizer's output
+  (BC-X.14.001), not this separate client-side filter's expected narrowing.
+- `--value ""` IDENTITY claim reconciled with never-drop: rewritten to state explicitly that the
+  empty-string case matches EVERY entry unconditionally, INCLUDING a `{id:None,label:None}` entry —
+  i.e. `--value ""` output == `--value`-absent output, preserving never-drop through the filter.
+  Made explicit that this is a deliberate special case (an unconditional match when the substring
+  itself is empty), not a restatement of "every `Some(String)` contains the empty substring" (which
+  would NOT, by itself, cover a fully-`None` entry that has no `Some` string to test at all).
+- VP-580-007 gained three new sub-points (g/h/i) asserting the `None`-field match/skip behavior and
+  the degenerate-entry inclusion/exclusion split between empty-string and non-empty `--value`.
+
+### F-2/D4 propagation — architect-decided, propagated into BC bodies
+
+Per ADR-0019 § Amendment D4 (adversary tag F-2, architect-resolved, this round propagates the
+BC-body consequences only — the architectural decision itself is NOT re-litigated here):
+
+- **Cell (a) — non-cascading-field collision** (`bc-3-issue-write.md`, BC-3.4.027): the `>` split
+  stays UNCONDITIONAL (confirms D3); the non-cascading case is now detected STRUCTURALLY (matched
+  parent's `children` collection is empty), never via a `schema.type` lookup. New paragraph
+  ("Non-cascading-field collision") added after the Multibyte-safety MUST paragraph; new Invariant
+  6; new **EC-3.4.027-7** (sibling to EC-3.4.027-2/3, NOT a widening of either) pinning the exact
+  message substrings `"is not a cascading select"` and `"remove the"`; VP-578-008 extended with a
+  flag for the verifier to add message-assertion coverage; Trace updated to cite the
+  `AllowedValue.children: Vec<AllowedValue>` (`#[serde(default)]`) type extension this decision
+  pins on `src/types/jira/editmeta.rs::AllowedValue`.
+- **Cell (b) — bare-form `>`-literal asymmetry** (`bc-3-issue-write.md`, BC-3.4.015): new paragraph
+  ("`>` is a LITERAL character in the bare form") added after the existing Hint-syntax-interaction
+  amendment note, stating explicitly that the bare form never splits on `>` — a bare
+  `--field cf=Parent>Child` against a cascading field is matched as ONE opaque candidate string,
+  falls through to the existing EC-3.4.016-2 unresolvable-value error; a cascading field's child can
+  ONLY be set via the explicit `:option` form. Cross-references BC-3.4.027 EC-3.4.027-7 and ADR-0019
+  § Amendment D4.
+
+**VP implication for the verifier (flagged, not resolved here):** a new/extended VP (sibling to
+VP-578-008) is needed asserting (i) EC-3.4.027-7's exact message substrings on a plain
+non-cascading `option` field whose `VALUE` contains a `>` where the parent segment resolves
+successfully; (ii) the bare-form-treats-`>`-as-literal behavior — a wiremock/fixture assertion that
+bare `--field cf=Parent>Child` against a cascading field never attempts a split and falls through to
+the existing EC-3.4.016-2 shape. Not authored here.
+
+### LOW-1/O-1 — `:asset` intra-composer check order pinned deterministic
+
+**Defect:** `--field cf:asset=:` and `cf:asset=:Y:Z` each match BOTH the empty-workspace EC (EC-2c)
+and an objectId-shaped EC (EC-2b's empty-objectId / EC-2d's extra-colon) — the message was
+ambiguous for these two overlapping inputs (exit code 64 either way, only the message text was
+undetermined).
+
+**Fix (`bc-3-issue-write.md`, BC-3.4.030 Parsing rule 2 + BC-3.4.031 EC-2c):** pinned a deterministic
+check order — the empty-workspace-segment check (EC-2c) is evaluated BEFORE the objectId-segment
+checks (EC-2b/EC-3/EC-2d), so an input matching both conditions ALWAYS surfaces EC-2c's
+"workspace segment cannot be empty" message. Added to both BC-3.4.030's Parsing rule 2 and
+BC-3.4.031's EC-2c entry (cross-referencing each other) so the ordering rule is visible from either
+BC.
+
+### O-2 — M3 numeric-bypass edge documented in `jr field options`
+
+**Fix (`cross-cutting.md`, BC-X.14.001):** new paragraph after the M3 service-desk resolution step
+paragraph, documenting that M3 inherits `jr requesttype fields`'s all-ASCII-digit numeric-bypass
+convention unmodified (per CLAUDE.md's existing documented edge case) — a request type NAMED e.g.
+`"100"` is unreachable by name on the M3 path; the caller must discover its numeric ID via
+`jr requesttype list --output json | jq`. Explicitly noted as a pre-existing, inherited `jr`
+behavior, not a new defect introduced by BC-X.14.001.
+
+### #5 — ADR-0019 §1 `has_project` note gains an inline superseded pointer
+
+**Fix (TARGETED, `.factory/specs/architecture/decisions/ADR-0019-field-dx-context-hint-shape-delimiter.md`,
+§1 ONLY):** the `has_project` note's bullet-list lead-in gained the inline marker
+`**[superseded 2026-08-26 — see Amendment D1]**` immediately after its bold lead-in. No other text
+in ADR-0019 was touched by this agent this round — the architect's D4 (and D1/D2/D3/F-B) content in
+the Amendment section is final and unmodified.
+
+### MED-2 — flagged for state-manager, NOT fixed here
+
+`BC-INDEX.md`'s BC-X.14.001 row prose still reads "REQUIRED for M2, OPTIONAL for M3" — stale,
+pre-D1 wording that contradicts both the bracketed H1 synopsis (`--type <T> [--project <P>]`,
+already corrected in `cross-cutting.md` per F-MED-2) and D1's own flag-OR-profile-default parity
+decision. **This agent did NOT edit `BC-INDEX.md`** (out of write scope this round — state-manager
+owns index reconciliation). Flagged here for the state-manager to correct the row prose to
+something in the shape of "companion for M2 (flag OR profile/config default), companion for M3."
+
+### Counts confirmed unchanged (round-4)
+
+`bc-3-issue-write.md`: 123 individually-bodied / 152 cumulative (frontmatter unchanged this round).
+`cross-cutting.md`: 89 individually-bodied / 155 cumulative (frontmatter unchanged this round).
+`total_bcs`: 719. Zero BCs added, removed, or retired this round — every change above is an
+in-place body amendment, an embedded edge case (EC-N addition, e.g. EC-3.4.027-7), a deterministic
+check-order pin, or a documentation-only note. The one ADR-0019 edit is a single inline marker, not
+a content change to the Amendment section's substance.
+
+### VP implications for the verifier (flagged, not resolved here — full summary)
+
+- **MED-3 / VP-578-013** (`bc-3-issue-write.md`, carried forward from round-3, F-A): still MUST be
+  rewritten to scope its empty-value→exit-64 assertion to `:asset` (EC-2a) ONLY, and its
+  `prop_oneof!` strategy MUST generate all four kinds (currently omits `:name`). Not touched this
+  round — restated here for the verifier's consolidated picture, no new change.
+- **F-1 / VP-580-007** (`cross-cutting.md`): new sub-points (g)/(h)/(i) above require realization —
+  a `None`-field filter case (matches via the remaining `Some` field; excluded when neither field
+  contains the substring) and the degenerate-entry (`{id:None,label:None}`) inclusion/exclusion
+  split between `--value ""`/absent (included) and any non-empty `--value` (excluded).
+- **F-2/D4** (`bc-3-issue-write.md`): a new VP (sibling to VP-578-008) for EC-3.4.027-7's message
+  substrings (non-cascading `>` collision) and for the bare-form `>`-literal behavior (D4 cell b) —
+  not authored here, flagged for the verifier.
+- **VP-580-012** (`cross-cutting.md`, carried forward from round-2/round-3): already minted and
+  DONE — no new change this round; restated only to confirm it remains closed, not reopened by this
+  round's edits.
+
 ## Traceability
 
 - Source issues: `gh issue view 580`, `gh issue view 578` (both read directly during this pass).

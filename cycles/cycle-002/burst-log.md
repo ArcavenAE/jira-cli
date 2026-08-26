@@ -209,3 +209,60 @@ No BCs added or removed — total stays **719** (bc-3-issue-write.md 123/152 ind
 | verifier | Amend existing VPs (VP-578-013 rewrite, VP-578-012 extension, VP-580-005 strengthening, VP-580-008 extension); confirm no new VP needed | `phase-f2-spec-evolution/verification-delta-field-dx.md` |
 | adversary | Fresh-context pass #3 | **CLEAN** |
 | state-manager | Propagate BC-INDEX.md title row, re-run guard scripts, confirm VP-580-012 presence, log this burst, update STATE.md, commit | `BC-INDEX.md`; this file; `STATE.md` v3.10 |
+
+## Burst: Burst 4 — F2 adversary-convergence round-4, THIRD fresh 3-pass streak (Pass 3 CLEAN, streak still 0/3), consistency-sweep + 5 MEDIUM-class + LOWs fixed (2026-08-26)
+
+**Parent-commit:** 3f029aabaf224e7b2fa8db362b12cf83f19d54c6 (factory(F2): field-dx convergence round-3 -- 2nd streak (1 pass clean), 1 HIGH+3 MED+LOWs fixed, VP 30, BC-INDEX title propagated)
+
+**Adversary verdict:** Pass 1 NOT-CLEAN, Pass 2 NOT-CLEAN, **Pass 3 CLEAN** — the third consecutive fresh-streak attempt this session to reach 3/3 CLEAN, and the second round to produce at least one individual CLEAN pass. A consistency-validator sweep across round-1/2/3's amendments (run alongside the 3-pass streak) confirmed the finding list was complete: all six findings routed this round were partial-fix propagation residuals from this same session's own D1/D2/D3/F-B fixes — not new defect classes. Fixed via a fix chain (architect for D4 + one targeted ADR-0019 note → product-owner for BC-body propagation → verifier for VP realization → product-owner back-fill of the verifier-minted VP's BC-body anchor). **Clean-pass streak REMAINS 0/3** — a single CLEAN pass inside an otherwise-NOT-CLEAN streak does not count toward the mandatory 3-CONSECUTIVE-CLEAN requirement; a fresh, fully-clean 3-pass run starting at Pass 1 is still required before F2 Step 5/8.
+
+**Files touched (Dim-1): 8 unique files**
+
+- phase-f2-spec-evolution/architecture-delta-field-dx.md
+- phase-f2-spec-evolution/prd-delta-field-dx.md
+- phase-f2-spec-evolution/verification-delta-field-dx.md
+- specs/architecture/decisions/ADR-0019-field-dx-context-hint-shape-delimiter.md
+- specs/prd/bc-3-issue-write.md
+- specs/prd/cross-cutting.md
+- sidecar-learning.md
+- specs/prd/BC-INDEX.md (state-manager, this burst — MED-2 title-row prose fix, the only BC-INDEX content change)
+
+**Codifications:** ADR-0019 gains § Amendment **D4** (architect-decided, tag F-2): the `>` split stays UNCONDITIONAL (confirms D3); a non-cascading-field collision (`--field cf:option=A>B` where `A`'s matched entry has an empty `children` collection) is now detected STRUCTURALLY, never via a `schema.type` lookup — new BC-3.4.027 EC-3.4.027-7 (pinned message substrings `"is not a cascading select"` + `"remove the"`); the bare form (`--field cf=Parent>Child`, no `:option` hint) treats `>` as a LITERAL character (no split), falling through to the existing EC-3.4.016-2 unresolvable-value error — new BC-3.4.015 note. `src/types/jira/editmeta.rs::AllowedValue` gains `children: Vec<AllowedValue>` (`#[serde(default)]`) as a type dependency. ADR-0019 §1's `has_project` note gains an inline `[superseded 2026-08-26 — see Amendment D1]` pointer (one-line targeted edit only). One new VP minted: **VP-578-023** (sibling to VP-578-008, D4/F-2 realization) — its inline BC-body anchor (BC-3.4.027 + BC-3.4.015) was back-filled by product-owner this round, closing the verifier's flagged pending-back-fill item. No new BC, no BC retired.
+
+**Dim-2 Attestation:** N/A for this burst — spec-only F2 convergence burst (no `src/` changes). `scripts/check-spec-counts.sh` → exit 0 ("Check passed: 8 bc files validated"). `scripts/check-bc-cumulative-counts.sh` → exit 0 ("OK: all cumulative BC counts verified (719 total across 9 files; Surface H footer checked where present)"). Both re-run post-burst by state-manager.
+
+**Dim-5 Attestation:** N/A — no binary/WASM artifact produced by this burst (spec/documentation delta only).
+
+**Dim-6 Attestation:** N/A — no `src/` code changed this burst; `cargo fmt`/`cargo clippy` not applicable.
+
+**Dim-7 Attestation:** N/A — no test suite changed this burst. Spec-level verification is `scripts/check-spec-counts.sh` and `scripts/check-bc-cumulative-counts.sh` (both PASS, see Dim-2 above); BC/VP realization tests remain deferred to F4 implementation per this repo's `convention: inline-proptest`.
+
+**Findings routed and fixed this burst:**
+
+| Finding | Severity | Description | Fix |
+|---------|----------|--------------|-----|
+| MED-1/F-3 | MEDIUM | EC-3.4.029-2 stated the create path "does NOT last-wins" UNQUALIFIED, contradicting BC-3.8.008 (JSM create IS last-wins) — the D2 guard's platform-only scope was implicit, not explicit, across five BC bodies | Explicit "PLATFORM (non-JSM)" qualifiers added to BC-3.4.029 EC-3.4.029-2, BC-3.4.017 (Gate B + EC-3.4.017-16 cross-ref), BC-3.3.010 Invariant 5, BC-3.3.011's error-taxonomy row, BC-3.4.014's echo bullet; BC-3.8.008 gains a new paragraph explicitly justifying JSM's retained last-wins behavior, with D2-extension-to-JSM flagged as an OPEN, DEFERRED decision for the F2 human gate (not silently decided) |
+| MED-2 | MEDIUM | BC-INDEX.md's BC-X.14.001 row prose still read "REQUIRED for M2, OPTIONAL for M3" — stale pre-D1 wording contradicting both the already-bracketed H1 synopsis and D1's flag-OR-profile-default parity decision | **state-manager** (this burst) corrected the row prose to "companion for M2 (flag OR profile/config default), companion for M3" — the ONLY BC-INDEX content change this round, no count field touched |
+| MED-3 | MEDIUM | VP-578-013 (carried forward from round-3's F-A rewrite) still needed its `prop_oneof!`/assertion split made explicit per-kind | `:option` empty → `is_err()` (downstream `allowedValues` match-miss, EC-3.4.016-2); `:id`/`:name` empty → `is_ok()` pass-through; `:asset` empty → `is_err()` structural — verification-delta realized this split |
+| F-1 | MEDIUM | BC-X.14.002's `--value` filter was written as if `id`/`label` are always populated strings, but round-3's F-B made them `Option<String>` — substring-match semantics against a `None` field, and `--value ""`'s interaction with a fully-degenerate entry, were unspecified | New "Filtering against `Option<String>` fields" paragraph (`None` is not a match source, skipped not panicked, never causes a drop) + `--value ""` reconciled as an unconditional match including `{id:None,label:None}`; VP-580-007 gains sub-points (g)/(h)/(i) |
+| F-2/D4 | (architect-decided) | Non-cascading-field `>`-collision and bare-form `>`-literal behavior were both underspecified — D3 mandates unconditional `str::split_once('>')` but never addressed what happens when the matched parent isn't actually cascading, nor what the bare (non-hinted) form does with a literal `>` | New BC-3.4.027 EC-3.4.027-7 (structural empty-`children` detection, pinned message) + `AllowedValue.children` type note; new BC-3.4.015 bare-form-`>`-is-literal note; new VP-578-023 minted (verifier), inline BC-body anchor back-filled (product-owner) |
+| LOWs | LOW | `:asset=:`/`:asset=:Y:Z` check-order ambiguity (EC-2c empty-workspace vs EC-2b/2d objectId checks); M3 numeric-bypass edge undocumented for `jr field options`; ADR-0019 §1 `has_project` note lacked a superseded pointer | EC-2c pinned to evaluate BEFORE objectId-segment checks (BC-3.4.030 Parsing rule 2 + BC-3.4.031 EC-2c, cross-referenced); new `jr field options` M3 numeric-bypass paragraph (inherits `jr requesttype fields` convention unmodified); ADR-0019 §1 gains `[superseded 2026-08-26 — see Amendment D1]` inline marker |
+
+**Closes:** MED-1/F-3 (platform-vs-JSM collision-guard scope made explicit everywhere), MED-2 (BC-INDEX.md title-row prose, state-manager), MED-3 (VP-578-013 per-kind split realized), F-1 (`--value` filter × `Option<String>` reconciled), F-2/D4 (non-cascading collision + bare-form literal, VP-578-023 minted + back-filled), all LOWs. **Does NOT close:** the F2 mandatory adversarial spec-convergence loop itself (streak remains 0/3 — Pass 3's CLEAN verdict does not carry over into a new streak attempt; a fresh 3-pass run starting from Pass 1 is required). **Also DEFERRED, not closed:** F-3's JSM collision-guard extension (BC-3.8.008's dedicated-flag wire-key collision) remains an open product decision, owed at the F2 human gate; DEC-310 formal registration and the DEC-namespace disambiguation question also remain owed at cycle close (unchanged from round-3).
+
+### Counts reconciled this burst
+
+No BCs added or removed — total stays **719** (bc-3-issue-write.md 123/152 individually-bodied/cumulative; cross-cutting.md 89/155). **VP total 30 → 31** (VP-578-023 newly minted; sequence now VP-578-001..023 = 23 ids + VP-580-005..012 = 8 ids). Holdouts unchanged (106). No BC-INDEX.md/CANONICAL-COUNTS.md VP-count surface exists to update — only STATE.md carries a standalone VP-total figure, updated 30→31 this burst.
+
+### Details
+
+| Agent | Task | Output |
+|-------|------|--------|
+| adversary | Fresh-context pass #1 (+ consistency-validator sweep run alongside) | NOT-CLEAN — routed MED-1/F-3, F-1, LOWs |
+| adversary | Fresh-context pass #2 | NOT-CLEAN — routed MED-2 (flagged for state-manager), MED-3, F-2/D4 (flagged for architect) |
+| architect | Decide D4 (non-cascading collision + bare-form literal), one targeted ADR-0019 §1 note | ADR-0019 § Amendment D4, `architecture-delta-field-dx.md` |
+| product-owner | Propagate MED-1/F-3, F-1, F-2/D4, LOWs into PRD/BC bodies; flag MED-2 for state-manager | `prd-delta-field-dx.md` "2026-08-26 F2 adversary-convergence round-4 amendments" section, `bc-3-issue-write.md`, `cross-cutting.md` |
+| verifier | Realize MED-3 (VP-578-013 per-kind split), F-1 (VP-580-007 g/h/i), mint VP-578-023 (D4/F-2) | `phase-f2-spec-evolution/verification-delta-field-dx.md` |
+| product-owner | Back-fill VP-578-023's inline BC-body Verification Properties anchor (was pending after verifier's pass) | `specs/prd/bc-3-issue-write.md` |
+| adversary | Fresh-context pass #3 | **CLEAN** |
+| state-manager | Fix BC-INDEX.md MED-2 title-row prose, re-run guard scripts, reconcile VP count 30→31, log this burst, update STATE.md, commit | `BC-INDEX.md`; this file; `STATE.md` |

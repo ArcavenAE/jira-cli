@@ -322,21 +322,23 @@ introduce one unprompted.
 
 ---
 
-## 9. Amendment (2026-08-26) — F2 Adversary Convergence: D1/D2/D3/F-B
+## 9. Amendment (2026-08-26) — F2 Adversary Convergence: D1/D2/D3/D4/F-B
 
 **Trigger:** F2's mandatory adversarial spec-convergence loop ran three round-1 fresh-context
 adversary passes against the frozen deltas (§0-8 above, `prd-delta-field-dx.md`,
 `verification-delta-field-dx.md`) and surfaced three defects this delta's own architecture
 decisions own the resolution of (D1/D2/D3). A subsequent round-2 adversary *completeness* pass
-found a fourth, independent gap (**F-B**, below) in the same frozen deltas. Full decision text and
-rationale for all four: ADR-0019 § Amendment (2026-08-26). This section is the delta-doc-level
-record of the same four decisions, kept in sync per this repo's convention that
-`architecture-delta-*.md` mirrors its governing ADR's decisions rather than merely
+found a fourth, independent gap (**F-B**, below) in the same frozen deltas. A round-3 adversary
+*completeness+correctness* pass (tag `F-2`) then found a fifth, independent gap (**D4**, below):
+two undefined cells in the cascading `>`-split × field-schema-type matrix D3 partially specified.
+Full decision text and rationale for all five: ADR-0019 § Amendment (2026-08-26). This section is
+the delta-doc-level record of the same five decisions, kept in sync per this repo's convention
+that `architecture-delta-*.md` mirrors its governing ADR's decisions rather than merely
 cross-referencing them.
 
 **File updated:** `.factory/specs/architecture/decisions/ADR-0019-field-dx-context-hint-shape-delimiter.md`
 (EDITED — amendment appended, frontmatter `amended: 2026-08-26` added; §1/§2/§3's original text
-is unchanged, the three superseded passages are called out explicitly rather than rewritten in
+is unchanged, the superseded/extended passages are called out explicitly rather than rewritten in
 place, consistent with this project's ADR-0017 amendment precedent). No other `.factory/architecture/`
 living doc required a matching append for this amendment — see per-item notes below.
 
@@ -455,10 +457,68 @@ type and pair of functions, not a new module, dependency edge, or HIGH-impact ri
   (integration-level) the two pinned table-rendering strings for a fixture item missing id/label
   respectively.
 
+### D4 — cascading `>`-split × field-schema-type matrix: non-cascading-field collision, and bare-form `>`-literal asymmetry (round-3 adversary completeness+correctness pass, tag `F-2`)
+
+**Trigger:** a round-3 adversary *completeness+correctness* pass (tag `F-2`, distinct from D3's own
+`B-F2` finding tag despite the similar label) found that §3/D3's confirmed unconditional
+`str::split_once('>')` split left two cells of the split × field-schema-type matrix undefined: (a)
+`--field cf:option=A>B` where `cf` is a PLAIN (non-cascading) `option` field — parent resolves,
+child has no `children` container to resolve against; (b) whether the BARE form
+(`--field cf=Parent>Child`, no hint) also splits on `>`, or treats it as a literal character. Full
+decision text and rationale: ADR-0019 § Amendment (2026-08-26), subsection **D4**.
+
+**Decision (a):** the split stays unconditional at the call site (confirms D3 — no `schema.type`
+inspection is added to the parser/composer). The non-cascading case is detected structurally,
+during `allowedValues` resolution, at the same point EC-3.4.027-3's existing "unresolvable child"
+check already inspects the matched parent's `children`: if a child segment is present and the
+matched parent's `children` is empty, this is a NEW, distinct exit-64 error — sibling to, not a
+reuse of, EC-3.4.027-2/EC-3.4.027-3 — naming the real problem (message load-bearing substrings:
+`"is not a cascading select"`, `"remove the"`) rather than degenerating into EC-3.4.027-3's
+"allowed child values: (empty)" shape. This requires extending the write-path
+`types::jira::editmeta::AllowedValue` type (`src/types/jira/editmeta.rs`, currently `{id, value,
+name}` only, verified as-built) with `#[serde(default)] children: Vec<AllowedValue>` — `Vec`, not
+`Option<Vec<..>>`, because wire-absent and wire-empty-array carry the identical "no cascading
+children" semantic here (unlike F-B's `id`/`label`, where absence was independently meaningful).
+This type extension was already an implicit prerequisite for BC-3.4.027's happy path (resolving a
+cascading child at all requires reading `allowedValues[].children[]`) — D4 makes it explicit and
+pins its exact shape.
+
+**Decision (b):** the bare form does NOT split on `>` — `>` is a literal character in the bare
+value, confirmed as a stated contract (not left implicit). D3's scope already excludes
+`parse_field_kv`/the bare-form dispatch from the `str::split_once('>')` obligation; D4 confirms
+what happens instead: a bare `--field cf=Parent>Child` against a cascading field is resolved
+exactly as BC-3.4.016 already resolves any bare value (whole-string match against
+`allowedValues[].value`), which fails and falls through to the EXISTING EC-3.4.016-2
+"unresolvable value" error — no new error path, no new code. A cascading field's child value can
+therefore ONLY be set via the explicit `:option=Parent>Child` form (BC-3.4.027).
+
+**Dependency-graph / purity-table impact (§3/§4 above):** none beyond the `AllowedValue` type-shape
+pin already implied by D3/§3 — no new module, function, or dependency edge. The new error branch is
+inserted into the already-`[PLANNED]` `field_resolve.rs`/`create.rs` L2 handlers' existing
+`allowedValues`-walk (§4's classification of those handlers as effectful shell is unchanged; the
+comparison itself — "is `children` empty" — is pure, same class as the rest of that resolution
+logic).
+
+**Not touched:** `component-graph.md`, `system-overview.md`, `ARCH-INDEX.md`,
+`.factory/architecture/adr-index.md`, `module-criticality.md`, `risk-register.md` — same reasoning
+as D1/D3/F-B's "not touched" notes: a new error branch and a type-shape pin inside already-`[PLANNED]`
+functions/types, not a new module, dependency edge, or HIGH-impact risk surface.
+
+**BC-body / VP propagation flagged, not made here (product-owner and verifier scope):**
+- Product-owner: BC-3.4.027 gains a new Edge Case (e.g. EC-3.4.027-7, sibling to EC-3.4.027-2/3)
+  documenting cell (a)'s trigger condition and pinned message substrings, plus the
+  `AllowedValue.children: Vec<AllowedValue>` (`#[serde(default)]`) type-shape note. BC-3.4.015
+  gains a note (near its bare-form dispatch, sibling to EC-3.4.015-9/10/11) stating `>` is literal
+  in the bare form, cross-referencing BC-3.4.027 EC-3.4.027-7 and ADR-0019 D4.
+- Verifier: a new/extended VP (sibling to VP-578-008) asserting (i) cell (a)'s exact pinned error
+  substrings on a plain `option` field whose value contains a resolvable-parent `>`-split; (ii)
+  cell (b)'s bare-form-`>`-is-literal behavior — bare form against a cascading field falls through
+  to the existing EC-3.4.016-2 shape, never attempts a split.
+
 ### Files NOT touched by this amendment burst
 
 `ARCH-INDEX.md` (no new ADR row — this is an amendment to the existing ADR-0019 row, not a new
 ADR), `.factory/architecture/adr-index.md` (same reasoning), `module-criticality.md` (still no
 implementation module to classify — unchanged from §1 above), `risk-register.md` (no new
-HIGH-impact R-NNN risk introduced by any of D1/D2/D3/F-B — these are correctness/consistency fixes
-to already-planned behavior, not new risk surface).
+HIGH-impact R-NNN risk introduced by any of D1/D2/D3/D4/F-B — these are correctness/consistency
+fixes to already-planned behavior, not new risk surface).
