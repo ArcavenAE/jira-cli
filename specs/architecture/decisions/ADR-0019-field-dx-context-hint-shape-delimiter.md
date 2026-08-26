@@ -24,6 +24,11 @@ resolved here" §1 and §3).
 defects surfaced by fresh-context adversary passes — M2 default-project resolution parity (D1),
 create-path `--field`/dedicated-flag collision precedence (D2), and cascading `>`-split multibyte
 safety (D3). See § Amendment (2026-08-26) below.
+**Amended further** (2026-08-26, adversary finding F-NEW-1): D2's create-path governed field set
+was itself under-scoped — it reused Gate B's five-member EDIT-derived set rather than
+`issue create`'s own larger dedicated-flag surface. Corrected to a nine-member set (`labels`,
+`parent`, `assignee`, and resolved-id detection for `team`/`points` added) in § "D2 correction
+(adversary F-NEW-1)" immediately following D2 below.
 
 > **NOTE — factory-artifact placement, not yet an F4 code artifact:** This ADR governs
 > `src/cli/field.rs` (new), an extension to `src/api/jira/issues.rs`, and the `parse_field_kv`
@@ -558,6 +563,90 @@ same correction. The product-owner should reconcile `bc-3-issue-write.md`'s BC-3
 BC-3.4.017, and BC-3.4.029 together in one pass to avoid reintroducing the same contradiction this
 finding closes.
 
+### D2 correction (adversary F-NEW-1) — create-path governed field-set completeness
+
+**Defect.** D2 above extended Gate B to the create path, but the "Governed field set" bullet was
+executed by reusing BC-3.4.017's edit-derived five-member set (`summary`, `description`,
+`issuetype`, `priority`, `components`) verbatim rather than re-deriving `issue create`'s OWN
+dedicated-flag surface — which is what D2's own qualifier ("restricted to whichever of those exist
+as a dedicated flag on issue create") actually called for. `handle_create`
+(`src/cli/issue/create.rs::handle_create`, the `fields` object build block) writes FIVE MORE
+dedicated-flag values directly into the same `fields` object `--field` merges into — `--label`,
+`--team`, `--points`, `--parent`, and `--to`/`--account-id` — none of which trip the five-member
+guard. `jr issue create --parent FOO-1 --field parent=BAR-2` (and the four analogues) silently
+double-writes `fields.parent` from two unordered sources: exactly the "no defined winner" failure
+mode D2 exists to close. This is an under-scoped execution of D2's own rationale, not a flaw in
+the rationale itself.
+
+**Decision: the create-path governed set is NINE wire-key targets, not five.**
+
+| # | Flag(s) | Wire key | Zero-HTTP at step 2b? | Matching mechanism |
+|---|---|---|---|---|
+| 1-5 | `--summary`, `--description`, `--type`, `--priority`, `--component` | `summary`, `description`, `issuetype`, `priority`, `components` | Yes (unchanged) | Static case-insensitive key compare — unchanged from original D2 |
+| 6 | `--label` | `labels` | Yes | Static case-insensitive key compare — SAME zero-cost mechanism as 1-5 |
+| 7 | `--parent` | `parent` | Yes | Static case-insensitive key compare — SAME mechanism as 1-5 |
+| 8 | `--to` / `--account-id` (clap `conflicts_with` already prevents both at once) | `assignee` | Yes | Static case-insensitive key compare — SAME mechanism as 1-5 |
+| 9a | `--points` | `story_points_field_id` from `config.active_profile()` (a `customfield_NNNNN` string) | Yes, unconditionally — `resolve_story_points_field_id` is config-only, no HTTP fallback exists | Resolved-id equality against a `--field customfield_NNNNN=` bypass form only — see caveat below |
+| 9b | `--team` | `team_field_id` from `config.active_profile()`, when present | Conditional — zero-HTTP only when `team_field_id` is already in profile config (the `jr init`-driven common case); `client.find_team_field_id()` (HTTP) is NEVER invoked to service this guard | Same resolved-id equality as 9a, only when the id is already in hand at zero cost; otherwise this flag's branch is a no-op for that invocation |
+
+**`labels`-on-create vs `labels`-exclusion-on-edit — do not conflate.** BC-3.4.017's edit-path
+Gate B deliberately EXCLUDES `labels` from its governed set because `issue edit --label` forks to
+a different endpoint/payload shape entirely (`BUG-LABEL-400`: single-key PUT with bare-string
+labels vs multi-key bulk POST with `{"name":…}` objects) — there is no single `fields.labels`
+write on edit for Gate B to guard a collision against. `issue create --label` has NO such fork: it
+is one code path writing `fields["labels"] = json!(labels)` unconditionally, unforked
+(`src/cli/issue/create.rs::handle_create`, the labels block). The edit-path exclusion rationale (a
+different-shaped write path, not "labels is exempt from collision risk in general") does not
+transfer to create, so `labels` MUST be governed there. This is a per-path exception with a
+documented reason, not an inconsistency between the two guards.
+
+**Team/points caveat — resolved-id detection only, bounded by the zero-HTTP invariant.** Unlike
+items 1-8 (static, fixed wire-key strings matched by case-insensitive comparison against the
+literal `--field NAME` text), `--team`/`--points` write to a *dynamically resolved* custom-field
+id (e.g. `customfield_10050`) that varies per Jira instance. Detecting a collision means comparing
+that resolved id against what the `--field` side names, which can be typed two ways: (a) the
+literal `customfield_NNNNN` bypass form (BC-3.3.010 Step 1) — a plain string-equality check
+against the already-resolved id, zero additional cost; (b) a human display name (e.g. `--field
+"Story Points"=5`) — resolving THAT to a field id requires the same cache-first
+`fields.json`/`list_fields()` lookup BC-3.3.010 Step 2 uses for ordinary field-name resolution,
+which CAN issue an HTTP `GET /rest/api/3/field` on a cold cache. Hoisting general field-NAME
+resolution ahead of step 2b (i.e., ahead of project/type resolution, the SSOT's zero-HTTP
+boundary) solely to service this guard would violate the step-2/2a/2b zero-HTTP invariant the
+entire `Platform-Path Guard Ordering` SSOT block is built on. **Decision: the create-path guard
+detects `--team`/`--points` collisions ONLY via form (a) — the `customfield_NNNNN` bypass — never
+via form (b), an unresolved display name.** A caller who writes `--points 5 --field "Story
+Points"=8` will NOT trip the guard (both values still reach the downstream merge unordered — the
+same latent risk D2 exists to close, now narrowed to this one residual case rather than
+eliminated). This is a documented, bounded gap, smaller in scope than but the same *kind* as the
+pre-existing edit-path "team/points deferred to v2" exclusion (BC-3.4.017 "Scope of Gate B"),
+flagged for the F2 human gate/verifier, not silently resolved. `--team`'s detection is FURTHER
+conditional on `team_field_id` already sitting in profile config (`jr init`'s common case); when
+absent, that branch is a no-op for the invocation rather than triggering
+`client.find_team_field_id()` to find out. `--points`'s detection has no such condition:
+`resolve_story_points_field_id` is unconditionally config-only (errors rather than falling back to
+HTTP when unconfigured), so item 9a is zero-HTTP-available whenever `story_points_field_id` is
+configured at all.
+
+**No new dependency-graph or purity-table edge.** `field_resolve::detect_flag_field_overlap`'s
+signature is unchanged from D2 above — it still takes an already-computed governed-key set from
+the caller. The only change is what `create.rs`'s step-2b call site passes in: for items 1-8, the
+same static-literal-set pattern as before, now with four more members; for item 9, `create.rs`
+reads `config.active_profile().story_points_field_id`/`.team_field_id` (already-loaded `Config` —
+`Config::load_with` completes in `main.rs` before `handle_create` is entered, per EC-3.8.012-6;
+not a new input) and includes the resolved id string(s) in the set when present. No new module, no
+new I/O, no new edge on the dependency graph beyond what D2 above already recorded.
+
+**Downstream implication (flagged for the product-owner and verifier, not made here):**
+BC-3.3.010 Invariant 5 / EC-3.3.010-6, BC-3.3.011's D2 taxonomy row, and BC-3.4.029 EC-3.4.029-2
+all currently describe (or cross-reference) a five-member governed set and must be rewritten to
+the nine-member set above, including the `labels`-on-create-vs-edit distinction and the
+team/points resolved-id/zero-HTTP caveats verbatim (load-bearing, not incidental prose). VP-578-021
+must be extended to exercise each of the four newly-covered static flags
+(`--label`/`--parent`/`--to`/`--account-id`) plus the two resolved-id cases (`--points` + `--field
+customfield_NNNNN=`; `--team` + `--field customfield_NNNNN=` when `team_field_id` is configured)
+and to assert the NON-firing residual case (`--points` + `--field "Story Points"=`) does NOT trip
+the guard, as a documented-limitation regression pin rather than a silent gap.
+
 ### D3 (adversary B-F2) — cascading `>`-split multibyte safety
 
 **Defect.** §3's confirmed `>` cascading split (`Parent>Child` → parent/child) is performed at the
@@ -901,3 +990,14 @@ value. This is now a STATED contract, not an accident.**
   (same as D3): commit `37850b26` (#734), `src/jql.rs::validate_duration`.
   Table-rendering precedent cited: `src/cli/issue/changelog.rs::NULL_GLYPH` (`"—"`), reused by
   `src/cli/user.rs` and `src/cli/requesttype.rs`.
+- **D2 correction (adversary F-NEW-1) source:** relayed directly by the orchestrator's task brief
+  for this amendment burst, labeled `F-NEW-1`; no separate adversary-pass artifact file exists on
+  disk for it at time of writing, same disclosure pattern as D1/D2/D3/D4/F-B above. Defect surface
+  cited: `src/cli/issue/create.rs::handle_create`'s `fields` object build block (`--label`,
+  `--team`, `--points`, `--parent`, `--to`/`--account-id` writes), crossed against D2's own
+  "restricted to whichever of those exist as a dedicated flag on issue create" qualifier, which the
+  original D2 execution did not honor. `src/cli/issue/helpers.rs::resolve_team_field` /
+  `resolve_story_points_field_id` cited for the zero-HTTP-vs-conditional-HTTP resolution asymmetry
+  between `--points` (config-only, unconditional) and `--team` (config-first, HTTP-fallback via
+  `find_team_field_id()` when unconfigured). BUG-LABEL-400 (CLAUDE.md Gotchas; `BC-3.4.017`'s
+  edit-path Gate B exclusion of `labels`) cited for the create-vs-edit `labels` asymmetry.

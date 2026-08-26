@@ -334,7 +334,9 @@ two undefined cells in the cascading `>`-split × field-schema-type matrix D3 pa
 Full decision text and rationale for all five: ADR-0019 § Amendment (2026-08-26). This section is
 the delta-doc-level record of the same five decisions, kept in sync per this repo's convention
 that `architecture-delta-*.md` mirrors its governing ADR's decisions rather than merely
-cross-referencing them.
+cross-referencing them. A subsequent adversary pass (**F-NEW-1**) found D2's own governed-field-set
+execution incomplete — see "D2 correction (adversary F-NEW-1)" immediately following D2 below,
+mirroring ADR-0019 § "D2 correction (adversary F-NEW-1)".
 
 **File updated:** `.factory/specs/architecture/decisions/ADR-0019-field-dx-context-hint-shape-delimiter.md`
 (EDITED — amendment appended, frontmatter `amended: 2026-08-26` added; §1/§2/§3's original text
@@ -393,6 +395,44 @@ edge is introduced by this addition.
 **BC-body propagation flagged, not made here (product-owner scope):** BC-3.4.029 EC-3.4.029-2 and
 BC-3.4.014's "no Gate B on create" text both require correction — see ADR-0019 § Amendment
 (2026-08-26), D2, "Downstream implication" paragraph for the exact passages to rewrite.
+
+### D2 correction (adversary F-NEW-1) — create-path governed field-set completeness
+
+**Defect.** D2 above extended Gate B to the create path, but the governed-field-set text D2
+recorded was executed as a straight reuse of Gate B's EDIT-derived five-member set (`summary`,
+`description`, `issuetype`, `priority`, `components`), not a re-derivation of `issue create`'s own
+dedicated-flag surface as D2's own "restricted to whichever of those exist as a dedicated flag on
+issue create" qualifier required. `create.rs::handle_create`'s `fields` object build block writes
+five more dedicated-flag values into the same `fields` object `--field` merges into — `--label`,
+`--team`, `--points`, `--parent`, `--to`/`--account-id` — none of which tripped the five-member
+guard, reopening the exact silent-double-write class D2 exists to close (e.g. `--parent FOO-1
+--field parent=BAR-2`).
+
+**Decision:** the create-path governed set grows from five wire-key targets to nine. Full
+per-member table, matching-mechanism detail, the `labels`-on-create-vs-edit-exclusion asymmetry,
+and the `--team`/`--points` resolved-custom-field-id caveat (bounded to the `customfield_NNNNN`
+bypass form only, to preserve the step-2b zero-HTTP invariant) are recorded in ADR-0019 § "D2
+correction (adversary F-NEW-1)" — this delta does not duplicate that table, only its
+architectural consequences below.
+
+**Dependency-graph / purity-table delta: NONE beyond §"D2" above.**
+`field_resolve::detect_flag_field_overlap`'s signature and purity classification are unchanged —
+it still consumes an already-computed governed-key set supplied by the caller. Only what
+`create.rs`'s step-2b call site passes into that set changes: four more static literal keys
+(`labels`, `parent`, `assignee` — `--to`/`--account-id` share one wire key), plus, when present,
+the resolved `story_points_field_id`/`team_field_id` strings already available on the
+already-loaded `Config` (`Config::load_with` completes in `main.rs` before `handle_create` runs,
+per EC-3.8.012-6 — not a new input to the module). No new module, function, or edge is added to
+the dependency graph or purity table beyond the single row §"D2" above already recorded for
+`detect_flag_field_overlap` itself.
+
+**BC-body propagation flagged, not made here (product-owner scope):** BC-3.3.010 Invariant 5 /
+EC-3.3.010-6, BC-3.3.011's D2 taxonomy row, and BC-3.4.029 EC-3.4.029-2 must be rewritten from the
+five-member set to the nine-member set — see ADR-0019 § "D2 correction (adversary F-NEW-1)",
+"Downstream implication" paragraph, for the exact passages and load-bearing caveats
+(`labels`-create-vs-edit distinction; `--team`/`--points` resolved-id-only, zero-HTTP-bounded
+detection) to carry over verbatim. VP-578-021 (verifier scope) must be extended per the same
+paragraph.
 
 ### D3 — cascading `>`-split multibyte safety (new obligation on an existing, already-planned split site)
 

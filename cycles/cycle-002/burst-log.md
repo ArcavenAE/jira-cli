@@ -266,3 +266,60 @@ No BCs added or removed — total stays **719** (bc-3-issue-write.md 123/152 ind
 | product-owner | Back-fill VP-578-023's inline BC-body Verification Properties anchor (was pending after verifier's pass) | `specs/prd/bc-3-issue-write.md` |
 | adversary | Fresh-context pass #3 | **CLEAN** |
 | state-manager | Fix BC-INDEX.md MED-2 title-row prose, re-run guard scripts, reconcile VP count 30→31, log this burst, update STATE.md, commit | `BC-INDEX.md`; this file; `STATE.md` |
+
+## Burst: Burst 5 — F2 adversary-convergence round-5, FOURTH fresh 3-pass streak (Pass 3 CLEAN, streak still 0/3), consistency-sweep + 4 MEDIUM-class + LOWs fixed (2026-08-26)
+
+**Parent-commit:** `d3b7a7bc` (factory(F2): field-dx convergence round-4 -- consistency-sweep + 3rd streak residuals fixed, VP 30->31, BC-INDEX D1 prose fixed)
+
+**Adversary verdict:** Pass 1 NOT-CLEAN, Pass 2 NOT-CLEAN, **Pass 3 CLEAN** — the fourth consecutive fresh-streak attempt this session to reach 3/3 CLEAN, and the third round in a row (rounds 3, 4, 5) to produce at least one individual CLEAN pass. A consistency-validator sweep was run after the verifier pass and caught one wording residual (the stale "pending back-fill" claim in `verification-delta-field-dx.md`), closed by two tiny wording fixes. All findings routed this round were partial-fix propagation residuals or peripheral-seam gaps in this same session's own D1/D2/D3/D4 fixes — no new defect classes, and (as with round-4) no HIGH/CRITICAL findings. Fixed via a fix chain: architect (D2 correction) → product-owner (BC-body propagation) → verifier (VP realization + VP-578-024 mint) → consistency-sweep → product-owner (2 tiny wording fixes).
+
+**Files touched (Dim-1): 6 unique files**
+
+- phase-f2-spec-evolution/architecture-delta-field-dx.md
+- phase-f2-spec-evolution/prd-delta-field-dx.md
+- phase-f2-spec-evolution/verification-delta-field-dx.md
+- specs/architecture/decisions/ADR-0019-field-dx-context-hint-shape-delimiter.md
+- specs/prd/bc-3-issue-write.md
+- specs/prd/cross-cutting.md
+
+(`sidecar-learning.md` also touched, non-spec.)
+
+**Codifications:** ADR-0019 gains § "D2 correction (adversary F-NEW-1)" (architect-decided): D2's create-path governed field set was itself under-scoped — it reused Gate B's five-member EDIT-derived set verbatim instead of re-deriving `issue create`'s own larger dedicated-flag surface (`handle_create` also writes `--label`/`--team`/`--points`/`--parent`/`--to`/`--account-id` into the same `fields` object `--field` merges into, none of which tripped the five-member guard). Corrected to a **nine-member set**: the original 5 (`summary`/`description`/`issuetype`/`priority`/`components`) + 3 new static-key members (`labels`/`parent`/`assignee`, zero-HTTP, same static case-insensitive mechanism) + 1 resolved-id category covering `--points`/`--team`, detected ONLY via the `--field customfield_NNNNN=` bypass form (never a display-name form — hoisting field-name resolution ahead of the create-path guard's zero-HTTP boundary would violate the step-2/2a/2b SSOT invariant). `labels` is governed on CREATE (one unforked write path) but stays EXCLUDED on EDIT (BUG-LABEL-400's endpoint fork) — a documented per-path exception, not an inconsistency. Propagated into BC-3.3.010 Invariant 5 + new EC-3.3.010-6a (full 9-member enumeration), BC-3.3.011's error-taxonomy row, and BC-3.4.029 EC-3.4.029-2 (5+3+1=9 arithmetic spelled out); VP-578-021 EXTENDED (not newly minted) to cover the 4 new static flags + 2 resolved-id cases + a NEGATIVE regression pin (`--points 5 --field "Story Points"=8` does NOT trip the guard, documented-limitation pin). Separately, F-NEW-2 pins `--field` hint-kind × `issue edit --dry-run` preview shape across BC-3.4.021/027/028/029/030: `plannedChanges` shows the SAME composed wire object the live PUT would send per hint kind (`:id`→`{"id":…}`, `:name`→`{"name":…}`, `:option` non-cascading→`{"id":…}`, `:option` cascading→`{"value":…,"child":{"value":…}}`, `:asset`→`[{workspaceId,id,objectId}]`), never the bare-form display-value string; PUT is never called under `--dry-run`. New **VP-578-024** minted (verifier), replacing the product-owner's `VP-DRY-RUN-005` placeholder in BC-3.4.021, also covering the `:asset` cold-cache side effect: a COLD `get_or_fetch_workspace_id` cache under `--dry-run` fires the real workspace-discovery HTTP call and CAN exit 64 from BC-3.4.030's cold-cache taxonomy BEFORE any `plannedChanges` output (mirrors VP-692-002/004's exit-64-before-preview shape). MED-1 corrected a miscitation: VP-578-013's enumeration had drifted to cite "EC-2d," which belongs exclusively to VP-578-012's extra-colon message, not VP-578-013 — corrected to the accurate EC-2a/b/c set. MED-2: VP-578-023's inline BC-body anchor is now back-filled at BOTH sites (BC-3.4.027 declared round-4; BC-3.4.015 back-filled this round) — the verification-delta's stale "sole pending back-fill" claim was reconciled, and `related_bcs` gained BC-3.4.015 (VP-578-023 Applies-to) + BC-3.4.021 (VP-578-024 owning BC). LOWs: M2 sub-headings bracketed for consistency with M3's existing bracket convention; a stale changelog line converted to a resolution-pointer instead of duplicated prose; the round-4 "four vs three new static keys" count slip reconciled to the correct 9 = 5 (original) + 3 (new static) + 1 (resolved-id category) arithmetic everywhere it's cited. No new BC, no BC retired.
+
+**Dim-2 Attestation:** N/A for this burst — spec-only F2 convergence burst (no `src/` changes). `scripts/check-spec-counts.sh` → exit 0 ("Check passed: 8 bc files validated"). `scripts/check-bc-cumulative-counts.sh` → exit 0 ("OK: all cumulative BC counts verified (719 total across 9 files; Surface H footer checked where present)"). Both re-run post-burst by state-manager.
+
+**Dim-5 Attestation:** N/A — no binary/WASM artifact produced by this burst (spec/documentation delta only).
+
+**Dim-6 Attestation:** N/A — no `src/` code changed this burst; `cargo fmt`/`cargo clippy` not applicable.
+
+**Dim-7 Attestation:** N/A — no test suite changed this burst. Spec-level verification is `scripts/check-spec-counts.sh` and `scripts/check-bc-cumulative-counts.sh` (both PASS, see Dim-2 above); BC/VP realization tests remain deferred to F4 implementation per this repo's `convention: inline-proptest`.
+
+**Findings routed and fixed this burst:**
+
+| Finding | Severity | Description | Fix |
+|---------|----------|--------------|-----|
+| F-NEW-1 | MEDIUM | D2's create-path governed field set was under-scoped — it reused Gate B's five-member EDIT set verbatim rather than re-deriving `issue create`'s own dedicated-flag surface (`--label`/`--team`/`--points`/`--parent`/`--to`/`--account-id` all silently unguarded) | ADR-0019 § "D2 correction (adversary F-NEW-1)": governed set corrected 5→9 (3 new static keys + 1 resolved-id category, bypass-form only); propagated to BC-3.3.010/011, BC-3.4.014/017/029; VP-578-021 EXTENDED with new coverage + a negative regression pin |
+| F-NEW-2 | MEDIUM | `--field` hint-kind × `issue edit --dry-run` preview wire shape was unpinned — unclear whether `plannedChanges` shows the composed wire object or the bare-form display-value string per hint kind | Pinned per-kind wire shape across BC-3.4.021/027/028/029/030 (`plannedChanges` mirrors the live PUT body exactly per kind, PUT never called); new **VP-578-024** minted (verifier), replacing the PO's `VP-DRY-RUN-005` placeholder; also covers the `:asset` cold-cache dry-run side-effect exit-64-before-preview case |
+| MED-1 | MEDIUM | VP-578-013's enumeration cited "EC-2d," which is exclusively VP-578-012's extra-colon message, not VP-578-013's | Enumeration corrected to the accurate EC-2a/b/c set |
+| MED-2 | MEDIUM | `verification-delta-field-dx.md` still claimed VP-578-023's BC-body anchor had a "sole pending back-fill" at BC-3.4.015, but the product-owner had already back-filled it | Back-fill confirmed DONE at both anchor sites (BC-3.4.027 + BC-3.4.015); stale "pending" claim reconciled; `related_bcs` gained BC-3.4.015 + BC-3.4.021 |
+| LOWs | LOW | M2 sub-headings unbracketed (inconsistent with M3's convention); a stale changelog line duplicated prose instead of pointing at the resolution; the round-4 "four vs three new static keys" arithmetic slip (should read 5+3+1=9) | M2 sub-headings bracketed; changelog line converted to a resolution pointer; "9 = 5+3+1" arithmetic reconciled everywhere it's cited |
+
+**Closes:** F-NEW-1 (create-path governed set 5→9, VP-578-021 extended), F-NEW-2 (dry-run per-kind wire shape pinned, VP-578-024 minted), MED-1 (VP-578-013 EC citation fixed), MED-2 (VP-578-023 back-fill reconciliation), all LOWs. **Does NOT close:** the F2 mandatory adversarial spec-convergence loop itself (streak remains 0/3 — Pass 3's CLEAN verdict does not carry over into a new streak attempt; a fresh 3-pass run starting from Pass 1 is still required). **Also NOT closed (unchanged from round-4):** DEC-310 formal registration, the DEC-namespace disambiguation question, and F-3's JSM collision-guard extension (open product decision) all remain owed at the F2 human gate.
+
+### Counts reconciled this burst
+
+No BCs added or removed — total stays **719** (bc-3-issue-write.md 123/152 individually-bodied/cumulative; cross-cutting.md 89/155). **VP total 31 → 32** (VP-578-024 newly minted; sequence now VP-578-001..024 = 24 ids + VP-580-005..012 = 8 ids). Holdouts unchanged (106). No BC-INDEX.md/CANONICAL-COUNTS.md VP-count surface exists to update — only STATE.md carries a standalone VP-total figure, updated 31→32 this burst.
+
+### Details
+
+| Agent | Task | Output |
+|-------|------|--------|
+| adversary | Fresh-context pass #1 | NOT-CLEAN — routed F-NEW-1 (flagged for architect), LOWs |
+| adversary | Fresh-context pass #2 | NOT-CLEAN — routed F-NEW-2, MED-1, MED-2 |
+| architect | Decide D2 correction (create-path governed set 5→9) | ADR-0019 § "D2 correction (adversary F-NEW-1)", `architecture-delta-field-dx.md` |
+| product-owner | Propagate F-NEW-1's 9-member set, F-NEW-2's dry-run scope note, LOWs into PRD/BC bodies | `prd-delta-field-dx.md` "2026-08-26 F2 adversary-convergence round-5 amendments" section, `bc-3-issue-write.md`, `cross-cutting.md` |
+| verifier | Extend VP-578-021 (9-member coverage + negative pin), fix MED-1 (VP-578-013 EC citation), mint VP-578-024 (F-NEW-2 dry-run shape) | `phase-f2-spec-evolution/verification-delta-field-dx.md` |
+| consistency-validator | Sweep round-1..5 amendments for residual drift | caught MED-2 (stale "pending back-fill" claim) |
+| product-owner | 2 tiny wording fixes: MED-2 back-fill reconciliation + related_bcs update | `verification-delta-field-dx.md`, `bc-3-issue-write.md` |
+| adversary | Fresh-context pass #3 | **CLEAN** |
+| state-manager | Re-run guard scripts, reconcile VP count 31→32, log this burst, update STATE.md, commit | this file; `STATE.md` |

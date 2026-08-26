@@ -937,6 +937,202 @@ a content change to the Amendment section's substance.
   DONE — no new change this round; restated only to confirm it remains closed, not reopened by this
   round's edits.
 
+## 2026-08-26 F2 adversary-convergence round-5 amendments
+
+Fresh-context adversarial pass against the frozen round-1..4 deltas found two MEDIUM findings
+(F-NEW-1, F-NEW-2), one MEDIUM inline self-contradiction (MED-1), one MEDIUM back-fill gap
+(MED-2), and two LOW findings (LOW-1, LOW-2). The recurring failure mode this round targets is
+PARTIAL-FIX PROPAGATION — a fix landing at one site while a sibling site is missed — so every fix
+below was grepped for ALL occurrences of the changed claim across `bc-3-issue-write.md` and
+`cross-cutting.md` before editing. **Write scope this round: `bc-3-issue-write.md`,
+`cross-cutting.md`, this file only.** `verification-delta-field-dx.md`, ADR-0019/
+`architecture-delta-field-dx.md`, `BC-INDEX.md`/`CANONICAL-COUNTS.md` are untouched by this agent
+this round (verifier and state-manager reconcile those next, per their own division of labor).
+**No BCs added, removed, or retired — counts are unchanged: `bc-3-issue-write.md` stays 123/152,
+`cross-cutting.md` stays 89/155, `total_bcs` stays 719** (frontmatter re-verified: `grep -c
+"^#### BC-"` on both files matches their `definitional_count`; `scripts/check-spec-counts.sh`
+passes: "Check passed: 8 bc files validated").
+
+### F-NEW-1 (MEDIUM) — create-path Gate B governed set widened 5→9, propagated to every sibling site
+
+**Defect (architect-resolved, ADR-0019 § "D2 correction (adversary F-NEW-1)"):** the original D2
+execution (round-1) extended Gate B to the `issue create` platform path by reusing Gate B's
+EDIT-derived five-member set (`summary`/`description`/`issuetype`/`priority`/`components`)
+verbatim, rather than re-deriving `issue create`'s own dedicated-flag surface as D2's own
+qualifier ("restricted to whichever of those exist as a dedicated flag on issue create") actually
+called for. `handle_create` writes five MORE dedicated-flag values into the same `fields` object
+`--field` merges into (`--label`, `--team`, `--points`, `--parent`, `--to`/`--account-id`), none
+of which tripped the five-member guard — reopening the exact "no defined winner" collision class
+D2 exists to close, for those five flags.
+
+**Fix — the create-path governed set is now NINE wire-key targets, not five, propagated to every
+site that named or implied the five-member set on the create path:**
+- `bc-3-issue-write.md`, BC-3.3.010 Invariant 5: cross-references the nine-member set and
+  EC-3.3.010-6 (widened-set citation added; does not itself re-enumerate).
+- `bc-3-issue-write.md`, BC-3.3.010: **new EC-3.3.010-6a** enumerating all three new static-flag
+  collisions (`labels`/`parent`/`assignee`) and the two resolved-id collisions
+  (`--points`/`--team` via the `customfield_NNNNN` bypass form only), the `labels`
+  create-vs-edit divergence rationale (BUG-LABEL-400 endpoint fork excludes `labels` from edit
+  Gate B; create has no such fork, so `labels` IS governed there), and the bounded
+  display-name-does-not-trip-the-guard residual (zero-HTTP boundary).
+- `bc-3-issue-write.md`, VP-578-021 (BC-3.3.010): extended to require coverage of the four new
+  static flags, the two resolved-id cases, and a NEGATIVE regression pin for the documented
+  non-firing residual (`--points 5 --field "Story Points"=8` does not trip the guard).
+- `bc-3-issue-write.md`, BC-3.3.011: the D2 error-taxonomy row's "any field in Gate B's governed
+  set" corrected to name the create-path's own nine-member set, explicitly distinct from
+  edit-path Gate B's five-member set.
+- `bc-3-issue-write.md`, BC-3.4.014: the same "any field in Gate B's governed set" phrase in the
+  `--field` echo-suppression amendment note corrected identically.
+- `bc-3-issue-write.md`, BC-3.4.017 (edit-path Gate B, itself UNCHANGED at five members): the D2
+  shared-function paragraph gained an explicit "mechanism reuse only, not identical governed
+  sets" clarification; EC-3.4.017-16's "matched pair" language gained a scope note stating this
+  describes mechanism symmetry (exit 64 vs. last-wins) for fields shared by both sets, not
+  set-size equality.
+- `bc-3-issue-write.md`, BC-3.4.029 EC-3.4.029-2: the main site describing the create-path
+  guard's field list — rewritten from the stale five-member enumeration to the nine-member set,
+  with the `labels` divergence rationale and the bounded residual restated; its trailing
+  cross-reference sentence ("all five system fields") corrected to note the create path's set is
+  documented separately (BC-3.3.010 EC-3.3.010-6a), not identical in size to the edit path's.
+- **Grep sweep proving exhaustiveness:** `grep -n "governed set\|Gate B" bc-3-issue-write.md`
+  (68 matches) reviewed line-by-line; every site asserting or implying a specific field-count for
+  the CREATE path was one of the seven sites fixed above. `grep -n "Gate B\|governed set"
+  cross-cutting.md` returned zero matches (F-NEW-1 has no cross-cutting.md footprint). `grep -n
+  '"summary"[/,] "description"[/,] "issuetype"[/,] "priority"[/,] "components"'
+  bc-3-issue-write.md` cross-checked as a second pass — remaining five-member enumerations are
+  all legitimately EDIT-path (Gate B's own, unchanged) or historical audit-trail quotes marked
+  "superseded"/"Previous version," none live-current for the create path.
+
+**VP implication for the verifier (flagged, not resolved here):** VP-578-021 must be extended (as
+stated in its own BC-3.3.010 site above) to exercise: (a) each of the four newly-covered static
+flags (`--label`/`--parent`/`--to`/`--account-id`) against a colliding `--field`, any argv order,
+any hint kind; (b) the two resolved-id cases — `--points` + `--field customfield_NNNNN=` and
+`--team` + `--field customfield_NNNNN=` when `team_field_id` is configured; (c) the NON-firing
+regression pin — `--points` + `--field "Story Points"=` must NOT trip the guard, asserted as a
+documented-limitation pin, not silently left untested. Not realized here.
+
+### F-NEW-2 (MEDIUM) — dry-run `plannedChanges` preview shape for `--field` hint kinds
+
+**Defect:** no BC specified what `issue edit --dry-run`'s `plannedChanges` preview shows for a
+HINTED `--field NAME:kind=VALUE` value. BC-3.4.021's general bare-form rule
+(`"<field display-name>": "<display value>"`, a human display string) does not fit any hint kind:
+`:id`/`:name` never resolve a display value (they wrap `VALUE` verbatim in a wire object), and
+`:option` cascading / `:asset` compose structured objects/arrays a bare string cannot represent.
+
+**Fix — each hint-kind BC gained a "Dry-run preview shape" Postconditions paragraph specifying
+that `plannedChanges` shows the SAME composed wire shape the live PUT would send:**
+- `bc-3-issue-write.md`, BC-3.4.027 (`:option`/cascading): non-cascading → `{"id":"<optionId>"}`;
+  cascading → `{"value":"<parent>","child":{"value":"<child>"}}`; a resolution failure under
+  `--dry-run` (unresolvable parent/child, EC-3.4.027-7's non-cascading collision) still exits 64
+  before any `plannedChanges` output (BC-3.4.021 Invariant 2 / EC-3.4.015-19 precedent).
+- `bc-3-issue-write.md`, BC-3.4.028 (`:id`): `{"id":"<VALUE>"}`, verbatim, no lookup.
+- `bc-3-issue-write.md`, BC-3.4.029 (`:name`): `{"name":"<VALUE>"}` (or the `priority` bypass key
+  form), verbatim, no lookup.
+- `bc-3-issue-write.md`, BC-3.4.030 (`:asset`): `[{"workspaceId":"<ws>","id":"<ws>:<objectId>",
+  "objectId":"<objectId>"}]` — distinct from BOTH the bare-form display-string convention AND
+  this same BC's own simplified `changed_fields` LIVE-echo composite string
+  (`"<workspaceId>:<objectId>"`); the dry-run preview and the live success echo are two
+  independently-specified channels, neither simplified further for dry-run.
+- **Side-effect pin (BC-3.4.030):** a bare `:asset=<objectId>` form's `get_or_fetch_workspace_id`
+  resolution runs UNCONDITIONALLY inside the `--dry-run` block (mirrors BC-3.4.021 Postconditions
+  — Common item 3's `--field` editmeta precedent). On a COLD workspace-id cache, `--field
+  cf:asset=<objectId> --dry-run` fires the REAL `GET /rest/servicedeskapi/assets/workspace` call
+  and CAN exit 64 from BC-3.4.030's own cold-cache error taxonomy BEFORE any `plannedChanges`
+  output — i.e. a dry-run invocation can exit 64 purely from workspace discovery. Cross-referenced
+  to EC-3.4.015-19 (the general "dry-run does not suppress resolution errors" precedent) and to
+  BC-3.4.030's error taxonomy table (unchanged, now pinned as reachable from `--dry-run` too, not
+  only from a live edit).
+- `bc-3-issue-write.md`, BC-3.4.021 (the dry-run-owning BC itself): the bare-form `--field
+  NAME=VALUE` Postconditions bullet gained a scope note — its display-value-string rule governs
+  the BARE form only; a HINTED `--field` is the documented exception, cross-referencing the four
+  BCs above — closing what would otherwise have been a fresh contradiction between BC-3.4.021's
+  general rule and the four hint-kind BCs' new specific rules (the exact partial-fix-propagation
+  failure mode this round's meta-instruction targets).
+
+**VP implication for the verifier (flagged, not resolved here):** new VP-DRY-RUN-005 flagged
+inline in BC-3.4.021's Verification Properties section — asserts, per hint kind, that
+`plannedChanges`'s entry is the composed wire object (not a display string), PUT never called;
+plus a companion assertion for the `:asset` cold-cache side effect (real workspace-discovery GET
+fires under `--dry-run`, can exit 64 before any `plannedChanges` output, mirroring VP-692-002/004's
+exit-64-before-preview shape). Not realized here.
+
+### MED-1 (MEDIUM) — VP-578-013 EC-2d enumeration self-contradiction
+
+**Defect:** BC-3.4.031 VP-578-013's inline text listed EC-2d in its "exercised by this VP"
+enumeration (`EC-1, EC-2a/b/c/d, EC-3, EC-5`) AND excluded it in the same block ("EC-2d covered by
+VP-578-012, not this VP") — a direct self-contradiction within one VP's own text.
+
+**Fix (`bc-3-issue-write.md`, BC-3.4.031, VP-578-013):** dropped `d` from the enumeration —
+now reads `EC-1, EC-2a/b/c, EC-3, EC-5`. The exclusion sentence (EC-2d belongs to VP-578-012) was
+already correct and is unchanged. `verification-delta-field-dx.md` was already correct on this
+point per the task brief — not touched by this agent (out of write scope this round).
+
+### MED-2 (MEDIUM) — VP-578-023 partial back-fill
+
+**Defect:** VP-578-023 was declared inline in BC-3.4.027 (its `:option`/cascading BC) but MISSING
+from BC-3.4.015's `>`-literal note (the bare-form BC whose behavior VP-578-023's bare-form
+sibling assertion actually verifies) — a citation existed at only one of its two relevant sites.
+
+**Fix (`bc-3-issue-write.md`, BC-3.4.015):** added a `VP-578-023` back-fill citation to the
+`>`-literal note, describing the bare-form assertion the VP already covers (bare
+`--field cf=Parent>Child` treats `>` as literal, falls through to EC-3.4.016-2, not
+EC-3.4.027-7's message) and explicitly noting this is the second, back-filled citation site for
+the SAME VP, not a duplicate/second VP. Not duplicated at BC-3.4.027 (already declared there,
+untouched this round).
+
+**Flagged for the verifier (not resolved here):** `verification-delta-field-dx.md`'s stale "both
+sites pending" claim for VP-578-023 (if present) should be reconciled to reflect the back-fill
+above, and its frontmatter `related_bcs` list should gain `BC-3.4.015` alongside the existing
+`BC-3.4.027` entry.
+
+### LOW-1 — BC-X.14.001 M2 sub-heading bracket sweep
+
+**Defect:** `cross-cutting.md` still had THREE live (non-historical) unbracketed M2
+`--type <T> --project <P>` sub-headings/labels — round-3's F-MED-2 fix bracketed the H1 synopsis
+but missed three sibling occurrences at the M2 issue-type-resolution sub-heading (~line 2215), a
+taxonomy-table row label (~line 2658), and an EC label (EC-X.14.004-4).
+
+**Fix (`cross-cutting.md`):** all three re-bracketed to `--type <T> [--project <P>]`, each tagged
+with a round-5/LOW-1 marker. A fourth occurrence (~line 2771, inside EC-X.14.004-7's worked
+example) was reviewed and deliberately left as-is — it is a concrete example INVOCATION that
+legitimately supplies `--project` (the scenario needs a resolvable project), not a generic
+sub-heading/label pattern, so bracketing it would misrepresent the example. The one historical
+occurrence (line 2186, F-MED-2's own "changed FROM `--type <T> --project <P>` TO..." correction
+narrative) is correctly quoting the OLD form and was left untouched.
+
+### LOW-2 (Pass3) — stale changelog line reconciled
+
+**Defect:** `cross-cutting.md`'s round-2 changelog entry (lines ~36-38) still stated the
+`--project` 404 taxonomy row's dedicated VP was "flagged open for the verifier, not resolved
+here." It was in fact resolved at round-3 (VP-580-012 minted and declared inline in the BC body),
+but the changelog entry was never updated to reflect that.
+
+**Fix (`cross-cutting.md`):** appended a resolution pointer to the round-2 changelog entry —
+"This was resolved round-3: VP-580-012 minted... — no longer open" — cross-referencing the live
+VP-580-012 declaration elsewhere in the same file.
+
+### Counts confirmed unchanged (round-5)
+
+`bc-3-issue-write.md`: 123 individually-bodied / 152 cumulative (frontmatter unchanged this
+round; re-verified via `grep -c "^#### BC-" bc-3-issue-write.md` == 123). `cross-cutting.md`: 89
+individually-bodied / 155 cumulative (re-verified via `grep -c "^#### BC-" cross-cutting.md` ==
+89). `total_bcs`: 719, unchanged. Zero BCs added, removed, or retired this round — every change
+above is an in-place body amendment, an embedded edge case (EC-3.3.010-6a addition), a
+Postconditions paragraph addition, or a documentation/changelog reconciliation.
+`scripts/check-spec-counts.sh` re-run after all edits: "Check passed: 8 bc files validated."
+
+### Sites touched this round (exhaustive list, for the verifier's cross-check)
+
+`bc-3-issue-write.md`: BC-3.3.010 (Invariant 5, EC-3.3.010-6a new, VP-578-021), BC-3.3.011 (D2
+taxonomy row), BC-3.4.014 (`--field` echo amendment note), BC-3.4.015 (`>`-literal note,
+VP-578-023 back-fill), BC-3.4.017 (D2 shared-function paragraph, EC-3.4.017-16 scope note),
+BC-3.4.021 (bare-form Postconditions scope note, VP-DRY-RUN-005 new), BC-3.4.027 (dry-run
+Postconditions paragraph), BC-3.4.028 (dry-run Postconditions bullet), BC-3.4.029 (EC-3.4.029-2
+rewrite, trailing cross-reference correction, dry-run Postconditions bullet), BC-3.4.030 (dry-run
+Postconditions + side-effect bullet), BC-3.4.031 (VP-578-013 enumeration fix).
+`cross-cutting.md`: BC-X.14.001 area (M2 sub-heading bracket, ~line 2215), the M2 taxonomy-table
+row (~line 2658), EC-X.14.004-4 (bracket), the round-2 changelog entry (~lines 36-38, LOW-2
+resolution pointer). `prd-delta-field-dx.md`: this section.
+
 ## Traceability
 
 - Source issues: `gh issue view 580`, `gh issue view 578` (both read directly during this pass).

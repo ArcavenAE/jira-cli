@@ -35,7 +35,9 @@ trace: |
     (`get_or_fetch_project_meta`) path, so a nonexistent `--project` is a genuine, previously-
     undocumented HTTP 404 outcome; new EC-X.14.004-6 added. Whether this new row warrants its own
     dedicated VP (beyond the general per-row coverage VP-580-004 already asserts) is flagged open
-    for the verifier, not resolved here. Pass2-F6 (MEDIUM, this file's 1 of 3 sites): the dangling
+    for the verifier, not resolved here. **[RESOLVED round-3, F2 adversary-convergence round-5,
+    LOW-2]** This was resolved round-3: VP-580-012 minted (see below, `--project` not found (404)
+    on the M2/M3 paths dedicated coverage) — no longer open. Pass2-F6 (MEDIUM, this file's 1 of 3 sites): the dangling
     `.factory/specs/verification-delta/` directory citation (never existed) replaced with the
     actual verifier artifact path `.factory/phase-f2-spec-evolution/verification-delta-field-dx.md`
     — the other two sites are in `bc-3-issue-write.md`. Full rationale and bc-3-issue-write.md's
@@ -2212,7 +2214,7 @@ call" contract — it reads only already-loaded in-process `Config` state, no HT
 distinct, sibling pure function to the arity check (both are pure core, same class as
 `config::validate_profile_name`), not a widened arity check.
 
-**M2 (`--type <T> --project <P>`) issue-type name→id resolution step**: `get_createmeta_fields`
+**M2 (`--type <T> [--project <P>]`) issue-type name→id resolution step [BRACKETED 2026-08-26, F2 adversary-convergence round-5, LOW-1 — was unbracketed, stale relative to the H1/D1-corrected `[--project <P>]` form]**: `get_createmeta_fields`
 (the shared M2 enumeration function, ADR-0019 §1) needs a NUMERIC `issueTypeId`, but `--type`
 is accepted as a NAME (same convention as `issue create --type`), so the M2 path resolves
 `--type <T>` to an `issueTypeId` BEFORE calling `get_createmeta_fields` — mirroring BC-3.3.010
@@ -2655,7 +2657,7 @@ fields with no enumerable option set (per `.factory/research/field-dx-context-me
 | `<field>` resolves to multiple matches (ambiguous) | Exit 64 naming candidates + ids | EC-3.4.015-2 parallel |
 | Resolved project (whether from an explicit `--project` companion or profile/config default) is non-JSM, supplied to the `--request-type` path | Exit 64 via `require_service_desk`, call-site-specific message (BC-X.8.004) | BC-X.12.003 parallel |
 | Unknown/ambiguous `--request-type` value | Exit 64 via `partial_match` (BC-X.12.006) | BC-X.12.006 |
-| M2 path (`--type <T> --project <P>`): `--type` value does not resolve to exactly one issue type for the resolved project (unknown name, or ambiguous case-insensitive match) | Exit 64 listing the project's valid issue type names, BEFORE `get_createmeta_fields` is called | BC-3.3.010 Step 3 / S-331 parallel |
+| M2 path (`--type <T> [--project <P>]`) **[BRACKETED 2026-08-26, F2 adversary-convergence round-5, LOW-1]**: `--type` value does not resolve to exactly one issue type for the resolved project (unknown name, or ambiguous case-insensitive match) | Exit 64 listing the project's valid issue type names, BEFORE `get_createmeta_fields` is called | BC-3.3.010 Step 3 / S-331 parallel |
 | **[ADDED 2026-08-26, F2 adversary-convergence round-2, Pass2-F2]** `--project <P>` supplied but the project does NOT exist / is not accessible (404, not 401) — on M2 this surfaces from EITHER of the two createmeta-family calls `jr field options` reuses (`get_issue_types_for_project`'s own `GET .../createmeta/{project}/issuetypes` list call, or `get_createmeta_fields`'s per-issue-type fields call, whichever runs first and 404s/400s on the bad project key); on M3 this surfaces from `get_or_fetch_project_meta`'s own `GET /rest/api/3/project/{key}` call (the SAME project-existence GET already documented elsewhere for its 401 behavior — see BC-X.8.006/007 — this row covers its 404 outcome instead) | Exit 64, "project not found or not accessible" (actionable, names the supplied project key) | New — no direct predecessor; `jr field options` performs no client-side project-existence pre-check on either path, so this is a genuine, previously-undocumented HTTP-failure row, distinct from the "no resolvable project" (companion-absent) and "non-JSM project" (resolves, wrong type) rows above |
 | `--issue <KEY>` not found (404) | Exit 64, "issue not found or not accessible" | EC-3.4.015-7 parallel |
 | createmeta/editmeta/requesttype-fields HTTP failure (401/403/5xx) | Propagated via standard `JrError` auth/API hint | EC-3.4.015-6 parallel |
@@ -2737,7 +2739,7 @@ reported via any taxonomy-table error row.
   fixing this exit-64 error by re-running against a different `--project`/`--type`, `--issue`, or
   `--request-type` context where the field IS configured may then encounter the graceful-degrade
   exit-0 path instead, for a field type with no fixed value set.
-- EC-X.14.004-4: M2 path (`--type <T> --project <P>`), `--type` names an unknown or ambiguous
+- EC-X.14.004-4: M2 path (`--type <T> [--project <P>]`) **[BRACKETED 2026-08-26, F2 adversary-convergence round-5, LOW-1]**, `--type` names an unknown or ambiguous
   issue type for the resolved project → `get_issue_types_for_project` resolution fails BEFORE
   `<field>` resolution and BEFORE `get_createmeta_fields` — exit 64 listing valid issue types
   (see taxonomy table row above). This is a DISTINCT, EARLIER failure than EC-X.14.001-5
