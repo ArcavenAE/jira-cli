@@ -378,3 +378,69 @@ No BCs added or removed — total stays **719** (bc-3-issue-write.md 123/152 ind
 | product-owner | Propagate M-1's 10-member set + 3 of the 4 LOWs into PRD/BC bodies | `prd-delta-field-dx.md` round-6 amendments section, `bc-3-issue-write.md` (10 sites), `cross-cutting.md` |
 | verifier | Amend VP-578-021 (property 2/3 split, fix latent 5+4+2=11 math error, negative pin retained); add VP-578-005 coverage note (4th LOW) | `phase-f2-spec-evolution/verification-delta-field-dx.md` |
 | state-manager | Re-run guard scripts (PASS, 719/no drift), log this burst, log process-gap lesson, update STATE.md, commit | this file; `cycles/cycle-002/lessons.md`; `STATE.md` |
+
+## Burst: Burst 7 — F2 adversary-convergence CLOSE: streak-6, 3/3 CONSECUTIVE CLEAN, zero intervening fixes (2026-08-26)
+
+**Parent-commit:** `b8082ba4` (factory(F2): field-dx convergence round-6 -- D2 create-guard count corrected 9->10 (distinct points/team wire keys) + 4 LOWs)
+
+**Adversary verdict:** a fresh 3-pass streak (orchestrator label: **streak-6**, run against the round-6 committed delta at `b8082ba4`) returned **CLEAN on all three passes**, using three diverse review lenses rather than three generic re-runs — Pass 1 correctness, Pass 2 completeness, Pass 3 traceability. **This is the first streak this session to reach 3/3 CONSECUTIVE CLEAN.** Zero intervening fixes were required between passes; this burst is bookkeeping-only (STATE.md, spec-changelog.md, this burst-log entry) — no spec-content files were edited.
+
+**Pass 1 (correctness) — CLEAN:** verified the D2 create-guard TEN-key count (round-6's M-1 fix) against the actual `create.rs` source directly (not against prior rounds' narrative), confirmed guard-ordering determinism, and reconciled the VP-count (32) three independent ways. Surfaced 2 LOW doc-hygiene items (see below).
+
+**Pass 2 (completeness) — CLEAN:** no new CRITICAL/HIGH/MEDIUM findings — six rounds of convergence have driven the delta's defect surface to the floor. Surfaced 1 LOW doc-hygiene item.
+
+**Pass 3 (traceability) — CLEAN:** confirmed the VP inventory (32, no orphans), TEN-count consistency across all 4 contract surfaces, DEC-310 governance chain, holdout coverage, and the 719/32/106 counts all reconcile. Surfaced 1 LOW doc-hygiene item.
+
+**Files touched (Dim-1): 3 unique files**
+
+- `STATE.md` (this burst's convergence-close record)
+- `spec-changelog.md` (PROCESS-INTEGRITY CAVEAT reconciled to record achieved+recorded convergence, superseding the prior 0/3 caveat as of `b8082ba4`)
+- `cycles/cycle-002/burst-log.md` (this entry)
+
+No `phase-f2-spec-evolution/`, `specs/prd/`, `specs/architecture/` files were touched this burst — the 4 residual LOW findings below are tracked as debt, not fixed in this burst (per explicit instruction: this burst records convergence, it does not perform a further fix-chain).
+
+**Dim-2 Attestation:** N/A for this burst — spec-only F2 bookkeeping burst (no `src/` changes). `scripts/check-spec-counts.sh` → exit 0 ("Check passed: 8 bc files validated"). `scripts/check-bc-cumulative-counts.sh` → exit 0 ("OK: all cumulative BC counts verified (719 total across 9 files; Surface H footer checked where present)"). Both re-run post-burst by state-manager.
+
+**Dim-5 Attestation:** N/A — no binary/WASM artifact produced by this burst (bookkeeping/documentation delta only).
+
+**Dim-6 Attestation:** N/A — no `src/` code changed this burst; `cargo fmt`/`cargo clippy` not applicable.
+
+**Dim-7 Attestation:** N/A — no test suite changed this burst. Spec-level verification is `scripts/check-spec-counts.sh` and `scripts/check-bc-cumulative-counts.sh` (both PASS, see Dim-2 above); BC/VP realization tests remain deferred to F4 implementation per this repo's `convention: inline-proptest`.
+
+**Codifications:** **F2 mandatory adversarial spec-convergence is CONVERGED (3/3 CONSECUTIVE CLEAN).** Spec version bumped **v1.5.0 → v1.6.0** (MINOR per DF-030) in `spec-changelog.md`; the MINOR-vs-MAJOR question on the BC-3.8.012/DEC-310 reversal remains explicitly flagged for the F2 human gate, not forced. F2 is now ready for **Step 8 (human gate)**.
+
+**4 residual LOW doc-hygiene findings (tracked, non-blocking — do NOT reset the clean streak per the mandatory rule, which resets only on NOT-CLEAN/MEDIUM+ verdicts):**
+
+| Finding | Severity | Description |
+|---------|----------|--------------|
+| DOC-1 | LOW | `prd-delta-field-dx.md`'s round-2 step-2a narration is stale |
+| DOC-2 | LOW | Platform `:asset` wire-shape carries an UNVERIFIED note |
+| DOC-3 | LOW | M1 (`jr field options`)'s editmeta FALLBACK path lacks an explicit status/permission-dependency caveat |
+| DOC-4 | LOW | `prd-delta-field-dx.md`'s Summary section says "9 amended BCs" but should include BC-3.4.021/028/030 (round-5/round-6 amendments) |
+
+**Closes:** the F2 mandatory adversarial spec-convergence loop itself (3/3 CONSECUTIVE CLEAN reached; no further adversary passes required for F2). **Does NOT close:** DEC-310 formal registration, the DEC-namespace disambiguation question, the F-3 JSM collision-guard-extension product decision, the MINOR-vs-MAJOR spec-version confirmation, or the 4 residual LOW doc-hygiene items above — all owed at the F2 human gate / cycle close per the cycle-closing checklist in STATE.md's Session Resume Checkpoint.
+
+### Cycle-closing checklist status (as of this burst)
+
+Process-gap follow-ups still owed at cycle close (none closed by this bookkeeping burst):
+
+1. **Register DEC-310** formally (proposed, propagation complete; formal registration step remains).
+2. **DEC-namespace disambiguation question** — spec-authored DECs and cycle-gate DECs share one flat `DEC-NNN` prefix with no central registry; needs a cycle-close decision.
+3. **Reversal-propagation checklist** for the PO/state-manager workflow — still not built (recurring gap noted rounds 1-6).
+4. **`COUNT-RECONCILIATION-FORCED-CONSISTENCY-PATTERN`** lesson from round-6 (a count-discrepancy reconciliation must re-derive the semantically correct count from the underlying distinct entities, not force consistency onto whichever number appeared first) — logged in `cycles/cycle-002/lessons.md`; candidate for a spec-authoring checklist item, not yet actioned.
+5. The **4 residual LOW doc-hygiene items** from this burst (DOC-1..4 above) — non-blocking, owed before or at cycle close.
+6. **MINOR-vs-MAJOR spec-version confirmation** — `spec-changelog.md` [1.6.0]'s MINOR classification is a spec-steward judgment call, explicitly flagged for human confirmation at the F2 gate; if overridden, version should be revised to v2.0.0 before cycle close.
+7. **F-3 (D2-collision-guard extension to the JSM create path)** — DEFERRED product decision from round-4, unchanged through streak-6, owed at the F2 human gate.
+
+### Counts reconciled this burst
+
+No BCs added or removed — total stays **719** (bc-3-issue-write.md 123/152 individually-bodied/cumulative; cross-cutting.md 89/155). **VP total stays 32** — no VP amended or minted this burst (bookkeeping only). Holdouts unchanged (106). Both guard scripts re-verified PASS post-burst (`check-spec-counts.sh` → exit 0, 8 files; `check-bc-cumulative-counts.sh` → exit 0, 719 total across 9 files).
+
+### Details
+
+| Agent | Task | Output |
+|-------|------|--------|
+| adversary | Fresh-context pass #1 (correctness lens) | **CLEAN** — 2 LOW |
+| adversary | Fresh-context pass #2 (completeness lens) | **CLEAN** — 1 LOW |
+| adversary | Fresh-context pass #3 (traceability lens) | **CLEAN** — 1 LOW |
+| state-manager | Re-run guard scripts (PASS, 719/no drift), update STATE.md to record F2 CONVERGED (streak 3/3), reconcile spec-changelog.md's [1.6.0] PROCESS-INTEGRITY CAVEAT, log this burst, commit | `STATE.md`; `spec-changelog.md`; this file |

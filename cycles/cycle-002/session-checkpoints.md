@@ -191,4 +191,41 @@ Archived verbatim from STATE.md v3.09 before the round-3 fix burst overwrote it.
 
 ---
 
+## Session Resume Checkpoint (2026-08-26) — F2-ROUND6-FIX-CHAIN (superseded by streak-6 convergence-close)
+
+Archived verbatim from STATE.md v3.13 before the streak-6 convergence-close burst overwrote it.
+
+### Spec Versions
+
+| Artifact | Version |
+|----------|---------|
+| BC-INDEX.md | v6.82 |
+| STATE.md | v3.13 |
+| Total BCs | 719 |
+| VPs | 32 (unchanged round-6 -- VP-578-021 amended, not newly minted) |
+| Holdout scenarios | 106 |
+
+**Cycle:** Field DX Feature Mode cycle (`cycle-002`) -- GitHub issues #580 (`jr field options <field>` -- enumerate custom-field options) + #578 (`--field` value-kind hint syntax `:option`/`:id`/`:name`/`:asset` + non-JSM `issue create --field`). 2-story bundle, full F1-F7 lifecycle, DTU not required.
+
+**Position:** Phase F2 (spec evolution), inside the MANDATORY adversarial spec-convergence loop. Pipeline ACTIVE -- loop in progress this session, not paused.
+
+**F1:** COMPLETE + human-approved. **F2 authoring:** COMPLETE plus round-1's fix-burst amendments, the DEC propagation sweep, and rounds 2-6's fix chains. 12 new BCs (`§X.14` Field Option Discovery + BC-3.3.010/011 + BC-3.4.026-031), ADR-0019 (Accepted 2026-08-25, § Amendment 2026-08-26 D1/D2/D3 + round-3's F-B + round-4's D4 + round-5's D2 correction + round-6's D2 count fix), BC-3.8.012 reversed (governance flag **DEC-310**, fully propagated). Counts: **719 total BCs** (BC-INDEX v6.82), **32 VPs** (unchanged round-6 -- VP-578-021 amended, not newly minted), **106 holdout scenarios**.
+
+**Round-6's work (2026-08-26):** a sixth fresh 3-pass adversary streak was run against the delta (attempting the required 3/3 CLEAN) -- Pass 1 NOT-CLEAN (one genuine MEDIUM), **Pass 2 CLEAN, Pass 3 CLEAN** (the first round in this session where two passes within the same streak both came back clean). Fixed via a fix chain (architect + product-owner + verifier dispatched in PARALLEL on disjoint files): **M-1** (MEDIUM) corrected round-5's D2 create-path collision-guard count from a wrongly-collapsed "nine" to the arithmetically correct **TEN** (`--points`/`--team` are two distinct `customfield_NNNNN` wire keys, not interchangeable) -- propagated across ADR-0019 § "D2 correction", `architecture-delta-field-dx.md` §9, `bc-3-issue-write.md` (10 sites), and VP-578-021 (property 2/3 split, negative pin retained). 4 LOWs folded in: BC-3.8.008 EC-3.8.008-3 pinned; BC-X.14.001 gains an M1-vs-M3 field-set divergence caveat; BC-3.4.021 Invariant 1 gains an F-NEW-2 exception qualifier; VP-578-005 gains a colon-in-field-name coverage note. No BC change (719 stays). VP total stays 32 (amendment, not new). 106 holdouts unchanged. Both guard scripts re-verified PASS post-burst.
+
+**Convergence counter at archival:** clean-pass streak was **0/3** -- sixth consecutive fresh-streak attempt to fail to reach 3/3 CLEAN in a single unbroken run, though this round produced TWO clean passes (Pass 2 and Pass 3) for the first time this session. **Superseded by streak-6's clean run (see current STATE.md) -- streak-6, run against this round's committed delta `b8082ba4`, reached 3/3 CONSECUTIVE CLEAN with zero intervening fixes.**
+
+**Decisions of record:** DEC-310 (reverses DEC-188; proposed, propagation complete) -- still needs formal registration. ADR-0019 (Accepted 2026-08-25; § Amendment D1/D2/D3 + F-B + D4 + D2 correction + D2 count fix).
+
+**Process-gap follow-ups owed at cycle close (as of round-6, carried forward to streak-6 and beyond):**
+1. Register DEC-310 formally.
+2. DEC-namespace disambiguation question (still open).
+3. Reversal-propagation checklist for the PO/state-manager workflow (still not built).
+4. `COUNT-RECONCILIATION-FORCED-CONSISTENCY-PATTERN` lesson from round-6 (a count-discrepancy reconciliation must re-derive the semantically correct count, not force consistency onto whichever number appeared first) -- logged in `cycles/cycle-002/lessons.md`.
+5. D2-collision-guard extension to the JSM create path (F-3, round-4) remains a DEFERRED product decision, owed at the F2 human gate.
+
+**Resume command (as of round-6):** `/vsdd-factory:next-step` (or resume the F2 adversarial convergence loop directly -- run a fresh adversary pass first, starting the streak count at 0/3; this is exactly what streak-6 did, and it succeeded).
+
+---
+
 <!-- Repeat for each archived checkpoint. Maintain chronological order. -->

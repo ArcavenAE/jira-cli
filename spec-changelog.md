@@ -9,6 +9,225 @@ Track all spec version changes. Most recent version first.
 
 > **Type legend:** Type classifies the SPEC document delta: MINOR = new BCs/VPs/sections; PATCH = amendments to existing bodies/ACs/ECs. Product-semver impact is recorded in the Summary line, independent of Type.
 
+## [1.6.0] - 2026-08-25
+
+### Type: MINOR
+
+### Summary
+
+F2 spec evolution for the **field-dx bundle** (Feature Mode cycle `cycle-002`/`field-dx`,
+issues #580/#578). Adds `jr field options <field>` (option-enumeration discovery across three
+context mechanisms — createmeta PRIMARY on the platform path, JSM requesttype-fields PRIMARY on
+the JSM path, editmeta FALLBACK), a `--field NAME:kind=VALUE` hint-syntax parser
+(`:option`/`:id`/`:name`/`:asset` kinds, including cascading-select support), and extends
+non-JSM `jr issue create --field` to the platform path via `createmeta` resolution — which
+**reverses BC-3.8.012's prior behavior**: DEC-188 (S-639-1) had made `--field`/`--on-behalf-of`
+without `--request-type` exit 64 pre-flight; that guard is now removed for `--field` (governance
+decision **DEC-310**, proposed — see Impact Assessment). 12 new BCs: BC-3.3.010/011 (non-JSM
+create `--field` path + error taxonomy), BC-3.4.026..031 (hint-syntax parser + cascading-select
+`>` delimiter + malformed-hint EC catalog), BC-X.14.001..004 (new "Field Option Discovery"
+cross-cutting subsection). BC-3.3.001, BC-3.4.014, BC-3.4.015, BC-3.4.016, BC-3.4.017 (Gate B
+extended to hint-tagged `--field NAME:kind=VALUE` pairs, new EC-3.4.017-16), BC-3.8.001,
+BC-3.8.008 (new EC-3.8.008-3), and BC-3.8.013 (trigger-scope description + dead combined-error
+cross-references updated; guard **behavior** itself unaffected) amended in place, no separate
+count. New architecture decision **ADR-0019** (Accepted 2026-08-25; context-mechanism strategy,
+`FieldValueSpec` shape, cascading-select `>` delimiter) — amended 2026-08-26 across three
+F2-adversarial-convergence rounds (§ Amendment D1 default-project resolution parity, D2
+create-path collision-guard governed set, D3 cascading-`>` multibyte-split safety) plus a further
+correction (F-NEW-1: D2's governed set corrected from an under-scoped 5-member reuse of Gate B's
+EDIT-derived set to a proper 10-member CREATE-path set — 5 original + 3 new static keys
+(`labels`/`parent`/`assignee`) + 2 distinct resolved-id `customfield_NNNNN` wire keys
+(`--points`, `--team`), not one merged "resolved-id category" as an intermediate round had
+mis-collapsed it). BC count 707 → 719 (`bc-3-issue-write.md` 115 → 123 individually-bodied,
+144 → 152 cumulative; `cross-cutting.md` 85 → 89 individually-bodied, 151 → 155 cumulative).
+BC-INDEX v6.81 → v6.82. VP count 25 → 32 across the delta's inline `VP-578-NNN`/`VP-580-NNN`
+per-BC properties (this repo does not maintain a separate VP-INDEX/L4-verification-properties
+file — properties are documented inline in BC bodies per the project's stated VP-registry
+convention). Holdout scenario count unchanged (106).
+
+**MINOR-vs-MAJOR determination on the BC-3.8.012 reversal (spec-steward judgment call, F2
+Step 5):** Classified **MINOR**, not MAJOR, for two independent reasons: (1) this repo's own
+spec-versioning convention (mirrored in the spec-steward agent's operating charter, "Hierarchy
+Versioning Rules") reserves MAJOR bumps for architecture restructuring or removed
+requirements/changed semantics of *existing, still-active* requirements — a BC *modified* or
+even *deprecated* is documented as MINOR; BC-3.8.012's replacement (BC-3.3.010/011 now govern
+the same call site) fits the "modified requirement" shape, not "architecture restructuring."
+(2) The reversal is **behavior-widening**, not behavior-narrowing: input that previously exited
+64 (rejected) now succeeds — no consumer that relied on the CLI *accepting* the prior contract
+(`--field` alone on the platform path exits 64) is broken by this change in the way a MAJOR
+bump's "removed requirement" class implies; the only theoretical regression is a script that
+specifically depended on the exit-64 *rejection* itself, an edge case, not the common case. Note
+this is a **distinct axis from CLI/product semver** — CLAUDE.md's own history separately labels
+DEC-188's *original introduction* "breaking change" in product/CLI terms (S-639-1,
+`v0.6.0-dev.12`), because at that time it made previously-accepted commands fail; that labeling
+concerned product behavior compatibility, not SPEC-document versioning, and does not itself
+compel a spec MAJOR bump for the reversal. **This call is flagged for human/orchestrator
+confirmation** — BC-INDEX.md's own F2-authoring-time prose already independently reached MINOR
+and explicitly flagged the reversal for extra scrutiny ("one governance-flagged reversal"), and
+DEC-310 is still only *proposed*, not formally registered; if the human gate disagrees with the
+MINOR classification when DEC-310 is registered, the version should be revised to v2.0.0 before
+cycle close, not after.
+
+**PROCESS-INTEGRITY CAVEAT — RESOLVED (state-manager update, this commit):** As of `b8082ba4`
+("round-6"), this entry originally recorded the F2 mandatory adversarial spec-convergence gate —
+**3 CONSECUTIVE clean fresh-context adversary passes** — as **not yet satisfied** (streak 0/3;
+round-6: Pass 1 NOT-CLEAN on one genuine MEDIUM, Pass 2 CLEAN, Pass 3 CLEAN; per the documented
+mandatory rule, a single NOT-CLEAN pass resets the streak regardless of how many CLEAN passes
+surround it). **That gap is now closed.** A fresh 3-pass streak (orchestrator label: streak-6),
+run against the round-6 committed delta (`b8082ba4`) using three diverse review lenses (Pass 1
+correctness, Pass 2 completeness, Pass 3 traceability), returned CLEAN on all three passes with
+zero intervening fixes required — the first streak this session to reach 3/3 CONSECUTIVE CLEAN.
+**F2 mandatory adversarial spec-convergence is CONVERGED**, recorded in `STATE.md` and
+`cycles/cycle-002/burst-log.md` Burst 7 as of **this commit**, which supersedes the 0/3 record
+above. Four LOW-severity doc-hygiene findings surfaced across the three passes (stale prd-delta
+round-2 step-2a narration; platform `:asset` wire-shape UNVERIFIED note; M1 editmeta
+status/permission-dependency caveat; prd-delta Summary's "9 amended BCs" stale count) are tracked
+as non-blocking debt in `STATE.md` Drift/Standing Items — they did not reset the streak, per the
+mandatory rule, which resets only on NOT-CLEAN/MEDIUM+ verdicts. F2 is now ready for **Step 8
+(human gate)**; DEC-310 formal registration, the DEC-namespace disambiguation question, the F-3
+JSM collision-guard-extension product decision, and this entry's own MINOR-vs-MAJOR spec-version
+classification remain OPEN, owed at that gate.
+
+### Changed Requirements
+
+- `bc-3-issue-write.md` (NEW): BC-3.3.010 — `issue create --field` extended to the non-JSM
+  platform path via `createmeta` resolution (reverses BC-3.8.012's prior exit-64 guard).
+  BC-3.3.011 — non-JSM `--field` error taxonomy (unknown field, malformed hint, wrong context).
+  BC-3.4.026..031 — `--field NAME:kind=VALUE` hint-syntax parser, `:option`/`:id`/`:name`/`:asset`
+  kind semantics, cascading-select `>` delimiter (ADR-0019 §3), malformed-hint EC catalog.
+  (AMENDED): BC-3.3.001, BC-3.4.014, BC-3.4.015, BC-3.4.016 (hint-syntax/non-JSM-create
+  interaction notes, no count change). BC-3.4.017 — Gate B extended to hint-tagged
+  `--field NAME:kind=VALUE` pairs matched on bare name, new EC-3.4.017-16 (closes a
+  contradiction with BC-3.4.029 EC-3.4.029-2, found adversary pass-13 F-1; EC-3.4.029-2 now
+  scoped to the create path only). BC-3.8.001, BC-3.8.008 (new EC-3.8.008-3: JSM malformed
+  `--field` hint exits 64 pre-POST). **BC-3.8.012 — REVERSED in place**: DEC-188's `--field`-alone
+  and combined platform-path exit-64 pre-flight guard removed; `[DEC-188 BEHAVIOR, superseded]`
+  retained inline for audit trail; governance decision **DEC-310 proposed** to record the
+  reversal formally (renumbered from the initially-proposed DEC-307, propagation to DEC-310
+  completed across all citing files). BC-3.8.013 — amended in place (trigger-scope description +
+  dead combined-error cross-references updated to reflect BC-3.8.012's guard removal; the
+  `--on-behalf-of` guard's own **behavior** is unchanged and remains fully in force).
+- `cross-cutting.md` (NEW): BC-X.14.001..004 — "Field Option Discovery" subsection: `jr field
+  options <field>` command, exactly-one-of-three context mechanisms (createmeta PRIMARY
+  platform, JSM requesttype-fields PRIMARY JSM, editmeta FALLBACK).
+- `specs/architecture/decisions/ADR-0019-field-dx-context-hint-shape-delimiter.md` (NEW):
+  Accepted 2026-08-25. Amended 2026-08-26 (§ Amendment: D1 default-project resolution parity,
+  D2 create-path collision-guard governed set, D3 cascading-`>` multibyte-split safety); further
+  amended 2026-08-26 (F-NEW-1: D2 governed-set correction to a proper 10-member CREATE-path set,
+  "§ D2 correction").
+- `BC-INDEX.md` (MODIFIED): frontmatter `total_bcs` 707 → 719, `index_version` v6.81 → v6.82,
+  `last_updated` narrative records the full delta + spec `v1.5.0 → v1.6.0 (MINOR)`.
+- `CANONICAL-COUNTS.md` (MODIFIED): per-file `total_bcs` for `bc-3-issue-write.md` (144 → 152)
+  and `cross-cutting.md` (151 → 155); Sum row 707 → 719; grand-total prose updated.
+
+### Impact Assessment
+
+| Artifact | Change Type | Notes |
+|----------|-------------|-------|
+| `.factory/specs/prd/bc-3-issue-write.md` | MODIFIED | 115 → 123 individually-bodied (144 → 152 cumulative) |
+| `.factory/specs/prd/cross-cutting.md` | MODIFIED | 85 → 89 individually-bodied (151 → 155 cumulative) |
+| `.factory/specs/prd/BC-INDEX.md` | MODIFIED | v6.81 → v6.82; total_bcs 707 → 719; spec v1.5.0 → v1.6.0 |
+| `.factory/specs/prd/CANONICAL-COUNTS.md` | MODIFIED | Sum row 707 → 719 |
+| `.factory/specs/architecture/decisions/ADR-0019-field-dx-context-hint-shape-delimiter.md` | NEW | Accepted; amended twice (D1/D2/D3, then F-NEW-1 D2 correction) |
+| Decisions Log (`STATE.md` Decisions of Record) | PROPOSED, NOT YET REGISTERED | **DEC-310** (reverses DEC-188) — proposed by product-owner; formal registration owed at cycle close, per this task's explicit instruction NOT performed by spec-steward here |
+| F2 mandatory adversarial spec-convergence gate | **UNVERIFIED AS CONVERGED** | Per `STATE.md`/`cycles/cycle-002/burst-log.md` as of commit `b8082ba4`: streak 0/3 (round-6 Pass 1 NOT-CLEAN, Pass 2 CLEAN, Pass 3 CLEAN). See PROCESS-INTEGRITY CAVEAT above. |
+
+- **Affected stories:** F4 delta-implementation for `src/cli/field.rs` (new), extensions to
+  `src/api/jira/issues.rs`, and the `parse_field_kv` signature in `src/cli/issue/create.rs` —
+  none of this exists in `src/` as of this writing (F2 spec-only delta; ADR-0019 explicitly
+  notes it governs pre-F4 factory artifacts only).
+- **Migration needed:** Product/CLI-level — yes, for the DEC-188 reversal specifically (a script
+  that depended on `--field`-alone exiting 64 on the platform path will instead see the command
+  succeed once F4 ships); spec-level — no additional spec migration beyond this changelog entry
+  and the traceability chain already carried in BC-3.8.012/013's bodies.
+
+---
+
+## [1.5.0] - 2026-08-21
+
+### Type: MINOR
+
+### Summary
+
+F2 spec evolution for the **list-read-ergonomics bundle** (issues #575/#584/#579/#588).
+Backfilled into this changelog by spec-steward during field-dx F2 Step 5 governance
+(2026-08-26) — this entry was not recorded at authoring time; BC-INDEX.md's own frontmatter
+narrative already carried the full record and is the source this entry is derived from. +8 new
+BCs in `bc-2-issue-read.md`: BC-2.2.033 (`issue list --fields <CSV>`, REPLACE semantics,
+JSON-only) + BC-2.3.041 (`issue view` twin) + BC-2.6.052 (additive client field-override
+methods) for #575; BC-2.2.034 + BC-2.3.042 (raw ADF passthrough for `--fields comment`,
+confirmatory, zero incremental transformation code) for #584; BC-2.1.023 (`--updated-recent
+<duration>`, reuses `jql::validate_duration`) for #579, with BC-2.1.006 (14 → 15 filter sources)
++ BC-2.1.007 (stable clause position) amended in place; BC-2.1.024 (`--sort <field>:asc|desc`
+syntax parse/validate) + BC-2.1.025 (`--sort` overrides `order_by` in all 4 branches, `key ASC`
+secondary sort, pass-through field validation) for #588. `--resolved-recent` explicitly
+deferred, not specified. BC count 699 → 707 (72 → 80 individually-bodied in
+`bc-2-issue-read.md`). BC-INDEX v6.80 → v6.81; spec v1.4.1 → v1.5.0 (MINOR — new BCs).
+
+### Changed Requirements
+
+- `bc-2-issue-read.md` (NEW): BC-2.1.023, BC-2.1.024, BC-2.1.025, BC-2.2.033, BC-2.2.034,
+  BC-2.3.041, BC-2.3.042, BC-2.6.052. (AMENDED): BC-2.1.006, BC-2.1.007.
+- `BC-INDEX.md` (MODIFIED): `total_bcs` 699 → 707, `index_version` v6.80 → v6.81.
+- `CANONICAL-COUNTS.md` (MODIFIED): Sum row 699 → 707.
+
+### Impact Assessment
+
+| Artifact | Change Type | Notes |
+|----------|-------------|-------|
+| `.factory/specs/prd/bc-2-issue-read.md` | MODIFIED | 72 → 80 individually-bodied |
+| `.factory/specs/prd/BC-INDEX.md` | MODIFIED | v6.80 → v6.81; total_bcs 699 → 707 |
+| `.factory/specs/prd/CANONICAL-COUNTS.md` | MODIFIED | Sum row 699 → 707 |
+
+- **Affected stories:** F4 implementation of issues #575/#584/#579/#588 (not yet landed as of
+  this backfilled entry).
+- **Migration needed:** NO — additive read-path features.
+
+---
+
+## [1.4.1] - 2026-08-17
+
+### Type: PATCH
+
+### Summary
+
+F5 scoped-adversarial fix round for the **component-mgmt** bundle (`issue list --component`
+filter). Backfilled into this changelog by spec-steward during field-dx F2 Step 5 governance
+(2026-08-26); not recorded at authoring time. Resolves findings F5-A-M1/F5-C-001
+(human-adjudicated: UNION) — `MatchResult::ExactMultiple` (case-only duplicate component names,
+e.g. `Backend`/10001 + `backend`/10005) was underspecified for the read path and, per
+`partial_match`'s first-match-wins return shape, risked silently unioning to only ONE id and
+dropping issues tagged with the other duplicate. BC-2.1.018 Postcondition 3 + EC-2.1.018-3
+(bare `in (...)` UNION), BC-2.1.019 Postcondition 3 + EC-2.1.019-4 (`not:` OR-EMPTY-group
+UNION), BC-2.1.021 Postcondition 2 + EC-2.1.021-4 (`all:` parenthesized-OR-term UNION), and
+BC-2.1.022 (new "ExactMultiple read-path disposition" subsection + EC-2.1.022-3, documenting the
+deliberate divergence from the mutating path's fail-closed disposition, BC-8.1.008 branch (0))
+amended in `bc-2-issue-read.md`. BC-8.4.005 amended in `bc-8-components.md` — H1 extended,
+Behavior corrected to state both caller-specific dispositions explicitly (previously ambiguous,
+implying a single universal "treat as Exact" outcome); new VP-COMPONENT-022. No new BC IDs; BC
+count unchanged (699). BC-INDEX v6.79 → v6.80; spec v1.4.0 → v1.4.1 (PATCH — amendment-in-place,
+no new/removed BCs).
+
+### Changed Requirements
+
+- `bc-2-issue-read.md` (AMENDED): BC-2.1.018, BC-2.1.019, BC-2.1.021, BC-2.1.022 (new
+  subsection + EC-2.1.022-3).
+- `bc-8-components.md` (AMENDED): BC-8.4.005 (H1 extended; new VP-COMPONENT-022).
+- `BC-INDEX.md` (MODIFIED): `index_version` v6.79 → v6.80; `total_bcs` unchanged (699).
+
+### Impact Assessment
+
+| Artifact | Change Type | Notes |
+|----------|-------------|-------|
+| `.factory/specs/prd/bc-2-issue-read.md` | MODIFIED | Amendment-in-place only, no count change |
+| `.factory/specs/prd/bc-8-components.md` | MODIFIED | Amendment-in-place only, no count change |
+| `.factory/specs/prd/BC-INDEX.md` | MODIFIED | v6.79 → v6.80; total_bcs unchanged |
+
+- **Affected stories:** component-mgmt F5 scoped-adversarial fix round (issue #606 area).
+- **Migration needed:** NO — read-path disposition clarification, no new requirement.
+
+---
+
 ## [1.4.0] - 2026-08-15
 
 ### Type: MINOR
