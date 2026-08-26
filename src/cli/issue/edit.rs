@@ -1,4 +1,4 @@
-use std::collections::BTreeMap;
+use std::collections::{BTreeMap, HashMap};
 
 use anyhow::{Result, bail};
 use serde_json::json;
@@ -16,7 +16,7 @@ use crate::error::JrError;
 use crate::output;
 use crate::partial_match::MatchResult;
 
-use super::create::parse_field_kv;
+use super::create::{parse_field_kv, reject_unsupported_hint_kinds};
 use super::format;
 use super::helpers;
 use super::json_output;
@@ -75,6 +75,12 @@ pub(super) async fn handle_edit(
     // Parse --field NAME=VALUE pairs into a HashMap (last-wins on duplicate keys).
     // Per EC-3.4.017-10: duplicate keys are collapsed here before resolve_edit_fields sees them.
     let field_pairs = parse_field_kv(&field_raw)?;
+
+    // S-578-1 INTERIM GUARD: `:kind` dispatch is not implemented on this
+    // command yet (deferred to S-578-2) — reject a hinted pair loudly rather
+    // than silently treating it as bare. Remove this call once S-578-2 lands
+    // real dispatch. Placed immediately after parsing, before any HTTP call.
+    reject_unsupported_hint_kinds(&field_pairs)?;
 
     // Validate: at least one selector must be present (keys or --jql).
     // clap doesn't enforce this natively since both are optional — we validate here.
@@ -541,11 +547,17 @@ pub(super) async fn handle_edit(
         if !field_pairs.is_empty() {
             let dr_key = &effective_keys[0];
             let mut dr_fields = json!({});
+            // S-578-1: resolve_edit_fields still takes bare NAME=VALUE pairs;
+            // :kind dispatch is not implemented yet (see parse_field_kv TODO).
+            let dr_field_values: HashMap<String, String> = field_pairs
+                .iter()
+                .map(|(k, v)| (k.clone(), v.value.clone()))
+                .collect();
             helpers::resolve_edit_fields(
                 client,
                 &config.active_profile_name,
                 dr_key,
-                &field_pairs,
+                &dr_field_values,
                 &mut dr_fields,
                 &mut dr_changed,
             )
@@ -1028,11 +1040,17 @@ pub(super) async fn handle_edit(
     // at all -- unaffected by whether components ends up merged into the
     // same PUT.
     if !field_pairs.is_empty() {
+        // S-578-1: resolve_edit_fields still takes bare NAME=VALUE pairs;
+        // :kind dispatch is not implemented yet (see parse_field_kv TODO).
+        let field_values: HashMap<String, String> = field_pairs
+            .iter()
+            .map(|(k, v)| (k.clone(), v.value.clone()))
+            .collect();
         helpers::resolve_edit_fields(
             client,
             &config.active_profile_name,
             key,
-            &field_pairs,
+            &field_values,
             &mut fields,
             &mut changed_fields,
         )
