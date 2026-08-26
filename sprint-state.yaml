@@ -1022,3 +1022,64 @@ SOH-ATTACHMENTS-1-bundle-status:
   final_version: "v0.6.0-dev.11"
   stories_delivered: "6/6 + FIX-576-DL + FIX-E2E-EGRESS"
   notes: "SOH-ATTACHMENTS-1 cycle FULLY CLOSED 2026-07-25. All 6 stories + 2 emergent fixes delivered. F5 STRICT CONVERGED (14r/8 fix PRs). F6 PASS. F7 APPROVED DEC-186. Session review COMPLETE S-7.02 SATISFIED (6 IPs: 5 ENGINE 1 REPO). v0.6.0-dev.11 SHIPPED. FIX-E2E-EGRESS delivered + verified. Pipeline IDLE at steady state."
+
+# Cycle 4 — Feature Mode: field-dx bundle (GitHub issues #580 + #578)
+# Phase F4 (delta implementation), 3-wave plan: wave 1 {S-580-1, S-578-1} -> wave 2 {S-578-2, S-578-3} -> wave 3 S-578-4
+# Updated: 2026-08-26
+
+cycle_002_field_dx:
+  title: "field-dx bundle (issues #580 + #578)"
+  bundle: field-dx
+  cycle: cycle-002
+  wave_1_status: "IN PROGRESS — S-578-1 delivered/merged; S-580-1 still to deliver"
+  wave_2_status: "blocked — depends_on wave 1 complete (S-578-2, S-578-3 depend_on S-578-1)"
+  wave_3_status: "blocked — S-578-4 depends_on [S-580-1, S-578-2]"
+  wave_1:
+    stories:
+      - id: S-578-1
+        title: "--field NAME:kind=VALUE value-kind hint-syntax parser"
+        status: completed
+        pr: 739
+        merge_sha: 993de83314e86e9ff26306058a56c5cf9b62aaf3
+        merged_at: "2026-08-26T17:54:08Z"
+        merged_via: "gh pr merge --squash (base develop)"
+        depends_on: []
+        bc_anchors: [BC-3.4.026, BC-3.4.031]
+        vp_anchors: [VP-578-005, VP-578-006, VP-578-013, VP-578-014]
+        holdout_anchors: []
+        points: 5
+        notes: "Wave 1 story 1/2. `parse_field_kv` return type changed HashMap<String,String> -> HashMap<String,FieldValueSpec>; FieldValueSpec{kind,value}/FieldValueKind{Option,Id,Name,Asset} — SHARED type consumed by S-578-2/S-578-3/S-578-4. Unicode-scalar-safe splitting (FIX-F6-LRE-1 class). Red Gate PASS; 3/3 per-story adversary convergence CLEAN; interim guard applied; demos recorded; PR #739 squash-merged to develop @ 993de833. Citation-fix detour (BC-3.3.010 citation form) resolved pre-merge, no scope change. Single-file change src/cli/issue/create.rs. Closes #578 item 1 part 2 of field-dx bundle."
+      - id: S-580-1
+        title: "jr field options <field> command"
+        status: ready
+        pr: null
+        merge_sha: null
+        merged_at: null
+        depends_on: []
+        bc_anchors: [BC-X.14.001, BC-X.14.002, BC-X.14.003, BC-X.14.004]
+        vp_anchors: [VP-580-005, VP-580-006, VP-580-007, VP-580-008, VP-580-009, VP-580-010, VP-580-011, VP-580-012]
+        holdout_anchors: []
+        points: 8
+        notes: "Wave 1 story 2/2, no deps, blocks S-578-4 (get_createmeta_fields REUSED VERBATIM). Not yet delivered — remaining Wave 1 story."
+  wave_2:
+    stories:
+      - id: S-578-2
+        title: "issue edit --field hint-kind dispatch"
+        status: ready
+        depends_on: [S-578-1]
+        points: 13
+        notes: "Wave 2 story 1/2, blocked on S-578-1 (now delivered) — awaiting wave 1 close (S-580-1) before wave 2 dispatch per wave-schedule ordering."
+      - id: S-578-3
+        title: "JSM issue create --field hint-kind dispatch"
+        status: ready
+        depends_on: [S-578-1]
+        points: 8
+        notes: "Wave 2 story 2/2, blocked on S-578-1 (now delivered) — awaiting wave 1 close (S-580-1) before wave 2 dispatch per wave-schedule ordering."
+  wave_3:
+    stories:
+      - id: S-578-4
+        title: "platform issue create --field support (DEC-188 reversal via DEC-310)"
+        status: ready
+        depends_on: [S-580-1, S-578-2]
+        points: 13
+        notes: "Wave 3, largest story tied with S-578-2. Implements get_createmeta_fields (upgrades BC-3.3.010 citation from prose to enforced symbol-form once landed). Reverses DEC-188 platform-path --field-alone exit-64 guard per DEC-310 (human-approved F2 gate)."

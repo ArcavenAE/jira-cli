@@ -548,3 +548,61 @@ No BCs/VPs/holdouts added or removed by this burst — 719 BCs / 32 VPs / 106 ho
 **Verification (state-manager):** `check-bc-citation-symbols.sh` → 402 citations checked, 0 stale. `check-spec-counts.sh` → 8 bc files validated. `check-bc-cumulative-counts.sh` → 719 total unchanged across 9 files. No BC/VP/holdout counts affected — hygiene-only fix, no phase transition (still F3/v2.0.0).
 
 **Lesson logged:** see `lessons.md` Process-Level #2 — F2 spec-authoring should run the citation guard before commit, or use prose form for forward-looking symbols.
+
+---
+
+## Burst: Burst 10 — F4 Wave 1: S-578-1 (--field hint-syntax parser) DELIVERED + MERGED (PR #739 @ 993de833) (2026-08-26)
+
+**Parent-commit:** 6af069e96f53a2f2cab6e724047b134419534bed (factory(fix): BC-3.3.010 citation — move planned get_createmeta_fields symbol to prose)
+
+**Trigger:** Human approved proceeding to F4 (TDD implementation, scoped to the 5 field-dx stories). Wave 1 dispatched first: S-580-1 and S-578-1 (no deps, parallel-eligible).
+
+**Dispatched:** per-story-delivery pipeline for S-578-1 (test-writer → implementer → demo-recorder → pr-manager → devops-engineer).
+
+**Adversary verdict:** Per-story adversary convergence 3/3 CLEAN (S-578-1 scoped review, not a full F5/spec-level adversary pass — this is a Feature Mode F4 per-story delivery, not an F2 spec-convergence burst).
+
+**What happened:** S-578-1 (`--field NAME:kind=VALUE` value-kind hint-syntax parser, BC-3.4.026/031, 5 pts) implemented in `src/cli/issue/create.rs`. `parse_field_kv` return type changed `HashMap<String,String>` → `HashMap<String,FieldValueSpec>`; new `FieldValueSpec{kind: Option<FieldValueKind>, value: String}` / `FieldValueKind{Option,Id,Name,Asset}` — SHARED type, consumed verbatim by S-578-2/S-578-3/S-578-4 downstream. Unicode-scalar-safe splitting (FIX-F6-LRE-1 class, matching #734's precedent). Malformed-hint exit-64 catalog covered (unknown kind, empty `:kind`, EC-6/7/8/9 regression pins).
+
+**Pipeline detail:**
+- **Red Gate:** PASS (test-writer's failing tests confirmed red before implementation).
+- **Per-story adversary convergence:** 3/3 CLEAN.
+- **Interim guard:** applied during implementation (bare-key/last-wins-across-kinds semantics per ADR-0019 §2(b)).
+- **Demos:** recorded (demo-recorder).
+- **Citation-fix detour:** BC-3.3.010's `Source`/`Trace` citation of the not-yet-existing `get_createmeta_fields` symbol was tripping `check-bc-citation-symbols.sh` (BC-CITE-001) in spec-guard CI, blocking PR #739 alongside every other open PR. Resolved by product-owner reworking the citation to guard-safe prose form (see the standalone "BC-3.3.010 citation hygiene fix" burst above, factory-artifacts `6af069e9`) — no scope change to S-578-1 itself.
+- **PR:** #739, squash-merged to `develop` @ `993de833` (2026-08-26T17:54:08Z).
+
+**Files touched (Dim-1): 4 unique files (factory-artifacts, this burst)**
+
+- sprint-state.yaml
+- stories/STORY-INDEX.md
+- STATE.md
+- cycles/cycle-002/burst-log.md
+
+(develop-side, via PR #739, not counted in Dim-1 above since that's jira-cli's own tree, not `.factory/`: `src/cli/issue/create.rs` (parser + `FieldValueSpec`/`FieldValueKind` types), associated test files (test-writer's Red Gate suite), demo evidence.)
+
+**Dim-2 Attestation:** `scripts/check-spec-counts.sh` → exit 0 ("Check passed: 8 bc files validated"). `scripts/check-bc-cumulative-counts.sh` → exit 0 ("OK: all cumulative BC counts verified (719 total across 9 files; Surface H footer checked where present)"). Both re-run post-burst by state-manager. S-578-1 consumed already-counted BC-3.4.026/031 — no BC/VP/holdout count change.
+
+**Dim-5 Attestation:** N/A — no binary/WASM artifact produced by this burst (no factory-side compiled hook changed; the develop-side change is ordinary Rust CLI source, covered by jira-cli's own CI, not this Dim).
+
+**Dim-6 Attestation:** PASS (delegated) — `cargo fmt --all -- --check` and `cargo clippy -- -D warnings` are enforced on PR #739 by jira-cli's own CI gate (`ci-gate`, required status check on `develop`); PR #739 was green before squash-merge.
+
+**Dim-7 Attestation:** PASS (delegated) — test-writer's Red Gate suite for S-578-1 (unknown-kind, empty-`:kind`, EC-6/7/8/9 regression pins, Unicode-scalar-safety cases) ran green in `ci-gate`'s `test` job before merge; full `cargo test` suite (unit + integration + proptest + snapshot) is part of jira-cli's own required CI, not re-run independently by state-manager.
+
+**Codifications:** F4 (delta implementation) is now **IN PROGRESS**. Wave 1 is 1/2 delivered — S-580-1 remains outstanding before Wave 2 (S-578-2, S-578-3) can dispatch per wave-schedule ordering (both already have their `depends_on:[S-578-1]` satisfied but wait on Wave 1 close). `activation_head` advanced for the first time this cycle.
+
+**Closes:** F4 Wave 1 story 1/2. **Does NOT close:** Wave 1 (S-580-1 outstanding); Wave 2/3 (blocked); the DEC-namespace disambiguation question; the 4 residual LOW doc-hygiene items from streak-6; `F7-GATE-SYSTEMIC-INPUT-HASH-DRIFT` (standing, not field-dx-scoped).
+
+### Counts reconciled this burst
+
+No BCs/VPs/holdouts added or removed — 719 BCs / 32 VPs / 106 holdouts unchanged (BC-3.4.026/031 were already counted at F2 close). `total_stories` unchanged at 161 (status transition only, not a new story).
+
+### Details
+
+| Agent | Task | Output |
+|-------|------|--------|
+| test-writer | Write failing tests for `--field NAME:kind=VALUE` hint-syntax parsing (Red Gate) | Red Gate test suite for S-578-1 |
+| implementer | Implement `parse_field_kv` → `FieldValueSpec`/`FieldValueKind`, Unicode-safe splitting, exit-64 catalog | `src/cli/issue/create.rs` changes |
+| demo-recorder | Record demo evidence for S-578-1 ACs | demo artifacts |
+| pr-manager | Open PR #739, triage citation-guard CI failure, coordinate the BC-3.3.010 citation-fix detour, drive to merge | PR #739 |
+| devops-engineer | Squash-merge PR #739 to `develop` | `develop` @ `993de833` |
+| state-manager | Record S-578-1 delivery: update `sprint-state.yaml`, `STORY-INDEX.md`, `STATE.md`; log this burst; commit + push | `STATE.md`; `sprint-state.yaml`; `stories/STORY-INDEX.md`; this file |
