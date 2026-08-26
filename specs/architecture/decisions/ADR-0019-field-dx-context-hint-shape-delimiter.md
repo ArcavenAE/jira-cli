@@ -3,6 +3,7 @@ document_type: adr
 adr_id: ADR-0019
 status: Accepted
 date: 2026-08-25
+amended: 2026-08-26
 subsystems_affected: ["SS-02", "SS-04", "SS-05"]
 supersedes: null
 superseded_by: null
@@ -19,6 +20,10 @@ research verdict (`.factory/research/field-dx-context-mechanism-2026-08-25.md`) 
 into BC-X.14.001 by the product-owner, and resolves two additional open design questions the
 product-owner explicitly deferred to architecture (F2 PRD delta, "Open design questions — NOT
 resolved here" §1 and §3).
+**Amended** (2026-08-26): F2 mandatory adversarial spec-convergence loop resolved three further
+defects surfaced by fresh-context adversary passes — M2 default-project resolution parity (D1),
+create-path `--field`/dedicated-flag collision precedence (D2), and cascading `>`-split multibyte
+safety (D3). See § Amendment (2026-08-26) below.
 
 > **NOTE — factory-artifact placement, not yet an F4 code artifact:** This ADR governs
 > `src/cli/field.rs` (new), an extension to `src/api/jira/issues.rs`, and the `parse_field_kv`
@@ -28,6 +33,15 @@ resolved here" §1 and §3).
 > created here. This factory artifact at
 > `.factory/specs/architecture/decisions/ADR-0019-field-dx-context-hint-shape-delimiter.md` is
 > the sole ADR-0019 record until F4 promotes it into `docs/adr/`.
+
+**Amended** (2026-08-26): F2's mandatory adversarial spec-convergence loop (three fresh-context
+adversary passes against the frozen F2 deltas) surfaced three additional defects in this ADR's
+own text — a default-project resolution asymmetry (§1), an underspecified create-path collision
+outcome (§2), and a missing multibyte-safety obligation on a new split site this ADR itself
+introduced (§3). All three are resolved below in **§ Amendment (2026-08-26) — F2 Adversary
+Convergence: D1, D2, D3**, which supersedes the specific passages it calls out; the rest of this
+ADR (§1's context-mechanism strategy, §2's `FieldValueSpec` shape, §3's `>` delimiter choice) is
+unchanged.
 
 ## Context
 
@@ -403,6 +417,185 @@ types instead of one shared `normalize_from_allowed_values`.
   already-drafted BC rather than confirming/refining it, a strictly worse outcome for F3 story
   authoring than resolving it here.
 
+## Amendment (2026-08-26) — F2 Adversary Convergence: D1, D2, D3
+
+Three fresh-context adversary passes against the frozen `architecture-delta-field-dx.md`,
+`prd-delta-field-dx.md`, and `verification-delta-field-dx.md` surfaced defects this ADR owns the
+architecture-decision half of. Per the F2 adversarial spec-convergence loop's division of labor,
+this amendment resolves only the architectural fork in each finding; the corresponding BC-body
+and VP text changes are flagged below for the product-owner and verifier passes that follow, not
+made here.
+
+### D1 (adversary MEDIUM-1) — M2 default-project resolution parity
+
+**Defect.** §1's arity model evaluates `resolve_field_context(has_type, has_request_type,
+has_issue, has_project)` as one pure function, pinning `has_project` to the literal `--project`
+CLI flag and requiring `ok = selectors==1 && (!has_type || has_project)`. Consequence: `jr field
+options FOO --type Bug` exits 64 even when the active profile has a default project configured —
+contradicting BC-3.3.010 (`issue create --field` resolves project as "flag OR profile default")
+and M3 (`--request-type`'s optional `--project` companion already falls back to the ambient
+profile/config default). M2 alone silently refuses the same default every sibling context accepts.
+
+**Decision: restore parity.** The "is a project resolvable at all?" question is moved OUT of the
+pure arity function into a distinct, post-arity resolution step, executed only on the M2 branch:
+
+1. **Step 1 — pure arity check (`resolve_field_context`), NARROWED.** Signature changes to
+   `resolve_field_context(has_type: bool, has_request_type: bool, has_issue: bool) -> Result<Mode,
+   ArityError>`. `has_project` is dropped from this function's signature entirely — the pure arity
+   check is now solely about mode-selector COMBINATION validity (exactly one of `{--type,
+   --request-type, --issue}`), exactly as D1's own framing requires. This function no longer knows
+   `--project` exists.
+2. **Step 2 — M2 project resolution, new function, runs only after Step 1 selects M2.** Resolves
+   the project as: the explicit `--project` flag value, OR the active profile/config default
+   project (the identical source `Config`/`ProfileConfig` accessor BC-3.3.010's create-path
+   project resolution and M3's optional-companion fallback already read — no new resolution
+   mechanism is introduced, this reuses the existing one). If neither is available, M2 fails with
+   the same exit-64 "incomplete-M2" error case (3) already documents — only the TRIGGER CONDITION
+   changes (now: no flag AND no default, not merely no flag). This step reads only already-loaded
+   in-process `Config` state — no HTTP call — so it stays inside the existing "arity guard
+   evaluated before any HTTP call" contract for BC-X.14.001; it is simply not part of the *pure*
+   arity function itself.
+   - Purity: `resolve_field_context` (Step 1) remains pure core, now with a narrower 3-bool
+     signature. The Step 2 resolver (e.g. `resolve_m2_project(cli_project: Option<&str>, config:
+     &Config) -> Option<String>`) is ALSO pure core (deterministic given its explicit arguments, no
+     I/O) — same purity class as the already-documented `config::validate_profile_name` carve-out —
+     it is a distinct function from Step 1, not a widened Step 1.
+3. **`has_project` semantics note — SUPERSEDED.** §1's "`has_project` note for the M2 arity
+   check" paragraph no longer applies: there is no `has_project` parameter left to disambiguate.
+   "Is `--project` present at all" (useful for M3's optional-companion UX, e.g. deciding whether to
+   log which project was used) remains a legitimate question elsewhere in the command, but it plays
+   no role in M2's arity validity — only in Step 2's resolution outcome.
+
+**Why parity, not divergence.** There is no functional reason M2's createmeta call needs a project
+id/key sourced differently than BC-3.3.010's createmeta call for `issue create --field`, or than
+M3's requesttype-fields call — all three ultimately need "some project," and `jr` already has one
+resolution rule for that (flag, else profile/config default). Requiring M2 alone to bypass the
+default is an unmotivated inconsistency the adversary correctly flagged as a parity gap, not a
+deliberate design choice worth preserving.
+
+**Downstream implication for VP-580-006 (flagged for the verifier, not resolved here):**
+VP-580-006's `resolve_field_context` proptest must be updated for the narrowed 3-bool pure
+signature (drop the `has_project` axis entirely from that proptest's input space). A new,
+separate verification target is needed for Step 2 — project resolution for M2 specifically,
+covering `{--project flag present, profile default present, neither present} × M2-only`,
+structurally mirroring whatever existing VP already covers BC-3.3.010's flag-or-default project
+resolution on the create path (reuse that VP's shape/fixture pattern rather than inventing a new
+one). This is a verifier-owned addition; not authored in this ADR.
+
+### D2 (adversary B-F3) — create-path collision precedence
+
+**Defect.** The create path (`jr issue create`) has no Gate B — BC-3.4.017's mutual-exclusion
+guard is edit-only. `jr issue create --priority Medium --field priority:name=Medium` therefore
+writes `fields.priority` via two independent, unordered sources: `--priority` and `--field` are
+distinct clap arguments (clap preserves no relative argv order between two different flags), and
+`parse_field_kv` returns an unordered `HashMap`. The current text ("LAST-WINS at the fields JSON
+merge step... standard 'later flag wins' `jr` convention," BC-3.4.029 EC-3.4.029-2) describes an
+outcome with no defined "later" — the actual behavior depends on unwritten merge-order code, and
+two implementers could pick opposite orders while both satisfying the existing spec text.
+
+**Decision: extend Gate B to the create path (option (a)), not a pinned precedence rule.**
+
+Rejected the precedence-rule alternative (option (b) — e.g. "dedicated typed flag always wins,
+`--field` silently ignored for that key," or vice versa) for two reasons: (1) it only relocates
+the arbitrariness from "which merge order wins" to "which flag class is more authoritative" — still
+a rule a user must discover and memorize, and jr has no existing convention of one flag class
+silently overriding another for the same wire key; (2) for a state-changing command (issue
+creation), silently discarding one of the user's two explicitly-supplied values for the same field
+is a worse failure mode than rejecting the ambiguous invocation outright and telling the user which
+flags conflicted — exactly the judgment `jr` already made for the identical collision class on
+`issue edit` via Gate B. Mirroring Gate B on create removes the ambiguity structurally (there is no
+"winner" to compute) rather than resolving it more cheaply but less safely.
+
+**Concrete decision, mirroring BC-3.4.017's Gate B:**
+
+- A new create-path guard, structurally identical in mechanism to `edit.rs`'s Gate B, runs on `jr
+  issue create` BEFORE any HTTP call (same pre-HTTP convention Gate B and §1's mode-selector arity
+  checks already follow).
+- **Governed field set:** the same field set BC-3.4.017 governs at any given time (currently
+  summary, description, issuetype/`--type`, priority, components), restricted to whichever of
+  those exist as a dedicated flag on `issue create` — this is the SAME governing set, not a
+  parallel list that could drift from Gate B's; if Gate B's field set grows, the create-path guard
+  grows with it by construction. Exact enumeration against `issue create`'s current flag surface is
+  confirmed by the product-owner/verifier at BC-propagation time, not hardcoded in this ADR.
+- **Matching rule:** identical to Gate B's — a hint-tagged `--field NAME:kind=VALUE` pair is
+  matched on its BARE NAME (BC-3.4.026's bare-key rule), so `--priority Medium --field
+  priority:name=Medium` is caught exactly like the bare `--field priority=Medium` case,
+  irrespective of which flag appears first on the command line — this is a set-intersection check
+  over parsed inputs, not an ordered merge, so it is inherently argv-order-independent (closing the
+  defect at its root, rather than picking a merge order).
+- **Error convention:** exit 64, no HTTP call issued, same overlap-error message *shape* as Gate
+  B's existing "cannot be combined with `--field`" text (the exact BC-body wording is the
+  product-owner's call, not dictated here).
+- **Architectural placement — shared logic, not a duplicate copy.** Extract Gate B's
+  overlap-detection logic into one shared pure function (e.g.
+  `field_resolve::detect_flag_field_overlap`, taking the already-parsed
+  `HashMap<String, FieldValueSpec>` plus the set of dedicated-flag wire-keys the caller actually
+  supplied, returning the overlapping key set) reused by both `edit.rs`'s Gate B and the new
+  create-path guard — consistent with this ADR's existing reuse bias (§1's `AllowedValue`/
+  `EditMetaFieldSchema` reuse; §2's single shared `FieldValueSpec`). This function is pure (a
+  set-intersection over already-parsed data, no I/O) — same purity class as
+  `cli::resolve_effective_limit`/`config::validate_profile_name` — and is an addition to the
+  purity-boundary table in `architecture-delta-field-dx.md §4`.
+- **Precise, deterministic, testable outcome (for the verifier's VP):** for `jr issue create` with
+  any argv ordering of `--priority Medium` and `--field priority:name=Medium` (or any hint kind on
+  the `--field` side, or any other governed-field pair) → exit 64; stderr overlap error naming the
+  colliding field (e.g. `priority`); zero HTTP calls issued. Symmetric with EC-3.4.017-16's
+  edit-path assertion — create and edit now share one behavior for this collision class instead of
+  two.
+
+**Downstream implication (flagged for the product-owner, not made here):** BC-3.4.029
+EC-3.4.029-2 currently states the create-path counterpart is "no Gate B exists there — last-wins
+applies" — this becomes false under this decision and must be rewritten to describe the new
+create-path guard (exit 64, symmetric with edit), with a fresh EC number for the create-path case
+and a corrected cross-reference from BC-3.4.017's own EC-3.4.017-16 note (which currently points to
+EC-3.4.029-2 as "the create-path counterpart, no Gate B exists there"). BC-3.4.014's
+precondition/error-taxonomy text ("no Gate B mutual-exclusion guard exists on create") needs the
+same correction. The product-owner should reconcile `bc-3-issue-write.md`'s BC-3.4.014,
+BC-3.4.017, and BC-3.4.029 together in one pass to avoid reintroducing the same contradiction this
+finding closes.
+
+### D3 (adversary B-F2) — cascading `>`-split multibyte safety
+
+**Defect.** §3's confirmed `>` cascading split (`Parent>Child` → parent/child) is performed at the
+CALL SITE (`field_resolve.rs` per §2, and the analogous point in `create.rs`'s platform-create
+path), never inside `parse_field_kv`. BC-3.4.026's Unicode-scalar-safety MUST is explicitly scoped
+to `parse_field_kv` steps 1-2 only — this new split site inherited neither that obligation nor a
+no-panic proptest, reopening the FIX-F6-LRE-1 class of bug (`validate_duration` panicking on
+multibyte input, fixed in #734): a naive implementation that locates the delimiter via a
+char-iterator index (e.g. `value.chars().position(|c| c == '>')`) and then uses that index directly
+as a byte offset for slicing (`&value[..idx]`) panics whenever a multibyte scalar precedes the
+`>` in the parent segment (e.g. `--field 'cf:option=Pré>Bñ'`) — the same class of byte/char-index
+conflation FIX-F6-LRE-1 remediated, via a different specific mechanism (there, a fixed
+`len() - 1` byte offset from the string's end; here, a char-count used as a byte index).
+
+**Decision: add an explicit, mandatory architectural obligation — use `str::split_once`, never
+hand-rolled index arithmetic.**
+
+- Every call site that performs the `>` cascading split MUST use `str::split_once('>')` (or,
+  equivalently, `str::find('>')` followed by slicing exactly at the returned byte index — never
+  `str::chars().position(...)` combined with direct slicing, and never a fixed-byte-offset
+  computation of any kind). `split_once` is the specifically recommended idiom: it is the single
+  standard-library call that both locates the delimiter and returns two guaranteed-valid `&str`
+  slices, eliminating the entire char/byte-index-conflation bug class **by construction** rather
+  than by an added runtime check — the general principle FIX-F6-LRE-1's own remediation established
+  (`chars().next_back()` + exact UTF-8 byte-length slicing, letting a char-aware primitive own the
+  boundary arithmetic instead of hand-rolling it).
+- **Scope:** this obligation applies to every call site performing the `Parent>Child` split —
+  currently `field_resolve.rs` (edit path) and the analogous point in `create.rs`'s platform-create
+  path (BC-3.3.010) — per §2's existing "cascading composition is only implemented on the platform
+  edit/create paths this cycle" framing. It does **not** apply to `parse_field_kv` itself
+  (unchanged; already covered by BC-3.4.026's own MUST) and does **not** apply to JSM (`:option`
+  cascading is not extended to JSM this cycle, per BC-3.8.008's amendment — there is no JSM call
+  site to cover).
+- **No-panic property test required.** A proptest over arbitrary UTF-8 input asserting the
+  cascading split never panics, for every call site above — mirroring `validate_duration`'s
+  FIX-F6-LRE-1 proptest and the existing `parse_field_kv_proptests` precedent. Flagged for the
+  verifier to add (extending or sibling to VP-578-008); not authored in this ADR.
+- **Why name one specific idiom instead of a looser "must be Unicode-scalar-safe" instruction:**
+  discretion over exactly how to implement boundary-safe splitting is the precise axis on which
+  FIX-F6-LRE-1 was introduced in the first place. Naming `split_once` removes that discretion
+  rather than trusting each future call site to independently rediscover the same safe pattern.
+
 ## Source / Origin
 
 - F1 delta analysis: `.factory/phase-f1-delta-analysis/delta-analysis-field-dx.md` (§3
@@ -428,3 +621,15 @@ types instead of one shared `normalize_from_allowed_values`.
   recommendation); ADR-0014 (JSM request-type dispatch fork — direct structural precedent for
   `jr field options`'s exactly-one-context-flag pattern); ADR-0018 (component resolution/caching/
   mutation strategy — sibling precedent for one ADR covering a multi-facet feature bundle).
+- **Amendment (2026-08-26) sources:** F2 mandatory adversarial spec-convergence loop, three
+  fresh-context adversary passes against the frozen `architecture-delta-field-dx.md`/
+  `prd-delta-field-dx.md`/`verification-delta-field-dx.md` (findings cited as adversary MEDIUM-1,
+  B-F3, B-F2 in the orchestrator's task brief to this ADR's amendment burst; no separate
+  adversary-pass artifact file exists on disk for this round at time of writing — findings were
+  relayed directly, not read from a `.factory/phase-f2-spec-evolution/adversarial-*field-dx*`
+  file). FIX-F6-LRE-1 precedent (D3): commit `37850b26` (#734), `src/jql.rs::validate_duration`,
+  documented in the project root `CLAUDE.md` "Gotchas"-adjacent commit history line. Existing
+  contradiction closed by D2: `bc-3-issue-write.md` BC-3.4.017 EC-3.4.017-16 / BC-3.4.029
+  EC-3.4.029-2 (the "adversary pass-13 F-1" cross-reference already present in both ECs, which
+  this amendment's D2 further corrects by removing the create-path asymmetry those ECs currently
+  describe).

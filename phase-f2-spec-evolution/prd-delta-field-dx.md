@@ -30,7 +30,7 @@ cycle uses a suffixed filename — `prd-delta-components.md`, `prd-delta-bucket1
 `bc-3-issue-write.md` §3.4) + BC-X.14.001..004 (4, `cross-cutting.md`, new §X.14 subsection).
 
 **9 existing BCs amended in place** (no count change): BC-3.3.001, BC-3.4.014 (DEC-188-qualifier
-body amended: `--field` echo-suppression removed per DEC-307 reversal; `--on-behalf-of`
+body amended: `--field` echo-suppression removed per DEC-310 reversal; `--on-behalf-of`
 suppression retained), BC-3.4.015, BC-3.4.016, BC-3.4.017 (**[AMENDED 2026-08-25 issue #578 F2,
 adversary pass-13 F-1]** Gate B's flag-overlap matching extended to hint-tagged `--field
 NAME:kind=VALUE` pairs, closing a contradiction with BC-3.4.029 EC-3.4.029-2 — new
@@ -40,12 +40,23 @@ place — body propagation of combined-guard removal; guard BEHAVIOR unchanged),
 
 **1 governance flag raised**: BC-3.8.012's reversal of DEC-188 (a deliberate breaking change
 shipped ~1 month prior, 2026-07-25) requires its own formal decision entry. **Proposed ID:
-DEC-307** (next sequential after the highest DEC number found across the live spec tree,
-DEC-306, per a `grep -rohE "DEC-[0-9]{3}"` survey run during this pass). This repo has no
-centralized DEC registry file — DEC numbers are assigned inline in spec prose by convention —
-so DEC-307 is a **proposal**, not yet a registered decision. The orchestrator/state-manager
-should register it formally and must not let a future pass silently reuse DEC-307 for an
-unrelated decision.
+DEC-310** (next sequential after the highest DEC number found across the ENTIRE `.factory/`
+tree, DEC-309, per a `grep -rohE "DEC-[0-9]{3}" .factory/` survey run during the F2
+adversary-convergence pass, 2026-08-26). This repo has no centralized DEC registry file — DEC
+numbers are assigned inline in spec prose by convention — so DEC-310 is a **proposal**, not yet
+a registered decision. **Correction (F2 adversary-convergence pass, C-M1):** this entry
+originally proposed **DEC-307**, computed from a `.factory/specs/`-only grep whose reported
+maximum (DEC-306) undercounted the repo: `cycle-001` (`list-read-ergonomics`)'s F5/F7 closure
+had already allocated DEC-306 through DEC-309 (recorded in `.factory/cycles/cycle-001/` and
+`STATE.md`, outside `specs/`), so DEC-307 was already a REGISTERED decision (that cycle's F5
+combined-delta fix), not an available number — the proposal collided rather than merely being
+imprecise. Re-running the "next sequential after the highest" rule against the correct
+full-`.factory/`-tree maximum (DEC-309) yields DEC-310. **Open namespace question, flagged not
+resolved here:** spec-level DECs (188, 306, 307, 310) and cycle-gate DECs (e.g. 309) currently
+share one undifferentiated `DEC-NNN` prefix — whether that should remain one sequence or split
+into two disambiguated series is unresolved; flagged for cycle close, not decided by this pass.
+The orchestrator/state-manager should register DEC-310 formally and must not let a future pass
+silently reuse DEC-310 (or DEC-307, already taken by `cycle-001`) for an unrelated decision.
 
 **BC-INDEX.md and CANONICAL-COUNTS.md updated**: total_bcs 707 → 719; bc-3-issue-write.md
 115 → 123 individually-bodied (144 → 152 cumulative); cross-cutting.md 85 → 89
@@ -136,12 +147,12 @@ These match the BA's proposed numbering exactly (BC-3.3.010/011; BC-3.4.026..031
 | BC ID | Nature of change | File |
 |---|---|---|
 | **BC-3.3.001** | Amendment note added: DEC-188's `--field` guard reversed (see BC-3.8.012); `--on-behalf-of` guard unaffected. Prior amendment text (2026-05-19, 2026-07-25) retained inline, unchanged. | bc-3-issue-write.md |
-| **BC-3.4.014** | DEC-188-qualifier body amended: `--field` echo-suppression removed per DEC-307 reversal; `--on-behalf-of` suppression retained. Precondition's `[DEC-188 qualifier]` note updated to reflect that a bare `--field` no longer triggers a step-2 exit-64 guard and its resolved value IS echoed (per BC-3.3.010 step 6); only `--on-behalf-of` present without `--request-type` still suppresses the echo via BC-3.8.013. BC-INDEX row propagated in the same commit. | bc-3-issue-write.md |
+| **BC-3.4.014** | DEC-188-qualifier body amended: `--field` echo-suppression removed per DEC-310 reversal; `--on-behalf-of` suppression retained. Precondition's `[DEC-188 qualifier]` note updated to reflect that a bare `--field` no longer triggers a step-2 exit-64 guard and its resolved value IS echoed (per BC-3.3.010 step 6); only `--on-behalf-of` present without `--request-type` still suppresses the echo via BC-3.8.013. BC-INDEX row propagated in the same commit. | bc-3-issue-write.md |
 | **BC-3.4.015** | Amendment note added: this BC's algorithm is now explicitly the BARE-form (`kind: None`) dispatch, permanent and unchanged; hint-syntax interaction documented, pointing to BC-3.4.026-031. Per ADR-0019 §2: `field_pairs` changes to `&HashMap<String, FieldValueSpec>` (bare-name key, last-wins on the whole spec); `resolve_edit_fields` reads each entry's `spec.kind` and takes the hinted-bypass branch before falling through to the existing `schema.type` match when `spec.kind == None`. | bc-3-issue-write.md |
 | **BC-3.4.016** | Amendment note added: same bare-form/permanence framing for the `option`-type dispatch; explicit opt-in spelling is `:option` (BC-3.4.027); `:id` hint is the explicit spelling of this BC's own Step-1 id-bypass. | bc-3-issue-write.md |
 | **BC-3.8.008** | Amendment note added: hint-kind syntax applies uniformly on the JSM create path too (resolves the F1 research/BA open question — decided YES, uniform application, since `parse_field_kv` is shared); wire target substituted to `requestFieldValues`; bare-form output is byte-identical, unchanged. New VP-578-015/016 pin the regression/parity guarantees. | bc-3-issue-write.md |
-| **BC-3.8.012** | **FULL REVERSAL.** DEC-188's `--field`-alone platform-path exit-64 pre-flight guard (and the combined `--field`+`--on-behalf-of` guard, which loses its trigger) is removed. Old DEC-188 contract preserved verbatim inline as `[DEC-188 BEHAVIOR, superseded 2026-08-25]` for audit trail (mirrors the append-only convention this BC already used once, for the pre-DEC-188 #383 warn-and-proceed text). New `[CURRENT BEHAVIOR — effective 2026-08-25]` section added: `--field` alone now resolves via createmeta (BC-3.3.010) instead of erroring. H1 heading updated to reflect the reversal. **Governance flag: DEC-307 proposed** (see Summary above). | bc-3-issue-write.md |
-| **BC-3.8.001** | §3.8 section preamble (3 sites) and BC-3.8.001's own H1 heading + amendment note scoped the surviving exit-64 guard to `--on-behalf-of` only, matching BC-3.8.012's reversal — the stale `--field`/`--on-behalf-of` combined phrasing (pre-reversal wording) is replaced with `--on-behalf-of`-only phrasing plus a `[reversed 2026-08-25 issue #578 DEC-307: --field no longer exits 64 — resolves via createmeta per BC-3.3.010/BC-3.8.012]` note at each site. No behavioral change to BC-3.8.001 itself — this closes a straggler where the BC-INDEX row (already corrected) and BC-3.3.001 H1 (already corrected) had moved on but this file's body text had not. | bc-3-issue-write.md |
+| **BC-3.8.012** | **FULL REVERSAL.** DEC-188's `--field`-alone platform-path exit-64 pre-flight guard (and the combined `--field`+`--on-behalf-of` guard, which loses its trigger) is removed. Old DEC-188 contract preserved verbatim inline as `[DEC-188 BEHAVIOR, superseded 2026-08-25]` for audit trail (mirrors the append-only convention this BC already used once, for the pre-DEC-188 #383 warn-and-proceed text). New `[CURRENT BEHAVIOR — effective 2026-08-25]` section added: `--field` alone now resolves via createmeta (BC-3.3.010) instead of erroring. H1 heading updated to reflect the reversal. **Governance flag: DEC-310 proposed** (see Summary above). | bc-3-issue-write.md |
+| **BC-3.8.001** | §3.8 section preamble (3 sites) and BC-3.8.001's own H1 heading + amendment note scoped the surviving exit-64 guard to `--on-behalf-of` only, matching BC-3.8.012's reversal — the stale `--field`/`--on-behalf-of` combined phrasing (pre-reversal wording) is replaced with `--on-behalf-of`-only phrasing plus a `[reversed 2026-08-25 issue #578 DEC-310: --field no longer exits 64 — resolves via createmeta per BC-3.3.010/BC-3.8.012]` note at each site. No behavioral change to BC-3.8.001 itself — this closes a straggler where the BC-INDEX row (already corrected) and BC-3.3.001 H1 (already corrected) had moved on but this file's body text had not. | bc-3-issue-write.md |
 | **BC-3.8.013** | Amended in place, NOT merely reclassified: `[CURRENT BEHAVIOR — effective 2026-08-25, issue #578]` note added (~body line 4266); "Combined pre-flight error" subsection rewritten in place (~body line 4309) to reflect BC-3.8.012's combined-guard removal; EC-3.8.013-1 updated (~body line 4331) to hold with-or-without `--field`; AC-3 marked stale-post-reversal and AC-12's count-normalization obligation added (~body line 4335). The GUARD'S OWN observable behavior (standalone `--on-behalf-of`-without-`--request-type` → exit 64) is unchanged — only the TRIGGER SCOPE description and the now-dead combined-error cross-references were updated to match BC-3.8.012's reversal. | bc-3-issue-write.md |
 | **BC-3.4.017** | **[AMENDED 2026-08-25 issue #578 F2, adversary pass-13 F-1 fix]** Gate B's flag-overlap matching note extended: a hint-tagged `--field NAME:kind=VALUE` pair is matched on its BARE NAME (per BC-3.4.026's bare-key rule), so it fires Gate B identically to the bare `--field NAME=VALUE` form, for all five system fields and every hint kind. New EC-3.4.017-16 documents this (`--priority Medium --field priority:name=Medium` → exit 64). Adds `[AMENDED 2026-08-25 issue #578 F2]` footer marker. This closes a contradiction where BC-3.4.029 EC-3.4.029-2 had claimed universal last-wins (no exit 64) for the identical flag combination — EC-3.4.029-2 is now scoped explicitly to the create path, where no Gate B guard exists. No BC-INDEX title change (H1 unchanged; Gate B's title already names all five fields). | bc-3-issue-write.md |
 
@@ -207,7 +218,7 @@ resolve. All four are resolved here, with rationale:
 4. **BC-3.8.012 repeal: full removal or DEC needed?** (BA open question 5.4) — RESOLVED: **DEC
    needed, not decided unilaterally.** This delta performs the spec-level reversal (BC-3.8.012's
    contract text now reflects the new behavior) but explicitly does NOT declare the governance
-   question closed — it proposes **DEC-307** and flags it for the orchestrator to register
+   question closed — it proposes **DEC-310** and flags it for the orchestrator to register
    formally, consistent with how DEC-188 itself was a recorded, reviewable decision rather than
    an implicit code change.
 
@@ -263,6 +274,194 @@ here (rather than deleted) for traceability of the F1→F2 open-question resolut
    caveats both the non-cascading and cascading JSM shapes as unverified rather than asserting
    the non-cascading form as fact. If a future cycle wants verified (cascading or non-cascading)
    support on JSM create, this needs its own research/live-verification pass.
+
+---
+
+## 2026-08-26 F2 adversary-convergence amendments (D1/D2/D3 + A-M2/B-F1/C-M1 + LOWs)
+
+Three fresh-context adversary passes against the frozen F2 delta (`architecture-delta-field-dx.md`,
+this document, `verification-delta-field-dx.md`) surfaced defects across three categories: three
+architectural design forks the architect resolved (D1/D2/D3, ADR-0019 § Amendment 2026-08-26 +
+`architecture-delta-field-dx.md` §9), three pure-spec-text errors (A-M2, B-F1, C-M1), and seven
+folded-in LOW findings. This burst propagates the architect's D1/D2/D3 decisions into the BC
+bodies and resolves the pure-spec-text/LOW items directly. **No BCs added or removed; total_bcs
+stays 719, `bc-3-issue-write.md` stays 123/152, `cross-cutting.md` stays 89/155.** All changes are
+in-place body amendments plus embedded edge cases (EC-N additions), consistent with this delta's
+existing no-count-change amendments (BC-3.3.001, BC-3.4.014/015/016/017, BC-3.8.001/008/013).
+
+### D1 — M2 default-project resolution parity (`cross-cutting.md`)
+
+**Defect (adversary MEDIUM-1):** the pure mode-selector arity function pinned `has_project` (the
+literal `--project` flag) as a REQUIRED 4th boolean for M2, so `jr field options FOO --type Bug`
+exited 64 even with a profile default project configured — contradicting BC-3.3.010's
+flag-OR-default project resolution and M3's own optional-companion fallback.
+
+**Resolution (ADR-0019 § Amendment D1):** the pure arity check (`resolve_field_context`) is
+narrowed to `(has_type, has_request_type, has_issue) -> Result<Mode, ArityError>` — `has_project`
+is removed from its signature entirely. A new, sibling pure function (`resolve_m2_project`),
+invoked only after M2 is selected, resolves the project as flag-OR-profile/config-default (same
+source BC-3.3.010 and M3 already read). The incomplete-M2 error's trigger widens from "no flag" to
+"no flag AND no default"; the error message itself is unchanged.
+
+**BC bodies touched:** BC-X.14.001 (`cross-cutting.md`) — the "§BC-X.14 context-mechanism
+decision" section intro, a new "M2 project resolution step" paragraph, the Preconditions bullet,
+Invariant 1, VP-580-006, and the Trace section; BC-X.14.004 — the error-taxonomy table row and the
+precedence paragraph. No `bc-3-issue-write.md` BC needed a D1 change (BC-3.3.010's create-path
+project resolution was already flag-OR-default; D1 only brought BC-X.14.001's M2 into parity with
+it).
+
+**VP implication (flagged for the verifier, not resolved here):** VP-580-006's
+`resolve_field_context` proptest must drop the `has_project` axis (narrowed to 3 booleans). A NEW
+verification target is needed for `resolve_m2_project` specifically — `{--project flag present,
+profile default present, neither present} × M2-only` — structurally mirroring whichever existing
+VP covers BC-3.3.010's flag-or-default project resolution on the create path.
+
+### D2 — create-path collision precedence (`bc-3-issue-write.md`)
+
+**Defect (adversary B-F3):** `jr issue create` has no Gate B — `--priority Medium --field
+priority:name=Medium` writes `fields.priority` via two unordered sources (`--priority` and
+`--field` are distinct clap args with no relative-order guarantee; `parse_field_kv` returns an
+unordered `HashMap`). BC-3.4.029 EC-3.4.029-2's prior "last-wins" claim described an outcome with
+no defined "later."
+
+**Resolution (ADR-0019 § Amendment D2):** Gate B (BC-3.4.017) is extended to the create path via
+one shared, pure, extracted function — `field_resolve::detect_flag_field_overlap` — reused by both
+`edit.rs`'s existing Gate B and a new create-path guard in `create.rs`. Outcome: any argv order of
+a dedicated flag and a `--field` pair on the same wire key (any hint kind, any field in Gate B's
+governed set restricted to `issue create`'s dedicated flags) → exit 64, no HTTP, symmetric with
+EC-3.4.017-16. A precedence-rule alternative (e.g. "dedicated flag always wins") was rejected — it
+only relocates the ambiguity and, for a state-changing command, silently discarding one of two
+explicit values is worse than rejecting the invocation outright.
+
+**BC bodies touched:** BC-3.4.029 EC-3.4.029-2 (rewritten — create path is now symmetric with
+edit, not last-wins); BC-3.4.014 (the matching "last-flag-wins... per BC-3.4.029 EC-2" sentence
+rewritten to describe the new guard); BC-3.4.017 (new note: Gate B's flag-overlap detection is now
+a shared function also invoked by the create path; EC-3.4.017-16's cross-reference to BC-3.4.029
+corrected); BC-3.3.010 (new Invariant 5 + EC-3.3.010-6 + a new VP for the create-path guard);
+BC-3.3.011 (new error-taxonomy row + Postconditions evaluation-order note).
+
+**VP implication (flagged for the verifier, not resolved here):** a create-path Gate-B VP,
+structurally mirroring VP-396-005's edit-path Gate B coverage, exercising any argv order × any
+hint kind × each governed field, asserting exit 64, the overlap error, and zero HTTP calls.
+
+### D3 — cascading `>`-split multibyte safety (`bc-3-issue-write.md`)
+
+**Defect (adversary B-F2):** the `>` cascading split (BC-3.4.027) happens at the CALL SITE
+(`field_resolve.rs`, and the analogous point in `create.rs`'s platform-create path) — never inside
+`parse_field_kv`, whose own Unicode-scalar-safety MUST (BC-3.4.026 step 5) does not cover this new
+site. A naive char-index-as-byte-offset implementation panics on a multibyte scalar preceding `>`
+(e.g. `--field 'cf:option=Pré>Bñ'`) — the same class of bug FIX-F6-LRE-1 (#734,
+`jql::validate_duration`) fixed, via a different specific mechanism.
+
+**Resolution (ADR-0019 § Amendment D3):** every call site performing the `>` split MUST use
+`str::split_once('>')` (never a char-index-based or fixed-byte-offset scheme) — named specifically
+rather than a looser "must be Unicode-scalar-safe" instruction, since discretion over the exact
+implementation is precisely the axis FIX-F6-LRE-1 was introduced on. Scoped to `field_resolve.rs`
+(edit) and `create.rs`'s platform-create path (create); excludes `parse_field_kv` (already
+covered) and JSM (no cascading this cycle).
+
+**BC bodies touched:** BC-3.4.027 — a new "Multibyte-safety MUST on the `>` split" paragraph, a
+new Invariant 5, EC-3.4.027-5 (multibyte no-panic), EC-3.4.027-6 (empty parent/child segment →
+exit 64, folds in the B-LOW empty-cascading-segments item below), and VP-578-008 extended with a
+no-panic-proptest note.
+
+**VP implication (flagged for the verifier, not resolved here):** a no-panic property test over
+arbitrary UTF-8 input, one per call site (`field_resolve.rs`; `create.rs` platform-create path),
+mirroring `validate_duration`'s FIX-F6-LRE-1 proptest and VP-578-005's `parse_field_kv` splitter
+coverage — extending or sibling to VP-578-008.
+
+### A-M2 — BC-X.14.002 bare-invocation example contradicted BC-X.14.001's mandatory-selector rule
+
+**Defect:** the example `jr field options customfield_10084` as a successful BARE invocation
+contradicted BC-X.14.001's Invariant 1 (zero mode selectors → exit 64).
+
+**Fix:** BC-X.14.002's Inputs section now shows `jr field options customfield_10084 --issue
+FOO-1` and clarifies "bare" means absence of `--value` specifically, never absence of a
+mode-selector context flag (which stays mandatory regardless).
+
+### B-F1 — BC-X.14.001 M3 pagination claim was factually false
+
+**Defect:** the Postconditions claimed M3 (`--request-type` field enumeration) "PAGINATES
+INTERNALLY... reuses the existing `jr requesttype fields` `isLastPage`-style pagination." Verified
+false against `src/api/jsm/request_types.rs::get_request_type_fields`: it is a single,
+non-paginated GET returning a flat `RequestTypeFieldsResponse { can_raise_on_behalf_of,
+can_add_request_participants, request_type_fields: Vec }` envelope (no `size`/`start`/`limit`/
+`isLastPage`/`_links.next`). The cited `isLastPage` loop belongs to the DIFFERENT function
+`list_request_types` (lists request TYPES, not one request type's FIELDS).
+
+**Fix:** BC-X.14.001's Postconditions corrected to state M3 field enumeration is a single GET, no
+pagination, with a forward-looking caveat that a future paginated JSM field envelope would need
+revisiting. The M2 createmeta/issuetypes pagination claims (both correct, independently verified
+against source) are UNCHANGED. Pre-fix wording retained inline as a superseded audit-trail note,
+per this repo's append-only convention.
+
+### C-M1 — DEC-307 was already allocated; renumbered to DEC-310
+
+**Defect:** the proposed DEC-307 (BC-3.8.012's governance flag for the DEC-188 reversal) was
+derived from a `grep -rohE "DEC-[0-9]{3}"` survey scoped to `.factory/specs/` only, which reported
+DEC-306 as the highest existing number. Re-running the survey across the ENTIRE `.factory/` tree
+(`grep -rohE "DEC-[0-9]{3}" .factory/`) finds DEC-309 as the true maximum — `cycle-001`
+(`list-read-ergonomics`)'s F5/F7 closure had already allocated DEC-306 through DEC-309 (recorded
+in `.factory/cycles/cycle-001/` and `STATE.md`, outside `specs/`): DEC-306 (F5 Round-1 human
+ruling), **DEC-307 (that same cycle's F5 combined-delta fix — already a REGISTERED decision, not
+an available number)**, DEC-308 (FIX-F6-LRE-1, PR #734), DEC-309 (the F7 final authorization
+gate). The original proposal did not merely round down to a stale number — it collided with an
+already-taken one.
+
+**Fix:** applying the repo's own "next sequential after the highest" rule against the CORRECT
+full-`.factory/`-tree maximum (DEC-309) yields **DEC-310**. Every occurrence of the proposed
+DEC-307 in `prd-delta-field-dx.md` (this document) and `bc-3-issue-write.md` (BC-3.3.001,
+BC-3.4.014, BC-3.8.001, BC-3.8.012's governance flag + Trace + `[AMENDED...]` markers,
+BC-3.8.013) is renumbered to DEC-310; the survey-provenance prose is corrected to describe the
+full-tree grep and the DEC-307 collision, not the specs-only undercounted grep. DEC-310 remains a
+**proposal**, not yet formally registered — the orchestrator/state-manager should register it at
+cycle close and must not let a future pass reuse DEC-310 or DEC-307 (already taken) again.
+
+**Open namespace question, flagged not resolved:** spec-level DECs (188, 306, 307, 310) and
+cycle-gate DECs (e.g. 309) currently share one undifferentiated `DEC-NNN` prefix. Whether these
+should remain one sequence (current de facto behavior, confirmed by this collision) or split into
+two disambiguated series is an open question flagged for cycle close — this amendment does not
+resolve it, only surfaces it so a repeat of this exact collision class does not happen silently
+again.
+
+### Folded-in LOWs
+
+- **A-LOW-1** (`bc-3-issue-write.md`, BC-3.4.026 Invariant 1): over-claimed the bare form
+  auto-detects "forever" with no platform-scope qualifier. Added an explicit platform-path-only
+  scope note — on the JSM path, bare `kind: None` is BC-3.8.008's UNCONDITIONAL string-wrap
+  (pinned by VP-578-015 byte-identity), not BC-3.4.016 auto-detect. Prevents a VP-578-015
+  regression from a future reader over-generalizing this invariant.
+- **A-LOW-2** (`cross-cutting.md`, BC-X.14.001 Preconditions): "`--issue <KEY>` (no `--project`
+  companion)" read as a prohibition. Reworded to "`--project` not consulted," consistent with
+  VP-580-006 and the model's own "harmlessly ignored, not rejected" framing elsewhere in the BC.
+- **B-LOW, `:asset` discovery failure** (`bc-3-issue-write.md`, BC-3.4.030): added an explicit
+  error-taxonomy table for the bare `:asset=<objectId>` cold-cache `get_or_fetch_workspace_id` GET
+  — 403/404 → "Assets is not available on this Jira site" UserError exit 64; 200+empty `values` →
+  "No Assets workspace found" UserError exit 64; 401 → standard auth-error mapping (unaffected by
+  the Assets-specific UserError); 5xx/network → standard API/network-error mapping — plus
+  EC-3.4.030-5, sourced from reading `src/api/assets/workspace.rs::get_or_fetch_workspace_id`
+  directly (not previously documented at the BC level).
+- **B-LOW, empty cascading segments** (`bc-3-issue-write.md`, BC-3.4.027): defined `cf:option=Parent>`
+  (empty child) and `cf:option=>Child` (empty parent) as EC-3.4.027-6 — both exit 64,
+  unresolvable, folding into the SAME shape as the existing EC-3.4.027-2 (empty parent → parent
+  unresolvable) / EC-3.4.027-3 (empty child → child unresolvable) rather than a distinct
+  empty-segment message.
+- **B-LOW, `--value ""`** (`cross-cutting.md`, BC-X.14.002): documented as the IDENTITY filter
+  (matches everything, same output as `--value` absent) since it's a reachable scripted
+  invocation distinct from the flag being absent entirely.
+- **B-LOW, `--value` + graceful-degrade** (`cross-cutting.md`, BC-X.14.002): documented that the
+  BC-X.14.004 graceful-degrade path still fires with `--value` present — the filter applies AFTER
+  the full fetch, so a zero-enumerable-options field produces an empty list before `--value` ever
+  runs; stdout stays `[]`, the degrade hint still fires.
+- **B-LOW, M3 reverse name-resolution** (`cross-cutting.md`, BC-X.14.001): added EC-X.14.001-6,
+  the reverse of EC-X.14.001-5 — a field enumerable in the request type's `validValues` but not
+  surfaced by the global `/rest/api/3/field` list under any human name (resolvable only via
+  `customfield_NNNNN`); a discoverability limitation, not a `jr` defect, with a documented
+  fallback (`jr requesttype fields <RT> --output json`).
+- **C-LOW** (`bc-3-issue-write.md`, BC-3.8.012 F3/F4 removal obligations): the rewritten-holdout
+  enumeration omitted H-NEW-PREFLIGHT-006 (the `--output json` mode counterpart of
+  H-NEW-PREFLIGHT-001, confirmed rewritten in `holdout-scenarios.md`'s own trace and Group 20 body
+  but not listed here). Added to the enumeration alongside H-NEW-PREFLIGHT-001/003.
 
 ---
 

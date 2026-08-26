@@ -4,7 +4,7 @@ phase: phase-f2-spec-evolution
 cycle: field-dx
 issues: [580, 578]
 producer: formal-verifier
-timestamp: 2026-08-25
+timestamp: 2026-08-26   # F2 adversary-convergence pass (D1/D2/D3 + C-LOW/B-F1); prior F5-pass-1 revision was 2026-08-25
 status: complete
 convention: inline-proptest   # this repo has NO centralized VP-NNN registry — see §0
 # ONE authoritative VP id per guarantee. The parallel `VP-*-04x` band an earlier revision of
@@ -12,11 +12,15 @@ convention: inline-proptest   # this repo has NO centralized VP-NNN registry —
 # with the single canonical inline VP id it is realized against. See §0 for the complete
 # old-04x → canonical mapping.
 new_properties:            # genuinely NEW inline VPs — extend the existing VP-578-0xx / VP-580-0xx sequences
-  - VP-578-020   # createmeta-family multi-page resolution (BC-3.3.010) — adversary pass-28 F-1; ADR-0019 §1 offset-pagination across BOTH createmeta endpoints: (a) FIELDS (`get_createmeta_fields`) — a `--field` target on fields-page ≥2 is collected and resolves (exit 0), not dropped; AND (b) ISSUE-TYPES (`get_issue_types_for_project`, the `--type` name→id resolution in src/api/jira/issues.rs) — a `--type` entry on issuetypes-page ≥2 resolves to its issueTypeId (exit 0), not dropped; added inline to BC-3.3.010
-  - VP-580-006   # context mutual-exclusion arity guard (BC-X.14.001 Invariant 1) — was the gap; added inline to BC-X.14.001
+  - VP-578-020   # createmeta-family multi-page resolution (BC-3.3.010) — FIELDS half: adversary pass-28 F-1; ISSUE-TYPES extension: adversary pass-29 F-1 (C-LOW attribution sync — BC-3.3.010 attributes the issuetypes half to pass-29); ADR-0019 §1 offset-pagination across BOTH createmeta endpoints: (a) FIELDS (`get_createmeta_fields`) — a `--field` target on fields-page ≥2 is collected and resolves (exit 0), not dropped; AND (b) ISSUE-TYPES (`get_issue_types_for_project`, the `--type` name→id resolution in src/api/jira/issues.rs) — a `--type` entry on issuetypes-page ≥2 resolves to its issueTypeId (exit 0), not dropped; added inline to BC-3.3.010
+  - VP-578-021   # create-path Gate-B collision guard (BC-3.3.010, ADR-0019 § Amendment 2026-08-26 D2) — D2 gap; shared `field_resolve::detect_flag_field_overlap` on the create path (any argv order, any hint kind, every Gate-B-governed field) → exit 64, ZERO HTTP, symmetric with edit's EC-3.4.017-16; modeled on the edit-path Gate-B VP (VP-396-005); added inline to BC-3.3.010 (back-fills the PO's D2 placeholder)
+  - VP-578-022   # :asset cold-cache workspace-discovery FAILURE taxonomy (BC-3.4.030, B-LOW) — each row (403/404 → Assets-unavailable exit 64; 200 + empty `values` → no-workspace exit 64; 401 → standard auth mapping; 5xx/network → standard API/network mapping) exercised via wiremock on BOTH edit and create call sites; added inline to BC-3.4.030 (back-fills the PO's B-LOW placeholder)
+  - VP-580-006   # context mutual-exclusion arity guard (BC-X.14.001 Invariant 1) — was the gap; added inline to BC-X.14.001. NARROWED per ADR-0019 § Amendment D1: pure fn is now `resolve_field_context(has_type, has_request_type, has_issue) -> Result<Mode, ArityError>` — 3-bool domain, `has_project` axis DROPPED
   - VP-580-007   # --value client-side filter correctness (BC-X.14.002) — was the gap; added inline to BC-X.14.002
   - VP-580-008   # table/JSON output-shape (BC-X.14.003) — was the gap; added inline to BC-X.14.003
   - VP-580-009   # `--project --request-type` valid M3, NOT an arity error (BC-X.14.004) — adversary pass-20 M1 / ADR-0019 §1 regression guard; realized as the positive `--project --request-type → Ok` case of VP-580-006's arity proptest
+  - VP-580-010   # M2 post-arity project resolution (BC-X.14.001, ADR-0019 § Amendment 2026-08-26 D1) — separate SIBLING pure fn `resolve_m2_project(cli_project: Option<&str>, config: &Config) -> Option<String>`; M2 succeeds when EITHER an explicit `--project` OR a profile/config-default project exists, exits 64 pre-HTTP only when NEITHER exists; mirrors BC-3.3.010's create-path flag-or-default project-resolution VP shape; added inline to BC-X.14.001 (back-fills the PO's D1 placeholder)
+  - VP-580-011   # --value + graceful-degrade interaction (BC-X.14.002, B-LOW) — `--value` present against a zero-enumerable-options field: filter applies POST-fetch, degrade hint still fires on stderr, stdout stays `[]`/empty table, exit 0; VP-580-005 companion; added inline to BC-X.14.002 (back-fills the PO's B-LOW placeholder)
 realizes_inline_vps:       # proptest/unit REALIZATIONS of EXISTING inline VPs — no new id, no duplicate
   - VP-578-001   # platform-create `--field` resolves via createmeta (never editmeta) (BC-3.3.010) — realized §1.1 (tests/issue_create.rs createmeta path, reuses VP-396-009 edit-path realization transplanted to create)
   - VP-578-002   # fields.json cache SHARED between `edit --field` and `create --field`, same profile (BC-3.3.010) — realized §1.1 (tests/issue_create.rs warm-cache reuse; shares resolve_edit_fields/write_fields_cache from VP-396-009)
@@ -25,7 +29,7 @@ realizes_inline_vps:       # proptest/unit REALIZATIONS of EXISTING inline VPs �
   - VP-578-005   # hint-splitter multibyte / Unicode-scalar safety (BC-3.4.026) — absorbs former VP-578-040
   - VP-578-006   # bare-name map key: last-wins ACROSS kinds, no composite-key double-apply (BC-3.4.026, ADR-0019 §2(b))
   - VP-578-007   # :option byte-identity to bare (BC-3.4.027) — absorbs former VP-578-041.1
-  - VP-578-008   # :option cascading Parent>Child composition (BC-3.4.027) — absorbs former VP-578-041.3; DE-PROVISIONALIZED per ADR-0019
+  - VP-578-008   # :option cascading Parent>Child composition (BC-3.4.027) — absorbs former VP-578-041.3; DE-PROVISIONALIZED per ADR-0019. EXTENDED per ADR-0019 § Amendment 2026-08-26 D3: a sibling no-panic proptest over arbitrary UTF-8 for the CALL-SITE `>` split (`str::split_once('>')`), ONE per call site (platform edit `field_resolve.rs` + platform create `create.rs`), FIX-F6-LRE-1 (#734) class — no new VP id (folded into VP-578-008, matching the BC-3.4.027 [EXTENDED] note)
   - VP-578-009   # :id value-kind mapping (BC-3.4.028) — absorbs former VP-578-042
   - VP-578-010   # :name value-kind mapping + --priority parity (BC-3.4.029) — absorbs former VP-578-043
   - VP-578-011   # :asset composer wire-shape correctness (BC-3.4.030) — absorbs former VP-578-044
@@ -56,7 +60,7 @@ aligns_with_inline_vps:
   - VP-578-015    # JSM parity (bare-form byte-identical) — referenced by BC-3.8.008; relative parity claim on the bare/:option path, already within the existing :option JSM caveat — unchanged by the pass-16 reframe
   - VP-578-016    # JSM parity (:id/:name/:asset → requestFieldValues wire target) — referenced by BC-3.8.008. UNVERIFIED / parity-PENDING (adversary pass-16 MEDIUM-2): the JSM requestFieldValues WRITE wire shapes are NOT research-verified (research confirmed only the platform `fields` contract). This delta does NOT pin VP-578-016 as a firm verification target — it is an F4/live-validation-PENDING assertion, realized & verified at F4 against live JSM, not asserted firm at F2 (mirrors the existing :option JSM caveat and how VP-578-008 was carried while PROVISIONAL). BC-3.8.008 concurrently downgrades these shapes to UNVERIFIED to match. See §1.1.
 adr_dependencies:
-  - ADR-0019      # Accepted 2026-08-25 — confirms `>` cascading delimiter (split-on-first, `:id=` escape hatch); de-PROVISIONALizes VP-578-008
+  - ADR-0019      # Accepted 2026-08-25 — confirms `>` cascading delimiter (split-on-first, `:id=` escape hatch); de-PROVISIONALizes VP-578-008. § Amendment 2026-08-26 (F2 adversary convergence): D1 narrows `resolve_field_context` to 3 bools + adds `resolve_m2_project` (→ VP-580-006 rewrite + VP-580-010); D2 extends Gate B to the create path via shared `detect_flag_field_overlap` (→ VP-578-021); D3 mandates `str::split_once('>')` at every cascading split site (→ VP-578-008 no-panic extension)
 input-hash: "8c6b543"
 ---
 
@@ -103,28 +107,39 @@ reconciliation note covered):
 | VP-580-040 | BC-X.14.001 Inv 1 | **VP-580-006** *(NEW)* | **Gap, not a duplicate.** No inline VP covered Invariant 1's mutual-exclusion; VP-580-006 is added inline to BC-X.14.001. |
 | VP-580-041 | BC-X.14.004 | **VP-580-005** | Same guarantee — graceful degrade (empty options → exit 0; the no-panic-on-arbitrary-`serde_json::Value` normalizer proptest is VP-580-005's property-test realization). |
 
-**Four genuinely-new VP-580 ids** were minted this delta (each ADDED to its BC body — see §5):
-three F5-gap VPs — **VP-580-006** (BC-X.14.001 Invariant 1 mutual-exclusion), **VP-580-007**
-(BC-X.14.002 `--value` filter), **VP-580-008** (BC-X.14.003 output shape) — plus the pass-20
-regression pin **VP-580-009** (BC-X.14.004 `--project --request-type` is a VALID M3, not an arity
-error; realized WITHIN VP-580-006's arity proptest, not a separate core-surface row). All four
-**extend** the existing `VP-580-0xx` sequence (prior max was `005`); they are NOT a parallel band.
+**Six genuinely-new VP-580 ids** are minted this delta (each ADDED to its BC body — see §5). The
+F5-pass-1 set (four): three F5-gap VPs — **VP-580-006** (BC-X.14.001 Invariant 1 mutual-exclusion),
+**VP-580-007** (BC-X.14.002 `--value` filter), **VP-580-008** (BC-X.14.003 output shape) — plus the
+pass-20 regression pin **VP-580-009** (BC-X.14.004 `--project --request-type` is a VALID M3, not an
+arity error; realized WITHIN VP-580-006's arity proptest, not a separate core-surface row). The
+**F2 adversary-convergence pass (2026-08-26)** adds two more: **VP-580-010** (BC-X.14.001, ADR-0019
+§ Amendment D1 — the separate post-arity `resolve_m2_project` step, flag-OR-profile/config-default;
+exit 64 pre-HTTP only when NEITHER exists) and **VP-580-011** (BC-X.14.002, B-LOW — the `--value` +
+graceful-degrade interaction, VP-580-005 companion). All six **extend** the existing `VP-580-0xx`
+sequence (prior max was `005`, now `011`); they are NOT a parallel band.
 
-**One VP-578-0xx id is newly minted this cycle** — **VP-578-020** (createmeta multi-page field
-resolution, BC-3.3.010; adversary pass-28 F-1, frontmatter `new_properties`). Every other #578
-guarantee already had an inline id. The full declared inline span is **VP-578-001..020** (all
-twenty ids are declared inline in `bc-3-issue-write.md`): VP-578-001/002/003 on BC-3.3.010
+**Three VP-578-0xx ids are newly minted across this cycle** — **VP-578-020** (createmeta-family
+multi-page resolution, BC-3.3.010; FIELDS half = adversary pass-28 F-1, ISSUE-TYPES half = adversary
+pass-29 F-1 — C-LOW attribution now synced to BC-3.3.010's own pass-29 attribution), plus the two
+**F2 adversary-convergence (2026-08-26)** additions: **VP-578-021** (BC-3.3.010, ADR-0019 § Amendment
+D2 — the create-path Gate-B collision guard via shared `detect_flag_field_overlap`) and **VP-578-022**
+(BC-3.4.030, B-LOW — the `:asset` cold-cache workspace-discovery failure taxonomy). Every other #578
+guarantee already had an inline id. The full declared inline span is now **VP-578-001..022** (all
+twenty-two ids are declared inline in `bc-3-issue-write.md`): VP-578-001/002/003 on BC-3.3.010
 (platform-create createmeta resolution / cache-sharing / all-or-nothing), VP-578-004 on BC-3.3.011
 (create-path error taxonomy), VP-578-005..014 the value-kind / hint-splitter / malformed-catalog
 guarantees this delta realizes (§1), VP-578-015/016 the JSM parity pair (frontmatter
 `aligns_with_inline_vps`; VP-578-016 is **UNVERIFIED / parity-PENDING** — its `requestFieldValues`
 write shapes are realized at F4 against live JSM, not pinned firm by this delta — see §1.1),
-VP-578-017/018/019 the DEC-307 reversal's own VPs on BC-3.8.012/013, and VP-578-020 the createmeta-family
+VP-578-017/018/019 the DEC-307 reversal's own VPs on BC-3.8.012/013, VP-578-020 the createmeta-family
 offset-pagination guarantee on BC-3.3.010 — covering **BOTH** the FIELDS (`get_createmeta_fields`, `--field`)
-and ISSUE-TYPES (`get_issue_types_for_project`, `--type`) createmeta endpoints (the one new #578 id, added
-inline to BC-3.3.010 by the product-owner in parallel). Apart from VP-578-020, the delta only supplies proptest/unit
-realizations; it mints no other new #578 id. §1.1 catalogs where each of the eight #578 ids NOT in
-the §1 core table (VP-578-001..004, 017..020) is realized — none is left without a realization
+and ISSUE-TYPES (`get_issue_types_for_project`, `--type`) createmeta endpoints — and VP-578-021/022 the
+two F2-amendment additions (create-path Gate-B guard on BC-3.3.010; `:asset` cold-cache failure taxonomy
+on BC-3.4.030). Note **D3** (cascading `>`-split multibyte safety) mints **no** new id: its no-panic
+call-site proptest is folded into **VP-578-008** as an extension (matching BC-3.4.027's own [EXTENDED]
+note — see §2 VP-578-008 and §0.2). Apart from VP-578-020/021/022, the delta only supplies proptest/unit
+realizations; it mints no other new #578 id. §1.1 catalogs where each of the ten #578 ids NOT in
+the §1 core table (VP-578-001..004, 017..022) is realized — none is left without a realization
 pointer.
 
 ### 0.2 ADR-0019 dependency — cascading delimiter is CONFIRMED, not provisional
@@ -140,20 +155,22 @@ inline VP-578-008 marker in `bc-3-issue-write.md` was cleared this pass.
 
 ## 1. Scope
 
-Fourteen authoritative VP guarantees form this delta's **core proptest/unit surface** (eleven
-realizations of existing inline VPs + three new inline VPs), grouped by concern. **All ids are the
-canonical inline ids** (§0.1). A further **eight** declared #578 inline VPs (VP-578-001..004,
-017..020) are realized by reuse, by the DEC-307 reversal's holdout/regression work, and (VP-578-020)
-by the new createmeta-pagination tests (**both** the FIELDS and ISSUE-TYPES createmeta endpoints) —
-catalogued separately in **§1.1** — as is the JSM-parity
-pair VP-578-015/016 (frontmatter
+Eighteen authoritative VP guarantees form this delta's **core proptest/unit surface** (eleven
+realizations of existing inline VPs + seven new inline VPs — the F5-pass-1 trio VP-580-006/007/008
+plus the four F2 adversary-convergence additions VP-578-021, VP-578-022, VP-580-010, VP-580-011),
+grouped by concern. **All ids are the canonical inline ids** (§0.1). A further **eight** declared
+#578 inline VPs (VP-578-001..004, 017..020) are realized by reuse, by the DEC-307 reversal's
+holdout/regression work, and (VP-578-020) by the new createmeta-pagination tests (**both** the
+FIELDS and ISSUE-TYPES createmeta endpoints) — catalogued separately in **§1.1** — as is the
+JSM-parity pair VP-578-015/016 (frontmatter
 `aligns_with_inline_vps`; **VP-578-016's `:id`/`:name`/`:asset` `requestFieldValues` write shapes
 are UNVERIFIED / parity-PENDING — realized at F4 against live JSM, not pinned firm by this delta;
-see §1.1**). The full declared inline inventory this delta touches is **twenty-five**
-VPs: the twenty #578 ids (VP-578-001..020) plus VP-580-005..009 (VP-580-001..004 were declared
+see §1.1**). The full declared inline inventory this delta touches is **twenty-nine**
+VPs: the twenty-two #578 ids (VP-578-001..022) plus VP-580-005..011 (VP-580-001..004 were declared
 inline by the product-owner pass — not minted by this verifier delta — and are realized at F4
 alongside the new `src/cli/field.rs` command, still unimplemented; this delta adds no further
-realization work for them, so they fall outside its realization surface).
+realization work for them, so they fall outside its realization surface). **D3** adds no id — its
+cascading-`>`-split no-panic proptest is folded into VP-578-008 (§2, §0.1).
 
 | VP (canonical) | Concern | BC(s) | Kind | Primary target file | Status |
 |---|---|---|---|---|---|
@@ -171,6 +188,10 @@ realization work for them, so they fall outside its realization surface).
 | **VP-580-006** | Context mutual-exclusion (exactly one of three), pre-HTTP | BC-X.14.001 | proptest + wiremock | `field_resolve.rs` or new `src/cli/field.rs` | **NEW inline** |
 | **VP-580-007** | `--value` client-side substring filter correctness | BC-X.14.002 | unit + proptest | new `src/cli/field.rs` + `tests/field_options.rs` (new) | **NEW inline** |
 | **VP-580-008** | Table/JSON output shape (`{id,label,children}`) | BC-X.14.003 | unit + integration | new `src/cli/field.rs` + `tests/field_options.rs` (new) | **NEW inline** |
+| **VP-578-021** | Create-path Gate-B collision guard (any argv order × any hint kind × every Gate-B-governed field → exit 64, ZERO HTTP; symmetric with edit's EC-3.4.017-16) | BC-3.3.010 | unit + integration | `src/cli/issue/field_resolve.rs` (`detect_flag_field_overlap`) + integration per call site (edit + create) | **NEW inline (F2 D2)** |
+| **VP-578-022** | `:asset` cold-cache workspace-discovery FAILURE taxonomy (each row exercised on BOTH edit + create call sites) | BC-3.4.030 | wiremock (per-row) | `src/api/assets/workspace.rs::get_or_fetch_workspace_id` call sites + `tests/issue_field_hint_kinds.rs` (new) | **NEW inline (F2 B-LOW)** |
+| **VP-580-010** | M2 post-arity project resolution (`resolve_m2_project`): flag OR profile/config default → Ok; NEITHER → exit 64 pre-HTTP | BC-X.14.001 | unit + proptest | new `src/cli/field.rs` (`resolve_m2_project`) + `tests/field_options.rs` (new) | **NEW inline (F2 D1)** |
+| **VP-580-011** | `--value` + graceful-degrade interaction (filter post-fetch; degrade hint still fires; stdout `[]`, exit 0) | BC-X.14.002 | wiremock + unit | new `src/cli/field.rs` + `tests/field_options.rs` (new) | **NEW inline (F2 B-LOW)** |
 
 **VP-580-009 (regression guard — realized WITHIN VP-580-006, not a separate core-surface row).**
 VP-580-009 (BC-X.14.004) — `--project --request-type` together is a **VALID M3** invocation
@@ -182,21 +203,25 @@ independent fifteenth core-surface realization: it is realized as the **positive
 assertion VP-580-006 already prescribes in `tests/field_options.rs` (that
 `--project --request-type` does **not** trip the guard). It carries its own id purely as a durable
 **regression pin** against re-introducing the superseded "pairing-error" behavior. This is why the
-delta's full declared inline inventory is **twenty-five** (twenty #578 + VP-580-005..009) while
-the §1 core surface remains **fourteen** new proptest/unit realizations.
+delta's full declared inline inventory is **twenty-nine** (twenty-two #578 [VP-578-001..022] +
+VP-580-005..011) while the §1 core surface is **eighteen** new proptest/unit/integration
+realizations (VP-580-009 remains realized within VP-580-006, not a separate core-surface row).
 
 ### 1.1 Remaining declared #578 inline VPs — realization pointers (realized outside the §1 core surface)
 
-The §1 table lists the fourteen guarantees this delta realizes as **new** proptest/unit work.
-For completeness, the remaining **eight** declared `VP-578-0xx` ids — the full #578 inline span is
-**VP-578-001..020** — are realized as follows. **None is left without a realization pointer.**
+The §1 table lists the eighteen guarantees this delta realizes as **new** proptest/unit/integration
+work (including the two F2-amendment #578 additions VP-578-021/022, which sit in the §1 core surface,
+not here). For completeness, the remaining **eight** declared `VP-578-0xx` ids realized OUTSIDE the
+§1 core surface — the full #578 inline span is now **VP-578-001..022** — are realized as follows.
+**None is left without a realization pointer.**
 VP-578-001..004 are the platform-**create** path VPs (realized largely by reuse of the VP-396-009
 **edit**-path realizations, transplanted to create); VP-578-017/018/019 are the **DEC-307 reversal's**
 own VPs (realized by the rewritten holdout scenarios + the `create.rs` guard-removal regression
-tests); **VP-578-020** (the one new #578 id this cycle, adversary pass-28 F-1) is the createmeta-family
-offset-pagination guarantee across **both** createmeta endpoints (FIELDS via `get_createmeta_fields` /
-`--field`, and ISSUE-TYPES via `get_issue_types_for_project` / `--type`), realized by new two-page
-createmeta wiremock tests (one per endpoint) in `tests/issue_create.rs`. The JSM-parity pair VP-578-015/016 is separately accounted for by the
+tests); **VP-578-020** (FIELDS half = adversary pass-28 F-1; ISSUE-TYPES half = adversary pass-29 F-1)
+is the createmeta-family offset-pagination guarantee across **both** createmeta endpoints (FIELDS via
+`get_createmeta_fields` / `--field`, and ISSUE-TYPES via `get_issue_types_for_project` / `--type`),
+realized by new two-page createmeta wiremock tests (one per endpoint) in `tests/issue_create.rs`. The
+JSM-parity pair VP-578-015/016 is separately accounted for by the
 frontmatter `aligns_with_inline_vps` list, with the confidence framing below.
 
 **VP-578-016 confidence — UNVERIFIED / parity-PENDING (F2 reframe, adversary pass-16 MEDIUM-2).**
@@ -223,7 +248,7 @@ caveat, and introduces no additional unverified JSM wire-shape assertion of its 
 | VP-578-017 | `--field a=b` alone (no `--request-type`, well-formed) → exit 0, platform POST fires with the field merged in; stderr has NO `"--field is only valid with"` | BC-3.8.012 (CURRENT) | **Rewritten** holdout scenarios **H-NEW-PREFLIGHT-001** (table mode) + **H-NEW-PREFLIGHT-006** (`--output json` variant), plus the `create.rs` guard-**removal** regression tests inverting the dead DEC-188 exit-64 assertions. |
 | VP-578-018 | `--field a=b --on-behalf-of X` (no `--request-type`) → exit 64 via BC-3.8.013's **standalone** guard only (combined guard REMOVED, createmeta resolution never reached) | BC-3.8.012 / BC-3.8.013 (CURRENT) | **Rewritten** holdout scenario **H-NEW-PREFLIGHT-003**, plus the `create.rs` guard-removal / combined-check-narrowing regression tests. |
 | VP-578-019 | Regression pin: `--on-behalf-of X` **alone** → exit 64 via BC-3.8.013, **unchanged wire-for-wire** from DEC-188-era behavior (proves the reversal did not weaken BC-3.8.013) | BC-3.8.013 | **Unchanged** holdout scenario **H-NEW-PREFLIGHT-002** + the `create.rs` guard-removal regression tests (which assert BC-3.8.013's standalone guard survives untouched). |
-| **VP-578-020** *(NEW — adversary pass-28 F-1)* | Createmeta-**family** multi-page resolution across **BOTH** offset-paginated createmeta endpoints (ADR-0019 §1): **(a) FIELDS** — `get_createmeta_fields` is offset-paginated, so a `--field` whose target field falls on fields-**page ≥2** is collected and resolves normally (**exit 0**, field merged into the create POST body), **never silently dropped** because only page 1 was read; **AND (b) ISSUE-TYPES** — `get_issue_types_for_project` (the `--type` name→id resolution, `src/api/jira/issues.rs`) is **likewise** offset-paginated (`startAt`/`maxResults`/`total`), so a `--type` whose entry falls on issuetypes-**page ≥2** resolves to its `issueTypeId` (**exit 0**), **never dropped** for the same reason. Mirrors the `list_worklogs` / BC-X.5.002 all-pages precedent (single-page fetch silently truncates → must paginate). | BC-3.3.010 | Two new **two-page createmeta wiremock** tests in `tests/issue_create.rs`, **one per endpoint**: **(a) fields** — page 1 returns `maxResults` fields **without** the target, page 2 returns the target field; asserts the `--field` resolves to **exit 0** with the field present in the composed POST body, **and** that the client fetches **BOTH** pages. **(b) issue-types** — page 1 returns `maxResults` issue types **without** the target `--type`, page 2 returns the target; asserts the `--type` resolves (to its `issueTypeId`, **exit 0**) **and** that **BOTH** pages are fetched. In each case a `.expect(1)`-style single-page assumption would false-red. Models the `list_worklogs` all-pages pagination test precedent. |
+| **VP-578-020** *(NEW — FIELDS half: adversary pass-28 F-1; ISSUE-TYPES half: adversary pass-29 F-1 — attribution synced to BC-3.3.010, C-LOW)* | Createmeta-**family** multi-page resolution across **BOTH** offset-paginated createmeta endpoints (ADR-0019 §1): **(a) FIELDS** — `get_createmeta_fields` is offset-paginated, so a `--field` whose target field falls on fields-**page ≥2** is collected and resolves normally (**exit 0**, field merged into the create POST body), **never silently dropped** because only page 1 was read; **AND (b) ISSUE-TYPES** — `get_issue_types_for_project` (the `--type` name→id resolution, `src/api/jira/issues.rs`) is **likewise** offset-paginated (`startAt`/`maxResults`/`total`), so a `--type` whose entry falls on issuetypes-**page ≥2** resolves to its `issueTypeId` (**exit 0**), **never dropped** for the same reason. Mirrors the `list_worklogs` / BC-X.5.002 all-pages precedent (single-page fetch silently truncates → must paginate). | BC-3.3.010 | Two new **two-page createmeta wiremock** tests in `tests/issue_create.rs`, **one per endpoint**: **(a) fields** — page 1 returns `maxResults` fields **without** the target, page 2 returns the target field; asserts the `--field` resolves to **exit 0** with the field present in the composed POST body, **and** that the client fetches **BOTH** pages. **(b) issue-types** — page 1 returns `maxResults` issue types **without** the target `--type`, page 2 returns the target; asserts the `--type` resolves (to its `issueTypeId`, **exit 0**) **and** that **BOTH** pages are fetched. In each case a `.expect(1)`-style single-page assumption would false-red. Models the `list_worklogs` all-pages pagination test precedent. |
 
 ---
 
@@ -363,13 +388,44 @@ VP-578-041.3 — retired.)* **This property is NO LONGER PROVISIONAL** — ADR-0
    `>` (BC-3.4.027 EC-4 collision) is reachable via the `:id=<numeric-id>` path (VP-578-009),
    which bypasses `allowedValues`/cascading parsing entirely — the user is redirected, never stuck.
 
+**EXTENDED — D3 multibyte no-panic on the CALL-SITE `>` split (ADR-0019 § Amendment 2026-08-26 D3,
+FIX-F6-LRE-1 / #734 class).** The `>` split runs at the CALL SITE — `field_resolve.rs` (platform
+edit path) and the analogous point in `create.rs`'s platform-create path (BC-3.3.010) — NOT inside
+`parse_field_kv` (whose own Unicode-scalar-safety MUST, BC-3.4.026 step 5, is scoped to steps 1–2
+and does not cover this site). A naive char-index-as-byte-offset implementation
+(`value.chars().position(|c| c == '>')` used directly as a byte slice bound) panics whenever a
+multibyte scalar precedes the `>` in the parent segment — e.g. `--field 'cf:option=Pré>Bñ'` — the
+same conflation FIX-F6-LRE-1 remediated. ADR-0019 § Amendment D3 mandates `str::split_once('>')`
+(never a char-index or fixed-byte-offset scheme). **This D3 obligation adds NO new VP id — it is
+folded into VP-578-008** (matching BC-3.4.027's own [EXTENDED 2026-08-26, D3] note).
+5. **No panic on any UTF-8 input (D3).** For arbitrary UTF-8 VALUE — including a `>` byte adjacent
+   to a multibyte scalar (`Pré>Bñ`, `世>界`, `🦀>x`, `x>🦀`, leading/trailing/doubled `>`, no `>`)
+   — the cascading `>` split never panics; it returns `Ok`/`Err(UserError)` only. Asserted by a
+   no-panic proptest **per call site** (platform edit, platform create), mirroring
+   `validate_duration`'s FIX-F6-LRE-1 proptest and VP-578-005's `parse_field_kv` splitter coverage.
+
 **Recommended strategy**: deterministic unit tests over a mocked cascading `allowedValues`
 fixture (`allowedValues[].value` + matched-parent `children[].value`), covering: two-segment
 compose, second-`>`-goes-to-child, parent-only, EC-3.4.027-2 (unresolvable parent → exit 64),
-EC-3.4.027-3 (unresolvable child → exit 64), and the EC-4 `:id=` fallback for a `>`-bearing label.
+EC-3.4.027-3 (unresolvable child → exit 64), EC-3.4.027-6 (empty parent `>Child` / empty child
+`Parent>` → exit 64), and the EC-4 `:id=` fallback for a `>`-bearing label. **Plus a D3 no-panic
+proptest at each call site:**
+```rust
+proptest! {
+    /// VP-578-008 (D3 no-panic): call-site '>' split never panics on arbitrary UTF-8.
+    #[test]
+    fn prop_cascading_split_no_panic(raw in "\\PC{0,80}") {   // incl. '>' adjacent to multibyte scalars
+        let _ = split_cascading_value(&raw);   // str::split_once('>') internally — must not panic
+    }
+}
+```
+one instance in `field_resolve.rs` (edit path) and one at the analogous `create.rs` platform-create
+split site, plus a named regression unit test pinning `"Pré>Bñ"` (mirrors
+`validate_duration_multibyte_unit_returns_err_not_panic`).
 
-**Target**: `src/cli/issue/field_resolve.rs` (cascading composer + unit tests). **F6**: via
-`field_resolve.rs` glob add.
+**Target**: `src/cli/issue/field_resolve.rs` (cascading composer + unit tests) AND the analogous
+`create.rs` platform-create split site (D3 proptest per call site). **F6**: `create.rs` already ∈
+`examine_globs`; add `field_resolve.rs` (§4).
 
 ---
 
@@ -776,18 +832,180 @@ tests co-located; integration in `tests/field_options.rs` (new). **F6**: add han
 
 ---
 
+### VP-578-021 — Create-path Gate-B collision guard *(NEW inline VP — F2 adversary convergence, D2)*
+
+**Applies to**: BC-3.3.010 (Invariant 5 / EC-3.3.010-6). **Genuinely NEW inline VP** — ADR-0019 §
+Amendment (2026-08-26) D2 extends Gate B (BC-3.4.017's dedicated-flag × `--field` mutual-exclusion,
+previously edit-only) to the create path (`jr issue create`), closing the adversary B-F3 defect
+(`--priority Medium --field priority:name=Medium` wrote `fields.priority` via two unordered sources
+with no defined "later"). Added to the BC-3.3.010 body this pass (back-fills the PO's D2 placeholder,
+§5). Modeled on the **edit-path Gate-B VP** (VP-396-005), symmetric with EC-3.4.017-16.
+
+**Architectural anchor**: one shared pure function `field_resolve::detect_flag_field_overlap(parsed:
+&HashMap<String, FieldValueSpec>, supplied_flag_keys: &Set<wire-key>) -> Set<overlap>` (ADR-0019 §
+Amendment D2 / architecture-delta §9 D2), reused by BOTH `edit.rs`'s existing Gate B and the new
+`create.rs` guard — a set-intersection over already-parsed data, no I/O (pure core).
+
+**Property statement**:
+1. **Overlap → exit 64, argv-order-independent.** For any argv ordering of a dedicated flag and a
+   `--field` pair on the SAME wire key (`--priority Medium --field priority:name=Medium`, and the
+   reverse order), the guard rejects with exit 64. Because the check is a set-intersection over the
+   parsed `HashMap` (not an ordered merge), the outcome is invariant under argv order **by
+   construction** — this is the property that closes the defect at its root.
+2. **Bare-name matching across hint kinds.** A hint-tagged `--field NAME:kind=VALUE` pair is matched
+   on its BARE NAME (BC-3.4.026 bare-key rule), so `priority:name=`, `priority:id=`, bare
+   `priority=`, `issuetype:id=`, `components:name=` are each caught against their dedicated flag
+   (`--priority`, `--type`, `--component`) identically — for **every** Gate-B-governed field that
+   also exists as a dedicated `issue create` flag.
+3. **Governed-set parity with edit.** The governed field set is exactly BC-3.4.017's current Gate-B
+   set restricted to `issue create`'s dedicated flags — the SAME set, not a parallel list that can
+   drift; if Gate B's set grows, the create-path guard grows with it (shared function).
+4. **Pre-HTTP, zero calls.** The rejection fires BEFORE project/type resolution, BEFORE the
+   createmeta enumeration GET, and BEFORE the POST — **zero** HTTP calls on the reject path.
+5. **Error shape.** Exit 64, overlap error naming the colliding field (e.g. `priority`), symmetric
+   with the edit path's EC-3.4.017-16 message shape.
+
+**Recommended strategy**: unit tests on the pure `detect_flag_field_overlap` (overlap present /
+absent / multiple, each hint kind, each governed field) asserting the returned overlap set; a
+proptest asserting argv-order invariance (the function ignores insertion order — permuting the
+parsed inputs never changes the overlap set); plus **one integration test PER call site** (edit and
+create) asserting exit 64 + the overlap error + **zero** HTTP requests fired (wiremock `.expect(0)`
+on both the createmeta GET and the POST for the create path).
+
+**Target**: `src/cli/issue/field_resolve.rs` (`detect_flag_field_overlap` + unit/proptest) +
+integration tests per call site (`tests/issue_create.rs` create; the existing edit-path Gate-B test
+file for edit). **F6**: via `field_resolve.rs` glob add (§4).
+
+---
+
+### VP-578-022 — `:asset` cold-cache workspace-discovery FAILURE taxonomy *(NEW inline VP — F2 adversary convergence, B-LOW)*
+
+**Applies to**: BC-3.4.030 (error taxonomy for the bare `:asset=<objectId>` cold-cache
+`get_or_fetch_workspace_id` GET; EC-3.4.030-5). **Genuinely NEW inline VP** — the F2 B-LOW pass added
+an explicit cold-cache workspace-discovery error taxonomy to BC-3.4.030, sourced from reading
+`src/api/assets/workspace.rs::get_or_fetch_workspace_id` directly; it had no VP. Added to the
+BC-3.4.030 body this pass (back-fills the PO's B-LOW placeholder, §5). Complements VP-578-011
+(warm-cache correctness, zero HTTP) and VP-578-012 (composer safety).
+
+**Property statement** — each row of the taxonomy is independently exercised via wiremock, on
+**BOTH** the `issue edit --field` and `issue create --field` call sites (they share the same
+`get_or_fetch_workspace_id` function per ADR-0019 §2's "L2 resolves, `build()` only wraps" split):
+1. **403 / 404 (Assets not available on this site)** → `JrError::UserError` exit 64, "Assets is not
+   available on this Jira site" — a genuine cold-cache HTTP round-trip (warm reads never reach this
+   path, VP-578-011).
+2. **200 + empty `values` (no workspace provisioned; JSM present, Assets/CMDB not enabled)** →
+   `JrError::UserError` exit 64, "No Assets workspace found on this Jira site". Distinct from
+   EC-3.4.030-4 (a field-schema-mismatch 400 from the FIELD-write POST): this failure happens
+   EARLIER, during workspace-id RESOLUTION, before any field-write POST is attempted.
+3. **401** → standard auth-error mapping (unaffected by the Assets-specific UserError above).
+4. **5xx / network error** → standard API-error / network-error mapping.
+
+**Recommended strategy**: per-row wiremock tests (mirroring the VP-578-004 error-taxonomy
+discipline) asserting the exact exit code, error variant, and the load-bearing message substring for
+rows 1–2, and standard-mapping parity for rows 3–4 — each run against BOTH call sites (edit + create)
+to pin the shared-function guarantee.
+
+**Target**: the `get_or_fetch_workspace_id` call sites in `field_resolve.rs`/`create.rs`;
+integration in `tests/issue_field_hint_kinds.rs` (new) + `tests/issue_create.rs`. **F6**: covered by
+`field_resolve.rs` glob add (the client function `get_or_fetch_workspace_id` in
+`src/api/assets/workspace.rs` is a read-only reused contract, not a new pure function this cycle).
+
+---
+
+### VP-580-010 — M2 post-arity project resolution *(NEW inline VP — F2 adversary convergence, D1)*
+
+**Applies to**: BC-X.14.001 (M2 `--type` createmeta path). **Genuinely NEW inline VP** — ADR-0019 §
+Amendment (2026-08-26) D1 restores M2/create-path parity: the "is a project resolvable?" question is
+moved OUT of the pure arity function (`resolve_field_context`, now narrowed to 3 booleans — see
+VP-580-006) into a distinct, post-arity resolution step executed only on the M2 branch. Added to the
+BC-X.14.001 body this pass (back-fills the PO's D1 placeholder, §5). Structurally mirrors BC-3.3.010's
+create-path flag-or-default project resolution — the SAME `Config`/`ProfileConfig` accessor, no new
+resolution mechanism.
+
+**Anchor**: a separate, SIBLING pure function `resolve_m2_project(cli_project: Option<&str>, config:
+&Config) -> Option<String>` (pure core — deterministic given explicit args, reads only already-loaded
+in-process `Config` state, no I/O; same purity class as `config::validate_profile_name`). Invoked
+ONLY after `resolve_field_context` selects M2.
+
+**Property statement** — over `{--project flag present, profile/config default present, neither} ×
+M2-only`:
+1. **Flag present → Ok.** An explicit `--project <KEY>` resolves M2's project to that value (flag
+   wins), regardless of whether a default also exists.
+2. **Default present, no flag → Ok.** No `--project` flag but an active profile/config default
+   project configured → M2 resolves to the default (parity with BC-3.3.010's create path and M3's
+   optional-companion fallback). This is the case the pre-D1 4-bool arity function wrongly rejected.
+3. **Neither → exit 64, PRE-HTTP.** No flag AND no default → the incomplete-M2 exit-64 error (the
+   error MESSAGE is unchanged from the pre-D1 spec; only the TRIGGER widens from "no flag" to "no
+   flag AND no default"). No HTTP call is made — this resolution reads only in-process `Config`, so
+   it stays inside BC-X.14.001's "arity guard evaluated before any HTTP call" contract.
+4. **Purity / totality.** `resolve_m2_project` never panics and performs no I/O; it returns
+   `Some(project)` or `None` deterministically from its two explicit arguments.
+
+**Recommended strategy**: unit + proptest on the pure `resolve_m2_project` covering the three
+`{flag, default, neither}` cases (a small `Config` fixture with / without a default); plus one
+wiremock integration test asserting the "neither present" M2 invocation exits 64 with **zero** HTTP
+requests fired (the pre-HTTP guarantee cannot be shown by the pure test alone). Reuse the fixture /
+assertion shape of whatever existing VP covers BC-3.3.010's create-path flag-or-default project
+resolution rather than inventing a new pattern.
+
+**Target**: `resolve_m2_project` in the new `jr field options` handler (`src/cli/field.rs`);
+unit/proptest co-located; integration in `tests/field_options.rs` (new). **F6**: add handler file to
+`examine_globs`.
+
+---
+
+### VP-580-011 — `--value` + graceful-degrade interaction *(NEW inline VP — F2 adversary convergence, B-LOW)*
+
+**Applies to**: BC-X.14.002 (`--value` filter) × BC-X.14.004 (graceful degrade). **Genuinely NEW
+inline VP** — the F2 B-LOW pass documented that the two paths compose; it had no VP. Added to the
+BC-X.14.002 body this pass (back-fills the PO's B-LOW placeholder, §5). The companion to VP-580-005
+(graceful degrade) and VP-580-007 (`--value` filter correctness).
+
+**Property statement**:
+1. **Degrade hint fires regardless of `--value`.** For a field with NO enumerable
+   `allowedValues`/`validValues`, the BC-X.14.004 graceful-degrade hint STILL fires on stderr when
+   `--value` is also supplied — because the filter applies AFTER the full fetch, and a
+   zero-enumerable-options field produces an empty `Vec<FieldOption>` BEFORE the filter ever runs, so
+   `--value`'s presence or absence is immaterial to whether the degrade hint fires.
+2. **stdout stays `[]` / empty, exit 0.** `--output json` → `stdout` is `[]` either way (EC-X.14.004-2);
+   table mode → empty table; exit code 0 (a valid success, not an error) — identical to the
+   no-`--value` case. The degrade hint's stderr text is unaffected by `--value`.
+3. **Ordering invariant (the load-bearing part).** fetch → normalize (empty) → degrade-hint decision
+   → filter — the filter is downstream of and cannot suppress the degrade path.
+
+**Recommended strategy**: a wiremock integration test in `tests/field_options.rs` with a
+zero-enumerable-options createmeta/editmeta/requesttype-fields fixture, run twice (with and without
+`--value <substr>`), asserting IDENTICAL outcomes — exit 0, `stdout == "[]"` (JSON) / empty table,
+and the degrade hint present on stderr in both runs. A unit assertion on the pure pipeline that the
+`filter_options` step is applied to an already-empty `Vec` (the degrade decision precedes it).
+
+**Target**: the enumerate→degrade→filter pipeline in the new `jr field options` handler
+(`src/cli/field.rs`); integration in `tests/field_options.rs` (new). **F6**: add handler file to
+`examine_globs`.
+
+---
+
 ## 3. Coverage of the task's five mandated properties
 
 | Task item | VP(s) (canonical) | Covered |
 |---|---|---|
 | 1. Hint-splitter multibyte safety (BC-3.4.026) | VP-578-005 | ✅ no-panic + clean-exit-64 + VALUE byte round-trip + bare-form invariance |
 | 2. Value-kind mapping correctness (BC-3.4.027–031) | VP-578-007/008/009/010/011 (correctness) + VP-578-013 (malformed → exit 64, one error/invocation) | ✅ per-kind JSON shape + cascading + `--priority` parity + malformed catalog |
-| 3. Context mutual-exclusion (BC-X.14.001) | **VP-580-006** (new) | ✅ exactly-one MODE-SELECTOR `{--type,--request-type,--issue}` accepted; 0/2+ selectors and `--type` sans `--project` → exit 64; `--project` companion (M2 requires it, M3 optional, `--project --request-type` valid); pre-HTTP |
+| 3. Context mutual-exclusion (BC-X.14.001) | **VP-580-006** (arity) + **VP-580-010** (M2 project) | ✅ **[D1-updated]** `resolve_field_context` is now 3-bool (`has_type, has_request_type, has_issue`) — exactly-one MODE-SELECTOR accepted, 0/2+ → exit 64, pre-HTTP; `has_project` axis DROPPED. M2's project requirement is now the SEPARATE post-arity `resolve_m2_project` (VP-580-010): flag OR profile/config default → Ok, NEITHER → exit 64 pre-HTTP. `--project --request-type` valid M3 (VP-580-009). |
 | 4. Graceful-degrade invariant (BC-X.14.004) | VP-580-005 | ✅ empty/absent options → exit 0; no panic on untyped `allowedValues.items` |
 | 5. Assets-ref composer safety | VP-578-012 (safety) + VP-578-011 (correctness) | ✅ malformed `W:Y` → clean error, never malformed JSON body (sanitize-proptest parallel) |
 
 Plus the two additional gap VPs F5 pass-1 required beyond the five above: **VP-580-007**
 (`--value` filter, BC-X.14.002) and **VP-580-008** (output shape, BC-X.14.003).
+
+**F2 adversary-convergence (2026-08-26) additions** beyond the F5-pass-1 surface: **VP-578-021**
+(D2 — create-path Gate-B collision guard, BC-3.3.010), **VP-578-022** (B-LOW — `:asset` cold-cache
+workspace-discovery failure taxonomy, BC-3.4.030), **VP-580-010** (D1 — M2 `resolve_m2_project`,
+BC-X.14.001), **VP-580-011** (B-LOW — `--value` + graceful-degrade interaction, BC-X.14.002), plus
+the D3 no-panic call-site `>`-split proptest folded into **VP-578-008** (no new id). Task item 4
+(B-F1) confirmed: **no** VP asserts M3 (`--request-type`) field-enumeration pagination — VP-578-020
+covers only the two M2 createmeta endpoints (FIELDS + ISSUE-TYPES); `get_request_type_fields` is a
+single non-paginated GET, so nothing to correct or remove.
 
 ---
 
@@ -799,16 +1017,25 @@ Concretely, the state-manager / F4 implementer should ensure `.cargo/mutants.tom
 covers:
 
 - `src/cli/issue/create.rs` — **already present** (`parse_field_kv` hint extension,
-  VP-578-005/013).
+  VP-578-005/013; the platform-create `>`-split site's D3 no-panic proptest, VP-578-008;
+  the create-path Gate-B guard call site, VP-578-021).
 - `src/cli/issue/field_resolve.rs` — **ADD** (the value-kind emission dispatch, the cascading
-  composer, the `:asset` composer — VP-578-007/008/009/010/011/012/013). This file is core to
+  composer with its D3 `str::split_once('>')` split, the `:asset` composer, and the new **shared
+  pure `detect_flag_field_overlap`** — VP-578-007/008/009/010/011/012/013/021). This file is core to
   #578 and is **not currently** in the glob list — a key F6 addition of this cycle.
 - The new `jr field options` handler file (`src/cli/field.rs` if F4 creates one) — **ADD at
   file-creation time**, per the S-576-1 / S-577-1 precedent ("new CLI handler file → add to
   mutants.toml at creation"). Covers the pure `normalize_from_allowed_values` /
   `normalize_from_valid_values` normalizers (VP-580-005), the
-  context-arity guard (VP-580-006), the `filter_options` filter (VP-580-007), and the
+  context-arity guard `resolve_field_context` (VP-580-006, now 3-bool per D1), the **new pure
+  `resolve_m2_project`** M2 project resolver (VP-580-010, D1), the `filter_options` filter
+  (VP-580-007) plus its graceful-degrade-ordering companion (VP-580-011), and the
   render/print shaping (VP-580-008) if any lives there.
+
+Note: VP-578-022's `:asset` cold-cache failure taxonomy targets the reused, read-only
+`src/api/assets/workspace.rs::get_or_fetch_workspace_id` client function (BC-4.2.001) — not a NEW
+pure function this cycle — so it is verified by per-row wiremock (§2 VP-578-022), not by a new
+mutation-glob addition.
 
 `tests/mutants_glob_existence.rs` (the always-run guard) will fail loudly if a glob is added
 for a file that doesn't yet exist, so the glob add must land in the **same** commit as the
@@ -822,18 +1049,19 @@ cleared this pass (§5).
 ## 5. Index / registry + BC-body actions
 
 **Registry**: None. No VP-NNN registry or verification ARCH-INDEX exists to update (§0). The
-fourteen core VP guarantees (§1) are realized as **new** inline `proptest!`/unit/integration tests
+eighteen core VP guarantees (§1) are realized as **new** inline `proptest!`/unit/integration tests
 at the cited locations in F4, and as `examine_globs` additions in F6; the remaining eight declared
-#578 inline VPs (§1.1 — VP-578-001..004, 017..020) are realized by reuse of the VP-396-009
-edit-path realizations transplanted to the create path, by the DEC-307 reversal's rewritten
-holdout scenarios + `create.rs` guard-removal regression tests, and (VP-578-020) by new two-page
-createmeta wiremock tests (**both** the FIELDS and ISSUE-TYPES createmeta endpoints) in
-`tests/issue_create.rs`. The full declared inline inventory
-this delta touches is **twenty-five** VPs (twenty #578 + VP-580-005..009). If the state-manager
-later stands up the `S-PG-VP-REGISTRY-1` registry, these are its seed rows for the field-dx cycle.
+#578 inline VPs realized outside the core surface (§1.1 — VP-578-001..004, 017..020) are realized by
+reuse of the VP-396-009 edit-path realizations transplanted to the create path, by the DEC-307
+reversal's rewritten holdout scenarios + `create.rs` guard-removal regression tests, and (VP-578-020)
+by new two-page createmeta wiremock tests (**both** the FIELDS and ISSUE-TYPES createmeta endpoints)
+in `tests/issue_create.rs`. The full declared inline inventory
+this delta touches is **twenty-nine** VPs (twenty-two #578 [VP-578-001..022] + VP-580-005..011). If
+the state-manager later stands up the `S-PG-VP-REGISTRY-1` registry, these are its seed rows for the
+field-dx cycle.
 
-**BC-body edits made this pass** (F5/F6 pass-1 fixes — the only durable home for these VP ids,
-given the inline convention):
+**BC-body edits made in the F5/F6 pass-1 fixes** (the only durable home for these VP ids, given the
+inline convention):
 - `bc-3-issue-write.md` BC-3.4.027 → **VP-578-008 de-PROVISIONALized** (delimiter CONFIRMED per
   ADR-0019 §3). *(The cascading BEHAVIOR prose in the BC-3.4.027 body — description, EC-4 — is
   de-PROVISIONALized by the product-owner in parallel; this pass touched only the VP-578-008
@@ -843,13 +1071,37 @@ given the inline convention):
   `--value` filter; the BC previously had none).
 - `cross-cutting.md` BC-X.14.003 → **VP-580-008 added** (a new Verification Properties section —
   output shape; the BC previously had none).
-- `bc-3-issue-write.md` BC-3.3.010 → **VP-578-020 added** inline (adversary pass-28 F-1 — createmeta-family
+- `bc-3-issue-write.md` BC-3.3.010 → **VP-578-020 added** inline (createmeta-family
   offset-pagination: a `--field` target on the FIELDS createmeta page ≥2 **AND** a `--type` entry on the
-  ISSUE-TYPES createmeta page ≥2 each resolve, not dropped). *(The VP-578-020 line and the reworded
-  "paginates internally, at-most-once-per-invocation" createmeta postconditions — now covering both the
-  `get_createmeta_fields` and `get_issue_types_for_project` endpoints — are added to the BC-3.3.010 body by
+  ISSUE-TYPES createmeta page ≥2 each resolve, not dropped). *(Added to the BC-3.3.010 body by
   the product-owner in parallel; this verification-delta only records the new VP id and its realization
-  pointer — it does not touch any BC file.)*
+  pointer.)*
 
-These four BC-body edits, plus this reconciled delta, leave **exactly one authoritative VP id per
-guarantee** and **zero PROVISIONAL markers** across the field-dx verification surface.
+**BC-body edits made THIS pass** (F2 adversary-convergence, 2026-08-26 — back-filling the four
+"flagged for the verifier to assign a VP id" placeholder markers the product-owner left, plus the D3
+extension; these are the ONLY edits this verifier made to the two BC files, per the task's TARGETED
+write scope):
+- `bc-3-issue-write.md` BC-3.3.010 (Verification Properties) → **VP-578-021 assigned** to the D2
+  create-path Gate-B collision-guard property (replaced the D2 placeholder marker; PO body text
+  otherwise untouched).
+- `bc-3-issue-write.md` BC-3.4.030 (Verification Properties) → **VP-578-022 assigned** to the B-LOW
+  `:asset` cold-cache workspace-discovery failure-taxonomy property (replaced the B-LOW placeholder
+  marker; PO body text otherwise untouched).
+- `cross-cutting.md` BC-X.14.001 (VP-580-006 body) → **VP-580-010 assigned** to the D1
+  `resolve_m2_project` sibling property (replaced the D1 placeholder marker; PO body text otherwise
+  untouched).
+- `cross-cutting.md` BC-X.14.002 (Verification Properties) → **VP-580-011 assigned** to the B-LOW
+  `--value` + graceful-degrade property (replaced the B-LOW placeholder marker; PO body text
+  otherwise untouched).
+- **D3 (no new BC-body VP-id edit):** BC-3.4.027's VP-578-008 line already carries the
+  product-owner's `[EXTENDED 2026-08-26, D3]` no-panic-proptest note; this delta realizes it as an
+  extension of VP-578-008 (§2), minting no new id. The BC files needed no edit for D3.
+
+**Task item 4 (B-F1) — verified, no edit required:** the verification delta contains **no** VP
+asserting M3 (`--request-type`) field-enumeration pagination. VP-578-020 is scoped to the two M2
+createmeta endpoints only; `get_request_type_fields` is a single non-paginated GET (flat envelope).
+Nothing to correct or remove.
+
+These edits, plus this reconciled delta, leave **exactly one authoritative VP id per
+guarantee**, **zero PROVISIONAL markers**, and **zero unfilled "assign a VP id" placeholders**
+across the field-dx verification surface.

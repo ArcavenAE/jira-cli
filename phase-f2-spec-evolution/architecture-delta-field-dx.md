@@ -5,10 +5,12 @@ producer: architect
 issue: "580,578"
 status: complete
 date: 2026-08-25
+amended: 2026-08-26
 traces_to:
   - ".factory/phase-f1-delta-analysis/delta-analysis-field-dx.md"
   - ".factory/phase-f2-spec-evolution/prd-delta-field-dx.md"
   - ".factory/research/field-dx-context-mechanism-2026-08-25.md"
+  - ".factory/specs/architecture/decisions/ADR-0019-field-dx-context-hint-shape-delimiter.md"
 ---
 
 # F2 Architecture Delta — Field DX Bundle (Issues #580, #578)
@@ -316,3 +318,95 @@ introduce one unprompted.
 - Structural precedent this delta mirrors: `.factory/phase-f2-spec-evolution/
   architecture-delta-components.md` (issues #604/605/606/608 — same delta-doc + append-to-
   living-docs pattern, same one-ADR-for-multiple-facets precedent).
+
+---
+
+## 9. Amendment (2026-08-26) — F2 Adversary Convergence: D1/D2/D3
+
+**Trigger:** F2's mandatory adversarial spec-convergence loop ran three fresh-context adversary
+passes against the frozen deltas (§0-8 above, `prd-delta-field-dx.md`,
+`verification-delta-field-dx.md`) and surfaced three defects this delta's own architecture
+decisions own the resolution of. Full decision text and rationale: ADR-0019 § Amendment
+(2026-08-26). This section is the delta-doc-level record of the same three decisions, kept in
+sync per this repo's convention that `architecture-delta-*.md` mirrors its governing ADR's
+decisions rather than merely cross-referencing them.
+
+**File updated:** `.factory/specs/architecture/decisions/ADR-0019-field-dx-context-hint-shape-delimiter.md`
+(EDITED — amendment appended, frontmatter `amended: 2026-08-26` added; §1/§2/§3's original text
+is unchanged, the three superseded passages are called out explicitly rather than rewritten in
+place, consistent with this project's ADR-0017 amendment precedent). No other `.factory/architecture/`
+living doc required a matching append for this amendment — see per-item notes below.
+
+### D1 — M2 default-project resolution parity (§2(a) above, superseded in part)
+
+**Decision:** `resolve_field_context`'s pure arity check is narrowed to
+`(has_type, has_request_type, has_issue) -> Result<Mode, ArityError>` — `has_project` is removed
+from the pure function entirely. A new, separate post-arity step (M2-only, e.g.
+`resolve_m2_project(cli_project: Option<&str>, config: &Config) -> Option<String>`) resolves the
+project as **flag OR profile/config default**, restoring parity with BC-3.3.010's create-path
+project resolution and M3's optional-`--project`-companion fallback. `--type`-without-a-resolvable-
+project (no flag, no default) is still the incomplete-M2 exit-64 error — only the trigger condition
+widens (from "no flag" to "no flag AND no default").
+
+**Dependency-graph / purity-table impact (§3/§4 above):** no new edge — `resolve_m2_project` reads
+already-loaded `Config` state passed as an explicit argument (no new dependency on `SS-0x` or any
+I/O module); it is pure core, same class as `config::validate_profile_name`, and is folded into
+the existing `cli::field::handle*`-adjacent pure-function row set in §4's table (no new table row
+needed beyond noting `resolve_m2_project` alongside `resolve_field_context` as a second, sibling
+pure function — both `[PLANNED]`, `cli::field` module).
+
+**Not touched:** `component-graph.md`, `system-overview.md` — this is a signature refinement
+inside an already-`[PLANNED]` function, not a new module or dependency edge; nothing in either
+living doc references `has_project` today (both predate this bundle's implementation).
+
+### D2 — create-path collision precedence (new architectural element)
+
+**Decision:** extend Gate B (BC-3.4.017's collision guard) to the create path via one shared,
+pure, extracted function — recommended name `field_resolve::detect_flag_field_overlap` — reused
+by both `edit.rs`'s existing Gate B and a new create-path guard in `create.rs`, rather than two
+independently maintained set-intersection implementations. Outcome: `jr issue create --priority
+Medium --field priority:name=Medium` (any argv order, any hint kind) → exit 64, no HTTP, symmetric
+with the edit path's EC-3.4.017-16.
+
+**Dependency-graph delta (extends §3 above):**
+```
+ADDED — new shared pure function (field_resolve.rs), reused by create.rs:
+  cli::issue::create → cli::issue::field_resolve (L2→L2, same-layer, pure-function reuse)
+    [NEW — detect_flag_field_overlap, extracted from edit.rs's existing Gate B logic;
+     edit.rs's own Gate B call site is refactored to call the same shared function]
+```
+This is an L2→L2 edge (both `create.rs` and `field_resolve.rs` are CLI-layer modules), not a
+layer violation — no change to the Layer Isolation Summary's constraints, and no new cross-layer
+edge is introduced by this addition.
+
+**Purity-table delta (extends §4 above):** add one row —
+
+| Module | Classification | Rationale |
+|---|---|---|
+| `cli::issue::field_resolve::detect_flag_field_overlap` | **Pure core (function)** | Set-intersection over an already-parsed `HashMap<String, FieldValueSpec>` and a caller-supplied governed-field-key set; no I/O. Shared by both `edit.rs`'s Gate B and the new create-path guard — same function-level purity carve-out class as `cli::resolve_effective_limit`/`config::validate_profile_name`. |
+
+**BC-body propagation flagged, not made here (product-owner scope):** BC-3.4.029 EC-3.4.029-2 and
+BC-3.4.014's "no Gate B on create" text both require correction — see ADR-0019 § Amendment
+(2026-08-26), D2, "Downstream implication" paragraph for the exact passages to rewrite.
+
+### D3 — cascading `>`-split multibyte safety (new obligation on an existing, already-planned split site)
+
+**Decision:** every call site performing the `Parent>Child` cascading split (`field_resolve.rs`
+edit path; the analogous point in `create.rs`'s platform-create path, BC-3.3.010) MUST implement
+it via `str::split_once('>')` (never a char-index-based or fixed-byte-offset scheme) — closing the
+FIX-F6-LRE-1 panic class (commit `37850b26`, #734) at a new split site this bundle itself
+introduces. No dependency-graph or purity-table change: this is an implementation-technique
+obligation on functions §3/§4 above already classify (the `:option` cascading composition inside
+`field_resolve.rs`/`create.rs`'s L2 handlers), not a new module, function, or edge.
+
+**Verification propagation flagged, not made here (verifier scope):** a no-panic proptest over
+arbitrary UTF-8 input, one per call site, mirroring `validate_duration`'s FIX-F6-LRE-1 proptest and
+the existing `parse_field_kv_proptests` precedent — extending or sibling to VP-578-008.
+
+### Files NOT touched by this amendment burst
+
+`ARCH-INDEX.md` (no new ADR row — this is an amendment to the existing ADR-0019 row, not a new
+ADR), `.factory/architecture/adr-index.md` (same reasoning), `module-criticality.md` (still no
+implementation module to classify — unchanged from §1 above), `risk-register.md` (no new
+HIGH-impact R-NNN risk introduced by any of D1/D2/D3 — these are correctness/consistency fixes to
+already-planned behavior, not new risk surface).

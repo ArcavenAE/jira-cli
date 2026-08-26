@@ -3,9 +3,34 @@ context: bc-x
 title: "Cross-cutting (HTTP client, Runtime, Users, Teams, Worklogs, Projects, Queues, JQL, Partial-match, JSM Request Types, CI Guards)"
 total_bcs: 155   # cumulative claim (incl. range-collapsed); definitional_count below is individually-bodied headings
 definitional_count: 89   # count of `#### BC-` headings in this file
-last_updated: 2026-08-25
+last_updated: 2026-08-26
 source_pass: 3
 trace: |
+  - F2 adversary-convergence amendments (2026-08-26, cycle field-dx, D1 + A-M2/B-F1/A-LOW-2 + LOWs
+    — no BC added/removed/retired, no count change, still 89 individually-bodied / 155 cumulative
+    in this file): propagates the architect's D1 decision (ADR-0019 § Amendment 2026-08-26) into
+    BC-X.14.001 and fixes pure-spec-text defects the F2 adversary-convergence loop surfaced. **D1**
+    (M2 default-project resolution parity): the "§BC-X.14 context-mechanism decision" section
+    intro, BC-X.14.001's Preconditions/Invariant 1/VP-580-006/Trace, and BC-X.14.004's error-
+    taxonomy row + precedence paragraph are all rewritten so the pure mode-selector arity check is
+    a 3-boolean function (`has_type`/`has_request_type`/`has_issue` only — `has_project` removed
+    entirely) and a NEW sibling paragraph ("M2 project resolution step") documents the separate,
+    post-arity `resolve_m2_project` step that resolves M2's project as flag-OR-profile-default,
+    restoring parity with BC-3.3.010/M3. **A-M2**: BC-X.14.002's bare-invocation example corrected
+    to include a mode selector (`--issue FOO-1`), clarifying "bare" means absence of `--value`, not
+    absence of a context flag. **B-F1**: BC-X.14.001's Postconditions M3-pagination claim corrected
+    — `get_request_type_fields` is a single non-paginated GET (flat `RequestTypeFieldsResponse`
+    envelope, no `isLastPage`), not a reuse of `list_request_types`'s pagination as previously
+    claimed; the M2 createmeta/issuetypes pagination claims (both correct) are unchanged.
+    **A-LOW-2**: the `--issue <KEY>` Precondition parenthetical reworded from "(no `--project`
+    companion)" to "(`--project` not consulted)" for consistency with VP-580-006. **B-LOW
+    (`--value`)**: BC-X.14.002 gains `--value ""` identity-filter documentation and a
+    graceful-degrade interaction note (degrade hint still fires with `--value` present). **B-LOW
+    (M3 reverse name-resolution)**: BC-X.14.001 gains EC-X.14.001-6, the reverse of EC-X.14.001-5
+    — a field enumerable via M3's `validValues` but not name-resolvable via the global field list.
+    Full rationale, D2/D3's `bc-3-issue-write.md` counterparts, and C-M1's DEC renumber:
+    `.factory/phase-f2-spec-evolution/prd-delta-field-dx.md` "2026-08-26 F2 adversary-convergence
+    amendments" section.
   - Adversary pass-28 fix, F-1 (2026-08-25, issue #580, MEDIUM): BC-X.14.001's Postconditions
     bullet claimed "exactly one of the three enumeration HTTP calls (createmeta /
     requesttype-fields / editmeta) fires" — this contradicted ADR-0019 §1, which specifies the M2
@@ -2053,16 +2078,44 @@ settling the F1 open design fork; ARITY MODEL CORRECTED per ADR-0019 §1, advers
 `--type`, `--request-type`, `--issue` — none or multiple → exit 64 before any HTTP.
 **`--project` is NEVER a mode selector — it is a companion flag** whose role (required,
 optional, or absent) is determined by which mode selector is present:
-- **PRIMARY, platform fields**: `--type <T>` (REQUIRES `--project <P>` as its companion) →
-  `GET /rest/api/3/issue/createmeta/{projectIdOrKey}/issuetypes/{issueTypeId}` (M2). Chosen
-  PRIMARY because it needs no pre-existing issue (closes #580's "before creating" motivating
-  gap) and its only documented project permission is Create Issues — no admin gate. **Note the
+- **PRIMARY, platform fields**: `--type <T>` (requires a RESOLVABLE PROJECT as its companion —
+  an explicit `--project <P>` flag OR the active profile/config default; **[CORRECTED
+  2026-08-26, ADR-0019 § Amendment D1]** see "D1" note below — the flag is NOT strictly
+  required, only a resolvable project is) → `GET
+  /rest/api/3/issue/createmeta/{projectIdOrKey}/issuetypes/{issueTypeId}` (M2). Chosen PRIMARY
+  because it needs no pre-existing issue (closes #580's "before creating" motivating gap) and
+  its only documented project permission is Create Issues — no admin gate. **Note the
   correction below (adversary pass-25 HIGH, Option A):** `--project` present WITHOUT `--type`
   AND without `--request-type` AND without `--issue` (i.e. a bare `--project` with no mode
   selector at all) is the ZERO-mode-selector error, NOT the incomplete-M2 error — `--project`
   is never itself a mode selector, so that invocation still has zero of the three present. The
-  incomplete-M2 error fires only when `--type` IS present but its `--project` companion is
-  missing. See BC-X.14.004 for the full taxonomy and precedence rules.
+  incomplete-M2 error fires only when `--type` IS present AND no project is resolvable at
+  all — neither an explicit `--project` flag NOR a profile/config default. See BC-X.14.004 for
+  the full taxonomy and precedence rules.
+
+**[CORRECTED 2026-08-26, ADR-0019 § Amendment (2026-08-26) D1 — M2 default-project resolution
+parity]**: an earlier revision of this decision pinned the mode-selector arity CHECK itself to a
+4-boolean function `(has_type, has_request_type, has_issue, has_project)`, requiring
+`has_project` (the literal `--project` flag) for M2 — which meant `jr field options FOO --type
+Bug` exited 64 even when the active profile had a default project configured, contradicting
+BC-3.3.010 (create-path `--field` resolves project as "flag OR profile default") and M3's own
+optional-`--project`-companion fallback. **Fix: the "is a project resolvable at all?" question
+moves OUT of the pure arity function into a separate, post-arity, M2-only resolution step.** The
+pure arity check (`resolve_field_context`) is narrowed to a 3-boolean signature —
+`(has_type, has_request_type, has_issue) -> Result<Mode, ArityError>` — and no longer takes
+`has_project` as an argument at all; it is solely about mode-selector COMBINATION validity. A
+new function (e.g. `resolve_m2_project(cli_project: Option<&str>, config: &Config) ->
+Option<String>`), invoked only after Step 1 selects M2, resolves the project as: the explicit
+`--project` flag value, OR the active profile/config default — the SAME source BC-3.3.010's
+create-path project resolution and M3's optional-companion fallback already read; no new
+resolution mechanism. If neither is available, M2 still fails with the same incomplete-M2
+exit-64 error (message unchanged) — only the TRIGGER CONDITION widens, from "no flag" to "no
+flag AND no default." This step reads only already-loaded in-process `Config` state (no HTTP),
+so it stays inside the existing "arity guard evaluated before any HTTP call" contract while
+being a distinct, later function from the pure arity check. Both `resolve_field_context` (Step
+1) and `resolve_m2_project` (Step 2) are pure core — same purity class as
+`config::validate_profile_name` — they are two sibling pure functions, not one widened function.
+See BC-X.14.001 Invariant 1 / VP-580-006 below for the propagated text.
 - **PRIMARY, JSM request-type fields**: `--request-type <NAME|ID>` (`--project <P>` is an
   OPTIONAL companion) → reuses `jr`'s existing
   `GET /rest/servicedeskapi/servicedesk/{sd}/requesttype/{rt}/field` call and 7-day cache (M3,
@@ -2105,6 +2158,21 @@ BC-3.4.015 Step 2/2b — shared cache, shared function, no new cache family) fol
 of three MODE-SELECTOR flags — `--type`, `--request-type`, `--issue` — selects the enumeration
 mode; `--project` is a companion flag, never itself a mode selector (see §BC-X.14
 context-mechanism decision above, and ADR-0019 §1).
+
+**M2 (`--type <T>`) project resolution step [ADDED 2026-08-26, ADR-0019 § Amendment D1]**: the
+mode-selector arity check (Invariant 1) is a pure function over `(has_type, has_request_type,
+has_issue)` ONLY — `--project`'s presence plays no role in mode arity at all. Once M2 is
+selected, a SEPARATE, non-HTTP resolution step determines the project to use: an explicit
+`--project <P>` flag value, OR the active profile/config default project — the SAME source
+BC-3.3.010's create-path project resolution and M3's optional-`--project`-companion fallback
+already read (no new resolution mechanism, no new `Config`/`ProfileConfig` accessor). If neither
+is available, M2 fails with the incomplete-M2 exit-64 error (message UNCHANGED; only the trigger
+condition widens from "no flag" to "no flag AND no default"). This resolution step runs BEFORE
+the issue-type name→id resolution below (which needs a resolved project) and BEFORE
+`get_createmeta_fields`, and stays inside the existing "arity guard evaluated before any HTTP
+call" contract — it reads only already-loaded in-process `Config` state, no HTTP. It is a
+distinct, sibling pure function to the arity check (both are pure core, same class as
+`config::validate_profile_name`), not a widened arity check.
 
 **M2 (`--type <T> --project <P>`) issue-type name→id resolution step**: `get_createmeta_fields`
 (the shared M2 enumeration function, ADR-0019 §1) needs a NUMERIC `issueTypeId`, but `--type`
@@ -2164,8 +2232,13 @@ CONFIRMed read shape here does not imply a verified write shape there.
 
 **Preconditions**:
 - `jr field options <field>` invoked with EXACTLY ONE of the three MODE-SELECTOR flags —
-  `--type` (with its REQUIRED `--project <P>` companion), `--request-type <RT>` (with an
-  OPTIONAL `--project <P>` companion), or `--issue <KEY>` (no `--project` companion).
+  `--type` (requiring a RESOLVABLE PROJECT as its companion — an explicit `--project <P>` flag
+  OR the active profile/config default; **[CORRECTED 2026-08-26, ADR-0019 § Amendment D1]** see
+  the "M2 project resolution step" paragraph above — the flag itself is not strictly required,
+  only a resolvable project is), `--request-type <RT>` (with an OPTIONAL `--project <P>`
+  companion), or `--issue <KEY>` (`--project` not consulted — **[REWORDED 2026-08-26, A-LOW-2]**
+  a stray `--project` alongside `--issue` is harmlessly ignored, not rejected; this is a
+  "not consulted" statement, not a prohibition).
 - `<field>` resolves to exactly one field (via `customfield_NNNNN` bypass or unambiguous
   `partial_match`).
 
@@ -2174,14 +2247,22 @@ CONFIRMed read shape here does not imply a verified write shape there.
 - `GET /rest/api/3/field` is NOT called when `<field>` is a `customfield_NNNNN` literal, and
   NOT called when a warm `fields.json` cache exists for the active profile (same cache
   contract as BC-3.4.015 invariants 6-8).
-- **[CORRECTED, adversary pass-28 F-1]** Exactly one of the three enumeration MECHANISMS
-  (createmeta / requesttype-fields / editmeta) fires, per the selected mode selector — "one
-  mechanism" means one logical enumeration, NOT necessarily one HTTP call. The M2 (createmeta,
-  `get_createmeta_fields`) and M3 (requesttype-fields) mechanisms each PAGINATE INTERNALLY until
-  all pages are collected, so either may issue MULTIPLE `GET`s for a single invocation: M2 is
-  OFFSET-paginated (`startAt`/`maxResults`/`total`, per ADR-0019 §1); M3 reuses the EXISTING `jr
-  requesttype fields` pagination (`isLastPage`-style, `src/api/jsm/request_types.rs`), unchanged
-  by this BC. M1 (editmeta) remains genuinely a single `GET`. Plus — on the M2 (`--type`) path
+- **[CORRECTED, adversary pass-28 F-1; M3 claim corrected, F2 adversary-convergence pass, B-F1]**
+  Exactly one of the three enumeration MECHANISMS (createmeta / requesttype-fields / editmeta)
+  fires, per the selected mode selector — "one mechanism" means one logical enumeration, NOT
+  necessarily one HTTP call. The M2 (createmeta, `get_createmeta_fields`) mechanism PAGINATES
+  INTERNALLY until all pages are collected (OFFSET-paginated, `startAt`/`maxResults`/`total`, per
+  ADR-0019 §1), so it may issue MULTIPLE `GET`s for a single invocation. **The M3
+  (requesttype-fields) mechanism is a SINGLE, non-paginated `GET`**:
+  `src/api/jsm/request_types.rs::get_request_type_fields` returns a flat envelope
+  (`RequestTypeFieldsResponse { can_raise_on_behalf_of, can_add_request_participants,
+  request_type_fields: Vec<...> }`) with NO `size`/`start`/`limit`/`isLastPage`/`_links.next`
+  fields — it is a DIFFERENT function from the `isLastPage`-style-paginated `list_request_types`
+  (which lists request TYPES, not one request type's FIELDS); the earlier claim that M3 "reuses
+  the EXISTING `jr requesttype fields` pagination" conflated the two. If a future JSM
+  tenant/API version returns a paginated field envelope this claim would need revisiting, but the
+  CURRENT truth, as of this cycle, is: one GET, no pagination. M1 (editmeta) remains genuinely a
+  single `GET`. Plus — on the M2 (`--type`) path
   only — exactly one LOGICAL `get_issue_types_for_project` issue-type name→id resolution (at most
   once per invocation, per BC-3.3.010's own Postconditions), OFFSET-PAGINATED INTERNALLY
   (`startAt`/`maxResults`/`total`) — one or more GETs until all issue-type pages are collected, so
@@ -2203,6 +2284,14 @@ CONFIRMed read shape here does not imply a verified write shape there.
   paths." — this literally described M2/M3 as single HTTP calls, contradicting ADR-0019 §1's
   offset-pagination spec for `get_createmeta_fields` and the pre-existing pagination of `jr
   requesttype fields`.
+  **[Pre-B-F1 wording, superseded, retained for audit trail]:** "M2 (createmeta,
+  `get_createmeta_fields`) and M3 (requesttype-fields) mechanisms each PAGINATE INTERNALLY until
+  all pages are collected, so either may issue MULTIPLE `GET`s for a single invocation: M2 is
+  OFFSET-paginated (`startAt`/`maxResults`/`total`, per ADR-0019 §1); M3 reuses the EXISTING `jr
+  requesttype fields` pagination (`isLastPage`-style, `src/api/jsm/request_types.rs`), unchanged
+  by this BC." — this M3 half is FACTUALLY FALSE: `get_request_type_fields` is a single
+  non-paginated GET; the cited `isLastPage` loop belongs to the different function
+  `list_request_types` (lists request TYPES, not one request type's FIELDS).
 
 **Invariants**:
 1. **Mode-selector mutual exclusion is enforced BEFORE any HTTP call.** Exactly one of the three
@@ -2210,8 +2299,13 @@ CONFIRMed read shape here does not imply a verified write shape there.
    NEVER counted as a mode selector. Zero mode selectors → exit 64 ("specify exactly one of
    --type, --request-type, --issue"). Two OR more mode selectors specified simultaneously (e.g.,
    `--issue KEY --request-type RT`) → exit 64, same message, listing the conflicting flags.
-   `--type` present without its required `--project` companion → exit 64, the incomplete-M2
-   error. A bare `--project` with no mode selector at all is a ZERO-mode-selector invocation
+   `--type` present with NO resolvable project — neither an explicit `--project` flag NOR a
+   profile/config default — → exit 64, the incomplete-M2 error. **[CORRECTED 2026-08-26,
+   ADR-0019 § Amendment D1]**: the pure mode-selector arity check itself (`resolve_field_context`)
+   is a function of `has_type`/`has_request_type`/`has_issue` ONLY and does not evaluate
+   `--project` or project-resolvability at all — project resolvability is a separate, post-arity,
+   M2-only step (see the "M2 project resolution step" paragraph above and VP-580-006 below). A
+   bare `--project` with no mode selector at all is a ZERO-mode-selector invocation
    (`--project` is never counted as a mode selector), so it lands in the zero-mode-selector row
    above, NOT the incomplete-M2 row — the two conditions are distinct and must not be conflated.
    `--request-type` WITH
@@ -2243,6 +2337,18 @@ CONFIRMed read shape here does not imply a verified write shape there.
   BC-X.14.004's error taxonomy for the per-context message shape (mirrors BC-3.3.010
   EC-3.3.010-2's "not on the Create screen" distinction between global existence and
   screen-membership).
+- EC-X.14.001-6 **[ADDED 2026-08-26, F2 adversary-convergence pass, B-LOW — the REVERSE of
+  EC-X.14.001-5]**: on the M3 (`--request-type`) path specifically, a field IS enumerable in the
+  resolved request type's `validValues` (i.e. present in the selected context's field set) but is
+  NOT surfaced by the global `GET /rest/api/3/field` list under any human-readable name reachable
+  via `list_fields()`/`partial_match` — some JSM-specific request-type field configurations are
+  not mirrored 1:1 into the global field catalog. In this narrow case, `<field>` is resolvable
+  ONLY via its literal `customfield_NNNNN` id (the bypass path, BC-3.4.015 Step 1) — a human-name
+  lookup for such a field fails with the ordinary zero-matches error (EC-3.4.015-1 parallel), even
+  though the field genuinely is enumerable once addressed by id. This is a discoverability
+  limitation, not a `jr` defect: `jr field options` cannot resolve-by-name a field the global
+  field list itself does not expose a name for; the caller falls back to `jr requesttype fields
+  <RT> --output json` (which lists the request type's own field ids directly) to discover the id.
 
 **Verification Properties**:
 - VP-580-001: `customfield_NNNNN` literal bypass skips `list_fields()` entirely (zero HTTP for
@@ -2251,26 +2357,43 @@ CONFIRMed read shape here does not imply a verified write shape there.
   children}` shape for equivalent input fixtures — the output shape is source-independent.
 - VP-580-003: Cascading `children[]` nesting round-trips correctly from both the M1/M2
   (`allowedValues[].children[]`) and M3 (`validValues[].children`) wire shapes.
-- VP-580-006: Mode-selector mutual-exclusion (Invariant 1) — the arity decision is extracted to
-  a pure function over the context-flag booleans (`has_type`, `has_request_type`, `has_issue`,
+- VP-580-006: Mode-selector mutual-exclusion (Invariant 1). **[REWRITTEN 2026-08-26, ADR-0019 §
+  Amendment D1]** The arity decision is extracted to a pure function,
+  `resolve_field_context(has_type, has_request_type, has_issue) -> Result<Mode, ArityError>`,
+  over the three MODE-SELECTOR booleans ONLY — `has_project` is NOT a parameter of this function
+  AT ALL (narrowed from a 4-boolean signature that previously took `has_project` as a fourth
+  argument even though it was excluded from the arity comparison itself). Proptested
+  exhaustively over the 3-boolean flag-presence space: EXACTLY one of the three mode-selectors
+  present → `Ok`; zero mode-selectors, two-or-more mode-selectors → `Err` (exit 64). A SEPARATE,
+  SIBLING pure function, `resolve_m2_project(cli_project: Option<&str>, config: &Config) ->
+  Option<String>`, invoked only after `resolve_field_context` selects M2, resolves `--project`
+  as: the explicit flag value, OR the active profile/config default; `None` from this function
+  on the M2 path → `Err`, the incomplete-M2 error. M3's `--request-type && has_project` → `Ok`
+  (NOT a pairing error) and M1's `--issue` (project not consulted) are unaffected — those
+  companion rules live where they always did, outside the arity function. Enforced BEFORE any
+  HTTP call — wiremock integration asserts zero requests fired on the reject paths (pre-HTTP
+  guarantee, analogue of DEC-188's pre-flight placement). Realized as an inline `proptest!`
+  co-located with each guard fn plus `tests/field_options.rs` integration; the `--project
+  --request-type` VALID-pairing regression guard is VP-580-009; per-error-message shape is
+  covered by VP-580-004's taxonomy rows. **[NEW 2026-08-26, ADR-0019 § Amendment D1]** VP-580-010:
+  a sibling verification target for `resolve_m2_project` specifically, covering `{--project flag
+  present, profile default present, neither present} × M2-only`, structurally mirroring whatever
+  existing VP covers BC-3.3.010's flag-or-default project resolution on the create path. **Prior
+  wording (superseded, retained for audit trail):** "the arity decision is extracted to a pure
+  function over the context-flag booleans (`has_type`, `has_request_type`, `has_issue`,
   `has_project`) and proptested exhaustively over the flag-presence space. Arity is evaluated
   over the three MODE-SELECTOR booleans ONLY (`has_type`, `has_request_type`, `has_issue`) —
-  `has_project` is NEVER counted toward the mode-selector arity, per Invariant 1 / ADR-0019 §1:
-  EXACTLY one of the three mode-selectors present → `Ok`, subject to that mode's own companion
-  rule for `--project` (M2/`--type`: `has_project` REQUIRED, else `Err` — the incomplete-M2 error;
-  M3/`--request-type`: `has_project` OPTIONAL, so `has_request_type && has_project` → `Ok`, NOT a
-  pairing error; M1/`--issue`: `has_project` not consulted). Zero mode-selectors, two-or-more
-  mode-selectors, or a bare `has_project` with no mode-selector at all → `Err` (exit 64).
-  Enforced BEFORE any HTTP call — wiremock integration asserts zero requests fired on the reject
-  paths (pre-HTTP guarantee, analogue of DEC-188's pre-flight placement). Realized as an inline
-  `proptest!` co-located with the guard fn plus `tests/field_options.rs` integration; the
-  `--project --request-type` VALID-pairing regression guard is VP-580-009; per-error-message
-  shape is covered by VP-580-004's taxonomy rows.
+  `has_project` is NEVER counted toward the mode-selector arity... subject to that mode's own
+  companion rule for `--project` (M2/`--type`: `has_project` REQUIRED, else `Err`...)" — this
+  described `has_project` as a (non-counted) PARAMETER of the SAME arity function, which is no
+  longer accurate: D1 removes it from that function's signature entirely.
 
 **Trace**: issue #580; `.factory/research/field-dx-context-mechanism-2026-08-25.md` (M1/M2/M3
 ranked recommendation, per-mechanism verdict table); `.factory/research/field-dx-feasibility-2026-08-25.md`
 claims 1-4; ADR-0019 §1 (context-mechanism arity model — mode-selector/companion correction,
-adversary pass-20 M1); BC-3.4.015 (shared field-name resolution + cache contract, reused);
+adversary pass-20 M1); ADR-0019 § Amendment (2026-08-26) D1 (M2 default-project resolution
+parity — narrows the pure arity function to 3 booleans, adds the sibling `resolve_m2_project`
+post-arity step); BC-3.4.015 (shared field-name resolution + cache contract, reused);
 BC-X.12.003/005 (JSM requesttype-fields call + cache + `--project` companion resolution via
 `require_service_desk`/`get_or_fetch_project_meta`, reused); BC-X.10.001 (`partial_match`,
 reused); BC-3.3.010 Step 3 (M2 `--type` name→issueTypeId resolution pattern, mirrored);
@@ -2300,11 +2423,27 @@ does not match; a parent matching `--value` retains ALL its children (no further
 within an already-matched parent's children). No server-side filtering exists for any of the
 three enumeration mechanisms (`allowedValues`/`validValues` are always returned in full) — the
 filter is purely client-side, applied after the full fetch.
-**Inputs**: `--value <substring>` (optional; when absent, all options are printed, matching #580's
-`jr field options customfield_10084` bare invocation).
+**Inputs**: `--value <substring>` (optional — **[CORRECTED 2026-08-26, A-M2]** "bare" here means
+absence of `--value` specifically, NOT absence of a mode-selector context flag, which remains
+MANDATORY per BC-X.14.001 Invariant 1 regardless of whether `--value` is supplied; when
+`--value` is absent, all options are printed, e.g. `jr field options customfield_10084 --issue
+FOO-1` with no `--value` — a full, valid invocation still requires one of `--type`,
+`--request-type`, or `--issue`). **[ADDED 2026-08-26, B-LOW]** `--value ""` (an explicit empty
+string) is the IDENTITY filter — every label/id contains the empty substring, so it matches
+everything, identical output to `--value` being absent entirely. This is a reachable scripted
+invocation (e.g., a caller building the flag programmatically from a possibly-empty variable)
+distinct from omitting the flag, and is documented here so it is not mistaken for a "match
+nothing" filter.
 **Outputs/Effects**: Filtered `Vec<FieldOption>`; an empty result (zero matches) is a valid
 success (exit 0, empty table / `[]` JSON) — NOT an error, consistent with `jr`'s existing
-empty-result convention (e.g., BC-X.12.002's `--search` empty-result behavior).
+empty-result convention (e.g., BC-X.12.002's `--search` empty-result behavior). **[ADDED
+2026-08-26, B-LOW]** `--value`'s interaction with BC-X.14.004's graceful-degrade case (a field
+with no enumerable `allowedValues`/`validValues` at all): the graceful-degrade hint STILL fires
+when `--value` is also present — the filter applies AFTER the full fetch, and a field with zero
+enumerable options produces an empty `Vec<FieldOption>` before the filter ever runs, so
+`--value`'s presence or absence is immaterial to whether the degrade hint fires. `stdout` stays
+`[]` in `--output json` mode either way (EC-X.14.004-2); the degrade hint's stderr text is
+unaffected by `--value`.
 **Errors**: None specific to this flag — filtering never fails; it can only narrow to zero.
 
 **Verification Properties**:
@@ -2315,11 +2454,16 @@ empty-result convention (e.g., BC-X.12.002's `--search` empty-result behavior).
   the parent's own `label`/`id` does not match; (c) a parent that itself matches retains ALL its
   children unfiltered; (d) zero matches → empty result, exit 0, empty table / `[]` JSON — a valid
   success, never an error (BC-X.12.002 empty-result precedent); (e) `--value` absent → the full
-  enumerated list is returned unchanged. The filter is a total function (never panics, never
-  fails — it can only narrow).
+  enumerated list is returned unchanged; (f) **[ADDED 2026-08-26, B-LOW]** `--value ""` (explicit
+  empty string) produces the SAME output as `--value` absent (identity filter — every entry
+  matches). The filter is a total function (never panics, never fails — it can only narrow).
+- VP-580-011 **[NEW 2026-08-26, B-LOW]**: `--value` supplied
+  alongside a field with no enumerable options still exits 0 with the graceful-degrade hint on
+  stderr and `[]`/empty table on stdout, identical to the no-`--value` case (BC-X.14.004
+  VP-580-005 companion).
 
 **Trace**: issue #580 (`jr field options customfield_10084 --value "<option-value>"` AC);
-BC-X.12.002 (empty-result-is-not-an-error precedent)
+BC-X.12.002 (empty-result-is-not-an-error precedent); BC-X.14.004 (graceful-degrade interaction)
 
 [NEW 2026-08-25 issue #580 F2]
 
@@ -2383,7 +2527,7 @@ fields with no enumerable option set (per `.factory/research/field-dx-context-me
 | Condition | Behavior | Source parallel |
 |---|---|---|
 | Zero mode selectors (`--type`/`--request-type`/`--issue` all absent) — this row also covers a BARE `--project` supplied with no mode selector at all (`--project` is never itself a mode selector, so that invocation still has zero of the three present) | Exit 64: "specify exactly one of --type, --request-type, --issue" | BC-X.14.001 Invariant 1 / ADR-0019 §1 |
-| `--type` present without its required `--project` companion | Exit 64, the incomplete-M2 error: "--type requires --project" | BC-X.14.001 Invariant 1 / ADR-0019 §1 |
+| `--type` present with no resolvable project — neither an explicit `--project` flag nor a profile/config default (**[CORRECTED 2026-08-26, ADR-0019 § Amendment D1]** trigger widened from "no flag" to "no flag AND no default") | Exit 64, the incomplete-M2 error: "--type requires --project" | BC-X.14.001 Invariant 1 / ADR-0019 § Amendment (2026-08-26) D1 |
 | Two or more mode selectors (`--type`/`--request-type`/`--issue`) supplied simultaneously | Exit 64, same message as the zero-mode-selector row, listing the conflicting flags | BC-X.14.001 Invariant 1 / ADR-0019 §1 |
 | `--request-type` present with NO resolvable ambient project (no `--project` companion, no profile/config default) | Exit 64 via `require_service_desk`'s "project required" error, unchanged from `jr requesttype fields`'s own behavior on the same condition | BC-X.12.003 parallel / ADR-0019 §1 |
 | `<field>` resolves to zero matches | Exit 64, hint naming `jr project fields` | EC-3.4.015-1 parallel |
@@ -2400,8 +2544,13 @@ arity (zero, or two-or-more, of `{--type, --request-type, --issue}`) is evaluate
 any `--project` companion-role validation — e.g. `--project <P> --request-type <RT> --type <T>`
 (all three flags present) is reported via the "two or more mode selectors" row, not any
 `--project` companion check. Once exactly one mode selector is confirmed present, `--project`'s
-companion role is validated against THAT mode only: REQUIRED for M2 (`--type` without
-`--project` → the incomplete-M2 error), OPTIONAL for M3 (`--request-type` with or without
+companion role is validated against THAT mode only: for M2, a resolvable project is REQUIRED
+in the sense that "a project must be resolvable" (`--type` with no resolvable project — neither
+an explicit `--project` flag NOR a profile/config default — → the incomplete-M2 error;
+**[CORRECTED 2026-08-26, ADR-0019 § Amendment D1]** this is evaluated by a separate,
+post-arity, M2-only resolution step, not by the pure mode-selector arity function itself — see
+BC-X.14.001's "M2 project resolution step" paragraph and VP-580-006), OPTIONAL for M3
+(`--request-type` with or without
 `--project` is valid; when `--project` is absent on M3, resolution falls through to the ambient
 profile/config-default project, which may itself fail via `require_service_desk`'s "project
 required" error if no project resolves at all — a DISTINCT, LATER failure from the
@@ -2487,8 +2636,9 @@ reported via any taxonomy-table error row.
   message ("specify exactly one of --type, --request-type, --issue"), NOT the incomplete-M2
   message ("--type requires --project") — a regression guard for the doubly-specified,
   self-contradictory routing found in adversary pass-25 (HIGH), fixed via Option A
-  (canonicalized as the zero-mode-selector case, consistent with VP-580-006's `has_project`
-  treatment). This includes the M2 `--type`
+  (canonicalized as the zero-mode-selector case, consistent with `resolve_field_context`'s
+  3-boolean arity signature — VP-580-006, per ADR-0019 § Amendment D1 — which does not take
+  `has_project` as a parameter at all). This includes the M2 `--type`
   name→id resolution row (EC-X.14.004-4): unknown/ambiguous `--type` for the resolved project
   exits 64 listing valid issue types, with `get_createmeta_fields` never called; and the M3
   no-resolvable-project row (EC-X.14.004-5): `--request-type` with no `--project` and no
