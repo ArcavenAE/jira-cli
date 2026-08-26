@@ -6,6 +6,24 @@ definitional_count: 89   # count of `#### BC-` headings in this file
 last_updated: 2026-08-26
 source_pass: 3
 trace: |
+  - F2 adversary-convergence round-2 amendments (2026-08-26, cycle field-dx — no BC
+    added/removed/retired, no count change, still 89 individually-bodied / 155 cumulative in this
+    file): fix round following a fresh 3-pass adversarial streak that found residual partial-fix/
+    coverage gaps, none requiring a new design decision. Pass2-F2 (MEDIUM): BC-X.14.004's error
+    taxonomy gains a new `--project not found (404)` row, distinct from the existing "no
+    resolvable project" (companion-absent, pre-HTTP arity failure) and "non-JSM project" (project
+    resolves, wrong type) rows — `jr field options` performs no client-side project-existence
+    pre-check on either the M2 (`get_issue_types_for_project`/`get_createmeta_fields`) or M3
+    (`get_or_fetch_project_meta`) path, so a nonexistent `--project` is a genuine, previously-
+    undocumented HTTP 404 outcome; new EC-X.14.004-6 added. Whether this new row warrants its own
+    dedicated VP (beyond the general per-row coverage VP-580-004 already asserts) is flagged open
+    for the verifier, not resolved here. Pass2-F6 (MEDIUM, this file's 1 of 3 sites): the dangling
+    `.factory/specs/verification-delta/` directory citation (never existed) replaced with the
+    actual verifier artifact path `.factory/phase-f2-spec-evolution/verification-delta-field-dx.md`
+    — the other two sites are in `bc-3-issue-write.md`. Full rationale and bc-3-issue-write.md's
+    companion Pass2-F1/F3/F4/F5 fixes:
+    `.factory/phase-f2-spec-evolution/prd-delta-field-dx.md` "2026-08-26 F2 adversary-convergence
+    round-2 amendments" section.
   - F2 adversary-convergence amendments (2026-08-26, cycle field-dx, D1 + A-M2/B-F1/A-LOW-2 + LOWs
     — no BC added/removed/retired, no count change, still 89 individually-bodied / 155 cumulative
     in this file): propagates the architect's D1 decision (ADR-0019 § Amendment 2026-08-26) into
@@ -42,7 +60,7 @@ trace: |
     (BC-3.3.010, the createmeta consumer BC-X.14.001 M2 shares code with) — same defect, same
     root cause, corrected together per that BC's own trace entry; new VP-578-020 there pins the
     page-≥2 field-resolution behavior (realized by the formal-verifier in
-    `.factory/specs/verification-delta/` in parallel). No BC added/removed/retired, no count
+    `.factory/phase-f2-spec-evolution/verification-delta-field-dx.md` in parallel). No BC added/removed/retired, no count
     change (still 89 individually-bodied / 155 cumulative in this file; 719 total_bcs / 106
     holdout scenarios factory-wide unchanged). Pre-pass-28 wording retained inline for audit
     trail.
@@ -2535,6 +2553,7 @@ fields with no enumerable option set (per `.factory/research/field-dx-context-me
 | Resolved project (whether from an explicit `--project` companion or profile/config default) is non-JSM, supplied to the `--request-type` path | Exit 64 via `require_service_desk`, call-site-specific message (BC-X.8.004) | BC-X.12.003 parallel |
 | Unknown/ambiguous `--request-type` value | Exit 64 via `partial_match` (BC-X.12.006) | BC-X.12.006 |
 | M2 path (`--type <T> --project <P>`): `--type` value does not resolve to exactly one issue type for the resolved project (unknown name, or ambiguous case-insensitive match) | Exit 64 listing the project's valid issue type names, BEFORE `get_createmeta_fields` is called | BC-3.3.010 Step 3 / S-331 parallel |
+| **[ADDED 2026-08-26, F2 adversary-convergence round-2, Pass2-F2]** `--project <P>` supplied but the project does NOT exist / is not accessible (404, not 401) — on M2 this surfaces from EITHER of the two createmeta-family calls `jr field options` reuses (`get_issue_types_for_project`'s own `GET .../createmeta/{project}/issuetypes` list call, or `get_createmeta_fields`'s per-issue-type fields call, whichever runs first and 404s/400s on the bad project key); on M3 this surfaces from `get_or_fetch_project_meta`'s own `GET /rest/api/3/project/{key}` call (the SAME project-existence GET already documented elsewhere for its 401 behavior — see BC-X.8.006/007 — this row covers its 404 outcome instead) | Exit 64, "project not found or not accessible" (actionable, names the supplied project key) | New — no direct predecessor; `jr field options` performs no client-side project-existence pre-check on either path, so this is a genuine, previously-undocumented HTTP-failure row, distinct from the "no resolvable project" (companion-absent) and "non-JSM project" (resolves, wrong type) rows above |
 | `--issue <KEY>` not found (404) | Exit 64, "issue not found or not accessible" | EC-3.4.015-7 parallel |
 | createmeta/editmeta/requesttype-fields HTTP failure (401/403/5xx) | Propagated via standard `JrError` auth/API hint | EC-3.4.015-6 parallel |
 | `<field>` resolves in the global `GET /field` list (or via `customfield_NNNNN` bypass) but is ABSENT from the selected context's field set | Exit 64, "field not available in this context" — per-context wording: "is not on the Create screen" (M2/createmeta), "is not on the Edit screen" (M1/editmeta), "is not a field on this request type" (M3/requesttype-fields) | BC-3.3.010 EC-3.3.010-2 parallel; see EC-X.14.001-5 |
@@ -2628,6 +2647,22 @@ reported via any taxonomy-table error row.
   selectors, or EC-X.14.004-4's M2 `--type`/`--project` case) and the non-JSM-project taxonomy
   row (which fires when a project DOES resolve but is the wrong project type) — here no project
   resolves at all, so `require_service_desk` is never reached with a candidate project key.
+- EC-X.14.004-6 **[ADDED 2026-08-26, F2 adversary-convergence round-2, Pass2-F2]**: `--project
+  NONEXISTENT --type <T>` (M2) or `--project NONEXISTENT --request-type <RT>` (M3), where
+  `NONEXISTENT` names a project key that does not exist / is not accessible to the caller → exit
+  64, "project not found or not accessible", from the taxonomy-table row added above. Distinct
+  from THREE other project-related rows in this same taxonomy, each firing at a different point
+  and for a different reason: (a) EC-X.14.004-4's M2 unknown-`--type`-for-a-VALID-project case
+  (here the project itself does not resolve at all — this fires strictly EARLIER, before any
+  issue-type name resolution is attempted, on M2); (b) the "no resolvable project" companion-
+  absent row / EC-X.14.004-5 (there NO `--project` value and no profile/config default was ever
+  supplied at all — a client-side, pre-HTTP arity failure; here a `--project` value WAS supplied
+  and IS syntactically present, it simply does not resolve to a real project server-side — a
+  genuine HTTP 404, not a pre-HTTP check); (c) the non-JSM-project row (there the project DOES
+  exist and DOES resolve, just to the wrong project type). `jr field options` performs no
+  client-side existence pre-check on either M2 or M3 — this is a first-class HTTP-failure
+  outcome, not a resolution-shape failure, mirroring how `--issue <KEY>` not found (the row
+  immediately below) is a first-class HTTP-failure outcome for M1.
 
 **Verification Properties**:
 - VP-580-004: Each row of the error taxonomy table is independently exercised, asserting exit
@@ -2651,6 +2686,10 @@ reported via any taxonomy-table error row.
   service-desk project, zero errors attributable to the flag pairing) — a regression guard
   against re-introducing the superseded "pairing error" behavior (adversary pass-20 M1,
   ADR-0019 §1).
+- VP-580-012: `--project` not found (404) on the M2 (`get_issue_types_for_project`/
+  `get_createmeta_fields`) and M3 (`get_or_fetch_project_meta`) enumeration paths exits 64 with
+  zero mutating HTTP and the message "project not found or not accessible"; pairs with the new
+  EC-X.14.004-6 taxonomy row.
 
 **Trace**: issue #580; `.factory/research/field-dx-context-mechanism-2026-08-25.md` §Q-B
 (graceful-degradation rule, field-type enumeration); ADR-0019 §1 (context-mechanism arity

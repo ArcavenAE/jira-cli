@@ -465,6 +465,116 @@ again.
 
 ---
 
+## 2026-08-26 F2 adversary-convergence round-2 amendments
+
+A fresh 3-pass adversarial streak against the round-1 amendments above (D1/D2/D3 + A-M2/B-F1/C-M1
++ LOWs) found six further residual defects — all partial-fix / coverage gaps in the prose those
+amendments left behind, **none requiring a new design decision**. Fixed in `bc-3-issue-write.md`
+and `cross-cutting.md` only; `verification-delta-field-dx.md`, `ADR-0019`/architecture-delta,
+`BC-INDEX.md`, and `CANONICAL-COUNTS.md` are unchanged this round (verifier and state-manager own
+those next). No BC added/removed/retired; `total_bcs` stays 719, VP total stays 29, holdout total
+stays 106.
+
+### Pass2-F1 (MEDIUM) — `:asset` cold-cache taxonomy widened to all three call sites
+
+`bc-3-issue-write.md`, BC-3.4.030. The B-LOW error taxonomy added in round 1 scoped itself to
+`issue edit --field` and `issue create --field` (platform) only, but BC-3.8.008 independently
+specifies that `handle_jsm_create` (JSM create path) ALSO calls `get_or_fetch_workspace_id` first
+for a bare `:asset=<objectId>` hint — the JSM site was omitted, contradicting BC-3.8.008's own
+text. Since the taxonomy fires during workspace-ID *resolution*, strictly before any `:asset`
+array is composed on any path, it is wire-shape-independent and applies uniformly. Fixed: the
+taxonomy's scope statement and its trailing summary sentence now name all three call sites (edit,
+platform-create, JSM-create); VP-578-022 extended to assert wiremock coverage on all three. A new
+distinguishing paragraph makes explicit that this does NOT resolve the SEPARATE, still-deferred
+question of whether the JSM path's happy-path `:asset` `requestFieldValues` wire shape matches the
+platform-path shape — that stays UNVERIFIED per VP-578-016 (BC-3.8.008 amendment), unchanged by
+this fix. **Do not conflate the two**: workspace-discovery FAILURE handling is now verified-and-
+uniform across all 3 sites; the JSM `:asset` SUCCESS-path wire shape remains unverified/deferred.
+
+### Pass2-F2 (MEDIUM) — new `--project not found (404)` taxonomy row for `jr field options`
+
+`cross-cutting.md`, BC-X.14.004. `jr field options` performs no client-side project-existence
+pre-check on either the M2 (`get_issue_types_for_project` / `get_createmeta_fields`) or M3
+(`get_or_fetch_project_meta`) path, so a `--project` value that does not resolve to a real,
+accessible project produces a genuine HTTP 404 that was previously undocumented in the error
+taxonomy — distinct from both the existing "no resolvable project" row (companion value absent
+entirely, a pre-HTTP arity failure) and the existing "non-JSM project" row (project DOES resolve,
+just to the wrong type). Fixed: added a new taxonomy-table row ("`--project not found or not
+accessible`", exit 64) plus companion EC-X.14.004-6, which explicitly distinguishes the new row
+from the three other project-related rows it could otherwise be confused with (EC-X.14.004-4's
+M2 unknown-`--type`-for-a-valid-project case; the companion-absent row/EC-X.14.004-5; the
+non-JSM-project row). **Flagged for the verifier, not resolved here**: whether this new row
+warrants a dedicated new VP number, or is adequately covered by VP-580-004's existing "each row of
+the error taxonomy table is independently exercised" per-row coverage clause.
+
+### Pass2-F3 (MEDIUM) — `:asset` `WORKSPACE:OBJECTID` first-colon split needs its own `str::split_once` MUST
+
+`bc-3-issue-write.md`, BC-3.4.030 Parsing rule 1. This colon-split (composer-call-site, splitting
+the ALREADY-extracted `NAME:asset=VALUE` value portion on its first `:`) is independent of both
+BC-3.4.026 step 5's Unicode-scalar-safety MUST (scoped to `parse_field_kv`'s own steps 1-2 only)
+and BC-3.4.027 Invariant 5's `str::split_once('>')` MUST (scoped to the cascading `>` split) —
+exactly the same "independent split site, needs its own explicit MUST" situation D3 already fixed
+for the `>` split. Fixed: added a `str::split_once(':')` MUST to Parsing rule 1 (mirroring D3's
+rationale verbatim — a char-index-as-byte-offset scheme panics on a multibyte scalar preceding the
+delimiter, the FIX-F6-LRE-1 bug class; a proptest alone is insufficient, the implementation
+technique itself must be pinned), a new Invariant 4 cross-referencing it, new EC-3.4.030-6
+(`cf:asset=Wé:123` — multibyte scalar adjacent to `:`, resolves without panicking), and a
+VP-578-012 extension adding a no-panic proptest note mirroring VP-578-008's D3 extension.
+
+### Pass2-F4 (LOW) — `objectId` numeric-shape check corrected from Unicode `\d+` to ASCII `[0-9]+`
+
+`bc-3-issue-write.md`, BC-3.4.030 Parsing rule 3 and BC-3.4.031 EC-3. Rust's `regex` crate's
+default `\d` matches the entire Unicode `Nd` (decimal number) category — Arabic-Indic digits
+(`١٢٣`), fullwidth digits (`１２３`), and other non-ASCII numeral scripts all pass a naive `\d+`
+check client-side, then fail server-side, since Jira's `objectId` field accepts ASCII digits only.
+Fixed: both sites now specify ASCII-only `[0-9]+` (equivalently `regex`'s `(?-u)\d+`) explicitly,
+with EC-3 gaining concrete non-ASCII-digit examples.
+
+### Pass2-F5 (MEDIUM) — deterministic ordering pinned between the D2 collision guard and BC-3.8.013's guard
+
+`bc-3-issue-write.md`. Round 1's D2 (create-path collision guard) and the pre-existing BC-3.8.013
+(`--on-behalf-of`-without-`--request-type`) guard are BOTH step-2-class guards — each fires
+immediately after the JSM dispatch fork, before project-key resolution, and neither round-1's
+`Platform-Path Guard Ordering` SSOT block nor BC-3.3.010's own guard-ordering precondition list
+said which wins when an invocation trips both (e.g. `create --priority X --field priority=Y
+--on-behalf-of Z`, no `--request-type`). Fixed, choosing the minimum-disruption resolution: BC-
+3.8.013 keeps its pre-existing, already-tested step-2 position UNCHANGED; the D2 guard becomes a
+new step 2a, evaluated immediately after step 2. Updated in four places: (1) the `Platform-Path
+Guard Ordering` SSOT block gains step 2a plus a worked example and an explicit "step 2 before step
+2a, step 2's position is unchanged" rationale; (2) BC-3.3.010's Preconditions guard-ordering
+sentence now names both guards in sequence and points at the SSOT block; (3) EC-3.3.010-6 gains an
+ordering note for the case where `--on-behalf-of` is also present; (4) BC-3.3.011's D2
+taxonomy-row Postconditions note is scope-clarified — "evaluated FIRST, before every other row in
+this table" was previously ambiguous as to whether it also out-ranked BC-3.8.013 (a guard that is
+NOT a row in that table); it does not. This is deterministic — consistent with BC-X.14.004's
+existing "fixing one reported error deterministically encounters the next" precedence principle
+(`cross-cutting.md` § BC-X.14.004), applied here across two different BCs' guards rather than
+within one taxonomy table.
+
+### Pass2-F6 (MEDIUM) — dangling `.factory/specs/verification-delta/` path corrected at all 3 sites
+
+`bc-3-issue-write.md` (2 sites: BC-3.3.010 amendment preamble; VP-578-020 body) and
+`cross-cutting.md` (1 site: BC-X.14.001's companion trace entry). All three cited
+`.factory/specs/verification-delta/` as the realization location for pass-28's page-≥2 pagination
+VPs — a directory that never existed in this repo. Replaced with the actual verifier artifact
+path, `.factory/phase-f2-spec-evolution/verification-delta-field-dx.md`, matching this directory's
+own `verification-delta-<cycle>.md` naming precedent used elsewhere (e.g.
+`verification-delta-DEAD-CITATION-CI.md`, `verification-delta-398.md`). This now agrees with
+`verification-delta-field-dx.md`'s own §0/§5, which correctly state there is no standalone VP
+registry file — these three BC-side pointers were the only remaining mismatch.
+
+### VP implications for the verifier (flagged, not resolved here)
+
+- **VP-580-006** (`cross-cutting.md`) — already correctly rewritten in this file's own inline body
+  to the post-D1 3-boolean `resolve_field_context(has_type, has_request_type, has_issue)`
+  signature (no `has_project` parameter). The STALE pre-D1 4-boolean signature + the
+  `!has_type||has_project` clause survives only inside `verification-delta-field-dx.md` §2 (out of
+  this agent's write scope) — the verifier's job to rewrite there, not a gap in either PRD file.
+- **VP-578-022** (`bc-3-issue-write.md`) — now must assert wiremock coverage on all THREE `:asset`
+  cold-cache call sites (edit, platform-create, JSM-create), not two. See Pass2-F1 above.
+- **New `--project` 404 row** (`cross-cutting.md`, BC-X.14.004) — possible new VP, or fold into
+  VP-580-004's existing per-row coverage clause. See Pass2-F2 above; genuinely undecided here.
+
 ## Traceability
 
 - Source issues: `gh issue view 580`, `gh issue view 578` (both read directly during this pass).

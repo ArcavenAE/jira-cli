@@ -4,7 +4,7 @@ phase: phase-f2-spec-evolution
 cycle: field-dx
 issues: [580, 578]
 producer: formal-verifier
-timestamp: 2026-08-26   # F2 adversary-convergence pass (D1/D2/D3 + C-LOW/B-F1); prior F5-pass-1 revision was 2026-08-25
+timestamp: 2026-08-26   # F2 adversary-convergence round-2 fix-chain (Pass1-F1 VP-580-006 3-bool rewrite; Pass2-F1 VP-578-022 3 call sites; Pass2-F3 VP-578-012 `:`-split; Pass2-F2 VP-580-012 minted). Prior round-1 F2 pass same day (D1/D2/D3 + C-LOW/B-F1); F5-pass-1 revision was 2026-08-25. VP total 29 → 30.
 status: complete
 convention: inline-proptest   # this repo has NO centralized VP-NNN registry — see §0
 # ONE authoritative VP id per guarantee. The parallel `VP-*-04x` band an earlier revision of
@@ -14,13 +14,14 @@ convention: inline-proptest   # this repo has NO centralized VP-NNN registry —
 new_properties:            # genuinely NEW inline VPs — extend the existing VP-578-0xx / VP-580-0xx sequences
   - VP-578-020   # createmeta-family multi-page resolution (BC-3.3.010) — FIELDS half: adversary pass-28 F-1; ISSUE-TYPES extension: adversary pass-29 F-1 (C-LOW attribution sync — BC-3.3.010 attributes the issuetypes half to pass-29); ADR-0019 §1 offset-pagination across BOTH createmeta endpoints: (a) FIELDS (`get_createmeta_fields`) — a `--field` target on fields-page ≥2 is collected and resolves (exit 0), not dropped; AND (b) ISSUE-TYPES (`get_issue_types_for_project`, the `--type` name→id resolution in src/api/jira/issues.rs) — a `--type` entry on issuetypes-page ≥2 resolves to its issueTypeId (exit 0), not dropped; added inline to BC-3.3.010
   - VP-578-021   # create-path Gate-B collision guard (BC-3.3.010, ADR-0019 § Amendment 2026-08-26 D2) — D2 gap; shared `field_resolve::detect_flag_field_overlap` on the create path (any argv order, any hint kind, every Gate-B-governed field) → exit 64, ZERO HTTP, symmetric with edit's EC-3.4.017-16; modeled on the edit-path Gate-B VP (VP-396-005); added inline to BC-3.3.010 (back-fills the PO's D2 placeholder)
-  - VP-578-022   # :asset cold-cache workspace-discovery FAILURE taxonomy (BC-3.4.030, B-LOW) — each row (403/404 → Assets-unavailable exit 64; 200 + empty `values` → no-workspace exit 64; 401 → standard auth mapping; 5xx/network → standard API/network mapping) exercised via wiremock on BOTH edit and create call sites; added inline to BC-3.4.030 (back-fills the PO's B-LOW placeholder)
+  - VP-578-022   # :asset cold-cache workspace-discovery FAILURE taxonomy (BC-3.4.030, B-LOW; Pass2-F1 widened) — each row (403/404 → Assets-unavailable exit 64; 200 + empty `values` → no-workspace exit 64; 401 → standard auth mapping; 5xx/network → standard API/network mapping) exercised via wiremock on ALL THREE call sites (edit, platform-create, and JSM `handle_jsm_create`) — all three share `get_or_fetch_workspace_id`, and this taxonomy is wire-shape-INDEPENDENT (fires during workspace-id resolution, before any :asset array is composed on any path). The JSM :asset HAPPY-PATH `requestFieldValues` WIRE shape stays UNVERIFIED/deferred (VP-578-016) — only the failure taxonomy is asserted on all 3; added inline to BC-3.4.030 (back-fills the PO's B-LOW placeholder)
   - VP-580-006   # context mutual-exclusion arity guard (BC-X.14.001 Invariant 1) — was the gap; added inline to BC-X.14.001. NARROWED per ADR-0019 § Amendment D1: pure fn is now `resolve_field_context(has_type, has_request_type, has_issue) -> Result<Mode, ArityError>` — 3-bool domain, `has_project` axis DROPPED
   - VP-580-007   # --value client-side filter correctness (BC-X.14.002) — was the gap; added inline to BC-X.14.002
   - VP-580-008   # table/JSON output-shape (BC-X.14.003) — was the gap; added inline to BC-X.14.003
   - VP-580-009   # `--project --request-type` valid M3, NOT an arity error (BC-X.14.004) — adversary pass-20 M1 / ADR-0019 §1 regression guard; realized as the positive `--project --request-type → Ok` case of VP-580-006's arity proptest
   - VP-580-010   # M2 post-arity project resolution (BC-X.14.001, ADR-0019 § Amendment 2026-08-26 D1) — separate SIBLING pure fn `resolve_m2_project(cli_project: Option<&str>, config: &Config) -> Option<String>`; M2 succeeds when EITHER an explicit `--project` OR a profile/config-default project exists, exits 64 pre-HTTP only when NEITHER exists; mirrors BC-3.3.010's create-path flag-or-default project-resolution VP shape; added inline to BC-X.14.001 (back-fills the PO's D1 placeholder)
   - VP-580-011   # --value + graceful-degrade interaction (BC-X.14.002, B-LOW) — `--value` present against a zero-enumerable-options field: filter applies POST-fetch, degrade hint still fires on stderr, stdout stays `[]`/empty table, exit 0; VP-580-005 companion; added inline to BC-X.14.002 (back-fills the PO's B-LOW placeholder)
+  - VP-580-012   # `--project` not-found (404) taxonomy on `jr field options` M2 + M3 enumeration paths (BC-X.14.004, F2 adversary-convergence round-2 Pass2-F2) — a nonexistent/inaccessible `--project` yields a genuine HTTP 404 (NOT a pre-HTTP arity failure): on M2 from whichever createmeta-family call runs first (`get_issue_types_for_project`'s `GET .../createmeta/{project}/issuetypes`, or `get_createmeta_fields`), on M3 from `get_or_fetch_project_meta`'s `GET /rest/api/3/project/{key}` → exit 64, "project not found or not accessible", zero mutating HTTP. Distinct HTTP-failure class from the pre-HTTP arity/companion-absent rejections (VP-580-006/010) and the non-JSM wrong-type row. Realized WITHIN VP-580-004's per-row taxonomy coverage (EC-X.14.004-6 + the new taxonomy row) as a durable regression pin — NOT a separate §1 core-surface row (mirrors VP-580-009's relationship to VP-580-006). NOTE: no PO placeholder marker existed in cross-cutting.md this round, so its inline BC-body declaration is a pending one-line back-fill for state-manager/PO (see §5)
 realizes_inline_vps:       # proptest/unit REALIZATIONS of EXISTING inline VPs — no new id, no duplicate
   - VP-578-001   # platform-create `--field` resolves via createmeta (never editmeta) (BC-3.3.010) — realized §1.1 (tests/issue_create.rs createmeta path, reuses VP-396-009 edit-path realization transplanted to create)
   - VP-578-002   # fields.json cache SHARED between `edit --field` and `create --field`, same profile (BC-3.3.010) — realized §1.1 (tests/issue_create.rs warm-cache reuse; shares resolve_edit_fields/write_fields_cache from VP-396-009)
@@ -33,7 +34,7 @@ realizes_inline_vps:       # proptest/unit REALIZATIONS of EXISTING inline VPs �
   - VP-578-009   # :id value-kind mapping (BC-3.4.028) — absorbs former VP-578-042
   - VP-578-010   # :name value-kind mapping + --priority parity (BC-3.4.029) — absorbs former VP-578-043
   - VP-578-011   # :asset composer wire-shape correctness (BC-3.4.030) — absorbs former VP-578-044
-  - VP-578-012   # :asset composer safety proptest — never malformed JSON body (BC-3.4.030) — absorbs former VP-578-046 + malformed-:asset part of VP-578-045
+  - VP-578-012   # :asset composer safety proptest — never malformed JSON body (BC-3.4.030) — absorbs former VP-578-046 + malformed-:asset part of VP-578-045. EXTENDED per F2 adversary-convergence round-2 Pass2-F3: the `WORKSPACE:OBJECTID` first-colon split MUST use `str::split_once(':')`; a no-panic proptest over arbitrary UTF-8 (multibyte scalar adjacent to `:`, e.g. `cf:asset=Wé:123`, EC-3.4.030-6) is folded into VP-578-012 — no new VP id, mirroring VP-578-008's D3 `>`-split extension
   - VP-578-013   # malformed-hint edge-case catalog: exit-64, one-error-per-invocation (BC-3.4.031) — absorbs former VP-578-045
   - VP-578-014   # EC-6/EC-7 regression pins: colon-in-VALUE resolves normally, unknown-kind fires the specific error (BC-3.4.031)
   - VP-578-017   # DEC-310 reversal: `--field` alone (no `--request-type`, well-formed) → exit 0, platform POST with field merged (BC-3.8.012) — realized §1.1 (rewritten holdouts H-NEW-PREFLIGHT-001/006 + create.rs guard-removal regression tests)
@@ -107,16 +108,20 @@ reconciliation note covered):
 | VP-580-040 | BC-X.14.001 Inv 1 | **VP-580-006** *(NEW)* | **Gap, not a duplicate.** No inline VP covered Invariant 1's mutual-exclusion; VP-580-006 is added inline to BC-X.14.001. |
 | VP-580-041 | BC-X.14.004 | **VP-580-005** | Same guarantee — graceful degrade (empty options → exit 0; the no-panic-on-arbitrary-`serde_json::Value` normalizer proptest is VP-580-005's property-test realization). |
 
-**Six genuinely-new VP-580 ids** are minted this delta (each ADDED to its BC body — see §5). The
-F5-pass-1 set (four): three F5-gap VPs — **VP-580-006** (BC-X.14.001 Invariant 1 mutual-exclusion),
-**VP-580-007** (BC-X.14.002 `--value` filter), **VP-580-008** (BC-X.14.003 output shape) — plus the
-pass-20 regression pin **VP-580-009** (BC-X.14.004 `--project --request-type` is a VALID M3, not an
-arity error; realized WITHIN VP-580-006's arity proptest, not a separate core-surface row). The
-**F2 adversary-convergence pass (2026-08-26)** adds two more: **VP-580-010** (BC-X.14.001, ADR-0019
+**Seven genuinely-new VP-580 ids** are minted this delta (each ADDED to — or, for VP-580-012, still
+PENDING a one-line back-fill to — its BC body; see §5). The F5-pass-1 set (four): three F5-gap
+VPs — **VP-580-006** (BC-X.14.001 Invariant 1 mutual-exclusion), **VP-580-007** (BC-X.14.002
+`--value` filter), **VP-580-008** (BC-X.14.003 output shape) — plus the pass-20 regression pin
+**VP-580-009** (BC-X.14.004 `--project --request-type` is a VALID M3, not an arity error; realized
+WITHIN VP-580-006's arity proptest, not a separate core-surface row). The **F2
+adversary-convergence pass (2026-08-26)** adds three more: **VP-580-010** (BC-X.14.001, ADR-0019
 § Amendment D1 — the separate post-arity `resolve_m2_project` step, flag-OR-profile/config-default;
-exit 64 pre-HTTP only when NEITHER exists) and **VP-580-011** (BC-X.14.002, B-LOW — the `--value` +
-graceful-degrade interaction, VP-580-005 companion). All six **extend** the existing `VP-580-0xx`
-sequence (prior max was `005`, now `011`); they are NOT a parallel band.
+exit 64 pre-HTTP only when NEITHER exists), **VP-580-011** (BC-X.14.002, B-LOW — the `--value` +
+graceful-degrade interaction, VP-580-005 companion), and the round-2 Pass2-F2 regression pin
+**VP-580-012** (BC-X.14.004 — the `--project` not-found (404) HTTP-failure class on the M2 + M3
+enumeration paths; realized WITHIN VP-580-004's per-row taxonomy coverage, not a separate
+core-surface row, mirroring VP-580-009). All seven **extend** the existing `VP-580-0xx`
+sequence (prior max was `005`, now `012`); they are NOT a parallel band.
 
 **Three VP-578-0xx ids are newly minted across this cycle** — **VP-578-020** (createmeta-family
 multi-page resolution, BC-3.3.010; FIELDS half = adversary pass-28 F-1, ISSUE-TYPES half = adversary
@@ -165,8 +170,8 @@ FIELDS and ISSUE-TYPES createmeta endpoints) — catalogued separately in **§1.
 JSM-parity pair VP-578-015/016 (frontmatter
 `aligns_with_inline_vps`; **VP-578-016's `:id`/`:name`/`:asset` `requestFieldValues` write shapes
 are UNVERIFIED / parity-PENDING — realized at F4 against live JSM, not pinned firm by this delta;
-see §1.1**). The full declared inline inventory this delta touches is **twenty-nine**
-VPs: the twenty-two #578 ids (VP-578-001..022) plus VP-580-005..011 (VP-580-001..004 were declared
+see §1.1**). The full declared inline inventory this delta touches is **thirty**
+VPs: the twenty-two #578 ids (VP-578-001..022) plus VP-580-005..012 (VP-580-001..004 were declared
 inline by the product-owner pass — not minted by this verifier delta — and are realized at F4
 alongside the new `src/cli/field.rs` command, still unimplemented; this delta adds no further
 realization work for them, so they fall outside its realization surface). **D3** adds no id — its
@@ -189,7 +194,7 @@ cascading-`>`-split no-panic proptest is folded into VP-578-008 (§2, §0.1).
 | **VP-580-007** | `--value` client-side substring filter correctness | BC-X.14.002 | unit + proptest | new `src/cli/field.rs` + `tests/field_options.rs` (new) | **NEW inline** |
 | **VP-580-008** | Table/JSON output shape (`{id,label,children}`) | BC-X.14.003 | unit + integration | new `src/cli/field.rs` + `tests/field_options.rs` (new) | **NEW inline** |
 | **VP-578-021** | Create-path Gate-B collision guard (any argv order × any hint kind × every Gate-B-governed field → exit 64, ZERO HTTP; symmetric with edit's EC-3.4.017-16) | BC-3.3.010 | unit + integration | `src/cli/issue/field_resolve.rs` (`detect_flag_field_overlap`) + integration per call site (edit + create) | **NEW inline (F2 D2)** |
-| **VP-578-022** | `:asset` cold-cache workspace-discovery FAILURE taxonomy (each row exercised on BOTH edit + create call sites) | BC-3.4.030 | wiremock (per-row) | `src/api/assets/workspace.rs::get_or_fetch_workspace_id` call sites + `tests/issue_field_hint_kinds.rs` (new) | **NEW inline (F2 B-LOW)** |
+| **VP-578-022** | `:asset` cold-cache workspace-discovery FAILURE taxonomy (each row exercised on ALL THREE call sites: edit, platform-create, JSM-create) | BC-3.4.030 | wiremock (per-row) | `src/api/assets/workspace.rs::get_or_fetch_workspace_id` call sites (edit `field_resolve.rs`, platform `create.rs`, JSM `jsm_create.rs`) + `tests/issue_field_hint_kinds.rs` (new) | **NEW inline (F2 B-LOW, Pass2-F1)** |
 | **VP-580-010** | M2 post-arity project resolution (`resolve_m2_project`): flag OR profile/config default → Ok; NEITHER → exit 64 pre-HTTP | BC-X.14.001 | unit + proptest | new `src/cli/field.rs` (`resolve_m2_project`) + `tests/field_options.rs` (new) | **NEW inline (F2 D1)** |
 | **VP-580-011** | `--value` + graceful-degrade interaction (filter post-fetch; degrade hint still fires; stdout `[]`, exit 0) | BC-X.14.002 | wiremock + unit | new `src/cli/field.rs` + `tests/field_options.rs` (new) | **NEW inline (F2 B-LOW)** |
 
@@ -202,10 +207,31 @@ independent fifteenth core-surface realization: it is realized as the **positive
 (§2 VP-580-006, `src/cli/issue/field_resolve.rs`) together with the paired **positive** wiremock
 assertion VP-580-006 already prescribes in `tests/field_options.rs` (that
 `--project --request-type` does **not** trip the guard). It carries its own id purely as a durable
-**regression pin** against re-introducing the superseded "pairing-error" behavior. This is why the
-delta's full declared inline inventory is **twenty-nine** (twenty-two #578 [VP-578-001..022] +
-VP-580-005..011) while the §1 core surface is **eighteen** new proptest/unit/integration
-realizations (VP-580-009 remains realized within VP-580-006, not a separate core-surface row).
+**regression pin** against re-introducing the superseded "pairing-error" behavior.
+
+**VP-580-012 (regression pin — realized WITHIN VP-580-004, not a separate core-surface row).**
+VP-580-012 (BC-X.14.004, F2 adversary-convergence round-2 Pass2-F2) — a nonexistent/inaccessible
+`--project` on `jr field options` produces a genuine **HTTP 404** (distinct from the *pre-HTTP*
+arity/companion-absent rejections owned by VP-580-006/010, and from the non-JSM *wrong-type* row):
+on **M2** the 404 surfaces from whichever createmeta-family call runs first
+(`get_issue_types_for_project`'s `GET .../createmeta/{project}/issuetypes`, or
+`get_createmeta_fields`), and on **M3** from `get_or_fetch_project_meta`'s
+`GET /rest/api/3/project/{key}` — each mapped to **exit 64, "project not found or not accessible",
+zero mutating HTTP**. Like VP-580-009, it is a **newly-minted inline VP this cycle** (frontmatter
+`new_properties`) but **not** an independent core-surface realization: it is realized **WITHIN
+VP-580-004's** "each row of the error taxonomy table is independently exercised" per-row coverage
+(the new taxonomy row + EC-X.14.004-6 the product-owner added this round), carrying its own id
+purely as a durable regression pin for this distinct two-path HTTP-failure class. The PO left the
+"new row → own VP?" question explicitly open (Pass2-F2); this verifier **decides YES** — a distinct
+error class with a pinned message ("project not found or not accessible") on two enumeration paths
+warrants a dedicated regression id — but because **no PO placeholder marker existed in
+cross-cutting.md this round**, VP-580-012's inline BC-body declaration is a **pending one-line
+back-fill** for state-manager/PO (§5), not an edit this verifier made to that BC file.
+
+This is why the delta's full declared inline inventory is **thirty** (twenty-two #578
+[VP-578-001..022] + VP-580-005..012) while the §1 core surface is **eighteen** new
+proptest/unit/integration realizations (VP-580-009 remains realized within VP-580-006, and
+VP-580-012 within VP-580-004 — neither is a separate core-surface row).
 
 ### 1.1 Remaining declared #578 inline VPs — realization pointers (realized outside the §1 core surface)
 
@@ -537,8 +563,16 @@ part of former VP-578-045 — retired.)*
 
 **Property statement** — for **arbitrary** input to the `:asset` value composer (arbitrary
 UTF-8, arbitrary colon placement/count, empty segments, control characters):
-1. **No panic.** The composer never unwinds (no byte-offset panic on multibyte `WORKSPACE`
-   or `OBJECTID`; same class as VP-578-005).
+1. **No panic on the `WORKSPACE:OBJECTID` first-colon split (Pass2-F3, `str::split_once(':')`
+   MUST).** The composer splits the already-extracted `:asset=VALUE` value portion on its **first
+   `:`** to separate `WORKSPACE` from `OBJECTID`. This split site is INDEPENDENT of both BC-3.4.026
+   step 5's `parse_field_kv` Unicode-scalar-safety MUST (scoped to that parser's own steps 1–2) and
+   BC-3.4.027 Invariant 5's cascading `str::split_once('>')` MUST — exactly the same "independent
+   split site, needs its own explicit MUST" situation D3 fixed for the `>` split. Per BC-3.4.030
+   Parsing rule 1 / Invariant 4 the split MUST use `str::split_once(':')` (never a char-index-as-
+   byte-offset scheme, which panics on a multibyte scalar preceding the `:` — the FIX-F6-LRE-1 bug
+   class). The composer never unwinds — no byte-offset panic on a multibyte `WORKSPACE` or
+   `OBJECTID` (same class as VP-578-005 and VP-578-008's D3 extension).
 2. **Total classification.** The composer returns **either** a valid, well-formed Assets
    object-reference `serde_json::Value` (always the `[{workspaceId,id,objectId}]` array
    shape, all three keys present, all string-typed) **or** a clean `Err(UserError)` (exit 64)
@@ -569,6 +603,20 @@ proptest! {
     }
 }
 ```
+
+**EXTENDED — Pass2-F3 first-colon-split no-panic (mirrors VP-578-008's D3 `>`-split extension).**
+The `raw in "\\PC{0,60}"` strategy above already feeds the composer arbitrary UTF-8 including a `:`
+byte adjacent to a multibyte scalar, so `prop_compose_asset_ref_never_malformed` **is** the no-panic
+proptest for the `str::split_once(':')` `WORKSPACE:OBJECTID` split — no new proptest id is needed
+(the coverage is folded into VP-578-012, exactly as the `>`-split no-panic was folded into
+VP-578-008). Add a **named regression unit test** pinning the concrete Pass2-F3 / EC-3.4.030-6 input
+`"Wé:123"` (multibyte scalar immediately before the first `:`) — asserting it resolves without
+panicking (mirrors `validate_duration_multibyte_unit_returns_err_not_panic` and VP-578-008's
+`"Pré>Bñ"` pin), plus companions `"世:123"`, `":123"` (empty workspace), `"W:"` (empty objectId) →
+each a clean `Ok`/`Err(UserError)`, never an unwind. The `objectId` numeric-shape check (BC-3.4.030
+Parsing rule 3 / BC-3.4.031 EC-3) is **ASCII-only `[0-9]+`** (equivalently `(?-u)\d+`) — a companion
+regression pin should confirm non-ASCII digits (`"W:١٢٣"`, `"W:１２３"`) are rejected client-side
+(exit 64), not passed through to a server-side 400.
 
 **Target**: `src/cli/issue/field_resolve.rs` (or wherever `compose_asset_ref` lands). **F6**:
 this pure composer is the highest-value mutation target of the cycle — **must** be added to
@@ -693,72 +741,73 @@ two-function scheme; proptests co-located; integration in `tests/field_options.r
 **Applies to**: BC-X.14.001 **Invariant 1** (`jr field options <field>` selects its enumeration
 **mode** by **exactly one MODE-SELECTOR** among `{--type, --request-type, --issue}`; `--project`
 is a **COMPANION**, not a mode selector). Zero or multiple mode selectors → exit 64, **before any
-HTTP**; `--type` additionally **requires** its `--project` companion (M2 createmeta path), so
-`--type` without `--project` → exit 64. **This is a genuinely NEW inline VP** — F5 pass-1 found
-Invariant 1 had no VP. It was **added to the BC-X.14.001 body this pass** (§5). *(Former delta
-label VP-580-040 — retired in favor of this sequence-extending inline id.)* **The arity is defined
-over the three MODE-SELECTOR booleans only** — the earlier "`--project`+`--type` are one paired
-mechanism among three" framing is superseded here to match ADR-0019 §1 and BC-X.14.001/004 (the
-architect/PO are updating those in parallel this pass): `--project` counts as a companion in **no**
-mode-selector tally, and `--project --request-type` is a **valid** M3 form, **not** an arity error.
+HTTP**. **M2's `--type`-requires-`--project` companion rule is NO LONGER part of this arity
+function** (ADR-0019 § Amendment 2026-08-26 D1): it moved OUT of `resolve_field_context` into the
+separate post-arity `resolve_m2_project` step (**VP-580-010**), so `resolve_field_context` is
+defined over the three MODE-SELECTOR booleans ONLY. **This is a genuinely NEW inline VP** — F5
+pass-1 found Invariant 1 had no VP. It was **added to the BC-X.14.001 body this pass** (§5).
+*(Former delta label VP-580-040 — retired in favor of this sequence-extending inline id.)* **The
+arity is defined over the three MODE-SELECTOR booleans only** — the earlier "`--project`+`--type`
+are one paired mechanism among three" framing is superseded here to match ADR-0019 §1 / § Amendment
+D1 and BC-X.14.001/004 (the architect/PO are updating those in parallel this pass): `--project`
+counts as a companion in **no** mode-selector tally and is **not an input to this function at
+all**, and `--project --request-type` is a **valid** M3 form, **not** an arity error.
 
-**Property statement** — over the 2^4 space of `(has_type, has_request_type, has_issue,
-has_project)` presence:
+**Property statement** — over the 2^3 space of `(has_type, has_request_type, has_issue)` presence
+(`has_project` is **NOT** a parameter of this function — the M2 project companion is resolved
+separately, post-arity, by `resolve_m2_project`, VP-580-010):
 1. **Exactly one MODE-SELECTOR accepted.** The mode is chosen by precisely one of the three
-   MODE-SELECTORS `{has_type, has_request_type, has_issue}`. Exactly one present → the guard
-   passes to resolution (subject to the companion rule in (2)); `has_project` is **never counted**
-   toward this tally.
-2. **`--project` companion role (explicit).** `has_project` is a companion, not a mode selector:
-   - **M2 (`--type`) REQUIRES `--project`.** `has_type && !has_project` → exit 64 (createmeta
-     needs both). `has_type && has_project` is the well-formed M2 pair.
-   - **M3 (`--request-type`) PERMITS `--project` OPTIONALLY.** `--request-type` alone is valid
-     (profile-default project fallback); **`--project --request-type` is VALID and does NOT trip
-     an arity error** — `--project` here merely names the service-desk project.
-   - **`--issue`** carries its own project; `--project` alongside it is an unconstrained companion.
-   - **`--project` alone (no mode selector) → exit 64** — it selects no mode (falls under (3),
-     zero mode selectors), never a mode on its own.
-3. **Zero mode selectors rejected.** No MODE-SELECTOR present (regardless of `--project`) → exit 64
-   with a message naming the three modes.
+   MODE-SELECTORS `{has_type, has_request_type, has_issue}`. Exactly one present → `Ok(Mode)` (the
+   guard passes to resolution). `has_project` is not an input to this function; the M2
+   `--type`-requires-`--project` requirement is enforced downstream by `resolve_m2_project`
+   (VP-580-010), never here.
+2. **`--project` is resolved OUTSIDE this function (ADR-0019 § Amendment D1).** `resolve_field_context`
+   does not take `has_project`. Both the M2 `--type`-requires-`--project` companion rule and the M3
+   optional-`--project` fallback are handled by the separate post-arity `resolve_m2_project` step
+   (VP-580-010). Consequently `--project --request-type` is a **valid M3** invocation that does NOT
+   trip an arity error — at this function's level it is simply `has_request_type` alone → `Ok(M3)`.
+   The "actual `--project --request-type` flags do not trip the guard" case is asserted at the
+   integration layer and is the realization of **VP-580-009** (see §1). A bare `--project` with no
+   mode selector is invisible to this function (all three selectors false) and is rejected as
+   zero-mode-selectors by (3).
+3. **Zero mode selectors rejected.** No MODE-SELECTOR present → exit 64 with a message naming the
+   three modes. (A bare `--project` with no mode selector reaches this case — it selects no mode on
+   its own.)
 4. **Two+ mode selectors rejected.** Any two or three of `{--type, --request-type, --issue}`
    present simultaneously → exit 64 with a mutual-exclusion message listing the conflicting flags.
-5. **Pre-HTTP.** Every rejection in (2)–(4) fires **before** any network call (assert no request is
+5. **Pre-HTTP.** Every rejection in (3)–(4) fires **before** any network call (assert no request is
    made on the rejection paths — protects the "one mode, enforced before any HTTP" contract). This
    is the analogue of DEC-188's pre-flight-before-HTTP placement / ADR-0014's dispatch-fork guard.
 
-**Recommended strategy** — extract the arity decision into a **pure function** taking the
-booleans (`has_type`, `has_request_type`, `has_issue`, `has_project`) → `Result<Context,
-JrError>`, then proptest it exhaustively:
+**Recommended strategy** — extract the arity decision into a **pure function** taking the three
+MODE-SELECTOR booleans (`has_type`, `has_request_type`, `has_issue`) → `Result<Context,
+JrError>` (no `has_project` parameter), then proptest it exhaustively:
 ```rust
 fn prop_field_options_context_arity(
     has_type in any::<bool>(), has_request_type in any::<bool>(),
-    has_issue in any::<bool>(), has_project in any::<bool>(),
+    has_issue in any::<bool>(),
 ) {
-    let r = resolve_field_context(has_type, has_request_type, has_issue, has_project);
-    // MODE-SELECTORS only — --project is a companion, never counted here.
+    let r = resolve_field_context(has_type, has_request_type, has_issue);
+    // MODE-SELECTORS only — exactly one required. --project is NOT an input here
+    //   (M2's --type-requires---project rule is resolve_m2_project's job, VP-580-010).
     let selectors = [has_type, has_request_type, has_issue]
         .iter().filter(|b| **b).count();
-    let ok =
-        selectors == 1                       // exactly one mode selector, and…
-        && (!has_type || has_project);       // …M2 (--type) requires its --project companion
-        // M3 (--request-type) permits --project optionally => no extra constraint;
-        //   --project --request-type is VALID, not an arity error.
-        // --issue: --project is an unconstrained companion.
-        // --project alone => selectors == 0 => rejected below.
+    let ok = selectors == 1;                 // exactly one mode selector
     if ok {
         prop_assert!(r.is_ok());
     } else {
-        prop_assert!(r.is_err());            // 0 selectors, >1 selectors, or --type without --project
+        prop_assert!(r.is_err());            // 0 selectors or >1 selectors
     }
 }
 ```
 Plus wiremock integration tests in `tests/field_options.rs` asserting **exit 64 + no HTTP
-request fired** for the three rejection classes — **zero** mode selectors, **two+** mode
-selectors, and **`--type` without `--project`** (the M2-companion-missing case) — plus a
-positive assertion that **`--project --request-type` does NOT trip the guard** (it is valid M3);
-the pre-HTTP guarantee cannot be shown by the pure test alone. **This positive
+request fired** for the two arity rejection classes — **zero** mode selectors and **two+** mode
+selectors — plus a positive assertion that **`--project --request-type` does NOT trip the guard**
+(it is valid M3); the pre-HTTP guarantee cannot be shown by the pure test alone. **This positive
 `--project --request-type → Ok` case is the realization of VP-580-009** — the BC-X.14.004
-regression guard (adversary pass-20 M1 / ADR-0019 §1), see §1. Per-message-shape for each
-taxonomy row is owned by inline VP-580-004.
+regression guard (adversary pass-20 M1 / ADR-0019 §1), see §1. The M2 `--type`-without-`--project`
+rejection is **NOT** an arity-function concern this pass — it is owned by **VP-580-010**
+(`resolve_m2_project`). Per-message-shape for each taxonomy row is owned by inline VP-580-004.
 
 **Target**: pure guard fn in `src/cli/issue/field_resolve.rs` **or** new `src/cli/field.rs`
 (F4/architect to place the new `jr field options` handler); proptest co-located; integration
@@ -884,12 +933,19 @@ file for edit). **F6**: via `field_resolve.rs` glob add (§4).
 `get_or_fetch_workspace_id` GET; EC-3.4.030-5). **Genuinely NEW inline VP** — the F2 B-LOW pass added
 an explicit cold-cache workspace-discovery error taxonomy to BC-3.4.030, sourced from reading
 `src/api/assets/workspace.rs::get_or_fetch_workspace_id` directly; it had no VP. Added to the
-BC-3.4.030 body this pass (back-fills the PO's B-LOW placeholder, §5). Complements VP-578-011
-(warm-cache correctness, zero HTTP) and VP-578-012 (composer safety).
+BC-3.4.030 body this pass (back-fills the PO's B-LOW placeholder, §5). **Pass2-F1 (F2
+adversary-convergence round-2) widened the scope from TWO call sites to ALL THREE** — BC-3.8.008
+independently specifies that `handle_jsm_create` (the JSM create path) ALSO calls
+`get_or_fetch_workspace_id` first for a bare `:asset=<objectId>` hint, so the JSM site was omitted
+and must be included. Complements VP-578-011 (warm-cache correctness, zero HTTP) and VP-578-012
+(composer safety).
 
-**Property statement** — each row of the taxonomy is independently exercised via wiremock, on
-**BOTH** the `issue edit --field` and `issue create --field` call sites (they share the same
-`get_or_fetch_workspace_id` function per ADR-0019 §2's "L2 resolves, `build()` only wraps" split):
+**Property statement** — each row of the taxonomy is independently exercised via wiremock, on **ALL
+THREE** call sites that share `get_or_fetch_workspace_id` — `issue edit --field`, platform
+`issue create --field`, and the JSM `issue create --request-type … --field` path
+(`handle_jsm_create`) — per ADR-0019 §2's "L2 resolves, `build()` only wraps" split. **Because this
+taxonomy fires during workspace-ID *resolution*, strictly BEFORE any `:asset` array is composed on
+any path, it is wire-shape-INDEPENDENT and applies uniformly across all three sites:**
 1. **403 / 404 (Assets not available on this site)** → `JrError::UserError` exit 64, "Assets is not
    available on this Jira site" — a genuine cold-cache HTTP round-trip (warm reads never reach this
    path, VP-578-011).
@@ -900,13 +956,22 @@ BC-3.4.030 body this pass (back-fills the PO's B-LOW placeholder, §5). Compleme
 3. **401** → standard auth-error mapping (unaffected by the Assets-specific UserError above).
 4. **5xx / network error** → standard API-error / network-error mapping.
 
+**Scope boundary (do NOT conflate — Pass2-F1):** this VP asserts only the wire-shape-INDEPENDENT
+workspace-discovery **FAILURE** taxonomy, now uniform across all three sites. It does **NOT** resolve
+the SEPARATE, still-deferred question of whether the JSM path's happy-path `:asset`
+`requestFieldValues` **SUCCESS**-wire shape matches the platform-path shape — that stays
+**UNVERIFIED/parity-PENDING per VP-578-016** (BC-3.8.008 amendment), realized and verified at F4
+against live JSM, unchanged by this fix. Workspace-discovery failure handling is verified-and-uniform
+across all 3 sites; the JSM `:asset` success-path wire shape remains unverified/deferred.
+
 **Recommended strategy**: per-row wiremock tests (mirroring the VP-578-004 error-taxonomy
 discipline) asserting the exact exit code, error variant, and the load-bearing message substring for
-rows 1–2, and standard-mapping parity for rows 3–4 — each run against BOTH call sites (edit + create)
-to pin the shared-function guarantee.
+rows 1–2, and standard-mapping parity for rows 3–4 — each run against **all three** call sites (edit,
+platform-create, JSM-create) to pin the shared-function guarantee.
 
-**Target**: the `get_or_fetch_workspace_id` call sites in `field_resolve.rs`/`create.rs`;
-integration in `tests/issue_field_hint_kinds.rs` (new) + `tests/issue_create.rs`. **F6**: covered by
+**Target**: the `get_or_fetch_workspace_id` call sites in `field_resolve.rs` (edit), `create.rs`
+(platform-create), and `jsm_create.rs` (`handle_jsm_create`); integration in
+`tests/issue_field_hint_kinds.rs` (new) + `tests/issue_create.rs`. **F6**: covered by
 `field_resolve.rs` glob add (the client function `get_or_fetch_workspace_id` in
 `src/api/assets/workspace.rs` is a read-only reused contract, not a new pure function this cycle).
 
@@ -1000,9 +1065,13 @@ Plus the two additional gap VPs F5 pass-1 required beyond the five above: **VP-5
 
 **F2 adversary-convergence (2026-08-26) additions** beyond the F5-pass-1 surface: **VP-578-021**
 (D2 — create-path Gate-B collision guard, BC-3.3.010), **VP-578-022** (B-LOW — `:asset` cold-cache
-workspace-discovery failure taxonomy, BC-3.4.030), **VP-580-010** (D1 — M2 `resolve_m2_project`,
-BC-X.14.001), **VP-580-011** (B-LOW — `--value` + graceful-degrade interaction, BC-X.14.002), plus
-the D3 no-panic call-site `>`-split proptest folded into **VP-578-008** (no new id). Task item 4
+workspace-discovery failure taxonomy, BC-3.4.030, **Pass2-F1 widened to all THREE call sites**:
+edit, platform-create, JSM-create), **VP-580-010** (D1 — M2 `resolve_m2_project`, BC-X.14.001),
+**VP-580-011** (B-LOW — `--value` + graceful-degrade interaction, BC-X.14.002), and the round-2
+**VP-580-012** (Pass2-F2 — `--project` not-found (404) HTTP-failure class on the M2 + M3
+enumeration paths, BC-X.14.004; realized within VP-580-004's per-row coverage, not a core-surface
+row), plus the D3 no-panic call-site `>`-split proptest folded into **VP-578-008** and the Pass2-F3
+no-panic `:`-split proptest folded into **VP-578-012** (neither mints a new id). Task item 4
 (B-F1) confirmed: **no** VP asserts M3 (`--request-type`) field-enumeration pagination — VP-578-020
 covers only the two M2 createmeta endpoints (FIELDS + ISSUE-TYPES); `get_request_type_fields` is a
 single non-paginated GET, so nothing to correct or remove.
@@ -1056,7 +1125,7 @@ reuse of the VP-396-009 edit-path realizations transplanted to the create path, 
 reversal's rewritten holdout scenarios + `create.rs` guard-removal regression tests, and (VP-578-020)
 by new two-page createmeta wiremock tests (**both** the FIELDS and ISSUE-TYPES createmeta endpoints)
 in `tests/issue_create.rs`. The full declared inline inventory
-this delta touches is **twenty-nine** VPs (twenty-two #578 [VP-578-001..022] + VP-580-005..011). If
+this delta touches is **thirty** VPs (twenty-two #578 [VP-578-001..022] + VP-580-005..012). If
 the state-manager later stands up the `S-PG-VP-REGISTRY-1` registry, these are its seed rows for the
 field-dx cycle.
 
@@ -1097,11 +1166,37 @@ write scope):
   product-owner's `[EXTENDED 2026-08-26, D3]` no-panic-proptest note; this delta realizes it as an
   extension of VP-578-008 (§2), minting no new id. The BC files needed no edit for D3.
 
+**Round-2 fix-chain (F2 adversary-convergence round-2, 2026-08-26) — verification-delta-only edits,
+NO BC-body edits this round.** The four BC-body placeholder back-fills above were made in the
+round-1 F2 pass. This round-2 pass aligned the verification delta to the architect's and
+product-owner's round-2 amendments and made **zero** edits to `bc-3-issue-write.md` /
+`cross-cutting.md` — there were no unfilled placeholder markers to back-fill (grep-confirmed). The
+round-2 changes are all inside this file: (1) Pass1-F1 — VP-580-006 §2 rewritten from the stale
+pre-D1 4-boolean `resolve_field_context(has_type, has_request_type, has_issue, has_project)` to the
+correct 3-boolean signature (dropped the `has_project` axis and the `(!has_type || has_project)`
+arity clause; the M2 project requirement is VP-580-010's, not duplicated here); (2) Pass2-F1 —
+VP-578-022 widened to assert the `:asset` cold-cache failure taxonomy on all THREE call sites (edit,
+platform-create, JSM `handle_jsm_create`), with the JSM `:asset` happy-path wire shape kept
+UNVERIFIED/deferred (VP-578-016); (3) Pass2-F3 — VP-578-012 extended with a `str::split_once(':')`
+no-panic proptest note for the `WORKSPACE:OBJECTID` first-colon split (folded in, no new id);
+(4) Pass2-F2 — **VP-580-012 minted** for the `--project` not-found (404) HTTP-failure class on the
+M2 + M3 enumeration paths.
+- **VP-580-012 — pending BC-body back-fill (state-manager/PO action).** Because Pass2-F2 left the
+  "new row → own VP?" question open **without** a placeholder marker in `cross-cutting.md`,
+  VP-580-012's inline BC-body declaration was NOT made this round (the task's write scope permits a
+  targeted BC edit only where an explicit placeholder marker exists). The state-manager/PO should
+  add a one-line VP-580-012 entry to **`cross-cutting.md` BC-X.14.004's Verification Properties**
+  (alongside VP-580-004/005/009), anchoring it to the new `--project not found (404)` taxonomy row +
+  EC-X.14.004-6. Until then, VP-580-012's authoritative definition lives in this delta (§0.1, §1,
+  frontmatter `new_properties`) and its BC-body anchor is VP-580-004's per-row taxonomy-coverage
+  clause.
+
 **Task item 4 (B-F1) — verified, no edit required:** the verification delta contains **no** VP
 asserting M3 (`--request-type`) field-enumeration pagination. VP-578-020 is scoped to the two M2
 createmeta endpoints only; `get_request_type_fields` is a single non-paginated GET (flat envelope).
 Nothing to correct or remove.
 
 These edits, plus this reconciled delta, leave **exactly one authoritative VP id per
-guarantee**, **zero PROVISIONAL markers**, and **zero unfilled "assign a VP id" placeholders**
-across the field-dx verification surface.
+guarantee** (VP-580-012's inline BC-body declaration is the sole pending back-fill, flagged above),
+**zero PROVISIONAL markers**, and **zero unfilled "assign a VP id" placeholders** across the
+field-dx verification surface.
