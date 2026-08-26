@@ -444,3 +444,51 @@ No BCs added or removed — total stays **719** (bc-3-issue-write.md 123/152 ind
 | adversary | Fresh-context pass #2 (completeness lens) | **CLEAN** — 1 LOW |
 | adversary | Fresh-context pass #3 (traceability lens) | **CLEAN** — 1 LOW |
 | state-manager | Re-run guard scripts (PASS, 719/no drift), update STATE.md to record F2 CONVERGED (streak 3/3), reconcile spec-changelog.md's [1.6.0] PROCESS-INTEGRITY CAVEAT, log this burst, commit | `STATE.md`; `spec-changelog.md`; this file |
+
+## Burst: Burst 8 — F2 human gate APPROVED + DEC-310 REGISTERED + F2->F3 transition (2026-08-26)
+
+**Parent-commit:** the commit landing Burst 7 above (F2-CONVERGENCE-CLOSE, streak-6 3/3 CONSECUTIVE CLEAN).
+
+**Adversary verdict:** N/A -- this burst is a human gate-decision and DEC-310-registration bookkeeping burst, not an adversary pass. No adversary was dispatched this burst; F2's mandatory adversarial spec-convergence loop already reached 3/3 CONSECUTIVE CLEAN in Burst 7 and is not reopened here.
+
+**Human decision:** the human reviewed the F2 gate (Step 8) on 2026-08-26 and delivered four decisions:
+
+1. **F2 gate APPROVED** -> pipeline transitions **F2 -> F3** (incremental stories).
+2. **Spec version DEFERRED.** The human said BOTH v1.6.0 (MINOR) and v2.0.0 (MAJOR) framings offered at the gate are WRONG and explicitly said not to bump the version right now. The spec-version determination is therefore OPEN/deferred, not settled -- the pre-existing v1.6.0 authoring-time frontmatter in `BC-INDEX.md`/`spec-changelog.md` is NOT reverted (that would be out-of-scope churn for this burst); this burst only records that the version is unconfirmed.
+3. **F-3 (JSM collision-guard extension) RESOLVED.** JSM create keeps its pre-existing last-wins behavior; the spec already documents the divergence (BC-3.8.008, PO-verified). The MED-1/F-3 owed-at-gate item is closed, no D2 guard extension.
+4. **DEC-310 REGISTER NOW.** The product-owner updated all inline spec surfaces (`bc-3-issue-write.md`, `BC-INDEX.md`, `CANONICAL-COUNTS.md`, `prd-delta-field-dx.md`) from "proposed" to "registered (2026-08-26, human-approved)" ahead of this burst (uncommitted at burst start). state-manager finishes the registration in the remaining bookkeeping surfaces this burst: `STATE.md` Decisions Log (DEC-310 flipped proposed -> REGISTERED, `DEC-310-FORMAL-REGISTRATION-OPEN` flag removed), `spec-changelog.md`'s `[1.6.0]` entry (all "proposed" DEC-310 language flipped to registered, plus a DEFERRED note on the spec-version classification and a corrected F2-convergence-gate Impact Assessment row), and this file (new Burst 8).
+
+**Files touched (Dim-1): 8 unique files** (4 by the PO ahead of this burst, 4 by state-manager this burst)
+
+- `phase-f2-spec-evolution/prd-delta-field-dx.md` (PO: DEC-310 proposed -> registered)
+- `specs/prd/BC-INDEX.md` (PO: DEC-310 proposed -> registered)
+- `specs/prd/CANONICAL-COUNTS.md` (PO: DEC-310 proposed -> registered)
+- `specs/prd/bc-3-issue-write.md` (PO: DEC-310 proposed -> registered)
+- `STATE.md` (state-manager: F2 gate APPROVED, phase F2->F3, DEC-310 REGISTERED, F-3 RESOLVED, spec version DEFERRED)
+- `spec-changelog.md` (state-manager: `[1.6.0]` entry's DEC-310 language reconciled to registered; spec-version DEFERRED note added; convergence-gate Impact Assessment row corrected)
+- `cycles/cycle-002/burst-log.md` (this entry)
+- `cycles/cycle-002/session-checkpoints.md` (state-manager: prior streak-6/convergence-close checkpoint archived from STATE.md, with a superseding note recording the gate's APPROVED outcome)
+
+**Dim-2 Attestation:** N/A for this burst -- spec-only F2-gate-close bookkeeping burst (no `src/` changes). `scripts/check-spec-counts.sh` -> exit 0 ("Check passed: 8 bc files validated"). `scripts/check-bc-cumulative-counts.sh` -> exit 0 ("OK: all cumulative BC counts verified (719 total across 9 files; Surface H footer checked where present)"). Both re-run by state-manager both before and after this burst's edits -- the PO's DEC-310 inline-surface edits changed no counts (719 unchanged).
+
+**Dim-5 Attestation:** N/A -- no binary/WASM artifact produced by this burst (bookkeeping/decision-recording delta only).
+
+**Dim-6 Attestation:** N/A -- no `src/` code changed this burst; `cargo fmt`/`cargo clippy` not applicable.
+
+**Dim-7 Attestation:** N/A -- no test suite changed this burst. Spec-level verification is `scripts/check-spec-counts.sh` and `scripts/check-bc-cumulative-counts.sh` (both PASS, see Dim-2 above); BC/VP realization tests remain deferred to F4 implementation per this repo's `convention: inline-proptest`.
+
+**Codifications:** F2 human gate **APPROVED**. DEC-310 **REGISTERED** (2026-08-26, human-approved). F-3 (JSM D2 collision-guard extension) **RESOLVED** -- retain last-wins, no extension. Spec version (v1.6.0 MINOR vs v2.0.0 MAJOR) **DEFERRED** -- neither confirmed nor overridden, human declined to settle it now. Pipeline transitions **F2 -> F3**; F3 (incremental stories) has not yet started.
+
+**Closes:** DEC-310 formal registration (owed-at-gate item #1, closed). F-3 JSM collision-guard-extension product decision (owed-at-gate item, closed -- RESOLVED). The F2 human gate itself (Step 8, APPROVED). **Does NOT close:** the DEC-namespace disambiguation question (human did not choose a split at this gate -- remains open, tracked debt); the spec-version determination (explicitly DEFERRED, not forced); the 4 residual LOW doc-hygiene items from streak-6 (non-blocking, tracked in `STATE.md` Drift/Standing Items); the pre-existing, NOT field-dx-scoped `F7-GATE-SYSTEMIC-INPUT-HASH-DRIFT` standing item (~145 historical stale artifacts from closed cycles, factory-wide, unrelated to this bundle).
+
+### Counts reconciled this burst
+
+No BCs added or removed -- total stays **719** (`bc-3-issue-write.md` 123/152 individually-bodied/cumulative; `cross-cutting.md` 89/155). VP total stays **32**. Holdouts unchanged (**106**). Both guard scripts re-verified PASS post-burst.
+
+### Details
+
+| Agent | Task | Output |
+|-------|------|--------|
+| human | F2 Step 8 gate review; delivered 4 decisions (gate APPROVED, spec version DEFERRED, F-3 RESOLVED, DEC-310 REGISTER NOW) | verbal/session decision, recorded here and in `STATE.md` |
+| product-owner | Flip inline spec surfaces (`bc-3-issue-write.md`, `BC-INDEX.md`, `CANONICAL-COUNTS.md`, `prd-delta-field-dx.md`) DEC-310 proposed -> registered | those 4 files (uncommitted at burst start, committed together with this burst) |
+| state-manager | Re-verify guard scripts (PASS, 719/no drift), update `STATE.md` (phase F2->F3, DEC-310 REGISTERED, F-3 RESOLVED, spec version DEFERRED), reconcile `spec-changelog.md`'s `[1.6.0]` entry, archive the prior streak-6 checkpoint to `session-checkpoints.md`, log this burst, commit all 8 touched files, push | `STATE.md`; `spec-changelog.md`; this file; `cycles/cycle-002/session-checkpoints.md`; the 4 PO-edited spec files |

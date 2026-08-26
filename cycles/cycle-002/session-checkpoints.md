@@ -228,4 +228,48 @@ Archived verbatim from STATE.md v3.13 before the streak-6 convergence-close burs
 
 ---
 
+## Session Resume Checkpoint (2026-08-26) — F2-CONVERGENCE-CLOSE-STREAK-6 (superseded by the F2-GATE-APPROVED-F3-TRANSITION burst)
+
+Archived verbatim from STATE.md v3.14 before the F2-GATE-APPROVED-F3-TRANSITION burst (Burst 8) overwrote it.
+
+**SUPERSEDING NOTE (state-manager, 2026-08-26, Burst 8):** everything this checkpoint records as "still needs formal registration" / "remains DEFERRED, owed at the F2 human gate" was resolved at that same gate on the same day. The human reviewed the F2 gate and delivered four decisions: (1) F2 gate **APPROVED** -> pipeline transitions F2 -> F3; (2) spec version **DEFERRED** (both v1.6.0 MINOR and v2.0.0 MAJOR rejected, not settled); (3) F-3 (JSM D2 collision-guard extension) **RESOLVED** -- retain last-wins, no extension; (4) DEC-310 **REGISTERED**. See `STATE.md`'s current Session Resume Checkpoint and `cycles/cycle-002/burst-log.md` Burst 8 for the current, authoritative record. This archived checkpoint is preserved below unmodified as the historical snapshot of what was true immediately before that gate decision.
+
+### Spec Versions
+
+| Artifact | Version |
+|----------|---------|
+| BC-INDEX.md | v6.82 |
+| STATE.md | v3.14 |
+| Total BCs | 719 |
+| VPs | 32 |
+| Holdout scenarios | 106 |
+
+**Cycle:** Field DX Feature Mode cycle (`cycle-002`) -- GitHub issues #580 (`jr field options <field>` -- enumerate custom-field options) + #578 (`--field` value-kind hint syntax `:option`/`:id`/`:name`/`:asset` + non-JSM `issue create --field`). 2-story bundle, full F1-F7 lifecycle, DTU not required.
+
+**Position:** Phase F2 (spec evolution) -- mandatory adversarial spec-convergence loop **CONVERGED**. Pipeline ACTIVE, awaiting F2 Step 8 human gate.
+
+**F1:** COMPLETE + human-approved (unchanged). See `phase-f1-delta-analysis/delta-analysis-field-dx.md`.
+
+**F2 authoring + rounds 1-6:** COMPLETE (unchanged this burst) -- 12 new BCs (`§X.14` Field Option Discovery + BC-3.3.010/011 + BC-3.4.026-031), ADR-0019 (Accepted 2026-08-25; § Amendment 2026-08-26 D1/D2/D3 + F-B + D4 + D2 correction + D2 count fix), BC-3.8.012 reversed (governance flag **DEC-310**, fully propagated). Counts: **719 total BCs** (BC-INDEX v6.82), **32 VPs**, **106 holdout scenarios** -- all unchanged this burst (convergence-close is a bookkeeping/version burst; no spec-content edits beyond the version/changelog reconciliation).
+
+**This session's work (2026-08-26, streak-6 / convergence-close):** a fresh 3-pass adversary streak was run against the round-6 committed delta (factory-artifacts@`b8082ba4`) -- **Pass 1 (correctness) CLEAN** (verified the D2 create-guard TEN-key count against actual `create.rs` source, guard-ordering determinism, and the VP-count reconciliation 32 three ways; only 2 LOW doc-hygiene items), **Pass 2 (completeness) CLEAN** (no new CRITICAL/HIGH/MEDIUM -- six-round convergence drove the delta to the floor; 1 LOW), **Pass 3 (traceability) CLEAN** (VP inventory 32 with no orphans, TEN-count consistent across all 4 surfaces, DEC-310 governance, holdouts, counts 719/32/106 all reconcile; 1 LOW). Zero intervening fixes were required between passes -- this is the first streak this session to reach **3/3 CONSECUTIVE CLEAN**. **F2 mandatory adversarial spec-convergence is CONVERGED.** 4 residual LOW doc-hygiene findings are tracked as non-blocking debt (they do not reset the streak): (1) stale `prd-delta-field-dx.md` round-2 step-2a narration; (2) platform `:asset` wire-shape UNVERIFIED note; (3) M1 (`jr field options`)'s editmeta-fallback path missing an explicit status/permission-dependency caveat; (4) `prd-delta-field-dx.md`'s Summary section's "9 amended BCs" count is stale -- should include BC-3.4.021/028/030 (round-5/round-6 amendments). Spec version bumped **v1.5.0 -> v1.6.0** (MINOR per DF-030) in `spec-changelog.md`; that entry's PROCESS-INTEGRITY CAVEAT (which had recorded the pre-convergence 0/3 streak as of `b8082ba4`) is reconciled in this commit to state convergence achieved and recorded here, superseding the prior caveat. MINOR-vs-MAJOR on the BC-3.8.012/DEC-310 reversal is explicitly flagged for the human gate, not forced. Both guard scripts re-verified PASS (`check-spec-counts.sh` -> exit 0, 8 files; `check-bc-cumulative-counts.sh` -> exit 0, 719 total across 9 files). Full detail: `cycles/cycle-002/burst-log.md` Burst 7.
+
+**Convergence counter -- RESOLVED:** streak is **3/3 CONSECUTIVE CLEAN -- CONVERGED.** No further adversary passes are required for F2. **ON RESUME (as of this checkpoint):** proceed directly to **F2 Step 8 (human gate)** -- do not restart the adversary loop. *(Superseded: the gate has since run -- see SUPERSEDING NOTE above.)*
+
+**Decisions of record (as of this checkpoint, now superseded):** DEC-310 (reverses DEC-188; proposed, propagation complete) -- **still needs formal registration**, owed at the F2 human gate / cycle close. ADR-0019 (Accepted 2026-08-25; 6 amendment rounds through round-6's D2 count fix). D2-collision-guard-extension-to-JSM question (F-3, round-4) remains DEFERRED, owed at the F2 human gate.
+
+**Cycle-closing checklist -- process-gap follow-ups owed as of this checkpoint (now updated -- see SUPERSEDING NOTE above for current status):**
+1. Register DEC-310 formally. *(DONE at the F2 gate -- REGISTERED.)*
+2. DEC-namespace disambiguation question. *(Still open -- human did not choose a split at the gate.)*
+3. Reversal-propagation checklist for the PO/state-manager workflow. *(Still not built.)*
+4. `COUNT-RECONCILIATION-FORCED-CONSISTENCY-PATTERN` lesson from round-6. *(Still tracked, unchanged.)*
+5. The 4 residual LOW doc-hygiene items from streak-6. *(Still tracked, non-blocking.)*
+6. MINOR-vs-MAJOR spec-version confirmation. *(DEFERRED at the gate -- neither confirmed nor overridden.)*
+
+**Pending human decision (as of this checkpoint):** F2 human gate (Step 8) -- confirm convergence, register DEC-310, decide the DEC-namespace question, decide F-3 (D2-extension-to-JSM), and confirm/override the MINOR spec-version classification. *(Resolved -- see SUPERSEDING NOTE above.)*
+
+**Resume command (as of this checkpoint):** `/vsdd-factory:next-step` (or proceed directly to the F2 human gate -- the adversary loop is CONVERGED, do not restart it). *(Superseded -- the gate has run; current resume command is F3 story decomposition, see current `STATE.md`.)*
+
+---
+
 <!-- Repeat for each archived checkpoint. Maintain chronological order. -->

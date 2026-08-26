@@ -39,12 +39,13 @@ place — body propagation of combined-guard removal; guard BEHAVIOR unchanged),
 **BC-3.8.012 (full reversal)**.
 
 **1 governance flag raised**: BC-3.8.012's reversal of DEC-188 (a deliberate breaking change
-shipped ~1 month prior, 2026-07-25) requires its own formal decision entry. **Proposed ID:
-DEC-310** (next sequential after the highest DEC number found across the ENTIRE `.factory/`
-tree, DEC-309, per a `grep -rohE "DEC-[0-9]{3}" .factory/` survey run during the F2
-adversary-convergence pass, 2026-08-26). This repo has no centralized DEC registry file — DEC
-numbers are assigned inline in spec prose by convention — so DEC-310 is a **proposal**, not yet
-a registered decision. **Correction (F2 adversary-convergence pass, C-M1):** this entry
+shipped ~1 month prior, 2026-07-25) requires its own formal decision entry: **DEC-310**
+(registered 2026-08-26, human-approved at the F2 gate; next sequential after the highest DEC
+number found across the ENTIRE `.factory/` tree, DEC-309, per a `grep -rohE "DEC-[0-9]{3}"
+.factory/` survey run during the F2 adversary-convergence pass, 2026-08-26). This repo has no
+centralized DEC registry file — DEC numbers are assigned inline in spec prose by convention —
+and DEC-310 is now a registered decision under that convention. **Correction (F2
+adversary-convergence pass, C-M1):** this entry
 originally proposed **DEC-307**, computed from a `.factory/specs/`-only grep whose reported
 maximum (DEC-306) undercounted the repo: `cycle-001` (`list-read-ergonomics`)'s F5/F7 closure
 had already allocated DEC-306 through DEC-309 (recorded in `.factory/cycles/cycle-001/` and
@@ -55,7 +56,7 @@ full-`.factory/`-tree maximum (DEC-309) yields DEC-310. **Open namespace questio
 resolved here:** spec-level DECs (188, 306, 307, 310) and cycle-gate DECs (e.g. 309) currently
 share one undifferentiated `DEC-NNN` prefix — whether that should remain one sequence or split
 into two disambiguated series is unresolved; flagged for cycle close, not decided by this pass.
-The orchestrator/state-manager should register DEC-310 formally and must not let a future pass
+DEC-310 was registered 2026-08-26 (human-approved at the F2 gate); a future pass MUST NOT
 silently reuse DEC-310 (or DEC-307, already taken by `cycle-001`) for an unrelated decision.
 
 **BC-INDEX.md and CANONICAL-COUNTS.md updated**: total_bcs 707 → 719; bc-3-issue-write.md
@@ -151,7 +152,7 @@ These match the BA's proposed numbering exactly (BC-3.3.010/011; BC-3.4.026..031
 | **BC-3.4.015** | Amendment note added: this BC's algorithm is now explicitly the BARE-form (`kind: None`) dispatch, permanent and unchanged; hint-syntax interaction documented, pointing to BC-3.4.026-031. Per ADR-0019 §2: `field_pairs` changes to `&HashMap<String, FieldValueSpec>` (bare-name key, last-wins on the whole spec); `resolve_edit_fields` reads each entry's `spec.kind` and takes the hinted-bypass branch before falling through to the existing `schema.type` match when `spec.kind == None`. | bc-3-issue-write.md |
 | **BC-3.4.016** | Amendment note added: same bare-form/permanence framing for the `option`-type dispatch; explicit opt-in spelling is `:option` (BC-3.4.027); `:id` hint is the explicit spelling of this BC's own Step-1 id-bypass. | bc-3-issue-write.md |
 | **BC-3.8.008** | Amendment note added: hint-kind syntax applies uniformly on the JSM create path too (resolves the F1 research/BA open question — decided YES, uniform application, since `parse_field_kv` is shared); wire target substituted to `requestFieldValues`; bare-form output is byte-identical, unchanged. New VP-578-015/016 pin the regression/parity guarantees. | bc-3-issue-write.md |
-| **BC-3.8.012** | **FULL REVERSAL.** DEC-188's `--field`-alone platform-path exit-64 pre-flight guard (and the combined `--field`+`--on-behalf-of` guard, which loses its trigger) is removed. Old DEC-188 contract preserved verbatim inline as `[DEC-188 BEHAVIOR, superseded 2026-08-25]` for audit trail (mirrors the append-only convention this BC already used once, for the pre-DEC-188 #383 warn-and-proceed text). New `[CURRENT BEHAVIOR — effective 2026-08-25]` section added: `--field` alone now resolves via createmeta (BC-3.3.010) instead of erroring. H1 heading updated to reflect the reversal. **Governance flag: DEC-310 proposed** (see Summary above). | bc-3-issue-write.md |
+| **BC-3.8.012** | **FULL REVERSAL.** DEC-188's `--field`-alone platform-path exit-64 pre-flight guard (and the combined `--field`+`--on-behalf-of` guard, which loses its trigger) is removed. Old DEC-188 contract preserved verbatim inline as `[DEC-188 BEHAVIOR, superseded 2026-08-25]` for audit trail (mirrors the append-only convention this BC already used once, for the pre-DEC-188 #383 warn-and-proceed text). New `[CURRENT BEHAVIOR — effective 2026-08-25]` section added: `--field` alone now resolves via createmeta (BC-3.3.010) instead of erroring. H1 heading updated to reflect the reversal. **Governance flag: DEC-310 (registered 2026-08-26, human-approved at the F2 gate)** (see Summary above). | bc-3-issue-write.md |
 | **BC-3.8.001** | §3.8 section preamble (3 sites) and BC-3.8.001's own H1 heading + amendment note scoped the surviving exit-64 guard to `--on-behalf-of` only, matching BC-3.8.012's reversal — the stale `--field`/`--on-behalf-of` combined phrasing (pre-reversal wording) is replaced with `--on-behalf-of`-only phrasing plus a `[reversed 2026-08-25 issue #578 DEC-310: --field no longer exits 64 — resolves via createmeta per BC-3.3.010/BC-3.8.012]` note at each site. No behavioral change to BC-3.8.001 itself — this closes a straggler where the BC-INDEX row (already corrected) and BC-3.3.001 H1 (already corrected) had moved on but this file's body text had not. | bc-3-issue-write.md |
 | **BC-3.8.013** | Amended in place, NOT merely reclassified: `[CURRENT BEHAVIOR — effective 2026-08-25, issue #578]` note added (~body line 4266); "Combined pre-flight error" subsection rewritten in place (~body line 4309) to reflect BC-3.8.012's combined-guard removal; EC-3.8.013-1 updated (~body line 4331) to hold with-or-without `--field`; AC-3 marked stale-post-reversal and AC-12's count-normalization obligation added (~body line 4335). The GUARD'S OWN observable behavior (standalone `--on-behalf-of`-without-`--request-type` → exit 64) is unchanged — only the TRIGGER SCOPE description and the now-dead combined-error cross-references were updated to match BC-3.8.012's reversal. | bc-3-issue-write.md |
 | **BC-3.4.017** | **[AMENDED 2026-08-25 issue #578 F2, adversary pass-13 F-1 fix]** Gate B's flag-overlap matching note extended: a hint-tagged `--field NAME:kind=VALUE` pair is matched on its BARE NAME (per BC-3.4.026's bare-key rule), so it fires Gate B identically to the bare `--field NAME=VALUE` form, for all five system fields and every hint kind. New EC-3.4.017-16 documents this (`--priority Medium --field priority:name=Medium` → exit 64). Adds `[AMENDED 2026-08-25 issue #578 F2]` footer marker. This closes a contradiction where BC-3.4.029 EC-3.4.029-2 had claimed universal last-wins (no exit 64) for the identical flag combination — EC-3.4.029-2 is now scoped explicitly to the create path, where no Gate B guard exists. No BC-INDEX title change (H1 unchanged; Gate B's title already names all five fields). | bc-3-issue-write.md |
@@ -218,9 +219,9 @@ resolve. All four are resolved here, with rationale:
 4. **BC-3.8.012 repeal: full removal or DEC needed?** (BA open question 5.4) — RESOLVED: **DEC
    needed, not decided unilaterally.** This delta performs the spec-level reversal (BC-3.8.012's
    contract text now reflects the new behavior) but explicitly does NOT declare the governance
-   question closed — it proposes **DEC-310** and flags it for the orchestrator to register
-   formally, consistent with how DEC-188 itself was a recorded, reviewable decision rather than
-   an implicit code change.
+   question closed — it registers **DEC-310** (2026-08-26, human-approved at the F2 gate),
+   consistent with how DEC-188 itself was a recorded, reviewable decision rather than an
+   implicit code change.
 
 ---
 
@@ -413,9 +414,9 @@ full-`.factory/`-tree maximum (DEC-309) yields **DEC-310**. Every occurrence of 
 DEC-307 in `prd-delta-field-dx.md` (this document) and `bc-3-issue-write.md` (BC-3.3.001,
 BC-3.4.014, BC-3.8.001, BC-3.8.012's governance flag + Trace + `[AMENDED...]` markers,
 BC-3.8.013) is renumbered to DEC-310; the survey-provenance prose is corrected to describe the
-full-tree grep and the DEC-307 collision, not the specs-only undercounted grep. DEC-310 remains a
-**proposal**, not yet formally registered — the orchestrator/state-manager should register it at
-cycle close and must not let a future pass reuse DEC-310 or DEC-307 (already taken) again.
+full-tree grep and the DEC-307 collision, not the specs-only undercounted grep. DEC-310 was
+formally registered 2026-08-26 (human-approved at the F2 gate); a future pass must not reuse
+DEC-310 or DEC-307 (already taken) again.
 
 **Open namespace question, flagged not resolved:** spec-level DECs (188, 306, 307, 310) and
 cycle-gate DECs (e.g. 309) currently share one undifferentiated `DEC-NNN` prefix. Whether these
