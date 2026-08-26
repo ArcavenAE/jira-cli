@@ -2165,7 +2165,14 @@ See BC-X.14.001 Invariant 1 / VP-580-006 below for the propagated text.
 - **FALLBACK / convenience**: `--issue <KEY>` (no `--project` companion — the issue key alone
   supplies project context) → reuses the existing `GET /issue/{key}/editmeta` call `jr` already
   owns (M1, same mechanism as `issue edit --field`, BC-3.4.015). Useful when the caller has a
-  concrete reference issue to copy option ids from.
+  concrete reference issue to copy option ids from. **[CAVEAT ADDED 2026-08-26, F2
+  adversary-convergence round-6, LOW]**: M1 enumerates the PLATFORM editmeta Edit-screen field
+  set for `<KEY>` — this can DIVERGE from the portal request-type field set reachable via M3
+  (`--request-type`) on a JSM issue, since the Edit-screen (agent-facing) field set and a request
+  type's portal-facing field set are independently configured by a JSM admin and are not
+  guaranteed to match. A JSM user who wants the options a customer sees on the PORTAL form (not
+  the agent Edit screen) needs `--request-type <RT>` (M3), not `--issue <KEY>` (M1), even when
+  they have a concrete issue key in hand.
 
 All three mechanisms are OAuth-3LO-accessible for an ordinary (non-admin) user — this is the
 pivot away from the admin-gated `GET /field/{id}/context/{ctx}/option` endpoint #580's own

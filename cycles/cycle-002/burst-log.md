@@ -323,3 +323,58 @@ No BCs added or removed — total stays **719** (bc-3-issue-write.md 123/152 ind
 | product-owner | 2 tiny wording fixes: MED-2 back-fill reconciliation + related_bcs update | `verification-delta-field-dx.md`, `bc-3-issue-write.md` |
 | adversary | Fresh-context pass #3 | **CLEAN** |
 | state-manager | Re-run guard scripts, reconcile VP count 31→32, log this burst, update STATE.md, commit | this file; `STATE.md` |
+
+## Burst: Burst 6 — F2 adversary-convergence round-6, FIFTH fresh 3-pass streak (Passes 2 & 3 CLEAN, streak still 0/3), D2 count correction 9→10 + 4 LOWs fixed (2026-08-26)
+
+**Parent-commit:** `e289bce8` (factory(F2): field-dx convergence round-5 -- D2 create-guard 5->9 + dry-run VP-578-024 + consistency-sweep residual, VP 31->32)
+
+**Adversary verdict:** Pass 1 **NOT-CLEAN** (one genuine MEDIUM), Pass 2 **CLEAN**, Pass 3 **CLEAN** — the fifth consecutive fresh-streak attempt this session, and the first time in this session's history that TWO passes in the same streak came back clean. The single MEDIUM (M-1) was a count-arithmetic contradiction in round-5's own D2 correction, not a new defect class. Fixed via a fix chain: architect + product-owner + verifier, run in parallel on disjoint files, then reconciled by state-manager.
+
+**Files touched (Dim-1): 6 unique files**
+
+- phase-f2-spec-evolution/architecture-delta-field-dx.md
+- phase-f2-spec-evolution/prd-delta-field-dx.md
+- phase-f2-spec-evolution/verification-delta-field-dx.md
+- specs/architecture/decisions/ADR-0019-field-dx-context-hint-shape-delimiter.md
+- specs/prd/bc-3-issue-write.md
+- specs/prd/cross-cutting.md
+
+(`sidecar-learning.md` also touched, non-spec; new `cycles/cycle-002/lessons.md` created this burst, non-spec.)
+
+**Codifications:** **M-1 (MEDIUM) count correction:** round-5's D2 create-path collision guard governed set was reported as "nine" wire-key targets, but the arithmetic itself was wrong — `--points`→`story_points` customfield id and `--team`→`team` customfield id are TWO DISTINCT `customfield_NNNNN` wire keys, not one collapsed "resolved-id category." Round-5's reconciliation had wrongly collapsed them into a single member to force the total to read "nine." Corrected to **TEN** = 5 original (`summary`/`description`/`issuetype`/`priority`/`components`) + 3 new static keys (`labels`/`parent`/`assignee`, zero-HTTP) + 2 distinct resolved-id keys (`--points`→story-points customfield id, `--team`→team customfield id; both detected ONLY via the `--field customfield_NNNNN=` bypass form, never a display name). Propagated consistently across: ADR-0019 § "D2 correction" (rows 9a/9b split into distinct rows 9/10), `architecture-delta-field-dx.md` §9, `bc-3-issue-write.md` (10 sites: BC-3.3.010 Invariant 5/EC-3.3.010-6a, BC-3.3.011's error-taxonomy, BC-3.4.014/017/029), and `verification-delta-field-dx.md`'s VP-578-021 (property 2 = 8 static-key cases, property 3 = 2 SEPARATE resolved-id cases rather than one merged case, negative regression pin retained unchanged). Also fixed a latent 5+4+2=11 math error found alongside in the verification-delta's own scratch arithmetic. Grep-verified: every active contract surface now says TEN; the only remaining "nine" strings are intentional correction-narration (this burst's and round-5's own historical prose), not live counts. **4 LOWs folded in:** BC-3.8.008 EC-3.8.008-3 (JSM malformed `--field` hint exits 64 pre-POST, now pinned); BC-X.14.001 gains a caveat distinguishing M1's field set from M3's (the two diverge, previously unremarked); BC-3.4.021 Invariant 1 gains an explicit F-NEW-2 exception qualifier (round-5's dry-run wire-shape pin is an exception to the general invariant, not an extension of it, now stated as such); VP-578-005 gains a coverage note for the colon-in-a-field-name case (verifier-authored, closes a silent gap the adversary's Pass 1 also flagged). No new BC. No new VP — VP-578-021's amendment is a scope correction (property 2/3 split), not a new id; VP total stays 32.
+
+**Dim-2 Attestation:** N/A for this burst — spec-only F2 convergence burst (no `src/` changes). `scripts/check-spec-counts.sh` → exit 0 ("Check passed: 8 bc files validated"). `scripts/check-bc-cumulative-counts.sh` → exit 0 ("OK: all cumulative BC counts verified (719 total across 9 files; Surface H footer checked where present)"). Both re-run post-burst by state-manager.
+
+**Dim-5 Attestation:** N/A — no binary/WASM artifact produced by this burst (spec/documentation delta only).
+
+**Dim-6 Attestation:** N/A — no `src/` code changed this burst; `cargo fmt`/`cargo clippy` not applicable.
+
+**Dim-7 Attestation:** N/A — no test suite changed this burst. Spec-level verification is `scripts/check-spec-counts.sh` and `scripts/check-bc-cumulative-counts.sh` (both PASS, see Dim-2 above); BC/VP realization tests remain deferred to F4 implementation per this repo's `convention: inline-proptest`.
+
+**Findings routed and fixed this burst:**
+
+| Finding | Severity | Description | Fix |
+|---------|----------|--------------|-----|
+| M-1 | MEDIUM | Round-5's D2 create-path collision-guard governed set was arithmetically wrong — `--points` and `--team` resolve to two distinct `customfield_NNNNN` wire keys, but round-5 collapsed them into one "resolved-id category" to force the count to read "nine" | Corrected to TEN = 5 original + 3 static + 2 distinct resolved-id keys; propagated across ADR-0019, architecture-delta §9, bc-3-issue-write.md (10 sites), and VP-578-021 (property 2/3 split, negative pin retained); a latent 5+4+2=11 scratch-math error fixed alongside |
+| LOW | LOW | BC-3.8.008 EC-3.8.008-3 (JSM malformed `--field` hint exit-64-pre-POST) was implied but not explicitly pinned | Explicit EC pinned |
+| LOW | LOW | BC-X.14.001 did not caveat that M1's field set diverges from M3's | Divergence caveat added |
+| LOW | LOW | BC-3.4.021 Invariant 1 did not qualify F-NEW-2 (round-5) as an exception to the general invariant | Exception qualifier added |
+| LOW | LOW | VP-578-005 lacked a coverage note for the colon-in-field-name case | Coverage note added (verifier) |
+
+**Closes:** M-1 (D2 governed-set count corrected 9→10), all 4 LOWs. **Does NOT close:** the F2 mandatory adversarial spec-convergence loop itself (streak remains 0/3 — Pass 1's NOT-CLEAN verdict resets the streak even though Passes 2 and 3 were both CLEAN; a fresh 3-pass run starting from Pass 1 is still required). **Notable trajectory signal:** this is the first round in this session where TWO passes in the same streak (Passes 2 and 3) came back CLEAN — the delta's defect surface is at the floor; only the M-1 count contradiction (now fixed) broke the streak this round. **Also NOT closed (unchanged from round-5):** DEC-310 formal registration, the DEC-namespace disambiguation question, and F-3's JSM collision-guard extension (open product decision) all remain owed at the F2 human gate.
+
+### Counts reconciled this burst
+
+No BCs added or removed — total stays **719** (bc-3-issue-write.md 123/152 individually-bodied/cumulative; cross-cutting.md 89/155). **VP total stays 32** — VP-578-021 was amended (property 2/3 split), not newly minted; no new VP id this round. Holdouts unchanged (106). Both guard scripts re-verified PASS post-burst.
+
+### Details
+
+| Agent | Task | Output |
+|-------|------|--------|
+| adversary | Fresh-context pass #1 | NOT-CLEAN — routed M-1 (flagged for architect), 4 LOWs |
+| adversary | Fresh-context pass #2 | **CLEAN** |
+| adversary | Fresh-context pass #3 | **CLEAN** |
+| architect | Decide M-1 count correction (9→10, rows 9a/9b split into 9/10) | ADR-0019 § "D2 correction" amendment, `architecture-delta-field-dx.md` §9 |
+| product-owner | Propagate M-1's 10-member set + 3 of the 4 LOWs into PRD/BC bodies | `prd-delta-field-dx.md` round-6 amendments section, `bc-3-issue-write.md` (10 sites), `cross-cutting.md` |
+| verifier | Amend VP-578-021 (property 2/3 split, fix latent 5+4+2=11 math error, negative pin retained); add VP-578-005 coverage note (4th LOW) | `phase-f2-spec-evolution/verification-delta-field-dx.md` |
+| state-manager | Re-run guard scripts (PASS, 719/no drift), log this burst, log process-gap lesson, update STATE.md, commit | this file; `cycles/cycle-002/lessons.md`; `STATE.md` |

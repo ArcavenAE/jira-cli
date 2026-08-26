@@ -26,9 +26,11 @@ create-path `--field`/dedicated-flag collision precedence (D2), and cascading `>
 safety (D3). See § Amendment (2026-08-26) below.
 **Amended further** (2026-08-26, adversary finding F-NEW-1): D2's create-path governed field set
 was itself under-scoped — it reused Gate B's five-member EDIT-derived set rather than
-`issue create`'s own larger dedicated-flag surface. Corrected to a nine-member set (`labels`,
-`parent`, `assignee`, and resolved-id detection for `team`/`points` added) in § "D2 correction
-(adversary F-NEW-1)" immediately following D2 below.
+`issue create`'s own larger dedicated-flag surface. Corrected to a ten-member set (5 original Gate
+B keys + 3 new static keys — `labels`, `parent`, `assignee` — + 2 new resolved-id keys — the
+story-points customfield id and the team customfield id, two DISTINCT `customfield_NNNNN` wire
+keys, not one combined "resolved-id category") in § "D2 correction (adversary F-NEW-1)"
+immediately following D2 below.
 
 > **NOTE — factory-artifact placement, not yet an F4 code artifact:** This ADR governs
 > `src/cli/field.rs` (new), an extension to `src/api/jira/issues.rs`, and the `parse_field_kv`
@@ -578,7 +580,12 @@ double-writes `fields.parent` from two unordered sources: exactly the "no define
 mode D2 exists to close. This is an under-scoped execution of D2's own rationale, not a flaw in
 the rationale itself.
 
-**Decision: the create-path governed set is NINE wire-key targets, not five.**
+**Decision: the create-path governed set is TEN wire-key targets, not five.** The 5 original Gate
+B keys, plus 3 new static keys (`labels`, `parent`, `assignee`), plus 2 new resolved-id keys — the
+story-points customfield id and the team customfield id are TWO DISTINCT `customfield_NNNNN` wire
+keys, not one combined "resolved-id category": `--points` resolves to `story_points_field_id` and
+`--team` resolves to `team_field_id`, and a wire-key set-intersection guard must carry both
+independently for each to fire on its own flag.
 
 | # | Flag(s) | Wire key | Zero-HTTP at step 2b? | Matching mechanism |
 |---|---|---|---|---|
@@ -586,8 +593,8 @@ the rationale itself.
 | 6 | `--label` | `labels` | Yes | Static case-insensitive key compare — SAME zero-cost mechanism as 1-5 |
 | 7 | `--parent` | `parent` | Yes | Static case-insensitive key compare — SAME mechanism as 1-5 |
 | 8 | `--to` / `--account-id` (clap `conflicts_with` already prevents both at once) | `assignee` | Yes | Static case-insensitive key compare — SAME mechanism as 1-5 |
-| 9a | `--points` | `story_points_field_id` from `config.active_profile()` (a `customfield_NNNNN` string) | Yes, unconditionally — `resolve_story_points_field_id` is config-only, no HTTP fallback exists | Resolved-id equality against a `--field customfield_NNNNN=` bypass form only — see caveat below |
-| 9b | `--team` | `team_field_id` from `config.active_profile()`, when present | Conditional — zero-HTTP only when `team_field_id` is already in profile config (the `jr init`-driven common case); `client.find_team_field_id()` (HTTP) is NEVER invoked to service this guard | Same resolved-id equality as 9a, only when the id is already in hand at zero cost; otherwise this flag's branch is a no-op for that invocation |
+| 9 | `--points` | `story_points_field_id` from `config.active_profile()` (a `customfield_NNNNN` string) | Yes, unconditionally — `resolve_story_points_field_id` is config-only, no HTTP fallback exists | Resolved-id equality against a `--field customfield_NNNNN=` bypass form only — see caveat below |
+| 10 | `--team` | `team_field_id` from `config.active_profile()`, when present | Conditional — zero-HTTP only when `team_field_id` is already in profile config (the `jr init`-driven common case); `client.find_team_field_id()` (HTTP) is NEVER invoked to service this guard | Same resolved-id equality as item 9, only when the id is already in hand at zero cost; otherwise this flag's branch is a no-op for that invocation |
 
 **`labels`-on-create vs `labels`-exclusion-on-edit — do not conflate.** BC-3.4.017's edit-path
 Gate B deliberately EXCLUDES `labels` from its governed set because `issue edit --label` forks to
@@ -624,25 +631,28 @@ conditional on `team_field_id` already sitting in profile config (`jr init`'s co
 absent, that branch is a no-op for the invocation rather than triggering
 `client.find_team_field_id()` to find out. `--points`'s detection has no such condition:
 `resolve_story_points_field_id` is unconditionally config-only (errors rather than falling back to
-HTTP when unconfigured), so item 9a is zero-HTTP-available whenever `story_points_field_id` is
+HTTP when unconfigured), so item 9 is zero-HTTP-available whenever `story_points_field_id` is
 configured at all.
 
 **No new dependency-graph or purity-table edge.** `field_resolve::detect_flag_field_overlap`'s
 signature is unchanged from D2 above — it still takes an already-computed governed-key set from
 the caller. The only change is what `create.rs`'s step-2b call site passes in: for items 1-8, the
-same static-literal-set pattern as before, now with four more members; for item 9, `create.rs`
-reads `config.active_profile().story_points_field_id`/`.team_field_id` (already-loaded `Config` —
+same static-literal-set pattern as before, now with three more members (`labels`, `parent`,
+`assignee`); for items 9 and 10, `create.rs` reads
+`config.active_profile().story_points_field_id`/`.team_field_id` (already-loaded `Config` —
 `Config::load_with` completes in `main.rs` before `handle_create` is entered, per EC-3.8.012-6;
-not a new input) and includes the resolved id string(s) in the set when present. No new module, no
-new I/O, no new edge on the dependency graph beyond what D2 above already recorded.
+not a new input) and includes each resolved id string, independently, in the set when present —
+two distinct wire keys, not one combined lookup. No new module, no new I/O, no new edge on the
+dependency graph beyond what D2 above already recorded.
 
 **Downstream implication (flagged for the product-owner and verifier, not made here):**
 BC-3.3.010 Invariant 5 / EC-3.3.010-6, BC-3.3.011's D2 taxonomy row, and BC-3.4.029 EC-3.4.029-2
 all currently describe (or cross-reference) a five-member governed set and must be rewritten to
-the nine-member set above, including the `labels`-on-create-vs-edit distinction and the
-team/points resolved-id/zero-HTTP caveats verbatim (load-bearing, not incidental prose). VP-578-021
-must be extended to exercise each of the four newly-covered static flags
-(`--label`/`--parent`/`--to`/`--account-id`) plus the two resolved-id cases (`--points` + `--field
+the ten-member set above (5 original + 3 new static + 2 new resolved-id keys), including the
+`labels`-on-create-vs-edit distinction and the team/points resolved-id/zero-HTTP caveats verbatim
+(load-bearing, not incidental prose). VP-578-021 must be extended to exercise each of the three
+newly-covered static wire keys (`labels`/`parent`/`assignee`, reached via the four flags
+`--label`/`--parent`/`--to`/`--account-id`) plus the two resolved-id cases (`--points` + `--field
 customfield_NNNNN=`; `--team` + `--field customfield_NNNNN=` when `team_field_id` is configured)
 and to assert the NON-firing residual case (`--points` + `--field "Story Points"=`) does NOT trip
 the guard, as a documented-limitation regression pin rather than a silent gap.

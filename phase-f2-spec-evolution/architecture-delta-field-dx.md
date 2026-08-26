@@ -408,7 +408,11 @@ five more dedicated-flag values into the same `fields` object `--field` merges i
 guard, reopening the exact silent-double-write class D2 exists to close (e.g. `--parent FOO-1
 --field parent=BAR-2`).
 
-**Decision:** the create-path governed set grows from five wire-key targets to nine. Full
+**Decision:** the create-path governed set grows from five wire-key targets to ten — the 5
+original Gate B keys, plus 3 new static keys (`labels`, `parent`, `assignee`), plus 2 new
+resolved-id keys (the story-points customfield id and the team customfield id — TWO DISTINCT
+`customfield_NNNNN` wire keys, since `--points` resolves to `story_points_field_id` and `--team`
+resolves to `team_field_id` independently; not one combined "resolved-id category"). Full
 per-member table, matching-mechanism detail, the `labels`-on-create-vs-edit-exclusion asymmetry,
 and the `--team`/`--points` resolved-custom-field-id caveat (bounded to the `customfield_NNNNN`
 bypass form only, to preserve the step-2b zero-HTTP invariant) are recorded in ADR-0019 § "D2
@@ -418,21 +422,22 @@ architectural consequences below.
 **Dependency-graph / purity-table delta: NONE beyond §"D2" above.**
 `field_resolve::detect_flag_field_overlap`'s signature and purity classification are unchanged —
 it still consumes an already-computed governed-key set supplied by the caller. Only what
-`create.rs`'s step-2b call site passes into that set changes: four more static literal keys
-(`labels`, `parent`, `assignee` — `--to`/`--account-id` share one wire key), plus, when present,
-the resolved `story_points_field_id`/`team_field_id` strings already available on the
-already-loaded `Config` (`Config::load_with` completes in `main.rs` before `handle_create` runs,
-per EC-3.8.012-6 — not a new input to the module). No new module, function, or edge is added to
-the dependency graph or purity table beyond the single row §"D2" above already recorded for
-`detect_flag_field_overlap` itself.
+`create.rs`'s step-2b call site passes into that set changes: three more static literal keys
+(`labels`, `parent`, `assignee` — `--to`/`--account-id` share the `assignee` wire key), plus, when
+present, the two resolved `story_points_field_id`/`team_field_id` strings — each its own distinct
+wire key, added independently — already available on the already-loaded `Config`
+(`Config::load_with` completes in `main.rs` before `handle_create` runs, per EC-3.8.012-6 — not a
+new input to the module). No new module, function, or edge is added to the dependency graph or
+purity table beyond the single row §"D2" above already recorded for `detect_flag_field_overlap`
+itself.
 
 **BC-body propagation flagged, not made here (product-owner scope):** BC-3.3.010 Invariant 5 /
 EC-3.3.010-6, BC-3.3.011's D2 taxonomy row, and BC-3.4.029 EC-3.4.029-2 must be rewritten from the
-five-member set to the nine-member set — see ADR-0019 § "D2 correction (adversary F-NEW-1)",
-"Downstream implication" paragraph, for the exact passages and load-bearing caveats
-(`labels`-create-vs-edit distinction; `--team`/`--points` resolved-id-only, zero-HTTP-bounded
-detection) to carry over verbatim. VP-578-021 (verifier scope) must be extended per the same
-paragraph.
+five-member set to the ten-member set (5 original + 3 new static + 2 new resolved-id keys) — see
+ADR-0019 § "D2 correction (adversary F-NEW-1)", "Downstream implication" paragraph, for the exact
+passages and load-bearing caveats (`labels`-create-vs-edit distinction; `--team`/`--points`
+resolved-id-only, zero-HTTP-bounded detection) to carry over verbatim. VP-578-021 (verifier scope)
+must be extended per the same paragraph.
 
 ### D3 — cascading `>`-split multibyte safety (new obligation on an existing, already-planned split site)
 

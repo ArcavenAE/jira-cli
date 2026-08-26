@@ -953,7 +953,7 @@ this round (verifier and state-manager reconcile those next, per their own divis
 "^#### BC-"` on both files matches their `definitional_count`; `scripts/check-spec-counts.sh`
 passes: "Check passed: 8 bc files validated").
 
-### F-NEW-1 (MEDIUM) — create-path Gate B governed set widened 5→9, propagated to every sibling site
+### F-NEW-1 (MEDIUM) — create-path Gate B governed set widened 5→9, propagated to every sibling site [COUNT CORRECTED 9→10, round-6 — see "2026-08-26 F2 adversary-convergence round-6 amendments" below]
 
 **Defect (architect-resolved, ADR-0019 § "D2 correction (adversary F-NEW-1)"):** the original D2
 execution (round-1) extended Gate B to the `issue create` platform path by reusing Gate B's
@@ -965,21 +965,28 @@ called for. `handle_create` writes five MORE dedicated-flag values into the same
 of which tripped the five-member guard — reopening the exact "no defined winner" collision class
 D2 exists to close, for those five flags.
 
-**Fix — the create-path governed set is now NINE wire-key targets, not five, propagated to every
-site that named or implied the five-member set on the create path:**
-- `bc-3-issue-write.md`, BC-3.3.010 Invariant 5: cross-references the nine-member set and
+**Fix — the create-path governed set is now TEN wire-key targets, not five, propagated to every
+site that named or implied the five-member set on the create path.** **[NOTE, round-6: the
+original round-5 fix below undercounted this as NINE — it wrongly collapsed `--points` and
+`--team` into one combined "resolved-id category" instead of counting them as two distinct
+governed `customfield_NNNNN` wire keys. Corrected in place below; see "2026-08-26 F2
+adversary-convergence round-6 amendments" for the full correction and its own exhaustive site
+sweep.]**
+- `bc-3-issue-write.md`, BC-3.3.010 Invariant 5: cross-references the ten-member set and
   EC-3.3.010-6 (widened-set citation added; does not itself re-enumerate).
 - `bc-3-issue-write.md`, BC-3.3.010: **new EC-3.3.010-6a** enumerating all three new static-flag
-  collisions (`labels`/`parent`/`assignee`) and the two resolved-id collisions
-  (`--points`/`--team` via the `customfield_NNNNN` bypass form only), the `labels`
+  collisions (`labels`/`parent`/`assignee`) and the two SEPARATE resolved-id collisions
+  (`--points` and `--team`, each a distinct `customfield_NNNNN` wire key, via the
+  `customfield_NNNNN` bypass form only), the `labels`
   create-vs-edit divergence rationale (BUG-LABEL-400 endpoint fork excludes `labels` from edit
   Gate B; create has no such fork, so `labels` IS governed there), and the bounded
   display-name-does-not-trip-the-guard residual (zero-HTTP boundary).
 - `bc-3-issue-write.md`, VP-578-021 (BC-3.3.010): extended to require coverage of the four new
-  static flags, the two resolved-id cases, and a NEGATIVE regression pin for the documented
-  non-firing residual (`--points 5 --field "Story Points"=8` does not trip the guard).
+  static flags, the two resolved-id cases (asserted separately, not combined), and a NEGATIVE
+  regression pin for the documented non-firing residual (`--points 5 --field "Story Points"=8`
+  does not trip the guard).
 - `bc-3-issue-write.md`, BC-3.3.011: the D2 error-taxonomy row's "any field in Gate B's governed
-  set" corrected to name the create-path's own nine-member set, explicitly distinct from
+  set" corrected to name the create-path's own ten-member set, explicitly distinct from
   edit-path Gate B's five-member set.
 - `bc-3-issue-write.md`, BC-3.4.014: the same "any field in Gate B's governed set" phrase in the
   `--field` echo-suppression amendment note corrected identically.
@@ -989,7 +996,7 @@ site that named or implied the five-member set on the create path:**
   describes mechanism symmetry (exit 64 vs. last-wins) for fields shared by both sets, not
   set-size equality.
 - `bc-3-issue-write.md`, BC-3.4.029 EC-3.4.029-2: the main site describing the create-path
-  guard's field list — rewritten from the stale five-member enumeration to the nine-member set,
+  guard's field list — rewritten from the stale five-member enumeration to the ten-member set,
   with the `labels` divergence rationale and the bounded residual restated; its trailing
   cross-reference sentence ("all five system fields") corrected to note the create path's set is
   documented separately (BC-3.3.010 EC-3.3.010-6a), not identical in size to the edit path's.
@@ -1132,6 +1139,148 @@ Postconditions + side-effect bullet), BC-3.4.031 (VP-578-013 enumeration fix).
 `cross-cutting.md`: BC-X.14.001 area (M2 sub-heading bracket, ~line 2215), the M2 taxonomy-table
 row (~line 2658), EC-X.14.004-4 (bracket), the round-2 changelog entry (~lines 36-38, LOW-2
 resolution pointer). `prd-delta-field-dx.md`: this section.
+
+## 2026-08-26 F2 adversary-convergence round-6 amendments
+
+Two tasks this round: (A) a FACTUAL COUNT CORRECTION to round-5's F-NEW-1 fix (the D2 create-path
+collision guard governs TEN wire keys, not nine — round-5's "nine" figure wrongly collapsed
+`--points` and `--team` into one combined "resolved-id category" instead of counting them as two
+distinct governed `customfield_NNNNN` wire keys), and (B) three LOW doc-completeness items folded
+in from the adversary streak. **Write scope this round: `bc-3-issue-write.md`, `cross-cutting.md`,
+this file only** — `verification-delta-field-dx.md`, ADR-0019/`architecture-delta-field-dx.md`,
+`BC-INDEX.md`/`CANONICAL-COUNTS.md` are untouched by this agent this round. **No BCs added,
+removed, or retired — counts are unchanged: `bc-3-issue-write.md` stays 123/152,
+`cross-cutting.md` stays 89/155, `total_bcs` stays 719** (re-verified: `grep -c "^#### BC-"` on
+both files matches their `definitional_count`; `scripts/check-spec-counts.sh` passes: "Check
+passed: 8 bc files validated").
+
+### (A) Count correction — TEN wire keys, not nine
+
+**Canonical framing (adopted verbatim at every count site below):** TEN wire keys = 5 original
+Gate B keys (`summary`, `description`, `issuetype`, `priority`, `components`) + 3 new static keys
+(`labels`←`--label`, `parent`←`--parent`, `assignee`←`--to`/`--account-id`) + 2 new resolved-id
+keys (story-points customfield id ←`--points`, team customfield id ←`--team`; DISTINCT
+`customfield_NNNNN` wire keys, detected via the `--field customfield_NNNNN=` bypass form,
+zero-HTTP). Edit-path Gate B is UNCHANGED at 5. `labels` remains governed on create, excluded on
+edit (BUG-LABEL-400) — that asymmetry is unaffected by this correction.
+
+**Grep-sweep proof (every create-path SET-SIZE claim now says TEN):**
+- `bc-3-issue-write.md` line 814, BC-3.3.010 Invariant 5: "NINE wire-key targets" → "TEN
+  wire-key targets"; "full nine-member enumeration" → "full ten-member enumeration"; round-6
+  correction tag added alongside the round-5 "WIDENED 5→9" tag (retained for audit trail, not
+  erased).
+- `bc-3-issue-write.md` line 823, EC-3.3.010-6a intro: "plus the resolved-id category
+  (`points`/`team`)" (the exact collapsed framing this correction targets) → "plus TWO resolved-id
+  keys (`points` and `team` — DISTINCT `customfield_NNNNN` wire keys, each a separately governed
+  member, NOT one combined 'resolved-id category')"; explicit "TEN wire keys total: 5 + 3 + 2"
+  breakdown appended.
+- `bc-3-issue-write.md` line 830: "full nine-member table" → "full ten-member table".
+- `bc-3-issue-write.md` line 837, VP-578-021: "nine-member governed set" → "ten-member governed
+  set"; "(b) the TWO resolved-id cases" clause (already correctly enumerated as two separate cases
+  by round-5) annotated "asserted as SEPARATE assertions (not one combined resolved-id assertion)"
+  per this round's VP implication for the verifier, below.
+- `bc-3-issue-write.md` line 856, BC-3.3.011 D2 taxonomy row: "nine-member governed set" →
+  "ten-member governed set"; "plus resolved-id `--points`/`--team`" → "plus TWO SEPARATE
+  resolved-id keys, `--points`/`--team` (each a distinct `customfield_NNNNN` wire key)".
+- `bc-3-issue-write.md` line 1470, BC-3.4.014 `--field` echo amendment note: "nine-member governed
+  set" → "ten-member governed set"; "WIDENED 5→9" tag gains a companion "COUNT CORRECTED 9→10"
+  tag.
+- `bc-3-issue-write.md` line 2150, BC-3.4.017 D2 shared-function paragraph: "NINE-member wire-key
+  set" → "TEN-member wire-key set"; "plus resolved-id `--points`/`--team`" → "plus TWO SEPARATE
+  resolved-id keys `--points`/`--team` — each a distinct `customfield_NNNNN` wire key".
+- `bc-3-issue-write.md` line 2358 (EC-3.4.017-16 scope note): "own set is NINE members (four more
+  static keys — `labels`/`parent`/`assignee` plus resolved-id `--points`/`--team`...)" — this was
+  the site with the WORST miscount (it called the correction "four more static keys" when it is
+  three static keys plus two resolved-id keys, not four of anything) → "own set is TEN members
+  (three more static keys — `labels`/`parent`/`assignee` — plus TWO new resolved-id keys —
+  `--points` and `--team`, each a distinct `customfield_NNNNN` wire key, not one combined
+  resolved-id category...)".
+- `bc-3-issue-write.md` line 3386, BC-3.4.029 EC-3.4.029-2 (the main narrative site — the task
+  brief's own citation): "NINE wire-key targets" → "TEN wire-key targets"; "plus the resolved-id
+  category (`points`/`team`, ADR-0019 rows 9a/9b)" → "plus TWO new resolved-id keys (`points` and
+  `team`, ADR-0019 rows 9a/9b — DISTINCT `customfield_NNNNN` wire keys, each a separately governed
+  member, NOT one combined 'resolved-id category')"; the formula "5 (Gate B's original set) + 3
+  (new static keys) + 1 (the resolved-id category...) = 9 total" → "5 + 3 (new static keys) + 2
+  (two new resolved-id keys...) = 10 total", with an explicit note that round-5's "9" total was
+  computed as 5+3+1 by wrongly collapsing `--points`/`--team`; two further "nine-member" citations
+  later in the same paragraph corrected to "ten-member".
+- `.factory/phase-f2-spec-evolution/prd-delta-field-dx.md` (this file), F-NEW-1 section (round-5,
+  above): heading gained a "[COUNT CORRECTED 9→10, round-6]" pointer; the "Fix" line's "NINE" →
+  "TEN" with a round-6 note; the bullet enumerating sibling sites corrected in place ("nine-member
+  set" → "ten-member set" at the BC-3.3.010 Invariant 5, BC-3.3.011, and BC-3.4.029 EC-3.4.029-2
+  bullets; the EC-3.3.010-6a bullet's "two resolved-id collisions" reworded to "two SEPARATE
+  resolved-id collisions... each a distinct `customfield_NNNNN` wire key"; the VP-578-021 bullet's
+  "the two resolved-id cases" reworded to "the two resolved-id cases (asserted separately, not
+  combined)").
+- `cross-cutting.md`: grepped for "governed set"/"Gate B"/"nine"/"NINE"/"9a"/"9b" — zero matches
+  (confirms round-5's own finding that F-NEW-1 has no `cross-cutting.md` footprint; this
+  correction therefore has none either).
+
+**Left intact, as instructed:** the "FOUR newly-added static flags" phrasing in VP-578-021 (this
+counts FLAGS — `--label`/`--parent`/`--to`/`--account-id` — not wire keys; `--to` and
+`--account-id` both map to the single `assignee` wire key, so 4 flags → 3 static wire keys is
+correct and unrelated to this correction) and every "5 enumerated NEW COLLISION CASES" framing (3
+static + 2 resolved cases) describing test CASES, which was already 5 and already consistent with
+a TEN total — only the SET-SIZE claims (the word "nine"/"NINE" itself, and formulas summing to 9)
+moved 9→10. The edit-path "five" and Gate B's own five-member flag set are untouched.
+
+### (B) Three LOW doc-completeness items folded in
+
+**LOW-B1 — BC-3.8.008 (JSM create `--field`): new EC-3.8.008-3.** Pins explicitly (previously only
+implied by transitivity via the "Hint-kind uniformity" amendment) that the shared
+`parse_field_kv` unknown-`:kind` / malformed-`:asset` exit-64 catalog (BC-3.4.031) fires on the
+JSM `--request-type` create path BEFORE any `POST /rest/servicedeskapi/request` call — zero POST,
+one error, sibling to EC-3.8.008-1/-2. Site: `bc-3-issue-write.md`, BC-3.8.008.
+
+**LOW-B2 — BC-X.14.001 (M1 `--issue` path): caveat on the M1 bullet.** `jr field options <field>
+--issue <JSM-KEY>` enumerates the PLATFORM editmeta Edit-screen field set, which can DIVERGE from
+the portal request-type field set reachable via M3 (`--request-type`) — a JSM admin configures the
+agent Edit screen and a request type's portal form independently, with no guarantee they match. A
+JSM user wanting the options a customer sees on the portal needs `--request-type`, not `--issue`,
+even with a concrete issue key in hand. Site: `cross-cutting.md`, the M1/`--issue` bullet in the
+"§BC-X.14 context-mechanism decision" section (immediately preceding BC-X.14.001's own H1).
+
+**LOW-B3 — BC-3.4.021 Invariant 1: over-generalization qualifier.** Invariant 1's lead-in
+("`plannedChanges` field shapes are INTENTIONALLY SIMPLIFIED previews that do NOT match live-edit
+wire payloads") was not updated for round-5's own F-NEW-2 hint-path exception (Postconditions —
+Common item 3, above), which specifies that a HINTED `--field` preview IS the live wire object, not
+a simplified display string. Added a one-line "(except the hint-path composed shapes per F-NEW-2 —
+see item 3)" qualifier to the lead-in so it no longer over-generalizes past its own documented
+exception. Site: `bc-3-issue-write.md`, BC-3.4.021, Invariant 1 (~line 2690).
+
+### VP implications for the verifier (flagged, not resolved here)
+
+- **VP-578-021 total must say TEN**, with the two resolved-id keys asserted as SEPARATE
+  assertions: (a) `--points 5 --field customfield_NNNNN=8` collision → exit 64; (b)
+  `--team X --field customfield_NNNNN=Y` collision (when `team_field_id` configured) → exit 64 —
+  as two independently-asserted test cases, not one combined "resolved-id" assertion covering
+  both flags at once. This corrects round-5's own VP implication note, which already listed them
+  as "(b) the two resolved-id cases" (two bullets) but the surrounding narrative text it pointed
+  back at (BC-3.3.010 EC-3.3.010-6a / BC-3.4.029 EC-3.4.029-2) undercounted the total as nine —
+  the verifier should re-derive VP-578-021's realized test count from the corrected TEN-member
+  enumeration in `bc-3-issue-write.md`, not from any cached "nine" figure.
+- No new VP is minted by items (A)/(B) above — (A) is a pure count correction to an existing VP's
+  cited governed-set size, and LOW-B1/B2/B3 are documentation-only (an explicit-pin EC citing an
+  already-covered code path, a caveat, and a qualifier) with no new observable behavior to verify.
+
+### Counts confirmed unchanged (round-6)
+
+`bc-3-issue-write.md`: 123 individually-bodied / 152 cumulative (frontmatter unchanged this round;
+re-verified via `grep -c "^#### BC-" bc-3-issue-write.md` == 123). `cross-cutting.md`: 89
+individually-bodied / 155 cumulative (re-verified via `grep -c "^#### BC-" cross-cutting.md` ==
+89). `total_bcs`: 719, unchanged. Zero BCs added, removed, or retired this round — every change
+above is an in-place count correction, a new embedded edge case (EC-3.8.008-3), or a
+Postconditions/Invariant-text qualifier addition. `scripts/check-spec-counts.sh` re-run after all
+edits: "Check passed: 8 bc files validated."
+
+### Sites touched this round (exhaustive list, for the verifier's cross-check)
+
+`bc-3-issue-write.md`: BC-3.3.010 (Invariant 5, EC-3.3.010-6a), BC-3.3.011 (D2 taxonomy row),
+BC-3.4.014 (`--field` echo amendment note), BC-3.4.017 (D2 shared-function paragraph,
+EC-3.4.017-16 scope note), BC-3.4.021 (Invariant 1 qualifier — LOW-B3), BC-3.4.029 (EC-3.4.029-2,
+three sites within), BC-3.8.008 (new EC-3.8.008-3 — LOW-B1). `cross-cutting.md`: the M1/`--issue`
+bullet preceding BC-X.14.001's H1 (caveat — LOW-B2). `prd-delta-field-dx.md`: this section (F-NEW-1
+section heading/Fix line/bullets amended in place, not duplicated).
 
 ## Traceability
 

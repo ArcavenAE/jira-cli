@@ -149,4 +149,46 @@ Archived verbatim from STATE.md v3.09 before the round-3 fix burst overwrote it.
 
 ---
 
+## Session Resume Checkpoint (2026-08-26) — F2-ROUND4-FIX-CHAIN (superseded by round-5)
+
+<!-- NOTE (round-6 archival): round-4's checkpoint was not archived here at the time (a
+     pre-existing gap in a prior burst -- STATE.md's "Superseded checkpoint" line claimed
+     it was archived "verbatim" when it was not). This condensed entry reconstructs it from
+     round-4's surviving Phase Progress table row and Current Phase Steps row text so the
+     archival trail is complete; it is a condensed summary, not the original verbatim
+     checkpoint prose (which was never captured). Flagged, not further investigated --
+     out of scope for the round-6 focused task that found and fixed this gap. -->
+
+**Round-4's work (2026-08-26):** a fourth fresh 3-pass adversary streak was run, alongside a consistency-validator sweep -- Pass 1 NOT-CLEAN, Pass 2 NOT-CLEAN, **Pass 3 CLEAN** (second consecutive round with a CLEAN pass). 5 MEDIUM-class + several LOW fixed via architect -> PO -> verifier -> PO chain: platform-vs-JSM D2 collision-guard scope made explicit everywhere (MED-1/F-3), BC-INDEX.md title-row prose fixed (MED-2), VP-578-013 per-kind split realized (MED-3), `--value` filter x `Option<String>` semantics reconciled (F-1, VP-580-007 gains sub-points g/h/i), non-cascading `>`-collision + bare-form `>`-literal behavior specified (F-2/D4, new VP-578-023 minted). No BC change (719 stays). VP total 30 -> 31 (VP-578-023 new). 106 holdouts unchanged.
+
+**Convergence counter at archival:** clean-pass streak was **0/3** -- fourth consecutive fresh-streak attempt to fail to reach 3/3 CLEAN; second round in a row (rounds 3, 4) to produce an individual CLEAN pass. Superseded by round-5's streak.
+
+**Decisions of record:** DEC-310 (proposed, propagation complete) -- still needs formal registration. ADR-0019 (Accepted 2026-08-25; § Amendment D1/D2/D3 + F-B + D4).
+
+**Process-gap follow-ups owed at cycle close (as of round-4, carried forward to round-5):** same as round-3's list, plus item 8: D2-collision-guard extension to the JSM create path (F-3) flagged as a DEFERRED product decision, owed at the F2 human gate.
+
+**Resume command (as of round-4):** `/vsdd-factory:next-step` (or resume the F2 adversarial convergence loop directly -- run a fresh adversary pass first, starting the streak count at 0/3).
+
+---
+
+## Session Resume Checkpoint (2026-08-26) — F2-ROUND5-FIX-CHAIN (superseded by round-6)
+
+**Cycle:** Field DX Feature Mode cycle (`cycle-002`) -- GitHub issues #580 (`jr field options <field>`) + #578 (`--field` value-kind hint syntax + non-JSM `issue create --field`). 2-story bundle, full F1-F7 lifecycle, DTU not required.
+
+**Position:** Phase F2 (spec evolution), inside the mandatory adversarial spec-convergence loop. Pipeline ACTIVE.
+
+**F1:** COMPLETE + human-approved. **F2 authoring:** COMPLETE plus rounds 1-5's fix-burst amendments. 12 new BCs (`§X.14` Field Option Discovery + BC-3.3.010/011 + BC-3.4.026-031), ADR-0019 (Accepted 2026-08-25; § Amendment D1/D2/D3 + F-B + D4 + round-5's D2 correction), BC-3.8.012 reversed (DEC-310, fully propagated). Counts: **719 total BCs**, **32 VPs** (VP-578-024 new this round), **106 holdout scenarios**.
+
+**Round-5's work (2026-08-26):** a fifth fresh 3-pass adversary streak -- Pass 1 NOT-CLEAN, Pass 2 NOT-CLEAN, **Pass 3 CLEAN** (third consecutive round -- rounds 3, 4, 5 -- to produce a CLEAN verdict; no HIGH/CRITICAL since round-3). Fixed via architect -> PO -> verifier -> consistency-sweep -> PO chain: **F-NEW-1** (MED) the D2 create-path collision guard's governed field set was itself under-scoped -- corrected from the original 5-member EDIT-derived set (copy-pasted verbatim rather than re-derived) to what round-5 called a "nine"-member set: 5 original + 3 new static keys (`labels`/`parent`/`assignee`) + 1 resolved-id category collapsing `--points`/`--team` together. **(Round-6 later found this arithmetic itself was wrong -- see current STATE.md M-1: `--points` and `--team` are two DISTINCT wire keys, correct total is TEN, not nine.)** VP-578-021 extended. **F-NEW-2** (MED) `--field` hint-kind x `issue edit --dry-run` preview wire shape pinned across BC-3.4.021/027/028/029/030; new VP-578-024 minted, replacing the PO's `VP-DRY-RUN-005` placeholder, also covering the `:asset` cold-cache dry-run side effect. **MED-1** VP-578-013's EC-2d miscitation fixed to EC-2a/b/c. **MED-2** VP-578-023's back-fill status reconciled (confirmed DONE at both anchor sites; a stale "pending" claim corrected). LOWs: M2 sub-headings bracketed, a stale changelog line converted to a resolution-pointer, the round-4 "four vs three new static keys" count slip reconciled (to the now-superseded "9 = 5+3+1" arithmetic). No BC change (719 stays). VP total 31 -> 32 (VP-578-024 new). 106 holdouts unchanged.
+
+**Convergence counter at archival:** clean-pass streak was **0/3** -- fifth consecutive fresh-streak attempt to fail to reach 3/3 CLEAN; third round in a row (rounds 3, 4, 5) to produce an individual CLEAN pass. Superseded by round-6's streak (see current STATE.md).
+
+**Decisions of record:** DEC-310 (proposed, propagation complete) -- still needs formal registration. ADR-0019 (Accepted 2026-08-25; § Amendment D1/D2/D3 + F-B + D4 + D2 correction, later itself corrected round-6).
+
+**Process-gap follow-ups owed at cycle close (as of round-5, carried forward to round-6):** same as round-4's list, plus item 9: the recurring pattern of a guard/rule's scope being copy-pasted from a sibling site instead of re-derived from first principles (`GUARD-SCOPE-COPY-PASTE-PATTERN`) -- round-6 identified a sibling failure mode in the same D2 correction: the *count arithmetic* itself was propagated forward unverified rather than re-derived (see round-6's process-gap lesson in `cycles/cycle-002/lessons.md`).
+
+**Resume command (as of round-5):** `/vsdd-factory:next-step` (or resume the F2 adversarial convergence loop directly -- run a fresh adversary pass first, starting the streak count at 0/3).
+
+---
+
 <!-- Repeat for each archived checkpoint. Maintain chronological order. -->
