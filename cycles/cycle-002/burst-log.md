@@ -536,3 +536,15 @@ No BCs/VPs/holdouts added or removed by this burst — 719 BCs / 32 VPs / 106 ho
 |-------|------|--------|
 | story-writer | Decompose field-dx F2 spec into 5 stories with full BC/VP traceability and acyclic wave plan | 5 story files + `STORY-INDEX.md` update |
 | state-manager | Sanity-check story count consistency, update `STATE.md` (F3 COMPLETE, awaiting human F4 decision), archive prior checkpoint, log this burst, commit + push | `STATE.md`; this file; `cycles/cycle-002/session-checkpoints.md`; commit of all F3 artifacts |
+
+---
+
+## Burst: BC-3.3.010 citation hygiene fix (2026-08-26)
+
+**Trigger:** `check-bc-citation-symbols.sh` (BC-CITE-001) failing in spec-guard CI, blocking ALL open PRs including S-578-1's PR #739 — BC-3.3.010's `Source`/`Trace` fields cited `` `src/api/jira/issues.rs::get_createmeta_fields` `` in enforced symbol form, but that function does not exist yet (planned for S-578-4).
+
+**Fix (product-owner):** Reworded both citations in `specs/prd/bc-3-issue-write.md` (BC-3.3.010, ~lines 781/840) from enforced symbol form to guard-safe prose: `` `src/api/jira/issues.rs` (planned fn `get_createmeta_fields`, implemented by story S-578-4 — not yet in `src/`; ...) ``. File citation retained; only the not-yet-real symbol moved out of enforced form.
+
+**Verification (state-manager):** `check-bc-citation-symbols.sh` → 402 citations checked, 0 stale. `check-spec-counts.sh` → 8 bc files validated. `check-bc-cumulative-counts.sh` → 719 total unchanged across 9 files. No BC/VP/holdout counts affected — hygiene-only fix, no phase transition (still F3/v2.0.0).
+
+**Lesson logged:** see `lessons.md` Process-Level #2 — F2 spec-authoring should run the citation guard before commit, or use prose form for forward-looking symbols.
