@@ -1,0 +1,4 @@
+default_profile = "default"
+
+[profiles.default]
+url = "https://demo.example.atlassian.net"
