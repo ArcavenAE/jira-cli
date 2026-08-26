@@ -33,3 +33,4 @@
 |-----|-------|------------|------|
 | ADR-0017 | First multipart/streaming HTTP surface: reqwest multipart+stream features + tokio-util direct dependency | SS-03, SS-09 | decisions/ADR-0017-first-multipart-streaming-http-surface.md |
 | ADR-0018 | Component resolution, caching, delete-safety, and mutation-wire-shape strategy | SS-02, SS-04, SS-07, SS-08 | decisions/ADR-0018-component-resolution-caching-mutation-strategy.md |
+| ADR-0019 | Field DX: option-enumeration context strategy, hint-kind value-spec shape, and cascading-select delimiter | SS-02, SS-04, SS-05 | decisions/ADR-0019-field-dx-context-hint-shape-delimiter.md |

@@ -1,0 +1,78 @@
+# Field DX bundle (#580, #578) — machine-readable affected-file list
+# Format: <path> | <class NEW|MODIFIED|DEPENDENT> | <one-line reason>
+
+src/cli/field.rs | NEW | jr field options <field> command handler; structural mirror of src/cli/requesttype.rs
+src/cli/mod.rs | MODIFIED | New Command::Field variant + FieldCommand enum (additive clap extension); --field key-syntax parse point for :option=/:id=/:name=/:asset= hints on IssueCommand::Create/Edit
+src/main.rs | MODIFIED | New dispatch arm cli::Command::Field { command } => field::handle(...), mirrors RequestType arm
+src/api/jira/fields.rs | MODIFIED | Possible new field-options-via-editmeta or createmeta-expand-fields call, depending on F2 editmeta-vs-createmeta design decision (see research doc open question 1)
+src/api/jira/issues.rs | MODIFIED | get_editmeta already exists and is reused as-is (#580 pivot); possible new createmeta ?expand=fields call if that path is chosen instead
+src/types/jira/editmeta.rs | DEPENDENT | EditMeta/EditMetaField/AllowedValue already carry allowedValues; read-only reuse for #580's option enumeration, no shape change expected
+src/cli/issue/field_resolve.rs | MODIFIED | resolve_edit_fields' "option" dispatch gains hinted (:option=/:id=/:name=) bypass of fuzzy-match heuristics; largest existing file in the risk zone (914 LOC, dense editmeta type-dispatch logic, BC-3.4.015/016)
+src/cli/issue/create.rs | MODIFIED | parse_field_kv signature/return-type change (HashMap<String,String> -> kind-aware shape) ripples here; DEC-188 pre-flight guard must be SPLIT (drop --field guard on platform path per #578 pt.2, KEEP --on-behalf-of guard, JSM-only concept); new custom-field wire-insertion block mirrors existing --component/--team/--points additive pattern at the fields json! assembly site
+src/cli/issue/edit.rs | MODIFIED | Consumes parse_field_kv (single-key line 77 + bulk paths); dry-run JSON preview and BC-3.4.017 Gate B mutual-exclusion list may need field-hint awareness; ~3187 LOC HIGH regression-risk file (ADR-0012 exception, already 3x threshold)
+src/cli/issue/jsm_create.rs | MODIFIED | Consumes parse_field_kv (line 282); currently the ONLY call site with zero type dispatch (raw String passthrough) -- direct target of #578 pt.1
+src/api/jsm/requests.rs | MODIFIED | JsmRequestBuilder.extra_fields: &HashMap<String,String> and its build() loop unconditionally wire-serialize every value as serde_json::Value::String -- must gain kind-aware dispatch for the hint syntax
+src/types/jsm/request_type.rs | DEPENDENT | RequestTypeField.valid_values (untyped serde_json::Value) is JSM's own allowedValues-equivalent, structurally separate from editmeta's AllowedValue -- referenced for context, not expected to change
+src/api/assets/workspace.rs | DEPENDENT | get_or_fetch_workspace_id already resolves+caches workspaceId per-profile (7-day TTL); reused as-is for :asset= composition, no change expected
+src/types/assets/linked.rs | DEPENDENT | LinkedAsset's workspace_id/id composite-id convention ("{workspaceId}:{objectId}") is the reference shape for composing the new Assets object-ref array; read for convention only, no change expected
+src/partial_match.rs | DEPENDENT | Reused as-is for #580's "resolve field by human name" nice-to-have (already handles duplicate-name disambiguation)
+src/error.rs | DEPENDENT | JrError::UserError/exit-code conventions reused as-is for all new error paths (unknown field, ambiguous name, admin-scope-required fallback message, malformed hint syntax)
+src/output.rs | DEPENDENT | render_json/print_output reused as-is for `jr field options --output json` (JSON render invariant #526)
+
+# Files explicitly NOT changed (regression baseline)
+src/api/client.rs | UNCHANGED | HTTP core untouched
+src/api/auth.rs | UNCHANGED
+src/api/auth_embedded.rs | UNCHANGED
+src/api/pagination.rs | UNCHANGED
+src/api/rate_limit.rs | UNCHANGED
+src/api/refresh_coordinator.rs | UNCHANGED
+src/adf.rs | UNCHANGED
+src/config.rs | UNCHANGED
+src/cache.rs | UNCHANGED | No new cache family identified for this bundle (field-options enumeration is not cached in the proposal; revisit in F2 if editmeta/createmeta call volume becomes a UX concern)
+src/duration.rs | UNCHANGED
+src/jql.rs | UNCHANGED
+src/observability.rs | UNCHANGED
+src/cli/issue/list.rs | UNCHANGED
+src/cli/issue/view.rs | UNCHANGED
+src/cli/issue/comments.rs | UNCHANGED
+src/cli/issue/interactions.rs | UNCHANGED
+src/cli/issue/workflow.rs | UNCHANGED
+src/cli/issue/links.rs | UNCHANGED
+src/cli/issue/helpers.rs | UNCHANGED
+src/cli/issue/assets.rs | UNCHANGED
+src/cli/issue/changelog.rs | UNCHANGED
+src/cli/issue/attachments.rs | UNCHANGED
+src/cli/issue/json_output.rs | UNCHANGED
+src/cli/issue/format.rs | UNCHANGED
+src/cli/component.rs | UNCHANGED
+src/cli/requesttype.rs | UNCHANGED | Structural template only, not modified
+src/cli/board.rs | UNCHANGED
+src/cli/sprint.rs | UNCHANGED
+src/cli/worklog.rs | UNCHANGED
+src/cli/team.rs | UNCHANGED
+src/cli/user.rs | UNCHANGED
+src/cli/init.rs | UNCHANGED
+src/cli/project.rs | UNCHANGED
+src/cli/queue.rs | UNCHANGED
+src/cli/api.rs | UNCHANGED
+src/cli/auth/ | UNCHANGED
+src/cli/assets/ | UNCHANGED
+src/api/jsm/servicedesks.rs | UNCHANGED
+src/api/jsm/queues.rs | UNCHANGED
+src/api/jsm/request_types.rs | UNCHANGED
+src/api/assets/linked.rs | UNCHANGED
+src/api/assets/objects.rs | UNCHANGED
+src/api/assets/schemas.rs | UNCHANGED
+src/api/assets/tickets.rs | UNCHANGED
+src/api/jira/boards.rs | UNCHANGED
+src/api/jira/sprints.rs | UNCHANGED
+src/api/jira/statuses.rs | UNCHANGED
+src/api/jira/links.rs | UNCHANGED
+src/api/jira/resolutions.rs | UNCHANGED
+src/api/jira/teams.rs | UNCHANGED
+src/api/jira/worklogs.rs | UNCHANGED
+src/api/jira/projects.rs | UNCHANGED
+src/api/jira/attachments.rs | UNCHANGED
+src/api/jira/components.rs | UNCHANGED
+src/api/jira/users.rs | UNCHANGED
+src/api/jira/bulk.rs | UNCHANGED

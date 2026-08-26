@@ -2703,3 +2703,18 @@ below for full detail.
 | Resume command | Open a fresh session and run `/vsdd-factory:next-step` (STATE.md shows `pipeline: PAUSED`, `phase: F7`, cycle CLOSED) -- it will report no active pipeline work and surface the standing candidates listed above for the human to choose from. |
 | Superseded checkpoint | Prior Session Resume Checkpoint (LIST-READ-ERGONOMICS-F5-CONVERGED-F6-HARDENED-FIXF6-MERGED position, 2026-08-24, v3.00) archived verbatim above. |
 | Superseded by | **SESSION-WRAP-F7-CYCLE-CLOSED (2026-08-24, v3.01→v3.02):** human-requested `/wrap` light session-wrap checkpoint; pure bookkeeping, no pipeline work performed. `list-read-ergonomics` cycle remains CLOSED (DEC-309), unchanged. Pipeline stays PAUSED; `phase` stays F7. `develop` tip/`activation_head`/`activation_version` unchanged (`37850b26`/`v0.7.0-dev.1`). Folded the dirty `sidecar-learning.md` into the wrap commit so the `.factory/` working tree ends CLEAN. See the live checkpoint in `STATE.md` for the current state. |
+
+---
+
+## Checkpoint: SESSION-WRAP-LIST-READ-ERGONOMICS-CLOSED-MAINTENANCE-COMPLETE (2026-08-25T21:41:00Z) [ARCHIVED]
+
+_Was the active checkpoint after the 2026-08-25 STATE.md compaction burst (274→93 lines) + v0.7.0-dev.2 release (PR #736, squash `00df3823`, tag pushed, release.yml run 32858800028 SUCCESS) + maintenance sweep (10 findings, 6 fixed via PR #737 squash `e7e194ff`, 4 pending). Superseded when WRAP-F2-CONVERGENCE-PAUSE (human `/wrap` mid cycle-002 `field-dx` F2 adversarial spec-convergence loop) updated STATE.md v3.05→v3.06._
+
+| Field | Value |
+|-------|-------|
+| Position | `list-read-ergonomics` Feature Mode cycle (`cycle-001`) CLOSED (DEC-309; F1–F7 complete/approved). v0.7.0-dev.2 released and tagged; release workflow green. Pipeline PAUSED, phase F7, awaiting next human dispatch — no active pipeline work at this checkpoint. |
+| Convergence | cycle-001 CLOSED at F7: all five convergence dimensions plus Regression PASS (MAXIMUM_VIABLE_REFINEMENT_REACHED, human-authorized 2026-08-24). No active convergence pass running. |
+| Maintenance sweep | 2026-08-25 sweep COMPLETE: dependency scan CLEAN, doc-drift fixes merged (PR #737, squash `e7e194ff`), pattern scan CLEAN, one holdout coverage gap flagged, tech debt register has no overdue items. 4 findings pending. |
+| Drift / standing items | New: `HOLDOUT-COVERAGE-GAP-LIST-READ-ERGONOMICS-FLAGS` (LOW); `STORY-INDEX-DECLARED-VS-FILE-COUNT-MISMATCH` (LOW); candidate vsdd-factory plugin rc.20→rc.23 reactivation. Standing: 5 cargo Dependabot PRs held pending `syn 2.0`-vs-`3.0` convergence; `ADOPT-MERGE-METHOD-RULESETS`, `S-TRAIL-DERIVATION-GUARD-1`, `AX23-001` ratification; `F7-GATE-SYSTEMIC-INPUT-HASH-DRIFT-BOOKKEEPING` hygiene sweep; 10-story `SELF-IMPROVEMENT` `S-PG-*` backlog (draft, need PO BC-authorship). |
+| Activation | `develop` tip / activation_head `00df3823`, `activation_version` `v0.7.0-dev.2`. |
+| Resume command | Open a fresh session and run `/vsdd-factory:next-step` (STATE.md showed `pipeline: PAUSED`, `phase: F7`, cycle CLOSED) — it reports no active pipeline work and surfaces the standing candidates above for the human to choose from. |

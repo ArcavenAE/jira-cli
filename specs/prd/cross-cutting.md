@@ -1,11 +1,68 @@
 ---
 context: bc-x
 title: "Cross-cutting (HTTP client, Runtime, Users, Teams, Worklogs, Projects, Queues, JQL, Partial-match, JSM Request Types, CI Guards)"
-total_bcs: 151   # cumulative claim (incl. range-collapsed); definitional_count below is individually-bodied headings
-definitional_count: 85   # count of `#### BC-` headings in this file
-last_updated: 2026-08-15
+total_bcs: 155   # cumulative claim (incl. range-collapsed); definitional_count below is individually-bodied headings
+definitional_count: 89   # count of `#### BC-` headings in this file
+last_updated: 2026-08-25
 source_pass: 3
 trace: |
+  - Adversary pass-28 fix, F-1 (2026-08-25, issue #580, MEDIUM): BC-X.14.001's Postconditions
+    bullet claimed "exactly one of the three enumeration HTTP calls (createmeta /
+    requesttype-fields / editmeta) fires" — this contradicted ADR-0019 §1, which specifies the M2
+    (createmeta, `get_createmeta_fields`) mechanism is OFFSET-PAGINATED
+    (`startAt`/`maxResults`/`total`), and overlooked that M3 (requesttype-fields) already reuses
+    `jr requesttype fields`'s own existing pagination. Reworded to "exactly one enumeration
+    MECHANISM fires" — one logical enumeration, which may issue multiple HTTP page-fetches for M2
+    or M3; M1 (editmeta) remains a genuine single call. Companion fix in `bc-3-issue-write.md`
+    (BC-3.3.010, the createmeta consumer BC-X.14.001 M2 shares code with) — same defect, same
+    root cause, corrected together per that BC's own trace entry; new VP-578-020 there pins the
+    page-≥2 field-resolution behavior (realized by the formal-verifier in
+    `.factory/specs/verification-delta/` in parallel). No BC added/removed/retired, no count
+    change (still 89 individually-bodied / 155 cumulative in this file; 719 total_bcs / 106
+    holdout scenarios factory-wide unchanged). Pre-pass-28 wording retained inline for audit
+    trail.
+  - Adversary pass-20 fix, M1 (2026-08-25, issue #580): BC-X.14.001 Invariant 1 REWRITTEN —
+    corrected the arity model from an under-specified "exactly one of `--project`/`--type` |
+    `--request-type` | `--issue`" framing (which treated `--project` as a co-equal mode-selector,
+    wrongly making `--project --request-type` a pairing error and leaving M3-with-an-explicit-
+    project reachable only via a profile/config default) to the mode-selector/companion model:
+    exactly one of three MODE-SELECTOR flags (`--type`, `--request-type`, `--issue`) selects the
+    enumeration mode; `--project` is never a mode selector — it is a companion flag, REQUIRED for
+    M2 (`--type`), OPTIONAL for M3 (`--request-type`, so `--project --request-type` is now VALID,
+    not a pairing error), and not consulted for M1 (`--issue`). VP-580-006 rewritten so the arity
+    check is evaluated over the three mode-selector booleans only (never `has_project`); new
+    VP-580-009 added as the dedicated `--project --request-type` VALID-pairing regression guard.
+    BC-X.14.004's error-taxonomy precedence paragraph REWRITTEN to match (mode-selector arity
+    evaluated first; `--project`'s companion role validated second, against the confirmed mode
+    only). Ratified at the architecture layer by ADR-0019 §1 (Accepted 2026-08-25).
+    Prose/citation-only amendment — no BC added or removed (still 89 individually-bodied / 155
+    cumulative in this file).
+  - Adversary pass-16 fix, MEDIUM-1 (2026-08-25, issue #580): BC-X.14.001 AMENDED — the M2
+    (`--project`/`--type`) path was missing the `--type` name→issueTypeId resolution step that
+    `get_createmeta_fields` requires (createmeta needs a numeric id; `--type` is a NAME). Added
+    an explicit resolution step mirroring BC-3.3.010 Step 3 (`get_issue_types_for_project`,
+    S-331, project-scoped, case-insensitive, at most once per invocation); reworded Postcondition
+    3 to account for the additional resolution call on the M2 path only; added an error-taxonomy
+    row + EC-X.14.004-4 for an unresolvable/ambiguous `--type` name; added
+    `get_issue_types_for_project` to BC-X.14.001's Trace. Prose/citation-only amendment — no BC
+    added or removed (still 89 individually-bodied / 155 cumulative in this file).
+  - F2 spec evolution, Field DX bundle (2026-08-25, issue #580): +4 individually-bodied BCs —
+    new "## BC-X.14: Field Option Discovery" subsection (BC-X.14.001..004), filed as a
+    Cross-Cutting subsection per the `jr requesttype` (BC-X.12) precedent rather than a new
+    numbered section file (sizing rationale: `.factory/phase-f1-delta-analysis/field-dx-bc-mapping.md`
+    §1.3). `jr field options <field>` enumerates a custom select field's allowed options; it
+    selects its enumeration mode by exactly one of three MODE-SELECTOR flags {`--type`,
+    `--request-type`, `--issue`} (`--type` → createmeta PRIMARY for platform fields;
+    `--request-type` → JSM requesttype-fields PRIMARY for JSM fields; `--issue <KEY>` → editmeta
+    FALLBACK); `--project` is a companion (REQUIRED for M2/`--type`, OPTIONAL for
+    M3/`--request-type` so `--project --request-type` is VALID, IGNORED for M1/`--issue`) — see
+    ADR-0019 §1 / adversary pass-20 M1, settling the F1 open design fork per
+    `.factory/research/field-dx-context-mechanism-2026-08-25.md`'s ranked recommendation.
+    BC-X.14.005 (the issue's own "nice-to-have" `jr requesttype fields --enumerate-options`
+    stretch goal) is DEFERRED, not committed as a BC slot this cycle, per the F1 BA mapping
+    doc's own recommendation. definitional_count 85→89; total_bcs 151→155. See
+    `.factory/phase-f2-spec-evolution/prd-delta-field-dx.md`,
+    `.factory/phase-f1-delta-analysis/delta-analysis-field-dx.md`.
   - F2 spec evolution, component-management bundle (2026-08-15, issues #604/#605/#606/#608):
     BC-X.10.001 AMENDED — EC-1 caller-example list and Trace gain a citation for the new
     `src/cli/issue/helpers.rs::resolve_component` caller (project-scoped component name
@@ -44,10 +101,10 @@ trace: |
 
 # BC-X — Cross-cutting
 
-151 behavioral contracts covering: HTTP client (X.1), Pagination (X.2), Error handling (X.3),
+155 behavioral contracts covering: HTTP client (X.1), Pagination (X.2), Error handling (X.3),
 Rate limiting (X.4), Worklogs & duration (X.5), Teams (X.6), Users (X.7), Projects & Queues (X.8),
 JQL utilities (X.9), Partial-match (X.10), Build-time (X.11), JSM Request Types (X.12),
-CI Guards (X.13).
+CI Guards (X.13), Field Option Discovery (X.14).
 
 ---
 
@@ -1977,6 +2034,483 @@ passed; the positive-coverage line is the observable proof.
 [NEW 2026-08-05 FIX ROUND 12 S-626-1 issue #626] `test` job runtime test-execution floor (Guard 2),
 extending the BC-X.13 CI-guards subsystem established by DEAD-CITATION-CI (Guard 0) and
 CITATION-GUARDS Story B (Guard 1).
+
+---
+
+## BC-X.14: Field Option Discovery
+
+4 behavioral contracts covering `jr field options <field>` — a new top-level command family
+(issue #580) that enumerates a custom select field's allowed options with their machine
+option ids, so a caller can look up an id (e.g., for `--field NAME:id=<id>`, BC-3.4.028)
+BEFORE creating or editing a ticket, without an admin-gated API call. Sized and filed as a
+Cross-Cutting subsection per the `jr requesttype` (BC-X.12) precedent, not a new numbered
+section file — see `.factory/phase-f1-delta-analysis/field-dx-bc-mapping.md` §1.3 sizing
+rationale.
+
+**Context-mechanism decision (baked in per `.factory/research/field-dx-context-mechanism-2026-08-25.md`,
+settling the F1 open design fork; ARITY MODEL CORRECTED per ADR-0019 §1, adversary pass-20 M1)**:
+`jr field options <field>` requires EXACTLY ONE of three MODE-SELECTOR flags —
+`--type`, `--request-type`, `--issue` — none or multiple → exit 64 before any HTTP.
+**`--project` is NEVER a mode selector — it is a companion flag** whose role (required,
+optional, or absent) is determined by which mode selector is present:
+- **PRIMARY, platform fields**: `--type <T>` (REQUIRES `--project <P>` as its companion) →
+  `GET /rest/api/3/issue/createmeta/{projectIdOrKey}/issuetypes/{issueTypeId}` (M2). Chosen
+  PRIMARY because it needs no pre-existing issue (closes #580's "before creating" motivating
+  gap) and its only documented project permission is Create Issues — no admin gate. **Note the
+  correction below (adversary pass-25 HIGH, Option A):** `--project` present WITHOUT `--type`
+  AND without `--request-type` AND without `--issue` (i.e. a bare `--project` with no mode
+  selector at all) is the ZERO-mode-selector error, NOT the incomplete-M2 error — `--project`
+  is never itself a mode selector, so that invocation still has zero of the three present. The
+  incomplete-M2 error fires only when `--type` IS present but its `--project` companion is
+  missing. See BC-X.14.004 for the full taxonomy and precedence rules.
+- **PRIMARY, JSM request-type fields**: `--request-type <NAME|ID>` (`--project <P>` is an
+  OPTIONAL companion) → reuses `jr`'s existing
+  `GET /rest/servicedeskapi/servicedesk/{sd}/requesttype/{rt}/field` call and 7-day cache (M3,
+  same mechanism as `jr requesttype fields`, BC-X.12.005). `--project --request-type` together
+  is VALID (M3 with an explicit service-desk project) — NOT a pairing error; when `--project`
+  is absent, the ambient profile/config-default project supplies it, resolved via
+  `require_service_desk`/`get_or_fetch_project_meta` exactly as `jr requesttype fields` already
+  does.
+- **FALLBACK / convenience**: `--issue <KEY>` (no `--project` companion — the issue key alone
+  supplies project context) → reuses the existing `GET /issue/{key}/editmeta` call `jr` already
+  owns (M1, same mechanism as `issue edit --field`, BC-3.4.015). Useful when the caller has a
+  concrete reference issue to copy option ids from.
+
+All three mechanisms are OAuth-3LO-accessible for an ordinary (non-admin) user — this is the
+pivot away from the admin-gated `GET /field/{id}/context/{ctx}/option` endpoint #580's own
+issue text proposes as a workaround (research verdict: CONFIRM that endpoint requires
+`manage:jira-configuration` + Administer Jira and fails for `jr`'s typical user).
+
+**[CORRECTED 2026-08-25 adversary pass-20 M1]**: an earlier revision of this decision framed
+`--project`/`--type` as one paired mode-selector unit co-equal with `--request-type`/`--issue`,
+which made `--project --request-type` a pairing error and left M3-with-an-explicit-project
+reachable only via a profile/config default — inconsistent with the sibling `jr requesttype
+fields`, which happily accepts an ambient `--project` alongside a request-type lookup. The
+model above (mode-selector/companion split) is the binding one; treat any remaining BC/VP text
+elsewhere describing `--project` as a mode selector as stale. See ADR-0019 §1 for the full
+rationale and the enumerated arity error cases.
+
+---
+
+#### BC-X.14.001: `jr field options <field> (--type <T> --project <P> | --request-type <RT> [--project <P>] | --issue <KEY>)` resolves `<field>` and enumerates its allowed options into a normalized `{id, label, children}` model
+
+**Confidence**: HIGH
+**Subject**: Field option discovery (issue #580)
+**Behavior**: `<field>` accepts EITHER a `customfield_NNNNN` literal (bypasses name lookup,
+same regex/case-sensitivity convention as BC-3.4.015 Step 1) OR a human field name, resolved
+via `GET /rest/api/3/field` (`list_fields()`, same cache-first `fields.json` contract as
+BC-3.4.015 Step 2/2b — shared cache, shared function, no new cache family) followed by
+`partial_match` (BC-X.10.001) for case-insensitive exact→substring disambiguation (implements
+#580's "resolve by human name" nice-to-have, e.g. `jr field options "SOC Client"`). Exactly ONE
+of three MODE-SELECTOR flags — `--type`, `--request-type`, `--issue` — selects the enumeration
+mode; `--project` is a companion flag, never itself a mode selector (see §BC-X.14
+context-mechanism decision above, and ADR-0019 §1).
+
+**M2 (`--type <T> --project <P>`) issue-type name→id resolution step**: `get_createmeta_fields`
+(the shared M2 enumeration function, ADR-0019 §1) needs a NUMERIC `issueTypeId`, but `--type`
+is accepted as a NAME (same convention as `issue create --type`), so the M2 path resolves
+`--type <T>` to an `issueTypeId` BEFORE calling `get_createmeta_fields` — mirroring BC-3.3.010
+Step 3 exactly: the SAME project-scoped, case-insensitive `get_issue_types_for_project` lookup
+(S-331, `src/api/jira/issues.rs`) `jr` already uses for bulk `--type` and for `issue create
+--field`'s createmeta path. This resolution call fires AT MOST ONCE per invocation, and ONLY on
+the M2 path (M1/`--issue` and M3/`--request-type` never call it — M1 resolves an issue KEY, not
+a project+type pair; M3 resolves a request-type name via its own `partial_match` mechanism,
+BC-X.12.006). An unknown or ambiguous `--type` name → exit 64 listing valid issue types for the
+resolved project, BEFORE `get_createmeta_fields` is called — see BC-X.14.004's error taxonomy
+for the exact row.
+
+**M3 (`--request-type <RT> [--project <P>]`) service-desk resolution step**: `--project` is an
+OPTIONAL companion on the M3 path, never a mode selector — `--project --request-type` together
+is a VALID invocation (M3 with an explicit service-desk project), NOT a pairing error. When
+`--project <P>` is supplied, it names the service-desk project explicitly; when absent, the
+ambient profile/config-default project supplies it. Either way, the resolved project key is
+handed to `require_service_desk`/`get_or_fetch_project_meta` (`src/api/jsm/servicedesks.rs`)
+EXACTLY as `jr requesttype fields <NAME|ID> --project <KEY>` (BC-X.12.005) already does — same
+functions, same 7-day `project_meta.json` cache, no new resolution path. A resolved project
+that is non-JSM (software) → exit 64 via `require_service_desk`'s call-site-specific message
+(BC-X.8.004), same as BC-X.12.003. No resolvable ambient project at all (no `--project`, no
+profile/config default) → the existing `require_service_desk` "project required" error,
+unchanged from `jr requesttype fields`'s own behavior on the same condition — see BC-X.14.004's
+error taxonomy for the exact row. This resolution call fires AT MOST ONCE per invocation and
+ONLY on the M3 path (mirroring the M2 `--type` resolution call's at-most-once/single-path
+scoping above).
+
+The three sources return option entries under two different key spellings — `M1`/`M2`
+(createmeta/editmeta) use `allowedValues[].id`; `M3` (JSM requesttype fields) uses
+`validValues[].value` as the option id, with `.label` as display text (`.value` for M1/M2's
+display text is the field named `value`, NOT `id` — the naming collision between JSM's
+id-bearing `value` key and M1/M2's label-bearing `value` key is deliberate Atlassian API
+inconsistency, not a `jr` bug). `jr` normalizes BOTH shapes into one internal model:
+```rust
+struct FieldOption {
+    id: String,
+    label: String,
+    children: Vec<FieldOption>,   // cascading-select children; empty for non-cascading
+}
+```
+Cascading fields (`option-with-child` / JSM `children[]`) are enumerable — child options are
+nested under their parent's `children` array in the normalized model, recursively (both M1/M2's
+`allowedValues[].children[]` and M3's `validValues[].children` are read into the same shape).
+**[read-side shape per research; write-side unverified — see BC-3.8.008]** This READ-side
+`children[]` shape for all three sources (M1/M2's `allowedValues[].children[]` with per-child
+`id`; M3's `validValues[].children` with per-child `value`) is CONFIRMed by
+`.factory/research/field-dx-context-mechanism-2026-08-25.md` (§Q-A, M1/M2/M3 rows: "cascading
+parent+child both carry `id` under `children[]`"; "note the key is `value`, not `id`"; §"all
+three expose cascading child IDs"), not merely asserted by analogy — this is the read/GET
+enumeration path (`jr field options`), distinct from the JSM `requestFieldValues` WRITE-side
+cascading composition on `issue create --request-type` (BC-3.8.008's amendment), which remains
+explicitly UNVERIFIED against live JSM and out of scope this cycle. Do not conflate the two: a
+CONFIRMed read shape here does not imply a verified write shape there.
+
+**Preconditions**:
+- `jr field options <field>` invoked with EXACTLY ONE of the three MODE-SELECTOR flags —
+  `--type` (with its REQUIRED `--project <P>` companion), `--request-type <RT>` (with an
+  OPTIONAL `--project <P>` companion), or `--issue <KEY>` (no `--project` companion).
+- `<field>` resolves to exactly one field (via `customfield_NNNNN` bypass or unambiguous
+  `partial_match`).
+
+**Postconditions**:
+- On success: a `Vec<FieldOption>` is produced, normalized regardless of source mechanism.
+- `GET /rest/api/3/field` is NOT called when `<field>` is a `customfield_NNNNN` literal, and
+  NOT called when a warm `fields.json` cache exists for the active profile (same cache
+  contract as BC-3.4.015 invariants 6-8).
+- **[CORRECTED, adversary pass-28 F-1]** Exactly one of the three enumeration MECHANISMS
+  (createmeta / requesttype-fields / editmeta) fires, per the selected mode selector — "one
+  mechanism" means one logical enumeration, NOT necessarily one HTTP call. The M2 (createmeta,
+  `get_createmeta_fields`) and M3 (requesttype-fields) mechanisms each PAGINATE INTERNALLY until
+  all pages are collected, so either may issue MULTIPLE `GET`s for a single invocation: M2 is
+  OFFSET-paginated (`startAt`/`maxResults`/`total`, per ADR-0019 §1); M3 reuses the EXISTING `jr
+  requesttype fields` pagination (`isLastPage`-style, `src/api/jsm/request_types.rs`), unchanged
+  by this BC. M1 (editmeta) remains genuinely a single `GET`. Plus — on the M2 (`--type`) path
+  only — exactly one LOGICAL `get_issue_types_for_project` issue-type name→id resolution (at most
+  once per invocation, per BC-3.3.010's own Postconditions), OFFSET-PAGINATED INTERNALLY
+  (`startAt`/`maxResults`/`total`) — one or more GETs until all issue-type pages are collected, so
+  a `--type` name landing on page ≥2 still resolves; carries no cache — which fires BEFORE the
+  createmeta enumeration mechanism and is absent on the M1 and M3 paths. **[CORRECTED, adversary
+  pass-29 F-1]** the preceding `get_issue_types_for_project` clause was reworded from pass-28's own
+  text, which wrongly claimed the call was "itself a single, non-paginated call, unaffected by
+  this correction" — that claim is false: `get_issue_types_for_project` (`src/api/jira/issues.rs`)
+  offset-paginates identically in kind to `get_createmeta_fields` above, and a `--type` name
+  landing on page ≥2 of a large enterprise type scheme would have been silently dropped under the
+  pass-28 framing. **[Pre-pass-29 wording, superseded, retained for audit trail]:** "exactly one
+  `get_issue_types_for_project` issue-type name→id resolution call (itself a single, non-paginated
+  call, unaffected by this correction)" — this is the exact clause pass-29 corrects.
+  **[Pre-pass-28 wording, superseded,
+  retained for audit trail]:** "Exactly one of the three enumeration HTTP calls (createmeta /
+  requesttype-fields / editmeta) fires, per the selected mode selector, plus — on the M2
+  (`--type`) path only — exactly one `get_issue_types_for_project` issue-type name→id resolution
+  call, which fires BEFORE the createmeta enumeration call and is absent on the M1 and M3
+  paths." — this literally described M2/M3 as single HTTP calls, contradicting ADR-0019 §1's
+  offset-pagination spec for `get_createmeta_fields` and the pre-existing pagination of `jr
+  requesttype fields`.
+
+**Invariants**:
+1. **Mode-selector mutual exclusion is enforced BEFORE any HTTP call.** Exactly one of the three
+   MODE-SELECTOR flags — `--type`, `--request-type`, `--issue` — must be present; `--project` is
+   NEVER counted as a mode selector. Zero mode selectors → exit 64 ("specify exactly one of
+   --type, --request-type, --issue"). Two OR more mode selectors specified simultaneously (e.g.,
+   `--issue KEY --request-type RT`) → exit 64, same message, listing the conflicting flags.
+   `--type` present without its required `--project` companion → exit 64, the incomplete-M2
+   error. A bare `--project` with no mode selector at all is a ZERO-mode-selector invocation
+   (`--project` is never counted as a mode selector), so it lands in the zero-mode-selector row
+   above, NOT the incomplete-M2 row — the two conditions are distinct and must not be conflated.
+   `--request-type` WITH
+   `--project` is VALID (M3 with an explicit service-desk project) — NOT a pairing error. See
+   BC-X.14.004 for the full error taxonomy and precedence rules.
+2. This command is READ-ONLY — zero mutating HTTP calls under any invocation.
+3. The `customfield_NNNNN` bypass and `fields.json` cache-first contract are REUSED, not
+   reimplemented — same function, same cache file, same profile-scoped isolation as BC-3.4.015.
+4. `partial_match` disambiguation reuses BC-X.10.001's contract unchanged (single-substring →
+   `Ambiguous`, never auto-resolves; `ExactMultiple` → exit 64 naming candidates).
+
+**Edge Cases**:
+- EC-X.14.001-1: `customfield_10084` literal → bypasses `list_fields()`/`partial_match`
+  entirely, same as BC-3.4.015 Step 1.
+- EC-X.14.001-2: `"SOC Client"` human name, unambiguous exact match → resolves via
+  `list_fields()` (cache-first) + `partial_match`, then proceeds to enumeration.
+- EC-X.14.001-3: Human name resolves to MULTIPLE candidates (ambiguous) → exit 64 naming the
+  candidates and their `customfield_NNNNN` ids (mirrors EC-3.4.015-2), before any enumeration
+  HTTP call.
+- EC-X.14.001-4: Cascading field (`option-with-child`) → `children[]` populated with the child
+  options nested under their parent (Jira's cascading model is exactly two levels — one parent
+  plus one flat child list; the `Vec<FieldOption>` model can represent deeper nesting, but live
+  data never populates it); a non-cascading field always has `children: []` (never `null`/absent).
+- EC-X.14.001-5: `<field>` resolves successfully against the global `GET /field` list (or via
+  `customfield_NNNNN` bypass) but is ABSENT from the selected context's field set — not on the
+  `--project`/`--type` createmeta Create screen, not on the `--issue` editmeta Edit screen, and
+  not in the `--request-type` requesttype-fields list — because a field can exist globally while
+  not being configured on any particular project+issue-type/request-type screen. Exit 64; see
+  BC-X.14.004's error taxonomy for the per-context message shape (mirrors BC-3.3.010
+  EC-3.3.010-2's "not on the Create screen" distinction between global existence and
+  screen-membership).
+
+**Verification Properties**:
+- VP-580-001: `customfield_NNNNN` literal bypass skips `list_fields()` entirely (zero HTTP for
+  name resolution).
+- VP-580-002: All three source mechanisms (M1/M2/M3) normalize to the SAME `{id, label,
+  children}` shape for equivalent input fixtures — the output shape is source-independent.
+- VP-580-003: Cascading `children[]` nesting round-trips correctly from both the M1/M2
+  (`allowedValues[].children[]`) and M3 (`validValues[].children`) wire shapes.
+- VP-580-006: Mode-selector mutual-exclusion (Invariant 1) — the arity decision is extracted to
+  a pure function over the context-flag booleans (`has_type`, `has_request_type`, `has_issue`,
+  `has_project`) and proptested exhaustively over the flag-presence space. Arity is evaluated
+  over the three MODE-SELECTOR booleans ONLY (`has_type`, `has_request_type`, `has_issue`) —
+  `has_project` is NEVER counted toward the mode-selector arity, per Invariant 1 / ADR-0019 §1:
+  EXACTLY one of the three mode-selectors present → `Ok`, subject to that mode's own companion
+  rule for `--project` (M2/`--type`: `has_project` REQUIRED, else `Err` — the incomplete-M2 error;
+  M3/`--request-type`: `has_project` OPTIONAL, so `has_request_type && has_project` → `Ok`, NOT a
+  pairing error; M1/`--issue`: `has_project` not consulted). Zero mode-selectors, two-or-more
+  mode-selectors, or a bare `has_project` with no mode-selector at all → `Err` (exit 64).
+  Enforced BEFORE any HTTP call — wiremock integration asserts zero requests fired on the reject
+  paths (pre-HTTP guarantee, analogue of DEC-188's pre-flight placement). Realized as an inline
+  `proptest!` co-located with the guard fn plus `tests/field_options.rs` integration; the
+  `--project --request-type` VALID-pairing regression guard is VP-580-009; per-error-message
+  shape is covered by VP-580-004's taxonomy rows.
+
+**Trace**: issue #580; `.factory/research/field-dx-context-mechanism-2026-08-25.md` (M1/M2/M3
+ranked recommendation, per-mechanism verdict table); `.factory/research/field-dx-feasibility-2026-08-25.md`
+claims 1-4; ADR-0019 §1 (context-mechanism arity model — mode-selector/companion correction,
+adversary pass-20 M1); BC-3.4.015 (shared field-name resolution + cache contract, reused);
+BC-X.12.003/005 (JSM requesttype-fields call + cache + `--project` companion resolution via
+`require_service_desk`/`get_or_fetch_project_meta`, reused); BC-X.10.001 (`partial_match`,
+reused); BC-3.3.010 Step 3 (M2 `--type` name→issueTypeId resolution pattern, mirrored);
+`src/cli/field.rs` (new); `src/api/jira/issues.rs::get_createmeta_fields` (new
+createmeta-with-`allowedValues` enumeration method, M2, per ADR-0019 §1);
+`src/api/jira/issues.rs::get_issue_types_for_project` (REUSED, S-331 — M2 `--type` name→id
+resolution, at most once per invocation, fires before `get_createmeta_fields`);
+`src/api/jira/fields.rs::list_fields` (REUSED for field-name resolution only, not a new
+enumeration function — see BC-3.4.015); `src/api/jsm/request_types.rs` (M3, reused);
+`src/api/jsm/servicedesks.rs::{require_service_desk,get_or_fetch_project_meta}` (M3 companion
+`--project`/ambient-default resolution, reused)
+
+[NEW 2026-08-25 issue #580 F2]
+
+---
+
+#### BC-X.14.002: `--value <substring>` client-side filter narrows the enumerated option list to matching id/label(s)
+
+**Confidence**: HIGH
+**Subject**: Field option discovery — `--value` filter (issue #580)
+**Behavior**: `jr field options <field> --value <substring> [context flags]` enumerates the
+full option list per BC-X.14.001, then applies a CLIENT-SIDE case-insensitive substring filter
+against BOTH `label` and `id` for each top-level entry (matching either field counts as a
+match). Cascading children are filtered independently — a child matching `--value` is retained
+under its parent (and the parent itself is retained as context) even if the parent's own label
+does not match; a parent matching `--value` retains ALL its children (no further filtering
+within an already-matched parent's children). No server-side filtering exists for any of the
+three enumeration mechanisms (`allowedValues`/`validValues` are always returned in full) — the
+filter is purely client-side, applied after the full fetch.
+**Inputs**: `--value <substring>` (optional; when absent, all options are printed, matching #580's
+`jr field options customfield_10084` bare invocation).
+**Outputs/Effects**: Filtered `Vec<FieldOption>`; an empty result (zero matches) is a valid
+success (exit 0, empty table / `[]` JSON) — NOT an error, consistent with `jr`'s existing
+empty-result convention (e.g., BC-X.12.002's `--search` empty-result behavior).
+**Errors**: None specific to this flag — filtering never fails; it can only narrow to zero.
+
+**Verification Properties**:
+- VP-580-007: `--value <substring>` client-side filter correctness. Realized as a pure filter
+  function over a `Vec<FieldOption>` fixture plus unit/integration coverage: (a) match is
+  case-insensitive and succeeds when EITHER `label` OR `id` contains the substring; (b) a child
+  matching `--value` is retained under its parent AND the parent is retained as context even when
+  the parent's own `label`/`id` does not match; (c) a parent that itself matches retains ALL its
+  children unfiltered; (d) zero matches → empty result, exit 0, empty table / `[]` JSON — a valid
+  success, never an error (BC-X.12.002 empty-result precedent); (e) `--value` absent → the full
+  enumerated list is returned unchanged. The filter is a total function (never panics, never
+  fails — it can only narrow).
+
+**Trace**: issue #580 (`jr field options customfield_10084 --value "<option-value>"` AC);
+BC-X.12.002 (empty-result-is-not-an-error precedent)
+
+[NEW 2026-08-25 issue #580 F2]
+
+---
+
+#### BC-X.14.003: Table output columns (ID, Label) with cascading indentation; `--output json` returns the normalized `{id, label, children}` array
+
+**Confidence**: HIGH
+**Subject**: Field option discovery — output shape (issue #580)
+**Behavior**: Default table output (per `output::print_output` / `render_json` invariant, #526)
+shows two columns: **ID**, **Label**. Cascading children are rendered as additional rows
+indented under their parent (table mode only; JSON mode preserves the nested `children[]`
+structure verbatim, no flattening). `--output json` returns a JSON array of the normalized
+`FieldOption` shape: `[{id: "<str>", label: "<str>", children: [...]}, ...]`, pretty-printed
+via `render_json` per the repo-wide JSON render invariant (#526) — `serde_json::to_string_pretty`
+direct calls and compact `json!` Display printing are forbidden, matching every other `jr`
+JSON path.
+**Inputs**: `--output json` (optional flag, standard global flag).
+**Outputs/Effects**: stdout table (default) or stdout JSON array (`--output json`); stderr is
+empty on the ORDINARY success path but is NOT unconditionally empty on every exit-0 outcome —
+BC-X.14.004's graceful-degrade case is an exit-0 success path that emits a hint line to stderr
+(e.g. "no enumerable options — this field uses Assets"). This is **output-channel profile 2
+(Read-only)**, per CLAUDE.md's five-profile taxonomy — stdout for data, stderr for hints/warnings
+(the truncation-notice pattern used elsewhere, e.g. `issue list`/`sprint current`) — NOT profile
+1 (Pure), which requires zero stderr output under any success outcome. `--output json` mode keeps
+the hint on stderr rather than folding it into the JSON payload (EC-X.14.004-2), preserving
+`stdout` as machine-parseable JSON in both the enumerable and graceful-degrade cases.
+**Errors**: N/A (output-shape only; see BC-X.14.004 for error taxonomy and the graceful-degrade
+hint contract).
+
+**Verification Properties**:
+- VP-580-008: Output-shape correctness. (a) Default table output has exactly two columns
+  **ID**, **Label**; cascading children render as additional rows indented under their parent
+  (table mode only). (b) `--output json` returns a JSON array of the normalized `FieldOption`
+  shape `[{id, label, children: [...]}, ...]` with the nested `children[]` structure preserved
+  verbatim (no flattening), routed through `output::print_output` / `render_json` — asserting NO
+  direct `serde_json::to_string_pretty` / compact `json!` Display call (JSON render invariant
+  #526). (c) Read-only output-channel profile: stderr is empty on the ORDINARY enumeration
+  success path (a `[]`/empty-filter-result table is still exit 0 with no stderr, per
+  BC-X.14.002's empty-match convention), but is NOT asserted empty on the graceful-degrade
+  success path — that path's stderr hint is covered separately by BC-X.14.004's VP-580-005.
+  Realized as unit tests over the render fn plus an integration test capturing stdout/stderr
+  separately for both the ordinary and graceful-degrade success outcomes.
+
+**Trace**: issue #580; CLAUDE.md "JSON render invariant (#526)"; CLAUDE.md "Output channels"
+Profile 2 (Read-only)
+
+[NEW 2026-08-25 issue #580 F2]
+
+---
+
+#### BC-X.14.004: Error taxonomy — field not found, no enumerable options (graceful degrade), ambiguous name, context-flag mutual-exclusion violations
+
+**Confidence**: HIGH
+**Subject**: Field option discovery — error taxonomy (issue #580)
+**Behavior**: This BC pins the exit-64 error taxonomy AND the graceful-degradation contract for
+fields with no enumerable option set (per `.factory/research/field-dx-context-mechanism-2026-08-25.md`
+§Q-B, "fields where allowedValues/validValues is NOT returned — degrade gracefully").
+
+**Error taxonomy** (exit 64, zero mutating HTTP, before or in place of enumeration):
+| Condition | Behavior | Source parallel |
+|---|---|---|
+| Zero mode selectors (`--type`/`--request-type`/`--issue` all absent) — this row also covers a BARE `--project` supplied with no mode selector at all (`--project` is never itself a mode selector, so that invocation still has zero of the three present) | Exit 64: "specify exactly one of --type, --request-type, --issue" | BC-X.14.001 Invariant 1 / ADR-0019 §1 |
+| `--type` present without its required `--project` companion | Exit 64, the incomplete-M2 error: "--type requires --project" | BC-X.14.001 Invariant 1 / ADR-0019 §1 |
+| Two or more mode selectors (`--type`/`--request-type`/`--issue`) supplied simultaneously | Exit 64, same message as the zero-mode-selector row, listing the conflicting flags | BC-X.14.001 Invariant 1 / ADR-0019 §1 |
+| `--request-type` present with NO resolvable ambient project (no `--project` companion, no profile/config default) | Exit 64 via `require_service_desk`'s "project required" error, unchanged from `jr requesttype fields`'s own behavior on the same condition | BC-X.12.003 parallel / ADR-0019 §1 |
+| `<field>` resolves to zero matches | Exit 64, hint naming `jr project fields` | EC-3.4.015-1 parallel |
+| `<field>` resolves to multiple matches (ambiguous) | Exit 64 naming candidates + ids | EC-3.4.015-2 parallel |
+| Resolved project (whether from an explicit `--project` companion or profile/config default) is non-JSM, supplied to the `--request-type` path | Exit 64 via `require_service_desk`, call-site-specific message (BC-X.8.004) | BC-X.12.003 parallel |
+| Unknown/ambiguous `--request-type` value | Exit 64 via `partial_match` (BC-X.12.006) | BC-X.12.006 |
+| M2 path (`--type <T> --project <P>`): `--type` value does not resolve to exactly one issue type for the resolved project (unknown name, or ambiguous case-insensitive match) | Exit 64 listing the project's valid issue type names, BEFORE `get_createmeta_fields` is called | BC-3.3.010 Step 3 / S-331 parallel |
+| `--issue <KEY>` not found (404) | Exit 64, "issue not found or not accessible" | EC-3.4.015-7 parallel |
+| createmeta/editmeta/requesttype-fields HTTP failure (401/403/5xx) | Propagated via standard `JrError` auth/API hint | EC-3.4.015-6 parallel |
+| `<field>` resolves in the global `GET /field` list (or via `customfield_NNNNN` bypass) but is ABSENT from the selected context's field set | Exit 64, "field not available in this context" — per-context wording: "is not on the Create screen" (M2/createmeta), "is not on the Edit screen" (M1/editmeta), "is not a field on this request type" (M3/requesttype-fields) | BC-3.3.010 EC-3.3.010-2 parallel; see EC-X.14.001-5 |
+
+**Precedence when an invocation matches more than one taxonomy-table condition**: mode-selector
+arity (zero, or two-or-more, of `{--type, --request-type, --issue}`) is evaluated FIRST, before
+any `--project` companion-role validation — e.g. `--project <P> --request-type <RT> --type <T>`
+(all three flags present) is reported via the "two or more mode selectors" row, not any
+`--project` companion check. Once exactly one mode selector is confirmed present, `--project`'s
+companion role is validated against THAT mode only: REQUIRED for M2 (`--type` without
+`--project` → the incomplete-M2 error), OPTIONAL for M3 (`--request-type` with or without
+`--project` is valid; when `--project` is absent on M3, resolution falls through to the ambient
+profile/config-default project, which may itself fail via `require_service_desk`'s "project
+required" error if no project resolves at all — a DISTINCT, LATER failure from the
+mode-selector-arity rows), and inapplicable for M1 (`--issue` supplies project context on its
+own, no `--project` companion is consulted). Exit code is 64 for every taxonomy-table row; this
+paragraph pins evaluation ORDER only, so a caller fixing one reported error deterministically
+encounters the next-in-order error on a following attempt, never a silent flip between two error
+messages for the same invocation. **Note the reversal from an earlier revision of this
+paragraph (adversary pass-20 M1, ADR-0019 §1):** `--project <P> --request-type <RT>` (no
+`--type`) is now a VALID M3 invocation with an explicit service-desk project — it is NOT
+reported via any taxonomy-table error row.
+
+**Graceful degradation (NOT an error — exit 0)**: when the resolved field's `allowedValues`
+(M1/M2) or `validValues` (M3) is absent or empty, `jr field options` does NOT error. It inspects
+`schema.custom` (M1/M2) or `jiraSchema` (M3) and prints:
+- For Assets/CMDB object fields (`schema.custom` = `com.atlassian.jira.plugins.cmdb:cmdb-object-cftype`)
+  or Affected-services fields: a "no enumerable options — this field uses Assets" hint pointing
+  to `jr assets search` (consistent with BC-3.4.030's Assets-field posture on the write side).
+- For user-picker/multi-user-picker/Approvers/labels/other suggestion-backed fields: a "no
+  enumerable options (dynamic/lookup field)" hint plus the field's `autoCompleteUrl` if present
+  in the response.
+- For free-text/number/date/datetime and any other field with no finite option set: a "no
+  enumerable options (this field type has no fixed value set)" hint, no `autoCompleteUrl`.
+- **M3-specific note**: JSM Assets/Affected-services fields return `validValues: []`
+  unconditionally (JSDCLOUD-15551, an Atlassian-side gap, not a `jr` limitation) — `jr` treats
+  this identically to the Assets-field degrade case above, not as a "field has zero configured
+  options" misconfiguration message (EC-X.14.004-1 distinguishes the two).
+
+**Postconditions**:
+- Every taxonomy-table error emits exit 64 (or the standard `JrError` HTTP-failure mapping)
+  BEFORE the enumeration HTTP call, or in the createmeta/editmeta/requesttype-fields call's own
+  failure path.
+- Every graceful-degrade case emits exit 0 with the appropriate hint — NEVER a stack trace,
+  panic, or exit-64 "field has no configured option values" message (that message, from
+  BC-3.4.016 EC-3.4.016-1, is the WRITE-path posture on an editmeta-driven `--field` value
+  resolution failure — this READ-path discovery command's posture is deliberately more
+  permissive, since printing "no options" is informative, not a resolution failure to reject).
+- `--output json` mode: every genuine exit-64 error taxonomy-table row above emits the SAME
+  `{"error": "...", "code": 64}` envelope shape as every other `jr` pre-flight/resolution error
+  — written to stderr, not stdout (consistent with BC-3.3.011's Output/Errors convention for the
+  parallel write-path `--field` taxonomy). This applies to genuine errors only — the
+  graceful-degrade case above is exit 0 and therefore never emits this envelope; its stdout
+  payload is `[]` per EC-X.14.004-2, with the hint text on stderr as plain text, not JSON.
+
+**Edge Cases**:
+- EC-X.14.004-1: Assets/CMDB field via the M3 (`--request-type`) path → `validValues: []`
+  (JSDCLOUD-15551) → graceful-degrade Assets hint, NOT the generic "no fixed value set" hint —
+  `jr` distinguishes by inspecting `jiraSchema.custom`/`jiraSchema.system` for the CMDB type
+  string even though `validValues` is empty either way.
+- EC-X.14.004-2: `--output json` mode graceful-degrade → returns `[]` (empty array), with the
+  hint text emitted to STDERR (not stdout, per the Pure/Read-only channel distinction — JSON
+  stdout stays parseable; the hint is a stderr convenience for human operators redirecting
+  stdout to `jq`).
+- EC-X.14.004-3: `<field>` resolves globally but is absent from the selected context's field set
+  (global-existence-vs-screen-membership taxonomy row above) → exit 64 BEFORE any enumeration is
+  attempted (the createmeta/editmeta/requesttype-fields response is inspected for field presence
+  before `allowedValues`/`validValues` is read) — this is a DISTINCT failure from the
+  graceful-degrade case above: graceful-degrade fires when the field IS present in the selected
+  context but has no enumerable option set (exit 0); this edge case fires when the field is not
+  present in the selected context at all (exit 64). The two must not be conflated — a caller
+  fixing this exit-64 error by re-running against a different `--project`/`--type`, `--issue`, or
+  `--request-type` context where the field IS configured may then encounter the graceful-degrade
+  exit-0 path instead, for a field type with no fixed value set.
+- EC-X.14.004-4: M2 path (`--type <T> --project <P>`), `--type` names an unknown or ambiguous
+  issue type for the resolved project → `get_issue_types_for_project` resolution fails BEFORE
+  `<field>` resolution and BEFORE `get_createmeta_fields` — exit 64 listing valid issue types
+  (see taxonomy table row above). This is a DISTINCT, EARLIER failure than EC-X.14.001-5
+  (field-absent-from-context) — that edge case presumes `--type` already resolved successfully
+  and the createmeta call already ran; this one fires before either happens.
+- EC-X.14.004-5: `jr field options <field> --request-type <RT>` with NO resolvable ambient
+  project (no `--project` companion flag, no profile/config default project) → the existing
+  `require_service_desk` "project required" error (exit 64), unchanged from `jr requesttype
+  fields`'s own behavior on the same condition (BC-X.12.003 parallel). This is a companion-
+  resolution failure, distinct from both the mode-selector arity errors (zero/two-or-more mode
+  selectors, or EC-X.14.004-4's M2 `--type`/`--project` case) and the non-JSM-project taxonomy
+  row (which fires when a project DOES resolve but is the wrong project type) — here no project
+  resolves at all, so `require_service_desk` is never reached with a candidate project key.
+
+**Verification Properties**:
+- VP-580-004: Each row of the error taxonomy table is independently exercised, asserting exit
+  64, zero mutating HTTP, and the documented message shape. This includes a dedicated case for
+  a BARE `--project` supplied with no mode selector at all: it asserts the zero-mode-selector
+  message ("specify exactly one of --type, --request-type, --issue"), NOT the incomplete-M2
+  message ("--type requires --project") — a regression guard for the doubly-specified,
+  self-contradictory routing found in adversary pass-25 (HIGH), fixed via Option A
+  (canonicalized as the zero-mode-selector case, consistent with VP-580-006's `has_project`
+  treatment). This includes the M2 `--type`
+  name→id resolution row (EC-X.14.004-4): unknown/ambiguous `--type` for the resolved project
+  exits 64 listing valid issue types, with `get_createmeta_fields` never called; and the M3
+  no-resolvable-project row (EC-X.14.004-5): `--request-type` with no `--project` and no
+  profile/config default exits 64 via `require_service_desk`, exercised through `jr field
+  options`'s own dispatch (not merely inherited from `jr requesttype fields`'s existing
+  coverage) — asserting the M3 mode reaches the same companion-resolution code path.
+- VP-580-005: Each graceful-degrade sub-case (Assets, user-picker, free-text) exits 0 with the
+  correct hint variant and an empty (not error) options list.
+- VP-580-009: `--project --request-type` together resolves as a VALID M3 invocation (explicit
+  service-desk project, zero errors attributable to the flag pairing) — a regression guard
+  against re-introducing the superseded "pairing error" behavior (adversary pass-20 M1,
+  ADR-0019 §1).
+
+**Trace**: issue #580; `.factory/research/field-dx-context-mechanism-2026-08-25.md` §Q-B
+(graceful-degradation rule, field-type enumeration); ADR-0019 §1 (context-mechanism arity
+model — mode-selector/companion correction, adversary pass-20 M1); BC-3.4.016 EC-3.4.016-1
+(contrasted write-path posture); BC-X.8.004 (`require_service_desk` call-site label convention);
+BC-X.12.003 (`--project` companion resolution via `require_service_desk`/
+`get_or_fetch_project_meta`, mirrored on the M3 path); BC-X.12.006 (`partial_match`
+disambiguation convention)
+
+[NEW 2026-08-25 issue #580 F2]
 
 ---
 

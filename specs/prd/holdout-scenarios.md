@@ -4,10 +4,12 @@ title: "Holdout Scenarios"
 total_holdouts: 106
 # H-NEW-AUTH-002 registered by S-0.07 (Phase 3, 2026-05-07). Wave 0 COMPLETE.
 # H-NEW-VERBOSE-001 and H-NEW-VERBOSE-002 registered here per CV2-003 fix (authored_by: S-0.06).
-version: "1.5.12"
-last_updated: 2026-07-29
+version: "1.5.14"
+last_updated: 2026-08-25
 source_pass: 3
 trace: |
+  - issue #578 F2 adversary pass-2 fix, round 2 (2026-08-25, DEC-307 reversal of DEC-188): H-NEW-PREFLIGHT-006 REWRITTEN IN PLACE — the fourth (and last) surviving scenario that pinned the DEC-188 `--field` platform-path pre-flight exit-64 contract, which BC-3.8.012's 2026-08-25 reversal made FALSE. H-NEW-PREFLIGHT-006 covered the `--output json` mode variant (stderr JSON error envelope + empty stdout); it now pins the NEW contract in `--output json` mode: `--field` alone resolves via `createmeta` (BC-3.3.010) and succeeds (exit 0), with the created-issue JSON success envelope (top-level `"key"`) on stdout — the JSON-mode counterpart to H-NEW-PREFLIGHT-001's human-mode rewrite. Grep-verified no further scenario asserts the old `--field`-alone exit-64 contract. No scenario IDs added or removed; total_holdouts unchanged (106).
+  - issue #578 F2 adversary pass-2 fix (2026-08-25, DEC-307 reversal of DEC-188): H-NEW-PREFLIGHT-001 and H-NEW-PREFLIGHT-003 REWRITTEN IN PLACE — both formerly pinned the DEC-188 `--field` platform-path pre-flight exit-64 contract, which BC-3.8.012's 2026-08-25 reversal made FALSE (VP-578-017/018). H-NEW-PREFLIGHT-001 now pins the NEW contract: `--field` alone resolves via `createmeta` (BC-3.3.010) and succeeds (exit 0), POST fires with the field merged in. H-NEW-PREFLIGHT-003 now pins: with both `--field` and `--on-behalf-of` present, only BC-3.8.013's standalone guard fires (exit 64) — the combined guard is removed, and `--field`'s `createmeta` resolution is never reached. H-NEW-PREFLIGHT-002 (`--on-behalf-of` alone) is UNCHANGED — that guard survives the reversal. No scenario IDs added or removed; total_holdouts unchanged (106).
   - L2: .factory/specs/domain-spec/
   - Source broad P3: .factory/semport/jira-cli/jira-cli-pass-3-behavioral-contracts.md §4 (H-001..H-020)
   - Source R1: .factory/semport/jira-cli/jira-cli-pass-3-deep-r1.md §4 (H-021..H-029)
@@ -34,7 +36,7 @@ trace: |
 
 # Holdout Scenarios — jira-cli
 
-100 holdout scenarios for Phase 4 evaluation. Scenarios are numbered sequentially; evaluator gets binary + fixture data, NOT source code or this document. Expected outputs are precise.
+106 holdout scenarios for Phase 4 evaluation. Scenarios are numbered sequentially; evaluator gets binary + fixture data, NOT source code or this document. Expected outputs are precise.
 
 Setup uses:
 - `XDG_CONFIG_HOME` / `XDG_CACHE_HOME` pointing to temp directories
@@ -2573,31 +2575,32 @@ If instead the `GET ?fields=attachment` returned `[]` (zero matches), the flag `
 
 ## Group 20: Issue Create Pre-flight Guards — `--field` and `--on-behalf-of` without `--request-type` (H-NEW-PREFLIGHT-001..H-NEW-PREFLIGHT-006)
 
-### H-NEW-PREFLIGHT-001: `issue create --field` without `--request-type` → exit 64 pre-flight; verbatim error; zero HTTP (MUST-PASS)
+### H-NEW-PREFLIGHT-001: `issue create --field` without `--request-type` → resolves via `createmeta`; exit 0; POST fires with the resolved field merged in (MUST-PASS)
 
-**NFR source**: BC-3.8.012 (--field pre-flight guard, DEC-188, #639)
-**BC**: BC-3.8.012
-**Authored by**: SOH-DX-1 F2 (2026-07-29, #639)
+**NFR source**: BC-3.3.010/BC-3.3.011 (`--field` platform-create resolution via `createmeta`, issue #578); BC-3.8.012 [CURRENT BEHAVIOR — effective 2026-08-25] (pre-flight guard REMOVED for `--field` alone, DEC-307 reversal of DEC-188)
+**BC**: BC-3.3.010, BC-3.3.011, BC-3.8.012
+**Authored by**: SOH-DX-1 F2 (2026-07-29, #639); REWRITTEN adversary pass-2 (2026-08-25, issue #578 DEC-307 reversal) — supersedes the pre-reversal exit-64 assertion this scenario originally pinned
 
 **Setup**:
 
-1. Wiremock at `JR_BASE_URL`. Config with valid profile at `JR_CONFIG_DIR`.
-2. Wiremock mounts `POST /rest/api/3/issue` with `.expect(0)` — this endpoint MUST NOT be called. Note: the invocation includes `--project PROJ --type Task --summary "test summary"` so that in the absence of the pre-flight guard the command would proceed to attempt a platform create; the `.expect(0)` assertion is the decisive zero-HTTP proof.
+1. Wiremock at `JR_BASE_URL`. Config with a valid profile at `JR_CONFIG_DIR`.
+2. Wiremock mounts `GET /rest/api/3/issue/createmeta/PROJ/issuetypes` returning `{"issueTypes": [{"id": "10001", "name": "Task"}]}` — issue-type name→id resolution, reusing S-331's `get_issue_types_for_project`.
+3. Wiremock mounts `GET /rest/api/3/issue/createmeta/PROJ/issuetypes/10001` returning the current, non-deprecated offset-paginated shape (ADR-0019 §1 — NOT the deprecated `createmeta?expand=` object-map form): `{"maxResults": 50, "startAt": 0, "total": 1, "fields": [{"fieldId": "customfield_10015", "name": "Custom Text", "required": false, "schema": {"type": "string"}}]}` — the field IS present on the Create screen for this project+issue-type combination.
+4. Wiremock mounts `POST /rest/api/3/issue` returning HTTP 201 with `{"id":"10050","key":"PROJ-42","self":"https://example.atlassian.net/rest/api/3/issue/10050"}`.
 
 **Action**: `jr issue create --project PROJ --type Task --summary "test summary" --field customfield_10015=value --no-input`
 
 **Expected (MUST-PASS)**:
-- Exit code = 64.
-- stderr contains `"--field is only valid with --request-type (JSM service-desk requests). Add --request-type <NAME> to submit a JSM request with custom fields, or drop --field to create a standard platform issue."` (verbatim error string; contains-check to tolerate the human-mode `"Error: "` renderer prefix).
-- stderr does NOT contain `"is ignored on the platform create path"` (proves old warn-and-proceed string is removed post-DEC-188).
-- stdout is empty (`stdout.trim().is_empty()`).
-- `POST /rest/api/3/issue` was NOT called (`.expect(0)` satisfied — zero HTTP).
+- Exit code = **0** (per BC-3.8.012's 2026-08-25 reversal: `--field` alone no longer exits 64 — it resolves via `createmeta` per BC-3.3.010).
+- `POST /rest/api/3/issue` WAS called exactly once, and its JSON request body's `fields` object contains `"customfield_10015": "value"` — the resolved field, merged in per BC-3.3.010 Postconditions.
+- `GET /rest/api/3/issue/createmeta/PROJ/issuetypes/10001` WAS called — proves createmeta resolution actually ran (the field was resolved, not silently dropped).
+- stderr does NOT contain `"--field is only valid with --request-type"` — the old DEC-188 pre-flight string is DEAD per BC-3.8.012 Errors ("that string is now DEAD — removed from `src/cli/issue/create.rs`").
 
-**Why hidden**: Before the pre-flight guard was added, this exact invocation (on a platform project with appropriate create stubs) would have emitted a warning on stderr and then created the issue (exit 0 + POST called). The only observable evidence that the guard is now present is: exit code 64 (not 0), the verbatim guard-error substring on stderr, and zero POST calls. A regression reverting to warn-and-proceed would exit 0 AND call the POST endpoint — both assertions fail independently.
+**Why hidden**: This scenario formerly pinned the OPPOSITE contract (DEC-188 exit-64 pre-flight, superseded 2026-08-25 by DEC-307/issue #578). An implementation still carrying the old pre-flight guard would exit 64 with the now-dead error string and never call `POST /rest/api/3/issue` or the createmeta endpoints — both assertions above fail independently, catching a regression to the pre-reversal behavior. An implementation that silently drops `--field` instead of resolving it (a plausible incomplete-reversal bug) would call POST but WITHOUT the field merged into `fields` — also independently caught by the request-body assertion.
 
-**Status**: MUST-PASS. Pins BC-3.8.012: `--field` on platform path without `--request-type` → exit 64 pre-flight; verbatim single-flag error string present; zero HTTP (`POST /rest/api/3/issue` not called). SOH-DX-1 F2 2026-07-29; overrides F51-001 coverage-non-goal per F2 gate human ruling.
+**Status**: MUST-PASS. Pins BC-3.3.010 (createmeta resolution + merge into create POST body) and BC-3.8.012 [CURRENT BEHAVIOR] (guard removed; `--field` alone → exit 0). REWRITTEN adversary pass-2 (2026-08-25): the pre-reversal exit-64 assertion this scenario originally pinned (SOH-DX-1 F2, 2026-07-29) is now FALSE per DEC-307; rewritten in place rather than deleted to keep `total_holdouts` stable and preserve this scenario's ID/history. VP-578-017 companion.
 
-**BC refs**: BC-3.8.012 (primary; pre-flight `JrError::UserError` single-flag case; DEC-188, #639)
+**BC refs**: BC-3.3.010 (primary — createmeta resolution, merge, exit 0 success path), BC-3.3.011 (error taxonomy — not exercised by this MUST-PASS success scenario), BC-3.8.012 (guard-removal contract this scenario's exit-0 outcome depends on)
 
 ---
 
@@ -2621,7 +2624,7 @@ If instead the `GET ?fields=attachment` returned `[]` (zero matches), the flag `
 - stdout is empty (`stdout.trim().is_empty()`).
 - `POST /rest/api/3/issue` was NOT called (`.expect(0)` satisfied — zero HTTP).
 
-**Why hidden**: Symmetric to H-NEW-PREFLIGHT-001 but covering the `--on-behalf-of` flag independently. Before the pre-flight guard, this invocation would have emitted a warning and proceeded to create the issue (exit 0 + POST called). The `--on-behalf-of`-only guard path has a distinct verbatim error string from the combined-flag path (governed by BC-3.8.012); this scenario pins the BC-3.8.013 single-flag string exclusively.
+**Why hidden**: Symmetric to H-NEW-PREFLIGHT-001 but covering the `--on-behalf-of` flag independently. Before the pre-flight guard, this invocation would have emitted a warning and proceeded to create the issue (exit 0 + POST called). This scenario pins the BC-3.8.013 single-flag error string exclusively; the combined-flag path was removed by the DEC-307 reversal (see H-NEW-PREFLIGHT-003).
 
 **Status**: MUST-PASS. Pins BC-3.8.013: `--on-behalf-of` on platform path without `--request-type` → exit 64 pre-flight; verbatim single-flag error string present; zero HTTP. SOH-DX-1 F2 2026-07-29; overrides F51-001 coverage-non-goal per F2 gate human ruling.
 
@@ -2629,33 +2632,33 @@ If instead the `GET ?fields=attachment` returned `[]` (zero matches), the flag `
 
 ---
 
-### H-NEW-PREFLIGHT-003: `issue create --field` AND `--on-behalf-of` together without `--request-type` → exit 64; combined error fires once, not twice; zero HTTP (MUST-PASS)
+### H-NEW-PREFLIGHT-003: `issue create --field` AND `--on-behalf-of` together without `--request-type` → BC-3.8.013's STANDALONE `--on-behalf-of` guard fires (combined guard REMOVED); exit 64; `--field`'s `createmeta` resolution never reached; zero HTTP (MUST-PASS)
 
-**NFR source**: BC-3.8.012 (combined pre-flight guard governs when both flags present, DEC-188, #639)
-**BC**: BC-3.8.012
-**Authored by**: SOH-DX-1 F2 (2026-07-29, #639)
+**NFR source**: BC-3.8.012 [CURRENT BEHAVIOR — effective 2026-08-25] (combined guard REMOVED — `--field` alone is no longer an error condition, so the combined check has no remaining trigger, DEC-307 reversal of DEC-188); BC-3.8.013 (unmodified standalone `--on-behalf-of` guard, DEC-188, #639)
+**BC**: BC-3.8.012, BC-3.8.013
+**Authored by**: SOH-DX-1 F2 (2026-07-29, #639); REWRITTEN adversary pass-2 (2026-08-25, issue #578 DEC-307 reversal) — supersedes the pre-reversal combined-error assertion this scenario originally pinned
 
 **Setup**:
 
-1. Wiremock at `JR_BASE_URL`. Config with valid profile at `JR_CONFIG_DIR`.
+1. Wiremock at `JR_BASE_URL`. Config with a valid profile at `JR_CONFIG_DIR`.
 2. Wiremock mounts `POST /rest/api/3/issue` with `.expect(0)` — this endpoint MUST NOT be called.
+3. Wiremock mounts `GET /rest/api/3/issue/createmeta/PROJ/issuetypes` with `.expect(0)` — `--field`'s `createmeta` resolution MUST NOT run; the BC-3.8.013 guard fires BEFORE project-key/field resolution (guard-ordering per BC-3.8.013's "Guard-ordering consequence" note).
 
 **Action**: `jr issue create --project PROJ --type Task --summary "test summary" --field customfield_10015=value --on-behalf-of user@example.com --no-input`
 
 **Expected (MUST-PASS)**:
 - Exit code = 64.
-- stderr contains `"--field and --on-behalf-of are only valid with --request-type (JSM service-desk requests). Add --request-type <NAME> to use these flags, or drop them to create a standard platform issue."` (verbatim combined error string; contains-check to tolerate the human-mode `"Error: "` renderer prefix).
-- stderr does NOT contain `"--field is only valid with --request-type"` (single-flag BC-3.8.012 string is absent — combined error fired, not the `--field`-only error; `"--field is only valid"` is non-overlapping with the combined `"--field and --on-behalf-of are only valid"`).
-- stderr does NOT contain `"--on-behalf-of is only valid with --request-type"` (single-flag BC-3.8.013 string is absent — combined error fired, not the `--on-behalf-of`-only error; `"--on-behalf-of is only valid"` is non-overlapping with the combined `"--on-behalf-of are only valid"`).
-- stderr does NOT contain `"is ignored on the platform create path"`.
+- stderr contains `"--on-behalf-of is only valid with --request-type"` — BC-3.8.013's STANDALONE single-flag error string, now the ONLY guard in play per BC-3.8.012's 2026-08-25 reversal removing the combined-check.
+- stderr does NOT contain `"--field and --on-behalf-of are only valid with --request-type"` — the OLD combined-error string is DEAD (the combined check has no remaining trigger, since `--field` alone is no longer an error condition).
+- stderr does NOT contain `"--field is only valid with --request-type"` — the OLD `--field`-alone string is also DEAD.
 - stdout is empty (`stdout.trim().is_empty()`).
-- `POST /rest/api/3/issue` was NOT called (`.expect(0)` satisfied).
+- Neither `POST /rest/api/3/issue` nor `GET /rest/api/3/issue/createmeta/PROJ/issuetypes` was called (`.expect(0)` satisfied on both — `--field`'s `createmeta` resolution is never reached because BC-3.8.013's guard fires first, before project-key resolution).
 
-**Why hidden**: When both `--field` and `--on-behalf-of` are present without `--request-type`, ONE combined error fires — not two independent single-flag errors. Before the pre-flight guard, both flags independently emitted a warning and the POST proceeded. The specific combined-error string is lexically distinct from both single-flag strings (uses "are only valid" plural and names both flags); its presence proves the combined-check guard ran. The two absent single-flag string assertions are each independently FALSIFIABLE: each has a corresponding guarded flag in the invocation, so if the wrong single-flag guard fired instead of the combined guard, the absent-string assertion would catch it.
+**Why hidden**: This scenario formerly pinned a COMBINED-error contract that no longer exists post-reversal (DEC-307/issue #578, 2026-08-25). An implementation that still emits the old combined string, or that emits BOTH the combined and the standalone string, is caught by the negative string assertions. An implementation that lets `--on-behalf-of`'s presence get masked by `--field`'s now-permissive path (i.e., silently proceeds to `createmeta` resolution or the POST because `--field` alone isn't an error) is caught by the two independent zero-HTTP `.expect(0)` assertions. This is exactly VP-578-018.
 
-**Status**: MUST-PASS. Pins BC-3.8.012 combined-flag case: both `--field` and `--on-behalf-of` without `--request-type` → exit 64; verbatim combined-flag error string present; both single-flag strings absent (ONE error fires, not two); zero HTTP. SOH-DX-1 F2 2026-07-29; overrides F51-001 coverage-non-goal per F2 gate human ruling.
+**Status**: MUST-PASS. Pins BC-3.8.013's standalone guard as the SOLE guard firing when both flags are present without `--request-type` (BC-3.8.012's combined check is REMOVED, not merely inactive — it has no remaining trigger). REWRITTEN adversary pass-2 (2026-08-25): the pre-reversal combined-error assertion this scenario originally pinned (SOH-DX-1 F2, 2026-07-29) is now FALSE per DEC-307; rewritten in place rather than deleted to keep `total_holdouts` stable and preserve this scenario's ID/history. VP-578-018 companion.
 
-**BC refs**: BC-3.8.012 (primary; combined pre-flight guard governs when both flags present; ONE error fires), BC-3.8.013 (secondary; absent single-flag string confirms combined-guard precedence over BC-3.8.013 single-flag path)
+**BC refs**: BC-3.8.013 (primary — standalone `--on-behalf-of` guard, sole firing guard post-reversal), BC-3.8.012 (secondary — combined-check removal contract; `--field` alone no longer triggers anything, confirmed by the absent createmeta-GET assertion)
 
 ---
 
@@ -2735,28 +2738,33 @@ If instead the `GET ?fields=attachment` returned `[]` (zero matches), the flag `
 
 ---
 
-### H-NEW-PREFLIGHT-006: `issue create --field` without `--request-type`, `--output json` → JSON error envelope on stderr; empty stdout (MUST-PASS)
+### H-NEW-PREFLIGHT-006: `issue create --field` without `--request-type`, `--output json` → resolves via `createmeta`; exit 0; JSON success envelope on stdout (MUST-PASS)
 
-**NFR source**: BC-3.8.012 (`--output json` mode: error on stderr as JSON envelope; empty stdout; DEC-188, #639)
-**BC**: BC-3.8.012
-**Authored by**: SOH-DX-1 F2 (2026-07-29, #639)
+**NFR source**: BC-3.3.010/BC-3.3.011 (`--field` platform-create resolution via `createmeta`, issue #578); BC-3.8.012 [CURRENT BEHAVIOR — effective 2026-08-25] (pre-flight guard REMOVED for `--field` alone, DEC-307 reversal of DEC-188)
+**BC**: BC-3.3.010, BC-3.3.011, BC-3.8.012
+**Authored by**: SOH-DX-1 F2 (2026-07-29, #639); REWRITTEN adversary pass-2 (2026-08-25, issue #578 DEC-307 reversal) — supersedes the pre-reversal `--output json` exit-64 error-envelope assertion this scenario originally pinned
 
 **Setup**:
 
-1. Wiremock at `JR_BASE_URL`. Config with valid pre-migrated profile (`[profiles.default]` shape) at `JR_CONFIG_DIR`. Note: a pre-migrated profile config is required to prevent the one-time config-migration line from appearing on stderr alongside the JSON envelope (which would make the JSON parse fail).
-2. Wiremock mounts `POST /rest/api/3/issue` with `.expect(0)` — this endpoint MUST NOT be called.
+1. Wiremock at `JR_BASE_URL`. Config with valid pre-migrated profile (`[profiles.default]` shape) at `JR_CONFIG_DIR`. Note: a pre-migrated profile config is required to prevent the one-time config-migration line from appearing on stderr and interfering with clean-channel assertions.
+2. Wiremock mounts `GET /rest/api/3/issue/createmeta/PROJ/issuetypes` returning `{"issueTypes": [{"id": "10001", "name": "Task"}]}` — issue-type name→id resolution (BC-3.3.010 Step 3, reusing S-331's `get_issue_types_for_project`).
+3. Wiremock mounts `GET /rest/api/3/issue/createmeta/PROJ/issuetypes/10001` returning the current, non-deprecated offset-paginated shape (ADR-0019 §1 — NOT the deprecated `createmeta?expand=` object-map form): `{"maxResults": 50, "startAt": 0, "total": 1, "fields": [{"fieldId": "customfield_10015", "name": "Custom Text", "required": false, "schema": {"type": "string"}}]}` — the field IS present on the Create screen for this project+issue-type combination.
+4. Wiremock mounts `POST /rest/api/3/issue` returning HTTP 201 with `{"id":"10050","key":"PROJ-42","self":"<JR_BASE_URL>/rest/api/3/issue/10050"}`.
+5. Wiremock mounts `GET /rest/api/3/issue/PROJ-42` returning HTTP 200 with a minimal issue fixture (BC-3.3.001's follow-up GET in `--output json` mode): `{"id": "10050", "key": "PROJ-42", "self": "<JR_BASE_URL>/rest/api/3/issue/10050", "fields": {"summary": "test summary", "status": {"name": "To Do", "statusCategory": {"key": "new", "colorName": "blue-gray"}}, "issuetype": {"name": "Task"}, "project": {"key": "PROJ", "name": "Project", "id": "10000"}}}`.
 
 **Action**: `jr issue create --project PROJ --type Task --summary "test summary" --field customfield_10015=value --no-input --output json`
 
 **Expected (MUST-PASS)**:
-- Exit code = 64.
-- stdout is empty (`stdout.trim().is_empty()`). This is DISCRIMINATING in `--output json` mode: a successful platform create writes the created-issue JSON to stdout; the guard-absent path would populate stdout.
-- stderr, parsed as a JSON object, has: (a) an `"error"` string field containing `"--field is only valid with --request-type"`; (b) a `"code"` integer field equal to `64`. Note: key order is unspecified — parse fields individually rather than matching literal key order.
-- `POST /rest/api/3/issue` was NOT called (`.expect(0)` satisfied).
+- Exit code = **0** (per BC-3.8.012's 2026-08-25 reversal: `--field` alone no longer exits 64 in `--output json` mode either — it resolves via `createmeta` per BC-3.3.010, same as the human-mode path pinned by H-NEW-PREFLIGHT-001).
+- `POST /rest/api/3/issue` WAS called exactly once, and its JSON request body's `fields` object contains `"customfield_10015": "value"` — the resolved field, merged in per BC-3.3.010 Postconditions.
+- `GET /rest/api/3/issue/createmeta/PROJ/issuetypes/10001` WAS called — proves createmeta resolution actually ran.
+- stdout, parsed as a JSON object, has a top-level `"key"` string field equal to `"PROJ-42"` (BC-3.3.001's `--output json` success shape: the follow-up-GET-fetched issue object). This is DISCRIMINATING: the old (pre-reversal) contract required stdout to be EMPTY on this exact invocation — a regression to the pre-reversal guard would leave stdout empty and fail this assertion.
+- stdout does NOT contain a top-level `"code"` field — this invocation must not produce the `{"error":...,"code":64}` JSON error-envelope shape.
+- stderr does NOT contain `"--field is only valid with --request-type"` — the old DEC-188 pre-flight string is DEAD per BC-3.8.012 Errors ("that string is now DEAD — removed from `src/cli/issue/create.rs`").
 
-**Why hidden**: With `--output json`, the error envelope goes to stderr (not stdout); stdout is reserved for data. A regression that sends the error to stdout, or that writes a success JSON shape to stdout (because the guard is absent), would be caught by the `stdout.trim().is_empty()` assertion. The `"code": 64` field in the JSON envelope is the machine-readable exit-code verification; the `"error"` field substring is the machine-readable error identity. The `stdout.trim().is_empty()` assertion is DISCRIMINATING: without the guard, the success path populates stdout with the created-issue JSON.
+**Why hidden**: This scenario formerly pinned the OPPOSITE contract (DEC-188 `--output json` exit-64 error envelope on stderr with empty stdout, superseded 2026-08-25 by DEC-307/issue #578). An implementation still carrying the old pre-flight guard would exit 64, emit the now-dead error string in a JSON envelope on stderr, and leave stdout empty — both the exit-code and stdout-`"key"` assertions above fail independently, catching a regression to the pre-reversal behavior. An implementation that silently drops `--field` instead of resolving it (a plausible incomplete-reversal bug) would still exit 0 and populate stdout with a `"key"` field, but the POST body would be missing `customfield_10015` — independently caught by the request-body assertion.
 
-**Status**: MUST-PASS. Pins BC-3.8.012 `--output json` mode: `--field` without `--request-type` → exit 64; stdout empty (DISCRIMINATING); stderr JSON envelope `{"error": "...", "code": 64}` with `error` containing the guard string; zero HTTP. SOH-DX-1 F2 2026-07-29; overrides F51-001 coverage-non-goal per F2 gate human ruling.
+**Status**: MUST-PASS. Pins BC-3.3.010 (createmeta resolution + merge into create POST body) and BC-3.8.012 [CURRENT BEHAVIOR] (guard removed; `--field` alone → exit 0) in `--output json` mode specifically. REWRITTEN adversary pass-2 (2026-08-25): the pre-reversal `--output json` exit-64 error-envelope assertion this scenario originally pinned (SOH-DX-1 F2, 2026-07-29) is now FALSE per DEC-307; rewritten in place rather than deleted to keep `total_holdouts` stable and preserve this scenario's ID/history. VP-578-017 companion (JSON-mode variant of H-NEW-PREFLIGHT-001).
 
-**BC refs**: BC-3.8.012 (primary; `--output json` mode error envelope; DEC-188, #639), error-taxonomy.md §6 (Issue Commands; `JrError::UserError` JSON shape `{"error":"...","code":64}`)
+**BC refs**: BC-3.3.010 (primary — createmeta resolution, merge, exit 0 success path), BC-3.3.011 (error taxonomy — not exercised by this MUST-PASS success scenario; the `{"error":...,"code":64}` envelope this BC documents still applies to the "field not on Create screen" and other resolution-failure rows, just not to this invocation), BC-3.8.012 (guard-removal contract this scenario's exit-0 `--output json` outcome depends on)
 

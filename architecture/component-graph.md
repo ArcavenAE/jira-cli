@@ -277,3 +277,123 @@ All classifications are consistent with the existing Purity Boundary Map — no 
 of any existing module was required by this bundle.
 
 Source: F1 delta analysis §2, §3, §6; ADR-0018 (2026-08-15).
+
+---
+
+## Field DX Delta — DAG Verification (Issues #580/#578, F2 2026-08-25)
+
+**Status:** Spec-level delta only — no `src/` code exists yet for this bundle. Recorded here
+ahead of F4 implementation. Source: `.factory/phase-f1-delta-analysis/
+delta-analysis-field-dx.md`; ADR-0019.
+
+**New modules (1, `[PLANNED]`):**
+
+```
+cli::field   (L2, new file src/cli/field.rs)   — jr field options <field>; structural mirror
+                                                   of cli::requesttype (259 LOC precedent, well
+                                                   under the ADR-0012 shard threshold)
+```
+
+**No new L4 or L5 modules.** `api::jira::issues` (existing L4 node `issues_impl`) gains one new
+method (`get_createmeta_fields`) and two inline response types
+(`CreateMetaField`/`CreateMetaFieldsResponse`, following the exact in-file-type precedent
+`IssueTypeEntry`/`CreatemetaIssueTypesResponse` already establish on the same file for the
+sibling createmeta-issuetypes call). `api::jira::issues::get_editmeta` and
+`api::jsm::request_types` are reused verbatim (M1/M3, ADR-0019 §1) — no new API-layer code for
+either.
+
+**Delta edges (all additions; no edges removed; no existing edges modified):**
+
+```
+ADDED — new L2 handler (cli::field):
+  cli::field → api::jira::issues (L4)     [get_createmeta_fields (NEW method, M2 primary) +
+                                             get_editmeta (REUSED, M1 fallback) +
+                                             get_issue_types_for_project (REUSED, S-331 — M2
+                                             --type name→issueTypeId resolution)]
+  cli::field → api::jira::fields (L4)      [REUSED — list_fields field-name resolution,
+                                             BC-X.14.001; fields.json cache-first, same
+                                             contract as BC-3.4.015]
+  cli::field → api::jsm::request_types (L4) [REUSED — M3 primary, same call jr requesttype
+                                               fields already makes]
+  cli::field → cache (L6)                  [REUSED — read/write_request_type_fields_cache via
+                                             the M3 --request-type path only; no new cache
+                                             family]
+  cli::field → partial_match (L6)          [<field> positional name resolution against the
+                                             editmeta/createmeta/request-type-fields field-name
+                                             dict, mirrors cli::requesttype's identical edge]
+  cli::field → output (L6)                 [render_json invariant, table rendering — same as
+                                             every other cli::* leaf command]
+
+ADDED — modified L4 module (api::jira::issues, additive changes only):
+  api::jira::issues → types::jira::editmeta (L5)  [NEW edge — reuses AllowedValue/
+                                                     EditMetaFieldSchema for the new
+                                                     CreateMetaField type, per ADR-0019 §1
+                                                     type-reuse decision; api::jira::issues did
+                                                     NOT previously import from editmeta.rs]
+
+ADDED — modified L2 handlers (existing files, additive changes only, per ADR-0019 §2):
+  cli::issue::create   → (no new L4/L6 edges) — parse_field_kv return-type change
+                          (HashMap<String,String> → HashMap<String,FieldValueSpec>) is an
+                          internal signature change, not a new dependency edge; new
+                          FieldValueKind/FieldValueSpec types defined in this same file
+                          (create.rs, alongside parse_field_kv)
+  cli::issue::edit     → (no new L4/L6 edges) — threads FieldValueSpec instead of String
+                          through the existing parse_field_kv call site; dry-run preview + Gate
+                          B list gain hint-kind awareness (internal logic only)
+  cli::issue::jsm_create → (no new L4/L6 edges beyond the one below) — threads FieldValueSpec
+                          instead of String through the existing parse_field_kv call site
+
+ADDED — new L2→L4 edges for the :asset hint (BC-3.4.030, uniform per BC-3.8.008 amendment):
+  cli::issue::field_resolve → api::assets::workspace (L4)  [NEW — get_or_fetch_workspace_id,
+                                                              REUSED read-only, resolves the
+                                                              cached workspace id for :asset
+                                                              composition on the edit path
+                                                              (BC-3.4.030 primary site)]
+  cli::issue::create        → api::assets::workspace (L4)  [NEW — same reuse, platform-create
+                                                              :asset composition per BC-3.3.010
+                                                              "same machinery as issue edit
+                                                              --field"]
+  cli::issue::jsm_create    → api::assets::workspace (L4)  [NEW — same reuse, JSM :asset
+                                                              composition per BC-3.8.008's
+                                                              "uniform application" decision]
+
+  Deliberately NOT api::jsm::requests (L4) → api::assets::workspace (L4): a cross-L4 call would
+  violate the existing Layer Isolation Summary ("L4 resource impls" import from L3 client/L5
+  types/L6 only — not from a sibling L4 subsystem). The workspace id is resolved once at the L2
+  caller (whichever of the three sites above applies the hint) and passed into
+  JsmRequestBuilder as a plain resolved value, not fetched inside api::jsm::requests itself.
+
+ADDED — modified L4 module (api::jsm::requests, additive/type-widening only):
+  JsmRequestBuilder.extra_fields: &'a HashMap<String, String>
+    → &'a HashMap<String, FieldValueSpec>            [type widening, not a new edge — same
+                                                        L2→L4 edge cli::issue::jsm_create → 
+                                                        api::jsm::requests already has]
+  build()'s extra_fields loop: unconditional String-wrap → match on FieldValueSpec.kind
+                                                        (Option/Id/Name/Asset dispatch,
+                                                        BC-3.8.008 amendment)
+
+ADDED — modified L1 (cli::mod, additive only):
+  Command::Field { command: FieldCommand } variant + FieldCommand enum (List-shaped subcommand
+  surface: `options <field>`), mirrors the existing RequestTypeCommand shape exactly.
+
+ADDED — modified L0 (main.rs, additive only):
+  New dispatch arm cli::Command::Field { command } => field::handle(...), structurally
+  identical to the existing RequestType arm (main.rs:449).
+```
+
+**Cycle check:** All new/modified edges follow the existing layer direction (L2 → L4 → L3 → L6;
+L4 → L5; L2 → L6 directly, matching the `cli::requesttype`/`cli::component` precedent). No
+upward edges (L4/L5/L6 → L2) are introduced. No new L6 → L3/L4 edges. No new L4 → L4 edge is
+introduced (the one place this bundle could have tempted a cross-L4 shortcut —
+`api::jsm::requests` reaching into `api::assets::workspace` directly for the `:asset` hint — is
+explicitly avoided per ADR-0019 §2; the workspace-id resolution edge is placed at L2 instead,
+consistent with the existing `cli_assets`/`cli_issue_assets` → `assets_workspace`/`assets_linked`
+edges already in this graph). **DAG remains acyclic.**
+
+**Cross-check with purity boundary:** see `system-overview.md §Purity Boundary` update below —
+`cli::field`'s handlers are effectful shell (HTTP + cache + stdout), its `normalize_from_*`
+helper functions are pure (function-level carve-out, same class as `cli::resolve_effective_limit`),
+`FieldOption`/`FieldValueSpec`/`FieldValueKind` are pure data types, `api::jira::issues::
+get_createmeta_fields` is effectful shell (same class as every other L4 HTTP method).
+
+Source: F1 delta analysis §3; ADR-0019 (2026-08-25).
