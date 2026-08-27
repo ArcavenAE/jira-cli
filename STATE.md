@@ -1,18 +1,18 @@
 ---
 document_type: pipeline-state
 level: ops
-version: "3.22"
+version: "3.23"
 status: active
 producer: state-manager
-timestamp: 2026-08-27T13:39:03Z
+timestamp: 2026-08-27T13:51:00Z
 phase: F4
-pipeline: ACTIVE
+pipeline: PAUSED
 inputs: []
 input-hash: "[live-state]"
 traces_to: ""
 project: jira-cli
 mode: brownfield
-current_step: "D-chain cite D-453 latest brownfield (unchanged). trajectory-tail →1→3→0→2 (unchanged this burst). F4 (delta implementation): WAVE 1 COMPLETE (unchanged). WAVE 2 COMPLETE: S-578-2 (PR #741 @ `a3739763`) + S-578-3 (JSM `issue create --field` dispatch, PR #742 @ `41763ff0`) both DELIVERED + MERGED. S-578-3 closed after 4-pass adversary convergence (Pass 1 BLOCKING HIGH `:asset` L2-validation-gap + 2 MEDIUM → fixed, Passes 2/3 NITPICK_ONLY, Pass 4 CLEAN — 3/3 clean) and pr-reviewer APPROVE (2 BLOCKING fixed via commit `29300a3b`: B1 test-count body correction, B2 byte-identity full-map pin). Wave 3 (S-578-4, depends_on:[S-580-1, S-578-2], both individually satisfied) is now unblocked and ready for dispatch — its gate was Wave 2 completing as a whole. Full detail: cycles/cycle-002/burst-log.md Burst 13 + Session Resume Checkpoint below."
+current_step: "D-chain cite D-453 latest brownfield (unchanged). trajectory-tail →1→3→0→2 (unchanged this burst). F4 (delta implementation): WAVE 1 COMPLETE (unchanged). WAVE 2 COMPLETE: S-578-2 (PR #741 @ `a3739763`) + S-578-3 (JSM `issue create --field` dispatch, PR #742 @ `41763ff0`) both DELIVERED + MERGED. Wave 3 (S-578-4, depends_on:[S-580-1, S-578-2], both individually satisfied) is unblocked and ready for dispatch. Session PAUSED via human `/wrap` at this exact position -- no work in-flight, no worktrees, nothing abandoned mid-step. Full detail: cycles/cycle-002/burst-log.md Burst 13 + Session Resume Checkpoint below."
 trajectory_tail: "→1→3→0→2"
 maintenance_run:
   status: COMPLETE
@@ -28,27 +28,21 @@ phase_2_status: APPROVED
 phase_2_approved_at: 2026-05-07
 phase_3_status: SOH-ATTACHMENTS-1 F5 SCOPED ADVERSARIAL CONVERGED 2026-07-24 STRICT (14 rounds; window pass-12/pass-13/pass-14 CLEANx3; spec v1.3.99 to v1.3.106; BC-INDEX v6.38 to v6.44; develop @ db207b81) + F7 DELTA CONVERGENCE APPROVED 2026-07-25 (DEC-186; 5-dim PASS; MAXIMUM_VIABLE_REFINEMENT_REACHED) + CYCLE FULLY CLOSED 2026-07-25
 cycle_001_status: "list-read-ergonomics -- CLOSED (DEC-309), historical; see cycles/cycle-001/"
-cycle_002_status: "field-dx -- ACTIVE at F4 (delta implementation), pipeline resumed and progressing. Wave 1 COMPLETE: S-578-1 (PR #739 @ 993de833) + S-580-1 (PR #740 @ 74221bbc) both delivered/merged. Wave 2 COMPLETE: S-578-2 (PR #741 @ a3739763) + S-578-3 (PR #742 @ 41763ff0) both delivered/merged 2026-08-27. Wave 3 (S-578-4) now unblocked, ready for dispatch. Resume via /vsdd-factory:next-step."
+cycle_002_status: "field-dx -- ACTIVE at F4 (delta implementation), pipeline PAUSED via human /wrap 2026-08-27 at the Wave 2 COMPLETE position. Wave 1 COMPLETE: S-578-1 (PR #739 @ 993de833) + S-580-1 (PR #740 @ 74221bbc) both delivered/merged. Wave 2 COMPLETE: S-578-2 (PR #741 @ a3739763) + S-578-3 (PR #742 @ 41763ff0) both delivered/merged 2026-08-27. Wave 3 (S-578-4) unblocked, next on resume. Resume via /vsdd-factory:next-step."
 activation_head: "41763ff0"
 activation_version: "v0.7.0-dev.2"
 ---
 
-<!-- STATE.md SIZE BUDGET (2026-08-27, F4-WAVE-2-S-578-3 burst -- WAVE 2 COMPLETE):
-     193 lines (wc-l). soft-target 200; hard cap 500.
-     margin from soft-target = 200 - 193 = 7 lines of headroom remain before the soft target of 200.
-     margin from actual (hard cap) = 500 - 193 = 307 lines of headroom remain before the hard cap of 500.
-     This burst records S-578-3 (JSM `issue create --field` hint-kind dispatch, 8 pts), the second
-     and final Wave 2 story, completing the per-story-delivery pipeline (Red Gate PASS, 4-pass
-     adversary convergence [Pass 1 BLOCKING HIGH+2MED -> fixed, Passes 2/3 NITPICK_ONLY, Pass 4
-     CLEAN], pr-reviewer APPROVE after 2-BLOCKING fix commit), and merging via PR #742 @ 41763ff0.
-     STATE.md changes: version/timestamp bump, activation_head a3739763->41763ff0, current_step and
-     cycle_002_status updated, a new Phase Progress row (F4-WAVE-2-COMPLETE), Current Phase Steps
-     replaced with the 5 most recent S-578-3 delivery steps (older rows archived -- already fully
-     narrated in burst-log.md Burst 12/13), Session Resume Checkpoint replaced with the Wave-3-next
-     position (prior checkpoint archived to cycles/cycle-002/session-checkpoints.md), 3 new Drift
-     items (S-578-3-SHARED-ASSET-VALIDATOR, S-578-3-FIELDVALUESPEC-RELOCATION,
-     S-578-3-PR742-RESIDUAL-NITS). No BC/VP/holdout counts changed (719/32/106) -- PO confirmed no
-     BC/EC/VP count change; check-spec-counts.sh and check-bc-cumulative-counts.sh both exit 0. One
+<!-- STATE.md SIZE BUDGET (2026-08-27, WRAP-F4-WAVE2-COMPLETE-PAUSE burst -- session wrap):
+     183 lines (wc-l). soft-target 200; hard cap 500.
+     margin from soft-target = 200 - 183 = 17 lines of headroom remain before the soft target of 200.
+     margin from actual (hard cap) = 500 - 183 = 317 lines of headroom remain before the hard cap of 500.
+     This burst is a human-requested `/wrap` pause, not new pipeline work. STATE.md changes:
+     pipeline ACTIVE->PAUSED, timestamp refreshed, version v3.22->v3.23, one new Phase Progress
+     row (WRAP-F4-WAVE2-COMPLETE-PAUSE), Session Resume Checkpoint replaced with the PAUSED
+     position + environment notes for resume (prior checkpoint archived to
+     cycles/cycle-002/session-checkpoints.md as F4-WAVE-2-COMPLETE). No BC/VP/holdout counts
+     changed (719/32/106); no source code, spec, or story content touched this burst. One
      full-content Write, no Edit chain (DEC-247).
      Pre-compaction (pre-2026-08-25) full history remains at factory-artifacts commit 43f4a5e3. -->
 
@@ -62,9 +56,9 @@ activation_version: "v0.7.0-dev.2"
 | **Mode** | BROWNFIELD / Rust |
 | **Target Workspace** | develop to main |
 | **trajectory-tail** | →1→3→0→2 (unchanged this burst) |
-| **Last Updated** | F4-WAVE-2-S-578-3 (2026-08-27): trajectory-tail →1→3→0→2 (unchanged this burst). S-578-3 delivered and merged (PR #742 @ 41763ff0). **Wave 2 CLOSED.** Pipeline stays **ACTIVE**. v3.21->v3.22. |
-| **Current Phase** | Feature Mode cycle-002 (`field-dx`, GH #580 + #578) -- **Phase F4** (delta implementation), pipeline **ACTIVE**. Wave 1 COMPLETE. Wave 2 COMPLETE (S-578-2 PR #741 + S-578-3 PR #742 both merged). Wave 3 (S-578-4) unblocked, next. cycle-001 remains CLOSED, historical. |
-| **Activation HEAD** | 41763ff0 (`develop` tip after PR #742 merge; `v0.7.0-dev.2`) -- advanced this burst from `a3739763` |
+| **Last Updated** | WRAP-F4-WAVE2-COMPLETE-PAUSE (2026-08-27): trajectory-tail →1→3→0→2 (unchanged this burst). human-requested `/wrap` at the Wave 2 COMPLETE position. No new pipeline work this burst. Pipeline flips **ACTIVE -> PAUSED**. v3.22->v3.23. |
+| **Current Phase** | Feature Mode cycle-002 (`field-dx`, GH #580 + #578) -- **Phase F4** (delta implementation), pipeline **PAUSED** (human `/wrap`). Wave 1 COMPLETE. Wave 2 COMPLETE (S-578-2 PR #741 + S-578-3 PR #742 both merged). Wave 3 (S-578-4) unblocked, next on resume. cycle-001 remains CLOSED, historical. |
+| **Activation HEAD** | 41763ff0 (`develop` tip after PR #742 merge; `v0.7.0-dev.2`) -- unchanged this burst |
 
 ## Phase Progress (recent; full history in cycles/cycle-001/burst-log.md, cycles/cycle-002/burst-log.md, and factory-artifacts@43f4a5e3)
 
@@ -73,6 +67,7 @@ activation_version: "v0.7.0-dev.2"
 | F4-WAVE-1-COMPLETE | **COMPLETE** | 2026-08-26 | per-story-delivery pipeline (5-round adversarial convergence) + pr-reviewer (PR #740) | S-580-1 (`jr field options <field>`, BC-X.14.001-004). PR #740 squash-merged @ `74221bbc`. Wave 1 fully closed. 6 NON-BLOCKING pr-reviewer follow-ups tracked. Full detail: `cycles/cycle-002/burst-log.md` Burst 11. | 29→24→21→7→4→3→0 |
 | F4-WAVE-2-S-578-2 | **DELIVERED + MERGED** | 2026-08-27 | per-story-delivery pipeline (Red Gate + 4/4 adversary CLEAN) + security-reviewer + pr-reviewer | S-578-2 (`issue edit --field` hint-kind dispatch, BC-3.4.015/016/021/027/028/029/030/031). PR #741 @ `a3739763`; 4 adversary passes (P1 BLOCKING 2-MED+5-LOW → fixed, P2/P3/P4 NITPICK_ONLY = 3/3 clean); 4 pr-reviewer non-blocking findings fixed in-PR; 7 residual tracked. Full detail: Burst 12; `cycles/cycle-002/S-578-2/`. | 2MED+5LOW→0 (P1) then 3× clean |
 | F4-WAVE-2-COMPLETE | **COMPLETE** | 2026-08-27 | per-story-delivery (Red Gate + 3/3 adversary CLEAN + security APPROVE + pr-reviewer) | S-578-3 (PR #742 @ 41763ff0): kind-aware JSM requestFieldValues + :asset L2 validation + interim-guard/helper removal; 4 adversary passes (P1 BLOCKING HIGH :asset-validation-gap → fixed, P2/P3 NITPICK → fixed, P4 CLEAN); pr-reviewer B1 (test-count body correction) + B2 (byte-identity full-map pin) resolved. Wave 2 (S-578-2 #741 + S-578-3 #742) now CLOSED. | P1 1HIGH+2MED→0 then 3× clean |
+| WRAP-F4-WAVE2-COMPLETE-PAUSE | **PAUSED** | 2026-08-27 | human (/wrap) | Human-requested session wrap at the Wave 2 COMPLETE checkpoint. S-578-2 (#741) + S-578-3 (#742) both delivered + merged this session; develop @ 41763ff0. Wave 3 (S-578-4) unblocked and NEXT. No work in-flight; no worktrees; factory-artifacts pushed (HEAD a23b2973). | n/a — pause event |
 
 ## Current Phase Steps (cycle-002, phase F4; last 5)
 
@@ -82,7 +77,7 @@ activation_version: "v0.7.0-dev.2"
 | Red Gate verified | **PASS** | 11/11 new tests RED on real assertion mismatches (0 build errors, 0 panics); 102-test pre-existing baseline green. |
 | Adversary Pass 1 BLOCKING fixed (:asset L2 validation gap) | **FIXED, 4/4 CONVERGED** | 1 HIGH + 2 MEDIUM (ADV-S578-3-P1-001..003): ported `field_resolve.rs::compose_asset_hint`'s 4-check value-shape validation into `jsm_create.rs::resolve_asset_field_l2`; corrected BC-3.8.008 EC-3.8.008-1/EC-3.8.008-3 to STRING_WRAP (PO adjudicated). Passes 2/3 NITPICK_ONLY, Pass 4 CLEAN, 3/3 clean. |
 | PR #742 opened, reviewed, converged | **APPROVE** | pr-reviewer initial REQUEST_CHANGES (2 BLOCKING: B1 test-count overstatement, B2 partial byte-identity assertion) → both fixed via commit `29300a3b` → APPROVE at final confirmation review. |
-| S-578-3 PR #742 merged | **MERGED @ 41763ff0** | Squash-merged to `develop` (human manual merge). `activation_head` advanced `a3739763` -> `41763ff0`. STORY-INDEX.md + sprint-state.yaml S-578-3 row set to `status: completed`. **WAVE 2 COMPLETE.** |
+| S-578-3 PR #742 merged | **MERGED @ 41763ff0** | Squash-merged to `develop` (human manual merge). `activation_head` advanced `a3739763` -> `41763ff0`. STORY-INDEX.md + sprint-state.yaml S-578-3 row set to `status: completed`. **WAVE 2 COMPLETE.** Session then PAUSED via human `/wrap` -- no further steps this burst. |
 
 ## Decisions Log
 
@@ -112,39 +107,34 @@ activation_version: "v0.7.0-dev.2"
 
 `cycle-001` (`list-read-ergonomics`) CLOSED at F7 (DEC-309): historical, unchanged this burst.
 
-`cycle-002` (`field-dx`) F2 CONVERGED (streak-6) and human-approved. F3 COMPLETE. F4 Wave 1 COMPLETE. **F4 Wave 2 is now COMPLETE this burst: S-578-3 delivered via 4-pass per-story adversary convergence (Pass 1 BLOCKING → Passes 2/3 NITPICK_ONLY → Pass 4 CLEAN, 3/3 clean), pr-reviewer APPROVE (2 blocking fixed in-PR), merged PR #742 @ `41763ff0`.** Wave 3 (S-578-4) now unblocked, ready for dispatch. No BC/VP/holdout counts changed (719/32/106).
+`cycle-002` (`field-dx`) F2 CONVERGED (streak-6) and human-approved. F3 COMPLETE. F4 Wave 1 COMPLETE. F4 Wave 2 COMPLETE (S-578-2 PR #741 + S-578-3 PR #742 both merged). **Session PAUSED this burst via human `/wrap`** at the Wave 2 COMPLETE position -- no convergence loop open, nothing in-flight. Wave 3 (S-578-4) unblocked, ready for dispatch on resume. No BC/VP/holdout counts changed (719/32/106).
 
 ## Concurrent Cycles
 
-Two tracked cycles. `cycle-001` is CLOSED, historical. `cycle-002` (`field-dx`) is ACTIVE, **F4 Wave 1 + Wave 2 COMPLETE** (S-578-2 + S-578-3 both merged), Wave 3 (S-578-4) next. No greenfield or other concurrent cycle is in flight.
+Two tracked cycles. `cycle-001` is CLOSED, historical. `cycle-002` (`field-dx`) is ACTIVE but **PAUSED** (human `/wrap`), **F4 Wave 1 + Wave 2 COMPLETE** (S-578-2 + S-578-3 both merged), Wave 3 (S-578-4) next on resume. No greenfield or other concurrent cycle is in flight.
 
 ## Session Resume Checkpoint
 
-**Cycle:** Field DX Feature Mode cycle (`cycle-002`) -- GitHub issues #580 (`jr field options <field>`) + #578 (`--field` value-kind hint syntax + non-JSM `issue create --field`). 5-story decomposition, full F1-F7 lifecycle, DTU not required.
+**Date:** 2026-08-27. **Position:** Feature Mode Phase **F4** (delta implementation), cycle-002 (`field-dx`, GitHub issues #580 + #578) -- pipeline **PAUSED via human `/wrap`** at the Wave 2 COMPLETE checkpoint. 5-story decomposition, full F1-F7 lifecycle, DTU not required.
 
-**Position:** Phase **F4** (delta implementation), pipeline **ACTIVE**. Wave 1 of 3: **COMPLETE** (S-578-1 PR #739 @ `993de833`, S-580-1 PR #740 @ `74221bbc`). Wave 2 of 3: **COMPLETE** -- S-578-2 (PR #741 @ `a3739763`) + S-578-3 (JSM `issue create --field` hint dispatch, PR #742 @ `41763ff0`, 2026-08-27) both DELIVERED + MERGED. **Wave 3 is NEXT — S-578-4 (platform `issue create --field` support + DEC-188 reversal via DEC-310, 13 pts, depends_on [S-580-1, S-578-2] both satisfied). On resume: dispatch S-578-4 via per-story-delivery. S-578-4 reuses S-580-1's `get_createmeta_fields` verbatim and reverses the DEC-188 platform-path `--field`-alone exit-64 guard per DEC-310.**
+**Wave 2 COMPLETE (this session):** S-578-2 (`issue edit --field` hint-kind dispatch, PR #741 @ `a3739763`) + S-578-3 (JSM `issue create --field` hint-kind dispatch, PR #742 @ `41763ff0`) both DELIVERED + MERGED. `develop` @ `41763ff0` (`v0.7.0-dev.2`). Wave 1 (S-578-1 PR #739 @ `993de833`, S-580-1 PR #740 @ `74221bbc`) remains COMPLETE, unchanged. F1/F2/F3 COMPLETE + human-approved (unchanged). Counts: 719 total BCs (BC-INDEX v6.82), 32 VPs, 106 holdout scenarios -- unchanged.
 
-**F1/F2/F3:** COMPLETE + human-approved (unchanged). Counts: 719 total BCs (BC-INDEX v6.82), 32 VPs, 106 holdout scenarios -- unchanged.
+**NEXT on resume:** Wave 3 = **S-578-4** (platform `issue create --field` support + DEC-188 reversal via DEC-310, 13 pts, `depends_on:[S-580-1, S-578-2]` -- both satisfied). S-578-4 reuses S-580-1's `get_createmeta_fields` verbatim and reverses the DEC-188 platform-path `--field`-alone exit-64 guard per DEC-310. This is the LAST story in the field-dx bundle -- its completion closes cycle-002 Phase F4.
 
-**S-578-3 delivery summary:** Red Gate PASS (stub `cargo check` clean, guard intact; 11/11 new tests RED on real assertions, 102-test regression baseline green; fix-burst Red Gate: 4 `:asset` negative-path tests RED→GREEN) then GREEN (107/107 tests in-binary -- 81 in-file `tests/issue_create_jsm.rs` + 26 unrelated `common::wf::tests` via `mod common;`; report the 61→81 in-file delta, not the binary total -- + regression + clippy + fmt clean). 4-pass adversary convergence: Pass 1 BLOCKING (1 HIGH + 2 MEDIUM, ADV-S578-3-P1-001..003 -- the `:asset` L2 value-shape validation gap vs. the platform sibling, plus a BC-3.8.008 EC-3.8.008-1/EC-3.8.008-3 wire-shape wording conflict adjudicated STRING_WRAP by PO), Passes 2/3 NITPICK_ONLY, Pass 4 CLEAN (3/3 clean). pr-reviewer: initial REQUEST_CHANGES (2 BLOCKING -- B1 test-count body overstatement, B2 partial byte-identity assertion), both fixed via commit `29300a3b`, **APPROVE at final confirmation review** (4 non-blocking + 4 nitpick residual, tracked as `S-578-3-PR742-RESIDUAL-NITS`). No BC/VP/holdout count change. Full detail: `cycles/cycle-002/burst-log.md` Burst 13; `cycles/cycle-002/S-578-3/implementation/red-gate-log.md` + `adversary-convergence-state.json`.
+**In-flight:** NONE. No worktrees exist; no PRs pending; no adversary convergence loop open. Nothing abandoned mid-step -- S-578-3's feature branch/worktree lifecycle is complete (PR merged, branch deleted).
 
-**Tracked debt (unchanged + confirmed owed):**
-1. DEC-namespace disambiguation question (open, tracked debt).
-2. Reversal-propagation checklist for PO/state-manager workflow (not built).
-3. `COUNT-RECONCILIATION-FORCED-CONSISTENCY-PATTERN` lesson (round-6, not yet actioned).
-4. 4 residual LOW doc-hygiene items from streak-6 + 6 PR #740 + 11 PR #741 pr-reviewer follow-ups (see Drift/Standing Items) -- non-blocking, owed before/at cycle close.
-5. `BC-3.3.010-CITATION-UPGRADE-ELIGIBLE` -- now upgradeable to enforced symbol-form. Not yet actioned.
-6. `SEC-001-EDITMETA-RECURSION-GUARD` (LOW, pre-existing since S-580-1) -- see Drift/Standing Items.
-7. `S-578-3-SHARED-ASSET-VALIDATOR`, `S-578-3-FIELDVALUESPEC-RELOCATION`, `S-578-3-PR742-RESIDUAL-NITS` (LOW, new this burst) -- see Drift/Standing Items.
-8. Standing, pre-existing, NOT field-dx-scoped: `F7-GATE-SYSTEMIC-INPUT-HASH-DRIFT` -- ~145 historical stale input-hash artifacts, factory-wide.
+**Environment notes for resume:**
+1. Merges this session required MANUAL human execution -- the auto-mode permission classifier denied `gh pr merge --admin` at the Bash layer. Plan for the S-578-4 merge to need a human `gh pr merge`-style command or a permission grant.
+2. The `validate-pr-review-posted` SubagentStop hook loops on pr-manager stops for author-owned PRs (author cannot self-approve); scope pr-manager tightly and `TaskStop` it if it loops.
+3. A concurrent demo-recorder race occurred (a "completed" task-notification while still running) -- dispatch ONE demo-recorder and wait for full completion.
+
+**Phase-5 tracked debt (restated, full detail in Drift/Standing Items below):** `SEC-001-EDITMETA-RECURSION-GUARD`, `S-578-3-SHARED-ASSET-VALIDATOR`, `S-578-3-FIELDVALUESPEC-RELOCATION`, `S-578-3-PR742-RESIDUAL-NITS`.
 
 **Pending human decisions / blockers:** NONE. Full-autonomous-run mandate stands.
 
-**In flight / uncommitted at this checkpoint:** none -- S-578-3's feature branch/worktree lifecycle is complete (PR merged, branch deleted). `STATE.md`, `sprint-state.yaml`, `stories/STORY-INDEX.md`, `specs/prd/bc-3-issue-write.md`, `stories/S-578-3-jsm-create-field-hint-dispatch.md`, `regression-state.json`, `sidecar-learning.md`, and the new `cycles/cycle-002/S-578-3/` artifacts are committed to `factory-artifacts` together as part of this burst's commit, alongside the prior pending demo commit `4a9910d3`.
+**Resume command:** `/vsdd-factory:next-step` -- reads STATE.md and dispatches S-578-4 via per-story-delivery.
 
-**Resume command:** `/vsdd-factory:deliver-story S-578-4` (or `/vsdd-factory:next-step`) -- dispatches S-578-4, Wave 3 of 3, now unblocked.
-
-**Superseded checkpoint:** the F4-WAVE-2-S-578-2 checkpoint (v3.21, 2026-08-27) is archived to `cycles/cycle-002/session-checkpoints.md`, alongside all prior cycle-002 checkpoints. The `list-read-ergonomics` cycle-001 CLOSED-position checkpoint (v3.05) remains archived at `cycles/cycle-001/session-checkpoints.md`.
+**Superseded checkpoint:** the F4-WAVE-2-COMPLETE checkpoint (v3.22, 2026-08-27) is archived to `cycles/cycle-002/session-checkpoints.md`, alongside all prior cycle-002 checkpoints. The `list-read-ergonomics` cycle-001 CLOSED-position checkpoint (v3.05) remains archived at `cycles/cycle-001/session-checkpoints.md`.
 
 ## Historical Content
 
@@ -154,7 +144,7 @@ Two tracked cycles. `cycle-001` is CLOSED, historical. `cycle-002` (`field-dx`) 
 | cycle-002 burst history | `cycles/cycle-002/burst-log.md` (Bursts 1-6 = F2 adversary rounds; Burst 7 = streak-6 close; Burst 8 = F2 gate APPROVED + F2->F3; Burst 9 = F3 decomposition; Burst 10 = S-578-1 merged; Burst 11 = S-580-1 merged, WAVE 1 COMPLETE; Burst 12 = S-578-2 merged, WAVE 2 HALF DONE; Burst 13 = S-578-3 merged, WAVE 2 COMPLETE) |
 | cycle-001 convergence trajectory | `cycles/cycle-001/convergence-trajectory.md` |
 | cycle-001 session checkpoints | `cycles/cycle-001/session-checkpoints.md` |
-| cycle-002 session checkpoints | `cycles/cycle-002/session-checkpoints.md` (all prior F2/F3/F4 checkpoints incl. F4-WAVE-2-S-578-2 archived here) |
+| cycle-002 session checkpoints | `cycles/cycle-002/session-checkpoints.md` (all prior F2/F3/F4 checkpoints incl. F4-WAVE-2-COMPLETE archived here) |
 | cycle-001 lessons learned | `cycles/cycle-001/lessons.md` |
 | cycle-002 lessons learned | `cycles/cycle-002/lessons.md` (round-6's [process-gap] lesson; S-578-2's 2 [infra-observation] lessons; S-578-3's 2 [content] + 1 [infra-observation] lessons) |
 | cycle-001 resolved blockers | `cycles/cycle-001/blocking-issues-resolved.md` |

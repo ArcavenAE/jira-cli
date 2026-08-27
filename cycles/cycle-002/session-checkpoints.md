@@ -330,4 +330,26 @@ Archived verbatim from STATE.md v3.14 before the F2-GATE-APPROVED-F3-TRANSITION 
 
 ---
 
+## Archived Checkpoint: F4-WAVE-2-COMPLETE (STATE.md v3.22, 2026-08-27)
+
+**SUPERSEDING NOTE:** This checkpoint is superseded by a human-requested `/wrap` at the Wave 2 COMPLETE position later the same day (STATE.md v3.23) -- see current `STATE.md` Session Resume Checkpoint for the live position.
+
+**Cycle:** Field DX Feature Mode cycle (`cycle-002`) -- GitHub issues #580 (`jr field options <field>`) + #578 (`--field` value-kind hint syntax + non-JSM `issue create --field`). 5-story decomposition, full F1-F7 lifecycle, DTU not required.
+
+**Position (as of this checkpoint):** Phase **F4** (delta implementation), pipeline **ACTIVE**. Wave 1 of 3: **COMPLETE** (S-578-1 PR #739 @ `993de833`, S-580-1 PR #740 @ `74221bbc`). Wave 2 of 3: **COMPLETE** -- S-578-2 (PR #741 @ `a3739763`) + S-578-3 (JSM `issue create --field` hint dispatch, PR #742 @ `41763ff0`, 2026-08-27) both DELIVERED + MERGED. Wave 3 is NEXT -- S-578-4 (platform `issue create --field` support + DEC-188 reversal via DEC-310, 13 pts, depends_on [S-580-1, S-578-2] both satisfied).
+
+**F1/F2/F3 (as of this checkpoint):** COMPLETE + human-approved (unchanged). Counts: 719 total BCs (BC-INDEX v6.82), 32 VPs, 106 holdout scenarios -- unchanged.
+
+**S-578-3 delivery summary:** Red Gate PASS (stub `cargo check` clean, guard intact; 11/11 new tests RED on real assertions, 102-test regression baseline green; fix-burst Red Gate: 4 `:asset` negative-path tests RED->GREEN) then GREEN (107/107 tests in-binary -- 81 in-file `tests/issue_create_jsm.rs` + 26 unrelated `common::wf::tests` via `mod common;`; report the 61->81 in-file delta, not the binary total -- + regression + clippy + fmt clean). 4-pass adversary convergence: Pass 1 BLOCKING (1 HIGH + 2 MEDIUM, ADV-S578-3-P1-001..003 -- the `:asset` L2 value-shape validation gap vs. the platform sibling, plus a BC-3.8.008 EC-3.8.008-1/EC-3.8.008-3 wire-shape wording conflict adjudicated STRING_WRAP by PO), Passes 2/3 NITPICK_ONLY, Pass 4 CLEAN (3/3 clean). pr-reviewer: initial REQUEST_CHANGES (2 BLOCKING -- B1 test-count body overstatement, B2 partial byte-identity assertion), both fixed via commit `29300a3b`, APPROVE at final confirmation review (4 non-blocking + 4 nitpick residual, tracked as `S-578-3-PR742-RESIDUAL-NITS`). No BC/VP/holdout count change. Full detail: `cycles/cycle-002/burst-log.md` Burst 13; `cycles/cycle-002/S-578-3/implementation/red-gate-log.md` + `adversary-convergence-state.json`.
+
+**Tracked debt (as of this checkpoint):** DEC-namespace disambiguation question (open); reversal-propagation checklist for PO/state-manager workflow (not built); `COUNT-RECONCILIATION-FORCED-CONSISTENCY-PATTERN` lesson (not actioned); 4 residual LOW doc-hygiene items from streak-6 (non-blocking); `BC-3.3.010-CITATION-UPGRADE-ELIGIBLE` (upgrade-eligible, not actioned); `SEC-001-EDITMETA-RECURSION-GUARD` (LOW, pre-existing since S-580-1); `S-578-3-SHARED-ASSET-VALIDATOR`, `S-578-3-FIELDVALUESPEC-RELOCATION`, `S-578-3-PR742-RESIDUAL-NITS` (LOW, new that burst); `F7-GATE-SYSTEMIC-INPUT-HASH-DRIFT-BOOKKEEPING` (standing, not field-dx-scoped).
+
+**Pending human decisions / blockers (as of this checkpoint):** NONE. Full-autonomous-run mandate stood.
+
+**In flight / uncommitted (as of this checkpoint):** none -- S-578-3's feature branch/worktree lifecycle was complete (PR merged, branch deleted).
+
+**Resume command (as of this checkpoint):** `/vsdd-factory:deliver-story S-578-4` (or `/vsdd-factory:next-step`) -- dispatches S-578-4, Wave 3 of 3, now unblocked. *(Superseded -- session was paused by human `/wrap` at this exact position with zero work in-flight; see current `STATE.md` for the live PAUSED checkpoint.)*
+
+---
+
 <!-- Repeat for each archived checkpoint. Maintain chronological order. -->
