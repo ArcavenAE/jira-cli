@@ -1,0 +1,78 @@
+{
+  "story": "S-578-2",
+  "cycle": "cycle-002",
+  "feature_mode_bundle": "field-dx",
+  "perimeter": 1,
+  "perimeter_label": "per-story Step 4.5 (BC-5.39.001)",
+  "convergence_bar": "3-consecutive-clean",
+
+  "passes": [
+    {
+      "id": "P1",
+      "classification": "BLOCKING",
+      "findings": [
+        {"id": "ADV-S578-2-P1-001", "severity": "MEDIUM", "category": "spec-conformance", "description": "EC-3.4.027-1 entry-point schema.type gate for :option unimplemented -- a non-option field with empty allowedValues fell through to BC-3.4.016's 'no configured option values' message instead of failing at the entry point"},
+        {"id": "ADV-S578-2-P1-002", "severity": "MEDIUM", "category": "spec-conformance", "description": "AC-019 / Invariant 7 orthogonality ruling (EC-3.4.027-1 entry gate vs. Invariant 6/EC-3.4.027-7 structural children-empty check) not yet reflected in BC text or implementation"},
+        {"id": "ADV-S578-2-P1-003", "severity": "LOW", "category": "coverage", "description": "Cascading-error branch coverage gap for the entry-point gate interaction"},
+        {"id": "ADV-S578-2-P1-004", "severity": "LOW", "category": "coverage", "description": "Multi-asset :asset hint coverage gap"},
+        {"id": "ADV-S578-2-P1-005", "severity": "LOW", "category": "spec-fidelity", "description": "BC-3.4.029 Invariant 2 over-specified implementation technique (shared wire-composition function) rather than output-equality guarantee"},
+        {"id": "ADV-S578-2-P1-006", "severity": "LOW", "category": "spec-fidelity", "description": "BC-3.4.030/031 HTTP-ordering wording overstated as blanket 'no HTTP call' when the field-resolution editmeta GET has already occurred"},
+        {"id": "ADV-S578-2-P1-007", "severity": "LOW", "category": "documentation", "description": "Stale STUB comment on now-implemented dispatch branch"}
+      ],
+      "window_eligible": false,
+      "notes": "Pass 1 BLOCKING: 2 MEDIUM + 5 LOW. Fixes applied: EC-3.4.027-1 entry-point schema.type gate implemented (compose_option_hint gates on meta_field.schema.field_type before allowedValues/children inspection, reusing unsupported_field_type_error for array/any); AC-019 added to story spec + Invariant 7 added to BC-3.4.027 (orthogonality ruling); 3 new gate tests (RED then GREEN); BC-3.4.029 Invariant 2 reworded to output-equality guarantee (BC-3.4.031 EC-2 HTTP-ordering wording corrected to 'before any workspace-discovery GET or PUT/POST'); stale STUB comment dropped."
+    },
+    {
+      "id": "P2",
+      "classification": "NITPICK_ONLY",
+      "findings": [],
+      "window_eligible": true,
+      "window_position": "1/3",
+      "notes": "Pass 2 NITPICK_ONLY -- convergence window starts (1/3). No source-level BLOCKING/MEDIUM/HIGH findings; residual observations only."
+    },
+    {
+      "id": "P3",
+      "classification": "NITPICK_ONLY",
+      "findings": [],
+      "window_eligible": true,
+      "window_position": "2/3",
+      "notes": "Pass 3 NITPICK_ONLY -- window at 2/3. Doc-only nit fixed in-branch (docs(S-578-2): drop stale STUB comment on implemented dispatch (adv P3 fix))."
+    },
+    {
+      "id": "P4",
+      "classification": "NITPICK_ONLY",
+      "findings": [],
+      "window_eligible": true,
+      "window_position": "3/3",
+      "notes": "Pass 4 NITPICK_ONLY -- window COMPLETE (3/3). Doc-only nit fixed in-branch (docs(S-578-2): update test module doc to merged/GREEN reality (adv P4 fix)). CONVERGED."
+    }
+  ],
+
+  "total_passes": 4,
+  "convergence_window_passes": ["P2", "P3", "P4"],
+  "passes_clean": 3,
+  "converged": true,
+  "last_classification": "NITPICK_ONLY",
+  "feature_branch": "feature/S-578-2-edit-field-dispatch",
+  "develop_base_sha": "74221bbc",
+  "converged_sha": "PR-741-pre-merge",
+
+  "post_convergence_reviews": {
+    "security_reviewer": {
+      "verdict": "APPROVE",
+      "notes": "No new attack surface beyond pre-existing custom-field write path; server remains sole validator for :id/:name verbatim wraps; :asset composer reuses existing get_or_fetch_workspace_id L2 call-site convention (Architecture Compliance Rule 3). See STATE.md Drift item SEC-001-EDITMETA-RECURSION-GUARD for a pre-existing (S-580-1) LOW follow-up first traversed in production by this story's composer."
+    },
+    "pr_reviewer": {
+      "verdict": "APPROVE",
+      "blocking_findings": 0,
+      "non_blocking_findings": 11,
+      "fixed_in_pr": 4,
+      "fixed_finding_ids": ["PRF-001", "PRF-002", "PRF-009", "PRF-010"],
+      "residual_finding_ids": ["PRF-003", "PRF-004", "PRF-005", "PRF-006", "PRF-007", "PRF-008", "PRF-011"],
+      "notes": "PRF-003 (PR-body description accuracy) was also fixed by pr-manager directly (PR body edit, not a source commit); tracked as residual in the sense that no source/test change was needed. See .factory/code-delivery/S-578-2/pr-review.md and STATE.md Drift item S-578-2-PR741-RESIDUAL-NITS."
+    }
+  },
+
+  "convergence_summary": "S-578-2 (issue edit --field hint-kind dispatch, 13pts) CONVERGED after 4 per-story Step-4.5 adversary passes. Pass 1 was BLOCKING (2 MEDIUM + 5 LOW, ADV-S578-2-P1-001..007) -- the most significant was the missing EC-3.4.027-1 entry-point schema.type gate for :option, which was implemented alongside a new BC-level Invariant 7 (orthogonality ruling vs. Invariant 6's structural children-empty check) and a new story AC-019, plus corrections to BC-3.4.029 Invariant 2 and BC-3.4.030/031 HTTP-ordering wording. Passes 2/3/4 were NITPICK_ONLY (doc-only fixes), giving 3/3 consecutive clean passes. Post-convergence: security-reviewer APPROVE, pr-reviewer APPROVE (0 blocking, 11 non-blocking -- 4 fixed in-PR, 7 tracked as residual debt). PR #741 squash-merged to develop @ a3739763cb1cc3d52bdb0340085113bc5afb2adb (2026-08-27).",
+  "timestamp": "2026-08-27T00:00:00Z"
+}

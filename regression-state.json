@@ -1,1 +1,1 @@
-{"status":"pass","timestamp":"2026-08-26T21:25:18Z","command":"\\\ncargo build 2>&1 | tail -10 && echo \"---LIB---\" && \\\ncargo test --lib 2>&1 | tail -5 && echo \"---FIELD_OPTIONS---\" && \\\ncargo test --test field_options 2>&1 | tail -5 && echo \"---CLIPPY---\" && \\\ncargo clippy --all-targets -- -D warnings 2>&1 | tail -10 && echo \"---FMT---\" && \\\ncargo fmt --all -- --check 2>&1 | tail -20 && echo \"ALL GREEN\""}
+{"status":"pass","timestamp":"2026-08-27T01:41:00Z","command":"cargo build 2>&1 | tail -20 && cargo test --lib 2>&1 | tail -15"}

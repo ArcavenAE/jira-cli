@@ -1032,8 +1032,8 @@ cycle_002_field_dx:
   bundle: field-dx
   cycle: cycle-002
   wave_1_status: "COMPLETE — S-578-1 (PR #739 @ 993de833) + S-580-1 (PR #740 @ 74221bbc) both merged. develop advanced to 74221bbc."
-  wave_2_status: "unblocked — wave 1 complete; S-578-2/S-578-3 depend_on S-578-1 (merged); ready for dispatch"
-  wave_3_status: "blocked — S-578-4 depends_on [S-580-1, S-578-2]; S-580-1 satisfied, S-578-2 still pending"
+  wave_2_status: "HALF DONE — S-578-2 MERGED (PR #741 @ a3739763). S-578-3 (JSM issue create --field hint dispatch, 8 pts) is NEXT, sequential — shares the interim reject_unsupported_hint_kinds guard removal (jsm_create.rs call-site + now-unused helper, last caller) with S-578-2's edit.rs removal. develop advanced to a3739763."
+  wave_3_status: "blocked — S-578-4 depends_on [S-580-1, S-578-2]; both deps now satisfied (S-580-1 + S-578-2 merged), but Wave 3 unblocks only when Wave 2 as a whole ({S-578-2, S-578-3}) is fully complete; S-578-3 remains"
   wave_1:
     stories:
       - id: S-578-1
@@ -1066,10 +1066,17 @@ cycle_002_field_dx:
     stories:
       - id: S-578-2
         title: "issue edit --field hint-kind dispatch"
-        status: ready
+        status: completed
+        pr: 741
+        merge_sha: a3739763cb1cc3d52bdb0340085113bc5afb2adb
+        merged_at: "2026-08-27"
+        merged_via: "gh pr merge --squash (base develop)"
         depends_on: [S-578-1]
+        bc_anchors: [BC-3.4.015, BC-3.4.016, BC-3.4.021, BC-3.4.027, BC-3.4.028, BC-3.4.029, BC-3.4.030, BC-3.4.031]
+        vp_anchors: [VP-578-007, VP-578-008, VP-578-009, VP-578-010, VP-578-011, VP-578-012, VP-578-022, VP-578-023, VP-578-024]
+        holdout_anchors: []
         points: 13
-        notes: "Wave 2 story 1/2, blocked on S-578-1 (now delivered) — awaiting wave 1 close (S-580-1) before wave 2 dispatch per wave-schedule ordering."
+        notes: "Wave 2 story 1/2, largest story in bundle. DELIVERED + MERGED. Red Gate PASS (stub cargo-check clean with guard intact; 28/29 new tests RED on real assertions, 0 build errors, 90/90 regression baseline green; fix-burst Red Gate: 3 EC-3.4.027-1 gate tests RED->GREEN) then GREEN (64/64 new + 90/90 regression + clippy + fmt clean). 4-pass adversary convergence: Pass 1 BLOCKING (2 MED + 5 LOW, ADV-S578-2-P1-001..007, fixed), Passes 2/3/4 NITPICK_ONLY (3/3 clean). security-reviewer APPROVE. pr-reviewer APPROVE (0 blocking, 11 non-blocking; 4 fixed in-PR: empty-child EC-3.4.027-3 conformance, field_resolve.rs CLAUDE.md size-doc entry, 2 test-quality fixes; 7 residual tracked as S-578-2-PR741-RESIDUAL-NITS). PR #741 squash-merged to develop @ a3739763. version bumped to v1.1 (AC-019 added, AC-007/009 reworded) propagating PO-approved F2 adversary Pass-1 BC clarifications (EC-3.4.027-1 two sub-cases, new Invariant 7 orthogonality ruling, BC-3.4.029 Invariant 2 correction, BC-3.4.030/031 HTTP-ordering wording) — no BC/VP/holdout count change (719/32/106). Unblocks S-578-4 (Wave 3) jointly with S-580-1; Wave 3 still gated on S-578-3 (Wave 2 sibling) completing."
       - id: S-578-3
         title: "JSM issue create --field hint-kind dispatch"
         status: ready

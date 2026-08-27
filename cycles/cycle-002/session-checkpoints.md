@@ -310,4 +310,24 @@ Archived verbatim from STATE.md v3.14 before the F2-GATE-APPROVED-F3-TRANSITION 
 
 ---
 
+## Archived Checkpoint: WRAP-F4-WAVE2-PAUSE (STATE.md v3.20, 2026-08-26)
+
+**SUPERSEDING NOTE:** This checkpoint is superseded by S-578-2's resumed dispatch, delivery, and merge (PR #741 @ `a3739763`, STATE.md v3.21) -- see current `STATE.md` Session Resume Checkpoint for the live position.
+
+**Cycle:** Field DX Feature Mode cycle (`cycle-002`) -- GitHub issues #580 (`jr field options <field>`) + #578 (`--field` value-kind hint syntax + non-JSM `issue create --field`). 5-story decomposition, full F1-F7 lifecycle, DTU not required.
+
+**Position (as of this checkpoint):** Phase **F4** (delta implementation), pipeline **PAUSED** via human `/wrap` on 2026-08-26. Wave 1 of 3: **COMPLETE** (S-578-1 PR #739 @ `993de833`, S-580-1 PR #740 @ `74221bbc`, both merged). Wave 2 of 3: **IN PROGRESS, PAUSED** -- S-578-2 (`issue edit --field` hint dispatch) was at **Step 2** (stub generation): dispatched, then interrupted by `/wrap` during the read phase. No changes had landed -- worktree `.worktrees/S-578-2` (branch `feature/S-578-2-edit-field-dispatch`) existed at develop base `74221bbc`, CLEAN (0 commits ahead).
+
+**F1/F2/F3 (as of this checkpoint):** COMPLETE + human-approved (unchanged). Counts: 719 total BCs (BC-INDEX v6.82), 32 VPs, 106 holdout scenarios -- unchanged.
+
+**F4 Wave status (as of this checkpoint):** Wave 1 COMPLETE (`activation_head` = `74221bbc`). Wave 2 IN PROGRESS, PAUSED at S-578-2 Step 2. S-578-3 next, sequential (shares the interim `reject_unsupported_hint_kinds` guard removal in `create.rs`). Wave 3 (S-578-4) blocked on Wave 2.
+
+**Guard-replacement Red-Gate strategy for S-578-2/S-578-3 (documented so resume doesn't re-derive it):** KEEP the interim `reject_unsupported_hint_kinds` guard through each story's stub + test steps; REMOVE its call-site and implement real `:kind` dispatch only in the IMPLEMENT step. S-578-2 removes the `edit.rs` guard call-site. S-578-3 removes the `jsm_create.rs` guard call-site AND the now-unused helper function itself (last caller).
+
+**Tracked debt (as of this checkpoint):** DEC-namespace disambiguation question (open); reversal-propagation checklist for PO/state-manager workflow (not built); `COUNT-RECONCILIATION-FORCED-CONSISTENCY-PATTERN` lesson (not actioned); 4 residual LOW doc-hygiene items from streak-6 (non-blocking); 6 PR #740 pr-reviewer NON-BLOCKING follow-ups; `BC-3.3.010-CITATION-UPGRADE-ELIGIBLE` (not yet actioned); `F7-GATE-SYSTEMIC-INPUT-HASH-DRIFT` (standing, not field-dx-scoped).
+
+**Resume command (as of this checkpoint):** `/vsdd-factory:next-step` (reads `STATE.md`, re-dispatches Step 2 of S-578-2 to continue Wave 2 delivery). *(Superseded -- S-578-2 dispatch resumed, delivered, and merged via PR #741 @ `a3739763`; see current `STATE.md`.)*
+
+---
+
 <!-- Repeat for each archived checkpoint. Maintain chronological order. -->

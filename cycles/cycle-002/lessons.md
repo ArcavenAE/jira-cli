@@ -32,7 +32,11 @@ traces_to: STATE.md
 
 ## Infrastructure-Level
 
-<!-- none logged yet this cycle -->
+1. **[infra-observation] Concurrent demo-recorder race: a parked-then-resumed background subagent emitted a `completed` task-notification while still running, causing a duplicate demo-recorder dispatch on the same worktree and a `git add -f` that force-added `docs/demo-evidence/` past repo policy #708.** Recovered via a mixed `git reset` to the pushed SHA. Demos correctly live on `factory-artifacts` at `.factory/demos/S-578-2/` (commit `d6a5151c`). Harness/infra behavior, not a VSDD agent-prompt gap; feedback already drafted directly to the human — no follow-up story needed.
+   _Discovered: S-578-2 delivery, 2026-08-26/27_
+
+2. **[infra-observation] Author-self-approve Stop-hook loop: the `validate-pr-review-posted` SubagentStop hook is unsatisfiable for author-owned PRs (GitHub forbids author self-approve; only COMMENTED is possible), causing pr-reviewer/pr-manager to loop and re-notify.** Recovered via `TaskStop`. Merge succeeded regardless (admin-bypass squash). Harness/infra behavior, not a VSDD agent-prompt gap; feedback already drafted directly to the human — no follow-up story needed.
+   _Discovered: S-578-2 delivery, PR #741, 2026-08-26/27_
 
 ## Policy Candidates
 

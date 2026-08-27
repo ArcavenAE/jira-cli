@@ -665,3 +665,69 @@ No BCs/VPs/holdouts added or removed — 719 BCs / 32 VPs / 106 holdouts unchang
 | pr-manager | Open PR #740, triage 5-round adversarial review incl. CWE-835 fix, drive to merge | PR #740 |
 | devops-engineer | Squash-merge PR #740 to `develop` | `develop` @ `74221bbc` |
 | state-manager | Record S-580-1 delivery + Wave 1 closure: update `sprint-state.yaml`, `STORY-INDEX.md`, `STATE.md`; log this burst; commit + push | `STATE.md`; `sprint-state.yaml`; `stories/STORY-INDEX.md`; this file |
+
+## Burst: Burst 12 — F4 Wave 2: S-578-2 (`issue edit --field` hint-kind dispatch) DELIVERED + MERGED (PR #741 @ a3739763) — Wave 2 HALF DONE (2026-08-27)
+
+**Parent-commit:** 74221bbc (S-580-1 merge / Wave 1 close, Burst 11)
+
+**Trigger:** Wave 1 CLOSED (Burst 11); S-578-2 (Wave 2 story 1/2, `depends_on:[S-578-1]`, satisfied) dispatched next per wave-schedule ordering.
+
+**Dispatched:** per-story-delivery pipeline for S-578-2 (stub-architect → test-writer → implementer → demo-recorder → pr-manager → devops-engineer), following the pre-documented guard-replacement Red-Gate strategy (keep `reject_unsupported_hint_kinds` through stub+test steps, remove its `edit.rs` call site only in the implement step).
+
+**Adversary verdict:** 4-pass per-story adversary convergence. Pass 1 BLOCKING (2 MEDIUM + 5 LOW, ADV-S578-2-P1-001..007) — the significant fix was implementing the previously-missing EC-3.4.027-1 entry-point `schema.type` gate for `:option`, propagated back into the BC as a new Invariant 7 (orthogonality ruling vs. Invariant 6's structural `children`-empty check) and into the story as a new AC-019 (spec v1.0 → v1.1); also corrected BC-3.4.029 Invariant 2 (output-equality, not shared-function-implementation mandate) and BC-3.4.030/031's HTTP-ordering wording (narrowed from blanket "no HTTP" to "no workspace-discovery GET or PUT/POST" — the field-resolution editmeta GET has already fired). Passes 2/3/4 NITPICK_ONLY (doc-only fixes), 3/3 consecutive clean. Full detail: `cycles/cycle-002/S-578-2/adversary-convergence-state.json`.
+
+**What happened:** S-578-2 (`issue edit --field` hint-kind dispatch, 13 pts — largest story in the bundle) implemented the hinted-bypass branch in `resolve_edit_fields` (`field_resolve.rs`), reading `spec.kind` BEFORE the unchanged bare-form editmeta type-dispatch: `:option` byte-identical-to-bare for non-cascading values plus cascading `Parent>Child` composition (`str::split_once('>')` MUST, D3) and the D4 non-cascading-`>`-collision structural guard; `:id`/`:name` verbatim wrap bypasses (BC-3.4.028/029); `:asset` Assets object-reference composer (`str::split_once(':')` MUST) with workspace-id resolved at this L2 call site (never inside a JSM function) and its 4-row cold-cache failure taxonomy; dry-run `plannedChanges` per-hint-kind composed-wire-shape preview. `edit.rs`'s own diff was 47 lines — well inside the ADR-0019 §2(b) ~100-LOC narrow-touch guidance. The S-578-1 interim `reject_unsupported_hint_kinds` guard's `edit.rs` call site was removed (the helper itself stays defined in `create.rs`, still called from `jsm_create.rs` — S-578-3 removes it as the last caller, per the documented guard-replacement strategy).
+
+**Pipeline detail:**
+- **Red Gate:** PASS — stub step (`cargo check` clean, guard intact); failing-test step (28/29 new tests RED on real assertion mismatches, 0 build errors, 0 panics, 90/90 regression baseline green); fix-burst Red Gate (3 EC-3.4.027-1 gate tests RED → GREEN). Full detail: `cycles/cycle-002/S-578-2/implementation/red-gate-log.md`.
+- **Green Gate:** 64/64 new tests + 90/90 regression + clippy + fmt clean. Independently re-confirmed by pr-reviewer at PR HEAD `4d0d54af`.
+- **Per-story adversary convergence:** 4 passes to CLEAN (Pass 1 BLOCKING → Passes 2/3/4 NITPICK_ONLY, 3/3 clean).
+- **security-reviewer:** APPROVE.
+- **pr-reviewer (fresh-eyes, PR #741):** APPROVE — 0 BLOCKING, 11 NON-BLOCKING findings. 4 fixed in-PR (empty-child EC-3.4.027-3 conformance per EC-3.4.027-6's "same shape" requirement; `field_resolve.rs` CLAUDE.md Known Size Deviations entry, now ~1,270 LOC crossing ADR-0012's 1,000-LOC threshold; 2 test-quality fixes — EC-8/EC-9 wire-body `.expect(1)` tightening + proptest dead-assertion fix). 7 residual findings tracked as debt (see STATE.md Drift item `S-578-2-PR741-RESIDUAL-NITS`). Full detail: `.factory/code-delivery/S-578-2/pr-review.md`.
+- **Demos:** recorded on `factory-artifacts` at `.factory/demos/S-578-2/` (commit `d6a5151c`), per repo policy #708.
+- **PR:** #741, squash-merged to `develop` @ `a3739763cb1cc3d52bdb0340085113bc5afb2adb` (2026-08-27).
+- **Spec propagation:** story spec v1.0 → v1.1 (AC-019 added; AC-007/AC-009 reworded); BC changes propagated to `bc-3-issue-write.md` (EC-3.4.027-1 two sub-cases + new Invariant 7 + BC-3.4.029 Invariant 2 correction + BC-3.4.030/031 HTTP-ordering wording) — no BC/VP/holdout count change (719/32/106 confirmed via `check-spec-counts.sh` + `check-bc-cumulative-counts.sh`, both exit 0).
+
+**Two infra-observation lessons captured this burst** (harness/infra behavior, not VSDD agent-prompt gaps; no follow-up story owed — see `cycles/cycle-002/lessons.md` Infrastructure-Level 1-2): a concurrent demo-recorder race causing a duplicate dispatch + policy-#708-violating force-add (recovered via mixed `git reset`); an author-self-approve Stop-hook loop on `validate-pr-review-posted` (recovered via `TaskStop`, merge unaffected).
+
+**New tracked debt this burst (see STATE.md Drift/Standing Items):** `SEC-001-EDITMETA-RECURSION-GUARD` (LOW, pre-existing since S-580-1, first traversed in production by this story's `:option` cascading composer — apply a MAX_ADF_DEPTH-style recursion-depth cap to `AllowedValue.children` deserialization, mirroring `adf.rs` SEC-001/BC-7.2.012); `S-578-2-PR741-RESIDUAL-NITS` (LOW, 7 residual pr-reviewer non-blocking findings).
+
+**Files touched (Dim-1): 7 unique files (factory-artifacts, this burst)**
+
+- sprint-state.yaml
+- stories/STORY-INDEX.md
+- STATE.md
+- cycles/cycle-002/burst-log.md
+- cycles/cycle-002/S-578-2/implementation/red-gate-log.md
+- cycles/cycle-002/S-578-2/adversary-convergence-state.json
+- cycles/cycle-002/lessons.md
+
+(develop-side, via PR #741, not counted in Dim-1 above: `src/cli/issue/field_resolve.rs`, `src/cli/issue/edit.rs`, `src/types/jira/editmeta.rs`, `tests/issue_field_hint_kinds.rs` (new), `tests/issue_edit_field.rs`, `CLAUDE.md` size-doc entry, demo evidence.)
+
+**Dim-2 Attestation:** `scripts/check-spec-counts.sh` → exit 0. `scripts/check-bc-cumulative-counts.sh` → exit 0 (719 total across 9 files, unchanged). S-578-2 consumed already-counted BC-3.4.015/016/021/027/028/029/030/031 — no BC/VP/holdout count change.
+
+**Dim-5 Attestation:** N/A — no binary/WASM artifact produced by this burst.
+
+**Dim-6 Attestation:** PASS (delegated) — `cargo fmt --all -- --check` and `cargo clippy --all-targets -- -D warnings` enforced on PR #741 by jira-cli's `ci-gate`; green before squash-merge.
+
+**Dim-7 Attestation:** PASS (delegated) — 64/64 new tests + 90/90 regression suite ran green in `ci-gate`'s `test` job before merge; independently re-confirmed by pr-reviewer at PR HEAD.
+
+**Codifications:** F4 Wave 2 is now **HALF DONE** — S-578-2 delivered and merged. S-578-3 (JSM `issue create --field` hint-kind dispatch, 8 pts, same `depends_on:[S-578-1]`) is next, sequential (shares the interim guard removal — `jsm_create.rs` call-site + now-unused `reject_unsupported_hint_kinds` helper as last caller). Wave 3 (S-578-4) remains blocked — its own deps (S-580-1 + S-578-2) are now both satisfied, but Wave 3 unblocks only when Wave 2 as a whole ({S-578-2, S-578-3}) is complete. `activation_head` advanced `74221bbc` → `a3739763`.
+
+**Closes:** F4 Wave 2 story 1/2 (S-578-2). **Does NOT close:** Wave 2 story 2/2 (S-578-3, still `ready`, not yet dispatched); Wave 3 (S-578-4, blocked on S-578-3); the DEC-namespace disambiguation question; the 4 residual LOW doc-hygiene items from streak-6; the 6 PR #740 pr-reviewer follow-ups (unchanged); the new 7 PR #741 pr-reviewer follow-ups; `F7-GATE-SYSTEMIC-INPUT-HASH-DRIFT` (standing, not field-dx-scoped).
+
+### Counts reconciled this burst
+
+No BCs/VPs/holdouts added or removed — 719 BCs / 32 VPs / 106 holdouts unchanged (all 8 BC-3.4.* anchors were already counted at F2 close; the v1.1 BC text changes are clarifications, not new BCs). `total_stories` unchanged at 161 (status transition only).
+
+### Details
+
+| Agent | Task | Output |
+|-------|------|--------|
+| stub-architect | Compilable `todo!()`-body hinted-bypass dispatch branch + 4 composer stubs, guard intact | Stub commit (`cargo check` clean) |
+| test-writer | Write failing tests for BC-3.4.015/016/021/027-031 hint-kind dispatch (Red Gate); adv Pass-1 EC-3.4.027-1 gate tests; PR-review test-quality fixes | `tests/issue_field_hint_kinds.rs` (new, 64 tests at final GREEN) |
+| implementer | Implement `:option`/`:id`/`:name`/`:asset` composers, remove interim guard call site, EC-3.4.027-1 entry gate, empty-child EC-3.4.027-3 conformance fix, CLAUDE.md size-doc entry | `field_resolve.rs`, `edit.rs` changes |
+| demo-recorder | Record demo evidence for S-578-2 ACs | `.factory/demos/S-578-2/` (factory-artifacts @ `d6a5151c`) |
+| pr-manager | Open PR #741, triage 4-round adversarial review + fresh-eyes pr-reviewer (11 non-blocking findings, 4 fixed), drive to merge | PR #741 |
+| devops-engineer | Squash-merge PR #741 to `develop` | `develop` @ `a3739763` |
+| state-manager | Record S-578-2 delivery: update `sprint-state.yaml`, `STORY-INDEX.md`, `STATE.md`; write red-gate-log.md + adversary-convergence-state.json; log this burst + 2 infra-observation lessons; commit + push | `STATE.md`; `sprint-state.yaml`; `stories/STORY-INDEX.md`; `cycles/cycle-002/S-578-2/*`; `cycles/cycle-002/lessons.md`; this file |

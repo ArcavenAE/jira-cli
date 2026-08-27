@@ -22,7 +22,7 @@ inputs:
   - ".factory/specs/prd/bc-3-issue-write.md"
   - ".factory/specs/architecture/decisions/ADR-0019-field-dx-context-hint-shape-delimiter.md"
   - ".factory/phase-f2-spec-evolution/verification-delta-field-dx.md"
-input-hash: "b4915a8"
+input-hash: "a79cf31"
 traces_to: "src/cli/issue/field_resolve.rs::resolve_edit_fields"
 cycle: field-dx
 bundle: field-dx
@@ -44,11 +44,11 @@ parent_phase: F3-incremental-stories
 spec_source: ".factory/specs/prd/bc-3-issue-write.md"
 implementation_strategy: tdd
 module_criticality: HIGH
-acceptance_criteria_count: 18
+acceptance_criteria_count: 19
 assumption_validations: []
 risk_mitigations: []
 created: "2026-08-26"
-version: "1.0"
+version: "1.1"
 last_updated: "2026-08-26"
 breaking_change: false
 retroactive: false
@@ -66,6 +66,7 @@ origin: >
   already covered by another story.
 changelog:
   - "1.0 (2026-08-26): Initial story authored; F2 gate convergence; bundle field-dx (issues #580/#578), wave 2."
+  - "1.1 (2026-08-26): Propagated PO-approved BC-level clarifications from bc-3-issue-write.md: added AC-019 for EC-3.4.027-1's entry-point schema.type gate (two message sub-cases, Invariant 7 orthogonality with AC-004); reworded AC-007 to require byte-identical wire OUTPUT for :name/priority (Invariant 2 correction — independent/duplicated code paths acceptable); softened AC-009's HTTP-ordering claim to \"before any workspace-discovery GET or PUT/POST\" per VP-578-012's P1-005 scope correction (field-resolution editmeta GET already fired). acceptance_criteria_count 18 -> 19. No code/tests/BC files touched."
 ---
 
 > **tdd_mode:** strict — Red Gate required. Write all tests in `tests/issue_field_hint_kinds.rs`
@@ -198,7 +199,61 @@ name}`) with `#[serde(default)] pub children: Vec<AllowedValue>` — `Vec`, NOT
 `Option<Vec<AllowedValue>>` (wire-absent and wire-empty-array carry the identical "no cascading
 children" semantic here).
 
+**Orthogonality with AC-019 (Invariant 7):** this structural `children`-empty check (Question 2:
+"among fields already confirmed option/option-with-child, is THIS matched parent entry cascading
+or plain?") is a DIFFERENT question from AC-019's entry-point `schema.type` membership gate
+(Question 1: "is this an option field AT ALL?"), asked in strict sequence — Question 1 fires
+first; this check fires only for fields that already passed it, per matched entry. Neither check
+conflicts with, or is redundant with, the other.
+
 **Test**: `test_bc_3_4_027_ec7_non_cascading_collision_distinct_message` (VP-578-023) in
+`tests/issue_field_hint_kinds.rs`.
+
+---
+
+### AC-019: EC-3.4.027-1 entry-point `:option` type gate — two distinct exit-64 message sub-cases, runs before any `allowedValues`/`children` inspection
+(traces to BC-3.4.027 EC-3.4.027-1, Invariant 7)
+
+`--field NAME:option=VALUE` on a resolved field whose `schema.type` is NOT `"option"` and NOT
+`"option-with-child"` → exit 64, via an ENTRY-POINT type gate that MUST run immediately after
+`schema.type` is known and BEFORE the `:option` composer inspects `allowedValues` or `children`
+at all — i.e. before this BC's own EC-3.4.027-2/3/6/7 checks, which all presuppose `schema.type`
+already passed this gate. Two sub-cases, each with a DIFFERENT message content — this split is
+itself load-bearing and MUST NOT be collapsed into one generic message, because the two have
+different actionable remediation:
+
+- **`schema.type` is `array` or `any`** (a type BC-3.4.015/BC-3.4.016 already treat as wholesale
+  unsupported by `--field`, hinted or not) → the `:option` composer MUST call the SAME code path
+  BC-3.4.015 Step 4 already uses for this case — reuse EC-3.4.015-5's exact message/exit
+  behavior, not a re-derived one. Load-bearing: stderr contains the literal `schema.type` string
+  (`"array"` / `"any"`).
+- **`schema.type` is anything else the bare form DOES support** (`string`/`number`/`date`/
+  `datetime`/`user`, or any future scalar type BC-3.4.016 Step 4 dispatches on) → a DISTINCT
+  message from EC-3.4.015-5 (do NOT reuse "unsupported type" wording, which would misleadingly
+  imply the field can't be set at all — only the `:option` hint is inapplicable, not the field).
+  Load-bearing substrings: `"is not an option field"` and the literal resolved `schema.type`
+  string (e.g. `"schema type 'string'"`), naming both the field and its actual type, with a hint
+  to drop `:option` and use the bare form instead.
+
+**Non-goal, explicitly:** this gate is a closed-set `schema.type` membership check only — it
+never inspects `allowedValues` content or `children`. An `option`/`option-with-child` field with
+empty/null `allowedValues` is NOT caught here (that is EC-3.4.016's existing "no configured
+option values" case) and must not be conflated with it.
+
+**Orthogonality with AC-004 (Invariant 7):** this entry-point gate (Question 1) and AC-004's
+structural `children.is_empty()` D4 check (Question 2) are two DIFFERENT questions asked in
+strict sequence and do NOT conflict. Question 1 (this AC) is answered ONCE via a `schema.type`
+closed-set membership check, before any `allowedValues`/`children` inspection. Question 2
+(AC-004) is answered structurally, on a per-matched-parent-entry basis, NEVER by a second
+`schema.type` lookup — precisely because Question 1 already settled the field-level type
+question; re-deriving it from `schema.type` at Question 2's point would be redundant, not merely
+non-idiomatic. AC-004's "not a `schema.type` lookup" language describes ONLY how Question 2 is
+answered — it says nothing about, and does not preclude, this gate's own `schema.type` check
+running first.
+
+**Test**: `test_bc_3_4_027_ec1_array_type_reuses_ec_3_4_015_5_message` +
+`test_bc_3_4_027_ec1_scalar_type_distinct_is_not_an_option_field_message` +
+`test_bc_3_4_027_ec1_gate_runs_before_allowed_values_children_inspection` in
 `tests/issue_field_hint_kinds.rs`.
 
 ---
@@ -239,8 +294,14 @@ regardless of `allowedValues` content).
 
 `--field NAME:name=VALUE` sends `VALUE` verbatim as `{"name": "<VALUE>"}`. For `priority`
 specifically (the one system field also reachable via a dedicated named flag), `--field
-priority:name=Medium` MUST produce BYTE-IDENTICAL wire output to `--priority Medium` — the
-dedicated flag's existing wire-composition function is REUSED, not duplicated.
+priority:name=Medium` MUST produce BYTE-IDENTICAL wire output to `--priority Medium`. Per
+BC-3.4.029 Invariant 2 (corrected 2026-08-26, F2 adversary-convergence Pass 1, P1-006), this is a
+consistency guarantee on OUTPUT, not an implementation-technique mandate: `--priority`'s
+dedicated-flag path and `--field NAME:name=VALUE`'s hint-composer path MAY compose the identical
+`{"name": "<VALUE>"}` shape via independent, textually-duplicated code — the dedicated flag's
+wire-composition function does NOT need to be shared/reused — PROVIDED the two resulting JSON
+bodies are byte-for-byte equal. The test asserts OUTPUT equality at the wire boundary, not any
+shared-function implementation detail.
 
 **Test**: `test_bc_3_4_029_name_hint_priority_byte_identical_to_dedicated_flag` (VP-578-010) in
 `tests/issue_field_hint_kinds.rs`.
@@ -267,8 +328,18 @@ resolves the workspace id itself; it does NOT call into any JSM-layer function.
 
 ---
 
-### AC-009: `:asset` composer safety — malformed shapes exit 64 before any HTTP, never malformed JSON
+### AC-009: `:asset` composer safety — malformed shapes exit 64 before any workspace-discovery GET or PUT/POST, never malformed JSON
 (traces to BC-3.4.030 Error taxonomy / BC-3.4.031 EC-2a/b/c/d/EC-3, VP-578-012)
+
+**Scope correction (2026-08-26, F2 adversary-convergence Pass 1, P1-005):** this is NOT a
+"before any HTTP call" claim — the field-resolution `editmeta`/`createmeta` `GET` (BC-3.4.015
+Step 3, required to confirm the field is on the Edit screen) has ALREADY occurred by the time
+these malformed-shape checks run. What is guaranteed is that the value-shape check fires and
+exits 64 BEFORE the `:asset`-specific `get_or_fetch_workspace_id` discovery `GET`
+(`GET /rest/servicedeskapi/assets/workspace`) and BEFORE any field-write `PUT`/`POST` — never
+before the issue's own field-resolution `GET`, which is unavoidable on this call site regardless
+of hint kind. The property test's wiremock server MUST still receive that field-resolution `GET`
+and MUST assert zero calls to the workspace-discovery endpoint and zero `PUT`/`POST`.
 
 - `--field cf:asset=` (empty value) → exit 64, "asset reference cannot be empty" (EC-2a).
 - `--field cf:asset=ws:` (objectId segment empty) → exit 64, same message as EC-3.4.030-3 (EC-2b).
@@ -458,7 +529,7 @@ DF-021 discipline; do NOT load the full `architecture/` directory.
 
 | ID | Description | Expected Behavior |
 |----|-------------|-------------------|
-| EC-3.4.027-1 | `:option` on a non-`option`/non-`option-with-child` field | exit 64, "unsupported type" shape (EC-3.4.015-5 parallel) |
+| EC-3.4.027-1 | `:option` on a resolved field whose `schema.type` ∉ {`option`, `option-with-child`} — ENTRY-POINT gate, runs BEFORE any `allowedValues`/`children` inspection (Invariant 7) | Two sub-cases, both exit 64: (a) `schema.type` is `array`/`any` → REUSES EC-3.4.015-5's exact message (load-bearing: literal type string `"array"`/`"any"`); (b) `schema.type` is `string`/`number`/`date`/`datetime`/`user` (bare-form-supported) → DISTINCT message, load-bearing substrings `"is not an option field"` + resolved type string (e.g. `"schema type 'string'"`) |
 | EC-3.4.027-2 | Cascading unresolvable parent | exit 64, lists allowed parent values |
 | EC-3.4.027-3 | Cascading resolvable parent, unresolvable child | exit 64, lists that parent's allowed child values |
 | EC-3.4.027-4 | Literal `>` inside a non-cascading option label, under `:option` | misparsed as parent/child split; escape hatch is `:id=` |
