@@ -731,3 +731,68 @@ No BCs/VPs/holdouts added or removed — 719 BCs / 32 VPs / 106 holdouts unchang
 | pr-manager | Open PR #741, triage 4-round adversarial review + fresh-eyes pr-reviewer (11 non-blocking findings, 4 fixed), drive to merge | PR #741 |
 | devops-engineer | Squash-merge PR #741 to `develop` | `develop` @ `a3739763` |
 | state-manager | Record S-578-2 delivery: update `sprint-state.yaml`, `STORY-INDEX.md`, `STATE.md`; write red-gate-log.md + adversary-convergence-state.json; log this burst + 2 infra-observation lessons; commit + push | `STATE.md`; `sprint-state.yaml`; `stories/STORY-INDEX.md`; `cycles/cycle-002/S-578-2/*`; `cycles/cycle-002/lessons.md`; this file |
+
+## Burst: Burst 13 — F4 Wave 2: S-578-3 (JSM `issue create --field` hint-kind dispatch) DELIVERED + MERGED (PR #742 @ 41763ff0) — **WAVE 2 COMPLETE** (2026-08-27)
+
+**Parent-commit:** a3739763 (S-578-2 merge, Burst 12)
+
+**Trigger:** S-578-2 delivered (Burst 12); S-578-3 (Wave 2 story 2/2, `depends_on:[S-578-1]`, satisfied) dispatched next per wave-schedule ordering.
+
+**Dispatched:** per-story-delivery pipeline for S-578-3 (stub-architect → test-writer → implementer → demo-recorder → pr-manager → devops-engineer), following the pre-documented guard-replacement Red-Gate strategy (keep `reject_unsupported_hint_kinds` through stub+test steps, remove its `jsm_create.rs` call site AND delete the now-unused helper itself — S-578-3 is its last caller — only in the implement step).
+
+**Adversary verdict:** 4-pass per-story adversary convergence. Pass 1 BLOCKING (1 HIGH + 2 MEDIUM, ADV-S578-3-P1-001..003) — the significant fix was porting `field_resolve.rs::compose_asset_hint`'s 4-check `:asset` value-shape validation (missing `:`, empty workspace segment, empty/non-numeric object-id segment) into the JSM L2 resolver (`jsm_create.rs::resolve_asset_field_l2`), which had dropped it entirely, diverging from DEC-188's pre-flight-guard convention; also corrected BC-3.8.008's EC-3.8.008-1/EC-3.8.008-3 wording (STRING_WRAP, adjudicated by PO, replacing a drafted-by-analogy OBJECT-wrap that had contradicted AC-002's bare-parity shape and the shipped code). Passes 2/3 NITPICK_ONLY, Pass 4 fully **CLEAN** — 3/3 consecutive clean. Full detail: `cycles/cycle-002/S-578-3/adversary-convergence-state.json`.
+
+**What happened:** S-578-3 (JSM `issue create --field` hint-kind dispatch, 8 pts — Wave 2 story 2/2) threaded `FieldValueSpec` through `JsmRequestBuilder.extra_fields` (`src/api/jsm/requests.rs`, was `HashMap<String,String>`) and implemented kind-aware `requestFieldValues` composition in `build()`'s loop: bare/`:option` unchanged string-wrap (VP-578-015 byte-identity regression pin — `:option` cascading NOT extended to JSM, `>` stays an opaque literal per EC-3.8.008-1); `:id`→`{"id":V}`; `:name`→`{"name":V}`; `:asset`→pure array-wrap of an already-L2-resolved value (`build()` never calls `get_or_fetch_workspace_id` — no L4→L4 edge, ADR-0019 §2 "L2 resolves, build() only wraps"). `jsm_create.rs::resolve_asset_field_l2` performs the `:asset` L2 workspace-id resolution (mirrors S-578-2's platform-side split) plus its 4-row cold-cache failure taxonomy (VP-578-022). The S-578-1 interim `reject_unsupported_hint_kinds` guard's `jsm_create.rs` call site was removed, and — as its last remaining caller — the helper function itself was deleted from `create.rs`.
+
+**Pipeline detail:**
+- **Red Gate:** PASS — stub step (`cargo check` clean, guard intact); failing-test step (11 new tests RED on real assertion mismatches, 0 build errors, 0 panics, 102-test pre-existing baseline green); fix-burst Red Gate (4 `:asset` negative-path tests RED → GREEN after the P1 validation-gap fix). Full detail: `cycles/cycle-002/S-578-3/implementation/red-gate-log.md`.
+- **Green Gate:** 107/107 tests in-binary (81 in-file `tests/issue_create_jsm.rs` tests + 26 unrelated `common::wf::tests` pulled in via `mod common;` — report the 61→81 in-file delta, not the binary total, per pr-reviewer B1) + regression + clippy + fmt clean. Independently re-confirmed by pr-reviewer at PR HEAD `29300a3b`.
+- **Per-story adversary convergence:** 4 passes to CLEAN (Pass 1 BLOCKING → Passes 2/3 NITPICK_ONLY → Pass 4 CLEAN, 3/3 clean).
+- **pr-reviewer (fresh-eyes, PR #742):** initial verdict REQUEST_CHANGES (posted as COMMENT — GitHub rejects `--request-changes` on one's own PR), 2 BLOCKING: B1 (PR body overstated coverage delta as 59→107; actual in-file delta is 61→81, the +26 came from unrelated `common::wf` tests), B2 (AC-008/VP-578-015 byte-identity test asserted only 4 keys individually, not the full object — an added key was invisible). Both fixed via commit `29300a3b` (B1: PR body corrected by pr-manager directly, not a code change; B2: `assert_eq!` against the full expected `requestFieldValues` object). **FINAL CONFIRMATION REVIEW at HEAD `29300a3b`: APPROVE**, both BLOCKING items verified resolved, no new blocking issues introduced. 4 NON-BLOCKING + 4 NITPICK residual findings tracked as debt (see STATE.md Drift item `S-578-3-PR742-RESIDUAL-NITS` and `S-578-3-FIELDVALUESPEC-RELOCATION` for N1). Full detail: `.factory/code-delivery/S-578-3/pr-review.md`.
+- **PR:** #742, squash-merged to `develop` @ `41763ff0cbbd64ca325fb56e14f1d55ed5b79837` (2026-08-27).
+- **Spec propagation:** BC-3.8.008 EC-3.8.008-1/EC-3.8.008-3 corrected to STRING_WRAP + related uniformity/VP-578-015 edits propagated to `bc-3-issue-write.md`; story spec `S-578-3-jsm-create-field-hint-dispatch.md` → v1.3. No BC/VP/holdout count change (719/32/106 confirmed via `check-spec-counts.sh` + `check-bc-cumulative-counts.sh`, both exit 0 — PO confirmed no BC/EC/VP count change).
+
+**One content lesson + one infra-observation lesson captured this burst** (see `cycles/cycle-002/lessons.md` Content-Level 1-2, Infrastructure-Level 3): the `:option` JSM wire-shape spec conflict (drafted-by-analogy OBJECT-wrap vs. shipped STRING-wrap, caught pre-convergence); the `:asset` validation-gap + PR coverage-count-inflation pair (adversary P1 + pr-reviewer B1); pr-manager over-orchestration + an auto-mode permission-classifier denial of `gh pr merge --admin`, resolved by human manual merge.
+
+**New tracked debt this burst (see STATE.md Drift/Standing Items):** `S-578-3-SHARED-ASSET-VALIDATOR` (LOW, extract shared `validate_asset_value` helper + hoist JSM `:asset` validation ordering to match DEC-188); `S-578-3-FIELDVALUESPEC-RELOCATION` (LOW, architectural — move `FieldValueSpec`/`FieldValueKind` to a neutral `src/types/` module, removing the only `api/`→`cli/` import inversion); `S-578-3-PR742-RESIDUAL-NITS` (LOW, residual pr-reviewer non-blocking nits).
+
+**Files touched (Dim-1): 8 unique files (factory-artifacts, this burst)**
+
+- sprint-state.yaml
+- stories/STORY-INDEX.md
+- STATE.md
+- cycles/cycle-002/burst-log.md
+- cycles/cycle-002/S-578-3/implementation/red-gate-log.md
+- cycles/cycle-002/S-578-3/adversary-convergence-state.json
+- cycles/cycle-002/lessons.md
+- specs/prd/bc-3-issue-write.md, stories/S-578-3-jsm-create-field-hint-dispatch.md (spec propagation, counted together)
+
+(develop-side, via PR #742, not counted in Dim-1 above: `src/api/jsm/requests.rs`, `src/cli/issue/create.rs` [helper deletion], `src/cli/issue/jsm_create.rs`, `src/cli/issue/mod.rs`, `tests/issue_create_jsm.rs`, demo evidence.)
+
+**Dim-2 Attestation:** `scripts/check-spec-counts.sh` → exit 0. `scripts/check-bc-cumulative-counts.sh` → exit 0 (719 total across 9 files, unchanged). S-578-3 amended already-counted BC-3.8.008 (EC wording only) — no BC/VP/holdout count change.
+
+**Dim-5 Attestation:** N/A — no binary/WASM artifact produced by this burst.
+
+**Dim-6 Attestation:** PASS (delegated) — `cargo fmt --all -- --check` and `cargo clippy --all-targets -- -D warnings` enforced on PR #742 by jira-cli's `ci-gate`; green before squash-merge.
+
+**Dim-7 Attestation:** PASS (delegated) — 107/107 tests in-binary (81 in-file + regression) ran green in `ci-gate`'s `test` job before merge; independently re-confirmed by pr-reviewer at PR HEAD.
+
+**Codifications:** F4 Wave 2 is now **COMPLETE** — S-578-2 (#741) + S-578-3 (#742) both delivered and merged. Wave 3 (S-578-4, `depends_on:[S-580-1, S-578-2]`, both individually satisfied) is now **unblocked and ready for dispatch** — its gate was "Wave 2 as a whole complete," now satisfied. `activation_head` advanced `a3739763` → `41763ff0`.
+
+**Closes:** F4 Wave 2 story 2/2 (S-578-3). **Wave 2 fully CLOSED.** **Does NOT close:** Wave 3 (S-578-4, now unblocked but not yet dispatched); the DEC-namespace disambiguation question; the 4 residual LOW doc-hygiene items from streak-6; the 6 PR #740 + 7 PR #741 pr-reviewer follow-ups (unchanged); the new 3 items tracked this burst (`S-578-3-SHARED-ASSET-VALIDATOR`, `S-578-3-FIELDVALUESPEC-RELOCATION`, `S-578-3-PR742-RESIDUAL-NITS`); `F7-GATE-SYSTEMIC-INPUT-HASH-DRIFT` (standing, not field-dx-scoped).
+
+### Counts reconciled this burst
+
+No BCs/VPs/holdouts added or removed — 719 BCs / 32 VPs / 106 holdouts unchanged (BC-3.8.008 EC wording corrections are clarifications, not new BCs; PO confirmed no BC/EC/VP count change). `total_stories` unchanged at 161 (status transition only).
+
+### Details
+
+| Agent | Task | Output |
+|-------|------|--------|
+| stub-architect | `FieldValueSpec`-typed `extra_fields` + kind-aware composer stubs (`:id`/`:name`/`:asset`), `:asset` L2 resolver stub, guard intact | Stub commit (`cargo check` clean) |
+| test-writer | Write failing tests for BC-3.8.008 JSM kind-aware `requestFieldValues` (Red Gate); adv Pass-1 `:asset` 4-check negative-path tests; PR-review B1/B2 test-strengthening fixes | `tests/issue_create_jsm.rs` (61→81 in-file tests at final GREEN) |
+| implementer | Implement `:id`/`:name`/`:asset` composers, `:asset` L2 workspace-id resolution + validation parity fix, remove interim guard call site + delete now-unused helper (last caller) | `requests.rs`, `jsm_create.rs`, `create.rs`, `mod.rs` changes |
+| demo-recorder | Record demo evidence for S-578-3 ACs | `.factory/demos/S-578-3/` (factory-artifacts @ `4a9910d3`) |
+| pr-manager | Open PR #742, triage 4-round adversarial review + fresh-eyes pr-reviewer (2 BLOCKING fixed via `29300a3b`, APPROVE at confirmation review), drive to merge | PR #742 |
+| devops-engineer / human | Squash-merge PR #742 to `develop` (human manual merge — auto-mode permission classifier denied `gh pr merge --admin`) | `develop` @ `41763ff0` |
+| state-manager | Record S-578-3 delivery: update `sprint-state.yaml`, `STORY-INDEX.md`, `STATE.md`; write red-gate-log.md + adversary-convergence-state.json; commit spec propagation edits; log this burst + 2 content lessons + 1 infra-observation lesson; commit + push | `STATE.md`; `sprint-state.yaml`; `stories/STORY-INDEX.md`; `cycles/cycle-002/S-578-3/*`; `cycles/cycle-002/lessons.md`; `specs/prd/bc-3-issue-write.md`; `stories/S-578-3-jsm-create-field-hint-dispatch.md`; this file |

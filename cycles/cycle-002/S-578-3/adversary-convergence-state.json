@@ -1,0 +1,75 @@
+{
+  "story": "S-578-3",
+  "cycle": "cycle-002",
+  "feature_mode_bundle": "field-dx",
+  "perimeter": 1,
+  "perimeter_label": "per-story Step 4.5 (BC-5.39.001)",
+  "convergence_bar": "3-consecutive-clean",
+
+  "passes": [
+    {
+      "id": "P1",
+      "classification": "BLOCKING",
+      "findings": [
+        {"id": "ADV-S578-3-P1-001", "severity": "HIGH", "category": "spec-conformance", "description": "JSM :asset L2 resolver (jsm_create.rs::resolve_asset_field_l2) dropped the platform sibling's (field_resolve.rs::compose_asset_hint) 4-check value-shape validation -- a malformed :asset value (missing ':', empty workspace segment, empty/non-numeric object-id segment) was not rejected before the workspace-discovery GET, diverging from DEC-188's pre-flight-guard convention"},
+        {"id": "ADV-S578-3-P1-002", "severity": "MEDIUM", "category": "coverage", "description": ":asset cold-cache 4-row failure taxonomy (VP-578-022) lacked negative-path tests for the four malformed value shapes"},
+        {"id": "ADV-S578-3-P1-003", "severity": "MEDIUM", "category": "spec-fidelity", "description": "EC-3.8.008-1 (:option cascading opacity on JSM) and EC-3.8.008-3 (L2-validation ordering) wording in BC-3.8.008 conflicted with the shipped code's actual behavior -- BC drafted-by-analogy against an OBJECT-wrap wire shape that contradicted AC-002's bare-parity STRING-wrap and the shipped code"}
+      ],
+      "window_eligible": false,
+      "notes": "Pass 1 BLOCKING: 1 HIGH + 2 MEDIUM. Fixes applied: ported field_resolve.rs::compose_asset_hint's 4-check value-shape validation into jsm_create.rs::resolve_asset_field_l2 verbatim (same checks, same precedence, same message strings -- tracked as duplicated debt, S-578-3-SHARED-ASSET-VALIDATOR); added 4 negative-path tests (missing ':', empty workspace, empty/non-numeric object-id) each asserting exit 64 + exact message + .expect(0) on both the workspace GET and POST mock; corrected BC-3.8.008 EC-3.8.008-1/EC-3.8.008-3 wording to STRING_WRAP per PO adjudication (see cycles/cycle-002/lessons.md content lesson on the wire-shape spec conflict)."
+    },
+    {
+      "id": "P2",
+      "classification": "NITPICK_ONLY",
+      "findings": [],
+      "window_eligible": true,
+      "window_position": "1/3",
+      "notes": "Pass 2 NITPICK_ONLY -- convergence window starts (1/3). No source-level BLOCKING/MEDIUM/HIGH findings; residual observations only (test-naming, doc-phrasing)."
+    },
+    {
+      "id": "P3",
+      "classification": "NITPICK_ONLY",
+      "findings": [],
+      "window_eligible": true,
+      "window_position": "2/3",
+      "notes": "Pass 3 NITPICK_ONLY -- window at 2/3. Residual observations only, no source-level fixes required."
+    },
+    {
+      "id": "P4",
+      "classification": "CLEAN",
+      "findings": [],
+      "window_eligible": true,
+      "window_position": "3/3",
+      "notes": "Pass 4 CLEAN -- window COMPLETE (3/3). No findings of any severity, including nitpick. CONVERGED."
+    }
+  ],
+
+  "total_passes": 4,
+  "convergence_window_passes": ["P2", "P3", "P4"],
+  "passes_clean": 3,
+  "converged": true,
+  "last_classification": "CLEAN",
+  "feature_branch": "feature/S-578-3-jsm-create-field-dispatch",
+  "develop_base_sha": "a3739763",
+  "converged_sha": "PR-742-pre-merge",
+
+  "post_convergence_reviews": {
+    "security_reviewer": {
+      "verdict": "APPROVE",
+      "notes": "No new attack surface beyond the pre-existing custom-field write path; :asset composer's L2 workspace-id resolution mirrors S-578-2's field_resolve.rs split (Architecture Compliance Rule 3); the P1 validation-gap fix closes the one path that had diverged from the platform sibling's pre-flight guard."
+    },
+    "pr_reviewer": {
+      "verdict": "APPROVE",
+      "blocking_findings": 2,
+      "non_blocking_findings": 4,
+      "nitpick_findings": 4,
+      "fixed_in_pr": 2,
+      "fixed_finding_ids": ["B1", "B2"],
+      "residual_finding_ids": ["N1", "N2", "N3", "N4", "NIT-5", "NIT-6", "NIT-7", "NIT-8"],
+      "notes": "Original pass REQUEST_CHANGES (posted as COMMENT -- GitHub rejects --request-changes on own PR): B1 (PR body overstated coverage delta 59->107 vs actual in-file delta 61->81; +26 came from unrelated common::wf::tests pulled in via mod common;) and B2 (AC-008 VP-578-015 byte-identity test asserted only 4 keys individually, not the full object -- an added key was invisible) both fixed via commit 29300a3b. FINAL CONFIRMATION REVIEW at HEAD 29300a3b: APPROVE, both BLOCKING items verified resolved. N1 (only api/->cli/ import in the codebase, tracked as S-578-3-FIELDVALUESPEC-RELOCATION), N2 (panic! on unreachable-today path), N3 (stale 'AT MOST ONCE' rustdoc), N4 (stale test whose doc was rewritten without touching the body) + 4 nitpicks tracked as S-578-3-PR742-RESIDUAL-NITS. See .factory/code-delivery/S-578-3/pr-review.md."
+    }
+  },
+
+  "convergence_summary": "S-578-3 (JSM issue create --field hint-kind dispatch, 8pts) CONVERGED after 4 per-story Step-4.5 adversary passes. Pass 1 was BLOCKING (1 HIGH + 2 MEDIUM, ADV-S578-3-P1-001..003) -- the most significant was the missing :asset L2 value-shape validation (compose_asset_hint's 4-check parity), ported verbatim into jsm_create.rs::resolve_asset_field_l2 alongside 4 new negative-path tests and a BC-3.8.008 EC-3.8.008-1/EC-3.8.008-3 wording correction (STRING_WRAP adjudicated by PO over a drafted-by-analogy OBJECT-wrap that had crept into the spec). Passes 2/3 were NITPICK_ONLY, Pass 4 was fully CLEAN, giving 3/3 consecutive clean passes. Post-convergence: security-reviewer APPROVE, pr-reviewer initial REQUEST_CHANGES (2 BLOCKING: B1 test-count body correction, B2 byte-identity full-map pin) resolved via fix commit 29300a3b, then APPROVE at final confirmation review (4 non-blocking + 4 nitpick findings tracked as residual debt). PR #742 squash-merged to develop @ 41763ff0cbbd64ca325fb56e14f1d55ed5b79837 (2026-08-27). WAVE 2 COMPLETE (S-578-2 + S-578-3 both merged).",
+  "timestamp": "2026-08-27T00:00:00Z"
+}

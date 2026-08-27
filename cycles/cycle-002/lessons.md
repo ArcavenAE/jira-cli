@@ -1,10 +1,10 @@
 ---
 document_type: lessons-learned
 level: ops
-version: "1.0"
+version: "1.1"
 status: in-progress
 producer: state-manager
-timestamp: 2026-08-26T20:45:00Z
+timestamp: 2026-08-27T00:00:00Z
 cycle: "cycle-002-field-dx"
 inputs: [STATE.md]
 input-hash: "[live-state]"
@@ -30,6 +30,14 @@ traces_to: STATE.md
 2. **[process-gap] F2 BC-citation authoring committed forward-looking `src/...::symbol` citations to not-yet-implemented symbols (`get_createmeta_fields`) without running `check-bc-citation-symbols.sh`; the guard runs only in spec-guard CI, so it wasn't caught until an F4 PR's CI ran, blocking ALL open PRs.** Lesson: F2/spec-authoring must run `check-bc-citation-symbols.sh` before commit, OR planned symbols must use guard-safe prose form until their implementing story lands. Owed follow-up: consider adding the citation guard to the local state-manager verification set for spec commits.
    _Discovered: BC-3.3.010 hygiene fix, 2026-08-26 (blocking S-578-1's PR #739)_
 
+## Content-Level
+
+1. **[content] The `:option` JSM wire-shape spec conflict: BC-3.8.008 EC-3.8.008-1/EC-3.8.008-3 carried a drafted-by-analogy OBJECT-wrap `{"cf":{"value":...}}` that contradicted AC-002's bare-parity STRING-wrap `{"cf":"V"}` and the shipped code.** Caught pre-convergence by reading the BC before dispatching the adversary; PO adjudicated STRING_WRAP; BC + story corrected. Lesson: drafted-by-analogy/parity-PENDING wire shapes are error-prone; verify BC↔story↔code consistency BEFORE running convergence, not after.
+   _Discovered: S-578-3 delivery, pre-adversary-dispatch, 2026-08-27_
+
+2. **[content] The `:asset` validation gap (adversary Pass 1, ADV-S578-3-P1-001, HIGH): the JSM L2 resolver initially dropped the platform sibling's 4-check value-shape validation** — a "mirror-required" call-site needs explicit parity verification + negative tests, not an assumption that copy-then-adapt preserved the guard. Also: PR coverage-count inflation from `mod common;` pulling 26 unrelated `common::wf` tests into the binary total (pr-reviewer B1) — report in-file deltas (61→81), not binary totals (107), when citing test-count growth.
+   _Discovered: S-578-3 delivery, PR #742, adversary Pass 1 + pr-reviewer, 2026-08-27_
+
 ## Infrastructure-Level
 
 1. **[infra-observation] Concurrent demo-recorder race: a parked-then-resumed background subagent emitted a `completed` task-notification while still running, causing a duplicate demo-recorder dispatch on the same worktree and a `git add -f` that force-added `docs/demo-evidence/` past repo policy #708.** Recovered via a mixed `git reset` to the pushed SHA. Demos correctly live on `factory-artifacts` at `.factory/demos/S-578-2/` (commit `d6a5151c`). Harness/infra behavior, not a VSDD agent-prompt gap; feedback already drafted directly to the human — no follow-up story needed.
@@ -37,6 +45,9 @@ traces_to: STATE.md
 
 2. **[infra-observation] Author-self-approve Stop-hook loop: the `validate-pr-review-posted` SubagentStop hook is unsatisfiable for author-owned PRs (GitHub forbids author self-approve; only COMMENTED is possible), causing pr-reviewer/pr-manager to loop and re-notify.** Recovered via `TaskStop`. Merge succeeded regardless (admin-bypass squash). Harness/infra behavior, not a VSDD agent-prompt gap; feedback already drafted directly to the human — no follow-up story needed.
    _Discovered: S-578-2 delivery, PR #741, 2026-08-26/27_
+
+3. **[infra-observation] pr-manager over-orchestration: spawned its own verify sub-agents then stalled; separately, the auto-mode permission classifier denied `gh pr merge --admin` at the Bash layer.** Merge completed by the human manually. Harness/infra behavior, not a VSDD agent-prompt gap; feedback already drafted for the related hook issue — no follow-up story needed.
+   _Discovered: S-578-3 delivery, PR #742, 2026-08-27_
 
 ## Policy Candidates
 

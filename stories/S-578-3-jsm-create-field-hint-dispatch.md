@@ -23,7 +23,7 @@ inputs:
   - ".factory/specs/architecture/decisions/ADR-0019-field-dx-context-hint-shape-delimiter.md"
   - ".factory/phase-f2-spec-evolution/verification-delta-field-dx.md"
   - ".factory/phase-f1-delta-analysis/delta-analysis-field-dx.md"
-input-hash: "8130876"
+input-hash: "1066c58"
 traces_to: "src/api/jsm/requests.rs::JsmRequestBuilder::build"
 cycle: field-dx
 bundle: field-dx
@@ -49,7 +49,7 @@ acceptance_criteria_count: 10
 assumption_validations: []
 risk_mitigations: []
 created: "2026-08-26"
-version: "1.0"
+version: "1.3"
 last_updated: "2026-08-26"
 breaking_change: false
 retroactive: false
@@ -68,6 +68,52 @@ origin: >
   caveat, and does NOT overstate them as firmly asserted at this phase.
 changelog:
   - "1.0 (2026-08-26): Initial story authored; F2 gate convergence; bundle field-dx (issues #580/#578), wave 2."
+  - "1.1 (2026-08-26): AC-003 body text and the EC-3.8.008-1 Edge Cases table row corrected to
+    match the PO-approved BC-3.8.008 correction (STRING_WRAP decision): the JSM `:option`
+    requestFieldValues wire shape for a cascading-shaped `Parent>Child` literal is bare-parity
+    `{\"cf\": \"Parent>Child\"}`, not the object-wrap `{\"cf\": {\"value\": \"Parent>Child\"}}`
+    the story previously (incorrectly) documented. No AC added or removed; AC-002/AC-008 were
+    already correct and untouched. Propagates the BC-3.8.008 amendment correction, the
+    EC-3.8.008-1 correction, and BC-3.4.027's corrected reciprocal-asymmetry note into this
+    story only — no code, tests, or BC files changed."
+  - "1.2 (2026-08-26): AC-005 corrected per adversary Pass-1 finding ADV-S578-3-P1-003. The prior
+    text asserted that malformed-`:asset` VALUE-shape rejection was \"a direct consequence of
+    `parse_field_kv` running as a single, request-type-agnostic parse pass\" and that \"no
+    separate JSM-specific pre-flight check is needed\" — FALSE: `parse_field_kv`
+    (`src/cli/issue/create.rs`) validates only the `:kind` TAG, never the `:asset` VALUE's
+    `WORKSPACE:OBJECTID` shape. On the platform path that validation lives at the L2 call site
+    (the `:asset` composer in `field_resolve.rs`, S-578-2), not inside the parser. AC-005 now
+    states that this story's own JSM-path L2 call site (`jsm_create.rs`/`handle_jsm_create`,
+    the same site AC-006 resolves the workspace id at) MUST perform the equivalent
+    `WORKSPACE:OBJECTID` value-shape validation BEFORE `get_or_fetch_workspace_id`, and adds
+    four required exit-64 cases (empty value / empty workspace segment / extra colon /
+    non-numeric objectId, per BC-3.4.030 EC-3.4.030-3 + BC-3.4.031 EC-2a/EC-2b/EC-2d) with
+    named tests. `acceptance_criteria_count` unchanged at 10 — this is a prose/scope correction
+    to the existing AC-005, not a new standalone AC. BC-3.4.030/031 themselves are unchanged
+    (already correct) — no code, tests, or BC files changed by this edit."
+  - "1.3 (2026-08-26): Two corrections per adversary Pass-2 findings ADV-S578-3-P2-003 and
+    ADV-S578-3-P2-004. (P2-003, scope reconciliation) File Structure Requirements previously
+    listed `src/cli/issue/create.rs` under \"Files that MUST NOT change\", but S-578-3
+    legitimately edits it: deletion of the now-unused `reject_unsupported_hint_kinds` interim
+    guard helper, since S-578-3 is its LAST caller after S-578-2 already removed the edit.rs
+    call-site, and the platform `handle_create` never called it (rejects `--field` via the
+    DEC-188 preflight instead) — grep-confirmed zero dangling call sites, so removal introduces
+    no silent hint-drop. `create.rs` moved from the MUST-NOT-change list to the File Structure
+    Requirements table as a narrow, scoped MODIFY entry (delete the helper only; `parse_field_kv`
+    and all other `create.rs` logic untouched); the rest of the MUST-NOT-change list
+    (`field_resolve.rs`, `edit.rs`, `field.rs`, `api/jira/issues.rs`, `tests/jsm_request_api.rs`,
+    BC files) is unchanged. (P2-004, test-name citation drift) AC-005's cited test symbol names
+    had drifted from the landed function names: `test_ec_3_8_008_3_asset_empty_value_exits_64_zero_post`
+    corrected to the landed `test_ec_3_8_008_asset_empty_value_exits_64_zero_post` (no `_3_`
+    infix), and similarly for the empty-workspace-segment, extra-colon, and non-numeric-objectId
+    citations; `test_ec_3_8_008_3_unknown_kind_tag_exits_64_zero_post_on_jsm_path` corrected to
+    the landed `test_ec_3_8_008_3_malformed_hint_exits_64_zero_post_on_jsm_path`. Verified against
+    `tests/issue_create_jsm.rs` on the S-578-3 worktree. No separately-named
+    `..._empty_objectid_...` test exists as of this correction (the P2-001 concurrent fix); a
+    note was added instead of a hard citation, since `test_ec_3_8_008_asset_non_numeric_objectid_exits_64_zero_post`
+    already covers both the bare and explicit non-numeric-objectId forms. `acceptance_criteria_count`
+    unchanged at 10 — both are citation/scope corrections, not new or removed ACs. No code,
+    tests, or BC files changed by this edit."
 ---
 
 > **tdd_mode:** strict — Red Gate required. Write all tests in
@@ -179,10 +225,11 @@ there is NO `>`-split site anywhere in the JSM dispatch (BC-3.4.027's cascading-
 composition is explicitly NOT extended to JSM this cycle; `parse_field_kv` itself never
 performs the `>` split — that split lives only at the platform-path call sites, per ADR-0019 §
 Amendment D3). Consequence: the entire `"Parent>Child"` substring, `>` included, is wrapped
-verbatim by the `Some(Option)` non-cascading dispatch arm → `{"cf": {"value":
-"Parent>Child"}}` on `requestFieldValues`. `jr` does NOT client-side detect or reject this
-shape — best case is a server-side 400 or silent no-match. This limitation is tracked as an
-open design question, NOT a defect requiring a fix this cycle.
+verbatim by the `Some(Option)` non-cascading dispatch arm — which sits in the SAME shared arm as
+`kind: None` (AC-002) — producing `{"cf": "Parent>Child"}` (a plain JSON string, bare-parity with
+the unhinted form, NOT an object-wrap) on `requestFieldValues`. `jr` does NOT client-side detect
+or reject this shape — best case is a server-side 400 or silent no-match. This limitation is
+tracked as an open design question, NOT a defect requiring a fix this cycle.
 
 **Test**: `test_ec_3_8_008_1_cascading_greater_than_treated_as_opaque_literal_on_jsm` in
 `tests/issue_create_jsm.rs`.
@@ -203,19 +250,56 @@ Applies identically on the platform path.
 
 ---
 
-### AC-005: Malformed-hint catalog (BC-3.4.031) fires on the JSM path BEFORE any POST
+### AC-005: Malformed-hint catalog (BC-3.4.031) fires on the JSM path BEFORE any POST — `:asset` value-shape validation is an L2 call-site responsibility, NOT an emergent property of `parse_field_kv`
 (traces to BC-3.8.008 EC-3.8.008-3, Errors line amendment)
 
-`parse_field_kv`'s shared unknown-`:kind`/malformed-`:asset` exit-64 catalog (BC-3.4.031) fires
-on the JSM path — a malformed hint on `--request-type` create (e.g. `--request-type RT --field
-cf:bogus=X`, or `--field cf:asset=` structurally invalid) exits 64 with ZERO HTTP POST,
-identically to the platform-path shape. This is a direct consequence of `parse_field_kv`
-running as a single, request-type-agnostic parse pass before `JsmRequestBuilder::build()`/
-`handle_jsm_create` ever construct the request body — no separate JSM-specific pre-flight check
-is needed.
+**Correction (this version) — the previous draft of this AC misstated WHERE validation
+lives.** `parse_field_kv` (`src/cli/issue/create.rs`) validates ONLY the `:kind` TAG (its
+closed set: `option`/`id`/`name`/`asset`) — it never inspects the `:asset` VALUE's
+`WORKSPACE:OBJECTID` shape at all. A malformed `:kind` TAG (e.g. `--field cf:bogus=X`) IS
+rejected by `parse_field_kv`'s own closed-set check, identically on both paths, before any call
+site is reached — that part of the original claim was correct. But malformed-`:asset`
+VALUE-SHAPE rejection (empty value, empty workspace segment, extra colon, non-numeric objectId)
+is a SEPARATE responsibility that `parse_field_kv` does not and cannot perform (it has no
+kind-specific value logic at all). On the platform path this validation lives at the L2 call
+site — the `:asset` `WORKSPACE:OBJECTID` composer in `field_resolve.rs` (S-578-2), invoked
+before `get_or_fetch_workspace_id`. On the JSM path, this story's own L2 call site —
+`jsm_create.rs`/`handle_jsm_create` (the same site AC-006 resolves the workspace id at) — MUST
+perform the equivalent `WORKSPACE:OBJECTID` value-shape validation BEFORE calling
+`get_or_fetch_workspace_id`, mirroring the platform sibling composer. This is new logic this
+story must implement, not an emergent consequence of `parse_field_kv`'s single-pass parsing —
+the original AC-005 premise that "no separate JSM-specific pre-flight check is needed" was
+FALSE and led to the validation being omitted; it IS needed, at this story's own L2 call site.
 
-**Test**: `test_ec_3_8_008_3_malformed_hint_exits_64_zero_post_on_jsm_path` in
-`tests/issue_create_jsm.rs`.
+Required exit-64 cases (per BC-3.4.030 EC-3.4.030-3 + BC-3.4.031 EC-2a/EC-2b/EC-2d — the
+deterministic check order from BC-3.4.030 Parsing rule 2 applies here too, so an input matching
+two conditions at once always surfaces the earlier-checked message — applied to the JSM path via
+the BC-3.8.008 "shared malformed-hint exit-64 catalog" amendment), each firing with ZERO HTTP
+POST and ZERO workspace-discovery GET (validation precedes the L2 `get_or_fetch_workspace_id`
+call):
+- `--field cf:asset=` (empty value entirely) → exit 64, "asset reference cannot be empty"
+  (EC-2a).
+- `--field cf:asset=:777` (workspace segment empty, colon present — treated as a malformed
+  EXPLICIT-workspace form, not the bare-objectId form) → exit 64, "workspace segment cannot be
+  empty when ':' is present; omit the workspace prefix entirely to use the cached workspace id"
+  (EC-2c, the sub-case BC-3.4.031's EC-2b/EC-2c enumeration maps this shape to).
+- `--field cf:asset=WS:OBJ:X` (extra colon inside the value) → exit 64, a message naming the
+  extra-colon mistake specifically (e.g. `"unexpected extra ':' in :asset value — expected
+  WORKSPACE:OBJECTID"`), NOT the generic "objectId must be numeric" text (EC-2d).
+- `--field cf:asset=abc` (bare form, non-numeric) / `--field cf:asset=WS:abc` (explicit form,
+  non-numeric objectId segment) → exit 64, "objectId must be numeric" — ASCII `[0-9]+` only per
+  BC-3.4.030 Parsing rule 3; non-ASCII digit scripts also reject (EC-3).
+
+**Test**: `test_ec_3_8_008_3_malformed_hint_exits_64_zero_post_on_jsm_path` (unchanged
+parser-level behavior — kind-tag validation only) + `test_ec_3_8_008_asset_empty_value_exits_64_zero_post`
++ `test_ec_3_8_008_asset_empty_workspace_segment_exits_64_zero_post` +
+`test_ec_3_8_008_asset_extra_colon_exits_64_zero_post` +
+`test_ec_3_8_008_asset_non_numeric_objectid_exits_64_zero_post` in
+`tests/issue_create_jsm.rs` (the last of these covers both the bare non-numeric-objectId form
+and the explicit `WS:abc` form in one test function; no separately-named
+`..._empty_objectid_...` test exists as of this correction — the empty-value and
+empty-workspace-segment cases above are the closest landed analogues, and no gap is asserted
+here beyond what those two already cover).
 
 ---
 
@@ -321,7 +405,7 @@ regression run required, not a subset.
 
 | ID | Description | Expected Behavior |
 |----|-------------|-------------------|
-| EC-3.8.008-1 | Cascading `>` on JSM `:option` path | Opaque literal, `{"cf": {"value": "Parent>Child"}}`, best-case server 400 |
+| EC-3.8.008-1 | Cascading `>` on JSM `:option` path | Opaque literal, `{"cf": "Parent>Child"}` (bare-parity string-wrap), best-case server 400 |
 | EC-3.8.008-2 | `--field cf:option` (no `=`) | Pre-existing "missing `=`" error, NOT a hint-parse case |
 | EC-3.8.008-3 | Malformed hint (BC-3.4.031 catalog) on JSM path | exit 64 zero HTTP POST, identical to platform-path shape |
 | (BC-3.4.030 taxonomy) | `:asset` cold-cache 403/404/empty-workspace/401/5xx | Same 4-row taxonomy as platform path, asserted independently here |
@@ -468,10 +552,9 @@ touching `build()`'s loop.
 | `src/api/jsm/requests.rs` | MODIFY | `JsmRequestBuilder.extra_fields` type change + kind-aware `build()` dispatch |
 | `src/cli/issue/jsm_create.rs` | MODIFY | `:asset` workspace-id resolution at the `--field` call site (line ~282) |
 | `tests/issue_create_jsm.rs` | MODIFY | All 10 new ACs; existing 59 tests untouched (regression baseline) |
+| `src/cli/issue/create.rs` | MODIFY (narrow) | Delete the now-unused `reject_unsupported_hint_kinds` helper — S-578-3 is its LAST caller (S-578-2 already removed its own call-site). The platform `handle_create` never called it and rejects `--field` via the DEC-188 preflight, so removal introduces no silent hint-drop. Do NOT change `parse_field_kv` or any other `create.rs` logic. |
 
 **Files that MUST NOT change:**
-- `src/cli/issue/create.rs` — `parse_field_kv`'s own definition is S-578-1's; the platform-create
-  dispatch is S-578-4's
 - `src/cli/issue/edit.rs`, `src/cli/issue/field_resolve.rs` — S-578-2's scope
 - `src/cli/field.rs`, `src/api/jira/issues.rs` — S-580-1's scope, no code overlap
 - `tests/jsm_request_api.rs` — the untouched-keys backstop; assert against it, do not modify it
