@@ -1112,30 +1112,20 @@ async fn test_jsm_create_field_missing_equals_exits_64() {
 }
 
 // ---------------------------------------------------------------------------
-// S-578-1 LOW-finding remediation — INTERIM GUARD (this test FAILS until a
-// follow-up implementer wires the guard; kind-hint DISPATCH itself is
-// S-578-2/3/4, out of scope here).
-//
-// `parse_field_kv` (src/cli/issue/create.rs) already recognizes `:kind`
-// hints (`:option`/`:id`/`:name`/`:asset`), but `handle_jsm_create`
-// (src/cli/issue/jsm_create.rs) does not dispatch on `.kind` yet — see the
-// "S-578-1: JsmRequestBuilder::extra_fields still takes bare NAME=VALUE
-// pairs; :kind dispatch is not implemented yet" comment immediately above
-// its `parse_field_kv` call site. It unconditionally maps every parsed pair
-// to `(name, spec.value)`, silently dropping any `:kind` hint and treating
-// a hinted pair exactly like the bare form. Per the project's
-// no-silent-value-drop principle for write commands, this interim state
-// must be a CLEAR exit-64 error, not silent treat-as-bare.
-//
-// TODAY this test FAILS: `--field cf:id=10042` is silently reduced to field
-// "cf" = "10042" and POSTed successfully (exit 0). Once the interim guard
-// lands, this must become an exit-64 `JrError::UserError` naming the
-// unsupported hints and pointing at the bare `NAME=VALUE` form — BEFORE the
-// POST to /rest/servicedeskapi/request.
+// S-578-3: real `:kind` dispatch has landed on the JSM create path,
+// superseding the S-578-1 interim guard this test previously pinned (the
+// guard call site and its underlying `reject_unsupported_hint_kinds` helper
+// have both been removed — see `tests/issue_create_jsm.rs`'s AC-001..010
+// block further down in this file for the full new-behavior coverage). This
+// test is flipped, not deleted, to keep asserting the end-to-end outcome for
+// this exact `--field cf:id=10042` input: it now dispatches through
+// `JsmRequestBuilder::build()`'s kind-aware match and succeeds (exit 0),
+// producing `{"id": "10042"}` on `requestFieldValues.cf` (by analogy to the
+// platform-path shape; VP-578-016 parity-PENDING).
 // ---------------------------------------------------------------------------
 
 #[tokio::test]
-async fn test_jsm_create_field_kind_hint_exits_64_pending_dispatch_s578_1() {
+async fn test_jsm_create_field_kind_hint_dispatches_real_id_shape_s578_3() {
     let server = MockServer::start().await;
     let cache_dir = tempfile::tempdir().unwrap();
     let config_dir = tempfile::tempdir().unwrap();
@@ -1145,13 +1135,10 @@ async fn test_jsm_create_field_kind_hint_exits_64_pending_dispatch_s578_1() {
     mount_service_desk_list(&server).await;
     mount_request_type_list(&server).await;
 
-    // Full working POST mock (no call-count expectation) so that, TODAY, the
-    // un-guarded call-site succeeds end-to-end and this assertion cleanly
-    // fails on the exit-code mismatch rather than panicking on an
-    // unmatched/missing mock or a wiremock expectation violation.
     Mock::given(method("POST"))
         .and(path("/rest/servicedeskapi/request"))
         .respond_with(ResponseTemplate::new(201).set_body_json(jsm_created_response()))
+        .expect(1)
         .mount(&server)
         .await;
 
@@ -1175,43 +1162,41 @@ async fn test_jsm_create_field_kind_hint_exits_64_pending_dispatch_s578_1() {
             "--field",
             "cf:id=10042",
             "--no-input",
+            "--output",
+            "json",
         ])
         .output()
         .unwrap();
 
     let stderr = String::from_utf8_lossy(&output.stderr);
-    let stdout = String::from_utf8_lossy(&output.stdout);
+    assert!(
+        output.status.success(),
+        "S-578-3: '--field cf:id=10042' must dispatch through real :kind handling and \
+         succeed (exit 0) — the S-578-1 interim guard has been removed. \
+         stderr={stderr}"
+    );
 
+    let requests = server.received_requests().await.expect("requests recorded");
+    let jsm_post = requests
+        .iter()
+        .find(|r| r.url.path() == "/rest/servicedeskapi/request" && r.method.as_str() == "POST")
+        .expect("S-578-3: JSM POST must have been made");
+    let body: Value =
+        serde_json::from_slice(&jsm_post.body).expect("S-578-3: POST body must be valid JSON");
     assert_eq!(
-        output.status.code(),
-        Some(64),
-        "S-578-1 INTERIM GUARD: '--field cf:id=10042' (a ':kind'-hinted pair) must be rejected \
-         with exit 64 until dispatch lands (S-578-2/3/4) — it must NEVER be silently treated \
-         as the bare form. This assertion is expected to FAIL today (no guard exists yet; the \
-         command currently exits 0 via silent treat-as-bare). stderr={stderr} stdout={stdout}"
-    );
-
-    // Load-bearing substrings the guard's error message must contain once implemented:
-    // (1) states the ':kind' hints are not yet supported on this command, and
-    // (2) suggests the bare NAME=VALUE form as the escape hatch.
-    assert!(
-        stderr.contains("not yet supported"),
-        "S-578-1 INTERIM GUARD: stderr must explain the ':kind' hint is 'not yet supported' \
-         on this command; stderr={stderr}"
-    );
-    assert!(
-        stderr.contains("NAME=VALUE"),
-        "S-578-1 INTERIM GUARD: stderr must suggest the bare 'NAME=VALUE' form; stderr={stderr}"
+        body["requestFieldValues"]["cf"],
+        json!({"id": "10042"}),
+        "S-578-3: ':id' hint must produce {{\"id\": \"10042\"}} on requestFieldValues; \
+         got body: {body}"
     );
 }
 
-/// S-578-1 regression pin (paired with the interim-guard test above): a BARE
+/// S-578-1 regression pin (paired with the test above, which now dispatches
+/// through real `:kind` handling with the interim guard removed): a BARE
 /// `--field NAME=VALUE` pair (`kind: None`) must keep working exactly as
-/// before the interim guard lands — the guard must reject ONLY `kind: Some(_)`
-/// pairs, never fire on the unhinted form. This test PASSES today (it is a
-/// restatement of the existing last-wins coverage above, scoped narrowly to
-/// the guard-non-interference property) and must continue to pass after the
-/// guard is implemented.
+/// before — hinted (`kind: Some(_)`) and unhinted pairs must never interfere
+/// with each other. This test is a restatement of the existing last-wins
+/// coverage above, scoped narrowly to that non-interference property.
 #[tokio::test]
 async fn test_jsm_create_field_bare_pair_unaffected_by_kind_hint_guard_s578_1() {
     let server = MockServer::start().await;
@@ -5368,4 +5353,1715 @@ fn assert_code_mark_exclusivity_local(adf: &serde_json::Value) {
             }
         }
     }
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+// S-578-3: JSM `issue create --field` hint-kind uniformity
+// (BC-3.8.008 "Hint-kind uniformity" amendment, VP-578-015/016/022)
+//
+// Historical (RED gate, now closed): the S-578-1 interim
+// `reject_unsupported_hint_kinds` guard that used to reject every `--field
+// NAME:kind=VALUE` hinted pair with exit 64 has been removed — both the
+// guard call site and its underlying helper are gone from `jsm_create.rs`.
+// `JsmRequestBuilder::build()`'s kind-aware dispatch (`compose_id_wire`/
+// `compose_name_wire`/`compose_asset_wire` in `src/api/jsm/requests.rs`) and
+// `resolve_asset_field_l2` (`src/cli/issue/jsm_create.rs`) are real,
+// implemented logic, not `todo!()` stubs. Every test below — HINTED
+// (`:id`/`:name`/`:asset`/`:option`) and bare alike — now exercises that
+// real dispatch end-to-end and is expected to PASS (GREEN), pinning the
+// merged behavior rather than describing a pending Red Gate.
+//
+// VP-578-016 PARITY-PENDING NOTE: the `:id`/`:name`/`:asset`
+// `requestFieldValues` wire shapes asserted below are implemented BY
+// ANALOGY to the platform-path shapes (`field_resolve.rs::compose_id_hint`/
+// `compose_name_hint`/`compose_asset_hint`) per BC-3.8.008's own explicit
+// caveat — this parity is NOT research-confirmed for the JSM
+// `requestFieldValues` target. A green run of these tests, once the guard
+// is removed and dispatch lands, is NOT proof of live-JSM parity; treat
+// VP-578-016 as parity-PENDING until F4/live-JSM validation.
+// ═══════════════════════════════════════════════════════════════════════════
+
+// ─── AC-001 (BC-3.8.008 amendment): extra_fields type is FieldValueSpec map ──
+
+/// AC-001: `JsmRequestBuilder.extra_fields` is `&'a HashMap<String,
+/// FieldValueSpec>` (not the old `&'a HashMap<String, String>`) — the SAME
+/// `parse_field_kv` parser used by every `--field`-accepting call site now
+/// feeds this builder directly (no per-call-site parsing divergence).
+///
+/// `FieldValueSpec`/`FieldValueKind` are `pub(crate)` (crate-internal), so
+/// this cannot be asserted via a direct Rust type check from an external
+/// integration test — it is exercised behaviorally: a BARE (unhinted)
+/// `--field` pair must flow end-to-end through `parse_field_kv` ->
+/// `JsmRequestBuilder.extra_fields` -> `build()` successfully (`kind: None`
+/// is the `FieldValueSpec` variant the bare form always produces).
+///
+/// PRE-SATISFIED GREEN at time of writing: the `extra_fields` type change
+/// (Task 2) already landed as part of the compilable-stub commit
+/// (`7eb89fd6`) that precedes this Red Gate — `src/api/jsm/requests.rs`'s
+/// `JsmRequestBuilder.extra_fields` field is already `&'a HashMap<String,
+/// FieldValueSpec>`, and `jsm_create.rs` already constructs that map
+/// directly from `parse_field_kv`'s output (no intermediate `.value`-only
+/// unwrap). This test is a regression pin locking in the already-landed
+/// type change, not a new Red Gate failure.
+#[tokio::test]
+async fn test_bc_3_8_008_bare_field_flows_through_spec_typed_extra_fields() {
+    let server = MockServer::start().await;
+    let cache_dir = tempfile::tempdir().unwrap();
+    let config_dir = tempfile::tempdir().unwrap();
+    write_minimal_config(config_dir.path(), &server.uri());
+
+    mount_project_meta_help(&server).await;
+    mount_service_desk_list(&server).await;
+    mount_request_type_list(&server).await;
+
+    Mock::given(method("POST"))
+        .and(path("/rest/servicedeskapi/request"))
+        .respond_with(ResponseTemplate::new(201).set_body_json(jsm_created_response()))
+        .expect(1)
+        .mount(&server)
+        .await;
+
+    let output = Command::cargo_bin("jr")
+        .unwrap()
+        .env("JR_BASE_URL", server.uri())
+        .env("JR_AUTH_HEADER", "Basic dGVzdDp0ZXN0")
+        .env("XDG_CACHE_HOME", cache_dir.path())
+        .env("JR_CACHE_DIR", cache_dir.path().join("jr"))
+        .env("XDG_CONFIG_HOME", config_dir.path())
+        .env("JR_CONFIG_DIR", config_dir.path().join("jr"))
+        .args([
+            "issue",
+            "create",
+            "--project",
+            "HELP",
+            "--request-type",
+            "Password Reset",
+            "--summary",
+            "test",
+            "--field",
+            "customfield_20000=plain",
+            "--no-input",
+            "--output",
+            "json",
+        ])
+        .output()
+        .unwrap();
+
+    let stderr = String::from_utf8_lossy(&output.stderr);
+    assert!(
+        output.status.success(),
+        "AC-001: expected exit 0, got {:?}. stderr: {stderr}",
+        output.status.code()
+    );
+
+    let requests = server.received_requests().await.expect("requests recorded");
+    let jsm_post = requests
+        .iter()
+        .find(|r| r.url.path() == "/rest/servicedeskapi/request" && r.method.as_str() == "POST")
+        .expect("AC-001: JSM POST must have been made");
+    let body: Value =
+        serde_json::from_slice(&jsm_post.body).expect("AC-001: POST body must be valid JSON");
+    assert_eq!(
+        body["requestFieldValues"]["customfield_20000"].as_str(),
+        Some("plain"),
+        "AC-001: a bare --field pair must flow through the FieldValueSpec-typed \
+         extra_fields map end-to-end; got body: {body}"
+    );
+}
+
+// ─── AC-002 (BC-3.8.008 amendment): build()'s kind-aware dispatch ────────────
+
+/// AC-002: `:id` dispatches through `JsmRequestBuilder::build()`'s
+/// kind-aware match to `compose_id_wire`, producing `{"id": "10042"}` on
+/// `requestFieldValues` (by analogy to the platform-path shape,
+/// `field_resolve.rs::compose_id_hint` — VP-578-016 parity-PENDING).
+#[tokio::test]
+async fn test_bc_3_8_008_build_kind_aware_dispatch_id() {
+    let server = MockServer::start().await;
+    let cache_dir = tempfile::tempdir().unwrap();
+    let config_dir = tempfile::tempdir().unwrap();
+    write_minimal_config(config_dir.path(), &server.uri());
+
+    mount_project_meta_help(&server).await;
+    mount_service_desk_list(&server).await;
+    mount_request_type_list(&server).await;
+
+    Mock::given(method("POST"))
+        .and(path("/rest/servicedeskapi/request"))
+        .respond_with(ResponseTemplate::new(201).set_body_json(jsm_created_response()))
+        .mount(&server)
+        .await;
+
+    let output = Command::cargo_bin("jr")
+        .unwrap()
+        .env("JR_BASE_URL", server.uri())
+        .env("JR_AUTH_HEADER", "Basic dGVzdDp0ZXN0")
+        .env("XDG_CACHE_HOME", cache_dir.path())
+        .env("JR_CACHE_DIR", cache_dir.path().join("jr"))
+        .env("XDG_CONFIG_HOME", config_dir.path())
+        .env("JR_CONFIG_DIR", config_dir.path().join("jr"))
+        .args([
+            "issue",
+            "create",
+            "--project",
+            "HELP",
+            "--request-type",
+            "Password Reset",
+            "--summary",
+            "test",
+            "--field",
+            "customfield_30000:id=10042",
+            "--no-input",
+            "--output",
+            "json",
+        ])
+        .output()
+        .unwrap();
+
+    let stderr = String::from_utf8_lossy(&output.stderr);
+    assert!(
+        output.status.success(),
+        "AC-002: ':id' hint must dispatch through build() and exit 0. \
+         got exit {:?}. \
+         stderr: {stderr}",
+        output.status.code()
+    );
+
+    let requests = server.received_requests().await.expect("requests recorded");
+    let jsm_post = requests
+        .iter()
+        .find(|r| r.url.path() == "/rest/servicedeskapi/request" && r.method.as_str() == "POST")
+        .expect("AC-002: JSM POST must have been made");
+    let body: Value =
+        serde_json::from_slice(&jsm_post.body).expect("AC-002: POST body must be valid JSON");
+    assert_eq!(
+        body["requestFieldValues"]["customfield_30000"],
+        json!({"id": "10042"}),
+        "AC-002: ':id' hint must produce {{\"id\": \"10042\"}} on requestFieldValues \
+         (by analogy to the platform-path shape; VP-578-016 parity-PENDING); \
+         got body: {body}"
+    );
+}
+
+/// AC-002: `:name` dispatches through `build()`'s kind-aware match to
+/// `compose_name_wire`, producing `{"name": "High"}` on `requestFieldValues`
+/// (by analogy to `field_resolve.rs::compose_name_hint` — VP-578-016
+/// parity-PENDING).
+#[tokio::test]
+async fn test_bc_3_8_008_build_kind_aware_dispatch_name() {
+    let server = MockServer::start().await;
+    let cache_dir = tempfile::tempdir().unwrap();
+    let config_dir = tempfile::tempdir().unwrap();
+    write_minimal_config(config_dir.path(), &server.uri());
+
+    mount_project_meta_help(&server).await;
+    mount_service_desk_list(&server).await;
+    mount_request_type_list(&server).await;
+
+    Mock::given(method("POST"))
+        .and(path("/rest/servicedeskapi/request"))
+        .respond_with(ResponseTemplate::new(201).set_body_json(jsm_created_response()))
+        .mount(&server)
+        .await;
+
+    let output = Command::cargo_bin("jr")
+        .unwrap()
+        .env("JR_BASE_URL", server.uri())
+        .env("JR_AUTH_HEADER", "Basic dGVzdDp0ZXN0")
+        .env("XDG_CACHE_HOME", cache_dir.path())
+        .env("JR_CACHE_DIR", cache_dir.path().join("jr"))
+        .env("XDG_CONFIG_HOME", config_dir.path())
+        .env("JR_CONFIG_DIR", config_dir.path().join("jr"))
+        .args([
+            "issue",
+            "create",
+            "--project",
+            "HELP",
+            "--request-type",
+            "Password Reset",
+            "--summary",
+            "test",
+            "--field",
+            "customfield_30001:name=High",
+            "--no-input",
+            "--output",
+            "json",
+        ])
+        .output()
+        .unwrap();
+
+    let stderr = String::from_utf8_lossy(&output.stderr);
+    assert!(
+        output.status.success(),
+        "AC-002: ':name' hint must dispatch through build() and exit 0. \
+         got exit {:?}. \
+         stderr: {stderr}",
+        output.status.code()
+    );
+
+    let requests = server.received_requests().await.expect("requests recorded");
+    let jsm_post = requests
+        .iter()
+        .find(|r| r.url.path() == "/rest/servicedeskapi/request" && r.method.as_str() == "POST")
+        .expect("AC-002: JSM POST must have been made");
+    let body: Value =
+        serde_json::from_slice(&jsm_post.body).expect("AC-002: POST body must be valid JSON");
+    assert_eq!(
+        body["requestFieldValues"]["customfield_30001"],
+        json!({"name": "High"}),
+        "AC-002: ':name' hint must produce {{\"name\": \"High\"}} on requestFieldValues \
+         (by analogy to the platform-path shape; VP-578-016 parity-PENDING); \
+         got body: {body}"
+    );
+}
+
+/// AC-002 / VP-578-015: `kind: None` (bare) and `kind: Some(Option)`
+/// (`:option`, non-cascading) both dispatch to the SAME plain-string wrap —
+/// `build()`'s match arm is `None | Some(FieldValueKind::Option) =>
+/// serde_json::Value::String(spec.value.clone())` (already-landed, real
+/// logic per the rustdoc in `src/api/jsm/requests.rs`, not a stub). Bare and
+/// `:option`-hinted pairs on DIFFERENT field names must therefore produce
+/// byte-identical (plain string) wire values.
+#[tokio::test]
+async fn test_bc_3_8_008_build_kind_aware_dispatch_option_bare_parity() {
+    let server = MockServer::start().await;
+    let cache_dir = tempfile::tempdir().unwrap();
+    let config_dir = tempfile::tempdir().unwrap();
+    write_minimal_config(config_dir.path(), &server.uri());
+
+    mount_project_meta_help(&server).await;
+    mount_service_desk_list(&server).await;
+    mount_request_type_list(&server).await;
+
+    Mock::given(method("POST"))
+        .and(path("/rest/servicedeskapi/request"))
+        .respond_with(ResponseTemplate::new(201).set_body_json(jsm_created_response()))
+        .mount(&server)
+        .await;
+
+    let output = Command::cargo_bin("jr")
+        .unwrap()
+        .env("JR_BASE_URL", server.uri())
+        .env("JR_AUTH_HEADER", "Basic dGVzdDp0ZXN0")
+        .env("XDG_CACHE_HOME", cache_dir.path())
+        .env("JR_CACHE_DIR", cache_dir.path().join("jr"))
+        .env("XDG_CONFIG_HOME", config_dir.path())
+        .env("JR_CONFIG_DIR", config_dir.path().join("jr"))
+        .args([
+            "issue",
+            "create",
+            "--project",
+            "HELP",
+            "--request-type",
+            "Password Reset",
+            "--summary",
+            "test",
+            "--field",
+            "bare_field=BareValue",
+            "--field",
+            "hinted_field:option=HintedValue",
+            "--no-input",
+            "--output",
+            "json",
+        ])
+        .output()
+        .unwrap();
+
+    let stderr = String::from_utf8_lossy(&output.stderr);
+    assert!(
+        output.status.success(),
+        "AC-002 VP-578-015: bare/:option parity must exit 0. \
+         got exit {:?}. stderr: {stderr}",
+        output.status.code()
+    );
+
+    let requests = server.received_requests().await.expect("requests recorded");
+    let jsm_post = requests
+        .iter()
+        .find(|r| r.url.path() == "/rest/servicedeskapi/request" && r.method.as_str() == "POST")
+        .expect("AC-002: JSM POST must have been made");
+    let body: Value =
+        serde_json::from_slice(&jsm_post.body).expect("AC-002: POST body must be valid JSON");
+    assert_eq!(
+        body["requestFieldValues"]["bare_field"],
+        json!("BareValue"),
+        "AC-002 VP-578-015: bare form must remain a plain string; got body: {body}"
+    );
+    assert_eq!(
+        body["requestFieldValues"]["hinted_field"],
+        json!("HintedValue"),
+        "AC-002 VP-578-015: ':option' non-cascading hint must produce the SAME \
+         plain-string wrap as the bare form (byte-identical parity, not an \
+         object wrap); got body: {body}"
+    );
+}
+
+// ─── AC-003 (EC-3.8.008-1): cascading '>' is opaque literal on JSM ───────────
+
+/// EC-3.8.008-1: `--field cf:option=Parent>Child` on the JSM path is treated
+/// as an OPAQUE literal — JSM has no `>`-split site anywhere in its
+/// dispatch (`parse_field_kv` itself never splits on `>`; that split lives
+/// only at platform-path call sites, per ADR-0019 §Amendment D3). The whole
+/// `"Parent>Child"` substring, `>` included, is wrapped verbatim by the SAME
+/// `None | Some(Option) => Value::String(...)` non-cascading arm AC-002
+/// pins — i.e. a PLAIN STRING `"Parent>Child"`, not a `{"value": ...}`
+/// object.
+///
+/// NOTE on the story text: S-578-3's own AC-003 prose describes the
+/// resulting shape as `{"cf": {"value": "Parent>Child"}}` (an object wrap),
+/// which is inconsistent with AC-002's own `{"cf": "V"}` pin for the
+/// identical match arm and with the already-landed (non-stub)
+/// `src/api/jsm/requests.rs` `build()` code (which this story explicitly
+/// forbids modifying) — that arm performs a plain `Value::String` wrap for
+/// BOTH `None` and `Some(Option)`, with no object-wrap branch anywhere.
+/// This test follows the landed source code (source of truth) rather than
+/// the apparently-erroneous story example.
+#[tokio::test]
+async fn test_ec_3_8_008_1_cascading_greater_than_treated_as_opaque_literal_on_jsm() {
+    let server = MockServer::start().await;
+    let cache_dir = tempfile::tempdir().unwrap();
+    let config_dir = tempfile::tempdir().unwrap();
+    write_minimal_config(config_dir.path(), &server.uri());
+
+    mount_project_meta_help(&server).await;
+    mount_service_desk_list(&server).await;
+    mount_request_type_list(&server).await;
+
+    Mock::given(method("POST"))
+        .and(path("/rest/servicedeskapi/request"))
+        .respond_with(ResponseTemplate::new(201).set_body_json(jsm_created_response()))
+        .mount(&server)
+        .await;
+
+    let output = Command::cargo_bin("jr")
+        .unwrap()
+        .env("JR_BASE_URL", server.uri())
+        .env("JR_AUTH_HEADER", "Basic dGVzdDp0ZXN0")
+        .env("XDG_CACHE_HOME", cache_dir.path())
+        .env("JR_CACHE_DIR", cache_dir.path().join("jr"))
+        .env("XDG_CONFIG_HOME", config_dir.path())
+        .env("JR_CONFIG_DIR", config_dir.path().join("jr"))
+        .args([
+            "issue",
+            "create",
+            "--project",
+            "HELP",
+            "--request-type",
+            "Password Reset",
+            "--summary",
+            "test",
+            "--field",
+            "customfield_40000:option=Parent>Child",
+            "--no-input",
+            "--output",
+            "json",
+        ])
+        .output()
+        .unwrap();
+
+    let stderr = String::from_utf8_lossy(&output.stderr);
+    assert!(
+        output.status.success(),
+        "EC-3.8.008-1: expected exit 0. got exit {:?}. stderr: {stderr}",
+        output.status.code()
+    );
+
+    let requests = server.received_requests().await.expect("requests recorded");
+    let jsm_post = requests
+        .iter()
+        .find(|r| r.url.path() == "/rest/servicedeskapi/request" && r.method.as_str() == "POST")
+        .expect("EC-3.8.008-1: JSM POST must have been made");
+    let body: Value =
+        serde_json::from_slice(&jsm_post.body).expect("EC-3.8.008-1: POST body must be valid JSON");
+    assert_eq!(
+        body["requestFieldValues"]["customfield_40000"],
+        json!("Parent>Child"),
+        "EC-3.8.008-1: the entire 'Parent>Child' substring must be wrapped \
+         verbatim as a PLAIN STRING (no '>' split, no object wrap) — matches \
+         the landed non-cascading Option match arm; got body: {body}"
+    );
+}
+
+// ─── AC-004 (EC-3.8.008-2): missing '=' is the pre-existing error ────────────
+
+/// EC-3.8.008-2: `--field cf:option` (no `=` at all) never reaches
+/// `parse_field_kv`'s step-2 `:kind` extraction — step 1 (split on the
+/// first `=`) fails to find any `=` first, so this resolves to the SAME
+/// pre-existing "missing '='" exit-64 error BC-3.8.008's own Errors line
+/// documents, NOT a hint-syntax parse error. Applies identically on the
+/// platform path (this is `parse_field_kv`'s own step-1 behavior,
+/// unaffected by call site or by this story's S-578-3 dispatch amendment).
+///
+/// PRE-SATISFIED GREEN: `parse_field_kv`'s step-1 "missing '='" check is
+/// pre-existing, unrelated to the hint-kind dispatch this story adds — this
+/// test is a regression pin, not a Red Gate failure.
+#[tokio::test]
+async fn test_ec_3_8_008_2_missing_equals_is_preexisting_error_not_hint_parse_error() {
+    let server = MockServer::start().await;
+    let cache_dir = tempfile::tempdir().unwrap();
+    let config_dir = tempfile::tempdir().unwrap();
+    write_minimal_config(config_dir.path(), &server.uri());
+
+    mount_project_meta_help(&server).await;
+    mount_service_desk_list(&server).await;
+    mount_request_type_list(&server).await;
+
+    Mock::given(method("POST"))
+        .and(path("/rest/servicedeskapi/request"))
+        .respond_with(ResponseTemplate::new(201))
+        .expect(0)
+        .mount(&server)
+        .await;
+
+    let output = Command::cargo_bin("jr")
+        .unwrap()
+        .env("JR_BASE_URL", server.uri())
+        .env("JR_AUTH_HEADER", "Basic dGVzdDp0ZXN0")
+        .env("XDG_CACHE_HOME", cache_dir.path())
+        .env("JR_CACHE_DIR", cache_dir.path().join("jr"))
+        .env("XDG_CONFIG_HOME", config_dir.path())
+        .env("JR_CONFIG_DIR", config_dir.path().join("jr"))
+        .args([
+            "issue",
+            "create",
+            "--project",
+            "HELP",
+            "--request-type",
+            "Password Reset",
+            "--summary",
+            "test",
+            "--field",
+            "cf:option",
+            "--no-input",
+        ])
+        .output()
+        .unwrap();
+
+    let stderr = String::from_utf8_lossy(&output.stderr);
+    assert_eq!(
+        output.status.code(),
+        Some(64),
+        "EC-3.8.008-2: expected exit 64 for missing '=', got {:?}. stderr: {stderr}",
+        output.status.code()
+    );
+    assert!(
+        stderr.contains("cf:option"),
+        "EC-3.8.008-2: error must mention the malformed pair 'cf:option'; got: {stderr}"
+    );
+    assert!(
+        stderr.contains("NAME=VALUE"),
+        "EC-3.8.008-2: error must mention NAME=VALUE format requirement, confirming \
+         this is the pre-existing missing-'=' error, not a hint-parse error; got: {stderr}"
+    );
+    assert!(
+        !stderr.contains("unknown field-value kind"),
+        "EC-3.8.008-2: must NOT be routed through the ':kind' catalog (BC-3.4.031) — \
+         it never reaches step 2; got: {stderr}"
+    );
+}
+
+// ─── AC-005 (EC-3.8.008-3): malformed-hint catalog fires before any POST ─────
+
+/// EC-3.8.008-3: `parse_field_kv`'s shared unknown-`:kind` exit-64 catalog
+/// (BC-3.4.031) fires on the JSM path BEFORE any HTTP POST — `--field
+/// cf:bogus=X` (unknown kind tag) exits 64 with ZERO POST to
+/// `/rest/servicedeskapi/request`, identically to the platform-path shape.
+/// This is a direct consequence of `parse_field_kv` running as a single,
+/// request-type-agnostic parse pass before `handle_jsm_create` ever
+/// constructs the request body — no separate JSM-specific pre-flight check
+/// is needed.
+///
+/// PRE-SATISFIED GREEN: the unknown-`:kind` catalog check is `parse_field_kv`
+/// step 3, pre-existing and unaffected by this story's dispatch amendment —
+/// this test is a regression pin, not a Red Gate failure.
+#[tokio::test]
+async fn test_ec_3_8_008_3_malformed_hint_exits_64_zero_post_on_jsm_path() {
+    let server = MockServer::start().await;
+    let cache_dir = tempfile::tempdir().unwrap();
+    let config_dir = tempfile::tempdir().unwrap();
+    write_minimal_config(config_dir.path(), &server.uri());
+
+    mount_project_meta_help(&server).await;
+    mount_service_desk_list(&server).await;
+    mount_request_type_list(&server).await;
+
+    Mock::given(method("POST"))
+        .and(path("/rest/servicedeskapi/request"))
+        .respond_with(ResponseTemplate::new(201).set_body_json(jsm_created_response()))
+        .expect(0)
+        .mount(&server)
+        .await;
+
+    let output = Command::cargo_bin("jr")
+        .unwrap()
+        .env("JR_BASE_URL", server.uri())
+        .env("JR_AUTH_HEADER", "Basic dGVzdDp0ZXN0")
+        .env("XDG_CACHE_HOME", cache_dir.path())
+        .env("JR_CACHE_DIR", cache_dir.path().join("jr"))
+        .env("XDG_CONFIG_HOME", config_dir.path())
+        .env("JR_CONFIG_DIR", config_dir.path().join("jr"))
+        .args([
+            "issue",
+            "create",
+            "--project",
+            "HELP",
+            "--request-type",
+            "Password Reset",
+            "--summary",
+            "test",
+            "--field",
+            "cf:bogus=X",
+            "--no-input",
+        ])
+        .output()
+        .unwrap();
+
+    let stderr = String::from_utf8_lossy(&output.stderr);
+    assert_eq!(
+        output.status.code(),
+        Some(64),
+        "EC-3.8.008-3: expected exit 64 for unknown ':kind' tag, got {:?}. stderr: {stderr}",
+        output.status.code()
+    );
+    assert!(
+        stderr.contains("unknown field-value kind"),
+        "EC-3.8.008-3: stderr must route through the BC-3.4.031 unknown-kind catalog; \
+         got: {stderr}"
+    );
+    assert!(
+        stderr.contains("option, id, name, asset"),
+        "EC-3.8.008-3: stderr must list the closed set of valid kinds; got: {stderr}"
+    );
+    // The .expect(0) on the POST mock is enforced on server drop — zero HTTP
+    // POST must occur before this exit-64.
+}
+
+// ─── AC-006 (BC-3.8.008 amendment ':asset' arm): L2 workspace resolution ─────
+
+/// AC-006: an EXPLICIT `WORKSPACE:OBJECTID` `:asset` value composes
+/// directly at the L2 call site (`jsm_create.rs`) — NO cache lookup, NO
+/// call to `get_or_fetch_workspace_id` — mirroring `edit.rs`'s S-578-2
+/// precedent for the platform path. `build()`'s `Some(Asset)` arm then
+/// performs PURE array-wrapping of the already-qualified value:
+/// `[{"workspaceId":"WS-9","id":"WS-9:777","objectId":"777"}]` (by analogy
+/// to `field_resolve.rs::compose_asset_hint`'s platform-path shape —
+/// VP-578-016 parity-PENDING). The workspace-discovery GET mock below must
+/// receive ZERO hits — the explicit form skips the cache lookup entirely
+/// per AC-006.
+#[tokio::test]
+async fn test_bc_3_8_008_asset_explicit_workspace_l2_composes_no_cache_lookup() {
+    let server = MockServer::start().await;
+    let cache_dir = tempfile::tempdir().unwrap();
+    let config_dir = tempfile::tempdir().unwrap();
+    write_minimal_config(config_dir.path(), &server.uri());
+
+    mount_project_meta_help(&server).await;
+    mount_service_desk_list(&server).await;
+    mount_request_type_list(&server).await;
+
+    // Mounted but must receive ZERO hits — explicit WORKSPACE:OBJECTID form
+    // must never trigger a cache/API workspace lookup (AC-006).
+    Mock::given(method("GET"))
+        .and(path("/rest/servicedeskapi/assets/workspace"))
+        .respond_with(ResponseTemplate::new(200).set_body_json(json!({
+            "size": 1, "start": 0, "limit": 25, "isLastPage": true,
+            "values": [{"workspaceId": "should-not-be-fetched"}]
+        })))
+        .mount(&server)
+        .await;
+
+    Mock::given(method("POST"))
+        .and(path("/rest/servicedeskapi/request"))
+        .respond_with(ResponseTemplate::new(201).set_body_json(jsm_created_response()))
+        .mount(&server)
+        .await;
+
+    let output = Command::cargo_bin("jr")
+        .unwrap()
+        .env("JR_BASE_URL", server.uri())
+        .env("JR_AUTH_HEADER", "Basic dGVzdDp0ZXN0")
+        .env("XDG_CACHE_HOME", cache_dir.path())
+        .env("JR_CACHE_DIR", cache_dir.path().join("jr"))
+        .env("XDG_CONFIG_HOME", config_dir.path())
+        .env("JR_CONFIG_DIR", config_dir.path().join("jr"))
+        .args([
+            "issue",
+            "create",
+            "--project",
+            "HELP",
+            "--request-type",
+            "Password Reset",
+            "--summary",
+            "test",
+            "--field",
+            "customfield_50000:asset=WS-9:777",
+            "--no-input",
+            "--output",
+            "json",
+        ])
+        .output()
+        .unwrap();
+
+    let stderr = String::from_utf8_lossy(&output.stderr);
+    assert!(
+        output.status.success(),
+        "AC-006: expected exit 0. got exit {:?}. stderr: {stderr}",
+        output.status.code()
+    );
+
+    let requests = server.received_requests().await.expect("requests recorded");
+    let workspace_hits = requests
+        .iter()
+        .filter(|r| r.url.path() == "/rest/servicedeskapi/assets/workspace")
+        .count();
+    assert_eq!(
+        workspace_hits, 0,
+        "AC-006: explicit WORKSPACE:OBJECTID form must NEVER call \
+         get_or_fetch_workspace_id (no cache/API lookup); got {workspace_hits} hits"
+    );
+
+    let jsm_post = requests
+        .iter()
+        .find(|r| r.url.path() == "/rest/servicedeskapi/request" && r.method.as_str() == "POST")
+        .expect("AC-006: JSM POST must have been made");
+    let body: Value =
+        serde_json::from_slice(&jsm_post.body).expect("AC-006: POST body must be valid JSON");
+    assert_eq!(
+        body["requestFieldValues"]["customfield_50000"],
+        json!([{"workspaceId": "WS-9", "id": "WS-9:777", "objectId": "777"}]),
+        "AC-006: explicit :asset form must produce a pure array-wrap of the \
+         already-qualified WORKSPACE:OBJECTID pair; got body: {body}"
+    );
+}
+
+/// AC-006: a BARE `<objectId>` `:asset` value (no `:`) requires the L2 call
+/// site to call `get_or_fetch_workspace_id` FIRST (AT MOST ONCE per
+/// invocation, mirroring the platform-path invariant) before the array can
+/// be composed — `build()` never sees a bare `:asset` value, only the
+/// L2-resolved, fully-composed result. The workspace-discovery mock must
+/// receive exactly 1 hit.
+#[tokio::test]
+async fn test_bc_3_8_008_asset_bare_form_l2_resolves_workspace_before_build() {
+    let server = MockServer::start().await;
+    let cache_dir = tempfile::tempdir().unwrap();
+    let config_dir = tempfile::tempdir().unwrap();
+    write_minimal_config(config_dir.path(), &server.uri());
+
+    mount_project_meta_help(&server).await;
+    mount_service_desk_list(&server).await;
+    mount_request_type_list(&server).await;
+
+    Mock::given(method("GET"))
+        .and(path("/rest/servicedeskapi/assets/workspace"))
+        .respond_with(ResponseTemplate::new(200).set_body_json(json!({
+            "size": 1, "start": 0, "limit": 25, "isLastPage": true,
+            "values": [{"workspaceId": "ws-42"}]
+        })))
+        .mount(&server)
+        .await;
+
+    Mock::given(method("POST"))
+        .and(path("/rest/servicedeskapi/request"))
+        .respond_with(ResponseTemplate::new(201).set_body_json(jsm_created_response()))
+        .mount(&server)
+        .await;
+
+    let output = Command::cargo_bin("jr")
+        .unwrap()
+        .env("JR_BASE_URL", server.uri())
+        .env("JR_AUTH_HEADER", "Basic dGVzdDp0ZXN0")
+        .env("XDG_CACHE_HOME", cache_dir.path())
+        .env("JR_CACHE_DIR", cache_dir.path().join("jr"))
+        .env("XDG_CONFIG_HOME", config_dir.path())
+        .env("JR_CONFIG_DIR", config_dir.path().join("jr"))
+        .args([
+            "issue",
+            "create",
+            "--project",
+            "HELP",
+            "--request-type",
+            "Password Reset",
+            "--summary",
+            "test",
+            "--field",
+            "customfield_50001:asset=888",
+            "--no-input",
+            "--output",
+            "json",
+        ])
+        .output()
+        .unwrap();
+
+    let stderr = String::from_utf8_lossy(&output.stderr);
+    assert!(
+        output.status.success(),
+        "AC-006: expected exit 0. got exit {:?}. stderr: {stderr}",
+        output.status.code()
+    );
+
+    let requests = server.received_requests().await.expect("requests recorded");
+    let workspace_hits = requests
+        .iter()
+        .filter(|r| r.url.path() == "/rest/servicedeskapi/assets/workspace")
+        .count();
+    assert_eq!(
+        workspace_hits, 1,
+        "AC-006: bare :asset form must call get_or_fetch_workspace_id EXACTLY \
+         ONCE; got {workspace_hits} hits"
+    );
+
+    let jsm_post = requests
+        .iter()
+        .find(|r| r.url.path() == "/rest/servicedeskapi/request" && r.method.as_str() == "POST")
+        .expect("AC-006: JSM POST must have been made");
+    let body: Value =
+        serde_json::from_slice(&jsm_post.body).expect("AC-006: POST body must be valid JSON");
+    assert_eq!(
+        body["requestFieldValues"]["customfield_50001"],
+        json!([{"workspaceId": "ws-42", "id": "ws-42:888", "objectId": "888"}]),
+        "AC-006: bare :asset form must resolve workspaceId via cache/API before \
+         composing the array; got body: {body}"
+    );
+}
+
+// ─── ADV-S578-3-P1-002: malformed `:asset` value negative coverage ──────────
+//
+// GAP (adversary Pass-1 finding ADV-S578-3-P1-002): the two AC-006 tests
+// above cover only WELL-FORMED `:asset` values (explicit
+// `WORKSPACE:OBJECTID` and bare `<objectId>`). The malformed-shape catalog
+// that BC-3.4.030 EC-3.4.030-3 + BC-3.4.031 EC-2a/EC-2b/EC-2d mandate for the
+// platform path — `src/cli/issue/field_resolve.rs::compose_asset_hint`,
+// mirrored by `tests/issue_field_hint_kinds.rs::test_bc_3_4_031_ec2a/ec2b/
+// ec2c/ec2d/ec3` — was never exercised on the JSM path via BC-3.8.008's
+// shared malformed-hint exit-64 catalog. This let a real HIGH impl gap ship:
+// `resolve_asset_field_l2` (`jsm_create.rs`) and `compose_asset_wire`
+// (`requests.rs`) perform ZERO validation today — a malformed value sails
+// straight through the L2 workspace fetch and/or the JSM POST instead of
+// being rejected pre-flight, exactly mirroring the platform path's four
+// `compose_asset_hint` checks.
+//
+// `resolve_asset_field_l2` mirrors `compose_asset_hint`'s four checks (empty
+// value, empty workspace segment, extra colon, non-numeric/empty objectId)
+// BEFORE either the L2 workspace fetch or `build()` — every test below pins
+// that pre-flight rejection: exit 64, zero workspace-discovery GET hits, and
+// zero JSM POST hits.
+
+/// EC-2a (via BC-3.8.008's shared malformed-hint catalog): `--field
+/// cf:asset=` (empty value) must exit 64 with the exact "asset reference
+/// cannot be empty" message `compose_asset_hint` uses on the platform path —
+/// BEFORE any workspace-discovery GET or JSM POST.
+#[tokio::test]
+async fn test_ec_3_8_008_asset_empty_value_exits_64_zero_post() {
+    let server = MockServer::start().await;
+    let cache_dir = tempfile::tempdir().unwrap();
+    let config_dir = tempfile::tempdir().unwrap();
+    write_minimal_config(config_dir.path(), &server.uri());
+
+    mount_project_meta_help(&server).await;
+    mount_service_desk_list(&server).await;
+    mount_request_type_list(&server).await;
+
+    Mock::given(method("GET"))
+        .and(path("/rest/servicedeskapi/assets/workspace"))
+        .respond_with(ResponseTemplate::new(200).set_body_json(json!({
+            "size": 1, "start": 0, "limit": 25, "isLastPage": true,
+            "values": [{"workspaceId": "should-not-be-fetched"}]
+        })))
+        .expect(0)
+        .mount(&server)
+        .await;
+
+    Mock::given(method("POST"))
+        .and(path("/rest/servicedeskapi/request"))
+        .respond_with(ResponseTemplate::new(201).set_body_json(jsm_created_response()))
+        .expect(0)
+        .mount(&server)
+        .await;
+
+    let output = Command::cargo_bin("jr")
+        .unwrap()
+        .env("JR_BASE_URL", server.uri())
+        .env("JR_AUTH_HEADER", "Basic dGVzdDp0ZXN0")
+        .env("XDG_CACHE_HOME", cache_dir.path())
+        .env("JR_CACHE_DIR", cache_dir.path().join("jr"))
+        .env("XDG_CONFIG_HOME", config_dir.path())
+        .env("JR_CONFIG_DIR", config_dir.path().join("jr"))
+        .args([
+            "issue",
+            "create",
+            "--project",
+            "HELP",
+            "--request-type",
+            "Password Reset",
+            "--summary",
+            "test",
+            "--field",
+            "customfield_54001:asset=",
+            "--no-input",
+            "--output",
+            "json",
+        ])
+        .output()
+        .unwrap();
+
+    let stderr = String::from_utf8_lossy(&output.stderr);
+    assert_eq!(
+        output.status.code(),
+        Some(64),
+        "ADV-S578-3-P1-002 EC-2a: expected exit 64 for empty :asset value; \
+         got exit {:?}. stderr: {stderr}",
+        output.status.code()
+    );
+    assert!(
+        stderr.contains("asset reference cannot be empty"),
+        "ADV-S578-3-P1-002 EC-2a: message must match compose_asset_hint's \
+         platform-path wording verbatim; stderr={stderr}"
+    );
+}
+
+/// EC-2c/EC-2b (via BC-3.8.008's shared malformed-hint catalog): `--field
+/// cf:asset=:777` (colon present, empty workspace segment) must exit 64 with
+/// the exact "workspace segment cannot be empty" message `compose_asset_hint`
+/// uses on the platform path — BEFORE any workspace-discovery GET or JSM
+/// POST. This value has a numeric objectId segment ("777"), so the
+/// empty-workspace check must fire and take PRECEDENCE over the generic
+/// numeric check, exactly as the platform sibling's EC-2c precedence test
+/// asserts.
+#[tokio::test]
+async fn test_ec_3_8_008_asset_empty_workspace_segment_exits_64_zero_post() {
+    let server = MockServer::start().await;
+    let cache_dir = tempfile::tempdir().unwrap();
+    let config_dir = tempfile::tempdir().unwrap();
+    write_minimal_config(config_dir.path(), &server.uri());
+
+    mount_project_meta_help(&server).await;
+    mount_service_desk_list(&server).await;
+    mount_request_type_list(&server).await;
+
+    Mock::given(method("GET"))
+        .and(path("/rest/servicedeskapi/assets/workspace"))
+        .respond_with(ResponseTemplate::new(200).set_body_json(json!({
+            "size": 1, "start": 0, "limit": 25, "isLastPage": true,
+            "values": [{"workspaceId": "should-not-be-fetched"}]
+        })))
+        .expect(0)
+        .mount(&server)
+        .await;
+
+    Mock::given(method("POST"))
+        .and(path("/rest/servicedeskapi/request"))
+        .respond_with(ResponseTemplate::new(201).set_body_json(jsm_created_response()))
+        .expect(0)
+        .mount(&server)
+        .await;
+
+    let output = Command::cargo_bin("jr")
+        .unwrap()
+        .env("JR_BASE_URL", server.uri())
+        .env("JR_AUTH_HEADER", "Basic dGVzdDp0ZXN0")
+        .env("XDG_CACHE_HOME", cache_dir.path())
+        .env("JR_CACHE_DIR", cache_dir.path().join("jr"))
+        .env("XDG_CONFIG_HOME", config_dir.path())
+        .env("JR_CONFIG_DIR", config_dir.path().join("jr"))
+        .args([
+            "issue",
+            "create",
+            "--project",
+            "HELP",
+            "--request-type",
+            "Password Reset",
+            "--summary",
+            "test",
+            "--field",
+            "customfield_54002:asset=:777",
+            "--no-input",
+            "--output",
+            "json",
+        ])
+        .output()
+        .unwrap();
+
+    let stderr = String::from_utf8_lossy(&output.stderr);
+    assert_eq!(
+        output.status.code(),
+        Some(64),
+        "ADV-S578-3-P1-002 EC-2c/EC-2b: expected exit 64 for empty workspace \
+         segment; got exit {:?}. stderr: {stderr}",
+        output.status.code()
+    );
+    assert!(
+        stderr.contains("workspace segment cannot be empty"),
+        "ADV-S578-3-P1-002 EC-2c/EC-2b: message must match compose_asset_hint's \
+         platform-path wording verbatim; stderr={stderr}"
+    );
+}
+
+/// EC-2d (via BC-3.8.008's shared malformed-hint catalog): `--field
+/// cf:asset=W:Y:Z` (extra colon) must exit 64 with the exact "unexpected
+/// extra ':'" message `compose_asset_hint` uses on the platform path —
+/// BEFORE any workspace-discovery GET or JSM POST. This must be a DISTINCT
+/// message from the generic "objectId must be numeric" error, mirroring the
+/// platform sibling's EC-2d precedence test.
+#[tokio::test]
+async fn test_ec_3_8_008_asset_extra_colon_exits_64_zero_post() {
+    let server = MockServer::start().await;
+    let cache_dir = tempfile::tempdir().unwrap();
+    let config_dir = tempfile::tempdir().unwrap();
+    write_minimal_config(config_dir.path(), &server.uri());
+
+    mount_project_meta_help(&server).await;
+    mount_service_desk_list(&server).await;
+    mount_request_type_list(&server).await;
+
+    Mock::given(method("GET"))
+        .and(path("/rest/servicedeskapi/assets/workspace"))
+        .respond_with(ResponseTemplate::new(200).set_body_json(json!({
+            "size": 1, "start": 0, "limit": 25, "isLastPage": true,
+            "values": [{"workspaceId": "should-not-be-fetched"}]
+        })))
+        .expect(0)
+        .mount(&server)
+        .await;
+
+    Mock::given(method("POST"))
+        .and(path("/rest/servicedeskapi/request"))
+        .respond_with(ResponseTemplate::new(201).set_body_json(jsm_created_response()))
+        .expect(0)
+        .mount(&server)
+        .await;
+
+    let output = Command::cargo_bin("jr")
+        .unwrap()
+        .env("JR_BASE_URL", server.uri())
+        .env("JR_AUTH_HEADER", "Basic dGVzdDp0ZXN0")
+        .env("XDG_CACHE_HOME", cache_dir.path())
+        .env("JR_CACHE_DIR", cache_dir.path().join("jr"))
+        .env("XDG_CONFIG_HOME", config_dir.path())
+        .env("JR_CONFIG_DIR", config_dir.path().join("jr"))
+        .args([
+            "issue",
+            "create",
+            "--project",
+            "HELP",
+            "--request-type",
+            "Password Reset",
+            "--summary",
+            "test",
+            "--field",
+            "customfield_54003:asset=W:Y:Z",
+            "--no-input",
+            "--output",
+            "json",
+        ])
+        .output()
+        .unwrap();
+
+    let stderr = String::from_utf8_lossy(&output.stderr);
+    assert_eq!(
+        output.status.code(),
+        Some(64),
+        "ADV-S578-3-P1-002 EC-2d: expected exit 64 for extra ':' in :asset \
+         value; got exit {:?}. stderr: {stderr}",
+        output.status.code()
+    );
+    assert!(
+        stderr.contains("unexpected extra ':'"),
+        "ADV-S578-3-P1-002 EC-2d: message must name the extra-colon mistake \
+         specifically (compose_asset_hint's platform-path wording verbatim), \
+         not the generic numeric-objectId message; stderr={stderr}"
+    );
+}
+
+/// EC-3 (via BC-3.8.008's shared malformed-hint catalog): `--field
+/// cf:asset=abc` (bare, non-numeric objectId) and `--field
+/// cf:asset=WS:abc` (explicit workspace, non-numeric objectId) must both
+/// exit 64 with the exact "objectId must be numeric" message
+/// `compose_asset_hint` uses on the platform path — BEFORE any
+/// workspace-discovery GET or JSM POST.
+#[tokio::test]
+async fn test_ec_3_8_008_asset_non_numeric_objectid_exits_64_zero_post() {
+    let server = MockServer::start().await;
+    let cache_dir = tempfile::tempdir().unwrap();
+    let config_dir = tempfile::tempdir().unwrap();
+    write_minimal_config(config_dir.path(), &server.uri());
+
+    mount_project_meta_help(&server).await;
+    mount_service_desk_list(&server).await;
+    mount_request_type_list(&server).await;
+
+    Mock::given(method("GET"))
+        .and(path("/rest/servicedeskapi/assets/workspace"))
+        .respond_with(ResponseTemplate::new(200).set_body_json(json!({
+            "size": 1, "start": 0, "limit": 25, "isLastPage": true,
+            "values": [{"workspaceId": "should-not-be-fetched"}]
+        })))
+        .expect(0)
+        .mount(&server)
+        .await;
+
+    Mock::given(method("POST"))
+        .and(path("/rest/servicedeskapi/request"))
+        .respond_with(ResponseTemplate::new(201).set_body_json(jsm_created_response()))
+        .expect(0)
+        .mount(&server)
+        .await;
+
+    for value in ["abc", "WS:abc"] {
+        let field_arg = format!("customfield_54004:asset={value}");
+        let output = Command::cargo_bin("jr")
+            .unwrap()
+            .env("JR_BASE_URL", server.uri())
+            .env("JR_AUTH_HEADER", "Basic dGVzdDp0ZXN0")
+            .env("XDG_CACHE_HOME", cache_dir.path())
+            .env("JR_CACHE_DIR", cache_dir.path().join("jr"))
+            .env("XDG_CONFIG_HOME", config_dir.path())
+            .env("JR_CONFIG_DIR", config_dir.path().join("jr"))
+            .args([
+                "issue",
+                "create",
+                "--project",
+                "HELP",
+                "--request-type",
+                "Password Reset",
+                "--summary",
+                "test",
+                "--field",
+                &field_arg,
+                "--no-input",
+                "--output",
+                "json",
+            ])
+            .output()
+            .unwrap();
+
+        let stderr = String::from_utf8_lossy(&output.stderr);
+        assert_eq!(
+            output.status.code(),
+            Some(64),
+            "ADV-S578-3-P1-002 EC-3: expected exit 64 for non-numeric \
+             objectId; value={value:?}; got exit {:?}. stderr: {stderr}",
+            output.status.code()
+        );
+        assert!(
+            stderr.contains("objectId must be numeric"),
+            "ADV-S578-3-P1-002 EC-3: message must match compose_asset_hint's \
+             platform-path wording verbatim; value={value:?}; stderr={stderr}"
+        );
+    }
+}
+
+/// EC-2b (adversarial Pass-2 finding P2-001, MEDIUM — mutation-survivability):
+/// `--field cf:asset=ws:` (colon present, objectId segment EMPTY, distinct
+/// from `WS:abc`'s non-empty-but-non-numeric case above) must exit 64 with
+/// the SAME "objectId must be numeric" message `compose_asset_hint` uses on
+/// the platform path — BEFORE any workspace-discovery GET or JSM POST. This
+/// pins the load-bearing `object_id.is_empty()` half of
+/// `resolve_asset_field_l2`'s combined `object_id.is_empty() ||
+/// !object_id.chars().all(|c| c.is_ascii_digit())` check (`jsm_create.rs`) —
+/// without a test exercising an explicit-workspace value whose objectId
+/// segment is empty (as opposed to merely non-numeric), a mutant dropping
+/// the `is_empty()` conjunct would let `ws:` fall through to
+/// `format!("{workspace_id}:{object_id}")` and POST a malformed
+/// `{"objectId":""}` array on `requestFieldValues`, undetected.
+#[tokio::test]
+async fn test_ec_3_8_008_asset_empty_objectid_with_colon_exits_64_zero_post() {
+    let server = MockServer::start().await;
+    let cache_dir = tempfile::tempdir().unwrap();
+    let config_dir = tempfile::tempdir().unwrap();
+    write_minimal_config(config_dir.path(), &server.uri());
+
+    mount_project_meta_help(&server).await;
+    mount_service_desk_list(&server).await;
+    mount_request_type_list(&server).await;
+
+    Mock::given(method("GET"))
+        .and(path("/rest/servicedeskapi/assets/workspace"))
+        .respond_with(ResponseTemplate::new(200).set_body_json(json!({
+            "size": 1, "start": 0, "limit": 25, "isLastPage": true,
+            "values": [{"workspaceId": "should-not-be-fetched"}]
+        })))
+        .expect(0)
+        .mount(&server)
+        .await;
+
+    Mock::given(method("POST"))
+        .and(path("/rest/servicedeskapi/request"))
+        .respond_with(ResponseTemplate::new(201).set_body_json(jsm_created_response()))
+        .expect(0)
+        .mount(&server)
+        .await;
+
+    let output = Command::cargo_bin("jr")
+        .unwrap()
+        .env("JR_BASE_URL", server.uri())
+        .env("JR_AUTH_HEADER", "Basic dGVzdDp0ZXN0")
+        .env("XDG_CACHE_HOME", cache_dir.path())
+        .env("JR_CACHE_DIR", cache_dir.path().join("jr"))
+        .env("XDG_CONFIG_HOME", config_dir.path())
+        .env("JR_CONFIG_DIR", config_dir.path().join("jr"))
+        .args([
+            "issue",
+            "create",
+            "--project",
+            "HELP",
+            "--request-type",
+            "Password Reset",
+            "--summary",
+            "test",
+            "--field",
+            "customfield_54005:asset=ws:",
+            "--no-input",
+            "--output",
+            "json",
+        ])
+        .output()
+        .unwrap();
+
+    let stderr = String::from_utf8_lossy(&output.stderr);
+    assert_eq!(
+        output.status.code(),
+        Some(64),
+        "P2-001: expected exit 64 for 'ws:' (empty objectId segment with \
+         colon present); got exit {:?}. stderr: {stderr}",
+        output.status.code()
+    );
+    assert!(
+        stderr.contains("objectId must be numeric"),
+        "P2-001: message must match compose_asset_hint's platform-path \
+         wording verbatim (the object_id.is_empty() conjunct must fire, not \
+         fall through to a malformed POST); stderr={stderr}"
+    );
+}
+
+// ─── AC-007 (BC-3.4.030 taxonomy, VP-578-022): JSM-path independent assertion ─
+
+/// AC-007 (VP-578-022 — 1 of 3 shared call sites; this is `jsm_create.rs`'s
+/// OWN independent assertion, NOT "already covered" by S-578-2's edit-path
+/// test or S-578-4's create-path test of the same VP): 403/404 from `GET
+/// /rest/servicedeskapi/assets/workspace` -> exit 64, "Assets is not
+/// available on this Jira site..." (the SAME `get_or_fetch_workspace_id`
+/// error mapping every call site shares — `src/api/assets/workspace.rs`).
+#[tokio::test(flavor = "multi_thread", worker_threads = 2)]
+async fn test_bc_3_4_030_jsm_path_asset_cold_cache_403_404_assets_unavailable() {
+    for status in [403u16, 404u16] {
+        let server = MockServer::start().await;
+        let cache_dir = tempfile::tempdir().unwrap();
+        let config_dir = tempfile::tempdir().unwrap();
+        write_minimal_config(config_dir.path(), &server.uri());
+
+        mount_project_meta_help(&server).await;
+        mount_service_desk_list(&server).await;
+        mount_request_type_list(&server).await;
+
+        let _guard = Mock::given(method("GET"))
+            .and(path("/rest/servicedeskapi/assets/workspace"))
+            .respond_with(ResponseTemplate::new(status).set_body_json(json!({
+                "errorMessages": ["nope"], "errors": {}
+            })))
+            .mount_as_scoped(&server)
+            .await;
+
+        Mock::given(method("POST"))
+            .and(path("/rest/servicedeskapi/request"))
+            .respond_with(ResponseTemplate::new(201).set_body_json(jsm_created_response()))
+            .expect(0)
+            .mount(&server)
+            .await;
+
+        let output = Command::cargo_bin("jr")
+            .unwrap()
+            .env("JR_BASE_URL", server.uri())
+            .env("JR_AUTH_HEADER", "Basic dGVzdDp0ZXN0")
+            .env("XDG_CACHE_HOME", cache_dir.path())
+            .env("JR_CACHE_DIR", cache_dir.path().join("jr"))
+            .env("XDG_CONFIG_HOME", config_dir.path())
+            .env("JR_CONFIG_DIR", config_dir.path().join("jr"))
+            .args([
+                "issue",
+                "create",
+                "--project",
+                "HELP",
+                "--request-type",
+                "Password Reset",
+                "--summary",
+                "test",
+                "--field",
+                "customfield_60000:asset=456",
+                "--no-input",
+            ])
+            .output()
+            .unwrap();
+
+        let stderr = String::from_utf8_lossy(&output.stderr);
+        assert_eq!(
+            output.status.code(),
+            Some(64),
+            "AC-007 status={status}: expected exit 64; stderr={stderr}"
+        );
+        assert!(
+            stderr.contains(
+                "Assets is not available on this Jira site. Assets requires \
+                 Jira Service Management Premium or Enterprise."
+            ),
+            "AC-007 status={status}: message must match this taxonomy row's \
+             specific wording; stderr={stderr}"
+        );
+    }
+}
+
+/// AC-007: `GET /rest/servicedeskapi/assets/workspace` returning 200 with
+/// zero entries -> exit 64, "No Assets workspace found on this Jira
+/// site...".
+#[tokio::test(flavor = "multi_thread", worker_threads = 2)]
+async fn test_bc_3_4_030_jsm_path_asset_cold_cache_empty_workspace() {
+    let server = MockServer::start().await;
+    let cache_dir = tempfile::tempdir().unwrap();
+    let config_dir = tempfile::tempdir().unwrap();
+    write_minimal_config(config_dir.path(), &server.uri());
+
+    mount_project_meta_help(&server).await;
+    mount_service_desk_list(&server).await;
+    mount_request_type_list(&server).await;
+
+    let _guard = Mock::given(method("GET"))
+        .and(path("/rest/servicedeskapi/assets/workspace"))
+        .respond_with(ResponseTemplate::new(200).set_body_json(json!({
+            "size": 0, "start": 0, "limit": 25, "isLastPage": true, "values": []
+        })))
+        .mount_as_scoped(&server)
+        .await;
+
+    Mock::given(method("POST"))
+        .and(path("/rest/servicedeskapi/request"))
+        .respond_with(ResponseTemplate::new(201).set_body_json(jsm_created_response()))
+        .expect(0)
+        .mount(&server)
+        .await;
+
+    let output = Command::cargo_bin("jr")
+        .unwrap()
+        .env("JR_BASE_URL", server.uri())
+        .env("JR_AUTH_HEADER", "Basic dGVzdDp0ZXN0")
+        .env("XDG_CACHE_HOME", cache_dir.path())
+        .env("JR_CACHE_DIR", cache_dir.path().join("jr"))
+        .env("XDG_CONFIG_HOME", config_dir.path())
+        .env("JR_CONFIG_DIR", config_dir.path().join("jr"))
+        .args([
+            "issue",
+            "create",
+            "--project",
+            "HELP",
+            "--request-type",
+            "Password Reset",
+            "--summary",
+            "test",
+            "--field",
+            "customfield_60001:asset=456",
+            "--no-input",
+        ])
+        .output()
+        .unwrap();
+
+    let stderr = String::from_utf8_lossy(&output.stderr);
+    assert_eq!(
+        output.status.code(),
+        Some(64),
+        "AC-007 empty-workspace: expected exit 64; stderr={stderr}"
+    );
+    assert!(
+        stderr.contains(
+            "No Assets workspace found on this Jira site. Assets requires \
+             Jira Service Management Premium or Enterprise."
+        ),
+        "AC-007 empty-workspace: message must match this taxonomy row's \
+         specific wording; stderr={stderr}"
+    );
+}
+
+/// AC-007: `GET /rest/servicedeskapi/assets/workspace` returning 401 must
+/// use the STANDARD `JrError::NotAuthenticated` mapping (exit 2) — not a
+/// bespoke Assets-specific mapping.
+#[tokio::test(flavor = "multi_thread", worker_threads = 2)]
+async fn test_bc_3_4_030_jsm_path_asset_cold_cache_401_standard_auth_mapping() {
+    let server = MockServer::start().await;
+    let cache_dir = tempfile::tempdir().unwrap();
+    let config_dir = tempfile::tempdir().unwrap();
+    write_minimal_config(config_dir.path(), &server.uri());
+
+    mount_project_meta_help(&server).await;
+    mount_service_desk_list(&server).await;
+    mount_request_type_list(&server).await;
+
+    let _guard = Mock::given(method("GET"))
+        .and(path("/rest/servicedeskapi/assets/workspace"))
+        .respond_with(ResponseTemplate::new(401).set_body_json(json!({
+            "errorMessages": ["Client must be authenticated to access this resource."],
+            "errors": {}
+        })))
+        .mount_as_scoped(&server)
+        .await;
+
+    Mock::given(method("POST"))
+        .and(path("/rest/servicedeskapi/request"))
+        .respond_with(ResponseTemplate::new(201).set_body_json(jsm_created_response()))
+        .expect(0)
+        .mount(&server)
+        .await;
+
+    let output = Command::cargo_bin("jr")
+        .unwrap()
+        .env("JR_BASE_URL", server.uri())
+        .env("JR_AUTH_HEADER", "Basic dGVzdDp0ZXN0")
+        .env("XDG_CACHE_HOME", cache_dir.path())
+        .env("JR_CACHE_DIR", cache_dir.path().join("jr"))
+        .env("XDG_CONFIG_HOME", config_dir.path())
+        .env("JR_CONFIG_DIR", config_dir.path().join("jr"))
+        .args([
+            "issue",
+            "create",
+            "--project",
+            "HELP",
+            "--request-type",
+            "Password Reset",
+            "--summary",
+            "test",
+            "--field",
+            "customfield_60002:asset=456",
+            "--no-input",
+        ])
+        .output()
+        .unwrap();
+
+    let stderr = String::from_utf8_lossy(&output.stderr);
+    assert_eq!(
+        output.status.code(),
+        Some(2),
+        "AC-007 401: 401 must use the standard NotAuthenticated mapping \
+         (exit 2); stderr={stderr}"
+    );
+    assert!(stderr.contains("Not authenticated"), "stderr={stderr}");
+}
+
+/// AC-007: `GET /rest/servicedeskapi/assets/workspace` returning 5xx, and a
+/// network-unreachable base URL, both use the STANDARD `ApiError`/
+/// `NetworkError` mapping (exit 1).
+///
+/// Sub-case (a) 5xx: the workspace-discovery GET returns 500 and the
+/// command must exit 1 via the standard `ApiError` mapping.
+///
+/// Sub-case (b) network error: uses a connect-refused base URL
+/// (`http://127.0.0.1:1`, matching the established convention in
+/// `tests/assets_errors.rs` and the S-578-2 edit-path taxonomy test). This
+/// necessarily exercises the FIRST HTTP call the JSM create flow makes
+/// (`require_service_desk`'s project-meta lookup), not exclusively the
+/// workspace-discovery GET, since `jr`'s single `JR_BASE_URL` applies to
+/// every call — so this sub-case is PRE-SATISFIED GREEN today (the failure
+/// occurs before field-hint dispatch is ever reached, identically with or
+/// without this story's implementation), demonstrating the same standard
+/// NetworkError/exit-1 mapping the underlying `get_or_fetch_workspace_id`
+/// machinery shares. This mirrors the identical precedent and caveat in
+/// `tests/issue_field_hint_kinds.rs`'s
+/// `test_bc_3_4_030_edit_path_asset_cold_cache_5xx_network_standard_mapping`.
+#[tokio::test(flavor = "multi_thread", worker_threads = 2)]
+async fn test_bc_3_4_030_jsm_path_asset_cold_cache_5xx_network_standard_mapping() {
+    // (a) 5xx.
+    {
+        let server = MockServer::start().await;
+        let cache_dir = tempfile::tempdir().unwrap();
+        let config_dir = tempfile::tempdir().unwrap();
+        write_minimal_config(config_dir.path(), &server.uri());
+
+        mount_project_meta_help(&server).await;
+        mount_service_desk_list(&server).await;
+        mount_request_type_list(&server).await;
+
+        Mock::given(method("GET"))
+            .and(path("/rest/servicedeskapi/assets/workspace"))
+            .respond_with(ResponseTemplate::new(500).set_body_json(json!({
+                "errorMessages": ["Internal server error"], "errors": {}
+            })))
+            .mount(&server)
+            .await;
+
+        Mock::given(method("POST"))
+            .and(path("/rest/servicedeskapi/request"))
+            .respond_with(ResponseTemplate::new(201).set_body_json(jsm_created_response()))
+            .expect(0)
+            .mount(&server)
+            .await;
+
+        let output = Command::cargo_bin("jr")
+            .unwrap()
+            .env("JR_BASE_URL", server.uri())
+            .env("JR_AUTH_HEADER", "Basic dGVzdDp0ZXN0")
+            .env("XDG_CACHE_HOME", cache_dir.path())
+            .env("JR_CACHE_DIR", cache_dir.path().join("jr"))
+            .env("XDG_CONFIG_HOME", config_dir.path())
+            .env("JR_CONFIG_DIR", config_dir.path().join("jr"))
+            .args([
+                "issue",
+                "create",
+                "--project",
+                "HELP",
+                "--request-type",
+                "Password Reset",
+                "--summary",
+                "test",
+                "--field",
+                "customfield_60003:asset=456",
+                "--no-input",
+            ])
+            .output()
+            .unwrap();
+
+        let stderr = String::from_utf8_lossy(&output.stderr);
+        assert_eq!(
+            output.status.code(),
+            Some(1),
+            "AC-007 5xx: 5xx must use the standard ApiError mapping (exit 1); \
+             stderr={stderr}"
+        );
+        assert!(stderr.contains("API error (500)"), "stderr={stderr}");
+    }
+
+    // (b) network error — connect-refused (see doc comment above): failure
+    // occurs at the FIRST HTTP call, before any field-hint dispatch is
+    // reached.
+    {
+        let cache_dir = tempfile::tempdir().unwrap();
+        let config_dir = tempfile::tempdir().unwrap();
+        write_minimal_config(config_dir.path(), "http://127.0.0.1:1");
+
+        let output = Command::cargo_bin("jr")
+            .unwrap()
+            .env("JR_BASE_URL", "http://127.0.0.1:1")
+            .env("JR_AUTH_HEADER", "Basic dGVzdDp0ZXN0")
+            .env("XDG_CACHE_HOME", cache_dir.path())
+            .env("JR_CACHE_DIR", cache_dir.path().join("jr"))
+            .env("XDG_CONFIG_HOME", config_dir.path())
+            .env("JR_CONFIG_DIR", config_dir.path().join("jr"))
+            .args([
+                "issue",
+                "create",
+                "--project",
+                "HELP",
+                "--request-type",
+                "Password Reset",
+                "--summary",
+                "test",
+                "--field",
+                "customfield_60004:asset=456",
+                "--no-input",
+            ])
+            .output()
+            .unwrap();
+
+        let stderr = String::from_utf8_lossy(&output.stderr);
+        assert_eq!(
+            output.status.code(),
+            Some(1),
+            "AC-007 network: network error must use the standard NetworkError \
+             mapping (exit 1); stderr={stderr}"
+        );
+        assert!(stderr.contains("Could not reach"), "stderr={stderr}");
+    }
+}
+
+// ─── AC-008 (VP-578-015): bare-field byte-identity regression pin ────────────
+
+/// AC-008 / VP-578-015: a bare (unhinted) `--field NAME=VALUE` on the JSM
+/// create path produces BYTE-IDENTICAL `requestFieldValues` wire output
+/// before and after the S-578-3 amendment — the kind-aware dispatch is
+/// purely additive for `kind: None`. `summary`/`description`/`priority`/
+/// `labels` (BC-3.8.005..007) sit in the SAME `rfv` map and are untouched
+/// by this amendment.
+///
+/// PRE-SATISFIED GREEN: the bare-form arm (`None | Some(Option) =>
+/// Value::String(...)`) is unchanged, pre-existing logic — this test is a
+/// regression pin, not a Red Gate failure.
+#[tokio::test]
+async fn test_vp_578_015_bare_field_byte_identical_pre_post_amendment() {
+    let server = MockServer::start().await;
+    let cache_dir = tempfile::tempdir().unwrap();
+    let config_dir = tempfile::tempdir().unwrap();
+    write_minimal_config(config_dir.path(), &server.uri());
+
+    mount_project_meta_help(&server).await;
+    mount_service_desk_list(&server).await;
+    mount_request_type_list(&server).await;
+
+    Mock::given(method("POST"))
+        .and(path("/rest/servicedeskapi/request"))
+        .respond_with(ResponseTemplate::new(201).set_body_json(jsm_created_response()))
+        .expect(1)
+        .mount(&server)
+        .await;
+
+    let output = Command::cargo_bin("jr")
+        .unwrap()
+        .env("JR_BASE_URL", server.uri())
+        .env("JR_AUTH_HEADER", "Basic dGVzdDp0ZXN0")
+        .env("XDG_CACHE_HOME", cache_dir.path())
+        .env("JR_CACHE_DIR", cache_dir.path().join("jr"))
+        .env("XDG_CONFIG_HOME", config_dir.path())
+        .env("JR_CONFIG_DIR", config_dir.path().join("jr"))
+        .args([
+            "issue",
+            "create",
+            "--project",
+            "HELP",
+            "--request-type",
+            "Password Reset",
+            "--summary",
+            "test",
+            "--priority",
+            "High",
+            "--label",
+            "alpha",
+            "--field",
+            "customfield_70000=BareUnhintedValue",
+            "--no-input",
+            "--output",
+            "json",
+        ])
+        .output()
+        .unwrap();
+
+    let stderr = String::from_utf8_lossy(&output.stderr);
+    assert!(
+        output.status.success(),
+        "AC-008: expected exit 0, got {:?}. stderr: {stderr}",
+        output.status.code()
+    );
+
+    let requests = server.received_requests().await.expect("requests recorded");
+    let jsm_post = requests
+        .iter()
+        .find(|r| r.url.path() == "/rest/servicedeskapi/request" && r.method.as_str() == "POST")
+        .expect("AC-008: JSM POST must have been made");
+    let body: Value =
+        serde_json::from_slice(&jsm_post.body).expect("AC-008: POST body must be valid JSON");
+    let rfv = body
+        .get("requestFieldValues")
+        .expect("AC-008: requestFieldValues must be present");
+
+    // COMPLETE-MAP equality (VP-578-015 review fix B2): assert the entire
+    // requestFieldValues object against the full expected wire shape in one
+    // shot, so an added/removed/renamed key OR a wrong value on any existing
+    // key (including the exact `labels` contents, not just its length) fails
+    // this test. This makes the "BYTE-IDENTICAL" claim in this test's name
+    // real rather than a per-key spot-check that an added key could slip
+    // past silently.
+    assert_eq!(
+        rfv,
+        &json!({
+            "summary": "test",
+            "priority": {"name": "High"},
+            "labels": ["alpha"],
+            "customfield_70000": "BareUnhintedValue"
+        }),
+        "AC-008 VP-578-015: bare --field must produce a BYTE-IDENTICAL \
+         requestFieldValues map to pre-amendment behavior — no added, \
+         removed, or changed keys; got rfv: {rfv}"
+    );
+}
+
+// ─── AC-009 (VP-578-016): :id/:name/:asset wire shapes by analogy ────────────
+
+/// AC-009 / VP-578-016 (DOWNGRADED status per the story: "NOT
+/// research-confirmed for any of the three kinds... `:asset` in particular
+/// is at least as likely to diverge as `:option` — Assets attribute
+/// payloads are the least standardized of the four across Atlassian's JSM
+/// vs platform surfaces"). This test asserts the IMPLEMENTED shape (by
+/// analogy to the platform-path `:id`/`:name`/`:asset` shapes in
+/// `field_resolve.rs::compose_id_hint`/`compose_name_hint`/
+/// `compose_asset_hint`) with wiremock.
+///
+/// **A green run of this test is NOT proof of live-JSM parity.** VP-578-016
+/// remains parity-PENDING until F4/live-JSM validation runs against a real
+/// JSM instance — do NOT read this test passing as a settled guarantee of
+/// Atlassian's actual `requestFieldValues` schema for these three hint
+/// kinds.
+#[tokio::test]
+async fn test_vp_578_016_id_name_asset_jsm_wire_shapes_by_analogy_flagged_unverified() {
+    let server = MockServer::start().await;
+    let cache_dir = tempfile::tempdir().unwrap();
+    let config_dir = tempfile::tempdir().unwrap();
+    write_minimal_config(config_dir.path(), &server.uri());
+
+    mount_project_meta_help(&server).await;
+    mount_service_desk_list(&server).await;
+    mount_request_type_list(&server).await;
+
+    Mock::given(method("POST"))
+        .and(path("/rest/servicedeskapi/request"))
+        .respond_with(ResponseTemplate::new(201).set_body_json(jsm_created_response()))
+        .mount(&server)
+        .await;
+
+    let output = Command::cargo_bin("jr")
+        .unwrap()
+        .env("JR_BASE_URL", server.uri())
+        .env("JR_AUTH_HEADER", "Basic dGVzdDp0ZXN0")
+        .env("XDG_CACHE_HOME", cache_dir.path())
+        .env("JR_CACHE_DIR", cache_dir.path().join("jr"))
+        .env("XDG_CONFIG_HOME", config_dir.path())
+        .env("JR_CONFIG_DIR", config_dir.path().join("jr"))
+        .args([
+            "issue",
+            "create",
+            "--project",
+            "HELP",
+            "--request-type",
+            "Password Reset",
+            "--summary",
+            "test",
+            "--field",
+            "f_id:id=90001",
+            "--field",
+            "f_name:name=Urgent",
+            "--field",
+            "f_asset:asset=WSX:5001",
+            "--no-input",
+            "--output",
+            "json",
+        ])
+        .output()
+        .unwrap();
+
+    let stderr = String::from_utf8_lossy(&output.stderr);
+    assert!(
+        output.status.success(),
+        "AC-009/VP-578-016: expected exit 0 (by-analogy shapes, \
+         parity-PENDING). got exit {:?}. \
+         stderr: {stderr}",
+        output.status.code()
+    );
+
+    let requests = server.received_requests().await.expect("requests recorded");
+    let jsm_post = requests
+        .iter()
+        .find(|r| r.url.path() == "/rest/servicedeskapi/request" && r.method.as_str() == "POST")
+        .expect("AC-009: JSM POST must have been made");
+    let body: Value =
+        serde_json::from_slice(&jsm_post.body).expect("AC-009: POST body must be valid JSON");
+    let rfv = body
+        .get("requestFieldValues")
+        .expect("AC-009: requestFieldValues must be present");
+
+    assert_eq!(
+        rfv.get("f_id"),
+        Some(&json!({"id": "90001"})),
+        "AC-009/VP-578-016 (by analogy, parity-PENDING): ':id' shape; got rfv: {rfv}"
+    );
+    assert_eq!(
+        rfv.get("f_name"),
+        Some(&json!({"name": "Urgent"})),
+        "AC-009/VP-578-016 (by analogy, parity-PENDING): ':name' shape; got rfv: {rfv}"
+    );
+    assert_eq!(
+        rfv.get("f_asset"),
+        Some(&json!([{"workspaceId": "WSX", "id": "WSX:5001", "objectId": "5001"}])),
+        "AC-009/VP-578-016 (by analogy, parity-PENDING): ':asset' shape; got rfv: {rfv}"
+    );
 }
