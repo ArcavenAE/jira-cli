@@ -824,3 +824,56 @@ No BCs/VPs/holdouts added or removed this burst (BC-3.3.010/3.3.011/3.4.014/3.8.
 | pr-manager | Triage PR #746 review, verify CI 15/15 green (incl. CI Gate + mutation testing), verify per-story adversarial convergence CONVERGED STRICT (14 passes) + security-reviewer CLEAN + pr-reviewer APPROVE, drive to merge (fell back to direct `gh`/`git` verification after `github-ops` sub-agent stalls) | PR #746 |
 | devops-engineer / human | Squash-merge PR #746 to `develop` | `develop` @ `ae8514b8` (2026-08-31T06:16:25Z); feature branch deleted; worktree removed |
 | state-manager | Record S-578-4 delivery + Wave 3/Phase F4 completion: update `sprint-state.yaml`, `STORY-INDEX.md`, `STATE.md` (v3.23→v3.24, activation_head/version re-derived); log this burst + 1 infra-observation lesson; commit + push | `STATE.md`; `sprint-state.yaml`; `stories/STORY-INDEX.md`; `cycles/cycle-002/lessons.md`; `cycles/cycle-002/session-checkpoints.md`; this file |
+
+## Burst: Burst 15 — Phase F5 scoped-adversarial review CONVERGED + FIX-F5-001 delivered + merged (PR #747 @ 4e4ae4f5) — **F5 COMPLETE, transition to F6** (2026-08-31)
+
+**Parent-commit:** ae8514b8 (S-578-4 merge, Burst 14)
+
+**Trigger:** cycle-002 Phase F4 (delta implementation) complete (Burst 14); human decision to proceed with Phase F5 (scoped adversarial review of the full 5-story field-dx delta) rather than close/pause the cycle at F4.
+
+**Dispatched:** primary-adversary review (adversary model), fresh context, scoped to the integrated delta `91d04fe1..ae8514b8` (all 5 bundle stories: S-578-1, S-580-1, S-578-2, S-578-3, S-578-4), targeting cross-story integration seams rather than re-litigating already-converged per-story findings. First dispatch died on a transient API connection error before producing output and was re-run from scratch — logged as a transport retry, not a review round (only the re-run counts toward the pass total).
+
+**Adversary verdict:** 1 primary-adversary pass, CONVERGENCE_REACHED. Zero CRITICAL/HIGH. 1 MEDIUM (`ADV-P01-MED-001`: `get_issue_types_for_project` missing the pagination-termination safeguards its twin `get_createmeta_fields` gained this cycle — no MAX page-count bound, CWE-400/770-adjacent, and no `total`-absent full-page heuristic, undermining VP-578-020's "issue-types page ≥2" guarantee in the total-absent branch). 4 LOW findings: `ADV-P01-LOW-001` (`:asset` malformed-shape validation duplicated byte-for-byte between `jsm_create.rs::resolve_asset_field_l2` and `field_resolve.rs::compose_asset_hint` — cross-referenced to the pre-existing `S-578-3-SHARED-ASSET-VALIDATOR` id, no new id opened), `ADV-P01-LOW-002` (`F5-EDIT-GATEB-SHARE`: `edit.rs` Gate B not on the shared `detect_flag_field_overlap` helper), `ADV-P01-LOW-003` (`F5-ISSUETYPE-CASEFOLD-SPLIT`: ASCII vs. Unicode case-fold divergence on issue-type name→id resolution), `ADV-P01-LOW-004` (`F5-VP578021-WEAK-NEGPIN`: weak test assertion). Full detail: `phase-f5-adversarial/adversarial-delta-review.md`.
+
+**Secondary review-tier (F5 Step 7):** SKIPPED. Justification: every story was already individually adversarially converged during F4 delivery (S-578-4 alone ran 14 passes, final 3/3 CLEAN; S-578-2/S-578-3 each ran 4-pass per-story convergence to CLEAN). This whole-delta primary pass found only 1 low-likelihood MEDIUM + 4 LOW — the marginal value of a second independently dispatched secondary-tier pass did not justify the cost. Primary-adversary convergence was treated as the F5 gate.
+
+**What happened — FIX-F5-001:** the MEDIUM finding was fixed on branch `fix/F5-001-issuetypes-pagination`: `get_issue_types_for_project` (`src/api/jira/issues.rs`) now shares the `MAX_CREATEMETA_PAGES` bound and the same total-absent full-page heuristic (`if total > 0 { start_at + page_len >= total } else { page_len < page_size }`) as its twin `get_createmeta_fields`. Regression test `test_vp_578_020b_type_on_issuetypes_page_2_resolves_when_total_absent` added (RED before the fix, GREEN after). security-reviewer confirmed the bound is a genuine CWE-400 mitigation introducing no new risk. pr-reviewer verdict APPROVE. CI green.
+
+**PR:** #747, merged to `develop` @ `4e4ae4f5` (2026-08-31T14:46:55Z). `activation_head` advanced `ae8514b8` → `4e4ae4f5`. `activation_version` re-derived from `Cargo.toml` on `develop` @ `4e4ae4f5`: unchanged at `v0.7.0-dev.2`.
+
+**F5 close:** with FIX-F5-001 merged, Phase F5 (scoped adversarial review) is now COMPLETE for cycle-002. Full convergence record: `phase-f5-adversarial/convergence-summary.md` (findings-by-severity table, MEDIUM fix detail, secondary-tier skip justification, novelty assessment, final verdict CONVERGED) and `phase-f5-adversarial/adversarial-delta-review.md` (raw pass-1 findings).
+
+**Codifications:** cycle-002 Phase F5 is now **COMPLETE**. **NEXT: Phase F6** (targeted hardening — fuzz testing, mutation testing, and formal verification scoped to the delta, plus full regression and security scans on the full tree), then **Phase F7** (delta convergence + human gate).
+
+**Closes:** the F5 review (both the primary-adversary pass and the FIX-F5-001 remediation). **Does NOT close:** cycle-002 itself (F6/F7 remain); the 4 LOW tracked-debt items from this pass (`S-578-3-SHARED-ASSET-VALIDATOR` cross-ref, `F5-EDIT-GATEB-SHARE`, `F5-ISSUETYPE-CASEFOLD-SPLIT`, `F5-VP578021-WEAK-NEGPIN`); all previously-tracked LOW residual/drift items (unchanged this burst); the DEC-namespace disambiguation question.
+
+### Counts reconciled this burst
+
+No BCs/VPs/holdouts added or removed this burst (FIX-F5-001 is a bug fix against an existing BC's pagination-safety guarantee, not a new BC) — 719 BCs / 32 VPs / 106 holdouts unchanged. `total_stories` unchanged at 161.
+
+### Details
+
+| Agent | Task | Output |
+|-------|------|--------|
+| adversary | Primary-adversary scoped review of the integrated 5-story field-dx delta (re-dispatched after transient transport failure on first attempt) | `phase-f5-adversarial/adversarial-delta-review.md` (pass 1, CONVERGENCE_REACHED) |
+| implementer | Port `get_createmeta_fields`'s `MAX_CREATEMETA_PAGES` bound + total-absent full-page heuristic onto `get_issue_types_for_project`; add regression test | `src/api/jira/issues.rs`, `tests/issue_create_field.rs` (or equivalent VP-578-020b test file) |
+| security-reviewer | Confirm FIX-F5-001's bound is a genuine CWE-400 mitigation with no new risk | CLEAN |
+| pr-manager | Open PR #747, drive to merge | PR #747 |
+| devops-engineer | Merge PR #747 to `develop` | `develop` @ `4e4ae4f5` (2026-08-31T14:46:55Z) |
+| state-manager | Write `phase-f5-adversarial/convergence-summary.md`; update `STATE.md` (v3.24→v3.25, phase F4→F5, activation_head/version re-derived, compacted to ≤200 lines); log this burst; commit + push | `STATE.md`; `phase-f5-adversarial/convergence-summary.md`; this file |
+
+**Files touched (Dim-1): 3 unique files (factory-artifacts, this burst)**
+
+- STATE.md
+- cycles/cycle-002/burst-log.md
+- phase-f5-adversarial/convergence-summary.md
+
+(develop-side, via PR #747, not counted in Dim-1 above: `src/api/jira/issues.rs`, the regression test file.)
+
+**Dim-2 Attestation:** `scripts/check-spec-counts.sh` → exit 0. `scripts/check-bc-cumulative-counts.sh` → exit 0 (719 total across 9 files, unchanged). FIX-F5-001 is a bug fix against an existing BC's pagination-safety guarantee — no BC/VP/holdout count change.
+
+**Dim-5 Attestation:** N/A — no binary/WASM artifact produced by this burst.
+
+**Dim-6 Attestation:** PASS (delegated) — `cargo fmt --all -- --check` and `cargo clippy --all-targets -- -D warnings` enforced on PR #747 by jira-cli's `ci-gate`; green before merge.
+
+**Dim-7 Attestation:** PASS (delegated) — full test suite incl. the new `test_vp_578_020b_type_on_issuetypes_page_2_resolves_when_total_absent` regression test ran green in `ci-gate`'s `test` job before merge.

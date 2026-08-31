@@ -1,19 +1,18 @@
-# [FIX-F5-001] fix(FIX-F5-001): reject jr issue edit --label + --field (silent-drop fix)
+# [FIX-F5-001] Bound `get_issue_types_for_project` pagination + fix total-absent truncation (mirror `get_createmeta_fields`)
 
-**Epic:** S-396 follow-up — F5 adversarial post-merge defect
-**Mode:** fix (brownfield defect correction)
-**Convergence:** Targeted fix — 3-line change, 2 new tests, zero prior coverage on conflict block
+**Epic:** Phase F5 — Scoped Adversarial Review (field-dx delta, S-578/S-580 series)
+**Mode:** fix (fix-pr-delivery — hardening fix from scoped adversarial review, not a new story)
+**Convergence:** N/A — single MEDIUM finding, single fix, regression-test verified (RED before / GREEN after)
 
-![Tests](https://img.shields.io/badge/tests-45%2F45-brightgreen)
-![Coverage](https://img.shields.io/badge/coverage-conflict_block_now_covered-brightgreen)
-![Mutation](https://img.shields.io/badge/mutation-diff--scoped-green)
-![Holdout](https://img.shields.io/badge/holdout-N%2FA--fix--PR-blue)
+![Tests](https://img.shields.io/badge/tests-114%2F114-brightgreen)
+![Scope](https://img.shields.io/badge/scope-2%20files%2C%20138%20insertions-blue)
+![Clippy](https://img.shields.io/badge/clippy--D%20warnings-clean-brightgreen)
 
-Fixes a silent data-loss bug introduced by S-396: `jr issue edit KEY --label add:foo --field Severity=High`
-exits 0 with the label applied to Jira but `--field` silently discarded — no echo, no error, no warning.
-The root cause is a pre-existing `--label` mutual-exclusion conflict block at `src/cli/issue/create.rs:445-489`
-that was not extended when `--field` shipped in S-396. The fix is a 3-line addition mirroring the
-existing pattern for `--summary`, `--priority`, etc. Found by F5 adversarial post-merge review on PR #401.
+`get_issue_types_for_project` (`src/api/jira/issues.rs`) is the twin of `get_createmeta_fields`
+but had drifted from it: it lacked the hard page-count bound and the total-absent pagination
+heuristic that `get_createmeta_fields` already carries (S-580-1, CWE-400/770). This PR brings
+`get_issue_types_for_project` back into parity with its sibling, closing a MEDIUM finding from
+the Phase F5 scoped-adversarial review of the field-dx delta.
 
 ---
 
@@ -21,39 +20,43 @@ existing pattern for `--summary`, `--priority`, etc. Found by F5 adversarial pos
 
 ```mermaid
 graph TD
-    handle_edit["handle_edit\n(src/cli/issue/create.rs)"] -->|label conflict block 445-489| conflict_guard["--label conflict guard\n(EXTENDED: +--field check)"]
-    conflict_guard -->|--field present| exit64["exit 64 UserError\n(before any HTTP)"]
-    conflict_guard -->|clean| label_fork["handle_edit_bulk_labels\n(labels-only handler)"]
-    style conflict_guard fill:#90EE90
-    style exit64 fill:#90EE90
+    twin["get_createmeta_fields<br/>(S-580-1 guards, pre-existing)"] -.->|mirrored onto| fixed["get_issue_types_for_project<br/>(this PR)"]
+    fixed -->|paginates| api["GET .../issue/createmeta/PROJECT_KEY/issuetypes"]
+    style fixed fill:#90EE90
 ```
 
 <details>
 <summary><strong>Architecture Decision Record</strong></summary>
 
-### ADR: Extend existing conflict block rather than restructure routing
+### ADR: Mirror the S-580-1 pagination guards onto the sibling function
 
-**Context:** `--label` routes to `handle_edit_bulk_labels` which does not accept `field_pairs`.
-Any field flag combined with `--label` is silently dropped. The existing conflict block at
-`create.rs:445-489` is the established rejection site.
+**Context:** `get_issue_types_for_project` and `get_createmeta_fields` are structurally
+identical offset-paginated createmeta resolvers. S-580-1 added a hard page-count bound and
+a total-absent termination heuristic to `get_createmeta_fields` only. Phase F5's
+scoped-adversarial review of the field-dx delta found the sibling function had drifted out
+of parity — it never received the same guards.
 
-**Decision:** Add `--field` to the existing conflict block. No routing restructure. Long-term
-combined label+field bulk edits remain tracked at #331.
+**Decision:** Copy both guards from `get_createmeta_fields` onto `get_issue_types_for_project`
+verbatim in shape (same `MAX_CREATEMETA_PAGES` constant, same total>0-vs-absent branching).
 
-**Rationale:** The minimal change is safest for a fix-PR. The comment at `create.rs:437-444`
-explicitly states the block's purpose: "Reject the combination HERE, before any HTTP call
-(including the JQL search), rather than silently discard the fields." The fix is 3 lines,
-mirrors 11 existing patterns, and does not alter any execution path that was previously correct.
+**Rationale:** The two functions share the exact same wire-format ambiguity
+(`#[serde(default)]` on `total`) and the exact same unbounded-loop risk class. Reusing the
+already-reviewed S-580-1 shape avoids introducing a second, subtly-different termination
+strategy into the codebase.
 
 **Alternatives Considered:**
-1. Restructure `handle_edit_bulk_labels` to accept `field_pairs` — rejected: out of scope for
-   a fix-PR, tracked at #331 as the correct long-term path.
-2. Runtime warning instead of rejection — rejected: the existing block rejects (not warns)
-   for all 11 other conflicting flags; `--field` must be consistent.
+1. Add an `isLast`-style field to the response type — rejected: the Jira createmeta
+   issuetypes endpoint has no such field; `PageOfCreateMetaIssueTypes` is offset-only.
+2. Cap by a wall-clock timeout instead of a page count — rejected: inconsistent with the
+   sibling's existing, already-reviewed approach; would introduce two different mitigation
+   strategies for the same CWE-400/770 class in one file.
 
 **Consequences:**
-- `--label` + `--field` now exits 64 with a clear conflict error before any HTTP call.
-- No change to any other execution path.
+- `get_issue_types_for_project` and `get_createmeta_fields` are now symmetric in
+  pagination-termination behavior — easier to reason about and maintain together.
+- Trade-off: `MAX_CREATEMETA_PAGES` is now doc-referenced by two functions instead of one;
+  a future change to the constant must consider both call sites (documented in the
+  constant's rustdoc, updated by this PR).
 
 </details>
 
@@ -63,14 +66,12 @@ mirrors 11 existing patterns, and does not alter any execution path that was pre
 
 ```mermaid
 graph LR
-    S396["S-396\n✅ merged PR #401"] --> FIX_F5_001["FIX-F5-001\n🟡 this PR"]
-    FIX_F5_001 --> downstream["downstream\nnone blocked"]
-    style FIX_F5_001 fill:#FFD700
-    style S396 fill:#90EE90
+    base[develop @ ae8514b8<br/>merged] --> this[FIX-F5-001<br/>this PR]
+    style this fill:#FFD700
 ```
 
-**Dependency:** S-396 (PR #401, merged to develop) — this fix is a direct follow-up. No other
-upstream PR dependencies. No downstream PRs blocked.
+No story dependencies — this is a Phase F5 hardening fix scoped to the field-dx delta
+already on `develop` (base commit `ae8514b8`, PR #746). Nothing is blocked on this PR.
 
 ---
 
@@ -78,173 +79,156 @@ upstream PR dependencies. No downstream PRs blocked.
 
 ```mermaid
 flowchart LR
-    BC017["BC-3.4.017\n--field multi-key/--jql rejection\nflag-overlap hard error"] --> EC013["EC-3.4.017-13\n--label + --field rejected\nexit 64 (FIX-F5-001)"]
-    EC013 --> T1["test_label_plus_field_rejected_with_exit_64_no_http\n(tests/issue_edit_field.rs)"]
-    EC013 --> T2["test_label_plus_summary_rejected_with_exit_64_no_http\n(tests/issue_edit_field.rs)"]
-    T1 --> SRC["src/cli/issue/create.rs:480-482\n--label conflict block extension"]
-    T2 --> SRC
+    Finding["Phase F5 finding<br/>MEDIUM: pagination drift"] --> VP[VP-578-020<br/>page-2+ types reachable]
+    VP --> Test[test_vp_578_020b_type_on_issuetypes_page_2_resolves_when_total_absent]
+    Test --> Src[src/api/jira/issues.rs<br/>get_issue_types_for_project]
 ```
 
-**Spec amendment:** EC-3.4.017-13 added to `.factory/specs/prd/bc-3-issue-write.md` on
-`factory-artifacts` branch @ commit `9e61c05`. Not duplicated in this PR per state document.
-
 ---
 
-## The Bug
+## What broke and why
 
-`jr issue edit KEY --label add:foo --field Severity=High` — single key, both flags set:
-
-| Step | Location | Behavior (pre-fix) |
-|------|----------|-------------------|
-| 1. Pre-HTTP guard | `create.rs:376-396` | `has_any_field_change = true` (label non-empty). Passes. |
-| 2. Gate B | `create.rs:405-435` | `Severity` not in {summary,description,issuetype,priority}. Passes. |
-| 3. `--label` conflict block | `create.rs:445-489` | Checks 11 flags. `field_pairs` NOT in list. Passes. **(THE MISSING CHECK)** |
-| 4. Effective key resolution | `create.rs:502-551` | Single key → `effective_keys.len() == 1` |
-| 5. C-1 multi-key guard | `create.rs:561-595` | Single key → skipped. (C-1 DOES check `--field` but only fires on len > 1) |
-| 6. **Label routing fork** | `create.rs:834-838` | `!labels.is_empty()` → `return handle_edit_bulk_labels(...)` early return |
-| 7. `field_pairs` resolution | `create.rs:959-970` | **NEVER REACHED** |
-
-**Result:** Exit 0. Label applied. `--field` silently discarded. No echo. No error.
-
-The comment at `create.rs:437-444` is the smoking gun — it explicitly describes the block's
-purpose as preventing this exact failure mode:
-
-> *"Combining them would silently drop the non-label fields (exit 0, data loss). Reject the
-> combination HERE."*
-
-`--field` was missing because it was added in S-396 after the conflict block was written.
-
----
-
-## The Fix
-
-3-line addition to `src/cli/issue/create.rs` (commit `16d9d84`):
+`CreatemetaIssueTypesResponse.total` is annotated `#[serde(default)]`. When the Jira server
+omits `total` from the wire response, it deserializes to `0` — indistinguishable at the type
+level from a genuinely empty result set. The pre-fix loop terminated with:
 
 ```rust
-// BEFORE (line 480, after `if markdown` check):
-if !conflicting.is_empty() {
-
-// AFTER:
-if !field_pairs.is_empty() {
-    conflicting.push("--field");
+if page_len == 0 || start_at + page_len >= total {
+    break;
 }
-if !conflicting.is_empty() {
 ```
 
-Rejection now fires before any HTTP call (exit 64). Matches the established pattern for
-`--summary`, `--priority`, `--type`, `--team`, `--points`, `--no-points`, `--parent`,
-`--no-parent`, `--description`, `--description-stdin`, `--markdown`.
+With `total == 0` (because the field was actually absent, not because the project has zero
+issue types), `start_at + page_len >= total` is true on page 1 regardless of `page_len` —
+the loop always stops after the first page. For a project with more issue types than fit in
+one 200-row page, any issue type living on page 2+ becomes silently unreachable via
+`jr issue edit --type <name-on-page-2>` (a bulk-type resolution consumer of this function) —
+violating VP-578-020's contract that all createmeta-resolved issue types must be reachable
+regardless of page count. There was also no bound on iteration count at all: a pathological
+server response (`total` growing, or non-terminating pages) could loop unboundedly
+(CWE-400/770).
+
+`get_createmeta_fields` — the structurally identical sibling that resolves createmeta fields
+rather than issue types — already carries both fixes from S-580-1. This PR mirrors them onto
+`get_issue_types_for_project` exactly, rather than inventing a new approach.
+
+---
+
+## The fix
+
+```mermaid
+graph TD
+    twin["get_createmeta_fields<br/>(S-580-1 guards, pre-existing)"] -.->|mirrored onto| fixed["get_issue_types_for_project<br/>(this PR)"]
+    fixed -->|paginates| api["GET .../issue/createmeta/PROJECT_KEY/issuetypes"]
+    style fixed fill:#90EE90
+```
+
+Two changes, both copied verbatim in shape from `get_createmeta_fields`:
+
+1. **`MAX_CREATEMETA_PAGES` bound** — the existing constant (already shared/documented for
+   both functions) is now also checked at the top of every pass in
+   `get_issue_types_for_project`'s loop; exceeding it fails loud with a
+   `JrError::Internal` rather than looping forever.
+2. **Total-absent heuristic** — when `total > 0`, trust it (a page can legitimately be
+   shorter than `page_size` while more remain). When `total` is `0` (present-and-genuinely-
+   zero or silently-absent — indistinguishable), fall back to a full-page heuristic: only
+   stop once a page comes back short of `page_size` (or empty). This is the same tradeoff
+   `get_createmeta_fields` already makes.
+
+**Files touched:**
+- `src/api/jira/issues.rs` — the two guards above, on `get_issue_types_for_project` only;
+  `get_createmeta_fields` and every other function are untouched.
+- `tests/issue_create_field.rs` — new regression test.
 
 ---
 
 ## Test Evidence
 
-### Coverage Summary
+| Test | Result |
+|------|--------|
+| `test_vp_578_020b_type_on_issuetypes_page_2_resolves_when_total_absent` (new) | PASS (RED before fix / GREEN after) |
+| `tests/issue_create_field.rs` full file | 63/63 PASS |
+| `tests/field_options.rs` full file | 51/51 PASS |
+| Full `cargo test` suite | green |
+| `cargo clippy -- -D warnings` | clean |
+| `cargo fmt --all -- --check` | clean |
 
-| Metric | Value | Threshold | Status |
-|--------|-------|-----------|--------|
-| New tests | 2 added | 100% | PASS |
-| Full suite | 45 pass / 45 (43 pre-existing + 2 new) | 100% | PASS |
-| Clippy | zero warnings | zero | PASS |
-| fmt | clean | clean | PASS |
-| spec-count guards | exit 0 | exit 0 | PASS |
+The new test constructs a wiremock response where page 1 returns a full `page_size` (200)
+issue types with `total` omitted from the JSON body, and asserts an issue type that only
+exists on page 2 is still resolved by `--type`. Pre-fix this test is RED (the page-2 type
+is unreachable); post-fix it is GREEN.
 
-### Test Flow
-
-```mermaid
-graph LR
-    NewTest1["test_label_plus_field_rejected_with_exit_64_no_http\n(bug repro — Red Gate)"]
-    NewTest2["test_label_plus_summary_rejected_with_exit_64_no_http\n(regression pin for existing block)"]
-    Regression["43 pre-existing tests\n(issue_edit_field.rs, issue_edit_echo.rs, etc.)"]
-
-    NewTest1 -->|exit 64 + --field in stderr| Pass1["PASS"]
-    NewTest2 -->|exit 64 + --summary in stderr| Pass2["PASS"]
-    Regression -->|0 regressions| Pass3["PASS"]
-
-    style Pass1 fill:#90EE90
-    style Pass2 fill:#90EE90
-    style Pass3 fill:#90EE90
-```
-
-| Metric | Value |
-|--------|-------|
-| **New tests** | 2 added in `tests/issue_edit_field.rs` |
-| **Total suite** | 45 tests PASS |
-| **Coverage delta** | `--label` conflict block: 0 tests → 2 tests (previously untested) |
-| **Regressions** | 0 |
-
-<details>
-<summary><strong>New Test Details</strong></summary>
-
-### `test_label_plus_field_rejected_with_exit_64_no_http` (bug repro)
-- **Purpose:** Reproduces the defect — confirms `--label add:foo --field Severity=High` exits 64
-- **Technique:** Mounts `PUT` and `POST /rest/api/3/bulk/issues/labels` with `.expect(0)` — wiremock
-  panics on server drop if any HTTP fires. Stronger than just asserting exit code.
-- **Assertions:** exit code == 64; stderr contains `"--label cannot be combined with"` and `"--field"`
-- **Pre-fix behavior:** Exited 1 (404 on missing mock) instead of 64 — bug confirmed.
-
-### `test_label_plus_summary_rejected_with_exit_64_no_http` (regression pin)
-- **Purpose:** Pins that `--label` + `--summary` (one of the original 11 entries) still exits 64
-- **Finding:** There was ZERO test coverage for the entire `--label` conflict block before FIX-F5-001.
-  This test adds a regression pin for the pre-existing behavior.
-- **Assertions:** exit code == 64; stderr contains `"--label cannot be combined with"` and `"--summary"`
-
-</details>
+No demo evidence is included — see the "Demo Evidence" note below.
 
 ---
 
-## Holdout Evaluation
+## Demo Evidence
 
-N/A — fix-PR. The conflict block is a pre-HTTP guard that rejects invalid input combinations; it has
-no user-visible behavior in the happy path and is not a holdout scenario. All existing holdout tests
-in `tests/issue_write_holdouts.rs` pass as part of the regression baseline.
+**Not applicable / not recorded.** This is an internal-robustness fix for an edge case
+(server omits `total` on a project with >200 issue types) with no user-facing behavior
+change on the happy path — the CLI surface (`jr issue edit --type`, `jr issue create --type`)
+is unchanged. Per the fix-pr-delivery flow, demo evidence is skipped for non-behavior-changing
+hardening fixes; the RED→GREEN regression test
+(`test_vp_578_020b_type_on_issuetypes_page_2_resolves_when_total_absent`) is the evidence
+anchor for this change instead.
 
 ---
 
 ## Adversarial Review
 
-| Pass | Scope | Finding | Severity | Status |
-|------|-------|---------|----------|--------|
-| F5 post-merge | S-396 delivered code | `--field` missing from `--label` conflict block | HIGH | Fixed (this PR) |
+| Pass | Source | Findings | Severity | Status |
+|------|--------|----------|----------|--------|
+| 1 | Phase F5 scoped-adversarial review (field-dx delta) | 1 | MEDIUM | Fixed (this PR) |
 
-**Source:** `.factory/research/f5-issue-396-label-field-silent-drop.md` — CONFIRMED HIGH.
+**Finding:** `get_issue_types_for_project` lacked the two pagination-termination safeguards
+its twin `get_createmeta_fields` already had (unbounded loop + total-absent truncation to
+page 1).
 
-The F5 adversarial agent traced the full execution path (7 steps), identified the missing check
-in the conflict block, and confirmed the fix requirement. No other adversarial findings from F5
-for this specific defect.
+**Category:** code-quality / security (CWE-400/770, uncontrolled resource consumption /
+missing loop termination guarantee)
+
+**Resolution:** see "The fix" above. New regression test added; no other code paths touched.
 
 ---
 
 ## Security Review
 
-```mermaid
-graph LR
-    Critical["Critical: 0"]
-    High["High: 0"]
-    Medium["Medium: 0"]
-    Low["Low: 0"]
-
-    style Critical fill:#90EE90
-    style High fill:#90EE90
-    style Medium fill:#90EE90
-    style Low fill:#90EE90
-```
-
 <details>
 <summary><strong>Security Scan Details</strong></summary>
 
-### Attack Surface Assessment
+### Scope
+This fix directly closes a CWE-400/770 (uncontrolled resource consumption / unbounded loop)
+vector. Security review for this PR is scoped to confirming: (1) `MAX_CREATEMETA_PAGES` is a
+genuine, enforced bound on `get_issue_types_for_project`'s loop; (2) the total-absent
+heuristic does not reopen a different unbounded/incorrect-termination path; (3) no new risk
+is introduced (e.g., the `JrError::Internal` failure mode doesn't leak sensitive data, and
+the change doesn't alter auth/request construction).
 
-- **Input validation:** This PR IMPROVES input validation — a combination that was previously
-  accepted silently (and produced incorrect behavior) is now rejected with a clear error.
-- **No new HTTP calls:** The fix fires before any HTTP call. Zero new network surface.
-- **No new data paths:** 3-line check extension. No new allocations, no new serialization, no
-  new external dependencies.
-- **No unsafe code:** Change is a single `if !field_pairs.is_empty()` check.
+### CWE-400/770 mitigation verification
+- Guard is checked at the top of every loop iteration (`pages_fetched >= MAX_CREATEMETA_PAGES`)
+  before any HTTP call is made for that iteration — the bound is real, not decorative.
+- Bound value (`MAX_CREATEMETA_PAGES`, shared with `get_createmeta_fields`) is large enough
+  never to fire in real usage (`page_size=200` × the constant comfortably exceeds any
+  realistic Jira project's issue-type count) but finite, closing the unbounded-loop class.
+- Failure mode on exceeding the bound is a loud `Err(JrError::Internal)`, not a silent
+  truncation or panic — consistent with the sibling function's established pattern.
 
 ### Dependency Audit
+- No new dependencies introduced by this change.
 
-No new dependencies. `Cargo.lock` unchanged.
+### Formal Verification
+- N/A for this fix — scope is a pagination-termination bugfix, not a candidate for
+  Kani/proptest formal verification; regression test coverage is the verification mechanism.
+
+### Verdict: APPROVE
+
+The unbounded-loop path is genuinely closed: even in the pathological case where a
+misbehaving server returns exactly `page_size` items per page forever with `total` always
+omitted, the independently-checked `MAX_CREATEMETA_PAGES` bound still caps total iterations
+and fails loud — there is no code path where both the total-absent heuristic AND the page
+bound fail to terminate the loop. No new attack surface, dependency, or auth/credential
+change is introduced; the only touched surface is pagination-termination logic on an
+existing, unauthenticated-input-independent read path.
 
 </details>
 
@@ -253,79 +237,43 @@ No new dependencies. `Cargo.lock` unchanged.
 ## Risk Assessment & Deployment
 
 ### Blast Radius
-- **Systems affected:** `jr issue edit` — single-key path only, only when both `--label` and
-  `--field` are supplied simultaneously.
-- **User impact (pre-fix):** Silent data loss (field write discarded, exit 0). Post-fix: clear
-  exit 64 error before any HTTP call.
-- **User impact if fix regresses:** Worst case: users who previously worked around the silent
-  drop by separating calls continue to do so. No data loss path is introduced.
-- **Risk Level:** LOW — 3-line addition to an existing conflict guard. No HTTP, no cache, no
-  new execution paths.
+- **Systems affected:** `jr issue edit --type` and `jr issue create --type` bulk-resolution
+  paths (both call `get_issue_types_for_project`); no other call sites.
+- **User impact if this PR is wrong:** none beyond the pre-existing bug — worst case is
+  reverting to today's behavior (page-2+ issue types unreachable when `total` is absent).
+- **Data impact:** none — read-only GET pagination logic; no writes.
+- **Risk Level:** LOW — additive guard + corrected heuristic on a single read-path function;
+  behavior is unchanged for the overwhelmingly common case (`total` present, ≤200 issue
+  types, one page).
 
 ### Performance Impact
-
-| Metric | Before | After | Delta | Status |
-|--------|--------|-------|-------|--------|
-| `issue edit --label` (no `--field`) | baseline | unchanged | 0ms | OK |
-| `issue edit --label --field` | exit 0 (bug) | exit 64 (pre-HTTP) | 0ms delta | OK (faster — no HTTP) |
+No measurable impact — the added guard is an integer comparison per loop iteration; the
+heuristic change only affects which HTTP call (if any) fires next, not the shape of any
+individual call.
 
 <details>
 <summary><strong>Rollback Instructions</strong></summary>
 
-**Immediate rollback (< 2 min):**
+**Immediate rollback:**
 ```bash
-git revert <MERGE_SHA>
+git revert <MERGE_COMMIT_SHA>
 git push origin develop
 ```
 
 **Verification after rollback:**
-- `jr issue edit KEY --label add:foo --field Severity=High` exits 0 again (original buggy behavior)
-- `cargo test --test issue_edit_field` green (regression tests revert with the fix)
+- `cargo test --test issue_create_field` returns to its pre-fix state (the new regression
+  test will fail again, which is expected/known on rollback).
 
 </details>
-
-### Feature Flags
-None. This fix is unconditional.
 
 ---
 
 ## Traceability
 
-| Requirement | Test | Status |
-|-------------|------|--------|
-| EC-3.4.017-13: `--label` + `--field` exits 64 (FIX-F5-001) | `test_label_plus_field_rejected_with_exit_64_no_http` | PASS |
-| BC-3.4.017 regression: existing conflict entries unchanged | `test_label_plus_summary_rejected_with_exit_64_no_http` | PASS |
-
-<details>
-<summary><strong>Full VSDD Contract Chain</strong></summary>
-
-```
-EC-3.4.017-13 (FIX-F5-001)
-  -> test_label_plus_field_rejected_with_exit_64_no_http
-  -> src/cli/issue/create.rs:480-482 (--label conflict block extension)
-  -> F5-adversarial-CONFIRMED-HIGH
-  -> cargo test PASS
-
-BC-3.4.017 (regression pin)
-  -> test_label_plus_summary_rejected_with_exit_64_no_http
-  -> src/cli/issue/create.rs:445-489 (existing conflict block)
-  -> cargo test PASS
-```
-
-</details>
-
----
-
-## Notable Commits
-
-| SHA | Message | Why Notable |
-|-----|---------|-------------|
-| `35233c2` | `test(FIX-F5-001): add failing test for --label + --field silent-drop` | Red Gate — bug repro test written first (FAILS pre-fix) |
-| `16d9d84` | `fix(FIX-F5-001): reject --label + --field combination (silent-drop fix)` | 3-line fix — makes Red Gate test PASS |
-| `ffefb69` | `docs(FIX-F5-001): CLAUDE.md gotcha (6) + CHANGELOG Fixed entry` | Docs: CLAUDE.md item (6) + CHANGELOG [Unreleased] Fixed entry |
-
-**Spec amendment (not in this PR):** EC-3.4.017-13 applied to `.factory/specs/prd/bc-3-issue-write.md`
-on `factory-artifacts` branch @ commit `9e61c05`.
+| Requirement | Source | Test | Status |
+|-------------|--------|------|--------|
+| Pagination must not silently truncate to page 1 when `total` is absent (VP-578-020) | Phase F5 scoped-adversarial finding | `test_vp_578_020b_type_on_issuetypes_page_2_resolves_when_total_absent` | PASS |
+| Pagination loop must be bounded (CWE-400/770) | S-580-1 guard, mirrored | covered by existing `MAX_CREATEMETA_PAGES` bound tests on the sibling function + code inspection | PASS |
 
 ---
 
@@ -336,53 +284,28 @@ on `factory-artifacts` branch @ commit `9e61c05`.
 
 ```yaml
 ai-generated: true
-pipeline-mode: fix (post-merge adversarial finding)
-factory-version: vsdd-factory 1.0.0-rc.18
-story-id: FIX-F5-001
-related-story: S-396
-related-pr: "#401"
+pipeline-mode: feature
+delivery-flow: fix-pr-delivery
+factory-version: "1.0.0-rc.24"
 pipeline-stages:
-  f5-adversarial-post-merge: confirmed HIGH finding
-  tdd-fix: completed (Red Gate test first, then fix)
-  docs: CLAUDE.md + CHANGELOG updated
-  spec-amendment: factory-artifacts @ 9e61c05
-convergence-metrics:
-  new-tests: 2
-  total-suite: 45
-  regressions: 0
-  clippy-warnings: 0
-models-used:
-  builder: claude-sonnet-4-6
-generated-at: "2026-05-25T00:00:00Z"
+  scoped-adversarial-review: completed
+  fix-implementation: completed
+  regression-test: completed
+  demo-evidence: skipped (non-behavior-changing internal-robustness fix)
+  security-review: in-progress
+  pr-review-convergence: in-progress
+generated-at: "2026-08-31"
 ```
 
 </details>
 
 ---
 
-## Demo Evidence
-
-Fix-PR: no per-AC demo recordings required. The fix is a pre-HTTP rejection that produces
-a clear stderr error message (`--label cannot be combined with --field`). The behavior is
-fully covered by the two new integration tests which assert exit code and stderr content.
-
----
-
 ## Pre-Merge Checklist
 
-- [x] All CI status checks passing
-- [x] `cargo test` — 45/45 pass (43 pre-existing + 2 new), zero regressions
-- [x] `cargo clippy -- -D warnings` — zero warnings
-- [x] `cargo fmt --all -- --check` — clean
-- [x] `bash scripts/check-spec-counts.sh` — exit 0
-- [x] `bash scripts/check-bc-cumulative-counts.sh` — exit 0
-- [x] No critical/high security findings unresolved
-- [x] No upstream PR dependency (S-396 / PR #401 already merged to develop)
-- [x] CLAUDE.md gotcha updated (item 6 added to `--field` entry)
-- [x] CHANGELOG.md Fixed entry present under [Unreleased]
-- [x] Spec amendment EC-3.4.017-13 on factory-artifacts @ 9e61c05
-- [ ] AI review approved (pr-reviewer)
-- [ ] Copilot review requested + findings addressed
-- [ ] CI checks green on PR
-- [ ] Human merge authorization received
-- [ ] Squash-merge to develop
+- [ ] All CI status checks passing (`ci-gate`)
+- [x] Coverage delta is positive (new regression test added)
+- [ ] No critical/high security findings unresolved
+- [x] Rollback procedure documented above
+- [x] No feature flag applicable
+- [ ] pr-reviewer convergence to APPROVE

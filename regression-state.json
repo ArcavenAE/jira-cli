@@ -1,1 +1,1 @@
-{"status":"pass","timestamp":"2026-08-31T05:41:57Z","command":"cargo test --test issue_create_field --test issue_create_jsm 2>&1 | grep -E \"test result:|error\\[|panicked\" "}
+{"status":"pass","timestamp":"2026-08-31T13:55:28Z","command":"cargo fmt --all -- --check 2>&1 | tail -5; echo \"=== clippy ===\"; cargo clippy --tests -- -D warnings 2>&1 | tail -8; echo \"=== full test file ===\"; cargo test --test issue_create_field 2>&1 | tail -6"}
