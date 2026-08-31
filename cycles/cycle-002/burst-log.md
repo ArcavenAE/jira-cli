@@ -796,3 +796,31 @@ No BCs/VPs/holdouts added or removed — 719 BCs / 32 VPs / 106 holdouts unchang
 | pr-manager | Open PR #742, triage 4-round adversarial review + fresh-eyes pr-reviewer (2 BLOCKING fixed via `29300a3b`, APPROVE at confirmation review), drive to merge | PR #742 |
 | devops-engineer / human | Squash-merge PR #742 to `develop` (human manual merge — auto-mode permission classifier denied `gh pr merge --admin`) | `develop` @ `41763ff0` |
 | state-manager | Record S-578-3 delivery: update `sprint-state.yaml`, `STORY-INDEX.md`, `STATE.md`; write red-gate-log.md + adversary-convergence-state.json; commit spec propagation edits; log this burst + 2 content lessons + 1 infra-observation lesson; commit + push | `STATE.md`; `sprint-state.yaml`; `stories/STORY-INDEX.md`; `cycles/cycle-002/S-578-3/*`; `cycles/cycle-002/lessons.md`; `specs/prd/bc-3-issue-write.md`; `stories/S-578-3-jsm-create-field-hint-dispatch.md`; this file |
+
+## Burst: Burst 14 — F4 Wave 3: S-578-4 (platform `issue create --field` support, DEC-188 reversal via DEC-310) DELIVERED + MERGED (PR #746 @ ae8514b8) — **WAVE 3 COMPLETE / cycle-002 PHASE F4 COMPLETE** (2026-08-30/31)
+
+Session resumed from the `WRAP-F4-WAVE2-COMPLETE-PAUSE` position (STATE.md v3.23) and delivered the LAST story of the field-dx bundle, closing all three waves and Phase F4 (delta implementation) in full.
+
+**Story:** S-578-4 — platform (non-JSM) `issue create --field` support. `resolve_edit_fields` extended with a createmeta-vs-editmeta source parameter (one shared function, not a second implementation); resolution pipeline sourced from `get_createmeta_fields` (S-580-1, reused verbatim). Reverses DEC-188's platform-path `--field`-alone pre-flight exit-64 guard via DEC-310 (human-approved F2 gate) — a deliberate, documented reversal of S-639-1's own guard. `--on-behalf-of`'s BC-3.8.013 guard unchanged in mechanism; only its trigger scope widens now the combined pre-emption check is gone. BC-3.3.010/3.3.011/3.4.014(amended)/3.8.012(reversed)/3.8.013(unchanged); 13 pts, largest story in the bundle tied with S-578-2; `depends_on:[S-580-1, S-578-2]`, both satisfied.
+
+**Quality gates:** Red Gate PASS. Per-story adversarial convergence **CONVERGED STRICT** — 14 passes, final 3 CLEAN (zero production-logic defects after pass 2); convergence state at `cycles/cycle-002/S-578-4/adversary-convergence-state.json`. security-reviewer: CLEAN. pr-reviewer: APPROVE, 1 review cycle, 0 blocking findings. CI: 15/15 green including CI Gate + mutation testing. Demo evidence: `.factory/demos/S-578-4/` (6 VHS demos + evidence-report.md).
+
+**Process-gap lessons captured during convergence** (see `cycles/cycle-002/lessons.md` Process-Level 3–5): an AC-to-Task placement conflict inside the story spec (AC-016 vs. Task-2); a File-Structure/Architecture-Mapping self-contradiction ("edit.rs MUST NOT change" vs. required `resolve_edit_fields` signature extension touching edit.rs call sites) — implementation correctly followed Architecture Mapping; a test-inversion instruction gap (Task-2 updated test bodies for the DEC-310-reversed behavior but not test names/doc-comments, leaving 5 stale-name/stale-comment strays surfaced across passes P8/P10/P11).
+
+**Infra observation:** the `github-ops` sub-agent stalled on every dispatch this session (dependency check, stale-verdict check, merge) without returning completion reports, though the underlying `gh`/`git` actions succeeded; pr-manager fell back to direct `gh`/`git` verification each time. Logged as an observation (lessons.md Infrastructure-Level 4), not a process gap requiring a follow-up story.
+
+**Codifications:** F4 Wave 3 is now **COMPLETE**. **All 5 field-dx bundle stories are now delivered + merged**: S-580-1 (#740), S-578-1 (#739), S-578-2 (#741), S-578-3 (#742), S-578-4 (#746). **cycle-002 Phase F4 (delta implementation) is COMPLETE.** `activation_head` advanced `41763ff0` → `ae8514b8`. `activation_version` unchanged at `v0.7.0-dev.2` (re-derived from `Cargo.toml` on `develop` @ `ae8514b8`, not guessed).
+
+**Closes:** F4 Wave 3 (S-578-4). **Wave 3 fully CLOSED. Phase F4 fully CLOSED.** **Does NOT close:** the human decision on whether to proceed to F5 (scoped adversarial refinement on the full field-dx delta) → F6 (targeted hardening) → F7 (delta convergence + human gate), or to close/pause cycle-002 here; the DEC-namespace disambiguation question; all previously-tracked LOW residual/drift items (unchanged this burst).
+
+### Counts reconciled this burst
+
+No BCs/VPs/holdouts added or removed this burst (BC-3.3.010/3.3.011/3.4.014/3.8.012/3.8.013 were pre-existing, amended/reversed during F2, unchanged in count) — 719 BCs / 32 VPs / 106 holdouts unchanged. `total_stories` unchanged at 161 (status transition only, S-578-4 `ready` → `completed`).
+
+### Details
+
+| Agent | Task | Output |
+|-------|------|--------|
+| pr-manager | Triage PR #746 review, verify CI 15/15 green (incl. CI Gate + mutation testing), verify per-story adversarial convergence CONVERGED STRICT (14 passes) + security-reviewer CLEAN + pr-reviewer APPROVE, drive to merge (fell back to direct `gh`/`git` verification after `github-ops` sub-agent stalls) | PR #746 |
+| devops-engineer / human | Squash-merge PR #746 to `develop` | `develop` @ `ae8514b8` (2026-08-31T06:16:25Z); feature branch deleted; worktree removed |
+| state-manager | Record S-578-4 delivery + Wave 3/Phase F4 completion: update `sprint-state.yaml`, `STORY-INDEX.md`, `STATE.md` (v3.23→v3.24, activation_head/version re-derived); log this burst + 1 infra-observation lesson; commit + push | `STATE.md`; `sprint-state.yaml`; `stories/STORY-INDEX.md`; `cycles/cycle-002/lessons.md`; `cycles/cycle-002/session-checkpoints.md`; this file |

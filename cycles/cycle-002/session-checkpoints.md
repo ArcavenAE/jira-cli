@@ -352,4 +352,26 @@ Archived verbatim from STATE.md v3.14 before the F2-GATE-APPROVED-F3-TRANSITION 
 
 ---
 
+## Archived Checkpoint: WRAP-F4-WAVE2-COMPLETE-PAUSE (STATE.md v3.23, 2026-08-27)
+
+**SUPERSEDING NOTE:** This checkpoint is superseded by the session resuming and delivering Wave 3 (S-578-4, PR #746 @ `ae8514b8`) to completion, closing cycle-002 Phase F4 in full (STATE.md v3.24, 2026-08-31) -- see current `STATE.md` Session Resume Checkpoint for the live position.
+
+**Cycle:** Field DX Feature Mode cycle (`cycle-002`) -- GitHub issues #580 (`jr field options <field>`) + #578 (`--field` value-kind hint syntax + non-JSM `issue create --field`). 5-story decomposition, full F1-F7 lifecycle, DTU not required.
+
+**Position (as of this checkpoint):** Phase **F4** (delta implementation), pipeline **PAUSED via human `/wrap`** at the Wave 2 COMPLETE checkpoint. Wave 1 of 3: **COMPLETE** (S-578-1 PR #739 @ `993de833`, S-580-1 PR #740 @ `74221bbc`). Wave 2 of 3: **COMPLETE** (S-578-2 PR #741 @ `a3739763` + S-578-3 PR #742 @ `41763ff0`, both merged). Wave 3 (S-578-4) unblocked, next on resume -- LAST story of the field-dx bundle.
+
+**F1/F2/F3 (as of this checkpoint):** COMPLETE + human-approved (unchanged). Counts: 719 total BCs (BC-INDEX v6.82), 32 VPs, 106 holdout scenarios -- unchanged.
+
+**In-flight (as of this checkpoint):** NONE. No worktrees exist; no PRs pending; no adversary convergence loop open. Nothing abandoned mid-step.
+
+**Environment notes carried into resume:** (1) merges required MANUAL human execution this session -- auto-mode permission classifier denied `gh pr merge --admin` at the Bash layer; (2) the `validate-pr-review-posted` SubagentStop hook loops on pr-manager stops for author-owned PRs; scope pr-manager tightly and `TaskStop` it if it loops; (3) a concurrent demo-recorder race occurred previously (a "completed" task-notification while still running) -- dispatch ONE demo-recorder and wait for full completion.
+
+**Tracked debt (as of this checkpoint):** DEC-namespace disambiguation question (open); `SEC-001-EDITMETA-RECURSION-GUARD` (LOW); `S-578-3-SHARED-ASSET-VALIDATOR`, `S-578-3-FIELDVALUESPEC-RELOCATION`, `S-578-3-PR742-RESIDUAL-NITS` (LOW); `S-578-2-PR741-RESIDUAL-NITS` (LOW); `S-580-1-PR740-S1/S2/S3/N1/N2` (LOW); `BC-3.3.010-CITATION-UPGRADE-ELIGIBLE` (LOW); `F7-GATE-SYSTEMIC-INPUT-HASH-DRIFT-BOOKKEEPING` (standing, not field-dx-scoped).
+
+**Pending human decisions / blockers (as of this checkpoint):** NONE. Full-autonomous-run mandate stood.
+
+**Resume command (as of this checkpoint):** `/vsdd-factory:next-step` -- reads STATE.md and dispatches S-578-4 via per-story-delivery. *(Superseded -- session resumed, S-578-4 was delivered via PR #746 @ `ae8514b8`, and cycle-002 Phase F4 is now COMPLETE; see current `STATE.md` for the live checkpoint.)*
+
+---
+
 <!-- Repeat for each archived checkpoint. Maintain chronological order. -->

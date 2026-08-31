@@ -58,6 +58,9 @@ traces_to: STATE.md
 3. **[infra-observation] pr-manager over-orchestration: spawned its own verify sub-agents then stalled; separately, the auto-mode permission classifier denied `gh pr merge --admin` at the Bash layer.** Merge completed by the human manually. Harness/infra behavior, not a VSDD agent-prompt gap; feedback already drafted for the related hook issue — no follow-up story needed.
    _Discovered: S-578-3 delivery, PR #742, 2026-08-27_
 
+4. **[infra-observation] The `github-ops` sub-agent stalled on every dispatch this session (dependency check, stale-verdict check, merge) without returning completion reports even though the underlying `gh`/`git` actions succeeded.** pr-manager fell back to direct `gh`/`git` verification each time and delivery completed successfully regardless. Observation only, not a process gap requiring a follow-up story this cycle — worth investigating before the next PR cycle if the pattern recurs.
+   _Discovered: S-578-4 delivery, PR #746, 2026-08-30/31_
+
 ## Policy Candidates
 
 <!-- Lessons that should be formalized as governance policies.

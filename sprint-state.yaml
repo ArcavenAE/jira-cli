@@ -1033,7 +1033,7 @@ cycle_002_field_dx:
   cycle: cycle-002
   wave_1_status: "COMPLETE — S-578-1 (PR #739 @ 993de833) + S-580-1 (PR #740 @ 74221bbc) both merged. develop advanced to 74221bbc."
   wave_2_status: "COMPLETE — S-578-2 (#741) + S-578-3 (#742) both merged"
-  wave_3_status: "unblocked — S-578-4 deps [S-580-1, S-578-2] both satisfied; Wave 2 complete; ready for dispatch"
+  wave_3_status: "COMPLETE — S-578-4 (PR #746 @ ae8514b8) merged. WAVE 3 COMPLETE. Bundle field-dx fully delivered (5/5 stories merged): S-580-1 (#740), S-578-1 (#739), S-578-2 (#741), S-578-3 (#742), S-578-4 (#746). Phase F4 (delta implementation) COMPLETE."
   wave_1:
     stories:
       - id: S-578-1
@@ -1094,7 +1094,14 @@ cycle_002_field_dx:
     stories:
       - id: S-578-4
         title: "platform issue create --field support (DEC-188 reversal via DEC-310)"
-        status: ready
+        status: completed
+        pr: 746
+        merge_sha: ae8514b8cf0c0d702514088167817261c62d5440
+        merged_at: "2026-08-31T06:16:25Z"
+        merged_via: "gh pr merge --squash (base develop)"
         depends_on: [S-580-1, S-578-2]
+        bc_anchors: [BC-3.3.010, BC-3.3.011, BC-3.4.014, BC-3.8.012, BC-3.8.013]
+        vp_anchors: [VP-578-001, VP-578-002, VP-578-003, VP-578-004, VP-578-017, VP-578-018, VP-578-019, VP-578-020, VP-578-021, VP-578-022]
+        holdout_anchors: []
         points: 13
-        notes: "Wave 3, largest story tied with S-578-2. Implements get_createmeta_fields (upgrades BC-3.3.010 citation from prose to enforced symbol-form once landed). Reverses DEC-188 platform-path --field-alone exit-64 guard per DEC-310 (human-approved F2 gate)."
+        notes: "Wave 3, largest story tied with S-578-2, LAST story of the field-dx bundle. DELIVERED + MERGED. Implements get_createmeta_fields-driven platform-path resolution (reuses S-580-1's get_createmeta_fields verbatim) and reverses DEC-188's platform-path --field-alone exit-64 guard via DEC-310 (human-approved F2 gate). Red Gate PASS; per-story adversarial convergence CONVERGED STRICT (14 passes, final 3 CLEAN — zero production-logic defects after pass 2; state at cycles/cycle-002/S-578-4/adversary-convergence-state.json); security-reviewer CLEAN; pr-reviewer APPROVE (1 cycle, 0 blocking); CI 15/15 green incl. CI Gate + mutation testing. Demo evidence: .factory/demos/S-578-4/ (6 VHS demos + evidence-report.md). PR #746 squash-merged to develop @ ae8514b8 (2026-08-31T06:16:25Z). WAVE 3 COMPLETE — all 5 field-dx bundle stories now delivered+merged; cycle-002 Phase F4 (delta implementation) COMPLETE."
