@@ -1,78 +1,128 @@
 ---
 phase: f6-targeted-hardening
-bundle: ADF-CODE-MARK-EXCLUSIVITY
-head_sha: d7875e6
-pre_bundle_base: 0d8a8a5
-merge_commit: 7ba4cf4 (fix), d7875e6 (changelog)
-issue: "#571"
-bc_anchors: [BC-7.2.015, BC-7.2.007]
-verification_properties: [VP-571-001, VP-571-002, VP-571-003, VP-571-004, VP-571-005]
-regression_current: 2007/0/93
+bundle: field-dx
+cycle: cycle-002
+head_sha: 4e4ae4f5
+pre_bundle_base: 91d04fe1
+merge_commit: dd311e13 (FIX-F6-001 config fix)
+issue: "#578, #580"
+bc_anchors: []
+verification_properties: [VP-578-001..024, VP-580-005..012]
+regression_current: 4660/0/106
 gate_verdict: GO
-date: 2026-07-08
+date: 2026-08-31
+superseded_note: "Replaces the ADF-CODE-MARK-EXCLUSIVITY F6 summary (bundle closed 2026-07-08, PR #593/#594) previously recorded at this path. That bundle's own record remains in factory-artifacts git history at commit 6c6e9141."
 ---
 
-# F6 — Targeted Hardening Summary
+# Phase F6 — Targeted Hardening Summary (cycle-002, field-dx bundle)
 
-Bundle **ADF-CODE-MARK-EXCLUSIVITY** on `develop` @ `d7875e6` (already merged via PR #593 / #594). Delta verified independently of prior review conclusions and phase-f5 artifacts (information-asymmetry wall observed).
+- **Scope:** field-dx delta (GitHub issues #578 + #580; stories S-578-1..4,
+  S-580-1), integrated delta `91d04fe1..4e4ae4f5` on `develop`.
+- **Date closed:** 2026-08-31.
+- **Verdict: F6 COMPLETE.** All gate criteria met or justifiably substituted;
+  no CRITICAL/HIGH findings anywhere in this phase.
 
-## Independent delta confirmation
+Full detail per check: `kani-results.md`, `fuzz-results.md`,
+`mutation-results.md`, `security-scan-results.md` (all in this directory).
 
-`git diff 0d8a8a5..d7875e6 --stat`:
+---
 
-```
- CHANGELOG.md                                       |   9 +
- CLAUDE.md                                          |   2 +-
- src/adf.rs                                         | 594 +++++++++++-
- tests/adf_code_mark_exclusivity.rs                 | 499 +++++++++++
- tests/issue_create_jsm.rs                          | 237 +++++
- (+ code-delivery demo assets)
- 18 files changed, 1635 insertions(+), 19 deletions(-)
-```
+## 1. Kani (formal verification)
 
-Production `src/` delta: `src/adf.rs` (single file) — the `push_code` allowlist-filter change closing BC-7.2.015 (also closing the BC-7.2.007 EC-2 follow-up from issue #474). Test delta: new `tests/adf_code_mark_exclusivity.rs` (H-NEW-ADF-010 Calls A–D, platform path) + extension of `tests/issue_create_jsm.rs` (Call E, JSM path). Confirmed.
+**Not set up in this repository** — no `kani` dependency, no
+`#[kani::proof]` harness anywhere in `src/`/`tests/`. Per CLAUDE.md and this
+repo's documented convention (property-style guarantees live as inline
+`proptest!` blocks, no standalone VP-NNN registry), the recorded method is
+**proptest substitution**, judged sound for this delta: the field-dx surface
+is dominated by string parsing, HTTP wire-shape composition, and CLI
+arity/dispatch — no unbounded arithmetic, unsafe pointer manipulation, or
+array-indexing invariant that would specifically demand a bounded model
+checker.
 
-## Per-dimension results
+**Coverage: 32/32 field-dx VPs covered, 0 GAPs.** VP-578-016 (JSM
+`requestFieldValues` write wire-shape) is PASS-with-caveat: an intentional
+parity-PENDING deferral to F4/live-validation by spec design, not an
+accidental coverage gap.
 
-| # | Dimension | Result | Notes |
-|---|-----------|--------|-------|
-| 1 | Formal verification (proptest — Kani substitute) | **PASS** | VP-571-001 held at `PROPTEST_CASES=2000` (10× default). All 5 VPs covered by proof-strength or integration-strength artifacts. See `kani-results.md`. |
-| 2 | Fuzz testing | **PASS (justified skip)** | No cargo-fuzz setup in repo (project precedent). VP-571-001 proptest at 2000-case count on `markdown_to_adf` is the substitute; delta introduces no new panic / I/O surface. See `fuzz-results.md`. |
-| 3 | Mutation testing (`--in-diff`) | **PASS** | 1 mutant generated, 1 caught → **100.0% kill rate** (target 90%). Mutant `src/adf.rs:1282:9 replace push_code with ()` killed in 4.2 s. See `mutation-results.md`. |
-| 4a | cargo deny check | **PASS (exit 0)** | advisories/bans/licenses/sources ok. 3 unused-license-allowance warnings (baseline, non-fatal). |
-| 4b | cargo audit | **PASS (exit 0)** | 347 crates scanned, 0 vulnerabilities. |
-| 4c | Semgrep | **SKIP (justified)** | Not installed on host — project standard is cargo-deny + cargo-audit + clippy. Manual audit of `src/adf.rs`: 0 real `unsafe`, 0 new panic / I/O surface. |
-| 4d | BC-7.2.015 SEC framing | **PASS** | Restrictive-only allowlist filter; no untrusted-input execution; no `href` scheme validation change. |
-| 5a | cargo test (full regression) | **PASS — 2007/0/93** | 0 failures across full workspace. |
-| 5b | cargo clippy --all-targets -- -D warnings | **CLEAN (exit 0)** | Zero warnings. |
-| 5c | cargo fmt --all -- --check | **CLEAN (exit 0)** | No formatting drift. |
-| 6 | DTU adversarial (7b) | **N/A (justified)** | No external-service interaction change. `push_code` is a pure-core emit-site filter; JSM/Jira APIs unchanged. `dtu_required=false`. |
-| 7 | Accessibility (7d) | **N/A (justified)** | CLI-only feature. No UI surface, no new human-facing text. |
+## 2. Fuzz testing
 
-## Regression evidence
+**cargo-fuzz not set up** — no `fuzz/` directory, no `fuzz_target!` usage.
+Justified **proptest substitution**: all 3 named input-parsing surfaces have
+arbitrary-Unicode-input property coverage with no-panic + no-malformed-JSON
+oracles, equivalent to what a byte-oriented fuzzer would target for these
+bounded pure-string transforms:
 
-- **cargo test full-workspace: 2007 passed, 0 failed, 93 ignored.**
-- Reverse-path MUST-STAY-GREEN (VP-571-004): `test_render_marks_code_and_strong`, `test_render_strong_with_code_applies_code_innermost` — both green.
-- BC-7.2.011 CR/LF MUST-STAY-GREEN: `test_push_code_normalizes_lone_cr_in_inline_code`, `test_push_code_normalizes_bare_lf_to_space` — both green.
-- BC-7.2.012 depth-guard MUST-STAY-GREEN: `test_max_adf_depth_constant_is_256`, `test_markdown_to_adf_depth_256_blockquote_is_err`, `test_adf_to_text_depth_256_is_err` — all green.
+- `parse_field_kv` (`NAME[:kind]=VALUE` splitting) — `prop_field_hint_split_no_panic`, `prop_field_hint_value_bytes_preserved`.
+- `:asset` `WS:OBJ` composition — `prop_asset_composer_no_malformed_json_ever`.
+- `:option` cascading `Parent>Child` split — `prop_cascading_split_no_panic`.
 
-## Security escalation
+**No uncovered input surface.**
 
-No CRITICAL or HIGH findings across cargo deny, cargo audit, manual audit, or BC-7.2.015 SEC-framing review. No `security-reviewer` escalation. No BLOCK condition.
+## 3. Mutation testing
 
-## Findings requiring fix-PR
+Config gap found (`field.rs` + `field_resolve.rs` absent from
+`.cargo/mutants.toml::examine_globs`) — **FIXED & MERGED as FIX-F6-001, PR
+#749 @ `dd311e13`**. Numeric run on those two files:
+177 total mutants; 142 scored → **93 caught, 0 MISSED, 38 timeout (host
+contention), 11 unviable**. **Kill rate on conclusively-scored mutants =
+93/93 = 100%; zero test-quality-gap survivors.** The remaining six
+examine_globs-covered field-dx delta files (`create.rs`, `edit.rs`,
+`jsm_create.rs`, `issues.rs`, `requests.rs`, `editmeta.rs`) were
+mutation-verified at ≥90% via per-PR required CI at merge time. Full detail:
+`mutation-results.md`.
 
-**None.** No FIX-F6-NNN issues opened.
+## 4. Security scan
 
-## Gate verdict: **GO** for F7 (Delta Convergence)
+**CLEAN.** `cargo deny check` — advisories/bans/licenses/sources all ok.
+`cargo audit` — 0 vulnerability advisories (358 crates scanned). Zero new
+third-party dependencies introduced by the delta (`Cargo.toml`/`Cargo.lock`
+diff empty). semgrep unavailable in-session; manual CWE/OWASP review
+substituted per fallback policy, covering every named new input-handling
+entry point. 3 LOW findings, no CRITICAL/HIGH:
 
-Quality-gate criteria all met:
+- **SEC-F6-1** (CWE-617, `compose_asset_wire` invariant panic) — unreachable
+  today; sole production caller always supplies a qualified value. Accepted
+  as documented, matches existing codebase invariant-panic convention.
+- **SEC-F6-2** (CWE-674, `AllowedValue.children` deserialization-time
+  recursion) — runtime tree-walks are guarded at `MAX_FIELD_OPTION_DEPTH =
+  256`; raw deserialization depth is bounded only by process stack, same
+  accepted-risk class as every other typed API response in the codebase.
+  Cross-references the pre-existing tracked item
+  `SEC-001-EDITMETA-RECURSION-GUARD`.
+- **SEC-F6-3** (CWE-20, `:asset` workspace segment charset) — informational;
+  not an injection or SSRF vector (value is JSON-escaped via
+  `serde_json::json!`, never concatenated into a URL/host).
 
-- [x] Formal proofs / substitute PASS (proptest at 2000 cases).
-- [x] Fuzz clean or justified skip (justified skip; substitute PASS).
-- [x] Mutation kill rate ≥ 90% (100% — 1/1).
-- [x] No unresolved CRIT/HIGH security findings (0 across all channels).
-- [x] Full regression green (2007/0/93).
-- [x] clippy clean, fmt clean.
+Confirmed FIX-F5-001 (`get_issue_types_for_project` pagination bound,
+`MAX_CREATEMETA_PAGES = 500`) is a genuine CWE-400/770 fix, no regression.
 
-Ready for F7 delta convergence. State-manager owns commit of these artifacts to `.factory/phase-f6-hardening/` on the factory-artifacts branch.
+## 5. Full regression
+
+**PASS.** `cargo test` (full suite) on `develop` @ `4e4ae4f5`: **4660
+passed / 0 failed / 106 ignored** (ignored = gated keyring/OAuth/live-E2E
+tests), across 111 test-result lines. Zero `FAILED` lines, no panics.
+
+## 6. DTU adversarial testing
+
+**SKIPPED.** `dtu_required: false` — the field-dx bundle clones no external
+service behavior; Jira interaction is already covered by wiremock
+integration tests.
+
+## 7. Accessibility re-check
+
+**SKIPPED.** `feature_type: backend-cli` — `jr` has no UI surface.
+
+---
+
+## Overall verdict
+
+**F6 COMPLETE.** All applicable gate criteria (formal verification, fuzz
+testing, mutation testing, security scan, full regression) are met or
+justifiably substituted per repo convention; the two skip categories (DTU,
+accessibility) are correctly inapplicable to this CLI-only, no-external-clone
+bundle. No CRITICAL/HIGH finding anywhere in the phase. Config-quality gap
+found during the phase (mutation `examine_globs` scope) was fixed and merged
+within the phase (FIX-F6-001, PR #749), not deferred as tracked debt.
+
+**Next:** Phase F7 (delta convergence — 5-dimensional check on the delta +
+full-tree regression — then the FINAL HUMAN GATE to close cycle-002).

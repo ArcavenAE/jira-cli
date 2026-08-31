@@ -1,94 +1,89 @@
----
-phase: f6-targeted-hardening
-dimension: fuzz-testing
-bundle: ADF-CODE-MARK-EXCLUSIVITY
-head_sha: d7875e6
-pre_bundle_base: 0d8a8a5
-tool: none (justified skip — precedent) + proptest as high-case-count substitute
-date: 2026-07-08
-verdict: PASS (justified skip)
+# Phase F6 — Fuzz Assessment (field-dx delta)
+
+- **Producer:** formal-verifier (Phase F6 targeted hardening)
+- **Branch / commit:** `develop` @ `4e4ae4f540ed04e652ced2cf113e11f851fe6d34`
+- **Scope:** field-dx bundle (issues #578, #580)
+- **Information-asymmetry wall (DF-025):** No Phase F5 adversarial-review artifact was read. Input surfaces were derived independently from the VP catalog and source.
+
 ---
 
-# F6 Dimension 2 — Fuzz Testing
+## 1. Fuzz availability finding
 
-## No cargo-fuzz setup exists in this repo
+**`cargo-fuzz` / a `fuzz/` harness directory is NOT set up in this repository.** Verified:
 
-```
-$ ls fuzz/ 2>/dev/null || echo "no fuzz dir"
-no fuzz dir
-```
+- No `fuzz/` directory at repo root (`ls fuzz` → "No such file or directory").
+- No `cargo-fuzz` / `fuzz_target!` usage anywhere (`grep -rn -i "cargo-fuzz\|fuzz_target" Cargo.toml src tests` → 0 hits).
+- No libFuzzer/AFL wiring in `.cargo/`.
 
-There is no `fuzz/` directory, no `cargo fuzz` target, and no cargo-fuzz
-setup anywhere in the repo. This matches the established precedent for
-every prior F6 cycle on this project (issue-407, issue-483, issue-474,
-S-FORK-OPS-BACKFILL) — the project uses proptest at elevated case counts
-as its substitute for fuzz testing on the ADF parser, and this F6 follows
-suit rather than introducing a new toolchain mid-cycle.
+### Justified substitution → proptest arbitrary-input generators
 
-## Substitute — proptest at elevated case count on `markdown_to_adf`
+The repo's recorded methodology (CLAUDE.md: "Property tests with proptest";
+`verification-delta-field-dx.md §0`) uses **proptest with arbitrary-input strategies** as
+the coverage mechanism for parser/input-handling surfaces, in place of a standalone
+coverage-guided fuzzer. For the field-dx input-parsing surfaces this substitution is sound:
 
-The VP-571-001 property (BC-7.2.015 universal invariant) is itself a
-fuzz-equivalent harness against `markdown_to_adf`:
+- Each parsing surface is exercised through a proptest that generates **arbitrary Unicode
+  input** (`\PC{0,80}` — any Unicode scalars incl. multibyte — and `[^\x00]{0,24}`
+  arbitrary-non-NUL), which is precisely the class of input a byte-oriented fuzzer would
+  target (multibyte-boundary panics, embedded delimiters, empty segments).
+- The properties assert the two invariants a fuzzer would look for: **no panic**
+  (no `exit 101`, no `"panicked at"` in stderr) and **no malformed output**
+  (every emitted PUT/POST body is valid JSON).
+- The surfaces are pure/near-pure string transforms with bounded input; a coverage-guided
+  fuzzer offers little marginal reach over exhaustive proptest shrinking here.
 
-- **Target function under exercise**: `markdown_to_adf`, the parser
-  entrypoint for markdown → ADF. Same target a cargo-fuzz target would
-  attack.
-- **Input space**: markdown strings composed from a 9-wrapper × N-inline-template product with wrapper depth ≤ 3. Covers the same inputs a
-  structured fuzzer would generate — arbitrary shapes of typographic
-  wrapping around inline-code events, nested list / blockquote / panel /
-  table / footnote-definition containers.
-- **Assertion**: universal invariant on emitted ADF (BC-7.2.015). A
-  parse crash, panic, or invariant violation would surface as a test
-  failure.
+A standalone `cargo-fuzz` target could be added later for continuous long-running fuzzing,
+but is **not required** to close the field-dx input surfaces at F6 — each already has
+arbitrary-input property coverage.
 
-Command (per Dimension 1):
+---
 
-```
-PROPTEST_CASES=2000 cargo test --lib \
-  prop_bc_7_2_015_no_code_marked_text_node_carries_typographic_marks
-```
+## 2. Input-surface → proptest coverage
 
-Result: **1 test, 0 failures, 0 crashes** at 2,000 generator cases
-(10× default). Result echoed in `kani-results.md`.
+The three input-parsing surfaces named in the F6 task, each with its arbitrary-input proptest:
 
-## Existing ADF proptest coverage (broader adf fuzz-equivalent surface)
+| Input surface | Parser / composer | Arbitrary-input proptest | Strategy | Panic-free assertion |
+|---|---|---|---|---|
+| `NAME[:kind]=VALUE` splitting | `parse_field_kv` (`src/cli/issue/create.rs:564`) | `prop_field_hint_split_no_panic` (create.rs:1140); `prop_field_hint_value_bytes_preserved` (1221); `prop_parse_field_kv_no_panic_on_arbitrary_input` (1123) | `raw in "\PC{0,80}"` (any Unicode scalars); value `in "\PC{0,40}"` | returns `Ok`/`Err(UserError)`, never unwinds; VALUE preserved byte-for-byte |
+| `WS:OBJ` asset parsing | `:asset` composer / `resolve_asset_field_l2` (`field_resolve.rs`), first-colon `split_once(':')` | `prop_asset_composer_no_malformed_json_ever` (`tests/issue_field_hint_kinds.rs:1150`) | `prop_oneof![5 => "[^\x00]{0,24}", 2 => "[0-9]{1,10}"]` (arbitrary non-NUL + numeric objectId lane so the PUT-body branch actually executes) | no `exit 101`, no `"panicked at"`; every PUT body is valid JSON |
+| `Parent>Child` cascading `>` split | `:option` composer, `str::split_once('>')` (`field_resolve.rs`, `create.rs`) | `prop_cascading_split_no_panic` (`tests/issue_field_hint_kinds.rs:470`) | `val in "[^\x00]{0,24}"` (arbitrary non-NUL) | no `exit 101`, no `"panicked at"` |
 
-`src/adf.rs::tests` already carries multiple property tests over
-`markdown_to_adf` / `adf_to_text` / `text_to_adf` that exercise the parser
-under randomized input during every F6 regression run:
+**Bug-class provenance:** these proptests are the direct mitigation of `FIX-F6-LRE-1` (#734)
+— the byte-offset-slice-inside-a-multibyte-scalar panic class (the same defect
+`validate_duration::split_at` had on `"7é"`). The delta's split sites use char-boundary-safe
+`split_once`, and the proptests pin no-panic over multibyte input; both `>` and `:` split
+sites have a dedicated arbitrary-UTF-8 no-panic proptest per the VP-578-008 (D3) and
+VP-578-012 (Pass2-F3) extensions.
 
-- `prop_bc_7_2_015_no_code_marked_text_node_carries_typographic_marks` (F5 landing) — VP-571-001 primary
-- Existing task-list `GenNode` recursive strategy — property tested
-  against markdown_to_adf across arbitrary nested-list / task-list shapes
-- Existing ADF round-trip / CR-LF-normalization proptests (per
-  BC-7.2.011 INV-1 and BC-7.2.012 depth-guard)
+### Coverage verdict
 
-All the above ran green in the F6 full-regression pass (2007/0/93).
-This constitutes a fuzz-equivalent coverage surface on the same target
-symbol.
+- **All three named input surfaces have arbitrary-input proptest coverage.** No input surface
+  is left without a property test.
+- Proptests are subprocess-based (spawn the real `jr` binary) and assert against real panic
+  signals (`exit 101`, `"panicked at"`), giving genuine end-to-end panic detection equivalent
+  to a fuzzer's crash oracle.
 
-## No crash / panic surface added by the delta
+---
 
-Reviewed the delta (`git diff 0d8a8a5..d7875e6 -- src/`):
+## 3. Execution
 
-- **New code paths**: allowlist-filter branch inside `push_code`
-  (immutable clone + filter + append). Non-recursive, non-branching on
-  input, no I/O. Cannot introduce a new panic surface beyond the
-  existing `serde_json::Value` clone/append operations, which are
-  infallible on the shapes produced upstream.
-- **No new unsafe blocks**: `grep -nE '^unsafe |^ *unsafe ' src/adf.rs` →
-  0 uses (single hit is inside a comment on `sanitized for cell-unsafe
-  characters`). Non-test-code `.unwrap()`/`.expect()` count in
-  `src/adf.rs` outside the `#[cfg(test)] mod tests` block is unchanged
-  from pre-bundle baseline (4).
-- **No new external I/O**: `push_code` remains pure. All effects stay
-  behind the `handle_create`/`handle_jsm_create` call sites, which are
-  already covered by wiremock integration tests (H-NEW-ADF-010 Calls
-  A–E).
+The field-dx proptests run as part of the full `cargo test` suite on `develop` @ `4e4ae4f5`:
 
-## Verdict
+- **Full suite: PASS — exit 0; 4660 passed, 0 failed, 106 ignored** (across 111 result lines).
+- All three input-surface proptests executed and passed:
+  - `prop_field_hint_split_no_panic` + `prop_field_hint_value_bytes_preserved` (`parse_field_kv`),
+  - `prop_cascading_split_no_panic` (`Parent>Child` split),
+  - `prop_asset_composer_no_malformed_json_ever` (`WS:OBJ` asset composer).
 
-**PASS (justified skip)** — no cargo-fuzz setup exists (project precedent);
-proptest at `PROPTEST_CASES=2000` on `markdown_to_adf` acts as the
-substitute; delta introduces no new panic / I/O surface that a fuzz
-target would additionally cover.
+No proptest (parser, cascading-split, or asset-composer) reported a panic or shrink failure.
+
+---
+
+## 4. Fuzz-substitution justification — summary
+
+- **cargo-fuzz / fuzz/ present:** No.
+- **Substitution justified:** **Yes** — proptest arbitrary-Unicode-input generators cover
+  every field-dx input-parsing surface (`parse_field_kv`, `WS:OBJ` asset split,
+  `Parent>Child` cascading split) with no-panic + no-malformed-JSON oracles, which is the
+  coverage a byte-oriented fuzzer would target for these bounded pure-string transforms.
+- **Uncovered input surface:** **None.**

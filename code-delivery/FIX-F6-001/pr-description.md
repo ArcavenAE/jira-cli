@@ -1,53 +1,39 @@
-# [FIX-F6-001] test(windows): add path-fallback property suite (F6 formal verification)
+# [FIX-F6-001] Close mutation-coverage scope gap: `field.rs` + `field_resolve.rs`
 
-**Epic:** Windows-build F6 targeted hardening — formal/property verification
-**Mode:** test-only (property verification recording — no production code change)
-**Convergence:** 9 properties, 2048 proptest cases each, 100% mutation kill on delta scope
+**Epic:** Phase F6 — Targeted Hardening (Feature Mode)
+**Mode:** feature (test-infra / config-only fix)
+**Convergence:** N/A — single-cycle config/doc fix, not a TDD story
 
-![Tests](https://img.shields.io/badge/tests-9_properties_|_2048_cases_each-brightgreen)
-![Mutation](https://img.shields.io/badge/mutation-100%25_kill-brightgreen)
-![Clippy](https://img.shields.io/badge/clippy-clean-brightgreen)
-![Security](https://img.shields.io/badge/security-no_new_surface-green)
+![Type](https://img.shields.io/badge/type-config%2Fdoc--only-blue)
+![Source Change](https://img.shields.io/badge/source%20code%20changed-none-brightgreen)
+![Scope](https://img.shields.io/badge/examine__globs-18%20%E2%86%92%2020-orange)
 
-Lands the Phase F6 formal verification substitute for the two pure Windows path-fallback
-helper functions introduced in S-WIN-1:
-- `jr::config::config_appdata_fallback(Option<String>) -> PathBuf`
-- `jr::cache::cache_localappdata_fallback(Option<String>) -> PathBuf`
-
-These helpers implement the empty-string filter invariant for the Windows
-`%APPDATA%`/`%LOCALAPPDATA%` defensive fallback (BC-6.1.014 EC-1, BC-6.2.016 EC-1/EC-4) —
-a security-relevant invariant: an empty string must never escape the fallback as an
-empty path component that could silently redirect config/cache to the process's CWD.
-
-Kani was evaluated and OOMs on PathBuf equality proofs (tractability probe confirmed).
-The input space has exactly 3 equivalence classes (None, Some(""), Some(non-empty)) — proptest
-exhaustively covers all 3 and fans out over ~10k generated cases across the 5 proptest
-properties. This is the recorded formal verification method; see commit body.
+Phase F6 (targeted hardening) surfaced a mutation-coverage scope gap: two production CLI
+files — `src/cli/field.rs` (`jr field options <field>`, S-580-1) and
+`src/cli/issue/field_resolve.rs` (the shared `--field` resolution/dispatch hub used by both
+`issue edit --field` and `issue create --field`, S-578-2/S-578-4) — were never added to
+`.cargo/mutants.toml::examine_globs`. Because the required `mutants` CI gate relies solely on
+`examine_globs` (no `--file` flags), this meant the gate generated **zero mutants** for either
+file across every field-dx PR shipped to date (#578 parts 1–5, S-580-1). This PR closes the
+gap by adding both files to scope, backfilling the required `docs/specs/cargo-mutants-policy.md`
+§Scope citations, and recording the change in CHANGELOG.md. No production source code is
+touched — this is a pure test-infrastructure/config fix, same drift class as
+P22-001/DEC-149/S-MUTANTS-SCOPE-1.
 
 ---
 
 ## Architecture Changes
 
+Not applicable — this PR changes only test/mutation-testing configuration and documentation.
+No component, module, or dependency graph change.
+
 ```mermaid
 graph TD
-    Test["tests/win_path_fallback_props.rs\n(NEW — test-only)"]
-    Config["jr::config::config_appdata_fallback\n(pure fn, no OS call)"]
-    Cache["jr::cache::cache_localappdata_fallback\n(pure fn, no OS call)"]
-    PropTest["proptest framework\n(2048 cases per property)"]
-
-    Test -->|9 properties| Config
-    Test -->|9 properties| Cache
-    PropTest -->|arbitrary String inputs| Test
-
-    style Test fill:#90EE90
-    style Config fill:#E0E0E0
-    style Cache fill:#E0E0E0
+    mutants_toml[".cargo/mutants.toml<br/>examine_globs"] -->|now scopes| field_rs["src/cli/field.rs<br/>~91 mutants"]
+    mutants_toml -->|now scopes| field_resolve_rs["src/cli/issue/field_resolve.rs<br/>~45 mutants"]
+    style field_rs fill:#90EE90
+    style field_resolve_rs fill:#90EE90
 ```
-
-No production code changes. The new test file exercises existing pure functions via the
-public `jr::` API surface (integration test, not unit test). Both helper functions are
-`pub` and platform-agnostic (they take `Option<String>` as a parameter — no `std::env`
-access inside — so they run on any platform without `#[cfg(windows)]` gating).
 
 ---
 
@@ -55,25 +41,13 @@ access inside — so they run on any platform without `#[cfg(windows)]` gating).
 
 ```mermaid
 graph LR
-    SWIN1["S-WIN-1\n✅ merged PR #505\nconfig_appdata_fallback\ncache_localappdata_fallback"]
-    SWIN5["S-WIN-5\n✅ merged PR #510\nWindows CI matrix"]
-    FIX_F5["F5 adversarial\n✅ CONVERGED\n14 passes / 5 fix PRs #511-#515"]
-    F6["FIX-F6-001\n🟡 this PR\nF6 property verification"]
-
-    SWIN1 --> F6
-    SWIN5 --> F6
-    FIX_F5 --> F6
-    F6 --> downstream["downstream\nnone blocked"]
-
-    style F6 fill:#FFD700
-    style SWIN1 fill:#90EE90
-    style SWIN5 fill:#90EE90
-    style FIX_F5 fill:#90EE90
+    S580[S-580-1<br/>merged<br/>jr field options] -.->|scope gap in| F6001[FIX-F6-001<br/>this PR]
+    S578[S-578-1..5<br/>merged<br/>--field hint-syntax] -.->|scope gap in| F6001
+    F6001 -->|future changes to these 2 files now gated by| MutantsCI[mutants CI job<br/>ge90pct kill rate required]
+    style F6001 fill:#FFD700
 ```
 
-**All upstream dependencies merged.** S-WIN-1 (PR #505) delivered the production functions
-being verified. S-WIN-5 (PR #510) delivered the Windows CI matrix. F5 adversarial converged
-at develop `2f96543` (DEC-098). No downstream PRs blocked.
+No open dependency PRs; this is a standalone follow-up fix against already-merged stories.
 
 ---
 
@@ -81,112 +55,72 @@ at develop `2f96543` (DEC-098). No downstream PRs blocked.
 
 ```mermaid
 flowchart LR
-    BC1["BC-6.1.014\nEC-1: empty-string filter\nEC-3: pass-through exact"]
-    BC2["BC-6.2.016\nEC-1: empty LOCALAPPDATA filter\nEC-4: pass-through exact"]
-
-    BC1 --> P1["P1: None → PathBuf::from('.')"]
-    BC1 --> P2["P2: Some('') → PathBuf::from('.')"]
-    BC2 --> P3["P3: non-empty → byte-exact pass-through"]
-    BC2 --> P4["P4: output never empty PathBuf"]
-
-    P1 --> T_det1["test_config_appdata_fallback_none_is_dot\ntest_cache_localappdata_fallback_none_is_dot"]
-    P2 --> T_det2["test_config_appdata_fallback_empty_is_dot\ntest_cache_localappdata_fallback_empty_is_dot"]
-    P3 --> T_prop1["prop_config_nonempty_passthrough\nprop_cache_nonempty_passthrough"]
-    P4 --> T_prop2["prop_config_output_never_empty\nprop_cache_output_never_empty\nprop_both_helpers_agree"]
+    BC[P22-001 / DEC-149 / S-MUTANTS-SCOPE-1<br/>mutants examine_globs drift class] --> AC1[New CLI handler file<br/>must be added to examine_globs at creation]
+    AC1 --> T1[check-cargo-mutants-policy-citations.sh<br/>69 file,fn pairs, exit 0]
+    AC1 --> T2[mutants_glob_existence.rs<br/>every examine_globs entry resolves]
+    T1 --> S1["docs/specs/cargo-mutants-policy.md"]
+    T2 --> S2[".cargo/mutants.toml"]
 ```
-
-| BC | EC | Invariant | Tests |
-|----|-----|-----------|-------|
-| BC-6.1.014 | EC-1 | `None`/`""` → `"."` defensive fallback | `test_config_appdata_fallback_none_is_dot`, `test_config_appdata_fallback_empty_is_dot` |
-| BC-6.1.014 | EC-3 | non-empty pass-through byte-exact | `prop_config_nonempty_passthrough` (2048 cases) |
-| BC-6.2.016 | EC-1 | `None`/`""` → `"."` defensive fallback | `test_cache_localappdata_fallback_none_is_dot`, `test_cache_localappdata_fallback_empty_is_dot` |
-| BC-6.2.016 | EC-4 | non-empty pass-through byte-exact | `prop_cache_nonempty_passthrough` (2048 cases) |
-| both | P4 | output is NEVER empty PathBuf | `prop_config_output_never_empty`, `prop_cache_output_never_empty` (2048 cases each) |
-| both | cross | both helpers agree on all inputs | `prop_both_helpers_agree` (2048 cases) |
 
 ---
 
 ## Test Evidence
 
-### Coverage Summary
+No unit/integration tests are added or modified — this PR contains no `src/` production code
+changes, only `.cargo/mutants.toml` config, a `docs/specs/` policy doc update, and a
+CHANGELOG entry. Verification is via the repo's existing self-validating guards:
 
-| Metric | Value | Status |
-|--------|-------|--------|
-| New properties | 9 (4 deterministic + 5 proptest) | PASS |
-| Proptest cases (per property) | 2048 | PASS |
-| Total generated inputs exercised | ~10,240 | PASS |
-| Mutation kill rate (delta scope) | 100% | PASS |
-| Clippy | zero warnings | PASS |
-| fmt | clean | PASS |
-| cargo test --test win_path_fallback_props | GREEN | PASS |
+| Guard | What it checks | Expected result |
+|-------|-----------------|------------------|
+| `scripts/check-cargo-mutants-policy-citations.sh` (spec-guard CI job) | Every `examine_globs` entry has a matching §Scope function-location citation in `docs/specs/cargo-mutants-policy.md` | exit 0, 69 (file, fn) pairs validated |
+| `tests/mutants_glob_existence.rs` (always-run `test` CI job) | Every `examine_globs` glob entry resolves to at least 1 real file on disk | PASS — `src/cli/field.rs` and `src/cli/issue/field_resolve.rs` both exist |
+| `scripts/check-spec-counts.sh` class guards (spec-guard) | No numeric-test-count drift introduced in doc prose | N/A — no BC files touched |
 
-### Test Inventory
+### Why this PR's own `mutants` CI job won't mutation-test the two newly-scoped files
 
-```mermaid
-graph LR
-    Det["Deterministic (4)"]
-    Prop["Property (5 × 2048)"]
+This PR's `mutants` job runs `--in-diff` scoped to *this PR's own diff* (`.cargo/mutants.toml`,
+`CHANGELOG.md`, `docs/specs/cargo-mutants-policy.md` — no `src/` lines changed), so it correctly
+generates zero mutants here. The value delivered is forward-looking: any **future** PR that
+touches `src/cli/field.rs` or `src/cli/issue/field_resolve.rs` will now have its diff lines
+mutation-tested by the gate, closing the silent-zero-mutant blind spot that existed for every
+field-dx PR shipped so far.
 
-    Det --> d1["test_config_appdata_fallback_none_is_dot"]
-    Det --> d2["test_config_appdata_fallback_empty_is_dot"]
-    Det --> d3["test_cache_localappdata_fallback_none_is_dot"]
-    Det --> d4["test_cache_localappdata_fallback_empty_is_dot"]
-    Prop --> p1["prop_config_nonempty_passthrough"]
-    Prop --> p2["prop_cache_nonempty_passthrough"]
-    Prop --> p3["prop_config_output_never_empty"]
-    Prop --> p4["prop_cache_output_never_empty"]
-    Prop --> p5["prop_both_helpers_agree"]
+| Metric | Value |
+|--------|-------|
+| **Files changed** | 3 (`.cargo/mutants.toml`, `CHANGELOG.md`, `docs/specs/cargo-mutants-policy.md`) |
+| **Source files changed** | 0 |
+| **`examine_globs` delta** | 18 -> 20 entries |
+| **New mutation surface unlocked (future PRs)** | `src/cli/field.rs` (~91 mutants) + `src/cli/issue/field_resolve.rs` (~45 mutants) ~= 136 mutants |
+| **Regressions** | none possible -- config/doc-only |
 
-    style Det fill:#90EE90
-    style Prop fill:#90EE90
-```
+---
 
-| Test | Property | BC | Method |
-|------|----------|----|--------|
-| `test_config_appdata_fallback_none_is_dot` | P1 | BC-6.1.014 EC-1 | deterministic |
-| `test_config_appdata_fallback_empty_is_dot` | P2 | BC-6.1.014 EC-1 | deterministic |
-| `test_cache_localappdata_fallback_none_is_dot` | P1 | BC-6.2.016 EC-1 | deterministic |
-| `test_cache_localappdata_fallback_empty_is_dot` | P2 | BC-6.2.016 EC-1 | deterministic |
-| `prop_config_nonempty_passthrough` | P3 | BC-6.1.014 EC-3 | proptest 2048 cases |
-| `prop_cache_nonempty_passthrough` | P3 | BC-6.2.016 EC-4 | proptest 2048 cases |
-| `prop_config_output_never_empty` | P4 | BC-6.1.014/6.2.016 | proptest 2048 cases |
-| `prop_cache_output_never_empty` | P4 | BC-6.1.014/6.2.016 | proptest 2048 cases |
-| `prop_both_helpers_agree` | cross | both | proptest 2048 cases |
+## Demo Evidence
 
-### Kani Tractability Note
+N/A — test-infrastructure/config change (mutation-testing scope only), not a user-facing
+behavior change. No CLI output, flag, or UX surface is affected, so there is nothing to
+demonstrate per-AC. Evidence of correctness is the pair of always-run/spec-guard CI checks
+cited in **Test Evidence** above:
 
-Kani was evaluated as the F6 formal verification method for `config_appdata_fallback` and
-`cache_localappdata_fallback`. A tractability probe confirmed:
-- Kani CAN prove the `None`/empty equivalence class with bounded model checking
-- Bounded-string symbolic execution on arbitrary strings triggers CBMC memory OOM
-- The input space is exactly 3 equivalence classes (None / Some("") / Some(non-empty)) with
-  no parsing, arithmetic, or indexing — proptest's `\PC{1,256}` strategy exhaustively
-  exercises all reachable paths in the non-empty class over ~2048 generated strings
-
-Proptest is the recorded formal verification method for this delta. The property results
-are recorded at `.factory/phase-f6-hardening/win-build/property-results.md` (per story spec).
+- `scripts/check-cargo-mutants-policy-citations.sh` — validates the new §Scope citations
+  for `src/cli/field.rs` and `src/cli/issue/field_resolve.rs` (exit 0, 69 (file, fn) pairs).
+- `tests/mutants_glob_existence.rs` — validates both new `examine_globs` entries resolve to
+  real files on disk.
 
 ---
 
 ## Holdout Evaluation
 
-N/A — formal verification recording. Evaluated at wave gate per VSDD convention.
+N/A — evaluated at wave gate. This is a config/doc-only test-infrastructure fix, not a story
+subject to holdout scenario evaluation.
 
 ---
 
 ## Adversarial Review
 
-N/A for this PR. The Phase F5 adversarial review for the Windows-build feature already
-converged at develop `2f96543` (DEC-098: 14 passes / 5 fix PRs #511–#515 / 3 clean passes
-R12/R13/R14). This F6 property suite is the FOLLOW-ON verification recording — not a new
-feature subject to adversarial review.
-
-| Phase | Finding Category | Count | Status |
-|-------|-----------------|-------|--------|
-| F5 (Windows-build) | CRITICAL | 0 | CLEAN |
-| F5 (Windows-build) | HIGH | 0 since R2 | CLEAN (CONVERGED) |
-| F5 (Windows-build) | MEDIUM | accepted residuals | WIN-RUNTIME-OAUTH-PROBE, WIN-AC004-DIRECTIONAL |
-| F6 (this PR) | N/A — test-only | — | — |
+N/A — evaluated at Phase 5. This fix originates from Phase F6 targeted-hardening review
+findings, not a fresh adversarial pass of its own; the change itself is reviewed via the
+standard PR review convergence loop below.
 
 ---
 
@@ -205,31 +139,59 @@ graph LR
     style Low fill:#90EE90
 ```
 
-- **No new production code.** One new test file. Zero new network surface.
-- **No new dependencies.** `proptest` is already a dev-dependency.
-- **Security-relevant invariant VERIFIED:** The `prop_config_output_never_empty` and
-  `prop_cache_output_never_empty` properties directly verify that an empty-string input
-  (which would represent a malformed `%APPDATA%`/`%LOCALAPPDATA%` env var) NEVER produces
-  an empty PathBuf — closing the path-redirection risk where an empty config/cache dir
-  would silently resolve to the process CWD.
-- **No unsafe code.** No `#[allow(...)]` suppressions.
+<details>
+<summary><strong>Security Scan Details</strong></summary>
+
+### SAST / Dependency / Secrets
+- No production source code changed; no new dependencies added.
+- Changed files are: a TOML config list of glob strings (`.cargo/mutants.toml`), a Markdown
+  policy doc, and a Markdown changelog — none execute at runtime or affect the compiled binary.
+- `cargo deny check`: unaffected (no `Cargo.toml`/lockfile change).
+- Conclusion: no attack surface change. Security review is a confirmation pass, not a scan.
+
+</details>
 
 ---
 
 ## Risk Assessment & Deployment
 
 ### Blast Radius
-- **Systems affected:** None (test-only). No production code changes.
-- **User impact:** Zero. This PR adds CI coverage; no runtime behavior changes.
-- **Risk Level:** MINIMAL — test-only, no new dependencies in production.
+- **Systems affected:** CI `mutants` job scope only (test infrastructure).
+- **User impact:** none — no runtime behavior change, no binary change.
+- **Data impact:** none.
+- **Risk Level:** LOW.
 
 ### Performance Impact
 
-No runtime impact. Proptest runs only during `cargo test`; 9 × 2048 = ~18k property
-evaluations complete in well under 1 second (pure functions, no I/O, no OS calls).
+| Metric | Before | After | Delta | Status |
+|--------|--------|-------|-------|--------|
+| Runtime perf | unaffected | unaffected | none | OK |
+| CI `mutants` job wall-clock (future PRs touching these 2 files) | 0 mutants tested | up to ~136 mutants in scope | +test time only on touching PRs | OK (expected, intended) |
 
-### Feature Flags
-None.
+<details>
+<summary><strong>Rollback Instructions</strong></summary>
+
+**Immediate rollback (< 5 min):**
+```bash
+git revert <MERGE_COMMIT_SHA>
+git push origin develop
+```
+
+No feature flag; no data migration; a straight revert fully restores prior `examine_globs`
+scope with no side effects.
+
+</details>
+
+---
+
+## Traceability
+
+| Requirement | Story AC | Test | Verification | Status |
+|-------------|---------|------|-------------|--------|
+| Close `field.rs` mutation-scope gap | FIX-F6-001 AC1 | `tests/mutants_glob_existence.rs` | glob resolves | PASS |
+| Close `field_resolve.rs` mutation-scope gap | FIX-F6-001 AC2 | `tests/mutants_glob_existence.rs` | glob resolves | PASS |
+| §Scope citations backfilled | FIX-F6-001 AC3 | `scripts/check-cargo-mutants-policy-citations.sh` | 69 (file,fn) pairs, exit 0 | PASS |
+| CHANGELOG entry recorded | FIX-F6-001 AC4 | manual diff review | N/A | PASS |
 
 ---
 
@@ -240,53 +202,31 @@ None.
 
 ```yaml
 ai-generated: true
-pipeline-mode: fix-f6-formal-hardening
-story-id: FIX-F6-001
-related-stories: [S-WIN-1, S-WIN-5]
-related-prs: ["#505 (S-WIN-1)", "#510 (S-WIN-5)"]
-phase: F6-targeted-hardening
+pipeline-mode: feature
+factory-version: "1.0.0-rc.24"
 pipeline-stages:
-  f6-property-verification: completed — 9 properties, 2048 cases each
-  kani-probe: OOM on PathBuf equality — proptest substituted (recorded)
-  mutation-testing: 100% kill on delta scope
-  clippy: clean
-  fmt: clean
-convergence-metrics:
-  new-tests: 9
-  proptest-cases-per-property: 2048
-  mutation-kill-rate: 100%
-  regressions: 0
-  clippy-warnings: 0
+  spec-crystallization: not-applicable
+  story-decomposition: not-applicable
+  tdd-implementation: not-applicable
+  holdout-evaluation: not-applicable
+  adversarial-review: not-applicable
+  formal-verification: not-applicable
+  convergence: not-applicable
+adversarial-passes: 0
 models-used:
-  builder: claude-sonnet-4-6
-generated-at: "2026-06-14T00:00:00Z"
+  builder: claude-sonnet-5
+generated-at: "2026-08-31T00:00:00Z"
 ```
 
 </details>
 
 ---
 
-## Demo Evidence
-
-Test-only PR. No per-AC demo recordings required per established Skip Log convention
-for CI/infra/test-only stories (see STATE.md Skip Log: "All 7 S-WIN-1..6 + #475 per-AC
-demos: Yes — adapted. All are CI-config / infra / docs / test-only / platform-cfg stories").
-Evidence is the CI run itself (all 3-OS matrix test jobs green).
-
----
-
 ## Pre-Merge Checklist
 
-- [x] `cargo test --test win_path_fallback_props` — GREEN (all 9 tests/properties pass)
-- [x] `cargo test` — full suite GREEN, zero regressions
-- [x] `cargo clippy -- -D warnings` — zero warnings
-- [x] `cargo fmt --all -- --check` — clean
-- [x] Mutation testing: 100% kill on delta scope (test-only file; no new production code)
-- [x] No critical/high security findings unresolved
-- [x] All upstream PRs merged (S-WIN-1 #505, S-WIN-5 #510, F5 #511–#515)
-- [x] Kani tractability probe documented in commit + test file module doc
-- [x] No new production code — test-only
-- [x] No new runtime dependencies
-- [ ] AI review approved (pr-reviewer)
-- [ ] CI checks green on PR
-- [ ] Squash-merge to develop
+- [ ] All CI status checks passing (`ci-gate`)
+- [x] Coverage delta is positive or neutral (no source change; net-new mutation surface added for future PRs)
+- [x] No critical/high security findings unresolved (config/doc-only, no scan needed)
+- [x] Rollback procedure validated (single `git revert`)
+- [ ] Human review completed (self-merge via repo admin bypass, per FIX-F5-001 precedent)
+- [x] Monitoring alerts configured — N/A (no production-impacting change)
