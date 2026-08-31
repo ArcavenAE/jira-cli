@@ -1,0 +1,152 @@
+{
+  "story": "S-578-4",
+  "cycle": "cycle-002",
+  "feature_mode_bundle": "field-dx",
+  "perimeter": 1,
+  "perimeter_label": "per-story Step 4.5 (BC-5.39.001)",
+  "convergence_bar": "3-consecutive-clean",
+
+  "passes": [
+    {
+      "id": "P1",
+      "classification": "FINDINGS_PRESENT",
+      "findings": [
+        {"id": "ADV-S578-4-P1-001", "severity": "LOW", "category": "spec-fidelity", "description": "create-path field echo behavior diverged from spec wording (echo/AC-016-adjacent)"},
+        {"id": "ADV-S578-4-P1-002", "severity": "LOW", "category": "coverage", "description": "AC-016 mandated help-text test coverage not yet present in issue_create_field.rs"},
+        {"id": "ADV-S578-4-P1-003", "severity": "NIT", "category": "documentation", "description": "minor wording nit"},
+        {"id": "ADV-S578-4-P1-004", "severity": "NIT", "category": "documentation", "description": "minor wording nit"}
+      ],
+      "window_eligible": false,
+      "notes": "Pass 1 FINDINGS_PRESENT: 2 LOW + 2 NIT. Fixes applied: 4 tests added covering the echo behavior and AC-016 help-text requirement. Also surfaced an internal spec placement conflict (Story AC-016 mandates the two help-text tests live in issue_create_field.rs while Task-2 places the AC-12 count fix in issue_create_jsm.rs) -- tracked as a process-gap lesson, not a code defect."
+    },
+    {
+      "id": "P2",
+      "classification": "FINDINGS_PRESENT",
+      "findings": [
+        {"id": "ADV-S578-4-P2-001", "severity": "LOW", "category": "correctness", "description": "create-path used .remove() where the edit-path sibling used .get() on the editmeta field map, producing a false 'not on Create screen' rejection for a field shape asymmetry between the two call sites"}
+      ],
+      "window_eligible": false,
+      "notes": "Pass 2 FINDINGS_PRESENT: 1 LOW. Fixed via switching the create-path lookup to .get() (parity with the edit-path sibling), adding Clone derives to the editmeta types needed for the non-consuming lookup, and a regression test pinning the corrected behavior."
+    },
+    {
+      "id": "P3",
+      "classification": "NITPICK_ONLY",
+      "findings": [],
+      "window_eligible": true,
+      "window_position": "1/3",
+      "notes": "Pass 3 NITPICK_ONLY -- convergence window starts (1/3). No source-level findings."
+    },
+    {
+      "id": "P4",
+      "classification": "FINDINGS_PRESENT",
+      "findings": [
+        {"id": "ADV-S578-4-P4-001", "severity": "MEDIUM", "category": "coverage", "description": "no create-path POST-body wire-shape assertions -- tests checked exit code/HTTP call presence but never asserted the actual outgoing JSON body shape for --field on the create path"},
+        {"id": "ADV-S578-4-P4-002", "severity": "LOW", "category": "coverage", "description": "AC-018 fixture used an unrealistic field type, weakening the scenario it was meant to cover"}
+      ],
+      "window_eligible": false,
+      "notes": "Pass 4 FINDINGS_PRESENT: 1 MEDIUM + 1 LOW. Window reset (was 1/3 after P3). Fixes applied: 4 body_partial_json wire-shape tests added asserting the actual outgoing POST body for --field on the create path; AC-018 fixture switched to a realistic doc-type field description."
+    },
+    {
+      "id": "P5",
+      "classification": "FINDINGS_PRESENT",
+      "findings": [
+        {"id": "ADV-S578-4-P5-001", "severity": "LOW", "category": "documentation", "description": "CLAUDE.md carried a stale field_resolve.rs size entry"},
+        {"id": "ADV-S578-4-P5-002", "severity": "LOW", "category": "spec-fidelity", "description": "Story's File-Structure section ('edit.rs MUST NOT change') contradicted the Architecture-Mapping requirement to extend the shared resolve_edit_fields signature, which necessarily touches edit.rs call sites"},
+        {"id": "ADV-S578-4-P5-003", "severity": "NIT", "category": "coverage", "description": "error-taxonomy table rows 1 and 3 missing an expected substring assertion"}
+      ],
+      "window_eligible": false,
+      "notes": "Pass 5 FINDINGS_PRESENT: 2 LOW + 1 NIT. Fixes applied: CLAUDE.md field_resolve.rs size entry corrected; taxonomy rows 1 & 3 substring assertions added. The edit.rs contradiction is a spec self-contradiction between the story's File-Structure section and its own Architecture-Mapping section -- implementation correctly followed Architecture Mapping (extending resolve_edit_fields); noted rather than 'fixed' since the code was already correct. See cycle lessons for the process-gap this surfaced."
+    },
+    {
+      "id": "P6",
+      "classification": "NITPICK_ONLY",
+      "findings": [],
+      "window_eligible": true,
+      "window_position": "1/3",
+      "notes": "Pass 6 NITPICK_ONLY -- convergence window restarts (1/3) after P5's findings."
+    },
+    {
+      "id": "P7",
+      "classification": "FINDINGS_PRESENT",
+      "findings": [
+        {"id": "ADV-S578-4-P7-001", "severity": "LOW", "category": "documentation", "description": "D2 residual-note wording was narrower than the general case it was describing"},
+        {"id": "ADV-S578-4-P7-002", "severity": "NIT", "category": "documentation", "description": "stale rustdoc comment"}
+      ],
+      "window_eligible": false,
+      "notes": "Pass 7 FINDINGS_PRESENT: 1 LOW + 1 NIT. Window reset (was 1/3 after P6). Both fixes were comment-only (D2 residual-note generalized; stale rustdoc corrected), no behavioral or test changes."
+    },
+    {
+      "id": "P8",
+      "classification": "NITPICK_ONLY",
+      "findings": [],
+      "window_eligible": true,
+      "window_position": "1/3",
+      "notes": "Pass 8 NITPICK_ONLY -- convergence window restarts (1/3) after P7's findings."
+    },
+    {
+      "id": "P9",
+      "classification": "CLEAN",
+      "findings": [],
+      "window_eligible": true,
+      "window_position": "2/3",
+      "notes": "Pass 9 CLEAN -- window at 2/3, no findings of any severity."
+    },
+    {
+      "id": "P10",
+      "classification": "NITPICK_ONLY",
+      "findings": [
+        {"id": "ADV-S578-4-P10-001", "severity": "LOW", "category": "coverage", "description": "error-taxonomy Row-10 missing an expected substring assertion"}
+      ],
+      "window_eligible": false,
+      "notes": "Pass 10 NITPICK_ONLY with 1 LOW finding -- window reset (was 2/3 after P9) because a LOW finding still breaks the consecutive-clean-or-better streak used for the convergence window in this story's tally. Fixed in the same sweep that produced the P11 rename/doc fixes (Row-10 substring added)."
+    },
+    {
+      "id": "P11",
+      "classification": "FINDINGS_PRESENT",
+      "findings": [
+        {"id": "ADV-S578-4-P11-001", "severity": "MEDIUM", "category": "test-naming-truthfulness", "description": "the DEC-188 test-inversion task (Task-2) updated several tests' BODIES to assert the reversed (post-DEC-310) behavior but left their NAMES and doc-comments unchanged, so 5 tests were still named/documented as asserting the pre-reversal '..._combined_error' behavior their bodies now negated"},
+        {"id": "ADV-S578-4-P11-002", "severity": "LOW", "category": "documentation", "description": "stale doc-comment #1 left over from the same inversion sweep"},
+        {"id": "ADV-S578-4-P11-003", "severity": "LOW", "category": "documentation", "description": "stale doc-comment #2 left over from the same inversion sweep"}
+      ],
+      "window_eligible": false,
+      "notes": "Pass 11 FINDINGS_PRESENT: 1 MEDIUM + 2 LOW. Root-caused via a comprehensive rename/doc sweep across the DEC-188-inverted tests (5 strays fixed: names and doc-comments brought into agreement with their already-correct bodies) plus the carried-forward Row-10 taxonomy substring from P10. This is the root cause tracked as a process-gap lesson: the inversion task should have mandated renaming + doc-comment refresh in the same change that inverted the assertions."
+    },
+    {
+      "id": "P12",
+      "classification": "CLEAN",
+      "findings": [],
+      "window_eligible": true,
+      "window_position": "1/3",
+      "notes": "Pass 12 CLEAN -- convergence window restarts (1/3) after P11's findings."
+    },
+    {
+      "id": "P13",
+      "classification": "CLEAN",
+      "findings": [],
+      "window_eligible": true,
+      "window_position": "2/3",
+      "notes": "Pass 13 CLEAN -- window at 2/3."
+    },
+    {
+      "id": "P14",
+      "classification": "CLEAN",
+      "findings": [],
+      "window_eligible": true,
+      "window_position": "3/3",
+      "notes": "Pass 14 CLEAN -- window COMPLETE (3/3), run against final HEAD f2778259. No findings of any severity. CONVERGED STRICT."
+    }
+  ],
+
+  "total_passes": 14,
+  "convergence_window_passes": ["P12", "P13", "P14"],
+  "passes_clean": 3,
+  "converged": true,
+  "converged_strict": true,
+  "last_classification": "CLEAN",
+  "feature_branch": "feature/S-578-4-create-field-support",
+  "develop_base_sha": "41763ff0",
+  "converged_sha": "f2778259",
+
+  "convergence_summary": "S-578-4 (issue create --field platform-path createmeta resolution + DEC-188 reversal per DEC-310, 13 pts, 19 ACs) CONVERGED STRICT after 14 per-story Step-4.5 adversary passes on branch feature/S-578-4-create-field-support (base develop @ 41763ff0, final HEAD f2778259). Trajectory: P1 FINDINGS_PRESENT (2 LOW + 2 NIT: echo/AC-016 coverage) -> fixed (4 tests); P2 FINDINGS_PRESENT (1 LOW: create-path .remove() vs edit-path .get() asymmetry causing a false 'not on Create screen' rejection) -> fixed (.get() + editmeta Clone derives + regression test); P3 NITPICK_ONLY; P4 FINDINGS_PRESENT (1 MEDIUM: no create-path POST-body wire-shape assertions; 1 LOW: AC-018 fixture realism) -> fixed (4 wire-shape tests + realistic fixture); P5 FINDINGS_PRESENT (2 LOW: stale CLAUDE.md entry, story File-Structure vs Architecture-Mapping contradiction; 1 NIT: taxonomy rows) -> CLAUDE.md fixed, taxonomy rows fixed, contradiction noted as a spec self-contradiction (implementation correctly followed Architecture Mapping); P6 NITPICK_ONLY; P7 FINDINGS_PRESENT (1 LOW + 1 NIT, comment-only) -> fixed; P8 NITPICK_ONLY; P9 CLEAN; P10 NITPICK_ONLY (1 LOW taxonomy Row-10) -> fixed in the P11 sweep; P11 FINDINGS_PRESENT (1 MEDIUM: 5 DEC-188-inversion tests with stale names/doc-comments contradicting their already-inverted bodies; 2 LOW stale doc-comments) -> root-caused via a comprehensive rename/doc sweep; P12/P13/P14 all CLEAN, giving the final 3/3 consecutive-clean window on HEAD f2778259 -- criterion (passes_clean >= 3 AND last == NITPICK_ONLY-or-cleaner) MET. Zero production-logic defects were found after P2; every finding from P3 onward was test-coverage, test-naming-truthfulness, or doc-completeness in nature. Final orchestrator-run test state: issue_create_field 62 pass, issue_create_jsm 107 pass, issue_edit_field 90 pass; full suite green; clippy -D warnings clean; fmt clean; zero todo!(). Three process-gap lessons recorded in cycles/cycle-002/lessons.md for the Cycle-Closing Checklist. PR not yet opened/merged as of this record -- STATE.md/STORY-INDEX/sprint-state updates deferred until merge.",
+  "timestamp": "2026-08-30T00:00:00Z"
+}

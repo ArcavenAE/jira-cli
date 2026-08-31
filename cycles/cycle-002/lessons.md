@@ -30,6 +30,15 @@ traces_to: STATE.md
 2. **[process-gap] F2 BC-citation authoring committed forward-looking `src/...::symbol` citations to not-yet-implemented symbols (`get_createmeta_fields`) without running `check-bc-citation-symbols.sh`; the guard runs only in spec-guard CI, so it wasn't caught until an F4 PR's CI ran, blocking ALL open PRs.** Lesson: F2/spec-authoring must run `check-bc-citation-symbols.sh` before commit, OR planned symbols must use guard-safe prose form until their implementing story lands. Owed follow-up: consider adding the citation guard to the local state-manager verification set for spec commits.
    _Discovered: BC-3.3.010 hygiene fix, 2026-08-26 (blocking S-578-1's PR #739)_
 
+3. **[process-gap] Story AC-016 mandates two help-text tests in `issue_create_field.rs` while Task-2 places the AC-12 count fix in `issue_create_jsm.rs`** — an internal AC-to-Task placement conflict within the same story spec, surfaced only once the adversary cross-checked AC ownership against the Task breakdown.
+   _Discovered: S-578-4 delivery, adversary Pass 1, 2026-08-30_
+
+4. **[process-gap] Story File-Structure section states "edit.rs MUST NOT change" while the same story's Architecture-Mapping section requires extending the shared `resolve_edit_fields` signature, which necessarily touches edit.rs call sites** — a spec self-contradiction between two sections of the same story file. Implementation correctly followed Architecture Mapping; the File-Structure constraint was simply wrong for this story's actual design.
+   _Discovered: S-578-4 delivery, adversary Passes 5/8/9, 2026-08-30_
+
+5. **[process-gap] Task-2's test-inversion instruction updated test BODIES to assert the DEC-310-reversed behavior but did not mandate updating test NAMES or doc-comments, leaving 5 stale-name/stale-comment strays that took three adversary passes (P8, P10, P11) to fully surface and root-cause.** Lesson: any task instruction that inverts a test's asserted behavior must explicitly require renaming the test and refreshing its doc-comment in the same change — otherwise the test's name/doc actively lies about what its body now checks.
+   _Discovered: S-578-4 delivery, adversary Pass 11 (root cause), 2026-08-30_
+
 ## Content-Level
 
 1. **[content] The `:option` JSM wire-shape spec conflict: BC-3.8.008 EC-3.8.008-1/EC-3.8.008-3 carried a drafted-by-analogy OBJECT-wrap `{"cf":{"value":...}}` that contradicted AC-002's bare-parity STRING-wrap `{"cf":"V"}` and the shipped code.** Caught pre-convergence by reading the BC before dispatching the adversary; PO adjudicated STRING_WRAP; BC + story corrected. Lesson: drafted-by-analogy/parity-PENDING wire shapes are error-prone; verify BC↔story↔code consistency BEFORE running convergence, not after.
