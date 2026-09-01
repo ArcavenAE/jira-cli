@@ -1,13 +1,13 @@
 ---
 document_type: session-checkpoints
 level: ops
-version: "1.1"
+version: "1.2"
 status: archive
 producer: state-manager
-timestamp: 2026-08-31T20:00:00Z
+timestamp: 2026-09-01T15:30:00Z
 cycle: "cycle-002"
 inputs: [STATE.md]
-input-hash: "46b7b5e"
+input-hash: "ac34e10"
 traces_to: STATE.md
 ---
 
@@ -393,6 +393,20 @@ Archived verbatim from STATE.md v3.14 before the F2-GATE-APPROVED-F3-TRANSITION 
 **In-flight (as of this checkpoint):** none tracked by this pipeline. No worktrees, PRs, or adversary convergence loops open on the factory side. (`release.yml` run `33459579699` running upstream on GitHub Actions, outside this pipeline's tracking scope once triggered.)
 
 **NEXT on resume (as of this checkpoint):** optional post-pipeline session review (`/vsdd-factory:session-review`). No further implementation, adversarial review, hardening, or release work queued for cycle-002. *(Superseded -- session was wrapped by human request on 2026-09-01 at exactly this position; nothing further executed. See current `STATE.md` for the live SESSION-WRAP checkpoint.)*
+
+---
+
+**Checkpoint (v3.30, 2026-09-01, SESSION-WRAP):** Feature Mode cycle-002 (`field-dx`, GitHub issues #580 + #578) -- **CLOSED + RELEASED** (`v0.7.0-dev.3`). Human-requested wrap at cycle-002 completion; nothing was in-flight to interrupt.
+
+**This burst (SESSION-WRAP):** persisted the remaining session-managed `.factory/` artifacts left uncommitted at the release-cut burst (v3.29): `regression-state.json` (modified), `sidecar-learning.md` (modified), `code-delivery/release-v0.7.0-dev.3/{pr-description,pr-review}.md` (untracked -- release PR delivery artifacts). Explicit paths staged, no `git add -A`. `pipeline` frontmatter set `IDLE` (truthful terminal status -- no active cycle, last cycle shipped). `activation_head`/`activation_version` unchanged (`87f17aff` / `v0.7.0-dev.3`). Added `SESSION-WRAP` Phase Progress + Current Phase Steps rows. Burst narrative: `cycles/cycle-002/burst-log.md` Burst 20.
+
+**Final cycle-002 state (unchanged from v3.29):** F5 CONVERGED (FIX-F5-001/PR #747 @ `4e4ae4f5`). F6 COMPLETE (FIX-F6-001/PR #749 @ `dd311e13`). F7 delta-convergence PASS (FIX-F7-001/PR #750 @ `2000c455`) then human-approved at the gate (DEC-311). Released as `v0.7.0-dev.3` (PR #751 @ `87f17aff`, tag pushed, `release.yml` run `33459579699`). Counts: 719 total BCs (BC-INDEX v6.82), 32 VPs, 106 holdout scenarios -- unchanged.
+
+**In-flight (as of this checkpoint):** NONE -- no open worktrees, no pending PRs, no open convergence loop.
+
+**Outstanding (all non-blocking, tracked):** 8 LOW follow-ups (F5x4, F6-security x3, F7-story-status x1) + 3 process-gap deferrals (`CYCLE-002-PROCESS-GAP-DEFERRAL-1/2/3`) + the ~142 historical input-hash drift (`F7-GATE-SYSTEMIC-INPUT-HASH-DRIFT-BOOKKEEPING`) + 5 held Dependabot PRs. Optional not-yet-run: post-pipeline session review (session-reviewer).
+
+**NEXT on resume (as of this checkpoint):** no active cycle -- either (a) start a new feature/cycle, (b) run the optional post-pipeline session review, or (c) verify the release build finished. *(Superseded -- cycle-003 `auth-profile-dx` was opened 2026-09-01 following grounded investigation + modern-CLI research and a confirmed scope decision at the senior-architect gate. See current `STATE.md` for the live cycle-003 checkpoint.)*
 
 ---
 
