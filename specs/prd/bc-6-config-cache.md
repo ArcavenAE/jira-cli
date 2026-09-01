@@ -1,11 +1,11 @@
 ---
 context: bc-6
 title: "Configuration & Cache"
-total_bcs: 43   # cumulative claim (incl. range-collapsed; +3 windows-build F2 2026-06-12: BC-6.1.014, BC-6.2.016, BC-6.2.017; +1 added 2026-06-27: BC-6.2.018 cache warm-hit no-HTTP invariant)
-definitional_count: 33   # count of `#### BC-` headings in this file (+3 windows-build F2 2026-06-12; +1 added 2026-06-27)
-last_updated: 2026-06-27
+total_bcs: 44   # cumulative claim (incl. range-collapsed; +3 windows-build F2 2026-06-12: BC-6.1.014, BC-6.2.016, BC-6.2.017; +1 added 2026-06-27: BC-6.2.018 cache warm-hit no-HTTP invariant; +1 added 2026-09-01 cycle-003 auth-profile-dx: BC-6.1.015 `env` config-schema tag)
+definitional_count: 34   # count of `#### BC-` headings in this file (+3 windows-build F2 2026-06-12; +1 added 2026-06-27; +1 added 2026-09-01 cycle-003 auth-profile-dx)
+last_updated: 2026-09-01
 source_pass: 3
-adversary_fixes: "F-1/F-2/F-5/F-6 applied 2026-06-12 (windows-build Phase F2 adversarial review)"
+adversary_fixes: "F-1/F-2/F-5/F-6 applied 2026-06-12 (windows-build Phase F2 adversarial review); cycle-003 auth-profile-dx F2 spec-evolution 2026-09-01: BC-6.2.015 amended (ADR-0011 hard-fence un-defer, DEC-317), BC-6.1.015 added (`env` tag, DEC-314/ADR-0020 §4)"
 trace: |
   - L2: .factory/specs/domain-spec/bc-06-config-cache.md
   - Source broad: .factory/semport/jira-cli/jira-cli-pass-3-behavioral-contracts.md §2.10-2.11
@@ -16,8 +16,10 @@ trace: |
 
 # BC-6 — Configuration & Cache
 
-43 behavioral contracts across 3 subdomains: Configuration (6.1), Cache (6.2),
-Multi-profile fields — MUST-FIX (6.3). (+1 BC-6.2.018 added 2026-06-27 cache warm-hit no-HTTP invariant.)
+44 behavioral contracts across 3 subdomains: Configuration (6.1), Cache (6.2),
+Multi-profile fields — MUST-FIX (6.3). (+1 BC-6.2.018 added 2026-06-27 cache warm-hit no-HTTP invariant;
++1 BC-6.1.015 added 2026-09-01 cycle-003 `auth-profile-dx`: `env` config-schema tag; BC-6.2.015 amended
+2026-09-01 cycle-003: ADR-0011 hard-fence un-defer.)
 
 ---
 
@@ -168,6 +170,32 @@ Multi-profile fields — MUST-FIX (6.3). (+1 BC-6.2.018 added 2026-06-27 cache w
 
 ---
 
+#### BC-6.1.015: `ProfileConfig` gains an additive `env: Option<String>` environment/role tag (free-form, tolerant reader, no migration)
+
+**Confidence**: HIGH
+**Source**: `src/config.rs::ProfileConfig` (target field — F4 implementation story `S-cycle3-env-tag`, not yet landed as of this F2 pass); ADR-0020 §4 ("Additive `env`/role tag (DEC-314)")
+**Subject**: Config & Cache
+**Behavior**: `ProfileConfig` gains one new field, `env: Option<String>`. This is a **free-form, human-readable label** — NOT validated against a fixed enum or allowlist. DEC-314's own framing ("prod"/"sandbox"/"uat") is illustrative, not exhaustive: any string value is accepted verbatim. Per-profile `url` remains the actual environment lock (profile = environment + identity); `env` carries no access-control semantics and does not gate which Jira instance a profile talks to.
+
+**Tolerant-reader default (no migration required)**: `Option<T>` fields on `ProfileConfig` deserialize to `None` when the corresponding TOML key is absent, without requiring an explicit `#[serde(default)]` attribute (consistent with every other `Option` field already on this struct). An old `config.toml` written before this field existed deserializes with `env: None` — no forced cache or keychain namespace bump is triggered by this field alone (DEC-314).
+
+**Documented alternative (considered, not adopted this cycle)**: an enum/allowlist-validated shape (rejecting an `env` value outside a fixed `prod|sandbox|uat` set) was considered and explicitly NOT adopted — DEC-314 frames the tag as "lightweight, additive," and a validation contract would be a separate, additive change a future cycle could layer on without altering this BC's storage contract or triggering a migration.
+
+**Edge cases**:
+- EC-1: An arbitrary, non-canonical string (e.g. `"staging"`, `"qa-3"`) is accepted verbatim — no rejection, no normalization (case is preserved as typed).
+- EC-2: `env = ""` (explicit empty string) deserializes to `Some(String::new())`, distinct from an absent key (`None`). No special-casing collapses empty-string to `None`.
+- EC-3: An old `config.toml` with no `env` key under any `[profiles.<name>]` table loads successfully with `env: None` for that profile — `Config::load_with` does not error or warn.
+
+**Cross-reference (bc-1, not authored here)**: DISPLAY of `env` — the `auth list` table column, `auth status` output, and JSON surfacing (DEC-324) — is a `bc-1-auth-identity.md` concern (BC-1.6.046, amended) authored by the parallel cycle-003 F2 burst. This BC covers the config-schema storage contract only.
+
+**Verification Properties**:
+- **VP-AUTHDX-009 — `env` tolerant-reader round-trip / deserialization indistinguishability (PROPERTY, PROMOTED 2026-09-01, F2 VP-delta pass, was VP-cycle3-021 relocated to its correct layer).** Property: across the full input space of possible pre-cycle-003 `config.toml` shapes, a config with the `env` key ABSENT deserializes to a `ProfileConfig` with `env: None`, INDISTINGUISHABLE from any other absent-optional-field handling, with NO migration required; and a serialize→deserialize round-trip is stable (`Some(s)` survives as `Some(s)`, `None`/absent survives as `None`, and `Some("")` empty-string is distinguishable from `None`/absent). Old profiles never fail to load because of the new field. Promoted (and relocated from bc-1, where it was originally drafted as a display-layer candidate) because this is a schema/deserialization-layer property, not a display concern — it belongs alongside this BC's own tolerant-reader default and EC-1/EC-2/EC-3 edge cases, which it directly strengthens into a property-test proof. **Verification method**: property test (`proptest`, arbitrary `ProfileConfig` field combinations with/without `env`, including `env = ""`), asserting the tolerant-reader and round-trip invariants on every generated case. **F6 target**: the `ProfileConfig` serde deserialization path in `src/config.rs`.
+
+**Related**: DEC-314; ADR-0020 §4 (per-profile credential ownership / env tagging / OAuth-default ADR); F1 delta analysis (`cycles/cycle-003/phase-f1-delta-analysis/delta-analysis.md`) §1.2 item 7.
+**Trace**: ADR-0020 §4; DEC-314; F1 delta analysis §1.2 item 7; F3 candidate story `S-cycle3-env-tag` (F1 delta analysis §2 item 1)
+
+---
+
 ### 6.2 Cache
 
 #### BC-6.2.001: `read_cache<T>` returns `Ok(None)` for NotFound; propagates other I/O errors
@@ -210,7 +238,9 @@ Multi-profile fields — MUST-FIX (6.3). (+1 BC-6.2.018 added 2026-06-27 cache w
 - **Windows**: `%LOCALAPPDATA%\jr\v1\<profile>\` — `dirs::cache_dir()` used; XDG env vars are NOT consulted on Windows (see BC-6.2.016).
 
 **Platform-conditional clause** [added windows-build F2 2026-06-12]: The `~/.cache/jr/v1/` prefix documented in pre-Windows-build specs applies to Unix only. Windows path is `%LOCALAPPDATA%\jr\v1\<profile>\`.
-**Trace**: Pass 3 BC-1004; platform-conditional update windows-build F2 2026-06-12
+
+**Cycle-003 confirmation** [DEC-325(a), ADR-0020 §3, 2026-09-01]: The per-profile credential restructuring (DEC-315) does NOT bump this `v1/` cache-root — DOCUMENTED-UNCHANGED this cycle. A `v1→v2` bump remains an available-but-untriggered lever for a future cycle's separate call; cycle-003's new per-profile keychain layout (`<profile>:email`/`<profile>:api-token`, symmetric with `<profile>:oauth-*`) does not introduce an analogous keychain-namespace version marker — ADR-0020 §3 rejects that as unproven, non-disposable-data infrastructure with no existing lever to reuse (unlike this cache root's `v1/` segment).
+**Trace**: Pass 3 BC-1004; platform-conditional update windows-build F2 2026-06-12; cycle-003 confirmation 2026-09-01 (DEC-325a)
 
 ---
 
@@ -306,15 +336,26 @@ Multi-profile fields — MUST-FIX (6.3). (+1 BC-6.2.018 added 2026-06-27 cache w
 
 ---
 
-#### BC-6.2.015: Every cache reader/writer takes `profile: &str` as its first parameter (soft-fence convention)
+#### BC-6.2.015: Every cache reader/writer takes `profile: &Profile` as its first parameter (compile-time hard fence via `Profile(String)` newtype)
 
 **Confidence**: HIGH
-**Source**: `src/cache.rs` (all public functions); NFR-SCA-2
+**Source**: `docs/adr/0011-type-level-profile-fence.md` (Status: Accepted, amended 2026-09-01, DEC-317); `src/cache.rs` (target signature — F4 implementation story `S-cycle3-adr0011-newtype`, not yet landed as of this F2 pass)
 **Subject**: Config & Cache
-**Behavior**: Architectural convention: ALL cache read/write functions accept `profile: &str` as their first positional argument. No profile-unaware cache function exists. This is a soft fence (convention, not type system). Enforcement pattern: `grep -n 'fn read_cache\|fn write_cache\|fn read_team\|fn write_team\|fn read_project\|fn write_project' src/cache.rs` should show `profile: &str` as first non-self parameter in every result.
-**Verification test pattern**: `grep -E 'fn (read|write)_\w+\((?!.*profile)' src/cache.rs` should return zero matches.
-**Related**: NFR-SCA-2 (compile-time enforcement deferred — `Profile(String)` newtype P1 priority).
-**Trace**: NFR-SCA-2; Pass 4 R4; CLAUDE.md "Multi-profile boundary" gotcha
+**Behavior**: **[AMENDED 2026-09-01, cycle-003 `auth-profile-dx`, DEC-317]** The soft-fence convention this BC previously described is superseded: ADR-0011 is un-deferred (Status: Deferred → Accepted, in place, not a supersession — the decision confirms a documented revisit trigger was met, not a reversal). A `Profile(String)` newtype (`pub struct Profile(String)`, with `impl From<String> for Profile`, `impl AsRef<str> for Profile`, and a `Display` impl) is introduced and threaded through every per-profile boundary this BC previously protected by convention alone. **Target contract**: ALL cache read/write/clear/invalidate functions in `src/cache.rs` (12+ functions as of ADR-0011's amendment — the exact count is whatever `src/cache.rs` has grown to by implementation time), `Config::active_profile_name`, and `JiraClient::profile_name` change signature from `profile: &str` / `String` to `profile: &Profile` / `Profile`. A profile-unaware cache function, or a call site passing a bare `&str`/hardcoded string literal where a `Profile` is expected, becomes a **compile error** — the hard fence ADR-0011 names, replacing the grep-based soft-fence enforcement pattern below.
+
+**Status as of this amendment**: Design **ACCEPTED, NOT YET IMPLEMENTED**. `src/cache.rs`'s functions, `Config::active_profile_name`, and `JiraClient::profile_name` still use `profile: &str` / `String` as of this writing (F2). Implementation is tracked as F4 story `S-cycle3-adr0011-newtype`, sequenced to land AFTER the per-profile credential-storage/migration stories (`S-cycle3-percred-storage`, `S-cycle3-percred-migration`) so the call-site sweep covers the enlarged, post-restructuring surface exactly once (ADR-0011 § Sequencing). Until that story lands, the PRIOR soft-fence runtime behavior (documented by this BC's 1.0.0 revision) remains the actual contract — this amendment documents the accepted TARGET, not a completed migration.
+
+**Residual (documented, not closed by the newtype)**: a value that is correctly typed as `Profile` but semantically WRONG (e.g., a caller substitutes the wrong profile's `Profile` value) is NOT caught by the type system alone — the compiler enforces "a `Profile` was supplied," not "the CORRECT `Profile` was supplied." Cross-profile isolation tests (BC-6.2.009, BC-6.2.010) remain the operative safety net for this residual class; the compiler becomes the PRIMARY, not sole, safety net (see ADR-0011 § Consequences, Negative/Trade-offs).
+
+**Legacy verification pattern (superseded, retained for historical/soft-fence-only enforcement prior to newtype landing)**: `grep -n 'fn read_cache\|fn write_cache\|fn read_team\|fn write_team\|fn read_project\|fn write_project' src/cache.rs` should show `profile: &str` as first non-self parameter in every result; `grep -E 'fn (read|write)_\w+\((?!.*profile)' src/cache.rs` should return zero matches. These patterns verify the SOFT fence only and remain the operative check until `S-cycle3-adr0011-newtype` lands; once it lands, the operative verification becomes "does `cargo build` succeed with `Profile`-typed signatures throughout" — a compile-time check, not a grep.
+
+**Related**: NFR-SCA-2 — status changed from `DEFER` to resolved-design/FIX-IN-CYCLE (cycle-003) by DEC-317; see `nfr-catalog.md` NFR-SCA-2 row (amended alongside this BC).
+**Trace**: `docs/adr/0011-type-level-profile-fence.md` (Accepted, amended 2026-09-01); DEC-317; NFR-SCA-2; Pass 4 R4; CLAUDE.md "Multi-profile boundary" gotcha; F1 delta analysis (`cycles/cycle-003/phase-f1-delta-analysis/delta-analysis.md`) §1.1/§1.3/§3
+
+| Version | Date | Author | Change |
+|---------|------|--------|--------|
+| 1.0.0 | Pass 4 R4 | product-owner | Initial soft-fence convention BC (`profile: &str`, grep-based verification, `Related: NFR-SCA-2 (deferred)`). |
+| 2.0.0 | 2026-09-01 | product-owner | **AMENDED** (cycle-003 `auth-profile-dx`, DEC-317): un-defers ADR-0011 — rewrote Behavior to describe the compile-time hard fence (`Profile(String)` newtype) as the ACCEPTED target contract; documented current not-yet-implemented status and F4 sequencing (`S-cycle3-adr0011-newtype`); flagged the "correctly-typed-but-wrong-value" residual; flipped `Related` cross-reference from "NFR-SCA-2 (deferred)" to "NFR-SCA-2 (resolved-design/FIX-IN-CYCLE)"; retained legacy grep-verification pattern as historical/soft-fence-only, valid until F4 lands. No BC ID change (append-only numbering) and no filename-slug change. |
 
 ---
 
@@ -339,8 +380,10 @@ Multi-profile fields — MUST-FIX (6.3). (+1 BC-6.2.018 added 2026-06-27 cache w
 - EC-1: `dirs::cache_dir()` returns `None` (Windows Known Folder API failure — rare; `dirs` resolves via `SHGetKnownFolderPath`/`FOLDERID_LocalAppData` and does NOT consult the `LOCALAPPDATA` env var, so this is independent of `LOCALAPPDATA`'s value). The `unwrap_or_else` fallback then reads `LOCALAPPDATA` directly: `std::env::var("LOCALAPPDATA").ok()` returns `None` (unset) or `Some("")` (empty), both filtered out by `.filter(|s| !s.is_empty())`; `.map(PathBuf::from)` is not called; `.unwrap_or_else(|| PathBuf::from("."))` yields `"."` → joined with `"jr"` → relative `./jr`. A set-but-empty `LOCALAPPDATA=""` is therefore treated identically to an unset `LOCALAPPDATA` — both route to the `./jr` defensive fallback. Cache writes proceed; on next TTL expiry cache is re-fetched from API.
 - EC-2: Existing Windows user running pre-BC-6.2.016 build (non-idiomatic `%USERPROFILE%\.cache\jr\` path) — cache is not migrated; old files orphan harmlessly; TTL expiry causes re-fetch. No corruption. Not a blocker for v1.
 
+**Cycle-003 confirmation** [DEC-325(a), ADR-0020 §3, 2026-09-01]: Same confirmation as BC-6.2.004 — DEC-315's per-profile credential restructuring does NOT bump this `v1/` cache-root (Windows or Unix); no keychain-namespace version marker is introduced either (ADR-0020 §3). DOCUMENTED-UNCHANGED this cycle.
+
 **Related BCs**: BC-6.2.004 (platform-conditional root, updated), BC-6.2.017 (debug seam)
-**Trace**: windows-build F2 2026-06-12; architecture-delta.md §1.2; ADR-0016
+**Trace**: windows-build F2 2026-06-12; architecture-delta.md §1.2; ADR-0016; cycle-003 confirmation 2026-09-01 (DEC-325a)
 
 ---
 
@@ -537,7 +580,9 @@ These pinned-text changes are load-bearing for the holdout H-NEW-MP-001 verifica
 - Cache directory: `~/.cache/jr/v1/<profile>/` (Unix); `%LOCALAPPDATA%\jr\v1\<profile>\` (Windows) — see BC-6.2.004, BC-6.2.016
 - Config directory: `~/.config/jr/` (Unix); `%APPDATA%\jr\` (Windows) — see BC-6.1.014
 - Non-atomic writes are the documented contract; self-heal on read
-- Cross-profile cache isolation enforced by naming convention (not type system)
+- Cross-profile cache isolation: convention-enforced today (naming convention, not type system); ADR-0011 amendment (cycle-003 `auth-profile-dx`, DEC-317) ACCEPTS a compile-time `Profile(String)` newtype hard fence as the target — design-accepted, NOT yet implemented (F4 story `S-cycle3-adr0011-newtype`); see BC-6.2.015 (amended)
 - `config.active_profile()` is the SOLE source of truth for per-profile custom field IDs post-fix
 - `JR_CONFIG_DIR` / `JR_CACHE_DIR` override path resolution in debug builds only; no-op in release — see BC-6.2.017
 - XDG env vars (`XDG_CONFIG_HOME`, `XDG_CACHE_HOME`) are consulted ONLY on `#[cfg(not(windows))]` — not on Windows builds
+- `ProfileConfig.env: Option<String>` — additive, free-form environment/role tag; tolerant reader (absent key → `None`); no migration required; see BC-6.1.015 (cycle-003, DEC-314/ADR-0020 §4)
+- No `v1→v2` cache-root bump and no keychain-namespace version marker this cycle (DEC-325a, ADR-0020 §3) — see BC-6.2.004/BC-6.2.016 confirmations

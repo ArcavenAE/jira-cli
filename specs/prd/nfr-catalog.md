@@ -1,10 +1,10 @@
 ---
 context: nfr-catalog
 title: "NFR Catalog — Pass 4 Convergence"
-total_nfrs: 42  # 41 baseline + NFR-P-W1 (windows-build F2, supported platforms, 2026-06-12)
-last_updated: 2026-06-12
+total_nfrs: 42  # 41 baseline + NFR-P-W1 (windows-build F2, supported platforms, 2026-06-12); no new row added cycle-003 (routing-only changes)
+last_updated: 2026-09-01
 source_pass: 4
-revision_note: "2026-06-12 — windows-build F2: NFR-P-W1 (Supported Platforms — x86_64-pc-windows-msvc added as full-support tier) added to Dimension 4 (Performance/Platform). 2026-05-09 — S-3.08 (PR #317 / fba47ad) closed 11 LOW NFRs: 7 flipped DOCUMENT-AS-IS → DOCUMENT-AS-IS-COMPLETE (source comments + CLAUDE.md entries); 4 flipped DEFER → DEFER-DOCUMENTED (CLAUDE.md entries noting v2 deferral). Two new status types introduced: DOCUMENT-AS-IS-COMPLETE (closure mechanism committed) and DEFER-DOCUMENTED (deferral explicitly surfaced in CLAUDE.md). Pre-impl audit confirmed NFR-O-H and NFR-O-R already RESOLVED via S-2.05; NFR-O-E and NFR-SCA-2 remain pure-DEFER with no action. Prior revision (2026-05-08): Wave 2 closure swept 10 additional NFRs to RESOLVED (NFR-O-F/J/L/M/O/W/H/R/V via S-2.05/S-2.07; NFR-R-F via S-2.05)."
+revision_note: "2026-09-01 — cycle-003 `auth-profile-dx` F2 spec evolution: NFR-SCA-2 routing DEFER → FIX-IN-CYCLE (design accepted; DEC-317 un-defers ADR-0011's `Profile(String)` newtype hard fence; F4 implementation pending; see BC-6.2.015 amended in bc-6-config-cache.md). NFR-S-B routing SECURITY-DECIDE → RESOLVED (doc-drift fix: CLAUDE.md already documents `JR_AUTH_HEADER` as `#[cfg(debug_assertions)]`-gated per SD-002, mirroring `JR_BASE_URL`; the row's prior description was stale, not a live decision). Neither change adds/removes an NFR row (total_nfrs unchanged at 42). 2026-06-12 — windows-build F2: NFR-P-W1 (Supported Platforms — x86_64-pc-windows-msvc added as full-support tier) added to Dimension 4 (Performance/Platform). 2026-05-09 — S-3.08 (PR #317 / fba47ad) closed 11 LOW NFRs: 7 flipped DOCUMENT-AS-IS → DOCUMENT-AS-IS-COMPLETE (source comments + CLAUDE.md entries); 4 flipped DEFER → DEFER-DOCUMENTED (CLAUDE.md entries noting v2 deferral). Two new status types introduced: DOCUMENT-AS-IS-COMPLETE (closure mechanism committed) and DEFER-DOCUMENTED (deferral explicitly surfaced in CLAUDE.md). Pre-impl audit confirmed NFR-O-H and NFR-O-R already RESOLVED via S-2.05; NFR-O-E and NFR-SCA-2 remain pure-DEFER with no action (superseded 2026-09-01 for NFR-SCA-2, above). Prior revision (2026-05-08): Wave 2 closure swept 10 additional NFRs to RESOLVED (NFR-O-F/J/L/M/O/W/H/R/V via S-2.05/S-2.07; NFR-R-F via S-2.05)."
 trace: |
   - L2: .factory/specs/domain-spec/
   - Source: .factory/semport/jira-cli/jira-cli-pass-4-deep-r4.md §2,§3,§4
@@ -62,7 +62,7 @@ All four MUST-FIX items (NFR-R-D, NFR-R-A, NFR-R-B, NFR-R-E) have been crystalli
 
 | ID | Description | Severity | Site | Phase 3 Routing |
 |---|---|---|---|---|
-| **NFR-S-B** | `JR_AUTH_HEADER` env var read unconditionally in production binary (`client.rs:64-66`). Any process inheriting that env-var bypasses keychain auth. Privilege escalation risk in CI/CD environments where env vars leak between jobs. | HIGH | `src/api/client.rs:64-66` | **SECURITY-DECIDE**: Option (a) `#[cfg(test)]` gate; OR (b) require simultaneous `JR_BASE_URL` set (lowest-risk migration). Policy decision required. |
+| **NFR-S-B** | `JR_AUTH_HEADER` env var — **doc-drift correction (cycle-003 F2, 2026-09-01): this row was stale.** CLAUDE.md's "AI Agent Notes" documents `JR_AUTH_HEADER` as already gated `#[cfg(debug_assertions)]` (SD-002, mirroring the shipped `JR_BASE_URL` release-gate pattern) — release binaries do NOT read it; only debug/test builds do, for test isolation. The original "read unconditionally in production binary" description describes a pre-SD-002 state that no longer matches `src/`. Not a new decision — a documentation-truth reconciliation flagged by the F1 delta analysis (§1.5) as adjacent-but-out-of-scope for cycle-003's own auth-profile-dx changes. | HIGH | `src/api/client.rs`; `.factory/architecture/security-decisions/SD-002-jr-auth-header-prod-gating.md` | **RESOLVED (doc-drift fix, cycle-003 F2, 2026-09-01)**: SD-002 already gates `JR_AUTH_HEADER` behind `#[cfg(debug_assertions)]`, symmetric with `JR_BASE_URL`'s dual-site gate. No `SECURITY-DECIDE` action remains — row updated to reflect shipped reality, not a new policy call. |
 | **NFR-S-F** | Supply-chain: `cargo-deny` is wired in CI but `multiple-versions = "warn"` policy means version dupes don't fail the build. No SBOM published. 332 transitive Cargo deps for an OAuth-handling CLI. Cross-ref: risk register R-H5. | HIGH | `deny.toml`, `.github/workflows/ci.yml` | **FIX-IN-PHASE-3**: Enforce `multiple-versions = "deny"` in `deny.toml`; publish SBOM via `cargo cyclonedx`. See R-H5 in risk-register.md. |
 | **NFR-S-E** | GitHub Actions workflows use floating action tags (e.g., `actions/checkout@v4`) instead of pinned SHA digests. A compromised tag could inject malicious code into the build/release pipeline without detection — specifically, the OAuth client secret injected at build time (`JR_BUILD_OAUTH_CLIENT_ID`/`_SECRET`) could be exfiltrated. CI/CD integrity gap. | HIGH | `.github/workflows/` | **FIX-IN-PHASE-3**: Pin all `uses: <action>@<tag>` lines to `uses: <action>@<sha256-digest>` (e.g., `actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683`). Use `pin-github-action` or Dependabot to automate. Severity promoted from LOW to HIGH per ADV-P2-004 (rare event but OAuth client secret exposure if exploited). |
 
@@ -135,7 +135,7 @@ All four MUST-FIX items (NFR-R-D, NFR-R-A, NFR-R-B, NFR-R-E) have been crystalli
 | ID | Description | Severity | Site | Phase 3 Routing |
 |---|---|---|---|---|
 | **NFR-SCA-1** | Retry-After parsing accepts integer only; HTTP-date format (`Mon, 04 May 2026 00:00:00 GMT`) silently falls through to `DEFAULT_RETRY_SECS = 1`. Atlassian sends integers in practice. | LOW | `src/api/rate_limit.rs:14-19` | **DOCUMENT-AS-IS-COMPLETE (S-3.08 / PR #317)**: NFR-SCA-1 Retry-After integer-only rationale added at `src/api/rate_limit.rs:25`. |
-| **NFR-SCA-2** | Soft-fence per-profile cache isolation: convention is "every cache fn takes `profile: &str` first" (100% conformance) but no compile-time enforcement. Future contributor could add profile-unaware reader. | LOW | `src/cache.rs` | **DEFER**: Introduce `Profile(String)` newtype to enforce at compile time. P1 priority. |
+| **NFR-SCA-2** | Soft-fence per-profile cache isolation: convention is "every cache fn takes `profile: &str` first" (100% conformance) but no compile-time enforcement. Future contributor could add profile-unaware reader. | LOW | `src/cache.rs` | **FIX-IN-CYCLE (design accepted, cycle-003 `auth-profile-dx`, DEC-317, 2026-09-01)**: ADR-0011 un-deferred in place (Status: Deferred → Accepted) — `Profile(String)` newtype ACCEPTED as the compile-time enforcement mechanism (`docs/adr/0011-type-level-profile-fence.md`). Design-resolved, implementation PENDING: F4 story `S-cycle3-adr0011-newtype`, sequenced after `S-cycle3-percred-storage`/`S-cycle3-percred-migration` per ADR-0011 § Sequencing. See BC-6.2.015 (amended, `bc-6-config-cache.md`). |
 | **NFR-SCA-3** | `validate_asset_key` accepts ASCII alphanumeric prefix + `-` + ASCII digit suffix only. Unicode object keys would be rejected. Not a current use case. | LOW | `src/jql.rs:39-54` | **DOCUMENT-AS-IS-COMPLETE (S-3.08 / PR #317)**: NFR-SCA-3 ASCII-only validate_asset_key rationale added at `src/jql.rs:39`. |
 
 ---
@@ -158,7 +158,7 @@ All four MUST-FIX items (NFR-R-D, NFR-R-A, NFR-R-B, NFR-R-E) have been crystalli
 | NFR-R-A | Reliability | HIGH | FIX-IN-PHASE-3 | BC-X.5.002 |
 | NFR-R-B | Reliability | HIGH | FIX-IN-PHASE-3 | BC-3.4.001 |
 | NFR-R-E | Reliability | HIGH | FIX-IN-PHASE-3 | BC-4.3.001 |
-| NFR-S-B | Security | HIGH | SECURITY-DECIDE | — |
+| NFR-S-B | Security | HIGH | RESOLVED (doc-drift fix, cycle-003 F2, 2026-09-01 — SD-002 already gates `JR_AUTH_HEADER`) | — |
 | NFR-P-W1 | Performance / Platform | MEDIUM | FIX-IN-PHASE-3 (windows-build F2 2026-06-12) | BC-6.1.014, BC-6.2.016, BC-6.2.017 |
 | NFR-R-C | Reliability | MEDIUM | RESOLVED (2026-05-08, S-2.06 v2.0.0, PR #308 / c8f15d8) | — |
 | NFR-R-F | Reliability | MEDIUM | DOCUMENT-AS-IS-FIXED (S-2.05 comment + S-3.07 v2 guard + JRACLOUD-94632 warning) | — |
@@ -193,21 +193,22 @@ All four MUST-FIX items (NFR-R-D, NFR-R-A, NFR-R-B, NFR-R-E) have been crystalli
 | NFR-O-V | Observability | LOW | RESOLVED (2026-05-08, S-2.05, PR #307 / 7f004ca) | — |
 | NFR-O-X | Observability | LOW | DEFER-DOCUMENTED (S-3.08, PR #317) | — |
 | NFR-SCA-1 | Scalability | LOW | DOCUMENT-AS-IS-COMPLETE (S-3.08, PR #317) | — |
-| NFR-SCA-2 | Scalability | LOW | DEFER | — |
+| NFR-SCA-2 | Scalability | LOW | FIX-IN-CYCLE (design accepted, cycle-003 `auth-profile-dx`, DEC-317; ADR-0011 amendment; F4 implementation pending) | BC-6.2.015 |
 | NFR-SCA-3 | Scalability | LOW | DOCUMENT-AS-IS-COMPLETE (S-3.08, PR #317) | — |
 | NFR-T-E2E-1 | Testing / CI Infrastructure | MEDIUM | DEFER to S-E2E-1 (F2 Feature Mode, 2026-05-29) | — |
 
-**Phase 3 routing summary (post Wave 2 closure, 2026-05-08; updated S-3.08 PR #317 / fba47ad, 2026-05-09; NFR-T-E2E-1 added F2 2026-05-29; NFR-P-W1 added windows-build F2 2026-06-12):**
-- RESOLVED: 10 (NFR-R-C via S-2.06; NFR-O-H/NFR-O-L/NFR-O-M/NFR-O-O/NFR-O-R/NFR-O-V via S-2.05; NFR-O-F/NFR-O-J/NFR-O-W via S-2.07)
+**Phase 3 routing summary (post Wave 2 closure, 2026-05-08; updated S-3.08 PR #317 / fba47ad, 2026-05-09; NFR-T-E2E-1 added F2 2026-05-29; NFR-P-W1 added windows-build F2 2026-06-12; NFR-S-B and NFR-SCA-2 routing updated cycle-003 `auth-profile-dx` F2, 2026-09-01):**
+- RESOLVED: 11 (NFR-R-C via S-2.06; NFR-O-H/NFR-O-L/NFR-O-M/NFR-O-O/NFR-O-R/NFR-O-V via S-2.05; NFR-O-F/NFR-O-J/NFR-O-W via S-2.07; NFR-S-B via cycle-003 F2 doc-drift fix 2026-09-01 — SD-002 already gates `JR_AUTH_HEADER`, no policy decision remained)
 - COMPLETE: 1 (1 LOW: NFR-R-NEW-1 via S-3.07 — MAX_RETRY_AFTER_SECS=60 cap delivered)
 - FIX-IN-PHASE-3: 7 (1 CRITICAL: NFR-R-D; 5 HIGH: NFR-R-A, NFR-R-B, NFR-R-E, NFR-S-E, NFR-S-F; 1 MEDIUM: NFR-P-W1 windows-build F2 2026-06-12)
-- SECURITY-DECIDE: 2 (1 HIGH: NFR-S-B; 1 MEDIUM: NFR-S-C)
+- FIX-IN-CYCLE: 1 (1 LOW: NFR-SCA-2 — cycle-003 `auth-profile-dx` DEC-317, 2026-09-01; design accepted via ADR-0011 amendment (Deferred → Accepted), `Profile(String)` newtype; F4 implementation story `S-cycle3-adr0011-newtype` pending; see BC-6.2.015 amended)
+- SECURITY-DECIDE: 1 (1 MEDIUM: NFR-S-C)
 - POLICY-DECISION: 0 (all 3 closed by Wave 2: NFR-O-F, NFR-O-J, NFR-O-W)
 - DOCUMENT-AS-IS: 1 (NFR-S-D — LOW; improve error message precision, 2 LOC)
 - DOCUMENT-AS-IS-COMPLETE: 7 (S-3.08 / PR #317 / 2026-05-09; all LOW: NFR-R-G via cache.rs:37; NFR-O-C via CLAUDE.md:108; NFR-O-G via CLAUDE.md:79; NFR-O-I via adf.rs:532; NFR-O-T via worklogs.rs:34; NFR-SCA-1 via rate_limit.rs:25; NFR-SCA-3 via jql.rs:39)
 - DOCUMENT-AS-IS-FIXED: 1 (NFR-R-F — S-2.05 KNOWN-GAP comment + S-3.07 v2 real guard added in src/api/jira/issues.rs + JRACLOUD-94632 warning)
 - DEFER-DOCUMENTED: 4 (S-3.08 / PR #317 / 2026-05-09; all LOW: NFR-O-N via CLAUDE.md:111; NFR-O-P via CLAUDE.md:112; NFR-O-U via CLAUDE.md:110; NFR-O-X via CLAUDE.md:109 — underlying gaps deferred to v2, CLAUDE.md entry surfaces the deferral explicitly)
-- DEFER: 10 (MEDIUM and LOW: NFR-O-A/B/D/S via DEFER; NFR-P-NEW-1 via DEFER; NFR-O-E/NFR-SCA-2 via pure-acknowledgment DEFER; NFR-S-A via DEFER per ADR-0013 / S-3.09 2026-05-09; NFR-T-E2E-1 via DEFER to S-E2E-1 F2 2026-05-29)
+- DEFER: 9 (MEDIUM and LOW: NFR-O-A/B/D/S via DEFER; NFR-P-NEW-1 via DEFER; NFR-O-E via pure-acknowledgment DEFER; NFR-S-A via DEFER per ADR-0013 / S-3.09 2026-05-09; NFR-T-E2E-1 via DEFER to S-E2E-1 F2 2026-05-29) — NFR-SCA-2 moved out of this bucket to FIX-IN-CYCLE above, cycle-003 2026-09-01
 
 **Total: 42** (42 rows − NFR-O-K merged into NFR-S-D at adversary Pass 7 − NFR-R-NEW-2 removed at S-3.07 v2.0.0 2026-05-08 + NFR-T-E2E-1 added F2 Feature Mode 2026-05-29 + NFR-P-W1 added windows-build F2 2026-06-12. NFR-S-F added per ADV-P3-007. NFR-S-E severity promoted LOW→HIGH per ADV-P2-004.)
 

@@ -2,7 +2,7 @@
 document_type: canonical-counts
 product: jr (jira-cli)
 generated: "2026-05-04"
-last_verified: "2026-08-25 (bc-3-issue-write.md +8 BCs (BC-3.3.010..011 + BC-3.4.026..031) and cross-cutting.md +4 BCs (BC-X.14.001..004) added F2 spec evolution, Field DX bundle, issues #580/#578 — BC-3.8.012 REVERSED in place (DEC-188 --field guard removed, DEC-310 registered 2026-08-26, human-approved at the F2 gate — renumbered from the initially-proposed DEC-307, which was already cycle-001's); 719 total; prior: 2026-08-21 (bc-2-issue-read.md +8 BCs added F2 spec evolution, list-read-ergonomics bundle, issues #575/#584/#579/#588 — BC-2.1.023..025 + BC-2.2.033..034 + BC-2.3.041..042 + BC-2.6.052; BC-2.1.006/007 amended in place, no separate count; 707 total; prior: 2026-08-15 (bc-8-components.md NEW FILE added F2 spec evolution, component-management bundle, issues #604/#605/#606/#608 — jr component command group, 28 individually-bodied BCs; BC-2.1.018..022 + BC-2.3.040 added to bc-2-issue-read.md (--component filter + Component.id prerequisite; +6); BC-3.4.022..025 added to bc-3-issue-write.md (issue create/edit --component; +4); BC-2.1.006/007, BC-3.4.012/013/017/020/021, and cross-cutting.md BC-X.10.001 amended in place (no separate count); +38 total; 699 total; prior: 2026-08-13 (BC-1.2.047 added F2 spec evolution, bucket1-defects bundle, issue #663 — `auth switch --profile <X>` rejected exit 64; +1 individually-bodied BC; 661 total; BC-1.2.018 amended in place (auth switch carve-out, no count change); prior: BC-2.2.032 + BC-2.3.039 added F2 spec evolution issue #668 duedate feature — `issue list --duedate` opt-in column + `issue view` always-on Due Date row; +2 individually-bodied BCs; 660 total; BC-2.2.028 + BC-2.3.036 amended in place (16→17 field list, no count change); prior: BC-X.13.007 added FIX ROUND 12 S-626-1 issue #626 — `test` job runtime test-execution floor / POL-11; +1 individually-bodied BC; 658 total; prior: BC-3.9.015..020 added adversary pass-1 round B; +6 individually-bodied BCs; 657 total; prior: BC-2.7.001..012 + BC-3.9.001..014 + BC-X.8.010 added SOH-ATTACHMENTS-1 F2 DEC-179 issues #576 #585)"
+last_verified: "2026-09-01 (bc-1-auth-identity.md +12 BCs (BC-1.1.013..015 + BC-1.2.048..051 + BC-1.4.031..033 + BC-1.6.047) and bc-6-config-cache.md +1 BC (BC-6.1.015) added F2 spec evolution, cycle-003 `auth-profile-dx` bundle, DEC-312..325, ADR-0020 (new) + ADR-0011 (amended); BC-1.1.009/010, BC-1.2.013/014/017, BC-1.4.025/027/029, BC-1.6.046 amended in place in bc-1; BC-6.2.015 amended in place in bc-6; 731 total; prior: 2026-08-25 (bc-3-issue-write.md +8 BCs (BC-3.3.010..011 + BC-3.4.026..031) and cross-cutting.md +4 BCs (BC-X.14.001..004) added F2 spec evolution, Field DX bundle, issues #580/#578 — BC-3.8.012 REVERSED in place (DEC-188 --field guard removed, DEC-310 registered 2026-08-26, human-approved at the F2 gate — renumbered from the initially-proposed DEC-307, which was already cycle-001's); 719 total; prior: 2026-08-21 (bc-2-issue-read.md +8 BCs added F2 spec evolution, list-read-ergonomics bundle, issues #575/#584/#579/#588 — BC-2.1.023..025 + BC-2.2.033..034 + BC-2.3.041..042 + BC-2.6.052; BC-2.1.006/007 amended in place, no separate count; 707 total; prior: 2026-08-15 (bc-8-components.md NEW FILE added F2 spec evolution, component-management bundle, issues #604/#605/#606/#608 — jr component command group, 28 individually-bodied BCs; BC-2.1.018..022 + BC-2.3.040 added to bc-2-issue-read.md (--component filter + Component.id prerequisite; +6); BC-3.4.022..025 added to bc-3-issue-write.md (issue create/edit --component; +4); BC-2.1.006/007, BC-3.4.012/013/017/020/021, and cross-cutting.md BC-X.10.001 amended in place (no separate count); +38 total; 699 total; prior: 2026-08-13 (BC-1.2.047 added F2 spec evolution, bucket1-defects bundle, issue #663 — `auth switch --profile <X>` rejected exit 64; +1 individually-bodied BC; 661 total; BC-1.2.018 amended in place (auth switch carve-out, no count change); prior: BC-2.2.032 + BC-2.3.039 added F2 spec evolution issue #668 duedate feature — `issue list --duedate` opt-in column + `issue view` always-on Due Date row; +2 individually-bodied BCs; 660 total; BC-2.2.028 + BC-2.3.036 amended in place (16→17 field list, no count change); prior: BC-X.13.007 added FIX ROUND 12 S-626-1 issue #626 — `test` job runtime test-execution floor / POL-11; +1 individually-bodied BC; 658 total; prior: BC-3.9.015..020 added adversary pass-1 round B; +6 individually-bodied BCs; 657 total; prior: BC-2.7.001..012 + BC-3.9.001..014 + BC-X.8.010 added SOH-ATTACHMENTS-1 F2 DEC-179 issues #576 #585)"
 ---
 
 # Canonical Counts — jr (jira-cli) L3 PRD
@@ -19,16 +19,16 @@ re-run to verify. Disputes go here first.
 
 | File | Actual `#### BC-` count | Frontmatter `definitional_count` | Match? |
 |------|------------------------|----------------------------------|--------|
-| bc-1-auth-identity.md | 47 | 47 | YES |
+| bc-1-auth-identity.md | 58 | 58 | YES |
 | bc-2-issue-read.md | 80 | 80 | YES |
 | bc-3-issue-write.md | 123 | 123 | YES |
 | bc-4-assets-cmdb.md | 22 | 22 | YES |
 | bc-5-boards-sprints.md | 18 | 18 | YES |
-| bc-6-config-cache.md | 33 | 33 | YES |
+| bc-6-config-cache.md | 34 | 34 | YES |
 | bc-7-output-render.md | 49 | 49 | YES |
 | bc-8-components.md | 28 | 28 | YES |
 | cross-cutting.md | 89 | 89 | YES |
-| **Total individually-bodied** | **489** | — | — |
+| **Total individually-bodied** | **501** | — | — |
 
 Verification command:
 ```bash
@@ -41,20 +41,32 @@ done
 
 | File | Frontmatter `total_bcs` |
 |------|------------------------|
-| bc-1-auth-identity.md | 58 |
+| bc-1-auth-identity.md | 69 |
 | bc-2-issue-read.md | 122 |
 | bc-3-issue-write.md | 152 |
 | bc-4-assets-cmdb.md | 32 |
 | bc-5-boards-sprints.md | 36 |
-| bc-6-config-cache.md | 43 |
+| bc-6-config-cache.md | 44 |
 | bc-7-output-render.md | 93 |
 | bc-8-components.md | 28 |
 | cross-cutting.md | 155 |
-| **Sum** | **719** |
+| **Sum** | **731** |
 
 ### Grand total
 
-**Canonical grand total: 719** (+12 BC-3.3.010..011 + BC-3.4.026..031 + BC-X.14.001..004 added
+**Canonical grand total: 731** (+12 BC-1.1.013..015 + BC-1.2.048..051 + BC-1.4.031..033 + BC-1.6.047
+added 2026-09-01 via F2 spec evolution, cycle-003 `auth-profile-dx` bundle, DEC-312..325, ADR-0020
+(new) + ADR-0011 (amended) — per-profile API-token credential storage and one-time lazy migration
+(DEC-315: BC-1.4.031/032/033), non-destructive `auth logout` + 4-step `auth remove` (DEC-322:
+BC-1.2.013/014 amended), OAuth-default-at-creation + non-interactive/runtime-default regression
+pins (DEC-313: BC-1.1.013/014/015), `auth refresh` mechanism-override removal (DEC-321: BC-1.2.051),
+`--oauth` deprecation + new `--api-token` flag (DEC-323: BC-1.2.049/050), `auth list` ENV column +
+JSON shape (DEC-314/324: BC-1.6.046 amended + BC-1.6.047); BC-1.1.009/010, BC-1.2.017, BC-1.4.025/
+027/029 amended in place, no separate count; in bc-1-auth-identity.md (58→69 cumulative, 47→58
+individually-bodied); +1 BC-6.1.015 added 2026-09-01 via the same cycle-003 bundle — `ProfileConfig`
+gains an additive `env: Option<String>` tag (DEC-314); BC-6.2.015 amended in place — ADR-0011
+hard-fence un-defer (DEC-317), no separate count; in bc-6-config-cache.md (43→44 cumulative, 33→34
+individually-bodied); was 719 before this addition; prior note: +12 BC-3.3.010..011 + BC-3.4.026..031 + BC-X.14.001..004 added
 2026-08-25 via F2 spec evolution, Field DX bundle, issues #580/#578 — `issue create --field`
 extended to the non-JSM platform path via createmeta resolution (BC-3.3.010/011, reverses
 DEC-188's `--field`-alone platform-path exit-64 guard, DEC-310 registered 2026-08-26); `--field
@@ -73,14 +85,20 @@ addition; prior note: 707 total after
 _Note: BC-INDEX.md `total_bcs` header was bumped to 651 in v1.3.43 via a sanctioned Python shell edit (TD-031 validate-stable-anchors hook bypassed per the established workaround). CANONICAL-COUNTS.md remains the primary source of truth; TD-031 line-cite violations are tracked separately for cleanup._
 
 Breakdown:
-- 719 = sum of per-file `total_bcs` values (canonical; see per-file table above)
-- 489 of 719 are individually-bodied (have a `#### BC-` heading)
+- 731 = sum of per-file `total_bcs` values (canonical; see per-file table above)
+- 501 of 731 are individually-bodied (have a `#### BC-` heading)
 - 230 are range-collapsed (counted in cumulative claim, no individual heading; unchanged — the
-  2026-08-25 Field DX addition is entirely individually-bodied, no range-collapsed entries)
+  2026-09-01 cycle-003 `auth-profile-dx` addition (bc-1 +12, bc-6 +1) is entirely
+  individually-bodied, no range-collapsed entries; same was true of the 2026-08-25 Field DX addition)
 - BC-X.4.009 (ADV-P1-029) is a `#### BC-` heading in cross-cutting.md; it is
-  included in cross-cutting's `total_bcs: 155` and in the **719 sum**.
+  included in cross-cutting's `total_bcs: 155` and in the **731 sum**.
   It does NOT add +1 beyond the 656.
-  _(Note updated 2026-08-25 F2 spec evolution, Field DX bundle, issues #580/#578: 719 total
+  _(Note updated 2026-09-01 F2 spec evolution, cycle-003 `auth-profile-dx` bundle: 731 total after
+  +12 BCs (BC-1.1.013..015 + BC-1.2.048..051 + BC-1.4.031..033 + BC-1.6.047 added to
+  bc-1-auth-identity.md) + 1 BC (BC-6.1.015 added to bc-6-config-cache.md); BC-1.1.009/010,
+  BC-1.2.013/014/017, BC-1.4.025/027/029, BC-1.6.046 amended in place in bc-1; BC-6.2.015 amended
+  in place in bc-6; no separate count for amendments; was 719 before this addition; prior note:
+  2026-08-25 F2 spec evolution, Field DX bundle, issues #580/#578: 719 total
   after +12 BCs (BC-3.3.010..011 + BC-3.4.026..031 added to bc-3-issue-write.md; BC-X.14.001..004
   added to cross-cutting.md as a new subsection; BC-3.3.001/BC-3.4.014/BC-3.4.015/BC-3.4.016/
   BC-3.4.017/BC-3.8.001/BC-3.8.008/BC-3.8.013 amended in place, BC-3.8.012 REVERSED in place,
@@ -108,12 +126,12 @@ bc_count in L2 represents the same cumulative claim (individually-bodied + range
 
 | L2 File | L2 bc_count (after P17 fix) | L3 File | L3 total_bcs | Aligned? |
 |---------|----------------------------|---------|--------------|----------|
-| bc-01-auth-identity.md | 57 | bc-1-auth-identity.md | 58 | PENDING (L2 not bumped by this pass; out of scope — F2 delta touched L3 only) |
+| bc-01-auth-identity.md | 57 | bc-1-auth-identity.md | 69 | PENDING (L2 not bumped by the 2026-09-01 cycle-003 `auth-profile-dx` F2 delta — F2 touched L3 only, same posture as prior bc-1 deltas; +12 BCs BC-1.1.013..015 + BC-1.2.048..051 + BC-1.4.031..033 + BC-1.6.047 added DEC-312..325/ADR-0020; prior: PENDING since the 2026-08-13 F2 bucket1-defects delta) |
 | bc-02-issue-read.md | 108 | bc-2-issue-read.md | 122 | PENDING (L2 not bumped by the 2026-08-21 F2 list-read-ergonomics delta — F2 touched L3 only, same posture as bc-01; +8 BCs BC-2.1.023..025 + BC-2.2.033..034 + BC-2.3.041..042 + BC-2.6.052 added issues #575/#584/#579/#588; prior: PENDING since the 2026-08-15 F2 component-management delta; prior: YES, bumped 2026-08-13; +2 BCs BC-2.2.032 + BC-2.3.039 added F2 issue #668 duedate feature; prior: bumped 2026-07-15; +12 BCs BC-2.7.001..012 added SOH-ATTACHMENTS-1 F2 DEC-179) |
 | bc-03-issue-write.md | 140 | bc-3-issue-write.md | 152 | PENDING (L2 not bumped by the 2026-08-25 F2 Field DX delta — F2 touched L3 only, same posture as bc-01; +8 BCs BC-3.3.010..011 + BC-3.4.026..031 added issues #580/#578; prior: PENDING since the 2026-08-15 F2 component-management delta; prior: YES, bumped 2026-07-15; +14 BCs BC-3.9.001..014 added SOH-ATTACHMENTS-1 F2 DEC-179; +6 BCs BC-3.9.015..020 added adversary pass-1 round B 2026-07-15) |
 | bc-04-assets-cmdb.md | 32 | bc-4-assets-cmdb.md | 32 | YES (was 44) |
 | bc-05-boards-sprints.md | 36 | bc-5-boards-sprints.md | 36 | YES (bumped 2026-06-30; +1 BC BC-5.1.005 added BC-subclause-pass F2) |
-| bc-06-config-cache.md | 43 | bc-6-config-cache.md | 43 | YES (bumped 2026-06-27; +1 BC-6.2.018 added cache warm-hit no-HTTP invariant) |
+| bc-06-config-cache.md | 43 | bc-6-config-cache.md | 44 | PENDING (L2 not bumped by the 2026-09-01 cycle-003 `auth-profile-dx` F2 delta — F2 touched L3 only; +1 BC BC-6.1.015 added DEC-314/ADR-0020 §4; prior: YES, bumped 2026-06-27; +1 BC-6.2.018 added cache warm-hit no-HTTP invariant) |
 | bc-07-output-render.md | 93 | bc-7-output-render.md | 93 | YES (bumped 2026-07-07; +1 BC-7.2.015 added issue #571 ADF code-mark exclusivity) |
 | bc-08-components.md (not created) | — | bc-8-components.md | 28 | PENDING — same posture as prior L3-only F2 deltas; L2 not kept in sync per established convention |
 
