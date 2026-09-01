@@ -7,7 +7,7 @@ producer: state-manager
 timestamp: 2026-08-31T20:00:00Z
 cycle: "cycle-002"
 inputs: [STATE.md]
-input-hash: "bb3676f"
+input-hash: "46b7b5e"
 traces_to: STATE.md
 ---
 
@@ -989,3 +989,53 @@ No BCs/VPs/holdouts added or removed this burst (human-gate closure + checklist 
 **Dim-6 Attestation:** N/A — no source code changed this burst (`.factory/` artifact bookkeeping only, no `develop`-side commit).
 
 **Dim-7 Attestation:** N/A — no test-affecting change this burst; full regression already PASS (4660/0/106) as of the F7 delta-convergence-analyses pass, unchanged.
+
+## Burst: Burst 19 — Release v0.7.0-dev.3 cut and SHIPPED — **cycle-002 field-dx CLOSED + RELEASED** (2026-09-01)
+
+**Parent-commit:** `2000c455` (FIX-F7-001 merge, `develop` tip at the F7 human-gate close recorded in Burst 18).
+
+**Trigger:** with cycle-002 CLOSED (DEC-311, human-authorized at the F7 gate) and no further work queued, the release step ran next: version bump, tag, and `release.yml` dispatch.
+
+**Release actions taken:**
+1. Version-bump PR **#751** merged to `develop` — `develop` advanced `2000c455` → `87f17aff`.
+2. Annotated git tag **`v0.7.0-dev.3`** pushed at commit `87f17aff`.
+3. `release.yml` workflow run **`33459579699`** triggered off the tag push — building and publishing artifacts upstream (not tracked further by this factory pipeline once triggered).
+
+**Adversary verdict:** N/A — this burst is the release step + factory-artifact bookkeeping (version bump, tag, release-workflow dispatch, evidence sweep), not an adversarial review pass; no `adversary` agent was dispatched. cycle-002's adversarial convergence was already settled in F5 (CONVERGED) and F7 (5-dim PASS), both prior to this burst.
+
+**Cycle outcome:** cycle-002 (`field-dx`) is now **CLOSED + RELEASED — SHIPPED**. `activation_head` moves `2000c455` → `87f17aff`; `activation_version` moves `v0.7.0-dev.2` → `v0.7.0-dev.3`. `pipeline` frontmatter moves `RELEASE-PENDING` → `RELEASED`. No BC/VP/holdout counts changed this burst (719/32/106).
+
+**Also swept this burst (previously-uncommitted F7 evidence/delivery artifacts, explicit paths only, no `git add -A`):** `phase-f7-convergence/consistency-audit-delta.md`, `phase-f7-convergence/holdout-eval-delta.md`, `code-delivery/FIX-F7-001/pr-description.md`, `code-delivery/FIX-F7-001/pr-review.md`. `regression-state.json` and `sidecar-learning.md` left unstaged (session-managed, not clearly finalized).
+
+**NEXT:** optional post-pipeline session review (`/vsdd-factory:session-review`). No further work is queued for cycle-002.
+
+**Codifications:** cycle-002 field-dx is CLOSED + RELEASED as `v0.7.0-dev.3`. The release step is complete; the factory pipeline's tracking of this cycle ends here (upstream `release.yml` build/publish is outside pipeline scope once triggered).
+
+**Closes:** the release step; cycle-002 field-dx end-to-end (F1 through release). **Does NOT close:** the standing Drift/Standing Items carried forward unchanged (3 `CYCLE-002-PROCESS-GAP-DEFERRAL` items, 5 cargo Dependabot PRs, `ADOPT-MERGE-METHOD-RULESETS`, `S-TRAIL-DERIVATION-GUARD-1`, `AX23-001`, `F7-GATE-SYSTEMIC-INPUT-HASH-DRIFT-BOOKKEEPING`, the 10-story `S-PG-*` self-improvement backlog, and the DEC-namespace disambiguation question).
+
+### Counts reconciled this burst
+
+No BCs/VPs/holdouts added or removed this burst (release + evidence-sweep bookkeeping only) — 719 BCs / 32 VPs / 106 holdouts unchanged. `total_stories` unchanged at 161.
+
+### Details
+
+| Agent | Task | Output |
+|-------|------|--------|
+| state-manager | Record release (tag `v0.7.0-dev.3` @ `87f17aff`, PR #751, `release.yml` run `33459579699`); sweep uncommitted F7 evidence/delivery artifacts into factory-artifacts (explicit paths); update `activation_head`/`activation_version`/`pipeline` frontmatter; mark cycle-002 CLOSED + RELEASED in STATE.md (v3.28→v3.29); log this burst; commit + push | `STATE.md`; `cycles/cycle-002/burst-log.md` (this file); `phase-f7-convergence/consistency-audit-delta.md`; `phase-f7-convergence/holdout-eval-delta.md`; `code-delivery/FIX-F7-001/pr-description.md`; `code-delivery/FIX-F7-001/pr-review.md` |
+
+**Files touched (Dim-1): 6 unique files (factory-artifacts, this burst)**
+
+- STATE.md
+- cycles/cycle-002/burst-log.md
+- phase-f7-convergence/consistency-audit-delta.md
+- phase-f7-convergence/holdout-eval-delta.md
+- code-delivery/FIX-F7-001/pr-description.md
+- code-delivery/FIX-F7-001/pr-review.md
+
+**Dim-2 Attestation:** `scripts/check-spec-counts.sh` / `scripts/check-bc-cumulative-counts.sh` — N/A this burst (no BC/VP/holdout count change; release + artifact-sweep bookkeeping only, no `.factory/specs/prd/` or `BC-INDEX.md` edits).
+
+**Dim-5 Attestation:** N/A — no binary/WASM artifact produced by this factory-side burst (the release binary is built by `release.yml` upstream, outside this pipeline's tracking scope).
+
+**Dim-6 Attestation:** PASS (delegated) — `develop`-side PR #751 (version bump) was gated by jira-cli's `ci-gate`; green before merge.
+
+**Dim-7 Attestation:** N/A — no test-affecting change this burst; full regression already PASS (4660/0/106) as of the F7 delta-convergence pass, unchanged.
