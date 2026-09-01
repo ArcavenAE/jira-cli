@@ -7,7 +7,7 @@ producer: state-manager
 timestamp: 2026-09-01T15:30:00Z
 cycle: "cycle-003"
 inputs: [STATE.md]
-input-hash: "ae8ea2b"
+input-hash: "bca71fc"
 traces_to: STATE.md
 ---
 
@@ -170,5 +170,70 @@ No BCs/VPs/holdouts added or removed — 719 BCs / 32 VPs / 106 holdouts unchang
 **Dim-5 Attestation:** N/A — no binary/WASM artifact produced by this burst.
 
 **Dim-6 Attestation:** N/A — no source code changed this burst (`.factory/` artifact bookkeeping + spec authoring only; `docs/adr/0011-type-level-profile-fence.md` on `develop` was reverted, not committed, this burst).
+
+**Dim-7 Attestation:** N/A — no test-affecting change this burst; full regression remains PASS (4660/0/106) as of the cycle-002 F7 delta-convergence pass, unchanged.
+
+## Burst: Burst 4 — F2-gate FIX round: no-copy migration redesign + adversary pass-1/pass-2 fixes (2026-09-01)
+
+**Parent-commit:** `87f17aff` (`develop` tip; unchanged this burst — spec-only, no `develop`-side commit).
+
+**Trigger:** F2 quality-gate adversarial review ran two convergence passes against the Burst 3 F2-authoring-complete package. Pass-1 surfaced a CRITICAL migration-lockout finding (C-1); pass-2, run after the pass-1 fix, surfaced 2 HIGH + 3 MED seam issues (H-1/H-2/M-1/M-2/M-3) plus several LOW items. This burst records the FIX round closing all of pass-1 and pass-2's findings. Adversary pass-3 (convergence check) and the human F2 gate have NOT yet run.
+
+**Actions taken:**
+1. **REDESIGNED BC-1.4.032/033 (closes C-1, HUMAN DECISION — DEC-326):** the shared legacy `email`/`api-token` credential migration model changed from copy-then-delete to **no-copy detect-and-instruct** — `load_api_token` never reads-as-credential, copies, or deletes the legacy keys for any profile (including `default`); an absent namespaced pair produces an actionable exit-64 instructing `jr auth login <profile>`. BC-1.4.033's partial-write recovery narrowed to the namespaced-pair case only (the legacy-partial branch no longer exists — there is no copy step left to interrupt). VP-AUTHDX-005/006/007/008 oracles rewritten for the no-copy model; VP-AUTHDX-007 relabeled a mandatory keyring-gated scenario (SR-014).
+2. **ADDED BC-1.1.016 (closes I-1):** airtight non-interactive OAuth guard — `auth login --oauth` and `auth refresh` against an oauth-method profile both exit 64 under any non-interactive trigger, fail-fast, never launch a browser (ADR-0020 §Decision 8).
+3. **ADDED BC-1.4.034:** one-time re-login breaking-change contract formalizing BC-1.4.032's no-copy redesign, with an F4 CHANGELOG doc-fallout obligation.
+4. **AMENDED BC-1.6.046/047 (adversary pass-2 H-2):** JSON-vs-human-text channel split formalized (Postcondition 2a JSON-verbatim/lossless vs 2b human-text-sanitized); terminal display-sanitization contract added for the `ENV` table cell (control-character/ANSI-escape strip + length cap).
+5. **AMENDED BC-1.1.013/014 (adversary pass-2 M-1, L-2; human decision SR-010, refines DEC-313 — DEC-327):** the outgoing-mechanism credential-clear (O-1/SR-011) extended to fire identically on a non-interactive mechanism switch, not just interactive re-declaration; `JR_EMAIL`/`JR_API_TOKEN` presence is a non-interactive-ONLY trigger for suppressing the OAuth-default picker — it never overrides an interactive TTY session, which always shows the picker regardless of env vars.
+6. **AMENDED BC-1.2.013/014/048/050/051, BC-1.4.031 (adversary pass-2 M-3 + F2-gate fix pass):** ordering corrections (credential-deletion before config-entry removal on `auth logout`/`auth remove`), scope narrowing (`--api-token` inert-with-notice on `refresh`), and cross-reference fixes threaded through ADR-0020 and `architecture-delta.md` in lockstep.
+7. **BC-INDEX.md + CANONICAL-COUNTS.md** updated: `total_bcs` 731 → **733** (+2: BC-1.1.016, BC-1.4.034); `bc-1-auth-identity.md` 69→71 cumulative, 58→60 individually-bodied; `bc-6-config-cache.md` unaffected (44 cumulative / 34 individually-bodied). `scripts/check-bc-cumulative-counts.sh` reconfirmed green (733 total) after this burst's commit.
+8. **Committed to factory-artifacts** (Single-Commit Burst Protocol, explicit paths, no `git add -A`): `specs/prd/bc-1-auth-identity.md`, `specs/prd/bc-6-config-cache.md`, `specs/prd/BC-INDEX.md`, `specs/prd/CANONICAL-COUNTS.md`, `specs/architecture/decisions/ADR-0020-...md`, `cycles/cycle-003/phase-f2-spec-evolution/architecture-delta.md`, `cycles/cycle-003/phase-f2-spec-evolution/adr-0011-amendment-staged.md` — commit `d9b69e61`, pushed. Pre-existing uncommitted `regression-state.json` and `sidecar-learning.md` modifications left untouched (unrelated, per standing instruction).
+9. **Recorded DEC-326 and DEC-327** (resolves adversary finding M-3 — undocumented human decisions from the fix round): DEC-326 (no-copy migration, supersedes DEC-325(a)'s "additive keychain keys + lazy migration" language — the lazy-migration clause is reversed, the additive-keychain-keys part stands); DEC-327 (env-var non-interactive-only trigger, refines DEC-313). DEC-325(a) annotated SUPERSEDED in the Decisions Log (not removed).
+10. STATE.md refreshed via one full-content Write (v3.33 → v3.34): `current_step`/`cycle_003_status` updated to record the FIX round complete and adversary pass-3 + human gate as NEXT; Phase Progress + Current Phase Steps rows added; Convergence Status counts updated 731→733 BCs (41 VPs, 106 holdouts unchanged); new LOW Drift/Standing item L-3 recorded (BC-1.2.017 phantom BC-1.1.017 self-citation); Session Resume Checkpoint replaced (prior v3.33 checkpoint archived to `cycles/cycle-003/session-checkpoints.md`).
+11. Did NOT touch `regression-state.json` or `sidecar-learning.md`, and did NOT touch `src/` — spec-only fix round, per standing instruction.
+
+**Adversary verdict:** Pass-1 CRITICAL (C-1 migration-lockout) — FIXED. Pass-2: 2 HIGH (H-1, H-2) + 3 MED (M-1, M-2, M-3) — all FIXED; several LOW items also addressed in the same pass (see `bc-1-auth-identity.md` frontmatter Trace history for the full itemized list). Pass-3 (convergence check) is the immediate next step.
+
+**Outcome:** cycle-003 (`auth-profile-dx`) Phase F2 spec-evolution FIX round is COMPLETE: the no-copy migration redesign (DEC-326) closes the pass-1 CRITICAL migration-lockout; all pass-2 HIGH/MED seam issues are closed; DEC-326/327 recorded and DEC-325(a) annotated superseded. BC count 731→733, VP count unchanged at 41, holdouts unchanged at 106. Adversary pass-3 (convergence check) and the human F2 gate are NEXT.
+
+**NEXT:** run adversary pass-3 (convergence check — confirm no new findings / novelty decayed to zero); on a clean pass, present the F2 spec-evolution package (as fixed) at the human gate. On approval, dispatch Phase F3 (incremental stories).
+
+**Codifications:** BC-1.4.032/033's no-copy redesign is final pending F4 implementation; ADR-0020 amended in place to reflect Decision 8 (airtight non-interactive OAuth guard) and the DEC-327 env-var trigger refinement; ADR-0011 amendment (staged) unaffected by this burst.
+
+**Closes:** adversary pass-1 finding C-1; adversary pass-2 findings H-1, H-2, M-1, M-2, M-3 (M-3 closed via this burst's DEC-326/DEC-327 recording). Does NOT close: DEC-NAMESPACE-COLLISION-RISK monitoring (still standing, re-verified clean this burst — highest allocated ID is now DEC-327), or any pre-existing cycle-002 Drift/Standing item.
+
+### Counts reconciled this burst
+
+- BCs: 731 → 733 (+2: BC-1.1.016, BC-1.4.034; bc-1-auth-identity.md 69→71 cumulative / 58→60 individually-bodied; bc-6-config-cache.md unchanged at 44/34).
+- VPs: 41 (unchanged — VP-AUTHDX-005/006/007/008 oracles rewritten in place for the no-copy model, no VP added/removed).
+- Holdout scenarios: 106 (unchanged — holdout authoring is F3's work).
+- `total_stories`: unchanged at 161.
+- `total_nfrs`: unchanged at 42.
+- DEC IDs: 325 → 327 (DEC-326, DEC-327 newly allocated; collision-checked clean via corpus-wide grep, highest pre-existing was DEC-325).
+
+### Details
+
+| Agent | Task | Output |
+|-------|------|--------|
+| state-manager | Commit the F2-gate FIX round deltas to factory-artifacts (explicit paths, no `git add -A`); record DEC-326/DEC-327 and annotate DEC-325(a) as superseded; record the FIX-round-complete milestone in STATE.md (frontmatter, Phase Progress + Current Phase Steps rows, Convergence Status counts, new LOW Drift/Standing item L-3, Session Resume Checkpoint); archive the prior checkpoint; verify `scripts/check-bc-cumulative-counts.sh` green at 733; commit + push to factory-artifacts | `STATE.md`; `cycles/cycle-003/burst-log.md` (this file); `cycles/cycle-003/session-checkpoints.md`; `specs/prd/bc-1-auth-identity.md`; `specs/prd/bc-6-config-cache.md`; `specs/prd/BC-INDEX.md`; `specs/prd/CANONICAL-COUNTS.md`; `specs/architecture/decisions/ADR-0020-per-profile-credential-ownership-env-tagging-and-oauth-default-at-creation.md`; `cycles/cycle-003/phase-f2-spec-evolution/architecture-delta.md`; `cycles/cycle-003/phase-f2-spec-evolution/adr-0011-amendment-staged.md` |
+
+**Files touched (Dim-1): 10 unique files this burst (7 committed to factory-artifacts as commit `d9b69e61`; STATE.md, burst-log.md, and session-checkpoints.md committed in the state-manager's own follow-on commit)**
+
+- specs/prd/bc-1-auth-identity.md
+- specs/prd/bc-6-config-cache.md
+- specs/prd/BC-INDEX.md
+- specs/prd/CANONICAL-COUNTS.md
+- specs/architecture/decisions/ADR-0020-per-profile-credential-ownership-env-tagging-and-oauth-default-at-creation.md
+- cycles/cycle-003/phase-f2-spec-evolution/architecture-delta.md
+- cycles/cycle-003/phase-f2-spec-evolution/adr-0011-amendment-staged.md
+- STATE.md
+- cycles/cycle-003/burst-log.md
+- cycles/cycle-003/session-checkpoints.md
+
+**Dim-2 Attestation:** `scripts/check-bc-cumulative-counts.sh` — PASS this burst (BC count 731→733 verified across all tracked surfaces post-commit; 0 mismatches).
+
+**Dim-5 Attestation:** N/A — no binary/WASM artifact produced by this burst.
+
+**Dim-6 Attestation:** N/A — no source code changed this burst (`.factory/` artifact bookkeeping + spec fix round only; `src/` untouched per instruction).
 
 **Dim-7 Attestation:** N/A — no test-affecting change this burst; full regression remains PASS (4660/0/106) as of the cycle-002 F7 delta-convergence pass, unchanged.

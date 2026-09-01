@@ -7,7 +7,7 @@ producer: state-manager
 timestamp: 2026-09-01T15:30:00Z
 cycle: "cycle-003"
 inputs: [STATE.md]
-input-hash: "ae8ea2b"
+input-hash: "bca71fc"
 traces_to: STATE.md
 ---
 
@@ -141,6 +141,59 @@ v6.82), 32 VPs, 106 holdout scenarios -- unchanged this checkpoint.
 ```
 
 **Superseded by:** v3.33 (F2 spec-evolution authoring COMPLETE; F2 quality-gate checks NEXT), 2026-09-01, live in STATE.md.
+
+---
+
+## Session Resume Checkpoint (2026-09-01) — v3.33, cycle-003 F2 spec-evolution AUTHORING COMPLETE, F2 GATE PENDING
+
+### Spec Versions
+
+| Artifact | Version |
+|----------|---------|
+| STATE.md | v3.33 |
+| BC-INDEX | 731 BCs / 41 VPs / 106 holdouts (719->731 this checkpoint) |
+
+**Date:** 2026-09-01. **Position:** cycle-003 (`auth-profile-dx`) F1 delta-analysis APPROVED, Phase F2 (spec evolution) AUTHORING COMPLETE, F2 GATE PENDING. `develop` @ `87f17aff` (unchanged -- no code touched yet; the `docs/adr/0011-type-level-profile-fence.md` amendment in `develop`'s working tree was reverted, not committed, this burst). cycle-001 and cycle-002 remain CLOSED, historical, unaltered by this burst.
+
+```
+This burst (cycle-003 F2 authoring complete): the F2 spec-evolution deliverables landed:
+BC delta (specs/prd/bc-1-auth-identity.md +12, specs/prd/bc-6-config-cache.md +1, 9 BCs
+amended in place; 719->731 total, BC-INDEX.md/CANONICAL-COUNTS.md updated,
+scripts/check-bc-cumulative-counts.sh green); VP delta (VP-AUTHDX-001..009, 32->41
+total); ADR-0011 amended in place (Status Deferred->Accepted, DEC-317/DEC-325b) with
+content STAGED at cycles/cycle-003/phase-f2-spec-evolution/adr-0011-amendment-staged.md
+rather than applied to the main-repo docs/adr/ file (routing correction); new ADR-0020
+authored (specs/architecture/decisions/ADR-0020-per-profile-credential-ownership-env-
+tagging-and-oauth-default-at-creation.md, DEC-325c); nfr-catalog.md reconciled
+(NFR-SCA-2 DEFER->FIX-IN-CYCLE, NFR-S-B SECURITY-DECIDE->RESOLVED doc-drift fix;
+total_nfrs unchanged at 42); specs/architecture/ARCH-INDEX.md and architecture/adr-
+index.md updated with the ADR-0020 row. STATE.md refreshed via one full-content Write
+(v3.32 -> v3.33): current_step/cycle_003_status updated to F2 AUTHORING COMPLETE / F2
+GATE PENDING; Convergence Status counts updated (731 BCs / 41 VPs / 106 holdouts).
+Prior F2-in-progress checkpoint (v3.32) archived above. Burst narrative:
+cycles/cycle-003/burst-log.md Burst 3.
+
+In-flight: F2 quality-gate checks (consistency-validator, input-hash drift check,
+spec-reviewer second opinion, adversarial review) have NOT yet run; the human F2 gate
+has NOT yet been presented. No open worktrees, no pending PRs, no open convergence
+loop, no code changed. docs/adr/0011-type-level-profile-fence.md on develop is clean
+(amendment staged, not applied) pending the F4 implementation PR.
+
+Constraints to carry into the F2 gate and F3: ADR-0006 (embedded OAuth, fixed port
+53682), ADR-0013 (PKCE deferral), SD-002 debug-only release gates, single-use refresh
+tokens + refresh_coordinator.rs single-flight, Windows Credential Manager posture, and
+the shared-vs-per-profile keychain invariant under deliberate restructuring (DEC-315) --
+migration discipline mandatory. Refresh override removed (DEC-321). ADR-0011 amendment
+is STAGED, not applied -- the F4 story S-cycle3-adr0011-newtype must apply it. Full
+detail: cycles/cycle-003/investigation/auth-profile-current-state.md,
+cycles/cycle-003/phase-f1-delta-analysis/delta-analysis.md,
+cycles/cycle-003/phase-f2-spec-evolution/architecture-delta.md.
+
+cycle-002 final state (unchanged, historical): RELEASED as v0.7.0-dev.3 (PR #751 @
+87f17aff, tag pushed, release.yml run 33459579699).
+```
+
+**Superseded by:** v3.34 (cycle-003 F2-gate FIX round COMPLETE — adversary pass-1/pass-2 fixes, DEC-326/DEC-327 recorded; adversary pass-3 + human F2 gate PENDING), 2026-09-01, live in STATE.md.
 
 ---
 
