@@ -319,10 +319,13 @@ this ADR's storage decision.
 - `jr auth login` (bare, interactive, no flags) presents the SAME `["OAuth 2.0
   (recommended)", "API Token"]` picker `jr init` already uses, defaulting to OAuth
   (`.default(0)`) — closing the A.3 inconsistency the current-state brief documents.
-- **Non-interactive** `auth login` (`--no-input`, non-TTY stdin, or `JR_EMAIL`/
-  `JR_API_TOKEN` present) selects API-token and NEVER launches a browser — this is a
-  byte-for-byte regression-safety pin on DEC-313's explicit "CI stays token-first"
-  guarantee, not a new capability.
+- **Non-interactive** `auth login` (`--no-input` or non-TTY stdin — the OAuth-default
+  picker is suppressed by this 2-member trigger set ONLY; `JR_EMAIL`/`JR_API_TOKEN`
+  presence is a credential SOURCE under this trigger, never an independent trigger of
+  its own — on an interactive TTY the picker always shows regardless of env vars, per
+  DEC-327) selects API-token and NEVER launches a browser — this is a byte-for-byte
+  regression-safety pin on DEC-313's explicit "CI stays token-first" guarantee, not a
+  new capability.
 - A new explicit `--api-token` flag is added to `LoginArgs`/`RefreshArgs`
   (`src/cli/mod.rs::AuthCommand::Login`/`Refresh`) as `--oauth`'s coequal, symmetric
   opt-in — resolving F1 Open Question 5 in favor of an explicit flag rather than
@@ -356,7 +359,7 @@ profile's intrinsic `auth_method`, with **no override**, full stop — `--oauth`
 `--api-token` on `refresh` become syntactically accepted (so existing scripts passing
 `--oauth` don't hard-error) but behaviorally inert aliases carrying the same deprecation
 notice as `login`'s. `chosen_flow_for_profile`'s `oauth_override: bool` parameter is
-removed (or ignored) at the F4 implementation step; `refresh`'s "clear-then-relogin" always
+removed (or ignored) at the F4 implementation step; `refresh`'s "relogin-then-replace" always
 relogs in via the profile's own `auth_method`. This closes the one place in the current
 codebase where a per-command flag outranks the profile's stored mechanism, making
 `auth_method` genuinely intrinsic rather than intrinsic-with-an-escape-hatch.

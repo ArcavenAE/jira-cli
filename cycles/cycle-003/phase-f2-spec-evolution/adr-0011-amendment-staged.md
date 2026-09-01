@@ -36,12 +36,14 @@ committers) remain NOT met — DEC-317 explicitly cites #3 alone as sufficient.
 > document is the current, single source of truth.
 
 > **Design decision, not yet a completed migration.** This amendment records the ACCEPTED
-> decision to implement the hard fence. The actual `Profile(String)` newtype and its ~50-70
-> call-site threading through `src/cache.rs`, `Config::active_profile_name`, and
-> `JiraClient::profile_name` are an **F4 implementation deliverable** of cycle-003 (story
-> `S-cycle3-adr0011-newtype` in the F1 delta analysis' preliminary story list) — no `src/` file
-> has been touched by this F2 architecture pass. `src/cache.rs`, `src/config.rs`, and
-> `src/api/client.rs` still carry `profile: &str` / `profile_name: String` as of this writing.
+> decision to implement the hard fence. The actual `Profile(String)` newtype and its ~60-80
+> call-site threading through `src/cache.rs`, `Config::active_profile_name`,
+> `JiraClient::profile_name`, and `src/api/auth.rs`'s credential functions
+> (`store_api_token`/`load_api_token`/`store_oauth_tokens`/`load_oauth_tokens`) are an
+> **F4 implementation deliverable** of cycle-003 (story `S-cycle3-adr0011-newtype` in the F1
+> delta analysis' preliminary story list) — no `src/` file has been touched by this F2
+> architecture pass. `src/cache.rs`, `src/config.rs`, `src/api/client.rs`, and
+> `src/api/auth.rs` still carry `profile: &str` / `profile_name: String` as of this writing.
 
 ## Context
 

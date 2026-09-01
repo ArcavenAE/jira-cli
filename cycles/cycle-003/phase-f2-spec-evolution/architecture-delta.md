@@ -84,7 +84,7 @@ flowchart LR
         Profile["[profiles.&lt;name&gt;]\nauth_method (intrinsic, set once)\nenv: Option&lt;String&gt; (NEW, additive)\nurl, cloud_id, ..."]
     end
 
-    LoginCmd["jr auth login\nbare/interactive -> OAuth default (NEW)\n--no-input / JR_EMAIL+JR_API_TOKEN -> api_token\n--api-token (NEW flag) / --oauth (deprecated alias)"]
+    LoginCmd["jr auth login\nbare/interactive -> OAuth default (NEW)\n--no-input / non-TTY -> api_token\n(JR_EMAIL/JR_API_TOKEN are a credential SOURCE\nunder this trigger, never a trigger themselves -- DEC-327)\n--api-token (NEW flag) / --oauth (deprecated alias)"]
     LoginCmd -->|writes per-profile| PerProfileToken
     LoginCmd -->|writes per-profile| OAuthPair
     LoginCmd -->|sets auth_method once| Profile
@@ -98,7 +98,7 @@ flowchart LR
     LegacyFlat -.->|existence-check ONLY -- detect-and-instruct,\nNO copy, NO delete (F2-gate redesign)| ErrorMsg["Actionable exit-64 error:\nrun `jr auth login &lt;profile&gt;`"]
     LegacyOAuth -.->|lazy migrate, default only,\nunchanged| OAuthPair
 
-    RefreshCmd["jr auth refresh\n--oauth/--api-token now INERT\naliases (NEW) -- always follows\nProfile's own auth_method"] -->|clear + relogin| LoginCmd
+    RefreshCmd["jr auth refresh\n--oauth/--api-token now INERT\naliases (NEW) -- always follows\nProfile's own auth_method"] -->|relogin-then-replace| LoginCmd
 
     RemoveCmd["jr auth remove\n(4th delete step -- NEW)"] -->|deletes| PerProfileToken
     RemoveCmd -->|deletes| OAuthPair
@@ -125,7 +125,7 @@ sequenceDiagram
     participant Store as Keychain + config.toml
 
     User->>CLI: jr auth login [--profile X] [--oauth|--api-token] [--no-input]
-    alt non-interactive (--no-input, non-TTY, or JR_EMAIL+JR_API_TOKEN set)
+    alt non-interactive (--no-input or non-TTY only; JR_EMAIL/JR_API_TOKEN are a credential source here, never a trigger -- DEC-327)
         CLI->>CLI: select api_token (NEVER launches a browser)
         CLI->>Store: store_api_token(profile, email, token)
         CLI->>Store: set auth_method = "api_token"
