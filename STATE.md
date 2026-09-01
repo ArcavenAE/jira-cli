@@ -1,18 +1,18 @@
 ---
 document_type: pipeline-state
 level: ops
-version: "3.31"
+version: "3.32"
 status: active
 producer: state-manager
-timestamp: 2026-09-01T18:04:39Z
-phase: F1
+timestamp: 2026-09-01T19:20:00Z
+phase: F2
 pipeline: ACTIVE
 inputs: []
 input-hash: "[live-state]"
 traces_to: ""
 project: jira-cli
 mode: brownfield
-current_step: "D-chain cite D-453 latest brownfield (unchanged). trajectory-tail →1→3→0→2 (unchanged). cycle-003 auth-profile-dx OPENED (feature mode). Scope confirmed by human at senior-architect gate after grounded investigation + modern-CLI research. Phase F1 (delta analysis) NEXT."
+current_step: "D-chain cite D-453 latest brownfield (unchanged). trajectory-tail →1→3→0→2 (unchanged). cycle-003 auth-profile-dx F1 delta-analysis APPROVED at human gate (all 4 open questions resolved). Phase F2 (spec evolution: ADR-0011 amend, ADR-0020 author, BC delta) IN PROGRESS."
 trajectory_tail: "→1→3→0→2"
 maintenance_run:
   status: COMPLETE
@@ -29,32 +29,33 @@ phase_2_approved_at: 2026-05-07
 phase_3_status: SOH-ATTACHMENTS-1 F5 SCOPED ADVERSARIAL CONVERGED 2026-07-24 STRICT (14 rounds; window pass-12/pass-13/pass-14 CLEANx3; spec v1.3.99 to v1.3.106; BC-INDEX v6.38 to v6.44; develop @ db207b81) + F7 DELTA CONVERGENCE APPROVED 2026-07-25 (DEC-186; 5-dim PASS; MAXIMUM_VIABLE_REFINEMENT_REACHED) + CYCLE FULLY CLOSED 2026-07-25
 cycle_001_status: "list-read-ergonomics -- CLOSED (DEC-309), historical; see cycles/cycle-001/"
 cycle_002_status: "field-dx -- CLOSED + RELEASED 2026-09-01 (DEC-311 close; v0.7.0-dev.3 tagged @ 87f17aff, release.yml run 33459579699 triggered). All 5 stories delivered/merged (F4); F5 CONVERGED (FIX-F5-001, PR #747); F6 COMPLETE (FIX-F6-001, PR #749); F7 COMPLETE (5-dim convergence PASS + full regression PASS 4660/0/106, FIX-F7-001, PR #750 @ 2000c455); RELEASED (version bump PR #751 @ 87f17aff, tag v0.7.0-dev.3 pushed, release.yml triggered). Pipeline SHIPPED. Session wrapped 2026-09-01."
-cycle_003_status: "auth-profile-dx -- OPEN (feature mode), phase F1 delta-analysis pending. Scope confirmed 2026-09-01."
+cycle_003_status: "auth-profile-dx -- OPEN (feature mode). Phase F1 delta-analysis APPROVED at human gate 2026-09-01 (impact boundary: ~8 BCs amend, ~9-13 new BCs, ADR-0011 amendment + new ADR-0020, 10 preliminary F3 stories, HIGH-risk shared->per-profile credential migration). Phase F2 (spec evolution) IN PROGRESS."
 activation_head: "87f17aff"
 activation_version: "v0.7.0-dev.3"
 ---
 
-<!-- STATE.md SIZE BUDGET (2026-09-01, cycle-003-open burst):
-     204 lines (wc-l). soft-target 200; hard cap 500.
-     margin from soft-target = 204 - 200 = 4 -- 4 lines OVER the soft target of 200.
-     margin from actual (hard cap) = 500 - 204 = 296 lines of headroom remain before the hard cap of 500.
-     This burst opens cycle-003 (auth-profile-dx) as a new
-     brownfield Feature Mode cycle; cycle-001 and cycle-002 remain CLOSED and
-     historical, unaltered. Frontmatter: phase F7->F1, pipeline IDLE->ACTIVE,
-     current_cycle cycle-002->cycle-003, feature_mode_bundle field-dx->
-     auth-profile-dx; cycle_001_status/cycle_002_status preserved verbatim;
-     cycle_003_status added. activation_head/activation_version unchanged
-     (87f17aff / v0.7.0-dev.3) -- no new release this burst. 8 new Decisions Log
-     rows (DEC-312..DEC-319, collision-checked against the DEC-311 ceiling --
-     corpus-wide grep confirmed no collision, closing this instance of the
-     standing DEC-NAMESPACE-COLLISION-RISK check). Session Resume Checkpoint
-     replaced; the prior SESSION-WRAP checkpoint (v3.30) is archived to
-     cycles/cycle-002/session-checkpoints.md. Burst narrative:
-     cycles/cycle-003/burst-log.md Burst 1 (new file). cycle-003 scaffolding
-     created: cycles/cycle-003/{burst-log.md,session-checkpoints.md}; the
-     investigation/ artifacts were already present ahead of this burst. One
-     full-content Write, no Edit chain (DEC-247). No BC/VP/holdout counts
-     changed (719/32/106) -- this burst is scope-recording only. -->
+<!-- STATE.md SIZE BUDGET (2026-09-01, cycle-003-f1-gate burst):
+     214 lines (wc-l). soft-target 200; hard cap 500.
+     margin from soft-target = 214 - 200 = 14 -- 14 lines OVER the soft target of 200.
+     margin from actual (hard cap) = 500 - 214 = 286 lines of headroom remain before the hard cap of 500.
+     This burst records the F1 delta-analysis HUMAN GATE APPROVAL for cycle-003
+     (auth-profile-dx) and transitions the pipeline to phase F2 (spec evolution).
+     Frontmatter: version 3.31->3.32, phase F1->F2, timestamp refreshed,
+     current_step + cycle_003_status updated to reflect F1 APPROVED / F2 IN
+     PROGRESS. pipeline stays ACTIVE. cycle_001_status/cycle_002_status
+     preserved verbatim, unaltered. 6 new Decisions Log rows (DEC-320..DEC-325,
+     collision-checked against the DEC-319 ceiling -- corpus-wide grep confirmed
+     no collision, closing this instance of the standing
+     DEC-NAMESPACE-COLLISION-RISK check). Session Resume Checkpoint replaced;
+     the prior F1-pending checkpoint (v3.31) is archived to
+     cycles/cycle-003/session-checkpoints.md. Burst narrative:
+     cycles/cycle-003/burst-log.md Burst 2. F1 deliverable
+     (cycles/cycle-003/phase-f1-delta-analysis/delta-analysis.md) committed
+     this burst alongside STATE.md. No BC/VP/holdout counts changed yet
+     (719/32/106) -- F2 (spec authoring) has not yet landed any BC/VP edits.
+     One full-content Write, no Edit chain (DEC-247). A pre-existing
+     uncommitted `sidecar-learning.md` modification in the worktree is left
+     untouched -- not staged, not committed, per standing instruction. -->
 
 # Pipeline State: jira-cli
 
@@ -66,32 +67,38 @@ activation_version: "v0.7.0-dev.3"
 | **Mode** | BROWNFIELD / Rust |
 | **Target Workspace** | develop to main |
 | **trajectory-tail** | →1→3→0→2 (unchanged this burst) |
-| **Last Updated** | cycle-003 OPEN (2026-09-01): trajectory-tail →1→3→0→2 (unchanged). cycle-003 `auth-profile-dx` opened as a new brownfield Feature Mode cycle; scope confirmed by human at senior-architect gate. Phase F1 (delta analysis) NEXT. |
-| **Current Phase** | Feature Mode cycle-003 (`auth-profile-dx`) -- **OPEN**, Phase F1 (delta analysis) pending. cycle-001 and cycle-002 remain CLOSED, historical. |
+| **Last Updated** | cycle-003 F1 APPROVED (2026-09-01): trajectory-tail →1→3→0→2 (unchanged). F1 delta-analysis for `auth-profile-dx` approved at the human gate (all 4 open questions resolved: refresh override removed, `auth logout` scoped to session-clear, explicit `--api-token` flag added, `env` tag surfaced in `auth list`). Phase F2 (spec evolution) now IN PROGRESS. |
+| **Current Phase** | Feature Mode cycle-003 (`auth-profile-dx`) -- **F2 spec evolution IN PROGRESS** (ADR-0011 amend, ADR-0020 author, BC delta). cycle-001 and cycle-002 remain CLOSED, historical. |
 | **Activation HEAD** | 87f17aff (`develop` tip; unchanged this burst -- no `develop`-side commit yet in cycle-003) |
 
 ## Phase Progress (recent; full history in cycles/cycle-001/burst-log.md, cycles/cycle-002/burst-log.md, cycles/cycle-003/burst-log.md, and factory-artifacts@43f4a5e3)
 
 | Phase | Status | Completed | Gate | Notes | Finding Progression |
 |-------|--------|-----------|------|-------|---------------------|
-| RELEASE-v0.7.0-dev.3-SHIPPED (cycle-002) | COMPLETE | 2026-09-01 | Release pipeline (version bump / tag / GitHub release) | Version-bump PR #751 merged to develop (`2000c455` → `87f17aff`). Annotated tag `v0.7.0-dev.3` pushed. cycle-002 field-dx CLOSED + RELEASED. | N/A (release step) |
-| SESSION-WRAP (cycle-002) | COMPLETE | 2026-09-01 | Human request ("wrap this session") | Wrap at cycle-002 completion -- nothing in-flight. Superseded by cycle-003 opening this burst. | N/A |
-| CYCLE-003-OPENED | **COMPLETE (this burst)** | 2026-09-01 | Human scope confirmation at senior-architect gate | `auth-profile-dx` feature bundle scope confirmed after grounded current-state investigation + modern-CLI research (39 sources). 8 decisions recorded (DEC-312..DEC-319). Phase F1 next. | N/A (cycle-open step, not adversary-pass-scored) |
+| CYCLE-003-OPENED | COMPLETE | 2026-09-01 | Human scope confirmation at senior-architect gate | `auth-profile-dx` feature bundle scope confirmed. 8 decisions recorded (DEC-312..DEC-319). | N/A (cycle-open step) |
+| F1-DELTA-ANALYSIS (cycle-003) | **COMPLETE (this burst)** | 2026-09-01 | Human gate — F1 delta-analysis APPROVED | Impact boundary accepted: ~8 BCs amend, ~9-13 new BCs, ADR-0011 amendment + new ADR-0020, 10 preliminary F3 stories, HIGH-risk shared->per-profile credential migration. 4 open questions resolved (DEC-320..DEC-325). Report: `cycles/cycle-003/phase-f1-delta-analysis/delta-analysis.md`. | N/A (gate, not adversary-scored) |
+| F2-SPEC-EVOLUTION (cycle-003) | **IN PROGRESS (started this burst)** | -- | Pending (spec-evolution completion + F2 gate) | ADR-0011 amendment (Deferred->Accepted), new ADR-0020 authorship, BC delta (~8 amend / ~9-13 new). Deferred items: input-hash drift check runs at the F2 gate; NFR-S-B doc-drift to reconcile during F2. | N/A |
 
-## Current Phase Steps (cycle-003, cycle-open burst; last 5)
+## Current Phase Steps (cycle-003, F1-gate + F2-entry burst; last 5)
 
 | Step | Status | Notes |
 |------|--------|-------|
-| Grounding investigation written | DONE (pre-burst) | `cycles/cycle-003/investigation/auth-profile-current-state.md` -- current-state map of the existing auth/profile subsystem. |
-| Modern-CLI research written | DONE (pre-burst) | `cycles/cycle-003/investigation/modern-cli-auth-profile-research.md` -- 39 cited sources, 4 ranked decision recommendations. |
-| Scope confirmed at architect gate | **DONE** | Human confirmed the 8 scope decisions below at a senior-architect gate. Made By: human. |
-| DEC-312..DEC-319 recorded | **DONE** | 8 cycle-003 scope decisions (Decisions Log below). Collision-checked against DEC-311 ceiling -- clean. |
-| STATE.md cycle-003 initialization | **DONE** | `pipeline` set `ACTIVE`, `phase` set `F1`; version bumped v3.30 → v3.31; new Session Resume Checkpoint written; prior SESSION-WRAP checkpoint archived. |
+| F1 delta-analysis report produced | DONE (pre-burst) | `cycles/cycle-003/phase-f1-delta-analysis/delta-analysis.md` -- impact boundary, affected specs/stories/tests, regression risk. |
+| F1 delta-analysis APPROVED at human gate | **DONE** | Human approved the impact boundary and resolved all 4 open questions (F1 Open Questions 5/6/7/8) plus the 3 architect recommendations (F1 Open Questions 1/2/3) + deprecation-window call. Made By: human. |
+| DEC-320..DEC-325 recorded | **DONE** | 6 F1-gate resolution decisions (Decisions Log below). Collision-checked against DEC-319 ceiling -- clean. |
+| STATE.md F1-approval / F2-entry transition | **DONE** | `phase` set `F2`; version bumped v3.31 → v3.32; new Session Resume Checkpoint written; prior F1-pending checkpoint archived. |
+| Phase F2 (spec evolution) dispatch | **NEXT** | `/vsdd-factory:phase-f2-spec-evolution` -- ADR-0011 amend, ADR-0020 author, BC delta (~8 amend / ~9-13 new). |
 
 ## Decisions Log
 
 | ID | Decision | Rationale | Phase | Date | Made By |
 |----|----------|-----------|-------|------|---------|
+| DEC-325 | Accepted architect recommendations for cycle-003 F1 (Open Questions 1/2/3 + deprecation window): (a) NO version bump -- per-profile `<profile>:email`/`<profile>:api-token` are additive keychain keys + lazy migration, keychain stays profile-prefixed (no `v2` marker), no cache-root bump; (b) ADR-0011 un-deferred via IN-PLACE amendment (Deferred->Accepted), not supersession; (c) ONE combined new ADR (target ADR-0020, collision-checked clean) covering per-profile credential layout + `env` tag + OAuth-default-at-creation; (d) `--oauth` kept accepted indefinitely, marked deprecated, no hard removal date -- removal left to a future cycle | Matches human's caution on breaking changes; avoids an unforced cache/keychain version bump; consolidates related spec work into one ADR rather than three | F1 | 2026-09-01 | human (at F1 gate) |
+| DEC-324 | `env` tag (prod/sandbox/uat) surfaced as an `auth list` table column | Resolves F1 Open Question 7; the tag exists on the profile (DEC-314) but was not yet visible in any command output. Appears in the human table plus `auth status` and JSON. The pinned BC-1.6.046 4-column insta-snapshot is updated to accommodate it (documented, routine output change) | F1 | 2026-09-01 | human (at F1 gate) |
+| DEC-323 | Explicit `--api-token` flag added to `auth login`, symmetric with the now-deprecated `--oauth` alias | Resolves F1 Open Question 5; gives non-interactive mechanism declaration and lets an existing profile's mechanism be re-declared explicitly, without relying on `--oauth`'s absence as the implicit signal | F1 | 2026-09-01 | human (at F1 gate) |
+| DEC-322 | `auth logout` is session-clear only, NON-DESTRUCTIVE: for an OAuth profile, `logout` clears ONLY the OAuth session tokens (`<profile>:oauth-access-token`/`-refresh-token`) and PRESERVES the profile config entry and all non-session identity (url, cloud_id, env, any stored email), so re-login requires no re-entry of email/url. `auth remove` remains the full-delete (profile + all per-profile credentials) | Resolves F1 Open Question 6; matches user expectation that logout is reversible without re-answering setup questions, while remove is the destructive operation | F1 | 2026-09-01 | human (at F1 gate) |
+| DEC-321 | Refresh override REMOVED: `auth refresh` always follows the profile's intrinsic `auth_method`; the current per-call `--oauth` override in `chosen_flow_for_profile` (`cli/auth/mod.rs:107`) is removed. Changing a profile's mechanism is done via explicit `auth login <profile>` re-declaration | Resolves F1 Open Question 8; a per-call override on `refresh` contradicts DEC-313's "auth mechanism is an intrinsic profile property, no per-command switch" design | F1 | 2026-09-01 | human (at F1 gate) |
+| DEC-320 | F1 delta-analysis for cycle-003 (`auth-profile-dx`) APPROVED at the human gate -- impact boundary accepted: ~8 BCs amend, ~9-13 new BCs, ADR-0011 amendment + one new ADR, 10 preliminary F3 stories, HIGH-risk shared->per-profile credential migration flagged | F1 delta-analysis report (`cycles/cycle-003/phase-f1-delta-analysis/delta-analysis.md`) presented at the gate; human approved proceeding to F2 | F1 | 2026-09-01 | human |
 | DEC-319 | Device Authorization Grant (RFC 8628) rejected as a design basis for cycle-003 | Unsupported on Atlassian 3LO; does not solve unattended CI (still needs a human) -- not designed against | F1 | 2026-09-01 | human |
 | DEC-318 | 2LO service-account client-credentials CI **deferred** to a future cycle | Correct future zero-friction-CI direction, but needs an Atlassian-endpoint-coverage spike; separable additive new grant type, out of scope for a make-OAuth-default cycle | F1 | 2026-09-01 | human |
 | DEC-317 | Un-defer ADR-0011 (`Profile` newtype type-level hard-fence) | Per-profile credential normalization (DEC-315) multiplies cross-profile scoping call-sites -- the hard-fence is now justified; this cycle is ADR-0011's documented "config overhaul" revisit trigger | F1 | 2026-09-01 | human |
@@ -116,7 +123,7 @@ activation_version: "v0.7.0-dev.3"
 | F6 Kani formal verification (cycle-002) | yes | Not set up in repo; proptest substitution justified (32/32 VPs covered, 0 GAP). |
 | F6 cargo-fuzz (cycle-002) | yes | Not set up in repo; proptest arbitrary-input substitution justified (0 uncovered input surface). |
 | F6 DTU adversarial testing / accessibility re-check (cycle-002) | yes | `dtu_required: false`; `feature_type: backend-cli`, no UI surface. |
-| UX Spec (cycle-003, tentative) | tbd | `jr` is CLI-only; auth-profile-dx is likely no-UI-surface, same as cycle-002 -- confirm at F1. |
+| UX Spec (cycle-003, tentative) | tbd | `jr` is CLI-only; auth-profile-dx is likely no-UI-surface, same as cycle-002 -- confirm at F1/F2. |
 | DTU creation (cycle-003) | yes | `dtu_required: false` -- no external service behavior is being cloned; auth flows target the real Atlassian OAuth/token endpoints already covered by existing DTU-not-required precedent. |
 
 ## Blocking Issues
@@ -133,33 +140,35 @@ activation_version: "v0.7.0-dev.3"
 
 `cycle-002` (`field-dx`) F2-F7 COMPLETE, human-authorized at the F7 gate (DEC-311, MAXIMUM_VIABLE_REFINEMENT_REACHED). **RELEASED 2026-09-01 as `v0.7.0-dev.3`** (PR #751 @ `87f17aff`, tag pushed, `release.yml` run `33459579699` triggered). cycle-002 field-dx is SHIPPED, historical as of this burst.
 
-`cycle-003` (`auth-profile-dx`) **OPEN**, Phase F1 (delta analysis) pending this burst. No convergence loop started yet. No BC/VP/holdout counts changed (719/32/106).
+`cycle-003` (`auth-profile-dx`) F1 delta-analysis **APPROVED** at the human gate this burst; Phase F2 (spec evolution) now IN PROGRESS. No convergence loop started yet (convergence applies from F4 onward). No BC/VP/holdout counts changed yet (719/32/106) -- F2 has not yet landed any spec edits.
 
 ## Concurrent Cycles
 
-Three tracked cycles. `cycle-001` is CLOSED, historical. `cycle-002` (`field-dx`) is **CLOSED + RELEASED** (2026-09-01), historical. `cycle-003` (`auth-profile-dx`) is the sole **ACTIVE** cycle, OPEN at Phase F1.
+Three tracked cycles. `cycle-001` is CLOSED, historical. `cycle-002` (`field-dx`) is **CLOSED + RELEASED** (2026-09-01), historical. `cycle-003` (`auth-profile-dx`) is the sole **ACTIVE** cycle, F1 APPROVED, now at Phase F2 (spec evolution).
 
 ## Constraints Carried Forward (cycle-003)
 
-ADR-0006 (embedded OAuth app, fixed callback port 53682), ADR-0013 (PKCE deferral -- Atlassian 3LO does not support public-client PKCE as of 2026-05), SD-002 release gates (`JR_AUTH_HEADER`/`JR_BASE_URL` debug-only, release binaries ignore them), single-use refresh tokens + `refresh_coordinator.rs` per-profile single-flight, Windows Credential Manager posture (SEC-WCM-DOC), and the shared-vs-per-profile keychain invariant -- being **deliberately restructured** by DEC-315; migration discipline mandatory (see F1/F2 for the concrete migration design).
+ADR-0006 (embedded OAuth app, fixed callback port 53682), ADR-0013 (PKCE deferral -- Atlassian 3LO does not support public-client PKCE as of 2026-05), SD-002 release gates (`JR_AUTH_HEADER`/`JR_BASE_URL` debug-only, release binaries ignore them), single-use refresh tokens + `refresh_coordinator.rs` per-profile single-flight, Windows Credential Manager posture (SEC-WCM-DOC), and the shared-vs-per-profile keychain invariant -- being **deliberately restructured** by DEC-315; migration discipline mandatory (see F2 for the concrete migration design). Additionally as of this burst: refresh mechanism override removed (DEC-321) -- `auth refresh` always follows the profile's intrinsic `auth_method`; ADR-0011 amendment (Deferred->Accepted, DEC-317/DEC-325b) and new ADR-0020 (DEC-325c) are F2 deliverables, not yet written.
 
 ## Session Resume Checkpoint
 
-**Date:** 2026-09-01. **Position:** cycle-003 (`auth-profile-dx`) **OPEN**, Phase **F1 (delta analysis) NEXT**. `develop` @ `87f17aff` (unchanged -- no code touched yet). cycle-001 and cycle-002 remain CLOSED, historical, unaltered by this burst.
+**Date:** 2026-09-01. **Position:** cycle-003 (`auth-profile-dx`) F1 delta-analysis **APPROVED**, Phase **F2 (spec evolution) IN PROGRESS**. `develop` @ `87f17aff` (unchanged -- no code touched yet). cycle-001 and cycle-002 remain CLOSED, historical, unaltered by this burst.
 
-**This burst (cycle-003 OPEN):** opened a new brownfield Feature Mode cycle following a senior-architect scope gate. Grounding was produced ahead of this burst: `cycles/cycle-003/investigation/auth-profile-current-state.md` (current-state map of the existing `src/api/auth.rs`/`src/config.rs`/keychain layout) and `cycles/cycle-003/investigation/modern-cli-auth-profile-research.md` (modern-CLI auth/profile-design research, 39 cited sources, 4 ranked decision recommendations). The human confirmed 8 scope decisions at the gate, recorded this burst as DEC-312 through DEC-319 (collision-checked clean against the DEC-311 ceiling): cycle-003 opened; `auth_method` as first-class intrinsic profile property (OAuth-default at creation, no per-command switch, non-interactive CI stays token-first); additive `env`/role profile tag; per-profile credentials (api-token symmetric with OAuth, one-time keychain migration of the shared `email`/`api-token` keys into `default`); API-token auth stays coequal/first-class; ADR-0011 (`Profile` newtype hard-fence) un-deferred; 2LO service-account CI deferred to a future cycle; Device Authorization Grant rejected as a design basis. STATE.md refreshed via one full-content Write (v3.30 → v3.31): `phase` F7 → F1, `pipeline` IDLE → ACTIVE, `current_cycle` cycle-002 → cycle-003, `feature_mode_bundle` field-dx → auth-profile-dx. Prior SESSION-WRAP checkpoint (v3.30) archived to `cycles/cycle-002/session-checkpoints.md`. cycle-003 scaffolding created: `cycles/cycle-003/{burst-log.md,session-checkpoints.md}`. Burst narrative: `cycles/cycle-003/burst-log.md` Burst 1.
+**This burst (cycle-003 F1-gate APPROVED / F2 entry):** the F1 delta-analysis report (`cycles/cycle-003/phase-f1-delta-analysis/delta-analysis.md`) was presented at the human gate and APPROVED: impact boundary accepted (~8 BCs amend, ~9-13 new BCs, ADR-0011 amendment + one new ADR, 10 preliminary F3 stories, HIGH-risk shared->per-profile credential migration). All 4 F1 open questions were resolved at the gate, recorded this burst as DEC-320 through DEC-325: F1 APPROVED (DEC-320); refresh override removed -- `auth refresh` always follows the profile's intrinsic `auth_method`, no per-call `--oauth` override (DEC-321, resolves Open Question 8); `auth logout` is session-clear only and non-destructive, preserving profile config + non-session identity, `auth remove` remains full-delete (DEC-322, resolves Open Question 6); explicit `--api-token` flag added to `auth login`, symmetric with the now-deprecated `--oauth` (DEC-323, resolves Open Question 5); `env` tag surfaced as an `auth list` table column plus `auth status`/JSON, pinned BC-1.6.046 snapshot updated (DEC-324, resolves Open Question 7); accepted architect recommendations -- no version bump, ADR-0011 amended in place (not superseded), one combined new ADR-0020 (per-profile credential layout + `env` tag + OAuth-default-at-creation), `--oauth` deprecated indefinitely with no hard removal date (DEC-325). STATE.md refreshed via one full-content Write (v3.31 → v3.32): `phase` F1 → F2; `current_step` and `cycle_003_status` updated to reflect F1 APPROVED / F2 IN PROGRESS. Prior F1-pending checkpoint (v3.31) archived to `cycles/cycle-003/session-checkpoints.md`. Burst narrative: `cycles/cycle-003/burst-log.md` Burst 2.
 
-**In-flight:** NONE beyond this bookkeeping burst -- no open worktrees, no pending PRs, no open convergence loop, no code changed. F1 delta analysis has not yet been dispatched.
+**In-flight:** Phase F2 (spec evolution) is now open but not yet dispatched/executed -- no ADR-0011 amendment text, no ADR-0020 file, no BC delta written yet. No open worktrees, no pending PRs, no open convergence loop, no code changed.
 
-**Constraints to carry into F1/F2:** ADR-0006 (embedded OAuth, fixed port 53682), ADR-0013 (PKCE deferral), SD-002 debug-only release gates, single-use refresh tokens + `refresh_coordinator.rs` single-flight, Windows Credential Manager posture, and the shared-vs-per-profile keychain invariant under deliberate restructuring (DEC-315) -- migration discipline mandatory. Full detail: `cycles/cycle-003/investigation/auth-profile-current-state.md`.
+**Constraints to carry into F2:** ADR-0006 (embedded OAuth, fixed port 53682), ADR-0013 (PKCE deferral), SD-002 debug-only release gates, single-use refresh tokens + `refresh_coordinator.rs` single-flight, Windows Credential Manager posture, and the shared-vs-per-profile keychain invariant under deliberate restructuring (DEC-315) -- migration discipline mandatory. Refresh override removed (DEC-321). Full detail: `cycles/cycle-003/investigation/auth-profile-current-state.md`, `cycles/cycle-003/phase-f1-delta-analysis/delta-analysis.md`.
+
+**Deferred to F2 (noted, not blocking):** input-hash drift check runs at the F2 gate (F1 wrote no new specs; only the known ~142-item accepted standing drift exists, see Drift/Standing Items below). NFR-S-B nfr-catalog vs CLAUDE.md doc-drift to be reconciled during F2.
 
 **cycle-002 final state (unchanged, historical):** RELEASED as `v0.7.0-dev.3` (PR #751 @ `87f17aff`, tag pushed, `release.yml` run `33459579699`). Counts: 719 total BCs (BC-INDEX v6.82), 32 VPs, 106 holdout scenarios -- unchanged this burst.
 
-**NEXT on resume:** dispatch Phase F1 delta analysis (`/vsdd-factory:phase-f1-delta-analysis`) against the confirmed `auth-profile-dx` scope (DEC-312..DEC-319), using the two cycle-003 investigation artifacts as grounding input.
+**NEXT on resume:** dispatch Phase F2 spec evolution (`/vsdd-factory:phase-f2-spec-evolution`) against the approved F1 delta-analysis and the 6 gate-resolution decisions (DEC-320..DEC-325): amend ADR-0011 (Deferred->Accepted), author new ADR-0020, write the BC delta (~8 amend / ~9-13 new).
 
-**Resume command:** `/vsdd-factory:next-step` -- reports F1 delta-analysis as the next step -- or `/vsdd-factory:phase-f1-delta-analysis` directly.
+**Resume command:** `/vsdd-factory:next-step` -- reports F2 spec-evolution as the next step -- or `/vsdd-factory:phase-f2-spec-evolution` directly.
 
-**Superseded checkpoints:** the prior SESSION-WRAP checkpoint (v3.30, 2026-09-01) is superseded in place by this burst's cycle-003-OPEN position above and archived to `cycles/cycle-002/session-checkpoints.md`, alongside the RELEASED/SHIPPED (v3.29), F7-PASS/AWAITING-GATE (v3.27), F6-COMPLETE (v3.26), F5-COMPLETE (v3.25), F4-COMPLETE (v3.24), and `WRAP-F4-WAVE2-COMPLETE-PAUSE` (v3.23, 2026-08-27) checkpoints. The `list-read-ergonomics` cycle-001 CLOSED-position checkpoint (v3.05) remains archived at `cycles/cycle-001/session-checkpoints.md`.
+**Superseded checkpoints:** the prior F1-pending checkpoint (v3.31, 2026-09-01) is superseded in place by this burst's F1-APPROVED/F2-IN-PROGRESS position above and archived to `cycles/cycle-003/session-checkpoints.md`. Earlier archives (RELEASED/SHIPPED v3.29, F7-PASS/AWAITING-GATE v3.27, F6-COMPLETE v3.26, F5-COMPLETE v3.25, F4-COMPLETE v3.24, `WRAP-F4-WAVE2-COMPLETE-PAUSE` v3.23, and the SESSION-WRAP checkpoint) remain at `cycles/cycle-002/session-checkpoints.md`. The `list-read-ergonomics` cycle-001 CLOSED-position checkpoint (v3.05) remains archived at `cycles/cycle-001/session-checkpoints.md`.
 
 ## Historical Content
 
@@ -167,8 +176,9 @@ ADR-0006 (embedded OAuth app, fixed callback port 53682), ADR-0013 (PKCE deferra
 |---------|----------|
 | cycle-001 burst history | `cycles/cycle-001/burst-log.md` |
 | cycle-002 burst history | `cycles/cycle-002/burst-log.md` (Bursts 1-14 = F2/F3/F4; 15 = F5 CONVERGED + FIX-F5-001; 16 = F6 COMPLETE + FIX-F6-001; 17 = F7 delta-convergence analyses PASS + FIX-F7-001; 18 = F7 human gate APPROVED + cycle-002 CLOSED; 19 = release v0.7.0-dev.3 SHIPPED; 20 = SESSION-WRAP) |
-| cycle-003 burst history | `cycles/cycle-003/burst-log.md` (Burst 1 = cycle OPENED, this burst) |
+| cycle-003 burst history | `cycles/cycle-003/burst-log.md` (Burst 1 = cycle OPENED; Burst 2 = F1 delta-analysis APPROVED at human gate, F2 entry, this burst) |
 | cycle-003 grounding artifacts | `cycles/cycle-003/investigation/auth-profile-current-state.md` (current-state map); `cycles/cycle-003/investigation/modern-cli-auth-profile-research.md` (modern-CLI research, 39 sources, 4 ranked recommendations) |
+| cycle-003 F1 delta-analysis report | `cycles/cycle-003/phase-f1-delta-analysis/delta-analysis.md` (impact boundary, affected specs/stories/tests, regression risk; APPROVED at human gate this burst) |
 | F5 scoped-adversarial review report (cycle-002) | `phase-f5-adversarial/adversarial-delta-review.md` (raw pass-1 findings); `phase-f5-adversarial/convergence-summary.md` (F5 close record) |
 | F6 targeted-hardening report (cycle-002) | `phase-f6-hardening/summary.md` (consolidated); `kani-results.md`, `fuzz-results.md`, `mutation-results.md`, `security-scan-results.md` (per-check detail) |
 | F7 delta convergence report + traceability (cycle-002) | `phase-f7-convergence/delta-convergence-report.md`; `phase-f7-convergence/traceability-chain-delta.md`; `phase-f7-convergence/consistency-audit-delta.md`; `phase-f7-convergence/holdout-eval-delta.md`; `cycles/cycle-002/convergence/traceability-chain.md` (master) |
@@ -180,7 +190,7 @@ ADR-0006 (embedded OAuth app, fixed callback port 53682), ADR-0013 (PKCE deferra
 
 ## Drift / Standing Items
 
-**cycle-003 (new this burst):** none yet -- cycle just opened. DEC-NAMESPACE-COLLISION-RISK was re-verified this burst (corpus-wide grep of `DEC-[0-9]+` across `.factory/**/*.md`, max pre-existing `DEC-311`) before allocating DEC-312..DEC-319 -- clean, no collision.
+**cycle-003 (updated this burst):** DEC-NAMESPACE-COLLISION-RISK re-verified (corpus-wide grep of `DEC-[0-9]+` across `.factory/**/*.md`, max pre-existing `DEC-319`) before allocating DEC-320..DEC-325 -- clean, no collision. New this burst: F2 must reconcile the ~142-item historical input-hash drift check at the F2 gate (deferred from F1, not blocking) and the NFR-S-B nfr-catalog vs CLAUDE.md doc-drift item (deferred to F2, not blocking).
 
 **Still open (2026-09-01, cycle-002 F7 human gate + S-7.02 cycle-closing checklist -- justified deferral, carried forward unchanged):**
 - `CYCLE-002-PROCESS-GAP-DEFERRAL-1/2/3` (all LOW, justified deferral — no follow-up story exists in STORY-INDEX; target: a future SELF-IMPROVEMENT maintenance cycle; reason: process-doc refinement, non-blocking): (1) AC-016<->Task-2 story placement conflict; (2) story File-Structure vs Architecture-Mapping self-contradiction; (3) Task-2 test-inversion left stale test-names/doc-comments uncaught until adversary Pass 11. Full detail + `[codified]` disposition notes: `cycles/cycle-002/lessons.md` Process-Level items 3/4/5.
