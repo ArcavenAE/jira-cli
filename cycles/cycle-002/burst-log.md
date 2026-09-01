@@ -1039,3 +1039,51 @@ No BCs/VPs/holdouts added or removed this burst (release + evidence-sweep bookke
 **Dim-6 Attestation:** PASS (delegated) — `develop`-side PR #751 (version bump) was gated by jira-cli's `ci-gate`; green before merge.
 
 **Dim-7 Attestation:** N/A — no test-affecting change this burst; full regression already PASS (4660/0/106) as of the F7 delta-convergence pass, unchanged.
+
+## Burst: Burst 20 — SESSION-WRAP — human-requested wrap at cycle-002 completion (2026-09-01)
+
+**Parent-commit:** `87f17aff` (`develop` tip after PR #751 version-bump merge; unchanged this burst — no `develop`-side commit).
+
+**Trigger:** human requested "wrap this session" at a clean cycle-completion boundary — cycle-002 field-dx is already CLOSED + RELEASED (v0.7.0-dev.3, Burst 19). This is a session-end wrap, not a mid-work pause: nothing was in-flight to interrupt.
+
+**Actions taken:**
+1. Persisted the remaining uncommitted `.factory/` artifacts left session-managed at Burst 19: `regression-state.json`, `sidecar-learning.md` (both modified), `code-delivery/release-v0.7.0-dev.3/{pr-description,pr-review}.md` (untracked — the release PR delivery artifacts). Explicit paths staged, no `git add -A`.
+2. STATE.md refreshed via one full-content Write (v3.29 → v3.30): `timestamp` bumped; `pipeline` frontmatter set to `IDLE` (truthful terminal status — no active cycle, last cycle shipped, nothing to resume mid-step; `PAUSED` would misstate that anything is in-flight). `activation_head` (`87f17aff`) and `activation_version` (`v0.7.0-dev.3`) unchanged. Added `SESSION-WRAP` Phase Progress + Current Phase Steps rows. Session Resume Checkpoint replaced; the prior RELEASED/SHIPPED checkpoint (v3.29) archived to `cycles/cycle-002/session-checkpoints.md`.
+3. This burst entry logged.
+
+**Adversary verdict:** N/A — bookkeeping-only burst (artifact persistence + STATE.md wrap), no code or spec change; no `adversary` agent dispatched.
+
+**Outcome:** `.factory/` working tree is CLEAN after this burst's commit. No BC/VP/holdout counts changed (719/32/106). No `develop`-side change.
+
+**NEXT:** none queued. On resume: start a new feature/cycle, run the optional post-pipeline session review (`/vsdd-factory:session-review`), or verify the release build finished (`gh run view 33459579699` / `gh release view v0.7.0-dev.3`).
+
+**Codifications:** none — pure bookkeeping burst.
+
+**Closes:** the session (human-requested wrap). **Does NOT close:** any standing Drift/Standing Items — all carried forward unchanged (see STATE.md Drift / Standing Items section).
+
+### Counts reconciled this burst
+
+No BCs/VPs/holdouts added or removed — 719 BCs / 32 VPs / 106 holdouts unchanged. `total_stories` unchanged at 161.
+
+### Details
+
+| Agent | Task | Output |
+|-------|------|--------|
+| state-manager | Persist remaining uncommitted `.factory/` artifacts (explicit paths); update STATE.md (v3.29→v3.30, pipeline→IDLE, new SESSION-WRAP checkpoint, prior checkpoint archived); log this burst; commit + push to factory-artifacts | `STATE.md`; `cycles/cycle-002/burst-log.md` (this file); `cycles/cycle-002/session-checkpoints.md`; `regression-state.json`; `sidecar-learning.md`; `code-delivery/release-v0.7.0-dev.3/` |
+
+**Files touched (Dim-1): 6 unique files (factory-artifacts, this burst)**
+
+- STATE.md
+- cycles/cycle-002/burst-log.md
+- cycles/cycle-002/session-checkpoints.md
+- regression-state.json
+- sidecar-learning.md
+- code-delivery/release-v0.7.0-dev.3/ (2 files: pr-description.md, pr-review.md)
+
+**Dim-2 Attestation:** `scripts/check-spec-counts.sh` / `scripts/check-bc-cumulative-counts.sh` — N/A this burst (no BC/VP/holdout count change; bookkeeping-only, no `.factory/specs/prd/` or `BC-INDEX.md` edits).
+
+**Dim-5 Attestation:** N/A — no binary/WASM artifact produced by this burst.
+
+**Dim-6 Attestation:** N/A — no source code changed this burst (`.factory/` artifact bookkeeping only, no `develop`-side commit).
+
+**Dim-7 Attestation:** N/A — no test-affecting change this burst; full regression already PASS (4660/0/106) as of the F7 delta-convergence pass, unchanged.

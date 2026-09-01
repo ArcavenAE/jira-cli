@@ -1,18 +1,18 @@
 ---
 document_type: pipeline-state
 level: ops
-version: "3.29"
+version: "3.30"
 status: active
 producer: state-manager
-timestamp: 2026-09-01T00:30:00Z
+timestamp: 2026-09-01T14:13:52Z
 phase: F7
-pipeline: RELEASED
+pipeline: IDLE
 inputs: []
 input-hash: "[live-state]"
 traces_to: ""
 project: jira-cli
 mode: brownfield
-current_step: "D-chain cite D-453 latest brownfield (unchanged). trajectory-tail →1→3→0→2 (unchanged this burst). Release burst: v0.7.0-dev.3 cut and SHIPPED. Bump PR #751 merged to develop (2000c455 -> 87f17aff); annotated tag v0.7.0-dev.3 pushed at 87f17aff; release.yml run 33459579699 triggered (build/publish in progress upstream, not tracked further by this pipeline). cycle-002 field-dx is now CLOSED + RELEASED. NEXT: post-pipeline session review (optional)."
+current_step: "D-chain cite D-453 latest brownfield (unchanged). SESSION-WRAP: human-requested wrap at cycle-002 completion. cycle-002 field-dx is CLOSED + RELEASED (v0.7.0-dev.3, tag @ 87f17aff, release.yml run 33459579699). Nothing in-flight -- no open worktrees, no pending PRs, no open convergence loop. Remaining .factory/ artifacts persisted (regression-state.json, sidecar-learning.md, code-delivery/release-v0.7.0-dev.3/). trajectory-tail →1→3→0→2 (unchanged). NEXT: no active cycle -- start a new feature/cycle, run the optional post-pipeline session review, or verify the release build finished."
 trajectory_tail: "→1→3→0→2"
 maintenance_run:
   status: COMPLETE
@@ -28,29 +28,29 @@ phase_2_status: APPROVED
 phase_2_approved_at: 2026-05-07
 phase_3_status: SOH-ATTACHMENTS-1 F5 SCOPED ADVERSARIAL CONVERGED 2026-07-24 STRICT (14 rounds; window pass-12/pass-13/pass-14 CLEANx3; spec v1.3.99 to v1.3.106; BC-INDEX v6.38 to v6.44; develop @ db207b81) + F7 DELTA CONVERGENCE APPROVED 2026-07-25 (DEC-186; 5-dim PASS; MAXIMUM_VIABLE_REFINEMENT_REACHED) + CYCLE FULLY CLOSED 2026-07-25
 cycle_001_status: "list-read-ergonomics -- CLOSED (DEC-309), historical; see cycles/cycle-001/"
-cycle_002_status: "field-dx -- CLOSED + RELEASED 2026-09-01 (DEC-311 close; v0.7.0-dev.3 tagged @ 87f17aff, release.yml run 33459579699 triggered). All 5 stories delivered/merged (F4); F5 CONVERGED (FIX-F5-001, PR #747); F6 COMPLETE (FIX-F6-001, PR #749); F7 COMPLETE (5-dim convergence PASS + full regression PASS 4660/0/106, FIX-F7-001, PR #750 @ 2000c455); RELEASED (version bump PR #751 @ 87f17aff, tag v0.7.0-dev.3 pushed, release.yml triggered). Pipeline SHIPPED."
+cycle_002_status: "field-dx -- CLOSED + RELEASED 2026-09-01 (DEC-311 close; v0.7.0-dev.3 tagged @ 87f17aff, release.yml run 33459579699 triggered). All 5 stories delivered/merged (F4); F5 CONVERGED (FIX-F5-001, PR #747); F6 COMPLETE (FIX-F6-001, PR #749); F7 COMPLETE (5-dim convergence PASS + full regression PASS 4660/0/106, FIX-F7-001, PR #750 @ 2000c455); RELEASED (version bump PR #751 @ 87f17aff, tag v0.7.0-dev.3 pushed, release.yml triggered). Pipeline SHIPPED. Session wrapped 2026-09-01 -- no active work."
 activation_head: "87f17aff"
 activation_version: "v0.7.0-dev.3"
 ---
 
-<!-- STATE.md SIZE BUDGET (2026-09-01, release burst):
-     182 lines (wc-l). soft-target 200; hard cap 500.
-     margin from soft-target = 182 - 200 = -18 -- 18 lines UNDER the soft target of 200.
-     margin from actual (hard cap) = 500 - 182 = 318 lines of headroom remain before the hard cap of 500.
-     This burst records the release: annotated tag v0.7.0-dev.3 pushed at commit 87f17aff
-     (the release-bump PR #751 merge commit; develop advanced 2000c455 -> 87f17aff via that
-     PR), and release.yml run 33459579699 triggered to build/publish. cycle-002 field-dx is
-     now CLOSED + RELEASED -- SHIPPED. activation_head moves to 87f17aff; activation_version
-     moves to v0.7.0-dev.3. Added Phase Progress row RELEASE-v0.7.0-dev.3-SHIPPED. pipeline
-     frontmatter set to RELEASED (was RELEASE-PENDING). Session Resume Checkpoint replaced;
-     the prior CLOSED/RELEASE-PENDING checkpoint (v3.28) is archived to
-     cycles/cycle-002/session-checkpoints.md. Burst narrative: cycles/cycle-002/burst-log.md
-     Burst 19. One full-content Write, no Edit chain (DEC-247). No BC/VP/holdout counts
-     changed (719/32/106). Also swept previously-uncommitted F7 evidence/delivery artifacts
-     into this commit (consistency-audit-delta.md, holdout-eval-delta.md,
-     code-delivery/FIX-F7-001/{pr-description,pr-review}.md) -- explicit paths staged, no
-     git add -A. regression-state.json and sidecar-learning.md left as session-managed,
-     unstaged. -->
+<!-- STATE.md SIZE BUDGET (2026-09-01, session-wrap burst):
+     179 lines (wc-l). soft-target 200; hard cap 500.
+     margin from soft-target = 179 - 200 = -21 -- 21 lines UNDER the soft target of 200.
+     margin from actual (hard cap) = 500 - 179 = 321 lines of headroom remain before the hard cap of 500.
+     This burst is a human-requested SESSION WRAP at a clean cycle-completion
+     boundary -- cycle-002 field-dx is already CLOSED + RELEASED (Burst 19); nothing
+     was in-flight to interrupt. Persisted the remaining session-managed .factory/
+     artifacts (regression-state.json, sidecar-learning.md,
+     code-delivery/release-v0.7.0-dev.3/{pr-description,pr-review}.md) -- explicit
+     paths staged, no git add -A. pipeline frontmatter set to IDLE (not PAUSED --
+     there is no in-flight step to resume mid-work; IDLE truthfully states no
+     active cycle with the last cycle shipped). activation_head/activation_version
+     unchanged (87f17aff / v0.7.0-dev.3). Added Phase Progress + Current Phase
+     Steps rows for SESSION-WRAP. Session Resume Checkpoint replaced; the prior
+     RELEASED/SHIPPED checkpoint (v3.29) is archived to
+     cycles/cycle-002/session-checkpoints.md. Burst narrative:
+     cycles/cycle-002/burst-log.md Burst 20. One full-content Write, no Edit
+     chain (DEC-247). No BC/VP/holdout counts changed (719/32/106). -->
 
 # Pipeline State: jira-cli
 
@@ -62,27 +62,27 @@ activation_version: "v0.7.0-dev.3"
 | **Mode** | BROWNFIELD / Rust |
 | **Target Workspace** | develop to main |
 | **trajectory-tail** | →1→3→0→2 (unchanged this burst) |
-| **Last Updated** | Release SHIPPED (2026-09-01): trajectory-tail →1→3→0→2 (unchanged). v0.7.0-dev.3 tagged @ 87f17aff, release.yml run 33459579699 triggered. cycle-002 field-dx CLOSED + RELEASED. NEXT: post-pipeline session review (optional). |
-| **Current Phase** | Feature Mode cycle-002 (`field-dx`, GH #580 + #578) -- **RELEASED as v0.7.0-dev.3**. cycle-001 remains CLOSED, historical. |
+| **Last Updated** | SESSION-WRAP (2026-09-01): trajectory-tail →1→3→0→2 (unchanged). human-requested wrap at cycle-002 completion. cycle-002 field-dx CLOSED + RELEASED (v0.7.0-dev.3). Nothing in-flight. |
+| **Current Phase** | Feature Mode cycle-002 (`field-dx`, GH #580 + #578) -- **RELEASED as v0.7.0-dev.3**, session wrapped, no active work. cycle-001 remains CLOSED, historical. |
 | **Activation HEAD** | 87f17aff (`develop` tip after PR #751 version-bump merge; `v0.7.0-dev.3`, annotated tag pushed) |
 
 ## Phase Progress (recent; full history in cycles/cycle-001/burst-log.md, cycles/cycle-002/burst-log.md, and factory-artifacts@43f4a5e3)
 
 | Phase | Status | Completed | Gate | Notes | Finding Progression |
 |-------|--------|-----------|------|-------|---------------------|
-| F7-DELTA-CONVERGENCE-ANALYSES-PASS | PASS (superseded) | 2026-08-31 | 5-dimensional convergence + full-tree regression, all PASS | All 5 dims PASS. Regression 4660/0/106. FIX-F7-001, PR #750 @ `2000c455`. Report: `phase-f7-convergence/delta-convergence-report.md`. | N/A |
 | F7-DELTA-CONVERGENCE-COMPLETE | COMPLETE — cycle CLOSED | 2026-09-01 | Human authorization gate: "Approve & release" | Human approved F7 delta-convergence report. cycle-002 field-dx CLOSED (DEC-311, MAXIMUM_VIABLE_REFINEMENT_REACHED). S-7.02 checklist: 3 process-gap findings dispositioned via justified deferral. | N/A |
-| RELEASE-v0.7.0-dev.3-SHIPPED | **COMPLETE** | 2026-09-01 | Release pipeline (version bump / tag / GitHub release) | Version-bump PR #751 merged to develop (`2000c455` → `87f17aff`). Annotated tag `v0.7.0-dev.3` pushed at `87f17aff`. `release.yml` run `33459579699` triggered (build/publish upstream). cycle-002 field-dx is now **CLOSED + RELEASED**. | N/A (release step, not adversary-pass-scored) |
+| RELEASE-v0.7.0-dev.3-SHIPPED | COMPLETE | 2026-09-01 | Release pipeline (version bump / tag / GitHub release) | Version-bump PR #751 merged to develop (`2000c455` → `87f17aff`). Annotated tag `v0.7.0-dev.3` pushed at `87f17aff`. `release.yml` run `33459579699` triggered (build/publish upstream). cycle-002 field-dx is now **CLOSED + RELEASED**. | N/A (release step, not adversary-pass-scored) |
+| SESSION-WRAP | **COMPLETE** | 2026-09-01 | Human request ("wrap this session") | Wrap at cycle-002 completion -- nothing in-flight. Remaining `.factory/` artifacts persisted; STATE.md refreshed; `pipeline` set `IDLE`. | N/A (bookkeeping step, not adversary-pass-scored) |
 
-## Current Phase Steps (cycle-002, release step; last 5)
+## Current Phase Steps (cycle-002, session-wrap step; last 5)
 
 | Step | Status | Notes |
 |------|--------|-------|
-| Human authorization gate | DONE | Human chose "Approve & release" (2026-09-01) at the F7 delta-convergence gate. |
-| Cycle-closing checklist (S-7.02) | DONE | 3 `[process-gap]` findings dispositioned via justified deferral (Drift/Standing Items below). |
 | DEC-311 recorded | DONE | cycle-002 field-dx closure decision (Decisions Log below). Made By: human. |
-| Version-bump PR #751 merged | **DONE** | `develop` advanced `2000c455` → `87f17aff`. |
-| Tag `v0.7.0-dev.3` pushed + `release.yml` triggered | **DONE** | Annotated tag at `87f17aff`; run `33459579699` building/publishing. cycle-002 SHIPPED. |
+| Version-bump PR #751 merged | DONE | `develop` advanced `2000c455` → `87f17aff`. |
+| Tag `v0.7.0-dev.3` pushed + `release.yml` triggered | DONE | Annotated tag at `87f17aff`; run `33459579699` building/publishing. cycle-002 SHIPPED. |
+| Remaining `.factory/` artifacts persisted | **DONE** | `regression-state.json`, `sidecar-learning.md`, `code-delivery/release-v0.7.0-dev.3/` committed to factory-artifacts (explicit paths). |
+| STATE.md wrap-at-completion recorded | **DONE** | `pipeline` set `IDLE`; version bumped v3.29 → v3.30; SESSION-WRAP checkpoint written; prior checkpoint archived. |
 
 ## Decisions Log
 
@@ -117,44 +117,41 @@ activation_version: "v0.7.0-dev.3"
 
 `cycle-001` (`list-read-ergonomics`) CLOSED at F7 (DEC-309): historical, unchanged this burst.
 
-`cycle-002` (`field-dx`) F2-F7 COMPLETE, human-authorized at the F7 gate (DEC-311, MAXIMUM_VIABLE_REFINEMENT_REACHED). **RELEASED 2026-09-01 as `v0.7.0-dev.3`** (PR #751 @ `87f17aff`, tag pushed, `release.yml` run `33459579699` triggered). cycle-002 field-dx is now **SHIPPED**. No BC/VP/holdout counts changed (719/32/106).
+`cycle-002` (`field-dx`) F2-F7 COMPLETE, human-authorized at the F7 gate (DEC-311, MAXIMUM_VIABLE_REFINEMENT_REACHED). **RELEASED 2026-09-01 as `v0.7.0-dev.3`** (PR #751 @ `87f17aff`, tag pushed, `release.yml` run `33459579699` triggered). cycle-002 field-dx is SHIPPED. Session wrapped this burst -- no active cycle. No BC/VP/holdout counts changed (719/32/106).
 
 ## Concurrent Cycles
 
-Two tracked cycles. `cycle-001` is CLOSED, historical. `cycle-002` (`field-dx`) is **CLOSED + RELEASED** (2026-09-01). No greenfield or other concurrent cycle is in flight.
+Two tracked cycles. `cycle-001` is CLOSED, historical. `cycle-002` (`field-dx`) is **CLOSED + RELEASED** (2026-09-01), session wrapped. No greenfield, feature, or other concurrent cycle is in flight.
 
 ## Session Resume Checkpoint
 
-**Date:** 2026-09-01. **Position:** Feature Mode cycle-002 (`field-dx`, GitHub issues #580 + #578) -- **RELEASED as `v0.7.0-dev.3`**. Pipeline SHIPPED.
+**Date:** 2026-09-01. **Position:** cycle-002 field-dx **CLOSED + RELEASED** (`v0.7.0-dev.3`). `develop` @ `87f17aff`. **NOTHING in-flight** -- no open worktrees, no pending PRs, no open convergence loop. This is a clean session-end wrap at cycle completion, not a mid-work pause.
 
-**This burst:** recorded the release. Version-bump PR #751 merged to `develop` (`2000c455` → `87f17aff`). Annotated tag `v0.7.0-dev.3` pushed at `87f17aff`. `release.yml` run `33459579699` triggered (build/publish upstream, not tracked further here). `activation_head` moves to `87f17aff`; `activation_version` moves to `v0.7.0-dev.3`. Added the `RELEASE-v0.7.0-dev.3-SHIPPED` Phase Progress row. `pipeline` frontmatter set to `RELEASED`; `cycle_002_status` updated to CLOSED + RELEASED. Also swept previously-uncommitted F7 evidence into this commit: `phase-f7-convergence/{consistency-audit-delta,holdout-eval-delta}.md`, `code-delivery/FIX-F7-001/{pr-description,pr-review}.md` (explicit paths, no `git add -A`). `regression-state.json` and `sidecar-learning.md` left unstaged (session-managed). Burst narrative: `cycles/cycle-002/burst-log.md` Burst 19. The prior CLOSED/RELEASE-PENDING checkpoint (v3.28) is archived to `cycles/cycle-002/session-checkpoints.md`.
+**Release status:** tag `v0.7.0-dev.3` pushed at `87f17aff`. `release.yml` run `33459579699` was **in_progress** at wrap time (multi-platform binary build + GitHub release publishing). A resuming session can verify completion via `gh run view 33459579699` / `gh release view v0.7.0-dev.3`.
 
-**F5/F6/F7 (prior, unchanged):** F5 CONVERGED (FIX-F5-001/PR #747 @ `4e4ae4f5`). F6 COMPLETE (FIX-F6-001/PR #749 @ `dd311e13`, 93/93 conclusive kill, security CLEAN 3 LOW). F7 delta-convergence PASS (FIX-F7-001/PR #750 @ `2000c455`, regression 4660/0/106) then human-approved at the gate (DEC-311). Full narrative: `cycles/cycle-002/burst-log.md` Bursts 15-19. Counts: 719 total BCs (BC-INDEX v6.82), 32 VPs, 106 holdout scenarios -- unchanged.
+**This burst (SESSION-WRAP):** persisted the remaining session-managed `.factory/` artifacts left uncommitted at Burst 19: `regression-state.json` (modified), `sidecar-learning.md` (modified), `code-delivery/release-v0.7.0-dev.3/{pr-description,pr-review}.md` (untracked — release PR delivery artifacts). Explicit paths staged, no `git add -A`. STATE.md refreshed via one full-content Write (v3.29 → v3.30): `pipeline` frontmatter set `IDLE` (truthful terminal status -- no active cycle, last cycle shipped; `PAUSED` was not used since nothing is in-flight to resume mid-step). `activation_head`/`activation_version` unchanged (`87f17aff` / `v0.7.0-dev.3`). Added `SESSION-WRAP` Phase Progress + Current Phase Steps rows. Prior RELEASED/SHIPPED checkpoint (v3.29) archived to `cycles/cycle-002/session-checkpoints.md`. Burst narrative: `cycles/cycle-002/burst-log.md` Burst 20.
 
-**NEXT on resume:** optional **post-pipeline session review** (`/vsdd-factory:session-review`). No further implementation, adversarial review, hardening, or release work is queued for cycle-002 -- it is closed and shipped.
+**Outstanding (all non-blocking, tracked):** 8 LOW follow-ups (F5×4, F6-security×3, F7-story-status×1) + 3 process-gap deferrals (`CYCLE-002-PROCESS-GAP-DEFERRAL-1/2/3`) + the ~142 historical input-hash drift (`F7-GATE-SYSTEMIC-INPUT-HASH-DRIFT-BOOKKEEPING`) + 5 held Dependabot PRs. Optional not-yet-run: post-pipeline session review (session-reviewer). Full detail in Drift / Standing Items below.
 
-**In-flight:** none tracked by this pipeline. No worktrees, PRs, or adversary convergence loops open on the factory side. (`release.yml` run `33459579699` is running upstream on GitHub Actions — outside this pipeline's tracking scope once triggered.)
+**NEXT on resume:** no active cycle -- either (a) start a new feature/cycle, (b) run the optional post-pipeline session review (`/vsdd-factory:session-review`), or (c) verify the release build finished (`gh run view 33459579699` / `gh release view v0.7.0-dev.3`).
 
-**Infra observation carried forward (unchanged):** the `github-ops` sub-agent has intermittently stalled on prior dispatches this cycle without returning completion reports, though underlying `gh`/`git` actions succeeded; pr-manager fell back to direct `gh`/`git` verification. Host CPU contention from concurrent agents affected long-running `cargo-mutants`/`cargo test` invocations during F6. Worth investigating before the next cycle if patterns recur.
+**Resume command:** `/vsdd-factory:next-step` -- reports the idle/complete state -- or begin a new feature request directly.
 
-**Pending human decisions / blockers:** none. Release is shipped.
-
-**Resume command:** `/vsdd-factory:next-step` -- reads STATE.md and surfaces the optional post-pipeline session review as the next action.
-
-**Superseded checkpoints:** the prior CLOSED/RELEASE-PENDING checkpoint (v3.28, 2026-09-01) is superseded in place by this burst's RELEASED position above and archived to `cycles/cycle-002/session-checkpoints.md`, alongside the F6-COMPLETE (v3.26), F5-COMPLETE (v3.25), F4-COMPLETE (v3.24), and `WRAP-F4-WAVE2-COMPLETE-PAUSE` (v3.23, 2026-08-27) checkpoints. The `list-read-ergonomics` cycle-001 CLOSED-position checkpoint (v3.05) remains archived at `cycles/cycle-001/session-checkpoints.md`.
+**Superseded checkpoints:** the prior RELEASED/SHIPPED checkpoint (v3.29, 2026-09-01) is superseded in place by this burst's SESSION-WRAP position above and archived to `cycles/cycle-002/session-checkpoints.md`, alongside the F7-PASS/AWAITING-GATE (v3.27), F6-COMPLETE (v3.26), F5-COMPLETE (v3.25), F4-COMPLETE (v3.24), and `WRAP-F4-WAVE2-COMPLETE-PAUSE` (v3.23, 2026-08-27) checkpoints. The `list-read-ergonomics` cycle-001 CLOSED-position checkpoint (v3.05) remains archived at `cycles/cycle-001/session-checkpoints.md`.
 
 ## Historical Content
 
 | Content | Location |
 |---------|----------|
 | cycle-001 burst history | `cycles/cycle-001/burst-log.md` |
-| cycle-002 burst history | `cycles/cycle-002/burst-log.md` (Bursts 1-14 = F2/F3/F4; 15 = F5 CONVERGED + FIX-F5-001; 16 = F6 COMPLETE + FIX-F6-001; 17 = F7 delta-convergence analyses PASS + FIX-F7-001; 18 = F7 human gate APPROVED + cycle-002 CLOSED; 19 = release v0.7.0-dev.3 SHIPPED, this burst) |
+| cycle-002 burst history | `cycles/cycle-002/burst-log.md` (Bursts 1-14 = F2/F3/F4; 15 = F5 CONVERGED + FIX-F5-001; 16 = F6 COMPLETE + FIX-F6-001; 17 = F7 delta-convergence analyses PASS + FIX-F7-001; 18 = F7 human gate APPROVED + cycle-002 CLOSED; 19 = release v0.7.0-dev.3 SHIPPED; 20 = SESSION-WRAP, this burst) |
 | F5 scoped-adversarial review report | `phase-f5-adversarial/adversarial-delta-review.md` (raw pass-1 findings); `phase-f5-adversarial/convergence-summary.md` (F5 close record) |
 | F6 targeted-hardening report | `phase-f6-hardening/summary.md` (consolidated); `kani-results.md`, `fuzz-results.md`, `mutation-results.md`, `security-scan-results.md` (per-check detail) |
 | F7 delta convergence report + traceability | `phase-f7-convergence/delta-convergence-report.md`; `phase-f7-convergence/traceability-chain-delta.md`; `phase-f7-convergence/consistency-audit-delta.md`; `phase-f7-convergence/holdout-eval-delta.md`; `cycles/cycle-002/convergence/traceability-chain.md` (master) |
-| cycle-001/cycle-002 convergence trajectory + session checkpoints + lessons + resolved blockers | `cycles/cycle-001/` and `cycles/cycle-002/` (see per-cycle files; cycle-002 session-checkpoints.md holds all prior F2-F7 checkpoints) |
+| cycle-001/cycle-002 convergence trajectory + session checkpoints + lessons + resolved blockers | `cycles/cycle-001/` and `cycles/cycle-002/` (see per-cycle files; cycle-002 session-checkpoints.md holds all prior F2-F7 + RELEASED checkpoints) |
 | S-578-2/S-578-3/S-578-4 delivery artifacts | `cycles/cycle-002/S-578-2/`, `S-578-3/`, `S-578-4/` (red-gate-log.md, adversary-convergence-state.json); `code-delivery/S-578-2/`, `S-578-3/`, `S-578-4/` (pr-review.md, demos) |
 | FIX-F5-001/FIX-F6-001/FIX-F7-001 delivery artifacts | `code-delivery/FIX-F5-001/`, `FIX-F6-001/`, `FIX-F7-001/` (pr-description.md, pr-review.md) |
+| Release v0.7.0-dev.3 delivery artifacts | `code-delivery/release-v0.7.0-dev.3/` (pr-description.md, pr-review.md) |
 | Pre-2026-08-25 compaction history | factory-artifacts commit `43f4a5e3` |
 
 ## Drift / Standing Items

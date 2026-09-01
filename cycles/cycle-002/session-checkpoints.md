@@ -7,7 +7,7 @@ producer: state-manager
 timestamp: 2026-08-31T20:00:00Z
 cycle: "cycle-002"
 inputs: [STATE.md]
-input-hash: "bb3676f"
+input-hash: "46b7b5e"
 traces_to: STATE.md
 ---
 
@@ -381,6 +381,18 @@ Archived verbatim from STATE.md v3.14 before the F2-GATE-APPROVED-F3-TRANSITION 
 **F5/F6 (prior, unchanged):** F5 CONVERGED (0 CRIT/HIGH, 1 MEDIUM fixed as FIX-F5-001/PR #747 @ `4e4ae4f5`, 4 LOW tracked). F6 COMPLETE (mutation config gap fixed as FIX-F6-001/PR #749 @ `dd311e13`, 93/93=100% conclusive kill, security CLEAN 3 LOW, regression 4660/0/106). Counts: 719 total BCs (BC-INDEX v6.82), 32 VPs, 106 holdout scenarios -- unchanged.
 
 **NEXT on resume (as of this checkpoint):** present `phase-f7-convergence/delta-convergence-report.md` to the human for the FINAL AUTHORIZATION GATE. *(Superseded -- the human approved at the gate on 2026-09-01 ("Approve & release"); cycle-002 is now CLOSED and F7 is COMPLETE; see current `STATE.md` for the live checkpoint.)*
+
+---
+
+**Checkpoint (v3.29, 2026-09-01, RELEASED/SHIPPED):** Feature Mode cycle-002 (`field-dx`, GitHub issues #580 + #578) -- **RELEASED as `v0.7.0-dev.3`**. Pipeline SHIPPED.
+
+**This burst (release cut):** recorded the release. Version-bump PR #751 merged to `develop` (`2000c455` -> `87f17aff`). Annotated tag `v0.7.0-dev.3` pushed at `87f17aff`. `release.yml` run `33459579699` triggered (build/publish upstream, not tracked further here). `activation_head` moved to `87f17aff`; `activation_version` moved to `v0.7.0-dev.3`. Added the `RELEASE-v0.7.0-dev.3-SHIPPED` Phase Progress row. `pipeline` frontmatter set to `RELEASED`; `cycle_002_status` updated to CLOSED + RELEASED. Also swept previously-uncommitted F7 evidence into that commit: `phase-f7-convergence/{consistency-audit-delta,holdout-eval-delta}.md`, `code-delivery/FIX-F7-001/{pr-description,pr-review}.md` (explicit paths, no `git add -A`). `regression-state.json` and `sidecar-learning.md` were left unstaged (session-managed) at that point. Burst narrative: `cycles/cycle-002/burst-log.md` Burst 19.
+
+**F5/F6/F7 (prior, unchanged):** F5 CONVERGED (FIX-F5-001/PR #747 @ `4e4ae4f5`). F6 COMPLETE (FIX-F6-001/PR #749 @ `dd311e13`, 93/93 conclusive kill, security CLEAN 3 LOW). F7 delta-convergence PASS (FIX-F7-001/PR #750 @ `2000c455`, regression 4660/0/106) then human-approved at the gate (DEC-311). Counts: 719 total BCs (BC-INDEX v6.82), 32 VPs, 106 holdout scenarios -- unchanged.
+
+**In-flight (as of this checkpoint):** none tracked by this pipeline. No worktrees, PRs, or adversary convergence loops open on the factory side. (`release.yml` run `33459579699` running upstream on GitHub Actions, outside this pipeline's tracking scope once triggered.)
+
+**NEXT on resume (as of this checkpoint):** optional post-pipeline session review (`/vsdd-factory:session-review`). No further implementation, adversarial review, hardening, or release work queued for cycle-002. *(Superseded -- session was wrapped by human request on 2026-09-01 at exactly this position; nothing further executed. See current `STATE.md` for the live SESSION-WRAP checkpoint.)*
 
 ---
 
