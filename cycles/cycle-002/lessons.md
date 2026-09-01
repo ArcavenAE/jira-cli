@@ -1,10 +1,10 @@
 ---
 document_type: lessons-learned
 level: ops
-version: "1.1"
+version: "1.2"
 status: in-progress
 producer: state-manager
-timestamp: 2026-08-27T00:00:00Z
+timestamp: 2026-08-31T20:00:00Z
 cycle: "cycle-002-field-dx"
 inputs: [STATE.md]
 input-hash: "bb3676f"
@@ -32,12 +32,15 @@ traces_to: STATE.md
 
 3. **[process-gap] Story AC-016 mandates two help-text tests in `issue_create_field.rs` while Task-2 places the AC-12 count fix in `issue_create_jsm.rs`** — an internal AC-to-Task placement conflict within the same story spec, surfaced only once the adversary cross-checked AC ownership against the Task breakdown.
    _Discovered: S-578-4 delivery, adversary Pass 1, 2026-08-30_
+   _Codified (S-7.02 cycle-closing checklist, 2026-08-31): no follow-up story exists in STORY-INDEX targeting this finding. Justified-deferral entry added to STATE.md Drift/Standing Items (target: future SELF-IMPROVEMENT maintenance cycle; reason: process-doc refinement, non-blocking — an AC-to-Task placement cross-check is a spec-authoring discipline improvement, not a code defect)._
 
 4. **[process-gap] Story File-Structure section states "edit.rs MUST NOT change" while the same story's Architecture-Mapping section requires extending the shared `resolve_edit_fields` signature, which necessarily touches edit.rs call sites** — a spec self-contradiction between two sections of the same story file. Implementation correctly followed Architecture Mapping; the File-Structure constraint was simply wrong for this story's actual design.
    _Discovered: S-578-4 delivery, adversary Passes 5/8/9, 2026-08-30_
+   _Codified (S-7.02 cycle-closing checklist, 2026-08-31): no follow-up story exists in STORY-INDEX targeting this finding. Justified-deferral entry added to STATE.md Drift/Standing Items (target: future SELF-IMPROVEMENT maintenance cycle; reason: process-doc refinement, non-blocking — a story-writer self-consistency check between File-Structure and Architecture-Mapping sections is a spec-template improvement, not a code defect)._
 
 5. **[process-gap] Task-2's test-inversion instruction updated test BODIES to assert the DEC-310-reversed behavior but did not mandate updating test NAMES or doc-comments, leaving 5 stale-name/stale-comment strays that took three adversary passes (P8, P10, P11) to fully surface and root-cause.** Lesson: any task instruction that inverts a test's asserted behavior must explicitly require renaming the test and refreshing its doc-comment in the same change — otherwise the test's name/doc actively lies about what its body now checks.
    _Discovered: S-578-4 delivery, adversary Pass 11 (root cause), 2026-08-30_
+   _Codified (S-7.02 cycle-closing checklist, 2026-08-31): no follow-up story exists in STORY-INDEX targeting this finding. Justified-deferral entry added to STATE.md Drift/Standing Items (target: future SELF-IMPROVEMENT maintenance cycle; reason: process-doc refinement, non-blocking — a test-inversion-requires-rename convention belongs in the orchestrator's task-instruction template, not a code defect)._
 
 ## Content-Level
 

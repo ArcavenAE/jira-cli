@@ -1,10 +1,10 @@
 ---
 document_type: burst-log
 level: ops
-version: "1.0"
+version: "1.1"
 status: in-progress
 producer: state-manager
-timestamp: 2026-08-26T11:30:00Z
+timestamp: 2026-08-31T20:00:00Z
 cycle: "cycle-002"
 inputs: [STATE.md]
 input-hash: "bb3676f"
@@ -945,3 +945,47 @@ No BCs/VPs/holdouts added or removed this burst (FIX-F6-001 is a mutation-testin
 **Dim-6 Attestation:** PASS (delegated) — `cargo fmt --all -- --check` and `cargo clippy --all-targets -- -D warnings` enforced on PR #749 by jira-cli's `ci-gate`; green before merge.
 
 **Dim-7 Attestation:** PASS (delegated) — full test suite (4660/0/106) ran green in `ci-gate`'s `test` job before merge; `scripts/check-cargo-mutants-policy-citations.sh` green (69 pairs) as an additional PR #749-specific gate.
+
+## Burst: Burst 18 — Phase F7 human authorization gate APPROVED ("Approve & release") — **cycle-002 field-dx CLOSED, release pending** (2026-09-01)
+
+**Parent-commit:** `2000c455` (FIX-F7-001 merge, referenced by the prior F7 delta-convergence-analyses pass — that pass's own burst narrative, tracked in STATE.md history as "Burst 17," was not separately appended to this file before this session; pre-existing gap, out of scope for this burst).
+
+**Trigger:** cycle-002 Phase F7 (delta convergence) reached PASS — all 5 dimensions (spec/test/implementation/verification/holdout) PASS, full-tree regression PASS (4660/0/106) — and the delta-convergence report (`phase-f7-convergence/delta-convergence-report.md`) was presented to the human at the final authorization gate.
+
+**Human decision (2026-09-01):** at the F7 delta-convergence human authorization gate, the human explicitly chose **"Approve & release."** cycle-002 (`field-dx`) is **APPROVED as converged** and authorized to close and proceed to release, at `develop` @ `2000c455`.
+
+**Adversary verdict:** N/A — this burst is the human authorization gate itself (a decision-recording + cycle-closing-checklist burst), not an adversarial review pass; no `adversary` agent was dispatched. The equivalent gate-pass signal is the human's explicit "Approve & release" decision at the F7 gate, made against the already-PASS 5-dimensional convergence report from the prior F7 delta-convergence-analyses pass.
+
+**Cycle-closing checklist (S-7.02, run before declaring CLOSED):** reviewed the 3 `[process-gap]` findings logged this cycle in `cycles/cycle-002/lessons.md` (Process-Level items 3, 4, 5 — AC-016↔Task-2 story placement conflict; story "edit.rs MUST NOT change" vs Architecture-Mapping self-contradiction; Task-2 test-inversion left stale test-names/comments). For each, checked STORY-INDEX.md for an existing follow-up story targeting the SELF-IMPROVEMENT epic — none of the 123 tracked stories (including the 10-item `S-PG-*` self-improvement backlog) targets any of these 3 findings specifically. **Outcome: all 3 lack a follow-up story, so a justified-deferral entry was added to STATE.md Drift/Standing Items** (target: a future maintenance/self-improvement cycle; reason: process-doc refinement, each is a spec-authoring/story-template/task-instruction discipline gap, not a code defect — none is blocking). Checklist completion recorded per-finding as `[codified]` notes in `cycles/cycle-002/lessons.md` items 3/4/5.
+
+**Cycle close:** with the human's "Approve & release" decision and the cycle-closing checklist satisfied, **cycle-002 (`field-dx`) is now CLOSED** — MAXIMUM_VIABLE_REFINEMENT_REACHED, human-authorized at the F7 gate. Phase F7 advances from PASS/AWAITING-GATE to **COMPLETE**. Recorded as **DEC-311** in STATE.md's Decisions Log (Made By: human). No BC/VP/holdout counts changed this burst (719/32/106); no code changed (bookkeeping-only burst).
+
+**NEXT:** the release step (version bump / CHANGELOG finalize / tag / GitHub release) at `develop` @ `2000c455`, then a post-pipeline session review.
+
+**Codifications:** cycle-002 field-dx is CLOSED. F7 is COMPLETE. The 3 process-gap findings from this cycle are dispositioned via justified deferral (not silently dropped) per S-7.02.
+
+**Closes:** the F7 human authorization gate; cycle-002 field-dx (F1 through F7, all phases). **Does NOT close:** the release step itself (queued next); the standing Drift/Standing Items carried forward unchanged (5 cargo Dependabot PRs, `ADOPT-MERGE-METHOD-RULESETS`, `S-TRAIL-DERIVATION-GUARD-1`, `AX23-001`, `F7-GATE-SYSTEMIC-INPUT-HASH-DRIFT-BOOKKEEPING`, the 10-story `S-PG-*` self-improvement backlog, the 8 F5/F6/F7 outstanding LOW items ratified-by-closure at this gate, and the DEC-namespace disambiguation question).
+
+### Counts reconciled this burst
+
+No BCs/VPs/holdouts added or removed this burst (human-gate closure + checklist bookkeeping only) — 719 BCs / 32 VPs / 106 holdouts unchanged. `total_stories` unchanged at 161.
+
+### Details
+
+| Agent | Task | Output |
+|-------|------|--------|
+| state-manager | Run S-7.02 cycle-closing checklist against the 3 logged process-gap findings; add justified-deferral entries to STATE.md; record `[codified]` notes in `lessons.md`; write DEC-311; mark F7 COMPLETE and cycle-002 CLOSED in STATE.md (v3.27→v3.28); log this burst; commit + push | `STATE.md`; `cycles/cycle-002/lessons.md`; `cycles/cycle-002/burst-log.md` (this file) |
+
+**Files touched (Dim-1): 3 unique files (factory-artifacts, this burst)**
+
+- STATE.md
+- cycles/cycle-002/lessons.md
+- cycles/cycle-002/burst-log.md
+
+**Dim-2 Attestation:** `scripts/check-spec-counts.sh` / `scripts/check-bc-cumulative-counts.sh` — N/A this burst (no BC/VP/holdout count change; bookkeeping-only, no `.factory/specs/prd/` or `BC-INDEX.md` edits).
+
+**Dim-5 Attestation:** N/A — no binary/WASM artifact produced by this burst.
+
+**Dim-6 Attestation:** N/A — no source code changed this burst (`.factory/` artifact bookkeeping only, no `develop`-side commit).
+
+**Dim-7 Attestation:** N/A — no test-affecting change this burst; full regression already PASS (4660/0/106) as of the F7 delta-convergence-analyses pass, unchanged.

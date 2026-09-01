@@ -1,10 +1,10 @@
 ---
 document_type: session-checkpoints
 level: ops
-version: "1.0"
+version: "1.1"
 status: archive
 producer: state-manager
-timestamp: 2026-08-26T11:30:00Z
+timestamp: 2026-08-31T20:00:00Z
 cycle: "cycle-002"
 inputs: [STATE.md]
 input-hash: "bb3676f"
@@ -371,6 +371,16 @@ Archived verbatim from STATE.md v3.14 before the F2-GATE-APPROVED-F3-TRANSITION 
 **Pending human decisions / blockers (as of this checkpoint):** NONE. Full-autonomous-run mandate stood.
 
 **Resume command (as of this checkpoint):** `/vsdd-factory:next-step` -- reads STATE.md and dispatches S-578-4 via per-story-delivery. *(Superseded -- session resumed, S-578-4 was delivered via PR #746 @ `ae8514b8`, and cycle-002 Phase F4 is now COMPLETE; see current `STATE.md` for the live checkpoint.)*
+
+---
+
+**Checkpoint (v3.27, 2026-08-31, F7-PASS/AWAITING-HUMAN-GATE):** Feature Mode cycle-002 (`field-dx`, GitHub issues #580 + #578) -- Phase **F7 (delta convergence) PASS** this burst, **AWAITING HUMAN AUTHORIZATION GATE** (F7 intentionally not marked COMPLETE).
+
+**This burst (F7 delta-convergence-analyses pass):** ran the F7 delta-convergence analyses pass. Fixed the last remaining consistency broken-ref (13x `tests/issue_create.rs` -> `tests/issue_create_field.rs` in `verification-delta-field-dx.md`, grep-confirmed). Wrote the 4-level (BC->VP->test->src) traceability chain for all 5 field-dx stories plus cross-references (DEC-310 reverses DEC-188; S-578-4 depends_on S-580-1/S-578-2; `field_resolve.rs` shared by edit+create) to `phase-f7-convergence/traceability-chain-delta.md`, and appended the new links to a freshly-created `cycles/cycle-002/convergence/traceability-chain.md` (none existed previously). Wrote the F7 delta-convergence report (`phase-f7-convergence/delta-convergence-report.md`): all 5 dimensions PASS (spec novelty LOW/CONVERGED, mutation 100% conclusive on the two FIX-F6-001-covered files, 0 CRIT/HIGH implementation residuals, verification 32/32 VPs + clean `cargo deny`/`audit`, holdout mean 0.917 >= 0.85), full regression PASS (4660/0/106), cost-benefit assessment recommends cycle close (MAXIMUM_VIABLE_REFINEMENT), 8 outstanding LOW items carried forward for human ratification, recommendation READY FOR MERGE pending the gate. Bumped 7 benign cycle-002 input-hashes (4 story files S-578-1..4 + `session-checkpoints.md`/`burst-log.md`/`lessons.md` via `compute-input-hash --update`); re-scanned all 7 via `--check` and confirmed MATCH. `activation_head` advanced `dd311e13` -> `2000c455` (FIX-F7-001, PR #750, docs-only). Phase frontmatter advanced `F6` -> `F7`.
+
+**F5/F6 (prior, unchanged):** F5 CONVERGED (0 CRIT/HIGH, 1 MEDIUM fixed as FIX-F5-001/PR #747 @ `4e4ae4f5`, 4 LOW tracked). F6 COMPLETE (mutation config gap fixed as FIX-F6-001/PR #749 @ `dd311e13`, 93/93=100% conclusive kill, security CLEAN 3 LOW, regression 4660/0/106). Counts: 719 total BCs (BC-INDEX v6.82), 32 VPs, 106 holdout scenarios -- unchanged.
+
+**NEXT on resume (as of this checkpoint):** present `phase-f7-convergence/delta-convergence-report.md` to the human for the FINAL AUTHORIZATION GATE. *(Superseded -- the human approved at the gate on 2026-09-01 ("Approve & release"); cycle-002 is now CLOSED and F7 is COMPLETE; see current `STATE.md` for the live checkpoint.)*
 
 ---
 
