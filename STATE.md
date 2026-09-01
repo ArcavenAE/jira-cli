@@ -1,18 +1,18 @@
 ---
 document_type: pipeline-state
 level: ops
-version: "3.34"
+version: "3.35"
 status: active
 producer: state-manager
-timestamp: 2026-09-01T21:40:00Z
+timestamp: 2026-09-01T22:16:55Z
 phase: F2
-pipeline: ACTIVE
+pipeline: PAUSED
 inputs: []
 input-hash: "[live-state]"
 traces_to: ""
 project: jira-cli
 mode: brownfield
-current_step: "D-chain cite D-453 latest brownfield (unchanged); trajectory-tail →1→3→0→2; (unchanged). cycle-003 F2 spec-evolution + F2-gate fix rounds COMPLETE. Adversary convergence: pass-1 (major, incl. C-1 migration-lockout) → fixed → pass-2 (2 HIGH + 3 MED seam issues H-1/H-2/M-1/M-2/M-3) → fixed. DEC-326 (no-copy migration, HUMAN) + DEC-327 (env-var trigger, HUMAN); DEC-325(a) superseded. Adversary PASS-3 + F2 human gate NEXT. Counts 733 BCs / 41 VPs / 106 holdouts."
+current_step: "D-chain cite D-453 latest brownfield (unchanged); trajectory-tail →1→3→0→2 (unchanged). SESSION-WRAP (human /wrap request): F2-gate pass-3 propagation fixes (HIGH-1 env-var trigger, MED-2 newtype-scope note, MED-3 relogin terminology) committed as 8fe5d78f. Adversary pass-4 (convergence check) was IN-FLIGHT and ABANDONED mid-review by this wrap -- it made no persisted progress and must be RE-RUN in full on resume. F2 human gate still PENDING. Pipeline set to PAUSED."
 trajectory_tail: "→1→3→0→2"
 maintenance_run:
   status: COMPLETE
@@ -29,35 +29,32 @@ phase_2_approved_at: 2026-05-07
 phase_3_status: SOH-ATTACHMENTS-1 F5 SCOPED ADVERSARIAL CONVERGED 2026-07-24 STRICT (14 rounds; window pass-12/pass-13/pass-14 CLEANx3; spec v1.3.99 to v1.3.106; BC-INDEX v6.38 to v6.44; develop @ db207b81) + F7 DELTA CONVERGENCE APPROVED 2026-07-25 (DEC-186; 5-dim PASS; MAXIMUM_VIABLE_REFINEMENT_REACHED) + CYCLE FULLY CLOSED 2026-07-25
 cycle_001_status: "list-read-ergonomics -- CLOSED (DEC-309), historical; see cycles/cycle-001/"
 cycle_002_status: "field-dx -- CLOSED + RELEASED 2026-09-01 (DEC-311 close; v0.7.0-dev.3 tagged @ 87f17aff, release.yml run 33459579699 triggered). All 5 stories delivered/merged (F4); F5 CONVERGED (FIX-F5-001, PR #747); F6 COMPLETE (FIX-F6-001, PR #749); F7 COMPLETE (5-dim convergence PASS + full regression PASS 4660/0/106, FIX-F7-001, PR #750 @ 2000c455); RELEASED (version bump PR #751 @ 87f17aff, tag v0.7.0-dev.3 pushed, release.yml triggered). Pipeline SHIPPED. Session wrapped 2026-09-01."
-cycle_003_status: "auth-profile-dx -- OPEN (feature mode). Phase F1 delta-analysis APPROVED at human gate 2026-09-01. Phase F2 (spec evolution) AUTHORING COMPLETE 2026-09-01, then F2-GATE FIX ROUND COMPLETE 2026-09-01: adversary pass-1 CRITICAL (C-1 migration-lockout) fixed via no-copy redesign (DEC-326); pass-2 2 HIGH + 3 MED (H-1/H-2/M-1/M-2/M-3) fixed; DEC-327 (env-var trigger) recorded; DEC-325(a) annotated superseded. BC delta 719->733 total (731 after authoring, +2 in fix round), VP delta 32->41 (unchanged since authoring), ADR-0011 amended (STAGED for F4), ADR-0020 authored/amended. Adversary pass-3 (convergence check) + human F2 gate NEXT."
+cycle_003_status: "auth-profile-dx -- OPEN (feature mode), PAUSED at SESSION-WRAP 2026-09-01. Phase F1 delta-analysis APPROVED at human gate 2026-09-01. Phase F2 (spec evolution) AUTHORING COMPLETE 2026-09-01, then F2-GATE FIX ROUND COMPLETE (adversary pass-1 C-1 + pass-2 H-1/H-2/M-1/M-2/M-3, DEC-326/327). Adversary PASS-3 (arch-doc propagation fixes: HIGH-1 env-var trigger, MED-2 newtype-scope, MED-3 relogin terminology) committed as 8fe5d78f this wrap. Adversary pass-4 (convergence check) was IN-FLIGHT and ABANDONED by this SESSION-WRAP -- must be RE-RUN on resume. F2 human gate PENDING. BC/VP/holdout counts unchanged this wrap (733/41/106)."
 activation_head: "87f17aff"
 activation_version: "v0.7.0-dev.3"
 ---
 
-<!-- STATE.md SIZE BUDGET (2026-09-01, cycle-003-f2-gate-fix-round burst):
-     219 lines (wc-l). soft-target 200; hard cap 500.
-     margin from soft-target = 219 - 200 = 19 -- 19 lines OVER the soft target of 200.
-     margin from actual (hard cap) = 500 - 219 = 281 lines of headroom remain before the hard cap of 500.
-     This burst records cycle-003 (auth-profile-dx) Phase F2 spec-evolution FIX ROUND
-     COMPLETE: adversary pass-1 CRITICAL (C-1 migration-lockout) closed via a HUMAN-decided
-     no-copy detect-and-instruct migration redesign (DEC-326, supersedes DEC-325(a)'s lazy-
-     migration clause); adversary pass-2's 2 HIGH + 3 MED seam issues (H-1/H-2/M-1/M-2/M-3)
-     all closed, including M-3 (undocumented human decisions), now recorded as DEC-326 and
-     DEC-327 (env-var non-interactive-only trigger, refines DEC-313). BC delta 731->733
-     (+2: BC-1.1.016, BC-1.4.034); VP/holdout counts unchanged (41 VPs, 106 holdouts). Spec
-     files (bc-1, bc-6, BC-INDEX, CANONICAL-COUNTS, ADR-0020, architecture-delta, ADR-0011
-     staged amendment) already committed to factory-artifacts as `d9b69e61` by the prior
-     (interrupted) burst attempt -- NOT re-committed here. Frontmatter: version 3.33->3.34,
-     phase stays F2, pipeline stays ACTIVE, timestamp refreshed, current_step +
-     cycle_003_status updated to reflect FIX ROUND COMPLETE / adversary pass-3 + human gate
-     PENDING. cycle_001_status/cycle_002_status preserved verbatim, unaltered. Session
-     Resume Checkpoint replaced; the prior F2-AUTHORING-COMPLETE checkpoint (v3.33) is
-     archived to cycles/cycle-003/session-checkpoints.md. Burst narrative:
-     cycles/cycle-003/burst-log.md Burst 4. `scripts/check-bc-cumulative-counts.sh`
-     reconfirmed green (733 total) after this burst's commit. One full-content Write, no
-     Edit chain (DEC-247). Pre-existing uncommitted `regression-state.json` and
+<!-- STATE.md SIZE BUDGET (2026-09-01, SESSION-WRAP burst):
+     220 lines (wc-l). soft-target 200; hard cap 500.
+     margin from soft-target = 220 - 200 = 20 -- 20 lines OVER the soft target of 200.
+     margin from actual (hard cap) = 500 - 220 = 280 lines of headroom remain before the hard cap of 500.
+     This burst is a human-requested SESSION-WRAP (/wrap), pausing the factory mid-F2-gate
+     for cycle-003 (auth-profile-dx). Real work committed this wrap: the architect's F2-gate
+     pass-3 propagation fixes (HIGH-1 env-var trigger DEC-327 propagated into ADR-0020/
+     architecture-delta.md, MED-2 newtype-scope note in the staged ADR-0011 amendment, MED-3
+     "relogin-then-replace" terminology fix) as commit `8fe5d78f` to factory-artifacts.
+     Adversary pass-4 (convergence check) was in flight and is ABANDONED by this wrap -- it
+     is read-only, produced no artifacts, and must be re-run in full on resume. Frontmatter:
+     pipeline ACTIVE->PAUSED, version 3.34->3.35, timestamp refreshed, phase stays F2.
+     cycle_001_status/cycle_002_status preserved verbatim, unaltered. Session Resume
+     Checkpoint replaced; the prior F2-GATE-FIX-ROUND-COMPLETE checkpoint (v3.34) is archived
+     to cycles/cycle-003/session-checkpoints.md. Burst narrative:
+     cycles/cycle-003/burst-log.md Burst 5. `scripts/check-bc-cumulative-counts.sh`
+     reconfirmed green (733 total, unchanged) after this wrap's commits. One full-content
+     Write, no Edit chain (DEC-247). Pre-existing uncommitted `regression-state.json` and
      `sidecar-learning.md` modifications in the worktree are left untouched -- not staged,
-     not committed, per standing instruction. -->
+     not committed, per standing instruction; both predate this session and are unrelated
+     to cycle-003 work. -->
 
 # Pipeline State: jira-cli
 
@@ -69,8 +66,8 @@ activation_version: "v0.7.0-dev.3"
 | **Mode** | BROWNFIELD / Rust |
 | **Target Workspace** | develop to main |
 | **trajectory-tail** | →1→3→0→2 (unchanged this burst) |
-| **Last Updated** | cycle-003 F2-gate fix round complete (2026-09-01): trajectory-tail →1→3→0→2 (unchanged). Phase F2 spec evolution for `auth-profile-dx` is FIX ROUND COMPLETE -- adversary pass-1/pass-2 findings fixed, DEC-326/327 recorded. Adversary pass-3 + human F2 gate NEXT. |
-| **Current Phase** | Feature Mode cycle-003 (`auth-profile-dx`) -- **F2 spec evolution FIX ROUND COMPLETE, adversary pass-3 + F2 GATE PENDING**. cycle-001 and cycle-002 remain CLOSED, historical. |
+| **Last Updated** | SESSION-WRAP (2026-09-01): trajectory-tail →1→3→0→2 (unchanged). Phase F2 spec evolution for `auth-profile-dx` has its adversary pass-3 propagation fixes committed (`8fe5d78f`); adversary pass-4 was abandoned mid-review by this human-requested wrap and must be re-run on resume. Pipeline is PAUSED. |
+| **Current Phase** | Feature Mode cycle-003 (`auth-profile-dx`) -- **F2 spec evolution, inside the adversarial convergence loop, PAUSED pending adversary pass-4 re-run + F2 GATE**. cycle-001 and cycle-002 remain CLOSED, historical. |
 | **Activation HEAD** | 87f17aff (`develop` tip; unchanged this burst -- no `develop`-side commit in cycle-003) |
 
 ## Phase Progress (recent; full history in cycles/cycle-001/burst-log.md, cycles/cycle-002/burst-log.md, cycles/cycle-003/burst-log.md, and factory-artifacts@43f4a5e3)
@@ -79,17 +76,18 @@ activation_version: "v0.7.0-dev.3"
 |-------|--------|-----------|------|-------|---------------------|
 | F1-DELTA-ANALYSIS (cycle-003) | COMPLETE | 2026-09-01 | Human gate — F1 delta-analysis APPROVED | Impact boundary accepted: ~8 BCs amend, ~9-13 new BCs, ADR-0011 amendment + new ADR-0020, 10 preliminary F3 stories, HIGH-risk shared->per-profile credential migration. Report: `cycles/cycle-003/phase-f1-delta-analysis/delta-analysis.md`. | N/A (gate, not adversary-scored) |
 | F2-SPEC-EVOLUTION (cycle-003) | AUTHORING COMPLETE | 2026-09-01 | Superseded by fix round below | ADR-0011 amended (Deferred->Accepted, STAGED for F4 application), ADR-0020 authored, BC delta landed (+12 bc-1, +1 bc-6, 9 amended in place), nfr-catalog.md reconciled (NFR-SCA-2, NFR-S-B). Report: `cycles/cycle-003/phase-f2-spec-evolution/architecture-delta.md`. | 719→731 BCs; 32→41 VPs |
-| F2-GATE-FIX-ROUND (cycle-003) | **COMPLETE (this burst)** | 2026-09-01 | Pending — adversary pass-3 (convergence check) + human F2 gate | Adversary pass-1 CRITICAL (C-1 migration-lockout) fixed via DEC-326 no-copy redesign; pass-2's 2 HIGH + 3 MED (H-1/H-2/M-1/M-2/M-3) fixed; DEC-326/DEC-327 recorded, DEC-325(a) annotated superseded. Spec commit `d9b69e61`. Report: `cycles/cycle-003/burst-log.md` Burst 4. | 731→733 BCs; 41 VPs unchanged |
+| F2-GATE-FIX-ROUND (cycle-003) | COMPLETE | 2026-09-01 | Superseded by pass-3/pass-4 below | Adversary pass-1 CRITICAL (C-1 migration-lockout) fixed via DEC-326 no-copy redesign; pass-2's 2 HIGH + 3 MED (H-1/H-2/M-1/M-2/M-3) fixed; DEC-326/DEC-327 recorded, DEC-325(a) annotated superseded. Spec commit `d9b69e61`. Report: `cycles/cycle-003/burst-log.md` Burst 4. | 731→733 BCs; 41 VPs unchanged |
+| F2-GATE-PASS3-4 + SESSION-WRAP (cycle-003) | **PAUSED (this burst)** | 2026-09-01 | Pending — adversary pass-4 re-run + human F2 gate | Pass-3 (arch-doc propagation: HIGH-1 env-var trigger, MED-2 newtype-scope, MED-3 relogin terminology) committed as `8fe5d78f`. Adversary pass-4 (convergence check) was in flight and ABANDONED by a human-requested `/wrap` -- made no persisted progress, must be re-run in full. Report: `cycles/cycle-003/burst-log.md` Burst 5. | 733 BCs unchanged; 41 VPs unchanged |
 
-## Current Phase Steps (cycle-003, F2-gate fix round; last 5)
+## Current Phase Steps (cycle-003, F2-gate pass-3/pass-4 + wrap; last 5)
 
 | Step | Status | Notes |
 |------|--------|-------|
-| Adversary pass-1 (CRITICAL C-1 migration-lockout) | **DONE** | Fixed via no-copy detect-and-instruct redesign (DEC-326) — BC-1.4.032/033 redesigned, BC-1.4.034 added. |
-| Adversary pass-2 (2 HIGH + 3 MED: H-1/H-2/M-1/M-2/M-3) | **DONE** | H-2 (BC-1.6.046/047 JSON/human channel split), M-1/L-2 (BC-1.1.013/014 env-var trigger, DEC-327), M-3 (undocumented decisions — now DEC-326/327 recorded) all fixed; BC-1.1.016 added (I-1). |
 | BC delta landed (731→733) | **DONE** | +2 (BC-1.1.016, BC-1.4.034); `BC-INDEX.md`/`CANONICAL-COUNTS.md` updated; `scripts/check-bc-cumulative-counts.sh` green. |
-| Committed to factory-artifacts | **DONE** | Spec files committed as `d9b69e61`; STATE.md/burst-log/session-checkpoints committed in this state-manager follow-on commit. |
-| Adversary pass-3 (convergence check) + human F2 gate | **NEXT** | Confirm novelty decayed to zero on the fixed package; on a clean pass, present the F2 spec-evolution package (as fixed) at the human gate. On approval, dispatch Phase F3 (incremental stories). |
+| F2-gate fix round committed to factory-artifacts | **DONE** | Spec files committed as `d9b69e61`; STATE.md/burst-log/session-checkpoints committed in follow-on commit (v3.34). |
+| Adversary pass-3 (arch-doc propagation: HIGH-1/MED-2/MED-3) | **DONE** | Fixes committed as `8fe5d78f` this wrap: env-var trigger (DEC-327) propagated into ADR-0020/architecture-delta.md, newtype-scope note in staged ADR-0011 amendment, "relogin-then-replace" terminology fix. |
+| Adversary pass-4 (convergence check) | **ABANDONED mid-review** | Read-only, produced no artifacts, no persisted progress; abandoned by human-requested SESSION-WRAP. **MUST BE RE-RUN IN FULL on resume.** |
+| SESSION-WRAP: pipeline set PAUSED | **DONE (this burst)** | Human-requested `/wrap`. STATE.md v3.34→v3.35, `pipeline: ACTIVE`→`PAUSED`. Resume: re-run adversary pass-4, then present F2 human gate. |
 
 ## Decisions Log
 
@@ -129,6 +127,7 @@ activation_version: "v0.7.0-dev.3"
 | F6 DTU adversarial testing / accessibility re-check (cycle-002) | yes | `dtu_required: false`; `feature_type: backend-cli`, no UI surface. |
 | UX Spec (cycle-003, tentative) | tbd | `jr` is CLI-only; auth-profile-dx is likely no-UI-surface, same as cycle-002 -- confirm at F1/F2. |
 | DTU creation (cycle-003) | yes | `dtu_required: false` -- no external service behavior is being cloned; auth flows target the real Atlassian OAuth/token endpoints already covered by existing DTU-not-required precedent. |
+| Adversary pass-4 (this wrap) | **no — deferred, not skipped** | In flight when human requested `/wrap`; abandoned mid-review with no persisted progress; MUST be re-run in full on resume, not treated as satisfied. |
 
 ## Blocking Issues
 
@@ -144,33 +143,35 @@ activation_version: "v0.7.0-dev.3"
 
 `cycle-002` (`field-dx`) F2-F7 COMPLETE, human-authorized at the F7 gate (DEC-311, MAXIMUM_VIABLE_REFINEMENT_REACHED). **RELEASED 2026-09-01 as `v0.7.0-dev.3`** (PR #751 @ `87f17aff`, tag pushed, `release.yml` run `33459579699` triggered). cycle-002 field-dx is SHIPPED, historical as of this burst.
 
-`cycle-003` (`auth-profile-dx`) F1 delta-analysis APPROVED at the human gate; Phase F2 (spec evolution) AUTHORING COMPLETE, then **FIX ROUND COMPLETE** this burst — adversary pass-1 CRITICAL (C-1) and pass-2's 2 HIGH + 3 MED (H-1/H-2/M-1/M-2/M-3) findings all fixed; DEC-326/DEC-327 recorded, DEC-325(a) annotated superseded. No convergence loop started yet (convergence applies from F4 onward). Counts updated this burst: **733 total BCs** (731→733, +2: BC-1.1.016, BC-1.4.034), **41 total VPs** (unchanged since authoring), **106 holdout scenarios** (unchanged -- holdout authoring is F3's work). Adversary pass-3 (convergence check) + human F2 gate are NEXT.
+`cycle-003` (`auth-profile-dx`) F1 delta-analysis APPROVED at the human gate; Phase F2 (spec evolution) AUTHORING COMPLETE, then F2-GATE-FIX-ROUND COMPLETE, then adversary pass-3 (arch-doc propagation fixes) committed as `8fe5d78f`. Adversary pass-4 (convergence check) was IN-FLIGHT and ABANDONED by this SESSION-WRAP -- no persisted progress, must be re-run in full on resume. Pipeline is now **PAUSED**. No convergence loop artifacts changed this burst. Counts unchanged this burst: **733 total BCs**, **41 total VPs**, **106 holdout scenarios**. Adversary pass-4 re-run + human F2 gate are NEXT on resume.
 
 ## Concurrent Cycles
 
-Three tracked cycles. `cycle-001` is CLOSED, historical. `cycle-002` (`field-dx`) is **CLOSED + RELEASED** (2026-09-01), historical. `cycle-003` (`auth-profile-dx`) is the sole **ACTIVE** cycle, F1 APPROVED, F2 spec-evolution FIX ROUND COMPLETE, adversary pass-3 + F2 gate pending.
+Three tracked cycles. `cycle-001` is CLOSED, historical. `cycle-002` (`field-dx`) is **CLOSED + RELEASED** (2026-09-01), historical. `cycle-003` (`auth-profile-dx`) is the sole cycle with open work, F1 APPROVED, F2 spec-evolution + gate-fix-round + pass-3 propagation fixes COMPLETE, adversary pass-4 + F2 gate pending; pipeline is **PAUSED** as of this SESSION-WRAP.
 
 ## Constraints Carried Forward (cycle-003)
 
-ADR-0006 (embedded OAuth app, fixed callback port 53682), ADR-0013 (PKCE deferral -- Atlassian 3LO does not support public-client PKCE as of 2026-05), SD-002 release gates (`JR_AUTH_HEADER`/`JR_BASE_URL` debug-only, release binaries ignore them), single-use refresh tokens + `refresh_coordinator.rs` per-profile single-flight, Windows Credential Manager posture (SEC-WCM-DOC), and the shared-vs-per-profile keychain invariant -- being **deliberately restructured** by DEC-315, migration mechanism finalized as no-copy detect-and-instruct (DEC-326); migration discipline mandatory (see F2 spec delta for the concrete migration design). Refresh mechanism override removed (DEC-321) -- `auth refresh` always follows the profile's intrinsic `auth_method`; ADR-0011 amendment (Deferred->Accepted, DEC-317/DEC-325b) is authored and STAGED (not yet applied to `docs/adr/`); ADR-0020 (DEC-325c) is authored, final under `.factory/`, and amended this burst (Decision 8 airtight non-interactive OAuth guard; DEC-327 env-var trigger refinement).
+ADR-0006 (embedded OAuth app, fixed callback port 53682), ADR-0013 (PKCE deferral -- Atlassian 3LO does not support public-client PKCE as of 2026-05), SD-002 release gates (`JR_AUTH_HEADER`/`JR_BASE_URL` debug-only, release binaries ignore them), single-use refresh tokens + `refresh_coordinator.rs` per-profile single-flight, Windows Credential Manager posture (SEC-WCM-DOC), and the shared-vs-per-profile keychain invariant -- being **deliberately restructured** by DEC-315, migration mechanism finalized as no-copy detect-and-instruct (DEC-326); migration discipline mandatory (see F2 spec delta for the concrete migration design). Refresh mechanism override removed (DEC-321) -- `auth refresh` always follows the profile's intrinsic `auth_method`; ADR-0011 amendment (Deferred->Accepted, DEC-317/DEC-325b) is authored and STAGED (not yet applied to `docs/adr/`); ADR-0020 (DEC-325c) is authored, final under `.factory/`, and reconciled this wrap (pass-3 fixes: DEC-327 env-var trigger propagated, newtype-scope note, relogin terminology).
 
 ## Session Resume Checkpoint
 
-**Date:** 2026-09-01. **Position:** cycle-003 (`auth-profile-dx`) F1 delta-analysis APPROVED, Phase F2 (spec evolution) AUTHORING COMPLETE then **F2-GATE FIX ROUND COMPLETE**, adversary pass-3 + F2 GATE PENDING. `develop` @ `87f17aff` (unchanged -- no code touched yet). cycle-001 and cycle-002 remain CLOSED, historical, unaltered by this burst.
+**Date:** 2026-09-01. **Position:** cycle-003 (`auth-profile-dx`), phase F2, inside the F2-GATE ADVERSARIAL CONVERGENCE loop (spec authoring + architecture COMPLETE; human gate NOT yet given). `develop` @ `87f17aff` (unchanged -- no code touched yet). cycle-001 and cycle-002 remain CLOSED, historical, unaltered by this burst. **Pipeline is PAUSED** by this human-requested SESSION-WRAP.
 
-**This burst (cycle-003 F2-gate fix round complete):** the F2 quality-gate adversarial review ran two convergence passes against the Burst-3 F2-authoring package. Pass-1 surfaced a CRITICAL migration-lockout finding (C-1), closed by a HUMAN-decided no-copy detect-and-instruct redesign of the shared legacy `email`/`api-token` migration (DEC-326, supersedes DEC-325(a)'s lazy-migration clause) — `load_api_token` never reads-as-credential/copies/deletes legacy keys for any profile; an absent namespaced pair exits 64 instructing `jr auth login <profile>`. Pass-2 (run after the pass-1 fix) surfaced 2 HIGH + 3 MED seam issues (H-1/H-2/M-1/M-2/M-3), all fixed: BC-1.1.016 added (airtight non-interactive OAuth guard, closes I-1); BC-1.4.034 added (one-time re-login breaking-change contract); BC-1.6.046/047 amended (JSON-vs-human-text channel split, H-2); BC-1.1.013/014 amended (env-var non-interactive-only trigger for the OAuth-default picker, DEC-327, refines DEC-313, M-1/L-2); BC-1.2.013/014/048/050/051 and BC-1.4.031 amended (ordering/scope/cross-ref fixes, M-3 + fix-pass). `BC-INDEX.md`/`CANONICAL-COUNTS.md` updated to 733 total BCs (731→733, +2); `scripts/check-bc-cumulative-counts.sh` green. Spec files (`bc-1-auth-identity.md`, `bc-6-config-cache.md`, `BC-INDEX.md`, `CANONICAL-COUNTS.md`, `ADR-0020`, `architecture-delta.md`, `adr-0011-amendment-staged.md`) were already committed to factory-artifacts as `d9b69e61` by a prior burst attempt that died mid-run (transient transport error) — NOT re-committed here. DEC-326 and DEC-327 recorded in the Decisions Log (resolving adversary finding M-3, undocumented human decisions); DEC-325(a) annotated SUPERSEDED in place (not removed). STATE.md refreshed via one full-content Write (v3.33 → v3.34): `current_step`/`cycle_003_status` updated; Phase Progress + Current Phase Steps rows added for the fix round; Convergence Status counts updated (733 BCs / 41 VPs / 106 holdouts); new LOW Drift/Standing item L-3 recorded. Prior F2-AUTHORING-COMPLETE checkpoint (v3.33) archived to `cycles/cycle-003/session-checkpoints.md`. Burst narrative: `cycles/cycle-003/burst-log.md` Burst 4.
+**Convergence trajectory (counter):** adversary pass-1 (major — incl. C-1 default-only migration-lockout) → fixed → pass-2 (2 HIGH + 3 MED document-seam issues H-1/H-2/M-1/M-2/M-3) → fixed → pass-3 (1 HIGH env-var-trigger + 2 MED newtype-note/terminology, all BC→architecture-doc propagation gaps) → fixed (this wrap commits those pass-3 fixes) → adversary pass-4 (convergence check) was IN-FLIGHT and ABANDONED mid-review by the wrap. Pass-4 is READ-ONLY, produces NO artifacts, and must be RE-RUN on resume.
 
-**In-flight:** adversary pass-3 (convergence check, confirming novelty decayed to zero on the fixed package) has NOT yet run; the human F2 gate has NOT yet been presented. No open worktrees, no pending PRs, no open convergence loop, no code changed. `docs/adr/0011-type-level-profile-fence.md` on `develop` is clean (amendment staged, not applied) pending the F4 implementation PR.
+**Committed spec state:** bc-1 = 71 BCs (60 individually-bodied), bc-6 = 44, grand total = 733 BCs; 41 VPs (VP-AUTHDX-001..009); 106 holdouts. BC layer confirmed AIRTIGHT by adversary pass-3; architecture docs (ADR-0020 / architecture-delta / staged ADR-0011) reconciled to the BCs as of this wrap's commit. Prior commits: `d9b69e61` (pass-1/2 fixes), `228c4905` (STATE v3.34 + DEC-326/327), `8fe5d78f` (this wrap's pass-3 propagation-fix commit).
 
-**Constraints to carry into the F2 gate and F3:** ADR-0006 (embedded OAuth, fixed port 53682), ADR-0013 (PKCE deferral), SD-002 debug-only release gates, single-use refresh tokens + `refresh_coordinator.rs` single-flight, Windows Credential Manager posture, and the shared-vs-per-profile keychain invariant under deliberate restructuring (DEC-315), migration mechanism finalized as no-copy detect-and-instruct (DEC-326). Refresh override removed (DEC-321). ADR-0011 amendment is STAGED, not applied — the F4 story `S-cycle3-adr0011-newtype` must apply it. Full detail: `cycles/cycle-003/investigation/auth-profile-current-state.md`, `cycles/cycle-003/phase-f1-delta-analysis/delta-analysis.md`, `cycles/cycle-003/phase-f2-spec-evolution/architecture-delta.md`.
+**Human decisions already made + recorded:** DEC-326 (no-copy api-token migration; supersedes DEC-325a) and DEC-327 (env-var non-interactive-only OAuth-picker trigger). Do NOT re-ask these on resume.
 
-**cycle-002 final state (unchanged, historical):** RELEASED as `v0.7.0-dev.3` (PR #751 @ `87f17aff`, tag pushed, `release.yml` run `33459579699`).
+**Pending human decision:** the F2 human approval gate has NOT been presented — it is pending a clean adversary pass-4.
 
-**NEXT on resume:** run adversary pass-3 (convergence check) against the fixed F2 spec-evolution package; on a clean pass (novelty decayed to zero), present the package at the human F2 gate. On approval, dispatch Phase F3 (incremental stories) against the ~10 preliminary F3 stories from the F1 delta analysis.
+**In-flight/abandoned:** adversary pass-4 (read-only, convergence check) — abandoned mid-review by this wrap, must be re-run in full on resume, no persisted progress to build on. Two pre-existing dirty files carried forward uncommitted: `regression-state.json`, `sidecar-learning.md` (dirty since session start; not cycle-003 work).
 
-**Resume command:** `/vsdd-factory:next-step` -- reports adversary pass-3 as the next step -- or run the F2 quality-gate adversarial review directly.
+**NEXT on resume (exact):** (1) re-run adversary pass-4 convergence check on the now-fully-reconciled specs (bc-1/bc-6/ADR-0020/architecture-delta/staged-ADR-0011); (2) if clean (pass-3 predicted it would be, since the BC layer is airtight and only arch-doc propagation remained) → present the F2 human approval gate; (3) on F2 approval → F3 story decomposition (10 preliminary story candidates enumerated in `cycles/cycle-003/phase-f1-delta-analysis/delta-analysis.md` §2, led by env-tag → per-profile-credential-storage → no-copy-detect-and-instruct → ADR-0011 newtype). Note the F4 obligation: the staged ADR-0011 amendment (`cycles/cycle-003/phase-f2-spec-evolution/adr-0011-amendment-staged.md`) must be applied to `docs/adr/0011-type-level-profile-fence.md` by the F4 newtype story's PR.
 
-**Superseded checkpoints:** the prior F2-AUTHORING-COMPLETE checkpoint (v3.33, 2026-09-01) is superseded in place by this burst's FIX-ROUND-COMPLETE position above and archived to `cycles/cycle-003/session-checkpoints.md`, alongside the F1-pending checkpoint (v3.31) and F2-in-progress checkpoint (v3.32). Earlier archives (RELEASED/SHIPPED v3.29, F7-PASS/AWAITING-GATE v3.27, F6-COMPLETE v3.26, F5-COMPLETE v3.25, F4-COMPLETE v3.24, `WRAP-F4-WAVE2-COMPLETE-PAUSE` v3.23, and the SESSION-WRAP checkpoint) remain at `cycles/cycle-002/session-checkpoints.md`. The `list-read-ergonomics` cycle-001 CLOSED-position checkpoint (v3.05) remains archived at `cycles/cycle-001/session-checkpoints.md`.
+**Resume command:** `/vsdd-factory:next-step`.
+
+**Superseded checkpoints:** the prior F2-GATE-FIX-ROUND-COMPLETE checkpoint (v3.34, 2026-09-01) is superseded in place by this wrap's PAUSED position above and archived to `cycles/cycle-003/session-checkpoints.md`, alongside the F1-pending checkpoint (v3.31), F2-in-progress checkpoint (v3.32), and F2-authoring-complete checkpoint (v3.33). Earlier archives (RELEASED/SHIPPED v3.29, F7-PASS/AWAITING-GATE v3.27, F6-COMPLETE v3.26, F5-COMPLETE v3.25, F4-COMPLETE v3.24, `WRAP-F4-WAVE2-COMPLETE-PAUSE` v3.23, and the SESSION-WRAP checkpoint) remain at `cycles/cycle-002/session-checkpoints.md`. The `list-read-ergonomics` cycle-001 CLOSED-position checkpoint (v3.05) remains archived at `cycles/cycle-001/session-checkpoints.md`.
 
 ## Historical Content
 
@@ -178,7 +179,7 @@ ADR-0006 (embedded OAuth app, fixed callback port 53682), ADR-0013 (PKCE deferra
 |---------|----------|
 | cycle-001 burst history | `cycles/cycle-001/burst-log.md` |
 | cycle-002 burst history | `cycles/cycle-002/burst-log.md` (Bursts 1-14 = F2/F3/F4; 15 = F5 CONVERGED + FIX-F5-001; 16 = F6 COMPLETE + FIX-F6-001; 17 = F7 delta-convergence analyses PASS + FIX-F7-001; 18 = F7 human gate APPROVED + cycle-002 CLOSED; 19 = release v0.7.0-dev.3 SHIPPED; 20 = SESSION-WRAP) |
-| cycle-003 burst history | `cycles/cycle-003/burst-log.md` (Burst 1 = cycle OPENED; Burst 2 = F1 delta-analysis APPROVED at human gate, F2 entry; Burst 3 = F2 spec-evolution AUTHORING COMPLETE; Burst 4 = F2-gate FIX round COMPLETE — adversary pass-1/pass-2 fixes, DEC-326/327 recorded, this burst) |
+| cycle-003 burst history | `cycles/cycle-003/burst-log.md` (Burst 1 = cycle OPENED; Burst 2 = F1 delta-analysis APPROVED at human gate, F2 entry; Burst 3 = F2 spec-evolution AUTHORING COMPLETE; Burst 4 = F2-gate FIX round COMPLETE — adversary pass-1/pass-2 fixes, DEC-326/327 recorded; Burst 5 = SESSION-WRAP — pass-3 propagation fixes committed, pass-4 abandoned, PAUSED, this burst) |
 | cycle-003 grounding artifacts | `cycles/cycle-003/investigation/auth-profile-current-state.md` (current-state map); `cycles/cycle-003/investigation/modern-cli-auth-profile-research.md` (modern-CLI research, 39 sources, 4 ranked recommendations) |
 | cycle-003 F1 delta-analysis report | `cycles/cycle-003/phase-f1-delta-analysis/delta-analysis.md` (impact boundary, affected specs/stories/tests, regression risk; APPROVED at human gate) |
 | cycle-003 F2 spec-evolution artifacts | `cycles/cycle-003/phase-f2-spec-evolution/architecture-delta.md` (architecture delta narrative); `cycles/cycle-003/phase-f2-spec-evolution/adr-0011-amendment-staged.md` (STAGED ADR-0011 amendment, pending F4 application to `docs/adr/`) |
@@ -193,9 +194,9 @@ ADR-0006 (embedded OAuth app, fixed callback port 53682), ADR-0013 (PKCE deferra
 
 ## Drift / Standing Items
 
-**cycle-003 (updated this burst):** ADR-0011's docs/adr amendment is **STAGED, not applied** — `cycles/cycle-003/phase-f2-spec-evolution/adr-0011-amendment-staged.md` holds the amended (Status Deferred→Accepted) ADR-0011 body; the main-repo file `docs/adr/0011-type-level-profile-fence.md` on `develop` remains reverted to its pre-amendment content. **The F4 story `S-cycle3-adr0011-newtype` MUST apply this staged amendment to `docs/adr/0011-type-level-profile-fence.md` as part of its implementation PR** — do not let the F4 PR skip this application step. DEC-NAMESPACE-COLLISION-RISK remains clean (max allocated ID DEC-327, re-verified this burst via corpus-wide grep).
+**cycle-003 (updated this burst):** ADR-0011's docs/adr amendment is **STAGED, not applied** — `cycles/cycle-003/phase-f2-spec-evolution/adr-0011-amendment-staged.md` holds the amended (Status Deferred→Accepted) ADR-0011 body; the main-repo file `docs/adr/0011-type-level-profile-fence.md` on `develop` remains reverted to its pre-amendment content. **The F4 story `S-cycle3-adr0011-newtype` MUST apply this staged amendment to `docs/adr/0011-type-level-profile-fence.md` as part of its implementation PR** — do not let the F4 PR skip this application step. DEC-NAMESPACE-COLLISION-RISK remains clean (max allocated ID DEC-327, no new decisions this wrap).
 
-**L-3 (new, this burst, LOW, non-blocking):** BC-1.2.017 self-notes the F1 report's phantom "BC-1.1.017" citation; cosmetic cross-ref cleanup, non-blocking.
+**L-3 (LOW, non-blocking, carried forward):** BC-1.2.017 self-notes the F1 report's phantom "BC-1.1.017" citation; cosmetic cross-ref cleanup, non-blocking.
 
 **Still open (2026-09-01, cycle-002 F7 human gate + S-7.02 cycle-closing checklist -- justified deferral, carried forward unchanged):**
 - `CYCLE-002-PROCESS-GAP-DEFERRAL-1/2/3` (all LOW, justified deferral — no follow-up story exists in STORY-INDEX; target: a future SELF-IMPROVEMENT maintenance cycle; reason: process-doc refinement, non-blocking): (1) AC-016<->Task-2 story placement conflict; (2) story File-Structure vs Architecture-Mapping self-contradiction; (3) Task-2 test-inversion left stale test-names/doc-comments uncaught until adversary Pass 11. Full detail + `[codified]` disposition notes: `cycles/cycle-002/lessons.md` Process-Level items 3/4/5.

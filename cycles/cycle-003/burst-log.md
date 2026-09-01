@@ -7,7 +7,7 @@ producer: state-manager
 timestamp: 2026-09-01T15:30:00Z
 cycle: "cycle-003"
 inputs: [STATE.md]
-input-hash: "bca71fc"
+input-hash: "ce28c9c"
 traces_to: STATE.md
 ---
 
@@ -235,5 +235,61 @@ No BCs/VPs/holdouts added or removed — 719 BCs / 32 VPs / 106 holdouts unchang
 **Dim-5 Attestation:** N/A — no binary/WASM artifact produced by this burst.
 
 **Dim-6 Attestation:** N/A — no source code changed this burst (`.factory/` artifact bookkeeping + spec fix round only; `src/` untouched per instruction).
+
+**Dim-7 Attestation:** N/A — no test-affecting change this burst; full regression remains PASS (4660/0/106) as of the cycle-002 F7 delta-convergence pass, unchanged.
+
+## Burst: Burst 5 — SESSION-WRAP: pass-3 propagation fixes committed, pass-4 abandoned, pipeline PAUSED (2026-09-01)
+
+**Parent-commit:** `87f17aff` (`develop` tip; unchanged this burst — spec-only, no `develop`-side commit).
+
+**Trigger:** human-requested `/wrap` (SESSION-WRAP) mid-session, while adversary pass-4 (the F2-gate convergence check following Burst 4's pass-1/pass-2 fixes) was in flight. The architect had already produced pass-3 fixes (BC-to-architecture-doc propagation gaps found between pass-2's fix round and pass-4) but they were sitting uncommitted in the `.factory` worktree when the wrap was requested. This burst brings the factory to a safe, resumable PAUSED stop without doing any further F2-gate work.
+
+**Actions taken:**
+1. **Verified worktree preconditions:** `.factory/.git` marker present, `git -C .factory rev-parse --git-dir` succeeds, `git -C .factory branch --show-current` == `factory-artifacts`, HEAD was `228c4905` at wrap start.
+2. **Committed the architect's F2-gate pass-3 propagation fixes** (explicit paths, no `git add -A`) — commit `8fe5d78f`: `specs/architecture/decisions/ADR-0020-per-profile-credential-ownership-env-tagging-and-oauth-default-at-creation.md`, `cycles/cycle-003/phase-f2-spec-evolution/architecture-delta.md`, `cycles/cycle-003/phase-f2-spec-evolution/adr-0011-amendment-staged.md`. These close pass-3's HIGH-1 (env-var trigger, DEC-327, propagated from the BCs into the architecture doc), MED-2 (newtype-scope clarifying note in the staged ADR-0011 amendment), and MED-3 ("relogin-then-replace" terminology fix, aligning prose with the DEC-326 no-copy detect-and-instruct migration model).
+3. **Left `regression-state.json` and `sidecar-learning.md` untouched** — both were dirty at session start, pre-existing and unrelated to cycle-003 work; not staged, not committed, per standing instruction.
+4. **ABANDONED adversary pass-4 (convergence check) mid-review** — it is READ-ONLY (produces no artifacts) and had made no persisted progress at the point of the wrap request; it must be RE-RUN in full on resume against the now fully-reconciled specs (bc-1, bc-6, ADR-0020, architecture-delta, staged ADR-0011).
+5. **STATE.md refreshed via one full-content Write (v3.34 → v3.35):** `pipeline: ACTIVE` → `PAUSED`; timestamp refreshed; `current_step`/`cycle_003_status` updated to record pass-3 fixes committed + pass-4 abandoned/pending; Session Resume Checkpoint replaced (prior v3.34 checkpoint archived to `cycles/cycle-003/session-checkpoints.md`); Current Phase Steps row added for this wrap.
+6. **Did NOT touch `src/`** — bookkeeping-only wrap, per standing instruction and the orchestrator's explicit constraint.
+
+**Adversary verdict:** N/A this burst — pass-4 did not complete; no findings to report. Pass-3's own findings (HIGH-1, MED-2, MED-3) are FIXED by this burst's commit `8fe5d78f`.
+
+**Outcome:** factory brought to a safe, resumable **PAUSED** stop. All real work (pass-3 propagation fixes) is committed and persisted on `factory-artifacts`. cycle-003 (`auth-profile-dx`) remains at Phase F2, inside the F2-gate adversarial convergence loop, one clean pass (pass-4) away from the human F2 gate.
+
+**NEXT on resume:** re-run adversary pass-4 (convergence check) against the fully-reconciled F2-gate package; on a clean pass, present the F2 human approval gate; on approval, dispatch Phase F3 (incremental stories).
+
+**Codifications:** none new this burst — this is a pause/bookkeeping burst, not a spec-content burst.
+
+**Closes:** F2-gate pass-3 findings HIGH-1, MED-2, MED-3 (propagation gaps between the BC layer and the architecture docs). Does NOT close: adversary pass-4 (must be re-run from scratch on resume — it made no persisted progress), the F2 human gate (still pending), or any pre-existing Drift/Standing item.
+
+### Counts reconciled this burst
+
+- BCs: 733 (unchanged — pass-3 was a documentation-propagation fix, no BC content added/removed).
+- VPs: 41 (unchanged).
+- Holdout scenarios: 106 (unchanged).
+- `total_stories`: unchanged at 161.
+- `total_nfrs`: unchanged at 42.
+- DEC IDs: unchanged at 327 (no new decisions this burst).
+
+### Details
+
+| Agent | Task | Output |
+|-------|------|--------|
+| state-manager | Commit the F2-gate pass-3 propagation fixes to factory-artifacts (explicit paths, no `git add -A`); set pipeline PAUSED in STATE.md frontmatter, bump version 3.34→3.35; replace Session Resume Checkpoint (archiving v3.34 verbatim); append this Burst 5 narrative; commit + push wrap to factory-artifacts | `specs/architecture/decisions/ADR-0020-per-profile-credential-ownership-env-tagging-and-oauth-default-at-creation.md` (commit `8fe5d78f`); `cycles/cycle-003/phase-f2-spec-evolution/architecture-delta.md` (commit `8fe5d78f`); `cycles/cycle-003/phase-f2-spec-evolution/adr-0011-amendment-staged.md` (commit `8fe5d78f`); `STATE.md`; `cycles/cycle-003/burst-log.md` (this file); `cycles/cycle-003/session-checkpoints.md` |
+
+**Files touched (Dim-1): 6 unique files this burst (3 committed as `8fe5d78f`; STATE.md, burst-log.md, and session-checkpoints.md committed in the wrap commit)**
+
+- specs/architecture/decisions/ADR-0020-per-profile-credential-ownership-env-tagging-and-oauth-default-at-creation.md
+- cycles/cycle-003/phase-f2-spec-evolution/architecture-delta.md
+- cycles/cycle-003/phase-f2-spec-evolution/adr-0011-amendment-staged.md
+- STATE.md
+- cycles/cycle-003/burst-log.md
+- cycles/cycle-003/session-checkpoints.md
+
+**Dim-2 Attestation:** `scripts/check-bc-cumulative-counts.sh` — expected PASS this burst (no BC count change; re-verified as part of wrap Step 6).
+
+**Dim-5 Attestation:** N/A — no binary/WASM artifact produced by this burst.
+
+**Dim-6 Attestation:** N/A — no source code changed this burst (`.factory/` artifact bookkeeping only; `src/` untouched per instruction).
 
 **Dim-7 Attestation:** N/A — no test-affecting change this burst; full regression remains PASS (4660/0/106) as of the cycle-002 F7 delta-convergence pass, unchanged.

@@ -7,7 +7,7 @@ producer: state-manager
 timestamp: 2026-09-01T15:30:00Z
 cycle: "cycle-003"
 inputs: [STATE.md]
-input-hash: "bca71fc"
+input-hash: "ce28c9c"
 traces_to: STATE.md
 ---
 
@@ -194,6 +194,87 @@ cycle-002 final state (unchanged, historical): RELEASED as v0.7.0-dev.3 (PR #751
 ```
 
 **Superseded by:** v3.34 (cycle-003 F2-gate FIX round COMPLETE — adversary pass-1/pass-2 fixes, DEC-326/DEC-327 recorded; adversary pass-3 + human F2 gate PENDING), 2026-09-01, live in STATE.md.
+
+---
+
+## Session Resume Checkpoint (2026-09-01) — v3.34, cycle-003 F2-gate FIX round COMPLETE, adversary pass-3 + F2 GATE PENDING
+
+### Spec Versions
+
+| Artifact | Version |
+|----------|---------|
+| STATE.md | v3.34 |
+| BC-INDEX | 733 BCs / 41 VPs / 106 holdouts (731->733 this checkpoint) |
+
+**Date:** 2026-09-01. **Position:** cycle-003 (`auth-profile-dx`) F1 delta-analysis APPROVED, Phase F2 (spec evolution) AUTHORING COMPLETE then **F2-GATE FIX ROUND COMPLETE**, adversary pass-3 + F2 GATE PENDING. `develop` @ `87f17aff` (unchanged -- no code touched yet). cycle-001 and cycle-002 remain CLOSED, historical, unaltered by this burst.
+
+```
+This burst (cycle-003 F2-gate fix round complete): the F2 quality-gate adversarial review
+ran two convergence passes against the Burst-3 F2-authoring package. Pass-1 surfaced a
+CRITICAL migration-lockout finding (C-1), closed by a HUMAN-decided no-copy
+detect-and-instruct redesign of the shared legacy email/api-token migration (DEC-326,
+supersedes DEC-325(a)'s lazy-migration clause) -- load_api_token never
+reads-as-credential/copies/deletes legacy keys for any profile; an absent namespaced pair
+exits 64 instructing `jr auth login <profile>`. Pass-2 (run after the pass-1 fix) surfaced
+2 HIGH + 3 MED seam issues (H-1/H-2/M-1/M-2/M-3), all fixed: BC-1.1.016 added (airtight
+non-interactive OAuth guard, closes I-1); BC-1.4.034 added (one-time re-login
+breaking-change contract); BC-1.6.046/047 amended (JSON-vs-human-text channel split,
+H-2); BC-1.1.013/014 amended (env-var non-interactive-only trigger for the OAuth-default
+picker, DEC-327, refines DEC-313, M-1/L-2); BC-1.2.013/014/048/050/051 and BC-1.4.031
+amended (ordering/scope/cross-ref fixes, M-3 + fix-pass). BC-INDEX.md/CANONICAL-COUNTS.md
+updated to 733 total BCs (731->733, +2); scripts/check-bc-cumulative-counts.sh green.
+Spec files (bc-1-auth-identity.md, bc-6-config-cache.md, BC-INDEX.md, CANONICAL-COUNTS.md,
+ADR-0020, architecture-delta.md, adr-0011-amendment-staged.md) were already committed to
+factory-artifacts as d9b69e61 by a prior burst attempt that died mid-run (transient
+transport error) -- NOT re-committed here. DEC-326 and DEC-327 recorded in the Decisions
+Log (resolving adversary finding M-3, undocumented human decisions); DEC-325(a) annotated
+SUPERSEDED in place (not removed). STATE.md refreshed via one full-content Write (v3.33 ->
+v3.34): current_step/cycle_003_status updated; Phase Progress + Current Phase Steps rows
+added for the fix round; Convergence Status counts updated (733 BCs / 41 VPs / 106
+holdouts); new LOW Drift/Standing item L-3 recorded. Prior F2-AUTHORING-COMPLETE
+checkpoint (v3.33) archived to cycles/cycle-003/session-checkpoints.md. Burst narrative:
+cycles/cycle-003/burst-log.md Burst 4.
+
+In-flight: adversary pass-3 (convergence check, confirming novelty decayed to zero on the
+fixed package) has NOT yet run; the human F2 gate has NOT yet been presented. No open
+worktrees, no pending PRs, no open convergence loop, no code changed.
+docs/adr/0011-type-level-profile-fence.md on develop is clean (amendment staged, not
+applied) pending the F4 implementation PR.
+
+Constraints to carry into the F2 gate and F3: ADR-0006 (embedded OAuth, fixed port
+53682), ADR-0013 (PKCE deferral), SD-002 debug-only release gates, single-use refresh
+tokens + refresh_coordinator.rs single-flight, Windows Credential Manager posture, and
+the shared-vs-per-profile keychain invariant under deliberate restructuring (DEC-315),
+migration mechanism finalized as no-copy detect-and-instruct (DEC-326). Refresh override
+removed (DEC-321). ADR-0011 amendment is STAGED, not applied -- the F4 story
+S-cycle3-adr0011-newtype must apply it. Full detail:
+cycles/cycle-003/investigation/auth-profile-current-state.md,
+cycles/cycle-003/phase-f1-delta-analysis/delta-analysis.md,
+cycles/cycle-003/phase-f2-spec-evolution/architecture-delta.md.
+
+cycle-002 final state (unchanged, historical): RELEASED as v0.7.0-dev.3 (PR #751 @
+87f17aff, tag pushed, release.yml run 33459579699).
+
+NEXT on resume: run adversary pass-3 (convergence check) against the fixed F2
+spec-evolution package; on a clean pass (novelty decayed to zero), present the package at
+the human F2 gate. On approval, dispatch Phase F3 (incremental stories) against the ~10
+preliminary F3 stories from the F1 delta analysis.
+
+Resume command: /vsdd-factory:next-step -- reports adversary pass-3 as the next step --
+or run the F2 quality-gate adversarial review directly.
+
+Superseded checkpoints (as recorded at v3.34): the prior F2-AUTHORING-COMPLETE checkpoint
+(v3.33, 2026-09-01) is superseded in place by this burst's FIX-ROUND-COMPLETE position
+above and archived to cycles/cycle-003/session-checkpoints.md, alongside the F1-pending
+checkpoint (v3.31) and F2-in-progress checkpoint (v3.32). Earlier archives
+(RELEASED/SHIPPED v3.29, F7-PASS/AWAITING-GATE v3.27, F6-COMPLETE v3.26, F5-COMPLETE
+v3.25, F4-COMPLETE v3.24, WRAP-F4-WAVE2-COMPLETE-PAUSE v3.23, and the SESSION-WRAP
+checkpoint) remain at cycles/cycle-002/session-checkpoints.md. The list-read-ergonomics
+cycle-001 CLOSED-position checkpoint (v3.05) remains archived at
+cycles/cycle-001/session-checkpoints.md.
+```
+
+**Superseded by:** v3.35 (SESSION-WRAP / PAUSED -- F2-gate pass-3 propagation fixes committed, commit `8fe5d78f`; adversary pass-4 convergence check IN-FLIGHT and ABANDONED mid-review by a human-requested `/wrap`, must be re-run on resume; pipeline PAUSED), 2026-09-01, live in STATE.md.
 
 ---
 
