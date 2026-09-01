@@ -22,7 +22,7 @@ inputs:
   - ".factory/specs/prd/bc-3-issue-write.md"
   - ".factory/specs/architecture/decisions/ADR-0019-field-dx-context-hint-shape-delimiter.md"
   - ".factory/phase-f2-spec-evolution/verification-delta-field-dx.md"
-input-hash: "b4915a8"
+input-hash: "8e0daa7"
 traces_to: "src/cli/issue/create.rs::parse_field_kv"
 cycle: field-dx
 bundle: field-dx

@@ -25,10 +25,10 @@ new_properties:            # genuinely NEW inline VPs — extend the existing VP
   - VP-580-011   # --value + graceful-degrade interaction (BC-X.14.002, B-LOW) — `--value` present against a zero-enumerable-options field: filter applies POST-fetch, degrade hint still fires on stderr, stdout stays `[]`/empty table, exit 0; VP-580-005 companion; added inline to BC-X.14.002 (back-fills the PO's B-LOW placeholder)
   - VP-580-012   # `--project` not-found (404) taxonomy on `jr field options` M2 + M3 enumeration paths (BC-X.14.004, F2 adversary-convergence round-2 Pass2-F2) — a nonexistent/inaccessible `--project` yields a genuine HTTP 404 (NOT a pre-HTTP arity failure): on M2 from whichever createmeta-family call runs first (`get_issue_types_for_project`'s `GET .../createmeta/{project}/issuetypes`, or `get_createmeta_fields`), on M3 from `get_or_fetch_project_meta`'s `GET /rest/api/3/project/{key}` → exit 64, "project not found or not accessible", zero mutating HTTP. Distinct HTTP-failure class from the pre-HTTP arity/companion-absent rejections (VP-580-006/010) and the non-JSM wrong-type row. Realized WITHIN VP-580-004's per-row taxonomy coverage (EC-X.14.004-6 + the new taxonomy row) as a durable regression pin — NOT a separate §1 core-surface row (mirrors VP-580-009's relationship to VP-580-006). DONE — the inline BC-body declaration now exists in `cross-cutting.md` BC-X.14.004's Verification Properties (~line 2805, alongside VP-580-004/005/009); the round-2/round-3 "pending back-fill" flag is CLOSED (F2 round-4)
 realizes_inline_vps:       # proptest/unit REALIZATIONS of EXISTING inline VPs — no new id, no duplicate
-  - VP-578-001   # platform-create `--field` resolves via createmeta (never editmeta) (BC-3.3.010) — realized §1.1 (tests/issue_create.rs createmeta path, reuses VP-396-009 edit-path realization transplanted to create)
-  - VP-578-002   # fields.json cache SHARED between `edit --field` and `create --field`, same profile (BC-3.3.010) — realized §1.1 (tests/issue_create.rs warm-cache reuse; shares resolve_edit_fields/write_fields_cache from VP-396-009)
-  - VP-578-003   # all-or-nothing multi-`--field` failure on create (zero POST on any resolution failure) (BC-3.3.010) — realized §1.1 (tests/issue_create.rs create-path variant transplanting VP-396-009 edit-path semantics)
-  - VP-578-004   # create-path `--field` error-taxonomy rows each independently exercised (BC-3.3.011) — realized §1.1 (per-row wiremock tests in tests/issue_create.rs: exit 64, zero POST, exact substring per row)
+  - VP-578-001   # platform-create `--field` resolves via createmeta (never editmeta) (BC-3.3.010) — realized §1.1 (tests/issue_create_field.rs createmeta path, reuses VP-396-009 edit-path realization transplanted to create)
+  - VP-578-002   # fields.json cache SHARED between `edit --field` and `create --field`, same profile (BC-3.3.010) — realized §1.1 (tests/issue_create_field.rs warm-cache reuse; shares resolve_edit_fields/write_fields_cache from VP-396-009)
+  - VP-578-003   # all-or-nothing multi-`--field` failure on create (zero POST on any resolution failure) (BC-3.3.010) — realized §1.1 (tests/issue_create_field.rs create-path variant transplanting VP-396-009 edit-path semantics)
+  - VP-578-004   # create-path `--field` error-taxonomy rows each independently exercised (BC-3.3.011) — realized §1.1 (per-row wiremock tests in tests/issue_create_field.rs: exit 64, zero POST, exact substring per row)
   - VP-578-005   # hint-splitter multibyte / Unicode-scalar safety (BC-3.4.026) — absorbs former VP-578-040
   - VP-578-006   # bare-name map key: last-wins ACROSS kinds, no composite-key double-apply (BC-3.4.026, ADR-0019 §2(b))
   - VP-578-007   # :option byte-identity to bare (BC-3.4.027) — absorbs former VP-578-041.1
@@ -275,7 +275,7 @@ own VPs (realized by the rewritten holdout scenarios + the `create.rs` guard-rem
 tests); **VP-578-020** (FIELDS half = adversary pass-28 F-1; ISSUE-TYPES half = adversary pass-29 F-1)
 is the createmeta-family offset-pagination guarantee across **both** createmeta endpoints (FIELDS via
 `get_createmeta_fields` / `--field`, and ISSUE-TYPES via `get_issue_types_for_project` / `--type`),
-realized by new two-page createmeta wiremock tests (one per endpoint) in `tests/issue_create.rs`. The
+realized by new two-page createmeta wiremock tests (one per endpoint) in `tests/issue_create_field.rs`. The
 JSM-parity pair VP-578-015/016 is separately accounted for by the
 frontmatter `aligns_with_inline_vps` list, with the confidence framing below.
 
@@ -296,14 +296,14 @@ caveat, and introduces no additional unverified JSM wire-shape assertion of its 
 
 | VP (canonical) | Concern | BC | Realized by |
 |---|---|---|---|
-| VP-578-001 | `--field` on platform create resolves via **createmeta**, never `editmeta` (no `GET …/editmeta` on the create path) | BC-3.3.010 | Platform create-path tests in `tests/issue_create.rs` exercising the `create.rs` createmeta resolution path; **reuses** the VP-396-009 edit-path resolution realization transplanted to create. |
-| VP-578-002 | Field-list cache (`fields.json`) **shared** between `issue edit --field` and `issue create --field` (same profile) | BC-3.3.010 | `tests/issue_create.rs` warm-cache reuse assertion (a cache populated by `edit --field` satisfies `create --field`); shares the `resolve_edit_fields` / `write_fields_cache` realization from VP-396-009. |
-| VP-578-003 | **All-or-nothing** multi-`--field` failure on create (zero POST on any resolution failure) | BC-3.3.010 | `tests/issue_create.rs` create-path variant; explicitly **transplants** VP-396-009's edit-path all-or-nothing semantics to the create path (per the BC-3.3.010 / VP-578-003 body). |
-| VP-578-004 | Create-path `--field` **error-taxonomy** rows each independently exercised | BC-3.3.011 | Per-row wiremock tests in `tests/issue_create.rs` asserting exit 64, zero POST, and the exact load-bearing substring for each taxonomy row (same discipline the inline VP-578-004 body prescribes). |
+| VP-578-001 | `--field` on platform create resolves via **createmeta**, never `editmeta` (no `GET …/editmeta` on the create path) | BC-3.3.010 | Platform create-path tests in `tests/issue_create_field.rs` exercising the `create.rs` createmeta resolution path; **reuses** the VP-396-009 edit-path resolution realization transplanted to create. |
+| VP-578-002 | Field-list cache (`fields.json`) **shared** between `issue edit --field` and `issue create --field` (same profile) | BC-3.3.010 | `tests/issue_create_field.rs` warm-cache reuse assertion (a cache populated by `edit --field` satisfies `create --field`); shares the `resolve_edit_fields` / `write_fields_cache` realization from VP-396-009. |
+| VP-578-003 | **All-or-nothing** multi-`--field` failure on create (zero POST on any resolution failure) | BC-3.3.010 | `tests/issue_create_field.rs` create-path variant; explicitly **transplants** VP-396-009's edit-path all-or-nothing semantics to the create path (per the BC-3.3.010 / VP-578-003 body). |
+| VP-578-004 | Create-path `--field` **error-taxonomy** rows each independently exercised | BC-3.3.011 | Per-row wiremock tests in `tests/issue_create_field.rs` asserting exit 64, zero POST, and the exact load-bearing substring for each taxonomy row (same discipline the inline VP-578-004 body prescribes). |
 | VP-578-017 | `--field a=b` alone (no `--request-type`, well-formed) → exit 0, platform POST fires with the field merged in; stderr has NO `"--field is only valid with"` | BC-3.8.012 (CURRENT) | **Rewritten** holdout scenarios **H-NEW-PREFLIGHT-001** (table mode) + **H-NEW-PREFLIGHT-006** (`--output json` variant), plus the `create.rs` guard-**removal** regression tests inverting the dead DEC-188 exit-64 assertions. |
 | VP-578-018 | `--field a=b --on-behalf-of X` (no `--request-type`) → exit 64 via BC-3.8.013's **standalone** guard only (combined guard REMOVED, createmeta resolution never reached) | BC-3.8.012 / BC-3.8.013 (CURRENT) | **Rewritten** holdout scenario **H-NEW-PREFLIGHT-003**, plus the `create.rs` guard-removal / combined-check-narrowing regression tests. |
 | VP-578-019 | Regression pin: `--on-behalf-of X` **alone** → exit 64 via BC-3.8.013, **unchanged wire-for-wire** from DEC-188-era behavior (proves the reversal did not weaken BC-3.8.013) | BC-3.8.013 | **Unchanged** holdout scenario **H-NEW-PREFLIGHT-002** + the `create.rs` guard-removal regression tests (which assert BC-3.8.013's standalone guard survives untouched). |
-| **VP-578-020** *(NEW — FIELDS half: adversary pass-28 F-1; ISSUE-TYPES half: adversary pass-29 F-1 — attribution synced to BC-3.3.010, C-LOW)* | Createmeta-**family** multi-page resolution across **BOTH** offset-paginated createmeta endpoints (ADR-0019 §1): **(a) FIELDS** — `get_createmeta_fields` is offset-paginated, so a `--field` whose target field falls on fields-**page ≥2** is collected and resolves normally (**exit 0**, field merged into the create POST body), **never silently dropped** because only page 1 was read; **AND (b) ISSUE-TYPES** — `get_issue_types_for_project` (the `--type` name→id resolution, `src/api/jira/issues.rs`) is **likewise** offset-paginated (`startAt`/`maxResults`/`total`), so a `--type` whose entry falls on issuetypes-**page ≥2** resolves to its `issueTypeId` (**exit 0**), **never dropped** for the same reason. Mirrors the `list_worklogs` / BC-X.5.002 all-pages precedent (single-page fetch silently truncates → must paginate). | BC-3.3.010 | Two new **two-page createmeta wiremock** tests in `tests/issue_create.rs`, **one per endpoint**: **(a) fields** — page 1 returns `maxResults` fields **without** the target, page 2 returns the target field; asserts the `--field` resolves to **exit 0** with the field present in the composed POST body, **and** that the client fetches **BOTH** pages. **(b) issue-types** — page 1 returns `maxResults` issue types **without** the target `--type`, page 2 returns the target; asserts the `--type` resolves (to its `issueTypeId`, **exit 0**) **and** that **BOTH** pages are fetched. In each case a `.expect(1)`-style single-page assumption would false-red. Models the `list_worklogs` all-pages pagination test precedent. |
+| **VP-578-020** *(NEW — FIELDS half: adversary pass-28 F-1; ISSUE-TYPES half: adversary pass-29 F-1 — attribution synced to BC-3.3.010, C-LOW)* | Createmeta-**family** multi-page resolution across **BOTH** offset-paginated createmeta endpoints (ADR-0019 §1): **(a) FIELDS** — `get_createmeta_fields` is offset-paginated, so a `--field` whose target field falls on fields-**page ≥2** is collected and resolves normally (**exit 0**, field merged into the create POST body), **never silently dropped** because only page 1 was read; **AND (b) ISSUE-TYPES** — `get_issue_types_for_project` (the `--type` name→id resolution, `src/api/jira/issues.rs`) is **likewise** offset-paginated (`startAt`/`maxResults`/`total`), so a `--type` whose entry falls on issuetypes-**page ≥2** resolves to its `issueTypeId` (**exit 0**), **never dropped** for the same reason. Mirrors the `list_worklogs` / BC-X.5.002 all-pages precedent (single-page fetch silently truncates → must paginate). | BC-3.3.010 | Two new **two-page createmeta wiremock** tests in `tests/issue_create_field.rs`, **one per endpoint**: **(a) fields** — page 1 returns `maxResults` fields **without** the target, page 2 returns the target field; asserts the `--field` resolves to **exit 0** with the field present in the composed POST body, **and** that the client fetches **BOTH** pages. **(b) issue-types** — page 1 returns `maxResults` issue types **without** the target `--type`, page 2 returns the target; asserts the `--type` resolves (to its `issueTypeId`, **exit 0**) **and** that **BOTH** pages are fetched. In each case a `.expect(1)`-style single-page assumption would false-red. Models the `list_worklogs` all-pages pagination test precedent. |
 
 ---
 
@@ -1351,7 +1351,7 @@ createmeta GET and the POST for the create path); the create-path integration se
 least the `labels` collision (the create-vs-edit divergence case) among its exercised flags.
 
 **Target**: `src/cli/issue/field_resolve.rs` (`detect_flag_field_overlap` + unit/proptest) +
-integration tests per call site (`tests/issue_create.rs` create; the existing edit-path Gate-B test
+integration tests per call site (`tests/issue_create_field.rs` create; the existing edit-path Gate-B test
 file for edit). **F6**: via `field_resolve.rs` glob add (§4).
 
 ---
@@ -1400,7 +1400,7 @@ platform-create, JSM-create) to pin the shared-function guarantee.
 
 **Target**: the `get_or_fetch_workspace_id` call sites in `field_resolve.rs` (edit), `create.rs`
 (platform-create), and `jsm_create.rs` (`handle_jsm_create`); integration in
-`tests/issue_field_hint_kinds.rs` (new) + `tests/issue_create.rs`. **F6**: covered by
+`tests/issue_field_hint_kinds.rs` (new) + `tests/issue_create_field.rs`. **F6**: covered by
 `field_resolve.rs` glob add (the client function `get_or_fetch_workspace_id` in
 `src/api/assets/workspace.rs` is a read-only reused contract, not a new pure function this cycle).
 
@@ -1582,7 +1582,7 @@ at the cited locations in F4, and as `examine_globs` additions in F6; the remain
 reuse of the VP-396-009 edit-path realizations transplanted to the create path, by the DEC-310
 reversal's rewritten holdout scenarios + `create.rs` guard-removal regression tests, and (VP-578-020)
 by new two-page createmeta wiremock tests (**both** the FIELDS and ISSUE-TYPES createmeta endpoints)
-in `tests/issue_create.rs`. The full declared inline inventory
+in `tests/issue_create_field.rs`. The full declared inline inventory
 this delta touches is **thirty-two** VPs (twenty-four #578 [VP-578-001..024] + VP-580-005..012). If
 the state-manager later stands up the `S-PG-VP-REGISTRY-1` registry, these are its seed rows for the
 field-dx cycle.
