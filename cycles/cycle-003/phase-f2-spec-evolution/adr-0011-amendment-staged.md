@@ -27,6 +27,14 @@ AFTER the credential restructuring lands — see the new combined ADR, `.factory
 once rather than twice. Condition #1 (a leakage bug in production) and Condition #2 (>5
 committers) remain NOT met — DEC-317 explicitly cites #3 alone as sufficient.
 
+> **F2-gate revision (same day, 2026-09-01):** this staged amendment was revised in place to
+> resolve F2-gate adversarial findings SR-006 (newtype scope contradiction with
+> architecture-delta §4 — `src/api/auth.rs`'s credential functions are now explicitly IN
+> SCOPE, § Decision item 2's sub-bullet) and SR-017 (constructor rationale — see §
+> Consequences' new bullet on the infallible `From<String>` constructor). The call-site
+> estimate is corrected from ~50-70 to ~60-80 accordingly. No separate "v2" file exists — this
+> document is the current, single source of truth.
+
 > **Design decision, not yet a completed migration.** This amendment records the ACCEPTED
 > decision to implement the hard fence. The actual `Profile(String)` newtype and its ~50-70
 > call-site threading through `src/cache.rs`, `Config::active_profile_name`, and
@@ -82,16 +90,38 @@ convention only:
 2. Every `cache::{read_*,write_*,clear_*,invalidate_*}` function signature changes
    `profile: &str` → `profile: &Profile` (12+ functions in `src/cache.rs` as of this
    writing; the exact count is whatever `src/cache.rs` has grown to by the time
-   `S-cycle3-adr0011-newtype` lands — cycle-003's own DEC-315 credential work adds new
-   per-profile keychain functions in `src/api/auth.rs`, not `src/cache.rs`, so it does
-   not by itself grow this function count, but see Sequencing below).
+   `S-cycle3-adr0011-newtype` lands).
+   - **`src/api/auth.rs`'s per-profile credential functions are IN SCOPE for the fence, on
+     equal footing with the `cache.rs` functions above** (added at the F2 gate — resolves
+     adversarial finding SR-006, a genuine contradiction between this document's original
+     Decision enumeration, which omitted `auth.rs` entirely, and
+     `.factory/cycles/cycle-003/phase-f2-spec-evolution/architecture-delta.md` §4, which
+     already showed `auth.rs`'s credential functions inside the fence diagram). Every one of
+     `store_api_token(profile, …)`, `load_api_token(profile)`, `store_oauth_tokens(profile,
+     …)`, and `load_oauth_tokens(profile)` (all four, `src/api/auth.rs`, this cycle's own
+     DEC-315 work per ADR-0020 § Decision 1) changes `profile: &str` → `profile: &Profile`.
+     These are not an afterthought inclusion: they take a `profile` parameter and ARE the
+     exact credential-isolation seam this hard fence is built to protect — a wrong-profile
+     `&str` silently passed to `store_api_token`/`load_oauth_tokens` is precisely a
+     cross-environment credential leak, the single worst-case failure mode this whole ADR
+     exists to make uncompilable. Excluding them from the fence while including
+     `cache::read_teams_cache` (data-only, lower stakes than a credential) would have been
+     internally incoherent. `clear_profile_creds`/`clear_all_credentials`'s aggregation loops
+     (same file) are included as downstream callers, not separately-typed functions.
 3. `Config::active_profile_name: String` → `Profile`.
 4. `JiraClient::profile_name: String` → `Profile`.
-5. Fix all call sites — ADR-0011's original estimate was "~50-70 changes"; DEC-317's own
-   rationale for un-deferring THIS cycle is that DEC-315's credential normalization
-   "multiplies cross-profile scoping call-sites," so the realized count at
-   implementation time is expected to be at or above that original estimate, not below
-   it.
+5. Fix all call sites — ADR-0011's original estimate was "~50-70 changes," scoped to a
+   `cache.rs`-only sweep at pre-cycle-003 file size. DEC-317's own rationale for
+   un-deferring THIS cycle is that DEC-315's credential normalization "multiplies
+   cross-profile scoping call-sites," and item 2's `src/api/auth.rs` addition above is
+   exactly that multiplication made concrete: adding `src/api/auth.rs`'s four per-profile
+   credential functions plus their
+   call sites (`JiraClient::load_auth_from_keychain`'s two branches, `login_token`,
+   `clear_profile_creds`/`clear_all_credentials`'s aggregation loops, `auth remove`'s fourth
+   delete step from ADR-0020 § Decision 7, and the `auth refresh`/`auth login` call sites
+   reading these functions — roughly 8-12 additional call sites) revises the estimate to
+   **~60-80 changes** (corrected at the F2 gate from the original ~50-70; see
+   architecture-delta §4 for the reconciliation).
 
 **Sequencing (binding on the F4 implementation story, not just a suggestion):** the newtype
 call-site sweep is sequenced to land AFTER cycle-003's per-profile credential-storage and
@@ -130,15 +160,39 @@ This decision was to be revisited in v0.6.0 or later if any of the following occ
   forward, superseding "code review is the enforcement gate" as the sole control.
 
 ### Negative / Trade-offs
-- Large, mechanical diff (~50-70+ call sites) — reviewable primarily by "does it compile and
-  do existing cross-profile isolation tests still pass," not by manual per-site correctness
-  reasoning (a WRONG-but-compiling `Profile` value substitution is not caught by the type
-  system alone — F1 delta analysis §3 "Cross-profile cache leakage during ADR-0011 newtype
-  threading," classified MEDIUM-mechanical-churn / LOW-post-landing risk).
+- Large, mechanical diff (**~60-80 call sites**, corrected at the F2 gate from the original
+  ~50-70 — see Decision §5's `src/api/auth.rs` scope addition above) — reviewable primarily
+  by "does it compile and do existing cross-profile isolation tests still pass," not by
+  manual per-site correctness reasoning (a WRONG-but-compiling `Profile` value substitution
+  is not caught by the type system alone — F1 delta analysis §3 "Cross-profile cache leakage
+  during ADR-0011 newtype threading," classified MEDIUM-mechanical-churn /
+  LOW-post-landing risk).
 - Adds `.0`/`AsRef<str>` friction at call sites that previously took a bare `&str` — accepted
   as the intended cost of the hard fence (see the original trade-off table above, unchanged).
 - Interop with `Config`/`JiraClient` requires updating their field types in the same change —
   not a standalone `cache.rs`-only patch.
+- **Infallible `From<String>` constructor was chosen over a validating `Profile::new() ->
+  Result` (resolves adversarial finding SR-017).** `impl From<String> for Profile` (Decision
+  §1) performs no validation — any `String`, including an empty one or one containing
+  characters that would never resolve to a real config entry, constructs a `Profile` without
+  error. This is a **presence-not-correctness** residual: the newtype guarantees "this value
+  was passed through the profile-typed API," not "this value names a profile that actually
+  exists in `config.toml`." That existence check already happens elsewhere (config lookup by
+  name, which returns `None`/an error for an unknown profile) and is unaffected by this ADR —
+  duplicating it inside `Profile::from` would mean either giving the constructor access to
+  `Config` (a layering violation — the newtype lives below `Config`, not beside it) or
+  re-validating against a data source the constructor doesn't otherwise need. A validating
+  `Profile::try_new(name: &str, cfg: &Config) -> Result<Profile>` was considered as an
+  alternative and is explicitly NOT adopted here: it would couple the newtype's construction
+  to `Config`'s shape, working against the goal of a minimal, dependency-free wrapper type,
+  and every existing call site already validates profile existence at a higher layer (CLI
+  arg parsing / config resolution) before a `Profile` value would ever need to be
+  constructed. The infallible constructor is therefore the correct scope for THIS ADR — it
+  closes the cross-profile-leakage class of bug (wrong profile, right shape), not the
+  invalid-profile-name class of bug (right profile, but the name doesn't exist), which
+  remains a separate, already-handled concern. Left as a documented residual, not a gap: a
+  future ADR could add a validating constructor as a strictly additive change without
+  touching this one's decision.
 
 ### Status as of this amendment (2026-09-01, cycle-003 F2)
 **Accepted, not yet implemented.** No `src/` file has changed as a result of this ADR

@@ -21,6 +21,15 @@ because they share one "config overhaul" window and are causally linked — DEC-
 of ADR-0011 is explicitly justified by this ADR's credential normalization multiplying the
 cross-profile scoping surface.
 
+> **F2-gate amendment (same day, 2026-09-01):** this document was revised in place, same-day,
+> to resolve F2-gate adversarial/spec-review findings and one HUMAN DECISION. The single most
+> consequential change is § Decision 2 (formerly a lazy `"default"`-only copy-then-delete
+> migration, now a no-copy detect-and-instruct guard — a HUMAN-DECIDED redesign, not an
+> adversarial finding alone). §§ Decision 1, 2a, 2b, and 8 are new; § Breaking-Change
+> Acknowledgment, § Rationale, and § Alternatives Considered are updated to match. There is no
+> separate "v2" file — this document is the current, single source of truth, and every section
+> below reflects the amended design, not the original F1/F2 draft.
+
 > **NOTE — factory-artifact placement, not yet an F4 code artifact.** This ADR governs new
 > functions in `src/api/auth.rs` (`store_api_token(profile, …)` / `load_api_token(profile)`
 > and their migration/clear-path siblings), a new field on `src/config.rs::ProfileConfig`,
@@ -85,8 +94,10 @@ structural profile-kind system; per-profile `url` remains the actual environment
   that same pattern from config-file fields to keychain-stored credentials. Referencing
   ADR-0007 here because its Option-A rationale ("no fallback to a shared struct that will
   silently be wrong for a second profile") is structurally identical to why this ADR's
-  migration (§ Decision 2) is a one-time copy-and-delete, not a permanent shared+override
-  fallback.
+  credential-absence handling (§ Decision 2) is a **no-copy detect-and-instruct guard**, not a
+  permanent shared+override fallback, and — per the F2-gate human decision recorded in
+  § Decision 2 — never copies a shared credential across the environment boundary it exists to
+  protect.
 
 ## Decision
 
@@ -116,38 +127,143 @@ to the per-profile pair instead of the flat one. The shared/flat `oauth_client_i
 **user's** login credentials) are explicitly **out of scope** — they remain shared, since a
 BYO OAuth app registration is inherently one-per-keychain, not one-per-profile.
 
-### 2. One-time lazy `"default"`-only migration (DEC-315)
+**Backend-error vs. key-absent distinction (resolves adversarial finding I-5):**
+`load_api_token`/`store_api_token` MUST distinguish a keychain BACKEND error (Secret Service
+unavailable, permission denied, headless CI with no keyring daemon running) from a genuine
+key-absent result — mirroring `load_oauth_tokens`'s existing `Err(keyring::Error::NoEntry)`
+vs.-any-other-`Err` handling byte-for-byte. A backend error propagates as its own distinct
+error (naming the backend problem, e.g. `"keychain unavailable: {e}"`) and is **never**
+coerced into § Decision 2's "no stored credential — run `jr auth login`" message: that
+message would misdirect a headless-CI user into repeatedly re-running a login that cannot
+succeed for the same underlying environmental reason (no keychain backend to write to). This
+distinction applies at every keychain read in § Decision 2 below, including the legacy-pair
+existence check.
 
-`load_api_token(profile)` mirrors `load_oauth_tokens`'s exact migration discipline
-(`src/api/auth.rs::load_oauth_tokens`) as of this writing:
+### 2. No-copy detect-and-instruct on credential absence (DEC-315, REDESIGNED at F2 gate — HUMAN DECISION)
 
-1. Try the namespaced keys (`<profile>:email`, `<profile>:api-token`) first.
-2. If BOTH namespaced keys are absent AND `profile == "default"`: read the legacy flat
-   `email` / `api-token` keys; if both present, copy them to the namespaced pair
-   (`store_api_token("default", …)`), best-effort-delete the legacy pair (`Ok(()) |
-   Err(NoEntry)` treated as success, matching `load_oauth_tokens`'s delete semantics), and
-   return the copied values.
-3. Any other profile with absent namespaced keys — or `"default"` with an absent/partial
-   legacy pair — surfaces the same actionable "no stored credential" error
-   `load_oauth_tokens` already produces for its non-default case, not a silent failure.
-4. Partial-state handling (one of `email`/`api-token` present, the other absent) gets its
-   own instance of `load_oauth_tokens`'s partial-recovery-then-explicit-error branch — try
-   legacy recovery for `"default"`, else a clear "run `jr auth logout`/`jr auth login`
-   to restore a clean state" error, never a silent misread.
+**The original F1/F2 design for this section — a lazy `"default"`-only copy-then-delete
+migration mirroring `load_oauth_tokens` exactly — is REJECTED and REMOVED.** The human
+reviewer rejected copying the shared, flat `email`/`api-token` credential into any profile's
+namespaced slot: doing so would silently plant whatever environment that shared credential
+happens to belong to (in practice, usually the account a user set up before multi-profile
+support existed — frequently production) behind a profile that may be tagged sandbox or uat.
+That is precisely the failure mode DEC-312 (environment-locked profiles) exists to close. A
+"helpful" auto-migration that populates a new profile with the wrong account's credential is
+strictly worse than requiring one explicit, clearly-explained re-login.
 
-**Trigger:** lazy, on first read — no eager config-load-time migration (unlike the TOML
-`[instance]` → `[profiles.default]` migration, which must run before any profile is
-resolvable at all; this migration has no such ordering dependency). **Idempotency:** a second
-read short-circuits at step 1 — no-op, byte-identical result. **Scope discipline:** this
-migration only fires when `load_api_token` is called for an `api_token`-method profile; it
-never fires for, or conflates with, the OAuth token migration, which is separate code
-operating on separate keys.
+`load_api_token(profile)` therefore performs **no copy step at all**, for any profile
+including `"default"`:
 
-**Backward compat / rollback:** identical posture to the existing OAuth migration — no
-automated rollback; a user reverting to a pre-cycle-003 binary after migration has run
-would need to re-run `jr auth login` (the legacy flat keys are deleted post-migration). This
-is the SAME accepted posture `docs/specs/multi-profile-auth.md`'s "Rollback story (manual
-only)" already documents for the OAuth-token migration — not a new risk this ADR introduces.
+1. Try the namespaced keys (`<profile>:email`, `<profile>:api-token`) first. Both present →
+   return them.
+2. Exactly one of the two namespaced keys present → a dedicated partial-write branch; see
+   § Decision 2a.
+3. Both namespaced keys absent → check, for existence only, whether the legacy shared flat
+   `email`/`api-token` pair is present (this check exists only to keep the code path
+   symmetric with the OAuth migration's detection shape — see Rationale below; it does **not**
+   change the error the user sees). In either sub-case (legacy pair present or absent), return
+   the same actionable `JrError::UserError` (exit 64): `"No credentials stored for profile
+   '{profile}'. This version of jr requires per-profile credentials — run \`jr auth login
+   {profile}\` to set them up."` The legacy pair's VALUES are never read as a credential,
+   never copied into the namespaced slot, and never deleted.
+4. No profile is treated specially. `"default"` and every other profile name go through the
+   identical two-branch check above — the prior design's `"default"`-only asymmetry is
+   removed along with the copy step it existed to gate.
+
+**The legacy shared flat `email`/`api-token` keys are left completely untouched** by this
+code path — not read as a credential value, not copied, not deleted. They remain in the
+keychain until either a user's own `jr auth remove`/`jr auth logout` happens to clear them
+(it does not today — `remove`'s new fourth delete step in § Decision 7 targets only the
+NAMESPACED per-profile pair, not the legacy flat keys) or a future, separate `jr auth`
+cleanup command is added. **That cleanup command is a recommended follow-up, not built in
+this cycle** — do not add auto-deletion of the legacy pair as part of this ADR's scope.
+Leaving the legacy pair in place opens no new security hole: once every api-token profile has
+re-logged in, nothing in `jr` reads the legacy keys again, and their exposure is bounded by
+the same pre-existing baseline as any keychain-resident secret — the user's own credential,
+in the user's own OS keychain, readable by processes in the user's own session. No new host,
+process, or principal gains access to it by being left in place; if anything, this design
+*closes* a live hole (the cross-environment credential-bleed vector into freshly created
+profiles) rather than opening one.
+
+**This is a one-time, clearly-communicated BREAKING CHANGE:** every profile that relied on
+the shared flat `email`/`api-token` pair for api-token auth before this cycle (which, prior to
+cycle-003, is every api-token-method profile — there was no other option) will see
+`load_api_token` fail with the actionable error above on first use after upgrade, until that
+profile runs `jr auth login <profile>` exactly once. See § Breaking-Change Acknowledgment.
+
+**Contrast with the OAuth-token migration (BC-1.4.025), which is explicitly UNCHANGED:**
+`load_oauth_tokens` keeps its existing `"default"`-only lazy copy-then-delete exactly as it is
+today — this ADR does not touch it. That migration remains safe to keep because an OAuth
+token is cloudId-scoped at the IdP: a `"default"` profile's legacy OAuth token can only ever
+authenticate against the ONE cloud/site it was issued for, so copying it into `"default"`'s
+namespaced slot cannot silently hand a profile access to the wrong environment. The
+API-token credential has no such binding — a Basic-auth email/token pair authenticates
+against whatever `base_url` the caller happens to point it at — which is exactly why its
+migration cannot reuse the OAuth migration's copy step. Do not generalize "the OAuth
+migration copies, therefore the API-token migration should too": the two mechanisms have
+different blast radii by construction, and this ADR's decision rests on that difference, not
+on a stylistic preference.
+
+### 2a. Partial-write recovery (resolves adversarial finding C-2/SR-007, dissolved-then-narrowed by the no-copy redesign)
+
+With the copy step removed, the "mid-migration crash leaves a permanently bricked profile"
+scenario the original design worried about (a crash between copying and deleting the legacy
+pair) **dissolves entirely** — there is no copy-then-delete sequence left to interrupt.
+
+The one remaining way a profile can end up in a "partial namespaced credential" state is
+unrelated to migration: `store_api_token`'s two sequential keychain writes
+(`<profile>:email`, then `<profile>:api-token`) being interrupted — process killed, keychain
+backend error, disk full — between the two writes, during a normal `jr auth login <profile>`
+call. `load_api_token(profile)` handles this directly, without ever treating it as a lockout:
+
+- **Both namespaced keys absent** → § Decision 2's detect-and-instruct error.
+- **Both namespaced keys present** → normal success.
+- **Exactly one namespaced key present (partial write)** → a dedicated branch, distinct from
+  "both absent": `JrError::UserError` (exit 64), `"Incomplete credentials stored for profile
+  '{profile}' — run \`jr auth login {profile}\` to fix this."` This is a strict subset of the
+  "both absent" error's remedy (the identical command), so a user never has to diagnose which
+  case they hit before acting.
+- `jr auth login <profile>` always **overwrites** both namespaced keys unconditionally — this
+  is already `store_api_token`'s existing behavior (a plain two-key write, not a
+  read-modify-write), so re-running login after a partial-write failure cleanly repairs the
+  profile with no bespoke recovery logic needed in `store_api_token` itself.
+
+**The read-side guard never converts a recoverable state into a hard lockout:** there is no
+state `load_api_token` can observe (absent, partial, or backend-error per § Decision 1) that
+`jr auth login <profile>` cannot immediately overwrite and fix in one command.
+
+### 2b. Migration concurrency (resolves adversarial finding I-7/SR-016)
+
+With the copy step removed, concurrent first-reads of `load_api_token` for the same profile
+are trivially benign: every branch above is **read-only** (namespaced-key lookup, legacy-pair
+existence check) until `jr auth login` itself writes, and that write uses the same
+`store_api_token` call shape as any other keychain write already present in this codebase —
+no new concurrency surface is introduced. Unlike `refresh_coordinator.rs`'s OAuth-refresh
+single-flight coordinator (which exists because a concurrent refresh can race against a
+single-use refresh token), the detect-and-instruct path has no analogous race to coordinate:
+two concurrent reads that both find an absent credential both simply return the same
+actionable error, and neither mutates keychain state. **No single-flight coordinator is
+needed for this path.**
+
+**Trigger:** eager, on every `load_api_token(profile)` call — there is no "migration" event
+left to trigger lazily; the function's behavior is the same on every call (no eager
+config-load-time step is added or needed; unlike the TOML `[instance]` →
+`[profiles.default]` migration, which must run before any profile is resolvable at all, this
+credential check has no such ordering dependency). **Idempotency:** trivially total — the
+function has no mutating side effect of its own, so every call with the same keychain state
+produces byte-identical output. **Scope discipline:** this code path only fires when
+`load_api_token` is called for an `api_token`-method profile; it never fires for, or
+conflates with, the OAuth token migration, which is separate code operating on separate keys
+and is functionally untouched by this ADR.
+
+**Backward compat / rollback:** a user reverting to a pre-cycle-003 binary after re-logging in
+under the new namespaced scheme would find the OLD binary's flat-key reader unable to see the
+new namespaced pair — the same category of one-directional migration risk
+`docs/specs/multi-profile-auth.md`'s "Rollback story (manual only)" already documents for the
+OAuth-token migration, not a new risk class this ADR introduces. Because this ADR's migration
+never deletes the legacy pair, a rollback user who never ran `jr auth login` post-upgrade is
+actually in a BETTER position than the OAuth case: their legacy credential is still sitting
+untouched in the keychain for the old binary to read.
 
 ### 3. Keychain/cache namespace version bump: cache-only if any bump happens at all (resolves F1 Open Question 1)
 
@@ -265,6 +381,37 @@ codebase where a per-command flag outranks the profile's stored mechanism, makin
   no-op for that profile's credentials (by design, not by omission) — this ADR makes that
   omission an explicit, documented decision rather than leaving it implicit.
 
+### 8. Non-interactive OAuth guard is airtight — covers every OAuth-selecting trigger, not just the no-flag default (DEC-313, hardened at F2 gate — closes adversarial finding I-1)
+
+DEC-313's original framing ("non-interactive `auth login` selects API-token, never launches a
+browser") was implemented, in the F1/F2 design, as a check that fires only on the *default*
+path — i.e., non-interactive mode silently substitutes `api_token` when no explicit
+auth-mechanism flag is given. That leaves a gap: `jr auth login --oauth` (the explicit,
+now-deprecated alias) or `jr auth refresh` against an already-oauth-method profile, invoked
+non-interactively (`--no-input`, non-TTY stdin, or a CI runner), would still attempt the full
+OAuth 3LO flow — binding the callback listener on port 53682 and/or trying to open a browser
+in an environment with no browser and no human present to complete the redirect. In CI this
+hangs (or fails unpredictably far downstream) instead of failing fast at the command boundary.
+
+**Hardened invariant, binding on the F4 implementation:** ANY non-interactive trigger state
+(`--no-input`, non-TTY stdin, or the equivalent of `JR_STDIN_IS_TTY` unset with stdin
+redirected) combined with EITHER (a) an explicit `--oauth` flag on `auth login`/`auth
+refresh`, OR (b) `auth refresh`'s implicit selection of an already-oauth-method profile
+(`auth_method == "oauth"`, no flag needed to reach the OAuth branch) MUST fail fast:
+exit 64 (`JrError::UserError`), stderr message `"OAuth requires an interactive terminal; use
+--api-token for non-interactive auth."`, and MUST NEVER reach the callback-listener bind or
+any browser-open call. This check is ordered as a precondition — BEFORE any network call,
+listener setup, or browser-open attempt — in both `auth login`'s and `auth refresh`'s
+handlers, not implemented as a timeout or best-effort cancellation of an already-started flow.
+
+This closes the CI-hang gap in VP-AUTHDX-001, which as staged at F1/F2 only exercised the
+"no explicit flag, non-interactive → silently substitutes api_token" cell of the decision
+matrix. The product-owner's BC-authoring pass must extend VP-AUTHDX-001's test matrix with
+(1) the explicit-`--oauth` × non-interactive cell on `auth login`, and (2) the
+implicit-oauth-profile × non-interactive cell on `auth refresh`, as new EC rows — see
+architecture-delta § 2.3 for the concrete decision-point flow, and the "BC changes required
+for the product-owner" list at the end of this cycle's F2 pass.
+
 ## Rationale
 
 - **DEC-315's per-profile credential model is the direct architectural extension of
@@ -276,13 +423,19 @@ codebase where a per-command flag outranks the profile's stored mechanism, makin
   profiles" (prod/sandbox/uat) DEC-312 names as this cycle's goal. A profile whose `url`
   points at a sandbox site but whose credentials are silently shared with a prod-profile's
   login is not environment-locked at all.
-- **Migration discipline reuses proven code shape, not proven code.** The OAuth-token lazy
-  migration (`load_oauth_tokens`) is not itself touched by this ADR, but its shape — try
-  namespaced first, `"default"`-only legacy fallback, best-effort delete-after-copy,
-  non-default profiles never inherit — is the validated pattern this ADR's new API-token
-  migration copies exactly. This is a proven PATTERN, not proven CODE (the F1 delta analysis'
-  own §3 caveat); the new migration needs its own direct-ported test suite, not a
-  "should just work" assumption.
+- **Migration discipline borrows the OAuth pattern's detection shape, but deliberately
+  diverges on the copy step (F2-gate human decision).** The OAuth-token lazy migration
+  (`load_oauth_tokens`, unchanged by this ADR) keeps its original shape — try namespaced
+  first, `"default"`-only legacy fallback, best-effort delete-after-copy — because an OAuth
+  token is cloudId-scoped and structurally cannot authenticate against the wrong environment.
+  The API-token credential-absence handling (§ Decision 2) reuses only the FIRST step of that
+  shape ("try namespaced keys first") and replaces everything after it with a no-copy
+  detect-and-instruct error, because a Basic-auth email/token pair carries no environment
+  binding of its own — copying it is the one migration action capable of defeating DEC-312's
+  environment-locking goal outright. This divergence is deliberate, not an oversight or a
+  downgrade in engineering rigor: "reuse the OAuth pattern wholesale" was the ORIGINAL F1/F2
+  plan and was explicitly rejected for the API-token case at the F2 gate, precisely because
+  the two credential kinds have different blast radii by construction.
 - **`--oauth` deprecation-not-removal preserves the existing `auth switch --profile`
   rejection precedent (BC-1.2.047/S-663-1) as a model:** the repo has already shipped one
   documented, deliberate CLI-surface break in the `auth` family when the alternative was
@@ -296,6 +449,16 @@ codebase where a per-command flag outranks the profile's stored mechanism, makin
 
 ## Alternatives Considered
 
+- **Copy-then-delete migration mirroring `load_oauth_tokens` exactly** (the ORIGINAL F1/F2
+  design for § Decision 2, before the F2 gate): lazily copy the shared legacy `email`/
+  `api-token` pair into `"default"`'s namespaced slot on first read, then best-effort-delete
+  the legacy pair. **Rejected by explicit human decision at the F2 gate.** An API-token
+  credential carries no environment binding, so copying it can silently hand a freshly
+  sandbox/uat-tagged profile the SAME credential as whatever environment the legacy pair
+  happened to belong to (in practice, usually production, since it predates multi-profile
+  support) — defeating DEC-312 outright. The OAuth-token migration keeps this exact pattern
+  because OAuth tokens ARE environment-bound (cloudId-scoped) and cannot make this mistake;
+  see § Decision 2's "Contrast with the OAuth-token migration" paragraph.
 - **Flat bag (status quo, do nothing):** keep `email`/`api-token` shared account-level.
   Rejected — this is precisely the invariant DEC-312 (environment-locked profiles) requires
   reversing; a shared credential pair cannot lock a profile to a distinct Jira account/site.
@@ -330,13 +493,19 @@ codebase where a per-command flag outranks the profile's stored mechanism, makin
   declaration path that does not depend on env-var presence alone.
 
 ### Negative / Trade-offs
-- **Highest-risk new code path in the cycle** (F1 delta analysis §3): the migration touches
-  the auth-header composition hot path (`JiraClient::from_config` → every HTTP call). A bug
-  here risks either silent auth failure for existing users on upgrade, or — worse — a
-  security-relevant leak if migration copies credentials to the wrong profile. Mandatory
-  mitigations: direct-ported unit tests mirroring `load_oauth_tokens`'s three proof shapes,
-  a keyring-gated end-to-end migration test, and an idempotency test (F1 delta analysis §3
-  table, row 1).
+- **Auth-header hot path change; risk profile revised at the F2 gate.** The credential-absence
+  handling still sits on `JiraClient::from_config`'s auth-header composition path (every HTTP
+  call), but the no-copy redesign (§ Decision 2) removes the WORST failure mode the original
+  design carried — a security-relevant leak from copying a credential to the wrong profile —
+  because there is no copy step left to get wrong. The remaining risk is purely
+  availability-shaped: every existing api-token profile hard-fails with an actionable error
+  until its first post-upgrade `jr auth login <profile>` — an intentional, communicated
+  breaking change (see § Breaking-Change Acknowledgment), not a defect. Mandatory
+  mitigations: unit tests covering all `load_api_token` branches (both-present,
+  both-absent-with/without-a-legacy-pair, partial-write, backend-error — §§ Decision 1/2/2a),
+  a keyring-gated test asserting the legacy pair's VALUES are never read as a credential and
+  never deleted, and an idempotency test confirming repeated failed reads produce
+  byte-identical error output (no mutating side effect to desync).
 - `env`-as-table-column is a deliberate, acknowledged break to a pinned insta-snapshot (see
   below) — not a cost-free addition.
 - `--oauth`'s open-ended deprecation window (no removal date) means the CLI surface carries
@@ -350,6 +519,27 @@ imply (F1 delta analysis §1.2 lists ~9-13 candidate new/amended BCs).
 
 ## Breaking-Change Acknowledgment
 
+- **No-copy detect-and-instruct on credential absence** (Decision §2, F2-gate redesign): a
+  genuine, deliberate breaking change — every profile that used api-token auth before this
+  cycle must run `jr auth login <profile>` exactly once after upgrading, since the shared
+  legacy credential is never auto-copied into the profile's namespaced slot. This is framed
+  as the SAFE choice, not a regrettable one: the rejected alternative (silently copying a
+  possibly-production credential behind a possibly-sandbox-tagged profile) would defeat
+  DEC-312's environment-locking goal outright, while this break costs each affected user one
+  `jr auth login` invocation with a clear, actionable error message pointing directly at the
+  fix. **F4 doc-fallout obligation:** the implementing story MUST add a CHANGELOG entry under
+  "Breaking Changes" describing the one-time re-login requirement and its rationale, and
+  SHOULD add a short migration-notes section (mirroring how other breaking auth-family
+  changes — e.g. BC-1.2.047/S-663-1 — were documented) — tracked as F4 doc-fallout, not
+  written by this architecture pass.
+- **Non-interactive OAuth guard now covers explicit `--oauth`/implicit-oauth-profile
+  `refresh`, not just the no-flag default** (Decision §8): non-breaking in the sense that no
+  script relying on the guard's *narrower* original coverage exists yet (this ADR ships the
+  hardened version, not a later tightening of an already-shipped one) — flagged here only for
+  clarity that the invariant is airtight from first implementation, not phased in loosely and
+  tightened later. A script that today (pre-cycle-003) passes `--oauth` non-interactively
+  expecting a hang or an eventual timeout will instead see a fast, clear exit-64 failure —
+  arguably a bugfix from that script's perspective, not a regression.
 - **`--oauth` demotion to deprecated-but-accepted alias** (Decision §5/§6): functionally
   non-breaking (existing invocations keep working byte-for-byte) but introduces a new
   stderr deprecation line — scripts asserting exact stderr content could break. Mitigated by
@@ -379,8 +569,8 @@ story list §2):
 1. `env` tag (Decision §4) — pure-additive, zero dependencies, can land first and
    independently.
 2. Per-profile credential storage functions (Decision §1) — no dependencies.
-3. Lazy migration (Decision §2) — depends on #2 (needs the per-profile reader/writer to
-   exist).
+3. No-copy detect-and-instruct guard (Decision §2/§2a/§2b) — depends on #2 (needs the
+   per-profile reader/writer to exist).
 4. `auth remove`/`auth logout` scope extension (Decision §7) — depends on #2/#3.
 5. **ADR-0011's `Profile` newtype threading** — depends on #2/#3/#4 landing first, so the
    call-site sweep covers the enlarged, post-restructuring surface exactly once (see
