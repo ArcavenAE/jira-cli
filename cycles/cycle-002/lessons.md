@@ -7,7 +7,7 @@ producer: state-manager
 timestamp: 2026-08-27T00:00:00Z
 cycle: "cycle-002-field-dx"
 inputs: [STATE.md]
-input-hash: "0cec1ff"
+input-hash: "bb3676f"
 traces_to: STATE.md
 ---
 
