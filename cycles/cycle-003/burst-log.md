@@ -7,7 +7,7 @@ producer: state-manager
 timestamp: 2026-09-01T15:30:00Z
 cycle: "cycle-003"
 inputs: [STATE.md]
-input-hash: "a1d4693"
+input-hash: "f510156"
 traces_to: STATE.md
 ---
 
@@ -822,3 +822,71 @@ No BCs/VPs/holdouts added or removed — 719 BCs / 32 VPs / 106 holdouts unchang
 **Dim-6 Attestation:** N/A — no source code changed by this `.factory/` commit itself; `S-cycle3-remove-logout-semantics`'s `src/`/`CHANGELOG.md` changes landed on `develop` via PR #757's own merge commit, already CI-verified there prior to merge (`ci-gate` 15/15).
 
 **Dim-7 Attestation:** CI `ci-gate` 15/15 green on PR #757's merged tree (`5e9dba8a`). Security review PASS-WITH-NOTES: SEC-1 (HIGH) found and fixed pre-merge, verified via direct grep of `src/api/auth.rs` and `src/cli/auth/{refresh,logout,remove}.rs` this burst. `scripts/check-bc-cumulative-counts.sh` and `scripts/check-spec-counts.sh`: both GREEN.
+
+## Burst: Burst 14 — F4 Wave 4 COMPLETE: `S-cycle3-adr0011-newtype` + `S-cycle3-oauth-default-creation` delivered + squash-merged; ADR-0011 amendment APPLIED; 2 MED found+fixed pre-merge (2026-09-02)
+
+**Parent-commit:** the Wave-3-COMPLETE burst commit (v3.43) — most recent prior `.factory/` commit on `factory-artifacts`. `develop` tip: was `5e9dba8a`, now `b70dd6f4` (PR #758 merge commit `b7e513f9`, then PR #761 merge commit `b70dd6f4`, this burst).
+
+**Trigger:** Burst 13 left Wave 4 (`S-cycle3-adr0011-newtype` + `S-cycle3-oauth-default-creation`, 13+13 pts, parallel) as the next dispatch. This burst records both stories' completed delivery through the full per-story TDD cycle (each including a security review), their squash-merges to `develop`, the ADR-0011 amendment's application, two MEDIUM findings found and fixed pre-merge on the second story, and the resulting Wave 4 close-out.
+
+**Actions taken:**
+
+1. **`S-cycle3-adr0011-newtype` (Wave 4, 13 pts) delivered end-to-end via per-story TDD, including a security review:** threaded a `Profile(String)` newtype hard-fence through ~38 signatures / ~259 call sites (`config.rs`, `cache.rs`, `api/client.rs`, `api/auth.rs`, and callers), un-deferred ADR-0011 (DEC-317) and **applied the staged amendment** to `docs/adr/0011-type-level-profile-fence.md` (Status Deferred→Accepted — verified this burst by reading the merged file: the Status section now reads "Accepted (amended 2026-09-01, cycle-003 `auth-profile-dx`, DEC-317...)"). Behavior-preserving: `Debug`/`Display`/`AsRef<str>` byte-identical to the prior `&str` call sites; `compile_fail` doctest fence present and load-bearing. PR #758 opened against `develop`, then squash-merged — merge commit `b7e513f9`; `develop` tip `5e9dba8a` → `b7e513f9`. Reviews: local **APPROVE**, security **PASS**, AI (pr-reviewer) **APPROVE-WITH-NITS** — 1 new LOW finding: `src/profile.rs` module doc and the ADR-0011 body retain residual "sweep not done" language that now contradicts the merged reality (non-blocking, tracked as a follow-up).
+2. **`S-cycle3-oauth-default-creation` (Wave 4, 13 pts, P0) delivered end-to-end via per-story TDD, including a security review:** added the interactive OAuth-default picker at profile creation (DEC-313), an explicit `--api-token` flag (DEC-323), and the DEC-327 non-interactive-only env-var-suppression guard (`JR_EMAIL`/`JR_API_TOKEN` presence suppresses the picker only under `--no-input`/non-TTY, never on an interactive TTY). PR #761 opened against `develop` (rebased onto `b7e513f9`), then squash-merged — merge commit `b70dd6f4`; `develop` tip `b7e513f9` → `b70dd6f4` (current tip). Reviews: local **APPROVE-WITH-NITS**, security **PASS-WITH-NOTES**, AI (pr-reviewer) **APPROVE-WITH-NITS**.
+3. **Two MEDIUM findings found and FIXED pre-merge on `S-cycle3-oauth-default-creation`:** (1) a CWE-400 (uncontrolled resource consumption) gap in the interactive picker's TTY guard; (2) a missing VP-AUTHDX-001 regression test. Both closed in the same PR before merge, verified present in the final reviewed diff — the first live test of DEC-331's "every HIGH/MEDIUM finding addressed" clause against MEDIUM-severity findings specifically (PR #757's SEC-1 exercised the HIGH clause); both resolved without a human pause, confirming DEC-331 behaves as specified.
+4. **Reviews on both final post-fix states summarized above.** CI `ci-gate` green on both PRs (per-PR verification; not independently re-run this burst).
+5. **Demos SKIPPED for both Wave 4 stories**, per the standing human decision extending the posture first applied after PR #757 (the open question on retroactively deleting the 3 pre-#757 stories' demos, and whether to keep skipping through Wave 5, remains undecided — not acted on this burst).
+6. **Worktrees + branches cleaned up** for both completed Wave 4 stories.
+7. **Hygiene — stray `pr-review.md` artifacts relocated:** another active agent in this session had written `pr-review.md` for both Wave 4 stories to stray top-level paths (`code-delivery/S-cycle3-adr0011-newtype/pr-review.md`, `code-delivery/S-cycle3-oauth-default-creation/pr-review.md`) instead of the convention path. Both files' content was read and confirmed to match their respective PRs (#758, #761) before relocation; both moved to `cycles/cycle-003/code-delivery/<story>/pr-review.md` this burst. The top-level scratch `code-delivery/pr-review.md` file (a different, older convention path reused across many prior stories/fixes) was found mid-edit by another active agent, holding PR #757 content instead of its last-committed state (PR #746/S-578-4 content) — reverted to the committed version via `git checkout` rather than committed dirty, so as not to destroy the other agent's context or introduce unreviewed content into this burst's commit.
+8. **Frontmatter updated:** `activation_head` `5e9dba8a` → `b70dd6f4` (develop moved twice this burst); `current_step` and `cycle_003_status` updated to reflect Wave 4 COMPLETE, ADR-0011 applied, the 2 MED findings found+fixed, the 4 tracked follow-ups, and Wave 5 as next. `phase` stays `F4`; `pipeline` stays `ACTIVE`. `version` 3.43 → 3.44.
+9. **Phase Progress** gained `F4-WAVE3-INTEGRATION-GATE` (marked PASSED, implied by Wave 4 dispatch — no standalone report file was ever authored for it, tracked as a LOW documentation-completeness gap), `F4-WAVE4-STORY1`/`F4-WAVE4-STORY2` (MERGED), `F4-WAVE4-INTEGRATION-GATE` (RUNNING), and `F4-WAVE5` (PENDING DISPATCH) rows; the `F4-DELTA-IMPLEMENTATION` row's status updated to `IN PROGRESS — Wave 4 COMPLETE (6/7 stories merged); integration gate running, Wave 5 next`. **Current Phase Steps** reset to the Wave-4 close-out trail. **Convergence Status**, **Concurrent Cycles**, and **Constraints Carried Forward** updated to reflect Wave 4 COMPLETE and the ADR-0011 application.
+10. **Decisions Log:** no new DEC ID recorded this burst — DEC-331 was applied (not amended) to both Wave 4 PRs. DEC-317, DEC-321, DEC-323 rows annotated with their implementation status (DEC-317/323 now IMPLEMENTED this burst; DEC-321 explicitly flagged NOT YET implemented — Wave 5's sole obligation). DEC-330's row updated to note PR #758/#761 among the auto-merged PRs.
+11. **Session Resume Checkpoint replaced** (v3.43 → v3.44) — new checkpoint records the Wave-4-COMPLETE position, both stories' delivery summaries, the 4 tracked follow-ups, DEC-331's confirmed behavior under its MEDIUM-finding clause, the unchanged demo-recording open question, and exact next-dispatch instructions for the Wave 4 integration gate and Wave 5 (the final cycle-003 story). Prior v3.43 checkpoint archived to `cycles/cycle-003/session-checkpoints.md` as Checkpoint v3.43.
+12. **Drift/Standing Items** gained a new "new this burst" entry recording Wave 4 MERGED, ADR-0011 applied, 2 MED found+fixed, and the 4 follow-ups verbatim; a new "resolved at F4-Wave-4-merged burst" entry closes the ADR-0011-staged-not-applied item that was previously tracked as "carried forward, unchanged"; the prior Burst-13 "new this burst" entry (Wave 3 MERGED, SEC-1, DEC-331, demo deletion) is compacted to a "resolved at" pointer per the established convention; all other pre-existing Drift/Standing items (the STORY-INDEX.md grep-count residual, standing cycle-002 items, and every cycle-001/cycle-002 historical item) preserved verbatim.
+13. **Historical Content table** gained a "cycle-003 F4 story-5/6 delivery evidence" row pointing at the two relocated `pr-review.md` files (no demos), and updated the F4-implementation-artifacts row to note Wave 3's gate had no standalone report and Wave 4's gate report is pending.
+14. **Did NOT touch:** `regression-state.json`, `sidecar-learning.md`, or the modified `S-cycle3-env-tag` demo gif (all pre-existing uncommitted changes, left as-is per standing instruction). `src/`/`docs/adr/`/`CHANGELOG.md` changes for both Wave 4 stories already landed on `develop` via PR #758's and PR #761's own merge commits, not via this `.factory/` commit — this burst commits only `.factory/` bookkeeping plus the two relocated review artifacts.
+
+**Adversary verdict:** N/A this burst — a delivery/merge-and-bookkeeping burst, not an adversarial spec-defect review. (Both stories' own local review, security review, and AI review are recorded above as part of their delivery trails: `S-cycle3-adr0011-newtype` — local APPROVE, security PASS, AI APPROVE-WITH-NITS; `S-cycle3-oauth-default-creation` — local APPROVE-WITH-NITS, security PASS-WITH-NOTES (2 MED found+fixed), AI APPROVE-WITH-NITS.)
+
+**Outcome:** cycle-003 (`auth-profile-dx`) Phase **F4 (delta implementation) is ACTIVE.** **Wave 4 is COMPLETE: 6 of 7 stories merged** (`S-cycle3-env-tag` PR #752, `S-cycle3-percred-storage` PR #755, `S-cycle3-credential-absence-guard` PR #756, `S-cycle3-remove-logout-semantics` PR #757, `S-cycle3-adr0011-newtype` PR #758, `S-cycle3-oauth-default-creation` PR #761; `develop` @ `b70dd6f4`). The ADR-0011 amendment is now APPLIED. Two MEDIUM findings found and fixed pre-merge on PR #761 confirm DEC-331's MEDIUM-finding clause behaves as specified. Wave 4 integration gate is running; Wave 5 (`S-cycle3-chosen-flow-reconcile`, the final cycle-003 story) is next. Pipeline stays **ACTIVE**; phase stays **F4**.
+
+**NEXT:** run/complete the Wave 4 integration gate (mirror the Wave 1–2 gate shape). On PASSED, stand up a worktree for `S-cycle3-chosen-flow-reconcile` (Wave 5, final story) rebased onto `b70dd6f4` and dispatch its per-story TDD delivery — scope is the DEC-321 refresh-override removal in `cli/auth/mod.rs::chosen_flow_for_profile`. On CI green + reviewer MERGE RECOMMENDATION + every HIGH/MEDIUM finding addressed, auto-merge per DEC-331. On Wave 5 merge, cycle-003 F4 is COMPLETE (7/7 stories shipped) — proceed to F5. Get an explicit human decision before acting on the open demo-recording question. Address the 4 tracked follow-ups in a future maintenance pass.
+
+**Codifications:** No new DEC ID this burst. DEC-331's MEDIUM-finding clause exercised for the first time (PR #761) and confirmed to behave as specified. No new BC/VP content added or changed — this is a delivery/review-finding/governance burst, not a spec-authoring one.
+
+**Closes:** `S-cycle3-adr0011-newtype` and `S-cycle3-oauth-default-creation` as open work (delivered/merged); **Wave 4 as a whole** (both its stories merged); the ADR-0011-staged-not-applied item (now applied and verified); the two found+fixed MEDIUM findings on PR #761 (verified). **Does NOT close:** the Wave 4 integration gate (running, report pending); DEC-321's refresh-override removal (Wave 5's sole remaining obligation); the `STORY-INDEX.md` grep-count residual (still flagged); the standing LOW oauth-migration-write drift item; the 4 newly tracked follow-ups (F1 MED, `JR_OAUTH_CODE` gating, adr0011 doc-drift, `remove.rs` doc-comment — all deferred to a future maintenance pass); the OPEN demo-recording/demo-retention human question (NOT decided); any other pre-existing Drift/Standing item.
+
+### Counts reconciled this burst
+
+- BCs: 733 (unchanged — delivery/review-finding/governance burst adds no new BCs).
+- VPs: 41 (unchanged — same reasoning).
+- Holdout scenarios: 106 (unchanged in the master count).
+- `total_stories`: unchanged at **168** (no story-file status flip this burst — no new spec content added).
+- `total_nfrs`: unchanged at 42.
+- DEC IDs: unchanged at 331 (no new decision recorded this burst; DEC-331 applied, not amended).
+- `develop` HEAD: `5e9dba8a` → `b7e513f9` (PR #758) → **`b70dd6f4`** (PR #761).
+- Full regression: per-PR `ci-gate` green on both PR #758 and PR #761 (not independently re-run at the `.factory/`-commit level this burst).
+- Security review: PR #758 PASS; PR #761 PASS-WITH-NOTES — 2 MEDIUM findings (CWE-400 picker-TTY guard gap; missing VP-AUTHDX-001 test) found and fixed pre-merge.
+
+### Details
+
+| Agent | Task | Output |
+|-------|------|--------|
+| state-manager | Record F4 Wave 4 (`S-cycle3-adr0011-newtype` + `S-cycle3-oauth-default-creation`) delivery + squash-merges to `develop` @ `b7e513f9` then `b70dd6f4` (PR #758, PR #761); verify ADR-0011 amendment application in the merged tree; record the two MEDIUM findings found+fixed pre-merge on PR #761; record the 4 tracked follow-ups; relocate two stray `pr-review.md` artifacts to the convention path after reading and confirming their content; revert the top-level scratch `code-delivery/pr-review.md` to its last-committed state; refresh STATE.md (frontmatter `activation_head`/`current_step`/`cycle_003_status`, Phase Progress, Current Phase Steps, Decisions Log, Convergence Status, Concurrent Cycles, Constraints, Historical Content, Drift/Standing Items, Session Resume Checkpoint); archive prior checkpoint as v3.43; commit + push to factory-artifacts (Single-Commit Burst Protocol) | `STATE.md`; `cycles/cycle-003/burst-log.md` (this file); `cycles/cycle-003/session-checkpoints.md`; `cycles/cycle-003/code-delivery/S-cycle3-adr0011-newtype/pr-review.md`; `cycles/cycle-003/code-delivery/S-cycle3-oauth-default-creation/pr-review.md`; `code-delivery/pr-review.md` (reverted) |
+
+**Files touched (Dim-1): 6 unique files this burst, all committed in the state-manager's own single atomic commit**
+
+- `STATE.md`
+- `cycles/cycle-003/burst-log.md`
+- `cycles/cycle-003/session-checkpoints.md`
+- `cycles/cycle-003/code-delivery/S-cycle3-adr0011-newtype/pr-review.md`
+- `cycles/cycle-003/code-delivery/S-cycle3-oauth-default-creation/pr-review.md`
+- `code-delivery/pr-review.md` (reverted to last-committed state, not new content)
+
+**Dim-2 Attestation:** N/A — no BC/VP/holdout-count-affecting spec file changed this burst; `scripts/check-bc-cumulative-counts.sh` and `scripts/check-spec-counts.sh` re-run this burst as a verification step and confirmed GREEN (no count drift).
+
+**Dim-5 Attestation:** N/A — no binary/WASM artifact produced by this burst.
+
+**Dim-6 Attestation:** N/A — no source code changed by this `.factory/` commit itself; both Wave 4 stories' `src/`/`docs/adr/`/`CHANGELOG.md` changes landed on `develop` via PR #758's and PR #761's own merge commits, already CI-verified there prior to merge.
+
+**Dim-7 Attestation:** Per-PR `ci-gate` green on PR #758 and PR #761 (not independently re-run at the `.factory/`-commit level this burst). ADR-0011 Status verified `Accepted` by reading `docs/adr/0011-type-level-profile-fence.md` on `develop` this burst. `scripts/check-bc-cumulative-counts.sh` and `scripts/check-spec-counts.sh`: both GREEN.
