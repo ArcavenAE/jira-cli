@@ -7,7 +7,7 @@ producer: state-manager
 timestamp: 2026-09-01T15:30:00Z
 cycle: "cycle-003"
 inputs: [STATE.md]
-input-hash: "76fc0af"
+input-hash: "47a6368"
 traces_to: STATE.md
 ---
 
@@ -553,3 +553,70 @@ No BCs/VPs/holdouts added or removed — 719 BCs / 32 VPs / 106 holdouts unchang
 **Dim-6 Attestation:** N/A — no source code changed this burst (`.factory/` artifact bookkeeping + story-status/gate-verdict bookkeeping only; `src/` untouched per instruction).
 
 **Dim-7 Attestation:** N/A — no test-affecting change this burst; full regression remains PASS (4660/0/106) as of the cycle-002 F7 delta-convergence pass, unchanged.
+
+## Burst: Burst 10 — F4 Wave 1 story 1 (`S-cycle3-env-tag`) delivered + squash-merged to `develop`; DEC-330 auto-merge authorization recorded (2026-09-02)
+
+**Parent-commit:** the F3-gate-approval burst commit (v3.39, DEC-329 + phase F3→F4) — most recent prior `.factory/` commit on `factory-artifacts`. `develop` tip: was `87f17aff`, now `4d0ae2d5` (PR #752 merge commit `4d0ae2d56e880a7a7645954f6da6193c5c62564e`, this burst).
+
+**Trigger:** Burst 9 opened Phase F4 (delta implementation) with Wave 1 (`S-cycle3-env-tag` + `S-cycle3-percred-storage`, parallel) as the next dispatch. This burst records the completed delivery of the first of those two stories through the full per-story TDD delivery cycle, its squash-merge to `develop`, and the human's authorization of an auto-merge policy for the remainder of cycle-003's F4 story PRs.
+
+**Actions taken:**
+1. **`S-cycle3-env-tag` (Wave 1, story 1/2, 5 pts) delivered end-to-end via per-story TDD:**
+   - Red Gate: `61e139eb` (compilable `todo!()` stubs, all tests fail) → `f3cb9103` (BC-anchored test suite: BC-6.1.015, BC-1.6.046, BC-1.6.047).
+   - Implementation (TDD green): `40c79fb0`, `826dcf79` — `ProfileConfig.env` tag added to config schema; `auth list` (table + JSON) and `auth status` both gained env surfacing.
+   - Local code review returned CHANGES-REQUESTED; fixed across 4 commits: `6d34fe38`, `a03d5c46`, `8b65af72`, `4df5b20a`.
+   - Demo evidence recorded: 4 VHS recordings covering AC-004/005 (table `ENV` column), AC-006 (ANSI/control-char sanitization + length cap), AC-007 (`--output json` verbatim echo), AC-008 (`auth status` `Env:` line) — `cycles/cycle-003/code-delivery/S-cycle3-env-tag/demos/` (4 `.tape`+`.gif`+`.webm` + `README.md`).
+   - PR #752 opened against `develop`. AI review (pr-reviewer) converged after 3 review cycles. CI `ci-gate` returned 15/15 green.
+   - **Squash-merged to `develop`** — merge commit `4d0ae2d56e880a7a7645954f6da6193c5c62564e`; `develop` tip `87f17aff` → `4d0ae2d5`. Worktree (`.worktrees/S-cycle3-env-tag`) removed; feature and any review branches deleted.
+   - Full regression confirmed on `develop` post-merge: `cargo test --lib` — **1234 passed / 0 failed / 11 ignored** (was 1203/0/11 on the pre-Wave-1 baseline recorded this same burst, below — the story's own new unit/proptest coverage accounts for the +31).
+2. **F4 pre-Wave-1 regression baseline committed** — `cycles/cycle-003/phase-f4-implementation/regression-baseline.md` (produced during story-1's delivery, previously uncommitted): `develop` @ `87f17aff` (pre-merge), `cargo build --tests` clean, `cargo test --lib` 1203/0/11 PASS, `cargo clippy --all-targets --all-features -- -D warnings` clean, `cargo fmt --all -- --check` clean. Verdict: GREEN — safe to start F4 Wave 1. This is the safety-net baseline Phase F4 as a whole is measured against.
+3. **Recorded DEC-330** in the Decisions Log — human authorized an AUTO-MERGE policy for cycle-003 F4 story PRs specifically: once CI `ci-gate` is green AND both the AI review (pr-reviewer) and the pre-PR local code review (code-reviewer) converge, the orchestrator may squash-merge the story PR to `develop` without a separate per-PR human prompt, pausing only for material/escalated findings. This overrides the fail-safe human-gated default (no `merge-config.yaml` present) for cycle-003 F4 story PRs specifically — it is not a general factory-wide autonomy-level change, does not apply to Wave-gate presentations, other cycles, or any PR where CI or either review fails to converge cleanly. First applied to PR #752 itself.
+4. **Frontmatter updated:** `activation_head` `87f17aff` → `4d0ae2d5` (develop moved); `current_step` and `cycle_003_status` updated to reflect Wave 1 story 1 MERGED and story 2 (`S-cycle3-percred-storage`) as next. `phase` stays `F4`; `pipeline` stays `ACTIVE`. `version` 3.39 → 3.40.
+5. **Phase Progress** gained a new `F4-WAVE1-STORY1 (cycle-003)` row (MERGED, this burst) and the existing `F4-DELTA-IMPLEMENTATION` row's status updated to `IN PROGRESS — Wave 1: 1/7 stories merged`. **Current Phase Steps** reset to this story's 5-step TDD delivery trail (Red Gate → implementation → local-review fixes → demos+PR → squash-merge). **Convergence Status** and **Concurrent Cycles** updated to reflect the merge and DEC-330. **Constraints Carried Forward** gained a note recording DEC-330 as a standing cycle-003-F4-scoped policy.
+6. **Session Resume Checkpoint replaced** (v3.39 → v3.40) — new checkpoint records the Wave-1-story-1-merged position, DEC-330's text and scope, the unchanged remaining wave order/critical path, and the exact next-dispatch instructions (rebase the `S-cycle3-percred-storage` worktree onto `4d0ae2d5`, dispatch per-story TDD delivery, auto-merge per DEC-330 on convergence). Prior v3.39 checkpoint archived to `cycles/cycle-003/session-checkpoints.md` as Checkpoint v3.39.
+7. **Drift/Standing Items** gained a new "resolved/recorded this burst" entry for the story-1 merge + DEC-330; all pre-existing Drift/Standing items (ADR-0011-staged-not-applied, prior burst resolution notes, the STORY-INDEX.md grep-count residual, and every cycle-002/standing item) preserved verbatim — the ADR-0011-staged note's `S-cycle3-adr0011-newtype` status clause was updated from "now `status: ready`" to "`status: ready`, not yet dispatched" for accuracy (that story is Wave 4, several waves away).
+8. **Historical Content table** gained two new rows: cycle-003 F4 implementation artifacts (`regression-baseline.md`) and cycle-003 F4 story-1 delivery evidence (the `demos/` directory).
+9. **Did NOT touch `src/`, `regression-state.json`, or `sidecar-learning.md`** — the latter two remain pre-existing uncommitted modifications unrelated to cycle-003 work, left dirty per standing instruction. `src/` changes for `S-cycle3-env-tag` already landed on `develop` via PR #752's own merge commit, not via this `.factory/` commit — this burst commits only `.factory/` bookkeeping and delivery-evidence artifacts.
+
+**Adversary verdict:** N/A this burst — a delivery/merge-and-bookkeeping burst, not an adversarial spec-defect review. (`S-cycle3-env-tag`'s own AI review and local code review are recorded above as part of its delivery trail, not as a separate adversarial-review-phase pass.)
+
+**Outcome:** cycle-003 (`auth-profile-dx`) Phase **F4 (delta implementation) is ACTIVE.** Wave 1: **1 of 7 stories merged** (`S-cycle3-env-tag`, PR #752, `develop` @ `4d0ae2d5`). Wave 1 story 2/2 (`S-cycle3-percred-storage`) is next. Human authorized auto-merge for cycle-003 F4 story PRs (DEC-330). Pipeline stays **ACTIVE**; phase stays **F4**.
+
+**NEXT:** rebase the `S-cycle3-percred-storage` worktree onto the new `develop` tip (`4d0ae2d5`) and dispatch its per-story TDD delivery. On CI green + dual-review convergence, auto-merge per DEC-330 (pause only for material/escalated findings). On Wave 1 full completion, proceed to Wave 2 (`S-cycle3-credential-absence-guard`, P0, HIGH-risk).
+
+**Codifications:** DEC-330 recorded this burst (auto-merge authorization for cycle-003 F4 story PRs). No BC/VP content added or changed — this is a delivery/governance burst, not a spec-authoring one.
+
+**Closes:** `S-cycle3-env-tag` as open work (delivered/merged). **Does NOT close:** Wave 1 as a whole (story 2/2 still pending); the staged ADR-0011 amendment application (still pending, Wave 4 obligation); the `STORY-INDEX.md` grep-count residual (still flagged for future reconciliation); any pre-existing Drift/Standing item.
+
+### Counts reconciled this burst
+
+- BCs: 733 (unchanged — delivery/merge burst adds no new BCs).
+- VPs: 41 (unchanged — same reasoning).
+- Holdout scenarios: 106 (unchanged in the master count).
+- `total_stories`: unchanged at **168** (no story-file status flip this burst — story delivery/merge bookkeeping, not authoring).
+- `total_nfrs`: unchanged at 42.
+- DEC IDs: 329 → **330** (DEC-330 recorded this burst).
+- `develop` HEAD: `87f17aff` → **`4d0ae2d5`** (PR #752 squash-merge).
+- Full regression (`cargo test --lib`): 1203/0/11 → **1234/0/11** (+31 tests from `S-cycle3-env-tag`'s own coverage).
+
+### Details
+
+| Agent | Task | Output |
+|-------|------|--------|
+| state-manager | Record F4 Wave 1 story 1 (`S-cycle3-env-tag`) delivery + squash-merge to `develop` @ `4d0ae2d5` (PR #752); record DEC-330 (auto-merge authorization); refresh STATE.md (frontmatter `activation_head`/`current_step`/`cycle_003_status`, Phase Progress, Current Phase Steps, Decisions Log, Convergence Status, Concurrent Cycles, Constraints, Historical Content, Drift/Standing Items, Session Resume Checkpoint); archive prior checkpoint as v3.39; commit the F4 regression baseline + story-1 demo evidence that were still uncommitted in the worktree; commit + push to factory-artifacts (Single-Commit Burst Protocol) | `STATE.md`; `cycles/cycle-003/burst-log.md` (this file); `cycles/cycle-003/session-checkpoints.md`; `cycles/cycle-003/phase-f4-implementation/regression-baseline.md`; `cycles/cycle-003/code-delivery/S-cycle3-env-tag/demos/` (4 recordings + README) |
+
+**Files touched (Dim-1): 5 unique files/directories this burst, all committed in the state-manager's own single atomic commit**
+
+- `STATE.md`
+- `cycles/cycle-003/burst-log.md`
+- `cycles/cycle-003/session-checkpoints.md`
+- `cycles/cycle-003/phase-f4-implementation/regression-baseline.md`
+- `cycles/cycle-003/code-delivery/S-cycle3-env-tag/demos/` (13 files: 4×`.tape`, 4×`.gif`, 4×`.webm`, 1×`README.md`)
+
+**Dim-2 Attestation:** N/A — no BC/VP/holdout-count-affecting spec file changed this burst; `scripts/check-bc-cumulative-counts.sh` and `scripts/check-spec-counts.sh` were not re-run (nothing in their scope changed).
+
+**Dim-5 Attestation:** N/A — no binary/WASM artifact produced by this burst.
+
+**Dim-6 Attestation:** N/A — no source code changed by this `.factory/` commit itself; `S-cycle3-env-tag`'s `src/` changes landed on `develop` via PR #752's own merge commit, already CI-verified there (15/15 green) prior to merge.
+
+**Dim-7 Attestation:** `cargo test --lib` on `develop` post-merge: **1234 passed / 0 failed / 11 ignored** (was 1203/0/11 pre-story, per the regression-baseline.md committed this burst). Full integration suite remains deferred to per-PR `ci-gate` (already run and green on PR #752).
