@@ -6,7 +6,11 @@ use crate::error::JrError;
 use crate::output;
 use crate::profile::Profile;
 
-use super::{AuthFlow, chosen_flow_for_profile, login_oauth, login_token};
+use super::{
+    AuthFlow, check_noninteractive_oauth_guard, chosen_flow_for_profile,
+    emit_api_token_inert_on_refresh_notice, emit_oauth_deprecation_notice, login_oauth,
+    login_token,
+};
 
 /// Post-refresh guidance shown to humans (stderr, Table mode) and embedded
 /// in the JSON payload (`next_step`). Click "Always Allow" on the keychain
@@ -45,6 +49,14 @@ pub(crate) fn refresh_success_payload(flow: AuthFlow) -> serde_json::Value {
 pub struct RefreshArgs<'a> {
     pub profile: Option<&'a str>,
     pub oauth: bool,
+    /// BC-1.2.050 Postcondition 3 (O-2/CV-2): syntactically accepted for
+    /// symmetry with `LoginArgs::api_token`, but INERT on `auth refresh` —
+    /// `refresh` always follows the target profile's own stored
+    /// `auth_method` (BC-1.2.051). Presence emits the inert-with-notice
+    /// stderr line (`emit_api_token_inert_on_refresh_notice`), stderr-only
+    /// and human-mode-only, mirroring `oauth`'s BC-1.2.049 deprecation
+    /// notice's output-channel rules.
+    pub api_token: bool,
     pub email: Option<String>,
     pub token: Option<String>,
     pub client_id: Option<String>,
@@ -74,6 +86,28 @@ pub async fn refresh_credentials(args: RefreshArgs<'_>) -> Result<()> {
         .cloned()
         .unwrap_or_default();
     let flow = chosen_flow_for_profile(&target_profile, args.oauth);
+
+    // BC-1.1.016 Postcondition 3, Precondition 2b: the airtight
+    // non-interactive OAuth guard, evaluated as the FIRST thing done with
+    // `flow` — before the URL-completeness check below, any credential
+    // clear, and any login dispatch. `chosen_flow_for_profile` has already
+    // folded BOTH the explicit `--oauth` case (Precondition 2a) and the
+    // implicit oauth-method-profile `refresh` case (Precondition 2b) into
+    // `flow == AuthFlow::OAuth`, so a single check covers both. `--api-token`
+    // has no override power here (EC-1.1.016-3) — it never reaches
+    // `chosen_flow_for_profile` at all.
+    check_noninteractive_oauth_guard(args.no_input, flow == AuthFlow::OAuth)?;
+
+    // BC-1.2.049 / BC-1.2.050: stderr-only, human-mode-only notices for the
+    // two flags. `--oauth`/`--api-token` are mutually exclusive at the clap
+    // layer, so at most one of these fires. Reached only once the guard
+    // above has passed.
+    if args.oauth {
+        emit_oauth_deprecation_notice(*args.output);
+    }
+    if args.api_token {
+        emit_api_token_inert_on_refresh_notice(*args.output);
+    }
 
     // For the api_token flow, login_token re-prompts/sets the SHARED
     // api-token but doesn't write a URL. If the target profile has no
