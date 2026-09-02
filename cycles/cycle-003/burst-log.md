@@ -347,4 +347,61 @@ No BCs/VPs/holdouts added or removed — 719 BCs / 32 VPs / 106 holdouts unchang
 
 **Dim-6 Attestation:** N/A — no source code changed this burst (`.factory/` artifact bookkeeping only; `src/` untouched per instruction).
 
+## Burst: Burst 7 — F2 human approval gate APPROVED (DEC-328); all 4 LOW residuals swept; cycle-003 advances F2 → F3 (2026-09-01)
+
+**Parent-commit:** `87f17aff` (`develop` tip; unchanged this burst — spec-only, no `develop`-side commit).
+
+**Trigger:** Burst 6 left the F2 delta CONVERGED (adversary pass-4 CLEAN) with the human F2 approval gate as the sole remaining step. The gate was presented this burst — spec package: BC delta, staged ADR-0011 amendment, ADR-0020, and the 4-pass adversarial convergence record — and **APPROVED**, with the human directing that the 4 LOW residuals (F-1, NEW-1, F-2, L-3) be swept in a dedicated burst before F3 dispatch rather than deferred further.
+
+**Actions taken:**
+1. **Recorded DEC-328** (Decisions Log, collision-checked clean — highest pre-existing ID was DEC-327): cycle-003 F2 delta APPROVED at the human gate; F2 delta CONVERGED (4-pass adversarial trajectory, pass-4 CLEAN) + fresh-context consistency audit CONSISTENT + cycle-003-scoped input-hash drift check NO-DRIFT; human directed the 4 LOW residuals be swept before F3; proceed to F3 story decomposition.
+2. **Fixed all 4 LOW residuals this burst** (verified via `git -C .factory diff` before staging):
+   - **F-1:** `specs/prd/bc-1-auth-identity.md` BC-1.2.051 Invariant 2(b) reworded so its characterization of EC-1.1.013-2's clear-ordering step matches EC-1.1.013-2's own "before or alongside" wording rather than overstating it as "once the write has a confirmed value" — the confirmed-value-first guarantee is now scoped explicitly to this BC's own option (a), not misattributed to the `auth login` re-declaration path.
+   - **NEW-1** (surfaced by the fresh-context consistency audit run at the F2 gate, not by adversary pass-4): added a `DEC-326` traceability citation to BC-1.4.032/033's `Trace:` lines in `bc-1-auth-identity.md` (both now read "F2-gate fix (2026-09-01, DEC-326, HUMAN DECISION)") and to ADR-0020 §Decision 2's heading (now "...HUMAN DECISION, DEC-326)") — the no-copy redesign was previously traceable only as an undated "HUMAN DECISION" with no DEC-ID anchor in either document.
+   - **F-2:** added a one-line note to ADR-0020 §Decision 7 (after the existing "no-op for that profile's credentials" text) clarifying that this describes credential-state only — `jr auth logout` on an api-token profile emits an informational stderr notice (exit 0) per BC-1.2.013's F2-gate upgrade, not a fully silent no-op.
+   - **L-3:** footnoted the F1 report's phantom "BC-1.1.017" citation in `cycles/cycle-003/phase-f1-delta-analysis/delta-analysis.md` §"BC delta" table (clarifying it is a typo for BC-1.2.017, reconciled in that BC's body + BC-INDEX) — this is a spec-input file, so its `input-hash` frontmatter field was updated `344ff59` → `b635a86` as a required consequence of the edit. This also resolves the single cycle-003 STALE hit the F2-gate drift check found (noted at the F2 gate).
+3. **Re-ran both count guards after the residual fixes:** `scripts/check-bc-cumulative-counts.sh` → `OK: all cumulative BC counts verified (733 total across 9 files...)`; `scripts/check-spec-counts.sh` → `Check passed: 8 bc files validated`. Both exit 0 — no BC/VP/holdout count drift from the residual sweep (733/41/106 unchanged).
+4. STATE.md refreshed via one full-content Write (v3.36 → v3.37): frontmatter `phase` F2 → **F3**, `pipeline` PAUSED → **ACTIVE**, `current_step`/`cycle_003_status` updated to record the gate approval + residual sweep + F3 entry; Phase Progress row added (F2-GATE-APPROVED); Current Phase Steps refreshed (last 5: dropped the three oldest Burst-4/5 rows, kept the two Burst-5/6 rows, added the gate-approval, residual-sweep, and phase-transition rows); Decisions Log gained DEC-328; Convergence Status / Concurrent Cycles / Constraints Carried Forward paragraphs updated to reflect F2 APPROVED and F3 entry; Drift/Standing Items' F-1/F-2/L-3 entries removed (resolved — NEW-1 was never separately listed there, surfaced and closed within this same burst); Session Resume Checkpoint replaced (prior v3.36 checkpoint archived to `cycles/cycle-003/session-checkpoints.md`).
+5. **Did NOT touch `src/`, `regression-state.json`, or `sidecar-learning.md`** — the latter two are pre-existing uncommitted modifications unrelated to cycle-003 work, left dirty per standing instruction; not staged, not committed.
+
+**Adversary verdict:** N/A this burst — no new adversary pass dispatched. The 4 residuals fixed were already-identified findings from pass-4 (F-1, F-2) and the F2-gate fresh-context consistency audit (NEW-1) and prior wrap history (L-3), not a new review.
+
+**Outcome:** cycle-003 (`auth-profile-dx`) Phase **F2 is CLOSED — human-approved (DEC-328)**. All 4 LOW residuals fixed. BC count unchanged at 733, VP count unchanged at 41, holdouts unchanged at 106. Pipeline transitions **PAUSED → ACTIVE**, phase **F2 → F3**. Phase F3 (incremental stories) is the immediate next activity.
+
+**NEXT:** dispatch Phase F3 (`/vsdd-factory:phase-f3-incremental-stories`) against the ~10 preliminary story candidates enumerated in `cycles/cycle-003/phase-f1-delta-analysis/delta-analysis.md` §2 (led by env-tag → per-profile-credential-storage → no-copy-detect-and-instruct → ADR-0011 newtype).
+
+**Codifications:** DEC-328 (F2 gate approval + residual-sweep directive) recorded in STATE.md Decisions Log. F-1, NEW-1, F-2, and L-3 are now fixed in their source spec files (not merely tracked) — see Actions Taken above for exact edits.
+
+**Closes:** the human F2 approval gate (APPROVED, DEC-328); adversary pass-4 residuals F-1 and F-2; the F2-gate consistency-audit finding NEW-1; the carried-forward L-3 phantom-citation item; the single cycle-003 STALE input-hash hit on `delta-analysis.md` (resolved as a consequence of the L-3 fix). **Does NOT close:** the staged ADR-0011 amendment (still pending F4 application to `docs/adr/0011-type-level-profile-fence.md`), or any other pre-existing Drift/Standing item.
+
+### Counts reconciled this burst
+
+- BCs: 733 (unchanged — residual fixes were wording/citation/footnote edits, no BC added/removed/renumbered).
+- VPs: 41 (unchanged).
+- Holdout scenarios: 106 (unchanged).
+- `total_stories`: unchanged at 161.
+- `total_nfrs`: unchanged at 42.
+- DEC IDs: 327 → **328** (one new decision this burst: DEC-328, F2 gate approval).
+
+### Details
+
+| Agent | Task | Output |
+|-------|------|--------|
+| state-manager | Record DEC-328 (F2 gate APPROVED); verify all 4 LOW residual fixes (F-1, NEW-1, F-2, L-3) are correctly applied on disk; re-verify `scripts/check-bc-cumulative-counts.sh` + `scripts/check-spec-counts.sh` green; refresh STATE.md (phase F2→F3, pipeline PAUSED→ACTIVE, Decisions Log, Phase Progress, Current Phase Steps, Convergence Status, Concurrent Cycles, Session Resume Checkpoint, Drift/Standing Items); archive prior checkpoint; commit + push to factory-artifacts (Single-Commit Burst Protocol) | `STATE.md`; `cycles/cycle-003/burst-log.md` (this file); `cycles/cycle-003/session-checkpoints.md`; `specs/prd/bc-1-auth-identity.md`; `specs/architecture/decisions/ADR-0020-per-profile-credential-ownership-env-tagging-and-oauth-default-at-creation.md`; `cycles/cycle-003/phase-f1-delta-analysis/delta-analysis.md` |
+
+**Files touched (Dim-1): 6 unique files this burst, all committed in the state-manager's own single atomic commit**
+
+- STATE.md
+- cycles/cycle-003/burst-log.md
+- cycles/cycle-003/session-checkpoints.md
+- specs/prd/bc-1-auth-identity.md
+- specs/architecture/decisions/ADR-0020-per-profile-credential-ownership-env-tagging-and-oauth-default-at-creation.md
+- cycles/cycle-003/phase-f1-delta-analysis/delta-analysis.md
+
+**Dim-2 Attestation:** `scripts/check-bc-cumulative-counts.sh` — re-run this burst, PASS (`OK: all cumulative BC counts verified (733 total across 9 files...)`). `scripts/check-spec-counts.sh` — re-run this burst, PASS (`Check passed: 8 bc files validated`).
+
+**Dim-5 Attestation:** N/A — no binary/WASM artifact produced by this burst.
+
+**Dim-6 Attestation:** N/A — no source code changed this burst (`.factory/` artifact bookkeeping + spec-file wording/citation fixes only; `src/` untouched per instruction).
+
 **Dim-7 Attestation:** N/A — no test-affecting change this burst; full regression remains PASS (4660/0/106) as of the cycle-002 F7 delta-convergence pass, unchanged.

@@ -323,4 +323,72 @@ Resume command: /vsdd-factory:next-step.
 
 ---
 
+## Session Resume Checkpoint (2026-09-01) — v3.36, F2 delta CONVERGED (pass-4 CLEAN), PAUSED pending human F2 approval gate
+
+### Spec Versions
+
+| Artifact | Version |
+|----------|---------|
+| STATE.md | v3.36 |
+| BC-INDEX | 733 BCs / 41 VPs / 106 holdouts (unchanged this checkpoint) |
+
+**Date:** 2026-09-01. **Position:** cycle-003 (`auth-profile-dx`), phase F2 -- the F2-GATE ADVERSARIAL CONVERGENCE loop has **CONVERGED** (adversary pass-4 completed CLEAN this burst); the human F2 approval gate has NOT yet been presented. `develop` @ `87f17aff` (unchanged -- no code touched yet). cycle-001 and cycle-002 remain CLOSED, historical, unaltered by this burst. **Pipeline remains PAUSED** -- this burst only corrects the record left by a prior wrap-time attempt at pass-4 that died mid-run and persisted nothing; it does not advance the pipeline past the human F2 gate.
+
+```
+Convergence trajectory (counter, CONVERGED): adversary pass-1 (major -- incl. C-1
+default-only migration-lockout) -> fixed -> pass-2 (2 HIGH + 3 MED document-seam issues
+H-1/H-2/M-1/M-2/M-3) -> fixed -> pass-3 (1 HIGH env-var-trigger + 2 MED
+newtype-note/terminology, all BC->architecture-doc propagation gaps) -> fixed (committed
+8fe5d78f) -> pass-4 (convergence check) COMPLETED CLEAN this burst: 0
+CRITICAL/HIGH/material-MED across all six reviewed documents (bc-1, bc-6, ADR-0020,
+architecture-delta, adr-0011-amendment-staged, STATE DEC-312..327). The F2 delta has
+CONVERGED. Two LOW non-blocking residuals recorded -- F-1 (BC-1.2.051 Invariant 2(b)
+characterizes EC-1.1.013-2's clear-ordering more strongly than EC-1.1.013-2 itself states;
+wording alignment) and F-2 (ADR-0020 SS Decision 7 calls api-token `auth logout` a "no-op"
+without noting BC-1.2.013's F2-gate upgrade to an informational stderr notice) -- see
+Drift/Standing Items.
+
+Committed spec state: unchanged from pass-3 -- bc-1 = 71 BCs (60 individually-bodied),
+bc-6 = 44, grand total = 733 BCs; 41 VPs (VP-AUTHDX-001..009); 106 holdouts. BC layer
+confirmed AIRTIGHT by adversary pass-3; architecture docs (ADR-0020 / architecture-delta /
+staged ADR-0011) confirmed reconciled to the BCs by adversary pass-4 (CLEAN). Prior
+commits: d9b69e61 (pass-1/2 fixes), 228c4905 (STATE v3.34 + DEC-326/327), 8fe5d78f (pass-3
+propagation-fix commit). This burst's commit is bookkeeping-only (STATE.md/burst-log/
+session-checkpoints) -- pass-4 is read-only by design and produced no spec-body changes.
+
+Human decisions already made + recorded: DEC-326 (no-copy api-token migration; supersedes
+DEC-325a) and DEC-327 (env-var non-interactive-only OAuth-picker trigger). Do NOT re-ask
+these on resume.
+
+Pending human decision: the F2 human approval gate has NOT been presented -- it is now the
+immediate next step. Pass-4 CLEAN removes the last blocker; no further adversary pass is
+required before presenting the gate.
+
+Resolved this burst: the prior wrap-time adversary-pass-4 attempt (recorded at v3.35 as
+"IN-FLIGHT and ABANDONED... must be RE-RUN") is superseded -- that attempt died mid-run and
+persisted NOTHING (verified before this burst started: STATE.md was still v3.35/PAUSED with
+no new factory-artifacts commit since dc1cf35b). This burst re-ran pass-4 fresh -- not a
+resume of the dead attempt -- and it returned CLEAN. Two pre-existing dirty files remain
+carried forward untouched: regression-state.json, sidecar-learning.md (dirty since session
+start; not cycle-003 work).
+
+NEXT on resume (exact): (1) F2 is CONVERGED -- a pass-4 re-run is OPTIONAL/confirmatory
+only; proceed directly to present the F2 human approval gate; (2) on F2 approval -> F3 story
+decomposition (10 preliminary story candidates enumerated in
+cycles/cycle-003/phase-f1-delta-analysis/delta-analysis.md SS2, led by env-tag ->
+per-profile-credential-storage -> no-copy-detect-and-instruct -> ADR-0011 newtype); (3)
+sweep the two LOW residuals F-1/F-2 opportunistically before/during F3 -- neither blocks the
+gate or F3 start. Note the F4 obligation: the staged ADR-0011 amendment
+(cycles/cycle-003/phase-f2-spec-evolution/adr-0011-amendment-staged.md) must be applied to
+docs/adr/0011-type-level-profile-fence.md by the F4 newtype story's PR.
+
+Resume command: /vsdd-factory:next-step.
+```
+
+**RESOLVED (recorded at v3.37, 2026-09-01):** the human F2 approval gate was presented and **APPROVED** (DEC-328), directing the 4 LOW residuals (F-1, NEW-1, F-2, L-3) be swept in a dedicated burst before F3 -- all 4 were fixed in that same v3.37 burst. Pipeline transitions PAUSED -> ACTIVE, phase F2 -> F3. This checkpoint's "Pending human decision" / "NEXT on resume" framing is now historical only -- see the v3.37 checkpoint below for the corrected, current position.
+
+**Superseded by:** v3.37 (F2 human gate APPROVED via DEC-328; all 4 LOW residuals swept; phase F2 -> F3, pipeline PAUSED -> ACTIVE), 2026-09-01, live in STATE.md.
+
+---
+
 <!-- Repeat for each archived checkpoint. Maintain chronological order. -->

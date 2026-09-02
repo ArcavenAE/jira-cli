@@ -139,7 +139,7 @@ succeed for the same underlying environmental reason (no keychain backend to wri
 distinction applies at every keychain read in § Decision 2 below, including the legacy-pair
 existence check.
 
-### 2. No-copy detect-and-instruct on credential absence (DEC-315, REDESIGNED at F2 gate — HUMAN DECISION)
+### 2. No-copy detect-and-instruct on credential absence (DEC-315, REDESIGNED at F2 gate — HUMAN DECISION, DEC-326)
 
 **The original F1/F2 design for this section — a lazy `"default"`-only copy-then-delete
 migration mirroring `load_oauth_tokens` exactly — is REJECTED and REMOVED.** The human
@@ -383,6 +383,11 @@ codebase where a per-command flag outranks the profile's stored mechanism, makin
   session-scoped `logout`'s. A `jr auth logout` on an `api_token`-method profile remains a
   no-op for that profile's credentials (by design, not by omission) — this ADR makes that
   omission an explicit, documented decision rather than leaving it implicit.
+  **Note (BC-1.2.013's F2-gate upgrade, I-3/SR-015):** "no-op for that profile's credentials"
+  describes the credential state only — nothing is cleared. It does not mean the command is
+  a fully silent no-op end-to-end: per BC-1.2.013, `jr auth logout` on an `api_token`-method
+  profile emits an informational stderr notice (exit 0) explaining that api-token auth has no
+  session to end, rather than producing no output at all.
 
 ### 8. Non-interactive OAuth guard is airtight — covers every OAuth-selecting trigger, not just the no-flag default (DEC-313, hardened at F2 gate — closes adversarial finding I-1)
 

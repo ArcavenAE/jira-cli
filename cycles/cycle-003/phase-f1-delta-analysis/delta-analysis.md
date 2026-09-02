@@ -23,7 +23,7 @@ inputs:
   - "docs/specs/multi-profile-auth.md"
   - "docs/specs/oauth-scopes-configurable.md"
 traces_to: ".factory/STATE.md#DEC-312..DEC-319"
-input-hash: "344ff59"
+input-hash: "b635a86"
 ---
 
 # F1 Delta Analysis: auth-profile-dx (cycle-003)
@@ -68,7 +68,7 @@ F1-F7 pipeline applies — no quick-dev routing.
 
 | BC | File | What changes |
 |----|------|---------------|
-| BC-1.1.009 / BC-1.1.010 / BC-1.1.017 | `bc-1-auth-identity.md` §1.1/1.2 | "writes shared `email`/`api-token` keychain keys" → per-profile `<profile>:email`/`<profile>:api-token` keys (DEC-315). All three BCs' Behavior/Effects text cites the shared-key write as the observable effect of `auth login`. |
+| BC-1.1.009 / BC-1.1.010 / BC-1.1.017 (BC-1.1.017 is a typo for BC-1.2.017 — reconciled in BC-1.2.017 body + BC-INDEX) | `bc-1-auth-identity.md` §1.1/1.2 | "writes shared `email`/`api-token` keychain keys" → per-profile `<profile>:email`/`<profile>:api-token` keys (DEC-315). All three BCs' Behavior/Effects text cites the shared-key write as the observable effect of `auth login`. |
 | BC-1.2.013 | `auth logout` deletes only `<profile>:oauth-*` | Currently states "Shared keys (`email`, `api-token`, …) untouched" as the contract. Under DEC-315 there is no longer one shared `email`/`api-token` pair for `logout` to leave untouched — the profile now owns its own token pair. Needs to state what `logout` does for an `api_token`-method profile (today: nothing, by omission — see Open Question 6). |
 | BC-1.2.014 | `auth remove` three-step delete | Currently step 2 deletes only `<name>:oauth-*`. Under DEC-315, per-profile `email`/`api-token` become a fourth deletable artifact — this BC's "three-step" enumeration and the "shared api-token never touched" invariant both need to change (see Open Question 6). |
 | BC-1.4.025 | `default`-only lazy legacy-OAuth-key migration | Needs a sibling clause (or a cross-reference to a new BC) describing the parallel api-token migration DEC-315 mandates, and must explicitly reconfirm this BC's OWN behavior is UNCHANGED by the credential restructuring (regression-risk item, §3). |
