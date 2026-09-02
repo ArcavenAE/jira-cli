@@ -7,7 +7,7 @@ producer: state-manager
 timestamp: 2026-09-01T15:30:00Z
 cycle: "cycle-003"
 inputs: [STATE.md]
-input-hash: "47a6368"
+input-hash: "1ced625"
 traces_to: STATE.md
 ---
 
@@ -641,6 +641,42 @@ Resume command: /vsdd-factory:next-step.
 **RESOLVED (recorded at v3.40, 2026-09-02):** Phase F4 Wave 1 story 1/2 (`S-cycle3-env-tag`) was dispatched, delivered via full per-story TDD, and squash-merged to `develop` -- PR #752, merge commit `4d0ae2d56e880a7a7645954f6da6193c5c62564e`, `develop` `87f17aff` -> `4d0ae2d5`. The human additionally authorized an auto-merge policy for cycle-003 F4 story PRs (DEC-330). Pipeline stays ACTIVE; phase stays F4. This checkpoint's "NEXT on resume" framing (dispatch Wave 1) is now historical only -- see the v3.40 checkpoint in STATE.md for the corrected, current position: Wave 1 story 2/2 (`S-cycle3-percred-storage`) is next.
 
 **Superseded by:** v3.40 (F4 Wave 1 story 1 `S-cycle3-env-tag` delivered + merged @ `4d0ae2d5` via PR #752, DEC-330 auto-merge authorization recorded, Wave 1 story 2/2 next), 2026-09-02, live in STATE.md.
+
+---
+
+## Checkpoint v3.40 (2026-09-02) — F4 Wave 1 story 1 (`S-cycle3-env-tag`) MERGED, Wave 1 story 2/2 (`S-cycle3-percred-storage`) NEXT
+
+**Date:** 2026-09-02. **Position:** cycle-003 (`auth-profile-dx`), Phase **F4 (delta implementation) ACTIVE** — Wave 1 story 1/2 (`S-cycle3-env-tag`) is **MERGED** to `develop` (PR #752 @ `4d0ae2d56e880a7a7645954f6da6193c5c62564e`, `develop` `87f17aff`→`4d0ae2d5`, 2026-09-02). Auto-merge policy **DEC-330** is in effect for cycle-003 F4 story PRs. Wave 1 story 2/2 (`S-cycle3-percred-storage`, 8 pts, HIGH-risk — adds a security review) is next; its worktree must be rebased onto the new `develop` tip before dispatch. cycle-001 and cycle-002 remain CLOSED, historical, unaltered by this burst.
+
+**Wave 1 status: 1 of 7 cycle-003 stories now delivered/merged.** `S-cycle3-env-tag` (5 pts) full TDD delivery trail: Red Gate (`61e139eb` stubs, `f3cb9103` tests) → implementation (`40c79fb0`, `826dcf79`) → local review CHANGES-REQUESTED fixed (`6d34fe38`, `a03d5c46`, `8b65af72`, `4df5b20a`) → demos recorded (4 ACs, VHS, `cycles/cycle-003/code-delivery/S-cycle3-env-tag/demos/`) → PR #752 opened → AI review (pr-reviewer) converged after 3 cycles → CI `ci-gate` 15/15 green → squash-merged. Full regression `cargo test --lib`: **1234 passed / 0 failed / 11 ignored** (was 1203/0/11 pre-story). Worktree removed, branches deleted.
+
+**DEC-330 (auto-merge authorization, human, 2026-09-02):** once CI `ci-gate` is green AND both the AI review (pr-reviewer) and the local code review (code-reviewer) converge, the orchestrator may squash-merge a cycle-003 F4 story PR to `develop` WITHOUT a separate per-PR human prompt — pausing only for material/escalated findings. First applied: PR #752.
+
+**Remaining wave order (unchanged from the F3 gate, DEC-329):**
+2. `S-cycle3-percred-storage` (Wave 1, 8 pts, no deps) — **NEXT.**
+3. `S-cycle3-credential-absence-guard` (Wave 2, 8 pts, P0, HIGH-risk, depends_on:[2]).
+4. `S-cycle3-remove-logout-semantics` (Wave 3, 5 pts, depends_on:[2,3]).
+5. `S-cycle3-adr0011-newtype` (Wave 4, 13 pts, depends_on:[2,3,4]) — MUST apply the staged ADR-0011 amendment to `docs/adr/`.
+6. `S-cycle3-oauth-default-creation` (Wave 4, 13 pts, P0, depends_on:[2,3,4]).
+7. `S-cycle3-chosen-flow-reconcile` (Wave 5, 5 pts, terminal, depends_on:[6]).
+
+**Critical path (unchanged):** `percred-storage`(2) → `credential-absence-guard`(3) → `remove-logout-semantics`(4) → `oauth-default-creation`(6) → `chosen-flow-reconcile`(7), 39 points.
+
+**Convergence trajectory (counter):** ... → F3 human approval gate presented and APPROVED (DEC-329) → F4 delta-implementation OPENED → **Wave 1 story 1 (`S-cycle3-env-tag`) delivered + merged** → Wave 1 story 2 (`S-cycle3-percred-storage`) NEXT.
+
+**Committed spec state:** unchanged in BC/VP/holdout count this burst — 733 BCs, 41 VPs, 106 holdouts (master count); `total_stories` unchanged at 168 (no story-file status change this burst — merge/delivery bookkeeping only, not a spec-authoring burst). Both count guards unaffected (no spec content touched). Prior commits: the F3-gate-approval burst commit (v3.39, DEC-329 + phase F3→F4). This burst's `.factory/` commit carries `cycles/cycle-003/phase-f4-implementation/regression-baseline.md` (F4 pre-Wave-1 regression baseline, GREEN), the `S-cycle3-env-tag` demo evidence (4 recordings + README), and STATE.md/burst-log.md/session-checkpoints.md bookkeeping — the story's `src/` changes already landed on `develop` via PR #752's own merge commit, not via this `.factory/` commit.
+
+**Human decisions already made + recorded:** DEC-326 (no-copy api-token migration), DEC-327 (env-var non-interactive-only OAuth-picker trigger), DEC-328 (F2 gate APPROVED), DEC-329 (F3 gate APPROVED; both carried-forward items ratified), and **DEC-330** (auto-merge authorization for cycle-003 F4 story PRs). Do NOT re-ask these on resume.
+
+**Pending human decision:** none blocking — DEC-330 covers routine story-PR merges through the remainder of Waves 1–5 unless a PR surfaces a material/escalated finding, in which case pause and ask.
+
+**NEXT on resume (exact):** (1) rebase/refresh the `S-cycle3-percred-storage` worktree onto the new `develop` tip (`4d0ae2d5`); (2) dispatch its per-story TDD delivery (test-writer → implementer → demo-recorder → pr-manager → devops-engineer); (3) on CI green + dual-review convergence, auto-merge per DEC-330 (pause only for material/escalated findings); (4) on Wave 1 full completion (both stories merged), proceed to Wave 2 (`S-cycle3-credential-absence-guard`, P0, HIGH-risk — the cycle's only MANDATORY keyring-gated VP; HIGH-risk flag means it also gets a security review); (5) continue through Waves 3–5 per `wave-schedule.md`; (6) note the F4 obligation carried forward: the staged ADR-0011 amendment (`cycles/cycle-003/phase-f2-spec-evolution/adr-0011-amendment-staged.md`) MUST be applied to `docs/adr/0011-type-level-profile-fence.md` by `S-cycle3-adr0011-newtype`'s (Wave 4) implementation PR — do not let that PR skip this step; (7) note the HIGH-risk `S-cycle3-credential-absence-guard` (Wave 2) implements DEC-326's no-copy behavior — `load_api_token` must NEVER read-as-credential, copy, or delete the legacy shared `email`/`api-token` keys for any profile, including `default`; an absent namespaced pair must produce an actionable exit-64 instructing `jr auth login <profile>`.
+
+**Resume command:** `/vsdd-factory:next-step`.
+
+**RESOLVED (recorded at v3.41, 2026-09-02):** Phase F4 Wave 1 story 2/2 (`S-cycle3-percred-storage`) was dispatched, delivered via full per-story TDD (including a security review, HIGH-risk), and squash-merged to `develop` — PR #755, merge commit `d3ba27262be5cd26992c8ac71b2162c895cc90d0`, `develop` `4d0ae2d5` → `d3ba2726`. Wave 1 is now COMPLETE (2/2 stories merged). The Wave 1 integration gate ran and returned GREEN across all five checks. The Wave 1 adversary review returned 3 non-blocking findings (1 MED, 2 LOW), all dispositioned — see the v3.41 Drift/Standing Items in STATE.md. Pipeline stays ACTIVE; phase stays F4. This checkpoint's "NEXT on resume" framing (dispatch story 2/2) is now historical only — see the v3.41 checkpoint in STATE.md for the corrected, current position: Wave 2 (`S-cycle3-credential-absence-guard`) is next.
+
+**Superseded by:** v3.41 (F4 Wave 1 COMPLETE — `S-cycle3-percred-storage` delivered + merged @ `d3ba2726` via PR #755, Wave 1 integration gate PASSED, adversary findings dispositioned, Wave 2 next), 2026-09-02, live in STATE.md.
 
 ---
 

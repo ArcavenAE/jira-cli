@@ -21,7 +21,7 @@ inputs:
   - ".factory/specs/prd/bc-1-auth-identity.md"
   - ".factory/specs/architecture/decisions/ADR-0020-per-profile-credential-ownership-env-tagging-and-oauth-default-at-creation.md"
   - ".factory/cycles/cycle-003/phase-f3-stories/decomposition-manifest.md"
-input-hash: "3f4ee5d"
+input-hash: "f01a25d"
 traces_to: ".factory/specs/prd/bc-1-auth-identity.md"
 cycle: cycle-003-auth-profile-dx
 estimated_effort: medium
@@ -58,7 +58,7 @@ risk_mitigations: []
 created: "2026-09-01"
 version: "1.0"
 last_updated: "2026-09-01"
-breaking_change: false
+breaking_change: true
 retroactive: false
 origin: >
   cycle-003 auth-profile-dx, Wave 1 (no deps, file-disjoint from S-cycle3-env-tag). Moves
@@ -70,6 +70,18 @@ origin: >
 ---
 
 # S-cycle3-percred-storage — Per-profile API-token keychain storage
+
+## Correction Note (Wave 1 integration-gate adversary, [process-gap], LOW)
+
+Frontmatter `breaking_change` was corrected from `false` to `true`. Removing the legacy
+flat-key read fallback (see "Current State" and Architecture Compliance Rules above — the
+new `load_api_token` has no `"default"`-only legacy-migration branch, unlike
+`load_oauth_tokens`) locks out every existing api-token profile, including `"default"`, on
+upgrade until the user re-authenticates — that is a breaking change by definition, not an
+invisible infrastructure change. The human-facing CHANGELOG entry (Item 6 of Tasks) already
+carried the correct `BREAKING — Action required` framing; only the machine-readable
+`breaking_change:` frontmatter field was out of sync with it. No ACs, coverage, or
+dependencies were changed by this correction.
 
 ## Anchor Justification
 

@@ -1,0 +1,24 @@
+$ JR_RUN_KEYRING_TESTS=1 cargo test --lib -- --include-ignored --test-threads=1 api_token_ bc_1_4_031
+
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 0.31s
+     Running unittests src/lib.rs (target/debug/deps/jr-c725785c006b1368)
+
+running 15 tests
+test api::auth::tests::load_api_token_cross_profile_isolation ... ok
+test api::auth::tests::load_api_token_default_profile_has_no_legacy_fallback ... ok
+test api::auth::tests::load_api_token_propagates_backend_error_not_absent_message ... ok
+test api::auth::tests::load_api_token_returns_err_for_missing_profile ... ok
+test api::auth::tests::percred_proptests::prop_bc_1_4_031_round_trip_and_cross_profile_isolation ... ok
+test api::auth::tests::store_and_load_per_profile_api_token_round_trip ... ok
+test api::auth::tests::store_api_token_overwrites_unconditionally ... ok
+test api::auth::tests::test_bc_1_4_031_api_token_email_key_default_profile ... ok
+test api::auth::tests::test_bc_1_4_031_api_token_email_key_sandbox_profile ... ok
+test api::auth::tests::test_bc_1_4_031_api_token_key_default_profile ... ok
+test api::auth::tests::test_bc_1_4_031_api_token_key_sandbox_profile ... ok
+test api::auth::tests::test_bc_1_4_031_api_token_keys_distinct_across_profiles ... ok
+test api::auth::tests::test_bc_1_4_031_api_token_keys_symmetric_with_oauth_key_shape ... ok
+test error::tests::test_api_token_expiry_hint_contains_required_text ... ok
+test error::tests::test_api_token_expiry_hint_excludes_oauth_scope_language ... ok
+
+test result: ok. 15 passed; 0 failed; 0 ignored; 0 measured; 1245 filtered out; finished in 20.32s
+

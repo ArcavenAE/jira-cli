@@ -22,7 +22,7 @@ inputs:
   - ".factory/specs/architecture/decisions/ADR-0020-per-profile-credential-ownership-env-tagging-and-oauth-default-at-creation.md"
   - ".factory/cycles/cycle-003/phase-f2-spec-evolution/architecture-delta.md"
   - ".factory/cycles/cycle-003/phase-f3-stories/decomposition-manifest.md"
-input-hash: "9c093c7"
+input-hash: "b46de8b"
 traces_to: ".factory/specs/prd/bc-1-auth-identity.md"
 cycle: cycle-003-auth-profile-dx
 estimated_effort: large
@@ -85,6 +85,38 @@ carries no environment binding, so copying it can silently hand a freshly sandbo
 profile the same credential as whatever environment the legacy pair happens to belong to
 (in practice, usually production). This story implements the REDESIGNED, no-copy contract.
 There is no migration left in this story's scope.
+
+## Wave 1 integration-gate finding (MED) — adversary-recommended enhancement
+
+The Wave 1 integration-gate adversary found that during the migration window this cycle
+introduces, `jr auth list` and `jr auth status` DISAGREE about a pre-cycle-003 api-token
+profile's credential state: `auth list`'s STATUS column is config-only (`url.is_some()` →
+`configured`), while `auth status`'s Credentials line actually probes the keychain via
+`load_api_token`. Concretely, a pre-cycle-003 api-token profile shows STATUS=`configured` in
+`auth list` but `Credentials: not found` in `auth status` — the exact detect-and-instruct
+condition this story exists to surface (BC-1.4.032) is invisible on the `auth list` surface.
+
+Since this story is specifically about making credential absence visible and actionable, it
+should EVALUATE making `auth list`'s STATUS column credential-aware — i.e., probe presence
+the same way `auth status` does (existence-only, same discipline as the legacy-pair check
+above: never surfacing values, only presence) — so the two surfaces stop disagreeing during
+the very migration window this story is designed to smooth over.
+
+Disposition: implement this if it fits cleanly within this story's existing scope and file
+list (`src/cli/auth/list.rs` is not currently in this story's File Structure Requirements —
+see `S-cycle3-env-tag`, the Wave 1 co-story, which does touch that file, for a possible
+integration point). If it does not fit cleanly, the story's delivery must explicitly flag it
+as a tracked follow-up in the PR description rather than silently dropping it — do not let
+this finding disappear unaddressed.
+
+This is an ADDED consideration only. It does not modify, replace, or supersede any existing
+AC, coverage requirement, or dependency in this story.
+
+**Related, not folded in:** a separate Wave 1 LOW finding observed that `auth status` (a
+documented read-only probe) can transitively trigger the OAuth `"default"`-profile lazy
+migration WRITE via `load_oauth_tokens`. That is pre-existing OAuth behavior tracked
+separately from this cycle and is noted here only so it is not confused with the MED finding
+above — it is out of scope for this story.
 
 ## Anchor Justification
 

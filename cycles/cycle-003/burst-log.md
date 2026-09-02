@@ -7,7 +7,7 @@ producer: state-manager
 timestamp: 2026-09-01T15:30:00Z
 cycle: "cycle-003"
 inputs: [STATE.md]
-input-hash: "47a6368"
+input-hash: "1ced625"
 traces_to: STATE.md
 ---
 
@@ -620,3 +620,71 @@ No BCs/VPs/holdouts added or removed — 719 BCs / 32 VPs / 106 holdouts unchang
 **Dim-6 Attestation:** N/A — no source code changed by this `.factory/` commit itself; `S-cycle3-env-tag`'s `src/` changes landed on `develop` via PR #752's own merge commit, already CI-verified there (15/15 green) prior to merge.
 
 **Dim-7 Attestation:** `cargo test --lib` on `develop` post-merge: **1234 passed / 0 failed / 11 ignored** (was 1203/0/11 pre-story, per the regression-baseline.md committed this burst). Full integration suite remains deferred to per-PR `ci-gate` (already run and green on PR #752).
+
+## Burst: Burst 11 — F4 Wave 1 COMPLETE: story 2 (`S-cycle3-percred-storage`) delivered + squash-merged; Wave 1 integration gate PASSED; adversary findings dispositioned (2026-09-02)
+
+**Parent-commit:** the Wave-1-story-1-merged burst commit (v3.40) — most recent prior `.factory/` commit on `factory-artifacts`. `develop` tip: was `4d0ae2d5`, now `d3ba2726` (PR #755 merge commit `d3ba27262be5cd26992c8ac71b2162c895cc90d0`, this burst).
+
+**Trigger:** Burst 10 left Wave 1 story 2/2 (`S-cycle3-percred-storage`) as the next dispatch. This burst records that story's completed delivery through the full per-story TDD cycle (including a security review, per its HIGH-risk flag), its squash-merge to `develop`, the resulting Wave 1 integration gate run, and the disposition of the 3 findings that gate's adversary review returned.
+
+**Actions taken:**
+1. **`S-cycle3-percred-storage` (Wave 1, story 2/2, 8 pts, HIGH-risk) delivered end-to-end via per-story TDD, including a security review:** per-profile API-token keychain storage (BC-1.4.031) — `store_api_token`/`load_api_token` restructured per DEC-315/DEC-326. PR #755 opened against `develop`. AI review (pr-reviewer) confirmed across 3 review cycles (`pr-review-cycle1.md`, `pr-review-cycle2.md`, `pr-review-cycle3.md`, final `pr-review.md` — all relocated this burst from the stray top-level `code-delivery/S-cycle3-percred-storage/` path into `cycles/cycle-003/code-delivery/S-cycle3-percred-storage/`, matching the `S-cycle3-env-tag/` convention). Demo evidence recorded (`AC-001-008-percred-storage-keyring-tests`, `AC-003-009-percred-storage-wiring-tests` + README) at `cycles/cycle-003/code-delivery/S-cycle3-percred-storage/demos/`, likewise relocated this burst. **Squash-merged to `develop`** — merge commit `d3ba27262be5cd26992c8ac71b2162c895cc90d0`; `develop` tip `4d0ae2d5` → `d3ba2726`. Auto-merged per DEC-330 (CI green + AI review + local review converged).
+2. **Wave 1 integration gate run** — `cycles/cycle-003/phase-f4-implementation/wave-1-integration-gate.md` (produced this burst, previously uncommitted): `develop` @ `d3ba2726` (fast-forwarded via `git checkout develop && git pull --ff-only`, no `git reset --hard`). Five checks: `cargo build --tests` GREEN; `cargo test --lib` GREEN (**1242 passed / 0 failed / 18 ignored**); `cargo clippy --all-targets --all-features -- -D warnings` GREEN, zero warnings; `cargo fmt --all -- --check` GREEN; `JR_RUN_KEYRING_TESTS=1`-gated keychain tests GREEN (**15 passed / 0 failed**). **Verdict: GREEN** — all checks pass cleanly with both Wave 1 stories merged.
+3. **Wave 1 adversary review returned 3 findings, all non-blocking — verdict SAFE TO PASS — and all 3 dispositioned this burst:**
+   - **MED** — `auth list` STATUS (config-only, `url.is_some()`→`configured`) vs `auth status` Credentials (keychain-probing via `load_api_token`) disagree during the migration window: a pre-cycle-003 api-token profile shows `configured` in `auth list` but `Credentials: not found` in `auth status`. **Disposition:** folded into Wave 2's `S-cycle3-credential-absence-guard` story file as a new "Wave 1 integration-gate finding (MED)" section — the story should EVALUATE making `auth list` STATUS credential-aware, implementing if it fits the story's existing file list, else flagging as a tracked PR-description follow-up.
+   - **LOW** — `auth status` (documented read-only) can transitively trigger the OAuth `"default"`-profile lazy-migration WRITE via `load_oauth_tokens`. **Disposition:** pre-existing OAuth behavior, unrelated to cycle-003's redesign; recorded as standing drift, NOT folded into any cycle-003 story.
+   - **LOW [process-gap]** — `S-cycle3-percred-storage.md`'s `breaking_change` frontmatter read `false`, contradicting its own already-correct CHANGELOG framing (`BREAKING — Action required`) and the actual migration-lockout behavior (removing the legacy flat-key read fallback locks out every existing api-token profile, including `default`, until re-authentication). **Disposition:** corrected `false`→`true` this burst with an added "Correction Note" section explaining the fix; a systemic frontmatter-coherence CI guard was considered and its addition **justified-deferred** (LOW, one observed instance, no recurring pattern evidence).
+4. **Story-file input-hashes refreshed** via `compute-input-hash --update`: `S-cycle3-percred-storage.md` (`3f4ee5d`→`f01a25d`, reflecting the `breaking_change` correction + Correction Note) and `S-cycle3-credential-absence-guard.md` (`9c093c7`→`b46de8b`, reflecting the new Wave 1 MED-finding section).
+5. **Frontmatter updated:** `activation_head` `4d0ae2d5` → `d3ba2726` (develop moved again); `current_step` and `cycle_003_status` updated to reflect Wave 1 COMPLETE, the gate PASSED, the 3 findings dispositioned, and Wave 2 (`S-cycle3-credential-absence-guard`) as next. `phase` stays `F4`; `pipeline` stays `ACTIVE`. `version` 3.40 → 3.41.
+6. **Phase Progress** gained `F4-WAVE1-STORY2`, `F4-WAVE1-INTEGRATION-GATE`, and `F4-WAVE2` (pending dispatch) rows; the `F4-DELTA-IMPLEMENTATION` row's status updated to `IN PROGRESS — Wave 1 COMPLETE (2/7 stories merged); Wave 2 next`. **Current Phase Steps** reset to the Wave-1-close-out trail (story-2 merge → integration gate → adversary review → findings dispositioned → Wave 1 closed). **Convergence Status**, **Concurrent Cycles**, and **Constraints Carried Forward** updated to reflect Wave 1 COMPLETE and the gate/findings outcome.
+7. **Session Resume Checkpoint replaced** (v3.40 → v3.41) — new checkpoint records the Wave-1-COMPLETE position, the gate result, the 3 findings + dispositions verbatim, the unchanged remaining wave order/critical path (with the Wave 3/Wave 4 carry-forward obligations restated), and the exact next-dispatch instructions for Wave 2. Prior v3.40 checkpoint archived to `cycles/cycle-003/session-checkpoints.md` as Checkpoint v3.40 (input-hash refreshed `47a6368`→`1ced625` on that file after the append).
+8. **Drift/Standing Items** gained a new "new this burst" entry recording the Wave 1 gate PASSED and all 3 adversary findings' dispositions verbatim; a prior burst-10-resolved entry for `S-cycle3-env-tag`'s merge was added for completeness; all pre-existing Drift/Standing items (ADR-0011-staged-not-applied, prior burst resolution notes, the STORY-INDEX.md grep-count residual, and every cycle-002/standing item) preserved verbatim.
+9. **Historical Content table** gained a new row for the Wave 1 integration-gate report and updated the story-1 delivery-evidence row to also cite its relocated `pr-review.md`; added a new row for the story-2 delivery evidence (demos + 4 pr-review artifacts, all relocated from the stray top-level `code-delivery/S-cycle3-percred-storage/` path this burst).
+10. **Did NOT touch `src/`, `regression-state.json`, or `sidecar-learning.md`** — the latter two remain pre-existing uncommitted modifications unrelated to cycle-003 work, left dirty per standing instruction. `src/` changes for `S-cycle3-percred-storage` already landed on `develop` via PR #755's own merge commit, not via this `.factory/` commit — this burst commits only `.factory/` bookkeeping, delivery-evidence artifacts, and the two story-file corrections/annotations.
+
+**Adversary verdict:** the Wave 1 integration gate's adversary review returned 3 findings (1 MED, 2 LOW), none blocking — **SAFE TO PASS**. All 3 dispositioned this burst (see Actions 3 above).
+
+**Outcome:** cycle-003 (`auth-profile-dx`) Phase **F4 (delta implementation) is ACTIVE.** **Wave 1 is COMPLETE: 2 of 7 stories merged** (`S-cycle3-env-tag` PR #752, `S-cycle3-percred-storage` PR #755; `develop` @ `d3ba2726`). Wave 1 integration gate **PASSED**. Wave 2 (`S-cycle3-credential-absence-guard`, P0, HIGH-risk) is next. Pipeline stays **ACTIVE**; phase stays **F4**.
+
+**NEXT:** stand up a worktree for `S-cycle3-credential-absence-guard` (Wave 2) rebased onto `d3ba2726` and dispatch its per-story TDD delivery (including a security review, per its HIGH-risk flag) — evaluating the Wave 1 MED finding's fold-in along the way. On CI green + dual-review convergence, auto-merge per DEC-330. On Wave 2 completion, run its own integration gate before proceeding to Wave 3 (`S-cycle3-remove-logout-semantics`, which must also clear the new per-profile credential keys).
+
+**Codifications:** no new DEC recorded this burst — the 3 adversary findings were dispositioned as story-file annotations/corrections and a Drift/Standing Items entry, not as formal decisions. No BC/VP content added or changed — this is a delivery/gate/governance burst, not a spec-authoring one.
+
+**Closes:** `S-cycle3-percred-storage` as open work (delivered/merged); **Wave 1 as a whole** (both stories merged, integration gate PASSED). **Does NOT close:** the staged ADR-0011 amendment application (still pending, Wave 4 obligation); the new per-profile credential-key clearing obligation now carried by Wave 3 (`S-cycle3-remove-logout-semantics`); the `STORY-INDEX.md` grep-count residual (still flagged); the standing LOW oauth-migration-write drift item (tracked, not a cycle-003 blocker); any other pre-existing Drift/Standing item.
+
+### Counts reconciled this burst
+
+- BCs: 733 (unchanged — delivery/gate burst adds no new BCs).
+- VPs: 41 (unchanged — same reasoning).
+- Holdout scenarios: 106 (unchanged in the master count).
+- `total_stories`: unchanged at **168** (no story-file status flip this burst — the two edits are a MED-finding annotation and a `breaking_change` correction, not new coverage).
+- `total_nfrs`: unchanged at 42.
+- DEC IDs: unchanged at 330 (no new DEC recorded this burst).
+- `develop` HEAD: `4d0ae2d5` → **`d3ba2726`** (PR #755 squash-merge).
+- Full regression (`cargo test --lib`): 1234/0/11 → **1242/0/18** (per the Wave 1 integration gate; +8 net tests / +7 ignored from `S-cycle3-percred-storage`'s own coverage, including the keyring-gated suite counted separately below).
+- Gated keychain tests (`JR_RUN_KEYRING_TESTS=1`): **15 passed / 0 failed** (new this burst — first run against both Wave 1 stories merged).
+
+### Details
+
+| Agent | Task | Output |
+|-------|------|--------|
+| state-manager | Record F4 Wave 1 story 2 (`S-cycle3-percred-storage`) delivery + squash-merge to `develop` @ `d3ba2726` (PR #755); record the Wave 1 integration gate result (GREEN) and its adversary review's 3 findings + dispositions; refresh STATE.md (frontmatter `activation_head`/`current_step`/`cycle_003_status`, Phase Progress, Current Phase Steps, Convergence Status, Concurrent Cycles, Constraints, Historical Content, Drift/Standing Items, Session Resume Checkpoint); archive prior checkpoint as v3.40 (input-hash refreshed on session-checkpoints.md); refresh input-hash on the two edited story files (`S-cycle3-percred-storage.md`, `S-cycle3-credential-absence-guard.md`); relocate the stray top-level `code-delivery/S-cycle3-env-tag/` and `code-delivery/S-cycle3-percred-storage/` pr-review artifacts into the `cycles/cycle-003/code-delivery/<story>/` convention; commit the wave-1-integration-gate report + story-2 demo evidence + relocated pr-reviews + story-file corrections that were still uncommitted in the worktree; commit + push to factory-artifacts (Single-Commit Burst Protocol) | `STATE.md`; `cycles/cycle-003/burst-log.md` (this file); `cycles/cycle-003/session-checkpoints.md`; `cycles/cycle-003/phase-f3-stories/S-cycle3-percred-storage.md`; `cycles/cycle-003/phase-f3-stories/S-cycle3-credential-absence-guard.md`; `cycles/cycle-003/phase-f4-implementation/wave-1-integration-gate.md`; `cycles/cycle-003/code-delivery/S-cycle3-env-tag/pr-review.md`; `cycles/cycle-003/code-delivery/S-cycle3-percred-storage/` (demos/ + 4 pr-review artifacts) |
+
+**Files touched (Dim-1): 8 unique files/directories this burst, all committed in the state-manager's own single atomic commit**
+
+- `STATE.md`
+- `cycles/cycle-003/burst-log.md`
+- `cycles/cycle-003/session-checkpoints.md`
+- `cycles/cycle-003/phase-f3-stories/S-cycle3-percred-storage.md`
+- `cycles/cycle-003/phase-f3-stories/S-cycle3-credential-absence-guard.md`
+- `cycles/cycle-003/phase-f4-implementation/wave-1-integration-gate.md`
+- `cycles/cycle-003/code-delivery/S-cycle3-env-tag/pr-review.md` (relocated, 1 file)
+- `cycles/cycle-003/code-delivery/S-cycle3-percred-storage/` (relocated/new: demos/ [5 files] + 4 pr-review artifacts = 9 files)
+
+**Dim-2 Attestation:** N/A — no BC/VP/holdout-count-affecting spec file changed this burst (the two story-file edits are annotation/correction, not new BC/VP coverage); `scripts/check-bc-cumulative-counts.sh` and `scripts/check-spec-counts.sh` re-run this burst as a verification step and confirmed GREEN (no count drift).
+
+**Dim-5 Attestation:** N/A — no binary/WASM artifact produced by this burst.
+
+**Dim-6 Attestation:** N/A — no source code changed by this `.factory/` commit itself; `S-cycle3-percred-storage`'s `src/` changes landed on `develop` via PR #755's own merge commit, already CI-verified there prior to merge.
+
+**Dim-7 Attestation:** `cargo test --lib` on `develop` post-Wave-1: **1242 passed / 0 failed / 18 ignored** (per the Wave 1 integration gate report). `JR_RUN_KEYRING_TESTS=1`-gated suite: **15 passed / 0 failed**. Full integration suite remains deferred to per-PR `ci-gate` (already run and green on PR #755).

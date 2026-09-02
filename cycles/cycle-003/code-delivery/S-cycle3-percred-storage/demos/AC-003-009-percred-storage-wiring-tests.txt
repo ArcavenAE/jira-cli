@@ -1,0 +1,11 @@
+$ JR_RUN_KEYRING_TESTS=1 cargo test --test api_token_percred_wiring -- --include-ignored --test-threads=1
+
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 0.13s
+     Running tests/api_token_percred_wiring.rs (target/debug/deps/api_token_percred_wiring-2090d7a467f35dcc)
+
+running 2 tests
+test test_from_config_api_token_branch_reads_namespaced_never_legacy_flat ... ok
+test test_login_token_writes_namespaced_pair_not_shared_flat ... ok
+
+test result: ok. 2 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 3.49s
+
