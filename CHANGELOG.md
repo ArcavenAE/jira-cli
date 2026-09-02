@@ -4,7 +4,57 @@ All notable changes to jr will be documented here.
 
 ## [Unreleased]
 
+### Internal
+
+- **Un-deferred ADR-0011 (Status: Deferred → Accepted, DEC-317) and completed the
+  compile-time type-level `Profile` fence** (`src/profile.rs`, `S-cycle3-adr0011-newtype`,
+  BC-6.2.015). No user-visible behavior change — this is a pure, compile-time-only refactor:
+  `Profile(String)` (`From<String>`, `From<&str>`, `AsRef<str>`, `Display`, and equality/debug
+  impls that keep existing `{:?}`/comparison call sites unchanged) is now threaded through
+  every `src/cache.rs` per-profile function, `src/api/auth.rs`'s per-profile credential
+  functions (`store_api_token`/`load_api_token`/`store_oauth_tokens`/`load_oauth_tokens`/
+  `clear_profile_creds`/`clear_profile_oauth_pair`/`clear_all_credentials`),
+  `Config::active_profile_name`, and `JiraClient::profile_name`/`profile_name()` — a
+  profile-unaware call site (a bare `&str`/hardcoded string literal passed where a real
+  profile name is expected) is now a compile error instead of a silent cross-profile
+  leakage risk. See `docs/adr/0011-type-level-profile-fence.md` for the full design.
+
+### Fixed
+
+- **`jr auth remove` no longer reports success while a genuine keychain
+  backend error silently leaves stale credentials behind**
+  (S-cycle3-remove-logout-semantics, BC-1.2.014). Credential-deletion
+  errors were previously aggregated and downgraded to a warning after the
+  config entry had already been removed; a real (non-`NoEntry`) keychain
+  failure now aborts the command before the cache-clear and config-removal
+  steps run, surfaces the error to the user, and leaves `[profiles.<name>]`
+  in place so a re-run of `jr auth remove <name>` is the recovery path.
+
 ### Changed
+
+- **`jr auth remove <name>` now deletes BOTH credential kinds — the OAuth
+  pair AND the per-profile API-token pair — and reorders its steps to
+  credentials-before-config-entry** (S-cycle3-remove-logout-semantics,
+  BC-1.2.014, DEC-322). New order: (1) OAuth-pair delete, (2) API-token-pair
+  delete (NEW — targets the namespaced `<profile>:email`/`<profile>:api-token`
+  keys introduced by S-cycle3-percred-storage), (3) cache clear, (4)
+  config-entry removal LAST. This is a deliberate reversal of the prior
+  ordering (which persisted the config removal first) — see the Fixed entry
+  above for why.
+
+- **`jr auth logout` on an API-token profile now prints an informational
+  notice instead of silently no-op-ing** (S-cycle3-remove-logout-semantics,
+  BC-1.2.013, DEC-322). Running `jr auth logout` against a profile whose
+  `auth_method` is `api_token` previously succeeded silently with no visible
+  effect. It now prints, to stderr, and exits 0 (this is an expected,
+  successful outcome, not an error):
+  `This profile uses API-token auth — nothing to log out; use \`jr auth
+  remove <profile>\` to delete stored credentials.` The profile entry and
+  its credentials remain untouched — `logout` stays OAuth-specific by
+  design; use `jr auth remove <profile>` to actually delete an API-token
+  profile's stored credentials. `oauth`-method profiles are unaffected:
+  `logout` still deletes the OAuth pair and prints the ordinary success
+  message.
 
 - **API-token credential absence now produces an actionable, exit-64
   "detect-and-instruct" error instead of a generic auth failure**
@@ -40,11 +90,11 @@ All notable changes to jr will be documented here.
   after upgrading: existing credentials under the old flat `email`/
   `api-token` keys are not migrated or read (there is no legacy-key
   fallback for any profile, including `"default"`). Until you re-login, the
-  next command using that profile's API-token auth will fail with
-  `No stored API token for profile "<name>" — run "jr auth login --profile
-  <name>"`. The detect-and-instruct guidance that surfaces this more
-  proactively lands with the follow-on S-cycle3-credential-absence-guard
-  story.
+  next command using that profile's API-token auth will fail with the
+  detect-and-instruct error described in the entry above
+  (S-cycle3-credential-absence-guard, BC-1.4.032):
+  `No credentials stored for profile '<name>'. This version of jr requires
+  per-profile credentials — run \`jr auth login <name>\` to set them up.`
 
 - **`jr auth list` (table mode) now renders a 5-column table — `NAME`, `URL`,
   `ENV`, `AUTH`, `STATUS` — adding a new `ENV` column between `URL` and
