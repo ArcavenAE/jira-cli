@@ -7,7 +7,7 @@ producer: state-manager
 timestamp: 2026-09-01T15:30:00Z
 cycle: "cycle-003"
 inputs: [STATE.md]
-input-hash: "725e4f4"
+input-hash: "a1d4693"
 traces_to: STATE.md
 ---
 
@@ -754,3 +754,71 @@ No BCs/VPs/holdouts added or removed — 719 BCs / 32 VPs / 106 holdouts unchang
 **Dim-6 Attestation:** N/A — no source code changed by this `.factory/` commit itself; `S-cycle3-credential-absence-guard`'s `src/` changes landed on `develop` via PR #756's own merge commit, already CI-verified there prior to merge.
 
 **Dim-7 Attestation:** `cargo fmt --all -- --check` locally GREEN, zero diffs. `cargo build --tests`/`cargo test --lib`/`cargo clippy --all-targets --all-features -- -D warnings` deferred to CI this burst, independently confirmed green via PR #756's `ci-gate` 15/15. `JR_RUN_KEYRING_TESTS=1`-gated suite: **1275 passed / 0 failed / 0 ignored** (per the implementer's prior verification). Full integration suite remains deferred to per-PR `ci-gate` (already run and green on PR #756).
+
+## Burst: Burst 13 — F4 Wave 3 COMPLETE: `S-cycle3-remove-logout-semantics` delivered + squash-merged; SEC-1 HIGH found+fixed pre-merge; both Wave-2-carried obligations closed; DEC-331 recorded (2026-09-02)
+
+**Parent-commit:** the Wave-2-COMPLETE burst commit (v3.42) — most recent prior `.factory/` commit on `factory-artifacts`. `develop` tip: was `5c568d0f`, now `5e9dba8a` (PR #757 merge commit `5e9dba8a`, this burst).
+
+**Trigger:** Burst 12 left Wave 3 (`S-cycle3-remove-logout-semantics`, 5 pts, carrying two obligations from the Wave 2 adversary review) as the next dispatch. This burst records that story's completed delivery through the full per-story TDD cycle (including a security review), its squash-merge to `develop`, the SEC-1 HIGH finding found and fixed pre-merge, verified closure of both carried obligations, DEC-331's recording, and the human-requested demo data deletion.
+
+**Actions taken:**
+
+1. **`S-cycle3-remove-logout-semantics` (Wave 3, 5 pts) delivered end-to-end via per-story TDD, including a security review:** reworked `auth remove`/`auth logout` semantics per DEC-322 (full-delete vs session-clear). PR #757 opened against `develop`, then squash-merged — merge commit `5e9dba8a`; `develop` tip `5c568d0f` → `5e9dba8a`.
+2. **SEC-1 (HIGH) found and fixed pre-merge:** the story widened `clear_profile_creds` to also clear the per-profile api-token pair (`<profile>:email`/`<profile>:api-token`), closing the deferred gap `S-cycle3-percred-storage` left open and satisfying DEC-322's full-delete requirement for `auth remove`. The security review found that `auth refresh`'s OAuth branch still called `clear_profile_creds` — on every refresh this would have silently deleted the profile's api-token pair alongside the OAuth session tokens, an unintended cross-credential-kind deletion for a routine session-refresh operation. **Fix:** a new, narrow `clear_profile_oauth_pair` function was introduced that clears ONLY the OAuth session pair (`<profile>:oauth-access-token`/`-refresh-token`); `auth refresh`'s OAuth branch and `auth logout` were both switched to call it instead. `clear_profile_creds` (the full-delete, both-credential-kinds function) is now called ONLY by `auth remove`. Verified this burst by direct grep of the merged tree: `src/cli/auth/refresh.rs:117` and `src/cli/auth/logout.rs:91` both call `clear_profile_oauth_pair`; `src/cli/auth/remove.rs:130` is the sole production call site of `clear_profile_creds`.
+3. **Both obligations Wave 2's adversary carried onto Wave 3 are CLOSED, verified this burst (not merely claimed):**
+   - **Per-profile credential-key clearing** — `auth remove` now deletes both the OAuth pair AND the per-profile api-token pair (via the widened `clear_profile_creds`), reordered credentials-before-config-entry; `auth logout` on an OAuth profile clears only the session tokens (via `clear_profile_oauth_pair`) and leaves the profile's config entry and any per-profile api-token pair untouched, consistent with DEC-322's non-destructive-logout contract. `auth logout` on an api-token profile now prints an informational stderr notice and exits 0 instead of silently no-op-ing.
+   - **CHANGELOG `[Unreleased]` reconciliation** — grep-confirmed this burst: the stale Wave-1 failure-message quote (`No stored API token for profile "<name>"...`) is no longer present anywhere in `CHANGELOG.md`; the current entry for the credential-absence guard matches the BC-1.4.032 text the shipped binary actually emits, closing the self-contradiction Wave 2's adversary flagged.
+4. **Reviews on the final post-fix state:** local code review APPROVE-WITH-NITS; security review PASS-WITH-NOTES (SEC-1 fixed, verified); AI review (pr-reviewer) APPROVE. CI `ci-gate` 15/15 green.
+5. **DEC-331 recorded (human, 2026-09-02):** refines the cycle-003 auto-merge policy to fully autonomous — story PRs merge without a human merge gate once (1) CI `ci-gate` is green, (2) a reviewer returns an explicit MERGE RECOMMENDATION on the final post-fix state, and (3) every HIGH/MEDIUM finding is addressed (LOW/cosmetic non-blocking). A found-and-fixed HIGH (like SEC-1 on this very PR) no longer requires pausing the human. This supersedes DEC-330's interim "pause the human for HIGH/CRITICAL" handling, which was in effect and used for PR #757's own merge. DEC-331's rationale records an unresolved operational residual: the `gh pr merge` action itself was blocked by Claude Code's auto-mode permission classifier when agent-initiated on PR #757, requiring the human to directly authorize the merge — a session permission rule may be needed to make the merge ACTION (not just the merge DECISION) fully autonomous.
+6. **Demo data deletion (human request):** PR #757's on-disk demo directory `cycles/cycle-003/code-delivery/S-cycle3-remove-logout-semantics/demos/` (6 gifs/webm/tapes + fixtures + gated-test-evidence + README, 25 files) was deleted at the human's request. These files were untracked and `.factory/` is gitignored on the feature branch, so they were never part of PR #757's diff — this deletion has no effect on the merged PR content. No other stories' demo directories were touched. An **OPEN human question, NOT decided this burst**, is recorded: whether to delete the other 3 merged stories' (`S-cycle3-env-tag`, `S-cycle3-percred-storage`, `S-cycle3-credential-absence-guard`) demo directories, and whether to stop recording demos for the remaining Waves 4–5.
+7. **Worktree + branches cleaned up** for the completed `S-cycle3-remove-logout-semantics` story.
+8. **Frontmatter updated:** `activation_head` `5c568d0f` → `5e9dba8a` (develop moved again); `current_step` and `cycle_003_status` updated to reflect Wave 3 COMPLETE, SEC-1 found+fixed, both carried obligations closed, DEC-331 recorded, the demo deletion + open demo question, and Wave 4 as next. `phase` stays `F4`; `pipeline` stays `ACTIVE`. `version` 3.42 → 3.43.
+9. **Phase Progress** gained `F4-WAVE3-STORY` (MERGED), `F4-WAVE3-INTEGRATION-GATE` (RUNNING), and `F4-WAVE4` (PENDING DISPATCH) rows; the `F4-DELTA-IMPLEMENTATION` row's status updated to `IN PROGRESS — Wave 3 COMPLETE (4/7 stories merged); integration gate running, Wave 4 next`. **Current Phase Steps** reset to the Wave-3 close-out trail (story merge → SEC-1 found+fixed → DEC-331 recorded → demo deletion → Wave 3 closed). **Convergence Status**, **Concurrent Cycles**, and **Constraints Carried Forward** updated to reflect Wave 3 COMPLETE and the closure of both Wave-2-carried obligations.
+10. **Decisions Log** gained DEC-331 (inserted above DEC-330, most-recent-first ordering); DEC-330's own row annotated to note it is superseded in part (the HIGH/CRITICAL-pause clause) by DEC-331, with the core CI+dual-review gate unchanged; DEC-322's row annotated **IMPLEMENTED 2026-09-02** now that `logout`/`remove` actually carry the split semantics it specified.
+11. **Session Resume Checkpoint replaced** (v3.42 → v3.43) — new checkpoint records the Wave-3-COMPLETE position, SEC-1's finding and fix, both carried obligations' closure, DEC-331, the demo deletion + open question, and the exact next-dispatch instructions for the Wave 3 integration gate and Wave 4. Prior v3.42 checkpoint archived to `cycles/cycle-003/session-checkpoints.md` as Checkpoint v3.42 (input-hash refreshed via `compute-input-hash --update` after the append: `a1d4693`).
+12. **Drift/Standing Items** gained a new "new this burst" entry recording Wave 3 MERGED, SEC-1, DEC-331, and the demo deletion + open question verbatim; a new "resolved at F4-Wave-3-merged burst" entry closes both Wave-2-carried obligations; the prior Burst-12 "new this burst" entry (Wave 2 gate + 2 findings) is compacted to a "resolved at F4-Wave-2-integration-gate-passed burst" pointer per the established convention; a new LOW doc-hygiene nit (`remove.rs`'s step-enumeration doc-comment) is tracked, deferred to a future doc sweep; all other pre-existing Drift/Standing items (ADR-0011-staged-not-applied, prior burst resolution notes, the STORY-INDEX.md grep-count residual, and every cycle-002/standing item) preserved verbatim.
+13. **Historical Content table** gained a "cycle-003 F4 story-4 delivery evidence" row noting the demo deletion, and updated the F4-implementation-artifacts row to note the Wave 3 integration gate report is pending.
+14. **Hygiene:** `.factory/.gitignore` gained a `.DS_Store` entry (pre-existing untracked `.DS_Store` files under `code-delivery/` left as-is on disk, now ignored going forward). Did **NOT** touch `regression-state.json`, `sidecar-learning.md`, the modified `S-cycle3-env-tag` demo gif, or the top-level `code-delivery/pr-review.md` scratch file (the latter two appear to be mid-edit by another active agent this session; left untouched per standing instruction and to avoid stepping on concurrent agent work). `src/`/`CHANGELOG.md` changes for `S-cycle3-remove-logout-semantics` already landed on `develop` via PR #757's own merge commit, not via this `.factory/` commit — this burst commits only `.factory/` bookkeeping.
+
+**Adversary verdict:** N/A this burst — a delivery/merge-and-bookkeeping burst, not an adversarial spec-defect review. (`S-cycle3-remove-logout-semantics`'s own local review, security review, and AI review are recorded above as part of its delivery trail: local review APPROVE-WITH-NITS; security review PASS-WITH-NOTES, SEC-1 found+fixed+verified; AI review (pr-reviewer) APPROVE; CI `ci-gate` 15/15 green.)
+
+**Outcome:** cycle-003 (`auth-profile-dx`) Phase **F4 (delta implementation) is ACTIVE.** **Wave 3 is COMPLETE: 4 of 7 stories merged** (`S-cycle3-env-tag` PR #752, `S-cycle3-percred-storage` PR #755, `S-cycle3-credential-absence-guard` PR #756, `S-cycle3-remove-logout-semantics` PR #757; `develop` @ `5e9dba8a`). Both obligations Wave 2's adversary carried onto Wave 3 are CLOSED. DEC-331 refines the auto-merge policy to fully autonomous. Wave 3 integration gate is running; Wave 4 (`S-cycle3-adr0011-newtype` ∥ `S-cycle3-oauth-default-creation`) is next. Pipeline stays **ACTIVE**; phase stays **F4**.
+
+**NEXT:** run/complete the Wave 3 integration gate (mirror the Wave 1/Wave 2 gate shape). On PASSED, stand up worktrees for `S-cycle3-adr0011-newtype` and `S-cycle3-oauth-default-creation` (Wave 4, parallel) rebased onto `5e9dba8a` and dispatch both stories' per-story TDD delivery — `S-cycle3-adr0011-newtype` MUST apply the staged ADR-0011 amendment to `docs/adr/`. On CI green + reviewer MERGE RECOMMENDATION + every HIGH/MEDIUM finding addressed, auto-merge per DEC-331. Get an explicit human decision before acting on the open demo-recording question.
+
+**Codifications:** DEC-331 recorded (refined fully-autonomous auto-merge policy, human-confirmed). No new BC/VP content added or changed — this is a delivery/security-finding/policy/governance burst, not a spec-authoring one.
+
+**Closes:** `S-cycle3-remove-logout-semantics` as open work (delivered/merged); **Wave 3 as a whole** (its sole story merged); the SEC-1 HIGH security finding (found + fixed pre-merge, verified); both obligations Wave 2's adversary carried onto Wave 3 (per-profile credential-key clearing; CHANGELOG reconciliation). **Does NOT close:** the Wave 3 integration gate (running, report pending); the staged ADR-0011 amendment application (still pending, Wave 4 obligation); the `STORY-INDEX.md` grep-count residual (still flagged); the standing LOW oauth-migration-write drift item; the new LOW `remove.rs` doc-comment nit (deferred to a doc sweep); the OPEN demo-recording/demo-retention human question (NOT decided); any other pre-existing Drift/Standing item.
+
+### Counts reconciled this burst
+
+- BCs: 733 (unchanged — delivery/security/policy burst adds no new BCs).
+- VPs: 41 (unchanged — same reasoning).
+- Holdout scenarios: 106 (unchanged in the master count).
+- `total_stories`: unchanged at **168** (no story-file status flip this burst — no new spec content added).
+- `total_nfrs`: unchanged at 42.
+- DEC IDs: **330 → 331** (DEC-331 recorded this burst).
+- `develop` HEAD: `5c568d0f` → **`5e9dba8a`** (PR #757 squash-merge).
+- Full regression: CI `ci-gate` 15/15 green on PR #757's merged tree.
+- Security review: PASS-WITH-NOTES — SEC-1 (HIGH) found and fixed pre-merge, verified via grep of the merged tree this burst.
+
+### Details
+
+| Agent | Task | Output |
+|-------|------|--------|
+| state-manager | Record F4 Wave 3 (`S-cycle3-remove-logout-semantics`) delivery + squash-merge to `develop` @ `5e9dba8a` (PR #757); record the SEC-1 HIGH security finding (found+fixed pre-merge) and verify the fix in the merged tree; verify and record closure of both Wave-2-carried obligations (per-profile credential-key clearing, CHANGELOG reconciliation); record DEC-331 (refined autonomous auto-merge policy); record the human-requested demo data deletion and the open, undecided demo-recording question; refresh STATE.md (frontmatter `activation_head`/`current_step`/`cycle_003_status`, Phase Progress, Current Phase Steps, Decisions Log, Convergence Status, Concurrent Cycles, Constraints, Historical Content, Drift/Standing Items, Session Resume Checkpoint); archive prior checkpoint as v3.42 (input-hash refreshed on session-checkpoints.md via `compute-input-hash --update`); add `.DS_Store` to `.factory/.gitignore`; commit + push to factory-artifacts (Single-Commit Burst Protocol) | `STATE.md`; `cycles/cycle-003/burst-log.md` (this file); `cycles/cycle-003/session-checkpoints.md`; `.factory/.gitignore` |
+
+**Files touched (Dim-1): 4 unique files this burst, all committed in the state-manager's own single atomic commit**
+
+- `STATE.md`
+- `cycles/cycle-003/burst-log.md`
+- `cycles/cycle-003/session-checkpoints.md`
+- `.factory/.gitignore`
+
+**Dim-2 Attestation:** N/A — no BC/VP/holdout-count-affecting spec file changed this burst; `scripts/check-bc-cumulative-counts.sh` and `scripts/check-spec-counts.sh` re-run this burst as a verification step and confirmed GREEN (no count drift).
+
+**Dim-5 Attestation:** N/A — no binary/WASM artifact produced by this burst.
+
+**Dim-6 Attestation:** N/A — no source code changed by this `.factory/` commit itself; `S-cycle3-remove-logout-semantics`'s `src/`/`CHANGELOG.md` changes landed on `develop` via PR #757's own merge commit, already CI-verified there prior to merge (`ci-gate` 15/15).
+
+**Dim-7 Attestation:** CI `ci-gate` 15/15 green on PR #757's merged tree (`5e9dba8a`). Security review PASS-WITH-NOTES: SEC-1 (HIGH) found and fixed pre-merge, verified via direct grep of `src/api/auth.rs` and `src/cli/auth/{refresh,logout,remove}.rs` this burst. `scripts/check-bc-cumulative-counts.sh` and `scripts/check-spec-counts.sh`: both GREEN.
