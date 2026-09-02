@@ -4,6 +4,21 @@ use crate::api::auth;
 use crate::api::auth_embedded::OAuthAppSource;
 use crate::error::JrError;
 
+/// Render a profile's `env` tag for `auth status`'s text `env` line
+/// (BC-1.6.047 Postcondition 2b, EC-1.6.047-3): identical control-char/
+/// ANSI-strip + length-cap transform and `-`/blank placeholder convention
+/// as `auth list`'s `ENV` table column (BC-1.6.046 EC-1.6.046-1) — see
+/// `cli::auth::list::render_env_column`'s doc comment for the full
+/// contract. Shares the sanitizer with that call site (`output::
+/// sanitize_env_display`) per the "one shared sanitizer, two call sites"
+/// architecture rule.
+pub(crate) fn render_env_line(env: Option<&str>) -> String {
+    match env {
+        None => "-".to_string(),
+        Some(s) => crate::output::sanitize_env_display(s),
+    }
+}
+
 /// Inspect — without consuming or modifying — which source would supply
 /// OAuth app credentials on the next `refresh_oauth_token` call. Mirrors
 /// the resolver order in `api/auth.rs::resolve_refresh_app_credentials`.
@@ -111,17 +126,22 @@ pub async fn status(profile_arg: Option<&str>) -> Result<()> {
         .unwrap_or("(not configured)");
     println!("Profile:     {target}");
     println!("Instance:    {url}");
+    println!(
+        "Env:         {}",
+        render_env_line(profile.and_then(|p| p.env.as_deref()))
+    );
 
     let method = profile
         .and_then(|p| p.auth_method.as_deref())
         .unwrap_or("(not configured)");
     println!("Auth method: {method}");
 
-    // Credential probe: API-token creds are shared (one per host); OAuth
-    // tokens are per-profile and namespaced by the profile name.
+    // Credential probe: both API-token and OAuth creds are namespaced by
+    // profile as of S-cycle3-percred-storage (BC-1.4.031) — mirrors
+    // `load_oauth_tokens`'s per-profile lookup.
     let creds_ok = match method {
         "oauth" => auth::load_oauth_tokens(&target).is_ok(),
-        _ => auth::load_api_token().is_ok(),
+        _ => auth::load_api_token(&target).is_ok(),
     };
     if creds_ok {
         println!("Credentials: stored in keychain");

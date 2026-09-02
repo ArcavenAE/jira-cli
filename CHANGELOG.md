@@ -4,6 +4,73 @@ All notable changes to jr will be documented here.
 
 ## [Unreleased]
 
+### Changed
+
+- **API-token credential absence now produces an actionable, exit-64
+  "detect-and-instruct" error instead of a generic auth failure**
+  (S-cycle3-credential-absence-guard, BC-1.4.032/BC-1.4.033/BC-1.4.034,
+  DEC-326). When a profile has no per-profile `<profile>:email` /
+  `<profile>:api-token` keychain entries — the state every pre-cycle-003
+  API-token profile is in after the S-cycle3-percred-storage breaking
+  change above — `jr` now exits 64 with:
+  `No credentials stored for profile '<profile>'. This version of jr
+  requires per-profile credentials — run \`jr auth login <profile>\` to set
+  them up.` A single `jr auth login <profile>` permanently resolves it; no
+  second re-login is ever required. If only one of the two per-profile keys
+  is present (a partial write), a distinct message fires instead:
+  `Incomplete credentials stored for profile '<profile>' — run
+  \`jr auth login <profile>\` to fix this.` Neither message ever suggests
+  `jr auth logout` (a no-op for API-token profiles). **No-copy guarantee
+  (DEC-326):** `jr` detects whether the old shared flat `email`/`api-token`
+  keychain pair still exists purely to keep this code path symmetric with
+  OAuth's migration-detection step — it never reads, copies, or deletes
+  that legacy pair, and the error text is byte-identical whether or not the
+  legacy pair is present. This applies uniformly to `"default"` and every
+  other profile name — there is no profile-specific special case.
+
+- **BREAKING — Action required on upgrade: API-token credentials
+  (`email` / `api-token`) are now stored per-profile in the OS keychain,
+  under namespaced `<profile>:email` / `<profile>:api-token` keys**
+  (S-cycle3-percred-storage, BC-1.4.031). This mirrors the existing
+  per-profile OAuth token layout (`<profile>:oauth-access-token` /
+  `<profile>:oauth-refresh-token`) rather than the old shared flat
+  `email` / `api-token` keys. **Every profile that previously authenticated
+  with an API token — including every single-profile `"default"` user, the
+  majority auth path — must re-run `jr auth login [--profile <NAME>]` once**
+  after upgrading: existing credentials under the old flat `email`/
+  `api-token` keys are not migrated or read (there is no legacy-key
+  fallback for any profile, including `"default"`). Until you re-login, the
+  next command using that profile's API-token auth will fail with
+  `No stored API token for profile "<name>" — run "jr auth login --profile
+  <name>"`. The detect-and-instruct guidance that surfaces this more
+  proactively lands with the follow-on S-cycle3-credential-absence-guard
+  story.
+
+- **`jr auth list` (table mode) now renders a 5-column table — `NAME`, `URL`,
+  `ENV`, `AUTH`, `STATUS` — adding a new `ENV` column between `URL` and
+  `AUTH`** (S-cycle3-env-tag, BC-1.6.046, BC-1.6.047, BC-6.1.015, DEC-324).
+  Every profile now carries an optional free-form `env` tag
+  (`ProfileConfig.env`, e.g. `"prod"`/`"sandbox"`); the table cell shows the
+  tag when set (routed through a shared control-char/ANSI-escape-stripping,
+  length-capped display sanitizer — `output::sanitize_env_display`), a blank
+  cell for `Some("")`, and a `-` placeholder when unset. This is a
+  **breaking change for anything that parses `jr auth list`'s table output
+  by column position or snapshot** — the pinned insta snapshot
+  (`src/cli/auth/tests/snapshots/jr__cli__auth__tests__list_table_snapshot.snap`)
+  changes shape accordingly. `--output json` is unaffected in shape (already
+  additive: `env` is verbatim/lossless, `null` when unset — no
+  sanitization applied on the JSON channel, mirroring issue #398's
+  description-echo asymmetry) but now carries real values for tagged
+  profiles. `jr auth status`'s text `Env:` line uses the identical shared
+  sanitizer via `render_env_line`. Migration: any script scraping the table
+  by column index must account for the new `ENV` column; `--output json`
+  consumers are unaffected beyond the new non-null `env` values.
+  **How to set it:** `env` is hand-edit-only in this release — add
+  `env = "sandbox"` under the relevant `[profiles.<name>]` block in
+  `~/.config/jr/config.toml` (see the README's config example). There is no
+  `--env` flag or `jr init`/`jr auth login` prompt yet; that is tracked as a
+  follow-up.
+
 ## [0.7.0-dev.3] - 2026-09-01
 
 ### Breaking Changes
