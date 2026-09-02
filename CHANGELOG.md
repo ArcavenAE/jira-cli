@@ -4,6 +4,21 @@ All notable changes to jr will be documented here.
 
 ## [Unreleased]
 
+### Internal
+
+- **Un-deferred ADR-0011 (Status: Deferred → Accepted, DEC-317) and completed the
+  compile-time type-level `Profile` fence** (`src/profile.rs`, `S-cycle3-adr0011-newtype`,
+  BC-6.2.015). No user-visible behavior change — this is a pure, compile-time-only refactor:
+  `Profile(String)` (`From<String>`, `From<&str>`, `AsRef<str>`, `Display`, and equality/debug
+  impls that keep existing `{:?}`/comparison call sites unchanged) is now threaded through
+  every `src/cache.rs` per-profile function, `src/api/auth.rs`'s per-profile credential
+  functions (`store_api_token`/`load_api_token`/`store_oauth_tokens`/`load_oauth_tokens`/
+  `clear_profile_creds`/`clear_profile_oauth_pair`/`clear_all_credentials`),
+  `Config::active_profile_name`, and `JiraClient::profile_name`/`profile_name()` — a
+  profile-unaware call site (a bare `&str`/hardcoded string literal passed where a real
+  profile name is expected) is now a compile error instead of a silent cross-profile
+  leakage risk. See `docs/adr/0011-type-level-profile-fence.md` for the full design.
+
 ### Fixed
 
 - **`jr auth remove` no longer reports success while a genuine keychain
