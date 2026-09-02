@@ -6,6 +6,24 @@ All notable changes to jr will be documented here.
 
 ### Changed
 
+- **BREAKING — Action required on upgrade: API-token credentials
+  (`email` / `api-token`) are now stored per-profile in the OS keychain,
+  under namespaced `<profile>:email` / `<profile>:api-token` keys**
+  (S-cycle3-percred-storage, BC-1.4.031). This mirrors the existing
+  per-profile OAuth token layout (`<profile>:oauth-access-token` /
+  `<profile>:oauth-refresh-token`) rather than the old shared flat
+  `email` / `api-token` keys. **Every profile that previously authenticated
+  with an API token — including every single-profile `"default"` user, the
+  majority auth path — must re-run `jr auth login [--profile <NAME>]` once**
+  after upgrading: existing credentials under the old flat `email`/
+  `api-token` keys are not migrated or read (there is no legacy-key
+  fallback for any profile, including `"default"`). Until you re-login, the
+  next command using that profile's API-token auth will fail with
+  `No stored API token for profile "<name>" — run "jr auth login --profile
+  <name>"`. The detect-and-instruct guidance that surfaces this more
+  proactively lands with the follow-on S-cycle3-credential-absence-guard
+  story.
+
 - **`jr auth list` (table mode) now renders a 5-column table — `NAME`, `URL`,
   `ENV`, `AUTH`, `STATUS` — adding a new `ENV` column between `URL` and
   `AUTH`** (S-cycle3-env-tag, BC-1.6.046, BC-1.6.047, BC-6.1.015, DEC-324).

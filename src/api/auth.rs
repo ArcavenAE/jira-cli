@@ -38,6 +38,19 @@ fn oauth_refresh_key(profile: &str) -> String {
     format!("{profile}:oauth-refresh-token")
 }
 
+/// Namespaced keychain key for a profile's API-token email
+/// (`<profile>:email`, S-cycle3-percred-storage / BC-1.4.031). Mirrors
+/// [`oauth_access_key`]'s shape exactly.
+fn api_token_email_key(profile: &str) -> String {
+    format!("{profile}:email")
+}
+/// Namespaced keychain key for a profile's API token
+/// (`<profile>:api-token`, S-cycle3-percred-storage / BC-1.4.031). Mirrors
+/// [`oauth_refresh_key`]'s shape exactly.
+fn api_token_key(profile: &str) -> String {
+    format!("{profile}:api-token")
+}
+
 /// Default OAuth 2.0 scopes used when `oauth_scopes` is not set in
 /// config.toml. Covers every API surface `jr` exercises today:
 /// - `read:jira-work` / `write:jira-work` / `read:jira-user` — Jira issues,
@@ -208,16 +221,35 @@ fn entry(key: &str) -> Result<Entry> {
     Entry::new(&service_name(), key).context("Failed to access keychain")
 }
 
-/// Store an API token and associated email in the system keychain.
-pub fn store_api_token(email: &str, token: &str) -> Result<()> {
+/// Store an API token and associated email in the system keychain under the
+/// pre-multi-profile FLAT keys (`email` / `api-token`, shared across every
+/// profile on the host).
+///
+/// Renamed from the original unqualified `store_api_token` by
+/// S-cycle3-percred-storage (BC-1.4.031) to make room for the new
+/// profile-namespaced `store_api_token(profile, email, token)` below.
+/// New writes should always go through the namespaced function — this one
+/// is retained, unused as a credential source going forward, purely so
+/// `S-cycle3-credential-absence-guard`'s legacy-pair existence check has
+/// something to call.
+pub fn store_legacy_flat_api_token(email: &str, token: &str) -> Result<()> {
     entry(KEY_EMAIL)?.set_password(email)?;
     entry(KEY_API_TOKEN)?.set_password(token)?;
     Ok(())
 }
 
-/// Load the stored API token and email from the system keychain.
-/// Returns `(email, token)`.
-pub fn load_api_token() -> Result<(String, String)> {
+/// Load the stored API token and email from the system keychain's
+/// pre-multi-profile FLAT keys (`email` / `api-token`, shared across every
+/// profile on the host). Returns `(email, token)`.
+///
+/// Renamed from the original unqualified, no-arg `load_api_token` by
+/// S-cycle3-percred-storage (BC-1.4.031) to make room for the new
+/// profile-namespaced `load_api_token(profile)` below. New reads should
+/// always go through the namespaced function — this one is retained,
+/// unused as a credential source going forward, purely so
+/// `S-cycle3-credential-absence-guard`'s legacy-pair existence check has
+/// something to call.
+pub fn load_legacy_flat_api_token() -> Result<(String, String)> {
     let email = entry(KEY_EMAIL)?
         .get_password()
         .context("No stored email — run \"jr auth login\"")?;
@@ -307,6 +339,63 @@ pub fn load_oauth_tokens(profile: &str) -> Result<(String, String)> {
                  \"jr auth login --profile {profile}\" to restore a clean state."
             ))
         }
+    }
+}
+
+/// Store an API-token credential pair (email + token) scoped to a profile.
+///
+/// (S-cycle3-percred-storage, BC-1.4.031 postcondition 1.) Tokens are
+/// written to the namespaced keys `<profile>:email` and `<profile>:api-token`
+/// so multiple Jira sites/accounts can coexist in a single keychain — the
+/// same rationale as [`store_oauth_tokens`]'s `<profile>:oauth-*` pair.
+///
+/// Unlike [`store_oauth_tokens`], this function has NO legacy-fallback
+/// migration branch for any profile, including `"default"` (BC-1.4.031
+/// Invariant 2) — every write is a plain, unconditional two-key overwrite
+/// (BC-1.4.033 postcondition 3, forward reference), so a later `auth login`
+/// cleanly repairs a partial-write state with no bespoke recovery logic
+/// here.
+pub fn store_api_token(profile: &str, email: &str, token: &str) -> Result<()> {
+    entry(&api_token_email_key(profile))?.set_password(email)?;
+    entry(&api_token_key(profile))?.set_password(token)?;
+    Ok(())
+}
+
+/// Load an API-token credential pair (email + token) scoped to a profile.
+/// Returns `(email, token)`.
+///
+/// (S-cycle3-percred-storage, BC-1.4.031 postcondition 2.) Reads only the
+/// namespaced keys `<profile>:email` / `<profile>:api-token` — no
+/// shared/flat fallback for a profile whose namespaced keys already exist.
+///
+/// Unlike [`load_oauth_tokens`], this function has NO `"default"`-only
+/// legacy-migration special case (BC-1.4.031 Invariant 2): the
+/// detect-and-instruct legacy-pair existence check and richer "no stored
+/// credential" wording belong to the follow-on story
+/// `S-cycle3-credential-absence-guard` (BC-1.4.032). This function returns a
+/// plain, generic, actionable "no stored API token for profile {profile}"
+/// error when either namespaced key is absent (EC-1.4.031-1), using
+/// [`read_keyring_optional`]'s `NoEntry`-vs-other-`Err` distinction so a
+/// genuine keychain backend error (EC-1.4.031-2) propagates via `?` before
+/// ever reaching that generic message.
+pub fn load_api_token(profile: &str) -> Result<(String, String)> {
+    // `?` here propagates a genuine backend error (EC-1.4.031-2) as-is —
+    // read_keyring_optional only collapses `keyring::Error::NoEntry` to
+    // `Ok(None)`; anything else (e.g. an `Invalid` service name) surfaces
+    // here distinct from the generic absent-credential message below.
+    let email = read_keyring_optional(&api_token_email_key(profile))?;
+    let token = read_keyring_optional(&api_token_key(profile))?;
+
+    match (email, token) {
+        (Some(e), Some(t)) => Ok((e, t)),
+        // Either or both namespaced entries are absent (EC-1.4.031-1).
+        // Unlike `load_oauth_tokens`, there is no "default"-only legacy
+        // fallback here (BC-1.4.031 Invariant 2) — the detect-and-instruct
+        // legacy-pair check belongs to S-cycle3-credential-absence-guard.
+        _ => Err(anyhow::anyhow!(
+            "No stored API token for profile {profile:?} — \
+             run \"jr auth login --profile {profile}\""
+        )),
     }
 }
 
@@ -485,6 +574,12 @@ pub fn clear_all_credentials(profiles: &[&str]) -> Result<()> {
     for profile in profiles {
         keys.push(oauth_access_key(profile));
         keys.push(oauth_refresh_key(profile));
+        // S-cycle3-percred-storage: the API-token pair moved to namespaced
+        // keys (<profile>:email / <profile>:api-token), so the flat
+        // KEY_EMAIL/KEY_API_TOKEN deletes above no longer reach the
+        // credential `auth refresh` is rotating.
+        keys.push(api_token_email_key(profile));
+        keys.push(api_token_key(profile));
     }
     for key in keys {
         match entry(&key) {
@@ -1844,6 +1939,334 @@ mod tests {
             KEY_OAUTH_REFRESH_LEGACY,
             "default:oauth-refresh-token must not alias legacy oauth-refresh-token"
         );
+    }
+
+    // -------------------------------------------------------------------------
+    // S-cycle3-percred-storage (BC-1.4.031): per-profile API-token keychain
+    // storage — `store_api_token`/`load_api_token` and their namespaced-key
+    // helpers `api_token_email_key`/`api_token_key`.
+    // -------------------------------------------------------------------------
+
+    /// AC-001 (BC-1.4.031 postcondition 1): `api_token_email_key("default")`
+    /// must produce `"default:email"`. Mirrors `oauth_access_key`'s shape.
+    #[test]
+    fn test_bc_1_4_031_api_token_email_key_default_profile() {
+        assert_eq!(api_token_email_key("default"), "default:email");
+    }
+
+    /// AC-001 (BC-1.4.031 postcondition 1): `api_token_email_key("sandbox")`
+    /// must produce `"sandbox:email"`.
+    #[test]
+    fn test_bc_1_4_031_api_token_email_key_sandbox_profile() {
+        assert_eq!(api_token_email_key("sandbox"), "sandbox:email");
+    }
+
+    /// AC-001 (BC-1.4.031 postcondition 1): `api_token_key("default")` must
+    /// produce `"default:api-token"`.
+    #[test]
+    fn test_bc_1_4_031_api_token_key_default_profile() {
+        assert_eq!(api_token_key("default"), "default:api-token");
+    }
+
+    /// AC-001 (BC-1.4.031 postcondition 1): `api_token_key("sandbox")` must
+    /// produce `"sandbox:api-token"`.
+    #[test]
+    fn test_bc_1_4_031_api_token_key_sandbox_profile() {
+        assert_eq!(api_token_key("sandbox"), "sandbox:api-token");
+    }
+
+    /// BC-1.4.031 Invariant 1: the api-token key helpers must mirror the
+    /// OAuth key helpers' shape byte-for-byte — `<profile>:<suffix>`, same
+    /// separator, same profile-first ordering. If this drifts, the two
+    /// credential families are no longer symmetric, which the story's
+    /// entire design rationale depends on.
+    #[test]
+    fn test_bc_1_4_031_api_token_keys_symmetric_with_oauth_key_shape() {
+        for profile in ["default", "sandbox", "prod"] {
+            let email_key = api_token_email_key(profile);
+            let token_key = api_token_key(profile);
+            let oauth_access = oauth_access_key(profile);
+            let oauth_refresh = oauth_refresh_key(profile);
+
+            assert!(
+                email_key.starts_with(&format!("{profile}:")),
+                "email key must start with '<profile>:': {email_key}"
+            );
+            assert!(
+                token_key.starts_with(&format!("{profile}:")),
+                "api-token key must start with '<profile>:': {token_key}"
+            );
+            assert_eq!(
+                email_key.matches(':').count(),
+                oauth_access.matches(':').count(),
+                "email key must have the same '#:' separators as oauth_access_key: {email_key} vs {oauth_access}"
+            );
+            assert_eq!(
+                token_key.matches(':').count(),
+                oauth_refresh.matches(':').count(),
+                "api-token key must have the same '#:' separators as oauth_refresh_key: {token_key} vs {oauth_refresh}"
+            );
+        }
+    }
+
+    /// BC-1.4.027 (amended): api-token namespaced keys must be distinct
+    /// across profiles — cross-profile collision would silently overwrite
+    /// one site's API-token credentials with another's.
+    #[test]
+    fn test_bc_1_4_031_api_token_keys_distinct_across_profiles() {
+        assert_ne!(
+            api_token_email_key("default"),
+            api_token_email_key("sandbox"),
+            "email keys for different profiles must differ"
+        );
+        assert_ne!(
+            api_token_key("default"),
+            api_token_key("sandbox"),
+            "api-token keys for different profiles must differ"
+        );
+        assert_ne!(
+            api_token_email_key("default"),
+            api_token_key("default"),
+            "email and api-token keys for the same profile must differ"
+        );
+    }
+
+    /// Best-effort cleanup of `<profile>:email`/`<profile>:api-token`
+    /// entries created by a gated api-token test. `clear_all_credentials`
+    /// (used by `with_test_keyring`'s own cleanup) does not yet clear these
+    /// namespaced keys — flagged for the implementer/follow-on story — so
+    /// api-token round-trip tests clean up after themselves explicitly to
+    /// avoid leaving orphaned entries under the unique per-test service name.
+    fn cleanup_api_token_profile(profile: &str) {
+        if let Ok(e) = entry(&api_token_email_key(profile)) {
+            let _ = e.delete_credential();
+        }
+        if let Ok(e) = entry(&api_token_key(profile)) {
+            let _ = e.delete_credential();
+        }
+    }
+
+    /// AC-001/002 (BC-1.4.031 postconditions 1-2): store then load returns
+    /// the exact pair written, for two independent profiles. Mirrors
+    /// `store_and_load_per_profile_oauth_tokens_round_trip`.
+    #[test]
+    #[ignore = "requires keyring backend; set JR_RUN_KEYRING_TESTS=1 to run"]
+    fn store_and_load_per_profile_api_token_round_trip() {
+        with_test_keyring(|| {
+            store_api_token("default", "default@example.com", "default-token-1").unwrap();
+            store_api_token("sandbox", "sandbox@example.com", "sandbox-token-2").unwrap();
+
+            let (e1, t1) = load_api_token("default").unwrap();
+            let (e2, t2) = load_api_token("sandbox").unwrap();
+
+            assert_eq!(
+                (e1.as_str(), t1.as_str()),
+                ("default@example.com", "default-token-1")
+            );
+            assert_eq!(
+                (e2.as_str(), t2.as_str()),
+                ("sandbox@example.com", "sandbox-token-2")
+            );
+
+            cleanup_api_token_profile("default");
+            cleanup_api_token_profile("sandbox");
+        });
+    }
+
+    /// AC-008 / EC-1.4.031-1 (BC-1.4.031): a brand-new profile with no
+    /// namespaced keys (and no legacy flat keys either) must return an
+    /// actionable error, not panic or silently succeed with empty strings.
+    #[test]
+    #[ignore = "requires keyring backend; set JR_RUN_KEYRING_TESTS=1 to run"]
+    fn load_api_token_returns_err_for_missing_profile() {
+        with_test_keyring(|| {
+            assert!(load_api_token("brand-new-profile").is_err());
+        });
+    }
+
+    /// BC-1.4.031 Invariant 2: unlike `load_oauth_tokens`, `load_api_token`
+    /// has NO `"default"`-only legacy-fallback branch. Pre-seed ONLY the
+    /// legacy flat keys (`email`/`api-token`) for the `"default"` profile —
+    /// if `load_api_token` copied `load_oauth_tokens`'s migration behavior,
+    /// this would incorrectly succeed by reading the legacy pair. It must
+    /// still error: the detect-and-instruct legacy-pair check belongs to
+    /// `S-cycle3-credential-absence-guard` (BC-1.4.032), not this story.
+    #[test]
+    #[ignore = "requires keyring backend; set JR_RUN_KEYRING_TESTS=1 to run"]
+    fn load_api_token_default_profile_has_no_legacy_fallback() {
+        with_test_keyring(|| {
+            store_legacy_flat_api_token("legacy@example.com", "legacy-token").unwrap();
+
+            let result = load_api_token("default");
+            assert!(
+                result.is_err(),
+                "load_api_token(\"default\") must NOT fall back to the legacy flat pair"
+            );
+
+            // Legacy flat pair is still readable via the dedicated legacy
+            // reader — load_api_token must never have touched it.
+            let (legacy_email, legacy_token) = load_legacy_flat_api_token().unwrap();
+            assert_eq!(legacy_email, "legacy@example.com");
+            assert_eq!(legacy_token, "legacy-token");
+
+            if let Ok(e) = entry(KEY_EMAIL) {
+                let _ = e.delete_credential();
+            }
+            if let Ok(e) = entry(KEY_API_TOKEN) {
+                let _ = e.delete_credential();
+            }
+        });
+    }
+
+    /// VP-AUTHDX-004 direct case (BC-1.4.031): cross-profile isolation —
+    /// storing credentials for one profile must never be readable under a
+    /// different profile's namespaced keys.
+    #[test]
+    #[ignore = "requires keyring backend; set JR_RUN_KEYRING_TESTS=1 to run"]
+    fn load_api_token_cross_profile_isolation() {
+        with_test_keyring(|| {
+            store_api_token("default", "p1@example.com", "p1-token").unwrap();
+            store_api_token("sandbox", "p2@example.com", "p2-token").unwrap();
+
+            let (e1, t1) = load_api_token("default").unwrap();
+            let (e2, t2) = load_api_token("sandbox").unwrap();
+
+            assert_ne!((e1.as_str(), t1.as_str()), (e2.as_str(), t2.as_str()));
+            assert_eq!(e1, "p1@example.com");
+            assert_eq!(t1, "p1-token");
+            assert_eq!(e2, "p2@example.com");
+            assert_eq!(t2, "p2-token");
+
+            // A brand-new third profile must see neither pair.
+            assert!(load_api_token("ghost-profile").is_err());
+
+            cleanup_api_token_profile("default");
+            cleanup_api_token_profile("sandbox");
+        });
+    }
+
+    /// AC-007 / EC-1.4.031-2 (BC-1.4.031, I-5): a genuine keychain backend
+    /// error must propagate as its own distinct problem, never coerced into
+    /// the "no stored credential" absence message. Simulated deterministically
+    /// (no reliance on real OS fault injection, which would be flaky/
+    /// non-portable) by pointing `JR_SERVICE_NAME` at an empty string: every
+    /// keyring backend this crate uses (macOS Keychain Services / Windows
+    /// Credential Manager / Linux secret-service or keyutils) rejects an
+    /// empty service name with `Err(Error::Invalid(..))` — NOT
+    /// `Err(Error::NoEntry)` — before any persistent-storage I/O happens
+    /// (confirmed against the vendored `keyring` 3.6.3 source:
+    /// `macos.rs::MacCredential::new_with_target`,
+    /// `windows.rs`/`secret_service.rs`/`keyutils.rs` all reject an empty
+    /// service/target the same way). This exercises the exact
+    /// `read_keyring_optional` `NoEntry`-vs-other-`Err` branch
+    /// `load_api_token` must reuse rather than re-implement.
+    #[test]
+    #[ignore = "requires keyring backend; set JR_RUN_KEYRING_TESTS=1 to run"]
+    fn load_api_token_propagates_backend_error_not_absent_message() {
+        with_test_keyring(|| {
+            // SAFETY: with_test_keyring holds KEYRING_TEST_ENV_MUTEX for this
+            // closure's entire duration.
+            unsafe { std::env::set_var("JR_SERVICE_NAME", "") };
+
+            let err = load_api_token("sandbox").expect_err("empty service name must error");
+            let msg = format!("{err:#}").to_lowercase();
+            assert!(
+                !msg.contains("no stored credential"),
+                "a backend/validation error must not be coerced into the \
+                 absent-credential message: {msg}"
+            );
+        });
+    }
+
+    /// BC-1.4.033 Postcondition 3 (forward reference — informs this story's
+    /// write semantics even though the BC itself is owned by a later story):
+    /// `store_api_token` is a plain unconditional two-key overwrite, not a
+    /// read-modify-write / merge. A second call for the same profile fully
+    /// replaces the first pair.
+    #[test]
+    #[ignore = "requires keyring backend; set JR_RUN_KEYRING_TESTS=1 to run"]
+    fn store_api_token_overwrites_unconditionally() {
+        with_test_keyring(|| {
+            store_api_token("sandbox", "first@example.com", "first-token").unwrap();
+            store_api_token("sandbox", "second@example.com", "second-token").unwrap();
+
+            let (email, token) = load_api_token("sandbox").unwrap();
+            assert_eq!(email, "second@example.com");
+            assert_eq!(token, "second-token");
+
+            cleanup_api_token_profile("sandbox");
+        });
+    }
+
+    /// AC-005 / VP-AUTHDX-004: bounded-generator property tests for the
+    /// round-trip + cross-profile-isolation invariants, against the REAL
+    /// keychain backend (no in-process double is usable here — the
+    /// `keyring` crate's `mock` backend has zero identity-based persistence
+    /// across separate `Entry::new()` calls, which is exactly how
+    /// `store_api_token`/`load_api_token` construct their entries, so a
+    /// mock can't stand in for a real store-then-load round trip). Each
+    /// case runs through `with_test_keyring`, so it no-ops (trivially
+    /// passes) unless `JR_RUN_KEYRING_TESTS=1` is set — kept `#[ignore]`d
+    /// too, for the same belt-and-suspenders reason the other gated tests
+    /// in this module are. Case count is kept small (12) since every case
+    /// performs real keychain I/O.
+    mod percred_proptests {
+        use super::{load_api_token, store_api_token, with_test_keyring};
+        use proptest::prelude::*;
+
+        fn profile_strategy() -> impl Strategy<Value = String> {
+            "[a-z][a-z0-9]{2,9}"
+        }
+
+        fn email_strategy() -> impl Strategy<Value = String> {
+            "[a-z]{1,10}@[a-z]{1,10}\\.[a-z]{2,4}"
+        }
+
+        fn token_strategy() -> impl Strategy<Value = String> {
+            "[A-Za-z0-9]{8,32}"
+        }
+
+        proptest! {
+            #![proptest_config(ProptestConfig { cases: 12, .. ProptestConfig::default() })]
+
+            /// AC-005(a): for any profile and any valid-shaped (email, token),
+            /// `store_api_token` then `load_api_token` returns exactly
+            /// `(email, token)`.
+            /// AC-005(b): for any two distinct profiles p1 != p2, after
+            /// `store_api_token(p1, e1, t1)`, `load_api_token(p2)` never
+            /// returns `(e1, t1)` nor any component of it.
+            #[test]
+            #[ignore = "requires keyring backend; set JR_RUN_KEYRING_TESTS=1 to run"]
+            fn prop_bc_1_4_031_round_trip_and_cross_profile_isolation(
+                p1 in profile_strategy(),
+                p2 in profile_strategy(),
+                email in email_strategy(),
+                token in token_strategy(),
+            ) {
+                prop_assume!(p1 != p2);
+
+                with_test_keyring(|| {
+                    store_api_token(&p1, &email, &token).unwrap();
+
+                    // (a) round-trip.
+                    let (got_email, got_token) = load_api_token(&p1).unwrap();
+                    assert_eq!(got_email, email);
+                    assert_eq!(got_token, token);
+
+                    // (b) cross-profile isolation: p2 was never written to,
+                    // so it must not see p1's pair (nor any component of it).
+                    match load_api_token(&p2) {
+                        Err(_) => {} // expected: p2 has no stored credential
+                        Ok((e2, t2)) => {
+                            assert_ne!(e2, email, "p2 must not see p1's email");
+                            assert_ne!(t2, token, "p2 must not see p1's token");
+                        }
+                    }
+
+                    super::cleanup_api_token_profile(&p1);
+                });
+            }
+        }
     }
 
     /// SEC-JR-SERVICE-NAME-GATE behavioral regression: proves that debug builds
