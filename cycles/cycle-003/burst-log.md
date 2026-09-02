@@ -7,7 +7,7 @@ producer: state-manager
 timestamp: 2026-09-01T15:30:00Z
 cycle: "cycle-003"
 inputs: [STATE.md]
-input-hash: "ce28c9c"
+input-hash: "e9c4050"
 traces_to: STATE.md
 ---
 
@@ -287,6 +287,61 @@ No BCs/VPs/holdouts added or removed — 719 BCs / 32 VPs / 106 holdouts unchang
 - cycles/cycle-003/session-checkpoints.md
 
 **Dim-2 Attestation:** `scripts/check-bc-cumulative-counts.sh` — expected PASS this burst (no BC count change; re-verified as part of wrap Step 6).
+
+**Dim-5 Attestation:** N/A — no binary/WASM artifact produced by this burst.
+
+**Dim-6 Attestation:** N/A — no source code changed this burst (`.factory/` artifact bookkeeping only; `src/` untouched per instruction).
+
+**Dim-7 Attestation:** N/A — no test-affecting change this burst; full regression remains PASS (4660/0/106) as of the cycle-002 F7 delta-convergence pass, unchanged.
+
+## Burst: Burst 6 — Adversary pass-4 (convergence check) re-run fresh, COMPLETED CLEAN — F2 delta CONVERGED (2026-09-01)
+
+**Parent-commit:** `87f17aff` (`develop` tip; unchanged this burst — spec-only, no `develop`-side commit).
+
+**Trigger:** the prior burst's `/wrap` left adversary pass-4 (the F2-gate convergence check) recorded as "IN-FLIGHT and ABANDONED... must be RE-RUN in full on resume." A subsequent attempt to run that re-run itself died mid-run before this burst started, persisting NOTHING — verified before starting this burst: STATE.md was still at v3.35/`pipeline: PAUSED`, with no new factory-artifacts commit since `dc1cf35b`. This burst re-runs pass-4 fresh (idempotent — not a resume of either dead attempt) against the fully-reconciled F2-gate package (bc-1, bc-6, ADR-0020, architecture-delta, adr-0011-amendment-staged, and the STATE Decisions Log DEC-312..327).
+
+**Actions taken:**
+1. **Verified worktree preconditions and prior-attempt state:** `.factory/.git` marker present, `git -C .factory rev-parse --git-dir` succeeds, `git -C .factory branch --show-current` == `factory-artifacts`; confirmed HEAD was still `dc1cf35b` and STATE.md still read v3.35/PAUSED before this burst began — the dead re-run attempt left no trace to build on.
+2. **Ran adversary pass-4 (convergence check) fresh** against all six reviewed documents: `specs/prd/bc-1-auth-identity.md`, `specs/prd/bc-6-config-cache.md`, `specs/architecture/decisions/ADR-0020-per-profile-credential-ownership-env-tagging-and-oauth-default-at-creation.md`, `cycles/cycle-003/phase-f2-spec-evolution/architecture-delta.md`, `cycles/cycle-003/phase-f2-spec-evolution/adr-0011-amendment-staged.md`, and STATE.md's Decisions Log entries DEC-312 through DEC-327. **Result: CLEAN — 0 CRITICAL, 0 HIGH, 0 material-MED findings.** Two LOW findings surfaced, both non-blocking:
+   - **F-1 (LOW):** BC-1.2.051 Invariant 2(b) characterizes EC-1.1.013-2's clear-ordering more strongly ("once the write has a confirmed value") than EC-1.1.013-2 itself states ("before or alongside"). Wording-alignment only, no behavioral ambiguity.
+   - **F-2 (LOW):** ADR-0020 §Decision 7 calls api-token `auth logout` a "no-op" without noting BC-1.2.013's F2-gate upgrade to an informational stderr notice (exit 0 unchanged). Doc-completeness only.
+3. **The F2 delta has CONVERGED** — no further adversary pass is required before the human F2 approval gate. Convergence trajectory: pass-1 (major, incl. CRITICAL C-1) → pass-2 (2 HIGH + 3 MED seams) → pass-3 (1 HIGH + 2 MED BC→architecture-doc propagation gaps) → pass-4 (CLEAN).
+4. **Recorded F-1 and F-2** as new LOW, non-blocking Drift/Standing Items — sweep opportunistic before/during F3, not gating.
+5. STATE.md refreshed via one full-content Write (v3.35 → v3.36): `pipeline` stays `PAUSED`, `phase` stays `F2` (this burst corrects the record, it does not advance past the human gate); `current_step`/`cycle_003_status` updated to record pass-4 CLEAN / F2 CONVERGED; Phase Progress row added (F2-GATE-PASS4-CONVERGED); Current Phase Steps row added (oldest row, "BC delta landed", dropped to keep the last-5 window); Convergence Status / Concurrent Cycles / Constraints Carried Forward paragraphs updated to reflect CONVERGED status; Skip Log row for the (now-superseded) "deferred pass-4" framing removed; Session Resume Checkpoint replaced (prior v3.35 checkpoint archived to `cycles/cycle-003/session-checkpoints.md`).
+6. **Did NOT touch `src/`, `regression-state.json`, or `sidecar-learning.md`** — bookkeeping-only burst, per standing instruction; the latter two are pre-existing uncommitted modifications unrelated to cycle-003 work.
+
+**Adversary verdict:** Pass-4 (convergence check) — **CLEAN**. 0 CRITICAL/HIGH/material-MED across all six reviewed documents. 2 LOW findings (F-1, F-2), both non-blocking, recorded to Drift/Standing Items.
+
+**Outcome:** cycle-003 (`auth-profile-dx`) Phase F2 (spec evolution) adversarial convergence loop is **CONVERGED**. BC count unchanged at 733, VP count unchanged at 41, holdouts unchanged at 106. The human F2 approval gate is now the sole remaining step before Phase F3 (incremental stories) can be dispatched. Pipeline remains **PAUSED** pending that gate.
+
+**NEXT:** present the F2 human approval gate (spec package: BC delta, ADR-0011 amendment (staged), ADR-0020, 4-pass adversarial convergence record). On approval, dispatch Phase F3 (incremental stories) against the ~10 preliminary F3 story candidates from the F1 delta analysis. Sweep F-1/F-2 opportunistically before/during F3.
+
+**Codifications:** none new this burst — pass-4 is read-only by design; no spec-body content changed. F-1 and F-2 are tracked as Drift/Standing Items, not yet fixed.
+
+**Closes:** the adversary pass-4 convergence check (CLEAN) — the F2-gate adversarial convergence loop opened at Burst 3/4 is now CONVERGED. Does NOT close: the human F2 gate itself (still pending presentation), F-1/F-2 (tracked, not fixed), the staged ADR-0011 amendment (still pending F4 application), or any pre-existing Drift/Standing item.
+
+### Counts reconciled this burst
+
+- BCs: 733 (unchanged — pass-4 is a read-only convergence check, no BC content added/removed).
+- VPs: 41 (unchanged).
+- Holdout scenarios: 106 (unchanged).
+- `total_stories`: unchanged at 161.
+- `total_nfrs`: unchanged at 42.
+- DEC IDs: unchanged at 327 (no new decisions this burst — F-1/F-2 are adversary findings, not human decisions).
+
+### Details
+
+| Agent | Task | Output |
+|-------|------|--------|
+| state-manager | Verify worktree preconditions and confirm the prior wrap-time pass-4 attempt persisted nothing; re-run adversary pass-4 (convergence check) fresh against the six-document F2-gate package; record the CLEAN result and 2 new LOW Drift/Standing items (F-1, F-2) in STATE.md (frontmatter, Phase Progress + Current Phase Steps rows, Convergence Status/Concurrent Cycles/Constraints paragraphs, Session Resume Checkpoint); archive the prior checkpoint; verify `scripts/check-bc-cumulative-counts.sh` green at 733; commit + push to factory-artifacts | `STATE.md`; `cycles/cycle-003/burst-log.md` (this file); `cycles/cycle-003/session-checkpoints.md` |
+
+**Files touched (Dim-1): 3 unique files this burst (all committed in the state-manager's own bookkeeping commit — no spec-body files touched, pass-4 is read-only)**
+
+- STATE.md
+- cycles/cycle-003/burst-log.md
+- cycles/cycle-003/session-checkpoints.md
+
+**Dim-2 Attestation:** `scripts/check-bc-cumulative-counts.sh` — expected PASS this burst (no BC count change; re-verified as part of this burst's close-out).
 
 **Dim-5 Attestation:** N/A — no binary/WASM artifact produced by this burst.
 

@@ -7,7 +7,7 @@ producer: state-manager
 timestamp: 2026-09-01T15:30:00Z
 cycle: "cycle-003"
 inputs: [STATE.md]
-input-hash: "ce28c9c"
+input-hash: "e9c4050"
 traces_to: STATE.md
 ---
 
@@ -274,7 +274,52 @@ cycle-001 CLOSED-position checkpoint (v3.05) remains archived at
 cycles/cycle-001/session-checkpoints.md.
 ```
 
-**Superseded by:** v3.35 (SESSION-WRAP / PAUSED -- F2-gate pass-3 propagation fixes committed, commit `8fe5d78f`; adversary pass-4 convergence check IN-FLIGHT and ABANDONED mid-review by a human-requested `/wrap`, must be re-run on resume; pipeline PAUSED), 2026-09-01, live in STATE.md.
+**Superseded by:** v3.35 (SESSION-WRAP / PAUSED -- F2-gate pass-3 propagation fixes committed, commit `8fe5d78f`; adversary pass-4 convergence check IN-FLIGHT and ABANDONED mid-review by a human-requested `/wrap`, must be re-run on resume; pipeline PAUSED), 2026-09-01, archived below.
+
+---
+
+## Session Resume Checkpoint (2026-09-01) — v3.35, SESSION-WRAP / PAUSED, adversary pass-4 IN-FLIGHT and ABANDONED (superseded — that pass-4 attempt persisted nothing)
+
+### Spec Versions
+
+| Artifact | Version |
+|----------|---------|
+| STATE.md | v3.35 |
+| BC-INDEX | 733 BCs / 41 VPs / 106 holdouts (unchanged this checkpoint) |
+
+**Date:** 2026-09-01. **Position:** cycle-003 (`auth-profile-dx`) F1 delta-analysis APPROVED, Phase F2 (spec evolution) AUTHORING COMPLETE then F2-GATE FIX ROUND COMPLETE, then adversary pass-3 (arch-doc propagation fixes) committed as `8fe5d78f`. Adversary pass-4 (convergence check) was IN-FLIGHT and ABANDONED mid-review by a human-requested `/wrap`. `develop` @ `87f17aff` (unchanged -- no code touched yet). cycle-001 and cycle-002 remain CLOSED, historical, unaltered by this burst. **Pipeline is PAUSED** by this human-requested SESSION-WRAP.
+
+```
+This burst (SESSION-WRAP): human requested `/wrap` mid-session while adversary pass-4 (the
+F2-gate convergence check following Burst 4's pass-1/pass-2 fixes) was in flight. The
+architect had already produced pass-3 fixes (BC-to-architecture-doc propagation gaps found
+between pass-2's fix round and pass-4) but they were sitting uncommitted in the `.factory`
+worktree when the wrap was requested. Committed the architect's F2-gate pass-3 propagation
+fixes (explicit paths, no `git add -A`) as commit `8fe5d78f`: ADR-0020, architecture-delta.md,
+adr-0011-amendment-staged.md -- closing pass-3's HIGH-1 (env-var trigger, DEC-327,
+propagated into the architecture doc), MED-2 (newtype-scope clarifying note), and MED-3
+("relogin-then-replace" terminology fix). ABANDONED adversary pass-4 mid-review -- it is
+READ-ONLY (produces no artifacts) and had made no persisted progress at the point of the
+wrap request; recorded as MUST BE RE-RUN IN FULL on resume. STATE.md refreshed via one
+full-content Write (v3.34 -> v3.35): `pipeline: ACTIVE` -> `PAUSED`; timestamp refreshed;
+current_step/cycle_003_status updated; Session Resume Checkpoint replaced (prior v3.34
+checkpoint archived above); Current Phase Steps row added. Did NOT touch `src/`.
+
+In-flight: adversary pass-4 (convergence check) -- ABANDONED, no persisted progress, MUST
+be re-run in full on resume. The human F2 gate has NOT yet been presented. Two
+pre-existing dirty files carried forward untouched: regression-state.json,
+sidecar-learning.md (dirty since session start; not cycle-003 work).
+
+NEXT on resume: re-run adversary pass-4 (convergence check) against the fully-reconciled
+F2-gate package; on a clean pass, present the F2 human approval gate; on approval, dispatch
+Phase F3 (incremental stories).
+
+Resume command: /vsdd-factory:next-step.
+```
+
+**CORRECTION (recorded at v3.36, 2026-09-01):** a subsequent attempt to act on this checkpoint's "MUST BE RE-RUN IN FULL on resume" instruction itself died mid-run before producing any persisted progress -- verified at the start of the v3.36 burst: STATE.md was still exactly this v3.35 content (`pipeline: PAUSED`), with no new factory-artifacts commit since `dc1cf35b`. The v3.36 burst re-ran adversary pass-4 fresh (idempotent, not a resume of either dead attempt) and it returned **CLEAN** -- 0 CRITICAL/HIGH/material-MED across all six reviewed documents. **The F2 delta has CONVERGED** as of v3.36. This checkpoint's "IN-FLIGHT and ABANDONED... must be RE-RUN" framing is now historical only -- see the v3.36 checkpoint below for the corrected, current position.
+
+**Superseded by:** v3.36 (adversary pass-4 re-run fresh, COMPLETED CLEAN -- F2 delta CONVERGED; pipeline remains PAUSED pending the human F2 approval gate), 2026-09-01, live in STATE.md.
 
 ---
 
