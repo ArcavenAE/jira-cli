@@ -2,6 +2,20 @@ use anyhow::Result;
 
 use crate::output;
 
+/// Render a profile's `env` tag for the `auth list` table's `ENV` column
+/// (BC-1.6.046 EC-1.6.046-1): `None` -> `-` placeholder; `Some(s)` -> the
+/// shared `output::sanitize_env_display` transform (`Some("")` renders as a
+/// blank cell — zero visible characters — never the `-` placeholder; the
+/// two are NOT conflated). Shares the sanitizer with `auth status`'s text
+/// `env` line (`status.rs`) — see BC-1.6.046 Ownership clause / BC-1.6.047
+/// EC-1.6.047-3: "one shared sanitizer, two call sites."
+pub(crate) fn render_env_column(env: Option<&str>) -> String {
+    match env {
+        None => "-".to_string(),
+        Some(s) => crate::output::sanitize_env_display(s),
+    }
+}
+
 /// Render the table-form output of `jr auth list`. The active profile is
 /// marked with a leading `*`; others get a leading space so column widths
 /// stay stable across rows. Status today is a coarse "do we have a URL on
@@ -24,11 +38,12 @@ pub(crate) fn render_list_table(global: &crate::config::GlobalConfig, active: &s
         rows.push(vec![
             format!("{marker} {name}"),
             url.to_string(),
+            render_env_column(p.env.as_deref()),
             auth.to_string(),
             status.to_string(),
         ]);
     }
-    crate::output::render_table(&["NAME", "URL", "AUTH", "STATUS"], &rows)
+    crate::output::render_table(&["NAME", "URL", "ENV", "AUTH", "STATUS"], &rows)
 }
 
 /// Render the `--output json` form of `jr auth list`: an array of profile
@@ -44,6 +59,7 @@ pub(crate) fn render_list_json(
             serde_json::json!({
                 "name": name,
                 "url": &p.url,
+                "env": &p.env,
                 "auth_method": &p.auth_method,
                 "status": if p.url.is_some() { "configured" } else { "unset" },
                 "active": name == active,
