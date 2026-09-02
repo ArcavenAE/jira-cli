@@ -7,7 +7,7 @@ producer: state-manager
 timestamp: 2026-09-01T15:30:00Z
 cycle: "cycle-003"
 inputs: [STATE.md]
-input-hash: "e9c4050"
+input-hash: "c74fac3"
 traces_to: STATE.md
 ---
 
@@ -403,5 +403,88 @@ No BCs/VPs/holdouts added or removed — 719 BCs / 32 VPs / 106 holdouts unchang
 **Dim-5 Attestation:** N/A — no binary/WASM artifact produced by this burst.
 
 **Dim-6 Attestation:** N/A — no source code changed this burst (`.factory/` artifact bookkeeping + spec-file wording/citation fixes only; `src/` untouched per instruction).
+
+**Dim-7 Attestation:** N/A — no test-affecting change this burst; full regression remains PASS (4660/0/106) as of the cycle-002 F7 delta-convergence pass, unchanged.
+
+
+## Burst: Burst 8 — F3 story decomposition AUTHORED + INTEGRATED + fresh-context consistency audit SOUND; F3 human approval gate PENDING presentation (2026-09-01)
+
+**Parent-commit:** `87f17aff` (`develop` tip; unchanged this burst — spec-only, no `develop`-side commit).
+
+**Trigger:** Burst 7 closed F2 (human-approved, DEC-328) and advanced the pipeline to F3 (incremental stories), ACTIVE. This burst is the F3 story-decomposition dispatch itself — MANIFEST → CREATE → INTEGRATE sub-bursts, followed by a fresh-context consistency audit and a pre-gate governance fix, all landing in one commit per the Single-Commit Burst Protocol.
+
+**Actions taken:**
+1. **MANIFEST:** `decomposition-manifest.md` authored — proposes 7 stories (renaming F1's preliminary `S-cycle3-percred-migration` to `S-cycle3-credential-absence-guard` per DEC-326's no-copy redesign), a BC coverage matrix (**24/24 BCs — 14 new + 10 amended — assigned to exactly one story, zero duplicates, zero orphans**), and a VP coverage matrix (**9/9 VPs — VP-AUTHDX-001..009 — assigned, zero orphaned**).
+2. **CREATE:** 7 per-story files written under `cycles/cycle-003/phase-f3-stories/`: `S-cycle3-env-tag` (5 pts), `S-cycle3-percred-storage` (8 pts), `S-cycle3-credential-absence-guard` (8 pts, P0, HIGH-risk, cycle's only MANDATORY keyring-gated VP), `S-cycle3-remove-logout-semantics` (5 pts), `S-cycle3-adr0011-newtype` (13 pts, widest file footprint — applies the staged ADR-0011 amendment), `S-cycle3-oauth-default-creation` (13 pts, P0), `S-cycle3-chosen-flow-reconcile` (5 pts, terminal). **57 points total.**
+3. **INTEGRATE:** three sub-artifacts authored:
+   - `dependency-graph-extended.md` — 7-node subgraph verified **ACYCLIC** by exhaustive Kahn's-algorithm trace (every node reaches in-degree 0 and is dequeued exactly once); the combined 168-node graph (7 new + 161 existing) is also **ACYCLIC** by disjoint-union argument (zero edges cross the boundary — grep-confirmed against all 161 existing `STORY-INDEX.md` stories). Confirms the **`S-cycle3-oauth-default-creation` → `S-cycle3-remove-logout-semantics` dependency edge** (story-6 depends on story-4, alongside its edges to story-2/story-3) — this edge was added by orchestrator decision during dispatch and is now load-bearing in the topology, not merely proposed.
+   - `wave-schedule.md` — 5-wave Kahn-layering schedule: **Wave 1** {`S-cycle3-env-tag`, `S-cycle3-percred-storage`} parallel (13 pts), **Wave 2** {`S-cycle3-credential-absence-guard`} (8 pts), **Wave 3** {`S-cycle3-remove-logout-semantics`} (5 pts), **Wave 4** {`S-cycle3-adr0011-newtype`, `S-cycle3-oauth-default-creation`} parallel — no dependency edge between them, recommended intra-wave order `adr0011-newtype` first (26 pts, heaviest wave), **Wave 5** {`S-cycle3-chosen-flow-reconcile`} (5 pts). **Critical path: `percred-storage` → `credential-absence-guard` → `remove-logout-semantics` → `oauth-default-creation` → `chosen-flow-reconcile` = 5 stories / 5 waves, 39 points** (`env-tag` and `adr0011-newtype` are off the critical path). Wave-point total (57) matches the manifest's own estimate exactly, zero drift.
+   - `conflict-report.md` — checked the 7 new stories against in-flight/existing work: **`S-663-1`** (auth switch guard) CONFIRMED no conflict (merged + file-disjoint); **`S-384`** (JSM 401 hints) CONFIRMED, refined — de facto already merged (`is_oauth_auth()` present in `src/api/client.rs` on `develop`; the story file's own `status: ready` frontmatter is stale, unrelated pre-existing drift, out of scope to fix here); **`S-MAINT-532`** (global `--profile` fallback coverage) CONFIRMED, refined per binding dispatch instruction — recorded as **explicitly-deferred, non-conflicting, deliberately NOT folded into cycle-003's scope**, superseding the manifest's own tentative folding recommendation. **No blocking conflict found.** 5 wave-holdout-scenario files also authored (30 scenarios total across Waves 1-5).
+4. **Fresh-context consistency audit — verdict SOUND.** Three findings, all fixed this same burst (no separate remediation burst needed):
+   - **F3-audit F-1 (governance fix, most significant):** all 7 story files' `status:` frontmatter was found still reading `ready` (a leftover from an earlier draft-manifest assumption) despite the F3 human approval gate not yet having been presented — per this cycle's own governance discipline (mirrors the F2 gate's "no artifact claims a status its gate hasn't granted" rule), all 7 were corrected to `status: draft`, and each story's row in `STORY-INDEX.md` was verified to already read `status: draft (PENDING F3 human approval gate)` (it did — the row table was authored correctly; only the individual story-file frontmatter needed the fix).
+   - **F3-audit F-2 (manifest wave pointer):** `decomposition-manifest.md` cross-referenced a wave assignment that predated the final `wave-schedule.md` layering; corrected to point at the actual, INTEGRATE-confirmed wave numbers.
+   - **F3-audit F-3 (blocks-convention note):** `dependency-graph-extended.md` §1 already carries the governing convention note ("`depends_on:` is the authoritative graph EDGE set... `blocks:` is informational/TRANSITIVE reachability only and MUST NOT be treated as the edge set") — the audit confirmed this note was present and accurate against the actual story frontmatter (specifically the C-row case where `credential-absence-guard`'s `blocks:` over-states a transitive reach to `chosen-flow-reconcile`); no correction needed beyond confirming the note is not stale.
+5. **STORY-INDEX.md pre-gate reconciliation:** the INTEGRATE sub-burst's own `last_updated` header line originally read "7 new READY stories... each story file's own `status:` frontmatter already reads `ready`" — internally contradicted by the F3-audit F-1 fix above (and by the row table beneath it, which already correctly said `draft`). Corrected in place this burst (one bracketed annotation + word-swap, not a rewrite) to read "7 new DRAFT stories" with an explicit note dating the correction and pointing at the F-1 governance fix, so the header text and the row table now agree.
+6. **Two items explicitly carried forward for the F3 human gate**, not resolved by this burst (per instruction — no F3-approval decision is invented here):
+   - (a) **`S-MAINT-532` deliberately kept OUT of cycle-003 scope** — the conflict-report's disposition reflects the orchestrator's conservative default (do not silently fold an unrelated draft story's scope into this cycle without explicit sign-off); pending human ratification at the F3 gate.
+   - (b) **The `S-cycle3-oauth-default-creation` → `S-cycle3-remove-logout-semantics` dependency edge** was added by orchestrator decision during dispatch (not derived solely from the story files' own independent authoring) — flagged for the human's awareness at the gate, since it shapes both the critical path and Wave 4's composition.
+7. **Re-ran both count guards:** `scripts/check-bc-cumulative-counts.sh` → `OK: all cumulative BC counts verified (733 total across 9 files...)`; `scripts/check-spec-counts.sh` → `Check passed: 8 bc files validated`. Both exit 0 — F3 story authoring adds zero new BCs/VPs (it consumes the 24 BCs/9 VPs F2 already landed); counts unchanged (733/41/106).
+8. STATE.md refreshed via one full-content Write (v3.37 → v3.38): frontmatter `phase` stays **F3**, `pipeline` stays **ACTIVE**; `current_step`/`cycle_003_status` updated to record F3 AUTHORED + INTEGRATED + consistency-audit SOUND, F3 human approval gate PENDING presentation; new Phase Progress row (F3-STORY-DECOMPOSITION, AUTHORING COMPLETE / gate PENDING); Current Phase Steps refreshed (last 5: manifest → create → integrate → consistency-audit-SOUND-plus-pre-gate-fix → committed, F3 human gate NEXT); Convergence Status / Concurrent Cycles updated to reflect F3 authored, awaiting gate; Drift/Standing Items gained the F3-audit F-2/F-3 resolved note plus a new out-of-cycle-003-scope residual (`STORY-INDEX.md`'s pre-existing grep-count discrepancy, 165 unique `S-*` IDs vs. `total_stories: 168`, flagged for future reconciliation, not fixed here); Session Resume Checkpoint replaced (prior v3.37 checkpoint archived to `cycles/cycle-003/session-checkpoints.md`). No new DEC recorded — F3 has not been approved; inventing an approval decision here would be a governance violation.
+9. **Did NOT touch `src/`, `regression-state.json`, or `sidecar-learning.md`** — the latter two are pre-existing uncommitted modifications unrelated to cycle-003 work, left dirty per standing instruction; not staged, not committed.
+
+**Adversary verdict:** N/A this burst — the "fresh-context consistency audit" run here is a governance/traceability check (story-status vs. gate-state consistency), not an adversarial spec-defect review; no CRITICAL/HIGH/MED/LOW severity taxonomy applies. Verdict: **SOUND**, with the 3 findings above (F-1 governance fix, F-2, F-3) all fixed in the same burst.
+
+**Outcome:** cycle-003 (`auth-profile-dx`) Phase **F3 (incremental stories) is AUTHORED and VALIDATED — NOT yet human-approved.** 7 stories, all `status: draft`, 24/24 BCs + 9/9 VPs covered exactly-once, dependency graph ACYCLIC (7-node and combined 168-node), 5-wave schedule (57 total pts / 39-pt critical path), zero blocking conflicts against existing/in-flight work. Pipeline stays **ACTIVE**; phase stays **F3**. The **F3 human approval gate is the immediate next activity** — pipeline is paused for that presentation on the next orchestrator turn.
+
+**NEXT:** present the F3 human approval gate (story package: 7 stories + BC/VP coverage matrices, dependency graph + acyclicity proof, wave schedule + critical path, conflict report, wave holdout scenarios). On approval, dispatch Phase F4 (delta implementation) starting with Wave 1 (`S-cycle3-env-tag` + `S-cycle3-percred-storage`, parallel). At the gate, the human should explicitly ratify or override the two carried-forward items in Actions Taken step 6 (S-MAINT-532 scope exclusion; the oauth-default-creation → remove-logout-semantics dependency edge).
+
+**Codifications:** none new this burst — F3 authoring is a planning-and-validation pass; no BC/VP content added or changed (F2 already landed the 24 BCs/9 VPs this burst's stories consume). The F3-audit F-1/F-2/F-3 fixes and the STORY-INDEX.md header reconciliation are governance/consistency corrections to already-authored F3 artifacts, not spec changes.
+
+**Closes:** the F3 MANIFEST/CREATE/INTEGRATE sub-bursts (all COMPLETE); the fresh-context consistency audit (SOUND, 3/3 findings fixed). **Does NOT close:** the F3 human approval gate itself (still pending presentation), the staged ADR-0011 amendment (still pending F4 application via `S-cycle3-adr0011-newtype`), the `S-MAINT-532` scope question (pending human ratification), or any pre-existing Drift/Standing item.
+
+### Counts reconciled this burst
+
+- BCs: 733 (unchanged — F3 authoring consumes F2's already-landed BC delta, adds no new BCs).
+- VPs: 41 (unchanged — same reasoning; 9 of the 41 are VP-AUTHDX-001..009, all now assigned to a covering story).
+- Holdout scenarios: 106 (unchanged in the master count — the 30 new wave-holdout-scenarios are cycle-003-scoped planning artifacts under `phase-f3-stories/wave-holdout-scenarios/`, not yet merged into the master `holdout-scenarios.md` count; that merge is a Phase F4/wave-gate-time activity, not this burst's).
+- `total_stories`: **161 → 168** (7 new draft stories added to `STORY-INDEX.md`).
+- `total_nfrs`: unchanged at 42.
+- DEC IDs: unchanged at 328 (no new decision this burst — F3 has not been approved).
+
+### Details
+
+| Agent | Task | Output |
+|-------|------|--------|
+| story-writer | MANIFEST (decomposition-manifest.md, BC/VP coverage matrices) → CREATE (7 story files) → INTEGRATE (dependency-graph-extended.md, wave-schedule.md, conflict-report.md, 5 wave-holdout-scenario files) | `cycles/cycle-003/phase-f3-stories/` (13 files) |
+| state-manager | Fresh-context consistency audit (SOUND, F-1/F-2/F-3 fixed); STORY-INDEX.md row/header reconciliation; verify both count guards green; refresh STATE.md (Phase Progress, Current Phase Steps, Convergence Status, Concurrent Cycles, Drift/Standing Items, Session Resume Checkpoint); archive prior checkpoint; commit + push to factory-artifacts (Single-Commit Burst Protocol) | `STATE.md`; `cycles/cycle-003/burst-log.md` (this file); `cycles/cycle-003/session-checkpoints.md`; `stories/STORY-INDEX.md` |
+
+**Files touched (Dim-1): 20 unique files this burst, all committed in the state-manager's own single atomic commit**
+
+- `cycles/cycle-003/phase-f3-stories/decomposition-manifest.md`
+- `cycles/cycle-003/phase-f3-stories/S-cycle3-env-tag.md`
+- `cycles/cycle-003/phase-f3-stories/S-cycle3-percred-storage.md`
+- `cycles/cycle-003/phase-f3-stories/S-cycle3-credential-absence-guard.md`
+- `cycles/cycle-003/phase-f3-stories/S-cycle3-remove-logout-semantics.md`
+- `cycles/cycle-003/phase-f3-stories/S-cycle3-adr0011-newtype.md`
+- `cycles/cycle-003/phase-f3-stories/S-cycle3-oauth-default-creation.md`
+- `cycles/cycle-003/phase-f3-stories/S-cycle3-chosen-flow-reconcile.md`
+- `cycles/cycle-003/phase-f3-stories/dependency-graph-extended.md`
+- `cycles/cycle-003/phase-f3-stories/wave-schedule.md`
+- `cycles/cycle-003/phase-f3-stories/conflict-report.md`
+- `cycles/cycle-003/phase-f3-stories/wave-holdout-scenarios/wave-1-holdout-scenarios.md`
+- `cycles/cycle-003/phase-f3-stories/wave-holdout-scenarios/wave-2-holdout-scenarios.md`
+- `cycles/cycle-003/phase-f3-stories/wave-holdout-scenarios/wave-3-holdout-scenarios.md`
+- `cycles/cycle-003/phase-f3-stories/wave-holdout-scenarios/wave-4-holdout-scenarios.md`
+- `cycles/cycle-003/phase-f3-stories/wave-holdout-scenarios/wave-5-holdout-scenarios.md`
+- `stories/STORY-INDEX.md`
+- `STATE.md`
+- `cycles/cycle-003/burst-log.md`
+- `cycles/cycle-003/session-checkpoints.md`
+
+**Dim-2 Attestation:** `scripts/check-bc-cumulative-counts.sh` — re-run this burst, PASS (`OK: all cumulative BC counts verified (733 total across 9 files...)`). `scripts/check-spec-counts.sh` — re-run this burst, PASS (`Check passed: 8 bc files validated`).
+
+**Dim-5 Attestation:** N/A — no binary/WASM artifact produced by this burst.
+
+**Dim-6 Attestation:** N/A — no source code changed this burst (`.factory/` artifact bookkeeping + planning/story artifacts only; `src/` untouched per instruction).
 
 **Dim-7 Attestation:** N/A — no test-affecting change this burst; full regression remains PASS (4660/0/106) as of the cycle-002 F7 delta-convergence pass, unchanged.

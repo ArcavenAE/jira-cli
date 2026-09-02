@@ -7,7 +7,7 @@ producer: state-manager
 timestamp: 2026-09-01T15:30:00Z
 cycle: "cycle-003"
 inputs: [STATE.md]
-input-hash: "e9c4050"
+input-hash: "c74fac3"
 traces_to: STATE.md
 ---
 
@@ -388,6 +388,67 @@ Resume command: /vsdd-factory:next-step.
 **RESOLVED (recorded at v3.37, 2026-09-01):** the human F2 approval gate was presented and **APPROVED** (DEC-328), directing the 4 LOW residuals (F-1, NEW-1, F-2, L-3) be swept in a dedicated burst before F3 -- all 4 were fixed in that same v3.37 burst. Pipeline transitions PAUSED -> ACTIVE, phase F2 -> F3. This checkpoint's "Pending human decision" / "NEXT on resume" framing is now historical only -- see the v3.37 checkpoint below for the corrected, current position.
 
 **Superseded by:** v3.37 (F2 human gate APPROVED via DEC-328; all 4 LOW residuals swept; phase F2 -> F3, pipeline PAUSED -> ACTIVE), 2026-09-01, live in STATE.md.
+
+---
+
+## Session Resume Checkpoint (2026-09-01) — v3.37, F2 human approval gate APPROVED (DEC-328), all 4 LOW residuals swept, F2 CLOSED, phase F2 -> F3, pipeline PAUSED -> ACTIVE
+
+### Spec Versions
+
+| Artifact | Version |
+|----------|---------|
+| STATE.md | v3.37 |
+| BC-INDEX | 733 BCs / 41 VPs / 106 holdouts (unchanged this checkpoint) |
+
+**Date:** 2026-09-01. **Position:** cycle-003 (`auth-profile-dx`), the F2 human approval gate is APPROVED (DEC-328) and all 4 LOW residuals (F-1, NEW-1, F-2, L-3) are fixed. Phase is F3 (incremental stories); pipeline is ACTIVE. `develop` @ `87f17aff` (unchanged -- no code touched yet, this is spec-only bookkeeping). cycle-001 and cycle-002 remain CLOSED, historical, unaltered by this burst.
+
+```
+Convergence trajectory (counter, CONVERGED -- F2 CLOSED): adversary pass-1 (major -- incl.
+C-1 default-only migration-lockout) -> fixed -> pass-2 (2 HIGH + 3 MED document-seam issues
+H-1/H-2/M-1/M-2/M-3) -> fixed -> pass-3 (1 HIGH env-var-trigger + 2 MED
+newtype-note/terminology, all BC->architecture-doc propagation gaps) -> fixed (committed
+8fe5d78f) -> pass-4 (convergence check) COMPLETED CLEAN: 0 CRITICAL/HIGH/material-MED
+across all six reviewed documents -> F2 human approval gate presented and APPROVED
+(DEC-328) this burst -> all 4 LOW residuals (F-1, NEW-1, F-2, L-3) fixed this same burst.
+F-1 = BC-1.2.051 Invariant 2(b) wording aligned to EC-1.1.013-2's actual "before or
+alongside" characterization. NEW-1 = DEC-326 traceability citation added to
+BC-1.4.032/033 Trace lines and ADR-0020 SS Decision 2. F-2 = ADR-0020 SS Decision 7 note
+added (api-token `auth logout` emits an informational stderr notice per BC-1.2.013, not a
+fully silent no-op). L-3 = F1-report phantom "BC-1.1.017" citation footnoted in
+delta-analysis.md, input-hash refreshed 344ff59->b635a86 (also resolves the single
+cycle-003 STALE drift-check hit).
+
+Committed spec state: unchanged in count from pass-3/pass-4 -- bc-1 = 71 BCs (60
+individually-bodied), bc-6 = 44, grand total = 733 BCs; 41 VPs (VP-AUTHDX-001..009); 106
+holdouts. Both scripts/check-bc-cumulative-counts.sh and scripts/check-spec-counts.sh
+re-verified green after this burst's residual-fix edits. Prior commits: d9b69e61
+(pass-1/2 fixes), 228c4905 (STATE v3.34 + DEC-326/327), 8fe5d78f (pass-3
+propagation-fix commit). This burst's commit carries both the STATE/burst-log/
+session-checkpoints bookkeeping AND the 3 residual-fix spec files (bc-1, ADR-0020,
+delta-analysis.md) -- the first cycle-003 commit since pass-3 to touch spec-body content.
+
+Human decisions already made + recorded: DEC-326 (no-copy api-token migration; supersedes
+DEC-325a), DEC-327 (env-var non-interactive-only OAuth-picker trigger), and DEC-328 (F2
+gate APPROVED; residual-sweep-before-F3 directive). Do NOT re-ask these on resume.
+
+Pending human decision: none for F2 -- the gate is closed. The next human-facing
+checkpoint is whatever gate F3 (incremental stories) itself produces, if any.
+
+NEXT on resume (exact): (1) dispatch Phase F3 story decomposition
+(/vsdd-factory:phase-f3-incremental-stories) against the 10 preliminary story candidates
+enumerated in cycles/cycle-003/phase-f1-delta-analysis/delta-analysis.md SS2 (led by
+env-tag -> per-profile-credential-storage -> no-copy-detect-and-instruct -> ADR-0011
+newtype); (2) note the F4 obligation carried forward: the staged ADR-0011 amendment
+(cycles/cycle-003/phase-f2-spec-evolution/adr-0011-amendment-staged.md) must be applied
+to docs/adr/0011-type-level-profile-fence.md by the F4 newtype story's PR -- this is now
+the only outstanding staged-but-unapplied item from F2.
+
+Resume command: /vsdd-factory:next-step.
+```
+
+**RESOLVED (recorded at v3.38, 2026-09-01):** Phase F3 (incremental stories) was dispatched -- MANIFEST -> CREATE -> INTEGRATE all COMPLETE this burst, producing 7 draft stories, an ACYCLIC dependency graph, a 5-wave schedule (57 pts / 39-pt critical path), and a conflict report finding zero blocking conflicts. A fresh-context consistency audit returned SOUND (3 findings, all fixed in the same burst). Pipeline stays ACTIVE; phase stays F3. This checkpoint's "NEXT on resume" framing (dispatch F3) is now historical only -- see the v3.38 checkpoint in STATE.md for the corrected, current position: the F3 human approval gate is PENDING presentation, NOT yet approved.
+
+**Superseded by:** v3.38 (F3 story decomposition AUTHORED + INTEGRATED, fresh-context consistency audit SOUND, F3 human approval gate PENDING presentation), 2026-09-01, live in STATE.md.
 
 ---
 
