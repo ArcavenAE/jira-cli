@@ -4,7 +4,7 @@ story_id: "S-cycle3-remove-logout-semantics"
 epic_id: "AUTH-PROFILE-DX-1"
 title: "auth remove 4-step delete (reordered) + auth logout non-destructive notice (DEC-322)"
 wave: feature-followup
-status: draft
+status: ready
 intent: feature
 feature_type: feature
 mode: feature

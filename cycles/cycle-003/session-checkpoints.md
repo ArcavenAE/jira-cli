@@ -7,7 +7,7 @@ producer: state-manager
 timestamp: 2026-09-01T15:30:00Z
 cycle: "cycle-003"
 inputs: [STATE.md]
-input-hash: "c74fac3"
+input-hash: "76fc0af"
 traces_to: STATE.md
 ---
 
@@ -449,6 +449,97 @@ Resume command: /vsdd-factory:next-step.
 **RESOLVED (recorded at v3.38, 2026-09-01):** Phase F3 (incremental stories) was dispatched -- MANIFEST -> CREATE -> INTEGRATE all COMPLETE this burst, producing 7 draft stories, an ACYCLIC dependency graph, a 5-wave schedule (57 pts / 39-pt critical path), and a conflict report finding zero blocking conflicts. A fresh-context consistency audit returned SOUND (3 findings, all fixed in the same burst). Pipeline stays ACTIVE; phase stays F3. This checkpoint's "NEXT on resume" framing (dispatch F3) is now historical only -- see the v3.38 checkpoint in STATE.md for the corrected, current position: the F3 human approval gate is PENDING presentation, NOT yet approved.
 
 **Superseded by:** v3.38 (F3 story decomposition AUTHORED + INTEGRATED, fresh-context consistency audit SOUND, F3 human approval gate PENDING presentation), 2026-09-01, live in STATE.md.
+
+---
+
+## Checkpoint v3.38 (2026-09-01) — F3 AUTHORED + INTEGRATED, human approval gate PENDING presentation
+
+```
+Date: 2026-09-01. Position: cycle-003 (auth-profile-dx), Phase F3 (incremental
+stories) is AUTHORED and VALIDATED -- 7 stories, all status: draft. The F3 human
+approval gate has NOT been presented and F3 is NOT approved. develop @ 87f17aff
+(unchanged -- no code touched yet, this is spec-only bookkeeping). cycle-001 and
+cycle-002 remain CLOSED, historical, unaltered by this burst.
+
+F3 story set (7 stories, 57 total pts, 5 waves):
+1. S-cycle3-env-tag (Wave 1, 5 pts, no deps) -- ProfileConfig.env tag +
+   auth list/auth status surfacing.
+2. S-cycle3-percred-storage (Wave 1, 8 pts, no deps) -- per-profile API-token
+   keychain storage (store_api_token/load_api_token).
+3. S-cycle3-credential-absence-guard (Wave 2, 8 pts, P0, HIGH-risk,
+   depends_on:[2]) -- no-copy detect-and-instruct guard (DEC-326 redesign);
+   cycle's only MANDATORY keyring-gated VP.
+4. S-cycle3-remove-logout-semantics (Wave 3, 5 pts, depends_on:[2,3]) -- auth
+   remove 4-step delete reorder + non-destructive auth logout notice.
+5. S-cycle3-adr0011-newtype (Wave 4, 13 pts, depends_on:[2,3,4]) --
+   Profile(String) newtype, ~60-80 call sites, applies the staged ADR-0011
+   amendment to docs/adr/.
+6. S-cycle3-oauth-default-creation (Wave 4, 13 pts, P0, depends_on:[2,3,4]) --
+   OAuth-default-at-creation picker + BC-1.1.016 airtight non-interactive guard;
+   shares Wave 4 with story 5 (no dependency edge between them, recommended
+   order: 5 then 6).
+7. S-cycle3-chosen-flow-reconcile (Wave 5, 5 pts, terminal, depends_on:[6]) --
+   removes chosen_flow_for_profile's per-command override entirely.
+
+Critical path: percred-storage(2) -> credential-absence-guard(3) ->
+remove-logout-semantics(4) -> oauth-default-creation(6) ->
+chosen-flow-reconcile(7) = 5 stories / 5 waves, 39 points. env-tag(1) and
+adr0011-newtype(5) are off the critical path.
+
+Two items carried forward for the F3 human gate (NOT decided by the
+orchestrator unilaterally):
+- (a) S-MAINT-532 (global --profile fallback coverage, draft, test-only)
+  deliberately kept OUT of cycle-003 scope -- orchestrator's conservative
+  default, superseding the manifest's own tentative folding recommendation.
+  Pending human ratification at the gate.
+- (b) The S-cycle3-oauth-default-creation -> S-cycle3-remove-logout-semantics
+  dependency edge (story 6 depends on story 4) was added by orchestrator
+  decision during dispatch, not solely derived from independent story
+  authoring -- shapes both the critical path and Wave 4's composition.
+  Flagged for human awareness/ratification.
+
+Convergence trajectory (counter, F2 CLOSED, F3 AUTHORED-not-approved): ... ->
+F2 human approval gate presented and APPROVED (DEC-328) -> all 4 LOW residuals
+(F-1, NEW-1, F-2, L-3) fixed -> F3 MANIFEST -> CREATE -> INTEGRATE all COMPLETE
+this burst -> fresh-context consistency audit SOUND (F3-audit F-1 governance
+fix, F-2 manifest wave-pointer fix, F-3 blocks-convention note confirmed --
+all 3 fixed this same burst) -> F3 human approval gate PENDING presentation.
+
+Committed spec state: unchanged in BC/VP/holdout count from the F2-gate-approval
+burst -- bc-1 = 71 BCs (60 individually-bodied), bc-6 = 44, grand total = 733
+BCs; 41 VPs (VP-AUTHDX-001..009, all 9 now assigned to a covering F3 story);
+106 holdouts (master count; the 30 new wave-holdout-scenarios are cycle-003
+-scoped planning artifacts, not yet merged into the master count -- that merge
+is an F4/wave-gate-time activity). total_stories: 161 -> 168 (7 new draft
+stories). Both scripts/check-bc-cumulative-counts.sh and
+scripts/check-spec-counts.sh re-verified green after this burst.
+
+Human decisions already made + recorded: DEC-326 (no-copy api-token migration;
+supersedes DEC-325a), DEC-327 (env-var non-interactive-only OAuth-picker
+trigger), and DEC-328 (F2 gate APPROVED; residual-sweep-before-F3 directive).
+Do NOT re-ask these on resume.
+
+Pending human decision: the F3 human approval gate -- the story package (7
+stories + BC/VP coverage matrices, dependency graph + acyclicity proof, wave
+schedule + critical path, conflict report, wave holdout scenarios) has NOT
+yet been presented. At the gate, the human should also explicitly ratify or
+override the two carried-forward items above (S-MAINT-532 scope exclusion;
+the oauth-default-creation -> remove-logout-semantics dependency edge).
+
+NEXT on resume (exact): (1) present the F3 human approval gate; (2) on
+approval, dispatch Phase F4 (delta implementation) starting with Wave 1
+(S-cycle3-env-tag + S-cycle3-percred-storage, parallel); (3) note the F4
+obligation carried forward: the staged ADR-0011 amendment
+(cycles/cycle-003/phase-f2-spec-evolution/adr-0011-amendment-staged.md) must
+be applied to docs/adr/0011-type-level-profile-fence.md by
+S-cycle3-adr0011-newtype's (Wave 4) implementation PR.
+
+Resume command: /vsdd-factory:next-step.
+```
+
+**RESOLVED (recorded at v3.39, 2026-09-01):** the F3 human approval gate was presented and returned **APPROVED (DEC-329)**. All 7 stories flipped `status: draft` -> `status: ready`; both carried-forward items were ratified, not left open (the oauth-default-creation -> remove-logout-semantics dependency edge stands; S-MAINT-532 confirmed out of cycle-003 scope). Phase advances F3 -> F4; pipeline stays ACTIVE. This checkpoint's "NEXT on resume" framing (present the F3 gate) is now historical only -- see the v3.39 checkpoint in STATE.md for the corrected, current position: Phase F4 (delta implementation) is ACTIVE, Wave 1 (env-tag + percred-storage) is the next dispatch.
+
+**Superseded by:** v3.39 (F3 human approval gate APPROVED (DEC-329), all 7 stories ready, phase F3 -> F4, F4 delta-implementation ACTIVE), 2026-09-01, live in STATE.md.
 
 ---
 

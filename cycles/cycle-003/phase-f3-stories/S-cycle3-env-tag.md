@@ -4,7 +4,7 @@ story_id: "S-cycle3-env-tag"
 epic_id: "AUTH-PROFILE-DX-1"
 title: "Add ProfileConfig.env tag + surface in auth list/auth status (DEC-314/DEC-324)"
 wave: feature-followup
-status: draft
+status: ready
 intent: feature
 feature_type: feature
 mode: feature

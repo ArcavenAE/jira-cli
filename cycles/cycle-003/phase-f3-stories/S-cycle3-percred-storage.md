@@ -4,7 +4,7 @@ story_id: "S-cycle3-percred-storage"
 epic_id: "AUTH-PROFILE-DX-1"
 title: "Per-profile API-token keychain storage: store_api_token/load_api_token (DEC-315)"
 wave: feature-followup
-status: draft
+status: ready
 intent: feature
 feature_type: feature
 mode: feature

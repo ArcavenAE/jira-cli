@@ -4,7 +4,7 @@ story_id: "S-cycle3-credential-absence-guard"
 epic_id: "AUTH-PROFILE-DX-1"
 title: "No-copy detect-and-instruct guard for absent per-profile API-token credentials (DEC-326)"
 wave: feature-followup
-status: draft
+status: ready
 intent: feature
 feature_type: feature
 mode: feature

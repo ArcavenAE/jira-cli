@@ -7,7 +7,7 @@ producer: state-manager
 timestamp: 2026-09-01T15:30:00Z
 cycle: "cycle-003"
 inputs: [STATE.md]
-input-hash: "c74fac3"
+input-hash: "76fc0af"
 traces_to: STATE.md
 ---
 
@@ -486,5 +486,70 @@ No BCs/VPs/holdouts added or removed — 719 BCs / 32 VPs / 106 holdouts unchang
 **Dim-5 Attestation:** N/A — no binary/WASM artifact produced by this burst.
 
 **Dim-6 Attestation:** N/A — no source code changed this burst (`.factory/` artifact bookkeeping + planning/story artifacts only; `src/` untouched per instruction).
+
+**Dim-7 Attestation:** N/A — no test-affecting change this burst; full regression remains PASS (4660/0/106) as of the cycle-002 F7 delta-convergence pass, unchanged.
+
+## Burst: Burst 9 — F3 human approval gate APPROVED (DEC-329); cycle-003 advances F3 → F4 (2026-09-01)
+
+**Parent-commit:** `4698eff4` (factory-artifacts; the Burst 8 commit — F3 story decomposition AUTHORED + INTEGRATED). `develop` tip unchanged this burst at `87f17aff` — spec-only, no `develop`-side commit.
+
+**Trigger:** Burst 8 closed F3's MANIFEST → CREATE → INTEGRATE authoring and left the F3 human approval gate PENDING presentation. This burst is the gate presentation itself and its outcome: the gate returned **APPROVED**.
+
+**Actions taken:**
+1. **Presented the F3 human approval gate** — the 7-story package (BC/VP coverage matrices, dependency graph + Kahn's-algorithm acyclicity proof, 5-wave schedule + critical path, conflict report, 30 wave-holdout scenarios) plus the two carried-forward items from Burst 8 (the orchestrator-added `S-cycle3-oauth-default-creation` → `S-cycle3-remove-logout-semantics` dependency edge; `S-MAINT-532`'s deliberate exclusion from cycle-003 scope).
+2. **Gate verdict: APPROVED.** The human ratified both carried-forward items rather than leaving them open: (a) the dependency edge stands — story 6 (`S-cycle3-oauth-default-creation`) reuses the `clear_profile_creds` api-token clear-branch that story 4 (`S-cycle3-remove-logout-semantics`) adds; (b) `S-MAINT-532` is confirmed OUT of cycle-003 scope, deferred to a future maintenance cycle ("keep separate").
+3. **Recorded DEC-329** in the Decisions Log — full text captures the approval, the coverage/graph/schedule summary, and both ratified items.
+4. **Flipped all 7 `S-cycle3-*` story files' `status:` frontmatter** from `draft` → `ready` (`S-cycle3-env-tag`, `S-cycle3-percred-storage`, `S-cycle3-credential-absence-guard`, `S-cycle3-remove-logout-semantics`, `S-cycle3-adr0011-newtype`, `S-cycle3-oauth-default-creation`, `S-cycle3-chosen-flow-reconcile`).
+5. **Updated `STORY-INDEX.md`** — all 7 cycle-003 rows in BOTH the main description table and the Story Manifest table updated from `**draft** — F3 authored, PENDING F3 human approval gate (2026-09-01)` to `**ready** — F3 human gate APPROVED (2026-09-01, DEC-329), awaiting F4 dispatch` (main table), and `status: draft (PENDING F3 human approval gate)` to `status: ready (F3 human gate APPROVED 2026-09-01, DEC-329)` (manifest table). The main table's trailing `F4 dispatch blocked pending gate approval` clause was also updated to `F4 dispatch pending, Wave-scheduled per wave-schedule.md`, since the blocking condition no longer holds. `total_stories` held at **168** — status flip only, zero new rows. The header `last_updated` block's Burst-8-authored narrative was left as prose (not rewritten line-by-line) with a new dated `[UPDATED 2026-09-01, Burst 9: …]` annotation pointing at the row table as the single source of truth for current status — same convention Burst 8 itself used when it corrected the header's `ready`→`draft` claim.
+6. **Phase transition:** frontmatter `phase: F3` → `phase: F4`; `pipeline` stays `ACTIVE`. Phase Progress gained an `F3-GATE-APPROVED` row (COMPLETE, DEC-329) and an `F4-DELTA-IMPLEMENTATION` row (IN PROGRESS, Wave 1 starting). Current Phase Steps reset to the 5 gate-and-transition steps for this burst (gate presented → APPROVED → stories flipped → DEC-329 + phase transition → committed/Wave-1-next). Convergence Status, Concurrent Cycles, and Constraints Carried Forward updated to reflect F3 APPROVED / F4 ACTIVE.
+7. **Session Resume Checkpoint replaced** (v3.38 → v3.39) — new checkpoint records the F3-APPROVED/F4-ACTIVE position, the ratified carried-forward items, and the exact F4 Wave 1 dispatch instructions (env-tag + percred-storage, parallel) plus the two standing F4 obligations (staged ADR-0011 amendment application via `S-cycle3-adr0011-newtype`; DEC-326 no-copy behavior for `S-cycle3-credential-absence-guard`). Prior v3.38 checkpoint archived to `cycles/cycle-003/session-checkpoints.md`.
+8. **Drift/Standing Items** gained a new "resolved this burst" entry recording the gate approval and the STORY-INDEX.md reconciliation approach; all pre-existing Drift/Standing items (ADR-0011-staged-not-applied, the F3-audit F-1/F-2/F-3 resolved note, the STORY-INDEX.md grep-count residual, and every cycle-002/standing item) preserved verbatim.
+9. **Re-ran both count guards:** `scripts/check-bc-cumulative-counts.sh` → PASS (733 total unchanged); `scripts/check-spec-counts.sh` → PASS (8 bc files validated). Zero new BCs/VPs this burst — a gate-verdict + status-flip burst adds no spec content.
+10. **Did NOT touch `src/`, `regression-state.json`, or `sidecar-learning.md`** — the latter two remain pre-existing uncommitted modifications unrelated to cycle-003 work, left dirty per standing instruction.
+
+**Adversary verdict:** N/A this burst — a human-gate-verdict-and-bookkeeping burst, not an adversarial spec-defect review.
+
+**Outcome:** cycle-003 (`auth-profile-dx`) Phase **F3 (incremental stories) is APPROVED at the human gate (DEC-329).** All 7 stories are `status: ready`. Phase **F4 (delta implementation) is now ACTIVE** — Wave 1 (`S-cycle3-env-tag` + `S-cycle3-percred-storage`, parallel) is the next dispatch. Pipeline stays **ACTIVE**; phase advances **F3 → F4**.
+
+**NEXT:** dispatch Phase F4 Wave 1 (`S-cycle3-env-tag` + `S-cycle3-percred-storage`, parallel) via per-story TDD delivery. On Wave 1 merge, proceed to Wave 2 (`S-cycle3-credential-absence-guard`, P0, HIGH-risk). Full regression suite is the F4 safety net throughout.
+
+**Codifications:** none new this burst beyond DEC-329 itself — no BC/VP content added or changed; this is a governance/gate-verdict burst.
+
+**Closes:** the F3 human approval gate (now APPROVED, DEC-329); both carried-forward items from Burst 8 (now ratified, not merely carried forward). **Does NOT close:** the staged ADR-0011 amendment application (still pending, now an active F4 obligation of `S-cycle3-adr0011-newtype`), the `STORY-INDEX.md` grep-count residual (still flagged for future reconciliation), or any pre-existing Drift/Standing item.
+
+### Counts reconciled this burst
+
+- BCs: 733 (unchanged — gate-verdict burst adds no new BCs).
+- VPs: 41 (unchanged — same reasoning).
+- Holdout scenarios: 106 (unchanged in the master count).
+- `total_stories`: unchanged at **168** (status flip only, no new rows).
+- `total_nfrs`: unchanged at 42.
+- DEC IDs: 328 → **329** (DEC-329 recorded this burst).
+
+### Details
+
+| Agent | Task | Output |
+|-------|------|--------|
+| state-manager | Record F3 human gate verdict (APPROVED, DEC-329); flip 7 story files draft→ready; reconcile STORY-INDEX.md (14 rows + header annotation); refresh STATE.md (frontmatter phase F3→F4, Phase Progress, Current Phase Steps, Decisions Log, Convergence Status, Concurrent Cycles, Constraints, Drift/Standing Items, Session Resume Checkpoint); archive prior checkpoint; verify both count guards green; commit + push to factory-artifacts (Single-Commit Burst Protocol) | `STATE.md`; `cycles/cycle-003/burst-log.md` (this file); `cycles/cycle-003/session-checkpoints.md`; `stories/STORY-INDEX.md`; 7× `cycles/cycle-003/phase-f3-stories/S-cycle3-*.md` |
+
+**Files touched (Dim-1): 11 unique files this burst, all committed in the state-manager's own single atomic commit**
+
+- `cycles/cycle-003/phase-f3-stories/S-cycle3-env-tag.md`
+- `cycles/cycle-003/phase-f3-stories/S-cycle3-percred-storage.md`
+- `cycles/cycle-003/phase-f3-stories/S-cycle3-credential-absence-guard.md`
+- `cycles/cycle-003/phase-f3-stories/S-cycle3-remove-logout-semantics.md`
+- `cycles/cycle-003/phase-f3-stories/S-cycle3-adr0011-newtype.md`
+- `cycles/cycle-003/phase-f3-stories/S-cycle3-oauth-default-creation.md`
+- `cycles/cycle-003/phase-f3-stories/S-cycle3-chosen-flow-reconcile.md`
+- `stories/STORY-INDEX.md`
+- `STATE.md`
+- `cycles/cycle-003/burst-log.md`
+- `cycles/cycle-003/session-checkpoints.md`
+
+**Dim-2 Attestation:** `scripts/check-bc-cumulative-counts.sh` — re-run this burst, PASS (733 total unchanged). `scripts/check-spec-counts.sh` — re-run this burst, PASS (8 bc files validated).
+
+**Dim-5 Attestation:** N/A — no binary/WASM artifact produced by this burst.
+
+**Dim-6 Attestation:** N/A — no source code changed this burst (`.factory/` artifact bookkeeping + story-status/gate-verdict bookkeeping only; `src/` untouched per instruction).
 
 **Dim-7 Attestation:** N/A — no test-affecting change this burst; full regression remains PASS (4660/0/106) as of the cycle-002 F7 delta-convergence pass, unchanged.

@@ -4,7 +4,7 @@ story_id: "S-cycle3-oauth-default-creation"
 epic_id: "AUTH-PROFILE-DX-1"
 title: "OAuth-default-at-creation picker + non-interactive guard + --oauth/--api-token flags (DEC-313/DEC-323)"
 wave: feature-followup
-status: draft
+status: ready
 intent: feature
 feature_type: feature
 mode: feature

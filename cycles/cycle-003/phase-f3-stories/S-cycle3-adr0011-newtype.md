@@ -4,7 +4,7 @@ story_id: "S-cycle3-adr0011-newtype"
 epic_id: "AUTH-PROFILE-DX-1"
 title: "Profile(String) newtype -- un-defer ADR-0011, thread through ~60-80 call sites (DEC-317)"
 wave: feature-followup
-status: draft
+status: ready
 intent: feature
 feature_type: refactor
 mode: feature
