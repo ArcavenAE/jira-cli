@@ -1,0 +1,20 @@
+S-cycle3-credential-absence-guard — AC-011 regression baseline
+BC-1.4.025: `load_oauth_tokens` and its existing test suite must be
+byte-for-byte unchanged and green as part of this story's PR. This story's
+diff touches only the `load_api_token` sibling function; this run confirms
+zero regression in the OAuth path.
+Command (verbatim):
+  JR_RUN_KEYRING_TESTS=1 cargo test --lib -- --include-ignored --test-threads=1 oauth_tokens
+================================================================================
+
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 0.14s
+     Running unittests src/lib.rs (target/debug/deps/jr-c725785c006b1368)
+
+running 4 tests
+test api::auth::tests::load_oauth_tokens_default_partial_recovers_from_legacy ... ok
+test api::auth::tests::load_oauth_tokens_errors_on_partial_state ... ok
+test api::auth::tests::load_oauth_tokens_returns_err_for_missing_profile ... ok
+test api::auth::tests::store_and_load_per_profile_oauth_tokens_round_trip ... ok
+
+test result: ok. 4 passed; 0 failed; 0 ignored; 0 measured; 1271 filtered out; finished in 5.01s
+

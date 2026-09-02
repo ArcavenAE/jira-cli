@@ -1,0 +1,33 @@
+S-cycle3-credential-absence-guard — gated keyring test suite (authoritative)
+Command (verbatim):
+  JR_RUN_KEYRING_TESTS=1 cargo test --lib -- --include-ignored --test-threads=1 \
+    bc_1_4_032 bc_1_4_033 bc_1_4_034 vp_authdx absence_guard_proptests
+Real macOS Keychain Services backend (`with_test_keyring` self-namespaces
+into a throwaway `jr-jira-cli-test-<pid>-<counter>` service per test,
+serialized by KEYRING_TEST_ENV_MUTEX — never the real `jr-jira-cli` service).
+Ran cleanly: zero interactive prompts, zero hangs (unlike the raw
+`security`-CLI cross-process seeding attempted for the CLI-level demo — see
+the NOTE at the bottom of AC-001-002-003-cli-detect-and-instruct.txt).
+================================================================================
+
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 0.16s
+     Running unittests src/lib.rs (target/debug/deps/jr-c725785c006b1368)
+
+running 14 tests
+test api::auth::tests::absence_guard_proptests::prop_vp_authdx_005_detect_and_instruct_correctness ... ok
+test api::auth::tests::absence_guard_proptests::prop_vp_authdx_006_no_profile_is_special_cased ... ok
+test api::auth::tests::absence_guard_proptests::prop_vp_authdx_008_namespaced_partial_state_safety ... ok
+test api::auth::tests::test_bc_1_4_032_absent_namespaced_keys_legacy_pair_present_returns_identical_actionable_exit64 ... ok
+test api::auth::tests::test_bc_1_4_032_absent_namespaced_keys_no_legacy_pair_returns_actionable_exit64 ... ok
+test api::auth::tests::test_bc_1_4_032_default_profile_not_special_cased_identical_to_other_profiles ... ok
+test api::auth::tests::test_bc_1_4_032_no_copy_invariant_legacy_pair_untouched_and_no_percred_written ... ok
+test api::auth::tests::test_bc_1_4_032_repeated_calls_return_same_err_no_first_call_side_effect ... ok
+test api::auth::tests::test_bc_1_4_033_namespaced_partial_email_present_returns_incomplete_credentials_error ... ok
+test api::auth::tests::test_bc_1_4_033_namespaced_partial_token_present_returns_incomplete_credentials_error ... ok
+test api::auth::tests::test_bc_1_4_033_partial_precedence_over_legacy_pair_present ... ok
+test api::auth::tests::test_bc_1_4_033_remediation_message_never_mentions_auth_logout ... ok
+test api::auth::tests::test_bc_1_4_034_single_relogin_permanently_resolves_the_breaking_change ... ok
+test api::auth::tests::test_vp_authdx_007_keyring_gated_end_to_end_detect_and_instruct_scenario ... ok
+
+test result: ok. 14 passed; 0 failed; 0 ignored; 0 measured; 1261 filtered out; finished in 46.76s
+

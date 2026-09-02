@@ -1,0 +1,104 @@
+S-cycle3-credential-absence-guard — CLI-level demo transcript
+Captured directly (see README.md for VHS-fallback rationale)
+Command binary: target/debug/jr (debug build, this worktree)
+Isolation: JR_CONFIG_DIR + JR_SERVICE_NAME point at throwaway locations;
+the real developer ~/.config/jr/ and real macOS Keychain "jr-jira-cli"
+service are never touched by any command below.
+================================================================================
+
+=== Scenario 1 (AC-002): namespaced keys absent, legacy pair also absent ===
+Re-run cleanly in this final pass; service name never held any keychain item
+(guaranteed-absent, no ACL-confirmation risk).
+
+$ JR_CONFIG_DIR=<throwaway> JR_SERVICE_NAME=<fresh-unused-namespace> jr issue list --profile sandbox --no-input
+Error: No credentials stored for profile 'sandbox'. This version of jr requires per-profile credentials — run `jr auth login sandbox` to set them up.
+EXIT=64
+
+=== Scenario 2 (AC-001 + AC-003): namespaced keys absent, legacy pair PRESENT ===
+Captured earlier in this same session, against a fresh throwaway keychain
+service (jr-jira-cli-demo-cred-absence-ac001-<pid>, since deleted — see NOTE
+at the bottom of this file for why the transcript is presented this way
+instead of a single unbroken terminal capture).
+
+Seeded legacy flat 'email'/'api-token' keys under the throwaway service
+(never the real 'jr-jira-cli' service):
+
+$ security find-generic-password -a email -s <service> -w   # BEFORE
+demo-legacy@example.com
+$ security find-generic-password -a api-token -s <service> -w   # BEFORE
+legacy-token-abc123
+
+$ JR_CONFIG_DIR=<throwaway> JR_SERVICE_NAME=<service-with-legacy-pair> jr issue list --profile sandbox --no-input   (run 1)
+Error: No credentials stored for profile 'sandbox'. This version of jr requires per-profile credentials — run `jr auth login sandbox` to set them up.
+EXIT=64
+
+$ (same command again, run 2 — proves repeated calls give the identical Err, no first-call-migrates behavior)
+Error: No credentials stored for profile 'sandbox'. This version of jr requires per-profile credentials — run `jr auth login sandbox` to set them up.
+EXIT=64
+
+Note: byte-identical to Scenario 1's error text — legacy-pair presence does
+not change the message (BC-1.4.032 Postcondition 2).
+
+$ security find-generic-password -a email -s <service> -w   # AFTER — byte-identical to BEFORE
+demo-legacy@example.com
+$ security find-generic-password -a api-token -s <service> -w   # AFTER — byte-identical to BEFORE
+legacy-token-abc123
+
+$ security find-generic-password -a sandbox:email -s <service>   # confirms NO namespaced pair was ever written (no-copy)
+security: SecKeychainSearchCopyNext: The specified item could not be found in the keychain.
+$ security find-generic-password -a sandbox:api-token -s <service>   # confirms NO namespaced pair was ever written (no-copy)
+security: SecKeychainSearchCopyNext: The specified item could not be found in the keychain.
+
+(throwaway keychain items deleted after capture — confirmed removed via a
+metadata-only `security dump-keychain` grep, no secrets re-read)
+
+================================================================================
+NOTE ON SCENARIO 2's TRANSCRIPT FORM AND ON THE PARTIAL-PAIR SCENARIO
+(AC-007/008/009/010 — no CLI-level demo, unit/proptest evidence only)
+
+Scenario 2 above is real, directly-captured terminal output from this exact
+session (not fabricated) — it was captured on the FIRST attempt in this
+session, cleanly and quickly (no prompts, no hang). A second attempt later in
+the same session, seeding a freshly-named throwaway service with the same two
+legacy keys and invoking the same `jr issue list` command, hung indefinitely
+instead of returning. Diagnosis: a macOS `SecurityAgent` GUI confirmation
+process was found running in this session (spawned by an earlier accidental
+trigger — see below), and once a keychain-access confirmation dialog is
+queued behind an unanswerable one in a headless/agent sandbox with no display
+session to click "Allow", every subsequent keychain read that needs
+per-item-ACL confirmation blocks forever. This is NOT a source-code defect —
+it is host-environment flakiness in how a headless session's Terminal.app
+identity gets ACL-confirmed by macOS Keychain Services, and it is the same
+class of "GUI confirmation the sandbox cannot answer" failure the sibling
+story S-cycle3-percred-storage's demo README documented for VHS's browser
+automation layer (see that story's demos/README.md § "Recording tool status")
+— here it surfaced one layer down, in Keychain Services itself, rather than
+in VHS.
+
+Consequence: after the second hang, I did NOT attempt any further live
+`jr`-invocation seeded via raw `security add-generic-password` (the
+namespaced-partial-pair scenario for AC-007/008/009/010 was never attempted
+live at all, precisely to avoid triggering a third hang). All background
+tasks that hung were stopped via TaskStop; `ps aux` was checked afterward and
+confirmed zero orphaned `jr`/`security` processes. One accidental
+`security dump-keychain -d` (which would have echoed real secret VALUES) was
+started by mistake while diagnosing the hang and was killed via TaskStop
+within seconds, before it produced any output — no secret values were ever
+read, printed, or logged as part of that diagnostic step. All throwaway
+items created during this session (services `jr-jira-cli-demo-cred-absence-
+ac001-*`, `-ac007-*`, `-ac007b-*`, `-scenario1`, `-scenario2-*`) were
+individually deleted; a final metadata-only `security dump-keychain` grep for
+the `jr-jira-cli-demo-cred-absence` prefix confirms zero remaining items. The
+real `jr-jira-cli` service and `~/.config/jr/` were never referenced by any
+command in this session.
+
+Given this instability, the AUTHORITATIVE evidence for the namespaced-partial
+branch (AC-007/008/009/010) and for the no-copy invariant generally
+(AC-003/004/005) is the gated `cargo test` suite in
+`AC-004-011-gated-keyring-test-suite.txt` — it exercises the real macOS
+Keychain backend from within a single Rust test process (no cross-process ACL
+confirmation is needed, since the test binary is both the writer and the
+reader of every item it touches within one process lifetime), ran cleanly
+end-to-end (14/14 passed in 46.76s, zero prompts, zero hangs), and is what
+the demo-recorder task brief itself designates as authoritative for this
+story's keychain-internal invariants.
