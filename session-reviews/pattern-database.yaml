@@ -214,3 +214,105 @@ patterns:
     severity: LOW
     pattern_class: process-gap
     drift_item_refs: [TWIN-ARTIFACT-SWEEP, PG-F4-7]
+
+  - id: BACKGROUND-TASK-KILL-ON-LONG-VERIFICATION
+    first_observed: 2026-09-02
+    occurrences: 1
+    affected_cycles:
+      - "cycle-003 (auth-profile-dx: F6 targeted hardening — full cargo test ~26min and cargo-mutants runs killed as sub-agent background tasks; a main-loop-owned background job also killed at ~1600s)"
+    status: open
+    linked_proposal: IP-CYCLE003-02
+    upstream_ref: null
+    description: >
+      Long-running verification jobs (full regression suite, mutation testing) are killed when
+      launched as sub-agent background tasks -- the harness kills a sub-agent's background job
+      when that sub-agent yields, which is the normal control-flow shape of a verification agent
+      reporting back after kicking off a long job. A main-loop-owned background job was also
+      killed at ~1600s, suggesting an additional ceiling independent of sub-agent lifecycle.
+      Recovered via ad hoc chunking (segment by test binary) + main-loop-owned waiters with
+      completion markers. As this project's regression suite grows (2341 -> 4763 tests in seven
+      weeks), this will recur more often absent a documented default pattern.
+    severity: HIGH
+    pattern_class: infrastructure
+    drift_item_ref: BACKGROUND-TASK-KILL-ON-LONG-VERIFICATION
+
+  - id: KEYCHAIN-PROMPT-TEST-SLOWDOWN
+    first_observed: 2026-09-02
+    occurrences: 1
+    affected_cycles:
+      - "cycle-003 (auth-profile-dx: F6/F7 auth integration test runs slowed by real macOS keychain access prompts)"
+    status: open
+    linked_proposal: IP-CYCLE003-03
+    upstream_ref: null
+    description: >
+      Auth integration test binaries trigger real-OS-keychain access prompts, making F6/F7 test
+      runs slower and semi-interactive. Directly responsible for VP-AUTHDX-005/006/007/008 being
+      #[ignore]-gated behind JR_RUN_KEYRING_TESTS=1 and therefore invisible to ordinary CI --
+      previously tracked only as a CI-coverage-boundary decision, now also carrying a documented
+      session-timing cost. Remedy: apply this repo's existing debug-only test-isolation-seam
+      pattern (JR_CONFIG_DIR/JR_CACHE_DIR/JR_SERVICE_NAME/JR_STDIN_IS_TTY) to keychain Entry
+      construction.
+    severity: MEDIUM
+    pattern_class: quality
+    drift_item_ref: KEYCHAIN-PROMPT-TEST-SLOWDOWN
+
+  - id: FRESH-CONTEXT-AUDIT-PRE-GATE-VALUE
+    first_observed: 2026-07-24
+    occurrences: 2
+    affected_cycles:
+      - "cycle-001 (SOH-ATTACHMENTS-1: F5 Step-7 secondary review found a cross-model-unique HIGH-value refactor candidate after 14 primary rounds missed it)"
+      - "cycle-003 (auth-profile-dx: F7 pre-gate fresh-context consistency audit found 12 findings -- 1 CRIT/3 HIGH/2 MED/6 LOW, all doc/index-layer -- before the human gate)"
+    status: open
+    linked_proposal: IP-CYCLE003-04
+    upstream_ref: null
+    description: >
+      A fresh-context or cross-perspective check run before a phase's human/quality gate has now
+      found real, gate-relevant findings a converged pipeline missed in 2/2 tries across two
+      different cycles and two different mechanisms (F5 secondary review; F7 pre-gate consistency
+      audit). Currently ad hoc in both instances rather than a named, mandatory workflow step.
+      This is a POSITIVE pattern (recommend codifying, not fixing) -- tracked here as a pattern
+      because a 2/2 hit rate on a currently-optional practice is exactly the signal that should
+      convert an ad hoc practice into a standing one.
+    severity: LOW
+    pattern_class: convergence
+    drift_item_ref: FRESH-CONTEXT-AUDIT-PRE-GATE-VALUE
+
+  - id: HOOK-BLIND-TO-DISPATCH-SCOPED-EXCEPTION
+    first_observed: 2026-07-14
+    occurrences: 4
+    affected_cycles:
+      - "cycle-001 (SOH-ATTACHMENTS-1: pr-reviewer hook vs. DEC-173, 3 occurrences across the bundle)"
+      - "cycle-003 (auth-profile-dx: pr-reviewer posting-hook demanded gh pr review / pr-review.md post, contradicting an explicit report-only dispatch; ~3 turns burned before resolution)"
+    status: open
+    linked_proposal: IP-CYCLE003-05
+    upstream_ref: null
+    description: >
+      A hook enforces a blanket rule (always post pr-review.md / always require AUTHORIZE_MERGE)
+      with no visibility into an orchestrator-level, dispatch-scoped exception (report-only mode;
+      DEC-173 self-authored PRs). Each occurrence costs agent turns spent refusing/negotiating
+      before the human or orchestrator manually reconciles the conflict. 4th occurrence across two
+      cycles -- recommend either pre-authorizing the hook-required artifact write up front in the
+      dispatch, or teaching the hook to recognize a dispatch-scoped exception flag.
+    severity: MEDIUM
+    pattern_class: agent
+    drift_item_ref: HOOK-BLIND-TO-DISPATCH-SCOPED-EXCEPTION
+
+  - id: GIT-HOOK-FALSE-POSITIVE-ON-COMPOUND-COMMAND
+    first_observed: 2026-09-02
+    occurrences: 2
+    affected_cycles:
+      - "cycle-003 (auth-profile-dx: validate-factory-path-staging blocked a compound git add with explicit non-.factory args + mis-attributed worktree branch as develop; verify-git-push blocked on --force appearing in a co-located git worktree remove --force, not the actual git push)"
+    status: open
+    linked_proposal: IP-CYCLE003-06
+    upstream_ref: null
+    description: >
+      Two git-safety hooks pattern-match across an entire compound shell command rather than
+      parsing the specific verb/arguments they are meant to gate, producing false positives:
+      (a) git-add file-argument detection ignores explicit non-.factory paths and assumes a
+      default branch rather than reading the invoking worktree's actual branch; (b) --force
+      detection matches the substring anywhere in the command line rather than scoping to the
+      git push sub-command's own argument list. Both required workaround (splitting/isolating
+      the command) rather than a hook fix.
+    severity: MEDIUM
+    pattern_class: infrastructure
+    drift_item_ref: GIT-HOOK-FALSE-POSITIVE-ON-COMPOUND-COMMAND

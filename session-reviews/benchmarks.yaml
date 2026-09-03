@@ -95,3 +95,51 @@ metrics_577:
   # Meta
   cost_summary_available: false          # cost-summary.md still not initialized; see IP-571-01 (3rd cycle)
   cost_estimate_tokens: "~8–12M"         # Full F1→F7 arc estimate from F7 convergence report
+
+# ─────────────────────────────────────────────────────────────────────────────
+# Cycle: cycle-003 (auth-profile-dx) — session review 2026-09-03
+# Session scope: resume from PAUSED (F5 already CONVERGED) → F6 → F7 → release → CLOSE
+# Prior baseline cycle: SOH-ATTACHMENTS-1 (cycle-001 lineage, 2026-07-25)
+# Note: this session's scope is narrower than a full F1→F7 arc (F1-F5 ran in a prior
+#       session); metrics below cover F6/F7/release only unless noted "full cycle".
+# ─────────────────────────────────────────────────────────────────────────────
+metrics_cycle003:
+  # Full-cycle context (not this-session-only)
+  full_cycle_stories_delivered: 7          # S-cycle3-*, all merged across 5 waves in a prior session
+  full_cycle_new_bcs: 733                  # total BCs unchanged this session (no new BCs at F6/F7)
+  full_cycle_new_vps: 41                   # total VPs unchanged this session
+  full_cycle_holdout_scenarios: 106        # total, unchanged this session
+  full_cycle_total_stories: 168            # total, unchanged this session
+  full_cycle_f5_passes_strict: 3           # 3/3 clean re-run passes at CONVERGED checkpoint (prior session)
+
+  # This-session phase results (F6/F7/release)
+  f6_fix_prs_required: 0                   # Cleanest F6 on record for this project (cycle-002 needed FIX-F6-001)
+  f6_mutation_kill_rate_pct: 100            # 28/28, 0 survivors
+  f6_mutation_mutants_generated: 28
+  f6_security_findings: "0 CRIT / 0 HIGH / 0 MED / 1 LOW"  # LOW is pre-existing yanked chacha20, not delta-introduced
+  f6_kani_proptest_gap: 0                   # 0 GAP across VP-AUTHDX-001..009
+  f7_dimensions_pass: "5/5"
+  f7_holdout_mean_satisfaction: 0.895        # Lowest on record for this project (prior: 1.00 ×2)
+  f7_pre_gate_audit_findings: 12             # 1 CRIT / 3 HIGH / 2 MED / 6 LOW — all doc/index-layer, 0 code defects
+  f7_pre_gate_audit_findings_fixed_at_audit_time: 6
+  f7_pre_gate_audit_findings_deferred_to_pre_release_pr: 3  # HIGH-3, LOW-2, LOW-3 via PR #766
+  f7_pre_gate_audit_findings_deferred_to_future_cycle: 3    # MED-1, LOW-4, LOW-6
+
+  # Regression
+  full_regression_count_at_f7: 4763         # 4763 pass / 0 fail / 157 ignored — ~2× SOH-ATTACHMENTS-1's 2341
+  regression_ignored: 157
+
+  # Session-level (resume → release)
+  session_calendar_days: 1                  # 2026-09-02 resume → 2026-09-03 release SHIPPED
+  human_gate_decisions_this_session: 2       # DEC-332 (F7 approval), DEC-333 (release authorization)
+  prs_merged_this_session: 2                 # #766 (docs fix), #767 (version bump)
+  release_attempts: 1                        # release.yml run 33769389700 SUCCESS, first attempt
+  background_task_kills_during_verification: ">=2"  # sub-agent background jobs + 1 main-loop job @ ~1600s (NEW pattern)
+  hook_false_positives_this_session: 2       # validate-factory-path-staging + verify-git-push (NEW pattern)
+  pr_reviewer_hook_conflicts_this_session: 1 # report-only dispatch vs. posting-hook (4th occurrence of hook-vs-dispatch-exception lineage)
+  api_infra_failures_this_session: 1         # 529 overload, formal-verifier mid-run, recovered via resume
+  state_manager_monolithic_write_stalls: 0   # NOT observed this session — positive signal, DEC-247 discipline holding
+
+  # Meta
+  cost_summary_available: false             # cost-summary.md still not initialized; 6th consecutive cycle, see IP-CYCLE003-01
+  cost_estimate_tokens: "unknown"           # No estimate available; PERF-COST-TRACKING remains open
