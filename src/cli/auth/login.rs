@@ -1,4 +1,5 @@
 use anyhow::{Context, Result};
+use dialoguer::Select;
 
 use crate::api::auth;
 use crate::api::auth_embedded::OAuthAppSource;
@@ -6,9 +7,13 @@ use crate::cli::OutputFormat;
 use crate::config::{Config, global_config_path};
 use crate::error::JrError;
 use crate::output;
+use crate::profile::Profile;
 
 use super::keychain::{ENV_API_TOKEN, ENV_EMAIL};
-use super::{auth_json_response, resolve_credential, resolve_oauth_app_credentials};
+use super::{
+    auth_json_response, check_noninteractive_oauth_guard, emit_oauth_deprecation_notice,
+    resolve_credential, resolve_oauth_app_credentials,
+};
 
 /// Pick the OAuth scope string: user override from the *target* profile's
 /// `oauth_scopes` if set, else the compiled-in default. Trims and collapses
@@ -235,6 +240,11 @@ pub struct LoginArgs {
     pub profile: Option<String>,
     pub url: Option<String>,
     pub oauth: bool,
+    /// BC-1.2.050: select `api_token` directly, skipping the BC-1.1.013
+    /// interactive OAuth-default picker. Mutually exclusive with `oauth`
+    /// (enforced by clap `conflicts_with` at the CLI layer — see
+    /// `AuthCommand::Login` in `src/cli/mod.rs`).
+    pub api_token: bool,
     pub email: Option<String>,
     pub token: Option<String>,
     pub client_id: Option<String>,
@@ -256,6 +266,27 @@ pub struct LoginArgs {
 /// `Config::default()` and overwriting the user's broken-but-recoverable
 /// file (#258).
 pub async fn handle_login(args: LoginArgs) -> Result<()> {
+    // BC-1.1.016 Postcondition 3: the airtight non-interactive OAuth guard
+    // is evaluated as the FIRST statement in this function — before
+    // `Config::load_lenient_with` (which could itself block on a malformed
+    // config file), any prompt, any credential resolution, and any HTTP or
+    // browser code. Precondition 2a: explicit `--oauth` under a
+    // non-interactive trigger. The picker path (BC-1.1.013) can never
+    // select OAuth non-interactively — SR-012's precedence skips the
+    // picker entirely whenever `args.no_input` is set — so checking only
+    // `args.oauth` here covers every way this invocation could otherwise
+    // reach OAuth under `--no-input`.
+    check_noninteractive_oauth_guard(args.no_input, args.oauth)?;
+
+    // BC-1.2.049 Postcondition 2: `--oauth` is a deprecated-but-accepted
+    // alias. The guard above already ruled out the non-interactive case,
+    // so reaching here means this is a functional (interactive, or
+    // explicit non-interactive api-token-incompatible) `--oauth` use —
+    // stderr-only, human-mode-only (EC-1.2.049-1).
+    if args.oauth {
+        emit_oauth_deprecation_notice(args.output);
+    }
+
     let config_path = global_config_path();
     // `load_lenient` skips the active-profile existence check so
     // `jr auth login --profile newprof --url ...` can create the profile
@@ -318,7 +349,54 @@ pub async fn handle_login(args: LoginArgs) -> Result<()> {
     )?;
     config.global = global;
     config.save_global()?;
-    if args.oauth {
+
+    // Capture the target profile's CURRENT auth_method (if any) before it
+    // gets overwritten by login_oauth/login_token below — needed for the
+    // EC-1.1.013-2/EC-1.1.014-4 re-declaration credential-clear decision.
+    // `prepare_login_target` only touches `url`/`default_profile`, so this
+    // still reflects whatever was on disk prior to this invocation.
+    let current_auth_method = config
+        .global
+        .profiles
+        .get(&target)
+        .and_then(|p| p.auth_method.clone());
+
+    // SR-012 precedence (BC-1.1.013 Invariant 2): explicit flag (tier 1) >
+    // BC-1.1.014 non-interactive default (tier 2) > BC-1.1.013 interactive
+    // OAuth-default picker (tier 3). Each tier is consulted only when every
+    // tier above it does not apply.
+    let oauth_selected = if args.oauth {
+        true
+    } else if args.api_token {
+        false
+    } else if args.no_input {
+        // BC-1.1.014 Precondition 1 (SR-010-corrected): only `--no-input`/
+        // non-TTY trigger the non-interactive default — env var presence
+        // alone does not (EC-1.1.014-3, AC-006).
+        false
+    } else {
+        prompt_auth_method_picker()?
+    };
+    let new_method = if oauth_selected { "oauth" } else { "api_token" };
+
+    // BC-1.1.013 EC-1.1.013-2 / BC-1.1.014 EC-1.1.014-4 (M-1), AMENDED by
+    // FIX-F5-login-switch (relogin-then-replace ordering, mirroring I-6 /
+    // BC-1.2.051's fix to `refresh_credentials`): a mechanism-switching
+    // re-declaration must obtain and STORE the new mechanism's credentials
+    // FIRST, and only clear the outgoing mechanism's now-orphaned
+    // credentials AFTER that has succeeded. The old "clear-then-login"
+    // ordering (clearing before dispatch) left a profile credential-less if
+    // the new login failed (browser cancel, network error, a missing
+    // `--no-input` value) — strictly worse than the pre-command state. See
+    // `clear_outgoing_mechanism_on_switch`'s doc comment for why the clear
+    // step itself was also narrowed to per-kind (never
+    // `auth::clear_profile_creds`, which would delete the credentials this
+    // reorder just stored).
+    let switching = current_auth_method
+        .as_deref()
+        .is_some_and(|current| current != new_method);
+
+    if oauth_selected {
         login_oauth(
             &target,
             args.client_id,
@@ -330,6 +408,19 @@ pub async fn handle_login(args: LoginArgs) -> Result<()> {
     } else {
         login_token(&target, args.email, args.token, args.no_input).await?;
     }
+
+    // Reached only when the login above succeeded — a failed login returns
+    // early via `?` and this line, and therefore the outgoing-credential
+    // clear, never runs. The SHOULD-level stderr notice is scoped to the
+    // non-interactive switch case only — the interactive picker interaction
+    // already makes the switch visible to the user.
+    clear_outgoing_mechanism_on_switch(
+        &Profile::from(target.clone()),
+        current_auth_method.as_deref(),
+        new_method,
+        args.no_input && switching,
+    )?;
+
     if matches!(args.output, OutputFormat::Json) {
         println!(
             "{}",
@@ -389,4 +480,161 @@ pub(crate) fn prepare_login_target(
     }
 
     Ok((global, target))
+}
+
+/// CWE-400 (MED-1, pre-PR review): independent, `no_input`-blind terminal
+/// check used immediately before [`prompt_auth_method_picker`] would invoke
+/// `dialoguer::Select::interact()`.
+///
+/// `handle_login`'s tier-3 picker branch is normally gated by `args.no_input`
+/// alone, which is itself normally set correctly by `src/main.rs`'s
+/// auto-`--no-input` flip on non-TTY stdin. But that flip has a documented
+/// exception: `JR_OAUTH_CODE` (an OAuth-callback test seam, ungated by
+/// `#[cfg(debug_assertions)]`) suppresses the flip so a test harness can pipe
+/// stdin while still driving interactive selection. That means a *release*
+/// build with `JR_OAUTH_CODE` set and non-TTY stdin can reach `handle_login`
+/// with `no_input == false` even though there is no real terminal — which
+/// would otherwise let the picker call `Select::interact()` and hang a
+/// non-interactive session (CWE-400: uncontrolled resource consumption).
+///
+/// This function performs its OWN terminal detection rather than trusting
+/// the caller's `no_input`, so the picker is unreachable-by-construction
+/// without a real interactive terminal — regardless of `no_input`, and
+/// regardless of `JR_OAUTH_CODE`. It deliberately mirrors `src/main.rs`'s
+/// `JR_STDIN_IS_TTY` debug-only override (so interactive tests that force
+/// `JR_STDIN_IS_TTY=1` still reach the picker) but does NOT mirror
+/// `main.rs`'s `JR_OAUTH_CODE` exception — that exception is exactly the gap
+/// this check exists to close.
+fn stdin_is_interactive_tty() -> bool {
+    use std::io::IsTerminal;
+    #[cfg(debug_assertions)]
+    let forced = std::env::var("JR_STDIN_IS_TTY")
+        .map(|v| v == "1")
+        .unwrap_or(false);
+    #[cfg(not(debug_assertions))]
+    let forced = false;
+    forced || std::io::stdin().is_terminal()
+}
+
+/// BC-1.1.013: creation-time OAuth-default picker for `jr auth login`'s bare
+/// interactive path. Per SR-012's mechanism-selection precedence
+/// (BC-1.1.013 Invariant 2), this is tier 3 — reached only when neither an
+/// explicit `--oauth`/`--api-token` flag (tier 1, BC-1.2.049/BC-1.2.050) nor
+/// a non-interactive trigger (tier 2, BC-1.1.014) applies.
+///
+/// Must mirror `jr init`'s picker (`src/cli/init.rs::handle`, read-only
+/// reference for this story) byte-for-byte: same items (`"OAuth 2.0
+/// (recommended)"`, `"API Token"`), same `dialoguer::Select` with
+/// `.default(0)`. Returns `true` when OAuth is selected, `false` for API
+/// token — matching `LoginArgs::oauth`'s shape so a caller can reuse the
+/// existing `if oauth { login_oauth(..) } else { login_token(..) }`
+/// dispatch unchanged.
+///
+/// CWE-400 (MED-1, pre-PR review): before touching `dialoguer::Select`, this
+/// independently confirms stdin is a real interactive terminal via
+/// [`stdin_is_interactive_tty`] — NOT via the caller's `no_input` value. When
+/// stdin is not a real TTY, this returns `Ok(false)` (the same token-first
+/// default BC-1.1.014's non-interactive tier already selects) instead of
+/// calling `Select::interact()`, so the picker can never hang a
+/// non-interactive session no matter how it is reached.
+pub fn prompt_auth_method_picker() -> Result<bool> {
+    if !stdin_is_interactive_tty() {
+        return Ok(false);
+    }
+    let auth_methods = ["OAuth 2.0 (recommended)", "API Token"];
+    let choice = Select::new()
+        .with_prompt("Authentication method")
+        .items(auth_methods)
+        .default(0)
+        .interact()
+        .context("failed to prompt for authentication method")?;
+    Ok(choice == 0)
+}
+
+/// BC-1.1.013 EC-1.1.013-2 / BC-1.1.014 EC-1.1.014-4 (M-1), AMENDED by
+/// FIX-F5-login-switch (relogin-then-replace ordering): clear the OUTGOING
+/// mechanism's per-profile credentials once an `auth login` invocation
+/// (interactive re-declaration OR non-interactive mechanism switch) has
+/// ALREADY persisted `new_method`'s credentials onto `profile`, and that
+/// differs from the profile's PRIOR `auth_method`.
+///
+/// **Caller contract (data-loss fix, mirrors I-6 / BC-1.2.051's fix to
+/// `refresh_credentials`):** this function MUST be called only AFTER
+/// `login_oauth`/`login_token` has returned `Ok`, never before. The old
+/// "clear-then-login" ordering called this BEFORE dispatching the new
+/// login, so a failed login (browser cancel, network error, a missing
+/// `--no-input` value) left the profile with the outgoing mechanism's
+/// credentials already deleted and no replacement ever stored — worse than
+/// the profile's state before the command ran. `handle_login` now calls
+/// `login_oauth`/`login_token` first and only reaches this call on success;
+/// a failed login returns early via `?` and this function is never invoked,
+/// so the prior credentials stay completely intact.
+///
+/// A SAME-mechanism re-declaration, or a first-time declaration
+/// (`current_auth_method` is `None`), is a caller-side no-op — the existing
+/// `store_api_token`/`store_oauth_tokens` write already overwrites in
+/// place, so callers must not invoke this function in that case.
+///
+/// **Clears ONLY the outgoing mechanism's pair — NOT both kinds.** Reuses
+/// [`crate::api::auth::clear_profile_oauth_pair`] /
+/// [`crate::api::auth::clear_profile_api_token_pair`], the SAME per-kind
+/// primitives [`crate::api::auth::clear_profile_creds`] is itself built
+/// from (ADR-0020 §Decision 7 / BC-1.2.014) — so per-kind clearing is still
+/// not re-implemented inline here, just dispatched to the single relevant
+/// kind instead of both. This is load-bearing under the new ordering:
+/// because this call now runs AFTER the new mechanism's credentials are
+/// already stored, calling the combined `clear_profile_creds` (which clears
+/// BOTH the OAuth pair AND the API-token pair unconditionally) would delete
+/// the credentials this function's caller just persisted. Dispatching on
+/// `outgoing` alone keeps the newly-stored `new_method` pair untouched.
+///
+/// `emit_switch_notice` gates BC-1.1.014 EC-1.1.014-4's SHOULD-level
+/// informational stderr line for a NON-interactive mechanism switch (e.g.
+/// `"Profile '<profile>' auth method changed from 'oauth' to
+/// 'api_token'."`). The interactive re-declaration path (BC-1.1.013
+/// EC-1.1.013-2) should pass `false` — the picker interaction itself
+/// already makes the switch visible to the user.
+pub fn clear_outgoing_mechanism_on_switch(
+    profile: &Profile,
+    current_auth_method: Option<&str>,
+    new_method: &str,
+    emit_switch_notice: bool,
+) -> Result<()> {
+    let Some(outgoing) = current_auth_method else {
+        // First-time declaration — nothing to clear, caller-side no-op per
+        // this function's own contract.
+        return Ok(());
+    };
+    if outgoing == new_method {
+        // Same-mechanism re-declaration — the ordinary store_* overwrite
+        // path handles this; no separate clear step (AC-004).
+        return Ok(());
+    }
+
+    // Dispatch to the per-kind clear matching ONLY the outgoing mechanism —
+    // never the combined clear_profile_creds, which would also delete the
+    // new_method credentials this function's caller (handle_login) has
+    // already stored by the time this runs. An unrecognized `outgoing`
+    // value (e.g. a hand-edited config) has nothing of ours to clear.
+    let clear_result = match outgoing {
+        "oauth" => auth::clear_profile_oauth_pair(profile),
+        "api_token" => auth::clear_profile_api_token_pair(profile),
+        _ => Ok(()),
+    };
+    clear_result.with_context(|| {
+        format!(
+            "failed to clear profile {:?}'s outgoing '{outgoing}' credentials \
+             after switching to '{new_method}'",
+            profile.as_ref()
+        )
+    })?;
+
+    if emit_switch_notice {
+        eprintln!(
+            "Profile '{}' auth method changed from '{outgoing}' to '{new_method}'.",
+            profile.as_ref()
+        );
+    }
+
+    Ok(())
 }

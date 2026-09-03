@@ -596,6 +596,29 @@ pub fn clear_profile_oauth_pair(profile: &Profile) -> Result<()> {
     Ok(())
 }
 
+/// Clear ONLY a single profile's namespaced API-token-pair credentials
+/// (`<profile>:email` / `<profile>:api-token`) — never the OAuth pair, and
+/// never the legacy flat `KEY_EMAIL`/`KEY_API_TOKEN` keys
+/// (`S-cycle3-credential-absence-guard`'s no-touch invariant, BC-1.4.032).
+///
+/// Symmetric counterpart to [`clear_profile_oauth_pair`], added by
+/// FIX-F5-login-switch (BC-1.2.051-adjacent, relogin-then-replace ordering
+/// for `jr auth login`'s mechanism-switch path — see
+/// [`crate::cli::auth::login::clear_outgoing_mechanism_on_switch`]). That
+/// caller runs AFTER the new mechanism's credentials have already been
+/// stored, so it must clear ONLY the outgoing mechanism's pair —
+/// [`clear_profile_creds`] is unsuitable there because it clears BOTH kinds
+/// unconditionally and would delete the just-stored new credentials too.
+///
+/// `keyring::Error::NoEntry` on any step is success; any other keychain
+/// error propagates immediately via `?` (same tightening as
+/// [`clear_profile_creds`]/[`clear_profile_oauth_pair`]).
+pub fn clear_profile_api_token_pair(profile: &Profile) -> Result<()> {
+    delete_credential_tolerating_no_entry(&api_token_email_key(profile.as_ref()))?;
+    delete_credential_tolerating_no_entry(&api_token_key(profile.as_ref()))?;
+    Ok(())
+}
+
 /// Clear a single profile's stored credentials from the system keychain —
 /// BOTH the OAuth-pair AND the namespaced API-token-pair (other profiles +
 /// shared keys such as `oauth_client_id`/`oauth_client_secret` are
@@ -709,6 +732,26 @@ fn delete_credential_tolerating_no_entry(key: &str) -> Result<()> {
 /// deleted" invariant; the existing unconditional legacy-flat-key clear
 /// above is pre-existing, out of this story's scope, and must not be
 /// touched.
+///
+/// # TEST-ONLY — do not call from production code (S-cycle3-chosen-flow-reconcile, F1 history)
+///
+/// As of this story, this function has zero production call sites — every
+/// remaining caller is `#[cfg(test)]`. It was previously invoked from
+/// `auth refresh`'s pre-login "clear-then-login" sequence; that call site
+/// was removed by the BC-1.2.051 Invariant 2 ("relogin-then-replace", I-6)
+/// fix, because clearing credentials before a replacement was confirmed
+/// obtainable was the root cause of a real data-loss defect (F1): this
+/// function unconditionally wipes the SHARED `oauth_client_id`/
+/// `oauth_client_secret` BYO OAuth app credentials, the legacy flat
+/// email/api-token keys, and every listed profile's OAuth pair — none of
+/// which a subsequent successful login necessarily restores (a BYO app's
+/// client id/secret in particular are never re-derived; they're gone for
+/// every profile, not just the one being refreshed). Do NOT reintroduce a
+/// call to this function from `refresh`, `login`, or any other production
+/// command without first re-litigating this history — a narrower,
+/// single-profile clear (see [`clear_profile_creds`]) called ONLY after a
+/// replacement credential is confirmed obtainable is almost certainly what
+/// any future "clear before replace" need actually wants.
 pub fn clear_all_credentials(profiles: &[Profile]) -> Result<()> {
     let mut keys: Vec<String> = vec![
         KEY_EMAIL.to_string(),
@@ -1145,17 +1188,26 @@ pub(crate) async fn refresh_oauth_token_with_url(profile: &str, token_url: &str)
     // AC-005: emit structured tracing at refresh entry point.
     // refresh_token value is intentionally NOT logged — only the profile.
     info!(target: "jr::auth", profile = %profile, "refresh_oauth_token_start");
+    // F2-01/F2-02: `resolve_refresh_app_credentials` deliberately returns
+    // `Err` for two different reasons — a locked/permission-denied keychain
+    // (a genuine backend error) versus no app credentials being available at
+    // all (no BYO keychain entry and no embedded build, i.e. genuinely
+    // absent). Blanket-coercing every `Err` into empty embedded creds used
+    // to erase that distinction: a locked keychain would POST with empty
+    // client_id/client_secret, get back `invalid_client`, and surface the
+    // misleading "embedded app may have been rotated" hint — actively
+    // hiding the real cause on the hourly auto-refresh hot path. Only the
+    // genuinely-absent case (`NoAppCredentialsAvailable`) still falls back
+    // to an empty-credential attempt — this preserves existing behavior for
+    // environments with no embedded build and no stored BYO creds (e.g. a
+    // mock token endpoint that doesn't validate client credentials). Any
+    // other error (a real backend/permission failure) propagates as-is.
     let (client_id, client_secret, source) = match resolve_refresh_app_credentials() {
         Ok(creds) => creds,
-        Err(_) => {
-            // No app credentials available (no BYO keychain entry and no
-            // embedded build). Use empty strings — the token endpoint will
-            // reject them with invalid_client, which surfaces as a refresh
-            // failure. For integration-test environments, the mock server
-            // ignores the credentials and returns tokens regardless, which
-            // is the correct test behaviour for always-run tests.
+        Err(e) if e.downcast_ref::<NoAppCredentialsAvailable>().is_some() => {
             (String::new(), String::new(), RefreshAppSource::Embedded)
         }
+        Err(e) => return Err(e),
     };
     // Log that we resolved credentials without logging their values.
     debug!(
@@ -1166,7 +1218,25 @@ pub(crate) async fn refresh_oauth_token_with_url(profile: &str, token_url: &str)
         source = ?source,
         "refresh_credentials_resolved"
     );
-    let (_, refresh_token) = load_oauth_tokens(&Profile::from(profile)).unwrap_or_default();
+    // Same class of bug as above (F2-02): `unwrap_or_default()` used to
+    // coerce a genuine keychain backend error reading the stored refresh
+    // token into an empty string, which then gets POSTed to Atlassian and
+    // comes back as a confusing `invalid_grant` instead of surfacing the
+    // real (locked-keychain) cause. Only fall back to an empty refresh
+    // token when the profile genuinely has no stored OAuth token (or the
+    // stored pair is partial) — never when the read itself failed at the
+    // backend/keychain level.
+    let (_, refresh_token) = match load_oauth_tokens(&Profile::from(profile)) {
+        Ok(tokens) => tokens,
+        Err(e) if is_backend_keyring_error(&e) => {
+            return Err(e.context(
+                "OAuth refresh: failed to read the stored refresh token from \
+                 the system keychain. Unlock your keychain or grant access \
+                 to jr, then retry.",
+            ));
+        }
+        Err(_) => (String::new(), String::new()),
+    };
 
     // S-3.03 v2 DECISION: Option A-fixed (auto-refresh on 401 with
     // per-profile single-flight). Wired into JiaClient::send via
@@ -1307,11 +1377,35 @@ fn resolve_refresh_app_credentials() -> Result<(String, String, RefreshAppSource
             RefreshAppSource::Embedded,
         ));
     }
-    anyhow::bail!(
-        "OAuth refresh requires either previously-stored app credentials \
-         (run `jr auth login --oauth` once) or an embedded build. \
-         This binary has neither."
-    )
+    Err(NoAppCredentialsAvailable.into())
+}
+
+/// Marker error: no OAuth app credentials are available at all — no BYO
+/// keychain entry (genuinely absent, not a backend failure) and no
+/// embedded build compiled in. Distinct, by type rather than by string
+/// matching, from a genuine keychain backend/permission error (F2-01/
+/// F2-02) so `refresh_oauth_token_with_url` can tell the two apart via
+/// `anyhow::Error::downcast_ref` and only fall back to an empty-credential
+/// refresh attempt for this genuinely-absent case.
+#[derive(Debug, thiserror::Error)]
+#[error(
+    "OAuth refresh requires either previously-stored app credentials \
+     (run `jr auth login --oauth` once) or an embedded build. \
+     This binary has neither."
+)]
+struct NoAppCredentialsAvailable;
+
+/// True if `err`'s cause chain contains a genuine [`keyring::Error`] — as
+/// opposed to a message [`load_oauth_tokens`] constructs itself to describe
+/// "no token stored" or "partial state" (both of which are plain
+/// `anyhow::anyhow!` string errors with no `keyring::Error` in their
+/// chain). Used by `refresh_oauth_token_with_url` (F2-02) to distinguish a
+/// real backend/permission failure, which must propagate, from a
+/// legitimately-absent refresh token, which may still fall back to an
+/// empty string.
+fn is_backend_keyring_error(err: &anyhow::Error) -> bool {
+    err.chain()
+        .any(|cause| cause.downcast_ref::<keyring::Error>().is_some())
 }
 
 /// Where the OAuth app credentials for a token refresh resolved from.
@@ -1928,6 +2022,54 @@ mod tests {
                 result.is_err(),
                 "a genuine backend error must propagate from clear_all_credentials, \
                  not be swallowed"
+            );
+        });
+    }
+
+    /// F2-01/F2-02: a locked/backend keychain error encountered while
+    /// resolving refresh-side app credentials must propagate as the
+    /// refresh error, not be collapsed into empty embedded credentials
+    /// (which previously surfaced a misleading "embedded app rotated" hint
+    /// once Atlassian rejected the empty client_id/secret with
+    /// `invalid_client`). Uses an unreachable token URL — before the fix,
+    /// `resolve_refresh_app_credentials`'s `Err(_)` was swallowed and the
+    /// function proceeded all the way to the (failing) HTTP POST, so the
+    /// error text would be a network/URL failure, never mentioning the
+    /// keychain at all. After the fix, the function returns before ever
+    /// touching the network.
+    #[test]
+    #[ignore = "requires keyring backend; set JR_RUN_KEYRING_TESTS=1 to run"]
+    fn test_f2_01_refresh_propagates_locked_keychain_error_not_embedded_rotation_hint() {
+        with_test_keyring(|| {
+            // SAFETY: with_test_keyring holds KEYRING_TEST_ENV_MUTEX for
+            // this closure's entire duration.
+            unsafe { std::env::set_var("JR_SERVICE_NAME", "") };
+
+            let rt = tokio::runtime::Runtime::new().unwrap();
+            let result = rt.block_on(refresh_oauth_token_with_url(
+                "default",
+                "not-a-valid-url-would-error-if-reached",
+            ));
+
+            let err = result.expect_err(
+                "a locked/backend keychain error during credential resolution must \
+                 propagate as an Err",
+            );
+            let msg = format!("{err:#}").to_lowercase();
+            assert!(
+                msg.contains("keychain"),
+                "expected the genuine keychain/backend error to propagate: {msg}"
+            );
+            assert!(
+                !msg.contains("embedded oauth app credentials may have been rotated"),
+                "a locked/backend keychain error must not be masked by the \
+                 empty-creds embedded-rotation hint: {msg}"
+            );
+            assert!(
+                !msg.contains("token refresh failed: http"),
+                "the function must return before ever attempting the HTTP \
+                 refresh POST when credential resolution fails with a genuine \
+                 backend error: {msg}"
             );
         });
     }

@@ -4,6 +4,127 @@ All notable changes to jr will be documented here.
 
 ## [Unreleased]
 
+### Added
+
+- **`jr auth login` defaults to an OAuth-first interactive picker, mirroring
+  `jr init`** (S-cycle3-oauth-default-creation, BC-1.1.013, DEC-313). Bare
+  `jr auth login` on an interactive TTY now presents `["OAuth 2.0
+  (recommended)", "API Token"]` with OAuth as the default selection —
+  identical items and default index to `jr init`'s existing picker.
+  Non-interactive invocations (`--no-input`, or stdin not a TTY) skip the
+  picker entirely and always default to `api_token` (BC-1.1.014); presence
+  of `JR_EMAIL`/`JR_API_TOKEN` env vars alone does NOT suppress the picker
+  on an otherwise-interactive session. A mechanism-switching re-declaration
+  (picker or non-interactive) clears the outgoing mechanism's stored
+  credentials before/alongside writing the new ones.
+- **New, symmetric `--api-token` flag on `jr auth login`/`jr auth refresh`**
+  (S-cycle3-oauth-default-creation, BC-1.2.050, DEC-323), mutually exclusive
+  with `--oauth`. On `login`, `--api-token` selects the `api_token`
+  mechanism directly, skipping the interactive picker. On `refresh` it is
+  accepted for symmetry but has no effect on mechanism selection
+  (BC-1.2.051) — `refresh` always follows the profile's own stored
+  `auth_method` — and prints an informational stderr notice (human-mode
+  only) explaining that it's inert there.
+- **Airtight non-interactive OAuth guard** (S-cycle3-oauth-default-creation,
+  BC-1.1.016). An explicit `--oauth` under any non-interactive trigger, or
+  a non-interactive `jr auth refresh` against a profile whose stored
+  `auth_method` is already `oauth`, now exits 64 immediately — before any
+  network call, callback-listener bind, or browser-open attempt — with
+  `OAuth requires an interactive terminal; use --api-token for
+  non-interactive auth.` This closes a class of CI/automation hangs where a
+  non-interactive invocation could previously reach the OAuth flow and
+  block waiting on a browser redirect that could never complete.
+
+### Deprecated
+
+- **`--oauth` on `jr auth login`/`jr auth refresh` is deprecated** in favor
+  of letting the interactive picker default to OAuth, or passing the new
+  `--api-token` flag explicitly (S-cycle3-oauth-default-creation,
+  BC-1.2.049, DEC-323). `--oauth` continues to work exactly as before and
+  now prints a stderr-only, human-mode-only deprecation notice on every
+  functional (non-guard-rejected) use; the notice never appears under
+  `--output json`.
+
+### Changed
+
+- **Breaking:** `jr auth refresh --oauth`/`--api-token` no longer override
+  the target profile's stored mechanism (S-cycle3-chosen-flow-reconcile,
+  BC-1.2.048, BC-1.2.051, DEC-321). Previously, `jr auth refresh --oauth
+  <profile>` on a profile whose stored `auth_method` was `api_token` forced
+  an OAuth relogin regardless of the profile's actual mechanism — this was
+  the sole remaining exception to "`auth_method` is intrinsic." As of this
+  change, `refresh` always follows the target profile's own stored
+  `auth_method`; `--oauth`/`--api-token` remain syntactically accepted (no
+  clap error) but have zero effect on which mechanism is used. Migration:
+  the only way to change a profile's mechanism is `auth login`
+  re-declaration (`jr auth login --profile <name> --oauth` or
+  `--api-token`), mirroring the BC-1.2.047/S-663-1 precedent
+  (`jr auth switch --profile` removal). See also the accompanying I-6
+  "relogin-then-replace" ordering fix, which ensures a failed `refresh`
+  never clears existing credentials before a replacement is confirmed
+  obtainable. As an intentional consequence of relogin-then-replace, `jr
+  auth refresh` no longer clears ANY credentials before re-obtaining them —
+  it no longer wipes the shared BYO OAuth app credentials
+  (`oauth_client_id`/`oauth_client_secret`), legacy flat keys, or a
+  profile's other-mechanism token pair, resolving the previously-tracked F1
+  data-loss issue.
+
+### Fixed
+
+- **A locked/backend keychain error during OAuth token refresh no longer
+  surfaces as a misleading "embedded app rotated" hint** (FIX-F5-refinement,
+  F2-01/F2-02, adversary-surfaced MEDIUM finding). `refresh_oauth_token_with_url`
+  (`src/api/auth.rs`) used to coerce ANY error from
+  `resolve_refresh_app_credentials` — including a locked/permission-denied
+  keychain, which that resolver deliberately returns as a distinct `Err`
+  from "no credentials stored" — into empty embedded OAuth app credentials.
+  The refresh would then POST with an empty client_id/client_secret, get
+  back `invalid_client` from Atlassian, and tell the user their embedded
+  app credentials may have been rotated — actively hiding the real cause
+  (a locked keychain) on the hourly auto-refresh hot path. The same class
+  of bug also swallowed a genuine backend error reading the stored refresh
+  token into an empty string via `unwrap_or_default()`. Both call sites now
+  propagate a genuine backend/permission error as-is; only the truly-absent
+  case (no BYO keychain entry and no embedded build, or no stored refresh
+  token at all) still falls back to an empty-credential attempt, preserving
+  existing test/mock-environment behavior.
+- **`jr auth logout` on a profile with no `auth_method` recorded now takes
+  the api-token informational-notice branch, not the OAuth-clear branch**
+  (FIX-F5-refinement, LOW-4, BC-1.1.015). An unset `auth_method` defaults to
+  `"api_token"` at runtime (`from_config`'s `.unwrap_or("api_token")`), but
+  `handle_logout`'s branch condition only recognized an *explicit*
+  `auth_method = "api_token"` — an unset value fell through to the OAuth
+  branch and printed a misleading "Logged out of profile ..." success
+  message even though there was never an OAuth session for that profile.
+  Fixed by keying the branch on "not oauth" rather than "is api_token",
+  matching the documented runtime default.
+
+- **`jr auth login`'s mechanism-switching re-declaration no longer clears
+  the outgoing mechanism's credentials before the new login has succeeded**
+  (FIX-F5-login-switch, a Wave-5 adversary-surfaced MEDIUM data-loss
+  finding). Previously, `handle_login` called
+  `clear_outgoing_mechanism_on_switch` — which deletes the profile's
+  outgoing credential pair — BEFORE dispatching to `login_oauth`/
+  `login_token`. If the new login then failed (browser cancel, network
+  error, a missing `--no-input` value), the profile's prior WORKING
+  credentials had already been deleted and were never replaced, leaving the
+  profile credential-less — strictly worse than its state before the
+  command ran. This mirrors the exact "clear-then-login" antipattern the
+  accompanying I-6 fix (DEC-321, above) had just removed from `auth
+  refresh`, but it had not yet been applied to this `auth login`
+  mechanism-switch path. Fixed via the same relogin-then-replace ordering:
+  `login_oauth`/`login_token` now run FIRST, and the outgoing mechanism's
+  credentials are cleared ONLY after the new mechanism's credentials are
+  confirmed obtained and stored; a failed login leaves the prior
+  credentials completely untouched. As part of this fix,
+  `clear_outgoing_mechanism_on_switch` also narrowed from clearing BOTH
+  credential kinds unconditionally (via `clear_profile_creds`) to clearing
+  ONLY the outgoing kind (via the new `clear_profile_api_token_pair`,
+  symmetric with the existing `clear_profile_oauth_pair`) — under the new
+  ordering, the combined clear would otherwise delete the new mechanism's
+  credentials this same call just stored. A successful switch still leaves
+  no orphaned outgoing-mechanism credentials behind.
+
 ### Internal
 
 - **Un-deferred ADR-0011 (Status: Deferred → Accepted, DEC-317) and completed the
