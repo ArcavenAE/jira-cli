@@ -1,10 +1,8 @@
-use anyhow::{Context, Result};
+use anyhow::Result;
 
-use crate::api::auth;
 use crate::config::Config;
 use crate::error::JrError;
 use crate::output;
-use crate::profile::Profile;
 
 use super::{
     AuthFlow, check_noninteractive_oauth_guard, chosen_flow_for_profile,
@@ -28,24 +26,12 @@ pub(crate) fn refresh_success_payload(flow: AuthFlow) -> serde_json::Value {
     })
 }
 
-/// Clear all stored credentials and re-run the login flow so the current
-/// binary re-registers as the creator of fresh keychain entries.
-///
-/// On macOS this is the recovery path for the legacy Keychain ACL/partition
-/// invalidation that occurs after `jr` is replaced at its installed path
-/// (e.g., `brew upgrade`). See spec at
-/// `docs/superpowers/specs/2026-04-17-keychain-prompts-207-design.md`.
-///
-/// Ordering is clear-then-login. If the login step fails (e.g., EOF on stdin,
-/// network error during OAuth), the user is warned that credentials are gone
-/// and told exactly which `jr auth login` invocation will restore them,
-/// before the error is propagated.
 /// Bundle of CLI arguments threaded from `main.rs` to [`refresh_credentials`].
 ///
-/// Same rationale as [`LoginArgs`] — passing all credential slots plus the
-/// flow toggle and `--profile` as positional parameters trips clippy's
-/// `too_many_arguments` lint, so they're grouped into a struct that also
-/// makes the call site at `main.rs` self-documenting.
+/// Same rationale as [`LoginArgs`](super::LoginArgs) — passing all credential
+/// slots plus the flow toggle and `--profile` as positional parameters trips
+/// clippy's `too_many_arguments` lint, so they're grouped into a struct that
+/// also makes the call site at `main.rs` self-documenting.
 pub struct RefreshArgs<'a> {
     pub profile: Option<&'a str>,
     pub oauth: bool,
@@ -65,6 +51,35 @@ pub struct RefreshArgs<'a> {
     pub output: &'a crate::cli::OutputFormat,
 }
 
+/// Refresh (re-obtain) the stored credentials for a profile.
+///
+/// On macOS this is the recovery path for the legacy Keychain ACL/partition
+/// invalidation that occurs after `jr` is replaced at its installed path
+/// (e.g., `brew upgrade`). See spec at
+/// `docs/superpowers/specs/2026-04-17-keychain-prompts-207-design.md`.
+///
+/// **AMENDED by S-cycle3-chosen-flow-reconcile (BC-1.2.051 Invariant 2, I-6).**
+/// Ordering is **relogin-then-replace**, not "clear-then-login" (the prior
+/// term/behavior was self-contradicting — it admitted clearing credentials
+/// BEFORE confirming a replacement was obtainable, which directly violates
+/// "a failed refresh must never leave a profile in a WORSE, credential-less
+/// state than before the command was run"). The corrected contract: the new
+/// credential value must be obtained and confirmed usable FIRST; only then
+/// does the stored credential get overwritten. A refresh that fails to
+/// obtain a usable replacement (network error, cancelled interactive
+/// re-prompt, EOF on stdin) must leave the existing
+/// `<profile>:email`/`<profile>:api-token` (or OAuth) pair completely
+/// intact and propagate the error — never a prior delete step. This is a
+/// genuine logic reordering of the credential-obtain/replace sequence, not
+/// a comment-only fix; see BC-1.2.051 AC-006/AC-007.
+///
+/// Per BC-5.38.005's self-check, the `RefreshArgs` field access, config
+/// load, target-profile resolution, the BC-1.1.016 non-interactive OAuth
+/// guard, the BC-1.2.049/050 deprecation/inertness notices, and the
+/// URL-completeness precondition are all PRE-EXISTING control flow this
+/// story left intact. Only the relogin-then-replace credential-obtain/store
+/// sequence (previously the clear-then-login block) and its terminal
+/// success/error output were reordered.
 pub async fn refresh_credentials(args: RefreshArgs<'_>) -> Result<()> {
     // Pass `args.profile` as the CLI-flag override so a `--profile X`
     // against an unconfigured X surfaces the strict load's "unknown
@@ -85,7 +100,12 @@ pub async fn refresh_credentials(args: RefreshArgs<'_>) -> Result<()> {
         .get(&target)
         .cloned()
         .unwrap_or_default();
-    let flow = chosen_flow_for_profile(&target_profile, args.oauth);
+    // BC-1.2.051 AC-001/AC-002/AC-003/AC-004: `chosen_flow_for_profile` no
+    // longer takes an `--oauth`/override argument — it resolves solely from
+    // `target_profile.auth_method`. `args.oauth`/`args.api_token` are still
+    // read below (guard evaluation, deprecation/inertness notices), but
+    // neither reaches this call.
+    let flow = chosen_flow_for_profile(&target_profile);
 
     // BC-1.1.016 Postcondition 3, Precondition 2b: the airtight
     // non-interactive OAuth guard, evaluated as the FIRST thing done with
@@ -128,35 +148,25 @@ pub async fn refresh_credentials(args: RefreshArgs<'_>) -> Result<()> {
         .into());
     }
 
-    // Clear-only-what-this-flow-refreshes:
-    //
-    // - OAuth refresh rotates ONLY the per-profile <profile>:oauth-*-token
-    //   entries, via `clear_profile_oauth_pair` (NOT `clear_profile_creds`,
-    //   which — as of S-cycle3-remove-logout-semantics/BC-1.2.014 — ALSO
-    //   deletes the namespaced <profile>:email/<profile>:api-token pair).
-    //   `clear_profile_creds` is reserved for `auth remove`
-    //   ([`crate::cli::auth::remove::handle_remove`]); calling it here
-    //   would silently, irrecoverably delete an oauth-method profile's
-    //   api-token pair if it carries one (e.g. from a prior mechanism
-    //   switch) — a DEC-322 data-loss regression this fix closes. The
-    //   shared keys (oauth_client_id, oauth_client_secret) belong to other
-    //   profiles too and must not be wiped either.
-    // - API-token refresh re-prompts the email + api-token, which as of
-    //   S-cycle3-percred-storage (BC-1.4.031) live under the namespaced
-    //   <profile>:email / <profile>:api-token keys, not the old flat
-    //   email/api-token keys. `clear_all_credentials` deletes those
-    //   namespaced keys per profile (alongside the flat keys, kept for
-    //   pre-migration installs), so the #207-style "wipe-then-relogin"
-    //   path is correct again here.
-    match flow {
-        AuthFlow::OAuth => auth::clear_profile_oauth_pair(&Profile::from(target.clone())).context(
-            "failed to clear stored OAuth tokens before refresh — keychain may still hold stale entries",
-        )?,
-        AuthFlow::Token => auth::clear_all_credentials(&[Profile::from(target.clone())]).context(
-            "failed to clear stored credentials before refresh — keychain may still hold stale entries",
-        )?,
-    }
-
+    // Relogin-then-replace (BC-1.2.051 Invariant 2 / I-6): obtain/confirm
+    // the new credential value FIRST, then replace the stored one — never a
+    // prior delete step. `login_token`/`login_oauth` already have this
+    // shape internally: each resolves/obtains its new credential value
+    // (`resolve_credential` for Token; the OAuth browser round-trip for
+    // OAuth) and ONLY THEN persists it via `auth::store_api_token` /
+    // `auth::store_oauth_tokens` — both a plain, unconditional two-key
+    // `set_password` overwrite of the existing keychain entry, which is
+    // itself the "atomic-in-effect store" BC-1.2.051 Invariant 2 calls for.
+    // Calling them directly, with no separate clear/delete step beforehand,
+    // is therefore sufficient: on failure (e.g. `resolve_credential`'s
+    // no-input/missing-value check, or a failed/cancelled OAuth round-trip)
+    // neither store function is ever reached, so the existing
+    // <profile>:email/<profile>:api-token (or OAuth) pair is left
+    // completely untouched. This replaces the prior "clear-then-login"
+    // sequence (`clear_profile_oauth_pair`/`clear_all_credentials` called
+    // BEFORE login), which is the exact I-6 self-contradiction this story
+    // removes — it admitted deleting the working credential before a
+    // replacement was confirmed obtainable.
     let login_result = match flow {
         AuthFlow::Token => login_token(&target, args.email, args.token, args.no_input).await,
         AuthFlow::OAuth => {
@@ -176,9 +186,13 @@ pub async fn refresh_credentials(args: RefreshArgs<'_>) -> Result<()> {
             AuthFlow::Token => "jr auth login",
             AuthFlow::OAuth => "jr auth login --oauth",
         };
+        // Corrected I-6 framing: the old "Credentials were cleared, but…"
+        // message is gone because it is no longer true — relogin-then-
+        // replace never touches the existing credential until a
+        // replacement has been confirmed obtainable.
         eprintln!(
-            "Credentials were cleared, but the login flow did not complete. \
-             Run `{login_cmd}` to restore access."
+            "Refresh failed; your existing credentials for {target:?} were \
+             left unchanged. Run `{login_cmd}` to try again."
         );
         return Err(err);
     }
