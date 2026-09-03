@@ -4,7 +4,7 @@ level: ops
 version: "1.0"
 status: in-progress
 producer: state-manager
-timestamp: 2026-09-03T16:00:00Z
+timestamp: 2026-09-03T18:30:00Z
 cycle: "cycle-004"
 inputs: [STATE.md]
 input-hash: "[live-state]"
@@ -60,6 +60,66 @@ No BCs/VPs/holdouts added or removed — 733 BCs / 41 VPs / 106 holdouts unchang
 - cycles/cycle-004/burst-log.md
 
 **Dim-2 Attestation:** `scripts/check-spec-counts.sh` / `scripts/check-bc-cumulative-counts.sh` — N/A this burst (no BC/VP/holdout count change; bookkeeping-only cycle-open, no `.factory/specs/prd/` or `BC-INDEX.md` edits).
+
+**Dim-5 Attestation:** N/A — no binary/WASM artifact produced by this burst.
+
+**Dim-6 Attestation:** N/A — no source code changed this burst (`.factory/` artifact bookkeeping only, no `develop`-side commit).
+
+**Dim-7 Attestation:** N/A — no test-affecting change this burst; full regression remains PASS (4763/0/157) as of the cycle-003 F6/F7 hardening/convergence passes, unchanged.
+
+## Burst: Burst 2 — F1 human gate APPROVED, DEC-335 recorded, advanced to F2 (2026-09-03)
+
+**Parent-commit:** `42e92b46` (`develop` tip; unchanged this burst — no `develop`-side commit; cycle-004 has not started implementation).
+
+**Trigger:** human reviewed the architect's F1 delta-analysis report (`cycles/cycle-004/phase-f1-delta-analysis/delta-analysis.md`, 549 lines, §13 open questions) and **APPROVED** it at the human gate, answering all six open questions:
+
+1. **Scope:** confirmed and EXPANDED — the #759+#760 bundle becomes a 4-story decomposition: `dpapi-storage-fix` (#759 durable fix — keyring-first + user-scope DPAPI-encrypted-file fallback for oversized OAuth access+refresh tokens, atomic), `honest-fail-message` (#759 backstop — accurate `keyring::Error::TooLong` message + explicit dangling-grant revoke), `windows-docs` (#760), and `cloud_id-correctness` (human-added — fetch+persist `cloud_id` via `GET /_edge/tenant_info` on API-token login).
+2. **`cloud_id` fix inclusion (§11):** decided YES — folded in as story 4, `cloud_id-correctness`, which also closes the cycle-003-carried-forward `A-PA-LOW-001` standing item directly (not merely documents around it).
+3. **Windows-validation plan (§10):** ACCEPTED as proposed — F4 spikes whether `windows-latest` GitHub Actions CI can exercise DPAPI; a manual smoke test on real Windows remains a REQUIRED (not optional) gate before F7 convergence.
+4. **`windows` crate vs. raw `windows-sys` (§6):** DEFERRED to a F2 ADR — needs the architect's recommendation against a real `cargo add` dry-run against this repo's actual `deny.toml`/`Cargo.lock`, not decided at this gate.
+5. **Module exclusions (§13 Q5):** confirmed — `clear_all_credentials` stays untouched (test-only, no production call sites, pre-existing do-not-reintroduce warning).
+6. **Sequencing (§13 Q6):** decided — `honest-fail-message` bundled with `dpapi-storage-fix` into ONE release, not shipped independently as a fast-follow.
+
+**Actions taken:**
+1. STATE.md refreshed via one full-content Write (v3.53 → v3.54): frontmatter `phase` F1→F2, `current_step` updated (D-chain cite + trajectory-tail preserved), `cycle_004_status` updated to reflect F1 APPROVED / F2 IN PROGRESS / 4-story scope.
+2. Recorded 1 new Decisions Log entry, **DEC-335** (collision-checked: highest pre-existing ID was DEC-334, confirmed via corpus-wide grep against STATE.md — no collision): human APPROVED the F1 delta-analysis at the human gate — standard F1→F7 route, 4-story scope, Windows-validation plan accepted, `windows`-vs-`windows-sys` deferred to F2 ADR, `clear_all_credentials` confirmed untouched.
+3. Updated Phase Progress: `F1-DELTA-ANALYSIS` row → APPROVED (2026-09-03); added new `F2-SPEC-EVOLUTION` row, IN PROGRESS.
+4. Reset Current Phase Steps to a 4-row F1→F2-transition table; archived the prior Burst-1 steps table to this burst-log (Burst 1, above).
+5. Updated Convergence Status / Concurrent Cycles / Constraints Carried Forward / Session Resume Checkpoint prose to record the gate outcome and the F2-in-progress position.
+6. Updated Drift/Standing Items: annotated `A-PA-LOW-001` as now IN-SCOPE for cycle-004 story 4 (`cloud_id-correctness`) rather than merely "overlapping" #760's docs scope; marked the Burst-1 research-file hygiene note RESOLVED (see item 7 below).
+7. Committed the F1 delta-analysis artifacts (`cycles/cycle-004/phase-f1-delta-analysis/delta-analysis.md`, `affected-files.txt`) plus the previously-untracked `research/win-oauth-keychain-blob-limit-2026-09-03.md` and modified `research/RESEARCH-INDEX.md` (left uncommitted at Burst 1) alongside STATE.md and this burst-log entry.
+8. Did NOT stage the pre-existing unrelated dirty files noted at every burst since before this session (`regression-state.json`, `sidecar-learning.md`, the modified `S-cycle3-env-tag` demo gif) — left as-is per instruction.
+
+**Adversary verdict:** N/A — human-gate bookkeeping burst (STATE.md + committing already-produced F1 artifacts), no code or spec-body change; no `adversary` agent dispatched. The F1 gate itself was a human decision, not an adversarial review pass.
+
+**Outcome:** cycle-004 (`windows-correctness`) Phase F1 is **APPROVED**; Phase F2 (spec evolution) is now IN PROGRESS (not yet dispatched). No BC/VP/holdout counts changed (733/41/106 unchanged) — F1 does not create/modify specs; new BCs/VPs for the 4-story scope land at F2.
+
+**NEXT:** Dispatch F2 spec evolution (`/vsdd-factory:phase-f2-spec-evolution`) for the 4-story scope — incremental PRD/architecture/VP delta.
+
+**Codifications:** none this burst — DEC-335 is recorded in STATE.md's Decisions Log; no spec/BC/VP authored yet (that is F2's work).
+
+**Closes:** the Burst-1 hygiene note (research files now committed). **Does NOT close:** any cycle-001/002/003 standing Drift/Standing Items — all carried forward unchanged in STATE.md; `A-PA-LOW-001` is reclassified (in-scope, not resolved) not closed — it closes only when story 4 ships.
+
+### Counts reconciled this burst
+
+No BCs/VPs/holdouts added or removed — 733 BCs / 41 VPs / 106 holdouts unchanged. `total_stories` unchanged at 168 (the 4 new cycle-004 stories are not yet authored — that happens at F3).
+
+### Details
+
+| Agent | Task | Output |
+|-------|------|--------|
+| human | Review F1 delta-analysis report; answer §13 open questions; approve the gate | Gate decision recorded as DEC-335 |
+| state-manager | Update STATE.md (frontmatter, DEC-335, Phase Progress + Current Phase Steps rows, Convergence Status/Concurrent Cycles/Constraints/Drift-Standing prose, Session Resume Checkpoint); append this burst-log entry; commit F1 artifacts + research docs + STATE.md + burst-log to factory-artifacts | `STATE.md`; `cycles/cycle-004/burst-log.md` (this entry); F1 artifacts + research docs committed |
+
+**Files touched (Dim-1): 5 unique files (factory-artifacts, this burst)**
+
+- STATE.md
+- cycles/cycle-004/burst-log.md
+- cycles/cycle-004/phase-f1-delta-analysis/delta-analysis.md (newly committed, previously untracked)
+- cycles/cycle-004/phase-f1-delta-analysis/affected-files.txt (newly committed, previously untracked)
+- research/win-oauth-keychain-blob-limit-2026-09-03.md (newly committed, previously untracked) + research/RESEARCH-INDEX.md (modified)
+
+**Dim-2 Attestation:** `scripts/check-spec-counts.sh` / `scripts/check-bc-cumulative-counts.sh` — N/A this burst (no BC/VP/holdout count change; human-gate bookkeeping only, no `.factory/specs/prd/` or `BC-INDEX.md` edits).
 
 **Dim-5 Attestation:** N/A — no binary/WASM artifact produced by this burst.
 
