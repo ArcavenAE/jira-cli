@@ -7,7 +7,7 @@ producer: state-manager
 timestamp: 2026-09-01T15:30:00Z
 cycle: "cycle-003"
 inputs: [STATE.md]
-input-hash: "f510156"
+input-hash: "dd90884"
 traces_to: STATE.md
 ---
 
@@ -829,6 +829,42 @@ Resume command: /vsdd-factory:next-step.
 **RESOLVED (recorded at v3.45, 2026-09-02):** Phase F4 Wave 5 (`S-cycle3-chosen-flow-reconcile`) — the FINAL cycle-003 story — was dispatched, delivered, and squash-merged to `develop` — PR #762, merge commit `1dfcd013`, `develop` `b70dd6f4` → `1dfcd013`. **Phase F4 is now COMPLETE: all 7/7 cycle-003 stories shipped.** DEC-321 (refresh-override removal) implemented; I-6 relogin-then-replace (BC-1.2.051) implemented, verified safe. **Follow-up 1 (F1, BYO-OAuth-cred over-delete) is RESOLVED** — the pre-login clear that called `clear_all_credentials` is gone from `auth refresh`; zero production call sites remain. **Follow-up 3 (adr0011 doc-drift) is RESOLVED** — `profile.rs`, `field_resolve.rs`, `chosen_flow_for_profile` rustdoc, and the CLAUDE.md keychain-keys paragraph were all reconciled in the same PR. Follow-ups 2 (`JR_OAUTH_CODE` gating) and 4 (`remove.rs` doc-comment) remain open, plus one new cosmetic LOW NIT (`{target:?}` Debug-quoting). Phase advances F4 → F5 (scoped adversarial refinement). Pipeline stays ACTIVE. This checkpoint's "NEXT on resume" framing (dispatch Wave 5) is now historical only — see the v3.45 checkpoint in STATE.md for the corrected, current position: F5 scoped adversarial refinement is next (Wave 4 integration gate to be confirmed/closed alongside or ahead of F5 entry).
 
 **Superseded by:** v3.45 (F4 PHASE COMPLETE — `S-cycle3-chosen-flow-reconcile` delivered + merged @ `1dfcd013` via PR #762, all 7/7 cycle-003 stories shipped, F1 + adr0011-doc-drift RESOLVED, phase F4 → F5), 2026-09-02, live in STATE.md.
+
+---
+
+## Checkpoint v3.45 (archived, F4-PHASE-COMPLETE, 2026-09-02)
+
+**Date:** 2026-09-02. **Position:** cycle-003 (`auth-profile-dx`), Phase **F4 (delta implementation) is now COMPLETE** — **all 7/7 cycle-003 stories merged to `develop`**: `S-cycle3-env-tag` (PR #752 @ `4d0ae2d5`), `S-cycle3-percred-storage` (PR #755 @ `d3ba2726`), `S-cycle3-credential-absence-guard` (PR #756 @ `5c568d0f`), `S-cycle3-remove-logout-semantics` (PR #757 @ `5e9dba8a`), `S-cycle3-adr0011-newtype` (PR #758 @ `b7e513f9`), `S-cycle3-oauth-default-creation` (PR #761 @ `b70dd6f4`), and `S-cycle3-chosen-flow-reconcile` (PR #762, merge commit `1dfcd013`, current `develop` tip, 2026-09-02). Worktrees + branches for all cycle-003 F4 stories cleaned up — working tree back to baseline (`main` + `.factory` + `.reference`). Phase advances **F4 → F5**; pipeline stays **ACTIVE**.
+
+**Wave 5 (final story) delivery summary:**
+- `S-cycle3-chosen-flow-reconcile` (5 pts, terminal, `depends_on:[6]`) — implements **DEC-321**: `chosen_flow_for_profile` (`src/cli/auth/mod.rs`) resolves the auth flow solely from the profile's stored `auth_method`; the per-call `--oauth` override on `jr auth refresh` is removed (**BREAKING**; recovery: `jr auth login --profile <name> --oauth`). Also implements **I-6 relogin-then-replace** (BC-1.2.051, data-loss prevention) — `refresh`'s failure path no longer clears credentials before re-obtaining them; a failed relogin preserves the existing pair, a successful one cleanly overwrites via the existing unconditional two-key `set_password` path. **Side effect — F1 RESOLVED:** `auth refresh` no longer calls `clear_all_credentials` at all; the BYO-OAuth-app-cred over-delete risk tracked since the Wave 3 adversary pass is structurally gone (security-review-confirmed: zero production call sites remain; `clear_all_credentials` is now test-only, with a rustdoc warning against reintroduction). Folded-in doc-hygiene (same PR): `src/profile.rs` module doc, `src/cli/issue/field_resolve.rs` rustdoc, `chosen_flow_for_profile`'s own rustdoc, and the CLAUDE.md keychain-keys paragraph all reconciled — closing the adr0011 doc-drift follow-up. Reviews: local **APPROVE-WITH-NITS**, security **PASS-WITH-NOTES** (I-6 confirmed safe, F1 confirmed resolved), AI (pr-reviewer) **APPROVE-WITH-NITS** (merge recommendation, no blocking findings). CI `ci-gate` green 15/15. AC-006/AC-007 (relogin-then-replace safety) verified live against the real keychain (gated tests). One new cosmetic LOW NIT left open: `{target:?}` Debug-quoting in one of `refresh`'s failure messages.
+
+**Follow-ups tracked at this checkpoint:**
+1. **F1 — RESOLVED at v3.45.** See above. No further action required; the resolution is structural (the mechanism no longer exists), not a suppressed symptom.
+2. **`JR_OAUTH_CODE` debug-gating (LOW/MED seam hygiene, from the oauth-default-creation security review) — STILL OPEN at v3.45, unchanged.**
+3. **adr0011 doc-drift — RESOLVED at v3.45.** See above.
+4. **`{target:?}` Debug-quoting NIT (LOW, new at v3.45):** one of `refresh`'s failure messages formats a target with `{target:?}`. Cosmetic, non-blocking.
+5. **`remove.rs` step-enumeration doc-comment (LOW, carried forward from Wave 3 unchanged).**
+
+**Demo data (unchanged from Wave 4):** demos were **SKIPPED** for the Wave 5 story too, per the standing human decision. The OPEN human question from the Wave 3 checkpoint — whether to delete the 3 pre-PR#757 stories' demo directories — remained **NOT decided** at this checkpoint.
+
+**Wave/critical-path status:** all 5 waves complete; 39/39 critical-path points delivered. No stories remained in the F3-approved schedule.
+
+**Convergence trajectory (counter):** ... → Wave 4 delivered + merged, ADR-0011 applied, 2 MED found+fixed → Wave 4 integration gate PASSED (implied by Wave 5 dispatch) → **Wave 5 (`S-cycle3-chosen-flow-reconcile`, final story) delivered + merged, DEC-321 + I-6 implemented, F1 RESOLVED as a side effect** → **Phase F4 COMPLETE (7/7)** → Wave 5 integration gate RUNNING → Phase F5 (scoped adversarial refinement) NEXT.
+
+**Committed spec state:** unchanged in BC/VP/holdout count at this checkpoint — 733 BCs, 41 VPs, 106 holdouts; `total_stories` unchanged at 168. Prior commits: the Wave-4-COMPLETE burst commit (v3.44).
+
+**Human decisions already made + recorded:** DEC-317, DEC-321 (IMPLEMENTED at v3.45), DEC-322/323/326/327, DEC-328, DEC-329, DEC-330 (superseded in part by DEC-331), DEC-331.
+
+**Pending human decision at this checkpoint:** the demo-retention question above — OPEN, not covered by any standing decision.
+
+**NEXT on resume (as recorded at v3.45):** (1) close out the Wave 5 integration gate; (2) on Wave 5 gate PASSED, dispatch Phase F5 (scoped adversarial refinement) via `/vsdd-factory:phase-f5-scoped-adversarial`; (3) get an explicit human decision before acting on the demo-retention question; (4) address the 3 remaining tracked follow-ups (`JR_OAUTH_CODE` gating, `{target:?}` NIT, `remove.rs` doc-comment) in a future maintenance pass — none blocks F5.
+
+**Resume command:** `/vsdd-factory:next-step`.
+
+**RESOLVED (recorded at v3.46, 2026-09-02):** Phase F5 scoped adversarial refinement began — a Wave-5-adversary-sourced login-switch MED (CWE-460/636, data-loss on a failed mechanism switch) was fixed and squash-merged via **PR #763** (`aafa9f9f`); a follow-on F5-refinement bundle of 4 fixes (FIX-1 MED — locked-keychain refresh-error swallow; FIX-2 LOW — logout unset-`auth_method` handling; FIX-3 LOW — comment/text accuracy; FIX-4 LOW — `clear_profile_cache` empty-guard) was fixed and squash-merged via **PR #764** (`202414f2`, current `develop` tip). Two additional F5 findings — **MED-1** (BC-1.1.016↔DEC-321 spec/code contradiction) and **MED-2** (VP-AUTHDX-005/006/008 keyring-gated coverage-boundary, previously implicit) — were reconciled SPEC-ONLY (no code change) in `.factory/specs/prd/bc-1-auth-identity.md`, committed this burst; BC/VP/holdout counts unchanged (733/41/106). Two new non-blocking LOW follow-ups tracked from PR #764's AI review: (a) broaden the `clear_profile_cache` guard to reject `.`/`..`/traversal components, not just empty; (b) add an explicit regression test for FIX-1 call-site-2 backend-error propagation. This checkpoint's "NEXT on resume" framing (close Wave 5 gate, dispatch F5) is now historical only — F5 is now IN PROGRESS, not pending dispatch; see the v3.46 checkpoint in STATE.md for the corrected, current position: re-run F5 adversarial passes on `202414f2` for 3-clean convergence is next, then F6.
+
+**Superseded by:** v3.46 (F5 findings fixed — PR #763 @ `aafa9f9f`, PR #764 @ `202414f2` — plus MED-1/MED-2 spec reconciliation committed; F5 adversarial re-run for 3-clean convergence next), 2026-09-02, live in STATE.md.
 
 ---
 
