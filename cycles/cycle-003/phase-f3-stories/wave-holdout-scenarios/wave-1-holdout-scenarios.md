@@ -12,7 +12,7 @@ inputs:
   - ".factory/cycles/cycle-003/phase-f3-stories/S-cycle3-percred-storage.md"
   - ".factory/cycles/cycle-003/phase-f3-stories/wave-schedule.md"
 traces_to: "BC-6.1.015; BC-1.6.046; BC-1.6.047; BC-1.4.031; BC-1.4.027; BC-1.1.009; BC-1.1.010; BC-1.2.017"
-input-hash: "78a7d39"
+input-hash: "6542b95"
 ---
 
 # Wave 1 Holdout Scenarios — `S-cycle3-env-tag` + `S-cycle3-percred-storage`

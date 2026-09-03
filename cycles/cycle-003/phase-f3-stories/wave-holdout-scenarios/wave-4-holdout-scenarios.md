@@ -13,7 +13,7 @@ inputs:
   - ".factory/cycles/cycle-003/phase-f3-stories/wave-schedule.md"
   - ".factory/cycles/cycle-003/phase-f3-stories/wave-holdout-scenarios/wave-3-holdout-scenarios.md"
 traces_to: "BC-6.2.015; BC-1.1.013; BC-1.1.014; BC-1.1.015; BC-1.1.016; BC-1.2.049; BC-1.2.050"
-input-hash: "bc9c122"
+input-hash: "81a3f7a"
 ---
 
 # Wave 4 Holdout Scenarios — `S-cycle3-adr0011-newtype` + `S-cycle3-oauth-default-creation`

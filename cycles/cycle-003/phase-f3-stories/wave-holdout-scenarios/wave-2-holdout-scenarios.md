@@ -12,7 +12,7 @@ inputs:
   - ".factory/cycles/cycle-003/phase-f3-stories/wave-schedule.md"
   - ".factory/cycles/cycle-003/phase-f3-stories/wave-holdout-scenarios/wave-1-holdout-scenarios.md"
 traces_to: "BC-1.4.032; BC-1.4.033; BC-1.4.034; BC-1.4.025; BC-1.4.029"
-input-hash: "31f4f9d"
+input-hash: "a8df1a8"
 ---
 
 # Wave 2 Holdout Scenarios — `S-cycle3-credential-absence-guard`

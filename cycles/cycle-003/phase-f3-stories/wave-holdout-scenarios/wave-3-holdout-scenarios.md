@@ -12,7 +12,7 @@ inputs:
   - ".factory/cycles/cycle-003/phase-f3-stories/wave-schedule.md"
   - ".factory/cycles/cycle-003/phase-f3-stories/wave-holdout-scenarios/wave-2-holdout-scenarios.md"
 traces_to: "BC-1.2.013; BC-1.2.014"
-input-hash: "06e6281"
+input-hash: "87e941e"
 ---
 
 # Wave 3 Holdout Scenarios — `S-cycle3-remove-logout-semantics`

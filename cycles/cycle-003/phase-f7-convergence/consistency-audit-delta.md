@@ -7,7 +7,7 @@ producer: consistency-validator
 timestamp: 2026-09-03T00:00:00
 phase: F7
 inputs: [".factory/specs/prd/bc-1-auth-identity.md", ".factory/specs/prd/bc-6-config-cache.md", ".factory/specs/prd/BC-INDEX.md", ".factory/cycles/cycle-003/phase-f3-stories/S-cycle3-env-tag.md", ".factory/cycles/cycle-003/phase-f3-stories/S-cycle3-percred-storage.md", ".factory/cycles/cycle-003/phase-f3-stories/S-cycle3-credential-absence-guard.md", ".factory/cycles/cycle-003/phase-f3-stories/S-cycle3-remove-logout-semantics.md", ".factory/cycles/cycle-003/phase-f3-stories/S-cycle3-adr0011-newtype.md", ".factory/cycles/cycle-003/phase-f3-stories/S-cycle3-oauth-default-creation.md", ".factory/cycles/cycle-003/phase-f3-stories/S-cycle3-chosen-flow-reconcile.md", ".factory/cycles/cycle-003/phase-f3-stories/decomposition-manifest.md", ".factory/cycles/cycle-003/phase-f3-stories/dependency-graph-extended.md", ".factory/cycles/cycle-003/phase-f3-stories/wave-schedule.md", ".factory/stories/STORY-INDEX.md", "docs/adr/0011-type-level-profile-fence.md", ".factory/specs/architecture/decisions/ADR-0020-per-profile-credential-ownership-env-tagging-and-oauth-default-at-creation.md", ".factory/STATE.md", "src/api/auth.rs", "src/cli/auth/login.rs", "src/cli/auth/logout.rs", "src/cli/auth/remove.rs", "src/cli/auth/refresh.rs", "src/cli/auth/list.rs", "src/cli/auth/status.rs", "src/cli/auth/switch.rs", "src/cli/auth/mod.rs", "src/config.rs", "src/api/client.rs", "src/profile.rs", "src/cache.rs", "docs/specs/multi-profile-auth.md", "CLAUDE.md", "scripts/check-spec-counts.sh", "scripts/check-bc-cumulative-counts.sh"]
-input-hash: "a8aee06"
+input-hash: "98a2928"
 traces_to: ".factory/cycles/cycle-003/phase-f3-stories/decomposition-manifest.md"
 ---
 

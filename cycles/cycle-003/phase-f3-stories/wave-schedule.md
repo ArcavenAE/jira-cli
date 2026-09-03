@@ -14,7 +14,7 @@ inputs:
   - ".factory/cycles/cycle-003/phase-f3-stories/conflict-report.md"
   - ".factory/cycles/cycle-003/phase-f3-stories/decomposition-manifest.md"
 traces_to: "dependency-graph-extended.md §4a; ADR-0020 § Sequencing"
-input-hash: "2a78e3a"
+input-hash: "45db93d"
 ---
 
 # F3 Wave Schedule — `auth-profile-dx` (cycle-003)

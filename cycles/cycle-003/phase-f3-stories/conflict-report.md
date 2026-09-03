@@ -14,7 +14,7 @@ inputs:
   - ".factory/stories/STORY-INDEX.md"
   - "src/api/client.rs"
 traces_to: "decomposition-manifest.md §6/§7"
-input-hash: "ade63e8"
+input-hash: "72ccc57"
 ---
 
 # F3 Conflict Report — `auth-profile-dx` (cycle-003)

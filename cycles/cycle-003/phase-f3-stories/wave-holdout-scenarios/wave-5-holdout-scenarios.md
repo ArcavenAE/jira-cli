@@ -12,7 +12,7 @@ inputs:
   - ".factory/cycles/cycle-003/phase-f3-stories/wave-schedule.md"
   - ".factory/cycles/cycle-003/phase-f3-stories/wave-holdout-scenarios/wave-4-holdout-scenarios.md"
 traces_to: "BC-1.2.048; BC-1.2.051"
-input-hash: "e6a821c"
+input-hash: "63bcc93"
 ---
 
 # Wave 5 Holdout Scenarios — `S-cycle3-chosen-flow-reconcile`

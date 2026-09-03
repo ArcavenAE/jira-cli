@@ -15,7 +15,7 @@ inputs:
   - ".factory/cycles/cycle-003/phase-f2-spec-evolution/architecture-delta.md"
   - ".factory/stories/STORY-INDEX.md"
 traces_to: "DEC-312..DEC-328; ADR-0020; ADR-0011 (staged amendment)"
-input-hash: "73858ff"
+input-hash: "c0cb18a"
 ---
 
 # F3 Story Decomposition Manifest — `auth-profile-dx` (cycle-003)

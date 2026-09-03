@@ -23,7 +23,7 @@ inputs:
   - "docs/specs/multi-profile-auth.md"
   - "docs/specs/oauth-scopes-configurable.md"
 traces_to: ".factory/STATE.md#DEC-312..DEC-319"
-input-hash: "3eb517e"
+input-hash: "d40bd52"
 ---
 
 # F1 Delta Analysis: auth-profile-dx (cycle-003)
