@@ -126,3 +126,64 @@ No BCs/VPs/holdouts added or removed — 733 BCs / 41 VPs / 106 holdouts unchang
 **Dim-6 Attestation:** N/A — no source code changed this burst (`.factory/` artifact bookkeeping only, no `develop`-side commit).
 
 **Dim-7 Attestation:** N/A — no test-affecting change this burst; full regression remains PASS (4763/0/157) as of the cycle-003 F6/F7 hardening/convergence passes, unchanged.
+
+## Burst: Burst 3 — CRASH RECOVERY — recovered + checkpoint-committed architect+product-owner F2 artifacts left uncommitted by a crashed session (2026-09-03)
+
+**Parent-commit:** `42e92b46` (`develop` tip; unchanged this burst — no `develop`-side commit).
+
+**Trigger:** the prior factory session crashed mid-Phase-F2. Before the crash, the `architect` and `product-owner` agents had both COMPLETED their F2 deliverables and written them to disk inside the `.factory` worktree, but the orchestrator never reached `formal-verifier`, the adversarial loop, or `state-manager` before the crash — so STATE.md (v3.54) was left stale (it still said "F2 spec evolution dispatch NEXT / not yet dispatched"), and the recovered F2 work sat UNCOMMITTED in the worktree. This burst is mechanical crash recovery: make the recovered work durable via one atomic commit, and correct STATE.md to reflect the true F2 position. No new human decision was made — DEC-335 (the F1 human gate) remains the latest decision; no new DEC is recorded this burst.
+
+**Recovery verification performed before this burst (not re-litigated):** confirmed all four recovered NEW files and six recovered MODIFIED files were present and internally consistent in the `.factory` worktree (`git -C .factory status --porcelain`), read their contents against the orchestrator's recovery manifest, and confirmed `scripts/check-spec-counts.sh` (8 bc files, exit 0) and `scripts/check-bc-cumulative-counts.sh` (742 total across 9 files, exit 0) both PASS against the recovered PRD delta.
+
+**Actions taken:**
+1. Committed the recovered architect deliverables: `specs/architecture/decisions/ADR-0021-windows-oauth-secret-storage-dpapi-fallback.md` (Windows OAuth keyring-first + user-scope DPAPI-encrypted-file fallback on `keyring::Error::TooLong`) and `specs/architecture/decisions/ADR-0022-api-token-cloud-id-acquisition-tenant-info.md` (API-token `cloud_id` acquisition via `GET /_edge/tenant_info`, closing A-PA-LOW-001), plus `cycles/cycle-004/phase-f2-spec-evolution/architecture-delta.md` and `architecture/adr-index.md` (updated to list both new ADRs) and `specs/architecture/ARCH-INDEX.md` (updated for the architecture delta).
+2. Committed the recovered product-owner deliverables: `specs/prd/bc-1-auth-identity.md` (9 NEW BCs + 1 AMENDED — BC-1.4.035..040 for ADR-0021's Windows secret-storage design; BC-1.2.052..054 for ADR-0022's `cloud_id` acquisition; BC-1.4.028 amended so its partial-state read path checks the DPAPI file before erroring), `specs/prd/BC-INDEX.md`, and `specs/prd/CANONICAL-COUNTS.md` (both updated for the 733→742 total_bcs count change).
+3. Committed the recovered research artifact: `research/edge-tenant-info-cloudid-2026-09-03.md` (validates `/_edge/tenant_info` as the `cloud_id` source underlying ADR-0022) and `research/RESEARCH-INDEX.md` (updated to list it).
+4. Did NOT stage the three pre-existing unrelated dirty files (`regression-state.json`, `sidecar-learning.md`, the modified `S-cycle3-env-tag` demo gif) — left untouched, per standing instruction carried across every prior burst.
+5. Corrected STATE.md via one full-content Write (v3.54 → v3.55): frontmatter `current_step` and `cycle_004_status` updated to describe crash recovery and the true F2 position; Phase Progress F2-SPEC-EVOLUTION row updated from "not yet dispatched" to "architect + product-owner steps DONE (recovered), formal-verifier NEXT"; Current Phase Steps table's architect and product-owner rows marked DONE with a "(recovered post-crash, checkpoint-committed this burst)" flag; Convergence Status / Concurrent Cycles / Drift-Standing prose updated to record the crash-recovery event and the corrected BC count (733→742); Session Resume Checkpoint replaced, recording the crash and the exact next-on-resume action (dispatch `formal-verifier` for the F2 VP delta over the 9 new BCs, then scoped adversarial convergence [min 3 clean passes], then `consistency-validator` fresh-context audit, then the F2 human gate). No new DEC recorded — DEC-335 remains the latest F1-gate decision.
+6. Appended this burst-log entry (Burst 3).
+
+**Adversary verdict:** N/A — crash-recovery bookkeeping burst (committing already-produced F2 artifacts + correcting STATE.md), no code or spec-body authored this burst; no `adversary` agent dispatched. The architect/product-owner F2 work itself was produced and internally verified (count-scripts PASS) by the crashed session before it crashed — this burst only makes that work durable.
+
+**Outcome:** cycle-004 (`windows-correctness`) Phase F2 (spec evolution) is IN PROGRESS: architect step (ADR-0021, ADR-0022, architecture-delta.md) DONE-recovered; product-owner step (PRD delta, 9 new BCs + 1 amended) DONE-recovered. total_bcs advances 733→742 this burst (VPs unchanged 41; holdout scenarios unchanged 106; stories unchanged 168 — F2's story impact lands at F3). Next step: dispatch `formal-verifier` for the F2 VP delta.
+
+**NEXT:** Dispatch `formal-verifier` for the F2 VP delta over the 9 new BCs (BC-1.4.035..040, BC-1.2.052..054), then scoped adversarial convergence (minimum 3 clean passes), then `consistency-validator` fresh-context audit, then the F2 human gate.
+
+**Codifications:** none this burst — no new DEC; DEC-335 (F1 human gate) remains the latest decision. The architect's ADR-0021/ADR-0022 and the product-owner's 9 new BCs are the codified F2 spec-evolution output, produced by the crashed session and made durable by this burst.
+
+**Closes:** the STATE.md staleness introduced by the crash (v3.54 incorrectly said F2 not yet dispatched). **Does NOT close:** any cycle-001/002/003 standing Drift/Standing Items — all carried forward unchanged; F2 itself remains IN PROGRESS (formal-verifier + adversarial loop + consistency-validator + human gate all still ahead).
+
+### Counts reconciled this burst
+
+BCs: 733 → **742** (+9: BC-1.4.035..040, BC-1.2.052..054; BC-1.4.028 amended in place, no separate count). VPs unchanged at 41 (formal-verifier adds the VP delta next). Holdout scenarios unchanged at 106. `total_stories` unchanged at 168 (F2 does not create stories — that happens at F3).
+
+### Details
+
+| Agent | Task | Output |
+|-------|------|--------|
+| architect (crashed session, recovered) | F2 architecture delta for the 4-story scope | ADR-0021, ADR-0022, `cycles/cycle-004/phase-f2-spec-evolution/architecture-delta.md`, ARCH-INDEX.md + adr-index.md updates (all recovered + committed this burst) |
+| product-owner (crashed session, recovered) | F2 PRD delta — 9 new BCs + 1 amended | `specs/prd/bc-1-auth-identity.md`, `BC-INDEX.md`, `CANONICAL-COUNTS.md` updates (all recovered + committed this burst) |
+| state-manager | Verify recovered work is internally consistent; commit it in one atomic commit; correct STATE.md (frontmatter, Phase Progress, Current Phase Steps, Convergence Status/Concurrent Cycles/Drift-Standing prose, Session Resume Checkpoint); append this burst-log entry | This commit; `STATE.md`; `cycles/cycle-004/burst-log.md` (this entry) |
+
+**Files touched (Dim-1): 12 unique files (factory-artifacts, this burst)**
+
+- STATE.md
+- cycles/cycle-004/burst-log.md
+- cycles/cycle-004/phase-f2-spec-evolution/architecture-delta.md (newly committed, previously untracked)
+- research/edge-tenant-info-cloudid-2026-09-03.md (newly committed, previously untracked)
+- specs/architecture/decisions/ADR-0021-windows-oauth-secret-storage-dpapi-fallback.md (newly committed, previously untracked)
+- specs/architecture/decisions/ADR-0022-api-token-cloud-id-acquisition-tenant-info.md (newly committed, previously untracked)
+- specs/prd/bc-1-auth-identity.md (modified — +9 BCs, 1 amended)
+- specs/prd/BC-INDEX.md (modified)
+- specs/prd/CANONICAL-COUNTS.md (modified)
+- specs/architecture/ARCH-INDEX.md (modified)
+- architecture/adr-index.md (modified)
+- research/RESEARCH-INDEX.md (modified)
+
+**Dim-2 Attestation:** `scripts/check-spec-counts.sh` (8 bc files, exit 0) and `scripts/check-bc-cumulative-counts.sh` (742 total across 9 files, exit 0) both PASS against the recovered PRD delta — verified before this burst, recorded here per Defensive Sweep Discipline (S-7.02); no further count-drift found across STATE.md/ARCH-INDEX.md/BC-INDEX.md/prd body prose for the 733→742 transition.
+
+**Dim-5 Attestation:** N/A — no binary/WASM artifact produced by this burst.
+
+**Dim-6 Attestation:** N/A — no source code changed this burst (`.factory/` artifact recovery + bookkeeping only, no `develop`-side commit).
+
+**Dim-7 Attestation:** N/A — no test-affecting change this burst; full regression remains PASS (4763/0/157) as of the cycle-003 F6/F7 hardening/convergence passes, unchanged.

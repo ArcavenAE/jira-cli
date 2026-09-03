@@ -1,11 +1,12 @@
 ---
 context: bc-1
 title: "Auth & Identity"
-total_bcs: 71   # cumulative claim (incl. range-collapsed); definitional_count below is individually-bodied headings
-definitional_count: 60   # count of `#### BC-` headings in this file
+total_bcs: 80   # cumulative claim (incl. range-collapsed); definitional_count below is individually-bodied headings
+definitional_count: 69   # count of `#### BC-` headings in this file
 last_updated: 2026-09-03
 source_pass: 3
 trace: |
+  - F2 spec evolution, cycle-004 `windows-correctness` (2026-09-03, issues #759/#760, DEC-334, ADR-0021, ADR-0022): ADDED BC-1.4.035..040 (Windows OAuth secret storage — keyring-first with DPAPI-encrypted-file fallback on `keyring::Error::TooLong`, ADR-0021: size-safe routing + backend-selection atomicity BC-1.4.035, DPAPI-aware read path + distinct corrupt-file error BC-1.4.036, versioned-envelope atomic file write BC-1.4.037, delete-both-backends BC-1.4.038, honest-fail `DpapiFallbackFailed` backstop BC-1.4.039, profile-name-as-filename path-traversal guard on the new secret file BC-1.4.040 — NEW hardening requirement, escalated from an inherited cache-dir precedent); ADDED BC-1.2.052..054 (API-token `cloud_id` acquisition via unauthenticated `/_edge/tenant_info`, ADR-0022: fallback-chain acquisition BC-1.2.052, mechanism-switch refresh-not-clear BC-1.2.053, confirmed-unchanged `base_url()`/`assets_base_url` auth-method gating BC-1.2.054 closing A-PA-LOW-001). AMENDED BC-1.4.028 (`load_oauth_tokens`'s partial-state error is now preceded by a DPAPI-file check per ADR-0021 §4, extending — not replacing — the existing partial-state error). BC count 71→80 (60→69 individually-bodied). See `.factory/cycles/cycle-004/phase-f1-delta-analysis/delta-analysis.md`, `.factory/specs/architecture/decisions/ADR-0021-windows-oauth-secret-storage-dpapi-fallback.md`, `.factory/specs/architecture/decisions/ADR-0022-api-token-cloud-id-acquisition-tenant-info.md`, and `.factory/cycles/cycle-004/phase-f2-spec-evolution/architecture-delta.md`.
   - F7 pre-gate consistency fix, cycle-003 `auth-profile-dx` (2026-09-03, LOW-1): AMENDED BC-1.2.048 — VP-AUTHDX-003's "F6 target" note corrected: `chosen_flow_for_profile` was inaccurately claimed "REMOVED entirely... not merely simplified"; shipped code (`src/cli/auth/mod.rs::chosen_flow_for_profile`, ~line 170) shows it was SIMPLIFIED to single-argument form (the per-call `--oauth` override removed per DEC-321, not the function itself) and remains called from `refresh.rs`. Wording-only correction to the citation note — no Precondition/Postcondition/Invariant text changed, no BC added or removed, total_bcs (71) and definitional_count (60) unchanged. Matches the framing BC-1.2.051 already used ("if retained at all"). See `.factory/cycles/cycle-003/phase-f7-delta-convergence/` pre-gate consistency audit.
   - Adversary pass-2 fix round, cycle-003 `auth-profile-dx` (2026-09-01, same day): AMENDED BC-1.6.046 (H-2 — added Ownership clause + EC-1.6.046-2, terminal display-sanitization contract for the `ENV` table cell: control-character/ANSI-escape strip + length cap), BC-1.6.047 (H-2 — Postcondition 2 split into 2a JSON-verbatim/lossless (per issue #398 convention) and 2b human-text-sanitized; EC-1.6.047-1 scope-narrowed to JSON channel only; EC-1.6.047-3 added for human-text sanitization; Invariant 3 added pinning the channel split as permanent — resolves the contradiction with bc-6's BC-6.1.015 cross-reference), BC-1.1.014 (M-1 — new EC-1.1.014-4: the O-1/SR-011 outgoing-mechanism credential-clear now fires on a non-interactive mechanism switch too, not just BC-1.1.013's interactive re-declaration; recommended informational stderr notice on such a switch), BC-1.1.013 (M-1 — EC-1.1.013-2 cross-references EC-1.1.014-4), BC-1.2.051 (L-1 — "clear-then-relogin" renamed to "relogin-then-replace" in Postcondition 1 and Invariant 2, resolving the self-contradiction with this BC's own I-6 no-clear-before-confirmed-replacement rule), BC-1.1.013 (L-2 — Invariant 2/SR-012 wording corrected: an explicit flag always DETERMINES THE OUTCOME, not necessarily that the flag's own mechanism is used — `--oauth` non-interactively determines a fail-fast exit 64 per BC-1.1.016, not oauth usage). Summary Stats table and Note recomputed (M-2): §1.1 15→16, §1.4 9→10, Total 58→60/60 HIGH; Note "69 total…11 new" → "71 total…13 new" (11 from the F2 pass + 2 from the F2-gate fix pass). No BC added or removed — total_bcs (71) and definitional_count (60) unchanged from the pre-adversary-pass-2 values; table now matches definitional_count.
   - F2-gate fix pass, cycle-003 `auth-profile-dx` (2026-09-01, same day, ADR-0020 F2-gate amendment): REDESIGNED BC-1.4.032 (no-copy detect-and-instruct, HUMAN DECISION, was copy-then-delete) and BC-1.4.033 (partial-write recovery narrowed to the namespaced-pair case only, legacy-partial branch removed since there is no more copy step to interrupt); REWROTE VP-AUTHDX-005/006/007/008 oracles for the no-copy model (VP-AUTHDX-007 relabeled a mandatory keyring-gated SCENARIO per SR-014). AMENDED BC-1.1.013 (SR-012 consolidated mechanism-selection precedence statement; O-1/SR-011 re-declaration credential-clear EC), BC-1.1.014 (SR-010 — `JR_EMAIL`/`JR_API_TOKEN` presence is no longer an independent non-interactive trigger on an interactive TTY; VP-AUTHDX-001 matrix extended with the airtight-guard cells), BC-1.2.013 (I-3/SR-015 — `auth logout` on an api-token profile emits an informational stderr notice, exit 0, not a silent no-op), BC-1.2.014 (I-4/SR-008 — credential-deletion steps reordered BEFORE config-entry removal; genuine keychain errors surfaced, not swallowed), BC-1.2.048 (O-6 — narrowed to `login`/`refresh` only; SR-013 — VP-AUTHDX-003 F6 target corrected to `refresh.rs::refresh_credentials`; O-1/SR-011 cross-ref), BC-1.2.050 (O-2/CV-2 — `--api-token` inert-with-notice on `refresh`), BC-1.2.051 (I-6 — `refresh` must not clear existing api-token creds until a replacement is confirmed obtainable), BC-1.4.031 (new EC-1.4.031-2 backend-error-vs-absent distinction, I-5; VP-AUTHDX-004 generator bounded to valid credential strings, O-3), BC-1.6.046 (new EC-1.6.046-1 — `Some("")` vs `None` table-rendering distinction, O-4). ADDED BC-1.1.016 (airtight non-interactive OAuth guard covering explicit `--oauth` and implicit oauth-method `refresh`, ADR-0020 §Decision 8/architecture-delta §2.3, closes I-1), BC-1.4.034 (one-time re-login breaking-change contract for BC-1.4.032, with F4 CHANGELOG doc-fallout obligation). BC count 69→71 (58→60 individually-bodied). See ADR-0020 (as amended 2026-09-01, F2-gate) and `.factory/cycles/cycle-003/phase-f2-spec-evolution/architecture-delta.md` (as amended 2026-09-01).
@@ -19,7 +20,7 @@ trace: |
 
 # BC-1 — Auth & Identity
 
-71 behavioral contracts across 6 subdomains: OAuth flow (1.1), Profile management (1.2),
+80 behavioral contracts across 6 subdomains: OAuth flow (1.1), Profile management (1.2),
 Embedded OAuth app (1.3), Token keychain (1.4), OAuth state machine (1.5), Auth error handling (1.6).
 
 ---
@@ -570,7 +571,145 @@ Embedded OAuth app (1.3), Token keychain (1.4), OAuth state machine (1.5), Auth 
 
 **Verification Properties**: This BC's specific instances (an `api_token` profile with `refresh --oauth`; an `oauth` profile with `refresh --api-token`) are covered by **VP-AUTHDX-003**, declared at BC-1.2.048 (the general "`auth_method` is intrinsic" invariant this BC is the previously-non-compliant special case of) — not duplicated here. The original draft candidates VP-cycle3-010/011 were the two concrete generated-case seeds folded into VP-AUTHDX-003's proptest matrix at promotion time (2026-09-01, F2 VP-delta pass).
 
-**Trace**: F2 spec evolution, cycle-003 `auth-profile-dx` (2026-09-01); DEC-321; ADR-0020 §Decision 6 (resolves F1 delta analysis Open Question 8); F2-gate fix (2026-09-01, I-6) — Invariant 2 and EC-1.2.051-3 added, extending BC-1.1.011's not-cleared-on-failure guarantee to the relogin path; adversary pass-2 fix (2026-09-01, L-1) — Postcondition 1 and Invariant 2's "clear-then-relogin" term renamed to "relogin-then-replace" to resolve the self-contradiction against this BC's own I-6 no-clear-before-confirmed-replacement rule; cross-reference BC-1.2.048 (general invariant, VP-AUTHDX-003 declared there), BC-1.2.015/016 (pre-existing `--oauth`-on-refresh flag-presence pins — still true, only the override BEHAVIOR changes, not the flag's continued existence), BC-1.1.011 (the not-cleared-on-failure invariant this fix extends).
+**Trace**: F2 spec evolution, cycle-003 `auth-profile-dx` (2026-09-01); DEC-321; ADR-0020 §Decision 6; cross-reference BC-1.2.053 (NEW, cycle-004 — the mechanism-switch `cloud_id` refresh contract, an orthogonal switch-time behavior this BC's refresh-of-`auth_method` semantics do not govern).
+
+---
+
+#### BC-1.2.052: `auth login`/`jr init`'s API-token path acquires `cloud_id` via `--cloud-id` override, else an unauthenticated `/_edge/tenant_info` fetch, else soft-fail
+
+**Confidence**: HIGH
+**Source**: ADR-0022 §1/§2; `.factory/research/edge-tenant-info-cloudid-2026-09-03.md`; src/api/jira/tenant.rs (NEW FILE — does not exist yet, F4 target, not a live citation); `src/cli/auth/login.rs::login_token`, `::handle_login` (F4 targets)
+**Subject**: Auth & Identity
+**Origin**: NEW (cycle-004 `windows-correctness`, issue #760's cross-cutting `cloud_id` observation + A-PA-LOW-001, DEC-334, ADR-0022 §1/§2)
+
+**Description**: `login_token` (the API-token/Basic-auth login path) never acquires `cloud_id` today — every Assets/CMDB command against an API-token profile fails with the existing, otherwise-correct `"Cloud ID not configured. Run \"jr init\" to set up your instance."` error, even immediately after a successful login. A new module `src/api/jira/tenant.rs::fetch_cloud_id(site_url)` calls the unauthenticated, per-site `GET <site>/_edge/tenant_info` endpoint and parses ONLY the `cloudId` field; `login_token` gains this as a best-effort, non-blocking step, following an ordered fallback chain.
+
+**Preconditions**:
+1. `login_token` is invoked (directly via `jr auth login`, or via `jr init`'s API-token branch, which MUST reuse this same function/fetch path rather than a second, independent tenant_info call site).
+2. The profile's `url` has already been resolved by `prepare_login_target` before `login_token` runs (existing precondition, unchanged).
+
+**Postconditions**:
+1. **Explicit `--cloud-id <uuid>`** (highest precedence) — `login_token` gains a `cloud_id_override: Option<&str>` parameter, symmetric with `login_oauth`'s existing parameter of the same name; `handle_login` is updated to pass `args.cloud_id.as_deref()` through on the API-token branch (currently silently dropped — this is the concrete one-line dispatch fix). When supplied, the fetch step below is never attempted.
+2. **`/_edge/tenant_info` fetch** (when no override was supplied): `fetch_cloud_id(site_url)` issues `GET {site_url}/_edge/tenant_info` with NO `Authorization` header, NO query string appended (a trailing `?_r=...` cache-buster has been observed to 403 — the request MUST be the bare path), and a bounded timeout (10 seconds). Only the `cloudId` field is parsed from the JSON response; any other field present is ignored (serde default, not deny-unknown-fields).
+3. **Soft-fail** (fetch failure — network error, non-2xx status, malformed/missing `cloudId` field): `login_token` does NOT abort the login. It emits a single `eprintln!` diagnostic (human mode only, never on stdout, per the Output-channels convention) and leaves `p.cloud_id` as whatever it already was (`None` for a brand-new profile; the prior value untouched for an existing one — see BC-1.2.053 for why "untouched" is correct on a mechanism switch specifically). The existing `"Cloud ID not configured…"` error at Assets/CMDB call sites remains the user's actionable path if Assets is ever attempted without a resolved `cloud_id`.
+4. `jr init`'s interactive picker (API-token branch) invokes the SAME `login_token`/`fetch_cloud_id` plumbing — no second, independent tenant_info call site is introduced anywhere in the codebase.
+5. On fetch SUCCESS, the returned `cloudId` value overwrites `p.cloud_id` unconditionally (this profile now has a fresh, correct value) and is persisted via the normal `Config::save_global()` path, unchanged.
+
+**Invariants**:
+1. This is a plain `reqwest` call, NOT routed through `JiraClient` — mirroring `oauth_login`'s own direct-`reqwest` calls to `accessible-resources`, since a `JiraClient` cannot yet be constructed at login time (no `cloud_id`/auth header exists yet for the profile being created).
+2. A failed or changed `tenant_info` response NEVER blocks a successful Basic-auth login — core Jira operations (issue list/view/comment, etc.) do not need `cloud_id` at all; this is an ancillary Assets-enablement convenience, not a login precondition.
+3. No endpoint-specific rate limit is assumed or hard-coded; the fetched value is cached in `ProfileConfig.cloud_id` and is NOT re-fetched on every subsequent command — only on `auth login`/`jr init` invocations.
+
+**Edge Cases**:
+- EC-1.2.052-1: `--cloud-id` supplied on an API-token login where the value happens to be wrong/stale → this BC does not validate the override against the actual site (no such validation exists for `login_oauth`'s existing `cloud_id_override` either — this is consistent with established precedent, not a gap unique to this BC).
+- EC-1.2.052-2: The site is suspended/moved/deleted, or otherwise returns 401/403/404/a redirect from `/_edge/tenant_info` → treated identically to any other non-2xx status under Postcondition 3 (soft-fail); this BC does not special-case any particular non-2xx status code.
+- EC-1.2.052-3: The response body is valid JSON but omits `cloudId` (an unexpected but not malformed shape) → serde's missing-required-field deserialization failure is treated as a fetch failure under Postcondition 3, not a panic.
+- EC-1.2.052-4: A network-level error (DNS failure, connection refused, TLS failure) → identical soft-fail treatment; the 10-second timeout bounds how long `login_token` can be blocked by an unresponsive `tenant_info` endpoint.
+
+**Verification Properties**: new VP (formal-verifier to allocate, HIGH priority) — `fetch_cloud_id`'s soft-fail contract (non-2xx / network error / malformed JSON all degrade to `None`/untouched, never a panic and never an aborted login) — unit-testable cross-platform via `wiremock`.
+
+**Related BCs**: BC-1.2.053 (the mechanism-switch sibling of this BC's general fetch-on-every-invocation behavior), BC-1.2.054 (the confirmed-unchanged `base_url()`/`assets_base_url` guards this BC's acquisition half complements), BC-1.5.038 (the existing OAuth-side `accessible_resources` cloud_id discovery this BC's API-token-side sibling parallels, at a different endpoint).
+
+**Architecture Anchors**: ADR-0022 §1/§2; architecture-delta.md §1.2/§2.2 (new module interface table), §3 (modified-components table, `login_token`/`handle_login` rows).
+
+**Story Anchor**: TBD (F3)
+
+**VP Anchors**: (new, formal-verifier to allocate)
+
+**Trace**: F2 spec evolution, cycle-004 `windows-correctness` (2026-09-03), issue #760's cross-cutting observation, A-PA-LOW-001, DEC-334; ADR-0022 §1/§2; architecture-delta.md §1.2/§2.2/§3; `.factory/research/edge-tenant-info-cloudid-2026-09-03.md` Question A/B/D; cross-reference BC-1.5.038 (the OAuth-side sibling discovery mechanism this parallels).
+
+---
+
+#### BC-1.2.053: An oauth→api_token mechanism switch REFRESHES `cloud_id` on fetch success and PRESERVES the prior value on fetch failure — never a bare clear
+
+**Confidence**: HIGH
+**Source**: ADR-0022 §3; `src/cli/auth/login.rs::handle_login` (the existing mechanism-switch dispatch, F4 target)
+**Subject**: Auth & Identity
+**Origin**: NEW (cycle-004 `windows-correctness`, A-PA-LOW-001, DEC-334, ADR-0022 §3) — explicitly authored as its OWN BC/EC pair per architecture-delta.md §9 item 4, even though the underlying implementation has no dedicated code branch (it falls out of BC-1.2.052's general "fetch on every `login_token` invocation" behavior) — so this scenario gets its own test, not merely incidental coverage.
+
+**Description**: Because `login_token` (BC-1.2.052) now unconditionally attempts the `tenant_info` fetch (or honors an explicit `--cloud-id`) on EVERY invocation — not only brand-new-profile creation — the previously-tracked "stale `cloud_id` surviving an oauth→api_token mechanism switch" defect (A-PA-LOW-001) is closed as a direct consequence, with NO separate switch-detection code required. `handle_login`'s existing mechanism-switch dispatch (the `switching`/`current_auth_method` logic that already calls `login_token` on the incoming leg of an oauth→api_token switch) now always re-acquires `cloud_id` for the target profile as part of that same call.
+
+**Preconditions**:
+1. A profile currently has `auth_method: "oauth"` and a `cloud_id` value acquired during the prior OAuth login's `accessible_resources` discovery step (BC-1.5.038).
+2. The user runs `jr auth login <profile> --api-token` (or the non-interactive equivalent), switching the profile's mechanism to `api_token`.
+
+**Postconditions**:
+1. **Fetch succeeds**: the fresh `cloudId` value returned by `tenant_info` OVERWRITES whatever `cloud_id` the profile held before (including the stale OAuth-era value) — this is a plain instance of BC-1.2.052 Postcondition 5, with no switch-specific code path.
+2. **Fetch fails**: the PRIOR value is left in place — deliberately a refresh-with-fallback-to-existing, NEVER an unconditional clear. This is correct, not merely convenient, for two independent reasons:
+   a. The existing value cannot make anything WORSE than it already was: `Config::base_url()`'s `auth_method == "oauth"` guard (BC-1.2.054, confirmed pre-existing) already makes a stale `cloud_id` inert for core Jira REST v3 base-URL selection on an `api_token`-method profile — clearing it would gain nothing for that surface.
+   b. Assets/CMDB, which DOES need a valid `cloud_id` under Basic auth regardless of `auth_method` (BC-1.2.054's confirmed-unchanged `assets_base_url` computation), is strictly better served by a possibly-stale-but-present value than by an unconditional clear that would GUARANTEE Assets breaks even when the stale value happens to still be correct — the common case, since a site's `cloudId` essentially never changes for a fixed hostname in practice.
+
+**Invariants**:
+1. No new "mechanism switch" detection code is added anywhere in `client.rs` or `config.rs` — the fix lives entirely in `login_token` gaining the fetch step (BC-1.2.052), called at the point mechanism switches already flow through `handle_login`.
+2. This BC's guarantee applies symmetrically to an api_token→oauth switch too, insofar as `login_oauth`'s existing `accessible_resources` discovery (BC-1.5.038, unchanged) already refreshes `cloud_id` unconditionally on that leg — this BC's novel contribution is specifically the oauth→api_token direction, which previously had no acquisition step at all.
+
+**Edge Cases**:
+- EC-1.2.053-1: A profile switches oauth→api_token, the fetch fails, AND the profile never had a `cloud_id` in the first place (e.g. the prior OAuth login itself never resolved one, an edge case of BC-1.5.038) → the prior value (`None`) is preserved as `None` — Postcondition 2's "preserve" applies uniformly regardless of whether the preserved value is itself present or absent.
+- EC-1.2.053-2: A profile switches oauth→api_token TWICE in a row (switch back to oauth, then to api_token again) without an intervening successful fetch on the second switch → the value present after the FIRST switch's fetch (success, or the OAuth-era value if that fetch failed) is what gets preserved/refreshed by the second switch's own fetch attempt, independently — this BC does not track switch HISTORY, only the single most-recent fetch outcome.
+- EC-1.2.053-3: The switch is performed non-interactively (`--api-token` flag, `--no-input`) → identical fetch/preserve behavior; this BC's contract does not distinguish interactive from non-interactive invocation.
+
+**Verification Properties**: new VP (formal-verifier to allocate, HIGH priority) — extend `tests/auth_chosen_flow_reconcile.rs` (the existing 2×3 cross-product mechanism-reconciliation test harness, VP-AUTHDX-003) with a fetch-success and a fetch-failure case for the oauth→api_token leg specifically, asserting the overwrite-vs-preserve outcome named in Postcondition 1/2.
+
+**Related BCs**: BC-1.2.052 (the general fetch-on-every-invocation behavior this BC is a named instance of), BC-1.2.054 (the confirmed-unchanged `base_url()`/`assets_base_url` guards this BC's Postcondition 2 rationale depends on), BC-1.5.038 (the OAuth-side discovery step whose stale output this BC's scenario originates from).
+
+**Architecture Anchors**: ADR-0022 §3; architecture-delta.md §7 (verification-property hooks table, "mechanism-switch refresh" row), §9 item 4.
+
+**Story Anchor**: TBD (F3)
+
+**VP Anchors**: (new, formal-verifier to allocate; extends VP-AUTHDX-003)
+
+**Trace**: F2 spec evolution, cycle-004 `windows-correctness` (2026-09-03), A-PA-LOW-001, DEC-334; ADR-0022 §3; architecture-delta.md §7/§9 item 4; explicitly authored as a dedicated BC/EC pair per the architect's flag (architecture-delta.md §9 item 4) rather than left as incidental coverage of BC-1.2.052.
+
+---
+
+#### BC-1.2.054: `Config::base_url()`'s OAuth-only gateway guard and `assets_base_url`'s un-gated computation are CONFIRMED-CORRECT, pre-existing invariants — no new code required for this half of A-PA-LOW-001
+
+**Confidence**: HIGH
+**Source**: ADR-0022 §4 (Context, verified directly against `src/config.rs` during the F2 pass); `src/config.rs::Config::base_url`; `src/api/client.rs::JiraClient::from_config` (`assets_base_url` computation)
+**Subject**: Auth & Identity
+**Origin**: NEW BC documenting a CONFIRMED-UNCHANGED existing guarantee (cycle-004 `windows-correctness`, A-PA-LOW-001, DEC-334, ADR-0022 §4) — this BC adds no new behavior; it exists so a future pass does not mistakenly "fix" either guard a second time, and so this cycle's A-PA-LOW-001 closure has a citable BC covering BOTH halves of the finding (acquisition, BC-1.2.052/053, and gating, this BC).
+
+**Description**: The original `A-PA-LOW-001` framing assumed the `api.atlassian.com/ex/jira/{cloudId}` gateway needed a NEW `auth_method`-scoped guard to stop a stale `cloud_id` from routing Basic-auth requests to a gateway that would reject them. Reading `src/config.rs::Config::base_url` directly during this F2 pass confirms this guard ALREADY EXISTS:
+
+```rust
+if let Some(cloud_id) = &profile.cloud_id {
+    if profile.auth_method.as_deref() == Some("oauth") {
+        return Ok(format!("https://api.atlassian.com/ex/jira/{cloud_id}"));
+    }
+}
+Ok(url.trim_end_matches('/').to_string())
+```
+
+A stale `cloud_id` on an `api_token`-method profile is therefore already inert for core Jira REST v3 base-URL selection — this half of A-PA-LOW-001's originally recommended fix requires no new code. Separately, `JiraClient::from_config`'s `assets_base_url` computation derives the Assets/CMDB gateway URL from `profile.cloud_id` ALONE, with NO `auth_method` gate — and this is CORRECT, not a bug: Assets/CMDB genuinely reaches `api.atlassian.com/ex/jira/{cloudId}/jsm/assets/workspace/{workspaceId}/v1/...` under Basic auth too, even on the API-token path (workspace-ID discovery alone uses the site URL; the actual Assets data calls are gateway-hosted regardless of auth method).
+
+**Preconditions**:
+1. A profile has ANY `auth_method` value (including `api_token`, an unset/`None` value which `JiraClient::from_config` defaults to `api_token` via `.unwrap_or("api_token")`, and `oauth`) and a `cloud_id` present (correct, stale, or absent).
+
+**Postconditions**:
+1. `Config::base_url()` selects the gateway URL (`https://api.atlassian.com/ex/jira/{cloud_id}`) ONLY when `profile.auth_method.as_deref() == Some("oauth")` — ANY other `auth_method` value falls through to the site URL, `cloud_id` present or not.
+2. `JiraClient::from_config`'s `assets_base_url` computation derives the Assets gateway URL from `profile.cloud_id` alone — this is deliberately NOT gated by `auth_method`, because Assets/CMDB reaches the gateway under Basic auth too.
+3. Neither function is modified by this cycle. This BC's sole contribution is a citable, verified confirmation — not new code — closing the gating half of A-PA-LOW-001 alongside BC-1.2.052/BC-1.2.053's acquisition half.
+
+**Invariants**:
+1. Re-implementing either guard as new/duplicate code is explicitly REJECTED (ADR-0022 Rationale, Alternatives Considered) — a second, independent implementation of an already-correct invariant is a known drift-risk class this codebase's history (ADR-0007) already warns against.
+2. A future finding that re-raises "does `base_url()` gate the gateway by auth_method" or "should `assets_base_url` be gated by auth_method" should be checked against THIS BC before assuming either is an open defect.
+
+**Edge Cases**:
+- EC-1.2.054-1: A profile with `auth_method` unset/`None` (defaults to `api_token` per `JiraClient::from_config`'s `.unwrap_or("api_token")`) and a leftover `cloud_id` from some prior state → `base_url()` still routes to the site URL (Postcondition 1's "ANY other auth_method value" includes the unset/defaulted case).
+- EC-1.2.054-2: A classic (unscoped) API token attempting to reach the gateway directly (bypassing `base_url()`'s guard via some other code path, hypothetically) would fail — but this is precisely what the guard PREVENTS by routing classic-token Basic-auth callers to the site URL instead; the research basis for this (a scoped API token CAN authenticate at the gateway over Basic, per this repo's own issue #185 in-the-wild reproduction) does not change the guard's behavior, since `jr` issues/stores CLASSIC tokens today — this BC's justification is "classic Basic tokens belong on the site URL," never the stronger, false "the gateway categorically rejects Basic."
+- EC-1.2.054-3: An Assets/CMDB command against an api_token profile with a CORRECT (non-stale) `cloud_id` → succeeds via the gateway under Basic auth, exactly as `assets_base_url`'s existing un-gated computation already allows — this is the case BC-1.2.052/BC-1.2.053's acquisition fix now makes reachable in practice (a fresh, valid `cloud_id` for an api_token profile that previously never had one).
+
+**Verification Properties**: none dedicated — this BC documents an existing, already-tested invariant. Recommend an F4 regression-pin test (proptest over arbitrary `auth_method`/`cloud_id` combinations asserting the gateway is selected iff `auth_method == "oauth"`), mirroring VP-AUTHDX-002's "runtime-default-unchanged" regression-pin style, as a LOW-priority hardening addition — not a new formal property this BC's acceptance depends on.
+
+**Related BCs**: BC-1.2.052 (the acquisition half of A-PA-LOW-001 this BC's gating half complements), BC-1.2.053 (the mechanism-switch scenario whose safety this BC's Postcondition 2 rationale depends on), BC-1.1.015 (the existing `.unwrap_or("api_token")` runtime-default regression pin this BC's EC-1.2.054-1 cites).
+
+**Architecture Anchors**: ADR-0022 §4; architecture-delta.md §1.2 (target-state diagram, `ConfigRS`/`ClientRS` nodes marked UNCHANGED), §4 (confirmed-unchanged section).
+
+**Story Anchor**: TBD (F3) — likely NO implementing story at all, since no code changes; a story may still be needed for the recommended F4 regression-pin test.
+
+**VP Anchors**: none dedicated (see Verification Properties above for the optional regression-pin recommendation).
+
+**Trace**: F2 spec evolution, cycle-004 `windows-correctness` (2026-09-03), A-PA-LOW-001, DEC-334; ADR-0022 §4 (verified directly against `src/config.rs` during this F2 pass); architecture-delta.md §1.2/§4; cross-reference BC-1.1.015 (the `.unwrap_or("api_token")` regression pin this BC's EC-1.2.054-1 relies on). (resolves F1 delta analysis Open Question 8); F2-gate fix (2026-09-01, I-6) — Invariant 2 and EC-1.2.051-3 added, extending BC-1.1.011's not-cleared-on-failure guarantee to the relogin path; adversary pass-2 fix (2026-09-01, L-1) — Postcondition 1 and Invariant 2's "clear-then-relogin" term renamed to "relogin-then-replace" to resolve the self-contradiction against this BC's own I-6 no-clear-before-confirmed-replacement rule; cross-reference BC-1.2.048 (general invariant, VP-AUTHDX-003 declared there), BC-1.2.015/016 (pre-existing `--oauth`-on-refresh flag-presence pins — still true, only the override BEHAVIOR changes, not the flag's continued existence), BC-1.1.011 (the not-cleared-on-failure invariant this fix extends).
 
 ---
 
@@ -686,11 +825,16 @@ Embedded OAuth app (1.3), Token keychain (1.4), OAuth state machine (1.5), Auth 
 
 #### BC-1.4.028: `load_oauth_tokens` errors on PARTIAL state (one token present, other missing)
 
+**STATUS: AMENDED (2026-09-03, cycle-004 `windows-correctness`, DEC-334, ADR-0021 §4)** — the partial-state error is no longer the immediate outcome of detecting a partial namespaced keyring pair; the existing `"default"`-only legacy-pair recovery attempt (unchanged) is followed by a NEW check of the DPAPI-encrypted file (BC-1.4.036) before this BC's error is raised. This EXTENDS the contract below; it does not replace it.
+
 **Confidence**: HIGH
 **Source**: `src/api/auth.rs:~1249`
 **Subject**: Auth & Identity
-**Behavior**: Access-token without refresh-token (or vice versa) → `Err`. Prevents silent half-credential use.
-**Trace**: Pass 3 BC-1156 (R4)
+**Behavior (PREVIOUS, pre-cycle-004, retained verbatim for audit trail)**: Access-token without refresh-token (or vice versa) → `Err`. Prevents silent half-credential use.
+
+**Behavior (CURRENT, cycle-004)**: Exactly one namespaced keyring key present (partial write) → the existing `"default"`-only legacy-pair recovery is attempted first (unchanged); if that does not resolve it, `load_oauth_tokens` additionally checks `auth_windows_store::load_pair(profile)` (BC-1.4.036) — if it exists and decrypts to a complete pair, that pair is PREFERRED (a stderr warning notes a partial keyring remnant was ignored); otherwise, and only otherwise, this BC's original "OAuth keychain entries … are partial" `Err` fires, unchanged in wording and exit behavior from the previous contract above. On macOS/Linux, `auth_windows_store::load_pair` always returns `Ok(None)`, so this extension is a permanent no-op there and the previous (pre-cycle-004) behavior is observed byte-for-byte.
+
+**Trace**: Pass 3 BC-1156 (R4); F2 spec evolution, cycle-004 `windows-correctness` (2026-09-03) — extended (not replaced) to check the DPAPI-encrypted file before erroring, per ADR-0021 §4; cross-reference BC-1.4.036 (the new DPAPI-file read-path this BC's partial-state handling now also consults), BC-1.4.035 (the write-side routing whose Postcondition 1 this BC's normal-operation invariant assumes should prevent this dual-state from arising).
 
 ---
 
@@ -863,6 +1007,261 @@ Embedded OAuth app (1.3), Token keychain (1.4), OAuth state machine (1.5), Auth 
 **F4 doc-fallout obligation**: this breaking change MUST be called out in the CHANGELOG entry for the release that ships cycle-003 (per the general CHANGELOG-for-breaking-changes convention this corpus already follows for BC-1.2.047/S-663-1 and BC-1.2.051/DEC-321) and in any standalone migration-notes document this cycle produces — the F4 implementing story is responsible for drafting this entry; it is not optional polish.
 
 **Trace**: F2-gate fix, cycle-003 `auth-profile-dx` (2026-09-01); ADR-0020 §Decision 2 ("one-time, clearly-communicated BREAKING CHANGE" + § Breaking-Change Acknowledgment); DEC-315; cross-reference BC-1.4.032 (REDESIGNED — the no-copy contract this BC's breaking-change consequence follows from), BC-1.4.033 (the partial-write sibling — unaffected by this BC), BC-1.2.051/DEC-321 (this corpus's prior breaking-change-acknowledgment precedent).
+
+---
+
+#### BC-1.4.035: Keyring-first OAuth token storage with DPAPI-encrypted-file fallback on `keyring::Error::TooLong` (Windows only)
+
+**Confidence**: HIGH
+**Source**: ADR-0021 §1/§2; `.factory/research/win-oauth-keychain-blob-limit-2026-09-03.md`; `src/api/auth.rs::store_oauth_tokens` (F4 target)
+**Subject**: Auth & Identity
+**Origin**: NEW (cycle-004 `windows-correctness`, DEC-334, ADR-0021 §1/§2)
+
+**Description**: `store_oauth_tokens(profile, access, refresh)` continues to attempt `keyring::Entry::set_password` first for both the access and refresh token, unchanged on macOS/Linux and for any Windows secret that fits Credential Manager's 2560-byte blob ceiling. On Windows, when a `set_password` call returns `keyring::Error::TooLong(_, _)`, the WHOLE access+refresh pair is routed to a new DPAPI-encrypted-file store as a single atomic unit — never split across two backends. This closes #759 (OAuth login deterministically fails on Windows for any token exceeding ~1280 UTF-16 code units) at its root.
+
+**Preconditions**:
+1. `store_oauth_tokens` is called with a profile and a non-empty access+refresh token pair (post successful Atlassian token exchange or refresh-rotation).
+2. Running on any platform — this BC's routing predicate is compiled into every platform; only the Windows DPAPI code path actually engages (Invariant 3).
+
+**Postconditions**:
+1. Both `set_password` calls succeed (small-secret case, all platforms) → pair stored in keyring exactly as before this cycle; any stale DPAPI file for this profile from a prior oversized-token generation is best-effort removed (never fails the call if removal fails).
+2. Access `set_password` succeeds, refresh `set_password` returns `TooLong` → the access-token keyring write is rolled back (`delete_credential_tolerating_no_entry`) and the WHOLE pair is written via `auth_windows_store::store_pair` — never left with access-in-keyring/refresh-nowhere.
+3. Access `set_password` itself returns `TooLong` → refresh is never attempted against keyring at all; the whole pair routes directly to `auth_windows_store::store_pair`.
+4. Any other `Err` (genuine lock/permission/backend error, not `TooLong`) → propagates unchanged; no DPAPI engagement.
+5. `auth_windows_store::store_pair` failing (disk full, DPAPI syscall failure, permission denied on the secrets directory) surfaces the `DpapiFallbackFailed` marker error (BC-1.4.039).
+
+**Invariants**:
+1. The access/refresh pair is, at all times, either FULLY in the keyring or FULLY in one DPAPI file — never one secret in each backend.
+2. Routing decisions are made ONLY on the typed `keyring::Error::TooLong` variant returned by `keyring`'s own pre-flight validation — never a pre-flight length guess against a hardcoded byte budget (avoids duplicating/hardcoding `CRED_MAX_CREDENTIAL_BLOB_SIZE` outside `keyring`'s own check and drifting silently if `keyring` changes its ceiling or encoding).
+3. On macOS and Linux, `should_fallback_to_dpapi`'s predicate is reachable in source but the DPAPI file-store functions (`store_pair`/`load_pair`/`remove_if_present`) never perform any file I/O — `#[cfg(not(windows))]` arms exist only so the cross-platform call site compiles uniformly. Behavior on macOS/Linux is byte-for-byte UNCHANGED by this cycle.
+
+**Edge Cases**:
+- EC-1.4.035-1: Both access and refresh individually fit keyring but the SEQUENCE of two independent `set_password` calls is interrupted between them by a process kill (not a `TooLong` failure) — this is the PRE-EXISTING partial-write risk (unrelated to this BC's DPAPI routing); see BC-1.4.028 (partial-state handling, AMENDED this cycle) for the read-side recovery contract.
+- EC-1.4.035-2: A previously-oversized refresh token shrinks after rotation (now fits keyring) on a profile whose pair currently lives in the DPAPI file — the NEXT successful keyring-first write per Postcondition 1 removes the now-stale DPAPI file as a best-effort side effect; a failure to remove it does not fail the overall store call (the DPAPI file simply becomes an orphaned, harmless artifact until the next successful cleanup attempt).
+- EC-1.4.035-3: Running on Windows in a headless CI user context — `should_fallback_to_dpapi`'s predicate and the routing logic are exercised identically to an interactive session; only the real DPAPI syscall reachability in that context is unverified pending an F4 spike (architecture-delta §9 item 3).
+
+**Verification Properties**: VP-AUTHDX-011 (`TooLong`-triggered fallback routing — proptest/unit test with a mocked `keyring::Error`, cross-platform) and VP-AUTHDX-013 (cross-platform non-engagement of `#[cfg(windows)] mod dpapi` — compile-time proof, not a runtime test) are both anchored to this BC; formal-verifier to draft.
+
+**Related BCs**: BC-1.4.036 (read-path DPAPI-file fallback, the sibling of this BC's write path), BC-1.4.037 (the atomic file-write mechanism `store_pair` delegates to), BC-1.4.038 (delete-both-backends), BC-1.4.039 (honest-fail message when `store_pair` itself fails), BC-1.4.028 (pre-existing partial-write recovery, AMENDED this cycle), BC-1.4.025 (OAuth legacy-flat-key migration — confirmed UNCHANGED regression baseline, not touched by this BC).
+
+**Architecture Anchors**: ADR-0021 §1/§2; architecture-delta.md §1.2/§2.1/§3 (`store_oauth_tokens` row).
+
+**Story Anchor**: TBD (F3)
+
+**VP Anchors**: VP-AUTHDX-011, VP-AUTHDX-013
+
+**Trace**: F2 spec evolution, cycle-004 `windows-correctness` (2026-09-03), issue #759, DEC-334; ADR-0021 §1/§2; architecture-delta.md §1.2/§2.1/§3/§6; cross-reference BC-1.4.028 (AMENDED — the pre-existing partial-write scope), BC-1.4.025 (confirmed-unchanged regression baseline).
+
+---
+
+#### BC-1.4.036: OAuth token load path checks the DPAPI-encrypted file when both namespaced keyring keys are absent; a corrupt file yields a distinct force-re-login error
+
+**Confidence**: HIGH
+**Source**: ADR-0021 §4; `src/api/auth.rs::load_oauth_tokens` (F4 target)
+**Subject**: Auth & Identity
+**Origin**: NEW (cycle-004 `windows-correctness`, DEC-334, ADR-0021 §4)
+
+**Description**: `load_oauth_tokens(profile)` gains one new branch, inserted where today's code reaches the "both namespaced keys absent" case, before falling through to the existing `"default"`-only legacy-flat-key recovery (BC-1.4.025, unchanged). A token stored via EITHER backend (keyring or the DPAPI file) loads successfully and identically from the caller's perspective.
+
+**Preconditions**:
+1. `load_oauth_tokens(profile)` is called (directly, or transitively via `refresh_oauth_token_with_url`/`JiraClient::from_config`/`JiraClient::send`'s 401-reconcile path).
+
+**Postconditions**:
+1. Both namespaced keyring keys present → return them (fast path, unchanged, all platforms).
+2. Both namespaced keyring keys absent → attempt `auth_windows_store::load_pair(profile)`:
+   a. `Ok(Some((access, refresh)))` → return them; caller cannot distinguish this from a keyring-backed load.
+   b. `Err(e)` (file present but corrupt/undecryptable — bad envelope header, DPAPI decrypt failure, or created by a different Windows user account) → propagate a DISTINCT, actionable error: `"OAuth credentials for profile {profile:?} could not be decrypted (the file may be corrupted, or was created by a different Windows user account). Run \"jr auth login --oauth --profile {profile}\" to re-authenticate."` — this is NEVER coerced into "no stored OAuth token," which would misleadingly suggest the user never logged in.
+   c. `Ok(None)` → fall through to the existing `"default"`-only legacy-flat-key check (BC-1.4.025, unchanged), then the existing "No stored OAuth token" error (unchanged).
+3. Exactly one namespaced keyring key present (partial write) → existing logic is EXTENDED, not replaced (see BC-1.4.028, AMENDED): first the existing `"default"`-only legacy-pair recovery runs (unchanged); if that doesn't resolve it, additionally check `auth_windows_store::load_pair(profile)` — if it exists and decrypts to a complete pair, PREFER it (emitting a stderr warning that a partial keyring remnant was ignored); otherwise fall through to today's "OAuth keychain entries … are partial" error, unchanged.
+4. On macOS/Linux, `auth_windows_store::load_pair` always returns `Ok(None)` immediately — no file I/O attempted; Postcondition 2's branch is a permanent no-op there.
+
+**Invariants**:
+1. A corrupt/undecryptable DPAPI file is NEVER silently treated as "no token" — the distinction between "never logged in" and "logged in, but the stored credential is now unusable" is preserved across both storage backends.
+2. `auth status`'s presence check (`load_oauth_tokens(&profile).is_ok()`) reports "authenticated" identically whether the token lives in keyring or the DPAPI file.
+
+**Edge Cases**:
+- EC-1.4.036-1: A profile's DPAPI file exists but was created under a DIFFERENT Windows user account (e.g. a config directory copied between machines/users) — `CryptUnprotectData` fails because DPAPI keys are user-scoped; this is indistinguishable, from `jr`'s perspective, from ordinary corruption, and surfaces the identical Postcondition 2b message (both are "force re-login," not a more specific "wrong user" diagnosis — over-specifying the cause risks a misleading claim `jr` cannot actually verify).
+- EC-1.4.036-2: Both a namespaced-partial keyring state AND a complete, valid DPAPI file exist simultaneously (an unexpected dual-state that Postcondition 1 of BC-1.4.035 should prevent in normal operation, but which can arise from manual keychain edits or an interrupted rollback) — Postcondition 3 above prefers the DPAPI file and warns, rather than erroring outright.
+- EC-1.4.036-3: The three read-call sites in `src/api/client.rs` (`from_config`, and the two `send()` 401-reconcile call sites) all observe identical behavior via the shared `load_oauth_tokens` function — no call-site-specific change is needed or permitted.
+
+**Verification Properties**: new VP (formal-verifier to allocate) — corrupt-envelope / wrong-user-DPAPI-file → distinct force-re-login error, never coerced into "no token"; unit-testable cross-platform by constructing a malformed envelope byte sequence and asserting the decode path's `Err` variant.
+
+**Related BCs**: BC-1.4.035 (the write-side counterpart), BC-1.4.037 (envelope encode/decode this BC's `load_pair` call depends on), BC-1.4.028 (AMENDED — partial-state handling this BC extends), BC-1.4.025 (unchanged legacy-flat-key recovery this BC falls through to).
+
+**Architecture Anchors**: ADR-0021 §4; architecture-delta.md §2.1/§3 (`load_oauth_tokens` row).
+
+**Story Anchor**: TBD (F3)
+
+**VP Anchors**: (new, formal-verifier to allocate)
+
+**Trace**: F2 spec evolution, cycle-004 `windows-correctness` (2026-09-03), issue #759, DEC-334; ADR-0021 §4; architecture-delta.md §2.1/§3; cross-reference BC-1.4.028 (AMENDED in this same pass), BC-1.4.025 (unchanged), BC-1.4.037 (envelope format).
+
+---
+
+#### BC-1.4.037: DPAPI-encrypted-file store: versioned envelope + atomic temp-write-and-rename
+
+**Confidence**: HIGH
+**Source**: ADR-0021 §3; src/api/auth_windows_store.rs (NEW FILE — does not exist yet, F4 target, not a live citation)
+**Subject**: Auth & Identity
+**Origin**: NEW (cycle-004 `windows-correctness`, DEC-334, ADR-0021 §3)
+
+**Description**: New sibling module `src/api/auth_windows_store.rs` (subsystem SS-03) implements the DPAPI-encrypted-file backend with a deliberate pure/impure seam: `envelope::{encode, decode, wrap, unwrap}` and `should_fallback_to_dpapi` (BC-1.4.035) are pure, cross-platform-testable functions; only the two-function `dpapi::{protect, unprotect}` FFI wrapper and the file write itself are Windows-only/impure. The on-disk file at `%LOCALAPPDATA%\jr\secrets\<profile>\oauth-tokens.dat` is written atomically: encode → DPAPI-protect → wrap → temp-write (same directory) → `rename` over the final path.
+
+**Preconditions**:
+1. `auth_windows_store::store_pair(profile, access, refresh)` is called (only ever from `store_oauth_tokens`'s routing logic, BC-1.4.035).
+2. Running on `#[cfg(windows)]` for the real path; `#[cfg(not(windows))]` always returns the `DpapiFallbackFailed` error immediately with no file I/O attempted (this arm exists only so the cross-platform call site compiles uniformly — the size threshold that triggers it is realistically never hit by macOS Keychain/Linux Secret Service).
+
+**Postconditions**:
+1. `envelope::encode(access, refresh)` produces a plaintext byte sequence (JSON: `{version, access, refresh}`) that `envelope::decode` parses back to the identical `(access, refresh)` pair, byte-for-byte, for any UTF-8 string pair including values well above the 2560-byte Credential Manager ceiling.
+2. `envelope::wrap(protected_bytes)` prepends a 4-byte magic (`b"JROD"`) + 1-byte version to the DPAPI-protected ciphertext; `envelope::unwrap(file_bytes)` validates this 5-byte header and returns the remaining protected bytes, OR a distinct "unrecognized envelope" error for an unrecognized magic/version — never silently coerced into "no token."
+3. The atomic file write builds the full file bytes in memory, writes to `<profile-dir>/oauth-tokens.dat.tmp-<random-suffix>` in the SAME directory as the final path (creating the directory via `create_dir_all` first if absent), then `std::fs::rename`s over the final path — a crash or process kill mid-write leaves either the OLD complete file (rename never happened) or the NEW complete file (rename succeeded); it never leaves a truncated or partially-written file at the FINAL path.
+4. `dpapi::protect`/`dpapi::unprotect` (the sole `unsafe` code in this module tree) call `CryptProtectData`/`CryptUnprotectData` with USER scope only — `CRYPTPROTECT_LOCAL_MACHINE` is never passed (that flag would let ANY local user on the machine decrypt the blob, defeating the point of a per-user OAuth secret).
+
+**Invariants**:
+1. `envelope::{encode, decode, wrap, unwrap}` and `should_fallback_to_dpapi` are deterministic, side-effect-free functions with no I/O or syscalls — unit-testable on any OS/CI runner (Pure Core, architecture-delta.md §6).
+2. `dpapi::{protect, unprotect}` are the ONLY `unsafe` code in this module tree — two thin wrapper functions (build a `DATA_BLOB` from a Rust slice, call the FFI function, copy the output `DATA_BLOB` into an owned `Vec<u8>`, free the output buffer via `LocalFree`); no other file-write, JSON, or routing logic in this module is `unsafe`.
+3. `windows-sys` 0.60.2 (already present transitively via `keyring`'s `windows-native` feature) is promoted to a direct `[target.'cfg(windows)'.dependencies]` entry — this introduces ZERO new dependency-graph nodes; the existing `deny.toml` `[[bans.skip]]` entry for `windows-sys` version `"0.60"` gains an updated `reason` field naming this module's DPAPI usage alongside keyring's `windows-native` feature, in the same change.
+
+**Edge Cases**:
+- EC-1.4.037-1: The `envelope::decode`/`unwrap` functions receive a structurally malformed byte sequence (bad JSON, missing field, wrong magic/version) → a distinct "corrupt envelope"/"unrecognized envelope" error is returned, never a panic and never silently coerced into an empty/absent result (this is the mechanism BC-1.4.036 Postcondition 2b's force-re-login message depends on).
+- EC-1.4.037-2: Disk full, or the `secrets/<profile>/` directory is not writable (permission denied) during the temp-write step → the write fails BEFORE the `rename`, so the existing final-path file (if any) is completely untouched; this failure surfaces as `DpapiFallbackFailed` (BC-1.4.039).
+- EC-1.4.037-3: A `CryptProtectData`/`CryptUnprotectData` syscall failure (Windows-only; e.g., DPAPI subsystem unavailable) is a distinct impure-shell failure from the pure envelope-format errors above; it too surfaces as `DpapiFallbackFailed` on the write path (BC-1.4.039) and as the corrupt-file force-re-login error on the read path (BC-1.4.036).
+
+**Verification Properties**: VP-AUTHDX-010 (real `CryptProtectData`/`CryptUnprotectData` round-trip — manual/Windows CI integration test, Windows-only) and VP-AUTHDX-012 (atomic dual-write invariant via a fault-injection seam mirroring the existing `JR_S303_PERSIST_FAIL` pattern — cross-platform for the routing/rename logic, Windows CI for the real file-rename step) are both anchored to this BC; formal-verifier to draft.
+
+**Related BCs**: BC-1.4.035 (the routing logic that calls `store_pair`), BC-1.4.036 (the read-side `load_pair` counterpart), BC-1.4.040 (the secret-file PATH itself — profile-name sanitization, a distinct concern from this BC's envelope/atomicity contract).
+
+**Architecture Anchors**: ADR-0021 §3/§5; architecture-delta.md §2.1 (module interface table), §5 (dependency graph), §6 (purity boundary map).
+
+**Story Anchor**: TBD (F3)
+
+**VP Anchors**: VP-AUTHDX-010, VP-AUTHDX-012
+
+**Trace**: F2 spec evolution, cycle-004 `windows-correctness` (2026-09-03), issue #759, DEC-334; ADR-0021 §3/§5; architecture-delta.md §2.1/§5/§6; F1 delta analysis §6 (dependency assessment), §10 (Windows-only testability risk).
+
+---
+
+#### BC-1.4.038: `clear_profile_oauth_pair`/`clear_profile_creds` delete BOTH the keyring pair AND the DPAPI file
+
+**Confidence**: HIGH
+**Source**: ADR-0021 §7; `src/api/auth.rs::clear_profile_oauth_pair`, `::clear_profile_creds` (F4 targets)
+**Subject**: Auth & Identity
+**Origin**: NEW (cycle-004 `windows-correctness`, DEC-334, ADR-0021 §7)
+
+**Description**: `clear_profile_oauth_pair` (used by `auth logout`, BC-1.2.013) and `clear_profile_creds` (used by `auth remove`, BC-1.2.014) each gain one additional step — `auth_windows_store::remove_if_present(profile)` — called ALONGSIDE (not instead of) the existing two keyring deletes, using the same `NotFound`-is-success tolerance already established for `delete_credential_tolerating_no_entry`. Without this, `logout`/`remove`/a mechanism switch would leave an orphaned encrypted secret file on disk after every other credential trace is gone.
+
+**Preconditions**:
+1. `clear_profile_oauth_pair(profile)` or `clear_profile_creds(profile)` is called for a profile that may or may not have an OAuth pair stored in either backend.
+
+**Postconditions**:
+1. `clear_profile_oauth_pair` deletes `<profile>:oauth-access-token`, `<profile>:oauth-refresh-token` (unchanged), AND `auth_windows_store::remove_if_present(profile)` — all three tolerate a not-found/absent target as success, not an error.
+2. `clear_profile_creds` performs the same three deletions as part of its existing four-step delete (OAuth pair, API-token pair, cache directory, config entry) — credential deletion, INCLUDING the DPAPI file, happens before config-entry removal (consistent with BC-1.2.014's existing step-ordering contract).
+3. After either function returns `Ok(())`, `%LOCALAPPDATA%\jr\secrets\<profile>\oauth-tokens.dat` does not exist for that profile, regardless of which backend (keyring or DPAPI file) the pair was actually stored in at the time of the call.
+
+**Invariants**:
+1. `remove_if_present` NEVER fails the overall clear operation on a missing file — `NotFound` is success, mirroring the existing `delete_credential_tolerating_no_entry` idiom exactly.
+2. On macOS/Linux, `remove_if_present` returns `Ok(())` immediately with no file I/O attempted — a permanent no-op there, consistent with BC-1.4.035 Invariant 3.
+
+**Edge Cases**:
+- EC-1.4.038-1: A profile whose pair lives entirely in the DPAPI file (never touched keyring) — `clear_profile_oauth_pair`'s two keyring deletes both hit `NotFound`/tolerate-absent, and the DPAPI file removal is the ONLY deletion that actually removes anything; the overall call still succeeds.
+- EC-1.4.038-2: A profile with BOTH a stale/orphaned DPAPI file (from EC-1.4.035-2's cleanup-failure scenario) AND a currently-active keyring pair — both are removed; there is no scenario where clearing a profile's credentials leaves either backend's data behind.
+- EC-1.4.038-3: A genuine filesystem error removing the DPAPI file (e.g., permission denied on the `secrets/` directory, distinct from "file does not exist") propagates as a real error from the clear function, rather than being silently swallowed — consistent with BC-1.2.014's existing "genuine keychain errors surfaced, not swallowed" contract (I-4/SR-008), now extended to this third backend.
+
+**Verification Properties**: ordinary F4 acceptance test (assert DPAPI file absence post-clear, extending the existing keyring-only assertions in `tests/auth_remove_logout_semantics.rs` per the pattern F1 §5.3 flags) — not a distinct formal property beyond what BC-1.2.013/BC-1.2.014's existing test suites already establish for the keyring pair.
+
+**Related BCs**: BC-1.2.013 (`auth logout` non-destructive contract this BC's `clear_profile_oauth_pair` step serves), BC-1.2.014 (`auth remove` four-step delete this BC's `clear_profile_creds` step serves), BC-1.4.035 (the storage side this BC's deletion mirrors), BC-1.4.037 (the file this BC deletes).
+
+**Architecture Anchors**: ADR-0021 §7; architecture-delta.md §2.1 (module interface table), §3 (modified-components table).
+
+**Story Anchor**: TBD (F3)
+
+**VP Anchors**: none dedicated — ordinary F4 test extension.
+
+**Trace**: F2 spec evolution, cycle-004 `windows-correctness` (2026-09-03), issue #759, DEC-334; ADR-0021 §7; architecture-delta.md §2.1/§3; cross-reference BC-1.2.013/BC-1.2.014 (the logout/remove contracts this BC extends), `tests/auth_remove_logout_semantics.rs` (existing test suite to extend).
+
+---
+
+#### BC-1.4.039: Honest-fail backstop — `DpapiFallbackFailed` replaces "Unlock your keychain" only when the DPAPI fallback itself fails
+
+**Confidence**: HIGH
+**Source**: ADR-0021 §6; `src/api/auth.rs::oauth_login`, `::refresh_oauth_token_with_url` (F4 targets)
+**Subject**: Auth & Identity
+**Origin**: NEW (cycle-004 `windows-correctness`, DEC-334, ADR-0021 §6; supersedes the misdirecting message this cycle's root-cause analysis identifies, F1 §4)
+
+**Description**: A new, type-based (not string-matched) marker error `DpapiFallbackFailed(String)` distinguishes "the DPAPI fallback itself failed" (disk full, DPAPI syscall failure, permission denied) from every other error shape. Two of the four existing "Unlock your keychain" message sites in `src/api/auth.rs` are revised to branch on this marker; the other two are confirmed unaffected.
+
+**Preconditions**:
+1. `store_oauth_tokens` (BC-1.4.035) has already attempted the keyring-first write and, on `TooLong`, attempted the DPAPI fallback (BC-1.4.037), and that fallback itself returned an error.
+
+**Postconditions**:
+1. **Site 1** (`oauth_login`'s store-failure `map_err`) and **Site 3** (`refresh_oauth_token_with_url`'s post-refresh store-failure `map_err`): branch on `e.downcast_ref::<DpapiFallbackFailed>()`.
+   - `Some(_)` → NEW honest-fail message: `"Authorization succeeded with Atlassian, but the OAuth tokens were too large for Windows Credential Manager's 2560-byte limit AND jr's encrypted-file fallback also failed ({inner}). Check available disk space and file permissions, then run \"jr auth login --oauth --profile {profile}\" again. You must first revoke the now-unused Atlassian grant: visit https://id.atlassian.com/manage-profile/apps."` — the grant-revoke step is stated as a REQUIRED action, not an aside.
+   - `None` → the existing "Unlock your keychain (or grant access to jr)…" message is UNCHANGED — it remains accurate for every error that reaches this branch with no `DpapiFallbackFailed` marker (a genuine lock/permission condition on the small-secret keyring path, or a non-Windows backend error where DPAPI was never engaged).
+2. **Site 2** (`refresh_oauth_token_with_url`'s `load_oauth_tokens` read-failure branch): NO message-text change — this site becomes DPAPI-aware transitively via the corrected `load_oauth_tokens` (BC-1.4.036), which itself distinguishes a genuine backend error (unchanged message here) from a corrupt-DPAPI-file condition (its own distinct message, surfaced before this branch is ever reached).
+3. **Site 4** (`resolve_refresh_app_credentials`'s BYO app-credential-read error): UNCHANGED. This site guards the OAuth APP's `client_id`/`client_secret` pair — always short strings, never `TooLong`-reachable. F4 must AUDIT (not modify) this site to confirm no `TooLong` path is reachable here.
+
+**Invariants**:
+1. The honest-fail message is reachable ONLY when BOTH keyring AND the DPAPI store have failed for a given write — with the DPAPI fallback in place (BC-1.4.035/BC-1.4.037), this is now a true edge case, not the common path #759 originally reported.
+2. Every "Unlock your keychain" message site is accurate for the failure it actually reports, post this BC — no site says "locked keychain" for a `TooLong`-originated failure once the DPAPI fallback exists.
+
+**Edge Cases**:
+- EC-1.4.039-1: `store_oauth_tokens` fails with a genuine lock/permission error on the SMALL-secret keyring path (never reaches `TooLong`, DPAPI never engaged) → Sites 1/3 see `None` from the downcast and the existing "Unlock your keychain" message fires correctly — this is the majority case on macOS/Linux and for any Windows secret that fits.
+- EC-1.4.039-2: The DPAPI fallback's file write fails for a reason OTHER than disk-full/permission (e.g., a transient DPAPI syscall failure) → the `{inner}` interpolation in the honest-fail message carries whatever diagnostic string the underlying `anyhow::Error` provides; this BC does not enumerate every possible `{inner}` value, only the message TEMPLATE and trigger condition.
+- EC-1.4.039-3: A future refactor accidentally allows `TooLong` to reach Site 4 (the BYO app-credential path) — this BC's Postcondition 3 requires this to be AUDITED at F4 (client_id/client_secret are short strings by construction, so this is a confirmation task, not an anticipated real failure mode); if it did occur, Site 4 remains unchanged and would misreport a `TooLong` as a lock/permission issue — flagged here as an out-of-scope residual for F4 to confirm is unreachable, not fixed by this BC.
+
+**Verification Properties**: new VP (formal-verifier to allocate) — message-selection correctness: given a constructed `DpapiFallbackFailed` vs. an ordinary `keyring::Error`, Sites 1/3 select the correct message text; fully unit-testable cross-platform via constructed error values (no real Windows/DPAPI dependency).
+
+**Related BCs**: BC-1.4.035 (the routing/rollback logic whose failure this BC's marker error signals), BC-1.4.037 (the DPAPI store whose failure produces the marker), BC-1.4.036 (Site 2's DPAPI-awareness, achieved transitively), BC-1.4.030 (Site 4's function — `resolve_refresh_app_credentials` — confirmed UNCHANGED/unaffected by this BC).
+
+**Architecture Anchors**: ADR-0021 §6; architecture-delta.md §2.1 (module interface table — `DpapiFallbackFailed` row), §3 (modified-components table, Sites 1/3 rows).
+
+**Story Anchor**: TBD (F3)
+
+**VP Anchors**: (new, formal-verifier to allocate)
+
+**Trace**: F2 spec evolution, cycle-004 `windows-correctness` (2026-09-03), issue #759, DEC-334; ADR-0021 §6; architecture-delta.md §2.1/§3; F1 delta analysis §4 (root-cause BC), §5.2 (four message sites); cross-reference BC-1.4.030 (Site 4, confirmed unaffected).
+
+---
+
+#### BC-1.4.040: The DPAPI secret file's path is derived from the profile name with path-traversal / invalid-component rejection before any write, read, or delete
+
+**Confidence**: MEDIUM (new hardening requirement escalated from an inherited, previously-undocumented risk — see Description)
+**Source**: architecture-delta.md §9 item 1 (residual design question, flagged by architect); `src/profile.rs` (`Profile::from(String)`, "Infallible by design," ADR-0011); `src/cache.rs::cache_dir` (the pre-existing, unsanitized precedent this BC's file_path function otherwise mirrors)
+**Subject**: Auth & Identity
+**Origin**: NEW (cycle-004 `windows-correctness`, DEC-334) — a genuinely new requirement, not a restatement of existing behavior: `cache_dir(profile)` (`src/cache.rs`) already joins the raw profile string into a filesystem path with NO sanitization, and this ADR's new `auth_windows_store::file_path` was originally going to follow that identical convention (ADR-0021 §3) rather than invent a new rule. This BC ELEVATES that inherited pattern to an explicit, must-implement requirement for the SECRET file specifically, because a secret file is more sensitive than the existing disposable cache directory it would otherwise mirror unmodified.
+
+**Description**: `Profile::from(String)` performs no validation (ADR-0011, "Infallible by design") — a profile name can be any string, including one containing path-traversal-unsafe components (`..`, absolute-path-like segments, embedded path separators). `auth_windows_store::file_path(profile)` joins `cache_root().join("secrets").join(profile.as_ref()).join("oauth-tokens.dat")`. Before this cycle, an equivalent join for the (disposable, non-secret) cache directory carried the same absence of sanitization and was treated as an accepted, low-priority residual (profile names are operator-controlled local config, not remote-attacker-controlled input). Because the new artifact governed by this BC is a SECRET — the OAuth token pair, not a disposable cache entry — this BC requires the path-join step used by `store_pair`/`load_pair`/`remove_if_present` to reject a profile-name component that would cause the resulting path to escape the intended `secrets/<profile>/` directory, before any write, read, or delete is attempted against that path.
+
+**Preconditions**:
+1. `auth_windows_store::file_path(profile)` (or an equivalent path-construction step reachable from `store_pair`/`load_pair`/`remove_if_present`) is invoked with a `Profile` value derived from `Profile::from(String)` — any string, unsanitized (ADR-0011).
+
+**Postconditions**:
+1. A profile name whose string form, when joined under `secrets/`, would resolve (after normalization) to a path OUTSIDE `cache_root().join("secrets")` — e.g. containing a `..` path-traversal component, an absolute-path-like segment, or a raw path separator (`/` or `\`) that a naive `Path::join` would otherwise honor as a directory boundary — is REJECTED before any file-system operation (write, read, or delete) is attempted against the resulting path.
+2. The rejection surfaces as a distinct, actionable error (e.g. `JrError::UserError`, exit 64) naming the invalid profile name — never a silent no-op and never a successful write to an unintended location.
+3. A profile name containing none of the above (the overwhelming common case — alphanumeric, `_`, `-`, and similar ordinary identifier characters) is UNAFFECTED — this BC adds a rejection path, not a new success-path behavior for ordinary profile names.
+4. This guard applies uniformly to all three DPAPI-store entry points (`store_pair`, `load_pair`, `remove_if_present`) — not just the write path — since a hostile profile name could otherwise be used to probe for or delete a file outside the intended directory via any of the three operations.
+
+**Invariants**:
+1. This guard is a DEFENSE-IN-DEPTH addition specific to the new secret-file artifact this cycle introduces — it does NOT retroactively change `cache_dir(profile)`'s existing (unsanitized) behavior for the disposable, non-secret cache directory; that remains an accepted, separately-tracked residual, unchanged by this BC.
+2. Profile names remain operator-controlled local configuration, not remote-attacker-controlled input — this is a hardening measure appropriate to the elevated sensitivity of a SECRET file, not a response to a demonstrated remote-exploitation vector.
+
+**Edge Cases**:
+- EC-1.4.040-1: Profile name `"../../etc/passwd"` or any string containing a `..` component → rejected per Postcondition 1/2, regardless of which of the three DPAPI-store functions is invoked.
+- EC-1.4.040-2: Profile name containing a raw path separator without a `..` component (e.g. `"sub/dir"`) → still rejected, since `Path::join` would otherwise create or address a nested directory the caller never intended (mirrors the traversal concern even without a literal `..`).
+- EC-1.4.040-3: An ordinary profile name (e.g. `"default"`, `"sandbox-prod"`, `"team_a"`) → succeeds exactly as before; this BC introduces zero behavior change for any profile name already in normal use across this codebase's existing test fixtures.
+- EC-1.4.040-4: A profile name that is empty, or exactly `"."`/`".."` in full (not merely containing those as a substring) → also rejected under the same guard (an empty or bare-dot component is not a valid directory-segment identity for a per-profile secret directory).
+
+**Verification Properties**: new VP (formal-verifier to allocate, HIGH priority) — a property test (proptest, mirroring `prop_sanitize_attachment_filename_no_path_traversal`'s CWE-22 discipline per CLAUDE.md's existing convention for `sanitize_attachment_filename`) generating arbitrary profile-name strings and asserting the resulting path (when accepted) always remains a descendant of `cache_root().join("secrets")`, and that every traversal-shaped input is rejected before any file-system call. Fully cross-platform unit-testable — no DPAPI/Windows dependency (this is a pure path-construction check).
+
+**Related BCs**: BC-1.4.037 (the file this BC's guard protects), BC-6.2.016 (UPDATED this cycle — the pre-existing, unmodified `cache_dir(profile)` precedent this BC deliberately does NOT retroactively change).
+
+**Architecture Anchors**: architecture-delta.md §9 item 1 (residual design question raised by the architect for this exact concern).
+
+**Story Anchor**: TBD (F3)
+
+**VP Anchors**: (new, formal-verifier to allocate)
+
+**Trace**: F2 spec evolution, cycle-004 `windows-correctness` (2026-09-03), issue #759, DEC-334; architecture-delta.md §9 item 1; product-owner F2 decision: authored as a DEDICATED BC (not an EC on BC-1.4.037) because the guard is shared across all three DPAPI-store entry points (store/load/remove), not solely the write path, and warrants its own VP hook independent of the atomic-write mechanism BC-1.4.037 governs; cross-reference `sanitize_attachment_filename` (CWE-22 discipline precedent, CLAUDE.md), ADR-0011 (`Profile::from(String)` "Infallible by design").
 
 ---
 
@@ -1087,13 +1486,15 @@ Embedded OAuth app (1.3), Token keychain (1.4), OAuth state machine (1.5), Auth 
 | Subdomain | BCs | Confidence |
 |-----------|-----|-----------|
 | 1.1 OAuth Flow & Profile Resolution | 16 | All HIGH |
-| 1.2 Profile Lifecycle Management | 11 | All HIGH |
+| 1.2 Profile Lifecycle Management | 14 | All HIGH |
 | 1.3 Embedded OAuth App | 6 | All HIGH |
-| 1.4 Token Keychain Layout | 10 | All HIGH |
+| 1.4 Token Keychain Layout | 16 | 15 HIGH, 1 MEDIUM (BC-1.4.040) |
 | 1.5 OAuth State Machine | 11 | All HIGH |
 | 1.6 Auth Error Handling & 401 Dispatch | 6 | All HIGH |
-| **Total** | **60** | **60 HIGH** |
+| **Total** | **69** | **68 HIGH, 1 MEDIUM** |
 
-**(M-2, adversary pass-2 fix, 2026-09-01)**: table recomputed from actual `#### BC-` headings — was stale at 58 (§1.1 undercounted at 15, §1.4 undercounted at 9) since the F2-gate fix pass added BC-1.1.016 and BC-1.4.034 without updating this table. Table Total (60) now matches frontmatter `definitional_count: 60`.
+**(M-2, adversary pass-2 fix, 2026-09-01)**: table recomputed from actual `#### BC-` headings — was stale at 58 (§1.1 undercounted at 15, §1.4 undercounted at 9) since the F2-gate fix pass added BC-1.1.016 and BC-1.4.034 without updating this table. Table Total (60) now matched frontmatter `definitional_count: 60`.
+
+**(F2 spec evolution, cycle-004 `windows-correctness`, 2026-09-03)**: table recomputed again — §1.2 gained 3 (BC-1.2.052..054, `cloud_id` acquisition/mechanism-switch-refresh/confirmed-unchanged-guard, ADR-0022), §1.4 gained 6 (BC-1.4.035..040, Windows DPAPI secret storage, ADR-0021). Table Total (69) now matches frontmatter `definitional_count: 69`. BC-1.4.040 is the corpus's first MEDIUM-confidence BC in this file (a new hardening requirement, not a restatement of shipped behavior — see its own Confidence field for rationale).
 
 Note: 71 total BCs (cumulative, incl. range-collapsed) including 11 additional pre-cycle-003 R4 contracts (BC-1140..1178 subset) incorporated inline above, plus 13 new individually-bodied contracts added in cycle-003's `auth-profile-dx` work (2026-09-01, DEC-312..325, ADR-0020/ADR-0011): 11 from the F2 spec evolution pass (BC-1.1.013/014/015, BC-1.2.048/049/050/051, BC-1.4.031/032/033, BC-1.6.047) plus 2 from the same-day F2-gate fix pass (BC-1.1.016, BC-1.4.034). The complete pass-3 BC mapping is in BC-INDEX.md (bc-6/BC-INDEX.md reconciliation of this file's new total is an integrate-pass task, not performed here per the coordination boundary).
