@@ -7,7 +7,7 @@ producer: state-manager
 timestamp: 2026-09-01T15:30:00Z
 cycle: "cycle-003"
 inputs: [STATE.md]
-input-hash: "dd90884"
+input-hash: "c110412"
 traces_to: STATE.md
 ---
 
@@ -865,6 +865,47 @@ Resume command: /vsdd-factory:next-step.
 **RESOLVED (recorded at v3.46, 2026-09-02):** Phase F5 scoped adversarial refinement began — a Wave-5-adversary-sourced login-switch MED (CWE-460/636, data-loss on a failed mechanism switch) was fixed and squash-merged via **PR #763** (`aafa9f9f`); a follow-on F5-refinement bundle of 4 fixes (FIX-1 MED — locked-keychain refresh-error swallow; FIX-2 LOW — logout unset-`auth_method` handling; FIX-3 LOW — comment/text accuracy; FIX-4 LOW — `clear_profile_cache` empty-guard) was fixed and squash-merged via **PR #764** (`202414f2`, current `develop` tip). Two additional F5 findings — **MED-1** (BC-1.1.016↔DEC-321 spec/code contradiction) and **MED-2** (VP-AUTHDX-005/006/008 keyring-gated coverage-boundary, previously implicit) — were reconciled SPEC-ONLY (no code change) in `.factory/specs/prd/bc-1-auth-identity.md`, committed this burst; BC/VP/holdout counts unchanged (733/41/106). Two new non-blocking LOW follow-ups tracked from PR #764's AI review: (a) broaden the `clear_profile_cache` guard to reject `.`/`..`/traversal components, not just empty; (b) add an explicit regression test for FIX-1 call-site-2 backend-error propagation. This checkpoint's "NEXT on resume" framing (close Wave 5 gate, dispatch F5) is now historical only — F5 is now IN PROGRESS, not pending dispatch; see the v3.46 checkpoint in STATE.md for the corrected, current position: re-run F5 adversarial passes on `202414f2` for 3-clean convergence is next, then F6.
 
 **Superseded by:** v3.46 (F5 findings fixed — PR #763 @ `aafa9f9f`, PR #764 @ `202414f2` — plus MED-1/MED-2 spec reconciliation committed; F5 adversarial re-run for 3-clean convergence next), 2026-09-02, live in STATE.md.
+
+---
+
+## Checkpoint v3.46 (archived, F5-FINDINGS-FIXED, 2026-09-02)
+
+**Date:** 2026-09-02/03. **Position:** cycle-003 (`auth-profile-dx`), Phase **F4 (delta implementation) COMPLETE** (7/7 stories, `develop` @ `1dfcd013` via PR #762); Phase **F5 (scoped adversarial refinement) IN PROGRESS**. Two fix PRs merged this burst: `S`-mirroring login-switch relogin-then-replace fix (PR #763, merge commit `aafa9f9f`) and the F5-refinement bundle (PR #764, merge commit `202414f2`, current `develop` tip). Two additional findings reconciled spec-only, no code change: MED-1 (BC-1.1.016↔DEC-321 contradiction) and MED-2 (VP-AUTHDX-005/006/008 coverage-boundary). Pipeline stays **ACTIVE**.
+
+**F5 findings-and-fixes summary (this burst):**
+- **Login-switch MED (Wave-5-adversary-sourced, CWE-460/636) — PR #763 @ `aafa9f9f`.** `login_oauth`/`login_token` now run BEFORE `clear_outgoing_mechanism_on_switch` (was: clear-then-login), so a failed login short-circuits via `?` before any clear — the prior credential pair survives a failed mechanism switch intact. The clear itself dispatches per-kind via `clear_profile_oauth_pair` / a new symmetric `clear_profile_api_token_pair` (namespaced-only — not a repeat of the F1 `clear_all_credentials` landmine). Reviews: local APPROVE, security PASS (data-loss closed, no over-delete/leakage), AI APPROVE. CI green 15/15. TDD RED-proven (keyring-gated).
+- **F5-refinement bundle — PR #764 @ `202414f2` (current `develop` tip).** FIX-1 (MED): `jr auth refresh` no longer swallows a locked-keychain/backend keyring error into a silent "no credentials" fallback — `NoAppCredentialsAvailable` positive marker (site 1) + new `is_backend_keyring_error` chain-walk gate (site 2) restrict the embedded-creds fallback to genuinely-absent cases only; fails safe, no secret-value leakage. FIX-2 (LOW): `logout` treats unset/unknown `auth_method` as `api_token` (non-destructive notice branch). FIX-3 (LOW/doc): `refresh.rs` comment corrected to the accurate per-profile-namespaced description. FIX-4 (LOW): new empty-`Profile`-string guard on `clear_profile_cache`. Reviews: local APPROVE, security PASS, AI APPROVE-WITH-NITS (merge). CI green 15/15; always-run suite green 1249/0 confirms no FIX-1 regression.
+- **MED-1 (BC-1.1.016 ↔ DEC-321 spec/code contradiction) — spec-only, `.factory/specs/prd/bc-1-auth-identity.md`.** Precondition 2(a) narrowed to a `login`-only trigger; 2(b) restated as depending solely on the profile's resolved `auth_method` (DEC-321/BC-1.2.051 make `--oauth` inert on `refresh`); EC-1.1.016-1/2 and the BC's `**Trace**` field updated. Symmetric with the already-correct EC-1.1.016-3.
+- **MED-2 (VP-AUTHDX-005/006/008 keyring-gated coverage-boundary) — spec-only, same file.** Each VP body now states explicitly that its proptest runs only under `#[ignore]` + `JR_RUN_KEYRING_TESTS=1` (real-OS-keychain-only, no in-memory injection seam) and does NOT execute in default CI — a boundary that was true of the shipped tests already but previously undocumented in the VP prose. A keychain-injection seam that would close this in default CI is named as a tracked, NOT-implemented follow-up.
+- **Counts unchanged:** 733 BCs / 41 VPs / 106 holdouts (both spec edits are prose-only, no BC/VP added/removed/renumbered). `scripts/check-bc-cumulative-counts.sh` and `scripts/check-spec-counts.sh` both re-run this burst, both GREEN.
+
+**Follow-ups tracked this burst:**
+1. **`clear_profile_cache` traversal-hardening (LOW, new this burst, from PR #764's AI review):** the FIX-4 guard covers only `is_empty()`; `Profile::from("..")` is equally constructible (ADR-0011 applies no validation) and more destructive (`cache_dir` → `<cache_root>/v1/..` → `remove_dir_all` wipes the entire cache root). Currently unreachable in practice (callers validate first) — defense-in-depth, not a live exploit. Broaden the guard to reject `.`/`..`/path-separator/traversal components, not just empty.
+2. **FIX-1 call-site-2 regression test (LOW, new this burst, from PR #764's AI review):** the new `test_f2_01_…` keyring-gated test exercises the resolve path (site 1) and returns before reaching site 2 (`is_backend_keyring_error` / `load_oauth_tokens` propagation) — site 2's classification is currently exercised only by the always-run suite's happy-path assertion, not a dedicated backend-error-propagation seed. Add an explicit regression test.
+3. **`JR_OAUTH_CODE` debug-gating (LOW/MED seam hygiene) — STILL OPEN, unchanged since Burst 14.**
+4. **`{target:?}` Debug-quoting NIT (LOW, from Burst 15) — STILL OPEN, unchanged.**
+5. **`remove.rs` step-enumeration doc-comment (LOW, carried forward from Wave 3) — STILL OPEN, unchanged.**
+6. **Keychain-injection-seam for VP-AUTHDX-005/006/008 default-CI coverage (LOW/MED, new this burst, named by MED-2's own reconciliation):** not implemented as part of this fix; would require an injectable keyring backend to let these properties run in default CI rather than only under the keyring-gated flag.
+
+**Demo data (unchanged):** demos remain **SKIPPED** for Waves 4-5, per the standing human decision. The OPEN human question from the Wave 3 checkpoint — whether to delete the 3 pre-PR#757 stories' demo directories — remains **NOT decided**; do not act on it without an explicit human decision.
+
+**Wave/critical-path status:** all 5 waves complete (39/39 critical-path points delivered); F4 fully closed. F5 is a post-F4 adversarial-refinement phase, not wave-scheduled.
+
+**Convergence trajectory (counter):** ... → Phase F4 COMPLETE (7/7 stories) → Wave 5 integration gate RUNNING/treated-PASSED-implied → **Phase F5 entered: login-switch MED fixed+merged (#763) → F5-refinement bundle fixed+merged (#764) → MED-1/MED-2 reconciled spec-only** → F5 adversarial re-run for 3-clean convergence NEXT → Phase F6 (targeted hardening) after convergence.
+
+**Committed spec state:** unchanged in BC/VP/holdout count this burst — 733 BCs, 41 VPs, 106 holdouts (master count); `total_stories` unchanged at 168 (no story-file status change this burst). Both count guards re-run this burst and confirmed GREEN (no drift). Prior commits: the F4-PHASE-COMPLETE burst commit (v3.45). This burst's `.factory/` commit carries STATE.md/burst-log.md/session-checkpoints.md bookkeeping plus `specs/prd/bc-1-auth-identity.md` (the MED-1/MED-2 spec-only reconciliation) — PR #763's and PR #764's `src/`/`tests/`/`CHANGELOG.md` changes already landed on `develop` via their own merge commits, not via this `.factory/` commit. NOT staged/committed this burst, per explicit instruction: `regression-state.json`, `sidecar-learning.md`. Also left untouched (out of this burst's explicit scope): the two untracked F5 delivery-evidence directories (`code-delivery/FIX-F5-login-switch/pr-review.md`, `code-delivery/FIX-F5-refinement/pr-review.md`) and the modified `S-cycle3-env-tag` demo gif, both carried over unresolved from Burst 15.
+
+**Human decisions already made + recorded:** DEC-317 (ADR-0011 un-deferred, IMPLEMENTED), DEC-321 (refresh-override removal, IMPLEMENTED, spec-reconciled this burst), DEC-322/323/326/327 (all IMPLEMENTED), DEC-328 (F2 gate APPROVED), DEC-329 (F3 gate APPROVED), DEC-330 (interim auto-merge authorization, superseded in part by DEC-331), and DEC-331 (refined fully-autonomous auto-merge policy, applied to PR #763 and PR #764 this burst). Do NOT re-ask these on resume.
+
+**Pending human decision:** the demo-retention question above is OPEN and NOT covered by any standing decision — ask before acting on it. Otherwise none blocking for the F5 convergence re-run.
+
+**NEXT on resume (as recorded at v3.46):** (1) re-run F5 scoped adversarial passes against `develop` @ `202414f2` (the full cycle-003 delta, now including PRs #763/#764 and the MED-1/MED-2 spec reconciliation) seeking 3-clean convergence (no new findings across 3 consecutive passes); (2) on convergence, proceed to Phase F6 (targeted hardening); (3) before acting on the demo-retention open question, get an explicit human decision; (4) address the 6 tracked follow-ups (cache-guard traversal broadening, FIX-1 site-2 test, `JR_OAUTH_CODE` gating, `{target:?}` NIT, `remove.rs` doc-comment, keychain-injection-seam) in a future maintenance pass — none blocks F5 convergence; (5) relocate/stage the two untracked F5 delivery-evidence `pr-review.md` files per convention when convenient — not blocking.
+
+**Resume command:** `/vsdd-factory:next-step`.
+
+**RESOLVED (recorded at v3.47, 2026-09-02):** Phase F5 scoped adversarial refinement CONVERGED — 3/3 clean adversarial passes (Pass A/lifecycle, Pass B/error-concurrency, Pass C/spec-contract) ran against `develop` @ `202414f2` with zero new CRITICAL/HIGH/material-MED findings across all three. The human ran `/wrap` to pause the pipeline and make state durable for a session clear. Pipeline transitions **ACTIVE → PAUSED**; phase stays **F5** (CONVERGED, not yet advanced to F6 — that dispatch is the first action on resume). This checkpoint's "NEXT on resume" framing (re-run F5 passes) is now historical only — the re-run happened and converged; see the v3.47 checkpoint in STATE.md for the corrected, current position: dispatch Phase F6 (targeted hardening) is next.
+
+**Superseded by:** v3.47 (SESSION WRAP — F5 CONVERGED 3/3 clean passes, pipeline PAUSED, resume at F6), 2026-09-02, live in STATE.md.
 
 ---
 

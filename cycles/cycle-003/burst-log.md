@@ -7,7 +7,7 @@ producer: state-manager
 timestamp: 2026-09-01T15:30:00Z
 cycle: "cycle-003"
 inputs: [STATE.md]
-input-hash: "dd90884"
+input-hash: "c110412"
 traces_to: STATE.md
 ---
 
@@ -1008,3 +1008,50 @@ No BCs/VPs/holdouts added or removed — 719 BCs / 32 VPs / 106 holdouts unchang
 **Dim-6 Attestation:** No source code changed by this `.factory/` commit itself; PR #763's and PR #764's `src/`/`tests/`/`CHANGELOG.md` changes already landed on `develop` via their own merge commits (`aafa9f9f`, `202414f2`), already CI-verified there prior to merge.
 
 **Dim-7 Attestation:** Per-PR `ci-gate` green on PR #763 (15/15) and PR #764 (15/15). `scripts/check-bc-cumulative-counts.sh` and `scripts/check-spec-counts.sh`: both GREEN.
+
+---
+
+## Burst: Burst 17 — SESSION WRAP (human `/wrap`): F5 scoped adversarial refinement CONVERGED (3/3 clean passes); pipeline PAUSED, resume at F6 targeted hardening (2026-09-02)
+
+**Parent-commit:** the F5-findings-fixed burst commit (v3.46) — most recent prior `.factory/` commit on `factory-artifacts`. `develop` tip unchanged this burst: **`202414f2`** (no new PR merged — this is a state-only pause/checkpoint burst).
+
+**Trigger:** the human ran `/wrap` to pause the cycle-003 pipeline and make its state durable for a session clear, following Burst 16's F5 findings-fixed position. Per the orchestrator's dispatch to the state-manager: Phase F5 (scoped adversarial refinement) reached CONVERGENCE — 3/3 clean adversarial passes (Pass A / lifecycle, Pass B / error-concurrency, Pass C / spec-contract) against `develop` @ `202414f2`, with zero new CRITICAL/HIGH/material-MED findings across all three passes — before the wrap was requested.
+
+**Actions taken:**
+
+1. **F5 convergence recorded.** All findings from the F5 adversarial round are fixed or reconciled: the login-switch MED (PR #763), the F5-refinement bundle of FIX-1..4 (PR #764), and the MED-1/MED-2 spec-only reconciliations (Burst 16) — followed by 3/3 clean re-run passes with no new material findings. Phase F5 status: **CONVERGED**.
+2. **STATE.md refreshed via one full-content Write (v3.46 → v3.47), Single-Commit Burst Protocol (DEC-247).** Frontmatter: `phase` stays **F5** (converged, not yet advanced — F6 dispatch is the first action on resume); **`pipeline: ACTIVE` → `pipeline: PAUSED`**; `activation_head` unchanged at `202414f2`; `current_step` rewritten to record the session wrap and F5 convergence; `cycle_003_status` extended with the same summary. Phase Progress: new `F5-CONVERGED` row added recording the 3/3 clean-pass trajectory and the human-requested pause. Current Phase Steps: two new rows appended (F5 3/3-clean convergence; SESSION WRAPPED), oldest two of the prior five dropped (already fully detailed in Burst 16 and this burst-log entry). Session Resume Checkpoint replaced with the new PAUSED/F5-CONVERGED position; the prior F5-FINDINGS-FIXED checkpoint (v3.46) archived to `cycles/cycle-003/session-checkpoints.md`. Convergence Status / Concurrent Cycles / Constraints Carried Forward paragraphs updated to reflect F5 CONVERGED + pipeline PAUSED. Drift/Standing Items carried forward verbatim (no new resolutions this burst beyond the phase-level convergence note) — all follow-ups from Burst 16 (cache-guard traversal broadening, FIX-1 site-2 test, `JR_OAUTH_CODE` gating, `{target:?}` NIT, `remove.rs` doc-comment, keychain-injection-seam) remain OPEN, tracked, non-blocking. `cycle_001_status`/`cycle_002_status` preserved verbatim.
+3. **Commit hygiene sweep.** Staged this burst: `STATE.md`, `cycles/cycle-003/burst-log.md` (this file), `cycles/cycle-003/session-checkpoints.md`, plus the two untracked F5 delivery-evidence directories `code-delivery/FIX-F5-login-switch/pr-review.md` (PR #763) and `code-delivery/FIX-F5-refinement/pr-review.md` (PR #764) — both already at their correct DF-030 top-level `code-delivery/` path (this directory accumulates across the whole project per the lifecycle-aware structure; no relocation was needed despite the dispatch note's conditional phrasing). Explicitly NOT staged, per the dispatch's own instruction, all three pre-existing-dirty since session start and unrelated to cycle-003: `regression-state.json`, `sidecar-learning.md`, and the modified `cycles/cycle-003/code-delivery/S-cycle3-env-tag/demos/AC-004-005-auth-list-table-env-column.gif`.
+4. **Count guards re-verified.** `scripts/check-bc-cumulative-counts.sh` and `scripts/check-spec-counts.sh` both re-run this burst (no spec content changed since Burst 16, but re-verified as part of wrap discipline), both GREEN — 733 BCs / 41 VPs / 106 holdouts unchanged.
+
+**Adversary verdict:** F5 scoped adversarial refinement CONVERGED — 3/3 clean passes (Pass A / lifecycle, Pass B / error-concurrency, Pass C / spec-contract) against `develop` @ `202414f2`, zero new CRITICAL/HIGH/material-MED findings across all three. This burst's own bookkeeping content records that convergence result rather than running a review itself; no `adversary` agent was dispatched by the state-manager in this burst.
+
+**NEXT:** on resume, dispatch **Phase F6** (targeted hardening) — fuzz/mutation/security scan scoped to the cycle-003 delta, full regression + security scan on the full tree. Optionally sweep the tracked LOW follow-ups (cache-guard traversal broadening, FIX-1 site-2 test, `JR_OAUTH_CODE` gating, `{target:?}` NIT, `remove.rs` doc-comment, keychain-injection-seam) before or during F6 — none blocks F6 entry.
+
+**Codifications:** No new DEC ID this burst — the F5 convergence result and the wrap itself are bookkeeping, not new human policy decisions. No BC/VP/holdout content changed (733 BCs / 41 VPs / 106 holdouts unchanged, master count).
+
+**Outcome:** cycle-003 (`auth-profile-dx`) Phase F5 (scoped adversarial refinement) is **CONVERGED**. Pipeline is **PAUSED**. `develop` @ `202414f2` unchanged. Session state is durable — the session may be cleared with zero loss. On resume, the first action is dispatching Phase F6 (targeted hardening).
+
+**Closes:** the F5 adversarial-convergence loop opened at Burst 15/16 (now CONVERGED, 3/3 clean). Does NOT close: any Drift/Standing item — all remain open/tracked exactly as recorded in Burst 16, carried forward verbatim; the demo-retention open question (still pending an explicit human decision); Phase F6 itself (not yet dispatched).
+
+### Details
+
+| Agent | Task | Output |
+|-------|------|--------|
+| state-manager | Session wrap: record F5 CONVERGED (3/3 clean adversarial passes on `develop` @ `202414f2`); flip `pipeline: ACTIVE` → `PAUSED`; write new Session Resume Checkpoint (archive prior as v3.46); stage the two F5 delivery-evidence `pr-review.md` files; leave the 3 known pre-existing-dirty files untouched; commit + push to `factory-artifacts` (Single-Commit Burst Protocol, DEC-247) | `STATE.md`; `cycles/cycle-003/burst-log.md` (this file); `cycles/cycle-003/session-checkpoints.md`; `code-delivery/FIX-F5-login-switch/pr-review.md`; `code-delivery/FIX-F5-refinement/pr-review.md` |
+
+**Files touched (Dim-1): 5 unique files this burst, all committed in the state-manager's own single atomic commit**
+
+- `STATE.md`
+- `cycles/cycle-003/burst-log.md`
+- `cycles/cycle-003/session-checkpoints.md`
+- `code-delivery/FIX-F5-login-switch/pr-review.md` (newly staged, previously untracked)
+- `code-delivery/FIX-F5-refinement/pr-review.md` (newly staged, previously untracked)
+
+**Dim-2 Attestation:** No BC/VP/holdout content changed this burst (pure state/bookkeeping burst). `scripts/check-bc-cumulative-counts.sh` and `scripts/check-spec-counts.sh` re-run as a verification step, both GREEN — 733 BCs / 41 VPs / 106 holdouts unchanged.
+
+**Dim-5 Attestation:** N/A — no binary/WASM artifact produced by this burst.
+
+**Dim-6 Attestation:** No source code changed by this `.factory/` commit — PR #763's and PR #764's `src/`/`tests/`/`CHANGELOG.md` changes already landed on `develop` via their own merge commits (`aafa9f9f`, `202414f2`), unchanged this burst.
+
+**Dim-7 Attestation:** `scripts/check-bc-cumulative-counts.sh` and `scripts/check-spec-counts.sh`: both re-run this burst, both GREEN. No CI run triggered this burst (no source/test change).
