@@ -1127,3 +1127,57 @@ No BCs/VPs/holdouts added or removed — 719 BCs / 32 VPs / 106 holdouts unchang
 **Dim-6 Attestation:** No source code changed by this `.factory/` commit — this is a documentation/index consistency-fix burst; `develop` HEAD unchanged at `202414f2`.
 
 **Dim-7 Attestation:** `scripts/check-bc-cumulative-counts.sh` and `scripts/check-spec-counts.sh`: both re-run this burst, both GREEN. No CI run triggered this burst (no source/test change).
+
+---
+
+## Burst: Burst 22 — RELEASE v0.7.0-dev.4 + CYCLE CLOSE: human authorized and executed the dev release; cycle-003 auth-profile-dx CLOSED (DEC-333) (2026-09-03)
+
+**Parent-commit:** the F7-CLOSE burst commit (v3.51, `e83c511b`) — most recent prior `.factory/` commit on `factory-artifacts`. `develop` tip advances this burst: **`c9bb74f4` → `42e92b46`** (version-bump PR #767 squash-merged).
+
+**Trigger:** the human explicitly authorized "Proceed with the Dev release" this session, following Phase F7's human-approved CONVERGENCE (DEC-332) and the pre-release docs fix (PR #766, `c9bb74f4`) recorded at the prior burst. This is the one remaining human action for cycle-003 — release execution — held open at the prior burst.
+
+**Note on burst-log continuity:** Burst 21 (F7 human approval gate APPROVED — CONVERGED, DEC-332; HIGH-3/LOW-2/LOW-3 resolved via PR #766) was recorded in STATE.md (frontmatter, Phase Progress, Decisions Log, Drift/Standing) at commit `e83c511b` but its full prose narrative was never backfilled into this burst-log.md file — that backfill remains an outstanding, non-blocking documentation debt (tracked here, not fixed by this burst; the authoritative record of Burst 21's content is `git show e83c511b:STATE.md` plus this file's own Burst 20 entry for the audit context that preceded it).
+
+**Actions taken:**
+
+1. **Release cut.** Version-bump PR #767 squash-merged to `develop` (`c9bb74f4` → `42e92b46`): `Cargo.toml`/`Cargo.lock` bumped to `0.7.0-dev.4`; `CHANGELOG.md` `[Unreleased]` section rolled to `[0.7.0-dev.4] - 2026-09-03`. Annotated tag `v0.7.0-dev.4` pushed at `42e92b46`. GitHub Actions `release.yml` run `33769389700` triggered and concluded **SUCCESS**. GitHub prerelease published `2026-09-03T14:58:38Z` with 10 assets (5 targets × archive + sha256: `x86_64`/`aarch64` `linux-gnu`, `x86_64`/`aarch64` `apple-darwin`, `x86_64` `windows-msvc`).
+2. **STATE.md refreshed via one full-content Write (v3.51 → v3.52), Single-Commit Burst Protocol (DEC-247), no Edit chain.** Frontmatter: `pipeline` → **`RELEASED`** (mirrors the exact value cycle-002's own release-cut burst used, v3.29 / commit `198c37fd`); `phase` stays **F7** (release-cut does not advance the phase field, same precedent); `activation_head`/`activation_version` advance `c9bb74f4` → `42e92b46` / `v0.7.0-dev.3` → `v0.7.0-dev.4`; `cycle_003_status` → CLOSED + RELEASED. New **DEC-333** recorded (human release authorization + execution). Phase Progress: new `RELEASE v0.7.0-dev.4 (cycle-003)` row added (RELEASED — SHIPPED). Current Phase Steps: two new rows appended (release cut; cycle-003 CLOSED), oldest two of the prior five dropped (F6 regression + Kani-substitution row and the F7 pre-gate audit row — both already fully detailed in Bursts 19/20). Session Resume Checkpoint replaced with the CLOSED + RELEASED position; the prior F7-CONVERGED/RELEASE-HELD checkpoint (v3.51) queued for archival to `cycles/cycle-003/session-checkpoints.md` (not yet performed this burst — see STATE.md's own "Note (this burst)" caveat, consistent with the pending v3.49/v3.50 archival noted at prior bursts). Convergence Status / Concurrent Cycles / Constraints Carried Forward paragraphs updated to record CLOSED + RELEASED and "no cycle currently has open work." Drift/Standing Items: one new top entry added for this burst; all prior entries (Burst 21 F7-close, the bookkeeping input-hash cascade, the Burst 20 F7 pre-gate audit, and everything below) carried forward **verbatim** — zero resolutions to those beyond this burst's own release/close bookkeeping.
+3. **S-7.02 cycle-closing checklist satisfied.** Per the checklist, the two process-gap deferral candidates recorded at Burst 21 (STORY-INDEX index-currency gap; story-template-compliance gap) were confirmed present in STATE.md Drift/Standing as justified deferrals (target: a future SELF-IMPROVEMENT/maintenance cycle) and are now additionally codified in a **newly-created `cycles/cycle-003/lessons.md`** (mirroring cycle-002's `lessons.md` precedent, same S-7.02 trigger point) — two Process-Level entries, each marked `[deferral]` with the same justification and target as the STATE.md Drift/Standing text. Cycle-003 is CLOSED only with this satisfied; it is now satisfied.
+4. **Commit hygiene sweep.** Staged this burst: `STATE.md`, `cycles/cycle-003/burst-log.md` (this file), `cycles/cycle-003/lessons.md` (new). Explicitly NOT staged, per standing instruction and unrelated to cycle-003 (pre-existing dirty since before this session started): `regression-state.json`, `sidecar-learning.md`, and the modified `cycles/cycle-003/code-delivery/S-cycle3-env-tag/demos/AC-004-005-auth-list-table-env-column.gif`.
+5. **Count guards.** No BC/VP/holdout/story content changed this burst (pure release + bookkeeping burst) — `scripts/check-bc-cumulative-counts.sh` and `scripts/check-spec-counts.sh` were not re-run (no spec content touched); counts carried forward unchanged: 733 BCs / 41 VPs / 106 holdouts / 168 stories.
+
+**Adversary verdict:** N/A — this burst is a release-execution + cycle-close bookkeeping burst (state-manager only), not an adversarial-review pass. Phase F7's adversarial/convergence work was already completed and human-approved at the prior burst (DEC-332).
+
+**NEXT:** optional post-pipeline session review (`/vsdd-factory:session-review`); otherwise the pipeline is idle — no active cycle — awaiting the human's direction on the next feature bundle or maintenance cycle. The `S-PG-*` SELF-IMPROVEMENT backlog (now carrying 5 justified-deferral candidates across cycle-002 and cycle-003) is a natural candidate for that next cycle.
+
+**Codifications:** **DEC-333** — human authorized and executed the cycle-003 dev release v0.7.0-dev.4; cycle-003 CLOSED. No BC/VP/holdout added, removed, or renumbered by this burst (733/41/106/168 all unchanged).
+
+**Closes:** the one remaining open item from Burst 21 — the release trigger itself (RELEASE HELD → RELEASED). cycle-003 (`auth-profile-dx`) is now fully **CLOSED**. **Does NOT close:** any of the tracked non-blocking follow-ups (MED-1 VP-count re-verification, LOW-4/LOW-6 doc nits, the 4-story template-compliance gap, the 6-file bookkeeping input-hash cascade, the Burst-21-backfill-into-this-file debt noted above, or any cycle-002 standing item) — all carried forward verbatim to a future maintenance/self-improvement cycle, now also indexed in `cycles/cycle-003/lessons.md`.
+
+### Counts reconciled this burst
+
+- BCs: 733 (unchanged). VPs: 41 (unchanged). Holdout scenarios: 106 (unchanged). `total_stories`: unchanged at **168**.
+- DEC IDs: 331 → **333** (new: DEC-333).
+- `develop` HEAD: `c9bb74f4` → **`42e92b46`** (version-bump PR #767).
+- `activation_version`: `v0.7.0-dev.3` → **`v0.7.0-dev.4`**.
+- `pipeline` frontmatter: → **`RELEASED`**.
+
+### Details
+
+| Agent | Task | Output |
+|-------|------|--------|
+| state-manager | Record the human-authorized release (PR #767 @ `42e92b46`, tag `v0.7.0-dev.4`, `release.yml` run `33769389700` SUCCESS, GitHub prerelease 10 assets/5 targets); refresh STATE.md (frontmatter, Phase Progress, Current Phase Steps, new DEC-333, Convergence Status/Concurrent Cycles/Constraints, Session Resume Checkpoint, Drift/Standing); create `cycles/cycle-003/lessons.md` codifying the two S-7.02 process-gap deferrals; append this burst-log entry; commit + push to `factory-artifacts` (Single-Commit Burst Protocol, DEC-247) | `STATE.md`; `cycles/cycle-003/burst-log.md` (this file); `cycles/cycle-003/lessons.md` (new) |
+
+**Files touched (Dim-1): 3 unique files this burst, all committed in the state-manager's own single atomic commit**
+
+- `STATE.md`
+- `cycles/cycle-003/burst-log.md`
+- `cycles/cycle-003/lessons.md` (new)
+
+**Dim-2 Attestation:** No BC/VP/holdout content changed this burst (pure release-execution + bookkeeping burst). Counts unchanged: 733 BCs / 41 VPs / 106 holdouts / 168 stories.
+
+**Dim-5 Attestation:** N/A — no binary/WASM artifact produced by this `.factory/` commit itself (the release binaries are produced by `release.yml` upstream on GitHub Actions, outside this pipeline's tracking scope once triggered).
+
+**Dim-6 Attestation:** Source code changed via version-bump PR #767 only (`Cargo.toml`, `Cargo.lock`, `CHANGELOG.md`) — no functional `src/`/`tests/` change. `develop` HEAD advances `c9bb74f4` → `42e92b46`.
+
+**Dim-7 Attestation:** `release.yml` run `33769389700` concluded **SUCCESS** (build/publish across 5 targets, GitHub prerelease published with 10 assets). No `scripts/check-*` re-run this burst (no spec content changed).
