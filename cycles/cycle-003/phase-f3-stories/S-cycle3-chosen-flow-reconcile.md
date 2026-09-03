@@ -21,7 +21,7 @@ inputs:
   - ".factory/specs/prd/bc-1-auth-identity.md"
   - ".factory/specs/architecture/decisions/ADR-0020-per-profile-credential-ownership-env-tagging-and-oauth-default-at-creation.md"
   - ".factory/cycles/cycle-003/phase-f3-stories/decomposition-manifest.md"
-input-hash: "3f4ee5d"
+input-hash: "2fd9059"
 traces_to: ".factory/specs/prd/bc-1-auth-identity.md"
 cycle: cycle-003-auth-profile-dx
 estimated_effort: medium
@@ -50,12 +50,12 @@ acceptance_criteria_count: 9
 assumption_validations: []
 risk_mitigations: []
 created: "2026-09-01"
-version: "1.0"
-last_updated: "2026-09-01"
+version: "1.1"
+last_updated: "2026-09-03"
 breaking_change: true
 retroactive: false
 origin: >
-  cycle-003 auth-profile-dx, Wave 6 (depends on S-cycle3-oauth-default-creation; final story
+  cycle-003 auth-profile-dx, Wave 5 (depends on S-cycle3-oauth-default-creation; final story
   in the cycle). Removes chosen_flow_for_profile's oauth_override: bool parameter entirely --
   auth refresh --oauth/--api-token no longer override the profile's stored auth_method; the
   intrinsic mechanism always wins. Also fixes I-6: refresh's "clear-then-relogin" self-
@@ -65,6 +65,13 @@ origin: >
 ---
 
 # S-cycle3-chosen-flow-reconcile — Remove `chosen_flow_for_profile`'s per-command override; `auth_method` fully intrinsic
+
+## Revision Note (F7 pre-gate consistency-audit fix, MED-2)
+
+Stale wave-number prose corrected: this story lands in **Wave 5** of the adopted 5-wave
+schedule, not "Wave 6" as the `origin:` frontmatter block previously stated. This is a
+label-only fix — the `depends_on:`/`blocks:` dependency edges were already correct and are
+unchanged.
 
 ## Anchor Justification
 

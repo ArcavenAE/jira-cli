@@ -23,7 +23,7 @@ inputs:
   - ".factory/cycles/cycle-003/phase-f2-spec-evolution/adr-0011-amendment-staged.md"
   - ".factory/cycles/cycle-003/phase-f2-spec-evolution/architecture-delta.md"
   - ".factory/cycles/cycle-003/phase-f3-stories/decomposition-manifest.md"
-input-hash: "08d0adf"
+input-hash: "abe1e20"
 traces_to: ".factory/specs/prd/bc-6-config-cache.md"
 cycle: cycle-003-auth-profile-dx
 estimated_effort: x-large

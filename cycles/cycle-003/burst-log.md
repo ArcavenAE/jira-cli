@@ -7,7 +7,7 @@ producer: state-manager
 timestamp: 2026-09-01T15:30:00Z
 cycle: "cycle-003"
 inputs: [STATE.md]
-input-hash: "c110412"
+input-hash: "e73845a"
 traces_to: STATE.md
 ---
 
@@ -1053,5 +1053,77 @@ No BCs/VPs/holdouts added or removed — 719 BCs / 32 VPs / 106 holdouts unchang
 **Dim-5 Attestation:** N/A — no binary/WASM artifact produced by this burst.
 
 **Dim-6 Attestation:** No source code changed by this `.factory/` commit — PR #763's and PR #764's `src/`/`tests/`/`CHANGELOG.md` changes already landed on `develop` via their own merge commits (`aafa9f9f`, `202414f2`), unchanged this burst.
+
+**Dim-7 Attestation:** `scripts/check-bc-cumulative-counts.sh` and `scripts/check-spec-counts.sh`: both re-run this burst, both GREEN. No CI run triggered this burst (no source/test change).
+
+---
+
+## Burst: Burst 20 — F7 pre-gate fresh-context consistency audit: CRIT-1/HIGH-1/HIGH-2/MED-2/LOW-1/LOW-5 FIXED; HIGH-3/MED-1/LOW-2/3/4/6 OUTSTANDING (2026-09-03)
+
+**Parent-commit:** the F6-COMPLETE/F7-ADVANCE burst commit (v3.49) — most recent prior `.factory/` commit on `factory-artifacts`. `develop` tip unchanged this burst: **`202414f2`** (no new PR merged — this is a documentation/index consistency-fix burst, pre-F7-gate).
+
+**Trigger:** a fresh-context consistency audit was run against the full cycle-003 artifact set ahead of the F7 (delta convergence) human gate — the standard pre-gate hygiene pass to catch documentation/index drift before final convergence sign-off. The audit produced 12 findings (1 CRITICAL / 3 HIGH / 2 MEDIUM / 6 LOW), **all in the documentation/index layer — zero shipped-code defects.** Report: `cycles/cycle-003/phase-f7-convergence/consistency-audit-delta.md`.
+
+**Actions taken:**
+
+1. **CRIT-1 (`STORY-INDEX.md` 7 stale rows) — FIXED.** All 7 `S-cycle3-*` rows, in BOTH the status table (~line 1080) and the file-path table (~line 1461), were still reading `**ready** — F3 human gate APPROVED, awaiting F4 dispatch` despite all 7 stories having shipped to `develop` across Waves 1-5 (Bursts 10-15). Corrected to `**done** — merged 2026-09-02` with PR/commit citations: `S-cycle3-env-tag` (PR #752 @ `4d0ae2d5`, Wave 1), `S-cycle3-percred-storage` (PR #755 @ `d3ba2726`, Wave 1), `S-cycle3-credential-absence-guard` (PR #756 @ `5c568d0f`, Wave 2), `S-cycle3-remove-logout-semantics` (PR #757 @ `5e9dba8a`, Wave 3), `S-cycle3-adr0011-newtype` (PR #758 @ `b7e513f9`, Wave 4), `S-cycle3-oauth-default-creation` (PR #761 @ `b70dd6f4`, Wave 4), `S-cycle3-chosen-flow-reconcile` (PR #762 @ `1dfcd013`, Wave 5) — all confirmed against `git log` on the actual SHAs. Each row's dependency/blocks annotations updated to note `(delivered)`/`(all delivered)`, and the `F4 dispatch pending, Wave-scheduled per wave-schedule.md` trailing clause replaced with `F4 COMPLETE, F5 CONVERGED, F6 COMPLETE-PASS` reflecting the cycle's actual current phase position. Also corrected a stale bracketed frontmatter note (dated 2026-09-01, "Burst 8") that asserted "the row table below already reflects `status: draft`" — false as of this audit (the table has since progressed draft→ready→done); superseded in place with a dated correction note, per this file's own established convention of appending corrections rather than rewriting history.
+2. **LOW-1 (`S-cycle3-chosen-flow-reconcile` description overclaim) — FIXED, both BC-file and STORY-INDEX halves.** The row (both tables) claimed `chosen_flow_for_profile` was "removed entirely" / "not merely simplified" — factually wrong: the function still exists in `src/cli/auth/mod.rs` and is still called from `refresh.rs`; only the per-call `oauth_override: bool` parameter and its branch were removed (DEC-321). Corrected to "simplified to single-argument form" in both tables, with an explicit parenthetical noting the function's continued existence and call site. The BC-file half (`specs/prd/bc-1-auth-identity.md` BC-1.2.048) was already corrected by product-owner in this same burst (uncommitted edit, committed alongside this one).
+3. **LOW-5 (Story Manifest stale row-count headline) — FIXED.** The legacy "Story Manifest" section's headline read "Total rows: 133 (matches `total_stories: 133`...)" — stale since 2026-08-14 despite 35 subsequent story additions already correctly reflected in both the frontmatter `total_stories: 168` counter and the row tables themselves; only this one prose line was never updated. Corrected to 168/168, with a dated correction note; the historical `Prior:` narrative chain (unbroken since 2026-05-07) preserved verbatim beneath it.
+4. **HIGH-1/HIGH-2 (BC-1.4.027/BC-1.4.029 AC-trace staleness) and MED-2 (wave-label drift) — FIXED by product-owner** in `specs/prd/bc-1-auth-identity.md` (uncommitted edit in the worktree prior to this burst; committed alongside this burst's STORY-INDEX/STATE.md changes, not independently re-verified line-by-line by state-manager beyond confirming the file is staged).
+5. **Hash bumps — 10 cycle-003 stale-input files reconciled to current content** (per-file `compute-input-hash --update`, scoped strictly to cycle-003 artifacts touched or logically affected by this audit — NOT the ~147 unrelated historical stale artifacts tracked as standing debt under `F7-GATE-SYSTEMIC-INPUT-HASH-DRIFT-BOOKKEEPING`): `S-cycle3-remove-logout-semantics.md` (`2fd9059`), `decomposition-manifest.md` (`73858ff`), `wave-holdout-scenarios/wave-1-holdout-scenarios.md` (`78a7d39`), `wave-holdout-scenarios/wave-2-holdout-scenarios.md` (`31f4f9d`), `conflict-report.md` (`ade63e8`), `S-cycle3-adr0011-newtype.md` (`abe1e20`), `dependency-graph-extended.md` (`cdbcf37`), `wave-schedule.md` (`2a78e3a`), `S-cycle3-env-tag.md` (`347813b`), `phase-f1-delta-analysis/delta-analysis.md` (`3eb517e`). Story-writer independently bumped 4 further files in the same worktree prior to this burst: `S-cycle3-percred-storage.md`, `S-cycle3-credential-absence-guard.md`, `S-cycle3-oauth-default-creation.md`, `S-cycle3-chosen-flow-reconcile.md`.
+6. **STATE.md refreshed via one full-content Write (v3.49 → v3.50), Single-Commit Burst Protocol (DEC-247), no Edit chain.** Frontmatter: `phase` stays **F7** (unchanged — this is a pre-gate hygiene burst within the already-dispatched F7 phase, not a phase transition); `pipeline` stays `ACTIVE`; `activation_head` unchanged at `202414f2` (documentation-only burst, zero `develop`-side changes); `current_step` rewritten to record the audit outcome (12 findings, 1 CRIT/3 HIGH/2 MED/6 LOW, all doc-layer; FIXED vs OUTSTANDING breakdown; holdout eval + F7 convergence report as next steps). New Drift/Standing Items entry added recording the full audit outcome (fixed/outstanding split) and the pre-existing story-template-compliance gap on the 4 story files (missing `level` key + Architecture Mapping/Purity/Library sections) as a tracked non-blocking item. All counts (733 BCs / 41 VPs / 106 holdouts / 168 stories), the full Decisions Log, Skip Log, and every other Drift/Standing item carried forward verbatim — zero resolutions to those beyond this burst's additions.
+7. **OUTSTANDING for the F7 gate (not fixed this burst, explicitly deferred):** **HIGH-3** — `docs/specs/multi-profile-auth.md` has stale sections describing pre-cycle-003 credential layout; needs a `develop`-branch PR (out of `.factory/` worktree scope for state-manager; requires a code-repo doc PR, tracked as follow-up). **MED-1** — the VP count (41) could not be independently re-verified line-by-line against `VP-INDEX.md` within this audit's time-box; flagged as unverifiable-not-wrong, tracked for the F7 convergence report to re-confirm. **LOW-2/LOW-3/LOW-4/LOW-6** — assorted documentation nits (exact detail in `consistency-audit-delta.md`), non-blocking, deferred to a future maintenance sweep or the F7 gate's own discretion.
+
+**Adversary verdict:** N/A — this burst is a consistency-audit fix-application burst (state-manager bookkeeping + targeted STORY-INDEX corrections), not an adversarial-review pass. The audit itself was performed upstream of this burst; this burst records and applies its FIXED-vs-OUTSTANDING disposition.
+
+**NEXT:** proceed within Phase F7 (delta convergence, already dispatched, unchanged) — holdout evaluation (Dimension 5) is in progress by another agent in parallel (`holdout-eval-delta.md`, explicitly NOT touched by this burst), followed by the F7 convergence report synthesizing all 5 (or 7, per the S-CIGATE style dimension count used elsewhere in this project — see convergence-check skill for the canonical dimension list) convergence dimensions. HIGH-3 (stale docs) and MED-1 (VP-count re-verification) should be swept before or during F7 gate presentation; LOW-2/3/4/6 may be swept opportunistically or deferred to a future maintenance cycle at human discretion.
+
+**Codifications:** No new DEC ID this burst — a consistency-audit fix-application is bookkeeping/documentation-hygiene, not a new human policy decision. No BC/VP/holdout added, removed, or renumbered by this burst (733/41/106/168 all unchanged); the BC-1.4.027/BC-1.4.029/BC-1.2.048 edits are in-place prose/trace corrections within existing BC bodies (product-owner's edit, this same burst).
+
+**Closes:** CRIT-1, LOW-1 (both halves), LOW-5, and (via product-owner's parallel edit) HIGH-1, HIGH-2, MED-2 — 6 of 12 audit findings. **Does NOT close:** HIGH-3 (needs a `develop`-branch doc PR, out of `.factory/` scope), MED-1 (VP-count re-verification deferred to F7 convergence report), LOW-2/3/4/6 (doc nits, non-blocking) — 6 of 12 audit findings remain OUTSTANDING, explicitly tracked for the F7 gate rather than silently dropped. Also does not close: the pre-existing story-template-compliance gap on the 4 Wave-1/Wave-4/Wave-5 story files noted during this audit (missing `level` key + Architecture Mapping/Purity/Library template sections) — newly tracked as non-blocking standing debt, not fixed this burst.
+
+### Counts reconciled this burst
+
+- BCs: 733 (unchanged — HIGH-1/HIGH-2/MED-2 fixes are in-place prose/trace edits to existing BC bodies, no BC added/removed/renumbered).
+- VPs: 41 (unchanged; MED-1 flags this count as *unverified this burst*, not wrong).
+- Holdout scenarios: 106 (unchanged).
+- `total_stories`: unchanged at **168** (STORY-INDEX's own stale "Total rows: 133" headline corrected to 168 — LOW-5 — but this was a prose-only correction; the actual row count was already 168 before this burst).
+- DEC IDs: unchanged at 331 (no new decision recorded this burst).
+- `develop` HEAD: unchanged at `202414f2` (documentation/index-only burst, zero `src/`/`tests/` changes).
+- `scripts/check-bc-cumulative-counts.sh` and `scripts/check-spec-counts.sh`: both re-run this burst (post BC-1.4.027/029/1.2.048 edits), both GREEN.
+
+### Details
+
+| Agent | Task | Output |
+|-------|------|--------|
+| state-manager | Fix CRIT-1 (7 stale STORY-INDEX rows, both tables) + LOW-1 STORY-INDEX half (overclaim correction) + LOW-5 (stale row-count headline); commit product-owner's BC-1.4.027/029/1.2.048 fixes (HIGH-1/HIGH-2/MED-2) and story-writer's 4 hash bumps already staged in the worktree; run `compute-input-hash --update` on 10 further cycle-003 stale-input files; refresh STATE.md (frontmatter `current_step`, new Drift/Standing entry, all counts/Decisions Log/Skip Log carried forward verbatim); append this burst-log entry; commit + push to `factory-artifacts` (Single-Commit Burst Protocol, DEC-247) | `STATE.md`; `cycles/cycle-003/burst-log.md` (this file); `stories/STORY-INDEX.md`; `specs/prd/bc-1-auth-identity.md`; the 4 story-writer-bumped files; the 10 state-manager-bumped files; `cycles/cycle-003/phase-f7-convergence/consistency-audit-delta.md` |
+
+**Files touched (Dim-1): 19 unique files this burst, all committed in the state-manager's own single atomic commit**
+
+- `STATE.md`
+- `cycles/cycle-003/burst-log.md`
+- `stories/STORY-INDEX.md`
+- `specs/prd/bc-1-auth-identity.md`
+- `cycles/cycle-003/phase-f3-stories/S-cycle3-percred-storage.md` (story-writer's edit)
+- `cycles/cycle-003/phase-f3-stories/S-cycle3-credential-absence-guard.md` (story-writer's edit)
+- `cycles/cycle-003/phase-f3-stories/S-cycle3-oauth-default-creation.md` (story-writer's edit)
+- `cycles/cycle-003/phase-f3-stories/S-cycle3-chosen-flow-reconcile.md` (story-writer's edit)
+- `cycles/cycle-003/phase-f3-stories/S-cycle3-remove-logout-semantics.md` (hash bump only)
+- `cycles/cycle-003/phase-f3-stories/decomposition-manifest.md` (hash bump only)
+- `cycles/cycle-003/phase-f3-stories/wave-holdout-scenarios/wave-1-holdout-scenarios.md` (hash bump only)
+- `cycles/cycle-003/phase-f3-stories/wave-holdout-scenarios/wave-2-holdout-scenarios.md` (hash bump only)
+- `cycles/cycle-003/phase-f3-stories/conflict-report.md` (hash bump only)
+- `cycles/cycle-003/phase-f3-stories/S-cycle3-adr0011-newtype.md` (hash bump only)
+- `cycles/cycle-003/phase-f3-stories/dependency-graph-extended.md` (hash bump only)
+- `cycles/cycle-003/phase-f3-stories/wave-schedule.md` (hash bump only)
+- `cycles/cycle-003/phase-f3-stories/S-cycle3-env-tag.md` (hash bump only)
+- `cycles/cycle-003/phase-f1-delta-analysis/delta-analysis.md` (hash bump only)
+- `cycles/cycle-003/phase-f7-convergence/consistency-audit-delta.md` (new, the audit report itself)
+
+**Dim-2 Attestation:** BC-1.4.027, BC-1.4.029, BC-1.2.048 edited in place (prose/AC-trace accuracy fixes, HIGH-1/HIGH-2/MED-2, product-owner). No BC/VP added, removed, or renumbered. `scripts/check-bc-cumulative-counts.sh` and `scripts/check-spec-counts.sh` re-run this burst, both confirmed GREEN — 733 BCs / 41 VPs / 106 holdouts unchanged.
+
+**Dim-5 Attestation:** N/A — no binary/WASM artifact produced by this burst.
+
+**Dim-6 Attestation:** No source code changed by this `.factory/` commit — this is a documentation/index consistency-fix burst; `develop` HEAD unchanged at `202414f2`.
 
 **Dim-7 Attestation:** `scripts/check-bc-cumulative-counts.sh` and `scripts/check-spec-counts.sh`: both re-run this burst, both GREEN. No CI run triggered this burst (no source/test change).

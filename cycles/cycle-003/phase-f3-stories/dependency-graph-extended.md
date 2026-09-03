@@ -17,7 +17,7 @@ inputs:
   - ".factory/cycles/cycle-003/phase-f3-stories/decomposition-manifest.md"
   - ".factory/stories/STORY-INDEX.md"
 traces_to: "ADR-0020 § Sequencing; decomposition-manifest.md §5/§6"
-input-hash: "2dddfdb"
+input-hash: "cdbcf37"
 ---
 
 # F3 Extended Dependency Graph — `auth-profile-dx` (cycle-003)

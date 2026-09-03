@@ -22,7 +22,7 @@ inputs:
   - ".factory/specs/architecture/decisions/ADR-0020-per-profile-credential-ownership-env-tagging-and-oauth-default-at-creation.md"
   - ".factory/cycles/cycle-003/phase-f2-spec-evolution/architecture-delta.md"
   - ".factory/cycles/cycle-003/phase-f3-stories/decomposition-manifest.md"
-input-hash: "b46de8b"
+input-hash: "f01bfc1"
 traces_to: ".factory/specs/prd/bc-1-auth-identity.md"
 cycle: cycle-003-auth-profile-dx
 estimated_effort: large
@@ -60,8 +60,8 @@ acceptance_criteria_count: 12
 assumption_validations: []
 risk_mitigations: ["R-cycle3-credential-leak"]
 created: "2026-09-01"
-version: "1.0"
-last_updated: "2026-09-01"
+version: "1.1"
+last_updated: "2026-09-03"
 breaking_change: true
 retroactive: false
 origin: >
@@ -77,6 +77,17 @@ origin: >
 ---
 
 # S-cycle3-credential-absence-guard — No-copy detect-and-instruct guard for absent per-profile API-token credentials
+
+## Revision Note (F7 pre-gate consistency-audit fix, HIGH-2)
+
+`BC-1.4.029` (AMENDED — cross-reference to `load_api_token`'s non-inheritance guarantee) was
+present in this story's `bcs:`/`behavioral_contracts:` frontmatter and body BC table, but no
+acceptance criterion cited it explicitly. The shipped code already implements this coverage —
+AC-004's proptest (no `"default"`-only branch, VP-AUTHDX-006) is exactly the assertion that a
+non-`"default"` profile like `"sandbox"` never inherits the legacy flat pair, which is
+BC-1.4.029's cross-referenced non-inheritance guarantee. This is a documentation-traceability
+fix only: AC-004 now carries an explicit `BC-1.4.029` trace alongside its existing
+`BC-1.4.032`/`VP-AUTHDX-006` trace. No AC text, scope, coverage, or dependency was changed.
 
 **Renamed from F1's preliminary `S-cycle3-percred-migration`.** That design (lazy
 copy-then-delete of the shared flat pair) was REJECTED at the F2 gate (DEC-326, HUMAN
@@ -287,7 +298,9 @@ delete.
 A `proptest` over arbitrary profile names, INCLUDING `"default"` itself as a generated case
 (never excluded), asserts the identical error-and-untouched-legacy-pair invariant holds with
 no special-cased branch.
-(traces to BC-1.4.032 VP-AUTHDX-006)
+(traces to BC-1.4.032 VP-AUTHDX-006; BC-1.4.029 — cross-reference confirming a non-`"default"`
+profile's `load_api_token` never inherits the legacy flat pair, mirroring `load_oauth_tokens`'s
+existing non-inheritance guarantee)
 
 ### AC-005 — detect-and-instruct correctness property (VP-AUTHDX-005)
 A `proptest` over arbitrary legacy `(email, token)` pairs (or none at all) against `"default"`

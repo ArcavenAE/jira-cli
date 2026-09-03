@@ -21,7 +21,7 @@ inputs:
   - ".factory/specs/prd/bc-1-auth-identity.md"
   - ".factory/specs/architecture/decisions/ADR-0020-per-profile-credential-ownership-env-tagging-and-oauth-default-at-creation.md"
   - ".factory/cycles/cycle-003/phase-f3-stories/decomposition-manifest.md"
-input-hash: "f01a25d"
+input-hash: "2fd9059"
 traces_to: ".factory/specs/prd/bc-1-auth-identity.md"
 cycle: cycle-003-auth-profile-dx
 estimated_effort: medium
@@ -56,8 +56,8 @@ acceptance_criteria_count: 9
 assumption_validations: []
 risk_mitigations: []
 created: "2026-09-01"
-version: "1.0"
-last_updated: "2026-09-01"
+version: "1.1"
+last_updated: "2026-09-03"
 breaking_change: true
 retroactive: false
 origin: >
@@ -70,6 +70,16 @@ origin: >
 ---
 
 # S-cycle3-percred-storage — Per-profile API-token keychain storage
+
+## Revision Note (F7 pre-gate consistency-audit fix, HIGH-1)
+
+`BC-1.4.027` (AMENDED — namespaced-key split) was present in this story's `bcs:`/
+`behavioral_contracts:` frontmatter and body BC table, but no acceptance criterion cited it
+explicitly. The shipped code already implements this coverage — AC-001/AC-002 exercise
+exactly the namespaced-key store/load behavior BC-1.4.027 documents (email/api-token joining
+the namespaced-key set). This is a documentation-traceability fix only: AC-001 and AC-002 now
+carry an explicit `BC-1.4.027` trace alongside their existing `BC-1.4.031` trace. No AC text,
+scope, coverage, or dependency was changed.
 
 ## Correction Note (Wave 1 integration-gate adversary, [process-gap], LOW)
 
@@ -240,13 +250,15 @@ this story's — this story only ADDS the storage primitive, it does not wire de
 ### AC-001 — `store_api_token` writes the namespaced pair
 `store_api_token(profile, email, token)` writes `email` under `<profile>:email` and `token`
 under `<profile>:api-token`.
-(traces to BC-1.4.031 postcondition 1)
+(traces to BC-1.4.031 postcondition 1; BC-1.4.027 — `email`/`api-token` joining the
+namespaced-key set)
 
 ### AC-002 — `load_api_token` reads back the same namespaced pair, no shared/flat fallback
 `load_api_token(profile)` returns exactly the pair written by `store_api_token(profile, ...)`
 when both namespaced keys are present — no shared/flat fallback for a profile whose
 namespaced keys already exist.
-(traces to BC-1.4.031 postcondition 2)
+(traces to BC-1.4.031 postcondition 2; BC-1.4.027 — namespaced-key read supersedes the
+prior shared/flat behavior)
 
 ### AC-003 — `JiraClient::from_config`'s `api_token` branch reads via `load_api_token`
 `load_auth_from_keychain`'s `api_token` branch calls `load_api_token(profile_name)`, never

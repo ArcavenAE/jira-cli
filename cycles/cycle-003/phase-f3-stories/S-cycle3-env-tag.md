@@ -22,7 +22,7 @@ inputs:
   - ".factory/specs/prd/bc-6-config-cache.md"
   - ".factory/specs/architecture/decisions/ADR-0020-per-profile-credential-ownership-env-tagging-and-oauth-default-at-creation.md"
   - ".factory/cycles/cycle-003/phase-f3-stories/decomposition-manifest.md"
-input-hash: "49f3e00"
+input-hash: "347813b"
 traces_to: ".factory/specs/prd/bc-1-auth-identity.md; .factory/specs/prd/bc-6-config-cache.md"
 cycle: cycle-003-auth-profile-dx
 estimated_effort: small

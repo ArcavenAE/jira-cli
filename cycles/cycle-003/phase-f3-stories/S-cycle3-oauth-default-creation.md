@@ -22,7 +22,7 @@ inputs:
   - ".factory/specs/architecture/decisions/ADR-0020-per-profile-credential-ownership-env-tagging-and-oauth-default-at-creation.md"
   - ".factory/cycles/cycle-003/phase-f2-spec-evolution/architecture-delta.md"
   - ".factory/cycles/cycle-003/phase-f3-stories/decomposition-manifest.md"
-input-hash: "9c093c7"
+input-hash: "f01bfc1"
 traces_to: ".factory/specs/prd/bc-1-auth-identity.md"
 cycle: cycle-003-auth-profile-dx
 estimated_effort: x-large
@@ -60,12 +60,12 @@ acceptance_criteria_count: 15
 assumption_validations: []
 risk_mitigations: ["R-cycle3-ci-hang"]
 created: "2026-09-01"
-version: "1.0"
-last_updated: "2026-09-01"
+version: "1.1"
+last_updated: "2026-09-03"
 breaking_change: false
 retroactive: false
 origin: >
-  cycle-003 auth-profile-dx, Wave 5 (depends on S-cycle3-percred-storage,
+  cycle-003 auth-profile-dx, Wave 4 (depends on S-cycle3-percred-storage,
   S-cycle3-credential-absence-guard, and -- per the orchestrator's explicit dependency
   addition -- S-cycle3-remove-logout-semantics, since BC-1.1.013 EC-1.1.013-2's
   re-declaration credential-clear reuses clear_profile_creds's API-token-pair branch, which
@@ -81,6 +81,13 @@ origin: >
 ---
 
 # S-cycle3-oauth-default-creation — OAuth-default-at-creation picker + non-interactive guard + `--oauth`/`--api-token` flags
+
+## Revision Note (F7 pre-gate consistency-audit fix, MED-2)
+
+Stale wave-number prose corrected: this story lands in **Wave 4** of the adopted 5-wave
+schedule, not "Wave 5" as two prose references previously stated (the `origin:` frontmatter
+block and the "Previous Story Intelligence" cross-story fixture note). This is a label-only
+fix — the `depends_on:`/`blocks:` dependency edges were already correct and are unchanged.
 
 ## Anchor Justification
 
@@ -226,7 +233,7 @@ error text.
 
 **Cross-story fixture awareness — `auth list` 5-column snapshot break (DEC-324, owned by
 `S-cycle3-env-tag`, NOT this story's scope to implement, but load-bearing for this story's
-own test fixtures):** by the time this story lands (Wave 5, after Wave 1's
+own test fixtures):** by the time this story lands (Wave 4, after Wave 1's
 `S-cycle3-env-tag`), `jr auth list`'s table snapshot has ALREADY moved from 4 columns
 (`NAME, URL, AUTH, STATUS`) to 5 (`NAME, URL, ENV, AUTH, STATUS`) per BC-1.6.046's amended,
 deliberately-breaking insta-snapshot contract. Any test THIS story writes or extends that
