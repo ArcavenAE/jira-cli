@@ -1,13 +1,14 @@
 ---
 context: error-taxonomy
 title: "Error Taxonomy"
-last_updated: 2026-08-15
-source_pass: 3
+last_updated: 2026-09-04
+source_pass: 4
 trace: |
   - L2: .factory/specs/domain-spec/
   - Source broad: .factory/semport/jira-cli/jira-cli-pass-3-behavioral-contracts.md §2.X error sections
   - Source R1: .factory/semport/jira-cli/jira-cli-pass-3-deep-r1.md §3.1 (JrError variants)
   - Source P8: .factory/semport/jira-cli/jira-cli-pass-8-deep-synthesis.md §6.1 (design patterns)
+  - F2 amendment (2026-09-04, cycle-004 `windows-correctness`, issue #759, DEC-334, Pass-20 / gate-audit MED finding): Section 6 — Auth Commands subsection gains a new registered condition for BC-1.4.040/BC-1.4.036/BC-1.4.039's `ProfilePathEscape`-driven exit-64 message (the distinct "invalid profile name for the Windows encrypted-file fallback" error), with an explicit disambiguation note distinguishing it from the PRE-EXISTING "Invalid profile name: <name>" row (`validate_profile_name`/BC-6.1.004-BC-6.1.005, H-019) already in this table: the pre-existing row is the PRIMARY, live gate (fires for any invalid name at config-load/CLI-flag boundary, before any subcommand dispatches); the new row is defense-in-depth on the Windows DPAPI-fallback secret-file path only, reachable solely under a future relaxation of that validation or a validation-call-site regression bypassing it (per BC-1.4.040's Pass-20 gate-audit reclassification, `.factory/cycles/cycle-004/phase-f2-spec-evolution/architecture-delta.md` §21, ADR-0021 §9). No `src/` change; no exit-code semantics change; the two rows coexist as two DISTINCT invalid-profile-name mechanisms/messages.
   - F2 amendment (2026-07-11, issue #577 SOH-COMMENT-CRUD-1, adversary pass-44 fix round 47 F-2): Section 3 — comment 403/404 override rows added (UserError exit 64, body surfaced; BC-3.5.004/BC-3.5.005/BC-3.5.010); TD-031 pre-existing violation corrected (volatile line cite replaced with stable symbol anchor src/api/client.rs::extract_error_message); pre-existing table-cell pipe escaped in BC-CITE-001 False-positive risk row
   - F2 amendment (2026-07-16, issue #576 SOH-ATTACHMENTS-1, adversary pass-16 fix round 16 P16-001): Section 3 — attachment 404 override rows added (BC-2.7.006/BC-2.7.012/BC-3.9.008/BC-3.9.013/BC-3.9.015); first 413 surface added (attachment upload, BC-3.9.001/BC-3.9.012); perimeter-scan [process-gap] recorded in impact-boundary-576.md
   - F2 amendment (2026-07-27, issue #639 SOH-DX-1, F52-001): Section 6 — Issue Commands subsection added; three pre-flight JrError::UserError exit-64 conditions registered (BC-3.8.012: --field without --request-type; BC-3.8.013: --on-behalf-of without --request-type; combined: both flags without --request-type, BC-3.8.012 governs)
@@ -176,8 +177,13 @@ Every error message must suggest a next action. Conventions by category:
 |---|---|---|
 | `auth remove <active-profile>` | `"cannot remove active profile"` | 64 |
 | `auth refresh` with unconfigured profile + `--no-input` | `"no URL configured. Run: jr auth login --url <URL>"` | 64 |
-| Invalid profile name | `"Invalid profile name: <name>"` | 64 |
+| Invalid profile name (PRIMARY, live gate — `validate_profile_name`, BC-6.1.004/BC-6.1.005, H-019; fires at config-load and the CLI-flag/resolved-active-profile-name boundary, before any subcommand dispatches) | `"Invalid profile name: <name>"` | 64 |
+| Invalid profile name for the Windows encrypted-file OAuth-token fallback (DEFENSE-IN-DEPTH — `reject_unsafe_profile_component`/`ProfilePathEscape`, BC-1.4.040, checked inside `store_pair`/`load_pair`/`remove_if_present`; see disambiguation note below, cycle-004 `windows-correctness`, issue #759) | `"Profile name {profile:?} is not valid for jr's Windows encrypted-file OAuth-token fallback storage ({reason}) — this restriction applies only to that fallback (used when an OAuth token is too large for Windows Credential Manager), not to keyring-based credential storage in general. If your OAuth token is, or was, too large for the keyring, re-authenticate under a different profile name: \"jr auth login --oauth --profile <new-name>\"."` | 64 |
 | Config TOML parse failure | `"Failed to parse config: <toml error>"` | 78 |
+
+**Disambiguating the two coexisting invalid-profile-name errors above (Pass-20 gate-audit correction, 2026-09-04, cycle-004 `windows-correctness`, ADR-0021 §9).** These are two DIFFERENT mechanisms guarding two different call sites, not a duplicate:
+- **`"Invalid profile name: <name>"` is the PRIMARY, live gate.** Driven by `validate_profile_name` (BC-6.1.004/BC-6.1.005, `src/config.rs`), it runs unconditionally over every key in `global.profiles` at config-load (both the strict and lenient loaders) and again at the resolved-active-profile-name/CLI-flag boundary — BEFORE any subcommand, including any credential-storage call, ever dispatches. It rejects any name outside ASCII `[A-Za-z0-9_-]`, longer than 64 characters, or matching a reserved Windows device-name stem (case-insensitive).
+- **`"...not valid for jr's Windows encrypted-file OAuth-token fallback storage..."` is DEFENSE-IN-DEPTH, not a second live gate.** Driven by `reject_unsafe_profile_component` (BC-1.4.040, `src/api/auth_windows_store.rs`), it is checked as the first statement of `store_pair`/`load_pair`/`remove_if_present` — the Windows DPAPI-encrypted-file fallback used only when an OAuth token exceeds Windows Credential Manager's blob-size limit. Because `validate_profile_name`'s rule set (above) is a strict superset of the vectors this guard rejects, a name reaching this guard has ALREADY passed `validate_profile_name` in any normal CLI/config path — this message is therefore reachable only under (a) a future relaxation of `validate_profile_name`'s charset/reserved-name rules, or (b) a validation-call-site regression that lets a name bypass that gate entirely (BC-1.4.040's Pass-20 gate-audit reclassification, `.factory/cycles/cycle-004/phase-f2-spec-evolution/architecture-delta.md` §21). It is scoped explicitly to the Windows fallback storage, not to credential storage in general (Pass-11 adversarial review Finding #2).
 
 ### Config / Profile
 

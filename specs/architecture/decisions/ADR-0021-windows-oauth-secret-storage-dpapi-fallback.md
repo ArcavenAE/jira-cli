@@ -811,6 +811,35 @@ an exit-64 failure it never was before this cycle, on every OS (the finding's or
 as "macOS/Linux only" undersold the exposure: a Windows profile literally named a reserved device
 name is equally affected, since keyring storage never cared about filesystem-legal names).
 
+**Pass-20 gate-audit correction (2026-09-04) — the "pre-existing working profile named `con`"
+premise above is false for any profile `jr` itself has ever loaded.** `[profiles.con]` is legal
+TOML *syntax*, but it is not a config `jr` can successfully load: `validate_profile_name`
+(BC-6.1.004 / BC-6.1.005, `src/config.rs::validate_profile_name`) runs unconditionally over every
+key in `global.profiles` inside `Config::load_inner`'s per-key validation loop — for both the
+strict and lenient loaders, before `resolve_active_profile_name` and before any subcommand
+(including `auth logout`/`auth remove`) ever dispatches — and rejects `con` case-insensitively, as
+a reserved Windows device-name stem, with a DIFFERENT, pre-existing `JrError::UserError` (exit 64:
+`"invalid profile name \"con\" in config.toml; allowed: A-Z a-z 0-9 _ - up to 64 chars; reserved
+Windows names … excluded"`). The same is true of a profile name containing a literal `:`, or one
+ending in a trailing space or dot — all rejected by BC-6.1.004's charset rule. A hand-edited
+`[profiles.con]` (or `[profiles."foo:bar"]`) config therefore fails to load at all; `jr` never
+reaches the point of dispatching `auth logout`/`auth remove` for such a profile. **The
+"long-standing, working profile that predates this cycle" scenario this finding's original
+framing worried about cannot occur via any config `jr` has ever accepted to run.**
+
+This does not undo Finding #3's underlying concern — it narrows it to its correct, current scope,
+symmetric with §9's Pass-20 reclassification above: the real (currently hypothetical) concern is a
+**future relaxation** of `validate_profile_name` (BC-6.1.004/005) that would newly admit a name
+`reject_unsafe_profile_component` still rejects, or a **validation-call-site regression** that lets
+such a name into `global.profiles` without going through `validate_profile_name` at all. In either
+of those scenarios — not in the "pre-existing `con` profile" scenario the original finding
+described — this adapter is exactly the mechanism that keeps `auth logout`/`auth remove` from
+breaking on the resulting profile. **The adapter is retained on that basis, as defense-in-depth
+paired with §9's guard, not because the pre-cycle "legal and functional" scenario originally
+described is real.** No change to the adapter's implementation, call sites, or the invariant it
+enforces (below) — only the stated justification. See the companion `architecture-delta.md`'s
+"Pass-20 / gate-audit architect guidance" section for the required BC-1.4.038 wording adjustment.
+
 **Decision: the clear path's `remove_if_present` step is wrapped in a dedicated adapter that
 treats a `ProfilePathEscape` outcome as TOLERATED — logically and provably equivalent to
 `NotFound` — never as a genuine error for Postcondition 4's fan-out, on every OS (not
@@ -972,6 +1001,59 @@ primary boundary. If that verification ever fails, adding explicit ACL restricti
 time is a tracked follow-up, out of this ADR's scope.
 
 ### 9. Profile-name path-traversal guard — host-independent recognizer (BC-1.4.040 / VP-AUTHDX-016)
+
+**Pass-20 gate-audit correction (2026-09-04) — reclassifying this guard as defense-in-depth, not
+a fix for a live gap.** The F2 pre-gate audit (cycle-004, HIGH finding) found that this section's
+framing overstated the guard's necessity: it is **false** that "there is NO profile-name
+validation today." Profile names ARE validated today, and have been since before this cycle
+(BC-6.1.004 / BC-6.1.005; `src/config.rs::validate_profile_name`, invoked from the unconditional
+per-key validation loop in `Config::load_inner` over every key in `global.profiles`, run for BOTH
+the strict and lenient loaders, and again at the resolved-active-profile-name / CLI-flag boundary).
+That validation restricts every profile name that can reach ANY of this ADR's credential-storage
+call sites — not only the ones this section adds — to ASCII `[A-Za-z0-9_-]`, at most 64
+characters, with the classic reserved Windows device-name stems (`CON`, `NUL`, `AUX`, `PRN`,
+`COM1`-`COM9`, `LPT1`-`LPT9`) rejected case-insensitively. A config file containing a profile key
+that violates this fails to load at all (`JrError::UserError`, exit 64) **before any subcommand,
+including any credential-storage call, ever dispatches.**
+
+Cross-checking `reject_unsafe_profile_component`'s own 30-name vector set against that existing
+gate confirms it is fully subsumed: the 22 ASCII classic reserved names are a strict subset of
+BC-6.1.004's reserved list; `CONIN$`/`CONOUT$` contain `$` (already charset-rejected by
+BC-6.1.004); the 6 Unicode superscript variants (`COM¹` etc.) are non-ASCII (already
+charset-rejected); and `/`, `\`, `:`, a NUL byte, `.`/`..`, and a trailing dot or space are each
+either outside BC-6.1.004's allowed charset or excluded by its length/emptiness rule. **Every
+vector this recognizer guards against is therefore already unreachable via any normal CLI/config
+path** — BC-6.1.004/BC-6.1.005 is the PRIMARY, live gate, and it already closes this off before a
+profile name is ever stored anywhere, credential path included.
+
+This does not mean `reject_unsafe_profile_component` is incorrect or should be removed — see the
+reclassification immediately below — only that this section's original framing ("a genuinely new
+requirement," "closing a previously-undocumented risk," "SECURITY INVARIANT, HIGH PRIORITY,
+CWE-22") mischaracterized a defense-in-depth control as the live primary defense. The guard, its
+mandatory both-cfg-arm wiring (Pass-4 Finding #2, below), and its test suite (VP-AUTHDX-016) are
+**unchanged** by this correction — only the justification is.
+
+**Reclassification: defense-in-depth, not a live CWE-22 closure.** `reject_unsafe_profile_component`
+is retained — it is cheap, safe, and changes no behavior or performance characteristic on the
+credential-file path — but its purpose is now stated precisely as protecting against two
+scenarios BC-6.1.004/005 does not itself cover, since that BC only validates names entering
+through the normal CLI/config surface:
+1. A **future relaxation** of `validate_profile_name`'s charset or reserved-name list (e.g. a
+   later change widens `[A-Za-z0-9_-]` to admit `:` or `.` for some legitimate reason, without
+   separately reasoning about this ADR's filesystem-path-join implications).
+2. A **validation-call-site regression** — a future code path that constructs or persists a
+   profile-name string without going through `validate_profile_name` at all (a bypass of
+   BC-6.1.004/005's boundary, not a weakness in the boundary itself).
+
+Neither scenario is a live vulnerability today; both are realistic enough under ongoing
+maintenance to justify keeping a cheap, independent, host-independent check at the exact point
+where a profile name is joined into a filesystem path — the textbook shape of defense-in-depth.
+This reclassification changes `reject_unsafe_profile_component`'s implementation, call sites, and
+VP-AUTHDX-016's assertions **not at all**; it changes only how the risk this section closes is
+described, and adds BC-6.1.004/BC-6.1.005 as the primary, live gate this guard sits behind. See
+the companion `architecture-delta.md`'s "Pass-20 / gate-audit architect guidance" section for the
+required BC-1.4.040 / BC-1.4.035 / BC-1.4.036 / BC-1.4.039 cross-reference and reclassification
+wording, and the VP-AUTHDX-016 label downgrade.
 
 **Pass-2 adversarial-review correction (2026-09-03, Finding #1).** `Profile::from(String)`
 performs no validation (§9 item 1 of the companion `architecture-delta.md`, flagged as an

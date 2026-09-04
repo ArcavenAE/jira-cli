@@ -331,9 +331,9 @@ owns drafting the actual VP-NNN documents; this section only pins target module 
 | VP-AUTHDX-011 | `store_oauth_tokens`'s `TooLong` routing (§2 of ADR-0021) | proptest / unit test (mocked `keyring::Error`) | **CI classification corrected Pass-8, Finding #1 (supersedes the Pass-5 "default-CI via seam" framing previously stated here); propagated here Pass-11.** Default CI, cross-platform, no seam needed, for sub-property (1)'s pure `should_fallback_to_dpapi` predicate. Sub-property (2)'s routing/rollback STATE core (that `store_oauth_tokens` actually calls `store_pair` on `TooLong`, with correct rollback) is **KEYRING-GATED** (`#[ignore]`+`JR_RUN_KEYRING_TESTS=1`, additionally +`JR_FORCE_DPAPI_FALLBACK=1` on non-Windows to reach the branch at all) — the seam lifts only `engage_dpapi_fallback`'s `#[cfg(not(windows))]` gate, NOT `store_oauth_tokens`'s real `set_password`/delete keychain calls, and this core is a pre-seed→re-read STATE assertion the keyring mock cannot persist across `Entry::new()` (mirrors the VP-AUTHDX-005/006/007 boundary). See vp-delta.md's "Honest default-CI split" (Pass-8 Finding #1) and §18 below. |
 | VP-AUTHDX-012 | Atomic dual-write invariant (rollback-on-partial-overflow, ADR-0021 §2) | Unit test with a fault-injection seam (mirrors the existing `JR_S303_PERSIST_FAIL` pattern) | **CI classification corrected Pass-8, Finding #1 (supersedes the Pass-5 "default-CI via seam" framing previously stated here); propagated here Pass-11.** Sub-property (3)'s age-gated `*.tmp-*` cleanup (plain filesystem logic, no keychain) is default CI, cross-platform, no seam. Sub-property (1)'s no-split/rollback ORDERING state core is **KEYRING-GATED** (`#[ignore]`+`JR_RUN_KEYRING_TESTS=1`, additionally +`JR_FORCE_DPAPI_FALLBACK=1` on non-Windows) for the same reason as VP-AUTHDX-011 above (the seam doesn't seam out real keychain calls; the mock can't persist the pre-seed→re-read state). Sub-property (2)'s real file-rename/fsync mechanics remain Windows-CI-only, unaffected by the seam — that code exists only in `store_pair`'s `#[cfg(windows)]` arm. See vp-delta.md's "Honest default-CI split" (Pass-8 Finding #1) and §18 below. |
 | VP-AUTHDX-013 | Cross-platform non-engagement of `#[cfg(windows)] mod dpapi` | Compile-time (`cfg`-gated absence), not a runtime test | Cross-platform (proves absence on non-Windows) |
-| (new, unnumbered — formal-verifier to allocate) | `api/jira/tenant::fetch_cloud_id` — soft-fail on non-2xx/network error/malformed JSON | Unit test with `wiremock` | Cross-platform |
-| (new, unnumbered — formal-verifier to allocate) | `login_token`'s `cloud_id` refresh-not-clear behavior on a mechanism switch (ADR-0022 §3), AND `jr auth refresh`'s direct `login_token` call triggering the fetch on every invocation (ADR-0022 §2 "Decision", Pass-3 Finding #2) | Integration test extending `tests/auth_chosen_flow_reconcile.rs` | Cross-platform |
-| (new, unnumbered — formal-verifier to allocate; Pass-3 Finding #1, STALE-KEYRING-SHADOWS-DPAPI; **CI classification corrected Pass-8, Finding #1 — supersedes the "CI classification corrected Pass-5, Finding #1" note previously stated here; propagated here Pass-11 — see §18 below**) | `store_oauth_tokens`'s keyring-clear-before-DPAPI-store route (ADR-0021 §2): given a PRE-EXISTING complete keyring pair for a profile AND a fresh `access` write that returns `TooLong` (both the access-overflow arm and the refresh-overflow-after-access-succeeded arm), assert that after `store_oauth_tokens` returns `Ok`: (a) both namespaced keyring keys are absent, (b) the DPAPI file contains the fresh pair, and (c) a subsequent `load_oauth_tokens` returns the fresh DPAPI pair — never the stale keyring values | Unit test with a fault-injection seam producing `keyring::Error::TooLong` on a pre-seeded keyring pair | **KEYRING-GATED core, NO pure default-CI portion** (Pass-8 Finding #1 supersedes the Pass-5 "cross-platform via seam" framing previously stated here). The entire routing/delete-ordering/both-keys-absent core is a pre-seed→re-read STATE property: the `JR_FORCE_DPAPI_FALLBACK=1` seam makes the delete-then-store arm REACHABLE off-Windows, but observing the both-keys-absent state still requires a real keychain the mock cannot persist across `Entry::new()` (mirrors the VP-AUTHDX-005/006/007 boundary). Gated `#[ignore]`+`JR_RUN_KEYRING_TESTS=1`, additionally +`JR_FORCE_DPAPI_FALLBACK=1` on non-Windows. The `(a)+(b)+(c)`-after-`Ok` success oracle additionally requires a real DPAPI round-trip, which stays Windows-only regardless of the seam (`store_pair` cannot return `Ok` off Windows). |
+| VP-AUTHDX-019 | `api/jira/tenant::fetch_cloud_id` — soft-fail on non-2xx/network error/malformed JSON | Unit test with `wiremock` | Cross-platform |
+| VP-AUTHDX-020 | `login_token`'s `cloud_id` refresh-not-clear behavior on a mechanism switch (ADR-0022 §3), AND `jr auth refresh`'s direct `login_token` call triggering the fetch on every invocation (ADR-0022 §2 "Decision", Pass-3 Finding #2) | Integration test extending `tests/auth_chosen_flow_reconcile.rs` | Cross-platform |
+| VP-AUTHDX-022 (Pass-3 Finding #1, STALE-KEYRING-SHADOWS-DPAPI; **CI classification corrected Pass-8, Finding #1 — supersedes the "CI classification corrected Pass-5, Finding #1" note previously stated here; propagated here Pass-11 — see §18 below**) | `store_oauth_tokens`'s keyring-clear-before-DPAPI-store route (ADR-0021 §2): given a PRE-EXISTING complete keyring pair for a profile AND a fresh `access` write that returns `TooLong` (both the access-overflow arm and the refresh-overflow-after-access-succeeded arm), assert that after `store_oauth_tokens` returns `Ok`: (a) both namespaced keyring keys are absent, (b) the DPAPI file contains the fresh pair, and (c) a subsequent `load_oauth_tokens` returns the fresh DPAPI pair — never the stale keyring values | Unit test with a fault-injection seam producing `keyring::Error::TooLong` on a pre-seeded keyring pair | **KEYRING-GATED core, NO pure default-CI portion** (Pass-8 Finding #1 supersedes the Pass-5 "cross-platform via seam" framing previously stated here). The entire routing/delete-ordering/both-keys-absent core is a pre-seed→re-read STATE property: the `JR_FORCE_DPAPI_FALLBACK=1` seam makes the delete-then-store arm REACHABLE off-Windows, but observing the both-keys-absent state still requires a real keychain the mock cannot persist across `Entry::new()` (mirrors the VP-AUTHDX-005/006/007 boundary). Gated `#[ignore]`+`JR_RUN_KEYRING_TESTS=1`, additionally +`JR_FORCE_DPAPI_FALLBACK=1` on non-Windows. The `(a)+(b)+(c)`-after-`Ok` success oracle additionally requires a real DPAPI round-trip, which stays Windows-only regardless of the seam (`store_pair` cannot return `Ok` off Windows). |
 
 ---
 
@@ -1168,4 +1168,131 @@ unchanged by the fix.
 No behavior, VP, or BC changed by this finding — it is a code-sample compile-cleanliness fix
 confined to ADR-0021 §1's illustrative snippet, which downstream stories (`dpapi-storage-fix`,
 `honest-fail-message`) build the real `src/api/auth.rs` change against at F4.
+
+---
+
+## 20. Pass-16 Adversarial Review Amendments (2026-09-04)
+
+### Finding #1 [LOW] — stale "(new, unnumbered — formal-verifier to allocate)" VP-ID labels in §7's Verification-Property Hooks table
+
+**Locus found and fixed:** §7's table rows for the `fetch_cloud_id` soft-fail VP (pre-fix
+~line 334), the `login_token`/mechanism-switch VP (pre-fix ~line 335), and the stale-keyring-shadow
+VP (pre-fix ~line 336) still carried the F1-era first-column label `"(new, unnumbered —
+formal-verifier to allocate)"` even though all three VPs were allocated concrete `VP-AUTHDX` IDs
+during the original F2 VP-delta pass and its Pass-3 follow-on. §7 is a MAINTAINED, F6-facing
+reference table (Pass-11 §18 above already characterizes it this way, and that same section
+itself refers to the stale-keyring row by its allocated ID, `VP-AUTHDX-022` — an internal
+inconsistency within this document, since §7's own row for that VP still said "to allocate" until
+this fix). The row DESCRIPTIONS were already correct and matched their target VPs; only the
+first-column ID label was stale.
+
+**Fix applied (§7 above), cross-checked against `vp-delta.md`'s "New VPs — one-line oracles and BC
+traces" table and its "Coverage map" table (both authoritative for allocation):**
+- The `fetch_cloud_id` soft-fail row (target: `api/jira/tenant::fetch_cloud_id`, home BC
+  BC-1.2.052) → **VP-AUTHDX-019**.
+- The `login_token`/mechanism-switch row (target: `login_token`'s `cloud_id` refresh-not-clear
+  behavior + `jr auth refresh`'s fetch-trigger, home BC BC-1.2.053) → **VP-AUTHDX-020**.
+- The stale-keyring-shadow row (Pass-3 Finding #1, STALE-KEYRING-SHADOWS-DPAPI, home BC
+  BC-1.4.035) → **VP-AUTHDX-022**.
+
+No VP added, removed, or renumbered; no test-count, oracle-text, CI-classification, or BC change —
+this is a same-document label/traceability propagation fix only, identical in kind to Pass-11 §18
+Finding #1's §7 propagation fix (that one corrected stale CI-classification text on these same
+three rows' neighbors; this one corrects the stale ID label the CI-classification fix left
+untouched on these three rows specifically).
+
+**Comprehensive sweep (flushing the whole placeholder class).** Grepped this entire file for every
+member of the stale-VP-ID-placeholder class: `unnumbered`, `allocate an ID`, `formal-verifier to
+allocate`, `to allocate\b`, `TBD`, and `TODO`. Findings:
+- The three §7 table matches above — fixed.
+- One further match, in `## Pass-3 architect guidance for product-owner and formal-verifier`
+  (pre-fix ~line 558: *"A new VP is required (added to this document's §7 table, unnumbered —
+  allocate an ID)…"*) — **left unchanged, deliberately.** This is Pass-3's own review-guidance
+  prose, narrating, in the past tense, an instruction issued to the formal-verifier at a point in
+  the pipeline BEFORE the VP existed at all — it does not name a `VP-AUTHDX` ID, does not describe
+  current state, and is not itself a reference table entry a reader or F6 executor would consult
+  for the VP's identity (§7 is that table, and is exactly what this finding fixes). Rewriting
+  historical guidance text to retroactively insert an ID it could not have named at authoring time
+  would misrepresent the sequence of events this document exists to record, for zero traceability
+  benefit — the row `VP-AUTHDX-022` now correctly IDs the VP everywhere a reader would look it up.
+- No `TBD` or `TODO` VP reference exists anywhere in this file.
+- No other `VP-AUTHDX` mention in this file carries a placeholder ID — every other VP-AUTHDX
+  citation in §10-§19's amendment tables and prose already uses its concrete allocated ID.
+
+No stale VP-ID placeholder remains in this file's maintained reference tables.
+
+---
+
+## 21. Pass-20 / Gate-Audit Adversarial Review Amendments (2026-09-04)
+
+A Pass-20 gate-audit review (F2 pre-gate audit, cycle-004 `windows-correctness` bundle) raised 1
+HIGH finding — a cross-corpus consistency / mischaracterized-threat-model finding, not a design or
+behavior defect — resolved by editing ADR-0021 §7/§9 and this document directly. **No `src/`
+change; no behavior change to `reject_unsafe_profile_component`, `file_path`,
+`store_pair`/`load_pair`/`remove_if_present`, or `clear_dpapi_file_tolerating_path_escape` — both
+the guard and the adapter are RETAINED exactly as designed, as defense-in-depth:**
+
+| # | Sev | Finding (one-line) | Resolution |
+|---|-----|---------------------|------------|
+| 1 | HIGH | ADR-0021 §9 (and BC-1.4.040, cross-referenced from BC-1.4.035/036/039) justified `reject_unsafe_profile_component` on the false premise "there is NO profile-name validation today." `validate_profile_name` (BC-6.1.004 / BC-6.1.005, `src/config.rs`) ALREADY restricts every profile name that can reach any credential-storage call site to ASCII `[A-Za-z0-9_-]` ≤64 chars with case-insensitive reserved-Windows-name rejection — enforced at config-load (the unconditional per-key loop, both strict/lenient loaders) and at the resolved-active-profile-name/CLI-flag boundary — making every one of `reject_unsafe_profile_component`'s 30 guarded vectors already unreachable via any normal CLI/config path. Separately, ADR-0021 §7's Pass-8 Finding #3 rationale for `clear_dpapi_file_tolerating_path_escape` — that a pre-existing, working profile literally named `con` could exist and need `auth logout`/`remove` to keep clearing it — is also false: such a config fails to load at all (a different, pre-existing exit-64 error) before any `auth` subcommand ever dispatches. | ADR-0021 §9 gains a Pass-20 correction stating the true validation state, naming BC-6.1.004/BC-6.1.005 as the PRIMARY, live gate, and RECLASSIFYING `reject_unsafe_profile_component` as defense-in-depth against (a) a future charset/reserved-name relaxation of `validate_profile_name` and (b) a validation-call-site regression — not a live CWE-22 closure. ADR-0021 §7 gains a parallel Pass-20 correction on the Pass-8 Finding #3 rationale, replacing the "pre-existing `con` profile" premise with the correct one (impossible in a config `jr` has ever loaded) and reframing `clear_dpapi_file_tolerating_path_escape` on the same defense-in-depth basis. **Both the guard and the adapter are KEPT, unmodified in behavior** — see guidance below for the required product-owner/formal-verifier propagation into BC-1.4.040/035/036/039/038 and VP-AUTHDX-016. |
+
+---
+
+## Pass-20 / gate-audit architect guidance for product-owner and formal-verifier
+
+### Finding #1 — reclassify BC-1.4.040/035/036/039/038 framing, cross-reference BC-6.1.004/005, downgrade VP-AUTHDX-016's label
+
+**For the product-owner.**
+
+1. Add explicit "Related BCs" cross-references from BC-1.4.040 — and from BC-1.4.035/036/039
+   wherever their text cites BC-1.4.040's guard — to **BC-6.1.004** (`validate_profile_name`
+   charset/length/reserved-name rejection) and **BC-6.1.005** (validation runs at config-load, both
+   strict and lenient loaders, and at the CLI-flag/resolved-active-profile-name boundary). These
+   two BCs are the PRIMARY, live gate; BC-1.4.040 is a secondary, defense-in-depth layer sitting
+   behind it, specifically at the credential-storage filesystem-path-join point.
+2. Reword any BC-1.4.040 text that echoes ADR-0021's original "there is no profile-name validation
+   today" premise — directly, or by omission (e.g. framing the guard as closing a
+   "previously-undocumented" or "genuinely new" risk without qualification) — to state instead:
+   profile names are already validated by BC-6.1.004/005 before they can reach any
+   credential-storage call site; BC-1.4.040's guard is a defense-in-depth check against a future
+   relaxation of that validation or a validation-call-site regression, applied at the specific
+   point (`file_path`) where a profile name is joined into a filesystem path. **Do NOT weaken
+   BC-1.4.040's own postconditions, edge cases, or the guard's required behavior** (§9's 30-vector
+   rejection set, the mandatory-on-both-cfg-arms wiring from Pass-4 Finding #2) — only the stated
+   rationale/necessity framing changes.
+3. Correct BC-1.4.038's Invariant/Edge-Case text (added by the Pass-8 guidance, §16 above) wherever
+   it frames the clear-path adapter's necessity around a "long-standing profile predating this
+   cycle" that was "legal and functional" pre-cycle. Per ADR-0021 §7's Pass-20 correction, such a
+   profile could never have been loaded by `jr` at all — BC-6.1.004/005 would reject it at
+   config-load with a different, pre-existing error, before any `auth` subcommand dispatches.
+   Restate the adapter's justification as: defense-in-depth against a future relaxation of
+   BC-6.1.004/005 or a validation-bypass regression, symmetric with BC-1.4.040's own
+   reclassification in item 2. **The adapter's behavior (`ProfilePathEscape` tolerated as
+   `NotFound` on the clear path) and BC-1.4.038's postconditions/edge cases (EC-1.4.038-5/-6) are
+   UNCHANGED** — only the "why this is needed" prose changes.
+
+**For the formal-verifier.**
+
+1. Downgrade VP-AUTHDX-016's label from "SECURITY INVARIANT, HIGH PRIORITY / CWE-22" to a
+   defense-in-depth classification (e.g. "DEFENSE-IN-DEPTH — guards against a future
+   `validate_profile_name` (BC-6.1.004/005) relaxation or a validation-call-site regression; not a
+   currently-reachable CWE-22 path-traversal"). **Keep the assertion itself exactly as specified**
+   (all 30 vectors rejected by the host-independent recognizer, wired as the mandatory first
+   statement on both cfg arms of all three entry points per Pass-4 Finding #2) — this is a
+   severity/label change only, not a scope, oracle, or test-count change.
+2. Add a cross-reference from VP-AUTHDX-016's oracle text to BC-6.1.004/BC-6.1.005 as the primary,
+   already-tested live gate this VP sits behind, so a future reader does not mistake VP-AUTHDX-016
+   for the sole or primary defense against a malformed profile name.
+3. No change to VP-AUTHDX-018 (the clear-path adapter's oracle, §16 above) — its
+   tolerated-vs-genuine-error discrimination assertions remain correct and unaffected; only its
+   home BC's (BC-1.4.038) prose rationale, corrected by the product-owner per item 3 above, changes.
+4. Confirm no VP anywhere in this delta currently asserts or relies on the false premise "profile
+   names are unvalidated before BC-1.4.040" in its oracle text or comments (grep `VP-AUTHDX-*` for
+   "unvalidated," "no profile-name validation," or "predates this cycle" as a functional claim
+   rather than historical narration). If one does, apply the same reclassification note — the
+   PASS/FAIL assertion itself should not need to change.
+
+**No test, BC postcondition, or `src/` behavior changes as a result of this pass** — this is a
+documentation/rationale reconciliation only, correcting a mischaracterized threat model while
+preserving every existing guarantee, test, and code path exactly as previously specified.
 </content>
