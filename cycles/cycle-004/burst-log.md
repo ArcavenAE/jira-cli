@@ -661,3 +661,72 @@ BCs: unchanged at **742**. VPs: unchanged at **55**. Holdout scenarios unchanged
 **Dim-6 Attestation:** N/A — no source code changed this burst (`.factory/` human-gate bookkeeping only, no `develop`-side commit).
 
 **Dim-7 Attestation:** N/A — no test-affecting change this burst; full regression remains PASS (4763/0/157) as of the cycle-003 F6/F7 hardening/convergence passes, unchanged.
+
+## Burst: Burst 12 — F3 incremental story decomposition CONVERGED (4 review rounds) — AWAITING HUMAN GATE (2026-09-04)
+
+**Parent-commit:** Burst 11's commit (`develop` tip `42e92b46`, unchanged this burst — no `develop`-side commit).
+
+**Trigger:** Burst 11 dispatched `/vsdd-factory:phase-f3-incremental-stories`, tasking story-writer with decomposing the human-approved 4-story DEC-335 scope into implementable story files and integrating them into the existing dependency graph. This burst banks story-writer's completed output plus 4 rounds of consistency/adversarial story review, and records F3 decomposition as CONVERGED, awaiting the human gate.
+
+**Work performed this burst, in order:**
+
+1. **story-writer produced the 4-story F3 decomposition** in `cycles/cycle-004/phase-f3-stories/`:
+   - `S-cycle4-dpapi-storage-fix` — 13pt, P0, Wave 1, 20 ACs (#759 DPAPI-encrypted fallback storage).
+   - `S-cycle4-cloud-id-correctness` — 8pt, P1, Wave 1, 9 ACs (`cloud_id` acquisition/correctness, closes `A-PA-LOW-001`).
+   - `S-cycle4-honest-fail-message` — 5pt, P0, Wave 2, `depends_on` `dpapi-storage-fix`, 7 ACs.
+   - `S-cycle4-windows-docs` — 3pt, doc-only, Wave 2, 5 ACs.
+   Plus supporting artifacts: `decomposition-manifest.md`, `dependency-graph-extended.md`, `wave-schedule.md`, `conflict-report.md`, and `wave-holdout-scenarios/wave-{1,2}-holdout-scenarios.md`.
+2. **Scope check:** 41 ACs total (36 BC-traced + 5 doc-only), all traced to the F2 BCs/VPs; dependency graph is acyclic — 2 independent 2-node chains; Wave 1 = {`dpapi-storage-fix`, `cloud-id-correctness`}, Wave 2 = {`honest-fail-message`, `windows-docs`}; all 10 new/amended F2 BCs and all 14 new F2 VPs are each covered by exactly one story (no gap, no double-coverage); scope matches DEC-335's 4 stories exactly (no gap/creep); all 4 story files are template-compliant (closing the cycle-003 4-story template-compliance gap precedent — see Drift/Standing below).
+3. **4 rounds of fresh-context consistency/adversarial story review** ran against the decomposition: Round 1 (6 findings, all fixed), Round 2 (4 findings, all fixed), Round 3 (3 findings, all fixed), Round 4 **CLEAN** — novelty NONE, and both anti-pattern classes flagged in earlier rounds (footprint-omission; completeness-claim/annotation mismatch) independently confirmed CLOSED. F3 decomposition review has CONVERGED.
+4. **Tracked items carried into F4+** (recorded in Drift/Standing, not blockers):
+   - (a) BC-1.4.035 PC5 production-path VP gap — no F2 VP covers the `store_pair`-failure→`DpapiFallbackFailed` production path; AC-covered by `S-cycle4-dpapi-storage-fix` AC-019 (plus AC-020 for BC-1.4.037 Invariant 3, a manifest-assertion with no VP). Formal VP deferred to F6 hardening or a future maintenance touch — F2 is gated/frozen and is not being reopened for one additive VP. Non-blocking.
+   - (b) `S-410-keychain-test-isolation` (status: ready, backlog/wave: feature-followup) has a same-file overlap with cycle-004 on `tests/oauth_refresh_integration.rs` — non-blocking (backlog-unscheduled, no active-wave race); flagged for whoever delivers S-410 first.
+   - (c) `CHANGELOG.md [Unreleased]` is a same-wave parallel-edit hotspot across all 4 stories — F4 append-collision mitigation (each story appends its own distinct bullet; keep-both resolution) documented in `wave-schedule.md` §7a.
+5. Updated STATE.md via one full-content Write (v3.63 → v3.64): frontmatter (`current_step`, `cycle_004_status`; `phase` stays F3), Phase Progress table (F3-INCREMENTAL-STORIES row → CONVERGED, AWAITING HUMAN GATE, with the 4-story summary + review trajectory `6→4→3→CLEAN`), Current Phase Steps (F3 decomposition + review rows marked DONE, F3 human gate PENDING), Convergence Status / Concurrent Cycles / Constraints Carried Forward / Drift-Standing prose (F3 decomposition output + convergence + tracked items (a)/(b)/(c) added), and Session Resume Checkpoint (Position = cycle-004 F3 CONVERGED AWAITING HUMAN GATE; NEXT-on-resume = await/record the F3 human gate decision). **No new DEC recorded this burst** — the F3 gate decision will be the next DEC (DEC-337), not pre-recorded here.
+6. **Did NOT register `STORY-INDEX.md`** this burst — deferred to post-gate, per instruction. Story count remains `168` in frontmatter/body this burst; the pending 168→172 bump is noted as PENDING, not applied.
+7. Did NOT touch the F2 spec files (`architecture-delta.md`, `vp-delta.md`, ADR-0021/0022, PRD delta) — F2 is closed and frozen.
+8. Did NOT stage the three pre-existing unrelated dirty files (`regression-state.json`, `sidecar-learning.md`, the modified `S-cycle3-env-tag` demo gif) — left untouched, per standing instruction carried across every prior burst.
+9. Committed the 4 F3 story files + `decomposition-manifest.md` + `dependency-graph-extended.md` + `wave-schedule.md` + `conflict-report.md` + `wave-holdout-scenarios/*` + `STATE.md` + this burst-log entry to factory-artifacts in one atomic commit.
+10. Appended this burst-log entry (Burst 12).
+
+**Adversary verdict:** CLEAN (Round 4) — novelty NONE after 3 prior rounds of real findings (6→4→3), both anti-pattern classes (footprint-omission; completeness-claim/annotation mismatch) confirmed closed. F3 decomposition review CONVERGED.
+
+**Outcome:** cycle-004 (`windows-correctness`) Phase F3 (incremental story decomposition) is now **CONVERGED, AWAITING HUMAN GATE**. `total_bcs` unchanged at 742; `vp_count` unchanged at 55; holdout scenarios unchanged at 106; `total_stories` unchanged at 168 this burst (168→172 registration deferred to post-gate). **NEXT:** present the F3 story-decomposition human gate. On approval, register the 4 stories in `STORY-INDEX.md` (168→172) and advance F3→F4 (delta implementation, Wave 1 first).
+
+**Codifications:** none this burst — no new DEC recorded (the F3 gate decision will be DEC-337, recorded when the human decides).
+
+**Closes:** the F3 story-decomposition + review cycle (story-writer's output, 4 rounds of consistency/adversarial review reaching CLEAN). **Does NOT close:** the F3 human gate itself (pending); `STORY-INDEX.md` registration (deferred to post-gate); cycle-004 as a whole — F4 through F7 remain ahead; the LOW TD-031-blocked bc-6 BC-6.2.016 cross-reference and the BC-1.4.035 PC5 production-path VP gap both remain open as recorded, non-blocking maintenance items; no cycle-001/002/003 standing Drift/Standing items are touched.
+
+### Counts reconciled this burst
+
+BCs: unchanged at **742**. VPs: unchanged at **55**. Holdout scenarios: unchanged at 106 (F3 added `wave-{1,2}-holdout-scenarios.md` as wave-scoped WHS content, not yet folded into the cumulative `holdout-scenarios.md` count — folding happens at `STORY-INDEX.md` registration, post-gate). `total_stories` unchanged at **168** this burst — the 4 new F3 stories (`S-cycle4-dpapi-storage-fix`, `S-cycle4-cloud-id-correctness`, `S-cycle4-honest-fail-message`, `S-cycle4-windows-docs`) exist as files in `cycles/cycle-004/phase-f3-stories/` but are **not yet registered** in `STORY-INDEX.md` — that registration (168→172) is explicitly deferred to after the F3 human gate approves. Reserved Windows device-name set unchanged at 30 (ADR-0021 §9, untouched this burst).
+
+### Details
+
+| Agent | Task | Output |
+|-------|------|--------|
+| story-writer | Decompose the DEC-335 4-story scope into implementable story files + dependency-graph integration | 4 story files, `decomposition-manifest.md`, `dependency-graph-extended.md`, `wave-schedule.md`, `conflict-report.md`, `wave-holdout-scenarios/wave-{1,2}-holdout-scenarios.md` |
+| consistency-validator + adversary (4 rounds) | Review the F3 decomposition for gaps, contradictions, footprint-omission, completeness-claim mismatches | Round 1: 6 findings fixed; Round 2: 4 findings fixed; Round 3: 3 findings fixed; Round 4: CLEAN |
+| state-manager | Bank F3 artifacts + STATE.md update + burst-log entry in one atomic commit; explicitly defer `STORY-INDEX.md` registration | This commit; `STATE.md`; `cycles/cycle-004/burst-log.md` (this entry) |
+
+**Files touched (Dim-1): 11 unique files (factory-artifacts, this burst)**
+
+- STATE.md
+- cycles/cycle-004/burst-log.md
+- cycles/cycle-004/phase-f3-stories/S-cycle4-dpapi-storage-fix.md
+- cycles/cycle-004/phase-f3-stories/S-cycle4-cloud-id-correctness.md
+- cycles/cycle-004/phase-f3-stories/S-cycle4-honest-fail-message.md
+- cycles/cycle-004/phase-f3-stories/S-cycle4-windows-docs.md
+- cycles/cycle-004/phase-f3-stories/decomposition-manifest.md
+- cycles/cycle-004/phase-f3-stories/dependency-graph-extended.md
+- cycles/cycle-004/phase-f3-stories/wave-schedule.md
+- cycles/cycle-004/phase-f3-stories/conflict-report.md
+- cycles/cycle-004/phase-f3-stories/wave-holdout-scenarios/ (2 files: wave-1-holdout-scenarios.md, wave-2-holdout-scenarios.md)
+
+**Dim-2 Attestation:** `STORY-INDEX.md` was deliberately NOT touched this burst (registration deferred to post-gate, per instruction) — `scripts/check-spec-counts.sh` and `scripts/check-bc-cumulative-counts.sh` were not re-run since no BC/VP/index content changed this burst; both remained exit-0 as of Burst 10's re-verification. DEC-namespace collision check: N/A, no new DEC recorded this burst.
+
+**Dim-5 Attestation:** N/A — no binary/WASM artifact produced by this burst.
+
+**Dim-6 Attestation:** N/A — no source code changed this burst (`.factory/` F3 decomposition bookkeeping only, no `develop`-side commit).
+
+**Dim-7 Attestation:** N/A — no test-affecting change this burst; full regression remains PASS (4763/0/157) as of the cycle-003 F6/F7 hardening/convergence passes, unchanged.
