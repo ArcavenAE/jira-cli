@@ -4,7 +4,7 @@ level: ops
 version: "1.0"
 status: in-progress
 producer: state-manager
-timestamp: 2026-09-03T22:50:00Z
+timestamp: 2026-09-04T20:45:00Z
 cycle: "cycle-004"
 inputs: [STATE.md]
 input-hash: "[live-state]"
@@ -728,5 +728,56 @@ BCs: unchanged at **742**. VPs: unchanged at **55**. Holdout scenarios: unchange
 **Dim-5 Attestation:** N/A — no binary/WASM artifact produced by this burst.
 
 **Dim-6 Attestation:** N/A — no source code changed this burst (`.factory/` F3 decomposition bookkeeping only, no `develop`-side commit).
+
+**Dim-7 Attestation:** N/A — no test-affecting change this burst; full regression remains PASS (4763/0/157) as of the cycle-003 F6/F7 hardening/convergence passes, unchanged.
+
+## Burst: Burst 13 — SESSION WRAP (human-requested pause) — pipeline PAUSED at F3 human gate (2026-09-04)
+
+**Parent-commit:** Burst 12's commit (`965178df`, `develop` tip `42e92b46` unchanged this burst — no `develop`-side commit).
+
+**Trigger:** Human requested `/wrap` mid-session with no cycle-004 pipeline work in flight (no running sub-agents, no stories mid-TDD, no open cycle-004 PRs, no `.worktrees/`). This burst pauses the pipeline and re-checkpoints STATE.md so the session can be cleared with zero loss; it does not advance, approve, or alter the F3 story-decomposition gate itself.
+
+**Work performed this burst, in order:**
+
+1. **Frontmatter:** `pipeline: ACTIVE` → `pipeline: PAUSED`; `timestamp` refreshed to `2026-09-04T20:45:00Z`. `phase` stays `F3` — no phase transition occurred, only a pause.
+2. **Current Phase Steps:** appended a new row — "SESSION WRAP (human-requested pause) — pipeline PAUSED at F3 story-decomposition gate; no work in flight." The F3 story-decomposition human gate row remains **PENDING**, unchanged.
+3. **Session Resume Checkpoint replaced** (v3.64 → v3.65 position): the prior checkpoint (recorded at Burst 12, F3 CONVERGED AWAITING HUMAN GATE) is archived verbatim to `cycles/cycle-004/session-checkpoints.md` (new file, created this burst). The new checkpoint captures: cycle-004 position unchanged in substance (Phase F3 decomposition CONVERGED, AWAITING HUMAN GATE) but the pipeline itself is now PAUSED by explicit human action; zero in-flight work; the pending F3 gate decision and its four options (approve/investigate/reopen-F2/reject); the three tracked items carried into F4+ (BC-1.4.035 PC5 VP gap, S-410 file overlap, CHANGELOG.md parallel-edit hotspot); `STORY-INDEX.md` registration (168→172) still deferred to post-gate; an out-of-band SESSION NOTE recording the investigation and closure of a live OAuth report (root-caused to a local `cargo install` build lacking ADR-0006 embedded credentials, not a release/code/pipeline defect — no repo/spec/story change resulted); and the exact resume command.
+4. **No new DEC recorded.** The F3 gate decision remains reserved as DEC-337, unchanged from Burst 12.
+5. Version bumped 3.64 → 3.65.
+6. Updated STATE.md via one full-content Write (DEC-247 discipline; no Edit chain, no `cp`).
+7. Did NOT touch `STORY-INDEX.md` or any F2/F3 spec/story content — this burst is bookkeeping-only.
+8. Did NOT stage the three pre-existing unrelated dirty files (`regression-state.json`, `sidecar-learning.md`, the modified `S-cycle3-env-tag` demo gif) — left untouched, consistent with every prior burst.
+9. Committed STATE.md + this burst-log entry + the new `cycles/cycle-004/session-checkpoints.md` to factory-artifacts in one atomic commit.
+10. **Factory lock:** no `factory_lock` frontmatter block exists in STATE.md and the lock-write/verify-sha-currency scripts are not provisioned in this repo (`plugins/vsdd-factory/bin/factory-lock-write.sh` and `.factory/hooks/verify-sha-currency.sh` both absent) — no lock is held, so the renew/unlock step is a no-op. Noted, not fabricated.
+
+**Adversary verdict:** N/A — no spec/story content reviewed this burst; this is a pause-and-checkpoint bookkeeping burst, not a convergence pass.
+
+**Outcome:** cycle-004 (`windows-correctness`) is now **PAUSED** at Phase F3 (incremental story decomposition), CONVERGED, AWAITING HUMAN GATE — the substantive pipeline position is unchanged from Burst 12; only the `pipeline` frontmatter flag and the Session Resume Checkpoint changed. `total_bcs` unchanged at 742; `vp_count` unchanged at 55; holdout scenarios unchanged at 106; `total_stories` unchanged at 168. **NEXT on resume:** run `/vsdd-factory:next-step`, which reads STATE.md and resumes at the F3 story-decomposition human gate.
+
+**Codifications:** none this burst — no new DEC recorded (DEC-337 remains reserved for the F3 gate decision).
+
+**Closes:** nothing substantive — this burst only pauses and re-checkpoints. **Does NOT close:** the F3 human gate (still pending); `STORY-INDEX.md` registration (still deferred to post-gate); any cycle-001/002/003 standing Drift/Standing items (untouched).
+
+### Counts reconciled this burst
+
+BCs: unchanged at **742**. VPs: unchanged at **55**. Holdout scenarios: unchanged at 106. `total_stories` unchanged at **168** — the 168→172 bump remains deferred to post-gate `STORY-INDEX.md` registration.
+
+### Details
+
+| Agent | Task | Output |
+|-------|------|--------|
+| state-manager | Pause the pipeline and re-checkpoint STATE.md per human `/wrap` request, using the Single-Commit Burst Protocol | Updated `STATE.md` (v3.65, `pipeline: PAUSED`); new `cycles/cycle-004/session-checkpoints.md` (archives the v3.64 checkpoint); this burst-log entry |
+
+**Files touched (Dim-1): 3 unique files (factory-artifacts, this burst)**
+
+- STATE.md
+- cycles/cycle-004/burst-log.md
+- cycles/cycle-004/session-checkpoints.md (new file)
+
+**Dim-2 Attestation:** `STORY-INDEX.md` was deliberately NOT touched this burst (no index/BC/VP content changed) — `scripts/check-spec-counts.sh` and `scripts/check-bc-cumulative-counts.sh` were not re-run since no BC/VP/index content changed this burst. DEC-namespace collision check: N/A, no new DEC recorded this burst.
+
+**Dim-5 Attestation:** N/A — no binary/WASM artifact produced by this burst.
+
+**Dim-6 Attestation:** N/A — no source code changed this burst (`.factory/` pause bookkeeping only, no `develop`-side commit).
 
 **Dim-7 Attestation:** N/A — no test-affecting change this burst; full regression remains PASS (4763/0/157) as of the cycle-003 F6/F7 hardening/convergence passes, unchanged.
