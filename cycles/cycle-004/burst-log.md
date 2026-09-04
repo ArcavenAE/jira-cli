@@ -546,3 +546,66 @@ BCs: unchanged at **742** (Passes 15-20 amended existing BC/ADR/VP/error-taxonom
 **Dim-6 Attestation:** N/A — no source code changed this burst (`.factory/` spec-delta convergence only, no `develop`-side commit).
 
 **Dim-7 Attestation:** N/A — no test-affecting change this burst; full regression remains PASS (4763/0/157) as of the cycle-003 F6/F7 hardening/convergence passes, unchanged.
+
+## Burst: Burst 10 — F2 scoped adversarial RE-CONVERGENCE (Passes 20-25) + second consistency-validator re-audit CONSISTENT — F2 CONVERGENCE CHECKPOINT #7 (2026-09-04)
+
+**Parent-commit:** Burst 9's commit (`develop` tip `42e92b46`, unchanged this burst — no `develop`-side commit).
+
+**Trigger:** Burst 9's pre-gate consistency-validator audit had found DRIFT (1 HIGH/1 MED/1 LOW), reconciled via a Pass-20 fix chain that changed the spec delta and reset the 3-consecutive-clean adversarial streak to 0/3. The standing human convergence directive ("continue to full 3-consecutive-clean-pass convergence, re-confirmed by a consistency-validator audit with no DRIFT") continued to authorize a fresh round of adversarial passes on the corrected delta, followed by a second consistency-validator audit before the F2 spec delta could be presented at the human gate.
+
+**Work performed this burst, in order:**
+
+1. **Adversarial Pass 20** (fresh context, on the delta as corrected by Burst 9's Pass-20 fix chain): 1 finding — a `BC-INDEX.md` propagation miss. Burst 9's Pass-20 gate-audit fix chain had deliberately left `BC-INDEX.md` untouched (per its own record: "`BC-INDEX.md` and `ADR-0022` both confirmed unmodified since Burst 7"), but the underlying BC-1.4.040 reclassification (HIGH→defense-in-depth) and the new bc-6 Related-BC cross-refs were never propagated into `BC-INDEX.md` itself, leaving it stale relative to the reclassified BC bodies. Resolved via a product-owner fix chain: `BC-INDEX.md`'s BC-1.4.040 row updated to reflect the defense-in-depth classification and the bc-6 cross-references.
+2. **Adversarial Pass 21** (fresh context): 1 finding — a stale Trace-provenance sentence in `bc-1-auth-identity.md`, left over from before the Pass-20 reclassification (referencing the guard's old "closes live CWE-22" framing rather than the corrected defense-in-depth framing). Resolved via a product-owner fix chain: the Trace field corrected to reference the current defense-in-depth rationale and the bc-6 Related BCs.
+3. **Adversarial Pass 22** (fresh context): 1 finding — an `error-taxonomy.md` invoke/render/swallow precision nit on the `ProfilePathEscape` row (the Section-6 registration added at Burst 9 imprecisely described which layer invokes, which layer renders, and which layer swallows the error). Resolved via a formal-verifier fix chain: the row's invoke/render/swallow columns corrected to precisely name the CLEAR-path call site (invoke), the read/store sites (render), and the tolerant CLEAR-path-only swallow behavior (BC-1.4.038 Invariant 3).
+4. **Adversarial Passes 23, 24, and 25** (fresh context, each independently dispatched): **ALL THREE CLEAN — zero findings, novelty ZERO on each.** This **RE-ESTABLISHES** the 3-consecutive-clean adversarial convergence bar on the fully-corrected delta (BC-INDEX.md, bc-1-auth-identity.md, and error-taxonomy.md all current).
+5. **Second pre-gate consistency-validator audit** (fresh context, dispatched ahead of presenting the F2 human gate — the standard re-check required after any prior DRIFT finding, per the standing human convergence directive): returned **CONSISTENT — zero new findings.** The audit explicitly confirmed: (a) the Pass-20 gate-audit reconciliation (BC-1.4.040/ADR-0021 §9 guard reclassified defense-in-depth, `ProfilePathEscape` registered in `error-taxonomy.md`) is now fully and consistently propagated across every corpus surface, including `BC-INDEX.md` (closed by this burst's Pass 20); (b) no new cross-corpus drift was introduced by the Pass 20-22 fixes; (c) the F1-approved 4-story scope (`dpapi-storage-fix` + `honest-fail-message` bundled, `windows-docs`, `cloud_id-correctness`) remains fully covered with no scope creep; (d) `scripts/check-spec-counts.sh` and `scripts/check-bc-cumulative-counts.sh` both exit 0.
+6. **Verification re-run:** `scripts/check-spec-counts.sh` exit 0; `scripts/check-bc-cumulative-counts.sh` exit 0 (742 BCs across 9 files, unchanged — Passes 20-22 amended existing BC/index/error-taxonomy body text only, no BC added, removed, or renumbered); `vp-delta.md`'s recorded `input-hash` (`2db0acb`) reconfirmed current against its listed inputs (no VP-affecting change this burst).
+7. Did NOT stage the three pre-existing unrelated dirty files (`regression-state.json`, `sidecar-learning.md`, the modified `S-cycle3-env-tag` demo gif) — left untouched, per standing instruction carried across every prior burst.
+8. **Convergence-state consequence:** the 3-consecutive-clean adversarial streak is now **RE-ESTABLISHED at 3/3** on the fully-corrected delta, AND independently re-confirmed corpus-consistent by the second consistency-validator audit's CONSISTENT verdict (zero new findings). **F2 spec evolution is now formally CONVERGED + CONSISTENT — AWAITING HUMAN GATE.** The one carried-forward, non-blocking LOW (a bc-6 BC-6.2.016 cross-reference blocked by the pre-existing, cycle-004-unrelated TD-031 stable-anchor-hygiene hook violation, first recorded at Burst 9) remains open as a recorded maintenance item and is NOT a gate condition.
+9. Updated STATE.md via one full-content Write (v3.61 → v3.62): frontmatter (`current_step`, `cycle_004_status`), Phase Progress F2-SPEC-EVOLUTION row (status advanced to CONVERGED + CONSISTENT, AWAITING HUMAN GATE), Current Phase Steps table (Passes 20-25 + the second re-audit marked DONE, checkpoint #7 recorded, F2 human gate marked as the immediate next step, F3 incremental stories marked PENDING), Convergence Status / Concurrent Cycles / Constraints Carried Forward / Drift-Standing prose (trajectory extended through the second re-audit, clean-streak explicitly 3/3 RE-ESTABLISHED and consistency-confirmed, the LOW TD-031-blocked cross-ref still carried forward, prior Burst-9 full narrative paragraphs compacted to brief "historical" one-liners per the established per-burst compaction pattern), and Session Resume Checkpoint (recording NEXT-on-resume as awaiting/recording the F2 human-gate decision, and — on approval — dispatching `/vsdd-factory:phase-f3-incremental-stories`). No new DEC recorded — DEC-335 (the F1 human gate) remains the latest Decisions Log entry; the F2 human-gate decision, once made, will be the next DEC, deliberately not pre-recorded here.
+10. Appended this burst-log entry (Burst 10).
+
+**Adversary verdict:** Passes 20, 21, and 22 each returned a single small finding (a BC-INDEX propagation gap, a stale Trace-provenance sentence, and an error-taxonomy precision nit, respectively), all resolved via targeted fix chains with no new spec-content change beyond the correction itself. Passes 23, 24, and 25 each independently returned CLEAN, re-establishing the 3-consecutive-clean convergence bar. The subsequent second pre-gate consistency-validator audit — the standard re-check after any prior DRIFT finding — returned CONSISTENT with zero new findings, explicitly confirming no residual drift survived the Pass 20-22 fix round and no scope creep against the F1-approved 4-story scope. **Net convergence verdict: F2 IS NOW CONVERGED AND CONSISTENT.**
+
+**Outcome:** cycle-004 (`windows-correctness`) Phase F2 (spec evolution) is now **CONVERGED + CONSISTENT, AWAITING HUMAN GATE.** `total_bcs` unchanged at 742 this burst; `vp_count` unchanged at 55 (Passes 20-22 were BC-INDEX/Trace/error-taxonomy body-text-only fixes — no BC or VP added, removed, or renumbered). Adversarial finding trajectory, full run: 17→9→5→4→4→4→[sweep 3]→3→3→1→1→2→1→CLEAN→1→2→1→CLEAN→CLEAN→CLEAN→[gate-audit DRIFT 1H/1M/1L, reconciled]→1→1→1→CLEAN→CLEAN→CLEAN→[gate consistency re-audit: CONSISTENT]. Clean-streak **3/3 — RE-ESTABLISHED and consistency-confirmed.** **HUMAN CONVERGENCE DIRECTIVE (recorded, no DEC):** "continue to full 3-consecutive-clean-pass convergence, re-confirmed by a consistency-validator audit with no DRIFT" — now **SATISFIED.** **LOW carried forward (not a blocker):** the Burst-9 TD-031-blocked bc-6 BC-6.2.016 cross-reference remains open, non-blocking. **NEXT:** present the F2 human gate with the full 25-pass convergence history and both consistency-validator audits as evidence; on approval, dispatch `/vsdd-factory:phase-f3-incremental-stories`.
+
+**Codifications:** none this burst — no new DEC; DEC-335 (F1 human gate) remains the latest recorded decision. The Pass 20/21/22 fix-round outputs (`BC-INDEX.md` propagation fix, `bc-1-auth-identity.md` Trace-provenance correction, `error-taxonomy.md` invoke/render/swallow precision fix) are the codified F2 spec-evolution convergence output this burst. The re-established 3-consecutive-clean streak and the CONSISTENT second audit are the codified convergence-state output — F2 is now ready for its human gate.
+
+**Closes:** the Burst-9 gate-audit's residual propagation gap (the `BC-INDEX.md` staleness Pass 20 caught); the Pass-21 Trace-provenance staleness; the Pass-22 error-taxonomy precision nit; the 0/3 clean-streak reset from Burst 9 (re-established at 3/3); the requirement for a second, DRIFT-free consistency-validator audit before the F2 human gate. **Does NOT close:** F2 itself in the sense of advancing past the human gate — that decision is pending and is this checkpoint's own presentation; the LOW TD-031-blocked bc-6 cross-reference remains open as a recorded, non-blocking maintenance item; no cycle-001/002/003 standing Drift/Standing items are touched.
+
+### Counts reconciled this burst
+
+BCs: unchanged at **742** (Passes 20-22 amended existing `BC-INDEX.md`/BC-body/error-taxonomy text only; no BC added, removed, or renumbered). VPs: unchanged at **55** (no VP-affecting change in Passes 20-25). Holdout scenarios unchanged at 106. `total_stories` unchanged at 168 (F2 does not create stories). Reserved Windows device-name set unchanged at 30 (ADR-0021 §9, untouched this burst).
+
+### Details
+
+| Agent | Task | Output |
+|-------|------|--------|
+| adversary (Pass 20, fresh context) | Scoped adversarial review, round 20, on the Burst-9-corrected delta | 1 finding — `BC-INDEX.md` propagation miss |
+| product-owner (Pass 20 fix round) | Resolve Pass 20 finding | `BC-INDEX.md`'s BC-1.4.040 row updated: defense-in-depth classification + bc-6 cross-refs |
+| adversary (Pass 21, fresh context) | Scoped adversarial review, round 21 | 1 finding — stale Trace-provenance sentence in `bc-1-auth-identity.md` |
+| product-owner (Pass 21 fix round) | Resolve Pass 21 finding | Trace field corrected to reference current defense-in-depth rationale + bc-6 Related BCs |
+| adversary (Pass 22, fresh context) | Scoped adversarial review, round 22 | 1 finding — `error-taxonomy.md` invoke/render/swallow precision nit on `ProfilePathEscape` |
+| formal-verifier (Pass 22 fix round) | Resolve Pass 22 finding | Invoke/render/swallow columns corrected for the `ProfilePathEscape` row |
+| adversary (Pass 23, fresh context) | Scoped adversarial review, round 23 | CLEAN — zero findings |
+| adversary (Pass 24, fresh context) | Scoped adversarial review, round 24 | CLEAN — zero findings |
+| adversary (Pass 25, fresh context) | Scoped adversarial review, round 25 | CLEAN — zero findings; 3rd consecutive clean pass — RE-ESTABLISHES 3-consecutive-clean convergence |
+| consistency-validator (second pre-gate audit, fresh context) | Corpus-wide cross-document consistency re-audit ahead of F2 human gate | CONSISTENT — zero new findings |
+| state-manager | Verify accumulated work is internally consistent; commit it in one atomic commit; correct STATE.md; append this burst-log entry | This commit; `STATE.md`; `cycles/cycle-004/burst-log.md` (this entry) |
+
+**Files touched (Dim-1): 5 unique files (factory-artifacts, this burst)**
+
+- STATE.md
+- cycles/cycle-004/burst-log.md
+- specs/prd/BC-INDEX.md (modified)
+- specs/prd/bc-1-auth-identity.md (modified)
+- specs/prd/error-taxonomy.md (modified)
+
+**Dim-2 Attestation:** `scripts/check-spec-counts.sh` (8 bc files, exit 0) and `scripts/check-bc-cumulative-counts.sh` (742 total across 9 files, exit 0) both PASS — re-verified before this burst, recorded here per Defensive Sweep Discipline (S-7.02); `vp-delta.md`'s `input-hash` (`2db0acb`) confirmed current against its listed inputs (no VP-affecting change this burst); `ADR-0021`/`ADR-0022`/`architecture-delta.md`/`vp-delta.md` all confirmed unmodified since Burst 9 via `git status` and correctly excluded from this commit; the second consistency-validator audit's CONSISTENT verdict is itself the corpus-wide defensive sweep for this burst's propagation-completeness question, recorded here per Defensive Sweep Discipline.
+
+**Dim-5 Attestation:** N/A — no binary/WASM artifact produced by this burst.
+
+**Dim-6 Attestation:** N/A — no source code changed this burst (`.factory/` spec-delta convergence only, no `develop`-side commit).
+
+**Dim-7 Attestation:** N/A — no test-affecting change this burst; full regression remains PASS (4763/0/157) as of the cycle-003 F6/F7 hardening/convergence passes, unchanged.
