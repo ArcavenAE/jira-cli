@@ -609,3 +609,55 @@ BCs: unchanged at **742** (Passes 20-22 amended existing `BC-INDEX.md`/BC-body/e
 **Dim-6 Attestation:** N/A — no source code changed this burst (`.factory/` spec-delta convergence only, no `develop`-side commit).
 
 **Dim-7 Attestation:** N/A — no test-affecting change this burst; full regression remains PASS (4763/0/157) as of the cycle-003 F6/F7 hardening/convergence passes, unchanged.
+
+## Burst: Burst 11 — F2 HUMAN GATE APPROVED (DEC-336) — phase advanced F2 → F3, F3 incremental story decomposition DISPATCHED (2026-09-04)
+
+**Parent-commit:** Burst 10's commit (`develop` tip `42e92b46`, unchanged this burst — no `develop`-side commit).
+
+**Trigger:** Burst 10 left F2 spec evolution formally CONVERGED + CONSISTENT, AWAITING HUMAN GATE — 25 fresh-context adversarial passes across two attempts, each independently reaching a 3-consecutive-clean streak (Passes 17-19, then 23-25), and a second consistency-validator audit returning CONSISTENT (zero new findings). This burst presents that evidence at the F2 human gate and records the operator's decision.
+
+**Work performed this burst, in order:**
+
+1. **F2 human gate presented:** the full F2 convergence evidence — two 3-consecutive-clean adversarial runs (Passes 17-19, then 23-25 after the Burst-9 gate-audit reconciliation) and two consistency-validator audits (first found DRIFT 1H/1M/1L, reconciled; second returned CONSISTENT, zero new findings) — was presented to the human operator for approval.
+2. **Human APPROVED** the F2 spec delta at the gate, advancing the cycle to F3 (incremental story decomposition), with three explicit confirmations: (a) the 4-story DEC-335 scope (`dpapi-storage-fix` + `honest-fail-message` bundled, `windows-docs`, `cloud_id-correctness`) is correctly covered with no gap/creep, per the 2nd consistency audit; (b) keeping the path-traversal guard + clear-path adapter (BC-1.4.040 / `clear_dpapi_file_tolerating_path_escape`) as DEFENSE-IN-DEPTH — not removing them — is the desired call; (c) the classic-vs-scoped-token Assets honesty caveat in ADR-0022 (documenting that `cloud_id` acquisition may not enable Assets for `jr`'s classic tokens) is acceptable as written.
+3. **DEC-336 recorded** in the Decisions Log — collision check performed first: DEC-335 was the prior highest allocated ID, so DEC-336 is collision-free. DEC-336 codifies the approval decision and its three confirmations verbatim.
+4. **Phase frontmatter advanced F2 → F3.** `cycle_004_status` and `current_step` updated to reflect F2 CLOSED/APPROVED and F3 IN PROGRESS.
+5. **`/vsdd-factory:phase-f3-incremental-stories` DISPATCHED** — tasking story-writer with decomposing the human-approved 4-story scope into implementable story files and integrating them into the existing dependency graph without introducing cycles.
+6. Updated STATE.md via one full-content Write (v3.62 → v3.63): frontmatter (`phase` F2→F3, `cycle_004_status`, `current_step`), Decisions Log (new DEC-336 as the top row), Phase Progress table (F2-SPEC-EVOLUTION row → APPROVED; new F3-INCREMENTAL-STORIES row → IN PROGRESS), Current Phase Steps (reset for F3: F2 human gate marked DONE—APPROVED, story-decomposition dispatch IN PROGRESS, review + human gate PENDING; prior F2 steps archived into the Burst-1-through-10 rollup line), Convergence Status / Concurrent Cycles / Constraints Carried Forward / Drift-Standing prose (F2's verbose re-convergence narrative compacted to a brief historical summary now that the phase is closed, F3 status added), and Session Resume Checkpoint (Position = cycle-004 F3 IN PROGRESS; NEXT-on-resume = await story-writer output → consistency-validator + adversarial story review → F3 human gate → F4).
+7. Did NOT stage the three pre-existing unrelated dirty files (`regression-state.json`, `sidecar-learning.md`, the modified `S-cycle3-env-tag` demo gif) — left untouched, per standing instruction carried across every prior burst.
+8. Committed ONLY `STATE.md` and this burst-log entry to factory-artifacts in one atomic commit — no spec files changed this burst (F2's content was already fully committed at Burst 10; this burst is a human-gate decision plus a phase transition only).
+9. Appended this burst-log entry (Burst 11).
+
+**Adversary verdict:** N/A this burst — no adversarial pass was dispatched; this burst is a human-gate decision and phase transition, not a spec-content-producing or review burst.
+
+**Outcome:** cycle-004 (`windows-correctness`) Phase F2 (spec evolution) is now **CLOSED and APPROVED at its human gate (DEC-336)**. Phase **F3 (incremental story decomposition) is now IN PROGRESS** — story-writer dispatched. `total_bcs` unchanged at 742; `vp_count` unchanged at 55; holdout scenarios unchanged at 106; `total_stories` unchanged at 168 this burst (F3 will add new story files once story-writer's output is integrated). **NEXT:** story-writer produces the 4-story decomposition + dependency-graph integration → consistency-validator + adversarial story review → F3 story-decomposition human gate → F4 delta implementation.
+
+**Codifications:** **DEC-336** — the F2 human-gate approval decision, recorded with its three explicit confirmations (4-story scope coverage, defense-in-depth guard framing, classic-vs-scoped-token Assets caveat acceptability). This is the first new DEC since DEC-335 (F1 human gate).
+
+**Closes:** the F2 human gate (the final open item from Burst 10's CONVERGED + CONSISTENT, AWAITING HUMAN GATE status); the F2 spec-evolution phase for cycle-004 in its entirety (architect + product-owner + formal-verifier deliverables, 25-pass adversarial convergence, two consistency-validator audits, and now the human approval). **Does NOT close:** cycle-004 itself — F3 through F7 remain ahead; the LOW TD-031-blocked bc-6 BC-6.2.016 cross-reference remains open as a recorded, non-blocking maintenance item; no cycle-001/002/003 standing Drift/Standing items are touched.
+
+### Counts reconciled this burst
+
+BCs: unchanged at **742**. VPs: unchanged at **55**. Holdout scenarios unchanged at 106. `total_stories` unchanged at 168 (F3 will add new story files once story-writer's output is integrated — no story files were produced yet as of this burst). Reserved Windows device-name set unchanged at 30 (ADR-0021 §9, untouched this burst).
+
+### Details
+
+| Agent | Task | Output |
+|-------|------|--------|
+| orchestrator | Present the F2 human gate with the full 25-pass convergence history + both consistency-validator audits as evidence | Human APPROVED, with three explicit confirmations (scope coverage, defense-in-depth framing, Assets caveat acceptability) |
+| human | F2 human-gate decision | APPROVED — advance to F3 |
+| orchestrator | Dispatch F3 | `/vsdd-factory:phase-f3-incremental-stories` dispatched to story-writer |
+| state-manager | Record DEC-336 (collision-checked against DEC-335); advance phase frontmatter F2→F3; commit STATE.md + this burst-log entry in one atomic commit | This commit; `STATE.md`; `cycles/cycle-004/burst-log.md` (this entry) |
+
+**Files touched (Dim-1): 2 unique files (factory-artifacts, this burst)**
+
+- STATE.md
+- cycles/cycle-004/burst-log.md
+
+**Dim-2 Attestation:** No spec files changed this burst (human-gate decision + phase transition only) — `scripts/check-spec-counts.sh` and `scripts/check-bc-cumulative-counts.sh` were not re-run since no BC/VP/index content was touched; both remained exit-0 as of Burst 10's re-verification. DEC-namespace collision check performed and confirmed clean: DEC-335 was the prior highest allocated ID, DEC-336 is collision-free.
+
+**Dim-5 Attestation:** N/A — no binary/WASM artifact produced by this burst.
+
+**Dim-6 Attestation:** N/A — no source code changed this burst (`.factory/` human-gate bookkeeping only, no `develop`-side commit).
+
+**Dim-7 Attestation:** N/A — no test-affecting change this burst; full regression remains PASS (4763/0/157) as of the cycle-003 F6/F7 hardening/convergence passes, unchanged.
