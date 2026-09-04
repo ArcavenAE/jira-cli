@@ -4,7 +4,7 @@ level: ops
 version: "1.0"
 status: in-progress
 producer: state-manager
-timestamp: 2026-09-03T18:30:00Z
+timestamp: 2026-09-03T22:50:00Z
 cycle: "cycle-004"
 inputs: [STATE.md]
 input-hash: "[live-state]"
@@ -209,6 +209,8 @@ BCs: 733 → **742** (+9: BC-1.4.035..040, BC-1.2.052..054; BC-1.4.028 amended i
 9. Updated STATE.md via one full-content Write (v3.55 → v3.56): frontmatter, Phase Progress F2-SPEC-EVOLUTION row, Current Phase Steps table, Convergence Status / Concurrent Cycles / Constraints Carried Forward / Drift-Standing prose, and Session Resume Checkpoint all brought current to reflect Passes 1-4 complete+fixed, clean-streak 0/3, Pass 5 NEXT.
 10. Appended this burst-log entry (Burst 4).
 
+**Adversary verdict:** Not a single aggregate verdict — this burst's substance IS four scoped adversarial passes (Pass 1 through Pass 4), each already narrated inline above with its own finding count and fix-round outcome (17 → 9 → 5 → 4, all findings fully resolved via architect→product-owner→formal-verifier fix chains). No standalone top-level `adversary`-agent verdict beyond what the per-pass descriptions in "Work performed this burst" already capture. No CLEAN/BLOCKED convergence verdict applies yet — clean-streak remains 0/3, convergence still in progress.
+
 **Outcome:** cycle-004 (`windows-correctness`) Phase F2 (spec evolution) remains IN PROGRESS. `total_bcs` unchanged at 742 this burst (Passes 1-4 were BC-body refinements, not new BCs); `vp_count` advances 41 → 54 (+13, formal-verifier's delta). Adversarial finding trajectory: 17 → 9 → 5 → 4 (all findings from all 4 passes resolved via architect→product-owner→formal-verifier fix chains). Clean-streak 0/3 — three CONSECUTIVE clean passes are required to converge; none has yet been clean. **NEXT:** dispatch adversarial Pass 5 (fresh context), continuing toward 3 consecutive clean passes, then `consistency-validator` fresh-context audit, then the F2 human gate.
 
 **Codifications:** none this burst — no new DEC; DEC-335 (F1 human gate) remains the latest decision. The Pass 1-4 fix-chain outputs (VP delta + BC-body amendments + ADR-0021/ADR-0022 refinements) are the codified F2 spec-evolution convergence output.
@@ -234,7 +236,7 @@ BCs: unchanged at **742** (Passes 1-4 amended existing BC bodies; no BC added or
 | adversary (Pass 4, fresh context) | Scoped adversarial review, round 4 | 4 findings (0 HIGH/2 MED/2 LOW), novelty MOD-LOW |
 | state-manager | Verify recovered work is internally consistent; commit it in one atomic commit; correct STATE.md; append this burst-log entry | This commit; `STATE.md`; `cycles/cycle-004/burst-log.md` (this entry) |
 
-**Files touched (Dim-1): 7 unique files (factory-artifacts, this burst)**
+**Files touched (Dim-1): 8 unique files (factory-artifacts, this burst)**
 
 - STATE.md
 - cycles/cycle-004/burst-log.md
@@ -246,6 +248,64 @@ BCs: unchanged at **742** (Passes 1-4 amended existing BC bodies; no BC added or
 - specs/prd/BC-INDEX.md (modified)
 
 **Dim-2 Attestation:** `scripts/check-spec-counts.sh` (8 bc files, exit 0) and `scripts/check-bc-cumulative-counts.sh` (742 total across 9 files, exit 0) both PASS — re-verified before this burst, recorded here per Defensive Sweep Discipline (S-7.02); `vp-delta.md`'s `input-hash` confirmed current against its listed inputs; a corpus grep for the stale "41 VP" count found it only in genuinely-historical surfaces (cycle-003 files, prior cycle-004 burst-log Burst 3 entry, session-reviews) which correctly describe a past point in time and are left unchanged — no live-truth surface other than STATE.md carried the stale count.
+
+**Dim-5 Attestation:** N/A — no binary/WASM artifact produced by this burst.
+
+**Dim-6 Attestation:** N/A — no source code changed this burst (`.factory/` spec-delta convergence only, no `develop`-side commit).
+
+**Dim-7 Attestation:** N/A — no test-affecting change this burst; full regression remains PASS (4763/0/157) as of the cycle-003 F6/F7 hardening/convergence passes, unchanged.
+
+## Burst: Burst 5 — F2 scoped adversarial convergence, Passes 5-6 + post-Pass-6 consistency sweep — INTERMEDIATE CHECKPOINT #2 (2026-09-03)
+
+**Parent-commit:** `ab0a7fa5` (`develop` tip `42e92b46`, unchanged this burst — no `develop`-side commit).
+
+**Trigger:** two further rounds of orchestrator-driven F2 scoped adversarial review (Pass 5, Pass 6) plus a post-Pass-6 fresh-context consistency-validator sweep had accumulated uncommitted on top of the Burst 4 checkpoint (`ab0a7fa5`), leaving STATE.md 2 passes + 1 sweep behind reality (it still read "Pass 5 NEXT"). This session resumed cleanly — no crash or agent-stall this burst, unlike Bursts 3-4. This burst makes that work durable via one atomic commit and brings STATE.md current. No new human decision was made — DEC-335 (the F1 human gate) remains the latest decision; no new DEC is recorded this burst.
+
+**Work performed this burst, in order:**
+
+1. **Adversarial Pass 5** (fresh context, scoped to the F2 spec delta as refined through Pass 4): 4 findings (1 HIGH / 1 MED / 2 LOW), novelty substantive. The HIGH was a second-order/propagation defect surfaced by an earlier-pass fix interacting with existing spec text — exactly the class of catch a fresh-context adversarial loop exists to find. Resolved via a full architect→product-owner→formal-verifier fix chain.
+2. **Adversarial Pass 6** (fresh context): 4 findings (2 HIGH / 2 MED), novelty HIGH. Both HIGHs were second-order/propagation defects from earlier fixes interacting — the fresh-context loop's highest-value catches this cycle. One HIGH's fix round introduced a new debug-only test seam, `JR_FORCE_DPAPI_FALLBACK` (`#[cfg(debug_assertions)]`-gated only; production non-Windows behavior unchanged, hardcoded `false`), letting the DPAPI-fallback branch of `engage_dpapi_fallback` be exercised deterministically off real Windows; a new release-gate VP, `VP-AUTHDX-023`, pins a source-scan test asserting the `#[cfg(debug_assertions)]` guard sits within 5 source lines of the env-var read (same convention as `JR_TEST_BLOCK_UNTIL_SIGINT`/`JR_CONFIG_DIR`), and its opposing-outcome tests require `env_lock`-style `std::sync::Mutex` serialization (not `--test-threads=1`) since they assert conflicting outcomes from the same call site. `vp_count` 54 → 55 (+1, this burst). Resolved via the same architect→product-owner→formal-verifier fix-chain pattern.
+3. **Post-Pass-6 fresh-context consistency-validator sweep.** Rather than deferring quality-checking until 3 consecutive clean adversarial passes are reached, a comprehensive cross-file consistency-validator sweep ran immediately after Pass 6 to flush the recurring cross-file-propagation finding class comprehensively in one pass instead of piecemeal per-adversarial-round. Findings: 3 total (0 CRIT / 0 HIGH / 2 MED / 1 LOW) — BC-1.4.028's H1 heading needed title enrichment to reflect its amended scope; a dead `prd-delta.md` citation lingered in `BC-INDEX.md` (the file was renamed/restructured earlier in F2, and the stale citation was never swept); a VP-015 terminology drift used "four-outcome" in one place where "four-way" (the term used everywhere else describing BC-1.4.028's partial-state discrimination) was correct. All 3 fixed. The validator's overall assessment: after 6 adversarial rounds the corpus is in unusually good shape — no count-integrity breaks, no broken BC↔VP↔ADR traceability, no semantic mis-anchors.
+4. **Verification re-run:** `scripts/check-spec-counts.sh` exit 0; `scripts/check-bc-cumulative-counts.sh` exit 0 (742 BCs across 9 files, unchanged since Burst 3 — Passes 5-6 and the sweep were all BC-body/VP-body edits, no BC added/removed); `vp-delta.md`'s recorded `input-hash` (`00725ec`) confirmed current against its listed inputs.
+5. Did NOT stage the three pre-existing unrelated dirty files (`regression-state.json`, `sidecar-learning.md`, the modified `S-cycle3-env-tag` demo gif) — left untouched, per standing instruction carried across every prior burst.
+6. Corrected two pre-existing structural gaps in this burst-log's own Burst 4 entry (found by this session's structural validation, not by an adversarial pass): added a missing `**Adversary verdict:**` block, and fixed a Dim-1 cardinality mismatch (headline claimed 7 unique files against an 8-item enumerated list — the correct count is 8).
+7. Updated STATE.md via one full-content Write (v3.56 → v3.57): frontmatter, Phase Progress F2-SPEC-EVOLUTION row, Current Phase Steps table, Convergence Status / Concurrent Cycles / Constraints Carried Forward / Drift-Standing prose, and Session Resume Checkpoint all brought current to reflect Passes 5-6 and the consistency sweep complete+fixed, VP count 54→55, clean-streak 0/3, Pass 7 NEXT.
+8. Appended this burst-log entry (Burst 5).
+
+**Adversary verdict:** Not a single aggregate verdict — this burst's substance is two scoped adversarial passes (Pass 5, Pass 6) plus one non-adversarial consistency-validator sweep, each already narrated inline above with its own finding count and fix-round outcome (4 → 4 findings across the two adversarial passes, both fully resolved; 3 findings from the sweep, also fully resolved). No standalone top-level `adversary`-agent verdict beyond what the per-pass descriptions in "Work performed this burst" already capture. No CLEAN/BLOCKED convergence verdict applies yet — clean-streak remains 0/3, convergence still in progress; Pass 7 is next.
+
+**Outcome:** cycle-004 (`windows-correctness`) Phase F2 (spec evolution) remains IN PROGRESS. `total_bcs` unchanged at 742 this burst (Passes 5-6 were BC-body refinements, not new BCs); `vp_count` advances 54 → 55 (+1, VP-AUTHDX-023 added during the Pass-6 fix round). Adversarial finding trajectory: 17 → 9 → 5 → 4 → 4 → 4 (all findings from all 6 passes resolved via architect→product-owner→formal-verifier fix chains); the post-Pass-6 consistency sweep found and fixed 3 further findings. Clean-streak 0/3 — three CONSECUTIVE clean passes are required to converge; none has yet been clean. **NEXT:** dispatch adversarial Pass 7 (fresh context), continuing toward 3 consecutive clean passes, then the F2 human gate (re-running the consistency-validator only if further fixes land after Pass 7+).
+
+**Codifications:** none this burst — no new DEC; DEC-335 (F1 human gate) remains the latest decision. The Pass 5-6 fix-chain outputs (VP-AUTHDX-023 + its release-gate/serialization requirements, BC-body amendments, ADR-0021/ADR-0022 refinements) plus the consistency sweep's 3 fixes are the codified F2 spec-evolution convergence output.
+
+**Closes:** the STATE.md staleness that had accumulated across Passes 5-6 and the post-Pass-6 sweep (STATE.md previously still read "Pass 5 NEXT," now current). Also closes the pre-existing Burst-4 structural gaps (missing Adversary verdict block, Dim-1 count mismatch) noted in item 6 above. **Does NOT close:** F2 itself, which remains IN PROGRESS pending Pass 7+ (to reach 3 consecutive clean passes) and the F2 human gate; no cycle-001/002/003 standing Drift/Standing Items are touched.
+
+### Counts reconciled this burst
+
+BCs: unchanged at **742** (Passes 5-6 amended existing BC bodies; no BC added or removed). VPs: 54 → **55** (+1: VP-AUTHDX-023). Holdout scenarios unchanged at 106. `total_stories` unchanged at 168 (F2 does not create stories). Reserved Windows device-name set unchanged at 30 (ADR-0021 §9).
+
+### Details
+
+| Agent | Task | Output |
+|-------|------|--------|
+| adversary (Pass 5, fresh context) | Scoped adversarial review, round 5 | 4 findings (1 HIGH/1 MED/2 LOW), novelty substantive |
+| architect + product-owner + formal-verifier (Pass 5 fix round) | Resolve Pass 5 findings | BC-body amendments; fix chain closing the second-order propagation HIGH |
+| adversary (Pass 6, fresh context) | Scoped adversarial review, round 6 | 4 findings (2 HIGH/2 MED), novelty HIGH |
+| architect + product-owner + formal-verifier (Pass 6 fix round) | Resolve Pass 6 findings | `JR_FORCE_DPAPI_FALLBACK` debug-seam + `VP-AUTHDX-023` release-gate pin + `env_lock` serialization requirement; further BC/ADR amendments |
+| consistency-validator (fresh context, post-Pass-6 sweep) | Comprehensive cross-file consistency sweep | 3 findings (0 CRIT/0 HIGH/2 MED/1 LOW): BC-1.4.028 H1 title enrichment, dead `prd-delta.md` citation removed from BC-INDEX, VP-015 "four-way"/"four-outcome" terminology corrected |
+| state-manager | Verify accumulated work is internally consistent; fix Burst-4 structural gaps; commit it in one atomic commit; correct STATE.md; append this burst-log entry | This commit; `STATE.md`; `cycles/cycle-004/burst-log.md` (this entry + Burst-4 fixes) |
+
+**Files touched (Dim-1): 7 unique files (factory-artifacts, this burst)**
+
+- STATE.md
+- cycles/cycle-004/burst-log.md
+- cycles/cycle-004/phase-f2-spec-evolution/architecture-delta.md (modified)
+- cycles/cycle-004/phase-f2-spec-evolution/vp-delta.md (modified)
+- specs/architecture/decisions/ADR-0021-windows-oauth-secret-storage-dpapi-fallback.md (modified)
+- specs/prd/bc-1-auth-identity.md (modified)
+- specs/prd/BC-INDEX.md (modified)
+
+**Dim-2 Attestation:** `scripts/check-spec-counts.sh` (8 bc files, exit 0) and `scripts/check-bc-cumulative-counts.sh` (742 total across 9 files, exit 0) both PASS — re-verified before this burst, recorded here per Defensive Sweep Discipline (S-7.02); `vp-delta.md`'s `input-hash` (`00725ec`) confirmed current against its listed inputs; a corpus grep for the stale "54 VP"/"41 VP" counts found them only in genuinely-historical surfaces (cycle-003 files, prior cycle-004 burst-log Burst 3/4 entries, session-reviews) which correctly describe a past point in time and are left unchanged — no live-truth surface other than STATE.md carried a stale count.
 
 **Dim-5 Attestation:** N/A — no binary/WASM artifact produced by this burst.
 

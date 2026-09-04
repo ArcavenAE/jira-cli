@@ -118,6 +118,126 @@ Gating the call site is strictly safer than making the message platform-neutral:
 platform-neutral message would still be a NEW code path on non-Windows that does not exist
 today, which Invariant 3's "byte-for-byte" wording rules out regardless of message wording.
 
+**Pass-5 adversarial-review correction (2026-09-03, Finding #1) — a debug-only test-engagement
+seam, because the production gate makes §2's routing branch structurally UNREACHABLE on
+non-Windows.** The Pass-1 fix above is correct and stays exactly as specified: production
+non-Windows behavior is, and remains, hardcoded `false`. But that gate has a direct, previously
+unstated consequence for testability — with `engage_dpapi_fallback` hardcoded `false` on
+`#[cfg(not(windows))]`, the `Err(e) if engage_dpapi_fallback(&e) => { … }` match arms in
+`store_oauth_tokens` (§2) can **never** be entered on a Linux/macOS test run, no matter how the
+test mocks `keyring::Error::TooLong` — the delete-keyring-first ordering, the rollback logic, and
+the stale-keyring-shadow closure (Finding #1, Pass-3 review; BC-1.4.035 Invariant 1) are therefore
+dead code on every CI runner except a real (or cross-compiled) Windows one. A downstream VP
+(VP-AUTHDX-022, and sub-portions of VP-AUTHDX-011/012) that asserts outcomes of `store_oauth_tokens`
+actually taking that branch — e.g. "both keyring keys are absent after `store_oauth_tokens`
+returns `Ok`" — is not merely hard to run in default CI, it describes a code path the production
+gate makes unreachable there **by construction**. This is the contradiction Finding #1 identifies:
+Pass-1's fix (correctly) closed off the branch for production correctness, and in doing so silently
+closed off the branch for default-CI testability too, without either pass noticing the entanglement.
+
+**Decision: add a `#[cfg(debug_assertions)]`-gated, opt-in test seam, `JR_FORCE_DPAPI_FALLBACK`,**
+following this codebase's established `JR_*` debug-only seam convention byte-for-byte (see
+CLAUDE.md's "AI Agent Notes" seam table — e.g. `JR_S303_PERSIST_FAIL`, `JR_SERVICE_NAME`): a single
+env-var check, gated out of release builds entirely, read at exactly one call site.
+
+```rust
+#[cfg(windows)]
+fn engage_dpapi_fallback(err: &keyring::Error) -> bool {
+    auth_windows_store::should_fallback_to_dpapi(err)
+}
+
+#[cfg(not(windows))]
+fn engage_dpapi_fallback(err: &keyring::Error) -> bool {
+    // JR_FORCE_DPAPI_FALLBACK=1: debug-only test seam (Pass-5 review,
+    // Finding #1). Lets a Linux/macOS CI runner exercise
+    // store_oauth_tokens's DPAPI-routing branch -- delete-keyring-first
+    // ordering, rollback-on-partial-overflow, and the
+    // neither-backend-on-store-failure shape (VP-AUTHDX-011/012/022) --
+    // none of which is otherwise reachable on non-Windows, since this
+    // function is hardcoded `false` in production. #[cfg(debug_assertions)]
+    // -gated: compiled out of release builds entirely, identical in shape
+    // to every other JR_* debug-only seam in this codebase. PRODUCTION
+    // non-Windows behavior is UNCHANGED by this seam's existence: absent an
+    // explicit opt-in (env var set) in a debug build, this function still
+    // returns `false` unconditionally -- BC-1.4.035 Invariant 3 is not
+    // weakened, only made independently testable at the branch level.
+    #[cfg(debug_assertions)]
+    {
+        if std::env::var("JR_FORCE_DPAPI_FALLBACK").as_deref() == Ok("1") {
+            return auth_windows_store::should_fallback_to_dpapi(err);
+        }
+    }
+    false
+}
+```
+
+**What the seam does, and does NOT, make testable on non-Windows.** Even with the seam engaged,
+`auth_windows_store::store_pair`'s `#[cfg(not(windows))]` arm (§3) is unchanged — it ALWAYS
+returns `DpapiFallbackFailed` immediately after the guard call; it never succeeds off Windows. The
+seam therefore makes exactly ONE additional shape exercisable in default CI: **delete-then-fail** —
+given a pre-existing, fitting keyring pair and a mocked `TooLong`, `store_oauth_tokens` deletes both
+namespaced keyring keys FIRST (per §2's "Ordering, and why"), then calls `store_pair`, which fails;
+the observable end state is "neither backend holds a pair for this profile, `store_oauth_tokens`
+returns `Err`." This is a real, meaningful regression pin for the delete-first ordering decision
+(§2) and for the stale-keyring-shadow closure's crash-safety reasoning (a mid-window fault must
+leave the profile fully credential-less, never a stale-but-present keyring pair) — it is NOT a
+weaker substitute for that reasoning, it is the honest cross-platform slice of it. What the seam
+categorically CANNOT make testable off Windows is the **success** shape — `store_oauth_tokens`
+returning `Ok`, the DPAPI file actually holding the fresh pair, and a subsequent `load_oauth_tokens`
+reading it back — because that requires `store_pair`'s real, Windows-only DPAPI-protect/wrap/
+temp-write/rename implementation to actually run and succeed, which is structurally impossible on
+any non-Windows target regardless of this seam. See the companion `architecture-delta.md`'s
+"Pass-5 architect guidance for formal-verifier" section for the exact, corrected per-VP
+CI-classification this seam requires.
+
+**Doc-fallout note for F4 (expanded, Pass-6 adversarial review, 2026-09-03, Finding #3).** A
+Pass-6 review found this note incomplete: it named only the CLAUDE.md documentation step, but
+`JR_FORCE_DPAPI_FALLBACK` gates a security-critical credential-storage routing decision, and this
+codebase's established `JR_*` debug-only-seam convention (CLAUDE.md's "AI Agent Notes" — see
+`JR_SERVICE_NAME`, `JR_STDIN_IS_TTY`, `JR_TEST_BLOCK_UNTIL_SIGINT`, `JR_BASE_URL`, and every other
+listed seam) requires THREE things for a seam of this kind, not one. F4's `dpapi-storage-fix` story
+MUST ship all three in the SAME commit that introduces the seam:
+
+- **(a) A dedicated `tests/jr_force_dpapi_fallback_release_gate.rs` pin**, matching the sibling-seam
+  convention byte-for-byte (model it on `tests/jr_test_block_until_sigint_release_gate.rs` or
+  `tests/config_dir_release_gate.rs`): the test asserts `#[cfg(debug_assertions)]` appears within 5
+  source lines of the `JR_FORCE_DPAPI_FALLBACK` env-var read in `src/api/auth.rs`'s
+  `#[cfg(not(windows))] fn engage_dpapi_fallback` (§1 above) — proving, structurally, that a release
+  build compiles the seam's env-var read out entirely, not merely that it happens to return `false`
+  in today's source. This is a NEW test file, not an addition to an existing release-gate test, per
+  the one-file-per-seam convention every sibling seam already follows.
+- **(b) The CLAUDE.md `JR_*` seam-table entry** for `JR_FORCE_DPAPI_FALLBACK` (already required by
+  the pre-Pass-6 text above) — unchanged, still required, still in the same commit.
+- **(c) An explicit statement, in both the CLAUDE.md entry and the `tests/
+  jr_force_dpapi_fallback_release_gate.rs` doc comment, that the seam affects `#[cfg(debug_assertions)]`
+  builds ONLY and is compiled out of release** — production non-Windows behavior stays hardcoded
+  `false` unconditionally, exactly as §1's code comment already documents; the release-gate test
+  (a) is what makes this a proven property rather than an assertion resting on the seam's current
+  source shape.
+
+**Serialization requirement for the two opposing-outcome non-Windows tests (Pass-6 review, flagged
+for Finding #4, which the formal-verifier specs into the VPs — not resolved here).** Because
+`JR_FORCE_DPAPI_FALLBACK` is a process-global environment variable, two test bodies observe
+OPPOSITE `engage_dpapi_fallback` outcomes on the identical non-Windows target depending solely on
+whether it is set: the pre-existing legacy "Unlock your keychain" message test (asserted with the
+env var UNSET) and the new VP-AUTHDX-011/012/022 delete-then-fail tests (§1 above; asserted with the
+env var SET to `1`). Run in the same test binary without coordination, these two classes race —
+`cargo test`'s default parallel test execution can interleave a `set_var`/`remove_var` from one
+thread with an in-flight assertion in another, non-deterministically flipping either test's outcome.
+**These MUST be serialized via an `env_lock`-style mutex**, exactly as CLAUDE.md documents for
+`JR_SERVICE_NAME` in `tests/oauth_refresh_integration.rs` (a `std::sync::Mutex` guarding every test
+that reads or writes the shared env var, held for the duration of the env-var-dependent section) —
+not `#[serial]`/a crate-level attribute unless one is already in use elsewhere in this codebase for
+the same purpose, and not test-binary-level `--test-threads=1`, which would serialize unrelated
+tests too. This requirement governs the VP test implementation the formal-verifier specs (F6/F4
+scope) — it does not change ADR-0021's production code shape in §1/§2 above.
+
+**Doc-fallout note for F4 (original).** When this seam ships, CLAUDE.md's "AI Agent Notes" `JR_*`
+seam table gains a `JR_FORCE_DPAPI_FALLBACK` entry in the SAME commit, per this codebase's own
+codified doc-fallout convention (see the existing note there about `JR_BULK_UNKNOWN_GRACE_SECS`/
+`JR_BULK_AWAIT_TIMEOUT_SECS` shipping without it once, retroactively fixed). Not done here — this
+ADR is a design document, not the `src/`/`CLAUDE.md` change itself.
+
 ### 2. The access/refresh pair is stored ENTIRELY in one backend, never split
 
 `store_oauth_tokens` treats the pair as one atomic unit at the BACKEND-SELECTION level, not
@@ -293,9 +413,17 @@ fn file_path(profile: &Profile) -> std::path::PathBuf {
 #[cfg(windows)]
 mod dpapi {
     // CryptProtectData/CryptUnprotectData via windows-sys (see §5 for the
-    // dependency decision). User scope only — CRYPTPROTECT_LOCAL_MACHINE
-    // is never passed; that flag would let ANY local user decrypt the
-    // blob, defeating the point of storing a per-user OAuth secret.
+    // dependency decision).
+    //
+    // dwFlags = CRYPTPROTECT_UI_FORBIDDEN (0x1) (Pass-5 adversarial review,
+    // Finding #3). Suppresses any OS-level UI prompt CryptProtectData/
+    // CryptUnprotectData could otherwise raise -- which would hang, not
+    // merely degrade, a headless/CI/service process (a real target: see
+    // EC-1.4.035-3 and the F4 headless-validation spike, architecture-delta
+    // §9 item 3). CRYPTPROTECT_LOCAL_MACHINE (0x4) is never set, in either
+    // direction of this flag word -- that flag would let ANY local user
+    // decrypt the blob, defeating the point of storing a per-user OAuth
+    // secret. User scope, never machine scope, UI forbidden.
     pub fn protect(plaintext: &[u8]) -> std::io::Result<Vec<u8>> { /* … */ }
     pub fn unprotect(blob: &[u8]) -> std::io::Result<Vec<u8>> { /* … */ }
 }
@@ -434,20 +562,43 @@ legacy-flat-key recovery, which is unchanged):
    non-oversized secret on every platform).
 2. Both namespaced keyring keys absent → **NEW:** try `auth_windows_store::load_pair(profile)`.
    - `Ok(Some((a, r)))` → return them.
-   - `Err(e)` where `e.downcast_ref::<CorruptSecretFile>()` is `Some` (file present but
-     corrupt/undecryptable — see Finding #2 note in §3) → propagate a distinct, force-re-login
-     error: `"OAuth credentials for profile {profile:?} could not be decrypted
-     (the file may be corrupted, or was created by a different Windows user account). Run
-     \"jr auth login --oauth --profile {profile}\" to re-authenticate."` — never silently
+   - `Err(e)` where `e.downcast_ref::<ProfilePathEscape>()` is `Some` (the profile name itself
+     fails `reject_unsafe_profile_component`, §9) → **checked FIRST, before `CorruptSecretFile`
+     or any other discrimination (Pass-5 adversarial review, Finding #2).** Propagate a distinct
+     exit-64 `JrError::UserError` naming the invalid profile — e.g. `"Profile name {profile:?}
+     is not valid for credential storage on this platform ({reason}). Choose a different profile
+     name."`, where `{reason}` is a short, variant-specific phrase (e.g. "contains a path
+     separator," "is a reserved Windows device name") derived from the `ProfilePathEscape`
+     variant, never the generic backend-IO wording below. This is required by BC-1.4.040
+     Postcondition 6 and was previously unreachable: without this arm checked first, a
+     `ProfilePathEscape` (which `anyhow`'s `?`-propagation through `file_path` turns into an
+     ordinary `anyhow::Error` indistinguishable by TYPE from any other `load_pair` failure unless
+     explicitly downcast-checked) would fall through to the generic backend/IO branch below and be
+     rendered as a misleading "check file permissions" message that never mentions the actual
+     problem (an invalid profile name).
+   - `Err(e)` where (the above check did not match, and) `e.downcast_ref::<CorruptSecretFile>()`
+     is `Some` (file present but corrupt/undecryptable — see Finding #2 note in §3) → propagate a
+     distinct, force-re-login error: `"OAuth credentials for profile {profile:?} could not be
+     decrypted (the file may be corrupted, or was created by a different Windows user account).
+     Run \"jr auth login --oauth --profile {profile}\" to re-authenticate."` — never silently
      treated as "no token," which would misleadingly suggest the user never logged in.
-   - `Err(e)` otherwise (a genuine backend/IO error reading an existing file — e.g. permission
-     denied, a disk I/O failure) → propagate a distinct, NON-re-login error: `"Could not read
-     stored OAuth credentials for profile {profile:?}: {e}. Check file permissions under
-     %LOCALAPPDATA%\jr\secrets\{profile}\ and try again."` — re-login is not suggested, since
-     re-authenticating would hit the identical read failure and would needlessly mint a new,
-     unrevoked Atlassian grant.
+   - `Err(e)` otherwise (neither of the above — a genuine backend/IO error reading an existing
+     file, e.g. permission denied, a disk I/O failure) → propagate a distinct, NON-re-login error:
+     `"Could not read stored OAuth credentials for profile {profile:?}: {e}. Check file
+     permissions under %LOCALAPPDATA%\jr\secrets\{profile}\ and try again."` — re-login is not
+     suggested, since re-authenticating would hit the identical read failure and would needlessly
+     mint a new, unrevoked Atlassian grant.
    - `Ok(None)` → fall through to the existing `"default"`-only legacy-flat-key check, then the
      existing "No stored OAuth token" error (unchanged).
+
+**Discrimination order, stated once, applies everywhere `anyhow::Error` from this module reaches a
+message-rendering call site: `ProfilePathEscape` FIRST, then `CorruptSecretFile` (read path only),
+then `DpapiFallbackFailed` (store path only, §6), then the generic/legacy fallback.** This ordering
+is not arbitrary — `ProfilePathEscape` is checked before any other marker at every call site
+because it is the only one of the three that signals a problem with the CALLER's input (the
+profile name itself), not with the credential or the storage backend; conflating it with either of
+the other two would misdirect the user toward "re-authenticate" or "check file permissions" when
+the actual fix is "use a different profile name."
 3. Exactly one namespaced keyring key present (partial write) → **existing logic is extended,
    not replaced:** first attempt the existing `"default"`-only legacy-pair recovery (unchanged);
    if that doesn't resolve it, additionally check `auth_windows_store::load_pair(profile)` — if
@@ -532,19 +683,29 @@ The four existing "Unlock your keychain" message sites in `src/api/auth.rs` (F1 
 §5.2, sites 1–4) are revised:
 
 - **Site 1 (`oauth_login`'s store-failure `map_err`) and Site 3
-  (`refresh_oauth_token_with_url`'s post-refresh store-failure `map_err`):** branch
-  on `e.downcast_ref::<DpapiFallbackFailed>()`.
-  - `Some(_)` → **new honest-fail message**: `"Authorization succeeded with Atlassian, but the
+  (`refresh_oauth_token_with_url`'s post-refresh store-failure `map_err`):** branch, in order,
+  first on `e.downcast_ref::<ProfilePathEscape>()`, then (only if that did not match) on
+  `e.downcast_ref::<DpapiFallbackFailed>()`.
+  - **`ProfilePathEscape` `Some(_)` → checked FIRST at both sites (Pass-5 adversarial review,
+    Finding #2).** Same distinct exit-64 "invalid profile name" `JrError::UserError` as the read
+    path (§4) — never the honest-fail message, never "Unlock your keychain." This case can only
+    arise here if a profile name that passed whatever guard exists at profile-creation time (there
+    is none today — `Profile::from(String)` is unvalidated, ADR-0011) later fails
+    `reject_unsafe_profile_component` inside `store_pair`'s guard call; it is included for
+    completeness and symmetry with the read path, not because it is expected to fire often in
+    practice.
+  - **`DpapiFallbackFailed` `Some(_)` → new honest-fail message** (only reached if
+    `ProfilePathEscape` did not match): `"Authorization succeeded with Atlassian, but the
     OAuth tokens were too large for Windows Credential Manager's 2560-byte limit AND jr's
     encrypted-file fallback also failed ({inner}). Check available disk space and file
     permissions, then run \"jr auth login --oauth --profile {profile}\" again. You must first
     revoke the now-unused Atlassian grant: visit
     https://id.atlassian.com/manage-profile/apps."` — the revoke step is stated as a required
     action, not an aside, per DEC-334.
-  - `None` → unchanged existing "Unlock your keychain…" message (still accurate: every error
-    that reaches this branch with no `DpapiFallbackFailed` marker is a genuine lock/permission
-    condition on the small-secret keyring path, or a non-Windows backend error where DPAPI was
-    never engaged at all).
+  - **Neither marker matched → unchanged existing "Unlock your keychain…" message** (still
+    accurate: every error that reaches this branch with neither a `ProfilePathEscape` nor a
+    `DpapiFallbackFailed` marker is a genuine lock/permission condition on the small-secret
+    keyring path, or a non-Windows backend error where DPAPI was never engaged at all).
 - **Site 2 (`refresh_oauth_token_with_url`'s `load_oauth_tokens` read-failure branch):** no
   message-text change — this site becomes DPAPI-aware automatically because it calls the
   corrected `load_oauth_tokens` (§4), which now itself distinguishes a genuine backend error
@@ -594,6 +755,32 @@ already cited in Context (`git-credential-manager`'s `dpapi` store, `azure-cli`'
 file cache), neither of which is evidenced to rely on non-trivial entropy beyond DPAPI's own
 user-scope binding. Revisit only if a future design introduces a genuinely separate secret (e.g.
 a user-entered passphrase) to derive entropy from.
+
+**Decision: `dwFlags = CRYPTPROTECT_UI_FORBIDDEN` (0x1), not `0` (Pass-5 adversarial review,
+Finding #3).** The original §3 code comment specified no `dwFlags` value beyond implying `0`
+(equivalent to "no flags," including no `CRYPTPROTECT_LOCAL_MACHINE`), and a downstream VP
+(VP-AUTHDX-010(a)) accordingly pinned the literal constant `dwFlags == 0`. Passing bare `0` omits
+`CRYPTPROTECT_UI_FORBIDDEN`, the standard flag for a non-interactive/headless/service context —
+without it, `CryptProtectData`/`CryptUnprotectData` are free to raise an OS-level UI prompt (e.g.
+a credential/master-key-recovery dialog) if the user's DPAPI master key needs recovery, which would
+HANG rather than merely inconvenience a headless CI runner or an unattended service invocation of
+`jr` — a real, not hypothetical, target per EC-1.4.035-3 and the F4 headless-validation spike
+(architecture-delta.md §9 item 3). Setting `CRYPTPROTECT_UI_FORBIDDEN` costs nothing on an
+interactive desktop session (the flag only suppresses a prompt that would otherwise appear; it
+does not change whether the operation can succeed for a normal, non-corrupted user profile) and
+closes an unforced headless-hang risk at zero downside. This is additive to, not a loosening of,
+the existing user-scope decision: `CRYPTPROTECT_LOCAL_MACHINE` (0x4) is still never set, in either
+direction.
+
+**Consequence for the pinned security invariant: loosen `dwFlags == 0` to "the `LOCAL_MACHINE` bit
+is clear," not "the whole word is zero."** `dwFlags == 0` as a literal pin now over-specifies the
+property that actually matters and would need updating (and could silently drift back to a stale
+`== 0` pin) every time a future, legitimate flag is added for a different reason (e.g. a
+`CRYPTPROTECT_AUDIT` addition down the line). The security-relevant invariant — the one this
+codebase actually needs to never regress — is narrower and more durable: `dwFlags &
+CRYPTPROTECT_LOCAL_MACHINE == 0` (bit 2 / `0x4` clear), i.e. "never machine-scope." See the
+companion `architecture-delta.md`'s "Pass-5 architect guidance for formal-verifier" section for the
+required VP-AUTHDX-010(a) wording change.
 
 **ACL / permission expectations for `secrets/<profile>/oauth-tokens.dat`.** This ADR does NOT add
 new ACL-setting code (e.g. `SetNamedSecurityInfo`) — that would add a second `unsafe` FFI surface
@@ -719,6 +906,38 @@ pub(crate) fn reject_unsafe_profile_component(
 /// Final authoritative set: **30 names** (6 + 9 + 9 + 6) — see the
 /// companion `architecture-delta.md`'s Pass-4 guidance section for the
 /// full enumeration and the required BC-1.4.040/VP-AUTHDX-016 wording.
+///
+/// **Scope decision (Pass-5 adversarial review, Finding #4) — only ASCII
+/// space is trimmed; other whitespace is deliberately NOT normalized, and
+/// this has now been verified, not merely assumed.** Only a LEADING ASCII
+/// space (`trim_start_matches(' ')`, above) and a TRAILING ASCII space (via
+/// `reject_unsafe_profile_component`'s separate `ends_with(' ')` check) are
+/// treated as significant-but-disregardable. Whether Windows device-name
+/// resolution also disregards a leading tab (`\t`), vertical tab (`\x0B`),
+/// or form feed (`\x0C`) — which would let `"\tCON"` evade this stem match
+/// the same way `" CON"` is caught — was researched during this pass
+/// (Perplexity, cross-checked against Microsoft's `RtlIsDosDeviceName_U`
+/// documentation, 2026-09-03): **REFUTE.** Microsoft documents the
+/// recognized device-name forms (`CON`/`PRN`/`AUX`/`NUL`/`COMn`/`LPTn`/
+/// `CONIN$`/`CONOUT$`, plus an optional trailing colon) without describing
+/// any general Unicode-whitespace-trimming behavior in the recognizer —
+/// only the ASCII-space case has documented/observed special handling.
+/// `"\tCON"`, `"\x0BCON"`, and `"\x0CCON"` are therefore NOT expected to
+/// resolve as the reserved `CON` device on real Windows, and no equivalent
+/// trim is added here for them. This is a verified sufficiency claim, not
+/// merely a documented limitation: extending the trim set to non-space
+/// whitespace would each be adding a normalization Windows itself does not
+/// perform, which would make this recognizer OVER-reject relative to actual
+/// Windows behavior (rejecting `"\tmy-profile"` as if it collided with a
+/// device name it does not, in fact, collide with) — a correctness bug in
+/// the other direction, not a hardening. Profile names are also
+/// operator-controlled local configuration (Invariant 2 of this ADR's
+/// broader trust model, not a value ever accepted from an untrusted remote
+/// party), which further lowers the value of over-fitting this guard to
+/// characters Windows itself does not treat specially here. If Microsoft
+/// ever documents additional whitespace-equivalence behavior for DOS device
+/// name resolution, this scope note — and the trim set — should be revisited
+/// against that documentation, not against speculation.
 fn is_reserved_windows_device_name(profile: &str) -> bool {
     let trimmed = profile.trim_start_matches(' ');
     let stem = trimmed.split('.').next().unwrap_or(trimmed);
@@ -836,6 +1055,30 @@ inherited risk `architecture-delta.md` §9 item 1 already flags as out of this c
 the lower-sensitivity, disposable cache namespace). Extending this same recognizer to
 `cache_dir` is a plausible future hardening pass but is not required for BC-1.4.040/VP-AUTHDX-016
 and is not specified here.
+
+**BC-1.4.035 Invariant 3 scope clarification (Pass-5 adversarial review, Finding #2).** Because
+Pass-4 (Finding #2, above) made `file_path(profile)?` — hence `reject_unsafe_profile_component` —
+a mandatory first statement on BOTH cfg arms of `store_pair`/`load_pair`/`remove_if_present`, a
+profile name that fails the guard is now REJECTED on macOS/Linux too, where previously (both
+before this cycle, and even in this cycle's design prior to the Pass-4 fix) no such rejection
+existed — `Profile::from(String)` performs no validation (ADR-0011) and nothing in the pre-cycle
+codebase ever joined a profile name into a filesystem path this way on non-Windows. Read literally,
+"macOS/Linux byte-for-byte unchanged" (Invariant 3) could be misread as forbidding this new
+rejection. **It does not.** Invariant 3 governs one specific thing: the DPAPI-fallback ENGAGEMENT
+decision (`engage_dpapi_fallback`/`should_fallback_to_dpapi`'s `TooLong`-routing behavior, §1/§2) —
+it says a non-Windows build's *credential-storage backend selection* is unaffected by this cycle's
+change. It says nothing about, and does not extend to, the profile-name VALIDATION guard (§9/
+BC-1.4.040), which is deliberately new, deliberately cross-platform, security hardening — Pass-2's
+Finding #1 and Pass-4's Finding #2 both required it to behave IDENTICALLY on every OS specifically
+so its test suite would not depend on which OS `cargo test` happens to run on. A malformed or
+hostile profile name (a path separator, a drive-letter colon, a reserved device name) being
+rejected consistently on macOS/Linux exactly as it is on Windows is the INTENDED, in-scope outcome
+of BC-1.4.040 — not a regression Invariant 3 forbids. The product-owner's BC-1.4.035 Invariant 3
+wording should say this explicitly (e.g. "…unchanged, EXCLUDING the profile-name path-traversal
+guard of BC-1.4.040, which is new, cross-platform behavior by design and applies identically on
+every OS") so a future reader — or a future adversarial pass — does not mistake the two invariants
+for being in tension. See the companion `architecture-delta.md`'s "Pass-5 architect guidance for
+product-owner" section for the exact wording instruction.
 
 ## Rationale
 
@@ -1008,4 +1251,35 @@ and is not specified here.
   bringing the authoritative reserved-name set to 30. See the companion `architecture-delta.md`'s
   "Pass-4 architect guidance for product-owner and formal-verifier" section for the required
   BC-1.4.040/VP-AUTHDX-016 wording.
+- Pass-5 adversarial review (cycle-004 F2, 2026-09-03) — Findings #1, #2, #3, #4 incorporated
+  above: (#1, HIGH) a `#[cfg(debug_assertions)]`-gated `JR_FORCE_DPAPI_FALLBACK` test-only seam
+  (§1) resolves the testability contradiction between Pass-1's production call-site gate and
+  VP-AUTHDX-011/012/022's default-CI claims, with the seam's honest boundary (delete-then-fail
+  shape only; the success shape stays Windows-only) stated explicitly; (#2, MED) `ProfilePathEscape`
+  is now checked FIRST, before `CorruptSecretFile`/`DpapiFallbackFailed`, at both the read path
+  (§4) and the store-error sites (§6, Sites 1/3), and BC-1.4.035 Invariant 3's scope is clarified
+  (§9) to exclude the intentional, new, cross-platform profile-name guard rejection; (#3, LOW)
+  `dpapi::protect`/`unprotect`'s `dwFlags` now includes `CRYPTPROTECT_UI_FORBIDDEN` (0x1) to avoid
+  a headless-hang risk, and the pinned security invariant is loosened from `dwFlags == 0` to
+  "`CRYPTPROTECT_LOCAL_MACHINE` bit clear" (§8); (#4, LOW) research (Perplexity, cross-checked
+  against Microsoft's `RtlIsDosDeviceName_U` documentation) REFUTES that non-ASCII-space
+  whitespace (tab/vertical-tab/form-feed) is disregarded in Windows device-name resolution the way
+  a leading ASCII space is — `is_reserved_windows_device_name` (§9) is confirmed sufficient as
+  specified, with the verification recorded as a scope note rather than left as an open question.
+  See the companion `architecture-delta.md`'s "Pass-5 architect guidance for product-owner and
+  formal-verifier" section for the required BC/VP wording and CI-classification corrections.
+- Pass-6 adversarial review (cycle-004 F2, 2026-09-03) — Finding #3 (MED, process-gap) incorporated
+  above: §1's "Doc-fallout note for F4" is expanded from a single CLAUDE.md-entry reminder into a
+  three-part mandatory checklist matching this codebase's full `JR_*` debug-only-seam convention —
+  (a) a dedicated `tests/jr_force_dpapi_fallback_release_gate.rs` pin (modeled on the sibling
+  `tests/jr_test_block_until_sigint_release_gate.rs`/`tests/config_dir_release_gate.rs` pattern)
+  asserting `#[cfg(debug_assertions)]` sits within 5 source lines of the env-var read in
+  `src/api/auth.rs`, (b) the CLAUDE.md seam-table entry (already required pre-Pass-6, retained),
+  and (c) an explicit release-vs-debug scope statement in both places. Also flagged, for the
+  formal-verifier to spec into the VPs (not resolved in this ADR): the two opposing-outcome
+  non-Windows tests keyed on this process-global env var (the legacy-message test with the var
+  UNSET, and the VP-AUTHDX-011/012/022 delete-then-fail tests with it SET) require `env_lock`-style
+  mutex serialization, exactly as CLAUDE.md documents for `JR_SERVICE_NAME` in
+  `tests/oauth_refresh_integration.rs`. See the companion `architecture-delta.md`'s "Pass-6
+  architect guidance for formal-verifier" section.
 </content>
