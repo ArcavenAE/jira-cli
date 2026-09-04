@@ -187,3 +187,68 @@ BCs: 733 → **742** (+9: BC-1.4.035..040, BC-1.2.052..054; BC-1.4.028 amended i
 **Dim-6 Attestation:** N/A — no source code changed this burst (`.factory/` artifact recovery + bookkeeping only, no `develop`-side commit).
 
 **Dim-7 Attestation:** N/A — no test-affecting change this burst; full regression remains PASS (4763/0/157) as of the cycle-003 F6/F7 hardening/convergence passes, unchanged.
+
+## Burst: Burst 4 — F2 scoped adversarial convergence, Passes 1-4 + fix rounds — INTERMEDIATE CHECKPOINT (2026-09-03)
+
+**Parent-commit:** `42e92b46` (`develop` tip; unchanged this burst — no `develop`-side commit).
+
+**Trigger:** four rounds of orchestrator-driven F2 scoped adversarial review + architect/product-owner/formal-verifier fix chains had accumulated uncommitted on top of the Burst 3 crash-recovery checkpoint (`6cf5778a`), leaving STATE.md ~4 passes behind reality (it still read "F2 formal-verifier VP delta NEXT"). This burst makes that work durable via one atomic commit and brings STATE.md current. No new human decision was made — DEC-335 (the F1 human gate) remains the latest decision; no new DEC is recorded this burst.
+
+**Recovery/session-continuity notes (for audit).** This session resumed after the Burst 3 crash-recovery. Two further transient agent failures occurred mid-burst and were recovered without process changes to the pipeline itself: (a) after the `adversarial-review` skill's background-fork dispatch of Pass 1, the fork orphaned (no result surfaced) — the orchestrator switched to direct orchestrator-driven adversarial passes for Passes 2-4 rather than re-attempting the background-fork mechanism; (b) the Pass-4 `architect` fix-round agent stalled past its 600s watchdog having written nothing to disk — it was re-dispatched fresh and the retry succeeded, producing the Pass-4 fix content now in this commit.
+
+**Work performed this burst, in order:**
+
+1. **Formal-verifier: F2 VP delta.** Authored `cycles/cycle-004/phase-f2-spec-evolution/vp-delta.md` — 13 new VPs (`VP-AUTHDX-010`..`022`, continuing the cycle-003 `VP-AUTHDX` scheme) covering all 9 new BCs + the 1 amended BC, inline-placed under each home BC's `**Verification Properties**:` field in `bc-1-auth-identity.md`. `vp_count` 41 → 54.
+2. **Adversarial Pass 1** (fresh context, scoped to the F2 spec delta): 17 findings (2 HIGH / 7 MED / 8 LOW). Architect + product-owner fix round applied 9 BC-level fixes (`bc-1-auth-identity.md` changelog, Pass-1 entry): Finding #1 (HIGH) rescoped BC-1.2.054's unconditional Assets claim to a conditional classic-vs-scoped-token statement; Finding #2 (HIGH) extended BC-1.4.040's path-traversal guard enumeration with Windows-specific escape vectors (drive/ADS colon, UNC prefix, reserved device names) plus 6 further MED/LOW fixes (attempt-all/first-error-propagated delete ordering, typed backend/IO-vs-corrupt-envelope distinction, structural `#[cfg(windows)]`-gated DPAPI-unreachable-on-non-Windows guarantee, citation/trace-field cleanups, redirect-policy/precedence-ordering/atomicity-scoping wording fixes).
+3. **Adversarial Pass 2**: 9 findings (1 HIGH / 4 MED / 4 LOW), novelty MED. Fix round: Finding #2 added the `CorruptSecretFile(String)` typed marker error (mirrors `DpapiFallbackFailed`'s downcast-based discrimination) so the read path can distinguish a corrupt/undecryptable DPAPI file from a genuine backend/IO error without ad-hoc string-matching; Finding #7 added the Site-3-only proactive stale-pair clear (`refresh_oauth_token_with_url`'s `DpapiFallbackFailed` branch additionally clears the profile's now-stale OAuth pair before returning, since the consumed single-use refresh token is already server-side-dead by that point — confirmed non-conflicting with cycle-003's DEC-321 relogin-then-replace invariant, which governs a different moment in the sequence); Finding #6 corrected the temp-file cleanup clause to the AGE-GATED behavior (only `*.tmp-*` siblings older than `STALE_TMP_THRESHOLD` = 30s are removed, protecting a concurrent process's own in-flight write).
+4. **Adversarial Pass 3**: 5 findings (1 HIGH / 4 MED), novelty MOD-HIGH. Fix round: Finding #1 (HIGH, `STALE-KEYRING-SHADOWS-DPAPI`) — the most substantive fix this burst — reworked BC-1.4.035 Postconditions 2/3 so both `TooLong` arms delete the profile's ENTIRE existing keyring pair BEFORE calling `auth_windows_store::store_pair` (delete-keyring-first, never the reverse), closing a real defect where a pre-existing fitting keyring pair could permanently shadow a fresh DPAPI pair via `load_oauth_tokens`'s both-keys-present fast path; new VP-AUTHDX-022 pins the closure (delete-first ordering, crash-safety: a mid-window crash leaves NEITHER backend populated, never a stale shadow). Finding #2 (MED) named `jr auth refresh` as a third explicit `/_edge/tenant_info` fetch-trigger site (alongside `auth login`/`jr init`), confirmed intentional by the architect. Finding #3 (MED) fixed a Pass-2 propagation gap where the age-gated cleanup fix hadn't been carried into BC-1.4.037's own postcondition text.
+5. **Adversarial Pass 4**: 4 findings (0 HIGH / 2 MED / 2 LOW), novelty MOD-LOW. Fix round: Finding #1 harmonized the amended BC-1.4.028 partial-state read-path branch to apply the SAME typed 4-outcome distinction (prefer `Ok(Some)` / corrupt→force-re-login / backend-IO→distinct error / `Ok(None)`→partial) as the both-absent branch, asserted under both keyring pre-states; Finding #2 added a guard-WIRING oracle (VP-AUTHDX-016) calling `store_pair`/`load_pair`/`remove_if_present` directly with a guard-failing profile name and asserting each returns `Err`→`ProfilePathEscape` before any FS op — closing the gap where only the recognizer function itself, not its entry-point wiring, was covered by a default-CI-runnable test; Finding #4 required a non-`https://` `site_url` to skip the `/_edge/tenant_info` fetch entirely (zero network requests), not merely soft-fail after attempting it; Finding #8 confirmed `--cloud-id` override both suppresses the fetch AND is itself persisted via `Config::save_global()`.
+6. **Reserved Windows device-name set finalized** at 30 names (ADR-0021 §9: 6 classic + 9 `COM1-9` + 9 `LPT1-9` + 6 Unicode superscript variants `COM¹/²/³`/`LPT¹/²/³`), consumed by BC-1.4.040 / VP-AUTHDX-016's `reject_unsafe_profile_component` guard.
+7. **Verification re-run:** `scripts/check-spec-counts.sh` exit 0; `scripts/check-bc-cumulative-counts.sh` exit 0 (742 BCs across 9 files, unchanged since Burst 3 — this burst's fixes were all BC-body edits, no BC added/removed); `vp-delta.md`'s recorded `input-hash` current against its listed inputs.
+8. Did NOT stage the three pre-existing unrelated dirty files (`regression-state.json`, `sidecar-learning.md`, the modified `S-cycle3-env-tag` demo gif) — left untouched, per standing instruction carried across every prior burst.
+9. Updated STATE.md via one full-content Write (v3.55 → v3.56): frontmatter, Phase Progress F2-SPEC-EVOLUTION row, Current Phase Steps table, Convergence Status / Concurrent Cycles / Constraints Carried Forward / Drift-Standing prose, and Session Resume Checkpoint all brought current to reflect Passes 1-4 complete+fixed, clean-streak 0/3, Pass 5 NEXT.
+10. Appended this burst-log entry (Burst 4).
+
+**Outcome:** cycle-004 (`windows-correctness`) Phase F2 (spec evolution) remains IN PROGRESS. `total_bcs` unchanged at 742 this burst (Passes 1-4 were BC-body refinements, not new BCs); `vp_count` advances 41 → 54 (+13, formal-verifier's delta). Adversarial finding trajectory: 17 → 9 → 5 → 4 (all findings from all 4 passes resolved via architect→product-owner→formal-verifier fix chains). Clean-streak 0/3 — three CONSECUTIVE clean passes are required to converge; none has yet been clean. **NEXT:** dispatch adversarial Pass 5 (fresh context), continuing toward 3 consecutive clean passes, then `consistency-validator` fresh-context audit, then the F2 human gate.
+
+**Codifications:** none this burst — no new DEC; DEC-335 (F1 human gate) remains the latest decision. The Pass 1-4 fix-chain outputs (VP delta + BC-body amendments + ADR-0021/ADR-0022 refinements) are the codified F2 spec-evolution convergence output.
+
+**Closes:** the STATE.md staleness that had accumulated across 4 uncommitted adversarial passes (STATE.md previously still read "formal-verifier VP delta NEXT," now ~4 passes behind reality). **Does NOT close:** F2 itself, which remains IN PROGRESS pending Pass 5+ (to reach 3 consecutive clean passes), the consistency-validator audit, and the F2 human gate; no cycle-001/002/003 standing Drift/Standing Items are touched.
+
+### Counts reconciled this burst
+
+BCs: unchanged at **742** (Passes 1-4 amended existing BC bodies; no BC added or removed). VPs: 41 → **54** (+13: VP-AUTHDX-010..022). Holdout scenarios unchanged at 106. `total_stories` unchanged at 168 (F2 does not create stories). Reserved Windows device-name set finalized at 30 (ADR-0021 §9).
+
+### Details
+
+| Agent | Task | Output |
+|-------|------|--------|
+| formal-verifier | F2 VP delta over the 9 new BCs + 1 amended BC | `cycles/cycle-004/phase-f2-spec-evolution/vp-delta.md` (13 new VPs, VP-AUTHDX-010..022); inline VP placement in `bc-1-auth-identity.md` |
+| adversary (Pass 1, fresh context) | Scoped adversarial review of the F2 spec delta | 17 findings (2 HIGH/7 MED/8 LOW) |
+| architect + product-owner (Pass 1 fix round) | Resolve Pass 1 findings | `bc-1-auth-identity.md`, `ADR-0022` (classic-vs-scoped-token rescope), `ADR-0021`/`architecture-delta.md` updates |
+| adversary (Pass 2, fresh context) | Scoped adversarial review, round 2 | 9 findings (1 HIGH/4 MED/4 LOW), novelty MED |
+| architect + product-owner (Pass 2 fix round) | Resolve Pass 2 findings | `CorruptSecretFile` typed error, Site-3 stale-pair clear, age-gated temp-cleanup fix |
+| adversary (Pass 3, fresh context) | Scoped adversarial review, round 3 | 5 findings (1 HIGH/4 MED), novelty MOD-HIGH |
+| architect + product-owner (Pass 3 fix round) | Resolve Pass 3 findings | Delete-keyring-first stale-shadow closure (VP-AUTHDX-022), `auth refresh` third-fetch-trigger-site BC update |
+| architect (Pass 4 fix round; stalled once, re-dispatched) | Resolve Pass 4 findings | Amended-BC 4-outcome harmonization, guard-wiring oracle, https pre-check, `--cloud-id` persistence confirmation |
+| adversary (Pass 4, fresh context) | Scoped adversarial review, round 4 | 4 findings (0 HIGH/2 MED/2 LOW), novelty MOD-LOW |
+| state-manager | Verify recovered work is internally consistent; commit it in one atomic commit; correct STATE.md; append this burst-log entry | This commit; `STATE.md`; `cycles/cycle-004/burst-log.md` (this entry) |
+
+**Files touched (Dim-1): 7 unique files (factory-artifacts, this burst)**
+
+- STATE.md
+- cycles/cycle-004/burst-log.md
+- cycles/cycle-004/phase-f2-spec-evolution/architecture-delta.md (modified)
+- cycles/cycle-004/phase-f2-spec-evolution/vp-delta.md (newly committed, previously untracked)
+- specs/architecture/decisions/ADR-0021-windows-oauth-secret-storage-dpapi-fallback.md (modified)
+- specs/architecture/decisions/ADR-0022-api-token-cloud-id-acquisition-tenant-info.md (modified)
+- specs/prd/bc-1-auth-identity.md (modified)
+- specs/prd/BC-INDEX.md (modified)
+
+**Dim-2 Attestation:** `scripts/check-spec-counts.sh` (8 bc files, exit 0) and `scripts/check-bc-cumulative-counts.sh` (742 total across 9 files, exit 0) both PASS — re-verified before this burst, recorded here per Defensive Sweep Discipline (S-7.02); `vp-delta.md`'s `input-hash` confirmed current against its listed inputs; a corpus grep for the stale "41 VP" count found it only in genuinely-historical surfaces (cycle-003 files, prior cycle-004 burst-log Burst 3 entry, session-reviews) which correctly describe a past point in time and are left unchanged — no live-truth surface other than STATE.md carried the stale count.
+
+**Dim-5 Attestation:** N/A — no binary/WASM artifact produced by this burst.
+
+**Dim-6 Attestation:** N/A — no source code changed this burst (`.factory/` spec-delta convergence only, no `develop`-side commit).
+
+**Dim-7 Attestation:** N/A — no test-affecting change this burst; full regression remains PASS (4763/0/157) as of the cycle-003 F6/F7 hardening/convergence passes, unchanged.

@@ -85,6 +85,39 @@ pub(crate) fn should_fallback_to_dpapi(err: &keyring::Error) -> bool {
 }
 ```
 
+**Pass-1 adversarial-review correction (2026-09-03, Finding #5).** `should_fallback_to_dpapi`
+itself stays a pure, OS-agnostic predicate — that is exactly what makes it unit-testable on any
+CI runner (see Rationale) — but its **call site** in `store_oauth_tokens` (§2 below) is
+`#[cfg(windows)]`-gated, not merely "practically never true on macOS/Linux." A new thin wrapper
+makes this explicit:
+
+```rust
+#[cfg(windows)]
+fn engage_dpapi_fallback(err: &keyring::Error) -> bool {
+    auth_windows_store::should_fallback_to_dpapi(err)
+}
+
+#[cfg(not(windows))]
+fn engage_dpapi_fallback(_err: &keyring::Error) -> bool {
+    false
+}
+```
+
+`store_oauth_tokens`'s match guards (§2) call `engage_dpapi_fallback`, never
+`should_fallback_to_dpapi` directly. On `#[cfg(not(windows))]`, a `set_password` failure is
+therefore matched and propagated exactly as it is today — `auth_windows_store::store_pair`/
+`load_pair` are never reached from `store_oauth_tokens`/`load_oauth_tokens`, and the pre-existing
+"Unlock your keychain" message path is untouched. This is required by BC-1.4.035 Invariant 3
+("macOS/Linux byte-for-byte UNCHANGED"): without the call-site gate, a hypothetical non-Windows
+`keyring::Error::TooLong` (no known backend returns this today, but the variant is not
+Windows-exclusive in `keyring`'s own enum) would route through `auth_windows_store::store_pair`'s
+`#[cfg(not(windows))]` arm, which always fails with `DpapiFallbackFailed` — and that marker is
+rendered by the honest-fail message (§6) with **Windows-specific wording** ("Windows Credential
+Manager's 2560-byte limit"), which would be both false and a behavior change on macOS/Linux.
+Gating the call site is strictly safer than making the message platform-neutral: a
+platform-neutral message would still be a NEW code path on non-Windows that does not exist
+today, which Invariant 3's "byte-for-byte" wording rules out regardless of message wording.
+
 ### 2. The access/refresh pair is stored ENTIRELY in one backend, never split
 
 `store_oauth_tokens` treats the pair as one atomic unit at the BACKEND-SELECTION level, not
@@ -105,18 +138,38 @@ pub fn store_oauth_tokens(profile: &Profile, access: &str, refresh: &str) -> Res
                 let _ = auth_windows_store::remove_if_present(profile);
                 Ok(())
             }
-            Err(e) if auth_windows_store::should_fallback_to_dpapi(&e) => {
-                // Refresh overflowed after access succeeded — roll back
-                // the access write so the pair can never end up split
-                // across two backends.
+            Err(e) if engage_dpapi_fallback(&e) => {
+                // Refresh overflowed after access succeeded. Two keyring
+                // entries can now hold a value this write must not leave
+                // behind: `access_key` holds the JUST-WRITTEN new access
+                // token (roll it back, as before); `refresh_key` was never
+                // touched by this attempt — if this profile previously
+                // completed a FITTING login, `refresh_key` (and, by
+                // extension, a stale `access_key` if the rollback below
+                // did not run) can hold a stale, complete pair that would
+                // otherwise permanently shadow the fresh DPAPI pair via
+                // the read path's both-keys-present fast path (§4). Clear
+                // BOTH keys, in this order, BEFORE the DPAPI write — see
+                // the "Ordering, and why" note below (Finding #1, Pass-3
+                // review). `engage_dpapi_fallback` is #[cfg(windows)]-gated
+                // (see §1) — this arm is reachable on non-Windows only in
+                // the sense that the compiler must type-check it; it never
+                // fires there at runtime.
                 delete_credential_tolerating_no_entry(&access_key)?;
+                delete_credential_tolerating_no_entry(&refresh_key)?;
                 auth_windows_store::store_pair(profile, access, refresh)
             }
             Err(e) => Err(e.into()), // genuine backend/lock error — propagate unchanged
         },
-        Err(e) if auth_windows_store::should_fallback_to_dpapi(&e) => {
-            // Access overflowed; don't even attempt refresh in keyring —
-            // route the whole pair to the DPAPI store directly.
+        Err(e) if engage_dpapi_fallback(&e) => {
+            // Access overflowed; its set_password call never landed, so
+            // whatever is currently under `access_key` (and `refresh_key`,
+            // never even attempted) is untouched by this write attempt —
+            // it can be a complete, stale pair from a prior FITTING login.
+            // Clear both before routing the fresh pair to DPAPI, same
+            // delete-before-store ordering and rationale as the arm above.
+            delete_credential_tolerating_no_entry(&access_key)?;
+            delete_credential_tolerating_no_entry(&refresh_key)?;
             auth_windows_store::store_pair(profile, access, refresh)
         }
         Err(e) => Err(e.into()),
@@ -124,10 +177,46 @@ pub fn store_oauth_tokens(profile: &Profile, access: &str, refresh: &str) -> Res
 }
 ```
 
-The pair is therefore, at all times, either **fully in the keyring** or **fully in one DPAPI
-file** — never one secret in each. This closes the pre-existing partial-write risk the research
-doc flags (today's code has no atomicity at all, DPAPI or not) as a side effect of the routing
-design, without needing a separate transaction mechanism.
+**Ordering, and why (Finding #1, Pass-3 adversarial review, STALE-KEYRING-SHADOWS-DPAPI).** The
+original design routed an oversized pair to `auth_windows_store::store_pair` without ever
+clearing a pre-existing, FITTING keyring pair for the same profile — the read path's "both
+namespaced keys present" fast path (§4) would then return that stale pair forever, permanently
+shadowing the fresh DPAPI-stored pair. The fix is not merely "also delete the keyring keys
+somewhere" — the ORDER matters for crash-safety, and the two options are not equivalent:
+
+- **(a) Delete the keyring pair FIRST, then call `store_pair`** (the chosen design, in the code
+  above). A crash between the deletes and a successful `store_pair` rename leaves the profile
+  with **no credentials in either backend** — `load_oauth_tokens` (§4) sees both keyring keys
+  absent and `auth_windows_store::load_pair` returning `Ok(None)` (the temp file, not yet renamed
+  to the final path, is invisible to `load_pair`), and falls through to the existing "No stored
+  OAuth token" error. This forces a clean, honest re-login — annoying, but never wrong.
+- **(b) Call `store_pair` first, then delete the keyring pair.** A crash between a successful
+  `store_pair` rename and the keyring deletes leaves a **complete, stale keyring pair coexisting
+  with a complete, fresh DPAPI pair** — exactly the shadowing condition this fix exists to close,
+  now reachable again via an interrupted write instead of only via the original code path. This
+  ordering can silently REINTRODUCE the defect it was meant to fix.
+
+**Decision: (a).** A mid-crash outcome that forces a clean re-login is unambiguously safer than
+one that can silently resurrect stale, possibly-rotated-or-revoked tokens as if they were current
+— consistent with this ADR's existing honest-fail philosophy (§6): every other double-failure
+path in this design (DPAPI fallback itself failing, a corrupt DPAPI file) already resolves to
+"tell the user to re-authenticate," never to "silently keep using an old credential that might no
+longer be valid." Choosing (a) means a genuine `store_pair` failure (not just a crash) after the
+keyring deletes also leaves the profile fully credential-less rather than falling back to the old
+keyring pair — this is an intentional, in-kind extension of that same philosophy, not a
+regression: it is exactly the condition the existing honest-fail message (§6) already tells the
+user to treat as "re-authenticate and revoke the dangling grant," so leaving a
+questionable-but-present old pair in place would be inconsistent with the advice this ADR already
+gives for that message.
+
+**Resulting invariant (extends BC-1.4.035 Invariant 1).** The pair is therefore, at all times,
+either **fully in the keyring** or **fully in one DPAPI file** — never one secret in each backend
+— **and never a complete, stale keyring pair coexisting with a complete, fresh DPAPI pair for the
+same profile.** This closes the pre-existing partial-write risk the research doc flags (today's
+code has no atomicity at all, DPAPI or not) as a side effect of the routing design, and closes the
+stale-shadow risk Finding #1 identifies, without needing a separate transaction mechanism. See the
+companion `architecture-delta.md`'s "Pass-3 architect guidance for product-owner and
+formal-verifier" section for the required BC-1.4.035 wording and the new VP this invariant needs.
 
 ### 3. DPAPI-encrypted-file store — pure/impure seam
 
@@ -151,6 +240,41 @@ pub(crate) mod envelope {
     /// error, never silently coerced into "no token."
     pub fn unwrap(file_bytes: &[u8]) -> anyhow::Result<&[u8]> { /* … */ }
 }
+```
+
+**Version-field relationship, clarified (Finding #13, Pass-1 review).** There are deliberately
+TWO version markers at two different layers, each governing a different, non-overlapping thing:
+
+- The **outer 1-byte version** (in `wrap`'s unencrypted 5-byte header, alongside the `b"JROD"`
+  magic) governs the on-disk **ciphertext framing** — how many header bytes precede the
+  DPAPI-protected blob, and, for a future format change, whether a different protect/unprotect
+  call shape or an entirely different encryption scheme is in play. It must be readable BEFORE
+  any decryption is attempted, which is why it lives outside the encrypted region.
+- The **inner JSON `version` field** (inside `envelope::encode`'s plaintext) governs the
+  decrypted **plaintext schema** — which fields the JSON payload is expected to carry once
+  decryption has already succeeded (today: `access`/`refresh` only; a future revision might add,
+  e.g., an expiry timestamp). It can only be read AFTER a successful decrypt, so it is the correct
+  governing field for any future plaintext-schema migration, independent of ciphertext framing.
+
+**Single source of truth for migration:** a future change to the ciphertext/framing layer (e.g.,
+swapping encryption primitives) bumps the OUTER version; a future change to the plaintext/schema
+layer (e.g., adding a field) bumps the INNER version. Both are checked on read (`unwrap` checks
+the outer, `decode` checks the inner) — this is not redundancy, each guards a different boundary,
+and there is no single field that alone governs "the" format version.
+
+**The outer header is unauthenticated by design, and this is safe.** The 5-byte header sits
+outside the DPAPI-protected region, so a same-user process (already the established trust
+boundary — see §8) could corrupt or rewrite it without needing to break DPAPI at all. This is an
+accepted consequence, not an oversight: any tampering — outer header or inner ciphertext — that
+does not happen to produce a byte-for-byte-valid, DPAPI-decryptable, correctly-versioned,
+correctly-shaped JSON payload lands on the same safe path already specified above and in §4/§6: a
+distinct corrupt/undecryptable-envelope error that forces re-login, never a silent "no token" or
+a substituted value. A same-user actor capable of rewriting this file could, with or without
+touching the version header, more directly just call `CryptUnprotectData` on the blob themselves
+(§8) — the header's lack of authentication grants no capability beyond what that same-user trust
+boundary already grants.
+
+```rust
 
 pub(crate) fn should_fallback_to_dpapi(err: &keyring::Error) -> bool { /* §1 above */ }
 
@@ -177,30 +301,128 @@ mod dpapi {
 }
 
 /// Atomic pair write: encode -> DPAPI-protect -> wrap -> temp-write ->
-/// rename. `#[cfg(windows)]`: real implementation. `#[cfg(not(windows))]`:
-/// always returns the honest-fail error immediately (DPAPI is
-/// categorically unavailable; this path exists only so the cross-platform
-/// call site in `store_oauth_tokens` compiles uniformly — the size
-/// threshold that triggers it is realistically never hit by macOS
-/// Keychain / Linux Secret Service, whose ceilings are far above
-/// anything Atlassian emits).
+/// rename. On EVERY platform, the first statement is `file_path(profile)?`
+/// (§9) — this invokes `reject_unsafe_profile_component` and is what makes
+/// the guard's wiring at this entry point exercised, and
+/// regression-catchable, on an ordinary Linux/macOS CI runner (Pass-4
+/// adversarial review, Finding #2), not only on a real Windows machine.
+/// `#[cfg(windows)]`: once the guard passes, the real DPAPI-protect/wrap/
+/// temp-write/rename implementation runs. `#[cfg(not(windows))]`: once the
+/// guard passes, always returns the honest-fail error immediately (DPAPI
+/// is categorically unavailable; this path exists only so the
+/// cross-platform call site in `store_oauth_tokens` compiles uniformly —
+/// the size threshold that triggers it is realistically never hit by
+/// macOS Keychain / Linux Secret Service, whose ceilings are far above
+/// anything Atlassian emits). The `PathBuf` `file_path` returns is never
+/// used by the `#[cfg(not(windows))]` arm's own logic — the call exists
+/// solely to exercise the guard on every platform.
 pub fn store_pair(profile: &Profile, access: &str, refresh: &str) -> anyhow::Result<()> { /* … */ }
 
-/// Ok(None) if no file exists for this profile. Err on a file that exists
-/// but fails to decrypt/parse (corruption, tamper, or a different Windows
-/// user account) — this is a "force re-login" condition, never silently
-/// coerced into "no token."
+/// On EVERY platform, the first statement is `file_path(profile)?` (§9) —
+/// invoking `reject_unsafe_profile_component` before any other behavior
+/// (Pass-4 adversarial review, Finding #2). `#[cfg(not(windows))]`: once
+/// the guard passes, always returns `Ok(None)` — the resulting `PathBuf`
+/// is discarded, nothing is read from disk. `#[cfg(windows)]`: once the
+/// guard passes, `Ok(None)` if no file exists for this profile; `Err` on a
+/// file that exists but could not be turned into a usable pair — see
+/// `CorruptSecretFile` below for the typed discrimination between "this
+/// content is corrupt" and "this is a genuine backend/IO error," never
+/// silently coerced into "no token."
 pub fn load_pair(profile: &Profile) -> anyhow::Result<Option<(String, String)>> { /* … */ }
 
-/// Delete the file if present; `NotFound` is success (mirrors
-/// `delete_credential_tolerating_no_entry`'s NoEntry-is-success shape).
+/// On EVERY platform, the first statement is `file_path(profile)?` (§9) —
+/// invoking `reject_unsafe_profile_component` before any other behavior
+/// (Pass-4 adversarial review, Finding #2). `#[cfg(not(windows))]`: once
+/// the guard passes, always returns `Ok(())` immediately — the resulting
+/// `PathBuf` is discarded, no filesystem call is made. `#[cfg(windows)]`:
+/// once the guard passes, delete the file if present; `NotFound` is
+/// success (mirrors `delete_credential_tolerating_no_entry`'s
+/// NoEntry-is-success shape).
 pub fn remove_if_present(profile: &Profile) -> anyhow::Result<()> { /* … */ }
+
+/// Marker: `load_pair` found a file but could not turn it into a usable
+/// pair because its CONTENT was bad — DPAPI unprotect failed (wrong user,
+/// tamper), the 5-byte wrap header was unrecognized (`envelope::unwrap`),
+/// or the decrypted plaintext failed `envelope::decode` (malformed JSON,
+/// missing field). Attached via `.context(CorruptSecretFile(profile.to_string()))`
+/// (or an equivalent `anyhow::Error::from` wrap) at the exact point in
+/// `load_pair` where decode/decrypt fails, then recovered by the caller
+/// via `e.downcast_ref::<CorruptSecretFile>()` — the SAME type-based,
+/// never-string-matched discrimination pattern `DpapiFallbackFailed` (§6)
+/// already establishes for the write path.
+pub(crate) struct CorruptSecretFile(pub String);
 ```
+
+**Read-path error discrimination (Finding #2, Pass-2 adversarial review).** BC-1.4.036
+(Invariant 3 / Postcondition 2b vs 2c / EC-1.4.036-4) requires `load_oauth_tokens` to distinguish
+two DIFFERENT reasons `load_pair` can return `Err`, mirroring the write path's typed
+`DpapiFallbackFailed` discrimination rather than ad-hoc `bail!` strings (which this codebase's
+conventions forbid matching on):
+
+- **Content is corrupt/undecryptable** (`e.downcast_ref::<CorruptSecretFile>()` is `Some`): the
+  file exists and was readable as bytes, but decryption or parsing failed. This is the
+  force-re-login condition — §4's existing message text applies unchanged.
+- **A genuine backend/IO error reading an existing file** (`downcast_ref` is `None` — e.g.
+  permission denied, a disk I/O failure, or the path-guard rejection in §9 firing on a corrupted
+  on-disk profile-directory name): this is NOT a corruption signal and must NOT tell the user to
+  re-login — re-authenticating would not fix a filesystem permission or I/O problem and would
+  needlessly mint a new, unrevoked Atlassian grant. `load_oauth_tokens` propagates this case with
+  its own distinct message (§4 step 2 below), never the corrupt-file wording.
+
+This keeps `load_pair`'s public signature exactly as originally specified
+(`anyhow::Result<Option<(String, String)>>`) — no new enum-shaped return type is needed — while
+making the two failure reasons independently, non-string-matchably inspectable at the call site,
+which is what BC-1.4.036's Postcondition 2b/2c split actually requires.
 
 The atomic file write is: build the full file bytes in memory, write to
 `<profile-dir>/oauth-tokens.dat.tmp-<random-suffix>` in the SAME directory as the final path,
 then `std::fs::rename` over the final path. `rename` within one NTFS volume is atomic; the
 directory is created (`create_dir_all`) before the temp write if absent.
+
+**Fsync and temp-file cleanup expectations (Finding #17, Pass-1 review).** Today's
+temp-write-then-rename sequence is reasoned only against process-kill (a killed process either
+never reaches `rename`, or the rename has already atomically landed — POSIX/NTFS rename
+semantics, not a "never partial" guarantee against OS crash or power loss). The write path MUST
+`fsync` (`File::sync_all`) the temp file **before** the rename, so a crash immediately after
+`rename` cannot leave a zero-length or truncated file visible under the final name on a filesystem
+that reorders writes; a directory-entry fsync (`fsync` on the parent directory) after rename is
+NOT required here — losing the rename's durability on a true crash lands on the pre-existing
+"file absent or unreadable → treat as no-file / corrupt-file → force re-login" safe path already
+specified above and in §4/§6, which is acceptable (this is a re-obtainable OAuth credential, not
+data requiring crash-durability guarantees). **Orphaned temp files:** a mid-write crash (before
+`rename`) can leave a `oauth-tokens.dat.tmp-<suffix>` file behind with no automatic cleanup
+specified. `store_pair` MUST attempt to remove pre-existing `*.tmp-*` siblings for the same
+profile directory before writing a new one (best-effort, `NotFound`-tolerant, mirroring
+`remove_if_present`'s tolerance) — this bounds the leak to "at most one stale temp file per
+profile between login attempts" rather than an unbounded accumulation of encrypted-blob-bearing
+files across repeated crashes. This is a hygiene/disk-hygiene fix, not a security fix: an orphaned
+`.tmp-*` file carries the SAME DPAPI-protected ciphertext and the SAME same-user trust boundary
+as the final file (§8), so its accumulation is a disk-space and clutter concern, not a new
+exposure.
+
+**Pass-2 adversarial-review correction (2026-09-03, Finding #6) — cleanup is AGE-GATED, not a
+blanket delete.** The pre-write cleanup MUST NOT unconditionally remove every `*.tmp-*` sibling it
+finds: `refresh_coordinator.rs` single-flights refreshes only WITHIN one process (see its own
+module doc) and this ADR adds no cross-process lock for `login`/`refresh` — two `jr` processes can
+legitimately race a login/refresh for the SAME profile (e.g. an interactive `login --oauth` and a
+concurrent background `refresh`). A blanket delete lets process B's cleanup pass unlink process
+A's own in-flight temp file out from under it mid-write, so A's subsequent `rename` targets a path
+that no longer exists (on Windows, `rename`/`MoveFileEx` over a vanished source fails; the net
+effect is a spuriously failed login/refresh with no data-loss, but a real, avoidable failure).
+`store_pair`'s cleanup step therefore only removes a `*.tmp-*` sibling whose file-modified time is
+older than a fixed `STALE_TMP_THRESHOLD` (30 seconds) — comfortably longer than one
+encode→DPAPI-protect→wrap→write→rename sequence, which is in-memory work plus one small
+filesystem write, normally completing in well under a second. A temp file younger than the
+threshold is assumed to belong to another process's in-flight write and is left untouched; only a
+temp file old enough to be evidence of a genuinely abandoned (crashed) prior attempt is removed.
+**Stated concurrency boundary:** this closes the common case (two racing `jr` invocations, normal
+disk/DPAPI latency) without adding new cross-process locking machinery, which would be new scope
+beyond DEC-334's mandate. The residual risk — a legitimate write that is itself slower than
+`STALE_TMP_THRESHOLD` (e.g. a hung DPAPI call or a pathologically slow disk) racing a second
+process's cleanup — is accepted and documented here, not engineered away; it is strictly narrower
+than today's zero-concurrency-awareness state (no cleanup at all) and requires two independently
+unlikely conditions (a concurrent second `jr` process AND an abnormally slow first write) to
+manifest.
 
 ### 4. Read path — keyring first, then the DPAPI file
 
@@ -212,11 +434,18 @@ legacy-flat-key recovery, which is unchanged):
    non-oversized secret on every platform).
 2. Both namespaced keyring keys absent → **NEW:** try `auth_windows_store::load_pair(profile)`.
    - `Ok(Some((a, r)))` → return them.
-   - `Err(e)` (file present but corrupt/undecryptable) → propagate a distinct,
-     force-re-login error: `"OAuth credentials for profile {profile:?} could not be decrypted
+   - `Err(e)` where `e.downcast_ref::<CorruptSecretFile>()` is `Some` (file present but
+     corrupt/undecryptable — see Finding #2 note in §3) → propagate a distinct, force-re-login
+     error: `"OAuth credentials for profile {profile:?} could not be decrypted
      (the file may be corrupted, or was created by a different Windows user account). Run
      \"jr auth login --oauth --profile {profile}\" to re-authenticate."` — never silently
      treated as "no token," which would misleadingly suggest the user never logged in.
+   - `Err(e)` otherwise (a genuine backend/IO error reading an existing file — e.g. permission
+     denied, a disk I/O failure) → propagate a distinct, NON-re-login error: `"Could not read
+     stored OAuth credentials for profile {profile:?}: {e}. Check file permissions under
+     %LOCALAPPDATA%\jr\secrets\{profile}\ and try again."` — re-login is not suggested, since
+     re-authenticating would hit the identical read failure and would needlessly mint a new,
+     unrevoked Atlassian grant.
    - `Ok(None)` → fall through to the existing `"default"`-only legacy-flat-key check, then the
      existing "No stored OAuth token" error (unchanged).
 3. Exactly one namespaced keyring key present (partial write) → **existing logic is extended,
@@ -325,6 +554,13 @@ The four existing "Unlock your keychain" message sites in `src/api/auth.rs` (F1 
   **unchanged.** This guards the OAuth *app's* client_id/client_secret pair — always short
   strings, never `TooLong`-reachable. F4 must audit (not modify) this to confirm.
 
+**Message accuracy is now structural, not incidental (ties back to Finding #5, §1).** Because
+`engage_dpapi_fallback` gates DPAPI engagement to `#[cfg(windows)]` at the call site,
+`DpapiFallbackFailed` can never be produced by `store_oauth_tokens` on a non-Windows build — the
+`Some(_)` branch above is therefore unreachable on macOS/Linux by construction, not merely
+"unlikely." The Windows-specific wording in that branch's message is safe to keep exactly as
+written.
+
 ### 7. Delete/clear paths clean up the DPAPI file too
 
 `clear_profile_oauth_pair` and `clear_profile_creds` each gain one additional step:
@@ -333,6 +569,273 @@ existing two keyring deletes, using the same `NoEntry`/`NotFound`-is-success tol
 established for `delete_credential_tolerating_no_entry`. Without this, `logout`/`remove`/a
 mechanism switch would leave an orphaned encrypted file on disk after every other credential
 trace is gone.
+
+### 8. Security posture: same-user trust boundary, no additional entropy, ACL expectations
+
+**Threat model, stated explicitly (Finding #11, Pass-1 review).** `dpapi::protect`/`unprotect`
+call `CryptProtectData`/`CryptUnprotectData` with `pOptionalEntropy = NULL`. Any process running
+as the SAME Windows user account that owns the file can call `CryptUnprotectData` on it and
+recover the plaintext OAuth tokens — DPAPI's user-scope protection ties decryption to the
+logged-on user's master key, not to `jr.exe` specifically, and no per-application secret is mixed
+in. This is the IDENTICAL trust boundary CLAUDE.md's `SEC-WCM-DOC` already documents for Windows
+Credential Manager storage ("Secrets stored there are accessible to any process running in the
+same user session… OS-level user-session isolation is the trust boundary on Windows") — this ADR
+extends that SAME boundary to the DPAPI-file fallback, deliberately not a stricter or looser one.
+It was previously unstated for this new on-disk artifact; this section makes it explicit.
+
+**Decision: no `pOptionalEntropy`.** A secondary entropy value strengthens DPAPI's protection
+only if the entropy itself is kept somewhere a same-user attacker process could NOT also read —
+`jr` has no secret-storage primitive more protected than DPAPI available to it (no HSM, no
+TPM-backed key, no user-entered passphrase in this design), so any entropy `jr` could derive and
+store (a sibling file, a registry value, a hardcoded constant compiled into the binary) is itself
+readable by the exact same same-user process the entropy would be defending against — adding it
+would be security theater, not real hardening. This is consistent with the precedent survey
+already cited in Context (`git-credential-manager`'s `dpapi` store, `azure-cli`'s MSAL encrypted
+file cache), neither of which is evidenced to rely on non-trivial entropy beyond DPAPI's own
+user-scope binding. Revisit only if a future design introduces a genuinely separate secret (e.g.
+a user-entered passphrase) to derive entropy from.
+
+**ACL / permission expectations for `secrets/<profile>/oauth-tokens.dat`.** This ADR does NOT add
+new ACL-setting code (e.g. `SetNamedSecurityInfo`) — that would add a second `unsafe` FFI surface
+beyond the two functions §5 already scopes and justifies, for a boundary DPAPI already enforces
+at the decrypt layer regardless of file permissions. The expectation is: `secrets/` inherits its
+parent directory's NTFS ACL via ordinary `create_dir_all` (no explicit ACL call), which on a
+standard Windows profile restricts `%LOCALAPPDATA%` to the owning user account plus
+SYSTEM/Administrators — the same inheritance `jr`'s existing `cache_root()` already relies on for
+`%LOCALAPPDATA%\jr`'s other subtrees. **F4 must verify** (a Windows-only manual check, not new
+production code) that this inheritance actually holds for a freshly created `secrets/`
+subdirectory on a real Windows install: an inheritance gap here would let a DIFFERENT
+same-user-but-different-logon-context reader (e.g. a scheduled task running as the same account
+under a different token) read the ciphertext file — though DPAPI would still refuse to decrypt
+it without that logon's matching master key, making this a defense-in-depth layer, not the
+primary boundary. If that verification ever fails, adding explicit ACL restriction at creation
+time is a tracked follow-up, out of this ADR's scope.
+
+### 9. Profile-name path-traversal guard — host-independent recognizer (BC-1.4.040 / VP-AUTHDX-016)
+
+**Pass-2 adversarial-review correction (2026-09-03, Finding #1).** `Profile::from(String)`
+performs no validation (§9 item 1 of the companion `architecture-delta.md`, flagged as an
+inherited risk) — `file_path(profile)` (§3) joins the raw profile string into a filesystem path
+as a single component. The product-owner/formal-verifier's downstream BC-1.4.040 /
+VP-AUTHDX-016 pass described the required guard only as "Windows-syntax-aware," which is
+ambiguous in a way that matters: if implemented with `std::path::Path`/`Component` — the
+obvious, idiomatic Rust tool — the check's behavior depends on the OS `cargo test` happens to run
+on. `std::path::Path::new("C:\\evil")` on a **Linux** CI runner yields a SINGLE opaque
+`Component::Normal("C:\\evil")` (backslash is not a Unix path separator), which is lexically
+CONTAINED under `secrets/` and would be wrongly **ACCEPTED** — the exact opposite of the guard's
+intent — for `"C:\\evil"`, `"\\\\server\\share"` (UNC), and `"name:$DATA"` (NTFS Alternate Data
+Stream) alike. This would make VP-AUTHDX-016's "cross-platform, runs in default CI" claim false
+as written: a Linux-CI-run test asserting these three inputs are rejected would pass against a
+`std::path`-based implementation not because the guard works, but because the test never actually
+exercises Windows path syntax on a runner that understands it.
+
+**Decision: a dedicated, host-independent recognizer, not `std::path`.** New pure functions in
+`src/api/auth_windows_store.rs` (same pure/impure seam as `envelope`/`should_fallback_to_dpapi`,
+§3/§1 — this recognizer never touches the filesystem or the OS's own path parser):
+
+```rust
+/// Host-independent guard for a profile-derived path COMPONENT (never a
+/// full path) about to be joined as `secrets/<profile>/oauth-tokens.dat`.
+/// Deliberately does NOT use `std::path::Path`/`Component` — those parse
+/// path syntax according to the COMPILATION/RUNTIME target's OS
+/// conventions, so a check built on them behaves differently depending on
+/// which OS it happens to run on (Pass-2 review Finding #1: a Linux CI
+/// runner's `std::path` does not treat `\` as a separator or `:` as a
+/// drive/stream marker, silently accepting Windows escape syntax). This
+/// function instead implements its own minimal character-level scan,
+/// evaluated IDENTICALLY regardless of host OS — its behavior, and its
+/// test suite, never depend on which platform `cargo test` runs on, which
+/// is what makes it genuinely testable in default CI on a Linux runner.
+///
+/// Containment is achieved by CONSTRUCTION, not by post-hoc
+/// canonicalize-and-compare-prefix: every character or shape that could
+/// ever be interpreted as a path separator, anchor, or escape on ANY
+/// target OS is rejected outright, so any string that passes is
+/// guaranteed to be a single, non-empty, non-dot, opaque path segment —
+/// which can only ever resolve to a direct child of `secrets/`.
+pub(crate) fn reject_unsafe_profile_component(
+    profile: &str,
+) -> Result<(), ProfilePathEscape> {
+    use ProfilePathEscape::*;
+    if profile.is_empty() {
+        return Err(Empty);
+    }
+    if profile == "." || profile == ".." {
+        return Err(DotSegment);
+    }
+    if profile.contains('\0') {
+        return Err(NulByte);
+    }
+    // Reject BOTH separators on EVERY host, not just the host's own
+    // convention. This alone rejects UNC (`\\server\share`,
+    // `//server/share`) and any embedded traversal attempt identically on
+    // Linux, macOS, and Windows CI.
+    if profile.contains('/') || profile.contains('\\') {
+        return Err(Separator);
+    }
+    // Drive letters ("C:") and NTFS Alternate Data Streams ("name:$DATA")
+    // both use ':' — reject unconditionally rather than trying to
+    // distinguish the two shapes; a profile name has no legitimate use
+    // for a colon.
+    if profile.contains(':') {
+        return Err(Colon);
+    }
+    // A trailing '.' or space is silently stripped by the Windows shell
+    // and several Win32 APIs, which could make a name that LOOKS distinct
+    // from an existing one collide with it on disk.
+    if profile.ends_with('.') || profile.ends_with(' ') {
+        return Err(TrailingDotOrSpace);
+    }
+    if is_reserved_windows_device_name(profile) {
+        return Err(ReservedDeviceName);
+    }
+    Ok(())
+}
+
+/// Case-insensitive match against the Windows reserved device-name list,
+/// evaluated against the profile's STEM (the part before the first '.',
+/// if any) — `NUL.txt` is exactly as reserved as bare `NUL` on real
+/// Windows, since the device name resolves before extension handling.
+/// Includes the console pseudo-handle names `CONIN$`/`CONOUT$` alongside
+/// the classic DOS device names — both are reserved, real Win32 device
+/// names (the active console's input/output buffer), not merely a
+/// stylistic variant of `CON` (Pass-2 adversarial review, Finding #4).
+///
+/// **Pass-4 adversarial-review correction (2026-09-03, Finding #3).** Two
+/// additions, both required to match Microsoft's own "Naming Files,
+/// Paths, and Namespaces" reserved-name documentation exactly: (1) the
+/// stem is computed against a LEADING-space-trimmed copy of the profile
+/// string, so `" CON"` (and `" CON.txt"`) is recognized as reserved
+/// exactly like bare `"CON"` — a leading space alone is not otherwise
+/// rejected by `reject_unsafe_profile_component` (unlike a TRAILING
+/// dot/space, which is a different hazard — Windows silently strips it —
+/// and remains rejected outright there, not here); (2) the Unicode
+/// superscript-digit device names `COM¹`/`COM²`/`COM³`
+/// (U+00B9/U+00B2/U+00B3) and `LPT¹`/`LPT²`/`LPT³` are added to the match
+/// set — Microsoft documents these as reserved alongside the ASCII-digit
+/// forms. The superscript characters have no ASCII case, so
+/// `to_ascii_uppercase` leaves them unchanged; only the `COM`/`LPT`
+/// prefix's casing is folded, which is sufficient for an exact match.
+/// Final authoritative set: **30 names** (6 + 9 + 9 + 6) — see the
+/// companion `architecture-delta.md`'s Pass-4 guidance section for the
+/// full enumeration and the required BC-1.4.040/VP-AUTHDX-016 wording.
+fn is_reserved_windows_device_name(profile: &str) -> bool {
+    let trimmed = profile.trim_start_matches(' ');
+    let stem = trimmed.split('.').next().unwrap_or(trimmed);
+    matches!(
+        stem.to_ascii_uppercase().as_str(),
+        "CON" | "PRN" | "AUX" | "NUL" | "CONIN$" | "CONOUT$"
+            | "COM1" | "COM2" | "COM3" | "COM4" | "COM5" | "COM6" | "COM7" | "COM8" | "COM9"
+            | "LPT1" | "LPT2" | "LPT3" | "LPT4" | "LPT5" | "LPT6" | "LPT7" | "LPT8" | "LPT9"
+            | "COM\u{b9}" | "COM\u{b2}" | "COM\u{b3}" | "LPT\u{b9}" | "LPT\u{b2}" | "LPT\u{b3}"
+    )
+}
+
+/// Marker error for a rejected profile-derived path component. Carries no
+/// string payload deliberately — the variant name alone is the stable,
+/// non-string-matched signal a caller/CLI layer maps to
+/// `JrError::UserError` (exit 64), mirroring `DpapiFallbackFailed`'s
+/// type-based (never string-matched) discrimination convention.
+pub(crate) enum ProfilePathEscape {
+    Empty,
+    DotSegment,
+    NulByte,
+    Separator,
+    Colon,
+    TrailingDotOrSpace,
+    ReservedDeviceName,
+}
+```
+
+**Call-site contract — one implementation, three entry points.** `file_path(profile)` (§3) is the
+SOLE call site of `reject_unsafe_profile_component`, and is itself changed from returning a bare
+`PathBuf` to `Result<PathBuf, ProfilePathEscape>`:
+
+```rust
+fn file_path(profile: &Profile) -> Result<std::path::PathBuf, ProfilePathEscape> {
+    reject_unsafe_profile_component(profile.as_ref())?;
+    Ok(crate::cache::cache_root().join("secrets").join(profile.as_ref()).join("oauth-tokens.dat"))
+}
+```
+
+`store_pair`, `load_pair`, and `remove_if_present` each call `file_path(profile)?` as their FIRST
+statement, before any directory creation, read, or write — this is what makes the guard fire "at
+all three store entry points" (VP-AUTHDX-016) from a single implementation rather than three
+independently-drifting checks. A rejected profile therefore never reaches a filesystem call; the
+`ProfilePathEscape` error propagates up through `store_oauth_tokens`/`load_oauth_tokens`/
+`clear_profile_*` exactly like any other `anyhow`-wrapped error from this module, and the CLI
+layer maps it to `JrError::UserError` (exit 64) via the same downcast convention as
+`DpapiFallbackFailed` — a new, explicit downcast branch is required at whichever call site first
+surfaces this error to the user (F4 scope; not re-derived here).
+
+**Pass-4 adversarial-review correction (2026-09-03, Finding #2) — the guard call is REQUIRED
+on the non-Windows arm too, even though the resulting path is unused there.** The paragraph
+above is easy to satisfy only on the `#[cfg(windows)]` arm, where `file_path`'s returned
+`PathBuf` is genuinely needed for the real file I/O that follows. An implementer reaching for
+the natural shortcut on `#[cfg(not(windows))]` — where the path is never used — could write,
+e.g., `#[cfg(not(windows))] pub fn load_pair(_: &Profile) -> anyhow::Result<Option<(String,
+String)>> { Ok(None) }` without calling `file_path`/the guard at all. That compiles cleanly,
+passes every existing test, and silently exempts non-Windows builds from BC-1.4.040's
+guarantee — which is exactly the gap Finding #2 identifies: the guarantee is untestable in
+default (Linux/macOS) CI if the non-Windows arm never reaches the guard. The fix makes the call
+MANDATORY and identical in shape on both cfg arms of all three functions; the returned
+`PathBuf` is simply discarded on the arms that don't need it:
+
+```rust
+#[cfg(windows)]
+pub fn store_pair(profile: &Profile, access: &str, refresh: &str) -> anyhow::Result<()> {
+    let path = file_path(profile)?; // guard runs first; `?` propagates ProfilePathEscape
+    /* … real DPAPI-protect/wrap/temp-write/rename against `path` … */
+}
+
+#[cfg(not(windows))]
+pub fn store_pair(profile: &Profile, _access: &str, _refresh: &str) -> anyhow::Result<()> {
+    file_path(profile)?; // guard-only call; the returned path is never used here
+    Err(DpapiFallbackFailed("DPAPI is not available on this platform".into()).into())
+}
+
+#[cfg(windows)]
+pub fn load_pair(profile: &Profile) -> anyhow::Result<Option<(String, String)>> {
+    let path = file_path(profile)?;
+    /* … real file read + DPAPI unprotect against `path` … */
+}
+
+#[cfg(not(windows))]
+pub fn load_pair(profile: &Profile) -> anyhow::Result<Option<(String, String)>> {
+    file_path(profile)?; // guard-only call; the returned path is never used here
+    Ok(None)
+}
+
+#[cfg(windows)]
+pub fn remove_if_present(profile: &Profile) -> anyhow::Result<()> {
+    let path = file_path(profile)?;
+    /* … real NotFound-tolerant delete of `path` … */
+}
+
+#[cfg(not(windows))]
+pub fn remove_if_present(profile: &Profile) -> anyhow::Result<()> {
+    file_path(profile)?; // guard-only call; the returned path is never used here
+    Ok(())
+}
+```
+
+This makes the guard-INVOCATION WIRING itself — not merely `reject_unsafe_profile_component`'s
+own correctness — provable on a default Linux/macOS CI runner: a test that calls `store_pair`/
+`load_pair`/`remove_if_present` directly with a profile name the guard rejects, and asserts
+`Err` downcastable to `ProfilePathEscape` on every platform the test happens to run on, now
+catches a regression that drops the call from ANY of the six arms above — including a
+Windows-only regression, since the non-Windows arm's independent call is unaffected by a bug in
+the Windows arm and vice versa; each of the six call sites is its own, independently
+regression-catchable assertion. See the companion `architecture-delta.md`'s "Pass-4 architect
+guidance for product-owner and formal-verifier" section for the required BC-1.4.040/
+VP-AUTHDX-016 wording.
+
+**Scope note.** This guard governs ONLY the new `auth_windows_store.rs` secrets path — it does
+NOT retrofit `src/cache.rs::cache_dir(profile)`'s existing, unguarded profile-to-path join (the
+inherited risk `architecture-delta.md` §9 item 1 already flags as out of this cycle's scope for
+the lower-sensitivity, disposable cache namespace). Extending this same recognizer to
+`cache_dir` is a plausible future hardening pass but is not required for BC-1.4.040/VP-AUTHDX-016
+and is not specified here.
 
 ## Rationale
 
@@ -358,6 +861,23 @@ trace is gone.
 - **`windows-sys` over `windows`** is a deliberate minimization of new supply-chain surface on a
   security-critical path, at the cost of writing (and unit-testing at the envelope boundary) a
   small amount of `unsafe` FFI code — see §5 for the full comparison.
+- **Gating DPAPI engagement itself to `#[cfg(windows)]` (§1/§2)**, rather than relying on a
+  non-Windows backend simply never producing `TooLong` in practice, converts BC-1.4.035
+  Invariant 3 from a probabilistic property into a compile-time-structural one — the strongest
+  form of "byte-for-byte unchanged" available without forking `store_oauth_tokens` into two
+  separate functions per platform.
+- **No `pOptionalEntropy` and no new ACL-setting code (§8)** keep the DPAPI fallback's `unsafe`
+  surface exactly as narrow as §5 already commits to, on the reasoning that neither addition
+  would move the actual trust boundary (same-user), only add code that looks more secure without
+  being so.
+- **A dedicated, host-independent recognizer for the profile-name path guard (§9), never
+  `std::path`**, is the only design that makes the guard's own correctness — and its test
+  suite — independent of which OS `cargo test` happens to run on, which is a hard requirement for
+  a guard whose entire job is recognizing a DIFFERENT OS's path syntax (Windows) than the one it
+  may be compiled/run on.
+- **Type-based error discrimination on the read path (§3/§4, `CorruptSecretFile`)** extends the
+  same convention `DpapiFallbackFailed` already established for the write path, rather than
+  introducing a second, inconsistent (string-matched) mechanism for an analogous problem.
 
 ## Consequences
 
@@ -372,6 +892,19 @@ trace is gone.
 - Every "Unlock your keychain" message site becomes accurate for the failure it actually
   reports, closing the secondary root-cause BC (F1 §4) and making the dangling-grant revoke
   step explicit.
+- BC-1.4.035 Invariant 3 (macOS/Linux unchanged) is now enforceable as a call-site compile/
+  runtime gate (§1/§2), not merely an observation about current `keyring` behavior.
+- BC-1.4.040's path-traversal guard is now concretely, host-independently specified (§9) — its
+  Windows-syntax vectors are genuinely exercisable, and genuinely closed, by an ordinary
+  `cargo test` run on Linux/macOS CI, not merely a check that happens to look right when read.
+- BC-1.4.036's read-path error handling can now actually express the corrupt-vs-backend-IO
+  discrimination the BC mandates (§3's `CorruptSecretFile` marker), rather than requiring an
+  ad-hoc string-matched workaround this codebase's conventions forbid.
+- **BC-1.4.035 Invariant 1 is now closed against the stale-keyring-shadows-DPAPI defect
+  (Finding #1, Pass-3 review):** the DPAPI-fallback write route (§2) deletes any pre-existing
+  keyring pair for the profile BEFORE routing to DPAPI, in the crash-safe order — a mid-crash
+  outcome is "no credentials, forces clean re-login," never "a stale, complete keyring pair
+  permanently shadows a fresh, complete DPAPI pair."
 
 ### Negative / Trade-offs
 - New `unsafe` FFI surface (two functions) in a security-critical module — mitigated by
@@ -386,6 +919,15 @@ trace is gone.
   proving `CryptProtectData` is reachable in that headless runner context, is very likely
   required before F7 convergence. This ADR does not resolve that open question (F1 §13 Q3);
   it is carried forward to the F2 human gate.
+- The DPAPI file's confidentiality rests entirely on the OS-level same-user trust boundary
+  (§8) — no additional entropy, no application-level ACL hardening beyond directory inheritance.
+  This mirrors the already-accepted `SEC-WCM-DOC` posture for Credential Manager and is not a
+  weaker guarantee than today's keyring-only storage, but it is a NEW on-disk artifact carrying
+  that same exposure, now documented rather than implicit.
+- Durability is only guaranteed against process-kill unless the temp-write is `fsync`'d before
+  rename (§3, Finding #17); without an explicit temp-file cleanup step, a crash mid-write can
+  accumulate orphaned `*.tmp-*` ciphertext files (bounded to one per profile by the required
+  pre-write cleanup).
 
 ### Status as of this ADR (2026-09-03, cycle-004 F2)
 **Accepted, not yet implemented.** No `src/` file has changed. This ADR is the design F4's
@@ -439,4 +981,31 @@ trace is gone.
 - ADR-0020 — the most recent auth-subsystem ADR; this ADR's new module sits alongside, not in
   tension with, ADR-0020's per-profile credential-ownership model (the DPAPI file is keyed by
   the same `Profile` newtype and namespacing convention).
+- Pass-1 adversarial review (cycle-004 F2, 2026-09-03) — Findings #5, #11, #13, #17 incorporated
+  above: the `#[cfg(windows)]`-gated `engage_dpapi_fallback` call-site wrapper (§1/§2), the
+  security-posture/entropy/ACL documentation (§8), the outer/inner version-field relationship
+  (§3), and the fsync/temp-file-cleanup durability expectations (§3).
+- Pass-2 adversarial review (cycle-004 F2, 2026-09-03) — Findings #1, #2, #6 incorporated above:
+  the host-independent `reject_unsafe_profile_component` path-traversal recognizer for
+  BC-1.4.040/VP-AUTHDX-016 (new §9), the `CorruptSecretFile` typed read-path error marker for
+  BC-1.4.036 (§3/§4), and the age-gated (not blanket) `*.tmp-*` cleanup with its stated
+  cross-process concurrency boundary (§3). See the companion `architecture-delta.md`'s "Pass-2
+  architect guidance for product-owner and formal-verifier" section for the resulting
+  BC-1.4.040/VP-AUTHDX-016 wording instruction.
+- Pass-3 adversarial review (cycle-004 F2, 2026-09-03) — Finding #1 (STALE-KEYRING-SHADOWS-DPAPI)
+  incorporated above: §2's DPAPI-fallback write route now deletes any pre-existing keyring pair
+  BEFORE the DPAPI store (delete-then-store, not store-then-delete — the crash-safe ordering,
+  reasoned explicitly in §2's new "Ordering, and why" note), and BC-1.4.035 Invariant 1 is
+  extended to forbid a stale, complete keyring pair coexisting with a fresh, complete DPAPI pair.
+  See the companion `architecture-delta.md`'s "Pass-3 architect guidance for product-owner and
+  formal-verifier" section for the required BC-1.4.035 wording and the new VP-AUTHDX coverage.
+- Pass-4 adversarial review (cycle-004 F2, 2026-09-03) — Findings #2, #3 incorporated above:
+  `file_path(profile)?` (hence `reject_unsafe_profile_component`) is now a MANDATORY first
+  statement on BOTH cfg arms of `store_pair`/`load_pair`/`remove_if_present` (§3/§9), making the
+  guard's wiring — not just its own correctness — regression-catchable on default Linux/macOS
+  CI; and `is_reserved_windows_device_name` (§9) is extended with the Unicode superscript-digit
+  `COM¹`/`COM²`/`COM³`/`LPT¹`/`LPT²`/`LPT³` device names and leading-space-trimmed stem matching,
+  bringing the authoritative reserved-name set to 30. See the companion `architecture-delta.md`'s
+  "Pass-4 architect guidance for product-owner and formal-verifier" section for the required
+  BC-1.4.040/VP-AUTHDX-016 wording.
 </content>
