@@ -366,3 +366,61 @@ BCs: unchanged at **742** (Passes 5-6 amended existing BC bodies; no BC added or
 **Dim-6 Attestation:** N/A — no source code changed this burst (`.factory/` spec-delta convergence only, no `develop`-side commit).
 
 **Dim-7 Attestation:** N/A — no test-affecting change this burst; full regression remains PASS (4763/0/157) as of the cycle-003 F6/F7 hardening/convergence passes, unchanged.
+
+## Burst: Burst 7 — F2 scoped adversarial convergence, Passes 9-11 — INTERMEDIATE CHECKPOINT #4 (2026-09-04)
+
+**Parent-commit:** Burst 6's commit (`develop` tip `42e92b46`, unchanged this burst — no `develop`-side commit).
+
+**Trigger:** the human convergence directive recorded at the Burst 6 (post-Pass-8) checkpoint — "continue to full 3-consecutive-clean-pass convergence," rejecting gate-now-with-residuals — authorized three further rounds of orchestrator-driven F2 scoped adversarial review (Pass 9, Pass 10, Pass 11), which had accumulated uncommitted on top of the Burst 6 checkpoint. This burst makes that work durable via one atomic commit and brings STATE.md current. No new human decision was made this burst beyond recording the standing directive — DEC-335 (the F1 human gate) remains the latest recorded DEC.
+
+**Work performed this burst, in order:**
+
+1. **Adversarial Pass 9** (fresh context, scoped to the F2 spec delta as refined through Pass 8): 2 findings (0 CRIT / 0 HIGH / 1 MED / 1 LOW), novelty MED-LOW. Resolved via a full architect→product-owner→formal-verifier fix chain.
+2. **Adversarial Pass 10** (fresh context): 1 finding (0 CRIT / 1 HIGH / 0 MED / 0 LOW). The HIGH was a class-level defect, not a one-off: an earlier passage's "non-Windows always no-op" framing for `load_pair`/`store_pair`/`remove_if_present` overstated the guard-passing carve-out, and the same overstatement recurred at 3 further sibling loci across ADRs, BC bodies, and VP text. Rather than patching only the one cited instance, the fix round ran an exhaustive class-sweep — a comprehensive corpus grep for every "non-Windows … no-op" framing touching these three functions — and corrected all instances in one pass, closing the class with zero residuals confirmed by re-grep. Resolved via the architect→product-owner→formal-verifier fix chain.
+3. **Adversarial Pass 11** (fresh context): 2 findings (0 CRIT / 0 HIGH / 2 MED / 0 LOW). MED 1: `architecture-delta.md` §7's VP-hooks CI-classification table had gone stale relative to the Pass-8 keyring-gated correction (Burst 6) — it still carried the pre-Pass-8 tally instead of the corrected 10 fully-default-CI / 2 default-CI-portion+keyring-gated-core / 1 keyring-gated-core+Windows-tail / 1 Windows-only breakdown; corrected to match. MED 2: the DPAPI-fallback guard-rejection error message read "not valid for credential storage" / "choose a different name," which contradicted the keyring happy-path (a name rejected for the DPAPI-file fallback can still store successfully via keyring) — reworded to scope the restriction explicitly to the Windows encrypted-file fallback only, not credential storage generally. Both resolved via the architect→product-owner→formal-verifier fix chain.
+4. **Verification re-run:** `scripts/check-spec-counts.sh` exit 0; `scripts/check-bc-cumulative-counts.sh` exit 0 (742 BCs across 9 files, unchanged — Passes 9-11 were BC-body/VP-body/architecture-delta edits, no BC added or removed); `vp-delta.md`'s recorded `input-hash` (`8b37046`) confirmed current against its listed inputs.
+5. Did NOT stage the three pre-existing unrelated dirty files (`regression-state.json`, `sidecar-learning.md`, the modified `S-cycle3-env-tag` demo gif) — left untouched, per standing instruction carried across every prior burst. `ADR-0022` was confirmed NOT modified since the Burst 6 checkpoint (`git status` showed no changes to it) and was correctly excluded from this burst's commit.
+6. Updated STATE.md via one full-content Write (v3.58 → v3.59): frontmatter, Phase Progress F2-SPEC-EVOLUTION row, Current Phase Steps table (Passes 9-11 marked DONE, checkpoint #4 recorded, Pass 12 NEXT), Convergence Status / Concurrent Cycles / Constraints Carried Forward / Drift-Standing prose (trajectory extended to 17→9→5→4→4→4→[sweep 3]→3→3→1→1→2, clean-streak 0/3, the operator's full-convergence directive recorded), and Session Resume Checkpoint all brought current, recording NEXT-on-resume as dispatch of F2 adversarial Pass 12.
+7. Appended this burst-log entry (Burst 7).
+
+**Adversary verdict:** Not a single aggregate verdict — this burst's substance is three scoped adversarial passes (Pass 9, Pass 10, Pass 11), each already narrated inline above with its own finding count and fix-round outcome (2 → 1 → 2 findings, all fully resolved). No standalone top-level `adversary`-agent verdict beyond what the per-pass descriptions in "Work performed this burst" already capture. No CLEAN/BLOCKED convergence verdict applies yet — clean-streak remains 0/3 (no pass has yet been clean), convergence still in progress per the operator's continue-to-full-convergence directive.
+
+**Outcome:** cycle-004 (`windows-correctness`) Phase F2 (spec evolution) remains IN PROGRESS. `total_bcs` unchanged at 742 this burst; `vp_count` unchanged at 55 (Passes 9-11 were BC-body/VP-body/architecture-delta refinements, no new VP number allocated). Adversarial finding trajectory: 17 → 9 → 5 → 4 → 4 → 4 → [post-Pass-6 sweep: 3] → 3 → 3 → 1 → 1 → 2 (all findings from all 11 passes resolved via architect→product-owner→formal-verifier fix chains). Clean-streak 0/3 — three CONSECUTIVE clean passes are required to converge under the standard rule; none has yet been clean. **HUMAN CONVERGENCE DIRECTIVE (recorded, no DEC):** at the post-Pass-8 gate the operator chose "continue to full 3-consecutive-clean-pass convergence," rejecting gate-now-with-residuals — the loop continues to that bar. **NEXT:** dispatch F2 scoped adversarial Pass 12 (fresh context), continuing toward 3 consecutive clean passes.
+
+**Codifications:** none this burst — no new DEC; DEC-335 (F1 human gate) remains the latest recorded decision. The Pass 9-11 fix-chain outputs (the class-sweep correcting the "non-Windows always no-op" overstatement across ADRs/BCs/VPs, the architecture-delta §7 VP-hooks CI-classification reconciliation, and the guard-rejection message scoping fix) are the codified F2 spec-evolution convergence output this burst. The operator's continue-to-full-convergence directive is a process directive, not a spec/scope decision, and is recorded in STATE.md prose rather than as a DEC.
+
+**Closes:** the STATE.md staleness that had accumulated across Passes 9-11 (STATE.md previously current only through Pass 8, now current through Pass 11). Also closes, via the Pass 10 class-sweep, every remaining instance of the "non-Windows always no-op" overstatement across the corpus (comprehensive grep confirmed zero residuals). **Does NOT close:** F2 itself, which remains IN PROGRESS pending Pass 12+ (toward 3 consecutive clean passes, per the operator's directive) and the F2 human gate; no cycle-001/002/003 standing Drift/Standing Items are touched.
+
+### Counts reconciled this burst
+
+BCs: unchanged at **742** (Passes 9-11 amended existing BC/ADR/VP body text; no BC added or removed). VPs: unchanged at **55**. Holdout scenarios unchanged at 106. `total_stories` unchanged at 168 (F2 does not create stories). Reserved Windows device-name set unchanged at 30 (ADR-0021 §9).
+
+### Details
+
+| Agent | Task | Output |
+|-------|------|--------|
+| adversary (Pass 9, fresh context) | Scoped adversarial review, round 9 | 2 findings (0 CRIT/0 HIGH/1 MED/1 LOW), novelty MED-LOW |
+| architect + product-owner + formal-verifier (Pass 9 fix round) | Resolve Pass 9 findings | BC/VP-body amendments |
+| adversary (Pass 10, fresh context) | Scoped adversarial review, round 10 | 1 finding (0 CRIT/1 HIGH/0 MED/0 LOW) — "non-Windows always no-op" overstatement class |
+| architect + product-owner + formal-verifier (Pass 10 fix round) | Resolve Pass 10 finding via exhaustive class-sweep | Corrected the overstatement at the cited locus plus 3 further sibling loci across ADRs/BC bodies/VP text; comprehensive grep confirmed zero residuals |
+| adversary (Pass 11, fresh context) | Scoped adversarial review, round 11 | 2 findings (0 CRIT/0 HIGH/2 MED/0 LOW) |
+| architect + product-owner + formal-verifier (Pass 11 fix round) | Resolve Pass 11 findings | architecture-delta.md §7 VP-hooks CI-classification table reconciled to the Pass-8 corrected tally; DPAPI-fallback guard-rejection message reworded to scope the restriction to the Windows encrypted-file fallback only |
+| state-manager | Verify accumulated work is internally consistent; commit it in one atomic commit; correct STATE.md; append this burst-log entry | This commit; `STATE.md`; `cycles/cycle-004/burst-log.md` (this entry) |
+
+**Files touched (Dim-1): 7 unique files (factory-artifacts, this burst)**
+
+- STATE.md
+- cycles/cycle-004/burst-log.md
+- cycles/cycle-004/phase-f2-spec-evolution/architecture-delta.md (modified)
+- cycles/cycle-004/phase-f2-spec-evolution/vp-delta.md (modified)
+- specs/architecture/decisions/ADR-0021-windows-oauth-secret-storage-dpapi-fallback.md (modified)
+- specs/prd/bc-1-auth-identity.md (modified)
+- specs/prd/BC-INDEX.md (modified)
+
+**Dim-2 Attestation:** `scripts/check-spec-counts.sh` (8 bc files, exit 0) and `scripts/check-bc-cumulative-counts.sh` (742 total across 9 files, exit 0) both PASS — re-verified before this burst, recorded here per Defensive Sweep Discipline (S-7.02); `vp-delta.md`'s `input-hash` (`8b37046`) confirmed current against its listed inputs; `ADR-0022` confirmed unmodified since Burst 6 via `git status` and correctly excluded from this commit; a corpus grep for the "non-Windows always no-op" overstatement pattern (Pass 10's class) found zero remaining residuals after the fix round — confirmed here per Defensive Sweep Discipline.
+
+**Dim-5 Attestation:** N/A — no binary/WASM artifact produced by this burst.
+
+**Dim-6 Attestation:** N/A — no source code changed this burst (`.factory/` spec-delta convergence only, no `develop`-side commit).
+
+**Dim-7 Attestation:** N/A — no test-affecting change this burst; full regression remains PASS (4763/0/157) as of the cycle-003 F6/F7 hardening/convergence passes, unchanged.

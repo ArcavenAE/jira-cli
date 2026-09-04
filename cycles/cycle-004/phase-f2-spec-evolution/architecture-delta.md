@@ -328,12 +328,12 @@ owns drafting the actual VP-NNN documents; this section only pins target module 
 | VP (F1-provisional ID) | Target | Tool | Platform |
 |---|---|---|---|
 | VP-AUTHDX-010 | `auth_windows_store::dpapi::{protect,unprotect}` round-trip | Manual / Windows CI integration test | Windows-only |
-| VP-AUTHDX-011 | `store_oauth_tokens`'s `TooLong` routing (§2 of ADR-0021) | proptest / unit test (mocked `keyring::Error`) | Cross-platform for the pure `should_fallback_to_dpapi` predicate, no seam needed. Cross-platform for the ROUTING dispatch (that `store_oauth_tokens` actually calls `store_pair` on `TooLong`) **only with `JR_FORCE_DPAPI_FALLBACK=1` engaged** (Pass-5 review, Finding #1) — see §14 below; without the seam, that dispatch is unreachable on non-Windows and the sub-property is Windows-only. |
-| VP-AUTHDX-012 | Atomic dual-write invariant (rollback-on-partial-overflow, ADR-0021 §2) | Unit test with a fault-injection seam (mirrors the existing `JR_S303_PERSIST_FAIL` pattern) | Cross-platform for the rollback/ordering LOGIC **only with `JR_FORCE_DPAPI_FALLBACK=1` engaged** (Pass-5 review, Finding #1) — without it, the logic is unreachable on non-Windows. Windows CI for the real file-rename/fsync/age-gated-cleanup step (unaffected by the seam — that code exists only in `store_pair`'s `#[cfg(windows)]` arm). |
+| VP-AUTHDX-011 | `store_oauth_tokens`'s `TooLong` routing (§2 of ADR-0021) | proptest / unit test (mocked `keyring::Error`) | **CI classification corrected Pass-8, Finding #1 (supersedes the Pass-5 "default-CI via seam" framing previously stated here); propagated here Pass-11.** Default CI, cross-platform, no seam needed, for sub-property (1)'s pure `should_fallback_to_dpapi` predicate. Sub-property (2)'s routing/rollback STATE core (that `store_oauth_tokens` actually calls `store_pair` on `TooLong`, with correct rollback) is **KEYRING-GATED** (`#[ignore]`+`JR_RUN_KEYRING_TESTS=1`, additionally +`JR_FORCE_DPAPI_FALLBACK=1` on non-Windows to reach the branch at all) — the seam lifts only `engage_dpapi_fallback`'s `#[cfg(not(windows))]` gate, NOT `store_oauth_tokens`'s real `set_password`/delete keychain calls, and this core is a pre-seed→re-read STATE assertion the keyring mock cannot persist across `Entry::new()` (mirrors the VP-AUTHDX-005/006/007 boundary). See vp-delta.md's "Honest default-CI split" (Pass-8 Finding #1) and §18 below. |
+| VP-AUTHDX-012 | Atomic dual-write invariant (rollback-on-partial-overflow, ADR-0021 §2) | Unit test with a fault-injection seam (mirrors the existing `JR_S303_PERSIST_FAIL` pattern) | **CI classification corrected Pass-8, Finding #1 (supersedes the Pass-5 "default-CI via seam" framing previously stated here); propagated here Pass-11.** Sub-property (3)'s age-gated `*.tmp-*` cleanup (plain filesystem logic, no keychain) is default CI, cross-platform, no seam. Sub-property (1)'s no-split/rollback ORDERING state core is **KEYRING-GATED** (`#[ignore]`+`JR_RUN_KEYRING_TESTS=1`, additionally +`JR_FORCE_DPAPI_FALLBACK=1` on non-Windows) for the same reason as VP-AUTHDX-011 above (the seam doesn't seam out real keychain calls; the mock can't persist the pre-seed→re-read state). Sub-property (2)'s real file-rename/fsync mechanics remain Windows-CI-only, unaffected by the seam — that code exists only in `store_pair`'s `#[cfg(windows)]` arm. See vp-delta.md's "Honest default-CI split" (Pass-8 Finding #1) and §18 below. |
 | VP-AUTHDX-013 | Cross-platform non-engagement of `#[cfg(windows)] mod dpapi` | Compile-time (`cfg`-gated absence), not a runtime test | Cross-platform (proves absence on non-Windows) |
 | (new, unnumbered — formal-verifier to allocate) | `api/jira/tenant::fetch_cloud_id` — soft-fail on non-2xx/network error/malformed JSON | Unit test with `wiremock` | Cross-platform |
 | (new, unnumbered — formal-verifier to allocate) | `login_token`'s `cloud_id` refresh-not-clear behavior on a mechanism switch (ADR-0022 §3), AND `jr auth refresh`'s direct `login_token` call triggering the fetch on every invocation (ADR-0022 §2 "Decision", Pass-3 Finding #2) | Integration test extending `tests/auth_chosen_flow_reconcile.rs` | Cross-platform |
-| (new, unnumbered — formal-verifier to allocate; Pass-3 Finding #1, STALE-KEYRING-SHADOWS-DPAPI; **CI classification corrected Pass-5, Finding #1 — see §14/guidance below**) | `store_oauth_tokens`'s keyring-clear-before-DPAPI-store route (ADR-0021 §2): given a PRE-EXISTING complete keyring pair for a profile AND a fresh `access` write that returns `TooLong` (both the access-overflow arm and the refresh-overflow-after-access-succeeded arm), assert that after `store_oauth_tokens` returns `Ok`: (a) both namespaced keyring keys are absent, (b) the DPAPI file contains the fresh pair, and (c) a subsequent `load_oauth_tokens` returns the fresh DPAPI pair — never the stale keyring values | Unit test with a fault-injection seam producing `keyring::Error::TooLong` on a pre-seeded keyring pair | **Windows-only for the (a)+(b)+(c) success oracle as written** (requires `store_oauth_tokens` to return `Ok`, which is impossible on non-Windows regardless of any seam — `store_pair`'s `#[cfg(not(windows))]` arm always fails). **Cross-platform, but ONLY with `JR_FORCE_DPAPI_FALLBACK=1` engaged**, for the narrower delete-then-fail sub-property: given the same pre-existing pair and `TooLong`, both keyring keys are deleted BEFORE `store_pair` is attempted, and on `store_pair`'s (guaranteed, off-Windows) failure, `store_oauth_tokens` returns `Err` with neither backend populated. Without the seam, NEITHER sub-property is reachable in default CI — the whole match arm is dead code on non-Windows. |
+| (new, unnumbered — formal-verifier to allocate; Pass-3 Finding #1, STALE-KEYRING-SHADOWS-DPAPI; **CI classification corrected Pass-8, Finding #1 — supersedes the "CI classification corrected Pass-5, Finding #1" note previously stated here; propagated here Pass-11 — see §18 below**) | `store_oauth_tokens`'s keyring-clear-before-DPAPI-store route (ADR-0021 §2): given a PRE-EXISTING complete keyring pair for a profile AND a fresh `access` write that returns `TooLong` (both the access-overflow arm and the refresh-overflow-after-access-succeeded arm), assert that after `store_oauth_tokens` returns `Ok`: (a) both namespaced keyring keys are absent, (b) the DPAPI file contains the fresh pair, and (c) a subsequent `load_oauth_tokens` returns the fresh DPAPI pair — never the stale keyring values | Unit test with a fault-injection seam producing `keyring::Error::TooLong` on a pre-seeded keyring pair | **KEYRING-GATED core, NO pure default-CI portion** (Pass-8 Finding #1 supersedes the Pass-5 "cross-platform via seam" framing previously stated here). The entire routing/delete-ordering/both-keys-absent core is a pre-seed→re-read STATE property: the `JR_FORCE_DPAPI_FALLBACK=1` seam makes the delete-then-store arm REACHABLE off-Windows, but observing the both-keys-absent state still requires a real keychain the mock cannot persist across `Entry::new()` (mirrors the VP-AUTHDX-005/006/007 boundary). Gated `#[ignore]`+`JR_RUN_KEYRING_TESTS=1`, additionally +`JR_FORCE_DPAPI_FALLBACK=1` on non-Windows. The `(a)+(b)+(c)`-after-`Ok` success oracle additionally requires a real DPAPI round-trip, which stays Windows-only regardless of the seam (`store_pair` cannot return `Ok` off Windows). |
 
 ---
 
@@ -957,4 +957,175 @@ proves the guard EMITS `ProfilePathEscape` at `remove_if_present`'s own entry po
 the STORE path (Sites 1/3) RENDERS it distinctly; VP-018 (this Pass-8 addition) proves the CLEAR
 path SWALLOWS it — three genuinely different properties at three different call sites, each
 capable of failing independently if any one of them regresses.
+
+---
+
+## 17. Pass-10 Adversarial Review Amendments (2026-09-04)
+
+**Class-sweep, not a new finding.** A Pass-10 adversarial review re-examined the specific
+overstatement class Pass-9 partially corrected: Pass-4 (§13 above) made `file_path(profile)?` —
+hence `reject_unsafe_profile_component` — a mandatory first statement of the `#[cfg(not(windows))]`
+arms of `store_pair`/`load_pair`/`remove_if_present`, so NONE of those non-Windows arms is an
+unconditional no-op — a guard-**rejecting** profile name returns `Err(ProfilePathEscape)` on every
+OS before the arm's normal return; only a guard-**passing** name reaches the arm's fixed
+`DpapiFallbackFailed`/`Ok(None)`/`Ok(())` result. Pass-9 qualified some prose statements of this
+shape with the "for a profile name that passes the guard; a guard-rejecting name returns
+`Err(ProfilePathEscape)` on every OS" caveat, but did not propagate that caveat to every instance.
+
+**Locus found and fixed:** ADR-0021 §4 (~pre-fix line 610) stated "`#[cfg(not(windows))]`,
+`auth_windows_store::load_pair` always returns `Ok(None)` — this branch is a no-op read on
+macOS/Linux, never engaged in practice" with no guard-passing qualifier, contradicting §3's own
+doc-comment and code (which call `file_path(profile)?` first on that same arm). Fixed to read:
+"...always returns `Ok(None)` for a profile name that PASSES `reject_unsafe_profile_component`; a
+guard-rejecting name returns `Err(ProfilePathEscape)` on every OS (§3, §9) — this branch is a no-op
+read on macOS/Linux only in the guard-passing case, never engaged in practice."
+
+**Two further instances found and fixed by the same exhaustive sweep (not previously flagged by
+Pass-9):**
+- ADR-0021 §1 (~pre-fix line 114): a hypothetical-routing sentence — "would route through
+  `auth_windows_store::store_pair`'s `#[cfg(not(windows))]` arm, which always fails with
+  `DpapiFallbackFailed`" — stated the store-path fixed-result claim with no guard-passing
+  qualifier. Fixed to add "...for a profile name that PASSES `reject_unsafe_profile_component` (a
+  guard-rejecting name returns `Err(ProfilePathEscape)` on every OS instead, per §3/§9)."
+- ADR-0021 §1 (~pre-fix lines 174-176): "`auth_windows_store::store_pair`'s `#[cfg(not(windows))]`
+  arm (§3) is unchanged — it ALWAYS returns `DpapiFallbackFailed` immediately after the guard
+  call; it never succeeds off Windows" likewise asserted the fixed-result/never-succeeds claim
+  without the guard-passing carve-out. Fixed to read "...for a profile name that PASSES
+  `reject_unsafe_profile_component`, it ALWAYS returns `DpapiFallbackFailed` immediately after the
+  guard call; it never succeeds off Windows for such a name (a guard-rejecting name returns
+  `Err(ProfilePathEscape)` on every OS instead, per §3/§9)."
+
+**Exhaustive sweep performed, no further unqualified instances found.** All three files in this
+cycle's F2 spec-evolution scope (`ADR-0021-windows-oauth-secret-storage-dpapi-fallback.md`,
+`ADR-0022-api-token-cloud-id-acquisition-tenant-info.md`, this `architecture-delta.md`) were
+grepped for every phrasing named in the sweep instruction and several additional near-synonyms,
+confirming each surviving hit is either already correctly qualified or out of scope (a different
+function entirely). Grep terms used: `always returns Ok(None)`, `always returns Ok(())`,
+`` always `Ok(None)` ``, `` always `Ok(())` ``, `always returns`, `always fails with`,
+`DpapiFallbackFailed` (full context review of every hit), `permanent no-op`, `no-op read`,
+`no-op write`, `byte-for-byte`, `no file I/O`, `always.*immediately`, `unconditional`,
+`never succeeds`, `never fires`, `categorically`, `compiles uniformly`, `is discarded`,
+`nothing is read`, `no filesystem call`, `trivial`, `short-circuit`, `off Windows`,
+`guard, then always` (the already-correct reference pattern in §2.1 above, left unchanged),
+`is unchanged`. Findings after the sweep:
+- ADR-0022 (cloud_id/tenant_info) has **no** instances of this class — none of its content
+  concerns `auth_windows_store::{store_pair,load_pair,remove_if_present}`; its one `never fires`
+  hit (§1, the `https://` scheme check) is a different function (`fetch_cloud_id`) and a
+  different, already-accurate unconditional claim (the check is skipped only when the scheme
+  check itself fails, which has no guard-rejecting-name analog).
+- `architecture-delta.md` §2.1's interface table rows for `store_pair`/`load_pair`/
+  `remove_if_present` (~lines 162-164) were already correctly qualified ("guard...invoked FIRST on
+  BOTH cfg arms...then always...") before this pass and required no change — this is the reference
+  pattern the two ADR-0021 fixes above were brought into alignment with.
+- ADR-0021 §7's `clear_dpapi_file_tolerating_path_escape` discussion (~lines 731-839) and §9's
+  guard-implementation code/prose (~lines 937-1199) already state the guard-passing/
+  guard-rejecting split explicitly throughout and needed no correction.
+- ADR-0021 §3's doc-comment block (~lines 431-469, the `store_pair`/`load_pair`/
+  `remove_if_present` rustdoc) already uses the "once the guard passes, always returns X" phrasing
+  — equivalent in meaning to Pass-9's qualifier — and needed no correction.
+- `architecture-delta.md` §13's VP-AUTHDX-022 CI-classification row (~line 336, "`store_pair`'s
+  `#[cfg(not(windows))]` arm always fails") was reviewed and left UNCHANGED: that sentence's claim
+  is "never returns `Ok`" (i.e., always `Err`, of EITHER `DpapiFallbackFailed` or
+  `ProfilePathEscape`), which holds on every input regardless of guard outcome — it is not an
+  instance of the defect class, since it does not assert a SPECIFIC fixed error/return value
+  without the guard-passing carve-out.
+
+No behavior changed by this pass — wording qualification only, consistent with the Pass-4
+guard-first design already specified in ADR-0021 §3/§9.
+
+---
+
+## 18. Pass-11 Adversarial Review Amendments (2026-09-04)
+
+### Finding #1 [MED] — stale Pass-5 CI-classification in §7's Verification-Property Hooks table
+
+**Locus found and fixed:** §7's table rows for VP-AUTHDX-011, VP-AUTHDX-012, and VP-AUTHDX-022
+(pre-fix ~lines 331/332/336) still carried the **Pass-5** classification ("Cross-platform … only
+with `JR_FORCE_DPAPI_FALLBACK=1` engaged"). **Pass-8 Finding #1 superseded this** (see
+`vp-delta.md`'s "Honest default-CI split," Pass-8 Finding #1, and the per-VP rows at
+`vp-delta.md` lines 56/57/67): the seam is necessary but NOT sufficient for default CI on these
+three VPs — a real keychain is a second, independent requirement, because each VP's core is a
+pre-seed→re-read keychain STATE assertion the mock cannot persist across `Entry::new()` (the same
+VP-AUTHDX-005/006/007 boundary already established in cycle-003). Pass-8 corrected `bc-1-auth-
+identity.md`'s oracle text and `vp-delta.md`'s tally, but did not propagate the correction to
+this file's §7 table, which is a MAINTAINED reference an F6 executor consults directly — the
+staleness there was a real propagation gap, not merely a stray timestamp.
+
+**Fix applied (§7 above):** the three rows now state the Pass-8-authoritative split:
+- **VP-AUTHDX-011:** pure `should_fallback_to_dpapi` predicate (sub-property 1) is default-CI,
+  cross-platform, no seam; the routing/rollback STATE core (sub-property 2) is KEYRING-GATED
+  (`#[ignore]`+`JR_RUN_KEYRING_TESTS=1`, +`JR_FORCE_DPAPI_FALLBACK=1` on non-Windows).
+- **VP-AUTHDX-012:** the age-gated `*.tmp-*` cleanup (sub-property 3) is default-CI, cross-platform,
+  no seam; the no-split/rollback ordering STATE core (sub-property 1) is KEYRING-GATED, same
+  gating as above; the real rename/fsync mechanics (sub-property 2) remain Windows-CI-only.
+- **VP-AUTHDX-022:** has **no pure default-CI portion** — its entire routing/delete-ordering/
+  both-keys-absent core is KEYRING-GATED (same gating), with the `(a)+(b)+(c)`-after-`Ok` success
+  oracle additionally Windows-only (a real DPAPI round-trip cannot succeed off Windows regardless
+  of the seam). The stale "CI classification corrected Pass-5, Finding #1 — see §14/guidance
+  below" metadata on this row's first column is replaced with a pointer to this section and to
+  Pass-8's finding, since Pass-5's correction was itself the thing Pass-8 superseded.
+
+No VP added, removed, or renumbered; no test-count or oracle-text change (that is `bc-1-auth-
+identity.md` and the VP documents, formal-verifier's scope, already corrected at Pass-8 per
+`vp-delta.md`). This finding is a same-document propagation fix only.
+
+### Finding #2 [MED] — guard-rejection message contradicted the keyring happy path
+
+**Locus found and fixed:** ADR-0021 §4 (~pre-fix line 573; echoed at BC-1.4.036 Postcondition 2 /
+EC-1.4.036-7 and BC-1.4.039 Sites 1/3, product-owner's scope to update). The retired message —
+`"Profile name {profile:?} is not valid for credential storage on this platform ({reason}).
+Choose a different profile name."` — was reachable for a profile name that IS valid for keyring
+storage: `store_oauth_tokens`'s KEYRING happy path (ADR-0021 §2) never calls
+`reject_unsafe_profile_component` at all, so a guard-colliding name (e.g. `con`, or one containing
+`:`) whose OAuth tokens fit the keyring is stored and read successfully on every OS — this ADR's
+own §7 and BC-1.4.038 Invariant 3 already call such a name "legal for keyring-only credential
+storage." The retired message therefore asserted something false ("not valid for credential
+storage" — it IS valid, via keyring) with a self-contradictory remediation (re-running
+`jr auth login --profile con` succeeds via the very keyring path the message implied was
+unavailable).
+
+**Fix applied (ADR-0021 §4):** the message is reworded to scope the rejection to the DPAPI
+encrypted-file fallback specifically, and to condition its "different profile name" remediation
+on the oversized-token case (the only case this guard is ever consequential in, since a
+keyring-fitting token never reaches it). The exact new message string, defined once in ADR-0021
+§4 for product-owner and formal-verifier to echo verbatim:
+
+> `"Profile name {profile:?} is not valid for jr's Windows encrypted-file OAuth-token fallback
+> storage ({reason}) — this restriction applies only to that fallback (used when an OAuth token
+> is too large for Windows Credential Manager), not to keyring-based credential storage in
+> general. If your OAuth token is, or was, too large for the keyring, re-authenticate under a
+> different profile name: "jr auth login --oauth --profile <new-name>"."`
+
+**Read-path wording nuance (also recorded in ADR-0021 §4).** This message fires on the read path
+(§4 item 2) only when both namespaced keyring keys are already absent for the profile and the
+DPAPI fallback is then consulted for a guard-colliding name — so the message must not claim the
+profile's credentials "are still in the keyring" (at that exact call, they are not), but for the
+same reason must not tell the user the name is categorically invalid for storage either (its
+keyring path is untouched by this guard and works normally for a token that fits). The chosen
+wording states a general, always-true mechanism fact ("not to keyring-based credential storage in
+general") rather than a claim about this profile's current stored state, which is accurate both
+on the read path (uncertain whether the token would fit) and the two store-path call sites (§6,
+Sites 1/3, where the token is known-oversized and the keyring pair has just been deleted by the
+same store attempt — see ADR-0021 §4 for the full site-by-site accounting).
+
+## Pass-11 architect guidance for product-owner and formal-verifier
+
+- **Product-owner:** echo the exact message string above verbatim into BC-1.4.036 Postcondition 2
+  / EC-1.4.036-7 and BC-1.4.039 Sites 1/3, replacing the retired "is not valid for credential
+  storage on this platform… Choose a different profile name." wording wherever it is quoted.
+  Preserve the existing `{reason}`-derivation and discrimination-order prose (`ProfilePathEscape`
+  checked first, before `CorruptSecretFile`/generic backend-IO) — only the quoted message text and
+  its accompanying remediation description change. BC-1.4.038 Invariant 3's "legal for
+  keyring-only credential storage" language needs no change — it is what this fix aligns the
+  message text WITH, not a locus of this finding.
+- **Formal-verifier:** align VP-AUTHDX-015/017's message-content assertions to the new exact
+  string (VP-AUTHDX-017 owns the constructed-error message selection per `vp-delta.md`'s
+  default-CI bucket list). No CI-classification change follows from Finding #2 — this is a
+  message-content-only fix; VP-AUTHDX-015/017 remain in the default-CI bucket per `vp-delta.md`.
+  For Finding #1, no formal-verifier action is required — `vp-delta.md`'s tally and
+  `bc-1-auth-identity.md`'s oracle text were already corrected at Pass-8; this pass only closed the
+  §7 propagation gap in this file.
+
+No behavior changed by either finding beyond the message string's wording (Finding #2) and this
+file's own §7 reference-table text (Finding #1).
 </content>

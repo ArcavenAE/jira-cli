@@ -121,7 +121,7 @@ R1/R4 prefix = deepening round that introduced it.
 | BC-1.4.037 | DPAPI-encrypted-file store: versioned envelope + atomic temp-write-fsync-and-rename; sole `unsafe` FFI surface in the module tree [NEW 2026-09-03 cycle-004, DEC-334, ADR-0021 §3] | — | ADR-0021 §3; src/api/auth_windows_store.rs (NEW, F4 target) | HIGH |
 | BC-1.4.038 | `clear_profile_oauth_pair`/`clear_profile_creds` delete BOTH the keyring pair AND the DPAPI file [NEW 2026-09-03 cycle-004, DEC-334, ADR-0021 §7] | — | ADR-0021 §7; src/api/auth.rs::clear_profile_oauth_pair, ::clear_profile_creds (F4 targets) | HIGH |
 | BC-1.4.039 | Honest-fail backstop — `DpapiFallbackFailed` replaces "Unlock your keychain" only when the DPAPI fallback itself fails [NEW 2026-09-03 cycle-004, DEC-334, ADR-0021 §6] | — | ADR-0021 §6; src/api/auth.rs::oauth_login, ::refresh_oauth_token_with_url (F4 targets) | HIGH |
-| BC-1.4.040 | The DPAPI secret file's path is derived from the profile name with path-traversal / invalid-component rejection before any write, read, or delete [NEW 2026-09-03 cycle-004, DEC-334 — hardening requirement escalated from an inherited cache-dir precedent] | — | architecture-delta.md §9 item 1; src/profile.rs (Profile::from(String)); src/cache.rs::cache_dir (precedent) | MEDIUM |
+| BC-1.4.040 | The DPAPI secret file's path is derived from the profile name with path-traversal / invalid-component rejection before any write, read, or delete [NEW 2026-09-03 cycle-004, DEC-334 — hardening requirement escalated from an inherited cache-dir precedent] | — | ADR-0021 §9; architecture-delta.md §9 item 1; src/profile.rs (Profile::from(String)); src/cache.rs::cache_dir (precedent) | MEDIUM |
 
 ### 1.5 OAuth State Machine (11 BCs: BC-1.5.031..041)
 

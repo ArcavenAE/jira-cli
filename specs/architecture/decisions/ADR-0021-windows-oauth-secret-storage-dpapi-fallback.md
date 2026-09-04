@@ -111,7 +111,9 @@ therefore matched and propagated exactly as it is today — `auth_windows_store:
 ("macOS/Linux byte-for-byte UNCHANGED"): without the call-site gate, a hypothetical non-Windows
 `keyring::Error::TooLong` (no known backend returns this today, but the variant is not
 Windows-exclusive in `keyring`'s own enum) would route through `auth_windows_store::store_pair`'s
-`#[cfg(not(windows))]` arm, which always fails with `DpapiFallbackFailed` — and that marker is
+`#[cfg(not(windows))]` arm, which always fails with `DpapiFallbackFailed` for a profile name that
+PASSES `reject_unsafe_profile_component` (a guard-rejecting name returns `Err(ProfilePathEscape)`
+on every OS instead, per §3/§9) — and in the guard-passing case that marker is
 rendered by the honest-fail message (§6) with **Windows-specific wording** ("Windows Credential
 Manager's 2560-byte limit"), which would be both false and a behavior change on macOS/Linux.
 Gating the call site is strictly safer than making the message platform-neutral: a
@@ -172,8 +174,10 @@ fn engage_dpapi_fallback(err: &keyring::Error) -> bool {
 ```
 
 **What the seam does, and does NOT, make testable on non-Windows.** Even with the seam engaged,
-`auth_windows_store::store_pair`'s `#[cfg(not(windows))]` arm (§3) is unchanged — it ALWAYS
-returns `DpapiFallbackFailed` immediately after the guard call; it never succeeds off Windows. The
+`auth_windows_store::store_pair`'s `#[cfg(not(windows))]` arm (§3) is unchanged — for a profile
+name that PASSES `reject_unsafe_profile_component`, it ALWAYS returns `DpapiFallbackFailed`
+immediately after the guard call; it never succeeds off Windows for such a name (a
+guard-rejecting name returns `Err(ProfilePathEscape)` on every OS instead, per §3/§9). The
 seam therefore makes exactly ONE additional shape exercisable in default CI: **delete-then-fail** —
 given a pre-existing, fitting keyring pair and a mocked `TooLong`, `store_oauth_tokens` deletes both
 namespaced keyring keys FIRST (per §2's "Ordering, and why"), then calls `store_pair`, which fails;
@@ -565,17 +569,61 @@ legacy-flat-key recovery, which is unchanged):
    - `Err(e)` where `e.downcast_ref::<ProfilePathEscape>()` is `Some` (the profile name itself
      fails `reject_unsafe_profile_component`, §9) → **checked FIRST, before `CorruptSecretFile`
      or any other discrimination (Pass-5 adversarial review, Finding #2).** Propagate a distinct
-     exit-64 `JrError::UserError` naming the invalid profile — e.g. `"Profile name {profile:?}
-     is not valid for credential storage on this platform ({reason}). Choose a different profile
-     name."`, where `{reason}` is a short, variant-specific phrase (e.g. "contains a path
-     separator," "is a reserved Windows device name") derived from the `ProfilePathEscape`
-     variant, never the generic backend-IO wording below. This is required by BC-1.4.040
-     Postcondition 6 and was previously unreachable: without this arm checked first, a
-     `ProfilePathEscape` (which `anyhow`'s `?`-propagation through `file_path` turns into an
-     ordinary `anyhow::Error` indistinguishable by TYPE from any other `load_pair` failure unless
-     explicitly downcast-checked) would fall through to the generic backend/IO branch below and be
-     rendered as a misleading "check file permissions" message that never mentions the actual
-     problem (an invalid profile name).
+     exit-64 `JrError::UserError` naming the invalid profile. **Exact message (Pass-11
+     adversarial review, Finding #2 — supersedes the earlier Pass-5 wording; see the correction
+     rationale immediately below):**
+
+     `"Profile name {profile:?} is not valid for jr's Windows encrypted-file OAuth-token fallback
+     storage ({reason}) — this restriction applies only to that fallback (used when an OAuth
+     token is too large for Windows Credential Manager), not to keyring-based credential storage
+     in general. If your OAuth token is, or was, too large for the keyring, re-authenticate under
+     a different profile name: \"jr auth login --oauth --profile <new-name>\"."`
+
+     where `{reason}` is a short, variant-specific phrase (e.g. "contains a path separator," "is a
+     reserved Windows device name") derived from the `ProfilePathEscape` variant, never the
+     generic backend-IO wording below.
+
+     **Pass-11 correction rationale — the retired message was factually wrong and
+     self-contradictorily remediated.** The retired wording read: `"Profile name {profile:?} is
+     not valid for credential storage on this platform ({reason}). Choose a different profile
+     name."` This is untrue as a blanket claim: `store_oauth_tokens`'s KEYRING happy path (§2)
+     never calls `reject_unsafe_profile_component` at all — a guard-colliding profile name (e.g.
+     `con`, or one containing `:`) whose OAuth tokens FIT the keyring is stored and read
+     successfully on every OS (BC-1.4.038 Invariant 3 and this ADR's own §7 call such a name
+     "legal for keyring-only credential storage"). Telling the user the name is "not valid for
+     credential storage" over-scoped a DPAPI-encrypted-FILE-path-specific restriction to
+     "credential storage" in general, and "choose a different profile name" was self-contradictory
+     advice as a blanket remediation — re-running `jr auth login --profile con` succeeds via the
+     exact keyring happy path the message implied was blocked. The corrected message (1) scopes
+     the rejection to the DPAPI encrypted-file fallback specifically, and (2) conditions the
+     "different profile name" remediation on the oversized-token case, the only case in which this
+     guard is ever consequential (a keyring-fitting token never reaches this guard at all).
+
+     **Read-path wording nuance (this branch, item 2 above).** This arm is reached only when BOTH
+     namespaced keyring keys are already absent for this profile — so the message must NOT claim
+     the profile's credentials "are still in the keyring" (at this exact call, they demonstrably
+     are not); but for the same reason it must NOT assert the name is categorically invalid for
+     storage either, since a guard-colliding name's keyring path is untouched by this guard and
+     works normally for a token that fits. The message resolves this by stating a general,
+     always-true mechanism fact ("not to keyring-based credential storage in general") rather than
+     a claim about this profile's current stored state — accurate whether this call reflects a
+     profile that was never logged in, or one whose only credential was a pre-guard DPAPI file
+     under a name a later guard tightening now rejects (in which case that file is genuinely
+     unreadable, and the "re-authenticate under a different profile name" remediation is exactly
+     what recovers it). The same message text is also used, unchanged, at the two store-path call
+     sites (§6, Sites 1/3), where — unlike here — the keyring pair has just been deleted by the
+     store attempt itself (§2's delete-before-store ordering) and the token is known for certain to
+     be oversized (a `TooLong` already occurred): the message's conditional "if your OAuth token
+     is, or was, too large for the keyring" phrasing holds accurately in both the certain
+     (store-path) and uncertain (read-path) cases without asserting a specific current-state claim
+     that could be false at either site.
+
+     This message content is required by BC-1.4.040 Postcondition 6 and was previously
+     unreachable: without this arm checked first, a `ProfilePathEscape` (which `anyhow`'s
+     `?`-propagation through `file_path` turns into an ordinary `anyhow::Error` indistinguishable
+     by TYPE from any other `load_pair` failure unless explicitly downcast-checked) would fall
+     through to the generic backend/IO branch below and be rendered as a misleading "check file
+     permissions" message that never mentions the actual problem (an invalid profile name).
    - `Err(e)` where (the above check did not match, and) `e.downcast_ref::<CorruptSecretFile>()`
      is `Some` (file present but corrupt/undecryptable — see Finding #2 note in §3) → propagate a
      distinct, force-re-login error: `"OAuth credentials for profile {profile:?} could not be
@@ -607,8 +655,10 @@ the actual fix is "use a different profile name."
    stderr warning noting a partial keyring remnant was ignored; otherwise fall through to
    today's "OAuth keychain entries … are partial" error, unchanged.
 
-`#[cfg(not(windows))]`, `auth_windows_store::load_pair` always returns `Ok(None)` — this branch
-is a no-op read on macOS/Linux, never engaged in practice (see VP-AUTHDX-013, F1 §7.4).
+`#[cfg(not(windows))]`, `auth_windows_store::load_pair` always returns `Ok(None)` for a profile
+name that PASSES `reject_unsafe_profile_component`; a guard-rejecting name returns
+`Err(ProfilePathEscape)` on every OS (§3, §9) — this branch is a no-op read on macOS/Linux only
+in the guard-passing case, never engaged in practice (see VP-AUTHDX-013, F1 §7.4).
 
 ### 5. Dependency decision: `windows-sys` (already-present, promoted to a direct dependency), NOT the `windows` crate
 
