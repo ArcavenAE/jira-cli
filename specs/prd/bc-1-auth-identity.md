@@ -633,7 +633,7 @@ Embedded OAuth app (1.3), Token keychain (1.4), OAuth state machine (1.5), Auth 
 
 **Architecture Anchors**: ADR-0022 §1/§2; architecture-delta.md §1.2/§2.2 (new module interface table), §3 (modified-components table, `login_token`/`handle_login` rows).
 
-**Story Anchor**: TBD (F3)
+**Story Anchor**: `S-cycle4-cloud-id-correctness` (F3 human gate, DEC-337, 2026-09-04)
 
 **VP Anchors**: VP-AUTHDX-019
 
@@ -676,7 +676,7 @@ Embedded OAuth app (1.3), Token keychain (1.4), OAuth state machine (1.5), Auth 
 
 **Architecture Anchors**: ADR-0022 §3; architecture-delta.md §7 (verification-property hooks table, "mechanism-switch refresh" row), §9 item 4.
 
-**Story Anchor**: TBD (F3)
+**Story Anchor**: `S-cycle4-cloud-id-correctness` (F3 human gate, DEC-337, 2026-09-04)
 
 **VP Anchors**: VP-AUTHDX-020 (extends VP-AUTHDX-003's mechanism-reconciliation harness)
 
@@ -728,7 +728,7 @@ A stale `cloud_id` on an `api_token`-method profile is therefore already inert f
 
 **Architecture Anchors**: ADR-0022 §4; architecture-delta.md §1.2 (target-state diagram, `ConfigRS`/`ClientRS` nodes marked UNCHANGED), §4 (confirmed-unchanged section).
 
-**Story Anchor**: TBD (F3) — no PRODUCTION code changes; the implementing story is the regression-pin test itself (VP-AUTHDX-021).
+**Story Anchor**: `S-cycle4-cloud-id-correctness` (F3 human gate, DEC-337, 2026-09-04) — no PRODUCTION code changes; the implementing story is the regression-pin test itself (VP-AUTHDX-021).
 
 **VP Anchors**: VP-AUTHDX-021
 
@@ -1084,7 +1084,7 @@ A corrupt or permission-denied DPAPI file encountered while in this partial-keyr
 
 **Architecture Anchors**: ADR-0021 §1/§2; architecture-delta.md §1.2/§2.1/§3 (`store_oauth_tokens` row).
 
-**Story Anchor**: TBD (F3)
+**Story Anchor**: `S-cycle4-dpapi-storage-fix` (F3 human gate, DEC-337, 2026-09-04)
 
 **VP Anchors**: VP-AUTHDX-011, VP-AUTHDX-013, VP-AUTHDX-022 (stale-keyring-shadow closure — Postconditions 2/3/6, Invariant 1's second clause, EC-1.4.035-4; NEW cycle-004 F2 Pass-3 follow-on), VP-AUTHDX-023 (`JR_FORCE_DPAPI_FALLBACK` debug-seam release-gate — Invariant 3's `#[cfg(debug_assertions)]` seam compiled out of release; NEW cycle-004 F2 Pass-6 follow-on, Finding #3), VP-AUTHDX-012 (declared at BC-1.4.037; co-covers this BC's no-split-across-backends guarantee — Invariant 1 / Postcondition 2 — per the vp-delta coverage map)
 
@@ -1142,7 +1142,7 @@ A corrupt or permission-denied DPAPI file encountered while in this partial-keyr
 
 **Architecture Anchors**: ADR-0021 §4; architecture-delta.md §2.1/§3 (`load_oauth_tokens` row).
 
-**Story Anchor**: TBD (F3)
+**Story Anchor**: `S-cycle4-dpapi-storage-fix` (F3 human gate, DEC-337, 2026-09-04)
 
 **VP Anchors**: VP-AUTHDX-015 (also cross-covers BC-1.4.028's amended partial-state branch); depends on VP-AUTHDX-014's envelope-corruption proof for the manufactured `Err` input.
 
@@ -1191,7 +1191,7 @@ A corrupt or permission-denied DPAPI file encountered while in this partial-keyr
 
 **Architecture Anchors**: ADR-0021 §3/§5; architecture-delta.md §2.1 (module interface table), §5 (dependency graph), §6 (purity boundary map).
 
-**Story Anchor**: TBD (F3)
+**Story Anchor**: `S-cycle4-dpapi-storage-fix` (F3 human gate, DEC-337, 2026-09-04)
 
 **VP Anchors**: VP-AUTHDX-010, VP-AUTHDX-012, VP-AUTHDX-014
 
@@ -1239,7 +1239,7 @@ A corrupt or permission-denied DPAPI file encountered while in this partial-keyr
 
 **Architecture Anchors**: ADR-0021 §7 (as amended, Pass-8 — the `clear_dpapi_file_tolerating_path_escape` adapter); architecture-delta.md §2.1 (module interface table), §3 (modified-components table), §16 (Pass-8 adversarial review amendments).
 
-**Story Anchor**: TBD (F3)
+**Story Anchor**: `S-cycle4-dpapi-storage-fix` (F3 human gate, DEC-337, 2026-09-04)
 
 **VP Anchors**: VP-AUTHDX-018
 
@@ -1290,7 +1290,7 @@ A corrupt or permission-denied DPAPI file encountered while in this partial-keyr
 
 **Architecture Anchors**: ADR-0021 §6; architecture-delta.md §2.1 (module interface table — `DpapiFallbackFailed` row), §3 (modified-components table, Sites 1/3 rows).
 
-**Story Anchor**: TBD (F3)
+**Story Anchor**: `S-cycle4-honest-fail-message` (F3 human gate, DEC-337, 2026-09-04)
 
 **VP Anchors**: VP-AUTHDX-017
 
@@ -1346,7 +1346,7 @@ A corrupt or permission-denied DPAPI file encountered while in this partial-keyr
 
 **Architecture Anchors**: ADR-0021 §9 (`reject_unsafe_profile_component`, the concrete host-independent recognizer this BC's postconditions specify — Pass-2 adversarial review Finding #1); architecture-delta.md §9 item 1 (residual design question raised by the architect for this exact concern).
 
-**Story Anchor**: TBD (F3)
+**Story Anchor**: `S-cycle4-dpapi-storage-fix` (F3 human gate, DEC-337, 2026-09-04)
 
 **VP Anchors**: VP-AUTHDX-016
 

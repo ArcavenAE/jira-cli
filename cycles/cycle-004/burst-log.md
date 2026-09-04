@@ -781,3 +781,50 @@ BCs: unchanged at **742**. VPs: unchanged at **55**. Holdout scenarios: unchange
 **Dim-6 Attestation:** N/A — no source code changed this burst (`.factory/` pause bookkeeping only, no `develop`-side commit).
 
 **Dim-7 Attestation:** N/A — no test-affecting change this burst; full regression remains PASS (4763/0/157) as of the cycle-003 F6/F7 hardening/convergence passes, unchanged.
+
+## Burst: Burst 14 — F3 human gate APPROVED (DEC-337) — STORY-INDEX registration (168→172) + BC Story-Anchor backlinks + F3→F4 transition (2026-09-04)
+
+**Parent-commit:** `42e92b46` (`develop` tip; unchanged this burst — no `develop`-side commit; F4 implementation dispatch has not yet started).
+
+**Trigger:** the human APPROVED the F3 incremental story-decomposition gate ("Approve → F4") on 2026-09-04, confirming: (1) scope = exactly DEC-335's 4 stories, nothing added or dropped; (2) release-bundling of #759 items 1+2 via the `depends_on` edge (`honest-fail-message` → `dpapi-storage-fix`) kept as two independently-traceable stories, accepted; (3) two-tier Windows validation accepted (REQUIRED F4 CI spike + REQUIRED F7 manual Windows-11 smoke gate); (4) the three carried-forward non-blockers (BC-1.4.035 PC5 VP gap, S-410 file overlap, CHANGELOG.md parallel-edit hotspot) accepted as deferred. `factory-worktree-health` passed pre-burst (worktree in-sync at factory-artifacts@`7fe31dea`, lock FREE).
+
+**Work performed this burst:**
+
+1. **DEC-337 recorded** in STATE.md's Decisions Log — the F3 gate approval decision, with the human's four confirmations captured in the Decision column.
+2. **`STORY-INDEX.md` registration (168→172):** the 4 `S-cycle4-*` stories added to both the Feature Followup status table and the Story Manifest file-path table (frontmatter `total_stories: 168→172`, `version: 1.6.12→1.6.13`); Story Manifest "Total rows" headline corrected to match. All 4 rows recorded `status: draft` (F3-gate-approval-registers, F4-dispatch-flips-to-ready-per-story, same convention as cycle-003).
+3. **BC Story Anchor backlinks written** in `bc-1-auth-identity.md` per `decomposition-manifest.md` §9's authoritative mapping: BC-1.2.052/053/054 → `S-cycle4-cloud-id-correctness`; BC-1.4.035/036/037/038/040 → `S-cycle4-dpapi-storage-fix`; BC-1.4.039 → `S-cycle4-honest-fail-message`. **BC-1.4.028 (amended) was SKIPPED** — verified it carries no `Story Anchor` field at all (an older-style BC section predating that convention); per the task's explicit instruction, no field was invented. Only the `Story Anchor` line was touched on each of the 9 BCs edited — no postcondition/invariant/edge-case content was altered (F2 spec remains frozen/gated). `scripts/check-spec-counts.sh` and `scripts/check-bc-cumulative-counts.sh` both re-run clean after the edits (8/8 files validated; 742 BCs reconciled across 9 files) — the Story Anchor field is outside both scripts' count-surface scope, confirming no incidental count drift.
+4. **STATE.md transitioned F3→F4** (v3.65→v3.66): frontmatter `phase: F3→F4`, `pipeline: PAUSED→ACTIVE`; Phase Progress F3 row marked APPROVED (DEC-337); new F4-DELTA-IMPLEMENTATION (cycle-004) row added, IN PROGRESS, Wave 1 = {`S-cycle4-dpapi-storage-fix`, `S-cycle4-cloud-id-correctness`} (parallel, file-disjoint), Wave 2 = {`S-cycle4-honest-fail-message`, `S-cycle4-windows-docs`}; Current Phase Steps replaced with F4 steps, F3 gate marked DONE (APPROVED, DEC-337); Convergence Status/Concurrent Cycles narrative updated to cycle-004 OPEN+ACTIVE at F4 Wave 1, counts 742 BCs/55 VPs/106 holdout/**172 stories**. Superseded v3.65 checkpoint archived verbatim to `cycles/cycle-004/session-checkpoints.md`.
+
+**Adversary verdict:** N/A this burst — no adversarial pass was dispatched; this burst is a human-gate decision, index/backlink registration, and phase transition, not a spec-content-producing or review burst. The F3 story-decomposition review convergence itself (4 rounds, 6→4→3→CLEAN) was already completed and recorded at Burst 12.
+
+**Outcome:** cycle-004 (`windows-correctness`) is now **ACTIVE** at **Phase F4 (delta implementation), Wave 1** — `S-cycle4-dpapi-storage-fix` and `S-cycle4-cloud-id-correctness` are ready for per-story TDD dispatch (file-disjoint, safe to parallelize). `total_stories` is now **172**. `total_bcs`/`vp_count`/holdout scenarios unchanged at 742/55/106.
+
+**Codifications:** **DEC-337** — cycle-004 F3 incremental story decomposition APPROVED at the human gate, advance to F4.
+
+**Closes:** the F3 story-decomposition human gate (was PENDING since Burst 12). **Does NOT close:** F4 itself (Wave 1 dispatch is the next action, not performed this burst); any cycle-001/002/003 standing Drift/Standing items (untouched).
+
+### Counts reconciled this burst
+
+BCs: unchanged at **742**. VPs: unchanged at **55**. Holdout scenarios: unchanged at 106. `total_stories`: **168→172** (4 new `S-cycle4-*` rows registered).
+
+### Details
+
+| Agent | Task | Output |
+|-------|------|--------|
+| state-manager | Record DEC-337; register 4 stories in `STORY-INDEX.md` (168→172); write 9 BC Story-Anchor backlinks in `bc-1-auth-identity.md` (1 skipped, no field present); transition STATE.md F3→F4 (v3.65→v3.66); commit all `.factory/` changes in one atomic burst | Updated `STATE.md` (v3.66, `phase: F4`, `pipeline: ACTIVE`); updated `STORY-INDEX.md` (v1.6.13, 172 stories); updated `bc-1-auth-identity.md` (9 Story Anchor backlinks); updated `cycles/cycle-004/session-checkpoints.md` (archives v3.65); this burst-log entry |
+
+**Files touched (Dim-1): 5 unique files (factory-artifacts, this burst)**
+
+- STATE.md
+- .factory/stories/STORY-INDEX.md
+- .factory/specs/prd/bc-1-auth-identity.md
+- cycles/cycle-004/burst-log.md
+- cycles/cycle-004/session-checkpoints.md
+
+**Dim-2 Attestation:** `scripts/check-spec-counts.sh` and `scripts/check-bc-cumulative-counts.sh` both re-run after the `bc-1-auth-identity.md` edits and pass clean (8/8 files validated; 742 BCs reconciled across 9 files) — the Story Anchor field edits are outside both scripts' count-surface scope. DEC-namespace collision check: DEC-337 is the next sequential ID after DEC-336, no collision.
+
+**Dim-5 Attestation:** N/A — no binary/WASM artifact produced by this burst.
+
+**Dim-6 Attestation:** N/A — no source code changed this burst (`.factory/` bookkeeping only, no `develop`-side commit; F4 implementation dispatch has not yet started).
+
+**Dim-7 Attestation:** N/A — no test-affecting change this burst; full regression remains PASS (4763/0/157) as of the cycle-003 F6/F7 hardening/convergence passes, unchanged.
