@@ -169,6 +169,17 @@ fn engage_dpapi_fallback(err: &keyring::Error) -> bool {
             return auth_windows_store::should_fallback_to_dpapi(err);
         }
     }
+    // Release builds compile the block above out entirely (the
+    // #[cfg(debug_assertions)] gate), which would otherwise leave `err`
+    // unused under `-D warnings` in that configuration alone -- this
+    // discard is the exact mirror-image cfg of that block, so exactly one
+    // of the two `err` uses is compiled in for any given profile and `err`
+    // is never simultaneously unused and unread (Pass-12 review, Finding
+    // #2). Not an `#[allow(unused_variables)]`: the parameter is genuinely
+    // consumed on every build, just via a different arm depending on
+    // profile.
+    #[cfg(not(debug_assertions))]
+    let _ = err;
     false
 }
 ```

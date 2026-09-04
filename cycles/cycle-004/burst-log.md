@@ -424,3 +424,59 @@ BCs: unchanged at **742** (Passes 9-11 amended existing BC/ADR/VP body text; no 
 **Dim-6 Attestation:** N/A — no source code changed this burst (`.factory/` spec-delta convergence only, no `develop`-side commit).
 
 **Dim-7 Attestation:** N/A — no test-affecting change this burst; full regression remains PASS (4763/0/157) as of the cycle-003 F6/F7 hardening/convergence passes, unchanged.
+
+## Burst: Burst 8 — F2 scoped adversarial convergence, Passes 12-14 — INTERMEDIATE CHECKPOINT #5 (2026-09-04)
+
+**Parent-commit:** Burst 7's commit (`develop` tip `42e92b46`, unchanged this burst — no `develop`-side commit).
+
+**Trigger:** the human convergence directive recorded at the Burst 6 (post-Pass-8) checkpoint — "continue to full 3-consecutive-clean-pass convergence" — continues to authorize further rounds of orchestrator-driven F2 scoped adversarial review. Pass 12, Pass 13, and Pass 14 accumulated uncommitted on top of the Burst 7 checkpoint. This burst makes that work durable via one atomic commit and brings STATE.md current. No new human decision was made this burst — DEC-335 (the F1 human gate) remains the latest recorded DEC.
+
+**Work performed this burst, in order:**
+
+1. **Adversarial Pass 12** (fresh context, scoped to the F2 spec delta as refined through Pass 11): 2 findings (0 CRIT / 0 HIGH / 1 MED / 1 LOW). Finding #1 (MED, CI-classification honesty): VP-AUTHDX-015's exactly-one-key-present partial-state branch (the AMENDED BC-1.4.028 read path) requires the keyring to PERSIST exactly one namespaced key to be reached — the same VP-AUTHDX-005/006/007 state-persistence boundary Pass-8 already used to reclassify VP-AUTHDX-011/012/022 — so the Pass-8 "10 of 14 fully default-CI" tally was itself still an overstatement for this one VP. Reclassified to "default-CI portion (both-absent branch) + keyring-gated partial-state tail," correcting the honest split to 9-of-14 fully default-CI / 3-of-14 default-CI-portion+keyring-gated (VP-AUTHDX-011, 012, 015) / 1-of-14 keyring-gated-core (VP-AUTHDX-022) / 1-of-14 Windows-only (VP-AUTHDX-010). Finding #2 (LOW): ADR-0021 §1's `engage_dpapi_fallback` code sample left the `err` parameter genuinely unused under `-D warnings` in a RELEASE build, since the `#[cfg(debug_assertions)]` block that consumes it is compiled out entirely in that configuration — a real defect in a code sample F4 implementers are directed to build against, though the dev-profile clippy CI job never surfaced it. Fixed with a mirror-cfg `#[cfg(not(debug_assertions))] let _ = err;` arm (not an `#[allow]`, per CLAUDE.md's no-lint-suppression-without-refactoring policy) so exactly one of the two `err` uses compiles in for any given profile. Resolved via a formal-verifier (Finding #1) + architect (Finding #2) fix chain.
+2. **Adversarial Pass 13** (fresh context): **CLEAN — zero findings, novelty ZERO.** The first clean pass this convergence run. Clean-streak advanced from 0/3 to 1/3.
+3. **Adversarial Pass 14** (fresh context): 1 finding (0 CRIT / 0 HIGH / 1 MED / 0 LOW) plus 1 process-gap observation. Finding #1 (MED): `bc-1-auth-identity.md`'s "## Summary Stats" closing Note had been frozen at the cycle-003 end-state ("71 total BCs … plus 13 new individually-bodied contracts added in cycle-003"), contradicting the file's own authoritative `total_bcs: 80`/`definitional_count: 69` frontmatter and the cycle-004 recompute note immediately above it, and never mentioning cycle-004's 9 new BCs (BC-1.2.052/053/054, BC-1.4.035..040) — a drift that had survived all 13 prior adversarial passes undetected because `scripts/check-bc-cumulative-counts.sh` reconciles 8 count surfaces but does not cover this one per-file prose surface. Fixed by rewording the Note to STOP restating literal cumulative/definitional counts in prose, instead pointing at the `total_bcs`/`definitional_count` frontmatter fields and the Summary Stats table Total as the sole authoritative source — a drift-proof fix that prevents this exact class of staleness from recurring on a future cycle's BC additions. The process-gap itself (the script's coverage blind spot) is recorded in STATE.md's Drift/Standing as a codification candidate for a future SELF-IMPROVEMENT/maintenance cycle, not a cycle-004 blocker. Pass 14 reset the clean-streak from 1/3 back to 0/3. Resolved via a product-owner fix (BC-body reword) with the process-gap recorded, not independently fixed (it targets tooling, not this cycle's spec delta).
+4. **Verification re-run:** `scripts/check-spec-counts.sh` exit 0; `scripts/check-bc-cumulative-counts.sh` exit 0 (742 BCs across 9 files, unchanged — Passes 12-14 were VP-body/ADR-body/BC-body edits, no BC added or removed); `vp-delta.md`'s recorded `input-hash` (`0c454f6`) confirmed current against its listed inputs.
+5. Did NOT stage the three pre-existing unrelated dirty files (`regression-state.json`, `sidecar-learning.md`, the modified `S-cycle3-env-tag` demo gif) — left untouched, per standing instruction carried across every prior burst. `BC-INDEX.md` and `ADR-0022` were both confirmed NOT modified since the Burst 7 checkpoint (`git status` showed no changes to either) and were correctly excluded from this burst's commit.
+6. Updated STATE.md via one full-content Write (v3.59 → v3.60): frontmatter, Phase Progress F2-SPEC-EVOLUTION row, Current Phase Steps table (Passes 12-14 marked DONE, checkpoint #5 recorded, Pass 15 NEXT), Convergence Status / Concurrent Cycles / Constraints Carried Forward / Drift-Standing prose (trajectory extended to 17→9→5→4→4→4→[sweep 3]→3→3→1→1→2→1→CLEAN→1, clean-streak 0/3, the Pass-14 process-gap recorded), and Session Resume Checkpoint all brought current, recording NEXT-on-resume as dispatch of F2 adversarial Pass 15.
+7. Appended this burst-log entry (Burst 8).
+
+**Adversary verdict:** Not a single aggregate verdict — this burst's substance is three scoped adversarial passes (Pass 12, Pass 13, Pass 14), each already narrated inline above with its own finding count and fix-round outcome (2 → CLEAN → 1 findings). Pass 13 is the first CLEAN verdict this convergence run has produced. No standalone top-level `adversary`-agent verdict beyond what the per-pass descriptions in "Work performed this burst" already capture. No overall CLEAN/BLOCKED convergence verdict applies yet — clean-streak remains 0/3 (Pass 13 was clean, Pass 14 broke it), convergence still in progress per the operator's continue-to-full-convergence directive.
+
+**Outcome:** cycle-004 (`windows-correctness`) Phase F2 (spec evolution) remains IN PROGRESS. `total_bcs` unchanged at 742 this burst; `vp_count` unchanged at 55 (Pass 12 reclassified VP-AUTHDX-015's CI tier only, no new VP number allocated; Passes 13-14 added no VP). Adversarial finding trajectory: 17 → 9 → 5 → 4 → 4 → 4 → [post-Pass-6 sweep: 3] → 3 → 3 → 1 → 1 → 2 → 1 → CLEAN → 1 (all findings from all 14 passes resolved via fix chains; Pass 13 the first CLEAN result this run). Clean-streak 0/3 — three CONSECUTIVE clean passes are required to converge under the standard rule; Pass 13 was clean, Pass 14 reset the streak. **HUMAN CONVERGENCE DIRECTIVE (recorded, no DEC):** unchanged — "continue to full 3-consecutive-clean-pass convergence" remains standing. **PROCESS-GAP recorded (not a blocker):** `scripts/check-bc-cumulative-counts.sh` does not cover a per-file `bc-*.md` Summary Stats closing Note's cumulative prose, which is why the Pass-14 drift survived 13 prior passes undetected; candidate remediation (extend script coverage, or standardize a reference-frontmatter-not-restate-literal-count convention) logged as a codification candidate for a future SELF-IMPROVEMENT/maintenance cycle. **NEXT:** dispatch F2 scoped adversarial Pass 15 (fresh context), continuing toward 3 consecutive clean passes.
+
+**Codifications:** none this burst — no new DEC; DEC-335 (F1 human gate) remains the latest recorded decision. The Pass 12-14 fix-chain outputs (VP-AUTHDX-015's CI-reclassification, the ADR-0021 release-build code-sample fix, and the bc-1 Summary Stats Note drift-proofing) are the codified F2 spec-evolution convergence output this burst. The Pass-14 process-gap (the `check-bc-cumulative-counts.sh` coverage blind spot) is recorded as a codification CANDIDATE in STATE.md's Drift/Standing and the `S-PG-*` backlog — it is not itself codified this burst, pending PO BC-authorship in a future maintenance cycle.
+
+**Closes:** the STATE.md staleness that had accumulated across Passes 12-14 (STATE.md previously current only through Pass 11, now current through Pass 14). Also closes the release-build `unused_variables` defect in ADR-0021's `engage_dpapi_fallback` code sample (Pass 12 Finding #2), and the 13-pass-old stale cumulative-BC-count claim in bc-1's Summary Stats Note (Pass 14 Finding #1). **Does NOT close:** F2 itself, which remains IN PROGRESS pending Pass 15+ (toward 3 consecutive clean passes, per the operator's directive) and the F2 human gate; the Pass-14 process-gap remains open as a recorded candidate, not fixed; no cycle-001/002/003 standing Drift/Standing Items are touched.
+
+### Counts reconciled this burst
+
+BCs: unchanged at **742** (Passes 12-14 amended existing VP/ADR/BC body text; no BC added or removed). VPs: unchanged at **55** (Pass 12 reclassified an existing VP's CI tier only). Holdout scenarios unchanged at 106. `total_stories` unchanged at 168 (F2 does not create stories). Reserved Windows device-name set unchanged at 30 (ADR-0021 §9).
+
+### Details
+
+| Agent | Task | Output |
+|-------|------|--------|
+| adversary (Pass 12, fresh context) | Scoped adversarial review, round 12 | 2 findings (0 CRIT/0 HIGH/1 MED/1 LOW) — VP-AUTHDX-015 CI-classification honesty correction; ADR-0021 release-build code-sample defect |
+| formal-verifier + architect (Pass 12 fix round) | Resolve Pass 12 findings | VP-delta CI tally corrected to 9-of-14; ADR-0021 §1 code sample fixed with mirror-cfg `let _ = err;` arm |
+| adversary (Pass 13, fresh context) | Scoped adversarial review, round 13 | CLEAN — zero findings, novelty ZERO; first clean pass this convergence run |
+| adversary (Pass 14, fresh context) | Scoped adversarial review, round 14 | 1 finding (0 CRIT/0 HIGH/1 MED/0 LOW) + 1 process-gap observation |
+| product-owner (Pass 14 fix round) | Resolve Pass 14 finding | bc-1-auth-identity.md Summary Stats Note reworded to reference frontmatter/table rather than restate a literal cumulative count |
+| state-manager | Verify accumulated work is internally consistent; commit it in one atomic commit; correct STATE.md; append this burst-log entry | This commit; `STATE.md`; `cycles/cycle-004/burst-log.md` (this entry) |
+
+**Files touched (Dim-1): 6 unique files (factory-artifacts, this burst)**
+
+- STATE.md
+- cycles/cycle-004/burst-log.md
+- cycles/cycle-004/phase-f2-spec-evolution/architecture-delta.md (modified)
+- cycles/cycle-004/phase-f2-spec-evolution/vp-delta.md (modified)
+- specs/architecture/decisions/ADR-0021-windows-oauth-secret-storage-dpapi-fallback.md (modified)
+- specs/prd/bc-1-auth-identity.md (modified)
+
+**Dim-2 Attestation:** `scripts/check-spec-counts.sh` (8 bc files, exit 0) and `scripts/check-bc-cumulative-counts.sh` (742 total across 9 files, exit 0) both PASS — re-verified before this burst, recorded here per Defensive Sweep Discipline (S-7.02); `vp-delta.md`'s `input-hash` (`0c454f6`) confirmed current against its listed inputs; `BC-INDEX.md` and `ADR-0022` both confirmed unmodified since Burst 7 via `git status` and correctly excluded from this commit.
+
+**Dim-5 Attestation:** N/A — no binary/WASM artifact produced by this burst.
+
+**Dim-6 Attestation:** N/A — no source code changed this burst (`.factory/` spec-delta convergence only, no `develop`-side commit).
+
+**Dim-7 Attestation:** N/A — no test-affecting change this burst; full regression remains PASS (4763/0/157) as of the cycle-003 F6/F7 hardening/convergence passes, unchanged.

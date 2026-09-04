@@ -1128,4 +1128,44 @@ same store attempt — see ADR-0021 §4 for the full site-by-site accounting).
 
 No behavior changed by either finding beyond the message string's wording (Finding #2) and this
 file's own §7 reference-table text (Finding #1).
+
+## 19. Pass-12 Adversarial Review Amendments (2026-09-04)
+
+### Finding #2 [LOW] — unused `err` parameter in the §1 concrete code sample under a release build
+
+**Locus found and fixed:** ADR-0021 §1's `#[cfg(not(windows))] fn engage_dpapi_fallback(err:
+&keyring::Error) -> bool` body (pre-fix ~lines 151-173) — the Pass-5 revision that renamed the
+parameter from Pass-1's `_err` to `err` so the `#[cfg(debug_assertions)]` block could pass it to
+`should_fallback_to_dpapi`, without accounting for the case where that whole block is compiled
+out. In a RELEASE build (`debug_assertions` OFF), the `#[cfg(debug_assertions)]` block — the
+function's only use of `err` — does not exist in the compiled output, leaving `err` genuinely
+unused → `unused_variables` under `-D warnings`. CLAUDE.md's "no `#[allow]` without refactoring"
+policy rules out silencing this with an attribute; the code sample an F4 implementer is directed
+to build against needed a structural fix instead. Bounded, not urgent: the gating clippy CI job
+runs the dev profile (`debug_assertions` on), so this did not fail CI today — but the sample as
+written was defective for anyone who built `--release` against it, which is exactly the
+codebase's own documented Windows release-build path (release binaries, per CLAUDE.md's `JR_*`
+seam-table convention, ignore every debug-only seam).
+
+**Fix applied (ADR-0021 §1):** added a `#[cfg(not(debug_assertions))] let _ = err;` statement
+after the `#[cfg(debug_assertions)]` block, immediately before the final `false`. The two `cfg`s
+are exact mirror images of each other (`debug_assertions` / `not(debug_assertions)`), so for any
+given build profile exactly one of the two `err`-touching arms is compiled in — `err` is used on
+every profile, just via a different arm — and `false` remains the unconditional non-seam,
+non-Windows return value, unchanged. No `#[allow(...)]` anywhere; the parameter is genuinely
+consumed in both configurations, not suppressed.
+
+**Verified (this pass, not deferred to F4):** a standalone reproduction of the exact two-function
+`engage_dpapi_fallback` pair (both `#[cfg(windows)]` and the corrected `#[cfg(not(windows))]`
+arm, against a stand-in `keyring::Error`/`should_fallback_to_dpapi`) was compiled with
+`rustc -D warnings` twice — once with `-C debug-assertions=yes` (models `cargo build`/`cargo
+test`'s dev profile) and once with `-C debug-assertions=no -O` (models `cargo build --release`)
+— both exit 0, zero diagnostics. This confirms the corrected sample compiles clean under
+`-D warnings` in both configurations, with no `#[allow]`, and that the seam's release-mode
+behavior (production non-Windows `false`, unconditionally, exactly as §1 already documented) is
+unchanged by the fix.
+
+No behavior, VP, or BC changed by this finding — it is a code-sample compile-cleanliness fix
+confined to ADR-0021 §1's illustrative snippet, which downstream stories (`dpapi-storage-fix`,
+`honest-fail-message`) build the real `src/api/auth.rs` change against at F4.
 </content>
