@@ -18,7 +18,7 @@ inputs:
   - ".factory/specs/architecture/decisions/ADR-0022-api-token-cloud-id-acquisition-tenant-info.md"
   - ".factory/cycles/cycle-004/phase-f2-spec-evolution/architecture-delta.md"
   - ".factory/research/edge-tenant-info-cloudid-2026-09-03.md"
-input-hash: "00725ec"
+input-hash: "95218fd"
 ---
 
 # VP Delta — Windows Correctness (`windows-correctness`, cycle-004, Phase F2)
@@ -53,18 +53,18 @@ was updated from "(new, formal-verifier to allocate)" to the concrete IDs.
 | VP | Home BC | Class / priority | Platform | One-line oracle |
 |----|---------|------------------|----------|-----------------|
 | **VP-AUTHDX-010** | BC-1.4.037 | SECURITY-CRITICAL | **Windows-only** | `dpapi::unprotect(dpapi::protect(p)) == p` for any `p` (incl. > 2560 bytes), ciphertext ≠ plaintext, USER-scope only (never `CRYPTPROTECT_LOCAL_MACHINE`). Sub-property (a) pins the security bit only — `dwFlags & CRYPTPROTECT_LOCAL_MACHINE == 0`, NOT `dwFlags == 0` (Pass-5 Finding #3; current concrete value `CRYPTPROTECT_UI_FORBIDDEN` = `0x1`). |
-| **VP-AUTHDX-011** | BC-1.4.035 | SAFETY INVARIANT | cross-platform (routing dispatch seam-gated) | `should_fallback_to_dpapi` is `true` iff `keyring::Error::TooLong` (pure predicate, no seam); `store_oauth_tokens` routes the whole pair to DPAPI iff a `TooLong` occurs, never a pre-flight length guess — the routing DISPATCH is default-CI-reachable off-Windows ONLY via `JR_FORCE_DPAPI_FALLBACK=1` (Pass-5 Finding #1). |
-| **VP-AUTHDX-012** | BC-1.4.037 (+BC-1.4.035) | SAFETY-CRITICAL | cross-platform (rollback logic seam-gated; real rename Windows-only) | The pair is always fully in ONE backend (never split; access write rolled back on refresh-`TooLong`); the file write is temp-then-rename so a mid-write crash leaves the OLD or NO file, never a partial; stale-temp cleanup is AGE-GATED (Pass-3 Finding #3) — a `*.tmp-*` sibling older than `STALE_TMP_THRESHOLD` (30 s) is removed while a younger one is PRESERVED (never a blanket delete). The rollback/no-split ORDERING logic is default-CI-reachable off-Windows ONLY via `JR_FORCE_DPAPI_FALLBACK=1` (Pass-5 Finding #1); the real rename/fsync/age-gated-cleanup file mechanics stay Windows-only, unaffected by the seam. |
+| **VP-AUTHDX-011** | BC-1.4.035 | SAFETY INVARIANT | predicate cross-platform DEFAULT CI; routing-state core KEYRING-GATED | `should_fallback_to_dpapi` is `true` iff `keyring::Error::TooLong` (pure predicate, default CI, no seam, no keychain); `store_oauth_tokens` routes the whole pair to DPAPI iff a `TooLong` occurs, never a pre-flight length guess — the routing DISPATCH / rollback STATE core is **KEYRING-GATED** (`#[ignore]`+`JR_RUN_KEYRING_TESTS=1`, +`JR_FORCE_DPAPI_FALLBACK=1` on non-Windows), NOT default CI: the seam lifts only the cfg-gate, not `store_oauth_tokens`'s real `set_password`/delete keychain calls, and the keyring mock can't persist the pre-seed→re-read state (VP-005/006/007 boundary) — Pass-8 Finding #1 corrects Pass-5's overstated "default-CI via seam." |
+| **VP-AUTHDX-012** | BC-1.4.037 (+BC-1.4.035) | SAFETY-CRITICAL | age-gate cleanup DEFAULT CI; rollback/no-split state core KEYRING-GATED; real rename Windows-only | The pair is always fully in ONE backend (never split; access write rolled back on refresh-`TooLong`); the file write is temp-then-rename so a mid-write crash leaves the OLD or NO file, never a partial; stale-temp cleanup is AGE-GATED (Pass-3 Finding #3) — a `*.tmp-*` sibling older than `STALE_TMP_THRESHOLD` (30 s) is removed while a younger one is PRESERVED (never a blanket delete). Sub-property (3) age-gate cleanup is plain-filesystem logic → DEFAULT CI (no keychain, no seam). The rollback/no-split ORDERING STATE core is **KEYRING-GATED** (`#[ignore]`+`JR_RUN_KEYRING_TESTS=1`, +`JR_FORCE_DPAPI_FALLBACK=1` on non-Windows), NOT default CI — Pass-8 Finding #1 corrects Pass-5's overstated "default-CI via seam" (the seam doesn't seam out `store_oauth_tokens`'s real keychain calls, and the mock can't persist the rollback re-read state); the real rename/fsync file mechanics stay Windows-only, unaffected by the seam. |
 | **VP-AUTHDX-013** | BC-1.4.035 | COMPILE-TIME / cfg-ABSENCE | cross-platform | On `#[cfg(not(windows))]`, `dpapi::*` doesn't exist and `store_pair`/`load_pair`/`remove_if_present` do no I/O (`DpapiFallbackFailed`/`Ok(None)`/`Ok(())`) — macOS/Linux byte-for-byte unchanged. |
 | **VP-AUTHDX-014** | BC-1.4.037 | SAFETY-CRITICAL / PURE | cross-platform | `decode(encode(a,r)) == (a,r)` and `unwrap(wrap(x)) == x` for any input; malformed/unrecognized envelope → distinct `Err`, never a panic, never coerced to empty/absent. |
 | **VP-AUTHDX-015** | BC-1.4.036 (co-covers BC-1.4.028) | SAFETY INVARIANT | cross-platform (via seam) | A present-but-undecryptable DPAPI file → distinct force-re-login error, NEVER "no token"; `Ok(Some)` load indistinguishable from keyring; `Ok(None)` falls through; amended partial-state branch applies the SAME typed distinction as the both-absent branch (3a prefer `Ok(Some)`, 3b corrupt→force-re-login, 3c backend/IO→distinct non-corruption error, 3d `Ok(None)`→partial), asserted under both keyring pre-states (Pass-4 Finding #1). Per BC-1.4.036's FOUR-WAY framing, a `load_pair` `Err` carrying a `ProfilePathEscape` is the FIRST-checked member and RENDERS as the exit-64 invalid-profile-name message — before corrupt-envelope and backend/IO — never "check file permissions" (Pass-5 Finding #2, EC-1.4.036-7; distinct from VP-016's guard-emission proof). |
 | **VP-AUTHDX-016** | BC-1.4.040 | SECURITY INVARIANT (CWE-22) / **HIGH** | cross-platform / PURE | Host-independent character-level recognizer `reject_unsafe_profile_component` (NOT `std::path`, ADR-0021 §9): rejects — on ANY host, no `#[cfg(windows)]` gate — every `/` or `\` separator (incl. UNC via either), any `:` (drive-letter + NTFS ADS), empty/exact-`.`/`..`/NUL, trailing dot-or-space, and the 30-name reserved device set (ADR-0021 §9 authoritative list — 6 classic + `COM1-9` + `LPT1-9` + 6 Unicode superscript `COM¹/²/³`,`LPT¹/²/³`, leading-space-stem-trimmed) as a typed `ProfilePathEscape` → exit-64 BEFORE any FS op, at all three store entry points via `file_path`; a passing name is an opaque segment by construction (no post-hoc normalize-and-compare); ordinary names unchanged. Includes a DESIGN-CONFORMANCE assertion so a future `std::path` substitution is caught here on the Linux CI runner, not silently passed, PLUS a SEPARATE guard-WIRING oracle (Pass-4 Finding #2) calling `store_pair`/`load_pair`/`remove_if_present` directly with a guard-failing name and asserting each returns `Err`→`ProfilePathEscape` before any FS op/OS short-circuit — the wiring, not just the recognizer, is now default-CI-covered. |
 | **VP-AUTHDX-017** | BC-1.4.039 | SAFETY INVARIANT | cross-platform | Sites 1/3 select the honest-fail message iff `downcast_ref::<DpapiFallbackFailed>()` is `Some` (else the unchanged "Unlock your keychain" message); the two sites use DISTINCT text (Finding #3) — Site 1 (login) instructs grant-revoke, Site 3 (refresh) MUST omit it (oracle asserts absence); Site 3 additionally clears the stale pair via `clear_profile_oauth_pair` so the next command sees "no stored OAuth token", not `invalid_grant` (Postcondition 4, Finding #7). Honest-fail reachable only when BOTH backends failed. A store error carrying a `ProfilePathEscape` RENDERS FIRST at BOTH sites as the exit-64 invalid-profile-name message — before `DpapiFallbackFailed` and before "Unlock your keychain" (Pass-5 Finding #2, EC-1.4.039-5; distinct from VP-016's guard-emission proof). |
-| **VP-AUTHDX-018** | BC-1.4.038 | SAFETY INVARIANT | cross-platform (real delete Windows-only) | After `clear_profile_oauth_pair`/`clear_profile_creds`, NEITHER backend retains the pair; `NotFound` tolerated as success, a genuine FS error propagates (not swallowed); creds cleared before config entry. |
+| **VP-AUTHDX-018** | BC-1.4.038 | SAFETY INVARIANT | cross-platform (real delete Windows-only) | After `clear_profile_oauth_pair`/`clear_profile_creds`, NEITHER backend retains the pair; `NotFound` tolerated as success, a genuine FS error propagates (not swallowed); creds cleared before config entry. **Clear-path `ProfilePathEscape` tolerance (Pass-8 Findings #3/#2):** a guard-colliding name (`:`, `con`) clears to `Ok(())` with every keyring step still attempted — CROSS-PLATFORM / DEFAULT CI / NO `JR_FORCE_DPAPI_FALLBACK` seam (adapter `clear_dpapi_file_tolerating_path_escape` maps `ProfilePathEscape`→`Ok(())` like `NotFound`; guard rejects before any keychain/DPAPI touch); tolerated-`ProfilePathEscape` vs. genuine-FS-error kept provably distinct (EC-1.4.038-3); reserved-device-name case passes on Windows too; VP-016 EMITS / VP-017 RENDERS / VP-018 SWALLOWS are three independently-failing properties. |
 | **VP-AUTHDX-019** | BC-1.2.052 | SAFETY INVARIANT / **HIGH** | cross-platform | `fetch_cloud_id` failure (non-2xx / network / malformed / missing field) NEVER aborts login and NEVER panics — soft-fail, cloud_id untouched, single stderr note; success overwrites; no auth header, no query string, 10s timeout; a non-`https://` (`http://`/scheme-less) `site_url` SKIPS the fetch entirely with ZERO network requests (wiremock `expect(0)`) and leaves cloud_id unchanged — same soft-fail path (Pass-4 Finding #4); `--cloud-id` override suppresses the fetch AND is itself written to `p.cloud_id` + persisted via `Config::save_global()` (Finding #8). |
 | **VP-AUTHDX-020** | BC-1.2.053 | SAFETY INVARIANT / **HIGH** | cross-platform | oauth→api_token switch: fetch-success OVERWRITES stale cloud_id; fetch-failure PRESERVES the prior value (incl. `None`) — NEVER a bare clear. Extends VP-AUTHDX-003's mechanism-reconciliation harness. |
 | **VP-AUTHDX-021** | BC-1.2.054 | REGRESSION PIN (confirmed-unchanged) | cross-platform | `Config::base_url()` selects the gateway iff `auth_method == "oauth"` (any other value incl. unset→api_token → site URL); `assets_base_url` is `cloud_id`-only, deliberately un-gated. Pins current behavior so a future pass cannot silently re-fix either. |
-| **VP-AUTHDX-022** | BC-1.4.035 | SAFETY INVARIANT / **HIGH** | cross-platform core (real-DPAPI tail Windows-only) | Stale-keyring-shadow closure (Pass-3 Finding #1): given a PRE-EXISTING complete keyring pair + `TooLong` on BOTH arms (access-overflow; refresh-overflow-after-access-succeeded), after `store_oauth_tokens` both keyring keys are ABSENT, the DPAPI file holds the FRESH pair, and a subsequent `load_oauth_tokens` returns the FRESH DPAPI pair — never the stale keyring pair (no shadowing via BC-1.4.036's both-keys-present fast path); deletes keyring FIRST, so a mid-window crash leaves NEITHER backend populated. |
+| **VP-AUTHDX-022** | BC-1.4.035 | SAFETY INVARIANT / **HIGH** | KEYRING-GATED core (real-DPAPI tail Windows-only); NO pure default-CI portion | Stale-keyring-shadow closure (Pass-3 Finding #1): given a PRE-EXISTING complete keyring pair + `TooLong` on BOTH arms (access-overflow; refresh-overflow-after-access-succeeded), after `store_oauth_tokens` both keyring keys are ABSENT, the DPAPI file holds the FRESH pair, and a subsequent `load_oauth_tokens` returns the FRESH DPAPI pair — never the stale keyring pair (no shadowing via BC-1.4.036's both-keys-present fast path); deletes keyring FIRST, so a mid-window crash leaves NEITHER backend populated. The entire routing/delete-ordering core is a pre-seed→re-read STATE property → **KEYRING-GATED** (`#[ignore]`+`JR_RUN_KEYRING_TESTS=1`, +`JR_FORCE_DPAPI_FALLBACK=1` on non-Windows), NOT default CI — Pass-8 Finding #1 corrects Pass-5's overstated "default-CI core" (the seam made the arm REACHABLE off-Windows but reaching it still needs a real keychain to observe the both-keys-absent state; the mock can't persist it — VP-005/006/007 boundary). |
 | **VP-AUTHDX-023** | BC-1.4.035 | RELEASE-GATE / cfg-ABSENCE PIN — default-CI, spike-independent (same class as VP-010(a)) | cross-platform (source-text scan; Windows-COMPILED-buildable) | `JR_FORCE_DPAPI_FALLBACK` debug-seam release-gate (Pass-6 Finding #3, ADR-0021 §1 expanded doc-fallout note): a dedicated `tests/jr_force_dpapi_fallback_release_gate.rs` source-scan pin asserts `#[cfg(debug_assertions)]` sits within 5 source lines of the `JR_FORCE_DPAPI_FALLBACK` env-var read in `src/api/auth.rs`'s `#[cfg(not(windows))] fn engage_dpapi_fallback` — proving the seam is compiled OUT of release builds (production non-Windows stays hardcoded `false`), matching the sibling-seam convention (`tests/jr_test_block_until_sigint_release_gate.rs` / `tests/config_dir_release_gate.rs`, one file per seam). |
 
 ---
@@ -99,41 +99,72 @@ Every oracle states its testability boundary explicitly, so the F6 pass can run 
 delta in ordinary `cargo test` on macOS/Linux CI — mirroring the cycle-003 keyring-gated coverage
 boundary already documented for VP-AUTHDX-005/006/007.
 
-- **Cross-platform, runs in default CI (13 of 14):** VP-AUTHDX-011, 012 (no-split/rollback +
-  temp-rename sequencing + age-gated `*.tmp-*` cleanup via a directory-scan seam), 013, 014, 015,
-  016, 017, 018 (invocation/error-fold), 019, 020, 021, 022 (stale-keyring-shadow routing /
-  delete-keyring-first ordering / neither-backend-on-mid-window-fault core), 023 (the
-  `JR_FORCE_DPAPI_FALLBACK` debug-seam release-gate — a source-text-scan pin over `src/api/auth.rs`,
-  host-independent and spike-independent, same class as VP-AUTHDX-010(a); Pass-6 Finding #3). These rely on: pure
-  functions (envelope, routing predicate, path guard), `keyring::Error` and
-  `load_pair`-outcome fault-injection seams, `wiremock` (tenant_info), and the fact that on
+**Honest default-CI split (Pass-8 adversarial review Finding #1 — supersedes the earlier "13 of 14
+default CI" headline, which OVERSTATED coverage for VP-AUTHDX-011/012/022):** the earlier tally
+counted VP-AUTHDX-011, 012, and 022 as "default CI (with `JR_FORCE_DPAPI_FALLBACK=1`)." That was
+wrong: `JR_FORCE_DPAPI_FALLBACK` lifts ONLY the `#[cfg(not(windows))]` cfg-gate on
+`engage_dpapi_fallback` — it does NOT seam out `store_oauth_tokens`'s REAL keychain touchpoints
+(`set_password` / `delete_credential_tolerating_no_entry`), and these three VPs' cores are
+pre-seed→run→re-read STATE assertions ("both namespaced keyring keys ABSENT after
+`store_oauth_tokens`", delete-first ordering). Exactly as cycle-003's VP-AUTHDX-005/006/007 document,
+the keyring MOCK cannot persist state across `Entry::new()` and default Linux CI has no Secret
+Service backend, so those STATE cores are KEYRING-GATED, not default CI. Corrected buckets:
+
+- **Fully default-CI, no keychain-state persistence (10 of 14):** VP-AUTHDX-013 (compile-time
+  cfg-absence), 014 (pure envelope), 015 (`load_pair`-outcome seam + the both-absent pre-state the
+  mock supplies naturally — its own partial-state/real-file tails already documented below), 016
+  (pure recognizer + guard-WIRING oracle — the guard rejects before any keychain/FS op), 017
+  (constructed-error message selection + the env-UNSET legacy-message store call that propagates
+  without a state re-read), 018 (invocation/error-fold + Pass-8 clear-path `ProfilePathEscape`
+  tolerance — the guard rejects before any keychain touch, so `Ok(())` is observable with no
+  pre-seed), 019 (`wiremock` tenant_info), 020 (config-layer seam), 021 (`base_url()` regression
+  pin), 023 (`JR_FORCE_DPAPI_FALLBACK` release-gate — a source-text-scan pin over `src/api/auth.rs`,
+  host-independent and spike-independent, same class as VP-AUTHDX-010(a); Pass-6 Finding #3). These
+  rely on pure functions (envelope, routing predicate, path guard), `keyring::Error` /
+  `load_pair`-outcome fault-injection seams, `wiremock`, source-text scans, and the fact that on
   macOS/Linux `auth_windows_store::load_pair`→`Ok(None)` / `remove_if_present`→`Ok(())` /
-  `store_pair`→`DpapiFallbackFailed` are no-ops (BC-1.4.035 Invariant 3) — VP-AUTHDX-022's core in
-  particular leverages the non-Windows `store_pair`→`DpapiFallbackFailed` return to exercise the
-  mid-window-fault shape (keyring deleted, DPAPI store fails → neither backend populated) in
-  default CI, with only its real-DPAPI-present + fresh-load round-trip deferred to a Windows-only
-  tail (or a `load_pair` seam).
-  - **The default-CI figure (now 13 of 14 after Pass-6's VP-AUTHDX-023) is unchanged in kind, but
-    three of these default-CI classifications are now
-    explicitly SEAM-GATED, not unconditional (Pass-5 adversarial review Finding #1).** Because
-    Pass-1's `engage_dpapi_fallback` is `#[cfg(not(windows))]`-hardcoded `false` in production, the
-    DPAPI-routing branch of `store_oauth_tokens` is dead code on any non-Windows runner — so the
-    default-CI cores of VP-AUTHDX-011 (sub-property (2), the routing DISPATCH), VP-AUTHDX-012 (the
-    rollback/no-split ORDERING logic), and VP-AUTHDX-022 (the delete-keyring-first ordering +
-    neither-backend-on-store-failure "delete-then-fail" core) are reachable off-Windows ONLY with
-    the new `#[cfg(debug_assertions)]`-gated `JR_FORCE_DPAPI_FALLBACK=1` opt-in test seam engaged
-    (ADR-0021 §1). Without the seam, none of these three cores is an executable property on a
-    non-Windows runner at all (they did not exist as such until this pass added the seam). What is
-    NOT seam-gated and needs NO seam: VP-AUTHDX-011's pure `should_fallback_to_dpapi` predicate
-    (sub-property (1)); VP-AUTHDX-012's real rename/fsync/age-gated-cleanup file mechanics (those
-    are Windows-only regardless — they live inside `store_pair`'s `#[cfg(windows)]` arm the seam
-    cannot reach); and VP-AUTHDX-022's success oracle "(a)+(b)+(c) after `store_oauth_tokens`
-    returns `Ok`" (Windows-only real-DPAPI tail — a successful `store_pair` cannot happen off
-    Windows with or without the seam; in the seam-engaged default-CI run `store_oauth_tokens`
-    returns `Err`, which is exactly the delete-then-fail shape the core verifies). Each of these
-    three VPs' oracle text in `bc-1-auth-identity.md` now states its `JR_FORCE_DPAPI_FALLBACK`
-    dependency explicitly, so an F6 executor does not attempt to write these tests against the
-    unseamed production path and discover the branch is simply unreachable. Production/release
+  `store_pair`→`DpapiFallbackFailed` are no-ops (BC-1.4.035 Invariant 3) — none of them needs to
+  pre-seed and re-read a stored keyring PAIR.
+- **Default-CI PORTION + keyring-gated state/ordering core (2 of 14):** VP-AUTHDX-011 (sub-property
+  (1)'s pure `should_fallback_to_dpapi` predicate is default CI, no seam, no keychain; sub-property
+  (2)'s routing/rollback STATE core is KEYRING-GATED — `#[ignore]`+`JR_RUN_KEYRING_TESTS=1`,
+  +`JR_FORCE_DPAPI_FALLBACK=1` on non-Windows) and VP-AUTHDX-012 (sub-property (3)'s age-gated
+  `*.tmp-*` cleanup is default CI — plain filesystem logic, no keychain, no seam; sub-property (1)'s
+  no-split/rollback ORDERING state core is KEYRING-GATED, same gating; sub-property (2)'s real
+  rename/fsync is Windows-only).
+- **Keyring-gated core + Windows-only real-DPAPI tail, NO pure default-CI portion (1 of 14):**
+  VP-AUTHDX-022 — its entire routing/delete-ordering/both-keys-absent core is a pre-seed→re-read
+  STATE property (KEYRING-GATED: `#[ignore]`+`JR_RUN_KEYRING_TESTS=1`, +`JR_FORCE_DPAPI_FALLBACK=1`
+  on non-Windows); the seam made the delete-then-DPAPI-store arm REACHABLE off-Windows, but reaching
+  it still needs a real keychain to observe the both-keys-absent state the oracle asserts. Its
+  `(a)+(b)+(c)`-after-`Ok` success oracle is the additional Windows-only real-DPAPI round-trip tail
+  (or cross-platform via a `load_pair` seam, still keyring-gated for the stale-pair pre-seed).
+  - **Why VP-AUTHDX-011(2)/012(1)/022 are KEYRING-GATED, not default CI (Pass-8 adversarial review
+    Finding #1, correcting Pass-5's overstatement).** These three cores have TWO independent gating
+    dependencies, and Pass-5 accounted for only the first. **(i) Reachability (seam):** Pass-1's
+    `engage_dpapi_fallback` is `#[cfg(not(windows))]`-hardcoded `false` in production, so the
+    DPAPI-routing branch of `store_oauth_tokens` is dead code on any non-Windows runner unless the
+    `#[cfg(debug_assertions)]`-gated `JR_FORCE_DPAPI_FALLBACK=1` opt-in test seam is engaged
+    (ADR-0021 §1). **(ii) Observability (real keychain) — the dependency Pass-5 missed:** the seam
+    lifts ONLY the cfg-gate; it does NOT seam out `store_oauth_tokens`'s real `set_password` /
+    `delete_credential_tolerating_no_entry` keychain calls, and each core's substance is
+    PRE-SEEDING a keyring pair and RE-READING keyring state to prove both keys became ABSENT
+    (rollback / delete-first / no-split). Per cycle-003's VP-AUTHDX-005/006/007, the keyring MOCK
+    cannot persist state across `Entry::new()` and default Linux CI has no Secret Service backend —
+    so these STATE cores cannot run in default `cargo test` regardless of the seam. They are
+    therefore **KEYRING-GATED** (`#[ignore]` + `JR_RUN_KEYRING_TESTS=1`, ADDITIONALLY +
+    `JR_FORCE_DPAPI_FALLBACK=1` on non-Windows; on Windows the real keychain + real DPAPI make the
+    seam unnecessary), mirroring the VP-AUTHDX-005/006/007 boundary. The seam is NECESSARY but NOT
+    SUFFICIENT for default CI here — a real keychain is the second, independent requirement, which
+    is exactly why these belong in the keyring-gated tier, not the default-CI tier. What genuinely
+    needs NEITHER a keychain NOR the seam, and stays default CI: VP-AUTHDX-011's pure
+    `should_fallback_to_dpapi` predicate (sub-property (1)) and VP-AUTHDX-012's age-gated `*.tmp-*`
+    cleanup (sub-property (3), plain filesystem logic). VP-AUTHDX-012's real rename/fsync file
+    mechanics and VP-AUTHDX-022's `(a)+(b)+(c)`-after-`Ok` success oracle remain the Windows-only
+    real-DPAPI tails (a successful `store_pair` cannot happen off Windows with or without the seam).
+    Each of these three VPs' oracle text in `bc-1-auth-identity.md` now states this KEYRING-GATED
+    classification explicitly, so an F6 executor does not attempt to write these tests against the
+    default-CI (mock, no-backend) path and discover the state is unobservable. Production/release
     behavior is unchanged either way (still hardcoded `false` absent the seam).
   - **Pass-6 adversarial-review follow-on (two additions on this same seam, both scoped to
     F4/F6 test scaffolding — no production-code or VP-oracle change).** (i) **Finding #3** adds the
@@ -184,7 +215,7 @@ boundary already documented for VP-AUTHDX-005/006/007.
     tier (that tier is `#[ignore]` + `JR_RUN_KEYRING_TESTS=1`, the documented VP-AUTHDX-005/006/007 boundary).
     The full real-keychain end-to-end mechanism-switch scenario is an OPTIONAL keyring-gated confirmation
     tail (see below), not the primary oracle — so VP-AUTHDX-020's config-layer core legitimately counts
-    toward "13 of 14 in default CI."
+    toward the fully-default-CI bucket (the corrected "10 of 14"; see the Honest default-CI split above).
 - **Windows-only (1 of 14):** VP-AUTHDX-010 — the real `CryptProtectData`/`CryptUnprotectData`
   round-trip; the single property exercising the DPAPI syscalls. That round-trip (sub-property (b))
   runs on a `windows-latest` CI runner or via manual validation, and whether headless `windows-latest`
@@ -211,7 +242,11 @@ boundary already documented for VP-AUTHDX-005/006/007.
   its default-CI config-layer core (Finding #9); VP-AUTHDX-022's sub-assertions (b) "DPAPI file
   holds the fresh pair" and (c) "subsequent `load_oauth_tokens` returns the fresh DPAPI pair, not
   the stale keyring pair" are a Windows-only real-DPAPI round-trip tail (or cross-platform via a
-  `load_pair` injection seam) beyond its cross-platform delete-ordering/no-shadow-routing core.
+  `load_pair` injection seam, still keyring-gated for the stale-pair pre-seed) beyond its
+  delete-ordering/no-shadow-routing core — which is itself KEYRING-GATED, NOT default CI, per Pass-8
+  Finding #1 (VP-AUTHDX-022 has no pure-default-CI portion). Likewise VP-AUTHDX-011's routing/rollback
+  state core and VP-AUTHDX-012's no-split/rollback ordering state core are keyring-gated (their pure
+  predicate and age-gate-cleanup portions, respectively, remain default CI).
 
 ---
 
@@ -228,6 +263,7 @@ boundary already documented for VP-AUTHDX-005/006/007.
   ADR-0021 §1's expanded doc-fallout note; architecture-delta.md §15). The 41 baseline is the
   cycle-003-close figure tracked in STATE.md (and flagged there as MED-1: never independently
   re-verified line-by-line — this delta adds to it, it does not re-audit the 41).
+- **Pass-8 adversarial-review follow-on (formal-verifier, 2026-09-03) — CI-classification only, count UNCHANGED at 55.** Finding #1 (HIGH): the "default CI" TALLY was corrected (no VP added/removed) — the earlier "13 of 14 default CI" headline OVERSTATED coverage for VP-AUTHDX-011/012/022, whose pre-seed→re-read STATE cores need a REAL keychain the `JR_FORCE_DPAPI_FALLBACK` seam does not provide (the seam lifts only `engage_dpapi_fallback`'s cfg-gate, not `store_oauth_tokens`'s real `set_password`/delete calls; the keyring mock cannot persist state across `Entry::new()` — the VP-AUTHDX-005/006/007 boundary). Honest split: **10 of 14** fully default-CI; **2 of 14** (VP-AUTHDX-011, 012) have a genuinely-default-CI PORTION (the pure `should_fallback_to_dpapi` predicate; the age-gated `*.tmp-*` cleanup) but a KEYRING-GATED state/ordering core; **1 of 14** (VP-AUTHDX-022) is keyring-gated core + Windows-only real-DPAPI tail with no pure default-CI portion; **1 of 14** (VP-AUTHDX-010) Windows-only. Finding #2 (MED): VP-AUTHDX-018 gained clear-path `ProfilePathEscape`-tolerance oracle assertions (guard-colliding name → `Ok(())`, cross-platform DEFAULT CI, no seam; tolerated-vs-genuine-error distinct; Windows too; VP-016/017/018 = three independently-failing EMITS/RENDERS/SWALLOWS properties). See the corrected "Honest default-CI split" and per-VP rows above.
 
 ## Drift-check results (run from repo root after authoring)
 

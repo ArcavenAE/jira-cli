@@ -161,7 +161,8 @@ the Subsystem Registry or to this module's anchor is needed.
 | `engage_dpapi_fallback(err: &keyring::Error) -> bool` (in `auth.rs`, NOT `auth_windows_store.rs`) | private | **Pure** | `#[cfg(windows)]`: delegates to `should_fallback_to_dpapi`. `#[cfg(not(windows))]`: `false` in production (call-site gate closing Finding #5, Pass-1 review; `store_oauth_tokens`'s match guards call this, never `should_fallback_to_dpapi` directly, so `DpapiFallbackFailed` can never be produced on non-Windows in a release build). **In `#[cfg(debug_assertions)]` builds only, additionally honors the `JR_FORCE_DPAPI_FALLBACK=1` opt-in test seam** (Pass-5 review, Finding #1) — delegates to `should_fallback_to_dpapi` when set, else still `false`. Production/release behavior is unchanged either way. |
 | `store_pair(profile, access, refresh) -> Result<()>` | `pub` | **Impure** (I/O + syscall) | Guard (`reject_unsafe_profile_component`, via `file_path`) is invoked FIRST on BOTH cfg arms (Pass-4 review, Finding #2). `#[cfg(windows)]`: guard, then real DPAPI + atomic file write. `#[cfg(not(windows))]`: guard, then always returns the honest-fail `DpapiFallbackFailed` error immediately — no file I/O attempted. |
 | `load_pair(profile) -> Result<Option<(String,String)>>` | `pub` | **Impure** (I/O + syscall) | Guard invoked FIRST on BOTH cfg arms (Pass-4 review, Finding #2). `#[cfg(windows)]`: guard, then real file read + DPAPI unprotect. `#[cfg(not(windows))]`: guard, then always `Ok(None)` — no file I/O attempted. |
-| `remove_if_present(profile) -> Result<()>` | `pub` | **Impure** (I/O) | Guard invoked FIRST on BOTH cfg arms (Pass-4 review, Finding #2). `#[cfg(windows)]`: guard, then real delete, `NotFound`-tolerant. `#[cfg(not(windows))]`: guard, then always `Ok(())` immediately. |
+| `remove_if_present(profile) -> Result<()>` | `pub` | **Impure** (I/O) | Guard invoked FIRST on BOTH cfg arms (Pass-4 review, Finding #2). `#[cfg(windows)]`: guard, then real delete, `NotFound`-tolerant. `#[cfg(not(windows))]`: guard, then always `Ok(())` immediately. Signature/contract UNCHANGED by Pass-8 review (Finding #3) — see `clear_dpapi_file_tolerating_path_escape` below for the caller-side change. |
+| `clear_dpapi_file_tolerating_path_escape(profile) -> Result<()>` (in `auth.rs`, NOT `auth_windows_store.rs`; Pass-8 review Finding #3) | private | **Impure** (delegates to `remove_if_present`) | Identical on all platforms. Adapter used ONLY by `clear_profile_oauth_pair`/`clear_profile_creds`: calls `remove_if_present`, then maps `Err(e)` where `e.downcast_ref::<ProfilePathEscape>()` is `Some` to `Ok(())` (tolerated, equivalent to `NotFound`); any other `Err` propagates unchanged. Provably safe: `reject_unsafe_profile_component` is also `store_pair`'s mandatory first statement, so a guard-rejected name could never have had a DPAPI file written for it. NOT used by `store_oauth_tokens`'s best-effort post-success cleanup call (already discards all errors via `let _ =`) or by any store/read-path call site (those correctly keep rendering `ProfilePathEscape` distinctly). |
 | `dpapi::protect(plaintext) -> io::Result<Vec<u8>>` | private, `#[cfg(windows)]` | **Impure** (unsafe FFI) | Windows-only; does not exist in a non-Windows compilation unit at all. |
 | `dpapi::unprotect(blob) -> io::Result<Vec<u8>>` | private, `#[cfg(windows)]` | **Impure** (unsafe FFI) | Windows-only; does not exist in a non-Windows compilation unit at all. |
 | `DpapiFallbackFailed(String)` marker error | `pub(crate)` | n/a (data) | Identical on all platforms |
@@ -173,8 +174,13 @@ the Subsystem Registry or to this module's anchor is needed.
 - `store_oauth_tokens` — modified per ADR-0021 §2 (backend-selection-level routing + rollback).
 - `load_oauth_tokens` — modified per ADR-0021 §4 (DPAPI-file fallback branch inserted before
   the existing `"default"`-only legacy recovery).
-- `clear_profile_oauth_pair`, `clear_profile_creds` — each gains one
-  `auth_windows_store::remove_if_present(profile)` call (ADR-0021 §7).
+- `clear_profile_oauth_pair`, `clear_profile_creds` — each gains one DPAPI-removal step, called
+  through a NEW private adapter, `clear_dpapi_file_tolerating_path_escape(profile)` (ADR-0021 §7,
+  Pass-8 review Finding #3) — NOT a direct `auth_windows_store::remove_if_present(profile)` call.
+  The adapter treats a `ProfilePathEscape` result as TOLERATED (equivalent to `NotFound`), never
+  a genuine error, so a pre-existing profile whose name collides with BC-1.4.040's guard is still
+  fully cleared on every OS. `remove_if_present`'s own signature/contract is unchanged; only the
+  clear path's interpretation of its `ProfilePathEscape` outcome changes.
 - `oauth_login`'s and `refresh_oauth_token_with_url`'s `store_oauth_tokens` `map_err` closures —
   branch on `e.downcast_ref::<auth_windows_store::DpapiFallbackFailed>()` (ADR-0021 §6).
 - `load_oauth_tokens`'s new DPAPI-fallback-read branch — branches on
@@ -228,8 +234,8 @@ change needed).
 |-----------|---------------|--------|----------------|
 | `store_oauth_tokens` | `src/api/auth.rs` | Backend-selection-level routing on `keyring::Error::TooLong`; rollback of a partial keyring write; delegates to `auth_windows_store::store_pair` | ADR-0021 §2 |
 | `load_oauth_tokens` | `src/api/auth.rs` | New DPAPI-file-fallback branch when both namespaced keyring keys are absent; extended (not replaced) partial-state handling | ADR-0021 §4 |
-| `clear_profile_oauth_pair` | `src/api/auth.rs` | Additional `auth_windows_store::remove_if_present` call | ADR-0021 §7 |
-| `clear_profile_creds` | `src/api/auth.rs` | Additional `auth_windows_store::remove_if_present` call | ADR-0021 §7 |
+| `clear_profile_oauth_pair` | `src/api/auth.rs` | Additional DPAPI-removal step via the new `clear_dpapi_file_tolerating_path_escape` adapter (NOT a direct `remove_if_present` call) — tolerates `ProfilePathEscape` as a no-op | ADR-0021 §7 (Pass-8 review Finding #3) |
+| `clear_profile_creds` | `src/api/auth.rs` | Same adapter-wrapped DPAPI-removal step as above, within its existing four-step delete | ADR-0021 §7 (Pass-8 review Finding #3) |
 | `clear_all_credentials` (test-only) | `src/api/auth.rs` | Test-fixture parity update only — no behavior/production-callers change (F1 §5.2 row 5) | ADR-0021 (incidental) |
 | `oauth_login`'s store-failure `map_err` | `src/api/auth.rs` | Branches on `DpapiFallbackFailed` marker; new honest-fail message on that arm only | ADR-0021 §6 |
 | `refresh_oauth_token_with_url`'s post-refresh store-failure `map_err` | `src/api/auth.rs` | Same branch shape as above | ADR-0021 §6 |
@@ -829,4 +835,126 @@ over-serialize unrelated tests). Without this, `cargo test`'s default parallelis
 `set_var`/`remove_var` from one test with an in-flight assertion in the other, producing
 non-deterministic CI flakiness on either side. This is scoped to the VP test implementation
 (F4/F6) — it requires no change to ADR-0021's production code (§1/§2).
+
+---
+
+## 16. Pass-8 Adversarial Review Amendments (2026-09-03)
+
+**Numbering note.** A Pass-7 adversarial review ran between Pass-6 and this pass; it corrected a
+misstatement inside BC-1.4.039's own prose (about `JR_FORCE_DPAPI_FALLBACK`'s per-error-variant
+behavior) by pointing back to ADR-0021 §1's already-correct code — it required no
+`architecture-delta.md`/ADR-0021 edit, so there is no "§ Pass-7" section here. This section is
+Pass-8's.
+
+A Pass-8 adversarial review examined the CLEAR path (`auth logout`/`auth remove` →
+`clear_profile_oauth_pair`/`clear_profile_creds` → `remove_if_present`) — a surface no prior pass
+in this cycle had examined — and raised 1 MED finding requiring an architecture-level fix (which
+resolves a second, dependent MED finding), resolved by editing ADR-0021 §7 and this document
+directly — no `src/` change, no scope change to what F4 implements beyond what ADR-0021 §7 now
+concretely specifies:
+
+| # | Sev | Finding (one-line) | Resolution |
+|---|-----|---------------------|------------|
+| 3 | MED | BACKWARD-COMPAT REGRESSION: Pass-4's mandatory `file_path(profile)?`/guard call on BOTH cfg arms of `remove_if_present` (Finding #2, §9) is correct for the write/read entry points it was designed around, but `remove_if_present` is ALSO invoked UNCONDITIONALLY by `clear_profile_oauth_pair`/`clear_profile_creds` on EVERY `auth logout`/`auth remove`, for EVERY profile — not only one that ever engaged DPAPI. A pre-existing profile name that is legal for keyring-only storage (a Unix profile containing `:`, or — since `Profile::from(String)` performs no validation, ADR-0011 — even a WINDOWS profile literally named a reserved device name like `con`, which keyring-only storage never cared about) now makes the clear operation itself fail with exit 64, per BC-1.4.038 Postcondition 4's "first genuine error propagated" contract — a regression reachable on EVERY OS, not only macOS/Linux as the finding was originally framed. | ADR-0021 §7 adds a caller-side adapter, `clear_dpapi_file_tolerating_path_escape`, used only by `clear_profile_oauth_pair`/`clear_profile_creds`: it treats a `ProfilePathEscape` from `remove_if_present` as TOLERATED (equivalent to `NotFound`), never a genuine error, on every OS — provably safe because the SAME guard is also `store_pair`'s mandatory first statement, so a guard-rejected name could never have had a DPAPI file written for it in the first place. `remove_if_present`'s own signature and guard-invocation contract (Pass-4 Finding #2) are UNCHANGED — its Windows-path security value and cross-platform regression-catchability are both fully preserved. See guidance below for the required BC-1.4.038 wording and VP-AUTHDX-018 oracle additions. |
+| 2 | MED | (Dependent on #3.) `ProfilePathEscape` rendering was specified for the read path (BC-1.4.036) and the store-error sites (BC-1.4.039 Sites 1/3), but the clear path (BC-1.4.038/VP-AUTHDX-018) had no rendering treatment at all — a `ProfilePathEscape` from `remove_if_present` fell into BC-1.4.038 Postcondition 4's generic "first genuine error" bucket with no dedicated exit-64 invalid-profile-name message. | Resolved as a CONSEQUENCE of Finding #3's design, not by adding a rendering branch: because the clear path now tolerates (swallows) `ProfilePathEscape` from `remove_if_present` entirely via the new adapter, it NEVER surfaces as a user-visible error on the clear path at all. There is deliberately no exit-64 "invalid profile name" rendering here, unlike the store/read paths — see guidance below for why this asymmetry is correct and how BC-1.4.038 should state it explicitly. |
+
+---
+
+## Pass-8 architect guidance for product-owner and formal-verifier
+
+### Finding #3 — required BC-1.4.038 wording (Postcondition, Invariant, new Edge Cases)
+
+**For the product-owner (BC-1.4.038).** Amend Postcondition 4's fan-out contract to add an
+explicit outcome-classification clause for the `remove_if_present` step specifically: "The
+`remove_if_present` step's result is further discriminated before it can count as a 'genuine
+error' for this fan-out: a `ProfilePathEscape` result is TOLERATED — treated identically to
+`NotFound` — on EVERY OS, never propagated as the function's error. This is provably safe, not
+merely convenient: `reject_unsafe_profile_component` (BC-1.4.040) is ALSO the mandatory first
+statement of `store_pair`, so no profile name this guard rejects could ever have had a DPAPI
+file successfully written for it by any version of `jr` carrying this guard — 'the guard refuses
+to compute the path' and 'no file exists under this name' are the same fact for such a profile.
+Any OTHER error from `remove_if_present` (a genuine filesystem error, e.g. permission denied) is
+NOT tolerated and remains the propagated genuine error exactly as EC-1.4.038-3 already specifies."
+
+Add a new Invariant: "A profile name that is legal for keyring-only credential storage but fails
+`reject_unsafe_profile_component` (BC-1.4.040) — whether because it predates this guard's
+introduction, or because a future tightening of the reserved-name set newly rejects it — continues
+to have its credentials FULLY cleared by `auth logout`/`auth remove`, on every OS including
+Windows. This is a hard backward-compatibility guarantee: BC-1.4.040's guard, deliberately
+hardened and applied identically on every OS for NEW writes/reads, must never block the cleanup
+of credentials that predate it or that were never subject to it."
+
+Add two new Edge Cases:
+- **EC-1.4.038-5**: A profile name that fails `reject_unsafe_profile_component` — e.g. a Unix
+  profile literally containing `:`, or a profile literally named a reserved Windows device-name
+  stem such as `con` (legal on EVERY OS pre-cycle, since `Profile::from(String)` performs no
+  validation, ADR-0011) — is cleared successfully by `auth logout`/`auth remove`: the
+  DPAPI-removal step is tolerated as a no-op (never a genuine error, per the amended Postcondition
+  4 above), and every other deletion step (the keyring pair(s), the API-token pair for
+  `clear_profile_creds`, the cache directory, the config entry) proceeds and completes normally.
+  This holds identically on Windows, macOS, and Linux — it is NOT a macOS/Linux-only fix, since a
+  Windows profile whose name happens to be a reserved device name was equally exposed before this
+  fix (keyring-only storage never validated profile names against Windows filesystem syntax).
+- **EC-1.4.038-6** (accepted residual, documented not engineered away): A DPAPI file that somehow
+  exists on disk under a name the CURRENT guard would reject — reachable only via an out-of-band
+  mechanism, a future guard-tightening applied after such a file already existed, or a defect in
+  an earlier `jr` version that lacked this guard — is NOT found or removed by `remove_if_present`,
+  since `file_path` fails the guard before any existence check runs. This is a narrow completeness
+  gap only — it never affects the credential's CONFIDENTIALITY, since DPAPI still gates decryption
+  regardless of whether the file is ever deleted — and mirrors the ADR's already-accepted
+  stale-`*.tmp-*`-file residual (ADR-0021 §3). No test is required to exercise this residual; it
+  should be recorded as a documented, out-of-scope limitation, not asserted as a passing property.
+
+**For the formal-verifier (VP-AUTHDX-018).** Add new oracle assertions, distinct from the
+existing genuine-FS-error oracle (EC-1.4.038-3):
+
+1. Given a profile name that fails `reject_unsafe_profile_component` (cover at least: a name
+   containing `:`, and a name that is a reserved device-name stem such as `con`), calling
+   `clear_profile_oauth_pair(profile)` and, separately, `clear_profile_creds(profile)` each return
+   `Ok(())` — NOT `Err` downcastable to `ProfilePathEscape` and not any other error — AND every
+   keyring deletion step in the function's fixed attempt order is still observed to have been
+   attempted (via whatever fault-injection/spy seam the other BC-1.4.038 attempt-all assertions
+   already use). Cross-platform, runs in default CI, and — unlike VP-AUTHDX-011/012/022 — needs
+   NO `JR_FORCE_DPAPI_FALLBACK` seam: this property is entirely about the guard-rejection branch
+   of `remove_if_present`, which is reachable identically on every OS via `file_path`'s mandatory
+   first-statement call on both cfg arms (Pass-4 Finding #2), with no dependency on `TooLong` or
+   DPAPI engagement at all.
+2. Assert this TOLERATED classification is genuinely distinct from the existing GENUINE-error
+   classification, not merely two names for the same fallback: inject a `ProfilePathEscape` from
+   `remove_if_present` in one test case (expect `Ok(())`, tolerated) and a DIFFERENT, distinct
+   genuine `anyhow` error (e.g. a simulated permission-denied) from `remove_if_present` in a
+   sibling test case (expect that error to be the function's propagated result, per EC-1.4.038-3)
+   — the two cases must diverge, so a future change that collapses the two classifications back
+   together is caught by this VP failing, not silently passing.
+3. Include a case naming a profile a reserved Windows device-name stem (e.g. `"con"`) and assert
+   the clear succeeds when the TEST SUITE ITSELF runs on Windows too, not only on Linux/macOS —
+   this property is not gated to non-Windows platforms, unlike `remove_if_present`'s own
+   `#[cfg(not(windows))]` no-op arm.
+4. State explicitly in the oracle text that this VP does NOT assert anything about a NEW,
+   successful DPAPI write ever having occurred for the tested profile — it is purely a
+   clear-path/guard-interaction property, fully decoupled from `TooLong`/DPAPI engagement.
+
+### Finding #2 — required BC-1.4.038 wording (explicit no-rendering statement) and VP-AUTHDX-018 guidance
+
+**For the product-owner (BC-1.4.038).** Add one explicit sentence stating the asymmetry with the
+store/read paths, so a future reader does not assume the same three-way discrimination applies
+here: "Unlike BC-1.4.036's read-path handling and BC-1.4.039's Sites 1/3 (which check
+`ProfilePathEscape` FIRST and render it as a distinct, user-visible exit-64 'invalid profile name'
+error for a NEW write/read), the clear path NEVER renders a `ProfilePathEscape` from
+`remove_if_present` as a user-visible error at all — per the amended Postcondition 4 above, it is
+tolerated identically to `NotFound`. `auth logout`/`auth remove` have only two outcomes for this
+step: tolerated (no-op; includes both `NotFound` and `ProfilePathEscape`) or genuine-error
+(propagated, per EC-1.4.038-3)." Cross-reference BC-1.4.039's Postcondition 1 in this sentence so
+the two BCs' differing treatment of the same marker type is legible side-by-side rather than
+appearing contradictory to a future reader.
+
+**For the formal-verifier (VP-AUTHDX-018).** The oracle must assert the ABSENCE of any rendered
+error for this case — `Ok(())` returned, no message text to inspect — which is a different and
+stronger claim than "the correct message was rendered," the shape every other `ProfilePathEscape`
+oracle in this delta (VP-AUTHDX-016's guard-emission proof, VP-AUTHDX-017's Sites-1/3
+rendering proof) asserts. State this distinction explicitly in VP-AUTHDX-018's oracle text: VP-016
+proves the guard EMITS `ProfilePathEscape` at `remove_if_present`'s own entry point; VP-017 proves
+the STORE path (Sites 1/3) RENDERS it distinctly; VP-018 (this Pass-8 addition) proves the CLEAR
+path SWALLOWS it — three genuinely different properties at three different call sites, each
+capable of failing independently if any one of them regresses.
 </content>

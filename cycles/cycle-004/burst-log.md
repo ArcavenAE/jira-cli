@@ -255,6 +255,60 @@ BCs: unchanged at **742** (Passes 1-4 amended existing BC bodies; no BC added or
 
 **Dim-7 Attestation:** N/A — no test-affecting change this burst; full regression remains PASS (4763/0/157) as of the cycle-003 F6/F7 hardening/convergence passes, unchanged.
 
+## Burst: Burst 6 — F2 scoped adversarial convergence, Passes 7-8 — INTERMEDIATE CHECKPOINT #3 (2026-09-03/04)
+
+**Parent-commit:** `f59f29e2` (`develop` tip `42e92b46`, unchanged this burst — no `develop`-side commit).
+
+**Trigger:** two further rounds of orchestrator-driven F2 scoped adversarial review (Pass 7, Pass 8) had accumulated uncommitted on top of the Burst 5 checkpoint (`f59f29e2`), leaving STATE.md 2 passes behind reality (it still read "Pass 7 NEXT"). This session resumed cleanly — no crash or agent-stall this burst. This burst makes that work durable via one atomic commit and brings STATE.md current. No new human decision was made — DEC-335 (the F1 human gate) remains the latest decision; no new DEC is recorded this burst. The convergence-strategy choice itself (continue toward 3-consecutive-clean vs. gate now) is explicitly being routed to the human at this checkpoint rather than decided by the state-manager.
+
+**Work performed this burst, in order:**
+
+1. **Adversarial Pass 7** (fresh context, scoped to the F2 spec delta as refined through Pass 6): 3 findings (0 CRIT / 0 HIGH / 1 MED / 2 LOW), novelty MED-LOW — assessed as close to converged. Fix round: tightened the `should_fallback_to_dpapi(err)` seam-wording contract to state explicitly that it returns `true` **iff** `err` is `keyring::Error::TooLong` (a wording-precision fix — the implementation already matched only `TooLong`; only the spec prose was previously loose enough to read as unconditional). Also surfaced and documented a non-blocking residual: `--cloud-id` is not durable across `auth refresh` (EC-1.2.052-5) — the refresh path never re-derives or re-persists `cloud_id`, so a manually-overridden value survives only because refresh doesn't touch that field at all; flagged for the F2 human gate's attention rather than fixed this burst. Resolved via a full architect→product-owner→formal-verifier fix chain.
+2. **Adversarial Pass 8** (fresh context): 3 findings (0 CRIT / 1 HIGH / 2 MED / 0 LOW), novelty MED. All three findings landed on the CLEAR path (`auth logout` / `auth remove`) — a surface Passes 1-7 had never touched, confirming the value of continuing fresh-context passes past the point where findings looked like they were tapering off. The HIGH (a real backward-compatibility defect): `clear_profile_oauth_pair`/`clear_profile_creds` called the DPAPI-file removal helper directly, which could return `ProfilePathEscape` for a pre-existing profile name that predates BC-1.4.040's path-traversal guard (e.g. a legacy Unix profile literally named `con`) — causing the clear operation to fail where every other backend clears successfully. Fixed via a new `clear_dpapi_file_tolerating_path_escape` adapter (BC-1.4.038 new Invariant 3 + EC-1.4.038-5/6, ADR-0021 §7) that maps `ProfilePathEscape` → `Ok(())` at this ONE call site only (never at the store/read sites, where the guard must remain strict) — clearing must be permissive even where storing/reading is deliberately strict. A new VP-018 pins this clear-path swallow behavior. Finding #1 (a MED, honesty-correction, no design change): the VP CI-classification tally cited in earlier convergence bookkeeping was overstated ("13 of 14 default CI"); corrected to: 10 fully default-CI (VP-AUTHDX-013/014/015/016/017/018/019/020/021/023), 2 default-CI-portion + keyring-gated state core (VP-AUTHDX-011/012), 1 keyring-gated core + Windows-only real-DPAPI tail (VP-AUTHDX-022), 1 Windows-only (VP-AUTHDX-010). Resolved via the same architect→product-owner→formal-verifier fix-chain pattern.
+3. **Verification re-run:** `scripts/check-spec-counts.sh` exit 0; `scripts/check-bc-cumulative-counts.sh` exit 0 (742 BCs across 9 files, unchanged — Passes 7-8 were BC-body/VP-body edits, no BC added/removed); `vp-delta.md`'s recorded `input-hash` (`95218fd`) confirmed current against its listed inputs.
+4. Did NOT stage the three pre-existing unrelated dirty files (`regression-state.json`, `sidecar-learning.md`, the modified `S-cycle3-env-tag` demo gif) — left untouched, per standing instruction carried across every prior burst. BC-INDEX.md and ADR-0022 were confirmed NOT modified since the Burst 5 checkpoint (`git status` showed no changes to either) and were correctly excluded from this burst's commit.
+5. Updated STATE.md via one full-content Write, then two small corrective Edits required by the STATE.md structural/trajectory-tail validators (v3.57 → v3.58): frontmatter, Phase Progress F2-SPEC-EVOLUTION row, Current Phase Steps table (Passes 7-8 marked DONE, plus a new pending "F2 human convergence decision" row and a conditional Pass 9 row), Convergence Status / Concurrent Cycles / Constraints Carried Forward / Drift-Standing prose (trajectory extended to 17→9→5→4→4→4→[sweep 3]→3→3, clean-streak 0/3, corrected VP CI-classification tally), and Session Resume Checkpoint all brought current, recording NEXT-on-resume as **AWAITING HUMAN CONVERGENCE DECISION** rather than an automatic "dispatch Pass 9."
+6. Appended this burst-log entry (Burst 6).
+
+**Adversary verdict:** Not a single aggregate verdict — this burst's substance is two scoped adversarial passes (Pass 7, Pass 8), each already narrated inline above with its own finding count and fix-round outcome (3 → 3 findings, both fully resolved). No standalone top-level `adversary`-agent verdict beyond what the per-pass descriptions in "Work performed this burst" already capture. No CLEAN/BLOCKED convergence verdict applies yet — clean-streak remains 0/3 (no pass has yet been clean), convergence still in progress. Given the finding trend (severity declining through Pass 7, then one genuinely new but now-closed surface at Pass 8, zero CRIT across all 8 passes), the orchestrator is deferring the continue-vs-gate-now decision to the human rather than mechanically dispatching Pass 9.
+
+**Outcome:** cycle-004 (`windows-correctness`) Phase F2 (spec evolution) remains IN PROGRESS. `total_bcs` unchanged at 742 this burst (Passes 7-8 were BC-body refinements — BC-1.4.038 gained an Invariant, not a new BC number); `vp_count` unchanged at 55 since Pass 6 (VP-018 is a pre-existing VP number reused for the clear-path oracle, not a new count). Adversarial finding trajectory: 17 → 9 → 5 → 4 → 4 → 4 → [post-Pass-6 sweep: 3] → 3 → 3 (all findings from all 8 passes resolved via architect→product-owner→formal-verifier fix chains). Clean-streak 0/3 — three CONSECUTIVE clean passes are required to converge under the standard rule; none has yet been clean. **NEXT:** present the pending human convergence decision — continue toward 3 consecutive clean (dispatch Pass 9) OR proceed to the F2 human gate now with the 8-pass convergence history and the `--cloud-id` residual (EC-1.2.052-5) documented as rationale (re-running the consistency-validator first only if further fixes land after Pass 7-8).
+
+**Codifications:** none this burst — no new DEC; DEC-335 (F1 human gate) remains the latest decision. The Pass 7-8 fix-chain outputs (the seam-wording precision fix, the `clear_dpapi_file_tolerating_path_escape` adapter + BC-1.4.038 Invariant 3 + VP-018, and the corrected VP CI-classification tally) are the codified F2 spec-evolution convergence output. The continue-vs-gate-now convergence-strategy choice is a PENDING human decision, not yet recorded — it will receive its own DEC once made.
+
+**Closes:** the STATE.md staleness that had accumulated across Passes 7-8 (STATE.md previously still read "Pass 7 NEXT," now current). Also closes a self-inflicted STATE.md authoring defect from this burst's own first Write attempt (a stray trailing `</content>` artifact and a `wc -l`/banner mismatch), both caught and fixed by the file's own structural validators before commit — recorded here for the audit trail, not as a finding against the spec content itself. **Does NOT close:** F2 itself, which remains IN PROGRESS pending the human convergence decision and, downstream of it, either Pass 9+ or the F2 human gate; no cycle-001/002/003 standing Drift/Standing Items are touched.
+
+### Counts reconciled this burst
+
+BCs: unchanged at **742** (Passes 7-8 amended an existing BC — BC-1.4.038 gained Invariant 3 — no BC added or removed). VPs: unchanged at **55** (VP-018 reused an existing VP slot for the clear-path oracle; no new VP number allocated). Holdout scenarios unchanged at 106. `total_stories` unchanged at 168 (F2 does not create stories). Reserved Windows device-name set unchanged at 30 (ADR-0021 §9).
+
+### Details
+
+| Agent | Task | Output |
+|-------|------|--------|
+| adversary (Pass 7, fresh context) | Scoped adversarial review, round 7 | 3 findings (0 CRIT/0 HIGH/1 MED/2 LOW), novelty MED-LOW — close to converged |
+| architect + product-owner + formal-verifier (Pass 7 fix round) | Resolve Pass 7 findings | `should_fallback_to_dpapi` seam-wording precision fix; `--cloud-id`/`auth refresh` non-durability documented (EC-1.2.052-5) |
+| adversary (Pass 8, fresh context) | Scoped adversarial review, round 8 | 3 findings (0 CRIT/1 HIGH/2 MED/0 LOW), novelty MED — all on the CLEAR path (`auth logout`/`auth remove`) |
+| architect + product-owner + formal-verifier (Pass 8 fix round) | Resolve Pass 8 findings | `clear_dpapi_file_tolerating_path_escape` adapter + BC-1.4.038 Invariant 3 + EC-1.4.038-5/6 + VP-018; corrected VP CI-classification tally (Finding #1 honesty fix) |
+| state-manager | Verify accumulated work is internally consistent; commit it in one atomic commit; correct STATE.md (incl. fixing two self-inflicted authoring defects caught by its own validators); append this burst-log entry | This commit; `STATE.md`; `cycles/cycle-004/burst-log.md` (this entry) |
+
+**Files touched (Dim-1): 6 unique files (factory-artifacts, this burst)**
+
+- STATE.md
+- cycles/cycle-004/burst-log.md
+- cycles/cycle-004/phase-f2-spec-evolution/architecture-delta.md (modified)
+- cycles/cycle-004/phase-f2-spec-evolution/vp-delta.md (modified)
+- specs/architecture/decisions/ADR-0021-windows-oauth-secret-storage-dpapi-fallback.md (modified)
+- specs/prd/bc-1-auth-identity.md (modified)
+
+**Dim-2 Attestation:** `scripts/check-spec-counts.sh` (8 bc files, exit 0) and `scripts/check-bc-cumulative-counts.sh` (742 total across 9 files, exit 0) both PASS — re-verified before this burst, recorded here per Defensive Sweep Discipline (S-7.02); `vp-delta.md`'s `input-hash` (`95218fd`) confirmed current against its listed inputs; `BC-INDEX.md` and `ADR-0022` confirmed unmodified since Burst 5 via `git status` and correctly excluded from this commit; a corpus grep for the stale "13 of 14 default CI" VP-classification claim found it only in this burst's own now-corrected STATE.md prose — no other live-truth surface carried the stale tally.
+
+**Dim-5 Attestation:** N/A — no binary/WASM artifact produced by this burst.
+
+**Dim-6 Attestation:** N/A — no source code changed this burst (`.factory/` spec-delta convergence only, no `develop`-side commit).
+
+**Dim-7 Attestation:** N/A — no test-affecting change this burst; full regression remains PASS (4763/0/157) as of the cycle-003 F6/F7 hardening/convergence passes, unchanged.
+
 ## Burst: Burst 5 — F2 scoped adversarial convergence, Passes 5-6 + post-Pass-6 consistency sweep — INTERMEDIATE CHECKPOINT #2 (2026-09-03)
 
 **Parent-commit:** `ab0a7fa5` (`develop` tip `42e92b46`, unchanged this burst — no `develop`-side commit).
