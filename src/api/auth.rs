@@ -863,24 +863,66 @@ pub fn load_api_token(profile: &Profile) -> Result<(String, String)> {
 /// A genuine keychain backend error propagates via `?`, exactly like every
 /// other [`read_keyring_optional`] call site in this module — it must never
 /// be coerced into "no stored credentials".
+///
+/// Expressed in terms of [`probe_stored_credential_kind`] so the two can
+/// never drift apart — this function only discards the WHICH-kind
+/// information that function's caller (`src/cli/auth/login.rs::handle_login`,
+/// FIX-F5-CYCLE4-1 LOW-1) needs to reconcile an orphaned credential pair
+/// after a successful mechanism switch on a legacy `auth_method: None`
+/// profile.
 pub fn profile_has_stored_credentials(profile: &Profile) -> Result<bool> {
+    Ok(probe_stored_credential_kind(profile)?.is_some())
+}
+
+/// Existence-only probe: WHICH credential kind, if any, does `profile`
+/// currently hold in the keychain — `Some("oauth")`, `Some("api_token")`, or
+/// `None` if neither pair is present?
+///
+/// Checks in the same order [`profile_has_stored_credentials`] always has
+/// (namespaced OAuth pair, then namespaced api-token pair, then — for the
+/// `"default"` profile only — the pre-multi-profile legacy flat OAuth pair;
+/// see that function's own doc comment for why the legacy pair is scoped to
+/// `"default"` and why the legacy FLAT api-token pair is deliberately not
+/// probed at all), so converting this function's result to a plain `bool`
+/// via `.is_some()` reproduces `profile_has_stored_credentials`'s exact
+/// pre-existing behavior byte-for-byte.
+///
+/// **FIX-F5-CYCLE4-1 LOW-1 (F5-scoped adversarial review, cycle-004):**
+/// added so [`crate::cli::auth::login::handle_login`] can determine not just
+/// WHETHER a legacy `auth_method: None` profile
+/// ([`crate::config::migrate_legacy_global`]) already holds working
+/// credentials under some label — [`profile_has_stored_credentials`] already
+/// answers that for the PR #771 NEW-1 pre-mark guard — but WHICH kind, so
+/// that once a login under a DIFFERENT mechanism succeeds, the caller can
+/// clear exactly that orphaned pair afterward. Without this, `handle_login`
+/// had no way to distinguish "clear the OAuth pair" from "clear the
+/// api-token pair" for a `None`-labelled profile, so
+/// [`crate::cli::auth::login::clear_outgoing_mechanism_on_switch`] (which
+/// dispatches on a KNOWN `current_auth_method: Some(_)`) could not be reused
+/// for this case and the orphaned pair was never cleared at all — the
+/// asymmetric other half of PR #771's NEW-1 fix (which only protected the
+/// PRE-login label from being mismarked, not the POST-login orphan).
+///
+/// A genuine keychain backend error propagates via `?`, exactly like every
+/// other [`read_keyring_optional`] call site in this module.
+pub fn probe_stored_credential_kind(profile: &Profile) -> Result<Option<&'static str>> {
     if read_keyring_optional(&oauth_access_key(profile.as_ref()))?.is_some()
         && read_keyring_optional(&oauth_refresh_key(profile.as_ref()))?.is_some()
     {
-        return Ok(true);
+        return Ok(Some("oauth"));
     }
     if read_keyring_optional(&api_token_email_key(profile.as_ref()))?.is_some()
         && read_keyring_optional(&api_token_key(profile.as_ref()))?.is_some()
     {
-        return Ok(true);
+        return Ok(Some("api_token"));
     }
     if profile.as_ref() == "default"
         && read_keyring_optional(KEY_OAUTH_ACCESS_LEGACY)?.is_some()
         && read_keyring_optional(KEY_OAUTH_REFRESH_LEGACY)?.is_some()
     {
-        return Ok(true);
+        return Ok(Some("oauth"));
     }
-    Ok(false)
+    Ok(None)
 }
 
 /// Read an optional keychain entry, distinguishing "not present" (`NoEntry`)
@@ -5167,7 +5209,8 @@ mod tests {
     ///
     /// PR #771 review Finding NB-1 (coverage): normalizes a chunk of
     /// `auth.rs` source text for phrase-scanning purposes. Strips a leading
-    /// `///` doc-comment prefix and a trailing `\` string-literal
+    /// comment-marker prefix (`///`, `//!`, or plain `//` — see
+    /// FIX-F5-CYCLE4-1 LOW-2 below) and a trailing `\` string-literal
     /// line-continuation marker from each physical line, then collapses
     /// all whitespace runs (including the newlines between lines) to
     /// single spaces.
@@ -5184,12 +5227,25 @@ mod tests {
     /// [`site1_login_store_failure_message`] originally wrapped "...has no"
     /// / "other consumer..." across two `///` lines — invisible to a raw
     /// scan, caught once normalized.
+    ///
+    /// **FIX-F5-CYCLE4-1 LOW-2 (F5-scoped adversarial review, cycle-004):**
+    /// the original version above only stripped `///`, leaving `//!`
+    /// (inner-doc, e.g. a module-level `//!` header comment) and a plain
+    /// `//` line comment completely un-stripped. A phrase wrapped across
+    /// two `//!` or `//` lines then left that un-stripped marker sitting
+    /// BETWEEN the two halves of the phrase after line-joining (e.g. "...has
+    /// no //! other consumer...") — the substring check never matched even
+    /// though a reader sees one continuous run of text, the exact class this
+    /// function exists to close. The longest matching marker is stripped
+    /// first (`///` before `//!` before bare `//`) so a genuine `///` line
+    /// is never mis-stripped down to a bare `/` prefix.
     fn normalize_for_phrase_scan(source: &str) -> String {
         let mut normalized = String::with_capacity(source.len());
         for raw_line in source.lines() {
             let trimmed = raw_line.trim_start();
-            let after_doc_prefix = trimmed
-                .strip_prefix("///")
+            let after_doc_prefix = ["///", "//!", "//"]
+                .iter()
+                .find_map(|marker| trimmed.strip_prefix(marker))
                 .map(|rest| rest.strip_prefix(' ').unwrap_or(rest))
                 .unwrap_or(trimmed);
             let without_continuation = after_doc_prefix
@@ -5229,6 +5285,42 @@ mod tests {
             normalized.contains("no other consumer"),
             "normalize_for_phrase_scan must join a backslash-continued string literal back \
              into one continuous run; got: {normalized}"
+        );
+    }
+
+    /// FIX-F5-CYCLE4-1 LOW-2 (F5-scoped adversarial review, cycle-004):
+    /// `normalize_for_phrase_scan` stripped a leading `///` doc-comment
+    /// prefix but not `//!` (inner-doc) — a forbidden DEC-334 phrase wrapped
+    /// across two `//!` lines left the un-stripped `//!` marker sitting
+    /// between the two halves of the phrase after line-joining (e.g. "...has
+    /// no //! other consumer...") so the substring check never matched, even
+    /// though a reader (or rustdoc) sees one continuous run of text —
+    /// exactly the class `normalize_for_phrase_scan` exists to close for
+    /// `///`, just missing this one comment-marker spelling.
+    #[test]
+    fn test_normalize_for_phrase_scan_catches_inner_doc_wrapped_forbidden_phrase() {
+        let synthetic =
+            "//! this text says the grant has no\n//! other consumer in the whole system.\n";
+        let normalized = normalize_for_phrase_scan(synthetic).to_lowercase();
+        assert!(
+            normalized.contains("no other consumer"),
+            "normalize_for_phrase_scan must join a //!-wrapped (inner-doc) phrase back into \
+             one continuous run so the source-scan guard can catch it; got: {normalized}"
+        );
+    }
+
+    /// FIX-F5-CYCLE4-1 LOW-2: the same gap for a plain `//` line comment —
+    /// also unstripped by the pre-fix code, for the same reason as `//!`
+    /// above.
+    #[test]
+    fn test_normalize_for_phrase_scan_catches_plain_comment_wrapped_forbidden_phrase() {
+        let synthetic =
+            "// this text says the grant has no\n// other consumer in the whole system.\n";
+        let normalized = normalize_for_phrase_scan(synthetic).to_lowercase();
+        assert!(
+            normalized.contains("no other consumer"),
+            "normalize_for_phrase_scan must join a //-wrapped (plain line comment) phrase back \
+             into one continuous run so the source-scan guard can catch it; got: {normalized}"
         );
     }
 
