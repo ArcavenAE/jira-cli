@@ -51,11 +51,37 @@ pub(crate) fn resolve_oauth_scopes(profile: &crate::config::ProfileConfig) -> Re
 /// email is namespaced per profile (`<profile>:email` / `<profile>:api-token`
 /// via [`auth::store_api_token`]) — symmetric with the existing per-profile
 /// OAuth token namespacing, not shared/flat across profiles.
+///
+/// `cloud_id_override` (S-cycle4-cloud-id-correctness, BC-1.2.052) is
+/// symmetric with [`login_oauth`]'s existing parameter of the same name.
+/// Ordered fallback chain (ADR-0022 §2), applied on EVERY invocation, not
+/// only brand-new-profile creation (BC-1.2.052 Invariant 3, BC-1.2.053):
+/// 1. `cloud_id_override` supplied → used directly, fetch skipped, value
+///    persisted (BC-1.2.052 Postcondition 1).
+/// 2. Otherwise, [`crate::api::jira::tenant::fetch_cloud_id`] is attempted
+///    against the profile's `url` (already resolved by
+///    `prepare_login_target` before this function runs).
+/// 3. On fetch failure, soft-fail: `p.cloud_id` is left untouched and a
+///    single `eprintln!` diagnostic is emitted in Table (human) mode only
+///    (BC-1.2.052 Postcondition 3) — see [`resolve_and_apply_cloud_id`]'s
+///    own doc comment for the output-channel contract.
+///
+/// `output` selects the output-channel contract for the soft-fail
+/// diagnostic — passed straight through to [`resolve_and_apply_cloud_id`].
+///
+/// Call sites (BC-1.2.052 Invariant 3 — exactly three): `handle_login`
+/// (`auth login`, threads `args.output`), `jr init`'s API-token branch
+/// (hardcoded `OutputFormat::Table` — `jr init` is inherently interactive),
+/// and `refresh_credentials` (`jr auth refresh`, threads `*args.output`;
+/// `cloud_id_override` stays hardcoded `None` — no `--cloud-id` flag on
+/// `RefreshArgs`).
 pub async fn login_token(
     profile: &str,
     email: Option<String>,
     token: Option<String>,
+    cloud_id_override: Option<&str>,
     no_input: bool,
+    output: OutputFormat,
 ) -> Result<()> {
     let email = resolve_credential(
         email,
@@ -106,10 +132,175 @@ pub async fn login_token(
     if config.global.default_profile.is_none() {
         config.global.default_profile = Some(profile.to_string());
     }
+
+    resolve_and_apply_cloud_id(&mut config, profile, cloud_id_override, output).await;
+
     config.save_global()?;
 
     eprintln!("Credentials stored in keychain.");
     Ok(())
+}
+
+/// `cloud_id` acquisition fallback chain shared by every `login_token` call
+/// site (S-cycle4-cloud-id-correctness, BC-1.2.052/053, ADR-0022 §2/§3).
+///
+/// Mutates `config`'s entry for `profile` in place; does NOT call
+/// `config.save_global()` — the caller ([`login_token`]) persists once,
+/// alongside the `auth_method`/`default_profile` writes already made in the
+/// same load/save cycle.
+///
+/// Never returns an error — every failure mode (missing override, fetch
+/// failure of any shape, non-`https://` `site_url`) is a soft-fail per
+/// BC-1.2.052 Postcondition 3/Invariant 2: `p.cloud_id` is left as it
+/// already was, and a single `eprintln!` diagnostic is emitted — but ONLY in
+/// Table (human) output mode, gated on `matches!(output, OutputFormat::Table)`.
+/// Under `--output json` the diagnostic is suppressed entirely: nothing is
+/// written to stderr, and the return value reflects that (`None`, not the
+/// would-be message) so a caller/test can't mistake "suppressed" for
+/// "printed". This mirrors the established sibling convention in this same
+/// module — [`super::emit_oauth_deprecation_notice`] and
+/// [`super::emit_api_token_inert_on_refresh_notice`] gate their stderr
+/// notices the same way — and matches this function's own long-standing doc
+/// claim of being "human-mode-only," which prior to this change was
+/// documented but not actually implemented (ADV MED, S-cycle4-cloud-id-
+/// correctness). This is the single implementation both the
+/// override-precedence (AC-001), fetch-success-overwrite (AC-005), and
+/// mechanism-switch refresh-not-clear (AC-007, BC-1.2.053) acceptance
+/// criteria share — no separate "mechanism switch" detection code exists
+/// anywhere (BC-1.2.053 Invariant 1).
+///
+/// Returns the exact text of the `eprintln!` diagnostic when one was
+/// ACTUALLY EMITTED — i.e. only on a fetch-failure/no-URL soft-fail path
+/// AND `output == OutputFormat::Table` (`None` on the override path, the
+/// fetch-success path, and any soft-fail path under `OutputFormat::Json`,
+/// none of which print anything) — a testability seam only (ADV LOW-1):
+/// production callers ([`login_token`]) ignore it, since the diagnostic has
+/// already reached stderr as a side effect by the time this returns (when
+/// it returns `Some` at all). This lets tests assert on the exact soft-fail
+/// wording (preserved-vs-none, ADV LOW-4) AND on JSON-mode suppression
+/// (ADV MED) without needing to capture the real stderr file descriptor.
+///
+/// Structural note (ADV MED-B, S-cycle4-cloud-id-correctness fix burst):
+/// the would-be diagnostic (`diag: Option<String>`, computed independently
+/// of `output` on the no-URL/fetch-failure paths) and the actual emit
+/// (`eprintln!`) are decided by a SINGLE tail gate — `let emit = if
+/// matches!(output, OutputFormat::Table) { diag } else { None };` — rather
+/// than two separate `if matches!(output, OutputFormat::Table) { eprintln!
+/// …; return Some(msg) }` blocks (one per soft-fail branch, as this
+/// function had prior to this fix burst). This makes the return value a
+/// faithful-by-construction proxy for what actually reached stderr: there
+/// is exactly one `eprintln!(` call in this function's body (down from
+/// two), and it is reached if and only if `emit` — the value this function
+/// returns — is `Some`. A hand-edit can no longer hoist an `eprintln!`
+/// above the mode gate on just one branch while leaving the other, or the
+/// return-value tests, apparently intact — both branches now share the one
+/// gate. This is also why a dedicated in-process real-stderr-fd capture
+/// test is unnecessary here: there is no crate already in this repo for
+/// that (checked — no `gag`-style dependency, and `assert_cmd`/`predicates`
+/// are subprocess-level tools that cannot reach a module-private `async
+/// fn`), so stderr silence under `--output json` is guaranteed
+/// STRUCTURALLY by this single-gate design instead, pinned by two
+/// independent things: the return-value assertions on this function
+/// (`test_adv_med_json_mode_fetch_failure_suppresses_diagnostic` et al.,
+/// below) and the source-level guard confirming no stdout leak exists
+/// (`test_adv_low1_resolve_cloud_id_source_has_no_stdout_macro_or_write`).
+async fn resolve_and_apply_cloud_id(
+    config: &mut Config,
+    profile: &str,
+    cloud_id_override: Option<&str>,
+    output: OutputFormat,
+) -> Option<String> {
+    if let Some(override_value) = cloud_id_override {
+        // AC-001 (BC-1.2.052 Postcondition 1): explicit override takes
+        // precedence — the fetch is never attempted — and is written,
+        // symmetric with a fetch-success write.
+        let p = config
+            .global
+            .profiles
+            .entry(profile.to_string())
+            .or_default();
+        p.cloud_id = Some(override_value.to_string());
+        return None;
+    }
+
+    let site_url = config
+        .global
+        .profiles
+        .get(profile)
+        .and_then(|p| p.url.clone());
+
+    // `diag` is the diagnostic that WOULD be shown, computed independently
+    // of `output` — the single tail gate below is the only place `output`
+    // decides anything.
+    let diag: Option<String> = match site_url {
+        None => {
+            // No URL to fetch against at all — soft-fail, leave cloud_id
+            // as-is.
+            Some(format!(
+                "warning: could not look up cloud_id for profile {profile:?} — no URL configured."
+            ))
+        }
+        Some(site_url) => {
+            // Captured before the fetch so the soft-fail diagnostic
+            // (below) can distinguish "a prior value survives untouched"
+            // from "there was never one to begin with" (ADV LOW-4) —
+            // BC-1.2.053 Invariant 3: on `auth refresh` this fetch fires
+            // on every invocation, so a transient failure must not read
+            // as an error when the existing value is in fact preserved
+            // intact.
+            let had_existing_cloud_id = config
+                .global
+                .profiles
+                .get(profile)
+                .is_some_and(|p| p.cloud_id.is_some());
+
+            match crate::api::jira::tenant::fetch_cloud_id(&site_url).await {
+                Ok(cloud_id) => {
+                    // AC-005 / AC-007 (BC-1.2.052 Postcondition 5,
+                    // BC-1.2.053 Postcondition 1): fetch success
+                    // overwrites p.cloud_id unconditionally, even a stale
+                    // OAuth-era value.
+                    let p = config
+                        .global
+                        .profiles
+                        .entry(profile.to_string())
+                        .or_default();
+                    p.cloud_id = Some(cloud_id);
+                    None
+                }
+                Err(err) => {
+                    // AC-003 / AC-007 (BC-1.2.052 Postcondition 3,
+                    // BC-1.2.053 Postcondition 2): soft-fail — p.cloud_id
+                    // is left as it already was (None stays None; a prior
+                    // value survives untouched). Never abort login_token.
+                    Some(if had_existing_cloud_id {
+                        format!(
+                            "warning: could not refresh cloud_id for profile {profile:?} ({err}); keeping the existing value."
+                        )
+                    } else {
+                        format!(
+                            "warning: could not look up cloud_id for profile {profile:?}: {err}"
+                        )
+                    })
+                }
+            }
+        }
+    };
+
+    // Single decision point (ADV MED-B): human-mode-only (BC-1.2.052
+    // Postcondition 3) — suppressed entirely under `--output json`,
+    // matching the sibling notice convention (`emit_oauth_deprecation_notice`
+    // et al.). `eprintln!` fires IFF this function returns `Some` — there is
+    // no way for the two to desync.
+    let emit = if matches!(output, OutputFormat::Table) {
+        diag
+    } else {
+        None
+    };
+    if let Some(m) = &emit {
+        eprintln!("{m}");
+    }
+    emit
 }
 
 /// Run the OAuth 2.0 (3LO) login flow and persist site configuration.
@@ -250,7 +441,10 @@ pub struct LoginArgs {
     pub client_id: Option<String>,
     pub client_secret: Option<String>,
     /// Cloud ID override for multi-org disambiguation (--cloud-id flag).
-    /// Only meaningful when `oauth` is true; passed through to `login_oauth`.
+    /// Passed through to `login_oauth` on the OAuth branch and, as of
+    /// S-cycle4-cloud-id-correctness (BC-1.2.052 Postcondition 1), to
+    /// `login_token` on the API-token branch too — previously silently
+    /// dropped there.
     pub cloud_id: Option<String>,
     pub no_input: bool,
     pub output: OutputFormat,
@@ -406,7 +600,18 @@ pub async fn handle_login(args: LoginArgs) -> Result<()> {
         )
         .await?;
     } else {
-        login_token(&target, args.email, args.token, args.no_input).await?;
+        // BC-1.2.052 Postcondition 1: `--cloud-id` was previously silently
+        // dropped on the API-token branch (`login_oauth`'s sibling call
+        // above already threads it through). Symmetric fix.
+        login_token(
+            &target,
+            args.email,
+            args.token,
+            args.cloud_id.as_deref(),
+            args.no_input,
+            args.output,
+        )
+        .await?;
     }
 
     // Reached only when the login above succeeded — a failed login returns
@@ -637,4 +842,746 @@ pub fn clear_outgoing_mechanism_on_switch(
     }
 
     Ok(())
+}
+
+/// S-cycle4-cloud-id-correctness — Two-Step Red Gate TESTS (step 2 of 2) for
+/// `resolve_and_apply_cloud_id`'s override/fetch/soft-fail fallback chain
+/// (BC-1.2.052/053, ADR-0022 §2/§3, VP-AUTHDX-019/020).
+///
+/// `resolve_and_apply_cloud_id` is module-private — this inline test module
+/// is the ONLY place these behaviors can be exercised WITHOUT going through
+/// the real OS keychain (`login_token`'s `auth::store_api_token` write).
+/// This is exactly the "config-layer verification without a real credential
+/// store" AC-008/VP-AUTHDX-020 calls for: an in-memory `Config`/
+/// `ProfileConfig` plus `wiremock`, no keychain touched anywhere below.
+///
+/// ## `JR_TENANT_INFO_URL` seam — REQUIRED, NOT YET IMPLEMENTED
+///
+/// `fetch_cloud_id` (ADR-0022 §1, `src/api/jira/tenant.rs`) REQUIRES
+/// `site_url` to start with `https://` — a real security invariant (Pass-4
+/// adversarial review Finding #4: closes an on-path plaintext
+/// wrong-tenant-`cloudId` vector), not a testing inconvenience to relax.
+/// `wiremock` 0.6.5 has NO HTTPS/TLS support (verified directly against its
+/// public `MockServerBuilder` API: only `.listener()` and
+/// `.disable_request_recording()` exist — no TLS/cert configuration of any
+/// kind), so a genuine 200-plus-`cloudId` response can never be produced by
+/// pointing `fetch_cloud_id` at a real `wiremock` server while honoring the
+/// `https://` requirement literally: the TLS handshake against a plaintext
+/// server fails before any HTTP semantics are ever exchanged. This is a
+/// hard technical constraint of the available tooling, not a design choice
+/// made by this test suite, and it is NOT solvable by adding a new
+/// dependency (this story's own Library & Framework Requirements table
+/// says no new dependency is introduced).
+///
+/// The tests below that need a fetch *success* therefore assume
+/// `fetch_cloud_id` gains a debug-only `JR_TENANT_INFO_URL` env var
+/// override: when set, the ACTUAL GET request goes to
+/// `format!("{}/_edge/tenant_info", env::var("JR_TENANT_INFO_URL").unwrap())`
+/// instead of `format!("{}/_edge/tenant_info", site_url)`, while `site_url`
+/// itself is STILL what the `https://`-prefix precondition check validates.
+/// This is the same "override the actual network target while the logical
+/// argument still drives validation" shape as the already-established
+/// `JR_BASE_URL` (`src/config.rs::Config::base_url`) and
+/// `JR_ACCESSIBLE_RESOURCES_URL` (`src/api/auth.rs::oauth_login`) seams —
+/// see CLAUDE.md's "AI Agent Notes" section for the full family. It should
+/// be gated `#[cfg(debug_assertions)]` exactly like its siblings, with a
+/// matching CLAUDE.md entry and a `tests/*_release_gate.rs` pin added in
+/// the SAME commit, per this codebase's own documented convention for new
+/// `JR_*` test seams.
+///
+/// Until this seam is added, every test below fails via the current
+/// `todo!()` panic (Red Gate, step 2 — this is the required state right
+/// now). Once `resolve_and_apply_cloud_id`/`fetch_cloud_id` are implemented
+/// literally per ADR-0022's reference code WITHOUT this seam, the
+/// success-dependent tests will continue to fail (a TLS handshake error,
+/// not `Ok`) rather than flip green — flagged prominently in this story's
+/// Test Writer report as the single highest-priority open question, not
+/// left for a future reader to silently rediscover. The failure-path tests
+/// (soft-fail / preserve-on-failure) need no such seam and are fully
+/// self-contained: any `http://`/scheme-less `site_url` deterministically
+/// triggers `fetch_cloud_id`'s own https-only precondition skip, which is
+/// itself a legitimate, spec-documented failure shape (EC-1.2.052-2) from
+/// this caller's point of view.
+#[cfg(test)]
+mod cloud_id_fallback_chain_tests {
+    use std::collections::BTreeMap;
+    use std::sync::OnceLock;
+
+    use tokio::sync::Mutex;
+    use wiremock::matchers::{method, path};
+    use wiremock::{Mock, MockServer, ResponseTemplate};
+
+    use crate::cli::OutputFormat;
+    use crate::config::{Config, GlobalConfig, ProfileConfig, ProjectConfig};
+
+    use super::resolve_and_apply_cloud_id;
+
+    /// Serializes access to the process-global `JR_TENANT_INFO_URL` env var
+    /// across this module's tests — mirrors `src/config.rs`'s `ENV_MUTEX`
+    /// pattern for `JR_BASE_URL`, but async-aware (`tokio::sync::Mutex`, not
+    /// `std::sync::Mutex`) since the guard is held across `.await` points
+    /// here — `clippy::await_holding_lock` requires this. Only this
+    /// module's tests touch this env var, so a module-local guard is
+    /// sufficient (no cross-file races).
+    fn env_mutex() -> &'static Mutex<()> {
+        static M: OnceLock<Mutex<()>> = OnceLock::new();
+        M.get_or_init(|| Mutex::new(()))
+    }
+
+    /// Build a minimal, fully in-memory `Config` with exactly one profile —
+    /// no disk I/O, no keychain, matching AC-008's config-layer contract.
+    fn make_config(profile_name: &str, url: Option<&str>, cloud_id: Option<&str>) -> Config {
+        let mut profiles = BTreeMap::new();
+        profiles.insert(
+            profile_name.to_string(),
+            ProfileConfig {
+                url: url.map(str::to_string),
+                cloud_id: cloud_id.map(str::to_string),
+                auth_method: Some("api_token".into()),
+                ..ProfileConfig::default()
+            },
+        );
+        Config {
+            global: GlobalConfig {
+                default_profile: Some(profile_name.to_string()),
+                profiles,
+                ..GlobalConfig::default()
+            },
+            project: ProjectConfig::default(),
+            active_profile_name: profile_name.into(),
+        }
+    }
+
+    fn cloud_id_of<'a>(config: &'a Config, profile_name: &str) -> Option<&'a str> {
+        config
+            .global
+            .profiles
+            .get(profile_name)
+            .and_then(|p| p.cloud_id.as_deref())
+    }
+
+    /// AC-001 (BC-1.2.052 Postcondition 1, VP-AUTHDX-019): an explicit
+    /// `--cloud-id` override takes precedence — the fetch is never
+    /// attempted (proven by pointing `url` at a value that could never
+    /// resolve a real fetch) — and the override value is WRITTEN to
+    /// `p.cloud_id`, symmetric with a fetch-success write, not merely used
+    /// in-memory to skip the fetch.
+    #[tokio::test]
+    async fn test_ac_001_explicit_override_takes_precedence_and_is_written() {
+        let mut config = make_config("sandbox", Some("not-a-real-url"), None);
+
+        resolve_and_apply_cloud_id(
+            &mut config,
+            "sandbox",
+            Some("override-uuid-123"),
+            OutputFormat::Table,
+        )
+        .await;
+
+        assert_eq!(
+            cloud_id_of(&config, "sandbox"),
+            Some("override-uuid-123"),
+            "AC-001: explicit --cloud-id override must overwrite p.cloud_id \
+             even though the profile's url could never resolve a real fetch"
+        );
+    }
+
+    /// Multi-profile boundary pin (CLAUDE.md "Multi-profile boundary":
+    /// "Cross-profile cache leakage is a correctness bug, not a UX issue"
+    /// — the same principle applies to config writes, not just caches):
+    /// `resolve_and_apply_cloud_id` must write `cloud_id` onto the NAMED
+    /// `profile` argument it was called with, never onto
+    /// `config.active_profile_name`, when the two differ. Builds a config
+    /// with TWO distinct profiles — "prod" is the ACTIVE profile, "sandbox"
+    /// is the TARGET profile passed explicitly to the function (as
+    /// `jr auth login --profile sandbox` would do while some other profile
+    /// is active) — and asserts the write landed only on "sandbox" while
+    /// "prod" (including its own pre-existing `cloud_id`) is left
+    /// completely untouched. Uses the override path (no network/seam
+    /// needed) purely to isolate this from any fetch-success/failure
+    /// behavior already covered by the tests above.
+    #[tokio::test]
+    async fn test_resolve_cloud_id_writes_named_profile_not_active_profile() {
+        let mut profiles = BTreeMap::new();
+        profiles.insert(
+            "prod".to_string(),
+            ProfileConfig {
+                url: Some("https://prod.example.atlassian.net".to_string()),
+                cloud_id: Some("prod-untouched-uuid".to_string()),
+                auth_method: Some("api_token".into()),
+                ..ProfileConfig::default()
+            },
+        );
+        profiles.insert(
+            "sandbox".to_string(),
+            ProfileConfig {
+                url: Some("not-a-real-url".to_string()),
+                cloud_id: None,
+                auth_method: Some("api_token".into()),
+                ..ProfileConfig::default()
+            },
+        );
+        let mut config = Config {
+            global: GlobalConfig {
+                default_profile: Some("prod".to_string()),
+                profiles,
+                ..GlobalConfig::default()
+            },
+            project: ProjectConfig::default(),
+            // The ACTIVE profile is "prod" — deliberately different from
+            // the "sandbox" profile named in the call below.
+            active_profile_name: "prod".into(),
+        };
+
+        resolve_and_apply_cloud_id(
+            &mut config,
+            "sandbox",
+            Some("sandbox-override-uuid"),
+            OutputFormat::Table,
+        )
+        .await;
+
+        assert_eq!(
+            cloud_id_of(&config, "sandbox"),
+            Some("sandbox-override-uuid"),
+            "the write must land on the NAMED profile argument (\"sandbox\"), \
+             regardless of which profile is active"
+        );
+        assert_eq!(
+            cloud_id_of(&config, "prod"),
+            Some("prod-untouched-uuid"),
+            "the ACTIVE profile (\"prod\") must be completely untouched — a \
+             write keyed on `active_profile_name` instead of the `profile` \
+             argument would corrupt it here"
+        );
+        assert_eq!(
+            config.active_profile_name, "prod",
+            "resolve_and_apply_cloud_id must not mutate active_profile_name itself"
+        );
+    }
+
+    /// AC-001 (Pass-2 adversarial review Finding #8): the override REPLACES
+    /// a pre-existing value too, not merely a brand-new-profile
+    /// None -> Some transition.
+    #[tokio::test]
+    async fn test_ac_001_explicit_override_replaces_existing_cloud_id() {
+        let mut config = make_config("sandbox", Some("not-a-real-url"), Some("old-uuid"));
+
+        resolve_and_apply_cloud_id(
+            &mut config,
+            "sandbox",
+            Some("override-uuid-456"),
+            OutputFormat::Table,
+        )
+        .await;
+
+        assert_eq!(cloud_id_of(&config, "sandbox"), Some("override-uuid-456"));
+    }
+
+    /// AC-003 (BC-1.2.052 Postcondition 3, Invariant 2; VP-AUTHDX-019): on
+    /// fetch failure (here: the https-only precondition skip, EC-1.2.052-2
+    /// — the cheapest deterministic way to force an `Err` from
+    /// `fetch_cloud_id` with zero network dependency) — a brand-new
+    /// profile's `p.cloud_id` stays `None`; the function never aborts its
+    /// caller.
+    #[tokio::test]
+    async fn test_ac_003_soft_fail_leaves_new_profile_cloud_id_none() {
+        let mut config = make_config("sandbox", Some("http://not-https.example.net"), None);
+
+        resolve_and_apply_cloud_id(&mut config, "sandbox", None, OutputFormat::Table).await;
+
+        assert_eq!(
+            cloud_id_of(&config, "sandbox"),
+            None,
+            "AC-003: a brand-new profile's cloud_id must stay None on fetch failure"
+        );
+    }
+
+    /// AC-003, existing-profile half: a PRIOR value survives a fetch
+    /// failure completely untouched (not merely None -> None).
+    #[tokio::test]
+    async fn test_ac_003_soft_fail_leaves_existing_cloud_id_untouched() {
+        let mut config = make_config(
+            "sandbox",
+            Some("http://not-https.example.net"),
+            Some("prior-uuid"),
+        );
+
+        resolve_and_apply_cloud_id(&mut config, "sandbox", None, OutputFormat::Table).await;
+
+        assert_eq!(cloud_id_of(&config, "sandbox"), Some("prior-uuid"));
+    }
+
+    /// EC-1.2.053-1: mechanism switch, fetch fails, and the profile never
+    /// had a `cloud_id` to begin with -> preserved AS `None` (not `""`, not
+    /// a panic) — Postcondition 2's "preserve" applies uniformly regardless
+    /// of whether the preserved value is itself present or absent.
+    #[tokio::test]
+    async fn test_ec_1_2_053_1_preserve_none_on_failure_is_still_none() {
+        let mut config = make_config("sandbox", Some("http://not-https.example.net"), None);
+
+        resolve_and_apply_cloud_id(&mut config, "sandbox", None, OutputFormat::Table).await;
+
+        assert_eq!(cloud_id_of(&config, "sandbox"), None);
+    }
+
+    /// AC-005 / VP-AUTHDX-019 (BC-1.2.052 Postcondition 5): fetch SUCCESS
+    /// overwrites `p.cloud_id` unconditionally and this function's caller
+    /// (`login_token`) is expected to persist it via the normal
+    /// `Config::save_global()` path (this test itself stays at the
+    /// config-layer / does not touch disk).
+    ///
+    /// Depends on the `JR_TENANT_INFO_URL` seam documented in this module's
+    /// header doc comment.
+    #[tokio::test]
+    async fn test_ac_005_fetch_success_overwrites_cloud_id() {
+        let _guard = env_mutex().lock().await;
+        let server = MockServer::start().await;
+        Mock::given(method("GET"))
+            .and(path("/_edge/tenant_info"))
+            .respond_with(ResponseTemplate::new(200).set_body_json(serde_json::json!({
+                "cloudId": "fetched-uuid-789"
+            })))
+            .mount(&server)
+            .await;
+        // SAFETY: env_mutex is held for this whole scope; no other test in
+        // this module reads/writes JR_TENANT_INFO_URL concurrently.
+        unsafe {
+            std::env::set_var("JR_TENANT_INFO_URL", server.uri());
+        }
+
+        let mut config = make_config("sandbox", Some("https://plausible-site.example"), None);
+        resolve_and_apply_cloud_id(&mut config, "sandbox", None, OutputFormat::Table).await;
+
+        unsafe {
+            std::env::remove_var("JR_TENANT_INFO_URL");
+        }
+
+        assert_eq!(
+            cloud_id_of(&config, "sandbox"),
+            Some("fetched-uuid-789"),
+            "AC-005: fetch success must overwrite p.cloud_id unconditionally"
+        );
+    }
+
+    /// AC-007 (BC-1.2.053 Postcondition 1, VP-AUTHDX-020): the
+    /// mechanism-switch scenario's SUCCESS branch — a stale OAuth-era
+    /// `cloud_id` is unconditionally overwritten on fetch success. No
+    /// switch-specific code exists (Invariant 1) — this exercises the exact
+    /// same `resolve_and_apply_cloud_id` codepath as
+    /// `test_ac_005_fetch_success_overwrites_cloud_id` above, just
+    /// pre-seeded with a stale value matching BC-1.2.053's own precondition
+    /// shape. Same `JR_TENANT_INFO_URL` seam dependency.
+    #[tokio::test]
+    async fn test_ac_007_mechanism_switch_overwrites_stale_cloud_id_on_fetch_success() {
+        let _guard = env_mutex().lock().await;
+        let server = MockServer::start().await;
+        Mock::given(method("GET"))
+            .and(path("/_edge/tenant_info"))
+            .respond_with(ResponseTemplate::new(200).set_body_json(serde_json::json!({
+                "cloudId": "fresh-uuid-after-switch"
+            })))
+            .mount(&server)
+            .await;
+        unsafe {
+            std::env::set_var("JR_TENANT_INFO_URL", server.uri());
+        }
+
+        let mut config = make_config(
+            "sandbox",
+            Some("https://plausible-site.example"),
+            Some("stale-oauth-era-uuid"),
+        );
+        resolve_and_apply_cloud_id(&mut config, "sandbox", None, OutputFormat::Table).await;
+
+        unsafe {
+            std::env::remove_var("JR_TENANT_INFO_URL");
+        }
+
+        assert_eq!(
+            cloud_id_of(&config, "sandbox"),
+            Some("fresh-uuid-after-switch"),
+            "AC-007/BC-1.2.053 Postcondition 1: fetch success must overwrite \
+             even a stale OAuth-era cloud_id"
+        );
+    }
+
+    /// AC-007 (BC-1.2.053 Postcondition 2, VP-AUTHDX-020): the
+    /// mechanism-switch scenario's FAILURE branch — a stale value is
+    /// PRESERVED, never bare-cleared, on fetch failure. Fully testable
+    /// without any new seam — the https-skip is itself a legitimate
+    /// `fetch_cloud_id` failure from this caller's point of view.
+    #[tokio::test]
+    async fn test_ac_007_mechanism_switch_preserves_stale_cloud_id_on_fetch_failure() {
+        let mut config = make_config(
+            "sandbox",
+            Some("http://not-https.example.net"),
+            Some("stale-oauth-era-uuid"),
+        );
+
+        resolve_and_apply_cloud_id(&mut config, "sandbox", None, OutputFormat::Table).await;
+
+        assert_eq!(
+            cloud_id_of(&config, "sandbox"),
+            Some("stale-oauth-era-uuid"),
+            "AC-007/BC-1.2.053 Postcondition 2: a stale value must be \
+             preserved on fetch failure, never bare-cleared"
+        );
+    }
+
+    /// ADV LOW-1 / LOW-4: pins the soft-fail OBSERVABLE that no prior test
+    /// asserted — the exact wording of the diagnostic when a PRIOR
+    /// `cloud_id` survives a fetch failure untouched (BC-1.2.053 Invariant
+    /// 3, the `auth refresh` fetch-every-invocation case where a
+    /// transient failure must read as "kept", not as a bare error).
+    /// `resolve_and_apply_cloud_id` still succeeds (soft-fail — no panic,
+    /// no `Result::Err` bubbled to the caller) and hands the diagnostic
+    /// back via its return value so this can be asserted without a real
+    /// stderr-fd capture; production emits the identical text via
+    /// `eprintln!` (stderr only — this function's body contains no bare
+    /// `print!`/`println!` macro call and no reference to `stdout`,
+    /// verified by
+    /// `test_adv_low1_resolve_cloud_id_source_has_no_stdout_macro_or_write`
+    /// below), so the returned text and what a real invocation prints to
+    /// stderr are one and the same string.
+    #[tokio::test]
+    async fn test_adv_low4_preserved_cloud_id_message_names_existing_value_kept() {
+        let mut config = make_config(
+            "sandbox",
+            Some("http://not-https.example.net"),
+            Some("prior-uuid"),
+        );
+
+        let diagnostic =
+            resolve_and_apply_cloud_id(&mut config, "sandbox", None, OutputFormat::Table).await;
+
+        let msg =
+            diagnostic.expect("ADV LOW-1: a fetch failure must emit a diagnostic and hand it back");
+        assert!(
+            msg.contains("keeping the existing value"),
+            "ADV LOW-4: the message must convey the prior cloud_id was KEPT, \
+             not read as a bare error, when a value already existed. Got: {msg}"
+        );
+        assert!(
+            msg.contains("\"sandbox\""),
+            "the message must name the affected profile. Got: {msg}"
+        );
+        assert!(
+            !msg.contains("no URL configured"),
+            "the no-URL-configured wording must not appear here — a URL WAS \
+             configured, just non-https. Got: {msg}"
+        );
+        assert_eq!(
+            cloud_id_of(&config, "sandbox"),
+            Some("prior-uuid"),
+            "the prior value must actually survive untouched, matching the \
+             message's claim"
+        );
+    }
+
+    /// ADV LOW-1 / LOW-4 sibling: when there was NEVER a prior `cloud_id`,
+    /// the ORIGINAL "could not look up" wording is correct as-is (there is
+    /// nothing to report as "kept") and must be left unchanged — this test
+    /// guards against the preserved-value wording bleeding into the
+    /// absent-value case.
+    #[tokio::test]
+    async fn test_adv_low4_absent_cloud_id_message_keeps_original_lookup_wording() {
+        let mut config = make_config("sandbox", Some("http://not-https.example.net"), None);
+
+        let diagnostic =
+            resolve_and_apply_cloud_id(&mut config, "sandbox", None, OutputFormat::Table).await;
+
+        let msg =
+            diagnostic.expect("ADV LOW-1: a fetch failure must emit a diagnostic and hand it back");
+        assert!(
+            msg.starts_with("warning: could not look up cloud_id for profile \"sandbox\":"),
+            "ADV LOW-4: with no prior value, the original (non-'kept') \
+             wording is correct and must be preserved verbatim. Got: {msg}"
+        );
+        assert!(
+            !msg.contains("keeping the existing value"),
+            "there is no existing value to keep — this phrasing must not \
+             appear. Got: {msg}"
+        );
+        assert_eq!(cloud_id_of(&config, "sandbox"), None);
+    }
+
+    /// AC-001 / fetch-success: the return-value seam (added for ADV LOW-1)
+    /// must stay `None` on the two paths that print nothing, so a future
+    /// caller can't mistake "printed nothing" for "printed an empty
+    /// string".
+    #[tokio::test]
+    async fn test_adv_low1_no_diagnostic_returned_on_override_or_fetch_success() {
+        let mut config = make_config("sandbox", Some("not-a-real-url"), None);
+        let diagnostic = resolve_and_apply_cloud_id(
+            &mut config,
+            "sandbox",
+            Some("override-uuid"),
+            OutputFormat::Table,
+        )
+        .await;
+        assert_eq!(
+            diagnostic, None,
+            "the explicit-override path prints nothing, so nothing should be returned"
+        );
+
+        let _guard = env_mutex().lock().await;
+        let server = MockServer::start().await;
+        Mock::given(method("GET"))
+            .and(path("/_edge/tenant_info"))
+            .respond_with(ResponseTemplate::new(200).set_body_json(serde_json::json!({
+                "cloudId": "fetched-uuid"
+            })))
+            .mount(&server)
+            .await;
+        unsafe {
+            std::env::set_var("JR_TENANT_INFO_URL", server.uri());
+        }
+        let mut config2 = make_config("sandbox", Some("https://plausible-site.example"), None);
+        let diagnostic2 =
+            resolve_and_apply_cloud_id(&mut config2, "sandbox", None, OutputFormat::Table).await;
+        unsafe {
+            std::env::remove_var("JR_TENANT_INFO_URL");
+        }
+        assert_eq!(
+            diagnostic2, None,
+            "a successful fetch prints nothing, so nothing should be returned"
+        );
+    }
+
+    /// ADV MED (S-cycle4-cloud-id-correctness fix burst, BC-1.2.052
+    /// Postcondition 3): pins the Table-mode HALF of the human-mode-only
+    /// contract explicitly and by name — a fetch failure under
+    /// `OutputFormat::Table` must both emit the diagnostic (`Some(..)`
+    /// returned, matching what a real invocation actually writes to
+    /// stderr) AND leave the prior `cloud_id` preserved untouched. This is
+    /// the positive control for
+    /// `test_adv_med_json_mode_fetch_failure_suppresses_diagnostic` below —
+    /// together the pair proves the gate actually branches on `output`
+    /// rather than always emitting or always suppressing.
+    #[tokio::test]
+    async fn test_adv_med_table_mode_fetch_failure_emits_diagnostic() {
+        let mut config = make_config(
+            "sandbox",
+            Some("http://not-https.example.net"),
+            Some("prior-uuid"),
+        );
+
+        let diagnostic =
+            resolve_and_apply_cloud_id(&mut config, "sandbox", None, OutputFormat::Table).await;
+
+        let msg = diagnostic.expect(
+            "ADV MED: Table mode must emit and return a soft-fail diagnostic \
+             on a fetch failure",
+        );
+        assert!(
+            msg.starts_with("warning: could not refresh cloud_id for profile \"sandbox\"")
+                && msg.contains("keeping the existing value"),
+            "ADV MED: Table-mode diagnostic must use the preserved-value \
+             wording (a prior cloud_id existed). Got: {msg}"
+        );
+        assert_eq!(
+            cloud_id_of(&config, "sandbox"),
+            Some("prior-uuid"),
+            "the prior cloud_id must survive the fetch failure untouched"
+        );
+    }
+
+    /// ADV MED (S-cycle4-cloud-id-correctness fix burst, BC-1.2.052
+    /// Postcondition 3, VP-AUTHDX-019): the negative control — the SAME
+    /// fetch-failure scenario as
+    /// `test_adv_med_table_mode_fetch_failure_emits_diagnostic` above, but
+    /// under `OutputFormat::Json`. The diagnostic must be fully suppressed
+    /// (`None` returned — nothing was printed to stderr, matching the
+    /// sibling convention on `emit_oauth_deprecation_notice`/
+    /// `emit_api_token_inert_on_refresh_notice`), while login-level
+    /// behavior is completely unaffected: the function still soft-fails
+    /// rather than aborting, and the prior `cloud_id` still survives
+    /// untouched. Before this fix burst, `resolve_and_apply_cloud_id` had
+    /// no `output` parameter at all and always emitted — this test would
+    /// not have compiled, let alone passed.
+    #[tokio::test]
+    async fn test_adv_med_json_mode_fetch_failure_suppresses_diagnostic() {
+        let mut config = make_config(
+            "sandbox",
+            Some("http://not-https.example.net"),
+            Some("prior-uuid"),
+        );
+
+        let diagnostic =
+            resolve_and_apply_cloud_id(&mut config, "sandbox", None, OutputFormat::Json).await;
+
+        assert_eq!(
+            diagnostic, None,
+            "ADV MED: JSON mode must suppress the soft-fail diagnostic \
+             entirely — nothing printed, so nothing returned"
+        );
+        assert_eq!(
+            cloud_id_of(&config, "sandbox"),
+            Some("prior-uuid"),
+            "suppressing the diagnostic must not change the soft-fail \
+             preserve-on-failure behavior — the prior cloud_id still \
+             survives untouched"
+        );
+    }
+
+    /// ADV MED sibling: the no-URL-configured soft-fail branch (distinct
+    /// code path from the fetch-failure branch above) must ALSO suppress
+    /// its diagnostic under JSON mode, on a brand-new profile with no prior
+    /// `cloud_id` to preserve.
+    #[tokio::test]
+    async fn test_adv_med_json_mode_no_url_configured_suppresses_diagnostic() {
+        let mut config = make_config("sandbox", None, None);
+
+        let diagnostic =
+            resolve_and_apply_cloud_id(&mut config, "sandbox", None, OutputFormat::Json).await;
+
+        assert_eq!(
+            diagnostic, None,
+            "ADV MED: JSON mode must suppress the no-URL-configured \
+             diagnostic too, not just the fetch-failure one"
+        );
+        assert_eq!(cloud_id_of(&config, "sandbox"), None);
+    }
+
+    /// ADV MED-A (S-cycle4-cloud-id-correctness fix burst): the positive
+    /// control for `test_adv_med_json_mode_no_url_configured_suppresses_diagnostic`
+    /// above — no prior test asserted the Table-mode (human-mode) HALF of
+    /// the no-URL-configured branch, nor its exact wording. Mirrors
+    /// `test_adv_med_table_mode_fetch_failure_emits_diagnostic`'s role for
+    /// the fetch-failure branch: together with its JSON-mode sibling, this
+    /// proves the no-URL-configured gate actually branches on `output`
+    /// rather than always emitting or always suppressing.
+    #[tokio::test]
+    async fn test_adv_med_table_mode_no_url_configured_emits_diagnostic() {
+        let mut config = make_config("sandbox", None, None);
+
+        let diagnostic =
+            resolve_and_apply_cloud_id(&mut config, "sandbox", None, OutputFormat::Table).await;
+
+        assert_eq!(
+            diagnostic,
+            Some(
+                "warning: could not look up cloud_id for profile \"sandbox\" — \
+                 no URL configured."
+                    .to_string()
+            ),
+            "ADV MED-A: Table mode must emit and return the exact \
+             no-URL-configured diagnostic wording"
+        );
+        assert_eq!(
+            cloud_id_of(&config, "sandbox"),
+            None,
+            "the no-URL-configured soft-fail must leave cloud_id untouched (None)"
+        );
+    }
+
+    /// Counts occurrences of `pattern` (e.g. `"println!("` or `"print!("`)
+    /// in `body` that are NOT immediately preceded by the byte `'e'` — i.e.
+    /// occurrences that are not actually part of `eprintln!(`/`eprint!(`.
+    /// This lets a single scan tell a genuinely bare stdout macro call
+    /// apart from its `e`-prefixed stderr sibling, since (for example)
+    /// `"println!("` is a literal substring of `"eprintln!("` starting one
+    /// byte in.
+    fn count_bare_macro_calls(body: &str, pattern: &str) -> usize {
+        let bytes = body.as_bytes();
+        let mut count = 0;
+        let mut search_from = 0;
+        while let Some(rel) = body[search_from..].find(pattern) {
+            let abs = search_from + rel;
+            let preceded_by_e = abs > 0 && bytes[abs - 1] == b'e';
+            if !preceded_by_e {
+                count += 1;
+            }
+            search_from = abs + pattern.len();
+        }
+        count
+    }
+
+    /// ADV LOW-1 (stderr-only channel, structural proof); ADV MED-2
+    /// (strengthened, renamed from `test_adv_low1_no_stdout_writes_in_source`
+    /// — that name asserted a guarantee ("no stdout writes") the original
+    /// body did not actually check): every diagnostic this function can
+    /// ever emit goes through `eprintln!`. This scan of the function's own
+    /// source text rejects every stdout-writing shape this repo's
+    /// `println!(`-only original guard would have missed: a bare
+    /// `println!(` or `print!(` call (checked via `count_bare_macro_calls`,
+    /// which excludes matches that are actually part of `eprintln!(`/
+    /// `eprint!(`), AND any textual reference to `stdout` at all — which
+    /// additionally catches `write!(std::io::stdout(), …)`,
+    /// `writeln!(std::io::stdout(), …)`, and
+    /// `std::io::stdout().write_all(…)`, none of which contain a bare
+    /// `print!`/`println!` macro call for the first check to see. This is
+    /// a source-level structural pin, in the same spirit as this repo's
+    /// other reject-don't-parse text guards (see CLAUDE.md's CI Gate
+    /// history), chosen because `resolve_and_apply_cloud_id` is a private
+    /// fn with no in-process real-fd stderr capture available without a
+    /// new dependency or an unrelated refactor.
+    ///
+    /// Verified (locally, then reverted — not left in the tree) that this
+    /// guard actually fails on each of the vectors it claims to reject: a
+    /// temporary `print!("x");` or `writeln!(std::io::stdout(), "x").ok();`
+    /// inserted into `resolve_and_apply_cloud_id`'s body flips this test
+    /// from green to a failing assertion before the edit is reverted.
+    #[test]
+    fn test_adv_low1_resolve_cloud_id_source_has_no_stdout_macro_or_write() {
+        let src = include_str!("login.rs");
+        let start = src
+            .find("async fn resolve_and_apply_cloud_id(")
+            .expect("resolve_and_apply_cloud_id must exist in this file");
+        // The function ends at the first top-level `\n}\n` after its start;
+        // scanning to the next `\n/// Run the OAuth 2.0` doc comment (the
+        // next item in this file) is a safe, simple bound.
+        let end = src[start..]
+            .find("/// Run the OAuth 2.0 (3LO) login flow")
+            .map(|i| start + i)
+            .expect("the next item after resolve_and_apply_cloud_id must exist");
+        let body = &src[start..end];
+        let eprintln_count = body.matches("eprintln!(").count();
+        assert_eq!(
+            eprintln_count, 1,
+            "sanity: expected exactly ONE eprintln! call in this function's \
+             body (ADV MED-B, S-cycle4-cloud-id-correctness fix burst: both \
+             soft-fail branches — no-URL-configured, fetch-failure — now \
+             funnel through a single tail gate rather than each carrying \
+             its own eprintln!/return pair) — either the test's start/end \
+             source markers have drifted, or the single-gate structure was \
+             reverted to two separate gates"
+        );
+
+        // Neither a bare `println!(` nor a bare `print!(` (stdout) may
+        // appear inside this function's body — each must be zero, not
+        // merely "no more than the eprintln count" (that looser check is
+        // what ADV MED-2 is replacing).
+        let bare_println_count = count_bare_macro_calls(body, "println!(");
+        assert_eq!(
+            bare_println_count, 0,
+            "a bare stdout `println!(` call was found in \
+             resolve_and_apply_cloud_id — this would leak a diagnostic onto \
+             stdout, breaking the Output-channels convention (stdout stays \
+             clean, including under --output json)"
+        );
+        let bare_print_count = count_bare_macro_calls(body, "print!(");
+        assert_eq!(
+            bare_print_count, 0,
+            "a bare stdout `print!(` call was found in \
+             resolve_and_apply_cloud_id — this would leak a diagnostic onto \
+             stdout, breaking the Output-channels convention (stdout stays \
+             clean, including under --output json)"
+        );
+
+        // No reference to `stdout` at all (case-sensitive) may appear in
+        // this function's body — this closes the ADV MED-2 gap left by the
+        // two macro-call checks above: `write!(std::io::stdout(), …)`,
+        // `writeln!(std::io::stdout(), …)`, and
+        // `std::io::stdout().write_all(…)` are all real stdout-leak shapes
+        // that contain no bare `print!`/`println!` macro invocation.
+        assert!(
+            !body.contains("stdout"),
+            "a reference to `stdout` was found in resolve_and_apply_cloud_id \
+             — this function must write diagnostics to stderr only (via \
+             `eprintln!`), never touch stdout by any mechanism (macro call, \
+             `write!`/`writeln!`, or `.write_all(…)`)"
+        );
+    }
 }

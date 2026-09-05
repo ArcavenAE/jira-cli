@@ -4,6 +4,56 @@ All notable changes to jr will be documented here.
 
 ## [Unreleased]
 
+### Changed
+
+- **README: corrected Windows install/config/cloud_id documentation**
+  (S-cycle4-windows-docs, issue #760). Added a `Unblock-File` mark-of-the-web
+  step to the Windows install instructions (a browser-downloaded `.zip` can
+  otherwise trigger a SmartScreen warning or silently refuse to run), a
+  per-platform config/cache path table (Windows: `%APPDATA%\jr\config.toml`,
+  `%LOCALAPPDATA%\jr\v1\<profile>\`; Unix: `~/.config/jr/config.toml`,
+  `~/.cache/jr/v1/<profile>/`, replacing the previous Unix-only reference),
+  and rewrote the `cloud_id` caveat to describe the corrected, both-auth-methods
+  auto-discovery behavior shipped by `S-cycle4-cloud-id-correctness` rather than
+  the pre-fix OAuth-only limitation. Doc-only; no `src/` changes.
+
+### Fixed
+
+- **Windows: `jr auth login --oauth` no longer fails deterministically on
+  oversized OAuth tokens** (S-cycle4-dpapi-storage-fix, ADR-0021, issue
+  #759). `store_oauth_tokens` writes to the system keyring first,
+  unconditionally, on every platform; on Windows, when a token exceeds
+  Windows Credential Manager's ~2560-byte blob-size ceiling
+  (`keyring::Error::TooLong`), the whole access/refresh pair now falls back
+  to a new, user-scope DPAPI-encrypted file under
+  `%LOCALAPPDATA%\jr\secrets\<profile>\` instead of failing the login
+  outright. The existing keyring pair (if any) is deleted before the DPAPI
+  file is written, so a process kill mid-fallback never leaves both
+  backends holding a copy of the pair. `load_oauth_tokens` and
+  `auth remove`/`auth logout` gain matching read and delete-both-backends
+  branches, and a host-independent profile-name guard rejects path-traversal
+  and reserved-device-name vectors before any file is touched. macOS/Linux
+  behavior is unchanged. (Message-text differentiation for the two new
+  failure modes — DPAPI-fallback failure and rejected profile names — ships
+  separately in a fast-follow story.)
+- **API-token profiles now acquire a `cloud_id` at login/init/refresh time**
+  (S-cycle4-cloud-id-correctness, ADR-0022, BC-1.2.052/053/054,
+  A-PA-LOW-001). Previously, `jr auth login`'s API-token branch (and `jr
+  init`'s API-token picker choice) never obtained a `cloud_id`, so
+  Assets/CMDB commands against an API-token profile always failed with
+  "Cloud ID not configured" even immediately after a successful login. `jr
+  auth login`, `jr init`, and `jr auth refresh` (whenever they resolve to
+  the API-token flow) now attempt to discover the site's `cloud_id` via the
+  unauthenticated `GET {site}/_edge/tenant_info` endpoint, with an ordered
+  fallback chain: an explicit `--cloud-id` override (highest precedence,
+  persisted immediately) → the `tenant_info` fetch → a soft-fail that never
+  blocks login and leaves any existing `cloud_id` untouched. An
+  oauth→api_token mechanism switch now refreshes (rather than leaves stale)
+  a previously-acquired `cloud_id` on fetch success, and preserves it
+  (never bare-clears it) on fetch failure. `Config::base_url()`'s existing
+  `auth_method == "oauth"` gateway guard is unchanged — core Jira REST v3
+  requests remain unaffected either way.
+
 ## [0.7.0-dev.4] - 2026-09-03
 
 ### Added
