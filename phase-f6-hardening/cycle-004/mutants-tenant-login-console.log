@@ -1,0 +1,13 @@
+Found 40 mutants to test
+ok       Unmutated baseline in 52s build + 5s test
+MISSED   src/api/jira/tenant.rs:27:50: replace * with + in 22s build + 5s test
+MISSED   src/api/jira/tenant.rs:132:16: replace > with == in fetch_cloud_id in 46s build + 12s test
+MISSED   src/api/jira/tenant.rs:132:16: replace > with >= in fetch_cloud_id in 48s build + 15s test
+MISSED   src/api/jira/tenant.rs:143:23: replace > with == in fetch_cloud_id in 55s build + 19s test
+MISSED   src/api/jira/tenant.rs:143:23: replace > with >= in fetch_cloud_id in 54s build + 19s test
+MISSED   src/cli/auth/login.rs:953:5: replace clear_stored_credential_kind -> Result<()> with Ok(()) in 85s build + 65s test
+MISSED   src/cli/auth/login.rs:954:9: delete match arm "oauth" in clear_stored_credential_kind in 102s build + 54s test
+MISSED   src/cli/auth/login.rs:955:9: delete match arm "api_token" in clear_stored_credential_kind in 69s build + 82s test
+MISSED   src/cli/auth/login.rs:966:5: replace clear_outgoing_mechanism_on_switch -> Result<()> with Ok(()) in 96s build + 53s test
+MISSED   src/cli/auth/login.rs:1047:5: replace reconcile_legacy_none_outgoing_credentials -> Result<()> with Ok(()) in 90s build + 89s test
+40 mutants tested in 31m: 10 missed, 30 caught

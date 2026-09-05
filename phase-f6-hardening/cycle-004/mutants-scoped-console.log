@@ -1,0 +1,57 @@
+Found 159 mutants to test
+ok       Unmutated baseline in 61s build + 7s test
+MISSED   src/api/auth.rs:285:5: replace engage_dpapi_fallback -> bool with true in 40s build + 9s test
+MISSED   src/api/auth.rs:332:5: replace clear_dpapi_file_tolerating_path_escape -> Result<()> with Ok(()) in 77s build + 13s test
+MISSED   src/api/auth.rs:285:5: replace engage_dpapi_fallback -> bool with false in 208s build + 14s test
+MISSED   src/api/auth.rs:376:5: replace store_oauth_tokens -> Result<()> with Ok(()) in 69s build + 22s test
+MISSED   src/api/auth.rs:423:19: replace match guard engage_dpapi_fallback(&e) with true in store_oauth_tokens in 70s build + 20s test
+MISSED   src/api/auth.rs:405:27: replace match guard engage_dpapi_fallback(&e) with true in store_oauth_tokens in 65s build + 17s test
+MISSED   src/api/auth.rs:423:19: replace match guard engage_dpapi_fallback(&e) with false in store_oauth_tokens in 91s build + 24s test
+MISSED   src/api/auth.rs:405:27: replace match guard engage_dpapi_fallback(&e) with false in store_oauth_tokens in 53s build + 17s test
+MISSED   src/api/auth.rs:451:62: replace == with != in forced_toolong in 57s build + 27s test
+MISSED   src/api/auth.rs:596:5: replace load_oauth_tokens -> Result<(String, String)> with Ok((String::new(), String::new())) in 62s build + 23s test
+MISSED   src/api/auth.rs:596:5: replace load_oauth_tokens -> Result<(String, String)> with Ok((String::new(), "xyzzy".into())) in 95s build + 21s test
+MISSED   src/api/auth.rs:596:5: replace load_oauth_tokens -> Result<(String, String)> with Ok(("xyzzy".into(), String::new())) in 86s build + 18s test
+MISSED   src/api/auth.rs:596:5: replace load_oauth_tokens -> Result<(String, String)> with Ok(("xyzzy".into(), "xyzzy".into())) in 106s build + 19s test
+MISSED   src/api/auth.rs:603:9: delete match arm (None, None) in load_oauth_tokens in 94s build + 19s test
+MISSED   src/api/auth.rs:874:5: replace profile_has_stored_credentials -> Result<bool> with Ok(true) in 87s build + 23s test
+MISSED   src/api/auth.rs:909:5: replace probe_stored_credential_kind -> Result<Option<&'static str>> with Ok(None) in 75s build + 50s test
+MISSED   src/api/auth.rs:874:5: replace profile_has_stored_credentials -> Result<bool> with Ok(false) in 100s build + 56s test
+MISSED   src/api/auth.rs:909:5: replace probe_stored_credential_kind -> Result<Option<&'static str>> with Ok(Some("")) in 70s build + 62s test
+MISSED   src/api/auth.rs:909:5: replace probe_stored_credential_kind -> Result<Option<&'static str>> with Ok(Some("xyzzy")) in 68s build + 61s test
+MISSED   src/api/auth.rs:910:9: replace && with || in probe_stored_credential_kind in 39s build + 44s test
+MISSED   src/api/auth.rs:915:9: replace && with || in probe_stored_credential_kind in 57s build + 54s test
+MISSED   src/api/auth.rs:921:9: replace && with || in probe_stored_credential_kind in 55s build + 43s test
+MISSED   src/api/auth.rs:920:9: replace && with || in probe_stored_credential_kind in 84s build + 103s test
+MISSED   src/api/auth.rs:919:25: replace == with != in probe_stored_credential_kind in 71s build + 96s test
+MISSED   src/api/auth.rs:1067:25: replace == with != in clear_profile_oauth_pair in 63s build + 77s test
+MISSED   src/api/auth.rs:1053:5: replace clear_profile_oauth_pair -> Result<()> with Ok(()) in 82s build + 77s test
+MISSED   src/api/auth.rs:1114:5: replace clear_profile_api_token_pair -> Result<()> with Ok(()) in 54s build + 106s test
+MISSED   src/api/auth.rs:1197:5: replace clear_profile_creds -> Result<()> with Ok(()) in 93s build + 86s test
+MISSED   src/api/auth.rs:1220:25: replace == with != in clear_profile_creds in 103s build + 82s test
+MISSED   src/api/auth.rs:1860:5: replace refresh_oauth_token_with_url -> Result<String> with Ok(String::new()) in 47s build + 131s test
+MISSED   src/api/auth.rs:1860:5: replace refresh_oauth_token_with_url -> Result<String> with Ok("xyzzy".into()) in 78s build + 97s test
+MISSED   src/api/auth_windows_store.rs:378:5: replace fsync_parent_dir_best_effort with () in 243s build + 211s test
+TIMEOUT  src/api/auth_windows_store.rs:435:15: replace ^ with | in atomic_write in 251s build + 240s test
+TIMEOUT  src/api/auth_windows_store.rs:435:15: replace ^ with & in atomic_write in 218s build + 240s test
+TIMEOUT  src/api/auth_windows_store.rs:491:9: replace dpapi::protect -> std::io::Result<Vec<u8>> with Ok(vec![]) in 122s build + 240s test
+TIMEOUT  src/api/auth_windows_store.rs:491:9: replace dpapi::protect -> std::io::Result<Vec<u8>> with Ok(vec![0]) in 133s build + 240s test
+TIMEOUT  src/api/auth_windows_store.rs:491:9: replace dpapi::protect -> std::io::Result<Vec<u8>> with Ok(vec![1]) in 107s build + 240s test
+TIMEOUT  src/api/auth_windows_store.rs:509:19: replace == with != in dpapi::protect in 157s build + 240s test
+TIMEOUT  src/api/auth_windows_store.rs:531:9: replace dpapi::unprotect -> std::io::Result<Vec<u8>> with Ok(vec![]) in 159s build + 240s test
+TIMEOUT  src/api/auth_windows_store.rs:531:9: replace dpapi::unprotect -> std::io::Result<Vec<u8>> with Ok(vec![0]) in 174s build + 240s test
+TIMEOUT  src/api/auth_windows_store.rs:531:9: replace dpapi::unprotect -> std::io::Result<Vec<u8>> with Ok(vec![1]) in 157s build + 240s test
+TIMEOUT  src/api/auth_windows_store.rs:549:19: replace == with != in dpapi::unprotect in 161s build + 240s test
+TIMEOUT  src/api/auth_windows_store.rs:581:5: replace store_pair -> anyhow::Result<()> with Ok(()) in 159s build + 240s test
+TIMEOUT  src/api/auth_windows_store.rs:614:5: replace load_pair -> anyhow::Result<Option<(String, String)>> with Ok(None) in 154s build + 240s test
+MISSED   src/api/auth_windows_store.rs:614:5: replace load_pair -> anyhow::Result<Option<(String, String)>> with Ok(Some((String::new(), String::new()))) in 216s build + 222s test
+TIMEOUT  src/api/auth_windows_store.rs:614:5: replace load_pair -> anyhow::Result<Option<(String, String)>> with Ok(Some((String::new(), "xyzzy".into()))) in 311s build + 240s test
+TIMEOUT  src/api/auth_windows_store.rs:614:5: replace load_pair -> anyhow::Result<Option<(String, String)>> with Ok(Some(("xyzzy".into(), String::new()))) in 354s build + 240s test
+ERROR interrupted
+ERROR scenario execution internal error err=interrupted phase=Test
+ERROR interrupted
+ERROR scenario execution internal error err=interrupted phase=Build
+ERROR interrupted
+ERROR scenario execution internal error err=interrupted phase=Test
+ERROR interrupted
+ERROR scenario execution internal error err=interrupted phase=Test

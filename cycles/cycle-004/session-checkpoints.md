@@ -232,3 +232,29 @@ traces_to: STATE.md
 ```
 
 ---
+
+## Checkpoint v3.70 — cycle-004 F5→F6 transition (SUPERSEDED by v3.71, Burst 19)
+
+| Field | Value |
+|-------|-------|
+| **Date** | 2026-09-05 |
+| **Position** | cycle-004 (`windows-correctness`), Phase F6 (targeted hardening), IN PROGRESS — NOT YET DISPATCHED at archival time. |
+| **Convergence** | F5-SCOPED-ADVERSARIAL CLOSED (DEC-340): 3 fresh adversary passes + 1 cross-model secondary, 0 CRIT/HIGH/MED, all actionable LOWs fixed via PR #773 @ `f3863f07` + PR #774 @ `3b62cefa`. No F6-phase-level convergence loop active yet. |
+| **In-flight work** | NONE running at archival time. No live sub-agents. No open cycle-004 PRs. |
+| **Next step (as recorded)** | Dispatch F6 targeted hardening — formal verification / fuzz / mutation testing scoped to the cycle-004 delta (`develop` @ `3b62cefa`), plus a full regression suite run and a full security scan on the full tree. |
+
+### Resume Prompt (as recorded at v3.70)
+
+```
+**Date:** 2026-09-05. **Position:** cycle-004 (`windows-correctness`), **Phase F6 (targeted hardening), IN PROGRESS — NOT YET DISPATCHED.** F5 (scoped adversarial review) is CONVERGED (DEC-340): 3 fresh adversary passes + 1 cross-model secondary, 0 CRIT/HIGH/MED, all actionable LOWs fixed via PR #773 @ `f3863f07` and PR #774 @ `3b62cefa` (current `develop` tip). cycle-001, cycle-002, and cycle-003 remain CLOSED, historical, unaltered by this burst.
+
+**What changed this burst (Burst 18):** (1) F5 scoped adversarial review dispatched and converged across 2 rounds: Round 1 (1 adversary pass on `develop` @ `e5a18fe0`) found 0 CRIT/HIGH/MED with 3 actionable LOWs, fixed via PR #773 @ `f3863f07`, re-review CLEAN. (2) Round 2 (2 adversary passes + 1 cross-model `code-reviewer` secondary on `develop` @ `f3863f07`) found 0 CRIT/HIGH/MED with several corroborated actionable LOWs; human decided fix-everything-actionable; delivered via PR #774 @ `3b62cefa` (current `develop` tip), re-review CLEAN, full suite 4920/0. (3) F5-SCOPED-ADVERSARIAL declared CONVERGED (DEC-340). (4) Convergence summary persisted to `phase-f5-adversarial/cycle-004/convergence-summary.md`. (5) STATE.md transitioned `phase: F5→F6` (pipeline stays `ACTIVE`); version v3.69→v3.70 in one atomic Write.
+
+**NEXT ACTION on resume (exact, in order):** (1) Dispatch F6 targeted hardening — formal verification / fuzz / mutation testing scoped to the cycle-004 delta (`develop` @ `3b62cefa`), plus a full regression suite run and a full security scan on the full tree, per feature-mode F6 convention. (2) F7 delta convergence — 5-dimensional convergence check on the delta + full-codebase regression, including the REQUIRED manual Windows-11 smoke gate + the final human F7 gate. (3) Release on human authorization.
+
+**Counts:** total_bcs 742; VP count 55; holdout scenarios 106; total_stories 172 (all unchanged this burst).
+
+**EXACT RESUME COMMAND:** `/vsdd-factory:next-step` (reads STATE.md, resumes by dispatching F6 targeted hardening).
+
+**Superseded at (2026-09-05, Burst 19 — F6 targeted hardening COMPLETE, DEC-341 recorded):** superseded in place by the F6→F7 transition checkpoint (v3.71). Kani/fuzz JUSTIFIED SKIP (proptest substitution, 0 GAP); mutation testing found the delta files absent from `.cargo/mutants.toml` examine_globs (zero CI signal), worked around via `--file` override to 97-100% on the testable surface, with 5 genuine `tenant.rs` survivors fixed via PR #775 @ `024de4d8` (current `develop` tip); security scan CLEAN (no CRIT/HIGH); full regression GREEN. F6-TARGETED-HARDENING declared COMPLETE (DEC-341); phase advanced F6→F7, pipeline stayed ACTIVE.
+```

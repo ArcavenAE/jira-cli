@@ -1,0 +1,22 @@
+# F6 cycle-004 scoped mutation config — security-critical delta only.
+# Test scope limited to lib unit tests + the 3 relevant integration binaries
+# to eliminate the CPU-contention timeouts seen with the full 40+ binary suite.
+examine_globs = [
+    "src/api/auth.rs",
+    "src/api/auth_windows_store.rs",
+    "src/api/jira/tenant.rs",
+    "src/cli/auth/login.rs",
+]
+additional_cargo_test_args = [
+    "--all-features",
+    "--lib",
+    "--test", "cloud_id_tenant_info",
+    "--test", "auth_chosen_flow_reconcile",
+    "--test", "oauth_refresh_integration",
+    "--test", "auth_oauth_default_creation",
+    "--test", "api_token_percred_wiring",
+    "--test", "jr_force_dpapi_fallback_release_gate",
+    "--test", "jr_tenant_info_url_release_gate",
+    "--test", "jr_force_dpapi_load_pair_release_gate",
+    "--test", "jr_s759_force_toolong_release_gate",
+]

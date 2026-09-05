@@ -1060,3 +1060,61 @@ Plus first-commit of the untracked `code-delivery/FIX-F5-CYCLE4-1-pr-review.md` 
 **Codifications:** **DEC-340** — the F5 scoped-adversarial-review convergence verdict, recorded with its trajectory (3 LOWs → several corroborated LOWs → 0) and both fix-PR SHAs. This is the first new DEC since DEC-339 (F4 COMPLETE).
 
 **Closes:** the F5 scoped-adversarial-review phase for cycle-004 in its entirety (2 review rounds, 2 fix PRs, both merged clean); the 3 Round-1 LOW findings (LOW-1 legacy-None orphan-clear, LOW-2 guard normalization, LOW-3 `atomic_write` fsync); the Round-2 corroborated LOWs (`cloud_id` validation, `fetch_cloud_id` whitespace/body-cap, `clear_profile_api_token_pair` attempt-all, stale doc comments, `init` double-fetch). **Does NOT close:** cycle-004 itself — F6 (targeted hardening) and F7 (delta convergence, incl. the REQUIRED manual Windows-11 smoke gate) remain ahead; the pre-existing carried-forward non-blocking items (BC-1.4.035-PC5-VP-GAP, S-410-KEYCHAIN-ISOLATION-FILE-OVERLAP, TD-031-BLOCKED-BC-6.2.016-CROSSREF, W2-INT-PROCESS-GAP-README-PROSE-DRIFT) remain open, untouched by this burst; no cycle-001/002/003 standing Drift/Standing items are touched.
+
+## Burst: Burst 19 — F6 targeted hardening COMPLETE (DEC-341), phase F6→F7 (2026-09-05)
+
+**Scope:** cycle-004 (`windows-correctness`) delta — baseline `42e92b46` → `develop` @ `024de4d8` (all 4 stories' merged code plus the two F5 fix PRs #773/#774). Info-asymmetry wall honored: `formal-verifier` and `security-reviewer` were dispatched without visibility into the F5 adversarial findings, per standing F6 convention.
+
+1. **Kani (formal verification): JUSTIFIED SKIP.** Not provisioned in-repo, consistent with cycle-002/cycle-003 precedent. Substituted with proptest/unit-test coverage. VP-coverage audit found 0 GAP across all 14 new cycle-004 VPs (VP-AUTHDX-010 through VP-AUTHDX-023). Persisted to `phase-f6-hardening/cycle-004/kani-results.md`.
+
+2. **Fuzz (cargo-fuzz): JUSTIFIED SKIP.** Not provisioned, same precedent. Substituted with proptest arbitrary-input generation; 0 uncovered input surface identified across the DPAPI envelope encode/decode path, the `tenant_info` JSON response parse (including the new 64 KiB body cap), the profile-name path-traversal guard, and `cloud_id` plausibility validation. Persisted to `phase-f6-hardening/cycle-004/fuzz-results.md`.
+
+3. **Mutation testing: PROCESS GAP FOUND, PARTIALLY CLOSED THIS BURST.** None of the cycle-004 delta files (`src/api/auth.rs`, `src/api/auth_windows_store.rs`, `src/api/jira/tenant.rs`, `src/cli/auth/login.rs`, `src/cli/init.rs`) were present in `.cargo/mutants.toml`'s `examine_globs` — `cargo mutants --in-diff` against the PR diffs returned **zero mutants**, i.e. CI mutation testing had no signal at all on this cycle's delta. `formal-verifier` worked around this via an explicit `--file` override per module: the pure/decision-logic functions killed 97-100% (DPAPI envelope encode/decode/wrap/unwrap, `reject_unsafe_profile_component` CWE-22 guard, `is_reserved_windows_device_name`, `should_fallback_to_dpapi`, `is_plausible_cloud_id`, `validate_and_trim_site_url`, `fetch_cloud_id` soft-fail, `legacy_none_orphan_clear_target`, `should_mark_auth_method_before_attempt`, `classify_dpapi_removal_result`) — meeting the >=95% credential-module bar. Sub-90% raw kill rates on the override run were traced to two spec-declared, non-CI-default boundaries (not genuine gaps): keyring-gated code (VP-AUTHDX-005/006/007, killable under `JR_RUN_KEYRING_TESTS=1`) and Windows-`#[cfg]` DPAPI code (VP-AUTHDX-010, killable only on `windows-latest`). **5 genuine survivors** were found in `tenant.rs`'s new 64 KiB body-cap boundary — real test-quality gaps, not spec boundaries. `test-writer` + `implementer` closed them via **FIX-F6-1** (PR #775, squash-merged @ **`024de4d8`**, current `develop` tip): `tenant.rs` is now 21/21 (100%) mutation-killed, and `tenant.rs` was added to `.cargo/mutants.toml`'s `examine_globs` so future CI runs have signal on it. The broader `examine_globs` gap (the other 4 delta files remain absent) is **not** closed this burst — tracked as a follow-up (see Drift/Standing below). Persisted to `phase-f6-hardening/cycle-004/mutation-results.md`; PR #775 review evidence at `code-delivery/FIX-F6-1-pr-review.md`.
+
+4. **Security scan (Touchpoint #3): CLEAN.** No CRIT/HIGH findings. `cargo audit` + `cargo deny check` both clean (only the pre-existing, already-accepted `chacha20` yanked-crate skip, DEC-185). New dependency `windows-sys 0.60` is `cfg(windows)`-scoped and adds zero new graph nodes on non-Windows targets (already transitive via `keyring`). Manual CWE pass clean: no CWE-532 (credential logging) leakage; the DPAPI `unsafe` FFI is USER-scope-only with a null-blob guard; the CWE-22 path-traversal guard is closed by layered checks (`reject_unsafe_profile_component` + containment); the `tenant_info` SSRF surface remains closed (https-only precondition, `redirect::Policy::none()`, the new size cap, and the existing `#[cfg(debug_assertions)]` seam-release gate on `JR_TENANT_INFO_URL`); no credential over-deletion path found. DEC-334's revoke-granularity correction reconfirmed still accurate. Persisted to `phase-f6-hardening/cycle-004/security-scan-results.md`.
+
+5. **Regression: GREEN.** Full 3-OS CI matrix green; local run 4900+/0.
+
+6. **DTU adversarial testing / accessibility re-check: SKIPPED.** `dtu_required: false` (unchanged) — `tenant_info` is a real Atlassian endpoint being called correctly, not a cloned DTU being adversarially probed. No UI surface (`feature_type: backend`), so no accessibility check applies.
+
+7. **Verdict: F6 COMPLETE.** Every hardening dimension passed outright or was justified-skip with a documented substitution; the one genuine test-quality gap found (the `tenant.rs` body-cap mutation survivors) was fixed in-cycle via PR #775; the `examine_globs` process gap this burst uncovered was partially closed (tenant.rs added) with the remainder explicitly deferred, not silently dropped. Full narrative persisted to `phase-f6-hardening/cycle-004/summary.md` (cites `kani-results.md`, `fuzz-results.md`, `mutation-results.md`, `security-scan-results.md`, and `code-delivery/FIX-F6-1-pr-review.md` rather than duplicating them).
+
+8. STATE.md refreshed via one full-content Write (v3.70 → v3.71): frontmatter `phase` → `F7` (pipeline stays `ACTIVE`); `current_step` and `cycle_004_status` updated to record the F6 COMPLETE outcome, DEC-341, and the F6→F7 transition; `develop` tip recorded as `024de4d8`. Added DEC-341 to the Decisions Log. Updated Phase Progress (F6-TARGETED-HARDENING row → COMPLETE; added F7-DELTA-CONVERGENCE row → PENDING), Current Phase Steps (reset to the F7 position table; Burst 1-18 detail further archived), Skip Log (added the three cycle-004 F6 justified-skip rows), Convergence Status, Concurrent Cycles, Constraints Carried Forward, Drift/Standing Items (added `F6-MUTATION-EXAMINE-GLOBS-EXPANSION` as a tracked, non-blocking follow-up), and the Session Resume Checkpoint (replaced with the F7-position checkpoint; the superseded v3.70 checkpoint archived to `cycles/cycle-004/session-checkpoints.md`).
+
+**Counts reconciled this burst**
+
+BCs: unchanged at **742**. VPs: unchanged at **55**. Holdout scenarios: unchanged at **106**. `total_stories`: unchanged at **172** (FIX-F6-1 is test-only, no new story/BC/VP).
+
+**Details**
+
+| Agent | Task | Output |
+|-------|------|--------|
+| formal-verifier | F6 targeted hardening — Kani/fuzz/mutation/security scoped to the cycle-004 delta, `develop` @ `42e92b46..3b62cefa`, info-asymmetry wall (no F5 findings visibility) | Kani/fuzz JUSTIFIED SKIP; mutation examine_globs process gap found + 97-100% via override, 5 tenant.rs survivors |
+| security-reviewer | Security scan (Touchpoint #3), same info-asymmetry wall | CLEAN — no CRIT/HIGH |
+| test-writer + implementer | FIX-F6-1: close the 5 tenant.rs body-cap mutation survivors | PR #775 opened, tenant.rs 21/21 mutation-killed |
+| pr-reviewer | Fresh-context review of PR #775 | Evidence: `code-delivery/FIX-F6-1-pr-review.md` |
+| pr-manager | Merge PR #775 on clean review + green CI | PR #775 squash-merged @ `024de4d8` |
+| state-manager | Record F6 COMPLETE + F6→F7 transition in STATE.md (this entry + STATE.md v3.71); persist F6 hardening summary | This burst-log entry; `STATE.md` v3.71; `phase-f6-hardening/cycle-004/summary.md`; `cycles/cycle-004/session-checkpoints.md` (v3.70 archived) |
+
+**Files touched (Dim-1): 6 unique files (factory-artifacts, this burst)**
+
+- STATE.md
+- .factory/cycles/cycle-004/burst-log.md (this entry)
+- .factory/cycles/cycle-004/session-checkpoints.md (v3.70 archived)
+- .factory/phase-f6-hardening/cycle-004/summary.md (new)
+- .factory/phase-f6-hardening/cycle-004/{kani-results.md,fuzz-results.md,mutation-results.md,security-scan-results.md} (new, produced by the formal-verifier/security-reviewer dispatch, first-committed this burst)
+- .factory/code-delivery/FIX-F6-1-pr-review.md (new, first-committed this burst)
+
+**Dim-2 Attestation:** No BC/VP/holdout/story count changed this burst (FIX-F6-1 is test-hardening only). `scripts/check-spec-counts.sh` and `scripts/check-bc-cumulative-counts.sh` are unaffected — no BC/VP file touched. DEC-namespace collision check: DEC-341 allocated (previous max DEC-340), no collision.
+
+**Dim-5 Attestation:** N/A — no binary/WASM artifact produced by this burst (`.factory/` bookkeeping only; PR #775's `develop`-side change was built and verified by its own CI run, external to this burst).
+
+**Dim-6 Attestation:** N/A for this burst's own scope — `.factory/` bookkeeping only. The `develop`-side source change (`src/api/jira/tenant.rs` test additions + `.cargo/mutants.toml` examine_globs entry) was delivered and merged via PR #775 prior to this burst-log entry being written; this burst records that outcome, it does not itself change source.
+
+**Dim-7 Attestation:** PR #775's CI: all checks green prior to merge (fresh-context `pr-reviewer` confirmed no BLOCKING/WARNING findings; mutation re-run confirmed tenant.rs 21/21 killed post-fix).
+
+**Adversary verdict:** N/A this burst — F6 is a formal/mutation/security hardening phase, not an adversarial-review phase. No `adversary` dispatch this burst.
+
+**Codifications:** **DEC-341** — the F6 targeted-hardening verdict (COMPLETE), recorded with its per-dimension outcomes and the FIX-F6-1 fix-PR SHA. This is the first new DEC since DEC-340 (F5 CONVERGED).
+
+**Closes:** the F6 targeted-hardening phase for cycle-004 in its entirety (Kani/fuzz justified-skip, mutation gap found+partially-closed, security CLEAN, regression GREEN, DTU/accessibility SKIPPED); the 5 `tenant.rs` mutation survivors (via PR #775). **Does NOT close:** cycle-004 itself — F7 (delta convergence, incl. the REQUIRED manual Windows-11 smoke gate + final human gate) remains ahead; the `examine_globs` coverage gap for the other 4 delta files remains open, tracked as `F6-MUTATION-EXAMINE-GLOBS-EXPANSION`; all pre-existing carried-forward non-blocking items (BC-1.4.035-PC5-VP-GAP, S-410-KEYCHAIN-ISOLATION-FILE-OVERLAP, TD-031-BLOCKED-BC-6.2.016-CROSSREF, W2-INT-PROCESS-GAP-README-PROSE-DRIFT) remain open, untouched by this burst; no cycle-001/002/003 standing Drift/Standing items are touched.

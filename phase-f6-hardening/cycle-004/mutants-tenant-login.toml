@@ -1,0 +1,12 @@
+examine_globs = [
+    "src/api/jira/tenant.rs",
+    "src/cli/auth/login.rs",
+]
+additional_cargo_test_args = [
+    "--all-features",
+    "--lib",
+    "--test", "cloud_id_tenant_info",
+    "--test", "auth_chosen_flow_reconcile",
+    "--test", "auth_oauth_default_creation",
+    "--test", "api_token_percred_wiring",
+]

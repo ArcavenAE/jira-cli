@@ -1,0 +1,28 @@
+Found 159 mutants to test
+ok       Unmutated baseline in 62s build + 121s test
+MISSED   src/api/auth.rs:285:5: replace engage_dpapi_fallback -> bool with true in 31s build + 138s test
+MISSED   src/api/auth.rs:285:5: replace engage_dpapi_fallback -> bool with false in 196s build + 225s test
+TIMEOUT  src/api/auth.rs:332:5: replace clear_dpapi_file_tolerating_path_escape -> Result<()> with Ok(()) in 45s build + 240s test
+TIMEOUT  src/api/auth.rs:376:5: replace store_oauth_tokens -> Result<()> with Ok(()) in 33s build + 240s test
+TIMEOUT  src/api/auth.rs:423:19: replace match guard engage_dpapi_fallback(&e) with true in store_oauth_tokens in 43s build + 240s test
+TIMEOUT  src/api/auth.rs:423:19: replace match guard engage_dpapi_fallback(&e) with false in store_oauth_tokens in 19s build + 240s test
+TIMEOUT  src/api/auth.rs:405:27: replace match guard engage_dpapi_fallback(&e) with true in store_oauth_tokens in 24s build + 240s test
+TIMEOUT  src/api/auth.rs:405:27: replace match guard engage_dpapi_fallback(&e) with false in store_oauth_tokens in 31s build + 240s test
+TIMEOUT  src/api/auth.rs:449:5: replace forced_toolong -> Option<keyring::Error> with None in 35s build + 240s test
+TIMEOUT  src/api/auth.rs:451:62: replace == with != in forced_toolong in 22s build + 240s test
+TIMEOUT  src/api/auth.rs:596:5: replace load_oauth_tokens -> Result<(String, String)> with Ok((String::new(), String::new())) in 31s build + 240s test
+TIMEOUT  src/api/auth.rs:596:5: replace load_oauth_tokens -> Result<(String, String)> with Ok((String::new(), "xyzzy".into())) in 35s build + 240s test
+TIMEOUT  src/api/auth.rs:596:5: replace load_oauth_tokens -> Result<(String, String)> with Ok(("xyzzy".into(), String::new())) in 41s build + 240s test
+TIMEOUT  src/api/auth.rs:596:5: replace load_oauth_tokens -> Result<(String, String)> with Ok(("xyzzy".into(), "xyzzy".into())) in 30s build + 240s test
+TIMEOUT  src/api/auth.rs:603:9: delete match arm (None, None) in load_oauth_tokens in 33s build + 240s test
+TIMEOUT  src/api/auth.rs:874:5: replace profile_has_stored_credentials -> Result<bool> with Ok(true) in 36s build + 240s test
+TIMEOUT  src/api/auth.rs:874:5: replace profile_has_stored_credentials -> Result<bool> with Ok(false) in 40s build + 240s test
+TIMEOUT  src/api/auth.rs:909:5: replace probe_stored_credential_kind -> Result<Option<&'static str>> with Ok(None) in 31s build + 240s test
+ERROR interrupted
+ERROR scenario execution internal error err=interrupted phase=Test
+ERROR interrupted
+ERROR scenario execution internal error err=interrupted phase=Build
+ERROR interrupted
+ERROR scenario execution internal error err=interrupted phase=Test
+ERROR interrupted
+ERROR scenario execution internal error err=interrupted phase=Test
