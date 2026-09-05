@@ -935,3 +935,54 @@ Plus first-commit of the untracked `code-delivery/S-cycle4-{cloud-id-correctness
 **Dim-6 Attestation:** N/A for this burst's own scope — `.factory/` bookkeeping only. `develop`-side source changes for `S-cycle4-windows-docs` (`README.md`, `CLAUDE.md`) were delivered and merged via PR #770 prior to this burst; `S-cycle4-honest-fail-message`'s `src/api/auth.rs` changes exist only on the still-open `feat/cycle4-honest-fail-message` branch (PR #771), not on `develop`. This burst records both outcomes; it does not itself change source.
 
 **Dim-7 Attestation:** PR #770's CI ran green on `develop` @ `abb283e8` (doc-only change, no test-suite impact expected or observed). PR #771's CI status was not re-verified as part of this wrap (the review agents were halted, not the CI gate itself) — re-check CI freshness on resume per the `strict: false` branch-protection caveat (CLAUDE.md) before merging, since `develop` has moved since #771 was last rebased.
+
+## Burst: Burst 17 — F4 Wave 2 COMPLETION: PR #771 review resumed + merged, Wave 2 integration gate PASSED, README findings fixed via PR #772 — F4 COMPLETE, F4→F5 transition (2026-09-05)
+
+**Parent-commit:** `abb283e8` (`develop` tip at burst start) → `281ba272` (PR #771 squash-merge) → `e5a18fe0` (PR #772 squash-merge, current `develop` tip).
+
+**Trigger:** Session resumed from the Burst-16 `/wrap` halt. PR #771's pr-reviewer + security-reviewer, previously dispatched but halted mid-review, were re-dispatched fresh per the Burst-16 Session Resume Checkpoint's NEXT ACTION.
+
+**Work performed this burst:**
+
+1. **PR #771 review RESUMED and CONCLUDED.** Fresh pr-reviewer + security-reviewer (not continuations of the halted Burst-16 dispatches) found **2 BLOCKING** (B-1: Site-1 cleanup-advice recommended a command whose outcome misled in the brand-new-profile case; B-2: `CHANGELOG.md` denied a cross-platform message change that was in fact cross-platform) plus **NB-1** (the source-scan regression guard added in Burst 16 was defeated by line-wrapping) and **NB-2** (a CLAUDE.md lockstep gap). Implementer fixed all four (head `b2a0c5d707a9daa8543f32acba6e718bcec77907` → `17dcccb7`). Fix-delta re-review: security-reviewer MERGE-CLEAR; pr-reviewer approve with **1 LOW WARNING (NEW-1)** — `auth_method.is_none()` was an unsafe proxy for "brand-new profile" (a legacy `None`-labelled profile with working creds could be mislabelled and broken by a failing OAuth switch). NEW-1 fixed via a `profile_has_stored_credentials` existence-probe so the pre-mark fires only when no credentials exist under any label (head `17dcccb7` → `29912390`). Confirmation re-review: CLEAN. All 15 CI checks green on `29912390` (branch 0-behind `develop`). **PR #771 squash-merged @ `281ba272`.**
+2. **F4 Wave 2 integration gate PASSED.** Fresh-context adversary review of the combined Wave 2 diff (`c2074247`..`281ba272`, spanning PR #770 + PR #771) verdict: **CLEAN of emergent cross-story defects** — the chartered hazard (a doc calling OAuth-grant revoke a safe per-profile cleanup, contradicting DEC-334) does NOT exist in the merged tree. Regression covered by PR #771's own green 15-check CI on the fully-merged tree (no separate full-suite re-run performed this burst; not required — same precedent as Wave 1's gate). The gate additionally surfaced **3 README doc-consistency defects** (pre-existing, not emergent regressions introduced by either story): **W2-INT-MED-001** (README falsely stated API-token credentials are "shared by all api_token profiles" — they are per-profile namespaced, per the `<profile>:email`/`<profile>:api-token` scheme documented in CLAUDE.md); **W2-INT-LOW-001** (Windows storage docs omitted the DPAPI secrets-fallback path that PR #771's own honest-fail messages reference); **W2-INT-LOW-002** (README stated `jr auth login` defaults to API token; the actual default is an OAuth-first picker). Gate report persisted to `code-delivery/wave2-integration-gate-adversary.md`. A **[process-gap]** was also recorded in that report: no CI guard cross-checks README auth/storage PROSE against the code model (`tests/claude_md_citations.rs` checks only path *existence*, not prose accuracy) — tracked below as `W2-INT-PROCESS-GAP-README-PROSE-DRIFT`.
+3. **Human decision: fix all 3 README findings in-cycle now**, rather than deferring to a maintenance cycle. Delivered as **PR #772 (`FIX-W2-INT-README`, docs-only)**: corrected the API-token per-profile storage prose (plus the parallel `auth logout` command-table row referencing the same shared-storage misstatement); added the Windows DPAPI-fallback note to the storage docs; corrected the `jr auth login` default-auth-method description (plus the Quick Start section's matching comment); added a `CHANGELOG.md [Unreleased]` entry. pr-reviewer verdict: **CLEAN** — each of the three corrections was ground-truthed directly against `src/api/auth.rs`, `src/api/auth_windows_store.rs`, and `src/cli/auth/login.rs` before being accepted, not merely re-worded from the finding text. All 15 CI checks green. **PR #772 squash-merged @ `e5a18fe0` (current `develop` tip).**
+4. **F4 phase declared COMPLETE.** All 4 cycle-004 stories delivered and merged (PR #768 @ `9119b291`, PR #769 @ `c2074247`, PR #770 @ `abb283e8`, PR #771 @ `281ba272`), both wave integration gates PASSED, and the Wave 2 gate's 3 non-emergent README findings resolved in-cycle via PR #772. `STATE.md` transitioned `phase: F4 → F5`, `pipeline: PAUSED → ACTIVE`, version v3.68 → v3.69, in one atomic Write. `PR-771-REVIEW-HALTED` (Blocking Issues) closed — resolved, not carried forward.
+
+**Adversary verdict:** The F4 Wave 2 integration gate (item 2 above) is this burst's standalone `adversary`-agent dispatch, scoped to the combined Wave 2 diff `c2074247..281ba272`. Verdict: **CLEAN of emergent cross-story defects** — the chartered hazard (a doc contradicting DEC-334's revoke-granularity correction) does not exist in the merged tree; no BLOCKING or new HIGH/MED findings against the emergent-defect charter. The gate separately surfaced 3 pre-existing, non-emergent README doc-consistency findings (W2-INT-MED-001, W2-INT-LOW-001, W2-INT-LOW-002) plus 1 process-gap, all fixed in-cycle via PR #772 per human decision. PR #771's own review (item 1 above) was a `pr-reviewer`/`security-reviewer` pass, not an `adversary`-agent pass — its 2 BLOCKING + NB-1/NB-2 findings (fixed) and the fix-delta NEW-1 (fixed) are narrated inline in item 1, with a final CLEAN confirmation re-review.
+
+**Outcome:** cycle-004 (`windows-correctness`) Phase **F4 is COMPLETE**. `develop` (origin) @ `e5a18fe0`. Counts unchanged: 742 BCs / 55 VPs / 106 holdout / 172 stories (the README-only PR #772 added no BCs/stories). Next: F5 scoped adversarial review of the full cycle-004 delta (all 4 stories' code), then F6 targeted hardening, then F7 delta convergence (including the REQUIRED manual Windows-11 smoke gate), then release.
+
+**Codifications:** DEC-339 recorded — cycle-004 F4 COMPLETE, advance to F5. No other new DEC IDs this burst (the PR #771 fix rounds and the PR #772 README fixes are execution detail under DEC-338/DEC-334's existing authorization, not fresh gate decisions).
+
+**Closes:** `PR-771-REVIEW-HALTED` (resolved — reviewed + merged). **New tracked item (non-blocking):** `W2-INT-PROCESS-GAP-README-PROSE-DRIFT` (deferred to a future SELF-IMPROVEMENT/maintenance cycle per the S-7.02 cycle-closing checklist). **Does NOT close:** F4 phase's downstream successors (F5/F6/F7 all remain to run); the REQUIRED F7 manual Windows-11 smoke gate; any cycle-001/002/003 standing Drift/Standing items (untouched).
+
+### Counts reconciled this burst
+
+BCs: unchanged at **742**. VPs: unchanged at **55**. Holdout scenarios: unchanged at **106**. `total_stories`: unchanged at **172** (PR #772 is docs-only, no story added).
+
+### Details
+
+| Agent | Task | Output |
+|-------|------|--------|
+| pr-reviewer + security-reviewer | Fresh review of PR #771 (resumed from halt) | 2 BLOCKING + NB-1 + NB-2 found and fixed (`b2a0c5d7`→`17dcccb7`); fix-delta re-review found NEW-1 (LOW), fixed (`17dcccb7`→`29912390`); confirmation re-review CLEAN |
+| pr-manager | Merge PR #771 on clean review + green CI | PR #771 squash-merged @ `281ba272` |
+| adversary | F4 Wave 2 integration gate — combined diff `c2074247..281ba272` | Verdict CLEAN-of-emergent; 3 README doc-consistency findings + 1 process-gap surfaced; report persisted to `code-delivery/wave2-integration-gate-adversary.md` |
+| implementer + pr-reviewer | PR #772 (`FIX-W2-INT-README`, docs-only): fix all 3 README findings in-cycle per human decision | PR #772 opened, reviewed CLEAN, merged @ `e5a18fe0` |
+| state-manager | Record F4 COMPLETE close-out + F4→F5 transition in STATE.md (this entry + STATE.md v3.69) | This burst-log entry; `STATE.md` v3.69; `cycles/cycle-004/session-checkpoints.md` (v3.68 archived) |
+
+**Files touched (Dim-1): 3 unique files (factory-artifacts, this burst)**
+
+- STATE.md
+- .factory/cycles/cycle-004/burst-log.md (this entry)
+- .factory/cycles/cycle-004/session-checkpoints.md (v3.68 archived)
+
+Plus first-commit of the untracked `code-delivery/wave2-integration-gate-adversary.md`, `code-delivery/FIX-W2-INT-README-pr-review.md`, and `code-delivery/S-cycle4-honest-fail-message/{pr-rereview-new1.md,pr-rereview-pr-reviewer.md,pr-rereview-security.md}` review-evidence files (already present untracked in the worktree at burst start; committed as part of this burst's atomic commit).
+
+**Dim-2 Attestation:** No BC/VP/holdout/story count changed this burst (PR #772 is docs-only). `scripts/check-spec-counts.sh` and `scripts/check-bc-cumulative-counts.sh` are unaffected — no BC/VP file touched. DEC-namespace collision check: DEC-339 allocated (previous max DEC-338), no collision.
+
+**Dim-5 Attestation:** N/A — no binary/WASM artifact produced by this burst (`.factory/` bookkeeping only; PR #771/#772's `develop`-side changes were built and verified by their own CI runs, external to this burst).
+
+**Dim-6 Attestation:** N/A for this burst's own scope — `.factory/` bookkeeping only. `develop`-side source changes (`src/api/auth.rs` honest-fail-message fixes; `README.md`/`CLAUDE.md` corrections) were delivered and merged via PR #771 and PR #772 prior to this burst-log entry being written; this burst records both outcomes, it does not itself change source.
+
+**Dim-7 Attestation:** PR #771's CI: all 15 checks green on `29912390` (branch 0-behind `develop` at merge time — the `strict: false` staleness caveat did not bite). PR #772's CI: all 15 checks green. Neither required a fresh full-suite re-run beyond their own PR-scoped CI, per the same precedent as Wave 1's and Burst 16's gates.

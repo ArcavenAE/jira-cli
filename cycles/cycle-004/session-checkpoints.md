@@ -148,7 +148,47 @@ traces_to: STATE.md
 
 **EXACT RESUME COMMAND:** `/vsdd-factory:next-step` (reads STATE.md, resumes by dispatching F4 Wave 1).
 
-**Superseded at (2026-09-05, SESSION WRAP — F4 Wave 1 DELIVERED + MERGED (DEC-338) + Wave 2 PARTIALLY DELIVERED, reviews halted mid-wrap):** superseded in place by the SESSION WRAP checkpoint (v3.67). Both Wave-1 stories were delivered and squash-merged — `S-cycle4-dpapi-storage-fix` (PR #768 @ `9119b291`) and `S-cycle4-cloud-id-correctness` (PR #769 @ `c2074247`) — the REQUIRED F4 CI spike SUCCEEDED (VP-AUTHDX-010(b) CI-verified on windows-latest), and the Wave 1 integration gate PASSED (DEC-338). Wave 2 progressed further than a bare "unblocked" state before the human called `/wrap`: `S-cycle4-windows-docs` was ALSO delivered and squash-merged (PR #770 @ `abb283e8`, current `develop` tip); `S-cycle4-honest-fail-message` converged (3 clean adversarial passes, including a DEC-334 correction to the revoke-advice framing) and its PR #771 (head `b2a0c5d7`) is OPEN, with pr-reviewer + security-reviewer dispatched but HALTED mid-review for the wrap. Pipeline PAUSED at the wrap point.
+**Superseded at (2026-09-05, SESSION WRAP — F4 Wave 1 DELIVERED + MERGED (DEC-338) + Wave 2 PARTIALLY DELIVERED, reviews halted mid-wrap):** superseded in place by the SESSION WRAP checkpoint (v3.68 — no separate v3.67 was ever committed live; see burst-log.md Burst 16 for why the version jumps v3.66→v3.68 directly). Both Wave-1 stories were delivered and squash-merged — `S-cycle4-dpapi-storage-fix` (PR #768 @ `9119b291`) and `S-cycle4-cloud-id-correctness` (PR #769 @ `c2074247`) — the REQUIRED F4 CI spike SUCCEEDED (VP-AUTHDX-010(b) CI-verified on windows-latest), and the Wave 1 integration gate PASSED (DEC-338). Wave 2 progressed further than a bare "unblocked" state before the human called `/wrap`: `S-cycle4-windows-docs` was ALSO delivered and squash-merged (PR #770 @ `abb283e8`, current `develop` tip); `S-cycle4-honest-fail-message` converged (3 clean adversarial passes, including a DEC-334 correction to the revoke-advice framing) and its PR #771 (head `b2a0c5d7`) is OPEN, with pr-reviewer + security-reviewer dispatched but HALTED mid-review for the wrap. Pipeline PAUSED at the wrap point.
+```
+
+---
+
+## Session Resume Checkpoint (2026-09-05, v3.68) — cycle-004 SESSION WRAP, F4 PAUSED mid-Wave-2 (Burst 16)
+
+### Artifact Versions
+
+| Artifact | Version |
+|----------|---------|
+| STATE.md | 3.68 |
+| total_bcs | 742 |
+| VP count | 55 |
+| holdout scenarios | 106 |
+| total_stories | 172 (unchanged this burst) |
+
+### State
+
+| Field | Value |
+|-------|-------|
+| **Date** | 2026-09-05 |
+| **Position** | cycle-004 (`windows-correctness`), **Phase F4 (delta implementation), IN PROGRESS — PAUSED mid-Wave-2 (SESSION WRAP).** Wave 1 COMPLETE + integration gate PASSED (DEC-338). Wave 2: `S-cycle4-windows-docs` merged (PR #770 @ `abb283e8`, current `origin/develop` tip); `S-cycle4-honest-fail-message` converged, PR #771 (head `b2a0c5d707a9daa8543f32acba6e718bcec77907`) OPEN/unmerged, reviews halted. Local `develop` behind at `c2074247` (not fast-forwarded, not a durability issue). cycle-001, cycle-002, and cycle-003 remain CLOSED, historical, unaltered by this burst. |
+| **Convergence counter** | cycle-004 F2 convergence CLOSED at DEC-336. F3 review convergence COMPLETE, gate APPROVED (DEC-337). `S-cycle4-dpapi-storage-fix` and `S-cycle4-cloud-id-correctness` each individually 3-clean adversarially converged (merged). `S-cycle4-windows-docs` consistency-validated CONSISTENT (merged). `S-cycle4-honest-fail-message` individually 3-clean adversarially converged (PR open, NOT yet merged — pr-reviewer/security-reviewer review still outstanding). No F4-phase-level convergence loop is active — F5 (scoped adversarial review) is the next convergence-loop phase, after F4 fully completes. |
+| **In-flight work** | NONE running. PR #771 open; its two reviews (pr-reviewer-771-cycle1, security-reviewer-771) were dispatched but explicitly HALTED (not killed mid-tool-call, but not concluded) for this wrap — prior partial output exists at `code-delivery/S-cycle4-honest-fail-message/pr-review.md` but is PROVISIONAL, not a completed gate verdict. |
+| **Next step** | Re-dispatch pr-reviewer + security-reviewer fresh for PR #771; on clean review + green CI, merge; run the F4 Wave 2 integration gate; F4 COMPLETE → F5 scoped adversarial → F6 targeted hardening → F7 delta convergence (incl. REQUIRED manual Windows-11 smoke gate) → release. |
+
+### Resume Prompt
+
+```
+**Date:** 2026-09-05. **Position:** cycle-004 (`windows-correctness`), **Phase F4 (delta implementation), IN PROGRESS — PAUSED mid-Wave-2 (SESSION WRAP).** Wave 1 COMPLETE + integration gate PASSED (DEC-338). Wave 2: `S-cycle4-windows-docs` merged (PR #770 @ `abb283e8`, current `origin/develop` tip); `S-cycle4-honest-fail-message` converged, PR #771 (head `b2a0c5d707a9daa8543f32acba6e718bcec77907`) OPEN/unmerged, reviews halted. Local `develop` behind at `c2074247` (not fast-forwarded, not a durability issue). cycle-001, cycle-002, and cycle-003 remain CLOSED, historical, unaltered by this burst.
+
+**What changed this burst (Burst 16):** (1) `S-cycle4-windows-docs` DELIVERED + MERGED — PR #770 @ `abb283e8`. (2) `S-cycle4-honest-fail-message` CONVERGED, PR #771 OPEN, reviews HALTED — includes a DEC-334 correction to a CONFIRMED-harmful revoke-advice defect (BC-1.4.039 + ADR-0021 §6 amended; source-scan regression guard added). (3) `STORY-INDEX.md` + `sprint-state.yaml` reconciled to the true Wave-1/Wave-2 state. (4) `compute-input-hash --update` re-run on 6 cycle-004 artifacts citing the amended `bc-1-auth-identity.md`. (5) STATE.md transitioned `pipeline: ACTIVE→PAUSED`; version jumped v3.66→v3.68 in one atomic Write.
+
+**NEXT ACTION on resume (exact, in order):** (1) Re-dispatch pr-reviewer + security-reviewer fresh for PR #771. (2) On clean review + green CI (re-check CI freshness first — `develop` has moved since #771 was last rebased; `strict: false` caveat applies), merge PR #771. (3) Run the F4 Wave 2 integration gate. (4) F4 COMPLETE → F5 scoped adversarial → F6 targeted hardening → F7 delta convergence. (5) F7 includes the REQUIRED manual Windows-11 smoke gate + the final human F7 gate → release.
+
+**Counts:** total_bcs 742; VP count 55; holdout scenarios 106; total_stories 172 (all unchanged this burst).
+
+**EXACT RESUME COMMAND:** `/vsdd-factory:next-step` (reads STATE.md, resumes by re-dispatching PR #771's reviews).
+
+**Superseded at (2026-09-05, Burst 17 — PR #771 review resumed + merged @ `281ba272`; F4 Wave 2 integration gate PASSED CLEAN-of-emergent; 3 README findings fixed via PR #772 @ `e5a18fe0`; F4 declared COMPLETE, DEC-339 recorded):** superseded in place by the F4→F5 transition checkpoint (v3.69). PR #771's fresh pr-reviewer + security-reviewer found 2 BLOCKING + NB-1/NB-2 (all fixed, head `b2a0c5d7`→`17dcccb7`), then 1 LOW WARNING NEW-1 on fix-delta re-review (fixed, `17dcccb7`→`29912390`), then confirmed CLEAN — PR #771 squash-merged @ `281ba272`. The Wave 2 integration gate (combined diff `c2074247..281ba272`) verdict CLEAN of emergent cross-story defects, but surfaced 3 non-emergent README doc-consistency findings + 1 process-gap; human decided to fix all 3 in-cycle now, delivered as PR #772 (docs-only), pr-reviewer CLEAN, merged @ `e5a18fe0` (current `develop` tip). F4 is now COMPLETE; pipeline flipped PAUSED→ACTIVE, phase F4→F5. `PR-771-REVIEW-HALTED` closed.
 ```
 
 ---
