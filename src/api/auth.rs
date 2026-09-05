@@ -863,24 +863,66 @@ pub fn load_api_token(profile: &Profile) -> Result<(String, String)> {
 /// A genuine keychain backend error propagates via `?`, exactly like every
 /// other [`read_keyring_optional`] call site in this module — it must never
 /// be coerced into "no stored credentials".
+///
+/// Expressed in terms of [`probe_stored_credential_kind`] so the two can
+/// never drift apart — this function only discards the WHICH-kind
+/// information that function's caller (`src/cli/auth/login.rs::handle_login`,
+/// FIX-F5-CYCLE4-1 LOW-1) needs to reconcile an orphaned credential pair
+/// after a successful mechanism switch on a legacy `auth_method: None`
+/// profile.
 pub fn profile_has_stored_credentials(profile: &Profile) -> Result<bool> {
+    Ok(probe_stored_credential_kind(profile)?.is_some())
+}
+
+/// Existence-only probe: WHICH credential kind, if any, does `profile`
+/// currently hold in the keychain — `Some("oauth")`, `Some("api_token")`, or
+/// `None` if neither pair is present?
+///
+/// Checks in the same order [`profile_has_stored_credentials`] always has
+/// (namespaced OAuth pair, then namespaced api-token pair, then — for the
+/// `"default"` profile only — the pre-multi-profile legacy flat OAuth pair;
+/// see that function's own doc comment for why the legacy pair is scoped to
+/// `"default"` and why the legacy FLAT api-token pair is deliberately not
+/// probed at all), so converting this function's result to a plain `bool`
+/// via `.is_some()` reproduces `profile_has_stored_credentials`'s exact
+/// pre-existing behavior byte-for-byte.
+///
+/// **FIX-F5-CYCLE4-1 LOW-1 (F5-scoped adversarial review, cycle-004):**
+/// added so [`crate::cli::auth::login::handle_login`] can determine not just
+/// WHETHER a legacy `auth_method: None` profile
+/// ([`crate::config::migrate_legacy_global`]) already holds working
+/// credentials under some label — [`profile_has_stored_credentials`] already
+/// answers that for the PR #771 NEW-1 pre-mark guard — but WHICH kind, so
+/// that once a login under a DIFFERENT mechanism succeeds, the caller can
+/// clear exactly that orphaned pair afterward. Without this, `handle_login`
+/// had no way to distinguish "clear the OAuth pair" from "clear the
+/// api-token pair" for a `None`-labelled profile, so
+/// [`crate::cli::auth::login::clear_outgoing_mechanism_on_switch`] (which
+/// dispatches on a KNOWN `current_auth_method: Some(_)`) could not be reused
+/// for this case and the orphaned pair was never cleared at all — the
+/// asymmetric other half of PR #771's NEW-1 fix (which only protected the
+/// PRE-login label from being mismarked, not the POST-login orphan).
+///
+/// A genuine keychain backend error propagates via `?`, exactly like every
+/// other [`read_keyring_optional`] call site in this module.
+pub fn probe_stored_credential_kind(profile: &Profile) -> Result<Option<&'static str>> {
     if read_keyring_optional(&oauth_access_key(profile.as_ref()))?.is_some()
         && read_keyring_optional(&oauth_refresh_key(profile.as_ref()))?.is_some()
     {
-        return Ok(true);
+        return Ok(Some("oauth"));
     }
     if read_keyring_optional(&api_token_email_key(profile.as_ref()))?.is_some()
         && read_keyring_optional(&api_token_key(profile.as_ref()))?.is_some()
     {
-        return Ok(true);
+        return Ok(Some("api_token"));
     }
     if profile.as_ref() == "default"
         && read_keyring_optional(KEY_OAUTH_ACCESS_LEGACY)?.is_some()
         && read_keyring_optional(KEY_OAUTH_REFRESH_LEGACY)?.is_some()
     {
-        return Ok(true);
+        return Ok(Some("oauth"));
     }
-    Ok(false)
+    Ok(None)
 }
 
 /// Read an optional keychain entry, distinguishing "not present" (`NoEntry`)
@@ -1051,13 +1093,54 @@ pub fn clear_profile_oauth_pair(profile: &Profile) -> Result<()> {
 /// [`clear_profile_creds`] is unsuitable there because it clears BOTH kinds
 /// unconditionally and would delete the just-stored new credentials too.
 ///
-/// `keyring::Error::NoEntry` on any step is success; any other keychain
-/// error propagates immediately via `?` (same tightening as
-/// [`clear_profile_creds`]/[`clear_profile_oauth_pair`]).
+/// `keyring::Error::NoEntry` on any step is success. A genuine (non-`NoEntry`)
+/// keychain error does not stop the OTHER step from being attempted — this
+/// function attempts BOTH deletions unconditionally and returns the FIRST
+/// genuine error encountered (in call order), exactly like
+/// [`clear_profile_creds`]/[`clear_profile_oauth_pair`]'s attempt-all
+/// pattern.
+///
+/// **FIX-F5-CYCLE4-2 finding #2:** previously this function used `?` to
+/// early-abort after the first step, so a genuine backend error deleting
+/// `<profile>:email` left `<profile>:api-token` completely un-attempted —
+/// orphaning the token half of the pair on the
+/// mechanism-switch/reconcile path
+/// ([`crate::cli::auth::login::clear_stored_credential_kind`]), the one
+/// caller of this function. Delegates the attempt-all sequencing to
+/// [`clear_api_token_pair_attempt_all`], a host-pure helper extracted so
+/// the sequencing itself is directly unit-testable without a keychain
+/// backend.
 pub fn clear_profile_api_token_pair(profile: &Profile) -> Result<()> {
-    delete_credential_tolerating_no_entry(&api_token_email_key(profile.as_ref()))?;
-    delete_credential_tolerating_no_entry(&api_token_key(profile.as_ref()))?;
-    Ok(())
+    clear_api_token_pair_attempt_all(
+        || delete_credential_tolerating_no_entry(&api_token_email_key(profile.as_ref())),
+        || delete_credential_tolerating_no_entry(&api_token_key(profile.as_ref())),
+    )
+}
+
+/// Host-pure attempt-all core of [`clear_profile_api_token_pair`]: runs
+/// `clear_email` and `clear_token` unconditionally, in that order, and
+/// returns the FIRST `Err` encountered — never short-circuiting on the
+/// first failure the way `?` would. Extracted purely for testability
+/// (`tests::test_clear_api_token_pair_attempt_all_*`, FIX-F5-CYCLE4-2
+/// finding #2) — the production call site above wires in the real
+/// `delete_credential_tolerating_no_entry` calls.
+fn clear_api_token_pair_attempt_all(
+    clear_email: impl FnOnce() -> Result<()>,
+    clear_token: impl FnOnce() -> Result<()>,
+) -> Result<()> {
+    let mut first_error: Option<anyhow::Error> = None;
+    if let Err(e) = clear_email() {
+        first_error = Some(e);
+    }
+    if let Err(e) = clear_token() {
+        if first_error.is_none() {
+            first_error = Some(e);
+        }
+    }
+    match first_error {
+        Some(e) => Err(e),
+        None => Ok(()),
+    }
 }
 
 /// Clear a single profile's stored credentials from the system keychain —
@@ -2159,6 +2242,105 @@ mod tests {
     fn test_extract_query_param_no_query() {
         let request = "GET /callback HTTP/1.1\r\n";
         assert_eq!(extract_query_param(request, "code"), None);
+    }
+
+    // -----------------------------------------------------------------
+    // FIX-F5-CYCLE4-2 finding #2: `clear_profile_api_token_pair` must
+    // attempt BOTH deletion steps even if the first one fails — mirroring
+    // `clear_profile_oauth_pair`/`clear_profile_creds`'s attempt-all
+    // pattern, instead of early-aborting via `?` on the first `Err` and
+    // leaving the second step (the api-token entry) un-attempted, which
+    // orphans it on the mechanism-switch/reconcile path
+    // (`clear_stored_credential_kind`, `src/cli/auth/login.rs`).
+    //
+    // `clear_api_token_pair_attempt_all` is the host-pure core of
+    // `clear_profile_api_token_pair`, extracted so this sequencing
+    // property is directly unit-testable with fake steps — no keychain
+    // backend required — unlike its sibling attempt-all functions, whose
+    // equivalent tests are all keyring-gated (see e.g.
+    // `test_ac_002_clear_profile_creds_propagates_genuine_backend_error_not_swallowed`
+    // below).
+    // -----------------------------------------------------------------
+
+    /// RED before the fix: with the old `?`-early-abort implementation,
+    /// the second step is a source statement that is only *reached*, and
+    /// therefore only *invoked*, if the first step returned `Ok`. This
+    /// test proves the fixed sequencing directly: the second step's
+    /// closure must run even though the first one returns `Err`.
+    #[test]
+    fn test_clear_api_token_pair_attempt_all_runs_second_step_even_when_first_errors() {
+        let second_ran = std::cell::Cell::new(false);
+
+        let result = clear_api_token_pair_attempt_all(
+            || Err(anyhow::anyhow!("simulated email-delete backend error")),
+            || {
+                second_ran.set(true);
+                Ok(())
+            },
+        );
+
+        assert!(
+            result.is_err(),
+            "the first step's error must still propagate"
+        );
+        assert!(
+            second_ran.get(),
+            "FIX-F5-CYCLE4-2: the api-token delete step must still be \
+             attempted even when the email delete fails — early-abort via \
+             `?` would leave the token entry un-attempted, orphaning it on \
+             the switch/reconcile path"
+        );
+    }
+
+    /// When both steps fail, the FIRST error (call order) is the one
+    /// returned — matching `clear_profile_oauth_pair`/`clear_profile_creds`'s
+    /// documented first-error-wins contract.
+    #[test]
+    fn test_clear_api_token_pair_attempt_all_returns_first_error_when_both_fail() {
+        let result = clear_api_token_pair_attempt_all(
+            || Err(anyhow::anyhow!("first error")),
+            || Err(anyhow::anyhow!("second error")),
+        );
+
+        let err = result.expect_err("both steps failing must still return Err");
+        assert_eq!(
+            err.to_string(),
+            "first error",
+            "the FIRST error in call order must win, not the last"
+        );
+    }
+
+    /// The second step is still attempted (and its success observed) even
+    /// though it has no bearing on the overall `Ok` result here — this is
+    /// the "both succeed" control case.
+    #[test]
+    fn test_clear_api_token_pair_attempt_all_ok_when_both_steps_succeed() {
+        let second_ran = std::cell::Cell::new(false);
+
+        let result = clear_api_token_pair_attempt_all(
+            || Ok(()),
+            || {
+                second_ran.set(true);
+                Ok(())
+            },
+        );
+
+        assert!(result.is_ok());
+        assert!(second_ran.get());
+    }
+
+    /// When only the SECOND step fails, the first step's success must not
+    /// suppress the second step's error — mirrors the reverse ordering to
+    /// the "first fails" test above.
+    #[test]
+    fn test_clear_api_token_pair_attempt_all_surfaces_second_step_error_alone() {
+        let result = clear_api_token_pair_attempt_all(
+            || Ok(()),
+            || Err(anyhow::anyhow!("token-delete backend error")),
+        );
+
+        let err = result.expect_err("a second-step-only failure must still return Err");
+        assert_eq!(err.to_string(), "token-delete backend error");
     }
 
     #[test]
@@ -5167,7 +5349,8 @@ mod tests {
     ///
     /// PR #771 review Finding NB-1 (coverage): normalizes a chunk of
     /// `auth.rs` source text for phrase-scanning purposes. Strips a leading
-    /// `///` doc-comment prefix and a trailing `\` string-literal
+    /// comment-marker prefix (`///`, `//!`, or plain `//` — see
+    /// FIX-F5-CYCLE4-1 LOW-2 below) and a trailing `\` string-literal
     /// line-continuation marker from each physical line, then collapses
     /// all whitespace runs (including the newlines between lines) to
     /// single spaces.
@@ -5184,12 +5367,25 @@ mod tests {
     /// [`site1_login_store_failure_message`] originally wrapped "...has no"
     /// / "other consumer..." across two `///` lines — invisible to a raw
     /// scan, caught once normalized.
+    ///
+    /// **FIX-F5-CYCLE4-1 LOW-2 (F5-scoped adversarial review, cycle-004):**
+    /// the original version above only stripped `///`, leaving `//!`
+    /// (inner-doc, e.g. a module-level `//!` header comment) and a plain
+    /// `//` line comment completely un-stripped. A phrase wrapped across
+    /// two `//!` or `//` lines then left that un-stripped marker sitting
+    /// BETWEEN the two halves of the phrase after line-joining (e.g. "...has
+    /// no //! other consumer...") — the substring check never matched even
+    /// though a reader sees one continuous run of text, the exact class this
+    /// function exists to close. The longest matching marker is stripped
+    /// first (`///` before `//!` before bare `//`) so a genuine `///` line
+    /// is never mis-stripped down to a bare `/` prefix.
     fn normalize_for_phrase_scan(source: &str) -> String {
         let mut normalized = String::with_capacity(source.len());
         for raw_line in source.lines() {
             let trimmed = raw_line.trim_start();
-            let after_doc_prefix = trimmed
-                .strip_prefix("///")
+            let after_doc_prefix = ["///", "//!", "//"]
+                .iter()
+                .find_map(|marker| trimmed.strip_prefix(marker))
                 .map(|rest| rest.strip_prefix(' ').unwrap_or(rest))
                 .unwrap_or(trimmed);
             let without_continuation = after_doc_prefix
@@ -5229,6 +5425,42 @@ mod tests {
             normalized.contains("no other consumer"),
             "normalize_for_phrase_scan must join a backslash-continued string literal back \
              into one continuous run; got: {normalized}"
+        );
+    }
+
+    /// FIX-F5-CYCLE4-1 LOW-2 (F5-scoped adversarial review, cycle-004):
+    /// `normalize_for_phrase_scan` stripped a leading `///` doc-comment
+    /// prefix but not `//!` (inner-doc) — a forbidden DEC-334 phrase wrapped
+    /// across two `//!` lines left the un-stripped `//!` marker sitting
+    /// between the two halves of the phrase after line-joining (e.g. "...has
+    /// no //! other consumer...") so the substring check never matched, even
+    /// though a reader (or rustdoc) sees one continuous run of text —
+    /// exactly the class `normalize_for_phrase_scan` exists to close for
+    /// `///`, just missing this one comment-marker spelling.
+    #[test]
+    fn test_normalize_for_phrase_scan_catches_inner_doc_wrapped_forbidden_phrase() {
+        let synthetic =
+            "//! this text says the grant has no\n//! other consumer in the whole system.\n";
+        let normalized = normalize_for_phrase_scan(synthetic).to_lowercase();
+        assert!(
+            normalized.contains("no other consumer"),
+            "normalize_for_phrase_scan must join a //!-wrapped (inner-doc) phrase back into \
+             one continuous run so the source-scan guard can catch it; got: {normalized}"
+        );
+    }
+
+    /// FIX-F5-CYCLE4-1 LOW-2: the same gap for a plain `//` line comment —
+    /// also unstripped by the pre-fix code, for the same reason as `//!`
+    /// above.
+    #[test]
+    fn test_normalize_for_phrase_scan_catches_plain_comment_wrapped_forbidden_phrase() {
+        let synthetic =
+            "// this text says the grant has no\n// other consumer in the whole system.\n";
+        let normalized = normalize_for_phrase_scan(synthetic).to_lowercase();
+        assert!(
+            normalized.contains("no other consumer"),
+            "normalize_for_phrase_scan must join a //-wrapped (plain line comment) phrase back \
+             into one continuous run so the source-scan guard can catch it; got: {normalized}"
         );
     }
 

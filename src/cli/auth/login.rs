@@ -615,11 +615,20 @@ pub async fn handle_login(args: LoginArgs) -> Result<()> {
     // `should_mark_auth_method_before_attempt` short-circuits to `false`
     // regardless of this value, so probing there would be a wasted (and, on
     // some platforms, OS-prompting) keychain round-trip.
-    let has_stored_credentials = if current_auth_method.is_none() {
-        auth::profile_has_stored_credentials(&Profile::from(target.clone()))?
+    // FIX-F5-CYCLE4-1 LOW-1: probe WHICH kind (not just whether) is stored
+    // under a legacy `auth_method: None` label, in the SAME single read used
+    // for `has_stored_credentials` below — this snapshot is reused, after a
+    // successful login, by `reconcile_legacy_none_outgoing_credentials` to
+    // clear exactly that orphaned pair. Re-probing after login would double
+    // the keychain I/O (and, on some platforms, double an OS prompt) for no
+    // benefit: nothing between this read and the post-login reconcile call
+    // can legitimately change what was stored under the OLD label.
+    let legacy_none_stored_kind = if current_auth_method.is_none() {
+        auth::probe_stored_credential_kind(&Profile::from(target.clone()))?
     } else {
-        false
+        None
     };
+    let has_stored_credentials = legacy_none_stored_kind.is_some();
     if should_mark_auth_method_before_attempt(
         current_auth_method.as_deref(),
         has_stored_credentials,
@@ -668,6 +677,19 @@ pub async fn handle_login(args: LoginArgs) -> Result<()> {
         current_auth_method.as_deref(),
         new_method,
         args.no_input && switching,
+    )?;
+
+    // FIX-F5-CYCLE4-1 LOW-1: the symmetric other half of the above — a
+    // legacy `auth_method: None` profile that the pre-login probe found
+    // already holding a DIFFERENT credential kind. `clear_outgoing_mechanism_on_switch`
+    // cannot cover this (its `current_auth_method` parameter is `None`
+    // here, so it takes its own "nothing to clear" early return by design).
+    // Reached only after both login and the clear above have succeeded —
+    // same "never before a successful login" contract.
+    reconcile_legacy_none_outgoing_credentials(
+        &Profile::from(target.clone()),
+        legacy_none_stored_kind,
+        new_method,
     )?;
 
     if matches!(args.output, OutputFormat::Json) {
@@ -918,6 +940,23 @@ pub fn prompt_auth_method_picker() -> Result<bool> {
 /// 'api_token'."`). The interactive re-declaration path (BC-1.1.013
 /// EC-1.1.013-2) should pass `false` — the picker interaction itself
 /// already makes the switch visible to the user.
+///
+/// Per-kind clear dispatch shared by [`clear_outgoing_mechanism_on_switch`]
+/// (the `current_auth_method: Some(_)` case) and
+/// [`reconcile_legacy_none_outgoing_credentials`] (FIX-F5-CYCLE4-1 LOW-1,
+/// the `current_auth_method: None`-but-still-holding-credentials case) —
+/// extracted so the two call sites can never independently drift on which
+/// primitive clears which kind. An unrecognized `kind` value (e.g. a
+/// hand-edited config, or a probe result outside `{"oauth", "api_token"}`)
+/// has nothing of ours to clear.
+fn clear_stored_credential_kind(profile: &Profile, kind: &str) -> Result<()> {
+    match kind {
+        "oauth" => auth::clear_profile_oauth_pair(profile),
+        "api_token" => auth::clear_profile_api_token_pair(profile),
+        _ => Ok(()),
+    }
+}
+
 pub fn clear_outgoing_mechanism_on_switch(
     profile: &Profile,
     current_auth_method: Option<&str>,
@@ -938,14 +977,8 @@ pub fn clear_outgoing_mechanism_on_switch(
     // Dispatch to the per-kind clear matching ONLY the outgoing mechanism —
     // never the combined clear_profile_creds, which would also delete the
     // new_method credentials this function's caller (handle_login) has
-    // already stored by the time this runs. An unrecognized `outgoing`
-    // value (e.g. a hand-edited config) has nothing of ours to clear.
-    let clear_result = match outgoing {
-        "oauth" => auth::clear_profile_oauth_pair(profile),
-        "api_token" => auth::clear_profile_api_token_pair(profile),
-        _ => Ok(()),
-    };
-    clear_result.with_context(|| {
+    // already stored by the time this runs.
+    clear_stored_credential_kind(profile, outgoing).with_context(|| {
         format!(
             "failed to clear profile {:?}'s outgoing '{outgoing}' credentials \
              after switching to '{new_method}'",
@@ -961,6 +994,136 @@ pub fn clear_outgoing_mechanism_on_switch(
     }
 
     Ok(())
+}
+
+/// FIX-F5-CYCLE4-1 LOW-1 (F5-scoped adversarial review, cycle-004,
+/// credential-orphan on legacy-`None`-mechanism switch): the symmetric
+/// counterpart to [`clear_outgoing_mechanism_on_switch`] for a profile whose
+/// `auth_method` is recorded as `None` — a profile migrated from the legacy
+/// `[instance]` config shape ([`crate::config::migrate_legacy_global`]),
+/// which copies `instance.auth_method` verbatim and can therefore be `None`
+/// while the profile STILL holds a working, already-namespaced credential
+/// pair in the keychain.
+///
+/// [`clear_outgoing_mechanism_on_switch`] cannot handle this case itself:
+/// its `current_auth_method: Option<&str>` parameter is `None` here, and by
+/// design it treats `None` as "first-time declaration, nothing to clear" —
+/// correct for a GENUINELY brand-new profile (see that function's own doc
+/// comment), but unsafe as a blanket rule once a profile can be `None`-labelled
+/// while still holding real credentials (PR #771 fresh-context re-review
+/// Finding NEW-1 already established this fact for the PRE-login pre-mark
+/// guard; this function closes the mirror-image POST-login gap that guard
+/// left open — a `jr auth login` selecting a DIFFERENT mechanism on such a
+/// profile would store the new pair and mark `auth_method`, but never clear
+/// the still-present old credential, silently orphaning it in the
+/// keychain).
+///
+/// **Caller contract, identical to [`clear_outgoing_mechanism_on_switch`]:**
+/// must be invoked only AFTER the new mechanism's login has returned `Ok` —
+/// never before, and never on a failed login (relogin-then-replace,
+/// FIX-F5-login-switch). `handle_login` upholds this by construction: this
+/// call sits after both the `login_oauth`/`login_token` `?` AND the
+/// pre-existing `clear_outgoing_mechanism_on_switch` call.
+///
+/// `probed_outgoing_kind` MUST be the result of a SINGLE keychain probe
+/// ([`crate::api::auth::probe_stored_credential_kind`]) taken BEFORE
+/// dispatching the new login — never re-probed here. Reusing that snapshot
+/// avoids a second, redundant (and on some platforms OS-prompting) keychain
+/// read; nothing between that probe and this call can legitimately change
+/// what was stored under the profile's prior, unlabelled credentials.
+///
+/// A no-op in two cases, both caller-side: `probed_outgoing_kind` is `None`
+/// (a genuinely brand-new profile — nothing was stored under any label, so
+/// there is nothing to protect), or it already equals `new_method` (the
+/// probed credential is the SAME kind that was just re-stored — a
+/// same-kind re-declaration under a `None` label, not an orphan; the
+/// ordinary `store_api_token`/`store_oauth_tokens` overwrite already
+/// handled it).
+pub(crate) fn reconcile_legacy_none_outgoing_credentials(
+    profile: &Profile,
+    probed_outgoing_kind: Option<&'static str>,
+    new_method: &str,
+) -> Result<()> {
+    let Some(outgoing) = legacy_none_orphan_clear_target(probed_outgoing_kind, new_method) else {
+        return Ok(());
+    };
+    clear_stored_credential_kind(profile, outgoing).with_context(|| {
+        format!(
+            "failed to clear profile {:?}'s orphaned '{outgoing}' credentials \
+             after a legacy (auth_method: none) login selected '{new_method}'",
+            profile.as_ref()
+        )
+    })
+}
+
+/// Pure dispatch decision behind [`reconcile_legacy_none_outgoing_credentials`]:
+/// given what was probed as already stored under the legacy
+/// `auth_method: None` label, and the mechanism a login just established,
+/// decides whether an orphan-clear is needed and, if so, which credential
+/// kind to clear. Returns `None` for either no-op case documented on the
+/// caller above (nothing was probed, or the probed kind matches the new
+/// method).
+///
+/// Extracted so this branch's DECISION logic is directly unit-testable
+/// (`dispatch_decision_tests` below) without a keychain backend — the
+/// actual clearing side effect (`clear_stored_credential_kind`) stays a
+/// separate call the caller makes only when this returns `Some`
+/// (FIX-F5-CYCLE4-2 finding #6, code-reviewer suggestion: extract an
+/// injectable/pure decision so the dispatch branch gains non-keychain-gated
+/// coverage).
+fn legacy_none_orphan_clear_target<'a>(
+    probed_outgoing_kind: Option<&'a str>,
+    new_method: &str,
+) -> Option<&'a str> {
+    let outgoing = probed_outgoing_kind?;
+    if outgoing == new_method {
+        None
+    } else {
+        Some(outgoing)
+    }
+}
+
+#[cfg(test)]
+mod dispatch_decision_tests {
+    use super::legacy_none_orphan_clear_target;
+
+    /// Host-pure (no keychain, no I/O): nothing was probed under the
+    /// legacy `None` label — a genuinely brand-new profile — so there is
+    /// nothing to clear.
+    #[test]
+    fn test_legacy_none_orphan_clear_target_none_when_nothing_probed() {
+        assert_eq!(legacy_none_orphan_clear_target(None, "oauth"), None);
+    }
+
+    /// The probed kind matches the new method — a same-kind re-declaration
+    /// under a `None` label, not an orphan; the ordinary
+    /// `store_api_token`/`store_oauth_tokens` overwrite already handled it.
+    #[test]
+    fn test_legacy_none_orphan_clear_target_none_when_same_mechanism() {
+        assert_eq!(
+            legacy_none_orphan_clear_target(Some("oauth"), "oauth"),
+            None
+        );
+        assert_eq!(
+            legacy_none_orphan_clear_target(Some("api_token"), "api_token"),
+            None
+        );
+    }
+
+    /// The probed kind differs from the new method — this IS the orphan
+    /// case: the differing, probed kind must be returned so the caller
+    /// clears exactly that one.
+    #[test]
+    fn test_legacy_none_orphan_clear_target_some_when_switching_mechanism() {
+        assert_eq!(
+            legacy_none_orphan_clear_target(Some("api_token"), "oauth"),
+            Some("api_token")
+        );
+        assert_eq!(
+            legacy_none_orphan_clear_target(Some("oauth"), "api_token"),
+            Some("oauth")
+        );
+    }
 }
 
 /// S-cycle4-cloud-id-correctness — Two-Step Red Gate TESTS (step 2 of 2) for
