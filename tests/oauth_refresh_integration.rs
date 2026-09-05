@@ -134,6 +134,21 @@ fn set_env(key: &str, val: &str) {
     }
 }
 
+/// Remove an environment variable. Symmetric counterpart to [`set_env`], used
+/// by the BC-1.4.039 honest-fail tests to explicitly UNSET
+/// `JR_FORCE_DPAPI_FALLBACK`/`JR_S759_FORCE_TOOLONG` after use (and, for
+/// AC-007, to guarantee the seam is unset before the call under test) so no
+/// state leaks to a later test in this same process.
+///
+/// Safety: same discipline as `set_env` — callers hold `harness::env_lock()`
+/// for the whole mutation + call-under-test + cleanup sequence.
+fn remove_env(key: &str) {
+    #[allow(unsafe_code)]
+    unsafe {
+        std::env::remove_var(key);
+    }
+}
+
 mod harness {
     //! Test infrastructure shared across S-3.03 tests.
 
@@ -1424,3 +1439,257 @@ async fn test_persist_before_publish_fault_injection() {
          Got: {stored_refresh}"
     );
 }
+
+// ---------------------------------------------------------------------------
+// BC-1.4.039 / VP-AUTHDX-017 — S-cycle4-honest-fail-message
+//
+// Site 3 (`refresh_oauth_token_with_url`'s post-refresh store-failure
+// `map_err`) WIRED-behavior test: exercises the REAL call site (via the
+// public `auth::refresh_oauth_token` wrapper), not the pure
+// `site3_refresh_store_failure_message` helper directly (which is private to
+// `src/api/auth.rs` and covered by inline unit tests there). Mutates the
+// process-global `JR_FORCE_DPAPI_FALLBACK` / `JR_S759_FORCE_TOOLONG`
+// debug-only seams (S-cycle4-dpapi-storage-fix) and so MUST serialize via
+// `harness::env_lock()` — the same requirement BC-1.4.039's VP-AUTHDX-017
+// documents for the env-UNSET vs. env-SET assertion classes (Pass-6
+// adversarial review Finding #4).
+//
+// RED GATE: the test below currently fails because Site 3's `map_err`
+// closure is not yet wired to `site3_refresh_store_failure_message` —
+// today's code always renders the pre-existing "Unlock your keychain" text
+// regardless of whether the underlying error carries a `DpapiFallbackFailed`
+// marker, so the assertions below (2560-byte wording, no "Unlock your
+// keychain") fail.
+// ---------------------------------------------------------------------------
+
+/// AC-001 (DpapiFallbackFailed rendering, wired), AC-003 (Site 3 omits
+/// grant-revoke), AC-005 (Site 3 proactive stale-pair clear) — traces to
+/// BC-1.4.039, VP-AUTHDX-017.
+///
+/// Seeds a real OAuth pair, then forces the POST-refresh `store_oauth_tokens`
+/// call to fail with `DpapiFallbackFailed` via the `JR_FORCE_DPAPI_FALLBACK=1`
+/// + `JR_S759_FORCE_TOOLONG=access` seam combination
+/// (S-cycle4-dpapi-storage-fix). Asserts:
+///   (a) the propagated error is Site 3's DISTINCT honest-fail message (names
+///       the 2560-byte limit and the fallback failure detail, instructs a
+///       fresh login) and does NOT contain any grant-revoke instruction
+///       (AC-003) and is not the generic "Unlock your keychain" text;
+///   (b) afterward, `load_oauth_tokens` for the SAME profile observes NO
+///       stored pair (VP-AUTHDX-017's Site-3 clear oracle — tolerant of the
+///       fact that `store_oauth_tokens`'s own delete-first step, BC-1.4.035,
+///       typically already achieves this; the oracle asserts the resulting
+///       STATE, not a call count, per BC-1.4.039 Postcondition 4's own
+///       "typically redundant, retained as defense-in-depth" framing);
+///   (c) (MED-1, adversarial convergence; corrected 2026-09-05, second-pass
+///       finding) `clear_profile_oauth_pair` — the ONLY code path that
+///       touches the LEGACY flat `oauth-access-token`/`oauth-refresh-token`
+///       keys for the `"default"` profile (`store_oauth_tokens`'s
+///       delete-first step, BC-1.4.035, only ever touches the NAMESPACED
+///       `<profile>:oauth-*` keys) — was actually invoked. Without this,
+///       assertion (b) alone is satisfied whenever `store_oauth_tokens`'s
+///       own delete-first already removed the NAMESPACED pair, even if Site
+///       3's proactive clear call were deleted entirely: `load_oauth_tokens`
+///       would still observe "no stored pair" for the namespaced keys,
+///       silently passing regardless of whether `clear_profile_oauth_pair`
+///       ran.
+///
+///       **What actually kills the mutation, and why the read ordering
+///       matters:** pre-seeding the legacy flat pair is necessary but not
+///       sufficient — `load_oauth_tokens` ITSELF lazily migrates a
+///       still-intact legacy flat pair for the `"default"` profile when both
+///       namespaced keys are absent (see `load_oauth_tokens`'s
+///       `(None, None)` branch): it copies the legacy pair into the
+///       namespaced keys and DELETES the legacy flat keys as a side effect
+///       of a successful migration. If the legacy-pair reads below were
+///       taken AFTER calling `load_oauth_tokens` (as an earlier revision of
+///       this test did), a mutant that deletes Site 3's
+///       `clear_profile_oauth_pair` call would leave the legacy pair intact
+///       going into `load_oauth_tokens` — which would then lazily MIGRATE
+///       it (returning `Ok`, deleting the legacy keys as a side effect of
+///       migrating them) rather than erroring. In that mutant run, the
+///       legacy-key-absence assertions below would still pass — vacuously,
+///       because migration deleted the keys, not because
+///       `clear_profile_oauth_pair` did — and the mutation would only be
+///       caught by the separate `load_result.expect_err(...)` assertion
+///       (b) actually panicking (since migration returns `Ok`, not the
+///       expected error). To make the legacy-key assertions independently
+///       load-bearing rather than redundant with (b), they read the legacy
+///       pair's post-Site-3-clear state IMMEDIATELY after the
+///       `refresh_oauth_token` call returns — before `load_oauth_tokens` is
+///       ever invoked and before its lazy-migration side effect can touch
+///       these keys. Their absence at that point is attributable ONLY to
+///       `clear_profile_oauth_pair`.
+///
+/// KEYRING-GATED: requires `JR_RUN_KEYRING_TESTS=1`.
+#[tokio::test]
+#[ignore = "requires keyring backend; set JR_RUN_KEYRING_TESTS=1 to run"]
+async fn test_bc_1_4_039_site3_dpapi_fallback_failed_message_and_clear_profile_oauth_pair_invoked()
+{
+    if std::env::var("JR_RUN_KEYRING_TESTS").as_deref() != Ok("1") {
+        eprintln!("SKIP: set JR_RUN_KEYRING_TESTS=1 to run keychain tests");
+        return;
+    }
+    let _env_guard = harness::env_lock().lock().await;
+
+    use jr::api::auth;
+    use wiremock::matchers::{body_string_contains, method, path};
+    use wiremock::{Mock, MockServer, ResponseTemplate};
+
+    set_env("JR_SERVICE_NAME", "jr-s303-test");
+
+    // Seed a real, fitting pair under the shared "default" test profile.
+    harness::seed_oauth_tokens();
+
+    // MED-1 isolation seeding: pre-seed the LEGACY flat OAuth pair too.
+    // `store_oauth_tokens`'s delete-first step (BC-1.4.035) never touches
+    // these bare (non-namespaced) keys — only `clear_profile_oauth_pair`
+    // does, and only for the "default" profile (BC-1.2.014/BC-1.4.038).
+    // Their survival/removal is therefore the distinguishing signal for
+    // whether Site 3 actually invoked the proactive clear.
+    keyring::Entry::new("jr-s303-test", "oauth-access-token")
+        .expect("legacy access entry construction must succeed")
+        .set_password("legacy-access-bc-1-4-039")
+        .expect("legacy access seed write must succeed");
+    keyring::Entry::new("jr-s303-test", "oauth-refresh-token")
+        .expect("legacy refresh entry construction must succeed")
+        .set_password("legacy-refresh-bc-1-4-039")
+        .expect("legacy refresh seed write must succeed");
+
+    let server = MockServer::start().await;
+    set_env(
+        "JR_OAUTH_TOKEN_URL",
+        &format!("{}/oauth/token/bc1_4_039_ac005", server.uri()),
+    );
+
+    // The Atlassian exchange itself succeeds — only the SUBSEQUENT
+    // store_oauth_tokens call (Site 3) is fault-injected to fail.
+    Mock::given(method("POST"))
+        .and(path("/oauth/token/bc1_4_039_ac005"))
+        .and(body_string_contains("grant_type=refresh_token"))
+        .respond_with(ResponseTemplate::new(200).set_body_json(harness::refresh_ok_body()))
+        .mount(&server)
+        .await;
+
+    // Engage the DPAPI-fallback seam AND force the access set_password call
+    // to fail with keyring::Error::TooLong — on a non-Windows debug build
+    // this deterministically routes to auth_windows_store::store_pair,
+    // whose #[cfg(not(windows))] arm always returns DpapiFallbackFailed
+    // (BC-1.4.037 Precondition 2).
+    set_env("JR_FORCE_DPAPI_FALLBACK", "1");
+    set_env("JR_S759_FORCE_TOOLONG", "access");
+
+    let result = auth::refresh_oauth_token(harness::TEST_PROFILE).await;
+
+    // Unset the seams immediately after the call under test, before any
+    // further keychain interaction (cleanup, the follow-up load), so no
+    // state leaks into `harness::cleanup_oauth_tokens()` or another test.
+    remove_env("JR_FORCE_DPAPI_FALLBACK");
+    remove_env("JR_S759_FORCE_TOOLONG");
+
+    // MED-1 (load-bearing ordering, see the rustdoc above): read the LEGACY
+    // flat pair's post-Site-3-clear state HERE, immediately after
+    // `refresh_oauth_token` returns and BEFORE `load_oauth_tokens` is called
+    // anywhere below. `load_oauth_tokens` lazily migrates (and deletes) a
+    // still-intact legacy flat pair for the "default" profile as a SIDE
+    // EFFECT when both namespaced keys are absent — reading after that call
+    // would attribute the legacy pair's absence to migration rather than to
+    // `clear_profile_oauth_pair`, making these assertions non-discriminating
+    // against a mutant that deletes Site 3's proactive-clear call.
+    let legacy_access_after = keyring::Entry::new("jr-s303-test", "oauth-access-token")
+        .expect("legacy access entry construction must succeed")
+        .get_password();
+    let legacy_refresh_after = keyring::Entry::new("jr-s303-test", "oauth-refresh-token")
+        .expect("legacy refresh entry construction must succeed")
+        .get_password();
+
+    let err = result.expect_err(
+        "AC-001/AC-003: once Site 3's post-refresh store_oauth_tokens fails with \
+         DpapiFallbackFailed, refresh_oauth_token must propagate an error, not succeed.",
+    );
+    let msg = format!("{err:#}");
+    assert!(
+        msg.contains("2560-byte"),
+        "AC-003 VIOLATION: Site 3's honest-fail message must name the 2560-byte Credential \
+         Manager limit. Got: {msg}"
+    );
+    assert!(
+        !msg.to_lowercase().contains("revoke"),
+        "AC-003 VIOLATION: Site 3 (a REFRESH) must NEVER instruct the user to revoke the \
+         Atlassian grant — it may still back other active sessions for this profile. Got: {msg}"
+    );
+    assert!(
+        !msg.contains("id.atlassian.com/manage-profile/apps"),
+        "AC-003 VIOLATION: Site 3's message must not link to the grant-management page. \
+         Got: {msg}"
+    );
+    assert!(
+        !msg.contains("Unlock your keychain"),
+        "AC-001/AC-003 VIOLATION: a DpapiFallbackFailed store error must render the NEW \
+         honest-fail message, not the generic keychain-lock fallback. Got: {msg}"
+    );
+    assert!(
+        msg.contains("jr auth login --oauth --profile"),
+        "AC-003: Site 3's message must instruct a fresh login (not merely a retry/refresh). \
+         Got: {msg}"
+    );
+
+    // AC-005: the profile's stored OAuth pair must be a clean "no stored
+    // token" state afterward — never the stale, already-consumed pair.
+    //
+    // NOTE: this call itself can lazily migrate a still-intact legacy flat
+    // pair for the "default" profile (deleting the legacy keys as a side
+    // effect of migrating them) — which is exactly why the legacy-pair
+    // reads above were captured BEFORE this call, not after. See the MED-1
+    // rustdoc note above this test for the full reasoning.
+    let load_result = auth::load_oauth_tokens(&jr::profile::Profile::from(harness::TEST_PROFILE));
+
+    harness::cleanup_oauth_tokens();
+
+    let load_err = load_result.expect_err(
+        "AC-005 VIOLATION: after a Site-3 DpapiFallbackFailed, the profile must show NO \
+         stored OAuth pair (a clean 'no stored OAuth token' state) — never a usable stale \
+         pair left over from before the failed refresh.",
+    );
+    assert!(
+        format!("{load_err:#}").contains("No stored OAuth token"),
+        "AC-005 VIOLATION: expected the standard 'no stored OAuth token' absence error, not \
+         some other failure shape. Got: {load_err:#}"
+    );
+
+    // MED-1: the LEGACY flat pair must ALSO have been gone at the point
+    // captured above (immediately after `refresh_oauth_token` returned,
+    // before `load_oauth_tokens` ran) — this is the signal
+    // `store_oauth_tokens`'s delete-first step (BC-1.4.035) cannot produce
+    // on its own (it only ever touches the namespaced `<profile>:oauth-*`
+    // keys), and — because the read happened before `load_oauth_tokens`'s
+    // own lazy-migration could touch these keys — its absence here proves
+    // `clear_profile_oauth_pair` was actually invoked at Site 3, not merely
+    // that the namespaced pair happened to already be gone, and not that
+    // migration deleted it out from under us afterward.
+    assert!(
+        legacy_access_after.is_err(),
+        "MED-1 VIOLATION: the LEGACY flat oauth-access-token must be gone after a Site-3 \
+         DpapiFallbackFailed — its survival means clear_profile_oauth_pair (AC-005's \
+         proactive clear) was never actually invoked (store_oauth_tokens's delete-first \
+         step never touches this key). Got: {legacy_access_after:?}"
+    );
+    assert!(
+        legacy_refresh_after.is_err(),
+        "MED-1 VIOLATION: the LEGACY flat oauth-refresh-token must be gone after a Site-3 \
+         DpapiFallbackFailed — its survival means clear_profile_oauth_pair (AC-005's \
+         proactive clear) was never actually invoked (store_oauth_tokens's delete-first \
+         step never touches this key). Got: {legacy_refresh_after:?}"
+    );
+}
+
+// NOTE: AC-007 (non-Windows unreachability with the JR_FORCE_DPAPI_FALLBACK
+// seam UNSET) is deliberately NOT duplicated here as a wired integration
+// test. With the seam unset, TODAY's (unwired) Site 3 closure and the
+// POST-wiring closure produce byte-identical output — a wired-level
+// assertion for this specific scenario would pass unchanged before AND
+// after implementation (a vacuously-true, non-Red test). AC-007 is instead
+// covered where it CAN genuinely fail pre-implementation:
+// `src/api/auth.rs::tests::honest_fail_message_tests::
+// test_bc_1_4_039_ac_007_plain_toolong_without_marker_uses_legacy_message`,
+// which calls the `todo!()` message-selection stub directly and therefore
+// panics today.

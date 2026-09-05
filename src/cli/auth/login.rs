@@ -590,6 +590,50 @@ pub async fn handle_login(args: LoginArgs) -> Result<()> {
         .as_deref()
         .is_some_and(|current| current != new_method);
 
+    // PR #771 review Finding B-1 (BC-1.4.039): for a profile with NO prior
+    // `auth_method` on record (a brand-new profile), persist the SELECTED
+    // mechanism now, BEFORE attempting the flow below — not only after it
+    // succeeds. Without this, a brand-new profile whose OAuth login fails
+    // partway through (e.g. Site 1's `DpapiFallbackFailed` honest-fail case
+    // in `src/api/auth.rs`) is left with `auth_method: None`, which `jr
+    // auth logout` treats as an api-token profile ("nothing to log out") —
+    // exactly the wrong outcome for the cleanup command that failure
+    // message recommends as the default remediation. Scoped to the
+    // no-prior-method case only (`should_mark_auth_method_before_attempt`
+    // returns `false` whenever `switching` above would be `true`) — a
+    // mechanism SWITCH must still record the new mechanism only after a
+    // successful login, or a failed switch would mislabel a profile whose
+    // PRIOR mechanism's credentials are still valid and working.
+    //
+    // PR #771 fresh-context re-review Finding NEW-1: `current_auth_method
+    // == None` alone is an unsafe proxy for "nothing to protect" — a
+    // profile migrated from the legacy `[instance]` config shape can carry
+    // `auth_method: None` while STILL holding working credentials under
+    // some label. Probe the keychain before pre-marking so that case isn't
+    // mislabelled-then-broken by a failing switch. The probe is only
+    // performed when `current_auth_method` is `None` — when it's `Some(_)`,
+    // `should_mark_auth_method_before_attempt` short-circuits to `false`
+    // regardless of this value, so probing there would be a wasted (and, on
+    // some platforms, OS-prompting) keychain round-trip.
+    let has_stored_credentials = if current_auth_method.is_none() {
+        auth::profile_has_stored_credentials(&Profile::from(target.clone()))?
+    } else {
+        false
+    };
+    if should_mark_auth_method_before_attempt(
+        current_auth_method.as_deref(),
+        has_stored_credentials,
+    ) {
+        config.global = mark_auth_method_if_new(
+            config.global,
+            &target,
+            current_auth_method.as_deref(),
+            new_method,
+            has_stored_credentials,
+        );
+        config.save_global()?;
+    }
+
     if oauth_selected {
         login_oauth(
             &target,
@@ -633,6 +677,81 @@ pub async fn handle_login(args: LoginArgs) -> Result<()> {
         );
     }
     Ok(())
+}
+
+/// PR #771 review Finding B-1 (BC-1.4.039): decide whether [`handle_login`]
+/// should pre-mark the target profile's `auth_method` as the SELECTED
+/// mechanism BEFORE attempting that mechanism's flow, rather than only
+/// recording it after a successful login.
+///
+/// Scoped to a profile with NO established `auth_method` on record AND no
+/// working credentials stored under any label yet — i.e. a genuinely
+/// brand-new profile, or one whose prior login never completed. Returns
+/// `false` whenever the profile already has a WORKING, different mechanism
+/// (`current_auth_method` is `Some(_)`): this is `FIX-F5-login-switch`'s
+/// "relogin-then-replace" territory, where flipping the label eagerly would
+/// mislabel the profile as the NEW mechanism (with no credentials yet)
+/// while the OLD mechanism's still-valid credentials remain in place — a
+/// subsequent ordinary command would then try (and fail) to authenticate
+/// with the missing new mechanism instead of the still-working old one.
+///
+/// **`has_stored_credentials` (PR #771 fresh-context re-review Finding
+/// NEW-1):** `current_auth_method.is_none()` alone is an UNSAFE proxy for
+/// "brand-new profile, nothing to protect" — `None` is also the state of a
+/// profile migrated from the legacy `[instance]` config shape
+/// (`crate::config::migrate_legacy_global`), which can carry `auth_method:
+/// None` while STILL holding a working, already-namespaced credential pair
+/// in the keychain (see [`crate::api::auth::profile_has_stored_credentials`]
+/// for exactly what "working" means here). Without this parameter, a
+/// failing mechanism switch on such a profile would persist the NEW
+/// mechanism's label with no credentials behind it, silently orphaning the
+/// profile's still-working OLD credentials — the same "relogin-then-replace"
+/// failure mode `current_auth_method` alone already protects against for a
+/// non-`None` label, just reached via the `None` blind spot instead. Pass
+/// the caller's [`crate::api::auth::profile_has_stored_credentials`] probe
+/// result here; this function stays pure and takes it as a plain `bool` so
+/// it remains disk/keychain-I/O-free and trivially unit-testable.
+///
+/// For a genuinely brand-new profile (`current_auth_method` is `None` AND
+/// `has_stored_credentials` is `false`) there is nothing to protect: no
+/// working credentials exist under any label yet, so marking the intended
+/// mechanism early only helps `jr auth logout`/`jr auth remove` correctly
+/// recognize the profile if the login attempt fails partway through (e.g.
+/// at the credential-store step — the exact scenario BC-1.4.039's Site-1
+/// honest-fail message's cleanup recommendation targets).
+pub(crate) fn should_mark_auth_method_before_attempt(
+    current_auth_method: Option<&str>,
+    has_stored_credentials: bool,
+) -> bool {
+    current_auth_method.is_none() && !has_stored_credentials
+}
+
+/// Applies [`should_mark_auth_method_before_attempt`]'s decision to a
+/// `GlobalConfig`: when the target profile currently has no `auth_method`
+/// on record AND no working credentials stored under any label
+/// (`has_stored_credentials == false`), sets it to `method` now. No-op
+/// (returns `global` unchanged modulo the entry always existing) whenever
+/// the profile already has an established, different mechanism, OR already
+/// holds working credentials under some label despite the `None` record
+/// (PR #771 re-review Finding NEW-1) — see the sibling function's doc
+/// comment for why. Pure over `GlobalConfig` and `has_stored_credentials`,
+/// mirroring [`prepare_login_target`]'s disk-I/O-free testability — callers
+/// compute the keychain probe themselves and pass the result in.
+pub(crate) fn mark_auth_method_if_new(
+    mut global: crate::config::GlobalConfig,
+    target: &str,
+    current_auth_method: Option<&str>,
+    method: &str,
+    has_stored_credentials: bool,
+) -> crate::config::GlobalConfig {
+    if should_mark_auth_method_before_attempt(current_auth_method, has_stored_credentials) {
+        global
+            .profiles
+            .entry(target.to_string())
+            .or_default()
+            .auth_method = Some(method.to_string());
+    }
+    global
 }
 
 /// Pure logic for ensuring a target profile exists with the given URL.
