@@ -986,3 +986,77 @@ Plus first-commit of the untracked `code-delivery/wave2-integration-gate-adversa
 **Dim-6 Attestation:** N/A for this burst's own scope — `.factory/` bookkeeping only. `develop`-side source changes (`src/api/auth.rs` honest-fail-message fixes; `README.md`/`CLAUDE.md` corrections) were delivered and merged via PR #771 and PR #772 prior to this burst-log entry being written; this burst records both outcomes, it does not itself change source.
 
 **Dim-7 Attestation:** PR #771's CI: all 15 checks green on `29912390` (branch 0-behind `develop` at merge time — the `strict: false` staleness caveat did not bite). PR #772's CI: all 15 checks green. Neither required a fresh full-suite re-run beyond their own PR-scoped CI, per the same precedent as Wave 1's and Burst 16's gates.
+
+## Burst: Burst 18 — F5 scoped adversarial review CONVERGED (DEC-340), phase F5→F6 (2026-09-05)
+
+**Parent-commit:** `develop` @ `e5a18fe0` at burst start (F4-COMPLETE tip); advanced to `f3863f07` after Round 1's fix PR, then to `3b62cefa` (current `develop` tip) after Round 2's fix PR.
+
+**Trigger:** F4-DELTA-IMPLEMENTATION was declared COMPLETE at the end of Burst 17 (DEC-339). This burst dispatched the next feature-mode phase: F5 scoped adversarial review of the full cycle-004 delta (all 4 stories' merged code — PR #768/#769/#771 plus the docs-only PR #770/#772), per the feature-mode F5 convention (fresh context, different model family from the implementer).
+
+**Actions taken:**
+
+1. **Round 1 — fresh adversary pass, `develop` @ `e5a18fe0`.** Scope: the full cycle-004 implementation delta on `develop`. Verdict: 0 CRIT/HIGH/MED. 3 actionable LOW findings:
+   - **LOW-1 (security-critical):** the `auth_method:None` pre-mark blind-spot's symmetric CLEAR side left a legacy-migrated profile's OAuth refresh token orphaned on a mechanism switch (e.g. `--api-token` login after a legacy flat-OAuth profile).
+   - **LOW-2:** the DEC-334 source-scan regression guard (`normalize_for_phrase_scan`) normalized only `///` doc-comment markers, missing `//!`/`//` line-wrapped forms — a harmful-revoke-advice re-introduction could theoretically slip past the guard if worded with those comment styles.
+   - **LOW-3:** `atomic_write` lacked a parent-directory fsync step, understating its documented crash-safety guarantee (rename durability without a parent-dir fsync is not fully crash-safe on some filesystems).
+
+2. **Round 1 fix delivered.** `implementer` dispatched fresh (TDD, RED→GREEN) to fix all 3 LOWs: added `probe_stored_credential_kind` + `reconcile_legacy_none_outgoing_credentials` (LOW-1), broadened the guard's comment-marker normalization with longest-match-first ordering (LOW-2), and added a best-effort `fsync_parent_dir_best_effort` step to `atomic_write` plus a softened rustdoc (LOW-3). Delivered as **PR #773** (`fix/cycle4-f5-low`), squash-merged @ **`f3863f07`**. Fresh-context `pr-reviewer` re-review: CLEAN — merge-ready, 3 NITs only (non-blocking), no BLOCKING/WARNING findings. Evidence: `code-delivery/FIX-F5-CYCLE4-1-pr-review.md`.
+
+3. **Round 2 — 2 fresh adversary passes + 1 cross-model `code-reviewer` secondary, run in parallel for cognitive diversity, `develop` @ `f3863f07`.** Scope: same full cycle-004 delta plus PR #773's fix. All three independently declared 0 CRIT/HIGH/MED and converged on the blocking bar; novelty assessed LOW. Several actionable LOWs were corroborated across reviewers:
+   - `cloud_id` persisted without shape/emptiness validation (raised independently by 2 of the 3 reviewers).
+   - `fetch_cloud_id` had a whitespace-handling inconsistency between its precondition check and its request-base derivation.
+   - `fetch_cloud_id` had no cap on response body size (a malicious/misbehaving tenant_info endpoint could stream an unbounded body).
+   - `clear_profile_api_token_pair` used `?`-early-abort on the first delete, unlike its sibling `clear_profile_oauth_pair`/`clear_profile_creds`'s attempt-all pattern — could orphan the second credential half on a partial failure.
+   - Stale "Red Gate" narrative doc comments remained in now-green test files (`tests/cloud_id_tenant_info.rs`, `tests/auth_chosen_flow_reconcile.rs`, `tests/auth_oauth_default_creation.rs`).
+   - `jr init` fetched `cloud_id` via GraphQL unconditionally even when a value was already set from an earlier step, a redundant network call.
+
+4. **Human decision: fix everything actionable.** Rather than deferring any of the corroborated LOWs to a future maintenance cycle, the human elected to resolve all of them in-cycle now, consistent with this cycle's precedent (Burst 17's README-fix decision).
+
+5. **Round 2 fix delivered.** `implementer` dispatched fresh (TDD, RED→GREEN) to fix every actionable item: `is_plausible_cloud_id` (shape/empty validation) + `validate_and_trim_site_url` (whitespace fix, shared trimmed string for precondition and request-base) + a 64 KiB streamed-read body cap on `fetch_cloud_id`; `clear_profile_api_token_pair` converted to attempt-all via an extracted host-pure `clear_api_token_pair_attempt_all` helper; the 3 stale doc-comment sweeps; `jr init`'s GraphQL `cloud_id` write gated to `entry.cloud_id.is_none()`. Delivered as **PR #774** (`fix/cycle4-f5-low2`), squash-merged @ **`3b62cefa`** (current `develop` tip). Fresh-context `pr-reviewer` re-review: CLEAN — merge-ready, 2 NITs only (non-blocking; NIT-1 documents a narrow, very-low-impact re-init edge case, accepted as-is). Full suite 4920/0, clippy/fmt clean, all CI checks green. Evidence: `code-delivery/FIX-F5-CYCLE4-2-pr-review.md`.
+
+6. **F5-SCOPED-ADVERSARIAL declared CONVERGED — DEC-340.** 0 CRIT/HIGH/MED across 3 fresh adversary passes + 1 cross-model secondary; novelty decayed to LOW across the trajectory; all actionable LOWs resolved. Residuals — `--cloud-id` unvalidated on the api-token path (BC-1.2.052 PC1, by-design), api-token `cloud_id` unused by `base_url()` (BC-1.2.054, by-design), the orphan-clear branch's keychain-gated (non-CI) coverage (repo convention, now also host-pure dispatch-covered), the byte-pinned api-token soft-fail warning text (spec, not a defect), the disclosed-and-unreachable DPAPI-probe blind spot, and the NIT-1 re-init edge — are documented as by-design/convention/unreachable, not outstanding defects.
+
+7. **Convergence summary persisted.** Wrote `phase-f5-adversarial/cycle-004/convergence-summary.md` (new subdirectory — the pre-existing top-level `phase-f5-adversarial/convergence-summary.md` belongs to cycle-002's `field-dx` F5 and was left untouched to avoid clobbering it). The new summary cites, rather than duplicates, `code-delivery/FIX-F5-CYCLE4-1-pr-review.md`, `code-delivery/FIX-F5-CYCLE4-2-pr-review.md`, and the pre-existing `code-delivery/S-cycle4-honest-fail-message/pr-rereview-*.md` (F4-phase PR #771 review evidence, cited for continuity).
+
+8. STATE.md refreshed via one full-content Write (v3.69 → v3.70): frontmatter `phase` → `F6` (pipeline stays `ACTIVE`); `current_step`, `cycle_004_status` updated to record the F5 CONVERGED outcome and the F5→F6 transition. Added DEC-340 to the Decisions Log. Updated Phase Progress (F5-SCOPED-ADVERSARIAL row → CONVERGED; added F6-TARGETED-HARDENING row → PENDING), Current Phase Steps (reset to the F6-not-yet-dispatched table; Burst 1-17 detail further archived), Convergence Status, Concurrent Cycles, Constraints Carried Forward, Drift/Standing Items, and the Session Resume Checkpoint (replaced with the F6-position checkpoint; the superseded v3.69 checkpoint archived to `cycles/cycle-004/session-checkpoints.md`). A structural hook (`validate-state-structure`) flagged the initial banner's line-count claim and a split "margin from actual" phrase on the first Write attempt; corrected via one targeted Edit to the banner comment only (297 lines, matching `wc -l`; both margin figures on contiguous, unbroken phrasing) — no other content changed by that follow-up Edit.
+
+**Counts reconciled this burst**
+
+BCs: unchanged at **742**. VPs: unchanged at **55**. Holdout scenarios: unchanged at **106**. `total_stories`: unchanged at **172** (both F5 fix PRs are LOW-severity code hardening, no new story added).
+
+**Details**
+
+| Agent | Task | Output |
+|-------|------|--------|
+| adversary | F5 Round 1 — fresh-context review of the full cycle-004 delta, `develop` @ `e5a18fe0` | 0 CRIT/HIGH/MED; 3 actionable LOW findings (LOW-1/LOW-2/LOW-3) |
+| implementer | Round 1 fix: `probe_stored_credential_kind` + `reconcile_legacy_none_outgoing_credentials`; guard normalization; `atomic_write` fsync | PR #773 opened |
+| pr-reviewer | Fresh-context review of PR #773 | CLEAN — merge-ready, 3 NITs only |
+| pr-manager | Merge PR #773 on clean review + green CI | PR #773 squash-merged @ `f3863f07` |
+| adversary ×2 + code-reviewer (cross-model) | F5 Round 2 — 2 adversary passes + 1 cross-model secondary, `develop` @ `f3863f07` | 0 CRIT/HIGH/MED across all three; several corroborated actionable LOWs |
+| implementer | Round 2 fix: `is_plausible_cloud_id` + `validate_and_trim_site_url` + 64 KiB body cap; `clear_profile_api_token_pair` attempt-all; `init` GraphQL-only-when-unset; doc sweep | PR #774 opened |
+| pr-reviewer | Fresh-context review of PR #774 | CLEAN — merge-ready, 2 NITs only |
+| pr-manager | Merge PR #774 on clean review + green CI | PR #774 squash-merged @ `3b62cefa` |
+| state-manager | Record F5 CONVERGED + F5→F6 transition in STATE.md (this entry + STATE.md v3.70); persist convergence summary | This burst-log entry; `STATE.md` v3.70; `phase-f5-adversarial/cycle-004/convergence-summary.md`; `cycles/cycle-004/session-checkpoints.md` (v3.69 archived) |
+
+**Files touched (Dim-1): 4 unique files (factory-artifacts, this burst)**
+
+- STATE.md
+- .factory/cycles/cycle-004/burst-log.md (this entry)
+- .factory/cycles/cycle-004/session-checkpoints.md (v3.69 archived)
+- .factory/phase-f5-adversarial/cycle-004/convergence-summary.md (new)
+
+Plus first-commit of the untracked `code-delivery/FIX-F5-CYCLE4-1-pr-review.md` and `code-delivery/FIX-F5-CYCLE4-2-pr-review.md` review-evidence files (already present untracked in the worktree at burst start; committed as part of this burst's atomic commit).
+
+**Dim-2 Attestation:** No BC/VP/holdout/story count changed this burst (both F5 fix PRs are code-hardening only). `scripts/check-spec-counts.sh` and `scripts/check-bc-cumulative-counts.sh` are unaffected — no BC/VP file touched. DEC-namespace collision check: DEC-340 allocated (previous max DEC-339), no collision.
+
+**Dim-5 Attestation:** N/A — no binary/WASM artifact produced by this burst (`.factory/` bookkeeping only; PR #773/#774's `develop`-side changes were built and verified by their own CI runs, external to this burst).
+
+**Dim-6 Attestation:** N/A for this burst's own scope — `.factory/` bookkeeping only. `develop`-side source changes (`src/api/auth.rs`, `src/api/auth_windows_store.rs`, `src/cli/auth/{login,mod}.rs`, `src/cli/init.rs`, plus test/doc updates) were delivered and merged via PR #773 and PR #774 prior to this burst-log entry being written; this burst records both outcomes, it does not itself change source.
+
+**Dim-7 Attestation:** PR #773's CI: all checks green (fresh-context review confirmed no BLOCKING/WARNING findings; local test run of the new/changed tests passed). PR #774's CI: Clippy(ubuntu)/MSRV/Deny/Spec-Guards/Mutation/Secret-Scan/Signing-Guard/dependency-review all green at review time; Test(ubuntu/macos/windows)/Clippy(windows)/Coverage were still pending at review time but static-verified (green Clippy(ubuntu)+MSRV confirms the new code compiles) — `mergeable: MERGEABLE`, blocked only by pending required checks, not a conflict; merged once those checks completed green (full suite 4920/0 reported by the implementer's local run, corroborated by the reviewer's compile-time analysis).
+
+**Adversary verdict:** Round 1 (1 `adversary` pass, `develop` @ `e5a18fe0`): 0 CRIT/HIGH/MED, 3 actionable LOW findings (LOW-1/LOW-2/LOW-3), all fixed via PR #773 and confirmed CLEAN on fresh-context `pr-reviewer` re-review (3 NITs only). Round 2 (2 `adversary` passes + 1 cross-model `code-reviewer` secondary, `develop` @ `f3863f07`): 0 CRIT/HIGH/MED across all three independently, several corroborated actionable LOWs, all fixed via PR #774 per the human's fix-everything-actionable decision and confirmed CLEAN on fresh-context `pr-reviewer` re-review (2 NITs only). **Net convergence verdict: F5 IS NOW CONVERGED (DEC-340)** — 3 fresh adversary passes + 1 cross-model secondary, 0 CRIT/HIGH/MED throughout, novelty decayed to LOW, all actionable findings resolved in-cycle.
+
+**Codifications:** **DEC-340** — the F5 scoped-adversarial-review convergence verdict, recorded with its trajectory (3 LOWs → several corroborated LOWs → 0) and both fix-PR SHAs. This is the first new DEC since DEC-339 (F4 COMPLETE).
+
+**Closes:** the F5 scoped-adversarial-review phase for cycle-004 in its entirety (2 review rounds, 2 fix PRs, both merged clean); the 3 Round-1 LOW findings (LOW-1 legacy-None orphan-clear, LOW-2 guard normalization, LOW-3 `atomic_write` fsync); the Round-2 corroborated LOWs (`cloud_id` validation, `fetch_cloud_id` whitespace/body-cap, `clear_profile_api_token_pair` attempt-all, stale doc comments, `init` double-fetch). **Does NOT close:** cycle-004 itself — F6 (targeted hardening) and F7 (delta convergence, incl. the REQUIRED manual Windows-11 smoke gate) remain ahead; the pre-existing carried-forward non-blocking items (BC-1.4.035-PC5-VP-GAP, S-410-KEYCHAIN-ISOLATION-FILE-OVERLAP, TD-031-BLOCKED-BC-6.2.016-CROSSREF, W2-INT-PROCESS-GAP-README-PROSE-DRIFT) remain open, untouched by this burst; no cycle-001/002/003 standing Drift/Standing items are touched.

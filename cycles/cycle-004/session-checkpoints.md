@@ -192,3 +192,43 @@ traces_to: STATE.md
 ```
 
 ---
+
+## Checkpoint v3.69 — cycle-004 F4→F5 transition (SUPERSEDED by v3.70, Burst 18)
+
+### Artifact Versions At Archival
+
+| Artifact | Version |
+|----------|---------|
+| STATE.md | 3.69 |
+| total_bcs | 742 |
+| VP count | 55 |
+| holdout scenarios | 106 |
+| total_stories | 172 (unchanged this burst) |
+
+### State
+
+| Field | Value |
+|-------|-------|
+| **Date** | 2026-09-05 |
+| **Position** | cycle-004 (`windows-correctness`), **Phase F5 (scoped adversarial review), IN PROGRESS — NOT YET DISPATCHED.** F4 (delta implementation) is COMPLETE (DEC-339): all 4 stories merged (PR #768 @ `9119b291`, PR #769 @ `c2074247`, PR #770 @ `abb283e8`, PR #771 @ `281ba272`); both wave integration gates PASSED; Wave 2's 3 README findings fixed via PR #772 @ `e5a18fe0` (current `develop` tip). cycle-001, cycle-002, and cycle-003 remain CLOSED, historical, unaltered by that burst. |
+| **Convergence counter** | cycle-004 F2 convergence CLOSED at DEC-336. F3 review convergence COMPLETE, gate APPROVED (DEC-337). All 4 stories individually 3-clean adversarially/consistency converged and merged. F4-phase-level outcome: both wave integration gates PASSED (Wave 1 CLEAN; Wave 2 CLEAN-of-emergent, with 3 non-emergent README findings fixed in-cycle). No F5-phase-level convergence loop was active yet at this checkpoint — F5 scoped adversarial review had not been dispatched. |
+| **In-flight work** | NONE running at archival time. No live sub-agents. No open cycle-004 PRs. |
+| **Next step (as recorded)** | Dispatch F5 scoped adversarial review — fresh-context adversary review scoped to the full cycle-004 delta, different model family from the implementer. |
+
+### Resume Prompt (as recorded at v3.69)
+
+```
+**Date:** 2026-09-05. **Position:** cycle-004 (`windows-correctness`), **Phase F5 (scoped adversarial review), IN PROGRESS — NOT YET DISPATCHED.** F4 (delta implementation) is COMPLETE (DEC-339): all 4 stories merged (PR #768 @ `9119b291`, PR #769 @ `c2074247`, PR #770 @ `abb283e8`, PR #771 @ `281ba272`); both wave integration gates PASSED; Wave 2's 3 README findings fixed via PR #772 @ `e5a18fe0` (current `develop` tip). cycle-001, cycle-002, and cycle-003 remain CLOSED, historical, unaltered by this burst.
+
+**What changed this burst (Burst 17):** (1) PR #771 review resumed + concluded + merged @ `281ba272` — 2 BLOCKING + NB-1/NB-2 found and fixed; fix-delta re-review found 1 LOW NEW-1, fixed; confirmation CLEAN, 15/15 CI green. (2) F4 Wave 2 integration gate PASSED — combined diff `c2074247..281ba272` CLEAN of emergent cross-story defects; surfaced 3 non-emergent README findings + 1 process-gap. (3) PR #772 (`FIX-W2-INT-README`, docs-only) delivered + merged @ `e5a18fe0` — fixed all 3 README findings per human decision to resolve in-cycle now; pr-reviewer CLEAN. (4) F4-DELTA-IMPLEMENTATION declared COMPLETE (DEC-339) — all 4 stories merged, both wave gates PASSED, Wave 2 findings resolved. `PR-771-REVIEW-HALTED` CLOSED. (5) STATE.md transitioned `phase: F4→F5`, `pipeline: PAUSED→ACTIVE`; version v3.68→v3.69 in one atomic Write.
+
+**NEXT ACTION on resume (exact, in order):** (1) Dispatch F5 scoped adversarial review — fresh-context adversary review scoped to the full cycle-004 delta (all 4 stories' merged code on `develop`, `c2074247..e5a18fe0` plus the two Wave-1 PRs' already-merged content), different model family from the implementer per feature-mode F5 convention. (2) Drive the F5 convergence loop toward 3 consecutive clean passes (or a human decision to gate earlier). (3) F6 targeted hardening. (4) F7 delta convergence, including the REQUIRED manual Windows-11 smoke gate + the final human F7 gate. (5) Release on human authorization.
+
+**Counts:** total_bcs 742; VP count 55; holdout scenarios 106; total_stories 172 (all unchanged this burst).
+
+**EXACT RESUME COMMAND:** `/vsdd-factory:next-step` (reads STATE.md, resumes by dispatching the F5 scoped adversarial review).
+
+**Superseded at (2026-09-05, Burst 18 — F5 scoped adversarial review CONVERGED via 2 fix rounds, DEC-340 recorded):** superseded in place by the F5→F6 transition checkpoint (v3.70). Round 1 (1 fresh adversary pass on `develop` @ `e5a18fe0`) found 0 CRIT/HIGH/MED with 3 actionable LOWs, fixed via PR #773 @ `f3863f07`, re-review CLEAN. Round 2 (2 adversary passes + 1 cross-model `code-reviewer` secondary on `develop` @ `f3863f07`) found 0 CRIT/HIGH/MED with several corroborated actionable LOWs; human decided to fix everything actionable; delivered via PR #774 @ `3b62cefa` (current `develop` tip), re-review CLEAN, full suite 4920/0. F5-SCOPED-ADVERSARIAL declared CONVERGED (DEC-340); phase advanced F5→F6, pipeline stayed ACTIVE.
+```
+
+---
