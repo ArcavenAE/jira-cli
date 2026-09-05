@@ -53,6 +53,54 @@ All notable changes to jr will be documented here.
   (never bare-clears it) on fetch failure. `Config::base_url()`'s existing
   `auth_method == "oauth"` gateway guard is unchanged — core Jira REST v3
   requests remain unaffected either way.
+- **Windows: accurate error messages when the DPAPI-encrypted-file fallback
+  itself fails** (S-cycle4-honest-fail-message, ADR-0021 §6, BC-1.4.039,
+  issue #759). The fast-follow promised by S-cycle4-dpapi-storage-fix above:
+  when BOTH Windows Credential Manager AND the DPAPI fallback fail to store
+  an oversized OAuth token, `jr auth login --oauth` and the internal OAuth
+  refresh path no longer report the misleading "Unlock your keychain"
+  message — they now name the 2560-byte Credential Manager limit and the
+  fallback failure detail, and instruct the user to check disk space/file
+  permissions and re-authenticate. The two sites' messages are intentionally
+  distinct: `jr auth login`'s message recommends jr's own scoped cleanup
+  (`jr auth logout --profile <profile>` / `jr auth remove <profile>`) as the
+  default remediation (`jr auth remove <profile>` applies once the profile
+  is no longer the active/default profile — `jr auth remove` refuses to
+  delete either, and a brand-new profile is always both), and presents
+  revoking jr's Atlassian OAuth grant at
+  `https://id.atlassian.com/manage-profile/apps` as an OPTIONAL extra step
+  carrying an explicit warning that it is ACCOUNT-WIDE — jr uses one shared
+  embedded OAuth app, so revoking the grant signs out every `jr` profile on
+  that Atlassian account, not just this one (DEC-334; corrected 2026-09-05
+  after Perplexity-validated research showed the original "safe cleanup, no
+  other consumer" framing was false and harmful — see
+  `.factory/research/atlassian-3lo-revoke-granularity-2026-09-05.md`). This
+  same scoped-cleanup-default / optional-account-wide-warned-revoke
+  correction ALSO replaces the final sentence of `jr auth login`'s
+  pre-existing GENERIC "Unlock your keychain" message (any ordinary keyring
+  failure, e.g. a locked keychain) — that message is reachable on EVERY
+  platform, not just Windows, so this text correction is NOT limited to the
+  DPAPI-fallback failure mode described below (PR #771 review Finding B-2).
+  `jr auth login` also now records the target profile's `auth_method`
+  BEFORE attempting the login flow (previously only after it succeeded)
+  whenever the profile has no `auth_method` on record yet, so `jr auth
+  logout` — the message's default recommended cleanup command — correctly
+  recognizes and clears a brand-new profile's OAuth state instead of
+  misreporting "This profile uses API-token auth — nothing to log out",
+  even when the login fails at the credential-store step described below
+  (PR #771 review Finding B-1); a mechanism SWITCH away from an existing,
+  working `auth_method` is unaffected and still records the new mechanism
+  only after a successful login. The internal refresh path's message omits
+  any grant-revoke instruction entirely (the grant may still back other
+  active sessions for the profile) and proactively clears the profile's
+  now-stale stored OAuth pair so the
+  next command sees a clean "no stored OAuth token" state instead of a
+  confusing `invalid_grant`. An invalid profile name (rejected by the
+  DPAPI-fallback's path-traversal guard) continues to render as its own
+  distinct, actionable error at both sites. The Windows DPAPI-fallback
+  failure MODE itself (both message sites' distinct honest-fail text) is
+  unreachable on macOS/Linux by construction; the generic keychain-failure
+  message correction described above is NOT platform-limited.
 
 ## [0.7.0-dev.4] - 2026-09-03
 
