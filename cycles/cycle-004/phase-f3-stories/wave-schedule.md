@@ -14,7 +14,7 @@ inputs:
   - ".factory/cycles/cycle-004/phase-f3-stories/conflict-report.md"
   - ".factory/cycles/cycle-004/phase-f3-stories/decomposition-manifest.md"
 traces_to: "dependency-graph-extended.md §4a; DEC-335"
-input-hash: "ae9fd49"
+input-hash: "9dee440"
 ---
 
 # F3 Wave Schedule — `windows-correctness` (cycle-004)

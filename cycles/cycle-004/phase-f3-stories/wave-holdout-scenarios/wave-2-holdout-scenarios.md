@@ -13,7 +13,7 @@ inputs:
   - ".factory/cycles/cycle-004/phase-f3-stories/wave-schedule.md"
   - ".factory/cycles/cycle-004/phase-f3-stories/wave-holdout-scenarios/wave-1-holdout-scenarios.md"
 traces_to: "BC-1.4.039"
-input-hash: "fb4c7e5"
+input-hash: "9cad8bd"
 ---
 
 # Wave 2 Holdout Scenarios — `S-cycle4-honest-fail-message` + `S-cycle4-windows-docs`

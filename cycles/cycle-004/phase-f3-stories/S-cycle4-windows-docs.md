@@ -24,7 +24,7 @@ inputs:
   - ".factory/cycles/cycle-004/phase-f3-stories/S-cycle4-cloud-id-correctness.md"
   - "README.md"
   - "CLAUDE.md"
-input-hash: "4dd740b"
+input-hash: "2d2dcdc"
 traces_to: ".factory/cycles/cycle-004/phase-f1-delta-analysis/delta-analysis.md"
 cycle: cycle-004-windows-correctness
 estimated_effort: small

@@ -14,7 +14,7 @@ inputs:
   - ".factory/cycles/cycle-004/phase-f3-stories/decomposition-manifest.md"
   - ".factory/stories/STORY-INDEX.md"
 traces_to: "decomposition-manifest.md §6; ADR-0021; ADR-0022"
-input-hash: "56c22cf"
+input-hash: "e5f2fc4"
 ---
 
 # F3 Extended Dependency Graph — `windows-correctness` (cycle-004)

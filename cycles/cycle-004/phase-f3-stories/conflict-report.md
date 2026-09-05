@@ -19,7 +19,7 @@ inputs:
   - "CLAUDE.md"
   - "src/api/auth.rs"
 traces_to: "decomposition-manifest.md §6"
-input-hash: "6c8fb56"
+input-hash: "5559da2"
 ---
 
 # F3 Conflict Report — `windows-correctness` (cycle-004)

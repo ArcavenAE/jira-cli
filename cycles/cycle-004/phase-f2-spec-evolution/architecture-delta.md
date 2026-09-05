@@ -26,7 +26,7 @@ inputs:
   - "Cargo.toml"
   - "Cargo.lock"
   - "deny.toml"
-input-hash: "8f572bf"
+input-hash: "4ba2321"
 ---
 
 # Architecture Delta — Windows Correctness (`windows-correctness`, cycle-004)
