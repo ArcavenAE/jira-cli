@@ -4,6 +4,26 @@ All notable changes to jr will be documented here.
 
 ## [Unreleased]
 
+### Fixed
+
+- **Windows: `jr auth login --oauth` no longer fails deterministically on
+  oversized OAuth tokens** (S-cycle4-dpapi-storage-fix, ADR-0021, issue
+  #759). `store_oauth_tokens` writes to the system keyring first,
+  unconditionally, on every platform; on Windows, when a token exceeds
+  Windows Credential Manager's ~2560-byte blob-size ceiling
+  (`keyring::Error::TooLong`), the whole access/refresh pair now falls back
+  to a new, user-scope DPAPI-encrypted file under
+  `%LOCALAPPDATA%\jr\secrets\<profile>\` instead of failing the login
+  outright. The existing keyring pair (if any) is deleted before the DPAPI
+  file is written, so a process kill mid-fallback never leaves both
+  backends holding a copy of the pair. `load_oauth_tokens` and
+  `auth remove`/`auth logout` gain matching read and delete-both-backends
+  branches, and a host-independent profile-name guard rejects path-traversal
+  and reserved-device-name vectors before any file is touched. macOS/Linux
+  behavior is unchanged. (Message-text differentiation for the two new
+  failure modes — DPAPI-fallback failure and rejected profile names — ships
+  separately in a fast-follow story.)
+
 ## [0.7.0-dev.4] - 2026-09-03
 
 ### Added
