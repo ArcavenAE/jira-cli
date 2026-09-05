@@ -25,7 +25,7 @@ inputs:
   - ".factory/cycles/cycle-004/phase-f2-spec-evolution/vp-delta.md"
   - ".factory/cycles/cycle-004/phase-f1-delta-analysis/delta-analysis.md"
   - ".factory/cycles/cycle-004/phase-f1-delta-analysis/affected-files.txt"
-input-hash: "322bbf1"
+input-hash: "861e503"
 traces_to: ".factory/specs/prd/bc-1-auth-identity.md"
 cycle: cycle-004-windows-correctness
 estimated_effort: large

@@ -755,18 +755,87 @@ The four existing "Unlock your keychain" message sites in `src/api/auth.rs` (F1 
     `reject_unsafe_profile_component` inside `store_pair`'s guard call; it is included for
     completeness and symmetry with the read path, not because it is expected to fire often in
     practice.
-  - **`DpapiFallbackFailed` `Some(_)` → new honest-fail message** (only reached if
-    `ProfilePathEscape` did not match): `"Authorization succeeded with Atlassian, but the
-    OAuth tokens were too large for Windows Credential Manager's 2560-byte limit AND jr's
-    encrypted-file fallback also failed ({inner}). Check available disk space and file
-    permissions, then run \"jr auth login --oauth --profile {profile}\" again. You must first
-    revoke the now-unused Atlassian grant: visit
-    https://id.atlassian.com/manage-profile/apps."` — the revoke step is stated as a required
-    action, not an aside, per DEC-334.
-  - **Neither marker matched → unchanged existing "Unlock your keychain…" message** (still
-    accurate: every error that reaches this branch with neither a `ProfilePathEscape` nor a
-    `DpapiFallbackFailed` marker is a genuine lock/permission condition on the small-secret
-    keyring path, or a non-Windows backend error where DPAPI was never engaged at all).
+
+**F4 adversarial-review correction (2026-09-05, story `S-cycle4-honest-fail-message`) — the
+Site-1 "safe cleanup / no other consumer" premise below was FALSE, and the resulting advice is
+HARMFUL.** The Site-1 message this ADR originally specified (and the pre-existing legacy message
+at the same call site — see the dedicated note after the message bullet below) told the user that
+revoking the Atlassian grant at `https://id.atlassian.com/manage-profile/apps` was safe, required
+cleanup because "this specific grant was created by the SAME failed attempt … and has no other
+consumer." That premise does not hold for `jr`. Perplexity-validated against Atlassian's own
+primary documentation (`.factory/research/atlassian-3lo-revoke-granularity-2026-09-05.md`,
+verdict CONFIRMED, 2026-09-05): **Atlassian keeps exactly ONE grant per (OAuth app `client_id`,
+Atlassian account)** — "Only one grant exists per app for a given Atlassian account. If a user
+grants access to more than one Atlassian site for this app, then the additional sites are added
+to the same grant." (Atlassian OAuth 2.0 FAQ,
+https://developer.atlassian.com/cloud/oauth/getting-started/faq/) — and revoking that grant is
+account-wide, not attempt-scoped: "The app cannot work anywhere after a user has revoked their
+consent to the app." (OAuth 2.0 (3LO) apps — Jira Cloud platform,
+https://developer.atlassian.com/cloud/jira/platform/oauth-2-3lo-apps/). `jr` uses ONE embedded
+OAuth app (ADR-0006) shared across every profile, so a user with more than one profile
+authenticated under the same Atlassian account has exactly one grant backing ALL of them —
+revoking it at `manage-profile/apps` signs every one of those profiles out, not only the profile
+whose login or refresh just failed. There is no per-profile, per-session, or per-site revoke
+granularity on that page (research doc §"Verdict"). Instructing the revoke as a REQUIRED, "safe"
+cleanup step was therefore both an overstatement (it is never required) and potentially
+destructive advice (it silently breaks every other working `jr` profile under that account).
+
+**Corrected default: `jr`'s own scoped cleanup, not the Atlassian-wide revoke.** The Site-1
+message's remediation now leads with `jr`'s own credential-clearing commands —
+`jr auth logout --profile {profile}` or `jr auth remove --profile {profile}` — which clear only
+that profile's locally stored tokens (CLAUDE.md's `SEC-WCM-DOC` note; the per-profile keychain-key
+namespacing described there) and have no effect on any other profile or on the Atlassian-side
+grant itself. The `manage-profile/apps` revoke is demoted from a required step to an OPTIONAL
+one, offered only for a user who deliberately wants to sever the `jr` app from their Atlassian
+account entirely, carrying an explicit warning that doing so is account-wide and will sign out
+EVERY `jr` profile authenticated under that same Atlassian account (each then needing
+`jr auth login` again). This mirrors the research doc's recommendation verbatim (§"Recommendation
+for the jr error message").
+
+  - **`DpapiFallbackFailed` `Some(_)` → honest-fail message, Site 1 (login) wording, corrected
+    2026-09-05** (only reached if `ProfilePathEscape` did not match): `"Authorization succeeded
+    with Atlassian, but the OAuth tokens were too large for Windows Credential Manager's
+    2560-byte limit AND jr's encrypted-file fallback also failed ({inner}). Run \"jr auth logout
+    --profile {profile}\" (or \"jr auth remove --profile {profile}\" to also forget the profile)
+    to clear jr's local copy of this failed login, then run \"jr auth login --oauth --profile
+    {profile}\" again. Optional: to also revoke jr's access at the Atlassian account level,
+    visit https://id.atlassian.com/manage-profile/apps — this is ACCOUNT-WIDE and will sign out
+    every jr profile authenticated under the same Atlassian account, not just this one."` — the
+    revoke step is now presented as optional and scoped-warned, per the correction above, and
+    supersedes both the retired wording and the DEC-334 reasoning it was originally justified
+    under (see the dated DEC-334 annotation below).
+
+    **Site 3 (refresh) is unaffected by, and already consistent with, this correction.** Per
+    BC-1.4.039 Postcondition 1 (Pass-2 adversarial review Finding #3), Site 3's honest-fail
+    message never instructed any grant revoke in the first place — the "Site 1 … and Site 3 …"
+    grouping above describes only the shared `ProfilePathEscape`-then-`DpapiFallbackFailed`
+    DISPATCH ORDER the two sites share, not a shared message template. **BC-1.4.039 is the
+    authoritative source for the exact, site-differentiated message text** actually shipped (Site
+    1 and Site 3 read materially differently there — see BC-1.4.039 Postcondition 1). The
+    product-owner is amending BC-1.4.039's Site-1 canonical string in parallel with this ADR
+    correction, to the same effect: remove the "no other consumer / safe cleanup" premise and
+    apply the default-scoped-cleanup / optional-account-wide-revoke shape above. Treat BC-1.4.039
+    (as amended) as the source of truth for the literal string F4 implements, and this subsection
+    as the source of truth for the RATIONALE that string must satisfy.
+  - **Neither marker matched → the existing "Unlock your keychain…" message — ALSO IN SCOPE for
+    this same correction, not merely "unchanged."** This is the PRE-EXISTING, legacy message this
+    ADR predates: today, `oauth_login`'s store-failure `map_err` (`src/api/auth.rs`, as of this
+    writing ~line 1547) renders, for EVERY store failure at this site regardless of cause,
+    `"Authorization succeeded with Atlassian, but jr could not save the OAuth tokens to the
+    system keychain ({e:#}). Unlock your keychain (or grant access to jr) and run \"jr auth login
+    --oauth --profile {profile}\" again. To fully revoke the active grant first, visit
+    https://id.atlassian.com/manage-profile/apps."` — it carries the identical false "revoke
+    first" framing this section corrects above, unconditionally, for every genuine lock/permission
+    failure that reaches this branch (i.e., every case that is NOT a `ProfilePathEscape` or a
+    `DpapiFallbackFailed`). This text is CONFIRMED still accurate for the "Unlock your keychain
+    (or grant access to jr)" half — a genuine lock/permission condition on the small-secret
+    keyring path, or a non-Windows backend error where DPAPI was never engaged at all — but the
+    trailing "To fully revoke the active grant first" clause is exactly as false and harmful here
+    as it was in the `DpapiFallbackFailed` branch, for the identical account-wide-grant reason.
+    F4's `honest-fail-message` story MUST reword this branch's revoke clause to the same
+    default-scoped-cleanup / optional-account-wide-warning shape as the `DpapiFallbackFailed`
+    message above (not merely leave it as "unchanged" prior wording) — BC-1.4.039 (as amended) is
+    again the authoritative source for the exact resulting string.
 - **Site 2 (`refresh_oauth_token_with_url`'s `load_oauth_tokens` read-failure branch):** no
   message-text change — this site becomes DPAPI-aware automatically because it calls the
   corrected `load_oauth_tokens` (§4), which now itself distinguishes a genuine backend error
@@ -776,12 +845,25 @@ The four existing "Unlock your keychain" message sites in `src/api/auth.rs` (F1 
   **unchanged.** This guards the OAuth *app's* client_id/client_secret pair — always short
   strings, never `TooLong`-reachable. F4 must audit (not modify) this to confirm.
 
+**Correction to DEC-334's reasoning (dated annotation, 2026-09-05 — DEC-334's history in
+`.factory/STATE.md`'s Decisions Log is retained, not edited or deleted).** DEC-334 authorized, as
+part of the locked #759 fix strategy, an "honest-fail backstop" with "explicit grant-revoke." At
+the time DEC-334 was recorded, the grant-revoke was reasoned to be safe, required cleanup on the
+"same failed attempt, no other consumer" premise this subsection now corrects (2026-09-05,
+research-validated, above). **DEC-334's underlying decision to ship an honest-fail backstop at
+all is UNCHANGED and remains correct** — only its specific premise that the grant-revoke step is
+safe and mandatory is superseded. This annotation does not retroactively rewrite the Decisions
+Log entry itself; it records, at the point in this ADR where DEC-334 was previously cited as sole
+authority for the revoke-as-required wording, that the wording it authorized has since been
+corrected for the reason stated above, and cross-references BC-1.4.039 (also being amended in
+parallel) as the other artifact carrying the same now-corrected premise.
+
 **Message accuracy is now structural, not incidental (ties back to Finding #5, §1).** Because
 `engage_dpapi_fallback` gates DPAPI engagement to `#[cfg(windows)]` at the call site,
 `DpapiFallbackFailed` can never be produced by `store_oauth_tokens` on a non-Windows build — the
 `Some(_)` branch above is therefore unreachable on macOS/Linux by construction, not merely
-"unlikely." The Windows-specific wording in that branch's message is safe to keep exactly as
-written.
+"unlikely." The Windows-specific wording in that branch's message (as corrected above) is safe to
+keep on that basis.
 
 ### 7. Delete/clear paths clean up the DPAPI file too
 

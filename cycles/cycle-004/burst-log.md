@@ -828,3 +828,110 @@ BCs: unchanged at **742**. VPs: unchanged at **55**. Holdout scenarios: unchange
 **Dim-6 Attestation:** N/A — no source code changed this burst (`.factory/` bookkeeping only, no `develop`-side commit; F4 implementation dispatch has not yet started).
 
 **Dim-7 Attestation:** N/A — no test-affecting change this burst; full regression remains PASS (4763/0/157) as of the cycle-003 F6/F7 hardening/convergence passes, unchanged.
+
+## Burst: Burst 15 — F4 Wave 1 DELIVERED + MERGED (DEC-338) — integration gate PASSED, Wave 2 unblocked (2026-09-05)
+
+**Parent-commit:** `c2074247` (`develop` tip; advanced this burst from `42e92b46` via two squash-merges, PR #768 then PR #769).
+
+**Trigger:** F4 Wave 1 per-story TDD delivery of `S-cycle4-dpapi-storage-fix` and `S-cycle4-cloud-id-correctness` (parallel, file-disjoint, both `depends_on:[]`) ran to completion and merge this burst. Both PRs were squash-merged autonomously per the standing DEC-330/DEC-331 auto-merge policy (CI green + reviewer merge-recommendation + no unaddressed HIGH/MED), with the human's explicit authorization of the push/PR/merge flow this session.
+
+**Work performed this burst:**
+
+1. **`S-cycle4-dpapi-storage-fix` (P0, #759) DELIVERED + MERGED** — PR #768 squash-merged to `develop` @ `9119b291`. 3-clean adversarial convergence; security-reviewer MERGE-CLEAR; pr-reviewer APPROVE; full suite 4839/0/163 + keyring-gated 88/88 green on real macOS keychain. **F4 CI SPIKE SUCCEEDED:** the windows-latest CI leg executed and passed `test_dpapi_protect_unprotect_real_round_trip` + `test_dpapi_protect_flags_never_set_local_machine_bit` — headless GitHub Actions CAN exercise `CryptProtectData` end-to-end; **VP-AUTHDX-010(b) is now CI-verified** (resolves the prior M1/BC-1.4.035-PC5-adjacent Windows-verification residual). The windows-latest run also caught 2 real defects pre-merge (`clippy::unnecessary_mut_passed` + a fixture missing `#[cfg(not(windows))]`), both fixed before merge.
+2. **`S-cycle4-cloud-id-correctness` (P1, closes A-PA-LOW-001) DELIVERED + MERGED** — PR #769 squash-merged to `develop` @ `c2074247` (current `develop` tip). Rebased onto #768; keep-both resolution on `CHANGELOG.md` + `CLAUDE.md` (RESOLVES the `CHANGELOG-PARALLEL-EDIT-HOTSPOT` item carried from Burst 12). 3-clean convergence; security-reviewer clear; pr-reviewer APPROVE; full 3-OS CI matrix green on the integrated tree.
+3. **`develop` fast-forwarded** `42e92b46` → `c2074247`; both `feat/cycle4-dpapi-storage-fix` and `feat/cycle4-cloud-id-correctness` worktrees + local branches removed post-merge (`.worktrees/` confirmed empty of Wave-1 entries — note: Wave-2 worktrees `feat/cycle4-honest-fail-message`/`feat/cycle4-windows-docs` were observed already pre-provisioned at `develop` tip with zero commits, i.e. scaffolding ahead of dispatch, not in-flight work).
+4. **F4 Wave 1 integration gate PASSED** — combined-wave adversary review CLEAN (no CRIT/HIGH/MED emergent integration defects; the two stories are file-disjoint with mutually-exclusive auth branches); regression satisfied by PR #769's 3-OS CI matrix on the integrated tree; demo-of-integration SKIPPED (backend/Windows, justified — Skip Log).
+5. **DEC-338 recorded**, **Skip Log** gained "Demo recording (cycle-004, Wave 1)" (backend/Windows justification, consistent with cycle-002/003 precedent), **`STORY-INDEX.md` updated** (v1.6.13→v1.6.14; both Wave-1 rows draft→**done** with PR/merge-SHA citations; both Wave-2 rows draft→**ready**, their `depends_on` edges now satisfied), **`STATE.md` transitioned** (v3.66→v3.67; `activation_head`: `42e92b46`→`c2074247`; phase stays F4, pipeline stays ACTIVE). Carried-forward items updated: BC-1.4.035-PC5-VP-GAP note UPDATED (production round-trip now CI-verified; formal VP still deferred); new LOW item **SEC-WCM-DOC-DPAPI-GAP** recorded (CLAUDE.md's SEC-WCM-DOC note doesn't yet mention the DPAPI-file fallback — candidate for the Wave-2 `windows-docs` story or a future doc touch); `init.rs` double `cloud_id` writer (LOW, benign) and 2 non-blocking pr-review nits each from #768/#769 carried forward; **REQUIRED F7 manual Windows-11 smoke gate** remains outstanding, unaddressed by CI, carried to F7.
+
+**Adversary verdict:** Wave-1 combined-integration review CLEAN (0 CRIT/HIGH/MED). Both stories individually reached 3-clean per-story adversarial convergence during delivery (detail in each story's `code-delivery/S-cycle4-*/pr-review.md`).
+
+**Outcome:** cycle-004 (`windows-correctness`) Phase F4 **Wave 1 COMPLETE** — both stories merged, integration gate PASSED. Wave 2 (`S-cycle4-honest-fail-message` + `S-cycle4-windows-docs`) is now **UNBLOCKED** (both `depends_on` edges satisfied) — dispatch is the next action, not performed this burst. `develop` @ `c2074247`. Counts unchanged: 742 BCs / 55 VPs / 106 holdout / 172 stories (status flips only, no new rows).
+
+**Codifications:** **DEC-338** — cycle-004 F4 Wave-1 delivered + integration gate PASSED; both stories merged; F4 CI spike SUCCEEDED; demo recording SKIPPED for both, justified.
+
+**Closes:** F4 Wave 1 (dispatch → delivery → merge → integration gate, all complete); the `CHANGELOG-PARALLEL-EDIT-HOTSPOT` carried item (resolved via keep-both on PR #769); the REQUIRED F4 CI spike (SUCCEEDED). **Does NOT close:** F4 itself (Wave 2 dispatch is the next action, not performed this burst); the REQUIRED F7 manual Windows-11 smoke gate (occurs at F7, unaffected by CI); any cycle-001/002/003 standing Drift/Standing items (untouched).
+
+### Counts reconciled this burst
+
+BCs: unchanged at **742**. VPs: unchanged at **55**. Holdout scenarios: unchanged at 106. `total_stories`: unchanged at **172** (status flips only — 2× draft→done, 2× draft→ready — no rows added or removed).
+
+### Details
+
+| Agent | Task | Output |
+|-------|------|--------|
+| state-manager | Record DEC-338; flip 4 `S-cycle4-*` story statuses in `STORY-INDEX.md` (no count change); transition STATE.md F4 Wave-1-pending→Wave-1-complete (v3.66→v3.67); record Wave-1 carried-forward item updates (BC-1.4.035-PC5-VP-GAP, new SEC-WCM-DOC-DPAPI-GAP); add Skip Log entry; commit all `.factory/` changes in one atomic burst | Updated `STATE.md` (v3.67, `activation_head: c2074247`); updated `STORY-INDEX.md` (v1.6.14, 2 rows done + 2 rows ready); updated `cycles/cycle-004/session-checkpoints.md` (archives v3.66); this burst-log entry |
+
+**Files touched (Dim-1): 4 unique files (factory-artifacts, this burst)**
+
+- STATE.md
+- .factory/stories/STORY-INDEX.md
+- cycles/cycle-004/burst-log.md
+- cycles/cycle-004/session-checkpoints.md
+
+**Dim-2 Attestation:** No BC/VP/holdout content edited this burst (status-field flips only on `STORY-INDEX.md`, outside `check-spec-counts.sh`/`check-bc-cumulative-counts.sh`'s count-surface scope — both scripts remain clean, no re-run required by their own coverage rules). DEC-namespace collision check: DEC-338 is the next sequential ID after DEC-337, no collision. `validate-count-propagation` hook flagged a naive substring match ("172 stories" vs. legacy "168 stories"/"10 BCs" prose retained in STATE.md's own historical Burst-14 narrative, e.g. the `168→172` delta phrasing) — verified false-positive: `total_stories: 172` and `total_bcs: 742` are the sole current-count frontmatter values in both files and agree; the flagged strings are historical delta prose, not competing current-count claims.
+
+**Dim-5 Attestation:** N/A — no binary/WASM artifact produced by this burst (`.factory/` bookkeeping only; the `develop`-side binary changes were produced and verified by PR #768/#769's own CI runs, external to this burst).
+
+**Dim-6 Attestation:** N/A for this burst's own scope — `.factory/` bookkeeping only. `develop`-side source changes (2 stories, `src/api/auth_windows_store.rs` + `src/api/jira/tenant.rs`) were delivered and merged via PR #768/#769 prior to this burst; this burst records that outcome, it does not itself change source.
+
+**Dim-7 Attestation:** Full regression PASS 4839/0/163 (keyring-gated 88/88 additionally green on real macOS keychain) as of PR #768's merge; PR #769's 3-OS CI matrix green on the integrated tree at `c2074247` — both superseding the prior cycle-003 baseline (4763/0/157).
+
+## Burst: Burst 16 — F4 Wave 2 PARTIAL DELIVERY (windows-docs merged, honest-fail-message PR open+converged) — SESSION WRAP, reviews halted (2026-09-05)
+
+**Parent-commit:** `abb283e8` (`develop` tip; advanced this burst from `c2074247` via one squash-merge, PR #770). PR #771 (`feat/cycle4-honest-fail-message`, head `b2a0c5d707a9daa8543f32acba6e718bcec77907`) remains OPEN against `abb283e8`, not merged.
+
+**Trigger:** F4 Wave 2 per-story TDD delivery of `S-cycle4-honest-fail-message` and `S-cycle4-windows-docs` (both unblocked at the end of Burst 15) proceeded this burst. `S-cycle4-windows-docs` ran to completion and merge. `S-cycle4-honest-fail-message` reached adversarial convergence (3 clean passes, including a DEC-334 correction to its own F1 revoke-advice framing) and its PR (#771) was opened, but the human called `/wrap` while pr-reviewer and security-reviewer were still in progress on it — both were halted mid-review rather than force-completed.
+
+**Work performed this burst:**
+
+1. **`S-cycle4-windows-docs` (#760, doc-only) DELIVERED + MERGED** — PR #770 squash-merged to `develop` @ `abb283e8` (current `develop` tip). Consistency-validated CONSISTENT; pr-reviewer APPROVE. Also corrected the SEC-WCM-DOC CLAUDE.md note to mention the DPAPI fallback (closes the `SEC-WCM-DOC-DPAPI-GAP` LOW item carried from Burst 15).
+2. **`S-cycle4-honest-fail-message` (P0, #759 backstop) CONVERGED, PR OPEN, NOT MERGED** — 3 clean adversarial passes on `feat/cycle4-honest-fail-message` (rebased onto `abb283e8`, keep-both `CHANGELOG.md` resolution). **F1 correction recorded as a DEC-334 amendment (not a fresh DEC, since it corrects DEC-334's own bundled scope, not a new gate decision):** adversarial review found CONFIRMED-harmful advice in BC-1.4.039's honest-fail message — the Site-1 text instructed users to revoke `jr`'s OAuth grant at manage-profile/apps, framed as safe cleanup ("no other consumer"). Perplexity-validated research (`research/atlassian-3lo-revoke-granularity-2026-09-05.md`, CONFIRMED against Atlassian primary docs) established that revoke is ACCOUNT-WIDE — it signs out every `jr` profile authenticated under that Atlassian account, not just the one profile that hit the store failure. Fixed: BC-1.4.039 + ADR-0021 §6 amended to a scoped-cleanup-default (`jr auth logout --profile`/`jr auth remove`) with the account-wide revoke demoted to an explicitly-warned OPTIONAL step; story ACs AC-002/AC-004 amended to match; a source-scan regression guard (`test_no_account_wide_harmful_revoke_framing_in_auth_source`) added to `src/api/auth.rs` so the harmful framing cannot silently regress. PR #771 opened; pr-reviewer-771-cycle1 and security-reviewer-771 both dispatched and made partial progress (a review write-up already exists at `code-delivery/S-cycle4-honest-fail-message/pr-review.md`), but **HALTED, not concluded**, when the human called `/wrap` — the recorded verdict there is provisional, not a completed gate; both must be RE-DISPATCHED fresh on resume before merge.
+3. **SESSION WRAP invoked by the human.** Pipeline transitions ACTIVE → **PAUSED**. `develop` remains at `abb283e8`; local `develop` is behind at `c2074247` (not fast-forwarded this burst — noted, not a durability concern since `origin/develop` @ `abb283e8` is authoritative).
+4. **`STORY-INDEX.md` reconciled** (v1.6.14, no new rows, no count change — status-field flips only): `S-cycle4-windows-docs` draft/ready → **done** (PR #770 @ `abb283e8`); `S-cycle4-honest-fail-message` draft/ready → **in-review** (PR #771 @ `b2a0c5d7`, open). The uncommitted status-table edits found at wrap time (which had stopped at a "both Wave-2 stories ready" snapshot, itself already stale — anticipating a Wave-1-only checkpoint that never became live) are corrected to this true state in the same pass.
+5. **`sprint-state.yaml` reconciled**: `wave_2_status` updated to reflect the split outcome (windows-docs complete, honest-fail-message in-review, reviews halted); a `wave_2:` block with both stories' full detail was ADDED (the pre-wrap uncommitted edit had a `wave_2_status` placeholder but no `wave_2.stories` block at all).
+6. **Input-hash bookkeeping**: `compute-input-hash --update` re-run for `S-cycle4-honest-fail-message.md` (content changed by the F1 AC amendment) and every cycle-004 artifact whose `inputs:` frontmatter cites the amended `bc-1-auth-identity.md` — `vp-delta.md`, `decomposition-manifest.md`, `delta-analysis.md`, `S-cycle4-dpapi-storage-fix.md`, `S-cycle4-cloud-id-correctness.md` — closing the drift the pre-existing dispatcher hook flagged for those six files. `dependency-graph-extended.md` (which cites the story file, not `bc-1` directly) was left as-is — out of this burst's narrow declared scope, and already tracked under the standing `F7-GATE-SYSTEMIC-INPUT-HASH-DRIFT-BOOKKEEPING` debt.
+7. **`STATE.md` transitioned** (v3.66 → v3.68 — see note below on the version jump) — `pipeline: ACTIVE → PAUSED`; Phase Progress F4 row updated with the full Wave-1 + Wave-2-partial delta; new Session Resume Checkpoint (v3.68) written; the v3.66 checkpoint's forward "superseded" reference (already archived to `session-checkpoints.md` ahead of this burst) corrected to describe the true wrap outcome rather than the narrower Wave-1-only state it originally anticipated.
+
+**Note on the STATE.md version jump (v3.66 → v3.68, skipping v3.67):** Burst 15's narrative (above) described a `v3.66→v3.67` STATE.md transition as part of Wave-1 completion, but that write was never actually committed to the live file — the STATE.md found on disk at the start of this burst was still, verbatim, the v3.66 content (Phase F4, Wave 1 dispatch PENDING), i.e. STATE.md had fallen behind both Burst 15's Wave-1 delivery and this burst's Wave-2 partial delivery. Rather than fabricate a v3.67 intermediate that was never live, this burst performs the one real, atomic v3.66→v3.68 jump per DEC-247 (ONE full-content Write), folding in the full Wave-1 + Wave-2-partial delta in a single step. No pipeline decision or artifact content was lost in the gap — Burst 15's narrative and `STORY-INDEX.md`/`sprint-state.yaml`'s Wave-1 detail were already accurate and are preserved verbatim by this reconciliation.
+
+**Outcome:** cycle-004 (`windows-correctness`) Phase F4 is **Wave 1 COMPLETE, Wave 2 PARTIALLY COMPLETE** (`S-cycle4-windows-docs` merged; `S-cycle4-honest-fail-message` converged but unmerged, PR #771 open). Pipeline **PAUSED** (human `/wrap`). `develop` (origin) @ `abb283e8`. Counts unchanged: 742 BCs (BC-1.4.039 amended, not added) / 55 VPs / 106 holdout / 172 stories.
+
+**Codifications:** No new DEC this burst — the F1 revoke-advice correction is recorded as an amendment note under DEC-334 (it corrects that decision's bundled scope's downstream messaging, not a fresh gate decision), and the SESSION WRAP itself is a pipeline-state transition, not a decision requiring its own DEC ID (consistent with Burst 13's precedent).
+
+**Closes:** `SEC-WCM-DOC-DPAPI-GAP` (via PR #770). **Does NOT close:** F4 Wave 2 (PR #771 review must be re-dispatched and concluded, then merged, then the Wave 2 integration gate run); F4 itself; the REQUIRED F7 manual Windows-11 smoke gate (occurs at F7); any cycle-001/002/003 standing Drift/Standing items (untouched).
+
+### Counts reconciled this burst
+
+BCs: unchanged at **742** (BC-1.4.039 amended in place, not a new BC). VPs: unchanged at **55**. Holdout scenarios: unchanged at 106. `total_stories`: unchanged at **172** (status flips only).
+
+### Details
+
+| Agent | Task | Output |
+|-------|------|--------|
+| state-manager | Reconcile `STORY-INDEX.md` + `sprint-state.yaml` to the true Wave-1/Wave-2 state; re-run `compute-input-hash --update` on the 6 drifted cycle-004 artifacts citing the amended `bc-1-auth-identity.md`; transition STATE.md ACTIVE→PAUSED with a fresh Session Resume Checkpoint (v3.66→v3.68); commit all pending cycle-004 `.factory/` artifacts in one atomic burst | Updated `STATE.md` (v3.68, `pipeline: PAUSED`); updated `STORY-INDEX.md` (2 rows flipped: windows-docs→done, honest-fail-message→in-review); updated `sprint-state.yaml` (wave_2 block added); updated `vp-delta.md`, `decomposition-manifest.md`, `delta-analysis.md`, `S-cycle4-dpapi-storage-fix.md`, `S-cycle4-cloud-id-correctness.md`, `S-cycle4-honest-fail-message.md` (input-hash only); updated `cycles/cycle-004/session-checkpoints.md` (corrected the v3.66 forward-reference); this burst-log entry |
+
+**Files touched (Dim-1): 13 unique files (factory-artifacts, this burst)**
+
+- STATE.md
+- .factory/stories/STORY-INDEX.md
+- .factory/sprint-state.yaml
+- .factory/cycles/cycle-004/burst-log.md
+- .factory/cycles/cycle-004/session-checkpoints.md
+- .factory/cycles/cycle-004/phase-f2-spec-evolution/vp-delta.md
+- .factory/cycles/cycle-004/phase-f3-stories/decomposition-manifest.md
+- .factory/cycles/cycle-004/phase-f1-delta-analysis/delta-analysis.md
+- .factory/cycles/cycle-004/phase-f3-stories/S-cycle4-dpapi-storage-fix.md
+- .factory/cycles/cycle-004/phase-f3-stories/S-cycle4-cloud-id-correctness.md
+- .factory/cycles/cycle-004/phase-f3-stories/S-cycle4-honest-fail-message.md
+- .factory/specs/prd/bc-1-auth-identity.md (already amended pre-burst, committed this burst)
+- .factory/specs/architecture/decisions/ADR-0021-windows-oauth-secret-storage-dpapi-fallback.md (already amended pre-burst, committed this burst)
+
+Plus first-commit of the untracked `code-delivery/S-cycle4-{cloud-id-correctness,dpapi-storage-fix,honest-fail-message,windows-docs}/` review evidence directories and `research/atlassian-3lo-revoke-granularity-2026-09-05.md`.
+
+**Dim-2 Attestation:** No BC/VP/holdout count changed this burst (BC-1.4.039 was amended in place; `total_bcs` stays 742). `scripts/check-spec-counts.sh` and `scripts/check-bc-cumulative-counts.sh` are unaffected by a Story-Anchor/status-field/input-hash-only edit set — both scripts' coverage does not include those surfaces. The `validate-count-propagation` dispatcher hook flagged a naive substring match ("172 stories"/"19 BCs" vs. legacy "168 stories"/"10 BCs" prose retained in STATE.md's own historical Burst-14 narrative) when `STORY-INDEX.md` was edited mid-burst — verified false-positive, same class as the false-positive already noted and dismissed in Burst 15's Dim-2 Attestation: `total_stories: 172` and `total_bcs: 742` are the sole current-count frontmatter values in both files and agree; the flagged strings are historical delta prose (e.g. "168→172"), not competing current-count claims. DEC-namespace collision check: no new DEC ID allocated this burst (max remains DEC-338), no collision.
+
+**Dim-5 Attestation:** N/A — no binary/WASM artifact produced by this burst (`.factory/` bookkeeping only; PR #770's `develop`-side binary changes were produced and verified by its own CI run, external to this burst).
+
+**Dim-6 Attestation:** N/A for this burst's own scope — `.factory/` bookkeeping only. `develop`-side source changes for `S-cycle4-windows-docs` (`README.md`, `CLAUDE.md`) were delivered and merged via PR #770 prior to this burst; `S-cycle4-honest-fail-message`'s `src/api/auth.rs` changes exist only on the still-open `feat/cycle4-honest-fail-message` branch (PR #771), not on `develop`. This burst records both outcomes; it does not itself change source.
+
+**Dim-7 Attestation:** PR #770's CI ran green on `develop` @ `abb283e8` (doc-only change, no test-suite impact expected or observed). PR #771's CI status was not re-verified as part of this wrap (the review agents were halted, not the CI gate itself) — re-check CI freshness on resume per the `strict: false` branch-protection caveat (CLAUDE.md) before merging, since `develop` has moved since #771 was last rebased.

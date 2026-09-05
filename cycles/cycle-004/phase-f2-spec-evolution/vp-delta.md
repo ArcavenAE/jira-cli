@@ -18,7 +18,7 @@ inputs:
   - ".factory/specs/architecture/decisions/ADR-0022-api-token-cloud-id-acquisition-tenant-info.md"
   - ".factory/cycles/cycle-004/phase-f2-spec-evolution/architecture-delta.md"
   - ".factory/research/edge-tenant-info-cloudid-2026-09-03.md"
-input-hash: "2db0acb"
+input-hash: "241cf0b"
 ---
 
 # VP Delta — Windows Correctness (`windows-correctness`, cycle-004, Phase F2)

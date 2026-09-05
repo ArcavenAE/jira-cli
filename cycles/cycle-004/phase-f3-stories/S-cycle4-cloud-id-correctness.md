@@ -24,7 +24,7 @@ inputs:
   - ".factory/cycles/cycle-004/phase-f2-spec-evolution/architecture-delta.md"
   - ".factory/cycles/cycle-004/phase-f2-spec-evolution/vp-delta.md"
   - ".factory/cycles/cycle-004/phase-f1-delta-analysis/delta-analysis.md"
-input-hash: "22324f7"
+input-hash: "312679c"
 traces_to: ".factory/specs/prd/bc-1-auth-identity.md"
 cycle: cycle-004-windows-correctness
 estimated_effort: medium

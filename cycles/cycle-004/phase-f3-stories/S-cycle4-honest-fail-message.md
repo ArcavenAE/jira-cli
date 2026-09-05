@@ -25,7 +25,7 @@ inputs:
   - ".factory/cycles/cycle-004/phase-f2-spec-evolution/vp-delta.md"
   - ".factory/cycles/cycle-004/phase-f1-delta-analysis/delta-analysis.md"
   - ".factory/cycles/cycle-004/phase-f3-stories/S-cycle4-dpapi-storage-fix.md"
-input-hash: "7bdce0e"
+input-hash: "d4cbe50"
 traces_to: ".factory/specs/prd/bc-1-auth-identity.md"
 cycle: cycle-004-windows-correctness
 estimated_effort: small
@@ -52,8 +52,8 @@ acceptance_criteria_count: 7
 assumption_validations: []
 risk_mitigations: []
 created: "2026-09-04"
-version: "1.3"
-last_updated: "2026-09-04"
+version: "1.4"
+last_updated: "2026-09-05"
 breaking_change: false
 retroactive: false
 origin: >
@@ -75,6 +75,23 @@ origin: >
 
 # S-cycle4-honest-fail-message — Honest-fail backstop for the two revised message sites
 
+> **Revision note (v1.3 → v1.4, DEC-334 correction, 2026-09-05):** AC-002 and AC-004
+> rewritten to apply the product-owner's amended BC-1.4.039, issued this session after an
+> adversarial review CONFIRMED the prior Site-1 guidance — "state the grant-revoke step
+> ... as a REQUIRED action" — was account-wide-harmful: Atlassian's
+> `https://id.atlassian.com/manage-profile/apps` revoke has no per-profile granularity, so
+> requiring it for a single-profile Site-1 failure would sign the user out of every other
+> `jr` profile on that Atlassian account. Validated by
+> `.factory/research/atlassian-3lo-revoke-granularity-2026-09-05.md`. AC-002 now recommends
+> `jr auth logout`/`jr auth remove` (scoped to the one profile) as the DEFAULT cleanup, and
+> demotes the account-wide grant-revoke to an OPTIONAL step carrying an explicit
+> account-wide warning. AC-004 is retitled and corrected to match: Site 3's legacy message
+> stays byte-for-byte unchanged, but Site 1's legacy message is no longer asserted
+> unchanged — its final grant-revoke sentence is corrected to the same
+> scoped-default/optional-warned-revoke guidance AC-002 establishes. No other AC, the BC/VP
+> anchors (BC-1.4.039 / VP-AUTHDX-017), or the AC count (7) changed. See DEC-334 in
+> `.factory/cycles/cycle-004/` decision log for the full adversarial-finding record.
+>
 > **Revision note (v1.2 → v1.3, F3 round-3 re-review comprehensive fix pass, 2026-09-04):**
 > appended the anchoring `VP-AUTHDX-017` citation to AC-001 and AC-006 — both are within
 > VP-AUTHDX-017's oracle (AC-001's `ProfilePathEscape`-checked-first-at-both-sites
@@ -136,7 +153,7 @@ retry an action that would fail identically every time.
 
 | BC | Status | What this story delivers |
 |----|--------|---------------------------|
-| BC-1.4.039 | NEW | Sites 1 (`oauth_login` store-failure) and 3 (`refresh_oauth_token_with_url` post-refresh store-failure) branch, in order, on `ProfilePathEscape` then `DpapiFallbackFailed`; each of the two `DpapiFallbackFailed` arms gets DISTINCT message text (Site 1 requires grant-revoke, Site 3 forbids it); Site 3 additionally proactively clears the profile's now-stale stored pair; Sites 2 and 4 confirmed unaffected |
+| BC-1.4.039 | NEW | Sites 1 (`oauth_login` store-failure) and 3 (`refresh_oauth_token_with_url` post-refresh store-failure) branch, in order, on `ProfilePathEscape` then `DpapiFallbackFailed`; each of the two `DpapiFallbackFailed` arms gets DISTINCT message text (Site 1 recommends scoped `jr auth logout`/`jr auth remove` cleanup by default and presents the account-wide `manage-profile/apps` revoke as OPTIONAL with an explicit account-wide warning; Site 3 contains no revoke advice at all); Site 3 additionally proactively clears the profile's now-stale stored pair; Sites 2 and 4 confirmed unaffected |
 
 ## Acceptance Criteria
 
@@ -148,13 +165,21 @@ read path (BC-1.4.036) at both sites — never the honest-fail message, never "U
 keychain."
 (traces to BC-1.4.039 postcondition 1 (`ProfilePathEscape` bullet), invariant 4; VP-AUTHDX-017)
 
-### AC-002 — Site 1 (login) honest-fail message requires grant revoke
+### AC-002 — Site 1 (login) honest-fail message offers scoped cleanup by default, account-wide revoke as optional
 When `e.downcast_ref::<DpapiFallbackFailed>()` is `Some(_)` at Site 1, the message names
 the 2560-byte Credential Manager limit and the fallback failure (`{inner}`), instructs the
 user to check disk space/permissions and re-run `jr auth login --oauth --profile {profile}`,
-and states the grant-revoke step (`https://id.atlassian.com/manage-profile/apps`) as a
-REQUIRED action, not an aside — this grant was created by the same failed attempt and has
-no other consumer.
+and recommends `jr auth logout --profile {profile}` / `jr auth remove {profile}` as the
+DEFAULT cleanup step (scoped to this one profile). The
+`https://id.atlassian.com/manage-profile/apps` grant-revoke is presented as an OPTIONAL
+step only, carrying an explicit warning that it is ACCOUNT-WIDE — it signs out every `jr`
+profile authenticated against that same Atlassian account, not just the profile that hit
+this failure. This replaces the prior "required, no other consumer" framing, which
+Perplexity-validated research
+(`.factory/research/atlassian-3lo-revoke-granularity-2026-09-05.md`) confirmed is
+CONFIRMED-harmful: Atlassian's per-account grant-revoke page has no per-profile/per-site
+granularity, so recommending it as required guidance for a single-profile failure would
+sign the user out of every other `jr` profile on that account.
 (traces to BC-1.4.039 postcondition 1 (Site 1 `Some(_)` bullet); VP-AUTHDX-017)
 
 ### AC-003 — Site 3 (refresh) honest-fail message MUST NOT instruct grant revoke
@@ -165,11 +190,18 @@ since the grant may still back other active sessions for the profile and revokin
 would destroy working auth.
 (traces to BC-1.4.039 postcondition 1 (Site 3 `Some(_)` bullet); VP-AUTHDX-017)
 
-### AC-004 — Neither marker matched → unchanged legacy message
+### AC-004 — Neither marker matched → legacy message corrected at Site 1 only (account-wide-harmful sentence replaced)
 Given ANY store error without either marker (a genuine lock/permission `keyring::Error` on
 the small-secret path, or — on macOS/Linux, always, per BC-1.4.035 invariant 3 — a backend
-error where DPAPI was never engaged), the existing "Unlock your keychain (or grant access
-to jr)…" message fires UNCHANGED at both sites.
+error where DPAPI was never engaged): Site 3's legacy "Unlock your keychain (or grant
+access to jr)…" message fires BYTE-FOR-BYTE UNCHANGED. Site 1's legacy message is
+corrected — ONLY its final grant-revoke sentence is replaced with the scoped-cleanup-by-
+default / optional-account-wide-warned-revoke guidance established in AC-002 (the same
+`jr auth logout`/`jr auth remove` default plus the optional, account-wide-warned
+`https://id.atlassian.com/manage-profile/apps` step); the rest of Site 1's legacy message
+text is otherwise unchanged. This replaces the prior framing where the `None` branch was
+asserted unchanged at BOTH sites — that framing is no longer accurate once Site 1's
+harmful final sentence is corrected, per DEC-334.
 (traces to BC-1.4.039 postcondition 1 (`None` bullet); VP-AUTHDX-017)
 
 ### AC-005 — Site 3 proactive stale-pair clear

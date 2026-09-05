@@ -1105,3 +1105,70 @@ cycle_002_field_dx:
         holdout_anchors: []
         points: 13
         notes: "Wave 3, largest story tied with S-578-2, LAST story of the field-dx bundle. DELIVERED + MERGED. Implements get_createmeta_fields-driven platform-path resolution (reuses S-580-1's get_createmeta_fields verbatim) and reverses DEC-188's platform-path --field-alone exit-64 guard via DEC-310 (human-approved F2 gate). Red Gate PASS; per-story adversarial convergence CONVERGED STRICT (14 passes, final 3 CLEAN — zero production-logic defects after pass 2; state at cycles/cycle-002/S-578-4/adversary-convergence-state.json); security-reviewer CLEAN; pr-reviewer APPROVE (1 cycle, 0 blocking); CI 15/15 green incl. CI Gate + mutation testing. Demo evidence: .factory/demos/S-578-4/ (6 VHS demos + evidence-report.md). PR #746 squash-merged to develop @ ae8514b8 (2026-08-31T06:16:25Z). WAVE 3 COMPLETE — all 5 field-dx bundle stories now delivered+merged; cycle-002 Phase F4 (delta implementation) COMPLETE."
+
+# Cycle 5 — Feature Mode: windows-correctness bundle (GitHub issues #759 + #760, + human-added cloud_id-correctness)
+# Phase F4 (delta implementation), 2-wave plan: wave 1 {S-cycle4-dpapi-storage-fix, S-cycle4-cloud-id-correctness} -> wave 2 {S-cycle4-honest-fail-message, S-cycle4-windows-docs}
+# Updated: 2026-09-05 (SESSION WRAP — Wave 1 COMPLETE per DEC-338; Wave 2: windows-docs merged, honest-fail-message PR #771 open+converged, reviews halted mid-wrap)
+
+cycle_004_windows_correctness:
+  title: "windows-correctness bundle (issues #759 + #760 + cloud_id-correctness)"
+  bundle: windows-correctness
+  cycle: cycle-004
+  wave_1_status: "COMPLETE — S-cycle4-dpapi-storage-fix (PR #768 @ 9119b291) + S-cycle4-cloud-id-correctness (PR #769 @ c2074247) both merged. develop fast-forwarded 42e92b46 -> c2074247. Wave 1 integration gate PASSED (DEC-338)."
+  wave_2_status: "IN PROGRESS, PAUSED (SESSION WRAP) — S-cycle4-windows-docs DELIVERED + MERGED (PR #770 @ abb283e8, current develop tip). S-cycle4-honest-fail-message CONVERGED (3 clean adversarial passes) but PR #771 (head b2a0c5d7) is OPEN, not merged — pr-reviewer + security-reviewer were dispatched and HALTED mid-review for this wrap; must be re-dispatched on resume. Wave 2 integration gate NOT YET RUN (gated on #771 merging)."
+  wave_1:
+    stories:
+      - id: S-cycle4-dpapi-storage-fix
+        title: "Windows DPAPI-encrypted-file OAuth-token fallback for oversized tokens"
+        status: completed
+        pr: 768
+        merge_sha: 9119b291
+        merged_at: "2026-09-05"
+        merged_via: "gh pr merge --squash (base develop), autonomous per DEC-330/331 auto-merge policy + human flow authorization"
+        depends_on: []
+        bc_anchors: [BC-1.4.035, BC-1.4.036, BC-1.4.037, BC-1.4.038, BC-1.4.040, BC-1.4.028]
+        vp_anchors: [VP-AUTHDX-010, VP-AUTHDX-011, VP-AUTHDX-012, VP-AUTHDX-013, VP-AUTHDX-014, VP-AUTHDX-015, VP-AUTHDX-016, VP-AUTHDX-018, VP-AUTHDX-022, VP-AUTHDX-023]
+        holdout_anchors: []
+        points: 13
+        notes: "Wave 1 story 1/2, no deps, blocks S-cycle4-honest-fail-message (now unblocked). Keyring-first routing with a user-scope DPAPI-encrypted-file (%LOCALAPPDATA%) fallback on keyring::Error::TooLong, atomic envelope write, read-path fallback lookup, delete-both-backends, path-traversal guard (defense-in-depth behind BC-6.1.004/005). 3-clean adversarial convergence; security-reviewer MERGE-CLEAR; pr-reviewer APPROVE; full suite 4839/0/163 + keyring-gated 88/88 real macOS keychain. F4 CI SPIKE SUCCEEDED: windows-latest CI leg executed+passed test_dpapi_protect_unprotect_real_round_trip + test_dpapi_protect_flags_never_set_local_machine_bit — headless GitHub Actions CAN exercise CryptProtectData end-to-end; VP-AUTHDX-010(b) now CI-verified. windows-latest run also caught 2 real defects pre-merge (clippy::unnecessary_mut_passed + a fixture missing #[cfg(not(windows))]), both fixed before merge. Closes #759 part 1. REQUIRED F7 manual Windows-11 smoke gate still outstanding (occurs at F7)."
+      - id: S-cycle4-cloud-id-correctness
+        title: "API-token cloud_id acquisition via /_edge/tenant_info"
+        status: completed
+        pr: 769
+        merge_sha: c2074247
+        merged_at: "2026-09-05"
+        merged_via: "gh pr merge --squash (base develop), autonomous per DEC-330/331 auto-merge policy + human flow authorization"
+        depends_on: []
+        bc_anchors: [BC-1.2.052, BC-1.2.053, BC-1.2.054]
+        vp_anchors: [VP-AUTHDX-019, VP-AUTHDX-020, VP-AUTHDX-021]
+        holdout_anchors: []
+        points: 8
+        notes: "Wave 1 story 2/2, no deps, blocks S-cycle4-windows-docs (now unblocked), closes A-PA-LOW-001. ADR-0022 cloud_id auto-discovery so a stale cloud_id no longer survives an oauth->api_token profile switch. Rebased onto #768; keep-both resolution on CHANGELOG.md + CLAUDE.md (resolves the CHANGELOG-PARALLEL-EDIT-HOTSPOT carried item). 3-clean convergence; security-reviewer clear; pr-reviewer APPROVE; full 3-OS CI matrix green on the integrated tree. PR #769 squash-merged to develop @ c2074247 (current develop tip). WAVE 1 COMPLETE (both stories merged); Wave 1 integration gate PASSED (DEC-338, combined-wave adversary review CLEAN, stories file-disjoint with mutually-exclusive auth branches). Unblocks Wave 2 (S-cycle4-honest-fail-message, S-cycle4-windows-docs)."
+  wave_2:
+    stories:
+      - id: S-cycle4-windows-docs
+        title: "README Windows install steps, config/cache path table, cloud_id caveat"
+        status: completed
+        pr: 770
+        merge_sha: abb283e8
+        merged_at: "2026-09-05"
+        merged_via: "gh pr merge --squash (base develop), autonomous per DEC-330/331 auto-merge policy + human flow authorization"
+        depends_on: [S-cycle4-cloud-id-correctness]
+        bc_anchors: []
+        vp_anchors: []
+        holdout_anchors: []
+        points: 3
+        notes: "Wave 2 story, doc-only, depends_on S-cycle4-cloud-id-correctness (satisfied at Wave 1 merge). Consistency-validated CONSISTENT; pr-reviewer APPROVE. Also corrected the SEC-WCM-DOC CLAUDE.md note to mention the DPAPI fallback (closes the SEC-WCM-DOC-DPAPI-GAP item carried from Burst 15). PR #770 squash-merged to develop @ abb283e8 (current develop tip). Closes #760."
+      - id: S-cycle4-honest-fail-message
+        title: "Honest-fail backstop: accurate DpapiFallbackFailed messaging + grant-revoke instruction"
+        status: in_review
+        pr: 771
+        merge_sha: null
+        pr_head_sha: b2a0c5d7
+        merged_at: null
+        depends_on: [S-cycle4-dpapi-storage-fix]
+        bc_anchors: [BC-1.4.039]
+        vp_anchors: [VP-AUTHDX-017]
+        holdout_anchors: []
+        points: 5
+        notes: "Wave 2 story, depends_on S-cycle4-dpapi-storage-fix (satisfied at Wave 1 merge). Branch feat/cycle4-honest-fail-message, rebased onto abb283e8, keep-both CHANGELOG resolution. Adversarial review CONVERGED (3 clean passes). Includes a DEC-334 correction: adversarial review found CONFIRMED-harmful revoke advice (Site-1 message told users to revoke jr's grant as safe/no-other-consumer cleanup; Perplexity-validated research (research/atlassian-3lo-revoke-granularity-2026-09-05.md, CONFIRMED) shows revoke is ACCOUNT-WIDE, signing out every jr profile) — fixed via BC-1.4.039 + ADR-0021 §6 amendment to scoped-cleanup-default + optional account-wide-warned revoke, plus a source-scan guard test_no_account_wide_harmful_revoke_framing_in_auth_source. PR #771 OPEN @ b2a0c5d7, NOT merged — pr-reviewer + security-reviewer dispatched but HALTED mid-review for SESSION WRAP; re-dispatch both on resume (auth/credential module: verify no secret leakage, Site-3 proactive-clear safety, corrected revoke advice non-harm). Closes #759 part 2 (backstop)."

@@ -110,3 +110,45 @@ traces_to: STATE.md
 ```
 
 ---
+
+## Session Resume Checkpoint (2026-09-04, v3.66) — cycle-004 F3→F4 TRANSITION — Wave 1 dispatch pending (Burst 14)
+
+### Artifact Versions
+
+| Artifact | Version |
+|----------|---------|
+| STATE.md | 3.66 |
+| total_bcs | 742 |
+| VP count | 55 |
+| holdout scenarios | 106 |
+| total_stories | 172 (168→172 this burst) |
+
+### State
+
+| Field | Value |
+|-------|-------|
+| **Date** | 2026-09-04 |
+| **Position** | cycle-004 (`windows-correctness`), **Phase F4 (delta implementation), IN PROGRESS — Wave 1 dispatch pending.** `develop` @ `42e92b46`, unchanged. cycle-001, cycle-002, and cycle-003 remain CLOSED, historical, unaltered by this burst. |
+| **Convergence counter** | cycle-004 F2 scoped adversarial convergence CLOSED at the F2 human gate (DEC-336, Burst 11). cycle-004 F3 story-decomposition review convergence COMPLETE (4 rounds, 6→4→3→CLEAN, Burst 12) and its human gate APPROVED (DEC-337, Burst 13/14). No active convergence loop — F4 is per-story TDD delivery, not a convergence-pass phase. |
+| **In-flight work** | NONE. No running sub-agents, no stories mid-TDD, no open cycle-004 PRs, no `.worktrees/`. This burst performed bookkeeping (DEC-337, `STORY-INDEX.md` registration, BC backlinks, phase transition) only. |
+| **Next step** | Dispatch F4 Wave 1 — `S-cycle4-dpapi-storage-fix` (13pt, P0) and `S-cycle4-cloud-id-correctness` (8pt, P1), parallel and file-disjoint, via per-story TDD, plus the REQUIRED F4 CI spike (CryptProtectData headless viability). |
+
+### Resume Prompt
+
+```
+**Date:** 2026-09-04. **Position:** cycle-004 (`windows-correctness`), **Phase F4 (delta implementation), IN PROGRESS — Wave 1 dispatch pending.** `develop` @ `42e92b46`, unchanged. cycle-001, cycle-002, and cycle-003 remain CLOSED, historical, unaltered by this burst.
+
+**What changed this burst (Burst 14):** (1) DEC-337 recorded — the F3 human-gate approval, with the human's four confirmations (scope, bundling mechanism, Windows-validation plan, carried-forward non-blockers). (2) `STORY-INDEX.md` registered — 4 `S-cycle4-*` rows added; `total_stories: 168→172`; all `status: draft`. (3) BC Story Anchor backlinks written in `bc-1-auth-identity.md` (9/10 BCs; `BC-1.4.028` amended SKIPPED, no such field). (4) Phase frontmatter advanced F3→F4, `pipeline: PAUSED→ACTIVE`.
+
+**TRACKED ITEMS carried into F4+ (non-blocking, unchanged from Burst 12):** (i) BC-1.4.035 PC5 production-path VP gap — AC-covered by `S-cycle4-dpapi-storage-fix` AC-019/AC-020, formal VP deferred to F6/maintenance; (ii) `S-410-keychain-test-isolation` same-file overlap on `tests/oauth_refresh_integration.rs`, non-blocking; (iii) `CHANGELOG.md [Unreleased]` same-wave parallel-edit hotspot, F4 keep-both mitigation documented in `wave-schedule.md` §7a.
+
+**NEXT ACTION (not yet performed):** dispatch F4 Wave 1 — `S-cycle4-dpapi-storage-fix` and `S-cycle4-cloud-id-correctness`, parallel and file-disjoint, via per-story TDD. The REQUIRED F4 CI spike (CryptProtectData headless viability) should precede or accompany `S-cycle4-dpapi-storage-fix`'s delivery.
+
+**Counts:** total_bcs 742; VP count 55; holdout scenarios 106; total_stories 172 (168→172 this burst).
+
+**EXACT RESUME COMMAND:** `/vsdd-factory:next-step` (reads STATE.md, resumes by dispatching F4 Wave 1).
+
+**Superseded at (2026-09-05, SESSION WRAP — F4 Wave 1 DELIVERED + MERGED (DEC-338) + Wave 2 PARTIALLY DELIVERED, reviews halted mid-wrap):** superseded in place by the SESSION WRAP checkpoint (v3.67). Both Wave-1 stories were delivered and squash-merged — `S-cycle4-dpapi-storage-fix` (PR #768 @ `9119b291`) and `S-cycle4-cloud-id-correctness` (PR #769 @ `c2074247`) — the REQUIRED F4 CI spike SUCCEEDED (VP-AUTHDX-010(b) CI-verified on windows-latest), and the Wave 1 integration gate PASSED (DEC-338). Wave 2 progressed further than a bare "unblocked" state before the human called `/wrap`: `S-cycle4-windows-docs` was ALSO delivered and squash-merged (PR #770 @ `abb283e8`, current `develop` tip); `S-cycle4-honest-fail-message` converged (3 clean adversarial passes, including a DEC-334 correction to the revoke-advice framing) and its PR #771 (head `b2a0c5d7`) is OPEN, with pr-reviewer + security-reviewer dispatched but HALTED mid-review for the wrap. Pipeline PAUSED at the wrap point.
+```
+
+---

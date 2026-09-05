@@ -31,7 +31,7 @@ inputs:
   - ".factory/specs/prd/bc-6-config-cache.md"
   - ".factory/specs/prd/BC-INDEX.md"
 traces_to: ".factory/STATE.md#DEC-334"
-input-hash: "582b22f"
+input-hash: "debb122"
 ---
 
 # F1 Delta Analysis: windows-correctness (cycle-004)

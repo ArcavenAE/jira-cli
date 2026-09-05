@@ -17,7 +17,7 @@ inputs:
   - ".factory/cycles/cycle-004/phase-f2-spec-evolution/vp-delta.md"
   - ".factory/stories/STORY-INDEX.md"
 traces_to: "DEC-334; DEC-335; ADR-0021; ADR-0022; A-PA-LOW-001"
-input-hash: "99d415e"
+input-hash: "02698fc"
 ---
 
 # F3 Story Decomposition Manifest — `windows-correctness` (cycle-004)
