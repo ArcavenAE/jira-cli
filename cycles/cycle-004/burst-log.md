@@ -1117,4 +1117,58 @@ BCs: unchanged at **742**. VPs: unchanged at **55**. Holdout scenarios: unchange
 
 **Codifications:** **DEC-341** — the F6 targeted-hardening verdict (COMPLETE), recorded with its per-dimension outcomes and the FIX-F6-1 fix-PR SHA. This is the first new DEC since DEC-340 (F5 CONVERGED).
 
+## Burst: Burst 20 — SESSION WRAP (human-requested pause) — pipeline PAUSED at F7 final human gate (2026-09-05)
+
+**Parent-commit:** `a038ac0dde4e7cda2786a8a963d410c6c566448b` (F7 automated prep — convergence report + traceability delta + input-hash recompute; `develop` tip `024de4d8` unchanged this burst — no `develop`-side commit).
+
+**Trigger:** Human requested `/wrap` mid-session with no cycle-004 pipeline work in flight (no running sub-agents, no stories mid-TDD, no open cycle-004 PRs, no `.worktrees/`). All five automated F7 delta-convergence dimensions have PASSED (Spec, Test, Impl, Verification, Holdout) and the full regression suite is GREEN, but the phase cannot advance further without two human-only actions: the REQUIRED manual Windows-11 smoke test (DEC-335/337's two-tier Windows validation — the DPAPI `CryptProtectData`/`CryptUnprotectData` round-trip cannot be exercised on macOS/Linux CI) and the final human F7 convergence authorization. This burst pauses the pipeline and re-checkpoints STATE.md so the session can be cleared with zero loss; it does not perform, approve, or alter the pending human gate itself.
+
+**Work performed this burst, in order:**
+
+1. **Frontmatter:** `pipeline: ACTIVE` → `PAUSED`; `timestamp` refreshed to `2026-09-05T23:41:00Z` (approx., see committed value); `phase` rewritten to begin `PAUSED 2026-09-05.` followed by the cycle-004 F7 position and an explicit statement that the pause point is the FINAL HUMAN GATE (manual Windows-11 smoke test + final convergence authorization pending). This is a pause annotation on the existing F7 phase value, not a phase-number transition.
+2. **`current_step`** rewritten to `SESSION-WRAP-PAUSE-2026-09-05`, summarizing: F7 automated prep COMPLETE (convergence report + traceability delta + input-hash recompute @ `a038ac0d`); all five delta-convergence dimensions PASS (Spec 0-CRIT/HIGH/MED, Test mutation 97-100%/tenant.rs 100%, Impl 0 open CRIT/HIGH/MED, Verification 0-GAP + Kani/fuzz justified-skip + security CLEAN, Holdout 0.95 PASS-with-Windows-deferral); regression GREEN (3-OS CI + local 4900+/0); consistency CONSISTENT (1 Major spec-drift fixed); input-hash no gate-blocking drift; all 4 stories + 4 fix-PRs merged, `develop` @ `024de4d8`; next = human Windows-11 smoke test + final F7 authorization → release.
+3. **`last_amended`** overwritten (not concatenated — BC-5.45.001 write-path discipline) to record this SESSION WRAP as the current entry.
+4. **Version bumped 3.71 → 3.72** (single increment).
+5. **SIZE BUDGET banner** refreshed with the post-commit `wc -l` line count and recomputed soft-target/hard-cap margins.
+6. **Session Resume Checkpoint replaced** (v3.71 → v3.72 position): the prior checkpoint (recorded at Burst 19, F6→F7 transition) is archived verbatim to `cycles/cycle-004/session-checkpoints.md` (with a "Superseded at" forward note added) BEFORE the new checkpoint was written. The new checkpoint captures: position PAUSED at the F7 final human gate; convergence (F5 CONVERGED, F7 is a gate not a loop, all 5 automated dimensions PASS, no active counter at pause); zero in-flight work; the two pending human decisions (Windows-11 smoke test, final F7 authorization) plus the accepted non-blocking residuals (F6-MUTATION-EXAMINE-GLOBS-EXPANSION, W2-INT-PROCESS-GAP-README-PROSE-DRIFT, CYCLE-004-INPUT-HASH-HYGIENE now recomputed, and the two by-design items); no WIP branches (all cycle-004 branches merged+deleted, main checkout on `develop` @ `024de4d8`); exact resume command `/vsdd-factory:rehydrate-wave` then `/vsdd-factory:next-step`.
+7. **Current Phase Steps:** appended a new row — "SESSION-WRAP-PAUSE-2026-09-05" — status COMPLETE, agent state-manager, output "Factory paused at F7 final human gate; checkpoint written; all automated convergence prep complete." All existing F7 step rows (pre-gate drift check DONE, consistency audit, 5-dim check, Windows-11 smoke, final gate) are left as previously recorded — this burst does not resolve any of them, it only records the pause.
+8. **No new DEC recorded.** DEC-341 remains the most recent decision; the pending F7 authorization remains reserved for its own future DEC ID once granted.
+9. Updated STATE.md via one full-content Write (DEC-247 discipline; no Edit chain, no `cp`).
+10. Did NOT touch any F1-F7 spec/story/count content — this burst is bookkeeping-only.
+11. Did NOT stage the three pre-existing unrelated dirty files (`regression-state.json`, `sidecar-learning.md`, the modified `S-cycle3-env-tag` demo gif) nor the ephemeral `phase-f6-hardening/cycle-004/{mutants-run*,delta.diff}` scratch (F6-burst exclusion convention) — all left untouched/unstaged, consistent with every prior burst.
+12. Committed STATE.md + this burst-log entry + the updated `cycles/cycle-004/session-checkpoints.md` to factory-artifacts in one atomic commit; pushed to `origin/factory-artifacts`.
+13. **Factory lock:** no `factory_lock` frontmatter block exists in STATE.md and the lock-write/verify-sha-currency scripts are not provisioned in this repo — no lock is held, so the renew/unlock step is a no-op. Noted, not fabricated.
+
+**Adversary verdict:** N/A — no spec/story content reviewed this burst; this is a pause-and-checkpoint bookkeeping burst, not a convergence pass.
+
+**Outcome:** cycle-004 (`windows-correctness`) is now **PAUSED** at Phase F7 (delta convergence), at the FINAL HUMAN GATE — the substantive pipeline position is unchanged from the prior burst (all automated F7 work complete); only the `pipeline` frontmatter flag and the Session Resume Checkpoint changed. `total_bcs` unchanged at 742; `vp_count` unchanged at 55; holdout scenarios unchanged at 106; `total_stories` unchanged at 172. **NEXT on resume:** run `/vsdd-factory:rehydrate-wave` then `/vsdd-factory:next-step`, which reads STATE.md and resumes at the F7 final human gate (manual Windows-11 smoke test, then final convergence authorization).
+
+**Codifications:** none this burst — no new DEC recorded.
+
+**Closes:** nothing substantive — this burst only pauses and re-checkpoints. **Does NOT close:** the F7 final human gate (still pending, both the Windows-11 smoke test and the convergence authorization); any cycle-001/002/003 standing Drift/Standing items (untouched).
+
+### Counts reconciled this burst
+
+BCs: unchanged at **742**. VPs: unchanged at **55**. Holdout scenarios: unchanged at 106. `total_stories` unchanged at **172**.
+
+### Details
+
+| Agent | Task | Output |
+|-------|------|--------|
+| state-manager | Pause the pipeline and re-checkpoint STATE.md per human `/wrap` request, using the Single-Commit Burst Protocol | Updated `STATE.md` (v3.72, `pipeline: PAUSED`); updated `cycles/cycle-004/session-checkpoints.md` (archives the v3.71 checkpoint); this burst-log entry |
+
+**Files touched (Dim-1): 3 unique files (factory-artifacts, this burst)**
+
+- STATE.md
+- cycles/cycle-004/burst-log.md
+- cycles/cycle-004/session-checkpoints.md
+
+**Dim-2 Attestation:** `STORY-INDEX.md` was deliberately NOT touched this burst (no index/BC/VP content changed) — `scripts/check-spec-counts.sh` and `scripts/check-bc-cumulative-counts.sh` were not re-run since no BC/VP/index content changed this burst. DEC-namespace collision check: N/A, no new DEC recorded this burst.
+
+**Dim-5 Attestation:** N/A — no binary/WASM artifact produced by this burst.
+
+**Dim-6 Attestation:** N/A — `.factory/` bookkeeping only, no source change.
+
+**Dim-7 Attestation:** N/A — no CI-relevant change this burst.
+
 **Closes:** the F6 targeted-hardening phase for cycle-004 in its entirety (Kani/fuzz justified-skip, mutation gap found+partially-closed, security CLEAN, regression GREEN, DTU/accessibility SKIPPED); the 5 `tenant.rs` mutation survivors (via PR #775). **Does NOT close:** cycle-004 itself — F7 (delta convergence, incl. the REQUIRED manual Windows-11 smoke gate + final human gate) remains ahead; the `examine_globs` coverage gap for the other 4 delta files remains open, tracked as `F6-MUTATION-EXAMINE-GLOBS-EXPANSION`; all pre-existing carried-forward non-blocking items (BC-1.4.035-PC5-VP-GAP, S-410-KEYCHAIN-ISOLATION-FILE-OVERLAP, TD-031-BLOCKED-BC-6.2.016-CROSSREF, W2-INT-PROCESS-GAP-README-PROSE-DRIFT) remain open, untouched by this burst; no cycle-001/002/003 standing Drift/Standing items are touched.

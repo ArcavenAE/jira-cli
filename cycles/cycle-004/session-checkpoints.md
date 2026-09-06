@@ -258,3 +258,31 @@ traces_to: STATE.md
 
 **Superseded at (2026-09-05, Burst 19 — F6 targeted hardening COMPLETE, DEC-341 recorded):** superseded in place by the F6→F7 transition checkpoint (v3.71). Kani/fuzz JUSTIFIED SKIP (proptest substitution, 0 GAP); mutation testing found the delta files absent from `.cargo/mutants.toml` examine_globs (zero CI signal), worked around via `--file` override to 97-100% on the testable surface, with 5 genuine `tenant.rs` survivors fixed via PR #775 @ `024de4d8` (current `develop` tip); security scan CLEAN (no CRIT/HIGH); full regression GREEN. F6-TARGETED-HARDENING declared COMPLETE (DEC-341); phase advanced F6→F7, pipeline stayed ACTIVE.
 ```
+
+---
+
+## Checkpoint v3.71 — cycle-004 F6→F7 transition (SUPERSEDED by v3.72, Burst 20 SESSION WRAP)
+
+| Field | Value |
+|-------|-------|
+| **Date** | 2026-09-05 |
+| **Position** | cycle-004 (`windows-correctness`), Phase F7 (delta convergence), IN PROGRESS. F6 (targeted hardening) is COMPLETE (DEC-341). |
+| **Convergence** | F5-SCOPED-ADVERSARIAL CLOSED (DEC-340). F6-phase-level outcome CLOSED (DEC-341). F7-phase-level convergence loop IN PROGRESS — pre-gate input-hash drift check DONE (no gate-blocking drift); pre-gate consistency audit and the 5-dimensional convergence check had not yet run at this checkpoint. |
+| **In-flight work** | NONE running at archival time. No live sub-agents. No open cycle-004 PRs. |
+| **Next step (as recorded)** | Dispatch the F7 pre-gate fresh-context consistency audit, then the 5-dimensional delta convergence check, then the REQUIRED manual Windows-11 smoke gate, then the final human F7 convergence gate. |
+
+### Resume Prompt (as recorded at v3.71)
+
+```
+**Date:** 2026-09-05. **Position:** cycle-004 (`windows-correctness`), Phase F7 (delta convergence), IN PROGRESS. F6 (targeted hardening) is COMPLETE (DEC-341): Kani/fuzz JUSTIFIED SKIP (proptest substitution, 0 GAP); mutation testing found and partially closed an examine_globs process gap (tenant.rs now 100% via PR #775 @ `024de4d8`, current `develop` tip); security scan CLEAN (no CRIT/HIGH); full regression GREEN. The F7 pre-gate input-hash drift check ran this burst (215 tracked artifacts, no gate-blocking drift). cycle-001, cycle-002, and cycle-003 remain CLOSED, historical, unaltered by this burst.
+
+**What changed this burst (Burst 19):** F6 targeted hardening dispatched and completed (Kani/fuzz justified-skip, mutation examine_globs gap found + partially closed via PR #775 @ `024de4d8`, security CLEAN, regression GREEN); F6-TARGETED-HARDENING declared COMPLETE (DEC-341); STATE.md transitioned phase F6→F7; F7 pre-gate input-hash drift check ran and completed with no gate-blocking drift (`phase-f7-convergence/cycle-004/input-hash-drift.md`).
+
+**NEXT ACTION on resume (exact, in order):** (1) Dispatch the F7 pre-gate fresh-context consistency audit (`consistency-validator`) on the cycle-004 delta. (2) Run the 5-dimensional delta convergence check on the F6-hardened delta (`develop` @ `024de4d8`) plus full-codebase regression. (3) The REQUIRED manual Windows-11 smoke gate (human reproduces #759 on real Windows 11). (4) The final human F7 convergence gate, then release on human authorization.
+
+**Counts:** total_bcs 742; VP count 55; holdout scenarios 106; total_stories 172 (all unchanged this burst).
+
+**EXACT RESUME COMMAND:** `/vsdd-factory:next-step` (reads STATE.md, resumes by dispatching the F7 pre-gate consistency audit).
+
+**Superseded at (2026-09-05, Burst 20 — SESSION WRAP, human-requested pause):** superseded in place by the SESSION-WRAP-PAUSE checkpoint (v3.72). Between this checkpoint and the wrap, F7 automated prep ran to completion (commit `a038ac0d`): convergence report + traceability delta + input-hash recompute, with all five F7 delta-convergence dimensions (Spec, Test, Impl, Verification, Holdout) PASSING and full regression GREEN. The pipeline was then paused at the FINAL HUMAN GATE (REQUIRED manual Windows-11 smoke test + final convergence authorization, both still pending) per human `/wrap` request — no further automated F7 work remains; only the two human-only actions stand between this checkpoint and release.
+```
