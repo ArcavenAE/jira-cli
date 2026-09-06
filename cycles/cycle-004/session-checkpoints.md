@@ -369,3 +369,47 @@ traces_to: STATE.md
 **Superseded at (2026-09-06, Burst 22 — cycle-004 RELEASED as v0.7.0-dev.5 + CLOSED):** superseded in place by the v3.74 checkpoint. Human authorized and executed the cycle-004 dev release: version-bump PR #777 (`chore(release): v0.7.0-dev.5`) squash-merged to `develop` @ `569d85a8`; annotated tag `v0.7.0-dev.5` (tag object `41a880d5`) pushed; `release.yml` run `34046676423` concluded SUCCESS across all 5 build targets; GitHub prerelease published (10 assets/5 targets, 2026-09-06T16:55:46Z) at https://github.com/Zious11/jira-cli/releases/tag/v0.7.0-dev.5. `activation_head`/`activation_version` advanced `42e92b46`/`v0.7.0-dev.4` → `569d85a8`/`v0.7.0-dev.5`. **DEC-343 recorded; cycle-004 (`windows-correctness`) is now CLOSED.** `pipeline` frontmatter set to `RELEASED` (mirrors the exact value cycle-003's own release-cut burst used, v3.52/commit `bcc90d01` — the repo's resting-state value once the sole open cycle ships and closes). **All four tracked cycles (cycle-001, cycle-002, cycle-003, cycle-004) are now CLOSED — no open cycle, no open work.** No further action is pending; the pipeline is idle awaiting the human's direction on the next feature bundle or maintenance cycle.
 ```
 
+---
+
+## Session Resume Checkpoint (2026-09-06, v3.74) — cycle-004 CLOSED + RELEASED (resting state)
+
+### State
+
+| Field | Value |
+|-------|-------|
+| **Date** | 2026-09-06 |
+| **Position** | cycle-004 (`windows-correctness`) CLOSED + RELEASED as `v0.7.0-dev.5` (DEC-343). All four tracked cycles (cycle-001 through cycle-004) CLOSED — no open cycle, no open work. |
+| **Convergence counter** | F5 CONVERGED (DEC-340); F6 COMPLETE (DEC-341); F7 CONVERGED (DEC-342); RELEASED + CLOSED (DEC-343) |
+| **Next step** | None on cycle-004 — idle, awaiting human direction on the next feature/maintenance cycle |
+
+### Resume Prompt
+
+```
+**Date:** 2026-09-06. **Position:** cycle-004 (`windows-correctness`) **CLOSED + RELEASED as `v0.7.0-dev.5`** (DEC-343). **All four tracked cycles (cycle-001 through cycle-004) are now CLOSED — no open cycle, no open work.**
+
+**Release:** version-bump PR #777 (`chore(release): v0.7.0-dev.5`) squash-merged to `develop` @ `569d85a8`; annotated tag `v0.7.0-dev.5` (tag object `41a880d5`) pushed, peeling to `569d85a8`; `release.yml` run `34046676423` concluded SUCCESS across all 5 build targets (x86_64/aarch64 apple-darwin, x86_64/aarch64 unknown-linux-gnu, x86_64-pc-windows-msvc) plus Create Release; GitHub prerelease published (isPrerelease=true, isDraft=false), 10 assets across 5 targets, 2026-09-06T16:55:46Z, at https://github.com/Zious11/jira-cli/releases/tag/v0.7.0-dev.5.
+
+**Convergence:** F5 CONVERGED (DEC-340). F6 COMPLETE (DEC-341). F7 CONVERGED (DEC-342). **RELEASED + CLOSED (DEC-343).** cycle-004's F1-F7 pipeline is fully converged and shipped; no further phase work remains on this cycle.
+
+**In-flight work:** **NONE.** No live sub-agents, no open PRs, no story worktrees. All cycle-004 PRs (#768 through #777) are MERGED.
+
+**Pending human decisions / blockers:** **NONE.** cycle-004 is fully closed; no gate is pending. No cycle currently has open work.
+
+**Accepted non-blocking residuals carried forward (documented, not gating anything):**
+- `F6-MUTATION-EXAMINE-GLOBS-EXPANSION`, `W2-INT-PROCESS-GAP-README-PROSE-DRIFT`, `CYCLE-004-INPUT-HASH-HYGIENE` (resolved @ `a038ac0d`), `JR_CACHE_DIR-TEST-ENV-MUTEX-UNIFICATION`, `PR-MANAGER-COMPLETION-GUARD-HOOK-LOOP` — all confirmed still logged (S-7.02 cycle-closing checklist, this burst), targeting a future maintenance/self-improvement cycle or a vsdd-factory engine fix as applicable.
+- Windows-verification descoped residuals: (a) the natural `keyring::Error::TooLong` trigger from a real Windows Credential Manager; (b) the live `jr auth login --oauth` browser-consent flow. Both explicitly out of scope per DEC-342 — not gaps in the delivered release.
+- By-design items: the api-token profile's stored `cloud_id` is unused by `base_url()` (documented, not a defect); `--cloud-id` is accepted unvalidated (documented, not a defect).
+
+**WIP branches:** **None.** All cycle-004 story branches, all F4-F6 fix branches, PR #776's Windows-CI-verification branch, and PR #777's version-bump branch are merged/deleted. The main checkout is on `develop` @ **`569d85a8`** — the current tip, now in sync with `activation_head`.
+
+**Counts: total_bcs 742; VP count 55; holdout scenarios 106; total_stories 172** (all unchanged this burst — pure release + bookkeeping burst).
+
+**EXACT RESUME COMMAND:** none required — no active cycle. To begin the next unit of work: `/vsdd-factory:mode-decision-guide` or `/vsdd-factory:artifact-detection` to scope a new feature/maintenance cycle, or `/vsdd-factory:session-review` for the optional post-pipeline review.
+
+**Superseded at (2026-09-06, cycle-005 Burst 1 — cycle-005 `adf-mentions` OPENED, F1 APPROVED):** superseded in place by the v3.75 checkpoint (`cycles/cycle-005/session-checkpoints.md` going forward). Human requested a new feature-mode cycle: `adf-mentions` (GitHub #674), brownfield. F1 delta analysis ran (business-analyst + architect), a duplicate F1 artifact-mapping.md was reconciled (alternative decomposition folded into the canonical mapping as an F2 input note, duplicate removed), and the human **APPROVED** the F1 scope (**DEC-344**). Phase advances F1→F2. cycle-001 through cycle-004 remain CLOSED, unaltered by this transition.
+```
+
+---
+
+<!-- Repeat for each archived checkpoint. Maintain chronological order. -->
+

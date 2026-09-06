@@ -1,0 +1,90 @@
+# cycle-005 (adf-mentions, GitHub #674) — affected files
+# Format: <path> | <NEW|MODIFIED|DEPENDENT> | <risk> | <notes>
+
+src/cli/issue/mentions.rs | NEW | LOW | Effectful @Name resolution + accountId preflight-validate pre-pass (resolve_mentions); reuses helpers::disambiguate_user and JiraClient::get_user/search_users*
+src/adf.rs | MODIFIED | HIGH | New pure fns find_mention_candidates + markdown_to_adf_with_mentions; markdown_to_adf becomes thin wrapper (signature unchanged); new forward tree-walk mirroring autolink_bare_urls; new "mention" reverse-render arm in AdfToTextRenderer::render_node
+src/cli/issue/interactions.rs | MODIFIED | MEDIUM | handle_comment_add gains no_input:bool param + await resolution step before markdown_to_adf call (line ~71)
+src/cli/issue/mod.rs | MODIFIED | LOW | Dispatch-site change threading no_input into handle_comment_add call (~line 92)
+src/cli/issue/create.rs | MODIFIED | MEDIUM | await resolution step before markdown_to_adf call (line ~259)
+src/cli/issue/edit.rs | MODIFIED | MEDIUM-HIGH | await resolution step before BOTH markdown_to_adf call sites: dry-run (~line 599) and live (~line 966); must preserve existing stdout-empty-on-error ordering invariant (BC-3.4.021)
+src/cli/issue/helpers.rs | MODIFIED | LOW | disambiguate_user visibility fn -> pub(super) fn (no behavior change)
+src/api/jsm/requests.rs | MODIFIED-CONDITIONAL | MEDIUM | Same pattern as create.rs; in scope only if OQ-1 (JSM dispatch fork inclusion) resolves YES
+
+# DEPENDENT (unchanged code, behavior improves via new adf_to_text mention arm)
+src/cli/issue/list.rs | DEPENDENT | LOW | calls adf::adf_to_text, no code change
+src/cli/issue/view.rs | DEPENDENT | LOW | calls adf::adf_to_text, no code change
+src/cli/issue/comments.rs | DEPENDENT | LOW | calls adf::adf_to_text, no code change
+src/api/jira/users.rs | DEPENDENT | LOW | get_user/search_users/search_assignable_users* reused as-is, zero code change
+src/partial_match.rs | DEPENDENT | LOW | reused transitively via disambiguate_user, zero code change
+
+# NOT AFFECTED (structurally out of reach — no --markdown flag on this path)
+src/cli/worklog.rs | NOT_AFFECTED | N/A | uses adf::text_to_adf only; worklog add has no --markdown flag
+
+# REGRESSION BASELINE (explicitly NOT touched; must stay green)
+src/api/client.rs | BASELINE | - | HTTP core, no ADF dependency
+src/api/auth.rs | BASELINE | - | -
+src/api/auth_embedded.rs | BASELINE | - | -
+src/api/auth_windows_store.rs | BASELINE | - | -
+src/api/refresh_coordinator.rs | BASELINE | - | -
+src/api/pagination.rs | BASELINE | - | -
+src/api/rate_limit.rs | BASELINE | - | -
+src/cache.rs | BASELINE | - | -
+src/config.rs | BASELINE | - | -
+src/output.rs | BASELINE | - | -
+src/error.rs | BASELINE | - | -
+src/jql.rs | BASELINE | - | -
+src/duration.rs | BASELINE | - | -
+src/observability.rs | BASELINE | - | -
+src/cli/board.rs | BASELINE | - | -
+src/cli/sprint.rs | BASELINE | - | -
+src/cli/team.rs | BASELINE | - | -
+src/cli/user.rs | BASELINE | - | -
+src/cli/init.rs | BASELINE | - | -
+src/cli/project.rs | BASELINE | - | -
+src/cli/component.rs | BASELINE | - | -
+src/cli/queue.rs | BASELINE | - | -
+src/cli/requesttype.rs | BASELINE | - | -
+src/cli/api.rs | BASELINE | - | -
+src/cli/issue/format.rs | BASELINE | - | -
+src/cli/issue/jsm_create.rs | BASELINE | - | -
+src/cli/issue/workflow.rs | BASELINE | - | -
+src/cli/issue/links.rs | BASELINE | - | -
+src/cli/issue/assets.rs | BASELINE | - | -
+src/cli/issue/changelog.rs | BASELINE | - | -
+src/cli/issue/field_resolve.rs | BASELINE | - | -
+src/cli/issue/attachments.rs | BASELINE | - | -
+src/cli/issue/json_output.rs | BASELINE | - | -
+src/api/jira/issues.rs | BASELINE | - | -
+src/api/jira/bulk.rs | BASELINE | - | -
+src/api/jira/boards.rs | BASELINE | - | -
+src/api/jira/sprints.rs | BASELINE | - | -
+src/api/jira/fields.rs | BASELINE | - | -
+src/api/jira/statuses.rs | BASELINE | - | -
+src/api/jira/links.rs | BASELINE | - | -
+src/api/jira/resolutions.rs | BASELINE | - | -
+src/api/jira/teams.rs | BASELINE | - | -
+src/api/jira/worklogs.rs | BASELINE | - | -
+src/api/jira/projects.rs | BASELINE | - | -
+src/api/jira/attachments.rs | BASELINE | - | -
+src/api/jira/components.rs | BASELINE | - | -
+src/api/jsm/servicedesks.rs | BASELINE | - | -
+src/api/jsm/queues.rs | BASELINE | - | -
+src/api/jsm/request_types.rs | BASELINE | - | -
+src/api/jsm/attachments.rs | BASELINE | - | -
+src/api/assets/*.rs | BASELINE | - | all Assets/CMDB resource files
+src/types/**/*.rs | BASELINE | - | no new wire type needed; mention JSON built inline via serde_json::json! consistent with existing ADF node construction
+
+# REGRESSION-RISK-ZONE TESTS (must stay green; enumerated for F4/F6 scoping)
+src/adf.rs::tests (inline mod, 275 #[test] fns)
+tests/adf_code_mark_exclusivity.rs
+tests/adf_inline_html_inv1_e2e.rs
+tests/adf_recursion_depth.rs
+tests/comment_crud_api.rs
+tests/comment_edit.rs
+tests/comment_view.rs
+tests/issue_create_field.rs
+tests/issue_create_jsm.rs
+tests/issue_edit.rs
+tests/issue_commands.rs
+tests/boards_sprints_holdouts.rs
+tests/claude_md_citations.rs
