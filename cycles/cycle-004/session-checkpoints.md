@@ -286,3 +286,44 @@ traces_to: STATE.md
 
 **Superseded at (2026-09-05, Burst 20 — SESSION WRAP, human-requested pause):** superseded in place by the SESSION-WRAP-PAUSE checkpoint (v3.72). Between this checkpoint and the wrap, F7 automated prep ran to completion (commit `a038ac0d`): convergence report + traceability delta + input-hash recompute, with all five F7 delta-convergence dimensions (Spec, Test, Impl, Verification, Holdout) PASSING and full regression GREEN. The pipeline was then paused at the FINAL HUMAN GATE (REQUIRED manual Windows-11 smoke test + final convergence authorization, both still pending) per human `/wrap` request — no further automated F7 work remains; only the two human-only actions stand between this checkpoint and release.
 ```
+
+---
+
+## Checkpoint v3.72 — cycle-004 SESSION-WRAP-PAUSE at F7 final human gate (SUPERSEDED by v3.73, Burst 21 — F7 CONVERGED via CI verification path)
+
+| Field | Value |
+|-------|-------|
+| **Date** | 2026-09-05 |
+| **Position** | cycle-004 (`windows-correctness`), Phase F7 (delta convergence), PAUSED at the FINAL HUMAN GATE. All five automated F7 delta-convergence dimensions PASS; full regression GREEN; input-hash hygiene recomputed (commit `a038ac0d`). |
+| **Convergence** | F5 CONVERGED (DEC-340). F6 COMPLETE (DEC-341). F7 is a gate, not a loop — no active convergence counter at this pause. All 5 automated F7 dimensions PASS: Spec (0 CRIT/HIGH/MED, novelty-LOW, BC-1.4.039 sync @ `99443bfa`); Test (mutation 97-100%, `tenant.rs` 100%); Impl (0 open CRIT/HIGH/MED); Verification (VP 0-GAP, Kani/fuzz justified-skip, security CLEAN); Holdout (0.95 PASS, Windows-11-specific scenarios deferred to the manual smoke test, not scored as a gap). |
+| **In-flight work** | NONE running at archival time. No live sub-agents. All cycle-004 PRs (#768-#775) MERGED — no open PRs, no story worktrees. |
+| **Pending human decisions (as recorded)** | (1) REQUIRED manual Windows-11 smoke test (DEC-335/337's two-tier Windows validation plan) — reproduce #759 on real Windows 11: oversized OAuth token → DPAPI-encrypted-file fallback round-trip at `%LOCALAPPDATA%\jr\secrets\<profile>\oauth-tokens.dat`; covers H-W1-WIN-001 + DPAPI legs of H-W1-INT-001/002 & H-W2-INT-001. (2) Final human F7 convergence authorization → release, contingent on (1) passing. |
+
+### Resume Prompt (as recorded at v3.72)
+
+```
+**Date:** 2026-09-05. **Position:** cycle-004 (`windows-correctness`), Phase F7 (delta convergence), **PAUSED at the FINAL HUMAN GATE.** All five automated F7 delta-convergence dimensions PASS (Spec, Test, Impl, Verification, Holdout); full regression GREEN; input-hash hygiene recomputed (commit `a038ac0d`). **Next = human Windows-11 smoke test + final human F7 convergence authorization → release.** cycle-001, cycle-002, and cycle-003 remain CLOSED, historical, unaltered by this burst.
+
+**Convergence:** F5 CONVERGED (3 clean fresh adversary passes + 1 cross-model secondary, DEC-340). F6 COMPLETE (DEC-341). **F7 is a gate, not a loop — there is no active convergence counter at this pause.** All 5 automated F7 dimensions PASS: Spec (0 CRIT/HIGH/MED, novelty decayed to LOW, BC-1.4.039 sync verified @ `99443bfa`); Test (mutation 97-100% on the testable surface, `tenant.rs` 100%); Impl (0 open CRIT/HIGH/MED); Verification (VP 0-GAP, Kani/fuzz justified-skip, security scan CLEAN); Holdout (0.95 PASS, with the Windows-11-specific scenarios explicitly deferred to the manual smoke test, not scored as a gap).
+
+**In-flight work:** **NONE running.** No live sub-agents at the moment of this checkpoint. All cycle-004 PRs (#768, #769, #770, #771, #772, #773, #774, #775) are MERGED — no open PRs, no story worktrees.
+
+**Pending human decisions / blockers:**
+1. **REQUIRED manual Windows-11 smoke test** (DEC-335/DEC-337's two-tier Windows validation plan) — reproduce #759 on a real Windows 11 machine: an oversized OAuth refresh token must trigger the DPAPI-encrypted-file fallback at `%LOCALAPPDATA%\jr\secrets\<profile>\oauth-tokens.dat` and round-trip correctly. The `CryptProtectData`/`CryptUnprotectData` FFI round-trip cannot be exercised on macOS/Linux CI (per `src/api/auth_windows_store.rs`'s module header, DEC-335). Covers holdout scenarios H-W1-WIN-001 and the DPAPI legs of H-W1-INT-001/002 and H-W2-INT-001.
+2. **Final human F7 convergence authorization → release** (next dev version after `v0.7.0-dev.4`), contingent on (1) passing.
+
+**Accepted non-blocking residuals (documented, not gating F7):**
+- `F6-MUTATION-EXAMINE-GLOBS-EXPANSION` — 4 remaining cycle-004 credential-critical files still absent from `.cargo/mutants.toml` examine_globs; test quality manually verified 97-100%, CI enforcement deferred to a future maintenance cycle.
+- `W2-INT-PROCESS-GAP-README-PROSE-DRIFT` — no CI guard cross-checks README auth/storage prose against the code model; deferred to a future maintenance cycle.
+- `CYCLE-004-INPUT-HASH-HYGIENE` — the 9 cycle-004 F1-F3 delta artifacts flagged at the F7 pre-gate drift check have now been recomputed (commit `a038ac0d`); the factory-wide 165-artifact standing pool (`F7-GATE-SYSTEMIC-INPUT-HASH-DRIFT-BOOKKEEPING`) remains untouched, unchanged standing debt.
+- By-design items: the api-token profile's stored `cloud_id` is unused by `base_url()` (documented, not a defect); `--cloud-id` is accepted unvalidated (documented, not a defect).
+
+**WIP branches:** **None.** All cycle-004 story branches (`S-cycle4-dpapi-storage-fix`, `S-cycle4-cloud-id-correctness`, `S-cycle4-windows-docs`, `S-cycle4-honest-fail-message`) and all 4 in-cycle fix branches (FIX-W2-INT-README, FIX-F5-CYCLE4-1, FIX-F5-CYCLE4-2, FIX-F6-1) are merged and deleted. The main checkout is on `develop` @ `024de4d8` (current tip; NOT the same as `activation_head: 42e92b46`, the last-*released* tip).
+
+**Counts: total_bcs 742; VP count 55; holdout scenarios 106; total_stories 172** (all unchanged this burst).
+
+**EXACT RESUME COMMAND:** `/vsdd-factory:rehydrate-wave` then `/vsdd-factory:next-step`.
+
+**Superseded at (2026-09-06, Burst 21 — F7 CONVERGED via the windows-latest CI verification path):** superseded in place by the v3.73 checkpoint. Human authorized satisfying the REQUIRED Windows-11 DPAPI verification via the existing `windows-latest` GitHub Actions CI runner instead of a physical/manual smoke test ("add CI test → verify green → converge & release"). PR #776 (branch `test/cycle4-dpapi-file-roundtrip-win-ci`) squash-merged to `develop` @ `135eb804` added a `#[cfg(windows)]` CI test proving the DPAPI-encrypted-file production-path round-trip on real Windows (`Test (windows-latest)` run `34040856196`); gates all green (code-reviewer, pr-reviewer, security-reviewer, CI 14/14). This satisfies holdout H-W1-WIN-001 and the DPAPI legs of H-W1-INT-001/002 & H-W2-INT-001, with two residuals — (a) the natural `keyring::Error::TooLong` trigger from a real Windows Credential Manager, (b) the live OAuth browser-consent flow — explicitly descoped per human decision. The final human F7 convergence gate PASSED (**DEC-342**); phase F7 is now **CONVERGED**. Only release execution (cutting `v0.7.0-dev.5`) remains.
+```
+

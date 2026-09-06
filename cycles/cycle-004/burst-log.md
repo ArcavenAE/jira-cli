@@ -1172,3 +1172,68 @@ BCs: unchanged at **742**. VPs: unchanged at **55**. Holdout scenarios: unchange
 **Dim-7 Attestation:** N/A — no CI-relevant change this burst.
 
 **Closes:** the F6 targeted-hardening phase for cycle-004 in its entirety (Kani/fuzz justified-skip, mutation gap found+partially-closed, security CLEAN, regression GREEN, DTU/accessibility SKIPPED); the 5 `tenant.rs` mutation survivors (via PR #775). **Does NOT close:** cycle-004 itself — F7 (delta convergence, incl. the REQUIRED manual Windows-11 smoke gate + final human gate) remains ahead; the `examine_globs` coverage gap for the other 4 delta files remains open, tracked as `F6-MUTATION-EXAMINE-GLOBS-EXPANSION`; all pre-existing carried-forward non-blocking items (BC-1.4.035-PC5-VP-GAP, S-410-KEYCHAIN-ISOLATION-FILE-OVERLAP, TD-031-BLOCKED-BC-6.2.016-CROSSREF, W2-INT-PROCESS-GAP-README-PROSE-DRIFT) remain open, untouched by this burst; no cycle-001/002/003 standing Drift/Standing items are touched.
+
+## Burst: Burst 21 — F7 delta convergence HUMAN-AUTHORIZED via windows-latest CI verification path — DEC-342, F7 CONVERGED (2026-09-06)
+
+**Parent-commit:** `4c67e999eaa1e53f81b953fc4291f25747915453` (Burst 20 SESSION WRAP — pipeline PAUSED at the F7 final human gate; `develop` tip `024de4d8` at the start of this burst).
+
+**Trigger:** cycle-004 resumed from the Burst-20 F7 final-human-gate PAUSE. The human chose to satisfy the REQUIRED Windows-11 DPAPI verification via the existing `windows-latest` GitHub Actions CI runner rather than a physical/manual smoke test, and authorized "add CI test → verify green → converge & release." Pipeline flag: PAUSED → ACTIVE for this burst.
+
+**Work performed this burst, in order:**
+
+1. **PR #776 created and delivered** on branch `test/cycle4-dpapi-file-roundtrip-win-ci` (agent `create-dpapi-pr`): adds one `#[cfg(windows)]`, non-`#[ignore]`d test `test_store_pair_then_load_pair_oversized_token_round_trips_via_dpapi_file` in `src/api/auth_windows_store.rs` — stores an oversized (>2560-byte) OAuth token pair via `store_pair`, asserts the DPAPI-encrypted file exists at `%LOCALAPPDATA%\jr\secrets\<profile>\oauth-tokens.dat` (via the `JR_CACHE_DIR` debug test seam → tempdir), asserts on-disk bytes ≠ plaintext, and asserts `load_pair` round-trips both tokens exactly. Runs automatically on the `windows-latest` CI `test` leg. Plus a doc-comment honesty correction on the new `CACHE_DIR_SEAM_MUTEX`. TEST-ONLY + DOC-ONLY; no production code changed. Counts unchanged (total_bcs 742; VPs 55; holdout 106; stories 172).
+2. **CI watch** (agent `ci-watch-776`) tracked the PR to green: `Test (windows-latest)` (run `34040856196`) and all 14/14 checks including `CI Gate` passed.
+3. **Local code review** (agent `pr-review-776-cycle1`, `code-reviewer`): MERGE-READY — verified real signatures including `load_pair -> Result<Option<(access, refresh)>>` tuple order, non-tautological assertions, correct `#[cfg(windows)]` gating, and clean clippy.
+4. **PR review** (`pr-reviewer`): APPROVE.
+5. **Independent security review** (agent `security-review-776`, `security-reviewer`): CLEAN — no CWE-applicable finding; synthetic tokens only, no real credential material.
+6. **Merge:** PR #776 squash-merged to `develop`, new tip `135eb804`.
+7. **F7 Windows-verification gate closure assessment:** the DPAPI-encrypted-file PRODUCTION-PATH round-trip (`store_pair`→disk→`load_pair`, oversized token) is now automated on `windows-latest` CI. Combined with the pre-existing raw-FFI test `test_dpapi_protect_unprotect_real_round_trip` (VP-AUTHDX-010(b), already CI-verified), the #759 DPAPI-file mechanism is verified end-to-end on real Windows in CI — satisfying holdout H-W1-WIN-001 and the DPAPI legs of H-W1-INT-001/002 & H-W2-INT-001 for the DPAPI-file mechanism, WITHOUT needing a physical Windows-11 machine.
+8. **Explicit descoped residuals recorded** (human-accepted, NOT covered by this automation): (a) the NATURAL `keyring::Error::TooLong` trigger from a real Windows Credential Manager `set_password` on an oversized token (the fallback ROUTING on `TooLong` is already unit-tested via the `JR_S759_FORCE_TOOLONG`/`JR_FORCE_DPAPI_FALLBACK` seams; only the natural trigger itself is unexercised in CI); (b) the live `jr auth login --oauth` browser-consent flow. Both would still require a physical/manual Windows session or a much larger mocked-OAuth CI investment; explicitly out of scope for this closure per the human's decision.
+9. **F7 5-dimensional convergence reconfirmed all-PASS:** Spec/Test/Impl/Verification/Holdout unchanged from the prior automated prep @ `a038ac0d`; the Test and Verification dimensions are STRENGTHENED by PR #776; the Holdout dimension's prior "0.95 PASS-with-Windows-deferral" now has the DPAPI-file leg CI-COVERED rather than manually deferred, with residuals (a)/(b) above remaining descoped. Full regression GREEN (CI 14/14 on the merge run, all three OS test legs).
+10. **DEC-342 recorded:** "cycle-004 F7 delta convergence human-authorized via windows-latest CI verification path (PR #776 @ `135eb804`); manual Windows-11 smoke superseded by automated CI for the DPAPI-file round-trip; residuals (a)/(b) descoped; release pending." Phase F7 declared **CONVERGED**.
+11. **Two new tracked follow-ups logged** (non-blocking process-gaps): `JR_CACHE_DIR-TEST-ENV-MUTEX-UNIFICATION` — `src/cache.rs`, `src/config.rs`, and `src/api/auth_windows_store.rs` each carry a separate `ENV_MUTEX`/`CACHE_DIR_SEAM_MUTEX` guarding the same process-global `JR_CACHE_DIR` env var; they do not mutually exclude, and `cargo test` runs multithreaded. Safe failure mode (a race yields a visible test failure, never a false pass). Target a future SELF-IMPROVEMENT/maintenance cycle. `PR-MANAGER-COMPLETION-GUARD-HOOK-LOOP` — the vsdd-factory `pr-manager-completion-guard` hook (`plugins/vsdd-factory/hooks/dispatcher`) has no cross-turn memory; it parses only the current turn for `STEP_COMPLETE:` and loops after genuine 9-step completion (alternating between demanding a nonexistent "step 10" and resetting to step 1). This is a FACTORY-ENGINE tooling bug (vsdd-factory plugin), NOT a jira-cli product defect; it did not affect PR #776's correctness. Target a vsdd-factory engine fix.
+12. **STATE.md updated to v3.73** via one full-content Write (BC-5.45.001/DEC-247 discipline; no Edit chain, no `cp`): `pipeline: PAUSED` → `ACTIVE`; `phase`/`current_step`/`last_amended` rewritten to record DEC-342 and the F7-CONVERGED position; frontmatter `cycle_004_status` updated; Current Phase Steps table trimmed to last 5 rows (keep-last-5 rule), older rows' detail confirmed already archived in Bursts 19-20 above; Decisions Log gained the new DEC-342 row (DEC-339 folded into the collapsed-older bucket to keep the table lean); Convergence Status / Concurrent Cycles / Constraints Carried Forward / Drift-Standing-Items / Session Resume Checkpoint sections all updated in place; SIZE BUDGET banner refreshed (332 lines).
+13. **Session Resume Checkpoint replaced** (v3.72 → v3.73): the prior SESSION-WRAP-PAUSE checkpoint (recorded at Burst 20) is archived verbatim to `cycles/cycle-004/session-checkpoints.md` (with a "Superseded at" forward note) BEFORE the new checkpoint was written. The new checkpoint captures: position CONVERGED at F7; convergence (all 5 dimensions PASS, Windows-verification gate satisfied via CI); zero in-flight work; the single remaining pending action (release execution); the accepted non-blocking residuals including the two new Burst-21 items and the two explicitly descoped Windows-verification residuals; no WIP branches; exact resume command `/vsdd-factory:rehydrate-wave` then `/vsdd-factory:next-step`.
+14. **Activation pointers unchanged:** `activation_head` remains `42e92b46` / `activation_version` remains `v0.7.0-dev.4` until the release is cut — `develop`'s current tip (`135eb804`) is explicitly NOT the activation head.
+15. Did NOT stage the three pre-existing unrelated dirty files (`regression-state.json`, `sidecar-learning.md`, the modified `S-cycle3-env-tag` demo gif) nor the ephemeral `phase-f6-hardening/cycle-004/{mutants-run*, delta.diff}` scratch — consistent with every prior burst.
+16. Committed STATE.md + this burst-log entry + the updated `cycles/cycle-004/session-checkpoints.md` to factory-artifacts in one atomic commit; pushed to `origin/factory-artifacts`.
+17. **Factory lock:** no `factory_lock` frontmatter block exists in STATE.md and the lock-write/verify-sha-currency scripts are not provisioned in this repo — no lock is held, so the renew/unlock step is a no-op. Noted, not fabricated.
+
+**Adversary verdict:** N/A this burst at the state-manager level — the code-reviewer/pr-reviewer/security-reviewer review of PR #776 itself (steps 3-5 above) is the substantive review for this burst's only code change; no additional adversarial-review phase runs at F7.
+
+**Outcome:** cycle-004 (`windows-correctness`) Phase F7 (delta convergence) is now **CONVERGED (DEC-342)** — human-authorized via the windows-latest CI verification path. `develop` @ `135eb804` (current tip). `total_bcs` unchanged at 742; `vp_count` unchanged at 55; holdout scenarios unchanged at 106; `total_stories` unchanged at 172. **NEXT:** RELEASE EXECUTION — human-authorized dev release via branch + version-bump PR (standard dev-release-through-PR convention) to cut `v0.7.0-dev.5`.
+
+**Codifications:** **DEC-342** — the F7 delta-convergence verdict (CONVERGED, human-authorized), recorded with the PR #776 SHA, the CI run ID, and the two explicitly descoped residuals. This is the first new DEC since DEC-341 (F6 COMPLETE).
+
+### Counts reconciled this burst
+
+BCs: unchanged at **742**. VPs: unchanged at **55**. Holdout scenarios: unchanged at 106. `total_stories` unchanged at **172**.
+
+### Details
+
+| Agent | Task | Output |
+|-------|------|--------|
+| create-dpapi-pr | Author PR #776: `#[cfg(windows)]` CI test for the DPAPI-encrypted-file oversized-token round-trip | PR #776 (`test/cycle4-dpapi-file-roundtrip-win-ci`), test-only + doc-only |
+| ci-watch-776 | Watch PR #776 CI to green | 14/14 checks green incl. `Test (windows-latest)` run `34040856196` and `CI Gate` |
+| pr-review-776-cycle1 (code-reviewer) | Local code review of PR #776 | MERGE-READY |
+| pr-reviewer | Fresh-eyes PR review | APPROVE |
+| security-review-776 (security-reviewer) | Independent security review of PR #776 | CLEAN — no CWE-applicable finding |
+| state-manager | Record DEC-342, transition F7 to CONVERGED, update STATE.md (v3.73) + burst-log + session-checkpoints per the Single-Commit Burst Protocol | Updated `STATE.md` (v3.73, `pipeline: ACTIVE`, F7 CONVERGED); updated `cycles/cycle-004/session-checkpoints.md` (archives the v3.72 checkpoint); this burst-log entry |
+
+**Files touched (Dim-1): 3 unique files (factory-artifacts, this burst)**
+
+- STATE.md
+- cycles/cycle-004/burst-log.md
+- cycles/cycle-004/session-checkpoints.md
+
+(PR #776's own file changes — `src/api/auth_windows_store.rs` — landed on `develop` via the standard PR merge, not via this factory-artifacts commit.)
+
+**Dim-2 Attestation:** `STORY-INDEX.md`/BC/VP/holdout counts unchanged this burst (PR #776 added tests only) — `scripts/check-spec-counts.sh` and `scripts/check-bc-cumulative-counts.sh` were not re-run since no BC/VP/index content changed. DEC-namespace collision check: DEC-342 is the next sequential ID after DEC-341, no collision.
+
+**Dim-5 Attestation:** N/A — no binary/WASM artifact produced by this burst's factory-artifacts commit (PR #776's CI build artifacts are GitHub Actions' own, not a factory-artifacts deliverable).
+
+**Dim-6 Attestation:** PR #776 changed `src/api/auth_windows_store.rs` (test-only) on `develop` — reviewed via the standard code-reviewer/pr-reviewer/security-reviewer chain (steps 3-5). This factory-artifacts commit itself is bookkeeping-only, no source change.
+
+**Dim-7 Attestation:** PR #776 is CI-relevant by design — it adds a new automatically-run `windows-latest` test leg exercising the DPAPI-file round-trip; confirmed green (run `34040856196`) before merge.
+
+**Closes:** the F7 Windows-verification gate for the DPAPI-encrypted-file mechanism (production-path round-trip, end-to-end on real Windows in CI); the F7 final human convergence gate (DEC-342); Phase F7 (delta convergence) for cycle-004 in its entirety — all 5 dimensions PASS, Windows-verification satisfied via CI, human authorization received. **Does NOT close:** cycle-004 itself, which remains open pending RELEASE EXECUTION (cutting `v0.7.0-dev.5`); the `F6-MUTATION-EXAMINE-GLOBS-EXPANSION` gap (unchanged, still open); the two newly-logged process-gap follow-ups (`JR_CACHE_DIR-TEST-ENV-MUTEX-UNIFICATION`, `PR-MANAGER-COMPLETION-GUARD-HOOK-LOOP`), both non-blocking and targeted at future maintenance/engine work; the two explicitly descoped Windows-verification residuals ((a) natural `TooLong` trigger, (b) live OAuth browser-consent flow), which remain genuinely unexercised by design, not oversights; no cycle-001/002/003 standing Drift/Standing items are touched.
