@@ -327,3 +327,45 @@ traces_to: STATE.md
 **Superseded at (2026-09-06, Burst 21 — F7 CONVERGED via the windows-latest CI verification path):** superseded in place by the v3.73 checkpoint. Human authorized satisfying the REQUIRED Windows-11 DPAPI verification via the existing `windows-latest` GitHub Actions CI runner instead of a physical/manual smoke test ("add CI test → verify green → converge & release"). PR #776 (branch `test/cycle4-dpapi-file-roundtrip-win-ci`) squash-merged to `develop` @ `135eb804` added a `#[cfg(windows)]` CI test proving the DPAPI-encrypted-file production-path round-trip on real Windows (`Test (windows-latest)` run `34040856196`); gates all green (code-reviewer, pr-reviewer, security-reviewer, CI 14/14). This satisfies holdout H-W1-WIN-001 and the DPAPI legs of H-W1-INT-001/002 & H-W2-INT-001, with two residuals — (a) the natural `keyring::Error::TooLong` trigger from a real Windows Credential Manager, (b) the live OAuth browser-consent flow — explicitly descoped per human decision. The final human F7 convergence gate PASSED (**DEC-342**); phase F7 is now **CONVERGED**. Only release execution (cutting `v0.7.0-dev.5`) remains.
 ```
 
+---
+
+## Checkpoint v3.73 — cycle-004 F7 CONVERGED (DEC-342), release execution pending (SUPERSEDED by v3.74, Burst 22 — cycle-004 RELEASED as v0.7.0-dev.5 + CLOSED)
+
+| Field | Value |
+|-------|-------|
+| **Date** | 2026-09-06 |
+| **Position** | cycle-004 (`windows-correctness`), Phase F7 (delta convergence), **CONVERGED (DEC-342).** All five automated F7 delta-convergence dimensions PASS; the REQUIRED Windows-11 DPAPI verification satisfied via the `windows-latest` CI verification path (PR #776 @ `135eb804`) rather than a physical smoke test. |
+| **Convergence** | F5 CONVERGED (DEC-340). F6 COMPLETE (DEC-341). **F7 CONVERGED (DEC-342)** — all 5 dimensions PASS (Spec, Test, Impl, Verification, Holdout); the Windows-verification gate satisfied via CI with two explicitly descoped residuals ((a) natural `TooLong` trigger, (b) live OAuth browser-consent flow). |
+| **In-flight work** | NONE running at archival time. No live sub-agents. All cycle-004 PRs (#768-#776) MERGED — no open PRs, no story worktrees. |
+| **Pending human decisions (as recorded)** | RELEASE EXECUTION — human-authorized dev release via branch + version-bump PR (standard dev-release-through-PR convention) to cut `v0.7.0-dev.5`. |
+
+### Resume Prompt (as recorded at v3.73)
+
+```
+**Date:** 2026-09-06. **Position:** cycle-004 (`windows-correctness`), Phase F7 (delta convergence), CONVERGED (DEC-342). All five automated F7 delta-convergence dimensions PASS; the REQUIRED Windows-11 DPAPI verification is satisfied via the `windows-latest` CI verification path (PR #776 @ `135eb804`) rather than a physical smoke test, per explicit human authorization; the final human F7 gate PASSED. **Next = RELEASE EXECUTION** — cut `v0.7.0-dev.5` via the standard dev-release-through-PR convention. cycle-001, cycle-002, and cycle-003 remain CLOSED, historical, unaltered by this burst.
+
+**Convergence:** F5 CONVERGED (DEC-340). F6 COMPLETE (DEC-341). **F7 CONVERGED (DEC-342)** — all 5 automated dimensions PASS (Spec, Test, Impl, Verification, Holdout); the Windows-verification gate is satisfied via CI (PR #776) with two explicitly descoped residuals ((a) natural `TooLong` trigger, (b) live OAuth browser-consent flow). **cycle-004's F1-F7 pipeline is now fully converged; only release execution remains.**
+
+**In-flight work:** **NONE running.** No live sub-agents at the moment of this checkpoint. All cycle-004 PRs (#768, #769, #770, #771, #772, #773, #774, #775, #776) are MERGED — no open PRs, no story worktrees.
+
+**Pending human decisions / blockers:**
+1. **RELEASE EXECUTION** — human-authorized dev release via branch + version-bump PR (standard dev-release-through-PR convention) to cut **`v0.7.0-dev.5`**, the next dev version after `v0.7.0-dev.4`.
+
+**Accepted non-blocking residuals (documented, not gating release):**
+- `F6-MUTATION-EXAMINE-GLOBS-EXPANSION` — 4 remaining cycle-004 credential-critical files still absent from `.cargo/mutants.toml` examine_globs; test quality manually verified 97-100%, CI enforcement deferred to a future maintenance cycle.
+- `W2-INT-PROCESS-GAP-README-PROSE-DRIFT` — no CI guard cross-checks README auth/storage prose against the code model; deferred to a future maintenance cycle.
+- `CYCLE-004-INPUT-HASH-HYGIENE` — the 9 cycle-004 F1-F3 delta artifacts flagged at the F7 pre-gate drift check have been recomputed (commit `a038ac0d`); the factory-wide 165-artifact standing pool remains untouched, unchanged standing debt.
+- `JR_CACHE_DIR-TEST-ENV-MUTEX-UNIFICATION` (Burst 21) — three non-mutually-exclusive env-mutexes over one `JR_CACHE_DIR` global; safe failure mode, deferred to a future maintenance cycle.
+- `PR-MANAGER-COMPLETION-GUARD-HOOK-LOOP` (Burst 21) — vsdd-factory engine tooling bug in the completion-guard hook; did not affect PR #776's correctness; deferred to a vsdd-factory engine fix.
+- **Windows-verification descoped residuals (Burst 21):** (a) the natural `keyring::Error::TooLong` trigger from a real Windows Credential Manager; (b) the live `jr auth login --oauth` browser-consent flow. Both explicitly out of scope per human decision (DEC-342) — not gaps in the delivered release.
+- By-design items: the api-token profile's stored `cloud_id` is unused by `base_url()` (documented, not a defect); `--cloud-id` is accepted unvalidated (documented, not a defect).
+
+**WIP branches:** **None.** All cycle-004 story branches (`S-cycle4-dpapi-storage-fix`, `S-cycle4-cloud-id-correctness`, `S-cycle4-windows-docs`, `S-cycle4-honest-fail-message`), all 4 F4-F6 fix branches (FIX-W2-INT-README, FIX-F5-CYCLE4-1, FIX-F5-CYCLE4-2, FIX-F6-1), and PR #776's `test/cycle4-dpapi-file-roundtrip-win-ci` are merged and deleted. The main checkout is on `develop` @ **`135eb804`** (current tip; NOT the same as `activation_head: 42e92b46`, the last-*released* tip).
+
+**Counts: total_bcs 742; VP count 55; holdout scenarios 106; total_stories 172** (all unchanged this burst).
+
+**EXACT RESUME COMMAND:** `/vsdd-factory:rehydrate-wave` then `/vsdd-factory:next-step` (resumes at release execution).
+
+**Superseded at (2026-09-06, Burst 22 — cycle-004 RELEASED as v0.7.0-dev.5 + CLOSED):** superseded in place by the v3.74 checkpoint. Human authorized and executed the cycle-004 dev release: version-bump PR #777 (`chore(release): v0.7.0-dev.5`) squash-merged to `develop` @ `569d85a8`; annotated tag `v0.7.0-dev.5` (tag object `41a880d5`) pushed; `release.yml` run `34046676423` concluded SUCCESS across all 5 build targets; GitHub prerelease published (10 assets/5 targets, 2026-09-06T16:55:46Z) at https://github.com/Zious11/jira-cli/releases/tag/v0.7.0-dev.5. `activation_head`/`activation_version` advanced `42e92b46`/`v0.7.0-dev.4` → `569d85a8`/`v0.7.0-dev.5`. **DEC-343 recorded; cycle-004 (`windows-correctness`) is now CLOSED.** `pipeline` frontmatter set to `RELEASED` (mirrors the exact value cycle-003's own release-cut burst used, v3.52/commit `bcc90d01` — the repo's resting-state value once the sole open cycle ships and closes). **All four tracked cycles (cycle-001, cycle-002, cycle-003, cycle-004) are now CLOSED — no open cycle, no open work.** No further action is pending; the pipeline is idle awaiting the human's direction on the next feature bundle or maintenance cycle.
+```
+
