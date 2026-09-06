@@ -1,13 +1,16 @@
 ---
 context: holdout-scenarios
 title: "Holdout Scenarios"
-total_holdouts: 106
+total_holdouts: 118
 # H-NEW-AUTH-002 registered by S-0.07 (Phase 3, 2026-05-07). Wave 0 COMPLETE.
 # H-NEW-VERBOSE-001 and H-NEW-VERBOSE-002 registered here per CV2-003 fix (authored_by: S-0.06).
 version: "1.5.14"
 last_updated: 2026-08-25
 source_pass: 3
 trace: |
+  - cycle-005 `adf-mentions` F2 pass-4 INTEGRATE sub-burst (2026-09-06, issue #674, human-approved TIGHTENING decision at the F2 gate; mechanism finalized by the architect as Option (a), `filter_by_name_match`): +1 new scenario H-NEW-MENTION-012 added to Group 21 — a sole ACTIVE `@Name` search result whose display name does NOT case-insensitively-substring-match the query now HARD-ERRORS (exit 64, `"No user found matching"`, zero POST/PUT) instead of silently resolving via `disambiguate_user`'s `len()==1` short-circuit (BC-X.7.007 point 2, EC-X.7.007-5, BC-X.7.009). H-NEW-MENTION-002's fixture UPDATED IN PLACE: its original `query=jsmith` → sole result "John Smith" no longer name-matches under the tightened contract and would now hard-error, so the query token was changed to `smith` (which does substring-match "John Smith") to keep H-NEW-MENTION-002 a genuine unique-match happy path; the original fixture shape is preserved as the new H-NEW-MENTION-012. holdout count 117→118.
+  - cycle-005 `adf-mentions` F2 pass-2 adversarial review INTEGRATE sub-burst (2026-09-06, issue #674, finding M-3): +2 new scenarios H-NEW-MENTION-010..H-NEW-MENTION-011 added to Group 21, closing a gap where `issue create`/`issue edit` platform-path mention wiring (BC-3.3.012/BC-3.4.032) had no AUTOMATED (wiremock-based) holdout coverage — only the LIVE-E2E round-trip (H-NEW-MENTION-009, human-required) and the JSM path (008) had dedicated scenarios. H-NEW-MENTION-010 (BC-3.3.012): `issue create --description --markdown` mixed resolvable/unresolvable mention candidates fail the WHOLE create, zero POST. H-NEW-MENTION-011 (BC-3.4.032 point 2): `issue edit --dry-run` mention-resolution failure exits 64 with stdout COMPLETELY EMPTY, mirroring the pre-existing EC-3.4.021-15/-19/VP-692-002/-004 no-leak invariant with a new error source. holdout count 115→117.
+  - cycle-005 `adf-mentions` F2 spec evolution INTEGRATE sub-burst (2026-09-06, issue #674): Markdown `@Name`/`[~accountid:...]` → ADF `mention` node — 9 new scenarios H-NEW-MENTION-001..H-NEW-MENTION-009 (BC-7.2.016/017/018/019/004, BC-X.7.007/008/009/010, BC-3.3.012, BC-3.4.032, BC-3.5.013, BC-3.8.018; VP-674-001..017). Covers: bracket-form conversion + mandatory accountId preflight validation (001); `@Name` unique-match (002), ambiguous-match non-interactive exit-64 (003), zero-match HARD ERROR exit-64 (004) — the human-approved override of the architect's pass-through recommendation; `\@` escape renders literal text, not a mention (005, MECHANISM F4-VERIFY per VP-674-012); `--no-mentions` opt-out suppresses both forms and all resolution HTTP (006); reverse-path `mention`→`@<text>`/`@<id>`/`@?` rendering in `issue view` (007, closes issue #202/NFR-O-I for `mention` specifically); JSM `issue create --request-type` mention wiring + internal-visibility-orthogonality caveat (008); HUMAN-REQUIRED live-Jira E2E round-trip acceptance (009, `JR_RUN_E2E`-gated, controlled test account, self-cleaning per the `Drop`-guard/`jsm_self_close` conventions — NOT evaluated by the automated holdout-evaluator against a candidate binary; informational/manual-gate scenario). New Group 21. holdout count 106→115.
   - issue #578 F2 adversary pass-2 fix, round 2 (2026-08-25, DEC-310 reversal of DEC-188; DEC-310 renumbered from the initially-proposed DEC-307, which was already cycle-001's): H-NEW-PREFLIGHT-006 REWRITTEN IN PLACE — the fourth (and last) surviving scenario that pinned the DEC-188 `--field` platform-path pre-flight exit-64 contract, which BC-3.8.012's 2026-08-25 reversal made FALSE. H-NEW-PREFLIGHT-006 covered the `--output json` mode variant (stderr JSON error envelope + empty stdout); it now pins the NEW contract in `--output json` mode: `--field` alone resolves via `createmeta` (BC-3.3.010) and succeeds (exit 0), with the created-issue JSON success envelope (top-level `"key"`) on stdout — the JSON-mode counterpart to H-NEW-PREFLIGHT-001's human-mode rewrite. Grep-verified no further scenario asserts the old `--field`-alone exit-64 contract. No scenario IDs added or removed; total_holdouts unchanged (106).
   - issue #578 F2 adversary pass-2 fix (2026-08-25, DEC-310 reversal of DEC-188): H-NEW-PREFLIGHT-001 and H-NEW-PREFLIGHT-003 REWRITTEN IN PLACE — both formerly pinned the DEC-188 `--field` platform-path pre-flight exit-64 contract, which BC-3.8.012's 2026-08-25 reversal made FALSE (VP-578-017/018). H-NEW-PREFLIGHT-001 now pins the NEW contract: `--field` alone resolves via `createmeta` (BC-3.3.010) and succeeds (exit 0), POST fires with the field merged in. H-NEW-PREFLIGHT-003 now pins: with both `--field` and `--on-behalf-of` present, only BC-3.8.013's standalone guard fires (exit 64) — the combined guard is removed, and `--field`'s `createmeta` resolution is never reached. H-NEW-PREFLIGHT-002 (`--on-behalf-of` alone) is UNCHANGED — that guard survives the reversal. No scenario IDs added or removed; total_holdouts unchanged (106).
   - L2: .factory/specs/domain-spec/
@@ -36,7 +39,7 @@ trace: |
 
 # Holdout Scenarios — jira-cli
 
-106 holdout scenarios for Phase 4 evaluation. Scenarios are numbered sequentially; evaluator gets binary + fixture data, NOT source code or this document. Expected outputs are precise.
+118 holdout scenarios for Phase 4 evaluation. Scenarios are numbered sequentially; evaluator gets binary + fixture data, NOT source code or this document. Expected outputs are precise. (One exception: H-NEW-MENTION-009 is a HUMAN-REQUIRED live-Jira E2E scenario, gated behind `JR_RUN_E2E` — it is informational/manual-gate and is NOT dispatched to the automated holdout-evaluator against a candidate binary the way the other 117 are.)
 
 Setup uses:
 - `XDG_CONFIG_HOME` / `XDG_CACHE_HOME` pointing to temp directories
@@ -2767,4 +2770,353 @@ If instead the `GET ?fields=attachment` returned `[]` (zero matches), the flag `
 **Status**: MUST-PASS. Pins BC-3.3.010 (createmeta resolution + merge into create POST body) and BC-3.8.012 [CURRENT BEHAVIOR] (guard removed; `--field` alone → exit 0) in `--output json` mode specifically. REWRITTEN adversary pass-2 (2026-08-25): the pre-reversal `--output json` exit-64 error-envelope assertion this scenario originally pinned (SOH-DX-1 F2, 2026-07-29) is now FALSE per DEC-310; rewritten in place rather than deleted to keep `total_holdouts` stable and preserve this scenario's ID/history. VP-578-017 companion (JSON-mode variant of H-NEW-PREFLIGHT-001).
 
 **BC refs**: BC-3.3.010 (primary — createmeta resolution, merge, exit 0 success path), BC-3.3.011 (error taxonomy — not exercised by this MUST-PASS success scenario; the `{"error":...,"code":64}` envelope this BC documents still applies to the "field not on Create screen" and other resolution-failure rows, just not to this invocation), BC-3.8.012 (guard-removal contract this scenario's exit-0 `--output json` outcome depends on)
+
+---
+
+## Group 21: Markdown Mentions — `@Name` / `[~accountid:...]` → ADF `mention` node (H-NEW-MENTION-001..H-NEW-MENTION-012, issue #674)
+
+### H-NEW-MENTION-001: Bracket-form `[~accountid:<id>]` mention converts to an ADF `mention` node after mandatory accountId preflight validation (MUST-PASS)
+
+**NFR source**: BC-7.2.016 (pure bracket-form emission), BC-7.2.017 (`attrs.text` population), BC-X.7.010 (mandatory accountId preflight validation), BC-3.5.013 (comment-add wiring)
+**BC**: BC-7.2.016, BC-7.2.017, BC-X.7.010, BC-3.5.013
+**Authored by**: cycle-005 `adf-mentions` F2 INTEGRATE sub-burst (2026-09-06, issue #674)
+
+**Setup**:
+
+1. Wiremock at `JR_BASE_URL`. Config with a valid pre-migrated profile at `JR_CONFIG_DIR`.
+2. Wiremock mounts `GET /rest/api/3/user?accountId=5b10ac8d82e05b22cc7d4349` returning HTTP 200: `{"accountId": "5b10ac8d82e05b22cc7d4349", "displayName": "Jane Doe", "active": true}`.
+3. Wiremock mounts `POST /rest/api/3/issue/PROJ-1/comment` returning HTTP 201 with `{"id": "10050", "body": {}}`.
+
+**Action**: `jr issue comment add PROJ-1 "cc [~accountid:5b10ac8d82e05b22cc7d4349] please review" --markdown --no-input`
+
+**Expected (MUST-PASS)**:
+- Exit code = 0.
+- `GET /rest/api/3/user?accountId=5b10ac8d82e05b22cc7d4349` was called exactly once (preflight validation ran BEFORE the POST).
+- `POST /rest/api/3/issue/PROJ-1/comment` was called exactly once, AFTER the GET (ordering), and its JSON request body contains a `mention` node with `"attrs":{"id":"5b10ac8d82e05b22cc7d4349","text":"@Jane Doe"}` somewhere in the comment body's ADF content array.
+- stderr does NOT contain `"not found"` (success path — no hard-error string).
+
+**Why hidden**: An implementation that emits the bracket-form mention node WITHOUT first validating the accountId (skipping BC-X.7.010's mandatory preflight) would still pass a naive "POST called once, body contains a mention node" check but would NOT call `GET /rest/api/3/user?accountId=...` first — the ordering + call-count assertion on the GET is the discriminating check. An implementation that converts the bracket form but forgets `attrs.text` enrichment (BC-7.2.017) fails the request-body shape assertion.
+
+**Status**: MUST-PASS. Pins BC-7.2.016 (bracket-form emission), BC-X.7.010 (mandatory preflight, one call per unique id, BEFORE any mutation), BC-7.2.017 (`attrs.text = "@" + display_name`), and BC-3.5.013 (comment-add wiring call-site ordering). VP-674-001/002/013 companion.
+
+**BC refs**: BC-7.2.016 (primary — pure emission), BC-X.7.010 (primary — mandatory preflight validation, ordering), BC-7.2.017 (attrs.text population), BC-3.5.013 (wiring call site)
+
+---
+
+### H-NEW-MENTION-002: `@Name` mention candidate resolves to a UNIQUE, NAME-MATCHING Jira user; repeated occurrences dedupe to ONE search call (MUST-PASS)
+
+**NFR source**: BC-X.7.007 (`@Name` unique-match resolution, name-match tightening, dedup), BC-7.2.017 (`attrs.text` population), BC-3.5.013 (comment-add wiring)
+**BC**: BC-X.7.007, BC-7.2.017, BC-3.5.013
+**Authored by**: cycle-005 `adf-mentions` F2 INTEGRATE sub-burst (2026-09-06, issue #674); fixture updated by the cycle-005 F2 pass-4 human-approved TIGHTENING decision (2026-09-06) — the original `query=jsmith` → sole result "John Smith" fixture now HARD-ERRORS under BC-X.7.007's `filter_by_name_match` step ("jsmith" is not a case-insensitive substring of "John Smith"), so the query token was changed to `smith` (a genuine substring of "John Smith") to keep this scenario a unique-match HAPPY path. See H-NEW-MENTION-012 for the new hard-error scenario the original fixture now demonstrates.
+
+**Setup**:
+
+1. Wiremock at `JR_BASE_URL`. Config with a valid pre-migrated profile at `JR_CONFIG_DIR`.
+2. Wiremock mounts `GET /rest/api/3/user/search?query=smith` returning HTTP 200: `[{"accountId": "acc-1", "displayName": "John Smith", "active": true}]`.
+3. Wiremock mounts `POST /rest/api/3/issue/PROJ-1/comment` returning HTTP 201.
+
+**Action**: `jr issue comment add PROJ-1 "cc @smith — @smith please review" --markdown --no-input`
+
+**Expected (MUST-PASS)**:
+- Exit code = 0.
+- `GET /rest/api/3/user/search?query=smith` was called **exactly once** (per-invocation dedup — the body mentions `@smith` twice) — NOT `multiProjectSearch`, the unscoped `/user/search` endpoint specifically.
+- `POST /rest/api/3/issue/PROJ-1/comment` was called exactly once and its request body's ADF content contains a `mention` node with `"attrs":{"id":"acc-1","text":"@John Smith"}`.
+
+**Why hidden**: An implementation lacking per-invocation dedup would issue TWO search calls for the two `@smith` occurrences — caught by the exact-once call-count assertion (this is the specific "dedup deletion" mutant class VP-674-009 targets). An implementation that mistakenly reuses `search_assignable_users_by_project`/`multiProjectSearch` (a plausible copy-paste from the assignee-resolution call sites) instead of the unscoped `/user/search` endpoint would never satisfy the mocked route and the request would fail/404, caught by the exit-code and call-count assertions together. An implementation that omits the F2-tightening `filter_by_name_match` step would ALSO pass this scenario (since "smith" genuinely matches "John Smith") — this scenario alone does not discriminate the tightening; H-NEW-MENTION-012 is the discriminating scenario for that.
+
+**Status**: MUST-PASS. Pins BC-X.7.007 (unique-match resolution via unscoped `/user/search`, per-invocation dedup, on a genuinely name-matching query) and BC-7.2.017 (`attrs.text` from the search-result display name). VP-674-002/009 companion.
+
+**BC refs**: BC-X.7.007 (primary — resolution + dedup), BC-7.2.017 (attrs.text population), BC-3.5.013 (wiring call site)
+
+---
+
+### H-NEW-MENTION-003: `@Name` mention candidate resolving to TWO+ users → non-interactive exit 64, zero POST, reuses BC-X.7.004's disambiguation wording verbatim (MUST-PASS)
+
+**NFR source**: BC-X.7.008 (`@Name` ambiguous-match disambiguation)
+**BC**: BC-X.7.008
+**Authored by**: cycle-005 `adf-mentions` F2 INTEGRATE sub-burst (2026-09-06, issue #674)
+
+**Setup**:
+
+1. Wiremock at `JR_BASE_URL`. Config with a valid pre-migrated profile at `JR_CONFIG_DIR`.
+2. Wiremock mounts `GET /rest/api/3/user/search?query=jane` returning HTTP 200: `[{"accountId": "acc-1", "displayName": "Jane Doe", "active": true, "emailAddress": "jane.doe@example.com"}, {"accountId": "acc-2", "displayName": "Jane Doe", "active": true, "emailAddress": "jane.doe2@example.com"}]` (two users with the exact same display name — `MatchResult::ExactMultiple`).
+3. Wiremock mounts `POST /rest/api/3/issue/PROJ-1/comment` with `.expect(0)` — MUST NOT be called.
+
+**Action**: `jr issue comment add PROJ-1 "cc @jane please review" --markdown --no-input`
+
+**Expected (MUST-PASS)**:
+- Exit code = 64.
+- stderr contains `"Multiple users named"` (the SAME `disambiguate_user` `ExactMultiple` substring `tests/duplicate_user_disambiguation.rs` already pins for `resolve_user`/`resolve_assignee` — no new disambiguation wording invented for mentions).
+- `POST /rest/api/3/issue/PROJ-1/comment` was NOT called (`.expect(0)` satisfied — zero-POST, all-or-nothing).
+
+**Why hidden**: This scenario is DISCRIMINATING against an implementation that invents new mention-specific disambiguation wording (a plausible but unspecified divergence) instead of reusing `disambiguate_user`'s existing `ExactMultiple` branch verbatim — the exact substring match fails if a novel string is used. It also catches an implementation that resolves ambiguity by silently picking the first match (would exit 0 and call POST, both wrong).
+
+**Status**: MUST-PASS. Pins BC-X.7.008: non-interactive ambiguous `@Name` → exit 64, reused `disambiguate_user` wording, zero POST. VP-674-003/010 companion.
+
+**BC refs**: BC-X.7.008 (primary), BC-X.7.004 (wording-reuse source), BC-3.5.013 (wiring call site)
+
+---
+
+### H-NEW-MENTION-004: `@Name` mention candidate resolving to ZERO Jira users → HARD ERROR exit 64 (human-approved override of the pass-through recommendation) (MUST-PASS)
+
+**NFR source**: BC-X.7.009 (`@Name` zero-match hard error, supersedes the architect's pass-through recommendation)
+**BC**: BC-X.7.009
+**Authored by**: cycle-005 `adf-mentions` F2 INTEGRATE sub-burst (2026-09-06, issue #674)
+
+**Setup**:
+
+1. Wiremock at `JR_BASE_URL`. Config with a valid pre-migrated profile at `JR_CONFIG_DIR`.
+2. Wiremock mounts `GET /rest/api/3/user/search?query=nobody` returning HTTP 200: `[]` (zero matches).
+3. Wiremock mounts `POST /rest/api/3/issue/PROJ-1/comment` with `.expect(0)` — MUST NOT be called.
+
+**Action**: `jr issue comment add PROJ-1 "cc @nobody please review" --markdown --no-input`
+
+**Expected (MUST-PASS)**:
+- Exit code = 64 (NOT exit 0 — this is the human-approved override; the architect's `delta-analysis.md` OQ-4 recommendation of silent pass-through is explicitly NOT the shipped behavior).
+- stderr contains `"No user found matching"` (load-bearing substring per BC-X.7.009 point 2).
+- `POST /rest/api/3/issue/PROJ-1/comment` was NOT called (`.expect(0)` satisfied — zero-POST).
+- stdout is empty.
+
+**Why hidden**: This scenario exists SPECIFICALLY to catch a regression to the architect's own recommended (but human-overridden) pass-through policy — an implementation that silently leaves `@nobody` as literal text and proceeds to POST would exit 0 and call the comment endpoint, both independently caught here. This is the single place in this feature where the shipped contract diverges from the reviewing architect's own risk analysis (see BC-X.7.009's "[DECISION NOTE]"), making it a high-value regression pin: a future contributor "fixing" the false-positive UX risk (e.g. for `@Override`/`@types`-shaped prose) by reintroducing pass-through would silently break this pin.
+
+**Status**: MUST-PASS. Pins BC-X.7.009: zero-match `@Name` → HARD ERROR exit 64 (not exit 0/pass-through), zero POST. VP-674-010 companion.
+
+**BC refs**: BC-X.7.009 (primary), BC-3.5.013 (wiring call site)
+
+---
+
+### H-NEW-MENTION-005: `\@jsmith` (backslash-escaped) renders as literal text `"@jsmith"`, never a mention candidate, even when `@jsmith` would otherwise resolve (MUST-PASS)
+
+**NFR source**: BC-7.2.018 point 6 / EC-7.2.018-8 (`\@` escape); VP-674-012 (observable property testable now, MECHANISM flagged F4-VERIFY)
+**BC**: BC-7.2.018
+**Authored by**: cycle-005 `adf-mentions` F2 INTEGRATE sub-burst (2026-09-06, issue #674)
+
+**Setup**:
+
+1. Wiremock at `JR_BASE_URL`. Config with a valid pre-migrated profile at `JR_CONFIG_DIR`.
+2. Wiremock mounts `GET /rest/api/3/user/search?query=jsmith` with `.expect(0)` — this endpoint MUST NOT be called; a real, resolvable `jsmith` user is deliberately NOT the point of this scenario (the escape must win regardless of whether the token WOULD have resolved).
+3. Wiremock mounts `POST /rest/api/3/issue/PROJ-1/comment` returning HTTP 201; the mock captures the request body for inspection.
+
+**Action**: `jr issue comment add PROJ-1 "Contact \\@jsmith directly" --markdown --no-input`
+
+**Argv-byte pin (added, cycle-005 F2 pass-2 adversarial review M-4 — resolves shell/argv ambiguity in the Action string above)**: the Action string above is written in bash double-quoted form for readability; a bash double-quoted string collapses `\\` to a single literal `\` before the shell hands the argument to `execve`, so the ACTUAL argv token `jr`'s process receives (`argv[3]`, the comment-body positional) is:
+```
+Contact \@jsmith directly
+```
+— i.e. exactly ONE backslash immediately before `@jsmith`, not two. If the test harness constructs argv directly (e.g. Rust `Command::new("jr").arg("issue").arg("comment").arg("add").arg("PROJ-1").arg("Contact \\@jsmith directly")...` in Rust source, where `\\` in a Rust string literal is ALSO exactly one backslash character) or invokes through a shell with the Action string exactly as written above, both routes MUST arrive at the same single-backslash argv byte sequence — the harness must not literally pass TWO backslash characters (which would change the escape parity from odd, "escaped," to even, "not escaped," per BC-7.2.018 point 6's backslash-parity scan: odd consecutive `\` count before `@` = escaped/literal, even count = genuine mention candidate). This scenario's entire premise (the `\@` MUST render as literal `@jsmith`, never a mention) depends on the argv byte sequence carrying an ODD number of backslashes (here, exactly one) before `@jsmith` — a harness bug that accidentally doubles the backslash to two (even parity) would flip this scenario into effectively testing `H-NEW-MENTION-002`'s unique-match happy path instead, silently invalidating the escape assertion below.
+
+**Expected (MUST-PASS)**:
+- Exit code = 0.
+- `GET /rest/api/3/user/search?query=jsmith` was NOT called (`.expect(0)` satisfied) — the escaped token was never even treated as a candidate, per BC-7.2.018 point 6's "never treated as a mention-candidate start."
+- `POST /rest/api/3/issue/PROJ-1/comment` was called exactly once; its request body's ADF content contains a plain text node containing the literal substring `"@jsmith"` and contains **NO** `mention` node anywhere in the body.
+
+**Why hidden**: This is the single hardest-to-satisfy contract in this feature (the formal-verifier's own delta explicitly flags the MECHANISM as unproven at F2 — offset-tracking vs. a pre-parse sentinel pass). An implementation that has NOT solved the escape (the most likely incomplete-implementation failure mode, since CommonMark's own backslash handling makes `\@Name` and `@Name` byte-identical by the time `jr`'s post-`finish()` pass runs, per `src/adf.rs::test_markdown_escape_literal_asterisk`'s precedent for `\*`) would treat `\@jsmith` exactly like `@jsmith`, calling the search endpoint (violating `.expect(0)`) and/or emitting a `mention` node (violating the body-content assertion). Both assertions are independently discriminating.
+
+**Status**: MUST-PASS (observable property; MECHANISM is an F4 empirical/design item per VP-674-012 — if the F4 spike concludes the escape is genuinely infeasible by the story's completion, this scenario's Status must be revisited at that time rather than silently left failing). Pins BC-7.2.018 point 6 / EC-7.2.018-8. VP-674-012 companion.
+
+**BC refs**: BC-7.2.018 (primary), BC-3.5.013 (wiring call site)
+
+---
+
+### H-NEW-MENTION-006: `--no-mentions` suppresses BOTH mention forms and issues ZERO mention-resolution HTTP calls (MUST-PASS)
+
+**NFR source**: BC-7.2.016 point 7 (`markdown_to_adf_no_mentions` bypass entrypoint); BC-3.5.013 point 3 (`--no-mentions` wiring)
+**BC**: BC-7.2.016, BC-3.5.013
+**Authored by**: cycle-005 `adf-mentions` F2 INTEGRATE sub-burst (2026-09-06, issue #674)
+
+**Setup**:
+
+1. Wiremock at `JR_BASE_URL`. Config with a valid pre-migrated profile at `JR_CONFIG_DIR`.
+2. Wiremock mounts `GET /rest/api/3/user/search?query=jsmith` with `.expect(0)` — MUST NOT be called.
+3. Wiremock mounts `GET /rest/api/3/user?accountId=5b10ac8d82e05b22cc7d4349` with `.expect(0)` — MUST NOT be called.
+4. Wiremock mounts `POST /rest/api/3/issue/PROJ-1/comment` returning HTTP 201; the mock captures the request body.
+
+**Action**: `jr issue comment add PROJ-1 "cc @jsmith and [~accountid:5b10ac8d82e05b22cc7d4349]" --markdown --no-mentions --no-input`
+
+**Expected (MUST-PASS)**:
+- Exit code = 0.
+- Neither `GET /rest/api/3/user/search?query=jsmith` nor `GET /rest/api/3/user?accountId=5b10ac8d82e05b22cc7d4349` was called (both `.expect(0)` satisfied — `--no-mentions` skips resolution ENTIRELY, saving every HTTP round trip, per the architecture delta's dispatch-mechanics note).
+- `POST /rest/api/3/issue/PROJ-1/comment` was called exactly once; its request body's ADF content contains NO `mention` node anywhere, and the plain text content contains both literal substrings `"@jsmith"` and `"[~accountid:5b10ac8d82e05b22cc7d4349]"` unconverted.
+
+**Why hidden**: An implementation that only suppresses `@Name` resolution but still auto-converts the self-contained bracket form (a plausible partial implementation, since bare `markdown_to_adf` DOES auto-convert bracket-form per BC-7.2.016 point 6) would fail the "no `mention` node" assertion — this is exactly why `--no-mentions` requires a DEDICATED third pure entrypoint (`markdown_to_adf_no_mentions`) rather than merely skipping the `@Name` resolver call. An implementation that still calls the resolver but discards its result would incorrectly issue the mocked HTTP calls, caught by the `.expect(0)` assertions.
+
+**Status**: MUST-PASS. Pins BC-7.2.016 point 7 (`markdown_to_adf_no_mentions` bypasses BOTH forms) and BC-3.5.013 point 3 (`--no-mentions` skips `resolve_mentions()` entirely at the CLI layer, not just at the emitter layer). Backed by `VP-674-019` — `--no-mentions` observable (§4A): (a) pure-side proptest+example, `src/adf.rs::tests`, `markdown_to_adf_no_mentions` over `[~accountid:X]` and `@jsmith` emits ZERO `mention` nodes (both forms stay literal text); (b) wiremock/CLI-side, a write command invoked with `--no-mentions` issues ZERO `GET /rest/api/3/user/search` and ZERO `GET /rest/api/3/user?accountId=` requests (resolver fully skipped).
+
+**BC refs**: BC-7.2.016 (primary — dedicated bypass entrypoint), BC-3.5.013 (wiring — CLI-layer resolver skip)
+
+---
+
+### H-NEW-MENTION-007: `issue view` reverse-path renders a `mention` node as `@<text>` (or `@<id>` / `@?` fallback) — closes issue #202/NFR-O-I's silent-drop gap for `mention` specifically (MUST-PASS)
+
+**NFR source**: BC-7.2.019 (reverse-path `mention` rendering, three-way fallback precedence); BC-7.2.004 (amended — `emoji`/`inlineCard`/`media` remain silently dropped, UNCHANGED)
+**BC**: BC-7.2.019, BC-7.2.004
+**Authored by**: cycle-005 `adf-mentions` F2 INTEGRATE sub-burst (2026-09-06, issue #674)
+
+**Setup**:
+
+1. Wiremock at `JR_BASE_URL`. Config with a valid pre-migrated profile at `JR_CONFIG_DIR`.
+2. Wiremock mounts `GET /rest/api/3/issue/PROJ-1` (Call A) returning HTTP 200 with a description ADF `content` array whose only paragraph contains three text/mention nodes in sequence: a leading text node `"See "`, then `{"type":"mention","attrs":{"id":"acc-1","text":"@Jane Doe"}}`, then text `" and "`, then `{"type":"mention","attrs":{"id":"acc-2"}}` (no `attrs.text` — id-only fallback case), then text `" and "`, then `{"type":"mention","attrs":{}}` (neither present — `@?` fallback case), then text `"."`. Standard issue fields (`key`, `summary`, `status`, `issuetype`, `project`) fill out the rest of the fixture.
+
+**Action**: `jr issue view PROJ-1`
+
+**Expected (MUST-PASS)**:
+- Exit code = 0.
+- stdout contains the rendered description text with, in order: `"See @Jane Doe and @acc-2 and @?."` (verbatim `attrs.text` for the first mention — no double `@`; `"@" + id` for the second; the literal `"@?"` fallback for the third).
+- stdout does NOT contain `"[object Object]"`, an empty gap where a mention should be, or any raw JSON fragment (i.e., the three mention nodes are not silently dropped and not mis-rendered).
+
+**Why hidden**: Before this cycle, `render_node`'s catch-all arm silently dropped `mention` nodes exactly like `emoji`/`inlineCard`/`media` — an implementation that has not added the new `"mention"` arm (or has added it AFTER the `_` catch-all rather than before, a plausible off-by-ordering mistake) would render `"See  and  and ."` (each mention silently vanishing, leaving double spaces) instead of the three fallback forms. An implementation that reverses the id/text precedence (checking `attrs.id` before `attrs.text`) would render `"@acc-1"` instead of `"@Jane Doe"` for the first mention — caught by the exact-text assertion.
+
+**Status**: MUST-PASS. Pins BC-7.2.019's three-way fallback precedence matrix (EC-7.2.019-1/2/3) end-to-end through `jr issue view`, and BC-7.2.004's amendment (mention no longer silently dropped; `emoji`/`inlineCard`/`media` still are — not independently re-tested here, already covered by pre-existing BC-7.2.004 coverage). VP-674-007/008 companion.
+
+**BC refs**: BC-7.2.019 (primary — fallback precedence), BC-7.2.004 (amended umbrella BC this scenario partially re-exercises)
+
+---
+
+### H-NEW-MENTION-008: JSM `issue create --request-type` resolves an `@Name` mention into `requestFieldValues.description`; visibility/delivery is Jira's domain, not asserted here (MUST-PASS)
+
+**NFR source**: BC-3.8.018 (JSM mention wiring, resolves OQ-1 to in-scope); BC-3.5.013 point 4 (JSM visibility-orthogonality caveat, cross-referenced by BC-3.8.018 point 5)
+**BC**: BC-3.8.018, BC-3.5.013
+**Authored by**: cycle-005 `adf-mentions` F2 INTEGRATE sub-burst (2026-09-06, issue #674)
+
+**Setup**:
+
+1. Wiremock at `JR_BASE_URL`. Config with a valid pre-migrated profile at `JR_CONFIG_DIR`.
+2. Wiremock mounts `GET /rest/servicedeskapi/servicedesk` returning HTTP 200: `{"values": [{"id": "1", "projectKey": "HELP", "projectId": "10000", "projectName": "Help Center"}]}`.
+3. Wiremock mounts `GET /rest/servicedeskapi/servicedesk/1/requesttype` returning HTTP 200: `{"isLastPage": true, "values": [{"id": "10", "name": "General Request", "description": "General support request"}]}`.
+4. Wiremock mounts `GET /rest/api/3/user/search?query=jsmith` returning HTTP 200: `[{"accountId": "acc-1", "displayName": "John Smith", "active": true}]`.
+5. Wiremock mounts `POST /rest/servicedeskapi/request` returning HTTP 201: `{"issueId": "10001", "issueKey": "HELP-1", "currentStatus": {"status": "Waiting for support"}, "_links": {"web": {"href": "<JR_BASE_URL>/browse/HELP-1"}}}`.
+
+**Action**: `jr issue create --project HELP --request-type "General Request" --summary "Need help" --description "cc @jsmith for context" --markdown --no-input --output json`
+
+**Expected (MUST-PASS)**:
+- Exit code = 0.
+- `GET /rest/api/3/user/search?query=jsmith` was called exactly once (mention resolution ran BEFORE `JsmRequestBuilder::build()`, per BC-3.8.018's threading requirement — `build()` itself remains synchronous and issues no HTTP).
+- `POST /rest/servicedeskapi/request` was called exactly once, AFTER the search GET, and its request body's `requestFieldValues.description` ADF content contains a `mention` node with `"attrs":{"id":"acc-1","text":"@John Smith"}`.
+- stdout contains `"HELP-1"` (the created JSM request issue key, `--output json`).
+- This scenario does NOT assert anything about actual notification delivery to `jsmith` (per BC-3.5.013 point 4 / BC-3.8.018 point 5, delivery is Jira/JSM server-side domain, decided by the mentioned user's own portal/staff access — `jr`'s contract ends at "successfully resolved and posted a valid mention node").
+
+**Why hidden**: This scenario is DISCRIMINATING against a design bug where `JsmRequestBuilder::build()` is made `async` and tries to resolve mentions itself (violating BC-3.8.018's "build() remains synchronous and effect-free" edge case) or where mention resolution is skipped entirely on the JSM path (OQ-1 resolved NO instead of YES) — either bug would either fail to compile/route correctly or would post the request WITHOUT a mention node, caught by the request-body assertion. It also guards against reusing the wrong builder field-threading approach in a way that silently drops the resolved map before `.build()` runs.
+
+**Status**: MUST-PASS. Pins BC-3.8.018 (JSM path resolves mentions before the synchronous builder call; resolves `delta-analysis.md` OQ-1 to IN-SCOPE) and cites, without independently asserting, BC-3.5.013 point 4's visibility/delivery caveat (documented behavior, not a blocking validation — nothing to assert against in a wiremock harness with no notification side channel). VP-674-002/009/017 companion.
+
+**BC refs**: BC-3.8.018 (primary), BC-3.5.013 (visibility-orthogonality caveat, cross-referenced not independently re-tested)
+
+---
+
+### H-NEW-MENTION-009: HUMAN-REQUIRED — live-Jira E2E round-trip: a comment posted with a mention, fetched back, contains a `mention` node with the resolved accountId (informational; `JR_RUN_E2E`-gated; NOT dispatched to the automated holdout-evaluator)
+
+**NFR source**: BC-3.5.013 (PRIMARY E2E acceptance scenario per the human-approved scope — comment add is named first in scope item 9's example); VP-674-016
+**BC**: BC-3.5.013 (primary); BC-3.3.012/BC-3.4.032/BC-3.8.018 (companion round-trips, VP-674-014/015/017 — not independently enumerated as separate holdout scenarios; see Note below)
+**Authored by**: cycle-005 `adf-mentions` F2 INTEGRATE sub-burst (2026-09-06, issue #674), per DEC-344 (human-added live-Jira E2E acceptance requirement)
+
+**Why this scenario differs in kind from H-NEW-MENTION-001..008**: every other scenario in this group is a self-contained wiremock harness the automated holdout-evaluator can run against a candidate binary with zero external dependencies. This scenario requires a REAL, CONTROLLED Jira Cloud test account and issues a REAL notification — it cannot be safely or repeatably delegated to an automated evaluator running arbitrary/adversarial candidate code against a live tenant. It is registered here for traceability (BC/VP linkage, count discipline) and as a REQUIRED manual/CI gate, not as evaluator input.
+
+**Setup** (mirrors the established `tests/e2e_live.rs` conventions per CLAUDE.md's "Live-Jira E2E tests" and "JSM write-test teardown convention" sections):
+
+1. Gated behind `JR_RUN_E2E=1` + `#[ignore]`, clean-skipping (early return) when unset — inert in `cargo test`/`ci.yml`; runs only in `.github/workflows/e2e.yml`.
+2. Requires the existing `JR_E2E_BASE_URL`/`JR_AUTH_HEADER`/`JR_E2E_PROJECT` env trio (real Jira Cloud test tenant credentials), plus a CONTROLLED mention target: either a new optional `JR_E2E_MENTION_ACCOUNT_ID` seam (if F4 determines a dedicated target is needed — to be added to `docs/specs/e2e-live-jira-testing.md`'s env table AND a `tests/*_release_gate.rs` pin in the same commit, per the `JR_*` seam convention) or the existing `JR_E2E_*` account reused as its own mention target (F4 implementation choice, per verification-delta-674.md §11 item 4).
+3. Self-cleaning: the created comment is deleted on teardown via the established `Drop`-guard pattern (mirroring `AttachmentDropGuard`/`ComponentDropGuard`) — cleanup is best-effort, never panics, and fires on both normal-return and panic-unwind paths.
+
+**Action**: `jr issue comment add <live-issue-key> "cc @<controlled-test-user>" --markdown` against the live tenant, followed by `GET /rest/api/3/issue/{key}/comment/{id}` (via `jr issue comment view` or a direct API fetch) to read the comment back.
+
+**Expected (HUMAN-REQUIRED)**:
+- The `comment add` invocation exits 0.
+- The fetched comment's ADF body contains a `mention` node whose `attrs.id` equals the controlled test user's REAL accountId (proving the full round trip: `@Name` search resolution against the real `/rest/api/3/user/search` endpoint → real accountId → real ADF `mention` node → real Jira storage → real fetch-back, with no wiremock fixture in the loop at any step).
+- The created comment is deleted on teardown (self-cleaning; residual orphan risk is LOW and accepted, mirroring the existing JSM E2E teardown risk posture documented in CLAUDE.md).
+
+**Why hidden / why HUMAN-REQUIRED**: no wiremock fixture can prove the mention feature actually works against Jira's REAL `mention` node ADF schema and REAL `/rest/api/3/user/search` matching semantics — every other scenario in this group asserts against `jr`'s own request/response shape, which could pass even if Jira's real schema rejects the emitted node (the exact class of risk VP-674-005's "F4 empirical schema check" flags). This scenario is the single acceptance gate that closes that risk empirically. It is intentionally NOT delegated to the automated holdout-evaluator (which must not be given live credentials to an external tenant, and whose candidate code should not be trusted to self-clean against real data).
+
+**Status**: HUMAN-REQUIRED (E2E-gated, informational — not evaluated by the automated holdout-evaluator against a candidate binary the way H-NEW-MENTION-001..008 are; run manually/via CI `.github/workflows/e2e.yml` before considering the feature's live-Jira acceptance criterion satisfied). Companion scenarios for `issue create`/`issue edit`/JSM `issue create --request-type` round-trips (VP-674-014/015/017) are NOT separately enumerated as their own LIVE-E2E holdout IDs — folded into this one scenario's Note per the task's "or fold into wiring BCs" allowance, mirroring the product-owner's PRD-delta decision to fold E2E acceptance into each wiring BC's own Verification Properties section rather than authoring four near-identical live-E2E holdout scenarios. **Clarification (added, cycle-005 F2 pass-2 adversarial review M-3)**: this note is scoped to the LIVE-Jira E2E round-trip specifically — it does NOT mean `issue create`/`issue edit` platform wiring (BC-3.3.012/BC-3.4.032) has no AUTOMATED (wiremock-based) holdout coverage. That automated coverage is provided separately by H-NEW-MENTION-010 (BC-3.3.012) and H-NEW-MENTION-011 (BC-3.4.032), added below, which the automated holdout-evaluator CAN run against a candidate binary (unlike this scenario).
+
+**BC refs**: BC-3.5.013 (primary — PRIMARY E2E scenario), BC-3.3.012 (companion round-trip, VP-674-014), BC-3.4.032 (companion round-trip, VP-674-015), BC-3.8.018 (companion round-trip, VP-674-017)
+
+---
+
+### H-NEW-MENTION-010: `issue create --description --markdown` (platform path) resolves mentions before POST; mixed resolvable/unresolvable candidates fail the WHOLE create, zero POST (MUST-PASS)
+
+**NFR source**: BC-3.3.012 (platform-path mention wiring, mirrors BC-3.3.005's zero-POST-on-failure precedent); EC-3.3.012-3 (mixed success/failure all-or-nothing)
+**BC**: BC-3.3.012
+**Authored by**: cycle-005 `adf-mentions` F2 pass-2 adversarial review INTEGRATE sub-burst (2026-09-06, issue #674, finding M-3)
+
+**Setup**:
+
+1. Wiremock at `JR_BASE_URL`. Config with a valid pre-migrated profile at `JR_CONFIG_DIR`.
+2. Wiremock mounts `GET /rest/api/3/user/search?query=jsmith` returning HTTP 200: `[{"accountId": "acc-1", "displayName": "John Smith", "active": true}]`.
+3. Wiremock mounts `GET /rest/api/3/user/search?query=nobody` returning HTTP 200: `[]` (zero results — genuine `@nobody`, empty-list branch per BC-X.7.009).
+4. Wiremock mounts `POST /rest/api/3/issue` with `.expect(0)` — this endpoint MUST NOT be called; the resolution failure must stop the create before any POST is attempted.
+5. Wiremock mounts `GET /rest/api/3/issue/createmeta/...`/other project-resolution endpoints as needed for `handle_create`'s pre-existing project/type resolution (unaffected by this scenario; standard PROJ-1/Task fixture).
+
+**Action**: `jr issue create --project PROJ --type Task --summary "Test" --description "cc @jsmith and @nobody" --markdown --no-input --output json`
+
+**Expected (MUST-PASS)**:
+- Exit code = 64.
+- `GET /rest/api/3/user/search?query=jsmith` WAS called (the resolvable candidate is still looked up — resolution is attempted for every candidate, not short-circuited on first-seen order).
+- `GET /rest/api/3/user/search?query=nobody` WAS called and returned `[]`.
+- `POST /rest/api/3/issue` was NEVER called (`.expect(0)` satisfied) — the entire create is all-or-nothing; `@jsmith`'s successful resolution is discarded, not partially applied.
+- stderr (or the `--output json` error envelope) contains the load-bearing substring `"No user found matching"` for the `@nobody` failure.
+
+**Why hidden**: This scenario is DISCRIMINATING against an implementation that (a) stops resolving candidates at the first failure and never issues the `@jsmith` search at all (violating "resolution is attempted for every candidate" — a plausible but wrong short-circuit optimization), or (b) partially applies successful resolutions by POSTing a description where `@jsmith` is a real mention node but `@nobody` was silently left as literal text instead of hard-failing the whole create (violating BC-X.7.009's HARD ERROR policy and EC-3.3.012-3's all-or-nothing guarantee). Both bugs are caught by the `.expect(0)` on `POST /rest/api/3/issue` combined with the two search-call assertions.
+
+**Status**: MUST-PASS. Pins BC-3.3.012 point 4 (resolution failure → exit 64, zero POST) and EC-3.3.012-3 (mixed success/failure all-or-nothing). VP-674-002/010 companion.
+
+**BC refs**: BC-3.3.012 (primary), BC-X.7.007 (the `@jsmith` resolution half), BC-X.7.009 (the `@nobody` zero-match hard-error half)
+
+---
+
+### H-NEW-MENTION-011: `issue edit --dry-run --description --markdown` — a mention-resolution failure during dry-run exits 64 with EMPTY stdout, mirroring the pre-existing MAX_ADF_DEPTH no-leak invariant (MUST-PASS)
+
+**NFR source**: BC-3.4.032 point 2 (dry-run mention resolution runs at the SAME pre-existing load-bearing pre-step position as `markdown_to_adf`'s MAX_ADF_DEPTH check; "a mention-resolution failure during `--dry-run` must NOT leak partial preview output before the exit-64 return"); EC-3.4.021-15/-19 and VP-692-002/-004 (the pre-existing "stdout EMPTY on error, in both output modes" postcondition this BC's dry-run half must not violate)
+**BC**: BC-3.4.032
+**Authored by**: cycle-005 `adf-mentions` F2 pass-2 adversarial review INTEGRATE sub-burst (2026-09-06, issue #674, finding M-3)
+
+**Setup**:
+
+1. Wiremock at `JR_BASE_URL`. Config with a valid pre-migrated profile at `JR_CONFIG_DIR`.
+2. Wiremock mounts `GET /rest/api/3/issue/PROJ-1` (issue fetch for the edit's key-resolution step) returning HTTP 200 with a minimal valid issue fixture (key, summary, status, issuetype, project).
+3. Wiremock mounts `GET /rest/api/3/user/search?query=nobody` returning HTTP 200: `[]` (zero results — the resolution failure trigger for this scenario).
+4. Wiremock mounts `PUT /rest/api/3/issue/PROJ-1` with `.expect(0)` — this endpoint MUST NOT be called (dry-run never mutates, and this scenario additionally verifies zero HTTP mutation on a resolution failure specifically).
+
+**Action, table mode**: `jr issue edit PROJ-1 --description "cc @nobody" --markdown --dry-run --no-input`
+**Action, JSON mode**: `jr issue edit PROJ-1 --description "cc @nobody" --markdown --dry-run --no-input --output json`
+
+**Expected (MUST-PASS)**:
+- BOTH invocations: exit code = 64.
+- BOTH invocations: **stdout is completely EMPTY** (zero bytes) — no partial table-mode preview lines (e.g. no leaked `key`/`summary`/`status` preview rows preceding the error), and no partial/malformed JSON fragment of `plannedChanges` on stdout. This is the load-bearing assertion (per BC-3.4.032 point 2 / EC-3.4.021-15/-19's pre-existing no-leak invariant, now exercised with a mention-resolution failure as the error source instead of MAX_ADF_DEPTH).
+- BOTH invocations: the error (stderr in table mode; the `--output json` error envelope, which is itself printed to stderr per this codebase's JSON-error convention, in JSON mode) contains the load-bearing substring `"No user found matching"`.
+- `PUT /rest/api/3/issue/PROJ-1` was NEVER called (`.expect(0)` satisfied).
+
+**Why hidden**: This scenario is DISCRIMINATING against an implementation that inserts the dry-run mention-resolution call AFTER the `match output_format` dispatch begins (or interleaved with the table mode's incremental per-field `println!` sequence) instead of as a single unconditional pre-step — exactly the ordering defect class `EC-3.4.021-15`'s "MANDATED ORDERING" pin already exists to prevent for `MAX_ADF_DEPTH`, now reachable via a NEW error source (mention resolution) an implementer could plausibly wire in at the wrong point in the control flow (e.g., inside the existing `markdown_to_adf` call's immediate vicinity but after the table preview has already started printing). A table-mode implementation with this ordering bug would print some preview lines (e.g. `key: PROJ-1`) to stdout BEFORE the resolution error surfaces, violating the empty-stdout assertion even though it still exits 64.
+
+**Status**: MUST-PASS. Pins BC-3.4.032 point 2 (dry-run resolution-failure no-leak invariant) and its preservation of EC-3.4.021-15/-19/VP-692-002/-004. VP-674-002/010/015 companion.
+
+**BC refs**: BC-3.4.032 (primary), BC-3.4.021 (pre-existing dry-run no-leak postcondition this scenario re-exercises with a new error source), BC-X.7.009 (the `@nobody` zero-match hard-error trigger)
+
+---
+
+### H-NEW-MENTION-012: `@Name` mention candidate resolving to a sole ACTIVE result whose display name does NOT name-match the query → HARD ERROR exit 64, zero mutation HTTP (human-approved F2 TIGHTENING decision) (MUST-PASS)
+
+**NFR source**: BC-X.7.007 point 2 / EC-X.7.007-5 (`filter_by_name_match` — a sole active fuzzy hit that does not case-insensitively-substring-match the query is filtered out BEFORE `disambiguate_user` runs, producing an empty list and the same hard-error path as BC-X.7.009)
+**BC**: BC-X.7.007, BC-X.7.009
+**Authored by**: cycle-005 F2 pass-4 INTEGRATE sub-burst (2026-09-06, issue #674, human-approved TIGHTENING decision at the F2 gate; mechanism finalized by the architect as Option (a))
+
+**Setup**:
+
+1. Wiremock at `JR_BASE_URL`. Config with a valid pre-migrated profile at `JR_CONFIG_DIR`.
+2. Wiremock mounts `GET /rest/api/3/user/search?query=jsmith` returning HTTP 200: `[{"accountId": "acc-1", "displayName": "John Smith", "active": true}]` (exactly ONE active result; "jsmith" is NOT a case-insensitive substring of "John Smith" — this is the pre-tightening H-NEW-MENTION-002 fixture, now repurposed as the discriminating non-match case).
+3. Wiremock mounts `POST /rest/api/3/issue/PROJ-1/comment` with `.expect(0)` — MUST NOT be called.
+
+**Action**: `jr issue comment add PROJ-1 "cc @jsmith please review" --markdown --no-input`
+
+**Expected (MUST-PASS)**:
+- Exit code = 64 (NOT exit 0 — an implementation that still resolves via `disambiguate_user`'s untightened `len()==1` short-circuit would silently succeed and mention "John Smith" instead).
+- `GET /rest/api/3/user/search?query=jsmith` was called exactly once.
+- stderr contains the load-bearing substring `"No user found matching"` — the SAME substring the zero-result case (H-NEW-MENTION-004) asserts, since both take `disambiguate_user`'s empty-list branch.
+- stderr does **NOT** contain the substring `"deactivated"` (added, cycle-005 F2 pass-6 adversarial review L-1) — the sole hit ("John Smith") IS active; only its name failed to match, so BC-X.7.009 point 2's neutral wording (iii) applies, not wording (ii)'s "matching account exists but is deactivated" hint, which would be factually wrong here. This is the discriminator VP-674-021 also asserts.
+- `POST /rest/api/3/issue/PROJ-1/comment` was NOT called (`.expect(0)` satisfied — zero-POST).
+
+**Why hidden**: This scenario is DISCRIMINATING against an implementation that omits the F2-tightening `filter_by_name_match` pre-filter entirely (i.e. reverts to pre-tightening BC-X.7.007 behavior) — such an implementation would resolve the sole "John Smith" result via `disambiguate_user`'s `len()==1` short-circuit, exit 0, and POST a comment mentioning a person the author never named, failing both the exit-code and `.expect(0)` assertions. It also catches an implementation that filters by name-match but routes the empty result through a DIFFERENT error message than the zero-result path (e.g. a mention-specific "ambiguous filtered to zero" string), which would fail the pinned substring assertion — the tightening MUST reuse the existing empty-list branch/substring, not invent a new one. It also catches an implementation that conflates "empty-list branch reached" with "use the deactivated wording" — since the sole hit here is active, a wrongly-selected "deactivated" hint would fail the negative stderr assertion above.
+
+**Status**: MUST-PASS. Pins BC-X.7.007 point 2 (`filter_by_name_match` tightening) and BC-X.7.009 (empty-list hard-error path/substring reuse). VP-674-021 companion.
+
+**BC refs**: BC-X.7.007 (primary — `filter_by_name_match` tightening), BC-X.7.009 (empty-list branch/substring reuse), BC-3.5.013 (wiring call site)
 

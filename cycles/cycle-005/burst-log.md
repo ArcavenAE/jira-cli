@@ -73,4 +73,63 @@ traces_to: STATE.md
 
 ---
 
+## Burst: Burst 2 — Phase F2 spec evolution APPROVED (DEC-346); F2-gate TIGHTENING decision (DEC-345); F2-close INTEGRATE reconciliation; phase advances F2→F3 (2026-09-06)
+
+**Parent-commit:** `569d85a8` (`develop` tip; unchanged this burst — no `develop`-side commit; F2/F3 are spec-only phases, no code merged).
+
+**Trigger:** Phase F2 spec evolution (architect + product-owner + formal-verifier, across multiple INTEGRATE sub-bursts) authored the binding BCs/VPs/holdouts/ADR from the two F1 decomposition proposals, then ran 10 rounds of scoped adversarial review to convergence (passes 7-10 all 0-CRIT/HIGH/MED, cosmetic-only) and a pre-gate consistency audit (CONSISTENT verdict). The human then reviewed the F2 delta at the gate, issued one F2-gate TIGHTENING decision on `@Name` single-result resolution (DEC-345), and APPROVED F2 in full (DEC-346). This state-manager burst is the catch-up/close-out step: recording both decisions in STATE.md (neither had yet been logged there), performing the 6-item F2-close INTEGRATE reconciliation sweep the orchestrator identified as non-blocking propagation gaps, and advancing the tracked phase to F3.
+
+**Actions this burst:**
+
+1. Verified `.factory/` worktree preconditions (`.git` marker, `git rev-parse --git-dir`, branch `factory-artifacts`) — all PASS. No `project.yaml` (single-repo; `.factory-project/` preconditions N/A).
+2. Confirmed via direct inspection of `.factory/specs/prd/*.md`, `BC-INDEX.md`, `holdout-scenarios.md`, `cross-cutting.md`, and `.factory/architecture/component-graph.md` that the substantive F2 spec-evolution work (12 new BCs, ADR-0023, 21 VPs across `VP-674-001..021`, 12 holdout scenarios `H-NEW-MENTION-001..012`, the DEC-345 `filter_by_name_match` tightening amendment to BC-X.7.007, and the full Markdown Mentions Delta DAG-verification section in `component-graph.md`) was already present and internally consistent — BC-INDEX.md (`total_bcs: 754`, `index_version: v6.86`), `holdout-scenarios.md` (`total_holdouts: 118`), and `CANONICAL-COUNTS.md`'s per-file/Sum/grand-total rows and `last_verified` narrative all already reflected the final, reconciled state. The gaps were confined to cross-reference/bookkeeping documents that had not been swept in the same pass: `spec-changelog.md`, `CANONICAL-COUNTS.md`'s `## ADRs` section, `system-overview.md`, `specs/prd/README.md`, and the two F2 delta files' `status:` fields.
+3. Minted **DEC-345** (F2-gate tightening) and **DEC-346** (F2 approval) in STATE.md's Decisions Log.
+4. Performed the 6-item F2-close INTEGRATE cleanup sweep:
+   - `spec-changelog.md` `[2.2.0]` entry: corrected "6 existing BCs amended" → **7** (the original text already listed 7 IDs — BC-7.2.004 + 6 cross-reference-only BCs — but the header undercounted); corrected VP count 17→**21** (55→76 running total) and holdout count 9→**12** (106→118 running total); added a new paragraph documenting the post-entry adversarial-convergence and F2-gate tightening additions (pass-2 M-3's 2 holdouts, the F2-gate's BC-X.7.007 amendment + 1 holdout + 1 VP, and 3 further adversarial-pass VPs) that account for the corrected totals, including the JSM `--request-type` wiring (BC-3.8.018) already covered in the original entry.
+   - `.factory/architecture/component-graph.md`: **already contained** the full "Markdown Mentions Delta — DAG Verification (Issue #674, F2 2026-09-06)" section with every edge named in the F2 architecture-delta (`cli::issue::mentions → adf`, `→ api::jira::users`, `→ cli::issue::helpers`, `→ error`, plus the four handler→mentions edges) and an explicit "DAG remains acyclic" verdict — no edit needed, confirmed only.
+   - `.factory/architecture/system-overview.md`: fixed the dead-symbol citation `AdfToTextRenderer::render_node` → `AdfRenderer::render_node` (the real struct name; `AdfToTextRenderer` does not exist in `src/adf.rs`).
+   - `.factory/specs/prd/README.md`: updated both informational holdout rows (Document Map + Supplement Index) from `115` / `H-NEW-MENTION-001..H-NEW-MENTION-009` to `118` / `H-NEW-MENTION-001..H-NEW-MENTION-012`.
+   - `.factory/specs/prd/CANONICAL-COUNTS.md` `## ADRs`: bumped "Canonical ADR count: 19" → **23** (ADR-0001..0023, no gaps); added bullets for ADR-0020 (per-profile credential ownership), ADR-0021 (Windows DPAPI fallback), ADR-0022 (tenant_info cloud_id), and ADR-0023 (markdown mention conversion seam); updated the "Location convention" line's upper bound `ADR-0017..0019` → `ADR-0017..0023`. Additionally added the missing **ADR-0023** row to `.factory/architecture/adr-index.md`'s ADR Summary Table (that file's own row set stopped at ADR-0022) — without this, the CANONICAL-COUNTS.md verification instruction ("count rows in adr-index.md Summary Table") would itself have gone out of sync the moment the canonical count was bumped to 23.
+   - `.factory/phase-f2-spec-evolution/prd-delta-674.md` and `verification-delta-674.md`: flipped `status: draft` → `status: complete` in both frontmatter blocks (F2 is now human-approved).
+5. Re-ran the three required count-verification scripts — all exit 0 (see Dim-2 Attestation).
+6. Logged two new process-gap follow-ups (`ADR-COUNT-CANONICAL-GUARD-GAP`, `FACTORY-HOOK-FUEL-EXHAUSTED`) alongside the carried-forward cycle-004 process-gap backlog, unchanged.
+7. Advanced the tracked phase: `cycle-005 (adf-mentions) Phase F2 spec evolution APPROVED; Phase F3 (incremental story decomposition) IN PROGRESS.`
+
+**Adversary verdict:** N/A this state-manager burst — no `adversary` agent dispatched. The 10-pass adversarial-review convergence and pre-gate consistency audit this entry records were run by prior F2 spec-evolution sub-bursts (not by this bookkeeping/INTEGRATE-cleanup burst); their outcome (passes 7-10 all 0-CRIT/HIGH/MED, cosmetic-only; pre-gate audit CONSISTENT) is cited above as context for DEC-346, not re-run here.
+
+**Files touched (Dim-1): 10 unique files/paths this burst (all `.factory/` — 8 modified, 1 archived-content update, 1 this burst's own log entry), all committed in the state-manager's own single atomic commit**
+
+- `.factory/spec-changelog.md` (corrected `[2.2.0]` entry counts + added post-entry-additions paragraph)
+- `.factory/specs/prd/CANONICAL-COUNTS.md` (`## ADRs` section: 19→23, 4 new bullets, location-convention range extended)
+- `.factory/architecture/adr-index.md` (added missing ADR-0023 Summary Table row)
+- `.factory/architecture/system-overview.md` (dead-symbol citation fix: `AdfToTextRenderer` → `AdfRenderer`)
+- `.factory/specs/prd/README.md` (2 holdout-count rows: 115→118, `H-NEW-MENTION-001..009` → `..012`)
+- `.factory/phase-f2-spec-evolution/prd-delta-674.md` (`status: draft` → `complete`)
+- `.factory/phase-f2-spec-evolution/verification-delta-674.md` (`status: draft` → `complete`)
+- `STATE.md` (v3.76 — full-content Write)
+- `cycles/cycle-005/session-checkpoints.md` (v3.75 checkpoint archived with "Superseded at" note)
+- `cycles/cycle-005/burst-log.md` (this entry)
+
+**Known hook noise this burst (pre-existing, not caused by this burst's edits, not blocking):** `validate-template-compliance` fired on the `system-overview.md` edit (that file has never carried the `architecture-section-template.md` frontmatter/section structure — pre-existing drift, unrelated to the one-line citation fix made here); `validate-input-hash` fired on the `verification-delta-674.md` edit (this file is one of the 165 factory-wide stale-`input-hash` artifacts tracked under `F7-GATE-SYSTEMIC-INPUT-HASH-DRIFT-BOOKKEEPING`); `validate-input-hash`/`validate-factory-path-root`/`validate-template-compliance` also reported `FUEL_EXHAUSTED` on the large `spec-changelog.md` edit. All edits were grep/script-verified to have landed correctly regardless (see Actions 4-5 above); logged as `FACTORY-HOOK-FUEL-EXHAUSTED`, a tracked engine-tooling process-gap, not a jira-cli product defect.
+
+**Dim-2 Attestation:** `bash scripts/check-spec-counts.sh` → exit 0 ("Check passed: 8 bc files validated"). `bash scripts/check-bc-cumulative-counts.sh` → exit 0 ("OK: all cumulative BC counts verified (754 total across 9 files; Surface H footer checked where present)"). `bash scripts/check-bc-citation-symbols.sh` → exit 0 ("Check passed: 463 citations checked"). Counts entering F3: **754 BCs / 76 VPs (tracked running total; +21 net-new `VP-674-NNN` ids this cycle; the pre-existing `VP-COUNT-RECONCILIATION` gap — raw-grepped VP ids across `bc-*.md` bodies materially exceeding the tracked running total — remains open and non-blocking) / 118 holdout scenarios / 172 stories (unchanged; F3 will add cycle-005's story files)**. DEC-namespace collision check: DEC-345 and DEC-346 are the next two sequential IDs after DEC-344, no collision.
+
+**Dim-5 Attestation:** N/A — no binary/WASM artifact produced by this `.factory/` commit (bookkeeping-only, no build).
+
+**Dim-6 Attestation:** No `src/`/`tests/` change this burst — cycle-005 remains spec-only through F2/F3. `develop` HEAD unchanged at `569d85a8`.
+
+**Dim-7 Attestation:** N/A — no CI-relevant change this burst (no code, no workflow file touched).
+
+**Codifications:** **DEC-345** — human F2-gate TIGHTENING decision: a lone `@Name` search result whose display name does NOT case-insensitively-substring-match the query now HARD ERRORS (exit 64) via a new pure `filter_by_name_match` pre-filter step inserted between the active-user filter and `disambiguate_user`, rather than silently resolving; `disambiguate_user` itself is unchanged; `MatchResult::None` is thereby unreachable via the mention resolver's call site. Resolves EC-X.7.007-5's former open decision; supersedes the architect's own pass-through recommendation from `delta-analysis.md`. Ref ADR-0023 §7; implemented in BC-X.7.007 (amended in place, `cross-cutting.md`); 1 new holdout scenario (H-NEW-MENTION-012) and 1 new VP (VP-674-021). **DEC-346** — human APPROVED cycle-005 (`adf-mentions`, #674) Phase F2 spec evolution in full: 12 new BCs (BC-7.2.016..019, BC-X.7.007..010, BC-3.3.012/BC-3.4.032/BC-3.5.013/BC-3.8.018) + 7 BCs amended in place (BC-7.2.004 + 6 cross-reference-only amendments) + the DEC-345 BC-X.7.007 tightening amendment; new ADR-0023; 21 VPs (`VP-674-001..021`); 12 holdout scenarios (`H-NEW-MENTION-001..012`, including H-009 the human-required live-Jira E2E round-trip); spec version 2.1.0→2.2.0 (MINOR). Adversarial convergence reached over 10 passes (passes 7-10 all 0-CRIT/HIGH/MED, cosmetic-only); pre-gate consistency audit verdict CONSISTENT. Phase advances F2→F3.
+
+**Closes:** cycle-005 Phase F2 (spec evolution) — human-approved; the 6-item F2-close INTEGRATE reconciliation sweep the orchestrator dispatched (all 6 confirmed landed — 5 required an edit, 1 — `component-graph.md` — was already complete and confirmed only). **Does NOT close:** cycle-005 itself, which remains open through F3-F7; the pre-existing `VP-COUNT-RECONCILIATION` tracked follow-up (still non-blocking); the newly-logged `ADR-COUNT-CANONICAL-GUARD-GAP` and `FACTORY-HOOK-FUEL-EXHAUSTED` process-gaps (both target future engine/maintenance work, neither blocks cycle-005); any of the carried-forward cycle-001/002/003/004 standing items (all unchanged).
+
+### Details
+
+| Agent | Task | Output |
+|-------|------|--------|
+| state-manager | Verified F2 spec-evolution artifacts already present/consistent; minted DEC-345/DEC-346; performed 6-item F2-close INTEGRATE cleanup sweep; re-ran count-verification scripts; logged 2 new process-gaps; STATE.md v3.76 full-content Write; archived v3.75 checkpoint; commit + push to `factory-artifacts` | `spec-changelog.md`, `CANONICAL-COUNTS.md`, `adr-index.md`, `system-overview.md`, `README.md` (specs/prd), `prd-delta-674.md`, `verification-delta-674.md`, `STATE.md` (v3.76), `cycles/cycle-005/burst-log.md` (this file), `cycles/cycle-005/session-checkpoints.md` |
+
+---
+
 <!-- Repeat for each burst. Maintain chronological order. -->

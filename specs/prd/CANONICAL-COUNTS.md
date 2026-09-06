@@ -2,7 +2,7 @@
 document_type: canonical-counts
 product: jr (jira-cli)
 generated: "2026-05-04"
-last_verified: "2026-09-03 (bc-1-auth-identity.md +9 BCs (BC-1.2.052..054 + BC-1.4.035..040) added cycle-004 `windows-correctness` F2 spec evolution, issues #759/#760, DEC-334, ADR-0021/ADR-0022 — Windows OAuth DPAPI-encrypted-file fallback secret storage (BC-1.4.035..040) + API-token `cloud_id` acquisition via `/_edge/tenant_info` closing A-PA-LOW-001 (BC-1.2.052..054); BC-1.4.028 amended in place (partial-state error extended to check the DPAPI file before erroring), no separate count; bc-6-config-cache.md unaffected by this pass (a planned BC-6.2.016 cross-reference amendment was deferred — pre-existing TD-031 stable-anchor hygiene violation in that file blocks edits, unrelated to this cycle's diff); 742 total; prior: 2026-09-01 (bc-1-auth-identity.md +2 BCs (BC-1.1.016 + BC-1.4.034) added cycle-003 `auth-profile-dx` F2-gate FIX round, same day as the F2 spec evolution below — BC-1.1.016 closes adversarial finding I-1 (non-interactive OAuth guard for explicit `--oauth`/implicit oauth-method `refresh`); BC-1.4.034 formalizes the one-time re-login breaking-change contract; BC-1.4.032/033 REDESIGNED in place (no-copy detect-and-instruct model, DEC-315/ADR-0020 §Decision 2a) and BC-1.2.014 reworded in place (credentials-before-config-entry ordering), no separate count; 733 total; prior: 2026-09-01 (bc-1-auth-identity.md +12 BCs (BC-1.1.013..015 + BC-1.2.048..051 + BC-1.4.031..033 + BC-1.6.047) and bc-6-config-cache.md +1 BC (BC-6.1.015) added F2 spec evolution, cycle-003 `auth-profile-dx` bundle, DEC-312..325, ADR-0020 (new) + ADR-0011 (amended); BC-1.1.009/010, BC-1.2.013/014/017, BC-1.4.025/027/029, BC-1.6.046 amended in place in bc-1; BC-6.2.015 amended in place in bc-6; 731 total; prior: 2026-08-25 (bc-3-issue-write.md +8 BCs (BC-3.3.010..011 + BC-3.4.026..031) and cross-cutting.md +4 BCs (BC-X.14.001..004) added F2 spec evolution, Field DX bundle, issues #580/#578 — BC-3.8.012 REVERSED in place (DEC-188 --field guard removed, DEC-310 registered 2026-08-26, human-approved at the F2 gate — renumbered from the initially-proposed DEC-307, which was already cycle-001's); 719 total; prior: 2026-08-21 (bc-2-issue-read.md +8 BCs added F2 spec evolution, list-read-ergonomics bundle, issues #575/#584/#579/#588 — BC-2.1.023..025 + BC-2.2.033..034 + BC-2.3.041..042 + BC-2.6.052; BC-2.1.006/007 amended in place, no separate count; 707 total; prior: 2026-08-15 (bc-8-components.md NEW FILE added F2 spec evolution, component-management bundle, issues #604/#605/#606/#608 — jr component command group, 28 individually-bodied BCs; BC-2.1.018..022 + BC-2.3.040 added to bc-2-issue-read.md (--component filter + Component.id prerequisite; +6); BC-3.4.022..025 added to bc-3-issue-write.md (issue create/edit --component; +4); BC-2.1.006/007, BC-3.4.012/013/017/020/021, and cross-cutting.md BC-X.10.001 amended in place (no separate count); +38 total; 699 total; prior: 2026-08-13 (BC-1.2.047 added F2 spec evolution, bucket1-defects bundle, issue #663 — `auth switch --profile <X>` rejected exit 64; +1 individually-bodied BC; 661 total; BC-1.2.018 amended in place (auth switch carve-out, no count change); prior: BC-2.2.032 + BC-2.3.039 added F2 spec evolution issue #668 duedate feature — `issue list --duedate` opt-in column + `issue view` always-on Due Date row; +2 individually-bodied BCs; 660 total; BC-2.2.028 + BC-2.3.036 amended in place (16→17 field list, no count change); prior: BC-X.13.007 added FIX ROUND 12 S-626-1 issue #626 — `test` job runtime test-execution floor / POL-11; +1 individually-bodied BC; 658 total; prior: BC-3.9.015..020 added adversary pass-1 round B; +6 individually-bodied BCs; 657 total; prior: BC-2.7.001..012 + BC-3.9.001..014 + BC-X.8.010 added SOH-ATTACHMENTS-1 F2 DEC-179 issues #576 #585)"
+last_verified: "2026-09-06 (cycle-005 `adf-mentions` F2 pass-4 INTEGRATE sub-burst, issue #674, human-approved TIGHTENING decision at the F2 gate; mechanism finalized by the architect as Option (a), `filter_by_name_match` — no BC count change, 754 total unchanged (BC-X.7.007 amended in place); +1 new holdout scenario H-NEW-MENTION-012 (Group 21) — a sole ACTIVE `@Name` search result that does NOT name-match the query now hard-errors instead of silently resolving; H-NEW-MENTION-002's fixture updated in place to a genuinely name-matching query, holdout total 117→118; prior: 2026-09-06 (cycle-005 `adf-mentions` F2 pass-2 adversarial review INTEGRATE sub-burst, issue #674, finding M-3 — no BC change, 754 total unchanged; +2 new holdout scenarios H-NEW-MENTION-010..011 (Group 21) closing a gap where `issue create`/`issue edit` platform-path mention wiring (BC-3.3.012/BC-3.4.032) had no automated wiremock holdout coverage, holdout total 115→117; prior: 2026-09-06 (bc-7-output-render.md +4 BCs (BC-7.2.016..019), cross-cutting.md +4 BCs (BC-X.7.007..010), bc-3-issue-write.md +4 BCs (BC-3.3.012, BC-3.4.032, BC-3.5.013, BC-3.8.018) added cycle-005 `adf-mentions` F2 spec evolution INTEGRATE sub-burst, issue #674, ADR-0023 — markdown `@Name`/`[~accountid:...]` mention → ADF `mention` node; BC-7.2.004 amended in place (mention removed from silently-dropped enumeration); BC-3.3.008/BC-3.4.003/BC-3.4.004/BC-3.5.001/BC-3.5.009/BC-3.8.006 each gain a cross-reference blockquote, no separate count; 754 total; 9 new holdout scenarios H-NEW-MENTION-001..009 (Group 21), holdout total 106→115; prior: 2026-09-03 (bc-1-auth-identity.md +9 BCs (BC-1.2.052..054 + BC-1.4.035..040) added cycle-004 `windows-correctness` F2 spec evolution, issues #759/#760, DEC-334, ADR-0021/ADR-0022 — Windows OAuth DPAPI-encrypted-file fallback secret storage (BC-1.4.035..040) + API-token `cloud_id` acquisition via `/_edge/tenant_info` closing A-PA-LOW-001 (BC-1.2.052..054); BC-1.4.028 amended in place (partial-state error extended to check the DPAPI file before erroring), no separate count; bc-6-config-cache.md unaffected by this pass (a planned BC-6.2.016 cross-reference amendment was deferred — pre-existing TD-031 stable-anchor hygiene violation in that file blocks edits, unrelated to this cycle's diff); 742 total; prior: 2026-09-01 (bc-1-auth-identity.md +2 BCs (BC-1.1.016 + BC-1.4.034) added cycle-003 `auth-profile-dx` F2-gate FIX round, same day as the F2 spec evolution below — BC-1.1.016 closes adversarial finding I-1 (non-interactive OAuth guard for explicit `--oauth`/implicit oauth-method `refresh`); BC-1.4.034 formalizes the one-time re-login breaking-change contract; BC-1.4.032/033 REDESIGNED in place (no-copy detect-and-instruct model, DEC-315/ADR-0020 §Decision 2a) and BC-1.2.014 reworded in place (credentials-before-config-entry ordering), no separate count; 733 total; prior: 2026-09-01 (bc-1-auth-identity.md +12 BCs (BC-1.1.013..015 + BC-1.2.048..051 + BC-1.4.031..033 + BC-1.6.047) and bc-6-config-cache.md +1 BC (BC-6.1.015) added F2 spec evolution, cycle-003 `auth-profile-dx` bundle, DEC-312..325, ADR-0020 (new) + ADR-0011 (amended); BC-1.1.009/010, BC-1.2.013/014/017, BC-1.4.025/027/029, BC-1.6.046 amended in place in bc-1; BC-6.2.015 amended in place in bc-6; 731 total; prior: 2026-08-25 (bc-3-issue-write.md +8 BCs (BC-3.3.010..011 + BC-3.4.026..031) and cross-cutting.md +4 BCs (BC-X.14.001..004) added F2 spec evolution, Field DX bundle, issues #580/#578 — BC-3.8.012 REVERSED in place (DEC-188 --field guard removed, DEC-310 registered 2026-08-26, human-approved at the F2 gate — renumbered from the initially-proposed DEC-307, which was already cycle-001's); 719 total; prior: 2026-08-21 (bc-2-issue-read.md +8 BCs added F2 spec evolution, list-read-ergonomics bundle, issues #575/#584/#579/#588 — BC-2.1.023..025 + BC-2.2.033..034 + BC-2.3.041..042 + BC-2.6.052; BC-2.1.006/007 amended in place, no separate count; 707 total; prior: 2026-08-15 (bc-8-components.md NEW FILE added F2 spec evolution, component-management bundle, issues #604/#605/#606/#608 — jr component command group, 28 individually-bodied BCs; BC-2.1.018..022 + BC-2.3.040 added to bc-2-issue-read.md (--component filter + Component.id prerequisite; +6); BC-3.4.022..025 added to bc-3-issue-write.md (issue create/edit --component; +4); BC-2.1.006/007, BC-3.4.012/013/017/020/021, and cross-cutting.md BC-X.10.001 amended in place (no separate count); +38 total; 699 total; prior: 2026-08-13 (BC-1.2.047 added F2 spec evolution, bucket1-defects bundle, issue #663 — `auth switch --profile <X>` rejected exit 64; +1 individually-bodied BC; 661 total; BC-1.2.018 amended in place (auth switch carve-out, no count change); prior: BC-2.2.032 + BC-2.3.039 added F2 spec evolution issue #668 duedate feature — `issue list --duedate` opt-in column + `issue view` always-on Due Date row; +2 individually-bodied BCs; 660 total; BC-2.2.028 + BC-2.3.036 amended in place (16→17 field list, no count change); prior: BC-X.13.007 added FIX ROUND 12 S-626-1 issue #626 — `test` job runtime test-execution floor / POL-11; +1 individually-bodied BC; 658 total; prior: BC-3.9.015..020 added adversary pass-1 round B; +6 individually-bodied BCs; 657 total; prior: BC-2.7.001..012 + BC-3.9.001..014 + BC-X.8.010 added SOH-ATTACHMENTS-1 F2 DEC-179 issues #576 #585)"
 ---
 
 # Canonical Counts — jr (jira-cli) L3 PRD
@@ -21,14 +21,14 @@ re-run to verify. Disputes go here first.
 |------|------------------------|----------------------------------|--------|
 | bc-1-auth-identity.md | 69 | 69 | YES |
 | bc-2-issue-read.md | 80 | 80 | YES |
-| bc-3-issue-write.md | 123 | 123 | YES |
+| bc-3-issue-write.md | 127 | 127 | YES |
 | bc-4-assets-cmdb.md | 22 | 22 | YES |
 | bc-5-boards-sprints.md | 18 | 18 | YES |
 | bc-6-config-cache.md | 34 | 34 | YES |
-| bc-7-output-render.md | 49 | 49 | YES |
+| bc-7-output-render.md | 53 | 53 | YES |
 | bc-8-components.md | 28 | 28 | YES |
-| cross-cutting.md | 89 | 89 | YES |
-| **Total individually-bodied** | **512** | — | — |
+| cross-cutting.md | 93 | 93 | YES |
+| **Total individually-bodied** | **524** | — | — |
 
 Verification command:
 ```bash
@@ -43,18 +43,45 @@ done
 |------|------------------------|
 | bc-1-auth-identity.md | 80 |
 | bc-2-issue-read.md | 122 |
-| bc-3-issue-write.md | 152 |
+| bc-3-issue-write.md | 156 |
 | bc-4-assets-cmdb.md | 32 |
 | bc-5-boards-sprints.md | 36 |
 | bc-6-config-cache.md | 44 |
-| bc-7-output-render.md | 93 |
+| bc-7-output-render.md | 97 |
 | bc-8-components.md | 28 |
-| cross-cutting.md | 155 |
-| **Sum** | **742** |
+| cross-cutting.md | 159 |
+| **Sum** | **754** |
 
 ### Grand total
 
-**Canonical grand total: 742** (+9 BC-1.2.052..054 + BC-1.4.035..040 added 2026-09-03 via cycle-004
+**Canonical grand total: 754** (+12 BC-7.2.016..019 + BC-X.7.007..010 + BC-3.3.012 + BC-3.4.032 +
+BC-3.5.013 + BC-3.8.018 added 2026-09-06 via cycle-005 `adf-mentions` F2 spec evolution INTEGRATE
+sub-burst, issue #674 — markdown `@Name`/`[~accountid:...]` mention → ADF `mention` node: pure
+bracket-form forward emission + `attrs.text` display-name enrichment + `@Name` candidate-detection
+grammar + reverse-path `adf_to_text` rendering closing issue #202/NFR-O-I (BC-7.2.016..019, in
+bc-7-output-render.md, 93→97 cumulative, 49→53 individually-bodied; §7.2 range-collapsed span
+shifts BC-7.2.016..059 → BC-7.2.020..063); `@Name` unique/ambiguous/zero-match resolution
+(zero-match is a HARD ERROR exit 64, human-approved override of the architect's pass-through
+recommendation) + bracket-form accountId mandatory preflight validation (BC-X.7.007..010, in
+cross-cutting.md, 155→159 cumulative, 89→93 individually-bodied); per-command wiring for
+`issue create --description --markdown` (BC-3.3.012), `issue edit --description --markdown`
+(BC-3.4.032, both dry-run + live call sites), `issue comment add`/`comment edit --markdown`
+(BC-3.5.013, PRIMARY E2E round-trip acceptance scenario), and JSM `issue create --request-type
+--markdown` (BC-3.8.018, resolves `delta-analysis.md` OQ-1 to in-scope) — all four in
+bc-3-issue-write.md (152→156 cumulative, 123→127 individually-bodied); BC-7.2.004 amended in place
+(mention removed from the silently-dropped node enumeration, version-history table added) and
+BC-3.3.008/BC-3.4.003/BC-3.4.004/BC-3.5.001/BC-3.5.009/BC-3.8.006 each gain an
+`[UPDATED 2026-09-06 issue #674]` cross-reference blockquote, no separate count; 9 new holdout
+scenarios H-NEW-MENTION-001..009 registered (Group 21; holdout total 106→115), extended same-day by
+cycle-005 F2 pass-2 adversarial review finding M-3 with +2 more scenarios H-NEW-MENTION-010..011
+(BC-3.3.012/BC-3.4.032 automated wiremock coverage; holdout total 115→117; no BC change), further
+extended by cycle-005 F2 pass-4 INTEGRATE sub-burst (human-approved TIGHTENING decision at the F2
+gate; mechanism finalized by the architect as Option (a), `filter_by_name_match`) with +1 more
+scenario H-NEW-MENTION-012 (a sole ACTIVE `@Name` search result that does NOT name-match the query
+now hard-errors instead of silently resolving via `disambiguate_user`'s `len()==1` short-circuit;
+H-NEW-MENTION-002's fixture updated in place to a genuinely name-matching query; holdout total
+117→118; no BC change — BC-X.7.007 amended in place). ADR-0023 (new).
+was 742 before this addition; prior note: +9 BC-1.2.052..054 + BC-1.4.035..040 added 2026-09-03 via cycle-004
 `windows-correctness` F2 spec evolution, issues #759/#760, DEC-334, ADR-0021 (new) + ADR-0022 (new)
 — Windows OAuth secret storage: keyring-first with DPAPI-encrypted-file fallback on
 `keyring::Error::TooLong` (BC-1.4.035 routing + backend-selection atomicity, BC-1.4.036 DPAPI-aware
@@ -107,18 +134,27 @@ addition; prior note: 707 total after
 _Note: BC-INDEX.md `total_bcs` header was bumped to 651 in v1.3.43 via a sanctioned Python shell edit (TD-031 validate-stable-anchors hook bypassed per the established workaround). CANONICAL-COUNTS.md remains the primary source of truth; TD-031 line-cite violations are tracked separately for cleanup._
 
 Breakdown:
-- 742 = sum of per-file `total_bcs` values (canonical; see per-file table above)
-- 512 of 742 are individually-bodied (have a `#### BC-` heading)
+- 754 = sum of per-file `total_bcs` values (canonical; see per-file table above)
+- 524 of 754 are individually-bodied (have a `#### BC-` heading)
 - 230 are range-collapsed (counted in cumulative claim, no individual heading; unchanged — the
-  2026-09-03 cycle-004 `windows-correctness` F2 spec evolution addition (bc-1 +9: BC-1.2.052..054
+  2026-09-06 cycle-005 `adf-mentions` F2 spec evolution INTEGRATE sub-burst addition (+12:
+  BC-7.2.016..019 + BC-X.7.007..010 + BC-3.3.012 + BC-3.4.032 + BC-3.5.013 + BC-3.8.018) is entirely
+  individually-bodied, no range-collapsed entries; same was true of the 2026-09-03 cycle-004
+  `windows-correctness` F2 spec evolution addition (bc-1 +9: BC-1.2.052..054
   + BC-1.4.035..040) is entirely individually-bodied, no range-collapsed entries; same was true of
   the 2026-09-01 cycle-003 `auth-profile-dx` F2-gate FIX round (bc-1 +2: BC-1.1.016 + BC-1.4.034) and
   the earlier same-day F2 spec evolution addition (bc-1 +12, bc-6 +1); same was true of the
   2026-08-25 Field DX addition)
 - BC-X.4.009 (ADV-P1-029) is a `#### BC-` heading in cross-cutting.md; it is
-  included in cross-cutting's `total_bcs: 155` and in the **742 sum**.
+  included in cross-cutting's `total_bcs: 159` and in the **754 sum**.
   It does NOT add +1 beyond the 656.
-  _(Note updated 2026-09-03 F2 spec evolution, cycle-004 `windows-correctness`: 742 total after +9
+  _(Note updated 2026-09-06 cycle-005 `adf-mentions` F2 spec evolution INTEGRATE sub-burst: 754
+  total after +12 BCs (BC-7.2.016..019 + BC-X.7.007..010 + BC-3.3.012 + BC-3.4.032 + BC-3.5.013 +
+  BC-3.8.018 added across bc-7-output-render.md, cross-cutting.md, and bc-3-issue-write.md, issue
+  #674); BC-7.2.004 amended in place (mention removed from the silently-dropped node enumeration)
+  and BC-3.3.008/BC-3.4.003/BC-3.4.004/BC-3.5.001/BC-3.5.009/BC-3.8.006 each gain a cross-reference
+  blockquote, no separate count; was 742 before this addition; prior note: 2026-09-03 F2 spec
+  evolution, cycle-004 `windows-correctness`: 742 total after +9
   BCs (BC-1.2.052..054 + BC-1.4.035..040 added to bc-1-auth-identity.md); BC-1.4.028 amended in
   place (partial-state error extended to check the DPAPI file), no separate count; was 733 before
   this addition; prior note: 2026-09-01 F2-gate FIX round, cycle-003 `auth-profile-dx` (same day): 733 total
@@ -194,16 +230,17 @@ Note: NFR-O-K was merged into NFR-S-D at adversary Pass 7 (no net change). NFR-S
 
 ## Holdout Scenarios
 
-**Canonical holdout total: 106**
+**Canonical holdout total: 118**
 
 Verification command:
 ```bash
 grep -c '^### H-' .factory/specs/prd/holdout-scenarios.md
 ```
 
-Expected: 106 (H-001..H-047 + H-NEW-MP-001 + H-NEW-VERBOSE-001 + H-NEW-VERBOSE-002 + H-NEW-AUTH-002 + H-NEW-JSM-RT-001..H-NEW-JSM-RT-007 + H-CITE-001..H-CITE-003 + H-NEW-ADF-001..H-NEW-ADF-008 + H-NEW-SEC-001..H-NEW-SEC-002 + H-NEW-ADF-009..H-NEW-ADF-010 + H-NEW-EDIT-FIELD-001..H-NEW-EDIT-FIELD-002 + H-NEW-EDIT-TYPE-001..H-NEW-EDIT-TYPE-002 + H-NEW-CHANGELOG-001 + H-NEW-WORKLOG-ADD-001 + H-NEW-LINK-001 + H-NEW-QUEUE-VIEW-001 + H-NEW-LABEL-FORK-001 + H-NEW-DRY-RUN-001 + H-NEW-BOARD-VIEW-001 + H-NEW-COMMENT-001..H-NEW-COMMENT-005 + H-NEW-ATTACHMENT-001..H-NEW-ATTACHMENT-012 + H-NEW-PREFLIGHT-001..H-NEW-PREFLIGHT-006)
+Expected: 118 (H-001..H-047 + H-NEW-MP-001 + H-NEW-VERBOSE-001 + H-NEW-VERBOSE-002 + H-NEW-AUTH-002 + H-NEW-JSM-RT-001..H-NEW-JSM-RT-007 + H-CITE-001..H-CITE-003 + H-NEW-ADF-001..H-NEW-ADF-008 + H-NEW-SEC-001..H-NEW-SEC-002 + H-NEW-ADF-009..H-NEW-ADF-010 + H-NEW-EDIT-FIELD-001..H-NEW-EDIT-FIELD-002 + H-NEW-EDIT-TYPE-001..H-NEW-EDIT-TYPE-002 + H-NEW-CHANGELOG-001 + H-NEW-WORKLOG-ADD-001 + H-NEW-LINK-001 + H-NEW-QUEUE-VIEW-001 + H-NEW-LABEL-FORK-001 + H-NEW-DRY-RUN-001 + H-NEW-BOARD-VIEW-001 + H-NEW-COMMENT-001..H-NEW-COMMENT-005 + H-NEW-ATTACHMENT-001..H-NEW-ATTACHMENT-012 + H-NEW-PREFLIGHT-001..H-NEW-PREFLIGHT-006 + H-NEW-MENTION-001..H-NEW-MENTION-012)
 
-Groups added since last reconciliation (57 → 106):
+Groups added since last reconciliation (57 → 118):
+- Group 21 (Markdown Mentions, cycle-005 `adf-mentions` F2 INTEGRATE sub-burst, 2026-09-06, issue #674; extended by cycle-005 F2 pass-2 adversarial review, same day, finding M-3; extended again by cycle-005 F2 pass-4 human-approved TIGHTENING decision, same day): H-NEW-MENTION-001..H-NEW-MENTION-012 (BC-7.2.016/017/018/019/004, BC-X.7.007/008/009/010, BC-3.3.012, BC-3.4.032, BC-3.5.013, BC-3.8.018) — bracket-form conversion + mandatory accountId preflight (001); `@Name` unique-match (002, fixture updated pass-4 to a genuinely name-matching query — see 012), ambiguous-match exit-64 (003), zero-match HARD ERROR exit-64 (004, human-approved override of the architect's pass-through recommendation); `\@` escape literal (005, MECHANISM F4-VERIFY); `--no-mentions` opt-out (006); reverse-path render in `issue view` (007, closes issue #202/NFR-O-I for `mention`); JSM `--request-type` mention + internal-visibility-orthogonality caveat (008); HUMAN-REQUIRED live-Jira E2E round-trip (009, `JR_RUN_E2E`-gated, NOT dispatched to the automated holdout-evaluator); `issue create` platform-path mixed-resolution all-or-nothing (010, BC-3.3.012, added pass-2 M-3); `issue edit --dry-run` mention-resolution-failure no-leak invariant (011, BC-3.4.032 point 2, added pass-2 M-3); sole ACTIVE result NOT name-matching the query → HARD ERROR (012, BC-X.7.007 point 2/EC-X.7.007-5, added pass-4 human-approved tightening, `filter_by_name_match`) — +12
 - Group 8b (CI Citation Guard, 2026-06-19): H-CITE-001..H-CITE-003 (BC-X.13.001..003; S-MAINT-DEAD-CITATION-CI) — +3 (retitled from "Group 8" to "Group 8b" to resolve duplicate heading; P18-005)
 - Group 10 (ADF Markdown→ADF Feature Wave, D4 Burst 1 2026-06-26): H-NEW-ADF-001..H-NEW-ADF-008 (BC-7.2.009/010/011/003) — +8
 - Group 11 (SEC-001 ADF Recursion-Depth Guard, D4 Burst 2 2026-06-26): H-NEW-SEC-001..H-NEW-SEC-002 (BC-7.2.012) — +2
@@ -214,7 +251,7 @@ Groups added since last reconciliation (57 → 106):
 - Group 19 (Attachment Write, SOH-ATTACHMENTS-1 adversary pass-1 round B + P4-014 + P14-001 + P15-002 + P20-001 + P21-001, 2026-07-15/2026-07-16): H-NEW-ATTACHMENT-001..H-NEW-ATTACHMENT-012 (BC-2.7.001/007/008/010/011 + BC-3.9.001/003/004/005/015..020; P15-002/R3.12 adds H-NEW-ATTACHMENT-010; P20-001 adds H-NEW-ATTACHMENT-011 — BC-3.9.004 OQ-9 branch: --internal on non-JSM → silent platform POST, exit 0, zero servicedeskapi calls; P21-001 adds H-NEW-ATTACHMENT-012 — BC-3.9.010 EC-3.9.010-4: mid-batch bulk 404 benign-skip-continue, count=2, ids exclude 404'd AID, exit 0, 3 DELETEs issued; issues #576 #585) — +12
 - Group 20 (Issue Create Pre-flight Guards, SOH-DX-1 F2 2026-07-29, #639, DEC-188; REWRITTEN 2026-08-25 issue #578 F2 adversary pass-2, DEC-310 reversal): H-NEW-PREFLIGHT-001..H-NEW-PREFLIGHT-006 (BC-3.8.012/013; originally authored against DEC-188's --field and --on-behalf-of exit-64 pre-flight guard on the platform path without --request-type). DEC-310 (2026-08-25) reversed BC-3.8.012's --field-alone guard, so H-NEW-PREFLIGHT-001/003/006 were REWRITTEN IN PLACE to the new contract: 001 — --field alone now resolves via createmeta (BC-3.3.010) and succeeds (exit 0), POST fires with the field merged in; 003 — --field AND --on-behalf-of together now fire only BC-3.8.013's standalone --on-behalf-of guard (exit 64; the combined guard is removed, --field's createmeta resolution never reached); 006 — --field alone with --output json now succeeds (exit 0) with a JSON success envelope on stdout, not an error envelope. H-NEW-PREFLIGHT-002 (--on-behalf-of alone, exit 64) and H-NEW-PREFLIGHT-004/005 (neither-flag regression pin; JSM non-mis-fire) are UNCHANGED by the reversal. No scenario IDs added or removed — +6
 
-_Note: holdout-scenarios.md frontmatter `total_holdouts: 106` counts all holdout entries; the grep count of `^### H-` headings also returns 106. The frontmatter count (106) is authoritative. Last reconciled: 2026-08-25 (issue #578 F2 adversary pass-2, DEC-310 reversal of DEC-188 — H-NEW-PREFLIGHT-001/003/006 rewritten in place to the reversed --field contract per BC-3.8.012's 2026-08-25 amendment; H-NEW-PREFLIGHT-002/004/005 unchanged; no scenario IDs added or removed, count unaffected). Previously reconciled: 2026-07-29 (SOH-DX-1 F2 P-holdout authoring; +H-NEW-PREFLIGHT-001..006 — BC-3.8.012/013 pre-flight guards for --field and --on-behalf-of without --request-type; DEC-188, #639)._
+_Note: holdout-scenarios.md frontmatter `total_holdouts: 118` counts all holdout entries; the grep count of `^### H-` headings also returns 118. The frontmatter count (118) is authoritative. Last reconciled: 2026-09-06 (cycle-005 `adf-mentions` F2 pass-4 INTEGRATE sub-burst, issue #674, human-approved TIGHTENING decision at the F2 gate; mechanism finalized by the architect as Option (a), `filter_by_name_match` — +1 new scenario H-NEW-MENTION-012, Group 21; H-NEW-MENTION-002's fixture updated in place to a genuinely name-matching query; holdout count 117→118; no BC change, BC-X.7.007 amended in place). Previously reconciled: 2026-09-06 (cycle-005 `adf-mentions` F2 pass-2 adversarial review INTEGRATE sub-burst, issue #674, finding M-3 — +2 new scenarios H-NEW-MENTION-010..011, Group 21; holdout count 115→117, closing the gap where BC-3.3.012/BC-3.4.032 platform-path wiring had no automated wiremock holdout coverage). Previously reconciled: 2026-09-06 (cycle-005 `adf-mentions` F2 INTEGRATE sub-burst, issue #674 — +9 new scenarios H-NEW-MENTION-001..009, Group 21; holdout count 106→115). Previously reconciled: 2026-08-25 (issue #578 F2 adversary pass-2, DEC-310 reversal of DEC-188 — H-NEW-PREFLIGHT-001/003/006 rewritten in place to the reversed --field contract per BC-3.8.012's 2026-08-25 amendment; H-NEW-PREFLIGHT-002/004/005 unchanged; no scenario IDs added or removed, count unaffected). Previously reconciled: 2026-07-29 (SOH-DX-1 F2 P-holdout authoring; +H-NEW-PREFLIGHT-001..006 — BC-3.8.012/013 pre-flight guards for --field and --on-behalf-of without --request-type; DEC-188, #639)._
 
 ---
 
@@ -242,7 +279,11 @@ Last reconciled: 2026-05-18 (post-#288 F2 delta; previous reconciliation pre-S-3
 
 ## ADRs
 
-**Canonical ADR count: 19** (ADR-0001..ADR-0019; all present, no gaps)
+**Canonical ADR count: 23** (ADR-0001..ADR-0023; all present, no gaps — bumped from 19 during the
+cycle-005 `adf-mentions` F2-close INTEGRATE sub-burst, 2026-09-06, which discovered ADR-0020,
+ADR-0021, and ADR-0022 had gone undocumented here across the cycle-003/cycle-004 INTEGRATE
+passes that introduced them; see `ADR-COUNT-CANONICAL-GUARD-GAP` in STATE.md for the tracked
+process-gap follow-up — no CI guard currently catches this class of drift)
 
 - ADR-0001..0016: reside in `docs/adr/` (index at `.factory/architecture/adr-index.md`; `.reference/jira-cli/docs/adr/` is a read-only vendored copy, not canonical; `.factory/architecture/adr/` was removed, DRIFT-S3-003 resolved 2026-06-25)
 - ADR-0014: JSM request create dispatch fork (issue #288)
@@ -251,10 +292,14 @@ Last reconciled: 2026-05-18 (post-#288 F2 delta; previous reconciliation pre-S-3
 - ADR-0017: First multipart/streaming HTTP surface — reqwest multipart+stream features + tokio-util direct dependency (SOH-ATTACHMENTS-1 F2 DEC-179, 2026-07-15)
 - ADR-0018: Component resolution, caching, delete-safety, and mutation-wire-shape strategy (component-mgmt F2 gate, DEC-278/279/280; issues #604/#605/#606/#608, 2026-08-15)
 - ADR-0019: Field DX: option-enumeration context strategy, hint-kind value-spec shape, and cascading-select delimiter (field-dx F2 gate; issues #580/#578, 2026-08-25)
+- ADR-0020: Per-Profile Credential Ownership, Environment Tagging, and OAuth-Default-at-Creation (auth-profile-dx F2 gate, DEC-312..316; cycle-003, 2026-09-01)
+- ADR-0021: Windows OAuth Secret Storage — Keyring-First with DPAPI-Encrypted-File Fallback (windows-correctness F2 gate, DEC-334; cycle-004, issue #759, 2026-09-03)
+- ADR-0022: API-Token Cloud ID Acquisition via `/_edge/tenant_info`, and the A-PA-LOW-001 Guard (windows-correctness F2 gate; cycle-004, issue #760, 2026-09-03)
+- ADR-0023: Markdown Mention Conversion — Two-Pure-Entrypoints + One-Effectful-Resolver Seam (adf-mentions F2 gate; cycle-005, issue #674, 2026-09-06)
 - ADR-0002: Superseded by ADR-0006 (still counted — superseded is a valid status)
 - ADR-0013: PKCE deferral for OAuth 2.0 authorization code flow (Phase 1→2 gate, 2026-05-04)
 
-Location convention: ADR-0001..0016 reside in `docs/adr/` (with `.factory/architecture/adr-index.md` as their index); ADR-0017..0019 reside in `.factory/specs/architecture/decisions/` (per ARCH-INDEX.md and `adr-index.md` header note).
+Location convention: ADR-0001..0016 reside in `docs/adr/` (with `.factory/architecture/adr-index.md` as their index); ADR-0017..0023 reside in `.factory/specs/architecture/decisions/` (per ARCH-INDEX.md and `adr-index.md` header note).
 
 Verification: count rows in adr-index.md Summary Table (both `[ADR-NNNN]` link rows and plain `ADR-NNNN` rows).
 

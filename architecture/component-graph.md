@@ -397,3 +397,130 @@ helper functions are pure (function-level carve-out, same class as `cli::resolve
 get_createmeta_fields` is effectful shell (same class as every other L4 HTTP method).
 
 Source: F1 delta analysis §3; ADR-0019 (2026-08-25).
+
+---
+
+## Markdown Mentions Delta — DAG Verification (Issue #674, F2 2026-09-06)
+
+**Status:** Spec-level delta only — no `src/` code exists yet for this bundle. Recorded here
+ahead of F4 implementation. Source: `.factory/phase-f1-delta-analysis/cycle-005/
+delta-analysis.md`; ADR-0023.
+
+**New modules (1, `[PLANNED]`):**
+
+```
+cli::issue::mentions   (L2, new file src/cli/issue/mentions.rs)   — resolve_mentions(client,
+                         text, no_input): @Name search + disambiguate_user reuse + bracket-form
+                         accountId preflight-validation, per-invocation deduplicated. Support
+                         module (no dispatch of its own), classified alongside
+                         cli::issue::helpers / cli::issue::field_resolve.
+```
+
+**No new L4 or L5 modules.** `api::jira::users` (existing L4 node `users_impl`) is reused
+verbatim — `get_user` and `search_users` are called exactly as `jr user view`/`resolve_user`
+already call them, zero new HTTP methods, zero signature changes. `adf` (L6) gains new pure
+functions and two new pure data types (`MentionCandidates`, `MentionResolutions`) but is not a
+new module — it is the existing pure-core file every prior `#470→#571` cycle has extended the
+same way.
+
+**Delta edges (all additions; no edges removed; no existing edges modified):**
+
+```
+ADDED — new L2 support module (cli::issue::mentions):
+  cli::issue::mentions → adf (L6)                    [find_mention_candidates,
+                                                        MentionCandidates/MentionResolutions
+                                                        types — NEW pure fns/types, existing
+                                                        module]
+  cli::issue::mentions → api::jira::users (L4)        [get_user, search_users — REUSED,
+                                                        unmodified]
+  cli::issue::mentions → cli::issue::helpers (L2)     [disambiguate_user — visibility bumped
+                                                        fn → pub(super) fn; same-layer sibling
+                                                        edge, same shape as the existing
+                                                        cli::issue::edit → cli::issue::helpers
+                                                        edge already in this graph]
+  cli::issue::mentions → error (L6)                   [JrError — same as every other cli::*
+                                                        module]
+
+ADDED — modified L2 handlers (existing files, additive changes only, new edge to the new module):
+  cli::issue::interactions → cli::issue::mentions     [handle_comment_add (gains a new
+                                                        no_input: bool parameter, ONE call
+                                                        site to update: cli::issue::mod dispatch)
+                                                        and handle_comment_edit both call
+                                                        resolve_mentions().await before their
+                                                        existing markdown_to_adf call —
+                                                        BC-3.5.013]
+  cli::issue::create       → cli::issue::mentions     [handle_create — one call site,
+                                                        BC-3.3.012]
+  cli::issue::edit         → cli::issue::mentions     [handle_edit — TWO call sites (dry-run
+                                                        preview, live PUT), ONE new edge (both
+                                                        call sites are the same module→module
+                                                        dependency) — BC-3.4.032]
+  cli::issue::jsm_create   → cli::issue::mentions     [handle_jsm_create — resolution runs in
+                                                        the async caller BEFORE the synchronous
+                                                        JsmRequestBuilder::build() — BC-3.8.018,
+                                                        resolves delta-analysis.md OQ-1 to
+                                                        IN-SCOPE]
+
+ADDED — modified L6 utility (adf.rs, additive fns/types only, no existing signature changes):
+  adf::find_mention_candidates            (NEW, pure, pub(crate))
+  adf::markdown_to_adf_with_mentions      (NEW, pure, pub)
+  adf::markdown_to_adf_no_mentions        (NEW, pure, pub — the --no-mentions bypass entrypoint)
+  adf::markdown_to_adf                    (UNCHANGED signature — becomes a 1-line wrapper
+                                            around markdown_to_adf_with_mentions with an empty
+                                            MentionResolutions; every pre-#674 call site and all
+                                            275 pre-#674 tests are unaffected)
+  adf::MentionCandidates / MentionResolutions / MentionResolution   (NEW pure data types, no
+                                            Client, no async, no I/O)
+  adf::AdfToTextRenderer::render_node     (gains a new pure "mention" match arm, inserted before
+                                            the existing `_` catch-all — BC-7.2.019; no purity
+                                            reclassification, this fn was already pure)
+
+ADDED — modified L2 handler signature (cli::issue::interactions, additive parameter only):
+  handle_comment_add(sub, output_format, client)
+    → handle_comment_add(sub, output_format, client, no_input: bool)   [ONE call site to
+                                                        update: cli::issue::mod dispatch, which
+                                                        already has no_input in scope —
+                                                        handle_comment_delete/handle_comment_edit
+                                                        already receive it there]
+
+ADDED — modified L2 handler visibility (cli::issue::helpers, visibility-only, zero behavior
+change to existing callers):
+  fn disambiguate_user(...)  → pub(super) fn disambiguate_user(...)
+```
+
+**Cycle check:** All new/modified edges follow the existing layer direction (L2 → L4 → L3 → L6;
+L2 → L6 directly for `adf`/`error`, matching the `cli_issue_format`/`cli_issue_changelog` →
+`obs` precedent already in this graph; L2 → L2 sibling edges, matching the pre-existing
+`cli::issue::edit`/`cli::issue::create` → `cli::issue::helpers` precedent recorded in the
+Component Management Delta above). No upward edges (L4/L5/L6 → L2) are introduced.
+`cli::issue::mentions` does not call back into any of `create.rs`/`edit.rs`/`interactions.rs`/
+`jsm_create.rs` — its only outbound edges are to `adf` (L6), `api::jira::users` (L4),
+`cli::issue::helpers` (L2 sibling, which itself has no edge back to `mentions`/`create`/`edit`/
+`interactions`/`jsm_create`), and `error` (L6). No new L4 → L4 edge is introduced (a
+cross-L4 shortcut was never on the table here — `api::jira::users` is reused as-is, with no
+JSM-side counterpart needed). **DAG remains acyclic.**
+
+**Purity boundary cross-check (see also `system-overview.md §Purity Boundary` update above):**
+- `adf::find_mention_candidates` / `adf::markdown_to_adf_with_mentions` /
+  `adf::markdown_to_adf_no_mentions` — **pure** (no I/O, no `Client`, no `async`). Same class as
+  every other `adf.rs` public function.
+- `adf::MentionCandidates` / `MentionResolutions` / `MentionResolution` — **pure data types**
+  (plain structs/maps, no I/O). Same class as `types::jira::*` structs, though these live in
+  `adf.rs` rather than `types::` because they are the shared contract between `adf.rs`'s own
+  pure producer/consumer functions — see ADR-0023 §2 for why ownership sits with the pure layer
+  here rather than being kept CLI-local the way `FieldValueSpec` was (ADR-0019 §1).
+- `cli::issue::mentions::resolve_mentions` — **effectful shell** (HTTP via `JiraClient`,
+  interactive prompts via the reused `disambiguate_user`). Same class as
+  `cli::issue::helpers::resolve_user`/`resolve_assignee`/`resolve_assignee_by_project`.
+- `cli::issue::helpers::disambiguate_user` — **effectful shell, unchanged** — visibility-only
+  change, zero reclassification (it was already inside the effectful `cli::issue` module).
+- `cli::issue::{create,edit,interactions,jsm_create}` — **effectful shell, unchanged
+  classification** — each gains one new `.await` call immediately before an existing
+  `markdown_to_adf` call site; no module changes purity class.
+
+All classifications are consistent with the existing Purity Boundary Map — no reclassification
+of any existing module was required by this bundle. The dependency graph as a whole remains a
+strict acyclic DAG after this delta.
+
+Source: F1 delta analysis (`.factory/phase-f1-delta-analysis/cycle-005/delta-analysis.md`) §1,
+§2; ADR-0023 (2026-09-06).

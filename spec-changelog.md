@@ -9,6 +9,123 @@ Track all spec version changes. Most recent version first.
 
 > **Type legend:** Type classifies the SPEC document delta: MINOR = new BCs/VPs/sections; PATCH = amendments to existing bodies/ACs/ECs. Product-semver impact is recorded in the Summary line, independent of Type.
 
+## [2.2.0] - 2026-09-06
+
+### Type: MINOR
+
+### Summary
+
+F2 spec evolution for the **adf-mentions** feature (Feature Mode `cycle-005`, issue #674).
+Adds markdown `@Name`/`[~accountid:<id>]` mention tokens → ADF `mention` node conversion,
+closing the "a CLI-authored comment or description can never notify anyone" gap. **12 new BCs**:
+BC-7.2.016 (pure bracket-form `[~accountid:<id>]` → `mention` node forward emission, zero-HTTP
+post-`finish()` tree-walk mirroring `autolink_bare_urls`; introduces `find_mention_candidates`,
+`markdown_to_adf_with_mentions`, `markdown_to_adf_no_mentions`, with `markdown_to_adf` becoming a
+thin wrapper), BC-7.2.017 (`attrs.text = "@" + display_name` enrichment for both mention forms),
+BC-7.2.018 (`@Name` pure candidate-detection grammar — boundary rule reused from
+`autolink_bare_urls`, single-token MVP scope, `\@`-escape contract flagged MECHANISM F4-VERIFY),
+BC-7.2.019 (`adf_to_text` reverse-path rendering — `@<attrs.text>` / `@<attrs.id>` / `@?`
+fallback precedence — **committed close** of issue #202/NFR-O-I's silent-drop gap for `mention`
+specifically), BC-X.7.007/008/009 (`@Name` effectful resolution: unique-match happy path,
+ambiguous-match disambiguation reusing BC-X.7.004's contract verbatim, and zero-match **HARD
+ERROR exit 64** — a human-approved decision that explicitly OVERRIDES the architect's own
+pass-through recommendation from `delta-analysis.md` OQ-4), BC-X.7.010 (bracket-form accountId
+**mandatory preflight validation** via `GET /rest/api/3/user?accountId=`, deduplicated per unique
+id, hard error on an unknown id), and four per-command wiring BCs — BC-3.3.012 (`issue create
+--description --markdown`, platform path), BC-3.4.032 (`issue edit --description --markdown`,
+both dry-run and live call sites), BC-3.5.013 (`issue comment add`/`comment edit --markdown`,
+PRIMARY E2E round-trip acceptance scenario; `handle_comment_add` gains a new `no_input: bool`
+parameter), BC-3.8.018 (JSM `issue create --request-type --markdown`, resolves
+`delta-analysis.md` OQ-1 to IN-SCOPE — resolution runs in the async `handle_jsm_create` caller
+BEFORE the synchronous `JsmRequestBuilder::build()`). A `--no-mentions` opt-out flag is wired on
+every write command that already carries `--markdown`. **7 existing BCs amended in place** (no
+separate count, `[UPDATED 2026-09-06 issue #674]` tag, previous text preserved): BC-7.2.004 (H1 +
+Behavior narrowed — `mention` removed from the silently-dropped node enumeration, now
+`emoji`/`inlineCard`/`media` only; version-history table added) and BC-3.3.008/BC-3.4.003/
+BC-3.4.004/BC-3.5.001/BC-3.5.009/BC-3.8.006 (each gains a short cross-reference blockquote to its
+corresponding wiring BC; no wire-shape change) — 7 IDs total (the original entry undercounted
+this group as "6," omitting BC-7.2.004 itself from the tally despite listing it; corrected here).
+New architecture decision **ADR-0023**
+(Markdown Mention Conversion — Two-Pure-Entrypoints + One-Effectful-Resolver Seam; recommends a
+pre-parse private-use-sentinel protect/restore pass for the `\@`-escape mechanism, flagged for F4
+empirical verification). BC count 742 → 754 (`bc-7-output-render.md` 93 → 97 cumulative, 49 → 53
+individually-bodied; `cross-cutting.md` 155 → 159 cumulative, 89 → 93 individually-bodied;
+`bc-3-issue-write.md` 152 → 156 cumulative, 123 → 127 individually-bodied). BC-INDEX v6.85 →
+v6.86. VP count 55 → 76 across 21 new inline `VP-674-NNN` properties (VP-674-001..021; this repo
+has no separate VP-INDEX — properties are documented inline in BC bodies per the project's
+established convention); two VPs are flagged F4-contingent (VP-674-005 mark-composition empirical
+schema check; VP-674-012 `\@`-escape mechanism). **12 new holdout scenarios**
+H-NEW-MENTION-001..012 (Group 21) — bracket-form conversion + mandatory preflight (001); `@Name`
+unique-match (002), ambiguous-match exit-64 (003), zero-match HARD ERROR exit-64 (004); `\@`
+escape literal (005); `--no-mentions` opt-out (006); reverse-path render in `issue view` (007);
+JSM mention wiring + internal-visibility-orthogonality caveat (008); HUMAN-REQUIRED live-Jira E2E
+round-trip (009, `JR_RUN_E2E`-gated, controlled test account, self-cleaning — informational, NOT
+dispatched to the automated holdout-evaluator). Holdout scenario count 106 → 115.
+
+**Post-entry adversarial-convergence + F2-gate tightening additions (folded into the totals
+above, not a separate version bump):** subsequent F2 adversarial review passes and the human F2
+gate itself added further BCs/VPs/holdouts on top of the initial 12-BC/17-VP/9-holdout tally
+first drafted for this entry — the numbers above are the FINAL, reconciled totals. Pass-2
+adversarial review (finding M-3) added **2 holdout scenarios** H-NEW-MENTION-010..011 (Group 21)
+closing a gap where `issue create`/`issue edit` platform-path mention wiring (BC-3.3.012/
+BC-3.4.032) had no automated wiremock holdout coverage (holdout total 115 → 117). The F2-gate
+human **TIGHTENING decision** (DEC-345; mechanism finalized by the architect as Option (a),
+`filter_by_name_match`) amended **BC-X.7.007 in place** — an 8th in-place amendment beyond the 7
+enumerated above, tracked separately here because it landed via a later INTEGRATE sub-burst, not
+the original spec-evolution pass — inserting a pure pre-filter between the active-user filter and
+`disambiguate_user` so a lone, non-name-matching active search result now hard-errors instead of
+silently resolving (closes EC-X.7.007-5's former open decision); this added **1 more holdout
+scenario** H-NEW-MENTION-012 (holdout total 117 → 118) and **1 more VP** (VP-674-021). Combined
+with 3 further VPs added across the same adversarial passes (VP-674-018..020), the running VP
+total is 17 + 4 = 21 (VP-674-001..021), and the running holdout total is 9 + 3 = 12
+(H-NEW-MENTION-001..012) — both already reflected in the headline counts above.
+
+**MINOR version bump determination:** this delta is purely additive — 12 new BCs, one new ADR,
+twelve new holdout scenarios (across the initial pass and two follow-on adversarial/gate passes),
+and eight in-place amendments (seven at spec-evolution time, one — BC-X.7.007 — at the F2 gate)
+that add cross-references, narrow a
+silently-dropped-node enumeration without changing any existing wire contract or removing any
+previously-shipped behavior. No governance-flagged reversal (unlike the [2.0.0]/DEC-310 entry
+above), no breaking change to any existing command's observable behavior. Per this repo's
+spec-versioning convention (MINOR = "new BCs/VPs/sections" with no removed/changed existing
+requirement semantics), this is a straightforward MINOR bump.
+
+**Baseline-version note (process-gap disclosure, not fixed by this entry):** this entry bumps
+from **v2.1.0**, the version BC-INDEX.md's own `last_updated` frontmatter narrative records as
+current as of the 2026-09-03 cycle-004 `windows-correctness` F2 delta ("Spec version
+v2.0.0→v2.1.0 (MINOR — new requirements per ADR-0021/ADR-0022; no removed/changed existing
+behavior)") — however, **no `[2.1.0]` entry exists anywhere in this changelog file**; the most
+recent entry immediately prior to this one is `[2.0.0]` (2026-08-26, field-dx bundle). This is a
+disclosed, pre-existing gap from the cycle-003/cycle-004 INTEGRATE passes (which recorded the
+version bump in BC-INDEX.md's frontmatter narrative but apparently never appended the
+corresponding `spec-changelog.md` entry) — it predates this burst, is out of this INTEGRATE
+sub-burst's scope (issue #674 only), and is not silently absorbed here: BC-INDEX.md is treated as
+the authoritative version-sequence record per its own frontmatter history, so this entry
+continues that sequence at `v2.2.0` rather than re-deriving `v2.1.0` from `[2.0.0]` and
+colliding with BC-INDEX.md's own already-recorded `v2.1.0` claim. Flagged for a future
+maintenance sweep to backfill the missing `[2.1.0]` entry from the cycle-003/004 delta records
+(`.factory/cycles/cycle-003/`, `.factory/cycles/cycle-004/`).
+
+### Affected Files
+
+- `bc-7-output-render.md`: +4 BCs (BC-7.2.016..019); BC-7.2.004 amended in place.
+- `cross-cutting.md`: +4 BCs (BC-X.7.007..010).
+- `bc-3-issue-write.md`: +4 BCs (BC-3.3.012, BC-3.4.032, BC-3.5.013, BC-3.8.018); BC-3.3.008,
+  BC-3.4.003, BC-3.4.004, BC-3.5.001, BC-3.5.009, BC-3.8.006 amended in place.
+- `BC-INDEX.md`: 12 new rows registered across §3.3/§3.4/§3.5/§3.8/§7.2/§X.7; frontmatter
+  `total_bcs` 742 → 754; `index_version` v6.85 → v6.86.
+- `CANONICAL-COUNTS.md`: per-file table, Sum row, and grand-total prose updated to 754; Holdout
+  Scenarios section updated to 115.
+- `holdout-scenarios.md`: +9 scenarios (H-NEW-MENTION-001..009, Group 21); frontmatter
+  `total_holdouts` 106 → 115.
+- `README.md`: Document Map + Supplement Index holdout enumeration rows updated (informational).
+- `.factory/specs/architecture/decisions/ADR-0023-markdown-mention-pure-effectful-conversion-seam.md`
+  (new); `.factory/specs/architecture/ARCH-INDEX.md` (ADR-0023 registered).
+
+See `.factory/phase-f2-spec-evolution/prd-delta-674.md`, `.factory/phase-f2-spec-evolution/verification-delta-674.md`, `.factory/phase-f2-spec-evolution/architecture-delta.md`.
+
+---
+
 ## [2.0.0] - 2026-08-26
 
 ### Type: MAJOR

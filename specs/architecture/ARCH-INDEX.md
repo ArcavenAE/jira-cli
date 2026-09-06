@@ -37,3 +37,4 @@
 | ADR-0020 | Per-Profile Credential Ownership, Environment Tagging, and OAuth-Default-at-Creation | SS-02, SS-03, SS-08 | decisions/ADR-0020-per-profile-credential-ownership-env-tagging-and-oauth-default-at-creation.md |
 | ADR-0021 | Windows OAuth Secret Storage — Keyring-First with DPAPI-Encrypted-File Fallback | SS-03, SS-08, SS-09 | decisions/ADR-0021-windows-oauth-secret-storage-dpapi-fallback.md |
 | ADR-0022 | API-Token Cloud ID Acquisition via `/_edge/tenant_info`, and the A-PA-LOW-001 Guard | SS-02, SS-03, SS-04, SS-08 | decisions/ADR-0022-api-token-cloud-id-acquisition-tenant-info.md |
+| ADR-0023 | Markdown Mention Conversion — Two-Pure-Entrypoints + One-Effectful-Resolver Seam | SS-02, SS-04, SS-05, SS-08 | decisions/ADR-0023-markdown-mention-pure-effectful-conversion-seam.md |
