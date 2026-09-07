@@ -1,0 +1,11 @@
+MODIFIED .github/workflows/ci.yml
+NEW .github/workflows/mutants-nightly.yml
+MODIFIED docs/specs/cargo-mutants-policy.md
+MODIFIED scripts/check-ci-gate.sh
+MODIFIED tests/ci_gate_completeness.rs
+MODIFIED tests/common/wf.rs
+UNCHANGED-CONFIRM .cargo/mutants.toml
+UNCHANGED-CONFIRM CLAUDE.md
+UNCHANGED-CONFIRM scripts/check-cargo-mutants-policy-citations.sh
+UNCHANGED-CONFIRM tests/mutants_glob_existence.rs
+UNCHANGED-CONFIRM tests/claude_md_citations.rs

@@ -170,4 +170,51 @@ checkpoint in `STATE.md` (v3.78) for the full account, and
 
 ---
 
+## Session Resume Checkpoint (2026-09-07, v3.78) — cycle-005 F4 Wave 1 (Story A) SESSION WRAP, PR #778 OPEN — SUPERSEDED at cycle-006 Burst 1 (v3.79, cycle-006 OPENED)
+
+**Superseded at:** 2026-09-07, cycle-006 Burst 1 (v3.79) — a new Feature-Mode cycle, `mutants-ci-sharding`, was opened and its Phase F1 delta analysis human-approved (DEC-348) to fix the mutation-testing CI gate that is blocking PR #778. cycle-005 remains OPEN but is now explicitly PAUSED pending cycle-006 landing on `develop`; this checkpoint's "NEXT" step (merge PR #778) is deferred until cycle-006's own PR lands and PR #778 is rebased onto the resulting `develop`.
+
+### Spec Versions
+
+| Artifact | Version |
+|----------|---------|
+| STATE.md | 3.78 |
+| total_bcs | 754 |
+| VP count | 76 |
+| holdout scenarios | 118 |
+| total_stories | 174 |
+
+### State
+
+| Field | Value |
+|-------|-------|
+| **Date** | 2026-09-07 |
+| **Position** | cycle-005 (`adf-mentions`, GitHub #674) Phase F4 (delta implementation) Wave 1 (Story A, `S-cycle5-mention-pure-conversion`). |
+| **Convergence counter** | Story A per-story adversarial convergence COMPLETE — 3 clean passes (passes 3, 4, 5, all 0-CRIT/HIGH/MED); no active convergence loop at pause. Story B not started. |
+| **Next step (as recorded at this checkpoint)** | PR #778's CI must finish (Mutation testing was PENDING at wrap; other 13/14 green) → merge PR #778 (main-session-only, `gh pr merge 778 --squash --admin`, human-approved like #776/#777) → Wave-1 integration gate → Story B (Wave 2, `S-cycle5-mention-resolution-wiring`). |
+
+### Resume Prompt (as recorded at this checkpoint)
+
+```
+/vsdd-factory:rehydrate-wave then /vsdd-factory:next-step
+```
+
+### What actually happened next (recorded for continuity, not part of the original checkpoint)
+
+The human opened a new Feature-Mode cycle, `mutants-ci-sharding` (cycle-006), to fix the
+mutation-testing CI gate for large diffs before PR #778 could be merged — the gate's
+existing single-shard `cargo-mutants` run times out / is impractical on PR #778's diff
+size. cycle-006's Phase F1 delta analysis was human-approved in full (DEC-348): sharded
+`cargo-mutants --shard k/n` matrix (8 shards) + `mutants-aggregate` job + an in-scope
+escape hatch (escalated/neutral status for over-threshold diffs, ~120-mutant threshold)
++ advisory scheduled full run + `cargo-mutants@27.1.0` exact pin. Sequencing: cycle-006
+lands to `develop` FIRST (self-validating, no `src/` touched) to unblock PR #778's gate,
+THEN PR #778 rebases onto the new `develop` and cycle-005 F4 resumes. cycle-005 itself
+is unaffected in content — PR #778 remains exactly as it was at this checkpoint (13/14 CI
+green, Mutation testing PENDING, unmerged) — only its unblocking mechanism changed. See
+the live checkpoint in `STATE.md` (v3.79) for the full cycle-006 account, and
+`cycles/cycle-006/burst-log.md` Burst 1 for this state-manager burst's own actions.
+
+---
+
 <!-- Repeat for each archived checkpoint. Maintain chronological order. -->
