@@ -4,7 +4,7 @@ level: ops
 version: "1.0"
 status: in-progress
 producer: state-manager
-timestamp: 2026-09-07T01:15:00Z
+timestamp: 2026-09-07T04:37:49Z
 cycle: "cycle-005"
 inputs: [STATE.md]
 input-hash: "[live-state]"
@@ -185,6 +185,55 @@ traces_to: STATE.md
 | Agent | Task | Output |
 |-------|------|--------|
 | state-manager | Minted DEC-347; refreshed 3 stale `input-hash` values (1 already clean); registered 2 stories in `.factory/sprint-state.yaml` F4 wave tracking; re-ran count-verification scripts; STATE.md v3.77 full-content Write; archived v3.76 checkpoint; commit + push to `factory-artifacts` | `S-cycle5-mention-resolution-wiring.md`, `dependency-graph-extended.md`, `wave-schedule.md` (input-hash refresh), `sprint-state.yaml` (new section), `STATE.md` (v3.77), `cycles/cycle-005/burst-log.md` (this file), `cycles/cycle-005/session-checkpoints.md` |
+
+---
+
+## Burst: Burst 4 — F4 Wave 1 (Story A) implemented + PR #778 opened — SESSION WRAP / PAUSE (2026-09-07)
+
+**Parent-commit:** `569d85a8` (`develop` tip; unchanged this burst — PR #778 not yet merged).
+
+**Trigger:** Human requested a session wrap ("pause the factory and checkpoint cycle-005 for a session clear") after Phase F4 Wave 1 (Story A, `S-cycle5-mention-pure-conversion`) had been dispatched, implemented, and opened as PR #778 by the standard per-story-delivery TDD pipeline (test-writer → implementer → demo-recorder → pr-manager → devops-engineer) in the interim since Burst 3.
+
+**Actions taken:**
+
+1. **Recorded the Wave 1 (Story A) delivery status reached since Burst 3** (delivered by the per-story-delivery pipeline, not by this state-manager burst): the AC-007 `\@`-escape mechanism, flagged at F3-gate time as an F4 SPIKE, came back **FEASIBLE** — implemented via ADR-0023 §4's sentinel scheme (`SENTINEL_ESCAPE`/`SENTINEL_GUARD` collision guard). A further implementation-time discovery — CommonMark's inline grammar can destroy characters inside a bracket-form `[~accountid:<id>]` id before any post-`finish()` tree-walk ever runs (e.g. `[~accountid:_a_]` loses its underscores to emphasis parsing) — required a second, harder pre-parse protection mechanism, `protect_bracket_mentions`, layered onto the same `protect_mention_escapes` helper ahead of the existing `\@`-escape steps. `MentionResolutions` gained a public inserter API for Story B's later use (closes the L-2 flag from the F2-gate record).
+2. **Committed the two outstanding cycle-005 F4 spec artifacts** documenting the discovery above, left uncommitted by the implementation work: `specs/architecture/decisions/ADR-0023-markdown-mention-pure-effectful-conversion-seam.md` (new §4a "Bracket-form pre-parse protection" addendum — mechanism, eligibility grammar, the collision guard closing the primary collision with an accepted one-level GUARD-sub-range residual symmetric to `\@`'s own `U+E001` residual, and the L-1 accepted residual for a start-of-line `[~accountid:X]:` look-alike reference definition) and `phase-f2-spec-evolution/architecture-delta.md` (new §4.1a addendum cross-referencing ADR-0023 §4a, `input-hash` refreshed `504dd1e`→`d51137a`).
+3. **Recorded Story A's per-story adversarial convergence as COMPLETE** — 3 clean passes (passes 3-5, all 0-CRIT/HIGH/MED) — and PR #778's review status: pr-reviewer **APPROVE** (1 IMPORTANT doc finding fixed directly in the PR body), security-reviewer **CLEAN** (1 non-blocking LOW deferred to Story B). PR #778 (branch `feat/cycle5-mention-pure-conversion` @ `89b84a1f`) has 13/14 CI checks green with "Mutation testing" **PENDING** at the moment of this wrap; the worktree remains mounted at `.worktrees/cycle5-mention-pure-conversion`. No sub-agent work was abandoned mid-step — an implementer that looped on a background test was recovered earlier in the interim, and its pre-PR fixes were committed as `89b84a1f` before this burst began.
+4. **Paused the pipeline for the session wrap:** STATE.md frontmatter `pipeline:` flipped `ACTIVE`→`PAUSED`; `phase:` prefixed `"PAUSED 2026-09-07."`; `version` bumped `3.77`→`3.78`; `timestamp`/`last_amended`/`current_step` refreshed (verbatim-strict per D-441..D-449, with the required `trajectory-tail →1→3→0→2` + `D-chain cite D-31` markers preserved per D-453(d)/D-443(a)).
+5. Updated Phase Progress (F4-DELTA-IMPLEMENTATION row notes), Current Phase Steps (replaced with a new 7-row Burst 4 table; Burst 3's rows archived to this file's Burst 3 entry, already fully covered in prose there), Convergence Status, Concurrent Cycles, Constraints Carried Forward (new Burst 4 paragraph; Burst 3 paragraph condensed one-burst-lag), Drift/Standing Items (same treatment), and Historical Content (added a Wave-1 delivery-evidence row citing PR #778 + the worktree path; updated the burst-history summary row).
+6. **Archived the v3.77 Session Resume Checkpoint** to `cycles/cycle-005/session-checkpoints.md` with a "Superseded at" note, then wrote a new v3.78 checkpoint in STATE.md reflecting the paused position, PR #778's exact review/CI state, and the resume path (`/vsdd-factory:rehydrate-wave` then `/vsdd-factory:next-step`).
+7. Carried forward all standing process-gaps unchanged (`VP-COUNT-RECONCILIATION`, `ADR-COUNT-CANONICAL-GUARD-GAP`, `FACTORY-HOOK-FUEL-EXHAUSTED`, and every cycle-001/002/003/004 historical item) — no new process-gap identified this burst.
+8. Refreshed the STATE.md banner `wc -l` claim + dual-margin note to the actual post-Write line count (343 lines) per BC-5.39.005.
+
+**Adversary verdict:** N/A this state-manager burst — no `adversary` agent dispatched. Story A's 3-clean-pass per-story adversarial convergence record cited above was produced by the per-story-delivery pipeline's own review loop prior to this burst, not re-run here.
+
+**Files touched (Dim-1): 5 unique files/paths this burst, all committed in the state-manager's own single atomic commit**
+
+- `STATE.md` (v3.78 — full-content Write)
+- `cycles/cycle-005/session-checkpoints.md` (v3.77 checkpoint archived with "Superseded at" note)
+- `cycles/cycle-005/burst-log.md` (this entry)
+- `specs/architecture/decisions/ADR-0023-markdown-mention-pure-effectful-conversion-seam.md` (§4a bracket-form pre-parse-protection addendum — produced by the F4 implementation work, committed by this burst)
+- `phase-f2-spec-evolution/architecture-delta.md` (§4.1a addendum, `input-hash` `504dd1e`→`d51137a` — produced by the F4 implementation work, committed by this burst)
+
+**Known hook noise this burst:** `validate-trajectory-tail-cell-completeness` (BC-5.39.009, priority 158) initially blocked twice on the `current_step`/`Last Updated` cells for using the `trajectory_tail:` (underscore+colon) label form instead of the hook's required `trajectory-tail ` (hyphen+space) literal immediately preceding the arrow-sequence — corrected both sites to the hyphenated form (content unchanged otherwise). `validate-state-structure` also blocked once transiently on a stray banner-`wc -l` mismatch introduced by an intermediate edit, self-corrected before the final Write. Neither reflects a defect in this burst's substantive content — both were resolved before the commit below.
+
+**Dim-2 Attestation:** No count-verification script applies to this burst (SESSION WRAP is a bookkeeping pause, not a spec/story/BC-count-changing event) — `check-spec-counts.sh`/`check-bc-cumulative-counts.sh` not re-run; counts unchanged (754 BCs / 76 VPs / 118 holdouts / 174 stories, all carried forward verbatim from Burst 3).
+
+**Dim-5 Attestation:** N/A — no binary/WASM artifact produced by this `.factory/` commit (bookkeeping-only, no build).
+
+**Dim-6 Attestation:** No `src/`/`tests/` change committed by this state-manager burst — the F4 Wave 1 implementation itself (which does touch `src/`/`tests/`) lives on PR #778's branch (`feat/cycle5-mention-pure-conversion` @ `89b84a1f`), separate from this `.factory/` commit. `develop` HEAD unchanged at `569d85a8`.
+
+**Dim-7 Attestation:** N/A — no CI-relevant change in this `.factory/` commit (no code, no workflow file touched); PR #778's own CI is tracked separately on GitHub, not by this commit.
+
+**Codifications:** No new DEC this burst — a session-wrap pause is bookkeeping, not a phase-gate decision. Recorded (not decided) this burst: Story A per-story adversarial convergence COMPLETE (3 clean passes); PR #778 OPEN, pr-reviewer APPROVE, security-reviewer CLEAN, CI 13/14 green (Mutation testing PENDING); pipeline PAUSED.
+
+**Closes:** nothing — this burst does not close Phase F4, cycle-005, or any story; it pauses the pipeline for a session clear. **Does NOT close:** PR #778's CI, its merge, the Wave-1 integration gate, or Wave 2 (`S-cycle5-mention-resolution-wiring`, still blocked-on-wave-1) — all remain for the next session, per the resume command recorded in STATE.md's Session Resume Checkpoint.
+
+### Details
+
+| Agent | Task | Output |
+|-------|------|--------|
+| state-manager | Recorded F4 Wave 1 (Story A) delivery status (per-story-delivery pipeline's own work, not this burst's); committed 2 outstanding F4 spec artifacts (ADR-0023 §4a, architecture-delta.md §4.1a); paused pipeline (`ACTIVE`→`PAUSED`); STATE.md v3.78 full-content Write; archived v3.77 checkpoint; commit + push to `factory-artifacts` | `STATE.md` (v3.78), `cycles/cycle-005/burst-log.md` (this file), `cycles/cycle-005/session-checkpoints.md`, `ADR-0023-*.md` (§4a), `phase-f2-spec-evolution/architecture-delta.md` (§4.1a) |
 
 ---
 

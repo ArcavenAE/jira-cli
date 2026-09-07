@@ -4,7 +4,7 @@ level: ops
 version: "1.0"
 status: archive
 producer: state-manager
-timestamp: 2026-09-07T01:15:00Z
+timestamp: 2026-09-07T04:37:49Z
 cycle: "cycle-005"
 inputs: [STATE.md]
 input-hash: "[live-state]"
@@ -110,6 +110,63 @@ count advanced 172→174 (STORY-INDEX.md v1.6.16). The human then **APPROVED** F
 (**DEC-347**). See the live checkpoint in `STATE.md` (v3.77) for the full account, and
 `cycles/cycle-005/burst-log.md` Burst 3 for the state-manager's own recording/tracking-setup
 actions.
+
+---
+
+## Session Resume Checkpoint (2026-09-06, v3.77) — cycle-005 F3 APPROVED + F4 DISPATCH — SUPERSEDED at Burst 4 (v3.78, SESSION WRAP)
+
+**Superseded at:** 2026-09-07, Burst 4 (v3.78) — SESSION WRAP: Wave 1 (Story A) implemented, PR #778 opened, pipeline PAUSED.
+
+### Spec Versions
+
+| Artifact | Version |
+|----------|---------|
+| STATE.md | 3.77 |
+| total_bcs | 754 |
+| VP count | 76 |
+| holdout scenarios | 118 |
+| total_stories | 174 |
+
+### State
+
+| Field | Value |
+|-------|-------|
+| **Date** | 2026-09-06 |
+| **Position** | cycle-005 (`adf-mentions`, #674) OPEN — Phase F3 (incremental story decomposition) **APPROVED** (DEC-347); Phase F4 (delta implementation) **IN PROGRESS** — Wave 1 dispatched, not yet started by an implementer. |
+| **F3-gate decision** | **DEC-347** (full F3 approval, both stories, the 2-wave split, and the documented interim-window tradeoff) — human-made at the gate. |
+| **This checkpoint's work (recording + tracking setup)** | Minted DEC-347; refreshed `compute-input-hash` drift on 3 of 4 F3 story artifacts; registered both stories in `.factory/sprint-state.yaml`'s `cycle_005_adf_mentions` section (Wave 1 `ready`, Wave 2 `blocked`); re-ran both named count-verification scripts (both exit 0). |
+| **In-flight work at this checkpoint** | None — F4 had just been dispatched (Wave 1 ready) but not yet started by an implementer. |
+| **Convergence counter** | N/A at this checkpoint — the F3 gate had passed; F4's own per-story adversarial convergence loop had not yet started. |
+| **Next step (as recorded at this checkpoint)** | Dispatch Phase F4 Wave 1 (`S-cycle5-mention-pure-conversion`) to an implementer via the standard per-story-delivery TDD pipeline. |
+
+### Resume Prompt (as recorded at this checkpoint)
+
+```
+dispatch Phase F4 Wave 1 — S-cycle5-mention-pure-conversion
+(.factory/cycles/cycle-005/phase-f3-stories/S-cycle5-mention-pure-conversion.md) — via the
+standard per-story-delivery TDD pipeline (test-writer → implementer → demo-recorder →
+pr-manager → devops-engineer), reading the story's 15 ACs and its "Interim Shippability
+Note"; treat AC-007's `\@`-escape mechanism as an F4 SPIKE whose infeasibility routes a
+scope-cut decision back to the orchestrator rather than shipping silently.
+```
+
+### What actually happened next (recorded for continuity, not part of the original checkpoint)
+
+Phase F4 Wave 1 (Story A) was dispatched through the standard per-story-delivery TDD
+pipeline. The AC-007 `\@`-escape spike came back **FEASIBLE**, implemented via ADR-0023 §4's
+sentinel scheme. A further discovery during implementation — CommonMark destroys characters
+inside a bracket-form `[~accountid:<id>]` id before any post-`finish()` tree-walk runs —
+required a second pre-parse protection mechanism, `protect_bracket_mentions`, documented as
+a new ADR-0023 §4a addendum and a corresponding `architecture-delta.md` §4.1a addendum
+(both committed at Burst 4). `MentionResolutions` gained a public inserter API for Story B's
+later use. Story A reached per-story adversarial convergence over 3 clean passes (passes
+3-5, all 0-CRIT/HIGH/MED), pr-reviewer **APPROVE** (1 IMPORTANT doc finding fixed in the PR
+body), and security-reviewer **CLEAN** (1 non-blocking LOW deferred to Story B). PR #778
+opened (branch `feat/cycle5-mention-pure-conversion` @ `89b84a1f`), 13/14 CI checks green
+with "Mutation testing" **PENDING** at the moment of the SESSION WRAP. The human then
+requested a session wrap before PR #778's CI finished or it was merged. See the live
+checkpoint in `STATE.md` (v3.78) for the full account, and
+`cycles/cycle-005/burst-log.md` Burst 4 for this state-manager burst's own actions.
 
 ---
 

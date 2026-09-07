@@ -31,6 +31,17 @@ pass-2 adversarial review flagged for this gate) by tightening `@Name` single-re
 See §7 for the full mechanism; it is additive to everything in §1–§6 and changes no prior
 decision in this ADR.
 
+**§4a addendum (same date, 2026-09-06):** documents an F4 implementation-time discovery from
+`S-cycle5-mention-pure-conversion` Story A (pure bracket-form conversion) — CommonMark's inline
+grammar can DESTROY characters inside a bracket-form `[~accountid:<id>]` id before any
+post-`finish()` tree-walk ever runs (a fundamentally harder problem than `\@`'s invisibility
+problem, which §4 already solves), requiring a second, independent pre-parse protection pass,
+`protect_bracket_mentions`. See §4a for the full mechanism, the collision guard (closes the
+primary collision; accepts a one-level GUARD-sub-range residual symmetric with §4's own), and the
+syntactic L-1 residual. Additive to §1–§7; changes no decision §4 already made about the `\@`
+mechanism itself — it only corrects §4's implicit framing that pre-parse protection exists for
+`\@` alone.
+
 > **NOTE — factory-artifact placement, not yet an F4 code artifact:** This ADR governs
 > `src/cli/issue/mentions.rs` (new), extensions to `src/adf.rs`, and a visibility bump to
 > `src/cli/issue/helpers.rs::disambiguate_user` — none of which exist in this shape in `src/`
@@ -369,6 +380,259 @@ escape) if no sentinel codepoint proves clean. Option (a) is deprioritized as a 
 below (c), not above it — its blast radius on `adf.rs` is higher, and it should only be revisited
 if a *future* cycle needs general-purpose escape-awareness across many different escaped
 characters, at which point the investment is worth spreading over more than this one feature.
+
+### 4a. Bracket-form pre-parse protection (F4 implementation discovery, cycle-005 Story A)
+
+**Status:** Addendum, same date (2026-09-06). Discovered during F4 implementation of
+`S-cycle5-mention-pure-conversion` (Story A: pure bracket-form conversion, incl. reverse-render).
+Extends §4's pre-parse-sentinel mechanism — which this ADR originally scoped to the `\@` escape
+only — with a SECOND, independent pre-parse protection covering bracket-form
+(`[~accountid:<id>]`) spans. Nothing in §4's `\@`-escape decision changes; this section is
+additive.
+
+**1. The problem: CommonMark's inline grammar destroys, not merely obscures, characters inside a
+bracket-form id.**
+
+§3's rejection of a pre-parse `@Name`→bracket-form rewrite, and §4's `\@`-escape design, both
+implicitly carry an assumption from the `\@` case: that a POST-`finish()` tree-walk can always
+recover whatever the pre-#674 pure entrypoints already convert, because the character in
+question (an escaped `@`) *survives* the parse — CommonMark's own escape handling merges it back
+into ordinary text, and the tree-walk's only job is telling an escaped `@` apart from a live one.
+A RED proptest run against `find_mention_candidates`/`markdown_to_adf_with_mentions` during F4
+disproved that assumption for the bracket form: `[~accountid:_a_]` is not merely *ambiguous*
+post-parse, it is *destroyed* post-parse. `_a_` is a syntactically valid CommonMark emphasis
+span; pulldown-cmark's inline parser consumes the delimiting underscores as markup, and they
+never survive as literal text in the built tree at all — the same `Event`/`Tag` stream a
+post-`finish()` walk inspects has no way to know an underscore was ever there, because there is
+no delimiter left to see. `[~accountid:*x*]` is the identical failure for `*`. This is a
+fundamentally different failure mode than the `\@` case's invisibility problem (§4's opening
+paragraph): an escaped `@` is byte-identical to a live `@` *after* parsing, which is a
+disambiguation problem a tree-walk could in principle still solve given enough context; a
+destroyed delimiter has no representation left in the tree to disambiguate at all — there is
+nothing left to walk to. AC-001's byte-for-byte id-preservation guarantee (BC-7.2.016) is
+therefore unsatisfiable by any post-parse mechanism for a bracket-form id containing CommonMark's
+own inline-delimiter charset — exactly as unsatisfiable as it would have been for `\@` if
+pulldown-cmark's native escape handling did not exist. Since the bracket-form id grammar itself
+(`[A-Za-z0-9:_-]`) includes `_`, and pairs of `_`/`*`/`~` are common in real and synthetic test
+accountIds alike, this is not a rare edge case. **Conclusion: the bracket form ALSO requires
+pre-parse protection, not just `\@`.** §4's mechanism, as originally scoped, protected exactly
+one pre-parse substitution target (`\@` → `SENTINEL_ESCAPE`); this addendum extends the SAME
+pre-parse phase with a second, independent substitution target for bracket-form spans.
+
+**2. The mechanism: `protect_bracket_mentions`.**
+
+Before `\@`-escape substitution (§4) runs, and inside the same `protect_mention_escapes`
+pre-parse pipeline, `protect_bracket_mentions(markdown, code_ranges, link_ranges) -> (String,
+bool)` performs a single left-to-right scan of the raw markdown for the exact grammar
+`find_mention_candidates`/`convert_mentions` already use to recognize a bracket-form span
+post-parse (boundary, `[~accountid:`, one or more `[A-Za-z0-9:_-]` characters, closing `]`) and
+replaces each ELIGIBLE match, whole, with a reversible token built from three new reserved
+Private Use Area allocations — distinct from the `\@`-escape pair `SENTINEL_ESCAPE` (`U+E000`) /
+`SENTINEL_GUARD` (`U+E001`) §4 already reserves:
+
+- `BRACKET_SENTINEL_OPEN` (`U+E010`) and `BRACKET_SENTINEL_CLOSE` (`U+E011`) bracket the token —
+  codepoints with zero special meaning anywhere in CommonMark's inline grammar, so the whole run
+  is guaranteed to survive the parse as one unbroken sequence of ordinary characters, the same
+  guarantee `SENTINEL_ESCAPE` relies on for `\@`.
+- Between the two bracket sentinels, the id's own characters are individually re-encoded,
+  one-to-one and reversibly, via `encode_bracket_id_char`/`decode_bracket_id_char` into the
+  `U+E100..U+E180` PUA block (`BRACKET_ID_ENCODE_BASE = 0xE100`) — a per-character shift by a
+  fixed base, not a lookup table, so it needs no table and cannot fail for any character the id
+  grammar admits (`[A-Za-z0-9:_-]`, all ASCII, all `< 128`, so the shifted codepoint always lands
+  inside the reserved 128-codepoint block). This is necessary, not merely convenient:
+  sentinel-bracketing the span alone would still leave the id's own `_`/`*`/`~`-adjacent
+  characters exposed to the parser between the two sentinel codepoints — the id content itself
+  must ALSO be neutralized, not just delimited, or the exact destruction problem from point 1
+  recurs one layer in. Restoration is the exact inverse at emit time: the bracket-form arm of
+  `scan_mention_spans` looks for a `BRACKET_SENTINEL_OPEN` ... `BRACKET_SENTINEL_CLOSE` run,
+  decodes each interior character back through `decode_bracket_id_char`, and treats any
+  character outside the reserved range as a non-match (defensive; unreachable in practice since
+  only this function's own encoder ever writes into that range).
+
+Eligibility for protection is narrower than "every syntactic match," carrying forward two
+exclusions the RED proptests also surfaced (both already folded into `protect_bracket_mentions`
+as implemented, not proposed for later work):
+
+- **EC-7.2.016-3 (code-context):** a match starting inside a detected code span/fence (the same
+  `code_ranges` §4's code-range guard already computes) is left completely untouched — identical
+  in spirit to `\@`'s own code-skip rule, reusing the SAME `compute_protected_ranges` scan
+  (extended, see point 5 below) rather than a second, independently-maintained code detector.
+- **EC-7.2.016-6 (reference-link collision):** a match whose FULL span is EXACTLY the range of a
+  markdown `Link` event — i.e. `[~accountid:X]` is itself a shortcut/reference-style link because
+  a matching `[~accountid:X]: <url>` reference definition exists elsewhere in the document — is
+  left unprotected, so it resolves as the link the author's reference definition asked for, not
+  as a mention, with zero special-casing. This is a DIFFERENT range relationship than "nested
+  inside a larger link's text": a genuinely nested case, `[[~accountid:X]](url)` (EC-7.2.016-4),
+  has a link range that STRICTLY CONTAINS the bracket-form match rather than one that equals it
+  exactly — it is not excluded, and IS protected, correctly preserving EC-7.2.016-4's opposite
+  requirement that the inner span still convert. §4's original text did not anticipate needing a
+  link-range check at all (it predates bracket-form pre-parse protection entirely); this is a
+  genuinely new exclusion, not a refinement of an existing one.
+- **L-1 (line-start reference-definition heuristic, accepted residual — see point 4 below).**
+
+**3. The collision guard — closes the primary collision; a one-level residual is accepted,
+matching the `\@` guard's own standard (corrected, pass-2 adversarial review).**
+
+§4 step 2 already establishes the precedent this guard follows: before `SENTINEL_ESCAPE`
+(`U+E000`) is inserted as a marker, any PRE-EXISTING literal `U+E000` in the user's raw input is
+first remapped to `SENTINEL_GUARD` (`U+E001`) so the two meanings can never collide — and §4's own
+point 6 explicitly ACCEPTS, rather than eliminates, the one-level-deeper case: a pre-existing
+literal `U+E001` is itself misread as the guard marker on restore. The bracket-form mechanism
+follows the identical pattern, WITH the identical class of residual, over its own three-allocation
+range (`BRACKET_SENTINEL_OPEN`/`_CLOSE` plus the `U+E100..U+E180` encode block) and the paired
+GUARD sub-ranges reserved to protect it — `U+E012`/`U+E013` guarding `BRACKET_SENTINEL_OPEN`/
+`_CLOSE`, and `U+E180..U+E200` guarding the encode block — each a fixed +0x80 (128) shift off its
+primary codepoint, the same one-guard-codepoint-per-primary-codepoint shape
+`SENTINEL_ESCAPE`/`SENTINEL_GUARD` already uses.
+
+Any pre-existing literal codepoint in the PRIMARY bracket-sentinel/encode PUA range (`U+E010`,
+`U+E011`, and each of `U+E100..U+E180`) found in the non-code complement of the raw input is
+remapped, before `protect_bracket_mentions` ever inserts its own tokens, to its paired GUARD
+codepoint, and restored to the original literal on the same post-`finish()` restore pass that
+already reverses `SENTINEL_ESCAPE`/`SENTINEL_GUARD`. **This closes the primary collision the guard
+exists for, unconditionally:** a raw markdown document that happens to already contain one of the
+PRIMARY-range PUA codepoints as ordinary (if exotic) authored content — copy-pasted from another
+PUA-using source, for example — can no longer have that literal content silently reinterpreted as
+a fabricated bracket-mention token on restore, converting text the user never intended as a
+mention into a real `{"type":"mention",...}` node (the M-1/AC-003 "spurious mention" finding from
+this story's own pass-1 adversarial review). No input reopens that specific collision.
+
+**Accepted one-level residual (pass-2 adversarial review) — this ADR's earlier "CLOSED, not an
+accepted residual" framing for this guard is retracted as inaccurate; the guard closes the primary
+collision but does not, and cannot without an unbounded escape-of-escape chain, also guard its own
+GUARD sub-ranges.** The remap above only fires for literals found in the PRIMARY range (`U+E010`,
+`U+E011`, `U+E100..U+E180`); it does not touch, and the restore pass does not distinguish, a
+pre-existing literal that already sits in the GUARD sub-ranges themselves (`U+E012`, `U+E013`,
+`U+E180..U+E200`). Restore unconditionally reverses anything found in a GUARD sub-range on the
+assumption that it is a guarded-away primary literal, so a genuine pre-existing user literal
+already in a GUARD sub-range is shifted by -0x80 (128) on restore instead of surviving
+byte-for-byte — silent data-fidelity corruption of that one codepoint. This is NOT the collision
+class point 3 exists to close: the shifted-back codepoint is never itself a valid
+bracket-sentinel/encode-block value the parser or `scan_mention_spans`'s decoder would recognize
+as a mention token, so no spurious mention is fabricated and no HTTP/notify side effect follows —
+the residual is confined to that one codepoint's fidelity. This is the identical shape and the
+identical justification as §4's own accepted `U+E001` residual: both are Private Use Area
+codepoints outside anything a markdown author types via a normal keyboard, no real-world use case
+involving PUA codepoints in issue text surfaced during this cycle's research, and fully closing
+either one would require a second guard layer over the GUARD sub-ranges — which would in turn need
+its own guard, and so on, the same infinite-regress §4 already declines to chase further for the
+`\@` pair. **Accepted, not closed** — alongside, not instead of, the residual named in point 4
+below (a fundamentally different, syntactic, not sentinel-collision, risk). Pinned by a regression
+test (added alongside this correction) asserting the shifted-not-fabricated output for a
+pre-existing literal in each of the three GUARD sub-ranges.
+
+**4. Accepted residual (L-1): a start-of-line `[~accountid:X]:` in pure prose is conservatively
+left literal.**
+
+`protect_bracket_mentions`'s reference-definition exclusion (point 2's EC-7.2.016-6 case) needs
+to recognize a `[label]: destination` reference-definition LINE, not just a reference-definition
+LINK EVENT, because the exact-span-equals-a-Link-event check alone cannot fire until pulldown has
+already decided the line IS a valid reference definition — and a malformed or forward-declared
+reference definition may not yet register as a `Link` event at the point this pre-parse scan
+runs. The implemented heuristic is therefore syntactic, not semantic: a bracket-form match that
+sits at the START of a line and is immediately followed by `:` (the shape of a `[label]:
+destination` reference definition's own opening) is excluded from protection unconditionally,
+regardless of whether a well-formed destination actually follows. **Accepted residual:** a bare
+`[~accountid:X]:` appearing as ordinary prose at the start of a line — with no destination
+following, i.e. NOT a real reference definition — is therefore also left unprotected and
+un-converted, silently rendering as literal text rather than as a mention. This is deliberately
+conservative, in the same direction as §4's own residual-risk framing (point 6 there):
+protecting the genuine reference-definition case (letting the author's link win) is judged more
+important than converting the one accountId a prose sentence might happen to start a line with,
+and no holdout/test scenario in this cycle's scope exercises a prose sentence beginning exactly
+this way. **Documented here as ACCEPTED, not closed** — a real, load-bearing distinction from
+point 3's guard: point 3 closes a mechanism-collision gap with a general-purpose fix, while this
+residual is an inherent limitation of doing reference-definition detection without a full
+line-oriented reference-definition parser, and is not eliminated by any guard. Pinned by a
+regression test asserting the literal (non-mention) output for exactly this input shape.
+
+**5. Interaction and pass-order placement.**
+
+`protect_bracket_mentions` runs strictly BEFORE `\@`-escape substitution, inside the same
+`protect_mention_escapes` entrypoint (§4 step 4's shared helper), which now performs the
+following steps, in order:
+
+```
+0a. protect_bracket_mentions(markdown, code_ranges, link_ranges)   — NEW (§4a)
+0b. recompute code_ranges against the (possibly bracket-protected) string, if it changed
+1.  \@-escape collision guard (SENTINEL_ESCAPE -> SENTINEL_GUARD)  — §4 step 2, unchanged
+2.  \@-escape backslash-parity substitution                        — §4 step 3, unchanged
+```
+
+Both `code_ranges` and `link_ranges` for step 0a are computed by ONE disposable
+`into_offset_iter()` scan against the pristine, untouched raw string (the same scan §4's
+code-range guard already performs, now additionally collecting `Tag::Link` ranges alongside
+`Event::Code`/`Tag::CodeBlock` — no second parse pass for link detection). Because
+`protect_bracket_mentions` changes byte offsets whenever it actually substitutes something, the
+code-range set must be recomputed against ITS output before the `\@`-escape steps index into
+that string — this recompute is skipped (reusing the already-computed ranges) when
+`protect_bracket_mentions` made no substitution, avoiding a wasted fourth parse in the common
+case of a document with no bracket-form mentions at all. `protect_mention_escapes` is, as §4
+step 4 already establishes, called identically by `find_mention_candidates` and
+`markdown_to_adf_with_mentions`, and NEVER by `markdown_to_adf_no_mentions` (§4's pass-2/L-3
+correction) — this addendum does not alter that caller list; bracket-form protection is folded
+into the same shared helper and therefore inherits the same "two callers only" contract with no
+separate wiring needed.
+
+At restore time (§5's step 4, "sentinel-restore"), the bracket-form path does not need its own
+separate restore pass: bracket-form spans are converted directly by `convert_mentions`/
+`find_mention_candidates` (§5 step 3) BEFORE the generic `\@`-sentinel-restore pass ever runs —
+the emit-side walk recognizes a `BRACKET_SENTINEL_OPEN...BRACKET_SENTINEL_CLOSE` run, decodes it,
+and replaces the run with a real `mention` node outright, so by the time step 4's restore pass
+runs, no bracket sentinel remains in the tree for any bracket-form mention that WAS detected.
+Unlike `\@`, where an intentionally-escaped span must survive past `convert_mentions`
+unconverted (and therefore does need step 4's restore to turn back into a literal `@`), every
+bracket-form protection is unconditionally converted by construction (Decision §1: "Every
+bracket-form span is ALWAYS converted to a mention node ... self-contained") — so there is no
+bracket-form counterpart to step 4's restore at all. The bracket-sentinel/encode PUA range's
+own collision-guard restore (point 3 above) rides on the exact same post-`finish()` restore pass
+that already reverses `SENTINEL_ESCAPE`/`SENTINEL_GUARD`, purely because a pre-existing literal
+codepoint in that range could in principle survive UNPROTECTED text (text that was never inside
+an eligible bracket-form span to begin with) all the way to the built tree, and that case still
+needs the same restore-to-original step §4 step 6 already performs for the `\@` pair.
+
+**6. Consequences update.**
+
+- **A fourth in-process parse pass, not a third.** §4's own "Cost of the correction" already
+  raised the per-call-site pass count from two to three (the code-range guard, ahead of
+  `find_mention_candidates`/`markdown_to_adf_with_mentions`'s own two builds). This addendum adds
+  a conditional FOURTH: `protect_bracket_mentions`'s own linear scan is not itself a parse (it
+  reuses the code/link ranges the existing guard scan already produces), but the code-range
+  RECOMPUTE (point 5, step 0b) is an additional `into_offset_iter()` pass that fires whenever a
+  bracket-form span is actually protected. Judged equally negligible for the same reason every
+  prior pass in this ADR is judged negligible: in-process, small-input, dwarfed by the network
+  round trips mention resolution performs regardless.
+- **Three new reserved PUA allocations**, on top of §4's two (`SENTINEL_ESCAPE` `U+E000`,
+  `SENTINEL_GUARD` `U+E001`): `BRACKET_SENTINEL_OPEN` `U+E010`, `BRACKET_SENTINEL_CLOSE` `U+E011`,
+  and the `U+E100..U+E180` per-character id-encoding block — chosen to be non-overlapping with
+  each other and with §4's pair, and (per point 3) now guarded symmetrically against
+  pre-existing literal collisions the same way §4's pair already is.
+- **This addendum supersedes §4's implicit "pre-parse protection exists only for `\@`" framing**,
+  not any of §4's actual decisions about the `\@` mechanism itself. Every point in §4 (the
+  code-context guard, the `SENTINEL_ESCAPE`/`SENTINEL_GUARD` collision guard, the
+  restrict-to-two-callers rule, the F4 empirical-verification flag) stands unmodified; §4a
+  documents that the SAME pre-parse phase now also carries a second, independent protection pass
+  for a different, destruction-class failure mode the `\@` case does not exhibit. Any future
+  reader of §4 alone, without §4a, would incorrectly conclude `protect_mention_escapes` handles
+  `\@` exclusively — that conclusion is retracted by this addendum.
+- **Two new accepted residuals (point 3's GUARD-sub-range corruption case, and L-1/point 4),
+  alongside — not replacing — §4's own accepted residual** (the nested-sentinel-collision case for
+  `\@`/`U+E000`/`U+E001`). All three residuals are independent: point 3's is a second-level PUA
+  codepoint collision over the bracket-form guard's own GUARD sub-ranges (`U+E012`/`U+E013`/
+  `U+E180..U+E200`) — the same class of residual as §4's, one guard level deeper, corrected into
+  this addendum by pass-2 adversarial review after an earlier draft of this document mistakenly
+  claimed the guard was fully closed; L-1 is a syntactic reference-definition-detection limitation
+  with no sentinel collision involved at all; §4's own residual is specifically about its
+  second-level `U+E000`/`U+E001` PUA codepoint collision.
+- **F4 verification scope grows correspondingly.** §4's "F4 spike input" flag (sentinel-codepoint
+  survival under the full `Options` set; code-range guard boundary handling) now also covers: the
+  `U+E100..U+E180` encode block's survival under the same `Options` set for every character the
+  id grammar admits, the `BRACKET_SENTINEL_OPEN`/`_CLOSE` pair's survival identically, and the
+  `Tag::Link`-range extraction's boundary handling at a link's exact start/end offsets (needed
+  for the EC-7.2.016-6 exact-span-equality check in point 2 to be reliable). Regression tests
+  pinning (a) the L-1 residual's literal (non-conversion) output and (b) point 3's GUARD
+  sub-range shift-not-fabricate output for each of `U+E012`/`U+E013`/`U+E180..U+E200` are required
+  alongside the existing F4 empirical checks §4 already names.
 
 ### 5. Post-`finish()` pass ordering — definitive (closes MED-2)
 
@@ -756,6 +1020,29 @@ BC/EC/holdout files):
   (the disposable code-range guard) ahead of the two the design originally accepted
   (`find_mention_candidates`, `markdown_to_adf_with_mentions`). Still judged negligible — see §4
   "Cost of the correction."
+- **A fourth, conditional pre-parse pass and three more reserved PUA allocations (F4 discovery,
+  §4a).** During F4 implementation of Story A, a RED proptest showed CommonMark's inline grammar
+  can DESTROY characters inside a bracket-form `[~accountid:<id>]` id (e.g. `_a_`, `*x*`) before
+  any post-`finish()` tree-walk ever runs — unlike `\@`, where the escaped character survives
+  natively and only needs disambiguating, a destroyed delimiter has no representation left in the
+  tree to recover. This required a second, independent pre-parse protection mechanism,
+  `protect_bracket_mentions` (`BRACKET_SENTINEL_OPEN`/`_CLOSE` at `U+E010`/`U+E011`, plus a
+  per-character `U+E100..U+E180` reversible id encoding), folded into the same
+  `protect_mention_escapes` helper ahead of the `\@`-escape steps. It adds one more conditional
+  `into_offset_iter()` pass (a code-range recompute, fired only when a bracket-form span is
+  actually protected) on top of the triple-parse baseline above — still judged negligible against
+  the network round trips mention resolution performs regardless. The bracket-sentinel/encode PUA
+  range carries the same pre-existing-literal collision guard §4 step 2 already established for
+  `SENTINEL_ESCAPE`/`SENTINEL_GUARD` — closing the M-1/AC-003 "spurious mention" finding from this
+  story's pass-1 adversarial review unconditionally, the same way §4's own guard closes it for
+  `\@`. As with `\@`, the guard does not extend to its own GUARD sub-ranges (`U+E012`/`U+E013`/
+  `U+E180..U+E200`): a pre-existing literal already there is shifted by -0x80 on restore, an
+  accepted one-level data-fidelity residual symmetric with §4's own `U+E001` residual (corrected,
+  pass-2 adversarial review — an earlier draft of this ADR mischaracterized this guard as fully
+  closed with no residual). A second, narrower and unrelated residual (L-1) is also accepted: a
+  start-of-line `[~accountid:X]:` in pure prose with no matching reference definition is
+  conservatively left literal (silent non-conversion), pinned by a regression test. Full
+  mechanism and both accepted residuals: ADR-0023 §4a.
 - **Post-`finish()` pass ordering is now a five-step, cross-pass invariant** (§5), not a single
   pairwise rule. Any future new post-`finish()` pass in `adf.rs` must be inserted with explicit
   reasoning about where it sits relative to `autolink_bare_urls`, `convert_mentions`,
