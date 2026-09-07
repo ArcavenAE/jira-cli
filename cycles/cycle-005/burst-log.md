@@ -4,7 +4,7 @@ level: ops
 version: "1.0"
 status: in-progress
 producer: state-manager
-timestamp: 2026-09-06T18:30:00Z
+timestamp: 2026-09-07T01:15:00Z
 cycle: "cycle-005"
 inputs: [STATE.md]
 input-hash: "[live-state]"
@@ -129,6 +129,62 @@ traces_to: STATE.md
 | Agent | Task | Output |
 |-------|------|--------|
 | state-manager | Verified F2 spec-evolution artifacts already present/consistent; minted DEC-345/DEC-346; performed 6-item F2-close INTEGRATE cleanup sweep; re-ran count-verification scripts; logged 2 new process-gaps; STATE.md v3.76 full-content Write; archived v3.75 checkpoint; commit + push to `factory-artifacts` | `spec-changelog.md`, `CANONICAL-COUNTS.md`, `adr-index.md`, `system-overview.md`, `README.md` (specs/prd), `prd-delta-674.md`, `verification-delta-674.md`, `STATE.md` (v3.76), `cycles/cycle-005/burst-log.md` (this file), `cycles/cycle-005/session-checkpoints.md` |
+
+---
+
+## Burst: Burst 3 — Phase F3 story decomposition APPROVED (DEC-347); input-hash refresh; F4 wave tracking setup; phase advances F3→F4 (2026-09-06)
+
+**Parent-commit:** `569d85a8` (`develop` tip; unchanged this burst — no `develop`-side commit; F3/F4-dispatch are bookkeeping-only, no code merged yet).
+
+**Trigger:** Phase F3 (incremental story decomposition), run by story-writer + adversary across prior sub-bursts, produced 2 stories (`S-cycle5-mention-pure-conversion` Wave 1, `S-cycle5-mention-resolution-wiring` Wave 2) plus a dependency graph and wave schedule, converging over 6 rounds of adversarial story review (passes 5-6 both CLEAN — F-H-01/F-H-02/F-M-01/F-M-02/F-M-03 fixed across earlier passes). The human then reviewed the complete F3 decomposition at the gate and **APPROVED** it in full (DEC-347). This state-manager burst records the decision, refreshes deferred `input-hash` drift left by the prior story-writer/adversary fix rounds (no shell access in those roles), registers the 2 approved stories in the repo's Phase-3/F4 wave-tracking convention (`.factory/sprint-state.yaml`, `cycle_NNN_<bundle>` top-level keys — this repo has no `sprint-state.yaml`/`wave-state.yaml` under `.factory/stories/` or per-cycle; the single top-level `.factory/sprint-state.yaml` is the established convention, confirmed by grepping every prior `cycle_*` section including `cycle_002_field_dx` and `cycle_004_windows_correctness`), and advances the tracked phase to F4.
+
+**Actions this burst:**
+
+1. Verified `.factory/` worktree preconditions (`.git` marker, `git rev-parse --git-dir`, branch `factory-artifacts`) — all PASS. No `project.yaml` (single-repo; `.factory-project/` preconditions N/A).
+2. Minted **DEC-347** (F3 human gate APPROVAL) in STATE.md's Decisions Log: 2 stories — `S-cycle5-mention-pure-conversion` (Wave 1, 13 pts, priority P0/module_criticality CRITICAL, 15 ACs, `depends_on: []`, target `src/adf.rs`) + `S-cycle5-mention-resolution-wiring` (Wave 2, 13 pts, priority P0/module_criticality HIGH, 17 ACs, `depends_on: [S-cycle5-mention-pure-conversion]`, target `src/cli/issue/mentions.rs`); acyclic A→B dependency (Kahn-layering proven); 2 sequential waves; critical path 2 stories / 26 points (100% of cycle points). Story count 172→174 (already reflected in STORY-INDEX.md v1.6.16 from prior F3 authoring/fix bursts — this burst recorded the gate decision, it did not itself add the rows).
+3. Refreshed deferred `input-hash` drift on the F3 story artifacts, per file:
+   - `S-cycle5-mention-pure-conversion.md` — `--check` already clean (`90a5d3a`), no update needed.
+   - `S-cycle5-mention-resolution-wiring.md` — DRIFT (`6b68f5f` ≠ computed `86fbb15`); `--update` applied → `86fbb15`.
+   - `dependency-graph-extended.md` — DRIFT (`a6eb33d` ≠ computed `e9c8114`); `--update` applied. Because this file's `inputs:` list includes `S-cycle5-mention-resolution-wiring.md` (updated in the prior step), the hash actually written was **`ca77401`**, not the pre-update `e9c8114` snapshot — the cascade is expected and correct (update order matters: resolution-wiring before its dependents).
+   - `wave-schedule.md` — DRIFT (`9eea75a` ≠ computed `37e32c0`); `--update` applied. Same cascade effect from the prior two updates → final hash **`b59b05c`**.
+   - Re-ran `--check` on all 4 files after updating: all exit 0 (clean).
+   - `STORY-INDEX.md` — checked per the orchestrator's dispatch instruction; direct tool invocation returned `compute-input-hash: no inputs: field found in frontmatter` (exit 1). This file carries no `inputs:`/`input-hash:` frontmatter fields at all (confirmed via `grep -n "^inputs\|^input-hash" STORY-INDEX.md` → zero matches) — it is not tracked by the `compute-input-hash` mechanism by design (an index file with no declared inputs, unlike a derived artifact). **No action possible or needed; not a drift case.**
+4. Registered the 2 approved stories in `.factory/sprint-state.yaml` under a new top-level `cycle_005_adf_mentions:` section, following this repo's established convention (grepped every prior `cycle_*` top-level key in the file — `cycle_002_field_dx`, `cycle_004_windows_correctness`, etc. — all use this single top-level file, not a per-cycle or per-stories-dir sprint-state/wave-state file): `wave_1_status` = READY (Story A, no deps, not yet dispatched), `wave_2_status` = BLOCKED (Story B, `depends_on: [S-cycle5-mention-pure-conversion]`, Wave 1 not yet merged), with per-story `bc_anchors`/`vp_anchors`/`holdout_anchors`/`points`/`priority`/`module_criticality` fields mirroring the format used by every prior cycle section in this file.
+5. Re-ran the two count-verification scripts the orchestrator named (story count changed only; BC/holdout counts unaffected by an F3-gate decision) — both exit 0 (see Dim-2 Attestation).
+6. Advanced the tracked phase: `cycle-005 (adf-mentions) Phase F3 story decomposition APPROVED; Phase F4 (delta implementation) IN PROGRESS — Wave 1 (Story A, S-cycle5-mention-pure-conversion).`
+7. Carried forward all standing process-gaps unchanged (`VP-COUNT-RECONCILIATION`, `ADR-COUNT-CANONICAL-GUARD-GAP`, `FACTORY-HOOK-FUEL-EXHAUSTED`, and every cycle-001/002/003/004 historical item) — no new process-gap identified this burst.
+
+**Adversary verdict:** N/A this state-manager burst — no `adversary` agent dispatched. The 6-pass adversarial story-convergence loop this entry records (passes 5-6 both CLEAN) was run by prior F3 story-decomposition sub-bursts (story-writer + adversary), not by this bookkeeping burst; cited above as context for DEC-347, not re-run here.
+
+**Files touched (Dim-1): 7 unique files/paths this burst (all `.factory/` — 3 story-artifact input-hash updates, 1 wave-tracking registration, 1 STATE.md rewrite, 2 cycle-005 log files), all committed in the state-manager's own single atomic commit**
+
+- `.factory/cycles/cycle-005/phase-f3-stories/S-cycle5-mention-resolution-wiring.md` (`input-hash` refreshed `6b68f5f` → `86fbb15`)
+- `.factory/cycles/cycle-005/phase-f3-stories/dependency-graph-extended.md` (`input-hash` refreshed `a6eb33d` → `ca77401`)
+- `.factory/cycles/cycle-005/phase-f3-stories/wave-schedule.md` (`input-hash` refreshed `9eea75a` → `b59b05c`)
+- `.factory/sprint-state.yaml` (new `cycle_005_adf_mentions:` top-level section — Wave 1 ready, Wave 2 blocked-on-Wave-1)
+- `STATE.md` (v3.77 — full-content Write)
+- `cycles/cycle-005/session-checkpoints.md` (v3.76 checkpoint archived with "Superseded at" note)
+- `cycles/cycle-005/burst-log.md` (this entry)
+
+**Known hook noise this burst (pre-existing, not caused by this burst's edits, not blocking):** none newly observed. The standing `F7-GATE-SYSTEMIC-INPUT-HASH-DRIFT-BOOKKEEPING` debt (165 factory-wide stale artifacts) is unaffected — the 3 files refreshed this burst were addressed because the orchestrator explicitly named them as this cycle's own deferred drift, not as a draw against that separately-tracked batch debt.
+
+**Dim-2 Attestation:** `bash scripts/check-spec-counts.sh` → exit 0 ("Check passed: 8 bc files validated"). `bash scripts/check-bc-cumulative-counts.sh` → exit 0 ("OK: all cumulative BC counts verified (754 total across 9 files; Surface H footer checked where present)"). Counts entering F4: **754 BCs / 76 VPs (tracked running total, unchanged this burst) / 118 holdout scenarios (unchanged) / 174 stories (172→174, +2 cycle-005 rows)**. DEC-namespace collision check: DEC-347 is the next sequential ID after DEC-346, no collision.
+
+**Dim-5 Attestation:** N/A — no binary/WASM artifact produced by this `.factory/` commit (bookkeeping-only, no build).
+
+**Dim-6 Attestation:** No `src/`/`tests/` change this burst — cycle-005 remains spec/tracking-only through F3→F4 dispatch. `develop` HEAD unchanged at `569d85a8`.
+
+**Dim-7 Attestation:** N/A — no CI-relevant change this burst (no code, no workflow file touched).
+
+**Codifications:** **DEC-347** — human APPROVED cycle-005 (`adf-mentions`, #674) Phase F3 story decomposition in full: 2 stories (`S-cycle5-mention-pure-conversion` Wave 1 13pts CRITICAL 15 ACs `depends_on:[]`; `S-cycle5-mention-resolution-wiring` Wave 2 13pts HIGH 17 ACs `depends_on:[S-cycle5-mention-pure-conversion]`); acyclic A→B dependency; 2 sequential waves; critical path 26 points; story count 172→174. Reached via 6 rounds of adversarial story convergence (passes 5-6 CLEAN); all 13 in-scope BCs / 21 VPs / 12 holdouts mapped across the two stories (three-surface EC reconciliation proof). Phase advances F3→F4.
+
+**Closes:** cycle-005 Phase F3 (incremental story decomposition) — human-approved. **Does NOT close:** cycle-005 itself, which remains open through F4-F7; any carried-forward standing item (all unchanged, see Constraints Carried Forward in STATE.md); the newly-registered F4 wave tracking is a `ready`/`blocked` starting state, not a delivery outcome — Wave 1 (`S-cycle5-mention-pure-conversion`) has not yet been dispatched to an implementer.
+
+### Details
+
+| Agent | Task | Output |
+|-------|------|--------|
+| state-manager | Minted DEC-347; refreshed 3 stale `input-hash` values (1 already clean); registered 2 stories in `.factory/sprint-state.yaml` F4 wave tracking; re-ran count-verification scripts; STATE.md v3.77 full-content Write; archived v3.76 checkpoint; commit + push to `factory-artifacts` | `S-cycle5-mention-resolution-wiring.md`, `dependency-graph-extended.md`, `wave-schedule.md` (input-hash refresh), `sprint-state.yaml` (new section), `STATE.md` (v3.77), `cycles/cycle-005/burst-log.md` (this file), `cycles/cycle-005/session-checkpoints.md` |
 
 ---
 

@@ -1172,3 +1172,52 @@ cycle_004_windows_correctness:
         holdout_anchors: []
         points: 5
         notes: "Wave 2 story, depends_on S-cycle4-dpapi-storage-fix (satisfied at Wave 1 merge). Branch feat/cycle4-honest-fail-message, rebased onto abb283e8, keep-both CHANGELOG resolution. Adversarial review CONVERGED (3 clean passes). Includes a DEC-334 correction: adversarial review found CONFIRMED-harmful revoke advice (Site-1 message told users to revoke jr's grant as safe/no-other-consumer cleanup; Perplexity-validated research (research/atlassian-3lo-revoke-granularity-2026-09-05.md, CONFIRMED) shows revoke is ACCOUNT-WIDE, signing out every jr profile) — fixed via BC-1.4.039 + ADR-0021 §6 amendment to scoped-cleanup-default + optional account-wide-warned revoke, plus a source-scan guard test_no_account_wide_harmful_revoke_framing_in_auth_source. PR #771 OPEN @ b2a0c5d7, NOT merged — pr-reviewer + security-reviewer dispatched but HALTED mid-review for SESSION WRAP; re-dispatch both on resume (auth/credential module: verify no secret leakage, Site-3 proactive-clear safety, corrected revoke advice non-harm). Closes #759 part 2 (backstop)."
+
+# Cycle 6 — Feature Mode: adf-mentions bundle (GitHub issue #674)
+# Phase F4 (delta implementation), 2-wave plan: wave 1 {S-cycle5-mention-pure-conversion} -> wave 2 {S-cycle5-mention-resolution-wiring}
+# Updated: 2026-09-06 (F3 story decomposition APPROVED, DEC-347; F4 wave tracking registered — Wave 1 ready, Wave 2 blocked-on-wave-1)
+
+cycle_005_adf_mentions:
+  title: "adf-mentions bundle (issue #674)"
+  bundle: adf-mentions
+  cycle: cycle-005
+  wave_1_status: "READY — S-cycle5-mention-pure-conversion (13 pts, CRITICAL, 15 ACs, depends_on: []) approved at F3 gate (DEC-347); not yet dispatched to an implementer."
+  wave_2_status: "BLOCKED — S-cycle5-mention-resolution-wiring (13 pts, HIGH, 17 ACs, depends_on: [S-cycle5-mention-pure-conversion]) awaits Wave 1 merge before dispatch."
+  wave_1:
+    stories:
+      - id: S-cycle5-mention-pure-conversion
+        title: "adf.rs pure mention conversion — bracket-form + @Name detection/emission, \\@ escape, reverse-path render"
+        status: ready
+        pr: null
+        merge_sha: null
+        merged_at: null
+        depends_on: []
+        blocks: [S-cycle5-mention-resolution-wiring]
+        bc_anchors: [BC-7.2.016, BC-7.2.017, BC-7.2.018, BC-7.2.019, BC-7.2.004]
+        vp_anchors: [VP-674-001, VP-674-002, VP-674-004, VP-674-005, VP-674-006, VP-674-007, VP-674-008, VP-674-012, VP-674-018, VP-674-019]
+        holdout_anchors: [H-NEW-MENTION-005, H-NEW-MENTION-006, H-NEW-MENTION-007]
+        points: 13
+        priority: P0
+        module_criticality: CRITICAL
+        ac_count: 15
+        target_module: "src/adf.rs"
+        notes: "Wave 1 root story, no deps, blocks S-cycle4-mention-resolution-wiring. Approved at F3 human gate (DEC-347) after 6-pass adversarial story convergence (passes 5-6 CLEAN). Definitive 5-step post-finish() pass order (protect->finish->autolink->convert_mentions->sentinel-restore->assign_local_ids-last); \\@ escape mechanism is an F4 SPIKE (AC-007) — infeasibility routes a scope-cut decision to the orchestrator, do not ship silently without it. Independently BUILDABLE/TESTABLE, NOT independently acceptance-complete — accepted, time-boxed interim unvalidated-bracket-conversion window between this wave's merge and Wave 2's BC-X.7.010 preflight landing (documented in story's Interim Shippability Note). Not yet dispatched to an implementer as of this registration."
+  wave_2:
+    stories:
+      - id: S-cycle5-mention-resolution-wiring
+        title: "Effectful @Name/accountId mention resolution (src/cli/issue/mentions.rs) + wiring into create/edit/comment/JSM-create"
+        status: blocked
+        pr: null
+        merge_sha: null
+        merged_at: null
+        depends_on: [S-cycle5-mention-pure-conversion]
+        blocks: []
+        bc_anchors: [BC-X.7.007, BC-X.7.008, BC-X.7.009, BC-X.7.010, BC-3.3.012, BC-3.4.032, BC-3.5.013, BC-3.8.018, BC-7.2.016]
+        vp_anchors: [VP-674-002, VP-674-003, VP-674-009, VP-674-010, VP-674-011, VP-674-013, VP-674-014, VP-674-015, VP-674-016, VP-674-017, VP-674-019, VP-674-020, VP-674-021]
+        holdout_anchors: [H-NEW-MENTION-001, H-NEW-MENTION-002, H-NEW-MENTION-003, H-NEW-MENTION-004, H-NEW-MENTION-005, H-NEW-MENTION-006, H-NEW-MENTION-008, H-NEW-MENTION-009, H-NEW-MENTION-010, H-NEW-MENTION-011, H-NEW-MENTION-012]
+        points: 13
+        priority: P0
+        module_criticality: HIGH
+        ac_count: 17
+        target_module: "src/cli/issue/mentions.rs"
+        notes: "Wave 2 terminal story, depends_on S-cycle5-mention-pure-conversion (NOT YET SATISFIED — Wave 1 not yet dispatched/merged). Approved at F3 human gate (DEC-347) alongside Wave 1. New src/cli/issue/mentions.rs (resolve_mentions, filter_by_name_match per the F2-gate DEC-345 single-result name-match tightening); wired into issue create/edit (incl. --dry-run forced-non-interactive)/comment add+edit/JSM issue create --request-type; --no-mentions opt-out on all four write-command surfaces; mentions.rs MUST be added to .cargo/mutants.toml examine_globs in the same commit that creates it; includes the human-required live-Jira E2E round-trip (H-NEW-MENTION-009, JR_RUN_E2E-gated, self-cleaning). BLOCKED status reflects the unsatisfied depends_on, not a scheduling decision — dispatch as soon as Wave 1 merges."
