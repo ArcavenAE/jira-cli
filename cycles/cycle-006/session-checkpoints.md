@@ -325,4 +325,42 @@ A PHASE-GATE burst (Burst 8) sought and secured the human approval flagged as pe
 
 ---
 
+## Session Resume Checkpoint (2026-09-08, v3.86) — cycle-006 F3 human gate APPROVED (DEC-350), Burst 8 — SUPERSEDED at SESSION-WRAP-PAUSE-2026-09-08 (v3.87)
+
+**Superseded at:** 2026-09-08, SESSION-WRAP-PAUSE-2026-09-08 (v3.87) — session-wrap burst pausing the pipeline (ACTIVE→PAUSED) mid cycle-006 Phase F4 (delta implementation), Step-4.5 per-story adversarial convergence. Between this checkpoint (v3.86) and the pause, F4 was dispatched and driven to code-complete on branch `ci/mutants-ci-sharding` @ `ceeedbf1` (8 commits, pushed, all-green); F4 Preconditions 2/3/5 were satisfied; Step-4.5 ran two full adversarial trios plus fix rounds (a MED self-test-coverage gap and a HIGH gate-bypass, F-PF-HIGH-001, both fixed); 3-consecutive-clean convergence was NOT reached (streak reset to 0) and a round-3 trio was abandoned mid-review at wrap. See "What actually happened next" below for the full account, and the live checkpoint in `STATE.md` (v3.87) for the authoritative resume state.
+
+### Spec Versions
+
+| Artifact | Version |
+|----------|---------|
+| STATE.md | 3.86 |
+| total_bcs | 754 |
+| VP count | 76 (tracked running total) |
+| holdout scenarios | 118 |
+| total_stories | 175 |
+
+### State
+
+| Field | Value |
+|-------|-------|
+| **Date** | 2026-09-08 |
+| **Position** | cycle-006 (`mutants-ci-sharding`) Phase **F3 CLOSED/APPROVED (DEC-350)** — human gate sought and approved in full, as-is. Phase **F4 (delta implementation) is NEXT/READY**, gated on the 5 F4 blocking preconditions (now BINDING). |
+| **Convergence counter** | F3 adversarial STORY convergence — human chose FULL 3-consecutive-clean rigor. Story underwent ~26 adversarial passes total + 13 fix rounds; ~14 substantive findings caught+fixed across both sessions. **3 consecutive clean passes achieved (32/33/34).** Convergence target MET, pre-gate audit PASSED, human gate **APPROVED (DEC-350)** — F3 is CLOSED. |
+| **In-flight work at this checkpoint** | none in-flight for cycle-006 — F3 is closed at its consistent post-fix-round-13, 3-clean-verified, gate-approved state; F4 has not yet been dispatched. No PRs mid-review for cycle-006 (no code yet). |
+| **Pending human decisions at this checkpoint** | (1) PR #778 (cycle-005 Story A, 281 in-diff mutants) will ESCALATE under the new sharded gate (>120 threshold) at cycle-005 resume. (2) cycle-006 must land to `develop` before resuming cycle-005 F4. (3) The 5 F4 Blocking Preconditions are now BINDING. (4) F5 hand-off item: VP-006 `.outcome`→`.conclusion` byte-pin residual. (5)/(6) RESOLVED — input-hash cascade fully terminated; F3 human approval gate sought and **APPROVED (DEC-350)**. |
+| **Next step (as recorded at this checkpoint)** | Dispatch Phase F4 (delta implementation) for `S-cycle6-mutants-ci-sharding` via the standard per-story-delivery TDD pipeline, honoring the 5 binding preconditions. |
+
+### Resume Prompt (as recorded at this checkpoint)
+
+```
+dispatch Phase F4 (delta implementation) for `S-cycle6-mutants-ci-sharding` via the standard per-story-delivery TDD pipeline, honoring the 5 binding preconditions, or
+/vsdd-factory:next-step if further orchestrator guidance is needed first.
+```
+
+### What actually happened next (recorded for continuity, not part of the original checkpoint)
+
+F4 (delta implementation) was dispatched for the sole Wave-1 story `S-cycle6-mutants-ci-sharding`. Code reached COMPLETE on feature branch `ci/mutants-ci-sharding` @ `ceeedbf1` — 8 commits (scaffold `0fb5dc70` / RED `05b8ca01` / GREEN `6a0c83ab` / policy `c46891e3` / code-r1 `55131b17` / docs-r1 `ab072f3f` / code-r2 `1bc13cc7` / docs-r2 `ceeedbf1`), all committed and pushed, all-green (`mutants-aggregate --self-test` 24/24, `ci_gate_completeness` 86/86, full `cargo test` green, clippy/fmt/actionlint clean). F4 Preconditions 2 (scripts extracted), 3 (empirical `--list`⇔pooled partition proof: `cargo mutants --list` N=1532 exactly equals the sum of 8 `--shard k/8` slices, shard lists disjoint and union byte-for-byte equal), and 5 (policy doc + CHANGELOG landed in-branch) were satisfied. Step-4.5 per-story adversarial convergence ran two full trios (round 1 A/B/C: A NOT-CLEAN MED self-test-coverage gap, B/C CLEAN, fixed; round 2 D/E/F: D NOT-CLEAN MED shard-sentinel-pin gap, F NOT-CLEAN HIGH F-PF-HIGH-001 `mutants-plan` gate-bypass, E CLEAN, fixed) but did NOT reach 3-consecutive-clean — streak reset to 0 after each fix round, per convergence discipline. A round-3 trio (G/H/I) was started but abandoned mid-review, with no durable output, when the session was paused via `SESSION-WRAP-PAUSE-2026-09-08`. No cycle-006 PR is open yet. Two resume TODOs were recorded (not actioned, INV-3 halt): persisting the Precondition-3 empirical evidence into a durable artifact, and opening a draft self-improvement story for untrusted-outcomes.json hardening. See the live checkpoint in `STATE.md` (v3.87) for the full account.
+
+---
+
 <!-- Repeat for each archived checkpoint. Maintain chronological order. -->

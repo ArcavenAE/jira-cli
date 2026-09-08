@@ -1,1 +1,1 @@
-{"status":"pass","timestamp":"2026-09-07T03:57:40Z","command":"cargo test --lib adf:: 2>&1 | tail -30"}
+{"status":"pass","timestamp":"2026-09-08T20:56:45Z","command":"cargo test --test claude_md_citations 2>&1 | tail -30"}
