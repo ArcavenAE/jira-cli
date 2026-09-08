@@ -287,4 +287,42 @@ A FINAL minimal bookkeeping burst (Burst 7) terminated the cascade flagged at th
 
 ---
 
+## Session Resume Checkpoint (2026-09-08, v3.85) — cycle-006 F3 Burst 7 (wave-holdout-scenarios.md cascade RESOLVED, ZERO outstanding input-hash drift, AWAITING F3 GATE) — SUPERSEDED at Burst 8 (v3.86)
+
+**Superseded at:** 2026-09-08, Burst 8 (v3.86) — PHASE-GATE BOOKKEEPING BURST recording the cycle-006 Phase F3 HUMAN GATE APPROVAL: the human sought and approved the F3 gate in full (**DEC-350**) — the converged story (3 consecutive clean adversarial passes 32/33/34), the fully-accurate pre-gate consistency audit, and the clean `compute-input-hash --check` results across all 4 F3 artifacts were presented and accepted **as-is**, no changes. Phase advanced F3→F4; the 5 F4 blocking preconditions (approved at the F2 gate, DEC-349) are now BINDING gates on F4's start. 2 process lessons logged to `cycles/cycle-006/lessons.md` per the S-7.02 cycle-closing checklist (1 accepted, 1 tagged `[process-gap]` with a draft follow-up story `S-PG-CROSSREF-SCOPE-DISCIPLINE` opened into the `S-PG-*` backlog, 10→11). No story content, spec content, or code was touched — pure phase-gate bookkeeping.
+
+### Spec Versions
+
+| Artifact | Version |
+|----------|---------|
+| STATE.md | 3.85 |
+| total_bcs | 754 |
+| VP count | 76 (tracked running total) |
+| holdout scenarios | 118 |
+| total_stories | 175 |
+
+### State
+
+| Field | Value |
+|-------|-------|
+| **Date** | 2026-09-08 |
+| **Position** | cycle-006 (`mutants-ci-sharding`) Phase **F3** (incremental story decomposition), **adversarial STORY convergence ACHIEVED (3 consecutive clean passes 32/33/34); pre-gate consistency audit run and fixed; the `wave-schedule.md`→`wave-holdout-scenarios.md` input-hash cascade fully terminated across Bursts 6-7 — ALL 4 cycle-006 F3 artifacts verified clean via `compute-input-hash --check`; ZERO outstanding cycle-006 F3 input-hash drift; AWAITING the F3 human approval gate.** |
+| **Convergence counter** | F3 adversarial STORY convergence — human chose FULL 3-consecutive-clean rigor. Story underwent ~26 adversarial passes total + 13 fix rounds; ~14 substantive findings caught+fixed across both sessions. **3 consecutive clean passes achieved (32/33/34).** Convergence target MET. This burst (Burst 7) did not touch the story content — it was pure input-hash bookkeeping. |
+| **In-flight work at this checkpoint** | story-writer fix round 13 COMPLETED, followed by 3 clean adversarial re-review passes (no abandoned mid-step). F3 story is at its consistent post-fix-round-13, 3-clean-verified state. No PRs mid-review for cycle-006 (no code yet). |
+| **Pending human decisions at this checkpoint** | (1) F3 human approval gate — not yet SOUGHT (convergence criterion met, perimeter fully accurate). (2) PR #778 (cycle-005 Story A, 281 in-diff mutants) will ESCALATE under the new sharded gate (>120 threshold). (3) cycle-006 must land to `develop` before resuming cycle-005 F4. (4) The 5 F4 Blocking Preconditions + the M-1 reconciliation-premise risk. (5) F5 hand-off item: VP-006 `.outcome`→`.conclusion` byte-pin residual. (6) RESOLVED (Bursts 6-7) — the `wave-schedule.md`/`wave-holdout-scenarios.md` input-hash cascade is fully terminated. |
+| **Next step (as recorded at this checkpoint)** | Seek the F3 human approval gate on the now-fully-accurate perimeter (STORY-INDEX.md registered, all 4 F3 artifacts' input-hashes clean, STATE.md holdout count correct), then F4 (delta implementation, gated on the 5 F4 blocking preconditions). |
+
+### Resume Prompt (as recorded at this checkpoint)
+
+```
+seek the F3 human approval gate (present the converged story + the now-fully-accurate, fully-clean pre-gate audit for review — all 4 F3 artifacts' input-hashes verified clean as of this burst), or
+/vsdd-factory:next-step if further orchestrator guidance is needed first.
+```
+
+### What actually happened next (recorded for continuity, not part of the original checkpoint)
+
+A PHASE-GATE burst (Burst 8) sought and secured the human approval flagged as pending at this checkpoint: the human reviewed the converged story, the fully-accurate pre-gate consistency audit, and the clean count-check scripts, and **APPROVED the F3 gate in full (DEC-350)**, as-is, no changes. Phase advanced F3→F4; the 5 F4 blocking preconditions became BINDING gates on F4's start. The Session Resume Checkpoint was refreshed to reflect F3 CLOSED/APPROVED and F4 NEXT/READY, and 2 cycle-closing process lessons were logged to `cycles/cycle-006/lessons.md`. See the live checkpoint in `STATE.md` (v3.86) for the full account.
+
+---
+
 <!-- Repeat for each archived checkpoint. Maintain chronological order. -->
