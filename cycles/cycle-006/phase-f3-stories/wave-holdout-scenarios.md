@@ -11,7 +11,7 @@ inputs:
   - ".factory/cycles/cycle-006/phase-f3-stories/S-cycle6-mutants-ci-sharding.md"
   - ".factory/cycles/cycle-006/phase-f3-stories/wave-schedule.md"
 traces_to: "INV-AGG; INV-COMPLETE; INV-ESCALATE; VP-MUTANTS-SHARD-001..030"
-input-hash: "7f7db62"
+input-hash: "f27e1ff"
 ---
 
 # Wave 1 Holdout Scenarios — `S-cycle6-mutants-ci-sharding`

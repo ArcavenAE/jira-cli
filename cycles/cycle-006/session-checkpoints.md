@@ -1,10 +1,10 @@
 ---
 document_type: session-checkpoints
 level: ops
-version: "1.4"
+version: "1.5"
 status: archive
 producer: state-manager
-timestamp: 2026-09-08T18:05:00Z
+timestamp: 2026-09-08T18:20:00Z
 cycle: "cycle-006"
 inputs: [STATE.md]
 input-hash: "[live-state]"
@@ -246,6 +246,44 @@ seek the F3 human approval gate (present the converged story + this burst's pre-
 ### What actually happened next (recorded for continuity, not part of the original checkpoint)
 
 A minimal/surgical bookkeeping burst refreshed `wave-schedule.md`'s stale `input-hash` via `compute-input-hash --update` (`e128332`→`edf4ca2`), verified clean via `--check` — resolving the item flagged at this checkpoint. Verifying all 4 cycle-006 F3 artifacts (`S-cycle6-mutants-ci-sharding.md`, `dependency-graph-extended.md`, `wave-schedule.md`, `wave-holdout-scenarios.md`) then surfaced a NEW downstream cascade: `wave-holdout-scenarios.md` declares `wave-schedule.md` as one of its own `inputs:`, so refreshing `wave-schedule.md`'s bytes made `wave-holdout-scenarios.md`'s stored hash stale in turn (`7f7db62`≠`f27e1ff`). This cascade was surfaced and logged (`WAVE-HOLDOUT-SCENARIOS-INPUT-HASH-CASCADE`), not fixed — the burst's authorization covered only `wave-schedule.md`'s `input-hash` frontmatter and STATE.md. No DEC minted; F3 status, pipeline, and all counts unchanged. See the live checkpoint in `STATE.md` (v3.84) for the full account.
+
+---
+
+## Session Resume Checkpoint (2026-09-08, v3.84) — cycle-006 F3 Burst 6 (wave-schedule.md input-hash RESOLVED, wave-holdout-scenarios.md cascade surfaced) — SUPERSEDED at Burst 7 (v3.85)
+
+**Superseded at:** 2026-09-08, Burst 7 (v3.85) — FINAL MINIMAL BOOKKEEPING BURST terminating the cycle-006 F3 input-hash cascade: `wave-holdout-scenarios.md`'s stale `input-hash` refreshed via `compute-input-hash --update` (`7f7db62`→`f27e1ff`) — the leaf artifact in the drift DAG, nothing else declares it as an input. All 4 cycle-006 F3 artifacts (`S-cycle6-mutants-ci-sharding.md`, `dependency-graph-extended.md`, `wave-schedule.md`, `wave-holdout-scenarios.md`) re-verified via `compute-input-hash --check` in one stable pass — ALL FOUR exit 0 (clean). `WAVE-HOLDOUT-SCENARIOS-INPUT-HASH-CASCADE` marked RESOLVED; `WAVE-SCHEDULE-INPUT-HASH-DRIFT` reconfirmed RESOLVED. ZERO outstanding cycle-006 F3 input-hash drift remains. No DEC minted; F3 human gate still not sought.
+
+### Spec Versions
+
+| Artifact | Version |
+|----------|---------|
+| STATE.md | 3.84 |
+| total_bcs | 754 |
+| VP count | 76 (tracked running total) |
+| holdout scenarios | 118 |
+| total_stories | 175 |
+
+### State
+
+| Field | Value |
+|-------|-------|
+| **Date** | 2026-09-08 |
+| **Position** | cycle-006 (`mutants-ci-sharding`) Phase **F3** (incremental story decomposition), **adversarial STORY convergence ACHIEVED (3 consecutive clean passes 32/33/34); pre-gate consistency audit run and fixed; the previously-flagged `wave-schedule.md` input-hash drift RESOLVED this burst (Burst 6); a new downstream cascade drift on `wave-holdout-scenarios.md` was discovered as a direct, mechanical consequence and logged, NOT fixed; AWAITING the F3 human approval gate.** |
+| **Convergence counter** | F3 adversarial STORY convergence — human chose FULL 3-consecutive-clean rigor. Story has undergone ~26 adversarial passes total + 13 fix rounds; ~14 substantive findings caught+fixed across both sessions. **3 consecutive clean passes achieved (32/33/34).** Convergence target MET. This burst (Burst 6) did not touch the story content — it was pure input-hash bookkeeping. |
+| **In-flight work at this checkpoint** | story-writer fix round 13 COMPLETED, followed by 3 clean adversarial re-review passes (no abandoned mid-step). F3 story is at its consistent post-fix-round-13, 3-clean-verified state. No PRs mid-review for cycle-006 (no code yet). |
+| **Pending human decisions at this checkpoint** | (1) F3 human approval gate — not yet SOUGHT. (2) PR #778 (cycle-005 Story A, 281 in-diff mutants) will ESCALATE under the new sharded gate (>120 threshold). (3) cycle-006 must land to `develop` before resuming cycle-005 F4. (4) The 5 F4 Blocking Preconditions + the M-1 reconciliation-premise risk. (5) F5 hand-off item: VP-006 `.outcome`→`.conclusion` byte-pin residual. (6) RESOLVED this burst — `wave-schedule.md`'s `input-hash` was stale, now refreshed and clean. (7) NEW — `wave-holdout-scenarios.md`'s `input-hash` is stale (discovered this burst as a direct cascade of fixing item 6 — its `inputs:` list includes `wave-schedule.md` — not fixed, see Drift/Standing Items); does not block anything currently in flight, but should be resolved at, or before, the F3 gate. |
+| **Next step (as recorded at this checkpoint)** | Seek the F3 human approval gate on the now-accurate perimeter, or refresh the flagged `wave-holdout-scenarios.md` input-hash cascade first. |
+
+### Resume Prompt (as recorded at this checkpoint)
+
+```
+seek the F3 human approval gate (present the converged story + this burst's pre-gate audit fixes for review), or
+/vsdd-factory:next-step if further orchestrator guidance is needed first.
+```
+
+### What actually happened next (recorded for continuity, not part of the original checkpoint)
+
+A FINAL minimal bookkeeping burst (Burst 7) terminated the cascade flagged at this checkpoint: `wave-holdout-scenarios.md`'s stale `input-hash` was refreshed via `compute-input-hash --update` (`7f7db62`→`f27e1ff`) — the terminal leaf in the drift DAG, since nothing else declares `wave-holdout-scenarios.md` as an input. All 4 cycle-006 F3 artifacts were then re-verified via `compute-input-hash --check` in a single stable pass, and ALL FOUR showed exit 0 (clean). `WAVE-HOLDOUT-SCENARIOS-INPUT-HASH-CASCADE` was marked RESOLVED (and `WAVE-SCHEDULE-INPUT-HASH-DRIFT` reconfirmed RESOLVED), leaving ZERO outstanding cycle-006 F3 input-hash drift. Content was not touched — pure input-hash frontmatter metadata refresh, no semantic drift (the story remains frozen post-convergence). No DEC minted; F3 status, pipeline, and all counts unchanged. See the live checkpoint in `STATE.md` (v3.85) for the full account.
 
 ---
 
