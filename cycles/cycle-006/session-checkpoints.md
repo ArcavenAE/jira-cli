@@ -1,10 +1,10 @@
 ---
 document_type: session-checkpoints
 level: ops
-version: "1.1"
+version: "1.2"
 status: archive
 producer: state-manager
-timestamp: 2026-09-07T22:15:00Z
+timestamp: 2026-09-07T23:10:00Z
 cycle: "cycle-006"
 inputs: [STATE.md]
 input-hash: "[live-state]"
@@ -67,6 +67,51 @@ policy-doc-only (no new PRD BC). 30 new `VP-MUTANTS-SHARD-001..030` verification
 F2 gate review is still pending. See the live checkpoint in `STATE.md` (v3.80) for the full
 account, and `cycles/cycle-006/burst-log.md` Burst 2 for the state-manager's own catch-up/close-out
 actions.
+
+---
+
+## Session Resume Checkpoint (2026-09-07, v3.80) — cycle-006 F2 CONVERGED, AWAITING GATE — SUPERSEDED at Burst 3 (v3.81)
+
+**Superseded at:** 2026-09-07, Burst 3 (v3.81) — F2 gate human-**APPROVED** in full (DEC-349); phase advanced F2→F3.
+
+### Spec Versions
+
+| Artifact | Version |
+|----------|---------|
+| STATE.md | 3.80 |
+| total_bcs | 754 |
+| VP count | 76 (tracked running total) |
+| holdout scenarios | 118 |
+| total_stories | 174 |
+
+### State
+
+| Field | Value |
+|-------|-------|
+| **Date** | 2026-09-07 |
+| **Position** | cycle-006 (`mutants-ci-sharding`) Phase F2 (spec evolution) **CONVERGED** — 16-pass adversarial convergence (9 fix rounds, 3 consecutive clean passes 14/15/16) + pre-gate consistency audit **PASSED** (NO BLOCKER) — **AWAITING the human F2 gate decision** (no DEC minted). cycle-005 (`adf-mentions`) remains OPEN, PAUSED at Phase F4 Wave 1 (Story A, PR #778 OPEN) pending cycle-006's landing on `develop`. |
+| **Convergence** | cycle-006 F2 — 16 adversarial passes, 9 fix rounds, 3 consecutive clean passes (14/15/16, all CLEAN at MED+); 4 genuine findings (1 CRITICAL, 2 HIGH, 1 MEDIUM), all fixed. |
+| **In-flight work at this checkpoint** | cycle-006 has no in-flight code — F2 is spec-only. cycle-005's Story A PR #778 remains OPEN — 13/14 CI checks green, "Mutation testing" PENDING. |
+| **Pending human decisions at this checkpoint** | (1) cycle-006 F2 gate decision (scope/design/spec-surface approval — DEC to be minted only on approval); (2) approve merge of PR #778 after F2-F4 land and CI re-runs green under the new sharded gate; (3) Wave-1 integration gate; (4) Story B live-Jira E2E requirement. |
+| **Next step (as recorded at this checkpoint)** | Present cycle-006's F2 spec-evolution artifacts to the human for the F2 gate decision. |
+
+### Resume Prompt (as recorded at this checkpoint)
+
+```
+Present cycle-006's F2 spec-evolution artifacts (architecture-delta.md, mutants-sharding-invariants.md,
+ci-yml-design.md, verification-delta.md) to the human for the F2 gate decision (scope/design/
+spec-surface approval); on approval mint the next DEC and advance F2→F3.
+```
+
+### What actually happened next (recorded for continuity, not part of the original checkpoint)
+
+Human reviewed the F2 spec delta package and **APPROVED** proceeding to F3 with the design as-is
+(**DEC-349**) — the 8-shard `mutants-plan`→matrix→`mutants-aggregate` topology; pooled sum-not-average
+kill-rate ≥90% with exact-equality `MUTANT_COUNT` reconciliation (hard-fail); the >120-mutant escape
+hatch (ordinary failure + admin bypass); advisory `mutants-nightly.yml`; `cargo-mutants@27`→`@27.1.0`;
+policy-doc-only governance (no new PRD BC); and explicit acceptance of the reconciliation-premise risk
+mitigated by F4 blocking precondition 3 and the §6.10 code-review-bounded residual. Phase advanced
+F2→F3. See the live checkpoint in `STATE.md` (v3.81) for the full account.
 
 ---
 
