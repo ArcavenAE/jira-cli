@@ -1,10 +1,10 @@
 ---
 document_type: session-checkpoints
 level: ops
-version: "1.3"
+version: "1.4"
 status: archive
 producer: state-manager
-timestamp: 2026-09-08T15:05:29Z
+timestamp: 2026-09-08T18:05:00Z
 cycle: "cycle-006"
 inputs: [STATE.md]
 input-hash: "[live-state]"
@@ -208,6 +208,44 @@ narrative count in STATE.md vs. the actual 13 — `H-W1-INT-001..007` + `H-W1-RE
 added in fix round 10/FIX-5) — all three fixed in a single bookkeeping burst (no DEC minted; the F3 human
 gate itself was not approved by this burst). `pipeline:` flips PAUSED → ACTIVE. See the live checkpoint in
 `STATE.md` (v3.83) for the full account.
+
+---
+
+## Session Resume Checkpoint (2026-09-08, v3.83) — cycle-006 F3 3-clean-converged + pre-gate audit fixed, AWAITING GATE — SUPERSEDED at Burst 6 (v3.84)
+
+**Superseded at:** 2026-09-08, Burst 6 (v3.84) — MINIMAL/SURGICAL INPUT-HASH REMEDIATION: `wave-schedule.md`'s previously-flagged stale `input-hash` refreshed via `compute-input-hash --update` (`e128332`→`edf4ca2`, verified clean via `--check`) — `WAVE-SCHEDULE-INPUT-HASH-DRIFT` RESOLVED. Verifying all 4 cycle-006 F3 artifacts then surfaced a new downstream cascade: `wave-holdout-scenarios.md`'s stored `input-hash` is now stale (`7f7db62`≠`f27e1ff`) because its own `inputs:` list includes `wave-schedule.md`, whose bytes changed when its hash field was rewritten. The cascade was NOT fixed at Burst 6 (outside that burst's explicit two-file authorization) — logged as a new standing item, `WAVE-HOLDOUT-SCENARIOS-INPUT-HASH-CASCADE`. No DEC minted; F3 human gate still not sought.
+
+### Spec Versions
+
+| Artifact | Version |
+|----------|---------|
+| STATE.md | 3.83 |
+| total_bcs | 754 |
+| VP count | 76 (tracked running total) |
+| holdout scenarios | 118 |
+| total_stories | 175 |
+
+### State
+
+| Field | Value |
+|-------|-------|
+| **Date** | 2026-09-08 |
+| **Position** | cycle-006 (`mutants-ci-sharding`) Phase **F3** (incremental story decomposition), **adversarial STORY convergence ACHIEVED (3 consecutive clean passes 32/33/34); pre-gate consistency audit run and fixed; AWAITING the F3 human approval gate.** |
+| **Convergence counter** | F3 adversarial STORY convergence — human chose FULL 3-consecutive-clean rigor. Story has undergone ~26 adversarial passes total + 13 fix rounds; ~14 substantive findings caught+fixed across both sessions. **3 consecutive clean passes achieved this session (32/33/34).** Convergence target MET. |
+| **In-flight work at this checkpoint** | story-writer fix round 13 COMPLETED, followed by 3 clean adversarial re-review passes (no abandoned mid-step). F3 story is at its consistent post-fix-round-13, 3-clean-verified state. No PRs mid-review for cycle-006 (no code yet). |
+| **Pending human decisions at this checkpoint** | (1) F3 human approval gate — not yet SOUGHT. (2) PR #778 (cycle-005 Story A, 281 in-diff mutants) will ESCALATE under the new sharded gate (>120 threshold). (3) cycle-006 must land to `develop` before resuming cycle-005 F4. (4) The 5 F4 Blocking Preconditions + the M-1 reconciliation-premise risk. (5) F5 hand-off item: VP-006 `.outcome`→`.conclusion` byte-pin residual. (6) NEW — `wave-schedule.md`'s `input-hash` is stale (discovered this session, not fixed — flagged under Drift/Standing Items). |
+| **Next step (as recorded at this checkpoint)** | Seek the F3 human approval gate on the now-accurate perimeter, or refresh the flagged `wave-schedule.md` input-hash drift first. |
+
+### Resume Prompt (as recorded at this checkpoint)
+
+```
+seek the F3 human approval gate (present the converged story + this burst's pre-gate audit fixes for review), or
+/vsdd-factory:next-step if further orchestrator guidance is needed first.
+```
+
+### What actually happened next (recorded for continuity, not part of the original checkpoint)
+
+A minimal/surgical bookkeeping burst refreshed `wave-schedule.md`'s stale `input-hash` via `compute-input-hash --update` (`e128332`→`edf4ca2`), verified clean via `--check` — resolving the item flagged at this checkpoint. Verifying all 4 cycle-006 F3 artifacts (`S-cycle6-mutants-ci-sharding.md`, `dependency-graph-extended.md`, `wave-schedule.md`, `wave-holdout-scenarios.md`) then surfaced a NEW downstream cascade: `wave-holdout-scenarios.md` declares `wave-schedule.md` as one of its own `inputs:`, so refreshing `wave-schedule.md`'s bytes made `wave-holdout-scenarios.md`'s stored hash stale in turn (`7f7db62`≠`f27e1ff`). This cascade was surfaced and logged (`WAVE-HOLDOUT-SCENARIOS-INPUT-HASH-CASCADE`), not fixed — the burst's authorization covered only `wave-schedule.md`'s `input-hash` frontmatter and STATE.md. No DEC minted; F3 status, pipeline, and all counts unchanged. See the live checkpoint in `STATE.md` (v3.84) for the full account.
 
 ---
 

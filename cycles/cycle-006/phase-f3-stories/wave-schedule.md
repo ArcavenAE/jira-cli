@@ -12,7 +12,7 @@ timestamp: "2026-09-07T00:00:00"
 inputs:
   - ".factory/cycles/cycle-006/phase-f3-stories/dependency-graph-extended.md"
 traces_to: "dependency-graph-extended.md §4a"
-input-hash: "e128332"
+input-hash: "edf4ca2"
 ---
 
 # F3 Wave Schedule — `mutants-ci-sharding` (cycle-006)
