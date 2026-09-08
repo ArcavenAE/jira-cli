@@ -3,7 +3,9 @@ class Jr < Formula
   # no leading article, must not start with the formula name, no trailing period.
   desc "Keyboard-driven Jira CLI with offline support and fuzzy search"
   homepage "https://github.com/REPO_PLACEHOLDER"
-  version "VERSION_PLACEHOLDER"
+  # No `version` here: the stable tag is v<version>, so brew scans the
+  # version from the URL and `brew audit --strict` rejects the duplicate.
+  # The prerelease channel formulae keep theirs, where the tag does not scan.
   license "MIT"
 
   if Hardware::CPU.arm?
