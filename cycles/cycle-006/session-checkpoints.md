@@ -1,10 +1,10 @@
 ---
 document_type: session-checkpoints
 level: ops
-version: "1.0"
+version: "1.1"
 status: archive
 producer: state-manager
-timestamp: 2026-09-07T18:20:00Z
+timestamp: 2026-09-07T22:15:00Z
 cycle: "cycle-006"
 inputs: [STATE.md]
 input-hash: "[live-state]"
@@ -15,35 +15,58 @@ traces_to: STATE.md
 
 <!-- Archived session resume checkpoints extracted from STATE.md.
      Only the LATEST checkpoint lives in STATE.md.
-     Prior checkpoints are archived here for historical reference. -->
+     Prior checkpoints are archived here for historical reference,
+     maintained in chronological order (oldest first), matching the
+     pattern established by cycles/cycle-002/, cycles/cycle-003/,
+     cycles/cycle-004/, and cycles/cycle-005/session-checkpoints.md. -->
 
-## Session Resume Checkpoint (2026-09-07) — [none archived yet]
+## Session Resume Checkpoint (2026-09-07, v3.79) — cycle-006 F1 APPROVED, F2 NEXT — SUPERSEDED at Burst 2 (v3.80)
 
-<!-- Placeholder only — no checkpoint has been superseded for cycle-006 yet;
-     cycle-006 opened this burst (Burst 1) and its first live checkpoint lives
-     in STATE.md. This section will be replaced with a real archived entry
-     the first time a cycle-006 checkpoint is superseded. -->
+**Superseded at:** 2026-09-07, Burst 2 (v3.80) — F2 spec evolution CONVERGED (16-pass adversarial review + pre-gate consistency audit PASSED), AWAITING human gate (no DEC minted).
 
 ### Spec Versions
 
 | Artifact | Version |
 |----------|---------|
-| STATE.md | 3.79 (cycle-006 opened) |
+| STATE.md | 3.79 |
+| total_bcs | 754 |
+| VP count | 76 (tracked running total) |
+| holdout scenarios | 118 |
+| total_stories | 174 |
 
 ### State
 
 | Field | Value |
 |-------|-------|
 | **Date** | 2026-09-07 |
-| **Position** | N/A — no checkpoint archived yet |
-| **Convergence counter** | N/A |
-| **Next step** | N/A |
+| **Position** | cycle-006 (`mutants-ci-sharding`) Phase F1 (delta analysis) **APPROVED** (DEC-348); Phase F2 (spec evolution) **NEXT**. cycle-005 (`adf-mentions`) remains OPEN, PAUSED at Phase F4 Wave 1 (Story A, PR #778 OPEN) pending cycle-006's landing on `develop`. |
+| **F1 delta analysis (complete at this checkpoint)** | Scope (policy-doc-only governance + 2 new named invariants), sequencing (cycle-006 lands first), escape-hatch inclusion (human override of the F1 defer recommendation, HIGH-risk flagged for F2), and params (8 shards, ~120-mutant threshold, `cargo-mutants@27.1.0`) all human-**APPROVED** (DEC-348). HIGH regression risk flagged on the CI-gate machinery (7 guardrails). |
+| **In-flight work at this checkpoint** | Phase F2 (spec evolution) about to be dispatched (architect + spec-reviewer) to author the sharded CI-gate design and the 2 new named invariants in `docs/specs/cargo-mutants-policy.md`. |
+| **Convergence counter** | N/A — F1 delta analysis APPROVED (DEC-348); no adversarial convergence loop run this cycle yet (F1 is a spec-analysis-only phase). |
+| **Next step (as recorded at this checkpoint)** | Dispatch Phase F2 (spec evolution) for cycle-006. |
 
-### Resume Prompt
+### Resume Prompt (as recorded at this checkpoint)
 
 ```
-N/A — see the live Session Resume Checkpoint in STATE.md.
+/vsdd-factory:phase-f2-spec-evolution to dispatch F2 spec evolution for cycle-006, designing the
+sharded cargo-mutants CI-gate fix (8-shard matrix + mutants-aggregate job + escape hatch) per the
+F1-approved scope/sequencing/escape-hatch/params (DEC-348).
 ```
+
+### What actually happened next (recorded for continuity, not part of the original checkpoint)
+
+Phase F2 spec evolution ran to completion: 16 adversarial-review passes (9 fix rounds; 3
+consecutive clean passes 14/15/16, all CLEAN at MED+) plus a pre-gate consistency audit (NO
+BLOCKER; 1 MAJOR resolved as a 5th F4 blocking precondition rather than fixed in-place). Design:
+`mutants-plan` → 8-shard `mutants` matrix → `mutants-aggregate` (new `ci-gate.needs` member,
+replaces `mutants`); pooled sum-not-average kill-rate ≥90% with exact-equality `MUTANT_COUNT`
+reconciliation (hard fail); >120-mutant escape hatch (ordinary failure path + admin bypass);
+advisory `mutants-nightly.yml`; pin bump `cargo-mutants@27`→`@27.1.0`. Governance stayed
+policy-doc-only (no new PRD BC). 30 new `VP-MUTANTS-SHARD-001..030` verification properties
+(gapless). **No DEC minted this burst** — F2 convergence is not itself a gate decision; the human
+F2 gate review is still pending. See the live checkpoint in `STATE.md` (v3.80) for the full
+account, and `cycles/cycle-006/burst-log.md` Burst 2 for the state-manager's own catch-up/close-out
+actions.
 
 ---
 

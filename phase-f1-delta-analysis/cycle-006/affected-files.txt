@@ -2,6 +2,8 @@ MODIFIED .github/workflows/ci.yml
 NEW .github/workflows/mutants-nightly.yml
 MODIFIED docs/specs/cargo-mutants-policy.md
 MODIFIED scripts/check-ci-gate.sh
+NEW scripts/mutants-aggregate.sh
+NEW scripts/lib/trusted-jq.sh
 MODIFIED tests/ci_gate_completeness.rs
 MODIFIED tests/common/wf.rs
 UNCHANGED-CONFIRM .cargo/mutants.toml
@@ -9,3 +11,9 @@ UNCHANGED-CONFIRM CLAUDE.md
 UNCHANGED-CONFIRM scripts/check-cargo-mutants-policy-citations.sh
 UNCHANGED-CONFIRM tests/mutants_glob_existence.rs
 UNCHANGED-CONFIRM tests/claude_md_citations.rs
+
+# NOTE: scripts/mutants-aggregate.sh and scripts/lib/trusted-jq.sh were
+# added during F2 adversarial refinement (round-3 aggregation-logic
+# extraction for testability, architecture-delta.md §6.2a; round-7 shared
+# trusted-jq extraction, architecture-delta.md §6.11) — not feature scope
+# creep. See architecture-delta.md for the full derivation.

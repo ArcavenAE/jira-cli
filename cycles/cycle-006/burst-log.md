@@ -62,4 +62,56 @@ traces_to: STATE.md
 
 ---
 
+## Burst: Burst 2 — cycle-006 Phase F2 spec evolution CONVERGED — 16-pass adversarial review + pre-gate consistency audit PASSED, AWAITING human gate (2026-09-07)
+
+**Parent-commit:** `569d85a8` (`develop` tip; unchanged this burst — no `develop`-side commit; cycle-006 remains spec-only through F2, no `src/`/`ci.yml` change yet).
+
+**Trigger:** F2 spec-evolution phase dispatched following the F1 human gate (DEC-348, Burst 1): architect + spec-reviewer authored the sharded cargo-mutants CI-gate design and ran it through the standard adversarial-convergence loop (fresh-context adversary agent, minimum 3 clean passes) before the pre-gate consistency audit.
+
+**Actions taken:**
+
+1. F2 spec-evolution artifacts authored: `architecture-delta.md` (design for the `mutants-plan`→8-shard `mutants` matrix→`mutants-aggregate` pipeline, replacing the single `mutants` job as a `ci-gate.needs` member), `ci-yml-design.md` (the concrete `ci.yml` diff design — matrix job, aggregation job, escape-hatch routing, advisory `mutants-nightly.yml`), `mutants-sharding-invariants.md` (the 2 new named invariants from DEC-348: sharded-aggregation kill-rate sum-not-average with fail-closed missing-shard handling; escape-hatch/escalated-status contract), and `verification-delta.md` (30 new `VP-MUTANTS-SHARD-001..030` verification properties, gapless, covering both invariants plus the guard-test surface).
+2. **Adversarial convergence loop run to completion:** 16 passes total, 9 fix rounds. 4 distinct genuine findings surfaced and fixed:
+   - Pass 1 **CRITICAL** — aggregator all-shard-crash false-green (a scenario where every shard crashes could still report a passing aggregate).
+   - Pass 4 **HIGH** — structural-pin peer parity gap (the new matrix-job pin shape didn't mirror the existing `ci-gate` job/step key-set pin discipline).
+   - Pass 8 **MEDIUM** — runtime jq-shim parity gap (the aggregator's own `jq` invocation wasn't covered by the same trusted-jq PATH-shim defense as `check-ci-gate.sh`).
+   - Pass 11 **HIGH** — evidence-source `STATUS_DIR`/`SHARD_DIR` pin was a faulty declination (an earlier pass had incorrectly declined to pin these as out-of-scope; corrected).
+   Systematic loop-breakers were applied to close whole classes of findings rather than patching instances one at a time: a structural-pin peer review (§6.8 of `mutants-sharding-invariants.md`), a runtime-hardening peer review (§6.11), and a general policy on env-value-pin declinations (a prior pass's decision to leave a pin unaddressed must be justified in writing, not silently repeated). 3 consecutive clean passes closed the loop: passes 14, 15, 16, each independently CLEAN at MED+ severity.
+3. **Pre-gate consistency audit run:** result NO BLOCKER. One MAJOR finding (MAJOR-1, policy-doc drafting incompleteness) was resolved not by fixing it in-place but by converting it into the 5th of 5 F4 blocking preconditions (below) — deferring the actual `docs/specs/cargo-mutants-policy.md` prose drafting to F4, alongside the implementation PR, rather than blocking the F2 gate on documentation that has no implementation to document yet.
+4. **F1 affected-files.txt refreshed** this session (`phase-f1-delta-analysis/cycle-006/affected-files.txt`) to reflect the F2 design's actual file-touch surface (the concrete `ci.yml`/`tests/ci_gate_completeness.rs`/new-script list that emerged from `ci-yml-design.md`, superseding F1's earlier estimate).
+5. **5 F4 blocking preconditions recorded** (must all hold before F4 delta implementation begins): (1) cycle-006 lands to `develop` BEFORE PR #778 rebases (per DEC-348 sequencing, reaffirmed); (2) extract `scripts/mutants-aggregate.sh` + `scripts/lib/trusted-jq.sh` as standalone, testable scripts (not inlined in `ci.yml`); (3) the empirical `--list`⇔pooled-kill-rate premise (M-1) verified via a real scratch run before merge — a genuine unverified assumption underlying the whole sharding design, not yet proven against live `cargo mutants` output; (4) full guard-test suite passes at the new `EXPECTED_GUARD_TEST_COUNT` (38→65); (5) `docs/specs/cargo-mutants-policy.md` sections drafted + a CHANGELOG row, landed in the same PR as the implementation (closes MAJOR-1 from the consistency audit).
+6. **LOW F4 doc-fix items recorded** (non-blocking, deferred): frontmatter revision-note consolidation; a §5A honest-bound rewrite (the round-9 circular-reasoning residual, already resolved in the review record, had not yet been propagated into §5A's mutants-plan-tier justification prose); an examine_globs-narrowing-vs-nightly-backstop clarification; a bare-vs-braced `if: always()` style note; `EXPECTED_MUTANTS_AGG_FIXTURES`'s floor-of-12 value to be computed mechanically at F4 rather than hand-counted at F2.
+7. **Documented residuals carried forward** (bounded/accepted, explicitly not blockers): §5A common-mode shared-diff risk (the nightly full-suite run is the accepted backstop, not a fix); §6.10's mutants-plan/shard-run-line tier (accepted as code-review-bounded — exploiting it requires a visible `ci.yml` edit, same class of residual the CI Gate's own history already documents repeatedly); the M-1 `--list`⇔pooled premise (empirical verification is F4 blocking precondition 3); the `sentinel_files` bash-3.2 array-guard; the `uses:`/sudo residual (shared with `ci-gate` itself — same unpinned-`uses:`-value / passwordless-sudo class already documented at length in the CI Gate history section of `CLAUDE.md`).
+8. STATE.md refreshed via one full-content Write (v3.79 → v3.80): frontmatter `phase`/`last_amended`/`current_step` updated to F2 CONVERGED/AWAITING GATE; `cycle_006_status` extended with the F2 convergence summary (F1 content preserved verbatim, F2 clause appended); `cycle_005_status` held **unchanged, verbatim** (still PAUSED pending cycle-006 landing — no new cycle-005 work this burst). New Phase Progress row (`F2-SPEC-EVOLUTION (cycle-006)`, CONVERGED — AWAITING GATE). Current Phase Steps table replaced with this burst's 5 steps; the Burst 1 table archived (already present in Burst 1's own prose above, no re-archival write needed). Constraints Carried Forward / Drift-Standing-Items: the Burst 1 entry condensed per the one-burst-lag compaction rule (mirrors the DEC-345/346 precedent); a new, full Burst 2 entry added. Historical Content table gained one new row for the F2 artifacts. **No new Decisions Log row this burst** — F2 convergence is not itself a gate decision; the DEC is allocated only when the human approves at the F2 gate (per explicit orchestrator instruction this burst). Session Resume Checkpoint replaced (v3.79 → v3.80); the prior checkpoint archived to `cycles/cycle-006/session-checkpoints.md` (replacing its Burst-1 placeholder) with a "Superseded at" note BEFORE this burst's new checkpoint was written.
+9. Did NOT stage the pre-existing unrelated dirty files present in the worktree (`architecture/dtu-assessment.md`, the modified `S-cycle3-env-tag` demo gif, `regression-state.json`, `sidecar-learning.md`, and the untracked `phase-f6-hardening/cycle-004/mutants-run*`/`delta.diff` artifacts) — none are part of this task; left as-is per standing instruction, unchanged since Burst 1's note. Only the 4 named F2 artifacts, the refreshed `affected-files.txt`, STATE.md, and the cycle-006 checkpoint-archive append are staged for this commit.
+
+**Adversary verdict:** CONVERGED. 16 passes, 9 fix rounds, 4 genuine findings (1 CRITICAL, 2 HIGH, 1 MEDIUM), all fixed. 3 consecutive clean passes (14, 15, 16), each independently CLEAN at MED+ severity — the standard minimum-3-clean-passes convergence bar met and exceeded. Pre-gate consistency audit: NO BLOCKER (1 MAJOR converted to an F4 blocking precondition rather than fixed in-place).
+
+**Codifications:** None this burst — **no DEC minted**. Per explicit instruction, F2 convergence plus a clean consistency audit is not itself a gate decision; the phase remains F2 pending the human's F2 gate review of the converged artifacts. The next sequential DEC number (after DEC-348) is reserved for that approval, not allocated speculatively.
+
+**Closes:** Nothing — cycle-006 Phase F2 remains open pending the human gate. **Does NOT close:** cycle-006 Phase F2 (awaiting gate); cycle-005 (`adf-mentions`), which remains open and PAUSED pending cycle-006's landing on `develop`; PR #778's CI, merge, or the Wave-1 integration gate; any of the carried-forward cycle-001/002/003/004/005 standing items (all unchanged).
+
+**Outcome:** cycle-006 (`mutants-ci-sharding`) is OPEN, Phase F2 (spec evolution) CONVERGED and AWAITING the human gate decision. No BC/VP/holdout/story running-total counts changed this burst (754/76/118/174 unchanged) — governance remains policy-doc-only per DEC-348 (no new PRD BC); the 30 new `VP-MUTANTS-SHARD-*` verification properties are a CI-guard-scoped namespace whose reconciliation against the 76-VP running total, if any, is explicitly deferred to the F2 gate decision itself, not asserted unilaterally by this bookkeeping burst.
+
+**Files touched (Dim-1): 8 unique files/paths this burst, all committed in the state-manager's own single atomic commit**
+
+- `STATE.md` (modified)
+- `cycles/cycle-006/session-checkpoints.md` (modified — replaces the Burst-1 placeholder with the archived v3.79 checkpoint)
+- `cycles/cycle-006/burst-log.md` (modified — this Burst 2 entry appended)
+- `phase-f2-spec-evolution/cycle-006/architecture-delta.md` (created)
+- `phase-f2-spec-evolution/cycle-006/mutants-sharding-invariants.md` (created)
+- `phase-f2-spec-evolution/cycle-006/ci-yml-design.md` (created)
+- `phase-f2-spec-evolution/cycle-006/verification-delta.md` (created)
+- `phase-f1-delta-analysis/cycle-006/affected-files.txt` (modified — refreshed this session)
+
+**Dim-2 Attestation:** No BC/VP/holdout INDEX content changed this burst (the 30 `VP-MUTANTS-SHARD-*` properties live in `verification-delta.md`, not yet registered in any INDEX file — registration, if applicable, is an F2-gate/F3 concern). Counts unchanged: 754 BCs / 76 VPs (running total) / 118 holdouts / 174 stories. No DEC minted this burst — no DEC-namespace collision check applicable.
+
+**Dim-5 Attestation:** N/A — no binary/WASM artifact produced by this `.factory/` commit (spec-evolution + bookkeeping only, no build).
+
+**Dim-6 Attestation:** No `src/`/`tests/` change this burst — cycle-006 remains at Phase F2, spec-only; the `ci.yml`/`tests/ci_gate_completeness.rs` design is captured in `ci-yml-design.md` for F4 authorship, not yet applied to any tracked source file. `develop` HEAD unchanged at `569d85a8`.
+
+**Dim-7 Attestation:** N/A — no CI-relevant change this burst (no code, no workflow file touched; the CI-gate design is a spec artifact only). The eventual F4 `ci.yml`/`tests/ci_gate_completeness.rs` changes remain the HIGH-regression-risk item flagged at F1 (DEC-348) and reaffirmed by this burst's own findings (esp. Pass 1's aggregator all-crash false-green and Pass 4's structural-pin peer-parity gap) — not yet reached.
+
+---
+
 <!-- Repeat for each burst. Maintain chronological order. -->
