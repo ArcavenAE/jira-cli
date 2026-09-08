@@ -1,10 +1,10 @@
 ---
 document_type: session-checkpoints
 level: ops
-version: "1.2"
+version: "1.3"
 status: archive
 producer: state-manager
-timestamp: 2026-09-07T23:10:00Z
+timestamp: 2026-09-08T15:05:29Z
 cycle: "cycle-006"
 inputs: [STATE.md]
 input-hash: "[live-state]"
@@ -112,6 +112,55 @@ hatch (ordinary failure + admin bypass); advisory `mutants-nightly.yml`; `cargo-
 policy-doc-only governance (no new PRD BC); and explicit acceptance of the reconciliation-premise risk
 mitigated by F4 blocking precondition 3 and the §6.10 code-review-bounded residual. Phase advanced
 F2→F3. See the live checkpoint in `STATE.md` (v3.81) for the full account.
+
+---
+
+## Session Resume Checkpoint (2026-09-07, v3.81) — cycle-006 F2 gate APPROVED, F3 NEXT — SUPERSEDED at Burst 4 (v3.82)
+
+**Superseded at:** 2026-09-08, Burst 4 (v3.82) — SESSION WRAP: pipeline PAUSED mid cycle-006 Phase F3 adversarial story convergence (fix round 9 applied, clean-streak reset to 0).
+
+### Spec Versions
+
+| Artifact | Version |
+|----------|---------|
+| STATE.md | 3.81 |
+| total_bcs | 754 |
+| VP count | 76 (tracked running total) |
+| holdout scenarios | 118 |
+| total_stories | 174 |
+
+### State
+
+| Field | Value |
+|-------|-------|
+| **Date** | 2026-09-07 |
+| **Position** | cycle-006 (`mutants-ci-sharding`) Phase F2 (spec evolution) **APPROVED at the gate** (DEC-349) — 16-pass adversarial convergence (9 fix rounds, 3 consecutive clean passes 14/15/16) + pre-gate consistency audit **PASSED** (NO BLOCKER); human reviewed the full F2 package and approved the design, spec surface, and 5 F4 blocking preconditions **as-is**. Phase advances F2 → F3 (incremental story decomposition; dispatch not yet begun). cycle-005 (`adf-mentions`) remains OPEN, PAUSED at Phase F4 Wave 1 (Story A, PR #778 OPEN) pending cycle-006's landing on `develop`. |
+| **Convergence** | cycle-006 F2 — 16 adversarial passes, 9 fix rounds, 3 consecutive clean passes (14/15/16, all CLEAN at MED+); 4 genuine findings (1 CRITICAL, 2 HIGH, 1 MEDIUM), all fixed; human-approved at the gate (DEC-349). cycle-005: Story A per-story adversarial convergence COMPLETE (unchanged) — 3 clean passes (passes 3, 4, 5, all 0-CRIT/HIGH/MED); no active convergence loop at pause. Story B not started. |
+| **In-flight work at this checkpoint** | cycle-006 has no in-flight code — F2 is spec-only, no `src/`/`ci.yml` change yet; F3 dispatch has not yet begun. cycle-005's Story A PR #778 remains OPEN — 13/14 CI checks green, "Mutation testing" job PENDING; pr-reviewer APPROVE; security-reviewer CLEAN (1 non-blocking LOW deferred to Story B). Branch `feat/cycle5-mention-pure-conversion` @ `89b84a1f`; worktree still mounted. |
+| **Pending human decisions at this checkpoint** | (1) once F3-F4 land, approve merge of PR #778 after it is rebased and its CI re-runs green under the new sharded gate; (2) Wave-1 integration gate after PR #778 merges; (3) Story B delivery includes the human-required live-Jira E2E mention round-trip tests (`H-NEW-MENTION-009`). |
+| **Next step (as recorded at this checkpoint)** | Dispatch cycle-006's Phase F3 (incremental story decomposition). |
+
+### Resume Prompt (as recorded at this checkpoint)
+
+```
+/vsdd-factory:phase-f3-incremental-stories to dispatch F3 story decomposition for cycle-006, decomposing
+the human-approved F2 design (architecture-delta.md, mutants-sharding-invariants.md, ci-yml-design.md,
+verification-delta.md) into implementable stories and integrating them into the existing dependency
+graph without cycles.
+```
+
+### What actually happened next (recorded for continuity, not part of the original checkpoint)
+
+F3 story decomposition was dispatched: story `S-cycle6-mutants-ci-sharding` was authored (39 ACs / 30
+VPs / 12 holdouts / 30 tasks) into `cycles/cycle-006/phase-f3-stories/` alongside
+`dependency-graph-extended.md`, `wave-schedule.md`, and `wave-holdout-scenarios.md`. The human chose
+FULL 3-consecutive-clean adversarial rigor for the story. ~19 adversarial passes + 9 fix rounds ran;
+~7 substantive findings were caught and fixed. The latest batch (pass 17 CLEAN, pass 19 CLEAN, pass 18
+NOT-clean — F-P18-MED-001) triggered fix round 9 (sub-invariant→RED-fixture audit + LOW citation trims
++ F5 hand-off), resetting the clean-streak to 0 — 3 fresh consecutive clean passes are still needed
+before the F3 human gate. No DEC minted this burst. Session **PAUSED** (SESSION WRAP) with the F3
+artifacts committed to `factory-artifacts` in one atomic `factory(pause):` commit. See the live
+checkpoint in `STATE.md` (v3.82) for the full account.
 
 ---
 

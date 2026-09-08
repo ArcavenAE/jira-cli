@@ -139,6 +139,16 @@ No DTU clones are required for `jr`. All 9 services inventoried are either:
 1. **Atlassian proprietary SaaS APIs** (Services 1–7) — legally and technically not clonable; existing `wiremock`-based HTTP stubbing already provides per-test behavioral doubles at the HTTP transport layer.
 2. **Local OS APIs** (Services 8–9) — not network services; mock patterns already in place.
 
+**[CONFIRMED, F2 2026-09-06 — Markdown Mentions, issue #674, ADR-0023]:** `DTU_REQUIRED` stays
+`false`. The mention feature's `@Name`→accountId resolution and bracket-form accountId
+preflight-validation (`cli::issue::mentions::resolve_mentions`, new) call `JiraClient::get_user`
+and `JiraClient::search_users` — both already-implemented methods against Service 1 (Atlassian
+Jira REST API v3), reused verbatim with zero new HTTP methods and zero new endpoints. No new
+external service dependency is introduced. None of the §6 Future Revisit Triggers fire: no
+embedded local server, no Jira Server/Data Center target, no new inbound data feed `jr` owns,
+and wiremock fixtures for `GET /rest/api/3/user`/`GET /rest/api/3/user/search` already exist
+(reused by the existing `resolve_user`/`resolve_assignee` test suites).
+
 ---
 
 ## §4: Rationale

@@ -1,2 +1,7 @@
 logs/
 .DS_Store
+
+# Transient cargo-mutants scratch-run output and scratch diffs (large, regenerable;
+# PC-12 clean-tree policy -- see cycles/cycle-006/burst-log.md Burst 4 / STATE.md SESSION-WRAP-PAUSE-2026-09-08)
+phase-f6-hardening/**/mutants-*/
+phase-f6-hardening/**/delta.diff
