@@ -11,7 +11,7 @@ inputs:
   - ".factory/cycles/cycle-006/phase-f3-stories/S-cycle6-mutants-ci-sharding.md"
   - ".factory/cycles/cycle-006/phase-f3-stories/wave-schedule.md"
 traces_to: "INV-AGG; INV-COMPLETE; INV-ESCALATE; VP-MUTANTS-SHARD-001..030"
-input-hash: "b99b447"
+input-hash: "7f7db62"
 ---
 
 # Wave 1 Holdout Scenarios — `S-cycle6-mutants-ci-sharding`
@@ -184,27 +184,95 @@ reason as H-W1-INT-005 — reliably engineering a real heavily-unviable
 shard on a scratch run is comparatively awkward, though the implementer
 should attempt it at least once before this wave's gate closes).
 
-**Asymmetry note (deliberate, not an oversight — LOW polish item L-3):**
-AC-037's sentinel/data-desync arm has NO matching dedicated end-to-end
-holdout scenario here, even though its sibling AC-036 (this scenario)
-gets one. This is intentional: AC-037's fail-closed behavior is already
-fully exercised by its `scripts/mutants-aggregate.sh --self-test`
-fixture (a straightforward "assert exit 1" proof — there is no
-plausible "looks like it passed but the underlying decision was wrong"
-failure mode for a desync case the way there is for AC-036's fold-wins
-case), whereas AC-036's fold-wins arm is the realistic, PRODUCTION-risk
-false-RED an implementer could genuinely ship without noticing (a
-healthy shard's legitimately non-zero exit code silently mis-treated as
-a crash) — it is the one arm where an end-to-end, real-CI-wiring
-confirmation earns its keep beyond the unit-level `--self-test` proof.
-Constructing a real desync end-to-end (an artifact-upload race or a
-deliberately-corrupted download) is also comparatively contrived to
-engineer on a scratch run compared to AC-036's heavily-unviable-shard
-setup, which is a naturally-occurring shape. If a future review
-disagrees with this call, the fix is a new H-W1-INT-007 SHOULD-PASS
-scenario mirroring this one's structure with a corrupted/missing
-`outcomes.json` in place of the non-zero exit code — not a re-scoping
-of this note.
+### H-W1-INT-007 — A missing shard sentinel fails closed end-to-end (INV-COMPLETE Part B)
+
+**Setup:** On a scratch-run pipeline, deliberately suppress ONE shard's
+"Upload shard status sentinel" step (e.g., edit a throwaway copy of the
+workflow on a scratch branch to skip/no-op that one step for a single
+shard index, or delete that one sentinel artifact from a completed run
+before `mutants-aggregate` executes). This is trivially constructible —
+unlike AC-037's sentinel/data-desync arm below, it requires only ONE
+artifact to be absent, not a present-but-corrupt evidence pair.
+
+**Expectation:** `mutants-aggregate` FAILS the aggregation closed at
+Step 2 (INV-COMPLETE Part B — the missing/duplicate sentinel check),
+through the REAL GitHub Actions artifact-download/glob machinery, not
+just AC-002/VP-MUTANTS-SHARD-002's isolated bash-subprocess unit proof.
+This is the same "second line of defense" relationship H-W1-INT-002
+already establishes for AC-006/CRIT-1: the unit fixture proves the
+DECISION logic is correct when fed a synthetic sentinel tree; this
+scenario proves the real upload/download WIRING around that decision is
+also correct. `ci-gate` FAILS as an ordinary required-check failure.
+
+**MUST-PASS.**
+
+**Asymmetry note (deliberate, not an oversight — LOW polish item L-3;
+extended Phase F3 round 10/FIX-5):** Two arms in this story's coverage
+still rely on `scripts/mutants-aggregate.sh --self-test` unit fixtures
+ALONE, with no dedicated end-to-end holdout scenario: AC-037's
+sentinel/data-desync arm, and AC-008/AC-022/AC-023's pooled-total
+<-> `MUTANT_COUNT` reconciliation exact-equality hard fail (INV-AGG
+sub-invariant 8). (AC-002's missing-sentinel half was previously in
+this same "unit-only" category — it is now closed end-to-end by
+H-W1-INT-007 above, added this round precisely because it WAS trivially
+constructible, unlike the two arms below. AC-002's DUPLICATE-sentinel
+half — EC-004, the other half of INV-COMPLETE Part B — remains
+unit-fixture-only for the same contrivance reason as AC-037 below:
+engineering a genuine duplicate artifact upload on a real scratch run (a
+re-run colliding with a stale artifact, or a name collision) is not
+naturally reproducible the way suppressing one upload step is. If a
+future review disagrees, the fix is a dedicated holdout scenario with a
+duplicated sentinel artifact in place of a missing one — not a
+re-scoping of this note.) This is intentional, for two distinct
+reasons:
+
+- **AC-037 (sentinel/data-desync):** its fail-closed behavior is already
+  fully exercised by its `--self-test` fixture (a straightforward "assert
+  exit 1" proof — there is no plausible "looks like it passed but the
+  underlying decision was wrong" failure mode for a desync case the way
+  there is for AC-036's fold-wins case). Constructing a real desync
+  end-to-end (an artifact-upload race, or a deliberately-corrupted
+  download) is comparatively contrived to engineer on a scratch run
+  compared to both AC-036's naturally-occurring heavily-unviable-shard
+  setup and this scenario's trivially-constructible missing-sentinel
+  setup. If a future review disagrees with this call, the fix is
+  a new H-W1-INT-008 SHOULD-PASS scenario mirroring H-W1-INT-006's
+  structure with a corrupted/missing `outcomes.json` in place of the
+  non-zero exit code — not a re-scoping of this note.
+
+- **AC-008/AC-022/AC-023 (reconciliation hard fail, both directions,
+  plus the completeness-over-quality proof):** a genuine end-to-end
+  mismatch between `mutants-plan`'s independent `--list`-based pre-count
+  and the shard matrix's pooled total is not naturally constructible on a
+  real scratch run without deliberately sabotaging one side of the
+  pipeline after the fact (e.g., hand-editing an uploaded
+  `outcomes.json`'s counts, or hand-editing the `MUTANT_COUNT` output
+  value) — an artificial mutation of CI-produced evidence, not a
+  naturally-occurring shard-job condition the way a missing sentinel
+  (H-W1-INT-007) or a heavily-unviable shard (H-W1-INT-006) are. F4
+  Blocking Precondition 3 (AC-035, this story's own empirical
+  `--list`<->pooled premise-verification gate) is the closest real-world
+  proxy this story has for surfacing a genuine reconciliation drift in
+  practice, and it already runs as a separate MUST-PASS process
+  obligation before merge. **Scope of that proxy, precisely stated
+  (FIX-E, round 12):** AC-035/Task 3 verifies the two counts reconcile EXACTLY on a
+  known-nonzero diff — it exercises the reconcile-SUCCEEDS direction only
+  (a PASS-direction scratch run) and does not, and cannot, exercise the
+  aggregator's exit-1 hard-fail branch itself; the fail-closed behavior of
+  that branch (both the under-count and over-count directions, plus the
+  healthy-partial-kill-rate-doesn't-rescue-it case) is proven solely by
+  the Task 12/13 `--self-test` unit fixtures (AC-008/AC-022/AC-023), not
+  by AC-035's scratch run. Given that gate's existence, and given the
+  reconciliation logic itself (both the under-count and over-count
+  directions, plus the healthy-partial-kill-rate-doesn't-rescue-it case)
+  is fully exercised by dedicated `--self-test` fixtures (Task 12/13),
+  this story accepts unit-fixture-only coverage for AC-008/AC-022/AC-023
+  rather than fabricating an artificial fault-injection scenario whose
+  setup would not resemble any real failure mode. If a future review
+  disagrees with this call, the fix is a new H-W1-INT-009 SHOULD-PASS
+  scenario that hand-corrupts one shard's uploaded `outcomes.json` counts
+  after upload but before `mutants-aggregate` runs — not a re-scoping of
+  this note.
 
 ---
 
@@ -345,6 +413,7 @@ closes).
 | H-W1-INT-004 | MUST-PASS | Cross-cutting integration (escape hatch -> failure, not skip) |
 | H-W1-INT-005 | SHOULD-PASS | Cross-cutting integration (nightly isolation) |
 | H-W1-INT-006 | SHOULD-PASS | Cross-cutting integration (fold-wins arm, end-to-end) |
+| H-W1-INT-007 | MUST-PASS | Cross-cutting integration (missing shard sentinel -> fail closed, end-to-end) |
 | H-W1-REG-001 | MUST-PASS | Regression (other 7 always-run jobs unchanged) |
 | H-W1-REG-002 | MUST-PASS | Regression (job-partition invariant holds) |
 | H-W1-REG-003 | MUST-PASS | Regression (check-ci-gate.sh's 14 fixtures + trusted-jq extraction) |
@@ -352,9 +421,9 @@ closes).
 | H-W1-REG-005 | MUST-PASS | Regression (fixed-denominator self-check) |
 | H-W1-REG-006 | SHOULD-PASS | Regression (documented residuals stay consistent) |
 
-**12 scenarios total (9 MUST-PASS, 3 SHOULD-PASS)** — 6 cross-cutting
-integration scenarios (H-W1-INT-001..006) + 6 regression scenarios
-(H-W1-REG-001..006). This wave's gate cannot close
+**13 scenarios total (10 MUST-PASS, 3 SHOULD-PASS)** — 7 cross-cutting
+integration scenarios (H-W1-INT-001..007, extended round 10/FIX-5 with
+H-W1-INT-007) + 6 regression scenarios (H-W1-REG-001..006). This wave's gate cannot close
 with any MUST-PASS scenario failing; SHOULD-PASS scenarios failing must
 be explicitly acknowledged (not silently skipped) before the gate closes,
 per this document's own framing note that this cycle substitutes

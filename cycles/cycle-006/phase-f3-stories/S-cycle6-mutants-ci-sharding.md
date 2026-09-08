@@ -30,7 +30,12 @@ traces_to: ".factory/phase-f2-spec-evolution/cycle-006/architecture-delta.md"
 cycle: cycle-006-mutants-ci-sharding
 estimated_effort: large
 estimated_days: 5
-target_module: ".github/workflows/ci.yml; scripts/mutants-aggregate.sh; scripts/lib/trusted-jq.sh; .github/workflows/mutants-nightly.yml"
+target_module: ".github/workflows/ci.yml; scripts/mutants-aggregate.sh; scripts/lib/trusted-jq.sh; .github/workflows/mutants-nightly.yml; scripts/check-ci-gate.sh; tests/ci_gate_completeness.rs; docs/specs/cargo-mutants-policy.md; CHANGELOG.md"
+# target_module (FIX-6, round 10): appended the 4 MODIFY-only files
+# (scripts/check-ci-gate.sh, tests/ci_gate_completeness.rs,
+# docs/specs/cargo-mutants-policy.md, CHANGELOG.md) previously omitted —
+# the full, authoritative file list remains the File Structure
+# Requirements table below.
 subsystems: ["SS-09"]
 depends_on: []
 blocks: []
@@ -178,10 +183,11 @@ there is no user-facing behavior for a blind holdout-evaluator to exercise
 against a running product, so the product-feature blind-holdout-evaluator
 pattern (an isolated evaluator agent probing a live app/API against hidden
 acceptance scenarios) does not apply here. In its place, this story is
-covered by 12 wave-level holdout scenarios in
+covered by 13 wave-level holdout scenarios in
 `.factory/cycles/cycle-006/phase-f3-stories/wave-holdout-scenarios.md` —
-6 cross-cutting integration scenarios (H-W1-INT-001..006) and 6 regression
-scenarios (H-W1-REG-001..006) — run by the implementer/formal-verifier as
+7 cross-cutting integration scenarios (H-W1-INT-001..007, extended round
+10/FIX-5 with H-W1-INT-007 covering INV-COMPLETE Part B end-to-end) and 6
+regression scenarios (H-W1-REG-001..006) — run by the implementer/formal-verifier as
 subprocess-driven proofs against the real `ci.yml`/gate scripts rather than
 by a blind evaluator. See that file for the full scenario definitions and
 MUST-PASS/SHOULD-PASS dispositions.
@@ -350,7 +356,8 @@ explicit PR-description acknowledgment) — never `skipped`, never
 computes `DIFF_FILE` exactly once (`git diff origin/<base_ref>...HEAD`,
 `|| true` empty-diff-safe), uploads it as artifact `mutants-diff-file`,
 and sets outputs `escalated`/`mutant_count`/`overall_diff_lines`.
-(traces to architect §6.2 test 4; VP-MUTANTS-SHARD-004 — the
+(traces to architect §6.2 test 4 and `ci-yml-design.md §1`'s
+authoritative `mutants-plan` job design; VP-MUTANTS-SHARD-004 — the
 `ci-gate`-excluded half of VP-004's subject is covered by AC-032's
 `PINNED_GATE_EXCLUDED_JOBS` admission of `mutants`/`mutants-plan`; see
 AC-032 for the 1:1 trace)
@@ -579,6 +586,28 @@ confirm the total genuinely lands at 65; the
 Rust-side `test_this_file_test_count_matches_expected_denominator`
 self-check (H-W1-REG-005) is the backstop that catches a miscount, not a
 substitute for the implementer's own verification.
+**Round 11 correction (FIX-D):** the prior enumeration here ("Tasks 6-8,
+10, 12, 14, 17-23") was imprecise against the authoritative "AC -> Task
+Coverage Audit" table's Write-Test Task column below — it wrongly
+included Task 7 (implement-only; `mutants-plan` itself carries no test
+obligation of its own) and omitted Task 16 (AC-010's consumer env-line
+wiring test, F-L-005). The corrected, test-adding task set is **Tasks 6,
+8, 10, 12, 14, 16-23** — see the "AC -> Task Coverage Audit" table's
+Write-Test Task column for the authoritative per-AC attribution this
+enumeration summarizes; that table, not this prose list, is the source
+of truth if the two ever appear to disagree again.
+**Round 12 nuance (FIX-D):** within that Tasks 6/8/10/12/14/16-23 set,
+Task 16 is an author/wiring task (it adds `mutants-aggregate` to `ci.yml`
+and writes the `PINNED_ALWAYS_RUN_JOB_KEY_SETS`/`PINNED_ALWAYS_RUN_STEP_
+KEY_SETS` constant entries), not a task that itself authors a net-new
+`#[test]` function — its AC-010 write-test citation (the consumer env-line
+wiring test) is satisfied by Task 6/Task 19's tests plus the existing
+generic key-set test the constant entries drive, not by a dedicated Task-16
+test body. Task 16 belongs in this enumeration because its wiring is a
+precondition for those tests going GREEN, not because it adds to the
+`EXPECTED_GUARD_TEST_COUNT` numerator on its own — the "AC -> Task Coverage
+Audit" table's Write-Test Task column remains the authoritative per-AC
+source if this summary and that table ever appear to disagree.
 `EXPECTED_FIXTURES` (`scripts/check-ci-gate.sh --self-test`) moves
 `13 -> 14` (new Fixture 14, `empty-allowed-skips-any-skip-fails-closed`).
 **Same caveat: re-verify against the live `check-ci-gate.sh --self-test`
@@ -614,10 +643,16 @@ obligation every VP-00X test above ultimately registers against)
 
 ### AC-032 — `ci-gate.needs` retargets its LAST member only
 `ci-gate`'s `needs:` array changes exactly one element: `mutants` ->
-`mutants-aggregate`; every other member (`fmt`, `clippy`, `test`, `msrv`,
-`deny`, `spec-guard`, `check-signing-workflow-injection`) and `ci-gate`'s
-own `if: ${{ always() }}`/steps/`Evaluate required job results` step are
-byte-identical, unchanged. `mutants` and `mutants-plan` are admitted via
+`mutants-aggregate`; `ci-gate`'s own job block (its `if: ${{ always() }}`,
+steps, and `Evaluate required job results` step) is byte-identical,
+unchanged. Of the other six retained `needs:` members (`fmt`, `clippy`,
+`test`, `msrv`, `deny`, `check-signing-workflow-injection`), every one is
+byte-identical — **with ONE documented exception: `spec-guard` gains
+exactly one new step (the `bash scripts/mutants-aggregate.sh --self-test`
+step, AC-016) and is otherwise unchanged.** This narrows, and does not
+contradict, AC-016/Task 17/H-W1-REG-001, which already carve out
+`spec-guard`'s one new step as the sole permitted deviation. `mutants` and
+`mutants-plan` are admitted via
 `PINNED_GATE_EXCLUDED_JOBS`, never wired directly into branch protection
 (DEC-096/DEC-097). `PINNED_GATE_NEEDS_LINE` and
 `test_ci_gate_needs_exactly_the_required_jobs`'s expected-set literal are
@@ -628,12 +663,28 @@ guard-test family this story extends, not a new VP)
 
 ### AC-033 — Shard invocation shape and shared-artifact reuse
 Each of the 8 `mutants` shard jobs runs
-`cargo mutants --shard k/8 --sharding slice --jobs 2 --baseline skip
---timeout 240` against the SAME downloaded `mutants-diff-file` artifact
+`cargo mutants --in-diff "${DIFF_FILE}" --shard k/8 --sharding slice
+--jobs 2 --baseline skip --timeout 240` (byte-for-byte, including flag
+ORDER — `--in-diff` first — per `ci-yml-design.md` § `mutants` shard job
+(§2)'s authoritative shard job) against the SAME downloaded `mutants-diff-file` artifact
+(**placeholder note:** `k` here is prose shorthand for the literal
+GitHub Actions expression `${{ matrix.shard }}` — the real `ci.yml` line
+reads `--shard ${{ matrix.shard }}/8`, and the byte-pin is against that
+expression as it appears in `ci.yml`, not against this document's `k/8`
+shorthand)
 (one upload from `mutants-plan`, 8 downloads of identical bytes) using
 the exact pin `cargo-mutants@27.1.0` (also on `mutants-plan`; NOT
 installed on `mutants-aggregate`, which needs only `jq`/bash over
-already-produced `outcomes.json` files).
+already-produced `outcomes.json` files). This `--in-diff` flag is
+load-bearing, not cosmetic: without it, each shard slices the FULL
+`examine_globs` scope instead of the in-diff subset, and the pooled sum
+can never reconcile against `MUTANT_COUNT` (`mutants-plan`'s independent
+`--list --in-diff`-based pre-count) — AC-008's exact-equality
+reconciliation would hard-fail every PR. **The nightly full-scope
+workflow's shard invocation (AC-034/Task 23) deliberately does NOT carry
+`--in-diff`** — its N=16 shards examine the whole `examine_globs` tree by
+design (`ci-yml-design.md` § `mutants-full` job); do not add `--in-diff`
+there.
 (traces to architecture-delta §3/§8; VP-MUTANTS-SHARD-004/005 exercise
 the structural half of this shape)
 
@@ -649,7 +700,20 @@ Note: the nightly full-scope run's shard matrix uses `N=16` (`shard:
 [0..15]`, `--shard k/16`), NOT the per-PR `mutants` job's `N=8` — see
 `ci-yml-design.md` § `mutants-full` job (matrix `shard:` list, the
 `cargo mutants --shard … 16` invocation, and the accompanying "N=16
-(not 8)" design note); do not default to `N=8` here.
+(not 8)" design note); do not default to `N=8` here. **Pin-scope note
+(FIX-8, round 10):** the `N=16` shape (and, more broadly, the entire
+`mutants-full` job's `cargo mutants --shard k/16 --sharding slice --jobs
+2 --baseline skip --timeout 240` invocation — deliberately with NO
+`--in-diff`, per AC-033's note above) is asserted only in `ci-yml-design.md`
+DESIGN PROSE for this advisory, non-required, non-gate workflow — there is
+no dedicated structural Rust-side byte-pin on the nightly matrix length or
+invocation shape (Task 23's regression test covers only the
+`test_no_sibling_workflow_declares_a_job_named_ci_gate` isolation guard,
+not the shard count or invocation flags). Do not mistake this note for a
+claim that `N=16` is machine-enforced; it is a design-intent statement the
+implementer must transcribe correctly by hand, verified only by code
+review, consistent with this story's `cargo-mutants@27.1.0` version-pin
+disposition (Architecture Compliance Rules table).
 (traces to architecture-delta §5; no dedicated VP — this AC is the
 regression guard the existing `e2e.yml`-precedent test already covers,
 extended to the new file)
@@ -657,9 +721,10 @@ extended to the new file)
 ### AC-035 — F4 Blocking Precondition 3: empirical `--list`<->pooled reconciliation verified before merge
 Before this story's PR merges, a scratch-run verification is performed
 (NOT deferred to PR #778): `cargo mutants --list --in-diff <diff> | wc -l`
-and the pooled sum of 8 `--shard k/8 --sharding slice --baseline skip`
-runs against the IDENTICAL diff reconcile EXACTLY on a non-trivial,
-known-nonzero in-diff mutant set. If they mismatch, the implementer
+and the pooled sum of 8 `--in-diff <diff> --shard k/8 --sharding slice
+--jobs 2 --baseline skip --timeout 240` runs (the same AC-033 invocation
+shape, all 8 shards run against the IDENTICAL diff file) reconcile
+EXACTLY on a non-trivial, known-nonzero in-diff mutant set. If they mismatch, the implementer
 root-causes it (a tooling-surface artifact fixed at the source in
 `mutants-plan`'s `--list` invocation, OR a genuine counting-convention
 difference encoded as a documented, reasoned adjustment in `scripts/
@@ -854,7 +919,7 @@ Task 16 alongside their existing citations (F-L-005).
 | AC-002 | Task 10 | Task 9 (sentinel produced), Task 11 (sentinel-presence interpretation) | |
 | AC-003 | Task 14 | Task 15 | Escalation short-circuit, Step 1; AC text reworded this pass (F-M1) |
 | AC-004 | Task 6 | Task 7 | `mutants-plan` structural pin |
-| AC-005 | Task 6 | Task 9 (builds the 8-shard `strategy.matrix.shard` sequence the cross-check runs against) | `EXPECTED_SHARDS` cross-check — **corrected round 8 (F-M-001): implement column was "Task 7," wrong, since Task 7 only implements `mutants-plan`, which has no `strategy.matrix.shard`. Round 9 (LOW polish): trimmed the orphaned "Task 11 (+ Task 2, extraction context)" tail — Task 11/Task 2 are orthogonal to a matrix-length pin and misled readers; Task 9 alone is the correct citation.** |
+| AC-005 | Task 6 | Task 9 (builds the 8-shard `strategy.matrix.shard` sequence the cross-check runs against), Task 11 (authors the `EXPECTED_SHARDS=8` bash constant in `scripts/mutants-aggregate.sh`'s Step 2, `ci-yml-design.md` § `mutants-aggregate` job, that the SAME cross-check test reads and compares against Task 9's matrix count) | `EXPECTED_SHARDS` cross-check — **corrected round 8 (F-M-001): implement column was "Task 7," wrong, since Task 7 only implements `mutants-plan`, which has no `strategy.matrix.shard`. Round 9 (LOW polish): trimmed the orphaned "Task 11 (+ Task 2, extraction context)" tail on the (mistaken) belief Task 11 was orthogonal to this cross-check. Round 11 (FIX-F) REVERSES that trim: `EXPECTED_SHARDS=8` is not a Rust-side-only literal — it is a bash constant this story's own Task 11 authors inside `scripts/mutants-aggregate.sh`'s Step 2 body (`ci-yml-design.md` § `mutants-aggregate` job, INV-COMPLETE Part B), and the cross-check test (`test_mutants_aggregate_expected_shards_matches_matrix_shard_count`) reads that constant's value, not merely the ci.yml matrix. Task 11 is therefore restored to this column alongside Task 9; Task 2 (extraction context) stays trimmed — it remains orthogonal.** |
 | AC-006 | Task 10 | Task 9 (sentinel produced), Task 11 (crash-arm interpretation) | CRIT-1 regression guard |
 | AC-007 | Task 10 | Task 9 (sentinel produced), Task 11 (legit-empty interpretation) | HIGH-1 regression guard |
 | AC-008 | Task 12 | Task 13 | Exact-equality reconciliation, under-count direction |
@@ -980,7 +1045,14 @@ context.** Mitigation, mandatory for the implementer (not optional): load
 the topology/invariant-implementation phase (~72K tokens, ~36% — still
 over budget alone, so within THAT phase, load section-by-section per
 Task, not the whole file at once — e.g. `architecture-delta.md §6.2`
-alone for the constants table, not the full file); load
+alone for the constants table (~lines 666-693), not the full file. **§6.2
+has a SECOND, load-bearing region the implementer must also load for
+Task 20's stale-prose sweep obligation (FIX-A): the round-4 stale-prose /
+doc-comment sweep list (~lines 2635-2686), ~1900 lines further into the
+same section. Loading only the constants-table region and skipping this
+second region will silently under-deliver Task 20's FIX-A obligation —
+grep for `### 6.2` and read to the section's actual end, not merely the
+constants table near its start.**); load
 `verification-delta.md` only for the specific VP being test-written at
 that moment (grep the VP number, read that VP's ~50-80 line section, not
 the full 3,113-line file); load `ci-yml-design.md` only for the exact
@@ -1004,20 +1076,42 @@ these are explicit, ordered tasks, not background prose:**
    NOT resolved by the time this story is ready to merge, escalate to
    the orchestrator before proceeding — do not merge this story's `ci.yml`
    changes while PR #778 is open against the old gate shape.
-2. [ ] **F4 Blocking Precondition 2 (extraction):** extract
-   `scripts/mutants-aggregate.sh` (the aggregation logic — INV-AGG/
-   INV-COMPLETE/INV-ESCALATE decision code — as an invokable script with
-   a `--self-test` mode) AND `scripts/lib/trusted-jq.sh` (extracted from
-   `check-ci-gate.sh`'s existing `resolve_trusted_jq`/`is_trusted_jq_dir`/
-   `trusted_jq_dirs_for`). Refactor `scripts/check-ci-gate.sh` to
-   `source` the new shared lib file rather than keeping its own copy.
-   BLOCKING — every INV-AGG/INV-COMPLETE guard test depends on this
-   existing first (`architecture-delta.md §6.2a`).
+2. [ ] **F4 Blocking Precondition 2 (extraction + scaffold — reworded
+   round 10/FIX-3 to preserve RED-before-GREEN; do NOT pre-author
+   decision logic in this task):**
+   (a) **Extract** `scripts/lib/trusted-jq.sh` from `check-ci-gate.sh`'s
+   existing `resolve_trusted_jq`/`is_trusted_jq_dir`/`trusted_jq_dirs_for`
+   — a genuine, behavior-preserving move (H-W1-REG-003 is the regression
+   proof this changes nothing observable) — and refactor
+   `scripts/check-ci-gate.sh` to `source` the new shared lib file rather
+   than keeping its own copy.
+   (b) **Author** `scripts/mutants-aggregate.sh` as an invokable script
+   FILE + `--self-test` harness SCAFFOLD/skeleton ONLY: the file must
+   exist, be executable, `source scripts/lib/trusted-jq.sh`, parse
+   `--self-test` and dispatch to a (for now empty/stub) fixture runner,
+   and expose the `evaluate_mutants_aggregate()` entry point as a
+   callable no-op or `todo`-style stub — but its actual Step -1 through
+   Step 6 decision-logic BODY (INV-AGG/INV-COMPLETE/INV-ESCALATE) MUST
+   NOT be written in this task. Every line of that decision logic is
+   authored ONLY via the Tasks 10-15 RED->GREEN cycle (write the failing
+   fixture first in Task 10/12/14, then the minimum code to pass it in
+   Task 11/13/15). Use the verb **"author"** for `mutants-aggregate.sh`
+   throughout this story (it is net-new code, not an extraction from an
+   existing script) — reserve **"extract"** for `trusted-jq.sh`'s genuine
+   move out of `check-ci-gate.sh`.
+   Writing the decision-logic bodies in THIS task would make every Tasks
+   10/12/14 fixture GREEN on creation, violating strict TDD's Red Gate (a
+   fixture must fail before the code that satisfies it exists) — this is
+   why (b) is scoped to file/skeleton/self-test-harness only.
+   BLOCKING — every INV-AGG/INV-COMPLETE guard test depends on the
+   scaffold FILE and its `--self-test` harness existing first, but NOT on
+   the decision logic being pre-written (`architecture-delta.md §6.2a`).
 3. [ ] **F4 Blocking Precondition 3 (empirical premise verification,
    AC-035):** on a scratch branch (or via direct comparison against an
    already-open diff) with a known-nonzero in-diff mutant set, run (a)
    `cargo mutants --list --in-diff <diff> | wc -l` and (b) the 8
-   `--shard k/8 --sharding slice --baseline skip` runs against the
+   `--in-diff <diff> --shard k/8 --sharding slice --jobs 2 --baseline
+   skip --timeout 240` runs (the AC-033 invocation shape) against the
    IDENTICAL diff, and confirm the two counts reconcile EXACTLY. Do this
    BEFORE this story's own PR merges — this story's own PR is CI/doc-only
    (`MUTANT_COUNT == 0`) and cannot supply this evidence itself. On a
@@ -1042,6 +1136,24 @@ these are explicit, ordered tasks, not background prose:**
    for the sharded topology; transcribe the INV-AGG/INV-COMPLETE/
    INV-ESCALATE invariant substance directly into the policy doc (not
    only by reference); add ONE new `## Changelog` table row.
+   **Disposition note (FIX-7, round 10) — why this stays task-only,
+   unlike BP3/AC-035:** BP3 (Task 3) was elevated to a dedicated
+   process-gate AC (AC-035) because its obligation is an EMPIRICAL,
+   falsifiable claim about runtime behavior (the `--list`<->pooled
+   reconciliation premise actually holding on a real diff) that a future
+   reader could otherwise mistake for "already proven" without a named AC
+   forcing the evidence to be produced and attached to the PR. BP5's
+   policy-doc update, by contrast, is a documentation-completeness
+   obligation with no falsifiable runtime claim to gate — its correctness
+   is fully checkable by ordinary PR review of the diff to
+   `docs/specs/cargo-mutants-policy.md` (do the named sections exist? do
+   they describe the shipped design accurately?), the same review-time
+   verification this story already relies on for the `cargo-mutants@27.1.0`
+   version pin (Architecture Compliance Rules table) and the Task 26 LOW
+   doc-fix items. Elevating it to a dedicated AC would not change how it
+   is verified (still a human PR-review read of prose, not a `#[test]`),
+   so this story keeps BP5 as a task-only obligation and does not add a
+   40th AC or a 31st VP for it.
 6. [ ] Write failing tests for `mutants-plan`'s structural shape
    (AC-004), `EXPECTED_SHARDS` cross-check (AC-005), and the escalated-
    output wiring pin (AC-010) before implementing the job.
@@ -1049,20 +1161,31 @@ these are explicit, ordered tasks, not background prose:**
    artifact upload, pre-count, escalated/mutant_count/overall_diff_lines
    outputs).
 8. [ ] Write failing tests for the `mutants` shard job's structural shape
-   (AC-033: the `--shard k/8 --sharding slice --jobs 2 --baseline skip
-   --timeout 240` invocation shape, the shared-`mutants-diff-file`-
-   artifact-reuse wiring, and the `cargo-mutants@27.1.0` exact pin) — the
-   renamed `test_mutants_shard_job_structure_matches_sharded_design`,
-   including the 3-count `steps_with_if` cardinality inversion — before
-   modifying the job.
+   (AC-033: the `--in-diff "${DIFF_FILE}" --shard k/8 --sharding slice
+   --jobs 2 --baseline skip --timeout 240` invocation shape — `k` here is
+   prose shorthand for `${{ matrix.shard }}`, see AC-033's placeholder
+   note — byte-for-
+   byte, including flag ORDER, per `ci-yml-design.md` § `mutants` shard
+   job (§2) — and the
+   shared-`mutants-diff-file`-artifact-reuse wiring; `--timeout 240` IS
+   pinned by this on-run-line invocation-shape assertion. The
+   `cargo-mutants@27.1.0` exact pin is explicitly OUT OF SCOPE for this
+   test — per the Architecture Compliance Rules table's "Code-review-time
+   obligation (no structural Rust-side pin exists for this)" disposition,
+   do not add a Rust-side assertion for the version pin) — the renamed
+   `test_mutants_shard_job_structure_matches_sharded_design`, including
+   the 3-count `steps_with_if` cardinality inversion — before modifying
+   the job.
 9. [ ] Implement AC-033: modify the `mutants` job into an 8-shard
-   `strategy.matrix.shard` job: `--shard k/8 --sharding slice --jobs 2
-   --baseline skip --timeout 240`, downloading the shared
-   `mutants-diff-file` artifact, writing + uploading the status sentinel
-   (AC-002/AC-006/AC-007's evidence source), then uploading
-   `outcomes.json`.
-10. [ ] Write failing subprocess-harness tests for INV-COMPLETE (AC-002,
-    AC-006, AC-007, AC-036, AC-037), INV-AGG's core summation contract
+   `strategy.matrix.shard` job: `--in-diff "${DIFF_FILE}" --shard k/8
+   --sharding slice --jobs 2 --baseline skip --timeout 240`, downloading
+   the shared `mutants-diff-file` artifact, writing + uploading the
+   status sentinel (AC-002/AC-006/AC-007's evidence source), then
+   uploading `outcomes.json`.
+10. [ ] Write failing subprocess-harness tests for INV-COMPLETE (AC-002 —
+    two distinctly-named fixtures, one for a missing sentinel and one for
+    a duplicate sentinel artifact, per INV-COMPLETE Part B; AC-006,
+    AC-007, AC-036, AC-037), INV-AGG's core summation contract
     (AC-001), AND three previously-unnamed FATAL/warning per-shard arms
     this pass's F-P18-MED-001 loop-breaker audit surfaced — each needs its
     OWN named `--self-test` fixture in `scripts/mutants-aggregate.sh`,
@@ -1236,7 +1359,19 @@ F2's table should not be misled into expecting a fifth AC for the
     remediation message).
 16. [ ] Add `mutants-aggregate` to `ci.yml` (`needs: [mutants-plan,
     mutants]`, `if: always()`) wiring the extracted script as the sole
-    `run:` line of its eval step.
+    `run:` line of its eval step. **Same-commit lockstep obligation
+    (FIX-B, round 11):** in the SAME commit, add a `mutants-aggregate`
+    entry to BOTH `PINNED_ALWAYS_RUN_JOB_KEY_SETS` (job-level key set:
+    `&["if", "name", "needs", "runs-on", "steps", "timeout-minutes"]`,
+    per `architecture-delta.md §6.2`'s constants table) AND
+    `PINNED_ALWAYS_RUN_STEP_KEY_SETS` (the exact per-step key arrays,
+    derived from THIS job's FINAL merged `uses:`/`with:` pins — do not
+    copy `architecture-delta.md`'s illustrative shape blindly). Both are
+    enforced by the EXISTING generic
+    `test_always_run_jobs_have_pinned_complete_step_key_sets`/its
+    job-key-set sibling — no new `#[test]` function is needed for this
+    row; omitting the constant entries would leave `mutants-aggregate`
+    as the one always-run job with no key-set pin at all.
 17. [ ] **Implement AC-016 (F-H1 fix, round 7):** add a step to the
     `spec-guard` job whose `run:` line is byte-pinned to
     `bash scripts/mutants-aggregate.sh --self-test` — mirroring the
@@ -1247,6 +1382,16 @@ F2's table should not be misled into expecting a fifth AC for the
     byte-identical to the pinned invocation. Without this step and its
     pin, `EXPECTED_MUTANTS_AGG_FIXTURES` would be a self-test suite
     nobody runs in CI — the exact failure AC-016 exists to prevent.
+    **Same-commit lockstep obligation (FIX-B, round 11):** in the SAME
+    commit as adding this step, grow `PINNED_ALWAYS_RUN_STEP_KEY_SETS`'s
+    existing `spec-guard` entry from 12 to 13 ordered step-key-set
+    entries — append `&["name", "run"]` as the 13th, for this new step
+    (`architecture-delta.md :682`). This is forced by the SAME generic
+    `test_always_run_jobs_have_pinned_complete_step_key_sets` this
+    constant already drives — no new `#[test]` function is needed for
+    THIS row specifically, but skipping the constant update makes that
+    existing test fail, naming `spec-guard` and the mismatched
+    step-key-set length.
 18. [ ] Write the 6 structural-peer pins (AC-009, AC-017 through AC-021)
     against `tests/common/wf.rs`'s existing generic accessors (byte-pin
     the `run:` line, the `env:` key set, the invocation, the
@@ -1267,6 +1412,74 @@ F2's table should not be misled into expecting a fifth AC for the
     `test_ci_gate_needs_exactly_the_required_jobs`'s expected set in the
     SAME commit. Add `mutants`/`mutants-plan` to
     `PINNED_GATE_EXCLUDED_JOBS`.
+    **Same-commit stale-prose / doc-comment sweep obligation (FIX-A,
+    round 12, `architecture-delta.md §6.2` round-4 stale-prose list,
+    ~2618-2686 — MANDATORY, not optional polish):** the retarget above
+    changes `tests/ci_gate_completeness.rs`'s live BEHAVIOR, but several
+    doc comments and panic-message string literals in that same file
+    describe the OLD single-`mutants`-job shape in prose and become stale
+    — one of them (item 3 below) becomes AFFIRMATIVELY WRONG, not merely
+    outdated, once `ALLOWED_SKIPS`/`SKIP_TOLERANT_NEEDS_MEMBERS` are
+    emptied (Task 21). Update, in this SAME commit:
+    1. `:73` (approx.) — the module-map comment `test_always_run_jobs_
+       have_no_continue_on_error (class sweep, 7 jobs)` -> `8 jobs`.
+    2. `:619`, `:655`, `:720` (approx.) — `test_ci_gate_needs_exactly_the_
+       required_jobs`'s own doc comment AND its two independent
+       panic-message literal job-list enumerations (`[fmt, ..., mutants]`
+       / `{{fmt, ..., mutants}}`) — these are hardcoded strings distinct
+       from the `expected` `HashSet` literal item 1 above already updates;
+       each needs its own `mutants` -> `mutants-aggregate` swap or a future
+       mismatch's panic message will name the wrong job.
+    3. `:625-654` (approx.) — the SAME test's `expected` `HashSet` literal
+       carries an inline comment block explaining why `mutants` is
+       skip-tolerant ("Carries if: github.event_name == 'pull_request'...
+       emits skipped on push events... safe ONLY because mutants is named
+       in ALLOWED_SKIPS..."). This is AFFIRMATIVELY WRONG post-cycle-006:
+       `mutants-aggregate` carries no such `if:`, never emits `skipped`,
+       and is not in `ALLOWED_SKIPS` (which is empty). REPLACE this
+       comment entirely with cycle-006's actual rationale (always-run via
+       `if: always()`, never skipped by design) — do not merely swap the
+       job name inside the old rationale, which would leave a comment
+       asserting something false about `mutants-aggregate`.
+    4. `:1202-1204` (approx.) — `test_ci_gate_needs_jobs_have_no_job_
+       level_if`'s leading comment ("mutants is excluded — it is PR-only
+       by design and emits skipped on push events...") — its premise (an
+       exclusion exists) is gone once `SKIP_TOLERANT_NEEDS_MEMBERS` is
+       empty. Rewrite to describe the new state: every `ci-gate.needs`
+       member is iterated, and `mutants-aggregate` is handled via the
+       `PINNED_ALWAYS_RUN_WITH_IF_EXCEPTIONS` carve-out, not an exclusion
+       from the loop.
+    5. `:1268` (approx.) — `PINNED_ALWAYS_RUN_JOB_KEY_SETS`'s own doc
+       comment ("every ci-gate.needs member that must run unconditionally
+       (every member except mutants, per always_run_needs_members)") —
+       same "except mutants" premise, same fix: no exception exists
+       post-cycle-006; `mutants-aggregate` IS a member of this set, with
+       its own `if: always()` carve-out layered on top, not an exclusion.
+    6. `:1313-1314`, `:1328` (approx.) — "why ALL seven always-run
+       jobs..." / "of the seven, only fmt, clippy, msrv, spec-guard, and
+       check-signing-workflow-injection are concretely exposed to the
+       defaults.run.shell vector" — becomes "ALL EIGHT," and
+       `mutants-aggregate` joins the concretely-exposed list (six, not
+       five): its "Evaluate sharded mutation gate" step declares no
+       step-level `shell:` of its own.
+    7. `:1228`, `:3319`, `:3328`, `:3368` (approx.) — four more "seven
+       [always-run] jobs" occurrences (doc comments and a panic-message
+       literal inside `test_always_run_jobs_have_no_continue_on_error`) —
+       same "seven" -> "eight" fix, no other content change at these four
+       sites.
+    8. `:6170` (approx.) — `PINNED_GATE_NEEDS_LINE`'s own literal — already
+       covered by this task's own opening sentence above; listed here only
+       for exhaustiveness against the §6.2 grep, not as a separate action.
+    **Closing safety net (authoritative, not optional):** after applying
+    items 1-8, run `grep -n '"mutants"' tests/ci_gate_completeness.rs`
+    (the exact quoted job-name literal — NOT the bare substring `mutants`,
+    which also legitimately matches `mutants-plan`/`mutants-aggregate`/
+    `mutants.toml`) as the CLOSING step before committing the retarget,
+    and resolve every hit not already covered by items 1-8. `architecture-
+    delta.md §6.2` states its own stale-prose enumeration "has been wrong,
+    or incomplete, in every round so far" — this grep, run against the
+    file actually being edited, is the authoritative check, not the
+    numbered list above.
 21. [ ] Empty the skip-tolerant surface (AC-011/AC-012): `ALLOWED_SKIPS`
     -> `()`, `SKIP_TOLERANT_NEEDS_MEMBERS` -> `&[]`,
     `PINNED_ALLOWED_SKIP_IF_EXPRESSIONS` -> `&[]`; add the
@@ -1295,7 +1508,19 @@ F2's table should not be misled into expecting a fifth AC for the
 25. [ ] Update `EXPECTED_GUARD_TEST_COUNT` to `65`, `EXPECTED_FIXTURES`
     to `14`, add and compute `EXPECTED_MUTANTS_AGG_FIXTURES` (>=12,
     mechanically counted — AC-031), confirm `EXPECTED_JQ_TRUST_CHECKS`
-    stays `17`.
+    stays `17`. **Same-commit non-change verification (FIX-B, round 12,
+    `architecture-delta.md §6.2:680`):** `PINNED_MATRIX_NEEDS_MEMBER_COUNT`
+    stays `2` (unchanged) — the `mutants` shard job is NOT a
+    `ci-gate.needs` member, so `matrix_needs_members()` still returns
+    exactly `[clippy, test]`; `test_matrix_os_lists_remain_static_literals`'s
+    `os_path = ["strategy", "matrix", "os"]` literal is likewise untouched,
+    since it never reaches the `mutants` job's `strategy.matrix.shard` key
+    at all. Actually VERIFY this non-change against the live tree (do not
+    merely assume it, per this repo's "silence is not evidence"
+    convention) and add a one-line comment at `PINNED_MATRIX_NEEDS_MEMBER_
+    COUNT`'s declaration in `tests/ci_gate_completeness.rs` noting the
+    non-change was verified this cycle, not merely carried forward
+    unexamined.
 26. [ ] **LOW F4 doc-fix cleanup tasks (non-blocking, carried forward
     from the F2 gate, DEC-349) — land in the SAME PR, not deferred:**
     - [ ] §5A honest-bound rewrite: propagate the round-9 circular-
@@ -1345,6 +1570,26 @@ F2's table should not be misled into expecting a fifth AC for the
     exist to mutate at the moment the test is written). Confirm each such
     pin's RED proof was actually run against a deliberately-mutated `ci.yml`
     fixture, not skipped as "obviously red because the job doesn't exist yet."
+    **The 9 modified-in-place tests (FIX-E, round 11 — enumerated here so
+    this per-test obligation is mechanically verifiable, per
+    `architecture-delta.md §6.2`'s "Tests MODIFIED in place" list):**
+    (1) `test_ci_gate_needs_exactly_the_required_jobs`;
+    (2) `test_mutants_is_in_ci_gate_needs` -> renamed
+    `test_mutants_aggregate_is_in_ci_gate_needs`;
+    (3) `test_mutants_job_structure_unchanged_by_cigate2_option_c` ->
+    renamed `test_mutants_shard_job_structure_matches_sharded_design`
+    (largest single body rewrite — includes the 3-count `steps_with_if`
+    cardinality inversion, Task 8);
+    (4) `test_ci_gate_needs_jobs_have_no_job_level_if`;
+    (5) `test_this_file_test_count_matches_expected_denominator`;
+    (6) `test_ci_gate_decision_matches_job_level_if_for_every_needs_member`;
+    (7) `test_allowed_skips_members_require_job_level_conditional_in_ci_yml`
+    (+ its `all_skip_variants_for` helper's signature change, same item);
+    (8) `test_allowed_skips_has_exactly_three_code_level_references` ->
+    renamed `test_allowed_skips_has_exactly_four_code_level_references`;
+    (9) `test_mutants_aggregate_fails_closed_on_mutant_count_reconciliation_mismatch`
+    (round-4 rename/inversion, round-5 REVERTED back to this original
+    name/body). Verify all 9 by name before checking off this task.
 30. [ ] Refactor.
 
 ## Previous Story Intelligence
@@ -1429,7 +1674,7 @@ No new external dependency is introduced by this story (the two new
 | `scripts/mutants-aggregate.sh` | CREATE | Extracted aggregation logic (INV-AGG/INV-COMPLETE/INV-ESCALATE decision code), `--self-test` mode |
 | `scripts/lib/trusted-jq.sh` | CREATE | Shared jq-trust helper, extracted from `check-ci-gate.sh` |
 | `scripts/check-ci-gate.sh` | MODIFY | Source the new shared lib; empty `ALLOWED_SKIPS`; `is_allowed_skip`/`print_allowed_skips` empty-array guards; repurposed/new fixtures |
-| `tests/ci_gate_completeness.rs` | MODIFY | 27 new `#[test]` functions; 9 tests modified in place; constants table updates (`EXPECTED_GUARD_TEST_COUNT`, `PINNED_GATE_EXCLUDED_JOBS`, `PINNED_GATE_NEEDS_LINE`, the 7 new byte-VALUE pins, etc.) |
+| `tests/ci_gate_completeness.rs` | MODIFY | 27 new `#[test]` functions; 9 tests modified in place; constants table updates (`EXPECTED_GUARD_TEST_COUNT`, `PINNED_GATE_EXCLUDED_JOBS`, `PINNED_GATE_NEEDS_LINE`, `PINNED_ALWAYS_RUN_JOB_KEY_SETS` (+`mutants-aggregate` entry, Task 16), `PINNED_ALWAYS_RUN_STEP_KEY_SETS` (+`mutants-aggregate` entry, Task 16; `spec-guard` entry 12->13, Task 17), the 7 new byte-VALUE pins, `PINNED_MATRIX_NEEDS_MEMBER_COUNT` non-change verification comment (Task 25, FIX-B), etc.); same-commit stale-prose/doc-comment sweep (Task 20, FIX-A, `architecture-delta.md §6.2` ~2618-2686 — 8 enumerated sites plus the closing `grep -n '"mutants"' tests/ci_gate_completeness.rs` safety net) |
 | `docs/specs/cargo-mutants-policy.md` | MODIFY | Activate "Future Path: Job Sharding (Path B)"; update "CI Gate: Required Check"; new "Escape Hatch" + "Scheduled Full Run" sections; update "CI Integration"/"Local Invocation"; transcribe invariants; one new `## Changelog` row |
 | `CHANGELOG.md` | MODIFY | `[Unreleased] > Changed` entry per Task 27 |
 

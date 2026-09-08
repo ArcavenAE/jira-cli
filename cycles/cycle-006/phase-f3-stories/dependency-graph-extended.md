@@ -10,7 +10,7 @@ inputs:
   - ".factory/cycles/cycle-006/phase-f3-stories/S-cycle6-mutants-ci-sharding.md"
   - ".factory/stories/STORY-INDEX.md"
 traces_to: ".factory/phase-f2-spec-evolution/cycle-006/architecture-delta.md §7"
-input-hash: "a24926f"
+input-hash: "b286451"
 ---
 
 # F3 Extended Dependency Graph — `mutants-ci-sharding` (cycle-006)

@@ -164,4 +164,51 @@ checkpoint in `STATE.md` (v3.82) for the full account.
 
 ---
 
+## Session Resume Checkpoint (2026-09-08, v3.82) — cycle-006 F3 mid adversarial STORY convergence, SESSION WRAP — SUPERSEDED at Burst 5 (v3.83)
+
+**Superseded at:** 2026-09-08, Burst 5 (v3.83) — PRE-GATE BOOKKEEPING REMEDIATION: session resumed (`pipeline: PAUSED → ACTIVE`); a fresh-context pre-gate consistency audit found 1 BLOCKER + 2 MAJOR bookkeeping gaps (missing STORY-INDEX.md registration, stale `dependency-graph-extended.md` input-hash, stale "12 holdouts" narrative count) and fixed all three; F3 adversarial STORY convergence separately reached 3 consecutive clean passes (32/33/34) this session via fix rounds 10-13. F3 human gate still NOT reached — no DEC minted.
+
+### Spec Versions
+
+| Artifact | Version |
+|----------|---------|
+| STATE.md | 3.82 |
+| total_bcs | 754 |
+| VP count | 76 (tracked running total) |
+| holdout scenarios | 118 |
+| total_stories | 174 |
+
+### State
+
+| Field | Value |
+|-------|-------|
+| **Date** | 2026-09-08 |
+| **Position** | cycle-006 (`mutants-ci-sharding`) Phase **F3** (incremental story decomposition), **mid adversarial STORY convergence**. Story `S-cycle6-mutants-ci-sharding` authored; human chose FULL 3-consecutive-clean rigor. |
+| **Convergence** | F3 adversarial STORY convergence — Story has undergone ~19 adversarial passes + 9 fix rounds; ~7 substantive findings caught+fixed. Latest batch: pass 17 CLEAN, pass 19 CLEAN, pass 18 NOT-clean (F-P18-MED-001). Fix round 9 just applied (sub-invariant→RED-fixture audit + LOW citation trims + F5 hand-off). Clean streak = 0 — needs 3 fresh consecutive clean F3 passes on the post-round-9 story. |
+| **In-flight work at this checkpoint** | story-writer fix round 9 COMPLETED (no abandoned mid-step). F3 story is at its consistent post-round-9 state, pending re-review. No PRs mid-review for cycle-006 (no code yet — F4 is where code lands). |
+| **Pending human decisions at this checkpoint** | (1) F3 human approval gate — not yet reached (needs 3-clean first). (2) PR #778 (cycle-005 Story A, 281 in-diff mutants) will ESCALATE under the new sharded gate (>120 threshold) — human must split the diff or admin-bypass merge at cycle-005 resume. (3) cycle-006 must land to `develop` before resuming cycle-005 F4. (4) The 5 F4 Blocking Preconditions + the M-1 reconciliation-premise risk. (5) F5 hand-off item: VP-006 `.outcome`→`.conclusion` byte-pin residual. |
+| **Next step (as recorded at this checkpoint)** | Run fresh F3 adversarial story-faithfulness passes to 3-consecutive-clean, then the F3 human gate, then F4 (delta implementation). |
+
+### Resume Prompt (as recorded at this checkpoint)
+
+```
+/vsdd-factory:rehydrate-wave then /vsdd-factory:next-step
+```
+
+### What actually happened next (recorded for continuity, not part of the original checkpoint)
+
+The session resumed and ran fix rounds 10-13 against the story (~7 further genuine findings caught+fixed:
+shard `--in-diff` omission, Task-8 pin contradiction, Task-2 RED-gate wording, AC-032↔AC-016 contradiction,
+missing `PINNED_ALWAYS_RUN_STEP_KEY_SETS` lockstep, stale-prose sweep omission, and an EC-004/AC-037
+mis-anchoring introduced by fix rounds 11/12 and caught by pass 29), reaching 3 consecutive clean
+adversarial passes (32/33/34) on the post-fix-round-13 story. Before the F3 human gate, a fresh-context
+pre-gate consistency audit was run and found 1 BLOCKER (`S-cycle6-mutants-ci-sharding` not yet registered
+in `STORY-INDEX.md`) + 2 MAJOR (stale `input-hash` on `dependency-graph-extended.md`; stale "12 holdouts"
+narrative count in STATE.md vs. the actual 13 — `H-W1-INT-001..007` + `H-W1-REG-001..006`, `H-W1-INT-007`
+added in fix round 10/FIX-5) — all three fixed in a single bookkeeping burst (no DEC minted; the F3 human
+gate itself was not approved by this burst). `pipeline:` flips PAUSED → ACTIVE. See the live checkpoint in
+`STATE.md` (v3.83) for the full account.
+
+---
+
 <!-- Repeat for each archived checkpoint. Maintain chronological order. -->
