@@ -1,10 +1,10 @@
 ---
 document_type: session-checkpoints
 level: ops
-version: "1.6"
+version: "1.7"
 status: archive
 producer: state-manager
-timestamp: 2026-09-09T06:30:00Z
+timestamp: 2026-09-09T14:30:00Z
 cycle: "cycle-006"
 inputs: [STATE.md]
 input-hash: "[live-state]"
@@ -402,6 +402,47 @@ fixes, then assemble the cycle-006 PR, then pause before merge for human approva
 ### What actually happened next (recorded for continuity, not part of the original checkpoint)
 
 Burst 11 (resume-session continuation) fixed `F-PI-CRITICAL-001` via a comprehensive byte-pin closure (round-4 finding J-CRITICAL fix): every run-bearing step across all three mutation jobs (`mutants-plan` "Compute diff and mutation plan", shard "run-mutants", shard "Write shard status sentinel", `mutants-aggregate` "Evaluate sharded mutation gate") was re-pinned via a new `extract_and_normalize_run_scalar_for_step` helper that parses a `Value::Scalar` (rejecting anchor/tag/non-Literal style) rather than ordered-substring-searching raw comment-including block text — closing the CWE-358 defeat class for good (prior attempts across rounds 2-4 were each shown defeatable before this fix). `F-PG-MED-001` was closed in the same pass: the shard upload step's `with.path`/`with.name` are now byte-pinned and the shard job's step sequence is closed. 5 further adversarial trios ran after the Burst-9/10 rounds 1-2 (round 3 G/H/I NOT CLEAN — G-HIGH sentinel-step launder, G-MED process-gap, I-MED policy-doc stale sections; round 4 J/K/L NOT CLEAN — J-CRITICAL the mutants-plan byte-pin gap just described, J-O1 LOW; round 5 M/N/O NOT CLEAN — O-MED stale test-count ledger; round 6 P/Q/R — P/Q CLEAN, R 2 LOW stale-doc comments; round 7 S/T/U — **ALL THREE CLEAN**, reaching **3-consecutive-clean**). Branch HEAD advanced `ceeedbf1`→`8f46648f` (13 local commits, test/script/doc only — the tracked `.github/workflows/ci.yml` is byte-for-byte unchanged from `ceeedbf1`), **not yet pushed to `origin`**. `EXPECTED_GUARD_TEST_COUNT` 57→75, `EXPECTED_MUTANTS_AGG_FIXTURES` 24→25; full verification green at `8f46648f` (`cargo test --test ci_gate_completeness` 101 passed, `mutants-aggregate.sh --self-test` 25/25, full `cargo test` green, clippy/fmt/actionlint clean). `F-PI-CRITICAL-001`, `F-PF-HIGH-001`, and `F-PG-MED-001` are all RESOLVED — see `cycles/cycle-006/blocking-issues-resolved.md`. 5 follow-up items recorded (not actioned): 3 new process-gap items (STALE-RED-NARRATIVE-PATTERN, EXAMINE-GLOBS-SHRINK-RESIDUAL, BARE-JQ-TOKENIZER-RESIDUAL) plus the carried-forward `F-PE-MED-001`/`F-PC-MED-001` and a new `R-F2` planning-estimate truing-up note. NEXT: PR assembly (branch still needs pushing to `origin`), then pause-before-merge (human approval). See the live checkpoint in `STATE.md` (v3.89) for the full account.
+
+---
+
+## Session Resume Checkpoint (2026-09-08/09, v3.89) — cycle-006 F4 Step-4.5 CONVERGED (3-consecutive-clean, round 7 S/T/U CLEAN, HEAD `8f46648f`), Burst 11 — SUPERSEDED at Burst 12 (v3.90, PR #791 MERGED to `develop`)
+
+**Superseded at:** 2026-09-09, Burst 12 (v3.90) — PR #791 (story `S-cycle6-mutants-ci-sharding`) human-APPROVED at the merge gate and squash-merged to `develop` @ `a9168212`; F4 delivery COMPLETE + MERGED.
+
+### Spec Versions
+
+| Artifact | Version |
+|----------|---------|
+| STATE.md | 3.89 |
+| total_bcs | 754 |
+| VP count | 76 (tracked running total) |
+| holdout scenarios | 118 |
+| total_stories | 175 |
+
+### State
+
+| Field | Value |
+|-------|-------|
+| **Date** | 2026-09-08/09 |
+| **Position** | cycle-006 (`mutants-ci-sharding`) Phase **F4** (delta implementation) — Step-4.5 per-story adversarial convergence **CONVERGED** (3-consecutive-clean, round 7, passes S/T/U, all CLEAN, at frozen feature-branch HEAD `8f46648f`). Story `S-cycle6-mutants-ci-sharding`. Feature branch `ci/mutants-ci-sharding` @ `8f46648f` (13 local commits ahead of `ceeedbf1`, **NOT yet pushed to `origin`**, which remains at `ceeedbf1`). |
+| **Convergence counter** | Step-4.5 per-story adversarial convergence — needed 3-consecutive-clean; **ACHIEVED this session, streak 3/3.** Full 7-trio / 21-pass / 6-fix-round arc (round 1 A/B/C through round 7 S/T/U) recorded in `cycles/cycle-006/blocking-issues-resolved.md` (per-finding resolution for `F-PI-CRITICAL-001`, `F-PF-HIGH-001`, `F-PG-MED-001`). |
+| **In-flight work at this checkpoint** | None durable outstanding for Step-4.5 — convergence complete. Cycle-006's PR NOT yet assembled and the branch NOT yet pushed to `origin` — both were the immediate next actions recorded at this checkpoint. |
+| **Pending human decisions at this checkpoint** | (1) "Drive F4 autonomously, pause before merge" — cycle-006 PR merge-to-`develop` needs human approval once assembled. (2) At cycle-005 resume, PR #778 (281 in-diff mutants) will ESCALATE under the new >120 gate — human chooses split-below-120 or admin-bypass. (3) F4-Precondition-1: cycle-006 lands on `develop` FIRST, before PR #778 rebases. (4) Zero Blocking Issues remain open. |
+| **Next step (as recorded at this checkpoint)** | Push `ci/mutants-ci-sharding` to `origin`, assemble the cycle-006 PR, then pause-before-merge (human approval). |
+
+### Resume Prompt (as recorded at this checkpoint)
+
+```
+Push ci/mutants-ci-sharding (HEAD 8f46648f) to origin, assemble the cycle-006 PR
+(story S-cycle6-mutants-ci-sharding, Step-4.5 CONVERGED, zero open Blocking Issues),
+dispatch pr-reviewer + security-reviewer, then pause before merge for human approval
+per the user's standing "drive F4 autonomously, pause before merge" instruction, or
+/vsdd-factory:next-step if further orchestrator guidance is needed first.
+```
+
+### What actually happened next (recorded for continuity, not part of the original checkpoint)
+
+PR #791 was opened for story `S-cycle6-mutants-ci-sharding`, reviewed (pr-reviewer APPROVE; security-reviewer near-clean, 1 LOW + 1 INFO non-blocking, tracked), and all 24 CI checks passed — including the required CI Gate and, for the first time in production, the full NEW sharded pipeline itself running live: Mutation Test Plan, Mutation Testing (Shard) 0–7 (all 8 shards), and Mutation Testing (Aggregate). The github-ops gh-delegation layer hung in-session during merge execution (two `pr-manager` attempts stalled on delegated `gh` calls, including a non-terminating `gh pr checks --watch`) — a session-tooling issue, not a code or gate defect (tracked as the new `GITHUB-OPS-WATCH-HANG` follow-up item). The orchestrator verified PR state green/mergeable via direct read-only `gh` before the human merged. The human then executed the merge directly via the GitHub UI: PR #791 squash-merged into `develop`, merge commit `a9168212` ("ci(mutants): shard mutation-testing CI gate — 8-way matrix + pooled aggregate (cycle-006) (#791)"), merged 2026-09-09T14:15:13Z; `develop` advanced `569d85a8`→`a9168212`. Post-merge cleanup completed (devops-engineer): remote branch `ci/mutants-ci-sharding` deleted, local worktree `.worktrees/mutants-ci-sharding` removed, local branch deleted, stale refs pruned (cycle-005 worktree/branch untouched). Step-4.5 convergence (v3.89) stands unmodified; the 3 previously-open findings remain RESOLVED. cycle-006 Phase F4 is now **COMPLETE + MERGED**; NEXT is Phase F5 (scoped adversarial refinement), expected light since Step-4.5's 21-pass adversarial/security/reconciliation convergence already front-loaded most of the F5/F6 surface (delta touches no `src/`). cycle-005 PR #778 is now UNBLOCKED (cycle-006's sharded gate + >120 escape hatch is live on `develop`). See the live checkpoint in `STATE.md` (v3.90) for the full account.
 
 ---
 

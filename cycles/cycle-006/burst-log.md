@@ -114,4 +114,40 @@ traces_to: STATE.md
 
 ---
 
+## Burst: Burst 12 — cycle-006 F4 DELIVERY COMPLETE + MERGED — PR #791 squash-merged to `develop` @ `a9168212` (2026-09-09)
+
+**Parent-commit:** `569d85a8` → `a9168212` (`develop` tip advanced this burst — PR #791 squash-merge is the first `develop`-side landing of cycle-006).
+
+**Trigger:** resume-session continuation. Since the v3.89 checkpoint (Step-4.5 CONVERGED, branch not yet pushed, PR not yet assembled), the branch was pushed to `origin`, PR #791 was opened for story `S-cycle6-mutants-ci-sharding`, reviewed, all 24 CI checks passed (including the required CI Gate and the full NEW sharded pipeline running live in production for the first time: Mutation Test Plan, Mutation Testing (Shard) 0–7, Mutation Testing (Aggregate)), and the PR was human-approved and merged.
+
+**What happened:** PR #791 was pr-reviewer **APPROVE**; security-reviewer near-clean (1 LOW + 1 INFO, non-blocking, tracked). All 24 CI checks green. During merge execution, the github-ops gh-delegation layer hung in-session (two `pr-manager` attempts stalled on delegated `gh` calls, including a non-terminating `gh pr checks --watch`) — a session-tooling observation, not a code or gate defect. The orchestrator verified PR state green/mergeable via direct read-only `gh` before the human merged directly via the GitHub UI. PR #791 squash-merged into `develop`: merge commit `a9168212` ("ci(mutants): shard mutation-testing CI gate — 8-way matrix + pooled aggregate (cycle-006) (#791)"), merged 2026-09-09T14:15:13Z. `develop` advanced `569d85a8`→`a9168212`. Post-merge cleanup (devops-engineer): remote branch `ci/mutants-ci-sharding` deleted; local worktree `.worktrees/mutants-ci-sharding` removed; local branch deleted; stale refs pruned (cycle-005 worktree/branch untouched).
+
+**Convergence carried forward, unmodified:** Step-4.5 per-story adversarial convergence (recorded in full at v3.89) stands — 3-consecutive-clean via 7 trios / 21 fresh passes / 6 fix rounds; the 3 resume-time blocking findings (`F-PI-CRITICAL-001`, `F-PF-HIGH-001`, `F-PG-MED-001`) remain RESOLVED in `cycles/cycle-006/blocking-issues-resolved.md`. Blocking Issues table stays EMPTY.
+
+**Follow-up items, unchanged, still NOT actioned this burst:** the 3 process-gap items (`STALE-RED-NARRATIVE-PATTERN`, `EXAMINE-GLOBS-SHRINK-RESIDUAL`, `BARE-JQ-TOKENIZER-RESIDUAL`), `F-PE-MED-001` (M-1 evidence persistence — now captured in PR #791's merged body), `F-PC-MED-001` (DRAFT untrusted-outcomes.json hardening story), `R-F2` (planning-count truing-up 65→75). **New this burst:** `GITHUB-OPS-WATCH-HANG` [process-gap] — `gh pr checks --watch` / github-ops gh-delegation reliability, a session-tooling item, candidate follow-up for the vsdd-factory engine, not this product.
+
+**Adversary verdict:** N/A this state-manager burst — no `adversary` agent dispatched. Step-4.5's own 7-trio / 21-fresh-pass adversarial convergence (3-consecutive-clean, round 7 S/T/U) was run by prior F4 sub-bursts and is cited above as unmodified, standing context for this delivery/merge event, not re-run here. PR #791's pr-reviewer (APPROVE) and security-reviewer (near-clean, 1 LOW + 1 INFO non-blocking) passes were run by the pr-manager/PR-review pipeline, also prior to and independent of this bookkeeping burst.
+
+**Codifications:** None this burst — **no DEC minted**. F4 delivery/merge is not itself a gate decision; the F4→F5 (or eventual cycle-close) gate decisions come later, at their own human checkpoints.
+
+**Closes:** cycle-006 Phase **F4 (delta implementation) — COMPLETE + MERGED**. **Does NOT close:** cycle-006 itself (F5/F6/F7 remain ahead); cycle-005 (`adf-mentions`), which is now UNBLOCKED (PR #778 can rebase onto the new `develop` and its >120-mutant escalation decision can be made at cycle-005 resume) but not yet resumed this burst.
+
+**Outcome:** cycle-006 (`mutants-ci-sharding`) is OPEN, Phase **F4 COMPLETE + MERGED** to `develop` @ `a9168212`. NEXT is Phase F5 (scoped adversarial refinement) → F6 (targeted hardening) → F7 (delta convergence) — expected light for F5/F6 since Step-4.5's 21-pass adversarial + security + reconciliation + guard-completeness convergence already front-loaded most of that surface (the delta touches no `src/`, so scoped mutation/fuzz hardening is ~0-mutant / N/A); F7 remains the substantive remaining gate. No BC/VP/holdout/story running-total counts changed this burst (754/76/118/175 unchanged) — this was a delivery/merge event, not spec or story authorship.
+
+**Files touched (Dim-1): 3 unique files/paths this burst, all committed in the state-manager's own single atomic commit**
+
+- `STATE.md` (modified)
+- `cycles/cycle-006/session-checkpoints.md` (modified — archives the v3.89 checkpoint ahead of this burst's v3.90 checkpoint)
+- `cycles/cycle-006/burst-log.md` (modified — this Burst 12 entry appended)
+
+**Dim-2 Attestation:** No BC/VP/holdout INDEX content changed this burst. Counts unchanged: 754 BCs / 76 VPs (running total) / 118 holdouts / 175 stories. No DEC minted this burst — no DEC-namespace collision check applicable (max ID remains DEC-350).
+
+**Dim-5 Attestation:** N/A — no binary/WASM artifact produced by this `.factory/` commit (bookkeeping only; the actual merged binary is produced by `develop`'s own CI, outside `.factory/`'s scope).
+
+**Dim-6 Attestation:** `develop` HEAD advanced `569d85a8`→`a9168212` this burst (PR #791 squash-merge) — the first cycle-006 `src/`-adjacent landing to `develop` (the diff itself is `.github/workflows/`, `scripts/`, `tests/`, `docs/` only; no `src/` file touched per F1's scope).
+
+**Dim-7 Attestation:** CI-relevant change LANDED this burst — the sharded mutation-testing gate (`mutants-plan` → 8-shard matrix → `mutants-aggregate`, escape hatch, advisory nightly) is now live in production CI on `develop`, validated end-to-end by PR #791's own 24 green checks including the new pipeline's first real production run. This is the concrete closure of the HIGH regression-risk flag raised at F1 (DEC-348) for the CI-gate-machinery-change class.
+
+---
+
 <!-- Repeat for each burst. Maintain chronological order. -->
