@@ -427,4 +427,47 @@ Additionally swept into the same commit (pre-existing/concurrent, verified legit
 
 ---
 
+## Burst 9 — Step-4.5 Per-Story Adversarial Convergence: S-cycle5-mention-resolution-wiring (2026-09-09)
+
+**Parent-commit:** `b4c1fd3e` (`factory(phase-3): record Red Gate for S-cycle5-mention-resolution-wiring`) — the factory-artifacts tip immediately before this burst.
+
+**Trigger:** Orchestrator recorded the completed Step-4.5 (BC-5.39.001) per-story adversarial convergence loop for Wave 2's terminal story, run on branch `feat/cycle5-mention-resolution-wiring` (base `develop` @ `5b00b31e`, final HEAD `9dc0b098`). This is a **sub-phase record within F4 Wave 2 delivery, not a phase transition** — the STATE-worthy event is the eventual PR merge, which has not yet happened. Per this burst's own scoping instruction, **no STATE.md version bump** was made.
+
+**Actions taken:**
+
+1. **Wrote** `cycles/cycle-005/S-cycle5-mention-resolution-wiring/adversary-convergence-state.json` capturing all 4 passes: P1 SUBSTANTIVE (1 MEDIUM F1 — non-ASCII/Unicode case-fold defect in `filter_by_name_match`; 1 LOW F2 — a discarded interactive `dialoguer::Select` answer on an internal-error fallback path; plus two scrutiny items, the test-fixture `jsmith`→`smith` rename and the `disambiguate_name` shared-display-name spec-wording deviation, both reviewed and CLEARED as legitimate); P2 NITPICK_ONLY (F1/F2 CONFIRMED-FIXED via `7c9a52f6`/`12eb5d18`; new LOW-1 spec-prose-precedence and LOW-2 interactive-test-gap, both deferred non-blocking; window 1/3); P3 NITPICK_ONLY (new LOW-3 stale AC-020→AC-017 citation, fixed same-sweep via `9dc0b098`; window 2/3); P4 NITPICK_ONLY (all prior confirmed-fixed, no new substantive findings; window COMPLETE 3/3). Convergence criterion (passes_clean ≥ 3, last_classification NITPICK_ONLY-or-cleaner) MET — non-strict (window passes were NITPICK_ONLY throughout, not CLEAN).
+2. **Evaluated the STATE.md write-path decision** (BC-5.45.001 discipline, per this burst's own explicit either/or instruction): found `.factory/STATE.md` already carrying an **unrelated, uncommitted, concurrent modification** (a timestamp-only refresh, consistent with the `stamp-state-timestamp` PostToolUse hook or other in-flight concurrent activity) at the time this burst began — see the "Not swept" note below. Editing STATE.md's Drift/Standing Items section in this burst would have required either (a) committing that concurrent, not-this-burst's-content change alongside the deferral append, or (b) a version bump this burst is explicitly scoped to avoid. **Decision: SKIPPED the STATE.md edit this burst.** The two accepted deferrals (LOW-1, LOW-2) are recorded here and in `adversary-convergence-state.json` only, and will fold into STATE.md's Drift/Standing Items section at the eventual merge bookkeeping burst.
+3. **Updated** `sprint-state.yaml`'s `cycle_005_adf_mentions.wave_2_status` line and the `S-cycle5-mention-resolution-wiring` story entry's `notes` field to record: code complete on the feature branch, Step-4.5 adversarial convergence ACHIEVED (3 consecutive clean/nitpick passes — P2/P3/P4, last NITPICK_ONLY), awaiting demos/PR decision. Story-level `status:` field left as `in-progress` (unchanged — no PR exists yet; matches this file's short-token convention, with the descriptive convergence detail carried in `notes` per the same convention `S-cycle4-honest-fail-message` uses).
+4. **Not swept into this commit:** `.factory/STATE.md` (pre-existing uncommitted timestamp-only diff, not authored by this burst and not part of its scope), `.factory/regression-state.json`, and `.factory/sidecar-learning.md` — all three showed pre-existing uncommitted modifications from concurrent activity at burst start that are unrelated to this Step-4.5 convergence record. Unlike Burst 8 (where concurrent files were verified as legitimate parts of that dispatch and swept in), this burst's own instructions explicitly direct against sweeping unrelated churn, and none of the three was reviewed as in-scope for a per-story sub-phase record. Staged and committed by explicit path list, not `git add -A`.
+
+**Adversary verdict:** Convergence ACHIEVED per the `adversary` agent's own 4-pass record (see `adversary-convergence-state.json`) — 3 consecutive clean-or-nitpick passes (P2, P3, P4), last classification NITPICK_ONLY, criterion `passes_clean >= 3` met. Two LOW-severity items (LOW-1 spec-prose clarity, LOW-2 untestable-without-TTY-seam interactive path) remain as accepted, non-blocking, story-level deferrals — not defects, not blocking demos or PR.
+
+**Files touched (Dim-1): 2 unique files/paths this burst, all committed in the state-manager's own single atomic commit**
+
+- `cycles/cycle-005/S-cycle5-mention-resolution-wiring/adversary-convergence-state.json` (new)
+- `sprint-state.yaml` (`cycle_005_adf_mentions` wave_2_status + story entry `notes` updated)
+- `cycles/cycle-005/burst-log.md` (this entry)
+
+**STATE.md was deliberately NOT touched this burst** — see Action 2 above. `regression-state.json` and `sidecar-learning.md`'s pre-existing concurrent diffs were deliberately NOT swept in — see Action 4 above.
+
+**Dim-2 Attestation:** No count-verification script applies — counts unchanged (754 BCs / 76 VPs / 118 holdouts / 175 stories, carried forward verbatim). This burst authored no spec/story artifact.
+
+**Dim-5 Attestation:** N/A — no binary/WASM artifact produced by this `.factory/` commit (bookkeeping-only, no build).
+
+**Dim-6 Attestation:** No `src/`/`tests/` change committed by this state-manager burst. (The adversarial-convergence loop's own fix commits — `7c9a52f6`, `12eb5d18`, `9dc0b098` — already landed on the story branch `feat/cycle5-mention-resolution-wiring` prior to this burst; this burst only records the outcome in `.factory/`.)
+
+**Dim-7 Attestation:** N/A — no CI-relevant change in this `.factory/` commit.
+
+**Codifications:** No DEC minted this burst (a per-story sub-phase convergence record is bookkeeping, not a phase-gate or story decision). Recorded (not decided): the 4-pass convergence trajectory, the two accepted LOW-severity deferrals, and the sprint-state.yaml status-note update.
+
+**Closes:** nothing — this burst closes no phase, wave, or standing item, and does not itself close the story (that is the merge). **Does NOT close:** cycle-005 itself, Phase F4, Wave 2's dispatch, S-cycle5-mention-resolution-wiring itself (code-complete, not yet merged), or any Drift/Standing item (`INTERIM-SHIPPABILITY-WINDOW-CYCLE5-W1`, `CYCLE5-W1-LOCAL-MUTATION-VERIFY-PARTIAL`, the 5 remaining S-7.02 deferrals) — all unchanged. **Adds** two new accepted-deferral candidates (LOW-1, LOW-2) for the eventual STATE.md Drift/Standing Items fold-in at merge.
+
+### Details
+
+| Agent | Task | Output |
+|-------|------|--------|
+| state-manager | Recorded the Step-4.5 per-story adversarial convergence (4 passes, 3 consecutive clean/nitpick, CONVERGED) for `S-cycle5-mention-resolution-wiring`: wrote `adversary-convergence-state.json`; evaluated and SKIPPED the STATE.md Drift/Standing Items edit this burst (concurrent uncommitted STATE.md diff present + version-bump scoping conflict — deferred to merge bookkeeping); updated `sprint-state.yaml` wave/story status-note; did NOT sweep the pre-existing concurrent `STATE.md`/`regression-state.json`/`sidecar-learning.md` diffs into this commit; commit (explicit path list) + push to `factory-artifacts` | `cycles/cycle-005/S-cycle5-mention-resolution-wiring/adversary-convergence-state.json` (new), `sprint-state.yaml`, `cycles/cycle-005/burst-log.md` (this file) |
+
+---
+
 <!-- Repeat for each burst. Maintain chronological order. -->

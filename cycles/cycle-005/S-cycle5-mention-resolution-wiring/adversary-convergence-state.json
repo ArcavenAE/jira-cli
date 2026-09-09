@@ -1,0 +1,97 @@
+{
+  "story": "S-cycle5-mention-resolution-wiring",
+  "cycle": "cycle-005",
+  "feature_mode_bundle": "adf-mentions",
+  "perimeter": 1,
+  "perimeter_label": "per-story Step 4.5 (BC-5.39.001)",
+  "convergence_bar": "3-consecutive-clean",
+
+  "passes": [
+    {
+      "id": "P1",
+      "classification": "SUBSTANTIVE",
+      "findings": [
+        {"id": "ADV-SC5MRW-P1-001", "severity": "MEDIUM", "category": "correctness", "description": "filter_by_name_match performed a byte-wise/ASCII-only case fold when comparing candidate display names against the @Name token, so a non-ASCII display name (e.g. accented Latin characters) that differed from the token only by case would fail to match even though the names are the same identity under Unicode case-insensitive comparison"},
+        {"id": "ADV-SC5MRW-P1-002", "severity": "LOW", "category": "ux", "description": "on an interactive ambiguous-match prompt, a user's dialoguer::Select answer was read but then discarded on a subsequent internal error path, silently falling back to non-interactive failure behavior instead of honoring the answer the user had just given"}
+      ],
+      "scrutiny_items": [
+        {"item": "test fixture jsmith -> smith rename in the disambiguation test data", "disposition": "CLEARED", "rationale": "legitimate fixture correction to exercise a genuine substring/prefix collision case, not a masking of a defect"},
+        {"item": "disambiguate_name shared-display-name deviation from the spec's literal wording", "disposition": "CLEARED", "rationale": "faithful reuse of the existing partial_match disambiguation primitive per the story's mandated-reuse constraint; behavior matches intent even though phrasing differs from the spec prose"}
+      ],
+      "window_eligible": false,
+      "notes": "Pass 1 SUBSTANTIVE: 1 MEDIUM (F1, non-ASCII case-fold defect in filter_by_name_match) + 1 LOW (F2, discarded interactive prompt answer on an internal-error fallback path). Two additional items flagged for scrutiny during the pass (the jsmith->smith test-fixture rename and the disambiguate_name shared-display-name deviation) were both reviewed and CLEARED as legitimate, not defects."
+    },
+    {
+      "id": "P2",
+      "classification": "NITPICK_ONLY",
+      "findings": [
+        {"id": "ADV-SC5MRW-P2-001", "severity": "LOW", "category": "documentation", "description": "spec prose describing exact-match precedence in the name-resolution fallback chain was ambiguous relative to the implemented (and correct) order"},
+        {"id": "ADV-SC5MRW-P2-002", "severity": "LOW", "category": "coverage", "description": "no automated test exercises the interactive dialoguer::Select answered-then-resolves path (no TTY test seam available for this prompt)"}
+      ],
+      "window_eligible": true,
+      "window_position": "1/3",
+      "notes": "Pass 2 NITPICK_ONLY -- F1 and F2 from Pass 1 CONFIRMED-FIXED (7c9a52f6, 12eb5d18). Two new LOW findings surfaced, both deferred as non-blocking: LOW-1 (spec-prose precedence clarity) and LOW-2 (interactive-test gap, matching the pre-existing posture of duplicate_user_disambiguation.rs, which has the same untested-TTY-path limitation). Convergence window starts (1/3)."
+    },
+    {
+      "id": "P3",
+      "classification": "NITPICK_ONLY",
+      "findings": [
+        {"id": "ADV-SC5MRW-P3-001", "severity": "LOW", "category": "documentation", "description": "e2e_cli_surface_guard citation referenced a stale acceptance-criterion id (AC-020) that had been renumbered to AC-017"}
+      ],
+      "window_eligible": true,
+      "window_position": "2/3",
+      "notes": "Pass 3 NITPICK_ONLY -- new LOW-3 (stale AC-020 citation in the surface guard, should read AC-017) found and fixed same-sweep (9dc0b098). LOW-1 and LOW-2 from Pass 2 remain accepted deferrals, unchanged. Window continues (2/3) -- a LOW-severity nitpick with a same-pass fix does not reset the consecutive-clean-or-better streak for this story's tally, consistent with the S-578-4 precedent (NITPICK_ONLY still counts toward the window)."
+    },
+    {
+      "id": "P4",
+      "classification": "NITPICK_ONLY",
+      "findings": [],
+      "window_eligible": true,
+      "window_position": "3/3",
+      "notes": "Pass 4 NITPICK_ONLY -- all prior findings (F1, F2, LOW-3) CONFIRMED-FIXED; LOW-1 and LOW-2 remain accepted, non-blocking, deferred. No new substantive findings. Window COMPLETE (3/3) against final HEAD 9dc0b098. CONVERGED (passes_clean >= 3, last_classification NITPICK_ONLY)."
+    }
+  ],
+
+  "total_passes": 4,
+  "convergence_window_passes": ["P2", "P3", "P4"],
+  "passes_clean": 3,
+  "converged": true,
+  "converged_strict": false,
+  "last_classification": "NITPICK_ONLY",
+  "feature_branch": "feat/cycle5-mention-resolution-wiring",
+  "develop_base_sha": "5b00b31e",
+  "converged_sha": "9dc0b098",
+
+  "fix_commits": {
+    "F1": "7c9a52f6",
+    "F2": "12eb5d18",
+    "LOW-3": "9dc0b098"
+  },
+  "implementation_commits": [
+    "9d40594e", "2f7bba29", "ca9eaee4", "e0f5e0d6", "c83440a5", "2129c10d", "619f1011"
+  ],
+  "stub_commits": ["6799444c"],
+  "test_commits": ["50080c63", "63e4aeb1"],
+
+  "accepted_deferrals": [
+    {
+      "id": "LOW-1",
+      "severity": "LOW",
+      "category": "documentation",
+      "description": "BC-X.7.007 point 2 spec-prose exact-match-precedence clarification -- implementation is correct and faithful to the mandated partial_match reuse; the spec wording describing the fallback order is merely unclear, not the code.",
+      "target": "doc-hygiene / product-owner",
+      "blocking": false
+    },
+    {
+      "id": "LOW-2",
+      "severity": "LOW",
+      "category": "coverage",
+      "description": "No automated test covers the interactive dialoguer::Select answered-then-resolves path -- there is no TTY seam to drive this deterministically in the test harness. Matches the pre-existing accepted posture of duplicate_user_disambiguation.rs, which has the identical limitation.",
+      "target": "accepted limitation, no owner action tracked",
+      "blocking": false
+    }
+  ],
+
+  "convergence_summary": "S-cycle5-mention-resolution-wiring (Effectful @Name/accountId mention resolution + wiring into create/edit/comment/JSM-create, 13 pts, 17 ACs) reached per-story Step-4.5 adversarial CONVERGENCE after 4 passes on branch feat/cycle5-mention-resolution-wiring (base develop @ 5b00b31e, final HEAD 9dc0b098). Trajectory: P1 SUBSTANTIVE (1 MEDIUM F1: non-ASCII case-fold defect in filter_by_name_match; 1 LOW F2: discarded interactive prompt answer on an internal-error fallback path; plus two scrutiny items -- a test-fixture jsmith->smith rename and a disambiguate_name shared-display-name spec-wording deviation -- both reviewed and CLEARED as legitimate) -> F1 fixed via 7c9a52f6 (Unicode case-fold harmonization), F2 fixed via 12eb5d18 (force non-interactive resolution after a prior failure, honoring rather than discarding the answer path); P2 NITPICK_ONLY (F1/F2 CONFIRMED-FIXED; new LOW-1 spec-prose-precedence-clarity and LOW-2 interactive-test-gap, both deferred non-blocking) -- window starts 1/3; P3 NITPICK_ONLY (new LOW-3 stale AC-020->AC-017 citation, fixed same-sweep via 9dc0b098) -- window continues 2/3; P4 NITPICK_ONLY (all prior confirmed-fixed, no new substantive findings) -- window COMPLETE 3/3. Convergence criterion (passes_clean >= 3, last_classification NITPICK_ONLY-or-cleaner) MET, non-strict (window passes were NITPICK_ONLY rather than CLEAN throughout). Two LOW-severity items remain as accepted, non-blocking story-level deferrals (LOW-1 doc-hygiene, LOW-2 untestable-without-TTY-seam interactive path) -- tracked here and in cycles/cycle-005/burst-log.md; not yet folded into STATE.md Drift/Standing Items pending the eventual merge bookkeeping burst. Code is complete on the feature branch; PR not yet opened as of this record.",
+  "timestamp": "2026-09-09T21:30:00Z"
+}
