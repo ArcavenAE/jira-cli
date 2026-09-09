@@ -1182,7 +1182,7 @@ cycle_005_adf_mentions:
   bundle: adf-mentions
   cycle: cycle-005
   wave_1_status: "DONE — S-cycle5-mention-pure-conversion (13 pts, CRITICAL, 15 ACs) merged 2026-09-09 via PR #778 @ 708c8b32 (squash, escape-hatch admin-bypass per DEC-352)."
-  wave_2_status: "READY / UNBLOCKED — S-cycle5-mention-resolution-wiring (13 pts, HIGH, 17 ACs, depends_on: [S-cycle5-mention-pure-conversion]) — dependency SATISFIED 2026-09-09 (Wave 1 merged); not yet dispatched to an implementer."
+  wave_2_status: "IN-PROGRESS / DISPATCHED — S-cycle5-mention-resolution-wiring (13 pts, HIGH, 17 ACs, depends_on: [S-cycle5-mention-pure-conversion]) — dependency SATISFIED 2026-09-09 (Wave 1 merged); dispatched 2026-09-09 to per-story delivery, worktree feat/cycle5-mention-resolution-wiring created from develop @ 5b00b31e."
   wave_1:
     stories:
       - id: S-cycle5-mention-pure-conversion
@@ -1206,10 +1206,13 @@ cycle_005_adf_mentions:
     stories:
       - id: S-cycle5-mention-resolution-wiring
         title: "Effectful @Name/accountId mention resolution (src/cli/issue/mentions.rs) + wiring into create/edit/comment/JSM-create"
-        status: ready
+        status: in-progress
         pr: null
         merge_sha: null
         merged_at: null
+        worktree: "feat/cycle5-mention-resolution-wiring"
+        dispatched_at: "2026-09-09"
+        dispatched_from: "develop @ 5b00b31e"
         depends_on: [S-cycle5-mention-pure-conversion]
         blocks: []
         bc_anchors: [BC-X.7.007, BC-X.7.008, BC-X.7.009, BC-X.7.010, BC-3.3.012, BC-3.4.032, BC-3.5.013, BC-3.8.018, BC-7.2.016]
@@ -1220,4 +1223,4 @@ cycle_005_adf_mentions:
         module_criticality: HIGH
         ac_count: 17
         target_module: "src/cli/issue/mentions.rs"
-        notes: "Wave 2 terminal story, depends_on S-cycle5-mention-pure-conversion (NOT YET SATISFIED — Wave 1 not yet dispatched/merged). Approved at F3 human gate (DEC-347) alongside Wave 1. New src/cli/issue/mentions.rs (resolve_mentions, filter_by_name_match per the F2-gate DEC-345 single-result name-match tightening); wired into issue create/edit (incl. --dry-run forced-non-interactive)/comment add+edit/JSM issue create --request-type; --no-mentions opt-out on all four write-command surfaces; mentions.rs MUST be added to .cargo/mutants.toml examine_globs in the same commit that creates it; includes the human-required live-Jira E2E round-trip (H-NEW-MENTION-009, JR_RUN_E2E-gated, self-cleaning). BLOCKED status reflects the unsatisfied depends_on, not a scheduling decision — dispatch as soon as Wave 1 merges."
+        notes: "Wave 2 terminal story, depends_on S-cycle5-mention-pure-conversion — SATISFIED 2026-09-09 (Wave 1 merged, PR #778 @ 708c8b32). Approved at F3 human gate (DEC-347) alongside Wave 1. DISPATCHED 2026-09-09 to per-story delivery: worktree feat/cycle5-mention-resolution-wiring created from develop @ 5b00b31e; human-authorized resume of the F4 Wave 2 dispatch after the SESSION-WRAP pause. New src/cli/issue/mentions.rs (resolve_mentions, filter_by_name_match per the F2-gate DEC-345 single-result name-match tightening); wired into issue create/edit (incl. --dry-run forced-non-interactive)/comment add+edit/JSM issue create --request-type; --no-mentions opt-out on all four write-command surfaces; mentions.rs MUST be added to .cargo/mutants.toml examine_globs in the same commit that creates it; includes the human-required live-Jira E2E round-trip (H-NEW-MENTION-009, JR_RUN_E2E-gated, self-cleaning)."

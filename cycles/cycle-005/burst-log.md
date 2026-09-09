@@ -376,4 +376,55 @@ traces_to: STATE.md
 
 ---
 
+## Burst 8 — F4 WAVE 2 DISPATCH (2026-09-09)
+
+**Parent-commit:** `5b00b31e`-era `.factory` factory-artifacts tip immediately before this burst (Burst 7's own commit).
+
+**Trigger:** Human authorized resuming the SESSION-WRAP pause (Burst 7) and dispatching cycle-005 Phase F4 Wave 2 (`S-cycle5-mention-resolution-wiring`) to per-story delivery. A legitimate resume + status transition, not a phase-gate decision.
+
+**Actions taken:**
+
+1. **Frontmatter:** `pipeline:` `PAUSED` → `ACTIVE`. `timestamp:` refreshed to the dispatch instant. `phase:` rewritten to drop the `PAUSED 2026-09-09.` prefix and record the unchanged Wave-1/PR-793 history plus Wave 2 now `DISPATCHED to per-story delivery`, worktree `feat/cycle5-mention-resolution-wiring` created from `develop` @ `5b00b31e`. `current_step:` rewritten as an `F4-WAVE2-DISPATCH-2026-09-09` step description, preserving the `D-chain cite D-053 latest brownfield.` prefix and the `→1→3→0→2` trajectory-tail token, per the verbatim-strict chain convention. `last_amended:` full overwrite (BC-5.45.001 write-path discipline) recording the dispatch. `version:` `3.94` → `3.95` (exactly one bump).
+2. **Verified** the worktree `feat/cycle5-mention-resolution-wiring` exists via `git worktree list` — confirmed created from `develop` @ `5b00b31e` (already present, not created by this burst).
+3. **STORY-INDEX.md:** flipped `S-cycle5-mention-resolution-wiring` status `draft` → `in-progress` on both the registry row (~L1235) and the detail row (~L1652), recording the dispatch and confirming `depends_on:[S-cycle5-mention-pure-conversion]` SATISFIED (Wave 1 merged, PR #778 @ `708c8b32`) and F3-approval via DEC-347. No count change (754 BCs / 76 VPs / 118 holdouts / 175 stories) — no new story authored.
+4. **sprint-state.yaml:** updated `cycle_005_adf_mentions.wave_2_status` and the `S-cycle5-mention-resolution-wiring` story entry (`status: ready` → `in-progress`, added `worktree`/`dispatched_at`/`dispatched_from` fields) and its `notes` field to reflect the dispatch and existing worktree.
+5. **Archived** the v3.94 Session Resume Checkpoint to `cycles/cycle-005/session-checkpoints.md` with a "Superseded at" note, BEFORE writing the new one — see that file's newest entry.
+6. **Wrote exactly one new** `## Session Resume Checkpoint` (v3.95) in `STATE.md` reflecting the ACTIVE pipeline, Wave 2 dispatched to per-story delivery (noting observed concurrent test-writer/implementer activity already underway in the worktree), and the resume/next-action detail.
+7. **Appended** a new Phase Progress row `F4-WAVE2-DISPATCH-2026-09-09` (DISPATCHED, agent state-manager).
+8. **Recomputed** `wc -l .factory/STATE.md` after the Write and refreshed the SIZE BUDGET banner's line-count claim and dual-margin figures to match exactly (391 lines).
+9. **Included** the concurrently-modified `.factory/sidecar-learning.md` (further append-only `Session ended at …` markers) and `.factory/regression-state.json` (a test-run scratch record from the concurrent per-story-delivery activity inside the `.worktrees/S-cycle5-mention-resolution-wiring` worktree) in this same atomic commit — both verified as legitimate, in-scope artifacts of this dispatch, not stray/unrelated content.
+10. Updated Convergence Status / Concurrent Cycles (pipeline reflected as ACTIVE, Wave 2 DISPATCHED), Constraints Carried Forward (new Burst-8 paragraph; Burst 7's paragraph marked historical/superseded), Blocking Issues (clarifying note), Decisions Log (cycle-005 note paragraph appended, no new DEC row), and Historical Content (new evidence row + burst-history bullet) for consistency with the frontmatter change. No DEC minted — a dispatch/status transition is bookkeeping, not a phase-gate or story decision.
+
+**Adversary verdict:** N/A this state-manager burst — no `adversary` agent dispatched; this burst records a dispatch/status transition, not a spec/code change.
+
+**Files touched (Dim-1): 5 unique files/paths this burst, all committed in the state-manager's own single atomic commit**
+
+- `STATE.md` (v3.95 — full-content Write)
+- `stories/STORY-INDEX.md` (2 rows flipped draft→in-progress)
+- `sprint-state.yaml` (`cycle_005_adf_mentions` wave_2_status + story entry updated)
+- `cycles/cycle-005/session-checkpoints.md` (v3.94 checkpoint archived with "Superseded at" note)
+- `cycles/cycle-005/burst-log.md` (this entry)
+
+Additionally swept into the same commit (pre-existing/concurrent, verified legitimate, not authored by this burst's substantive actions): `sidecar-learning.md` (append-only session-end markers) and `regression-state.json` (concurrent per-story-delivery test-run record).
+
+**Dim-2 Attestation:** No count-verification script applies in the BC/VP/holdout/story sense — counts unchanged (754 BCs / 76 VPs / 118 holdouts / 175 stories, carried forward verbatim). This burst authored no new spec/story artifact (only a status-field flip on an existing story).
+
+**Dim-5 Attestation:** N/A — no binary/WASM artifact produced by this `.factory/` commit (bookkeeping-only, no build).
+
+**Dim-6 Attestation:** No `src/`/`tests/` change committed by this state-manager burst. (The concurrently-observed per-story-delivery activity in the Wave 2 worktree is tracked separately, outside this `.factory/` commit.)
+
+**Dim-7 Attestation:** N/A — no CI-relevant change in this `.factory/` commit.
+
+**Codifications:** No DEC minted this burst (a dispatch/status transition is not a phase-gate or story decision). Recorded (not decided): `pipeline: ACTIVE`, the dispatch fact, the STORY-INDEX/sprint-state status flips, and the new v3.95 checkpoint's resume point.
+
+**Closes:** nothing — this burst closes no phase, wave, or standing item. **Does NOT close:** cycle-005 itself, Phase F4, Wave 2 itself (delivery is only just beginning), or any Drift/Standing item (`INTERIM-SHIPPABILITY-WINDOW-CYCLE5-W1`, `CYCLE5-W1-LOCAL-MUTATION-VERIFY-PARTIAL`, the 5 remaining S-7.02 deferrals) — all unchanged.
+
+### Details
+
+| Agent | Task | Output |
+|-------|------|--------|
+| state-manager | Recorded the human-authorized resume + dispatch of cycle-005 Phase F4 Wave 2 (`S-cycle5-mention-resolution-wiring`) to per-story delivery: `pipeline: PAUSED`→`ACTIVE`, verbatim-strict `phase:`/`current_step:`/`last_amended:` chain, `version:` 3.94→3.95; verified the existing worktree `feat/cycle5-mention-resolution-wiring`; flipped STORY-INDEX.md status draft→in-progress (both rows); updated sprint-state.yaml wave/story tracking; archived v3.94 checkpoint, wrote v3.95 checkpoint; appended Phase Progress row; recomputed and refreshed the SIZE BUDGET banner; included the concurrently-modified `sidecar-learning.md`/`regression-state.json` in the same atomic commit (both verified legitimate); commit + push to `factory-artifacts` | `STATE.md` (v3.95), `stories/STORY-INDEX.md`, `sprint-state.yaml`, `cycles/cycle-005/burst-log.md` (this file), `cycles/cycle-005/session-checkpoints.md` |
+
+---
+
 <!-- Repeat for each burst. Maintain chronological order. -->

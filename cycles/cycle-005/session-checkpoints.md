@@ -311,4 +311,42 @@ The human directed a SESSION-WRAP PAUSE checkpoint (wrap skill Step 4) before Wa
 
 ---
 
+## Session Resume Checkpoint (2026-09-09, v3.94) — cycle-005 F4 Wave 2 READY/next (SESSION-WRAP PAUSE) — SUPERSEDED at Burst 8 (v3.95, F4 WAVE 2 DISPATCH)
+
+**Superseded at:** 2026-09-09, Burst 8 (v3.95) — human-authorized resume of the SESSION-WRAP pause: `pipeline:` set to `ACTIVE`, and cycle-005 Phase F4 Wave 2 (`S-cycle5-mention-resolution-wiring`) DISPATCHED to per-story delivery via the worktree `feat/cycle5-mention-resolution-wiring` (created from `develop` @ `5b00b31e`). This checkpoint is archived to make room for the dispatch checkpoint per the state-manager's single-latest-checkpoint-in-STATE.md convention.
+
+### Spec Versions
+
+| Artifact | Version |
+|----------|---------|
+| STATE.md | 3.94 |
+| total_bcs | 754 |
+| VP count | 76 |
+| holdout scenarios | 118 |
+| total_stories | 175 |
+
+### State
+
+| Field | Value |
+|-------|-------|
+| **Date** | 2026-09-09 |
+| **Position** | cycle-005 (`adf-mentions`) Phase **F4** (delta implementation) — Wave 1 (`S-cycle5-mention-pure-conversion`) **MERGED** via the >120-mutant escape-hatch **ADMIN-BYPASS** (**DEC-352**, PR #778 @ `708c8b32`). Standalone maintenance PR #793 also **MERGED** @ `5b00b31e`. `pipeline:` **PAUSED** (SESSION-WRAP, wrap skill Step 4). Wave 2 (`S-cycle5-mention-resolution-wiring`) **READY/next**, dependency SATISFIED, NOT yet dispatched. |
+| **Convergence counter** | N/A — a clean between-waves resting point, no active adversarial/convergence loop. |
+| **In-flight work** | None — no story mid-TDD, no open PRs, no sub-agent steps abandoned this wrap. |
+| **Pending human decisions/blockers** | Wave 2 kickoff timing (this wrap = pause chosen); the `mutants-nightly.yml` manual-trigger offer; the dynamic-shields badge (settled DEFERRED); the `CLAUDE_AUTOCOMPACT_PCT_OVERRIDE` advisory. No blockers. |
+| **WIP branches** | None — all feature branches merged + deleted. |
+| **Next step (as recorded at this checkpoint)** | Dispatch Wave 2 (`S-cycle5-mention-resolution-wiring`) via the standard per-story-delivery TDD pipeline, including the human-required live-Jira E2E round-trip acceptance test (`H-NEW-MENTION-009`), not yet started. |
+
+### Resume Prompt (as recorded at this checkpoint)
+
+```
+/vsdd-factory:rehydrate-wave then /vsdd-factory:next-step
+```
+
+### What actually happened next (recorded for continuity, not part of the original checkpoint)
+
+The human authorized resuming the pause and dispatching Wave 2 (`S-cycle5-mention-resolution-wiring`) to the standard per-story-delivery pipeline the same day — the worktree `feat/cycle5-mention-resolution-wiring` was confirmed created from `develop` @ `5b00b31e`, and by the time this burst's commit landed, concurrent test-writer/implementer activity was already observable in that worktree. See the live checkpoint in `STATE.md` (v3.95) for the full account, and `cycles/cycle-005/burst-log.md` Burst 8 for this state-manager burst's own actions.
+
+---
+
 <!-- Repeat for each archived checkpoint. Maintain chronological order. -->
