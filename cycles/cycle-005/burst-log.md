@@ -331,4 +331,49 @@ traces_to: STATE.md
 
 ---
 
+## Burst 7 — SESSION-WRAP PAUSE checkpoint (2026-09-09)
+
+**Parent-commit:** `5b00b31e`-era `.factory` factory-artifacts tip immediately before this burst (Burst 6's own commit).
+
+**Trigger:** Human directed the state-manager to execute the wrap skill's Step 4 PAUSE checkpoint on `.factory/STATE.md` — make pipeline state durable so the session can be cleared and resumed safely, without losing progress. No pipeline work (no new story, no new merge) occurred between Burst 6 and this burst.
+
+**Actions taken:**
+
+1. **Frontmatter:** `pipeline:` `ACTIVE` → `PAUSED`. `timestamp:` refreshed to the pause instant (2026-09-09T19:06:33Z). `phase:` rewritten to begin with `PAUSED 2026-09-09.` followed by the unchanged pipeline position (cycle-005 Phase F4 — Wave 1 MERGED via DEC-352, standalone maintenance PR #793 MERGED, Wave 2 READY/next NOT yet dispatched; `develop` @ `5b00b31e`). `current_step:` rewritten as a `SESSION-WRAP-PAUSE-2026-09-09` step description, preserving the `D-chain cite D-053 latest brownfield.` prefix and the `→1→3→0→2` trajectory-tail token, per the verbatim-strict chain convention. `last_amended:` full overwrite (BC-5.45.001 write-path discipline) recording the pause. `version:` `3.93` → `3.94` (exactly one bump).
+2. **Archived** the v3.93 Session Resume Checkpoint to `cycles/cycle-005/session-checkpoints.md` with a "Superseded at" note, BEFORE writing the new one — see that file's newest entry.
+3. **Wrote exactly one new** `## Session Resume Checkpoint` (v3.94) in `STATE.md` with all six required fields (date + pipeline position, convergence counter = N/A at a clean resting point, in-flight work = NONE, pending human decisions/unresolved incl. the open `mutants-nightly.yml` manual-trigger offer and the `CLAUDE_AUTOCOMPACT_PCT_OVERRIDE` advisory, WIP branches = none, resume command).
+4. **Appended** a new Phase Progress row `SESSION-WRAP-PAUSE-2026-09-09` (COMPLETE, agent state-manager) recording the pause as a bookkeeping event, not a phase/story gate.
+5. **Recomputed** `wc -l .factory/STATE.md` after the Write and refreshed the SIZE BUDGET banner's line-count claim and dual-margin figures to match exactly.
+6. **Included** the concurrently-modified `.factory/sidecar-learning.md` in this same atomic commit — verified its diff (two appended `Session ended at … (awaiting /session-review)` marker lines, consistent with the file's existing append-only pattern) is a legitimate factory learning artifact, not stray/unrelated content.
+7. Updated Current Phase Steps (fresh Burst-7 table; Burst 6's table folded into the existing pointer note), Convergence Status / Concurrent Cycles (pipeline status reflected as PAUSED), and Constraints Carried Forward (new Burst-7 paragraph) for consistency with the frontmatter change. No DEC minted — a pause is bookkeeping, not a phase-gate or story decision. Counts unchanged (754 BCs / 76 VPs / 118 holdouts / 175 stories); `activation_head`/`activation_version` unchanged (`a9168212`/`v0.7.0-dev.5`).
+
+**Adversary verdict:** N/A this state-manager burst — no `adversary` agent dispatched; this is a pure bookkeeping pause, not a spec/code change.
+
+**Files touched (Dim-1): 4 unique files/paths this burst, all committed in the state-manager's own single atomic commit**
+
+- `STATE.md` (v3.94 — full-content Write)
+- `cycles/cycle-005/session-checkpoints.md` (v3.93 checkpoint archived with "Superseded at" note)
+- `cycles/cycle-005/burst-log.md` (this entry)
+- `sidecar-learning.md` (pre-existing uncommitted append from earlier in the session — two session-end markers — included in this atomic commit per PC-12, working tree must end clean)
+
+**Dim-2 Attestation:** No count-verification script applies — counts unchanged (754 BCs / 76 VPs / 118 holdouts / 175 stories, carried forward verbatim). This burst authored no spec/story artifact.
+
+**Dim-5 Attestation:** N/A — no binary/WASM artifact produced by this `.factory/` commit (bookkeeping-only, no build).
+
+**Dim-6 Attestation:** No `src/`/`tests/` change committed by this state-manager burst.
+
+**Dim-7 Attestation:** N/A — no CI-relevant change in this `.factory/` commit.
+
+**Codifications:** No DEC minted this burst (a pause is bookkeeping, not a phase-gate or story decision). Recorded (not decided): `pipeline: PAUSED`, the archived v3.93 checkpoint, and the new v3.94 checkpoint's resume point.
+
+**Closes:** nothing — this burst closes no phase, wave, or standing item. **Does NOT close:** cycle-005 itself, Phase F4, Wave 2's dispatch, or any Drift/Standing item (`INTERIM-SHIPPABILITY-WINDOW-CYCLE5-W1`, `CYCLE5-W1-LOCAL-MUTATION-VERIFY-PARTIAL`, the 5 remaining S-7.02 deferrals) — all unchanged.
+
+### Details
+
+| Agent | Task | Output |
+|-------|------|--------|
+| state-manager | Executed the wrap skill's Step 4 SESSION-WRAP PAUSE checkpoint: `pipeline: PAUSED`, refreshed timestamp, verbatim-strict `phase:`/`current_step:`/`last_amended:` chain, `version:` 3.93→3.94; archived v3.93 checkpoint, wrote v3.94 checkpoint (all 6 fields); appended Phase Progress row; recomputed and refreshed the SIZE BUDGET banner; included the pre-existing `sidecar-learning.md` diff in the same atomic commit (verified legitimate); commit + push to `factory-artifacts` | `STATE.md` (v3.94), `cycles/cycle-005/burst-log.md` (this file), `cycles/cycle-005/session-checkpoints.md`, `sidecar-learning.md` |
+
+---
+
 <!-- Repeat for each burst. Maintain chronological order. -->

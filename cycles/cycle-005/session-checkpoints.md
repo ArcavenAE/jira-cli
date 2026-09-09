@@ -273,4 +273,42 @@ checkpoint in `STATE.md` (v3.93) for the full account, and
 
 ---
 
+## Session Resume Checkpoint (2026-09-09, v3.93) — cycle-005 F4 Wave 2 READY/next (standalone PR #793 also merged) — SUPERSEDED at Burst 7 (v3.94, SESSION-WRAP PAUSE)
+
+**Superseded at:** 2026-09-09, Burst 7 (v3.94) — SESSION-WRAP PAUSE checkpoint (wrap skill Step 4): `pipeline:` set to `PAUSED`. No pipeline-position change in substance occurred between v3.93 and this pause — Wave 2 (`S-cycle5-mention-resolution-wiring`) remains READY/next, dependency SATISFIED, NOT yet dispatched. This checkpoint is archived to make room for the pause checkpoint per the state-manager's single-latest-checkpoint-in-STATE.md convention, not because any pipeline work occurred.
+
+### Spec Versions
+
+| Artifact | Version |
+|----------|---------|
+| STATE.md | 3.93 |
+| total_bcs | 754 |
+| VP count | 76 |
+| holdout scenarios | 118 |
+| total_stories | 175 |
+
+### State
+
+| Field | Value |
+|-------|-------|
+| **Date** | 2026-09-09 |
+| **Position** | cycle-005 (`adf-mentions`) Phase **F4** (delta implementation) — Wave 1 (`S-cycle5-mention-pure-conversion`) **MERGED** via the >120-mutant escape-hatch **ADMIN-BYPASS** (**DEC-352**, PR #778 @ `708c8b32`). Standalone maintenance PR #793 (`ci/mutation-nightly-visibility`) also **MERGED** @ `5b00b31e` (`708c8b32`→`5b00b31e`), closing cycle-006 S-7.02 deferral `CYCLE6-LOW-STALE-CHECK-KILL-RATE-COMMENTS` and settling the badge-visibility research outcome (option #1 landed; dynamic badge DEFERRED). Wave 2 (`S-cycle5-mention-resolution-wiring`) **READY/next**, dependency SATISFIED, NOT yet dispatched. |
+| **Convergence counter** | Wave 1's per-story adversarial convergence reached 3-consecutive-clean pre-merge (Burst 4) and stands unmodified. Wave 2's own convergence not yet begun. PR #793's review (pr-reviewer APPROVE) was produced by the concurrent PR-review workflow, not a factory adversarial-convergence loop. |
+| **In-flight work** | None — Wave 1 and PR #793 both fully delivered/merged; Wave 2 unblocked but not yet dispatched to an implementer. |
+| **Pending human decisions/blockers** | None outstanding for either merge. Wave 2 dispatch needs no further human gate to begin (DEC-347 already approved the 2-wave decomposition). Zero Blocking Issues open. |
+| **WIP branches** | `feat/cycle5-mention-pure-conversion` and `ci/mutation-nightly-visibility` both merged and deleted post-merge. No new WIP branch yet for Wave 2. |
+| **Next step (as recorded at this checkpoint)** | Dispatch Wave 2 (`S-cycle5-mention-resolution-wiring`) via the standard per-story-delivery TDD pipeline (test-writer → implementer → demo-recorder → pr-manager → devops-engineer), including the human-required live-Jira E2E round-trip acceptance test (`H-NEW-MENTION-009`), not yet started. |
+
+### Resume Prompt (as recorded at this checkpoint)
+
+```
+/vsdd-factory:rehydrate-wave then /vsdd-factory:next-step
+```
+
+### What actually happened next (recorded for continuity, not part of the original checkpoint)
+
+The human directed a SESSION-WRAP PAUSE checkpoint (wrap skill Step 4) before Wave 2 was dispatched — no pipeline work occurred between this checkpoint and the pause; the pause exists to make pipeline state durable across a session boundary, not to record new progress. See the live checkpoint in `STATE.md` (v3.94) for the full account, and `cycles/cycle-005/burst-log.md` Burst 7 for this state-manager burst's own actions.
+
+---
+
 <!-- Repeat for each archived checkpoint. Maintain chronological order. -->
