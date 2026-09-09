@@ -1,0 +1,143 @@
+name: Mutants Nightly (Full Scope)
+
+# cycle-006 mutants-ci-sharding — advisory, non-diff-scoped full mutation
+# run. Matches .factory/phase-f2-spec-evolution/cycle-006/ci-yml-design.md
+# §4. Never wired into `ci-gate.needs` or branch protection, and declares
+# no job named `ci-gate`. Advisory only — this workflow must never fail a
+# merge; see `mutants-nightly-report`'s own note on why its summary step
+# always exits 0.
+
+on:
+  schedule:
+    - cron: "0 8 * * *"  # 08:00 UTC nightly — offset from e2e.yml's 06:00
+                          # cron to avoid runner-queue contention between
+                          # the two scheduled jobs.
+  workflow_dispatch: {}   # manual trigger for on-demand full runs
+
+jobs:
+  mutants-full:
+    name: Mutation Testing (Full, Advisory)
+    runs-on: ubuntu-latest
+    # No pull_request trigger at all in `on:` above; this belt-and-suspenders
+    # if: mirrors e2e.yml's own convention (never run this against a PR
+    # even if `on:` is later edited).
+    if: github.event_name != 'pull_request'
+    timeout-minutes: 240  # full, non-diff-scoped scope; advisory, not
+                           # required, so a long/occasionally-timing-out run
+                           # here is acceptable (does not block any merge).
+    strategy:
+      fail-fast: false
+      matrix:
+        shard: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15]  # N=16
+        # heavier sharding than the per-PR N=8 — full examine_globs scope
+        # is materially larger than a typical --in-diff PR slice.
+    steps:
+      - name: Harden the runner (Audit all outbound calls)
+        uses: step-security/harden-runner@05e31511f85b41b11d1cf0ef85d0992719546e2c # v2.21.0
+        with:
+          egress-policy: audit
+
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - uses: taiki-e/install-action@5b4d68e2e660441203ab128a23676f1e4faf1532 # v2.86.3
+        with:
+          tool: cargo-mutants@27.1.0
+
+      - uses: Swatinem/rust-cache@f0d9c3887740aee45f6153b24b3a6b815192ec16 # v2
+
+      - name: Run full mutation scope on this shard
+        continue-on-error: true
+        run: |
+          # NO --in-diff — full examine_globs scope, per docs/specs/
+          # cargo-mutants-policy.md's own note that --in-diff is "not a
+          # substitute for a full run" (weakened coverage of UNCHANGED
+          # code is invisible to the per-PR diff-scoped gate).
+          cargo mutants --shard ${{ matrix.shard }}/16 --sharding slice \
+            --jobs 2 --baseline skip --timeout 240
+
+      - name: Upload shard outcomes
+        if: always()
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
+        with:
+          name: mutants-nightly-shard-outcomes-${{ matrix.shard }}
+          path: mutants.out/outcomes.json
+          if-no-files-found: warn
+          retention-days: 7  # longer retention than the per-PR shards —
+                              # useful for trend analysis across nightly runs.
+
+  mutants-nightly-report:
+    name: Mutation Testing (Full, Report)
+    runs-on: ubuntu-latest
+    needs: [mutants-full]
+    if: always()
+    timeout-minutes: 15
+    steps:
+      - name: Harden the runner (Audit all outbound calls)
+        uses: step-security/harden-runner@05e31511f85b41b11d1cf0ef85d0992719546e2c # v2.21.0
+        with:
+          egress-policy: audit
+
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8
+        with:
+          pattern: mutants-nightly-shard-outcomes-*
+          path: ${{ runner.temp }}/shards
+
+      - name: Summarize pooled kill rate (advisory — never fails the workflow)
+        run: |
+          # Mirrors scripts/mutants-aggregate.sh's Step 3/Step 6 pooled
+          # INV-AGG summation, minus every fail-closed `return 1` branch —
+          # this job is advisory only and must never exit non-zero, since
+          # this workflow is not wired into ci-gate.needs and must never
+          # block a merge. See mutants-aggregate's per-shard-guard logic in
+          # ci.yml for the summation algorithm this step mirrors.
+          set +e
+          # (cycle-006 F4 review round 1, F-PC-LOW-003) source the same
+          # PATH-shim-resistant jq resolver the decision-path scripts use,
+          # for consistency — this workflow is advisory-only and never
+          # blocks a merge, so a resolution failure here just falls back
+          # to bare `jq` rather than aborting the summary.
+          # shellcheck source=lib/trusted-jq.sh
+          source scripts/lib/trusted-jq.sh
+          jq_bin="jq"
+          if resolved_jq_bin=$(resolve_trusted_jq); then
+            jq_bin="${resolved_jq_bin}"
+          else
+            echo "NOTE: resolve_trusted_jq could not resolve a trusted jq binary — falling back to bare 'jq' (advisory summary only)."
+          fi
+          caught_total=0; missed_total=0; timeout_total=0; unviable_total=0
+          shopt -s nullglob
+          for f in "${{ runner.temp }}"/shards/mutants-nightly-shard-outcomes-*/outcomes.json; do
+            if ! "${jq_bin}" empty "${f}" 2>/dev/null; then
+              echo "NOTE: ${f} is missing or not valid JSON — skipped (advisory summary only)."
+              continue
+            fi
+            caught=$("${jq_bin}" '.caught // 0' "${f}")
+            missed=$("${jq_bin}" '.missed // 0' "${f}")
+            timeout=$("${jq_bin}" '.timeout // 0' "${f}")
+            unviable=$("${jq_bin}" '.unviable // 0' "${f}")
+            [[ "${caught}"   =~ ^[0-9]+$ ]] || caught=0
+            [[ "${missed}"   =~ ^[0-9]+$ ]] || missed=0
+            [[ "${timeout}"  =~ ^[0-9]+$ ]] || timeout=0
+            [[ "${unviable}" =~ ^[0-9]+$ ]] || unviable=0
+            caught_total=$((caught_total + caught))
+            missed_total=$((missed_total + missed))
+            timeout_total=$((timeout_total + timeout))
+            unviable_total=$((unviable_total + unviable))
+          done
+
+          total_scored=$((caught_total + missed_total + timeout_total + unviable_total))
+          echo "Nightly pooled summary: ${caught_total} caught / ${missed_total} missed / ${timeout_total} timeout / ${unviable_total} unviable (${total_scored} total)"
+
+          killable=$((caught_total + missed_total + timeout_total))
+          if [ "${killable}" -eq 0 ]; then
+            echo "NOTE: 0 killable mutants scored across all nightly shards."
+          else
+            kill_rate=$(( (caught_total * 100) / killable ))
+            echo "Nightly pooled kill rate: ${kill_rate}% (target >= 90%, advisory only — never blocks a merge)"
+            if [ "${kill_rate}" -lt 90 ]; then
+              echo "::warning::Nightly full-scope pooled kill rate ${kill_rate}% is below the 90% target — advisory only, does not fail this workflow."
+            fi
+          fi
+          exit 0

@@ -129,16 +129,42 @@ simply forgotten:
 
 ## Kill-Rate Target
 
-**90% on the PR diff scope.** The CI `mutants` job fails if the kill rate is below 90%.
+**90% on the PR diff scope.** The required `ci-gate.needs` member `mutants-aggregate` fails
+the gate if the POOLED kill rate across all 8 shards is below 90%.
 
 Rationale: with the inline proptest from S-345 (BC-3.4.006) and the integration tests
 in `tests/issue_bulk_pr2.rs` and `tests/issue_bulk.rs`, the bulk + create paths have
 strong existing coverage. Mutation testing surfaces gaps where assertions are too loose.
 
-The 90% threshold lives in the CI YAML `Check kill rate` step (not in `.cargo/mutants.toml`)
-for CI-artifact visibility: reviewers can read the threshold without parsing TOML.
+**Location (cycle-006 correction):** there is no `Check kill rate` CI YAML step and no
+single deciding `mutants` job today — both were retired by cycle-006's sharded design
+(see **Sharded Mutation Gate (cycle-006)** below). The 90% threshold now lives in
+`scripts/mutants-aggregate.sh`'s Step 6 (`kill_rate=$(( (caught_total * 100) / killable ))`;
+`if [ "${kill_rate}" -lt 90 ]`), invoked from `ci.yml`'s `mutants-aggregate` job's
+"Evaluate sharded mutation gate" step — a shell script, not inline CI YAML, for the same
+CI-artifact-visibility rationale: reviewers can read the threshold without parsing YAML
+`env:`/`with:` blocks either way.
 
 ## Timeout Parameters (MUTATION-CI-TIMEOUT, 2026-06-28; corrected F5 adversarial pass)
+
+**Partially superseded by cycle-006 (I-MED, F4 review round 8) — read before relying on
+the CI-topology claims below.** This section predates cycle-006's sharded design (see
+**Sharded Mutation Gate (cycle-006)** below) and describes a single `mutants` CI job
+running the whole PR diff at `--jobs 4` with a 240-minute job timeout. That topology is
+retired. What remains CURRENT from this section: the `--timeout 240` per-mutant ceiling
+itself and its full derivation (measured baseline, runner-variance headroom, the
+floor-vs-ceiling correction for `minimum_test_timeout`/`timeout_multiplier`) — the shard
+job's "Run mutation tests on this shard" step passes this exact same `--timeout 240` value
+today. What is now HISTORICAL, describing the pre-cycle-006 topology only: **F-2:
+Cancelled Job Semantics** (below — the shard job is no longer a direct `ci-gate.needs`
+member and `ALLOWED_SKIPS` no longer contains an entry for it; see that subsection's own
+correction), the **CI Budget Model** table and its `--jobs 4` / 240-minute-single-job
+scale (the shard job's own `timeout-minutes` is 60, not 240 — "a stuck SHARD fails fast,"
+per `ci.yml`'s own comment on that job — and 8 shards run in parallel at `--jobs 2` each,
+not one job at `--jobs 4`), the **Oversized-Diff Signal** subsection (below — see its own
+correction pointing at the current `>120`-mutant escalation threshold), and the
+**Flakiness Risk Assessment** subsection (below — its `--jobs 4` and "200+ mutants" figures
+are pre-sharding scale).
 
 ### CONFIRMED CRITICAL — Previous Config Was Inverted
 
@@ -316,6 +342,29 @@ The correct response to a `cancelled` mutants job is:
 Do NOT increase `timeout-minutes` beyond 240 to accommodate oversized diffs. Do NOT
 treat a budget-exceeded cancellation as a flaky check.
 
+**Corrected for cycle-006 (I-MED, F4 review round 8):** the paragraphs above describe the
+pre-cycle-006 single-`mutants`-job design, retained as history. Under the sharded design
+(see **Sharded Mutation Gate (cycle-006)** below), `mutants` (the 8-shard matrix) is
+**not** itself a `ci-gate.needs` member — `mutants-aggregate` is, and its `if: always()`
+means it always runs and never reports `skipped`, so `ALLOWED_SKIPS` contains **no** entry
+for either job today (`&[]` in `tests/ci_gate_completeness.rs::PINNED_ALLOWED_SKIP_IF_
+EXPRESSIONS`, per CLAUDE.md's CI Gate scope summary). A single shard job being
+`cancelled` (its own `timeout-minutes: 60` is far tighter than the old single job's 240,
+specifically so "a stuck SHARD fails fast," per `ci.yml`'s own comment on that job) does
+not, by itself, propagate to `ci-gate` via job-status inheritance the way it used to — the
+`mutants-aggregate` job still runs (`if: always()`) and Step 2's sentinel-based
+completeness check (INV-COMPLETE) is what fails the gate closed: a cancelled or crashed
+shard never uploads its status sentinel (or uploads one whose `run_outcome` is not
+`success`), and Step 2 treats a missing-or-failed sentinel as a hard FAIL, not a silent
+skip. **The end result is the same as this section's original conclusion** — an
+incomplete mutation run blocks merge, not a flaky pass — but the MECHANISM is now
+sentinel-based completeness accounting inside `mutants-aggregate.sh`, not `ci-gate`
+directly observing a `cancelled` job status on `mutants` itself. The two admin-bypass /
+split-the-PR remedies below are unchanged and still apply; the escalation threshold
+(`>120` in-diff mutants, INV-ESCALATE, see **Sharded Mutation Gate (cycle-006)** below) is
+now the primary forcing function for an oversized diff, reached well before any shard
+would plausibly hit its own 60-minute budget.
+
 ### `--baseline=skip` and Path B
 
 When cargo-mutants runs with `--baseline=skip` (required for sharding), `timeout_multiplier`
@@ -333,6 +382,19 @@ on every shard command, since `timeout_multiplier` is not available under `--bas
 See research: `.factory/research/mutation-ci-perf-2026-06-28.md` §4.
 
 ## CI Gate: Required Check (MUTATION-CI-TIMEOUT, 2026-06-28)
+
+**Superseded by cycle-006 (I-MED, F4 review round 8) — "Promotion to Hard-Required" and
+"Push-Event Safety" immediately below describe the pre-cycle-006 single-`mutants`-job
+design and are retained as history, not current fact.** See **Sharded Mutation Gate
+(cycle-006)** below for the current, authoritative `ci-gate.needs` membership and
+skip-tolerance configuration; the corrected summary: `ci-gate.needs` today ends in
+`mutants-aggregate`, not a bare `mutants` entry — the bare `mutants` job (the 8-shard
+matrix) is a dependency of `mutants-aggregate` (`needs: [mutants-plan, mutants]`), not a
+direct `ci-gate.needs` member itself — and `ALLOWED_SKIPS` is EMPTY (`&[]`) today, since
+`mutants-aggregate` runs `if: always()` and resolves a push-event no-op as an ordinary
+`exit 0` inside its own Step 0 rather than via a job-level `if:` short-circuit, so it
+never reports `skipped` to GitHub Actions at all. There is currently no `ci-gate.needs`
+member that needs an `ALLOWED_SKIPS` entry.
 
 ### Promotion to Hard-Required
 
@@ -363,6 +425,18 @@ is unchanged.
 
 ### Oversized-Diff Signal
 
+**Superseded by cycle-006 (I-MED, F4 review round 8).** The paragraph below describes the
+pre-cycle-006 single-job budget (a ~400+ mutant PR timing out a single 240-minute job).
+Under the sharded design, the primary forcing function for an oversized diff is the
+`>120`-in-diff-mutant escalation threshold (`ESCALATION_THRESHOLD=120`, INV-ESCALATE —
+see **Sharded Mutation Gate (cycle-006)** below) — the comparison is `-gt 120`, so
+escalation begins at 121+ in-diff mutants (120 itself does not escalate), not ~400 — and
+resolved by `mutants-aggregate`'s Step 1 as an ordinary CI failure BEFORE any shard job is
+even scheduled — not by a job timing out after running. A single shard job's own
+`timeout-minutes: 60` budget being exceeded (a genuinely slow shard, independent of the
+escalation threshold) is covered by the corrected **F-2: Cancelled Job Semantics** above,
+not by this subsection. The retired framing below is kept for historical context only:
+
 A PR that generates ~400+ mutants and times out the 240-minute job **is not a flakiness
 event** — it is a forcing function to keep PR diffs focused, consistent with the
 `--in-diff` philosophy. The correct response is to split the PR into smaller, more
@@ -379,6 +453,36 @@ incentive to resolve async hang mutations (via `#[mutants::skip]` with justifica
 by refactoring the code to be mutation-testable) rather than silently ignoring them.
 
 ### F-3: Positive-Coverage Assertion (IMPLEMENTED, corrected by F5 adversarial pass)
+
+**Superseded by cycle-006 (I-MED, F4 review round 8) — the shell excerpts below describe
+a retired, single-job "Check kill rate" step that no longer exists.** The problem
+statement, the F5 false-RED correction, and the underlying PRINCIPLE (test the OVERALL
+diff size, not a per-file scoped count) are all still accurate and still the reasoning
+behind the current implementation. What changed is WHERE and HOW: this guard now runs as
+`scripts/mutants-aggregate.sh`'s Step 5 (see **Sharded Mutation Gate (cycle-006)** and
+bullet 5 of **Future Path: Job Sharding (Path B) — LANDED** below for the full account of
+what changed vs. the original sharding proposal), and its discriminator is `total_scored`
+(the shards' own pooled sum, already reconciled against `MUTANT_COUNT` by Step 4) being
+`== 0` — NOT a direct `[ ! -f mutants.out/outcomes.json ]` check on a single file, since
+there is no longer a single `outcomes.json` to check for absence. `OVERALL_DIFF_LINES` is
+still consulted, but only to explain WHY `total_scored` is legitimately zero, never as the
+primary completeness signal (INV-COMPLETE's sentinel-presence check and INV-AGG's
+`MUTANT_COUNT` reconciliation already rule out a shard crash or plan/execution mismatch by
+the time Step 5 runs). Current mechanism, byte-accurate:
+```bash
+if [ "${total_scored}" -eq 0 ]; then
+  if [ "${OVERALL_DIFF_LINES:-0}" -eq 0 ]; then
+    echo "FAIL: 0 mutants scored (MUTANT_COUNT=0, already reconciled at Step 4) AND overall diff is EMPTY."
+    echo "      Possible base-ref drift — same F-3 signature as the"
+    echo "      pre-sharding single-job design."
+    return 1
+  fi
+  echo "OK: 0 mutants scored — MUTANT_COUNT=0 (reconciled at Step 4; this is the only way to reach 0 scored mutants under the restored hard fail) — non-empty diff produced no mutable lines in examine_globs files (comment-only, whitespace, docs-only, or non-scoped-file PR)."
+  return 0
+fi
+```
+The pre-cycle-006 problem statement, F5 correction, and single-job shell excerpts below
+are retained as history.
 
 **Problem (F-3 MEDIUM [process-gap]):** When the PR diff resolves empty via base-ref
 drift (e.g., the feature branch was rebased but `git diff origin/...HEAD` produces an
@@ -436,19 +540,125 @@ guard is needed.
 
 ### Flakiness Risk Assessment
 
-The flakiness risk of a required `mutants` job is moderate:
+**Partially superseded by cycle-006 (I-MED, F4 review round 8):** items 3 and 4 below
+describe pre-sharding scale/parallelism and are retained as history — see the corrected
+figures inline. Items 1 and 2 are unaffected by sharding and remain current as written.
+
+The flakiness risk of the required mutation gate is moderate:
 
 1. **GitHub Actions runner performance variability:** ubuntu-latest runners vary in CPU
    speed by ~10–20%. The `--timeout 240` absolute cap provides adequate headroom for the
    measured 133–145s baseline on the slowest plausible runner (145s × 1.2 = ~174s, well
-   under 240s). See **Absolute Timeout Ceiling** above for the full derivation.
-2. **crates.io download reliability:** `taiki-e/install-action` downloads cargo-mutants;
-   `Swatenim/rust-cache` caches the binary after first install, limiting exposure.
+   under 240s). See **Absolute Timeout Ceiling** above for the full derivation. This
+   ceiling is unchanged by sharding — every shard's "Run mutation tests on this shard"
+   step passes the same `--timeout 240`.
+2. **crates.io download reliability:** `taiki-e/install-action` downloads cargo-mutants
+   (now pinned to the exact release `cargo-mutants@27.1.0` — see **cargo-mutants Version
+   Pin** above); `Swatinem/rust-cache` caches the binary after first install, limiting
+   exposure. Each of the 8 shard jobs, plus `mutants-plan`, runs its own install step.
 3. **Parallel wiremock port contention:** parallel mutant runs start their own test
-   processes and wiremock servers. This is the pre-existing behavior at `--jobs 4`; no
-   new risk introduced by making the job required.
-4. **Very large diffs (200+ mutants):** this causes a legitimate budget-exceeded
-   cancellation, not flakiness. Treat as a split-PR signal (see Oversized-Diff Signal).
+   processes and wiremock servers. Corrected scale: each of the 8 shard jobs runs at
+   `--jobs 2` (not a single job at `--jobs 4`); no new risk introduced by making the gate
+   required.
+4. **Very large diffs (>120 in-diff mutants):** corrected threshold — the sharded design's
+   `ESCALATION_THRESHOLD=120` (INV-ESCALATE) routes an oversized diff to an ordinary,
+   actionable CI failure at `mutants-plan`, before any shard job is even scheduled — not a
+   budget-exceeded cancellation after running (that pre-sharding framing, "200+ mutants,"
+   is retired; see the corrected **Oversized-Diff Signal** above). Treat escalation as the
+   split-PR signal today.
+
+## Sharded Mutation Gate (cycle-006)
+
+**This is the authoritative, current description of the mutation gate's CI topology and
+decision logic.** It supersedes the single-`mutants`-job design described in **CI
+Integration** below (retained there as history) and in the retired `Check kill rate` step
+referenced in the pre-cycle-006 text elsewhere in this document. Every claim below is
+verified directly against `scripts/mutants-aggregate.sh` and `.github/workflows/ci.yml` as
+shipped, not carried forward from planning documents.
+
+### Topology
+
+Three jobs, always in this order, all PR-only:
+
+1. **`mutants-plan`** (`if: github.event_name == 'pull_request'`) — computes
+   `git diff origin/<base_ref>...HEAD` ONCE, uploads it as the `mutants-diff-file`
+   artifact (shared, byte-identical, across every shard), and pre-counts in-diff mutants
+   via `cargo mutants --list --in-diff <diff>` (a listing-only invocation — it does not
+   execute the PR's code). Outputs: `escalated` (bool), `mutant_count` (the pre-count),
+   `overall_diff_lines`.
+2. **`mutants`** (matrix, `shard: [0..7]`, N=8; `if: github.event_name == 'pull_request'
+   && needs.mutants-plan.outputs.escalated != 'true'`) — each shard runs `cargo mutants
+   --in-diff <diff> --shard <k>/8 --sharding slice --jobs 2 --baseline skip --timeout 240`
+   with `continue-on-error: true` (a shard reporting missed/timeout mutants is routine
+   output, not a shard-job failure). Every shard unconditionally (`if: always()`) writes
+   and uploads a status sentinel (`{"shard_index", "run_outcome", "has_outcomes"}`, keyed
+   off `steps.run-mutants.outcome` — NOT `.conclusion`, which always reads `success` under
+   `continue-on-error: true`) and its `mutants.out/outcomes.json`.
+3. **`mutants-aggregate`** (`needs: [mutants-plan, mutants]`, `if: always()` — this job
+   NEVER reports `skipped` to GitHub Actions; a push-event no-op is resolved as an
+   ordinary `exit 0` INSIDE `scripts/mutants-aggregate.sh`'s Step 0, not via a job-level
+   `if:` short-circuit) — the sole pass/fail arbiter, invoked as `bash
+   scripts/mutants-aggregate.sh`. This is the required `ci-gate.needs` member that
+   replaces the pre-sharding single `mutants` job.
+
+### Pooled kill-rate computation (sum, not average)
+
+`mutants-aggregate.sh`'s Step 3 sums `caught`/`missed`/`timeout`/`unviable` from every
+shard's `outcomes.json` into pooled totals (`caught_total`, `missed_total`,
+`timeout_total`, `unviable_total`) — a POOLED sum across all 8 shards, never an average of
+8 per-shard percentages (which would let a small shard's extreme kill rate skew the
+result). Step 6 then computes:
+
+```
+killable   = caught_total + missed_total + timeout_total   # excludes unviable
+kill_rate  = (caught_total * 100) / killable                # integer division
+FAIL if kill_rate -lt 90                                    # integer comparison, not <=89
+```
+
+`unviable_total` is excluded from the `killable` denominator (an unviable mutant was never
+a real chance to catch a regression); if `killable` is 0 (every scored mutant was
+unviable), the gate passes unconditionally (`OK: N mutant(s) generated, all unviable.`).
+
+### Sentinel-based completeness (INV-COMPLETE) — every shard must report, or fail closed
+
+Step 2 checks, by exact shard index (0-7), that a status sentinel file exists at
+`${STATUS_DIR}/mutants-shard-status-<i>/shard-status-<i>.json` for every one of the 8
+expected shards — a crashed, cancelled, or never-scheduled shard job means its mutants
+were never verified, and the gate FAILS CLOSED rather than silently excluding that shard
+from the denominator. Step 3 then reads each present sentinel's `run_outcome`/
+`has_outcomes` fields to distinguish "this shard legitimately produced 0 mutants"
+(`run_outcome=success`, `has_outcomes=false` — contributes 0, not a failure) from "this
+shard's `run-mutants` step genuinely crashed before producing any `outcomes.json`"
+(anything else with `has_outcomes=false` — a hard FAIL). A sentinel claiming
+`has_outcomes=true` whose `outcomes.json` is missing from the download, or is malformed
+JSON, is also a hard FAIL (sentinel/data desync), never a silent skip.
+
+### Exact-equality `MUTANT_COUNT` reconciliation
+
+Step 4 requires the pooled `total_scored` (the shards' own summed
+`caught+missed+timeout+unviable`, folded in Step 3 from their OWN `outcomes.json` data)
+to equal `MUTANT_COUNT` (`mutants-plan`'s independent `cargo mutants --list --in-diff`
+pre-count) EXACTLY — both an under-count (a dropped, possibly-surviving mutant) and an
+over-count (the shard matrix examined more than was planned) are hard fails, not just the
+under-count direction. Step 6 (the kill-rate decision) is unreachable whenever Step 4
+finds a mismatch. See **Sharded Gate: Residual Trust Boundary** below for what this
+reconciliation does and does not protect against adversarially.
+
+### `>120`-mutant escape hatch (INV-ESCALATE) and escalation
+
+`mutants-plan`'s Step (`Compute diff and mutation plan`) compares its own
+`MUTANT_COUNT` pre-count against a human-reviewed literal, `ESCALATION_THRESHOLD=120`
+(update in the SAME commit as any deliberate change to shard count N or per-shard
+`--timeout`). When `MUTANT_COUNT > 120`, `escalated=true` is set as a job output; the
+`mutants` shard matrix's job-level `if:` then skips the entire matrix
+(`needs.mutants-plan.outputs.escalated != 'true'`), and `mutants-aggregate`'s Step 1
+short-circuits to an ordinary, actionable CI FAILURE — never a silent skip or a silent
+pass — naming two ways forward: split the PR into smaller changes, or (if genuinely large
+and reviewed) a repo admin merges via GitHub's branch-protection "Require approvals"
+bypass, explicitly acknowledging the unverified mutation coverage in the PR description.
+An advisory nightly full-scope workflow (`.github/workflows/mutants-nightly.yml`, N=16,
+non-blocking) still exercises the full mutation surface regardless of how an escalated PR
+is merged.
 
 ## Whitelist Convention
 
@@ -547,6 +757,16 @@ the scoped files and scores below 90% on changed lines will fail CI.
 
 ## Local Invocation
 
+**Note (cycle-006):** the commands below reproduce a single (non-sharded) run
+locally — they remain valid for local iteration and are what an `examine_globs`
+file's own `--file`-scoped run uses. They do NOT reproduce the sharded CI topology
+(`mutants-plan` → 8-shard matrix → `mutants-aggregate`) itself; the pooled kill-rate
+computation, the sentinel-based completeness accounting, and the escalation
+threshold are CI-only behaviors implemented in `scripts/mutants-aggregate.sh` (see
+**Sharded Mutation Gate (cycle-006)** above) and are not exercised by a local single-process run.
+To reproduce one shard's slice locally, add `--shard <k>/8 --sharding slice
+--baseline skip` to the PR-diff-equivalent command below.
+
 Install (one-time):
 
 ```bash
@@ -584,6 +804,15 @@ cargo mutants --file src/api/jira/bulk.rs --jobs 4 --timeout 240
 Results land in `mutants.out/` (excluded from git via `.gitignore`).
 
 ## CI Integration
+
+**Superseded by cycle-006's sharded pipeline — see Sharded Mutation Gate (cycle-006)
+above for the current job names/shapes.** The description below (a single `mutants` job) is
+retained as history; the required `ci-gate.needs` member today is
+`mutants-aggregate`, fed by `mutants-plan` and the 8-shard `mutants` matrix, all
+three PR-only (`mutants-plan`/`mutants`: `if: github.event_name == 'pull_request'`;
+`mutants-aggregate`: `if: always()`, resolving push-event no-ops internally rather
+than via a job-level `if:`). This remains consistent with the `security` job
+pattern and keeps mutation testing cost bounded to the PR review phase.
 
 The `mutants` job in `.github/workflows/ci.yml` runs on PRs only (not pushes to
 `develop` / `main`). This is consistent with the `security` job pattern and keeps
@@ -623,26 +852,57 @@ authoritative for the current gate configuration.
 
 ## Schema-Drift and False-Green Guards
 
-Beyond the base-ref drift guard (F-3) and kill-rate threshold, the `Check kill rate` CI
-step implements several additional guards. These are documented here because they are
-load-bearing correctness invariants of the required gate, and the policy doc must match
-the implemented behavior.
+Beyond the base-ref drift guard (F-3) and kill-rate threshold, `scripts/mutants-
+aggregate.sh`'s per-shard loop (Step 3 of `evaluate_mutants_aggregate`) implements
+several additional guards. These are documented here because they are load-bearing
+correctness invariants of the required gate, and the policy doc must match the
+implemented behavior.
 
-### cargo-mutants Version Pin (`cargo-mutants@27`)
+**Location corrected (I-MED, cycle-006 F4 review round 8):** every guard in this section
+previously described a single "Check kill rate" CI step reading one, unqualified
+`mutants.out/outcomes.json` via a bare `jq` invocation — that step, that file layout, and
+that bare-`jq` usage were all retired by cycle-006's sharded design (see **Sharded
+Mutation Gate (cycle-006)** above). Each guard below now runs once PER SHARD inside
+`scripts/mutants-aggregate.sh`, reading that shard's own downloaded `outcomes.json`
+(`"${f}" = "${SHARD_DIR}/mutants-shard-outcomes-${i}/outcomes.json"`, one per shard index
+`${i}`, 0–7) through the shared, PATH-shim-resistant `"${jq_bin}"` resolver
+(`scripts/lib/trusted-jq.sh::resolve_trusted_jq`), never a bare `jq`. The underlying
+PURPOSE of each guard is unchanged from the single-job design; only the CI-topology
+prose and code excerpts below are corrected to match where they actually run today.
 
-**Trigger:** `taiki-e/install-action` install step in `.github/workflows/ci.yml`.
+### cargo-mutants Version Pin (`cargo-mutants@27.1.0`)
 
-**Mechanism:** The install step pins to `cargo-mutants@27` (major version).
+**Corrected (I-MED, cycle-006 F4 review round 8):** this section previously described a
+major-version-only pin, `cargo-mutants@27`. As of cycle-006 (see the Changelog's
+2026-09-07 entry), the pin was TIGHTENED to the exact release, `cargo-mutants@27.1.0` —
+both `mutants-plan`'s and the `mutants` shard job's `taiki-e/install-action` steps in
+`.github/workflows/ci.yml` pin `tool: cargo-mutants@27.1.0` verbatim (the shard job's
+install step comment reads "same exact pin as mutants-plan"), and
+`scripts/mutants-aggregate.sh`'s own schema-drift FAIL message cites the same exact
+string (`"Pin: cargo-mutants@27.1.0"`, see **Runtime Schema-Drift Guard (H-1)** below).
+The rationale for pinning AT ALL (below) is unchanged; only the pin's precision — major
+version vs. exact release — is corrected here to match what is actually shipped.
 
-**Rationale:** The `Check kill rate` step makes specific assumptions about cargo-mutants
-v27 behavior that could change silently across major versions:
+**Trigger:** `taiki-e/install-action` install steps in `.github/workflows/ci.yml`
+(`mutants-plan` and the `mutants` shard job each carry their own install step, both
+pinned identically).
+
+**Mechanism:** Both install steps pin to `cargo-mutants@27.1.0` (exact release, not a
+major-version range).
+
+**Rationale:** `scripts/mutants-aggregate.sh`'s per-shard loop makes specific assumptions
+about cargo-mutants v27 behavior that could change silently across major (or, given the
+exact pin, any) versions:
 - **outcomes.json top-level summary keys:** `caught`, `missed`, `timeout`, `unviable`,
-  `total_mutants` — all present as top-level integer fields in v27. If a future major
-  version moves these into a nested object (e.g. `summary.caught`), the `// 0` fallbacks
-  in the `jq` extraction would all fire silently, giving a 0-mutant false-green.
+  `total_mutants` — all present as top-level integer fields in v27. If a future version
+  moves these into a nested object (e.g. `summary.caught`), the `// 0` fallbacks in the
+  `"${jq_bin}"` extraction would all fire silently, giving a 0-mutant false-green per
+  shard (closed at runtime by the **Runtime Schema-Drift Guard (H-1)** below, not by the
+  pin alone).
 - **Exit-code semantics:** `0` means all mutants caught or none generated; non-zero means
-  missed mutants, timeouts, or harness errors. The `(outcome, outcomes.json)` matrix logic
-  in `Check kill rate` depends on this invariant.
+  missed mutants, timeouts, or harness errors. The `(run_outcome, has_outcomes)`
+  sentinel-based completeness logic in `scripts/mutants-aggregate.sh`'s Step 2 depends on
+  this invariant.
 - **`--timeout` semantics:** `--timeout` is a CLI-only flag (no `.cargo/mutants.toml`
   equivalent) that supersedes `timeout_multiplier` entirely when present.
 
@@ -652,34 +912,41 @@ empirical refutation section, showing `caught`/`missed`/`timeout`/`unviable`/
 `total_mutants` as top-level integer keys). Exit-code and `--timeout` semantics confirmed
 via source-code analysis in `.factory/research/cargo-mutants-timeout-keys-verification-2026-06-28.md`.
 
-**Impact:** Pinning to `@27` means a silent upstream release of cargo-mutants v28+ with
-incompatible schema or exit-code changes cannot break the required gate without an
-explicit pin-bump that surfaces the change for review.
+**Impact:** Pinning to an exact release means a silent upstream release of cargo-mutants
+(major OR minor/patch) with incompatible schema or exit-code changes cannot break the
+required gate without an explicit pin-bump that surfaces the change for review — strictly
+tighter than the original major-version-only pin this section previously (and
+inaccurately) described as still current.
 
 ### Malformed-JSON Guard
 
-**Trigger:** `outcomes.json` exists but fails `jq empty` parseability check.
+**Trigger:** a shard's `outcomes.json` exists but fails `"${jq_bin}" empty` parseability
+check.
 
-**Mechanism:** Before extracting any fields, the step runs:
+**Mechanism (byte-accurate, `scripts/mutants-aggregate.sh`'s per-shard loop):** before
+extracting any fields, the loop runs:
 ```bash
-if ! jq empty mutants.out/outcomes.json 2>/dev/null; then
-  echo "FAIL: mutants.out/outcomes.json exists but is malformed JSON."
-  exit 1
+if ! "${jq_bin}" empty "${f}" 2>/dev/null; then
+  echo "FAIL: shard ${i}'s outcomes.json exists but is malformed JSON."
+  return 1
 fi
 ```
 
 **Rationale:** cargo-mutants writes `outcomes.json` incrementally. An OOM-kill or
 runner crash mid-write can produce a truncated, syntactically invalid file. Without this
-guard, the subsequent `jq '.caught // 0'` extractions would all return `0` via the `// 0`
-fallback — yielding a false-green zero-mutant result even though mutants were scored.
-The `jq empty` check FAILs the gate rather than silently passing.
+guard, the subsequent `"${jq_bin}" '.caught // 0'` extractions would all return `0` via
+the `// 0` fallback — yielding a false-green zero-mutant result for that shard even
+though mutants were scored. The `"${jq_bin}" empty` check FAILs the shard (and,
+transitively, the whole gate) rather than silently passing.
 
 ### Integer Validation
 
-**Trigger:** Any `jq`-extracted summary field contains a non-integer value.
+**Trigger:** Any `"${jq_bin}"`-extracted summary field, for a given shard, contains a
+non-integer value.
 
 **Mechanism:** After extracting `caught`, `missed`, `timeout`, `unviable`, and
-`total_mutants` via `jq`, each variable is validated with a regex guard:
+`total_mutants` via `"${jq_bin}"` (per shard, inside `scripts/mutants-aggregate.sh`'s
+per-shard loop), each variable is validated with a regex guard:
 ```bash
 [[ "${caught}"        =~ ^[0-9]+$ ]] || caught=0
 [[ "${missed}"        =~ ^[0-9]+$ ]] || missed=0
@@ -697,49 +964,110 @@ kill-rate calculation will then surface the anomaly in a controlled way.
 
 ### Runtime Schema-Drift Guard (H-1)
 
-**Trigger:** `outcomes.json` is valid JSON with a non-empty `.outcomes` array, but all
-five top-level summary keys (`caught`, `missed`, `timeout`, `unviable`, `total_mutants`)
-parsed as `0`.
+**Location corrected (cycle-006, I-MED, F4 review round 8):** this guard no longer lives
+in a single "Check kill rate" CI step reading one `mutants.out/outcomes.json` via bare
+`jq` — that step was retired by cycle-006's sharded design (see **Sharded Mutation Gate
+(cycle-006)** above). It now runs once PER SHARD, inside `scripts/mutants-aggregate.sh`'s
+per-shard loop (Step 3 of `evaluate_mutants_aggregate`), reading each shard's own
+downloaded `outcomes.json` (`"${f}"`, one per shard index `${i}`) through the shared,
+PATH-shim-resistant `"${jq_bin}"` resolver (`scripts/lib/trusted-jq.sh`), not a bare `jq`
+invocation. The guard's underlying PURPOSE — detect a cargo-mutants schema migration that
+silently zeroes out the extracted summary fields — is unchanged; only the trigger
+CONDITION and its surrounding mechanics were previously misdescribed here (see
+**Condition corrected** below).
 
-**Mechanism:**
+**Trigger (as shipped):** a shard's `outcomes.json` is valid JSON, its four scored-summary
+keys (`caught`, `missed`, `timeout`, `unviable`) all extracted as `0` (`_sum_check == 0`),
+AND EITHER its `.outcomes` array is non-empty OR its `total_mutants` field is non-zero —
+either signal alone, independent of the other, is sufficient to fire.
+
+**Mechanism (byte-accurate, `scripts/mutants-aggregate.sh`'s per-shard loop):**
 ```bash
-_outcomes_len=$(jq '(.outcomes // []) | length' mutants.out/outcomes.json 2>/dev/null || echo 0)
+_outcomes_len=$("${jq_bin}" '(.outcomes // []) | length' "${f}" 2>/dev/null || echo 0)
+[[ "${_outcomes_len}" =~ ^[0-9]+$ ]] || _outcomes_len=0
 _sum_check=$((caught + missed + timeout + unviable))
-if [ "${_outcomes_len}" -gt 0 ] && [ "${_sum_check}" -eq 0 ] && [ "${total_mutants}" -eq 0 ]; then
-  echo "FAIL: outcomes.json schema drift detected."
-  exit 1
+if [ "${_sum_check}" -eq 0 ] && { [ "${_outcomes_len}" -gt 0 ] || [ "${total_mutants}" -ne 0 ]; }; then
+  echo "FAIL: shard ${i}'s outcomes.json schema drift detected (non-empty outcomes/total_mutants but all summary keys sum to 0). Pin: cargo-mutants@27.1.0"
+  return 1
 fi
 ```
 
 **Rationale:** This is the fingerprint of a schema migration in which summary keys move
 from the top level into a nested object (e.g. `summary.caught`). When that happens, the
-`jq '.caught // 0'` extractions all return `0` silently (the key does not exist at the
-top level), giving `total_outcomes = 0` → the gate exits 0 as if no mutants ran (false-
-green). The guard detects this by cross-checking: if `outcomes` entries are present but
-all summary totals are zero, the schema has changed. The guard then FAILs the step with an
-actionable message referencing the `@27` pin.
+`"${jq_bin}" '.caught // 0'`-style extractions all return `0` silently (the key does not
+exist at the top level), giving `_sum_check = 0` → without this guard, the shard would
+contribute nothing to the pooled kill-rate denominator as if it legitimately scored zero
+mutants (false-green). The guard detects this by cross-checking: if EITHER the `outcomes`
+array is non-empty OR `total_mutants` is non-zero — i.e. cargo-mutants clearly did produce
+real per-mutant data for this shard, by at least one of the two available signals — while
+all four scored-summary keys nonetheless sum to zero, the schema has changed. The guard
+then FAILs the shard (and, transitively, the whole gate) with an actionable message
+referencing the `cargo-mutants@27.1.0` pin.
+
+**Condition corrected (I-MED, cycle-006 F4 review round 8):** an earlier revision of this
+section showed the trigger as a 3-way logical AND —
+`_outcomes_len -gt 0 AND _sum_check -eq 0 AND total_mutants -eq 0` — requiring
+`total_mutants` to ALSO read `0` before firing. That is NOT what the shipped script does,
+and the difference is not cosmetic: under the AND-shaped condition, a schema migration
+that moved `caught`/`missed`/`timeout`/`unviable` into a nested object while LEAVING
+`total_mutants` at the top level (so it still extracts correctly, non-zero) would leave
+`total_mutants -eq 0` false and the guard would never fire — exactly the false-green this
+guard exists to close, undetected. The shipped condition ORs the two positive signals
+(`_outcomes_len -gt 0` OR `total_mutants -ne 0`) instead of requiring both a positive
+signal AND a zeroed `total_mutants`, so either signal alone is sufficient — closing that
+gap. This section previously stated the AND-shaped condition as fact; it did not describe
+a real, then-later-fixed defect in the script itself (the script's `||` was not one of the
+findings' subjects) — it was this documentation that was wrong relative to the code from
+the moment this section was written for the sharded design.
 
 **Why it cannot produce false-REDs on legitimate runs:**
-- A genuine zero-mutant run produces **no** `outcomes.json` at all — this branch is never
-  reached.
-- A genuine all-unviable run has `unviable > 0`, so `_sum_check > 0` — the condition
+- A genuine zero-mutant shard produces **no** `outcomes.json` at all — this branch is
+  never reached (handled separately by Step 2's sentinel-based completeness check).
+- A genuine all-unviable shard has `unviable > 0`, so `_sum_check > 0` — the condition
   does not fire.
-- A genuine empty `.outcomes` array (no mutants scored) has `_outcomes_len == 0` — the
-  condition does not fire.
+- A genuine empty `.outcomes` array (no mutants scored) AND `total_mutants == 0` has both
+  disjuncts false — the condition does not fire.
+
+**Acknowledged residual — empty-shard-slice assumption (cycle-006 F4 review round 4,
+K-OBS-2, not fixed, documented):** the first bullet above ("a genuine zero-mutant shard
+produces no `outcomes.json` at all") is an empirically-grounded assumption about
+`cargo-mutants@27.1.0`'s behavior under `--sharding slice`, not a guarantee this repo
+controls. For a small in-diff mutant set (fewer than 8, the shard count), one or more
+shards legitimately receive an EMPTY `--shard <k>/8 --sharding slice` slice — no mutants
+assigned to that shard index at all. This section's non-false-RED reasoning depends on
+cargo-mutants producing NO `outcomes.json` (or one with `total_mutants=0`) for such an
+empty slice. If a future `cargo-mutants` release instead emits a well-formed
+`outcomes.json` for an empty slice with `total_mutants` set to the FULL undivided count
+(rather than 0 or the file being absent), the H-1 guard above would fire on that shard —
+producing a FALSE-RED (the fail-closed direction; this can never manufacture a
+false-green). This has not been observed against the pinned `cargo-mutants@27.1.0`, but
+it is also not something this policy doc or `mutants-aggregate.sh` independently verifies
+against every possible small-diff shard split — it is a watch item for the first PR that
+lands with a genuinely small (<8-mutant) in-diff set, not a proven-safe invariant. If it
+is ever observed, the fix is in `evaluate_mutants_aggregate`'s H-1 condition (distinguish
+"empty slice, no real work" from "schema drift"), not in this doc.
 
 ### `total_mutants` Reconciliation Warning (M-2)
 
-**Trigger:** `caught + missed + timeout + unviable != total_mutants` (and
-`total_mutants != 0`).
+**Trigger:** for a given shard, `caught + missed + timeout + unviable != total_mutants`
+(and `total_mutants != 0`).
 
-**Mechanism:**
+**Mechanism (byte-accurate, per-shard):**
 ```bash
 if [ "${total_mutants}" -ne 0 ] && [ "${_sum_check}" -ne "${total_mutants}" ]; then
-  echo "::warning::Schema mismatch: total_mutants=${total_mutants} but ..."
+  echo "::warning::Schema mismatch on shard ${i}: total_mutants=${total_mutants} but sum of known categories=${_sum_check}."
 fi
 ```
 
-**This emits a `::warning::` annotation — it does NOT hard-fail the gate.**
+**This emits a `::warning::` annotation — it does NOT hard-fail the gate.** As of
+cycle-006 (see `scripts/mutants-aggregate.sh`'s own inline comment at this call site),
+this per-shard warning is effectively MOOT under Step 4's exact-equality `MUTANT_COUNT`
+reconciliation (see **Sharded Mutation Gate (cycle-006)** above) — a future outcome
+category would eventually make the pooled `total_scored` fail to equal `MUTANT_COUNT`
+regardless of whether this warning fired, so it now functions as an early diagnostic
+pointing at WHY Step 4 is about to fail, not as an independent escape hatch in its own
+right. The "why warning-only, not hard-fail" rationale below predates that observation and
+remains the reason THIS check itself was never promoted to a hard-fail.
 
 **Rationale for warning-only:** The `total_mutants` field accounts for ALL outcomes,
 including any new outcome categories added in future cargo-mutants versions that this
@@ -751,12 +1079,14 @@ rejected for the following reasons:
 1. **False-RED risk:** If cargo-mutants adds a new outcome category (e.g. `skipped`),
    the sum would legitimately diverge from `total_mutants` — hard-failing would block
    every PR until the script is updated, even if the kill rate is healthy.
-2. **Accepted residual:** The `@27` version pin protects against undiscovered schema
-   changes in the current CI. If the pin is deliberately bumped to accommodate a new
-   major version that adds an outcome category, the reconciliation mismatch will surface
-   in CI logs at that time — making it an observable, actionable signal rather than a
-   silent drift. The warning-in-logs posture is sufficient because defeating it requires
-   bypassing the `@27` pin AND the change being visible in job logs.
+2. **Accepted residual:** The `cargo-mutants@27.1.0` exact-release pin (I-MED: corrected
+   from an earlier, less precise `@27` major-version-only description — see
+   **cargo-mutants Version Pin** above) protects against undiscovered schema changes in
+   the current CI. If the pin is deliberately bumped to accommodate a new version that
+   adds an outcome category, the reconciliation mismatch will surface in CI logs at that
+   time — making it an observable, actionable signal rather than a silent drift. The
+   warning-in-logs posture is sufficient because defeating it requires bypassing the pin
+   AND the change being visible in job logs.
 3. **Defense-in-depth:** The H-1 schema-drift guard (above) already FAILs the gate when
    all summary keys are zero despite non-empty outcomes — the most dangerous false-green
    class. The reconciliation warning catches the residual case of a partial-key move.
@@ -773,6 +1103,15 @@ chose not to author a BC for this cycle (F1 §8, Q3 resolution: policy-doc-only)
 mutation gate invariants need formal traceability in a future cycle, author a BC at that
 time. For F7 traceability: the governing artifact is this file at the `docs/specs/` path,
 not a PRD BC.
+
+**cycle-006 (S-cycle6-mutants-ci-sharding) continues this precedent.** The sharded
+gate's governing invariants — INV-AGG, INV-COMPLETE, INV-ESCALATE (see **Sharded
+Mutation Gate (cycle-006)** above) — are also policy-doc-only, per DEC-348 (F1 approval) and
+DEC-349 (F2 gate approval). No PRD BC exists for the sharded gate either; this file,
+plus `.factory/phase-f2-spec-evolution/cycle-006/mutants-sharding-invariants.md` (the
+invariant statements and their adversarial-review history) and
+`.factory/cycles/cycle-006/phase-f3-stories/S-cycle6-mutants-ci-sharding.md` (the
+delivering story), are the governing artifacts.
 
 ## Guards
 
@@ -796,33 +1135,291 @@ Two static-analysis guards protect §Scope integrity (DEC-150):
   `cargo test --test mutants_glob_existence`. On failure: fix the dead examine_globs entry
   or update it for the file move.
 
-## Future Path: Job Sharding (Path B)
+## Sharded Gate: Residual Trust Boundary (documented, not fixed) — cycle-006 F4 review round 1, F-PC-MED-001
 
-If a future cycle needs to further reduce CI wall-clock time (e.g., for very large
-ADF-touching PRs or a widened `examine_globs` scope), the recommended approach is
-job sharding via `--shard k/n` across a GitHub Actions matrix. Key requirements for
-Path B, informed by research (`.factory/research/mutation-ci-perf-2026-06-28.md` §3–4):
+`mutants-aggregate.sh`'s kill-rate decision reads `caught`/`missed`/`timeout`/`unviable`
+from each shard's `outcomes.json` (Step 3 of `evaluate_mutants_aggregate`). Each
+`outcomes.json` is produced inside the `mutants` shard job's own "Run mutation tests on
+this shard" step, which runs `cargo mutants --in-diff … --shard <k>/8 …` — and `cargo
+mutants` itself compiles and runs the PR's OWN code (`cargo build`/`cargo test` under the
+hood) to determine which mutants are caught. A PR that achieves code execution somewhere
+in that build/test loop (a malicious `build.rs`, a proc-macro, or a test-time side effect)
+runs with the ability to overwrite `mutants.out/outcomes.json` before the shard job's
+"Upload shard outcomes" step picks it up.
 
-1. Run a dedicated `mutants-baseline` job first (`cargo test --locked`) to prove the
-   suite is green; shards then run with `--baseline=skip`.
-2. Under `--baseline=skip`, `timeout_multiplier` is ignored and the test timeout falls
-   back to 300s per mutant (book verbatim). Pass `--timeout 240` (or the current tuned
-   value) explicitly on every shard command — do NOT rely on the multiplier or the
-   `minimum_test_timeout` floor under `--baseline=skip`.
-3. Wire a single **shard-aggregator job** (`needs: [all shards]`) into `ci-gate.needs`
-   per DEC-096/097 — not the individual shard matrix jobs.
-4. Pass the **same diff file** to every shard for correct `--in-diff` behavior.
-5. The base-ref drift guard (F-3, `OVERALL_DIFF_LINES` check) must run in the
-   aggregator job, not per-shard — only the aggregate outcomes.json reflects the full
-   run. The guard FAILs only when the overall diff is empty; a non-empty diff with
-   0 mutants passes (comment-only, docs-only, or non-scoped-file PRs).
+**The attack:** `MUTANT_COUNT` — the value `mutants-aggregate.sh`'s Step 4 reconciles the
+pooled shard total against — is deterministically computable offline via the exact same
+`cargo mutants --list --in-diff <diff>` command `mutants-plan` runs (this command only
+lists mutants; it does not execute the PR's code). A PR author can therefore precompute
+`MUTANT_COUNT` for their own diff and hand-fabricate an `outcomes.json` whose
+`caught`/`missed`/`timeout`/`unviable` sum to exactly that value while reporting a 100%
+pooled kill rate — satisfying both Step 4's exact-equality reconciliation and Step 6's
+kill-rate threshold trivially, with no real mutant ever executed.
 
-Path B is deferred until Path A's 240-minute budget proves insufficient in practice.
+**Blast radius: mutation-QUALITY signal only.** None of the three `mutants-plan`,
+`mutants`, or `mutants-aggregate` jobs in `ci.yml` reference any repository secret or
+`GITHUB_TOKEN` (grep-verified) — a PR that exploits this residual can force the mutation
+gate green without earning it, but it gains no path to secret exfiltration or write access
+through this mechanism.
+
+**This is not a regression.** The pre-sharding single `mutants` job had this identical
+trust boundary — it also produced `outcomes.json` inside the same job that built and
+tested the PR's own code, with **zero** reconciliation against anything computed
+independently. This diff *narrows* that pre-existing boundary rather than introducing it:
+Step 4's exact-equality `MUTANT_COUNT` cross-check (pooled shard total vs. an
+independently-computed pre-count) did not exist before cycle-006 and forces a forger to at
+minimum reproduce the correct total, not merely report a plausible-looking pass.
+
+**Correction (cycle-006 F4 review round 2, F-PE-LOW-002): reconciliation is not an
+adversarial control.** The paragraph above is accurate about the reconciliation's origin,
+but its "narrows the boundary" framing was previously read as if it also raised the bar for
+a DELIBERATE forger — it does not. `mutants-plan` computes `MUTANT_COUNT` by compiling and
+running `cargo mutants --list --in-diff` against the SAME PR checkout the `mutants` shard
+jobs later build and test — so an attacker who has already achieved code execution in one
+job (a malicious `build.rs`, a proc-macro, or a test-time side effect) has code execution in
+the other too, via the identical mechanism. That attacker controls BOTH sides of Step 4's
+exact-equality check simultaneously and can make them agree on any number it likes while
+fabricating a 100% pooled kill rate. Stated plainly: **reconciliation constrains accidental
+divergence only** (a bug, a partial-run artifact, an off-by-one in the sharding math
+producing a `MUTANT_COUNT`/pooled-total mismatch by mistake) — **it offers no adversarial
+protection against an attacker who already has code execution**, because that attacker
+controls both sides of the equation it checks.
+
+**Currency (same round): the TRIVIAL, no-code-execution variant of this bypass is now
+CLOSED.** Before this round, a plaintext `ci.yml` edit to `mutants-plan`'s "Compute diff and
+mutation plan" step — replacing its `run:` body with hardcoded `echo "escalated=false"` /
+`echo "mutant_count=0"` / `echo "overall_diff_lines=1"` output lines and no real `git
+diff`/`cargo mutants --list` invocation at all — satisfied every structural pin that existed
+at the time (job/step presence, `outputs:` key set, `if:` value) while requiring **zero**
+code execution and zero real mutation testing, for any PR diff size. Two new tests in
+`tests/ci_gate_completeness.rs` close this: `test_mutants_plan_compute_step_content_is_pinned`
+asserts the compute step's `run:` body contains ten required fragments, in order, tying each
+of `mutant_count` / `overall_diff_lines` / `escalated` to a real `git diff` / `cargo mutants
+--list --in-diff`-derived shell variable rather than a literal; `test_mutants_plan_job_and_
+step_key_sets_are_pinned` closes the job/step key-set gap that content pin sits inside (a
+smuggled job-level `defaults:`/`continue-on-error:`, or a smuggled step-level
+`if:`/`shell:`/`continue-on-error:`, on `mutants-plan` itself). The residual documented in
+this section is therefore narrower than at initial cycle-006 landing — but it was NOT, as
+an earlier revision of this paragraph claimed, narrowed all the way down to "specifically
+the code-execution-required path, not a plaintext `ci.yml` edit": that overclaimed
+closure. **Correction (cycle-006 F4 review round 4, A-F1):** a SECOND plaintext,
+no-code-execution `ci.yml` vector remained open on the sibling `mutants` shard job at the
+time that sentence was written — appending shell to the `run-mutants` step's `run:` body,
+AFTER the real `cargo mutants` invocation inside the SAME step, that launders the shard's
+own `mutants.out/outcomes.json` (moving `missed`/`timeout` counts into `caught`,
+sum-preserving so Step 4's exact-equality reconciliation still passes). AC-033's
+presence-only ordered-substring search over the whole raw `mutants` job block proved the
+real invocation was present, but never inspected what came after it. This is now CLOSED by
+`assert_run_mutants_step_content_is_honest` (scoped to the `run-mutants` step's PARSED
+`run:` scalar, mirroring this section's own `mutants-plan` fix) and its production pin
+`test_mutants_shard_run_step_content_is_pinned` in `tests/ci_gate_completeness.rs` — see
+"A second forgery path" below for a third, DIFFERENT no-code-execution variant
+(spoofed sibling-job artifacts) that remains open and tracked, separate from the one this
+paragraph now correctly states is closed. What remains open, accurately stated: the
+**code-execution-required** path (a malicious `build.rs`/proc-macro/test-time side effect
+reachable from a `cargo mutants`/`cargo build`/`cargo test` invocation) and the
+spoofed-sibling-artifact / canceling-errors / set-identity residuals described below — not
+a trailing-shell-append inside the shard's own `run-mutants` step, which this fix closes.
+
+**Correction (cycle-006 F4 review round 6, finding D-HIGH): the round-4 fix above was
+itself a substring DENYLIST, not default-deny, and a THIRD no-code-execution variant on
+the sibling upload step was never checked at all — all three are now CLOSED.**
+`assert_run_mutants_step_content_is_honest`'s ban on the CONTIGUOUS LITERAL
+`outcomes.json` appearing after the invocation was bypassable by any construction that
+references the file without spelling that exact literal: (1) shell variable indirection
+(`n=outcomes; ... > "mutants.out/${n}.json"`), or (2) a glob/loop that names the file only
+via a wildcard or loop variable (`for f in mutants.out/*.json; do … "$f" …; done`) — neither
+contains the substring `outcomes.json` anywhere in the scanned text. (3) A THIRD variant
+needed no change to `run-mutants` at all: repointing the sibling "Upload shard outcomes"
+step's `with.path`/`with.name` to a forged file — `PINNED_MUTANTS_SHARD_STEP_KEY_SETS` pins
+that step's own key set (`if`/`name`/`uses`/`with`) but has no visibility into `with:`'s
+CHILDREN, and nothing else in this file checked them either. All three were sum-preserving
+launders (or, for variant 3, bypassed the reconciliation entirely by uploading a
+fully-fabricated file), so `mutants-aggregate.sh`'s Step 4 exact-equality reconciliation and
+Step 6 kill-rate check both still passed. **Fixed** by replacing the substring-denylist call
+in `test_mutants_shard_run_step_content_is_pinned` with a FULL byte-for-byte comparison of
+the `run-mutants` step's entire parsed `run:` scalar against a reviewed literal
+(`PINNED_MUTANTS_SHARD_RUN_BODY` in `tests/ci_gate_completeness.rs`, via
+`extract_and_normalize_mutants_shard_run_body` — also rejecting a YAML anchor, tag, or any
+scalar style other than the real `Literal` (`|`) block form), and by adding a TARGETED,
+justified exception to this file's general "`with:` block CONTENTS are out of scope"
+boundary for this one security-critical step: `PINNED_MUTANTS_SHARD_UPLOAD_OUTCOMES_WITH_
+PATH`/`_WITH_NAME` pin the "Upload shard outcomes" step's `with.path`/`with.name` values
+byte-for-byte, via `extract_and_normalize_upload_outcomes_with_value`. `assert_run_mutants_
+step_content_is_honest` (the OLD substring-denylist function) is retained, unchanged, only
+so three standing RED regression tests — `test_mutants_shard_run_step_rejects_variable_
+indirection_launder`, `test_mutants_shard_run_step_rejects_glob_loop_launder`, and
+`test_mutants_shard_upload_outcomes_pin_rejects_repointed_path` — can demonstrate what it
+used to accept; its own doc comment states plainly that it is superseded and is no longer
+called by the production pin. What remains open, accurately stated, is narrower than
+before this round: the **code-execution-required** path and the spoofed-sibling-artifact /
+canceling-errors / set-identity residuals described below — not any of the three
+plaintext-`ci.yml`-edit, no-code-execution variants this round closes.
+
+### A second forgery path: spoofed sibling-job artifacts (cycle-006 F4 review round 2, F-PF-LOW-002)
+
+A second, arguably *easier* forgery mechanism exists alongside the build.rs/proc-macro path
+above, and it needs no code execution in the `mutants` shard build/test loop at all.
+`mutants-aggregate`'s two download steps (`ci.yml`'s "Download all shard status sentinels"
+and "Download all shard outcomes") pull artifacts by **name pattern** —
+`mutants-shard-status-*` and `mutants-shard-outcomes-*` — with no binding to the `mutants`
+matrix job's identity, run, or provenance. `scripts/mutants-aggregate.sh`'s completeness
+check (Step 2's sentinel-presence sweep, `EXPECTED_SHARDS=8`) verifies only that exactly one
+status sentinel exists per shard index 0–7; it has no way to tell a sentinel uploaded by the
+legitimate `mutants` matrix job apart from one uploaded by any OTHER job in the same
+workflow run. A PR that adds (or repurposes) a sibling job in the same workflow run — one
+with no relationship to `cargo mutants` at all — to upload 8 well-formed
+`mutants-shard-status-{0..7}` sentinels plus 8 well-formed `mutants-shard-outcomes-{0..7}`
+files (each summing to the `MUTANT_COUNT` `mutants-plan` computed, at a 100% kill rate)
+would be indistinguishable from a genuine shard run to every check `mutants-aggregate.sh`
+performs: the duplicate/stray-artifact guard (`actual_sentinel_count -ne EXPECTED_SHARDS`)
+only catches a *miscount*, not a well-formed spoof landing at exactly the expected count.
+
+This path is **not** narrowed by the `MUTANT_COUNT` reconciliation discussed above — a
+spoofing PR author has the same offline access to `cargo mutants --list --in-diff`'s output
+that `mutants-plan` itself uses (it is, after all, just a `cargo mutants --list` invocation
+against the PR's own diff, requiring no code execution privilege beyond what any PR author
+already has to open the PR), so a spoofed submission can make its fabricated totals
+reconcile exactly against Step 4's check.
+
+**Same blast radius as the build.rs/proc-macro path: mutation-quality signal only.** No
+repository secret or `GITHUB_TOKEN` is read or referenced by this mechanism. **Same
+mitigation, too: this requires a visible `ci.yml` diff** (a new or repurposed job,
+fabricated JSON payloads) — exactly the shape of change code review of a `ci-gate`-touching
+PR is expected to catch (see CLAUDE.md's "CI Gate — SCOPE SUMMARY" "Review scope" note).
+Documented and reasoned about, not fixed in this round; tracked alongside the
+code-execution path as an accepted residual.
+
+**Longer-term mitigation options (tracked as a future direction, not opened as a story by
+this round):**
+1. Independent per-mutant re-derivation — reconcile the actual *set* of mutant IDs each
+   shard reports against the diff-derived set `mutants-plan` computes, not just the
+   summary counts, closing the "right total, wrong contents" forgery this residual
+   currently allows.
+2. Sandboxed/isolated shard execution — run each shard's `cargo mutants` invocation in an
+   environment with no write access to the artifact the aggregator later trusts, so a
+   compromised build/test loop cannot influence its own scoring.
+3. Provenance-bound artifact download — verify the uploading job's identity (e.g. via the
+   GitHub API's run/job metadata) rather than trusting artifact NAME PATTERNS alone, closing
+   the spoofed-sibling-artifact path documented immediately above without requiring either
+   of the two options above.
+
+Same documentation posture as this repo's other accepted CI-gate residuals (the sudo bound
+and the two unpinned `uses:` values on the `ci-gate` decision path — see CLAUDE.md's
+"CI Gate — SCOPE SUMMARY"): documented and reasoned about, not fixed in this round.
+
+### A third residual, orthogonal to the two above: `examine_globs` shrinkage (cycle-006 F4 review round 8+9, finding M-LOW)
+
+A separate, PRE-EXISTING residual in the same whitelist-scoped mutation model, named here for
+the first time even though the underlying property predates cycle-006: `.cargo/mutants.toml`'s
+`examine_globs` list is a plain, human-edited allowlist of files `cargo mutants --list`
+considers at all. A plaintext, zero-code-execution PR that removes an entry from
+`examine_globs` (paired with the matching `docs/specs/cargo-mutants-policy.md` §Scope
+bullet, so `scripts/check-cargo-mutants-policy-citations.sh`'s citation-parity check still
+passes) drops that file out of mutation scope entirely. Concretely, for a changed file no
+longer listed: `cargo mutants --list --in-diff <diff>` reports zero mutants for it,
+`mutants-plan`'s `MUTANT_COUNT` is computed honestly against the now-narrower scope, every
+shard's `cargo mutants --in-diff … --shard <k>/8` run also sees zero mutants for that file,
+and `mutants-aggregate.sh`'s Step 4 reconciliation (pooled total vs. `MUTANT_COUNT`) still
+holds — both sides agree, because both were computed from the same shrunken `examine_globs`.
+The gate goes green via Step 5's legitimate "non-empty diff, 0 mutants examined → OK" branch,
+with the changed code inside the removed file completely untested by mutation testing, and no
+reconciliation mismatch anywhere to catch it.
+
+**This is not the same mechanism as the two residuals above.** Those require either
+code-execution-in-the-build/test-loop or a fabricated/spoofed artifact; this one requires
+neither — it is a plaintext, semantically-legal edit to a config file plus its paired policy
+doc bullet, and every downstream check (`mutants-plan`, the shard matrix, `mutants-aggregate`)
+computes its numbers *honestly* against the narrowed scope it was handed.
+
+**`tests/mutants_glob_existence.rs` (DEC-150 Guard 3) narrows this residual but does not
+close it.** Its `test_resolve_all_examine_globs_entries_to_real_files` asserts every EXISTING
+`examine_globs` entry resolves to ≥1 real file (no opinion on an entry that SHOULD be present
+but is missing), and its `assert_examine_globs_coverage_floor` helper additionally enforces a
+hard-coded numeric floor (`const FLOOR: usize = 11`, "MED-1-P22 FIX") on the total entry
+count. That floor guard genuinely fires for a wholesale gutting of the list, but it is coarse
+relative to the list's actual size: `examine_globs` currently carries 22 entries, so removing
+any 1–11 of them (including a single, deliberately targeted, security-relevant file) leaves
+the count at 11–21 — at or above the floor — and the guard stays silent. The floor is a
+blunt backstop against catastrophic scope collapse, not a per-file "this specific entry must
+remain present" check, so the single-entry-removal attack this section describes is not
+caught by it.
+
+**Blast radius: mutation-quality signal only**, same as the two residuals above — no secret
+or `GITHUB_TOKEN` reference exists on this path, and the change is fully visible in the PR's
+`ci.yml`-adjacent diff (`.cargo/mutants.toml` plus the paired policy-doc bullet, both
+plaintext, both reviewable). **Control: code review of the `.cargo/mutants.toml` diff**,
+same posture as this document's other residuals — a reviewer who notices a changed
+`src/` file is no longer paired with an `examine_globs`/§Scope entry (or notices an entry
+disappearing without a corresponding "this file was deleted/merged" justification) catches
+it before merge.
+
+**Considered and deliberately NOT added: a tighter floor, or a named-membership guard
+test.** Two strengthenings of the existing `assert_examine_globs_coverage_floor` were
+considered — (a) ratcheting `FLOOR` up to track the list's actual size (e.g. "current count
+minus a small slack" instead of the static `11`), and (b) a test asserting `examine_globs`
+contains at least a fixed, named set of "known-required" paths — and both were rejected as
+higher-maintenance than they're worth for a residual this narrow: `examine_globs` has grown
+by a handful of entries in nearly every cycle that touched security- or bulk-write-relevant
+code (see the Changelog table below — 16 → 18 → 20 → the current 22, each bump its own
+dated entry), so either strengthening would need a matching update in the SAME commit as any
+future legitimate addition, adding review friction without closing the actual gap: neither
+form catches a file that should have been added at creation time but never was (the exact
+"new CLI handler file → add to mutants.toml at creation" drift class already named at
+P22-001/DEC-149/S-MUTANTS-SCOPE-1, which is a recurring, independently-tracked process gap,
+not something a static floor or named-membership list can enforce), and neither can
+distinguish a legitimate removal (the file was deleted, or its mutation-relevant logic was
+fully relocated elsewhere and the new location is already listed) from a malicious one — both
+look identical to a membership check. This residual is therefore left as a documented,
+code-review-controlled gap, backstopped only by the existing coarse `FLOOR = 11` (which
+remains valuable against a wholesale gutting, just not a targeted single-entry removal) —
+rather than a new, tighter test; a follow-up story (provenance- or diff-aware `examine_globs`
+change review, e.g. a CI check that flags an `examine_globs` removal for extra scrutiny
+without hard-blocking legitimate refactors) is tracked separately, not opened by this round.
+
+## Future Path: Job Sharding (Path B) — LANDED (cycle-006, 2026-09-07)
+
+**This is no longer a future path — it is the current design.** Path A's 240-minute
+single-job budget did prove insufficient in practice (PR #778, 281 mutants), and
+cycle-006 (S-cycle6-mutants-ci-sharding) implemented the sharded design this section
+originally proposed. See **Sharded Mutation Gate (cycle-006)** above for the current,
+authoritative topology, invariants, and job shapes. This section is retained,
+unedited below, as the historical proposal — cross-referenced against what actually
+landed:
+
+1. ~~Run a dedicated `mutants-baseline` job first (`cargo test --locked`) to prove
+   the suite is green; shards then run with `--baseline=skip`.~~ **Landed
+   differently:** no dedicated `mutants-baseline` job was added. The shard jobs rely
+   on the pre-existing `test` job (already a `ci-gate.needs` member, already proving
+   the suite green on every PR) instead of duplicating that proof — see `ci.yml`'s
+   `mutants` shard job's own comment: `--baseline skip` is "legitimate here because
+   `test` (ci-gate.needs member) already proves the suite green before mutants ever
+   runs."
+2. **Landed as proposed.** `--timeout 240` is passed explicitly on every shard
+   command (`cargo mutants --in-diff "$DIFF_FILE" --shard <k>/8 --sharding slice
+   --jobs 2 --baseline skip --timeout 240`) — neither `timeout_multiplier` nor
+   `minimum_test_timeout` is relied upon under `--baseline skip`, per this
+   document's own **`--baseline=skip` and Path B** section above.
+3. **Landed as proposed, by name.** `mutants-aggregate` (`needs: [mutants-plan,
+   mutants]`) is the single shard-aggregator job wired into `ci-gate.needs` per
+   DEC-096/097 — not any individual shard matrix job.
+4. **Landed as proposed.** `mutants-plan` computes `DIFF_FILE` exactly once and
+   uploads it as the `mutants-diff-file` artifact; every one of the 8 shards
+   downloads and uses the SAME artifact bytes.
+5. **Landed with a refinement, not exactly as proposed.** The base-ref drift guard
+   does run in the aggregator job, not per-shard, as proposed — but its
+   discriminator changed from the proposed `OVERALL_DIFF_LINES`-only check to
+   `MUTANT_COUNT == 0` (established independently by `mutants-plan`, consulted only
+   after INV-COMPLETE's sentinel-presence/interpretation and INV-AGG's
+   `MUTANT_COUNT` reconciliation have already ruled out a shard-level crash or
+   plan/execution mismatch) — see **INV-COMPLETE** above for why this is stronger
+   than the original proposal.
 
 ## Changelog
 
 | Date | Cycle | Change |
 |------|-------|--------|
+| 2026-09-07 | S-cycle6-mutants-ci-sharding | **Sharded mutation gate:** replaced the single `mutants` job with a three-job pipeline (`mutants-plan` → 8-shard `mutants` matrix → `mutants-aggregate`) plus an advisory nightly full-scope workflow (`.github/workflows/mutants-nightly.yml`, N=16). `mutants-aggregate` (extracted to `scripts/mutants-aggregate.sh`) replaces `mutants` as the `ci-gate.needs` member and computes a POOLED sum-not-average kill rate across all 8 shards (INV-AGG), with exact-equality `MUTANT_COUNT` reconciliation as a hard fail (both over- and under-count directions). Fail-closed, sentinel-based shard-completeness accounting (INV-COMPLETE) replaces the old artifact-count proxy, closing an all-shards-crash false-green and an empty-shard false-red the single-job design was never exposed to. A `>120`-in-diff-mutant escape hatch (`ESCALATION_THRESHOLD=120`, INV-ESCALATE) routes oversized PRs to an ordinary, actionable CI failure — never a silent skip or pass — resolved by splitting the diff or an admin branch-protection bypass. `cargo-mutants` pin tightened from major-only `@27` to the exact release `@27.1.0`. Both `scripts/check-ci-gate.sh` and the new `scripts/mutants-aggregate.sh` now source a shared `scripts/lib/trusted-jq.sh`. See **Sharded Mutation Gate (cycle-006)** above for the full account; governed by this policy doc per DEC-348/DEC-349 (policy-doc-only, no new PRD BC), mirroring the MUTATION-CI-TIMEOUT precedent below. No `src/` (product-code) changes — CI/CD infrastructure only. |
 | 2026-08-31 | FIX-F6-MUTANTS-SCOPE | Scope-gap fix: added `src/cli/field.rs` (~91 mutants, S-580-1's `jr field options <field>` M1/M2/M3 resolution) and `src/cli/issue/field_resolve.rs` (~45 mutants, shared `--field` resolution/dispatch hub for `issue edit --field` and `issue create --field`) to `examine_globs` (18 → 20 entries). Both files had been omitted since creation across all field-dx PRs (S-580-1, #578 parts 1-5) — same P22-001/DEC-149/S-MUTANTS-SCOPE-1 drift class ("new CLI handler file → add to mutants.toml at creation"), meaning the required CI `mutants` gate generated zero mutants for either file across every field-dx PR to date. |
 | 2026-08-21 | S-575-1 | Added new "Exclusions" section (distinct from `#[mutants::skip]` Whitelist Convention) and a single `exclude_re` entry in `.cargo/mutants.toml` for `src/api/jira/issues.rs:374:16: delete ! in JiraClient::search_issues_with_fields` — an infinite-loop mutant uncatchable-as-anything-but-TIMEOUT under the whole-binary test-harness execution model. Termination correctness remains verified by existing multi-page pagination tests. |
 | 2026-08-14 | S-MUTANTS-SCOPE-1 | Scope widening + drift backfill: added `src/cli/queue.rs` and `src/main.rs` to `examine_globs` (16 → 18 entries). Backfilled §Scope bullets for 5 previously-undocumented `examine_globs` members: `src/cli/issue/interactions.rs`, `src/cli/issue/attachments.rs`, `src/api/jira/attachments.rs`, `src/api/jsm/attachments.rs`, `src/api/jsm/servicedesks.rs`. Closes drift item MUTANTS-SCOPE-GAP-QUEUE-MAIN. |
