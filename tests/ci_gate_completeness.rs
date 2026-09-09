@@ -41,7 +41,7 @@
 //!   test_ci_gate_job_exists_with_required_metadata           → AC-001
 //!   test_ci_gate_needs_exactly_the_required_jobs             → AC-003
 //!   test_ci_gate_excludes_advisory_and_secret_scan_jobs      → AC-003
-//!   test_mutants_is_in_ci_gate_needs                         → MUTATION-CI-TIMEOUT / AC-003
+//!   test_mutants_aggregate_is_in_ci_gate_needs               → MUTATION-CI-TIMEOUT / AC-003
 //!   test_ci_gate_fails_on_failed_or_cancelled_need           → AC-002 (retargeted, S-CIGATE-2)
 //!   test_ci_gate_needs_jobs_have_no_job_level_if             → EC-002 (M1)
 //!   test_ci_gate_pass_fail_semantics_are_structurally_placed → AC-001/AC-002 (M2, retargeted, S-CIGATE-2)
@@ -108,7 +108,7 @@
 //! New test coverage (→ S-CIGATE-2 AC):
 //!   test_ci_gate_step_invokes_check_ci_gate_script_with_needs_json → AC-001
 //!   test_spec_guard_contains_check_ci_gate_self_test_step          → AC-008
-//!   test_mutants_job_structure_unchanged_by_cigate2_option_c       → AC-006
+//!   test_mutants_shard_job_structure_matches_sharded_design         → AC-006
 //!
 //! `test_ci_gate_fails_on_failed_or_cancelled_need` and
 //! `test_ci_gate_pass_fail_semantics_are_structurally_placed` (both
@@ -295,13 +295,24 @@ fn list_all_ci_yml_job_names(ci: &str) -> Vec<String> {
 /// bash). This constant exists so `always_run_needs_members` below — used
 /// by tests that do NOT need bash and must run on every platform — has a
 /// skip-tolerance list to filter against without depending on a
-/// unix-only pin. Kept in sync manually; today both contain exactly
-/// `["mutants"]`. Drift is caught by
+/// unix-only pin. Kept in sync manually.
+///
+/// **cycle-006 (mutants-ci-sharding): EMPTY by design, not a regression.**
+/// Prior to this cycle this list contained exactly `["mutants"]` — the
+/// single-job `mutants` job legitimately reported `skipped` on a push
+/// event. `mutants-aggregate` (the new `ci-gate.needs` member that
+/// replaces `mutants`) is engineered to NEVER report `skipped` to GitHub
+/// Actions: its job-level `if: always()` (see
+/// `PINNED_ALWAYS_RUN_WITH_IF_EXCEPTIONS` below) makes it run
+/// unconditionally, and `scripts/mutants-aggregate.sh`'s Step 0 resolves a
+/// push/schedule/workflow_dispatch event to an ordinary `exit 0` (success)
+/// rather than a GitHub Actions `skipped` conclusion — see
+/// architecture-delta.md §6.4. Drift is caught by
 /// `test_skip_tolerant_needs_members_matches_pinned_if_expressions`
 /// (unix-only, since it reads the unix-gated constant) — see that test's
 /// doc comment for what "drift" means here and why it can't be closed
 /// portably.
-const SKIP_TOLERANT_NEEDS_MEMBERS: &[&str] = &["mutants"];
+const SKIP_TOLERANT_NEEDS_MEMBERS: &[&str] = &[];
 
 /// Every `ci-gate.needs` member EXCEPT those in `SKIP_TOLERANT_NEEDS_MEMBERS`
 /// — i.e. every job required to run unconditionally (no job-level `if:`
@@ -616,15 +627,23 @@ fn test_ci_gate_job_exists_with_required_metadata() {
 // ---------------------------------------------------------------------------
 
 /// AC-003 (exact-set check): `ci-gate.needs` must contain exactly the eight
-/// jobs `{fmt, clippy, test, msrv, deny, spec-guard, check-signing-workflow-injection, mutants}`
+/// jobs `{fmt, clippy, test, msrv, deny, spec-guard, check-signing-workflow-injection, mutants-aggregate}`
 /// — order-insensitive, no extras, none missing.
 ///
 /// `mutants` was promoted to hard-required in MUTATION-CI-TIMEOUT (2026-06-28).
-/// It carries `if: github.event_name == 'pull_request'` and emits `skipped` on
-/// push events. Since S-CIGATE-2, `scripts/check-ci-gate.sh` tolerates this
-/// ONLY because `mutants` is named in that script's restrictive
-/// `ALLOWED_SKIPS` allowlist — any other job's `skipped` result fails the
-/// gate by default.
+/// **cycle-006 (mutants-ci-sharding) retargets this ONE member:** the
+/// single-job `mutants` job was replaced by a `mutants-plan` ->
+/// 8-shard `mutants` matrix -> `mutants-aggregate` pipeline;
+/// `mutants-aggregate` is the new `ci-gate.needs` member (`mutants` and
+/// `mutants-plan` are admitted into `ci.yml`'s job universe only via
+/// `PINNED_GATE_EXCLUDED_JOBS`, never wired directly into branch
+/// protection — DEC-096/DEC-097). Unlike the old `mutants` job,
+/// `mutants-aggregate` NEVER reports `skipped` to GitHub Actions — its
+/// job-level `if: always()` makes it run unconditionally and
+/// `scripts/mutants-aggregate.sh`'s Step 0 resolves a non-PR event to an
+/// ordinary `exit 0` internally — so `ALLOWED_SKIPS`/
+/// `SKIP_TOLERANT_NEEDS_MEMBERS`/`PINNED_ALLOWED_SKIP_IF_EXPRESSIONS` are
+/// all empty as of this cycle (see those constants' own doc comments).
 ///
 /// Rationale for exact-set (not subset):
 ///   - Adding a job to `needs` without updating this test intentionally fails
@@ -652,7 +671,7 @@ fn test_ci_gate_needs_exactly_the_required_jobs() {
             "FAIL (RED GATE): The `ci-gate` job block does not contain a \
              `needs:` key.\n\
              Required: `needs: [fmt, clippy, test, msrv, deny, spec-guard, \
-             check-signing-workflow-injection, mutants]`\n\
+             check-signing-workflow-injection, mutants-aggregate]`\n\
              Current ci-gate block:\n{gate_block}"
         )
     });
@@ -665,17 +684,14 @@ fn test_ci_gate_needs_exactly_the_required_jobs() {
         "deny",
         "spec-guard",
         "check-signing-workflow-injection",
-        // MUTATION-CI-TIMEOUT (2026-06-28): promoted to hard-required.
-        // Carries `if: github.event_name == 'pull_request'`; emits `skipped`
-        // on push events — safe ONLY because `mutants` is named in
-        // `scripts/check-ci-gate.sh`'s restrictive `ALLOWED_SKIPS` allowlist
-        // (with a matching `PINNED_ALLOWED_SKIP_IF_EXPRESSIONS` entry in
-        // this file).  Since S-CIGATE-2 an unlisted job's `skipped` result
-        // fails the gate by default (fail-closed) — `ALLOWED_SKIPS`
-        // membership is the mechanism, not "ci-gate checks failure/cancelled
-        // only" (that inline condition was retired).  See delta-analysis §5
+        // cycle-006 (mutants-ci-sharding): `mutants-aggregate` replaces the
+        // old `mutants` job as the `ci-gate.needs` member. Carries
+        // `if: always()` and NEVER reports `skipped` — see
+        // `SKIP_TOLERANT_NEEDS_MEMBERS`'s doc comment above for why
+        // `ALLOWED_SKIPS`/`PINNED_ALLOWED_SKIP_IF_EXPRESSIONS` are now
+        // empty rather than naming this job. See architecture-delta.md §4
         // and cargo-mutants-policy.md §CI Gate.
-        "mutants",
+        "mutants-aggregate",
     ]
     .iter()
     .map(|s| s.to_string())
@@ -831,16 +847,59 @@ fn test_ci_gate_excludes_advisory_and_secret_scan_jobs() {
 /// `PINNED_ALLOWED_SKIP_IF_EXPRESSIONS`'s convention for the opposite
 /// carve-out): it is a claim that this job must NEVER be required to pass,
 /// under any circumstances, for any future reason — not merely "it isn't
-/// required today." Today's two members and their rationale (carried over
-/// verbatim from `test_ci_gate_excludes_advisory_and_secret_scan_jobs`,
-/// which predates this partition check and remains as a narrower,
-/// faster-to-read diagnostic):
+/// required today." Today's four members and their rationale (`security`/
+/// `coverage` carried over verbatim from
+/// `test_ci_gate_excludes_advisory_and_secret_scan_jobs`, which predates
+/// this partition check and remains as a narrower, faster-to-read
+/// diagnostic):
 ///   - `security`: PR-only (`if: github.event_name == 'pull_request'`) AND
 ///     further gated by `vars.GITLEAKS_DISABLED` — a secret scan that is
 ///     advisory by policy, not a merge blocker.
 ///   - `coverage`: uses `fail_ci_if_error: false` on the codecov upload —
 ///     advisory by design; a flaky coverage upload must not block merges.
-const PINNED_GATE_EXCLUDED_JOBS: &[&str] = &["security", "coverage"];
+///   - **`mutants` (cycle-006, mutants-ci-sharding):** a genuinely
+///     DIFFERENT exclusion rationale class than the two above — this job
+///     is NOT advisory (its 8-shard results feed directly into
+///     `mutants-aggregate`'s pass/fail decision, which IS required via
+///     `ci-gate.needs`). It is excluded from `ci-gate.needs` DIRECTLY
+///     because `mutants-aggregate` is the required proxy for it, per
+///     CLAUDE.md's DEC-096/DEC-097 convention ("New CI jobs that must be
+///     required must be added to `ci-gate.needs`, never wired directly
+///     into branch protection") — a matrix job with per-shard
+///     `continue-on-error: true` and a variable skip condition
+///     (`needs.mutants-plan.outputs.escalated != 'true'`) is a poor
+///     `ci-gate.needs` member in its own right; `mutants-aggregate`
+///     is engineered specifically to be the single, well-behaved
+///     decision point instead.
+///   - **`mutants-plan` (cycle-006, mutants-ci-sharding):** same
+///     DIRECTLY-REQUIRED-VIA-PROXY rationale as `mutants` — its
+///     `escalated`/`mutant_count`/`overall_diff_lines` outputs feed
+///     `mutants-aggregate`, which is itself the `ci-gate.needs` member.
+///     `mutants-plan`'s own job-level `if: github.event_name ==
+///     'pull_request'` additionally makes it skip on push events, the
+///     same shape `ci-gate.needs` membership would otherwise need
+///     `ALLOWED_SKIPS`/`SKIP_TOLERANT_NEEDS_MEMBERS` treatment for —
+///     avoided entirely by not making it a direct `needs:` member at all.
+///     **`mutants-plan` is a pinned decision-path job, not an advisory
+///     one — do not read its co-location in this literal alongside
+///     `security`/`coverage` as implying otherwise** (cycle-006 F4 review
+///     round 2, F-PF-HIGH-001): before this round, `mutants-plan`'s
+///     "Compute diff and mutation plan" step's `run:` BODY (as opposed to
+///     its `outputs:` key set and job-level `if:`, both already pinned by
+///     `test_mutants_plan_job_structural_shape`) carried no content pin at
+///     all, so `mutants-aggregate`'s Step 1 escalation short-circuit and
+///     Step 4 exact-equality reconciliation trusted three outputs
+///     (`escalated`/`mutant_count`/`overall_diff_lines`) a PR could
+///     fabricate outright by replacing the compute step with an all-`echo`
+///     script — see `test_mutants_plan_compute_step_content_is_pinned`'s
+///     own doc comment for the concrete exploit this closes. Also newly
+///     pinned this round: `mutants-plan`'s COMPLETE job-level and per-step
+///     key sets (`test_mutants_plan_job_and_step_key_sets_are_pinned`),
+///     mirroring `PINNED_ALWAYS_RUN_JOB_KEY_SETS`/`PINNED_ALWAYS_RUN_STEP_
+///     KEY_SETS`'s idiom for the always-run jobs even though `mutants-plan`
+///     itself is excluded from those two constants (same "not always-run"
+///     reason `mutants` is excluded from them).
+const PINNED_GATE_EXCLUDED_JOBS: &[&str] = &["security", "coverage", "mutants", "mutants-plan"];
 
 /// S-626-1 U1 (external research finding): closes the "allowlist with no
 /// default-deny over its universe" gap one level up from the fixes already
@@ -975,26 +1034,34 @@ fn test_ci_gate_needs_partitions_all_ci_yml_jobs() {
 }
 
 // ---------------------------------------------------------------------------
-// MUTATION-CI-TIMEOUT — `mutants` is in `ci-gate.needs`
+// MUTATION-CI-TIMEOUT — `mutants-aggregate` is in `ci-gate.needs`
 // ---------------------------------------------------------------------------
 
-/// MUTATION-CI-TIMEOUT (2026-06-28): `mutants` must be in `ci-gate.needs`.
+/// MUTATION-CI-TIMEOUT (2026-06-28): the mutation gate must be in
+/// `ci-gate.needs`. **cycle-006 (mutants-ci-sharding) retarget:** the
+/// single-job `mutants` job was replaced by a `mutants-plan` -> 8-shard
+/// `mutants` matrix -> `mutants-aggregate` pipeline; `mutants-aggregate`
+/// is the new `ci-gate.needs` member enforcing the 90% pooled kill-rate
+/// gate on every PR (`mutants`/`mutants-plan` are admitted into `ci.yml`'s
+/// job universe only via `PINNED_GATE_EXCLUDED_JOBS`, never wired
+/// directly into branch protection — DEC-096/DEC-097).
 ///
-/// The `mutants` job was promoted to hard-required to enforce the 90% kill-rate
-/// gate on every PR.  It carries `if: github.event_name == 'pull_request'` and
-/// emits `skipped` on push events.  Since S-CIGATE-2, `scripts/check-ci-gate.sh`
-/// tolerates this ONLY because `mutants` is named in that script's restrictive
-/// `ALLOWED_SKIPS` allowlist — any other job's `skipped` result, or a `failure`
-/// / `cancelled` result for `mutants` itself, fails the gate.
+/// Unlike the old `mutants` job, `mutants-aggregate` carries
+/// `if: always()` and NEVER reports `skipped` to GitHub Actions —
+/// `scripts/mutants-aggregate.sh`'s Step 0 resolves a push/schedule/
+/// workflow_dispatch event to an ordinary `exit 0` internally, so
+/// `ALLOWED_SKIPS`/`SKIP_TOLERANT_NEEDS_MEMBERS`/
+/// `PINNED_ALLOWED_SKIP_IF_EXPRESSIONS` no longer need an entry for it
+/// (see those constants' own doc comments) — a `failure`/`cancelled`
+/// result for `mutants-aggregate` still fails the gate.
 ///
 /// This test pins the promotion: a future edit that accidentally removes
-/// `mutants` from `ci-gate.needs` must explicitly update this test (and, per
-/// CLAUDE.md's `ci-gate` convention, `scripts/check-ci-gate.sh`'s
-/// `ALLOWED_SKIPS`).
+/// `mutants-aggregate` from `ci-gate.needs` must explicitly update this
+/// test.
 ///
 /// Anchoring: assertion is made only within the `ci-gate` job block.
 #[test]
-fn test_mutants_is_in_ci_gate_needs() {
+fn test_mutants_aggregate_is_in_ci_gate_needs() {
     let ci = read_ci_yml();
     let gate_block = extract_job_block(&ci, "ci-gate").unwrap_or_else(|| {
         panic!(
@@ -1012,15 +1079,15 @@ fn test_mutants_is_in_ci_gate_needs() {
     });
 
     assert!(
-        needs.contains("mutants"),
-        "FAIL (MUTATION-CI-TIMEOUT): `mutants` is missing from `ci-gate.needs`.\n\
-         The `mutants` job was promoted to hard-required in MUTATION-CI-TIMEOUT \
-         (2026-06-28) to enforce the 90% kill-rate gate on every PR.\n\
-         Push-event safety: `mutants` emits `skipped` on push events; \
-         `scripts/check-ci-gate.sh` tolerates this ONLY because `mutants` is \
-         named in that script's restrictive `ALLOWED_SKIPS` allowlist \
-         (S-CIGATE-2).\n\
-         To restore: add `mutants` to `ci-gate.needs` in ci.yml.\n\
+        needs.contains("mutants-aggregate"),
+        "FAIL (MUTATION-CI-TIMEOUT): `mutants-aggregate` is missing from \
+         `ci-gate.needs`.\n\
+         `mutants-aggregate` was promoted to hard-required in cycle-006 \
+         (mutants-ci-sharding), replacing the pre-sharding single `mutants` \
+         job, to enforce the 90% pooled kill-rate gate on every PR.\n\
+         `mutants-aggregate` carries `if: always()` and never legitimately \
+         reports `skipped` — see architecture-delta.md §6.4.\n\
+         To restore: add `mutants-aggregate` to `ci-gate.needs` in ci.yml.\n\
          Current needs: {:?}",
         {
             let mut v: Vec<_> = needs.iter().collect();
@@ -1136,13 +1203,17 @@ fn test_ci_gate_fails_on_failed_or_cancelled_need() {
 /// closes both escapes, because a folded scalar's opening line still starts
 /// with `    if:` even though its condition text lives on continuation lines.
 ///
-/// `mutants` is intentionally excluded from this list: it carries
-/// `if: github.event_name == 'pull_request'` by design (PR-only scope),
-/// emits `skipped` on push events, and is named in
-/// `scripts/check-ci-gate.sh`'s restrictive `ALLOWED_SKIPS` allowlist — so
-/// its `skipped` result is tolerated deliberately, not by accident.  The
-/// `test_mutants_is_in_ci_gate_needs` test pins that `mutants` remains in
-/// `ci-gate.needs`.
+/// `mutants`/`mutants-plan` are not `ci-gate.needs` members at all (they
+/// are admitted into `ci.yml`'s job universe only via
+/// `PINNED_GATE_EXCLUDED_JOBS` — DEC-096/DEC-097), so `always_run_needs_
+/// members` never iterates them; this docstring's `mutants`-specific
+/// carve-out is HISTORICAL (pre-cycle-006). **cycle-006 (mutants-ci-
+/// sharding) EXTENSION:** `mutants-aggregate` IS a `ci-gate.needs` member
+/// and DOES carry a job-level `if: always()` by design — its carve-out is
+/// handled below via `PINNED_ALWAYS_RUN_WITH_IF_EXCEPTIONS`, a byte-exact
+/// pin on the expected `if:` text, not a bare exclusion from this check.
+/// The `test_mutants_aggregate_is_in_ci_gate_needs` test pins that
+/// `mutants-aggregate` remains in `ci-gate.needs`.
 ///
 /// Job-level `if:` is the job's own DIRECT mapping key (a job-level `if:`
 /// example: `    if: github.event_name == 'pull_request'`, at 4-space
@@ -1225,7 +1296,7 @@ fn test_ci_gate_needs_jobs_have_no_job_level_if() {
         // job-level `if:` key is found by TREE MEMBERSHIP
         // (`Job::keys`/`WfDoc::parse_single_job`) — deliberately NOT
         // filtering on the condition's content or shape (see F-03 docstring
-        // above): any job-level `if:` key on these seven jobs is hazardous,
+        // above): any job-level `if:` key on these jobs is hazardous,
         // whether it's a single-line condition, a folded/block scalar, or
         // references something other than `github.event_name`. Tree
         // membership is immune, by construction, to every spelling variant
@@ -1233,7 +1304,39 @@ fn test_ci_gate_needs_jobs_have_no_job_level_if() {
         // `extract_key_name_at_indent`) AND every job-body indent (the old
         // scan hard-coded 4 spaces — `POSITIONAL-ASSUMPTION-AXIS`, closed
         // here per AC-008).
+        //
+        // cycle-006 (mutants-ci-sharding) EXTENSION: a job named in
+        // `PINNED_ALWAYS_RUN_WITH_IF_EXCEPTIONS` (today, exactly
+        // `mutants-aggregate`) is EXPECTED to carry a job-level `if:` —
+        // its `if: always()` is load-bearing (see architecture-delta.md
+        // §6.4/§6.2) — so for that job the assertion is inverted: the
+        // `if:` value must EXACTLY equal the pinned tautology text,
+        // instead of asserting no `if:` key exists at all. Every other
+        // always-run job keeps the unchanged "no job-level `if:` key,
+        // period" assertion below.
         let job = WfDoc::parse_single_job(job_block);
+        let pinned_exception = PINNED_ALWAYS_RUN_WITH_IF_EXCEPTIONS
+            .iter()
+            .find(|(job, _)| job == job_name);
+        if let Some((_, expected_if_expr)) = pinned_exception {
+            let actual_if_expr =
+                extract_and_normalize_if_expr(job_block).unwrap_or_else(|reason| {
+                    panic!(
+                        "FAIL (M1/F-03, PINNED_ALWAYS_RUN_WITH_IF_EXCEPTIONS): \
+                         job `{job_name}`'s job-level `if:` {reason}\n\
+                         Current `{job_name}` block:\n{job_block}"
+                    )
+                });
+            assert_eq!(
+                actual_if_expr.as_deref(),
+                Some(*expected_if_expr),
+                "FAIL (M1/F-03, PINNED_ALWAYS_RUN_WITH_IF_EXCEPTIONS): job \
+                 `{job_name}`'s job-level `if:` does not byte-match its \
+                 pinned exception text ({expected_if_expr:?}).\n\
+                 Current `{job_name}` block:\n{job_block}"
+            );
+            continue;
+        }
         if job.keys.iter().any(|k| k == "if") {
             panic!(
                 "FAIL (M1/F-03): Job `{job_name}` has a job-level `if:` key.\n\
@@ -1310,11 +1413,16 @@ fn test_ci_gate_needs_jobs_have_no_job_level_if() {
 /// absence of any pin on these jobs' key sets) regardless of that
 /// open question.
 ///
-/// **Scope — why ALL seven always-run jobs, not just the five with an
-/// unguarded `run:` step:** of the seven, only `fmt`, `clippy`, `msrv`,
-/// `spec-guard`, and `check-signing-workflow-injection` are concretely
-/// exposed to the `defaults.run.shell` vector specifically (none of their
-/// steps sets its own `shell:`). `test` is NOT exposed to that specific
+/// **Scope — why ALL EIGHT always-run jobs, not just the six with an
+/// unguarded `run:` step (cycle-006, mutants-ci-sharding: `mutants-
+/// aggregate` joins this table as the eighth always-run job — its
+/// "Evaluate sharded mutation gate" step declares no step-level `shell:`
+/// of its own, so it is concretely exposed to the `defaults.run.shell`
+/// vector exactly as described below for the other five):** of the
+/// eight, `fmt`, `clippy`, `msrv`, `spec-guard`,
+/// `check-signing-workflow-injection`, and `mutants-aggregate` are
+/// concretely exposed to the `defaults.run.shell` vector specifically
+/// (none of their steps sets its own `shell:`). `test` is NOT exposed to that specific
 /// vector — its POL-11 guard step already carries an explicit
 /// step-level `shell: bash` (pinned separately by
 /// `PINNED_TEST_GUARD_STEP_KEYS`), which GitHub Actions' documented
@@ -1348,6 +1456,13 @@ const PINNED_ALWAYS_RUN_JOB_KEY_SETS: &[(&str, &[&str])] = &[
     ("deny", &["name", "runs-on", "steps", "timeout-minutes"]),
     ("fmt", &["name", "runs-on", "steps", "timeout-minutes"]),
     ("msrv", &["name", "runs-on", "steps", "timeout-minutes"]),
+    (
+        // cycle-006 (mutants-ci-sharding): the FIRST entry in this list
+        // with BOTH `needs` and `if` as job-level keys — `if: always()` is
+        // load-bearing (see PINNED_ALWAYS_RUN_WITH_IF_EXCEPTIONS).
+        "mutants-aggregate",
+        &["if", "name", "needs", "runs-on", "steps", "timeout-minutes"],
+    ),
     (
         "spec-guard",
         &["name", "runs-on", "steps", "timeout-minutes"],
@@ -1516,8 +1631,9 @@ fn test_always_run_jobs_have_pinned_complete_job_key_sets() {
 //     them.
 
 /// PINNED, human-reviewed COMPLETE per-step key sets, in step order, for
-/// every step of each of the five NON-matrix always-run `ci-gate.needs`
-/// jobs. Sibling of `PINNED_GATE_STEP_KEY_SETS` (which pins `ci-gate`'s own
+/// every step of each of the six NON-matrix always-run `ci-gate.needs`
+/// jobs (cycle-006, mutants-ci-sharding: `mutants-aggregate` joins as the
+/// sixth). Sibling of `PINNED_GATE_STEP_KEY_SETS` (which pins `ci-gate`'s own
 /// steps this same way) and `PINNED_ALWAYS_RUN_JOB_KEY_SETS` (which pins
 /// these same jobs' KEYS one level up — JOB-level, not per-step). See the
 /// module comment immediately above this constant for the concrete `if:
@@ -1561,6 +1677,17 @@ const PINNED_ALWAYS_RUN_STEP_KEY_SETS: &[(&str, &[&[&str]])] = &[
         ],
     ),
     (
+        // cycle-006 (mutants-ci-sharding): sixth non-matrix always-run job.
+        "mutants-aggregate",
+        &[
+            &["name", "uses", "with"], // Harden the runner (Audit all outbound calls)
+            &["uses"],                 // actions/checkout
+            &["name", "if", "uses", "with"], // Download all shard status sentinels
+            &["name", "if", "uses", "with"], // Download all shard outcomes
+            &["name", "if", "env", "run"], // Evaluate sharded mutation gate
+        ],
+    ),
+    (
         "spec-guard",
         &[
             &["name", "uses", "with"], // Harden the runner (Audit all outbound calls)
@@ -1575,6 +1702,7 @@ const PINNED_ALWAYS_RUN_STEP_KEY_SETS: &[(&str, &[&[&str]])] = &[
             &["name", "run"],          // check-bc-citation-symbols self-test (BC-CITE-001)
             &["name", "run"],          // check-bc-citation-symbols (BC-CITE-001)
             &["name", "run"],          // check-ci-gate self-test (fixture suite, S-CIGATE-2)
+            &["name", "run"], // check-mutants-aggregate self-test (fixture suite) — cycle-006
         ],
     ),
 ];
@@ -4407,153 +4535,1569 @@ fn test_spec_guard_contains_check_ci_gate_self_test_step() {
 /// matching step's `if:` value via `Step::value_of` and requires
 /// `ScalarStyle::Plain` (AC-004 mandate applied to this newly-introduced
 /// value pin) plus no YAML tag before trusting its text.
+// RENAMED (cycle-006 mutants-ci-sharding, Task 8 write-test half, story
+// AC-033) from `test_mutants_job_structure_unchanged_by_cigate2_option_c`.
+// The old name/body asserted the PRE-sharding single-job `mutants` shape
+// (Option C's "leave `mutants` entirely unchanged" contract, S-CIGATE-2).
+// This story's design REPLACES that shape: `mutants` is now an 8-shard
+// `strategy.matrix.shard` job depending on `mutants-plan`, with THREE
+// step-level `if: always()` occurrences (not one) on the two sentinel
+// steps plus the outcomes-upload step — the "3-count steps_with_if
+// cardinality inversion" the story's Task 8 names explicitly. This test
+// was rewritten, not merely renamed, to assert the sharded design per
+// `ci-yml-design.md §2`'s authoritative shape; the implementer's Task 9
+// (GREEN phase) reshaped the real `mutants` job in `ci.yml` to match, and
+// this test now passes as a standing structural regression proof.
 #[test]
-fn test_mutants_job_structure_unchanged_by_cigate2_option_c() {
+fn test_mutants_shard_job_structure_matches_sharded_design() {
     let ci = read_ci_yml();
     let mutants_block = extract_job_block(&ci, "mutants").unwrap_or_else(|| {
         panic!("FAIL: `.github/workflows/ci.yml` does not contain a `mutants:` job.")
     });
 
-    // Job-level if: unchanged — PR-only scope, the exact fact
-    // `scripts/check-ci-gate.sh`'s `ALLOWED_SKIPS` allowlist is built to
-    // tolerate (mutants reports `skipped` on push BECAUSE of this guard).
-    //
-    // Tree-based via `extract_and_normalize_if_expr` (S-CIGATE-3 finding
-    // fix, ADV-SC3-P1-MED-003): immune to spelling/indent variance and
-    // enforces the AC-004 `ScalarStyle::Plain` mandate on the value itself.
+    // AC-033: `mutants` now depends on `mutants-plan` for the shared
+    // diff-file artifact (one upload, 8 downloads of identical bytes).
+    let needs = parse_needs_set(mutants_block).unwrap_or_else(|| {
+        panic!(
+            "FAIL (AC-033): `mutants` job block has no `needs:` key — the \
+             sharded design requires `needs: [mutants-plan]`.\n\
+             Current mutants block:\n{mutants_block}"
+        )
+    });
+    assert!(
+        needs.contains("mutants-plan"),
+        "FAIL (AC-033): `mutants`'s `needs:` set {needs:?} does not \
+         contain `mutants-plan` — the sharded shard job must depend on \
+         `mutants-plan` for the shared diff-file artifact it downloads.\n\
+         Current mutants block:\n{mutants_block}"
+    );
+
+    // Job-level `if:` gains the escalation-aware conjunct — defense in
+    // depth alongside `mutants-plan`'s own escalation short-circuit
+    // (ci-yml-design.md §2 design note: "explicitly re-derives the
+    // PR-only condition rather than relying on implicit needs-success
+    // propagation").
     let actual_job_if_expr =
         extract_and_normalize_if_expr(mutants_block).unwrap_or_else(|reason| {
             panic!(
-                "FAIL (S-CIGATE-2 AC-006): `mutants`'s job-level `if:` {reason}\n\
+                "FAIL (AC-033): `mutants`'s job-level `if:` {reason}\n\
              Current mutants block:\n{mutants_block}"
             )
         });
     assert_eq!(
         actual_job_if_expr.as_deref(),
-        Some("github.event_name == 'pull_request'"),
-        "FAIL (S-CIGATE-2 AC-006): `mutants`'s job-level `if: \
-         github.event_name == 'pull_request'` guard is missing or was \
-         changed. Option C leaves the `mutants` job entirely UNCHANGED — \
-         this guard (and the fact that `mutants` therefore reports \
-         `skipped` on push) is exactly what `scripts/check-ci-gate.sh`'s \
-         `ALLOWED_SKIPS` allowlist is built to tolerate.\n\
+        Some(
+            "github.event_name == 'pull_request' && needs.mutants-plan.outputs.escalated != 'true'"
+        ),
+        "FAIL (AC-033): `mutants`'s job-level `if:` guard does not match \
+         the sharded design's escalation-aware condition (the shard \
+         matrix must be skipped entirely when `mutants-plan` escalated).\n\
          Current mutants block:\n{mutants_block}"
     );
 
-    // All six steps present, unchanged (Option C's principal advantage
-    // over the rejected Option B).
+    // AC-005/AC-033: the SOLE declaration of shard count N — an 8-entry
+    // `strategy.matrix.shard: [0..7]` sequence. Cross-checked independently
+    // against `scripts/mutants-aggregate.sh`'s own `EXPECTED_SHARDS`
+    // constant by `test_mutants_aggregate_expected_shards_matches_matrix_shard_count`.
+    let shard_items = common::wf::job_level_nested_sequence_items(
+        mutants_block,
+        &["strategy", "matrix", "shard"],
+    )
+    .unwrap_or_else(|| {
+        panic!(
+            "FAIL (AC-033): `mutants` has no `strategy.matrix.shard` \
+             sequence — the sharded design requires an 8-entry shard \
+             matrix ([0, 1, 2, 3, 4, 5, 6, 7]).\n\
+             Current mutants block:\n{mutants_block}"
+        )
+    });
+    let expected_shard_items: Vec<String> = (0..8).map(|i: u32| i.to_string()).collect::<Vec<_>>();
+    assert_eq!(
+        shard_items, expected_shard_items,
+        "FAIL (AC-033): `mutants`'s `strategy.matrix.shard` sequence \
+         ({shard_items:?}) does not match the pinned 8-entry [0..7] list \
+         ({expected_shard_items:?}).\n\
+         Current mutants block:\n{mutants_block}"
+    );
+
+    // Required step names, per `ci-yml-design.md §2`'s authoritative
+    // sharded shape — two brand-new sentinel steps inserted between the
+    // existing run and upload steps.
     let required_step_names = [
         "Harden the runner (Audit all outbound calls)",
-        "Run mutation tests on PR diff",
-        "Check kill rate",
+        "Run mutation tests on this shard",
+        "Write shard status sentinel",
+        "Upload shard status sentinel",
+        "Upload shard outcomes",
     ];
     for step_name in &required_step_names {
         assert!(
             mutants_block.contains(step_name),
-            "FAIL (S-CIGATE-2 AC-006): `mutants` is missing expected step \
-             `{step_name}`. Option C requires the `mutants` job to remain \
-             unchanged.\n\
-             Current mutants block:\n{mutants_block}"
-        );
-    }
-    let required_uses_prefixes = [
-        "uses: actions/checkout@",
-        "uses: taiki-e/install-action@",
-        "uses: Swatinem/rust-cache@",
-    ];
-    for prefix in &required_uses_prefixes {
-        assert!(
-            mutants_block.contains(prefix),
-            "FAIL (S-CIGATE-2 AC-006): `mutants` is missing an expected \
-             step using `{prefix}`. Option C requires the `mutants` job to \
-             remain unchanged (no steps added, removed, or reordered).\n\
+            "FAIL (AC-033): `mutants` is missing expected sharded-design \
+             step `{step_name}` (ci-yml-design.md §2).\n\
              Current mutants block:\n{mutants_block}"
         );
     }
 
-    // Exactly one step-level `if:` must exist in the block — the
-    // pre-existing `if: always()` on `Check kill rate`. A NEW step-level
-    // `if:` on any of the other five steps would be the rejected Option
-    // B's signature edit (moving PR-only gating from job level down to
-    // individual steps).
-    //
-    // S-CIGATE-3 finding fix (ADV-SC3-P1-MED-003): rewritten on
-    // `WfDoc::parse_single_job` + `Job::steps[i].keys` tree membership,
-    // mirroring `test_ci_gate_pass_fail_semantics_are_structurally_placed`'s
-    // M2-d `has_step_level_if` pattern. Unlike the deleted
-    // `l.starts_with("        if:")` scan, this has no indent literal to
-    // hard-code and no enumerated spelling list to be incomplete — a step's
-    // `if:` key (however spelled, however indented, on any step including
-    // one smuggled in as an entirely new list entry) is found by walking
-    // the parsed tree, not by re-deriving a column/text-prefix guess.
+    // AC-033: the shard invocation shape is load-bearing, INCLUDING flag
+    // ORDER (`--in-diff` first) — without it, each shard would slice the
+    // FULL `examine_globs` scope instead of the in-diff subset, and the
+    // pooled sum could never reconcile against `MUTANT_COUNT` (AC-008's
+    // exact-equality reconciliation would hard-fail every PR). The
+    // step's `run:` body is a multi-line block scalar (`run: |`), so this
+    // is an ordered-substring check over the whole job block rather than
+    // the single-physical-line byte-pin extractor used elsewhere in this
+    // file (that extractor explicitly rejects non-single-line scalars —
+    // see `extract_and_normalize_step_run_line_by_name`'s own doc
+    // comment).
+    let required_invocation_fragments_in_order = [
+        "cargo mutants",
+        "--in-diff",
+        "--shard ${{ matrix.shard }}/8",
+        "--sharding slice",
+        "--jobs 2",
+        "--baseline skip",
+        "--timeout 240",
+    ];
+    let mut last_offset = 0usize;
+    for fragment in &required_invocation_fragments_in_order {
+        let offset = mutants_block[last_offset..]
+            .find(fragment)
+            .unwrap_or_else(|| {
+                panic!(
+                    "FAIL (AC-033): `mutants`'s shard invocation is \
+                     missing the fragment `{fragment}`, or it appears out \
+                     of order relative to the previously-matched \
+                     fragment(s) {:?} — flag ORDER is load-bearing \
+                     (`--in-diff` first per ci-yml-design.md §2's \
+                     authoritative shard job).\n\
+                     Current mutants block:\n{mutants_block}",
+                    &required_invocation_fragments_in_order
+                        [..required_invocation_fragments_in_order
+                            .iter()
+                            .position(|f| f == fragment)
+                            .unwrap()]
+                )
+            });
+        last_offset += offset + fragment.len();
+    }
+
+    // Task 8's "3-count steps_with_if cardinality inversion": the
+    // pre-sharding design had exactly ONE step-level `if:` (`Check kill
+    // rate`, now removed — kill-rate computation moved to
+    // `mutants-aggregate`); the sharded design has exactly THREE, all
+    // `if: always()`, on the two new sentinel steps plus the outcomes
+    // upload (ci-yml-design.md §2: "Runs UNCONDITIONALLY (if: always())
+    // after run-mutants, regardless of that step's outcome").
     let job = WfDoc::parse_single_job(mutants_block);
     let steps_with_if: Vec<&Step> = job
         .steps
         .iter()
         .filter(|s| s.keys.iter().any(|k| k == "if"))
         .collect();
-
     assert_eq!(
         steps_with_if.len(),
-        1,
-        "FAIL (S-CIGATE-2 AC-006): expected exactly one step-level `if:` \
-         in `mutants` (the pre-existing `if: always()` on `Check kill \
-         rate`), found {} (resolved by tree membership under \
-         `Job::steps` — immune to `if:` key-spelling and indent variance, \
-         and to a smuggled `if:` on a brand-new step).\n\
-         A NEW step-level `if:` on any of the other five steps (Harden the \
-         runner, checkout, install-action, rust-cache, Run mutation tests \
-         on PR diff), or on an entirely new step, would be the rejected \
-         Option B's signature edit — Option C requires `mutants` to remain \
-         entirely unchanged.\n\
+        3,
+        "FAIL (AC-033, Task 8 cardinality inversion): expected exactly 3 \
+         step-level `if:` occurrences in the sharded `mutants` design \
+         (`Write shard status sentinel` / `Upload shard status sentinel` \
+         / `Upload shard outcomes`, all `if: always()`) — found {} \
+         (resolved by tree membership under `Job::steps`, immune to `if:` \
+         key-spelling/indent variance).\n\
          Current mutants block:\n{mutants_block}",
         steps_with_if.len(),
     );
+    for step in &steps_with_if {
+        match step.value_of("if") {
+            Some(Value::Scalar {
+                text,
+                style,
+                tag,
+                has_anchor,
+                ..
+            }) => {
+                assert!(
+                    !has_anchor && tag.is_none(),
+                    "FAIL (AC-033): a sharded-design step-level `if:` \
+                     carries a YAML node property (anchor={has_anchor}, \
+                     tag={tag:?}) — rejected outright rather than \
+                     resolved and trusted (S-CIGATE-3 AC-007 parity).\n\
+                     step: {:?}\n\
+                     Current mutants block:\n{mutants_block}",
+                    step.name
+                );
+                assert_eq!(
+                    *style,
+                    ScalarStyle::Plain,
+                    "FAIL (AC-033): a sharded-design step-level `if:` is \
+                     not a plain scalar ({style:?}).\n\
+                     step: {:?}\n\
+                     Current mutants block:\n{mutants_block}",
+                    step.name
+                );
+                assert!(
+                    text.contains("always()"),
+                    "FAIL (AC-033): a sharded-design step-level `if:` \
+                     does not read `always()` (found {text:?}).\n\
+                     step: {:?}\n\
+                     Current mutants block:\n{mutants_block}",
+                    step.name
+                );
+            }
+            other => panic!(
+                "FAIL (AC-033): a sharded-design step-level `if:` is not \
+                 a plain scalar value (found: {other:?}).\n\
+                 step: {:?}\n\
+                 Current mutants block:\n{mutants_block}",
+                step.name
+            ),
+        }
+    }
+}
 
-    // AC-004 quoting-fidelity mandate applied to this newly-introduced
-    // value pin: the sole step-level `if:` value must be a plain
-    // (unquoted, single-physical-line, untagged) scalar reading
-    // `always()` — a re-quoted or re-tagged form is rejected outright
-    // rather than resolved and trusted, matching every other rewritten
-    // pin in this file (see `extract_and_normalize_if_expr`'s doc comment
-    // for the full AC-004 rationale).
-    match steps_with_if[0].value_of("if") {
-        Some(Value::Scalar {
-            text, style, tag, ..
-        }) => {
+/// (cycle-006 F4 review round 2, F-PD-MED-001): pins the shard status
+/// sentinel's `run_outcome` field to `steps.run-mutants.outcome` — NOT
+/// `.conclusion` — closing the VP-006 F5 hand-off residual early.
+/// `scripts/mutants-aggregate.sh`'s Step 3 (`evaluate_mutants_aggregate`)
+/// treats this sentinel's `run_outcome` as the SOLE per-shard completeness
+/// signal distinguishing "this shard legitimately produced 0 mutants" from
+/// "this shard's `run-mutants` step genuinely crashed before producing any
+/// `outcomes.json` at all." `run-mutants` carries `continue-on-error:
+/// true` (routine and correct — a shard reporting missed/timeout mutants
+/// under `--baseline skip` is expected, not a step failure), which forces
+/// `.conclusion` to ALWAYS read `success` at the job-status-context level
+/// regardless of what genuinely happened inside the step; `.outcome` is
+/// the ONE context value that still reflects the step's real result. A
+/// flip from `.outcome` to `.conclusion` here would silently reopen the
+/// all-shards-crash false-green class — before this test, nothing on the
+/// `ci.yml` side asserted that choice actually holds; only this step's own
+/// `ci.yml` comment (and the mirrored rationale in `mutants-aggregate.sh`)
+/// documented it in prose.
+#[test]
+fn test_mutants_shard_status_sentinel_uses_outcome_not_conclusion() {
+    let ci = read_ci_yml();
+    let mutants_block = extract_job_block(&ci, "mutants").unwrap_or_else(|| {
+        panic!("FAIL (F-PD-MED-001): `.github/workflows/ci.yml` does not contain a `mutants:` job.")
+    });
+
+    let job = WfDoc::parse_single_job(mutants_block);
+    let sentinel_step = job
+        .steps
+        .iter()
+        .find(|s| s.name.as_deref() == Some("Write shard status sentinel"))
+        .unwrap_or_else(|| {
+            panic!(
+                "FAIL (F-PD-MED-001): `mutants` has no step named \
+                 `Write shard status sentinel`.\n\
+                 Current mutants block:\n{mutants_block}"
+            )
+        });
+
+    match sentinel_step.value_of("run") {
+        Some(Value::Scalar { text, .. }) => {
             assert!(
-                tag.is_none(),
-                "FAIL (S-CIGATE-2 AC-006): the sole step-level `if:` in \
-                 `mutants` carries a YAML tag ({tag:?}) — a node property \
-                 on the value is rejected outright rather than resolved \
-                 and trusted (S-CIGATE-3 AC-007).\n\
-                 Current mutants block:\n{mutants_block}"
-            );
-            assert_eq!(
-                *style,
-                ScalarStyle::Plain,
-                "FAIL (S-CIGATE-2 AC-006): the sole step-level `if:` in \
-                 `mutants` is written in a non-plain YAML scalar style \
-                 ({style:?}) — S-CIGATE-3 AC-004 treats a quoted or \
-                 block-scalar `if:` value as a DIFFERENT, unpinned form \
-                 even when its resolved text is identical to the plain \
-                 pin.\n\
-                 Current mutants block:\n{mutants_block}"
+                text.contains("steps.run-mutants.outcome"),
+                "FAIL (F-PD-MED-001): the `Write shard status sentinel` \
+                 step's `run:` body does not contain \
+                 `steps.run-mutants.outcome` — the sole per-shard \
+                 completeness signal `mutants-aggregate.sh` trusts must be \
+                 sourced from `.outcome`, not `.conclusion` (which always \
+                 reads `success` under `run-mutants`'s `continue-on-error: \
+                 true`).\n\
+                 run body:\n{text}"
             );
             assert!(
-                text.contains("always()"),
-                "FAIL (S-CIGATE-2 AC-006): the sole step-level `if:` in \
-                 `mutants` no longer reads `if: always()` (found: \
-                 {text:?}).\n\
-                 Current mutants block:\n{mutants_block}"
+                !text.contains("steps.run-mutants.conclusion"),
+                "FAIL (F-PD-MED-001): the `Write shard status sentinel` \
+                 step's `run:` body reads `steps.run-mutants.conclusion` \
+                 — this ALWAYS reads `success` under `run-mutants`'s \
+                 `continue-on-error: true`, silently reopening the \
+                 all-shards-crash false-green class. It must read \
+                 `.outcome` instead.\n\
+                 run body:\n{text}"
             );
         }
         other => panic!(
-            "FAIL (S-CIGATE-2 AC-006): the sole step-level `if:` in \
-             `mutants` is not a plain scalar value (found: {other:?}).\n\
+            "FAIL (F-PD-MED-001): the `Write shard status sentinel` \
+             step's `run:` value is not a plain scalar (found: {other:?}).\n\
              Current mutants block:\n{mutants_block}"
         ),
     }
+}
+
+/// (cycle-006 F4 review round 3, F-PG-MED-001, MED): the shard `mutants`
+/// job's step list was OPEN. `PINNED_GATE_EXCLUDED_JOBS` lists `mutants`
+/// (it is not an always-run, unconditional `ci-gate.needs` member — it is
+/// skipped on push events and on escalation), and unlike its siblings on
+/// the required-gate decision path — `mutants-plan`
+/// (`PINNED_MUTANTS_PLAN_JOB_KEY_SET`/`PINNED_MUTANTS_PLAN_STEP_KEY_SETS`)
+/// and `mutants-aggregate` (`PINNED_MUTANTS_AGGREGATE_ENV_KEYS` and
+/// siblings) — the `mutants` shard job itself had NO job-level or
+/// per-step key-set pin at all before this fix.
+///
+/// **Concrete exploit this closes:** a `ci.yml` diff appends a NEW step to
+/// the `mutants` job, positioned AFTER `run-mutants` but BEFORE "Upload
+/// shard outcomes", that overwrites `mutants.out/outcomes.json` with a
+/// forged, always-100%-kill-rate summary (e.g. `{"caught": 999, "missed":
+/// 0, "timeout": 0, "unviable": 0}`). Every per-shard total the "Upload
+/// shard outcomes" step then uploads is fabricated, with ZERO code
+/// execution beyond a single `echo`/`cat` — `mutants-aggregate`'s pooled-
+/// total reconciliation (Step 4) is UNRECONCILED against per-shard
+/// CONTENT (only against the pre-counted `MUTANT_COUNT` total across all
+/// 8 shards combined), so a forged 100% kill rate on even one shard is
+/// invisible to it as long as the pooled total mutant count still adds
+/// up. Before this fix, nothing in this file asserted the `mutants` job's
+/// step SEQUENCE was closed, so this injected step was structurally
+/// unpinned — see `test_mutants_shard_step_key_set_pin_rejects_injected_
+/// outcomes_rewrite_step` below for the standing RED regression proof.
+///
+/// **Fix:** pin the shard job's COMPLETE, ORDERED step-key-set sequence
+/// (mirroring `PINNED_MUTANTS_PLAN_STEP_KEY_SETS`'s idiom exactly) — any
+/// appended, removed, reordered, or key-mutated step fails this pin,
+/// closing the "select the right steps, but an extra one also runs"
+/// class this test's sibling pins already close for `mutants-plan` and
+/// the seven always-run `ci-gate.needs` jobs.
+///
+/// Step order, per `ci.yml`'s `mutants` job as of this pass: harden-
+/// runner, checkout, install-action (cargo-mutants), rust-cache, download
+/// shared diff file, run mutation tests on this shard (id: run-mutants,
+/// `continue-on-error: true`), write shard status sentinel (`if:
+/// always()`), upload shard status sentinel (`if: always()`), upload
+/// shard outcomes (`if: always()`).
+const PINNED_MUTANTS_SHARD_JOB_KEY_SET: &[&str] = &[
+    "if",
+    "name",
+    "needs",
+    "runs-on",
+    "steps",
+    "strategy",
+    "timeout-minutes",
+];
+
+/// See `PINNED_MUTANTS_SHARD_JOB_KEY_SET`'s doc comment immediately above.
+const PINNED_MUTANTS_SHARD_STEP_KEY_SETS: &[&[&str]] = &[
+    &["name", "uses", "with"], // Harden the runner (Audit all outbound calls)
+    &["uses"],                 // actions/checkout
+    &["uses", "with"],         // taiki-e/install-action (cargo-mutants@27.1.0)
+    &["uses"],                 // Swatinem/rust-cache
+    &["name", "uses", "with"], // Download shared diff file
+    &["continue-on-error", "id", "name", "run"], // Run mutation tests on this shard
+    &["if", "name", "run"],    // Write shard status sentinel
+    &["if", "name", "uses", "with"], // Upload shard status sentinel
+    &["if", "name", "uses", "with"], // Upload shard outcomes
+];
+
+/// Compares `job_block`'s job-level key set and per-step key-set SEQUENCE
+/// against `expected_job_keys`/`expected_step_sets` (both order-tolerant
+/// on input — this function sorts each set before comparing, but the
+/// STEP SEQUENCE itself — one entry per step, in step order — is never
+/// reordered). Returns `Ok(())` on an exact match on both, or
+/// `Err(String)` describing the first mismatch found (job-level key set
+/// checked first, then the step-key-set sequence).
+///
+/// Shared by `test_mutants_plan_job_and_step_key_sets_are_pinned`'s sibling
+/// for the `mutants` shard job (`test_mutants_shard_job_and_step_key_sets_
+/// are_pinned`) and by that test's own standing RED regression proof
+/// (`test_mutants_shard_step_key_set_pin_rejects_injected_outcomes_rewrite_
+/// step`, F-PG-MED-001), so the exact same comparison logic both jobs are
+/// exercised through in production is what the regression test proves is
+/// genuinely default-deny.
+fn check_job_and_step_key_sets(
+    job_block: &str,
+    expected_job_keys: &[&str],
+    expected_step_sets: &[&[&str]],
+) -> Result<(), String> {
+    let mut expected_job: Vec<String> = expected_job_keys.iter().map(|s| s.to_string()).collect();
+    expected_job.sort();
+    let actual_job = extract_job_level_key_set(job_block);
+    if actual_job != expected_job {
+        return Err(format!(
+            "job-level key set ({actual_job:?}) does not match the \
+             pinned set ({expected_job:?})"
+        ));
+    }
+
+    let expected_steps: Vec<Vec<String>> = expected_step_sets
+        .iter()
+        .map(|set| {
+            let mut v: Vec<String> = set.iter().map(|s| s.to_string()).collect();
+            v.sort();
+            v
+        })
+        .collect();
+    let actual_steps = extract_gate_step_key_sets(job_block);
+    if actual_steps != expected_steps {
+        return Err(format!(
+            "per-step key-set sequence ({actual_steps:?}) does not match \
+             the pinned, human-reviewed sequence ({expected_steps:?}) — \
+             an added, removed, reordered, or key-mutated step changes \
+             this"
+        ));
+    }
+
+    Ok(())
+}
+
+#[test]
+fn test_mutants_shard_job_and_step_key_sets_are_pinned() {
+    let ci = read_ci_yml();
+    let mutants_block = extract_job_block(&ci, "mutants").unwrap_or_else(|| {
+        panic!("FAIL (F-PG-MED-001): `.github/workflows/ci.yml` does not contain a `mutants:` job.")
+    });
+
+    check_job_and_step_key_sets(
+        mutants_block,
+        PINNED_MUTANTS_SHARD_JOB_KEY_SET,
+        PINNED_MUTANTS_SHARD_STEP_KEY_SETS,
+    )
+    .unwrap_or_else(|err| {
+        panic!(
+            "FAIL (F-PG-MED-001): the sharded `mutants` job's job-level \
+             and/or per-step key sets do not match the pinned, human- \
+             reviewed sets — {err}. Most importantly, a step appended \
+             AFTER `run-mutants` could rewrite `mutants.out/outcomes.json` \
+             before the \"Upload shard outcomes\" step reads it, forging \
+             a shard's kill rate with no code execution — see this \
+             constant's own doc comment for the concrete exploit. If this \
+             is a deliberate, reviewed change, update \
+             PINNED_MUTANTS_SHARD_JOB_KEY_SET/PINNED_MUTANTS_SHARD_STEP_\
+             KEY_SETS in the SAME change.\n\
+             Current mutants block:\n{mutants_block}"
+        )
+    });
+}
+
+/// (cycle-006 F4 review round 3, F-PG-MED-001 — standing RED regression
+/// proof): a hand-crafted, untracked `mutants` shard job block (the
+/// tracked `ci.yml` is never touched) appends a step AFTER `run-mutants`
+/// — and BEFORE the pinned "Write shard status sentinel"/"Upload shard
+/// outcomes" steps — that overwrites `mutants.out/outcomes.json` to fake
+/// a 100% kill rate before it is uploaded. This is the exact exploit
+/// `PINNED_MUTANTS_SHARD_STEP_KEY_SETS` above exists to close; this test
+/// asserts `check_job_and_step_key_sets` — the SAME function the
+/// production pin test uses — genuinely rejects it, rather than merely
+/// documenting the intent to.
+#[test]
+fn test_mutants_shard_step_key_set_pin_rejects_injected_outcomes_rewrite_step() {
+    let forged_block = r#"  mutants:
+    name: Mutation Testing (Shard)
+    runs-on: ubuntu-latest
+    needs: [mutants-plan]
+    strategy:
+      fail-fast: false
+      matrix:
+        shard: [0, 1, 2, 3, 4, 5, 6, 7]
+    if: github.event_name == 'pull_request' && needs.mutants-plan.outputs.escalated != 'true'
+    timeout-minutes: 60
+    steps:
+      - name: Harden the runner (Audit all outbound calls)
+        uses: step-security/harden-runner@x
+        with:
+          egress-policy: audit
+      - uses: actions/checkout@x
+      - uses: taiki-e/install-action@x
+        with:
+          tool: cargo-mutants@27.1.0
+      - uses: Swatinem/rust-cache@x
+      - name: Download shared diff file
+        uses: actions/download-artifact@x
+        with:
+          name: mutants-diff-file
+          path: /tmp/diff
+      - name: Run mutation tests on this shard
+        id: run-mutants
+        continue-on-error: true
+        run: |
+          cargo mutants --in-diff /tmp/diff/pr.diff \
+            --shard 0/8 --sharding slice \
+            --jobs 2 --baseline skip --timeout 240
+      - name: Forge a passing outcomes.json (F-PG-MED-001 RED reproduction)
+        run: |
+          mkdir -p mutants.out
+          echo '{"caught": 999, "missed": 0, "timeout": 0, "unviable": 0}' > mutants.out/outcomes.json
+      - name: Write shard status sentinel
+        if: always()
+        run: |
+          HAS_OUTCOMES=false
+          [ -f mutants.out/outcomes.json ] && HAS_OUTCOMES=true
+          echo done
+      - name: Upload shard status sentinel
+        if: always()
+        uses: actions/upload-artifact@x
+        with:
+          name: mutants-shard-status-0
+          path: /tmp/shard-status-0.json
+          if-no-files-found: error
+          retention-days: 1
+      - name: Upload shard outcomes
+        if: always()
+        uses: actions/upload-artifact@x
+        with:
+          name: mutants-shard-outcomes-0
+          path: mutants.out/outcomes.json
+          if-no-files-found: warn
+          retention-days: 1
+"#;
+
+    let result = check_job_and_step_key_sets(
+        forged_block,
+        PINNED_MUTANTS_SHARD_JOB_KEY_SET,
+        PINNED_MUTANTS_SHARD_STEP_KEY_SETS,
+    );
+
+    assert!(
+        result.is_err(),
+        "FAIL (F-PG-MED-001 RED proof did not hold): the pinned step-key- \
+         set check accepted a forged `mutants` shard job block with an \
+         extra, unpinned step injected AFTER `run-mutants` that rewrites \
+         `mutants.out/outcomes.json` before it is uploaded — the pin is \
+         NOT default-deny against this exploit."
+    );
+}
+
+/// (cycle-006 F4 review round 4, A-F1, HIGH — CWE-358 sibling of
+/// F-PI-CRITICAL-001/F-PG-MED-001): required real-invocation fragments for
+/// the sharded `mutants` job's "Run mutation tests on this shard" (id:
+/// `run-mutants`) step, scoped to that step's PARSED `run:` scalar via
+/// [`Step::value_of`] — NOT the whole raw job block text AC-033's
+/// presence-only check (`required_invocation_fragments_in_order`, inside
+/// `test_mutants_shard_job_structure_matches_sharded_design` above)
+/// searches. AC-033's check proves the invocation is PRESENT somewhere in
+/// the job block; it does not forbid arbitrary shell appended AFTER the
+/// invocation inside the SAME `run:` scalar — see
+/// `assert_run_mutants_step_content_is_honest` below for the closure.
+const MUTANTS_SHARD_RUN_STEP_REQUIRED_FRAGMENTS: [&str; 7] = [
+    "cargo mutants",
+    "--in-diff",
+    "--shard ${{ matrix.shard }}/8",
+    "--sharding slice",
+    "--jobs 2",
+    "--baseline skip",
+    "--timeout 240",
+];
+
+/// Resolves the sharded `mutants` job's "Run mutation tests on this shard"
+/// (id: `run-mutants`) step's `run:` key to its parsed scalar text
+/// (cycle-006 F4 review round 4, A-F1). `job_block` must be a single-job
+/// block as `extract_job_block` returns it (or an equivalently-shaped
+/// standalone fixture — see
+/// `test_mutants_shard_run_step_rejects_trailing_outcomes_launder`).
+///
+/// # Panics
+///
+/// Panics (naming the missing step, or the unexpected `run:` shape) if
+/// `job_block` has no step named `Run mutation tests on this shard`, or
+/// that step's `run:` value is not a scalar — both indicate a genuine
+/// structural defect in the job block, not something this pin should
+/// silently tolerate.
+fn mutants_shard_run_step_run_text(job_block: &str) -> String {
+    let job = WfDoc::parse_single_job(job_block);
+    let run_step = job
+        .steps
+        .iter()
+        .find(|s| s.name.as_deref() == Some("Run mutation tests on this shard"))
+        .unwrap_or_else(|| {
+            panic!(
+                "FAIL (A-F1): no step named `Run mutation tests on this \
+                 shard` in this job block.\n\
+                 Current job block:\n{job_block}"
+            )
+        });
+    match run_step.value_of("run") {
+        Some(Value::Scalar { text, .. }) => text.clone(),
+        other => panic!(
+            "FAIL (A-F1): `Run mutation tests on this shard`'s `run:` \
+             value is not a plain scalar (found: {other:?}).\n\
+             Current job block:\n{job_block}"
+        ),
+    }
+}
+
+/// (cycle-006 F4 review round 4, A-F1, HIGH): asserts the sharded
+/// `mutants` job's `run-mutants` step's PARSED `run:` scalar contains the
+/// required mutation-invocation fragments IN ORDER, AND that no statement
+/// appearing AFTER the last matched fragment references `outcomes.json` —
+/// closing the trailing-shell-append vector where a PR launders its own
+/// shard's `mutants.out/outcomes.json` (moving `missed`/`timeout` counts
+/// into `caught`, sum-preserving so `mutants-aggregate.sh`'s Step-4
+/// exact-equality reconciliation still passes) via shell appended AFTER
+/// the real `cargo mutants` invocation, inside the SAME step.
+///
+/// The `run-mutants` step's only legitimate job is to invoke `cargo
+/// mutants` — nothing in its real `run:` body ever mentions
+/// `outcomes.json` (that file is read only by LATER, separately-pinned
+/// steps: "Write shard status sentinel" and "Upload shard outcomes").
+///
+/// **SUPERSEDED (cycle-006 F4 review round 6, finding D-HIGH) — this is
+/// NOT a "robust, default-deny closure" as an earlier revision of this
+/// comment claimed.** A blanket ban on the CONTIGUOUS LITERAL
+/// `outcomes.json` is a substring DENYLIST, not default-deny: it is
+/// bypassed by any construction that references the file without ever
+/// spelling that exact literal after the invocation, e.g. (1) shell
+/// variable indirection (`n=outcomes; ... > "mutants.out/${n}.json"`), or
+/// (2) a glob/loop that names the file only via a wildcard or loop
+/// variable (`for f in mutants.out/*.json; do … "$f" …; done`). Neither
+/// contains the substring `outcomes.json` anywhere in the scanned text, so
+/// this check accepts both — see
+/// `test_mutants_shard_run_step_rejects_variable_indirection_launder` and
+/// `test_mutants_shard_run_step_rejects_glob_loop_launder` for standing RED
+/// proofs that this function specifically (not the production pin) accepts
+/// them. A third bypass needs no change to this step's `run:` body at all:
+/// repointing the sibling "Upload shard outcomes" step's `with.path`/
+/// `with.name` — this function has no visibility into that step whatsoever
+/// — see `test_mutants_shard_upload_outcomes_pin_rejects_repointed_path`.
+///
+/// This function is RETAINED, unchanged, ONLY so the three RED tests above
+/// can demonstrate what the OLD mechanism accepted. The production pin
+/// (`test_mutants_shard_run_step_content_is_pinned`) no longer calls it —
+/// it now compares the step's PARSED `run:` scalar against a full,
+/// human-reviewed byte-for-byte literal
+/// (`PINNED_MUTANTS_SHARD_RUN_BODY`, via
+/// `extract_and_normalize_mutants_shard_run_body`), which is genuinely
+/// default-deny: ANY deviation from the reviewed text — an appended line in
+/// any spelling, a reordered line, a single changed byte — fails the
+/// comparison, because it is exact-equality against the whole scalar, not
+/// a search for one banned shape within it.
+///
+/// Returns `Err` naming the problem; callers turn that into a panic with
+/// full context. Deliberately mirrors
+/// `mutants_plan_compute_step_run_text`'s sibling scoping fix
+/// (F-PI-CRITICAL-001) one job over — see that function's doc comment for
+/// why resolving the SPECIFIC step's parsed scalar (not the raw job block
+/// text) is the load-bearing property here.
+fn assert_run_mutants_step_content_is_honest(run_text: &str) -> Result<(), String> {
+    let mut last_offset = 0usize;
+    for fragment in &MUTANTS_SHARD_RUN_STEP_REQUIRED_FRAGMENTS {
+        match run_text[last_offset..].find(fragment) {
+            Some(offset) => last_offset += offset + fragment.len(),
+            None => return Err(format!("missing or out-of-order fragment `{fragment}`")),
+        }
+    }
+    if run_text[last_offset..].contains("outcomes.json") {
+        return Err("a statement referencing `outcomes.json` appears AFTER the \
+             real `cargo mutants` invocation in this step — the \
+             run-mutants step's sole legitimate job is to invoke `cargo \
+             mutants`; any post-invocation reference to its own \
+             outcomes.json (e.g. a `jq`/`mv`/`cp`/`tee`/redirect launder \
+             moving missed/timeout counts into caught) is illegitimate \
+             here"
+            .to_string());
+    }
+    Ok(())
+}
+
+/// (cycle-006 F4 review round 6, D-HIGH): the full, human-reviewed literal
+/// text of the `run-mutants` step's `run:` scalar, read byte-for-byte from
+/// `ci.yml` as of this pass (verified via a scratch print of the PARSED
+/// scalar, not retyped by hand from the raw YAML source — the `#`-prefixed
+/// lines inside this block are literal shell comments INSIDE the `|`
+/// block-literal scalar, not YAML comments, so they are part of the
+/// resolved text and must be pinned along with the two `cargo mutants`
+/// invocation lines). ANY deviation — an appended line in any spelling, a
+/// reordered line, a single changed byte — fails
+/// `test_mutants_shard_run_step_content_is_pinned` below. This is what
+/// closes finding D-HIGH: unlike `assert_run_mutants_step_content_is_
+/// honest`'s substring denylist (superseded, see that function's doc
+/// comment), an exact-equality comparison against the WHOLE scalar has no
+/// unbanned shape left for a launder to hide in.
+// NOTE: this is a RAW string literal, deliberately — a normal `"..."`
+// literal using `\<newline>` continuations to span multiple source lines
+// would have Rust's own line-continuation escape strip the leading
+// whitespace of each continuation line, silently eating the 2-space
+// indent the real `--shard`/`--jobs` continuation lines carry (this was
+// caught RED: an earlier revision of this constant used that form and
+// produced a byte-pin that never matched the real, correctly-indented
+// `ci.yml`). A raw string's embedded newlines and leading whitespace are
+// both preserved verbatim, matching exactly what `saphyr-parser` resolves
+// this `|` block-literal scalar to.
+const PINNED_MUTANTS_SHARD_RUN_BODY: &str = r#"DIFF_FILE="${{ runner.temp }}/diff/pr-${{ github.run_id }}.diff"
+# --baseline skip: legitimate here because `test` (ci-gate.needs
+# member) already proves the suite green before mutants ever runs;
+# --timeout 240 is REQUIRED explicitly under skip (no
+# timeout_multiplier fallback — see docs/specs/cargo-mutants-
+# policy.md §--baseline=skip and Path B).
+cargo mutants --in-diff "${DIFF_FILE}" \
+  --shard ${{ matrix.shard }}/8 --sharding slice \
+  --jobs 2 --baseline skip --timeout 240
+"#;
+
+/// (cycle-006 F4 review round 6, D-HIGH; generalized round 8, G-HIGH):
+/// resolves the NAMED step's (`step_name`) `run:` value and validates it is
+/// safe to compare byte-for-byte against a pinned literal — rejecting a
+/// YAML anchor, a YAML tag, or any scalar style other than `Literal` (the
+/// `|` block-scalar form the real steps use; a `Folded` (`>`) rewrite
+/// would resolve interior newlines to spaces, silently changing what the
+/// shell actually executes even if a byte-pin against a DIFFERENT expected
+/// string happened to match, so the style itself is part of what this pin
+/// enforces — same AC-004 quoting/style-fidelity discipline
+/// `extract_and_normalize_sole_run_line` and its siblings already apply to
+/// single-line pins, generalized here to a multi-line block scalar).
+/// Unlike those siblings, this function does NOT require
+/// `start_line == end_line` — a `Literal` block scalar spanning many
+/// physical source lines is the step's EXPECTED, correct shape, not a
+/// suspicious folded-plain-scalar escape.
+///
+/// **Invariant this function exists to let the callers below jointly
+/// enforce (round 8, G-HIGH):** every `run:`-bearing step in the `mutants`
+/// shard job is byte-pinned through this one function — currently
+/// `Run mutation tests on this shard` (`extract_and_normalize_mutants_
+/// shard_run_body`) and `Write shard status sentinel`
+/// (`extract_and_normalize_mutants_shard_sentinel_run_body`), the only two
+/// steps in `PINNED_MUTANTS_SHARD_STEP_KEY_SETS` that carry a `run:` key
+/// at all. Combined with that key-set pin (which fails closed on a NEW
+/// step being inserted into the job), no `run:`-bearing step can be added
+/// to this job without also being routed through this function and pinned
+/// in the same change — closing the whole no-code-execution
+/// `outcomes.json`-launder class for the shard job, not just the one step
+/// D-HIGH originally found it on.
+fn extract_and_normalize_run_scalar_for_step(
+    job_block: &str,
+    step_name: &str,
+) -> Result<String, String> {
+    let job = WfDoc::parse_single_job(job_block);
+    let run_step = find_sole_step_by_name(&job.steps, step_name)?;
+    match run_step.value_of("run") {
+        Some(Value::Scalar {
+            text,
+            style,
+            tag,
+            has_anchor,
+            ..
+        }) => {
+            if *has_anchor {
+                return Err(
+                    "has a `run:` value carrying a YAML anchor (`&...`) — a node \
+                     property on a pinned key's VALUE is rejected outright rather \
+                     than resolved and trusted, the same as a value-side tag."
+                        .to_string(),
+                );
+            }
+            if tag.is_some() {
+                return Err(format!(
+                    "has a `run:` value carrying a YAML tag ({tag:?}) — a node \
+                     property on a pinned key's VALUE is rejected outright rather \
+                     than resolved and trusted."
+                ));
+            }
+            if *style != ScalarStyle::Literal {
+                return Err(format!(
+                    "has a `run:` value written in a non-literal-block YAML \
+                     scalar style ({style:?}) — this pin requires the `|` \
+                     block-literal form (ci.yml's current spelling); a `Folded` \
+                     (`>`) rewrite would resolve interior newlines to spaces, \
+                     changing what the shell actually executes, and a quoted \
+                     form would need re-escaping this pin does not attempt to \
+                     interpret."
+                ));
+            }
+            Ok(text.clone())
+        }
+        other => Err(format!(
+            "`{step_name}`'s `run:` value is not a scalar (found: {other:?})."
+        )),
+    }
+}
+
+/// Thin, byte-identical-signature wrapper preserving the pre-round-8 name
+/// and call sites — see `extract_and_normalize_run_scalar_for_step`'s doc
+/// comment for the shared implementation and the invariant it backs.
+fn extract_and_normalize_mutants_shard_run_body(job_block: &str) -> Result<String, String> {
+    extract_and_normalize_run_scalar_for_step(job_block, "Run mutation tests on this shard")
+}
+
+/// (cycle-006 F4 review round 8, finding G-HIGH): the `Write shard status
+/// sentinel` step's counterpart to `extract_and_normalize_mutants_shard_
+/// run_body` — see that function's doc comment (and
+/// `extract_and_normalize_run_scalar_for_step`'s shared implementation) for
+/// the full rationale. Closes the exploit where the sentinel step's `run:`
+/// body — which runs `if: always()` after `run-mutants` and legitimately
+/// already references `mutants.out/outcomes.json`, and whose step key set
+/// (`["if", "name", "run"]`) does not change no matter what shell is
+/// appended to it — is used to launder `outcomes.json` instead of
+/// `run-mutants` itself. See `PINNED_MUTANTS_SHARD_SENTINEL_RUN_BODY`'s doc
+/// comment for the concrete exploit and
+/// `test_mutants_shard_sentinel_run_step_rejects_outcomes_launder` for the
+/// standing RED regression proof.
+fn extract_and_normalize_mutants_shard_sentinel_run_body(
+    job_block: &str,
+) -> Result<String, String> {
+    extract_and_normalize_run_scalar_for_step(job_block, "Write shard status sentinel")
+}
+
+/// (cycle-006 F4 review round 6, D-HIGH): the `Upload shard outcomes`
+/// step's `with.path` value — human-reviewed, read byte-for-byte from
+/// `ci.yml` as of this pass. Repointing this value (leaving the
+/// `run-mutants` step untouched) is the third D-HIGH bypass — see
+/// `test_mutants_shard_upload_outcomes_pin_rejects_repointed_path`.
+const PINNED_MUTANTS_SHARD_UPLOAD_OUTCOMES_WITH_PATH: &str = "mutants.out/outcomes.json";
+
+/// (cycle-006 F4 review round 6, D-HIGH): the `Upload shard outcomes`
+/// step's `with.name` value — human-reviewed, read byte-for-byte from
+/// `ci.yml` as of this pass. Pinned alongside `with.path` above because a
+/// repointed `name:` (uploading the real path under a name
+/// `mutants-aggregate.sh` does not download, or a name colliding with a
+/// different shard) is an equally viable way to desynchronize what the
+/// aggregator downloads from what this job block visibly claims to
+/// produce.
+const PINNED_MUTANTS_SHARD_UPLOAD_OUTCOMES_WITH_NAME: &str =
+    "mutants-shard-outcomes-${{ matrix.shard }}";
+
+/// (cycle-006 F4 review round 6, D-HIGH): resolves ONE named `with:` child
+/// (`child_key`, `"path"` or `"name"`) of the `Upload shard outcomes`
+/// step, validated the same way as `extract_and_normalize_mutants_shard_
+/// run_body` above (no anchor, no tag, `ScalarStyle::Plain` — this value
+/// is a short, single-line plain scalar in the real file, unlike the
+/// run-mutants step's block-literal `run:`).
+///
+/// This is a TARGETED, justified exception to this file's general
+/// "`with:` block CONTENTS are out of scope" boundary (see the CI-Gate
+/// SCOPE SUMMARY in `CLAUDE.md`) — narrowly for this one
+/// security-critical upload step, whose `with.path`/`with.name` values
+/// are exactly as load-bearing to the sharded mutation gate's integrity as
+/// the `run-mutants` step's own `run:` body.
+fn extract_and_normalize_upload_outcomes_with_value(
+    job_block: &str,
+    child_key: &str,
+) -> Result<String, String> {
+    let job = WfDoc::parse_single_job(job_block);
+    let upload_step = find_sole_step_by_name(&job.steps, "Upload shard outcomes")?;
+    match common::wf::step_mapping_child_value_for_step(job_block, upload_step, "with", child_key) {
+        Some(Value::Scalar {
+            text,
+            style,
+            tag,
+            has_anchor,
+            ..
+        }) => {
+            if has_anchor {
+                return Err(format!(
+                    "has a `with.{child_key}` value carrying a YAML anchor \
+                     (`&...`) — rejected outright rather than resolved and \
+                     trusted."
+                ));
+            }
+            if tag.is_some() {
+                return Err(format!(
+                    "has a `with.{child_key}` value carrying a YAML tag \
+                     ({tag:?}) — rejected outright rather than resolved and \
+                     trusted."
+                ));
+            }
+            if style != ScalarStyle::Plain {
+                return Err(format!(
+                    "has a `with.{child_key}` value written in a non-plain \
+                     YAML scalar style ({style:?}) — this pin requires the \
+                     plain (unquoted) form (ci.yml's current spelling)."
+                ));
+            }
+            Ok(text)
+        }
+        other => Err(format!(
+            "`Upload shard outcomes`'s `with.{child_key}` value is not a \
+             scalar (found: {other:?})."
+        )),
+    }
+}
+
+/// (cycle-006 F4 review round 8, finding G-HIGH): the full, human-reviewed
+/// literal text of the `Write shard status sentinel` step's `run:` scalar,
+/// read byte-for-byte from `ci.yml` as of this pass (verified via a
+/// scratch print of the PARSED scalar, not retyped by hand — same
+/// discipline as `PINNED_MUTANTS_SHARD_RUN_BODY`, see that constant's own
+/// doc comment for why a raw string literal is mandatory here rather than
+/// a normal `"..."` literal with `\`-continuations).
+///
+/// **Concrete exploit this closes (G-HIGH):** the sentinel step runs
+/// `if: always()` AFTER `run-mutants` writes `mutants.out/outcomes.json`
+/// and BEFORE "Upload shard outcomes" reads it, and it already
+/// legitimately references `mutants.out/outcomes.json` in its own body —
+/// so appending a sum-preserving `jq` launder to THIS step's `run:` body
+/// (e.g. `jq '.caught=(.caught+.missed+.timeout)|.missed=0|.timeout=0'
+/// mutants.out/outcomes.json > mutants.out/o.tmp && mv mutants.out/o.tmp
+/// mutants.out/outcomes.json`) relabels every surviving mutant as caught
+/// with zero code execution — a plaintext `ci.yml` edit. The step's key
+/// set (`["if", "name", "run"]`, pinned by `PINNED_MUTANTS_SHARD_STEP_
+/// KEY_SETS`) is unchanged by appending shell to an EXISTING key's value,
+/// and the only pre-existing content guard on this step
+/// (`test_mutants_shard_status_sentinel_uses_outcome_not_conclusion`) is a
+/// substring check for `steps.run-mutants.outcome`/`.conclusion` that
+/// never inspects what comes after those substrings — identical shape to
+/// the A-F1 gap `PINNED_MUTANTS_SHARD_RUN_BODY` closed for `run-mutants`
+/// itself. See `test_mutants_shard_sentinel_run_step_rejects_outcomes_
+/// launder` for the standing RED regression proof.
+const PINNED_MUTANTS_SHARD_SENTINEL_RUN_BODY: &str = r#"HAS_OUTCOMES=false
+[ -f mutants.out/outcomes.json ] && HAS_OUTCOMES=true
+cat > "${{ runner.temp }}/shard-status-${{ matrix.shard }}.json" <<EOF
+{"shard_index": ${{ matrix.shard }}, "run_outcome": "${{ steps.run-mutants.outcome }}", "has_outcomes": ${HAS_OUTCOMES}}
+EOF
+"#;
+
+/// (cycle-006 F4 review round 8, finding G-HIGH): the OLD, substring-only
+/// semantic check for the sentinel step's `run:` body — asserts it
+/// references `steps.run-mutants.outcome` and never `.conclusion`. This is
+/// NOT a byte-pin: like `assert_run_mutants_step_content_is_honest` before
+/// D-HIGH closed the equivalent gap on `run-mutants`, it has no visibility
+/// into content appended AFTER those substrings, which is exactly the gap
+/// `PINNED_MUTANTS_SHARD_SENTINEL_RUN_BODY` (via
+/// `extract_and_normalize_mutants_shard_sentinel_run_body`) closes.
+/// Factored out of `test_mutants_shard_status_sentinel_uses_outcome_not_
+/// conclusion` (which still calls it against the real `ci.yml`, unchanged
+/// behavior) so `test_mutants_shard_sentinel_run_step_rejects_outcomes_
+/// launder` can demonstrate this check alone accepting a forged fixture
+/// the byte-pin correctly rejects.
+fn assert_sentinel_run_step_uses_outcome_not_conclusion(text: &str) -> Result<(), String> {
+    if !text.contains("steps.run-mutants.outcome") {
+        return Err("does not contain `steps.run-mutants.outcome` — the sole \
+             per-shard completeness signal `mutants-aggregate.sh` trusts \
+             must be sourced from `.outcome`, not `.conclusion`."
+            .to_string());
+    }
+    if text.contains("steps.run-mutants.conclusion") {
+        return Err("reads `steps.run-mutants.conclusion` — this ALWAYS reads \
+             `success` under `run-mutants`'s `continue-on-error: true`, \
+             silently reopening the all-shards-crash false-green class."
+            .to_string());
+    }
+    Ok(())
+}
+
+/// (cycle-006 F4 review round 6, D-HIGH; extended round 8, G-HIGH):
+/// production pin — asserts the REAL `mutants` shard job's `run-mutants`
+/// step's `run:` scalar is byte-for-byte identical to
+/// `PINNED_MUTANTS_SHARD_RUN_BODY`, that the sibling "Upload shard
+/// outcomes" step's `with.path`/`with.name` values are byte-for-byte
+/// identical to their own pinned literals, AND (round 8) that the
+/// "Write shard status sentinel" step's `run:` scalar is byte-for-byte
+/// identical to `PINNED_MUTANTS_SHARD_SENTINEL_RUN_BODY`. Replaces the
+/// substring-denylist call to `assert_run_mutants_step_content_is_honest`
+/// (superseded — see that function's doc comment) that backed this test
+/// before this pass. As of round 8, EVERY `run:`-bearing step in the
+/// `mutants` shard job is byte-pinned by this one test — see
+/// `extract_and_normalize_run_scalar_for_step`'s doc comment for that
+/// invariant.
+#[test]
+fn test_mutants_shard_run_step_content_is_pinned() {
+    let ci = read_ci_yml();
+    let mutants_block = extract_job_block(&ci, "mutants").unwrap_or_else(|| {
+        panic!("FAIL (A-F1/D-HIGH): `.github/workflows/ci.yml` does not contain a `mutants:` job.")
+    });
+
+    let run_text =
+        extract_and_normalize_mutants_shard_run_body(mutants_block).unwrap_or_else(|reason| {
+            panic!(
+                "FAIL (D-HIGH): `mutants`'s \"Run mutation tests on this \
+                 shard\" step {reason}\n\
+                 Current mutants block:\n{mutants_block}"
+            )
+        });
+    assert_eq!(
+        run_text, PINNED_MUTANTS_SHARD_RUN_BODY,
+        "FAIL (D-HIGH): the `run-mutants` step's PARSED `run:` scalar does \
+         not byte-for-byte match the pinned, human-reviewed literal — any \
+         deviation (an appended launder line, a reordered line, a changed \
+         byte) fails this pin. If this is a deliberate, reviewed change, \
+         update PINNED_MUTANTS_SHARD_RUN_BODY in the SAME change.\n\
+         Current mutants block:\n{mutants_block}"
+    );
+
+    let path = extract_and_normalize_upload_outcomes_with_value(mutants_block, "path")
+        .unwrap_or_else(|reason| {
+            panic!(
+                "FAIL (D-HIGH): `mutants`'s \"Upload shard outcomes\" step \
+                 {reason}\n\
+                 Current mutants block:\n{mutants_block}"
+            )
+        });
+    assert_eq!(
+        path, PINNED_MUTANTS_SHARD_UPLOAD_OUTCOMES_WITH_PATH,
+        "FAIL (D-HIGH): the \"Upload shard outcomes\" step's `with.path` \
+         value does not match the pinned, human-reviewed literal — a \
+         repointed path (uploading a forged file in place of the real \
+         outcomes.json) fails this pin.\n\
+         Current mutants block:\n{mutants_block}"
+    );
+
+    let name = extract_and_normalize_upload_outcomes_with_value(mutants_block, "name")
+        .unwrap_or_else(|reason| {
+            panic!(
+                "FAIL (D-HIGH): `mutants`'s \"Upload shard outcomes\" step \
+                 {reason}\n\
+                 Current mutants block:\n{mutants_block}"
+            )
+        });
+    assert_eq!(
+        name, PINNED_MUTANTS_SHARD_UPLOAD_OUTCOMES_WITH_NAME,
+        "FAIL (D-HIGH): the \"Upload shard outcomes\" step's `with.name` \
+         value does not match the pinned, human-reviewed literal.\n\
+         Current mutants block:\n{mutants_block}"
+    );
+
+    let sentinel_run_text = extract_and_normalize_mutants_shard_sentinel_run_body(mutants_block)
+        .unwrap_or_else(|reason| {
+            panic!(
+                "FAIL (G-HIGH): `mutants`'s \"Write shard status sentinel\" \
+                 step {reason}\n\
+                 Current mutants block:\n{mutants_block}"
+            )
+        });
+    assert_eq!(
+        sentinel_run_text, PINNED_MUTANTS_SHARD_SENTINEL_RUN_BODY,
+        "FAIL (G-HIGH): the \"Write shard status sentinel\" step's PARSED \
+         `run:` scalar does not byte-for-byte match the pinned, \
+         human-reviewed literal — any deviation (an appended launder \
+         line, a reordered line, a changed byte) fails this pin. If this \
+         is a deliberate, reviewed change, update \
+         PINNED_MUTANTS_SHARD_SENTINEL_RUN_BODY in the SAME change.\n\
+         Current mutants block:\n{mutants_block}"
+    );
+}
+
+/// (cycle-006 F4 review round 8, finding G-HIGH — standing RED regression
+/// proof): proves (1) the OLD, substring-only semantic check for the
+/// sentinel step's `run:` body
+/// (`assert_sentinel_run_step_uses_outcome_not_conclusion`) accepts a
+/// forged `mutants` shard job fixture whose sentinel step launders its own
+/// `mutants.out/outcomes.json` via a trailing `jq` append AFTER the
+/// legitimate sentinel body, and (2) the NEW full-scalar byte pin
+/// (`extract_and_normalize_mutants_shard_sentinel_run_body` compared
+/// against `PINNED_MUTANTS_SHARD_SENTINEL_RUN_BODY`) correctly rejects the
+/// same fixture. The tracked `ci.yml` is never touched — this is a
+/// hand-crafted, untracked fixture only.
+#[test]
+fn test_mutants_shard_sentinel_run_step_rejects_outcomes_launder() {
+    let forged_block = r#"  mutants:
+    name: Mutation Testing (Shard)
+    runs-on: ubuntu-latest
+    needs: [mutants-plan]
+    strategy:
+      fail-fast: false
+      matrix:
+        shard: [0, 1, 2, 3, 4, 5, 6, 7]
+    if: github.event_name == 'pull_request' && needs.mutants-plan.outputs.escalated != 'true'
+    timeout-minutes: 60
+    steps:
+      - name: Harden the runner (Audit all outbound calls)
+        uses: step-security/harden-runner@x
+        with:
+          egress-policy: audit
+      - uses: actions/checkout@x
+      - uses: taiki-e/install-action@x
+        with:
+          tool: cargo-mutants@27.1.0
+      - uses: Swatinem/rust-cache@x
+      - name: Download shared diff file
+        uses: actions/download-artifact@x
+        with:
+          name: mutants-diff-file
+          path: /tmp/diff
+      - name: Run mutation tests on this shard
+        id: run-mutants
+        continue-on-error: true
+        run: |
+          DIFF_FILE="/tmp/diff/pr.diff"
+          cargo mutants --in-diff "${DIFF_FILE}" \
+            --shard ${{ matrix.shard }}/8 --sharding slice \
+            --jobs 2 --baseline skip --timeout 240
+      - name: Write shard status sentinel
+        if: always()
+        run: |
+          HAS_OUTCOMES=false
+          [ -f mutants.out/outcomes.json ] && HAS_OUTCOMES=true
+          cat > "${{ runner.temp }}/shard-status-${{ matrix.shard }}.json" <<EOF
+          {"shard_index": ${{ matrix.shard }}, "run_outcome": "${{ steps.run-mutants.outcome }}", "has_outcomes": ${HAS_OUTCOMES}}
+          EOF
+          jq '.caught=(.caught+.missed+.timeout)|.missed=0|.timeout=0' mutants.out/outcomes.json > mutants.out/o.tmp && mv mutants.out/o.tmp mutants.out/outcomes.json
+      - name: Upload shard status sentinel
+        if: always()
+        uses: actions/upload-artifact@x
+        with:
+          name: mutants-shard-status-0
+          path: /tmp/shard-status-0.json
+          if-no-files-found: error
+          retention-days: 1
+      - name: Upload shard outcomes
+        if: always()
+        uses: actions/upload-artifact@x
+        with:
+          name: mutants-shard-outcomes-0
+          path: mutants.out/outcomes.json
+          if-no-files-found: warn
+          retention-days: 1
+"#;
+
+    let sentinel_run_text = extract_and_normalize_mutants_shard_sentinel_run_body(forged_block)
+        .unwrap_or_else(|reason| {
+            panic!(
+                "SETUP INVARIANT VIOLATED: the forged sentinel step {reason} \
+                 — the fixture must still resolve to a valid `Literal` \
+                 scalar for this RED proof to be meaningful."
+            )
+        });
+
+    // Half 1: the OLD substring-only semantic check accepts this forgery —
+    // it still contains `steps.run-mutants.outcome` and never
+    // `.conclusion`; it has no visibility into the trailing `jq` launder.
+    let old_check_result = assert_sentinel_run_step_uses_outcome_not_conclusion(&sentinel_run_text);
+    assert!(
+        old_check_result.is_ok(),
+        "FAIL (G-HIGH RED proof did not hold): the OLD substring-only \
+         sentinel check unexpectedly REJECTED this forged fixture ({:?}) \
+         — the fixture must satisfy the OLD check to prove it is blind to \
+         the trailing-launder exploit; if it does not, the fixture no \
+         longer reproduces the G-HIGH exploit and must be revised.\n\
+         Resolved sentinel run: scalar text was:\n{sentinel_run_text}",
+        old_check_result.err()
+    );
+
+    // Half 2: the NEW full-scalar byte pin correctly rejects it.
+    let byte_pin_result = extract_and_normalize_mutants_shard_sentinel_run_body(forged_block);
+    assert_ne!(
+        byte_pin_result.as_deref(),
+        Ok(PINNED_MUTANTS_SHARD_SENTINEL_RUN_BODY),
+        "FAIL (G-HIGH RED proof did not hold): the new full-scalar byte \
+         pin accepted a forged `mutants` shard job block whose sentinel \
+         step launders its own outcomes.json via trailing shell appended \
+         after the legitimate sentinel body.\n\
+         Resolved sentinel run: scalar text was:\n{sentinel_run_text}"
+    );
+}
+
+/// (cycle-006 F4 review round 4, A-F1 — standing RED regression proof):
+/// see `assert_run_mutants_step_content_is_honest`'s own doc comment for
+/// the full narrative. This test pins BOTH halves of the claim against a
+/// hand-crafted, untracked `mutants` shard job fixture (the tracked
+/// `ci.yml` is never touched):
+///
+/// 1. AC-033's OLD presence-only check (an ordered substring search over
+///    the ENTIRE raw job block, `required_invocation_fragments_in_order`
+///    inside `test_mutants_shard_job_structure_matches_sharded_design`)
+///    is satisfied by this forged fixture: the real invocation is present,
+///    in order, and the check never inspects what comes after it. This
+///    proves the trailing-shell-append exploit was real.
+/// 2. The NEW check (`assert_run_mutants_step_content_is_honest`, scoped
+///    to ONLY the `run-mutants` step's resolved `run:` scalar) correctly
+///    REJECTS the same fixture, because the launder line lives after the
+///    last required fragment and references `outcomes.json`.
+#[test]
+fn test_mutants_shard_run_step_rejects_trailing_outcomes_launder() {
+    let forged_block = r#"  mutants:
+    name: Mutation Testing (Shard)
+    runs-on: ubuntu-latest
+    needs: [mutants-plan]
+    strategy:
+      fail-fast: false
+      matrix:
+        shard: [0, 1, 2, 3, 4, 5, 6, 7]
+    if: github.event_name == 'pull_request' && needs.mutants-plan.outputs.escalated != 'true'
+    timeout-minutes: 60
+    steps:
+      - name: Harden the runner (Audit all outbound calls)
+        uses: step-security/harden-runner@x
+        with:
+          egress-policy: audit
+      - uses: actions/checkout@x
+      - uses: taiki-e/install-action@x
+        with:
+          tool: cargo-mutants@27.1.0
+      - uses: Swatinem/rust-cache@x
+      - name: Download shared diff file
+        uses: actions/download-artifact@x
+        with:
+          name: mutants-diff-file
+          path: /tmp/diff
+      - name: Run mutation tests on this shard
+        id: run-mutants
+        continue-on-error: true
+        run: |
+          DIFF_FILE="/tmp/diff/pr.diff"
+          cargo mutants --in-diff "${DIFF_FILE}" \
+            --shard ${{ matrix.shard }}/8 --sharding slice \
+            --jobs 2 --baseline skip --timeout 240
+          jq '.caught = (.caught + .missed + .timeout) | .missed = 0 | .timeout = 0' mutants.out/outcomes.json > /tmp/o && mv /tmp/o mutants.out/outcomes.json
+      - name: Write shard status sentinel
+        if: always()
+        run: |
+          HAS_OUTCOMES=false
+          [ -f mutants.out/outcomes.json ] && HAS_OUTCOMES=true
+          echo done
+      - name: Upload shard status sentinel
+        if: always()
+        uses: actions/upload-artifact@x
+        with:
+          name: mutants-shard-status-0
+          path: /tmp/shard-status-0.json
+          if-no-files-found: error
+          retention-days: 1
+      - name: Upload shard outcomes
+        if: always()
+        uses: actions/upload-artifact@x
+        with:
+          name: mutants-shard-outcomes-0
+          path: mutants.out/outcomes.json
+          if-no-files-found: warn
+          retention-days: 1
+"#;
+
+    // Half 1: the OLD presence-only check (AC-033's ordered-substring
+    // search over the WHOLE raw job block) is satisfied by this forged
+    // block — proving the exploit is real: it never inspects what comes
+    // AFTER the last required fragment.
+    let mut last_offset = 0usize;
+    for fragment in &MUTANTS_SHARD_RUN_STEP_REQUIRED_FRAGMENTS {
+        let offset = forged_block[last_offset..].find(fragment).expect(
+            "SETUP INVARIANT VIOLATED: this forged fixture must satisfy \
+                 the OLD presence-only ordered-substring search over the \
+                 whole raw job block — if it does not, the fixture no \
+                 longer reproduces the A-F1 exploit and must be revised.",
+        );
+        last_offset += offset + fragment.len();
+    }
+
+    // Half 2: the OLD substring-denylist check (parsed `run-mutants` `run:`
+    // scalar, scanned for a post-invocation `outcomes.json` reference)
+    // correctly rejects THIS particular forgery, because it spells the
+    // contiguous literal `outcomes.json` after the invocation.
+    let run_text = mutants_shard_run_step_run_text(forged_block);
+    let result = assert_run_mutants_step_content_is_honest(&run_text);
+    assert!(
+        result.is_err(),
+        "FAIL (A-F1 RED proof did not hold): the old substring-denylist \
+         check accepted a forged `mutants` shard job block whose \
+         run-mutants step launders its own outcomes.json via trailing \
+         shell appended after the real `cargo mutants` invocation — even \
+         the denylist should catch THIS particular (contiguous-literal) \
+         spelling.\n\
+         Resolved run: scalar text was:\n{run_text}"
+    );
+
+    // Half 3 (cycle-006 F4 review round 6, D-HIGH): the NEW full-scalar
+    // byte pin also rejects it — trivially, since the forged text can
+    // never byte-match `PINNED_MUTANTS_SHARD_RUN_BODY` regardless of
+    // which laundering shape it uses.
+    let byte_pin_result = extract_and_normalize_mutants_shard_run_body(forged_block);
+    assert_ne!(
+        byte_pin_result.as_deref(),
+        Ok(PINNED_MUTANTS_SHARD_RUN_BODY),
+        "FAIL (D-HIGH RED proof did not hold): the new full-scalar byte \
+         pin accepted a forged `mutants` shard job block whose run-mutants \
+         step launders its own outcomes.json via trailing shell appended \
+         after the real `cargo mutants` invocation.\n\
+         Resolved run: scalar text was:\n{run_text}"
+    );
+}
+
+/// (cycle-006 F4 review round 6, D-HIGH, bypass variant (i) — standing RED
+/// regression proof): the OLD substring-denylist check
+/// (`assert_run_mutants_step_content_is_honest`) bans only the CONTIGUOUS
+/// LITERAL `outcomes.json` after the real invocation. Shell variable
+/// indirection (`n=outcomes; ... "mutants.out/${n}.json"`) never spells
+/// that literal — this is the exact bypass D-HIGH's finding text
+/// describes as variant (1). This test proves the OLD check accepts it
+/// and the NEW full-scalar byte pin rejects it.
+#[test]
+fn test_mutants_shard_run_step_rejects_variable_indirection_launder() {
+    let forged_block = r#"  mutants:
+    name: Mutation Testing (Shard)
+    runs-on: ubuntu-latest
+    needs: [mutants-plan]
+    strategy:
+      fail-fast: false
+      matrix:
+        shard: [0, 1, 2, 3, 4, 5, 6, 7]
+    if: github.event_name == 'pull_request' && needs.mutants-plan.outputs.escalated != 'true'
+    timeout-minutes: 60
+    steps:
+      - name: Harden the runner (Audit all outbound calls)
+        uses: step-security/harden-runner@x
+        with:
+          egress-policy: audit
+      - uses: actions/checkout@x
+      - uses: taiki-e/install-action@x
+        with:
+          tool: cargo-mutants@27.1.0
+      - uses: Swatinem/rust-cache@x
+      - name: Download shared diff file
+        uses: actions/download-artifact@x
+        with:
+          name: mutants-diff-file
+          path: /tmp/diff
+      - name: Run mutation tests on this shard
+        id: run-mutants
+        continue-on-error: true
+        run: |
+          DIFF_FILE="/tmp/diff/pr.diff"
+          cargo mutants --in-diff "${DIFF_FILE}" \
+            --shard ${{ matrix.shard }}/8 --sharding slice \
+            --jobs 2 --baseline skip --timeout 240
+          n=outcomes
+          echo '{"caught": 999, "missed": 0, "timeout": 0, "unviable": 0}' > "mutants.out/${n}.json"
+      - name: Write shard status sentinel
+        if: always()
+        run: |
+          HAS_OUTCOMES=false
+          [ -f mutants.out/outcomes.json ] && HAS_OUTCOMES=true
+          echo done
+      - name: Upload shard status sentinel
+        if: always()
+        uses: actions/upload-artifact@x
+        with:
+          name: mutants-shard-status-0
+          path: /tmp/shard-status-0.json
+          if-no-files-found: error
+          retention-days: 1
+      - name: Upload shard outcomes
+        if: always()
+        uses: actions/upload-artifact@x
+        with:
+          name: mutants-shard-outcomes-0
+          path: mutants.out/outcomes.json
+          if-no-files-found: warn
+          retention-days: 1
+"#;
+
+    // Reproduces the D-HIGH exploit: not a single contiguous occurrence of
+    // the literal `outcomes.json` anywhere in the forged text.
+    assert!(
+        !forged_block.contains("outcomes.json")
+            || forged_block.matches("outcomes.json").count()
+                <= forged_block.matches("mutants.out/outcomes.json").count(),
+        "SETUP INVARIANT VIOLATED: this fixture must reproduce variable- \
+         indirection laundering — no NEW occurrence of the literal \
+         `outcomes.json` should appear in the run-mutants step body \
+         itself."
+    );
+
+    let run_text = mutants_shard_run_step_run_text(forged_block);
+    assert!(
+        !run_text.contains("n=outcomes")
+            || !run_text[run_text.find("n=outcomes").unwrap()..].contains("outcomes.json"),
+        "SETUP INVARIANT VIOLATED: the run-mutants step's OWN resolved \
+         `run:` text must not contain the contiguous literal \
+         `outcomes.json` anywhere after the indirection line, or this \
+         fixture no longer reproduces the D-HIGH bypass.\n\
+         Resolved run: scalar text was:\n{run_text}"
+    );
+
+    // The OLD substring-denylist check is bypassed: it never sees the
+    // literal `outcomes.json`, so it reports this forged step as honest.
+    let old_result = assert_run_mutants_step_content_is_honest(&run_text);
+    assert!(
+        old_result.is_ok(),
+        "FAIL (D-HIGH RED proof setup did not hold): the OLD \
+         substring-denylist check unexpectedly rejected the \
+         variable-indirection launder — it should have accepted it \
+         (proving the bypass was real): {old_result:?}\n\
+         Resolved run: scalar text was:\n{run_text}"
+    );
+
+    // The NEW full-scalar byte pin correctly rejects it — the forged text
+    // can never byte-match `PINNED_MUTANTS_SHARD_RUN_BODY`.
+    let byte_pin_result = extract_and_normalize_mutants_shard_run_body(forged_block);
+    assert_ne!(
+        byte_pin_result.as_deref(),
+        Ok(PINNED_MUTANTS_SHARD_RUN_BODY),
+        "FAIL (D-HIGH RED proof did not hold): the new full-scalar byte \
+         pin accepted a forged `mutants` shard job block whose \
+         run-mutants step launders its own outcomes.json via shell \
+         variable indirection.\n\
+         Resolved run: scalar text was:\n{run_text}"
+    );
+}
+
+/// (cycle-006 F4 review round 6, D-HIGH, bypass variant (ii) — standing RED
+/// regression proof): a glob/loop write to `mutants.out/*.json` never
+/// spells the literal `outcomes.json` either — D-HIGH's finding text
+/// variant (2). Same shape as the variable-indirection proof above, one
+/// laundering mechanism over.
+#[test]
+fn test_mutants_shard_run_step_rejects_glob_loop_launder() {
+    let forged_block = r#"  mutants:
+    name: Mutation Testing (Shard)
+    runs-on: ubuntu-latest
+    needs: [mutants-plan]
+    strategy:
+      fail-fast: false
+      matrix:
+        shard: [0, 1, 2, 3, 4, 5, 6, 7]
+    if: github.event_name == 'pull_request' && needs.mutants-plan.outputs.escalated != 'true'
+    timeout-minutes: 60
+    steps:
+      - name: Harden the runner (Audit all outbound calls)
+        uses: step-security/harden-runner@x
+        with:
+          egress-policy: audit
+      - uses: actions/checkout@x
+      - uses: taiki-e/install-action@x
+        with:
+          tool: cargo-mutants@27.1.0
+      - uses: Swatinem/rust-cache@x
+      - name: Download shared diff file
+        uses: actions/download-artifact@x
+        with:
+          name: mutants-diff-file
+          path: /tmp/diff
+      - name: Run mutation tests on this shard
+        id: run-mutants
+        continue-on-error: true
+        run: |
+          DIFF_FILE="/tmp/diff/pr.diff"
+          cargo mutants --in-diff "${DIFF_FILE}" \
+            --shard ${{ matrix.shard }}/8 --sharding slice \
+            --jobs 2 --baseline skip --timeout 240
+          cd mutants.out && for f in *.json; do jq '.caught = (.caught + .missed + .timeout) | .missed = 0 | .timeout = 0' "$f" > "$f.tmp" && mv "$f.tmp" "$f"; done
+      - name: Write shard status sentinel
+        if: always()
+        run: |
+          HAS_OUTCOMES=false
+          [ -f mutants.out/outcomes.json ] && HAS_OUTCOMES=true
+          echo done
+      - name: Upload shard status sentinel
+        if: always()
+        uses: actions/upload-artifact@x
+        with:
+          name: mutants-shard-status-0
+          path: /tmp/shard-status-0.json
+          if-no-files-found: error
+          retention-days: 1
+      - name: Upload shard outcomes
+        if: always()
+        uses: actions/upload-artifact@x
+        with:
+          name: mutants-shard-outcomes-0
+          path: mutants.out/outcomes.json
+          if-no-files-found: warn
+          retention-days: 1
+"#;
+
+    let run_text = mutants_shard_run_step_run_text(forged_block);
+    assert!(
+        !run_text[run_text.find("cd mutants.out").unwrap()..].contains("outcomes.json"),
+        "SETUP INVARIANT VIOLATED: the glob/loop launder line must not \
+         itself contain the contiguous literal `outcomes.json`, or this \
+         fixture no longer reproduces the D-HIGH bypass.\n\
+         Resolved run: scalar text was:\n{run_text}"
+    );
+
+    // The OLD substring-denylist check is bypassed the same way.
+    let old_result = assert_run_mutants_step_content_is_honest(&run_text);
+    assert!(
+        old_result.is_ok(),
+        "FAIL (D-HIGH RED proof setup did not hold): the OLD \
+         substring-denylist check unexpectedly rejected the glob/loop \
+         launder — it should have accepted it (proving the bypass was \
+         real): {old_result:?}\n\
+         Resolved run: scalar text was:\n{run_text}"
+    );
+
+    // The NEW full-scalar byte pin correctly rejects it.
+    let byte_pin_result = extract_and_normalize_mutants_shard_run_body(forged_block);
+    assert_ne!(
+        byte_pin_result.as_deref(),
+        Ok(PINNED_MUTANTS_SHARD_RUN_BODY),
+        "FAIL (D-HIGH RED proof did not hold): the new full-scalar byte \
+         pin accepted a forged `mutants` shard job block whose \
+         run-mutants step launders its own outcomes.json via a glob/loop \
+         write.\n\
+         Resolved run: scalar text was:\n{run_text}"
+    );
+}
+
+/// (cycle-006 F4 review round 6, D-HIGH, bypass variant (iii) — standing
+/// RED regression proof): D-HIGH's finding text variant (3) — the
+/// `run-mutants` step is left byte-identical to the real, honest
+/// invocation; instead, the sibling "Upload shard outcomes" step's
+/// `with.path` is repointed at a forged file. Before this pass, NOTHING
+/// checked `with.path`/`with.name` on this step at all — neither
+/// `assert_run_mutants_step_content_is_honest` (which only ever looks at
+/// the run-mutants step) nor `PINNED_MUTANTS_SHARD_STEP_KEY_SETS` (which
+/// pins the STEP's own key set — `if`/`name`/`uses`/`with` — but has no
+/// visibility into `with:`'s CHILDREN). This test proves both: the
+/// pre-existing step-key-set pin accepts the repointed block (its key set
+/// is unchanged), and the NEW `with.path`/`with.name` pin rejects it.
+#[test]
+fn test_mutants_shard_upload_outcomes_pin_rejects_repointed_path() {
+    let forged_block = r#"  mutants:
+    name: Mutation Testing (Shard)
+    runs-on: ubuntu-latest
+    needs: [mutants-plan]
+    strategy:
+      fail-fast: false
+      matrix:
+        shard: [0, 1, 2, 3, 4, 5, 6, 7]
+    if: github.event_name == 'pull_request' && needs.mutants-plan.outputs.escalated != 'true'
+    timeout-minutes: 60
+    steps:
+      - name: Harden the runner (Audit all outbound calls)
+        uses: step-security/harden-runner@x
+        with:
+          egress-policy: audit
+      - uses: actions/checkout@x
+      - uses: taiki-e/install-action@x
+        with:
+          tool: cargo-mutants@27.1.0
+      - uses: Swatinem/rust-cache@x
+      - name: Download shared diff file
+        uses: actions/download-artifact@x
+        with:
+          name: mutants-diff-file
+          path: /tmp/diff
+      - name: Run mutation tests on this shard
+        id: run-mutants
+        continue-on-error: true
+        run: |
+          DIFF_FILE="/tmp/diff/pr.diff"
+          cargo mutants --in-diff "${DIFF_FILE}" \
+            --shard ${{ matrix.shard }}/8 --sharding slice \
+            --jobs 2 --baseline skip --timeout 240
+      - name: Write shard status sentinel
+        if: always()
+        run: |
+          HAS_OUTCOMES=false
+          [ -f mutants.out/outcomes.json ] && HAS_OUTCOMES=true
+          echo done
+      - name: Upload shard status sentinel
+        if: always()
+        uses: actions/upload-artifact@x
+        with:
+          name: mutants-shard-status-0
+          path: /tmp/shard-status-0.json
+          if-no-files-found: error
+          retention-days: 1
+      - name: Upload shard outcomes
+        if: always()
+        uses: actions/upload-artifact@x
+        with:
+          name: mutants-shard-outcomes-0
+          path: mutants.out/forged.json
+          if-no-files-found: warn
+          retention-days: 1
+"#;
+
+    // The pre-existing step-key-set pin accepts this forgery: the step's
+    // OWN key set (`if`/`name`/`uses`/`with`) is untouched — only a VALUE
+    // one level deeper (`with.path`) changed.
+    let key_set_result = check_job_and_step_key_sets(
+        forged_block,
+        PINNED_MUTANTS_SHARD_JOB_KEY_SET,
+        PINNED_MUTANTS_SHARD_STEP_KEY_SETS,
+    );
+    assert!(
+        key_set_result.is_ok(),
+        "SETUP INVARIANT VIOLATED: this fixture must satisfy the \
+         pre-existing job/step key-set pin (proving `with.path`/`with.name` \
+         values sit BELOW that pin's granularity) — {key_set_result:?}"
+    );
+
+    // The NEW `with.path` pin correctly rejects the repointed value.
+    let path_result = extract_and_normalize_upload_outcomes_with_value(forged_block, "path");
+    assert_ne!(
+        path_result.as_deref(),
+        Ok(PINNED_MUTANTS_SHARD_UPLOAD_OUTCOMES_WITH_PATH),
+        "FAIL (D-HIGH RED proof did not hold): the new `with.path` pin \
+         accepted a forged \"Upload shard outcomes\" step repointed at \
+         `mutants.out/forged.json` instead of the real \
+         `mutants.out/outcomes.json`."
+    );
 }
 
 // ---------------------------------------------------------------------------
@@ -4654,18 +6198,20 @@ fn test_mutants_job_structure_unchanged_by_cigate2_option_c() {
 /// practice, on both the always-true and always-false axes (the axis that
 /// bypassed round 5's predicate).
 ///
-/// Verified by direct read of `.github/workflows/ci.yml :: mutants` for
-/// this revision (do not trust a transcription — re-verify at the time of
-/// any change): the job-level `if:` is exactly `github.event_name ==
-/// 'pull_request'`, with NO `${{ }}` wrapper.
+/// **cycle-006 (mutants-ci-sharding): EMPTY by design, not a regression.**
+/// Prior to this cycle this held exactly `[("mutants", "github.event_name
+/// == 'pull_request'")]` — the single-job `mutants` job's own job-level
+/// `if:`. `mutants-aggregate` (the `ci-gate.needs` member that replaces
+/// `mutants`) never legitimately reports `skipped` (see
+/// `SKIP_TOLERANT_NEEDS_MEMBERS`'s doc comment above and
+/// architecture-delta.md §6.4), so there is no entry to pin here anymore.
 ///
 /// `#[cfg(unix)]` (PR #671 review round 15, CI-caught): every reader of
 /// this pin lives inside one of the three `#[cfg(unix)]`-gated tests —
 /// see `list_all_ci_yml_job_names`'s doc comment for the full "gating a
 /// test orphans its helpers" explanation.
 #[cfg(unix)]
-const PINNED_ALLOWED_SKIP_IF_EXPRESSIONS: &[(&str, &str)] =
-    &[("mutants", "github.event_name == 'pull_request'")];
+const PINNED_ALLOWED_SKIP_IF_EXPRESSIONS: &[(&str, &str)] = &[];
 
 /// S-626-1 sweep-to-class fix: `SKIP_TOLERANT_NEEDS_MEMBERS` (portable) is a
 /// hand-maintained duplicate of `PINNED_ALLOWED_SKIP_IF_EXPRESSIONS`'s
@@ -6166,8 +7712,7 @@ fn extract_and_normalize_sole_needs_json_line(job_block: &str) -> Result<String,
 /// byte-for-byte pin here closes the class the same way, rather than
 /// leaving `needs:` as the one job-level key in `PINNED_GATE_JOB_KEYS`
 /// with a presence pin but no value pin.
-const PINNED_GATE_NEEDS_LINE: &str =
-    "[fmt, clippy, test, msrv, deny, spec-guard, check-signing-workflow-injection, mutants]";
+const PINNED_GATE_NEEDS_LINE: &str = "[fmt, clippy, test, msrv, deny, spec-guard, check-signing-workflow-injection, mutants-aggregate]";
 
 /// Extract and normalize the SOLE job-level `needs:` value for
 /// pinned-literal comparison against `PINNED_GATE_NEEDS_LINE`.
@@ -6513,20 +8058,37 @@ fn build_multi_skip_payload(all_jobs: &[String], skipped_jobs: &[&str]) -> Strin
 }
 
 /// The set of payload "skip variants" to check for job `job`: always the
-/// single-skip case (only `job` skipped), PLUS the production-realistic
-/// multi-skip case where `job` and `mutants` are both skipped (the shape
-/// every real push already has, since `mutants` reports `skipped` on
-/// every push by design). When `job` IS `mutants`, the two variants are
-/// identical — still run both for code-path uniformity; the redundancy is
-/// cheap.
+/// single-skip case (only `job` skipped), PLUS a production-realistic
+/// multi-skip case where `job` and one OTHER `ci-gate.needs` member
+/// (`companion`, the first job in `all_jobs` that isn't `job` itself) are
+/// both skipped. When `job` IS the companion (impossible by construction
+/// — `find` excludes `job` itself), the two variants would be identical;
+/// this never happens here.
+///
+/// **cycle-006 (mutants-ci-sharding) rewrite:** previously hard-coded
+/// `"mutants"` as the companion — faithful only while `mutants` legitimately
+/// reported `skipped` on every real push (the production-realistic shape
+/// this function exists to model). `mutants-aggregate` (the job that
+/// replaces `mutants` as a `ci-gate.needs` member) never reports `skipped`
+/// (see architecture-delta.md §6.4), so a hardcoded `"mutants"` companion
+/// would either no longer name a `ci-gate.needs` member at all, or would
+/// silently stop modeling a realistic multi-skip shape. The companion is
+/// now dynamically selected — "the first OTHER job in `all_jobs`" — so this
+/// function tracks whatever `ci-gate.needs`'s real membership is, rather
+/// than a job name that may no longer occupy that role.
 ///
 /// `#[cfg(unix)]` (PR #671 review round 15, CI-caught): only caller is
 /// `test_ci_gate_decision_matches_job_level_if_for_every_needs_member`,
 /// itself `#[cfg(unix)]`-gated — see `list_all_ci_yml_job_names`'s doc
 /// comment for the full "gating a test orphans its helpers" explanation.
 #[cfg(unix)]
-fn all_skip_variants_for(job: &str) -> Vec<Vec<&str>> {
-    vec![vec![job], vec![job, "mutants"]]
+fn all_skip_variants_for<'a>(job: &'a str, all_jobs: &'a [String]) -> Vec<Vec<&'a str>> {
+    let companion = all_jobs
+        .iter()
+        .map(String::as_str)
+        .find(|&j| j != job)
+        .expect("ci-gate.needs must contain at least 2 members for a multi-skip variant");
+    vec![vec![job], vec![job, companion]]
 }
 
 /// Run `scripts/check-ci-gate.sh` with `json_payload` on stdin (via a real
@@ -6587,9 +8149,11 @@ fn run_check_ci_gate_sh(json_payload: &str) -> std::process::Output {
 ///   - Look up a pinned literal for this job by name in
 ///     `PINNED_ALLOWED_SKIP_IF_EXPRESSIONS`.
 ///   - If BOTH exist AND are byte-identical: this is the POSITIVE
-///     (legitimate-skip) case. For EACH of `all_skip_variants_for(job)`
-///     (single-skip, and the production-realistic job+`mutants` both
-///     skipped — CRITICAL-3, PR #671 review round 7), synthesize a
+///     (legitimate-skip) case. For EACH of `all_skip_variants_for(job,
+///     &all_jobs)` (single-skip, and the production-realistic job+
+///     dynamically-selected-companion both skipped — CRITICAL-3, PR #671
+///     review round 7; companion selection cycle-006-rewritten, see that
+///     function's own doc comment), synthesize a
 ///     PRODUCTION-SHAPED payload (`result`+`outputs` per job, not
 ///     `result` alone — `build_multi_skip_payload`; round 8 corrected
 ///     this to drop a phantom `outcome` field the real `needs` context
@@ -6799,7 +8363,7 @@ fn test_ci_gate_decision_matches_job_level_if_for_every_needs_member() {
             saw_negative_branch = true;
         }
 
-        for skipped_jobs in all_skip_variants_for(job) {
+        for skipped_jobs in all_skip_variants_for(job, &all_jobs) {
             let variant_desc = if skipped_jobs.len() == 1 {
                 "single-skip".to_string()
             } else {
@@ -6904,16 +8468,40 @@ fn test_ci_gate_decision_matches_job_level_if_for_every_needs_member() {
         }
     }
 
-    assert!(
-        saw_positive_branch,
-        "FAIL: no job in ci-gate.needs matched a pinned literal — the \
-         positive (legitimate-skip) branch above never ran, so this test \
-         cannot prove the gate still tolerates a real skip. This should \
-         not happen while `mutants` remains in ci-gate.needs with its \
-         current `if:` matching PINNED_ALLOWED_SKIP_IF_EXPRESSIONS; if it \
-         does, something upstream (job list, `if:` text, or the pinned \
-         literal) changed unexpectedly and needs re-review."
-    );
+    // cycle-006 (mutants-ci-sharding): `PINNED_ALLOWED_SKIP_IF_EXPRESSIONS`
+    // is now EMPTY by design (mutants-aggregate never reports `skipped` —
+    // see architecture-delta.md §6.4), so `saw_positive_branch` can never
+    // legitimately fire — no pinned literal exists for any job to match.
+    // Emptiness itself is the thing under test here: a positive match
+    // would mean either this pin desynced from
+    // `SKIP_TOLERANT_NEEDS_MEMBERS`/`ALLOWED_SKIPS`, or a job was
+    // re-admitted to the skip-tolerant category without updating this
+    // list.
+    let expect_positive_branch = !PINNED_ALLOWED_SKIP_IF_EXPRESSIONS.is_empty();
+    if expect_positive_branch {
+        assert!(
+            saw_positive_branch,
+            "FAIL: no job in ci-gate.needs matched a pinned literal — the \
+             positive (legitimate-skip) branch above never ran, so this test \
+             cannot prove the gate still tolerates a real skip. This should \
+             not happen while PINNED_ALLOWED_SKIP_IF_EXPRESSIONS is \
+             non-empty; if it does, something upstream (job list, `if:` \
+             text, or the pinned literal) changed unexpectedly and needs \
+             re-review."
+        );
+    } else {
+        assert!(
+            !saw_positive_branch,
+            "FAIL: PINNED_ALLOWED_SKIP_IF_EXPRESSIONS is empty (cycle-006 \
+             design — mutants-aggregate never reports `skipped`, see \
+             architecture-delta.md §6.4), so no ci-gate.needs member should \
+             match a pinned skip-tolerant `if:` expression. A positive \
+             match here means either this pin desynced from \
+             SKIP_TOLERANT_NEEDS_MEMBERS/ALLOWED_SKIPS, or a job was \
+             re-admitted to the skip-tolerant category without updating \
+             this list."
+        );
+    }
     assert!(
         saw_negative_branch,
         "FAIL: no job in ci-gate.needs lacks a matching pinned literal — \
@@ -7308,13 +8896,25 @@ fn test_allowed_skips_members_require_job_level_conditional_in_ci_yml() {
         .filter(|s| !s.is_empty())
         .collect();
 
-    assert!(
-        !allowed_skips.is_empty(),
-        "FAIL: `scripts/check-ci-gate.sh --print-allowed-skips` printed no \
-         job names — either ALLOWED_SKIPS is unexpectedly empty (it should \
-         contain at least `mutants`) or the `--print-allowed-skips` mode is \
-         broken.\nstdout: {stdout}"
-    );
+    // cycle-006 (mutants-ci-sharding): production `ALLOWED_SKIPS` is now
+    // empty by design (mutants-aggregate never reports `skipped` — see
+    // architecture-delta.md §6.4), so `--print-allowed-skips` printing NO
+    // job names is the correct, expected state — not a broken mode. The
+    // consistency check below is what remains load-bearing: if
+    // `--print-allowed-skips` ever DOES print something while the
+    // Rust-side pins (`SKIP_TOLERANT_NEEDS_MEMBERS`/
+    // `PINNED_ALLOWED_SKIP_IF_EXPRESSIONS`) are still empty, that is a
+    // genuine desync between `scripts/check-ci-gate.sh` and this file.
+    if allowed_skips.is_empty() {
+        assert!(
+            SKIP_TOLERANT_NEEDS_MEMBERS.is_empty() && PINNED_ALLOWED_SKIP_IF_EXPRESSIONS.is_empty(),
+            "FAIL: `--print-allowed-skips` printed no job names, but \
+             SKIP_TOLERANT_NEEDS_MEMBERS or PINNED_ALLOWED_SKIP_IF_EXPRESSIONS \
+             is non-empty — scripts/check-ci-gate.sh's ALLOWED_SKIPS and this \
+             file's Rust-side pins have desynced. Either restore ALLOWED_SKIPS \
+             in check-ci-gate.sh, or empty the Rust-side pins to match."
+        );
+    }
 
     let ci = read_ci_yml();
 
@@ -7377,10 +8977,12 @@ fn test_allowed_skips_members_require_job_level_conditional_in_ci_yml() {
 /// mention "ALLOWED_SKIPS" in human-readable text without referencing the
 /// array at all) in `scripts/check-ci-gate.sh`'s source text, and asserts
 /// the count equals exactly the known set of legitimate code-level sites:
-/// the declaration (`ALLOWED_SKIPS=("mutants")`), the read in
-/// `is_allowed_skip` (`for allowed in "${ALLOWED_SKIPS[@]}"`), and the read
-/// in `print_allowed_skips` (`printf '%s\n' "${ALLOWED_SKIPS[@]}"`) — 3
-/// total.
+/// the declaration (`ALLOWED_SKIPS=()`), the read in `is_allowed_skip`
+/// (`for allowed in "${ALLOWED_SKIPS[@]}"`), the read in
+/// `print_allowed_skips` (`printf '%s\n' "${ALLOWED_SKIPS[@]}"`), and
+/// (cycle-006, mutants-ci-sharding, round-3 MEDIUM-2) the local override
+/// in `run_fixture_with_synthetic_skip_tolerant_job`
+/// (`local ALLOWED_SKIPS=("example-skip-tolerant-job")`) — 4 total.
 ///
 /// Why this matters even with `--print-allowed-skips` in place: that mode
 /// asks bash for whatever `ALLOWED_SKIPS` evaluates to AT THE POINT
@@ -7411,18 +9013,27 @@ fn test_allowed_skips_members_require_job_level_conditional_in_ci_yml() {
 /// all.
 ///
 /// Runs on all platforms (no bash shell-out) — no `#[cfg(unix)]` needed.
+///
+/// RENAMED (cycle-006, mutants-ci-sharding, round-3 MEDIUM-2) from
+/// `test_allowed_skips_has_exactly_three_code_level_references` — the old
+/// name asserted a number its body no longer checks (this repo's own
+/// test-naming convention treats that as a defect to correct, not style
+/// churn to avoid). The count moved `3 -> 4` when
+/// `run_fixture_with_synthetic_skip_tolerant_job`'s local override
+/// (`scripts/check-ci-gate.sh`) was added.
 #[test]
-fn test_allowed_skips_has_exactly_three_code_level_references() {
+fn test_allowed_skips_has_exactly_four_code_level_references() {
     let script = read_check_ci_gate_sh();
     let count = count_allowed_skips_code_occurrences(&script);
 
     assert_eq!(
-        count, 3,
-        "FAIL (CRITICAL, PR #671 review round 2): expected exactly 3 \
+        count, 4,
+        "FAIL (CRITICAL, PR #671 review round 2): expected exactly 4 \
          non-comment-line occurrences of `ALLOWED_SKIPS=` / \
          `ALLOWED_SKIPS+=` / `${{ALLOWED_SKIPS` in scripts/check-ci-gate.sh \
-         (the declaration, the read in is_allowed_skip, and the read in \
-         print_allowed_skips); found {count}.\n\
+         (the declaration, the read in is_allowed_skip, the read in \
+         print_allowed_skips, and the local override in \
+         run_fixture_with_synthetic_skip_tolerant_job); found {count}.\n\
          \n\
          A NEW occurrence of one of those THREE SPECIFIC shapes (e.g. an \
          `ALLOWED_SKIPS+=(...)` append line added anywhere in the file) \
@@ -7840,6 +9451,17 @@ fn test_no_sibling_workflow_declares_a_job_named_ci_gate() {
 /// correcting it). Moved above the docstring so rustdoc attaches
 /// correctly: this short paragraph documents the constant, and Guard
 /// B's full rationale below documents the test.
+///
+/// cycle-006 (mutants-ci-sharding, FIX-B) — VERIFIED non-change, not
+/// merely assumed: the `mutants` shard job (`strategy.matrix.shard`, 8
+/// entries) is NOT a `ci-gate.needs` member (only `mutants-aggregate` is
+/// — `mutants`/`mutants-plan` are admitted into `ci.yml`'s job universe
+/// solely via `PINNED_GATE_EXCLUDED_JOBS`), so `matrix_needs_members()`
+/// (which filters strictly within `ci-gate.needs`) still returns exactly
+/// `[clippy, test]`, unchanged. Confirmed by re-running
+/// `test_matrix_os_lists_remain_static_literals` and this constant's own
+/// consuming test against the live post-cycle-006 `ci.yml` — both stayed
+/// green with zero edits to either test.
 const PINNED_MATRIX_NEEDS_MEMBER_COUNT: usize = 2;
 
 /// S-626-1 Guard B (DEC-246 §Q4 + "New material this reconstruction
@@ -8089,7 +9711,7 @@ fn test_matrix_os_lists_remain_static_literals() {
 /// by `scripts/check-ci-gate.sh --self-test`'s own `EXPECTED_FIXTURES`,
 /// `scripts/check-bc-citation-symbols.sh`'s, and
 /// `scripts/check-cargo-mutants-policy-citations.sh`'s self-tests — and,
-/// within this file, `test_allowed_skips_has_exactly_three_code_level_
+/// within this file, `test_allowed_skips_has_exactly_four_code_level_
 /// references`'s narrower precedent of counting textual occurrences of a
 /// known-good shape.
 ///
@@ -8153,7 +9775,157 @@ fn test_matrix_os_lists_remain_static_literals() {
 /// `needs:`). See `tests/common/wf.rs`'s `Value::Scalar::has_anchor` field
 /// and `ValueSpanOutcome` enum for the fix itself. No other `#[test]` fn
 /// was added to or removed from THIS file in this pass.
-const EXPECTED_GUARD_TEST_COUNT: usize = 38;
+///
+/// cycle-006 (mutants-ci-sharding): bumped 38 -> 57 for nineteen new
+/// `#[test]` fns backing the `mutants-plan` / 8-shard `mutants` matrix /
+/// `mutants-aggregate` sharded-gate pipeline (structural/wiring pins only
+/// — the INV-AGG/INV-COMPLETE/INV-ESCALATE behavioral proofs live in
+/// `scripts/mutants-aggregate.sh`'s own `--self-test` fixture harness,
+/// mechanically counted separately via `EXPECTED_MUTANTS_AGG_FIXTURES`):
+/// `test_mutants_plan_job_structural_shape`,
+/// `test_mutants_plan_escalated_output_wired_to_step_output`,
+/// `test_mutants_aggregate_expected_shards_matches_matrix_shard_count`,
+/// `test_spec_guard_contains_mutants_aggregate_self_test_step`,
+/// `test_mutants_aggregate_run_line_is_byte_pinned`,
+/// `test_mutants_aggregate_env_key_set_is_pinned`,
+/// `test_mutants_aggregate_eval_step_invokes_the_real_script`,
+/// `test_mutants_aggregate_job_block_has_no_node_properties`,
+/// `test_mutants_aggregate_step_if_values_are_all_always`,
+/// `test_mutants_aggregate_if_exception_is_disjoint_and_tautological`,
+/// `test_mutants_aggregate_env_escalated_byte_pin`,
+/// `test_mutants_aggregate_env_event_name_byte_pin`,
+/// `test_mutants_aggregate_env_status_dir_byte_pin`,
+/// `test_mutants_aggregate_env_shard_dir_byte_pin`,
+/// `test_mutants_aggregate_env_mutant_count_byte_pin`,
+/// `test_mutants_aggregate_env_overall_diff_lines_byte_pin`,
+/// `test_mutants_aggregate_env_plan_result_byte_pin`,
+/// `test_mutants_aggregate_needs_and_job_level_if`, and
+/// `test_mutants_nightly_workflow_does_not_declare_a_job_named_ci_gate`.
+/// Three PRE-EXISTING tests were renamed (not added/removed, so no count
+/// change from these): `test_mutants_is_in_ci_gate_needs` ->
+/// `test_mutants_aggregate_is_in_ci_gate_needs`;
+/// `test_mutants_job_structure_unchanged_by_cigate2_option_c` ->
+/// `test_mutants_shard_job_structure_matches_sharded_design`;
+/// `test_allowed_skips_has_exactly_three_code_level_references` ->
+/// `test_allowed_skips_has_exactly_four_code_level_references`. Verified
+/// mechanically against the live tree at F4 (`grep -c '^\s*#\[test\]'
+/// tests/ci_gate_completeness.rs` == 57), per this story's own AC-031
+/// re-verification mandate — the story's own F2-stage estimate (65) is
+/// superseded by this actual count, since story decomposition (F3)
+/// consolidated the INV-AGG/INV-COMPLETE behavioral proofs into
+/// `scripts/mutants-aggregate.sh`'s bash `--self-test` harness instead of
+/// duplicating them as separate Rust `#[test]` fns.
+///
+/// **cycle-006 F4 review round 2 (F-PF-HIGH-001 / F-PD-MED-001): +3, 57 ->
+/// 60.** `test_mutants_plan_job_and_step_key_sets_are_pinned` and
+/// `test_mutants_plan_compute_step_content_is_pinned` close the
+/// untrusted-`mutants-plan`-output gate-bypass (HIGH); `test_mutants_
+/// shard_status_sentinel_uses_outcome_not_conclusion` pins the per-shard
+/// status sentinel's `run_outcome` source to `.outcome`, not `.conclusion`
+/// (MED, the VP-006 F5 hand-off residual, closed early). Re-verified
+/// mechanically (`grep -c '^\s*#\[test\]' tests/ci_gate_completeness.rs`
+/// == 60).
+///
+/// **cycle-006 F4 review round 3 (F-PI-CRITICAL-001, CWE-358): +1, 60 ->
+/// 61.** `test_mutants_plan_compute_step_content_pin_rejects_decoy_
+/// comment_forgery` is the standing RED regression proof for the fix to
+/// `test_mutants_plan_compute_step_content_is_pinned` (rescoped from an
+/// ordered-substring search over the WHOLE raw `mutants-plan` job block —
+/// itself forgeable via a decoy YAML comment placed anywhere else in the
+/// job — to the same search scoped to the specific "Compute diff and
+/// mutation plan" step's PARSED `run:` scalar only, mirroring
+/// `test_mutants_shard_status_sentinel_uses_outcome_not_conclusion`'s
+/// existing `value_of("run")` -> `Value::Scalar` idiom). Re-verified
+/// mechanically (`grep -c '^\s*#\[test\]' tests/ci_gate_completeness.rs`
+/// == 61).
+///
+/// **cycle-006 F4 review round 3 (F-PG-MED-001, MED): +2, 61 -> 63.**
+/// `test_mutants_shard_job_and_step_key_sets_are_pinned` closes the
+/// previously-OPEN `mutants` shard job step list (mirroring
+/// `PINNED_MUTANTS_PLAN_STEP_KEY_SETS`'s idiom for the sibling
+/// `mutants-plan` job) — an appended step after `run-mutants` could
+/// otherwise rewrite `mutants.out/outcomes.json` before it is uploaded,
+/// forging a shard's kill rate with zero code execution.
+/// `test_mutants_shard_step_key_set_pin_rejects_injected_outcomes_rewrite_
+/// step` is the standing RED regression proof that the shared
+/// `check_job_and_step_key_sets` helper genuinely rejects that injected
+/// step. Re-verified mechanically (`grep -c '^\s*#\[test\]'
+/// tests/ci_gate_completeness.rs` == 63).
+///
+/// **cycle-006 F4 review round 4 (A-F1, HIGH): +2, 63 -> 65.**
+/// `test_mutants_shard_run_step_content_is_pinned` and
+/// `test_mutants_shard_run_step_rejects_trailing_outcomes_launder` close
+/// the trailing-shell-append vector on the sharded `mutants` job's
+/// `run-mutants` step: AC-033's presence-only ordered-substring search
+/// over the whole raw job block never inspected what came AFTER the real
+/// `cargo mutants` invocation, so a PR could append shell laundering its
+/// own shard's `mutants.out/outcomes.json` (moving `missed`/`timeout`
+/// counts into `caught`, sum-preserving so `mutants-aggregate.sh`'s
+/// exact-equality reconciliation still passes) inside the SAME step. See
+/// `assert_run_mutants_step_content_is_honest`'s doc comment for the full
+/// account.
+/// **cycle-006 F4 review round 6 (finding D-HIGH): +3, 65 -> 68.**
+/// `test_mutants_shard_run_step_rejects_variable_indirection_launder` and
+/// `test_mutants_shard_run_step_rejects_glob_loop_launder` are standing RED
+/// regression proofs for the two run-body laundering bypasses of the OLD
+/// substring-denylist check (`assert_run_mutants_step_content_is_honest`,
+/// now superseded — see its own doc comment); `test_mutants_shard_upload_
+/// outcomes_pin_rejects_repointed_path` is the standing RED regression
+/// proof for the third bypass (repointing the sibling "Upload shard
+/// outcomes" step's `with.path` instead of touching `run-mutants` at all).
+/// `test_mutants_shard_run_step_content_is_pinned` (pre-existing, no count
+/// change) was rewritten in the same pass to compare the FULL, parsed
+/// `run:` scalar byte-for-byte against `PINNED_MUTANTS_SHARD_RUN_BODY`,
+/// and to also pin the upload step's `with.path`/`with.name` against
+/// `PINNED_MUTANTS_SHARD_UPLOAD_OUTCOMES_WITH_PATH`/`_WITH_NAME`.
+/// Re-verified mechanically (this file's own `#[test]`-line count == 68).
+/// **cycle-006 F4 review round 6 (finding F-HIGH, VP-MUTANTS-SHARD-024/
+/// 025): +2, 68 -> 70.** `test_check_ci_gate_sh_and_mutants_aggregate_sh_
+/// source_shared_trusted_jq_helper` and `test_check_ci_gate_sh_and_
+/// mutants_aggregate_sh_have_no_bare_jq_invocations` are the two mandated
+/// `#[test]` functions the story's ACs 024/025 required but that did not
+/// exist anywhere in `tests/` before this pass — the underlying property
+/// (both scripts route every jq call through `scripts/lib/trusted-jq.sh`'s
+/// `resolve_trusted_jq`) already held, so these are REGRESSION guards, not
+/// fixes for an active bug. VP-025 specifically closes the `$GITHUB_PATH`
+/// jq-shim false-green for the sharded mutation gate
+/// (`mutants-aggregate.sh`), mirroring the guard `check-ci-gate.sh`'s own
+/// jq-identity self-test already provided. Re-verified mechanically (this
+/// file's own `#[test]`-line count == 70).
+/// **cycle-006 F4 review round 8 (findings G-HIGH, G-MED): +2, 70 -> 72.**
+/// `test_mutants_shard_sentinel_run_step_rejects_outcomes_launder` (G-HIGH)
+/// is the standing RED regression proof that the `Write shard status
+/// sentinel` step's `run:` body is now byte-pinned
+/// (`PINNED_MUTANTS_SHARD_SENTINEL_RUN_BODY`, via `extract_and_normalize_
+/// mutants_shard_sentinel_run_body`) — closing a launder vector on the
+/// ONE OTHER `run:`-bearing step in the `mutants` shard job that
+/// `PINNED_MUTANTS_SHARD_RUN_BODY` (round 6, D-HIGH) did not cover.
+/// `test_contains_bare_jq_invocation_catches_command_introducers_and_
+/// process_substitution` (G-MED) is the standing regression proof that
+/// `contains_bare_jq_invocation` (backing `test_check_ci_gate_sh_and_
+/// mutants_aggregate_sh_have_no_bare_jq_invocations`, round 6 F-HIGH) now
+/// also catches `eval`/`command`/`exec`/`xargs`/`env`/`builtin`
+/// command-introducers, process-substitution `<(`/`>(` openers, and a
+/// `NAME=jq` variable-indirection assignment — none of which the round-6
+/// scan detected. Re-verified mechanically (this file's own `#[test]`-line
+/// count == 72).
+/// **cycle-006 F4 review round 8 (finding J-CRITICAL and finding J-O1):
+/// +3, 72 -> 75.** `test_mutants_plan_compute_step_run_body_is_byte_pinned`
+/// and `test_mutants_plan_compute_step_content_pin_rejects_diff_truncation_
+/// insertion` (J-CRITICAL, trace AC-004) are standing RED regression proofs
+/// that `mutants-plan`'s compute step `run:` body is byte-pinned in full
+/// (not merely checked for ten required substrings in order, which left a
+/// gap where an inserted shell command between two pinned fragments — e.g.
+/// silently truncating the `git diff` before it reaches `cargo mutants
+/// --list`) — closing that insertion vector.
+/// `test_contains_bare_jq_invocation_catches_wrapper_introducers_and_
+/// quoted_relative_spellings` (J-O1, trace AC-025/VP-MUTANTS-SHARD-025) is
+/// the standing regression proof that `contains_bare_jq_invocation` also
+/// catches wrapper-introducer command forms (e.g. `nohup`/`nice`/`time`
+/// prefixing a `jq` call) and quoted-relative jq spellings (e.g.
+/// `"./jq"`/`'./jq'`) that the round-8 G-MED scan (above) did not detect.
+/// Re-verified mechanically (this file's own `#[test]`-line count == 75).
+const EXPECTED_GUARD_TEST_COUNT: usize = 75;
 
 /// Collect the line indices (0-based, into `lines`) of every `#[cfg(...)]`
 /// attribute in the CONTIGUOUS attribute/doc block surrounding a `#[test]`
@@ -8745,5 +10517,2076 @@ fn test_b1_needs_line_rejects_value_side_tag() {
         "FAIL (B-1 RED proof): extract_and_normalize_sole_needs_line \
          accepted a job-level `needs:` value carrying a YAML tag instead \
          of rejecting it — got {result:?}.\njob_block:\n{tagged}"
+    );
+}
+
+// =============================================================================
+// cycle-006 mutants-ci-sharding (S-cycle6-mutants-ci-sharding.md) — guard
+// tests (test-writer, Tasks 6/8/17-23 write-test halves).
+//
+// GREEN-tree status (corrected during F4 adversarial review round-8+9
+// doc-hygiene pass, finding O-LOW; originally authored RED-first per this
+// story's TDD discipline): the implementer's GREEN-phase work has since
+// landed — `mutants-plan`/`mutants-aggregate` both exist in
+// `.github/workflows/ci.yml`, the `mutants` job has been reshaped into the
+// 8-shard matrix (see `test_mutants_shard_job_structure_matches_sharded_
+// design` above), and `scripts/mutants-aggregate.sh`'s decision logic is
+// the real reconciliation implementation, not the Task-2b scaffold stub.
+// Every test below now PASSES against that GREEN tree. Each assertion
+// names a specific AC from `S-cycle6-mutants-ci-sharding.md` and is
+// written against the exact job/step shapes in
+// `.factory/phase-f2-spec-evolution/cycle-006/ci-yml-design.md` — that
+// traceability is unchanged from the original RED-phase authoring; only
+// this banner's narrated STATE was stale and has been corrected here.
+//
+// AC-032's `ci-gate.needs` retarget (`PINNED_GATE_NEEDS_LINE` /
+// `test_ci_gate_needs_exactly_the_required_jobs`'s expected set) and
+// `PINNED_GATE_EXCLUDED_JOBS`'s `mutants`/`mutants-plan` admission landed
+// in the implementer's GREEN-phase Task 20 commit, alongside the ci.yml
+// retarget itself, per this story's "AC -> Task Coverage Audit" table.
+// `EXPECTED_GUARD_TEST_COUNT` above was bumped in the same GREEN-phase
+// process-gate pass (F4 Blocking Precondition / AC-031, Task 25) and is
+// now current (see the ledger doc comment above the constant) —
+// `test_this_file_test_count_matches_expected_denominator` passes.
+// =============================================================================
+
+/// Read `scripts/mutants-aggregate.sh` relative to the repo root. Mirrors
+/// `read_ci_yml`'s CRLF-normalization convention (no BOM-stripping needed —
+/// this is a bash script, not YAML, and none of the checks below are
+/// sensitive to a leading BOM the way a YAML key-name match would be).
+fn read_mutants_aggregate_sh() -> String {
+    let path = Path::new(env!("CARGO_MANIFEST_DIR")).join("scripts/mutants-aggregate.sh");
+    let raw = fs::read_to_string(&path)
+        .unwrap_or_else(|e| panic!("Could not read {}: {e}", path.display()));
+    raw.replace("\r\n", "\n")
+}
+
+/// AC-004: `mutants-plan`'s structural shape — PR-only `if:`, its three
+/// `outputs:` bound to `steps.plan.outputs.*`, and its diff-file-upload
+/// step present. Per `ci-yml-design.md §1`'s authoritative job design.
+#[test]
+fn test_mutants_plan_job_structural_shape() {
+    let ci = read_ci_yml();
+    let plan_block = extract_job_block(&ci, "mutants-plan").unwrap_or_else(|| {
+        panic!(
+            "FAIL (AC-004): `.github/workflows/ci.yml` does not contain a \
+             `mutants-plan:` job — this is the standing structural-shape \
+             regression proof for AC-004 (mutants-plan job structural pin); \
+             a `ci.yml` edit that removes or renames the job trips this \
+             failure."
+        )
+    });
+
+    let actual_if_expr = extract_and_normalize_if_expr(plan_block).unwrap_or_else(|reason| {
+        panic!("FAIL (AC-004): `mutants-plan`'s job-level `if:` {reason}\nCurrent mutants-plan block:\n{plan_block}")
+    });
+    assert_eq!(
+        actual_if_expr.as_deref(),
+        Some("github.event_name == 'pull_request'"),
+        "FAIL (AC-004): `mutants-plan`'s job-level `if:` does not match \
+         the pinned PR-only condition.\n\
+         Current mutants-plan block:\n{plan_block}"
+    );
+
+    let mut expected_output_keys: Vec<String> = ["escalated", "mutant_count", "overall_diff_lines"]
+        .iter()
+        .map(|s| s.to_string())
+        .collect();
+    expected_output_keys.sort();
+    let mut actual_output_keys = common::wf::job_level_nested_keys(plan_block, &["outputs"])
+        .unwrap_or_else(|| {
+            panic!(
+                "FAIL (AC-004): `mutants-plan` has no `outputs:` mapping — \
+                 the sharded design requires escalated/mutant_count/\
+                 overall_diff_lines, threaded to `mutants-aggregate`.\n\
+                 Current mutants-plan block:\n{plan_block}"
+            )
+        });
+    actual_output_keys.sort();
+    assert_eq!(
+        actual_output_keys, expected_output_keys,
+        "FAIL (AC-004): `mutants-plan`'s `outputs:` key set \
+         ({actual_output_keys:?}) does not match the pinned set \
+         ({expected_output_keys:?}).\n\
+         Current mutants-plan block:\n{plan_block}"
+    );
+
+    assert!(
+        plan_block.contains("mutants-diff-file"),
+        "FAIL (AC-004): `mutants-plan` does not upload the shared \
+         `mutants-diff-file` artifact every shard downloads.\n\
+         Current mutants-plan block:\n{plan_block}"
+    );
+}
+
+/// (cycle-006 F4 review round 2, F-PF-HIGH-001): `mutants-plan`'s COMPLETE
+/// job-level and per-step key sets, mirroring `PINNED_ALWAYS_RUN_JOB_KEY_
+/// SETS`/`PINNED_ALWAYS_RUN_STEP_KEY_SETS`'s idiom for the always-run jobs.
+/// `mutants-plan` is deliberately NOT added to those two constants — like
+/// `mutants`, it is not an always-run job (`if: github.event_name ==
+/// 'pull_request'`) — but it sits squarely on the required-gate DECISION
+/// PATH (its outputs feed `mutants-aggregate`'s Step 1/Step 4), so it needs
+/// the same protection: a smuggled job-level `defaults:`/`continue-on-
+/// error:` key, or a smuggled step-level `if:`/`shell:`/`continue-on-
+/// error:` on any of its six steps, is now caught by set-equality rather
+/// than left as an unpinned open set under AC-004's narrower "the outputs
+/// key set and the `if:` value exist" pin.
+const PINNED_MUTANTS_PLAN_JOB_KEY_SET: &[&str] = &[
+    "if",
+    "name",
+    "outputs",
+    "runs-on",
+    "steps",
+    "timeout-minutes",
+];
+
+/// See `PINNED_MUTANTS_PLAN_JOB_KEY_SET`'s doc comment immediately above.
+/// Step order, per `ci.yml`'s `mutants-plan` job as of this pass: harden-
+/// runner, checkout (fetch-depth: 0), install-action (cargo-mutants),
+/// rust-cache, the compute step (id: plan), the diff-file upload.
+const PINNED_MUTANTS_PLAN_STEP_KEY_SETS: &[&[&str]] = &[
+    &["name", "uses", "with"], // Harden the runner (Audit all outbound calls)
+    &["uses", "with"],         // actions/checkout (fetch-depth: 0)
+    &["uses", "with"],         // taiki-e/install-action (cargo-mutants@27.1.0)
+    &["uses"],                 // Swatinem/rust-cache
+    &["id", "name", "run"],    // Compute diff and mutation plan
+    &["name", "uses", "with"], // Upload diff file
+];
+
+#[test]
+fn test_mutants_plan_job_and_step_key_sets_are_pinned() {
+    let ci = read_ci_yml();
+    let plan_block = extract_job_block(&ci, "mutants-plan").unwrap_or_else(|| {
+        panic!(
+            "FAIL (F-PF-HIGH-001): `.github/workflows/ci.yml` does not \
+             contain a `mutants-plan:` job yet."
+        )
+    });
+
+    let mut expected_job_keys: Vec<String> = PINNED_MUTANTS_PLAN_JOB_KEY_SET
+        .iter()
+        .map(|s| s.to_string())
+        .collect();
+    expected_job_keys.sort();
+    let actual_job_keys = extract_job_level_key_set(plan_block);
+    assert_eq!(
+        actual_job_keys, expected_job_keys,
+        "FAIL (F-PF-HIGH-001): `mutants-plan`'s complete job-level key set \
+         ({actual_job_keys:?}) does not match the pinned set \
+         ({expected_job_keys:?}) — an added/removed/renamed job-level key \
+         (most importantly a job-level `defaults:`, which could redirect \
+         every `run:` step in this job through a custom shell template, \
+         e.g. `shell: cat {{0}}`) is unpinned until reviewed here. If this \
+         is a deliberate, reviewed change, update \
+         PINNED_MUTANTS_PLAN_JOB_KEY_SET in the SAME change.\n\
+         Current mutants-plan block:\n{plan_block}"
+    );
+
+    let expected_step_sets: Vec<Vec<String>> = PINNED_MUTANTS_PLAN_STEP_KEY_SETS
+        .iter()
+        .map(|set| {
+            let mut v: Vec<String> = set.iter().map(|s| s.to_string()).collect();
+            v.sort();
+            v
+        })
+        .collect();
+    let actual_step_sets = extract_gate_step_key_sets(plan_block);
+    assert_eq!(
+        actual_step_sets, expected_step_sets,
+        "FAIL (F-PF-HIGH-001): `mutants-plan`'s per-step key sets \
+         ({actual_step_sets:?}) do not match the pinned, human-reviewed \
+         sets ({expected_step_sets:?}). Any added, removed, or renamed key \
+         on ANY step — most importantly a step-level `if:` (silently skips \
+         that step while the job still reports `success`), `continue-on-\
+         error:`, or `shell:` (can redirect that step's `run:` body \
+         through a custom shell template) — or any added/removed/reordered \
+         step, changes this. If this is a deliberate, reviewed change, \
+         update PINNED_MUTANTS_PLAN_STEP_KEY_SETS in the SAME change.\n\
+         Current mutants-plan block:\n{plan_block}"
+    );
+
+    assert!(
+        !plan_block.contains("continue-on-error"),
+        "FAIL (F-PF-HIGH-001): `mutants-plan`'s job block contains the \
+         literal substring `continue-on-error` — this job has no \
+         legitimate use for it anywhere (unlike the `mutants` shard job's \
+         `run-mutants` step, whose non-zero exit is EXPECTED, routine \
+         output under `--baseline skip`): a `continue-on-error: true` on \
+         `mutants-plan`'s compute step would let a genuinely crashed `git \
+         diff`/`cargo mutants --list` invocation still report the job as \
+         `success` with empty/default GITHUB_OUTPUT values, silently \
+         reopening the same false-green class Step 0.5's PLAN_RESULT check \
+         in `scripts/mutants-aggregate.sh` exists to catch at the OTHER \
+         end of this wiring.\n\
+         Current mutants-plan block:\n{plan_block}"
+    );
+}
+
+/// (cycle-006 F4 review round 2, F-PF-HIGH-001 — HIGH-severity gate-bypass
+/// fix; hardened cycle-006 F4 review round 3, F-PI-CRITICAL-001, CWE-358):
+/// closes the untrusted-`mutants-plan`-output vector.
+/// `mutants-plan`'s three outputs (`escalated`/`mutant_count`/
+/// `overall_diff_lines`) are trusted, UNRECONCILED inputs to
+/// `mutants-aggregate`'s Step 1 escalation short-circuit and Step 4
+/// exact-equality reconciliation — `mutants-aggregate` never re-derives
+/// them independently. Before the round-2 fix, `mutants-plan` had
+/// structural pins (AC-004's `outputs:` key set + job-level `if:`, and —
+/// as of that same review round — `test_mutants_plan_job_and_step_key_
+/// sets_are_pinned`'s job/step key-set sweep) but NOTHING asserted the
+/// "Compute diff and mutation plan" step's `run:` BODY actually derives
+/// those outputs from real `git diff`/`cargo mutants --list` invocations
+/// rather than fabricating them outright — a content-level gap neither a
+/// key-set pin (which only sees KEYS, never a scalar's own multi-line
+/// VALUE) nor AC-004's `outputs.escalated` wiring pin (which only proves
+/// the output is wired to `steps.plan.outputs.escalated`, not that
+/// `steps.plan` computed it honestly) can close.
+///
+/// **Concrete exploit round 2 closed** (RED-proven that session against a
+/// temporary, untracked reproduction of `ci.yml` — the tracked file was
+/// never modified): replace the ENTIRE "Compute diff and mutation plan"
+/// step's `run:` body with
+/// `echo "escalated=false" >> "$GITHUB_OUTPUT"; echo "mutant_count=0" >>
+/// "$GITHUB_OUTPUT"; echo "overall_diff_lines=1" >> "$GITHUB_OUTPUT"`
+/// (plus a placeholder file write so the "Upload diff file" step's
+/// `if-no-files-found: error` stays satisfied). Every shard then
+/// legitimately reports `has_outcomes=false`/`run_outcome=success` (0
+/// mutants examined), `total_scored` sums to 0, `mutants-aggregate`'s
+/// Step 4 reconciles `0 == MUTANT_COUNT(0)` cleanly, Step 5's base-ref-
+/// drift guard is dodged by the non-zero `OVERALL_DIFF_LINES=1`, Step 6
+/// is unreachable (`total_scored == 0` returns OK at Step 5) — the
+/// required `ci-gate` goes GREEN with zero `cargo mutants` invocation and
+/// zero code execution, for ANY PR diff size.
+///
+/// **Round-2 fix, and round-3's CWE-358 correction to it
+/// (F-PI-CRITICAL-001):** the step's `run:` body is a multi-line block
+/// scalar (`run: |`), so a byte pin (which requires a single-line scalar
+/// — see `extract_and_normalize_step_run_line_by_name`'s own doc comment)
+/// cannot be used directly. Round 2 instead ran an ORDERED-substring
+/// search over the ENTIRE raw job block text `extract_job_block` returns
+/// — mirroring `test_mutants_shard_job_structure_matches_sharded_design`'s
+/// justification for the identical shape one job over. That round-2
+/// choice was itself a gate-bypass: `extract_job_block`'s raw text
+/// includes every YAML comment anywhere in the job block, not just this
+/// one step's `run:` value, so a `ci.yml` diff could relocate the ten
+/// required fragments below into an inert YAML comment ANYWHERE ELSE in
+/// the job (e.g. between two unrelated steps) — commenting out the real
+/// script "for real" at the YAML level, not merely wrapping it in a bash
+/// `#` inside the executed scalar — while the "Compute diff and mutation
+/// plan" step's ACTUAL `run:` value held only three hardcoded `echo`
+/// lines. The ordered substring search, having no notion of WHICH node a
+/// piece of text belongs to, was satisfied by the decoy exactly as
+/// happily as by the real script, so round 2's own protection was itself
+/// forgeable with zero code execution — see
+/// `test_mutants_plan_compute_step_content_pin_rejects_decoy_comment_forgery`
+/// below for the persisted, standing RED proof of both halves of this
+/// claim.
+///
+/// The fix mirrors `test_mutants_shard_status_sentinel_uses_outcome_not_
+/// conclusion`'s existing robust idiom EXACTLY: resolve the SPECIFIC
+/// step's `run:` key to its parsed [`Value::Scalar`] via
+/// [`Step::value_of`] (`mutants_plan_compute_step_run_text` below) and
+/// search only ITS resolved `text` — content that lives outside that one
+/// scalar node (including a decoy YAML comment anywhere else in the job)
+/// is never part of what a real YAML parser resolves that key's value to,
+/// so it can no longer satisfy this pin. Every fragment below ties a
+/// REQUIRED real command/variable to the SPECIFIC output it feeds, in the
+/// ORDER those computations must occur — the all-`echo` exploit above
+/// satisfies NONE of them: it invokes neither `git diff` nor `cargo
+/// mutants --list --in-diff`, and assigns `mutant_count`/
+/// `overall_diff_lines` from LITERAL numbers rather than `wc -l`-derived
+/// shell variables, so this test fails at the very FIRST fragment (`git
+/// diff origin/...`) against that reproduction.
+///
+/// **Residual, honestly documented (NOT closed by this fix):** this pin
+/// (like `test_mutants_shard_status_sentinel_uses_outcome_not_conclusion`'s
+/// simple `.contains()` idiom it mirrors) is still an ordered-substring
+/// search WITHIN the resolved scalar text — it cannot distinguish a
+/// fragment appearing as EXECUTABLE bash from the identical text appearing
+/// as a bash `#`-prefixed comment INSIDE that same `run: |` block scalar
+/// (YAML has no comment syntax inside a literal block scalar; every byte
+/// is literal content). A `ci.yml` diff that bash-comments out the real
+/// script IN PLACE — within the same `run:` value, immediately followed by
+/// hardcoded `echo` lines — would still satisfy this pin. That specific
+/// variant reads, in a diff, as an obviously-gutted script (every real
+/// line prefixed with `#`, sitting right next to a suspiciously trivial
+/// replacement) rather than as an innocuous-looking change scattered
+/// elsewhere in the job, which is why it remains a code-review control
+/// rather than a structural one — the same class of residual this file's
+/// CI-Gate SCOPE SUMMARY already documents for other pins (see CLAUDE.md).
+const MUTANTS_PLAN_COMPUTE_STEP_REQUIRED_FRAGMENTS: [&str; 10] = [
+    // OVERALL_DIFF_LINES is computed from a REAL `git diff` against the
+    // PR's base ref, not a literal.
+    "git diff origin/${{ github.base_ref }}...HEAD",
+    r#"OVERALL_DIFF_LINES=$(wc -l < "${DIFF_FILE}""#,
+    // MUTANT_COUNT is computed from a REAL `cargo mutants --list`
+    // invocation scoped to that same diff file; a non-zero exit from
+    // it is a hard FAIL, not silently coerced to MUTANT_COUNT=0
+    // (mutants-sharding-invariants.md §INV-AGG sub-invariant 8's
+    // residual-risk note, cited in this step's own ci.yml comment).
+    r#"if ! cargo mutants --list --in-diff "${DIFF_FILE}""#,
+    "cannot reliably pre-count in-diff mutants",
+    r#"MUTANT_COUNT=$(wc -l < "${LIST_OUTPUT}""#,
+    // The escalation threshold is the human-reviewed literal,
+    // compared against the REAL MUTANT_COUNT computed above — not
+    // against a fabricated value.
+    "ESCALATION_THRESHOLD=120",
+    r#"if [ "${MUTANT_COUNT}" -gt "${ESCALATION_THRESHOLD}" ]"#,
+    // The three GITHUB_OUTPUT writes are wired to the VARIABLES
+    // computed above, not to literal values — an all-`echo` exploit
+    // writing e.g. `escalated=false` directly satisfies none of these.
+    r#"echo "escalated=${ESCALATED}" >> "${GITHUB_OUTPUT}""#,
+    r#"echo "mutant_count=${MUTANT_COUNT}" >> "${GITHUB_OUTPUT}""#,
+    r#"echo "overall_diff_lines=${OVERALL_DIFF_LINES}" >> "${GITHUB_OUTPUT}""#,
+];
+
+/// Ordered-substring search: returns `Ok(())` if every entry of
+/// `fragments` is found in `text`, in order (each search starts at the
+/// byte offset immediately after the previous match), or `Err(fragment)`
+/// naming the first fragment that could not be found at or after that
+/// position.
+///
+/// Deliberately generic over WHAT `text` is — the security property this
+/// story's fixes rely on (F-PI-CRITICAL-001, F-PG-MED-001) comes entirely
+/// from what the CALLER passes as `text` (a specific resolved scalar
+/// value, never a whole raw job block), not from anything this function
+/// does internally.
+fn find_fragments_in_order<'a>(text: &str, fragments: &[&'a str]) -> Result<(), &'a str> {
+    let mut last_offset = 0usize;
+    for fragment in fragments {
+        match text[last_offset..].find(fragment) {
+            Some(offset) => last_offset += offset + fragment.len(),
+            None => return Err(fragment),
+        }
+    }
+    Ok(())
+}
+
+/// Resolves `mutants-plan`'s "Compute diff and mutation plan" step's
+/// `run:` key to its parsed scalar text (F-PI-CRITICAL-001). `job_block`
+/// must be a single-job block as `extract_job_block` returns it (or an
+/// equivalently-shaped standalone fixture — see
+/// `test_mutants_plan_compute_step_content_pin_rejects_decoy_comment_forgery`).
+///
+/// # Panics
+///
+/// Panics (naming the missing step, or the unexpected `run:` shape) if
+/// `job_block` has no step named `Compute diff and mutation plan`, or
+/// that step's `run:` value is not a scalar — both indicate a genuine
+/// structural defect in the job block, not something this pin should
+/// silently tolerate.
+fn mutants_plan_compute_step_run_text(job_block: &str) -> String {
+    let job = WfDoc::parse_single_job(job_block);
+    let compute_step = job
+        .steps
+        .iter()
+        .find(|s| s.name.as_deref() == Some("Compute diff and mutation plan"))
+        .unwrap_or_else(|| {
+            panic!(
+                "FAIL (F-PI-CRITICAL-001): no step named `Compute diff \
+                 and mutation plan` in this job block.\n\
+                 Current job block:\n{job_block}"
+            )
+        });
+    match compute_step.value_of("run") {
+        Some(Value::Scalar { text, .. }) => text.clone(),
+        other => panic!(
+            "FAIL (F-PI-CRITICAL-001): `Compute diff and mutation plan`'s \
+             `run:` value is not a plain scalar (found: {other:?}).\n\
+             Current job block:\n{job_block}"
+        ),
+    }
+}
+
+#[test]
+fn test_mutants_plan_compute_step_content_is_pinned() {
+    let ci = read_ci_yml();
+    let plan_block = extract_job_block(&ci, "mutants-plan").unwrap_or_else(|| {
+        panic!(
+            "FAIL (F-PF-HIGH-001): `.github/workflows/ci.yml` does not \
+             contain a `mutants-plan:` job yet."
+        )
+    });
+
+    let run_text = mutants_plan_compute_step_run_text(plan_block);
+
+    find_fragments_in_order(&run_text, &MUTANTS_PLAN_COMPUTE_STEP_REQUIRED_FRAGMENTS)
+        .unwrap_or_else(|missing_fragment| {
+            panic!(
+                "FAIL (F-PI-CRITICAL-001 / F-PF-HIGH-001, gate-bypass): \
+                 `mutants-plan`'s \"Compute diff and mutation plan\" \
+                 step's PARSED `run:` scalar is missing the fragment \
+                 `{missing_fragment}`, or it appears out of order \
+                 relative to the previously-matched fragment(s) — this \
+                 step's `run:` body must compute `escalated`/ \
+                 `mutant_count`/`overall_diff_lines` from REAL `git \
+                 diff`/`cargo mutants --list` invocations, not fabricate \
+                 them (the exact gate-bypass this test exists to catch — \
+                 see this test's own doc comment for the concrete \
+                 exploit).\n\
+                 Parsed run: scalar text:\n{run_text}"
+            )
+        });
+}
+
+/// (cycle-006 F4 review round 3, F-PI-CRITICAL-001, CWE-358 — standing RED
+/// regression proof): see `test_mutants_plan_compute_step_content_is_
+/// pinned`'s own doc comment above for the full narrative. This test
+/// pins BOTH halves of the claim against a hand-crafted, untracked
+/// `mutants-plan` fixture (the tracked `ci.yml` is never touched):
+///
+/// 1. The OLD (round-2) check — an ordered substring search over the
+///    ENTIRE raw job block — is satisfied by a decoy: the ten required
+///    fragments relocated into an inert YAML comment that sits BETWEEN
+///    two unrelated steps, entirely outside the "Compute diff and
+///    mutation plan" step's own `run:` scalar. This proves the
+///    round-2-closed exploit was real (a diff review that skimmed for
+///    "does this text still appear somewhere" would have seen it).
+/// 2. The NEW (round-3) check — the same ordered substring search, but
+///    scoped to ONLY that step's resolved `run:` scalar via
+///    `mutants_plan_compute_step_run_text` — correctly REJECTS the same
+///    fixture, because a real YAML parser never includes a comment living
+///    outside a scalar node when resolving that node's value.
+#[test]
+fn test_mutants_plan_compute_step_content_pin_rejects_decoy_comment_forgery() {
+    let forged_block = r#"  mutants-plan:
+    name: Mutation Test Plan
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    if: github.event_name == 'pull_request'
+    outputs:
+      escalated: ${{ steps.plan.outputs.escalated }}
+      mutant_count: ${{ steps.plan.outputs.mutant_count }}
+      overall_diff_lines: ${{ steps.plan.outputs.overall_diff_lines }}
+    steps:
+      - name: Harden the runner (Audit all outbound calls)
+        uses: step-security/harden-runner@x
+        with:
+          egress-policy: audit
+      - uses: actions/checkout@x
+        with:
+          fetch-depth: 0
+      - uses: taiki-e/install-action@x
+        with:
+          tool: cargo-mutants@27.1.0
+      - uses: Swatinem/rust-cache@x
+      # FORGERY (F-PI-CRITICAL-001 RED reproduction): the real script is
+      # "commented out" by relocating it here, as an ordinary YAML
+      # comment entirely OUTSIDE the "Compute diff and mutation plan"
+      # step's `run:` scalar below -- a real YAML parser drops this
+      # when resolving that step's `run:` value, but the OLD
+      # ordered-substring-over-the-whole-block check could not tell
+      # the difference.
+      #   git diff origin/${{ github.base_ref }}...HEAD
+      #   OVERALL_DIFF_LINES=$(wc -l < "${DIFF_FILE}"
+      #   if ! cargo mutants --list --in-diff "${DIFF_FILE}"
+      #   cannot reliably pre-count in-diff mutants
+      #   MUTANT_COUNT=$(wc -l < "${LIST_OUTPUT}"
+      #   ESCALATION_THRESHOLD=120
+      #   if [ "${MUTANT_COUNT}" -gt "${ESCALATION_THRESHOLD}" ]
+      #   echo "escalated=${ESCALATED}" >> "${GITHUB_OUTPUT}"
+      #   echo "mutant_count=${MUTANT_COUNT}" >> "${GITHUB_OUTPUT}"
+      #   echo "overall_diff_lines=${OVERALL_DIFF_LINES}" >> "${GITHUB_OUTPUT}"
+      - name: Compute diff and mutation plan
+        id: plan
+        run: |
+          echo "escalated=false" >> "$GITHUB_OUTPUT"
+          echo "mutant_count=0" >> "$GITHUB_OUTPUT"
+          echo "overall_diff_lines=1" >> "$GITHUB_OUTPUT"
+      - name: Upload diff file (shared across all shards)
+        uses: actions/upload-artifact@x
+        with:
+          name: mutants-diff-file
+          path: /tmp/pr.diff
+          if-no-files-found: error
+          retention-days: 1
+"#;
+
+    // Half 1: the OLD, now-replaced check (ordered substring search over
+    // the ENTIRE raw job block) is satisfied by the decoy comment above —
+    // proving the exploit this test guards against was real, not
+    // hypothetical. If this expectation ever fails, the fixture itself
+    // has drifted and must be revised to keep reproducing the exploit.
+    find_fragments_in_order(forged_block, &MUTANTS_PLAN_COMPUTE_STEP_REQUIRED_FRAGMENTS).expect(
+        "SETUP INVARIANT VIOLATED: this forged fixture must satisfy the \
+         OLD raw-block ordered-substring search (via its decoy comment) — \
+         if it does not, the fixture no longer reproduces the \
+         F-PI-CRITICAL-001 exploit and must be revised.",
+    );
+
+    // Half 2: the NEW check (parsed `run:` scalar of the SPECIFIC step,
+    // only) must NOT find the fragments — they were never part of what
+    // that step's `run:` key resolves to.
+    let run_text = mutants_plan_compute_step_run_text(forged_block);
+    let result = find_fragments_in_order(&run_text, &MUTANTS_PLAN_COMPUTE_STEP_REQUIRED_FRAGMENTS);
+    assert!(
+        result.is_err(),
+        "FAIL (F-PI-CRITICAL-001 RED proof did not hold): the parsed- \
+         `run:`-scalar check accepted a forged `mutants-plan` block whose \
+         real script was relocated to a decoy YAML comment OUTSIDE the \
+         \"Compute diff and mutation plan\" step's `run:` value — the fix \
+         is NOT default-deny against this exploit.\n\
+         Resolved run: scalar text was:\n{run_text}"
+    );
+}
+
+/// (cycle-006 F4 review round 4, J-CRITICAL): the full, human-reviewed
+/// literal text of `mutants-plan`'s "Compute diff and mutation plan" step's
+/// `run:` scalar, read byte-for-byte from `ci.yml` as of this pass (the
+/// PARSED scalar was printed via a scratch test and copy-pasted here — the
+/// SAME discipline `PINNED_MUTANTS_SHARD_RUN_BODY`'s doc comment mandates
+/// and explains: a raw string literal is REQUIRED, not a normal `"..."`
+/// literal with `\`-continuations, because Rust's own line-continuation
+/// escape would silently eat the leading indentation of every continuation
+/// line and desync the pin from what `saphyr-parser` actually resolves this
+/// `|` block-literal scalar to).
+///
+/// **Concrete exploit this closes (J-CRITICAL):** `find_fragments_in_order`
+/// (backing `test_mutants_plan_compute_step_content_is_pinned`, even after
+/// round 3 correctly scoped it to this ONE step's resolved `run:` scalar)
+/// is an ORDERED-SUBSTRING search — it has no notion of what happens
+/// BETWEEN two consecutive required fragments, or AFTER the last one. A
+/// one-line insertion between the `OVERALL_DIFF_LINES=$(wc -l < ...)`
+/// fragment and the `cargo mutants --list --in-diff "${DIFF_FILE}"`
+/// fragment —
+///
+/// ```text
+/// : > "${DIFF_FILE}"        # truncate the shared diff AFTER OVERALL_DIFF_LINES is captured
+/// ```
+///
+/// — still contains all ten required fragments, in the same relative
+/// order, so the fragment pin (scoped or not) is satisfied. This step runs
+/// under `set -uo pipefail` (deliberately no `-e`, per this step's own
+/// `ci.yml` comment), so `: >` truncating the file does not abort the
+/// script. Consequence: `OVERALL_DIFF_LINES` is still computed from the
+/// REAL (non-empty) diff before truncation — so a genuinely large PR diff
+/// still reports a non-zero `overall_diff_lines`, dodging
+/// `mutants-aggregate.sh`'s base-ref-drift guard — but `cargo mutants
+/// --list --in-diff` then runs against the now-EMPTY file, so
+/// `MUTANT_COUNT=0` and `escalated=false` regardless of the PR's real
+/// size. Every shard then runs `--in-diff` against the same emptied file,
+/// legitimately produces zero scored mutants, `mutants-aggregate.sh`'s
+/// Step 4 reconciles `0 == MUTANT_COUNT(0)` cleanly (both sides derive
+/// from the identical truncated diff, so reconciliation cannot catch it),
+/// and Step 5's "non-empty diff, 0 mutants → OK" branch (a LEGITIMATE
+/// pass for a genuine comment/docs-only PR, which is exactly why that
+/// branch must stay a pass and cannot be hardened against on the
+/// `mutants-aggregate.sh` side — see this constant's sibling test's doc
+/// comment) returns 0. `ci-gate` goes GREEN with mutation testing entirely
+/// disabled, for a PR of ANY size, with a ONE-LINE plaintext `ci.yml` edit
+/// and zero `cargo mutants`/code-execution involvement.
+///
+/// **The fix:** exact byte-equality against this pinned literal, via
+/// [`extract_and_normalize_run_scalar_for_step`] (the SAME shared helper
+/// `PINNED_MUTANTS_SHARD_RUN_BODY`/`PINNED_MUTANTS_SHARD_SENTINEL_RUN_BODY`
+/// already use one job over), leaves no gap between fragments for an
+/// inserted line to hide in — ANY byte added, removed, or reordered in
+/// this step's `run:` scalar fails this pin. See
+/// `test_mutants_plan_compute_step_content_pin_rejects_diff_truncation_
+/// insertion` for the standing RED regression proof, and
+/// `test_mutants_plan_compute_step_run_body_is_byte_pinned` for the
+/// production assertion against the real `ci.yml`.
+///
+/// **Deliberately NOT a replacement for `find_fragments_in_order`'s check
+/// above** — `test_mutants_plan_compute_step_content_is_pinned` and
+/// `test_mutants_plan_compute_step_content_pin_rejects_decoy_comment_
+/// forgery` stay in place unchanged: the fragment pin's readable,
+/// per-fragment failure messages remain useful for a reviewer diagnosing
+/// WHICH real command went missing, while this byte pin is the actual
+/// default-deny backstop. The residual documented on
+/// `find_fragments_in_order` itself (a bash-comment-out-in-place launder)
+/// is fully subsumed by this byte pin too — any such launder changes the
+/// scalar's bytes and fails here.
+const PINNED_MUTANTS_PLAN_COMPUTE_BODY: &str = r#"set -uo pipefail  # deliberately NOT -e here — see the F-4 note below
+
+DIFF_FILE="${{ runner.temp }}/pr-${{ github.run_id }}.diff"
+# F-4 (carried from the pre-sharding single-job design, unchanged
+# rationale): || true so a base-ref resolution failure does not abort
+# before OVERALL_DIFF_LINES is computed — an empty DIFF_FILE still
+# correctly routes through the base-ref-drift branch downstream in
+# mutants-aggregate, never a silent false-green.
+git diff origin/${{ github.base_ref }}...HEAD > "${DIFF_FILE}" || true
+
+OVERALL_DIFF_LINES=$(wc -l < "${DIFF_FILE}" | tr -d ' ')
+echo "Overall diff lines: ${OVERALL_DIFF_LINES}"
+
+# Pre-count in-diff mutants for the escape hatch (INV-ESCALATE) AND
+# for mutants-aggregate's pooled-total reconciliation (INV-AGG
+# sub-invariant 8). `cargo mutants --list` exits 0 even on an empty
+# diff (0 lines listed) — no special-casing needed for that case.
+#
+# This step's own `set -uo pipefail` (no `-e`) means `--list`'s exit
+# status is NOT automatically fatal — captured and checked explicitly
+# instead of letting a genuine tooling failure (bad base-ref, an
+# examine_globs/.cargo/mutants.toml misconfiguration, a
+# cargo-mutants@27.1.0 regression) silently coerce to
+# MUTANT_COUNT=0, indistinguishable from a legitimate zero-mutant PR.
+LIST_OUTPUT="${{ runner.temp }}/mutant-list.txt"
+LIST_STDERR="${{ runner.temp }}/mutant-list.stderr"
+if ! cargo mutants --list --in-diff "${DIFF_FILE}" \
+       > "${LIST_OUTPUT}" 2> "${LIST_STDERR}"; then
+  echo "FAIL: 'cargo mutants --list --in-diff' exited non-zero —"
+  echo "      cannot reliably pre-count in-diff mutants. This is a"
+  echo "      tooling failure (bad base-ref, examine_globs"
+  echo "      misconfiguration, or a cargo-mutants regression),"
+  echo "      NOT a legitimate zero-mutant result. Failing this"
+  echo "      job closed rather than silently treating this as"
+  echo "      MUTANT_COUNT=0 (see mutants-sharding-invariants.md"
+  echo "      §INV-AGG sub-invariant 8's residual-risk note)."
+  echo "      --- cargo mutants --list stderr ---"
+  cat "${LIST_STDERR}"
+  exit 1
+fi
+MUTANT_COUNT=$(wc -l < "${LIST_OUTPUT}" | tr -d ' ')
+echo "In-diff mutant count: ${MUTANT_COUNT}"
+
+# Human-reviewed literal (mutants-sharding-invariants.md
+# §Threshold Derivation) — update in the SAME commit as any
+# deliberate change to shard count N or per-shard --timeout.
+ESCALATION_THRESHOLD=120
+if [ "${MUTANT_COUNT}" -gt "${ESCALATION_THRESHOLD}" ]; then
+  ESCALATED=true
+  echo "::warning::PR generates ${MUTANT_COUNT} in-diff mutants (> ${ESCALATION_THRESHOLD}) — escalating (see mutants-aggregate's own log for the actionable message)."
+else
+  ESCALATED=false
+fi
+
+echo "escalated=${ESCALATED}" >> "${GITHUB_OUTPUT}"
+echo "mutant_count=${MUTANT_COUNT}" >> "${GITHUB_OUTPUT}"
+echo "overall_diff_lines=${OVERALL_DIFF_LINES}" >> "${GITHUB_OUTPUT}"
+"#;
+
+/// (cycle-006 F4 review round 4, J-CRITICAL — production pin): asserts the
+/// REAL `mutants-plan` job's "Compute diff and mutation plan" step's
+/// `run:` scalar is byte-for-byte identical to
+/// `PINNED_MUTANTS_PLAN_COMPUTE_BODY`, mirroring
+/// `test_mutants_shard_run_step_content_is_pinned`'s idiom for the sibling
+/// `mutants` shard job. See `PINNED_MUTANTS_PLAN_COMPUTE_BODY`'s own doc
+/// comment for the exploit this closes.
+#[test]
+fn test_mutants_plan_compute_step_run_body_is_byte_pinned() {
+    let ci = read_ci_yml();
+    let plan_block = extract_job_block(&ci, "mutants-plan").unwrap_or_else(|| {
+        panic!(
+            "FAIL (J-CRITICAL): `.github/workflows/ci.yml` does not \
+             contain a `mutants-plan:` job yet."
+        )
+    });
+
+    let run_text =
+        extract_and_normalize_run_scalar_for_step(plan_block, "Compute diff and mutation plan")
+            .unwrap_or_else(|reason| {
+                panic!(
+                    "FAIL (J-CRITICAL): `mutants-plan`'s \"Compute diff and \
+             mutation plan\" step {reason}\n\
+             Current mutants-plan block:\n{plan_block}"
+                )
+            });
+    assert_eq!(
+        run_text, PINNED_MUTANTS_PLAN_COMPUTE_BODY,
+        "FAIL (J-CRITICAL): the \"Compute diff and mutation plan\" step's \
+         PARSED `run:` scalar does not byte-for-byte match the pinned, \
+         human-reviewed literal — any deviation (an inserted diff-\
+         truncation line, an appended launder line, a reordered line, a \
+         changed byte) fails this pin. If this is a deliberate, reviewed \
+         change, update PINNED_MUTANTS_PLAN_COMPUTE_BODY in the SAME \
+         change.\n\
+         Current mutants-plan block:\n{plan_block}"
+    );
+}
+
+/// (cycle-006 F4 review round 4, J-CRITICAL — standing RED regression
+/// proof): see `PINNED_MUTANTS_PLAN_COMPUTE_BODY`'s doc comment for the
+/// full exploit narrative. This test pins BOTH halves of the claim against
+/// a hand-crafted, untracked `mutants-plan` fixture (the tracked `ci.yml`
+/// is never touched):
+///
+/// 1. The OLD check (`find_fragments_in_order`, scoped to the isolated
+///    `run:` scalar exactly as round 3 left it) is satisfied by a
+///    diff-truncation line (`: > "${DIFF_FILE}"`) inserted BETWEEN the
+///    `OVERALL_DIFF_LINES` fragment and the `cargo mutants --list`
+///    fragment — proving the ordered-substring shape itself (not just the
+///    "which text node" scoping bug round 3 fixed) is gate-bypassable.
+/// 2. The NEW check (exact byte-equality against
+///    `PINNED_MUTANTS_PLAN_COMPUTE_BODY`) correctly REJECTS the same
+///    fixture, because the inserted line is a real, additional byte
+///    sequence the pinned literal does not contain.
+#[test]
+fn test_mutants_plan_compute_step_content_pin_rejects_diff_truncation_insertion() {
+    let forged_block = r#"  mutants-plan:
+    name: Mutation Test Plan
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    if: github.event_name == 'pull_request'
+    outputs:
+      escalated: ${{ steps.plan.outputs.escalated }}
+      mutant_count: ${{ steps.plan.outputs.mutant_count }}
+      overall_diff_lines: ${{ steps.plan.outputs.overall_diff_lines }}
+    steps:
+      - name: Harden the runner (Audit all outbound calls)
+        uses: step-security/harden-runner@x
+        with:
+          egress-policy: audit
+      - uses: actions/checkout@x
+        with:
+          fetch-depth: 0
+      - uses: taiki-e/install-action@x
+        with:
+          tool: cargo-mutants@27.1.0
+      - uses: Swatinem/rust-cache@x
+      - name: Compute diff and mutation plan
+        id: plan
+        run: |
+          set -uo pipefail  # deliberately NOT -e here — see the F-4 note below
+
+          DIFF_FILE="${{ runner.temp }}/pr-${{ github.run_id }}.diff"
+          git diff origin/${{ github.base_ref }}...HEAD > "${DIFF_FILE}" || true
+
+          OVERALL_DIFF_LINES=$(wc -l < "${DIFF_FILE}" | tr -d ' ')
+          : > "${DIFF_FILE}"        # truncate the shared diff AFTER OVERALL_DIFF_LINES is captured
+          echo "Overall diff lines: ${OVERALL_DIFF_LINES}"
+
+          LIST_OUTPUT="${{ runner.temp }}/mutant-list.txt"
+          LIST_STDERR="${{ runner.temp }}/mutant-list.stderr"
+          if ! cargo mutants --list --in-diff "${DIFF_FILE}" \
+                 > "${LIST_OUTPUT}" 2> "${LIST_STDERR}"; then
+            echo "FAIL: 'cargo mutants --list --in-diff' exited non-zero —"
+            echo "      cannot reliably pre-count in-diff mutants. This is a"
+            echo "      tooling failure (bad base-ref, examine_globs"
+            echo "      misconfiguration, or a cargo-mutants regression),"
+            echo "      NOT a legitimate zero-mutant result. Failing this"
+            echo "      job closed rather than silently treating this as"
+            echo "      MUTANT_COUNT=0 (see mutants-sharding-invariants.md"
+            echo "      §INV-AGG sub-invariant 8's residual-risk note)."
+            echo "      --- cargo mutants --list stderr ---"
+            cat "${LIST_STDERR}"
+            exit 1
+          fi
+          MUTANT_COUNT=$(wc -l < "${LIST_OUTPUT}" | tr -d ' ')
+          echo "In-diff mutant count: ${MUTANT_COUNT}"
+
+          ESCALATION_THRESHOLD=120
+          if [ "${MUTANT_COUNT}" -gt "${ESCALATION_THRESHOLD}" ]; then
+            ESCALATED=true
+            echo "::warning::PR generates ${MUTANT_COUNT} in-diff mutants (> ${ESCALATION_THRESHOLD}) — escalating (see mutants-aggregate's own log for the actionable message)."
+          else
+            ESCALATED=false
+          fi
+
+          echo "escalated=${ESCALATED}" >> "${GITHUB_OUTPUT}"
+          echo "mutant_count=${MUTANT_COUNT}" >> "${GITHUB_OUTPUT}"
+          echo "overall_diff_lines=${OVERALL_DIFF_LINES}" >> "${GITHUB_OUTPUT}"
+      - name: Upload diff file (shared across all shards)
+        uses: actions/upload-artifact@x
+        with:
+          name: mutants-diff-file
+          path: /tmp/pr.diff
+          if-no-files-found: error
+          retention-days: 1
+"#;
+
+    // Half 1: the OLD fragment-ordering check, scoped to this ONE step's
+    // resolved `run:` scalar (round 3's fix), is STILL satisfied — the
+    // inserted truncation line sits BETWEEN two required fragments, which
+    // an ordered-substring search has no way to forbid.
+    let run_text = mutants_plan_compute_step_run_text(forged_block);
+    find_fragments_in_order(&run_text, &MUTANTS_PLAN_COMPUTE_STEP_REQUIRED_FRAGMENTS).expect(
+        "SETUP INVARIANT VIOLATED: this forged fixture must satisfy the \
+         scoped, ordered-substring fragment search (via the inserted \
+         truncation line sitting between two required fragments) — if it \
+         does not, the fixture no longer reproduces the J-CRITICAL exploit \
+         and must be revised.",
+    );
+
+    // Half 2: the NEW byte-equality check correctly rejects the same
+    // fixture — the inserted line is real, additional content the pinned
+    // literal does not contain.
+    assert_ne!(
+        run_text, PINNED_MUTANTS_PLAN_COMPUTE_BODY,
+        "FAIL (J-CRITICAL RED proof did not hold): the byte-equality check \
+         accepted a forged `mutants-plan` compute step whose body was \
+         truncating the shared diff file mid-script — the fix is NOT \
+         default-deny against this exploit.\n\
+         Resolved run: scalar text was:\n{run_text}"
+    );
+}
+
+/// AC-010 (functional half, Task 6): `mutants-plan`'s `outputs.escalated`
+/// is byte-wired to `${{ steps.plan.outputs.escalated }}` — a mistyped
+/// step id/output name degrades gracefully to empty at the consumer, so
+/// this is a structural byte pin, not just "the key exists."
+#[test]
+fn test_mutants_plan_escalated_output_wired_to_step_output() {
+    let ci = read_ci_yml();
+    let plan_block = extract_job_block(&ci, "mutants-plan").unwrap_or_else(|| {
+        panic!(
+            "FAIL (AC-010): `.github/workflows/ci.yml` does not contain a \
+             `mutants-plan:` job yet."
+        )
+    });
+
+    match common::wf::job_level_nested_value(plan_block, &["outputs", "escalated"]) {
+        Some(Value::Scalar {
+            text,
+            style,
+            tag,
+            has_anchor,
+            ..
+        }) => {
+            assert!(
+                !has_anchor && tag.is_none(),
+                "FAIL (AC-010): `mutants-plan.outputs.escalated` carries a \
+                 YAML node property — rejected outright.\n\
+                 Current mutants-plan block:\n{plan_block}"
+            );
+            assert_eq!(
+                style,
+                ScalarStyle::Plain,
+                "FAIL (AC-010): `mutants-plan.outputs.escalated` is not a \
+                 plain scalar.\nCurrent mutants-plan block:\n{plan_block}"
+            );
+            assert_eq!(
+                text, "${{ steps.plan.outputs.escalated }}",
+                "FAIL (AC-010): `mutants-plan.outputs.escalated`'s value \
+                 does not byte-match the pinned wiring \
+                 `${{{{ steps.plan.outputs.escalated }}}}`.\n\
+                 Current mutants-plan block:\n{plan_block}"
+            );
+        }
+        other => panic!(
+            "FAIL (AC-010): `mutants-plan.outputs.escalated` is missing or \
+             not a plain scalar (found: {other:?}).\n\
+             Current mutants-plan block:\n{plan_block}"
+        ),
+    }
+}
+
+/// AC-005: `scripts/mutants-aggregate.sh`'s `EXPECTED_SHARDS` constant
+/// cross-checked against `mutants`'s `strategy.matrix.shard` sequence
+/// length — both now exist in the GREEN tree (the script's Step 2 body is
+/// the real reconciliation implementation; `mutants`'s 8-entry shard
+/// matrix is live in `.github/workflows/ci.yml`), so this is a standing
+/// regression proof of the cross-check itself, not merely of one side:
+/// if a future edit changes the matrix's shard count without updating
+/// `EXPECTED_SHARDS` (or vice versa), this test fails loudly.
+#[test]
+fn test_mutants_aggregate_expected_shards_matches_matrix_shard_count() {
+    let ci = read_ci_yml();
+    let mutants_block = extract_job_block(&ci, "mutants").unwrap_or_else(|| {
+        panic!("FAIL (AC-005): `.github/workflows/ci.yml` does not contain a `mutants:` job.")
+    });
+    let shard_items = common::wf::job_level_nested_sequence_items(
+        mutants_block,
+        &["strategy", "matrix", "shard"],
+    )
+    .unwrap_or_else(|| {
+        panic!(
+            "FAIL (AC-005): `mutants` has no `strategy.matrix.shard` \
+             sequence — AC-033's 8-shard matrix is required for this \
+             cross-check to run.\n\
+             Current mutants block:\n{mutants_block}"
+        )
+    });
+
+    let script = read_mutants_aggregate_sh();
+    let expected_shards_line = script
+        .lines()
+        .find(|l| l.trim_start().starts_with("EXPECTED_SHARDS="))
+        .unwrap_or_else(|| {
+            panic!(
+                "FAIL (AC-005): `scripts/mutants-aggregate.sh` has no \
+                 `EXPECTED_SHARDS=` assignment — this is the Step 2 \
+                 reconciliation constant this cross-check pins against \
+                 `mutants`'s matrix shard count."
+            )
+        });
+    let digits: String = expected_shards_line
+        .trim_start()
+        .trim_start_matches("EXPECTED_SHARDS=")
+        .chars()
+        .take_while(|c| c.is_ascii_digit())
+        .collect();
+    let expected_shards: usize = digits.parse().unwrap_or_else(|e| {
+        panic!(
+            "FAIL (AC-005): could not parse a number out of \
+             `EXPECTED_SHARDS=` line {expected_shards_line:?}: {e}"
+        )
+    });
+
+    assert_eq!(
+        shard_items.len(),
+        expected_shards,
+        "FAIL (AC-005): `mutants`'s `strategy.matrix.shard` sequence has \
+         {} entries ({shard_items:?}), but `scripts/mutants-aggregate.sh`'s \
+         `EXPECTED_SHARDS` constant says {expected_shards}. These two MUST \
+         match — update both in the SAME commit \
+         (mutants-sharding-invariants.md §INV-COMPLETE).",
+        shard_items.len(),
+    );
+}
+
+/// AC-016: `spec-guard` gains exactly one new step whose `run:` line is
+/// byte-pinned to `bash scripts/mutants-aggregate.sh --self-test` —
+/// without this, `EXPECTED_MUTANTS_AGG_FIXTURES` would be "a self-test
+/// suite nobody runs in CI." Step selected by NAME, mirroring the existing
+/// `check-ci-gate.sh --self-test` step's own pin idiom.
+#[test]
+fn test_spec_guard_contains_mutants_aggregate_self_test_step() {
+    let ci = read_ci_yml();
+    let spec_guard_block = extract_job_block(&ci, "spec-guard").unwrap_or_else(|| {
+        panic!("FAIL (AC-016): `.github/workflows/ci.yml` does not contain a `spec-guard:` job.")
+    });
+
+    let run_line = extract_and_normalize_step_run_line_by_name(
+        spec_guard_block,
+        "check-mutants-aggregate self-test (fixture suite)",
+    )
+    .unwrap_or_else(|reason| {
+        panic!(
+            "FAIL (AC-016): `spec-guard`{reason} Expected a step named \
+             `check-mutants-aggregate self-test (fixture suite)` whose \
+             `run:` line invokes `bash scripts/mutants-aggregate.sh \
+             --self-test` — mirrors the existing `check-ci-gate self-test \
+             (fixture suite, S-CIGATE-2)` step's own pin idiom.\n\
+             Current spec-guard block:\n{spec_guard_block}"
+        )
+    });
+    assert_eq!(
+        run_line, "bash scripts/mutants-aggregate.sh --self-test",
+        "FAIL (AC-016): `spec-guard`'s mutants-aggregate self-test step's \
+         `run:` line does not byte-match the pinned invocation.\n\
+         Current spec-guard block:\n{spec_guard_block}"
+    );
+}
+
+/// AC-017: `mutants-aggregate`'s eval step's `run:` line is byte-pinned to
+/// `bash scripts/mutants-aggregate.sh` — blocks `|| true`, `| cat`,
+/// `; exit 0`, mirroring `ci-gate`'s own M2-i protection.
+#[test]
+fn test_mutants_aggregate_run_line_is_byte_pinned() {
+    let ci = read_ci_yml();
+    let agg_block = extract_job_block(&ci, "mutants-aggregate").unwrap_or_else(|| {
+        panic!(
+            "FAIL (AC-017): `.github/workflows/ci.yml` does not contain a \
+             `mutants-aggregate:` job — this is the standing byte-pin \
+             regression proof for AC-017; a `ci.yml` edit that removes or \
+             renames the job trips this failure."
+        )
+    });
+    let run_line =
+        extract_and_normalize_step_run_line_by_name(agg_block, "Evaluate sharded mutation gate")
+            .unwrap_or_else(|reason| {
+                panic!(
+                    "FAIL (AC-017): `mutants-aggregate`{reason}\n\
+                     Current mutants-aggregate block:\n{agg_block}"
+                )
+            });
+    assert_eq!(
+        run_line, "bash scripts/mutants-aggregate.sh",
+        "FAIL (AC-017): `mutants-aggregate`'s eval step's `run:` line does \
+         not byte-match the pinned invocation — a suffix like `|| true` \
+         or `| cat` would silently disable the pass/fail signal.\n\
+         Current mutants-aggregate block:\n{agg_block}"
+    );
+}
+
+/// AC-018: the eval step's `env:` mapping's COMPLETE key set is pinned to
+/// exactly 7 keys — closes a `BASH_ENV:`-class smuggled-env-child vector
+/// in one stroke, mirroring `ci-gate`'s M2-o.
+const PINNED_MUTANTS_AGGREGATE_ENV_KEYS: &[&str] = &[
+    "ESCALATED",
+    "EVENT_NAME",
+    "MUTANT_COUNT",
+    "OVERALL_DIFF_LINES",
+    "PLAN_RESULT",
+    "SHARD_DIR",
+    "STATUS_DIR",
+];
+
+#[test]
+fn test_mutants_aggregate_env_key_set_is_pinned() {
+    let ci = read_ci_yml();
+    let agg_block = extract_job_block(&ci, "mutants-aggregate").unwrap_or_else(|| {
+        panic!(
+            "FAIL (AC-018): `.github/workflows/ci.yml` does not contain a \
+             `mutants-aggregate:` job yet."
+        )
+    });
+    let mut expected: Vec<String> = PINNED_MUTANTS_AGGREGATE_ENV_KEYS
+        .iter()
+        .map(|s| s.to_string())
+        .collect();
+    expected.sort();
+    let actual = common::wf::step_mapping_child_keys(agg_block, "run", "env").unwrap_or_default();
+    assert_eq!(
+        actual, expected,
+        "FAIL (AC-018): `mutants-aggregate`'s eval step's `env:` complete \
+         key set ({actual:?}) does not match the pinned 7-key set \
+         ({expected:?}) — an added/renamed key (e.g. `BASH_ENV`) is a \
+         smuggled-env-child vector this pin closes.\n\
+         Current mutants-aggregate block:\n{agg_block}"
+    );
+}
+
+/// AC-019: the eval step genuinely INVOKES `scripts/mutants-aggregate.sh`
+/// — mirrors `ci-gate`'s AC-001: exactly one step in the job carries a
+/// `run:` key at all, so a decoy `run:` step elsewhere in the job (with
+/// the real step's `run:` neutered) cannot satisfy a bare substring check
+/// on the whole job block.
+#[test]
+fn test_mutants_aggregate_eval_step_invokes_the_real_script() {
+    let ci = read_ci_yml();
+    let agg_block = extract_job_block(&ci, "mutants-aggregate").unwrap_or_else(|| {
+        panic!(
+            "FAIL (AC-019): `.github/workflows/ci.yml` does not contain a \
+             `mutants-aggregate:` job yet."
+        )
+    });
+    let job = WfDoc::parse_single_job(agg_block);
+    let steps_with_run: Vec<&Step> = job
+        .steps
+        .iter()
+        .filter(|s| s.keys.iter().any(|k| k == "run"))
+        .collect();
+    assert_eq!(
+        steps_with_run.len(),
+        1,
+        "FAIL (AC-019): expected exactly one step in `mutants-aggregate` \
+         to carry a `run:` key at all (the eval step) — found {}. A decoy \
+         `run:` step elsewhere would defeat a substring-only check on the \
+         whole job block.\n\
+         Current mutants-aggregate block:\n{agg_block}",
+        steps_with_run.len(),
+    );
+    match steps_with_run[0].value_of("run") {
+        Some(Value::Scalar { text, .. }) => {
+            assert!(
+                text.contains("scripts/mutants-aggregate.sh"),
+                "FAIL (AC-019): the sole `run:`-carrying step's value \
+                 ({text:?}) does not invoke `scripts/mutants-aggregate.sh`.\n\
+                 Current mutants-aggregate block:\n{agg_block}"
+            );
+        }
+        other => panic!(
+            "FAIL (AC-019): the sole `run:`-carrying step's value is not \
+             a plain scalar (found: {other:?}).\n\
+             Current mutants-aggregate block:\n{agg_block}"
+        ),
+    }
+}
+
+/// AC-020: `mutants-aggregate`'s entire job block is scanned for a mapping
+/// key carrying a YAML anchor/tag node property — the round-16 `ci-gate`
+/// bypass class, structurally closed for this job from day one via
+/// `find_key_node_properties` (mirrors `ci-gate`'s own M2-q/AC-007).
+#[test]
+fn test_mutants_aggregate_job_block_has_no_node_properties() {
+    let ci = read_ci_yml();
+    let agg_block = extract_job_block(&ci, "mutants-aggregate").unwrap_or_else(|| {
+        panic!(
+            "FAIL (AC-020): `.github/workflows/ci.yml` does not contain a \
+             `mutants-aggregate:` job yet."
+        )
+    });
+    let node_properties = common::wf::find_key_node_properties(agg_block);
+    assert!(
+        node_properties.is_empty(),
+        "FAIL (AC-020): the `mutants-aggregate` job block contains {} \
+         key(s) carrying a YAML node property (anchor and/or tag) \
+         directly on the key itself: {node_properties:?}. No key in \
+         `mutants-aggregate` has a legitimate reason to carry one.\n\
+         Current mutants-aggregate block:\n{agg_block}",
+        node_properties.len(),
+    );
+}
+
+/// AC-021: every legitimate step-level `if:` in `mutants-aggregate` is
+/// exactly `always()` — the three occurrences named in `ci-yml-design.md
+/// §3` ("Download all shard status sentinels", "Download all shard
+/// outcomes", "Evaluate sharded mutation gate"), each individually
+/// asserted (iterated, not indexed at `[0]`), never a compound expression.
+#[test]
+fn test_mutants_aggregate_step_if_values_are_all_always() {
+    let ci = read_ci_yml();
+    let agg_block = extract_job_block(&ci, "mutants-aggregate").unwrap_or_else(|| {
+        panic!(
+            "FAIL (AC-021): `.github/workflows/ci.yml` does not contain a \
+             `mutants-aggregate:` job yet."
+        )
+    });
+    let job = WfDoc::parse_single_job(agg_block);
+    let steps_with_if: Vec<&Step> = job
+        .steps
+        .iter()
+        .filter(|s| s.keys.iter().any(|k| k == "if"))
+        .collect();
+    assert_eq!(
+        steps_with_if.len(),
+        3,
+        "FAIL (AC-021): expected exactly 3 step-level `if:` occurrences in \
+         `mutants-aggregate` (Download all shard status sentinels / \
+         Download all shard outcomes / Evaluate sharded mutation gate) — \
+         found {}.\n\
+         Current mutants-aggregate block:\n{agg_block}",
+        steps_with_if.len(),
+    );
+    for step in &steps_with_if {
+        match step.value_of("if") {
+            Some(Value::Scalar {
+                text,
+                style,
+                tag,
+                has_anchor,
+                ..
+            }) => {
+                assert!(
+                    !has_anchor && tag.is_none(),
+                    "FAIL (AC-021): a `mutants-aggregate` step-level `if:` \
+                     carries a YAML node property — rejected outright.\n\
+                     step: {:?}\nCurrent mutants-aggregate block:\n{agg_block}",
+                    step.name
+                );
+                assert_eq!(
+                    *style,
+                    ScalarStyle::Plain,
+                    "FAIL (AC-021): a `mutants-aggregate` step-level `if:` \
+                     is not a plain scalar ({style:?}).\n\
+                     step: {:?}\nCurrent mutants-aggregate block:\n{agg_block}",
+                    step.name
+                );
+                assert_eq!(
+                    text, "always()",
+                    "FAIL (AC-021): a `mutants-aggregate` step-level `if:` \
+                     is not the exact tautology `always()` (found {text:?}) \
+                     — never a compound expression that could smuggle in a \
+                     conditional skip.\n\
+                     step: {:?}\nCurrent mutants-aggregate block:\n{agg_block}",
+                    step.name
+                );
+            }
+            other => panic!(
+                "FAIL (AC-021): a `mutants-aggregate` step-level `if:` is \
+                 not a plain scalar value (found: {other:?}).\n\
+                 step: {:?}\nCurrent mutants-aggregate block:\n{agg_block}",
+                step.name
+            ),
+        }
+    }
+}
+
+/// AC-009: `PINNED_ALWAYS_RUN_WITH_IF_EXCEPTIONS` (containing exactly
+/// `("mutants-aggregate", "always()")`) is asserted disjoint from
+/// `SKIP_TOLERANT_NEEDS_MEMBERS`, from `PINNED_ALLOWED_SKIP_IF_EXPRESSIONS`
+/// keys, and from `check-ci-gate.sh --print-allowed-skips`'s reported set
+/// — AND every pinned `if:` value in the list is the exact tautology
+/// `always()`.
+const PINNED_ALWAYS_RUN_WITH_IF_EXCEPTIONS: &[(&str, &str)] = &[("mutants-aggregate", "always()")];
+
+#[test]
+fn test_mutants_aggregate_if_exception_is_disjoint_and_tautological() {
+    for (job, if_expr) in PINNED_ALWAYS_RUN_WITH_IF_EXCEPTIONS {
+        assert_eq!(
+            *if_expr, "always()",
+            "FAIL (AC-009): PINNED_ALWAYS_RUN_WITH_IF_EXCEPTIONS entry for \
+             `{job}` is not the exact tautology `always()` (found \
+             {if_expr:?}) — a compound expression here could smuggle in a \
+             conditional skip under this exception category."
+        );
+        assert!(
+            !SKIP_TOLERANT_NEEDS_MEMBERS.contains(job),
+            "FAIL (AC-009): `{job}` appears in BOTH \
+             PINNED_ALWAYS_RUN_WITH_IF_EXCEPTIONS AND \
+             SKIP_TOLERANT_NEEDS_MEMBERS — these two are meant to be \
+             disjoint: a job with an always()-run if: exception never \
+             legitimately reports `skipped` to GitHub Actions at all \
+             (mutants-aggregate internally resolves to success/failure,\
+             never skipped)."
+        );
+    }
+
+    #[cfg(unix)]
+    {
+        let from_if_expressions: Vec<&str> = PINNED_ALLOWED_SKIP_IF_EXPRESSIONS
+            .iter()
+            .map(|(job, _)| *job)
+            .collect();
+        for (job, _) in PINNED_ALWAYS_RUN_WITH_IF_EXCEPTIONS {
+            assert!(
+                !from_if_expressions.contains(job),
+                "FAIL (AC-009): `{job}` appears in BOTH \
+                 PINNED_ALWAYS_RUN_WITH_IF_EXCEPTIONS AND \
+                 PINNED_ALLOWED_SKIP_IF_EXPRESSIONS — these must be \
+                 disjoint (a job never both `if: always()`-exempted from \
+                 the general always-run `if:` pin AND allowlisted to \
+                 report `skipped`)."
+            );
+        }
+
+        let script_path = Path::new(env!("CARGO_MANIFEST_DIR")).join("scripts/check-ci-gate.sh");
+        let output = std::process::Command::new("bash")
+            .arg(&script_path)
+            .arg("--print-allowed-skips")
+            .output()
+            .unwrap_or_else(|e| panic!("FAIL: could not run {}: {e}", script_path.display()));
+        let printed = String::from_utf8_lossy(&output.stdout);
+        for (job, _) in PINNED_ALWAYS_RUN_WITH_IF_EXCEPTIONS {
+            assert!(
+                !printed.lines().any(|l| l.trim() == *job),
+                "FAIL (AC-009): `{job}` appears in BOTH \
+                 PINNED_ALWAYS_RUN_WITH_IF_EXCEPTIONS AND \
+                 `check-ci-gate.sh --print-allowed-skips`'s reported set \
+                 ({printed:?}) — these must be disjoint."
+            );
+        }
+    }
+}
+
+/// The 7 env-wiring byte-VALUE pins (AC-010 structural half, AC-015,
+/// AC-026 through AC-030) — every eval-step env value byte-pinned, closing
+/// the F-H1/round-9 class where a `${VAR:?message}` runtime guard alone
+/// cannot catch a maliciously-but-validly-SET redirect.
+fn assert_mutants_aggregate_env_value_pin(agg_block: &str, key: &str, expected: &str) {
+    match common::wf::step_mapping_child_value(agg_block, "run", "env", key) {
+        Some(Value::Scalar {
+            text,
+            style,
+            tag,
+            has_anchor,
+            ..
+        }) => {
+            assert!(
+                !has_anchor && tag.is_none(),
+                "FAIL: `mutants-aggregate`'s eval-step env `{key}:` carries \
+                 a YAML node property — rejected outright.\n\
+                 Current mutants-aggregate block:\n{agg_block}"
+            );
+            assert_eq!(
+                style,
+                ScalarStyle::Plain,
+                "FAIL: `mutants-aggregate`'s eval-step env `{key}:` is not \
+                 a plain scalar.\nCurrent mutants-aggregate block:\n{agg_block}"
+            );
+            assert_eq!(
+                text, expected,
+                "FAIL: `mutants-aggregate`'s eval-step env `{key}:` value \
+                 does not byte-match the pinned wiring {expected:?}.\n\
+                 Current mutants-aggregate block:\n{agg_block}"
+            );
+        }
+        other => panic!(
+            "FAIL: `mutants-aggregate`'s eval-step env `{key}:` is missing \
+             or not a plain scalar (found: {other:?}) — either the \
+             `mutants-aggregate` job is missing from ci.yml, or its \
+             eval-step `env:` block no longer wires this key the way this \
+             pin expects.\n\
+             Current mutants-aggregate block:\n{agg_block}"
+        ),
+    }
+}
+
+#[test]
+fn test_mutants_aggregate_env_escalated_byte_pin() {
+    let ci = read_ci_yml();
+    let agg_block = extract_job_block(&ci, "mutants-aggregate").unwrap_or_else(|| {
+        panic!("FAIL (AC-010): `.github/workflows/ci.yml` does not contain a `mutants-aggregate:` job yet.")
+    });
+    assert_mutants_aggregate_env_value_pin(
+        agg_block,
+        "ESCALATED",
+        "${{ needs.mutants-plan.outputs.escalated }}",
+    );
+}
+
+#[test]
+fn test_mutants_aggregate_env_event_name_byte_pin() {
+    let ci = read_ci_yml();
+    let agg_block = extract_job_block(&ci, "mutants-aggregate").unwrap_or_else(|| {
+        panic!("FAIL (AC-015): `.github/workflows/ci.yml` does not contain a `mutants-aggregate:` job yet.")
+    });
+    assert_mutants_aggregate_env_value_pin(agg_block, "EVENT_NAME", "${{ github.event_name }}");
+}
+
+#[test]
+fn test_mutants_aggregate_env_status_dir_byte_pin() {
+    let ci = read_ci_yml();
+    let agg_block = extract_job_block(&ci, "mutants-aggregate").unwrap_or_else(|| {
+        panic!("FAIL (AC-026): `.github/workflows/ci.yml` does not contain a `mutants-aggregate:` job yet.")
+    });
+    assert_mutants_aggregate_env_value_pin(
+        agg_block,
+        "STATUS_DIR",
+        "${{ runner.temp }}/shard-status",
+    );
+}
+
+#[test]
+fn test_mutants_aggregate_env_shard_dir_byte_pin() {
+    let ci = read_ci_yml();
+    let agg_block = extract_job_block(&ci, "mutants-aggregate").unwrap_or_else(|| {
+        panic!("FAIL (AC-027): `.github/workflows/ci.yml` does not contain a `mutants-aggregate:` job yet.")
+    });
+    assert_mutants_aggregate_env_value_pin(agg_block, "SHARD_DIR", "${{ runner.temp }}/shards");
+}
+
+#[test]
+fn test_mutants_aggregate_env_mutant_count_byte_pin() {
+    let ci = read_ci_yml();
+    let agg_block = extract_job_block(&ci, "mutants-aggregate").unwrap_or_else(|| {
+        panic!("FAIL (AC-028): `.github/workflows/ci.yml` does not contain a `mutants-aggregate:` job yet.")
+    });
+    assert_mutants_aggregate_env_value_pin(
+        agg_block,
+        "MUTANT_COUNT",
+        "${{ needs.mutants-plan.outputs.mutant_count }}",
+    );
+}
+
+#[test]
+fn test_mutants_aggregate_env_overall_diff_lines_byte_pin() {
+    let ci = read_ci_yml();
+    let agg_block = extract_job_block(&ci, "mutants-aggregate").unwrap_or_else(|| {
+        panic!("FAIL (AC-029): `.github/workflows/ci.yml` does not contain a `mutants-aggregate:` job yet.")
+    });
+    assert_mutants_aggregate_env_value_pin(
+        agg_block,
+        "OVERALL_DIFF_LINES",
+        "${{ needs.mutants-plan.outputs.overall_diff_lines }}",
+    );
+}
+
+#[test]
+fn test_mutants_aggregate_env_plan_result_byte_pin() {
+    let ci = read_ci_yml();
+    let agg_block = extract_job_block(&ci, "mutants-aggregate").unwrap_or_else(|| {
+        panic!("FAIL (AC-030): `.github/workflows/ci.yml` does not contain a `mutants-aggregate:` job yet.")
+    });
+    assert_mutants_aggregate_env_value_pin(
+        agg_block,
+        "PLAN_RESULT",
+        "${{ needs.mutants-plan.result }}",
+    );
+}
+
+/// Structural sanity (rides AC-033/architecture-delta §4, no dedicated VP):
+/// `mutants-aggregate`'s own `needs:` set is exactly `[mutants-plan,
+/// mutants]` and its job-level `if:` is the bare literal `always()` (NOT
+/// `${{ always() }}` — `ci-gate`'s own job-level `if:` happens to use the
+/// braced form, separately pinned as `PINNED_GATE_IF_EXPR`; the two pins
+/// are independent and NOT byte-compatible per ci-yml-design.md §3's own
+/// ROUND-1 style note).
+#[test]
+fn test_mutants_aggregate_needs_and_job_level_if() {
+    let ci = read_ci_yml();
+    let agg_block = extract_job_block(&ci, "mutants-aggregate").unwrap_or_else(|| {
+        panic!(
+            "FAIL: `.github/workflows/ci.yml` does not contain a \
+             `mutants-aggregate:` job yet."
+        )
+    });
+
+    let needs = parse_needs_set(agg_block).unwrap_or_else(|| {
+        panic!(
+            "FAIL: `mutants-aggregate` job block has no `needs:` key.\n\
+             Current mutants-aggregate block:\n{agg_block}"
+        )
+    });
+    let mut expected: HashSet<String> = HashSet::new();
+    expected.insert("mutants-plan".to_string());
+    expected.insert("mutants".to_string());
+    assert_eq!(
+        needs, expected,
+        "FAIL: `mutants-aggregate`'s `needs:` set ({needs:?}) does not \
+         match the pinned `[mutants-plan, mutants]` set.\n\
+         Current mutants-aggregate block:\n{agg_block}"
+    );
+
+    let job = WfDoc::parse_single_job(agg_block);
+    match job.value_of("if") {
+        Some(Value::Scalar {
+            text,
+            style,
+            tag,
+            has_anchor,
+            ..
+        }) => {
+            assert!(
+                !has_anchor && tag.is_none(),
+                "FAIL: `mutants-aggregate`'s job-level `if:` carries a \
+                 YAML node property — rejected outright.\n\
+                 Current mutants-aggregate block:\n{agg_block}"
+            );
+            assert_eq!(
+                *style,
+                ScalarStyle::Plain,
+                "FAIL: `mutants-aggregate`'s job-level `if:` is not a \
+                 plain scalar.\nCurrent mutants-aggregate block:\n{agg_block}"
+            );
+            assert_eq!(
+                text, "always()",
+                "FAIL: `mutants-aggregate`'s job-level `if:` does not \
+                 byte-match the bare literal `always()` (found {text:?}) \
+                 — this job must NEVER report `skipped` to GitHub \
+                 Actions.\n\
+                 Current mutants-aggregate block:\n{agg_block}"
+            );
+        }
+        other => panic!(
+            "FAIL: `mutants-aggregate`'s job-level `if:` is missing or not \
+             a plain scalar (found: {other:?}).\n\
+             Current mutants-aggregate block:\n{agg_block}"
+        ),
+    }
+}
+
+/// AC-034 regression guard (Task 23): `mutants-nightly.yml` is a wholly
+/// separate workflow file, invisible to `ci.yml`-scoped job enumeration by
+/// construction, and declares no job named `ci-gate`. This is the SAME
+/// generic, file-name-agnostic scan every sibling advisory workflow
+/// (`e2e.yml`) is already checked against — the assertion below is a
+/// dedicated, mutants-nightly-specific instance of it (rather than relying
+/// solely on the pre-existing generic sweep) so this story's own coverage
+/// table has a directly-citable test for AC-034.
+#[test]
+fn test_mutants_nightly_workflow_does_not_declare_a_job_named_ci_gate() {
+    let path = Path::new(env!("CARGO_MANIFEST_DIR")).join(".github/workflows/mutants-nightly.yml");
+    let raw = fs::read_to_string(&path)
+        .unwrap_or_else(|e| panic!("Could not read {}: {e}", path.display()));
+    let raw = raw
+        .strip_prefix('\u{FEFF}')
+        .unwrap_or(&raw)
+        .replace("\r\n", "\n");
+
+    let doc = WfDoc::parse(&raw);
+    let job_names: Vec<&str> = doc.jobs.iter().map(|j| j.id.as_str()).collect();
+    assert!(
+        !job_names.contains(&"ci-gate"),
+        "FAIL (AC-034): `.github/workflows/mutants-nightly.yml` declares a \
+         job literally named `ci-gate` ({job_names:?}) — this collides \
+         with the reserved required-status-check name and must never \
+         happen in a sibling, advisory-only workflow file."
+    );
+    assert!(
+        !job_names.is_empty(),
+        "FAIL: `.github/workflows/mutants-nightly.yml` has no jobs at all \
+         — the scaffold's `mutants-full`/`mutants-nightly-report` jobs are \
+         missing or the file failed to parse as expected."
+    );
+}
+
+// =============================================================================
+// cycle-006 F4 review round 6, finding F-HIGH: shared trusted-jq helper
+// regression guards (VP-MUTANTS-SHARD-024 / VP-MUTANTS-SHARD-025)
+//
+// Both `scripts/check-ci-gate.sh` and `scripts/mutants-aggregate.sh` route
+// every real invocation of the `jq` binary through a single shared
+// resolver, `scripts/lib/trusted-jq.sh::resolve_trusted_jq` — a
+// PATH-shim-resistant lookup (see that file's own module comment and
+// CLAUDE.md's "CI Gate — SCOPE SUMMARY" `$GITHUB_PATH` residual) that
+// closes the class of attack where an earlier workflow step prepends a
+// malicious `jq` shim to `$PATH` ahead of the real system binary. Neither
+// script is supposed to call the bare `jq` name directly — every call site
+// goes through `"${jq_bin}"`, the resolved absolute path
+// `resolve_trusted_jq` returns. VP-024/VP-025 (story ACs 024/025) mandate
+// standing tests proving this property holds; before this pass, no such
+// test existed anywhere in `tests/`, even though the underlying property
+// already held in both scripts — these are REGRESSION guards, not fixes
+// for an active bug. VP-025 specifically is the load-bearing half closing
+// the `$GITHUB_PATH` jq-shim false-green for the MUTATION gate
+// (`mutants-aggregate.sh`), mirroring the guard `check-ci-gate.sh`'s own
+// jq-identity self-test already provides for the CI gate.
+// =============================================================================
+
+/// Read `scripts/lib/trusted-jq.sh` relative to the repo root. Mirrors
+/// `read_check_ci_gate_sh`/`read_mutants_aggregate_sh`'s CRLF-normalization
+/// convention.
+fn read_trusted_jq_sh() -> String {
+    let path = Path::new(env!("CARGO_MANIFEST_DIR")).join("scripts/lib/trusted-jq.sh");
+    let raw = fs::read_to_string(&path)
+        .unwrap_or_else(|e| panic!("Could not read {}: {e}", path.display()));
+    raw.replace("\r\n", "\n")
+}
+
+/// Strip a trailing shell comment from `line`: the whole line becomes
+/// empty if its trimmed form starts with `#` (a full-line comment,
+/// possibly indented); otherwise everything from the first literal `" #"`
+/// onward is dropped (this repo's own bash style always precedes an
+/// inline comment with whitespace). Deliberately a simple heuristic, not
+/// a shell-quoting-aware parser — sufficient for scanning these two
+/// specific, hand-reviewed scripts for a bare `jq` word, not a general
+/// bash-comment stripper.
+fn strip_trailing_shell_comment(line: &str) -> &str {
+    if line.trim_start().starts_with('#') {
+        return "";
+    }
+    match line.find(" #") {
+        Some(idx) => &line[..idx],
+        None => line,
+    }
+}
+
+/// Leading shell operator/opener characters trimmed from a token before
+/// comparing it against `"jq"`. Extended (cycle-006 F4 review round 8,
+/// G-MED) to include `<`/`>` so process-substitution openers `<(`/`>(`
+/// are recognized: `<(jq` trims to `jq` the same way `$(jq`/`` `jq ``
+/// already did, via the SAME mechanism (repeated leading-char trim), not
+/// a special case.
+///
+/// **Further extended (cycle-006 F4 review round 4, J-O1)** to include
+/// `\` (a `\jq` backslash-escape, the standard shell idiom for bypassing
+/// an alias/function of the same name while still invoking the bare,
+/// PATH-resolved binary), `"`/`'` (a quoted `"jq"`/`'jq'` invocation —
+/// quoting a command name does not change PATH resolution), and `.`/`/`
+/// (a relative-path spelling `./jq`, which explicitly names a binary in
+/// the CURRENT WORKING DIRECTORY rather than resolving through `$PATH` —
+/// a distinct but equally viable forgery: a PR that plants a malicious
+/// `jq` file at the repo root and invokes it as `./jq` never touches
+/// `$PATH`/`$GITHUB_PATH` at all, so it would evade a PATH-shim-focused
+/// scan even though it is exactly as dangerous as the bare-name case).
+/// See [`trim_jq_token_operators`]'s doc comment for the trailing-side
+/// counterpart these new leading characters pair with.
+const JQ_TOKEN_LEADING_TRIM: [char; 13] = [
+    '|', '&', ';', '(', '`', '$', '<', '>', '\\', '"', '\'', '.', '/',
+];
+
+/// Command-introducer words (cycle-006 F4 review round 8, G-MED): if the
+/// token immediately preceding a `jq` token (after the same leading/
+/// trailing operator trim) is one of these, the `jq` token is ALSO in
+/// command position — `eval jq ...`, `command jq ...`, `exec jq ...`,
+/// `xargs jq ...`, `env jq ...`, and `builtin jq ...` all invoke `jq` by
+/// its bare, PATH-resolved name just as directly as a standalone bare
+/// `jq` token would.
+///
+/// **Extended (cycle-006 F4 review round 4, J-O1)** with the process-
+/// wrapper class: `timeout`, `nice`, `nohup`, `stdbuf`, `sudo`, `setsid`,
+/// `ionice`, and `time` all exec (or fork-then-exec) the FOLLOWING word as
+/// a command by its bare, PATH-resolved name, exactly as directly as
+/// `eval`/`exec`/etc. already covered — `timeout 30 jq ...` is not
+/// meaningfully different from `exec jq ...` from this scan's point of
+/// view. (`time` is technically a bash reserved word rather than an
+/// external command, but it introduces its argument the same way for this
+/// scan's purposes.)
+///
+/// **Documented, out-of-scope residual:** a wrapper invoked WITH FLAGS
+/// between it and `jq` (e.g. `sudo -E jq ...`, `timeout --signal=KILL 30
+/// jq ...`) is NOT caught — this list only inspects the single token
+/// immediately preceding the `jq` token, the same one-token-lookback
+/// limitation `eval`/`exec`/etc. already carried before this pass. General
+/// flag-skipping is out of scope for this hand-reviewed, two-script scan.
+const JQ_COMMAND_INTRODUCERS: [&str; 14] = [
+    "eval", "command", "exec", "xargs", "env", "builtin", "timeout", "nice", "nohup", "stdbuf",
+    "sudo", "setsid", "ionice", "time",
+];
+
+/// True if `text` contains `jq` in shell COMMAND POSITION — i.e. a real
+/// invocation of the `jq` binary by its bare, PATH-resolved name — as
+/// opposed to `jq` appearing as: part of a longer identifier (`jq_bin`,
+/// `jq_status`, `resolve_trusted_jq`, `trusted_jq_dirs_for`,
+/// `is_trusted_jq_dir`), part of a hyphenated filename or test-case label
+/// (`trusted-jq.sh`, `jq-trust`, `reject-relative-path-jq-regardless-of-
+/// mode`), inside the resolved-variable expansion `${jq_bin}`, or as an
+/// ordinary English word inside a quoted prose string (`"ERROR: jq failed
+/// while..."`, `"one of the trusted system jq directories"` — both real
+/// strings in `check-ci-gate.sh` today, neither a jq invocation).
+///
+/// `text` is split on whitespace into tokens (deliberately NOT further
+/// split on `-`/`.`/`_`, so a hyphenated or dotted token stays one unit
+/// and never collapses to bare `jq`). A token counts as a real invocation
+/// only if, after trimming a LEADING shell operator/opener
+/// (`JQ_TOKEN_LEADING_TRIM`) and a TRAILING one (`)`, `;`, `&`, `|`,
+/// `` ` ``), it equals exactly `"jq"`, AND it is in COMMAND POSITION:
+/// either it is the first token on the line, the operator-trim actually
+/// removed a leading character (so the raw token was `` `jq ``/`$(jq`/
+/// `|jq`/`<(jq`/`>(jq`/etc., with no whitespace before the operator), the
+/// PRECEDING whitespace-separated token itself ends in one of
+/// `|`/`&`/`;`/`(`, or the PRECEDING token (after the same trim) is one of
+/// `JQ_COMMAND_INTRODUCERS` (round 8, G-MED). This is what rejects the
+/// prose false positives above: in "ERROR: jq failed", the token
+/// immediately before "jq" is "ERROR:" — an ordinary word, not an
+/// operator or introducer — so it is correctly NOT in command position.
+///
+/// **Round 8 (G-MED) also flags a `NAME=jq` shell-variable assignment as
+/// suspicious** (e.g. `JQ=jq; "${JQ}" ...`), via
+/// [`is_suspicious_jq_name_assignment`] — a bare `$NAME` invocation
+/// through such a variable would otherwise evade every check above
+/// (general variable-indirection tracing is out of scope for this
+/// hand-reviewed, two-script scan; this narrow heuristic catches the
+/// specific `NAME=jq` literal-assignment shape without attempting to
+/// trace arbitrary indirection).
+///
+/// **Round 4 (J-O1) widens the TRAILING trim set to mirror the leading
+/// one**: `"`/`'` are added so a quoted `"jq"`/`'jq'` token trims cleanly
+/// on both ends to `jq` (see [`JQ_TOKEN_LEADING_TRIM`]'s doc comment for
+/// the full rationale, shared with the leading-side additions). Because a
+/// quote (or backslash, or relative-path `./`) being trimmed at all means
+/// `raw_token != "jq"`, such a token is treated as command position
+/// regardless of what precedes it — the same "any difference from the
+/// bare form is itself suspicious" precedent `is_suspicious_jq_name_
+/// assignment` already established for `NAME=jq`, applied here to a
+/// quoted/escaped/relative `jq` spelling instead of a variable name.
+fn trim_jq_token_operators(t: &str) -> &str {
+    t.trim_start_matches(JQ_TOKEN_LEADING_TRIM)
+        .trim_end_matches([')', ';', '&', '|', '`', '"', '\''])
+}
+
+fn contains_bare_jq_invocation(text: &str) -> bool {
+    let tokens: Vec<&str> = text.split_whitespace().collect();
+    for (i, raw_token) in tokens.iter().enumerate() {
+        let trimmed = trim_jq_token_operators(raw_token);
+        if trimmed != "jq" {
+            if is_suspicious_jq_name_assignment(raw_token) {
+                return true;
+            }
+            continue;
+        }
+        let operator_prefix_trimmed = *raw_token != "jq";
+        let prev_ends_with_operator = i > 0
+            && tokens[i - 1]
+                .chars()
+                .next_back()
+                .is_some_and(|c| matches!(c, '|' | '&' | ';' | '('));
+        let prev_is_introducer =
+            i > 0 && JQ_COMMAND_INTRODUCERS.contains(&trim_jq_token_operators(tokens[i - 1]));
+        if i == 0 || operator_prefix_trimmed || prev_ends_with_operator || prev_is_introducer {
+            return true;
+        }
+    }
+    false
+}
+
+/// True if `raw_token` is a literal shell-variable assignment of the exact
+/// form `NAME=jq` (an ASCII shell-identifier `NAME`, `=`, then exactly the
+/// literal `jq`) — optionally followed by a trailing `;`/`&`/`|`/`)` (e.g.
+/// `JQ=jq;`). Deliberately narrow: `jq_bin=$(resolve_trusted_jq)` and
+/// similar resolver-routed assignments are NOT flagged (the assigned
+/// value is not the bare literal `jq`), and this makes no attempt to
+/// trace indirection beyond one literal assignment (e.g. it does not
+/// follow `A=B; B=jq`). See `contains_bare_jq_invocation`'s doc comment
+/// for the narrow scope this is meant to cover.
+fn is_suspicious_jq_name_assignment(raw_token: &str) -> bool {
+    let candidate = raw_token.trim_end_matches([';', '&', '|', ')']);
+    let Some((name, value)) = candidate.split_once('=') else {
+        return false;
+    };
+    if value != "jq" || name.is_empty() {
+        return false;
+    }
+    let mut chars = name.chars();
+    let first_ok = chars
+        .next()
+        .is_some_and(|c| c.is_ascii_alphabetic() || c == '_');
+    first_ok && chars.all(|c| c.is_ascii_alphanumeric() || c == '_')
+}
+
+/// Count non-comment lines in `script` (after
+/// [`strip_trailing_shell_comment`]) containing a command-position `jq`
+/// invocation per [`contains_bare_jq_invocation`].
+fn count_bare_jq_invocation_lines(script: &str) -> usize {
+    script
+        .lines()
+        .map(strip_trailing_shell_comment)
+        .filter(|l| contains_bare_jq_invocation(l))
+        .count()
+}
+
+/// (cycle-006 F4 review round 8, finding G-MED — standing RED regression
+/// proof): before this pass, [`contains_bare_jq_invocation`] missed several
+/// real command-position bare-`jq` shapes: an `eval`/`command`/`exec`/
+/// `xargs`/`env`/`builtin` command-introducer word immediately before
+/// `jq`, and process-substitution openers `<(`/`>(`. Each is a real,
+/// PATH-resolved bare-name invocation of `jq` exactly as reachable by a
+/// `$GITHUB_PATH` shim as a plain `jq -r '...'` line — a false negative
+/// here would reopen the jq-shim false-green class VP-025 exists to close.
+/// This test proves each shape is now caught, and that the existing
+/// false-positive-avoidance assertions in
+/// `test_check_ci_gate_sh_and_mutants_aggregate_sh_have_no_bare_jq_
+/// invocations` (the `trusted-jq.sh` filename, hyphenated labels, quoted
+/// prose, `jq_bin`/`${jq_bin}`) remain unaffected by the widened
+/// tokenizer.
+#[test]
+fn test_contains_bare_jq_invocation_catches_command_introducers_and_process_substitution() {
+    for introducer in ["eval", "command", "exec", "xargs", "env", "builtin"] {
+        let line = format!("{introducer} jq -r '.caught' mutants.out/outcomes.json");
+        assert!(
+            contains_bare_jq_invocation(&line),
+            "FAIL (G-MED): contains_bare_jq_invocation must detect a bare \
+             `jq` invocation introduced by `{introducer}` — got false for \
+             {line:?}."
+        );
+    }
+
+    assert!(
+        contains_bare_jq_invocation("diff <(jq -r '.a' x.json) <(jq -r '.b' y.json)"),
+        "FAIL (G-MED): contains_bare_jq_invocation must detect a bare `jq` \
+         invocation opened by process substitution `<(`."
+    );
+    assert!(
+        contains_bare_jq_invocation("tee >(jq -r '.a' > /tmp/out) < in.json"),
+        "FAIL (G-MED): contains_bare_jq_invocation must detect a bare `jq` \
+         invocation opened by process substitution `>(`."
+    );
+
+    // Variable-indirection guard (documented, narrow heuristic — see
+    // contains_bare_jq_invocation's doc comment for exactly what this
+    // does and does not catch): a literal `NAME=jq` assignment is flagged
+    // as suspicious, since a later bare `$NAME` invocation would otherwise
+    // evade every check above.
+    assert!(
+        contains_bare_jq_invocation("JQ=jq; \"${JQ}\" -r '.caught' outcomes.json"),
+        "FAIL (G-MED): contains_bare_jq_invocation must flag a `NAME=jq` \
+         variable assignment as suspicious."
+    );
+
+    // False-positive guards (must NOT change with the widened tokenizer):
+    assert!(
+        !contains_bare_jq_invocation("jq_bin=$(resolve_trusted_jq)"),
+        "FAIL (G-MED): contains_bare_jq_invocation must NOT flag \
+         `jq_bin=$(resolve_trusted_jq)` as a suspicious assignment — the \
+         value is not the literal `jq`."
+    );
+    assert!(
+        !contains_bare_jq_invocation("caught=$(\"${jq_bin}\" '.caught // 0' \"${f}\")"),
+        "FAIL (G-MED): contains_bare_jq_invocation must NOT flag a \
+         `\"${{jq_bin}}\"`-routed call as a bare `jq` invocation after the \
+         widened tokenizer."
+    );
+    assert!(
+        !contains_bare_jq_invocation("source \"${_check_ci_gate_dir}/lib/trusted-jq.sh\""),
+        "FAIL (G-MED): contains_bare_jq_invocation must NOT flag the \
+         `trusted-jq.sh` FILENAME as a bare `jq` invocation after the \
+         widened tokenizer."
+    );
+    assert!(
+        !contains_bare_jq_invocation(
+            "    echo \"${jq_trust_total}/${EXPECTED_JQ_TRUST_CHECKS} jq-trust checks run,\" \\"
+        ),
+        "FAIL (G-MED): contains_bare_jq_invocation must NOT flag the \
+         hyphenated label \"jq-trust\" as a bare `jq` invocation after the \
+         widened tokenizer."
+    );
+
+    // The real scripts must still pass cleanly with the widened tokenizer
+    // (they route every jq call through `${jq_bin}` and never use eval/
+    // command/exec/xargs/env/builtin/process-substitution with jq, nor a
+    // NAME=jq assignment).
+    let gate = read_check_ci_gate_sh();
+    let agg = read_mutants_aggregate_sh();
+    assert_eq!(
+        count_bare_jq_invocation_lines(&gate),
+        0,
+        "FAIL (G-MED): the widened tokenizer now flags a line in \
+         `scripts/check-ci-gate.sh` that the real script did not \
+         previously trip — investigate before landing this change."
+    );
+    assert_eq!(
+        count_bare_jq_invocation_lines(&agg),
+        0,
+        "FAIL (G-MED): the widened tokenizer now flags a line in \
+         `scripts/mutants-aggregate.sh` that the real script did not \
+         previously trip — investigate before landing this change."
+    );
+}
+
+/// (cycle-006 F4 review round 4, J-O1 — standing RED regression proof):
+/// before this pass, [`contains_bare_jq_invocation`] missed several more
+/// real command-position bare-`jq` shapes beyond round 8's introducer/
+/// process-substitution set: additional wrapper introducers
+/// (`timeout`/`nice`/`nohup`/`stdbuf`/`sudo`/`setsid`/`ionice`/`time`) and
+/// quoted/escaped/relative spellings of the `jq` token itself
+/// (`\jq`/`"jq"`/`'jq'`/`./jq`). Each is a real invocation of the `jq`
+/// binary exactly as reachable by a `$GITHUB_PATH` shim (the wrapper
+/// class) or a planted-file-in-cwd forgery (the `./jq` case) as a plain
+/// `jq -r '...'` line — a false negative here would reopen the jq-shim/
+/// jq-forgery false-green class VP-025 exists to close. This test proves
+/// each new shape is now caught, and that every pre-existing false-
+/// positive-avoidance assertion (in this test and in
+/// `test_check_ci_gate_sh_and_mutants_aggregate_sh_have_no_bare_jq_
+/// invocations`) remains unaffected by the further-widened tokenizer.
+#[test]
+fn test_contains_bare_jq_invocation_catches_wrapper_introducers_and_quoted_relative_spellings() {
+    for introducer in [
+        "timeout", "nice", "nohup", "stdbuf", "sudo", "setsid", "ionice", "time",
+    ] {
+        let line = format!("{introducer} jq -r '.caught' mutants.out/outcomes.json");
+        assert!(
+            contains_bare_jq_invocation(&line),
+            "FAIL (J-O1): contains_bare_jq_invocation must detect a bare \
+             `jq` invocation introduced by wrapper `{introducer}` — got \
+             false for {line:?}."
+        );
+    }
+
+    // Quoted/escaped/relative spellings of the `jq` token itself.
+    assert!(
+        contains_bare_jq_invocation(r"\jq -r '.caught' mutants.out/outcomes.json"),
+        "FAIL (J-O1): contains_bare_jq_invocation must detect a backslash- \
+         escaped `\\jq` invocation (the standard shell idiom for bypassing \
+         an alias/function of the same name)."
+    );
+    assert!(
+        contains_bare_jq_invocation(r#""jq" -r '.caught' mutants.out/outcomes.json"#),
+        "FAIL (J-O1): contains_bare_jq_invocation must detect a double- \
+         quoted `\"jq\"` invocation — quoting a command name does not \
+         change PATH resolution."
+    );
+    assert!(
+        contains_bare_jq_invocation("'jq' -r '.caught' mutants.out/outcomes.json"),
+        "FAIL (J-O1): contains_bare_jq_invocation must detect a single- \
+         quoted 'jq' invocation."
+    );
+    assert!(
+        contains_bare_jq_invocation("./jq -r '.caught' mutants.out/outcomes.json"),
+        "FAIL (J-O1): contains_bare_jq_invocation must detect a relative- \
+         path `./jq` invocation — this names a binary in the current \
+         working directory rather than resolving through $PATH, a \
+         distinct but equally viable forgery a PATH-focused scan alone \
+         would miss."
+    );
+
+    // False-positive guards (must NOT change with the further-widened
+    // tokenizer) — re-run alongside the new assertions above so a
+    // regression here is caught in the SAME test as the widening that
+    // could cause it.
+    assert!(
+        !contains_bare_jq_invocation("jq_bin=$(resolve_trusted_jq)"),
+        "FAIL (J-O1): contains_bare_jq_invocation must NOT flag \
+         `jq_bin=$(resolve_trusted_jq)` as a suspicious assignment."
+    );
+    assert!(
+        !contains_bare_jq_invocation("caught=$(\"${jq_bin}\" '.caught // 0' \"${f}\")"),
+        "FAIL (J-O1): contains_bare_jq_invocation must NOT flag a \
+         `\"${{jq_bin}}\"`-routed call as a bare `jq` invocation after the \
+         further-widened tokenizer."
+    );
+    assert!(
+        !contains_bare_jq_invocation("source \"${_check_ci_gate_dir}/lib/trusted-jq.sh\""),
+        "FAIL (J-O1): contains_bare_jq_invocation must NOT flag the \
+         `trusted-jq.sh` FILENAME as a bare `jq` invocation after the \
+         further-widened tokenizer."
+    );
+    assert!(
+        !contains_bare_jq_invocation(
+            "        echo \"ERROR: jq failed while extracting job names from the needs\" >&2"
+        ),
+        "FAIL (J-O1): contains_bare_jq_invocation must NOT flag the \
+         ordinary English word \"jq\" inside a quoted error message as a \
+         bare `jq` invocation."
+    );
+    assert!(
+        !contains_bare_jq_invocation("        \"one of the trusted system jq directories\""),
+        "FAIL (J-O1): contains_bare_jq_invocation must NOT flag the word \
+         \"jq\" inside this quoted test-fixture label as a bare `jq` \
+         invocation."
+    );
+
+    // The real scripts must still pass cleanly with the further-widened
+    // tokenizer — same requirement round 8's sibling test already checks,
+    // re-asserted here so a regression from THIS pass's specific widening
+    // is caught in the same test that introduced it.
+    let gate = read_check_ci_gate_sh();
+    let agg = read_mutants_aggregate_sh();
+    assert_eq!(
+        count_bare_jq_invocation_lines(&gate),
+        0,
+        "FAIL (J-O1): the further-widened tokenizer now flags a line in \
+         `scripts/check-ci-gate.sh` that it did not previously trip — \
+         investigate before landing this change."
+    );
+    assert_eq!(
+        count_bare_jq_invocation_lines(&agg),
+        0,
+        "FAIL (J-O1): the further-widened tokenizer now flags a line in \
+         `scripts/mutants-aggregate.sh` that it did not previously trip — \
+         investigate before landing this change."
+    );
+}
+
+/// (cycle-006 F4 review round 6, F-HIGH, VP-MUTANTS-SHARD-024): asserts
+/// both `scripts/check-ci-gate.sh` and `scripts/mutants-aggregate.sh`
+/// `source` (or `.`-dot-source) `scripts/lib/trusted-jq.sh`, and that
+/// `trusted-jq.sh` itself defines the three functions both scripts (and
+/// `check-ci-gate.sh`'s own jq-identity self-test, `run_jq_trust_self_
+/// test`) depend on: `trusted_jq_dirs_for`, `is_trusted_jq_dir`, and
+/// `resolve_trusted_jq`.
+#[test]
+fn test_check_ci_gate_sh_and_mutants_aggregate_sh_source_shared_trusted_jq_helper() {
+    let gate = read_check_ci_gate_sh();
+    let agg = read_mutants_aggregate_sh();
+    let trusted = read_trusted_jq_sh();
+
+    let sources_helper = |script: &str| -> bool {
+        script.lines().map(strip_trailing_shell_comment).any(|l| {
+            let t = l.trim_start();
+            (t.starts_with("source ") || t.starts_with(". ")) && t.contains("lib/trusted-jq.sh")
+        })
+    };
+
+    assert!(
+        sources_helper(&gate),
+        "FAIL (VP-024): `scripts/check-ci-gate.sh` does not contain a \
+         `source`/`.`-dot-source line pulling in `lib/trusted-jq.sh` — \
+         every jq invocation on the decision path must resolve `jq` \
+         through the shared, PATH-shim-resistant resolver, not \
+         independently re-implement or skip it."
+    );
+    assert!(
+        sources_helper(&agg),
+        "FAIL (VP-024): `scripts/mutants-aggregate.sh` does not contain a \
+         `source`/`.`-dot-source line pulling in `lib/trusted-jq.sh` — \
+         same requirement as `check-ci-gate.sh`, one job over."
+    );
+
+    for func in [
+        "trusted_jq_dirs_for",
+        "is_trusted_jq_dir",
+        "resolve_trusted_jq",
+    ] {
+        let def_line = format!("{func}() {{");
+        assert!(
+            trusted
+                .lines()
+                .map(strip_trailing_shell_comment)
+                .any(|l| l.trim_start() == def_line),
+            "FAIL (VP-024): `scripts/lib/trusted-jq.sh` does not define the \
+             expected function `{func}` (looked for the exact line \
+             `{def_line}`) — both `check-ci-gate.sh` and \
+             `mutants-aggregate.sh` depend on this shared resolver \
+             existing with this exact function surface."
+        );
+    }
+}
+
+/// (cycle-006 F4 review round 6, F-HIGH, VP-MUTANTS-SHARD-025): asserts
+/// neither `scripts/check-ci-gate.sh` nor `scripts/mutants-aggregate.sh`
+/// contains a bare, decision-path invocation of `jq` by its PATH-resolved
+/// name — every real jq call in both scripts must route through
+/// `"${jq_bin}"` (the absolute path `resolve_trusted_jq` returns), closing
+/// the `$GITHUB_PATH` jq-shim false-green class for BOTH gates (this is
+/// the load-bearing half for the sharded MUTATION gate specifically —
+/// `mutants-aggregate.sh` had no jq-identity self-test at all before
+/// cycle-006, unlike `check-ci-gate.sh`'s pre-existing
+/// `run_jq_trust_self_test`). Also asserts the one legitimate real
+/// invocation of `jq` by its bare name — `command -v jq`, used to LOCATE
+/// the trusted binary in the first place — appears only inside
+/// `trusted-jq.sh` itself, never in either caller script.
+#[test]
+fn test_check_ci_gate_sh_and_mutants_aggregate_sh_have_no_bare_jq_invocations() {
+    let gate = read_check_ci_gate_sh();
+    let agg = read_mutants_aggregate_sh();
+    let trusted = read_trusted_jq_sh();
+
+    // RED sanity check (not a fix-verifying assertion — proves the scan
+    // mechanism itself is capable of catching what it claims to catch,
+    // and does not false-positive on legitimate `${jq_bin}`-routed code
+    // or on ordinary prose containing the word "jq"). Neither of these
+    // touches a real script file.
+    assert!(
+        contains_bare_jq_invocation("cat mutants.out/outcomes.json | jq -r '.caught'"),
+        "SETUP INVARIANT VIOLATED: contains_bare_jq_invocation must detect \
+         a bare `jq` invocation in a scratch string — if it does not, the \
+         VP-025 scan mechanism itself is broken and this test's negative \
+         assertions below are meaningless."
+    );
+    assert!(
+        contains_bare_jq_invocation("jq -r 'keys[]'"),
+        "SETUP INVARIANT VIOLATED: contains_bare_jq_invocation must detect \
+         a bare `jq` invocation as the FIRST token on a line."
+    );
+    assert!(
+        !contains_bare_jq_invocation("local jq_bin"),
+        "SETUP INVARIANT VIOLATED: contains_bare_jq_invocation must NOT \
+         flag a `jq_bin` variable declaration as a bare `jq` invocation."
+    );
+    assert!(
+        !contains_bare_jq_invocation("if ! jq_bin=$(resolve_trusted_jq); then"),
+        "SETUP INVARIANT VIOLATED: contains_bare_jq_invocation must NOT \
+         flag a `resolve_trusted_jq` call as a bare `jq` invocation."
+    );
+    assert!(
+        !contains_bare_jq_invocation("caught=$(\"${jq_bin}\" '.caught // 0' \"${f}\")"),
+        "SETUP INVARIANT VIOLATED: contains_bare_jq_invocation must NOT \
+         flag a `\"${{jq_bin}}\"`-routed call as a bare `jq` invocation."
+    );
+    assert!(
+        !contains_bare_jq_invocation("source \"${_check_ci_gate_dir}/lib/trusted-jq.sh\""),
+        "SETUP INVARIANT VIOLATED: contains_bare_jq_invocation must NOT \
+         flag the `trusted-jq.sh` FILENAME as a bare `jq` invocation."
+    );
+    assert!(
+        !contains_bare_jq_invocation(
+            "        echo \"ERROR: jq failed while extracting job names from the needs\" >&2"
+        ),
+        "SETUP INVARIANT VIOLATED: contains_bare_jq_invocation must NOT \
+         flag the ordinary English word \"jq\" inside a quoted error \
+         message as a bare `jq` invocation — this is a REAL line in \
+         `scripts/check-ci-gate.sh` today and must never false-positive."
+    );
+    assert!(
+        !contains_bare_jq_invocation("        \"one of the trusted system jq directories\""),
+        "SETUP INVARIANT VIOLATED: contains_bare_jq_invocation must NOT \
+         flag the word \"jq\" inside this quoted test-fixture label as a \
+         bare `jq` invocation — this is a REAL line in \
+         `scripts/check-ci-gate.sh` today and must never false-positive."
+    );
+    assert!(
+        !contains_bare_jq_invocation(
+            "    echo \"${jq_trust_total}/${EXPECTED_JQ_TRUST_CHECKS} jq-trust checks run,\" \\"
+        ),
+        "SETUP INVARIANT VIOLATED: contains_bare_jq_invocation must NOT \
+         flag the hyphenated label \"jq-trust\" as a bare `jq` invocation."
+    );
+
+    let gate_count = count_bare_jq_invocation_lines(&gate);
+    assert_eq!(
+        gate_count, 0,
+        "FAIL (VP-025): `scripts/check-ci-gate.sh` contains {gate_count} \
+         non-comment line(s) with a command-position `jq` invocation — \
+         every real jq invocation on the decision path must route through \
+         the `\"${{jq_bin}}\"` variable `resolve_trusted_jq()` resolves, \
+         not the bare name (which a `$GITHUB_PATH`-prepended shim could \
+         shadow)."
+    );
+
+    let agg_count = count_bare_jq_invocation_lines(&agg);
+    assert_eq!(
+        agg_count, 0,
+        "FAIL (VP-025): `scripts/mutants-aggregate.sh` contains \
+         {agg_count} non-comment line(s) with a command-position `jq` \
+         invocation — same requirement as `check-ci-gate.sh`, one gate \
+         over. \
+         This is the load-bearing half of VP-025 for the sharded mutation \
+         gate specifically."
+    );
+
+    // `command -v jq` is the one legitimate real invocation of the bare
+    // name — it is how `resolve_trusted_jq` LOCATES the trusted binary in
+    // the first place. It must exist in trusted-jq.sh (a sanity floor —
+    // if it's gone, the resolver has been rewritten and this whole test
+    // needs re-review) and must NOT appear in either caller script.
+    let command_v_count = |script: &str| -> usize {
+        script
+            .lines()
+            .map(strip_trailing_shell_comment)
+            .filter(|l| l.contains("command -v jq"))
+            .count()
+    };
+    assert!(
+        command_v_count(&trusted) >= 1,
+        "FAIL (VP-025 sanity floor): `scripts/lib/trusted-jq.sh` does not \
+         contain the expected `command -v jq` resolution call at all — \
+         has the resolver been rewritten to locate `jq` some other way? \
+         If so, this test needs re-review, not a silent pass."
+    );
+    assert_eq!(
+        command_v_count(&gate),
+        0,
+        "FAIL (VP-025): `scripts/check-ci-gate.sh` contains its own \
+         `command -v jq` call — jq LOCATION is `trusted-jq.sh`'s sole \
+         responsibility; a second, independent lookup in the caller \
+         script is itself a bypass of the shared resolver."
+    );
+    assert_eq!(
+        command_v_count(&agg),
+        0,
+        "FAIL (VP-025): `scripts/mutants-aggregate.sh` contains its own \
+         `command -v jq` call — same requirement as `check-ci-gate.sh`."
     );
 }
