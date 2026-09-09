@@ -470,4 +470,56 @@ Additionally swept into the same commit (pre-existing/concurrent, verified legit
 
 ---
 
+## Burst 10 — F4 WAVE 2 MERGE (2026-09-09)
+
+**Parent-commit:** the Burst 9 commit (Step-4.5 convergence record for `S-cycle5-mention-resolution-wiring`) — the factory-artifacts tip immediately before this burst.
+
+**Trigger:** Story `S-cycle5-mention-resolution-wiring` (Wave 2 of 2, 13 pts, HIGH) **MERGED** to `develop` via PR #794 (squash), merge commit `0eaf4268`. `develop` advanced `5b00b31e` → `0eaf4268`; main checkout fast-forwarded. Closes GitHub #674 (part 2). This is the STATE-worthy delivery event Burst 9 deferred — the eventual PR merge.
+
+**Actions taken:**
+
+1. **Frontmatter:** `pipeline:` stays `ACTIVE`. `timestamp:` refreshed to the merge-recording instant. `phase:` rewritten to record cycle-005 Phase F4 as **COMPLETE** (both waves merged: Wave 1 PR #778 @ `708c8b32` via DEC-352 admin-bypass; Wave 2 PR #794 @ `0eaf4268` via a **NORMAL** merge — CI fully green including the cycle-006 sharded mutation gate running to completion end-to-end, NO escape-hatch, NO admin-bypass, in explicit contrast to Wave 1). `current_step:`/`last_amended:` rewritten via the verbatim-strict chain, preserving `D-chain cite D-053 latest brownfield.` and the `→1→3→0→2` trajectory-tail token. `version:` `3.95` → `3.96` (exactly one bump).
+2. **STORY-INDEX.md:** flipped `S-cycle5-mention-resolution-wiring` status `in-progress` → `done`/merged on both the registry row (~L1235) and detail row (~L1652), recording PR #794 @ `0eaf4268`, the normal-merge CI/review evidence, and closure of GitHub #674 part 2. No count change (754 BCs / 76 VPs / 118 holdouts / 175 stories).
+3. **sprint-state.yaml:** updated `cycle_005_adf_mentions.wave_2_status` (→ DONE) and added an `f4_status: COMPLETE` line; the `S-cycle5-mention-resolution-wiring` story entry's `status`/`pr`/`merge_sha`/`merged_at`/`merged_via` fields set to `done`/794/`0eaf4268`/2026-09-09/normal-squash; `notes` field extended with the merge evidence and the CYCLE5-W2-LOW-1/2 fold-in pointer.
+4. **Drift/Standing Items:** `INTERIM-SHIPPABILITY-WINDOW-CYCLE5-W1` (DEC-347 accepted tradeoff) flipped to **RESOLVED/CLOSED** — Wave 2's BC-X.7.010 mandatory bracket-accountId preflight + effectful resolution wiring is now merged to `develop`, closing the unvalidated-bracket-conversion window. Added two new non-blocking standing items carried from Burst 9's adversarial-convergence record: `CYCLE5-W2-LOW-1-SPEC-PROSE` (BC-X.7.007 point 2 exact-match-precedence prose clarification; implementation correct/faithful; target doc-hygiene/product-owner) and `CYCLE5-W2-LOW-2-INTERACTIVE-TEST-GAP` (no automated test for the interactive `dialoguer::Select` answered→resolves path; no TTY seam; matches the pre-existing `duplicate_user_disambiguation.rs` posture; accepted limitation).
+5. **Skip Log:** appended "Demo recording (cycle-005, Wave 2)" = yes, human decision (backend/no-UI CLI, per cycle-003/004 precedent); and a note that live-Jira E2E (AC-017 / `H-NEW-MENTION-009`) is **DEFERRED to post-merge by human decision** (the 4 `JR_RUN_E2E`-gated scenarios are written and clean-skip in CI; human will run against their own Jira with `JR_E2E_MENTION_ACCOUNT_ID`) — recorded as a tracked standing follow-up, NOT a skip of a required gate.
+6. **Appended** a Phase Progress row `F4-WAVE2-MERGED-2026-09-09`.
+7. **Archived** the v3.95 Session Resume Checkpoint to `cycles/cycle-005/session-checkpoints.md` with a "Superseded at" note, BEFORE writing the new one; wrote exactly one new v3.96 checkpoint reflecting F4 COMPLETE and the next resume point (Wave 2 integration gate → cycle-005 F5/F6/F7 delta convergence → release decision, would ride cycle-005 + cycle-006).
+8. **Recomputed** `wc -l .factory/STATE.md` after the Write and refreshed the SIZE BUDGET banner.
+9. **Reconciled** the pre-existing concurrent, uncommitted `STATE.md` diff (a `stamp-state-timestamp` hook timestamp-only refresh, `19:57:56Z`→`21:48:55Z`, pre-dating this burst and superseded by this burst's own full-content Write) into this authoritative rewrite — no separate commit for it. Also swept in the concurrently-modified `regression-state.json` (a fresh test-run scratch record — `cargo clippy`/`cargo test --lib mentions` — from the same story's worktree, `.worktrees/S-cycle5-mention-resolution-wiring`, legitimate and in-scope for this merge-recording burst) and `sidecar-learning.md` (further append-only `Session ended at …` markers, consistent with its existing pattern) — both verified legitimate and included in this same atomic commit.
+10. **No DEC minted** — per this burst's own scoping instruction, this was a routine green merge (CI fully green, no escalation, no human admin-bypass), not a gated human decision; recorded, not decided.
+11. Updated Convergence Status / Concurrent Cycles (cycle-005 Phase F4 now COMPLETE), Constraints Carried Forward (new Burst-10 paragraph; Burst 8's paragraph marked historical/superseded — Burst 9 made no STATE.md-visible change), and Historical Content (new evidence row + burst-history bullet) for consistency with the frontmatter change.
+
+**Adversary verdict:** Already recorded at Burst 9 (`adversary-convergence-state.json`) — 4 passes, 3 consecutive clean/nitpick (P2/P3/P4), CONVERGED. This burst only records the resulting merge; no new adversarial pass was dispatched.
+
+**Files touched (Dim-1): 5 unique files/paths this burst, all committed in the state-manager's own single atomic commit**
+
+- `STATE.md` (v3.96 — full-content Write; reconciles the pre-existing concurrent timestamp-only diff)
+- `stories/STORY-INDEX.md` (2 rows flipped in-progress→done/merged)
+- `sprint-state.yaml` (`cycle_005_adf_mentions` wave_2_status/f4_status + story entry updated)
+- `cycles/cycle-005/session-checkpoints.md` (v3.95 checkpoint archived with "Superseded at" note)
+- `cycles/cycle-005/burst-log.md` (this entry)
+
+Additionally swept into the same commit (pre-existing/concurrent, verified legitimate, not authored by this burst's substantive actions): `regression-state.json` (fresh test-run scratch record from the same story's worktree) and `sidecar-learning.md` (append-only session-end markers).
+
+**Dim-2 Attestation:** No count-verification script applies — counts unchanged (754 BCs / 76 VPs / 118 holdouts / 175 stories, carried forward verbatim). This burst authored no new spec/story artifact (status-field flips only).
+
+**Dim-5 Attestation:** N/A — no binary/WASM artifact produced by this `.factory/` commit (bookkeeping-only, no build).
+
+**Dim-6 Attestation:** No `src/`/`tests/` change committed by this state-manager burst. (PR #794's own commits already landed on `develop` @ `0eaf4268` prior to this burst; this burst only records the outcome in `.factory/`.)
+
+**Dim-7 Attestation:** No CI-relevant `.github/workflows/` change in this `.factory/` commit — the sharded mutation gate itself (cycle-006) was already live and ran to completion as part of PR #794's own CI run; this burst only records that fact.
+
+**Codifications:** No DEC minted this burst (a routine green merge is bookkeeping, not a phase-gate or story decision — contrast Burst 5's DEC-352 admin-bypass). Recorded (not decided): the PR #794 merge fact, `develop`'s new tip, cycle-005 Phase F4 COMPLETE, the `INTERIM-SHIPPABILITY-WINDOW-CYCLE5-W1` resolution, the two new CYCLE5-W2-LOW-1/2 standing items, and the E2E-deferral standing follow-up.
+
+**Closes:** `INTERIM-SHIPPABILITY-WINDOW-CYCLE5-W1` (RESOLVED/CLOSED — see Drift/Standing Items). cycle-005 Phase **F4 (delta implementation) is now COMPLETE**. **Does NOT close:** cycle-005 itself (F5/F6/F7 delta convergence and the release decision remain ahead), the Wave 2 integration gate (not yet run), or any of the 5 remaining cycle-006 S-7.02 deferrals (unchanged). **Adds** `CYCLE5-W2-LOW-1-SPEC-PROSE` and `CYCLE5-W2-LOW-2-INTERACTIVE-TEST-GAP` as new non-blocking standing items, and a tracked (not skipped) standing follow-up for the deferred live-Jira E2E round-trip.
+
+### Details
+
+| Agent | Task | Output |
+|-------|------|--------|
+| state-manager | Recorded the MERGE of cycle-005 Phase F4 Wave 2 (`S-cycle5-mention-resolution-wiring`) via PR #794 (squash) @ `0eaf4268` — a normal, fully-green merge (no escape-hatch/admin-bypass): `phase:`/`current_step:`/`last_amended:` verbatim-strict chain, `version:` 3.95→3.96; flipped STORY-INDEX.md status in-progress→done/merged (both rows); updated sprint-state.yaml wave/story tracking + `f4_status: COMPLETE`; resolved/closed `INTERIM-SHIPPABILITY-WINDOW-CYCLE5-W1`; added CYCLE5-W2-LOW-1/2 standing items; recorded the Skip Log demo-recording entry + E2E-deferral standing follow-up; appended Phase Progress row; archived v3.95 checkpoint, wrote v3.96 checkpoint; recomputed and refreshed the SIZE BUDGET banner; reconciled the pre-existing concurrent STATE.md timestamp diff into this authoritative rewrite and swept in the concurrently-modified `regression-state.json`/`sidecar-learning.md` (both verified legitimate); commit + push to `factory-artifacts` | `STATE.md` (v3.96), `stories/STORY-INDEX.md`, `sprint-state.yaml`, `cycles/cycle-005/burst-log.md` (this file), `cycles/cycle-005/session-checkpoints.md` |
+
+---
+
 <!-- Repeat for each burst. Maintain chronological order. -->

@@ -1,1 +1,1 @@
-{"status":"pass","timestamp":"2026-09-09T19:46:25Z","command":"cd /Users/zious/Documents/GITHUB/jira-cli/.worktrees/S-cycle5-mention-resolution-wiring && cargo test --test mutants_glob_existence 2>&1 | tail -30"}
+{"status":"pass","timestamp":"2026-09-09T21:47:49Z","command":"cd /Users/zious/Documents/GITHUB/jira-cli/.worktrees/S-cycle5-mention-resolution-wiring\ncargo clippy --all-targets 2>&1 | grep -E 'warning|error' | head -20\necho \"=== clippy exit done; lib test for mentions ===\"\ncargo test --lib mentions 2>&1 | tail -8"}

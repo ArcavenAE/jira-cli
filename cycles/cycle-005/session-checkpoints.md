@@ -349,4 +349,42 @@ The human authorized resuming the pause and dispatching Wave 2 (`S-cycle5-mentio
 
 ---
 
+## Session Resume Checkpoint (2026-09-09, v3.95) — cycle-005 F4 Wave 2 IN-PROGRESS/DISPATCHED — SUPERSEDED at Burst 10 (v3.96, F4 WAVE 2 MERGE)
+
+**Superseded at:** 2026-09-09, Burst 10 (v3.96) — cycle-005 Phase F4 Wave 2 (`S-cycle5-mention-resolution-wiring`) **MERGED** to `develop` via PR #794 (squash) @ `0eaf4268` — a NORMAL merge, CI fully green including the cycle-006 sharded mutation gate running to completion, no escape-hatch/admin-bypass. cycle-005 Phase F4 (delta implementation) is now **COMPLETE**. This checkpoint is archived to make room for the merge checkpoint per the state-manager's single-latest-checkpoint-in-STATE.md convention.
+
+### Spec Versions
+
+| Artifact | Version |
+|----------|---------|
+| STATE.md | 3.95 |
+| total_bcs | 754 |
+| VP count | 76 |
+| holdout scenarios | 118 |
+| total_stories | 175 |
+
+### State
+
+| Field | Value |
+|-------|-------|
+| **Date** | 2026-09-09 |
+| **Position** | cycle-005 (`adf-mentions`) Phase **F4** (delta implementation) — Wave 1 (`S-cycle5-mention-pure-conversion`) **MERGED** (PR #778 @ `708c8b32`, **DEC-352**, escape-hatch admin-bypass); standalone maintenance PR #793 (nightly mutation visibility) **MERGED** @ `5b00b31e`; Wave 2 (`S-cycle5-mention-resolution-wiring`, 13 pts, HIGH, `depends_on` SATISFIED) **IN-PROGRESS / DISPATCHED** to per-story delivery via worktree `feat/cycle5-mention-resolution-wiring` (created from `develop` @ `5b00b31e`). `develop` @ `5b00b31e`. |
+| **Convergence counter** | N/A at this checkpoint — Wave 2's own per-story adversarial convergence loop had not yet begun (dispatch had just occurred). It subsequently ACHIEVED convergence at Burst 9 (4 passes, 3 consecutive clean/nitpick, HEAD `9dc0b098`), recorded in `cycles/cycle-005/S-cycle5-mention-resolution-wiring/adversary-convergence-state.json`. |
+| **In-flight work** | Wave 2 (`S-cycle5-mention-resolution-wiring`) dispatched to per-story delivery — worktree `feat/cycle5-mention-resolution-wiring` exists; a concurrent test-writer/implementer pass was already active in that worktree as of this checkpoint. No open PRs yet at this checkpoint. |
+| **Pending human decisions/blockers** | An OPEN offer to manually trigger `mutants-nightly.yml`; the dynamic-shields badge (settled DEFERRED); the `CLAUDE_AUTOCOMPACT_PCT_OVERRIDE` advisory. No blockers on Wave 2 dispatch itself. |
+| **WIP branches** | `feat/cycle5-mention-resolution-wiring` (worktree `.worktrees/S-cycle5-mention-resolution-wiring`, created from `develop` @ `5b00b31e`). |
+| **Next step (as recorded at this checkpoint)** | Continue Wave 2 per-story delivery (stubs/failing tests Red Gate → TDD → Step-4.5 adversarial convergence → PR), carrying the human-required live-Jira E2E round-trip `H-NEW-MENTION-009`. |
+
+### Resume Prompt (as recorded at this checkpoint)
+
+```
+/vsdd-factory:rehydrate-wave then /vsdd-factory:next-step
+```
+
+### What actually happened next (recorded for continuity, not part of the original checkpoint)
+
+Wave 2's per-story delivery ran to completion: Step-4.5 adversarial convergence ACHIEVED at Burst 9 (4 passes, 3 consecutive clean/nitpick — P2/P3/P4, last NITPICK_ONLY, HEAD `9dc0b098`; two accepted LOW-severity deferrals recorded); a PR was opened and merged the same day as PR #794 (squash) @ `0eaf4268` — a NORMAL merge (CI fully green including the cycle-006 sharded mutation gate running to completion, no escape-hatch/admin-bypass needed, in explicit contrast to Wave 1's admin-bypass), security-review 0 findings, pr-reviewer APPROVE (converged 1 cycle). `develop` advanced `5b00b31e`→`0eaf4268`; main checkout fast-forwarded. Closes GitHub #674 part 2. cycle-005 Phase F4 (delta implementation) is now COMPLETE — both waves merged. The live-Jira E2E round-trip (`H-NEW-MENTION-009`, AC-017) was DEFERRED to post-merge by human decision (written + clean-skip in CI). See the live checkpoint in `STATE.md` (v3.96) for the full account, and `cycles/cycle-005/burst-log.md` Bursts 9-10 for these state-manager bursts' own actions.
+
+---
+
 <!-- Repeat for each archived checkpoint. Maintain chronological order. -->
