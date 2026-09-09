@@ -1,10 +1,10 @@
 ---
 document_type: session-checkpoints
 level: ops
-version: "1.5"
+version: "1.6"
 status: archive
 producer: state-manager
-timestamp: 2026-09-08T18:20:00Z
+timestamp: 2026-09-09T06:30:00Z
 cycle: "cycle-006"
 inputs: [STATE.md]
 input-hash: "[live-state]"
@@ -360,6 +360,48 @@ dispatch Phase F4 (delta implementation) for `S-cycle6-mutants-ci-sharding` via 
 ### What actually happened next (recorded for continuity, not part of the original checkpoint)
 
 F4 (delta implementation) was dispatched for the sole Wave-1 story `S-cycle6-mutants-ci-sharding`. Code reached COMPLETE on feature branch `ci/mutants-ci-sharding` @ `ceeedbf1` — 8 commits (scaffold `0fb5dc70` / RED `05b8ca01` / GREEN `6a0c83ab` / policy `c46891e3` / code-r1 `55131b17` / docs-r1 `ab072f3f` / code-r2 `1bc13cc7` / docs-r2 `ceeedbf1`), all committed and pushed, all-green (`mutants-aggregate --self-test` 24/24, `ci_gate_completeness` 86/86, full `cargo test` green, clippy/fmt/actionlint clean). F4 Preconditions 2 (scripts extracted), 3 (empirical `--list`⇔pooled partition proof: `cargo mutants --list` N=1532 exactly equals the sum of 8 `--shard k/8` slices, shard lists disjoint and union byte-for-byte equal), and 5 (policy doc + CHANGELOG landed in-branch) were satisfied. Step-4.5 per-story adversarial convergence ran two full trios (round 1 A/B/C: A NOT-CLEAN MED self-test-coverage gap, B/C CLEAN, fixed; round 2 D/E/F: D NOT-CLEAN MED shard-sentinel-pin gap, F NOT-CLEAN HIGH F-PF-HIGH-001 `mutants-plan` gate-bypass, E CLEAN, fixed) but did NOT reach 3-consecutive-clean — streak reset to 0 after each fix round, per convergence discipline. A round-3 trio (G/H/I) was started but abandoned mid-review, with no durable output, when the session was paused via `SESSION-WRAP-PAUSE-2026-09-08`. No cycle-006 PR is open yet. Two resume TODOs were recorded (not actioned, INV-3 halt): persisting the Precondition-3 empirical evidence into a durable artifact, and opening a draft self-improvement story for untrusted-outcomes.json hardening. See the live checkpoint in `STATE.md` (v3.87) for the full account.
+
+---
+
+## Session Resume Checkpoint (2026-09-08, v3.88) — cycle-006 F4 Step-4.5 SESSION-WRAP CORRECTION (F-PI-CRITICAL-001/F-PG-MED-001 OPEN, streak 0), Burst 10 — SUPERSEDED at Burst 11 (v3.89, Step-4.5 CONVERGED)
+
+**Superseded at:** 2026-09-08/09, Burst 11 — resume-session continuation that drove Step-4.5 per-story adversarial convergence to **3-consecutive-clean** (final trio S/T/U, all CLEAN, at frozen feature-branch HEAD `8f46648f`). Between this checkpoint (v3.88) and Burst 11, 5 further adversarial trios (rounds 3-7, 15 fresh-context passes: G/H/I, J/K/L, M/N/O, P/Q/R, S/T/U) plus 6 fix rounds ran against `ci/mutants-ci-sharding`, advancing the branch HEAD `ceeedbf1`→`8f46648f` (13 local commits, **NOT yet pushed to `origin`** — origin remains at `ceeedbf1`). The two Blocking Issues open at this checkpoint (`F-PI-CRITICAL-001` CRITICAL, `F-PG-MED-001` MED) plus `F-PF-HIGH-001` were all resolved by the round-4 comprehensive byte-pin closure (fixing round-4 finding J-CRITICAL) and are recorded in `cycles/cycle-006/blocking-issues-resolved.md`. See "What actually happened next" below for the full 7-trio arc, and the live checkpoint in `STATE.md` (v3.89) for the authoritative resume state (NEXT: PR assembly, then pause-before-merge; branch still needs pushing to `origin`).
+
+### Spec Versions
+
+| Artifact | Version |
+|----------|---------|
+| STATE.md | 3.88 |
+| total_bcs | 754 |
+| VP count | 76 (tracked running total) |
+| holdout scenarios | 118 |
+| total_stories | 175 |
+
+### State
+
+| Field | Value |
+|-------|-------|
+| **Date** | 2026-09-08 |
+| **Position** | cycle-006 (`mutants-ci-sharding`) Phase **F4 (delta implementation) IN PROGRESS — PAUSED mid Step-4.5 per-story adversarial convergence**. Code complete and all-green on `ci/mutants-ci-sharding` @ `ceeedbf1` (pushed); Preconditions 2/3/5 satisfied. **F-PF-HIGH-001 OPEN** (round-2 fix proven DEFEATABLE — see `F-PI-CRITICAL-001`, CRITICAL, CWE-358); **F-PG-MED-001 OPEN** (MED, same defeat class, shard `run-mutants` step). |
+| **Convergence counter** | Step-4.5 per-story adversarial convergence — needs 3-consecutive-clean, streak **0**. Round 1 (A/B/C): A NOT-CLEAN (MED), B/C CLEAN, fixed. Round 2 (D/E/F): D NOT-CLEAN (MED), F NOT-CLEAN (then-believed HIGH, F-PF-HIGH-001), E CLEAN, fixed. **Burst 10 correction:** the round-2 fix is DEFEATABLE (`F-PI-CRITICAL-001`, CRITICAL); F-PF-HIGH-001 REOPENED as OPEN; adjacent `F-PG-MED-001` (MED) also opened. Round 3 (G/H/I) abandoned mid-review at Burst-9 wrap — must be re-run FRESH, now also scoped to cover the two new findings. |
+| **In-flight work at this checkpoint** | None durable — round-3 trio (G/H/I) was abandoned mid-review with no durable output at Burst 9 wrap; this checkpoint (Burst 10) was a bookkeeping/verification correction only, no code changes. No cycle-006 PR open yet (branch pushed, PR not assembled). |
+| **Pending human decisions at this checkpoint** | (1) "Drive F4 autonomously, pause before merge" — cycle-006 PR merge-to-`develop` needs human approval. (2) PR #778 will ESCALATE under the >120 gate at cycle-005 resume — human chooses split-below-120 or admin-bypass. (3) F4-Precondition-1: cycle-006 lands to `develop` before PR #778 rebases. (4) `F-PI-CRITICAL-001` (CRITICAL) and `F-PG-MED-001` (MED) must be fixed before Step-4.5 convergence can be meaningfully claimed. |
+| **Next step (as recorded at this checkpoint)** | Fix `F-PI-CRITICAL-001` + `F-PG-MED-001`, then re-run the Step-4.5 fresh adversarial trio to 3-consecutive-clean (now also scoped to the two new findings), then PR assembly, then pause-before-merge. |
+
+### Resume Prompt (as recorded at this checkpoint)
+
+```
+fix F-PI-CRITICAL-001 (CRITICAL, CWE-358, mutants-plan compute-step ordered-substring pin over raw
+comment-including text) and F-PG-MED-001 (MED, shard run-mutants step open step list), by re-pinning
+via a parsed run: scalar (value_of("run") -> Value::Scalar) mirroring the sentinel test's existing
+robust idiom, then re-run the Step-4.5 fresh adversarial trio to 3-consecutive-clean covering both
+fixes, then assemble the cycle-006 PR, then pause before merge for human approval, or
+/vsdd-factory:next-step if further orchestrator guidance is needed first.
+```
+
+### What actually happened next (recorded for continuity, not part of the original checkpoint)
+
+Burst 11 (resume-session continuation) fixed `F-PI-CRITICAL-001` via a comprehensive byte-pin closure (round-4 finding J-CRITICAL fix): every run-bearing step across all three mutation jobs (`mutants-plan` "Compute diff and mutation plan", shard "run-mutants", shard "Write shard status sentinel", `mutants-aggregate` "Evaluate sharded mutation gate") was re-pinned via a new `extract_and_normalize_run_scalar_for_step` helper that parses a `Value::Scalar` (rejecting anchor/tag/non-Literal style) rather than ordered-substring-searching raw comment-including block text — closing the CWE-358 defeat class for good (prior attempts across rounds 2-4 were each shown defeatable before this fix). `F-PG-MED-001` was closed in the same pass: the shard upload step's `with.path`/`with.name` are now byte-pinned and the shard job's step sequence is closed. 5 further adversarial trios ran after the Burst-9/10 rounds 1-2 (round 3 G/H/I NOT CLEAN — G-HIGH sentinel-step launder, G-MED process-gap, I-MED policy-doc stale sections; round 4 J/K/L NOT CLEAN — J-CRITICAL the mutants-plan byte-pin gap just described, J-O1 LOW; round 5 M/N/O NOT CLEAN — O-MED stale test-count ledger; round 6 P/Q/R — P/Q CLEAN, R 2 LOW stale-doc comments; round 7 S/T/U — **ALL THREE CLEAN**, reaching **3-consecutive-clean**). Branch HEAD advanced `ceeedbf1`→`8f46648f` (13 local commits, test/script/doc only — the tracked `.github/workflows/ci.yml` is byte-for-byte unchanged from `ceeedbf1`), **not yet pushed to `origin`**. `EXPECTED_GUARD_TEST_COUNT` 57→75, `EXPECTED_MUTANTS_AGG_FIXTURES` 24→25; full verification green at `8f46648f` (`cargo test --test ci_gate_completeness` 101 passed, `mutants-aggregate.sh --self-test` 25/25, full `cargo test` green, clippy/fmt/actionlint clean). `F-PI-CRITICAL-001`, `F-PF-HIGH-001`, and `F-PG-MED-001` are all RESOLVED — see `cycles/cycle-006/blocking-issues-resolved.md`. 5 follow-up items recorded (not actioned): 3 new process-gap items (STALE-RED-NARRATIVE-PATTERN, EXAMINE-GLOBS-SHRINK-RESIDUAL, BARE-JQ-TOKENIZER-RESIDUAL) plus the carried-forward `F-PE-MED-001`/`F-PC-MED-001` and a new `R-F2` planning-estimate truing-up note. NEXT: PR assembly (branch still needs pushing to `origin`), then pause-before-merge (human approval). See the live checkpoint in `STATE.md` (v3.89) for the full account.
 
 ---
 

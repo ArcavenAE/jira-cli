@@ -1,1 +1,1 @@
-{"status":"pass","timestamp":"2026-09-08T20:56:45Z","command":"cargo test --test claude_md_citations 2>&1 | tail -30"}
+{"status":"pass","timestamp":"2026-09-09T04:22:54Z","command":"cd /Users/zious/Documents/GITHUB/jira-cli/.worktrees/mutants-ci-sharding && cargo test 2>&1 | tee /tmp/cargo_test_full.log | grep -E \"FAILED|error\\[|^error:\" ; echo \"EXIT_CHECK_DONE\"; grep -c \"test result: ok\" /tmp/cargo_test_full.log; grep -c \"test result: FAILED\" /tmp/cargo_test_full.log"}
