@@ -217,4 +217,60 @@ the live checkpoint in `STATE.md` (v3.79) for the full cycle-006 account, and
 
 ---
 
+## Session Resume Checkpoint (2026-09-09, v3.92) — cycle-005 F4 Wave 1 MERGED via >120-mutant escape-hatch ADMIN-BYPASS (DEC-352) — SUPERSEDED at Burst 6 (v3.93)
+
+**Superseded at:** 2026-09-09, Burst 6 (v3.93) — a standalone maintenance/enhancement PR (#793, `ci/mutation-nightly-visibility`, NOT a cycle-005 story) squash-merged to `develop` @ `5b00b31e` (`708c8b32`→`5b00b31e`) between Wave 1 and Wave 2; no DEC minted; pipeline position unchanged in substance — Wave 2 (`S-cycle5-mention-resolution-wiring`) remains READY/next.
+
+### Spec Versions
+
+| Artifact | Version |
+|----------|---------|
+| STATE.md | 3.92 |
+| total_bcs | 754 |
+| VP count | 76 |
+| holdout scenarios | 118 |
+| total_stories | 175 |
+
+### State
+
+| Field | Value |
+|-------|-------|
+| **Date** | 2026-09-09 |
+| **Position** | cycle-005 (`adf-mentions`) Phase **F4** (delta implementation) — Wave 1 (`S-cycle5-mention-pure-conversion`) **MERGED** to `develop` via the >120-mutation escape-hatch **ADMIN-BYPASS**, human-authorized (**DEC-352**). Squash-merge commit `708c8b32`; `develop` advanced `a9168212`→`708c8b32`. |
+| **Convergence counter** | Wave 1's per-story adversarial convergence reached 3-consecutive-clean pre-merge (recorded Burst 4) and stands unmodified. No further convergence loop pending for Wave 1 — delivery complete. Wave 2's own convergence not yet begun. |
+| **In-flight work** | None outstanding for Wave 1 — fully delivered and merged. Wave 2 (`S-cycle5-mention-resolution-wiring`) unblocked but not yet dispatched to an implementer. |
+| **Pending human decisions/blockers** | None outstanding for Wave 1's merge (resolved via DEC-352). Wave 2 dispatch needs no further human gate to begin (DEC-347 already approved the 2-wave decomposition). Zero Blocking Issues open. |
+| **WIP branches** | `feat/cycle5-mention-pure-conversion` — merged and deleted post-merge. No new WIP branch yet for Wave 2. |
+| **Next step (as recorded at this checkpoint)** | Dispatch Wave 2 (`S-cycle5-mention-resolution-wiring`) via the standard per-story-delivery TDD pipeline (test-writer → implementer → demo-recorder → pr-manager → devops-engineer), including the human-required live-Jira E2E round-trip acceptance test (`H-NEW-MENTION-009`), not yet started. |
+
+### Resume Prompt (as recorded at this checkpoint)
+
+```
+/vsdd-factory:rehydrate-wave then /vsdd-factory:next-step
+```
+
+### What actually happened next (recorded for continuity, not part of the original checkpoint)
+
+Before Wave 2 was dispatched, a standalone maintenance/enhancement PR (#793,
+`ci/mutation-nightly-visibility` — NOT a cycle-005 story) was opened, reviewed
+(pr-reviewer **APPROVE**), and squash-merged to `develop` as `5b00b31e` ("ci: surface
+nightly mutation kill-rate in job summary + docs (#793)"), 2026-09-09T18:35Z; `develop`
+advanced `708c8b32`→`5b00b31e`. Normal merge — clean CI, no escalation/admin-bypass
+needed (~0 in-diff mutants, no `src/` change). The PR added a pooled kill-rate +
+caught/missed/timeout/unviable table to `$GITHUB_STEP_SUMMARY` in the
+`mutants-nightly-report` job (advisory/non-gating, `mutants-nightly.yml`), a new
+"Mutation testing" section in `README.md`, a nightly-summary pointer in
+`docs/specs/cargo-mutants-policy.md`, and comment-only fixes to 2 stale "Check kill
+rate" citations in `scripts/check-ci-gate.sh` + `.github/workflows/ci.yml` — closing
+cycle-006's S-7.02 deferral `CYCLE6-LOW-STALE-CHECK-KILL-RATE-COMMENTS`. This also
+operationalizes `research/mutation-testing-badge-visibility-2026-09-09.md`'s option #1
+recommendation (job-summary + docs); the dynamic shields-badge option is DEFERRED, not
+pursued — a settled outcome. No DEC was minted (small merged enhancement, not a
+phase-gate or story decision); counts unchanged (754/76/118/175). cycle-005's pipeline
+position is unchanged in substance — Wave 2 remains the next F4 work. See the live
+checkpoint in `STATE.md` (v3.93) for the full account, and
+`cycles/cycle-005/burst-log.md` Burst 6 for this state-manager burst's own actions.
+
+---
+
 <!-- Repeat for each archived checkpoint. Maintain chronological order. -->

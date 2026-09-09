@@ -1,34 +1,45 @@
-# PR Review — S-cycle4-honest-fail-message (DPAPI-fallback honest-fail messages)
+# PR #793 Fresh-Eyes Review — `ci/mutation-nightly-visibility` → `develop`
 
-**PR:** #771 — https://github.com/Zious11/jira-cli/pull/771
-**Branch:** feat/cycle4-honest-fail-message → develop
-**Reviewer:** pr-reviewer-771-cycle1 (fresh-eyes final pre-merge gate, cycle 1)
-**Verdict:** APPROVE — ready to merge
-**Date:** 2026-09-05
-**covered_sha:** b2a0c5d707a9daa8543f32acba6e718bcec77907
+## Verdict: APPROVE
 
-## Scope reviewed
-Production: `src/api/auth.rs` (new `site1_login_store_failure_message` / `site3_refresh_store_failure_message` pure selectors; Site 3 proactive `clear_profile_oauth_pair` wiring in `refresh_oauth_token_with_url`; source-scan guard test)
-Docs: `CHANGELOG.md` (`[Unreleased]` Fixed entry, DEC-334)
-Tests: `src/api/auth.rs` inline `honest_fail_message_tests` (AC-001..007 + chain-ordering proof + Site-1 no-clear keyring-gated) and `test_no_account_wide_harmful_revoke_framing_in_auth_source`; `tests/oauth_refresh_integration.rs` (`remove_env` helper + Site-3 wired keyring-gated test)
+CI-visibility + docs change. 5 files, no `src/` Rust touched. Advisory semantics preserved.
 
-## Independently verified (against source at HEAD, not just PR body)
-- **Two distinct messages correct.** Site 1 `DpapiFallbackFailed` arm: names the 2560-byte Credential Manager limit, interpolates the DPAPI failure detail (`DpapiFallbackFailed.0`), instructs disk-space/permissions check + re-login, recommends scoped `jr auth logout`/`jr auth remove` as DEFAULT, presents `manage-profile/apps` revoke as OPTIONAL with an explicit ACCOUNT-WIDE ("sign out every jr profile on this Atlassian account") warning. Site 3 `DpapiFallbackFailed` arm: names the same limit + detail, instructs a fresh login, contains NO "revoke" and NO manage-profile URL.
-- **Site 3 clears / Site 1 doesn't.** `refresh_oauth_token_with_url` (auth.rs:1826-1845) calls `clear_profile_oauth_pair` only when the `DpapiFallbackFailed` marker is present, before returning the honest-fail error; `oauth_login` clears nothing.
-- **Marker discrimination is type-based** (`downcast_ref`), `ProfilePathEscape` checked FIRST at both sites → distinct exit-64 `JrError::UserError` via `invalid_profile_name_error` (exit code 64 confirmed). Chain-ordering test proves ProfilePathEscape wins regardless of position in the anyhow chain.
-- **Source-scan guard is a real behavioral check**, not a no-op: `include_str!("auth.rs")` split at `"\nmod tests {"`, lowercase scan of the production half for `["no other consumer","must first revoke","safe cleanup"]`, asserts absence. Split correctly excludes the tests' own panic strings that reference the phrases.
-- **No secret leakage.** `{inner}` is always an IO/syscall error string (`"DPAPI protect failed: …"`, `"failed to write secret file: …"`, or the non-Windows `"DPAPI is not available …"`) — never a token. `{e:#}` for `keyring::Error::TooLong` renders `"Attribute 'password' is longer than platform limit of N chars"` (attribute NAME only, verified in keyring 3.x `error.rs`); this interpolation is pre-existing, unchanged by the PR.
-- **Local verification:** `cargo fmt --all -- --check` clean; inline `honest_fail_message_tests` 10/10 pass; source-scan guard 1/1 pass.
-- **CI:** all 15 checks green at this SHA (CI Gate, Clippy ubuntu+windows, Format, MSRV, Mutation testing, Coverage, Deny, Secret Scan, Spec Guards, Test macos/ubuntu/windows).
+## Verification results
 
-## Non-blocking observations (no change required)
-1. Source-scan guard is phrase-exact (3 literals) — a novel re-wording of harmful revoke framing would not be caught. Documented in the PR; PR review is the intended backstop.
-2. Cosmetic wording inconsistency in Site 1: `DpapiFallbackFailed` arm says "stale credentials" with double-quoted commands, legacy arm says "stored credentials" with backtick commands. Both satisfy all ACs.
+**1. `$GITHUB_STEP_SUMMARY` block — well-formed, no forward-reference risk**
+- It is a `{ … } >> "${GITHUB_STEP_SUMMARY}"` brace group (not a heredoc); braces balanced
+  (`{` line 154 / `}` line 164), every `echo` valid, and the literal backticks in the advisory
+  line (line 163) are correctly escaped as `` \` `` inside the double-quoted string.
+- All interpolated vars are defined unconditionally earlier in the same step:
+  `caught_total`/`missed_total`/`timeout_total`/`unviable_total` (lines 109, 124–127),
+  `total_scored` (line 130). No `set -u` is in effect (`set +e` at line 95), so there is no
+  undefined-variable failure risk regardless.
 
-## Findings by severity
-- HIGH: none
-- MED: none
-- LOW: two (both above), non-blocking.
+**2. Control flow — correct in both branches**
+- `kill_rate_display` is set in BOTH the `killable -eq 0` branch (line 136) and the `else`
+  branch (line 143), so it is always defined before the summary write.
+- The summary write sits after the if/else, and `exit 0` (line 166) still unconditionally
+  follows it. Advisory-only behavior intact — a job-summary write creates no status check.
 
-## Merge note
-CI green at `b2a0c5d7`. Nothing in the diff blocks merge.
+**3. "comment-only" claim for `ci.yml` / `check-ci-gate.sh` — TRUE**
+- Both edits are entirely inside `#` comment blocks. `ci.yml`: the `binaries=$(…)` executable
+  line and everything around it are unchanged (only the "same defect class as…" comment
+  reworded). `check-ci-gate.sh`: only the `TOOLING CHOICE` comment's citation changed.
+
+**4. Doc cross-references — all resolve**
+- `.github/workflows/mutants-nightly.yml` exists; `name:` is exactly `Mutants Nightly (Full
+  Scope)` (matches docs text); job id is `mutants-nightly-report` (matches docs reference).
+- `docs/specs/cargo-mutants-policy.md` exists.
+- README's `mutants` and `mutants-aggregate` jobs both exist in `ci.yml` (lines 497, 623);
+  "CI badge above" claim valid (CI badge at README line 3 points to `ci.yml`).
+- New `check-ci-gate.sh` citation `scripts/mutants-aggregate.sh` exists and genuinely uses
+  `jq` (22 occurrences), so the reworded "already an assumed dependency" rationale holds.
+
+**5. PR body vs. diff — consistent.** 5 files, no `src/`, advisory-only preserved, deliberate
+no-badge decision matches the absence of any badge addition.
+
+## Non-blocking note (no change requested)
+Under `set +e`, if `GITHUB_STEP_SUMMARY` were ever unset the `>> ""` redirect would fail
+silently and the step would still `exit 0`. On GitHub-hosted runners that variable is always
+present for a step, so this is not a real risk and is consistent with the advisory-only intent.
+Flagged only for completeness.

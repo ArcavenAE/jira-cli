@@ -287,4 +287,48 @@ traces_to: STATE.md
 
 ---
 
+## Burst: Burst 6 — standalone maintenance PR #793 (`ci/mutation-nightly-visibility`) MERGED; closes cycle-006 S-7.02 deferral CYCLE6-LOW-STALE-CHECK-KILL-RATE-COMMENTS (2026-09-09)
+
+**Parent-commit:** `d9001a46` (`.factory` factory-artifacts tip immediately before this burst — Burst 5's own commit).
+
+**Trigger:** Human directed the state-manager to record a small, already-merged CI-visibility/docs enhancement (PR #793) in STATE.md, archiving the prior v3.92 Session Resume Checkpoint first, via a single atomic commit to `factory-artifacts`.
+
+**Actions taken:**
+
+1. **Recorded the merge fact (no DEC minted — small merged enhancement, not a phase-gate or story decision):** PR #793 (`ci/mutation-nightly-visibility`) squash-merged to `develop` as `5b00b31e` ("ci: surface nightly mutation kill-rate in job summary + docs (#793)"), 2026-09-09T18:35Z; `develop` advanced `708c8b32`→`5b00b31e`. Normal merge — clean CI, no escalation/admin-bypass needed (~0 in-diff mutants, since no `src/` change). pr-reviewer **APPROVE**. Diff: `.github/workflows/mutants-nightly.yml` (adds pooled kill-rate + caught/missed/timeout/unviable table to `$GITHUB_STEP_SUMMARY` in the `mutants-nightly-report` job, advisory/non-gating, still exit 0), `README.md` (new "Mutation testing" section), `docs/specs/cargo-mutants-policy.md` (nightly-summary pointer), `scripts/check-ci-gate.sh` + `.github/workflows/ci.yml` (comment-only stale "Check kill rate" citation fixes). Local+CI verification green (`ci_gate_completeness` 101/101, `actionlint` clean, `mutants-aggregate` self-test 25/25).
+2. **Closed the cycle-006 S-7.02 deferral `CYCLE6-LOW-STALE-CHECK-KILL-RATE-COMMENTS`:** both stale inline comments citing the retired "Check kill rate" step (`scripts/check-ci-gate.sh` ~L43-45, `.github/workflows/ci.yml` ~L100-101) are fixed by PR #793's diff. Moved out of the open S-7.02 deferrals table in Drift/Standing Items into the "RESOLVED/CLOSED" note alongside `F-PE-MED-001`/`R-F2`.
+3. **Settled the mutation-testing badge-visibility research outcome:** PR #793 operationalizes `research/mutation-testing-badge-visibility-2026-09-09.md`'s option #1 recommendation (job-summary + docs). The dynamic shields-badge option remains **DEFERRED, not pursued** — recorded as the settled outcome so it is not re-opened. This strengthens the advisory-nightly net that cycle-005 Wave 1's escape-hatch bypass (DEC-352) relies on.
+4. **Confirmed pipeline position unchanged in substance:** `current_cycle`/`feature_mode_bundle` remain `cycle-005`/`adf-mentions`; cycle-005 remains the sole OPEN cycle, Phase F4 IN PROGRESS, Wave 2 (`S-cycle5-mention-resolution-wiring`) still READY/next (not yet dispatched). Counts unchanged (754 BCs / 76 VPs / 118 holdouts / 175 stories) — PR #793 authored no BC/VP/holdout/story. `activation_head`/`activation_version` unchanged (`a9168212`/`v0.7.0-dev.5`) — no release cut; `develop`'s real tip is now `5b00b31e`.
+5. **Archived the v3.92 Session Resume Checkpoint** to `cycles/cycle-005/session-checkpoints.md` (the cycle-005 burst — Burst 5 — that produced it) with a "Superseded at" note, then wrote a new v3.93 checkpoint in STATE.md reflecting the merge and the unchanged Wave-2-next position.
+6. Updated Phase Progress (new `MAINTENANCE-PR-793-MERGED (standalone, Burst 6)` row), Current Phase Steps (fresh Burst-6 table; Burst 5's table folded into the existing pointer note), Decisions Log (cycle-005 note paragraph appended, no new DEC row), Blocking Issues (clarifying note), Convergence Status, Concurrent Cycles (`develop`'s real tip updated to `5b00b31e`), Constraints Carried Forward (new Burst-6 paragraph), Historical Content (cycle-005 rows updated + new PR #793 evidence row), and Drift/Standing Items (S-7.02 deferrals table: removed the now-resolved row; badge-visibility references updated to reflect the settled outcome).
+7. Refreshed the STATE.md SIZE BUDGET banner and its `wc -l` claim to the actual post-Write line count.
+
+**Adversary verdict:** N/A this state-manager burst — no `adversary` agent dispatched. PR #793's own review/CI evidence (pr-reviewer APPROVE, local+CI verification green) was produced by the concurrent PR-review workflow prior to this burst, not re-run here.
+
+**Files touched (Dim-1): 3 unique files/paths this burst, all committed in the state-manager's own single atomic commit**
+
+- `STATE.md` (v3.93 — full-content Write)
+- `cycles/cycle-005/session-checkpoints.md` (v3.92 checkpoint archived with "Superseded at" note)
+- `cycles/cycle-005/burst-log.md` (this entry)
+
+**Dim-2 Attestation:** No count-verification script applies to this burst in the BC/VP/holdout/story sense — counts unchanged (754 BCs / 76 VPs / 118 holdouts / 175 stories, all carried forward verbatim). PR #793 touched no spec/story artifact.
+
+**Dim-5 Attestation:** N/A — no binary/WASM artifact produced by this `.factory/` commit (bookkeeping-only, no build). PR #793's own binary-equivalent artifacts (workflow YAML, docs) were already built/tested by CI as part of its own merge, separate from this commit.
+
+**Dim-6 Attestation:** No `src/`/`tests/` change committed by this state-manager burst — PR #793 touched no `src/` file at all (CI workflow + docs only), landing on `develop` @ `5b00b31e` via its own merge, separate from this `.factory/` commit.
+
+**Dim-7 Attestation:** N/A — no CI-relevant change in this `.factory/` commit (no code, no workflow file touched); PR #793's own CI is tracked on GitHub, not by this commit.
+
+**Codifications:** No DEC minted this burst (small merged enhancement, not a phase-gate or story decision). Recorded (not decided): the merge fact, the S-7.02 deferral closure, and the badge-visibility settled outcome.
+
+**Closes:** the cycle-006 S-7.02 deferral `CYCLE6-LOW-STALE-CHECK-KILL-RATE-COMMENTS` (RESOLVED by PR #793). **Does NOT close:** cycle-005 itself, any cycle-005 phase or wave, or the `INTERIM-SHIPPABILITY-WINDOW-CYCLE5-W1` standing item (unchanged, still OPEN, target Wave 2's BC-X.7.010 preflight).
+
+### Details
+
+| Agent | Task | Output |
+|-------|------|--------|
+| state-manager | Recorded PR #793 (`ci/mutation-nightly-visibility`) squash-merged to `develop` @ `5b00b31e` (standalone maintenance, not a cycle-005 story, no DEC minted); closed cycle-006 S-7.02 deferral `CYCLE6-LOW-STALE-CHECK-KILL-RATE-COMMENTS`; recorded the mutation-testing badge-visibility research settled outcome (option #1 landed, dynamic badge DEFERRED); STATE.md v3.93 full-content Write; archived v3.92 checkpoint to cycles/cycle-005/session-checkpoints.md; commit + push to `factory-artifacts` | `STATE.md` (v3.93), `cycles/cycle-005/burst-log.md` (this file), `cycles/cycle-005/session-checkpoints.md` |
+
+---
+
 <!-- Repeat for each burst. Maintain chronological order. -->
