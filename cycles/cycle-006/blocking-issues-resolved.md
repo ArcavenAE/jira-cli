@@ -45,4 +45,20 @@ step unpinned, same launder class) + 2 MED. Round 4 (J/K/L @ `d840ece5`) NOT CLE
 Session Resume Checkpoint (v3.89) and `cycles/cycle-006/session-checkpoints.md` v3.88 archive entry
 ("What actually happened next").
 
+## Resolved at Burst 13 (2026-09-09) — cycle-close resolutions (NOT the S-7.02 deferrals)
+
+These two items were tracked as follow-up items (not table-listed Blocking Issues, which stayed
+empty from Burst 11 onward) and were explicitly RESOLVED/CLOSED at the cycle-006 F7 close-out
+(DEC-351), distinct from the 6 items the human chose to record as justified deferrals in that same
+burst (see `STATE.md` Drift / Standing Items for the deferral table).
+
+| ID | Issue | Severity | Blocking Phase | Owner | Resolution |
+|----|-------|----------|-----------------|-------|------------|
+| F-PE-MED-001 | Precondition-3's M-1 empirical `--list`↔pooled partition-proof evidence (N=1532 exact; `--in-diff` mirror N=18 exact) had been verified but not yet persisted into a durable, standalone factory artifact — carried forward from Burst 9 through Burst 12 as a NOT-actioned follow-up. | MED | F4 (Step-4.5 per-story adversarial convergence, carried to cycle-close) | orchestrator (evidence capture) / state-manager (recorded) | **CLOSED (Burst 13).** The M-1 evidence is now captured durably in PR #791's merged body on `develop` (permanent GitHub PR record) — the standalone-durable-artifact concern this item tracked is satisfied by that record. No further action needed; a separate `.factory/`-local artifact was judged unnecessary given the PR body's permanence. |
+| R-F2 | The story `S-cycle6-mutants-ci-sharding.md`'s planning-stage estimate for `EXPECTED_GUARD_TEST_COUNT` (38→65, AC-031) diverged from the shipped value (75) discovered during F4 implementation. Flagged at Burst 11 as a planning-estimate truing-up item pending cycle-close disposition. | LOW (planning-estimate, not a defect) | F4 (Step-4.5 per-story adversarial convergence, carried to cycle-close) | state-manager (disposition recorded) | **CLOSED, not a defect (Burst 13).** AC-031 explicitly mandated F4 re-verification of this count — the shipped value 75 is the reconciled, correct truth; the original 65 was a planning-stage estimate, not a commitment the implementation was required to match exactly. No fix needed; the STORY-INDEX and story file were corrected to the shipped 75 as part of ordinary F4 delivery (see `develop` @ `a9168212`, PR #791). |
+
+**cycle-006 F7 close-out (DEC-351):** F7 delta convergence reached a 5-dimensional PASS and the
+human APPROVED closing cycle-006 with NO release cut. Full rationale: `STATE.md` Decisions Log,
+`DEC-351`. This is the final resolution entry for cycle-006 — the cycle is now CLOSED.
+
 <!-- Repeat for each archived resolution burst. Maintain chronological order. -->

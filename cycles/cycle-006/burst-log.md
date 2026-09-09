@@ -150,4 +150,43 @@ traces_to: STATE.md
 
 ---
 
+## Burst: Burst 13 — cycle-006 Phase F7 (delta convergence) HUMAN GATE APPROVED (DEC-351) — cycle-006 CLOSED, NO RELEASE CUT (2026-09-09)
+
+**Parent-commit:** `a9168212` (`develop` tip; unchanged this burst — no new `develop` landing, this is a `.factory/` bookkeeping-only burst recording the F7 gate outcome and cycle close).
+
+**Trigger:** orchestrator (main session) requested state-manager record cycle-006's F7 delta-convergence approval and CLOSE the cycle. F5 (scoped adversarial refinement) and F6 (targeted hardening) had already completed earlier in this session (evidence cited in DEC-351's 5-dimensional convergence rationale) — this burst records the terminal F7 gate and its human approval, plus the S-7.02 cycle-closing checklist.
+
+**What happened:** F7 (delta convergence) reached a 5-dimensional PASS: (1) Spec — `cargo-mutants-policy.md` converged (DEC-349), F5 audit confirmed spec↔impl match; (2) Story/Test — `S-cycle6-mutants-ci-sharding` F3-approved (DEC-350), 39 AC/30 VP/13 holdout all realized, STORY-INDEX corrected (see factory-artifacts commit `66e9090e`); (3) Implementation — merged to `develop` @ `a9168212`, Step-4.5 3-consecutive-clean (7 trios/21 passes/6 fix rounds), F5 integration/regression clean; (4) Verification — 30 VP-MUTANTS-SHARD guards passing, `ci_gate_completeness` 101/101, `mutants-aggregate` self-test 25/25, `check-ci-gate` jq-trust 17/17; (5) Regression — full CI SUCCESS on the merged `develop` tip `a9168212` (all required jobs) plus Scorecard supply-chain + E2E green. The human reviewed this complete evidence package and **APPROVED cycle-006's CLOSE at the F7 gate, explicitly choosing NO release cut** — the delta is CI-infrastructure-only (no `src/` change), the shipped `jr` binary is byte-identical to what was already released as `v0.7.0-dev.5`, and the next release will ride cycle-005 instead. **DEC-351** was minted to record this decision, verified DEC-namespace-collision-free (max prior ID `DEC-350`).
+
+**S-7.02 cycle-closing checklist executed — human chose RECORD DEFERRALS ONLY:** 6 items recorded as justified deferrals with an explicit target and reason each, in `STATE.md`'s Drift / Standing Items section: `STALE-RED-NARRATIVE-PATTERN` [process-gap] (target: future self-improvement/maintenance sweep), `EXAMINE-GLOBS-SHRINK-RESIDUAL` [process-gap] (target: future CI-hardening), `BARE-JQ-TOKENIZER-RESIDUAL` [process-gap] (target: future CI-hardening or script growth), `GITHUB-OPS-WATCH-HANG` [process-gap, tooling] (target: factory tooling improvement — avoid `--watch` in github-ops, add a timeout), `F-PC-MED-001` [security, process-gap] (target: future security-hardening cycle), `CYCLE6-LOW-STALE-CHECK-KILL-RATE-COMMENTS` [doc-hygiene] (target: next CI-touching PR). **No follow-up stories were opened**, per the human's explicit choice. Separately, `F-PE-MED-001` and `R-F2` were marked **RESOLVED/CLOSED** (not deferrals) — full resolution text appended to `cycles/cycle-006/blocking-issues-resolved.md` this burst.
+
+**Pipeline position updated:** `current_cycle`/`feature_mode_bundle` switched from `cycle-006`/`mutants-ci-sharding` to `cycle-005`/`adf-mentions` — cycle-006 is CLOSED, cycle-005 (`adf-mentions`) is now the sole active OPEN cycle. `activation_head` (`a9168212`) and `activation_version` (`v0.7.0-dev.5`) are UNCHANGED — no release tag cut this burst.
+
+**Historical compaction (cycle-close discipline):** now that cycle-006 is fully CLOSED, its many per-burst `Constraints Carried Forward` / `Drift / Standing Items` paragraphs (previously one paragraph per burst) were condensed into exactly two paragraphs per section in `STATE.md`, mirroring the existing `cycle-004` closed-cycle pattern. No historical detail was lost — it remains intact, unmodified, in this burst log, `session-checkpoints.md`, and `blocking-issues-resolved.md`.
+
+**Adversary verdict:** N/A this state-manager burst — no `adversary` agent dispatched directly by state-manager. F7's own 5-dimensional convergence check (which folds in F5's scoped adversarial refinement and F6's targeted hardening results) was run earlier in this session by other specialist agents and is cited above as the evidence basis for DEC-351, not re-run here.
+
+**Codifications:** **DEC-351 minted** — cycle-006 Phase F7 HUMAN GATE APPROVED / cycle CLOSED / NO RELEASE, 2026-09-09. DEC-namespace check: max prior ID `DEC-350`, `DEC-351` is collision-free (grep-verified against `STATE.md` and `.factory/` before minting).
+
+**Closes:** cycle-006 Phase **F7 (delta convergence) — COMPLETE.** **cycle-006 (`mutants-ci-sharding`) itself is now CLOSED** — F1 through F7 all complete, human-approved at every gate (DEC-348/349/350/351), no release cut. **Does NOT close:** cycle-005 (`adf-mentions`), which remains OPEN at Phase F4 (Wave 1, PR #778), now the sole active cycle, own resume not yet actioned.
+
+**Outcome:** cycle-006 (`mutants-ci-sharding`) is **CLOSED**. cycle-005 (`adf-mentions`) is now the sole active OPEN cycle in the factory. No BC/VP/holdout/story running-total counts changed this burst (754/76/118/175 unchanged) — this was a gate/cycle-close bookkeeping event, not spec or story authorship.
+
+**Files touched (Dim-1): 4 unique files/paths this burst, all committed in the state-manager's own single atomic commit**
+
+- `STATE.md` (modified)
+- `cycles/cycle-006/burst-log.md` (modified — this Burst 13 entry appended)
+- `cycles/cycle-006/blocking-issues-resolved.md` (modified — `F-PE-MED-001`/`R-F2` resolution entries appended)
+- `cycles/cycle-006/session-checkpoints.md` (modified — archives the v3.90 checkpoint ahead of this burst's v3.91 checkpoint)
+
+**Dim-2 Attestation:** No BC/VP/holdout INDEX content changed this burst. Counts unchanged: 754 BCs / 76 VPs (running total) / 118 holdouts / 175 stories. **DEC-351 minted this burst** — DEC-namespace collision check performed and clean (max prior ID DEC-350).
+
+**Dim-5 Attestation:** N/A — no binary/WASM artifact produced by this `.factory/` commit (bookkeeping only; no release tag cut, no `develop`-side change).
+
+**Dim-6 Attestation:** `develop` HEAD unchanged this burst (`a9168212`, same as Burst 12) — no new `develop`-side landing; this burst is `.factory/` artifact bookkeeping only.
+
+**Dim-7 Attestation:** No new CI-relevant change landed this burst — the sharded mutation-testing gate landed at Burst 12 and remains live in production, unmodified. This burst records the terminal human approval (F7 gate, DEC-351) that closes out the regression-risk flag raised at F1 (DEC-348) as fully resolved and validated end-to-end.
+
+---
+
 <!-- Repeat for each burst. Maintain chronological order. -->

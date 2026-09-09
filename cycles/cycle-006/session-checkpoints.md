@@ -446,4 +446,48 @@ PR #791 was opened for story `S-cycle6-mutants-ci-sharding`, reviewed (pr-review
 
 ---
 
+## Session Resume Checkpoint (2026-09-09, v3.90) — cycle-006 F4 DELIVERY COMPLETE + MERGED (PR #791 → `develop` @ `a9168212`), Burst 12 — SUPERSEDED at Burst 13 (v3.91, F7 delta convergence HUMAN GATE APPROVED, DEC-351, cycle-006 CLOSED, NO release cut)
+
+**Superseded at:** 2026-09-09, Burst 13 (v3.91) — cycle-006 Phase F7 (delta convergence) reached a 5-dimensional PASS and was human-**APPROVED** at the gate (**DEC-351**); cycle-006 is **CLOSED, with NO release cut** (CI-infrastructure-only; shipped binary byte-identical; next release rides cycle-005). Pipeline position updated — cycle-005 (`adf-mentions`) is now the sole active OPEN cycle.
+
+### Spec Versions
+
+| Artifact | Version |
+|----------|---------|
+| STATE.md | 3.90 |
+| total_bcs | 754 |
+| VP count | 76 (tracked running total) |
+| holdout scenarios | 118 |
+| total_stories | 175 |
+
+### State
+
+| Field | Value |
+|-------|-------|
+| **Date** | 2026-09-09 |
+| **Position** | cycle-006 (`mutants-ci-sharding`) Phase **F4 (delta implementation) COMPLETE + MERGED** — PR #791 (story `S-cycle6-mutants-ci-sharding`) human-APPROVED at the merge gate and squash-merged into `develop`, merge commit `a9168212` (2026-09-09T14:15:13Z); `develop` advanced `569d85a8`→`a9168212`. All 24 CI checks passed, including the required CI Gate and the full NEW sharded pipeline's first live production run (Mutation Test Plan, Mutation Testing Shard 0–7, Mutation Testing Aggregate). pr-reviewer APPROVE; security-reviewer near-clean (1 LOW + 1 INFO, non-blocking). Post-merge cleanup done: remote branch `ci/mutants-ci-sharding` deleted, local worktree `.worktrees/mutants-ci-sharding` removed, local branch deleted, stale refs pruned (cycle-005 worktree/branch untouched). Step-4.5 per-story adversarial convergence (recorded v3.89) stands unmodified — 3-consecutive-clean via 7 trios / 21 fresh passes / 6 fix rounds; `F-PI-CRITICAL-001`/`F-PF-HIGH-001`/`F-PG-MED-001` remain RESOLVED; Blocking Issues table stays EMPTY. Session-tooling note (not a code/gate defect): the github-ops gh-delegation layer hung in-session during merge execution (2 `pr-manager` attempts stalled on delegated `gh` calls, incl. a non-terminating `gh pr checks --watch`); the orchestrator verified PR state green/mergeable via direct read-only `gh` before the human merged directly via the GitHub UI — tracked as the new `GITHUB-OPS-WATCH-HANG` follow-up item. |
+| **Convergence counter** | Step-4.5 per-story adversarial convergence — 3-consecutive-clean, ACHIEVED at Burst 11 (streak 3/3) and unmodified since. PR #791's own review passes (pr-reviewer APPROVE, security-reviewer near-clean) and 24/24 green CI checks are the delivery-side convergence evidence for this checkpoint. |
+| **In-flight work at this checkpoint** | None durable outstanding for cycle-006 Phase F4 — delivery is complete and merged. `ci/mutants-ci-sharding` branch has been deleted post-merge (work now lives on `develop` @ `a9168212`). Cycle-006's next phase (F5) has not yet been dispatched. |
+| **Pending human decisions at this checkpoint** | (1) None outstanding for cycle-006's merge — resolved this burst. (2) At cycle-005 resume, PR #778 (281 in-diff mutants) will ESCALATE under the new >120 gate once it rebases and re-runs CI — human chooses split-below-120 or admin-bypass. (3) F4-Precondition-1 is now satisfied: cycle-006 has landed on `develop` before PR #778 rebases. (4) Zero Blocking Issues remain open for cycle-006. |
+| **Next step (as recorded at this checkpoint)** | cycle-006 Phase F5 (scoped adversarial refinement) → F6 (targeted hardening) → F7 (delta convergence); F5/F6 expected light since Step-4.5's 21-pass adversarial + security + reconciliation + guard-completeness convergence already front-loaded most of that surface (delta touches no `src/`). |
+
+### Resume Prompt (as recorded at this checkpoint)
+
+```
+Dispatch cycle-006 Phase F5 (scoped adversarial refinement) against the merged
+develop @ a9168212, then F6 (targeted hardening), then F7 (delta convergence) —
+expected light since Step-4.5's 21-pass adversarial/security/reconciliation
+convergence already front-loaded most of that surface (delta touches no src/).
+Separately, at cycle-005 resume: rebase PR #778 onto the new develop, re-run CI
+under the sharded gate, and resolve the pending >120-mutant escalation decision
+(split-below-120 vs admin-bypass) — not actioned this burst. Or
+/vsdd-factory:next-step if further orchestrator guidance is needed first.
+```
+
+### What actually happened next (recorded for continuity, not part of the original checkpoint)
+
+F5 (scoped adversarial refinement) and F6 (targeted hardening) were completed later in the same session by specialist review agents, with no separate human gate required under the feature-mode convention — their evidence (spec↔impl audit, VP-MUTANTS-SHARD guard coverage, `ci_gate_completeness`/`mutants-aggregate`/`check-ci-gate` verification results, and the full-CI regression pass on `develop` @ `a9168212`) folded directly into F7's 5-dimensional convergence record rather than being written to a standalone `phase-f5-adversarial/cycle-006/`/`phase-f6-hardening/cycle-006/` artifact tree. F7 (delta convergence) reached a full PASS across all five dimensions (Spec, Story/Test, Implementation, Verification, Regression) and the human **APPROVED cycle-006's CLOSE at the F7 gate, explicitly choosing NO release cut** — the delta is CI-infrastructure-only, the shipped `jr` binary is byte-identical, and the next release rides cycle-005 instead. **DEC-351** was minted (collision-free, max prior ID DEC-350). The S-7.02 cycle-closing checklist was executed per explicit human instruction: RECORD DEFERRALS ONLY — 6 items recorded as justified deferrals with explicit target + reason (`STALE-RED-NARRATIVE-PATTERN`, `EXAMINE-GLOBS-SHRINK-RESIDUAL`, `BARE-JQ-TOKENIZER-RESIDUAL`, `GITHUB-OPS-WATCH-HANG`, `F-PC-MED-001`, `CYCLE6-LOW-STALE-CHECK-KILL-RATE-COMMENTS`), no follow-up stories opened; `F-PE-MED-001` and `R-F2` were separately marked RESOLVED/CLOSED (not deferrals). **cycle-006 (`mutants-ci-sharding`) is now CLOSED** — F1 through F7 all complete, human-approved at every gate. Pipeline position switched: `current_cycle`/`feature_mode_bundle` now `cycle-005`/`adf-mentions` — cycle-005 is the sole active OPEN cycle, own resume not yet actioned. See the live checkpoint in `STATE.md` (v3.91) for the full account.
+
+---
+
 <!-- Repeat for each archived checkpoint. Maintain chronological order. -->
