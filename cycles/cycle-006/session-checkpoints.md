@@ -490,4 +490,46 @@ F5 (scoped adversarial refinement) and F6 (targeted hardening) were completed la
 
 ---
 
+## Session Resume Checkpoint (2026-09-09, v3.91) — cycle-006 F7 DELTA CONVERGENCE HUMAN GATE APPROVED (DEC-351), cycle-006 CLOSED with NO release cut, Burst 13 — SUPERSEDED at v3.92 (cycle-005 Wave 1 MERGED via >120-mutant escape-hatch ADMIN-BYPASS, DEC-352)
+
+**Superseded at:** 2026-09-09, cycle-005 Burst 5 (v3.92) — cycle-005 (`adf-mentions`) Wave 1 (`S-cycle5-mention-pure-conversion`) was **MERGED** to `develop` via the >120-mutation escape-hatch **ADMIN-BYPASS**, human-authorized (**DEC-352**); PR #778 squash-merged, merge commit `708c8b32` (`a9168212`→`708c8b32`). This checkpoint's own position (cycle-006 CLOSED, cycle-005 the sole active OPEN cycle at Phase F4, own resume pending) is archived here — the cycle-006 burst that produced it — per the orchestrator's explicit locate-first instruction, since v3.91 was written during cycle-006's own Burst 13 even though its "NEXT" already pointed at cycle-005.
+
+### Spec Versions
+
+| Artifact | Version |
+|----------|---------|
+| STATE.md | 3.91 |
+| total_bcs | 754 |
+| VP count | 76 (tracked running total) |
+| holdout scenarios | 118 |
+| total_stories | 175 |
+
+### State
+
+| Field | Value |
+|-------|-------|
+| **Date** | 2026-09-09 |
+| **Position** | cycle-006 (`mutants-ci-sharding`) Phase **F7** (delta convergence) reached a 5-dimensional PASS and was human-**APPROVED** at the gate (**DEC-351**). **cycle-006 is CLOSED, with NO release cut** (CI-infrastructure-only; shipped binary byte-identical; next release rides cycle-005). **NEXT:** cycle-005 (`adf-mentions`) is now the sole active OPEN cycle, at Phase F4 (delta implementation) — PR #778 is UNBLOCKED and can rebase onto the current `develop`, but its own resume (rebase, CI re-run, the >120-mutant escalation decision) is not yet actioned. |
+| **Convergence counter** | cycle-006's Step-4.5 per-story adversarial convergence reached 3-consecutive-clean at Burst 11 and stands unmodified. F7's own 5-dimensional convergence (Spec/Story-Test/Implementation/Verification/Regression) reached a full PASS this burst, recorded in DEC-351 — this IS the terminal convergence event for cycle-006; no further convergence loop was pending for this cycle. |
+| **In-flight work at this checkpoint** | None outstanding for cycle-006 — the cycle is fully closed. cycle-005's Phase F4 Wave 1 (PR #778) is the only in-flight work in the factory, and it is not being actively driven this burst (this burst's scope was cycle-006's close-out only). |
+| **Pending human decisions at this checkpoint** | (1) None outstanding for cycle-006 — fully resolved and closed this burst. (2) At cycle-005 resume, PR #778 (281 in-diff mutants) will ESCALATE under the now-live >120 gate once it rebases and re-runs CI — human chooses split-below-120 or admin-bypass. (3) Zero Blocking Issues remain open anywhere in the factory as of this checkpoint. |
+| **Next step (as recorded at this checkpoint)** | `/vsdd-factory:rehydrate-wave` then `/vsdd-factory:next-step`. |
+
+### Resume Prompt (as recorded at this checkpoint)
+
+```
+cycle-006 is CLOSED (DEC-351, no release). cycle-005 (adf-mentions) is now the
+sole active OPEN cycle, at Phase F4 — PR #778 is UNBLOCKED (cycle-006's sharded
+gate + >120 escape hatch is live on develop). At cycle-005 resume: rebase PR
+#778 onto the current develop, re-run CI under the sharded gate, and resolve
+the pending >120-mutant escalation decision (split-below-120 vs admin-bypass).
+Or /vsdd-factory:next-step if further orchestrator guidance is needed first.
+```
+
+### What actually happened next (recorded for continuity, not part of the original checkpoint)
+
+cycle-005's Wave 1 escalation decision was resolved later in the same session: PR #778's `src/adf.rs` diff generated 281 in-diff mutants (> the 120-mutant threshold), correctly ESCALATING the sharded mutation gate exactly as anticipated in this checkpoint's "Pending human decisions" row. All 14 other checks passed. The human reviewed the evidence — Story A's 3-clean per-story adversarial convergence, pr-reviewer APPROVE, security-reviewer CLEAN (1 LOW deferred), and a partial local `cargo mutants --in-diff` safety-net run (~96/281 mutants completed before stopped for environment contention) showing 66 caught / **0 missed** / 21 timeout (environmental) / 9 unviable, plus the ongoing advisory nightly full-scope run as the continuing net — and chose **ADMIN-BYPASS** over split-below-120 or defer. The human executed the merge directly in the GitHub UI (the orchestrator's `gh pr merge --admin` was correctly blocked by the environment's permission classifier). PR #778 squash-merged into `develop`, merge commit `708c8b32` (`a9168212`→`708c8b32`). **DEC-352** was minted (collision-free, max prior ID DEC-351). STORY-INDEX.md flipped both `S-cycle5-mention-pure-conversion` rows to done; `sprint-state.yaml`'s `cycle_005_adf_mentions` wave_1 → done, wave_2 → ready (dependency SATISFIED, now UNBLOCKED — the next F4 work). The DEC-347 interim-shippability-window tradeoff (pure bracket-mention conversion merged without the effectful preflight/resolution wiring) is now recorded **OPEN**, target closure = Wave 2's BC-X.7.010 preflight; a `CYCLE5-W1-LOCAL-MUTATION-VERIFY-PARTIAL` (LOW, informational) item was also recorded, since the local safety-net run was only partial. See the live checkpoint in `STATE.md` (v3.92) for the full account.
+
+---
+
 <!-- Repeat for each archived checkpoint. Maintain chronological order. -->

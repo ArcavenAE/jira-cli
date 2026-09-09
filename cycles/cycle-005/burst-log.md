@@ -237,4 +237,54 @@ traces_to: STATE.md
 
 ---
 
+## Burst: Burst 5 — F4 Wave 1 MERGED via >120-mutant escape-hatch ADMIN-BYPASS (DEC-352) (2026-09-09)
+
+**Parent-commit:** `1daf5aa9` (`.factory` factory-artifacts tip immediately before this burst — the cycle-006 F7-close commit; unrelated to `develop`, which moved separately via PR #778's own merge).
+
+**Trigger:** Human authorized recording of the verified fact that cycle-005 Wave 1 (`S-cycle5-mention-pure-conversion`, PR #778) was merged to `develop` via the >120-mutant escape-hatch admin-bypass, and directed the state-manager to record cycle-005 Phase F4 Wave-1 delivery + merge in STATE.md, archiving the prior v3.91 Session Resume Checkpoint (located in `cycles/cycle-006/session-checkpoints.md`, since v3.91 was written during cycle-006's own Burst 13) first.
+
+**Actions taken:**
+
+1. **Minted DEC-352:** cycle-005 Wave-1 story `S-cycle5-mention-pure-conversion` (PR #778) MERGED to `develop` via the >120-mutation escape-hatch ADMIN-BYPASS, human-authorized, 2026-09-09. Squash-merge commit `708c8b32` ("feat(adf): pure markdown-mention conversion (Story A, #674) (#778)"); `develop` advanced `a9168212`→`708c8b32`. PR #778's `src/adf.rs` diff generated 281 in-diff mutants (> the 120-mutant cycle-006 escalation threshold), so the sharded mutation gate correctly ESCALATED (Mutation Test Plan pass → 8 shards skipped → Mutation Testing Aggregate fail → CI Gate fail) — the first real production exercise of the cycle-006 escape hatch. All 14 other checks passed. Human reviewed split-below-120/defer/admin-bypass and chose admin-bypass on: (a) #778 already per-story adversarially converged (3 clean passes), pr-reviewer APPROVE, security-reviewer CLEAN (1 LOW deferred to Wave 2); (b) a local `cargo mutants --in-diff` safety-net run, started but stopped partway (~96 of 281 mutants completed) due to environment contention, showed 66 caught / 0 missed / 21 timeout (environmental) / 9 unviable; (c) the advisory nightly full-scope run remains the ongoing net, with a follow-up to surface its kill-rate via `$GITHUB_STEP_SUMMARY` now queued (`research/mutation-testing-badge-visibility-2026-09-09.md`, produced by a research agent this session). The admin-bypass merge itself was executed by the human directly in the GitHub UI — the orchestrator's `gh pr merge --admin` was correctly blocked by the environment's permission classifier. Verified DEC-namespace clean: max prior ID DEC-351, DEC-352 collision-free (grep-checked against `STATE.md` and all of `.factory/`).
+2. **Flipped STORY-INDEX.md:** both `S-cycle5-mention-pure-conversion` rows (Story Manifest ~line 1219, Feature Followup ~line 1636) to the repo's standard delivered convention (`**done** — merged 2026-09-09, PR #778 @ 708c8b32 (squash, escape-hatch admin-bypass per DEC-352)`); also updated the Wave-2 row's `depends_on` note to SATISFIED/UNBLOCKED for consistency, since it directly follows from the same verified fact. STORY-INDEX version bumped; `total_stories` unchanged at 175 (delivery, not authorship). A pre-existing, unrelated `count_propagation_drift` false-positive fired on this edit (a historical "19 BCs" string at ~line 192, dated 2026-08-05, predates this session and is unrelated to this burst's rows) — documented here as known hook noise, not fixed (out of scope for this burst).
+3. **Updated `sprint-state.yaml`'s `cycle_005_adf_mentions` section:** wave_1 flipped `ready`→`done` (`pr: 778`, `merge_sha: "708c8b32"`, `merged_at: "2026-09-09"`); wave_2 flipped `blocked`→`ready` (dependency SATISFIED).
+4. **Recorded two new standing items in Drift/Standing Items** (deliberately NOT Blocking Issues — neither blocks Wave 2 dispatch): `INTERIM-SHIPPABILITY-WINDOW-CYCLE5-W1` (the DEC-347 accepted tradeoff — pure bracket-mention conversion shipped without the effectful preflight/resolution wiring — is now OPEN, target closure = Wave 2's BC-X.7.010 preflight) and `CYCLE5-W1-LOCAL-MUTATION-VERIFY-PARTIAL` (LOW, informational — the local in-diff mutation safety-net run for #778 was only partial, environment-contention timeouts; covered by the nightly net).
+5. **Updated pipeline position:** `cycle_005_status` frontmatter updated to record Wave 1 MERGED / Wave 2 UNBLOCKED; `current_cycle`/`feature_mode_bundle` unchanged (already `cycle-005`/`adf-mentions` since cycle-006's Burst-13 close). `activation_head`/`activation_version` left UNCHANGED (`a9168212`/`v0.7.0-dev.5`) per explicit orchestrator instruction — no release tag cut this burst, though `develop`'s real tip is now `708c8b32`.
+6. **Archived the v3.91 Session Resume Checkpoint** to `cycles/cycle-006/session-checkpoints.md` (the cycle-006 burst that produced it, located per the orchestrator's explicit locate-first instruction) with a "Superseded at" note, then wrote a new v3.92 checkpoint in STATE.md reflecting Wave 1's merge, Wave 2's unblocked status, and the resume path.
+7. Updated Phase Progress (new `F4-WAVE1-MERGED (cycle-005, Burst 5)` row), Current Phase Steps (fresh Burst-5 table; Burst 13's cycle-006 table folded one level further into its existing pointer note), Decisions Log (new DEC-352 row + updated cycle-005 note paragraph), Blocking Issues (clarifying note that the interim window is a Drift item, not a blocker), Convergence Status, Concurrent Cycles (`develop`'s real tip vs. `activation_head` distinction spelled out), Constraints Carried Forward (new Burst-5 paragraph; Burst-4 paragraph condensed one-burst-lag), Historical Content (cycle-005 rows updated; new Wave-1 merge admin-bypass evidence row added), and Drift/Standing Items (new 2-row table for the items in step 4).
+8. Refreshed the STATE.md SIZE BUDGET banner (shorter than Burst 13's cycle-close banner, to offset this burst's additions) and its `wc -l` claim to the actual post-Write line count (384 lines).
+
+**Adversary verdict:** N/A this state-manager burst — no `adversary` agent dispatched. PR #778's own review/CI evidence (pr-reviewer APPROVE, security-reviewer CLEAN, 3-clean per-story adversarial convergence, partial local mutation safety-net run) was produced by the per-story-delivery pipeline and the human's own admin-bypass evaluation prior to this burst, not re-run here.
+
+**Files touched (Dim-1): 6 unique files/paths this burst, all committed in the state-manager's own single atomic commit**
+
+- `STATE.md` (v3.92 — full-content Write)
+- `cycles/cycle-006/session-checkpoints.md` (v3.91 checkpoint archived with "Superseded at" note)
+- `cycles/cycle-005/burst-log.md` (this entry)
+- `stories/STORY-INDEX.md` (both `S-cycle5-mention-pure-conversion` rows flipped to done; Wave-2 row's dependency note updated)
+- `sprint-state.yaml` (`cycle_005_adf_mentions` wave_1 → done, wave_2 → ready)
+- `research/mutation-testing-badge-visibility-2026-09-09.md` (previously-untracked research artifact, produced by a research agent this session, committed here as supporting evidence for DEC-352's queued badge-visibility follow-up)
+
+**Known hook noise this burst:** `validate-count-propagation` fired a false positive on the STORY-INDEX.md edit, citing an unrelated pre-existing historical string ("19 BCs" at ~line 192, dated 2026-08-05, predates this session) as drift against the current 754-BC running total — documented, not fixed (out of scope; the string is unrelated to the rows this burst touched). `validate-state-structure` twice blocked transiently on the SIZE BUDGET banner's `wc-l` self-citation during iterative editing (a wrong "wc -l" spacing, then a stale line-count figure after a subsequent edit shifted the file by 2 lines) — both corrected before the final state; neither reflects a defect in this burst's substantive content.
+
+**Dim-2 Attestation:** No count-verification script applies to this burst in the BC/VP/holdout sense (`check-spec-counts.sh`/`check-bc-cumulative-counts.sh` not re-run) — counts unchanged (754 BCs / 76 VPs / 118 holdouts / 175 stories, all carried forward verbatim). `total_stories` unchanged since this burst records delivery of an already-registered story, not new story authorship.
+
+**Dim-5 Attestation:** N/A — no binary/WASM artifact produced by this `.factory/` commit (bookkeeping-only, no build). PR #778's own binary was already built and tested by CI as part of its merge, separate from this commit.
+
+**Dim-6 Attestation:** No `src/`/`tests/` change committed by this state-manager burst — Wave 1's implementation itself (which did touch `src/adf.rs`/`tests/`) landed on `develop` @ `708c8b32` via PR #778's own merge, separate from this `.factory/` commit.
+
+**Dim-7 Attestation:** N/A — no CI-relevant change in this `.factory/` commit (no code, no workflow file touched); PR #778's own CI (including the sharded mutation gate's escalation) is tracked on GitHub, not by this commit.
+
+**Codifications:** **DEC-352** minted this burst — cycle-005 Wave 1 MERGED via the >120-mutant escape-hatch ADMIN-BYPASS, human-authorized. Recorded (not decided, already decided by the human before this burst): the admin-bypass evaluation itself, PR #778's review/CI evidence, the partial local mutation safety-net results.
+
+**Closes:** nothing new this burst does not itself close any phase or cycle. **Advances:** cycle-005 Phase F4 — Wave 1 delivery is now COMPLETE; Wave 2 (`S-cycle5-mention-resolution-wiring`) dependency is SATISFIED and UNBLOCKED, becoming the next F4 work. **Does NOT close:** cycle-005 itself (remains open through F4 Wave 2, F5, F6, F7); the DEC-347 interim-shippability-window tradeoff, now OPEN, which Wave 2's BC-X.7.010 preflight will close; the queued `$GITHUB_STEP_SUMMARY` badge-visibility follow-up, not yet actioned.
+
+### Details
+
+| Agent | Task | Output |
+|-------|------|--------|
+| state-manager | Minted DEC-352 (Wave 1 MERGED via >120-mutant escape-hatch admin-bypass, human-authorized); flipped STORY-INDEX.md rows to done; updated sprint-state.yaml wave tracking; recorded 2 new Drift/Standing items; updated pipeline position (Wave 2 UNBLOCKED); STATE.md v3.92 full-content Write; archived v3.91 checkpoint to cycles/cycle-006/session-checkpoints.md; commit + push to `factory-artifacts` | `STATE.md` (v3.92), `cycles/cycle-005/burst-log.md` (this file), `cycles/cycle-006/session-checkpoints.md`, `stories/STORY-INDEX.md`, `sprint-state.yaml`, `research/mutation-testing-badge-visibility-2026-09-09.md` |
+
+---
+
 <!-- Repeat for each burst. Maintain chronological order. -->

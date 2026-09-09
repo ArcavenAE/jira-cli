@@ -1181,16 +1181,16 @@ cycle_005_adf_mentions:
   title: "adf-mentions bundle (issue #674)"
   bundle: adf-mentions
   cycle: cycle-005
-  wave_1_status: "READY — S-cycle5-mention-pure-conversion (13 pts, CRITICAL, 15 ACs, depends_on: []) approved at F3 gate (DEC-347); not yet dispatched to an implementer."
-  wave_2_status: "BLOCKED — S-cycle5-mention-resolution-wiring (13 pts, HIGH, 17 ACs, depends_on: [S-cycle5-mention-pure-conversion]) awaits Wave 1 merge before dispatch."
+  wave_1_status: "DONE — S-cycle5-mention-pure-conversion (13 pts, CRITICAL, 15 ACs) merged 2026-09-09 via PR #778 @ 708c8b32 (squash, escape-hatch admin-bypass per DEC-352)."
+  wave_2_status: "READY / UNBLOCKED — S-cycle5-mention-resolution-wiring (13 pts, HIGH, 17 ACs, depends_on: [S-cycle5-mention-pure-conversion]) — dependency SATISFIED 2026-09-09 (Wave 1 merged); not yet dispatched to an implementer."
   wave_1:
     stories:
       - id: S-cycle5-mention-pure-conversion
         title: "adf.rs pure mention conversion — bracket-form + @Name detection/emission, \\@ escape, reverse-path render"
-        status: ready
-        pr: null
-        merge_sha: null
-        merged_at: null
+        status: done
+        pr: 778
+        merge_sha: "708c8b32"
+        merged_at: "2026-09-09"
         depends_on: []
         blocks: [S-cycle5-mention-resolution-wiring]
         bc_anchors: [BC-7.2.016, BC-7.2.017, BC-7.2.018, BC-7.2.019, BC-7.2.004]
@@ -1201,12 +1201,12 @@ cycle_005_adf_mentions:
         module_criticality: CRITICAL
         ac_count: 15
         target_module: "src/adf.rs"
-        notes: "Wave 1 root story, no deps, blocks S-cycle4-mention-resolution-wiring. Approved at F3 human gate (DEC-347) after 6-pass adversarial story convergence (passes 5-6 CLEAN). Definitive 5-step post-finish() pass order (protect->finish->autolink->convert_mentions->sentinel-restore->assign_local_ids-last); \\@ escape mechanism is an F4 SPIKE (AC-007) — infeasibility routes a scope-cut decision to the orchestrator, do not ship silently without it. Independently BUILDABLE/TESTABLE, NOT independently acceptance-complete — accepted, time-boxed interim unvalidated-bracket-conversion window between this wave's merge and Wave 2's BC-X.7.010 preflight landing (documented in story's Interim Shippability Note). Not yet dispatched to an implementer as of this registration."
+        notes: "Wave 1 root story, no deps, blocks S-cycle5-mention-resolution-wiring. Approved at F3 human gate (DEC-347) after 6-pass adversarial story convergence (passes 5-6 CLEAN); reached per-story adversarial convergence (3 clean passes) pre-PR. \\@ escape mechanism SPIKE (AC-007) came back FEASIBLE (ADR-0023 §4/§4a). MERGED 2026-09-09 via PR #778 @ 708c8b32 (squash-merge; DEC-352) — the >120-in-diff-mutant escape hatch (281 in-diff mutants) was invoked, human-authorized admin-bypass, on evidence of 3-clean per-story convergence + a partial-but-zero-missed local mutation safety-net run (66 caught/0 missed/21 timeout-environmental/9 unviable of ~96/281 completed) + the advisory nightly full-scope run as ongoing net. Independently BUILDABLE/TESTABLE, NOT independently acceptance-complete standalone — the accepted, time-boxed interim unvalidated-bracket-conversion window (documented in story's Interim Shippability Note) is now OPEN, closes at Wave 2's BC-X.7.010 preflight landing. Wave 2 now UNBLOCKED."
   wave_2:
     stories:
       - id: S-cycle5-mention-resolution-wiring
         title: "Effectful @Name/accountId mention resolution (src/cli/issue/mentions.rs) + wiring into create/edit/comment/JSM-create"
-        status: blocked
+        status: ready
         pr: null
         merge_sha: null
         merged_at: null
