@@ -16,6 +16,11 @@ mod jsm_create;
 mod json_output;
 mod links;
 mod list;
+// S-cycle5-mention-resolution-wiring: `resolve_mentions`/`filter_by_name_match`
+// are called from create.rs/edit.rs/interactions.rs/jsm_create.rs (all
+// siblings within this module tree), so `mod` visibility (matching
+// `helpers`/`field_resolve`) is sufficient — no `pub`/`pub(crate)` needed.
+mod mentions;
 mod view;
 pub mod workflow;
 
@@ -89,7 +94,7 @@ pub async fn handle(
             // without exceeding the clippy::too_many_arguments threshold (mirrors
             // handle_comment_edit / handle_move / handle_assign pattern).
             sub @ CommentSubcommand::Add { .. } => {
-                interactions::handle_comment_add(sub, output_format, client).await
+                interactions::handle_comment_add(sub, output_format, client, no_input).await
             }
             CommentSubcommand::Delete { key, id, yes } => {
                 interactions::handle_comment_delete(key, id, yes, output_format, client, no_input)
