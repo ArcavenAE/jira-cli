@@ -1,1 +1,1 @@
-{"status":"pass","timestamp":"2026-09-10T01:27:40Z","command":"cd /Users/zious/Documents/GITHUB/jira-cli\necho \"=== e2e.yml test invocation + env block ===\" && grep -nE \"cargo test|include-ignored|--test |JR_RUN_E2E|JR_E2E_|env:|secrets\\.|vars\\.\" .github/workflows/e2e.yml | head -40"}
+{"status":"pass","timestamp":"2026-09-10T12:33:25Z","command":"cd /Users/zious/Documents/GITHUB/jira-cli/.worktrees/E2E-DYNAMIC && cargo test --test e2e_live 2>&1 | grep -E \"parent_roundtrip|edit_custom_field\""}

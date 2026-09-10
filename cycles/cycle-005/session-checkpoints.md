@@ -454,4 +454,32 @@ cycle-005 Phase F7 (delta convergence) reached a 5-dimensional PASS on the combi
 
 ---
 
+## Session Resume Checkpoint (2026-09-09/10, v3.99) — cycle-005 Phase F7 DELTA CONVERGENCE HUMAN GATE APPROVED / CYCLE CLOSED, NO RELEASE — SUPERSEDED at SESSION-WRAP-PAUSE-2026-09-10 (v4.00, pipeline ACTIVE->PAUSED)
+
+**Superseded at:** 2026-09-10, SESSION-WRAP-PAUSE-2026-09-10 (v4.00) — a SESSION-WRAP PAUSE checkpoint (retry of a stalled prior wrap attempt that left no trace), executed in a single atomic burst on `factory-artifacts` (TD-VSDD-053). `pipeline:` ACTIVE->PAUSED. This checkpoint is archived to make room for the pause checkpoint per the state-manager's single-latest-checkpoint-in-STATE.md convention.
+
+### Checkpoint Body (as recorded at v3.99)
+
+**Date:** 2026-09-09/10. **Pipeline: ACTIVE (idle).** **Position:** cycle-005 (`adf-mentions`, GitHub #674) Phase F7 (delta convergence) reached a 5-dimensional PASS and was **human-APPROVED at the gate (DEC-353) -- cycle CLOSED, with NO release cut**. Feature ships on `develop @ cef4a021`, unreleased; tag deferred to a future release that would ride both cycle-005 and the already-closed cycle-006. **No OPEN cycle remains anywhere in the factory** -- ALL SIX tracked cycles (001 through 006) are now CLOSED. **NEXT action** = a new feature request (open a new Feature Mode cycle), OR a release decision (cut a release riding cycle-005 + cycle-006). The live-Jira E2E round-trip acceptance (`H-NEW-MENTION-009`, AC-017) is a human-owned post-close follow-up, not a blocker on either path.
+
+**Convergence counter:** cycle-005 Phase F7 (delta convergence) is **COMPLETE -- HUMAN GATE APPROVED, cycle CLOSED, NO RELEASE**. Phases F1-F6 all stand unmodified, historical (F4 both waves merged, F5 3-consecutive-clean CONVERGED, F6 HARDENED with 20/21 VPs covered). No further convergence loop is in flight for cycle-005 -- the cycle is closed.
+
+**In-flight work:** None -- no OPEN cycle, no open PRs, no story mid-TDD.
+
+**Pending human decisions / unresolved:** (1) the live-Jira E2E round-trip (`H-NEW-MENTION-009`, AC-017) remains DEFERRED, now a human-owned post-close follow-up -- the human will run the 4 `JR_RUN_E2E`-gated scenarios against their own Jira instance with `JR_E2E_MENTION_ACCOUNT_ID` set, at a time of their choosing; (2) `CYCLE5-F5-P3-01-STDIN-NOINPUT` remains "pending intent verification" -- a human/product-owner call on the ambient-`no_input` threading asymmetry; (3) an OPEN offer to manually trigger `mutants-nightly.yml` (workflow_dispatch), unanswered; (4) the dynamic-shields kill-rate README badge remains DEFERRED (settled, do not re-open); (5) the `CLAUDE_AUTOCOMPACT_PCT_OVERRIDE` settings.json advisory; (6) **the release decision itself** -- whether and when to cut a release riding cycle-005 + cycle-006 -- is the primary open question now that both cycles are closed. No blockers on either opening a new feature cycle or cutting a release.
+
+**WIP branches:** None -- all cycle-005 delivery/fix branches merged and eligible for post-merge deletion.
+
+**Resume command:** No pipeline phase is in flight. To open a new feature: the appropriate Feature Mode entry point (e.g. `/vsdd-factory:phase-f1-delta-analysis`) for the next feature request. To release: `/vsdd-factory:release` (would ship cycle-005 + cycle-006 together). Or `/vsdd-factory:next-step` to let the orchestrator propose the next step.
+
+**Tracked non-blocking follow-ups:** `VP-COUNT-RECONCILIATION`, `ADR-COUNT-CANONICAL-GUARD-GAP`, `FACTORY-HOOK-FUEL-EXHAUSTED`, `VALIDATE-COUNT-PROPAGATION-FALSE-POSITIVE` (all pre-existing factory-tooling items, see Drift/Standing Items). cycle-006's S-7.02 close-out deferrals: 5 remain open (unchanged, historical). cycle-005's CLOSE consolidated deferral set (Burst 13): 8 items open (2 unreachable/accepted, 1 pending intent verification, 2 doc-hygiene carried from Step-4.5, 2 NEW doc-polish, 1 NEW process-gap, plus `CYCLE5-BURST12-LOG-GAP`) -- see **Drift / Standing Items**. The live-Jira E2E deferral (`H-NEW-MENTION-009`/AC-017) is tracked as a human-owned standing follow-up, not a skip.
+
+**Counts: total_bcs 754; VP count 76 tracked running total; holdout scenarios 118; total_stories 175** (all counts unchanged this burst -- a delta-convergence/cycle-close bookkeeping event, no spec/story authorship).
+
+### What actually happened next (recorded for continuity, not part of the original checkpoint)
+
+Between v3.99 and this pause, the session continued and delivered a small E2E-CI test-infra follow-up (making the live `create --parent` and `edit --field` E2E tests self-configuring/dynamic, superseding the earlier static-env-var plan), plus a self-mention CI enablement PR (#796 @ `6e125b74`) that validated the mentions feature LIVE IN CI (E2E run `34476593053`, all 4 round-trip scenarios OK). The E2E-CI dynamic-tests work was COMMITTED but left UNVERIFIED on pushed branch `test/e2e-dynamic-parent-editfield` @ `6bfc2a0a` when this SESSION-WRAP PAUSE was executed (v4.00) -- a retry of a stalled prior wrap attempt that had left no trace. See the live checkpoint in `STATE.md` (v4.00) for the full account.
+
+---
+
 <!-- Repeat for each archived checkpoint. Maintain chronological order. -->
