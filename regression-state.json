@@ -1,1 +1,1 @@
-{"status":"pass","timestamp":"2026-09-10T18:51:36Z","command":"cd /Users/zious/Documents/GITHUB/jira-cli/.worktrees/E2E-DYNAMIC && cargo test > /private/tmp/claude-501/-Users-zious-Documents-GITHUB-jira-cli/d9821ea0-0a02-4546-9be9-6239d5fe7646/scratchpad/test_full.log 2>&1; echo \"EXIT:$?\""}
+{"status":"pass","timestamp":"2026-09-10T19:52:52Z","command":"cd /Users/zious/Documents/GITHUB/jira-cli/.worktrees/mutants-nightly-rebalance && cargo test --test ci_gate_completeness test_mutants_nightly_workflow_does_not_declare_a_job_named_ci_gate -- --exact 2>&1 | tail -20"}
