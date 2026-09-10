@@ -482,6 +482,27 @@ Between v3.99 and this pause, the session continued and delivered a small E2E-CI
 
 ---
 
+## Session Resume Checkpoint (2026-09-10) — STATE.md v4.04, SESSION-WRAP PAUSE (pre-formalization, condensed)
+
+**Superseded at 2026-09-10** by the STATE.md v4.05 `SESSION-WRAP-PAUSE-2026-09-10` checkpoint-formalization burst (state-manager, single atomic burst, TD-VSDD-053). This is the condensed `## Session Resume Checkpoint` text that was live in STATE.md v4.04 (written by the `/compact-state` compaction burst, itself a condensation of the fuller v4.03 checkpoint archived in the Appendix below) at the moment the v4.05 formalization burst read it.
+
+### State
+
+| Field | Value |
+|-------|-------|
+| **Date** | 2026-09-10 |
+| **Position** | Pipeline PAUSED (SESSION-WRAP PAUSE, unchanged since 2026-09-10, a retry of a stalled prior wrap attempt). All six tracked cycles (001-006) CLOSED, no OPEN cycle. |
+| **Convergence counter** | N/A -- no convergence loop in flight |
+| **Next step** | A new feature request, or a release decision (would ride cycle-005 + cycle-006) |
+
+### Resume Prompt
+
+```
+**Date:** 2026-09-10. **Pipeline: PAUSED** (SESSION-WRAP PAUSE, unchanged since 2026-09-10, a retry of a stalled prior wrap attempt). **Position:** all six tracked cycles CLOSED, no OPEN cycle. This session delivered the `adf-mentions` feature (cycle-005, GitHub #674) through Phase F7 close (DEC-353, NO release), then completed four maintenance follow-ups in sequence: CLAUDE.md compaction (PR #797 @ `a1f37995`), E2E-CI dynamic-tests WIP resolution (PR #798 @ `3a874d90`), mutants-nightly rebalance (PR #799 @ `78aeb86c`), and this STATE.md `/compact-state` compaction (447->196 lines). **NEXT action** = a new feature request, or a release decision (would ride cycle-005 + cycle-006). **No WIP branches outstanding.** **Resume command:** `/vsdd-factory:rehydrate-wave` then `/vsdd-factory:next-step` (no OPEN wave/cycle -- pipeline idle/PAUSED). **Counts:** total_bcs 754; VP count 76; holdout scenarios 118; total_stories 175 (all unchanged this burst). Full original (pre-condensation) checkpoint text: `cycles/cycle-005/session-checkpoints.md` (Appendix).
+```
+
+---
+
 <!-- Repeat for each archived checkpoint. Maintain chronological order. -->
 
 ## Appendix — full-text live checkpoint as it stood in STATE.md v4.03 (extracted, not superseded)
