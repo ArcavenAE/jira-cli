@@ -425,4 +425,33 @@ cycle-005 Phase F5 (scoped adversarial refinement) ran against the combined Wave
 
 ---
 
+## Session Resume Checkpoint (2026-09-09/10, v3.98) — cycle-005 Phase F6 (targeted hardening) COMPLETE/HARDENED — SUPERSEDED at Burst 13 (v3.99, F7 DELTA CONVERGENCE HUMAN GATE APPROVED / CYCLE CLOSED, NO RELEASE)
+
+**Superseded at:** 2026-09-09/10, Burst 13 (v3.99) — cycle-005 Phase F7 (delta convergence) reached a 5-dimensional PASS and was human-APPROVED at the gate (DEC-353) — cycle-005 (`adf-mentions`, GitHub #674) is CLOSED, with NO release cut. This checkpoint is archived to make room for the F7-close checkpoint per the state-manager's single-latest-checkpoint-in-STATE.md convention.
+
+### Checkpoint Body (as recorded at v3.98)
+
+| Field | Value |
+|-------|-------|
+| **Date** | 2026-09-09/10 |
+| **Pipeline** | ACTIVE |
+| **Position** | cycle-005 (`adf-mentions`) Phase **F4** (delta implementation) is **COMPLETE** (both waves merged); Phase **F5** (scoped adversarial refinement) is **CONVERGED**; Phase **F6 (targeted hardening) is COMPLETE/HARDENED** — a VP-674-001..021 coverage mapping was built against the realizing tests in `src/adf.rs::tests`, `tests/mention_resolution.rs`, and `tests/e2e_live.rs`: 20 of 21 VPs are fully COVERED. VP-674-005 (mark-composition empirical check) is DOCUMENTED DEFERRED — its decidable half is empirically verified via AC-015's two anchor tests, and its residual id-only-bracket-no-`attrs.text` sub-case remains UNREACHABLE from any wired write path (the pre-existing `CYCLE5-F5-L2-IDONLY-BRACKET-VP674005` deferral, not a new gap). Mutation posture is GREEN on both merge-relevant PRs (#794, #795) with zero escalation invoked on either; all 10 documented surviving-mutant classes map onto covered VPs. Kani/cargo-fuzz are JUSTIFIED-SKIP (0-GAP) per the cycle-002/003/004 precedent, with INV-1 and `MAX_ADF_DEPTH` confirmed respected. Full-tree regression (Test suite macOS+Ubuntu+Windows+Coverage), lint, `cargo deny check`, gitleaks, and dependency-review are all GREEN on `develop @ cef4a021` (CI run `34416725940`). The complete evidence package is at `.factory/phase-f6-hardening/cycle-005/hardening-report.md` — **VERDICT: HARDENED, no GAP found beyond the documented VP-674-005 deferral.** |
+| **Convergence counter** | cycle-005 Phase F6 (targeted hardening) is **COMPLETE/HARDENED** — VP coverage 20/21 fully COVERED, VP-674-005 documented deferred/unreachable residual; mutation, regression, lint, and security gates all GREEN. Phase F5's convergence (3-consecutive-clean, Burst 11) and Wave 1/Wave 2's per-story convergences (Bursts 4 and 9) all stand unmodified, historical. Phase F7 (delta convergence, human gate) had not yet begun at this checkpoint. |
+| **In-flight work** | None — Phase F6 is complete/hardened, no open PRs, no story mid-TDD. Phase F7 had not yet been dispatched. |
+| **Pending human decisions/blockers** | The live-Jira E2E round-trip (`H-NEW-MENTION-009`, AC-017) DEFERRED to post-merge by human decision; `CYCLE5-F5-P3-01-STDIN-NOINPUT` pending intent verification; an OPEN offer to manually trigger `mutants-nightly.yml`; the dynamic-shields badge (settled DEFERRED); the `CLAUDE_AUTOCOMPACT_PCT_OVERRIDE` advisory. Phase F7 (delta convergence) itself was the next human gate — the release decision was pending that gate. No blockers on proceeding to Phase F7. |
+| **WIP branches** | None — all cycle-005 delivery/fix branches merged and eligible for post-merge deletion. |
+| **Next step (as recorded at this checkpoint)** | `/vsdd-factory:phase-f7-delta-convergence` (cycle-005 F7), or `/vsdd-factory:next-step`. |
+
+### Resume Prompt (as recorded at this checkpoint)
+
+```
+/vsdd-factory:phase-f7-delta-convergence
+```
+
+### What actually happened next (recorded for continuity, not part of the original checkpoint)
+
+cycle-005 Phase F7 (delta convergence) reached a 5-dimensional PASS on the combined Wave 1+Wave 2 `adf-mentions` delta and was human-APPROVED at the gate, **DEC-353**, 2026-09-09 — the human explicitly chose to CLOSE the cycle with **NO release cut**, so the feature ships on `develop @ cef4a021` unreleased and the tag is deferred to a future release that will ride both cycle-005 and the already-closed cycle-006. **cycle-005 (`adf-mentions`, GitHub #674) is CLOSED.** This closes the last OPEN cycle in the factory — ALL SIX tracked cycles (001 through 006) are now CLOSED. The S-7.02 cycle-closing checklist was executed with the human choosing RECORD DEFERRALS ONLY (no follow-up stories opened); the previously scattered per-burst deferral tables were consolidated under one "cycle-005 CLOSE" heading in `STATE.md`'s Drift / Standing Items, with two new doc-polish items and one new process-gap item added. See the live checkpoint in `STATE.md` (v3.99) for the full account, and `cycles/cycle-005/burst-log.md` Burst 13 for this state-manager burst's own actions.
+
+---
+
 <!-- Repeat for each archived checkpoint. Maintain chronological order. -->
