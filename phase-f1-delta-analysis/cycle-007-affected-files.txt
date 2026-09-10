@@ -1,0 +1,42 @@
+# cycle-007 (auth-correctness-dx, issues #784/#785/#786/#787/#788/#790/#783) — affected files
+# Format: <path> | <NEW|MODIFIED|DEPENDENT> | <risk> | <notes>
+# Validated against develop @ 14e695aef0a553e01c63b45a95a4bef8b1b8f6bc
+
+src/api/auth.rs | MODIFIED | HIGH | load_api_token (~801/~812): #784 remediation-string fix (positional -> --profile); #786 credential-absence UserError(64) -> NotAuthenticated(2) for both-absent + namespaced-partial branches; #785 new env-var (JR_EMAIL/JR_API_TOKEN) resolution branch at top of load_api_token, precedence TBD at F2 gate. AMENDS BC-1.4.032/BC-1.4.033 message text + error type; test helpers expected_bc_1_4_032_absent_message/expected_bc_1_4_033_partial_message (~3687/~3696) must update in lockstep.
+src/cli/auth/keychain.rs | MODIFIED | MEDIUM | #785: ENV_EMAIL/ENV_API_TOKEN currently login-time-only (resolve_credential); either relocated to auth.rs or a new helper added here that load_api_token calls. New design seam, not a mechanical move.
+src/cli/auth/status.rs | MODIFIED | MEDIUM | #787: status(profile_arg) gains an &OutputFormat param, builds serde_json::Value, routes through output::render_json (per #526 invariant); JSON env field behavior AMENDS BC-1.6.047 (resolves EC-1.6.047-2 contingency). #786's status.rs unknown-profile site (~113, JrError::UserError) is OPEN — conflicts with BC-1.1.004 (pins exit 64) and the error-taxonomy Config/Profile section's consistent "profile not found -> 64" pattern; recommend NO CHANGE to this site pending F1-gate decision.
+src/cli/auth/list.rs | MODIFIED | MEDIUM | #788: render_list_table/render_list_json call profile_has_stored_credentials (src/api/auth.rs:~873) per profile instead of p.url.is_some(); widens STATUS vocabulary (configured/no-credentials/unset or adds a credentials:bool field). Snapshot regen required (BC-1.6.046 fixture "All STATUS cells configured" may no longer hold once probing is live).
+src/main.rs | MODIFIED | LOW-MEDIUM | ~279: thread OutputFormat into the cli::auth::status(...) call site for #787.
+src/cli/mod.rs | MODIFIED | LOW | #790: reword --oauth doc string (~221-229) to reflect embedded-app-by-default (ADR-0006); no functional/clap-shape change.
+src/cli/auth/login.rs | MODIFIED | LOW | #790 secondary (a): doc-comment-only unless an EC is added to BC-1.2.049 documenting guard-rejection-suppresses-notice as a second suppression reason distinct from --output json gating (optional, non-blocking).
+src/error.rs | DEPENDENT | LOW | exit_code() mapping itself is already correct (NotAuthenticated/InsufficientScope->2, ConfigError->78, UserError->64) — no change; auth.rs call sites change which variant they construct, not this mapping.
+README.md | MODIFIED | LOW | #783: add upgrade/migration note (pre-0.7.0-dev.4 api-token profiles must re-login) + OAuth-vs-api-token lazy-migration asymmetry sentence, scoped addition only (primary claim already fixed). #790: optional --oauth precedence-note mirror if help text changes.
+CHANGELOG.md | MODIFIED | LOW | #786's exit-code reclassification (64->2 on credential absence) is a breaking change for scripts checking exit 64 specifically — needs an entry mirroring the BC-1.2.051/DEC-321 precedent style.
+
+# Tests (regression-risk zone / to extend)
+tests/auth_profiles.rs | MODIFIED | HIGH | Covers BC-1.1.003/004/005/006/007/008 (switch/status/logout/remove/precedence) — status.rs and list.rs changes touch this file's fixtures directly.
+src/api/auth.rs (inline #[cfg(test)] mod tests) | MODIFIED | HIGH | ~110 inline tests incl. test_bc_1_4_032_*/test_bc_1_4_033_* (~3751-3920) pinning the exact broken message + exit-64 assertions; must be updated together with the fix, not after.
+tests/auth_output_json.rs | MODIFIED | MEDIUM | Existing `auth list --output json` JSON-shape precedent; #787's new `auth status --output json` tests should follow this file's pattern (new file or extension TBD at F3).
+tests/auth_remove_logout_semantics.rs | DEPENDENT | MEDIUM | Regression baseline — remove/logout are unaffected by this bundle but share auth.rs's clear_profile_creds/clear_all_credentials neighborhood.
+tests/auth_chosen_flow_reconcile.rs | DEPENDENT | MEDIUM | Regression baseline — refresh's "relogin-then-replace" flow shares auth.rs.
+src/cli/auth/tests/ (snapshot tests, mod.rs + snapshots/) | MODIFIED | MEDIUM | auth list table snapshot (BC-1.6.046) needs regen if #788 changes the STATUS column vocabulary.
+tests/auth_login_config_errors.rs | DEPENDENT | LOW | Regression baseline.
+tests/auth_oauth_default_creation.rs | DEPENDENT | LOW | Regression baseline.
+tests/auth_header_release_gate.rs | DEPENDENT | LOW | Regression baseline (release-gate pin, unrelated seam but must stay green).
+tests/oauth_refresh_integration.rs | DEPENDENT | LOW | Regression baseline, not touched.
+tests/oauth_flow_holdouts.rs | DEPENDENT | LOW | Regression baseline, not touched.
+tests/oauth_embedded_login.rs | DEPENDENT | LOW | Regression baseline, not touched (gated/ignored anyway).
+
+# NOT AFFECTED (regression baseline, explicitly out of scope)
+src/api/auth_embedded.rs | NOT AFFECTED | — | Embedded OAuth app XOR/obfuscation — untouched.
+src/api/refresh_coordinator.rs | NOT AFFECTED | — | Single-flight refresh coordination — untouched.
+src/api/auth_windows_store.rs | NOT AFFECTED | — | DPAPI fallback (cycle-004) — untouched; only oauth path, this bundle is api-token-credential-resolution + status/list display.
+src/api/client.rs | NOT AFFECTED | — | HTTP client / auth-header composition — untouched.
+src/config.rs | NOT AFFECTED | — | Profile config load/validate — untouched (validate_profile_name unchanged).
+src/cache.rs | NOT AFFECTED | — | Untouched.
+src/cli/auth/refresh.rs | NOT AFFECTED | — | Untouched.
+src/cli/auth/switch.rs | NOT AFFECTED | — | Untouched.
+src/cli/auth/remove.rs | NOT AFFECTED | — | Untouched.
+src/cli/auth/logout.rs | NOT AFFECTED | — | Untouched.
+src/cli/init.rs | NOT AFFECTED | — | Untouched.
+All of src/cli/{issue,assets,board,sprint,worklog,team,user,project,component,queue,requesttype}.rs and src/cli/issue/* | NOT AFFECTED | — | No auth-surface coupling.

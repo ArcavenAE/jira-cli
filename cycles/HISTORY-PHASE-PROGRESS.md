@@ -11,3 +11,14 @@
 | **F6-HARDENED-2026-09-09 (cycle-005, Burst 12)** | **COMPLETE / HARDENED** | 2026-09-09 | Targeted hardening -- automated quality gate, no separate human gate (feature-mode convention); VP coverage mapping + mutation/regression/security evidence review, no escalation needed | VP-674-001..021 coverage mapping built against realizing tests in `src/adf.rs::tests` / `tests/mention_resolution.rs` / `tests/e2e_live.rs`: 20/21 fully COVERED; VP-674-005 DOCUMENTED DEFERRED (decidable half verified via AC-015; residual id-only-bracket sub-case UNREACHABLE from any wired write path, pre-existing tracked deferral). Mutation posture GREEN (PR #794 + PR #795, zero escalation, all 10 documented surviving-mutant classes mapped to covered VPs); Kani/cargo-fuzz JUSTIFIED-SKIP (0-GAP, INV-1/MAX_ADF_DEPTH confirmed respected). Full regression (macOS+Ubuntu+Windows+Coverage)/lint/cargo-deny/gitleaks/dependency-review GREEN on `develop @ cef4a021` (CI run `34416725940`). Report: `phase-f6-hardening/cycle-005/hardening-report.md`. Next: Phase F7 delta convergence (human gate). | counts unchanged (754/76/118/175); no DEC minted -- F6 hardening is an automated quality gate |
 
 See `cycles/cycle-005/burst-log.md` Bursts 11-12 for full narrative detail (these rows summarize the same events).
+
+---
+
+> Extracted from `.factory/STATE.md`'s `## Phase Progress` table during the
+> 2026-09-10 cycle-007-OPEN burst (v4.08 -> v4.09), to keep the live table at
+> 7 rows after adding the new `F1-DELTA-ANALYSIS-CYCLE-007` row. This was the
+> oldest row at that point; archived here verbatim, unedited.
+
+| Phase | Status | Completed | Gate | Notes | Finding Progression |
+|-------|--------|-----------|------|-------|---------------------|
+| **F7-CONVERGED-CYCLE5-CLOSED-2026-09-09 (cycle-005, Burst 13)** | **COMPLETE / CLOSED, NO RELEASE** | 2026-09-09 | Delta convergence, human gate -- 5-dimensional PASS; human APPROVED CLOSE with NO release cut (DEC-353) | 5-dim PASS on the combined Wave 1+Wave 2 `adf-mentions` delta; merged to `develop @ cef4a021` (PR #778/#794/#795); F6 HARDENED 20/21 VPs; human approved closing cycle-005 with NO release -- feature ships on `develop`, tag deferred. **cycle-005 CLOSED; ALL SIX tracked cycles (001-006) now CLOSED.** Full text: `cycles/HISTORY-PHASE-PROGRESS.md`. | counts unchanged (754/76/118/175); DEC-353 minted |
