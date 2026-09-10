@@ -1,0 +1,13 @@
+# Phase Progress — Archived Rows (extracted from STATE.md)
+
+> Extracted from `.factory/STATE.md`'s `## Phase Progress` table during the
+> 2026-09-10 `/compact-state` compaction (v4.03 -> v4.04). STATE.md keeps
+> only the 5 most recent rows; the 2 rows below were the oldest and are
+> archived here verbatim, unedited.
+
+| Phase | Status | Completed | Gate | Notes | Finding Progression |
+|-------|--------|-----------|------|-------|---------------------|
+| **F5-CONVERGED-2026-09-09 (cycle-005, Burst 11)** | **CONVERGED** | 2026-09-09 | Scoped adversarial refinement, 3-consecutive-clean-tier convergence, no separate human gate (feature-mode convention); F-M1/F-L1 delivered via fix-PR, no escalation needed | 4 passes on the combined Wave 1+Wave 2 `adf-mentions` delta: Pass 1 SUBSTANTIVE (F-M1 [MED] `@Name` boundary false-positive on adjacent `]`; F-L1 [LOW] stale dead_code allows) -> both FIXED via `FIX-F5-001`, squash-merged as PR #795 @ `cef4a021` (`develop` `0eaf4268`->`befa72e6`(unrelated PR #780)->`cef4a021`; CI 24/24 green incl. clean in-line mutation gate); Pass 2 CLEAN, Pass 3 NITPICK_ONLY, Pass 4 NITPICK_ONLY. Zero CRITICAL/HIGH/MEDIUM remain. Two new LOW deferrals recorded. Next: Phase F6 targeted hardening. | counts unchanged (754/76/118/175); no DEC minted -- F5 convergence is an automated quality gate |
+| **F6-HARDENED-2026-09-09 (cycle-005, Burst 12)** | **COMPLETE / HARDENED** | 2026-09-09 | Targeted hardening -- automated quality gate, no separate human gate (feature-mode convention); VP coverage mapping + mutation/regression/security evidence review, no escalation needed | VP-674-001..021 coverage mapping built against realizing tests in `src/adf.rs::tests` / `tests/mention_resolution.rs` / `tests/e2e_live.rs`: 20/21 fully COVERED; VP-674-005 DOCUMENTED DEFERRED (decidable half verified via AC-015; residual id-only-bracket sub-case UNREACHABLE from any wired write path, pre-existing tracked deferral). Mutation posture GREEN (PR #794 + PR #795, zero escalation, all 10 documented surviving-mutant classes mapped to covered VPs); Kani/cargo-fuzz JUSTIFIED-SKIP (0-GAP, INV-1/MAX_ADF_DEPTH confirmed respected). Full regression (macOS+Ubuntu+Windows+Coverage)/lint/cargo-deny/gitleaks/dependency-review GREEN on `develop @ cef4a021` (CI run `34416725940`). Report: `phase-f6-hardening/cycle-005/hardening-report.md`. Next: Phase F7 delta convergence (human gate). | counts unchanged (754/76/118/175); no DEC minted -- F6 hardening is an automated quality gate |
+
+See `cycles/cycle-005/burst-log.md` Bursts 11-12 for full narrative detail (these rows summarize the same events).

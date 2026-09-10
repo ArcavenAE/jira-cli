@@ -483,3 +483,33 @@ Between v3.99 and this pause, the session continued and delivered a small E2E-CI
 ---
 
 <!-- Repeat for each archived checkpoint. Maintain chronological order. -->
+
+## Appendix — full-text live checkpoint as it stood in STATE.md v4.03 (extracted, not superseded)
+
+> Extracted during the 2026-09-10 `/compact-state` compaction (v4.03 -> v4.04)
+> to slim STATE.md's `## Session Resume Checkpoint` section. This was still
+> the LIVE/current checkpoint in STATE.md (not archived-as-superseded) — the
+> same SESSION-WRAP PAUSE checkpoint amended in place across the
+> CLAUDE.md-compaction / E2E-dynamic-tests / mutants-nightly-rebalance
+> bookkeeping bursts. STATE.md v4.04 carries a condensed version of this
+> same live checkpoint; full original prose preserved here.
+
+**Date:** 2026-09-10. **Pipeline: PAUSED** (SESSION-WRAP PAUSE checkpoint; a retry of a stalled prior wrap attempt -- nothing from that attempt had landed, so this Write/commit is the first and only landing of the pause). **Position:** all six tracked cycles (001-006) are CLOSED, no OPEN cycle. This session delivered the `adf-mentions` feature (cycle-005, GitHub #674) end-to-end through Phase F7 close (DEC-353, NO release) and separately started a small E2E-CI test-infra follow-up (making the live `create --parent` and `edit --field` E2E tests dynamic/self-configuring) that is **COMMITTED BUT UNVERIFIED** on a pushed WIP branch. **NEXT action** = resume by verifying and PR'ing that WIP branch (below); a new feature request; or a release decision (would ride cycle-005 + cycle-006). NOTE (subsequent bookkeeping bursts, unchanged text): the WIP branch was RESOLVED (merged via PR #798 @ `3a874d90`); a follow-on maintenance investigation of the mutants-nightly workflow was also completed (PR #799 @ `78aeb86c`) -- see Phase Progress/Drift-Standing-Items for both. This checkpoint's own prose is left as originally written per the compaction convention; the pipeline remains PAUSED.
+
+**Convergence counter:** N/A -- no convergence loop is in flight; this is a session-lifecycle pause, not a phase/quality-gate event.
+
+**IN-FLIGHT:** none remaining from the original pause -- the `test/e2e-dynamic-parent-editfield` WIP branch referenced below was RESOLVED (merged via PR #798, see Drift/Standing Items). No new IN-FLIGHT branch was opened by this burst's mutants-nightly investigation (fixed directly via PR #799, already merged).
+
+**PENDING/NOTES:** this PR (and future PRs) will need a HUMAN merge click -- the agent GitHub account is the PR author, so GitHub returns 422 on self-approval and the admin-bypass merge path is env-blocked (the recurring `PR-REVIEW-SELF-APPROVE-HOOK-LOOP` process-gap, tracked in Drift/Standing Items and Constraints Carried Forward); PRs #794/#795/#796/#798/#799 all merged this way this session. The earlier "full static-variable E2E" plan (`JR_E2E_PARENT_KEY`/`JR_E2E_CHILD_TYPE`/`JR_E2E_EDIT_FIELD` as required env vars) is **SUPERSEDED** by the dynamic/self-configuring approach shipped in PR #798 -- do **not** set those as required; they remain optional overrides only.
+
+**WIP BRANCHES:** none. `test/e2e-dynamic-parent-editfield` was merged and deleted (PR #798). All cycle-005/cycle-006 delivery/fix branches and the mutants-nightly-rebalance branch are merged and eligible for post-merge deletion.
+
+**Resume command:** `/vsdd-factory:rehydrate-wave` then `/vsdd-factory:next-step` (note: there is no OPEN wave/cycle -- the pipeline is idle/PAUSED pending a new feature request or a release decision).
+
+**Session achievements (this session, for continuity):** cycle-005 Wave 2 delivered + merged (PR #794 @ `0eaf4268`); F5 fix delivered + merged (`FIX-F5-001`/PR #795 @ `cef4a021`); self-mention CI enablement delivered + merged (PR #796 @ `6e125b74`); cycle-005 **CLOSED** at Phase F7 (DEC-353, NO release, Burst 13). **Mentions VALIDATED LIVE IN CI** -- E2E run `34476593053` @ `6e125b74` succeeded, all 4 mention round-trip scenarios OK. Post-pause maintenance: CLAUDE.md compaction merged (PR #797 @ `a1f37995`); E2E-CI dynamic-tests WIP resolved + merged (PR #798 @ `3a874d90`); mutants-nightly rebalance investigated + merged (PR #799 @ `78aeb86c`).
+
+**Counts:** total_bcs 754; VP count 76 tracked running total; holdout scenarios 118; total_stories 175 (all counts unchanged this burst -- a maintenance/bookkeeping event, no spec/story authorship).
+
+**Superseded checkpoints:** the prior cycle-005 Burst-13 checkpoint (v3.99, 2026-09-09/10 -- F7 DELTA CONVERGENCE HUMAN GATE APPROVED / CYCLE CLOSED, NO RELEASE) is superseded in place by this checkpoint and archived to `cycles/cycle-005/session-checkpoints.md` ahead of this Write, with a "Superseded at" note explaining this is the SESSION-WRAP PAUSE that followed cycle-005's close. Earlier archives (cycle-006 v3.79 Burst-1 through v3.91 Burst-13; cycle-005 v3.75-v3.78, v3.92 through v3.98; cycle-004 v3.53-v3.74, cycle-003 v3.31-v3.52, cycle-002 v3.23-v3.29 and earlier, cycle-001 v3.05) remain at their respective `cycles/<cycle>/session-checkpoints.md` files, unchanged this burst.
+
+<!-- Repeat for each archived checkpoint. Maintain chronological order. -->

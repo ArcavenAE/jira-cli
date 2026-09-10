@@ -190,3 +190,15 @@ traces_to: STATE.md
 ---
 
 <!-- Repeat for each burst. Maintain chronological order. -->
+
+## Appendix — extracted from STATE.md during 2026-09-10 `/compact-state` compaction (v4.03 -> v4.04)
+
+The block below is the Decisions-Log "cycle-006 note" narrative paragraph
+that was removed from STATE.md's body to slim it under the 200-line soft
+target. Preserved here verbatim, unedited.
+
+### Decisions Log — "cycle-006 note" narrative paragraph (as it stood in STATE.md v4.03)
+
+**cycle-006 note (Bursts 1-13, CLOSED, DEC-namespace clean at close, max ID DEC-351 as of cycle-close; superseded by DEC-353 as the factory's current max ID):** **DEC-348** (F1 APPROVED, Burst 1). **DEC-349** (F2 gate APPROVED as-is, Burst 3). **DEC-350** (F3 gate APPROVED as-is, Burst 8) -- phase advanced F3->F4. F4 (delta implementation) reached Step-4.5 3-consecutive-clean (7 trios / 21 fresh passes / 6 fix rounds, Bursts 9-11), then was delivered and squash-merged into `develop` @ `a9168212` via PR #791 (Burst 12). **DEC-351 (Burst 13):** F5/F6 completed with no separate human gate; F7 reached a 5-dimensional PASS and the human **APPROVED cycle-006's CLOSE at the F7 gate, with NO release cut**. The S-7.02 cycle-closing checklist was executed: **RECORD DEFERRALS ONLY** -- 6 items recorded as justified deferrals (see Drift / Standing Items; 1 of the 6 subsequently RESOLVED at cycle-005 Burst 6); `F-PE-MED-001` and `R-F2` marked **RESOLVED/CLOSED**. **cycle-006 (`mutants-ci-sharding`) is CLOSED.** Full burst-by-burst detail: `cycles/cycle-006/burst-log.md` Bursts 1-13.
+
+<!-- Repeat for each burst. Maintain chronological order. -->
