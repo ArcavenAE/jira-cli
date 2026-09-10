@@ -1,59 +1,47 @@
----
-document_type: pr-review-findings
-story_id: FIX-F5-001
-pr_number: 747
-status: "merged"
-producer: pr-manager
-timestamp: "2026-08-31T14:46:55Z"
----
+# Review Findings — FIX-F5-001
 
-# PR Review Findings: FIX-F5-001 (PR #747)
+**PR:** #795 (Zious11/jira-cli) — `fix/cycle5-mention-boundary-f5` → `develop`
+**Merged:** YES — squash-merge commit `cef4a021d0ccb6de9384c9f30ae24b4ae9f63afd`
+**Ancestry assertion:** PASSED (`git merge-base --is-ancestor cef4a021... origin/develop` exit 0)
+**Scope:** remediation of cycle-005 F5 Pass-1 adversarial findings F-M1 (MEDIUM) and F-L1 (LOW) on the merged adf-mentions feature (PR #794)
 
-## Convergence Summary
+## Convergence Table
 
-| Cycle | Findings | Blocking | Suggestion | Nit | Fixed | Remaining |
-|-------|----------|----------|-----------|-----|-------|-----------|
-| 1 | 1 | 0 | 0 | 1 | 0 | 0 |
+| Cycle | Reviewer | Findings | Blocking | Fixed | Remaining | Verdict |
+|-------|----------|----------|----------|-------|-----------|---------|
+| 1 | pr-reviewer | 1 non-blocking cosmetic note (PR description framing) | 0 | 0 (no fix required) | 0 | APPROVE |
 
-**Verdict:** CONVERGED after 1 cycle (APPROVE, independently verified by pr-reviewer sub-agent).
+**Result:** converged in 1 cycle. No REQUEST_CHANGES loop was needed.
 
-## Finding Detail
+## Security Review
 
-| ID | Cycle | Severity | Category | Finding | Resolution |
-|----|-------|----------|----------|---------|------------|
-| PRF-001 | 1 | nit | test-quality | Test fixture assigns page-1 type i=1 the id "10001", colliding with "Bug"'s id "10001" on page 2 | Accepted as-is — harmless, resolution keys on the unique NAME not id; cosmetic only, no fix required |
+| Pass | Findings | Critical | High | Medium | Low | Status |
+|------|----------|----------|------|--------|-----|--------|
+| 1 | 0 | 0 | 0 | 0 | 0 | CLEAN |
 
-## Triage Routing
+## covered_sha (BC-5.42.001 PC1)
 
-| Finding ID | Routed To | Status |
-|------------|-----------|--------|
-| PRF-001 | pr-manager (accepted, no action) | resolved (non-blocking, left as-is) |
+```
+covered_sha: 83848380a87dfbf835aa1f6f9671243675508243
+```
+Independently confirmed via `git rev-parse HEAD` in the worktree and matched by the pr-reviewer's own re-derivation. `check-stale-verdict.sh 795 83848380a87dfbf835aa1f6f9671243675508243` exited 0 (SHA matched live PR HEAD at merge time — not stale).
 
-## Review Cycle History
+## CI Gate
 
-### Cycle 1
+All 24 checks SUCCESS, including the required `CI Gate` aggregator (13s). `mergeStateStatus=CLEAN`, `mergeable=MERGEABLE` prior to merge.
 
-- **Reviewer:** `pr-reviewer-f5-001-cycle1` (vsdd-factory:pr-review-triage sub-agent) — independent, empirical review on branch worktree @ 54a46e85 (not rubber-stamped)
-- **Verdict:** APPROVE
-- **Findings:** 1 total (1 nit, PRF-001), 0 blocking
-- **Verification performed by reviewer:**
-  - Spec-fidelity: confirmed `done` computation and `MAX_CREATEMETA_PAGES=500` top-of-loop bound are byte-identical in shape to the already-reviewed sibling `get_createmeta_fields` (S-580-1/C-LOW-2); both branches carry the `page_len == 0` CWE-835 infinite-loop conjunct; `#[serde(default)]` on `total` handled correctly.
-  - Test-quality: independently reverted the `done`-logic to the naive pre-fix check — test FAILED; restored — test PASSED. Genuine RED->GREEN regression guard, not asserted, verified.
-  - Code-quality: `cargo fmt --check` clean, `cargo clippy --tests -D warnings` clean, `issue_create_field` suite 63/63 pass.
-  - Correctness: `total`-present path byte-identical to prior behavior (zero regression for existing callers); only the previously-truncating total-absent path changed; misbehaving-server path bounded by the fail-loud 500-page backstop.
-- **Action taken:** PRF-001 (nit) accepted as-is, no fix required. Triage summary already posted as a PR comment from the earlier fallback pass: https://github.com/Zious11/jira-cli/pull/747#issuecomment-5479375340 (fallback direct review, superseded in substance by this independently-verified cycle-1 result, which reaches the same APPROVE verdict with stronger evidence).
-- **Logistics note (relevant to step 8):** the reviewer flagged that `gh pr review --approve` is blocked by GitHub with "Can not approve your own pull request" (the `gh` CLI account authored PR #747) — a formal GitHub-native review approval cannot come from the same account. If `develop` branch protection requires a review approval (not just passing checks), merge must proceed via admin bypass (per CLAUDE.md: "Admins can bypass" protected-branch review requirements) rather than a same-account `gh pr review --approve`.
+## Dependency Check
 
-## Full pr-reviewer Artifact
+PR #794 (`0eaf4268`, adf-mentions feature / S-cycle5-mention-resolution-wiring) confirmed merged into `origin/develop` prior to this PR's creation — verified via `git merge-base --is-ancestor 0eaf4268 origin/develop`.
 
-See `.factory/code-delivery/FIX-F5-001/pr-review.md` (written by the pr-reviewer sub-agent) for the complete review detail.
+## Merge Execution
 
-## Post-Merge Record
+- Governed wrapper: `enforce-merge-strategy.sh 795 --squash` (non-release branch, squash strategy)
+- Merge commit: `cef4a021d0ccb6de9384c9f30ae24b4ae9f63afd`
+- Post-merge ancestry assertion: PASSED
+- Fork/cross-repo guard: not cross-repository (same-repo branch)
+- Remote branch deletion: confirmed via `git ls-remote --exit-code` (exit 2 — branch already deleted by GitHub's `delete_branch_on_merge`)
 
-- **CI:** all 15 checks passed on PR #747, including the required `CI Gate` aggregate. `Mutation testing` completed SUCCESS after 56m33s (legitimately long scoped `cargo-mutants --in-diff` run, not a stall).
-- **Dependency check:** none — base commit `ae8514b8` confirmed as ancestor of `origin/develop` before merge.
-- **Merge:** squash-merged via `gh pr merge 747 --squash --delete-branch` (self-approval logistics note above meant no formal `gh pr review --approve` was possible from the authoring account; merge proceeded on the strength of the independently-verified pr-reviewer APPROVE + security-reviewer APPROVE + all-green CI, consistent with CLAUDE.md's documented admin-bypass allowance on protected branches).
-- **Merge commit:** `4e4ae4f540ed04e652ced2cf113e11f851fe6d34`
-- **Ancestry assertion:** `git merge-base --is-ancestor 4e4ae4f5 origin/develop` — PASSED (develop moved `ae8514b8..4e4ae4f5`).
-- **Remote branch deletion:** confirmed via `git ls-remote --exit-code origin refs/heads/fix/F5-001-issuetypes-pagination` → exit code 2 (ref absent).
-- **Local branch deletion:** skipped (harmless) — pr-manager's session cwd was the checked-out worktree for that branch at merge time.
+## Non-Blocking Notes Carried Forward
+
+- pr-reviewer noted the PR description frames the CLAUDE.md change narrowly as "the `--no-mentions` footgun" when the documented entry actually covers the full BC-X.7.007–010 mention hard-fail wiring with F-M1 as its closing sentence. Accurate, just broader in scope than the summary framing. No follow-up action required.

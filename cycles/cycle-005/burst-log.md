@@ -522,4 +522,53 @@ Additionally swept into the same commit (pre-existing/concurrent, verified legit
 
 ---
 
+## Burst 11 — F5 SCOPED ADVERSARIAL CONVERGED (2026-09-09)
+
+**Parent-commit:** the Burst 10 commit (F4 WAVE 2 MERGE record) — the factory-artifacts tip immediately before this burst.
+
+**Trigger:** cycle-005 Phase F5 (scoped adversarial refinement) of the combined Wave 1+Wave 2 `adf-mentions` delta reached CONVERGENCE — 3 consecutive clean-tier passes (Pass 2 CLEAN, Pass 3 NITPICK_ONLY, Pass 4 NITPICK_ONLY). Pass 1 was SUBSTANTIVE: F-M1 [MED] (`@Name` mention detection wrongly treated `]` as a boundary character, causing a write-breaking exit-64 false-positive mention-candidate detection on ordinary prose such as `config[env]@home`/`array[i]@ts`) and F-L1 [LOW] (four stale `#[allow(dead_code)]` attributes on the now-live mention API). Both findings were FIXED and delivered via fix-PR `FIX-F5-001`, squash-merged as PR #795 @ merge commit `cef4a021` (`develop` advanced `0eaf4268` → `befa72e6` (unrelated intervening Dependabot merge, PR #780) → `cef4a021`). CI 24/24 green including a clean in-line (non-escalated) mutation gate; pr-reviewer APPROVE; security-reviewer 0 findings. Zero CRITICAL/HIGH/MEDIUM findings remain across the delta.
+
+**Actions taken:**
+
+1. **Frontmatter:** `pipeline:` stays `ACTIVE`. `timestamp:` refreshed to the convergence-recording instant. `phase:` rewritten to record cycle-005 Phase F5 as **CONVERGED** (3-clean; F-M1/F-L1 fixed via PR #795 @ `cef4a021`); next = F6 targeted hardening → F7 delta convergence (human gate). `current_step:`/`last_amended:` rewritten via the verbatim-strict chain, preserving `D-chain cite D-053 latest brownfield.` and the `→1→3→0→2` trajectory-tail token. `version:` `3.96` → `3.97` (exactly one bump).
+2. **sprint-state.yaml:** added an `f5_status: CONVERGED …` line to `cycle_005_adf_mentions` (sibling to the existing `f4_status` line), recording the 3-pass-clean outcome, the F-M1/F-L1 fix-PR evidence, the `develop` tip advance, and the two new deferrals.
+3. **Drift/Standing Items:** added two new non-blocking cycle-005 F5 deferrals: `CYCLE5-F5-L2-IDONLY-BRACKET-VP674005` (LOW, id-only bracket-mention path unreachable from any wired write path) and `CYCLE5-F5-P3-01-STDIN-NOINPUT` (LOW, `handle_comment_add`/`handle_create`/`handle_edit`'s live single-key path pass the ambient `no_input` to `mentions::resolve_mentions` after a blocking stdin read, unlike `handle_comment_edit`; debug-only reachable — release-build piped stdin auto-flips `no_input=true`).
+4. **Appended** a Phase Progress row `F5-CONVERGED-2026-09-09`.
+5. **Archived** the v3.96 Session Resume Checkpoint to `cycles/cycle-005/session-checkpoints.md` with a "Superseded at" note, BEFORE writing the new one; wrote exactly one new v3.97 checkpoint reflecting F5 CONVERGED and the next resume point (Phase F6 targeted hardening).
+6. **Recomputed** `wc -l .factory/STATE.md` after the Write and refreshed the SIZE BUDGET banner.
+7. **No DEC minted** — F5 is an automated quality gate (scoped adversarial refinement reaching 3-clean convergence), not a gated human decision; recorded, not decided.
+8. **Committed and pushed**, in the same atomic commit, the pre-existing concurrent, verified-legitimate delivery artifacts for `FIX-F5-001`/PR #795 that were already staged in the working tree ahead of this burst: `code-delivery/FIX-F5-001/pr-description.md` and `review-findings.md` (rewritten to describe the F-M1/F-L1 fix, superseding stale content from an earlier, unrelated field-dx fix that had reused this directory name), the new `code-delivery/FIX-F5-cycle5-mention-boundary/pr-review.md` (fresh-eyes pr-reviewer APPROVE verdict for PR #795), `regression-state.json` (a fresh `cargo test --lib` scratch record for the F-M1 fix's regression tests), and `sidecar-learning.md` (further append-only `Session ended at …` markers, consistent with its existing pattern).
+9. Updated Convergence Status / Concurrent Cycles (cycle-005 Phase F5 now CONVERGED), Constraints Carried Forward (new Burst-11 paragraph; Burst 10's paragraph marked historical/superseded), and Historical Content (new evidence row + burst-history bullet) for consistency with the frontmatter change.
+
+**Adversary verdict:** 4 passes total on the combined Wave 1+Wave 2 delta. Pass 1 SUBSTANTIVE (F-M1 MED, F-L1 LOW) → fixed via `FIX-F5-001`/PR #795 @ `cef4a021`. Pass 2 CLEAN. Pass 3 NITPICK_ONLY. Pass 4 NITPICK_ONLY. 3 consecutive clean-tier passes (2/3/4) — convergence criterion met.
+
+**Files touched (Dim-1): 8 unique files/paths this burst, all committed in the state-manager's own single atomic commit**
+
+- `STATE.md` (v3.97 — full-content Write)
+- `sprint-state.yaml` (`cycle_005_adf_mentions.f5_status` added)
+- `cycles/cycle-005/session-checkpoints.md` (v3.96 checkpoint archived with "Superseded at" note)
+- `cycles/cycle-005/burst-log.md` (this entry)
+
+Additionally swept into the same commit (pre-existing/concurrent, verified legitimate, produced by the FIX-F5-001/PR #795 delivery flow ahead of this burst, not authored by this burst's own bookkeeping actions): `code-delivery/FIX-F5-001/pr-description.md`, `code-delivery/FIX-F5-001/review-findings.md`, `code-delivery/FIX-F5-cycle5-mention-boundary/pr-review.md` (new), `regression-state.json`, `sidecar-learning.md`.
+
+**Dim-2 Attestation:** No count-verification script applies — counts unchanged (754 BCs / 76 VPs / 118 holdouts / 175 stories, carried forward verbatim). This burst authored no new spec/story artifact.
+
+**Dim-5 Attestation:** N/A — no binary/WASM artifact produced by this `.factory/` commit (bookkeeping-only, no build).
+
+**Dim-6 Attestation:** No `src/`/`tests/` change committed by this state-manager burst. (PR #795's own commits already landed on `develop` @ `cef4a021` prior to this burst; this burst only records the outcome in `.factory/`.)
+
+**Dim-7 Attestation:** No CI-relevant `.github/workflows/` change in this `.factory/` commit — the sharded mutation gate ran in-line (non-escalated, 24/24 checks green) as part of PR #795's own CI run; this burst only records that fact.
+
+**Codifications:** No DEC minted this burst (F5 convergence is an automated quality gate, not a phase-gate or story decision requiring human sign-off). Recorded (not decided): the F5 convergence outcome, the FIX-F5-001/PR #795 merge fact, `develop`'s new tip, and the two new CYCLE5-F5 deferrals.
+
+**Closes:** cycle-005 Phase **F5 (scoped adversarial refinement) is now CONVERGED**. **Does NOT close:** cycle-005 itself (F6/F7 delta convergence and the release decision remain ahead). **Adds** `CYCLE5-F5-L2-IDONLY-BRACKET-VP674005` and `CYCLE5-F5-P3-01-STDIN-NOINPUT` as new non-blocking standing items.
+
+### Details
+
+| Agent | Task | Output |
+|-------|------|--------|
+| state-manager | Recorded cycle-005 Phase F5 (scoped adversarial refinement) CONVERGENCE — 3 consecutive clean-tier passes (2/3/4), Pass 1's F-M1 [MED]/F-L1 [LOW] findings FIXED via FIX-F5-001/PR #795 @ `cef4a021`: `phase:`/`current_step:`/`last_amended:` verbatim-strict chain, `version:` 3.96→3.97; added `sprint-state.yaml` `f5_status`; added two new Drift/Standing Items deferrals; appended Phase Progress row; archived v3.96 checkpoint, wrote v3.97 checkpoint; recomputed and refreshed the SIZE BUDGET banner; swept the pre-existing, verified-legitimate FIX-F5-001/PR #795 delivery artifacts (`code-delivery/FIX-F5-001/{pr-description,review-findings}.md`, new `code-delivery/FIX-F5-cycle5-mention-boundary/pr-review.md`, `regression-state.json`, `sidecar-learning.md`) into this same atomic commit; commit + push to `factory-artifacts` | `STATE.md` (v3.97), `sprint-state.yaml`, `cycles/cycle-005/burst-log.md` (this file), `cycles/cycle-005/session-checkpoints.md`, `code-delivery/FIX-F5-001/pr-description.md`, `code-delivery/FIX-F5-001/review-findings.md`, `code-delivery/FIX-F5-cycle5-mention-boundary/pr-review.md`, `regression-state.json`, `sidecar-learning.md` |
+
+---
+
 <!-- Repeat for each burst. Maintain chronological order. -->

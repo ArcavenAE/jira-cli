@@ -387,4 +387,42 @@ Wave 2's per-story delivery ran to completion: Step-4.5 adversarial convergence 
 
 ---
 
+## Session Resume Checkpoint (2026-09-09, v3.96) — cycle-005 F4 COMPLETE (both waves merged) — SUPERSEDED at Burst 11 (v3.97, F5 SCOPED ADVERSARIAL CONVERGED)
+
+**Superseded at:** 2026-09-09/10, Burst 11 (v3.97) — cycle-005 Phase F5 (scoped adversarial refinement) of the combined Wave 1+Wave 2 `adf-mentions` delta reached CONVERGENCE (3 consecutive clean-tier passes: Pass 2 CLEAN, Pass 3 NITPICK_ONLY, Pass 4 NITPICK_ONLY). Pass 1's F-M1 [MED]/F-L1 [LOW] findings were FIXED and merged via `FIX-F5-001`/PR #795 @ `cef4a021`. This checkpoint is archived to make room for the F5-convergence checkpoint per the state-manager's single-latest-checkpoint-in-STATE.md convention.
+
+### Spec Versions
+
+| Artifact | Version |
+|----------|---------|
+| STATE.md | 3.96 |
+| total_bcs | 754 |
+| VP count | 76 |
+| holdout scenarios | 118 |
+| total_stories | 175 |
+
+### State
+
+| Field | Value |
+|-------|-------|
+| **Date** | 2026-09-09 |
+| **Position** | cycle-005 (`adf-mentions`) Phase **F4** (delta implementation) is **COMPLETE** — Wave 1 (`S-cycle5-mention-pure-conversion`) **MERGED** (PR #778 @ `708c8b32`, **DEC-352**, escape-hatch admin-bypass); standalone maintenance PR #793 **MERGED** @ `5b00b31e`; Wave 2 (`S-cycle5-mention-resolution-wiring`, 13 pts, HIGH) **MERGED** via PR #794 (squash) @ `0eaf4268` — a NORMAL merge (CI fully green incl. the cycle-006 sharded mutation gate running to completion, no escape-hatch/admin-bypass; security-review 0 findings; pr-reviewer APPROVE converged 1 cycle). `develop` advanced `5b00b31e`→`0eaf4268` (main checkout fast-forwarded). Closes GitHub #674 in full. |
+| **Convergence counter** | Wave 2's per-story adversarial convergence loop (Step-4.5, BC-5.39.001) is CONVERGED — 4 passes, 3 consecutive clean/nitpick, final HEAD `9dc0b098`. The Wave 2 INTEGRATION-gate-level convergence (full wave diff, holdouts, demos) had not yet begun at this checkpoint. |
+| **In-flight work** | None at this checkpoint — both cycle-005 waves merged, no open PRs, no story mid-TDD. The Wave 2 integration gate had not yet been dispatched. |
+| **Pending human decisions/blockers** | The live-Jira E2E round-trip (`H-NEW-MENTION-009`, AC-017) DEFERRED to post-merge by human decision; an OPEN offer to manually trigger `mutants-nightly.yml`; the dynamic-shields badge (settled DEFERRED); the `CLAUDE_AUTOCOMPACT_PCT_OVERRIDE` advisory. No blockers on proceeding to the Wave 2 integration gate. |
+| **WIP branches** | None — `feat/cycle5-mention-resolution-wiring` merged and eligible for post-merge deletion. |
+| **Next step (as recorded at this checkpoint)** | `/vsdd-factory:wave-gate` (Wave 2 integration gate) then `/vsdd-factory:phase-f5-scoped-adversarial` (cycle-005 F5), or `/vsdd-factory:next-step`. |
+
+### Resume Prompt (as recorded at this checkpoint)
+
+```
+/vsdd-factory:wave-gate then /vsdd-factory:phase-f5-scoped-adversarial
+```
+
+### What actually happened next (recorded for continuity, not part of the original checkpoint)
+
+cycle-005 Phase F5 (scoped adversarial refinement) ran against the combined Wave 1+Wave 2 `adf-mentions` delta and reached CONVERGENCE: 4 passes total, Pass 1 SUBSTANTIVE (F-M1 [MED] `@Name` mention-boundary false-positive on adjacent `]`, write-breaking exit-64 regression risk on prose like `config[env]@home`; F-L1 [LOW] stale `#[allow(dead_code)]` attributes), fixed via fix-PR `FIX-F5-001` squash-merged as PR #795 @ merge commit `cef4a021` (`develop` advanced `0eaf4268`→`befa72e6` (unrelated Dependabot merge, PR #780)→`cef4a021`; CI 24/24 green incl. a clean in-line mutation gate; pr-reviewer APPROVE; security-reviewer 0 findings); Passes 2/3/4 were CLEAN/NITPICK_ONLY/NITPICK_ONLY — 3 consecutive clean-tier passes, convergence criterion met. Zero CRITICAL/HIGH/MEDIUM findings remain across the delta. Two new non-blocking deferrals were recorded: `CYCLE5-F5-L2-IDONLY-BRACKET-VP674005` and `CYCLE5-F5-P3-01-STDIN-NOINPUT`. See the live checkpoint in `STATE.md` (v3.97) for the full account, and `cycles/cycle-005/burst-log.md` Burst 11 for this state-manager burst's own actions.
+
+---
+
 <!-- Repeat for each archived checkpoint. Maintain chronological order. -->
