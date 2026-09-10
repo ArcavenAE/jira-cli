@@ -1,28 +1,28 @@
 ---
 document_type: pipeline-state
 level: ops
-version: "4.07"
+version: "4.08"
 status: active
 producer: state-manager
-timestamp: 2026-09-10T21:42:01Z
-phase: "PAUSED 2026-09-10. Position: all six tracked cycles (001-006) CLOSED, no OPEN cycle; this session delivered cycle-005 (adf-mentions, #674) through F7 close, then four maintenance follow-ups -- CLAUDE.md compaction (#797 @ a1f37995), E2E-CI dynamic-tests WIP resolution (#798 @ 3a874d90), mutants-nightly rebalance (#799 @ 78aeb86c), and STATE.md /compact-state (447->196), followed by the SESSION-WRAP-PAUSE-2026-09-10 checkpoint formalization. MAINTENANCE-SWEEP-2026-09-10 COMPLETE this burst (manual trigger, human request): 2 read-only scans (dependency audit, doc drift) + open-PR triage (10 open PRs) all ran to completion; develop confirmed dependency-clean (0 RUSTSEC advisories); fix PR #800 (chacha20 0.10.0 yanked-crate bump to 0.10.2) and doc-sync PR #801 opened; 3 factory doc-hygiene items (CYCLE5-F7-DOC-1, CYCLE5-F7-DOC-2, CYCLE5-STEP45-LOW-1) RESOLVED in this same commit; 5 cargo Dependabot PRs re-confirmed correctly held (live syn 2.0-vs-3.0 [bans] duplicate); #792/#628 deferred by human. 4 merges (#800, #801, #779, #754) await human action -- auto_merge=false, classifier blocked admin-merge. Maintenance-mode bookkeeping only -- pipeline stays PAUSED throughout, no phase/cycle transition."
+timestamp: 2026-09-10T21:52:43Z
+phase: "PAUSED 2026-09-10. Position: all six tracked cycles (001-006) CLOSED, no OPEN cycle; this session delivered cycle-005 (adf-mentions, #674) through F7 close, then four maintenance follow-ups -- CLAUDE.md compaction (#797 @ a1f37995), E2E-CI dynamic-tests WIP resolution (#798 @ 3a874d90), mutants-nightly rebalance (#799 @ 78aeb86c), and STATE.md /compact-state (447->196), followed by the SESSION-WRAP-PAUSE-2026-09-10 checkpoint formalization. MAINTENANCE-SWEEP-2026-09-10 COMPLETE, then FULLY CLOSED this burst (manual trigger, human request): 2 read-only scans (dependency audit, doc drift) + open-PR triage (10 open PRs) all ran to completion; develop confirmed dependency-clean (0 RUSTSEC advisories); fix PR #800 (chacha20 0.10.0 yanked-crate bump to 0.10.2) and doc-sync PR #801 opened; 3 factory doc-hygiene items (CYCLE5-F7-DOC-1, CYCLE5-F7-DOC-2, CYCLE5-STEP45-LOW-1) RESOLVED same commit; 5 cargo Dependabot PRs re-confirmed correctly held (live syn 2.0-vs-3.0 [bans] duplicate); #792/#628 deferred by human. All 4 merges (#779, #754, #800, #801) subsequently MERGED to develop by human action 2026-09-10 -- develop tip advanced 78aeb86c -> 14e695ae (merge SHAs: #779=211ae959, #754=d4760cd5, #800=522f9ba2, #801=14e695ae). Sweep is now fully closed, zero outstanding actions. Maintenance-mode bookkeeping only -- pipeline stays PAUSED throughout, no phase/cycle transition."
 pipeline: PAUSED
 inputs: []
 input-hash: "[live-state]"
 traces_to: ""
 project: jira-cli
 mode: brownfield
-last_amended: "2026-09-10, v4.07, state-manager -- MAINTENANCE-SWEEP-2026-09-10 COMPLETE: closed the human-requested maintenance sweep in a single atomic burst on factory-artifacts (TD-VSDD-053), incorporating the sweep's scan outputs and 3 spec-steward doc-hygiene fixes that were already staged in the worktree. Updated the `maintenance_run` frontmatter block (status: COMPLETE, date: 2026-09-10, trigger: manual (human request), findings_count: 8, fixes_applied: 3, fixes_pending: 4, pr: \"#800,#801 (fix PRs opened); #779,#754 merge-authorized-held\") and updated the MAINTENANCE-SWEEP-2026-09-10 Phase Progress row in place from STARTED to COMPLETE. Wrote `maintenance/sweep-report-2026-09-10.md`; resolved 3 OPEN-STANDING-ITEMS.md entries (CYCLE5-F7-DOC-1, CYCLE5-F7-DOC-2, CYCLE5-STEP45-LOW-1), moving them to RESOLVED-DRIFT-ITEMS.md with resolution notes. Ran scripts/check-spec-counts.sh and scripts/check-bc-cumulative-counts.sh before committing -- both green, counts unchanged (754/76/118/175). Added a Drift/Standing headline note `MAINTENANCE-SWEEP-2026-09-10-MERGES-PENDING` (4 human-gated merges awaiting action). Maintenance-mode operation only, NOT a cycle/phase transition -- pipeline stays PAUSED throughout, all six tracked cycles remain CLOSED, no DEC minted."
-current_step: "D-chain cite D-053, D-2026 latest brownfield. MAINTENANCE-SWEEP-2026-09-10: state-manager closed the human-requested maintenance sweep on STATE.md in a single atomic burst on factory-artifacts (TD-VSDD-053), per human request, folding in the already-staged sweep artifacts (4 scan/report output files, 3 spec-steward doc-hygiene fixes). Refreshed timestamp to this burst's instant. Wrote the sweep report (`maintenance/sweep-report-2026-09-10.md`), updated `maintenance_run` (status COMPLETE, findings_count 8, fixes_applied 3, fixes_pending 4, pr \"#800,#801 (fix PRs opened); #779,#754 merge-authorized-held\"), updated the MAINTENANCE-SWEEP-2026-09-10 Phase Progress row STARTED->COMPLETE, and moved 3 resolved OPEN-STANDING-ITEMS.md entries to RESOLVED-DRIFT-ITEMS.md. version: 4.06->4.07 (exactly one bump, no double-bump). No count change (754/76/118/175) -- pure maintenance-mode bookkeeping, no spec/story authorship. Pipeline stays PAUSED throughout; no phase transition, no cycle change; trajectory-tail unchanged →1→3→0→2."
+last_amended: "2026-09-10, v4.08, state-manager -- MAINTENANCE-SWEEP-2026-09-10 MERGES LANDED: closed out the sweep's last open item in a single atomic burst on factory-artifacts (TD-VSDD-053). All 4 human-gated merges from the sweep (#779 Dependabot action-gh-release, #754 Dependabot codeql, #800 chacha20 fix, #801 doc-sync) are now MERGED to develop by human action; develop tip advanced 78aeb86c -> 14e695ae. Updated the `maintenance_run` frontmatter block (fixes_pending: 0, fixes_applied: 7, pr: \"#800,#801 fix PRs MERGED; #779,#754 Dependabot bumps MERGED\"; status stays COMPLETE). Updated the MAINTENANCE-SWEEP-2026-09-10 Phase Progress row in place with a closing note (all 4 PRs merged, sweep fully closed). Resolved and removed the `MAINTENANCE-SWEEP-2026-09-10-MERGES-PENDING` headline note from Drift/Standing Items, moving the resolution detail to `cycles/RESOLVED-DRIFT-ITEMS.md`. Refreshed Project Metadata (Activation HEAD row's develop-tip citation) and the Session Resume Checkpoint's pending-decisions field. Ran scripts/check-spec-counts.sh and scripts/check-bc-cumulative-counts.sh before committing -- both green, counts unchanged (754/76/118/175). No DEC minted -- maintenance-mode bookkeeping only, pipeline stays PAUSED throughout, no phase/cycle transition."
+current_step: "D-chain cite D-053, D-2026 latest brownfield. MAINTENANCE-SWEEP-2026-09-10 MERGES LANDED: state-manager closed out the sweep's last open item on STATE.md in a single atomic burst on factory-artifacts (TD-VSDD-053), per human request, recording that all 4 human-gated merges (#779, #754, #800, #801) landed on develop (tip 78aeb86c->14e695ae via 211ae959/d4760cd5/522f9ba2/14e695ae). Refreshed timestamp to this burst's instant. Updated `maintenance_run` (fixes_pending 0, fixes_applied 7, pr \"#800,#801 fix PRs MERGED; #779,#754 Dependabot bumps MERGED\"), updated the MAINTENANCE-SWEEP-2026-09-10 Phase Progress row with a closing note, removed the resolved `MAINTENANCE-SWEEP-2026-09-10-MERGES-PENDING` headline bullet from Drift/Standing Items (resolution detail moved to `cycles/RESOLVED-DRIFT-ITEMS.md`), and refreshed the Activation HEAD row + Session Resume Checkpoint pending-decisions field. version: 4.07->4.08 (exactly one bump, no double-bump). No count change (754/76/118/175) -- pure maintenance-mode bookkeeping, no spec/story authorship. Pipeline stays PAUSED throughout; no phase transition, no cycle change; trajectory-tail unchanged →1→3→0→2."
 trajectory_tail: "→1→3→0→2"
 maintenance_run:
   status: COMPLETE
   date: 2026-09-10
   trigger: manual (human request)
   findings_count: 8
-  fixes_applied: 3
-  fixes_pending: 4
-  pr: "#800,#801 (fix PRs opened); #779,#754 merge-authorized-held"
+  fixes_applied: 7
+  fixes_pending: 0
+  pr: "#800,#801 fix PRs MERGED; #779,#754 Dependabot bumps MERGED"
 current_cycle: "none"
 feature_mode_bundle: "none"
 dtu_required: false
@@ -39,50 +39,46 @@ activation_head: "a9168212"
 activation_version: "v0.7.0-dev.5"
 ---
 
-<!-- STATE.md SIZE BUDGET (2026-09-10, MAINTENANCE-SWEEP-2026-09-10 COMPLETE checkpoint -- pipeline stays
-     PAUSED, all six cycles (001-006) remain CLOSED, no OPEN cycle; line count refreshed after this
+<!-- STATE.md SIZE BUDGET (2026-09-10, MAINTENANCE-SWEEP-2026-09-10 MERGES-LANDED checkpoint -- pipeline
+     stays PAUSED, all six cycles (001-006) remain CLOSED, no OPEN cycle; line count refreshed after this
      burst's Write):
      This is a MAINTENANCE-MODE bookkeeping burst (state-manager, per human request -- manual trigger,
      2026-09-10 -- NOT a phase/cycle transition; pipeline was already PAUSED and stays PAUSED throughout).
-     Closed the MAINTENANCE-SWEEP-2026-09-10 sweep that a prior burst STARTED: updated the
-     `maintenance_run` frontmatter block (status: COMPLETE, date: 2026-09-10, trigger: manual (human
-     request), findings_count: 8, fixes_applied: 3, fixes_pending: 4, pr: "#800,#801 (fix PRs opened);
-     #779,#754 merge-authorized-held"). `timestamp:` refreshed to this burst's instant.
-     `phase:`/`current_step:`/`last_amended:` rewritten via the verbatim-strict chain, preserving
-     `D-chain cite D-053, D-2026 latest brownfield.` and trajectory-tail `→1→3→0→2`. `version:`
-     4.06 -> 4.07 (exactly one bump, no double-bump). `pipeline:` stays PAUSED throughout; no phase
-     transition, no cycle change; counts unchanged.
-     Updated the existing `MAINTENANCE-SWEEP-2026-09-10` Phase Progress row IN PLACE from STARTED to
-     COMPLETE (not a new row) -- Phase Progress table stays at 8 rows, still one over the "recent 7"
-     guideline in its header (same acceptable one-burst transient as the prior burst; the next
-     `/compact-state` pass will archive the oldest row out and re-condense to 7).
-     Also lightly refreshed the Project Metadata table's Pipeline Status / Last Updated / Current Phase
-     rows and the Current Phase Steps paragraph to name MAINTENANCE-SWEEP-2026-09-10 COMPLETE -- values
-     only, no structural change. Refreshed the Session Resume Checkpoint's In-flight-work and Pending-
-     human-decisions fields to reflect the sweep's COMPLETE state and the 4 outstanding human-gated
+     Closed out the sweep's last open item: all 4 human-gated merges from MAINTENANCE-SWEEP-2026-09-10
+     (#779, #754, #800, #801) are now MERGED to develop by human action; develop tip advanced
+     78aeb86c -> 14e695ae (#779=211ae959, #754=d4760cd5, #800=522f9ba2, #801=14e695ae). Updated the
+     `maintenance_run` frontmatter block (fixes_pending: 0, fixes_applied: 7, pr: "#800,#801 fix PRs
+     MERGED; #779,#754 Dependabot bumps MERGED"; status stays COMPLETE, date/trigger/findings_count
+     unchanged). `timestamp:` refreshed to this burst's instant. `phase:`/`current_step:`/`last_amended:`
+     rewritten via the verbatim-strict chain, preserving `D-chain cite D-053, D-2026 latest brownfield.`
+     and trajectory-tail `→1→3→0→2`. `version:` 4.07 -> 4.08 (exactly one bump, no double-bump).
+     `pipeline:` stays PAUSED throughout; no phase transition, no cycle change; counts unchanged.
+     `activation_head` stays `a9168212` unchanged -- no release tag cut.
+     Updated the existing `MAINTENANCE-SWEEP-2026-09-10` Phase Progress row IN PLACE with a closing note
+     (all 4 PRs merged, sweep fully closed) -- Phase Progress table stays at 8 rows.
+     Refreshed the Project Metadata table's Pipeline Status / Last Updated / Current Phase / Activation
+     HEAD rows -- Activation HEAD row's develop-real-tip citation updated `78aeb86c` -> `14e695ae` --
+     values only, no structural change. Refreshed the Current Phase Steps paragraph and the Session
+     Resume Checkpoint's Position / NEXT / Pending-human-decisions fields to reflect zero outstanding
      merges, without archiving a new full checkpoint (no session-wrap event this burst).
-     Added ONE new Drift/Standing-Items headline bullet, `MAINTENANCE-SWEEP-2026-09-10-MERGES-PENDING`
-     (4 human-gated merges -- #800, #801, #779, #754 -- await human action; the auto-mode classifier
-     blocked admin-merge). `MUTANTS-NIGHTLY-VERIFY-FULL-RUN` and `VSDD-FACTORY-COMPACT-CLAUDE-MD-GAP`
-     remain OPEN, unchanged.
-     Resolved 3 items in `cycles/OPEN-STANDING-ITEMS.md` (`CYCLE5-F7-DOC-1`, `CYCLE5-F7-DOC-2`,
-     `CYCLE5-STEP45-LOW-1`) via matching spec-steward doc-hygiene edits to
-     `phase-f2-spec-evolution/verification-delta-674.md`, `specs/architecture/decisions/ADR-0023-...md`,
-     and `specs/prd/cross-cutting.md`; moved to `cycles/RESOLVED-DRIFT-ITEMS.md` with resolution notes.
+     REMOVED the resolved `MAINTENANCE-SWEEP-2026-09-10-MERGES-PENDING` headline bullet from Drift/
+     Standing Items (all 4 merges landed) -- resolution detail moved to `cycles/RESOLVED-DRIFT-ITEMS.md`
+     per the standard content-routing convention (mirrors how `E2E-CI-DYNAMIC-TESTS-WIP-UNVERIFIED` was
+     retired from this section once fully resolved). `MUTANTS-NIGHTLY-VERIFY-FULL-RUN` and
+     `VSDD-FACTORY-COMPACT-CLAUDE-MD-GAP` remain OPEN, unchanged.
      No count change (754 BCs / 76 VPs / 118 holdouts / 175 stories) -- maintenance-mode bookkeeping
      only; `scripts/check-spec-counts.sh` and `scripts/check-bc-cumulative-counts.sh` both re-verified
      green before this commit.
-     soft target 200 lines; hard cap 500 lines. 230 lines (wc-l) (this file, this Write) -- up
-     from 219 lines before this burst (maintenance_run block values changed not grown, Phase Progress
-     row updated in place not appended, one new Drift/Standing-Items bullet +1 line, this SIZE BUDGET
-     banner expanded by a few lines, Project Metadata rows unchanged line count).
-     margin from soft-target = 230 - 200 (OVER the soft target; acceptable one-burst
-     transient per the extract-history/keep-live-state principle -- next `/compact-state` pass will
-     re-condense).
-     margin from actual = 500 - 230 (headroom remains before the hard cap).
-     RECOVERY CONTEXT: no crash this burst -- a planned maintenance-sweep close, verified via a fresh
-     read of this file before writing (still v4.06/STARTED, prior state intact) -- this Write/commit is
-     the first and only landing of this event.
+     soft target 200 lines; hard cap 500 lines. 227 lines (wc-l) (this file, this Write) -- roughly flat
+     vs. 230 lines before this burst (one Drift/Standing-Items bullet removed net of its replacement
+     annotations, Phase Progress row grew by a closing note, maintenance_run/frontmatter values changed
+     not grown, this SIZE BUDGET banner refreshed at roughly the same length).
+     margin from soft-target = 227 - 200 (OVER the soft target; acceptable one-burst transient per the
+     extract-history/keep-live-state principle -- next `/compact-state` pass will re-condense).
+     margin from actual = 500 - 227 (headroom remains before the hard cap).
+     RECOVERY CONTEXT: no crash this burst -- a planned merges-landed close-out, verified via a fresh
+     read of this file before writing (still v4.07/MERGES-PENDING, prior state intact) -- this
+     Write/commit is the first and only landing of this event.
      Factory lock: no `factory_lock` frontmatter block is present in this STATE.md and the
      lock-write/verify-sha-currency scripts are not provisioned in this repo -- the renew/unlock
      step this burst is therefore a no-op, noted rather than fabricated. -->
@@ -96,11 +92,11 @@ activation_version: "v0.7.0-dev.5"
 | **Product** | jr (Jira CLI) |
 | **Mode** | BROWNFIELD / Rust |
 | **Target Workspace** | develop to main |
-| **Pipeline Status** | **PAUSED** (SESSION-WRAP PAUSE, formalized 2026-09-10) -- all six tracked cycles (001-006) CLOSED, no OPEN cycle; MAINTENANCE-SWEEP-2026-09-10 COMPLETE this burst (maintenance-mode only, not a phase/cycle transition; 4 human-gated merges outstanding -- see Drift/Standing Items); resume by opening a new feature cycle or making a release decision (see Session Resume Checkpoint) |
+| **Pipeline Status** | **PAUSED** (SESSION-WRAP PAUSE, formalized 2026-09-10) -- all six tracked cycles (001-006) CLOSED, no OPEN cycle; MAINTENANCE-SWEEP-2026-09-10 fully CLOSED this burst (maintenance-mode only, not a phase/cycle transition; all 4 human-gated merges landed -- see `cycles/RESOLVED-DRIFT-ITEMS.md`); resume by opening a new feature cycle or making a release decision (see Session Resume Checkpoint) |
 | **trajectory-tail** | →1→3→0→2 (unchanged) |
-| **Last Updated** | 2026-09-10, MAINTENANCE-SWEEP-2026-09-10 (COMPLETE). trajectory-tail →1→3→0→2 (unchanged). Full prior per-cycle history: `cycles/CYCLE-SUMMARY.md` |
-| **Current Phase** | No OPEN cycle; pipeline PAUSED. cycle-001 through cycle-006 all CLOSED, historical -- see `cycles/CYCLE-SUMMARY.md`. MAINTENANCE-SWEEP-2026-09-10 COMPLETE this burst (maintenance-mode bookkeeping, not a phase/cycle transition); 4 merges await human action. |
-| **Activation HEAD** | `a9168212` (unchanged -- no release tag cut; `develop`'s real tip is `78aeb86c`) |
+| **Last Updated** | 2026-09-10, MAINTENANCE-SWEEP-2026-09-10 (fully CLOSED -- all 4 pending merges landed). trajectory-tail →1→3→0→2 (unchanged). Full prior per-cycle history: `cycles/CYCLE-SUMMARY.md` |
+| **Current Phase** | No OPEN cycle; pipeline PAUSED. cycle-001 through cycle-006 all CLOSED, historical -- see `cycles/CYCLE-SUMMARY.md`. MAINTENANCE-SWEEP-2026-09-10 fully CLOSED this burst (maintenance-mode bookkeeping, not a phase/cycle transition); zero outstanding actions. |
+| **Activation HEAD** | `a9168212` (unchanged -- no release tag cut; `develop`'s real tip is `14e695ae`, all 4 sweep merges landed) |
 
 ## Phase Progress (recent 7; full history: `cycles/HISTORY-PHASE-PROGRESS.md` + `cycles/cycle-00{1..6}/burst-log.md` + factory-artifacts@43f4a5e3)
 
@@ -113,11 +109,11 @@ activation_version: "v0.7.0-dev.5"
 | **MUTANTS-NIGHTLY-REBALANCE-2026-09-10** | **COMPLETE** | 2026-09-10 | Maintenance bookkeeping, no quality gate | Nightly mutation run `34478602590` ended `cancelled` (4/16 shards, PARTIAL data). Fix via PR #799 (merged @ `78aeb86c`): rebalanced N=16->24 shards + timeout 240->300 + completion-sentinel guard. New follow-up: `MUTANTS-NIGHTLY-VERIFY-FULL-RUN` (see Drift/Standing Items below). | counts unchanged; no DEC minted |
 | **STATE-MD-COMPACT-2026-09-10** | **COMPLETE** | 2026-09-10 | Maintenance bookkeeping (`/compact-state` skill), state-manager-executed, no quality gate | Extracted historical content (frontmatter cycle-status prose, SIZE BUDGET banner, 2 oldest Phase Progress rows, full Current-Phase-Steps checklist, Decisions-Log narrative notes, resolved+open Drift/Standing-Items detail, cycle-002/003/004 Skip Log rows, verbose Historical-Content descriptions, full live Session-Resume-Checkpoint text) into `cycles/` files -- nothing deleted, every pointer resolves. STATE.md 447->196 lines, single full-content Write. `STATE-MD-OVER-SOFT-TARGET` marked RESOLVED. | counts unchanged (754/76/118/175); no DEC minted -- maintenance event |
 | **SESSION-WRAP-PAUSE-2026-09-10 (formalization)** | **COMPLETE** | 2026-09-10 | Session-lifecycle pause checkpoint, state-manager-executed, no quality gate | Formalized the SESSION-WRAP PAUSE checkpoint per human request in a single atomic burst (TD-VSDD-053): archived the prior (v4.04) Session Resume Checkpoint to `cycles/cycle-005/session-checkpoints.md` (Superseded at 2026-09-10), wrote a new checkpoint with all six required fields (position, convergence counter, in-flight work, pending human decisions, WIP branch list, resume command). Pipeline was already PAUSED -- no `pipeline:` transition this burst (distinct from the earlier ACTIVE->PAUSED row above). | counts unchanged (754/76/118/175); no DEC minted -- session-lifecycle event |
-| **MAINTENANCE-SWEEP-2026-09-10** | **COMPLETE** | 2026-09-10 | Maintenance bookkeeping, no quality gate | Human-requested maintenance sweep CLOSED in one atomic burst (TD-VSDD-053): 2 read-only scans (dependency audit -- `develop` dependency-clean, 0 RUSTSEC advisories, 1 actionable LOW: `chacha20` 0.10.0 yanked; doc drift -- PR #797 compaction verified clean, 8 findings) + open-PR triage (10 open PRs, `auto_merge=false`). Fix PR #800 (`chacha20` 0.10.0->0.10.2) + doc-sync PR #801 opened. 3 factory doc-hygiene items (`CYCLE5-F7-DOC-1`, `CYCLE5-F7-DOC-2`, `CYCLE5-STEP45-LOW-1`) RESOLVED in this commit. 5 cargo Dependabot PRs (syn) re-confirmed correctly held; `#792`/`#628` deferred by human. 4 merges (`#800`, `#801`, `#779`, `#754`) await human action -- classifier blocked admin-merge. Full report: `maintenance/sweep-report-2026-09-10.md`. | counts unchanged (754/76/118/175); no DEC minted |
+| **MAINTENANCE-SWEEP-2026-09-10** | **COMPLETE, FULLY CLOSED** | 2026-09-10 | Maintenance bookkeeping, no quality gate | Human-requested maintenance sweep CLOSED in one atomic burst (TD-VSDD-053): 2 read-only scans (dependency audit -- `develop` dependency-clean, 0 RUSTSEC advisories, 1 actionable LOW: `chacha20` 0.10.0 yanked; doc drift -- PR #797 compaction verified clean, 8 findings) + open-PR triage (10 open PRs, `auto_merge=false`). Fix PR #800 (`chacha20` 0.10.0->0.10.2) + doc-sync PR #801 opened. 3 factory doc-hygiene items (`CYCLE5-F7-DOC-1`, `CYCLE5-F7-DOC-2`, `CYCLE5-STEP45-LOW-1`) RESOLVED same commit. 5 cargo Dependabot PRs (syn) re-confirmed correctly held; `#792`/`#628` deferred by human. **CLOSING UPDATE (same day):** all 4 merges (`#800`, `#801`, `#779`, `#754`) subsequently MERGED to `develop` by human action; `develop` tip advanced `78aeb86c` -> `14e695ae` (`#779`=`211ae959`, `#754`=`d4760cd5`, `#800`=`522f9ba2`, `#801`=`14e695ae`). Sweep is now fully closed, zero outstanding actions. Full report: `maintenance/sweep-report-2026-09-10.md`. | counts unchanged (754/76/118/175); no DEC minted |
 
 ## Current Phase Steps
 
-No phase is currently mid-execution (pipeline PAUSED, no OPEN cycle). The last completed pipeline-phase checklist was cycle-005 Burst 13 (F7 delta convergence, cycle CLOSE) -- its full 15-step checklist is preserved at `cycles/cycle-005/burst-log.md` (Appendix). MAINTENANCE-SWEEP-2026-09-10's steps (2 read-only scans, open-PR triage, fix PR #800/doc-sync PR #801, 3 factory doc-hygiene resolutions, this closing STATE.md burst) are summarized in the Phase Progress row above, the `last_amended`/`current_step` frontmatter fields, and `maintenance/sweep-report-2026-09-10.md`. The sweep is now COMPLETE; 4 human-gated merges (`#800`, `#801`, `#779`, `#754`) remain the only outstanding action, and are not gate-blocking (pipeline stays PAUSED regardless).
+No phase is currently mid-execution (pipeline PAUSED, no OPEN cycle). The last completed pipeline-phase checklist was cycle-005 Burst 13 (F7 delta convergence, cycle CLOSE) -- its full 15-step checklist is preserved at `cycles/cycle-005/burst-log.md` (Appendix). MAINTENANCE-SWEEP-2026-09-10's steps (2 read-only scans, open-PR triage, fix PR #800/doc-sync PR #801, 3 factory doc-hygiene resolutions, the closing STATE.md burst) are summarized in the Phase Progress row above, the `last_amended`/`current_step` frontmatter fields, and `maintenance/sweep-report-2026-09-10.md`. The sweep is now fully CLOSED: all 4 human-gated merges (`#800`, `#801`, `#779`, `#754`) have landed on `develop` (tip `14e695ae`); zero outstanding actions remain from this sweep.
 
 ## Decisions Log
 
@@ -177,7 +173,7 @@ All six tracked cycles (001-006) are CLOSED. cycle-002 RELEASED as `v0.7.0-dev.3
 
 ## Concurrent Cycles
 
-Six tracked cycles, all CLOSED. `develop`'s real tip is `78aeb86c` (PR #799 merged); `activation_head` frontmatter stays `a9168212` -- no release tag cut. Pipeline PAUSED; MAINTENANCE-SWEEP-2026-09-10 COMPLETE this burst (maintenance-mode, no cycle/phase transition; 4 human-gated merges outstanding). Live-Jira E2E round-trip (`H-NEW-MENTION-009`, AC-017) remains DEFERRED, a human-owned post-close standing follow-up. Full per-cycle detail: `cycles/CYCLE-SUMMARY.md`.
+Six tracked cycles, all CLOSED. `develop`'s real tip is `14e695ae` (all 4 MAINTENANCE-SWEEP-2026-09-10 merges landed: #779, #754, #800, #801); `activation_head` frontmatter stays `a9168212` -- no release tag cut. Pipeline PAUSED; MAINTENANCE-SWEEP-2026-09-10 fully CLOSED this burst (maintenance-mode, no cycle/phase transition; zero outstanding merges). Live-Jira E2E round-trip (`H-NEW-MENTION-009`, AC-017) remains DEFERRED, a human-owned post-close standing follow-up. Full per-cycle detail: `cycles/CYCLE-SUMMARY.md`.
 
 ## Constraints Carried Forward
 
@@ -185,13 +181,13 @@ All prior per-cycle constraints narrative (cycle-005/006 CLOSE + earlier F1-F7 d
 
 ## Session Resume Checkpoint
 
-**Date:** 2026-09-10. **Pipeline: PAUSED** (SESSION-WRAP PAUSE, formalized 2026-09-10; MAINTENANCE-SWEEP-2026-09-10 COMPLETE this burst, maintenance-mode only). **Position:** all six tracked cycles (001-006) CLOSED, no OPEN wave/cycle; pipeline idle, maintenance sweep now COMPLETE. **NEXT** = human decision on 4 pending merges (`#800` chacha20 fix, `#801` doc-sync, `#779` action-gh-release, `#754` codeql -- all `auto_merge=false`, classifier-blocked admin-merge), or open a new feature request / make a release decision (would ride cycle-005 + cycle-006).
+**Date:** 2026-09-10. **Pipeline: PAUSED** (SESSION-WRAP PAUSE, formalized 2026-09-10; MAINTENANCE-SWEEP-2026-09-10 fully CLOSED this burst, maintenance-mode only). **Position:** all six tracked cycles (001-006) CLOSED, no OPEN wave/cycle; pipeline idle, maintenance sweep fully CLOSED, zero outstanding actions. **NEXT** = open a new feature request, or make a release decision (would ride cycle-005 + cycle-006).
 
 **Convergence counter:** N/A -- no adversarial/convergence loop active.
 
-**In-flight work:** none. MAINTENANCE-SWEEP-2026-09-10 is COMPLETE (findings_count 8, fixes_applied 3, fixes_pending 4, `pr: "#800,#801 (fix PRs opened); #779,#754 merge-authorized-held"`) -- full report `maintenance/sweep-report-2026-09-10.md`. This session's 3 prior PRs (`#797`, `#798`, `#799`) are all MERGED to `develop`; no stories mid-TDD.
+**In-flight work:** none. MAINTENANCE-SWEEP-2026-09-10 is fully CLOSED (findings_count 8, fixes_applied 7, fixes_pending 0, `pr: "#800,#801 fix PRs MERGED; #779,#754 Dependabot bumps MERGED"`) -- full report `maintenance/sweep-report-2026-09-10.md`. This session's 5 PRs (`#797`, `#798`, `#799`, `#800`, `#801`) plus Dependabot `#779`/`#754` are all MERGED to `develop`; no stories mid-TDD.
 
-**Pending human decisions / open follow-ups:** 4 merges from this sweep (`#800`, `#801`, `#779`, `#754` -- see `MAINTENANCE-SWEEP-2026-09-10-MERGES-PENDING` in Drift/Standing Items); `MUTANTS-NIGHTLY-VERIFY-FULL-RUN` (awaiting tonight's 08:00 UTC scheduled nightly to confirm all 24 shards complete + a real kill rate) and `VSDD-FACTORY-COMPACT-CLAUDE-MD-GAP` (engine follow-up, tracked in the vsdd-factory repo, not jira-cli). No blockers.
+**Pending human decisions / open follow-ups:** `MUTANTS-NIGHTLY-VERIFY-FULL-RUN` (awaiting tonight's 08:00 UTC scheduled nightly to confirm all 24 shards complete + a real kill rate) and `VSDD-FACTORY-COMPACT-CLAUDE-MD-GAP` (engine follow-up, tracked in the vsdd-factory repo, not jira-cli). No blockers; no outstanding merges.
 
 **WIP branch list:** none.
 
@@ -224,7 +220,8 @@ Burst logs, adversary pass details, session checkpoints, resolved/open standing 
 
 - `VSDD-FACTORY-COMPACT-CLAUDE-MD-GAP` -- engine gap: vsdd-factory has no `compact-claude-md` capability mirroring `compact-state`; candidate follow-up in the vsdd-factory repo, NOT jira-cli.
 - `MUTANTS-NIGHTLY-VERIFY-FULL-RUN` -- LOW, non-blocking. The mutants-nightly rebalance fix (N=16->24 shards, `timeout-minutes` 240->300, completion-sentinel guard; PR #799 @ `78aeb86c`) is statically validated only (actionlint/shellcheck/YAML-parse + local code-reviewer). A manual `workflow_dispatch` run, or the next scheduled 08:00 UTC nightly, must confirm all 24 shards complete within the 300-min cap and produce a real full-scope kill rate -- the true kill-rate-vs-90% posture is unknown until then.
-- `STATE-MD-OVER-SOFT-TARGET` -- **RESOLVED 2026-09-10** (STATE-MD-COMPACT-2026-09-10 burst, `/compact-state`; STATE.md reduced 447->196 lines). Subsequent bursts (SESSION-WRAP-PAUSE-2026-09-10 formalization, MAINTENANCE-SWEEP-2026-09-10 STARTED, and this MAINTENANCE-SWEEP-2026-09-10 COMPLETE burst) have each re-added a small transient overage (checkpoint/sweep bookkeeping + Phase Progress rows), putting STATE.md back OVER the 200-line soft target (see the SIZE BUDGET banner above) -- tracked, not re-opened as a distinct item; the next `/compact-state` pass will re-condense.
-- `MAINTENANCE-SWEEP-2026-09-10-MERGES-PENDING` -- LOW, non-blocking. 4 human-gated merges from this sweep -- `#800` (`chacha20` 0.10.0->0.10.2 fix), `#801` (README/CLAUDE.md doc-sync), `#779` (`action-gh-release` 3.0.3, soak PASS), `#754` (`codeql` 4.37.9, soak PASS) -- await human action; the auto-mode classifier blocked admin-merge on all four (`auto_merge: false`). Non-blocking to the pipeline, which stays PAUSED regardless. Full sweep report: `maintenance/sweep-report-2026-09-10.md`.
+- `STATE-MD-OVER-SOFT-TARGET` -- **RESOLVED 2026-09-10** (STATE-MD-COMPACT-2026-09-10 burst, `/compact-state`; STATE.md reduced 447->196 lines). Subsequent bursts (SESSION-WRAP-PAUSE-2026-09-10 formalization, MAINTENANCE-SWEEP-2026-09-10 STARTED/COMPLETE/MERGES-LANDED) have each re-added a small transient overage (checkpoint/sweep bookkeeping + Phase Progress rows), putting STATE.md back OVER the 200-line soft target (see the SIZE BUDGET banner above) -- tracked, not re-opened as a distinct item; the next `/compact-state` pass will re-condense.
+
+**RESOLVED this burst (moved to `cycles/RESOLVED-DRIFT-ITEMS.md`):** `MAINTENANCE-SWEEP-2026-09-10-MERGES-PENDING` -- all 4 human-gated merges landed on `develop` 2026-09-10.
 
 All other standing debt -- full text preserved, nothing deleted: OPEN items (cycle-005/006 close deferrals, cycle-002/003/004 LOW items, process-gaps, `PR-REVIEW-SELF-APPROVE-HOOK-LOOP`, Dependabot PRs, `VP-COUNT-RECONCILIATION`, the S-PG-* backlog, etc.) at `cycles/OPEN-STANDING-ITEMS.md`; RESOLVED/CLOSED items and historical narrative at `cycles/RESOLVED-DRIFT-ITEMS.md`.

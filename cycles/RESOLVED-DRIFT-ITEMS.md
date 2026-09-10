@@ -53,3 +53,16 @@ Fixed by spec-steward directly in the MAINTENANCE-SWEEP-2026-09-10 single-commit
 - `CYCLE5-STEP45-LOW-1` (= `CYCLE5-W2-LOW-1-SPEC-PROSE`) -- **RESOLVED 2026-09-10.** `specs/prd/cross-cutting.md`'s BC-X.7.007 point 2 prose was clarified to spell out the exact-match-precedence-then-substring-fallback order explicitly: a case-insensitive exact match on `display_name` takes precedence and, when present, is the sole basis for keeping a candidate; only when no candidate exact-matches does the filter fall back to `partial_match`'s substring check. The implementation was already correct and faithful to the mandated `partial_match` reuse -- only the spec wording was unclear.
 
 Full sweep detail: `.factory/maintenance/sweep-report-2026-09-10.md`.
+
+## `MAINTENANCE-SWEEP-2026-09-10-MERGES-PENDING` — RESOLVED 2026-09-10 (same day)
+
+**RESOLVED 2026-09-10.** All 4 human-gated merges from MAINTENANCE-SWEEP-2026-09-10 (`#800` chacha20 0.10.0->0.10.2 fix, `#801` README/CLAUDE.md doc-sync, `#779` `action-gh-release` 3.0.3 Dependabot bump, `#754` `codeql` 4.37.9 Dependabot bump) landed on `develop` by human action, same day as the sweep closed. `develop` tip advanced `78aeb86c` -> `14e695ae`:
+
+| PR | Merge SHA |
+|----|-----------|
+| #779 | `211ae959` |
+| #754 | `d4760cd5` |
+| #800 | `522f9ba2` |
+| #801 | `14e695ae` |
+
+Sweep is fully closed with zero outstanding actions. `activation_head` frontmatter stays `a9168212` unchanged (no release tag cut). No DEC minted -- maintenance-mode bookkeeping only.
