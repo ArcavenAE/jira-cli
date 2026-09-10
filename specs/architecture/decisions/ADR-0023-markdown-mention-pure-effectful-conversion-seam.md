@@ -941,6 +941,31 @@ BC/EC/holdout files):
    unconditional should be checked against this tightened contract and revised if it asserts the
    pre-tightening behavior.
 
+### 7a. Post-#795 implementation note: `is_at_name_boundary` / `is_mention_boundary` boundary-set split (CYCLE5-F7-DOC-2)
+
+**Status:** Implementation note, added post-landing (PR #795, commit `cef4a021`,
+F-M1/F-L1 fix). Documents a discovered refinement to the boundary-character rule §4a point 2
+and BC-7.2.018's detection grammar describe; it does not revise any decision made above.
+
+`src/adf.rs` implements the mention-opener boundary check as two distinct functions rather than
+one shared one, because the two mention forms need different boundary-character sets:
+
+- `is_mention_boundary` — used by the bracket-form (`[~accountid:X]`) detection path. Its
+  boundary set is unchanged from the original design: start-of-node, whitespace, or one of
+  `*_~(`.
+- `is_at_name_boundary` — used by the `@Name` detection path (`find_mention_candidates`'s
+  `@`-opener rule, BC-7.2.018 point/rule 1). Fix F-M1/F-L1 (PR #795) EXCLUDES `]` from this
+  function's boundary-character set, where it had previously been accepted as a valid opener
+  position alongside `*_~(`. Without the exclusion, prose immediately following a closing
+  bracket — e.g. `[some link]@handle` or a bracket-form mention immediately followed by an
+  `@Name` token — could misdetect an `@` positioned right after `]` as a legitimate `@Name`
+  opener, which is not the intended boundary set for this form.
+
+The two functions are kept separate (not unified into one shared boundary-set constant) because
+this is exactly the point of divergence: the bracket form's boundary set and the `@Name` form's
+boundary set are no longer identical after this fix. Do not attempt to re-merge them without
+re-verifying both detection grammars' example-anchor tests in `src/adf.rs::tests`.
+
 ## Rationale
 
 - **Preserves the single most valuable invariant in the codebase:** `adf.rs` remains pure,

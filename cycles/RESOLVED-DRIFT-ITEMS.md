@@ -43,3 +43,13 @@ Full resolution detail (including the earlier 3-finding Step-4.5 arc): `cycles/c
 ## STATE-MD-OVER-SOFT-TARGET
 
 **RESOLVED 2026-09-10** by this compaction itself (`/compact-state`, v4.03 -> v4.04): STATE.md reduced from 447 lines to under the 200-line soft target via extraction of historical content into this file and its siblings under `cycles/`.
+
+## Cycle-005 S-7.02 doc-hygiene deferrals — RESOLVED at MAINTENANCE-SWEEP-2026-09-10
+
+Fixed by spec-steward directly in the MAINTENANCE-SWEEP-2026-09-10 single-commit burst (guards `scripts/check-spec-counts.sh` and `scripts/check-bc-cumulative-counts.sh` both green after the fix; counts unchanged 754/76/118/175; no DEC minted -- maintenance-mode doc-hygiene, not a spec revision).
+
+- `CYCLE5-F7-DOC-1` -- **RESOLVED 2026-09-10.** `phase-f2-spec-evolution/verification-delta-674.md`'s VP-674-005 section, which still read F2-era "UNPROVEN" prose, received the F6 closure note: the decidable half of the empirical-schema question was resolved via AC-015 (Atlaskit `adf-schema` mark-composition rule pinned as an example anchor in `src/adf.rs::tests`), and the residual sub-case (a mention node lacking `attrs.text` reaching the mark-composition path) is documented UNREACHABLE -- BC-X.7.010's mandatory preflight always populates `attrs.text` on a bracket-form mention before conversion.
+- `CYCLE5-F7-DOC-2` -- **RESOLVED 2026-09-10.** `specs/architecture/decisions/ADR-0023-markdown-mention-pure-effectful-conversion-seam.md` received a new §7a post-#795 implementation note documenting the `is_at_name_boundary` / `is_mention_boundary` boundary-character-set split introduced by `FIX-F5-001` (PR #795, commit `cef4a021`): the `@Name` detection path's boundary function excludes `]` from its opener boundary set (unlike the bracket-form path's function, which retains it), preventing misdetection of an `@` immediately following a closing bracket as a legitimate `@Name` opener.
+- `CYCLE5-STEP45-LOW-1` (= `CYCLE5-W2-LOW-1-SPEC-PROSE`) -- **RESOLVED 2026-09-10.** `specs/prd/cross-cutting.md`'s BC-X.7.007 point 2 prose was clarified to spell out the exact-match-precedence-then-substring-fallback order explicitly: a case-insensitive exact match on `display_name` takes precedence and, when present, is the sole basis for keeping a candidate; only when no candidate exact-matches does the filter fall back to `partial_match`'s substring check. The implementation was already correct and faithful to the mandated `partial_match` reuse -- only the spec wording was unclear.
+
+Full sweep detail: `.factory/maintenance/sweep-report-2026-09-10.md`.

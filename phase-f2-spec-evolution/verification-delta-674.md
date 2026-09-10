@@ -421,6 +421,18 @@ BC-7.2.016 EC-7.2.016-5 (same phase-perimeter discipline VP-571-002's
 R13-LOW-3 clause established). **Flagged for the F2 gate**: this VP's anchor
 shape is contingent on an F4 finding, not fixed here.
 
+**F6 closure note (CYCLE5-F7-DOC-1):** the decidable half of this VP's
+empirical-schema question has since been resolved: AC-015 empirically pinned
+the observed Atlaskit `adf-schema` mark-composition rule as an example anchor
+in `src/adf.rs::tests` (test evidence lives there, not in this delta doc),
+and the feature cycle carrying that resolution fully converged and CLOSED per
+DEC-353. The residual sub-case this VP originally flagged as open — whether a
+mention node lacking `attrs.text` could reach the mark-composition path at
+all — is documented UNREACHABLE: BC-X.7.010's mandatory preflight always
+populates `attrs.text` on a bracket-form mention before conversion, so that
+code path cannot be exercised with `attrs.text` absent. This note updates
+status prose only; VP-674-005's id, pins, and citations above are unchanged.
+
 ### VP-674-018 — `@Name` detection-grammar property (proptest + example)
 **Technique**: proptest (grammar generator) + example-anchored `#[test]` cases.
 **Pins**: BC-7.2.018 (the `@Name` candidate-detection grammar) — the surface
