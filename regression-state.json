@@ -1,1 +1,1 @@
-{"status":"pass","timestamp":"2026-09-11T18:27:37Z","command":"cd /Users/zious/Documents/GITHUB/jira-cli/.worktrees/S-cycle7-credential-absence-fix && cargo test --no-run 2>&1 | grep -E \"error|warning|FAILED\" | head -10"}
+{"status":"pass","timestamp":"2026-09-11T19:13:31Z","command":"cd /Users/zious/Documents/GITHUB/jira-cli/.worktrees/S-cycle7-credential-absence-fix && cargo test --test auth_credential_absence test_bc_1_4_032 -- --nocapture 2>&1 | tail -10"}
