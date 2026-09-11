@@ -45,6 +45,60 @@ Human chose RECORD DEFERRALS ONLY, NO follow-up stories opened; originally 6 ite
 |------|-------|--------|--------|
 | `E2E-DISCOVER-SAFE-EDIT-FIELD-VALIDATED-SUBTYPE` | coverage, LOW/MEDIUM, non-blocking | future maintenance | `discover_safe_edit_field` in `tests/e2e_live.rs` filters only on `schema.type == "string"`, so on a project whose only non-`Environment` editable string field is a validated-format subtype (e.g. a URL custom field), `test_e2e_issue_edit_custom_field`'s dynamic path could produce a real 400 -> test failure rather than a clean skip. Nightly/non-blocking, no data risk; the `Environment`-preferred path avoids it on the canonical E2E project. Candidate hardening: also exclude constrained `schema.custom` subtypes, or treat a write 400 as a skip. |
 
+## E2E test `test_e2e_issue_edit_custom_field` — ADF-field heuristic defect (E2E-EDIT-FIELD-ADF-HEURISTIC)
+
+**ID:** `E2E-EDIT-FIELD-ADF-HEURISTIC`
+**Severity:** LOW, non-blocking. NOT a quality-gate blocker.
+**Status:** OPEN, deferred to next maintenance sweep.
+**Classification:** test-infrastructure defect. UNRELATED to cycle-007 (auth) — off the F4 critical path. Do not fold into cycle-007.
+**Added:** 2026-09-11, bookkeeping burst (state-manager, TD-VSDD-053 single-commit).
+
+**Summary:** The live-Jira E2E test `tests/e2e_live.rs::test_e2e_issue_edit_custom_field` fails
+deterministically on `develop` SHA `14e695ae` (E2E run 34588420715, 2026-09-11 10:16 UTC, and the
+identical push run 34534019457 on the same SHA) with:
+```
+API error (400): environment: Operation value must be an Atlassian Document (see the Atlassian Document Format)
+```
+106/107 E2E tests pass; this is the sole failure. E2E (Live Jira) is a NON-BLOCKING workflow
+(not in `ci-gate.needs`), so it did not and does not gate any merge — PR #801 merged
+legitimately.
+
+**Root cause:** `tests/e2e_live.rs::discover_safe_edit_field` (added 2026-09-10 by commit
+`3a874d90`) picks a write target using the heuristic `schema.type == "string"` and PREFERS
+Jira's `Environment` system field. On Jira Cloud REST v3, `environment` (like `description`)
+is a rich-text/ADF field that requires an Atlassian Document Format object on write even though
+its `editmeta` `schema.type` is `"string"`. The test sends a plain string → Jira 400. The
+product (`jr issue edit --field`) is behaving correctly (plain-string write for a nominal string
+field is idiomatic for a thin client); the defect is in the TEST's selection heuristic only.
+
+**Research:** Full sourced findings at `.factory/research/e2e-environment-adf-field-2026-09-11.md`
+(HIGH confidence). Key result: there is NO generic documented `editmeta` signal that distinguishes
+an ADF-backed "string" field from a plain-string one — Atlassian closed the fix as Won't Fix
+(JRACLOUD-75814); renderer-exposure issue Timed Out (JRACLOUD-75913). The ONLY reliable metadata
+discriminators are hard-coded system field IDs and the built-in `schema.custom` type key:
+`com.atlassian.jira.plugin.system.customfieldtypes:textfield` = plain single-line string;
+`...:textarea` = ADF.
+
+**Recommended fix** (for whichever future maintenance/test-fix story picks this up):
+- Remove the `Environment` preference block in `tests/e2e_live.rs::discover_safe_edit_field`.
+- Replace the `is_string_field` predicate with one requiring `schema.type == "string"` AND
+  `schema.custom == "com.atlassian.jira.plugin.system.customfieldtypes:textfield"` (the only
+  documented plain-string class; always a `customfield_NNNNN`).
+- Return the field in the literal `customfield_NNNNN` bypass form (no display-name resolution).
+- Add a defensive denylist skipping `summary`/`description`/`environment`.
+- Keep clean-skip (`None`) semantics and the `JR_E2E_EDIT_FIELD` override escape hatch unchanged.
+- Residual (acceptable): a project with no single-line-text custom field on the edit screen will
+  clean-skip rather than test; covered by the env override.
+
+**Target:** Next maintenance sweep (or a small dedicated E2E-test-fix follow-up), routed through
+the normal fix pipeline — not hand-edited.
+
+**Note:** Supersedes / clarifies `E2E-DISCOVER-SAFE-EDIT-FIELD-VALIDATED-SUBTYPE` (table above) —
+that item anticipated a potential future issue with validated-format subtype fields; this item
+records the ACTUAL observed deterministic failure and its confirmed root cause (the ADF/plain-string
+schema gap, not a subtype-validation issue). Both items remain open; the fix described here
+addresses both.
+
 ## Live-Jira E2E round-trip (`H-NEW-MENTION-009`, AC-017) — human-owned post-close follow-up, NOT a skip
 
 DEFERRED by human decision, carried forward past cycle-005's CLOSE. The 4 `JR_RUN_E2E`-gated scenarios are written and clean-skip in CI (inert without `JR_RUN_E2E=1`/`JR_E2E_MENTION_ACCOUNT_ID`); the human will run them against their own Jira instance at a time of their choosing.

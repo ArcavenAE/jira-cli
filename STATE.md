@@ -1,10 +1,10 @@
 ---
 document_type: pipeline-state
 level: ops
-version: "4.12"
+version: "4.13"
 status: active
 producer: state-manager
-timestamp: 2026-09-11T12:47:09Z
+timestamp: 2026-09-11T15:07:56Z
 phase: "PAUSED 2026-09-11. cycle-007 (auth-correctness-dx) OPEN, Feature Mode. Phase F1 (delta analysis) APPROVED 2026-09-10 (DEC-354) -- 6-issue scope (#784/#786-narrowed/#787/#788/#790/#783); #785 DEFERRED (parked). Phase F2 (spec evolution) APPROVED 2026-09-10 (DEC-355) -- 3 new BCs BC-1.6.048/049/050 + amendments to BC-1.4.032/033/034/BC-1.6.047, 6 new VPs VP-AUTHDX-024..029, spec 2.2.0->2.3.0 MINOR. Phase F3 (incremental story decomposition) HUMAN GATE APPROVED 2026-09-11 (DEC-356) -- 5 new stories (S-cycle7-credential-absence-fix closes #784+#786, S-cycle7-auth-state-derivation #788, S-cycle7-auth-status-json #787 depends-on auth-state-derivation, S-cycle7-oauth-help-text-fix #790, S-cycle7-readme-migration-note #783), 28 points, 2 waves (Wave 1 A/B1/C/D=20pts, Wave 2 B2=8pts), acyclic (B1->B2 only cross-story edge); 11 total adversary story-review passes to zero-novelty convergence preceded the gate. Phase F4 (delta implementation) STARTED then PAUSED at this session wrap -- the F4 regression-baseline sub-agent was IN-FLIGHT and was cleanly ABANDONED (a re-runnable read-only measurement with no committable state; no worktrees or code were produced). No worktrees/code/PRs exist for cycle-007 yet. Core touch point src/api/auth.rs remains flagged HIGH regression risk (3rd consecutive cycle touching this file). All six prior cycles (001-006) remain CLOSED, historical. Full prior narrative: F1/F2/F3 Phase Progress rows + cycles/cycle-007/session-checkpoints.md."
 pipeline: PAUSED
 inputs: []
@@ -12,8 +12,8 @@ input-hash: "[live-state]"
 traces_to: ""
 project: jira-cli
 mode: brownfield
-last_amended: "2026-09-11, v4.12, state-manager -- SESSION-WRAP-PAUSE-2026-09-11: minted DEC-356 recording the human's F3 story-decomposition scope-gate approval (2026-09-11 -- 5 new stories, 28 points, 2 waves, acyclic B1->B2, proceeding to F4) and paused the pipeline at F4-start for session clear; the F4 regression-baseline sub-agent was in-flight and was cleanly abandoned (re-runnable, no committable state; re-run at F4 Step 1 on resume); zero worktrees/code/PRs exist for cycle-007. Archived the prior v4.11 Session Resume Checkpoint to cycles/cycle-007/session-checkpoints.md and wrote one new checkpoint. Updated the F3 Phase Progress row's Status cell in place (CONVERGED -> APPROVED (DEC-356)) and appended a new SESSION-WRAP-PAUSE-2026-09-11 row, archiving the oldest row (E2E-CI-DYNAMIC-TESTS-DELIVERED-2026-09-10) to cycles/HISTORY-PHASE-PROGRESS.md to hold the live table at 7 rows. Counts unchanged: total_bcs 757, VP count 82, holdout scenarios 118, total_stories 180. Committed the stray uncommitted churn present at wrap time (regression-state.json, sidecar-learning.md, code-delivery/PR-800/, code-delivery/PR-801/) in this same atomic commit per the wrap clean-tree requirement -- an explicit exception to the usual per-burst stray-churn-stays-uncommitted convention. version: 4.11->4.12 (exactly one bump, no double-bump)."
-current_step: "D-chain cite D-053, D-2026 latest brownfield. SESSION-WRAP-PAUSE-2026-09-11: state-manager minted DEC-356 (the human's F3 story-decomposition scope-gate approval, 2026-09-11 -- 5 new stories, 28 points, 2 waves, acyclic B1->B2, proceeding to F4) and paused the pipeline at F4-start for session clear, in a single atomic burst on factory-artifacts (TD-VSDD-053). The F4 regression-baseline sub-agent was in-flight and was cleanly abandoned (re-runnable read-only measurement, no committable state; re-run at F4 Step 1 on resume). No worktrees, code, or PRs exist for cycle-007 yet. trajectory-tail →1→3→0→2 unchanged (no cycle-007 code exists; the F5 code-review loop this counter tracks has not started)."
+last_amended: "2026-09-11, v4.13, state-manager -- BOOKKEEPING-BURST-E2E-ADF-HEURISTIC-2026-09-11: recorded new non-blocking standing item E2E-EDIT-FIELD-ADF-HEURISTIC (LOW, test-infrastructure defect in tests/e2e_live.rs::discover_safe_edit_field ADF-field heuristic; deferred to next maintenance sweep; unrelated to cycle-007 auth; full detail at cycles/OPEN-STANDING-ITEMS.md; research at research/e2e-environment-adf-field-2026-09-11.md). Added one-line headline bullet to Drift/Standing Items. Committed research/e2e-environment-adf-field-2026-09-11.md alongside pre-existing stray churn (regression-state.json, sidecar-learning.md). Counts unchanged: total_bcs 757, VP 82, holdout 118, total_stories 180. No phase transition; cycle-007 remains PAUSED at F4-start (separate resume in progress). version: 4.12->4.13."
+current_step: "D-chain cite D-053, D-2026 latest brownfield. BOOKKEEPING-BURST-2026-09-11: state-manager recorded new non-blocking standing item E2E-EDIT-FIELD-ADF-HEURISTIC (LOW, tests/e2e_live.rs::discover_safe_edit_field ADF-field heuristic defect; confirmed failure on SHA 14e695ae via E2E runs 34588420715 + 34534019457, 2026-09-11; deferred to next maintenance sweep; unrelated to cycle-007 auth). Full detail at cycles/OPEN-STANDING-ITEMS.md; research at research/e2e-environment-adf-field-2026-09-11.md. Counts unchanged. No phase transition. cycle-007 remains PAUSED at F4-start. trajectory-tail →1→3→0→2 unchanged."
 trajectory_tail: "→1→3→0→2"
 maintenance_run:
   status: COMPLETE
@@ -39,62 +39,18 @@ activation_head: "a9168212"
 activation_version: "v0.7.0-dev.5"
 ---
 
-<!-- STATE.md SIZE BUDGET (2026-09-11, SESSION-WRAP-PAUSE-2026-09-11 checkpoint -- this is the
-     /vsdd-factory:wrap Step 4 checkpoint-write. `pipeline:` flips ACTIVE -> PAUSED this burst;
-     cycle-007 (auth-correctness-dx) is the sole OPEN cycle, now with F1/F2/F3 all HUMAN GATE
-     APPROVED (DEC-354/DEC-355/DEC-356) and Phase F4 (delta implementation) STARTED then PAUSED
-     at this wrap; all six prior cycles (001-006) remain CLOSED, historical; line count refreshed
-     after this burst's Write):
-     This is a SESSION-LIFECYCLE PAUSE burst (state-manager, per orchestrator instruction -- mints
-     DEC-356 recording the human's F3 scope-gate approval, then pauses the pipeline for session
-     clear). `pipeline:` ACTIVE -> PAUSED. `current_cycle:` frontmatter updated to reflect F1/F2/F3
-     all APPROVED and F4 STARTED-then-PAUSED. `phase:`/`current_step:`/`last_amended:` rewritten
-     via the verbatim-strict chain (each field's prior chained value is NOT nested inside the new
-     one -- overwritten per the last_amended write-path discipline), preserving `D-chain cite
-     D-053, D-2026 latest brownfield.` and trajectory-tail `→1→3→0→2` (unchanged -- no cycle-007
-     code exists yet; F4 has not produced any committable artifact). `version:` 4.11 -> 4.12
-     (exactly one bump, no double-bump).
-     Minted DEC-356 (F3 human-gate approval, 2026-09-11) in the Decisions Log -- the placeholder
-     "no DEC yet for cycle-007 F3" row from the prior burst is replaced with the real decision
-     record. Updated the `F3-STORY-DECOMPOSITION-CYCLE-007` Phase Progress row's Status cell in
-     place (`CONVERGED` -> `APPROVED (DEC-356)`) and its Gate column (human gate PENDING ->
-     APPROVED). Appended ONE new Phase Progress row (`SESSION-WRAP-PAUSE-2026-09-11`, status
-     `COMPLETE`) recording the pause event itself; archived the table's oldest row
-     (`E2E-CI-DYNAMIC-TESTS-DELIVERED-2026-09-10`) to `cycles/HISTORY-PHASE-PROGRESS.md` to hold
-     the live table at 7 rows per the "recent 7" convention.
-     Archived the prior (v4.11) `## Session Resume Checkpoint` to
-     `cycles/cycle-007/session-checkpoints.md` (new file, session-checkpoints template, marked
-     Superseded 2026-09-11) BEFORE writing the one new checkpoint below -- per the "only the
-     LATEST checkpoint lives in STATE.md" rule.
-     Counts: total_bcs 757, VP count 82, holdout scenarios 118, total_stories 180 -- ALL UNCHANGED
-     this burst (a session-lifecycle pause checkpoint mints no spec/story/holdout-corpus
-     artifacts; DEC-356 records a scope-gate approval, not a spec delta). All count surfaces
-     re-verified consistent via `scripts/check-spec-counts.sh` + `scripts/check-bc-cumulative-
-     counts.sh`, both green (757 total across 9 files) before this commit -- unaffected by this
-     burst's scope, re-run as a safety check per protocol.
-     CLEAN-TREE REQUIREMENT (wrap PC-12): per orchestrator instruction, this burst's commit
-     includes ALL currently-uncommitted `.factory/` content, not just STATE.md -- the stray churn
-     present at wrap time (`regression-state.json`, `sidecar-learning.md`,
-     `code-delivery/PR-800/`, `code-delivery/PR-801/`) is committed in this same atomic commit so
-     `git -C .factory status --porcelain` is EMPTY afterward. This is an explicit, one-burst
-     exception to the usual per-burst convention of leaving unrelated stray churn uncommitted
-     (durability + a clean tree across the session-clear boundary takes priority for a wrap).
-     soft target 200 lines; hard cap 500 lines. 242 lines (wc-l) (this file, this Write) -- down
-     from the pre-burst 250 lines (DEC-356 mint + new SESSION-WRAP-PAUSE-2026-09-11 row added
-     length; archiving the oldest Phase Progress row + condensing the replacement Session Resume
-     Checkpoint net-reduced the total).
-     margin from soft-target = 242 - 200 (OVER the soft target; acceptable transient per the
-     extract-history/keep-live-state principle -- a future `/compact-state` pass will re-condense
-     once cycle-007 resumes and runs a few more bursts).
-     margin from actual = 500 - 242 (headroom remains before the hard cap).
-     RECOVERY CONTEXT: no crash this burst -- a planned, human-directed session-wrap pause event,
-     verified via a fresh read of this file before writing (still v4.11/F3-converged-awaiting-
-     gate/pipeline-ACTIVE, prior state intact) -- this Write/commit is the first and only landing
-     of this event.
-     Factory lock: no `factory_lock` frontmatter block is present in this STATE.md and the
-     lock-write/verify-sha-currency scripts are not provisioned in this repo -- the renew/unlock
-     step this burst is therefore a no-op (confirmed via `factory-lock-write.sh renew`, which
-     printed "no factory_lock block present"), noted rather than fabricated. -->
+<!-- STATE.md SIZE BUDGET (2026-09-11, BOOKKEEPING-BURST-E2E-ADF-HEURISTIC v4.13):
+     Bookkeeping-only burst: added one-line headline bullet `E2E-EDIT-FIELD-ADF-HEURISTIC`
+     to Drift/Standing Items; full detail entry written to `cycles/OPEN-STANDING-ITEMS.md`;
+     committed `research/e2e-environment-adf-field-2026-09-11.md` + pre-existing stray churn
+     (regression-state.json, sidecar-learning.md). No phase transition; no spec/story/count
+     changes (total_bcs 757, VP 82, holdout 118, total_stories 180 -- all unchanged).
+     Single full-content Write (STATE.md hook guard active). TD-VSDD-053 single-commit burst.
+     version: 4.12->4.13. soft target 200 lines; hard cap 500 lines.
+     200 lines (wc-l). At soft target; acceptable -- a future /compact-state pass will
+     re-condense once cycle-007 F4 resumes.
+     margin from soft-target = 200 - 200 = 0 (at soft target).
+     margin from actual = 500 - 200 = 300 (300 lines of headroom). -->
 
 # Pipeline State: jira-cli
 
@@ -107,7 +63,7 @@ activation_version: "v0.7.0-dev.5"
 | **Target Workspace** | develop to main |
 | **Pipeline Status** | **PAUSED** -- session-wrap pause 2026-09-11 (`/vsdd-factory:wrap` Step 4 checkpoint). cycle-007 (`auth-correctness-dx`) OPEN, Feature Mode; Phase F1 APPROVED (DEC-354, 2026-09-10); Phase F2 (spec evolution) APPROVED (DEC-355, 2026-09-10); Phase F3 (incremental story decomposition) HUMAN GATE APPROVED (DEC-356, 2026-09-11); Phase F4 (delta implementation) STARTED then PAUSED at this wrap -- the regression-baseline sub-agent was in-flight and was cleanly abandoned (re-run at resume). All six prior cycles (001-006) remain CLOSED -- see `cycles/CYCLE-SUMMARY.md` |
 | **trajectory-tail** | →1→3→0→2 (unchanged -- no cycle-007 code exists yet; the F5 code-review loop this counter tracks has not started) |
-| **Last Updated** | 2026-09-11, SESSION-WRAP-PAUSE-2026-09-11: cycle-007 F3 scope gate HUMAN GATE APPROVED (DEC-356), pipeline PAUSED at F4-start for session clear. trajectory-tail →1→3→0→2 (unchanged). Full prior per-cycle history: `cycles/CYCLE-SUMMARY.md` |
+| **Last Updated** | 2026-09-11, BOOKKEEPING-BURST-E2E-ADF-HEURISTIC: recorded E2E-EDIT-FIELD-ADF-HEURISTIC (LOW/non-blocking standing item; test-infrastructure defect in `tests/e2e_live.rs::discover_safe_edit_field`; deferred to next maintenance sweep). trajectory-tail →1→3→0→2 (unchanged). Prior: SESSION-WRAP-PAUSE-2026-09-11 -- cycle-007 F3 scope gate HUMAN GATE APPROVED (DEC-356), pipeline PAUSED at F4-start. Full prior per-cycle history: `cycles/CYCLE-SUMMARY.md` |
 | **Current Phase** | cycle-007 (`auth-correctness-dx`) Phase F4 (delta implementation) -- **STARTED then PAUSED at session wrap.** F3 (incremental story decomposition) HUMAN GATE APPROVED via DEC-356 (2026-09-11): 5 new stories (28 points, 2 waves): `S-cycle7-credential-absence-fix` (closes #784+#786), `S-cycle7-auth-state-derivation` (#788), `S-cycle7-auth-status-json` (#787, depends on auth-state-derivation), `S-cycle7-oauth-help-text-fix` (#790), `S-cycle7-readme-migration-note` (#783). Wave 1 (A/B1/C/D, 20pts) + Wave 2 (B2, 8pts), acyclic (B1->B2 only cross-story edge). The F4 regression-baseline sub-agent (Step 1) was IN-FLIGHT at wrap and was cleanly ABANDONED (re-runnable read-only measurement, no committable state) -- resume by re-running it before creating any Wave-1 worktrees. Core touch point `src/api/auth.rs` remains HIGH regression risk (3rd consecutive cycle). Detail: `cycles/cycle-007/phase-f3-stories/`. cycle-001 through cycle-006 all CLOSED, historical -- see `cycles/CYCLE-SUMMARY.md`. |
 | **Activation HEAD** | `a9168212` (unchanged -- no release tag cut; `develop`'s real tip is `14e695ae`) |
 
@@ -193,7 +149,7 @@ All prior per-cycle constraints narrative (cycle-005/006 CLOSE + earlier F1-F7 d
 
 **In-flight work:** F4's regression-baseline sub-agent was IN-FLIGHT at session-wrap and was cleanly ABANDONED (read-only measurement, no committable state; re-run at F4 Step 1 on resume). No stories mid-TDD, no worktrees, no cycle-007 PRs.
 
-**Pending human decisions / open follow-ups:** none blocking F4 (F3 approved via DEC-356). Standing, unchanged: `MUTANTS-NIGHTLY-VERIFY-FULL-RUN` (awaiting a scheduled nightly to confirm all 24 shards complete + a real kill rate), `VSDD-FACTORY-COMPACT-CLAUDE-MD-GAP` (engine follow-up, tracked in the vsdd-factory repo, not jira-cli), and `FIX-F6-A` / `F6-MUTATION-EXAMINE-GLOBS-EXPANSION` (`src/api/auth.rs` `examine_globs` expansion, deferred, reaffirmed not resolved by F3). Four issue bundles remain PARKED pending future human go-ahead: cycle-008 (`issue-io-quickwins`), cycle-009 (`bulk-by-jql`), cycle-010 (`read-index-lag`), cycle-011 (`filter-grammar`). GitHub #674 CLOSED (already shipped, cycle-005); #387 DEFERRED (destructive history-rewrite, out of Feature Mode scope). MAINTENANCE-SWEEP-2026-09-10 remains fully CLOSED, zero outstanding actions.
+**Pending human decisions / open follow-ups:** none blocking F4 (F3 approved via DEC-356). Standing, unchanged: `MUTANTS-NIGHTLY-VERIFY-FULL-RUN` (awaiting a scheduled nightly to confirm all 24 shards complete + a real kill rate), `VSDD-FACTORY-COMPACT-CLAUDE-MD-GAP` (engine follow-up, tracked in the vsdd-factory repo, not jira-cli), and `FIX-F6-A` / `F6-MUTATION-EXAMINE-GLOBS-EXPANSION` (`src/api/auth.rs` `examine_globs` expansion, deferred, reaffirmed not resolved by F3). New this burst: `E2E-EDIT-FIELD-ADF-HEURISTIC` (LOW, non-blocking, test-infrastructure defect -- see Drift/Standing Items). Four issue bundles remain PARKED pending future human go-ahead: cycle-008 (`issue-io-quickwins`), cycle-009 (`bulk-by-jql`), cycle-010 (`read-index-lag`), cycle-011 (`filter-grammar`). GitHub #674 CLOSED (already shipped, cycle-005); #387 DEFERRED (destructive history-rewrite, out of Feature Mode scope). MAINTENANCE-SWEEP-2026-09-10 remains fully CLOSED, zero outstanding actions.
 
 **WIP branch list:** none.
 
@@ -223,6 +179,7 @@ Burst logs, adversary pass details, session checkpoints, resolved/open standing 
 | CLAUDE.md compaction / E2E-CI dynamic-tests / mutants-nightly rebalance evidence | PR #797 @ `a1f37995`, PR #798 @ `3a874d90`, PR #799 @ `78aeb86c` -- detail: `cycles/HISTORICAL-CONTENT-INDEX-DETAIL.md` |
 | MAINTENANCE-SWEEP-2026-09-10 evidence | `maintenance/sweep-report-2026-09-10.md`, `maintenance/dependency-audit-raw-2026-09-10.log`, `maintenance/dependency-audit-raw-summary-2026-09-10.md`, `maintenance/dependency-audit-analysis-2026-09-10.md`, `maintenance/doc-drift-findings-2026-09-10.md` |
 | Pre-2026-08-25 compaction history | factory-artifacts commit `43f4a5e3` |
+| E2E ADF-field heuristic research | `research/e2e-environment-adf-field-2026-09-11.md` |
 
 ## Drift / Standing Items
 
@@ -233,6 +190,7 @@ Burst logs, adversary pass details, session checkpoints, resolved/open standing 
 - **`CYCLE-007-PARKED-BUNDLES`** -- same-day issue triage (2026-09-10) also disposed of the broader backlog: GitHub **#674 CLOSED** (already shipped, cycle-005, no further action); **#387 DEFERRED** (destructive history-rewrite -- a standalone repo-ops decision, out of Feature Mode scope, not scheduled into any cycle); 4 further bundles **PARKED** pending a future human go-ahead -- **cycle-008** (`issue-io-quickwins`), **cycle-009** (`bulk-by-jql`), **cycle-010** (`read-index-lag`), **cycle-011** (`filter-grammar`). None of the four are scheduled or scoped -- triaged and named only. Full triage: `phase-f1-delta-analysis/issue-triage-auth-cluster-2026-09-10.md` and `phase-f1-delta-analysis/issue-triage-enhancement-cluster-2026-09-10.md`.
 - `VSDD-FACTORY-COMPACT-CLAUDE-MD-GAP` -- engine gap: vsdd-factory has no `compact-claude-md` capability mirroring `compact-state`; candidate follow-up in the vsdd-factory repo, NOT jira-cli.
 - `MUTANTS-NIGHTLY-VERIFY-FULL-RUN` -- LOW, non-blocking. The mutants-nightly rebalance fix (N=16->24 shards, `timeout-minutes` 240->300, completion-sentinel guard; PR #799 @ `78aeb86c`) is statically validated only (actionlint/shellcheck/YAML-parse + local code-reviewer). A manual `workflow_dispatch` run, or the next scheduled 08:00 UTC nightly, must confirm all 24 shards complete within the 300-min cap and produce a real full-scope kill rate -- the true kill-rate-vs-90% posture is unknown until then.
+- **`E2E-EDIT-FIELD-ADF-HEURISTIC`** -- LOW, non-blocking, test-infrastructure defect only. `tests/e2e_live.rs::discover_safe_edit_field` (commit `3a874d90`) picks `environment` (an ADF rich-text field) as write target → Jira 400; 106/107 E2E pass; product code is correct. E2E workflow is non-blocking (`ci-gate.needs` excluded). Full detail + recommended fix: `cycles/OPEN-STANDING-ITEMS.md`. Research: `research/e2e-environment-adf-field-2026-09-11.md`. Deferred to next maintenance sweep; unrelated to cycle-007 (auth).
 - `STATE-MD-OVER-SOFT-TARGET` -- **RESOLVED 2026-09-10** (STATE-MD-COMPACT-2026-09-10 burst, `/compact-state`; STATE.md reduced 447->196 lines). Subsequent bursts (SESSION-WRAP-PAUSE formalizations, MAINTENANCE-SWEEP-2026-09-10 STARTED/COMPLETE/MERGES-LANDED, cycle-007-OPEN, F1/F2/F3-convergence + gate-approvals, and this pause) have each re-added a small transient overage -- tracked, not re-opened as a distinct item; a future `/compact-state` pass will re-condense once cycle-007 resumes and runs a few more bursts.
 
 **RESOLVED this burst:** `CYCLE-007-F3-SCOPE-GATE-PENDING` -- F3 approved via DEC-356, 2026-09-11.
