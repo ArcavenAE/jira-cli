@@ -17,6 +17,33 @@ traces_to: STATE.md
      Only the LATEST checkpoint lives in STATE.md.
      Prior checkpoints are archived here for historical reference. -->
 
+## Session Resume Checkpoint (2026-09-11, STATE.md v4.15) — F4-WAVE-1-IN-PROGRESS: Wave-1 worktrees created, Story A TDD started — Superseded 2026-09-11
+
+**Status:** SUPERSEDED 2026-09-11 by the v4.16 STORY-A-STEP-4.5-CONVERGED checkpoint (Story A
+per-story adversarial review CONVERGED, 9 passes, 3 consecutive CLEAN, final HEAD 67609600).
+Archived verbatim (condensed to State + Resume Prompt) from STATE.md v4.15 below.
+
+### State
+
+| Field | Value |
+|-------|-------|
+| **Date** | 2026-09-11 |
+| **Position** | cycle-007 is the sole OPEN cycle, at Phase F4 (delta implementation) IN PROGRESS. Baseline GREEN @ develop@`14e695ae` (5,267/5,091/0/176). Wave-1 worktrees created. Per-story delivery started, Story A first. All six prior cycles (001-006) CLOSED. |
+| **Convergence counter** | N/A -- F3 converged (DEC-356 approved); F4 code-review / F5 adversarial loop not yet started. trajectory-tail `->1->3->0->2` (unchanged -- no cycle-007 code merged to develop yet). |
+| **Next step (at supersession time)** | Continue Story A (`S-cycle7-credential-absence-fix`) red-green-refactor TDD cycle on `.worktrees/S-cycle7-credential-absence-fix` (`fix/cycle7-credential-absence`); then B1; C and D parallelizable in Wave 1; Wave 2 = B2 (`S-cycle7-auth-status-json`, depends on B1 merge). |
+
+### Resume Prompt (at supersession time)
+
+```
+**Date:** 2026-09-11. **Pipeline: ACTIVE** (cycle-007 `auth-correctness-dx`, F4 delta implementation IN PROGRESS). **Position:** cycle-007 is the sole OPEN cycle, at Phase F4 with regression baseline GREEN @ develop@`14e695ae` (5,267/5,091/0/176) and Wave-1 worktrees created. Per-story delivery started, Story A first. **NEXT** = continue Story A TDD cycle on `.worktrees/S-cycle7-credential-absence-fix` (`fix/cycle7-credential-absence`); then B1; C and D parallelizable in Wave 1; Wave 2 = B2.
+
+**Pending human decisions / open follow-ups:** none blocking F4. Standing: `MUTANTS-NIGHTLY-VERIFY-FULL-RUN`, `VSDD-FACTORY-COMPACT-CLAUDE-MD-GAP`, `FIX-F6-A` / `F6-MUTATION-EXAMINE-GLOBS-EXPANSION`. New: `AUTH-REMEDIATION-EQUALS-FORM-BROADER` (LOW/non-blocking).
+
+**Resume command:** `/vsdd-factory:next-step` (already in F4 with worktrees -- no rehydrate needed).
+```
+
+---
+
 ## Session Resume Checkpoint (2026-09-11, STATE.md v4.13) — SESSION-WRAP-PAUSE-2026-09-11: F3 APPROVED (DEC-356), F4 STARTED then PAUSED — Superseded 2026-09-11
 
 **Status:** SUPERSEDED 2026-09-11 by the v4.14 F4-BASELINE-GREEN-WAVE-1-STARTED checkpoint (F4 regression baseline re-run GREEN @ develop@`14e695ae`; Wave-1 worktrees created; Story A delivery started). Archived verbatim (condensed to State + Resume Prompt) from STATE.md v4.13 below.
