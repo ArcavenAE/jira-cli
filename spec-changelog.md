@@ -9,6 +9,95 @@ Track all spec version changes. Most recent version first.
 
 > **Type legend:** Type classifies the SPEC document delta: MINOR = new BCs/VPs/sections; PATCH = amendments to existing bodies/ACs/ECs. Product-semver impact is recorded in the Summary line, independent of Type.
 
+## [2.3.0] - 2026-09-10
+
+### Type: MINOR
+
+### Summary
+
+F2 spec evolution for the **auth-correctness-dx** bundle (Feature Mode `cycle-007`, human-approved
+F1 gate, issues #784/#786/#787/#788/#790/#783). Issue #785 (headless `JR_EMAIL`/`JR_API_TOKEN`
+credential resolution) is explicitly **DEFERRED** per human decision at the F1 gate — no BC,
+subdomain, or spec surface was authored for it this cycle.
+
+**3 new BCs**, all in `bc-1-auth-identity.md` §1.6: BC-1.6.048 (shared `unset`/`no-credentials`/
+`configured` auth-state vocabulary — the single source of truth `auth status` and `auth list` both
+compose against, closing the "the two commands could disagree" gap issues #787/#788 both flagged),
+BC-1.6.049 (issue #788 — `auth list`'s STATUS column derives from an actual
+auth_method-aware credential-kind probe (`load_oauth_tokens`/`load_api_token`, selected by the
+profile's `auth_method`) instead of `url.is_some()` alone; the shipped code's own doc
+comment already flagged this as provisional), BC-1.6.050 (issue #787 — `auth status --output json`
+emits the full per-profile schema `{profile, url, env, auth_method, status, oauth_app}`, modeled on
+`auth list`'s existing JSON shape, and **retires NFR-O-N**).
+
+**3 existing BCs amended in place** (`[UPDATED 2026-09-10 issue #784/#786]` tag, previous text
+preserved inline, no separate count): BC-1.4.032 and BC-1.4.033 — the two `src/api/auth.rs`
+credential-absence sites `load_api_token` returns on absent/incomplete per-profile credentials —
+both change (a) the quoted remediation command from the non-parsing positional form
+`jr auth login {profile}` to `jr auth login --profile {profile}` (issue #784: `AuthCommand::Login`
+declares `profile` as `#[arg(long)]`-only, so the positional form fails clap parsing with exit 2,
+meaning the sole remediation path for BC-1.4.034's mandatory breaking change was itself broken), and
+(b) the error type from `JrError::UserError` (exit 64) to `JrError::NotAuthenticated` (exit 2)
+(issue #786: an authentication failure indistinguishable from a usage error to any script/agent
+parsing exit codes). BC-1.4.034 is amended in the same burst since it quotes BC-1.4.032's message
+verbatim (H1 title and Postcondition 1 corrected to match). **Narrowed scope, locked at the F1
+gate:** `src/cli/auth/status.rs`'s unrelated unknown-profile error is deliberately **NOT** changed
+— it stays `JrError::UserError`/exit 64, consistent with BC-1.1.004 (unamended) and the error
+taxonomy's consistent "profile not found → 64" convention across `auth switch`/`logout`/`remove`.
+"Profile doesn't exist" (a usage error) and "profile exists but has no stored credentials" (an
+authentication error) are treated as categorically distinct — see the PRD delta §5.1 for the full
+narrowing rationale, which reverses part of the original issue-triage framing for #786.
+
+**1 existing BC amended for contingency resolution:** BC-1.6.047's EC-1.6.047-2 (`auth status
+--output json`'s `env`-field JSON obligation, previously contingent on NFR-O-N's documented gap) is
+now UNCONDITIONALLY ACTIVE, realized by BC-1.6.050. **2 light-touch additions, not counted as
+amendments:** BC-1.6.046 gains a non-normative cross-reference note flagging its 3-profile fixture's
+"All STATUS cells `configured`" line for F4 regeneration once BC-1.6.049 ships (real credential
+probing may not report all three fixture profiles as `configured`); BC-1.2.049 gains EC-1.2.049-3
+(issue #790, non-blocking — documents that `check_noninteractive_oauth_guard`'s rejection already
+correctly suppresses the deprecation notice; the actual defect was `src/cli/mod.rs`'s `--oauth`
+help string overclaiming unconditional emission and separately claiming "requires your own OAuth
+app" when jr ships an embedded OAuth app by default per ADR-0006 — both doc-string-only fixes
+outside this BC's Postconditions/Invariants).
+
+**NFR-O-N retirement RECORDED** (via BC-1.6.050's existence and this changelog entry) — `auth status
+--output json` is now specified by BC-1.6.050. **[CORRECTED 2026-09-10, same-day F2 fix round,
+finding F2-M2]** The `nfr-catalog.md` row-text edit itself (was `DEFER-DOCUMENTED`; target state
+`RETIRED`, BC Anchor → `BC-1.6.050`) is **DEFERRED at F2** — blocked by the file's pre-existing
+TD-031 stable-anchors hook debt, unrelated to this cycle's diff (see
+`cycle-007-prd-delta.md` §7/§14) — carried forward as BC-1.6.050's explicit F4 doc-fallout
+obligation (a), NOT already applied as a prior version of this entry incorrectly stated. **1 new
+architecture note:** none — Architecture is UNCHANGED this
+cycle (F1 confirmed no structural/interface redesign; issue #785's env-var-precedence design
+question, the one item with a genuine design-decision surface, is moot this cycle since #785 is
+deferred). **6 new verification properties** (VP-AUTHDX-024..029, bringing the VP corpus total to
+82 — consistent with `cycle-007-prd-delta.md` §11 and `cycle-007-verification-delta.md`):
+VP-AUTHDX-024 (BC-1.6.048 — `auth list`/`auth status` vocabulary-parity SAFETY INVARIANT, asserting
+the two commands can never disagree on a profile's auth-state for the same keychain state);
+VP-AUTHDX-025 (BC-1.6.049 — `auth list` STATUS is a real auth_method-aware credential PROBE, not
+`url.is_some()`); VP-AUTHDX-026 (BC-1.6.050 — `auth status --output json` full 6-key schema, routed
+through `output::render_json`); VP-AUTHDX-027 (BC-1.4.032 + BC-1.4.033 — recovery command PARSES
+against clap **and** credential-absence exits **2** at both `auth.rs` sites); VP-AUTHDX-028
+(BC-1.1.004, NEGATIVE pin — unknown-profile stays exit **64**, the two failure classes stay
+distinct); VP-AUTHDX-029 (BC-1.6.048 Postcondition 3 — `auth status`'s HUMAN-TEXT auth-state agrees
+with the shared derivation, the THIRD channel alongside the two JSON channels VP-AUTHDX-024 already
+pins). **[CORRECTED 2026-09-10, adversary pass-4, finding F-3]** A prior version of this entry
+undercounted this as "1 new verification property: VP-AUTHDX-024" — VP-AUTHDX-025..028 were
+allocated by the formal-verifier's delta, and VP-AUTHDX-029 by its F2-M1 follow-on; all 6 are new
+this cycle.
+
+**Doc-deltas, no BC change:** issue #783 (README upgrade-note gap: pre-cycle-003 api-token profiles
+must re-login, OAuth-vs-api-token asymmetry) and issue #790's primary defect (the `--oauth` help
+string's factual errors) are captured as doc-only deliverables in the PRD delta, not new/amended
+BCs — no BC pins literal CLI help text or README prose as a tested contract.
+
+BC count 754 → 757 (`bc-1-auth-identity.md` 80 → 83 cumulative, 69 → 72 individually-bodied;
+§1.6 subdomain 6 → 9 BCs). BC-INDEX v6.86 → v6.87. `scripts/check-spec-counts.sh` and
+`scripts/check-bc-cumulative-counts.sh` both verified green after this delta. See
+`.factory/phase-f2-spec-evolution/cycle-007-prd-delta.md`,
+`.factory/phase-f1-delta-analysis/cycle-007-auth-delta-analysis.md`,
+`.factory/phase-f1-delta-analysis/issue-triage-auth-cluster-2026-09-10.md`.
+
 ## [2.2.0] - 2026-09-06
 
 ### Type: MINOR

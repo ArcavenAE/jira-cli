@@ -19,7 +19,7 @@ re-run to verify. Disputes go here first.
 
 | File | Actual `#### BC-` count | Frontmatter `definitional_count` | Match? |
 |------|------------------------|----------------------------------|--------|
-| bc-1-auth-identity.md | 69 | 69 | YES |
+| bc-1-auth-identity.md | 72 | 72 | YES |
 | bc-2-issue-read.md | 80 | 80 | YES |
 | bc-3-issue-write.md | 127 | 127 | YES |
 | bc-4-assets-cmdb.md | 22 | 22 | YES |
@@ -28,7 +28,7 @@ re-run to verify. Disputes go here first.
 | bc-7-output-render.md | 53 | 53 | YES |
 | bc-8-components.md | 28 | 28 | YES |
 | cross-cutting.md | 93 | 93 | YES |
-| **Total individually-bodied** | **524** | — | — |
+| **Total individually-bodied** | **527** | — | — |
 
 Verification command:
 ```bash
@@ -41,7 +41,7 @@ done
 
 | File | Frontmatter `total_bcs` |
 |------|------------------------|
-| bc-1-auth-identity.md | 80 |
+| bc-1-auth-identity.md | 83 |
 | bc-2-issue-read.md | 122 |
 | bc-3-issue-write.md | 156 |
 | bc-4-assets-cmdb.md | 32 |
@@ -50,11 +50,30 @@ done
 | bc-7-output-render.md | 97 |
 | bc-8-components.md | 28 |
 | cross-cutting.md | 159 |
-| **Sum** | **754** |
+| **Sum** | **757** |
 
 ### Grand total
 
-**Canonical grand total: 754** (+12 BC-7.2.016..019 + BC-X.7.007..010 + BC-3.3.012 + BC-3.4.032 +
+**Canonical grand total: 757** (+3 BC-1.6.048..050 added 2026-09-10 via cycle-007
+`auth-correctness-dx` F2 spec evolution, human-approved F1 gate, issues #787/#788 — BC-1.6.048
+(NEW, shared `unset`/`no-credentials`/`configured` auth-state vocabulary, single source of truth
+for `auth status` and `auth list`), BC-1.6.049 (NEW, #788 — `auth list` STATUS column derives from
+an actual `profile_has_stored_credentials` probe instead of `url.is_some()` alone), BC-1.6.050
+(NEW, #787 — `auth status --output json` full per-profile schema, retires NFR-O-N and activates
+BC-1.6.047 Postcondition 2a's previously-contingent JSON obligation) — all three in
+bc-1-auth-identity.md (80→83 cumulative, 69→72 individually-bodied). BC-1.4.032/BC-1.4.033/
+BC-1.4.034 AMENDED in place (#784 + #786, narrowed to the two `src/api/auth.rs` credential-absence
+sites only — `src/cli/auth/status.rs`'s unrelated unknown-profile site, BC-1.1.004, deliberately
+NOT changed, preserving the taxonomy's "profile not found → 64" convention): quoted remediation
+command `jr auth login {profile}` (non-parsing positional form) corrected to `jr auth login
+--profile {profile}`; error type `JrError::UserError`/exit 64 reclassified to
+`JrError::NotAuthenticated`/exit 2. BC-1.6.047 AMENDED in place (EC-1.6.047-2's NFR-O-N contingency
+RESOLVED). BC-1.6.046 gains a non-normative cross-reference note (fixture STATUS values pending
+BC-1.6.049's F4 regeneration). BC-1.2.049 gains EC-1.2.049-3 (#790, non-blocking doc-alignment
+note). No separate count for any of the above amendments. #783 (README migration note) and #790's
+primary help-text correction are doc-deltas outside the BC surface. Was 754 before this addition;
+full delta: `.factory/phase-f2-spec-evolution/cycle-007-prd-delta.md`; prior note: +12
+BC-7.2.016..019 + BC-X.7.007..010 + BC-3.3.012 + BC-3.4.032 +
 BC-3.5.013 + BC-3.8.018 added 2026-09-06 via cycle-005 `adf-mentions` F2 spec evolution INTEGRATE
 sub-burst, issue #674 — markdown `@Name`/`[~accountid:...]` mention → ADF `mention` node: pure
 bracket-form forward emission + `attrs.text` display-name enrichment + `@Name` candidate-detection
@@ -195,7 +214,7 @@ bc_count in L2 represents the same cumulative claim (individually-bodied + range
 
 | L2 File | L2 bc_count (after P17 fix) | L3 File | L3 total_bcs | Aligned? |
 |---------|----------------------------|---------|--------------|----------|
-| bc-01-auth-identity.md | 57 | bc-1-auth-identity.md | 80 | PENDING (L2 not bumped by the 2026-09-03 cycle-004 `windows-correctness` F2 delta — F2 touched L3 only, same posture as prior bc-1 deltas; +9 BCs BC-1.2.052..054 + BC-1.4.035..040 added DEC-334/ADR-0021/ADR-0022, issues #759/#760; prior: PENDING since the 2026-09-01 cycle-003 `auth-profile-dx` F2-gate FIX round — +2 BCs BC-1.1.016 + BC-1.4.034 added same-day fix round; +12 BCs BC-1.1.013..015 + BC-1.2.048..051 + BC-1.4.031..033 + BC-1.6.047 added DEC-312..325/ADR-0020; prior: PENDING since the 2026-08-13 F2 bucket1-defects delta) |
+| bc-01-auth-identity.md | 57 | bc-1-auth-identity.md | 83 | PENDING (L2 not bumped by the 2026-09-10 cycle-007 `auth-correctness-dx` F2 delta — F2 touched L3 only, same posture as prior bc-1 deltas; +3 BCs BC-1.6.048..050 added issues #787/#788, retires NFR-O-N; BC-1.4.032/033/034 amended in place for #784/#786, no count change; prior: PENDING since the 2026-09-03 cycle-004 `windows-correctness` F2 delta — F2 touched L3 only, same posture as prior bc-1 deltas; +9 BCs BC-1.2.052..054 + BC-1.4.035..040 added DEC-334/ADR-0021/ADR-0022, issues #759/#760; prior: PENDING since the 2026-09-01 cycle-003 `auth-profile-dx` F2-gate FIX round — +2 BCs BC-1.1.016 + BC-1.4.034 added same-day fix round; +12 BCs BC-1.1.013..015 + BC-1.2.048..051 + BC-1.4.031..033 + BC-1.6.047 added DEC-312..325/ADR-0020; prior: PENDING since the 2026-08-13 F2 bucket1-defects delta) |
 | bc-02-issue-read.md | 108 | bc-2-issue-read.md | 122 | PENDING (L2 not bumped by the 2026-08-21 F2 list-read-ergonomics delta — F2 touched L3 only, same posture as bc-01; +8 BCs BC-2.1.023..025 + BC-2.2.033..034 + BC-2.3.041..042 + BC-2.6.052 added issues #575/#584/#579/#588; prior: PENDING since the 2026-08-15 F2 component-management delta; prior: YES, bumped 2026-08-13; +2 BCs BC-2.2.032 + BC-2.3.039 added F2 issue #668 duedate feature; prior: bumped 2026-07-15; +12 BCs BC-2.7.001..012 added SOH-ATTACHMENTS-1 F2 DEC-179) |
 | bc-03-issue-write.md | 140 | bc-3-issue-write.md | 152 | PENDING (L2 not bumped by the 2026-08-25 F2 Field DX delta — F2 touched L3 only, same posture as bc-01; +8 BCs BC-3.3.010..011 + BC-3.4.026..031 added issues #580/#578; prior: PENDING since the 2026-08-15 F2 component-management delta; prior: YES, bumped 2026-07-15; +14 BCs BC-3.9.001..014 added SOH-ATTACHMENTS-1 F2 DEC-179; +6 BCs BC-3.9.015..020 added adversary pass-1 round B 2026-07-15) |
 | bc-04-assets-cmdb.md | 32 | bc-4-assets-cmdb.md | 32 | YES (was 44) |

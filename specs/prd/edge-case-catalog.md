@@ -1,9 +1,10 @@
 ---
 context: edge-case-catalog
 title: "Edge Case Catalog"
-last_updated: 2026-08-14
+last_updated: 2026-09-10
 source_pass: 3
 trace: |
+  - F2 spec evolution, cycle-007 `auth-correctness-dx` (2026-09-10, human-approved F1 gate, issues #784/#786/#787/#788): added EC-AUTH-010 (credential-absence remediation command must parse, #784), EC-AUTH-011 (credential-absence exit code is NotAuthenticated/2 narrowly, not the unrelated unknown-profile UserError/64 site, #786), EC-AUTH-012 (`auth list`/`auth status` truthful-status vocabulary parity, #787+#788). Cross-references BC-1.4.032/033 (AMENDED), BC-1.1.004 (unamended), BC-1.6.048/049/050 (NEW).
   - F2 spec evolution (2026-08-14, S-MUTANTS-SCOPE-1): EC-HTTP-005 citation corrected — was mis-cited as "Covered by BC-X.1.009" (the unrelated 429-exhausted-warning BC); corrected to BC-X.3.006 (the actual Ctrl+C/SIGINT BC, amended in the same change to a full BC with exact stderr/exit-code contract and Verification Properties). Confidence label MEDIUM→HIGH.
   - L2: .factory/specs/domain-spec/
   - Source broad: .factory/semport/jira-cli/jira-cli-pass-3-behavioral-contracts.md §3 (cross-ref), §5
@@ -78,6 +79,24 @@ Categories:
 **Expected**: `InsufficientScope` variant raised (not generic `NotAuthenticated`).
 **Status**: Covered by BC-1.6.042; holdout H-012.
 **Test gap**: Any future tightening of the substring match would silently break this.
+
+### EC-AUTH-010: `load_api_token` credential-absence remediation command must parse (cycle-007, #784)
+**Boundary**: A profile with no stored per-profile api-token credentials (both namespaced keys absent, or exactly one present) invokes any command requiring auth.
+**Expected**: The actionable error's remediation command is `jr auth login --profile {profile}` — the flag form `AuthCommand::Login` actually accepts (`profile: Option<String>` is `#[arg(long)]`-only) — never the positional `jr auth login {profile}` form, which fails clap parsing with exit 2 before ever reaching the login flow.
+**Status**: Covered by BC-1.4.032 Postcondition 2 / BC-1.4.033 Postcondition 2 (both AMENDED 2026-09-10, cycle-007 `auth-correctness-dx`).
+**Test gap**: A regression test asserting every `auth login` remediation string in the codebase contains `--profile` (not a bare positional) would close this class of defect proactively — recommended, not yet implemented as of this F2 pass.
+
+### EC-AUTH-011: Credential-absence exit code is `NotAuthenticated`/2, not `UserError`/64 — scoped narrowly (cycle-007, #786)
+**Boundary**: Same trigger as EC-AUTH-010 (both-absent or partial-namespaced-pair states in `load_api_token`), vs. the DIFFERENT trigger of `auth status --profile <name-that-does-not-exist-in-config>`.
+**Expected**: The two `src/api/auth.rs::load_api_token` credential-absence sites raise `JrError::NotAuthenticated` (exit 2) — an authentication failure, distinguishable by script/agent exit-code inspection from a usage error. `src/cli/auth/status.rs`'s UNRELATED unknown-profile site (a profile name that was never configured at all — a usage error, not an authentication failure) is DELIBERATELY UNCHANGED at `JrError::UserError`/exit 64, consistent with BC-1.1.004 and the error taxonomy's consistent "profile not found → 64" convention (`auth switch`/`logout`/`remove` all use 64 for the same class of error). Do not conflate these two triggers — narrowing #786 to the credential-absence sites only, and explicitly NOT touching the unknown-profile site, was a locked decision at the cycle-007 F1 human gate (see `cycle-007-auth-delta-analysis.md` §5.1).
+**Status**: Covered by BC-1.4.032/BC-1.4.033 (AMENDED 2026-09-10) for the exit-2 side; BC-1.1.004 (UNAMENDED) for the exit-64 side.
+**Test gap**: An explicit regression test asserting `auth status --profile <unknown>` STAYS at exit 64 (not silently swept up in a future exit-code normalization pass) would guard against this narrowing being accidentally reversed.
+
+### EC-AUTH-012: `auth list`/`auth status` truthful-status vocabulary parity (cycle-007, #787+#788)
+**Boundary**: The same profile, same keychain state, queried via both `jr auth list` and `jr auth status --output json` in the same session.
+**Expected**: Both commands report the IDENTICAL `unset`/`no-credentials`/`configured` value for that profile — computed via one shared derivation helper (BC-1.6.048), never two independently-maintained code paths. A profile with a URL on file but no stored credentials must NEVER report `configured` in either command (closes the class of defect where `list`'s old `url.is_some()`-only ternary could disagree with `status`'s actual credential probe).
+**Status**: Covered by BC-1.6.048 (NEW, shared vocabulary + VP-AUTHDX-024 parity property), BC-1.6.049 (NEW, `auth list` realization, #788), BC-1.6.050 (NEW, `auth status --output json` realization, #787) — all cycle-007 `auth-correctness-dx`, 2026-09-10.
+**Test gap**: None expected at F4 — VP-AUTHDX-024's property test is specifically designed to close this gap proactively rather than leave it as a discovered-later drift.
 
 ---
 
