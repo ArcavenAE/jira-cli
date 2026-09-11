@@ -1,10 +1,10 @@
 ---
 document_type: pipeline-state
 level: ops
-version: "4.14"
+version: "4.15"
 status: active
 producer: state-manager
-timestamp: 2026-09-11T19:32:37Z
+timestamp: 2026-09-11T20:07:23Z
 phase: "ACTIVE 2026-09-11. cycle-007 (auth-correctness-dx) OPEN, Feature Mode. F1 APPROVED 2026-09-10 (DEC-354) -- 6-issue scope (#784/#786-narrowed/#787/#788/#790/#783); #785 DEFERRED. F2 APPROVED 2026-09-10 (DEC-355) -- 3 new BCs BC-1.6.048/049/050 + amendments, 6 new VPs VP-AUTHDX-024..029, spec 2.2.0->2.3.0 MINOR. F3 HUMAN GATE APPROVED 2026-09-11 (DEC-356) -- 5 new stories (S-cycle7-credential-absence-fix closes #784+#786, S-cycle7-auth-state-derivation #788, S-cycle7-auth-status-json #787, S-cycle7-oauth-help-text-fix #790, S-cycle7-readme-migration-note #783), 28 points, 2 waves (Wave 1 A/B1/C/D=20pts, Wave 2 B2=8pts), acyclic (B1->B2 only cross-story edge); 11 total adversary story-review passes to zero-novelty convergence. F4 (delta implementation) IN PROGRESS -- regression baseline GREEN @ develop@14e695ae (5267 total / 5091 pass / 0 fail / 176 ignored; clippy PASS; fmt PASS; runner: serial cargo test); Wave-1 worktrees created (A=fix/cycle7-credential-absence, B1=feat/cycle7-auth-state-derivation, C=fix/cycle7-oauth-help-text, D=docs/cycle7-readme-migration-note); per-story delivery STARTED (Story A first, auth.rs merge-order note). Core touch point src/api/auth.rs HIGH regression risk (3rd consecutive cycle). All six prior cycles (001-006) CLOSED. Full prior narrative: F1/F2/F3 Phase Progress rows + cycles/cycle-007/session-checkpoints.md."
 pipeline: ACTIVE
 inputs: []
@@ -12,7 +12,7 @@ input-hash: "[live-state]"
 traces_to: ""
 project: jira-cli
 mode: brownfield
-last_amended: "2026-09-11, v4.14, state-manager -- F4-BASELINE-GREEN-WAVE-1-STARTED: cycle-007 PAUSED->ACTIVE; F4 regression baseline GREEN @ develop@14e695ae (5267 tests: 5091 pass / 0 fail / 176 ignored; clippy -D warnings PASS; fmt PASS; runner: serial cargo test -- nextest unsuitable on dev host due to syspolicyd fragility); Wave-1 worktrees created (A=.worktrees/S-cycle7-credential-absence-fix / fix/cycle7-credential-absence, B1=.worktrees/S-cycle7-auth-state-derivation / feat/cycle7-auth-state-derivation, C=.worktrees/S-cycle7-oauth-help-text-fix / fix/cycle7-oauth-help-text, D=.worktrees/S-cycle7-readme-migration-note / docs/cycle7-readme-migration-note); per-story delivery started, Story A first (auth.rs merge-order note). CYCLE-007-F4-BASELINE-RERUN-PENDING RESOLVED. HOST-GATEKEEPER-SYSPOLICYD-FRAGILITY (LOW/non-blocking/dev-host-only) recorded at cycles/OPEN-STANDING-ITEMS.md. Prior SESSION-WRAP-PAUSE-2026-09-11 checkpoint archived to cycles/cycle-007/session-checkpoints.md. Counts unchanged: total_bcs 757, VP 82, holdout 118, total_stories 180."
+last_amended: "2026-09-11, v4.15, state-manager -- PASS4-F2-SPEC-SWEEP: bc-1-auth-identity.md equals-form propagation committed (BC-1.4.032/033/034 hints + BC-1.6.048 Inv-3 + BC-1.6.050 EC-4 + VP-AUTHDX-005/007/008/027 oracles); spec-changelog.md F-2 paragraph appended. AUTH-REMEDIATION-EQUALS-FORM-BROADER (LOW/non-blocking) recorded in cycles/OPEN-STANDING-ITEMS.md + Drift headline added. Counts unchanged: total_bcs 757, VP 82, holdout 118, total_stories 180."
 current_step: "D-chain cite D-053, D-2026 latest brownfield. F4-WAVE-1-IN-PROGRESS. trajectory-tail →1→3→0→2 (unchanged -- no cycle-007 code merged to develop yet). Baseline GREEN @ develop@14e695ae (5267 tests: 5091 pass / 0 fail / 176 ignored). Wave-1 worktrees (all off develop@14e695ae): A .worktrees/S-cycle7-credential-absence-fix / fix/cycle7-credential-absence, B1 .worktrees/S-cycle7-auth-state-derivation / feat/cycle7-auth-state-derivation, C .worktrees/S-cycle7-oauth-help-text-fix / fix/cycle7-oauth-help-text, D .worktrees/S-cycle7-readme-migration-note / docs/cycle7-readme-migration-note. Delivery started; Story A first (auth.rs merge-order note). F4 inner TDD loop: targeted cargo test only; full regression serial at end of each story -- never cargo nextest (syspolicyd fragility). Baseline detail: phase-f4-implementation/regression-baseline.md."
 trajectory_tail: "→1→3→0→2"
 maintenance_run:
@@ -39,14 +39,13 @@ activation_head: "a9168212"
 activation_version: "v0.7.0-dev.5"
 ---
 
-<!-- STATE.md SIZE BUDGET (2026-09-11, F4-BASELINE-GREEN-WAVE-1-STARTED v4.14):
-     F4 resume burst: pipeline PAUSED->ACTIVE; F4 regression baseline GREEN @ develop@14e695ae
-     (5267 tests / 5091 pass / 0 fail / 176 ignored; clippy PASS; fmt PASS; serial cargo test).
-     Wave-1 worktrees created (A/B1/C/D); Story A delivery started. CYCLE-007-F4-BASELINE-RERUN-PENDING
-     RESOLVED. HOST-GATEKEEPER-SYSPOLICYD-FRAGILITY (LOW/non-blocking/dev-host-only) recorded.
+<!-- STATE.md SIZE BUDGET (2026-09-11, PASS4-F2-SPEC-SWEEP v4.15):
+     Bookkeeping burst: bc-1-auth-identity.md equals-form propagation committed;
+     spec-changelog.md F-2 paragraph appended; AUTH-REMEDIATION-EQUALS-FORM-BROADER
+     recorded in cycles/OPEN-STANDING-ITEMS.md + Drift headline added. No phase change.
      No spec/story/count changes (total_bcs 757, VP 82, holdout 118, total_stories 180 -- unchanged).
      Single full-content Write (STATE.md hook guard active). TD-VSDD-053 single-commit burst.
-     version: 4.13->4.14. soft target 200 lines; hard cap 500 lines.
+     version: 4.14->4.15. soft target 200 lines; hard cap 500 lines.
      199 lines (wc-l). 1 line under soft target. margin from soft-target = 200 - 199 = 1 (1 line under soft target).
      margin from actual = 500 - 199 = 301 (301 lines of headroom). -->
 
@@ -61,7 +60,7 @@ activation_version: "v0.7.0-dev.5"
 | **Target Workspace** | develop to main |
 | **Pipeline Status** | **ACTIVE** -- cycle-007 (`auth-correctness-dx`) OPEN, Feature Mode; Phase F4 (delta implementation) IN PROGRESS. Baseline GREEN @ develop@`14e695ae` (5,267 total / 5,091 pass / 0 fail / 176 ignored; clippy PASS; fmt PASS; serial `cargo test` -- nextest unusable per `HOST-GATEKEEPER-SYSPOLICYD-FRAGILITY`, CI unaffected). Wave-1 worktrees created; Story A delivery started. F1/F2/F3 all APPROVED (DEC-354/355/356). Baseline: `phase-f4-implementation/regression-baseline.md`. All six prior cycles (001-006) CLOSED -- see `cycles/CYCLE-SUMMARY.md` |
 | **trajectory-tail** | →1→3→0→2 (unchanged -- no cycle-007 code merged to develop yet; F5 code-review loop not started) |
-| **Last Updated** | 2026-09-11, F4-BASELINE-GREEN-WAVE-1-STARTED: F4 baseline GREEN @ `14e695ae` (5,267 / 5,091 / 0 / 176); Wave-1 worktrees created; Story A delivery started. CYCLE-007-F4-BASELINE-RERUN-PENDING RESOLVED. HOST-GATEKEEPER-SYSPOLICYD-FRAGILITY recorded (LOW/non-blocking/dev-host-only). trajectory-tail →1→3→0→2 (unchanged). Prior: BOOKKEEPING-BURST-E2E-ADF-HEURISTIC-2026-09-11. Full history: `cycles/CYCLE-SUMMARY.md` |
+| **Last Updated** | 2026-09-11, PASS4-F2-SPEC-SWEEP: bc-1-auth-identity.md equals-form propagation committed; spec-changelog.md F-2 paragraph appended; AUTH-REMEDIATION-EQUALS-FORM-BROADER (LOW/non-blocking) recorded. trajectory-tail →1→3→0→2 (unchanged). Prior: F4-BASELINE-GREEN-WAVE-1-STARTED. Full history: `cycles/CYCLE-SUMMARY.md` |
 | **Current Phase** | cycle-007 (`auth-correctness-dx`) Phase F4 (delta implementation) -- **IN PROGRESS**. Baseline GREEN @ develop@`14e695ae` (5,267/5,091/0/176; clippy PASS; fmt PASS; serial `cargo test` only -- see `HOST-GATEKEEPER-SYSPOLICYD-FRAGILITY`). Wave-1 worktrees: A (`S-cycle7-credential-absence-fix`) on `fix/cycle7-credential-absence`, B1 (`S-cycle7-auth-state-derivation`) on `feat/cycle7-auth-state-derivation`, C (`S-cycle7-oauth-help-text-fix`) on `fix/cycle7-oauth-help-text`, D (`S-cycle7-readme-migration-note`) on `docs/cycle7-readme-migration-note`. Story A delivery started (auth.rs merge-order note honored). Core `src/api/auth.rs` HIGH regression risk (3rd consecutive cycle). Contract: all 5,091 passing tests must still pass. cycle-001 through cycle-006 all CLOSED -- see `cycles/CYCLE-SUMMARY.md`. |
 | **Activation HEAD** | `a9168212` (unchanged -- no release tag cut; `develop`'s real tip is `14e695ae`) |
 
@@ -69,14 +68,14 @@ activation_version: "v0.7.0-dev.5"
 
 | Phase | Status | Completed | Gate | Notes | Finding Progression |
 |-------|--------|-----------|------|-------|---------------------|
-| **STATE-MD-COMPACT-2026-09-10** | **COMPLETE** | 2026-09-10 | Maintenance bookkeeping (`/compact-state`), no quality gate | Extracted historical content into `cycles/` files -- nothing deleted. STATE.md 447->196 lines. `STATE-MD-OVER-SOFT-TARGET` RESOLVED. | counts unchanged (754/76/118/175); no DEC minted |
 | **MAINTENANCE-SWEEP-2026-09-10** | **COMPLETE, FULLY CLOSED** | 2026-09-10 | Maintenance bookkeeping, no quality gate | Dependency audit + doc drift scan + open-PR triage + 3 factory doc-hygiene items RESOLVED. Fix PR #800 + doc-sync PR #801 opened; all 4 merges (`#800`, `#801`, `#779`, `#754`) MERGED; `develop` tip advanced -> `14e695ae`. Full report: `maintenance/sweep-report-2026-09-10.md`. | counts unchanged (754/76/118/175); no DEC minted |
 | **F1-DELTA-ANALYSIS-CYCLE-007** | **APPROVED (DEC-354)** | 2026-09-10 | Feature Mode F1 human scope gate | 6-issue scope (#784/#786/#787/#788/#790/#783); #785 DEFERRED; #786 NARROWED (only the two `src/api/auth.rs` credential-absence sites -> exit 2). `src/api/auth.rs` HIGH regression risk (3rd consecutive cycle). Detail: `phase-f1-delta-analysis/cycle-007-auth-delta-analysis.md`. | counts unchanged (754/76/118/175); DEC-354 minted |
 | **F2-SPEC-EVOLUTION-CYCLE-007** | **APPROVED (DEC-355)** | 2026-09-10 | Feature Mode F2 human scope gate | 3 new BCs (BC-1.6.048/049/050) + amendments, 6 new VPs (VP-AUTHDX-024..029), spec 2.2.0->2.3.0 MINOR; 10 adversary passes (3 consecutive CLEAN). Detail: `phase-f2-spec-evolution/`. | counts: BCs 754->757, VPs 76->82; DEC-355 minted |
 | **F3-STORY-DECOMPOSITION-CYCLE-007** | **APPROVED (DEC-356)** | 2026-09-11 | Feature Mode F3, 11-pass adversarial convergence, human gate APPROVED | 5 new stories (28 points, 2 waves, acyclic B1->B2). **HUMAN GATE APPROVED 2026-09-11 (DEC-356)** -- A->B1 auth.rs merge-order note honored; `FIX-F6-A` deferral accepted. Detail: `cycles/cycle-007/phase-f3-stories/`. | 5 stories/28pts; story count 175->180. DEC-356 minted |
 | **SESSION-WRAP-PAUSE-2026-09-11** | **COMPLETE** | 2026-09-11 | Session-lifecycle pause checkpoint, no quality gate | Paused cycle-007 at F4-start; F4 regression-baseline sub-agent was in-flight and was cleanly abandoned (re-runnable read-only, no worktrees/code). `pipeline:` ACTIVE -> PAUSED. | counts unchanged; DEC-356 minted (same burst) |
 | **BOOKKEEPING-BURST-E2E-ADF-HEURISTIC-2026-09-11** | **COMPLETE** | 2026-09-11 | Bookkeeping only, no quality gate | Recorded `E2E-EDIT-FIELD-ADF-HEURISTIC` (LOW/non-blocking; `tests/e2e_live.rs::discover_safe_edit_field` ADF-field heuristic defect; deferred to next maintenance sweep). Detail: `cycles/OPEN-STANDING-ITEMS.md`; research: `research/e2e-environment-adf-field-2026-09-11.md`. | counts unchanged; no DEC minted |
-| **F4-BASELINE-GREEN-WAVE-1-STARTED-CYCLE-007** | **IN PROGRESS** | 2026-09-11 | Feature Mode F4 delta implementation; no gate yet | Resumed cycle-007 (PAUSED->ACTIVE). F4 regression baseline GREEN @ develop@`14e695ae`: 5,267 total / 5,091 pass / 0 fail / 176 ignored; clippy `-D warnings` PASS; fmt PASS; runner: serial `cargo test` (nextest unsuitable -- `HOST-GATEKEEPER-SYSPOLICYD-FRAGILITY`; CI Linux unaffected). Contract: all 5,091 passing tests must still pass; zero regressions. Detail: `phase-f4-implementation/regression-baseline.md`. Wave-1 worktrees created off develop@`14e695ae`: A (`.worktrees/S-cycle7-credential-absence-fix`, `fix/cycle7-credential-absence`), B1 (`.worktrees/S-cycle7-auth-state-derivation`, `feat/cycle7-auth-state-derivation`), C (`.worktrees/S-cycle7-oauth-help-text-fix`, `fix/cycle7-oauth-help-text`), D (`.worktrees/S-cycle7-readme-migration-note`, `docs/cycle7-readme-migration-note`). Story A delivery started (auth.rs merge-order note). CYCLE-007-F4-BASELINE-RERUN-PENDING RESOLVED. HOST-GATEKEEPER-SYSPOLICYD-FRAGILITY recorded. | counts unchanged (757/82/118/180) |
+| **F4-BASELINE-GREEN-WAVE-1-STARTED-CYCLE-007** | **IN PROGRESS** | 2026-09-11 | Feature Mode F4 delta implementation; no gate yet | Resumed cycle-007 (PAUSED->ACTIVE). F4 regression baseline GREEN @ develop@`14e695ae`: 5,267 total / 5,091 pass / 0 fail / 176 ignored; clippy `-D warnings` PASS; fmt PASS; runner: serial `cargo test` (nextest unsuitable -- `HOST-GATEKEEPER-SYSPOLICYD-FRAGILITY`; CI Linux unaffected). Wave-1 worktrees created off develop@`14e695ae`: A/B1/C/D. Story A delivery started. CYCLE-007-F4-BASELINE-RERUN-PENDING RESOLVED. HOST-GATEKEEPER-SYSPOLICYD-FRAGILITY recorded. | counts unchanged (757/82/118/180) |
+| **PASS4-F2-SPEC-SWEEP-BOOKKEEPING-2026-09-11** | **COMPLETE** | 2026-09-11 | Bookkeeping only, no quality gate | Committed pass-4 F-2 spec sweep: `bc-1-auth-identity.md` equals-form propagation (BC-1.4.032/033/034 hints + BC-1.6.048 Inv-3 + BC-1.6.050 EC-4 + VP-AUTHDX-005/007/008/027 oracles); `spec-changelog.md` F-2 paragraph appended. `AUTH-REMEDIATION-EQUALS-FORM-BROADER` (LOW/non-blocking) recorded in `cycles/OPEN-STANDING-ITEMS.md`. Spec count guards GREEN (757 BCs). | counts unchanged (757/82/118/180); no DEC minted |
 
 ## Current Phase Steps
 
@@ -144,13 +143,13 @@ All prior per-cycle constraints narrative is either historical/resolved or dupli
 
 **In-flight work:** Story A TDD delivery started on `.worktrees/S-cycle7-credential-absence-fix`. No PRs open for cycle-007 yet.
 
-**Pending human decisions / open follow-ups:** none blocking F4. Standing: `MUTANTS-NIGHTLY-VERIFY-FULL-RUN`, `VSDD-FACTORY-COMPACT-CLAUDE-MD-GAP`, `FIX-F6-A` / `F6-MUTATION-EXAMINE-GLOBS-EXPANSION`. New this burst: `HOST-GATEKEEPER-SYSPOLICYD-FRAGILITY` (LOW/non-blocking/dev-host-only -- serial `cargo test` only for F4 full-suite runs; see `cycles/OPEN-STANDING-ITEMS.md`). `E2E-EDIT-FIELD-ADF-HEURISTIC` (LOW/non-blocking). Four issue bundles PARKED: cycle-008 through cycle-011. GitHub #674 CLOSED; #387 DEFERRED. MAINTENANCE-SWEEP-2026-09-10 fully CLOSED.
+**Pending human decisions / open follow-ups:** none blocking F4. Standing: `MUTANTS-NIGHTLY-VERIFY-FULL-RUN`, `VSDD-FACTORY-COMPACT-CLAUDE-MD-GAP`, `FIX-F6-A` / `F6-MUTATION-EXAMINE-GLOBS-EXPANSION`. New this burst: `AUTH-REMEDIATION-EQUALS-FORM-BROADER` (LOW/non-blocking -- `load_oauth_tokens` + `auth logout` remediation strings still emit SPACE form; fold into cycle-007 B1/B2 or a dedicated follow-up; see `cycles/OPEN-STANDING-ITEMS.md`). Prior: `HOST-GATEKEEPER-SYSPOLICYD-FRAGILITY` (LOW/non-blocking/dev-host-only), `E2E-EDIT-FIELD-ADF-HEURISTIC` (LOW/non-blocking). Four issue bundles PARKED: cycle-008 through cycle-011. GitHub #674 CLOSED; #387 DEFERRED. MAINTENANCE-SWEEP-2026-09-10 fully CLOSED.
 
 **WIP branch list:** `fix/cycle7-credential-absence` (Story A, `.worktrees/S-cycle7-credential-absence-fix`), `feat/cycle7-auth-state-derivation` (B1), `fix/cycle7-oauth-help-text` (C), `docs/cycle7-readme-migration-note` (D) -- all Wave-1 worktrees off develop@`14e695ae`, Story A delivery in progress.
 
 **Resume command:** `/vsdd-factory:next-step` (already in F4 with worktrees -- no rehydrate needed).
 
-**Counts:** total_bcs 757 (unchanged); VP count 82 (unchanged); holdout scenarios 118 (unchanged); total_stories 180 (unchanged). Prior checkpoint (STATE.md v4.13): archived to `cycles/cycle-007/session-checkpoints.md`.
+**Counts:** total_bcs 757 (unchanged); VP count 82 (unchanged); holdout scenarios 118 (unchanged); total_stories 180 (unchanged). Prior checkpoint (STATE.md v4.14): archived to `cycles/cycle-007/session-checkpoints.md`.
 
 ## Historical Content
 
@@ -182,6 +181,7 @@ Burst logs, adversary pass details, session checkpoints, and per-burst narrative
 
 **OPEN -- headline follow-ups (kept visible per compaction policy):**
 
+- **`AUTH-REMEDIATION-EQUALS-FORM-BROADER`** -- LOW, non-blocking. `jr auth login --profile=<name>` equals-form (EC-1.4.032-6) applies beyond Story A: `load_oauth_tokens` stale-keyring + `auth logout` remediation strings still emit SPACE form. BC-1.6.048 Inv-3 + BC-1.6.050 EC-4 citations updated this burst; B1/B2 implementations MUST emit equals-form. Candidate fix: fold into cycle-007 B1/B2 or a dedicated follow-up before F7. Full detail: `cycles/OPEN-STANDING-ITEMS.md`.
 - **`FIX-F6-A` / `F6-MUTATION-EXAMINE-GLOBS-EXPANSION`** -- LOW, non-blocking, still open (pre-existing since cycle-004; tracked verbatim in `cycles/OPEN-STANDING-ITEMS.md`). `.cargo/mutants.toml`'s `examine_globs` omits `src/api/auth.rs` and siblings. cycle-007 F3 explicitly REAFFIRMS this deferred; DEC-356 EXPLICITLY ACCEPTED the deferral. Target: a future SELF-IMPROVEMENT/maintenance cycle.
 - **`CYCLE-007-PARKED-BUNDLES`** -- 2026-09-10 issue triage: #674 CLOSED (shipped, cycle-005); #387 DEFERRED; 4 bundles PARKED: **cycle-008** (`issue-io-quickwins`), **cycle-009** (`bulk-by-jql`), **cycle-010** (`read-index-lag`), **cycle-011** (`filter-grammar`). Full triage: `phase-f1-delta-analysis/issue-triage-*.md`.
 - `VSDD-FACTORY-COMPACT-CLAUDE-MD-GAP` -- engine gap: vsdd-factory has no `compact-claude-md` capability; candidate follow-up in the vsdd-factory repo, NOT jira-cli.
@@ -190,9 +190,9 @@ Burst logs, adversary pass details, session checkpoints, and per-burst narrative
 - **`HOST-GATEKEEPER-SYSPOLICYD-FRAGILITY`** -- LOW, non-blocking, dev-host-only. macOS `syspolicyd` (Gatekeeper daemon) wedged after ~56-day uptime (~60% CPU), stalling test-binary launches; `sudo killall syspolicyd` clears it. `cargo-nextest` UNUSABLE for full suite: its `--list` phase mass-launches all ~121 test binaries simultaneously (not gated by `-j`), re-saturating the daemon. Serial `cargo test` is the reliable runner (~95 min full suite). **F4 implication:** targeted tests only for inner TDD loop; full regression serial; NEVER nextest. NOT a product or CI issue (Linux runners unaffected). Full detail: `cycles/OPEN-STANDING-ITEMS.md`.
 - `STATE-MD-OVER-SOFT-TARGET` -- **RESOLVED 2026-09-10** (STATE-MD-COMPACT-2026-09-10 burst). Subsequent bursts have re-added transient overage -- tracked, not re-opened; future `/compact-state` pass will re-condense.
 
-**RESOLVED this burst:** `CYCLE-007-F4-BASELINE-RERUN-PENDING` -- F4 regression baseline re-run successfully GREEN @ develop@`14e695ae` (5,267 total / 5,091 pass / 0 fail / 176 ignored); Wave-1 worktrees created; delivery started 2026-09-11.
+**RESOLVED this burst:** none (bookkeeping only -- PASS4-F2-SPEC-SWEEP; no prior open items closed).
 
-**RESOLVED prior burst:** `CYCLE-007-F3-SCOPE-GATE-PENDING` -- F3 approved via DEC-356, 2026-09-11.
+**RESOLVED prior burst:** `CYCLE-007-F4-BASELINE-RERUN-PENDING` -- F4 regression baseline re-run successfully GREEN @ develop@`14e695ae` (5,267 total / 5,091 pass / 0 fail / 176 ignored); Wave-1 worktrees created; delivery started 2026-09-11.
 
 **RESOLVED prior bursts (moved to `cycles/RESOLVED-DRIFT-ITEMS.md`):** `MAINTENANCE-SWEEP-2026-09-10-MERGES-PENDING` -- all 4 merges landed 2026-09-10. `CYCLE-007-F1-SCOPE-GATE-PENDING` -- F1 approved via DEC-354. `CYCLE-007-F2-SCOPE-GATE-PENDING` -- F2 approved via DEC-355.
 

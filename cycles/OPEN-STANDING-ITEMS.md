@@ -10,6 +10,43 @@
 > `MUTANTS-NIGHTLY-VERIFY-FULL-RUN`, `STATE-MD-OVER-SOFT-TARGET`) stay
 > inline in STATE.md itself and are NOT duplicated here except where noted.
 
+## cycle-007 F4 follow-up — AUTH-REMEDIATION-EQUALS-FORM-BROADER (2026-09-11, PASS4-F2-SPEC-SWEEP burst)
+
+**ID:** `AUTH-REMEDIATION-EQUALS-FORM-BROADER`
+**Severity:** LOW, non-blocking. NOT a quality-gate blocker for Story A or Wave-1.
+**Status:** OPEN. Non-blocking for Story A convergence.
+**Classification:** spec consistency + code remediation follow-up. In-scope for cycle-007 (auth cluster); not a separate cycle.
+**Added:** 2026-09-11, PASS4-F2-SPEC-SWEEP bookkeeping burst (state-manager, TD-VSDD-053 single-commit).
+
+**Summary:** The `jr auth login --profile=<profile>` equals-form remediation (EC-1.4.032-6 — required so
+leading-hyphen profile names like `-prod` parse correctly under clap) was applied in the PASS-4 F-2 spec
+sweep across BC-1.4.032/033/034 quoted hints and VP-AUTHDX-005/007/008/027 oracles. However, the equals-form
+fix applies BEYOND Story A's `load_api_token` credential-absence path. Two coordinated follow-ups remain:
+
+**(a) CODE:** `src/api/auth.rs::load_oauth_tokens` stale-keyring remediation messages AND the
+`jr auth logout --profile <name>` remediation strings still emit the SPACE form (`--profile <name>`
+instead of `--profile=<name>`). These two sites have the identical leading-hyphen clap-parse defect as
+the BC-1.4.032/033 sites fixed in Story A. They were deliberately REVERTED out of Story A's scope
+(out-of-story BC scope, untested-regression risk on adjacent auth paths). Fix in a follow-up —
+candidate: fold into cycle-007 Story B1/B2 (both touch `src/api/auth.rs` / auth-state machinery),
+or a dedicated small Story B1.5 / Story E fix in Wave 1 if the scope is clean.
+
+**(b) SPEC/CONVENTION:** BC-1.6.048 Invariant 3 and BC-1.6.050 EC-1.6.050-4 login-invocation citations
+were updated to the equals form this cycle (PASS-4 F-2 spec sweep). B1/B2 implementations MUST emit
+equals-form for any `jr auth login --profile=<name>` hint they produce, to match. This is already
+reflected in the updated spec text; no additional spec change needed — it is a CONFORMANCE reminder for
+the implementer to follow when writing the B1/B2 remediation string code.
+
+**Non-blocking rationale:** Story A convergence (credential-absence path, BC-1.4.032/033/034) is
+unaffected. The two sites with the SPACE-form defect are in separate code paths (`load_oauth_tokens`
+stale-keyring branch, `auth logout` path) that Story A does not touch. The hint strings are advisory
+only; a user with a leading-hyphen profile name would see a slightly wrong example, not a failed command.
+
+**Target:** Fold into cycle-007 Story B1/B2, or a dedicated follow-up fix story, before the F7 delta
+convergence gate. Not urgent mid-F4.
+
+---
+
 ## S-7.02 cycle-closing checklist deferrals — cycle-005 close (Burst 13, DEC-353, 2026-09-09)
 
 Human chose RECORD DEFERRALS ONLY, no follow-up stories opened. `INTERIM-SHIPPABILITY-WINDOW-CYCLE5-W1` is RESOLVED/CLOSED (see `cycles/RESOLVED-DRIFT-ITEMS.md`), not carried here. `CYCLE5-F7-DOC-1`, `CYCLE5-F7-DOC-2`, and `CYCLE5-STEP45-LOW-1` are RESOLVED as of MAINTENANCE-SWEEP-2026-09-10 (see `cycles/RESOLVED-DRIFT-ITEMS.md`), not carried here. The following 4 items remain open, non-blocking, human-owned or targeted at a future maintenance/self-improvement cycle:

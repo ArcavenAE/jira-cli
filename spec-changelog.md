@@ -25,6 +25,8 @@ Fix (commit `da6f7839`): the emitted remediation uses the **equals form** `jr au
 
 COUNT-NEUTRAL: no BC added or removed. `total_bcs` stays 757; `definitional_count` unchanged. `scripts/check-spec-counts.sh` and `scripts/check-bc-cumulative-counts.sh` both verified green after this delta.
 
+**F-2 literal-text propagation (same version, adversary pass-4 finding F-2, 2026-09-11):** EC-1.4.032-6 mandates the equals form `jr auth login --profile=<profile>` for the emitted remediation command. However, the quoted remediation-hint literals and VP-oracle strings in BC-1.4.032 (Postcondition 2, Invariant 6, EC-1.4.032-1/4, VP-AUTHDX-005/007), BC-1.4.033 (Postcondition 2, VP-AUTHDX-008/027), and BC-1.4.034 (H1 title, Description, Preconditions, Postconditions, VP notes) still carried the space form (`--profile {profile}`, `--profile default`, `--profile <profile>`), creating an internal self-contradiction with the EC they referenced. All such occurrences updated to the equals form in `bc-1-auth-identity.md`. Historical audit-trail blocks (Previous version sections, Trace arrows `→ \`jr auth login --profile {profile}\``) left untouched. Literal-text alignment only; COUNT-NEUTRAL.
+
 ## [2.3.0] - 2026-09-10
 
 ### Type: MINOR
