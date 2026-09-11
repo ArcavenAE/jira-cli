@@ -4,7 +4,7 @@ level: ops
 version: "4.14"
 status: active
 producer: state-manager
-timestamp: 2026-09-11T19:13:56Z
+timestamp: 2026-09-11T19:32:37Z
 phase: "ACTIVE 2026-09-11. cycle-007 (auth-correctness-dx) OPEN, Feature Mode. F1 APPROVED 2026-09-10 (DEC-354) -- 6-issue scope (#784/#786-narrowed/#787/#788/#790/#783); #785 DEFERRED. F2 APPROVED 2026-09-10 (DEC-355) -- 3 new BCs BC-1.6.048/049/050 + amendments, 6 new VPs VP-AUTHDX-024..029, spec 2.2.0->2.3.0 MINOR. F3 HUMAN GATE APPROVED 2026-09-11 (DEC-356) -- 5 new stories (S-cycle7-credential-absence-fix closes #784+#786, S-cycle7-auth-state-derivation #788, S-cycle7-auth-status-json #787, S-cycle7-oauth-help-text-fix #790, S-cycle7-readme-migration-note #783), 28 points, 2 waves (Wave 1 A/B1/C/D=20pts, Wave 2 B2=8pts), acyclic (B1->B2 only cross-story edge); 11 total adversary story-review passes to zero-novelty convergence. F4 (delta implementation) IN PROGRESS -- regression baseline GREEN @ develop@14e695ae (5267 total / 5091 pass / 0 fail / 176 ignored; clippy PASS; fmt PASS; runner: serial cargo test); Wave-1 worktrees created (A=fix/cycle7-credential-absence, B1=feat/cycle7-auth-state-derivation, C=fix/cycle7-oauth-help-text, D=docs/cycle7-readme-migration-note); per-story delivery STARTED (Story A first, auth.rs merge-order note). Core touch point src/api/auth.rs HIGH regression risk (3rd consecutive cycle). All six prior cycles (001-006) CLOSED. Full prior narrative: F1/F2/F3 Phase Progress rows + cycles/cycle-007/session-checkpoints.md."
 pipeline: ACTIVE
 inputs: []

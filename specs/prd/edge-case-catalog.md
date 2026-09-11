@@ -1,9 +1,10 @@
 ---
 context: edge-case-catalog
 title: "Edge Case Catalog"
-last_updated: 2026-09-10
+last_updated: 2026-09-11
 source_pass: 3
 trace: |
+  - cycle-007 per-story convergence, Story A pass 3 (2026-09-11, ADV-cycle007-P3-MED-01): added EC-AUTH-013 (leading-hyphen profile names require equals-form remediation command `jr auth login --profile=<profile>`). Cross-references BC-1.4.032 EC-1.4.032-6.
   - F2 spec evolution, cycle-007 `auth-correctness-dx` (2026-09-10, human-approved F1 gate, issues #784/#786/#787/#788): added EC-AUTH-010 (credential-absence remediation command must parse, #784), EC-AUTH-011 (credential-absence exit code is NotAuthenticated/2 narrowly, not the unrelated unknown-profile UserError/64 site, #786), EC-AUTH-012 (`auth list`/`auth status` truthful-status vocabulary parity, #787+#788). Cross-references BC-1.4.032/033 (AMENDED), BC-1.1.004 (unamended), BC-1.6.048/049/050 (NEW).
   - F2 spec evolution (2026-08-14, S-MUTANTS-SCOPE-1): EC-HTTP-005 citation corrected — was mis-cited as "Covered by BC-X.1.009" (the unrelated 429-exhausted-warning BC); corrected to BC-X.3.006 (the actual Ctrl+C/SIGINT BC, amended in the same change to a full BC with exact stderr/exit-code contract and Verification Properties). Confidence label MEDIUM→HIGH.
   - L2: .factory/specs/domain-spec/
@@ -97,6 +98,11 @@ Categories:
 **Expected**: Both commands report the IDENTICAL `unset`/`no-credentials`/`configured` value for that profile — computed via one shared derivation helper (BC-1.6.048), never two independently-maintained code paths. A profile with a URL on file but no stored credentials must NEVER report `configured` in either command (closes the class of defect where `list`'s old `url.is_some()`-only ternary could disagree with `status`'s actual credential probe).
 **Status**: Covered by BC-1.6.048 (NEW, shared vocabulary + VP-AUTHDX-024 parity property), BC-1.6.049 (NEW, `auth list` realization, #788), BC-1.6.050 (NEW, `auth status --output json` realization, #787) — all cycle-007 `auth-correctness-dx`, 2026-09-10.
 **Test gap**: None expected at F4 — VP-AUTHDX-024's property test is specifically designed to close this gap proactively rather than leave it as a discovered-later drift.
+
+### EC-AUTH-013: Leading-hyphen profile names require equals-form remediation command (cycle-007, ADV-cycle007-P3-MED-01)
+**Boundary**: `load_api_token` emits a credential-absence remediation hint for a profile whose name begins with a hyphen (e.g. `-prod`) — a valid name accepted by `src/config.rs`'s profile-name validation.
+**Expected**: The remediation command uses the **equals form** `jr auth login --profile=<profile>` — NOT the space form `jr auth login --profile <profile>` — because `--profile` lacks `allow_hyphen_values` and clap rejects the space form for hyphen-leading values with exit 2 (re-triggering the #784 non-parsing-remediation failure class for this name shape). The equals form parses correctly for all valid profile names, including hyphen-leading ones.
+**Status**: Covered by BC-1.4.032 EC-1.4.032-6 / BC-1.4.033 Postcondition 2 (both branches are one code path in `src/api/auth.rs::load_api_token`). Finding: ADV-cycle007-P3-MED-01. Fix: commit `da6f7839`. Test: `tests/auth_credential_absence.rs::test_clap_login_profile_equals_form_required_for_leading_hyphen`.
 
 ---
 

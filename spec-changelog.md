@@ -9,6 +9,22 @@ Track all spec version changes. Most recent version first.
 
 > **Type legend:** Type classifies the SPEC document delta: MINOR = new BCs/VPs/sections; PATCH = amendments to existing bodies/ACs/ECs. Product-semver impact is recorded in the Summary line, independent of Type.
 
+## [2.3.1] - 2026-09-11
+
+### Type: PATCH
+
+### Summary
+
+F4 per-story convergence traceability for cycle-007 `auth-correctness-dx` Story A. Codex cross-vendor adversary pass 3 (ADV-cycle007-P3-MED-01) found that the credential-absence remediation command emitted by `load_api_token` (BC-1.4.032 / BC-1.4.033) — corrected to `jr auth login --profile <profile>` (space form) by issue #784 — is still rejected by clap for profile names with a **leading hyphen** (e.g. `-prod`), a name that `src/config.rs` profile-name validation accepts as valid. Because `--profile` lacks `allow_hyphen_values`, the space form `jr auth login --profile -prod` fails clap parsing with exit 2, re-triggering the #784 non-parsing-remediation failure class for this name shape.
+
+Fix (commit `da6f7839`): the emitted remediation uses the **equals form** `jr auth login --profile=<profile>`, which clap accepts for all valid profile names, including hyphen-leading ones. BC-1.4.033 shares the same code path and therefore the same equals-form requirement.
+
+**EC-1.4.032-6 added** to `bc-1-auth-identity.md` BC-1.4.032 Edge Cases — documents the leading-hyphen constraint, equals-form resolution, and cross-references BC-1.4.033 as the shared code path. BC-1.4.032 Trace field extended in place with the ADV-cycle007-P3-MED-01 finding, commit, and test citations. Frontmatter `last_updated` 2026-09-10 → 2026-09-11; `source_pass` 20 → 21.
+
+**EC-AUTH-013 added** to `edge-case-catalog.md` §EC-AUTH — catalog entry for the same finding, cross-referencing BC-1.4.032 EC-1.4.032-6. Frontmatter `last_updated` 2026-09-10 → 2026-09-11.
+
+COUNT-NEUTRAL: no BC added or removed. `total_bcs` stays 757; `definitional_count` unchanged. `scripts/check-spec-counts.sh` and `scripts/check-bc-cumulative-counts.sh` both verified green after this delta.
+
 ## [2.3.0] - 2026-09-10
 
 ### Type: MINOR
