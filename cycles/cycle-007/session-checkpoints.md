@@ -17,6 +17,31 @@ traces_to: STATE.md
      Only the LATEST checkpoint lives in STATE.md.
      Prior checkpoints are archived here for historical reference. -->
 
+## Session Resume Checkpoint (2026-09-11, STATE.md v4.16) — STORY-A-STEP-4.5-CONVERGED: Story A adversarial review CONVERGED, awaiting demo/PR/merge — Superseded 2026-09-11
+
+**Status:** SUPERSEDED 2026-09-11 by the v4.17 STORY-A-MERGED checkpoint (Story A PR #803 squash-merged to `develop` @ `08021685`). Archived verbatim (condensed to State + Resume Prompt) from STATE.md v4.16 below.
+
+### State
+
+| Field | Value |
+|-------|-------|
+| **Date** | 2026-09-11 |
+| **Position** | Story A (`S-cycle7-credential-absence-fix`) TDD COMPLETE + Step-4.5 adversarial review CONVERGED (9 passes, 3 consecutive CLEAN, final HEAD `67609600` on `fix/cycle7-credential-absence`). Awaiting demo/PR/merge. B1/C/D Wave-1 pending; Wave 2 = B2. |
+| **Convergence counter** | Story A Step-4.5 CONVERGED (9 passes; passes 7/8/9 CLEAN = 3 consecutive). trajectory-tail `→1→3→0→2` unchanged -- no cycle-007 code merged to develop yet. |
+| **Next step (at supersession time)** | Story A demo recording -> PR creation -> human review -> merge -> then B1; C and D parallelizable in Wave 1; Wave 2 = B2 after B1 merge. |
+
+### Resume Prompt (at supersession time)
+
+```
+**Date:** 2026-09-11. **Pipeline: ACTIVE** (cycle-007 `auth-correctness-dx`, F4 delta implementation IN PROGRESS). **Position:** Story A (`S-cycle7-credential-absence-fix`) TDD COMPLETE + Step-4.5 adversarial review CONVERGED (9 passes, 3 consecutive CLEAN, final HEAD `67609600` on `fix/cycle7-credential-absence`). Story A awaiting demo/PR/merge. B1 (`S-cycle7-auth-state-derivation`), C (`S-cycle7-oauth-help-text-fix`), D (`S-cycle7-readme-migration-note`) pending Wave-1 delivery; Wave 2 = B2 (`S-cycle7-auth-status-json`, depends on B1 merge). All six prior cycles (001-006) CLOSED. **NEXT** = Story A demo recording -> PR creation -> human review -> merge -> B1 delivery (auth.rs merge-order). C and D parallelizable after Story A PR is in review. Wave 2 (B2) starts after B1 merge.
+
+**Pending human decisions / open follow-ups:** none blocking F4. Standing: `MUTANTS-NIGHTLY-VERIFY-FULL-RUN`, `VSDD-FACTORY-COMPACT-CLAUDE-MD-GAP`, `FIX-F6-A` / `F6-MUTATION-EXAMINE-GLOBS-EXPANSION`, `AUTH-REMEDIATION-EQUALS-FORM-BROADER` (fold into B1/B2 or dedicated follow-up). Prior: `HOST-GATEKEEPER-SYSPOLICYD-FRAGILITY`, `E2E-EDIT-FIELD-ADF-HEURISTIC`. Four issue bundles PARKED: cycle-008 through cycle-011.
+
+**Resume command:** `/vsdd-factory:next-step` (already in F4 -- Story A demo/PR next).
+```
+
+---
+
 ## Session Resume Checkpoint (2026-09-11, STATE.md v4.15) — F4-WAVE-1-IN-PROGRESS: Wave-1 worktrees created, Story A TDD started — Superseded 2026-09-11
 
 **Status:** SUPERSEDED 2026-09-11 by the v4.16 STORY-A-STEP-4.5-CONVERGED checkpoint (Story A
