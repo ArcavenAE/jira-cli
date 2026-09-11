@@ -99,6 +99,58 @@ records the ACTUAL observed deterministic failure and its confirmed root cause (
 schema gap, not a subtype-validation issue). Both items remain open; the fix described here
 addresses both.
 
+## macOS syspolicyd/Gatekeeper Fragility — dev-host-only (HOST-GATEKEEPER-SYSPOLICYD-FRAGILITY)
+
+**ID:** `HOST-GATEKEEPER-SYSPOLICYD-FRAGILITY`
+**Severity:** LOW, non-blocking. NOT a product or CI issue. Dev-host-only.
+**Status:** OPEN (environmental; persists on long-uptime macOS dev hosts).
+**Classification:** infra/environment, dev-host ergonomics. UNRELATED to cycle-007 product scope.
+**Added:** 2026-09-11, F4-BASELINE-GREEN-WAVE-1-STARTED burst (state-manager, TD-VSDD-053 single-commit).
+
+**Summary:** On this macOS dev host (~56-day uptime at time of discovery), `syspolicyd` (the
+macOS Gatekeeper launch-validation daemon) became wedged with ~60% CPU consumption under zero
+actual user load, stalling all test-binary launches in `_dyld_start` (pre-main, before any
+test code executes). Running `sudo killall syspolicyd` causes the system to restart the
+daemon and cleared the issue immediately.
+
+**Root cause:** macOS Gatekeeper performs a one-time validation scan on first launch of each
+new binary. After long uptimes (50+ days) with heavy Rust development activity (producing many
+distinct test binary artifacts), `syspolicyd` can accumulate a large pending-validation backlog
+and eventually wedge under combined disk I/O + CPU pressure, especially when many binaries are
+launched in rapid succession.
+
+**cargo-nextest is UNUSABLE for full suite on this host:** `cargo nextest run`'s binary-discovery
+phase (`--list`) launches all ~121 test binaries simultaneously to enumerate their tests, and
+this is NOT gated by the `-j` concurrency flag (it's a pre-run enumeration step). On a wedged-
+or post-wedge host, this simultaneously-launched wave re-saturates `syspolicyd` immediately,
+reproducing the exact symptom that was just cleared. Even after a `syspolicyd` restart, running
+`cargo nextest run` over the full suite triggers the same saturation.
+
+**Plain serial `cargo test` IS reliable (~95 min):** The standard `cargo test` runner launches
+one test binary at a time, allowing `syspolicyd` to complete each validation before the next
+binary starts. On a freshly-restarted `syspolicyd`, each binary incurs a one-time Gatekeeper
+first-launch latency, but no saturation occurs.
+
+**F4 implication for cycle-007 delivery:**
+- Inner TDD loop (per-test iteration): use targeted `cargo test <test-module>` only; never run the
+  full suite mid-story.
+- End-of-story regression gate: run `cargo test` (full suite, serial) before opening a PR.
+- NEVER use `cargo nextest` for any full-suite or multi-binary run on this host.
+- NEVER run 4 concurrent worktree full-suite runs simultaneously (would also saturate).
+
+**CI impact:** NONE. GitHub Actions runners are Linux-based (`ubuntu-latest`). This is a local
+development ergonomics constraint only. The CI gate (`ci-gate` in `.github/workflows/ci.yml`)
+is completely unaffected.
+
+**Resolution path:** The constraint relaxes naturally on OS reboot (fresh kernel + clean Gatekeeper
+cache) or after `syspolicyd` has completed its backlog (may resolve over days of idle time). A
+deliberate fix would require either: (a) scheduled OS reboots to avoid long uptimes, (b) pre-flight
+`sudo killall syspolicyd` as part of the F4 test-runner wrapper, or (c) using `cargo nextest` with
+a `--test-threads=1` sequential mode if such a mode becomes available. For the remainder of F4, the
+plain `cargo test` workaround is sufficient.
+
+---
+
 ## Live-Jira E2E round-trip (`H-NEW-MENTION-009`, AC-017) — human-owned post-close follow-up, NOT a skip
 
 DEFERRED by human decision, carried forward past cycle-005's CLOSE. The 4 `JR_RUN_E2E`-gated scenarios are written and clean-skip in CI (inert without `JR_RUN_E2E=1`/`JR_E2E_MENTION_ACCOUNT_ID`); the human will run them against their own Jira instance at a time of their choosing.

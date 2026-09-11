@@ -1,58 +1,81 @@
-# Cycle-004 Phase F4 — Pre-Implementation Regression Baseline
+# Cycle-007 Phase F4 — Pre-Implementation Regression Baseline (F4 Step 1)
 
 ## Context
 
-- **Purpose:** Establish the regression contract that all Phase F4 (delta implementation) work must not break, before creating the Wave 1 story worktrees.
+- **Cycle:** cycle-007-auth-correctness-dx
+- **Phase:** F4 Step 1 (regression baseline)
+- **Runner:** `cargo test` (serial libtest — NOT nextest; see note below)
 - **Repo:** `jira-cli` (`jr`)
 - **Branch:** `develop`
-- **Commit SHA:** `42e92b46` (full: `42e92b464201a9d3def2b8c1f6a14668c3dc7ab5`)
-- **Working tree state:** Clean with respect to `src/`, `tests/`, `Cargo.toml`, `Cargo.lock` (verified via `git status --porcelain=v1 -- src tests Cargo.toml Cargo.lock` → empty output). The only untracked paths in the main repo tree were `.claude/hooks/`, `.claude/pr-reviews/`, `.claude/settings.local.json.bak`, `.claude/spec-config.json` — unrelated to source, not touched. The three known-dirty `.factory/` artifacts (`regression-state.json`, `sidecar-learning.md`, the `S-cycle3-env-tag` demo gif) live in the `.factory/` git worktree (orphan `factory-artifacts` branch), not the main repo tree, and are out of scope here.
+- **Commit SHA (full):** `14e695aef0a553e01c63b45a95a4bef8b1b8f6bc`
+- **Commit SHA (short):** `14e695ae`
+- **Timestamp (UTC, run start):** 2026-09-11T16:17:00Z
+- **Timestamp (UTC, run end):** 2026-09-11T17:52:00Z
 
-## Build
+> **Why `cargo test` (not nextest):** nextest's parallel `--list` binary-discovery phase
+> mass-launches all 121 test binaries simultaneously, saturating macOS Gatekeeper
+> (syspolicyd) at 57.7%+ CPU. A prior attempt (2026-09-11T16:02Z) stalled for >10 min
+> with zero test completions. `cargo test` launches binaries serially (one at a time),
+> keeping Gatekeeper pressure low. syspolicyd stayed at ≤28.6% CPU during this run and
+> idled for most of it.
 
-- **Invocation:** `cargo build`
-- **Result:** SUCCESS (exit 0)
-- **Notes:** `Compiling jr v0.7.0-dev.4 (...)`, `Finished \`dev\` profile [unoptimized + debuginfo] target(s) in 13m 59s`. No warnings emitted.
-- **Timestamp (UTC, build start):** 2026-09-04T21:32:21Z
+## Working Tree State
 
-## Test Suite
+Clean with respect to tracked source files. `git status --porcelain` output:
 
-- **Invocation (exact):** `cargo test --workspace`
-- **Timestamp (UTC, test run start):** recorded via `date -u +"%Y-%m-%dT%H:%M:%SZ" > /tmp/f4_test_start.txt` immediately preceding the run (same session as the build above; test run followed the build).
-- **Result:** GREEN — 0 failures.
+```
+?? .claude/hooks/
+?? .claude/pr-reviews/
+?? .claude/settings.local.json.bak
+?? .claude/spec-config.json
+```
 
-| Metric | Count |
+No modified or staged tracked files. All untracked paths are `.claude/` tooling artifacts
+unrelated to `src/`, `tests/`, `Cargo.toml`, or `Cargo.lock`.
+
+## Test Suite Results
+
+- **Invocation:** `time cargo test` (no `--include-ignored` — live-Jira E2E suite inert)
+- **Overall result:** GREEN — all tests passed
+
+| Metric | Value |
 |---|---|
-| Test-result blocks (binaries + doc-tests) | 115 |
-| Total tests (passed + failed + ignored) | 4920 |
-| Passed | 4763 |
+| Total tests | 5,267 |
+| Passed | **5,091** |
 | Failed | **0** |
-| Ignored | 157 |
-| Measured (benchmarks) | 0 |
-| Filtered out | 0 |
+| Ignored | 176 |
+| Test binaries executed | 121 (1 lib unit + 119 integration + 1 doc-test) |
+| Serial test-binary execution time | 771.5s (~12.9 min) |
+| Wall-clock elapsed | ~95 min (includes compilation + Gatekeeper validation) |
 
-- No `FAILED`, `panicked`, or non-zero `failed` count appears anywhere in the full log across all 115 `test result:` blocks (unit tests, every `tests/*.rs` integration binary, and the 1 doc-test in `src/profile.rs`).
-- Ignored tests are the expected gated categories per CLAUDE.md conventions: keyring-backend tests (`JR_RUN_KEYRING_TESTS=1` required), live-Jira E2E tests (`JR_RUN_E2E=1` required), OAuth integration tests (`JR_RUN_OAUTH_INTEGRATION=1` required), and platform-specific (`#[cfg(unix)]`) tests not applicable on this run's target.
-- Full raw log preserved at `/tmp/f4_cargo_test_full.log` for this session (not committed; local scratch artifact).
+### Notable binary timings
 
-## Lint — Clippy
+| Binary | Time |
+|---|---|
+| `adf_code_mark_exclusivity` (bc_7_2_015 subprocess tests) | 634.22s |
+| `e2e_cli_surface_guard` | 43.06s |
+| `attachment_download` | 30.02s |
+| `auth_remove_logout_semantics` | 29.04s |
+| doc-tests `jr` (profile.rs compile-fail) | 19.68s |
 
-- **Invocation (exact):** `cargo clippy -- -D warnings`
-- **Timestamp (UTC, start):** recorded via `date -u +"%Y-%m-%dT%H:%M:%SZ" > /tmp/f4_clippy_start.txt` immediately preceding the run.
-- **Result:** PASS (exit 0). `Checking jr v0.7.0-dev.4 (...)`, `Finished \`dev\` profile [unoptimized + debuginfo] target(s) in 1m 56s`. Zero warning lines in output.
+The `adf_code_mark_exclusivity` binary runs 4 tests that each spawn a `jr` subprocess to
+validate ADF code-mark exclusivity via a wiremock-backed integration path; each subprocess
+takes ~150s due to Gatekeeper first-launch validation of the newly-built debug binary.
 
-## Format Check
+## Lint Gate
 
-- **Invocation (exact):** `cargo fmt --all -- --check`
-- **Result:** PASS (exit 0). No diff output.
+- **Clippy:** `cargo clippy -- -D warnings` → **PASS** (exit code 0, zero warnings)
+- **Format:** `cargo fmt --all -- --check` → **PASS** (exit code 0, zero diff)
+
+## CONTRACT
+
+> All **5,091** passing tests must still pass after cycle-007 F4 implementation;
+> zero regressions permitted.
 
 ## Verdict
 
-**BASELINE IS GREEN.** 0 failing tests, 0 clippy warnings, 0 fmt diffs, clean build. Phase F4 delta implementation may proceed on top of this commit (`42e92b46`) as the regression safety net.
+**GREEN — safe to start Wave 1.**
 
-## Wave 1 Worktrees (created after this GREEN baseline)
-
-- `.worktrees/S-cycle4-dpapi-storage-fix` — branch `feat/cycle4-dpapi-storage-fix`, based off `develop` @ `42e92b46`
-- `.worktrees/S-cycle4-cloud-id-correctness` — branch `feat/cycle4-cloud-id-correctness`, based off `develop` @ `42e92b46`
-
-Both stories are file-disjoint per the Wave 1 schedule and are safe to implement in parallel.
+The full `cargo test` suite ran to completion with zero failures across 121 test binaries,
+5,091 passing tests, and 176 appropriately-ignored tests (keyring, OAuth integration,
+live-Jira E2E — all require environment not present in this run).

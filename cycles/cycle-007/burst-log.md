@@ -1,0 +1,72 @@
+---
+document_type: burst-log
+level: ops
+version: "1.0"
+status: in-progress
+producer: state-manager
+timestamp: 2026-09-11T20:00:00Z
+cycle: "cycle-007-auth-correctness-dx"
+inputs: [STATE.md]
+input-hash: "[live-state]"
+traces_to: STATE.md
+---
+
+# Burst Log — cycle-007 (auth-correctness-dx)
+
+## Burst: Burst 1 — cycle-007 F4 resumed — baseline GREEN, Wave-1 worktrees created, Story A delivery started (2026-09-11)
+
+**Parent-commit:** `14e695ae` (`develop` tip after all MAINTENANCE-SWEEP-2026-09-10 merges landed: #779=`211ae959`, #754=`d4760cd5`, #800=`522f9ba2`, #801=`14e695ae`). No new `develop`-side commit this burst — F4 has not yet produced any merged PRs for cycle-007; worktrees branch off `develop @ 14e695ae`.
+
+**Trigger:** cycle-007 was PAUSED at the end of the prior session (SESSION-WRAP-PAUSE-2026-09-11) with its F4 regression-baseline sub-agent cleanly abandoned in-flight (a re-runnable read-only measurement, no committable state, no worktrees produced). This burst resumes F4: re-runs the baseline, creates Wave-1 worktrees, and starts per-story delivery.
+
+**Actions taken:**
+
+1. **F4 regression baseline re-run and confirmed GREEN** @ develop@`14e695ae`:
+   - Total tests: 5,267 (5,091 pass / 0 fail / 176 ignored)
+   - `clippy -D warnings`: PASS (zero warnings)
+   - `cargo fmt --all -- --check`: PASS
+   - Runner: plain serial `cargo test` (NOT `cargo-nextest` — see `HOST-GATEKEEPER-SYSPOLICYD-FRAGILITY` below)
+   - Contract established: all 5,091 currently-passing tests must still pass after F4; zero regressions tolerated.
+   - Full detail: `phase-f4-implementation/regression-baseline.md`
+
+2. **Wave-1 worktrees created** (all off `develop @ 14e695ae`):
+   - Story A (`S-cycle7-credential-absence-fix`): `.worktrees/S-cycle7-credential-absence-fix` / `fix/cycle7-credential-absence`
+   - Story B1 (`S-cycle7-auth-state-derivation`): `.worktrees/S-cycle7-auth-state-derivation` / `feat/cycle7-auth-state-derivation`
+   - Story C (`S-cycle7-oauth-help-text-fix`): `.worktrees/S-cycle7-oauth-help-text-fix` / `fix/cycle7-oauth-help-text`
+   - Story D (`S-cycle7-readme-migration-note`): `.worktrees/S-cycle7-readme-migration-note` / `docs/cycle7-readme-migration-note`
+   Merge order: Story A must land on `develop` before Story B1 (both touch `src/api/auth.rs`; auth.rs merge-order note from DEC-356 honored). C and D are parallelizable in Wave 1. Wave 2 = B2 (`S-cycle7-auth-status-json`, depends on B1 merge).
+
+3. **Per-story delivery started** with Story A (`S-cycle7-credential-absence-fix`) on `.worktrees/S-cycle7-credential-absence-fix` / `fix/cycle7-credential-absence`.
+
+4. **New standing item recorded:** `HOST-GATEKEEPER-SYSPOLICYD-FRAGILITY` (LOW, non-blocking, dev-host-only, NOT a product or CI issue). On this macOS dev host (~56-day uptime), `syspolicyd` (Gatekeeper launch-validation daemon) became wedged (~60% CPU with zero load), stalling all test-binary launches in `_dyld_start` (pre-main); `sudo killall syspolicyd` cleared it. `cargo-nextest` is UNUSABLE for the full suite on this host: its parallel `--list` binary-discovery phase mass-launches all ~121 test binaries simultaneously (not gated by `-j`), re-saturating `syspolicyd`. Plain serial `cargo test` is the reliable runner (~95 min full suite due to per-binary Gatekeeper first-launch latency). **F4 implication:** inner TDD loop must use targeted `cargo test <test-name>` only; full regression run serially at the end of each story — NEVER `cargo nextest`, NEVER 4 concurrent worktree suites. CI (Linux runners) is unaffected. Full detail recorded to `cycles/OPEN-STANDING-ITEMS.md`.
+
+5. **STATE.md updated** (v4.13 → v4.14, single full-content Write per hook-guard discipline): `pipeline` PAUSED → ACTIVE; `phase` / `current_step` / `last_amended` / `current_cycle` / `timestamp` updated; Phase Progress +1 row (F4-BASELINE-GREEN-WAVE-1-STARTED-CYCLE-007); Current Phase Steps replaced; Session Resume Checkpoint replaced (prior v4.13 checkpoint archived to `cycles/cycle-007/session-checkpoints.md`); Drift/Standing Items: `CYCLE-007-F4-BASELINE-RERUN-PENDING` moved to RESOLVED, `HOST-GATEKEEPER-SYSPOLICYD-FRAGILITY` added. SIZE BUDGET banner updated (199 lines / wc-l; 1 line under soft target; both margins present).
+
+6. **Prior session checkpoint archived** to `cycles/cycle-007/session-checkpoints.md` (SESSION-WRAP-PAUSE-2026-09-11 / STATE.md v4.13 checkpoint appended verbatim before new checkpoint written in STATE.md).
+
+7. **`cycles/OPEN-STANDING-ITEMS.md` updated**: `HOST-GATEKEEPER-SYSPOLICYD-FRAGILITY` full entry appended with classification, root cause, implications, and resolution path.
+
+**Adversary verdict:** N/A — bookkeeping/F4-resume burst (STATE.md + scaffolding only; no code or spec-body change; no `adversary` agent dispatched). The F4 baseline and worktree creation are process-setup steps, not deliverable artifacts requiring adversarial review.
+
+**Codifications:** No new DEC minted this burst (this is a process-resume burst, not a scope or spec gate). `CYCLE-007-F4-BASELINE-RERUN-PENDING` is now RESOLVED. `HOST-GATEKEEPER-SYSPOLICYD-FRAGILITY` recorded as a new LOW/non-blocking/dev-host-only standing item.
+
+**Closes:** `CYCLE-007-F4-BASELINE-RERUN-PENDING` drift item. **Does NOT close:** cycle-007 itself (F4 IN PROGRESS, Wave-1 delivery started but not complete); the `HOST-GATEKEEPER-SYSPOLICYD-FRAGILITY` standing item (open until next OS reboot or uptime reset, or indefinitely if the CI-only workflow is accepted); any carried-forward standing items from prior cycles; `FIX-F6-A` / `F6-MUTATION-EXAMINE-GLOBS-EXPANSION` (deferred explicitly by DEC-356).
+
+**Outcome:** cycle-007 (`auth-correctness-dx`) is ACTIVE, Phase F4 (delta implementation) IN PROGRESS. Baseline GREEN @ develop@`14e695ae` (5,267/5,091/0/176). Wave-1 worktrees created. Story A delivery started. All counts unchanged (757 BCs / 82 VPs / 118 holdouts / 180 stories).
+
+**Files touched (Dim-1): 4 unique files/paths this burst, all committed in the state-manager's own single atomic commit on `factory-artifacts`**
+
+- `.factory/STATE.md` (modified — v4.13 → v4.14; pipeline PAUSED→ACTIVE)
+- `.factory/cycles/cycle-007/burst-log.md` (created — this file)
+- `.factory/cycles/cycle-007/session-checkpoints.md` (modified — prior SESSION-WRAP-PAUSE-2026-09-11 checkpoint archived)
+- `.factory/cycles/OPEN-STANDING-ITEMS.md` (modified — HOST-GATEKEEPER-SYSPOLICYD-FRAGILITY entry appended)
+
+**Dim-2 Attestation:** No BC/VP/holdout INDEX content changed this burst (F4 baseline + worktree creation is process-setup only, no spec authorship). Counts unchanged: 757 BCs / 82 VPs / 118 holdouts / 180 stories. No DEC minted; no DEC-namespace collision check needed.
+
+**Dim-5 Attestation:** N/A — no binary/WASM artifact produced by this `.factory/` commit (this burst is process-bookkeeping only, no build or compilation step).
+
+**Dim-6 Attestation:** No `src/`/`tests/` change this burst — cycle-007 is at Phase F4 baseline/worktree-creation step; Story A delivery has started but no code is committed to `develop` yet. `develop` HEAD unchanged at `14e695ae`.
+
+**Dim-7 Attestation:** N/A — no CI-relevant change this burst (no code, no workflow file, no `.github/` change touched). Note: cycle-007's `src/api/auth.rs` changes at F4 are the HIGH-regression-risk item (3rd consecutive cycle touching this file); that risk manifests at the per-story TDD + PR stage, not here.
+
+---
