@@ -131,6 +131,27 @@ All notable changes to jr will be documented here.
   interactivity-gated: "A deprecation notice is printed in human-output (Table) mode
   unless the non-interactive OAuth guard rejects the refresh first."
   No functional change — doc-comment accuracy fixes only.
+- **`jr auth list` STATUS column now reflects actual credential state, not URL presence**
+  (S-cycle7-auth-state-derivation, BC-1.6.048/BC-1.6.049, issue #788). The STATUS column
+  (table output) and `"status"` field (JSON output) previously showed `configured` for any
+  profile that had a URL set, regardless of whether credentials were actually stored. They
+  now derive from a real keychain probe:
+
+  - `unset` — profile has no URL configured.
+  - `no-credentials` — URL is set but no matching credentials found in the keychain.
+  - `configured` — URL is set and a matching credential (OAuth tokens or API token,
+    selected by the profile's `auth_method`) is present in the keychain.
+
+  The renderers (`render_list_table`, `render_list_json`) are now pure — they receive
+  pre-computed probe results from `collect_probe_results` in `handle_list` and perform no
+  keychain access themselves (BC-1.6.048 F-1 fix). JSON `"status"` serializes with
+  kebab-case: `"unset"`, `"no-credentials"`, `"configured"`.
+
+  **macOS note:** because `jr auth list` now probes the keychain for each URL-configured
+  profile, macOS users may see a Keychain Access consent dialog ("jr wants to use your
+  confidential information stored in jr in your keychain") after upgrading if the rebuilt
+  binary is not yet on the keychain item's ACL. Grant access once; subsequent invocations
+  are silent. This prompt does not appear on Linux or Windows.
 
 - **Breaking: `load_api_token` credential-absence branches now exit 2 (not 64) and
   suggest the correct `--profile` flag form** (S-cycle7-credential-absence-fix,
