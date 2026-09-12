@@ -228,16 +228,17 @@ N/A — evaluated at wave gate.
 
 ## Security Review
 
-> Security review to be populated after Step 4 dispatch. This PR touches `src/api/auth.rs`
-> (HIGH-criticality auth/credential module) — security-reviewer dispatch is REQUIRED.
+Security review completed — **APPROVE** (Step 4, cycle-007). No blocking findings.
 
 ```mermaid
 graph LR
-    Critical["Critical: TBD"]
-    High["High: TBD"]
-    Medium["Medium: TBD"]
-    Low["Low: TBD"]
+    Critical["Critical: 0"]
+    High["High: 0"]
+    Medium["Medium: 0"]
+    Low["Low: 0"]
 ```
+
+**Summary:** `derive_auth_state` is a pure function with no I/O. `probe_matching_kind_credential` is effectful but keychain-gated; it performs read-only queries only. No injection vectors, no auth bypass, no OWASP Top-10 issues identified. The `collect_probe_results` probe-injection seam is internal (`pub(crate)`) and never reachable from untrusted input.
 
 ---
 
@@ -246,7 +247,7 @@ graph LR
 ### Blast Radius
 - **Systems affected:** `jr auth list` (table + JSON), `src/api/auth.rs` (new pure helper), `.cargo/mutants.toml` (mutation scope)
 - **User impact:** `auth list` STATUS column now shows `no-credentials` instead of `configured` for profiles missing the correct credential kind. This is a CORRECTNESS fix — users previously saw false positives that would lead to `NotAuthenticated` errors on the next command.
-- **Data impact:** None — read-only keychain probe, no writes
+- **Data impact:** Minimal — keychain probes are read-only per profile. However, `handle_list` invokes `load_oauth_tokens` via the probe path on OAuth profiles; for the `default` profile this may trigger lazy migration of legacy flat OAuth keys (store + delete, `src/api/auth.rs`). This migration is pre-existing behavior, not new to this PR, but `jr auth list` is now a new trigger site for it.
 - **Breaking change:** Yes — profiles with a URL but no matching-kind credential now show `no-credentials` instead of `configured`. Scripts parsing `jr auth list` table output should be updated.
 - **Risk Level:** LOW for production behavior (read-only probe, better UX); MEDIUM for table-output consumers that depend on the old `configured` string for all URL-set profiles.
 
@@ -339,7 +340,7 @@ models-used:
 
 ## Pre-Merge Checklist
 
-- [ ] All CI status checks passing (`ci-gate`)
+- [x] All CI status checks passing (`ci-gate`) — run 34667161012 PASS
 - [x] Build passes (`cargo build`)
 - [x] Clippy clean (`cargo clippy -- -D warnings`)
 - [x] Format clean (`cargo fmt --all -- --check`)
@@ -348,6 +349,6 @@ models-used:
 - [x] `.cargo/mutants.toml` `examine_globs` entry for `src/cli/auth/list.rs` added
 - [x] Two `probe_matching_kind_credential` `exclude_re` entries added with justification
 - [x] CHANGELOG `[Unreleased]` entry present (B1 + Story C entries preserved from rebase)
-- [ ] Security review completed (HIGH-criticality auth module — dispatch required)
-- [ ] PR reviewer APPROVE with covered_sha
-- [ ] No critical/high security findings unresolved
+- [x] Security review completed — APPROVE, 0 blocking findings (Step 4)
+- [x] PR reviewer APPROVE with covered_sha: d42d288e5bdff17336cf1b32a4edf711f2b452fb (cycle 2)
+- [x] No critical/high security findings unresolved

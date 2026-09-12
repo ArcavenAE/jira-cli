@@ -1,10 +1,10 @@
 ---
 document_type: session-checkpoints
 level: ops
-version: "1.1"
+version: "1.2"
 status: archive
 producer: state-manager
-timestamp: 2026-09-11T20:00:00Z
+timestamp: 2026-09-12T00:00:00Z
 cycle: "cycle-007-auth-correctness-dx"
 inputs: [STATE.md]
 input-hash: "[live-state]"
@@ -17,6 +17,26 @@ traces_to: STATE.md
      Only the LATEST checkpoint lives in STATE.md.
      Prior checkpoints are archived here for historical reference. -->
 
+## Session Resume Checkpoint (2026-09-11, STATE.md v4.19) — WAVE-1-INTEGRATION-GATE-PASSED: All 4 Wave-1 stories merged @ develop@33567e92; Wave 2 = B2 STARTING — Superseded 2026-09-12
+
+**Status:** SUPERSEDED 2026-09-12 by the v4.20 SESSION-WRAP-PAUSE-2026-09-12 checkpoint (B2 CONVERGED + MERGED PR #807 @ develop@30bb1a18; all 5 stories done; pipeline PAUSED). Archived verbatim (condensed) from STATE.md v4.19 below.
+
+**Date:** 2026-09-11. **Pipeline: ACTIVE** (cycle-007 `auth-correctness-dx`, F4 delta implementation IN PROGRESS). **Position:** Wave-1 INTEGRATION GATE PASSED. All 4 Wave-1 stories merged to `develop@33567e92`: Story A PR #803 @ `08021685` (#784 closed; #786 manual close pending), Story C PR #805 @ `5b5b4432` (#790 closed), Story D PR #804 @ `24e6f5d1`, Story B1 PR #806 @ `33567e92` (#788 auto-closed per `closes #788` commit msg; BC-1.6.048/049). Gate: CI run `34668700676` GREEN (combined tree); wave adversarial 3 consecutive CLEAN; wave security CLEAN; all 8 MUST-PASS holdout scenarios satisfied. Wave 2 = B2 (`S-cycle7-auth-status-json`, BC-1.6.050, depends on B1's `derive_auth_state` now merged): worktree `feat/cycle7-auth-status-json` created off `develop@33567e92`.
+
+**NEXT** = B2 per-story TDD delivery (Red Gate → implement → convergence → PR → merge).
+
+**Open action items:** `#786-MANUAL-CLOSE` (PR #803 merged to `develop` not `main`; confirm repo `Zious11/jira-cli` before closing manually). `AUTH-REFRESH-APITOKEN-DOC-OVERCLAIM` (LOW, non-blocking). `AUTH-REMEDIATION-EQUALS-FORM-BROADER` (LOW, non-blocking; `load_oauth_tokens` + `auth logout` SPACE-form; B2 MUST emit equals-form per spec).
+
+**Convergence counter:** Stories A+C+D+B1 all MERGED; Wave-1 gate PASSED. trajectory-tail `->1->3->0->2` unchanged. Wave 2 = B2 starting.
+
+**WIP branch list:** `feat/cycle7-auth-status-json` (B2, freshly created off `develop@33567e92`).
+
+**Resume command:** `/vsdd-factory:next-step` (B2 per-story TDD delivery).
+
+**Counts:** total_bcs 757; VP 82; holdout 118; total_stories 180 (all unchanged). Prior checkpoint: STATE.md v4.18.
+
+---
+
 ## Session Resume Checkpoint (2026-09-11, STATE.md v4.18) — WAVE-1-C-MERGED-D-READY-B1-CONVERGED: Stories A+C MERGED; Story D awaiting UI merge; Story B1 converged entering PR — Superseded 2026-09-11
 
 **Status:** SUPERSEDED 2026-09-11 by the v4.19 WAVE-1-INTEGRATION-GATE-PASSED checkpoint. Archived verbatim (condensed) from STATE.md v4.18 below.
@@ -25,7 +45,7 @@ traces_to: STATE.md
 
 **NEXT** = (1) human merges PR #804 via GitHub UI squash-merge; (2) B1 PR creation -> pr-reviewer + security-reviewer -> merge; (3) Wave 2 = B2.
 
-**Convergence counter:** Stories A+C MERGED; Story D CONVERGED (PR #804 awaiting UI merge); Story B1 CONVERGED (11 passes, 3 consecutive CLEAN). trajectory-tail `→1→3→0→2` unchanged (F5 not yet started). PG-C1 + PG-B1 codified in `cycles/cycle-007/lessons.md`.
+**Convergence counter:** Stories A+C MERGED; Story D CONVERGED (PR #804 awaiting UI merge); Story B1 CONVERGED (11 passes, 3 consecutive CLEAN). trajectory-tail `→1→3→0→2` unchanged. PG-C1 + PG-B1 codified in `cycles/cycle-007/lessons.md`.
 
 **WIP:** `feat/cycle7-auth-state-derivation` (B1, rebase needed@`5b5b4432`).
 
