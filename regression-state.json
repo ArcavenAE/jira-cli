@@ -1,1 +1,1 @@
-{"status":"pass","timestamp":"2026-09-11T22:14:26Z","command":"cd /Users/zious/Documents/GITHUB/jira-cli/.worktrees/S-cycle7-auth-state-derivation && cargo test --lib --no-run 2>&1 | tail -20"}
+{"status":"pass","timestamp":"2026-09-12T01:55:03Z","command":"cd /Users/zious/Documents/GITHUB/jira-cli/.worktrees/S-cycle7-auth-state-derivation && cargo test --test auth_list_status 2>&1 | tail -6"}

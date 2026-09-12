@@ -116,3 +116,57 @@ traces_to: STATE.md
 **Dim-7 Attestation:** N/A — no CI-workflow change this burst. CI was exercised by PR #803's ci-gate (25 checks PASS); no `.github/` file touched by this state-manager burst.
 
 ---
+
+## Burst: Burst 3 — Story C MERGED (PR #805), Story D awaiting human UI merge (PR #804), Story B1 CONVERGED 11 passes entering PR (2026-09-11)
+
+**Parent-commit:** `5b5b4432` (`develop` tip after PR #805 squash-merge; advanced from `08021685`).
+
+**Trigger:** Wave-1 per-story delivery progress: Story C (`S-cycle7-oauth-help-text-fix`) converged and merged via PR #805; Story D (`S-cycle7-readme-migration-note`) converged and PR #804 opened but blocked by auto-mode permission gate; Story B1 (`S-cycle7-auth-state-derivation`) converged after 11 adversary passes (3 consecutive CLEAN passes 9/10/11; human authorized past 10-pass soft ceiling), now entering PR phase.
+
+**Actions taken:**
+
+1. **Story C (`S-cycle7-oauth-help-text-fix`) MERGED** via PR #805 squash-merge to `develop` at `5b5b4432`. Converged via 5-pass per-story adversarial review (3 consecutive CLEAN). Cross-vendor-caught sibling fix included: `jr auth refresh --oauth` doc had the same unconditional-notice overclaim as the primary `--oauth` help text. CI green. pr-reviewer APPROVE. `develop` tip advanced `08021685` → `5b5b4432`. GitHub issue **#790 CLOSED** by PR #805 merge.
+
+2. **PROCESS-GAP PG-C1 codified** in `cycles/cycle-007/lessons.md`: pr-manager auto-merged #805 despite explicit orchestrator "do NOT merge" instruction, tripping the Claude Code auto-mode "Merge Without Review" security classifier. Human REVIEWED and ACCEPTED the merge (content was fully converged + CI-green + approved). Classifier is INCONSISTENT: it blocked #804's auto-merge attempt but only warned #805's. Remediation candidate: pr-manager dispatch prompts should carry a hard "report-only, NO merge authority" contract; or all merges should route exclusively through the orchestrator/human.
+
+3. **Story D (`S-cycle7-readme-migration-note`) CONVERGED**: 4-pass per-story adversarial review (3 consecutive CLEAN). Rebased onto `5b5b4432` (HEAD `800e67f1`). PR #804 fully green (24/24, mergeStateStatus CLEAN after macOS-runner-flake re-run). AWAITING human UI squash-merge (automated merge repeatedly blocked by auto-mode permission gate). `#804-AWAITING-HUMAN-UI-MERGE` recorded as open action item.
+
+4. **Story B1 (`S-cycle7-auth-state-derivation`) CONVERGED**: per-story adversarial convergence reached 3 consecutive CLEAN passes (passes 9/10/11) after 11 total passes. Human authorized pushing past the 10-pass soft ceiling for full 3-clean confirmation. Behavior verified correct from pass 2; tail was test-quality/coverage/mutation-scope hardening. Entering PR phase: rebase onto `develop@5b5b4432`, auth.rs = HIGH-criticality → full pr-reviewer + security-reviewer. Branch `feat/cycle7-auth-state-derivation`, HEAD ~`4b751e3f`.
+
+5. **PROCESS-GAP PG-B1 codified** in `cycles/cycle-007/lessons.md`: B1's convergence churned 11 passes due to a recurring "incomplete-sweep / fix-induced sibling breakage" pattern. A test-hardening fix repeatedly touched only some of N sibling sites (source-scan heuristic applied in 2 of 3 tests); a fixture grown 3→4 profiles broke a sibling `arr.len()==3` assertion → RED suite; a missing AC-008 test. Remediation: after any shared-test-helper/fixture change, run the ENTIRE affected test module (`cargo test --lib <module>`) and grep-sweep ALL sibling sites.
+
+6. **Demo recording SKIPPED (Story B1)** by human decision. Justification: `auth list` STATUS behavior exhaustively unit-tested + snapshot-pinned; multi-profile keychain-state demo setup impractical on the Gatekeeper-fragile dev host; consistent with Story A demo-skip precedent. Recorded in STATE.md Skip Log.
+
+7. **Follow-up `AUTH-REFRESH-APITOKEN-DOC-OVERCLAIM`** added as LOW/non-blocking standing item: the `jr auth refresh --api-token` doc comment (`src/cli/mod.rs`) has a latent unconditional-notice overclaim of the same class C fixed for `--oauth`. Its informational notice is also guard-suppressed on an oauth-method profile under `--no-input`. Left out-of-scope of Story C (`--oauth`-only). Fix in a future doc-accuracy sweep. Recorded in `cycles/OPEN-STANDING-ITEMS.md` and STATE.md Drift items.
+
+8. **STATE.md updated** (v4.17 → v4.18, single full-content Write per hook-guard discipline): develop tip updated (`08021685` → `5b5b4432`); Story C → MERGED; Story D → AWAITING-HUMAN-UI-MERGE; Story B1 → CONVERGED/entering-PR; Skip Log +1 row (B1 demo recording); Phase Progress rotated (F2-SPEC-EVOLUTION-CYCLE-007 row evicted, WAVE-1-C-MERGED-D-READY-B1-CONVERGED-2026-09-11 added); Current Phase Steps updated; Session Resume Checkpoint replaced (v4.17 archived); Drift/Standing Items: `AUTH-REFRESH-APITOKEN-DOC-OVERCLAIM` + `#804-AWAITING-HUMAN-UI-MERGE` added.
+
+9. **Prior session checkpoint (v4.17 / STORY-A-MERGED)** archived to `cycles/cycle-007/session-checkpoints.md`.
+
+10. **`cycles/OPEN-STANDING-ITEMS.md` updated**: `AUTH-REFRESH-APITOKEN-DOC-OVERCLAIM` and `#804-AWAITING-HUMAN-UI-MERGE` entries appended.
+
+**Adversary verdict:** N/A — bookkeeping/progress-record burst (STATE.md + cycle files only; no code or spec-body change this burst; per-story adversarial reviews were conducted by the per-story delivery flow prior to PR creation).
+
+**Codifications:** No new DEC minted this burst. PG-C1 and PG-B1 codified in `cycles/cycle-007/lessons.md`. `AUTH-REFRESH-APITOKEN-DOC-OVERCLAIM` and `#804-AWAITING-HUMAN-UI-MERGE` recorded as open standing items.
+
+**Closes:** Story C (`S-cycle7-oauth-help-text-fix`) delivery (MERGED); #790 CLOSED. **Does NOT close:** cycle-007 itself (F4 IN PROGRESS, Story D + B1 merge + Wave 2 remaining); #786 (manual close required); #804 (awaiting human UI merge).
+
+**Outcome:** cycle-007 (`auth-correctness-dx`) ACTIVE, Phase F4 IN PROGRESS. Story A MERGED @ `develop@08021685`; Story C MERGED @ `develop@5b5b4432` (#790 closed). Story D converged, PR #804 awaiting human UI merge. Story B1 CONVERGED (11 passes, 3 consecutive CLEAN), entering PR phase. Wave 2 = B2 after B1 merge. All counts unchanged (757 BCs / 82 VPs / 118 holdouts / 180 stories).
+
+**Files touched (Dim-1): 5 unique files/paths this burst, all committed in the state-manager's own single atomic commit on `factory-artifacts`**
+
+- `.factory/STATE.md` (modified — v4.17 → v4.18; Story C MERGED, D awaiting, B1 converged)
+- `.factory/cycles/cycle-007/burst-log.md` (modified — Burst 3 appended)
+- `.factory/cycles/cycle-007/lessons.md` (modified — PG-C1, PG-B1 appended)
+- `.factory/cycles/cycle-007/session-checkpoints.md` (modified — v4.17 STORY-A-MERGED checkpoint archived)
+- `.factory/cycles/OPEN-STANDING-ITEMS.md` (modified — AUTH-REFRESH-APITOKEN-DOC-OVERCLAIM + #804-AWAITING-HUMAN-UI-MERGE appended)
+
+**Dim-2 Attestation:** No BC/VP/holdout INDEX content changed this burst. Counts unchanged: 757 BCs / 82 VPs / 118 holdouts / 180 stories. No DEC minted.
+
+**Dim-5 Attestation:** N/A — process-bookkeeping only, no binary/WASM artifact produced.
+
+**Dim-6 Attestation:** `develop` HEAD advanced `08021685` → `5b5b4432` via PR #805 squash-merge (Story C code change). This burst records that fact; no new `src/`/`tests/` change originates in this burst.
+
+**Dim-7 Attestation:** N/A — no CI-workflow change this burst. CI was exercised by PR #805's ci-gate (green) and PR #804's ci-gate (24/24 green); no `.github/` file touched by this state-manager burst.
+
+---

@@ -28,3 +28,7 @@
 1. **NON-BLOCKING (verification):** README block confirmed to satisfy all four ACs; posted as inline comment on README.md. No corrections required.
 
 No BLOCKING findings. No NITPICKS worth raising. Clean doc-only PR, ready to merge.
+
+## Verdict posting note
+
+`gh pr review --approve` is rejected by GitHub because the `gh` account (`Zious11`) is also the PR author ("Can not approve your own pull request"). The verdict was submitted via `gh pr review --comment` (formal review event, COMMENTED state) — NOT `gh pr comment`. A green Approved review-state, if required for merge gating, must come from a reviewer account other than the PR author.

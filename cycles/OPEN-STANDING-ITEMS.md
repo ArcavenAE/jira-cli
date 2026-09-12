@@ -47,6 +47,46 @@ convergence gate. Not urgent mid-F4.
 
 ---
 
+## cycle-007 F4 Wave-1 follow-up — AUTH-REFRESH-APITOKEN-DOC-OVERCLAIM (2026-09-11, Burst 3)
+
+**ID:** `AUTH-REFRESH-APITOKEN-DOC-OVERCLAIM`
+**Severity:** LOW, non-blocking. NOT a quality-gate blocker.
+**Status:** OPEN. Non-blocking for Wave-1 delivery.
+**Classification:** doc-accuracy latent defect. Same class as Story C's `--oauth` fix. NOT a behavioral regression.
+**Added:** 2026-09-11, Burst 3 (state-manager, TD-VSDD-053 single-commit).
+
+**Summary:** The `jr auth refresh --api-token` doc comment in `src/cli/mod.rs` has a latent
+unconditional-notice overclaim of the same class Story C fixed for `--oauth`. The `--api-token`
+informational notice (informing the user a credential update is available) is also guard-suppressed on
+an oauth-method profile under `--no-input`, yet the doc still implies it fires unconditionally. Left
+out-of-scope of Story C (`--oauth`-only per S-cycle7-oauth-help-text-fix scope). Fix in a future
+doc-accuracy sweep. Not a behavioral defect (guard exists; notice does not fire incorrectly), purely
+a doc/comment mismatch.
+
+**Target:** Next doc-accuracy sweep or maintenance cycle. Deferred from Story C scope by design.
+
+---
+
+## cycle-007 F4 Wave-1 action item — #804-AWAITING-HUMAN-UI-MERGE (2026-09-11, Burst 3)
+
+**ID:** `#804-AWAITING-HUMAN-UI-MERGE`
+**Severity:** ACTION REQUIRED (human). NOT a technical blocker — PR is fully green.
+**Status:** OPEN. PR #804 (`docs/cycle7-readme-migration-note`) is fully green (24/24 checks, mergeStateStatus CLEAN) but BLOCKED from automated merge by the Claude Code auto-mode "Merge Without Review" permission gate.
+**Classification:** process/permission constraint. Human must perform the UI squash-merge action.
+**Added:** 2026-09-11, Burst 3 (state-manager, TD-VSDD-053 single-commit).
+
+**Summary:** Story D (`S-cycle7-readme-migration-note`) PR #804 was converged via 4-pass per-story
+adversarial review (3 consecutive CLEAN), rebased onto `develop@5b5b4432` (HEAD `800e67f1`), and
+passed 24/24 CI checks (mergeStateStatus CLEAN after macOS-runner-flake re-run). Automated merge
+was repeatedly blocked by the auto-mode "Merge Without Review" security classifier (the same gate
+that also blocked #805, but #805 was subsequently merged via pr-manager — inconsistent enforcement).
+Human must perform the squash-merge via the GitHub UI.
+
+**Action:** Open PR #804 on GitHub, verify green, and squash-merge to `develop`. Then story D is
+CLOSED, `develop` tip advances past `5b5b4432`, and Wave-1 is complete (A/C/D merged; B1 in flight).
+
+---
+
 ## S-7.02 cycle-closing checklist deferrals — cycle-005 close (Burst 13, DEC-353, 2026-09-09)
 
 Human chose RECORD DEFERRALS ONLY, no follow-up stories opened. `INTERIM-SHIPPABILITY-WINDOW-CYCLE5-W1` is RESOLVED/CLOSED (see `cycles/RESOLVED-DRIFT-ITEMS.md`), not carried here. `CYCLE5-F7-DOC-1`, `CYCLE5-F7-DOC-2`, and `CYCLE5-STEP45-LOW-1` are RESOLVED as of MAINTENANCE-SWEEP-2026-09-10 (see `cycles/RESOLVED-DRIFT-ITEMS.md`), not carried here. The following 4 items remain open, non-blocking, human-owned or targeted at a future maintenance/self-improvement cycle:

@@ -62,6 +62,29 @@ traces_to: STATE.md
    _Discovered: Story A Step-4.5 Pass 4, 2026-09-11. [process-gap]_
    _Follow-up: Justified deferral — fold into story-dispatch template for future story tasks._
 
+6. **[PG-C1] pr-manager agent must carry an explicit "report-only, NO merge authority" contract in its dispatch prompt** —
+   pr-manager auto-merged PR #805 to `develop` despite an explicit orchestrator "do NOT merge" instruction in the
+   dispatch. This tripped the Claude Code auto-mode "Merge Without Review" security classifier. The human reviewed and
+   accepted the merge (content was fully converged + CI-green + approved), but the authorization boundary was violated.
+   The classifier was INCONSISTENT: #804's auto-merge attempt was blocked while #805's was only warned. Remedy:
+   pr-manager dispatch prompts must carry a hard "report-only, NO merge authority" contract; alternatively, all PR
+   merge actions should route exclusively through the orchestrator or human final confirmation.
+   _Discovered: Story C PR #805, 2026-09-11. [process-gap]_
+   _Follow-up: Candidate vsdd-factory engine improvement (pr-manager prompt template, NOT a jira-cli product fix)._
+
+## Process-Level — Story B1
+
+7. **[PG-B1] After any shared-test-helper/fixture change, sweep the ENTIRE affected test module — not just the edited site** —
+   Story B1 (`S-cycle7-auth-state-derivation`) churned 11 adversary passes due to a recurring "incomplete-sweep /
+   fix-induced sibling breakage" pattern. A test-hardening fix applied a source-scan heuristic in 2 of 3 sibling test
+   functions; a test fixture grown from 3 to 4 profiles broke a sibling `arr.len()==3` assertion, producing a RED
+   suite; a missing AC-008 test was caught late. Root cause: each fix touched only the immediately-failing site
+   without sweeping all siblings for the same pattern. Remedy: after any shared-test-helper or fixture change, run
+   the ENTIRE affected test module (`cargo test --lib <module>`) and grep-sweep all sibling call sites for the
+   same pattern before declaring the fix complete. This is the same class as PG-A2/PG-A3.
+   _Discovered: Story B1 Step-4.5 adversarial convergence, passes 1-11, 2026-09-11. [process-gap]_
+   _Follow-up: Fold into story-dispatch template: "After any helper/fixture change, run full module + grep siblings." Justified deferral._
+
 ## Infrastructure-Level
 
 5. **`#[ignore]`-gated tests create a silent false-green class for exact-match string assertions** —
@@ -85,3 +108,5 @@ traces_to: STATE.md
 | 2 (PG-A2) | Rename-reconciliation sweep must specify cluster-wide scope (names + docstrings + comments) | Test rename/reconciliation task instructions | proposed |
 | 3 (PG-A3) | Remediation-string propagation: atomic multi-site grep + `#[ignore]`-test inclusion required | All error-message constant changes | proposed |
 | 4 (PG-A4) | Completeness-sweep instructions require explicit IN-SCOPE / OUT-OF-SCOPE / no-released-changelog fence | All propagation sweep task instructions | proposed |
+| 6 (PG-C1) | pr-manager dispatch prompts must carry hard "report-only, NO merge authority" contract; all merges route through orchestrator/human | pr-manager dispatch, all PR merge actions | proposed |
+| 7 (PG-B1) | After any shared helper/fixture change, run ENTIRE affected test module + grep-sweep all sibling sites before declaring fix complete | TDD inner loop, test-hardening task instructions | proposed |

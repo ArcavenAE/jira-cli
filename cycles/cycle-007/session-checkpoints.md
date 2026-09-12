@@ -17,6 +17,24 @@ traces_to: STATE.md
      Only the LATEST checkpoint lives in STATE.md.
      Prior checkpoints are archived here for historical reference. -->
 
+## Session Resume Checkpoint (2026-09-11, STATE.md v4.17) — STORY-A-MERGED: Story A PR #803 squash-merged to develop @ 08021685 — Superseded 2026-09-11
+
+**Status:** SUPERSEDED 2026-09-11 by the v4.18 WAVE-1-C-MERGED-D-READY-B1-CONVERGED checkpoint. Archived verbatim (condensed) from STATE.md v4.17 below.
+
+**Date:** 2026-09-11. **Pipeline: ACTIVE** (cycle-007 `auth-correctness-dx`, F4 delta implementation IN PROGRESS). **Position:** Story A (`S-cycle7-credential-absence-fix`) MERGED via PR #803 to `develop` @ `08021685` (stale-verdict PASSED @ `5a3fc8be`; ci-gate PASS 25 checks; pr-reviewer APPROVE 0 findings; security CLEAN 0 blocking; 3 CI fix cycles). Demo skipped (human decision). #784 auto-closed; #786 needs manual close (confirm repo `Zious11/jira-cli`). B1/C/D pending Wave-1 delivery; Wave 2 = B2 (`S-cycle7-auth-status-json`). All six prior cycles (001-006) CLOSED.
+
+**NEXT** = B1 + C + D Wave-1 in parallel (B1 rebase onto `develop@08021685` first). Wave 2 = B2 after B1 merge.
+
+**Convergence counter:** Story A MERGED (demo skipped; Step-4.5 CONVERGED 9 passes). trajectory-tail `→1→3→0→2` unchanged.
+
+**WIP:** `feat/cycle7-auth-state-derivation` (B1, rebase needed@`08021685`), `fix/cycle7-oauth-help-text` (C), `docs/cycle7-readme-migration-note` (D).
+
+**Resume command:** `/vsdd-factory:next-step` (B1/C/D Wave-1 in parallel).
+
+**Counts:** total_bcs 757; VP 82; holdout 118; total_stories 180 (all unchanged). Prior: STATE.md v4.16.
+
+---
+
 ## Session Resume Checkpoint (2026-09-11, STATE.md v4.16) — STORY-A-STEP-4.5-CONVERGED: Story A adversarial review CONVERGED, awaiting demo/PR/merge — Superseded 2026-09-11
 
 **Status:** SUPERSEDED 2026-09-11 by the v4.17 STORY-A-MERGED checkpoint (Story A PR #803 squash-merged to `develop` @ `08021685`). Archived verbatim (condensed to State + Resume Prompt) from STATE.md v4.16 below.
