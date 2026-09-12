@@ -80,6 +80,15 @@ All notable changes to jr will be documented here.
   policy-doc-only (DEC-348/DEC-349), no new PRD BC — see
   `docs/specs/cargo-mutants-policy.md` §"Sharded Mutation Gate (cycle-006)".
 
+- **README: add per-profile-credential migration note** (S-cycle7-readme-migration-note,
+  issue #783). API-token profiles created before per-profile credential storage shipped
+  (pre-cycle-003) do not have their `email`/`api-token` credentials lazy-migrated to the
+  new per-profile keychain layout the way OAuth tokens are. After upgrading, the first
+  command that contacts Jira on any such profile exits 2 (not authenticated) with a
+  remediation hint. The migration section of README.md now documents this asymmetry and
+  directs users to run `jr auth login --profile=<name>` once (equals form, so
+  leading-hyphen profile names are not misread as flags). Doc-only; no `src/` changes.
+
 - **CI: nightly full-scope mutation workflow rebalanced to 24 shards + a completeness
   guard (`ci/mutants-nightly-rebalance`).** Investigated run 34478602590 (the first
   N=16 nightly run) `cancelled`: only 4/16 shards finished inside the old
@@ -122,6 +131,27 @@ All notable changes to jr will be documented here.
   interactivity-gated: "A deprecation notice is printed in human-output (Table) mode
   unless the non-interactive OAuth guard rejects the refresh first."
   No functional change — doc-comment accuracy fixes only.
+- **`jr auth list` STATUS column now reflects actual credential state, not URL presence**
+  (S-cycle7-auth-state-derivation, BC-1.6.048/BC-1.6.049, issue #788). The STATUS column
+  (table output) and `"status"` field (JSON output) previously showed `configured` for any
+  profile that had a URL set, regardless of whether credentials were actually stored. They
+  now derive from a real keychain probe:
+
+  - `unset` — profile has no URL configured.
+  - `no-credentials` — URL is set but no matching credentials found in the keychain.
+  - `configured` — URL is set and a matching credential (OAuth tokens or API token,
+    selected by the profile's `auth_method`) is present in the keychain.
+
+  The renderers (`render_list_table`, `render_list_json`) are now pure — they receive
+  pre-computed probe results from `collect_probe_results` in `handle_list` and perform no
+  keychain access themselves (BC-1.6.048 F-1 fix). JSON `"status"` serializes with
+  kebab-case: `"unset"`, `"no-credentials"`, `"configured"`.
+
+  **macOS note:** because `jr auth list` now probes the keychain for each URL-configured
+  profile, macOS users may see a Keychain Access consent dialog ("jr wants to use your
+  confidential information stored in jr in your keychain") after upgrading if the rebuilt
+  binary is not yet on the keychain item's ACL. Grant access once; subsequent invocations
+  are silent. This prompt does not appear on Linux or Windows.
 
 - **Breaking: `load_api_token` credential-absence branches now exit 2 (not 64) and
   suggest the correct `--profile` flag form** (S-cycle7-credential-absence-fix,

@@ -2203,6 +2203,72 @@ fn extract_query_param(request: &str, param: &str) -> Option<String> {
     None
 }
 
+// ── BC-1.6.048 — AuthState vocabulary + derive_auth_state pure helper ──────
+
+/// Three-state vocabulary for a profile's credential readiness (BC-1.6.048).
+///
+/// Serializes to kebab-case strings: `"unset"` / `"no-credentials"` /
+/// `"configured"`. Used by `derive_auth_state`, `auth list`, and (Wave 2)
+/// `auth status --output json`.
+///
+/// `Serialize` only — this enum is never deserialized from external data.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, serde::Serialize)]
+#[serde(rename_all = "kebab-case")]
+pub enum AuthState {
+    /// No URL is configured for this profile — nothing to authenticate against.
+    Unset,
+    /// A URL is configured but no matching-kind credential is stored.
+    NoCredentials,
+    /// A URL is configured and a matching-kind credential is present.
+    Configured,
+}
+
+impl AuthState {
+    /// Return the canonical kebab-case string representation of this variant —
+    /// the single source of truth for the human-readable STATUS column in
+    /// `render_list_table` (adversary pass-6, F-1 root-cause dedup).
+    ///
+    /// These strings match the serde `#[serde(rename_all = "kebab-case")]`
+    /// serialization, keeping table and JSON channels in sync. The agreement
+    /// is enforced by `test_bc_1_6_048_auth_state_as_str_agrees_with_serde`
+    /// in this module.
+    pub(crate) fn as_str(self) -> &'static str {
+        match self {
+            AuthState::Unset => "unset",
+            AuthState::NoCredentials => "no-credentials",
+            AuthState::Configured => "configured",
+        }
+    }
+}
+
+/// Derive the credential-readiness state for a profile (BC-1.6.048).
+///
+/// **PURE** — no IO, no keychain access, deterministic on its two inputs.
+/// The CALLER selects and invokes the kind-specific keychain probe
+/// (`load_oauth_tokens` for oauth, `load_api_token` for api_token) and passes
+/// `.is_ok()` as `matching_kind_present`.
+///
+/// # Truth table
+///
+/// | url     | matching_kind_present | Result        |
+/// |---------|----------------------|---------------|
+/// | None    | false                | Unset         |
+/// | None    | true                 | Unset         |
+/// | Some(_) | false                | NoCredentials |
+/// | Some(_) | true                 | Configured    |
+pub fn derive_auth_state(url: Option<&str>, matching_kind_present: bool) -> AuthState {
+    match url {
+        None => AuthState::Unset,
+        Some(_) => {
+            if matching_kind_present {
+                AuthState::Configured
+            } else {
+                AuthState::NoCredentials
+            }
+        }
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -2470,6 +2536,184 @@ mod tests {
             !url.contains("scope:with+plus"),
             "raw + must not appear in the URL: {url}"
         );
+    }
+
+    // ── BC-1.6.048 / BC-1.6.049 — derive_auth_state pure-function tests ──
+    //
+    // Tests for the new `derive_auth_state(url: Option<&str>,
+    // matching_kind_present: bool) -> AuthState` helper (BC-1.6.048).
+    //
+    // RED GATE: all tests in this block reference `derive_auth_state` and
+    // `AuthState`, which do NOT yet exist in production code. They will fail
+    // with a compile error until the implementation is added — that compile
+    // error IS the Red Gate for these ACs (AC-001/002/003/008/011).
+    //
+    // S-cycle7-auth-state-derivation, Wave 1.
+
+    /// BC-1.6.048 postcondition 1 / AC-001 (DEFAULT CI — pure function, no
+    /// keychain). `derive_auth_state` returns `AuthState::Unset` whenever
+    /// `url` is `None`, REGARDLESS of `matching_kind_present`. Both
+    /// `false` and `true` must produce `Unset`.
+    #[test]
+    fn test_bc_1_6_048_derive_auth_state_url_none_always_unset() {
+        assert_eq!(
+            derive_auth_state(None, false),
+            AuthState::Unset,
+            "url=None + matching_kind=false must yield Unset"
+        );
+        assert_eq!(
+            derive_auth_state(None, true),
+            AuthState::Unset,
+            "url=None + matching_kind=true must still yield Unset (url is gating)"
+        );
+    }
+
+    /// BC-1.6.048 postcondition 1 / AC-002 (DEFAULT CI — pure function, no
+    /// keychain). `derive_auth_state` returns `AuthState::NoCredentials`
+    /// when `url` is `Some` AND `matching_kind_present == false`.
+    #[test]
+    fn test_bc_1_6_048_derive_auth_state_url_some_no_match_yields_no_credentials() {
+        assert_eq!(
+            derive_auth_state(Some("https://acme.atlassian.net"), false),
+            AuthState::NoCredentials,
+            "url=Some + matching_kind=false must yield NoCredentials"
+        );
+    }
+
+    /// BC-1.6.048 postcondition 1 / AC-003 (DEFAULT CI — pure function, no
+    /// keychain). `derive_auth_state` returns `AuthState::Configured` when
+    /// `url` is `Some` AND `matching_kind_present == true`.
+    #[test]
+    fn test_bc_1_6_048_derive_auth_state_url_some_match_yields_configured() {
+        assert_eq!(
+            derive_auth_state(Some("https://acme.atlassian.net"), true),
+            AuthState::Configured,
+            "url=Some + matching_kind=true must yield Configured"
+        );
+    }
+
+    /// BC-1.6.048 postcondition 1 / AC-011 — VP-AUTHDX-024 pure-function
+    /// half (DEFAULT CI — exhaustive truth-table over the 4-class domain).
+    /// `derive_auth_state` is a TOTAL, DETERMINISTIC function of its two
+    /// inputs with no hidden state. Covers all four (url × matching_kind)
+    /// input classes collapsing onto the 3-value `AuthState` enum:
+    ///
+    /// | url     | matching_kind | Expected        |
+    /// |---------|---------------|-----------------|
+    /// | None    | false         | Unset           |
+    /// | None    | true          | Unset           |
+    /// | Some(_) | false         | NoCredentials   |
+    /// | Some(_) | true          | Configured      |
+    ///
+    /// Uses proptest to also verify the function is stable across arbitrary
+    /// `&str` URL values (the function never parses/validates the URL —
+    /// only `.is_none()` is checked).
+    #[test]
+    fn test_bc_1_6_048_derive_auth_state_exhaustive_truth_table() {
+        use proptest::prelude::*;
+
+        // Exhaustive enumeration of the 4 classes — determinism is
+        // verified by calling each case twice and asserting equality.
+        let cases: &[(Option<&str>, bool, AuthState)] = &[
+            (None, false, AuthState::Unset),
+            (None, true, AuthState::Unset),
+            (
+                Some("https://acme.atlassian.net"),
+                false,
+                AuthState::NoCredentials,
+            ),
+            (
+                Some("https://acme.atlassian.net"),
+                true,
+                AuthState::Configured,
+            ),
+        ];
+        for (url, matching, expected) in cases {
+            let first = derive_auth_state(*url, *matching);
+            let second = derive_auth_state(*url, *matching);
+            assert_eq!(
+                first, *expected,
+                "truth table mismatch: url={url:?} matching={matching}"
+            );
+            assert_eq!(
+                first, second,
+                "non-deterministic: derive_auth_state({url:?}, {matching}) produced \
+                 different results on two consecutive calls"
+            );
+        }
+
+        // Property-based: arbitrary URL strings must not alter the
+        // url-None/url-Some gating. Only `.is_none()` matters — the
+        // actual URL content is irrelevant.
+        let mut runner = proptest::test_runner::TestRunner::default();
+        runner
+            .run(&("[a-z]{1,20}"), |url_str| {
+                // url=Some with any string + matching=false → NoCredentials
+                prop_assert_eq!(
+                    derive_auth_state(Some(url_str.as_str()), false),
+                    AuthState::NoCredentials,
+                    "arbitrary url + matching=false must yield NoCredentials"
+                );
+                // url=Some with any string + matching=true → Configured
+                prop_assert_eq!(
+                    derive_auth_state(Some(url_str.as_str()), true),
+                    AuthState::Configured,
+                    "arbitrary url + matching=true must yield Configured"
+                );
+                Ok(())
+            })
+            .expect("proptest: derive_auth_state truth table holds for arbitrary url strings");
+    }
+
+    /// BC-1.6.049 postcondition 2 / AC-008 (DEFAULT CI — AuthState
+    /// serialization check). The JSON `"status"` field's string values are
+    /// exactly `"unset"` / `"no-credentials"` / `"configured"`. Verified
+    /// by checking `AuthState`'s serde serialization output directly —
+    /// the vocabulary is defined here, not in the renderer.
+    #[test]
+    fn test_bc_1_6_049_list_json_schema_status_vocabulary_values() {
+        // All three AuthState variants must serialize to their canonical
+        // vocabulary strings. Any misspelling (e.g. "no_credentials") is a
+        // breaking API change.
+        assert_eq!(
+            serde_json::to_string(&AuthState::Unset).unwrap(),
+            "\"unset\""
+        );
+        assert_eq!(
+            serde_json::to_string(&AuthState::NoCredentials).unwrap(),
+            "\"no-credentials\""
+        );
+        assert_eq!(
+            serde_json::to_string(&AuthState::Configured).unwrap(),
+            "\"configured\""
+        );
+    }
+
+    /// BC-1.6.048 / AC-014 root-cause dedup — `AuthState::as_str()` must agree
+    /// with serde's `#[serde(rename_all = "kebab-case")]` serialization for ALL
+    /// THREE variants (adversary pass-6, F-1). This is the cross-channel
+    /// consistency lock: if someone renames a variant without updating `as_str()`,
+    /// this test catches the drift immediately. Likewise, if serde's output drifts
+    /// (e.g. derive macro changes), this test would surface the inconsistency.
+    #[test]
+    fn test_bc_1_6_048_auth_state_as_str_agrees_with_serde() {
+        for variant in [
+            AuthState::Unset,
+            AuthState::NoCredentials,
+            AuthState::Configured,
+        ] {
+            let serde_str = serde_json::to_string(&variant)
+                .unwrap_or_else(|e| panic!("serde failed on {variant:?}: {e}"));
+            // serde_json::to_string wraps in quotes: `"unset"` → strip them.
+            let serde_inner = serde_str.trim_matches('"');
+            assert_eq!(
+                variant.as_str(),
+                serde_inner,
+                "AuthState::{variant:?}: as_str()={:?} but serde produces {serde_inner:?} — \
+                 table and JSON STATUS columns have drifted (adversary pass-6, F-1)",
+                variant.as_str()
+            );
+        }
     }
 
     fn unique_test_service() -> String {
