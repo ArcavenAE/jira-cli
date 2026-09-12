@@ -262,7 +262,7 @@ The pre-existing `F7-GATE-SYSTEMIC-INPUT-HASH-DRIFT-BOOKKEEPING` factory-wide in
 
 ## cycle-004 maintenance items (carried forward, not blockers)
 
-- **F6-MUTATION-EXAMINE-GLOBS-EXPANSION** -- add `src/api/auth.rs`, `src/cli/auth/login.rs`, `src/api/auth_windows_store.rs` to `.cargo/mutants.toml` examine_globs. Target: a future SELF-IMPROVEMENT/maintenance cycle.
+- **F6-MUTATION-EXAMINE-GLOBS-EXPANSION** -- add `src/api/auth.rs`, `src/cli/auth/login.rs`, `src/api/auth_windows_store.rs` to `.cargo/mutants.toml` examine_globs. Target: a future SELF-IMPROVEMENT/maintenance cycle. **OBS-2 (appended 2026-09-11, Wave-1 gate):** `.cargo/mutants.toml` comment mis-attributes `derive_auth_state` mutation coverage to the `list.rs` glob; this becomes cross-wave-relevant as B2 (`S-cycle7-auth-status-json`) adds a 2nd `derive_auth_state` call site. Fold the comment correction into the glob expansion fix.
 - **JR_CACHE_DIR-TEST-ENV-MUTEX-UNIFICATION** -- `src/cache.rs`, `src/config.rs`, and `src/api/auth_windows_store.rs` each carry a SEPARATE mutex guarding the SAME process-global `JR_CACHE_DIR` env var. Target: a future SELF-IMPROVEMENT/maintenance cycle.
 - **TD-031-BLOCKED-BC-6.2.016-CROSSREF** -- deferred, blocked by a pre-existing TD-031 hook violation, unrelated to cycle-005/006.
 - **BC-1.4.035-PC5-VP-GAP** -- production round-trip now CI-verified; formal VP itself still deferred to maintenance.

@@ -170,3 +170,57 @@ traces_to: STATE.md
 **Dim-7 Attestation:** N/A — no CI-workflow change this burst. CI was exercised by PR #805's ci-gate (green) and PR #804's ci-gate (24/24 green); no `.github/` file touched by this state-manager burst.
 
 ---
+
+## Burst: Burst 4 — cycle-007 Wave-1 INTEGRATION GATE PASSED; Wave 2 = B2 STARTING (2026-09-11)
+
+**Parent-commit on develop:** `33567e92` (Story B1 squash-merge PR #806 `feat(auth): derive STATUS from keychain probe, not URL presence (BC-1.6.048/049, closes #788)`; `develop` tip after all 4 Wave-1 PRs landed: A `08021685`, C `5b5b4432`, D `24e6f5d1`, B1 `33567e92`).
+
+**Trigger:** All 4 Wave-1 stories (A/C/D/B1) confirmed merged to `develop@33567e92`. Wave-1 integration gate assessment complete. Bookkeeping burst: record gate PASS, fix stale holdout-doc string, append FIX-F6-A OBS-2 note, start Wave 2.
+
+**Actions taken:**
+
+1. **Story D (`S-cycle7-readme-migration-note`) MERGED** PR #804 @ `develop@24e6f5d1` (human UI squash-merge; `#804-AWAITING-HUMAN-UI-MERGE` standing item RESOLVED). Commit: `docs: add per-profile-credential migration note to README (issue #783) (#804)`.
+
+2. **Story B1 (`S-cycle7-auth-state-derivation`) MERGED** PR #806 @ `develop@33567e92` (#788 auto-closed per `closes #788` in commit message). BC-1.6.048/049 delivered. `derive_auth_state` function now in `src/api/auth.rs`. Commit: `feat(auth): derive STATUS from keychain probe, not URL presence (BC-1.6.048/049, closes #788) (#806)`.
+
+3. **Wave-1 INTEGRATION GATE assessed and PASSED** (all 4 gate dimensions):
+   - **Combined-tree CI** (run `34668700676`, `develop@33567e92`): GREEN. Closes the `strict:false` combined-tree gap — the merge of all 4 Wave-1 stories was tested as a single unit.
+   - **Wave adversarial review**: 3 consecutive CLEAN passes (integration focus: A+B1 coexistence in `auth.rs`, equals-form/vocabulary coherence across all 4 stories, combined CHANGELOG, no cross-story collision, all 8 MUST-PASS holdout scenarios satisfied).
+   - **Wave security review** (combined auth surface, A+B1 HIGH-criticality): CLEAN — no credential leakage, fail-closed probe, no injection vector, multi-profile isolation intact.
+   - **Holdout regression**: covered by the green develop CI + wave adversarial static holdout-scenario checks (all 8 `H-W1-*` MUST-PASS scenarios satisfied).
+
+4. **Holdout-doc stale equals-form string fixed** (LOW, surfaced at the gate): `cycles/cycle-007/phase-f3-stories/wave-holdout-scenarios.md` H-W1-INT-001 illustrative remediation command changed from SPACE form `` `jr auth login --profile sandbox` `` to EQUALS form `` `jr auth login --profile=sandbox` `` (per EC-1.4.032-6 / Story A). Doc-string only; no scenario-logic or count change.
+
+5. **FIX-F6-A OBS-2 note appended** to `cycles/OPEN-STANDING-ITEMS.md` F6-MUTATION-EXAMINE-GLOBS-EXPANSION item: `.cargo/mutants.toml` comment mis-attributes `derive_auth_state` mutation coverage to the `list.rs` glob; becomes cross-wave-relevant as B2 adds a 2nd `derive_auth_state` call site.
+
+6. **Wave 2 STARTING**: sole story B2 (`S-cycle7-auth-status-json`, BC-1.6.050, `auth status --output json`). Depends on B1's `derive_auth_state` function (now merged @ `33567e92`). Worktree `feat/cycle7-auth-status-json` created off `develop@33567e92`. NEXT = B2 per-story TDD delivery.
+
+7. **STATE.md updated** (v4.18 → v4.19, single full-content Write per hook-guard discipline): Phase Progress rotated; trajectory_tail updated to unicode `→1→3→0→2`; develop tip updated; Current Phase Steps updated to Wave 2 STARTING; Session Resume Checkpoint replaced (v4.18 archived); Drift: `#804-AWAITING-HUMAN-UI-MERGE` RESOLVED, `FIX-F6-A` updated with OBS-2 note.
+
+8. **Prior session checkpoint (v4.18 / WAVE-1-C-MERGED-D-READY-B1-CONVERGED)** archived to `cycles/cycle-007/session-checkpoints.md`.
+
+**Adversary verdict:** N/A — bookkeeping burst (state + cycle files only; no code or spec-body change this burst; wave-level adversarial/security reviews were conducted by the wave delivery flow prior to gate assessment).
+
+**Codifications:** No new DEC minted this burst. FIX-F6-A OBS-2 note appended. `#804-AWAITING-HUMAN-UI-MERGE` RESOLVED.
+
+**Closes:** `#804-AWAITING-HUMAN-UI-MERGE` standing item (RESOLVED — Story D PR #804 squash-merged to `develop@24e6f5d1`). **Does NOT close:** cycle-007 itself (F4 IN PROGRESS, Wave 2 = B2 remaining); `#786-MANUAL-CLOSE` (manual action still required).
+
+**Outcome:** cycle-007 (`auth-correctness-dx`) ACTIVE, Phase F4 IN PROGRESS. Wave-1 INTEGRATION GATE PASSED. All 4 Wave-1 stories merged to `develop@33567e92`. Wave 2 = B2 (`S-cycle7-auth-status-json`) STARTING. All counts unchanged (757 BCs / 82 VPs / 118 holdouts / 180 stories).
+
+**Files touched (Dim-1): 5 unique files/paths this burst, all committed in the state-manager's own single atomic commit on `factory-artifacts`**
+
+- `.factory/STATE.md` (modified — v4.18 → v4.19; Wave-1 gate PASSED, Wave 2 STARTING)
+- `.factory/cycles/cycle-007/burst-log.md` (modified — Burst 4 appended)
+- `.factory/cycles/cycle-007/phase-f3-stories/wave-holdout-scenarios.md` (modified — H-W1-INT-001 stale equals-form string fixed)
+- `.factory/cycles/cycle-007/session-checkpoints.md` (modified — v4.18 WAVE-1-C-MERGED-D-READY-B1-CONVERGED checkpoint archived)
+- `.factory/cycles/OPEN-STANDING-ITEMS.md` (modified — FIX-F6-A OBS-2 note appended)
+
+**Dim-2 Attestation:** No BC/VP/holdout INDEX content changed this burst. Counts unchanged: 757 BCs / 82 VPs / 118 holdouts / 180 stories. No DEC minted.
+
+**Dim-5 Attestation:** N/A — process-bookkeeping only, no binary/WASM artifact produced.
+
+**Dim-6 Attestation:** `develop` HEAD advanced `5b5b4432` → `33567e92` via PRs #804 + #806. This burst records that fact; no new `src/`/`tests/` change originates in this burst.
+
+**Dim-7 Attestation:** N/A — no CI-workflow change this burst.
+
+---

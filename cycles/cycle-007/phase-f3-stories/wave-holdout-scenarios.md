@@ -35,7 +35,7 @@ and `sandbox:api-token` absent).
 `no-credentials` (not `configured`). `jr <any command needing sandbox's
 auth>` (e.g. `jr issue list --profile sandbox`) fails via `load_api_token`
 (A) with `JrError::NotAuthenticated` (exit 2) and a message recommending `jr
-auth login --profile sandbox` — a command that (per A's own AC-003) actually
+auth login --profile=sandbox` — a command that (per A's own AC-003) actually
 parses. Running that exact suggested command succeeds and namespaces the
 credential pair; a SUBSEQUENT `jr auth list` now reports `sandbox` as
 `configured`. This is the single most important end-to-end proof this wave

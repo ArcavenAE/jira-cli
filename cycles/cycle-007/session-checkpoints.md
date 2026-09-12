@@ -17,6 +17,22 @@ traces_to: STATE.md
      Only the LATEST checkpoint lives in STATE.md.
      Prior checkpoints are archived here for historical reference. -->
 
+## Session Resume Checkpoint (2026-09-11, STATE.md v4.18) — WAVE-1-C-MERGED-D-READY-B1-CONVERGED: Stories A+C MERGED; Story D awaiting UI merge; Story B1 converged entering PR — Superseded 2026-09-11
+
+**Status:** SUPERSEDED 2026-09-11 by the v4.19 WAVE-1-INTEGRATION-GATE-PASSED checkpoint. Archived verbatim (condensed) from STATE.md v4.18 below.
+
+**Date:** 2026-09-11. **Pipeline: ACTIVE** (cycle-007 `auth-correctness-dx`, F4 delta implementation IN PROGRESS). **Position:** Stories A+C MERGED (PR #803 @ `develop@08021685`; PR #805 @ `develop@5b5b4432`; #784+#790 closed; #786 manual close pending). Story D (`S-cycle7-readme-migration-note`) CONVERGED (4-pass adversarial, 3 consecutive CLEAN); PR #804 fully green (24/24); AWAITING human UI squash-merge. Story B1 (`S-cycle7-auth-state-derivation`) CONVERGED 11 passes (passes 9/10/11 CLEAN; human authorized past 10-pass ceiling; demo skipped); entering PR phase (rebase `feat/cycle7-auth-state-derivation` HEAD ~`4b751e3f` onto `develop@5b5b4432`, HIGH-criticality auth.rs). Wave 2 = B2 (`S-cycle7-auth-status-json`, depends on B1 merge) pending.
+
+**NEXT** = (1) human merges PR #804 via GitHub UI squash-merge; (2) B1 PR creation -> pr-reviewer + security-reviewer -> merge; (3) Wave 2 = B2.
+
+**Convergence counter:** Stories A+C MERGED; Story D CONVERGED (PR #804 awaiting UI merge); Story B1 CONVERGED (11 passes, 3 consecutive CLEAN). trajectory-tail `→1→3→0→2` unchanged (F5 not yet started). PG-C1 + PG-B1 codified in `cycles/cycle-007/lessons.md`.
+
+**WIP:** `feat/cycle7-auth-state-derivation` (B1, rebase needed@`5b5b4432`).
+
+**Counts:** total_bcs 757 (unchanged); VP count 82 (unchanged); holdout scenarios 118 (unchanged); total_stories 180 (unchanged).
+
+---
+
 ## Session Resume Checkpoint (2026-09-11, STATE.md v4.17) — STORY-A-MERGED: Story A PR #803 squash-merged to develop @ 08021685 — Superseded 2026-09-11
 
 **Status:** SUPERSEDED 2026-09-11 by the v4.18 WAVE-1-C-MERGED-D-READY-B1-CONVERGED checkpoint. Archived verbatim (condensed) from STATE.md v4.17 below.
