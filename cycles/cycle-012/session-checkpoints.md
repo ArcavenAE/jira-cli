@@ -4,7 +4,7 @@ level: ops
 version: "1.0"
 status: archive
 producer: state-manager
-timestamp: 2026-09-12T17:00:00Z
+timestamp: 2026-09-12T00:00:00Z
 cycle: "cycle-012-field-adf-autoconvert"
 inputs: [STATE.md]
 input-hash: "[live-state]"
@@ -19,7 +19,7 @@ traces_to: STATE.md
 
 ## Session Resume Checkpoint (2026-09-12) — cycle-012 F1 APPROVED, entering F2 (initial cycle entry)
 
-**Status:** CURRENT — this is the active checkpoint in STATE.md v4.21. It will be superseded and archived here when the next burst writes a replacement checkpoint.
+**Archived from STATE.md v4.21 on 2026-09-12. Superseded by the v4.22 SESSION-WRAP-PAUSE burst.**
 
 ### Spec Versions
 
