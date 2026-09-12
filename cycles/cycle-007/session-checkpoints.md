@@ -1,7 +1,7 @@
 ---
 document_type: session-checkpoints
 level: ops
-version: "1.2"
+version: "1.3"
 status: archive
 producer: state-manager
 timestamp: 2026-09-12T00:00:00Z
@@ -16,6 +16,14 @@ traces_to: STATE.md
 <!-- Archived session resume checkpoints extracted from STATE.md.
      Only the LATEST checkpoint lives in STATE.md.
      Prior checkpoints are archived here for historical reference. -->
+
+## Session Resume Checkpoint (2026-09-12, STATE.md v4.20) — SESSION-WRAP-PAUSE: All 5 cycle-007 stories merged @ develop@30bb1a18; Wave-2 gate PENDING; pipeline PAUSED — Superseded 2026-09-12 (v4.21 cycle-012 formalized)
+
+**Status:** SUPERSEDED 2026-09-12 by the v4.21 CYCLE-012-FORMALIZE checkpoint (cycle-012 `field-adf-autoconvert` F1 APPROVED DEC-357; pipeline ACTIVE on cycle-012 while cycle-007 remains PAUSED). Archived verbatim (condensed) from STATE.md v4.20 below.
+
+**Date:** 2026-09-12. **Pipeline: PAUSED** (cycle-007 `auth-correctness-dx`, F4 IMPL COMPLETE). **Position:** All 5 cycle-007 stories merged to `develop@30bb1a18`: Story A PR #803 @ `08021685` (#784/#786 closed), Story C PR #805 @ `5b5b4432` (#790 closed), Story D PR #804 @ `24e6f5d1`, Story B1 PR #806 @ `33567e92` (#788 closed; BC-1.6.048/049), Story B2 PR #807 @ `30bb1a18` (#787 closed; BC-1.6.050, retires NFR-O-N). B2 demo skipped (human decision). Issue #783 also closed. Wave-2 integration gate PENDING (confirm develop@`30bb1a18` push-CI run green on resume). **NEXT (on resume)** = Wave-2 integration gate -> F4 COMPLETE -> F5 scoped adversarial -> F6 targeted hardening -> F7 delta convergence + human gate. Use `/vsdd-factory:rehydrate-wave` then `/vsdd-factory:next-step`.
+
+---
 
 ## Session Resume Checkpoint (2026-09-11, STATE.md v4.19) — WAVE-1-INTEGRATION-GATE-PASSED: All 4 Wave-1 stories merged @ develop@33567e92; Wave 2 = B2 STARTING — Superseded 2026-09-12
 

@@ -1,0 +1,22 @@
+# Affected files — cycle-012-field-adf-autoconvert (v4, Route B + JSM path)
+# Generated: 2026-09-12
+# Supersedes v1 (test-infra Route A), v2 (Route B first pass), v3 (platform path only).
+#
+# Story 1 (platform path):
+#
+# Change type: MODIFIED (3 functions + 1 new standalone helper)
+src/cli/issue/field_resolve.rs
+#
+# Change type: MODIFIED (adaptive E2E read-back assertion in test_e2e_issue_edit_custom_field)
+tests/e2e_live.rs
+#
+# Change type: MODIFIED (rustdoc only — remove "not used in v1 resolution" from custom/system fields)
+src/types/jira/editmeta.rs
+#
+# Story 2 (JSM path):
+#
+# Change type: MODIFIED (extra_fields ADF branch + isAdfRequest flag accumulation)
+src/api/jsm/requests.rs
+#
+# Change type: MODIFIED (extended JSM E2E ADF assertion in test_e2e_jsm_create_request_roundtrip)
+# Note: tests/e2e_live.rs already listed above for Story 1; Story 2 adds JSM assertion to same file
