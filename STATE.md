@@ -1,19 +1,19 @@
 ---
 document_type: pipeline-state
 level: ops
-version: "4.22"
-status: paused
+version: "4.23"
+status: active
 producer: state-manager
-timestamp: 2026-09-12T20:15:25Z
-phase: "PAUSED 2026-09-12. cycle-012 (field-adf-autoconvert) OPEN, Feature Mode, Phase F2 spec-evolution mid adversarial convergence (10 passes run, 0 consecutive clean; need 3). F1 APPROVED DEC-357. cycle-007 (auth-correctness-dx) also PAUSED at F4 IMPL COMPLETE (Wave-2 integration gate PENDING, develop@30bb1a18)."
-pipeline: PAUSED
+timestamp: 2026-09-13T23:22:50Z
+phase: "cycle-012 (field-adf-autoconvert) ACTIVE, Feature Mode, Phase F3 incremental-story-decomposition STARTING. F2 APPROVED (DEC-358) 2026-09-13 after 33 adversarial passes (MAXIMUM_VIABLE_REFINEMENT_REACHED). cycle-007 (auth-correctness-dx) PAUSED at F4 IMPL COMPLETE (Wave-2 gate PENDING, develop@30bb1a18)."
+pipeline: ACTIVE
 inputs: []
 input-hash: "[live-state]"
 traces_to: ""
 project: jira-cli
 mode: brownfield
-last_amended: "2026-09-12, v4.22, state-manager -- SESSION-WRAP-PAUSE: cycle-012 F2 adversarial-convergence in progress (10 passes, streak 0/3); pipeline ACTIVE->PAUSED. F2 artifacts committed (12 BCs, 4 VPs, ADR-0024). cycle-007 remains PAUSED at F4."
-current_step: "SESSION-WRAP-PAUSE-2026-09-12. cycle-012 F2 adversarial convergence in progress: 10 passes, streak 0/3. Pass-10 architect fixes (F-1 marker side-channel, F-3 bare-only fail-open, §5 item 2) written to verification-delta + ADR-0024. PENDING product-owner pass-10 BC fixes (F-2 BC-3.4.035, F-3 EC-3.8.019-2/020-5) then fresh pass 11. NEXT = /vsdd-factory:rehydrate-wave then /vsdd-factory:next-step."
+last_amended: "2026-09-13, v4.23, state-manager -- cycle-012 F2 HUMAN GATE APPROVED (DEC-358); uniform-exit-64 guard (DEC-359); F3 starting. pipeline PAUSED->ACTIVE."
+current_step: "cycle-012 F2 CLOSED (DEC-358, DEC-359). 33 adversarial passes, MAXIMUM_VIABLE_REFINEMENT_REACHED. trajectory-tail →1→3→0→2. F3 incremental story decomposition STARTING. NEXT = /vsdd-factory:run-phase phase-f3-incremental-stories. D-chain cite D-2026 latest brownfield."
 trajectory_tail: "→1→3→0→2"
 maintenance_run:
   status: COMPLETE
@@ -23,9 +23,9 @@ maintenance_run:
   fixes_applied: 7
   fixes_pending: 0
   pr: "#800,#801 fix PRs MERGED; #779,#754 Dependabot bumps MERGED"
-current_cycle: "cycle-012-field-adf-autoconvert (F2 adversarial convergence in progress: 10 passes, streak 0/3). cycle-007 auth-correctness-dx PAUSED: F4 IMPL COMPLETE, Wave-2 gate PENDING, develop@30bb1a18."
+current_cycle: "cycle-012-field-adf-autoconvert (F2 APPROVED DEC-358; F3 starting). cycle-007 auth-correctness-dx PAUSED: F4 IMPL COMPLETE, Wave-2 gate PENDING, develop@30bb1a18."
 feature_mode_bundle: "field-adf-autoconvert: addresses E2E-EDIT-FIELD-ADF-HEURISTIC / test_e2e_issue_edit_custom_field pre-existing defect (confirmed pre-cycle-007 @ 14e695ae)"
-cycle_012_status: "field-adf-autoconvert -- OPEN, Feature Mode, F2 adversarial spec-convergence in progress (10 passes, streak 0/3). 12 BCs + 4 VPs + ADR-0024 produced. PENDING: pass-10 BC fixes (BC-3.4.035, EC-3.8.019-2/020-5), then pass 11, then 3-clean streak, then F2 human gate. Spec bump 2.3.0->2.4.0 produced in F2."
+cycle_012_status: "field-adf-autoconvert -- ACTIVE, Feature Mode, Phase F3 incremental story decomposition STARTING. F1 APPROVED DEC-357, F2 APPROVED DEC-358 (DEC-359 uniform-exit-64). 12 BCs + 4 VPs + ADR-0024, spec 2.3.0->2.4.0. total_bcs 769, VPs 86."
 cycle_007_status: "auth-correctness-dx -- PAUSED at F4 IMPL COMPLETE (Wave-2 gate PENDING, develop@30bb1a18). F1 APPROVED DEC-354, F2 APPROVED DEC-355, F3 APPROVED DEC-356. All 5 stories merged (PRs #803/805/804/806/#807). Resumable after cycle-012 closes."
 dtu_required: false
 phase_2_status: APPROVED
@@ -41,11 +41,10 @@ activation_head: "a9168212"
 activation_version: "v0.7.0-dev.5"
 ---
 
-<!-- STATE.md SIZE BUDGET (2026-09-12, SESSION-WRAP-PAUSE v4.22):
-     cycle-012 F2 adversarial-convergence in progress (10 passes, streak 0/3). pipeline PAUSED.
-     F2 artifacts (12 BCs, 4 VPs, ADR-0024) committed. counts reconciled to 769 BCs/86 VPs.
-     Session Resume Checkpoint replaced (v4.21 archived to cycles/cycle-012/session-checkpoints.md). version: 4.21->4.22.
-     soft target 200 lines; hard cap 500 lines. 205 lines (wc-l). margin from soft-target = -5 (5 over soft); margin from actual = 295. -->
+<!-- STATE.md SIZE BUDGET (2026-09-13, CYCLE-012-F2-APPROVED v4.23):
+     cycle-012 F2 HUMAN GATE APPROVED (DEC-358, DEC-359). F3 starting. pipeline ACTIVE.
+     Session Resume Checkpoint replaced (v4.22 archived to cycles/cycle-012/session-checkpoints.md). version: 4.22->4.23.
+     soft target 200 lines; hard cap 500 lines. 206 lines (wc-l). margin from soft-target = -6 (6 lines over soft); margin from actual = 294. -->
 
 # Pipeline State: jira-cli
 
@@ -56,17 +55,16 @@ activation_version: "v0.7.0-dev.5"
 | **Product** | jr (Jira CLI) |
 | **Mode** | BROWNFIELD / Rust |
 | **Target Workspace** | develop to main |
-| **Pipeline Status** | **PAUSED** -- cycle-012 (`field-adf-autoconvert`) OPEN, Feature Mode, Phase F2 spec-evolution, 10 adversarial passes (streak 0/3). cycle-007 (`auth-correctness-dx`) **PAUSED** at F4 IMPL COMPLETE (Wave-2 gate PENDING, develop@`30bb1a18`). |
-| **trajectory-tail** | →1→3→0→2 (cycle-012 F2 adversarial convergence in progress) |
-| **Last Updated** | 2026-09-12, SESSION-WRAP-PAUSE: cycle-012 F2 adversarial-convergence PAUSED (10 passes, streak 0/3); F2 artifacts committed 769 BCs/86 VPs; pipeline PAUSED. |
-| **Current Phase** | cycle-012 Phase F2 spec-evolution (adversarial convergence 10 passes, streak 0/3). cycle-007 Phase F4 IMPL COMPLETE (PAUSED). |
+| **Pipeline Status** | **ACTIVE** -- cycle-012 (`field-adf-autoconvert`) OPEN, Feature Mode, Phase F3 story-decomposition STARTING. F2 APPROVED (DEC-358) 2026-09-13. cycle-007 (`auth-correctness-dx`) **PAUSED** at F4 IMPL COMPLETE (Wave-2 gate PENDING, develop@`30bb1a18`). |
+| **trajectory-tail** | →1→3→0→2 (cycle-012 F2 CLOSED, 33 passes, MAXIMUM_VIABLE_REFINEMENT_REACHED; F3 not yet started) |
+| **Last Updated** | 2026-09-13, CYCLE-012-F2-APPROVED: trajectory-tail →1→3→0→2; F2 HUMAN GATE APPROVED (DEC-358, DEC-359); F3 starting; pipeline PAUSED->ACTIVE. |
+| **Current Phase** | cycle-012 Phase F3 incremental story decomposition (STARTING). cycle-007 Phase F4 IMPL COMPLETE (PAUSED). |
 | **Activation HEAD** | `a9168212` (unchanged; `develop`'s real tip is `30bb1a18`) |
 
 ## Phase Progress (recent 8; full history: `cycles/HISTORY-PHASE-PROGRESS.md` + `cycles/cycle-00{1..6}/burst-log.md` + factory-artifacts@43f4a5e3)
 
 | Phase | Status | Completed | Gate | Notes | Finding Progression |
 |-------|--------|-----------|------|-------|---------------------|
-| **STORY-A-MERGED-2026-09-11** | **MERGED** | 2026-09-11 | PR #803 squash-merge to `develop` @ `08021685` | Story A MERGED. ci-gate PASS (25). pr-reviewer APPROVE. security CLEAN. 3 CI fix cycles. Demo skipped. #784 closed; #786 manual close needed. `develop` tip `14e695ae`->`08021685`. | counts unchanged (757/82/118/180) |
 | **WAVE-1-C-MERGED-D-READY-B1-CONVERGED-2026-09-11** | **IN PROGRESS** | 2026-09-11 | F4 Wave-1 progress checkpoint; no gate | Story C MERGED PR #805 @ `5b5b4432` (#790 closed). Story D CONVERGED (4-pass, 3 consecutive CLEAN). Story B1 CONVERGED 11 passes (9/10/11 CLEAN). PG-C1 + PG-B1 codified. | counts unchanged (757/82/118/180) |
 | **WAVE-1-D-B1-MERGED-2026-09-11** | **MERGED** | 2026-09-11 | PR #804+#806 squash-merges to `develop` | Story D MERGED PR #804 @ `develop@24e6f5d1`. Story B1 MERGED PR #806 @ `develop@33567e92` (#788 auto-closed; BC-1.6.048/049). `develop` tip `5b5b4432`->`33567e92`. | counts unchanged (757/82/118/180) |
 | **WAVE-1-INTEGRATION-GATE-PASSED-CYCLE-007** | **PASSED** | 2026-09-11 | F4 Wave-1 integration gate (4-dimension): combined-tree CI green + wave adversarial 3 consecutive CLEAN + wave security CLEAN + all 8 MUST-PASS holdout scenarios satisfied | All 4 Wave-1 stories (A/C/D/B1) merged to `develop@33567e92`. CI run `34668700676` GREEN. Wave 2 = B2 STARTING. | counts unchanged (757/82/118/180) |
@@ -74,23 +72,24 @@ activation_version: "v0.7.0-dev.5"
 | **SESSION-WRAP-PAUSE-2026-09-12** | **COMPLETE** | 2026-09-12 | Bookkeeping only, session wrap; no quality gate | STATE.md v4.19->v4.20, pipeline ACTIVE->PAUSED. cycle-007 Wave-2 gate PENDING. Discovering E2E pre-existing defect triggers cycle-012. | counts unchanged (757/82/118/180) |
 | **CYCLE-012-F1-APPROVED-2026-09-12** | **APPROVED** | 2026-09-12 | F1 human gate (explicit scope approval) | DEC-357: cycle-012 `field-adf-autoconvert` F1 HUMAN GATE APPROVED. Scope: ADF auto-convert on edit/create (platform + JSM). v4.20->v4.21. cycle-012 formalized. cycle-007 remains PAUSED. | counts unchanged (757/82/118/180) |
 | **SESSION-WRAP-PAUSE-2026-09-12** | **COMPLETE** | 2026-09-12 | Bookkeeping only, session wrap; no quality gate | cycle-012 F2 adversarial-convergence in progress (10 passes, streak 0/3); F2 artifacts (12 BCs, 4 VPs, ADR-0024) committed; pipeline PAUSED; counts reconciled 769 BCs/86 VP. v4.21->v4.22. | 769 BCs / 86 VPs |
+| **CYCLE-012-F2-APPROVED-2026-09-13** | **APPROVED** | 2026-09-13 | F2 human gate (explicit spec approval) | DEC-358/359: F2 HUMAN GATE APPROVED. 12 BCs + 4 VPs + ADR-0024, spec 2.3.0->2.4.0. 33 adversarial passes, MAXIMUM_VIABLE_REFINEMENT_REACHED (no CRIT/HIGH/MED = clean; LOW advisory do not reset streak; content converged ~pass 21). DEC-359: uniform exit-64 for `--markdown`+`--field description=`. F3 starting. v4.22->v4.23. | 769 BCs / 86 VPs |
 
 ## Current Phase Steps
 
-**cycle-012 (`field-adf-autoconvert`) Phase F2 spec-evolution -- adversarial convergence in progress 2026-09-12.** 10 adversarial passes run, streak 0/3. Pass-10 architect fixes (F-1 live-marker side-channel, F-3 bare-only fail-open, §5 item 2 ambiguity) written to `phase-f2-spec-evolution/cycle-012-verification-delta.md` + ADR-0024. PENDING product-owner pass-10 BC fixes: F-2 = BC-3.4.035 must show `(adf)`/`(adf-clear)` NOT `(updated)` for `--field description=`; F-3 = EC-3.8.019-2/020-5 warning string + fail-open scope to BARE (kind.is_none()) `--field` only. **cycle-007 (`auth-correctness-dx`) PAUSED at F4** -- Wave-2 gate PENDING (develop@`30bb1a18`). **NEXT** = `/vsdd-factory:rehydrate-wave` then `/vsdd-factory:next-step`.
+**cycle-012 (`field-adf-autoconvert`) Phase F3 incremental story decomposition STARTING 2026-09-13.** F2 CLOSED (DEC-358, DEC-359). 33 adversarial passes, MAXIMUM_VIABLE_REFINEMENT_REACHED. F4 obligations carried forward: DQ-6 type/signature decision + VP-004 axes (b)-(f); Axis (g) `build()` reorder in `src/api/jsm/requests.rs`; Axis (h1/h2) uniform exit-64 guards (create.rs step 2c, edit.rs extension); 2 `.unwrap_or(false)` strictness test fixes; createmeta→EditMetaFieldSchema fidelity test; §5 items 5a/13/16/17/18; F4-gate Checkbox A/B. **cycle-007 (`auth-correctness-dx`) PAUSED at F4** -- Wave-2 gate PENDING (develop@`30bb1a18`). **NEXT** = `/vsdd-factory:run-phase phase-f3-incremental-stories`.
 
 ## Decisions Log
 
 | ID | Decision | Rationale | Phase | Date | Made By |
 |----|----------|-----------|-------|------|---------|
+| DEC-359 | cycle-012 F2-gate uniform-exit-64: `--markdown` + `--field description=` (raw key `description`, case-sensitive, no-trim) UNIFORMLY exits 64 across platform `issue create` (NET-NEW guard step 2c), platform `issue edit` (guard extension), and JSM `create --request-type` (pre-existing BC-3.8.017). Message MUST contain pinned substring `cannot be combined with \`--markdown\`` + remediation "Pass --description with --markdown, or omit --markdown". | Human F2-gate qualifier "consistent with all of jr" caught that create was silently lenient while edit+JSM exited 64. Codebase analysis confirmed CLI-wide principle. Scoped adversary re-verified CLEAN. Supersedes DQ-1-Option-A silent-ignore framing. | F2 (gate) | 2026-09-13 | human (F2-gate qualifier) |
+| DEC-358 | cycle-012 F2 **HUMAN GATE APPROVED** 2026-09-13 -- 12 BCs + 4 VPs + ADR-0024, spec 2.3.0->2.4.0; adversarial spec-convergence MAXIMUM_VIABLE_REFINEMENT_REACHED after 33 passes (convergence bar: no CRITICAL/HIGH/MEDIUM = clean; LOW advisory do not reset streak; content converged ~pass 21, tail was verification-delta enumeration/coverage completeness). | Human reviewed F2 PRD delta + verification delta; applied F2-gate qualifier (DEC-359); explicitly approved proceeding to F3. | F2 (gate) | 2026-09-13 | human (explicit F2-gate approval) |
 | DEC-357 | cycle-012 F1 **HUMAN GATE APPROVED** 2026-09-12 -- scope: ADF auto-convert `--field NAME=VALUE` for rich-text fields on `jr issue edit`, `jr issue create` (platform), AND `jr issue create --request-type` (JSM, explicitly included). | Human reviewed F1 delta v4 after research + fresh-context adversarial review (1 CRITICAL/2 HIGH/5 MEDIUM all resolved in v4) + 2 live-Jira read-only probes; made explicit scope-gate approval including JSM path. DQ-6 noted. | F1 (gate) | 2026-09-12 | human (explicit F1-gate approval) |
 | DEC-356 | cycle-007 F3 **HUMAN GATE APPROVED** 2026-09-11 -- 5-story decomposition (28 pts, 2 waves, acyclic B1->B2); A->B1 merge-order honored; `FIX-F6-A` deferral accepted. | Human reviewed F3 story-decomposition (CONVERGED 11 adversary passes) and made explicit approval ruling | F3 (gate) | 2026-09-11 | human (explicit F3-gate approval) |
 | DEC-355 | cycle-007 F2 **HUMAN GATE APPROVED** 2026-09-10 -- 3 new BCs (BC-1.6.048/049/050) + 6 new VPs (VP-AUTHDX-024..029), spec 2.2.0->2.3.0 MINOR; authorized proceeding to F3. | Human reviewed F2 PRD delta (CONVERGED 10 adversary passes) and made explicit approval ruling | F2 (gate) | 2026-09-10 | human (explicit F2-gate approval) |
-| DEC-354 | cycle-007 F1 **HUMAN GATE APPROVED** 2026-09-10 -- 6-issue scope: #784, #786 (narrowed), #787, #788, #790, #783; #785 DEFERRED. | Human reviewed F1 delta-analysis and made explicit scope-gate ruling | F1 (gate) | 2026-09-10 | human (explicit F1-gate approval) |
-| DEC-353 | cycle-005 F7 **HUMAN GATE APPROVED / cycle CLOSED** 2026-09-09, **NO RELEASE**. 5-dim delta convergence PASS. Ships on `develop`; tag deferred. | Human reviewed 5-dim delta-convergence and explicitly approved closing without a release | F7 (gate) | 2026-09-09 | human (explicit approval) |
-| (358 older decisions) | DEC-352 through DEC-309 and earlier -- unchanged this burst | -- | F1-F7/historical | 2026-08-24...2026-09-09 | various -- see `cycles/cycle-004/burst-log.md` Bursts 1-22, `cycles/cycle-005/burst-log.md`, `cycles/cycle-006/burst-log.md` |
+| (359 older decisions) | DEC-354 through DEC-309 and earlier -- unchanged this burst | -- | F1-F7/historical | 2026-08-24...2026-09-12 | various -- see `cycles/cycle-004/burst-log.md` Bursts 1-22, `cycles/cycle-005/burst-log.md`, `cycles/cycle-006/burst-log.md` |
 
-**cycle-012 F1 artifacts:** `phase-f1-delta-analysis/e2e-edit-field-adf-heuristic-delta-analysis-v4.md` (OPERATIVE; v1/v2/v3 SUPERSEDED). Research: `research/field-adf-autoconvert-design-research-2026-09-12.md`, `research/e2e-environment-adf-field-2026-09-11.md`. Probes: `research/createmeta-schema-probe-2026-09-12.md`, `research/jsm-requesttype-fields-adf-probe-2026-09-12.md`. cycle-007 decisions: `phase-f1-delta-analysis/cycle-007-auth-delta-analysis.md`; F2 delta: `phase-f2-spec-evolution/cycle-007-prd-delta.md`; F3 stories: `cycles/cycle-007/phase-f3-stories/`.
+**cycle-012 F1 artifacts:** `phase-f1-delta-analysis/e2e-edit-field-adf-heuristic-delta-analysis-v4.md` (OPERATIVE; v1/v2/v3 SUPERSEDED). Research: `research/field-adf-autoconvert-design-research-2026-09-12.md`, `research/e2e-environment-adf-field-2026-09-11.md`. Probes: `research/createmeta-schema-probe-2026-09-12.md`, `research/jsm-requesttype-fields-adf-probe-2026-09-12.md`. **cycle-012 F2 artifacts:** `phase-f2-spec-evolution/cycle-012-verification-delta.md`, `specs/architecture/decisions/ADR-0024-adf-autoconversion-for-field-on-richtext-fields.md`, `specs/prd/bc-3-issue-write.md` (12 cycle-012 BCs + base-BC amendments).
 
 ## Skip Log
 
@@ -117,7 +116,7 @@ Older rows (cycle-001 through cycle-004, historical): `cycles/HISTORY-SKIP-LOG.m
 
 ## Blocking Issues
 
-**NONE OPEN.** Zero Blocking Issues remain open. cycle-007 PAUSED at F4 IMPL COMPLETE (Wave-2 gate PENDING); cycle-012 OPEN at F2 adversarial convergence (10 passes, streak 0/3). All six prior cycles (001-006) CLOSED. Resolved items: `cycles/RESOLVED-DRIFT-ITEMS.md`. Still-open LOW/non-blocking: `cycles/OPEN-STANDING-ITEMS.md`.
+**NONE OPEN.** Zero Blocking Issues remain open. cycle-012 ACTIVE at F3 (F2 APPROVED). cycle-007 PAUSED at F4 IMPL COMPLETE (Wave-2 gate PENDING). All six prior cycles (001-006) CLOSED. Resolved items: `cycles/RESOLVED-DRIFT-ITEMS.md`. Still-open LOW/non-blocking: `cycles/OPEN-STANDING-ITEMS.md`.
 
 | ID | Issue | Severity | Blocking Phase | Owner | Resolution |
 |----|-------|----------|-----------------|-------|------------|
@@ -125,11 +124,11 @@ Older rows (cycle-001 through cycle-004, historical): `cycles/HISTORY-SKIP-LOG.m
 
 ## Convergence Status
 
-cycle-007 (`auth-correctness-dx`) PAUSED, F4 IMPL COMPLETE. All 5 stories merged to `develop@30bb1a18`. Wave-2 integration gate PENDING on resume. cycle-012 (`field-adf-autoconvert`) OPEN, F2 adversarial spec-convergence: 10 passes run, streak 0/3 (need 3 consecutive clean). Full detail: `cycles/CYCLE-SUMMARY.md`.
+cycle-007 (`auth-correctness-dx`) PAUSED, F4 IMPL COMPLETE. Wave-2 integration gate PENDING on resume. cycle-012 (`field-adf-autoconvert`) ACTIVE, F2 CLOSED (33 passes, MAXIMUM_VIABLE_REFINEMENT_REACHED; DEC-358); F3 story-decomposition STARTING. Full detail: `cycles/CYCLE-SUMMARY.md`.
 
 ## Concurrent Cycles
 
-Nine tracked cycles total: cycle-001 through cycle-006 CLOSED; **cycle-007 (`auth-correctness-dx`) PAUSED** at F4 IMPL COMPLETE (Wave-2 gate PENDING, develop@`30bb1a18`); **cycle-012 (`field-adf-autoconvert`) ACTIVE** at F2 adversarial convergence (10 passes, streak 0/3). Cycles 008-011 PARKED (not yet started). `activation_head` stays `a9168212`. Full detail: `cycles/CYCLE-SUMMARY.md`.
+Nine tracked cycles total: cycle-001 through cycle-006 CLOSED; **cycle-007 (`auth-correctness-dx`) PAUSED** at F4 IMPL COMPLETE (Wave-2 gate PENDING, develop@`30bb1a18`); **cycle-012 (`field-adf-autoconvert`) ACTIVE** at F3 starting. Cycles 008-011 PARKED (not yet started). `activation_head` stays `a9168212`. Full detail: `cycles/CYCLE-SUMMARY.md`.
 
 ## Constraints Carried Forward
 
@@ -137,21 +136,21 @@ All prior per-cycle constraints narrative is either historical/resolved or dupli
 
 ## Session Resume Checkpoint
 
-**Date:** 2026-09-12. **Pipeline: PAUSED** (cycle-012 `field-adf-autoconvert`, Feature Mode, Phase F2 spec-evolution, mid adversarial spec-convergence). F1 APPROVED (DEC-357). F2 content produced: 12 BCs (platform create BC-3.3.013/014/015, platform edit BC-3.4.033/034/035/036/037, JSM BC-3.8.019/020/021/022), 4 VPs (VP-FIELD-ADF-001/002/003/004), ADR-0024 (ADF auto-conversion design), spec bump 2.3.0->2.4.0. NEXT after convergence: F2 human gate, then F3.
+**Date:** 2026-09-13. **Pipeline: ACTIVE** (cycle-012 `field-adf-autoconvert`, Feature Mode, Phase F3 incremental story decomposition STARTING). F1 APPROVED (DEC-357). F2 APPROVED (DEC-358, DEC-359) 2026-09-13.
 
-**Convergence counter:** F2 adversarial spec-convergence = 10 passes run, streak 0 of 3 consecutive-clean required. Trajectory: pass1 CRIT+HIGH+MED → pass2 HIGH+MED → pass3 MED+LOW → pass4 CRIT(propagation) → pass5 HIGH → pass6 HIGH+MED → pass7 HIGH+3MED → pass8 3MED → pass9 1MED → pass10 1HIGH(F-1 live-marker)+2MED. Pass-10 delta/ADR fixes DONE; pass-10 BC fixes PENDING; pass 11 not yet run.
+**F2 artifacts (committed):** 12 BCs (platform create BC-3.3.013/014/015, platform edit BC-3.4.033/034/035/036/037, JSM BC-3.8.019/020/021/022), 4 VPs (VP-FIELD-ADF-001/002/003/004), ADR-0024 (ADF auto-conversion design), spec bump 2.3.0->2.4.0. Pre-gate checks: input-hash drift PASS; consistency-validator perimeter audit CONSISTENT; all spec guards exit 0.
 
-**In-flight work:** (1) Pass-10 architect fixes (verification-delta + ADR-0024) committed by this pause burst. (2) PENDING product-owner BC fixes: F-2 = BC-3.4.035 must show marker `(adf)`/`(adf-clear)` NOT `(updated)` for `--field description=`; F-3 = EC-3.8.019-2 and EC-3.8.020-5 warning string → "warning: could not fetch request type fields — ADF-backed --field values will be sent as plain strings" + scope fail-open to BARE (kind.is_none()) `--field` only. (3) After BC fixes: run fresh pass 11, continue until 3 consecutive clean. (4) Then consistency-validator audit + F2 human gate. No code WIP, no open PRs.
+**F4 obligations (tracked to F4 gate):** DQ-6 type/signature decision; VP-004 axes (b)-(f) authoring; Axis (g) `build()` assembly-order reorder (`src/api/jsm/requests.rs`); Axis (h1) platform-create NET-NEW `--markdown`+`--field description=` guard (create.rs step 2c); Axis (h2) platform-edit guard extension (edit.rs); 2 `.unwrap_or(false)` strictness test fixes; createmeta→EditMetaFieldSchema fidelity test; §5 items 5a/13/16/17/18; F4-gate Checkbox A/B.
 
-**Pending human decisions / blockers:** F2 human gate PENDING (after 3-clean). cycle-007 PAUSED at F4 IMPL COMPLETE (Wave-2 gate PENDING, develop@`30bb1a18`; resume after cycle-012 closes). Session decisions: route B (full fix); JSM path INCLUDED in cycle-012 scope; converging JSM in-cycle. `test_e2e_issue_edit_custom_field` nightly failure is pre-existing defect fixed BY cycle-012 (confirmed pre-cycle-007 @ `14e695ae`).
+**Pending human decisions / blockers:** F3 human gate PENDING (after story decomposition). cycle-007 PAUSED at F4 IMPL COMPLETE (Wave-2 gate PENDING, develop@`30bb1a18`; resume after cycle-012 closes).
 
-**WIP branch list:** NONE (F2 is spec-only; no story feature branches, no open cycle-012 PRs).
+**WIP branch list:** NONE (F3 is spec-only; no story feature branches, no open cycle-012 PRs).
 
-**Resume command:** `/vsdd-factory:rehydrate-wave` then `/vsdd-factory:next-step`.
+**Resume command:** `/vsdd-factory:run-phase phase-f3-incremental-stories`.
 
-**Counts:** total_bcs 769 (12 new F2 BCs; was 757); VP count 86 (4 new VPs; was 82); holdout scenarios 118 (unchanged); total_stories 180 (unchanged). Prior checkpoint (STATE.md v4.21): archived to `cycles/cycle-012/session-checkpoints.md`.
+**Counts:** total_bcs 769 (12 new F2 BCs; was 757); VP count 86 (4 new VPs; was 82); holdout scenarios 118 (unchanged); total_stories 180 (unchanged). Prior checkpoint (STATE.md v4.22): archived to `cycles/cycle-012/session-checkpoints.md`.
 
-**NEXT:** Run `/vsdd-factory:rehydrate-wave` then `/vsdd-factory:next-step` to resume cycle-012 F2 adversarial convergence.
+**NEXT:** Run `/vsdd-factory:run-phase phase-f3-incremental-stories` to begin cycle-012 F3 story decomposition.
 
 ## Historical Content
 
@@ -174,7 +173,9 @@ Burst logs, adversary pass details, session checkpoints, and per-burst narrative
 | cycle-007 Step-4.5 convergence records (Stories A/C/D/B1/B2) | `cycles/cycle-007/adversarial-reviews/story-{A,C,D,B1,B2}-convergence.md` |
 | cycle-007 lessons (PG-A1..A4, PG-C1, PG-B1) | `cycles/cycle-007/lessons.md` |
 | cycle-012 F1 operative delta analysis | `phase-f1-delta-analysis/e2e-edit-field-adf-heuristic-delta-analysis-v4.md` (v1/v2/v3 SUPERSEDED) |
-| cycle-012 F2 spec evolution | `phase-f2-spec-evolution/cycle-012-verification-delta.md`, `specs/architecture/decisions/ADR-0024-adf-autoconversion-for-field-on-richtext-fields.md` |
+| cycle-012 F2 spec evolution | `phase-f2-spec-evolution/cycle-012-verification-delta.md`, `specs/architecture/decisions/ADR-0024-adf-autoconversion-for-field-on-richtext-fields.md`, `specs/prd/bc-3-issue-write.md` |
+| cycle-012 session checkpoints | `cycles/cycle-012/session-checkpoints.md` |
+| cycle-012 lessons (L-001..L-004) | `cycles/cycle-012/lessons.md` |
 | cycle-012 F1 design research + live-Jira probes | `research/field-adf-autoconvert-design-research-2026-09-12.md`, `research/e2e-environment-adf-field-2026-09-11.md`, `research/createmeta-schema-probe-2026-09-12.md`, `research/jsm-requesttype-fields-adf-probe-2026-09-12.md` |
 | cycle-005/006 F1-F7 spec/story/delivery artifacts | `phase-f1-delta-analysis/`, `phase-f2-spec-evolution/`, `cycles/<cycle>/phase-f3-stories/`, `phase-f6-hardening/cycle-005/`, `cycles/cycle-006/blocking-issues-resolved.md` |
 | cycle-001..004 spec/story/delivery artifacts | `cycles/HISTORICAL-CONTENT-INDEX-DETAIL.md` |
@@ -187,19 +188,19 @@ Burst logs, adversary pass details, session checkpoints, and per-burst narrative
 
 **OPEN -- headline follow-ups (kept visible per compaction policy):**
 
+- **`BC-CITE-001 ZERO-TOLERANCE (CODIFIED, L-001)`** -- POLICY. `scripts/check-bc-citation-symbols.sh` exits 1 on ANY backtick-wrapped pending `src/…::symbol` token in BC Trace/Source. Future spec-ahead-of-code cycles MUST cite not-yet-existing F4 symbols in the un-backticked "(…pending — F4 Story N)" convention. Codified in `cycles/cycle-012/lessons.md` (L-001).
+- **`INPUT-HASH-DRIFT-STALE-ARTIFACTS`** -- LOW, non-blocking. Input-hash scan shows 209 STALE + 4 UNRESOLVABLE artifacts, ALL from prior closed cycles (old S-6xx/S-5xx/S-CIGATE stories, prior-issue F1 analyses). Pre-existing repo-wide condition. Candidate for future maintenance-sweep (`--update` after triage). No action required for cycle-012.
 - **`AUTH-REFRESH-APITOKEN-DOC-OVERCLAIM`** -- LOW, non-blocking. `jr auth refresh --api-token` doc comment (`src/cli/mod.rs`) has latent unconditional-notice overclaim. Fix in future doc sweep. Full detail: `cycles/OPEN-STANDING-ITEMS.md`.
 - **`AUTH-REMEDIATION-EQUALS-FORM-BROADER`** -- LOW, non-blocking. `load_oauth_tokens` stale-keyring + `auth logout` strings still emit SPACE form. Broader remediation remains. Full detail: `cycles/OPEN-STANDING-ITEMS.md`.
 - **`FIX-F6-A` / `F6-MUTATION-EXAMINE-GLOBS-EXPANSION`** -- LOW, non-blocking (pre-existing since cycle-004). DEC-356 EXPLICITLY ACCEPTED deferral. OBS-2: `.cargo/mutants.toml` comment mis-attributes `derive_auth_state` mutation coverage. Target: future maintenance cycle.
 - **`CYCLE-007-PARKED-BUNDLES`** -- 4 bundles PARKED: **cycle-008** (`issue-io-quickwins`), **cycle-009** (`bulk-by-jql`), **cycle-010** (`read-index-lag`), **cycle-011** (`filter-grammar`). Full triage: `phase-f1-delta-analysis/issue-triage-*.md`.
 - `VSDD-FACTORY-COMPACT-CLAUDE-MD-GAP` -- engine gap; candidate follow-up in vsdd-factory repo.
 - `MUTANTS-NIGHTLY-VERIFY-FULL-RUN` -- LOW, non-blocking. PR #799 rebalance fix statically validated only; nightly must confirm.
-- **`E2E-EDIT-FIELD-ADF-HEURISTIC`** -- **BEING ADDRESSED by cycle-012** (route B product fix: ADF auto-convert on `--field NAME=VALUE` for rich-text fields). F2 adversarial convergence in progress (10 passes, streak 0/3). Will close when cycle-012 F7 approved.
+- **`E2E-EDIT-FIELD-ADF-HEURISTIC`** -- **BEING ADDRESSED by cycle-012** (route B product fix). F2 APPROVED (DEC-358). F3 starting. Will close when cycle-012 F7 approved.
 - **`HOST-GATEKEEPER-SYSPOLICYD-FRAGILITY`** -- LOW, non-blocking, dev-host-only. `cargo-nextest` UNUSABLE for full suite. NOT a CI issue. Full detail: `cycles/OPEN-STANDING-ITEMS.md`.
 
-**RESOLVED this burst (2026-09-12, v4.22):** STATE.md v4.21->v4.22; cycle-012 F2 adversarial-convergence PAUSED (10 passes, streak 0/3); F2 artifacts (12 BCs/4 VPs/ADR-0024) committed; pipeline ACTIVE->PAUSED; counts reconciled to 769 BCs/86 VPs.
+**RESOLVED this burst (2026-09-13, v4.23):** cycle-012 F2 HUMAN GATE APPROVED (DEC-358, DEC-359); F3 starting; pipeline PAUSED->ACTIVE; lessons L-001..L-004 codified in `cycles/cycle-012/lessons.md`; session checkpoint v4.22 archived.
 
-**RESOLVED prior burst:** `#786-MANUAL-CLOSE` -- GitHub issue #786 CLOSED (all 6 F1-scope issues now closed). All cycle-007 story worktrees removed + branches deleted post-merge.
-
-**RESOLVED prior bursts (moved to `cycles/RESOLVED-DRIFT-ITEMS.md`):** `MAINTENANCE-SWEEP-2026-09-10-MERGES-PENDING`, `CYCLE-007-F1-SCOPE-GATE-PENDING`, `CYCLE-007-F2-SCOPE-GATE-PENDING`, `STATE-MD-OVER-SOFT-TARGET`.
+**RESOLVED prior burst (2026-09-12, v4.22):** STATE.md v4.21->v4.22; cycle-012 F2 adversarial-convergence PAUSED (10 passes, streak 0/3); F2 artifacts (12 BCs/4 VPs/ADR-0024) committed; pipeline ACTIVE->PAUSED; counts reconciled to 769 BCs/86 VPs.
 
 All other standing debt -- full text preserved, nothing deleted: OPEN items at `cycles/OPEN-STANDING-ITEMS.md`; RESOLVED/CLOSED items at `cycles/RESOLVED-DRIFT-ITEMS.md`.
