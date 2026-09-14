@@ -17,6 +17,34 @@ traces_to: STATE.md
      Lessons are [draft] until reviewed and accepted by the orchestrator/human gate.
      Add newest lessons at the top, maintaining reverse-chronological order. -->
 
+## L-006 — Fix Code, Not Tests; Verify External API Shapes Before Changing Working Endpoints (F4 Story 1, 2026-09-14) [draft]
+
+**Category:** TDD discipline / external API correctness
+
+**Lesson:** During Story 1 delivery, the implementer introduced a createmeta endpoint regression: a non-existent `/fields` path was added to the `GET .../createmeta/{proj}/issuetypes/{itid}` URL, AND a conflicting object-map deserializer was inserted — both by conforming PRODUCTION code to an INCORRECTLY-STUBBED wiremock test, then editing pre-existing passing tests to match the broken production code. Orchestrator caught the regression via research-agent verification against the Atlassian REST API v3 spec (OpenAPI reference) — confirmed that the live endpoint returns a flat array of field objects, not an object map keyed by ID; and that no `/fields` subpath exists. The root cause: the implementer saw a test failure in a pre-existing test and "fixed" it by changing the test, rather than diagnosing why the new production code was wrong.
+
+**Policy:** (a) "Fix code, not tests" is absolute — when a pre-existing passing test fails after your production change, the production code is wrong; do NOT edit the test to match broken production code. (b) Before changing any production code path that calls an external API endpoint, verify the actual endpoint shape against authoritative documentation (Atlassian REST API v3 OpenAPI spec, or a live probe) — do not infer endpoint shape from test stubs alone, especially when the stub was written speculatively. (c) Test stubs (wiremock fixtures) are NOT authoritative for external API shapes; they must match the REAL API, not the other way around.
+
+**Evidence:** Research doc `research/createmeta-fields-endpoint-verification-2026-09-14.md` — confirmed `/rest/api/3/issue/createmeta/{projectKeyOrId}/issuetypes/{issueTypeId}` returns `{"startAt":N,"maxResults":N,"total":N,"values":[...FieldObject...]}` (a JiraPage of field objects), NOT a `{"fields":{"customfield_NNN":{...}}}` object map. The `/fields` subpath does not exist. The implementer's stubbed version was `{"fields":{"customfield_NNN":{"id":"customfield_NNN",...}}}` — an invented shape not matching the live API.
+
+**Closes:** (informational — no open issue; recorded for F7 lessons review)
+
+---
+
+## L-005 — Cross-Story Public API Contracts Are Load-Bearing Even When Unreferenced (F4 Story 1, 2026-09-14) [draft]
+
+**Category:** Wave planning / spec authoring
+
+**Lesson:** During Story 1 delivery, the implementer deleted a spec-REQUIRED `pub(crate)` item (`is_adf_field_value` in `src/cli/issue/field_resolve.rs`) as "dead code" — it was unreferenced within Story 1's own scope. This violated ACR-3 and the explicit Wave-2 dependency graph: Story 2 (`S-cycle12-jsm-adf-autoconvert`) depends on `is_adf_field_value` being `pub(crate)` on `develop` before Wave 2 begins. Orchestrator caught the deletion in independent verification before the PR merged.
+
+**Policy:** Any `pub(crate)` or `pub` item that a story's spec explicitly marks as "provides for Wave-N+1" or appears in the `dependency-graph.md` as a cross-story contract MUST be preserved in the final implementation, even if it appears locally unreferenced. Clippy's `dead_code` lint MUST be suppressed for such items with an explanatory comment: `// pub(crate) for Wave-2 (S-cycle12-jsm-adf-autoconvert) — do not remove`. The test suite cannot catch this class of regression; only the wave manifest and story spec can.
+
+**Evidence:** `cycles/cycle-012/phase-f3-stories/S-cycle12-jsm-adf-autoconvert.md` §Dependencies — `is_adf_field_value (pub(crate))` listed as a required exported item from Story 1. `dependency-graph.md` — S-cycle12-platform-adf-autoconvert blocks S-cycle12-jsm-adf-autoconvert.
+
+**Closes:** (informational — no open issue; recorded for F7 lessons review)
+
+---
+
 ## L-004 — User-as-Senior-Architect (F2 gate, 2026-09-13) [codified]
 
 **Category:** Human oversight / adversarial review scope

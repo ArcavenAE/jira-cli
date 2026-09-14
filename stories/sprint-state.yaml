@@ -1,0 +1,25 @@
+---
+document_type: sprint-state
+level: ops
+version: "1.0"
+status: active
+producer: state-manager
+timestamp: 2026-09-14T18:00:00Z
+cycle: "cycle-012-field-adf-autoconvert"
+traces_to: STATE.md
+---
+
+# Sprint State — cycle-012-field-adf-autoconvert
+
+## cycle-012 Stories
+
+| Story | Wave | Points | Status | PR | Merged |
+|-------|------|--------|--------|----|--------|
+| S-cycle12-platform-adf-autoconvert | Wave 1 | 13 | merged | #809 | 2026-09-14 @ e926cb70 (squash, develop) |
+| S-cycle12-jsm-adf-autoconvert | Wave 2 | 13 | ready | — | pending (depends_on: S-cycle12-platform-adf-autoconvert SATISFIED) |
+
+## Notes
+
+- Wave 1 COMPLETE: S-cycle12-platform-adf-autoconvert merged 2026-09-14, PR #809 @ e926cb70.
+- Wave 2 ELIGIBLE: S-cycle12-jsm-adf-autoconvert dependency satisfied (is_adf_field_value pub(crate) on develop@e926cb70).
+- cycle-007 PAUSED: Wave-2 integration gate PENDING (resume after cycle-012 closes).

@@ -17,6 +17,36 @@ traces_to: STATE.md
      Only the LATEST checkpoint lives in STATE.md.
      Prior checkpoints are archived here for historical reference. -->
 
+## Session Resume Checkpoint (2026-09-13) — cycle-012 F4 STARTED, Story 1 in-progress (v4.26 active state)
+
+**Archived from STATE.md v4.26 on 2026-09-14. Superseded by the v4.27 STORY-1-DELIVERED burst.**
+
+### State
+
+| Field | Value |
+|-------|-------|
+| **Date** | 2026-09-13 |
+| **Position** | cycle-012 (`field-adf-autoconvert`) OPEN, Phase F4 IN PROGRESS, Story 1 (`S-cycle12-platform-adf-autoconvert`) per-story TDD delivery in progress. cycle-007 (`auth-correctness-dx`) PAUSED at F4 IMPL COMPLETE (Wave-2 gate PENDING, develop@`30bb1a18`). |
+| **Pipeline** | ACTIVE (F4 delivery in progress) |
+| **Convergence counter** | NONE active. F3 story convergence 3/3 CLEAN (passes 8/9/10). F2 MAXIMUM_VIABLE_REFINEMENT_REACHED/APPROVED (33 passes). |
+| **Next step** | Continue Story 1 per-story TDD delivery. |
+
+### Resume Prompt (verbatim from STATE.md v4.26)
+
+```
+**Date:** 2026-09-13. **Pipeline: ACTIVE** (cycle-012 `field-adf-autoconvert`, Feature Mode, Phase F4 STARTED; cycle-007 `auth-correctness-dx` PAUSED at F4 IMPL COMPLETE, Wave-2 gate PENDING).
+
+**Pipeline position:** cycle-012 F4 IN PROGRESS. Current = Story 1 (`S-cycle12-platform-adf-autoconvert`, platform, Wave 1, 13pts) via per-story TDD delivery. Global STORY-INDEX registration complete (180→182, this burst). DTU check N/A (`dtu_required: false`). F1 APPROVED (DEC-357). F2 APPROVED (DEC-358, DEC-359). F3 APPROVED (DEC-360) 2026-09-13.
+
+**In-flight work:** Story 1 TDD delivery in progress; no open PRs; no story worktrees yet (pre-implementation setup next).
+
+**Resume command:** `/vsdd-factory:next-step` (Story 1 per-story TDD delivery).
+
+**Counts:** total_bcs 769; VP count 86; holdout scenarios 118; total_stories 182.
+```
+
+---
+
 ## Session Resume Checkpoint (2026-09-13) — cycle-012 F3 APPROVED, F4 NOT STARTED, pre-pause (v4.24 active state)
 
 **Archived from STATE.md v4.24 on 2026-09-13. Superseded by the v4.25 SESSION-WRAP-PAUSE burst.**
