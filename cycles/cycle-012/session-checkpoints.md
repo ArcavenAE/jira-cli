@@ -17,6 +17,42 @@ traces_to: STATE.md
      Only the LATEST checkpoint lives in STATE.md.
      Prior checkpoints are archived here for historical reference. -->
 
+## Session Resume Checkpoint (2026-09-13) — cycle-012 F3 APPROVED, F4 NOT STARTED, pre-pause (v4.24 active state)
+
+**Archived from STATE.md v4.24 on 2026-09-13. Superseded by the v4.25 SESSION-WRAP-PAUSE burst.**
+
+### State
+
+| Field | Value |
+|-------|-------|
+| **Date** | 2026-09-13 |
+| **Position** | cycle-012 (`field-adf-autoconvert`) OPEN, Phase F4 delta-implementation STARTING, Story 1/Wave 1. F3 APPROVED (DEC-360) 2026-09-13. cycle-007 (`auth-correctness-dx`) PAUSED at F4 IMPL COMPLETE (Wave-2 gate PENDING, develop@`30bb1a18`). |
+| **Pipeline** | ACTIVE (pre-pause snapshot; replaced by v4.25 PAUSED state) |
+| **Convergence counter** | F3 story convergence 3/3 consecutive CLEAN (passes 8/9/10). F2 MAXIMUM_VIABLE_REFINEMENT_REACHED (33 passes). No active adversarial convergence. |
+| **Next step** | Worktree setup + CI/CD verification for Story 1 (S-cycle12-platform-adf-autoconvert, platform, Wave 1), then per-story TDD delivery. |
+
+### Resume Prompt (verbatim from STATE.md v4.24)
+
+```
+**Date:** 2026-09-13. **Pipeline: ACTIVE** (cycle-012 `field-adf-autoconvert`, Feature Mode, Phase F4 delta-implementation STARTING, Story 1/Wave 1). F1 APPROVED (DEC-357). F2 APPROVED (DEC-358, DEC-359). F3 APPROVED (DEC-360) 2026-09-13.
+
+**F3 artifacts (committed):** 5 files in `cycles/cycle-012/phase-f3-stories/` -- S-cycle12-platform-adf-autoconvert.md (13pts, Wave 1), S-cycle12-jsm-adf-autoconvert.md (13pts, Wave 2), dependency-graph.md, STORY-INDEX.md, wave-schedule.md. 2-story decomposition, 26 pts total, S1→S2 sequential critical path. total_stories 180→182.
+
+**F4 obligations (tracked to F4 gate):** DQ-6 type/signature decision; VP-004 axes (b)-(f) authoring; Axis (g) `build()` assembly-order reorder (`src/api/jsm/requests.rs`); Axis (h1) platform-create NET-NEW `--markdown`+`--field description=` guard (create.rs step 2c); Axis (h2) platform-edit guard extension (edit.rs); 2 `.unwrap_or(false)` strictness test fixes; createmeta→EditMetaFieldSchema fidelity test; §5 items 4/7a-c/10/11/13/16/17/18; F4-gate Checkbox A/B (Story 2 two-checkbox gate).
+
+**Pending human decisions / blockers:** None currently. F4 per-story TDD delivery proceeds. cycle-007 PAUSED at F4 IMPL COMPLETE (Wave-2 gate PENDING, develop@`30bb1a18`; resume after cycle-012 closes).
+
+**WIP branch list:** NONE (F4 not yet started; no open cycle-012 PRs).
+
+**Resume command:** `/vsdd-factory:phase-f4-delta-implementation` (Story 1: S-cycle12-platform-adf-autoconvert, Wave 1).
+
+**Counts:** total_bcs 769 (unchanged); VP count 86 (unchanged); holdout scenarios 118 (unchanged); total_stories 182 (+2 F3 stories; was 180). Prior checkpoint (STATE.md v4.23): archived to `cycles/cycle-012/session-checkpoints.md`.
+
+**NEXT:** Worktree setup + CI/CD verification for Story 1 (S-cycle12-platform-adf-autoconvert, platform, Wave 1), then per-story TDD delivery.
+```
+
+---
+
 ## Session Resume Checkpoint (2026-09-12) — cycle-012 F2 mid-convergence PAUSED (10 passes, streak 0/3)
 
 **Archived from STATE.md v4.22 on 2026-09-13. Superseded by the v4.23 CYCLE-012-F2-APPROVED burst.**
