@@ -17,6 +17,34 @@ traces_to: STATE.md
      Lessons are [draft] until reviewed and accepted by the orchestrator/human gate.
      Add newest lessons at the top, maintaining reverse-chronological order. -->
 
+## L-009 — Live-E2E Skip-on-Failure Cannot Substitute for Regression Coverage (F4 Story 2 Step-4.5 Pass 3, 2026-09-14) [draft]
+
+**Category:** Test design / E2E coverage limits
+
+**Lesson:** The JSM ADF live-E2E test (AC-016, `S-cycle12-jsm-adf-autoconvert`) skips — rather than fails — on a non-403 create failure. This means it can only provide positive round-trip confirmation when the environment cooperates; it cannot reliably catch a regression that reintroduces plain-string (non-ADF) field values on the JSM create path, because an environment-level failure and a regression-triggered failure both manifest as the same "clean skip," not a red test. This matches the repo's established best-effort E2E skip convention (see `docs/specs/e2e-live-jira-testing.md`), so it is not a defect in this story — but it is a real coverage-limit worth naming explicitly so nobody over-trusts a green nightly run as regression proof for this specific behavior.
+
+**Policy:** When a live-E2E test's only regression-catching value depends on a specific external precondition (here: a successful JSM request creation), and the test's failure mode for a missing precondition is "skip" rather than "fail," record that limitation next to the test and in the story's convergence record — do not rely on it as the sole automated regression guard for the property it targets. Wiremock/CLI-level and unit-level coverage remain the load-bearing regression guard; the live-E2E test is confirmatory only.
+
+**Evidence:** Step 4.5 Pass 3, OBS-P3-1 (`cycles/cycle-012/adversarial-reviews/story-S-cycle12-jsm-adf-autoconvert-convergence.md`). Noted for whoever relies on the nightly smoke test.
+
+**Closes:** (informational — no open issue; recorded for F7 lessons review)
+
+---
+
+## L-008 — Story-Text Output-Channel Claims Must Match jr's Output-Channel Profiles (F4 Story 2 Step-4.5, 2026-09-14) [draft]
+
+**Category:** Story authoring / spec-to-implementation fidelity
+
+**Lesson:** `S-cycle12-jsm-adf-autoconvert`'s AC-012 story text specified the field-conversion notice as emitted to stdout, but jr's actual convention for this command path (`issue create --request-type`, Symmetric output-channel profile) is stderr via `output::print_success`. The implementer caught the discrepancy during delivery (DONE_WITH_CONCERNS) and the adversary independently confirmed it at Pass 1 (OBS-1); the test was written to assert the correct channel (stderr), not the story-text channel. This is a content defect in the story text, not a process gap — the story-decomposition step (F3) did not cross-check the AC wording against CLAUDE.md's "Output channels" convention table.
+
+**Policy:** When authoring or reviewing an AC that specifies a CLI output channel, cross-check the claimed channel against CLAUDE.md's `## Output channels` profile table for the command family in question before finalizing story text. This is a first occurrence for this specific defect class in cycle-012 — no standing policy/checklist addition is warranted per the Cycle-Closing Checklist's recurring-defect threshold; correct the AC-012 wording in a future doc sweep / at F7 close instead.
+
+**Evidence:** `cycles/cycle-012/adversarial-reviews/story-S-cycle12-jsm-adf-autoconvert-convergence.md` Pass 1, OBS-1. Test asserts stderr (not stdout) for the field-conversion notice.
+
+**Closes:** (informational — no open issue; recorded for F7 lessons review)
+
+---
+
 ## L-007 — E2E Ignore-Gated Tests Are Not Covered by ci-gate (F4 Story 1 E2E Verification, 2026-09-14) [draft]
 
 **Category:** Pipeline discipline / DoD gating
