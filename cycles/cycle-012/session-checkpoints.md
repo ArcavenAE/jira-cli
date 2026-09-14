@@ -17,6 +17,44 @@ traces_to: STATE.md
      Only the LATEST checkpoint lives in STATE.md.
      Prior checkpoints are archived here for historical reference. -->
 
+## Session Resume Checkpoint (2026-09-14) — cycle-012 F4 Wave 1 COMPLETE, Story 1 MERGED, Wave 2 STARTING (v4.27 active state)
+
+**Archived from STATE.md v4.27 on 2026-09-14. Superseded by the v4.28 STORY-1-E2E-VERIFIED burst.**
+
+### State
+
+| Field | Value |
+|-------|-------|
+| **Date** | 2026-09-14 |
+| **Position** | cycle-012 (`field-adf-autoconvert`) OPEN, Phase F4 Wave 1 COMPLETE, Wave 2 STARTING. Story 1 (`S-cycle12-platform-adf-autoconvert`) MERGED PR #809 @ `e926cb70` (squash, 2026-09-14). cycle-007 (`auth-correctness-dx`) PAUSED at F4 IMPL COMPLETE (Wave-2 gate PENDING, develop@`e926cb70`). |
+| **Pipeline** | ACTIVE (Wave 1 COMPLETE; Wave 2 starting) |
+| **Convergence counter** | NONE active. Story 1 Step 4.5 CONVERGED 3/3 CLEAN (7 passes total). F2 MAXIMUM_VIABLE_REFINEMENT_REACHED (33 passes). |
+| **Next step** | Story 2 per-story TDD delivery (S-cycle12-jsm-adf-autoconvert). |
+
+### Resume Prompt (verbatim from STATE.md v4.27)
+
+```
+**Date:** 2026-09-14. **Pipeline: ACTIVE** (cycle-012 `field-adf-autoconvert`, Feature Mode, Phase F4 Wave 1 COMPLETE; Wave 2 STARTING. cycle-007 `auth-correctness-dx` PAUSED at F4 IMPL COMPLETE, Wave-2 gate PENDING).
+
+**Pipeline position:** cycle-012 F4 Wave 1 COMPLETE. Story 1 (`S-cycle12-platform-adf-autoconvert`) MERGED PR #809 @ `e926cb70` (squash, 2026-09-14). Step 4.5 CONVERGED 3/3 consecutive CLEAN (7 passes total; convergence record fd9fa4b0). 8 BCs + 4 VPs implemented. Wave 2 (`S-cycle12-jsm-adf-autoconvert`, 13pts) now ELIGIBLE — `is_adf_field_value` pub(crate) on `develop@e926cb70`. DTU check N/A (`dtu_required: false`). F1 APPROVED (DEC-357). F2 APPROVED (DEC-358, DEC-359). F3 APPROVED (DEC-360) 2026-09-13.
+
+**Security/maintenance events recorded this burst:** PR #810 MERGED (`71d98800`) — rustls 0.23.37→0.23.45 resolving RUSTSEC-2026-0285 (TLS-1.3 handshake). MSRV-1.85-verified. Advisory cleared tree-wide. Mutants Nightly run 34858140987 CANCELLED (user decision); cron UNCHANGED. Last two nightly runs (2026-09-12, 2026-09-13) FAILED; `MUTANTS-NIGHTLY-VERIFY-FULL-RUN` remains OPEN.
+
+**Convergence counter:** NONE active. Story 1 Step 4.5 CONVERGED 3/3 CLEAN (7 passes). No active adversarial convergence underway.
+
+**In-flight work:** No open PRs. No active worktrees. Wave 2 dispatch = next step.
+
+**Pending human decisions / blockers:** NONE open. cycle-007 Wave-2 integration gate remains PENDING (resume after cycle-012 closes).
+
+**WIP branch list:** NONE (Wave 2 branch creation = next step).
+
+**Resume command:** `/vsdd-factory:next-step` (Story 2 per-story TDD delivery: S-cycle12-jsm-adf-autoconvert).
+
+**Counts:** total_bcs 769 (unchanged); VP count 86 (unchanged); holdout scenarios 118 (unchanged); total_stories 182 (unchanged). Prior checkpoint (STATE.md v4.26): archived to `cycles/cycle-012/session-checkpoints.md`.
+```
+
+---
+
 ## Session Resume Checkpoint (2026-09-13) — cycle-012 F4 STARTED, Story 1 in-progress (v4.26 active state)
 
 **Archived from STATE.md v4.26 on 2026-09-14. Superseded by the v4.27 STORY-1-DELIVERED burst.**

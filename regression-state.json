@@ -1,1 +1,1 @@
-{"status":"pass","timestamp":"2026-09-12T04:28:05Z","command":"cd /Users/zious/Documents/GITHUB/jira-cli/.worktrees/S-cycle7-auth-status-json && cargo test --test auth_status_json 2>&1 | tail -20 && cargo test --lib bc_1_6_050 2>&1 | tail -20"}
+{"status":"pass","timestamp":"2026-09-14T18:07:10Z","command":"cd /Users/zious/Documents/GITHUB/jira-cli/.worktrees/fix-e2e-adf-readback && cargo test --test e2e_cli_surface_guard 2>&1 | tail -15"}

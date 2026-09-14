@@ -17,6 +17,20 @@ traces_to: STATE.md
      Lessons are [draft] until reviewed and accepted by the orchestrator/human gate.
      Add newest lessons at the top, maintaining reverse-chronological order. -->
 
+## L-007 — E2E Ignore-Gated Tests Are Not Covered by ci-gate (F4 Story 1 E2E Verification, 2026-09-14) [draft]
+
+**Category:** Pipeline discipline / DoD gating
+
+**Lesson:** cycle-012's headline acceptance test (`test_e2e_issue_edit_custom_field`) was `#[ignore]`-gated and NOT part of `ci-gate`. Story 1's PR #809 merged green through `ci-gate` despite AC-014 being under-delivered (string-only read-back assertion, not ADF-aware). The gap only surfaced in the nightly live E2E run (`34881320608`) — not immediately after merge. A separate PR #811 was required to strengthen the assertion post-merge.
+
+**Policy:** When a cycle's Definition of Done hinges on a specific live-E2E test passing, the orchestrator MUST explicitly verify that test's live result (via the `e2e.yml` run artifact) before declaring the defect closed. A green `ci-gate` does NOT exercise `#[ignore]`-gated E2E tests. The human gate for story delivery should include a checklist item: "Has the live-E2E run that covers this story's acceptance criteria been inspected?"
+
+**Evidence:** e2e.yml run `34881320608` @ `develop@67b3939a` — `test_e2e_issue_edit_custom_field` PASSED. Prior run at `develop@e926cb70` (PR #809 state) showed AC-014 under-delivery. PR #811 (`67b3939a`) added the ADF-aware read-back assertion and positive doc-shape check (`type == "doc"`, non-null, gated to ADF-backed fields).
+
+**Closes:** (informational — no open issue; recorded for F7 lessons review)
+
+---
+
 ## L-006 — Fix Code, Not Tests; Verify External API Shapes Before Changing Working Endpoints (F4 Story 1, 2026-09-14) [draft]
 
 **Category:** TDD discipline / external API correctness
