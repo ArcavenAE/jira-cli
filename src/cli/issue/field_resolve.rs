@@ -379,10 +379,14 @@ pub(crate) async fn resolve_edit_fields(
     profile: &crate::profile::Profile,
     source: FieldMetaSource<'_>,
     field_pairs: &HashMap<String, FieldValueSpec>,
-    fields: &mut serde_json::Value,
-    changed_fields: &mut BTreeMap<String, String>,
-    planned_preview: &mut BTreeMap<String, serde_json::Value>,
+    outputs: FieldResolutionOutputs<'_>,
 ) -> Result<()> {
+    let FieldResolutionOutputs {
+        fields,
+        changed_fields,
+        planned_preview,
+        field_markers,
+    } = outputs;
     use crate::cache::{read_fields_cache, write_fields_cache};
 
     if field_pairs.is_empty() {
@@ -524,6 +528,8 @@ pub(crate) async fn resolve_edit_fields(
                 .into());
             } else {
                 // Field not found in cache (or no cache). Fetch fresh from API once.
+                // Any HTTP error from list_fields() propagates immediately (exit 1
+                // per test_bc_3_3_011_error_taxonomy_all_10_rows row10).
                 let raw_fields = client.list_fields().await?;
                 let fresh: Vec<(String, String)> = raw_fields
                     .iter()
@@ -551,6 +557,16 @@ pub(crate) async fn resolve_edit_fields(
                 }
             };
 
+            // For system fields (non-customfield_), use the field_id as human_name
+            // so the changed_fields JSON key matches the convention used by dedicated
+            // flags (e.g. `--description` inserts "description", not "Description").
+            // BC-3.4.035 AC-011: `changed_fields["description"]` must use lowercase.
+            let human_name = if field_id.starts_with("customfield_") {
+                human_name
+            } else {
+                field_id.clone()
+            };
+
             resolved.push((field_id, human_name, spec.clone()));
         }
     }
@@ -566,6 +582,7 @@ pub(crate) async fn resolve_edit_fields(
                 fields,
                 changed_fields,
                 planned_preview,
+                field_markers,
             )
             .await
         }
@@ -578,9 +595,12 @@ pub(crate) async fn resolve_edit_fields(
                 project_key,
                 issue_type_name,
                 resolved,
-                fields,
-                changed_fields,
-                planned_preview,
+                FieldResolutionOutputs {
+                    fields,
+                    changed_fields,
+                    planned_preview,
+                    field_markers,
+                },
             )
             .await
         }
@@ -605,10 +625,14 @@ async fn resolve_against_createmeta(
     project_key: &str,
     issue_type_name: &str,
     resolved: Vec<(String, String, FieldValueSpec)>,
-    fields: &mut serde_json::Value,
-    changed_fields: &mut BTreeMap<String, String>,
-    planned_preview: &mut BTreeMap<String, serde_json::Value>,
+    outputs: FieldResolutionOutputs<'_>,
 ) -> Result<()> {
+    let FieldResolutionOutputs {
+        fields,
+        changed_fields,
+        planned_preview,
+        field_markers,
+    } = outputs;
     // Step 3 (issue-type name → id, S-331 reuse, AC-007): case-insensitive,
     // offset-paginated internally inside get_issue_types_for_project.
     let issue_types = client.get_issue_types_for_project(project_key).await?;
@@ -671,6 +695,14 @@ async fn resolve_against_createmeta(
             auto_complete_url: meta_field.auto_complete_url.clone(),
         };
 
+        // ADF empty-omit pre-check (BC-3.3.015, S-cycle12): on create, an
+        // empty value for an ADF-backed field is OMITTED from the POST body
+        // entirely (not sent as a clear-doc). Only applies to bare-form
+        // (kind == None) — hinted values bypass this check.
+        if is_bare_empty_adf_field(spec.kind, &adapted.schema, &spec.value) {
+            continue;
+        }
+
         dispatch_field_value(
             client,
             &field_id,
@@ -681,6 +713,7 @@ async fn resolve_against_createmeta(
                 fields,
                 changed_fields,
                 planned_preview,
+                field_markers,
             },
         )
         .await?;
@@ -701,6 +734,7 @@ async fn resolve_against_editmeta(
     fields: &mut serde_json::Value,
     changed_fields: &mut BTreeMap<String, String>,
     planned_preview: &mut BTreeMap<String, serde_json::Value>,
+    field_markers: &mut BTreeMap<String, String>,
 ) -> Result<()> {
     // --- Phase 2: Fetch editmeta once (Step 3). ---
     // Only reached when all field names were resolved successfully (Phase 1 has no errors).
@@ -728,6 +762,22 @@ async fn resolve_against_editmeta(
             .into());
         }
 
+        // ADF empty-clear pre-check (BC-3.4.036, S-cycle12): on edit, an empty
+        // value for an ADF-backed field writes a clear-doc (empty content array).
+        // Only applies to bare-form (kind == None) — hinted values bypass this.
+        if is_bare_empty_adf_field(spec.kind, &meta_field.schema, &spec.value) {
+            let clear_doc = serde_json::json!({"type": "doc", "version": 1, "content": []});
+            fields[field_id.as_str()] = clear_doc.clone();
+            // #398 lossless-machine-channel invariant (BC-3.4.036 / AC-010):
+            // carry the raw untrimmed user-supplied value in changed_fields,
+            // NOT String::new() — a whitespace-only input like "   " must
+            // round-trip as "   ", not silently collapse to "".
+            changed_fields.insert(human_name.clone(), spec.value.clone());
+            planned_preview.insert(human_name.clone(), clear_doc);
+            field_markers.insert(human_name, "(adf-clear)".to_string());
+            continue;
+        }
+
         dispatch_field_value(
             client,
             &field_id,
@@ -738,6 +788,7 @@ async fn resolve_against_editmeta(
                 fields,
                 changed_fields,
                 planned_preview,
+                field_markers,
             },
         )
         .await?;
@@ -746,17 +797,104 @@ async fn resolve_against_editmeta(
     Ok(())
 }
 
+/// Three-arm ADF allowlist predicate core (AC-001, ADR-0024 §"Single allowlist
+/// core").
+///
+/// Returns `true` IFF the schema matches exactly one of:
+/// - `system == "description"`
+/// - `system == "environment"`
+/// - `custom` ends with `":textarea"`
+///
+/// `is_adf_field` is the entry point that delegates here (Architecture
+/// Compliance Rule 1, S-cycle12-platform-adf-autoconvert).
+fn is_adf_schema(system: Option<&str>, custom: Option<&str>) -> bool {
+    matches!(system, Some("description") | Some("environment"))
+        || custom.map(|c| c.ends_with(":textarea")).unwrap_or(false)
+}
+
+/// ADF field detection predicate for a raw `serde_json::Value` schema object
+/// (ACR-3, Architecture Compliance Rule 3, S-cycle12-platform-adf-autoconvert).
+///
+/// This is the single `pub(crate)` entry point for ADF detection used by both
+/// typed-struct callers (via [`is_adf_field`]) and Wave-2 JSON-Value callers
+/// (e.g. `jsm_create.rs`). Delegates to [`is_adf_schema`]; contains NO
+/// allowlist logic itself (ACR-1).
+///
+/// `value` is expected to be the schema sub-object (e.g.
+/// `{"type":"string","system":"description"}`). Returns `false` for non-object
+/// values or if neither `system` nor `custom` is present.
+pub(crate) fn is_adf_field_value(value: &serde_json::Value) -> bool {
+    let system = value.get("system").and_then(|v| v.as_str());
+    let custom = value.get("custom").and_then(|v| v.as_str());
+    is_adf_schema(system, custom)
+}
+
+/// ADF field detection predicate for a typed `EditMetaFieldSchema` (AC-001,
+/// BC-3.4.033 precondition).
+///
+/// Bridges the typed-struct path to [`is_adf_field_value`], which is the
+/// single `pub(crate)` entry point. Contains NO allowlist logic itself (ACR-1).
+fn is_adf_field(schema: &crate::types::jira::EditMetaFieldSchema) -> bool {
+    // Bridge to the pub(crate) entry point so all ADF detection goes through
+    // a single production-reachable function (suppresses dead_code for
+    // is_adf_field_value; ACR-1 — no allowlist duplication).
+    let v = serde_json::json!({
+        "system": schema.system,
+        "custom": schema.custom,
+    });
+    is_adf_field_value(&v)
+}
+
+/// Empty-value gate for ADF-backed fields on the bare (un-hinted) form only
+/// (AC-004, BC-3.3.015, BC-3.4.036, S-cycle12).
+///
+/// Returns `true` IFF ALL three conditions hold:
+/// 1. `kind` is `None` (bare form — hinted values bypass this gate and route
+///    to the hint composer instead).
+/// 2. The field's schema is ADF-backed ([`is_adf_field`] returns true).
+/// 3. `value.trim().is_empty()` — the user supplied an empty or whitespace-only value.
+///
+/// Call sites:
+/// - [`resolve_against_createmeta`]: empty bare-form → OMIT the field from POST.
+/// - [`resolve_against_editmeta`]: empty bare-form → write a clear-doc
+///   (`{"type":"doc","version":1,"content":[]}`).
+///
+/// Extracted as a pure, network-free helper so VP-FIELD-ADF-003 Axis D can be
+/// unit-tested without a MockServer (AC-004 F4 obligation).
+fn is_bare_empty_adf_field(
+    kind: Option<crate::cli::issue::create::FieldValueKind>,
+    schema: &crate::types::jira::EditMetaFieldSchema,
+    value: &str,
+) -> bool {
+    kind.is_none() && is_adf_field(schema) && value.trim().is_empty()
+}
+
 /// Output/accumulator bundle for [`dispatch_field_value`].
 ///
 /// Reduces argument count on `dispatch_field_value` to satisfy
 /// `clippy::too_many_arguments` (CLAUDE.md policy: refactor rather than
-/// `#[allow]`) by bundling the three `&mut` output sinks each call site
-/// already threads through together. Pure signature refactor (S-578-4) —
-/// no behavior change at either call site.
-struct FieldResolutionOutputs<'a> {
-    fields: &'a mut serde_json::Value,
-    changed_fields: &'a mut BTreeMap<String, String>,
-    planned_preview: &'a mut BTreeMap<String, serde_json::Value>,
+/// `#[allow]`) by bundling the output sinks each call site already threads
+/// through together. Pure signature refactor (S-578-4) — no behavior change
+/// at either call site.
+///
+/// `field_markers` (S-cycle12-platform-adf-autoconvert, AC-003): keyed by
+/// `human_name` (display name), records ADF-specific display sentinels
+/// (`"(adf)"` / `"(adf-clear)"`) for the table-emit loop priority rule in
+/// `edit.rs` and `create.rs`. Initialized empty at every construction site;
+/// populated ONLY at two PLATFORM-PATH sites (implementation: Step 5/7).
+///
+/// `pub(crate)` so that `edit.rs` and `create.rs` can construct it before
+/// calling [`resolve_edit_fields`] (avoids the clippy `too_many_arguments`
+/// lint on the public API — bundles the 4 output sinks into one struct).
+pub(crate) struct FieldResolutionOutputs<'a> {
+    pub fields: &'a mut serde_json::Value,
+    pub changed_fields: &'a mut BTreeMap<String, String>,
+    pub planned_preview: &'a mut BTreeMap<String, serde_json::Value>,
+    /// ADF marker side-channel (AC-003, S-cycle12-platform-adf-autoconvert).
+    /// Keyed by `human_name`; values are `"(adf)"` or `"(adf-clear)"`.
+    /// Populated by the ADF branch in `dispatch_field_value` and the ADF
+    /// empty-clear pre-check in `resolve_against_editmeta`.
+    pub field_markers: &'a mut BTreeMap<String, String>,
 }
 
 /// Shared per-pair Step 4-6 dispatch (hinted-bypass + bare-form type
@@ -808,6 +946,22 @@ async fn dispatch_field_value(
 
     match field_type {
         "string" | "text" => {
+            // ADF non-empty path (BC-3.4.033, BC-3.3.013, S-cycle12):
+            // convert plain text to ADF doc, record "(adf)" marker,
+            // store ADF object in planned_preview (not display string).
+            // #398 invariant: changed_fields carries raw input string.
+            if is_adf_field(&meta_field.schema) {
+                let adf_doc = crate::adf::text_to_adf(&value);
+                outputs
+                    .field_markers
+                    .insert(human_name.clone(), "(adf)".to_string());
+                outputs
+                    .planned_preview
+                    .insert(human_name.clone(), adf_doc.clone());
+                outputs.fields[field_id] = adf_doc;
+                outputs.changed_fields.insert(human_name, value);
+                return Ok(());
+            }
             wire_value = serde_json::Value::String(value.clone());
             display_value = value.clone();
         }
@@ -1646,6 +1800,465 @@ mod tests {
             super::strip_integer_decimal_suffix("-+5.0"),
             None,
             "minus-then-plus must reject"
+        );
+    }
+
+    // -------------------------------------------------------------------------
+    // AC-001 / VP-FIELD-ADF-001: ADF detection predicate tests
+    // (S-cycle12-platform-adf-autoconvert)
+    //
+    // is_adf_schema and is_adf_field are fully implemented (GREEN).
+    // -------------------------------------------------------------------------
+
+    use proptest::prelude::*;
+
+    proptest! {
+        #![proptest_config(ProptestConfig::with_cases(1000))]
+        /// VP-FIELD-ADF-001 two-sided IFF property: `is_adf_field` fires ONLY on
+        /// the three-arm allowlist and on NO other arbitrary `system`/`custom` pair.
+        ///
+        /// Generator uses `prop_oneof!` to produce BOTH allowlist members (system
+        /// `"description"` / `"environment"`, custom ending `":textarea"`) AND random
+        /// non-members for balanced positive/negative mutation coverage (O1, AC-001).
+        #[test]
+        fn prop_bc_3_4_033_is_adf_field_fires_only_on_allowlist(
+            system in prop_oneof![
+                // Allowlist positives for system arm.
+                Just(Some("description".to_string())),
+                Just(Some("environment".to_string())),
+                // Non-member randoms.
+                proptest::option::of("[a-z]{0,20}").prop_filter("not allowlist", |s| {
+                    !matches!(s.as_deref(), Some("description") | Some("environment"))
+                }),
+            ],
+            custom in prop_oneof![
+                // Allowlist positive: ends with ":textarea".
+                Just(Some("com.atlassian.jira.plugin.system.customfieldtypes:textarea".to_string())),
+                // Non-member randoms.
+                proptest::option::of("[a-z.:]{0,40}").prop_filter("not textarea", |c| {
+                    !c.as_deref().map(|s| s.ends_with(":textarea")).unwrap_or(false)
+                }),
+            ],
+        ) {
+            let schema = crate::types::jira::EditMetaFieldSchema {
+                field_type: "string".to_string(),
+                system: system.clone(),
+                custom: custom.clone(),
+            };
+            let result = is_adf_field(&schema);
+            let expected = matches!(system.as_deref(), Some("description") | Some("environment"))
+                || custom.as_deref().map(|c| c.ends_with(":textarea")).unwrap_or(false);
+            prop_assert_eq!(
+                result,
+                expected,
+                "is_adf_field({:?}, {:?}) = {:?}, expected {:?}",
+                system,
+                custom,
+                result,
+                expected
+            );
+        }
+    }
+
+    /// VP-FIELD-ADF-001 example-based: all anchor rows from the allowlist
+    /// spec verified explicitly.
+    #[test]
+    fn test_bc_3_4_033_is_adf_field_allowlist_positive_and_negative_anchors() {
+        fn mk(
+            system: Option<&str>,
+            custom: Option<&str>,
+        ) -> crate::types::jira::EditMetaFieldSchema {
+            crate::types::jira::EditMetaFieldSchema {
+                field_type: "string".to_string(),
+                system: system.map(|s| s.to_string()),
+                custom: custom.map(|c| c.to_string()),
+            }
+        }
+        // Positive anchors (must return true):
+        // ":textarea" custom type
+        assert!(
+            is_adf_field(&mk(
+                None,
+                Some("com.atlassian.jira.plugin.system.customfieldtypes:textarea")
+            )),
+            ":textarea custom must be ADF-backed"
+        );
+        // "description" system field
+        assert!(
+            is_adf_field(&mk(Some("description"), None)),
+            "system=description must be ADF-backed"
+        );
+        // "environment" system field
+        assert!(
+            is_adf_field(&mk(Some("environment"), None)),
+            "system=environment must be ADF-backed"
+        );
+        // customfield_NNNNN bypass: schema.system from editmeta still has the system value
+        // (AC-005/BC-3.4.037 — the field_id on wire is customfield_NNNNN but the schema
+        // carries system="environment")
+        assert!(
+            is_adf_field(&mk(Some("environment"), None)),
+            "customfield bypass with system=environment must be ADF-backed"
+        );
+        // Negative anchors (must return false):
+        // ":textfield" — NOT ":textarea"
+        assert!(
+            !is_adf_field(&mk(
+                None,
+                Some("com.atlassian.jira.plugin.system.customfieldtypes:textfield")
+            )),
+            ":textfield must NOT be ADF-backed"
+        );
+        // "summary" system field
+        assert!(
+            !is_adf_field(&mk(Some("summary"), None)),
+            "system=summary must NOT be ADF-backed"
+        );
+        // empty schema (no system, no custom)
+        assert!(
+            !is_adf_field(&mk(None, None)),
+            "empty schema must NOT be ADF-backed"
+        );
+    }
+
+    /// AC-001 delegator contract: `is_adf_field_value` is the Wave-2 entry
+    /// point for callers holding a `serde_json::Value` schema (e.g. jsm_create).
+    /// It must return exactly the same decisions as `is_adf_field` for the same
+    /// schema data, by delegating to `is_adf_schema` (ACR-1 — no allowlist
+    /// duplication).
+    #[test]
+    fn test_bc_3_4_033_is_adf_field_value_delegates_to_allowlist() {
+        use serde_json::json;
+
+        // Positive anchors (must return true):
+        // system = "description"
+        assert!(
+            is_adf_field_value(&json!({"type": "string", "system": "description"})),
+            "system=description must be ADF-backed via is_adf_field_value"
+        );
+        // system = "environment"
+        assert!(
+            is_adf_field_value(&json!({"type": "string", "system": "environment"})),
+            "system=environment must be ADF-backed via is_adf_field_value"
+        );
+        // custom ends with ":textarea"
+        assert!(
+            is_adf_field_value(&json!({
+                "type": "string",
+                "custom": "com.atlassian.jira.plugin.system.customfieldtypes:textarea"
+            })),
+            ":textarea custom must be ADF-backed via is_adf_field_value"
+        );
+
+        // Negative anchors (must return false):
+        // custom ends with ":textfield", NOT ":textarea"
+        assert!(
+            !is_adf_field_value(&json!({
+                "type": "string",
+                "custom": "com.atlassian.jira.plugin.system.customfieldtypes:textfield"
+            })),
+            ":textfield must NOT be ADF-backed via is_adf_field_value"
+        );
+        // system = "summary"
+        assert!(
+            !is_adf_field_value(&json!({"type": "string", "system": "summary"})),
+            "system=summary must NOT be ADF-backed via is_adf_field_value"
+        );
+        // empty schema (no system, no custom keys)
+        assert!(
+            !is_adf_field_value(&json!({"type": "string"})),
+            "empty schema must NOT be ADF-backed via is_adf_field_value"
+        );
+        // non-object value
+        assert!(
+            !is_adf_field_value(&json!(null)),
+            "null value must NOT be ADF-backed via is_adf_field_value"
+        );
+    }
+
+    // -------------------------------------------------------------------------
+    // AC-002 / VP-FIELD-ADF-002 (inline): dispatch_field_value ADF conversion
+    // -------------------------------------------------------------------------
+
+    /// Recursive INV-1 tree-walk: returns `true` iff NO text node anywhere in
+    /// the ADF `node` value contains a raw `\n` or `\r` character.
+    /// Called by VP-FIELD-ADF-002 Property 3.
+    fn adf_no_raw_newline_in_text_nodes(node: &serde_json::Value) -> bool {
+        if node.get("type").and_then(|t| t.as_str()) == Some("text") {
+            if let Some(text) = node.get("text").and_then(|t| t.as_str()) {
+                if text.contains('\n') || text.contains('\r') {
+                    return false;
+                }
+            }
+        }
+        if let Some(children) = node.get("content").and_then(|c| c.as_array()) {
+            if children
+                .iter()
+                .any(|child| !adf_no_raw_newline_in_text_nodes(child))
+            {
+                return false;
+            }
+        }
+        true
+    }
+
+    proptest! {
+        #![proptest_config(ProptestConfig::with_cases(200))]
+        /// VP-FIELD-ADF-002 property: for arbitrary non-empty values on an
+        /// ADF-backed field, `dispatch_field_value` must return an ADF doc object
+        /// satisfying all three properties:
+        ///
+        /// Property 1: type="doc", version=1.
+        /// Property 2: `content` is a non-empty array containing ≥1 "paragraph" node.
+        /// Property 3 (INV-1): no `text` node anywhere in the tree contains a raw
+        ///   `\n` or `\r` character — multi-line inputs must produce `hardBreak` nodes,
+        ///   not raw newlines in text nodes.
+        ///
+        /// Generator mixes single-line and multi-line inputs (including `\n`, `\r`,
+        /// `\r\n`) so the hardBreak path and INV-1 are both exercised.
+        /// Empty/whitespace-only inputs are skipped (they route to the empty guard).
+        #[test]
+        fn prop_bc_3_4_033_dispatch_field_value_adf_backed_returns_adf_object(
+            value in prop_oneof![
+                // 4 parts: plain single-line strings (no newlines).
+                4 => "[^\r\n]{1,40}",
+                // 2 parts: strings with an embedded LF.
+                2 => "[^\r\n]{0,19}\n[^\r\n]{0,19}",
+                // 1 part: strings with an embedded CR.
+                1 => "[^\r\n]{0,19}\r[^\r\n]{0,19}",
+                // 1 part: strings with an embedded CRLF sequence.
+                1 => "[^\r\n]{0,9}\r\n[^\r\n]{0,9}",
+            ]
+        ) {
+            // Skip inputs that are empty or all-whitespace after trim — those route
+            // to the ADF empty guard (bare-form + ADF schema + empty value) and do
+            // not reach dispatch_field_value.
+            prop_assume!(!value.trim().is_empty());
+
+            let rt = tokio::runtime::Runtime::new().unwrap();
+            let wire_value = rt.block_on(async {
+                let client = crate::api::client::JiraClient::new_for_test(
+                    "http://localhost:1".to_string(),
+                    "Basic dGVzdDp0ZXN0".to_string(),
+                );
+                let schema = crate::types::jira::EditMetaFieldSchema {
+                    field_type: "string".to_string(),
+                    system: Some("description".to_string()),
+                    custom: None,
+                };
+                let meta_field = crate::types::jira::EditMetaField {
+                    name: "Description".to_string(),
+                    schema,
+                    allowed_values: None,
+                    operations: vec!["set".to_string()],
+                    required: false,
+                    auto_complete_url: None,
+                };
+                let mut fields = serde_json::json!({});
+                let mut changed_fields = std::collections::BTreeMap::new();
+                let mut planned_preview = std::collections::BTreeMap::new();
+                let mut field_markers = std::collections::BTreeMap::new();
+                let mut outputs = FieldResolutionOutputs {
+                    fields: &mut fields,
+                    changed_fields: &mut changed_fields,
+                    planned_preview: &mut planned_preview,
+                    field_markers: &mut field_markers,
+                };
+                let spec = crate::cli::issue::create::FieldValueSpec {
+                    value: value.clone(),
+                    kind: None,
+                };
+                let _ = dispatch_field_value(
+                    &client,
+                    "description",
+                    "Description".to_string(),
+                    spec,
+                    &meta_field,
+                    &mut outputs,
+                )
+                .await;
+                fields["description"].clone()
+            });
+
+            // Property 1: wire value must be an ADF doc object (type="doc", version=1).
+            prop_assert!(
+                wire_value.is_object()
+                    && wire_value.get("type").and_then(|t| t.as_str()) == Some("doc"),
+                "VP-FIELD-ADF-002 Property 1: expected ADF doc object, got: {:?}",
+                wire_value
+            );
+            prop_assert_eq!(
+                wire_value.get("version").and_then(|v| v.as_i64()),
+                Some(1),
+                "VP-FIELD-ADF-002 Property 1: ADF version must be 1"
+            );
+
+            // Property 2: content must be non-empty and contain at least one "paragraph".
+            let content = wire_value.get("content").and_then(|c| c.as_array());
+            prop_assert!(
+                content.map(|c| !c.is_empty()).unwrap_or(false),
+                "VP-FIELD-ADF-002 Property 2: content array must be non-empty; got: {:?}",
+                wire_value
+            );
+            prop_assert!(
+                content
+                    .map(|c| {
+                        c.iter().any(|n| {
+                            n.get("type").and_then(|t| t.as_str()) == Some("paragraph")
+                        })
+                    })
+                    .unwrap_or(false),
+                "VP-FIELD-ADF-002 Property 2: content must contain ≥1 paragraph node; got: {:?}",
+                wire_value
+            );
+
+            // Property 3 (INV-1): no text node in the tree may contain a raw \n or \r.
+            prop_assert!(
+                adf_no_raw_newline_in_text_nodes(&wire_value),
+                "VP-FIELD-ADF-002 Property 3 (INV-1): found text node with raw newline in: {:?}",
+                wire_value
+            );
+        }
+    }
+
+    /// VP-FIELD-ADF-002 example-based: multi-line input produces `hardBreak`
+    /// nodes and no raw newline in any text node (BC-7.2.011 INV-1, ADR-0024 §ADF).
+    #[test]
+    fn test_bc_3_4_033_dispatch_field_value_multiline_uses_hardbreak() {
+        let rt = tokio::runtime::Runtime::new().unwrap();
+        let wire_value = rt.block_on(async {
+            let client = crate::api::client::JiraClient::new_for_test(
+                "http://localhost:1".to_string(),
+                "Basic dGVzdDp0ZXN0".to_string(),
+            );
+            let schema = crate::types::jira::EditMetaFieldSchema {
+                field_type: "string".to_string(),
+                system: Some("description".to_string()),
+                custom: None,
+            };
+            let meta_field = crate::types::jira::EditMetaField {
+                name: "Description".to_string(),
+                schema,
+                allowed_values: None,
+                operations: vec!["set".to_string()],
+                required: false,
+                auto_complete_url: None,
+            };
+            let mut fields = serde_json::json!({});
+            let mut changed_fields = std::collections::BTreeMap::new();
+            let mut planned_preview = std::collections::BTreeMap::new();
+            let mut field_markers = std::collections::BTreeMap::new();
+            let mut outputs = FieldResolutionOutputs {
+                fields: &mut fields,
+                changed_fields: &mut changed_fields,
+                planned_preview: &mut planned_preview,
+                field_markers: &mut field_markers,
+            };
+            let spec = crate::cli::issue::create::FieldValueSpec {
+                value: "line one\nline two\r\nline three".to_string(),
+                kind: None,
+            };
+            let _ = dispatch_field_value(
+                &client,
+                "description",
+                "Description".to_string(),
+                spec,
+                &meta_field,
+                &mut outputs,
+            )
+            .await;
+            fields["description"].clone()
+        });
+
+        // Must be an ADF doc object.
+        assert!(
+            wire_value.get("type").and_then(|t| t.as_str()) == Some("doc"),
+            "expected ADF doc object, got: {wire_value:?}"
+        );
+        // INV-1: no raw newlines in text nodes.
+        assert!(
+            adf_no_raw_newline_in_text_nodes(&wire_value),
+            "INV-1: found text node with raw newline in: {wire_value:?}"
+        );
+        // At least one hardBreak node must appear in the tree (multi-line input).
+        fn has_hard_break(node: &serde_json::Value) -> bool {
+            if node.get("type").and_then(|t| t.as_str()) == Some("hardBreak") {
+                return true;
+            }
+            node.get("content")
+                .and_then(|c| c.as_array())
+                .map(|c| c.iter().any(has_hard_break))
+                .unwrap_or(false)
+        }
+        assert!(
+            has_hard_break(&wire_value),
+            "multi-line input must produce at least one hardBreak node; got: {wire_value:?}"
+        );
+    }
+
+    // -------------------------------------------------------------------------
+    // AC-004 Axis D (VP-FIELD-ADF-003): empty ADF guard fires ONLY on bare
+    // form (kind.is_none()), not on hinted form (kind.is_some()).
+    //
+    // Extracted helper: `is_bare_empty_adf_field(kind, schema, value)`.
+    // Tested here without a MockServer (AC-004 F4 extraction obligation).
+    // -------------------------------------------------------------------------
+
+    /// AC-004 Axis D: `is_bare_empty_adf_field` returns `true` IFF
+    /// `kind.is_none() && is_adf_field(schema) && value.trim().is_empty()`.
+    ///
+    /// Pins the `kind.is_none()` conjunct: a mutant that drops it would make
+    /// the hinted-form case incorrectly return `true`, failing this test.
+    #[test]
+    fn test_adf_empty_guard_fires_only_on_bare_form_not_hinted_platform() {
+        fn mk_schema(
+            system: Option<&str>,
+            custom: Option<&str>,
+        ) -> crate::types::jira::EditMetaFieldSchema {
+            crate::types::jira::EditMetaFieldSchema {
+                field_type: "string".to_string(),
+                system: system.map(|s| s.to_string()),
+                custom: custom.map(|c| c.to_string()),
+            }
+        }
+
+        let adf_schema = mk_schema(Some("description"), None);
+        let non_adf_schema = mk_schema(Some("summary"), None);
+
+        // TRUE: bare form (kind=None) + ADF-backed schema + empty value.
+        assert!(
+            is_bare_empty_adf_field(None, &adf_schema, ""),
+            "Axis D TRUE: bare-form empty value on ADF schema must return true"
+        );
+        // TRUE: whitespace-only value is also "empty" after trim.
+        assert!(
+            is_bare_empty_adf_field(None, &adf_schema, "   "),
+            "Axis D TRUE: bare-form whitespace-only value on ADF schema must return true"
+        );
+
+        // FALSE: hinted form (kind=Some) + ADF-backed schema + empty value.
+        // The kind.is_none() conjunct is the discriminator: it gates the hinted path
+        // out of the empty-guard, routing it to the hint composer instead.
+        // A mutant dropping kind.is_none() would make this return true, failing here.
+        assert!(
+            !is_bare_empty_adf_field(
+                Some(crate::cli::issue::create::FieldValueKind::Option),
+                &adf_schema,
+                ""
+            ),
+            "Axis D FALSE: hinted-form (kind=Some) must NOT fire the empty ADF guard"
+        );
+
+        // FALSE: bare form + ADF-backed schema + non-empty value.
+        assert!(
+            !is_bare_empty_adf_field(None, &adf_schema, "hello"),
+            "Axis D FALSE: bare-form non-empty value must return false"
+        );
+
+        // FALSE: bare form + non-ADF schema + empty value.
+        assert!(
+            !is_bare_empty_adf_field(None, &non_adf_schema, ""),
+            "Axis D FALSE: bare-form empty value on non-ADF schema must return false"
         );
     }
 }
