@@ -4,7 +4,7 @@ level: ops
 version: "1.0"
 status: archive
 producer: state-manager
-timestamp: 2026-09-14T20:00:00Z
+timestamp: 2026-09-14T23:05:00Z
 cycle: "cycle-012-field-adf-autoconvert"
 inputs: [STATE.md]
 input-hash: "[live-state]"
@@ -16,6 +16,40 @@ traces_to: STATE.md
 <!-- Archived session resume checkpoints extracted from STATE.md.
      Only the LATEST checkpoint lives in STATE.md.
      Prior checkpoints are archived here for historical reference. -->
+
+## Session Resume Checkpoint (2026-09-14) — cycle-012 F4 Wave 2 Story 2 CONVERGED (Step 4.5 3/3 CLEAN); demo skipped; v4.31 active state (pre-merge)
+
+**Archived from STATE.md v4.31 on 2026-09-14. Superseded by the v4.32 Story 2 MERGED / Wave 2 COMPLETE burst.**
+
+### State
+
+| Field | Value |
+|-------|-------|
+| **Date** | 2026-09-14 |
+| **Position** | cycle-012 (`field-adf-autoconvert`) OPEN, Phase F4 Wave 2. Story 2 (`S-cycle12-jsm-adf-autoconvert`, 13pts, strict TDD) Step 4.5 CONVERGED (3/3 consecutive CLEAN); demo SKIPPED; implementation COMPLETE + GREEN. Branch `feat/cycle12-jsm-adf-autoconvert` @ `3dadb1ae` (base `67b3939a`). cycle-007 (`auth-correctness-dx`) PAUSED at F4 IMPL COMPLETE (Wave-2 gate PENDING, develop@`67b3939a`). |
+| **Pipeline** | ACTIVE (Story 2 CONVERGED, PR next) |
+| **Convergence counter** | none active (Story 1 Step-4.5 CONVERGED 3-consecutive-CLEAN and merged; Story 2 Step-4.5 CONVERGED 3-consecutive-CLEAN 2026-09-14, PR not yet opened). |
+| **Next step** | push branch + pr-manager 9-step PR flow for `S-cycle12-jsm-adf-autoconvert`. |
+
+### Resume Prompt (verbatim from STATE.md v4.31)
+
+```
+**Date & position:** 2026-09-14. cycle-012 (`field-adf-autoconvert`), Feature Mode. F4 Wave 2. Story 2 (`S-cycle12-jsm-adf-autoconvert`, 13pts, strict TDD) Step 4.5 CONVERGED (3/3 consecutive CLEAN); demo SKIPPED; implementation COMPLETE + GREEN. Branch `feat/cycle12-jsm-adf-autoconvert` @ `3dadb1ae` (base `67b3939a`). NEXT = push branch + pr-manager 9-step PR flow for `S-cycle12-jsm-adf-autoconvert`.
+
+**Convergence counter:** none active (Story 1 Step-4.5 CONVERGED 3-consecutive-CLEAN and merged; Story 2 Step-4.5 CONVERGED 3-consecutive-CLEAN 2026-09-14, PR not yet opened).
+
+**In-flight work:** Story 2 (`S-cycle12-jsm-adf-autoconvert`) implementation COMPLETE + GREEN (lib jsm 31/0, issue_create_jsm 113/0, clippy+fmt clean); no open PR yet (#809/#810/#811 all MERGED to develop @ `67b3939a`; Story 2's PR not yet opened).
+
+**Pending human decisions / blockers:** none open. LOW standing item: `E2E-COMPONENT-FILTER-SEARCH-INDEX-FLAKE` (`test_e2e_issue_list_component_filter_grammar` intermittently red on live-Jira search-index lag; non-blocking; candidate poll/retry fix). cycle-007 Wave-2 integration gate still PENDING (resume after cycle-012 closes).
+
+**WIP branch list:** `feat/cycle12-jsm-adf-autoconvert` (worktree `.worktrees/S-cycle12-jsm-adf-autoconvert`, base `67b3939a`, head `3dadb1ae`, no PR yet).
+
+**Resume command:** proceed to push branch + pr-manager 9-step PR flow for `S-cycle12-jsm-adf-autoconvert` (pipeline already ACTIVE; no rehydrate needed this session).
+
+**Counts:** total_bcs 769 (unchanged); VP count 86 (unchanged); holdout scenarios 118 (unchanged); total_stories 182 (unchanged). Prior checkpoint (STATE.md v4.30): archived to `cycles/cycle-012/session-checkpoints.md`.
+```
+
+---
 
 ## Session Resume Checkpoint (2026-09-14) — cycle-012 F4 Wave 1 COMPLETE + E2E-VERIFIED; AC-014 strengthened; v4.28 active state (SESSION-WRAP-PAUSE precursor)
 

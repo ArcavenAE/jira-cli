@@ -53,3 +53,39 @@ traces_to: STATE.md
 **Dim-7 Attestation:** N/A — no CI-relevant change this burst (no code, no workflow file, no `.github/` change touched). cycle-012's eventual `src/cli/issue/field_resolve.rs` and `src/api/jsm/requests.rs` changes are the HIGH-regression-risk items; those risk vectors manifest at the per-story TDD + PR stage in F4, not here.
 
 ---
+
+## Burst: Burst 2 — Story 2 (S-cycle12-jsm-adf-autoconvert) DELIVERED + MERGED PR #812; Wave 2 COMPLETE; cycle-012 F4 COMPLETE; STATE.md v4.31->v4.32 (2026-09-14)
+
+**Parent-commit:** `develop` fast-forwarded `67b3939a` -> `2a0b0fae` via PR #812 squash-merge (`--admin`, 2026-09-14T22:57:09Z; consistent with #809/#811 zero-review-classifier merge path).
+
+**Trigger:** Story 2 (`S-cycle12-jsm-adf-autoconvert`) completed Step 4.5 adversarial convergence (3/3 consecutive CLEAN, recorded in the prior STATE.md v4.31 burst) and proceeded through the standard pr-manager 9-step PR flow: PR #812 opened, CI ran fully green (24/24 checks incl. CI Gate + 8 mutation shards + 3-platform tests), fresh-eyes pr-reviewer APPROVE (nitpicks only, no blocking findings), security review CLEAN, dependency gate satisfied (Story 1 / PR #809 prerequisite already merged), and the PR was squash-merged to `develop` with `--admin`.
+
+**Actions taken:**
+
+1. **STATE.md updated** (v4.31 → v4.32, single full-content Write per hook-guard discipline): `phase` / `last_amended` / `current_step` / `current_cycle` / `feature_mode_bundle` / `cycle_012_status` / `cycle_007_status` / `timestamp` updated to reflect Story 2 MERGED + Wave 2 COMPLETE + cycle-012 F4 COMPLETE. Phase Progress: `CYCLE-012-STORY2-MERGED-WAVE2-COMPLETE-2026-09-14` row added. Current Phase Steps replaced. Session Resume Checkpoint replaced (prior v4.31 checkpoint archived to `cycles/cycle-012/session-checkpoints.md`). Convergence Status + Concurrent Cycles sections updated. Drift/Standing Items `RESOLVED this burst` rotated.
+
+2. **Worktree/branch cleanup:** `.worktrees/S-cycle12-jsm-adf-autoconvert` and branch `feat/cycle12-jsm-adf-autoconvert` cleanup IN PROGRESS (devops-engineer, this burst) -- post-merge teardown, standard per-story-delivery workflow step.
+
+**Adversary verdict:** N/A this burst -- Step 4.5 convergence (3/3 consecutive CLEAN) already recorded in the prior v4.31 burst; this burst records the downstream PR/merge outcome only. No new code or spec change.
+
+**Codifications:** No new DEC minted (merge is a mechanical pr-manager outcome, not a human gate decision). Counts unchanged: 769 BCs / 86 VPs / 118 holdouts / 182 stories.
+
+**Closes:** cycle-012 F4 Wave 2 (Story 2 delivery). cycle-012 F4 (both waves now delivered). **Does NOT close:** cycle-012 itself (F5/F6/F7 remain before cycle close); cycle-007 (remains PAUSED, Wave-2 integration gate still PENDING on resume).
+
+**Outcome:** cycle-012 (`field-adf-autoconvert`) F4 COMPLETE. `develop` at `2a0b0fae`. NEXT = cycle-012 Wave 2 integration gate → F5 scoped adversarial refinement → F6 targeted hardening → F7 delta convergence.
+
+**Files touched (Dim-1): 3 unique files/paths this burst, all committed in the state-manager's own single atomic commit on `factory-artifacts`**
+
+- `.factory/STATE.md` (modified — v4.31 → v4.32)
+- `.factory/cycles/cycle-012/session-checkpoints.md` (modified — v4.31 checkpoint archived)
+- `.factory/cycles/cycle-012/burst-log.md` (modified — this entry)
+
+**Dim-2 Attestation:** No BC/VP/holdout INDEX content changed this burst. Counts unchanged: 769 BCs / 86 VPs / 118 holdouts / 182 stories.
+
+**Dim-5 Attestation:** N/A — no binary/WASM artifact produced by this `.factory/` commit.
+
+**Dim-6 Attestation:** `src/` change this burst is the PR #812 merge itself (already TDD-delivered + reviewed prior to this burst); `develop` HEAD moved `67b3939a` → `2a0b0fae`.
+
+**Dim-7 Attestation:** CI-relevant: PR #812's own CI run (24/24 checks) is the relevant CI evidence; no `.github/` workflow file touched by this state-management burst itself.
+
+---
