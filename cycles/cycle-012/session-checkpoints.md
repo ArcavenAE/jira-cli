@@ -4,7 +4,7 @@ level: ops
 version: "1.0"
 status: archive
 producer: state-manager
-timestamp: 2026-09-13T00:00:00Z
+timestamp: 2026-09-14T20:00:00Z
 cycle: "cycle-012-field-adf-autoconvert"
 inputs: [STATE.md]
 input-hash: "[live-state]"
@@ -16,6 +16,46 @@ traces_to: STATE.md
 <!-- Archived session resume checkpoints extracted from STATE.md.
      Only the LATEST checkpoint lives in STATE.md.
      Prior checkpoints are archived here for historical reference. -->
+
+## Session Resume Checkpoint (2026-09-14) — cycle-012 F4 Wave 1 COMPLETE + E2E-VERIFIED; AC-014 strengthened; v4.28 active state (SESSION-WRAP-PAUSE precursor)
+
+**Archived from STATE.md v4.28 on 2026-09-14. Superseded by the v4.29 SESSION-WRAP-PAUSE burst.**
+
+### State
+
+| Field | Value |
+|-------|-------|
+| **Date** | 2026-09-14 |
+| **Position** | cycle-012 (`field-adf-autoconvert`) OPEN, Phase F4 Wave 1 COMPLETE + E2E-VERIFIED. Wave 2 (`S-cycle12-jsm-adf-autoconvert`, 13pts) ELIGIBLE. cycle-007 (`auth-correctness-dx`) PAUSED at F4 IMPL COMPLETE (Wave-2 gate PENDING, develop@`67b3939a`). |
+| **Pipeline** | ACTIVE (Wave 1 COMPLETE + E2E-VERIFIED; Wave 2 starting) |
+| **Convergence counter** | NONE active. Story 1 Step 4.5 CONVERGED 3/3 CLEAN (7 passes total). E2E-EDIT-FIELD-ADF-HEURISTIC RESOLVED/VERIFIED (run 34881320608). No active adversarial convergence underway. |
+| **Next step** | Story 2 per-story TDD delivery (S-cycle12-jsm-adf-autoconvert, Wave 2). |
+
+### Resume Prompt (verbatim from STATE.md v4.28)
+
+```
+**Date:** 2026-09-14. **Pipeline: ACTIVE** (cycle-012 `field-adf-autoconvert`, Feature Mode, Phase F4 Wave 1 COMPLETE + E2E-VERIFIED; Wave 2 STARTING. cycle-007 `auth-correctness-dx` PAUSED at F4 IMPL COMPLETE, Wave-2 gate PENDING).
+
+**Pipeline position:** cycle-012 F4 Wave 1 COMPLETE + E2E-VERIFIED. Story 1 (`S-cycle12-platform-adf-autoconvert`) MERGED PR #809 @ `e926cb70` (squash, 2026-09-14); AC-014 adaptive read-back assertion strengthened in PR #811 @ `67b3939a` (squash, 2026-09-14). `test_e2e_issue_edit_custom_field` PASSED on live Jira (e2e.yml run `34881320608` @ `develop@67b3939a`). **E2E-EDIT-FIELD-ADF-HEURISTIC RESOLVED/VERIFIED** -- product defect + E2E proven fixed; formal cycle-012 closure at F7. Step 4.5 CONVERGED 3/3 consecutive CLEAN (7 passes total; convergence record fd9fa4b0). 8 BCs + 4 VPs implemented. Wave 2 (`S-cycle12-jsm-adf-autoconvert`, 13pts) now ELIGIBLE -- `is_adf_field_value` pub(crate) on `develop@67b3939a`. DTU check N/A (`dtu_required: false`). F1 APPROVED (DEC-357). F2 APPROVED (DEC-358, DEC-359). F3 APPROVED (DEC-360) 2026-09-13.
+
+**Security/maintenance events recorded this session:** PR #810 MERGED (`71d98800`) -- rustls 0.23.37->0.23.45 resolving RUSTSEC-2026-0285. Mutants Nightly run 34858140987 CANCELLED (user decision). Last two nightly runs (2026-09-12, 2026-09-13) FAILED; `MUTANTS-NIGHTLY-VERIFY-FULL-RUN` remains OPEN.
+
+**New standing item this burst:** `E2E-COMPONENT-FILTER-SEARCH-INDEX-FLAKE` (LOW, non-blocking) -- `test_e2e_issue_list_component_filter_grammar` intermittently fails on live Jira due to search-index eventual-consistency lag. Candidate fix: E2E poll/retry helper (JR_E2E_POLL_* pattern). Registered for future maintenance sweep; do NOT fix now.
+
+**Convergence counter:** NONE active. Story 1 Step 4.5 CONVERGED 3/3 CLEAN (7 passes). No active adversarial convergence underway.
+
+**In-flight work:** No open PRs. No active worktrees. Wave 2 dispatch = next step.
+
+**Pending human decisions / blockers:** NONE open. cycle-007 Wave-2 integration gate remains PENDING (resume after cycle-012 closes).
+
+**WIP branch list:** NONE (Wave 2 branch creation = next step).
+
+**Resume command:** `/vsdd-factory:next-step` (Story 2 per-story TDD delivery: S-cycle12-jsm-adf-autoconvert).
+
+**Counts:** total_bcs 769 (unchanged); VP count 86 (unchanged); holdout scenarios 118 (unchanged); total_stories 182 (unchanged). Prior checkpoint (STATE.md v4.27): archived to `cycles/cycle-012/session-checkpoints.md`.
+```
+
+---
 
 ## Session Resume Checkpoint (2026-09-14) — cycle-012 F4 Wave 1 COMPLETE, Story 1 MERGED, Wave 2 STARTING (v4.27 active state)
 

@@ -1,19 +1,19 @@
 ---
 document_type: pipeline-state
 level: ops
-version: "4.28"
+version: "4.29"
 status: active
 producer: state-manager
-timestamp: 2026-09-14T18:55:30Z
-phase: "ACTIVE 2026-09-14. cycle-012 (field-adf-autoconvert) F4 Wave 1 COMPLETE + E2E-VERIFIED -- Story 1 MERGED PR #809 @ e926cb70; AC-014 strengthened PR #811 @ 67b3939a; E2E-EDIT-FIELD-ADF-HEURISTIC RESOLVED/VERIFIED (run 34881320608). Wave 2 (S-cycle12-jsm-adf-autoconvert) ELIGIBLE. cycle-007 PAUSED at F4 IMPL COMPLETE."
-pipeline: ACTIVE
+timestamp: 2026-09-14T19:40:47Z
+phase: "PAUSED 2026-09-14. cycle-012 F4 Wave 1 COMPLETE + E2E-VERIFIED (Story 1 MERGED #809 @ e926cb70; AC-014 strengthened #811 @ 67b3939a; E2E-EDIT-FIELD-ADF-HEURISTIC RESOLVED/VERIFIED run 34881320608); Wave 2 (S-cycle12-jsm-adf-autoconvert) ELIGIBLE/next; cycle-007 PAUSED at F4 IMPL COMPLETE (Wave-2 gate pending)."
+pipeline: PAUSED
 inputs: []
 input-hash: "[live-state]"
 traces_to: ""
 project: jira-cli
 mode: brownfield
-last_amended: "2026-09-14, v4.27->v4.28, state-manager -- E2E-EDIT-FIELD-ADF-HEURISTIC RESOLVED/VERIFIED (run 34881320608, PR #811 @ 67b3939a); AC-014 adaptive read-back strengthened; E2E-COMPONENT-FILTER-SEARCH-INDEX-FLAKE registered; L-007 added."
-current_step: "CYCLE-012-STORY1-E2E-VERIFIED-2026-09-14: test_e2e_issue_edit_custom_field PASSED on live Jira (e2e run 34881320608 @ develop@67b3939a). PR #811 MERGED (67b3939a, squash, by Zious11) -- ADF-aware read-back assertion, AC-014 adaptive readback strengthened. E2E-EDIT-FIELD-ADF-HEURISTIC RESOLVED/VERIFIED (product defect + E2E proven fixed; formal cycle-012 closure pending F7). E2E-COMPONENT-FILTER-SEARCH-INDEX-FLAKE registered (LOW, non-blocking, unrelated to cycle-012). L-007 added to cycles/cycle-012/lessons.md. develop tip: 71d98800->e926cb70->67b3939a. NEXT = Story 2 (S-cycle12-jsm-adf-autoconvert, Wave 2, 13pts). trajectory-tail →1→3→0→2. v4.27->v4.28."
+last_amended: "2026-09-14, v4.28->v4.29, state-manager -- pipeline ACTIVE->PAUSED at cycle-012 Wave-1-complete/E2E-verified boundary; session wrap."
+current_step: "SESSION-WRAP-PAUSE-2026-09-14: pipeline ACTIVE->PAUSED at cycle-012 Wave-1-complete boundary; NEXT = /vsdd-factory:rehydrate-wave then /vsdd-factory:next-step to start Wave 2. D-chain cite D-2026 latest brownfield. trajectory-tail →1→3→0→2."
 trajectory_tail: "→1→3→0→2"
 maintenance_run:
   status: COMPLETE
@@ -23,9 +23,9 @@ maintenance_run:
   fixes_applied: 7
   fixes_pending: 0
   pr: "#800,#801 fix PRs MERGED; #779,#754 Dependabot bumps MERGED"
-current_cycle: "cycle-012-field-adf-autoconvert (F4 Wave 1 COMPLETE + E2E-VERIFIED; Story 1 MERGED PR #809 @ e926cb70; AC-014 strengthened PR #811 @ 67b3939a 2026-09-14; E2E-EDIT-FIELD-ADF-HEURISTIC RESOLVED/VERIFIED; Wave 2 ELIGIBLE). cycle-007 auth-correctness-dx PAUSED: F4 IMPL COMPLETE, Wave-2 gate PENDING, develop@67b3939a."
-feature_mode_bundle: "field-adf-autoconvert: addresses E2E-EDIT-FIELD-ADF-HEURISTIC / test_e2e_issue_edit_custom_field pre-existing defect (confirmed pre-cycle-007 @ 14e695ae). Wave 1 COMPLETE + E2E-VERIFIED (PR #809 @ e926cb70; AC-014 strengthened PR #811 @ 67b3939a; run 34881320608). Wave 2 STARTING."
-cycle_012_status: "field-adf-autoconvert -- ACTIVE, Feature Mode, Phase F4, Wave 1 COMPLETE + E2E-VERIFIED. Story 1 (S-cycle12-platform-adf-autoconvert) DELIVERED + MERGED (PR #809 @ e926cb70, 2026-09-14); AC-014 adaptive read-back strengthened (PR #811 @ 67b3939a, 2026-09-14). test_e2e_issue_edit_custom_field PASSED live Jira (run 34881320608). E2E-EDIT-FIELD-ADF-HEURISTIC RESOLVED/VERIFIED. Wave 2 (S-cycle12-jsm-adf-autoconvert, 13pts) now ELIGIBLE. F1 APPROVED DEC-357, F2 APPROVED DEC-358 (DEC-359), F3 APPROVED DEC-360. total_bcs 769, VPs 86, total_stories 182."
+current_cycle: "cycle-012-field-adf-autoconvert (F4 Wave 1 COMPLETE + E2E-VERIFIED; Story 1 MERGED PR #809 @ e926cb70; AC-014 strengthened PR #811 @ 67b3939a 2026-09-14; E2E-EDIT-FIELD-ADF-HEURISTIC RESOLVED/VERIFIED; Wave 2 ELIGIBLE; PAUSED session wrap). cycle-007 auth-correctness-dx PAUSED: F4 IMPL COMPLETE, Wave-2 gate PENDING, develop@67b3939a."
+feature_mode_bundle: "field-adf-autoconvert: addresses E2E-EDIT-FIELD-ADF-HEURISTIC / test_e2e_issue_edit_custom_field pre-existing defect (confirmed pre-cycle-007 @ 14e695ae). Wave 1 COMPLETE + E2E-VERIFIED (PR #809 @ e926cb70; AC-014 strengthened PR #811 @ 67b3939a; run 34881320608). Wave 2 ELIGIBLE (next session)."
+cycle_012_status: "field-adf-autoconvert -- PAUSED, Feature Mode, Phase F4, Wave 1 COMPLETE + E2E-VERIFIED. Story 1 (S-cycle12-platform-adf-autoconvert) DELIVERED + MERGED (PR #809 @ e926cb70, 2026-09-14); AC-014 adaptive read-back strengthened (PR #811 @ 67b3939a, 2026-09-14). test_e2e_issue_edit_custom_field PASSED live Jira (run 34881320608). E2E-EDIT-FIELD-ADF-HEURISTIC RESOLVED/VERIFIED. Wave 2 (S-cycle12-jsm-adf-autoconvert, 13pts) now ELIGIBLE. F1 APPROVED DEC-357, F2 APPROVED DEC-358 (DEC-359), F3 APPROVED DEC-360. total_bcs 769, VPs 86, total_stories 182."
 cycle_007_status: "auth-correctness-dx -- PAUSED at F4 IMPL COMPLETE (Wave-2 gate PENDING, develop@67b3939a). F1 APPROVED DEC-354, F2 APPROVED DEC-355, F3 APPROVED DEC-356. All 5 stories merged (PRs #803/805/804/806/#807). Resumable after cycle-012 closes."
 dtu_required: false
 phase_2_status: APPROVED
@@ -41,9 +41,9 @@ activation_head: "a9168212"
 activation_version: "v0.7.0-dev.5"
 ---
 
-<!-- STATE.md SIZE BUDGET (2026-09-14, CYCLE-012-STORY1-E2E-VERIFIED v4.28):
-     E2E-EDIT-FIELD-ADF-HEURISTIC RESOLVED/VERIFIED (run 34881320608, PR #811 @ 67b3939a). E2E-COMPONENT-FILTER-SEARCH-INDEX-FLAKE registered. L-007 added. v4.27->v4.28.
-     soft target 200 lines; hard cap 500 lines. 215 lines (wc-l). margin from soft-target = -15 (15 lines over soft); margin from actual = 285. -->
+<!-- STATE.md SIZE BUDGET (2026-09-14, SESSION-WRAP-PAUSE v4.29):
+     pipeline ACTIVE->PAUSED; cycle-012 Wave-1-complete/E2E-verified; session wrap. v4.28->v4.29.
+     soft target 200 lines; hard cap 500 lines. 209 lines (wc-l). margin from soft-target = -9 (9 lines over soft); margin from actual = 291. -->
 
 # Pipeline State: jira-cli
 
@@ -54,17 +54,16 @@ activation_version: "v0.7.0-dev.5"
 | **Product** | jr (Jira CLI) |
 | **Mode** | BROWNFIELD / Rust |
 | **Target Workspace** | develop to main |
-| **Pipeline Status** | **ACTIVE** -- cycle-012 (`field-adf-autoconvert`) F4 Wave 1 **COMPLETE + E2E-VERIFIED**. Story 1 (`S-cycle12-platform-adf-autoconvert`) MERGED PR #809 @ `e926cb70`; AC-014 adaptive read-back strengthened PR #811 @ `67b3939a` (2026-09-14); `test_e2e_issue_edit_custom_field` PASSED live Jira (run `34881320608`). **E2E-EDIT-FIELD-ADF-HEURISTIC RESOLVED/VERIFIED**. Wave 2 (`S-cycle12-jsm-adf-autoconvert`, 13pts) now **ELIGIBLE**. cycle-007 (`auth-correctness-dx`) **PAUSED** at F4 IMPL COMPLETE (Wave-2 gate PENDING, develop@`67b3939a`). |
+| **Pipeline Status** | **PAUSED** -- cycle-012 (`field-adf-autoconvert`) F4 Wave 1 COMPLETE + E2E-VERIFIED (session wrap 2026-09-14). Wave 2 (`S-cycle12-jsm-adf-autoconvert`, 13pts) **ELIGIBLE** (next session). cycle-007 (`auth-correctness-dx`) **PAUSED** at F4 IMPL COMPLETE (Wave-2 gate PENDING). |
 | **trajectory-tail** | →1→3→0→2 (cycle-012 F2 CLOSED, 33 passes, MAXIMUM_VIABLE_REFINEMENT_REACHED) |
-| **Last Updated** | 2026-09-14, STORY-1-E2E-VERIFIED: `test_e2e_issue_edit_custom_field` PASSED live Jira (run `34881320608` @ `develop@67b3939a`); PR #811 MERGED (`67b3939a`, squash) -- ADF-aware read-back assertion, AC-014 strengthened; E2E-EDIT-FIELD-ADF-HEURISTIC RESOLVED/VERIFIED; E2E-COMPONENT-FILTER-SEARCH-INDEX-FLAKE registered (LOW); L-007 added; trajectory-tail →1→3→0→2; v4.27->v4.28. |
-| **Current Phase** | cycle-012 Phase F4, Wave 1 COMPLETE + E2E-VERIFIED (Wave 2 starting). cycle-007 Phase F4 IMPL COMPLETE (PAUSED). |
+| **Last Updated** | 2026-09-14, SESSION-WRAP-PAUSE: pipeline ACTIVE->PAUSED; v4.28->v4.29; session wrap at cycle-012 Wave-1-complete/E2E-verified boundary. trajectory-tail →1→3→0→2. |
+| **Current Phase** | cycle-012 Phase F4 PAUSED (Wave 1 COMPLETE + E2E-VERIFIED; Wave 2 ELIGIBLE, next session). cycle-007 Phase F4 IMPL COMPLETE (PAUSED). |
 | **Activation HEAD** | `a9168212` (unchanged; `develop`'s real tip is `67b3939a`) |
 
 ## Phase Progress (recent 9; full history: `cycles/HISTORY-PHASE-PROGRESS.md` + `cycles/cycle-00{1..6}/burst-log.md` + factory-artifacts@43f4a5e3)
 
 | Phase | Status | Completed | Gate | Notes | Finding Progression |
 |-------|--------|-----------|------|-------|---------------------|
-| **SESSION-WRAP-PAUSE-2026-09-12** | **COMPLETE** | 2026-09-12 | Bookkeeping only, session wrap; no quality gate | STATE.md v4.19->v4.20, pipeline ACTIVE->PAUSED. cycle-007 Wave-2 gate PENDING. Discovering E2E pre-existing defect triggers cycle-012. | counts unchanged (757/82/118/180) |
 | **CYCLE-012-F1-APPROVED-2026-09-12** | **APPROVED** | 2026-09-12 | F1 human gate (explicit scope approval) | DEC-357: cycle-012 `field-adf-autoconvert` F1 HUMAN GATE APPROVED. Scope: ADF auto-convert on edit/create (platform + JSM). v4.20->v4.21. cycle-012 formalized. cycle-007 remains PAUSED. | counts unchanged (757/82/118/180) |
 | **SESSION-WRAP-PAUSE-2026-09-12b** | **COMPLETE** | 2026-09-12 | Bookkeeping only, session wrap; no quality gate | cycle-012 F2 adversarial-convergence in progress (10 passes, streak 0/3); F2 artifacts (twelve new BCs, 4 VPs, ADR-0024) committed; pipeline PAUSED; counts reconciled 769 BCs/86 VP. v4.21->v4.22. | 769 BCs / 86 VPs |
 | **CYCLE-012-F2-APPROVED-2026-09-13** | **APPROVED** | 2026-09-13 | F2 human gate (explicit spec approval) | DEC-358/359: F2 HUMAN GATE APPROVED. twelve new BCs + 4 VPs + ADR-0024, spec 2.3.0->2.4.0. 33 adversarial passes, MAXIMUM_VIABLE_REFINEMENT_REACHED. DEC-359: uniform exit-64 for `--markdown`+`--field description=`. F3 starting. v4.22->v4.23. | 769 BCs / 86 VPs |
@@ -73,10 +72,11 @@ activation_version: "v0.7.0-dev.5"
 | **CYCLE-012-F4-STARTED-2026-09-13** | **COMPLETE** | 2026-09-13 | per-story TDD delivery | global STORY-INDEX 180->182 registered; pipeline ACTIVE; CI/CD gate PASS (develop@`30bb1a18`); Story 1 delivery starting. v4.25->v4.26. | 769 BCs / 86 VPs / 118 holdout / 182 stories |
 | **CYCLE-012-STORY1-DELIVERED-2026-09-14** | **COMPLETE** | 2026-09-14 | Story 1 per-story TDD delivery + merge | S-cycle12-platform-adf-autoconvert MERGED PR #809 @ `e926cb70` (squash, `develop`). Step 4.5 CONVERGED 3 consecutive CLEAN (7 passes total). 8 BCs (BC-3.3.013/014/015, BC-3.4.033-037) + 4 VPs (VP-FIELD-ADF-001/002/003/004). rustls RUSTSEC-2026-0285 cleared (PR #810 @ `71d98800`). develop: `30bb1a18`->`71d98800`->`e926cb70`. Wave 1 COMPLETE; Wave 2 ELIGIBLE. v4.26->v4.27. | 769 BCs / 86 VPs / 118 holdout / 182 stories |
 | **CYCLE-012-STORY1-E2E-VERIFIED-2026-09-14** | **COMPLETE** | 2026-09-14 | E2E live-Jira verification; AC-014 adaptive read-back strengthened (PR #811) | `test_e2e_issue_edit_custom_field` PASSED live Jira (run `34881320608` @ `develop@67b3939a`). PR #811 MERGED (`67b3939a`, squash) -- ADF-aware assertion. E2E-EDIT-FIELD-ADF-HEURISTIC RESOLVED/VERIFIED. E2E-COMPONENT-FILTER-SEARCH-INDEX-FLAKE registered (LOW). L-007 added. develop: `71d98800`->`e926cb70`->`67b3939a`. v4.27->v4.28. | counts unchanged (769/86/118/182) |
+| **SESSION-WRAP-PAUSE-2026-09-14** | **COMPLETE** | 2026-09-14 | Bookkeeping only, session wrap; no quality gate | pipeline ACTIVE->PAUSED at cycle-012 Wave-1-complete/E2E-verified boundary; v4.28->v4.29; session wrap | counts unchanged (769/86/118/182) |
 
 ## Current Phase Steps
 
-**cycle-012 (`field-adf-autoconvert`) Phase F4 ACTIVE as of 2026-09-14.** Wave 1 COMPLETE + **E2E-VERIFIED**: Story 1 (`S-cycle12-platform-adf-autoconvert`) MERGED PR #809 @ `e926cb70` (2026-09-14); AC-014 adaptive read-back assertion strengthened in PR #811 @ `67b3939a` (2026-09-14). `test_e2e_issue_edit_custom_field` PASSED live Jira (e2e run `34881320608` @ `develop@67b3939a`). **E2E-EDIT-FIELD-ADF-HEURISTIC RESOLVED/VERIFIED** (product defect + E2E proven fixed; formal closure at F7). Wave 2 (`S-cycle12-jsm-adf-autoconvert`, JSM, 13pts) now **ELIGIBLE** -- `is_adf_field_value` pub(crate) on `develop@67b3939a`. **cycle-007 (`auth-correctness-dx`) PAUSED at F4** -- Wave-2 gate PENDING (develop@`67b3939a`). **NEXT** = Story 2 per-story TDD delivery (S-cycle12-jsm-adf-autoconvert).
+**cycle-012 (`field-adf-autoconvert`) Phase F4 PAUSED as of 2026-09-14 (session wrap).** Wave 1 COMPLETE + **E2E-VERIFIED**: Story 1 (`S-cycle12-platform-adf-autoconvert`) MERGED PR #809 @ `e926cb70` (2026-09-14); AC-014 adaptive read-back assertion strengthened in PR #811 @ `67b3939a` (2026-09-14). `test_e2e_issue_edit_custom_field` PASSED live Jira (e2e run `34881320608` @ `develop@67b3939a`). **E2E-EDIT-FIELD-ADF-HEURISTIC RESOLVED/VERIFIED**. Wave 2 (`S-cycle12-jsm-adf-autoconvert`, JSM, 13pts) **ELIGIBLE** -- session wrapped; resume via `/vsdd-factory:rehydrate-wave` then `/vsdd-factory:next-step`. **cycle-007 (`auth-correctness-dx`) PAUSED at F4** -- Wave-2 gate PENDING (develop@`67b3939a`). **NEXT** = `/vsdd-factory:rehydrate-wave` then `/vsdd-factory:next-step` for Wave 2.
 
 ## Decisions Log
 
@@ -117,7 +117,7 @@ Older rows (cycle-001 through cycle-004, historical): `cycles/HISTORY-SKIP-LOG.m
 
 ## Blocking Issues
 
-**NONE OPEN.** Zero Blocking Issues remain open. cycle-012 ACTIVE, F4 Wave 1 COMPLETE + E2E-VERIFIED (Wave 2 starting). cycle-007 PAUSED at F4 IMPL COMPLETE (Wave-2 gate PENDING). All six prior cycles (001-006) CLOSED. Resolved items: `cycles/RESOLVED-DRIFT-ITEMS.md`. Still-open LOW/non-blocking: `cycles/OPEN-STANDING-ITEMS.md`.
+**NONE OPEN.** Zero Blocking Issues remain open. cycle-012 PAUSED, F4 Wave 1 COMPLETE + E2E-VERIFIED (Wave 2 next session). cycle-007 PAUSED at F4 IMPL COMPLETE (Wave-2 gate PENDING). All six prior cycles (001-006) CLOSED. Resolved items: `cycles/RESOLVED-DRIFT-ITEMS.md`. Still-open LOW/non-blocking: `cycles/OPEN-STANDING-ITEMS.md`.
 
 | ID | Issue | Severity | Blocking Phase | Owner | Resolution |
 |----|-------|----------|-----------------|-------|------------|
@@ -125,11 +125,11 @@ Older rows (cycle-001 through cycle-004, historical): `cycles/HISTORY-SKIP-LOG.m
 
 ## Convergence Status
 
-cycle-007 (`auth-correctness-dx`) PAUSED, F4 IMPL COMPLETE. Wave-2 integration gate PENDING on resume. cycle-012 (`field-adf-autoconvert`) ACTIVE, F4 Wave 1 COMPLETE + E2E-VERIFIED (Wave 2 starting). Story 1 Step 4.5 CONVERGED 3/3 consecutive CLEAN (7 passes total); E2E-EDIT-FIELD-ADF-HEURISTIC RESOLVED/VERIFIED (run `34881320608`). Full detail: `cycles/CYCLE-SUMMARY.md`.
+cycle-007 (`auth-correctness-dx`) PAUSED, F4 IMPL COMPLETE. Wave-2 integration gate PENDING on resume. cycle-012 (`field-adf-autoconvert`) PAUSED, F4 Wave 1 COMPLETE + E2E-VERIFIED (Wave 2 ELIGIBLE; start via `/vsdd-factory:rehydrate-wave` next session). Story 1 Step 4.5 CONVERGED 3/3 consecutive CLEAN (7 passes total); E2E-EDIT-FIELD-ADF-HEURISTIC RESOLVED/VERIFIED (run `34881320608`). Full detail: `cycles/CYCLE-SUMMARY.md`.
 
 ## Concurrent Cycles
 
-Nine tracked cycles total: cycle-001 through cycle-006 CLOSED; **cycle-007 (`auth-correctness-dx`) PAUSED** at F4 IMPL COMPLETE (Wave-2 gate PENDING, develop@`67b3939a`); **cycle-012 (`field-adf-autoconvert`) ACTIVE** at F4 Wave 1 COMPLETE + E2E-VERIFIED (Wave 2 starting). Cycles 008-011 PARKED (not yet started). `activation_head` stays `a9168212`. Full detail: `cycles/CYCLE-SUMMARY.md`.
+Nine tracked cycles total: cycle-001 through cycle-006 CLOSED; **cycle-007 (`auth-correctness-dx`) PAUSED** at F4 IMPL COMPLETE (Wave-2 gate PENDING, develop@`67b3939a`); **cycle-012 (`field-adf-autoconvert`) PAUSED** at F4 Wave 1 COMPLETE + E2E-VERIFIED (Wave 2 ELIGIBLE; deferred to next session). Cycles 008-011 PARKED (not yet started). `activation_head` stays `a9168212`. Full detail: `cycles/CYCLE-SUMMARY.md`.
 
 ## Constraints Carried Forward
 
@@ -137,25 +137,19 @@ All prior per-cycle constraints narrative is either historical/resolved or dupli
 
 ## Session Resume Checkpoint
 
-**Date:** 2026-09-14. **Pipeline: ACTIVE** (cycle-012 `field-adf-autoconvert`, Feature Mode, Phase F4 Wave 1 COMPLETE + E2E-VERIFIED; Wave 2 STARTING. cycle-007 `auth-correctness-dx` PAUSED at F4 IMPL COMPLETE, Wave-2 gate PENDING).
+**Date & position:** 2026-09-14. cycle-012 (`field-adf-autoconvert`), Feature Mode. F4 Wave 1 COMPLETE + E2E-verified. NEXT = Wave 2 story `S-cycle12-jsm-adf-autoconvert` (13pts, ELIGIBLE -- its `is_adf_field_value (pub(crate))` dependency is on develop) via per-story TDD delivery.
 
-**Pipeline position:** cycle-012 F4 Wave 1 COMPLETE + E2E-VERIFIED. Story 1 (`S-cycle12-platform-adf-autoconvert`) MERGED PR #809 @ `e926cb70` (squash, 2026-09-14); AC-014 adaptive read-back assertion strengthened in PR #811 @ `67b3939a` (squash, 2026-09-14). `test_e2e_issue_edit_custom_field` PASSED on live Jira (e2e.yml run `34881320608` @ `develop@67b3939a`). **E2E-EDIT-FIELD-ADF-HEURISTIC RESOLVED/VERIFIED** -- product defect + E2E proven fixed; formal cycle-012 closure at F7. Step 4.5 CONVERGED 3/3 consecutive CLEAN (7 passes total; convergence record fd9fa4b0). 8 BCs + 4 VPs implemented. Wave 2 (`S-cycle12-jsm-adf-autoconvert`, 13pts) now ELIGIBLE -- `is_adf_field_value` pub(crate) on `develop@67b3939a`. DTU check N/A (`dtu_required: false`). F1 APPROVED (DEC-357). F2 APPROVED (DEC-358, DEC-359). F3 APPROVED (DEC-360) 2026-09-13.
+**Convergence counter:** none active (Story 1 Step-4.5 CONVERGED 3-consecutive-CLEAN and merged; no loop underway).
 
-**Security/maintenance events recorded this session:** PR #810 MERGED (`71d98800`) -- rustls 0.23.37->0.23.45 resolving RUSTSEC-2026-0285. Mutants Nightly run 34858140987 CANCELLED (user decision). Last two nightly runs (2026-09-12, 2026-09-13) FAILED; `MUTANTS-NIGHTLY-VERIFY-FULL-RUN` remains OPEN.
+**In-flight work:** NONE mid-TDD. No open PRs (#809/#810/#811 all MERGED to develop @ `67b3939a`). No story worktrees (all cleaned). Only main + `.factory` + `.reference` worktrees remain.
 
-**New standing item this burst:** `E2E-COMPONENT-FILTER-SEARCH-INDEX-FLAKE` (LOW, non-blocking) -- `test_e2e_issue_list_component_filter_grammar` intermittently fails on live Jira due to search-index eventual-consistency lag. Candidate fix: E2E poll/retry helper (JR_E2E_POLL_* pattern). Registered for future maintenance sweep; do NOT fix now.
+**Pending human decisions / blockers:** none open. Human chose to wrap after Wave 1 (Wave 2 start deferred to a future session). NOTE for resume: PR merges on this repo require a human review-approval or `gh pr merge <n> --squash --admin` -- the automated merge classifier blocks zero-review PRs (observed on #811). LOW standing item: `E2E-COMPONENT-FILTER-SEARCH-INDEX-FLAKE` (`test_e2e_issue_list_component_filter_grammar` intermittently red on live-Jira search-index lag; non-blocking; candidate poll/retry fix). cycle-007 Wave-2 integration gate still PENDING (resume after cycle-012 closes).
 
-**Convergence counter:** NONE active. Story 1 Step 4.5 CONVERGED 3/3 CLEAN (7 passes). No active adversarial convergence underway.
+**WIP branch list:** none.
 
-**In-flight work:** No open PRs. No active worktrees. Wave 2 dispatch = next step.
+**Resume command:** `/vsdd-factory:rehydrate-wave` then `/vsdd-factory:next-step`.
 
-**Pending human decisions / blockers:** NONE open. cycle-007 Wave-2 integration gate remains PENDING (resume after cycle-012 closes).
-
-**WIP branch list:** NONE (Wave 2 branch creation = next step).
-
-**Resume command:** `/vsdd-factory:next-step` (Story 2 per-story TDD delivery: S-cycle12-jsm-adf-autoconvert).
-
-**Counts:** total_bcs 769 (unchanged); VP count 86 (unchanged); holdout scenarios 118 (unchanged); total_stories 182 (unchanged). Prior checkpoint (STATE.md v4.27): archived to `cycles/cycle-012/session-checkpoints.md`.
+**Counts:** total_bcs 769 (unchanged); VP count 86 (unchanged); holdout scenarios 118 (unchanged); total_stories 182 (unchanged). Prior checkpoint (STATE.md v4.28): archived to `cycles/cycle-012/session-checkpoints.md`.
 
 ## Historical Content
 
@@ -208,8 +202,8 @@ Burst logs, adversary pass details, session checkpoints, and per-burst narrative
 - **`HOST-GATEKEEPER-SYSPOLICYD-FRAGILITY`** -- LOW, non-blocking, dev-host-only. `cargo-nextest` UNUSABLE for full suite. NOT a CI issue. Full detail: `cycles/OPEN-STANDING-ITEMS.md`.
 - **`VP-FIELD-ADF-001-TEXTAREA-ANCHOR`** -- LOW, non-blocking residual. VP-FIELD-ADF-001 lacks a non-canonical `:textarea`-prefix positive anchor test. Candidate for Wave 2 tests or a future maintenance sweep (L-005/L-006 context, cycles/cycle-012/lessons.md).
 
-**RESOLVED this burst (2026-09-14, v4.28):** E2E-EDIT-FIELD-ADF-HEURISTIC RESOLVED/VERIFIED (run `34881320608`, PR #811 @ `67b3939a`); AC-014 adaptive read-back strengthened; E2E-COMPONENT-FILTER-SEARCH-INDEX-FLAKE registered (LOW); L-007 added to cycle-012/lessons.md.
+**RESOLVED this burst (2026-09-14, v4.29):** pipeline ACTIVE->PAUSED (session wrap); STATE.md v4.28->v4.29; SESSION-WRAP-PAUSE-2026-09-14 phase progress row appended.
 
-**RESOLVED prior burst (2026-09-14, v4.27):** S-cycle12-platform-adf-autoconvert DELIVERED + MERGED (PR #809 @ `e926cb70`); Wave 1 COMPLETE; Wave 2 ELIGIBLE; rustls RUSTSEC-2026-0285 CLEARED (PR #810 @ `71d98800`); develop tip advanced `30bb1a18`->`e926cb70`.
+**RESOLVED prior burst (2026-09-14, v4.28):** E2E-EDIT-FIELD-ADF-HEURISTIC RESOLVED/VERIFIED (run `34881320608`, PR #811 @ `67b3939a`); AC-014 adaptive read-back strengthened; E2E-COMPONENT-FILTER-SEARCH-INDEX-FLAKE registered (LOW); L-007 added.
 
 All other standing debt -- full text preserved, nothing deleted: OPEN items at `cycles/OPEN-STANDING-ITEMS.md`; RESOLVED/CLOSED items at `cycles/RESOLVED-DRIFT-ITEMS.md`.
