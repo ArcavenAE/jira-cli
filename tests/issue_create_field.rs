@@ -246,11 +246,17 @@ fn createmeta_any_field(field_id: &str, name: &str) -> Value {
     })
 }
 
-/// A `doc`-typed createmeta field descriptor — the REAL Jira Cloud schema
-/// type for the built-in `description` field (ADF document, not a plain
-/// string). `dispatch_field_value`'s bare-form type dispatch has no `"doc"`
-/// arm, so this fixture correctly routes to the `unsupported_field_type_error`
-/// branch (AC-018 realism fix, adversary Pass 5 LOW).
+/// A `doc`-typed createmeta field descriptor used as a test fixture.
+///
+/// Note: `"doc"` is NOT the real Jira Cloud schema type for the built-in
+/// `description` field. Live Jira reports `schema.type == "string"` for
+/// `description` and `environment`; ADF auto-conversion is triggered by the
+/// `system`/`custom` allowlist in `is_adf_field`, not by `schema.type` (see
+/// ADR-0024 foundational live-probe finding). This fixture deliberately uses
+/// `type == "doc"` to exercise a synthetic "unsupported type" path:
+/// `dispatch_field_value`'s bare-form type dispatch has no `"doc"` arm, so
+/// this fixture correctly routes to the `unsupported_field_type_error` branch
+/// (AC-018 realism fix, adversary Pass 5 LOW).
 fn createmeta_doc_field(field_id: &str, name: &str) -> Value {
     json!({
         "fieldId": field_id,
@@ -2844,7 +2850,7 @@ async fn test_bc_3_3_010_field_resolution_ordering_after_project_type_before_pos
 /// to; in this realistic fixture that arm is the unsupported-type error, so
 /// the literal value is never even sent to Jira.
 #[tokio::test]
-async fn test_ec_3_8_012_5_markdown_field_description_no_longer_guarded() {
+async fn test_ec_3_8_012_5_markdown_field_description_now_guarded_by_step2c() {
     let h = Harness::new().await;
     mount_issue_types(&h.server, "PROJ", &[("10000", "Task")]).await;
     mount_createmeta_fields_single_page(
@@ -2880,29 +2886,25 @@ async fn test_ec_3_8_012_5_markdown_field_description_no_longer_guarded() {
         .unwrap();
 
     let stderr = String::from_utf8_lossy(&output.stderr);
+    // S-cycle12 (BC-3.3.014/AC-006) added a --markdown + --field description
+    // guard to the CREATE path, so this guard now fires before field resolution.
     assert_eq!(
         output.status.code(),
         Some(64),
-        "AC-018 (realistic fixture): a 'doc'-typed description field has no \
-         supported bare-form type arm — expect exit 64 via \
-         unsupported_field_type_error, proving resolution ran past the \
-         removed guard rather than being rejected pre-flight by it; \
+        "AC-006/BC-3.3.014: --field description + --markdown must exit 64; \
          stderr={stderr}"
     );
     assert!(
-        stderr.contains("which is not supported by `--field`"),
-        "AC-018: must fail via the unsupported-field-type arm specifically \
-         (proof that createmeta resolution genuinely engaged), not some \
-         unrelated error; stderr={stderr}"
+        stderr.contains("cannot be combined with `--markdown`"),
+        "AC-006: must fail via the BC-3.3.014 --markdown+--field description \
+         guard; stderr={stderr}"
     );
+    // The OLD DEC-188 guard ("--field is only valid with --request-type")
+    // must still NOT fire — DEC-310 reversal remains in effect.
     assert!(
         !stderr.contains("--field is only valid with"),
-        "AC-018: the removed DEC-188 guard must not fire; stderr={stderr}"
-    );
-    assert!(
-        !stderr.contains("cannot be combined with `--markdown`"),
-        "AC-018: handle_create has no --markdown-requires-description guard \
-         of its own (that guard is JSM/edit-only); stderr={stderr}"
+        "DEC-310 reversal: the removed DEC-188 guard must not fire; \
+         stderr={stderr}"
     );
 }
 

@@ -1251,6 +1251,9 @@ pub(crate) struct CreateMetaField {
 /// key, tolerates the OpenAPI-synonymous `results` key (AC-008) — no
 /// `values`, no `nextPageToken`, same pagination family as the sibling
 /// [`CreatemetaIssueTypesResponse`].
+///
+/// Wire shape: `{"fields": [...], "startAt": 0, "maxResults": N, "total": N}`.
+/// Each element is a `FieldCreateMetadata` object (`fieldId`, `name`, `schema`, …).
 #[derive(Debug, Deserialize)]
 struct CreateMetaFieldsResponse {
     #[serde(alias = "results", default)]
