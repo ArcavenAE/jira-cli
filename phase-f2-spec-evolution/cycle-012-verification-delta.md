@@ -46,7 +46,7 @@ related_bcs:
   - BC-3.8.021
   - BC-3.8.022
 related_adr: ADR-0024
-input-hash: "3bf509f"
+input-hash: "e14e42c"
 ---
 
 # Verification Delta — cycle-012 `field-adf-autoconvert`

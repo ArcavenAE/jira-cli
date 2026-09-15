@@ -9,7 +9,7 @@ cycle: cycle-012-field-adf-autoconvert
 inputs:
   - ".factory/cycles/cycle-012/phase-f3-stories/dependency-graph.md"
   - ".factory/cycles/cycle-012/phase-f3-stories/STORY-INDEX.md"
-input-hash: "a20c730"
+input-hash: "5fe181c"
 phase: F3
 traces_to: ".factory/cycles/cycle-012/phase-f3-stories/STORY-INDEX.md"
 ---

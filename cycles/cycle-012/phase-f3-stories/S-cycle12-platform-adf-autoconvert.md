@@ -24,7 +24,7 @@ inputs:
   - "src/cli/issue/create.rs"
   - "src/adf.rs"
   - "src/types/jira/editmeta.rs"
-input-hash: "a111c8b"
+input-hash: "9fe3a72"
 traces_to: ".factory/phase-f2-spec-evolution/cycle-012-verification-delta.md §4 VP-FIELD-ADF-001/002/003/004"
 cycle: cycle-012-field-adf-autoconvert
 estimated_effort: large

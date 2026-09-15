@@ -17,6 +17,40 @@ traces_to: STATE.md
      Only the LATEST checkpoint lives in STATE.md.
      Prior checkpoints are archived here for historical reference. -->
 
+## Session Resume Checkpoint (2026-09-15) — cycle-012 F5 CONVERGED, fix PR #813 merged; F6 targeted hardening starting; v4.33 active state (pre-F6/F7)
+
+**Archived from STATE.md v4.33 on 2026-09-15. Superseded by the v4.34 F6-HARDENED / F7-CONVERGED burst.**
+
+### State
+
+| Field | Value |
+|-------|-------|
+| **Date** | 2026-09-15 |
+| **Position** | cycle-012 (`field-adf-autoconvert`), Feature Mode. Phase F5 (scoped adversarial refinement) CONVERGED -- adversary 3/3 consecutive CLEAN (Passes A/B/C); code-reviewer findings (H-1/M-1/M-3) + adversary OBS-1 resolved; security-reviewer CLEAN throughout. Fix PR #813 MERGED squash @ `80bb4215` (2026-09-15T00:14:11Z, `--admin`). Worktree + branch cleaned up. cycle-007 (`auth-correctness-dx`) PAUSED at F4 IMPL COMPLETE (Wave-2 gate PENDING, develop@`80bb4215`). |
+| **Pipeline** | ACTIVE |
+| **Convergence counter** | F5 scoped adversarial CONVERGED (3/3, trajectory `4→0→0→0`); no convergence counter currently active (F6 not yet begun a formal convergence track). |
+| **Next step** | Feature Mode F6 (targeted hardening) -> F7 (delta convergence + human gate). |
+
+### Resume Prompt (verbatim from STATE.md v4.33)
+
+```
+**Date & position:** 2026-09-15. cycle-012 (`field-adf-autoconvert`), Feature Mode. Phase F5 (scoped adversarial refinement) **CONVERGED** -- adversary 3/3 consecutive CLEAN (Passes A/B/C); code-reviewer findings (H-1/M-1/M-3) + adversary OBS-1 resolved; security-reviewer CLEAN throughout. Fix PR #813 MERGED squash @ `80bb4215` (2026-09-15T00:14:11Z, `--admin`). Worktree + branch cleaned up. NEXT = Feature Mode F6 (targeted hardening) IN PROGRESS -> F7 (delta convergence + human gate).
+
+**Convergence counter:** F5 scoped adversarial CONVERGED (3/3, trajectory `4→0→0→0`); no convergence counter currently active (F6 not yet begun a formal convergence track).
+
+**In-flight work:** cycle-012 Phase F6 (targeted hardening: formal verification, fuzz testing, mutation testing scoped to the delta; full regression + security scans on the full tree) IN PROGRESS, just starting. F7 not yet started.
+
+**Pending human decisions / blockers:** none open. LOW standing items: `E2E-COMPONENT-FILTER-SEARCH-INDEX-FLAKE` (non-blocking, pre-existing); new F5 debt `M-2`/`OBS-A`/`OBS-3` (all LOW, non-blocking, see Drift/Standing Items). cycle-007 Wave-2 integration gate still PENDING (resume after cycle-012 closes).
+
+**WIP branch list:** none open -- `fix/cycle012-f5-findings` MERGED (PR #813 @ `80bb4215`); worktree + branch cleaned up.
+
+**Resume command:** `/vsdd-factory:run-phase phase-f6-targeted-hardening` (pipeline already ACTIVE; no rehydrate needed this session).
+
+**Counts:** total_bcs 769 (unchanged); VP count 86 (unchanged); holdout scenarios 118 (unchanged); total_stories 182 (unchanged). Prior checkpoint (STATE.md v4.32): archived to `cycles/cycle-012/session-checkpoints.md`.
+```
+
+---
+
 ## Session Resume Checkpoint (2026-09-14) — cycle-012 F4 COMPLETE (both waves delivered); Wave 2 integration gate next; v4.32 active state (pre-F5)
 
 **Archived from STATE.md v4.32 on 2026-09-15. Superseded by the v4.33 F5 CONVERGED / fix PR #813 merged burst.**

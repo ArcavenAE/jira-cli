@@ -11,7 +11,7 @@ inputs:
   - ".factory/cycles/cycle-012/phase-f3-stories/S-cycle12-jsm-adf-autoconvert.md"
   - ".factory/specs/prd/bc-3-issue-write.md"
   - ".factory/phase-f2-spec-evolution/cycle-012-verification-delta.md"
-input-hash: "f36f3d1"
+input-hash: "50014be"
 ---
 
 # cycle-012 Dependency Graph

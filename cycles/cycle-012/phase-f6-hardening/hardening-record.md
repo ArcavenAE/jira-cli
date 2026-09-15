@@ -23,7 +23,7 @@ inputs:
   - "tests/issue_create_field_adf.rs"
   - "tests/issue_create_jsm.rs"
   - ".cargo/mutants.toml"
-input-hash: "5ec3975"
+input-hash: "028ed43"
 ---
 
 # F6 Targeted Hardening Record — cycle-012 `field-adf-autoconvert`

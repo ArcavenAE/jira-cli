@@ -23,7 +23,7 @@ inputs:
   - "src/api/jsm/requests.rs"
   - "src/cli/issue/field_resolve.rs"
   - "src/types/jsm/request_type.rs"
-input-hash: "db6d150"
+input-hash: "1660ecd"
 traces_to: ".factory/phase-f2-spec-evolution/cycle-012-verification-delta.md §4 VP-FIELD-ADF-001/003/004"
 cycle: cycle-012-field-adf-autoconvert
 estimated_effort: large

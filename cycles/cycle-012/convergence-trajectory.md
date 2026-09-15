@@ -6,7 +6,7 @@ status: complete
 producer: state-manager
 timestamp: 2026-09-15T00:20:00Z
 cycle: "cycle-012-field-adf-autoconvert"
-inputs: [adversarial-reviews/, code-delivery/cycle012-f5/pr-review.md, code-delivery/FIX-cycle012-f5/pr-review.md]
+inputs: [adversarial-reviews/, code-delivery/cycle012-f5/pr-review.md]
 input-hash: "[live-state]"
 traces_to: STATE.md
 ---
