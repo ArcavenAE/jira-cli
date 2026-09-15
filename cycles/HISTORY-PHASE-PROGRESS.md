@@ -80,3 +80,15 @@ See `cycles/cycle-005/burst-log.md` Bursts 11-12 for full narrative detail (thes
 |-------|--------|-----------|------|-------|---------------------|
 | **SESSION-WRAP-PAUSE-2026-09-14** | **COMPLETE** | 2026-09-14 | Bookkeeping only, session wrap; no quality gate | pipeline ACTIVE->PAUSED at cycle-012 Wave-1-complete/E2E-verified boundary; v4.28->v4.29; session wrap | counts unchanged (769/86/118/182) |
 | **CYCLE-012-WAVE2-F4-STARTED-2026-09-14** | **COMPLETE** | 2026-09-14 | per-story TDD delivery start | pipeline PAUSED->ACTIVE. Local develop fast-forwarded to `67b3939a` (was `30bb1a18`); Main-Checkout Sync Protocol pre-check ran CLEAN. Worktree created: `.worktrees/S-cycle12-jsm-adf-autoconvert`, branch `feat/cycle12-jsm-adf-autoconvert`, base `67b3939a`. Story 2 (`S-cycle12-jsm-adf-autoconvert`, 13pts, strict TDD) delivery starting; Red Gate about to begin. v4.29->v4.30. | counts unchanged (769/86/118/182) |
+
+---
+
+> Extracted from `.factory/STATE.md`'s `## Phase Progress` table during the
+> 2026-09-15 CYCLE-007-F7-APPROVED-CLOSED-RELEASED burst (v4.38 -> v4.39), to
+> keep the live table at 10 rows after adding the new
+> `CYCLE-007-F7-APPROVED-CLOSED-RELEASED-2026-09-15` row. This was the oldest
+> row at that point; archived here verbatim, unedited.
+
+| Phase | Status | Completed | Gate | Notes | Finding Progression |
+|-------|--------|-----------|------|-------|---------------------|
+| **CYCLE-012-STORY2-CONVERGED-2026-09-14** | **COMPLETE** | 2026-09-14 | Step 4.5 3/3 CLEAN + demo skip | S-cycle12-jsm-adf-autoconvert Step 4.5 CONVERGED -- 3 consecutive CLEAN adversary passes, zero CRIT/HIGH/MED. OBS-P3-2 (CHANGELOG JSM assembly-order gap) RESOLVED, doc-only, no re-convergence. 4 BCs (BC-3.8.019-022) + 3 VPs (VP-FIELD-ADF-001/003/004). Demo recording SKIPPED (human decision). Implementation COMPLETE + GREEN: lib jsm 31/0, issue_create_jsm 113/0, clippy+fmt clean. L-008/L-009 added. v4.30->v4.31. | 769 BCs / 86 VPs / 118 holdout / 182 stories |

@@ -1,10 +1,10 @@
 ---
 document_type: session-checkpoints
 level: ops
-version: "1.4"
+version: "1.5"
 status: archive
 producer: state-manager
-timestamp: 2026-09-15T04:49:40Z
+timestamp: 2026-09-15T16:45:00Z
 cycle: "cycle-007-auth-correctness-dx"
 inputs: [STATE.md]
 input-hash: "[live-state]"
@@ -12,6 +12,36 @@ traces_to: STATE.md
 ---
 
 # Session Checkpoints — cycle-007-auth-correctness-dx
+
+## Session Resume Checkpoint (2026-09-15, STATE.md v4.38) — CYCLE-007-F7-CONVERGED: F7 delta convergence ALL 7 DIMENSIONS PASS, F7 human gate pending — Superseded 2026-09-15 (v4.39 CYCLE-007-F7-APPROVED-CLOSED-RELEASED)
+
+**Status:** SUPERSEDED 2026-09-15 by the v4.39 CYCLE-007-F7-APPROVED-CLOSED-RELEASED checkpoint (the
+cycle-007 F7 human gate closed this burst: human ruled "Approve & close" + chose to cut a dev release;
+released as v0.7.0-dev.6 via PR #815 @ `7160a534`; DEC-362 minted). Archived verbatim from STATE.md v4.38
+below.
+
+### State
+
+| Field | Value |
+|-------|-------|
+| **Date** | 2026-09-15 |
+| **Position** | cycle-007 (`auth-correctness-dx`) Phase **F7 CONVERGED** -- fresh-context consistency-validator returned ALL 7 DIMENSIONS PASS this burst (spec<->code, code<->test, traceability, index-consistency, ADR alignment, citation-integrity, cross-references); Phase **F6 HARDENED_WITH_RESIDUALS** also recorded this burst (evidence already committed at `596ec950`, prior burst, but not yet reflected in STATE.md). Benign input-hash drift on 6 cycle-007 F3 artifacts resolved this burst (Job A). **NEXT = cycle-007 Phase F7 HUMAN GATE** (final close approval + release decision) -- awaiting human. cycle-012 (`field-adf-autoconvert`) remains **CLOSED** (DEC-361, F7 human gate APPROVED "Approve & close", 2026-09-15) -- unaffected by this burst. |
+| **Convergence counter** | F6 hardening loop CLOSED (HARDENED_WITH_RESIDUALS, 3 LOW residuals accepted). F7 delta convergence loop CLOSED at ALL 7 DIMENSIONS PASS (single fresh-context pass, no re-run needed). Only the F7 human gate remains. |
+| **In-flight work** | NONE. No open PRs (#803/#804/#805/#806/#807/#814 all MERGED for cycle-007; #809/#810/#811/#812/#813 all MERGED for cycle-012). No story worktrees. |
+
+### Resume Prompt
+
+```
+**Date:** 2026-09-15. cycle-007 (`auth-correctness-dx`) Phase F7 CONVERGED -- fresh-context consistency-validator returned ALL 7 DIMENSIONS PASS this burst; Phase F6 HARDENED_WITH_RESIDUALS also recorded this burst. Benign input-hash drift on 6 cycle-007 F3 artifacts resolved (Job A). NEXT = cycle-007 Phase F7 HUMAN GATE (final close approval + release decision) -- awaiting human. cycle-012 (`field-adf-autoconvert`) remains CLOSED (DEC-361, "Approve & close", 2026-09-15).
+
+**Pending human decisions / blockers:** The cycle-007 F7 human gate itself (final close approval + release decision) is now the single pending decision point. LOW standing items unchanged: `CYCLE-007-CR-001-KEYCHAIN-ERROR-VS-ABSENCE`, `CYCLE-007-PROBE-ROUTING-NO-DEFAULT-CI-TEST`, `CYCLE-007-LEGACY-OAUTH-UNSET-METHOD-MISREPORT`, `CYCLE-007-OAUTH-ABSENCE-EXIT-CODE-ASYMMETRY`, `CANONICAL-COUNTS-BREAKDOWN-STALE`, `CYCLE-007-AUTH-LIST-LAZY-MIGRATION-WRITE`, `CYCLE-007-F5-DOC-NITPICKS`. Also unchanged: `M-2`/`OBS-A`/`OBS-3` (cycle-012 F5 debt), pre-existing `SEC-001-EDITMETA-RECURSION-GUARD`, `E2E-COMPONENT-FILTER-SEARCH-INDEX-FLAKE`, F6 cycle-012 residuals L-1/L-2, `CYCLE-007-STORY-STATUS-DRAFT-POSTMERGE`, `NFR-O-N-CATALOG-RETIREMENT-EDIT`. cycle-007's own F6 residuals (R1/R2/R3) -- R3 is the same item as CR-001, not a new one.
+
+**Resume command (future session's choice):** Present the F7 convergence summary (ALL 7 DIMENSIONS PASS, F6 HARDENED_WITH_RESIDUALS) to the human for the cycle-007 F7 human gate ruling (close approval + release decision, mirroring cycle-012's DEC-361 precedent); or `/vsdd-factory:maintenance-sweep` to burn down the deferred LOW debt first if the gate is deferred.
+```
+
+---
+
+<!-- Repeat for each archived checkpoint. Maintain chronological order (newest first). -->
 
 <!-- Archived session resume checkpoints extracted from STATE.md.
      Only the LATEST checkpoint lives in STATE.md.

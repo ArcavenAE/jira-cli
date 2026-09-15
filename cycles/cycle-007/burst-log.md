@@ -476,3 +476,93 @@ at `11c95d5e` entering and leaving this burst.
 **Dim-7 Attestation:** N/A — no CI-workflow change this burst.
 
 ---
+
+## Burst: Burst 8 — cycle-007 Phase F7 HUMAN GATE APPROVED, CLOSED + RELEASED as v0.7.0-dev.6 (2026-09-15)
+
+**Parent-commit:** `11c95d5e` (`develop` tip entering this burst, unchanged since Burst 7). This burst's
+release work executed on a separate `chore/release-v0.7.0-dev.6` branch → PR #815 → merged squash to
+`develop` @ `7160a53477bc2a403ca190971d740a5ef78659cb`, mergedAt 2026-09-15T14:53:32Z.
+
+**Trigger:** Human reviewed the cycle-007 F7 convergence summary (ALL 7 DIMENSIONS PASS, F6
+HARDENED_WITH_RESIDUALS) presented at the end of Burst 7 and ruled at the F7 gate: **"Approve & close"**,
+explicitly choosing to **cut a dev release** (over the ship-on-develop-no-tag alternative that cycle-005
+and cycle-012 both took).
+
+**Release mechanics (executed via this repo's native release-metadata-PR precedent — NOT the
+`vsdd-factory:release` skill, which has no `.factory/release-config.yaml` wired up for this repo):**
+
+- Branch `chore/release-v0.7.0-dev.6` cut from `develop @ 11c95d5e`. Version bump
+  `0.7.0-dev.5` → `0.7.0-dev.6` in `Cargo.toml` + `Cargo.lock`; `CHANGELOG.md`'s `[Unreleased]` section
+  promoted to `## [0.7.0-dev.6] - 2026-09-15`.
+- PR #815 opened against `develop`; all CI green (CI Gate pass, full mutation shard matrix, Test matrix,
+  Coverage, Deny, Clippy, MSRV, Spec Guards); local review clean.
+- PR #815 merged squash @ `7160a534`, mergedAt 2026-09-15T14:53:32Z. `develop`: `11c95d5e` → `7160a534`.
+- Annotated tag `v0.7.0-dev.6` created on `7160a534` and pushed — **dev.5 topology**: tagged on `develop`,
+  never promoted to `main` (same pattern as the dev.3/dev.4/dev.5 releases).
+- `release.yml` run `34984900326` (https://github.com/Zious11/jira-cli/actions/runs/34984900326) triggered
+  by the tag push — BUILDING the 5-platform GitHub prerelease as of this write. The GitHub Release page is
+  **not yet published**; confirm completion in a later burst/session.
+
+**What dev.6 contains:** this release ROLLS UP every previously-untagged `develop` change since dev.5 —
+cycle-005 (`adf-mentions`, was ship-on-develop-no-tag at its own F7 close), cycle-006
+(`mutants-ci-sharding`, was ship-on-develop-no-tag), the 2026-09-10 maintenance sweep merges, cycle-012
+(`field-adf-autoconvert`, was ship-on-develop-no-tag at DEC-361), and cycle-007 (`auth-correctness-dx`)
+itself, plus an independent rustls 0.23.45 security bump that had also landed on `develop` untagged.
+**dev.6 is therefore the first tagged prerelease to capture cycle-005's and cycle-012's changes.**
+
+**S-7.02 Cycle-Closing Checklist:** confirmed satisfied for cycle-007. All 8 tracked process-gap/novel
+findings from cycle-007's F5/F6 passes are DEFERRED as tracked standing items in
+`cycles/OPEN-STANDING-ITEMS.md` (verified present, not invented this burst): `CYCLE-007-CR-001-KEYCHAIN-
+ERROR-VS-ABSENCE`, `CYCLE-007-PROBE-ROUTING-NO-DEFAULT-CI-TEST`, `CYCLE-007-LEGACY-OAUTH-UNSET-METHOD-
+MISREPORT`, `CYCLE-007-OAUTH-ABSENCE-EXIT-CODE-ASYMMETRY`, `CANONICAL-COUNTS-BREAKDOWN-STALE`, `CYCLE-007-
+AUTH-LIST-LAZY-MIGRATION-WRITE`, the bundled `CYCLE-007-F5-DOC-NITPICKS`, and F6 residuals R1/R2 (`CYCLE-
+007-F6-R1-KEYRING-GATED-HUMAN-TEXT-COVERAGE` / `CYCLE-007-F6-R2-DERIVE-AUTH-STATE-NO-MUTATION-COVERAGE`;
+R3 is the same item as CR-001, not separately tracked). None left without a follow-up or justified
+deferral. No new deferrals invented.
+
+**DEC-362 minted:** cycle-007 F7 HUMAN GATE APPROVED — "Approve & close" + "cut a dev release" → released
+as v0.7.0-dev.6. See STATE.md Decisions Log for full text.
+
+**Adversary verdict:** N/A this burst — no adversarial review is run at the F7 human-gate closure step
+(feature-mode convention). cycle-007's F5 scoped-adversarial verdict (3 consecutive CLEAN passes, zero
+unresolved CRIT/HIGH/MED) was already recorded in Burst 6 and is unchanged by this burst.
+
+**Codifications:** none new this burst. The S-7.02 Cycle-Closing Checklist was reviewed and every
+cycle-007 process-gap/novel finding was confirmed already CODIFIED as a lesson (`cycles/cycle-007/
+lessons.md`) or DEFERRED as a tracked standing item in `cycles/OPEN-STANDING-ITEMS.md` (see the checklist
+paragraph above) — no new lesson entries or deferrals were required or invented this burst.
+
+**Closes:** the cycle-007 F7 human gate (final close approval + release decision) — the single pending
+decision point carried since Burst 7 — is now closed via DEC-362. This also closes cycle-007
+(`auth-correctness-dx`) itself: **CLOSED + RELEASED as v0.7.0-dev.6.**
+
+**Outcome:** **cycle-007 (`auth-correctness-dx`) CLOSED + RELEASED as v0.7.0-dev.6.** All nine tracked
+cycles (001-007, 012) are now CLOSED. Pipeline fully idle/paused — no active cycle anywhere in the
+factory. `activation_head` → `7160a534`; `activation_version` → `v0.7.0-dev.6`.
+
+**Files touched (Dim-1): 5 unique files/paths this burst, all committed in the state-manager's own single
+atomic commit on `factory-artifacts`**
+
+- `.factory/STATE.md` (modified — v4.38 → v4.39; F7 human gate closure + release recorded)
+- `.factory/cycles/cycle-007/burst-log.md` (modified — Burst 8 appended, this entry)
+- `.factory/cycles/HISTORY-PHASE-PROGRESS.md` (modified — oldest Phase Progress row archived)
+- `.factory/cycles/cycle-007/session-checkpoints.md` (modified — prior v4.38 checkpoint archived)
+- `.factory/cycles/RESOLVED-DRIFT-ITEMS.md` (modified — prior "RESOLVED prior burst" v4.37 entry archived)
+
+(Repo-side `Cargo.toml`/`Cargo.lock`/`CHANGELOG.md` version-bump changes and the PR #815 merge/tag/release
+workflow are tracked in the repo's own git history — `develop @ 7160a534`, tag `v0.7.0-dev.6` — not
+duplicated as factory-artifacts files.)
+
+**Dim-2 Attestation:** No BC/VP/holdout INDEX content changed this burst. Counts unchanged: 769 BCs / 86
+VPs / 118 holdouts / 182 stories. DEC-362 minted (human F7-gate approval + release ruling).
+
+**Dim-5 Attestation:** N/A on the factory-artifacts side — the release binary/prerelease artifacts are
+produced by `release.yml` run `34984900326` on the repo side, not by state-manager.
+
+**Dim-6 Attestation:** `develop` HEAD advanced `11c95d5e` → `7160a534` this burst (PR #815 merge). Annotated
+tag `v0.7.0-dev.6` pushed on `7160a534`.
+
+**Dim-7 Attestation:** N/A — no CI-workflow (`ci.yml`) change this burst; `release.yml` ran as designed,
+unmodified.
+
+---

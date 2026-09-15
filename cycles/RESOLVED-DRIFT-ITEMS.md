@@ -74,3 +74,12 @@ Sweep is fully closed with zero outstanding actions. `activation_head` frontmatt
 ## RESOLVED at cycle-007 Wave-2 gate (2026-09-15, v4.36 -- archived from STATE.md's "RESOLVED prior burst" slot during the v4.37->v4.38 CYCLE-007-F7-CONVERGED burst)
 
 cycle-007 (`auth-correctness-dx`) Wave-2 integration gate **PASSED** -- regression GREEN (`auth_status_json` 31/0, lib `auth` 270/0, `auth_profiles` 46/0 on `develop@80bb4215`); Wave-2 adversarial 3 consecutive CLEAN passes (A/B/C), zero CRIT/HIGH/MED; Wave-2 security CLEAN (1 LOW accepted); consistency PASS; holdout `H-W2-INT-001` satisfied structurally. **cycle-007 Phase F4 COMPLETE** (all 5 stories merged, both wave gates PASSED). New LOW standing item `CYCLE-007-STORY-STATUS-DRAFT-POSTMERGE` recorded; `NFR-O-N-CATALOG-RETIREMENT-EDIT` confirmed already present (commit `bb0e1a9d`), not duplicated. No DEC minted (bookkeeping/automated gate, Wave-1-gate precedent). Full detail archived: `cycles/cycle-007/burst-log.md` Burst 5.
+
+## RESOLVED at cycle-007 Phase F5 (2026-09-15, v4.37 -- archived from STATE.md's "RESOLVED prior burst" slot during the v4.38->v4.39 CYCLE-007-F7-APPROVED-CLOSED-RELEASED burst)
+
+cycle-007 (`auth-correctness-dx`) Phase F5 scoped adversarial refinement **CONVERGED** -- adversary 4
+rounds to 3 consecutive CLEAN, zero unresolved CRIT/HIGH/MED; code-reviewer `APPROVE_WITH_NITS`
+(CR-002/CR-003 RESOLVED; CR-001/CR-004 human-DEFERRED); security-reviewer CLEAN throughout. Findings
+closed via fix PR #814 (`11c95d5e`) + commits `0b9fb1fc`/`878ebe67`. 7 new LOW standing items recorded.
+No DEC minted (automated gate, cycle-012-F5 precedent). Full detail archived:
+`cycles/cycle-007/burst-log.md` Burst 6.
