@@ -45,6 +45,45 @@ Target for all four items: a future maintenance sweep, or at F7 close if still o
 
 ---
 
+## cycle-007 Wave-2 gate finding F-B2-01 — NFR-O-N-CATALOG-RETIREMENT-EDIT (2026-09-14)
+
+**ID:** `NFR-O-N-CATALOG-RETIREMENT-EDIT`
+**Severity:** LOW, non-blocking.
+**Status:** OPEN. `nfr-catalog.md`'s NFR-O-N row still reads `DEFER-DOCUMENTED` (main table row
+~line 110, Summary Table row ~line 188, `DEFER-DOCUMENTED: 4` bucket count ~line 210). NFR-O-N is
+RETIRED per BC-1.6.050 Invariant 2 ("NFR-O-N is RETIRED by this BC's existence") — `CLAUDE.md` is
+already correct (its `auth status --output json` gotcha entry states "NFR-O-N is RETIRED"); only
+`nfr-catalog.md`'s row text is stale.
+
+**History:** Story B2 (`S-cycle7-auth-status-json`, merged PR #807) implemented `auth status
+--output json` and updated `CLAUDE.md` in the same burst, but explicitly DEFERRED the
+`nfr-catalog.md` row-text edit per B2 AC-012 + BC-1.6.050's F4 doc-fallout obligation (a), because
+of pre-existing TD-031 "stable-anchors hook" debt on that file — see `cycle-007-prd-delta.md` §7
+for the original blocker account.
+
+**Blocker (re-confirmed 2026-09-14, cycle-007 Wave-2 gate remediation attempt):** attempted the
+row-text edit directly via the `Edit` tool; refused by the live `validate-stable-anchors`
+PreToolUse hook (`hooks-registry.toml`, WASM plugin, `on_error = "block"`, scoped to
+`.factory/specs/**/*.md`). The hook fail-closed-blocks **any** edit to `nfr-catalog.md` because the
+file carries pre-existing `*.rs:NNN`-style volatile line citations in UNRELATED NFR rows (NFR-R-D,
+NFR-R-A, NFR-R-E, NFR-R-G, and others, none touched by this change) — it does not distinguish "this
+diff is clean" from "the file has debt"; the whole file is edit-locked until every pre-existing
+violation is converted to a stable-symbol anchor per TD-VSDD-091. Same blocker class as
+`TD-031-BLOCKED-BC-6.2.016-CROSSREF` above (cycle-004).
+
+**Target:** maintenance sweep — bundle the actual row-text edit (Phase 3 Routing cell
+`DEFER-DOCUMENTED (S-3.08 / PR #317)` → `RETIRED (BC-1.6.050)`, description's stale "no
+`--output json` test coverage for `auth status`" clause removed (coverage now exists in
+`tests/auth_status_json.rs`); Summary Table row status → `RETIRED`, BC column → `BC-1.6.050`;
+`DEFER-DOCUMENTED: 4` → `3` with a new `RETIRED: 1` bucket added) with the TD-031 stable-anchor
+remediation fix for `nfr-catalog.md` (convert its pre-existing volatile `*.rs:NNN` citations to
+stable symbol anchors) — the retirement edit can land in the same or a following burst once the
+file is unlocked.
+
+**Source:** cycle-007 Wave-2 gate finding F-B2-01.
+
+---
+
 ## cycle-007 F4 follow-up — AUTH-REMEDIATION-EQUALS-FORM-BROADER (2026-09-11, PASS4-F2-SPEC-SWEEP burst)
 
 **ID:** `AUTH-REMEDIATION-EQUALS-FORM-BROADER`
