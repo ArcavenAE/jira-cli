@@ -17,6 +17,20 @@ traces_to: STATE.md
      Lessons are [draft] until reviewed and accepted by the orchestrator/human gate.
      Add newest lessons at the top, maintaining reverse-chronological order. -->
 
+## L-010 — F5 Scoped Adversarial Integration Pass Catches Scope-Leak Per-Story Passes Structurally Cannot See (F5 scoped adversarial, Pass 1, 2026-09-14) [draft]
+
+**Category:** Pipeline discipline / adversarial review scope
+
+**Lesson:** Feature Mode Phase F5 (scoped adversarial refinement, run against the cycle's full changed/new-code delta after both waves) caught OBS-1: Story 1's `changed_fields --output json` key-remapping change (a side effect of the ADF-autoconvert work, not its stated purpose) had broadened beyond its intended scope to affect non-ADF system fields on `issue edit`, silently changing an existing `--output json` contract. Neither Story 1's nor Story 2's own Step-4.5 per-story adversarial convergence (each scoped to its own story's diff) could have caught this — the affected non-ADF-field behavior sits outside both stories' individual review scope, but squarely inside the cycle-level integration diff F5 reviews. Human adjudication narrowed the remapping to ADF-only fields (description/environment), and a regression test was added to pin the fix. Code-reviewer's own pass (fresh context, different model family, same F5 run) independently surfaced H-1/M-1/M-3 — all doc/comment-accuracy findings (stale `isAdfRequest` comment, `CLAUDE.md` Known Size Deviations drift) that a per-story reviewer, seeing only that story's diff, would also have had no trigger to check.
+
+**Policy:** Per-story Step-4.5 convergence is necessary but not sufficient for multi-story cycles — it structurally cannot see cross-story side effects that only become visible in the full-cycle diff. The F5 scoped-adversarial pass (and its accompanying code-reviewer + security-reviewer passes) is the correct control for this class of defect, and should never be treated as redundant with per-story Step-4.5 just because both stories individually converged clean. Continue running F5 as a mandatory full-delta integration pass on every multi-story (or even single-story) Feature Mode cycle, regardless of how clean the per-story passes were.
+
+**Evidence:** F5 Pass 1 (pre-fix) findings: OBS-1 (adversary, human-ruled — `changed_fields` lowercase-key remapping scope-leak), H-1 (code-reviewer — `jsm_create.rs` missing from `CLAUDE.md` Known Size Deviations), M-1 (code-reviewer — `field_resolve.rs` size entry stale at pre-S-cycle12 LOC), M-3 (code-reviewer — stale `isAdfRequest` comment). All four resolved in fix PR #813 (`fix/cycle012-f5-findings`, squash-merged to `develop` @ `80bb4215`, 2026-09-15T00:14:11Z, `--admin`). Post-fix re-review: adversary 3/3 consecutive CLEAN (Passes A/B/C, `VERDICT CLEAN NITPICK_ONLY`, zero CRIT/HIGH/MED); security-reviewer CLEAN (0 CRIT/HIGH/MED; SEC-001 LOW pre-existing debug-only cache guard, not reachable via cycle-012 paths). Full trajectory: `cycles/cycle-012/convergence-trajectory.md`.
+
+**Closes:** (informational — no open issue; recorded for F7 lessons review)
+
+---
+
 ## L-009 — Live-E2E Skip-on-Failure Cannot Substitute for Regression Coverage (F4 Story 2 Step-4.5 Pass 3, 2026-09-14) [draft]
 
 **Category:** Test design / E2E coverage limits

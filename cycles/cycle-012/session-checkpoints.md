@@ -17,6 +17,40 @@ traces_to: STATE.md
      Only the LATEST checkpoint lives in STATE.md.
      Prior checkpoints are archived here for historical reference. -->
 
+## Session Resume Checkpoint (2026-09-14) — cycle-012 F4 COMPLETE (both waves delivered); Wave 2 integration gate next; v4.32 active state (pre-F5)
+
+**Archived from STATE.md v4.32 on 2026-09-15. Superseded by the v4.33 F5 CONVERGED / fix PR #813 merged burst.**
+
+### State
+
+| Field | Value |
+|-------|-------|
+| **Date** | 2026-09-14 |
+| **Position** | cycle-012 (`field-adf-autoconvert`), Feature Mode. F4 COMPLETE -- both waves delivered. Story 2 (`S-cycle12-jsm-adf-autoconvert`, 13pts, strict TDD) DELIVERED + MERGED PR #812 @ `2a0b0fae` (squash, `--admin`, 2026-09-14T22:57:09Z). Wave 2 COMPLETE; all quality gates PASS. Worktree `.worktrees/S-cycle12-jsm-adf-autoconvert` + branch `feat/cycle12-jsm-adf-autoconvert` cleanup IN PROGRESS (devops). cycle-007 (`auth-correctness-dx`) PAUSED at F4 IMPL COMPLETE (Wave-2 gate PENDING, develop@`2a0b0fae`). |
+| **Pipeline** | ACTIVE |
+| **Convergence counter** | none active (Story 1 and Story 2 Step-4.5 both CONVERGED 3-consecutive-CLEAN and merged; F5 scoped adversarial convergence not yet started). |
+| **Next step** | cycle-012 Wave 2 integration gate -> Feature Mode F5 (scoped adversarial refinement) -> F6 (targeted hardening) -> F7 (delta convergence). |
+
+### Resume Prompt (verbatim from STATE.md v4.32)
+
+```
+**Date & position:** 2026-09-14. cycle-012 (`field-adf-autoconvert`), Feature Mode. F4 COMPLETE -- both waves delivered. Story 2 (`S-cycle12-jsm-adf-autoconvert`, 13pts, strict TDD) DELIVERED + MERGED PR #812 @ `2a0b0fae` (squash, `--admin`, 2026-09-14T22:57:09Z). Wave 2 COMPLETE; all quality gates PASS. Worktree `.worktrees/S-cycle12-jsm-adf-autoconvert` + branch `feat/cycle12-jsm-adf-autoconvert` cleanup IN PROGRESS (devops). NEXT = cycle-012 Wave 2 integration gate -> Feature Mode F5 (scoped adversarial refinement) -> F6 (targeted hardening) -> F7 (delta convergence).
+
+**Convergence counter:** none active (Story 1 and Story 2 Step-4.5 both CONVERGED 3-consecutive-CLEAN and merged; F5 scoped adversarial convergence not yet started).
+
+**In-flight work:** cycle-012 F4 COMPLETE (both waves delivered, both PRs merged to `develop`). Wave 2 integration gate not yet run. F5/F6/F7 not yet started.
+
+**Pending human decisions / blockers:** none open. LOW standing item: `E2E-COMPONENT-FILTER-SEARCH-INDEX-FLAKE` (`test_e2e_issue_list_component_filter_grammar` intermittently red on live-Jira search-index lag; non-blocking; candidate poll/retry fix). cycle-007 Wave-2 integration gate still PENDING (resume after cycle-012 closes).
+
+**WIP branch list:** none open -- `feat/cycle12-jsm-adf-autoconvert` MERGED (PR #812 @ `2a0b0fae`); worktree + branch cleanup IN PROGRESS (devops).
+
+**Resume command:** proceed to cycle-012 Wave 2 integration gate, then `/vsdd-factory:run-phase phase-f5-scoped-adversarial` (pipeline already ACTIVE; no rehydrate needed this session).
+
+**Counts:** total_bcs 769 (unchanged); VP count 86 (unchanged); holdout scenarios 118 (unchanged); total_stories 182 (unchanged).
+```
+
+---
+
 ## Session Resume Checkpoint (2026-09-14) — cycle-012 F4 Wave 2 Story 2 CONVERGED (Step 4.5 3/3 CLEAN); demo skipped; v4.31 active state (pre-merge)
 
 **Archived from STATE.md v4.31 on 2026-09-14. Superseded by the v4.32 Story 2 MERGED / Wave 2 COMPLETE burst.**

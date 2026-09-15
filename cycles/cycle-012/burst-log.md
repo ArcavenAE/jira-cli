@@ -89,3 +89,44 @@ traces_to: STATE.md
 **Dim-7 Attestation:** CI-relevant: PR #812's own CI run (24/24 checks) is the relevant CI evidence; no `.github/` workflow file touched by this state-management burst itself.
 
 ---
+
+## Burst: Burst 3 — Phase F5 (scoped adversarial refinement) CONVERGED; fix PR #813 MERGED; STATE.md v4.32->v4.33 (2026-09-15)
+
+**Parent-commit:** `develop` fast-forwarded `2a0b0fae` -> `80bb4215` via PR #813 squash-merge (`--admin`, 2026-09-15T00:14:11Z).
+
+**Trigger:** cycle-012 Wave 2 integration gate cleared; `vsdd-factory:phase-f5-scoped-adversarial` ran against the full cycle-012 delta (both waves: PR #809/#811 platform path + PR #812 JSM path). Adversary Pass 1 (pre-fix) surfaced OBS-1 (a scope-leak: Story 1's `changed_fields --output json` lowercase-key remapping had broadened beyond ADF fields to affect non-ADF system fields on `issue edit`). In parallel, code-reviewer surfaced H-1 (`jsm_create.rs` missing from `CLAUDE.md` Known Size Deviations), M-1 (`field_resolve.rs` size entry stale), M-3 (stale `isAdfRequest` comment). Security-reviewer ran CLEAN from the start (0 CRIT/HIGH/MED; SEC-001 LOW pre-existing, not reachable via cycle-012 paths).
+
+**Actions taken:**
+
+1. **Fix PR #813** (`fix/cycle012-f5-findings`) opened addressing all four Pass-1 findings: human ruling narrowed the OBS-1 remapping to ADF fields only (`description`/`environment`) with a regression test added; `CLAUDE.md` Known Size Deviations gained a `jsm_create.rs` entry (H-1) and had its `field_resolve.rs` entry refreshed to 2,269 LOC (M-1); the stale `isAdfRequest` comment was corrected (M-3).
+2. **Re-review Passes A/B/C** ran against the fix-PR delta — all three independent, fresh-context, `VERDICT CLEAN NITPICK_ONLY`, zero CRIT/HIGH/MED. 3/3 consecutive CLEAN reached Pass C (2026-09-15) — **F5 CONVERGED** per the standard bar (DEC-360 precedent). Full per-pass detail: `cycles/cycle-012/convergence-trajectory.md`.
+3. **PR #813 merged**: fresh-eyes pr-reviewer APPROVE, CI 21/21 green incl. CI Gate, security review CLEAN — squash-merged to `develop` with `--admin`. Worktree + branch cleaned up.
+4. **STATE.md updated** (v4.32 → v4.33, single full-content Write per hook-guard discipline): `phase` / `last_amended` / `current_step` / `current_cycle` / `feature_mode_bundle` / `cycle_012_status` / `timestamp` updated to record F5 CONVERGED + fix PR #813 merged; NEXT = F6 targeted hardening (in progress) → F7 delta convergence + human gate. Phase Progress: `CYCLE-012-F5-CONVERGED-2026-09-15` row added. Session Resume Checkpoint replaced (prior v4.32 checkpoint archived to `cycles/cycle-012/session-checkpoints.md`). New debt items (M-2, OBS-A, OBS-3) added to Drift/Standing Items + `cycles/OPEN-STANDING-ITEMS.md`.
+5. **L-010 lesson recorded** in `cycles/cycle-012/lessons.md` — F5's integration-scope pass caught a cross-story side effect (OBS-1) that neither story's own per-story Step-4.5 convergence could structurally have seen.
+
+**Adversary verdict:** CONVERGED — 3/3 consecutive CLEAN (Passes A/B/C), zero CRIT/HIGH/MED, on top of the Pass-1 pre-fix findings (1 adversary OBS + 3 code-reviewer H-1/M-1/M-3), all resolved. Trajectory: `4→0→0→0`.
+
+**Codifications:** No new DEC minted (F5 convergence + fix-PR merge is a standard pipeline-phase outcome, not a human-gate scope decision). Counts unchanged: 769 BCs / 86 VPs / 118 holdouts / 182 stories.
+
+**Closes:** cycle-012 Phase F5 (scoped adversarial refinement). **Does NOT close:** cycle-012 itself (F6/F7 remain before cycle close); cycle-007 (remains PAUSED, Wave-2 integration gate still PENDING on resume).
+
+**Outcome:** cycle-012 (`field-adf-autoconvert`) F5 CONVERGED. `develop` at `80bb4215`. NEXT = Phase F6 targeted hardening (in progress) → F7 delta convergence + human gate.
+
+**Files touched (Dim-1): 6 unique files/paths this burst, all committed in the state-manager's own single atomic commit on `factory-artifacts`**
+
+- `.factory/STATE.md` (modified — v4.32 → v4.33)
+- `.factory/cycles/cycle-012/convergence-trajectory.md` (created — F5 finding progression + per-pass detail)
+- `.factory/cycles/cycle-012/burst-log.md` (modified — this entry)
+- `.factory/cycles/cycle-012/lessons.md` (modified — L-010 added)
+- `.factory/cycles/cycle-012/session-checkpoints.md` (modified — v4.32 checkpoint archived)
+- `.factory/cycles/OPEN-STANDING-ITEMS.md` (modified — M-2/OBS-A/OBS-3 debt items added)
+
+**Dim-2 Attestation:** No BC/VP/holdout INDEX content changed this burst. Counts unchanged: 769 BCs / 86 VPs / 118 holdouts / 182 stories.
+
+**Dim-5 Attestation:** N/A — no binary/WASM artifact produced by this `.factory/` commit.
+
+**Dim-6 Attestation:** `src/` change this burst is fix PR #813's own delta (doc corrections in `CLAUDE.md`, `changed_fields` scope-narrowing in `field_resolve.rs`, comment fix in JSM create path), already TDD/adversarial-reviewed prior to this burst; `develop` HEAD moved `2a0b0fae` → `80bb4215`.
+
+**Dim-7 Attestation:** CI-relevant: PR #813's own CI run (21/21 checks incl. CI Gate) is the relevant CI evidence; no `.github/` workflow file touched by this state-management burst itself.
+
+---

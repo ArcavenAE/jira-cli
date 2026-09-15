@@ -10,6 +10,41 @@
 > `MUTANTS-NIGHTLY-VERIFY-FULL-RUN`, `STATE-MD-OVER-SOFT-TARGET`) stay
 > inline in STATE.md itself and are NOT duplicated here except where noted.
 
+## cycle-012 Phase F5 follow-ups — M-2, OBS-A, OBS-3 (2026-09-15, Burst 3)
+
+**Status:** OPEN, all LOW, non-blocking. Surfaced by Phase F5 scoped adversarial refinement (code-reviewer
++ adversary Passes A/B/C) after Wave 2 integration; not fixed in fix PR #813 (which addressed only the
+CRIT/HIGH/MED-tier Pass-1 findings OBS-1/H-1/M-1/M-3). Full F5 trajectory: `cycles/cycle-012/convergence-trajectory.md`.
+
+**`M-2` (F5 code-review, 2026-09-14):** The `--markdown` + `--field description=` conflict predicate
+(DEC-359's uniform-exit-64 guard) is triplicated verbatim across `src/cli/issue/create.rs`,
+`src/cli/issue/edit.rs`, and `src/cli/issue/jsm_create.rs`. Extract a shared
+`field_pairs_raw_key_matches` helper into `src/cli/issue/field_resolve.rs` so the three call sites share
+one implementation instead of three copies that can drift independently. Deferred to a future maintenance
+sweep (single-source convention); not urgent -- the three copies are currently byte-identical and each is
+covered by its own command family's test suite.
+
+**`OBS-A` (F5 adversary Pass A, 2026-09-14):** The `environment` field's `changed_fields` lowercase-key
+arm (added by the OBS-1 fix in `field_resolve.rs`, PR #813) has no NON-gated CI regression test -- only
+the gated live-E2E suite exercises it. This is a pre-existing Wave-1 coverage gap (the `description` arm
+has a non-gated regression test, `test_obs_1`; the `environment` arm does not), not a new defect introduced
+by the F5 fix. Candidate: mirror `test_obs_1` for `environment` in a non-gated wiremock/CLI test.
+
+**`OBS-3` (F5 adversary Pass B, 2026-09-14):** EC-3.8.019-4's supersession case (`--description X --field
+description=Y`, no `--markdown`, where `Y` lands in `resolved_adf_values`) has no dedicated test. The code
+path is identical to the already-tested string-wrap case and ordering is not considered a viable mutation
+target, so this is a coverage nit, not a correctness gap. Candidate: add a small dedicated test for
+completeness in a future maintenance sweep.
+
+**Also carried forward:** `CYCLE-012-STORY2-AC-012-OUTPUT-CHANNEL-WORDING` (L-008's AC-012 story-text
+stdout/stderr wording defect -- `S-cycle12-jsm-adf-autoconvert`'s story text names stdout for the
+field-conversion notice; actual/correct channel is stderr per jr's Symmetric output-channel convention;
+test correctly asserts stderr) -- this item is already tracked inline in STATE.md's `## Drift / Standing
+Items` (added at the Story 2 CONVERGED burst) and is NOT duplicated here; see STATE.md for current text.
+Target for all four items: a future maintenance sweep, or at F7 close if still open.
+
+---
+
 ## cycle-007 F4 follow-up — AUTH-REMEDIATION-EQUALS-FORM-BROADER (2026-09-11, PASS4-F2-SPEC-SWEEP burst)
 
 **ID:** `AUTH-REMEDIATION-EQUALS-FORM-BROADER`
