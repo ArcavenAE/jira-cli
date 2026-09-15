@@ -97,3 +97,23 @@ dimensions. Job A hygiene: 6 cycle-007 F3 artifacts had BENIGN input-hash drift,
 `compute-input-hash --update` in topological order; cycle-007 drift narrowed to the accepted
 `[live-state]` sentinel class only. No DEC minted that burst (automated gate, cycle-012 F6/F7-CONVERGED
 precedent). Full detail archived: `cycles/cycle-007/burst-log.md` Burst 7.
+
+## RESOLVED at cycle-007 F7 human-gate closure + v0.7.0-dev.6 release (2026-09-15, v4.39 -- archived from STATE.md's "RESOLVED prior burst" slot during the v4.40->v4.41 CYCLE-013-F3-APPROVED burst)
+
+cycle-007 (`auth-correctness-dx`) Phase F7 **HUMAN GATE APPROVED** -- human ruled "Approve & close" and
+explicitly chose to **cut a dev release** (DEC-362). Release executed via this repo's native
+release-metadata-PR precedent (not the vsdd-factory release skill): PR #815
+(`chore/release-v0.7.0-dev.6` -> `develop`) merged squash @ `7160a534`, mergedAt
+2026-09-15T14:53:32Z, all CI green, local review clean; annotated tag `v0.7.0-dev.6` pushed on
+`7160a534` (dev.5 topology -- tagged on `develop`, not promoted to `main`); `release.yml` run
+`34984900326` BUILDING the 5-platform prerelease (not yet published as of that write). Version
+bump `0.7.0-dev.5`->`0.7.0-dev.6`; CHANGELOG `[Unreleased]` promoted to `[0.7.0-dev.6] -
+2026-09-15`. dev.6 ROLLS UP all previously-untagged `develop` changes since dev.5: cycle-005
+(`adf-mentions`), cycle-006 (`mutants-ci-sharding`), the 2026-09-10 maintenance sweep, cycle-012
+(`field-adf-autoconvert`), and cycle-007 + the rustls 0.23.45 security bump -- the first tagged
+prerelease to capture cycle-005 and cycle-012's changes. S-7.02 Cycle-Closing Checklist CONFIRMED
+SATISFIED: all 8 cycle-007 process-gap/novel findings DEFERRED as tracked standing items in
+`cycles/OPEN-STANDING-ITEMS.md`, none left uncovered; no new deferrals invented. **cycle-007
+CLOSED.** cycle-012 remains CLOSED (DEC-361), unaffected beyond now sharing the release. **All
+nine tracked cycles (001-007, 012) now CLOSED.** Pipeline fully idle/paused at that point.
+`activation_head` -> `7160a534`; `activation_version` -> `v0.7.0-dev.6`.

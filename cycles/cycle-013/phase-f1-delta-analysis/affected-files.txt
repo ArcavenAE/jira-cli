@@ -7,7 +7,6 @@
 Cargo.toml	MODIFIED	MEDIUM
 .github/workflows/ci.yml	MODIFIED	MEDIUM
 tests/ci_gate_completeness.rs	MODIFIED	HIGH
-tests/common/wf.rs	MODIFIED	LOW
 CLAUDE.md	MODIFIED	LOW
 src/cli/auth/keychain.rs	MODIFIED	LOW
 src/cli/board.rs	MODIFIED	LOW
@@ -18,3 +17,24 @@ docs/superpowers/specs/2026-03-21-jr-jira-cli-design.md	MODIFIED	LOW
 
 src/output.rs	DEPENDENT	MEDIUM
 src/cli/auth/tests/snapshots/jr__cli__auth__tests__list_table_snapshot.snap	DEPENDENT	MEDIUM
+
+# Reconciliation removal (Pass-4 F-D, sourced from Pass-3 F-H1): `tests/common/wf.rs` was
+# originally listed here as `MODIFIED LOW`. F-H1 (Pass-3) found this wrong — wf.rs's ~L1782-1784
+# region is a hypothetical decoy-attack narrative fixture, not the real `msrv` job step shape,
+# and S1 (S-cycle13-msrv-cargo-ci-atomic-bump) treats it as READ-ONLY / out-of-scope: grepped
+# only (to confirm it stays on the AC-008 DECOY-PRESERVE allow-list), never edited. The row is
+# removed rather than re-annotated because this manifest's schema (line 3 above) has no
+# READ-ONLY/out-of-scope change-type — a file that is never edited does not belong in a
+# "files needing changes" manifest. See S-cycle13-msrv-cargo-ci-atomic-bump.md's Architecture
+# Mapping table and AC-008 DECOY-PRESERVE allow-list for the authoritative read-only
+# classification.
+
+# Reconciliation addition (Pass-3 F-M4, S-cycle13-letchain-retrofit-convention-cleanup AC-007/AC-008):
+# the two rows below are NOT part of F1's original delta-analysis scope — they are legitimately
+# in-scope via ADR-0025's prose-currency Consequences (bundled into F2/F3 per the orchestrator's
+# task framing for this cycle), not an F1-identified delta. Recorded here so S2's own
+# diff-scope-check Architecture Compliance Rule (git diff vs. this manifest) does not
+# false-positive on them. See S-cycle13-letchain-retrofit-convention-cleanup.md AC-007/AC-008 for
+# the specific prose being refreshed in each file.
+.factory/specs/prd/bc-5-boards-sprints.md	MODIFIED	LOW
+.factory/specs/prd/cross-cutting.md	MODIFIED	LOW
