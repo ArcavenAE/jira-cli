@@ -181,4 +181,29 @@ Archived verbatim (condensed to State + Resume Prompt) from STATE.md v4.15 below
 
 ---
 
+## Checkpoint: STATE.md v4.35 (2026-09-15, CYCLE-012-F7-APPROVED-CLOSED)
+
+**Status:** SUPERSEDED 2026-09-15 by the v4.36 CYCLE-007-WAVE2-GATE-PASSED-F4-COMPLETE checkpoint (cycle-007's Wave-2 integration gate PASSED this burst; Phase F4 COMPLETE). Archived verbatim from STATE.md v4.35 below.
+
+### State
+
+| Field | Value |
+|-------|-------|
+| **Date** | 2026-09-15 |
+| **Position** | cycle-012 (`field-adf-autoconvert`) **CLOSED** at the Phase F7 human gate -- APPROVED ("Approve & close", DEC-361); release decision: ship on `develop`, NO TAG (cycle-005 precedent). **Pipeline idle/paused-ready** -- no active cycle. cycle-007 (`auth-correctness-dx`) remains **PAUSED** at F4 IMPL COMPLETE (Wave-2 gate PENDING, resumable). |
+| **Convergence counter** | none active -- cycle-012's F1-F7 sequence is fully closed; no convergence track in flight. |
+| **In-flight work** | NONE. cycle-012 is CLOSED. No open PRs (#809/#810/#811/#812/#813 all MERGED). No story worktrees. |
+
+### Resume Prompt
+
+```
+**Date:** 2026-09-15. cycle-012 (`field-adf-autoconvert`) CLOSED at the Phase F7 human gate -- APPROVED ("Approve & close", DEC-361); release decision: ship on `develop`, NO TAG (cycle-005 precedent). Pipeline idle/paused-ready -- no active cycle. cycle-007 (`auth-correctness-dx`) remains PAUSED at F4 IMPL COMPLETE (Wave-2 gate PENDING, resumable).
+
+**Pending human decisions / blockers:** NONE open. LOW standing items unchanged, deferred to a future maintenance sweep: M-2/OBS-A/OBS-3 (F5 debt), pre-existing SEC-001-EDITMETA-RECURSION-GUARD, E2E-COMPONENT-FILTER-SEARCH-INDEX-FLAKE (unrelated), F6 residuals L-1 (gated JSM live-E2E coverage) and L-2 (repo-wide unprovisioned Kani/fuzz). cycle-007 Wave-2 integration gate still PENDING (resumable any time).
+
+**Resume command (future session's choice):** (a) `/vsdd-factory:session-review` for an optional cycle-012 session review; (b) `/vsdd-factory:rehydrate-wave` then `/vsdd-factory:next-step` to resume cycle-007's Wave-2 integration gate; or (c) `/vsdd-factory:maintenance-sweep` to burn down the deferred LOW debt.
+```
+
+---
+
 <!-- Repeat for each archived checkpoint. Maintain chronological order (newest first). -->

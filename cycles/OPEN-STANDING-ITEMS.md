@@ -84,6 +84,32 @@ file is unlocked.
 
 ---
 
+## cycle-007 Wave-2 gate finding OBS-C-01 — CYCLE-007-STORY-STATUS-DRAFT-POSTMERGE (2026-09-15)
+
+**ID:** `CYCLE-007-STORY-STATUS-DRAFT-POSTMERGE`
+**Severity:** LOW, non-blocking, process-gap.
+**Status:** OPEN.
+
+**Summary:** All cycle-007 F3 story frontmatter (including the merged Wave-1 stories A/C/D/B1 and
+the merged Wave-2 story B2) still reads `status: draft` post-merge — the story files were never
+flipped to `status: done`/`merged` after their respective PRs landed (`#803`/`#805`/`#804`/`#806`/`#807`).
+This is systemic, not specific to any one story: `.factory/STATE.md`'s Phase Progress table and
+`cycle_007_status` frontmatter field are the authoritative status source, so no downstream
+consumer has actually been misled by the stale story-file field — but the drift itself is real.
+
+**Candidate fix:** a status-flip sweep across all 5 story files at cycle-007's full close (F7),
+setting each to its terminal status and citing the merging PR.
+
+**Open question (also part of this item's scope):** verify whether prior CLOSED cycles
+(001-006, 012) left their own story files at `status: draft` post-merge as well — i.e., whether
+this is an accepted repo-wide convention (STATE.md is the single source of truth, story-frontmatter
+status is decorative/not authoritative) or a genuine drift gap worth fixing everywhere. Do not
+assume either answer; check a sample of closed-cycle story files before scoping the fix.
+
+**Source:** cycle-007 Wave-2 integration gate, adversary Pass C (2026-09-15).
+
+---
+
 ## cycle-007 F4 follow-up — AUTH-REMEDIATION-EQUALS-FORM-BROADER (2026-09-11, PASS4-F2-SPEC-SWEEP burst)
 
 **ID:** `AUTH-REMEDIATION-EQUALS-FORM-BROADER`

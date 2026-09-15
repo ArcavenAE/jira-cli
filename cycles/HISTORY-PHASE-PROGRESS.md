@@ -45,3 +45,14 @@ See `cycles/cycle-005/burst-log.md` Bursts 11-12 for full narrative detail (thes
 | Phase | Status | Completed | Gate | Notes | Finding Progression |
 |-------|--------|-----------|------|-------|---------------------|
 | **CYCLE-012-F4-STARTED-2026-09-13** | **COMPLETE** | 2026-09-13 | per-story TDD delivery | global STORY-INDEX 180->182 registered; pipeline ACTIVE; CI/CD gate PASS (develop@`30bb1a18`); Story 1 delivery starting. v4.25->v4.26. | 769 BCs / 86 VPs / 118 holdout / 182 stories |
+
+---
+
+> Extracted from `.factory/STATE.md`'s `## Phase Progress` table during the
+> 2026-09-15 CYCLE-007-WAVE2-GATE-PASSED-F4-COMPLETE burst (v4.35 -> v4.36), to keep
+> the live table at 10 rows after adding the new `CYCLE-007-WAVE2-GATE-PASSED-F4-COMPLETE-2026-09-15`
+> row. This was the oldest row at that point; archived here verbatim, unedited.
+
+| Phase | Status | Completed | Gate | Notes | Finding Progression |
+|-------|--------|-----------|------|-------|---------------------|
+| **CYCLE-012-STORY1-DELIVERED-2026-09-14** | **COMPLETE** | 2026-09-14 | Story 1 per-story TDD delivery + merge | S-cycle12-platform-adf-autoconvert MERGED PR #809 @ `e926cb70` (squash, `develop`). Step 4.5 CONVERGED 3 consecutive CLEAN (7 passes total). 8 BCs (BC-3.3.013/014/015, BC-3.4.033-037) + 4 VPs (VP-FIELD-ADF-001/002/003/004). rustls RUSTSEC-2026-0285 cleared (PR #810 @ `71d98800`). develop: `30bb1a18`->`71d98800`->`e926cb70`. Wave 1 COMPLETE; Wave 2 ELIGIBLE. v4.26->v4.27. | 769 BCs / 86 VPs / 118 holdout / 182 stories |

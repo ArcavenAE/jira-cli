@@ -224,3 +224,53 @@ traces_to: STATE.md
 **Dim-7 Attestation:** N/A — no CI-workflow change this burst.
 
 ---
+
+## Burst: Burst 5 — cycle-007 Wave-2 INTEGRATION GATE PASSED; Phase F4 COMPLETE (2026-09-15)
+
+**Parent-commit on develop:** `80bb4215` (unchanged this burst; already carries cycle-012's F5 fix PR #813 on top of cycle-007's Story B2 squash-merge PR #807, which landed in an earlier session prior to this gate assessment).
+
+**Trigger:** Session resumed cycle-007, which was PAUSED at "F4 IMPL COMPLETE, Wave-2 gate PENDING." Story B2 (`S-cycle7-auth-status-json`, PR #807) was already merged to `develop` in a prior session; this burst runs the pending Wave-2 integration gate that had not yet been assessed.
+
+**Actions taken:**
+
+1. **Wave-2 INTEGRATION GATE assessed and PASSED** (all gate dimensions, sole Wave-2 story B2):
+   - **Regression:** auth test suites GREEN on `develop@80bb4215` — `auth_status_json` 31/0, lib `auth` 270/0, `auth_profiles` 46/0.
+   - **Wave adversarial review:** 3 consecutive CLEAN passes (A/B/C), zero CRITICAL/HIGH/MEDIUM findings.
+   - **Wave security review:** CLEAN — 0 CRIT/HIGH/MED; 1 LOW accepted (env value emitted verbatim in `auth status --output json`'s `env` key; self-authored config, documented lossless-machine-channel design choice, not a leak).
+   - **Consistency validation:** PASS — BC-1.6.050 ↔ code ↔ tests aligned; `check-spec-counts.sh` and `check-bc-cumulative-counts.sh` both exit 0.
+   - **Holdout:** Wave-2 scenarios covered. `H-W2-INT-001` (cross-command runtime parity between `auth list`/`auth status` STATUS derivation) satisfied structurally — both commands route through the shared `derive_auth_state` helper (VP-AUTHDX-024), with AC-002 shared-derivation and AC-011 field-name-match closing the parity requirement.
+   - **Demo:** SKIPPED — prior human decision (already recorded in the Skip Log for Story B2).
+
+2. **cycle-007 Phase F4 COMPLETE** — all 5 stories merged (A/C/D/B1 Wave 1 + B2 Wave 2) and both wave integration gates PASSED.
+
+3. **New standing item recorded:** `CYCLE-007-STORY-STATUS-DRAFT-POSTMERGE` (OBS-C-01, LOW, process-gap, surfaced by Wave-2 gate adversary Pass C) — all cycle-007 F3 story frontmatter, including the merged stories, still reads `status: draft` post-merge; STATE.md remains the authoritative status source. Candidate: a status-flip sweep at cycle-007's full close (F7); also flagged as an open question whether prior CLOSED cycles left the same gap or whether this is accepted convention. Full text: `cycles/OPEN-STANDING-ITEMS.md`.
+
+4. **Confirmed no duplicate:** `NFR-O-N-CATALOG-RETIREMENT-EDIT` (cycle-007 Wave-2 gate finding F-B2-01) was already added in a prior burst (commit `bb0e1a9d`) — not re-added.
+
+5. **STATE.md updated** (v4.35 → v4.36, single full-content Write per hook-guard discipline): Phase Progress row `CYCLE-007-WAVE2-GATE-PASSED-F4-COMPLETE-2026-09-15` appended (oldest row `CYCLE-012-STORY1-DELIVERED-2026-09-14` archived to `cycles/HISTORY-PHASE-PROGRESS.md`, keeping the table at 10 rows); Current Phase Steps rewritten; `cycle_007_status` updated from "PAUSED at F4 IMPL COMPLETE (Wave-2 gate PENDING)" to "F4 COMPLETE (both waves gated); Wave-2 gate PASSED 2026-09-15. F5/F6/F7 REMAIN (not yet started)."; Session Resume Checkpoint replaced (prior checkpoint archived to `cycles/cycle-007/session-checkpoints.md`); Drift/Standing Items updated with the new `CYCLE-007-STORY-STATUS-DRAFT-POSTMERGE` entry. Pipeline remains PAUSED — no in-flight work started this burst.
+
+**Adversary verdict:** N/A — bookkeeping burst (state + cycle files only; no code or spec-body change this burst; the 3/3 CLEAN adversarial passes cited above were the Wave-2 gate's own review track, already conducted prior to this state-manager recording burst).
+
+**Codifications:** No new DEC minted this burst — matches the Wave-1 gate precedent (Burst 4): an integration-gate PASS recorded by the state-manager is an automated/bookkeeping outcome, not a human decision point. `CYCLE-007-STORY-STATUS-DRAFT-POSTMERGE` standing item added.
+
+**Closes:** Nothing. **Does NOT close:** cycle-007 itself (F5/F6/F7 remain, not yet started).
+
+**Outcome:** cycle-007 (`auth-correctness-dx`) Phase **F4 COMPLETE**. Pipeline remains PAUSED/idle — no active cycle resumed for further work this burst. All counts unchanged (769 BCs / 86 VPs / 118 holdouts / 182 stories).
+
+**Files touched (Dim-1): 5 unique files/paths this burst, all committed in the state-manager's own single atomic commit on `factory-artifacts`**
+
+- `.factory/STATE.md` (modified — v4.35 → v4.36; Wave-2 gate PASSED, F4 COMPLETE)
+- `.factory/cycles/cycle-007/burst-log.md` (modified — Burst 5 appended)
+- `.factory/cycles/HISTORY-PHASE-PROGRESS.md` (modified — oldest Phase Progress row archived)
+- `.factory/cycles/cycle-007/session-checkpoints.md` (modified — prior v4.35 checkpoint archived)
+- `.factory/cycles/OPEN-STANDING-ITEMS.md` (modified — `CYCLE-007-STORY-STATUS-DRAFT-POSTMERGE` item appended)
+
+**Dim-2 Attestation:** No BC/VP/holdout INDEX content changed this burst. Counts unchanged: 769 BCs / 86 VPs / 118 holdouts / 182 stories. No DEC minted.
+
+**Dim-5 Attestation:** N/A — process-bookkeeping only, no binary/WASM artifact produced.
+
+**Dim-6 Attestation:** `develop` HEAD unchanged this burst (`80bb4215`) — no code merged; this burst records a gate assessment only.
+
+**Dim-7 Attestation:** N/A — no CI-workflow change this burst.
+
+---
