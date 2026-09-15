@@ -67,3 +67,16 @@ See `cycles/cycle-005/burst-log.md` Bursts 11-12 for full narrative detail (thes
 | Phase | Status | Completed | Gate | Notes | Finding Progression |
 |-------|--------|-----------|------|-------|---------------------|
 | **CYCLE-012-STORY1-E2E-VERIFIED-2026-09-14** | **COMPLETE** | 2026-09-14 | E2E live-Jira verification; AC-014 adaptive read-back strengthened (PR #811) | `test_e2e_issue_edit_custom_field` PASSED live Jira (run `34881320608` @ `develop@67b3939a`). PR #811 MERGED (`67b3939a`, squash) -- ADF-aware assertion. E2E-EDIT-FIELD-ADF-HEURISTIC RESOLVED/VERIFIED. E2E-COMPONENT-FILTER-SEARCH-INDEX-FLAKE registered (LOW). L-007 added. develop: `71d98800`->`e926cb70`->`67b3939a`. v4.27->v4.28. | counts unchanged (769/86/118/182) |
+
+---
+
+> Extracted from `.factory/STATE.md`'s `## Phase Progress` table during the
+> 2026-09-15 CYCLE-007-F7-CONVERGED burst (v4.37 -> v4.38), to keep the live
+> table at 10 rows after adding the new `CYCLE-007-F6-HARDENED-2026-09-15` and
+> `CYCLE-007-F7-CONVERGED-2026-09-15` rows. These were the 2 oldest rows at
+> that point; archived here verbatim, unedited.
+
+| Phase | Status | Completed | Gate | Notes | Finding Progression |
+|-------|--------|-----------|------|-------|---------------------|
+| **SESSION-WRAP-PAUSE-2026-09-14** | **COMPLETE** | 2026-09-14 | Bookkeeping only, session wrap; no quality gate | pipeline ACTIVE->PAUSED at cycle-012 Wave-1-complete/E2E-verified boundary; v4.28->v4.29; session wrap | counts unchanged (769/86/118/182) |
+| **CYCLE-012-WAVE2-F4-STARTED-2026-09-14** | **COMPLETE** | 2026-09-14 | per-story TDD delivery start | pipeline PAUSED->ACTIVE. Local develop fast-forwarded to `67b3939a` (was `30bb1a18`); Main-Checkout Sync Protocol pre-check ran CLEAN. Worktree created: `.worktrees/S-cycle12-jsm-adf-autoconvert`, branch `feat/cycle12-jsm-adf-autoconvert`, base `67b3939a`. Story 2 (`S-cycle12-jsm-adf-autoconvert`, 13pts, strict TDD) delivery starting; Red Gate about to begin. v4.29->v4.30. | counts unchanged (769/86/118/182) |

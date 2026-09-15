@@ -14,7 +14,7 @@ inputs:
   - ".factory/cycles/cycle-007/phase-f3-stories/S-cycle7-readme-migration-note.md"
   - ".factory/stories/STORY-INDEX.md"
 traces_to: ".factory/phase-f2-spec-evolution/cycle-007-prd-delta.md"
-input-hash: "c6f8e19"
+input-hash: "42960f0"
 ---
 
 # F3 Extended Dependency Graph — `auth-correctness-dx` (cycle-007)

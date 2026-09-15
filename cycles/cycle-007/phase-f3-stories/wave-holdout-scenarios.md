@@ -12,7 +12,7 @@ inputs:
   - ".factory/cycles/cycle-007/phase-f3-stories/S-cycle7-auth-status-json.md"
   - ".factory/cycles/cycle-007/phase-f3-stories/wave-schedule.md"
 traces_to: "BC-1.4.032/033/034; BC-1.6.048/049/050; BC-1.1.004; VP-AUTHDX-024..029"
-input-hash: "f7d57aa"
+input-hash: "90e5644"
 ---
 
 # Wave Holdout Scenarios — `auth-correctness-dx` (cycle-007)

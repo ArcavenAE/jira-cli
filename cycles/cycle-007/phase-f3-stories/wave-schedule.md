@@ -12,7 +12,7 @@ timestamp: "2026-09-10T00:00:00"
 inputs:
   - ".factory/cycles/cycle-007/phase-f3-stories/dependency-graph-extended.md"
 traces_to: "dependency-graph-extended.md §4a"
-input-hash: "00f4118"
+input-hash: "babb42c"
 ---
 
 # F3 Wave Schedule — `auth-correctness-dx` (cycle-007)

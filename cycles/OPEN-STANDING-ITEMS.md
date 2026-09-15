@@ -167,6 +167,35 @@ candidates for a future doc-sweep or maintenance pass, not correctness issues.
 
 ---
 
+## cycle-007 Phase F6 hardening residuals (2026-09-15, Burst 7)
+
+**Status:** OPEN, all LOW, accepted. Surfaced by Phase F6 targeted hardening
+(`cycles/cycle-007/phase-f6-hardening/hardening-record.md`, commit `596ec950`); recorded into STATE.md
+in Burst 7 alongside Phase F7 CONVERGED. R3 from the hardening record (OBS-PB-1) is the same substance as
+`CYCLE-007-CR-001-KEYCHAIN-ERROR-VS-ABSENCE` above — not duplicated here.
+
+**`CYCLE-007-F6-R1-KEYRING-GATED-HUMAN-TEXT-COVERAGE` (F6 residual R1, 2026-09-14):** VP-029/BC-1.6.050
+Postcondition 6 human-text assertions (AC-006/007/008) run only under `JR_RUN_KEYRING_TESTS=1` — the
+human-text `Credentials:` path performs a real keychain probe with no default-CI injection seam. Consistent
+with the cycle-007 verification-delta coverage boundary and the VP-AUTHDX-007 `JR_RUN_KEYRING_TESTS=1`
+pattern; default-CI carries the regression weight via the pure `peek_oauth_app_source_for_test` helper,
+the probe-free JSON builder test, and the dispatch-arm coverage test instead. Accepted.
+
+**`CYCLE-007-F6-R2-DERIVE-AUTH-STATE-NO-MUTATION-COVERAGE` (F6 residual R2, 2026-09-14):** `derive_auth_state`
+has no cargo-mutants coverage because `src/api/auth.rs` is not in `.cargo/mutants.toml` `examine_globs`
+(pre-existing state, not introduced this cycle). Mitigated by an exhaustive truth-table + proptest that
+fully enumerate the finite domain (functionally equivalent to full mutation kill on a total pure function);
+the `probe_matching_kind_credential` exclusion pair is inert-but-retained. Related to (not a duplicate of)
+the pre-existing `FIX-F6-A`/`F6-MUTATION-EXAMINE-GLOBS-EXPANSION` item (cycle-004 maintenance items,
+below) — that item is the general `examine_globs` expansion debt; this residual is the specific
+cycle-007 instance of it. Accepted, documented.
+
+**Target for both items above:** a future maintenance sweep (natural pairing with
+`FIX-F6-A`/`F6-MUTATION-EXAMINE-GLOBS-EXPANSION`), or at cycle-007's F7 human-gate close if the human
+chooses to fold them in.
+
+---
+
 ## cycle-007 F4 follow-up — AUTH-REMEDIATION-EQUALS-FORM-BROADER (2026-09-11, PASS4-F2-SPEC-SWEEP burst)
 
 **ID:** `AUTH-REMEDIATION-EQUALS-FORM-BROADER`

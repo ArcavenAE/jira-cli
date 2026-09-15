@@ -369,3 +369,110 @@ state-recording burst).
 **Dim-7 Attestation:** N/A — no CI-workflow change this burst.
 
 ---
+
+## Burst: Burst 7 — cycle-007 Phase F6 targeted hardening + Phase F7 delta convergence recorded; benign input-hash drift resolved (2026-09-15)
+
+**Parent-commit:** No new `develop`-side commit this burst — bookkeeping/state-recording only. `develop`
+tip unchanged at `11c95d5e` (F6's `hardening-record.md` was already committed to `factory-artifacts` in a
+prior burst, commit `596ec950`). factory-artifacts commit produced by this burst (state-manager atomic
+commit — SHA recorded after push).
+
+**Adversary verdict:** N/A — bookkeeping/F6+F7-record burst (STATE.md + cycle file updates + 6
+input-hash refreshes only; no code or spec-body change; no `adversary` agent dispatched this burst). F6's
+hardening evidence (VP coverage, mutation/regression/security review) is the operative quality evidence
+for cycle-007 F6, already committed at `596ec950`. F7's fresh-context consistency-validator run (7
+dimensions, all PASS) is the operative convergence evidence for cycle-007 F7, summarized inline above.
+
+**Scope:** Two jobs, both bookkeeping/state-recording — no source code changed this burst.
+
+**Job A — benign input-hash drift resolution (hygiene).** The F7 drift check found 6 non-sentinel
+cycle-007 artifacts STALE because the `src/*.rs` files they cite as `inputs:` evolved during F4
+implementation and the F5 fix track — content of the 6 artifacts themselves was already F7-verified
+correct; `bc-1-auth-identity.md` itself unchanged. Re-hashed via `compute-input-hash --update` in
+topological (leaf-to-root) order so each file's hash reflects the final state of its own dependencies:
+
+1. `S-cycle7-auth-state-derivation.md` — `5048eff` → `73c15ab`
+2. `S-cycle7-auth-status-json.md` — `f728e9e` → `59861b4`
+3. `S-cycle7-oauth-help-text-fix.md` — `696e65c` → `be6fed2`
+4. `dependency-graph-extended.md` — `c6f8e19` → `42960f0` (inputs the 3 story files above, all
+   already re-hashed by the time this one was computed — correct topological order)
+5. `wave-schedule.md` — `00f4118` → `babb42c` (inputs `dependency-graph-extended.md`, already updated)
+6. `wave-holdout-scenarios.md` — `f7d57aa` → `90e5644` (inputs `wave-schedule.md` + the 3 story files,
+   all already updated)
+
+Post-update `--check` on all 6: exit 0 (MATCH). The 3 `[live-state]` sentinels (`burst-log.md`,
+`lessons.md`, `session-checkpoints.md`) left byte-for-byte unchanged, confirmed via `grep`. A repeat
+`--scan cycles/cycle-007` now reports `TOTAL=13 MATCH=9 STALE=3` — the 3 remaining STALE are exactly the
+`[live-state]` sentinel class (accepted convention, not real drift).
+
+**Job B — record Phase F6 + Phase F7 in STATE.md.** cycle-007's Phase F6 targeted hardening was already
+executed and its evidence committed in a prior burst (`hardening-record.md` @ commit `596ec950`,
+2026-09-14T23:32:54Z) but STATE.md had not yet been updated to reflect it — STATE.md still showed F5
+CONVERGED as the latest state entering this burst. This burst records both F6 and the newly-run F7 delta
+convergence check into STATE.md in one pass:
+
+- **F6 — HARDENED_WITH_RESIDUALS.** All 6 VPs (VP-AUTHDX-024..029) covered with cited tests, no uncovered
+  axis. Kani/cargo-fuzz proptest-substitution JUSTIFIED (0-GAP, cycle-002/003/004/005/012 precedent).
+  Mutation gate: `list.rs`/`status.rs` in `examine_globs` (covered); `auth.rs` deliberately NOT in
+  `examine_globs` — `derive_auth_state` is instead covered by an exhaustive truth-table + proptest (the
+  probe-consolidation exclusion is inert-but-retained). cargo-mutants GREEN in CI on merge PRs (not
+  re-run locally this burst, per policy — no source changed). 366 auth tests pass locally. Security scan
+  CLEAN. DTU/accessibility N/A (`dtu_required: false`, CLI-only). 3 LOW residuals accepted: R1
+  (keyring-gated human-text coverage only), R2 (`auth.rs` outside `examine_globs`, by design), R3 (same
+  item as the already-tracked `CYCLE-007-CR-001-KEYCHAIN-ERROR-VS-ABSENCE` / CR-001, not a new finding).
+- **F7 — CONVERGENCE ALL 7 DIMENSIONS PASS.** A fresh-context consistency-validator ran: spec↔code PASS;
+  code↔test PASS (static analysis + prior green CI/gate evidence — a full dynamic test run was attempted
+  but hung on build-lock contention with concurrent agents in this session and was not force-retried, per
+  the orchestrator's explicit "do NOT run cargo tests" instruction for this burst); traceability PASS;
+  index-consistency PASS (`check-spec-counts.sh` + `check-bc-cumulative-counts.sh` both exit 0, 769 BCs
+  confirmed); ADR alignment PASS (ADR-0011 Profile fence, ADR-0020 Accepted, both consulted — no
+  contradiction with cycle-007's auth-probe changes); citation-integrity PASS (`claude_md_citations`
+  61/61, `bc-citation` 525 clean, `cargo-mutants-policy-citations` 77 pairs clean); cross-references PASS.
+  Input-hash drift dimension: benign lifecycle drift only, resolved this burst by Job A above; remaining
+  drift is the accepted `[live-state]` sentinel class plus the pre-existing prior-cycle baseline noted in
+  `INPUT-HASH-DRIFT-STALE-ARTIFACTS`.
+
+**Codifications:** No new DEC minted this burst — F6 hardening and F7 CONVERGED are both
+bookkeeping/automated-gate outcomes (feature-mode convention: no separate human gate for either, matching
+the cycle-012 F6/F7-CONVERGED precedent, where the DEC was minted only at the F7 *human-gate close*, not
+at CONVERGED). NEXT (future session) = cycle-007's Phase F7 **human gate** — final close approval +
+release decision.
+
+**Closes:** nothing new (no open findings this burst — F6/F7 both came back clean). **Does NOT close:**
+cycle-007 itself (the F7 human gate remains open, awaiting human approval + release ruling).
+
+**Outcome:** cycle-007 (`auth-correctness-dx`) Phase **F7 CONVERGED** (F6 HARDENED_WITH_RESIDUALS also
+now reflected). Pipeline remains PAUSED/idle — no active cycle resumed for further code work this burst.
+All counts unchanged (769 BCs / 86 VPs / 118 holdouts / 182 stories).
+
+**Files touched (Dim-1): 10 unique files/paths this burst, all committed in the state-manager's own
+single atomic commit on `factory-artifacts`**
+
+- `.factory/STATE.md` (modified — v4.37 → v4.38; F6 + F7 recorded)
+- `.factory/cycles/cycle-007/burst-log.md` (modified — Burst 7 appended, this entry)
+- `.factory/cycles/HISTORY-PHASE-PROGRESS.md` (modified — 2 oldest Phase Progress rows archived)
+- `.factory/cycles/cycle-007/session-checkpoints.md` (modified — prior v4.37 checkpoint archived)
+- `.factory/cycles/cycle-007/phase-f3-stories/S-cycle7-auth-state-derivation.md` (modified — input-hash
+  re-computed, Job A)
+- `.factory/cycles/cycle-007/phase-f3-stories/S-cycle7-auth-status-json.md` (modified — input-hash
+  re-computed, Job A)
+- `.factory/cycles/cycle-007/phase-f3-stories/S-cycle7-oauth-help-text-fix.md` (modified — input-hash
+  re-computed, Job A)
+- `.factory/cycles/cycle-007/phase-f3-stories/dependency-graph-extended.md` (modified — input-hash
+  re-computed, Job A)
+- `.factory/cycles/cycle-007/phase-f3-stories/wave-schedule.md` (modified — input-hash re-computed,
+  Job A)
+- `.factory/cycles/cycle-007/phase-f3-stories/wave-holdout-scenarios.md` (modified — input-hash
+  re-computed, Job A)
+
+**Dim-2 Attestation:** No BC/VP/holdout INDEX content changed this burst. Counts unchanged: 769 BCs / 86
+VPs / 118 holdouts / 182 stories. No DEC minted.
+
+**Dim-5 Attestation:** N/A — process-bookkeeping only, no binary/WASM artifact produced.
+
+**Dim-6 Attestation:** `develop` HEAD unchanged by this burst — no source code touched; `develop` remains
+at `11c95d5e` entering and leaving this burst.
+
+**Dim-7 Attestation:** N/A — no CI-workflow change this burst.
+
+---

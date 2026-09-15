@@ -19,7 +19,7 @@ inputs:
   - ".factory/phase-f2-spec-evolution/cycle-007-prd-delta.md"
   - ".factory/specs/prd/bc-1-auth-identity.md"
   - "src/cli/mod.rs"
-input-hash: "696e65c"
+input-hash: "be6fed2"
 traces_to: ".factory/phase-f2-spec-evolution/cycle-007-prd-delta.md §6.1"
 cycle: cycle-007-auth-correctness-dx
 estimated_effort: xsmall

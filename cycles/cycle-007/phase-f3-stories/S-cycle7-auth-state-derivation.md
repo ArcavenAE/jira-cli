@@ -21,7 +21,7 @@ inputs:
   - ".factory/specs/prd/bc-1-auth-identity.md"
   - "src/api/auth.rs"
   - "src/cli/auth/list.rs"
-input-hash: "5048eff"
+input-hash: "73c15ab"
 traces_to: ".factory/phase-f2-spec-evolution/cycle-007-prd-delta.md §2/§8"
 cycle: cycle-007-auth-correctness-dx
 estimated_effort: medium

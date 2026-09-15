@@ -1,10 +1,10 @@
 ---
 document_type: session-checkpoints
 level: ops
-version: "1.3"
+version: "1.4"
 status: archive
 producer: state-manager
-timestamp: 2026-09-12T00:00:00Z
+timestamp: 2026-09-15T04:49:40Z
 cycle: "cycle-007-auth-correctness-dx"
 inputs: [STATE.md]
 input-hash: "[live-state]"
@@ -16,6 +16,42 @@ traces_to: STATE.md
 <!-- Archived session resume checkpoints extracted from STATE.md.
      Only the LATEST checkpoint lives in STATE.md.
      Prior checkpoints are archived here for historical reference. -->
+
+## Session Resume Checkpoint (2026-09-15, STATE.md v4.37) — CYCLE-007-F5-CONVERGED: Phase F5 scoped adversarial refinement CONVERGED (4 rounds to 3/3 CLEAN); F6/F7 REMAIN — Superseded 2026-09-15 (v4.38 F6 HARDENED + F7 CONVERGED recorded)
+
+**Status:** SUPERSEDED 2026-09-15 by the v4.38 CYCLE-007-F7-CONVERGED checkpoint (Phase F6 targeted
+hardening HARDENED_WITH_RESIDUALS and Phase F7 delta convergence ALL 7 DIMENSIONS PASS both recorded;
+NEXT = F7 human gate). Archived verbatim (condensed) from STATE.md v4.37 below.
+
+**Date:** 2026-09-15. **Pipeline: PAUSED** (cycle-007 `auth-correctness-dx`). **Position:** cycle-007
+Phase **F5 CONVERGED** — adversary converged across 4 rounds to 3 consecutive CLEAN this burst;
+code-reviewer `APPROVE_WITH_NITS` (CR-002/CR-003 resolved, CR-001/CR-004 human-deferred); security-reviewer
+CLEAN. Findings resolved via fix PR #814 @ `11c95d5e` + commits `0b9fb1fc`/`878ebe67`. **F6/F7 REMAIN, not
+yet started** — pipeline PAUSED/resumable. cycle-012 (`field-adf-autoconvert`) remains **CLOSED** (DEC-361,
+F7 human gate APPROVED "Approve & close", 2026-09-15) — unaffected.
+
+**Convergence counter:** F5 loop CLOSED at 3/3 consecutive CLEAN (4 rounds total). cycle-007's F6 targeted
+hardening loop had not yet started.
+
+**In-flight work:** NONE. No open PRs (#803/#804/#805/#806/#807/#814 all MERGED for cycle-007;
+#809/#810/#811/#812/#813 all MERGED for cycle-012). No story worktrees.
+
+**Pending human decisions / blockers:** NONE open. LOW standing items: `CYCLE-007-CR-001-KEYCHAIN-ERROR-VS-ABSENCE`,
+`CYCLE-007-PROBE-ROUTING-NO-DEFAULT-CI-TEST`, `CYCLE-007-LEGACY-OAUTH-UNSET-METHOD-MISREPORT`,
+`CYCLE-007-OAUTH-ABSENCE-EXIT-CODE-ASYMMETRY`, `CANONICAL-COUNTS-BREAKDOWN-STALE`,
+`CYCLE-007-AUTH-LIST-LAZY-MIGRATION-WRITE`, `CYCLE-007-F5-DOC-NITPICKS` (all recorded v4.37 burst). Also:
+`M-2`/`OBS-A`/`OBS-3` (cycle-012 F5 debt), pre-existing `SEC-001-EDITMETA-RECURSION-GUARD`,
+`E2E-COMPONENT-FILTER-SEARCH-INDEX-FLAKE`, F6 residuals L-1/L-2, `CYCLE-007-STORY-STATUS-DRAFT-POSTMERGE`,
+`NFR-O-N-CATALOG-RETIREMENT-EDIT`.
+
+**Resume command (as of v4.37):** `/vsdd-factory:rehydrate-wave` then `/vsdd-factory:next-step` to begin
+cycle-007's Phase F6 targeted hardening; or `/vsdd-factory:maintenance-sweep` to burn down the deferred
+LOW debt first.
+
+**Counts:** total_bcs 769 (unchanged); VP count 86 (unchanged); holdout scenarios 118 (unchanged);
+total_stories 182 (unchanged).
+
+---
 
 ## Session Resume Checkpoint (2026-09-12, STATE.md v4.20) — SESSION-WRAP-PAUSE: All 5 cycle-007 stories merged @ develop@30bb1a18; Wave-2 gate PENDING; pipeline PAUSED — Superseded 2026-09-12 (v4.21 cycle-012 formalized)
 

@@ -70,3 +70,7 @@ Full sweep detail: `.factory/maintenance/sweep-report-2026-09-10.md`.
 | #801 | `14e695ae` |
 
 Sweep is fully closed with zero outstanding actions. `activation_head` frontmatter stays `a9168212` unchanged (no release tag cut). No DEC minted -- maintenance-mode bookkeeping only.
+
+## RESOLVED at cycle-007 Wave-2 gate (2026-09-15, v4.36 -- archived from STATE.md's "RESOLVED prior burst" slot during the v4.37->v4.38 CYCLE-007-F7-CONVERGED burst)
+
+cycle-007 (`auth-correctness-dx`) Wave-2 integration gate **PASSED** -- regression GREEN (`auth_status_json` 31/0, lib `auth` 270/0, `auth_profiles` 46/0 on `develop@80bb4215`); Wave-2 adversarial 3 consecutive CLEAN passes (A/B/C), zero CRIT/HIGH/MED; Wave-2 security CLEAN (1 LOW accepted); consistency PASS; holdout `H-W2-INT-001` satisfied structurally. **cycle-007 Phase F4 COMPLETE** (all 5 stories merged, both wave gates PASSED). New LOW standing item `CYCLE-007-STORY-STATUS-DRAFT-POSTMERGE` recorded; `NFR-O-N-CATALOG-RETIREMENT-EDIT` confirmed already present (commit `bb0e1a9d`), not duplicated. No DEC minted (bookkeeping/automated gate, Wave-1-gate precedent). Full detail archived: `cycles/cycle-007/burst-log.md` Burst 5.
