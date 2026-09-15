@@ -1,32 +1,65 @@
-# PR Review — #806 (Review Cycle 2)
+# PR Review — #812 (S-cycle12-jsm-adf-autoconvert)
 
-- **PR:** #806 — feat(auth): derive AuthState from pure helper; wire auth list to probe-based 3-state status (BC-1.6.048/049)
-- **Branch:** `feat/cycle7-auth-state-derivation`
-- **Covered HEAD SHA:** `d42d288e5bdff17336cf1b32a4edf711f2b452fb`
-- **Base:** `develop`
-- **Verdict:** APPROVE (0 blocking findings; 1 non-blocking documentation-accuracy note)
+- **PR:** https://github.com/Zious11/jira-cli/pull/812
+- **Branch:** `feat/cycle12-jsm-adf-autoconvert` → `develop`
+- **Reviewer:** pr-reviewer (fresh-eyes, cycle 1b)
+- **Scope reviewed:** full diff (5 files, +1851/-46) — src/api/jsm/requests.rs, src/cli/issue/jsm_create.rs, tests/issue_create_jsm.rs, tests/e2e_live.rs, CHANGELOG.md; plus PR description.
 
-## Delta since 0c034cb7 (re-review of new HEAD d42d288e)
-Single-file CHANGELOG.md addition: a macOS keychain ACL consent note stating that `jr auth list` now probes the keychain per URL-configured profile and that macOS users may see a one-time Keychain Access consent dialog after upgrading (does not appear on Linux/Windows). Accurate against the `collect_probe_results` behavior and consistent with the keyring/Windows Credential Manager posture in CLAUDE.md. Documentation-only; addresses NB-2/NB-4. No code/spec change; all prior findings carry forward.
+## Verdict: APPROVE
 
-## Delta 5ced48ca → 0c034cb7
-Only `tests/auth_profiles.rs` changed: two integration tests (`precedence_flag_overrides_env_overrides_config`, `test_bc_1_2_018_auth_list_remove_profile_flag_still_honored_not_rejected`) now set a unique `JR_SERVICE_NAME` to isolate the keychain service, so `collect_probe_results` (wired into `handle_list` by BC-1.6.049) no longer triggers a macOS ACL consent dialog. Both tests exercise `auth list` against URL-bearing profiles, so probing the real keychain was a genuine side-effect. Correct, well-scoped fix; service names are unique per test. No production/spec/doc changes — the prior review carries forward unchanged, including the non-blocking note below (nothing in `.cargo/mutants.toml` or the docs changed).
+Ready to merge. Zero CRITICAL/HIGH/MEDIUM findings. No blocking NITPICKs.
 
-## Cycle-1 fixes verified
-- **B-1** — `docs/specs/multi-profile-auth.md`: `STATUS ∈ {configured, no-credentials, unset}` with the 3-state derivation note. Correct.
-- **B-2** — `docs/specs/cargo-mutants-policy.md`: two-regex `probe_matching_kind_credential` exclusion documented with rationale. Correct.
-- **NB-1** — `test_bc_1_6_049_list_probes_at_most_once_per_url_profile` now asserts profile-specific map values (`with-url-1 → Some(&true)`, `with-url-2 → Some(&false)`, `no-url` absent, `len()==2`), killing the `results.insert(name, true)` clamp mutation. Fixed.
+## Basis
 
-## Correctness (all 3 states)
-- `derive_auth_state`: `None → Unset` regardless of `matching_kind_present`; `Some + false → NoCredentials`; `Some + true → Configured`. Matches documented truth table. Total, deterministic, pure. Exhaustive 4-class test + proptest.
-- `collect_probe_results`: faithfully stores probe return value, gates on `url.is_some()`, never probes `url: None`, injectable seam.
-- `probe_matching_kind_credential`: correct `auth_method == "oauth"` dispatch to `load_oauth_tokens` / else `load_api_token`.
-- Renderers: both pure (source-scan-enforced), route STATUS through `derive_auth_state(...).as_str()` / the enum; safe `unwrap_or(false)` fallback.
-- `handle_list`: single probe pass before output match; table + JSON share `probe_results`.
-- Serialization: `AuthState` serde kebab-case + `as_str()` agreement locked by test; JSON key-set unchanged (6 keys); snapshot regenerated honestly.
+1. **Assembly-order bug fix is correct.** `JsmRequestBuilder::build()` now inserts
+   summary/priority/labels → `extra_fields` loop → `resolved_adf_values` merge → THEN
+   `self.description`. This makes `--description`'s ADF deterministically supersede a
+   `--field description=` string-wrap (AC-006 / EC-3.8.019-4), and makes
+   `resolved_adf_values` supersede any same-key string-wrap. The asymmetry
+   (description wins over extra_fields; priority/labels still lose to extra_fields per
+   BC-3.8.008) is deliberate and documented in the code + CHANGELOG.
 
-## Non-blocking finding (NB)
-The `.cargo/mutants.toml` comment on the `src/cli/auth/list.rs` glob (and the mirroring text in `docs/specs/cargo-mutants-policy.md`) attributes `derive_auth_state` to that glob, but `derive_auth_state`/`AuthState` are defined in `src/api/auth.rs:2217/2259`, which is not in `examine_globs`. No correctness or gate-integrity risk — those symbols have strong direct unit tests (exhaustive truth table + proptest + serde-agreement). Suggest a one-line comment fix in a follow-up.
+2. **isAdfRequest purity is sound (AC-013).** `build()` computes
+   `description_is_adf || self.is_adf_request` — it never derives ADF-ness from value
+   shapes. The regression test (hinted `:id` field → JSON object must NOT trip
+   `isAdfRequest`) directly guards the exact mutant class. C.2 proptest correctly
+   tightened from `.and_then(as_bool).unwrap_or(false)` to `.is_none()` (ABSENT, not
+   explicit `false`).
 
-## CI at review time
-Format / Clippy (both OS) / MSRV / Spec Guards / Deny / gitleaks green; Test + Coverage + mutation shards still running.
+3. **Fail-open contract is correct (AC-008 / EC-3.8.019-2).**
+   `fetch_request_type_fields_cached` returns `None` on any error;
+   `resolve_jsm_adf_extra_fields` is infallible (no `Result`), emits exactly one global
+   stderr `warning:` line, degrades all bare values to plain strings (their untouched
+   shape), never sets `is_adf_request`, and never exits 64.
+
+4. **Empty-omit is correct (AC-007 / BC-3.8.021).** Empty/whitespace bare ADF-backed
+   field is dropped from both `extra_fields` and `resolved_adf_values`, contributes no
+   `is_adf_request` — distinct from the platform edit path's clear-doc semantics,
+   documented.
+
+5. **Backward compatibility intact.** All 6 pre-existing `requests.rs` call sites
+   (proptests + build tests) and the test helper pass `resolved_adf_values:
+   &BTreeMap::new()` / `is_adf_request: false`, preserving output byte-for-byte. Only
+   production caller is `handle_jsm_create`.
+
+6. **GET-gating correct (AC-015a).** `has_bare_field_pair` guard means hinted-only /
+   no-field creates issue zero metadata GETs. Cache-first via the shared
+   request_type_fields cache (7-day TTL).
+
+7. **ADF detection contract correct (AC-002).** `is_adf_field_value` called with
+   `rt_field.jira_schema` directly — no double-nesting; reuses the Story-1 shared
+   predicate, not re-implemented.
+
+## Test coverage
+
+Thorough. Resolution-layer wiremock tests isolate `JR_CACHE_DIR`/`XDG_CACHE_HOME`
+per-test under a mutex, driving the runtime outside the guard (no
+`clippy::await_holding_lock`). Recursive INV-1 no-raw-newline assertions on ADF text
+nodes, plus two pure `build()` regression tests for AC-006 and AC-013.
+
+## Quality gates (per PR evidence)
+
+- `cargo test --lib jsm` 31/0
+- `cargo test --test issue_create_jsm` 113/0
+- `cargo clippy -- -D warnings` clean
+- `cargo fmt --all -- --check` clean

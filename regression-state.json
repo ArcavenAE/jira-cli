@@ -1,1 +1,1 @@
-{"status":"pass","timestamp":"2026-09-14T18:07:10Z","command":"cd /Users/zious/Documents/GITHUB/jira-cli/.worktrees/fix-e2e-adf-readback && cargo test --test e2e_cli_surface_guard 2>&1 | tail -15"}
+{"status":"pass","timestamp":"2026-09-15T04:44:23Z","command":"wc -l /private/tmp/claude-501/-Users-zious-Documents-GITHUB-jira-cli/91d77cae-c185-46d2-9833-171e693efd20/tasks/b65tsck98.output 2>/dev/null; ps aux | grep -E \"cargo test|lsof\" | grep -v grep"}
