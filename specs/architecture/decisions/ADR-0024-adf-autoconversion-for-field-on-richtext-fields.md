@@ -1,7 +1,7 @@
 ---
 document_type: adr
 adr_id: ADR-0024
-status: proposed
+status: Accepted
 date: 2026-09-13
 subsystems_affected: ["SS-02", "SS-04", "SS-05", "SS-08"]
 supersedes: null
@@ -516,6 +516,13 @@ assigned to Stories 1 (platform path, `src/cli/issue/field_resolve.rs`) and 2 (J
 path, `src/api/jsm/requests.rs`). F4 TDD delivery pending. No `src/` code has been
 written as of this ADR's creation. This ADR will be set to `Accepted` when Story 1's
 PR merges.
+
+### Status as of 2026-09-14
+
+Accepted. Both implementing stories have merged: Story 1 (platform path, PR #809)
+and Story 2 (JSM path, PR #812). Cycle-012 F7 convergence confirmed. `status:`
+frontmatter updated from `proposed` to `Accepted` accordingly (spec-steward
+governance sweep).
 
 ## Alternatives Considered
 
