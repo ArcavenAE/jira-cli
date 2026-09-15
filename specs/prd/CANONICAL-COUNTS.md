@@ -66,7 +66,7 @@ BC-1.4.034 AMENDED in place (#784 + #786, narrowed to the two `src/api/auth.rs` 
 sites only — `src/cli/auth/status.rs`'s unrelated unknown-profile site, BC-1.1.004, deliberately
 NOT changed, preserving the taxonomy's "profile not found → 64" convention): quoted remediation
 command `jr auth login {profile}` (non-parsing positional form) corrected to `jr auth login
---profile {profile}`; error type `JrError::UserError`/exit 64 reclassified to
+--profile={profile}`; error type `JrError::UserError`/exit 64 reclassified to
 `JrError::NotAuthenticated`/exit 2. BC-1.6.047 AMENDED in place (EC-1.6.047-2's NFR-O-N contingency
 RESOLVED). BC-1.6.046 gains a non-normative cross-reference note (fixture STATUS values pending
 BC-1.6.049's F4 regeneration). BC-1.2.049 gains EC-1.2.049-3 (#790, non-blocking doc-alignment

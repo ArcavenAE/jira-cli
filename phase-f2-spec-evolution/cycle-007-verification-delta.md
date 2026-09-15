@@ -45,7 +45,7 @@ related_bcs:
   - BC-1.4.033
   - BC-1.4.034
   - BC-1.1.004
-input-hash: "fc636d3"
+input-hash: "31abc7b"
 ---
 
 # Verification Delta — cycle-007 `auth-correctness-dx`
@@ -322,8 +322,8 @@ assertable against an injected absent-credential state).
 **Property**:
 1. **(a) Remediation command parses (#784, the HIGH defect):** the literal
    remediation string emitted in BOTH error messages —
-   `jr auth login --profile <profile>` — when parsed through the actual clap
-   surface (`Cli::try_parse_from(["jr","auth","login","--profile","<profile>"])`)
+   `jr auth login --profile=<profile>` — when parsed through the actual clap
+   surface (`Cli::try_parse_from(["jr","auth","login","--profile=<profile>"])`)
    resolves successfully to `AuthCommand::Login { profile: Some("<profile>"), .. }`
    and does NOT produce a clap usage error. **NEGATIVE regression anchor:** the
    OLD positional form `["jr","auth","login","<profile>"]` MUST fail to bind
@@ -334,13 +334,13 @@ assertable against an injected absent-credential state).
    - BC-1.4.032 both-namespaced-keys-absent → `load_api_token` returns
      `JrError::NotAuthenticated`, `exit_code() == 2`, message
      `"No credentials stored for profile '{profile}'…run \`jr auth login
-     --profile {profile}\`…"` (contains the parsing `--profile` form). Legacy
+     --profile={profile}\`…"` (contains the parsing `--profile` form). Legacy
      pair present or absent yields the IDENTICAL error (Postcondition 2's
      symmetric outcome).
    - BC-1.4.033 exactly-one-namespaced-key-present (partial write) →
      `JrError::NotAuthenticated`, `exit_code() == 2`, message
      `"Incomplete credentials stored for profile '{profile}' — run \`jr auth
-     login --profile {profile}\`…"`.
+     login --profile={profile}\`…"`.
    - **Both messages carry the `--profile` form** (ties (a) and (b) together —
      the string a user is told to run is the string the parse test in (a) proves
      valid).
@@ -352,7 +352,7 @@ assertable against an injected absent-credential state).
      correct oracle), NOT a prefix-free equality against the whole `Display`
      output.
 3. **Message-recommendation guard (BC-1.4.033 Invariant 2, SR-009):** the
-   partial-write message recommends `jr auth login --profile <profile>` (or
+   partial-write message recommends `jr auth login --profile=<profile>` (or
    `jr auth remove <profile>`), NEVER `jr auth logout` (a no-op for api-token
    creds) — asserted by a substring-absence check on `"logout"` in the message.
 **Suggested names**: `test_bc_1_4_032_remediation_command_parses_against_clap`

@@ -97,6 +97,29 @@ traces_to: STATE.md
    _Follow-up: Follow-up story candidate — CI or pre-push script that diffs production error_
    _constants against expected-message test helpers. Deferred to cycle-008+ / maintenance sweep._
 
+## Process-Level — F5 Convergence
+
+8. **[PG-D1] Canonical-literal corrections must be grep-propagated across the WHOLE cycle tree, not just BC bodies** —
+   The da6f7839 equals-form fix (EC-1.4.032-6, space-form -> equals-form `--profile` remediation
+   literal) was applied to the BC bodies (`bc-1-auth-identity.md`) but not systematically swept
+   across every artifact that quotes the same literal. This left drift in F2 artifacts
+   (`cycle-007-prd-delta.md`, `cycle-007-verification-delta.md`, `error-taxonomy.md`,
+   `edge-case-catalog.md`, `CANONICAL-COUNTS.md`) and F3 stories
+   (`S-cycle7-credential-absence-fix.md`, `S-cycle7-readme-migration-note.md`) even after the BC
+   bodies and BC-INDEX were corrected. The gap surfaced TWICE at F5, as two separate findings
+   (F-C007-PASSC-M1 — BC-INDEX title-column drift; F-C007-PASSD-M1 — F2 verification-delta + F3
+   stories still quoting the broken space form) rather than being closed in one pass. Remedy: any
+   canonical-literal correction (a corrected error message, CLI syntax, or remediation string) must
+   be followed by a repo-wide `.factory/`-scoped grep for the OLD literal across specs, deltas, and
+   stories — not just the BC file where the correction originates — in the SAME burst as the fix,
+   same class as PG-A3 but scoped to spec/story artifacts rather than `src`/`tests`/CHANGELOG.
+   _Discovered: cycle-007 F5 scoped-adversarial review, passes yielding F-C007-PASSC-M1 and
+   F-C007-PASSD-M1, 2026-09-14. [process-gap]_
+   _Follow-up: Fold into product-owner/spec-steward sweep instructions: "After any canonical-literal
+   BC correction, grep the full `.factory/` cycle tree (specs/prd/, phase-f1/f2-*, cycles/<id>/) for
+   the old literal before declaring the correction complete." Justified deferral to a governance
+   policy addition._
+
 ## Policy Candidates
 
 <!-- Lessons that should be formalized as governance policies.
@@ -109,4 +132,5 @@ traces_to: STATE.md
 | 3 (PG-A3) | Remediation-string propagation: atomic multi-site grep + `#[ignore]`-test inclusion required | All error-message constant changes | proposed |
 | 4 (PG-A4) | Completeness-sweep instructions require explicit IN-SCOPE / OUT-OF-SCOPE / no-released-changelog fence | All propagation sweep task instructions | proposed |
 | 6 (PG-C1) | pr-manager dispatch prompts must carry hard "report-only, NO merge authority" contract; all merges route through orchestrator/human | pr-manager dispatch, all PR merge actions | proposed |
+| 8 (PG-D1) | Canonical-literal BC corrections must be grep-propagated across the whole `.factory/` cycle tree (specs + deltas + stories), not just BC bodies, in the same burst as the fix | All canonical-literal (error-message/CLI-syntax) correction tasks | proposed |
 | 7 (PG-B1) | After any shared helper/fixture change, run ENTIRE affected test module + grep-sweep all sibling sites before declaring fix complete | TDD inner loop, test-hardening task instructions | proposed |

@@ -83,7 +83,7 @@ Categories:
 
 ### EC-AUTH-010: `load_api_token` credential-absence remediation command must parse (cycle-007, #784)
 **Boundary**: A profile with no stored per-profile api-token credentials (both namespaced keys absent, or exactly one present) invokes any command requiring auth.
-**Expected**: The actionable error's remediation command is `jr auth login --profile {profile}` — the flag form `AuthCommand::Login` actually accepts (`profile: Option<String>` is `#[arg(long)]`-only) — never the positional `jr auth login {profile}` form, which fails clap parsing with exit 2 before ever reaching the login flow.
+**Expected**: The actionable error's remediation command is `jr auth login --profile={profile}` — the flag form `AuthCommand::Login` actually accepts (`profile: Option<String>` is `#[arg(long)]`-only) — never the positional `jr auth login {profile}` form, which fails clap parsing with exit 2 before ever reaching the login flow. (Equals form per EC-AUTH-013 below; the space form `--profile {profile}` is additionally rejected outright for hyphen-leading profile names.)
 **Status**: Covered by BC-1.4.032 Postcondition 2 / BC-1.4.033 Postcondition 2 (both AMENDED 2026-09-10, cycle-007 `auth-correctness-dx`).
 **Test gap**: A regression test asserting every `auth login` remediation string in the codebase contains `--profile` (not a bare positional) would close this class of defect proactively — recommended, not yet implemented as of this F2 pass.
 

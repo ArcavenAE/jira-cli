@@ -130,7 +130,7 @@ itself (see `bc-1-auth-identity.md`). Summarized here:
 
 | | Before | After |
 |---|---|---|
-| Remediation command | `jr auth login {profile}` (positional — does NOT parse: `AuthCommand::Login`'s `profile` field is `#[arg(long)]`-only) | `jr auth login --profile {profile}` |
+| Remediation command | `jr auth login {profile}` (positional — does NOT parse: `AuthCommand::Login`'s `profile` field is `#[arg(long)]`-only) | `jr auth login --profile={profile}` |
 | Error type / exit code | `JrError::UserError` / exit 64 | `JrError::NotAuthenticated` / exit 2 |
 
 Invariant 6, EC-1.4.032-1/4, VP-AUTHDX-005/007's quoted oracle text updated in lockstep.
@@ -145,7 +145,7 @@ remediation-command example, VP-AUTHDX-008's quoted oracle text updated in locks
 ### BC-1.4.034 — One-time re-login breaking-change contract
 
 Quotes BC-1.4.032's message verbatim, so it drifts whenever that BC's text changes. H1 title
-corrected `jr auth login <profile>` → `jr auth login --profile <profile>`; Postcondition 1's quoted
+corrected `jr auth login <profile>` → `jr auth login --profile=<profile>`; Postcondition 1's quoted
 message and Postconditions 2/3's command syntax corrected to match. New **cycle-007 addendum**
 added to its existing F4 doc-fallout obligation: the exit-code change (64→2) is itself an
 observably breaking change for any script/CI wrapper that greps for exit 64 on this credential-
@@ -218,7 +218,7 @@ Doc-only, scoped to the migration-note gap only (the primary README claim — "s
 model" — was already remediated before this cycle, per the validated triage report). **F4
 deliverable:** add to `README.md`'s existing migration section (near the `[instance]`→
 `[profiles.default]` reshape note) a bullet covering: pre-cycle-003 api-token profiles must run
-`jr auth login --profile <name>` once after upgrading (BC-1.4.034's breaking-change contract, now
+`jr auth login --profile=<name>` once after upgrading (BC-1.4.034's breaking-change contract, now
 with the corrected `--profile` syntax from this cycle), and the deliberate OAuth-vs-api-token
 migration asymmetry (OAuth lazy-migrates flat→namespaced keys; api-token does NOT, per BC-1.4.032's
 no-copy detect-and-instruct design). Recommend sequencing this edit AFTER the code change lands, so
@@ -1058,8 +1058,8 @@ earlier rounds' text.
 `#[error("Not authenticated. {hint}")]`) prepends `"Not authenticated. "` to whatever `hint` string is
 supplied. BC-1.4.032 Postcondition 2, BC-1.4.032 EC-1.4.032-1, and BC-1.4.033 Postcondition 2 all quote
 the user-facing message text WITHOUT this prefix (e.g. `"No credentials stored for profile
-'{profile}'. This version of jr requires per-profile credentials — run \`jr auth login --profile
-{profile}\` to set them up."`) — accurate as the `hint` FIELD VALUE, but a story-writer/implementer
+'{profile}'. This version of jr requires per-profile credentials — run \`jr auth login
+--profile={profile}\` to set them up."`) — accurate as the `hint` FIELD VALUE, but a story-writer/implementer
 reading only the quoted string in isolation could plausibly construct a `NotAuthenticated` variant that
 either omits the "Not authenticated. " prefix entirely (bypassing the shared Display impl) or
 double-prepends it.

@@ -18,7 +18,7 @@ phase: 3
 inputs:
   - ".factory/phase-f2-spec-evolution/cycle-007-prd-delta.md"
   - "README.md"
-input-hash: "f9a04c7"
+input-hash: "ca65e4d"
 traces_to: ".factory/phase-f2-spec-evolution/cycle-007-prd-delta.md §6.2"
 cycle: cycle-007-auth-correctness-dx
 estimated_effort: xsmall
@@ -59,7 +59,7 @@ origin: >
   migration section (near the `[instance]` -> `[profiles.default]` reshape
   note) is missing a bullet covering the per-profile-credential breaking
   change introduced in cycle-003 (BC-1.4.034): every pre-cycle-003 api-token
-  profile must run `jr auth login --profile <name>` once after upgrading, and
+  profile must run `jr auth login --profile=<name>` once after upgrading, and
   this requirement is asymmetric with OAuth (which lazy-migrates flat ->
   namespaced keys automatically; api-token deliberately does NOT, per
   BC-1.4.032's no-copy detect-and-instruct design). The README's primary
@@ -89,7 +89,7 @@ origin: >
 - **As a** `jr` user upgrading from a pre-cycle-003 binary with an
   api-token-authenticated profile
 - **I want to** find, in README.md's migration section, a clear statement
-  that I must run `jr auth login --profile <name>` once after upgrading
+  that I must run `jr auth login --profile=<name>` once after upgrading
 - **So that** I understand why my previously-working profile suddenly fails
   with a credential-absence error, and know the exact remediation without
   filing a support issue or reading the source
@@ -111,7 +111,7 @@ amended by `S-cycle7-credential-absence-fix`, not by this story).
 `README.md`'s existing migration section (the section discussing the
 `[instance]` → `[profiles.default]` config reshape) gains a new bullet
 stating: pre-cycle-003 api-token profiles must run
-`jr auth login --profile <name>` once after upgrading to restore working
+`jr auth login --profile=<name>` once after upgrading to restore working
 authentication.
 **Test:** content-presence check — the bullet text exists in `README.md`'s
 migration section, reviewed at PR time (not a `#[test]` function; a
@@ -119,8 +119,8 @@ migration section, reviewed at PR time (not a `#[test]` function; a
 choice)
 
 ### AC-002 (traces to PRD delta §6.2 / BC-1.4.034's breaking-change contract, cross-ref only)
-The bullet cites the CORRECTED `--profile` syntax (`jr auth login --profile
-<name>`, not the old non-parsing positional form) — this is why the PRD
+The bullet cites the CORRECTED `--profile` syntax (`jr auth login
+--profile=<name>`, not the old non-parsing positional form) — this is why the PRD
 delta recommends sequencing this edit after `S-cycle7-credential-absence-fix`
 lands, so the bullet is written once, correctly, without a follow-up
 correction. (Editorial sequencing recommendation only — see
@@ -128,7 +128,7 @@ correction. (Editorial sequencing recommendation only — see
 `--profile` flag itself already works today independent of that story's
 status.)
 **Test:** content-presence check — the bullet's exact syntax matches
-`jr auth login --profile <name>`, not `jr auth login <name>`
+`jr auth login --profile=<name>`, not `jr auth login <name>`
 
 ### AC-003 (traces to PRD delta §6.2, asymmetry note)
 The bullet (or an adjacent sentence in the same migration section) documents

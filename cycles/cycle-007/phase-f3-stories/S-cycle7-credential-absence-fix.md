@@ -21,7 +21,7 @@ inputs:
   - ".factory/specs/prd/bc-1-auth-identity.md"
   - "src/api/auth.rs"
   - "src/cli/mod.rs"
-input-hash: "d0a488c"
+input-hash: "543612f"
 traces_to: ".factory/phase-f2-spec-evolution/cycle-007-prd-delta.md §3"
 cycle: cycle-007-auth-correctness-dx
 estimated_effort: medium
@@ -266,17 +266,17 @@ origin: >
 
 ### AC-001 (traces to BC-1.4.032 postcondition 2)
 `load_api_token(profile)`'s both-namespaced-keys-absent branch (`src/api/auth.rs::load_api_token`, the `(None, None)` match arm, currently `~line 798`) returns `JrError::NotAuthenticated { hint }` (`exit_code() == 2`) with `hint` set to exactly:
-`"No credentials stored for profile '{profile}'. This version of jr requires per-profile credentials — run \`jr auth login --profile {profile}\` to set them up."`
+`"No credentials stored for profile '{profile}'. This version of jr requires per-profile credentials — run \`jr auth login --profile={profile}\` to set them up."`
 — identically whether or not the legacy shared flat `email`/`api-token` pair is present in the keychain (Postcondition 2's symmetric outcome; the legacy-pair existence check, Postcondition 1, is unaffected by this story and stays existence-only).
 **Test:** `test_bc_1_4_032_credential_absence_exits_2_not_64`. **Test method: keyring-gated (`#[ignore]+JR_RUN_KEYRING_TESTS=1`)** — `load_api_token` has no in-memory injection seam (VP-AUTHDX-005's own documented coverage-boundary note); the "absent credential" fixture is a freshly-chosen, never-used profile name exercised against the REAL keyring backend, the same pattern as every other `load_api_token` test in `src/api/auth.rs`.
 
 ### AC-002 (traces to BC-1.4.033 postcondition 2)
 `load_api_token(profile)`'s exactly-one-namespaced-key-present branch (`src/api/auth.rs::load_api_token`, the `_` catch-all match arm, currently `~line 807`) returns `JrError::NotAuthenticated { hint }` (`exit_code() == 2`) with `hint` set to exactly:
-`"Incomplete credentials stored for profile '{profile}' — run \`jr auth login --profile {profile}\` to fix this."`
+`"Incomplete credentials stored for profile '{profile}' — run \`jr auth login --profile={profile}\` to fix this."`
 **Test:** `test_bc_1_4_033_partial_write_exits_2_and_recommends_login_not_logout`. **Test method: keyring-gated (`#[ignore]+JR_RUN_KEYRING_TESTS=1`)** — same reasoning as AC-001: no injection seam exists for `load_api_token`'s partial-write branch.
 
 ### AC-003 (traces to BC-1.4.032 postcondition 2 / VP-AUTHDX-027 property a)
-The literal remediation string `jr auth login --profile <profile>` — with `<profile>` substituted for a representative value, e.g. `default` — parses through the real clap surface (`Cli::try_parse_from(["jr","auth","login","--profile","default"])`) and resolves successfully to `AuthCommand::Login { profile: Some("default".to_string()), .. }`, producing NO clap usage error.
+The literal remediation string `jr auth login --profile=<profile>` — with `<profile>` substituted for a representative value, e.g. `default` — parses through the real clap surface (`Cli::try_parse_from(["jr","auth","login","--profile=default"])`) and resolves successfully to `AuthCommand::Login { profile: Some("default".to_string()), .. }`, producing NO clap usage error.
 
 **NOTE (LOW-2, F3 adversary pass-1):** `src/cli/mod.rs` defines a `--profile` flag at TWO levels — a global `Cli.profile` (`#[arg(long, global = true)]`, top-level, applies to every subcommand) AND a Login-LOCAL `profile` field on `AuthCommand::Login` itself (`#[arg(long)]`). The assertion above (`AuthCommand::Login { profile: Some("default".to_string()), .. }`) targets the Login-LOCAL field specifically — that is the field `load_api_token`'s remediation string is instructing the user to populate (the subcommand-scoped `--profile` accepted after `login`), not `Cli.profile` (which would also successfully parse the same token string but bind it to a DIFFERENT field entirely, at the top-level `Cli` struct, and would NOT prove this BC's specific remediation command works). The test author must destructure `AuthCommand::Login`'s own `profile` field, not `Cli.profile`, when asserting AC-003/AC-004's outcomes — asserting the wrong field would let a test pass even if `AuthCommand::Login`'s local `profile` field were renamed or removed, defeating the point of this regression guard.
 
@@ -287,7 +287,7 @@ The OLD positional form `["jr","auth","login","default"]` (no `--profile` flag) 
 **Test:** `test_bc_1_4_032_remediation_command_parses_against_clap` (negative-anchor assertion within the same test). **Test method: DEFAULT CI** — same clap-only test as AC-003; no keychain.
 
 ### AC-005 (traces to BC-1.4.033 invariant 2, SR-009)
-The partial-write branch's error message NEVER contains the substring `"logout"` (a substring-absence assertion) — `jr auth logout` is a no-op for api-token profiles (BC-1.2.013, amended) and must never be recommended as a fix for this state. The message recommends only `jr auth login --profile <profile>` (primary fix) or, implicitly via general docs, `jr auth remove <profile>` (abandon-and-restart) — neither of which is `logout`.
+The partial-write branch's error message NEVER contains the substring `"logout"` (a substring-absence assertion) — `jr auth logout` is a no-op for api-token profiles (BC-1.2.013, amended) and must never be recommended as a fix for this state. The message recommends only `jr auth login --profile=<profile>` (primary fix) or, implicitly via general docs, `jr auth remove <profile>` (abandon-and-restart) — neither of which is `logout`.
 **Test:** `test_bc_1_4_033_partial_write_exits_2_and_recommends_login_not_logout` (substring-absence assertion within the same test). **Test method: keyring-gated (`#[ignore]+JR_RUN_KEYRING_TESTS=1`)** — rides in the same test body as AC-002, which requires the real keyring backend.
 
 **NOTE (LOW-1, F3 adversary pass-7):** the PRE-EXISTING test
@@ -319,7 +319,7 @@ In one test module, both AC-001/AC-002's credential-absence exit code (2, `NotAu
 **Test:** `test_bc_1_1_004_unknown_profile_json_envelope_is_standard_error_shape`. **Test method: DEFAULT CI** — same reasoning as AC-006: the unknown-profile check fires before any keychain probe in either output mode.
 
 ### AC-009 (traces to BC-1.4.034 cross-reference / F4 doc-fallout obligation)
-`CHANGELOG.md`'s `[Unreleased]` section gains a `Fixed` (or `Changed`, per this project's breaking-change convention) entry documenting: (a) the credential-absence remediation command now reads `jr auth login --profile <profile>` (was a non-parsing positional form), and (b) the exit code for both `load_api_token` credential-absence branches changed from 64 to 2 — styled after the existing BC-1.2.051/DEC-321 CHANGELOG breaking-change precedent, and explicitly noting `src/cli/auth/status.rs`'s unrelated unknown-profile exit-64 site (BC-1.1.004) is UNAFFECTED.
+`CHANGELOG.md`'s `[Unreleased]` section gains a `Fixed` (or `Changed`, per this project's breaking-change convention) entry documenting: (a) the credential-absence remediation command now reads `jr auth login --profile=<profile>` (was a non-parsing positional form), and (b) the exit code for both `load_api_token` credential-absence branches changed from 64 to 2 — styled after the existing BC-1.2.051/DEC-321 CHANGELOG breaking-change precedent, and explicitly noting `src/cli/auth/status.rs`'s unrelated unknown-profile exit-64 site (BC-1.1.004) is UNAFFECTED.
 **Test:** N/A (doc artifact; verified by PR review / `scripts/check-*.sh` guards where applicable, not a `#[test]`)
 
 ### AC-010 (traces to BC-1.4.032 postcondition 2 hint-field clarification, F2 fix round 6, finding L-2)
@@ -499,9 +499,9 @@ multiple entries and the file already documents one.
 
 | ID | Scenario | Expected Behavior |
 |----|----------|-------------------|
-| EC-1.4.032-1 | `"default"` profile, legacy flat pair present, namespaced keys absent | Identical exit-2 error with `--profile default` remediation — legacy-pair presence changes nothing observable |
+| EC-1.4.032-1 | `"default"` profile, legacy flat pair present, namespaced keys absent | Identical exit-2 error with `--profile=default` remediation — legacy-pair presence changes nothing observable |
 | EC-1.4.032-3 | Non-`"default"` profile (e.g. `"sandbox"`) with absent namespaced keys, legacy flat pair still exists | Identical error to `"default"`'s — no profile is special-cased |
-| EC-1.4.032-4 | User runs `jr auth login --profile <profile>` once | Subsequent `load_api_token(profile)` calls succeed via the ordinary namespaced-keys-present path; legacy pair (if any) remains untouched |
+| EC-1.4.032-4 | User runs `jr auth login --profile=<profile>` once | Subsequent `load_api_token(profile)` calls succeed via the ordinary namespaced-keys-present path; legacy pair (if any) remains untouched |
 | EC-1.4.033-1 | `default:email` present, `default:api-token` absent, AND a complete legacy flat pair also exists | Namespaced partial-write state still takes precedence (namespaced keys checked first) — surfaces this story's partial-write `Err` |
 
 ## Purity Classification
@@ -533,9 +533,9 @@ Well under the 20-30% threshold — no split needed.
 4. [ ] Write failing tests for AC-006/AC-007 (unknown-profile stays 64, discriminator module) — `test-writer`
 5. [ ] Write failing test for AC-008 (`--output json` unknown-profile envelope) — `test-writer`
 6. [ ] Verify Red Gate: all new tests fail against current code (positional form / exit 64)
-7. [ ] Implement: change `load_api_token`'s two `Err(...)` constructions from `JrError::UserError(format!(...))` to `JrError::NotAuthenticated { hint: format!(...) }`, updating the remediation string from `jr auth login {profile}` to `jr auth login --profile {profile}` in both branches — `implementer`
+7. [ ] Implement: change `load_api_token`'s two `Err(...)` constructions from `JrError::UserError(format!(...))` to `JrError::NotAuthenticated { hint: format!(...) }`, updating the remediation string from `jr auth login {profile}` to `jr auth login --profile={profile}` in both branches — `implementer`
 7a. [ ] **(F3 adversary pass-7, MEDIUM-1; EXTENDED at F3 pass-10, MEDIUM-1 — see the "Task 7a Reconciliation Table" section after the Tasks list for the exhaustive per-site audit)** In the SAME commit as Task 7, update the ~12 PRE-EXISTING keyring-gated BC-1.4.032/033/034 tests in `src/api/auth.rs`'s inline `#[cfg(test)]` module (`~3680-4232`) that pin the OLD `load_api_token` contract, so the full suite (new AC-001/002/005/007/010 tests + these pre-existing ones) converges together — `implementer`:
-    - Rewrite `expected_bc_1_4_032_absent_message` (`~3687-3692`) and `expected_bc_1_4_033_partial_message` (`~3696-3701`) to return the `` `jr auth login --profile {profile}` `` form. Keep both returning the raw hint text only (no `"Not authenticated. "` prefix) — per AC-010, assertions compare against the hint field, not the full Display-rendered string.
+    - Rewrite `expected_bc_1_4_032_absent_message` (`~3687-3692`) and `expected_bc_1_4_033_partial_message` (`~3696-3701`) to return the `` `jr auth login --profile={profile}` `` form. Keep both returning the raw hint text only (no `"Not authenticated. "` prefix) — per AC-010, assertions compare against the hint field, not the full Display-rendered string.
     - Rewrite `assert_user_error_exit_64` (`~3708-3722`) to assert `JrError::NotAuthenticated { .. }` and `exit_code() == 2` (rename it, e.g. `assert_not_authenticated_exit_2`, so the name reflects the new contract — a lingering `_exit_64` name on a function that now asserts exit 2 is itself a defect). Update all of its call sites (`~3755, 3773, 3800, 3830, 3834, 3860, 3864, 3889, 3911, 3936, 4010, 4043`) to the new name. **(F3 adversary pass-10, MEDIUM-1)** ALSO change what the renamed function RETURNS: today it returns `format!("{err:#}")` (`~3721`) — the FULL `Display`-rendered string. `JrError::UserError`'s Display is a pass-through (`#[error("{0}")]`), so this happens to equal the raw message today; but `JrError::NotAuthenticated`'s Display (`#[error("Not authenticated. {hint}")]`, `src/error.rs::18`) PREPENDS `"Not authenticated. "`, which would break every downstream full-equality `assert_eq!(msg, expected_bc_1_4_03{2,3}_..._message(...))` site if `format!("{err:#}")` were kept. Instead, downcast, `match`/`if let` on `JrError::NotAuthenticated { hint }`, and return `hint.clone()` (the raw `hint` FIELD, never a hand-rolled or Display-derived string) — this is the ONE place this fix needs to happen for this helper; do NOT edit the ~10 downstream `assert_eq!` call sites individually (Section A of the Task 7a Reconciliation Table below), and do NOT add the `"Not authenticated. "` prefix to `expected_bc_1_4_032_absent_message`/`expected_bc_1_4_033_partial_message` instead — that would violate AC-010's locked prefix-free hint-field contract.
     - Rewrite `absence_guard_proptests::assert_absent_err_and_no_write` (`~4109-4126`) — it duplicates the same `matches!(je, JrError::UserError(_))` / `exit_code()==64` assertion INLINE rather than delegating to `assert_user_error_exit_64`; it backs `prop_vp_authdx_005_detect_and_instruct_correctness` (`~4141`) and `prop_vp_authdx_006_no_profile_is_special_cased` (`~4180`). **(F3 adversary pass-10, MEDIUM-1)** Apply the SAME return-value fix as above: this function also builds its return via `format!("{err:#}")` (`~4125`) — change it to destructure `JrError::NotAuthenticated { hint }` and return `hint.clone()`, so the two downstream full-equality sites at `~4153` (inside `prop_vp_authdx_005_...`) and `~4189` (inside `prop_vp_authdx_006_...`) converge without their own edits.
     - Rewrite the separate inline duplicate assertion inside `prop_vp_authdx_008_namespaced_partial_state_safety` (`~4221-4225`) — it goes through neither helper and re-asserts `JrError::UserError`/`exit_code()==64` directly. **(F3 adversary pass-10, MEDIUM-1)** Apply the SAME return-value fix: this site builds `msg` inline via `format!("{err:#}")` at `~4226` — change it to destructure `JrError::NotAuthenticated { hint }` and build `msg` from `hint.clone()`, so the downstream full-equality assertion at `~4227` converges without its own edit.
