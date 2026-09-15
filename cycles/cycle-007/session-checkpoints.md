@@ -1,10 +1,10 @@
 ---
 document_type: session-checkpoints
 level: ops
-version: "1.5"
+version: "1.6"
 status: archive
 producer: state-manager
-timestamp: 2026-09-15T16:45:00Z
+timestamp: 2026-09-15T18:20:00Z
 cycle: "cycle-007-auth-correctness-dx"
 inputs: [STATE.md]
 input-hash: "[live-state]"
@@ -12,6 +12,34 @@ traces_to: STATE.md
 ---
 
 # Session Checkpoints — cycle-007-auth-correctness-dx
+
+## Session Resume Checkpoint (2026-09-15, STATE.md v4.39) — CYCLE-007-F7-APPROVED-CLOSED-RELEASED: cycle-007 CLOSED + RELEASED as v0.7.0-dev.6, pipeline idle — Superseded 2026-09-15 (v4.40 CYCLE-013-F1-F2-APPROVED)
+
+**Status:** SUPERSEDED 2026-09-15 by the v4.40 CYCLE-013-F1-F2-APPROVED checkpoint (a new feature
+cycle, cycle-013 `msrv-1.88-bump`, was established this burst: Phase F1 delta-analysis APPROVED
+(DEC-363) and Phase F2 spec evolution APPROVED (DEC-364, ADR-0025 `proposed`); pipeline moved from
+PAUSED/IDLE to ACTIVE). Archived verbatim from STATE.md v4.39 below.
+
+### State
+
+| Field | Value |
+|-------|-------|
+| **Date** | 2026-09-15 |
+| **Position** | cycle-007 (`auth-correctness-dx`) Phase **F7 HUMAN GATE APPROVED -- CLOSED + RELEASED as v0.7.0-dev.6.** Human ruled "Approve & close" and explicitly chose to cut a dev release. DEC-362 minted. Release executed via this repo's native release-metadata-PR precedent: PR #815 merged squash @ `7160a534` (mergedAt 2026-09-15T14:53:32Z, all CI green); annotated tag `v0.7.0-dev.6` pushed on `7160a534`; `release.yml` run `34984900326` BUILDING the 5-platform GitHub prerelease (Release page not yet published as of this write -- confirm in a later session). dev.6 rolls up cycle-005/006/012/007 + the 2026-09-10 maintenance sweep's previously-untagged `develop` changes -- the first tagged prerelease to capture cycle-005 and cycle-012. cycle-012 (`field-adf-autoconvert`) remains **CLOSED** (DEC-361, 2026-09-15) -- unaffected by this burst beyond now sharing the same release tag. **All nine tracked cycles (001-007, 012) are CLOSED.** |
+| **Convergence counter** | No active convergence loop anywhere -- cycle-007's F6/F7 loops closed in the prior burst; this burst closed the F7 human gate itself. Pipeline fully idle. |
+| **In-flight work** | NONE. No open PRs (#803/#804/#805/#806/#807/#814/#815 all MERGED for cycle-007; #809/#810/#811/#812/#813 all MERGED for cycle-012). No story worktrees. `release.yml` run `34984900326` is the only in-flight process, external to the factory pipeline (5-platform build, not yet complete as of this write). |
+
+### Resume Prompt
+
+```
+**Date:** 2026-09-15. cycle-007 (`auth-correctness-dx`) Phase F7 HUMAN GATE APPROVED -- CLOSED + RELEASED as v0.7.0-dev.6. Human ruled "Approve & close" and explicitly chose to cut a dev release. DEC-362 minted. PR #815 merged squash @ `7160a534` (mergedAt 2026-09-15T14:53:32Z, all CI green); annotated tag `v0.7.0-dev.6` pushed on `7160a534`; `release.yml` run `34984900326` BUILDING the 5-platform GitHub prerelease. dev.6 rolls up cycle-005/006/012/007 + the 2026-09-10 maintenance sweep's untagged changes. cycle-012 remains CLOSED (DEC-361, 2026-09-15). All nine tracked cycles (001-007, 012) are CLOSED.
+
+**Pending human decisions / blockers:** NONE that block pipeline progress. A future session should confirm `release.yml` run `34984900326`'s completion and the GitHub Release page's publish status as a light follow-up. LOW standing items unchanged from the prior burst (all still DEFERRED, tracked, non-blocking): `CYCLE-007-CR-001-KEYCHAIN-ERROR-VS-ABSENCE`, `CYCLE-007-PROBE-ROUTING-NO-DEFAULT-CI-TEST`, `CYCLE-007-LEGACY-OAUTH-UNSET-METHOD-MISREPORT`, `CYCLE-007-OAUTH-ABSENCE-EXIT-CODE-ASYMMETRY`, `CANONICAL-COUNTS-BREAKDOWN-STALE`, `CYCLE-007-AUTH-LIST-LAZY-MIGRATION-WRITE`, `CYCLE-007-F5-DOC-NITPICKS`, `CYCLE-007-F6-R1-KEYRING-GATED-HUMAN-TEXT-COVERAGE`, `CYCLE-007-F6-R2-DERIVE-AUTH-STATE-NO-MUTATION-COVERAGE`. Also unchanged: `M-2`/`OBS-A`/`OBS-3` (cycle-012 F5 debt), pre-existing `SEC-001-EDITMETA-RECURSION-GUARD`, `E2E-COMPONENT-FILTER-SEARCH-INDEX-FLAKE`, F6 cycle-012 residuals L-1/L-2, `CYCLE-007-STORY-STATUS-DRAFT-POSTMERGE`, `NFR-O-N-CATALOG-RETIREMENT-EDIT`.
+
+**Resume command (future session's choice):** (a) verify `release.yml` run `34984900326` completed and the GitHub Release for `v0.7.0-dev.6` published; (b) kick off a new cycle from the PARKED bundles (cycle-008 `issue-io-quickwins`, cycle-009 `bulk-by-jql`, cycle-010 `read-index-lag`, cycle-011 `filter-grammar`); or (c) `/vsdd-factory:maintenance-sweep` to burn down the accumulated LOW/deferred debt across cycle-007 and cycle-012.
+```
+
+---
 
 ## Session Resume Checkpoint (2026-09-15, STATE.md v4.38) — CYCLE-007-F7-CONVERGED: F7 delta convergence ALL 7 DIMENSIONS PASS, F7 human gate pending — Superseded 2026-09-15 (v4.39 CYCLE-007-F7-APPROVED-CLOSED-RELEASED)
 

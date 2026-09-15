@@ -1,0 +1,20 @@
+# cycle-013 msrv-1.88-bump — F1 affected-files manifest (machine-readable)
+# Format: <path>\t<change-type>\t<risk>
+# change-type: MODIFIED | DEPENDENT
+# risk: HIGH | MEDIUM | LOW
+# See .factory/cycles/cycle-013/phase-f1-delta-analysis/delta-analysis.md §3 for full rationale.
+
+Cargo.toml	MODIFIED	MEDIUM
+.github/workflows/ci.yml	MODIFIED	MEDIUM
+tests/ci_gate_completeness.rs	MODIFIED	HIGH
+tests/common/wf.rs	MODIFIED	LOW
+CLAUDE.md	MODIFIED	LOW
+src/cli/auth/keychain.rs	MODIFIED	LOW
+src/cli/board.rs	MODIFIED	LOW
+src/cli/issue/list.rs	MODIFIED	LOW
+README.md	MODIFIED	LOW
+CHANGELOG.md	MODIFIED	LOW
+docs/superpowers/specs/2026-03-21-jr-jira-cli-design.md	MODIFIED	LOW
+
+src/output.rs	DEPENDENT	MEDIUM
+src/cli/auth/tests/snapshots/jr__cli__auth__tests__list_table_snapshot.snap	DEPENDENT	MEDIUM

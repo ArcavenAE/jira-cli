@@ -39,3 +39,4 @@
 | ADR-0022 | API-Token Cloud ID Acquisition via `/_edge/tenant_info`, and the A-PA-LOW-001 Guard | SS-02, SS-03, SS-04, SS-08 | decisions/ADR-0022-api-token-cloud-id-acquisition-tenant-info.md |
 | ADR-0023 | Markdown Mention Conversion — Two-Pure-Entrypoints + One-Effectful-Resolver Seam | SS-02, SS-04, SS-05, SS-08 | decisions/ADR-0023-markdown-mention-pure-effectful-conversion-seam.md |
 | ADR-0024 | ADF Auto-Conversion for `--field` on Rich-Text Fields — Allowlist Predicate, Shared Helper, and Empty-Value Semantics | SS-02, SS-04, SS-05, SS-08 | decisions/ADR-0024-adf-autoconversion-for-field-on-richtext-fields.md |
+| ADR-0025 | Raise Minimum Supported Rust Version from 1.85 to 1.88 | SS-02, SS-08, SS-09 | decisions/ADR-0025-raise-msrv-to-1-88.md |

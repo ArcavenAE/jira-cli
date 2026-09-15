@@ -83,3 +83,17 @@ rounds to 3 consecutive CLEAN, zero unresolved CRIT/HIGH/MED; code-reviewer `APP
 closed via fix PR #814 (`11c95d5e`) + commits `0b9fb1fc`/`878ebe67`. 7 new LOW standing items recorded.
 No DEC minted (automated gate, cycle-012-F5 precedent). Full detail archived:
 `cycles/cycle-007/burst-log.md` Burst 6.
+
+## RESOLVED at cycle-007 Phase F6/F7 (2026-09-15, v4.38 -- archived from STATE.md's "RESOLVED prior burst" slot during the v4.39->v4.40 CYCLE-013-F1-F2-APPROVED burst)
+
+cycle-007 (`auth-correctness-dx`) Phase F6 targeted hardening **HARDENED_WITH_RESIDUALS** and Phase F7
+delta convergence **ALL 7 DIMENSIONS PASS** both recorded (F6's evidence had already been committed at
+`596ec950` in a prior burst but STATE.md had not yet reflected it; F7 was freshly run that burst). F6:
+all 6 VPs (VP-AUTHDX-024..029) covered, no uncovered axis; Kani/fuzz proptest-substitution JUSTIFIED
+(0-GAP); mutation gate GREEN in CI; 366 auth tests pass; security CLEAN; 3 LOW residuals (R1
+keyring-gated human-text, R2 `auth.rs` outside `examine_globs`, R3 = already-tracked
+`CYCLE-007-CR-001-KEYCHAIN-ERROR-VS-ABSENCE`). F7: fresh-context consistency-validator PASS on all 7
+dimensions. Job A hygiene: 6 cycle-007 F3 artifacts had BENIGN input-hash drift, re-hashed via
+`compute-input-hash --update` in topological order; cycle-007 drift narrowed to the accepted
+`[live-state]` sentinel class only. No DEC minted that burst (automated gate, cycle-012 F6/F7-CONVERGED
+precedent). Full detail archived: `cycles/cycle-007/burst-log.md` Burst 7.
