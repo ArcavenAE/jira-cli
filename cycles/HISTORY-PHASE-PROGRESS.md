@@ -34,3 +34,14 @@ See `cycles/cycle-005/burst-log.md` Bursts 11-12 for full narrative detail (thes
 | Phase | Status | Completed | Gate | Notes | Finding Progression |
 |-------|--------|-----------|------|-------|---------------------|
 | **SESSION-WRAP-PAUSE-2026-09-13** | **COMPLETE** | 2026-09-13 | Bookkeeping only, session wrap; no quality gate | STATE.md v4.24->v4.25, pipeline ACTIVE->PAUSED at cycle-012 F4-start. sidecar-learning.md committed. | counts unchanged (769/86/118/182) |
+
+---
+
+> Extracted from `.factory/STATE.md`'s `## Phase Progress` table during the
+> 2026-09-15 CYCLE-012-F7-APPROVED-CLOSED burst (v4.34 -> v4.35), to keep
+> the live table at 10 rows after adding the new `CYCLE-012-F7-APPROVED-CLOSED-2026-09-15`
+> row. This was the oldest row at that point; archived here verbatim, unedited.
+
+| Phase | Status | Completed | Gate | Notes | Finding Progression |
+|-------|--------|-----------|------|-------|---------------------|
+| **CYCLE-012-F4-STARTED-2026-09-13** | **COMPLETE** | 2026-09-13 | per-story TDD delivery | global STORY-INDEX 180->182 registered; pipeline ACTIVE; CI/CD gate PASS (develop@`30bb1a18`); Story 1 delivery starting. v4.25->v4.26. | 769 BCs / 86 VPs / 118 holdout / 182 stories |

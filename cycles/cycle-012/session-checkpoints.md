@@ -17,6 +17,40 @@ traces_to: STATE.md
      Only the LATEST checkpoint lives in STATE.md.
      Prior checkpoints are archived here for historical reference. -->
 
+## Session Resume Checkpoint (2026-09-15) — cycle-012 F6 HARDENED + F7 CONVERGED (7/7 dimensions PASS); awaiting F7 human gate; v4.34 active state (pre-close)
+
+**Archived from STATE.md v4.34 on 2026-09-15. Superseded by the v4.35 F7-HUMAN-GATE-APPROVED / CYCLE-012-CLOSED burst.**
+
+### State
+
+| Field | Value |
+|-------|-------|
+| **Date** | 2026-09-15 |
+| **Position** | cycle-012 (`field-adf-autoconvert`), Feature Mode. Phase F6 (targeted hardening) HARDENED (4/4 VPs covered, mutation GREEN, security CLEAN, 2 LOW residuals accepted). Phase F7 (delta convergence) CONVERGED -- fresh-context consistency-validator ran ALL 7 DIMENSIONS PASS; ADR-0024 flipped `Proposed`->`Accepted` (commit `2430bdc8`). Awaiting F7 HUMAN GATE (final close approval + release decision). cycle-007 (`auth-correctness-dx`) PAUSED at F4 IMPL COMPLETE (Wave-2 gate PENDING, develop@`80bb4215`). |
+| **Pipeline** | ACTIVE |
+| **Convergence counter** | F7 delta convergence CONVERGED (7/7 dimensions PASS); no further automated convergence track pending for cycle-012's F1-F7 sequence. |
+| **Next step** | Present F7 convergence summary to the human for the F7 HUMAN GATE ruling (final close approval + release decision). |
+
+### Resume Prompt (verbatim from STATE.md v4.34)
+
+```
+**Date & position:** 2026-09-15. cycle-012 (`field-adf-autoconvert`), Feature Mode. Phase F6 (targeted hardening) **HARDENED**; Phase F7 (delta convergence) **CONVERGED** -- fresh-context consistency-validator ran ALL 7 DIMENSIONS PASS; ADR-0024 flipped `Proposed`->`Accepted` (commit `2430bdc8`). NEXT = **F7 HUMAN GATE** (final cycle-012 close approval + release decision) -- awaiting human.
+
+**Convergence counter:** F7 delta convergence CONVERGED (7/7 dimensions PASS); awaiting the human F7-gate ruling (close + release decision) -- no further automated convergence track pending for cycle-012's F1-F7 sequence.
+
+**In-flight work:** cycle-012 F6 and F7 are both COMPLETE from the automated-gate side. Only the F7 human gate (final close approval + release decision) remains before cycle-012 can formally CLOSE.
+
+**Pending human decisions / blockers:** **F7 HUMAN GATE** -- final cycle-012 close approval + release decision (the pipeline's only pending item; not a code/quality blocker). LOW standing items unchanged: `M-2`/`OBS-A`/`OBS-3` (F5 debt), `E2E-COMPONENT-FILTER-SEARCH-INDEX-FLAKE` (pre-existing, unrelated), F6 residuals L-1 (gated JSM live-E2E coverage) and L-2 (repo-wide unprovisioned Kani/fuzz). cycle-007 Wave-2 integration gate still PENDING (resume after cycle-012 closes).
+
+**WIP branch list:** none open.
+
+**Resume command:** present the F7 convergence summary to the human for the **F7 HUMAN GATE** ruling (final cycle-012 close approval + release decision); pipeline already ACTIVE, no rehydrate needed.
+
+**Counts:** total_bcs 769 (unchanged); VP count 86 (unchanged); holdout scenarios 118 (unchanged); total_stories 182 (unchanged). Prior checkpoint (STATE.md v4.33): archived to `cycles/cycle-012/session-checkpoints.md`.
+```
+
+---
+
 ## Session Resume Checkpoint (2026-09-15) — cycle-012 F5 CONVERGED, fix PR #813 merged; F6 targeted hardening starting; v4.33 active state (pre-F6/F7)
 
 **Archived from STATE.md v4.33 on 2026-09-15. Superseded by the v4.34 F6-HARDENED / F7-CONVERGED burst.**
