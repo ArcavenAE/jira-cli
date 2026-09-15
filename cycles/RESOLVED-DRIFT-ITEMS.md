@@ -6,6 +6,10 @@
 > is RESOLVED/CLOSED — kept for audit trail, not tracked as open debt.
 > STATE.md keeps only a one-line pointer to this file.
 
+## RESOLVED at cycle-012 F7 close (2026-09-15, v4.35 -- archived from STATE.md's "RESOLVED prior burst" slot during the v4.36->v4.37 CYCLE-007-F5-CONVERGED burst)
+
+cycle-012 Phase F7 **HUMAN GATE APPROVED** -- "Approve & close" (DEC-361); release decision: ship on `develop`, NO TAG (cycle-005 precedent), changes ride `develop @ 80bb4215` into the next tagged release, CHANGELOG `[Unreleased]` entry already present. S-7.02 Cycle-Closing Checklist executed: every process-gap/novel finding is CODIFIED as a lesson (L-008 AC-012 channel wording; L-010 F5 integration-scope value; L-001..L-009 prior) or DEFERRED as tracked LOW debt with a maintenance-sweep target (`M-2`/`OBS-A`/`OBS-3`, pre-existing `SEC-001-EDITMETA-RECURSION-GUARD`) -- no open process-gap finding lacks a follow-up or justified deferral. **cycle-012 CLOSED.** Pipeline PAUSED/idle -- no active cycle; cycle-007 remains PAUSED (resumable). STATE.md v4.34->v4.35; `CYCLE-012-F7-APPROVED-CLOSED-2026-09-15` phase progress row appended (oldest row `CYCLE-012-F4-STARTED-2026-09-13` archived out to `cycles/HISTORY-PHASE-PROGRESS.md`, keeping the table at 10 rows). Prior Session Resume Checkpoint (v4.34) archived to `cycles/cycle-012/session-checkpoints.md`. `cycle_012_status` frontmatter field collapsed to a one-line CLOSED summary (mirroring `cycle_005_status`/`cycle_006_status`); full narrative routed to `cycles/CYCLE-SUMMARY.md#cycle_012_status`.
+
 ## RESOLVED/CLOSED at cycle-006 close (Burst 13, NOT deferrals)
 
 - `F-PE-MED-001` -- **CLOSED.** The Precondition-3 M-1 empirical `--list`<=>pooled partition evidence is now captured durably in PR #791's merged body.

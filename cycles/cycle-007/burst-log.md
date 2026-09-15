@@ -274,3 +274,98 @@ traces_to: STATE.md
 **Dim-7 Attestation:** N/A — no CI-workflow change this burst.
 
 ---
+
+## Burst: Burst 6 — cycle-007 Phase F5 scoped adversarial refinement CONVERGED (2026-09-15)
+
+**Parent-commit on develop:** `11c95d5e` (advanced from `80bb4215` this cycle's F5 track: fix PR #814
+squash-merged, plus prior standalone commits `0b9fb1fc`/`878ebe67`).
+
+**Trigger:** cycle-007 Phase F4 COMPLETE (Burst 5); Phase F5 scoped adversarial refinement started and
+ran to convergence this burst, mirroring cycle-012's F5 pattern.
+
+**Actions taken:**
+
+1. **Adversary converged across 4 rounds to 3 consecutive CLEAN on the final state** — final round:
+   traceability CLEAN, integration CLEAN, tests/convention CLEAN; earlier code passes A/B/D all CLEAN.
+   Zero unresolved CRITICAL/HIGH/MEDIUM findings remain.
+2. **Code-reviewer verdict: `APPROVE_WITH_NITS`** — CR-002 (duplicated `probe_matching_kind_credential`)
+   and CR-003 (per-invocation keychain-read-cost documentation) RESOLVED this burst; CR-001
+   (keychain-error-vs-absence collapse) and CR-004 (related boolean/3-state model) explicitly DEFERRED
+   by human decision — not fixed this cycle.
+3. **Security-reviewer verdict: CLEAN** — 0 CRIT/HIGH/MED across the auth/credential surface; the
+   consolidated probe's `.is_ok()`-discards-secrets pattern was specifically praised as good posture
+   (errors never leak into the boolean/3-state result).
+4. **Findings resolved this cycle's F5:**
+   - **CR-002 / F-C007-M1** (duplicated parity-critical probe): consolidated
+     `probe_matching_kind_credential` from two byte-identical copies (`cli/auth/list.rs`,
+     `cli/auth/status.rs`) into one `pub(crate)` fn in `src/api/auth.rs`, next to
+     `derive_auth_state`. PR #814 (`fix/cycle007-f5-probe-consolidation`) squash-merged @ `11c95d5e`.
+   - **OBS-3**: added `test_probe_matching_kind_credential_single_shared_source`, a default-CI parity
+     test pinning the single-shared-source refactor (PR #814).
+   - **CR-003**: documented the per-invocation keychain-read cost (`auth list` = O(profiles), `auth
+     status` = one read) in `src/api/auth.rs` rustdoc, cross-referencing the existing CHANGELOG note on
+     the macOS Keychain-consent-dialog consequence (PR #814).
+   - **F-C007-PASSC-M1** (BC-INDEX.md BC-1.4.034 title space→equals-form `--profile` literal drift):
+     fixed standalone, commit `0b9fb1fc`.
+   - **F-C007-PASSD-M1** (space→equals remediation-literal drift surviving in the F2 verification-delta,
+     2 F3 stories, `error-taxonomy.md`, `edge-case-catalog.md`, and `CANONICAL-COUNTS.md`): fixed via a
+     comprehensive grep-propagation sweep, ~27 literal occurrences across 9 files, commit `878ebe67`.
+     Input-hashes updated on every touched file; `check-spec-counts.sh`/`check-bc-cumulative-counts.sh`
+     both exit 0 post-fix.
+5. **Lesson confirmed present, not re-added:** `PG-D1` ("canonical-literal corrections must be
+   grep-propagated across the WHOLE cycle tree, not just BC bodies") is already recorded as lesson 8 in
+   `cycles/cycle-007/lessons.md` (added alongside the `878ebe67` fix) — verified present this burst, no
+   duplicate entry created.
+6. **6 new LOW/non-blocking standing items recorded** to `cycles/OPEN-STANDING-ITEMS.md`
+   (`CYCLE-007-CR-001-KEYCHAIN-ERROR-VS-ABSENCE`, `CYCLE-007-PROBE-ROUTING-NO-DEFAULT-CI-TEST`,
+   `CYCLE-007-LEGACY-OAUTH-UNSET-METHOD-MISREPORT`, `CYCLE-007-OAUTH-ABSENCE-EXIT-CODE-ASYMMETRY`,
+   `CANONICAL-COUNTS-BREAKDOWN-STALE`, `CYCLE-007-AUTH-LIST-LAZY-MIGRATION-WRITE`), plus a bundled minor
+   doc-comment nitpicks note — dedupe-checked against `NFR-O-N-CATALOG-RETIREMENT-EDIT` and
+   `CYCLE-007-STORY-STATUS-DRAFT-POSTMERGE`, both already present and NOT re-added.
+7. **STATE.md updated** (v4.36 → v4.37, single full-content Write per hook-guard discipline): Phase
+   Progress row `CYCLE-007-F5-CONVERGED-2026-09-15` appended (oldest row
+   `CYCLE-012-STORY1-E2E-VERIFIED-2026-09-14` archived to `cycles/HISTORY-PHASE-PROGRESS.md`, keeping the
+   table at 10 rows); Current Phase Steps rewritten; `cycle_007_status` updated from "F4 COMPLETE ...
+   F5/F6/F7 REMAIN" to "F5 CONVERGED ... F6 targeted hardening NEXT"; Session Resume Checkpoint replaced
+   (prior v4.36 checkpoint archived to `cycles/cycle-007/session-checkpoints.md`); Drift/Standing Items
+   updated with the 7 new/bundled entries above. Pipeline remains PAUSED — no in-flight work started this
+   burst beyond the F5 recording itself.
+
+**Adversary verdict:** CONVERGED — 3 consecutive CLEAN passes on the final state (traceability,
+integration, tests/convention all CLEAN); earlier passes A/B/D also CLEAN. Zero unresolved
+CRIT/HIGH/MED.
+
+**Codifications:** No new DEC minted this burst — F5 scoped-adversarial convergence is an
+automated/bookkeeping quality-gate outcome (feature-mode convention, no separate human gate), matching
+the cycle-012 F5-CONVERGED precedent. The human's CR-001/CR-004 deferral ruling is recorded as a standing
+item, not a DEC.
+
+**Closes:** CR-002/F-C007-M1, OBS-3, CR-003, F-C007-PASSC-M1, F-C007-PASSD-M1 (all fixed, PR #814 +
+commits `0b9fb1fc`/`878ebe67`). **Does NOT close:** cycle-007 itself (F6/F7 remain, not yet started); does
+NOT resolve CR-001/CR-004 (deferred by human).
+
+**Outcome:** cycle-007 (`auth-correctness-dx`) Phase **F5 CONVERGED**. Pipeline remains PAUSED/idle — no
+active cycle resumed for further work this burst. All counts unchanged (769 BCs / 86 VPs / 118 holdouts /
+182 stories).
+
+**Files touched (Dim-1): 5 unique files/paths this burst, all committed in the state-manager's own single
+atomic commit on `factory-artifacts`**
+
+- `.factory/STATE.md` (modified — v4.36 → v4.37; F5 CONVERGED)
+- `.factory/cycles/cycle-007/burst-log.md` (modified — Burst 6 appended)
+- `.factory/cycles/HISTORY-PHASE-PROGRESS.md` (modified — oldest Phase Progress row archived)
+- `.factory/cycles/cycle-007/session-checkpoints.md` (modified — prior v4.36 checkpoint archived)
+- `.factory/cycles/OPEN-STANDING-ITEMS.md` (modified — 7 new cycle-007 F5 standing items appended)
+
+**Dim-2 Attestation:** No BC/VP/holdout INDEX content changed this burst. Counts unchanged: 769 BCs / 86
+VPs / 118 holdouts / 182 stories. No DEC minted.
+
+**Dim-5 Attestation:** N/A — process-bookkeeping only, no binary/WASM artifact produced.
+
+**Dim-6 Attestation:** `develop` HEAD unchanged by this burst itself (already at `11c95d5e` entering this
+burst — PR #814 and commits `0b9fb1fc`/`878ebe67` landed in the F5 code-review/fix track prior to this
+state-recording burst).
+
+**Dim-7 Attestation:** N/A — no CI-workflow change this burst.
+
+---

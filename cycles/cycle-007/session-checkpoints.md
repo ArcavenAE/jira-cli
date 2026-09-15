@@ -206,4 +206,31 @@ Archived verbatim (condensed to State + Resume Prompt) from STATE.md v4.15 below
 
 ---
 
+## Session Resume Checkpoint (2026-09-15, STATE.md v4.36) — CYCLE-007-WAVE2-GATE-PASSED-F4-COMPLETE: Wave-2 gate PASSED, all 5 stories merged; F5/F6/F7 REMAIN — Superseded 2026-09-15 (v4.37 CYCLE-007-F5-CONVERGED)
+
+**Status:** SUPERSEDED 2026-09-15 by the v4.37 CYCLE-007-F5-CONVERGED checkpoint (cycle-007's Phase F5
+scoped adversarial refinement converged this burst -- 3 consecutive CLEAN + code-review resolved + security
+CLEAN, fix PR #814 merged). Archived verbatim from STATE.md v4.36 below.
+
+### State
+
+| Field | Value |
+|-------|-------|
+| **Date** | 2026-09-15 |
+| **Position** | cycle-007 (`auth-correctness-dx`) Phase **F4 COMPLETE** -- Wave-2 integration gate PASSED this burst (regression GREEN + adversarial 3/3 CLEAN + security CLEAN + consistency PASS + holdout satisfied); all 5 stories merged, both wave gates PASSED. **F5/F6/F7 REMAIN, not yet started** -- pipeline PAUSED/resumable. cycle-012 (`field-adf-autoconvert`) remains **CLOSED** (DEC-361, F7 human gate APPROVED "Approve & close", 2026-09-15) -- unaffected by this burst. |
+| **Convergence counter** | none active -- this burst was a gate-assessment bookkeeping recording, not a convergence loop. cycle-007's F5 scoped adversarial loop had not yet started. |
+| **In-flight work** | NONE. No open PRs (#803/#804/#805/#806/#807 all MERGED for cycle-007; #809/#810/#811/#812/#813 all MERGED for cycle-012). No story worktrees. |
+
+### Resume Prompt
+
+```
+**Date:** 2026-09-15. cycle-007 (`auth-correctness-dx`) Phase F4 COMPLETE -- Wave-2 integration gate PASSED (regression GREEN + adversarial 3/3 CLEAN + security CLEAN + consistency PASS + holdout satisfied); all 5 stories merged, both wave gates PASSED. F5/F6/F7 REMAIN, not yet started -- pipeline PAUSED/resumable. cycle-012 (`field-adf-autoconvert`) remains CLOSED (DEC-361, "Approve & close", 2026-09-15).
+
+**Pending human decisions / blockers:** NONE open. LOW standing items unchanged plus `CYCLE-007-STORY-STATUS-DRAFT-POSTMERGE` (OBS-C-01, LOW, process-gap -- cycle-007 story frontmatter still `draft` post-merge). `NFR-O-N-CATALOG-RETIREMENT-EDIT` confirmed present (commit `bb0e1a9d`), not duplicated. cycle-007's F5 scoped adversarial had not yet started.
+
+**Resume command (future session's choice):** (a) `/vsdd-factory:session-review` for an optional cycle-012 session review; (b) `/vsdd-factory:rehydrate-wave` then `/vsdd-factory:next-step` to begin cycle-007's Phase F5 scoped adversarial review; or (c) `/vsdd-factory:maintenance-sweep` to burn down the deferred LOW debt.
+```
+
+---
+
 <!-- Repeat for each archived checkpoint. Maintain chronological order (newest first). -->

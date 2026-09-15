@@ -110,6 +110,63 @@ assume either answer; check a sample of closed-cycle story files before scoping 
 
 ---
 
+## cycle-007 Phase F5 follow-ups (2026-09-15, Burst 6)
+
+**Status:** OPEN, all LOW, non-blocking. Surfaced by Phase F5 scoped adversarial refinement (4 rounds to
+3 consecutive CLEAN), code-reviewer (`APPROVE_WITH_NITS`), and security-reviewer (CLEAN) after cycle-007's
+CRIT/HIGH/MED-tier findings (CR-002/F-C007-M1, OBS-3, CR-003, F-C007-PASSC-M1, F-C007-PASSD-M1) were
+resolved via PR #814 (`11c95d5e`) + commits `0b9fb1fc`/`878ebe67`. Human explicitly DEFERRED CR-001/CR-004
+rather than fixing them this cycle. Full F5 trajectory: `cycles/cycle-007/burst-log.md` Burst 6.
+
+**`CYCLE-007-CR-001-KEYCHAIN-ERROR-VS-ABSENCE` (F5 code-review CR-001/CR-004, 2026-09-14, human-deferred):**
+`auth status`/`auth list` collapse a keychain-probe error into the same "no-credentials" outcome as a
+genuine absence via `.is_ok()` on the consolidated `probe_matching_kind_credential` (PR #814). The
+boolean/3-state status model was kept as-is per explicit human decision at F5. Follow-up: distinguish a
+probe ERROR (keychain unreachable/corrupt) from a genuine credential ABSENCE — likely needs a BC change
+(a 4th status value, or a `probe_error` field surfaced separately in both human-text and `--output json`).
+
+**`CYCLE-007-PROBE-ROUTING-NO-DEFAULT-CI-TEST` (F5, 2026-09-14):** The consolidated probe's `== "oauth"`
+dispatch branch (`src/api/auth.rs::probe_matching_kind_credential`, PR #814) has no default-CI behavioral
+test — only a source-scan parity test (pinning the single-shared-source refactor) and keyring-gated
+coverage exercise it; the branch itself is `.cargo/mutants.toml` mutation-excluded (keychain-effectful, no
+injection seam). Candidate: a keyring-gated oauth-vs-api-token dispatch test, or introduce a testable seam
+for the dispatch predicate.
+
+**`CYCLE-007-LEGACY-OAUTH-UNSET-METHOD-MISREPORT` (F5, 2026-09-14):** A legacy-migrated OAuth profile with
+`auth_method` unset in config routes to the api-token probe arm and can display "no-credentials" despite
+having working OAuth credentials in the keychain. Display-only edge case; related to CR-001's
+error-vs-absence gap above (same probe, different trigger — unset field vs. probe error).
+
+**`CYCLE-007-OAUTH-ABSENCE-EXIT-CODE-ASYMMETRY` (F5, 2026-09-14):** OAuth credential-absence returns
+exit 1 while api-token credential-absence returns exit 2 — spec-sanctioned by BC-1.4.028, with the
+exit-2 reclassification deliberately scoped to api-token only by BC-1.4.032/033 (Story A). Open question
+for a future spec decision: should OAuth absence also map to `NotAuthenticated`/exit 2 for symmetry? Also
+note exit-2 now overlaps clap's generic usage-error exit code 2 — the two are distinguishable via stderr
+text / `--output json` shape, but this overlap is worth flagging if it ever causes scripting confusion.
+
+**`CYCLE-007-AUTH-LIST-LAZY-MIGRATION-WRITE` (F5, awareness note, 2026-09-14):** `auth list` can now
+trigger a one-time, idempotent, self-healing lazy keychain-migration WRITE for a legacy-flat `"default"`
+OAuth profile (same lazy-migration path documented in `src/api/auth.rs`'s module header). Bounded and
+would fire on any authed command anyway — not a defect, just an awareness note that `auth list`'s
+read-only-looking surface can perform a write under this one legacy-profile condition.
+
+**`CANONICAL-COUNTS-BREAKDOWN-STALE` (LOW, pre-existing cross-cycle, OUT of cycle-007's F5 perimeter,
+noted during the F5 pass):** `CANONICAL-COUNTS.md` (~lines 156-158) "Breakdown:" narrative prose says 754
+BCs where it should say 769 — this narrative is an UNENFORCED surface (`check-bc-cumulative-counts.sh`
+validates Surfaces A-H only, not the free-text Breakdown narrative). Candidates: a one-off narrative sweep
+fixing the stale figure, plus extending the count guard to cover this surface so it can't silently drift
+again.
+
+**Minor doc-comment nitpicks (bundled, F5 code-review nits, non-blocking):** `tests/auth_status_json.rs`'s
+test-map table omits the inline VP-AUTHDX-026 tests; `tests/auth_credential_absence.rs`'s header comment
+references a stale "AC-010"; the keyring-gated AC-006/007/008 tests call `cargo_bin` directly instead of
+going through the env-scrubbing `jr()` helper used elsewhere in the file. All cosmetic/test-hygiene only —
+candidates for a future doc-sweep or maintenance pass, not correctness issues.
+
+**Target for all items above:** a future maintenance sweep, or at cycle-007's F7 close if still open.
+
+---
+
 ## cycle-007 F4 follow-up — AUTH-REMEDIATION-EQUALS-FORM-BROADER (2026-09-11, PASS4-F2-SPEC-SWEEP burst)
 
 **ID:** `AUTH-REMEDIATION-EQUALS-FORM-BROADER`

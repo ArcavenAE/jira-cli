@@ -56,3 +56,14 @@ See `cycles/cycle-005/burst-log.md` Bursts 11-12 for full narrative detail (thes
 | Phase | Status | Completed | Gate | Notes | Finding Progression |
 |-------|--------|-----------|------|-------|---------------------|
 | **CYCLE-012-STORY1-DELIVERED-2026-09-14** | **COMPLETE** | 2026-09-14 | Story 1 per-story TDD delivery + merge | S-cycle12-platform-adf-autoconvert MERGED PR #809 @ `e926cb70` (squash, `develop`). Step 4.5 CONVERGED 3 consecutive CLEAN (7 passes total). 8 BCs (BC-3.3.013/014/015, BC-3.4.033-037) + 4 VPs (VP-FIELD-ADF-001/002/003/004). rustls RUSTSEC-2026-0285 cleared (PR #810 @ `71d98800`). develop: `30bb1a18`->`71d98800`->`e926cb70`. Wave 1 COMPLETE; Wave 2 ELIGIBLE. v4.26->v4.27. | 769 BCs / 86 VPs / 118 holdout / 182 stories |
+
+---
+
+> Extracted from `.factory/STATE.md`'s `## Phase Progress` table during the
+> 2026-09-15 CYCLE-007-F5-CONVERGED burst (v4.36 -> v4.37), to keep the live
+> table at 10 rows after adding the new `CYCLE-007-F5-CONVERGED-2026-09-15`
+> row. This was the oldest row at that point; archived here verbatim, unedited.
+
+| Phase | Status | Completed | Gate | Notes | Finding Progression |
+|-------|--------|-----------|------|-------|---------------------|
+| **CYCLE-012-STORY1-E2E-VERIFIED-2026-09-14** | **COMPLETE** | 2026-09-14 | E2E live-Jira verification; AC-014 adaptive read-back strengthened (PR #811) | `test_e2e_issue_edit_custom_field` PASSED live Jira (run `34881320608` @ `develop@67b3939a`). PR #811 MERGED (`67b3939a`, squash) -- ADF-aware assertion. E2E-EDIT-FIELD-ADF-HEURISTIC RESOLVED/VERIFIED. E2E-COMPONENT-FILTER-SEARCH-INDEX-FLAKE registered (LOW). L-007 added. develop: `71d98800`->`e926cb70`->`67b3939a`. v4.27->v4.28. | counts unchanged (769/86/118/182) |
