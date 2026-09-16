@@ -1303,7 +1303,7 @@ fn test_write_fields_cache_swallows_io_error_and_returns_ok() {
         ],
         || {
             jr::cache::write_fields_cache(
-                "test-profile-swallow",
+                &jr::profile::Profile::from("test-profile-swallow"),
                 &[("customfield_10001".to_string(), "Severity".to_string())],
             )
         },
@@ -3956,5 +3956,192 @@ async fn test_bc_3_4_016_option_idless_numeric_value_falls_through_to_label_matc
     assert!(
         stderr.contains("--field"),
         "Stderr must contain '--field' (EC-3.4.016-8 load-bearing substring); stderr={stderr}"
+    );
+}
+
+// ---------------------------------------------------------------------------
+// S-578-2 — real hinted-bypass dispatch supersedes the S-578-1 interim guard.
+//
+// `parse_field_kv` (src/cli/issue/create.rs) recognizes `:kind` hints
+// (`:option`/`:id`/`:name`/`:asset`) and returns them as
+// `FieldValueSpec { kind: Some(_), .. }`. Through S-578-1, `handle_edit`
+// (src/cli/issue/edit.rs) rejected any such pair with exit 64 via the
+// interim guard `reject_unsupported_hint_kinds` — a deliberate, loud
+// placeholder, never a silent treat-as-bare. S-578-2 removes that guard's
+// call site on THIS command and wires real dispatch: `--field
+// Severity:id=10042` now bypasses `allowedValues` entirely and sends
+// `{"id": "10042"}` verbatim (BC-3.4.028). This test is the flipped
+// counterpart of the S-578-1 interim-guard pin — it now asserts the guard is
+// GONE and real dispatch fires, rather than that the guard fires. Full
+// per-kind coverage (:option/:id/:name/:asset, cascading, dry-run preview,
+// error taxonomy) lives in `tests/issue_field_hint_kinds.rs`; this test's
+// remaining job is a narrow regression pin at THIS exact call site
+// (`Severity:id=10042`) that the interim guard is no longer reachable here.
+// ---------------------------------------------------------------------------
+
+#[tokio::test(flavor = "multi_thread", worker_threads = 2)]
+async fn test_edit_field_id_hint_dispatches_verbatim_object_s578_2() {
+    let server = MockServer::start().await;
+    let cache_dir = tempfile::tempdir().unwrap();
+    let config_dir = tempfile::tempdir().unwrap();
+
+    mount_list_fields(&server, "customfield_10001", "Severity").await;
+    mount_editmeta_string(&server, "TEST-1", "customfield_10001", "Severity").await;
+    // `Severity`'s editmeta schema is "string" — the bare-form dispatch for
+    // that type would send the raw VALUE as a bare JSON STRING
+    // (`"customfield_10001": "10042"`), never an object. Asserting the wire
+    // body is `{"id": "10042"}` (an OBJECT) is what actually distinguishes
+    // real `:id` dispatch from a silent bare-form fallback that happens to
+    // echo the same display text — a body-blind mock (`mount_put_204`) would
+    // pass either way and not prove dispatch occurred.
+    Mock::given(method("PUT"))
+        .and(path("/rest/api/3/issue/TEST-1"))
+        .and(body_partial_json(
+            serde_json::json!({"fields": {"customfield_10001": {"id": "10042"}}}),
+        ))
+        .respond_with(ResponseTemplate::new(204))
+        .expect(1)
+        .mount(&server)
+        .await;
+
+    let output = jr_cmd_with_xdg(&server.uri(), cache_dir.path(), config_dir.path())
+        .args([
+            "--no-input",
+            "--output",
+            "json",
+            "issue",
+            "edit",
+            "TEST-1",
+            "--field",
+            "Severity:id=10042",
+        ])
+        .output()
+        .unwrap();
+
+    let stderr = String::from_utf8_lossy(&output.stderr);
+    let stdout = String::from_utf8_lossy(&output.stdout);
+
+    assert!(
+        output.status.success(),
+        "S-578-2: '--field Severity:id=10042' (a ':kind'-hinted pair) must now dispatch for \
+         real — the S-578-1 interim guard's call site was removed from `issue edit` by \
+         S-578-2, so this must succeed (not exit 64), sending {{\"id\": \"10042\"}} verbatim; \
+         stderr={stderr} stdout={stdout}"
+    );
+    assert!(
+        !stderr.contains("not yet supported"),
+        "S-578-2: the interim guard's message must never fire on `issue edit` again; \
+         stderr={stderr}"
+    );
+
+    let parsed: serde_json::Value = serde_json::from_str(&stdout)
+        .unwrap_or_else(|e| panic!("stdout must be valid JSON: {e}; stdout={stdout}"));
+    assert_eq!(
+        parsed["changed_fields"]["Severity"].as_str(),
+        Some("10042"),
+        "S-578-2: :id echo must be the raw id literal, no reverse lookup; stdout={stdout}"
+    );
+}
+
+/// S-578-1 regression pin (paired with the interim-guard test above): a BARE
+/// `--field NAME=VALUE` pair (`kind: None`) must keep working exactly as
+/// before the interim guard lands — the guard must reject ONLY `kind: Some(_)`
+/// pairs, never fire on the unhinted form. This test PASSES today and must
+/// continue to pass after the guard is implemented.
+#[tokio::test(flavor = "multi_thread", worker_threads = 2)]
+async fn test_edit_field_bare_pair_unaffected_by_kind_hint_guard_s578_1() {
+    let server = MockServer::start().await;
+    let cache_dir = tempfile::tempdir().unwrap();
+    let config_dir = tempfile::tempdir().unwrap();
+
+    mount_list_fields(&server, "customfield_10001", "Severity").await;
+    mount_editmeta_string(&server, "TEST-1", "customfield_10001", "Severity").await;
+    mount_put_204(&server, "TEST-1").await;
+
+    let output = jr_cmd_with_xdg(&server.uri(), cache_dir.path(), config_dir.path())
+        .args([
+            "--no-input",
+            "issue",
+            "edit",
+            "TEST-1",
+            "--field",
+            "Severity=Critical",
+        ])
+        .output()
+        .unwrap();
+
+    let stderr = String::from_utf8_lossy(&output.stderr);
+    let stdout = String::from_utf8_lossy(&output.stdout);
+
+    assert!(
+        output.status.success(),
+        "S-578-1 regression pin: a bare (unhinted) '--field Severity=Critical' pair must keep \
+         succeeding (kind: None must never trip the interim ':kind'-hint guard); \
+         stderr={stderr} stdout={stdout}"
+    );
+}
+
+// ---------------------------------------------------------------------------
+// Test 50 — OBS-1 / BC-3.4.035 AC-011 scope correction (cycle-012 F5, DEC-357)
+//
+// AC-011 / BC-3.4.035 only requires the `changed_fields` key-lowering-to-
+// `field_id` remap for the two ADF-backed system fields this cycle converts
+// (`description`, `environment`). A NON-ADF system field (e.g. "Due date",
+// field_id `duedate`) resolved by display name must keep using its DISPLAY
+// NAME as the `changed_fields` key — the pre-cycle-012 behavior (see
+// `git show 30bb1a18:src/cli/issue/field_resolve.rs`, where `human_name` was
+// never remapped for non-customfield_ fields at all). Before the OBS-1 fix,
+// the code broadened the remap to ALL non-customfield_ (system) fields,
+// silently changing this key for fields like `duedate`.
+// ---------------------------------------------------------------------------
+
+#[tokio::test(flavor = "multi_thread", worker_threads = 2)]
+async fn test_obs_1_non_adf_system_field_changed_fields_key_is_display_name() {
+    let server = MockServer::start().await;
+    let cache_dir = tempfile::tempdir().unwrap();
+    let config_dir = tempfile::tempdir().unwrap();
+
+    mount_list_fields(&server, "duedate", "Due date").await;
+    mount_editmeta_string(&server, "TEST-1", "duedate", "Due date").await;
+    mount_put_204(&server, "TEST-1").await;
+
+    let output = jr_cmd_with_xdg(&server.uri(), cache_dir.path(), config_dir.path())
+        .args([
+            "--no-input",
+            "--output",
+            "json",
+            "issue",
+            "edit",
+            "TEST-1",
+            "--field",
+            "Due date=2026-12-31",
+        ])
+        .output()
+        .unwrap();
+
+    let stderr = String::from_utf8_lossy(&output.stderr);
+    let stdout = String::from_utf8_lossy(&output.stdout);
+
+    assert!(
+        output.status.success(),
+        "Expected exit 0; stderr={stderr} stdout={stdout}"
+    );
+
+    let parsed: serde_json::Value = serde_json::from_str(&stdout)
+        .unwrap_or_else(|e| panic!("stdout is not valid JSON: {e}; stdout={stdout}"));
+
+    // OBS-1: a non-ADF system field must keep its DISPLAY NAME as the
+    // changed_fields key — NOT the lowercase field_id ("duedate").
+    assert_eq!(
+        parsed["changed_fields"]["Due date"].as_str(),
+        Some("2026-12-31"),
+        "OBS-1: changed_fields[\"Due date\"] must be \"2026-12-31\" (display-name key \
+         preserved for non-ADF system fields); stdout={stdout}"
+    );
+    assert!(
+        parsed["changed_fields"].get("duedate").is_none(),
+        "OBS-1: changed_fields must NOT contain 'duedate' as key — the field_id remap is \
+         scoped to ADF fields only (description/environment), not all system fields; \
+         stdout={stdout}"
     );
 }

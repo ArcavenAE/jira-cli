@@ -45,6 +45,67 @@ examine_globs = [
     # S-576-5 — JSM project meta resolution (get_or_fetch_project_meta, resolve_service_desk_id).
     # HIGH-value: TTL logic, project_id string equality match, service_desk_id resolution chain.
     "src/api/jsm/servicedesks.rs",
+    # HIGH-value: collapse_and_truncate's F6-hardened 200-char truncation boundary (PR #700)
+    # and resolve_queue_by_name's partial-match resolution. Whole-file scope — cargo-mutants
+    # examine_globs has no sub-file targeting. (added S-MUTANTS-SCOPE-1)
+    "src/cli/queue.rs",
+    # HIGH-value: previously-zero-coverage run_until_shutdown ctrl_c/SIGINT fork (closed by
+    # this story — VP-MUTANTS-SCOPE-1-001/002) and the InvalidSubcommand intercept.
+    # Whole-file scope — cargo-mutants examine_globs has no sub-file targeting; other
+    # branch-dense regions of main.rs (init_tracing, stdin-TTY flip) become mutation
+    # targets too as an accepted, tracked risk. (added S-MUTANTS-SCOPE-1)
+    "src/main.rs",
+    # HIGH-value: `jr field options <field>` (S-580-1) — `handle`'s M1/M2/M3
+    # context-mechanism resolution (`resolve_field_context`, `resolve_m2_project`), the
+    # normalized `FieldOption` model builders (`normalize_from_allowed_values`,
+    # `normalize_from_valid_values`), and the `--value` filter (`filter_options`).
+    # Previously absent from examine_globs — same class of gap as MAINT-MUTANTS-GLOBS-01's
+    # sibling-candidates review, but this one was an outright omission, not a deferral.
+    # ~91 mutants. (added FIX-F6-MUTANTS-SCOPE)
+    "src/cli/field.rs",
+    # HIGH-value: `resolve_edit_fields`/`dispatch_field_value` — the shared `--field`
+    # resolution/dispatch hub for BOTH `issue edit --field` and `issue create --field`
+    # (S-578-2/S-578-4); `detect_flag_field_overlap` (D2 collision guard);
+    # `resolve_against_createmeta`/`resolve_against_editmeta`; the
+    # `compose_{option,id,name,asset}_hint` wire-value composers. Previously absent from
+    # examine_globs despite backing two command families — P22-001/DEC-149/S-MUTANTS-SCOPE-1
+    # drift class ("new CLI handler file → add to mutants.toml at creation") that slipped
+    # through across all field-dx PRs. ~45 mutants. (added FIX-F6-MUTANTS-SCOPE)
+    "src/cli/issue/field_resolve.rs",
+    # S-cycle3-env-tag — `sanitize_env_display`/`strip_control_and_ansi`:
+    # security-relevant display-sanitization (terminal-escape injection), same
+    # class as attachments.rs::display_sanitize_filename. Whole-file scope brings
+    # render_table/render_json in too — accepted, tracked, same as main.rs/queue.rs.
+    "src/output.rs",
+    # FIX-F6-1 (cycle-004 F6 hardening, examine_globs policy gap): S-cycle4-cloud-id-
+    # correctness's cloud_id acquisition (`fetch_cloud_id`, `validate_and_trim_site_url`,
+    # `is_plausible_cloud_id`, the response-body size-cap guards). Fully default-CI-
+    # testable — no keyring/Windows-cfg boundary — 21 mutants, 100% kill after the
+    # FIX-F6-1 body-cap boundary tests. Was omitted at file-creation time
+    # (S-cycle4-cloud-id-correctness); same P22-001/DEC-149 drift class as every prior
+    # "new security-relevant file → add to mutants.toml at creation" gap.
+    "src/api/jira/tenant.rs",
+    # S-cycle5-mention-resolution-wiring (AC-016, verification-delta-674.md §9):
+    # new effectful mention-resolution module (`resolve_mentions`,
+    # `filter_by_name_match`) reachable from every write-command surface
+    # (create/edit/comment add/edit/JSM create). Added at file-creation time
+    # per the P22-001/DEC-149/S-MUTANTS-SCOPE-1 "new CLI handler file → add to
+    # mutants.toml at creation" convention, in the SAME commit that creates
+    # the file (satisfies `tests/mutants_glob_existence.rs`).
+    "src/cli/issue/mentions.rs",
+    # S-cycle7-auth-state-derivation (B1): pure `derive_auth_state` +
+    # injection-seam `collect_probe_results` + renderer purity wiring.
+    # `probe_matching_kind_credential` was consolidated (CR-002/F-C007-M1,
+    # cycle-007 F5) into `api/auth.rs` and is no longer defined in this file —
+    # see the exclude_re pair anchored to `src/api/auth.rs` below.
+    "src/cli/auth/list.rs",
+    # S-cycle7-auth-status-json (B2): `build_status_json` pure JSON builder
+    # + `status()` OutputFormat dispatch. `peek_oauth_app_source` is in the
+    # same file but excluded below (keychain-gated, no injection seam,
+    # exclude_re pair below). `probe_matching_kind_credential` was
+    # consolidated (CR-002/F-C007-M1, cycle-007 F5) into `api/auth.rs` and is
+    # no longer defined in this file.
+    "src/cli/auth/status.rs",
 ]
 
 # The absolute per-mutant test ceiling is set via `--timeout 240` on the CLI
@@ -55,3 +116,69 @@ examine_globs = [
 # Match the CI test invocation so mutation runs use the same feature set as
 # the verifying suite.
 additional_cargo_test_args = ["--all-features"]
+
+# JUSTIFIED EXCLUSION (S-575-1) — see docs/specs/cargo-mutants-policy.md §Exclusions.
+#
+# `delete ! in JiraClient::search_issues_with_fields` (the `if !page_has_more { break; }`
+# terminal-page guard, src/api/jira/issues.rs) is uncatchable-as-anything-but-TIMEOUT, not
+# a coverage gap:
+#
+#   - Deleting `!` makes the loop NOT break on a terminal page. A terminal page always has
+#     `next_page_token == None`, so the JRACLOUD-95368 repeated-cursor anti-loop guard
+#     (`next_cursor.is_some() && next_cursor == prev_cursor`) never fires (`is_some()` is
+#     false on `None`) — the mutant re-fetches the same terminal page forever.
+#   - cargo-mutants runs the WHOLE test binary against each mutant. Any test that reaches a
+#     terminal page (which is every realistic pagination test — that's how pagination ends)
+#     hangs the process before any assertion can complete, so the run is killed by
+#     `--timeout 240` and classified TIMEOUT (= survived), never MISSED or CAUGHT.
+#   - Bounding one mock/test can't fix this: EVERY terminal-page test hangs identically —
+#     there is no assertion shape that observes the infinite loop before the timeout does.
+#   - The break's correctness is positively verified by the multi-page termination tests,
+#     e.g. `test_search_issues_with_fields_two_page_pagination_terminates_at_terminal_page`
+#     (src/api/jira/issues.rs) and the `rate_limit_cap_tests.rs` pagination-termination set —
+#     these assert the loop DOES terminate, which is the property this mutant would break.
+#
+# Regex is anchored to file:line:col + exact function name so it matches ONLY this one
+# mutant — NOT the sibling `delete ! in JiraClient::search_issues` (issues.rs:273, same
+# `if !page_has_more { break; }` shape, different function) or `search_issue_keys`, and not
+# any of the sibling `>`/`>=`/`||`/`&&`/`==` mutants at nearby lines in the same function.
+exclude_re = [
+    '^src/api/jira/issues\.rs:374:16: delete ! in JiraClient::search_issues_with_fields$',
+    # CR-002 / F-C007-M1 (cycle-007 F5 fix bundle): `probe_matching_kind_credential`
+    # was consolidated from two byte-identical per-file copies (formerly in
+    # `cli/auth/list.rs` and `cli/auth/status.rs`) into ONE shared implementation in
+    # `api/auth.rs`. It reads the OS keychain and has no injection seam — its
+    # mutations cannot be caught by DEFAULT-CI tests. `src/api/auth.rs` is not
+    # currently in `examine_globs` (see docs/specs/cargo-mutants-policy.md
+    # "FIX-F6-1 deferred, not added"), so this pair is presently inert, but is kept
+    # so the exclusion travels with the function if/when that file enters scope.
+    # TWO regexes are required (mirrors the pre-consolidation per-file pattern):
+    #
+    # Regex A — operator/expression mutants (e.g. `delete ==`, `replace &&`,
+    # `replace .is_ok() with false`):
+    #     cargo-mutants names these
+    #     "src/api/auth.rs:N:C: <op> in probe_matching_kind_credential"
+    # Anchored to file + function suffix. Does NOT match derive_auth_state,
+    # collect_probe_results, or any renderer.
+    '^src/api/auth\.rs:\d+:\d+: .+ in probe_matching_kind_credential$',
+    # Regex B — whole-function-body replacement mutants (e.g.
+    #     `replace probe_matching_kind_credential -> bool with true`):
+    #     cargo-mutants names these
+    #     "src/api/auth.rs:N:C: replace probe_matching_kind_credential … with …"
+    #     These do NOT end in "in probe_matching_kind_credential" so Regex A
+    #     does not cover them → they would report MISSED (no DEFAULT-CI test
+    #     exercises the real keychain probe, by design).
+    # Anchored to file + function name; does NOT match derive_auth_state,
+    # collect_probe_results, render_list_table, render_list_json, or handle_list.
+    '^src/api/auth\.rs:\d+:\d+: replace probe_matching_kind_credential .*$',
+    # S-cycle7-auth-status-json B2: `peek_oauth_app_source` in status.rs
+    # reads the OS keychain (try_load_oauth_app_credentials + embedded flag)
+    # and has no injection seam — mutations cannot be caught by DEFAULT-CI
+    # tests. `peek_oauth_app_source_for_test` (pure, no keychain) is NOT
+    # excluded. TWO regexes required:
+    #
+    # Regex A — operator/expression mutants:
+    '^src/cli/auth/status\.rs:\d+:\d+: .+ in peek_oauth_app_source$',
+    # Regex B — whole-function-body replacement mutants:
+    '^src/cli/auth/status\.rs:\d+:\d+: replace peek_oauth_app_source .*$',
+]

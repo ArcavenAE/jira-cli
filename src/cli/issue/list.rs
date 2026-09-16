@@ -35,6 +35,102 @@ fn extract_unique_status_names(issue_types: &[IssueTypeWithStatuses]) -> Vec<Str
 
 // ── List ──────────────────────────────────────────────────────────────
 
+/// BC-2.1.006 (amended, S-579-1; FIX-F5-LRE-1 / ADV-LRE-F5-A-MED-001): "no
+/// project or filters specified" guard message -- the amended 15-source
+/// enumeration, with `--updated-recent` appended immediately before
+/// `or --jql`. `--updated-recent` is one filter source among the fifteen
+/// listed here, exactly like `--recent` and the other fourteen -- it
+/// contributes an `updated >= -{d}` clause via `build_filter_clauses` and, on
+/// its own, is sufficient to satisfy this guard (mirroring `--recent`'s
+/// long-standing behavior). There is exactly ONE call site left in
+/// `handle_list`:
+///   - The end-of-function `all_parts.is_empty()` guard -- the original
+///     BC-2.1.006 backstop, now covering all fifteen filter sources
+///     uniformly (including `--updated-recent`).
+///
+/// FIX-F5-LRE-1 (human-adjudicated, ADV-LRE-F5-A-MED-001) removed the two
+/// `--updated-recent`-specific dedicated guards that used to run ahead of
+/// this one (an early pre-HTTP guard, and a `base_parts.is_empty()`
+/// backstop) -- `--updated-recent` was previously the only 1 of 15 filter
+/// sources that refused (exit 64) when used alone; it now proceeds to a
+/// query exactly like every other filter source, including cross-project.
+///
+/// Adding a 16th filter flag to `IssueCommand::List` requires keeping two
+/// things in sync: (a) this message's enumerated list, and (b)
+/// `build_filter_clauses`, which must emit the new flag's JQL clause into
+/// `all_parts` -- only then does the flag actually contribute to, and
+/// satisfy, the terminal `all_parts.is_empty()` guard above. Nothing
+/// currently enforces this mechanically -- no compile error is raised on
+/// drift between the message text and `build_filter_clauses`'s clause
+/// emission.
+const NO_FILTERS_SPECIFIED_MSG: &str = "No project or filters specified. Use --project, --assignee, --reporter, --status, --open, --team, --recent, --created-after, --created-before, --updated-after, --updated-before, --asset, --component, --updated-recent, or --jql. You can also set a default project in .jr.toml or run \"jr init\".";
+
+/// Sort direction for `--sort <field>:<direction>` (BC-2.1.024 postcondition 1).
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub(super) enum SortDirection {
+    Asc,
+    Desc,
+}
+
+/// Parsed `--sort <field>:<direction>` value (BC-2.1.024 postcondition 1):
+/// `field` is preserved VERBATIM (original casing, no trimming beyond the
+/// split); `direction` is normalized to `Asc`/`Desc`.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub(super) struct SortSpec {
+    pub(super) field: String,
+    pub(super) direction: SortDirection,
+}
+
+/// Parse and validate `--sort <field>:asc|desc` per BC-2.1.024.
+///
+/// Splits on the FIRST `:` only; the direction segment is matched
+/// case-insensitively against `asc`/`desc`. `field` is preserved verbatim
+/// (original casing, no trimming beyond the split) -- no local allowlist.
+/// Any other shape (no `:`, empty field, empty direction, non-asc/desc
+/// direction, or an extra `:` inside the direction segment) is rejected
+/// pre-HTTP with a `JrError::UserError` (exit 64).
+fn parse_sort(raw: &str) -> Result<SortSpec, JrError> {
+    let invalid = || {
+        JrError::UserError(format!(
+            "Invalid --sort \"{raw}\". Use <field>:asc or <field>:desc (e.g., updated:desc)."
+        ))
+    };
+
+    let (field, direction_str) = raw.split_once(':').ok_or_else(invalid)?;
+    if field.is_empty() || direction_str.is_empty() {
+        return Err(invalid());
+    }
+
+    let direction = if direction_str.eq_ignore_ascii_case("asc") {
+        SortDirection::Asc
+    } else if direction_str.eq_ignore_ascii_case("desc") {
+        SortDirection::Desc
+    } else {
+        return Err(invalid());
+    };
+
+    Ok(SortSpec {
+        field: field.to_string(),
+        direction,
+    })
+}
+
+/// Compose the `order_by` JQL fragment for an overriding `--sort` value per
+/// BC-2.1.025: `"<FIELD> <DIR>, key ASC"`, except when `field` matches `key`
+/// case-insensitively, where the secondary sort is omitted.
+fn compose_order_by_with_sort(spec: &SortSpec) -> String {
+    let dir = match spec.direction {
+        SortDirection::Asc => "ASC",
+        SortDirection::Desc => "DESC",
+    };
+
+    if spec.field.eq_ignore_ascii_case("key") {
+        format!("{} {}", spec.field, dir)
+    } else {
+        format!("{} {}, key ASC", spec.field, dir)
+    }
+}
+
 /// Build base JQL parts when `--jql` is provided.
 ///
 /// Returns `(base_parts, order_by)`. Strips any trailing `ORDER BY` clause
@@ -70,18 +166,64 @@ pub(super) async fn handle_list(
         assignee,
         reporter,
         recent,
+        updated_recent,
         open,
         points: show_points,
         assets: show_assets,
+        duedate: show_duedate,
         asset: asset_key,
+        component,
         created_after,
         created_before,
         updated_after,
         updated_before,
+        fields,
+        sort,
     } = command
     else {
         unreachable!()
     };
+
+    // S-575-1 (BC-2.2.033): `--fields <CSV>` output-format gate + pre-HTTP
+    // CSV validation. Both run before ANY network call (project resolution,
+    // component resolution, `project_exists`, the search itself) so a
+    // rejected combination costs zero HTTP requests. Default behavior
+    // (fields == None) is untouched below.
+    let field_list: Option<Vec<String>> = match &fields {
+        Some(csv) => {
+            if !matches!(output_format, OutputFormat::Json) {
+                return Err(JrError::UserError("--fields requires --output json.".into()).into());
+            }
+            Some(helpers::parse_fields_csv(csv)?)
+        }
+        None => None,
+    };
+
+    // S-588-1 (BC-2.1.024 postcondition 2): `--sort <field>:asc|desc` syntax
+    // parse/validate. Runs before ANY network call (project resolution,
+    // component resolution, `project_exists`, the search itself) so a
+    // malformed `--sort` value costs zero HTTP requests. The parsed
+    // `SortSpec` is reused later (order_by override hook, below) rather than
+    // re-parsing -- `sort` itself is not consumed here.
+    let sort_spec: Option<SortSpec> = sort.as_deref().map(parse_sort).transpose()?;
+
+    // Resolve project key once, before any HTTP call. Moved up from its
+    // original position (immediately before the `project_exists` check)
+    // because the S-606-1 `--component` pre-flight validation below needs it
+    // and MUST run before `project_exists`'s GET — see
+    // `validate_component_preflight`'s doc comment for why (VP-COMPONENT-013
+    // zero-HTTP guarantee for a rejected combination or missing project
+    // scope).
+    let project_key = config.project_key(project_override);
+
+    // S-606-1 (BC-2.1.018..022): --component pre-flight validation —
+    // combination/count guards and the project-scope requirement, purely
+    // CLI-arg-derived, HTTP-free. MUST run before ANY network call (including
+    // `project_exists`) so a rejected combination or missing project scope
+    // costs literally zero requests (VP-COMPONENT-013).
+    if !component.is_empty() {
+        validate_component_preflight(&component, project_key.as_deref())?;
+    }
 
     let effective_limit = resolve_effective_limit(limit, all);
 
@@ -90,6 +232,27 @@ pub(super) async fn handle_list(
 
     // Validate --recent duration format early
     if let Some(ref d) = recent {
+        crate::jql::validate_duration(d).map_err(JrError::UserError)?;
+    }
+
+    // S-579-1 (BC-2.1.023 Precondition 2): --updated-recent duration filter,
+    // the `updated` field parallel to --recent (`created`). Reuses the SAME
+    // validator --recent uses (jql::validate_duration, NOT duration.rs) --
+    // combined units like `4w2d` are rejected pre-HTTP with the identical
+    // error shape --recent's own validation produces (AC-002).
+    //
+    // FIX-F5-LRE-1 (human-adjudicated, ADV-LRE-F5-A-MED-001): `--updated-recent`
+    // used alone (no other filter/scope) previously exited 64 here via a
+    // dedicated EC-2.1.023-4 guard -- the only 1 of 15 filter sources that
+    // refused when used alone. That guard (and its `base_parts.is_empty()`
+    // backstop, below where `base_parts` is resolved) has been removed:
+    // `--updated-recent` alone now proceeds to a query exactly like `--recent`
+    // and every other filter source -- `build_filter_clauses` already emits
+    // the `updated >= -{d}` clause for it, so the final `all_parts` is
+    // non-empty and the end-of-function BC-2.1.006 guard does not fire. The
+    // true no-filter case (a completely bare `jr issue list`) is still caught
+    // by that same end-of-function guard.
+    if let Some(ref d) = updated_recent {
         crate::jql::validate_duration(d).map_err(JrError::UserError)?;
     }
 
@@ -187,9 +350,6 @@ pub(super) async fn handle_list(
         (None, None)
     };
 
-    // Resolve project key once, before validation and JQL building
-    let project_key = config.project_key(project_override);
-
     // Validate --project exists
     if let Some(ref pk) = project_key {
         // Skip if --status is set (project will be validated via statuses endpoint below)
@@ -254,6 +414,16 @@ pub(super) async fn handle_list(
         None
     };
 
+    // Resolve --component filter (bare/not:/none/all: forms) — BC-2.1.018..022.
+    // Zero-value case (no --component flags at all) matches pre-S-606-1 behavior
+    // exactly: no resolver HTTP, no clause contributed, existing filters/tests
+    // are unaffected by this guard.
+    let component_clauses: Vec<String> = if component.is_empty() {
+        Vec::new()
+    } else {
+        resolve_component_clauses(client, project_key.as_deref(), &component).await?
+    };
+
     // Build filter clauses from all flag values
     let filter_parts = build_filter_clauses(FilterOptions {
         assignee_jql: assignee_jql.as_deref(),
@@ -261,8 +431,10 @@ pub(super) async fn handle_list(
         status: resolved_status.as_deref(),
         team_clause: team_clause.as_deref(),
         recent: recent.as_deref(),
+        updated_recent: updated_recent.as_deref(),
         open,
         asset_clause: asset_clause.as_deref(),
+        component_clauses: &component_clauses,
         created_after_clause: created_after_clause.as_deref(),
         created_before_clause: created_before_clause.as_deref(),
         updated_after_clause: updated_after_clause.as_deref(),
@@ -342,22 +514,87 @@ pub(super) async fn handle_list(
         }
     };
 
+    // S-588-1 (BC-2.1.025): `--sort`, when present, OVERRIDES the `order_by`
+    // value computed by every branch above -- `--jql`, scrum-active-sprint,
+    // kanban, and default-project alike -- uniformly, including the
+    // board-driven `rank ASC` defaults (DEC-298 "always wins"). Absent
+    // `--sort`, `order_by` is byte-for-byte unchanged from the branches
+    // above (BC-2.1.002/003/004/005's pinned default literals).
+    let order_by: String = match sort_spec {
+        Some(ref spec) => compose_order_by_with_sort(spec),
+        None => order_by.to_string(),
+    };
+
+    // FIX-F5-LRE-1 (human-adjudicated, ADV-LRE-F5-A-MED-001): the
+    // `--updated-recent`-specific `base_parts.is_empty()` backstop guard that
+    // used to live here (S-579-1 pr-review cycle 1 Finding 1) has been
+    // removed. `--updated-recent` alone now composes its `updated >= -{d}`
+    // clause into `filter_parts` regardless of whether `base_parts` is empty
+    // -- the same as `--recent` and every other filter source -- and the
+    // end-of-function `all_parts.is_empty()` guard below remains the single
+    // no-filter backstop for all fifteen filter sources.
+
     // Combine base + filters
     let mut all_parts = base_parts;
     all_parts.extend(filter_parts);
 
     // Guard against unbounded query
     if all_parts.is_empty() {
-        return Err(JrError::UserError(
-            "No project or filters specified. Use --project, --assignee, --reporter, --status, --open, --team, --recent, --created-after, --created-before, --updated-after, --updated-before, --asset, or --jql. \
-             You can also set a default project in .jr.toml or run \"jr init\"."
-                .into(),
-        )
-        .into());
+        return Err(JrError::UserError(NO_FILTERS_SPECIFIED_MSG.into()).into());
     }
 
     let where_clause = all_parts.join(" AND ");
     let effective_jql = format!("{where_clause} ORDER BY {order_by}");
+
+    // S-575-1 (BC-2.2.033 Postcondition 1/4, human-locked DEC-298): when
+    // `--fields` is present it REPLACES BASE_ISSUE_FIELDS entirely — no
+    // union with `extra` (story points / team field ids), and `--points` /
+    // `--assets` / `--duedate` become silent no-ops by never reaching any of
+    // the cmdb-field-fetch, asset-enrichment, or column-rendering logic
+    // below (that logic is entirely skipped, not merely made inert).
+    //
+    // DEFENSIVE (S-584-1, BC-2.2.034 Edge Case EC-2.2.034-3): an unnamed
+    // `--fields` request (e.g. `comment`) is not a named field on
+    // `IssueFields` — it lands in `IssueFields.extra`'s `#[serde(flatten)]`
+    // catch-all and is serialized to JSON below via `output::print_output`
+    // with ZERO transformation, i.e. raw ADF for `comment.comments[].body`.
+    // Do NOT post-process `extra` here (e.g. to run `comment` bodies through
+    // `adf::adf_to_text` for consistency with the `issue comments` command's
+    // flattened rendering) — that is explicitly OUT OF SCOPE and would
+    // violate BC-2.2.034 Postcondition 1 (raw ADF preserved byte-for-byte)
+    // and Postcondition 3 (zero incremental transformation code). See also
+    // BC-2.3.042.
+    if let Some(field_list) = &field_list {
+        let field_refs: Vec<&str> = field_list.iter().map(String::as_str).collect();
+        let search_result = client
+            .search_issues_with_fields(&effective_jql, effective_limit, &field_refs)
+            .await?;
+        let has_more = search_result.has_more;
+        let issues = search_result.issues;
+
+        output::print_output(output_format, &[], &[], &issues)?;
+
+        if has_more && !all {
+            let count_jql = crate::jql::strip_order_by(&effective_jql);
+            match client.approximate_count(count_jql).await {
+                Ok(total) if total > 0 => {
+                    eprintln!(
+                        "Showing {} of ~{} results. Use --limit or --all to see more.",
+                        issues.len(),
+                        total
+                    );
+                }
+                Ok(_) | Err(_) => {
+                    eprintln!(
+                        "Showing {} results. Use --limit or --all to see more.",
+                        issues.len()
+                    );
+                }
+            }
+        }
+
+        return Ok(());
+    }
 
     let cmdb_fields = if show_assets {
         if let Some(fields) = asset_cmdb_fields {
@@ -566,11 +803,24 @@ pub(super) async fn handle_list(
             } else {
                 None
             };
-            format::format_issue_row(issue, effective_sp, assets, team)
+            // `Some("")` fallback (not `None`) when the issue's own duedate
+            // is unset — this keeps the column SHOWN (rendering "-" via
+            // `render_due_date`) whenever `--duedate` is passed, rather than
+            // hiding the column per-row based on data presence (BC-2.2.032).
+            let duedate = if show_duedate {
+                Some(issue.fields.duedate.as_deref().unwrap_or(""))
+            } else {
+                None
+            };
+            format::format_issue_row(issue, duedate, effective_sp, assets, team)
         })
         .collect();
-    let headers =
-        format::issue_table_headers(effective_sp.is_some(), show_assets_col, show_team_col);
+    let headers = format::issue_table_headers(
+        show_duedate,
+        effective_sp.is_some(),
+        show_assets_col,
+        show_team_col,
+    );
     output::print_output(output_format, &headers, &rows, &issues)?;
 
     if has_more && !all {
@@ -593,6 +843,257 @@ pub(super) async fn handle_list(
     }
 
     Ok(())
+}
+
+/// Resolve the repeatable `--component` flag's raw values into zero, one, or
+/// two composed JQL clause fragments (bare-then-`not:` order per BC-2.1.018
+/// Precondition 3 / BC-2.1.019 Postcondition 2), per BC-2.1.018..022:
+///
+/// - Bare `--component <NAME>` (repeatable) → OR-combined `component in (...)`.
+/// - `--component not:<NAME>` → the full `(component not in (...) OR component
+///   is EMPTY)` form — never a bare `not in`.
+/// - `--component none` → `component is EMPTY`, ZERO resolver HTTP; must be the
+///   ONLY occurrence; still requires `project_key` (project-scope guard).
+/// - `--component all:<N1>,<N2>` → AND-combined `component = id1 AND component
+///   = id2 ...`; at most one `all:` occurrence; not combinable with
+///   bare/`not:`/`none`.
+/// - Any non-`none` value resolves via `helpers::resolve_component` (§8.4)
+///   BEFORE composition; zero/ambiguous matches → exit 64 with ZERO
+///   `POST /rest/api/3/search/jql` calls (BC-2.1.022, VP-COMPONENT-013).
+/// - No `project_key` for a bare/`not:`/`all:`/`none` value → exit 64
+///   pre-flight, naming `--project`, before any resolver GET.
+///
+/// Caller contract: `values` MUST be non-empty — the zero-`--component`-flags
+/// case is short-circuited by the caller (`handle_list`) before this function
+/// is reached, so it need not (and does not) special-case an empty slice.
+/// ALSO: `validate_component_preflight(values, project_key)` MUST have
+/// already succeeded against these exact `values`/`project_key` — this
+/// function performs the ACTUAL §8.4 resolver HTTP calls only; the
+/// combination/count/project-scope guard logic lives entirely in
+/// `validate_component_preflight`, which `handle_list` calls BEFORE the
+/// `project_exists` GET so a rejected combination or missing project scope
+/// costs literally zero HTTP calls (VP-COMPONENT-013, BC-2.1.022
+/// EC-2.1.022-1/2). Deliberately does NOT implement issue #607's generalized
+/// multi-valued/negatable filter grammar — these forms are pre-composed and
+/// component-specific, not a reusable abstraction.
+async fn resolve_component_clauses(
+    client: &JiraClient,
+    project_key: Option<&str>,
+    values: &[String],
+) -> Result<Vec<String>> {
+    // `none`: zero resolver HTTP (BC-2.1.020 Postcondition 1). Project scope
+    // was already confirmed by `validate_component_preflight`.
+    if values.len() == 1 && values[0].eq_ignore_ascii_case("none") {
+        return Ok(vec!["component is EMPTY".to_string()]);
+    }
+
+    let pk = project_key.expect(
+        "validate_component_preflight guarantees a project scope for any \
+         non-`none` --component value",
+    );
+
+    // `all:` form — at most one occurrence is guaranteed by
+    // `validate_component_preflight`. Comma-separated names AND-compose into
+    // repeated equality (BC-2.1.021 Postcondition 1), NOT `IN`.
+    if let Some(all_value) = values.iter().find(|v| v.starts_with("all:")) {
+        let components = client.list_components(pk).await?;
+        let candidate_names: Vec<String> = components.iter().map(|c| c.name.clone()).collect();
+
+        let mut equality_clauses = Vec::new();
+        for name in all_value["all:".len()..].split(',') {
+            let ids = resolve_one_component_id(name, pk, &components, &candidate_names)?;
+            if ids.len() == 1 {
+                equality_clauses.push(format!("component = {}", ids[0]));
+            } else {
+                // F5-A-M1/F5-C-001 (human-adjudicated: UNION) — ExactMultiple
+                // becomes a parenthesized OR-of-equalities term standing in
+                // for this one name's position in the AND-chain (BC-2.1.021
+                // Postcondition 2 / EC-2.1.021-4).
+                let or_group = ids
+                    .iter()
+                    .map(|id| format!("component = {id}"))
+                    .collect::<Vec<_>>()
+                    .join(" OR ");
+                equality_clauses.push(format!("({or_group})"));
+            }
+        }
+        return Ok(vec![equality_clauses.join(" AND ")]);
+    }
+
+    // Bare + `not:` forms — MAY coexist (BC-2.1.018 Precondition 3), composing
+    // two AND-joined clauses in bare-then-`not:` order (BC-2.1.018
+    // Postcondition 2 / BC-2.1.019 Postcondition 2).
+    let components = client.list_components(pk).await?;
+    let candidate_names: Vec<String> = components.iter().map(|c| c.name.clone()).collect();
+
+    let mut bare_ids: Vec<String> = Vec::new();
+    let mut not_ids: Vec<String> = Vec::new();
+    for v in values {
+        if let Some(name) = v.strip_prefix("not:") {
+            // F5-A-M1/F5-C-001: each value's resolved ids (ascending numeric
+            // for an ExactMultiple union) are appended in comma-supplied
+            // value order (BC-2.1.019 PC3 / EC-2.1.019-4).
+            not_ids.extend(resolve_one_component_id(
+                name,
+                pk,
+                &components,
+                &candidate_names,
+            )?);
+        } else {
+            bare_ids.extend(resolve_one_component_id(
+                v,
+                pk,
+                &components,
+                &candidate_names,
+            )?);
+        }
+    }
+
+    let mut clauses = Vec::new();
+    if !bare_ids.is_empty() {
+        clauses.push(format!("component in ({})", bare_ids.join(", ")));
+    }
+    if !not_ids.is_empty() {
+        clauses.push(format!(
+            "(component not in ({}) OR component is EMPTY)",
+            not_ids.join(", ")
+        ));
+    }
+    Ok(clauses)
+}
+
+/// Pure, HTTP-free pre-flight validation for the `--component` flag's
+/// combination/count constraints (BC-2.1.020 Precondition 1 — `none` must be
+/// the sole occurrence; BC-2.1.021 Preconditions 1-2 — at most one `all:`
+/// occurrence, not combined with bare/`not:`/`none`) and project-scope
+/// requirement (BC-2.1.020 Precondition 2 / BC-2.1.022 EC-2.1.022-1/2 — every
+/// non-empty `--component` value list, including `none`, needs a resolved
+/// project). MUST run before any HTTP call — including `project_exists` — so
+/// a rejected combination or missing project scope costs literally zero
+/// requests (VP-COMPONENT-013).
+///
+/// Caller contract: only meaningful when `values` is non-empty — the
+/// zero-`--component`-flags case is handled by the caller before this is
+/// reached.
+fn validate_component_preflight(
+    values: &[String],
+    project_key: Option<&str>,
+) -> std::result::Result<(), JrError> {
+    let is_sole_none = values.len() == 1 && values[0].eq_ignore_ascii_case("none");
+
+    let none_count = values
+        .iter()
+        .filter(|v| v.eq_ignore_ascii_case("none"))
+        .count();
+    if none_count > 0 && values.len() > 1 {
+        return Err(JrError::UserError(
+            "--component none cannot be combined with other --component values.".into(),
+        ));
+    }
+
+    let all_count = values.iter().filter(|v| v.starts_with("all:")).count();
+    if all_count > 1 {
+        return Err(JrError::UserError(
+            "--component all: may only be specified once; comma-separate multiple names within one all: value."
+                .into(),
+        ));
+    }
+    if all_count == 1 && values.len() > 1 {
+        return Err(JrError::UserError(
+            "--component all: cannot be combined with other --component values.".into(),
+        ));
+    }
+
+    if project_key.is_none() {
+        return Err(JrError::UserError(if is_sole_none {
+            "--component none requires --project (or a configured default project) to avoid an unrestricted org-wide search."
+                .into()
+        } else {
+            "--component requires --project (or a configured default project) to resolve component names."
+                .into()
+        }));
+    }
+
+    Ok(())
+}
+
+/// Resolve one `--component` name/id (already prefix-stripped by the caller
+/// for `not:`/`all:` forms) to its numeric component id(s) via §8.4
+/// (`helpers::resolve_component`), mapping a name match back to its id via
+/// `components`. BC-8.4.002/003 failure messages, verbatim (alphabetically
+/// sorted, case-insensitive, period-terminated) — mirrors
+/// `cli/component.rs`'s identical resolution pattern.
+///
+/// F5-A-M1/F5-C-001 (2026-08-17, human-adjudicated: UNION) — `Exact` and the
+/// numeric-id bypass always resolve to a single-element `Vec`; a case-only
+/// duplicate name (`MatchResult::ExactMultiple`) resolves to EVERY
+/// case-insensitively-name-matching component id in `components` (a re-scan
+/// of the already-fetched list — zero extra HTTP), ascending numeric order,
+/// per BC-2.1.018 Postcondition 3 / BC-2.1.019 Postcondition 3 / BC-2.1.021
+/// Postcondition 2. This is a READ-PATH-ONLY divergence from
+/// `cli/component.rs`'s fail-closed mutating behavior on `ExactMultiple`
+/// (BC-2.1.022 EC-2.1.022-3) — do NOT change the mutating commands to match.
+fn resolve_one_component_id(
+    input: &str,
+    project: &str,
+    components: &[crate::types::jira::component::Component],
+    candidate_names: &[String],
+) -> std::result::Result<Vec<String>, JrError> {
+    match helpers::resolve_component(input, project, candidate_names) {
+        MatchResult::Exact(matched) => {
+            if helpers::is_numeric_component_id(input) {
+                // Numeric bypass (BC-8.4.001 step 1): `matched` IS the id.
+                Ok(vec![matched])
+            } else {
+                components
+                    .iter()
+                    .find(|c| c.name == matched)
+                    .map(|c| vec![c.id.clone()])
+                    .ok_or_else(|| {
+                        JrError::Internal(format!(
+                            "Internal error: resolved component name '{}' not found in list.",
+                            matched
+                        ))
+                    })
+            }
+        }
+        MatchResult::ExactMultiple(matched) => {
+            // Numeric bypass never produces ExactMultiple (it short-circuits
+            // to Exact in `helpers::resolve_component` step 1), so `matched`
+            // here is always a name — re-scan `components` for every
+            // case-insensitive name match and union their ids.
+            let mut ids: Vec<String> = components
+                .iter()
+                .filter(|c| c.name.to_lowercase() == matched.to_lowercase())
+                .map(|c| c.id.clone())
+                .collect();
+            if ids.is_empty() {
+                return Err(JrError::Internal(format!(
+                    "Internal error: resolved component name '{}' not found in list.",
+                    matched
+                )));
+            }
+            ids.sort_by_key(|id| id.parse::<u64>().unwrap_or(u64::MAX));
+            Ok(ids)
+        }
+        MatchResult::Ambiguous(mut candidates) => {
+            candidates.sort_by_key(|s| s.to_lowercase());
+            Err(JrError::UserError(format!(
+                "Ambiguous component '{}'. Matches: {}.",
+                input,
+                candidates.join(", ")
+            )))
+        }
+        MatchResult::None(mut available) => {
+            available.sort_by_key(|s| s.to_lowercase());
+            Err(JrError::UserError(format!(
+                "Component '{}' not found in project {}. Available: {}.",
+                input,
+                project,
+                available.join(", ")
+            )))
+        }
+    }
 }
 
 /// Resolve whether to show story points. Returns the field ID if points should
@@ -623,8 +1124,16 @@ struct FilterOptions<'a> {
     status: Option<&'a str>,
     team_clause: Option<&'a str>,
     recent: Option<&'a str>,
+    /// S-579-1 (BC-2.1.007 amendment): slots in immediately after `recent`
+    /// (`created >= -{d}`), before `asset_clause`.
+    updated_recent: Option<&'a str>,
     open: bool,
     asset_clause: Option<&'a str>,
+    /// Zero, one, or two pre-composed `--component` clause fragments, already
+    /// resolved and formatted by `resolve_component_clauses` (bare-then-`not:`
+    /// order per BC-2.1.018 Precondition 3). Slots in after `asset_clause`,
+    /// before the date-range clauses (BC-2.1.007 amendment).
+    component_clauses: &'a [String],
     created_after_clause: Option<&'a str>,
     created_before_clause: Option<&'a str>,
     updated_after_clause: Option<&'a str>,
@@ -652,9 +1161,19 @@ fn build_filter_clauses(opts: FilterOptions<'_>) -> Vec<String> {
     if let Some(d) = opts.recent {
         parts.push(format!("created >= -{d}"));
     }
+    // S-579-1 (BC-2.1.007 amendment): --updated-recent's clause slots in
+    // immediately after `recent`, before `asset`.
+    if let Some(d) = opts.updated_recent {
+        parts.push(format!("updated >= -{d}"));
+    }
     if let Some(a) = opts.asset_clause {
         parts.push(a.to_string());
     }
+    // S-606-1 (BC-2.1.007 amendment): --component clause(s) slot in here —
+    // after `asset`, before the date-range clauses. `opts.component_clauses`
+    // is already fully resolved/composed by `resolve_component_clauses`; this
+    // is only the ordered-insertion point.
+    parts.extend(opts.component_clauses.iter().cloned());
     if let Some(c) = opts.created_after_clause {
         parts.push(c.to_string());
     }
@@ -694,6 +1213,133 @@ mod tests {
         assert_eq!(resolve_show_points(true, None), None);
     }
 
+    // ── S-588-1 (BC-2.1.024): `parse_sort` syntax parse/validate ──────────
+
+    #[test]
+    fn test_bc_2_1_024_parse_sort_valid_updated_desc() {
+        // EC-2.1.024-1
+        let spec = parse_sort("updated:desc").expect("valid --sort value must parse");
+        assert_eq!(
+            spec,
+            SortSpec {
+                field: "updated".to_string(),
+                direction: SortDirection::Desc,
+            }
+        );
+    }
+
+    #[test]
+    fn test_bc_2_1_024_parse_sort_direction_case_insensitive() {
+        // AC-003 / EC-2.1.024-2: --sort key:ASC and --sort key:AsC parse
+        // identically to --sort key:asc.
+        let lower = parse_sort("key:asc").expect("lowercase direction must parse");
+        let upper = parse_sort("key:ASC").expect("uppercase direction must parse");
+        let mixed = parse_sort("key:AsC").expect("mixed-case direction must parse");
+        assert_eq!(lower, upper);
+        assert_eq!(lower, mixed);
+        assert_eq!(
+            lower,
+            SortSpec {
+                field: "key".to_string(),
+                direction: SortDirection::Asc,
+            }
+        );
+    }
+
+    #[test]
+    fn test_bc_2_1_024_parse_sort_field_preserved_verbatim_original_casing() {
+        // BC-2.1.024 postcondition 1: field preserved VERBATIM (original
+        // casing, no trimming beyond the split) -- no local allowlist.
+        let spec = parse_sort("CustomField_10099:DESC").expect("valid value must parse");
+        assert_eq!(spec.field, "CustomField_10099");
+        assert_eq!(spec.direction, SortDirection::Desc);
+    }
+
+    #[test]
+    fn test_bc_2_1_024_parse_sort_malformed_input_exits_64_pre_http() {
+        // AC-004 / EC-2.1.024-3..7: missing `:`, empty field segment, empty
+        // direction segment, a direction that isn't asc/desc, and a second
+        // `:` embedded in the direction segment all produce the exact pinned
+        // `JrError::UserError` message (mapped to exit 64 by
+        // `JrError::exit_code`).
+        for bad in [
+            "updated",            // EC-2.1.024-3: no `:`
+            ":desc",              // EC-2.1.024-4: empty field segment
+            "updated:",           // EC-2.1.024-5: empty direction segment
+            "updated:sideways",   // EC-2.1.024-6: direction not asc/desc
+            "updated:desc:extra", // EC-2.1.024-7: second `:` in direction
+        ] {
+            let err = parse_sort(bad).unwrap_err();
+            match err {
+                JrError::UserError(msg) => {
+                    assert_eq!(
+                        msg,
+                        format!(
+                            "Invalid --sort \"{bad}\". Use <field>:asc or <field>:desc (e.g., updated:desc)."
+                        ),
+                        "unexpected message for --sort {bad:?}: {msg}"
+                    );
+                    // BC-2.1.024 postcondition 2 maps to exit 64 via
+                    // `JrError::exit_code` (unit-pinned in `src/error.rs`);
+                    // re-asserted here so this test alone documents the
+                    // full contract for a `--sort` malformed-input value.
+                    assert_eq!(JrError::UserError(msg).exit_code(), 64);
+                }
+                other => panic!("expected JrError::UserError for --sort {bad:?}, got: {other:?}"),
+            }
+        }
+    }
+
+    // ── S-588-1 (BC-2.1.025): `compose_order_by_with_sort` composition ────
+
+    #[test]
+    fn test_bc_2_1_025_compose_order_by_with_sort_appends_key_asc_secondary() {
+        // AC-001 / EC-2.1.025-1
+        let spec = SortSpec {
+            field: "updated".to_string(),
+            direction: SortDirection::Desc,
+        };
+        assert_eq!(compose_order_by_with_sort(&spec), "updated DESC, key ASC");
+    }
+
+    #[test]
+    fn test_bc_2_1_025_compose_order_by_with_sort_key_field_omits_secondary_clause() {
+        // AC-002 / EC-2.1.025-2
+        let spec = SortSpec {
+            field: "key".to_string(),
+            direction: SortDirection::Asc,
+        };
+        assert_eq!(compose_order_by_with_sort(&spec), "key ASC");
+    }
+
+    #[test]
+    fn test_bc_2_1_025_compose_order_by_with_sort_key_omission_case_insensitive_field_casing_preserved()
+     {
+        // AC-010 / EC-2.1.025-3: the omission check matches the field name
+        // against "key" case-insensitively, but the field's OWN casing is
+        // preserved verbatim in the composed order_by once past that check.
+        let spec = SortSpec {
+            field: "KEY".to_string(),
+            direction: SortDirection::Desc,
+        };
+        assert_eq!(compose_order_by_with_sort(&spec), "KEY DESC");
+    }
+
+    #[test]
+    fn test_bc_2_1_025_compose_order_by_with_sort_arbitrary_field_passthrough_verbatim() {
+        // BC-2.1.025 Precondition 1: no local field-name allowlist -- an
+        // arbitrary/unknown field name is composed into order_by verbatim,
+        // with the standard key ASC secondary sort appended.
+        let spec = SortSpec {
+            field: "customfield_10099".to_string(),
+            direction: SortDirection::Desc,
+        };
+        assert_eq!(
+            compose_order_by_with_sort(&spec),
+            "customfield_10099 DESC, key ASC"
+        );
+    }
+
     #[test]
     fn build_jql_parts_assignee_me() {
         let parts = build_filter_clauses(FilterOptions {
@@ -702,8 +1348,10 @@ mod tests {
             status: None,
             team_clause: None,
             recent: None,
+            updated_recent: None,
             open: false,
             asset_clause: None,
+            component_clauses: &[],
             created_after_clause: None,
             created_before_clause: None,
             updated_after_clause: None,
@@ -720,8 +1368,10 @@ mod tests {
             status: None,
             team_clause: None,
             recent: None,
+            updated_recent: None,
             open: false,
             asset_clause: None,
+            component_clauses: &[],
             created_after_clause: None,
             created_before_clause: None,
             updated_after_clause: None,
@@ -738,8 +1388,10 @@ mod tests {
             status: None,
             team_clause: None,
             recent: Some("7d"),
+            updated_recent: None,
             open: false,
             asset_clause: None,
+            component_clauses: &[],
             created_after_clause: None,
             created_before_clause: None,
             updated_after_clause: None,
@@ -756,8 +1408,10 @@ mod tests {
             status: Some("In Progress"),
             team_clause: Some(r#"customfield_10001 = "uuid-123""#),
             recent: Some("30d"),
+            updated_recent: None,
             open: false,
             asset_clause: None,
+            component_clauses: &[],
             created_after_clause: None,
             created_before_clause: None,
             updated_after_clause: None,
@@ -779,8 +1433,10 @@ mod tests {
             status: None,
             team_clause: None,
             recent: None,
+            updated_recent: None,
             open: false,
             asset_clause: None,
+            component_clauses: &[],
             created_after_clause: None,
             created_before_clause: None,
             updated_after_clause: None,
@@ -797,8 +1453,10 @@ mod tests {
             status: Some("Done"),
             team_clause: None,
             recent: None,
+            updated_recent: None,
             open: false,
             asset_clause: None,
+            component_clauses: &[],
             created_after_clause: None,
             created_before_clause: None,
             updated_after_clause: None,
@@ -818,8 +1476,10 @@ mod tests {
             status: Some(r#"He said "hi" \o/"#),
             team_clause: None,
             recent: None,
+            updated_recent: None,
             open: false,
             asset_clause: None,
+            component_clauses: &[],
             created_after_clause: None,
             created_before_clause: None,
             updated_after_clause: None,
@@ -836,8 +1496,10 @@ mod tests {
             status: None,
             team_clause: None,
             recent: None,
+            updated_recent: None,
             open: true,
             asset_clause: None,
+            component_clauses: &[],
             created_after_clause: None,
             created_before_clause: None,
             updated_after_clause: None,
@@ -854,8 +1516,10 @@ mod tests {
             status: None,
             team_clause: None,
             recent: None,
+            updated_recent: None,
             open: true,
             asset_clause: None,
+            component_clauses: &[],
             created_after_clause: None,
             created_before_clause: None,
             updated_after_clause: None,
@@ -874,8 +1538,10 @@ mod tests {
             status: None, // status conflicts with open, so None here
             team_clause: Some(r#"customfield_10001 = "uuid-123""#),
             recent: Some("30d"),
+            updated_recent: None,
             open: true,
             asset_clause: None,
+            component_clauses: &[],
             created_after_clause: None,
             created_before_clause: None,
             updated_after_clause: None,
@@ -898,8 +1564,10 @@ mod tests {
             status: None,
             team_clause: None,
             recent: None,
+            updated_recent: None,
             open: false,
             asset_clause: Some(clause),
+            component_clauses: &[],
             created_after_clause: None,
             created_before_clause: None,
             updated_after_clause: None,
@@ -917,8 +1585,10 @@ mod tests {
             status: None,
             team_clause: None,
             recent: None,
+            updated_recent: None,
             open: false,
             asset_clause: Some(clause),
+            component_clauses: &[],
             created_after_clause: None,
             created_before_clause: None,
             updated_after_clause: None,
@@ -929,6 +1599,83 @@ mod tests {
         assert!(parts.contains(&clause.to_string()));
     }
 
+    /// F-1 (Step-4.5 adversarial finding, coverage gap): pins BC-2.1.007's
+    /// clause-ordering amendment / VP-COMPONENT-015 with BOTH the asset
+    /// clause slot AND `component_clauses` non-empty in the same call — no
+    /// pre-existing test in this module exercised that combination, so a
+    /// reorder placing `component_clauses` before `asset_clause` (or after a
+    /// date-range clause) would have stayed green. Asserts exact positional
+    /// Vec equality, not a loose `contains`/`len` check, so the pin actually
+    /// catches a reorder.
+    #[test]
+    fn test_bc_2_1_007_build_filter_clauses_component_immediately_after_asset() {
+        let asset_clause = r#""Client" IN aqlFunction("Key = \"CUST-5\"")"#;
+        let component_clauses = vec![
+            "component in (10001)".to_string(),
+            "(component not in (10002) OR component is EMPTY)".to_string(),
+        ];
+        let parts = build_filter_clauses(FilterOptions {
+            assignee_jql: Some("currentUser()"),
+            reporter_jql: None,
+            status: None,
+            team_clause: None,
+            recent: None,
+            updated_recent: None,
+            open: false,
+            asset_clause: Some(asset_clause),
+            component_clauses: &component_clauses,
+            created_after_clause: Some("created >= \"2026-03-01\""),
+            created_before_clause: None,
+            updated_after_clause: None,
+            updated_before_clause: None,
+        });
+        assert_eq!(
+            parts,
+            vec![
+                "assignee = currentUser()".to_string(),
+                asset_clause.to_string(),
+                "component in (10001)".to_string(),
+                "(component not in (10002) OR component is EMPTY)".to_string(),
+                "created >= \"2026-03-01\"".to_string(),
+            ]
+        );
+    }
+
+    /// VP-UPDATED-RECENT-001 / AC-005 (M1 gap fix): `--recent`, `--updated-recent`,
+    /// and `--asset` together compose clauses with `updated >= -{d}` positioned
+    /// IMMEDIATELY AFTER `created >= -{d}` (recent) and BEFORE the asset clause.
+    /// Verified via exact `Vec<String>` positional equality — NOT substring-index
+    /// comparison — per AC-005's mandated discipline (mirrors
+    /// `test_bc_2_1_007_build_filter_clauses_component_immediately_after_asset`'s
+    /// style, the existing precedent for this discipline in this module).
+    #[test]
+    fn test_bc_2_1_007_build_filter_clauses_updated_recent_immediately_after_recent_before_asset() {
+        let asset_clause = r#""Client" IN aqlFunction("Key = \"CUST-5\"")"#;
+        let parts = build_filter_clauses(FilterOptions {
+            assignee_jql: None,
+            reporter_jql: None,
+            status: None,
+            team_clause: None,
+            recent: Some("7d"),
+            updated_recent: Some("60d"),
+            open: false,
+            asset_clause: Some(asset_clause),
+            component_clauses: &[],
+            created_after_clause: None,
+            created_before_clause: None,
+            updated_after_clause: None,
+            updated_before_clause: None,
+        });
+        assert_eq!(
+            parts,
+            vec![
+                "created >= -7d".to_string(),
+                "updated >= -60d".to_string(),
+                asset_clause.to_string(),
+            ]
+        );
+    }
+
     #[test]
     fn build_jql_parts_created_after_clause() {
         let parts = build_filter_clauses(FilterOptions {
@@ -937,8 +1684,10 @@ mod tests {
             status: None,
             team_clause: None,
             recent: None,
+            updated_recent: None,
             open: false,
             asset_clause: None,
+            component_clauses: &[],
             created_after_clause: Some("created >= \"2026-03-18\""),
             created_before_clause: None,
             updated_after_clause: None,
@@ -955,8 +1704,10 @@ mod tests {
             status: None,
             team_clause: None,
             recent: None,
+            updated_recent: None,
             open: false,
             asset_clause: None,
+            component_clauses: &[],
             created_after_clause: None,
             created_before_clause: None,
             updated_after_clause: Some("updated >= \"2026-03-01\""),
@@ -975,8 +1726,10 @@ mod tests {
             status: None,
             team_clause: None,
             recent: None,
+            updated_recent: None,
             open: false,
             asset_clause: None,
+            component_clauses: &[],
             created_after_clause: Some("created >= \"2026-03-01\""),
             created_before_clause: Some("created < \"2026-04-01\""),
             updated_after_clause: None,

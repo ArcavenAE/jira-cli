@@ -12,9 +12,12 @@
 //! AC-013 proptest properties live in `src/cli/issue/create.rs::mod parse_field_kv_proptests`.
 //! AC-014 proptest properties live in `src/api/jsm/requests.rs::mod proptests`.
 
+#[allow(dead_code)]
+mod common;
+
 use assert_cmd::Command;
 use serde_json::{Value, json};
-use wiremock::matchers::{body_partial_json, method, path, query_param};
+use wiremock::matchers::{body_partial_json, method, path, path_regex, query_param};
 use wiremock::{Mock, MockServer, ResponseTemplate};
 
 // ─── Shared mock fixture helpers ──────────────────────────────────────────────
@@ -817,14 +820,14 @@ async fn test_jsm_create_plain_description_absent_when_no_description_flag() {
     let body: Value =
         serde_json::from_slice(&jsm_post.body).expect("BC-3.8.006: POST body must be valid JSON");
 
-    // BC-3.8.006: isAdfRequest must be absent or false when description is absent.
-    let is_adf = body
-        .get("isAdfRequest")
-        .and_then(Value::as_bool)
-        .unwrap_or(false);
+    // AC-010 (VP-FIELD-ADF-004 pass-14 M-1 finding): the negative-case
+    // ABSENT-check MUST use `.is_none()`, NOT
+    // `.and_then(as_bool).unwrap_or(false)` — the lax form passes on BOTH an
+    // absent key AND an explicit `false` value, so it cannot kill a mutant
+    // that inserts `"isAdfRequest": false`.
     assert!(
-        !is_adf,
-        "BC-3.8.006: isAdfRequest must be absent or false when --description not set; got body: {body}"
+        body.get("isAdfRequest").is_none(),
+        "BC-3.8.006: isAdfRequest must be ABSENT (NOT explicit false) when --description not set; got body: {body}"
     );
 
     // BC-3.8.006: description key must be absent from requestFieldValues.
@@ -1105,6 +1108,144 @@ async fn test_jsm_create_field_missing_equals_exits_64() {
     assert!(
         stderr.contains("NAME=VALUE"),
         "BC-3.8.008: error must mention NAME=VALUE format requirement; got: {stderr}"
+    );
+}
+
+// ---------------------------------------------------------------------------
+// S-578-3: real `:kind` dispatch has landed on the JSM create path,
+// superseding the S-578-1 interim guard this test previously pinned (the
+// guard call site and its underlying `reject_unsupported_hint_kinds` helper
+// have both been removed — see `tests/issue_create_jsm.rs`'s AC-001..010
+// block further down in this file for the full new-behavior coverage). This
+// test is flipped, not deleted, to keep asserting the end-to-end outcome for
+// this exact `--field cf:id=10042` input: it now dispatches through
+// `JsmRequestBuilder::build()`'s kind-aware match and succeeds (exit 0),
+// producing `{"id": "10042"}` on `requestFieldValues.cf` (by analogy to the
+// platform-path shape; VP-578-016 parity-PENDING).
+// ---------------------------------------------------------------------------
+
+#[tokio::test]
+async fn test_jsm_create_field_kind_hint_dispatches_real_id_shape_s578_3() {
+    let server = MockServer::start().await;
+    let cache_dir = tempfile::tempdir().unwrap();
+    let config_dir = tempfile::tempdir().unwrap();
+    write_minimal_config(config_dir.path(), &server.uri());
+
+    mount_project_meta_help(&server).await;
+    mount_service_desk_list(&server).await;
+    mount_request_type_list(&server).await;
+
+    Mock::given(method("POST"))
+        .and(path("/rest/servicedeskapi/request"))
+        .respond_with(ResponseTemplate::new(201).set_body_json(jsm_created_response()))
+        .expect(1)
+        .mount(&server)
+        .await;
+
+    let output = Command::cargo_bin("jr")
+        .unwrap()
+        .env("JR_BASE_URL", server.uri())
+        .env("JR_AUTH_HEADER", "Basic dGVzdDp0ZXN0")
+        .env("XDG_CACHE_HOME", cache_dir.path())
+        .env("JR_CACHE_DIR", cache_dir.path().join("jr"))
+        .env("XDG_CONFIG_HOME", config_dir.path())
+        .env("JR_CONFIG_DIR", config_dir.path().join("jr"))
+        .args([
+            "issue",
+            "create",
+            "--project",
+            "HELP",
+            "--request-type",
+            "Password Reset",
+            "--summary",
+            "test",
+            "--field",
+            "cf:id=10042",
+            "--no-input",
+            "--output",
+            "json",
+        ])
+        .output()
+        .unwrap();
+
+    let stderr = String::from_utf8_lossy(&output.stderr);
+    assert!(
+        output.status.success(),
+        "S-578-3: '--field cf:id=10042' must dispatch through real :kind handling and \
+         succeed (exit 0) — the S-578-1 interim guard has been removed. \
+         stderr={stderr}"
+    );
+
+    let requests = server.received_requests().await.expect("requests recorded");
+    let jsm_post = requests
+        .iter()
+        .find(|r| r.url.path() == "/rest/servicedeskapi/request" && r.method.as_str() == "POST")
+        .expect("S-578-3: JSM POST must have been made");
+    let body: Value =
+        serde_json::from_slice(&jsm_post.body).expect("S-578-3: POST body must be valid JSON");
+    assert_eq!(
+        body["requestFieldValues"]["cf"],
+        json!({"id": "10042"}),
+        "S-578-3: ':id' hint must produce {{\"id\": \"10042\"}} on requestFieldValues; \
+         got body: {body}"
+    );
+}
+
+/// S-578-1 regression pin (paired with the test above, which now dispatches
+/// through real `:kind` handling with the interim guard removed): a BARE
+/// `--field NAME=VALUE` pair (`kind: None`) must keep working exactly as
+/// before — hinted (`kind: Some(_)`) and unhinted pairs must never interfere
+/// with each other. This test is a restatement of the existing last-wins
+/// coverage above, scoped narrowly to that non-interference property.
+#[tokio::test]
+async fn test_jsm_create_field_bare_pair_unaffected_by_kind_hint_guard_s578_1() {
+    let server = MockServer::start().await;
+    let cache_dir = tempfile::tempdir().unwrap();
+    let config_dir = tempfile::tempdir().unwrap();
+    write_minimal_config(config_dir.path(), &server.uri());
+
+    mount_project_meta_help(&server).await;
+    mount_service_desk_list(&server).await;
+    mount_request_type_list(&server).await;
+
+    Mock::given(method("POST"))
+        .and(path("/rest/servicedeskapi/request"))
+        .respond_with(ResponseTemplate::new(201).set_body_json(jsm_created_response()))
+        .mount(&server)
+        .await;
+
+    let output = Command::cargo_bin("jr")
+        .unwrap()
+        .env("JR_BASE_URL", server.uri())
+        .env("JR_AUTH_HEADER", "Basic dGVzdDp0ZXN0")
+        .env("XDG_CACHE_HOME", cache_dir.path())
+        .env("JR_CACHE_DIR", cache_dir.path().join("jr"))
+        .env("XDG_CONFIG_HOME", config_dir.path())
+        .env("JR_CONFIG_DIR", config_dir.path().join("jr"))
+        .args([
+            "issue",
+            "create",
+            "--project",
+            "HELP",
+            "--request-type",
+            "Password Reset",
+            "--summary",
+            "test",
+            "--field",
+            "cf=10042",
+            "--no-input",
+        ])
+        .output()
+        .unwrap();
+
+    let stderr = String::from_utf8_lossy(&output.stderr);
+    let stdout = String::from_utf8_lossy(&output.stdout);
+
+    assert!(
+        output.status.success(),
+        "S-578-1 regression pin: a bare (unhinted) '--field cf=10042' pair must keep succeeding \
+         (kind: None must never trip the interim ':kind'-hint guard); \
+         stderr={stderr} stdout={stdout}"
     );
 }
 
@@ -2296,13 +2437,12 @@ async fn test_jsm_create_markdown_description_yields_adf_with_strong_marks() {
 
     // Walk content to find any text node with a "strong" mark — produced by **bold**.
     fn has_strong_mark(node: &Value) -> bool {
-        if let Some(marks) = node.get("marks").and_then(Value::as_array) {
-            if marks
+        if let Some(marks) = node.get("marks").and_then(Value::as_array)
+            && marks
                 .iter()
                 .any(|m| m.get("type").and_then(Value::as_str) == Some("strong"))
-            {
-                return true;
-            }
+        {
+            return true;
         }
         if let Some(children) = node.get("content").and_then(Value::as_array) {
             return children.iter().any(has_strong_mark);
@@ -2320,11 +2460,12 @@ async fn test_jsm_create_markdown_description_yields_adf_with_strong_marks() {
 
 // ─── M-01 sanity: --markdown without --description exits 64 on JSM path ───────
 
-/// M-01 (adversary pass-02-retry) + platform-parity: `--markdown` without
-/// `--description` or `--description-stdin` on the JSM path errors with the
-/// same verbatim message as the platform path (mirrors lines 333-343 of
-/// handle_create). Regression guard for the validation block added in
-/// handle_jsm_create at b35bc1a.
+/// M-01 (adversary pass-02-retry): `--markdown` without `--description` or
+/// `--description-stdin` on the JSM path errors with a JSM-specific message.
+/// No platform-path equivalent exists (S-639-1, EC-3.8.012-5 — see the
+/// correction in `jsm_create.rs::handle_jsm_create` step 3): on the platform
+/// path, `--markdown` with no description is simply a no-op. Regression guard
+/// for the validation block added in handle_jsm_create at b35bc1a.
 ///
 /// No HTTP mocks are mounted — the validation fires before any HTTP is made.
 /// If a future refactor moves the validation after HTTP, the test will fail
@@ -2370,25 +2511,38 @@ async fn test_jsm_create_markdown_without_description_exits_64_with_platform_mes
         Some(64),
         "M-01 / BC-3.8.006: expected exit 64 for --markdown without --description; stderr: {stderr}"
     );
-    // Verbatim match against the platform path's error text (verify against
-    // create.rs lines 333-343 if this assertion drifts).
+    // JSM-specific message (jsm_create.rs::handle_jsm_create step 3) — no
+    // platform-path equivalent exists (S-639-1, EC-3.8.012-5).
     assert!(
         stderr.contains("--markdown requires --description or --description-stdin to take effect"),
-        "M-01 / BC-3.8.006: expected platform-parity validation message; got: {stderr}"
+        "M-01 / BC-3.8.006: expected JSM-path validation message; got: {stderr}"
     );
 }
 
-// ─── S-383: Platform-path inverse warnings (BC-3.8.012 / BC-3.8.013) ─────────
+// ─── S-639-1: Platform-path pre-flight exit-64 guards (BC-3.8.012 / BC-3.8.013,
+//     DEC-188) ─────────────────────────────────────────────────────────────────
 //
 // These tests live in `issue_create_jsm.rs` by the explicit decision in the
 // S-383 story file (`.factory/stories/S-383-platform-inverse-warnings.md`
-// §"Test File Decision").  They are PLATFORM-PATH tests — no `--request-type`
-// flag — co-located here because they cover the inverse symmetry of the
-// BC-3.8.011 forward-direction warnings already in this file.
+// §"Test File Decision"), carried forward by S-639-1
+// (`.factory/stories/S-639-1.md`). They are PLATFORM-PATH tests — no
+// `--request-type` flag — co-located here because they cover the inverse
+// symmetry of the BC-3.8.011 forward-direction warnings already in this file.
 //
-// Red Gate: all 7 tests MUST fail against the unmodified implementation
-// in `src/cli/issue/create.rs`.  The implementation change (2 `eprintln!`
-// guards) is introduced in a subsequent commit.
+// **IMPLEMENTING SUCCESSOR to S-383 (DEC-188, 2026-07-25):** the S-383
+// warn-and-proceed contract (exit 0 + issue created despite the stray flag)
+// is SUPERSEDED by a pre-flight `JrError::UserError` exit-64 guard that fires
+// BEFORE any HTTP call. AC-1/AC-2/AC-3/AC-5/AC-7 below are INVERTED from
+// exit-0 to exit-64 (renamed per the story's "Superseded Tests" table);
+// AC-4/AC-6 are vacuity→non-vacuity transitions (same names, updated bodies).
+// AC-8 through AC-21 are new tests added by S-639-1.
+//
+// Red Gate: every test below asserting exit-64 + a new verbatim error string
+// MUST fail against the unmodified (S-383-era) implementation in
+// `src/cli/issue/create.rs`, which still warns-and-proceeds (exit 0) for
+// `--field` / `--on-behalf-of` without `--request-type`. The guard
+// implementation (3-branch pre-flight check after the JSM dispatch fork) is
+// implemented in `src/cli/issue/create.rs` on this branch (S-639-1 Task 3).
 
 /// Helper: mount the two stubs the platform path needs (POST /rest/api/3/issue
 /// + GET /rest/api/3/field for CMDB discovery) and return the key "PROJ-123".
@@ -2410,19 +2564,30 @@ async fn mount_platform_create_stubs(server: &wiremock::MockServer) {
         .await;
 }
 
-// ─── AC-1: --field on platform path emits BC-3.8.012 warning ─────────────────
+// ─── AC-1: --field on platform path exits 64 pre-flight (BC-3.8.012) ─────────
 
-/// AC-1 (BC-3.8.012 postcondition 1): `jr issue create --field NAME=VALUE`
-/// WITHOUT `--request-type` emits exactly the verbatim BC-3.8.012 warning on
-/// stderr.  The platform POST to `/rest/api/3/issue` proceeds; exit code 0.
-/// The JSM endpoint is never called.
+/// AC-1 (S-578-4 INVERSION, BC-3.3.010/011, VP-578-017, [mode: human]):
+/// `jr issue create --field NAME=VALUE` WITHOUT `--request-type` no longer
+/// exits 64 pre-flight (DEC-188 reversed by DEC-310) — it resolves via
+/// createmeta instead. This fixture's `GET /rest/api/3/field` mock returns
+/// an EMPTY field list, so field "a" fails Phase-1 name resolution with the
+/// NEW BC-3.3.011 taxonomy-row-2 "zero matches" error — exit 64 STILL, but
+/// for a completely different reason and with a different message; the old
+/// DEC-188 verbatim string is DEAD. SUPERSEDES the DEC-188-era test
+/// `test_platform_create_field_flag_emits_warning_without_request_type`
+/// (originally inverted to `..._exits_64_without_request_type` under
+/// S-639-1; this S-578-4 pass inverts it a second time, per BC-3.8.012's own
+/// "F3/F4 removal obligations" — the fresh createmeta-resolution AC-002
+/// success-path test lives separately in `tests/issue_create_field.rs`).
 #[tokio::test]
-async fn test_platform_create_field_flag_emits_warning_without_request_type() {
+async fn test_platform_create_field_flag_exits_64_without_request_type() {
     let server = MockServer::start().await;
     let cache_dir = tempfile::tempdir().unwrap();
     let config_dir = tempfile::tempdir().unwrap();
-    write_minimal_config(config_dir.path(), &server.uri());
+    common::fixtures::write_profile_config(config_dir.path(), &server.uri());
 
+    // Would-otherwise-succeed precondition — proves the guard fires pre-flight,
+    // not merely that the platform POST happens to be unreachable.
     mount_platform_create_stubs(&server).await;
 
     // JSM endpoint must NEVER be called.
@@ -2451,10 +2616,8 @@ async fn test_platform_create_field_flag_emits_warning_without_request_type() {
             "--summary",
             "test",
             "--field",
-            "NAME=VALUE",
+            "a=b",
             "--no-input",
-            "--output",
-            "json",
         ])
         .output()
         .unwrap();
@@ -2462,288 +2625,440 @@ async fn test_platform_create_field_flag_emits_warning_without_request_type() {
     let stderr = String::from_utf8_lossy(&output.stderr);
     let stdout = String::from_utf8_lossy(&output.stdout);
 
-    assert!(
-        output.status.success(),
-        "BC-3.8.012 / AC-1: expected exit 0; got {:?}. stderr: {stderr}",
-        output.status.code()
-    );
-    assert!(
-        stderr.contains("warning: --field is ignored on the platform create path; it only applies with --request-type (JSM service-desk requests). To pass custom fields to a JSM request type, also supply --request-type."),
-        "BC-3.8.012 / AC-1: verbatim warning must appear on stderr; got: {stderr}"
-    );
-    assert!(
-        stdout.contains("PROJ-123"),
-        "BC-3.8.012 / AC-1: platform issue key must appear on stdout; got: {stdout}"
-    );
-    // Warning must NOT bleed onto stdout.
-    assert!(
-        !stdout.contains("warning: --field is ignored"),
-        "BC-3.8.012 / AC-1: warning must be on stderr only, not stdout; got: {stdout}"
-    );
-    // The .expect(0) on the JSM mock is enforced on server drop.
-}
-
-// ─── AC-2: --on-behalf-of on platform path emits BC-3.8.013 warning ──────────
-
-/// AC-2 (BC-3.8.013 postcondition 1): `jr issue create --on-behalf-of <ID>`
-/// WITHOUT `--request-type` emits exactly the verbatim BC-3.8.013 warning on
-/// stderr.  The platform POST proceeds; exit code 0.  The JSM endpoint is
-/// never called.
-#[tokio::test]
-async fn test_platform_create_on_behalf_of_flag_emits_warning_without_request_type() {
-    let server = MockServer::start().await;
-    let cache_dir = tempfile::tempdir().unwrap();
-    let config_dir = tempfile::tempdir().unwrap();
-    write_minimal_config(config_dir.path(), &server.uri());
-
-    mount_platform_create_stubs(&server).await;
-
-    Mock::given(method("POST"))
-        .and(path("/rest/servicedeskapi/request"))
-        .respond_with(ResponseTemplate::new(500).set_body_string("must not be called"))
-        .expect(0)
-        .mount(&server)
-        .await;
-
-    let output = Command::cargo_bin("jr")
-        .unwrap()
-        .env("JR_BASE_URL", server.uri())
-        .env("JR_AUTH_HEADER", "Basic dGVzdDp0ZXN0")
-        .env("XDG_CACHE_HOME", cache_dir.path())
-        .env("JR_CACHE_DIR", cache_dir.path().join("jr"))
-        .env("XDG_CONFIG_HOME", config_dir.path())
-        .env("JR_CONFIG_DIR", config_dir.path().join("jr"))
-        .args([
-            "issue",
-            "create",
-            "--project",
-            "PROJ",
-            "--type",
-            "Task",
-            "--summary",
-            "test",
-            "--on-behalf-of",
-            "fake-account-id",
-            "--no-input",
-            "--output",
-            "json",
-        ])
-        .output()
-        .unwrap();
-
-    let stderr = String::from_utf8_lossy(&output.stderr);
-    let stdout = String::from_utf8_lossy(&output.stdout);
-
-    assert!(
-        output.status.success(),
-        "BC-3.8.013 / AC-2: expected exit 0; got {:?}. stderr: {stderr}",
-        output.status.code()
-    );
-    assert!(
-        stderr.contains("warning: --on-behalf-of is ignored on the platform create path; it only applies with --request-type (JSM service-desk requests). To raise a request on behalf of another user, also supply --request-type."),
-        "BC-3.8.013 / AC-2: verbatim warning must appear on stderr; got: {stderr}"
-    );
-    assert!(
-        stdout.contains("PROJ-123"),
-        "BC-3.8.013 / AC-2: platform issue key must appear on stdout; got: {stdout}"
-    );
-    assert!(
-        !stdout.contains("warning: --on-behalf-of is ignored"),
-        "BC-3.8.013 / AC-2: warning must be on stderr only, not stdout; got: {stdout}"
-    );
-}
-
-// ─── AC-3: Both --field + --on-behalf-of emit independent warnings ────────────
-
-/// AC-3 (BC-3.8.012 postcondition 3 + BC-3.8.013 postcondition 3): When both
-/// `--field NAME=VALUE` and `--on-behalf-of <ID>` are supplied WITHOUT
-/// `--request-type`, BOTH verbatim warnings fire independently on stderr.
-/// Each appears at least once.  Ordering is not asserted.  Platform POST
-/// proceeds normally; exit code 0.
-#[tokio::test]
-async fn test_platform_create_both_inverse_flags_emit_independent_warnings() {
-    let server = MockServer::start().await;
-    let cache_dir = tempfile::tempdir().unwrap();
-    let config_dir = tempfile::tempdir().unwrap();
-    write_minimal_config(config_dir.path(), &server.uri());
-
-    mount_platform_create_stubs(&server).await;
-
-    Mock::given(method("POST"))
-        .and(path("/rest/servicedeskapi/request"))
-        .respond_with(ResponseTemplate::new(500).set_body_string("must not be called"))
-        .expect(0)
-        .mount(&server)
-        .await;
-
-    let output = Command::cargo_bin("jr")
-        .unwrap()
-        .env("JR_BASE_URL", server.uri())
-        .env("JR_AUTH_HEADER", "Basic dGVzdDp0ZXN0")
-        .env("XDG_CACHE_HOME", cache_dir.path())
-        .env("JR_CACHE_DIR", cache_dir.path().join("jr"))
-        .env("XDG_CONFIG_HOME", config_dir.path())
-        .env("JR_CONFIG_DIR", config_dir.path().join("jr"))
-        .args([
-            "issue",
-            "create",
-            "--project",
-            "PROJ",
-            "--type",
-            "Task",
-            "--summary",
-            "test",
-            "--field",
-            "A=1",
-            "--on-behalf-of",
-            "fake-id",
-            "--no-input",
-            "--output",
-            "json",
-        ])
-        .output()
-        .unwrap();
-
-    let stderr = String::from_utf8_lossy(&output.stderr);
-
-    assert!(
-        output.status.success(),
-        "BC-3.8.012+013 / AC-3: expected exit 0; got {:?}. stderr: {stderr}",
-        output.status.code()
-    );
-    assert!(
-        stderr.contains("warning: --field is ignored on the platform create path; it only applies with --request-type (JSM service-desk requests). To pass custom fields to a JSM request type, also supply --request-type."),
-        "BC-3.8.012 / AC-3: BC-3.8.012 warning must appear on stderr; got: {stderr}"
-    );
-    assert!(
-        stderr.contains("warning: --on-behalf-of is ignored on the platform create path; it only applies with --request-type (JSM service-desk requests). To raise a request on behalf of another user, also supply --request-type."),
-        "BC-3.8.013 / AC-3: BC-3.8.013 warning must appear on stderr; got: {stderr}"
-    );
-}
-
-// ─── AC-4: No inverse flags → no new warnings ────────────────────────────────
-
-/// AC-4 (BC-3.8.012 postcondition 4 + BC-3.8.013 postcondition 4 — negative
-/// case): `jr issue create --project PROJ --summary "Foo"` WITHOUT `--field`
-/// AND WITHOUT `--on-behalf-of` AND WITHOUT `--request-type` must NOT emit
-/// either inverse warning.  Stderr is byte-identical to pre-issue-#383 behavior.
-#[tokio::test]
-async fn test_platform_create_without_inverse_flags_emits_no_new_warnings() {
-    let server = MockServer::start().await;
-    let cache_dir = tempfile::tempdir().unwrap();
-    let config_dir = tempfile::tempdir().unwrap();
-    write_minimal_config(config_dir.path(), &server.uri());
-
-    mount_platform_create_stubs(&server).await;
-
-    let output = Command::cargo_bin("jr")
-        .unwrap()
-        .env("JR_BASE_URL", server.uri())
-        .env("JR_AUTH_HEADER", "Basic dGVzdDp0ZXN0")
-        .env("XDG_CACHE_HOME", cache_dir.path())
-        .env("JR_CACHE_DIR", cache_dir.path().join("jr"))
-        .env("XDG_CONFIG_HOME", config_dir.path())
-        .env("JR_CONFIG_DIR", config_dir.path().join("jr"))
-        .args([
-            "issue",
-            "create",
-            "--project",
-            "PROJ",
-            "--type",
-            "Task",
-            "--summary",
-            "Foo",
-            "--no-input",
-            "--output",
-            "json",
-        ])
-        .output()
-        .unwrap();
-
-    let stderr = String::from_utf8_lossy(&output.stderr);
-
-    assert!(
-        output.status.success(),
-        "BC-3.8.012+013 / AC-4: expected exit 0; got {:?}. stderr: {stderr}",
-        output.status.code()
-    );
-    assert!(
-        !stderr.contains("--field is ignored"),
-        "BC-3.8.012 / AC-4: BC-3.8.012 warning must NOT appear when --field is absent; got: {stderr}"
-    );
-    assert!(
-        !stderr.contains("--on-behalf-of is ignored"),
-        "BC-3.8.013 / AC-4: BC-3.8.013 warning must NOT appear when --on-behalf-of is absent; got: {stderr}"
-    );
-}
-
-// ─── AC-5: Multiple --field occurrences emit exactly ONE warning ──────────────
-
-/// AC-5 (BC-3.8.012 postcondition 2 — idempotency): `--field A=1 --field A=2
-/// --field B=3` WITHOUT `--request-type` emits the BC-3.8.012 warning EXACTLY
-/// ONCE — the per-logical-flag-NAME rule means `--field` is one logical flag
-/// regardless of how many NAME=VALUE pairs are supplied.
-#[tokio::test]
-async fn test_platform_create_field_idempotent_one_warning_per_logical_flag() {
-    let server = MockServer::start().await;
-    let cache_dir = tempfile::tempdir().unwrap();
-    let config_dir = tempfile::tempdir().unwrap();
-    write_minimal_config(config_dir.path(), &server.uri());
-
-    mount_platform_create_stubs(&server).await;
-
-    let output = Command::cargo_bin("jr")
-        .unwrap()
-        .env("JR_BASE_URL", server.uri())
-        .env("JR_AUTH_HEADER", "Basic dGVzdDp0ZXN0")
-        .env("XDG_CACHE_HOME", cache_dir.path())
-        .env("JR_CACHE_DIR", cache_dir.path().join("jr"))
-        .env("XDG_CONFIG_HOME", config_dir.path())
-        .env("JR_CONFIG_DIR", config_dir.path().join("jr"))
-        .args([
-            "issue",
-            "create",
-            "--project",
-            "PROJ",
-            "--type",
-            "Task",
-            "--summary",
-            "test",
-            "--field",
-            "A=1",
-            "--field",
-            "A=2",
-            "--field",
-            "B=3",
-            "--no-input",
-            "--output",
-            "json",
-        ])
-        .output()
-        .unwrap();
-
-    let stderr = String::from_utf8_lossy(&output.stderr);
-
-    assert!(
-        output.status.success(),
-        "BC-3.8.012 / AC-5: expected exit 0; got {:?}. stderr: {stderr}",
-        output.status.code()
-    );
     assert_eq!(
-        stderr
-            .matches("warning: --field is ignored on the platform create path")
-            .count(),
-        1,
-        "BC-3.8.012 / AC-5: warning must appear EXACTLY ONCE regardless of --field count; got: {stderr}"
+        output.status.code(),
+        Some(64),
+        "S-578-4 / AC-1 (inverted): expected exit 64 (now a createmeta \
+         zero-matches resolution failure, NOT the removed pre-flight guard); \
+         got {:?}. stderr: {stderr}",
+        output.status.code()
+    );
+    assert!(
+        stderr.contains("Error: "),
+        "S-578-4 / AC-1: human-mode 'Error: ' prefix must appear; got: {stderr}"
+    );
+    assert!(
+        stderr.contains("not found") && stderr.contains("Zero matches for 'a'"),
+        "S-578-4 / AC-1: field 'a' must fail BC-3.3.011 taxonomy row 2 \
+         (zero matches in list_fields()); got: {stderr}"
+    );
+    assert!(
+        !stderr.contains("--field is only valid with"),
+        "S-578-4 / AC-1: the DEAD DEC-188 verbatim string must NEVER appear; got: {stderr}"
+    );
+    assert!(
+        stdout.trim().is_empty(),
+        "S-578-4 / AC-1: stdout must be empty (HYGIENE); got: {stdout}"
+    );
+    assert!(
+        !stderr.contains("Created issue"),
+        "S-578-4 / AC-1: DISCRIMINATING — no success path must have executed; got: {stderr}"
+    );
+    assert!(
+        !stderr.contains("is ignored on the platform create path"),
+        "S-578-4 / AC-1: REGRESSION PIN — old S-383 warn string must not appear; got: {stderr}"
+    );
+}
+
+// ─── AC-2: --on-behalf-of on platform path exits 64 pre-flight (BC-3.8.013) ──
+
+/// AC-2 (BC-3.8.013, [mode: --output json]): `jr issue create --on-behalf-of
+/// <ID>` WITHOUT `--request-type` exits 64 with a JSON error envelope on
+/// stderr. INVERTED from the S-383 exit-0 warn-and-proceed contract
+/// (DEC-188). Renamed from
+/// `test_platform_create_on_behalf_of_flag_emits_warning_without_request_type`.
+#[tokio::test]
+async fn test_platform_create_on_behalf_of_flag_exits_64_without_request_type() {
+    let server = MockServer::start().await;
+    let cache_dir = tempfile::tempdir().unwrap();
+    let config_dir = tempfile::tempdir().unwrap();
+    // Pre-migrated config REQUIRED — assert_json_error_envelope strict-parses
+    // stderr as JSON; the legacy [instance] shape triggers a migration line
+    // that would poison the parse.
+    common::fixtures::write_profile_config(config_dir.path(), &server.uri());
+
+    mount_platform_create_stubs(&server).await;
+
+    Mock::given(method("POST"))
+        .and(path("/rest/servicedeskapi/request"))
+        .respond_with(ResponseTemplate::new(500).set_body_string("must not be called"))
+        .expect(0)
+        .mount(&server)
+        .await;
+
+    let output = Command::cargo_bin("jr")
+        .unwrap()
+        .env("JR_BASE_URL", server.uri())
+        .env("JR_AUTH_HEADER", "Basic dGVzdDp0ZXN0")
+        .env("XDG_CACHE_HOME", cache_dir.path())
+        .env("JR_CACHE_DIR", cache_dir.path().join("jr"))
+        .env("XDG_CONFIG_HOME", config_dir.path())
+        .env("JR_CONFIG_DIR", config_dir.path().join("jr"))
+        .args([
+            "issue",
+            "create",
+            "--project",
+            "PROJ",
+            "--type",
+            "Task",
+            "--summary",
+            "test",
+            "--on-behalf-of",
+            "X",
+            "--no-input",
+            "--output",
+            "json",
+        ])
+        .output()
+        .unwrap();
+
+    common::assertions::assert_json_error_envelope(&output, 64, "BC-3.8.013 / AC-2");
+
+    let stderr = String::from_utf8_lossy(&output.stderr);
+    let stdout = String::from_utf8_lossy(&output.stdout);
+    let parsed: serde_json::Value = serde_json::from_str(stderr.trim()).unwrap();
+    assert!(
+        parsed["error"]
+            .as_str()
+            .is_some_and(|s| s.contains("--on-behalf-of is only valid with")),
+        "BC-3.8.013 / AC-2: error field must contain the single-flag prefix pin; got: {parsed}"
+    );
+    assert!(
+        stdout.trim().is_empty(),
+        "BC-3.8.013 / AC-2: DISCRIMINATING — stdout must be empty; got: {stdout}"
+    );
+    assert!(
+        !stderr.contains("is ignored on the platform create path"),
+        "BC-3.8.013 / AC-2: REGRESSION PIN — old S-383 warn string must not appear; got: {stderr}"
+    );
+}
+
+// ─── AC-3: --on-behalf-of + --field → standalone guard fires alone ───────────
+
+/// AC-3 (BC-3.8.013 standalone postcondition, [mode: human]): When both
+/// `--field NAME=VALUE` and `--on-behalf-of <ID>` are supplied WITHOUT
+/// `--request-type`, BC-3.8.013's STANDALONE `--on-behalf-of` guard fires
+/// alone (exit 64) — the combined-error contract from S-639-1/DEC-188
+/// (BC-3.8.012) is REMOVED by S-578-4/DEC-310; `--field` no longer
+/// contributes to any pre-flight error on the platform path. Renamed from
+/// `test_platform_create_both_inverse_flags_exit_64_combined_error`
+/// (originally `..._emit_independent_warnings` under the dead S-383
+/// exit-0 warn-and-proceed contract).
+#[tokio::test]
+async fn test_platform_create_both_inverse_flags_exit_64_standalone_on_behalf_guard() {
+    let server = MockServer::start().await;
+    let cache_dir = tempfile::tempdir().unwrap();
+    let config_dir = tempfile::tempdir().unwrap();
+    write_minimal_config(config_dir.path(), &server.uri());
+
+    mount_platform_create_stubs(&server).await;
+
+    Mock::given(method("POST"))
+        .and(path("/rest/servicedeskapi/request"))
+        .respond_with(ResponseTemplate::new(500).set_body_string("must not be called"))
+        .expect(0)
+        .mount(&server)
+        .await;
+
+    let output = Command::cargo_bin("jr")
+        .unwrap()
+        .env("JR_BASE_URL", server.uri())
+        .env("JR_AUTH_HEADER", "Basic dGVzdDp0ZXN0")
+        .env("XDG_CACHE_HOME", cache_dir.path())
+        .env("JR_CACHE_DIR", cache_dir.path().join("jr"))
+        .env("XDG_CONFIG_HOME", config_dir.path())
+        .env("JR_CONFIG_DIR", config_dir.path().join("jr"))
+        .args([
+            "issue",
+            "create",
+            "--project",
+            "PROJ",
+            "--type",
+            "Task",
+            "--summary",
+            "test",
+            "--field",
+            "a=b",
+            "--on-behalf-of",
+            "X",
+            "--no-input",
+        ])
+        .output()
+        .unwrap();
+
+    let stderr = String::from_utf8_lossy(&output.stderr);
+    let stdout = String::from_utf8_lossy(&output.stdout);
+
+    // S-578-4 INVERSION (BC-3.8.013 "Combined pre-flight error [REWRITTEN]",
+    // VP-578-018): BC-3.8.012's combined check is REMOVED — the STANDALONE
+    // `--on-behalf-of`-only guard (step 2, unconditional, unchanged
+    // mechanism) now fires on its own, unconditionally, whenever
+    // `--on-behalf-of` is present, regardless of `--field`. `--field` no
+    // longer contributes to any pre-flight error on the platform path.
+    assert_eq!(
+        output.status.code(),
+        Some(64),
+        "S-578-4 / AC-3 (inverted): expected exit 64 via BC-3.8.013's \
+         STANDALONE guard; got {:?}. stderr: {stderr}",
+        output.status.code()
+    );
+    assert!(
+        stderr.contains("--on-behalf-of is only valid with"),
+        "S-578-4 / AC-3: BC-3.8.013 standalone prefix pin must appear on stderr; got: {stderr}"
+    );
+    assert!(
+        stderr.contains(
+            "--on-behalf-of is only valid with --request-type (JSM service-desk requests). Add --request-type <NAME> to raise a request on behalf of another user, or drop --on-behalf-of to create a standard platform issue."
+        ),
+        "S-578-4 / AC-3: FULL-STRING verbatim standalone error must appear on stderr; got: {stderr}"
+    );
+    assert!(
+        stdout.trim().is_empty(),
+        "S-578-4 / AC-3: stdout must be empty (HYGIENE); got: {stdout}"
+    );
+    assert!(
+        !stderr.contains("Created issue"),
+        "S-578-4 / AC-3: DISCRIMINATING — no success path must have executed; got: {stderr}"
+    );
+    assert!(
+        !stderr.contains("--field and --on-behalf-of are only valid with"),
+        "S-578-4 / AC-3: the now-removed combined-error string must NEVER appear; got: {stderr}"
+    );
+    assert!(
+        !stderr.contains("--field is only valid with"),
+        "S-578-4 / AC-3: --field must not itself contribute any pre-flight error; got: {stderr}"
+    );
+    assert!(
+        !stderr.contains("is ignored on the platform create path"),
+        "S-578-4 / AC-3: REGRESSION PIN — old S-383 warn strings must not appear; got: {stderr}"
+    );
+}
+
+// ─── AC-4: No inverse flags → no pre-flight errors (regression baseline) ─────
+
+/// AC-4 (BC-3.8.012 negative postcondition — clean-path regression baseline,
+/// [mode: --output json]): `jr issue create --project PROJ --summary "test"`
+/// WITHOUT `--field` AND WITHOUT `--on-behalf-of` AND WITHOUT `--request-type`
+/// must NOT trip any of the three new pre-flight guard error strings. Exit
+/// code stays 0 (BREAKING-CHANGE REGRESSION PIN, H-NEW-PREFLIGHT-004).
+///
+/// **AC-4 VACUITY→NON-VACUITY TRANSITION (DEC-188):** the old assertions
+/// (`!stderr.contains("--field is ignored")` / the `--on-behalf-of` twin) are
+/// vacuously true post-DEC-188 — those substrings no longer exist ANYWHERE in
+/// the codebase, so they would pass even if the guard fired unconditionally.
+/// Replaced with FALSIFIABLE-COARSE negatives on the three NEW error
+/// substrings, which DO catch an unconditionally-firing guard.
+/// Renamed from `test_platform_create_without_inverse_flags_emits_no_new_warnings`.
+#[tokio::test]
+async fn test_platform_create_without_inverse_flags_emits_no_errors() {
+    let server = MockServer::start().await;
+    let cache_dir = tempfile::tempdir().unwrap();
+    let config_dir = tempfile::tempdir().unwrap();
+    write_minimal_config(config_dir.path(), &server.uri());
+
+    mount_platform_create_stubs(&server).await;
+
+    let output = Command::cargo_bin("jr")
+        .unwrap()
+        .env("JR_BASE_URL", server.uri())
+        .env("JR_AUTH_HEADER", "Basic dGVzdDp0ZXN0")
+        .env("XDG_CACHE_HOME", cache_dir.path())
+        .env("JR_CACHE_DIR", cache_dir.path().join("jr"))
+        .env("XDG_CONFIG_HOME", config_dir.path())
+        .env("JR_CONFIG_DIR", config_dir.path().join("jr"))
+        .args([
+            "issue",
+            "create",
+            "--project",
+            "PROJ",
+            "--type",
+            "Task",
+            "--summary",
+            "test",
+            "--no-input",
+            "--output",
+            "json",
+        ])
+        .output()
+        .unwrap();
+
+    let stderr = String::from_utf8_lossy(&output.stderr);
+
+    assert!(
+        output.status.success(),
+        "BC-3.8.012+013 / AC-4: expected exit 0 (H-NEW-PREFLIGHT-004 regression pin); got {:?}. stderr: {stderr}",
+        output.status.code()
+    );
+    assert!(
+        !stderr.contains("--field is only valid with"),
+        "BC-3.8.012 / AC-4: FALSIFIABLE-COARSE — single-flag guard must NOT fire on a clean invocation; got: {stderr}"
+    );
+    assert!(
+        !stderr.contains("--on-behalf-of is only valid with"),
+        "BC-3.8.013 / AC-4: FALSIFIABLE-COARSE — single-flag guard must NOT fire on a clean invocation; got: {stderr}"
+    );
+    assert!(
+        !stderr.contains("--field and --on-behalf-of are only valid with"),
+        "BC-3.8.012 / AC-4: FALSIFIABLE-COARSE — combined guard must NOT fire on a clean invocation; got: {stderr}"
+    );
+}
+
+// ─── AC-5: Multiple --field occurrences of one name → one resolution error ───
+
+/// AC-5 (S-578-4 INVERSION, BC-3.3.010/011, VP-578-017, [mode: human]):
+/// `--field a=b` (ONE occurrence) and `--field a=b --field a=c` (TWO
+/// occurrences of the SAME name) WITHOUT `--request-type` both exit 64 with
+/// the SAME BC-3.3.011 taxonomy-row-2 "zero matches for 'a'" resolution
+/// error. The DEC-188 presence-only `!field_pairs.is_empty()` guard this AC
+/// originally exercised is REMOVED; the byte-identical result across both
+/// invocations now falls out of `parse_field_kv`'s pre-existing last-wins
+/// semantics (BC-3.4.026, unchanged), which collapse repeated occurrences of
+/// one name into a single map entry before resolution ever runs — not from a
+/// dedicated idempotency guard. The old DEC-188 verbatim string is DEAD.
+/// Renamed from `test_platform_create_field_idempotent_one_warning_per_logical_flag`
+/// (originally re-inverted to the current name under S-639-1).
+///
+/// Two-invocation comparison test — deliberately separate from AC-1.
+#[tokio::test]
+async fn test_platform_create_field_idempotent_one_error_per_logical_flag() {
+    // Invocation (i): exactly ONE --field.
+    let server_i = MockServer::start().await;
+    let cache_dir_i = tempfile::tempdir().unwrap();
+    let config_dir_i = tempfile::tempdir().unwrap();
+    common::fixtures::write_profile_config(config_dir_i.path(), &server_i.uri());
+    mount_platform_create_stubs(&server_i).await;
+
+    let output_i = Command::cargo_bin("jr")
+        .unwrap()
+        .env("JR_BASE_URL", server_i.uri())
+        .env("JR_AUTH_HEADER", "Basic dGVzdDp0ZXN0")
+        .env("XDG_CACHE_HOME", cache_dir_i.path())
+        .env("JR_CACHE_DIR", cache_dir_i.path().join("jr"))
+        .env("XDG_CONFIG_HOME", config_dir_i.path())
+        .env("JR_CONFIG_DIR", config_dir_i.path().join("jr"))
+        .args([
+            "issue",
+            "create",
+            "--project",
+            "PROJ",
+            "--type",
+            "Task",
+            "--summary",
+            "test",
+            "--field",
+            "a=b",
+            "--no-input",
+        ])
+        .output()
+        .unwrap();
+
+    // Invocation (ii): TWO --field occurrences TARGETING THE SAME NAME "a"
+    // (S-578-4 INVERSION note below explains why this differs from the
+    // pre-inversion two-DIFFERENT-keys form).
+    let server_ii = MockServer::start().await;
+    let cache_dir_ii = tempfile::tempdir().unwrap();
+    let config_dir_ii = tempfile::tempdir().unwrap();
+    common::fixtures::write_profile_config(config_dir_ii.path(), &server_ii.uri());
+    mount_platform_create_stubs(&server_ii).await;
+
+    let output_ii = Command::cargo_bin("jr")
+        .unwrap()
+        .env("JR_BASE_URL", server_ii.uri())
+        .env("JR_AUTH_HEADER", "Basic dGVzdDp0ZXN0")
+        .env("XDG_CACHE_HOME", cache_dir_ii.path())
+        .env("JR_CACHE_DIR", cache_dir_ii.path().join("jr"))
+        .env("XDG_CONFIG_HOME", config_dir_ii.path())
+        .env("JR_CONFIG_DIR", config_dir_ii.path().join("jr"))
+        .args([
+            "issue",
+            "create",
+            "--project",
+            "PROJ",
+            "--type",
+            "Task",
+            "--summary",
+            "test",
+            "--field",
+            "a=b",
+            "--field",
+            "a=c",
+            "--no-input",
+        ])
+        .output()
+        .unwrap();
+
+    let stderr_i = String::from_utf8_lossy(&output_i.stderr).to_string();
+    let stderr_ii = String::from_utf8_lossy(&output_ii.stderr).to_string();
+
+    // S-578-4 INVERSION (BC-3.3.010/011, VP-578-017): the DEC-188 presence-only
+    // `!field_pairs.is_empty()` guard this AC originally exercised is REMOVED.
+    // Both invocations here fail via the NEW BC-3.3.011 taxonomy row 2 (zero
+    // matches for field 'a' against the empty mounted field list) instead.
+    // The (ii) invocation deliberately repeats the SAME NAME "a" (not a
+    // second, distinct key "c") — `parse_field_kv`'s own last-wins semantics
+    // (BC-3.4.026, unchanged) collapse it to ONE map entry before resolution
+    // ever runs, so both invocations produce byte-identical error text
+    // referencing field 'a'. Two DIFFERENT keys would no longer guarantee
+    // byte-identical stderr post-reversal (Phase-1 field resolution iterates
+    // an unordered `HashMap`, so which of two distinct failing keys is
+    // reported first is not deterministic) — this AC's idempotency claim is
+    // now scoped to "repeated occurrences of the SAME name", not "any two
+    // distinct --field keys", a narrower but still faithful reading of
+    // BC-3.4.026's per-NAME last-wins collapse.
+    for (label, output, stderr) in [
+        ("AC-5(i, n=1)", &output_i, &stderr_i),
+        ("AC-5(ii, n=2 same key)", &output_ii, &stderr_ii),
+    ] {
+        assert_eq!(
+            output.status.code(),
+            Some(64),
+            "S-578-4 / {label}: expected exit 64 (zero-matches resolution \
+             failure); got {:?}. stderr: {stderr}",
+            output.status.code()
+        );
+        assert!(
+            stderr.contains("not found") && stderr.contains("Zero matches for 'a'"),
+            "S-578-4 / {label}: anchor — field 'a' zero-matches error must appear; got: {stderr}"
+        );
+        assert!(
+            !stderr.contains("--field is only valid with"),
+            "S-578-4 / {label}: the DEAD DEC-188 verbatim string must NEVER appear; got: {stderr}"
+        );
+        assert!(
+            !stderr.contains("is ignored on the platform create path"),
+            "S-578-4 / {label}: REGRESSION PIN — old S-383 warn string must not appear; got: {stderr}"
+        );
+        assert!(
+            !stderr.contains("Created issue"),
+            "S-578-4 / {label}: DISCRIMINATING — no success path must have executed; got: {stderr}"
+        );
+    }
+
+    // Byte-identity: ONE error regardless of how many times the SAME --field
+    // NAME is repeated (parse_field_kv's last-wins collapse, unaffected by
+    // this story). The anchor assertions above guarantee this isn't merely
+    // two identical "Created issue" success paths.
+    assert_eq!(
+        stderr_i, stderr_ii,
+        "S-578-4 / AC-5: stderr must be byte-identical for n=1 and n=2 \
+         same-key --field occurrences (parse_field_kv last-wins collapse); \
+         i={stderr_i} ii={stderr_ii}"
     );
 }
 
 // ─── AC-6: JSM path + --field does NOT fire BC-3.8.012 (regression gate) ─────
 
-/// AC-6 (BC-3.8.011 invariant — forward-path regression gate): When
-/// `--request-type` IS set alongside `--field NAME=VALUE`, the command takes
-/// the JSM path and BC-3.8.012 must NOT fire.  The existing BC-3.8.011
-/// forward-direction warning tests remain unaffected by the S-383 change.
+/// AC-6 (BC-3.8.012 JSM-path non-mis-fire, BC-3.3.001 regression baseline,
+/// [mode: --output json]): When `--request-type` IS set alongside `--field
+/// NAME=VALUE`, the command takes the JSM path and neither the BC-3.8.012
+/// single-flag nor combined guard may fire. Exit code stays 0. The
+/// `expect(1)` POST stub below is KEPT (load-bearing).
+///
+/// **AC-6 VACUITY→NON-VACUITY TRANSITION (DEC-188):** the old assertion
+/// (`!stderr.contains("--field is ignored on the platform create path")`) is
+/// vacuously true post-DEC-188 — that substring no longer exists anywhere in
+/// the codebase. Replaced with DISCRIMINATING + FALSIFIABLE-COARSE negatives
+/// on the new guard error substrings.
 #[tokio::test]
 async fn test_jsm_create_with_field_and_request_type_does_not_fire_bc_3_8_012() {
     let server = MockServer::start().await;
@@ -2796,24 +3111,31 @@ async fn test_jsm_create_with_field_and_request_type_does_not_fire_bc_3_8_012() 
         output.status.code()
     );
     assert!(
-        !stderr.contains("--field is ignored on the platform create path"),
-        "BC-3.8.012 / AC-6: BC-3.8.012 warning must NOT fire on JSM path; got: {stderr}"
+        !stderr.contains("--field is only valid with"),
+        "BC-3.8.012 / AC-6: DISCRIMINATING — single-flag guard must NOT fire on JSM path; got: {stderr}"
+    );
+    assert!(
+        !stderr.contains("--field and --on-behalf-of are only valid with"),
+        "BC-3.8.012 / AC-6: FALSIFIABLE-COARSE — combined guard must NOT fire when only --field is present; got: {stderr}"
     );
 }
 
-// ─── AC-7: Malformed --field on platform path → one warning, no exit-64 ──────
+// ─── AC-7: Malformed --field on platform path exits 64 (EC-3.8.012-3) ────────
 
-/// AC-7 (BC-3.8.012 postcondition 5 — malformed --field edge case): When
-/// `--field bare-name-no-equals` is supplied WITHOUT `--request-type`, the
-/// platform path emits the BC-3.8.012 warning EXACTLY ONCE and proceeds to
-/// the platform POST (no exit-64).  Format validation (BC-3.8.008) applies
-/// only on the JSM path, not the platform path.
+/// AC-7 (S-578-4 INVERSION, BC-3.4.026 parser contract / `parse_field_kv`,
+/// [mode: --output json]): `--field bareflagnoequals` (no `=`) WITHOUT
+/// `--request-type` still exits 64 — but now via `parse_field_kv`'s own
+/// missing-`=` rejection (step 2a, the SAME pure parser precedent this
+/// story's SSOT "Platform-Path Guard Ordering" block documents), NOT the
+/// removed DEC-188 presence-only guard. The message shape is entirely
+/// different: `parse_field_kv` fails BEFORE the D2 collision guard (step 2b)
+/// and BEFORE any resolution or project/type lookup ever runs.
 #[tokio::test]
-async fn test_platform_create_malformed_field_one_warning_no_exit_64() {
+async fn test_platform_create_malformed_field_without_request_type_exits_64() {
     let server = MockServer::start().await;
     let cache_dir = tempfile::tempdir().unwrap();
     let config_dir = tempfile::tempdir().unwrap();
-    write_minimal_config(config_dir.path(), &server.uri());
+    common::fixtures::write_profile_config(config_dir.path(), &server.uri());
 
     mount_platform_create_stubs(&server).await;
 
@@ -2850,19 +3172,1098 @@ async fn test_platform_create_malformed_field_one_warning_no_exit_64() {
         .output()
         .unwrap();
 
+    common::assertions::assert_json_error_envelope(&output, 64, "S-578-4 / AC-7 (inverted)");
+
+    let stderr = String::from_utf8_lossy(&output.stderr);
+    let stdout = String::from_utf8_lossy(&output.stdout);
+    let parsed: serde_json::Value = serde_json::from_str(stderr.trim()).unwrap();
+    assert!(
+        parsed["error"]
+            .as_str()
+            .is_some_and(|s| s.contains("not a valid NAME=VALUE pair") && s.contains("missing '='")),
+        "S-578-4 / AC-7: error field must contain parse_field_kv's missing-'=' \
+         message (step 2a), NOT the removed DEC-188 guard string; got: {parsed}"
+    );
+    assert!(
+        !parsed["error"]
+            .as_str()
+            .unwrap_or_default()
+            .contains("--field is only valid with"),
+        "S-578-4 / AC-7: the DEAD DEC-188 verbatim string must NEVER appear; got: {parsed}"
+    );
+    assert!(
+        stdout.trim().is_empty(),
+        "S-578-4 / AC-7: DISCRIMINATING — stdout must be empty; got: {stdout}"
+    );
+    assert!(
+        !stderr.contains("is ignored on the platform create path"),
+        "S-578-4 / AC-7: REGRESSION PIN — old S-383 warn string must not appear; got: {stderr}"
+    );
+}
+
+// ─── AC-8 (NEW): --field allows helper HTTP; --on-behalf-of stays zero-HTTP ──
+
+/// AC-8 (S-578-4 INVERSION on invocation (i) only; invocation (ii) is
+/// UNAFFECTED — BC-3.8.013's guard is unchanged, [mode: human]):
+///
+/// Invocation (i) originally proved `--field` alone suppressed ALL helper
+/// HTTP (team/assignee resolution) via the now-removed DEC-188 zero-HTTP
+/// pre-flight guard. Post-reversal, a well-formed, non-colliding `--field`
+/// no longer blocks ANYTHING pre-flight — `--team`/`--to` helper resolution
+/// now proceeds normally and DOES reach the network. This sub-invocation is
+/// INVERTED to prove exactly that: the previously-forbidden endpoints are
+/// no longer zero-HTTP (`received_requests()` must be NON-empty), and the
+/// dead DEC-188 string never appears. Invocation (ii) (`--on-behalf-of` +
+/// helpers) is UNTOUCHED below — BC-3.8.013's guard still suppresses all
+/// HTTP unconditionally, exiting 64. The function name reflects only
+/// invocation (ii)'s outcome (exit 64, zero HTTP) — invocation (i) exits 0
+/// with non-empty HTTP, the deliberate opposite, as this doc comment
+/// explains.
+#[tokio::test]
+async fn test_platform_create_field_allows_network_on_behalf_of_stays_exit_64_zero_http() {
+    // Sub-invocation (i): --field + --team + --to (INVERTED — see doc comment).
+    {
+        let server = MockServer::start().await;
+        let cache_dir = tempfile::tempdir().unwrap();
+        let config_dir = tempfile::tempdir().unwrap();
+        write_minimal_config(config_dir.path(), &server.uri());
+
+        // These endpoints are no longer forbidden post-reversal — registered
+        // WITHOUT `.expect(0)` (which would panic-at-drop the instant the
+        // now-expected call arrives) so team/assignee resolution can proceed
+        // as far as it does; a 500 response is sufficient to prove the call
+        // reached the network without needing the full pipeline to succeed.
+        for (m, p) in [
+            ("GET", "/rest/api/3/myself"),
+            ("POST", "/gateway/api/graphql"),
+        ] {
+            Mock::given(method(m))
+                .and(path(p))
+                .respond_with(ResponseTemplate::new(500).set_body_string("simulated failure"))
+                .mount(&server)
+                .await;
+        }
+        Mock::given(method("GET"))
+            .and(path_regex("/gateway/api/public/teams/v1/org/.*/teams"))
+            .respond_with(ResponseTemplate::new(500).set_body_string("simulated failure"))
+            .mount(&server)
+            .await;
+        Mock::given(method("GET"))
+            .and(path("/rest/api/3/field"))
+            .respond_with(ResponseTemplate::new(500).set_body_string("simulated failure"))
+            .mount(&server)
+            .await;
+        Mock::given(method("POST"))
+            .and(path("/rest/api/3/issue"))
+            .respond_with(ResponseTemplate::new(500).set_body_string("simulated failure"))
+            .mount(&server)
+            .await;
+
+        let output = Command::cargo_bin("jr")
+            .unwrap()
+            .env("JR_BASE_URL", server.uri())
+            .env("JR_AUTH_HEADER", "Basic dGVzdDp0ZXN0")
+            .env("XDG_CACHE_HOME", cache_dir.path())
+            .env("JR_CACHE_DIR", cache_dir.path().join("jr"))
+            .env("XDG_CONFIG_HOME", config_dir.path())
+            .env("JR_CONFIG_DIR", config_dir.path().join("jr"))
+            .args([
+                "issue",
+                "create",
+                "--project",
+                "PROJ",
+                "--type",
+                "Task",
+                "--summary",
+                "test",
+                "--field",
+                "a=b",
+                "--team",
+                "X",
+                "--to",
+                "me",
+                "--no-input",
+            ])
+            .output()
+            .unwrap();
+
+        let stderr = String::from_utf8_lossy(&output.stderr);
+        assert!(
+            !stderr.contains("--field is only valid with"),
+            "S-578-4 / AC-8(i) inverted: the DEAD DEC-188 verbatim string must \
+             NEVER appear; got: {stderr}"
+        );
+        assert!(
+            !stderr.contains("is ignored on the platform create path"),
+            "S-578-4 / AC-8(i) inverted: REGRESSION PIN; got: {stderr}"
+        );
+        assert!(
+            !server.received_requests().await.unwrap().is_empty(),
+            "S-578-4 / AC-8(i) inverted: the OLD zero-HTTP guarantee for \
+             `--field` alone is GONE — team/assignee helper resolution must \
+             now reach the network (at least one request expected)"
+        );
+    }
+
+    // Sub-invocation (ii): --on-behalf-of + --team + --to (BC-3.8.013 mirror).
+    {
+        let server = MockServer::start().await;
+        let cache_dir = tempfile::tempdir().unwrap();
+        let config_dir = tempfile::tempdir().unwrap();
+        write_minimal_config(config_dir.path(), &server.uri());
+
+        for (m, p) in [
+            ("GET", "/rest/api/3/myself"),
+            ("POST", "/gateway/api/graphql"),
+        ] {
+            Mock::given(method(m))
+                .and(path(p))
+                .respond_with(ResponseTemplate::new(500).set_body_string("must not be called"))
+                .expect(0)
+                .mount(&server)
+                .await;
+        }
+        Mock::given(method("GET"))
+            .and(path_regex("/gateway/api/public/teams/v1/org/.*/teams"))
+            .respond_with(ResponseTemplate::new(500).set_body_string("must not be called"))
+            .expect(0)
+            .mount(&server)
+            .await;
+        Mock::given(method("GET"))
+            .and(path("/rest/api/3/field"))
+            .respond_with(ResponseTemplate::new(500).set_body_string("must not be called"))
+            .expect(0)
+            .mount(&server)
+            .await;
+        Mock::given(method("POST"))
+            .and(path("/rest/api/3/issue"))
+            .respond_with(ResponseTemplate::new(500).set_body_string("must not be called"))
+            .expect(0)
+            .mount(&server)
+            .await;
+
+        let output = Command::cargo_bin("jr")
+            .unwrap()
+            .env("JR_BASE_URL", server.uri())
+            .env("JR_AUTH_HEADER", "Basic dGVzdDp0ZXN0")
+            .env("XDG_CACHE_HOME", cache_dir.path())
+            .env("JR_CACHE_DIR", cache_dir.path().join("jr"))
+            .env("XDG_CONFIG_HOME", config_dir.path())
+            .env("JR_CONFIG_DIR", config_dir.path().join("jr"))
+            .args([
+                "issue",
+                "create",
+                "--project",
+                "PROJ",
+                "--type",
+                "Task",
+                "--summary",
+                "test",
+                "--on-behalf-of",
+                "X",
+                "--team",
+                "X",
+                "--to",
+                "me",
+                "--no-input",
+            ])
+            .output()
+            .unwrap();
+
+        let stderr = String::from_utf8_lossy(&output.stderr);
+        assert_eq!(
+            output.status.code(),
+            Some(64),
+            "BC-3.8.013 / AC-8(ii): expected exit 64; got {:?}. stderr: {stderr}",
+            output.status.code()
+        );
+        assert!(
+            stderr.contains("--on-behalf-of is only valid with"),
+            "BC-3.8.013 / AC-8(ii): prefix pin must appear; got: {stderr}"
+        );
+        assert!(
+            !stderr.contains("is ignored on the platform create path"),
+            "BC-3.8.013 / AC-8(ii): REGRESSION PIN; got: {stderr}"
+        );
+        assert!(
+            !stderr.contains("Created issue"),
+            "BC-3.8.013 / AC-8(ii): HYGIENE — structurally unreachable on an isolated server; got: {stderr}"
+        );
+        assert!(
+            server.received_requests().await.unwrap().is_empty(),
+            "BC-3.8.013 / AC-8(ii): NORMATIVE zero-HTTP proof — no request of any kind must reach the server"
+        );
+    }
+}
+
+// ─── AC-9 (NEW): --field without --project exits 64, not a project error ────
+
+/// AC-9 (S-578-4 INVERSION, BC-3.3.010 EC-3.3.010-3, [mode: human]):
+/// `--field a=b` WITHOUT `--project` and WITHOUT `--request-type` now exits
+/// 64 with the PRE-EXISTING "Project key is required" error — the removed
+/// DEC-188 guard no longer intercepts first. `--field` resolution never
+/// runs without a resolved project+type (BC-3.3.010 EC-3.3.010-3): the D2
+/// collision guard (step 2b, no dedicated flags here, so no collision) runs
+/// and passes, then project-key resolution (step 3) fails BEFORE step 4b's
+/// createmeta resolution is ever reached.
+#[tokio::test]
+async fn test_platform_create_field_without_project_exits_64_not_project_error() {
+    let cwd_dir = tempfile::tempdir().unwrap();
+    let server = MockServer::start().await;
+    let cache_dir = tempfile::tempdir().unwrap();
+    let config_dir = tempfile::tempdir().unwrap();
+    // Config lacks a project key — write_minimal_config writes only [instance] url.
+    write_minimal_config(config_dir.path(), &server.uri());
+
+    let output = Command::cargo_bin("jr")
+        .unwrap()
+        .current_dir(cwd_dir.path())
+        .env("JR_BASE_URL", server.uri())
+        .env("JR_AUTH_HEADER", "Basic dGVzdDp0ZXN0")
+        .env("XDG_CACHE_HOME", cache_dir.path())
+        .env("JR_CACHE_DIR", cache_dir.path().join("jr"))
+        .env("XDG_CONFIG_HOME", config_dir.path())
+        .env("JR_CONFIG_DIR", config_dir.path().join("jr"))
+        .args(["issue", "create", "--field", "a=b", "--no-input"])
+        .output()
+        .unwrap();
+
+    let stderr = String::from_utf8_lossy(&output.stderr);
+    let stdout = String::from_utf8_lossy(&output.stdout);
+
+    assert_eq!(
+        output.status.code(),
+        Some(64),
+        "S-578-4 / AC-9 (inverted): expected exit 64 (project-key resolution \
+         failure, NOT the removed pre-flight guard); got {:?}. stderr: {stderr}",
+        output.status.code()
+    );
+    assert!(
+        stderr.contains("Project key is required"),
+        "S-578-4 / AC-9: DISCRIMINATING (inverted) — the PRE-EXISTING project \
+         resolution error must now fire; got: {stderr}"
+    );
+    assert!(
+        !stderr.contains("--field is only valid with"),
+        "S-578-4 / AC-9: the DEAD DEC-188 verbatim string must NEVER appear; got: {stderr}"
+    );
+    assert!(
+        stdout.trim().is_empty(),
+        "S-578-4 / AC-9: stdout must be empty (HYGIENE); got: {stdout}"
+    );
+    assert!(
+        !stderr.contains("Created issue"),
+        "S-578-4 / AC-9: HYGIENE — structurally unreachable without a project; got: {stderr}"
+    );
+    assert!(
+        !stderr.contains("is ignored on the platform create path"),
+        "S-578-4 / AC-9: REGRESSION PIN; got: {stderr}"
+    );
+}
+
+// ─── AC-10 (NEW): --field --output json error-envelope shape ────────────────
+
+/// AC-10 (S-578-4 INVERSION, BC-3.3.011 `--output json` envelope shape,
+/// [mode: --output json]): Pairing/symmetric twin of AC-1 ([mode: human])
+/// for the same invocation class — same createmeta zero-matches failure,
+/// JSON-envelope-shaped.
+#[tokio::test]
+async fn test_platform_create_field_without_request_type_json_error_shape() {
+    let cwd_dir = tempfile::tempdir().unwrap();
+    let server = MockServer::start().await;
+    let cache_dir = tempfile::tempdir().unwrap();
+    let config_dir = tempfile::tempdir().unwrap();
+    common::fixtures::write_profile_config(config_dir.path(), &server.uri());
+
+    mount_platform_create_stubs(&server).await;
+
+    let output = Command::cargo_bin("jr")
+        .unwrap()
+        .current_dir(cwd_dir.path())
+        .env("JR_BASE_URL", server.uri())
+        .env("JR_AUTH_HEADER", "Basic dGVzdDp0ZXN0")
+        .env("XDG_CACHE_HOME", cache_dir.path())
+        .env("JR_CACHE_DIR", cache_dir.path().join("jr"))
+        .env("XDG_CONFIG_HOME", config_dir.path())
+        .env("JR_CONFIG_DIR", config_dir.path().join("jr"))
+        .args([
+            "issue",
+            "create",
+            "--project",
+            "PROJ",
+            "--type",
+            "Task",
+            "--summary",
+            "test",
+            "--field",
+            "a=b",
+            "--no-input",
+            "--output",
+            "json",
+        ])
+        .output()
+        .unwrap();
+
+    common::assertions::assert_json_error_envelope(&output, 64, "S-578-4 / AC-10 (inverted)");
+
+    let stderr = String::from_utf8_lossy(&output.stderr);
+    let stdout = String::from_utf8_lossy(&output.stdout);
+    let parsed: serde_json::Value = serde_json::from_str(stderr.trim()).unwrap();
+    assert_eq!(
+        parsed["code"].as_i64(),
+        Some(64),
+        "S-578-4 / AC-10: code field must be 64; got: {parsed}"
+    );
+    assert!(
+        parsed["error"]
+            .as_str()
+            .is_some_and(|s| s.contains("not found") && s.contains("Zero matches for 'a'")),
+        "S-578-4 / AC-10: error field must contain the BC-3.3.011 zero-matches \
+         message, NOT the removed DEC-188 guard string; got: {parsed}"
+    );
+    assert!(
+        !parsed["error"]
+            .as_str()
+            .unwrap_or_default()
+            .contains("--field is only valid with"),
+        "S-578-4 / AC-10: the DEAD DEC-188 verbatim string must NEVER appear; got: {parsed}"
+    );
+    assert!(
+        stdout.trim().is_empty(),
+        "S-578-4 / AC-10: DISCRIMINATING — stdout must be empty; got: {stdout}"
+    );
+    assert!(
+        !stderr.contains("is ignored on the platform create path"),
+        "S-578-4 / AC-10: REGRESSION PIN; got: {stderr}"
+    );
+}
+
+// ─── AC-11 (NEW): --field in TTY/interactive mode exits 64 before prompt ────
+
+/// AC-11 (S-578-4 INVERSION, BC-3.3.010 mode-agnosticism, [mode: human/TTY]):
+/// `--field a=b` WITHOUT `--project`, WITHOUT `--request-type`, and WITHOUT
+/// `--no-input` now exits 64 via the PRE-EXISTING "Project key is required"
+/// error — the removed DEC-188 guard no longer intercepts first. The D2
+/// collision guard (no dedicated flags here, so no collision) passes, and
+/// project-key resolution attempts an interactive prompt (still with
+/// `JR_STDIN_IS_TTY=1`, the debug seam suppressing the auto-`--no-input`
+/// flip on non-TTY stdin).
+///
+/// Non-goal: dialoguer 0.12 `interact_text()` short-circuits on non-TTY
+/// stderr under `assert_cmd`; the true PTY-interactive branch is untestable
+/// without a PTY harness. AC-11's unique value is exercising the
+/// `JR_STDIN_IS_TTY=1` no-auto-flip code path itself.
+#[tokio::test]
+async fn test_platform_create_field_interactive_tty_exits_64_before_prompt() {
+    let cwd_dir = tempfile::tempdir().unwrap();
+    // Bare MockServer, no registered handlers — expect(0) mocks are
+    // NON-DISCRIMINATING here (guard-absent also fails before reaching HTTP,
+    // via the project-resolution or prompt path); the discriminating proof
+    // is the "Project key" absence + presence of the guard string below.
+    let server = MockServer::start().await;
+    let cache_dir = tempfile::tempdir().unwrap();
+    let config_dir = tempfile::tempdir().unwrap();
+    write_minimal_config(config_dir.path(), &server.uri());
+
+    let output = Command::cargo_bin("jr")
+        .unwrap()
+        .current_dir(cwd_dir.path())
+        .env("JR_BASE_URL", server.uri())
+        .env("JR_AUTH_HEADER", "Basic dGVzdDp0ZXN0")
+        .env("XDG_CACHE_HOME", cache_dir.path())
+        .env("JR_CACHE_DIR", cache_dir.path().join("jr"))
+        .env("XDG_CONFIG_HOME", config_dir.path())
+        .env("JR_CONFIG_DIR", config_dir.path().join("jr"))
+        .env("JR_STDIN_IS_TTY", "1")
+        .args(["issue", "create", "--field", "a=b"])
+        .output()
+        .unwrap();
+
+    let stderr = String::from_utf8_lossy(&output.stderr);
+    let stdout = String::from_utf8_lossy(&output.stdout);
+
+    assert!(
+        stderr.contains("Project key is required"),
+        "S-578-4 / AC-11: DISCRIMINATING (inverted) — the PRE-EXISTING project \
+         resolution error must now fire; got: {stderr}"
+    );
+    assert!(
+        !stderr.contains("--field is only valid with"),
+        "S-578-4 / AC-11: the DEAD DEC-188 verbatim string must NEVER appear; got: {stderr}"
+    );
+    assert!(
+        !stderr.contains("Created issue"),
+        "S-578-4 / AC-11: HYGIENE — structurally unreachable without a project; got: {stderr}"
+    );
+    assert!(
+        !stderr.contains("is ignored on the platform create path"),
+        "S-578-4 / AC-11: REGRESSION PIN — old S-383 warn string must not appear; got: {stderr}"
+    );
+    assert_eq!(
+        output.status.code(),
+        Some(64),
+        "S-578-4 / AC-11: expected exit 64 (project-key resolution failure); \
+         got {:?}. stderr: {stderr}",
+        output.status.code()
+    );
+    assert!(
+        stdout.trim().is_empty(),
+        "S-578-4 / AC-11: output-channel hygiene; got: {stdout}"
+    );
+}
+
+// ─── AC-12 (NEW): --help pins "requires --request-type" on BOTH flags ───────
+
+/// AC-12 (S-578-4 INVERSION, BC-3.8.012 F3/F4 removal obligations —
+/// "AC-12 obligation", [mode: human help]): post-DEC-310-reversal, `--field`'s
+/// help line NO LONGER carries "requires --request-type" at all (the clause's
+/// removal IS the reversal itself) — only `--on-behalf-of`'s help line keeps
+/// it. The count assertion changes from `== 2` to `== 1`, scoped to the
+/// `--on-behalf-of` help line only.
+#[tokio::test]
+async fn test_platform_create_help_flags_requires_request_type_in_help() {
+    let output = Command::cargo_bin("jr")
+        .unwrap()
+        .args(["issue", "create", "--help"])
+        .output()
+        .unwrap();
+
+    let stdout = String::from_utf8_lossy(&output.stdout);
+    // Normalization is MANDATORY — clap 4 next-line layout may wrap long doc
+    // strings, causing the substring to straddle a newline.
+    let normalized = stdout.split_whitespace().collect::<Vec<_>>().join(" ");
+
+    assert_eq!(
+        normalized.matches("requires --request-type").count(),
+        1,
+        "S-578-4 / AC-12 (inverted): 'requires --request-type' must appear \
+         EXACTLY ONCE post-reversal — scoped to the --on-behalf-of help line \
+         only; --field's help line no longer carries the clause at all; \
+         got normalized help: {normalized}"
+    );
+}
+
+// ─── AC-13 (NEW): empty --on-behalf-of + --field → standalone guard alone ────
+
+/// AC-13 (S-578-4 INVERSION, BC-3.8.013 EC-3.8.013-1 — the combined check no
+/// longer exists, [mode: human]): `--on-behalf-of "" --field a=b` WITHOUT
+/// `--request-type` now fires ONLY BC-3.8.013's STANDALONE guard — `""` is
+/// still `Some("")`, i.e. `is_some()` is true, and this guard is
+/// UNCONDITIONAL (step 2, unaffected by `--field`'s presence). Dedicated
+/// isolated `MockServer` (not `mount_platform_create_stubs`) so the
+/// zero-HTTP proof is DISCRIMINATING against the would-otherwise-succeed
+/// guard-absent path. Renamed from
+/// `test_platform_create_combined_empty_on_behalf_with_field_exits_64_combined_error`.
+#[tokio::test]
+async fn test_platform_create_combined_empty_on_behalf_with_field_exits_64_standalone_guard() {
+    let server = MockServer::start().await;
+    let cache_dir = tempfile::tempdir().unwrap();
+    let config_dir = tempfile::tempdir().unwrap();
+    write_minimal_config(config_dir.path(), &server.uri());
+
+    // Would-otherwise-succeed precondition (inlined, not via
+    // mount_platform_create_stubs, to keep this MockServer dedicated).
+    Mock::given(method("POST"))
+        .and(path("/rest/api/3/issue"))
+        .respond_with(ResponseTemplate::new(201).set_body_json(json!({
+            "id": "10001",
+            "key": "PROJ-123",
+            "self": format!("{}/rest/api/3/issue/10001", server.uri()),
+        })))
+        .mount(&server)
+        .await;
+    Mock::given(method("GET"))
+        .and(path("/rest/api/3/field"))
+        .respond_with(ResponseTemplate::new(200).set_body_json(serde_json::Value::Array(vec![])))
+        .mount(&server)
+        .await;
+
+    let output = Command::cargo_bin("jr")
+        .unwrap()
+        .env("JR_BASE_URL", server.uri())
+        .env("JR_AUTH_HEADER", "Basic dGVzdDp0ZXN0")
+        .env("XDG_CACHE_HOME", cache_dir.path())
+        .env("JR_CACHE_DIR", cache_dir.path().join("jr"))
+        .env("XDG_CONFIG_HOME", config_dir.path())
+        .env("JR_CONFIG_DIR", config_dir.path().join("jr"))
+        .args([
+            "issue",
+            "create",
+            "--project",
+            "PROJ",
+            "--type",
+            "Task",
+            "--summary",
+            "test",
+            "--on-behalf-of",
+            "",
+            "--field",
+            "a=b",
+            "--no-input",
+        ])
+        .output()
+        .unwrap();
+
+    let stderr = String::from_utf8_lossy(&output.stderr);
+
+    assert!(
+        stderr.contains("--on-behalf-of is only valid with"),
+        "S-578-4 / AC-13 (inverted): the STANDALONE BC-3.8.013 error must \
+         be present; got: {stderr}"
+    );
+    assert_eq!(
+        output.status.code(),
+        Some(64),
+        "S-578-4 / AC-13: expected exit 64; got {:?}. stderr: {stderr}",
+        output.status.code()
+    );
+    assert!(
+        !stderr.contains("--field and --on-behalf-of are only valid with"),
+        "S-578-4 / AC-13: the now-removed combined-error string must NEVER appear; got: {stderr}"
+    );
+    assert!(
+        !stderr.contains("--field is only valid with"),
+        "S-578-4 / AC-13: --field must not itself contribute any pre-flight error; got: {stderr}"
+    );
+    assert!(
+        !stderr.contains("is ignored on the platform create path"),
+        "S-578-4 / AC-13: REGRESSION PIN — DISCRIMINATING (this invocation previously \
+         emitted BOTH old S-383 warn strings); got: {stderr}"
+    );
+    assert!(
+        server.received_requests().await.unwrap().is_empty(),
+        "S-578-4 / AC-13: NORMATIVE zero-HTTP proof — BC-3.8.013's standalone \
+         guard remains unconditional and fires before any HTTP"
+    );
+}
+
+// ─── AC-14 (NEW): empty --request-type routes to JSM, not BC-3.8.012 ────────
+
+/// AC-14 (BC-3.8.012 EC-3.8.012-2 — routing guard is JSM-fork-agnostic,
+/// [mode: human]): `--project PROJ --field a=b --request-type ""` routes to
+/// the JSM dispatch fork (since `request_type.is_some()` is true for `""`)
+/// and fires the BC-3.8.016 empty-request-type guard, NOT BC-3.8.012.
+/// `--project PROJ` is REQUIRED: `handle_jsm_create` resolves the project key
+/// BEFORE the empty-request-type guard.
+#[tokio::test]
+async fn test_platform_create_empty_request_type_routes_jsm_not_bc_3_8_012() {
+    let server = MockServer::start().await;
+    let cache_dir = tempfile::tempdir().unwrap();
+    let config_dir = tempfile::tempdir().unwrap();
+    write_minimal_config(config_dir.path(), &server.uri());
+
+    let output = Command::cargo_bin("jr")
+        .unwrap()
+        .env("JR_BASE_URL", server.uri())
+        .env("JR_AUTH_HEADER", "Basic dGVzdDp0ZXN0")
+        .env("XDG_CACHE_HOME", cache_dir.path())
+        .env("JR_CACHE_DIR", cache_dir.path().join("jr"))
+        .env("XDG_CONFIG_HOME", config_dir.path())
+        .env("JR_CONFIG_DIR", config_dir.path().join("jr"))
+        .args([
+            "issue",
+            "create",
+            "--project",
+            "PROJ",
+            "--field",
+            "a=b",
+            "--request-type",
+            "",
+            "--no-input",
+        ])
+        .output()
+        .unwrap();
+
+    let stderr = String::from_utf8_lossy(&output.stderr);
+
+    assert!(
+        stderr.contains("request type cannot be empty"),
+        "BC-3.8.012 / AC-14: POSITIVE — BC-3.8.016 empty-request-type guard must fire; got: {stderr}"
+    );
+    assert!(
+        !stderr.contains("--field is only valid with"),
+        "BC-3.8.012 / AC-14: DISCRIMINATING — BC-3.8.012 would fire here if the platform-path \
+         guard preceded the JSM dispatch fork; got: {stderr}"
+    );
+}
+
+// ─── AC-15 (NEW): clap conflicts_with exits 2, not 64 ────────────────────────
+
+/// AC-15 (BC-3.8.012 EC-3.8.012-8 — clap parse-level rejection precedes
+/// `handle_create`, [mode: human]): `--field a=b --to me --account-id X`
+/// (clap `conflicts_with` pair: `--to` conflicts with `--account-id`) exits 2
+/// (clap parse error), NOT 64. The guard is structurally unreachable on any
+/// clap-rejected invocation.
+#[tokio::test]
+async fn test_platform_create_conflicting_flags_exit_2_not_64_clap_precedence() {
+    let server = MockServer::start().await;
+    let output = Command::cargo_bin("jr")
+        .unwrap()
+        .env("JR_BASE_URL", server.uri())
+        .env("JR_AUTH_HEADER", "Basic dGVzdDp0ZXN0")
+        .args([
+            "issue",
+            "create",
+            "--field",
+            "a=b",
+            "--to",
+            "me",
+            "--account-id",
+            "X",
+            "--no-input",
+        ])
+        .output()
+        .unwrap();
+
+    let stderr = String::from_utf8_lossy(&output.stderr);
+
+    assert_eq!(
+        output.status.code(),
+        Some(2),
+        "BC-3.8.012 / AC-15: expected clap exit 2 (not 64); got {:?}. stderr: {stderr}",
+        output.status.code()
+    );
+    assert!(
+        !stderr.contains("--field is only valid with"),
+        "BC-3.8.012 / AC-15: HYGIENE — handle_create is never entered on a clap-rejected \
+         invocation; got: {stderr}"
+    );
+}
+
+// ─── AC-16 (NEW): --on-behalf-of "" alone fires BC-3.8.013 ──────────────────
+
+/// AC-16 (BC-3.8.013 EC-3.8.013-1 — empty string value is still `is_some()`,
+/// [mode: human]): `--on-behalf-of ""` alone (no `--field`, no
+/// `--request-type`) exits 64 with the verbatim BC-3.8.013 single-flag error.
+#[tokio::test]
+async fn test_platform_create_on_behalf_empty_string_exits_64_013_error() {
+    let cwd_dir = tempfile::tempdir().unwrap();
+    let server = MockServer::start().await;
+    let cache_dir = tempfile::tempdir().unwrap();
+    let config_dir = tempfile::tempdir().unwrap();
+    write_minimal_config(config_dir.path(), &server.uri());
+
+    let output = Command::cargo_bin("jr")
+        .unwrap()
+        .current_dir(cwd_dir.path())
+        .env("JR_BASE_URL", server.uri())
+        .env("JR_AUTH_HEADER", "Basic dGVzdDp0ZXN0")
+        .env("XDG_CACHE_HOME", cache_dir.path())
+        .env("JR_CACHE_DIR", cache_dir.path().join("jr"))
+        .env("XDG_CONFIG_HOME", config_dir.path())
+        .env("JR_CONFIG_DIR", config_dir.path().join("jr"))
+        .args(["issue", "create", "--on-behalf-of", "", "--no-input"])
+        .output()
+        .unwrap();
+
+    let stderr = String::from_utf8_lossy(&output.stderr);
+
+    assert_eq!(
+        output.status.code(),
+        Some(64),
+        "BC-3.8.013 / AC-16: expected exit 64; got {:?}. stderr: {stderr}",
+        output.status.code()
+    );
+    assert!(
+        stderr.contains("--on-behalf-of is only valid with"),
+        "BC-3.8.013 / AC-16: prefix pin must appear; got: {stderr}"
+    );
+    assert!(
+        stderr.contains(
+            "--on-behalf-of is only valid with --request-type (JSM service-desk requests). Add --request-type <NAME> to raise a request on behalf of another user, or drop --on-behalf-of to create a standard platform issue."
+        ),
+        "BC-3.8.013 / AC-16: FULL-STRING verbatim single-flag error must appear on stderr; got: {stderr}"
+    );
+    assert!(
+        !stderr.contains("--field and --on-behalf-of are only valid with"),
+        "BC-3.8.013 / AC-16: FALSIFIABLE-COARSE — combined guard must NOT mis-fire when --field is absent; got: {stderr}"
+    );
+    assert!(
+        !stderr.contains("is ignored on the platform create path"),
+        "BC-3.8.013 / AC-16: REGRESSION PIN — DISCRIMINATING (this invocation previously \
+         emitted the old S-383 warn string); got: {stderr}"
+    );
+}
+
+// ─── AC-17 (NEW): --markdown + --field exits 64 (BC-3.8.012), not markdown err ─
+
+/// AC-17 (S-578-4 INVERSION, EC-3.8.012-5 now stale post-reversal —
+/// AC-018's regression-check counterpart in `tests/issue_create_field.rs`
+/// covers the WOULD-otherwise-succeed variant of this invocation; [mode:
+/// human]): `--markdown --field description=x` WITHOUT `--request-type` no
+/// longer fires the removed DEC-188 guard. This fixture has no `--project`,
+/// so the PRE-EXISTING "Project key is required" error fires instead
+/// (`description` collides with NO dedicated flag here — `--description`/
+/// `--description-stdin` are absent — so the D2 collision guard passes
+/// cleanly). Still NOT the JSM-path `--markdown` conflict error (that string
+/// lives only inside `handle_jsm_create`, structurally unreachable without
+/// `--request-type` routing).
+#[tokio::test]
+async fn test_platform_create_markdown_with_field_exits_64_bc_3_8_012_not_markdown_error() {
+    let cwd_dir = tempfile::tempdir().unwrap();
+    let server = MockServer::start().await;
+    let cache_dir = tempfile::tempdir().unwrap();
+    let config_dir = tempfile::tempdir().unwrap();
+    write_minimal_config(config_dir.path(), &server.uri());
+
+    let output = Command::cargo_bin("jr")
+        .unwrap()
+        .current_dir(cwd_dir.path())
+        .env("JR_BASE_URL", server.uri())
+        .env("JR_AUTH_HEADER", "Basic dGVzdDp0ZXN0")
+        .env("XDG_CACHE_HOME", cache_dir.path())
+        .env("JR_CACHE_DIR", cache_dir.path().join("jr"))
+        .env("XDG_CONFIG_HOME", config_dir.path())
+        .env("JR_CONFIG_DIR", config_dir.path().join("jr"))
+        .args([
+            "issue",
+            "create",
+            "--markdown",
+            "--field",
+            "description=x",
+            "--no-input",
+        ])
+        .output()
+        .unwrap();
+
+    let stderr = String::from_utf8_lossy(&output.stderr);
+
+    assert_eq!(
+        output.status.code(),
+        Some(64),
+        "S-578-4 / AC-17 (inverted): expected exit 64 (project-key resolution \
+         failure, NOT the removed pre-flight guard); got {:?}. stderr: {stderr}",
+        output.status.code()
+    );
+    assert!(
+        stderr.contains("Project key is required"),
+        "S-578-4 / AC-17: DISCRIMINATING (inverted) — the PRE-EXISTING project \
+         resolution error must now fire; got: {stderr}"
+    );
+    assert!(
+        !stderr.contains("--field is only valid with"),
+        "S-578-4 / AC-17: the DEAD DEC-188 verbatim string must NEVER appear; got: {stderr}"
+    );
+    assert!(
+        !stderr.contains("cannot be combined with `--markdown`"),
+        "S-578-4 / AC-17: HYGIENE — the JSM-path --markdown conflict string is structurally \
+         unreachable without --request-type routing; got: {stderr}"
+    );
+    assert!(
+        !stderr.contains("is ignored on the platform create path"),
+        "S-578-4 / AC-17: REGRESSION PIN; got: {stderr}"
+    );
+}
+
+// ─── AC-18 (NEW): --description-stdin + --field exits 64, stdin IS consumed ──
+
+/// AC-18 (S-578-4 INVERSION, EC-3.8.012-7 now stale post-reversal,
+/// BC-3.3.011 taxonomy row 2, [mode: human]): `--field a=b
+/// --description-stdin` WITHOUT `--request-type` no longer exits 64 via any
+/// pre-flight guard — the removed DEC-188 guard no longer intercepts.
+/// `description_stdin` is a governed D2 key, but the `--field` here targets
+/// wire key "a" (not "description"), so the D2 collision guard passes
+/// cleanly; the blocking stdin read at step 4a now DOES run (unlike the
+/// pre-reversal contract, where the guard fired before it and stdin was
+/// never consumed). Resolution then fails at step 4b: field "a" is absent
+/// from the mounted (empty) `list_fields()` response — BC-3.3.011 taxonomy
+/// row 2 (zero matches). Renamed from
+/// `test_platform_create_description_stdin_with_field_exits_64_stdin_not_consumed`
+/// — the pre-reversal name asserted the OPPOSITE of what this body now
+/// verifies (stdin consumption, not its absence).
+#[tokio::test]
+async fn test_platform_create_description_stdin_with_field_exits_64_stdin_consumed() {
+    let server = MockServer::start().await;
+    let cache_dir = tempfile::tempdir().unwrap();
+    let config_dir = tempfile::tempdir().unwrap();
+    write_minimal_config(config_dir.path(), &server.uri());
+
+    mount_platform_create_stubs(&server).await;
+
+    let output = Command::cargo_bin("jr")
+        .unwrap()
+        .env("JR_BASE_URL", server.uri())
+        .env("JR_AUTH_HEADER", "Basic dGVzdDp0ZXN0")
+        .env("XDG_CACHE_HOME", cache_dir.path())
+        .env("JR_CACHE_DIR", cache_dir.path().join("jr"))
+        .env("XDG_CONFIG_HOME", config_dir.path())
+        .env("JR_CONFIG_DIR", config_dir.path().join("jr"))
+        .args([
+            "issue",
+            "create",
+            "--project",
+            "PROJ",
+            "--type",
+            "Task",
+            "--summary",
+            "test",
+            "--field",
+            "a=b",
+            "--description-stdin",
+            "--no-input",
+        ])
+        .write_stdin("some description content\n")
+        .output()
+        .unwrap();
+
+    let stderr = String::from_utf8_lossy(&output.stderr);
+    let stdout = String::from_utf8_lossy(&output.stdout);
+
+    assert_eq!(
+        output.status.code(),
+        Some(64),
+        "S-578-4 / AC-18 (inverted): expected exit 64 (zero-matches resolution \
+         failure for field 'a', NOT the removed pre-flight guard); got {:?}. \
+         stderr: {stderr}",
+        output.status.code()
+    );
+    assert!(
+        stderr.contains("not found") && stderr.contains("Zero matches for 'a'"),
+        "S-578-4 / AC-18: field 'a' must fail BC-3.3.011 taxonomy row 2 \
+         (zero matches in list_fields()) — the stdin read at step 4a runs \
+         normally now that the pre-flight guard is gone; got: {stderr}"
+    );
+    assert!(
+        !stderr.contains("--field is only valid with"),
+        "S-578-4 / AC-18: the DEAD DEC-188 verbatim string must NEVER appear; got: {stderr}"
+    );
+    assert!(
+        stdout.trim().is_empty(),
+        "S-578-4 / AC-18: stdout must be empty (HYGIENE); got: {stdout}"
+    );
+    assert!(
+        !stderr.contains("Created issue"),
+        "S-578-4 / AC-18: DISCRIMINATING — no success path must have executed; got: {stderr}"
+    );
+    assert!(
+        !stderr.contains("is ignored on the platform create path"),
+        "S-578-4 / AC-18: REGRESSION PIN; got: {stderr}"
+    );
+}
+
+// ─── AC-19 (NEW): --field a= (empty value) still fires BC-3.8.012 ───────────
+
+/// AC-19 (S-578-4 INVERSION, EC-3.8.012-9 fully superseded, BC-3.3.011
+/// taxonomy row 2, [mode: human]): `--field a=` (key present, empty value
+/// after `=`) WITHOUT `--request-type` still exits 64 — but the removed
+/// DEC-188 presence-only guard is GONE; `parse_field_kv` accepts an empty
+/// VALUE (BC-3.8.008's pre-existing "empty value allowed" contract,
+/// unaffected by this story), so resolution proceeds to the SAME
+/// zero-matches failure as AC-1/AC-10/AC-18 (field "a" absent from the
+/// mounted empty `list_fields()` response) — the VALUE's emptiness is never
+/// inspected at ANY stage, matching the original AC-19 intent under a
+/// different mechanism.
+#[tokio::test]
+async fn test_platform_create_field_empty_value_exits_64_bc_3_8_012() {
+    let server = MockServer::start().await;
+    let cache_dir = tempfile::tempdir().unwrap();
+    let config_dir = tempfile::tempdir().unwrap();
+    write_minimal_config(config_dir.path(), &server.uri());
+
+    mount_platform_create_stubs(&server).await;
+
+    let output = Command::cargo_bin("jr")
+        .unwrap()
+        .env("JR_BASE_URL", server.uri())
+        .env("JR_AUTH_HEADER", "Basic dGVzdDp0ZXN0")
+        .env("XDG_CACHE_HOME", cache_dir.path())
+        .env("JR_CACHE_DIR", cache_dir.path().join("jr"))
+        .env("XDG_CONFIG_HOME", config_dir.path())
+        .env("JR_CONFIG_DIR", config_dir.path().join("jr"))
+        .args([
+            "issue",
+            "create",
+            "--project",
+            "PROJ",
+            "--type",
+            "Task",
+            "--summary",
+            "test",
+            "--field",
+            "a=",
+            "--no-input",
+        ])
+        .output()
+        .unwrap();
+
+    let stderr = String::from_utf8_lossy(&output.stderr);
+    let stdout = String::from_utf8_lossy(&output.stdout);
+
+    assert_eq!(
+        output.status.code(),
+        Some(64),
+        "S-578-4 / AC-19 (inverted): expected exit 64 (zero-matches resolution \
+         failure, NOT the removed pre-flight guard); got {:?}. stderr: {stderr}",
+        output.status.code()
+    );
+    assert!(
+        stderr.contains("not found") && stderr.contains("Zero matches for 'a'"),
+        "S-578-4 / AC-19: field 'a' must fail BC-3.3.011 taxonomy row 2 \
+         (zero matches) — the empty VALUE is never inspected; got: {stderr}"
+    );
+    assert!(
+        !stderr.contains("--field is only valid with"),
+        "S-578-4 / AC-19: the DEAD DEC-188 verbatim string must NEVER appear; got: {stderr}"
+    );
+    assert!(
+        stdout.trim().is_empty(),
+        "S-578-4 / AC-19: stdout must be empty (HYGIENE); got: {stdout}"
+    );
+    assert!(
+        !stderr.contains("Created issue"),
+        "S-578-4 / AC-19: DISCRIMINATING — no success path must have executed; got: {stderr}"
+    );
+    assert!(
+        !stderr.contains("is ignored on the platform create path"),
+        "S-578-4 / AC-19: REGRESSION PIN — DISCRIMINATING (this invocation previously \
+         triggered the old S-383 warn string); got: {stderr}"
+    );
+}
+
+// ─── AC-20 (NEW): JSM path + --on-behalf-of does NOT fire BC-3.8.013 ────────
+
+/// AC-20 (BC-3.8.013 JSM-path non-mis-fire, [mode: --output json]): When
+/// `--request-type` IS set alongside `--on-behalf-of <ID>`, the command takes
+/// the JSM path and neither guard may fire.
+#[tokio::test]
+async fn test_jsm_create_with_on_behalf_of_and_request_type_does_not_fire_bc_3_8_013() {
+    let server = MockServer::start().await;
+    let cache_dir = tempfile::tempdir().unwrap();
+    let config_dir = tempfile::tempdir().unwrap();
+    write_minimal_config(config_dir.path(), &server.uri());
+
+    mount_project_meta_help(&server).await;
+    mount_service_desk_list(&server).await;
+    mount_request_types_password_reset(&server).await;
+
+    Mock::given(method("POST"))
+        .and(path("/rest/servicedeskapi/request"))
+        .respond_with(ResponseTemplate::new(201).set_body_json(jsm_created_response()))
+        .expect(1)
+        .mount(&server)
+        .await;
+
+    let output = Command::cargo_bin("jr")
+        .unwrap()
+        .env("JR_BASE_URL", server.uri())
+        .env("JR_AUTH_HEADER", "Basic dGVzdDp0ZXN0")
+        .env("XDG_CACHE_HOME", cache_dir.path())
+        .env("JR_CACHE_DIR", cache_dir.path().join("jr"))
+        .env("XDG_CONFIG_HOME", config_dir.path())
+        .env("JR_CONFIG_DIR", config_dir.path().join("jr"))
+        .args([
+            "issue",
+            "create",
+            "--project",
+            "HELP",
+            "--summary",
+            "test",
+            "--on-behalf-of",
+            "X",
+            "--request-type",
+            "Password Reset",
+            "--no-input",
+            "--output",
+            "json",
+        ])
+        .output()
+        .unwrap();
+
     let stderr = String::from_utf8_lossy(&output.stderr);
 
     assert!(
         output.status.success(),
-        "BC-3.8.012 / AC-7: expected exit 0 (not 64) for malformed --field on platform path; got {:?}. stderr: {stderr}",
+        "BC-3.8.013 / AC-20: expected exit 0 on JSM path; got {:?}. stderr: {stderr}",
         output.status.code()
     );
-    assert_eq!(
-        stderr
-            .matches("warning: --field is ignored on the platform create path")
-            .count(),
-        1,
-        "BC-3.8.012 / AC-7: warning must appear EXACTLY ONCE for malformed --field; got: {stderr}"
+    assert!(
+        !stderr.contains("--on-behalf-of is only valid with"),
+        "BC-3.8.013 / AC-20: DISCRIMINATING — single-flag guard must NOT fire on JSM path; got: {stderr}"
+    );
+    assert!(
+        !stderr.contains("--field is only valid with"),
+        "BC-3.8.013 / AC-20: HYGIENE — invocation has no --field; got: {stderr}"
+    );
+    assert!(
+        !stderr.contains("--field and --on-behalf-of are only valid with"),
+        "BC-3.8.013 / AC-20: FALSIFIABLE-COARSE — combined guard must NOT fire when only \
+         --on-behalf-of is present; got: {stderr}"
+    );
+}
+
+// ─── AC-21 (NEW): JSM path + BOTH flags does NOT fire either guard ──────────
+
+/// AC-21 (BC-3.8.012 + BC-3.8.013 combined JSM-path non-mis-fire,
+/// [mode: --output json]): The ONLY invocation falsifying the COMBINED guard
+/// on the JSM path — `--project HELP --summary test --field a=b
+/// --on-behalf-of X --request-type "Password Reset"` (BOTH `--field` AND
+/// `--on-behalf-of` with `--request-type`) must not fire ANY of the three
+/// guard error strings.
+#[tokio::test]
+async fn test_jsm_create_with_both_flags_and_request_type_does_not_fire_guards() {
+    let server = MockServer::start().await;
+    let cache_dir = tempfile::tempdir().unwrap();
+    let config_dir = tempfile::tempdir().unwrap();
+    write_minimal_config(config_dir.path(), &server.uri());
+
+    mount_project_meta_help(&server).await;
+    mount_service_desk_list(&server).await;
+    mount_request_types_password_reset(&server).await;
+
+    Mock::given(method("POST"))
+        .and(path("/rest/servicedeskapi/request"))
+        .respond_with(ResponseTemplate::new(201).set_body_json(jsm_created_response()))
+        .expect(1)
+        .mount(&server)
+        .await;
+
+    let output = Command::cargo_bin("jr")
+        .unwrap()
+        .env("JR_BASE_URL", server.uri())
+        .env("JR_AUTH_HEADER", "Basic dGVzdDp0ZXN0")
+        .env("XDG_CACHE_HOME", cache_dir.path())
+        .env("JR_CACHE_DIR", cache_dir.path().join("jr"))
+        .env("XDG_CONFIG_HOME", config_dir.path())
+        .env("JR_CONFIG_DIR", config_dir.path().join("jr"))
+        .args([
+            "issue",
+            "create",
+            "--project",
+            "HELP",
+            "--summary",
+            "test",
+            "--field",
+            "a=b",
+            "--on-behalf-of",
+            "X",
+            "--request-type",
+            "Password Reset",
+            "--no-input",
+            "--output",
+            "json",
+        ])
+        .output()
+        .unwrap();
+
+    let stderr = String::from_utf8_lossy(&output.stderr);
+
+    assert!(
+        output.status.success(),
+        "BC-3.8.012+013 / AC-21: expected exit 0 on JSM path; got {:?}. stderr: {stderr}",
+        output.status.code()
+    );
+    assert!(
+        !stderr.contains("--field is only valid with"),
+        "BC-3.8.012 / AC-21: DISCRIMINATING — single-flag guard must NOT fire; got: {stderr}"
+    );
+    assert!(
+        !stderr.contains("--on-behalf-of is only valid with"),
+        "BC-3.8.013 / AC-21: DISCRIMINATING — single-flag guard must NOT fire; got: {stderr}"
+    );
+    assert!(
+        !stderr.contains("--field and --on-behalf-of are only valid with"),
+        "BC-3.8.012+013 / AC-21: DISCRIMINATING — combined guard must NOT fire; this is the \
+         discriminating negative AC-6 and AC-20 cannot provide; got: {stderr}"
     );
 }
 
@@ -4060,4 +5461,2375 @@ fn assert_code_mark_exclusivity_local(adf: &serde_json::Value) {
             }
         }
     }
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+// S-578-3: JSM `issue create --field` hint-kind uniformity
+// (BC-3.8.008 "Hint-kind uniformity" amendment, VP-578-015/016/022)
+//
+// Historical (RED gate, now closed): the S-578-1 interim
+// `reject_unsupported_hint_kinds` guard that used to reject every `--field
+// NAME:kind=VALUE` hinted pair with exit 64 has been removed — both the
+// guard call site and its underlying helper are gone from `jsm_create.rs`.
+// `JsmRequestBuilder::build()`'s kind-aware dispatch (`compose_id_wire`/
+// `compose_name_wire`/`compose_asset_wire` in `src/api/jsm/requests.rs`) and
+// `resolve_asset_field_l2` (`src/cli/issue/jsm_create.rs`) are real,
+// implemented logic, not `todo!()` stubs. Every test below — HINTED
+// (`:id`/`:name`/`:asset`/`:option`) and bare alike — now exercises that
+// real dispatch end-to-end and is expected to PASS (GREEN), pinning the
+// merged behavior rather than describing a pending Red Gate.
+//
+// VP-578-016 PARITY-PENDING NOTE: the `:id`/`:name`/`:asset`
+// `requestFieldValues` wire shapes asserted below are implemented BY
+// ANALOGY to the platform-path shapes (`field_resolve.rs::compose_id_hint`/
+// `compose_name_hint`/`compose_asset_hint`) per BC-3.8.008's own explicit
+// caveat — this parity is NOT research-confirmed for the JSM
+// `requestFieldValues` target. A green run of these tests, once the guard
+// is removed and dispatch lands, is NOT proof of live-JSM parity; treat
+// VP-578-016 as parity-PENDING until F4/live-JSM validation.
+// ═══════════════════════════════════════════════════════════════════════════
+
+// ─── AC-001 (BC-3.8.008 amendment): extra_fields type is FieldValueSpec map ──
+
+/// AC-001: `JsmRequestBuilder.extra_fields` is `&'a HashMap<String,
+/// FieldValueSpec>` (not the old `&'a HashMap<String, String>`) — the SAME
+/// `parse_field_kv` parser used by every `--field`-accepting call site now
+/// feeds this builder directly (no per-call-site parsing divergence).
+///
+/// `FieldValueSpec`/`FieldValueKind` are `pub(crate)` (crate-internal), so
+/// this cannot be asserted via a direct Rust type check from an external
+/// integration test — it is exercised behaviorally: a BARE (unhinted)
+/// `--field` pair must flow end-to-end through `parse_field_kv` ->
+/// `JsmRequestBuilder.extra_fields` -> `build()` successfully (`kind: None`
+/// is the `FieldValueSpec` variant the bare form always produces).
+///
+/// PRE-SATISFIED GREEN at time of writing: the `extra_fields` type change
+/// (Task 2) already landed as part of the compilable-stub commit
+/// (`7eb89fd6`) that precedes this Red Gate — `src/api/jsm/requests.rs`'s
+/// `JsmRequestBuilder.extra_fields` field is already `&'a HashMap<String,
+/// FieldValueSpec>`, and `jsm_create.rs` already constructs that map
+/// directly from `parse_field_kv`'s output (no intermediate `.value`-only
+/// unwrap). This test is a regression pin locking in the already-landed
+/// type change, not a new Red Gate failure.
+#[tokio::test]
+async fn test_bc_3_8_008_bare_field_flows_through_spec_typed_extra_fields() {
+    let server = MockServer::start().await;
+    let cache_dir = tempfile::tempdir().unwrap();
+    let config_dir = tempfile::tempdir().unwrap();
+    write_minimal_config(config_dir.path(), &server.uri());
+
+    mount_project_meta_help(&server).await;
+    mount_service_desk_list(&server).await;
+    mount_request_type_list(&server).await;
+
+    Mock::given(method("POST"))
+        .and(path("/rest/servicedeskapi/request"))
+        .respond_with(ResponseTemplate::new(201).set_body_json(jsm_created_response()))
+        .expect(1)
+        .mount(&server)
+        .await;
+
+    let output = Command::cargo_bin("jr")
+        .unwrap()
+        .env("JR_BASE_URL", server.uri())
+        .env("JR_AUTH_HEADER", "Basic dGVzdDp0ZXN0")
+        .env("XDG_CACHE_HOME", cache_dir.path())
+        .env("JR_CACHE_DIR", cache_dir.path().join("jr"))
+        .env("XDG_CONFIG_HOME", config_dir.path())
+        .env("JR_CONFIG_DIR", config_dir.path().join("jr"))
+        .args([
+            "issue",
+            "create",
+            "--project",
+            "HELP",
+            "--request-type",
+            "Password Reset",
+            "--summary",
+            "test",
+            "--field",
+            "customfield_20000=plain",
+            "--no-input",
+            "--output",
+            "json",
+        ])
+        .output()
+        .unwrap();
+
+    let stderr = String::from_utf8_lossy(&output.stderr);
+    assert!(
+        output.status.success(),
+        "AC-001: expected exit 0, got {:?}. stderr: {stderr}",
+        output.status.code()
+    );
+
+    let requests = server.received_requests().await.expect("requests recorded");
+    let jsm_post = requests
+        .iter()
+        .find(|r| r.url.path() == "/rest/servicedeskapi/request" && r.method.as_str() == "POST")
+        .expect("AC-001: JSM POST must have been made");
+    let body: Value =
+        serde_json::from_slice(&jsm_post.body).expect("AC-001: POST body must be valid JSON");
+    assert_eq!(
+        body["requestFieldValues"]["customfield_20000"].as_str(),
+        Some("plain"),
+        "AC-001: a bare --field pair must flow through the FieldValueSpec-typed \
+         extra_fields map end-to-end; got body: {body}"
+    );
+}
+
+// ─── AC-002 (BC-3.8.008 amendment): build()'s kind-aware dispatch ────────────
+
+/// AC-002: `:id` dispatches through `JsmRequestBuilder::build()`'s
+/// kind-aware match to `compose_id_wire`, producing `{"id": "10042"}` on
+/// `requestFieldValues` (by analogy to the platform-path shape,
+/// `field_resolve.rs::compose_id_hint` — VP-578-016 parity-PENDING).
+#[tokio::test]
+async fn test_bc_3_8_008_build_kind_aware_dispatch_id() {
+    let server = MockServer::start().await;
+    let cache_dir = tempfile::tempdir().unwrap();
+    let config_dir = tempfile::tempdir().unwrap();
+    write_minimal_config(config_dir.path(), &server.uri());
+
+    mount_project_meta_help(&server).await;
+    mount_service_desk_list(&server).await;
+    mount_request_type_list(&server).await;
+
+    Mock::given(method("POST"))
+        .and(path("/rest/servicedeskapi/request"))
+        .respond_with(ResponseTemplate::new(201).set_body_json(jsm_created_response()))
+        .mount(&server)
+        .await;
+
+    let output = Command::cargo_bin("jr")
+        .unwrap()
+        .env("JR_BASE_URL", server.uri())
+        .env("JR_AUTH_HEADER", "Basic dGVzdDp0ZXN0")
+        .env("XDG_CACHE_HOME", cache_dir.path())
+        .env("JR_CACHE_DIR", cache_dir.path().join("jr"))
+        .env("XDG_CONFIG_HOME", config_dir.path())
+        .env("JR_CONFIG_DIR", config_dir.path().join("jr"))
+        .args([
+            "issue",
+            "create",
+            "--project",
+            "HELP",
+            "--request-type",
+            "Password Reset",
+            "--summary",
+            "test",
+            "--field",
+            "customfield_30000:id=10042",
+            "--no-input",
+            "--output",
+            "json",
+        ])
+        .output()
+        .unwrap();
+
+    let stderr = String::from_utf8_lossy(&output.stderr);
+    assert!(
+        output.status.success(),
+        "AC-002: ':id' hint must dispatch through build() and exit 0. \
+         got exit {:?}. \
+         stderr: {stderr}",
+        output.status.code()
+    );
+
+    let requests = server.received_requests().await.expect("requests recorded");
+    let jsm_post = requests
+        .iter()
+        .find(|r| r.url.path() == "/rest/servicedeskapi/request" && r.method.as_str() == "POST")
+        .expect("AC-002: JSM POST must have been made");
+    let body: Value =
+        serde_json::from_slice(&jsm_post.body).expect("AC-002: POST body must be valid JSON");
+    assert_eq!(
+        body["requestFieldValues"]["customfield_30000"],
+        json!({"id": "10042"}),
+        "AC-002: ':id' hint must produce {{\"id\": \"10042\"}} on requestFieldValues \
+         (by analogy to the platform-path shape; VP-578-016 parity-PENDING); \
+         got body: {body}"
+    );
+}
+
+/// AC-002: `:name` dispatches through `build()`'s kind-aware match to
+/// `compose_name_wire`, producing `{"name": "High"}` on `requestFieldValues`
+/// (by analogy to `field_resolve.rs::compose_name_hint` — VP-578-016
+/// parity-PENDING).
+#[tokio::test]
+async fn test_bc_3_8_008_build_kind_aware_dispatch_name() {
+    let server = MockServer::start().await;
+    let cache_dir = tempfile::tempdir().unwrap();
+    let config_dir = tempfile::tempdir().unwrap();
+    write_minimal_config(config_dir.path(), &server.uri());
+
+    mount_project_meta_help(&server).await;
+    mount_service_desk_list(&server).await;
+    mount_request_type_list(&server).await;
+
+    Mock::given(method("POST"))
+        .and(path("/rest/servicedeskapi/request"))
+        .respond_with(ResponseTemplate::new(201).set_body_json(jsm_created_response()))
+        .mount(&server)
+        .await;
+
+    let output = Command::cargo_bin("jr")
+        .unwrap()
+        .env("JR_BASE_URL", server.uri())
+        .env("JR_AUTH_HEADER", "Basic dGVzdDp0ZXN0")
+        .env("XDG_CACHE_HOME", cache_dir.path())
+        .env("JR_CACHE_DIR", cache_dir.path().join("jr"))
+        .env("XDG_CONFIG_HOME", config_dir.path())
+        .env("JR_CONFIG_DIR", config_dir.path().join("jr"))
+        .args([
+            "issue",
+            "create",
+            "--project",
+            "HELP",
+            "--request-type",
+            "Password Reset",
+            "--summary",
+            "test",
+            "--field",
+            "customfield_30001:name=High",
+            "--no-input",
+            "--output",
+            "json",
+        ])
+        .output()
+        .unwrap();
+
+    let stderr = String::from_utf8_lossy(&output.stderr);
+    assert!(
+        output.status.success(),
+        "AC-002: ':name' hint must dispatch through build() and exit 0. \
+         got exit {:?}. \
+         stderr: {stderr}",
+        output.status.code()
+    );
+
+    let requests = server.received_requests().await.expect("requests recorded");
+    let jsm_post = requests
+        .iter()
+        .find(|r| r.url.path() == "/rest/servicedeskapi/request" && r.method.as_str() == "POST")
+        .expect("AC-002: JSM POST must have been made");
+    let body: Value =
+        serde_json::from_slice(&jsm_post.body).expect("AC-002: POST body must be valid JSON");
+    assert_eq!(
+        body["requestFieldValues"]["customfield_30001"],
+        json!({"name": "High"}),
+        "AC-002: ':name' hint must produce {{\"name\": \"High\"}} on requestFieldValues \
+         (by analogy to the platform-path shape; VP-578-016 parity-PENDING); \
+         got body: {body}"
+    );
+}
+
+/// AC-002 / VP-578-015: `kind: None` (bare) and `kind: Some(Option)`
+/// (`:option`, non-cascading) both dispatch to the SAME plain-string wrap —
+/// `build()`'s match arm is `None | Some(FieldValueKind::Option) =>
+/// serde_json::Value::String(spec.value.clone())` (already-landed, real
+/// logic per the rustdoc in `src/api/jsm/requests.rs`, not a stub). Bare and
+/// `:option`-hinted pairs on DIFFERENT field names must therefore produce
+/// byte-identical (plain string) wire values.
+#[tokio::test]
+async fn test_bc_3_8_008_build_kind_aware_dispatch_option_bare_parity() {
+    let server = MockServer::start().await;
+    let cache_dir = tempfile::tempdir().unwrap();
+    let config_dir = tempfile::tempdir().unwrap();
+    write_minimal_config(config_dir.path(), &server.uri());
+
+    mount_project_meta_help(&server).await;
+    mount_service_desk_list(&server).await;
+    mount_request_type_list(&server).await;
+
+    Mock::given(method("POST"))
+        .and(path("/rest/servicedeskapi/request"))
+        .respond_with(ResponseTemplate::new(201).set_body_json(jsm_created_response()))
+        .mount(&server)
+        .await;
+
+    let output = Command::cargo_bin("jr")
+        .unwrap()
+        .env("JR_BASE_URL", server.uri())
+        .env("JR_AUTH_HEADER", "Basic dGVzdDp0ZXN0")
+        .env("XDG_CACHE_HOME", cache_dir.path())
+        .env("JR_CACHE_DIR", cache_dir.path().join("jr"))
+        .env("XDG_CONFIG_HOME", config_dir.path())
+        .env("JR_CONFIG_DIR", config_dir.path().join("jr"))
+        .args([
+            "issue",
+            "create",
+            "--project",
+            "HELP",
+            "--request-type",
+            "Password Reset",
+            "--summary",
+            "test",
+            "--field",
+            "bare_field=BareValue",
+            "--field",
+            "hinted_field:option=HintedValue",
+            "--no-input",
+            "--output",
+            "json",
+        ])
+        .output()
+        .unwrap();
+
+    let stderr = String::from_utf8_lossy(&output.stderr);
+    assert!(
+        output.status.success(),
+        "AC-002 VP-578-015: bare/:option parity must exit 0. \
+         got exit {:?}. stderr: {stderr}",
+        output.status.code()
+    );
+
+    let requests = server.received_requests().await.expect("requests recorded");
+    let jsm_post = requests
+        .iter()
+        .find(|r| r.url.path() == "/rest/servicedeskapi/request" && r.method.as_str() == "POST")
+        .expect("AC-002: JSM POST must have been made");
+    let body: Value =
+        serde_json::from_slice(&jsm_post.body).expect("AC-002: POST body must be valid JSON");
+    assert_eq!(
+        body["requestFieldValues"]["bare_field"],
+        json!("BareValue"),
+        "AC-002 VP-578-015: bare form must remain a plain string; got body: {body}"
+    );
+    assert_eq!(
+        body["requestFieldValues"]["hinted_field"],
+        json!("HintedValue"),
+        "AC-002 VP-578-015: ':option' non-cascading hint must produce the SAME \
+         plain-string wrap as the bare form (byte-identical parity, not an \
+         object wrap); got body: {body}"
+    );
+}
+
+// ─── AC-003 (EC-3.8.008-1): cascading '>' is opaque literal on JSM ───────────
+
+/// EC-3.8.008-1: `--field cf:option=Parent>Child` on the JSM path is treated
+/// as an OPAQUE literal — JSM has no `>`-split site anywhere in its
+/// dispatch (`parse_field_kv` itself never splits on `>`; that split lives
+/// only at platform-path call sites, per ADR-0019 §Amendment D3). The whole
+/// `"Parent>Child"` substring, `>` included, is wrapped verbatim by the SAME
+/// `None | Some(Option) => Value::String(...)` non-cascading arm AC-002
+/// pins — i.e. a PLAIN STRING `"Parent>Child"`, not a `{"value": ...}`
+/// object.
+///
+/// NOTE on the story text: S-578-3's own AC-003 prose describes the
+/// resulting shape as `{"cf": {"value": "Parent>Child"}}` (an object wrap),
+/// which is inconsistent with AC-002's own `{"cf": "V"}` pin for the
+/// identical match arm and with the already-landed (non-stub)
+/// `src/api/jsm/requests.rs` `build()` code (which this story explicitly
+/// forbids modifying) — that arm performs a plain `Value::String` wrap for
+/// BOTH `None` and `Some(Option)`, with no object-wrap branch anywhere.
+/// This test follows the landed source code (source of truth) rather than
+/// the apparently-erroneous story example.
+#[tokio::test]
+async fn test_ec_3_8_008_1_cascading_greater_than_treated_as_opaque_literal_on_jsm() {
+    let server = MockServer::start().await;
+    let cache_dir = tempfile::tempdir().unwrap();
+    let config_dir = tempfile::tempdir().unwrap();
+    write_minimal_config(config_dir.path(), &server.uri());
+
+    mount_project_meta_help(&server).await;
+    mount_service_desk_list(&server).await;
+    mount_request_type_list(&server).await;
+
+    Mock::given(method("POST"))
+        .and(path("/rest/servicedeskapi/request"))
+        .respond_with(ResponseTemplate::new(201).set_body_json(jsm_created_response()))
+        .mount(&server)
+        .await;
+
+    let output = Command::cargo_bin("jr")
+        .unwrap()
+        .env("JR_BASE_URL", server.uri())
+        .env("JR_AUTH_HEADER", "Basic dGVzdDp0ZXN0")
+        .env("XDG_CACHE_HOME", cache_dir.path())
+        .env("JR_CACHE_DIR", cache_dir.path().join("jr"))
+        .env("XDG_CONFIG_HOME", config_dir.path())
+        .env("JR_CONFIG_DIR", config_dir.path().join("jr"))
+        .args([
+            "issue",
+            "create",
+            "--project",
+            "HELP",
+            "--request-type",
+            "Password Reset",
+            "--summary",
+            "test",
+            "--field",
+            "customfield_40000:option=Parent>Child",
+            "--no-input",
+            "--output",
+            "json",
+        ])
+        .output()
+        .unwrap();
+
+    let stderr = String::from_utf8_lossy(&output.stderr);
+    assert!(
+        output.status.success(),
+        "EC-3.8.008-1: expected exit 0. got exit {:?}. stderr: {stderr}",
+        output.status.code()
+    );
+
+    let requests = server.received_requests().await.expect("requests recorded");
+    let jsm_post = requests
+        .iter()
+        .find(|r| r.url.path() == "/rest/servicedeskapi/request" && r.method.as_str() == "POST")
+        .expect("EC-3.8.008-1: JSM POST must have been made");
+    let body: Value =
+        serde_json::from_slice(&jsm_post.body).expect("EC-3.8.008-1: POST body must be valid JSON");
+    assert_eq!(
+        body["requestFieldValues"]["customfield_40000"],
+        json!("Parent>Child"),
+        "EC-3.8.008-1: the entire 'Parent>Child' substring must be wrapped \
+         verbatim as a PLAIN STRING (no '>' split, no object wrap) — matches \
+         the landed non-cascading Option match arm; got body: {body}"
+    );
+}
+
+// ─── AC-004 (EC-3.8.008-2): missing '=' is the pre-existing error ────────────
+
+/// EC-3.8.008-2: `--field cf:option` (no `=` at all) never reaches
+/// `parse_field_kv`'s step-2 `:kind` extraction — step 1 (split on the
+/// first `=`) fails to find any `=` first, so this resolves to the SAME
+/// pre-existing "missing '='" exit-64 error BC-3.8.008's own Errors line
+/// documents, NOT a hint-syntax parse error. Applies identically on the
+/// platform path (this is `parse_field_kv`'s own step-1 behavior,
+/// unaffected by call site or by this story's S-578-3 dispatch amendment).
+///
+/// PRE-SATISFIED GREEN: `parse_field_kv`'s step-1 "missing '='" check is
+/// pre-existing, unrelated to the hint-kind dispatch this story adds — this
+/// test is a regression pin, not a Red Gate failure.
+#[tokio::test]
+async fn test_ec_3_8_008_2_missing_equals_is_preexisting_error_not_hint_parse_error() {
+    let server = MockServer::start().await;
+    let cache_dir = tempfile::tempdir().unwrap();
+    let config_dir = tempfile::tempdir().unwrap();
+    write_minimal_config(config_dir.path(), &server.uri());
+
+    mount_project_meta_help(&server).await;
+    mount_service_desk_list(&server).await;
+    mount_request_type_list(&server).await;
+
+    Mock::given(method("POST"))
+        .and(path("/rest/servicedeskapi/request"))
+        .respond_with(ResponseTemplate::new(201))
+        .expect(0)
+        .mount(&server)
+        .await;
+
+    let output = Command::cargo_bin("jr")
+        .unwrap()
+        .env("JR_BASE_URL", server.uri())
+        .env("JR_AUTH_HEADER", "Basic dGVzdDp0ZXN0")
+        .env("XDG_CACHE_HOME", cache_dir.path())
+        .env("JR_CACHE_DIR", cache_dir.path().join("jr"))
+        .env("XDG_CONFIG_HOME", config_dir.path())
+        .env("JR_CONFIG_DIR", config_dir.path().join("jr"))
+        .args([
+            "issue",
+            "create",
+            "--project",
+            "HELP",
+            "--request-type",
+            "Password Reset",
+            "--summary",
+            "test",
+            "--field",
+            "cf:option",
+            "--no-input",
+        ])
+        .output()
+        .unwrap();
+
+    let stderr = String::from_utf8_lossy(&output.stderr);
+    assert_eq!(
+        output.status.code(),
+        Some(64),
+        "EC-3.8.008-2: expected exit 64 for missing '=', got {:?}. stderr: {stderr}",
+        output.status.code()
+    );
+    assert!(
+        stderr.contains("cf:option"),
+        "EC-3.8.008-2: error must mention the malformed pair 'cf:option'; got: {stderr}"
+    );
+    assert!(
+        stderr.contains("NAME=VALUE"),
+        "EC-3.8.008-2: error must mention NAME=VALUE format requirement, confirming \
+         this is the pre-existing missing-'=' error, not a hint-parse error; got: {stderr}"
+    );
+    assert!(
+        !stderr.contains("unknown field-value kind"),
+        "EC-3.8.008-2: must NOT be routed through the ':kind' catalog (BC-3.4.031) — \
+         it never reaches step 2; got: {stderr}"
+    );
+}
+
+// ─── AC-005 (EC-3.8.008-3): malformed-hint catalog fires before any POST ─────
+
+/// EC-3.8.008-3: `parse_field_kv`'s shared unknown-`:kind` exit-64 catalog
+/// (BC-3.4.031) fires on the JSM path BEFORE any HTTP POST — `--field
+/// cf:bogus=X` (unknown kind tag) exits 64 with ZERO POST to
+/// `/rest/servicedeskapi/request`, identically to the platform-path shape.
+/// This is a direct consequence of `parse_field_kv` running as a single,
+/// request-type-agnostic parse pass before `handle_jsm_create` ever
+/// constructs the request body — no separate JSM-specific pre-flight check
+/// is needed.
+///
+/// PRE-SATISFIED GREEN: the unknown-`:kind` catalog check is `parse_field_kv`
+/// step 3, pre-existing and unaffected by this story's dispatch amendment —
+/// this test is a regression pin, not a Red Gate failure.
+#[tokio::test]
+async fn test_ec_3_8_008_3_malformed_hint_exits_64_zero_post_on_jsm_path() {
+    let server = MockServer::start().await;
+    let cache_dir = tempfile::tempdir().unwrap();
+    let config_dir = tempfile::tempdir().unwrap();
+    write_minimal_config(config_dir.path(), &server.uri());
+
+    mount_project_meta_help(&server).await;
+    mount_service_desk_list(&server).await;
+    mount_request_type_list(&server).await;
+
+    Mock::given(method("POST"))
+        .and(path("/rest/servicedeskapi/request"))
+        .respond_with(ResponseTemplate::new(201).set_body_json(jsm_created_response()))
+        .expect(0)
+        .mount(&server)
+        .await;
+
+    let output = Command::cargo_bin("jr")
+        .unwrap()
+        .env("JR_BASE_URL", server.uri())
+        .env("JR_AUTH_HEADER", "Basic dGVzdDp0ZXN0")
+        .env("XDG_CACHE_HOME", cache_dir.path())
+        .env("JR_CACHE_DIR", cache_dir.path().join("jr"))
+        .env("XDG_CONFIG_HOME", config_dir.path())
+        .env("JR_CONFIG_DIR", config_dir.path().join("jr"))
+        .args([
+            "issue",
+            "create",
+            "--project",
+            "HELP",
+            "--request-type",
+            "Password Reset",
+            "--summary",
+            "test",
+            "--field",
+            "cf:bogus=X",
+            "--no-input",
+        ])
+        .output()
+        .unwrap();
+
+    let stderr = String::from_utf8_lossy(&output.stderr);
+    assert_eq!(
+        output.status.code(),
+        Some(64),
+        "EC-3.8.008-3: expected exit 64 for unknown ':kind' tag, got {:?}. stderr: {stderr}",
+        output.status.code()
+    );
+    assert!(
+        stderr.contains("unknown field-value kind"),
+        "EC-3.8.008-3: stderr must route through the BC-3.4.031 unknown-kind catalog; \
+         got: {stderr}"
+    );
+    assert!(
+        stderr.contains("option, id, name, asset"),
+        "EC-3.8.008-3: stderr must list the closed set of valid kinds; got: {stderr}"
+    );
+    // The .expect(0) on the POST mock is enforced on server drop — zero HTTP
+    // POST must occur before this exit-64.
+}
+
+// ─── AC-006 (BC-3.8.008 amendment ':asset' arm): L2 workspace resolution ─────
+
+/// AC-006: an EXPLICIT `WORKSPACE:OBJECTID` `:asset` value composes
+/// directly at the L2 call site (`jsm_create.rs`) — NO cache lookup, NO
+/// call to `get_or_fetch_workspace_id` — mirroring `edit.rs`'s S-578-2
+/// precedent for the platform path. `build()`'s `Some(Asset)` arm then
+/// performs PURE array-wrapping of the already-qualified value:
+/// `[{"workspaceId":"WS-9","id":"WS-9:777","objectId":"777"}]` (by analogy
+/// to `field_resolve.rs::compose_asset_hint`'s platform-path shape —
+/// VP-578-016 parity-PENDING). The workspace-discovery GET mock below must
+/// receive ZERO hits — the explicit form skips the cache lookup entirely
+/// per AC-006.
+#[tokio::test]
+async fn test_bc_3_8_008_asset_explicit_workspace_l2_composes_no_cache_lookup() {
+    let server = MockServer::start().await;
+    let cache_dir = tempfile::tempdir().unwrap();
+    let config_dir = tempfile::tempdir().unwrap();
+    write_minimal_config(config_dir.path(), &server.uri());
+
+    mount_project_meta_help(&server).await;
+    mount_service_desk_list(&server).await;
+    mount_request_type_list(&server).await;
+
+    // Mounted but must receive ZERO hits — explicit WORKSPACE:OBJECTID form
+    // must never trigger a cache/API workspace lookup (AC-006).
+    Mock::given(method("GET"))
+        .and(path("/rest/servicedeskapi/assets/workspace"))
+        .respond_with(ResponseTemplate::new(200).set_body_json(json!({
+            "size": 1, "start": 0, "limit": 25, "isLastPage": true,
+            "values": [{"workspaceId": "should-not-be-fetched"}]
+        })))
+        .mount(&server)
+        .await;
+
+    Mock::given(method("POST"))
+        .and(path("/rest/servicedeskapi/request"))
+        .respond_with(ResponseTemplate::new(201).set_body_json(jsm_created_response()))
+        .mount(&server)
+        .await;
+
+    let output = Command::cargo_bin("jr")
+        .unwrap()
+        .env("JR_BASE_URL", server.uri())
+        .env("JR_AUTH_HEADER", "Basic dGVzdDp0ZXN0")
+        .env("XDG_CACHE_HOME", cache_dir.path())
+        .env("JR_CACHE_DIR", cache_dir.path().join("jr"))
+        .env("XDG_CONFIG_HOME", config_dir.path())
+        .env("JR_CONFIG_DIR", config_dir.path().join("jr"))
+        .args([
+            "issue",
+            "create",
+            "--project",
+            "HELP",
+            "--request-type",
+            "Password Reset",
+            "--summary",
+            "test",
+            "--field",
+            "customfield_50000:asset=WS-9:777",
+            "--no-input",
+            "--output",
+            "json",
+        ])
+        .output()
+        .unwrap();
+
+    let stderr = String::from_utf8_lossy(&output.stderr);
+    assert!(
+        output.status.success(),
+        "AC-006: expected exit 0. got exit {:?}. stderr: {stderr}",
+        output.status.code()
+    );
+
+    let requests = server.received_requests().await.expect("requests recorded");
+    let workspace_hits = requests
+        .iter()
+        .filter(|r| r.url.path() == "/rest/servicedeskapi/assets/workspace")
+        .count();
+    assert_eq!(
+        workspace_hits, 0,
+        "AC-006: explicit WORKSPACE:OBJECTID form must NEVER call \
+         get_or_fetch_workspace_id (no cache/API lookup); got {workspace_hits} hits"
+    );
+
+    let jsm_post = requests
+        .iter()
+        .find(|r| r.url.path() == "/rest/servicedeskapi/request" && r.method.as_str() == "POST")
+        .expect("AC-006: JSM POST must have been made");
+    let body: Value =
+        serde_json::from_slice(&jsm_post.body).expect("AC-006: POST body must be valid JSON");
+    assert_eq!(
+        body["requestFieldValues"]["customfield_50000"],
+        json!([{"workspaceId": "WS-9", "id": "WS-9:777", "objectId": "777"}]),
+        "AC-006: explicit :asset form must produce a pure array-wrap of the \
+         already-qualified WORKSPACE:OBJECTID pair; got body: {body}"
+    );
+}
+
+/// AC-006: a BARE `<objectId>` `:asset` value (no `:`) requires the L2 call
+/// site to call `get_or_fetch_workspace_id` FIRST (AT MOST ONCE per
+/// invocation, mirroring the platform-path invariant) before the array can
+/// be composed — `build()` never sees a bare `:asset` value, only the
+/// L2-resolved, fully-composed result. The workspace-discovery mock must
+/// receive exactly 1 hit.
+#[tokio::test]
+async fn test_bc_3_8_008_asset_bare_form_l2_resolves_workspace_before_build() {
+    let server = MockServer::start().await;
+    let cache_dir = tempfile::tempdir().unwrap();
+    let config_dir = tempfile::tempdir().unwrap();
+    write_minimal_config(config_dir.path(), &server.uri());
+
+    mount_project_meta_help(&server).await;
+    mount_service_desk_list(&server).await;
+    mount_request_type_list(&server).await;
+
+    Mock::given(method("GET"))
+        .and(path("/rest/servicedeskapi/assets/workspace"))
+        .respond_with(ResponseTemplate::new(200).set_body_json(json!({
+            "size": 1, "start": 0, "limit": 25, "isLastPage": true,
+            "values": [{"workspaceId": "ws-42"}]
+        })))
+        .mount(&server)
+        .await;
+
+    Mock::given(method("POST"))
+        .and(path("/rest/servicedeskapi/request"))
+        .respond_with(ResponseTemplate::new(201).set_body_json(jsm_created_response()))
+        .mount(&server)
+        .await;
+
+    let output = Command::cargo_bin("jr")
+        .unwrap()
+        .env("JR_BASE_URL", server.uri())
+        .env("JR_AUTH_HEADER", "Basic dGVzdDp0ZXN0")
+        .env("XDG_CACHE_HOME", cache_dir.path())
+        .env("JR_CACHE_DIR", cache_dir.path().join("jr"))
+        .env("XDG_CONFIG_HOME", config_dir.path())
+        .env("JR_CONFIG_DIR", config_dir.path().join("jr"))
+        .args([
+            "issue",
+            "create",
+            "--project",
+            "HELP",
+            "--request-type",
+            "Password Reset",
+            "--summary",
+            "test",
+            "--field",
+            "customfield_50001:asset=888",
+            "--no-input",
+            "--output",
+            "json",
+        ])
+        .output()
+        .unwrap();
+
+    let stderr = String::from_utf8_lossy(&output.stderr);
+    assert!(
+        output.status.success(),
+        "AC-006: expected exit 0. got exit {:?}. stderr: {stderr}",
+        output.status.code()
+    );
+
+    let requests = server.received_requests().await.expect("requests recorded");
+    let workspace_hits = requests
+        .iter()
+        .filter(|r| r.url.path() == "/rest/servicedeskapi/assets/workspace")
+        .count();
+    assert_eq!(
+        workspace_hits, 1,
+        "AC-006: bare :asset form must call get_or_fetch_workspace_id EXACTLY \
+         ONCE; got {workspace_hits} hits"
+    );
+
+    let jsm_post = requests
+        .iter()
+        .find(|r| r.url.path() == "/rest/servicedeskapi/request" && r.method.as_str() == "POST")
+        .expect("AC-006: JSM POST must have been made");
+    let body: Value =
+        serde_json::from_slice(&jsm_post.body).expect("AC-006: POST body must be valid JSON");
+    assert_eq!(
+        body["requestFieldValues"]["customfield_50001"],
+        json!([{"workspaceId": "ws-42", "id": "ws-42:888", "objectId": "888"}]),
+        "AC-006: bare :asset form must resolve workspaceId via cache/API before \
+         composing the array; got body: {body}"
+    );
+}
+
+// ─── ADV-S578-3-P1-002: malformed `:asset` value negative coverage ──────────
+//
+// GAP (adversary Pass-1 finding ADV-S578-3-P1-002): the two AC-006 tests
+// above cover only WELL-FORMED `:asset` values (explicit
+// `WORKSPACE:OBJECTID` and bare `<objectId>`). The malformed-shape catalog
+// that BC-3.4.030 EC-3.4.030-3 + BC-3.4.031 EC-2a/EC-2b/EC-2d mandate for the
+// platform path — `src/cli/issue/field_resolve.rs::compose_asset_hint`,
+// mirrored by `tests/issue_field_hint_kinds.rs::test_bc_3_4_031_ec2a/ec2b/
+// ec2c/ec2d/ec3` — was never exercised on the JSM path via BC-3.8.008's
+// shared malformed-hint exit-64 catalog. This let a real HIGH impl gap ship:
+// `resolve_asset_field_l2` (`jsm_create.rs`) and `compose_asset_wire`
+// (`requests.rs`) perform ZERO validation today — a malformed value sails
+// straight through the L2 workspace fetch and/or the JSM POST instead of
+// being rejected pre-flight, exactly mirroring the platform path's four
+// `compose_asset_hint` checks.
+//
+// `resolve_asset_field_l2` mirrors `compose_asset_hint`'s four checks (empty
+// value, empty workspace segment, extra colon, non-numeric/empty objectId)
+// BEFORE either the L2 workspace fetch or `build()` — every test below pins
+// that pre-flight rejection: exit 64, zero workspace-discovery GET hits, and
+// zero JSM POST hits.
+
+/// EC-2a (via BC-3.8.008's shared malformed-hint catalog): `--field
+/// cf:asset=` (empty value) must exit 64 with the exact "asset reference
+/// cannot be empty" message `compose_asset_hint` uses on the platform path —
+/// BEFORE any workspace-discovery GET or JSM POST.
+#[tokio::test]
+async fn test_ec_3_8_008_asset_empty_value_exits_64_zero_post() {
+    let server = MockServer::start().await;
+    let cache_dir = tempfile::tempdir().unwrap();
+    let config_dir = tempfile::tempdir().unwrap();
+    write_minimal_config(config_dir.path(), &server.uri());
+
+    mount_project_meta_help(&server).await;
+    mount_service_desk_list(&server).await;
+    mount_request_type_list(&server).await;
+
+    Mock::given(method("GET"))
+        .and(path("/rest/servicedeskapi/assets/workspace"))
+        .respond_with(ResponseTemplate::new(200).set_body_json(json!({
+            "size": 1, "start": 0, "limit": 25, "isLastPage": true,
+            "values": [{"workspaceId": "should-not-be-fetched"}]
+        })))
+        .expect(0)
+        .mount(&server)
+        .await;
+
+    Mock::given(method("POST"))
+        .and(path("/rest/servicedeskapi/request"))
+        .respond_with(ResponseTemplate::new(201).set_body_json(jsm_created_response()))
+        .expect(0)
+        .mount(&server)
+        .await;
+
+    let output = Command::cargo_bin("jr")
+        .unwrap()
+        .env("JR_BASE_URL", server.uri())
+        .env("JR_AUTH_HEADER", "Basic dGVzdDp0ZXN0")
+        .env("XDG_CACHE_HOME", cache_dir.path())
+        .env("JR_CACHE_DIR", cache_dir.path().join("jr"))
+        .env("XDG_CONFIG_HOME", config_dir.path())
+        .env("JR_CONFIG_DIR", config_dir.path().join("jr"))
+        .args([
+            "issue",
+            "create",
+            "--project",
+            "HELP",
+            "--request-type",
+            "Password Reset",
+            "--summary",
+            "test",
+            "--field",
+            "customfield_54001:asset=",
+            "--no-input",
+            "--output",
+            "json",
+        ])
+        .output()
+        .unwrap();
+
+    let stderr = String::from_utf8_lossy(&output.stderr);
+    assert_eq!(
+        output.status.code(),
+        Some(64),
+        "ADV-S578-3-P1-002 EC-2a: expected exit 64 for empty :asset value; \
+         got exit {:?}. stderr: {stderr}",
+        output.status.code()
+    );
+    assert!(
+        stderr.contains("asset reference cannot be empty"),
+        "ADV-S578-3-P1-002 EC-2a: message must match compose_asset_hint's \
+         platform-path wording verbatim; stderr={stderr}"
+    );
+}
+
+/// EC-2c/EC-2b (via BC-3.8.008's shared malformed-hint catalog): `--field
+/// cf:asset=:777` (colon present, empty workspace segment) must exit 64 with
+/// the exact "workspace segment cannot be empty" message `compose_asset_hint`
+/// uses on the platform path — BEFORE any workspace-discovery GET or JSM
+/// POST. This value has a numeric objectId segment ("777"), so the
+/// empty-workspace check must fire and take PRECEDENCE over the generic
+/// numeric check, exactly as the platform sibling's EC-2c precedence test
+/// asserts.
+#[tokio::test]
+async fn test_ec_3_8_008_asset_empty_workspace_segment_exits_64_zero_post() {
+    let server = MockServer::start().await;
+    let cache_dir = tempfile::tempdir().unwrap();
+    let config_dir = tempfile::tempdir().unwrap();
+    write_minimal_config(config_dir.path(), &server.uri());
+
+    mount_project_meta_help(&server).await;
+    mount_service_desk_list(&server).await;
+    mount_request_type_list(&server).await;
+
+    Mock::given(method("GET"))
+        .and(path("/rest/servicedeskapi/assets/workspace"))
+        .respond_with(ResponseTemplate::new(200).set_body_json(json!({
+            "size": 1, "start": 0, "limit": 25, "isLastPage": true,
+            "values": [{"workspaceId": "should-not-be-fetched"}]
+        })))
+        .expect(0)
+        .mount(&server)
+        .await;
+
+    Mock::given(method("POST"))
+        .and(path("/rest/servicedeskapi/request"))
+        .respond_with(ResponseTemplate::new(201).set_body_json(jsm_created_response()))
+        .expect(0)
+        .mount(&server)
+        .await;
+
+    let output = Command::cargo_bin("jr")
+        .unwrap()
+        .env("JR_BASE_URL", server.uri())
+        .env("JR_AUTH_HEADER", "Basic dGVzdDp0ZXN0")
+        .env("XDG_CACHE_HOME", cache_dir.path())
+        .env("JR_CACHE_DIR", cache_dir.path().join("jr"))
+        .env("XDG_CONFIG_HOME", config_dir.path())
+        .env("JR_CONFIG_DIR", config_dir.path().join("jr"))
+        .args([
+            "issue",
+            "create",
+            "--project",
+            "HELP",
+            "--request-type",
+            "Password Reset",
+            "--summary",
+            "test",
+            "--field",
+            "customfield_54002:asset=:777",
+            "--no-input",
+            "--output",
+            "json",
+        ])
+        .output()
+        .unwrap();
+
+    let stderr = String::from_utf8_lossy(&output.stderr);
+    assert_eq!(
+        output.status.code(),
+        Some(64),
+        "ADV-S578-3-P1-002 EC-2c/EC-2b: expected exit 64 for empty workspace \
+         segment; got exit {:?}. stderr: {stderr}",
+        output.status.code()
+    );
+    assert!(
+        stderr.contains("workspace segment cannot be empty"),
+        "ADV-S578-3-P1-002 EC-2c/EC-2b: message must match compose_asset_hint's \
+         platform-path wording verbatim; stderr={stderr}"
+    );
+}
+
+/// EC-2d (via BC-3.8.008's shared malformed-hint catalog): `--field
+/// cf:asset=W:Y:Z` (extra colon) must exit 64 with the exact "unexpected
+/// extra ':'" message `compose_asset_hint` uses on the platform path —
+/// BEFORE any workspace-discovery GET or JSM POST. This must be a DISTINCT
+/// message from the generic "objectId must be numeric" error, mirroring the
+/// platform sibling's EC-2d precedence test.
+#[tokio::test]
+async fn test_ec_3_8_008_asset_extra_colon_exits_64_zero_post() {
+    let server = MockServer::start().await;
+    let cache_dir = tempfile::tempdir().unwrap();
+    let config_dir = tempfile::tempdir().unwrap();
+    write_minimal_config(config_dir.path(), &server.uri());
+
+    mount_project_meta_help(&server).await;
+    mount_service_desk_list(&server).await;
+    mount_request_type_list(&server).await;
+
+    Mock::given(method("GET"))
+        .and(path("/rest/servicedeskapi/assets/workspace"))
+        .respond_with(ResponseTemplate::new(200).set_body_json(json!({
+            "size": 1, "start": 0, "limit": 25, "isLastPage": true,
+            "values": [{"workspaceId": "should-not-be-fetched"}]
+        })))
+        .expect(0)
+        .mount(&server)
+        .await;
+
+    Mock::given(method("POST"))
+        .and(path("/rest/servicedeskapi/request"))
+        .respond_with(ResponseTemplate::new(201).set_body_json(jsm_created_response()))
+        .expect(0)
+        .mount(&server)
+        .await;
+
+    let output = Command::cargo_bin("jr")
+        .unwrap()
+        .env("JR_BASE_URL", server.uri())
+        .env("JR_AUTH_HEADER", "Basic dGVzdDp0ZXN0")
+        .env("XDG_CACHE_HOME", cache_dir.path())
+        .env("JR_CACHE_DIR", cache_dir.path().join("jr"))
+        .env("XDG_CONFIG_HOME", config_dir.path())
+        .env("JR_CONFIG_DIR", config_dir.path().join("jr"))
+        .args([
+            "issue",
+            "create",
+            "--project",
+            "HELP",
+            "--request-type",
+            "Password Reset",
+            "--summary",
+            "test",
+            "--field",
+            "customfield_54003:asset=W:Y:Z",
+            "--no-input",
+            "--output",
+            "json",
+        ])
+        .output()
+        .unwrap();
+
+    let stderr = String::from_utf8_lossy(&output.stderr);
+    assert_eq!(
+        output.status.code(),
+        Some(64),
+        "ADV-S578-3-P1-002 EC-2d: expected exit 64 for extra ':' in :asset \
+         value; got exit {:?}. stderr: {stderr}",
+        output.status.code()
+    );
+    assert!(
+        stderr.contains("unexpected extra ':'"),
+        "ADV-S578-3-P1-002 EC-2d: message must name the extra-colon mistake \
+         specifically (compose_asset_hint's platform-path wording verbatim), \
+         not the generic numeric-objectId message; stderr={stderr}"
+    );
+}
+
+/// EC-3 (via BC-3.8.008's shared malformed-hint catalog): `--field
+/// cf:asset=abc` (bare, non-numeric objectId) and `--field
+/// cf:asset=WS:abc` (explicit workspace, non-numeric objectId) must both
+/// exit 64 with the exact "objectId must be numeric" message
+/// `compose_asset_hint` uses on the platform path — BEFORE any
+/// workspace-discovery GET or JSM POST.
+#[tokio::test]
+async fn test_ec_3_8_008_asset_non_numeric_objectid_exits_64_zero_post() {
+    let server = MockServer::start().await;
+    let cache_dir = tempfile::tempdir().unwrap();
+    let config_dir = tempfile::tempdir().unwrap();
+    write_minimal_config(config_dir.path(), &server.uri());
+
+    mount_project_meta_help(&server).await;
+    mount_service_desk_list(&server).await;
+    mount_request_type_list(&server).await;
+
+    Mock::given(method("GET"))
+        .and(path("/rest/servicedeskapi/assets/workspace"))
+        .respond_with(ResponseTemplate::new(200).set_body_json(json!({
+            "size": 1, "start": 0, "limit": 25, "isLastPage": true,
+            "values": [{"workspaceId": "should-not-be-fetched"}]
+        })))
+        .expect(0)
+        .mount(&server)
+        .await;
+
+    Mock::given(method("POST"))
+        .and(path("/rest/servicedeskapi/request"))
+        .respond_with(ResponseTemplate::new(201).set_body_json(jsm_created_response()))
+        .expect(0)
+        .mount(&server)
+        .await;
+
+    for value in ["abc", "WS:abc"] {
+        let field_arg = format!("customfield_54004:asset={value}");
+        let output = Command::cargo_bin("jr")
+            .unwrap()
+            .env("JR_BASE_URL", server.uri())
+            .env("JR_AUTH_HEADER", "Basic dGVzdDp0ZXN0")
+            .env("XDG_CACHE_HOME", cache_dir.path())
+            .env("JR_CACHE_DIR", cache_dir.path().join("jr"))
+            .env("XDG_CONFIG_HOME", config_dir.path())
+            .env("JR_CONFIG_DIR", config_dir.path().join("jr"))
+            .args([
+                "issue",
+                "create",
+                "--project",
+                "HELP",
+                "--request-type",
+                "Password Reset",
+                "--summary",
+                "test",
+                "--field",
+                &field_arg,
+                "--no-input",
+                "--output",
+                "json",
+            ])
+            .output()
+            .unwrap();
+
+        let stderr = String::from_utf8_lossy(&output.stderr);
+        assert_eq!(
+            output.status.code(),
+            Some(64),
+            "ADV-S578-3-P1-002 EC-3: expected exit 64 for non-numeric \
+             objectId; value={value:?}; got exit {:?}. stderr: {stderr}",
+            output.status.code()
+        );
+        assert!(
+            stderr.contains("objectId must be numeric"),
+            "ADV-S578-3-P1-002 EC-3: message must match compose_asset_hint's \
+             platform-path wording verbatim; value={value:?}; stderr={stderr}"
+        );
+    }
+}
+
+/// EC-2b (adversarial Pass-2 finding P2-001, MEDIUM — mutation-survivability):
+/// `--field cf:asset=ws:` (colon present, objectId segment EMPTY, distinct
+/// from `WS:abc`'s non-empty-but-non-numeric case above) must exit 64 with
+/// the SAME "objectId must be numeric" message `compose_asset_hint` uses on
+/// the platform path — BEFORE any workspace-discovery GET or JSM POST. This
+/// pins the load-bearing `object_id.is_empty()` half of
+/// `resolve_asset_field_l2`'s combined `object_id.is_empty() ||
+/// !object_id.chars().all(|c| c.is_ascii_digit())` check (`jsm_create.rs`) —
+/// without a test exercising an explicit-workspace value whose objectId
+/// segment is empty (as opposed to merely non-numeric), a mutant dropping
+/// the `is_empty()` conjunct would let `ws:` fall through to
+/// `format!("{workspace_id}:{object_id}")` and POST a malformed
+/// `{"objectId":""}` array on `requestFieldValues`, undetected.
+#[tokio::test]
+async fn test_ec_3_8_008_asset_empty_objectid_with_colon_exits_64_zero_post() {
+    let server = MockServer::start().await;
+    let cache_dir = tempfile::tempdir().unwrap();
+    let config_dir = tempfile::tempdir().unwrap();
+    write_minimal_config(config_dir.path(), &server.uri());
+
+    mount_project_meta_help(&server).await;
+    mount_service_desk_list(&server).await;
+    mount_request_type_list(&server).await;
+
+    Mock::given(method("GET"))
+        .and(path("/rest/servicedeskapi/assets/workspace"))
+        .respond_with(ResponseTemplate::new(200).set_body_json(json!({
+            "size": 1, "start": 0, "limit": 25, "isLastPage": true,
+            "values": [{"workspaceId": "should-not-be-fetched"}]
+        })))
+        .expect(0)
+        .mount(&server)
+        .await;
+
+    Mock::given(method("POST"))
+        .and(path("/rest/servicedeskapi/request"))
+        .respond_with(ResponseTemplate::new(201).set_body_json(jsm_created_response()))
+        .expect(0)
+        .mount(&server)
+        .await;
+
+    let output = Command::cargo_bin("jr")
+        .unwrap()
+        .env("JR_BASE_URL", server.uri())
+        .env("JR_AUTH_HEADER", "Basic dGVzdDp0ZXN0")
+        .env("XDG_CACHE_HOME", cache_dir.path())
+        .env("JR_CACHE_DIR", cache_dir.path().join("jr"))
+        .env("XDG_CONFIG_HOME", config_dir.path())
+        .env("JR_CONFIG_DIR", config_dir.path().join("jr"))
+        .args([
+            "issue",
+            "create",
+            "--project",
+            "HELP",
+            "--request-type",
+            "Password Reset",
+            "--summary",
+            "test",
+            "--field",
+            "customfield_54005:asset=ws:",
+            "--no-input",
+            "--output",
+            "json",
+        ])
+        .output()
+        .unwrap();
+
+    let stderr = String::from_utf8_lossy(&output.stderr);
+    assert_eq!(
+        output.status.code(),
+        Some(64),
+        "P2-001: expected exit 64 for 'ws:' (empty objectId segment with \
+         colon present); got exit {:?}. stderr: {stderr}",
+        output.status.code()
+    );
+    assert!(
+        stderr.contains("objectId must be numeric"),
+        "P2-001: message must match compose_asset_hint's platform-path \
+         wording verbatim (the object_id.is_empty() conjunct must fire, not \
+         fall through to a malformed POST); stderr={stderr}"
+    );
+}
+
+// ─── AC-007 (BC-3.4.030 taxonomy, VP-578-022): JSM-path independent assertion ─
+
+/// AC-007 (VP-578-022 — 1 of 3 shared call sites; this is `jsm_create.rs`'s
+/// OWN independent assertion, NOT "already covered" by S-578-2's edit-path
+/// test or S-578-4's create-path test of the same VP): 403/404 from `GET
+/// /rest/servicedeskapi/assets/workspace` -> exit 64, "Assets is not
+/// available on this Jira site..." (the SAME `get_or_fetch_workspace_id`
+/// error mapping every call site shares — `src/api/assets/workspace.rs`).
+#[tokio::test(flavor = "multi_thread", worker_threads = 2)]
+async fn test_bc_3_4_030_jsm_path_asset_cold_cache_403_404_assets_unavailable() {
+    for status in [403u16, 404u16] {
+        let server = MockServer::start().await;
+        let cache_dir = tempfile::tempdir().unwrap();
+        let config_dir = tempfile::tempdir().unwrap();
+        write_minimal_config(config_dir.path(), &server.uri());
+
+        mount_project_meta_help(&server).await;
+        mount_service_desk_list(&server).await;
+        mount_request_type_list(&server).await;
+
+        let _guard = Mock::given(method("GET"))
+            .and(path("/rest/servicedeskapi/assets/workspace"))
+            .respond_with(ResponseTemplate::new(status).set_body_json(json!({
+                "errorMessages": ["nope"], "errors": {}
+            })))
+            .mount_as_scoped(&server)
+            .await;
+
+        Mock::given(method("POST"))
+            .and(path("/rest/servicedeskapi/request"))
+            .respond_with(ResponseTemplate::new(201).set_body_json(jsm_created_response()))
+            .expect(0)
+            .mount(&server)
+            .await;
+
+        let output = Command::cargo_bin("jr")
+            .unwrap()
+            .env("JR_BASE_URL", server.uri())
+            .env("JR_AUTH_HEADER", "Basic dGVzdDp0ZXN0")
+            .env("XDG_CACHE_HOME", cache_dir.path())
+            .env("JR_CACHE_DIR", cache_dir.path().join("jr"))
+            .env("XDG_CONFIG_HOME", config_dir.path())
+            .env("JR_CONFIG_DIR", config_dir.path().join("jr"))
+            .args([
+                "issue",
+                "create",
+                "--project",
+                "HELP",
+                "--request-type",
+                "Password Reset",
+                "--summary",
+                "test",
+                "--field",
+                "customfield_60000:asset=456",
+                "--no-input",
+            ])
+            .output()
+            .unwrap();
+
+        let stderr = String::from_utf8_lossy(&output.stderr);
+        assert_eq!(
+            output.status.code(),
+            Some(64),
+            "AC-007 status={status}: expected exit 64; stderr={stderr}"
+        );
+        assert!(
+            stderr.contains(
+                "Assets is not available on this Jira site. Assets requires \
+                 Jira Service Management Premium or Enterprise."
+            ),
+            "AC-007 status={status}: message must match this taxonomy row's \
+             specific wording; stderr={stderr}"
+        );
+    }
+}
+
+/// AC-007: `GET /rest/servicedeskapi/assets/workspace` returning 200 with
+/// zero entries -> exit 64, "No Assets workspace found on this Jira
+/// site...".
+#[tokio::test(flavor = "multi_thread", worker_threads = 2)]
+async fn test_bc_3_4_030_jsm_path_asset_cold_cache_empty_workspace() {
+    let server = MockServer::start().await;
+    let cache_dir = tempfile::tempdir().unwrap();
+    let config_dir = tempfile::tempdir().unwrap();
+    write_minimal_config(config_dir.path(), &server.uri());
+
+    mount_project_meta_help(&server).await;
+    mount_service_desk_list(&server).await;
+    mount_request_type_list(&server).await;
+
+    let _guard = Mock::given(method("GET"))
+        .and(path("/rest/servicedeskapi/assets/workspace"))
+        .respond_with(ResponseTemplate::new(200).set_body_json(json!({
+            "size": 0, "start": 0, "limit": 25, "isLastPage": true, "values": []
+        })))
+        .mount_as_scoped(&server)
+        .await;
+
+    Mock::given(method("POST"))
+        .and(path("/rest/servicedeskapi/request"))
+        .respond_with(ResponseTemplate::new(201).set_body_json(jsm_created_response()))
+        .expect(0)
+        .mount(&server)
+        .await;
+
+    let output = Command::cargo_bin("jr")
+        .unwrap()
+        .env("JR_BASE_URL", server.uri())
+        .env("JR_AUTH_HEADER", "Basic dGVzdDp0ZXN0")
+        .env("XDG_CACHE_HOME", cache_dir.path())
+        .env("JR_CACHE_DIR", cache_dir.path().join("jr"))
+        .env("XDG_CONFIG_HOME", config_dir.path())
+        .env("JR_CONFIG_DIR", config_dir.path().join("jr"))
+        .args([
+            "issue",
+            "create",
+            "--project",
+            "HELP",
+            "--request-type",
+            "Password Reset",
+            "--summary",
+            "test",
+            "--field",
+            "customfield_60001:asset=456",
+            "--no-input",
+        ])
+        .output()
+        .unwrap();
+
+    let stderr = String::from_utf8_lossy(&output.stderr);
+    assert_eq!(
+        output.status.code(),
+        Some(64),
+        "AC-007 empty-workspace: expected exit 64; stderr={stderr}"
+    );
+    assert!(
+        stderr.contains(
+            "No Assets workspace found on this Jira site. Assets requires \
+             Jira Service Management Premium or Enterprise."
+        ),
+        "AC-007 empty-workspace: message must match this taxonomy row's \
+         specific wording; stderr={stderr}"
+    );
+}
+
+/// AC-007: `GET /rest/servicedeskapi/assets/workspace` returning 401 must
+/// use the STANDARD `JrError::NotAuthenticated` mapping (exit 2) — not a
+/// bespoke Assets-specific mapping.
+#[tokio::test(flavor = "multi_thread", worker_threads = 2)]
+async fn test_bc_3_4_030_jsm_path_asset_cold_cache_401_standard_auth_mapping() {
+    let server = MockServer::start().await;
+    let cache_dir = tempfile::tempdir().unwrap();
+    let config_dir = tempfile::tempdir().unwrap();
+    write_minimal_config(config_dir.path(), &server.uri());
+
+    mount_project_meta_help(&server).await;
+    mount_service_desk_list(&server).await;
+    mount_request_type_list(&server).await;
+
+    let _guard = Mock::given(method("GET"))
+        .and(path("/rest/servicedeskapi/assets/workspace"))
+        .respond_with(ResponseTemplate::new(401).set_body_json(json!({
+            "errorMessages": ["Client must be authenticated to access this resource."],
+            "errors": {}
+        })))
+        .mount_as_scoped(&server)
+        .await;
+
+    Mock::given(method("POST"))
+        .and(path("/rest/servicedeskapi/request"))
+        .respond_with(ResponseTemplate::new(201).set_body_json(jsm_created_response()))
+        .expect(0)
+        .mount(&server)
+        .await;
+
+    let output = Command::cargo_bin("jr")
+        .unwrap()
+        .env("JR_BASE_URL", server.uri())
+        .env("JR_AUTH_HEADER", "Basic dGVzdDp0ZXN0")
+        .env("XDG_CACHE_HOME", cache_dir.path())
+        .env("JR_CACHE_DIR", cache_dir.path().join("jr"))
+        .env("XDG_CONFIG_HOME", config_dir.path())
+        .env("JR_CONFIG_DIR", config_dir.path().join("jr"))
+        .args([
+            "issue",
+            "create",
+            "--project",
+            "HELP",
+            "--request-type",
+            "Password Reset",
+            "--summary",
+            "test",
+            "--field",
+            "customfield_60002:asset=456",
+            "--no-input",
+        ])
+        .output()
+        .unwrap();
+
+    let stderr = String::from_utf8_lossy(&output.stderr);
+    assert_eq!(
+        output.status.code(),
+        Some(2),
+        "AC-007 401: 401 must use the standard NotAuthenticated mapping \
+         (exit 2); stderr={stderr}"
+    );
+    assert!(stderr.contains("Not authenticated"), "stderr={stderr}");
+}
+
+/// AC-007: `GET /rest/servicedeskapi/assets/workspace` returning 5xx, and a
+/// network-unreachable base URL, both use the STANDARD `ApiError`/
+/// `NetworkError` mapping (exit 1).
+///
+/// Sub-case (a) 5xx: the workspace-discovery GET returns 500 and the
+/// command must exit 1 via the standard `ApiError` mapping.
+///
+/// Sub-case (b) network error: uses a connect-refused base URL
+/// (`http://127.0.0.1:1`, matching the established convention in
+/// `tests/assets_errors.rs` and the S-578-2 edit-path taxonomy test). This
+/// necessarily exercises the FIRST HTTP call the JSM create flow makes
+/// (`require_service_desk`'s project-meta lookup), not exclusively the
+/// workspace-discovery GET, since `jr`'s single `JR_BASE_URL` applies to
+/// every call — so this sub-case is PRE-SATISFIED GREEN today (the failure
+/// occurs before field-hint dispatch is ever reached, identically with or
+/// without this story's implementation), demonstrating the same standard
+/// NetworkError/exit-1 mapping the underlying `get_or_fetch_workspace_id`
+/// machinery shares. This mirrors the identical precedent and caveat in
+/// `tests/issue_field_hint_kinds.rs`'s
+/// `test_bc_3_4_030_edit_path_asset_cold_cache_5xx_network_standard_mapping`.
+#[tokio::test(flavor = "multi_thread", worker_threads = 2)]
+async fn test_bc_3_4_030_jsm_path_asset_cold_cache_5xx_network_standard_mapping() {
+    // (a) 5xx.
+    {
+        let server = MockServer::start().await;
+        let cache_dir = tempfile::tempdir().unwrap();
+        let config_dir = tempfile::tempdir().unwrap();
+        write_minimal_config(config_dir.path(), &server.uri());
+
+        mount_project_meta_help(&server).await;
+        mount_service_desk_list(&server).await;
+        mount_request_type_list(&server).await;
+
+        Mock::given(method("GET"))
+            .and(path("/rest/servicedeskapi/assets/workspace"))
+            .respond_with(ResponseTemplate::new(500).set_body_json(json!({
+                "errorMessages": ["Internal server error"], "errors": {}
+            })))
+            .mount(&server)
+            .await;
+
+        Mock::given(method("POST"))
+            .and(path("/rest/servicedeskapi/request"))
+            .respond_with(ResponseTemplate::new(201).set_body_json(jsm_created_response()))
+            .expect(0)
+            .mount(&server)
+            .await;
+
+        let output = Command::cargo_bin("jr")
+            .unwrap()
+            .env("JR_BASE_URL", server.uri())
+            .env("JR_AUTH_HEADER", "Basic dGVzdDp0ZXN0")
+            .env("XDG_CACHE_HOME", cache_dir.path())
+            .env("JR_CACHE_DIR", cache_dir.path().join("jr"))
+            .env("XDG_CONFIG_HOME", config_dir.path())
+            .env("JR_CONFIG_DIR", config_dir.path().join("jr"))
+            .args([
+                "issue",
+                "create",
+                "--project",
+                "HELP",
+                "--request-type",
+                "Password Reset",
+                "--summary",
+                "test",
+                "--field",
+                "customfield_60003:asset=456",
+                "--no-input",
+            ])
+            .output()
+            .unwrap();
+
+        let stderr = String::from_utf8_lossy(&output.stderr);
+        assert_eq!(
+            output.status.code(),
+            Some(1),
+            "AC-007 5xx: 5xx must use the standard ApiError mapping (exit 1); \
+             stderr={stderr}"
+        );
+        assert!(stderr.contains("API error (500)"), "stderr={stderr}");
+    }
+
+    // (b) network error — connect-refused (see doc comment above): failure
+    // occurs at the FIRST HTTP call, before any field-hint dispatch is
+    // reached.
+    {
+        let cache_dir = tempfile::tempdir().unwrap();
+        let config_dir = tempfile::tempdir().unwrap();
+        write_minimal_config(config_dir.path(), "http://127.0.0.1:1");
+
+        let output = Command::cargo_bin("jr")
+            .unwrap()
+            .env("JR_BASE_URL", "http://127.0.0.1:1")
+            .env("JR_AUTH_HEADER", "Basic dGVzdDp0ZXN0")
+            .env("XDG_CACHE_HOME", cache_dir.path())
+            .env("JR_CACHE_DIR", cache_dir.path().join("jr"))
+            .env("XDG_CONFIG_HOME", config_dir.path())
+            .env("JR_CONFIG_DIR", config_dir.path().join("jr"))
+            .args([
+                "issue",
+                "create",
+                "--project",
+                "HELP",
+                "--request-type",
+                "Password Reset",
+                "--summary",
+                "test",
+                "--field",
+                "customfield_60004:asset=456",
+                "--no-input",
+            ])
+            .output()
+            .unwrap();
+
+        let stderr = String::from_utf8_lossy(&output.stderr);
+        assert_eq!(
+            output.status.code(),
+            Some(1),
+            "AC-007 network: network error must use the standard NetworkError \
+             mapping (exit 1); stderr={stderr}"
+        );
+        assert!(stderr.contains("Could not reach"), "stderr={stderr}");
+    }
+}
+
+// ─── AC-008 (VP-578-015): bare-field byte-identity regression pin ────────────
+
+/// AC-008 / VP-578-015: a bare (unhinted) `--field NAME=VALUE` on the JSM
+/// create path produces BYTE-IDENTICAL `requestFieldValues` wire output
+/// before and after the S-578-3 amendment — the kind-aware dispatch is
+/// purely additive for `kind: None`. `summary`/`description`/`priority`/
+/// `labels` (BC-3.8.005..007) sit in the SAME `rfv` map and are untouched
+/// by this amendment.
+///
+/// PRE-SATISFIED GREEN: the bare-form arm (`None | Some(Option) =>
+/// Value::String(...)`) is unchanged, pre-existing logic — this test is a
+/// regression pin, not a Red Gate failure.
+#[tokio::test]
+async fn test_vp_578_015_bare_field_byte_identical_pre_post_amendment() {
+    let server = MockServer::start().await;
+    let cache_dir = tempfile::tempdir().unwrap();
+    let config_dir = tempfile::tempdir().unwrap();
+    write_minimal_config(config_dir.path(), &server.uri());
+
+    mount_project_meta_help(&server).await;
+    mount_service_desk_list(&server).await;
+    mount_request_type_list(&server).await;
+
+    Mock::given(method("POST"))
+        .and(path("/rest/servicedeskapi/request"))
+        .respond_with(ResponseTemplate::new(201).set_body_json(jsm_created_response()))
+        .expect(1)
+        .mount(&server)
+        .await;
+
+    let output = Command::cargo_bin("jr")
+        .unwrap()
+        .env("JR_BASE_URL", server.uri())
+        .env("JR_AUTH_HEADER", "Basic dGVzdDp0ZXN0")
+        .env("XDG_CACHE_HOME", cache_dir.path())
+        .env("JR_CACHE_DIR", cache_dir.path().join("jr"))
+        .env("XDG_CONFIG_HOME", config_dir.path())
+        .env("JR_CONFIG_DIR", config_dir.path().join("jr"))
+        .args([
+            "issue",
+            "create",
+            "--project",
+            "HELP",
+            "--request-type",
+            "Password Reset",
+            "--summary",
+            "test",
+            "--priority",
+            "High",
+            "--label",
+            "alpha",
+            "--field",
+            "customfield_70000=BareUnhintedValue",
+            "--no-input",
+            "--output",
+            "json",
+        ])
+        .output()
+        .unwrap();
+
+    let stderr = String::from_utf8_lossy(&output.stderr);
+    assert!(
+        output.status.success(),
+        "AC-008: expected exit 0, got {:?}. stderr: {stderr}",
+        output.status.code()
+    );
+
+    let requests = server.received_requests().await.expect("requests recorded");
+    let jsm_post = requests
+        .iter()
+        .find(|r| r.url.path() == "/rest/servicedeskapi/request" && r.method.as_str() == "POST")
+        .expect("AC-008: JSM POST must have been made");
+    let body: Value =
+        serde_json::from_slice(&jsm_post.body).expect("AC-008: POST body must be valid JSON");
+    let rfv = body
+        .get("requestFieldValues")
+        .expect("AC-008: requestFieldValues must be present");
+
+    // COMPLETE-MAP equality (VP-578-015 review fix B2): assert the entire
+    // requestFieldValues object against the full expected wire shape in one
+    // shot, so an added/removed/renamed key OR a wrong value on any existing
+    // key (including the exact `labels` contents, not just its length) fails
+    // this test. This makes the "BYTE-IDENTICAL" claim in this test's name
+    // real rather than a per-key spot-check that an added key could slip
+    // past silently.
+    assert_eq!(
+        rfv,
+        &json!({
+            "summary": "test",
+            "priority": {"name": "High"},
+            "labels": ["alpha"],
+            "customfield_70000": "BareUnhintedValue"
+        }),
+        "AC-008 VP-578-015: bare --field must produce a BYTE-IDENTICAL \
+         requestFieldValues map to pre-amendment behavior — no added, \
+         removed, or changed keys; got rfv: {rfv}"
+    );
+}
+
+// ─── AC-009 (VP-578-016): :id/:name/:asset wire shapes by analogy ────────────
+
+/// AC-009 / VP-578-016 (DOWNGRADED status per the story: "NOT
+/// research-confirmed for any of the three kinds... `:asset` in particular
+/// is at least as likely to diverge as `:option` — Assets attribute
+/// payloads are the least standardized of the four across Atlassian's JSM
+/// vs platform surfaces"). This test asserts the IMPLEMENTED shape (by
+/// analogy to the platform-path `:id`/`:name`/`:asset` shapes in
+/// `field_resolve.rs::compose_id_hint`/`compose_name_hint`/
+/// `compose_asset_hint`) with wiremock.
+///
+/// **A green run of this test is NOT proof of live-JSM parity.** VP-578-016
+/// remains parity-PENDING until F4/live-JSM validation runs against a real
+/// JSM instance — do NOT read this test passing as a settled guarantee of
+/// Atlassian's actual `requestFieldValues` schema for these three hint
+/// kinds.
+#[tokio::test]
+async fn test_vp_578_016_id_name_asset_jsm_wire_shapes_by_analogy_flagged_unverified() {
+    let server = MockServer::start().await;
+    let cache_dir = tempfile::tempdir().unwrap();
+    let config_dir = tempfile::tempdir().unwrap();
+    write_minimal_config(config_dir.path(), &server.uri());
+
+    mount_project_meta_help(&server).await;
+    mount_service_desk_list(&server).await;
+    mount_request_type_list(&server).await;
+
+    Mock::given(method("POST"))
+        .and(path("/rest/servicedeskapi/request"))
+        .respond_with(ResponseTemplate::new(201).set_body_json(jsm_created_response()))
+        .mount(&server)
+        .await;
+
+    let output = Command::cargo_bin("jr")
+        .unwrap()
+        .env("JR_BASE_URL", server.uri())
+        .env("JR_AUTH_HEADER", "Basic dGVzdDp0ZXN0")
+        .env("XDG_CACHE_HOME", cache_dir.path())
+        .env("JR_CACHE_DIR", cache_dir.path().join("jr"))
+        .env("XDG_CONFIG_HOME", config_dir.path())
+        .env("JR_CONFIG_DIR", config_dir.path().join("jr"))
+        .args([
+            "issue",
+            "create",
+            "--project",
+            "HELP",
+            "--request-type",
+            "Password Reset",
+            "--summary",
+            "test",
+            "--field",
+            "f_id:id=90001",
+            "--field",
+            "f_name:name=Urgent",
+            "--field",
+            "f_asset:asset=WSX:5001",
+            "--no-input",
+            "--output",
+            "json",
+        ])
+        .output()
+        .unwrap();
+
+    let stderr = String::from_utf8_lossy(&output.stderr);
+    assert!(
+        output.status.success(),
+        "AC-009/VP-578-016: expected exit 0 (by-analogy shapes, \
+         parity-PENDING). got exit {:?}. \
+         stderr: {stderr}",
+        output.status.code()
+    );
+
+    let requests = server.received_requests().await.expect("requests recorded");
+    let jsm_post = requests
+        .iter()
+        .find(|r| r.url.path() == "/rest/servicedeskapi/request" && r.method.as_str() == "POST")
+        .expect("AC-009: JSM POST must have been made");
+    let body: Value =
+        serde_json::from_slice(&jsm_post.body).expect("AC-009: POST body must be valid JSON");
+    let rfv = body
+        .get("requestFieldValues")
+        .expect("AC-009: requestFieldValues must be present");
+
+    assert_eq!(
+        rfv.get("f_id"),
+        Some(&json!({"id": "90001"})),
+        "AC-009/VP-578-016 (by analogy, parity-PENDING): ':id' shape; got rfv: {rfv}"
+    );
+    assert_eq!(
+        rfv.get("f_name"),
+        Some(&json!({"name": "Urgent"})),
+        "AC-009/VP-578-016 (by analogy, parity-PENDING): ':name' shape; got rfv: {rfv}"
+    );
+    assert_eq!(
+        rfv.get("f_asset"),
+        Some(&json!([{"workspaceId": "WSX", "id": "WSX:5001", "objectId": "5001"}])),
+        "AC-009/VP-578-016 (by analogy, parity-PENDING): ':asset' shape; got rfv: {rfv}"
+    );
+}
+
+// ─────────────────────────────────────────────────────────────────────────
+// S-cycle12-jsm-adf-autoconvert: JSM ADF auto-conversion for `--field` on
+// rich-text fields (BC-3.8.019..022, VP-FIELD-ADF-004, ADR-0024).
+//
+// These wiremock/CLI-level tests exercise the full `handle_jsm_create`
+// dispatch, including the new `GET .../requesttype/{id}/field` fetch (cache-
+// first, fail-open) added by this story. All bare-form JSM `--field` fixtures
+// pre-dating this story were audited (AC-011) and found to need no wiremock
+// stub or assertion change — see the story-delivery report for the full
+// triage (every pre-existing bare-form fixture targets a non-ADF-backed
+// field_id and asserts neither exact request counts nor "stderr clean", so
+// they remain correct under this section's default fail-open degradation).
+// ─────────────────────────────────────────────────────────────────────────
+
+/// Mount `GET .../requesttype/11002/field` for service desk 10 / RT 11002
+/// (the `mount_request_types_password_reset` fixture's resolved id),
+/// returning the given `RequestTypeField` JSON objects.
+async fn mount_request_type_fields(server: &MockServer, fields: Vec<Value>) {
+    Mock::given(method("GET"))
+        .and(path(
+            "/rest/servicedeskapi/servicedesk/10/requesttype/11002/field",
+        ))
+        .respond_with(ResponseTemplate::new(200).set_body_json(json!({
+            "canRaiseOnBehalfOf": false,
+            "canAddRequestParticipants": false,
+            "requestTypeFields": fields
+        })))
+        .mount(server)
+        .await;
+}
+
+/// An ADF-backed `RequestTypeField` fixture for the system `description`
+/// field (BC-3.8.019 allowlist arm).
+fn adf_description_field_json() -> Value {
+    json!({
+        "fieldId": "description",
+        "name": "Description",
+        "description": Value::Null,
+        "required": false,
+        "visible": true,
+        "defaultValues": Value::Null,
+        "validValues": Value::Null,
+        "jiraSchema": {"type": "string", "system": "description"}
+    })
+}
+
+/// AC-008 / VP-FIELD-ADF-004 Axis (e) (BC-3.8.019 EC-3.8.019-2): when the
+/// `GET .../requesttype/{id}/field` fetch itself FAILS (here: simply
+/// unmocked, so wiremock's default unmatched-request 404 applies), the
+/// resolution layer fails OPEN: exactly one global `warning:` line, ALL bare
+/// `--field` values (including empty ones) degrade to `Value::String`, and
+/// the command NEVER exits 64. Includes the pass-21 M-1 sub-assertion:
+/// a bare EMPTY `--field NAME=` on an allowlist-looking field_id is present
+/// as `Value::String("")` (NOT omitted) and `isAdfRequest` is ABSENT.
+#[tokio::test]
+async fn test_jsm_adf_field_metadata_unavailable_emits_warning() {
+    let server = MockServer::start().await;
+    let cache_dir = tempfile::tempdir().unwrap();
+    let config_dir = tempfile::tempdir().unwrap();
+    write_minimal_config(config_dir.path(), &server.uri());
+
+    mount_project_meta_help(&server).await;
+    mount_service_desk_list(&server).await;
+    mount_request_types_password_reset(&server).await;
+    // Deliberately NOT mounting GET .../requesttype/11002/field — the fetch
+    // must fail (wiremock's default unmatched-request 404), triggering the
+    // AC-008 fail-open path.
+
+    Mock::given(method("POST"))
+        .and(path("/rest/servicedeskapi/request"))
+        .respond_with(ResponseTemplate::new(201).set_body_json(jsm_created_response()))
+        .expect(1)
+        .mount(&server)
+        .await;
+
+    let output = Command::cargo_bin("jr")
+        .unwrap()
+        .env("JR_BASE_URL", server.uri())
+        .env("JR_AUTH_HEADER", "Basic dGVzdDp0ZXN0")
+        .env("XDG_CACHE_HOME", cache_dir.path())
+        .env("JR_CACHE_DIR", cache_dir.path().join("jr"))
+        .env("XDG_CONFIG_HOME", config_dir.path())
+        .env("JR_CONFIG_DIR", config_dir.path().join("jr"))
+        .args([
+            "issue",
+            "create",
+            "--project",
+            "HELP",
+            "--request-type",
+            "Password Reset",
+            "--summary",
+            "test",
+            "--field",
+            "description=",
+            "--no-input",
+            "--output",
+            "json",
+        ])
+        .output()
+        .unwrap();
+
+    let stderr = String::from_utf8_lossy(&output.stderr);
+    assert!(
+        output.status.success(),
+        "AC-008(d): fail-open must NEVER exit 64; got {:?}. stderr: {stderr}",
+        output.status.code()
+    );
+
+    // AC-008(a): exactly ONE global warning line.
+    let warning_lines: Vec<&str> = stderr
+        .lines()
+        .filter(|l| l.starts_with("warning:"))
+        .collect();
+    assert_eq!(
+        warning_lines.len(),
+        1,
+        "AC-008(a): exactly ONE global warning line must be emitted; got stderr: {stderr}"
+    );
+    assert!(
+        warning_lines[0].contains("could not fetch request type fields"),
+        "AC-008: warning must identify the fields-fetch failure; got: {}",
+        warning_lines[0]
+    );
+
+    let requests = server.received_requests().await.expect("requests recorded");
+    let jsm_post = requests
+        .iter()
+        .find(|r| r.url.path() == "/rest/servicedeskapi/request" && r.method.as_str() == "POST")
+        .expect("AC-008: JSM POST must have been made");
+    let body: Value =
+        serde_json::from_slice(&jsm_post.body).expect("AC-008: POST body must be valid JSON");
+
+    // AC-008(e) / pass-21 M-1: bare empty --field on an allowlist-looking
+    // field_id, under fail-open, is present as an empty string (NOT omitted).
+    assert_eq!(
+        body.get("requestFieldValues")
+            .and_then(|rfv| rfv.get("description")),
+        Some(&json!("")),
+        "AC-008(e): under fail-open, requestFieldValues['description'] must be \
+         Value::String(\"\") — present, NOT omitted; got body: {body}"
+    );
+    // AC-008(c): isAdfRequest key ABSENT — NOT explicit false.
+    assert!(
+        body.get("isAdfRequest").is_none(),
+        "AC-008(c): isAdfRequest must be ABSENT under fail-open; got body: {body}"
+    );
+}
+
+/// VP-FIELD-ADF-004 Axis (f) (BC-3.8.019 "Accepted residual" / EC-3.8.019-2
+/// I-1 rule): the fields-fetch SUCCEEDS but the bare `--field` NAME simply
+/// does not match any `RequestTypeField.field_id` in the returned list —
+/// this is the ordinary unknown-field case (BC-3.8.008 verbatim), NOT the
+/// fetch-failed case: `Value::String(VALUE)` verbatim, ZERO warning lines,
+/// `isAdfRequest` unchanged. Discriminates from the Axis (e) fail-open test
+/// above — conflating "fetch failed" with "field absent from a successful
+/// fetch" is the mutant this test pins.
+#[tokio::test]
+async fn test_jsm_adf_field_name_absent_from_fetched_list_falls_through_verbatim() {
+    let server = MockServer::start().await;
+    let cache_dir = tempfile::tempdir().unwrap();
+    let config_dir = tempfile::tempdir().unwrap();
+    write_minimal_config(config_dir.path(), &server.uri());
+
+    mount_project_meta_help(&server).await;
+    mount_service_desk_list(&server).await;
+    mount_request_types_password_reset(&server).await;
+    // Fetch SUCCEEDS but returns a field list that does not contain
+    // "mystery_field".
+    mount_request_type_fields(&server, vec![adf_description_field_json()]).await;
+
+    Mock::given(method("POST"))
+        .and(path("/rest/servicedeskapi/request"))
+        .respond_with(ResponseTemplate::new(201).set_body_json(jsm_created_response()))
+        .expect(1)
+        .mount(&server)
+        .await;
+
+    let output = Command::cargo_bin("jr")
+        .unwrap()
+        .env("JR_BASE_URL", server.uri())
+        .env("JR_AUTH_HEADER", "Basic dGVzdDp0ZXN0")
+        .env("XDG_CACHE_HOME", cache_dir.path())
+        .env("JR_CACHE_DIR", cache_dir.path().join("jr"))
+        .env("XDG_CONFIG_HOME", config_dir.path())
+        .env("JR_CONFIG_DIR", config_dir.path().join("jr"))
+        .args([
+            "issue",
+            "create",
+            "--project",
+            "HELP",
+            "--request-type",
+            "Password Reset",
+            "--summary",
+            "test",
+            "--field",
+            "mystery_field=SomeValue",
+            "--no-input",
+            "--output",
+            "json",
+        ])
+        .output()
+        .unwrap();
+
+    let stderr = String::from_utf8_lossy(&output.stderr);
+    assert!(
+        output.status.success(),
+        "Axis f: expected exit 0; got {:?}. stderr: {stderr}",
+        output.status.code()
+    );
+    assert!(
+        !stderr.contains("warning:"),
+        "Axis f: ZERO warnings must be emitted when the fetch succeeds and the field \
+         is simply absent from the list (I-1 rule, distinct from the fetch-failed \
+         case); got stderr: {stderr}"
+    );
+
+    let requests = server.received_requests().await.expect("requests recorded");
+    let jsm_post = requests
+        .iter()
+        .find(|r| r.url.path() == "/rest/servicedeskapi/request" && r.method.as_str() == "POST")
+        .expect("Axis f: JSM POST must have been made");
+    let body: Value =
+        serde_json::from_slice(&jsm_post.body).expect("Axis f: POST body must be valid JSON");
+
+    assert_eq!(
+        body.get("requestFieldValues")
+            .and_then(|rfv| rfv.get("mystery_field")),
+        Some(&json!("SomeValue")),
+        "Axis f: NAME absent from a successfully-fetched RT field list must fall \
+         through to Value::String(VALUE) verbatim; got body: {body}"
+    );
+    assert!(
+        body.get("isAdfRequest").is_none(),
+        "Axis f: isAdfRequest must be unchanged (ABSENT) — no ADF conversion occurred; \
+         got body: {body}"
+    );
+}
+
+/// AC-012 (BC-3.8.001 context/regression): on a successful
+/// `jr issue create --request-type RT --field <ADF-BACKED>=VALUE`, the
+/// success output is `Created request <KEY>` — no per-field echo, no
+/// `(adf)` marker (the JSM create path has no per-field table output
+/// surface; `field_markers` from Story 1 is a platform-paths-only
+/// side-channel, never populated by `jsm_create.rs`).
+#[tokio::test]
+async fn test_bc_3_8_019_jsm_create_output_is_key_only_no_adf_marker() {
+    let server = MockServer::start().await;
+    let cache_dir = tempfile::tempdir().unwrap();
+    let config_dir = tempfile::tempdir().unwrap();
+    write_minimal_config(config_dir.path(), &server.uri());
+
+    mount_project_meta_help(&server).await;
+    mount_service_desk_list(&server).await;
+    mount_request_types_password_reset(&server).await;
+    mount_request_type_fields(&server, vec![adf_description_field_json()]).await;
+
+    Mock::given(method("POST"))
+        .and(path("/rest/servicedeskapi/request"))
+        .respond_with(ResponseTemplate::new(201).set_body_json(jsm_created_response()))
+        .expect(1)
+        .mount(&server)
+        .await;
+
+    // Table mode (default, no --output json): success output must be
+    // exactly "Created request <KEY>" with no per-field ADF marker.
+    //
+    // NOTE: the story's AC-012 text says this lands on "stdout" — that
+    // wording is factually wrong about the channel. The actual, universal
+    // convention (CLAUDE.md's Symmetric output-channel profile) is that
+    // `output::print_success` (src/cli/issue/jsm_create.rs) writes the
+    // human success line via `eprintln!` -> STDERR; stdout carries data
+    // only (empty in table mode). Every other create test
+    // (tests/issue_create_field.rs, issue_create_echo.rs, cli_handler.rs)
+    // asserts "Created issue"/"Created request" on stderr, not stdout.
+    // The behavioral INTENT this test protects — key-only success output,
+    // no per-field table echo, no `(adf)` marker anywhere — is unchanged;
+    // only the channel assertion below was corrected to match reality.
+    // Do NOT "fix" this back to stdout.
+    let output = Command::cargo_bin("jr")
+        .unwrap()
+        .env("JR_BASE_URL", server.uri())
+        .env("JR_AUTH_HEADER", "Basic dGVzdDp0ZXN0")
+        .env("XDG_CACHE_HOME", cache_dir.path())
+        .env("JR_CACHE_DIR", cache_dir.path().join("jr"))
+        .env("XDG_CONFIG_HOME", config_dir.path())
+        .env("JR_CONFIG_DIR", config_dir.path().join("jr"))
+        .args([
+            "issue",
+            "create",
+            "--project",
+            "HELP",
+            "--request-type",
+            "Password Reset",
+            "--summary",
+            "test",
+            "--field",
+            "description=Some rich text",
+            "--no-input",
+        ])
+        .output()
+        .unwrap();
+
+    let stdout = String::from_utf8_lossy(&output.stdout);
+    let stderr = String::from_utf8_lossy(&output.stderr);
+    assert!(
+        output.status.success(),
+        "AC-012: expected exit 0; got {:?}. stderr: {stderr}",
+        output.status.code()
+    );
+    assert!(
+        stdout.trim().is_empty(),
+        "AC-012: table-mode JSM create writes no data to stdout (Symmetric \
+         output-channel profile); got stdout: {stdout}"
+    );
+    assert!(
+        stderr.contains("Created request HELP-42"),
+        "AC-012: JSM create success output must be key-only with no per-field ADF \
+         marker; the human success line is written via output::print_success \
+         (eprintln! -> stderr); got stderr: {stderr}"
+    );
+    assert!(
+        !stdout.contains("(adf)") && !stderr.contains("(adf)"),
+        "AC-012: JSM create has no per-field echo surface — '(adf)' must never appear \
+         on either channel; got stdout: {stdout}, stderr: {stderr}"
+    );
+}
+
+/// AC-015(a) (delta §5 item 7 FIRM-MUST): the `GET .../requesttype/{id}/field`
+/// fetch fires IFF at least one BARE (`kind.is_none()`) `--field` pair is
+/// present — asserted across all three sub-cases in one test (per delta
+/// pass-19 M-2 gate correction).
+#[tokio::test]
+async fn test_jsm_adf_rt_fields_get_fires_iff_bare_field_present() {
+    fn empty_rt_fields_body() -> Value {
+        json!({
+            "canRaiseOnBehalfOf": false,
+            "canAddRequestParticipants": false,
+            "requestTypeFields": []
+        })
+    }
+
+    // ── Sub-case 1: a bare --field pair → GET fires exactly once ──────────
+    {
+        let server = MockServer::start().await;
+        let cache_dir = tempfile::tempdir().unwrap();
+        let config_dir = tempfile::tempdir().unwrap();
+        write_minimal_config(config_dir.path(), &server.uri());
+
+        mount_project_meta_help(&server).await;
+        mount_service_desk_list(&server).await;
+        mount_request_types_password_reset(&server).await;
+
+        Mock::given(method("GET"))
+            .and(path(
+                "/rest/servicedeskapi/servicedesk/10/requesttype/11002/field",
+            ))
+            .respond_with(ResponseTemplate::new(200).set_body_json(empty_rt_fields_body()))
+            .expect(1)
+            .mount(&server)
+            .await;
+        Mock::given(method("POST"))
+            .and(path("/rest/servicedeskapi/request"))
+            .respond_with(ResponseTemplate::new(201).set_body_json(jsm_created_response()))
+            .mount(&server)
+            .await;
+
+        let output = Command::cargo_bin("jr")
+            .unwrap()
+            .env("JR_BASE_URL", server.uri())
+            .env("JR_AUTH_HEADER", "Basic dGVzdDp0ZXN0")
+            .env("XDG_CACHE_HOME", cache_dir.path())
+            .env("JR_CACHE_DIR", cache_dir.path().join("jr"))
+            .env("XDG_CONFIG_HOME", config_dir.path())
+            .env("JR_CONFIG_DIR", config_dir.path().join("jr"))
+            .args([
+                "issue",
+                "create",
+                "--project",
+                "HELP",
+                "--request-type",
+                "Password Reset",
+                "--summary",
+                "test",
+                "--field",
+                "labels_field=plain",
+                "--no-input",
+            ])
+            .output()
+            .unwrap();
+        assert!(
+            output.status.success(),
+            "AC-015(a) sub-case 1 (bare field present): expected exit 0; stderr: {}",
+            String::from_utf8_lossy(&output.stderr)
+        );
+        // The `.expect(1)` on the GET mock enforces "fires exactly once" on server drop.
+    }
+
+    // ── Sub-case 2: no --field at all → GET must NOT fire ──────────────────
+    {
+        let server = MockServer::start().await;
+        let cache_dir = tempfile::tempdir().unwrap();
+        let config_dir = tempfile::tempdir().unwrap();
+        write_minimal_config(config_dir.path(), &server.uri());
+
+        mount_project_meta_help(&server).await;
+        mount_service_desk_list(&server).await;
+        mount_request_types_password_reset(&server).await;
+
+        Mock::given(method("GET"))
+            .and(path(
+                "/rest/servicedeskapi/servicedesk/10/requesttype/11002/field",
+            ))
+            .respond_with(ResponseTemplate::new(200).set_body_json(empty_rt_fields_body()))
+            .expect(0)
+            .mount(&server)
+            .await;
+        Mock::given(method("POST"))
+            .and(path("/rest/servicedeskapi/request"))
+            .respond_with(ResponseTemplate::new(201).set_body_json(jsm_created_response()))
+            .mount(&server)
+            .await;
+
+        let output = Command::cargo_bin("jr")
+            .unwrap()
+            .env("JR_BASE_URL", server.uri())
+            .env("JR_AUTH_HEADER", "Basic dGVzdDp0ZXN0")
+            .env("XDG_CACHE_HOME", cache_dir.path())
+            .env("JR_CACHE_DIR", cache_dir.path().join("jr"))
+            .env("XDG_CONFIG_HOME", config_dir.path())
+            .env("JR_CONFIG_DIR", config_dir.path().join("jr"))
+            .args([
+                "issue",
+                "create",
+                "--project",
+                "HELP",
+                "--request-type",
+                "Password Reset",
+                "--summary",
+                "test",
+                "--no-input",
+            ])
+            .output()
+            .unwrap();
+        assert!(
+            output.status.success(),
+            "AC-015(a) sub-case 2 (no --field): expected exit 0; stderr: {}",
+            String::from_utf8_lossy(&output.stderr)
+        );
+        // The `.expect(0)` on the GET mock enforces "never fires" on server drop.
+    }
+
+    // ── Sub-case 3: only hinted --field pairs → GET must NOT fire ──────────
+    {
+        let server = MockServer::start().await;
+        let cache_dir = tempfile::tempdir().unwrap();
+        let config_dir = tempfile::tempdir().unwrap();
+        write_minimal_config(config_dir.path(), &server.uri());
+
+        mount_project_meta_help(&server).await;
+        mount_service_desk_list(&server).await;
+        mount_request_types_password_reset(&server).await;
+
+        Mock::given(method("GET"))
+            .and(path(
+                "/rest/servicedeskapi/servicedesk/10/requesttype/11002/field",
+            ))
+            .respond_with(ResponseTemplate::new(200).set_body_json(empty_rt_fields_body()))
+            .expect(0)
+            .mount(&server)
+            .await;
+        Mock::given(method("POST"))
+            .and(path("/rest/servicedeskapi/request"))
+            .respond_with(ResponseTemplate::new(201).set_body_json(jsm_created_response()))
+            .mount(&server)
+            .await;
+
+        let output = Command::cargo_bin("jr")
+            .unwrap()
+            .env("JR_BASE_URL", server.uri())
+            .env("JR_AUTH_HEADER", "Basic dGVzdDp0ZXN0")
+            .env("XDG_CACHE_HOME", cache_dir.path())
+            .env("JR_CACHE_DIR", cache_dir.path().join("jr"))
+            .env("XDG_CONFIG_HOME", config_dir.path())
+            .env("JR_CONFIG_DIR", config_dir.path().join("jr"))
+            .args([
+                "issue",
+                "create",
+                "--project",
+                "HELP",
+                "--request-type",
+                "Password Reset",
+                "--summary",
+                "test",
+                "--field",
+                "cf:id=5",
+                "--no-input",
+            ])
+            .output()
+            .unwrap();
+        assert!(
+            output.status.success(),
+            "AC-015(a) sub-case 3 (hinted-only): expected exit 0; stderr: {}",
+            String::from_utf8_lossy(&output.stderr)
+        );
+        // The `.expect(0)` on the GET mock enforces "never fires" on server drop.
+    }
+}
+
+/// AC-015(b): a warm request-type-fields cache entry (from a prior create in
+/// the same profile/service-desk/request-type) skips the HTTP GET entirely
+/// on a second create.
+#[tokio::test]
+async fn test_jsm_adf_rt_fields_cache_warm_skips_http() {
+    let server = MockServer::start().await;
+    let cache_dir = tempfile::tempdir().unwrap();
+    let config_dir = tempfile::tempdir().unwrap();
+    write_minimal_config(config_dir.path(), &server.uri());
+
+    mount_project_meta_help(&server).await;
+    mount_service_desk_list(&server).await;
+    mount_request_types_password_reset(&server).await;
+
+    // Registered ONCE; `.expect(1)` verifies it is called AT MOST once across
+    // BOTH creates below — the second create must be served entirely from
+    // `read_request_type_fields_cache`.
+    Mock::given(method("GET"))
+        .and(path(
+            "/rest/servicedeskapi/servicedesk/10/requesttype/11002/field",
+        ))
+        .respond_with(ResponseTemplate::new(200).set_body_json(json!({
+            "canRaiseOnBehalfOf": false,
+            "canAddRequestParticipants": false,
+            "requestTypeFields": []
+        })))
+        .expect(1)
+        .mount(&server)
+        .await;
+    Mock::given(method("POST"))
+        .and(path("/rest/servicedeskapi/request"))
+        .respond_with(ResponseTemplate::new(201).set_body_json(jsm_created_response()))
+        .mount(&server)
+        .await;
+
+    let run = || {
+        Command::cargo_bin("jr")
+            .unwrap()
+            .env("JR_BASE_URL", server.uri())
+            .env("JR_AUTH_HEADER", "Basic dGVzdDp0ZXN0")
+            .env("XDG_CACHE_HOME", cache_dir.path())
+            .env("JR_CACHE_DIR", cache_dir.path().join("jr"))
+            .env("XDG_CONFIG_HOME", config_dir.path())
+            .env("JR_CONFIG_DIR", config_dir.path().join("jr"))
+            .args([
+                "issue",
+                "create",
+                "--project",
+                "HELP",
+                "--request-type",
+                "Password Reset",
+                "--summary",
+                "test",
+                "--field",
+                "labels_field=plain",
+                "--no-input",
+            ])
+            .output()
+            .unwrap()
+    };
+
+    let first = run();
+    assert!(
+        first.status.success(),
+        "AC-015(b): first (cold-cache) create must succeed; stderr: {}",
+        String::from_utf8_lossy(&first.stderr)
+    );
+
+    let second = run();
+    assert!(
+        second.status.success(),
+        "AC-015(b): second (warm-cache) create must succeed; stderr: {}",
+        String::from_utf8_lossy(&second.stderr)
+    );
+
+    // The `.expect(1)` on the GET mock enforces "at most once across both
+    // creates" on server drop.
+}
+
+/// AC-015(c): a 401 on the fields-fetch GET emits the mandatory global
+/// warning prefix, does NOT include the `write:servicedesk-request` hint
+/// (that hint is reserved for the create POST itself, not this read-only
+/// endpoint), and does NOT exit 64 (fail-open; the create POST still fires).
+#[tokio::test]
+async fn test_jsm_adf_rt_fields_fetch_401_emits_global_warning_not_write_scope_hint() {
+    let server = MockServer::start().await;
+    let cache_dir = tempfile::tempdir().unwrap();
+    let config_dir = tempfile::tempdir().unwrap();
+    write_minimal_config(config_dir.path(), &server.uri());
+
+    mount_project_meta_help(&server).await;
+    mount_service_desk_list(&server).await;
+    mount_request_types_password_reset(&server).await;
+
+    Mock::given(method("GET"))
+        .and(path(
+            "/rest/servicedeskapi/servicedesk/10/requesttype/11002/field",
+        ))
+        .respond_with(ResponseTemplate::new(401).set_body_json(json!({
+            "errorMessages": ["Unauthorized"]
+        })))
+        .mount(&server)
+        .await;
+    Mock::given(method("POST"))
+        .and(path("/rest/servicedeskapi/request"))
+        .respond_with(ResponseTemplate::new(201).set_body_json(jsm_created_response()))
+        .expect(1)
+        .mount(&server)
+        .await;
+
+    let output = Command::cargo_bin("jr")
+        .unwrap()
+        .env("JR_BASE_URL", server.uri())
+        .env("JR_AUTH_HEADER", "Basic dGVzdDp0ZXN0")
+        .env("XDG_CACHE_HOME", cache_dir.path())
+        .env("JR_CACHE_DIR", cache_dir.path().join("jr"))
+        .env("XDG_CONFIG_HOME", config_dir.path())
+        .env("JR_CONFIG_DIR", config_dir.path().join("jr"))
+        .args([
+            "issue",
+            "create",
+            "--project",
+            "HELP",
+            "--request-type",
+            "Password Reset",
+            "--summary",
+            "test",
+            "--field",
+            "labels_field=plain",
+            "--no-input",
+        ])
+        .output()
+        .unwrap();
+
+    let stderr = String::from_utf8_lossy(&output.stderr);
+    assert!(
+        output.status.success(),
+        "AC-015(c): 401 on the fields-fetch must fail-open, NOT exit 64; got {:?}. \
+         stderr: {stderr}",
+        output.status.code()
+    );
+    assert!(
+        stderr.contains("warning: could not fetch request type fields"),
+        "AC-015(c): the mandatory global warning prefix must be present; got: {stderr}"
+    );
+    assert!(
+        !stderr.contains("write:servicedesk-request"),
+        "AC-015(c): the write-scope hint is reserved for the create POST itself, NOT \
+         the read-only fields-fetch endpoint; got: {stderr}"
+    );
 }

@@ -1,6 +1,7 @@
 use crate::api::rate_limit::{MAX_RETRY_AFTER_SECS, RateLimitInfo};
 use crate::config::Config;
 use crate::error::JrError;
+use crate::profile::Profile;
 use base64::Engine;
 use reqwest::{Client, Method, RequestBuilder, Response, StatusCode};
 use serde::Serialize;
@@ -26,7 +27,7 @@ pub struct JiraClient {
     /// Active profile name, plumbed through so per-profile cache calls can
     /// scope their reads/writes correctly without the call sites needing
     /// access to `&Config`.
-    profile_name: String,
+    profile_name: Profile,
 }
 
 impl JiraClient {
@@ -121,15 +122,19 @@ impl JiraClient {
     ///
     /// Shared by the `#[cfg(debug_assertions)]` and `#[cfg(not(debug_assertions))]` branches
     /// of `from_config` to avoid duplicating the `oauth`/`api_token` match arms.
-    fn load_auth_from_keychain(auth_method: &str, profile_name: &str) -> anyhow::Result<String> {
+    fn load_auth_from_keychain(
+        auth_method: &str,
+        profile_name: &Profile,
+    ) -> anyhow::Result<String> {
         match auth_method {
             "oauth" => {
                 let (access, _refresh) = crate::api::auth::load_oauth_tokens(profile_name)?;
                 Ok(format!("Bearer {access}"))
             }
             _ => {
-                // api_token (default)
-                let (email, token) = crate::api::auth::load_api_token()?;
+                // api_token (default) — namespaced per-profile read
+                // (S-cycle3-percred-storage, BC-1.4.031 postcondition 3).
+                let (email, token) = crate::api::auth::load_api_token(profile_name)?;
                 let encoded =
                     base64::engine::general_purpose::STANDARD.encode(format!("{email}:{token}"));
                 Ok(format!("Basic {encoded}"))
@@ -149,7 +154,7 @@ impl JiraClient {
             verbose: false,
             verbose_bodies: false,
             assets_base_url,
-            profile_name: "default".to_string(),
+            profile_name: Profile::from("default"),
         }
     }
 
@@ -172,7 +177,7 @@ impl JiraClient {
             verbose: false,
             verbose_bodies: false,
             assets_base_url,
-            profile_name: profile.to_string(),
+            profile_name: Profile::from(profile),
         }
     }
 
@@ -199,14 +204,14 @@ impl JiraClient {
             verbose: false,
             verbose_bodies: false,
             assets_base_url,
-            profile_name: "default".to_string(),
+            profile_name: Profile::from("default"),
         }
     }
 
     /// Active profile name this client is bound to. Used by per-profile
     /// cache call sites (CMDB fields, workspace ID, project meta, resolutions,
     /// object-type attrs) that have a `&JiraClient` but not `&Config`.
-    pub fn profile_name(&self) -> &str {
+    pub fn profile_name(&self) -> &Profile {
         &self.profile_name
     }
 
@@ -341,6 +346,22 @@ impl JiraClient {
         let request = self.client.put(&url).json(body);
         self.send(request).await?;
         Ok(())
+    }
+
+    /// Perform a PUT request with a JSON body and deserialize the response body.
+    ///
+    /// Used for PUT endpoints that return a resource on success (e.g.
+    /// `PUT /rest/api/3/component/{id}` — BC-8.1.007).
+    pub async fn put_json<T: DeserializeOwned, B: Serialize>(
+        &self,
+        path: &str,
+        body: &B,
+    ) -> anyhow::Result<T> {
+        let url = format!("{}{}", self.base_url, path);
+        let request = self.client.put(&url).json(body);
+        let response = self.send(request).await?;
+        let bytes = self.collect_response_body(response).await?;
+        Ok(serde_json::from_slice(&bytes)?)
     }
 
     /// Perform a POST request that returns 204 No Content on success.
@@ -535,20 +556,19 @@ impl JiraClient {
         //   - bug-symmetry: the clamp inside the loop already enforces "no
         //     sleep on expired", so this just extends that invariant to
         //     "no request on expired" — one consistent semantic.
-        if let Some(d) = deadline {
-            if let ClampResult::Expired { remaining_ms } =
+        if let Some(d) = deadline
+            && let ClampResult::Expired { remaining_ms } =
                 clamp_retry_sleep(Duration::ZERO, Some(d))
-            {
-                return Err(JrError::DeadlineExceeded {
-                    remaining_ms,
-                    message: format!(
-                        "[deadline:send-entry] Caller-supplied deadline already \
+        {
+            return Err(JrError::DeadlineExceeded {
+                remaining_ms,
+                message: format!(
+                    "[deadline:send-entry] Caller-supplied deadline already \
                          expired at send entry (remaining budget {remaining_ms}ms). \
                          The request was not issued. Rerun with a larger timeout."
-                    ),
-                }
-                .into());
+                ),
             }
+            .into());
         }
 
         // We need to be able to retry, so we clone the request builder.
@@ -577,28 +597,28 @@ impl JiraClient {
 
                 let req = req.header("Authorization", &self.auth_header);
 
-                if self.verbose || self.verbose_bodies {
-                    if let Some(ref r) = req.try_clone().and_then(|r| r.build().ok()) {
-                        if self.verbose {
-                            // AC-003: log request method+URL to stderr under --verbose.
-                            // The [verbose] prefix is retained because cli_handler tests
-                            // (SD-003 contract guards) assert on stderr.contains("[verbose] GET/PUT/...")
-                            // and the verbose_bodies.rs tests assert on the same prefix.
-                            // Tracing handles rate-limit and other diagnostic events.
-                            // Method and URL are extracted to variables before the print call
-                            // so no single source line contains both the eprintln and method().
-                            let method_str = r.method().as_str();
-                            let url_str = r.url().as_str();
-                            eprintln!("[verbose] {method_str} {url_str}");
-                        }
-                        if let Some(bytes) = r.body().and_then(|b| b.as_bytes()) {
-                            if self.verbose_bodies {
-                                eprintln!("[verbose] body: {}", String::from_utf8_lossy(bytes));
-                            } else {
-                                eprintln!(
-                                    "[verbose] body suppressed (use --verbose-bodies to inspect, will print PII)"
-                                );
-                            }
+                if (self.verbose || self.verbose_bodies)
+                    && let Some(ref r) = req.try_clone().and_then(|r| r.build().ok())
+                {
+                    if self.verbose {
+                        // AC-003: log request method+URL to stderr under --verbose.
+                        // The [verbose] prefix is retained because cli_handler tests
+                        // (SD-003 contract guards) assert on stderr.contains("[verbose] GET/PUT/...")
+                        // and the verbose_bodies.rs tests assert on the same prefix.
+                        // Tracing handles rate-limit and other diagnostic events.
+                        // Method and URL are extracted to variables before the print call
+                        // so no single source line contains both the eprintln and method().
+                        let method_str = r.method().as_str();
+                        let url_str = r.url().as_str();
+                        eprintln!("[verbose] {method_str} {url_str}");
+                    }
+                    if let Some(bytes) = r.body().and_then(|b| b.as_bytes()) {
+                        if self.verbose_bodies {
+                            eprintln!("[verbose] body: {}", String::from_utf8_lossy(bytes));
+                        } else {
+                            eprintln!(
+                                "[verbose] body suppressed (use --verbose-bodies to inspect, will print PII)"
+                            );
                         }
                     }
                 }
@@ -778,15 +798,17 @@ impl JiraClient {
         let profile = self.profile_name.clone();
 
         let refresh_result = crate::api::refresh_coordinator::refresh_with_single_flight(
-            &profile,
+            profile.as_ref(),
             &token_url_snapshot,
             || {
                 let profile = profile.clone();
                 let token_url = token_url_snapshot.clone();
                 async move {
-                    let new_access =
-                        crate::api::auth::refresh_oauth_token_with_url(&profile, &token_url)
-                            .await?;
+                    let new_access = crate::api::auth::refresh_oauth_token_with_url(
+                        profile.as_ref(),
+                        &token_url,
+                    )
+                    .await?;
                     // refresh_oauth_token_with_url stores tokens in keychain (persist-before-publish).
                     // We return (access, refresh) — refresh is re-read from keychain to provide
                     // the coordinator with the new refresh token for AC-010 reconcile.
@@ -1653,85 +1675,84 @@ fn extract_error_message_raw(body: &[u8]) -> String {
                 return joined;
             }
         }
-        if let Some(errors) = json.get("errors").and_then(|v| v.as_object()) {
-            if !errors.is_empty() {
-                // Memory-amplification defense (OWASP API4:2023 (Unrestricted Resource Consumption) / CWE-770 (Allocation of Resources Without Limits or Throttling), same threat
-                // class as the errorMessages streaming join earlier). Three
-                // server-controlled vectors are bounded here:
-                //
-                // 1. Entry count — `take(MAX_ERROR_PAIRS)` before collect/sort
-                //    so a hostile response with 1M keys cannot force a 1M-entry
-                //    intermediate Vec.
-                //
-                // 2. Key length — each key passes through `cap_entry` BEFORE
-                //    format!. Without this cap, a hostile response with a
-                //    small number of pathologically large keys (e.g., 1 MB
-                //    key name) would amplify intermediate allocations in the
-                //    formatted pair string even with the entry-count cap.
-                //
-                // 3. Non-string value size/depth — `serialize_value_bounded`
-                //    serializes via a byte-limited writer instead of
-                //    `Value::to_string()`. A hostile response with deeply
-                //    nested or huge non-string values cannot force a full
-                //    serialization allocation before cap_entry truncates.
-                //
-                // MAX_ERROR_PAIRS = 256 is generous (legitimate Jira responses
-                // have 1-10 field-level errors). Per-pair memory is bounded
-                // by 2 × MAX_ERROR_ENTRY_LEN (capped key + capped value) plus
-                // ~4 bytes of format overhead, so the intermediate Vec is
-                // bounded at roughly 256 × 2 × 1024 ≈ 512 KiB worst case.
-                // The downstream streaming join further bounds OUTPUT to
-                // MAX_SANITIZED_OUTPUT_LEN.
-                const MAX_ERROR_PAIRS: usize = 256;
-                let total_keys = errors.len();
-                let mut pairs: Vec<String> = errors
-                    .iter()
-                    .take(MAX_ERROR_PAIRS)
-                    .map(|(k, v)| {
-                        // Cap server-controlled key length BEFORE format!
-                        // (see comment block above).
-                        let k_capped = cap_entry(k);
-                        if let Some(s) = v.as_str() {
-                            // String value: borrow via Cow when no truncation.
-                            format!("{}: {}", k_capped, cap_entry(s))
-                        } else {
-                            // Non-string value: bounded serialization avoids
-                            // full Value::to_string() allocation against
-                            // hostile deeply-nested / huge values.
-                            let serialized = serialize_value_bounded(v, MAX_ERROR_ENTRY_LEN);
-                            format!("{}: {}", k_capped, cap_entry(&serialized))
-                        }
-                    })
-                    .collect();
-                pairs.sort();
-                let pairs_truncated = total_keys > MAX_ERROR_PAIRS;
+        if let Some(errors) = json.get("errors").and_then(|v| v.as_object())
+            && !errors.is_empty()
+        {
+            // Memory-amplification defense (OWASP API4:2023 (Unrestricted Resource Consumption) / CWE-770 (Allocation of Resources Without Limits or Throttling), same threat
+            // class as the errorMessages streaming join earlier). Three
+            // server-controlled vectors are bounded here:
+            //
+            // 1. Entry count — `take(MAX_ERROR_PAIRS)` before collect/sort
+            //    so a hostile response with 1M keys cannot force a 1M-entry
+            //    intermediate Vec.
+            //
+            // 2. Key length — each key passes through `cap_entry` BEFORE
+            //    format!. Without this cap, a hostile response with a
+            //    small number of pathologically large keys (e.g., 1 MB
+            //    key name) would amplify intermediate allocations in the
+            //    formatted pair string even with the entry-count cap.
+            //
+            // 3. Non-string value size/depth — `serialize_value_bounded`
+            //    serializes via a byte-limited writer instead of
+            //    `Value::to_string()`. A hostile response with deeply
+            //    nested or huge non-string values cannot force a full
+            //    serialization allocation before cap_entry truncates.
+            //
+            // MAX_ERROR_PAIRS = 256 is generous (legitimate Jira responses
+            // have 1-10 field-level errors). Per-pair memory is bounded
+            // by 2 × MAX_ERROR_ENTRY_LEN (capped key + capped value) plus
+            // ~4 bytes of format overhead, so the intermediate Vec is
+            // bounded at roughly 256 × 2 × 1024 ≈ 512 KiB worst case.
+            // The downstream streaming join further bounds OUTPUT to
+            // MAX_SANITIZED_OUTPUT_LEN.
+            const MAX_ERROR_PAIRS: usize = 256;
+            let total_keys = errors.len();
+            let mut pairs: Vec<String> = errors
+                .iter()
+                .take(MAX_ERROR_PAIRS)
+                .map(|(k, v)| {
+                    // Cap server-controlled key length BEFORE format!
+                    // (see comment block above).
+                    let k_capped = cap_entry(k);
+                    if let Some(s) = v.as_str() {
+                        // String value: borrow via Cow when no truncation.
+                        format!("{}: {}", k_capped, cap_entry(s))
+                    } else {
+                        // Non-string value: bounded serialization avoids
+                        // full Value::to_string() allocation against
+                        // hostile deeply-nested / huge values.
+                        let serialized = serialize_value_bounded(v, MAX_ERROR_ENTRY_LEN);
+                        format!("{}: {}", k_capped, cap_entry(&serialized))
+                    }
+                })
+                .collect();
+            pairs.sort();
+            let pairs_truncated = total_keys > MAX_ERROR_PAIRS;
 
-                // Streaming join with upfront marker reservation (same pattern
-                // as the errorMessages path above).
-                const JOIN_MARKER: &str = " [...truncated]";
-                let content_budget_join =
-                    MAX_SANITIZED_OUTPUT_LEN.saturating_sub(JOIN_MARKER.len());
-                let mut joined = String::with_capacity(MAX_SANITIZED_OUTPUT_LEN);
-                let mut first = true;
-                let mut join_truncated = false;
-                for p in &pairs {
-                    let separator_len = if first { 0 } else { 2 };
-                    if joined.len() + separator_len + p.len() > content_budget_join {
-                        join_truncated = true;
-                        break;
-                    }
-                    if !first {
-                        joined.push_str("; ");
-                    }
-                    joined.push_str(p);
-                    first = false;
+            // Streaming join with upfront marker reservation (same pattern
+            // as the errorMessages path above).
+            const JOIN_MARKER: &str = " [...truncated]";
+            let content_budget_join = MAX_SANITIZED_OUTPUT_LEN.saturating_sub(JOIN_MARKER.len());
+            let mut joined = String::with_capacity(MAX_SANITIZED_OUTPUT_LEN);
+            let mut first = true;
+            let mut join_truncated = false;
+            for p in &pairs {
+                let separator_len = if first { 0 } else { 2 };
+                if joined.len() + separator_len + p.len() > content_budget_join {
+                    join_truncated = true;
+                    break;
                 }
-                if join_truncated || pairs_truncated {
-                    joined.push_str(JOIN_MARKER);
+                if !first {
+                    joined.push_str("; ");
                 }
-                debug_assert!(joined.len() <= MAX_SANITIZED_OUTPUT_LEN);
-                return joined;
+                joined.push_str(p);
+                first = false;
             }
+            if join_truncated || pairs_truncated {
+                joined.push_str(JOIN_MARKER);
+            }
+            debug_assert!(joined.len() <= MAX_SANITIZED_OUTPUT_LEN);
+            return joined;
         }
         if let Some(msg) = json.get("message").and_then(|v| v.as_str()) {
             return cap_entry(msg).into_owned();
@@ -2602,5 +2623,123 @@ mod is_oauth_auth_tests {
             !client.is_oauth_auth(),
             "is_oauth_auth() is case-sensitive: lowercase 'bearer' must return false"
         );
+    }
+}
+
+/// S-cycle4-cloud-id-correctness — Two-Step Red Gate TEST (step 2 of 2) for
+/// AC-009 (BC-1.2.054 Postcondition 2, Invariant 1/2; VP-AUTHDX-021):
+/// `JiraClient::from_config`'s `assets_base_url` computation derives the
+/// Assets/CMDB gateway URL from `profile.cloud_id` ALONE, deliberately
+/// UN-GATED by `auth_method` — for the full cross product of `auth_method`
+/// in {oauth, api_token, unset/None} x `cloud_id` in {present, absent}.
+///
+/// This is a REGRESSION PIN on already-correct, PRE-EXISTING behavior
+/// (ADR-0022 §4) — no `src/api/client.rs` code change is made by this
+/// story. It must FAIL LOUD if a future change adds an `auth_method` gate
+/// to `assets_base_url`.
+///
+/// `assets_base_url` is a private field with no public accessor (and this
+/// story's File Structure Requirements mark `src/api/client.rs` READ-ONLY —
+/// confirm, do not modify), so this property is verified from INSIDE this
+/// module (a private-field-visible descendant of `client.rs`), never via a
+/// `tests/*.rs` integration test.
+///
+/// Uses the `JR_AUTH_HEADER` debug-only seam (bypasses the real keychain
+/// read) while deliberately NOT setting `JR_BASE_URL`, so `from_config`
+/// consults the REAL profile's `url`/`auth_method`/`cloud_id` for this
+/// computation instead of short-circuiting into test-override mode (which
+/// would compute `assets_base_url` from the override URL, not from
+/// `cloud_id` at all — the opposite of what this property needs to
+/// observe). `from_config` itself performs no network I/O, so this is a
+/// pure, offline, in-process test.
+///
+/// This test currently PASSES against `from_config`'s existing,
+/// unmodified implementation (confirmed:
+/// `cargo test prop_assets_base_url_is_cloud_id_only_never_gated_by_auth_method`
+/// is green today) — a regression pin on already-correct code, not a Red
+/// Gate test for new production code. Included from this story's first
+/// commit per Task 12 / AC-009's "no code change to either function"
+/// contract.
+#[cfg(test)]
+mod proptests_ac_009_assets_base_url_gating {
+    use super::JiraClient;
+    use crate::config::{Config, GlobalConfig, ProfileConfig, ProjectConfig};
+    use proptest::prelude::*;
+    use std::sync::Mutex;
+
+    /// Guards the `JR_AUTH_HEADER`/`JR_BASE_URL` process-global env vars for
+    /// this module's tests only (mirrors `src/config.rs`'s `ENV_MUTEX`
+    /// pattern).
+    static ENV_MUTEX: Mutex<()> = Mutex::new(());
+
+    proptest! {
+        #![proptest_config(ProptestConfig::with_cases(256))]
+
+        #[test]
+        fn prop_assets_base_url_is_cloud_id_only_never_gated_by_auth_method(
+            auth_method in prop_oneof![
+                Just(Some("oauth".to_string())),
+                Just(Some("api_token".to_string())),
+                Just(None::<String>),
+            ],
+            cloud_id_present in any::<bool>(),
+            cloud_id in "[a-f0-9-]{8,36}",
+        ) {
+            let _guard = ENV_MUTEX.lock().unwrap_or_else(|e| e.into_inner());
+            // SAFETY: ENV_MUTEX held for this whole property test body.
+            unsafe {
+                std::env::remove_var("JR_BASE_URL");
+                std::env::set_var("JR_AUTH_HEADER", "Basic dGVzdDp0ZXN0");
+            }
+
+            let mut profiles = std::collections::BTreeMap::new();
+            profiles.insert(
+                "sandbox".to_string(),
+                ProfileConfig {
+                    url: Some("https://sandbox.atlassian.net".into()),
+                    auth_method: auth_method.clone(),
+                    cloud_id: if cloud_id_present { Some(cloud_id.clone()) } else { None },
+                    ..ProfileConfig::default()
+                },
+            );
+            let config = Config {
+                global: GlobalConfig {
+                    default_profile: Some("sandbox".into()),
+                    profiles,
+                    ..GlobalConfig::default()
+                },
+                project: ProjectConfig::default(),
+                active_profile_name: "sandbox".into(),
+            };
+
+            let client = JiraClient::from_config(&config, false, false)
+                .expect("from_config must succeed: JR_AUTH_HEADER bypasses the keychain read, and url is set");
+
+            unsafe {
+                std::env::remove_var("JR_AUTH_HEADER");
+            }
+
+            if cloud_id_present {
+                let expected = format!(
+                    "https://api.atlassian.com/ex/jira/{}/jsm/assets",
+                    urlencoding::encode(&cloud_id)
+                );
+                prop_assert_eq!(
+                    client.assets_base_url.as_deref(),
+                    Some(expected.as_str()),
+                    "assets_base_url must derive from cloud_id ALONE, regardless of \
+                     auth_method ({:?})",
+                    auth_method
+                );
+            } else {
+                prop_assert_eq!(
+                    client.assets_base_url.as_deref(),
+                    None,
+                    "assets_base_url must be None when cloud_id is absent, \
+                     regardless of auth_method ({:?})",
+                    auth_method
+                );
+            }
+        }
     }
 }

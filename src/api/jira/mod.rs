@@ -1,6 +1,7 @@
 pub mod attachments;
 pub mod boards;
 pub mod bulk;
+pub mod components;
 pub mod fields;
 pub mod issues;
 pub mod links;
@@ -9,5 +10,6 @@ pub mod resolutions;
 pub mod sprints;
 pub mod statuses;
 pub mod teams;
+pub mod tenant;
 pub mod users;
 pub mod worklogs;

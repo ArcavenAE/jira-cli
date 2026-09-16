@@ -6,6 +6,7 @@ use serde::{Deserialize, Serialize};
 use std::path::PathBuf;
 
 use crate::error::JrError;
+use crate::profile::Profile;
 
 #[derive(Debug, Deserialize, Serialize, Default, Clone)]
 pub struct FieldsConfig {
@@ -24,6 +25,14 @@ pub struct ProfileConfig {
     pub story_points_field_id: Option<String>,
     /// Default project key for this profile. Overridden by --project flag and .jr.toml.
     pub project: Option<String>,
+    /// Free-form environment label for this profile (e.g. "prod", "sandbox",
+    /// "uat") — illustrative only, no validation/allowlist (BC-6.1.015).
+    /// Additive, tolerant-reader: absent in a pre-existing `config.toml`
+    /// deserializes to `None`, matching the sibling `Option<String>` fields
+    /// on this struct (no `#[serde(default)]` needed — same pattern).
+    /// Storage stays verbatim; display-layer sanitization lives in
+    /// `output::sanitize_env_display` (BC-6.1.015 EC-4).
+    pub env: Option<String>,
 }
 
 #[derive(Debug, Deserialize, Serialize, Default, Clone)]
@@ -86,7 +95,7 @@ pub struct Config {
     pub global: GlobalConfig,
     pub project: ProjectConfig,
     /// Resolved at load() — flag > JR_PROFILE > default_profile > "default".
-    pub active_profile_name: String,
+    pub active_profile_name: Profile,
 }
 
 /// Resolve the active profile name from precedence chain:
@@ -187,6 +196,7 @@ pub fn migrate_legacy_global(mut global: GlobalConfig) -> GlobalConfig {
         oauth_scopes: global.instance.oauth_scopes.clone(),
         team_field_id: global.fields.team_field_id.clone(),
         story_points_field_id: global.fields.story_points_field_id.clone(),
+        env: None,
         project: None,
     };
     global.profiles.insert("default".to_string(), profile);
@@ -322,11 +332,12 @@ impl Config {
         // is not thread-safe, so the cleaner fix is to drop the env-var seam
         // entirely. JR_PROFILE remains the user-facing env var.
         let env_profile = std::env::var("JR_PROFILE").ok();
-        let active_profile_name = resolve_active_profile_name(&global, cli_profile, env_profile);
+        let active_profile_name_raw =
+            resolve_active_profile_name(&global, cli_profile, env_profile);
         // Validate the resolved name. JR_PROFILE / --profile / default_profile
         // all flow into cache paths and keyring keys, so a bad value (e.g.
         // "foo:bar" or path separators) must be rejected at the config boundary.
-        validate_profile_name(&active_profile_name)?;
+        validate_profile_name(&active_profile_name_raw)?;
 
         // Verify the resolved active profile exists in [profiles] (when any
         // profiles are configured). A fresh install with no profiles yet is
@@ -342,15 +353,22 @@ impl Config {
         // file. Matches the wording used by switch/remove/logout/status.
         if strict
             && !global.profiles.is_empty()
-            && !global.profiles.contains_key(&active_profile_name)
+            && !global.profiles.contains_key(&active_profile_name_raw)
         {
             let known: Vec<&str> = global.profiles.keys().map(String::as_str).collect();
             return Err(JrError::UserError(format!(
-                "unknown profile: {active_profile_name}; known: {}",
+                "unknown profile: {active_profile_name_raw}; known: {}",
                 known.join(", ")
             ))
             .into());
         }
+
+        // Boundary construction (BC-6.2.015, ADR-0011): the raw profile-name
+        // `String` resolved above becomes a type-fenced `Profile` here, right
+        // where it first becomes available, so every downstream consumer of
+        // `Config::active_profile_name` is compile-time guaranteed a real
+        // `Profile` rather than a profile-unaware bare string.
+        let active_profile_name = Profile::from(active_profile_name_raw);
 
         Ok(Config {
             global,
@@ -382,7 +400,7 @@ impl Config {
         if let Ok(override_url) = std::env::var("JR_BASE_URL") {
             return Ok(override_url.trim_end_matches('/').to_string());
         }
-        let profile = self.global.profiles.get(&self.active_profile_name).ok_or_else(|| {
+        let profile = self.global.profiles.get(self.active_profile_name.as_ref()).ok_or_else(|| {
             JrError::ConfigError(format!(
                 "No Jira instance configured for profile {:?}. Run \"jr auth login --profile {}\" or \"jr init\".",
                 self.active_profile_name, self.active_profile_name
@@ -394,10 +412,10 @@ impl Config {
                 self.active_profile_name, self.active_profile_name
             ))
         })?;
-        if let Some(cloud_id) = &profile.cloud_id {
-            if profile.auth_method.as_deref() == Some("oauth") {
-                return Ok(format!("https://api.atlassian.com/ex/jira/{cloud_id}"));
-            }
+        if let Some(cloud_id) = &profile.cloud_id
+            && profile.auth_method.as_deref() == Some("oauth")
+        {
+            return Ok(format!("https://api.atlassian.com/ex/jira/{cloud_id}"));
         }
         Ok(url.trim_end_matches('/').to_string())
     }
@@ -419,7 +437,7 @@ impl Config {
     pub fn active_profile(&self) -> ProfileConfig {
         self.global
             .profiles
-            .get(&self.active_profile_name)
+            .get(self.active_profile_name.as_ref())
             .cloned()
             .unwrap_or_default()
     }
@@ -428,7 +446,7 @@ impl Config {
     pub fn active_profile_or_err(&self) -> anyhow::Result<&ProfileConfig> {
         self.global
             .profiles
-            .get(&self.active_profile_name)
+            .get(self.active_profile_name.as_ref())
             .ok_or_else(|| {
                 let known: Vec<&str> = self.global.profiles.keys().map(String::as_str).collect();
                 JrError::ConfigError(format!(
@@ -653,7 +671,7 @@ mod tests {
         let config = Config {
             global: GlobalConfig::default(),
             project: ProjectConfig::default(),
-            active_profile_name: String::new(),
+            active_profile_name: Profile::default(),
         };
         assert!(config.base_url().is_err());
     }
@@ -718,7 +736,7 @@ mod tests {
                 project: Some("FOO".into()),
                 board_id: None,
             },
-            active_profile_name: String::new(),
+            active_profile_name: Profile::default(),
         };
         assert_eq!(config.project_key(Some("BAR")), Some("BAR".into()));
         assert_eq!(config.project_key(None), Some("FOO".into()));
@@ -732,7 +750,7 @@ mod tests {
                 project: None,
                 board_id: Some(42),
             },
-            active_profile_name: String::new(),
+            active_profile_name: Profile::default(),
         };
         // CLI override wins
         assert_eq!(config.board_id(Some(99)), Some(99));
@@ -915,6 +933,70 @@ mod tests {
             p.story_points_field_id.as_deref(),
             Some("customfield_10002")
         );
+    }
+
+    /// BC-6.1.015 AC-001 / EC-3: a pre-existing `config.toml` written before
+    /// the `env` field existed (no `env` key under `[profiles.x]`) must
+    /// deserialize with `env: None` — no error, no warning. This is the
+    /// tolerant-reader contract (DEC-314): `env` is purely additive.
+    #[test]
+    fn test_profile_config_env_absent_key_deserializes_to_none() {
+        let toml = r#"
+            url = "https://acme.atlassian.net"
+            auth_method = "oauth"
+        "#;
+        let p: ProfileConfig = toml::from_str(toml).unwrap();
+        assert_eq!(
+            p.env, None,
+            "a config.toml with no `env` key must deserialize to env: None"
+        );
+    }
+
+    /// BC-6.1.015 postcondition: a profile with `env = "prod"` set
+    /// deserializes to `Some("prod")`.
+    #[test]
+    fn test_profile_config_env_present_deserializes_to_some() {
+        let toml = r#"
+            url = "https://acme.atlassian.net"
+            env = "prod"
+        "#;
+        let p: ProfileConfig = toml::from_str(toml).unwrap();
+        assert_eq!(p.env.as_deref(), Some("prod"));
+    }
+
+    /// BC-6.1.015 AC-002 / EC-2: `env = ""` (present but empty) must
+    /// deserialize distinctly from an absent key — `Some(String::new())`,
+    /// never collapsed to `None`. The `Some("")` vs `None` distinction is
+    /// spec-fixed (BC-1.6.046 EC-1.6.046-1) and depends on this round-trip
+    /// holding at the storage layer.
+    #[test]
+    fn test_profile_config_env_empty_string_deserializes_to_some_empty() {
+        let toml = r#"
+            url = "https://acme.atlassian.net"
+            env = ""
+        "#;
+        let p: ProfileConfig = toml::from_str(toml).unwrap();
+        assert_eq!(
+            p.env,
+            Some(String::new()),
+            "env = \"\" must deserialize to Some(\"\"), never None"
+        );
+    }
+
+    /// BC-6.1.015 EC-4: storage stays verbatim — no allowlist/enum
+    /// validation on `env`. Any string, including one with control
+    /// characters or unicode, round-trips unmodified through serialize ->
+    /// deserialize. (Display-layer sanitization is a separate concern,
+    /// owned by `output::sanitize_env_display`.)
+    #[test]
+    fn test_profile_config_env_accepts_arbitrary_string_no_validation() {
+        let p = ProfileConfig {
+            env: Some("not-a-real-enum-value \u{1b}[31m\x00".into()),
+            ..ProfileConfig::default()
+        };
+        let serialized = toml::to_string(&p).unwrap();
+        let round_tripped: ProfileConfig = toml::from_str(&serialized).unwrap();
+        assert_eq!(round_tripped.env, p.env);
     }
 
     #[test]
@@ -1995,5 +2077,168 @@ mod tests {
             "M-6: resolved path must end with 'jr' component. Got: {}",
             result.display()
         );
+    }
+
+    /// S-cycle4-cloud-id-correctness — Two-Step Red Gate TEST (step 2 of 2)
+    /// for AC-009 (BC-1.2.054 Postcondition 1, Invariant 1/2; VP-AUTHDX-021):
+    /// `Config::base_url()` selects the OAuth gateway URL IFF
+    /// `auth_method == Some("oauth")` AND `cloud_id` is present — for the
+    /// FULL cross product of `auth_method` in {oauth, api_token,
+    /// unset/None} x `cloud_id` in {present, absent}. A "stale" vs
+    /// "correct" cloud_id makes no observable difference to this pure,
+    /// config-derived function — it is opaque UUID text substituted
+    /// verbatim into the gateway URL string — so {present, absent} is the
+    /// complete cross product this property needs, not a three-way
+    /// {correct, stale, absent} split (the story's own AC-009 text lists
+    /// "present-correct/present-stale/absent" as the conceptual states a
+    /// human might reason about; this pin covers "present" generically
+    /// since the two present-cases are byte-identical from `base_url()`'s
+    /// point of view).
+    ///
+    /// This is a REGRESSION PIN on already-correct, PRE-EXISTING behavior
+    /// (ADR-0022 §4) — no `src/config.rs` code change is made by this
+    /// story. It must FAIL LOUD if a future change removes the `oauth`
+    /// gate from `base_url()`.
+    ///
+    /// This test currently PASSES against `base_url()`'s existing,
+    /// unmodified implementation (confirmed: `cargo test
+    /// prop_base_url_selects_gateway_iff_oauth_and_cloud_id_present` is
+    /// green today) — it is a regression pin on already-correct code, not a
+    /// Red Gate test for new production code. Included here per Task 12 /
+    /// AC-009 so the pin exists from this story's first commit onward,
+    /// consistent with the "no code change to either function" contract.
+    mod proptests_ac_009_base_url_gateway_guard {
+        use super::*;
+        use proptest::prelude::*;
+
+        proptest! {
+            #![proptest_config(ProptestConfig::with_cases(256))]
+
+            #[test]
+            fn prop_base_url_selects_gateway_iff_oauth_and_cloud_id_present(
+                auth_method in prop_oneof![
+                    Just(Some("oauth".to_string())),
+                    Just(Some("api_token".to_string())),
+                    Just(None::<String>),
+                ],
+                cloud_id_present in any::<bool>(),
+                cloud_id in "[a-f0-9-]{8,36}",
+            ) {
+                let _guard = ENV_MUTEX.lock().unwrap_or_else(|e| e.into_inner());
+                // SAFETY: ENV_MUTEX held for this whole property test body —
+                // base_url() consults JR_BASE_URL first (debug builds only)
+                // and must not be short-circuited by a leaking env var from
+                // another test.
+                unsafe {
+                    std::env::remove_var("JR_BASE_URL");
+                }
+
+                let mut profiles = std::collections::BTreeMap::new();
+                profiles.insert(
+                    "sandbox".to_string(),
+                    ProfileConfig {
+                        url: Some("https://sandbox.atlassian.net".into()),
+                        auth_method: auth_method.clone(),
+                        cloud_id: if cloud_id_present { Some(cloud_id.clone()) } else { None },
+                        ..ProfileConfig::default()
+                    },
+                );
+                let config = Config {
+                    global: GlobalConfig {
+                        default_profile: Some("sandbox".into()),
+                        profiles,
+                        ..GlobalConfig::default()
+                    },
+                    project: ProjectConfig::default(),
+                    active_profile_name: "sandbox".into(),
+                };
+
+                let result = config.base_url().unwrap();
+                let expects_gateway = auth_method.as_deref() == Some("oauth") && cloud_id_present;
+
+                if expects_gateway {
+                    prop_assert_eq!(
+                        &result,
+                        &format!("https://api.atlassian.com/ex/jira/{cloud_id}")
+                    );
+                } else {
+                    prop_assert_eq!(&result, &"https://sandbox.atlassian.net".to_string());
+                }
+            }
+        }
+    }
+}
+
+/// VP-AUTHDX-009 (BC-6.1.015 AC-003): tolerant-reader + round-trip property
+/// coverage for `ProfileConfig.env` across arbitrary field combinations.
+#[cfg(test)]
+mod proptests_env_tag {
+    use super::*;
+    use proptest::prelude::*;
+
+    proptest! {
+        #![proptest_config(ProptestConfig::with_cases(1000))]
+
+        /// Property 1: a TOML profile block with NO `env` key (arbitrary
+        /// other fields present or absent) always deserializes to
+        /// `env: None`. Covers BC-6.1.015 EC-3 / AC-001 across randomized
+        /// sibling-field combinations, not just the single fixed case in
+        /// `test_profile_config_env_absent_key_deserializes_to_none`.
+        #[test]
+        fn prop_profile_config_env_absent_key_always_none(
+            url in proptest::option::of("[a-zA-Z0-9.:/-]{0,40}"),
+            auth_method in proptest::option::of("[a-z_]{0,20}"),
+        ) {
+            let mut toml = String::new();
+            if let Some(u) = &url {
+                toml.push_str(&format!("url = {u:?}\n"));
+            }
+            if let Some(a) = &auth_method {
+                toml.push_str(&format!("auth_method = {a:?}\n"));
+            }
+            let p: ProfileConfig = toml::from_str(&toml).unwrap();
+            prop_assert_eq!(p.env, None);
+        }
+
+        /// Property 2: for ANY string `s` (including empty and strings with
+        /// control/unicode characters — the `(?s)` flag makes `.` match
+        /// every character, including `\n`, so this genuinely covers
+        /// newlines and not just other control bytes), constructing
+        /// `env: Some(s.clone())` and round-tripping through serialize ->
+        /// deserialize returns `Some(s)` unchanged. Covers BC-6.1.015 EC-4
+        /// (storage stays verbatim, no validation/mutation at the storage
+        /// layer).
+        #[test]
+        fn prop_profile_config_env_some_round_trips(s in "(?s).*") {
+            let p = ProfileConfig {
+                env: Some(s.clone()),
+                ..ProfileConfig::default()
+            };
+            let serialized = toml::to_string(&p)
+                .expect("ProfileConfig with arbitrary env string must serialize");
+            let round_tripped: ProfileConfig = toml::from_str(&serialized)
+                .expect("serialized ProfileConfig must deserialize");
+            prop_assert_eq!(round_tripped.env, Some(s));
+        }
+
+        /// Property 3: `env: None` always round-trips as `None` (never
+        /// promoted to `Some("")` or any other value) through a
+        /// serialize -> deserialize cycle, for any combination of sibling
+        /// `Option<String>` fields.
+        #[test]
+        fn prop_profile_config_env_none_round_trips_as_none(
+            url in proptest::option::of("[a-zA-Z0-9.:/-]{0,40}"),
+        ) {
+            let p = ProfileConfig {
+                url,
+                env: None,
+                ..ProfileConfig::default()
+            };
+            let serialized = toml::to_string(&p)
+                .expect("ProfileConfig must serialize");
+            let round_tripped: ProfileConfig = toml::from_str(&serialized)
+                .expect("serialized ProfileConfig must deserialize");
+            prop_assert_eq!(round_tripped.env, None);
+        }
     }
 }
