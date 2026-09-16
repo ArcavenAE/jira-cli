@@ -18,11 +18,22 @@ input-hash: "1c24441"
 
 ## Status
 
-**Proposed** (2026-09-15). Gate: F2 spec evolution for cycle-013 `msrv-1.88-bump` (Feature Mode).
-The 1.88 target itself was already confirmed by the human at the F1 delta-analysis gate
-(`.factory/cycles/cycle-013/phase-f1-delta-analysis/delta-analysis.md`); this ADR records the
-decision's durable rationale for F2's human approval gate. Do not treat this as Accepted until
-the F2 gate is passed — no DEC is minted by this document.
+**Proposed** (2026-09-15; prose reconciled 2026-09-16 at the cycle-013 Wave-2 integration gate).
+Gate: F2 spec evolution for cycle-013 `msrv-1.88-bump` (Feature Mode) was approved 2026-09-15
+(DEC-364). Since then, F3 story decomposition was approved 2026-09-15 (DEC-365) and F4 delta
+implementation has landed on `develop` in full: Wave 1 (S1+S2 combined, DEC-366) merged via PR
+#818 @ `29e2d362`, and Wave 2 (S3, docs-only) merged via PR #819 @ `cfe1dedc`. `Cargo.toml`'s
+`rust-version` is now `"1.88"`, `comfy-table` is re-pinned to `=7.2.2`, and
+`.github/workflows/ci.yml`'s `msrv` job runs `cargo check --all-targets --all-features --locked`
+at toolchain `1.88.0` — all independently re-verified against the merged `develop` tip by the
+cycle-013 Wave-2 integration gate
+(`.factory/cycles/cycle-013/phase-f4-wave2-gate/regression-report.md`, `.../consistency-audit.md`,
+GATE: PASS). The 1.88 target itself was already confirmed by the human at the F1 delta-analysis
+gate (`.factory/cycles/cycle-013/phase-f1-delta-analysis/delta-analysis.md`); this ADR records
+the decision's durable rationale. **Despite F2, F3, and F4 all being approved/merged, this
+document's top-level `status:` field correctly remains `proposed`** — per VSDD convention
+(cycle-012/ADR-0024 precedent), it flips to `Accepted` only at the cycle-013 F7 delta-convergence
+human gate, which has not yet run. No DEC is minted by this document itself.
 
 ## Context
 
@@ -178,12 +189,23 @@ record that F4's doc edit traces back to.
   description will describe pre-refactor code once F4 lands the let-chain retrofit and should be
   refreshed as a documentation-currency pass — see this cycle's F2 verification-delta artifact.
 
-### Status as of 2026-09-15
+### Status as of 2026-09-16 (updated at the Wave-2 integration gate; originally written 2026-09-15)
 
-Proposed, pending the F2 human approval gate. No code, `Cargo.toml`, or `ci.yml` changes have been
-made under this ADR — F2 is spec-layer only. Implementation is F4's responsibility per the F1
-preview story decomposition (Story A: mechanical version bump + CI-gate contract, atomic; Story B:
-let-chain retrofit + convention cleanup; Story C: doc/policy reconciliation).
+**Superseded narrative, kept for history:** as originally written 2026-09-15, this section read
+"Proposed, pending the F2 human approval gate. No code, `Cargo.toml`, or `ci.yml` changes have
+been made under this ADR — F2 is spec-layer only." That is no longer current.
+
+**Current state (2026-09-16):** F2 human approval gate PASSED 2026-09-15 (DEC-364). F3 story
+decomposition PASSED 2026-09-15 (DEC-365). F4 delta implementation is now COMPLETE — both waves
+merged to `develop`: Wave 1 (S1+S2 combined) via PR #818 @ `29e2d362`, Wave 2 (S3, docs-only) via
+PR #819 @ `cfe1dedc`. All three F1-preview stories have landed (Story A: mechanical version bump +
+CI-gate contract; Story B: let-chain retrofit + convention cleanup; Story C: doc/policy
+reconciliation) — `Cargo.toml`, `.github/workflows/ci.yml`, and `tests/ci_gate_completeness.rs`
+are all at `1.88` on `develop`, confirmed by the cycle-013 Wave-2 integration gate's regression
+report (5271 tests pass / 0 fail, clippy 0-warn, fmt clean, MSRV 1.88 floor build verified) and
+consistency audit. This ADR's own `status:` field stays `proposed`; it is scheduled to flip to
+`Accepted` at the cycle-013 F7 delta-convergence human gate, not before. Next: Phase F5 scoped
+adversarial review.
 
 ## Alternatives Considered
 

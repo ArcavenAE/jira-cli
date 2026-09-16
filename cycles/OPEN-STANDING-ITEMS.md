@@ -468,3 +468,65 @@ The pre-existing `F7-GATE-SYSTEMIC-INPUT-HASH-DRIFT-BOOKKEEPING` factory-wide in
 - `F7-GATE-SYSTEMIC-INPUT-HASH-DRIFT-BOOKKEEPING` -- see Systemic standing debt above.
 - 11-story SELF-IMPROVEMENT `S-PG-*` backlog (all `draft`, need PO BC-authorship before `ready`).
 - `VP-COUNT-RECONCILIATION` (cycle-005 F1, unresolved) -- a raw grep found materially more VP ids across `bc-*.md` bodies than STATE's tracked running total; pre-existing bookkeeping-basis discrepancy, non-blocking. Target: a future maintenance/self-improvement cycle.
+
+## cycle-013 Wave-2 integration gate — F-3 (LOW/NIT), deferred (2026-09-16)
+
+**ID:** `CYCLE-013-F3-HISTORICAL-PLANDOC-MSRV-MENTIONS`
+**Severity:** LOW/NIT, non-blocking. Surfaced by the cycle-013 Wave-2 integration gate's
+consistency audit (`.factory/cycles/cycle-013/phase-f4-wave2-gate/consistency-audit.md`, finding
+F-3). Deferred, not a gate blocker (regression GREEN, consistency verdict resolved via F-1/F-2
+fixes; F-3 alone does not reopen the gate).
+
+**Files:** `docs/superpowers/plans/2026-04-24-list-rs-split.md:9`,
+`docs/superpowers/plans/2026-04-24-multi-profile-auth.md:9`,
+`docs/superpowers/plans/2026-05-13-search-issue-keys.md:9`,
+`docs/superpowers/specs/2026-04-16-markdown-to-adf-conversion-design.md:228`,
+`docs/superpowers/plans/2026-03-21-jr-implementation.md` (multiple mentions).
+
+**Issue:** These dated, historical planning/design documents state "Rust 1.85 MSRV" / "Rust 1.85+"
+as a fact about the environment at time of writing -- now stale since cycle-013 raised MSRV to
+1.88. Cycle-013's S3 (`S-cycle13-doc-policy-reconciliation`) added an explicit dated-historical
+annotation to exactly one comparable file
+(`docs/superpowers/plans/2026-04-23-team-field-object-shape-tolerance.md`) because that file's
+MSRV mention was load-bearing for an active code-snippet rationale (why `.and_then()` was used
+instead of a let-chain). The files above make the same kind of now-stale claim but were left
+untouched -- S3's target list didn't include them and F1's delta-analysis scoped "Files NOT
+Changed" to exclude the general `docs/superpowers/` corpus.
+
+**Why not fixed now:** point-in-time planning-snapshot documents (CLAUDE.md itself frames the v1
+implementation plan as historical architectural context, not a living spec); none drive an active
+behavioral claim the way the team-field one did; no CI guard (`claude_md_citations`,
+`check-spec-counts`, etc.) covers this corpus.
+
+**Candidate fix (optional, not required):** a single blanket disclaimer at the top of
+`docs/superpowers/plans/` (or a README there) stating these are point-in-time snapshots and
+MSRV/dependency-version mentions are historical, not live -- rather than patching each file
+individually as it happens to get touched. Target: a future maintenance sweep.
+
+## cycle-013 Wave-2 integration gate — process-gap findings (2026-09-16)
+
+**Status:** OPEN, all LOW/informational, non-blocking. Recorded per the S-7.02 Cycle-Closing
+Checklist discipline: these are pipeline/tooling gaps surfaced during the gate burst, not content
+defects in any spec/code artifact, and are not attributed to a fabricated story ID.
+
+**`CYCLE-013-HOOK-FALSE-POSITIVE-COMMIT-MSG-SCAN`** -- The `validate-factory-path-staging`
+PreToolUse hook pattern-matches the full Bash COMMIT-MESSAGE prose for `.factory/` substrings
+(not the actual staged paths), which false-positive-blocked a commit that staged only a `docs/`
+file (the architect hit this delivering the PR #822 fix; worked around it by rewording the commit
+message rather than by a hook fix). Candidate fix: scope the hook's pattern match to
+`git diff --cached --name-only` output instead of the commit-message string. Target: a future
+self-improvement/maintenance cycle (engine-level, `vsdd-factory` repo).
+
+**`CYCLE-013-PR822-SUBAGENT-STALL`** -- On the PR #822 dispatch, `vsdd-factory:github-ops` and an
+initial `vsdd-factory:pr-reviewer` sub-agent stalled for several minutes without returning
+(`github-ops-pr822-info` never returned a result); `pr-manager` fell back to running read-only
+`gh` inspections and the `gh pr merge` directly via Bash instead of waiting further. Root cause
+unknown -- flagged as a possible recurring infra issue, not yet diagnosed. Candidate: instrument
+sub-agent dispatch with a timeout/retry policy and capture stall telemetry next time it recurs.
+
+**`CYCLE-013-MERGE-WRAPPER-SCRIPTS-MISSING`** -- The governed merge-wrapper scripts referenced by
+the `pr-manager` protocol (`enforce-merge-strategy.sh`, `check-stale-verdict.sh`) do not exist in
+this repo, so they could not be invoked during the PR #822 merge; `pr-manager` fell back to direct
+`gh pr merge`. Candidate: either scaffold the two scripts in this repo (if the protocol expects
+them project-side) or correct the `pr-manager` protocol doc if they are meant to be engine-side
+and this repo is missing an integration step. Target: a future self-improvement/maintenance cycle.

@@ -4,7 +4,7 @@ level: ops
 version: "1.0"
 status: archive
 producer: state-manager
-timestamp: 2026-09-16T03:05:00Z
+timestamp: 2026-09-16T22:20:00Z
 cycle: "cycle-013-msrv-1.88-bump"
 inputs: [STATE.md]
 input-hash: "[live-state]"
@@ -73,4 +73,30 @@ now COMPLETE). Archived verbatim (from STATE.md v4.42) below.
 **Pending human decisions / blockers:** NONE that block pipeline progress. S3 (S-cycle13-doc-policy-reconciliation) is the next delta-implementation task, not yet started -- no human gate pending until S3 delivers and the Wave-2 integration gate runs (or unless S3 surfaces a blocker). LOW standing items: CYCLE-007-CR-001-KEYCHAIN-ERROR-VS-ABSENCE, CYCLE-007-PROBE-ROUTING-NO-DEFAULT-CI-TEST, CYCLE-007-LEGACY-OAUTH-UNSET-METHOD-MISREPORT, CYCLE-007-OAUTH-ABSENCE-EXIT-CODE-ASYMMETRY, CANONICAL-COUNTS-BREAKDOWN-STALE, CYCLE-007-AUTH-LIST-LAZY-MIGRATION-WRITE, CYCLE-007-F5-DOC-NITPICKS, CYCLE-007-F6-R1-KEYRING-GATED-HUMAN-TEXT-COVERAGE, CYCLE-007-F6-R2-DERIVE-AUTH-STATE-NO-MUTATION-COVERAGE, CYCLE-013-F4-S3-DOC-NITPICKS. A future session should also confirm release.yml run 34984900326's completion / GitHub Release publish for v0.7.0-dev.6 as a light follow-up (carried forward, unrelated to cycle-013).
 
 **Resume command (future session's choice):** /vsdd-factory:phase-f4-delta-implementation (or /vsdd-factory:next-step) to begin cycle-013's S3 (S-cycle13-doc-policy-reconciliation) delta implementation, folding in the CYCLE-013-F4-S3-DOC-NITPICKS items.
+```
+
+## Session Resume Checkpoint (2026-09-16, STATE.md v4.43) — CYCLE-013-F4-COMPLETE: cycle-013 Phase F4 (both waves) COMPLETE — Superseded 2026-09-16 (v4.44 CYCLE-013-WAVE2-GATE-PASSED)
+
+**Status:** SUPERSEDED 2026-09-16 by the v4.44 CYCLE-013-WAVE2-GATE-PASSED checkpoint
+(cycle-013 Wave-2 integration gate PASSED: regression GREEN, consistency audit
+INCONSISTENT->RESOLVED via PR #822 + this burst's ADR-0025 prose fix). Archived verbatim
+(from STATE.md v4.43) below.
+
+### State
+
+| Field | Value |
+|-------|-------|
+| **Date** | 2026-09-16 |
+| **Position** | cycle-013 (`msrv-1.88-bump`) Phase **F4 COMPLETE** (both waves): Wave 1 (S1+S2 combined, DEC-366) PR #818 @ `29e2d362`; Wave 2 S3 (`S-cycle13-doc-policy-reconciliation`, docs-only) PR #819 (`docs/cycle13-doc-policy-reconciliation` -> `develop`) merged squash @ `cfe1dedc` (2026-09-16T02:48:38Z, mergedBy Zious11; `develop`: `29e2d362`->`cfe1dedc`, 5 files). Quality gates cleared: docs-accuracy adversarial convergence (1 MED cross-ref mis-anchor fixed @ `0ab0acf5`, then CLEAN); fresh-eyes pr-reviewer APPROVE x2 independently; security N/A/CLEAN; CI 24/24 green incl. CI Gate; demo SKIPPED (docs-only). `S-cycle13-doc-policy-reconciliation` marked `done`/merged in `stories/STORY-INDEX.md` (v1.6.25->v1.6.26). `CYCLE-013-F4-S3-DOC-NITPICKS` RESOLVED; new LOW standing item `README-LICENSE-BADGE-VS-DEFERRED-LICENSE` recorded (out-of-scope awareness, not acted on). Phase F1 (DEC-363), F2 (DEC-364), F3 (DEC-365), Wave-1 (DEC-366) remain APPROVED/MERGED, unaffected. cycle-007 remains **CLOSED + RELEASED as v0.7.0-dev.6** (DEC-362); cycle-012 remains **CLOSED** (DEC-361). |
+| **Convergence counter** | No active convergence loop right now -- cycle-013 Phase F4 is complete (both waves' own delivery convergence finished: Wave 1's per-story adversarial 3/3 CLEAN each, Wave 2's docs-accuracy convergence). The next possible convergence loop is the Wave-2 integration gate's own checks, or Phase F5 scoped adversarial once that gate passes. |
+| **In-flight work** | NONE. No open PRs (PR #819 MERGED this burst). No story worktrees. `code-delivery/S-cycle13-doc-policy-reconciliation/pr-review.md` and the `stories/STORY-INDEX.md` status update are committed this burst. |
+
+### Resume Prompt
+
+```
+**Date:** 2026-09-16. cycle-013 (msrv-1.88-bump) Phase F4 COMPLETE (both waves merged): Wave 1 (S1+S2 combined, DEC-366) PR #818 @ 29e2d362; Wave 2 S3 (S-cycle13-doc-policy-reconciliation, docs-only) PR #819 (docs/cycle13-doc-policy-reconciliation -> develop) merged squash @ cfe1dedc (2026-09-16T02:48:38Z, mergedBy Zious11; develop: 29e2d362->cfe1dedc, 5 files). Quality gates cleared: docs-accuracy adversarial convergence (1 MED cross-ref mis-anchor fixed @ 0ab0acf5, then CLEAN); fresh-eyes pr-reviewer APPROVE x2 independently; security N/A/CLEAN; CI 24/24 green incl. CI Gate; demo SKIPPED (docs-only). S-cycle13-doc-policy-reconciliation marked done/merged in stories/STORY-INDEX.md (v1.6.25->v1.6.26). CYCLE-013-F4-S3-DOC-NITPICKS RESOLVED; new LOW standing item README-LICENSE-BADGE-VS-DEFERRED-LICENSE recorded (out-of-scope awareness, not acted on). Phase F1 (DEC-363), F2 (DEC-364), F3 (DEC-365), Wave-1 (DEC-366) remain APPROVED/MERGED, unaffected. cycle-007 remains CLOSED+RELEASED v0.7.0-dev.6 (DEC-362); cycle-012 remains CLOSED (DEC-361).
+
+**Pending human decisions / blockers:** NONE that block pipeline progress. The Wave-2 integration gate is the next task, not yet started -- no human gate pending until it runs (or unless it surfaces a blocker). LOW standing items: CYCLE-007-CR-001-KEYCHAIN-ERROR-VS-ABSENCE, CYCLE-007-PROBE-ROUTING-NO-DEFAULT-CI-TEST, CYCLE-007-LEGACY-OAUTH-UNSET-METHOD-MISREPORT, CYCLE-007-OAUTH-ABSENCE-EXIT-CODE-ASYMMETRY, CANONICAL-COUNTS-BREAKDOWN-STALE, CYCLE-007-AUTH-LIST-LAZY-MIGRATION-WRITE, CYCLE-007-F5-DOC-NITPICKS, CYCLE-007-F6-R1-KEYRING-GATED-HUMAN-TEXT-COVERAGE, CYCLE-007-F6-R2-DERIVE-AUTH-STATE-NO-MUTATION-COVERAGE, README-LICENSE-BADGE-VS-DEFERRED-LICENSE (new this burst; full detail: cycles/OPEN-STANDING-ITEMS.md). A future session should also confirm release.yml run 34984900326's completion / GitHub Release publish for v0.7.0-dev.6 as a light follow-up (carried forward, unrelated to cycle-013).
+
+**Resume command (future session's choice):** /vsdd-factory:wave-gate (or /vsdd-factory:next-step) to run cycle-013's Wave-2 integration gate now that both waves (S1+S2 and S3) have merged to develop.
 ```

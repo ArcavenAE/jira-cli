@@ -161,3 +161,22 @@ Decisions Log: DEC-365 minted; DEC-361 rolled into the collapsed older-decisions
 Resume Checkpoint (v4.40) archival was claimed but never actually executed (file did not exist prior
 to the v4.41->v4.42 burst); the gap is pre-existing and not recoverable verbatim, and is documented
 transparently in `cycles/cycle-013/session-checkpoints.md`'s header rather than silently ignored.
+
+## RESOLVED (rotated from STATE.md v4.44, originally "RESOLVED prior burst" 2026-09-16, v4.42)
+
+cycle-013 (`msrv-1.88-bump`) Phase F4 Wave 1 **COMBINED S1+S2 DELIVERY MERGED** (DEC-366): PR #818
+(`chore/cycle13-msrv-1.88-atomic-bump` -> `develop`) merged squash @ `29e2d362` (`develop`:
+`7160a534`->`29e2d362`, 41 files) -- a human-approved wave-plan deviation (MSRV 1.88 forces 73
+clippy `collapsible_if` sites, bump+retrofit inseparable). Per-story adversarial convergence 3/3
+CLEAN each; security CLEAN; pr-reviewer APPROVE; CI 24/24 green incl. CI Gate + 8 mutation shards;
+MSRV verified at real 1.88.0; demo SKIPPED (human decision). `comfy-table` 7.2.1->7.2.2. `.factory`
+docs reconciled (BC-5.3.001/BC-5.3.002/BC-X.13.007 prose refresh; 4 F3 story-doc nitpicks fixed,
+input-hashes recomputed). Both stories marked done/merged in `stories/STORY-INDEX.md`
+(v1.6.24->v1.6.25); `sprint-state.yaml` intentionally left untouched (cycle-012-scoped, pre-existing
+gap). STATE.md v4.41->v4.42; Phase Progress row `CYCLE-013-WAVE1-S1S2-MERGED-2026-09-16` appended
+(oldest row `CYCLE-012-F7-CONVERGED-2026-09-15` archived to `cycles/HISTORY-PHASE-PROGRESS.md`).
+Decisions Log: DEC-366 minted; DEC-362 rolled from an explicit row into the collapsed older-decisions
+row (369->370). 3 carried-forward F4 constraints RESOLVED (`CYCLE-013-F4-LETCHAIN-BC-COUPLING`,
+`CYCLE-013-F4-BC-PROSE-CURRENCY`, `CYCLE-013-F4-STORY-DOC-NITPICKS`); 1 new carry-forward item
+recorded (`CYCLE-013-F4-S3-DOC-NITPICKS`, subsequently RESOLVED at the F4 Wave-2/S3 burst). Prior
+Session Resume Checkpoint (v4.41) archived to `cycles/cycle-013/session-checkpoints.md`.
