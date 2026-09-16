@@ -1,1 +1,1 @@
-{"status":"pass","timestamp":"2026-09-16T02:21:24Z","command":"cd /Users/zious/Documents/GITHUB/jira-cli/.worktrees/S-cycle13-doc-policy-reconciliation && cargo test --test claude_md_citations 2>&1 | tail -30"}
+{"status":"pass","timestamp":"2026-09-16T20:51:40Z","command":"cd /Users/zious/Documents/GITHUB/jira-cli/.worktrees/docs-cycle13-wave2-gate-ci-gate-doc-currency && cargo test --test claude_md_citations 2>&1 | tail -30"}

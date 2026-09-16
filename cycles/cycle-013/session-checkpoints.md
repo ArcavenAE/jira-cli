@@ -100,3 +100,22 @@ INCONSISTENT->RESOLVED via PR #822 + this burst's ADR-0025 prose fix). Archived 
 
 **Resume command (future session's choice):** /vsdd-factory:wave-gate (or /vsdd-factory:next-step) to run cycle-013's Wave-2 integration gate now that both waves (S1+S2 and S3) have merged to develop.
 ```
+
+## Checkpoint v4.44 (archived from STATE.md during the v4.44->v4.45 CYCLE-013-F5-CONVERGED burst, 2026-09-16)
+
+| Field | Value |
+|-------|-------|
+| **Date** | 2026-09-16 |
+| **Position** | cycle-013 (`msrv-1.88-bump`) **Wave-2 integration gate PASSED**: regression report (`cycles/cycle-013/phase-f4-wave2-gate/regression-report.md`) GATE: PASS (cargo build/test/clippy/fmt + MSRV-1.88.0-floor build all PASS, 5271 tests/0 fail). Consistency audit (`cycles/cycle-013/phase-f4-wave2-gate/consistency-audit.md`) initial verdict INCONSISTENT (F-1 MED, F-2 HIGH, F-3 LOW/NIT) resolved to **RESOLVED**: F-2 fixed via PR #822 (squash @ `b960c305`, 2026-09-16, mergedBy Zious11; `develop`: `cfe1dedc`->`b960c305`); F-1 fixed against `specs/architecture/decisions/ADR-0025-raise-msrv-to-1-88.md`'s Status prose (`status: proposed` unchanged, input-hash `1c24441` unchanged); F-3 deferred as new standing item `CYCLE-013-F3-HISTORICAL-PLANDOC-MSRV-MENTIONS`. 3 process-gap findings also recorded as new standing items (`CYCLE-013-HOOK-FALSE-POSITIVE-COMMIT-MSG-SCAN`, `CYCLE-013-PR822-SUBAGENT-STALL`, `CYCLE-013-MERGE-WRAPPER-SCRIPTS-MISSING`). No DEC minted (bookkeeping/automated gate, cycle-007/012 precedent). Phase F1 (DEC-363), F2 (DEC-364), F3 (DEC-365), F4-both-waves (DEC-366) remain APPROVED/MERGED, unaffected. cycle-007 remains **CLOSED + RELEASED as v0.7.0-dev.6** (DEC-362); cycle-012 remains **CLOSED** (DEC-361). |
+| **Convergence counter** | No active convergence loop right now -- the Wave-2 integration gate's own regression + consistency checks are complete and PASSED. The next convergence loop is Phase F5 scoped adversarial review, not yet started. |
+| **In-flight work** | NONE. No open PRs (PR #822 MERGED this burst's gate-closing window). No story worktrees. `specs/architecture/decisions/ADR-0025-raise-msrv-to-1-88.md` (F-1 fix) and `cycles/OPEN-STANDING-ITEMS.md` (F-3 + 3 process-gap standing items) committed this burst, alongside the gate evidence files (`cycles/cycle-013/phase-f4-wave2-gate/regression-report.md`, `.../consistency-audit.md`). |
+
+### Resume Prompt
+
+```
+**Date:** 2026-09-16. cycle-013 (msrv-1.88-bump) Wave-2 integration gate PASSED: regression GREEN (cargo build/test/clippy/fmt + MSRV-1.88.0-floor build all PASS, 5271 tests/0 fail). Consistency audit's initial INCONSISTENT verdict (F-1 MED, F-2 HIGH, F-3 LOW/NIT) resolved to RESOLVED: F-2 fixed via PR #822 (squash @ b960c305, develop: cfe1dedc->b960c305); F-1 fixed against ADR-0025's Status prose (status: proposed unchanged); F-3 deferred as new standing item CYCLE-013-F3-HISTORICAL-PLANDOC-MSRV-MENTIONS. 3 process-gap findings recorded as new standing items. No DEC minted (bookkeeping/automated gate). Phase F1 (DEC-363), F2 (DEC-364), F3 (DEC-365), F4-both-waves (DEC-366) remain APPROVED/MERGED. cycle-007 remains CLOSED+RELEASED v0.7.0-dev.6 (DEC-362); cycle-012 remains CLOSED (DEC-361).
+
+**Pending human decisions / blockers:** NONE that block pipeline progress. Phase F5 scoped adversarial review is the next task, not yet started -- no human gate pending until F7. LOW standing items: CYCLE-007-CR-001-KEYCHAIN-ERROR-VS-ABSENCE, CYCLE-007-PROBE-ROUTING-NO-DEFAULT-CI-TEST, CYCLE-007-LEGACY-OAUTH-UNSET-METHOD-MISREPORT, CYCLE-007-OAUTH-ABSENCE-EXIT-CODE-ASYMMETRY, CANONICAL-COUNTS-BREAKDOWN-STALE, CYCLE-007-AUTH-LIST-LAZY-MIGRATION-WRITE, CYCLE-007-F5-DOC-NITPICKS, CYCLE-007-F6-R1-KEYRING-GATED-HUMAN-TEXT-COVERAGE, CYCLE-007-F6-R2-DERIVE-AUTH-STATE-NO-MUTATION-COVERAGE, README-LICENSE-BADGE-VS-DEFERRED-LICENSE, CYCLE-013-F3-HISTORICAL-PLANDOC-MSRV-MENTIONS, CYCLE-013-HOOK-FALSE-POSITIVE-COMMIT-MSG-SCAN, CYCLE-013-PR822-SUBAGENT-STALL, CYCLE-013-MERGE-WRAPPER-SCRIPTS-MISSING (4 new that burst; full detail: cycles/OPEN-STANDING-ITEMS.md). A future session should also confirm release.yml run 34984900326's completion / GitHub Release publish for v0.7.0-dev.6 as a light follow-up (carried forward, unrelated to cycle-013).
+
+**Resume command (future session's choice):** /vsdd-factory:phase-f5-scoped-adversarial (or /vsdd-factory:next-step) to begin cycle-013's Phase F5 scoped adversarial review now that the Wave-2 integration gate has passed.
+```

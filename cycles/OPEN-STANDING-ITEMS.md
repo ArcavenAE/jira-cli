@@ -530,3 +530,25 @@ this repo, so they could not be invoked during the PR #822 merge; `pr-manager` f
 `gh pr merge`. Candidate: either scaffold the two scripts in this repo (if the protocol expects
 them project-side) or correct the `pr-manager` protocol doc if they are meant to be engine-side
 and this repo is missing an integration step. Target: a future self-improvement/maintenance cycle.
+
+## cycle-013 F5 scoped adversarial — maintenance-sensitivity watch (2026-09-16)
+
+**ID:** `CYCLE-013-COMFY-TABLE-ZERO-HEADROOM-MSRV`
+**Severity:** LOW, maintenance sensitivity, non-blocking. Surfaced by F5 Pass 3
+(`.factory/cycles/cycle-013/phase-f5-adversarial/pass-03.md`).
+
+**Issue:** `comfy-table` is pinned at exactly `=7.2.2`, which requires Rust 1.88 --
+matching this repo's `rust-version = "1.88"` MSRV floor with zero headroom. Any future
+`comfy-table` bump that raises its own MSRV above 1.88 would fail the (now `--all-targets`
+-scoped) `msrv` CI job.
+
+**Why not fixed now:** not a defect -- the current pin is valid and CI-green. The
+zero-headroom condition is fail-safe by construction: a future incompatible bump fails the
+widened `msrv` job LOUDLY (a hard CI red), not silently, and the repo's existing
+exact-pin-with-review convention (the same discipline already applied to `saphyr-parser`)
+means any `comfy-table` version bump already goes through human-gated review before
+landing.
+
+**Candidate action:** none required now. Watch this pin the next time `comfy-table` is
+bumped -- confirm the new version's own MSRV still sits at or below this repo's floor
+before merging, or raise the floor in lockstep if it doesn't.

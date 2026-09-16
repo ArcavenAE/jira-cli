@@ -162,6 +162,16 @@ Resume Checkpoint (v4.40) archival was claimed but never actually executed (file
 to the v4.41->v4.42 burst); the gap is pre-existing and not recoverable verbatim, and is documented
 transparently in `cycles/cycle-013/session-checkpoints.md`'s header rather than silently ignored.
 
+## RESOLVED (rotated from STATE.md v4.45, originally "RESOLVED prior burst" 2026-09-16, v4.43 -- archived during the v4.44->v4.45 CYCLE-013-F5-CONVERGED burst)
+
+cycle-013 (`msrv-1.88-bump`) Phase F4 Wave 2 S3 product-tree doc-nitpick constraint
+(`CYCLE-013-F4-S3-DOC-NITPICKS`, recorded at the Wave-1 merge) closed -- all 4 items landed in PR
+#819 @ `cfe1dedc`: README MSRV badge (1.85->1.88), `tests/team_column_parity.rs` stale S-626-1
+doc-comments refreshed, the plan-doc's "MSRV 1.85" phrasing reframed as dated-historical, and the
+CLAUDE.md `Cargo.toml:78-85` line-range citation replaced with symbol/prose form (#408). New LOW
+standing item `README-LICENSE-BADGE-VS-DEFERRED-LICENSE` recorded (out-of-scope awareness, not
+acted on). Prior Session Resume Checkpoint (v4.42) archived to `cycles/cycle-013/session-checkpoints.md`.
+
 ## RESOLVED (rotated from STATE.md v4.44, originally "RESOLVED prior burst" 2026-09-16, v4.42)
 
 cycle-013 (`msrv-1.88-bump`) Phase F4 Wave 1 **COMBINED S1+S2 DELIVERY MERGED** (DEC-366): PR #818

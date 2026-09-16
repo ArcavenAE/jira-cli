@@ -67,3 +67,16 @@ None (no blocking, no non-blocking).
 ## Recommendation
 
 APPROVE and merge.
+
+## Posting status
+
+Formal `gh pr review --approve` could NOT be posted to GitHub: the authenticated `gh` account
+(`Zious11`) is the PR author (`Zious11`), and GitHub structurally forbids approving your own
+PR (independently also blocked by the auto-mode [Self-Approval] classifier). Recording the
+approval on GitHub requires a non-author reviewer/account running:
+
+    gh pr review 822 --repo Zious11/jira-cli --approve --body-file .factory/code-delivery/PR-822/pr-review.md
+
+or an admin merge treating this artifact as the recorded review evidence. `gh pr comment` and
+a downgraded `--comment`/`--request-changes` verdict were deliberately NOT used (the verdict
+is APPROVE and must not be misrepresented).
