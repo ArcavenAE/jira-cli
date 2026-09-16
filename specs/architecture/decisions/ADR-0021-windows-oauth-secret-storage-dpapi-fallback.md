@@ -722,8 +722,10 @@ slice, call the FFI function, copy the output `DATA_BLOB` into an owned `Vec<u8>
 output buffer via `LocalFree`. No other file-write, JSON, or routing logic is `unsafe`.
 
 **MSRV verification is an explicit F4 task, not assumed here:** `windows-sys` 0.60.2's MSRV
-against this repo's `rust-version = "1.85"` must be confirmed at F4 (the F1 delta analysis
-flagged this as unverified for either dependency candidate).
+against this repo's `rust-version` floor at the time (1.85; now 1.88 under ADR-0025, unaffected by
+this ADR's conclusion — see `cycles/OPEN-STANDING-ITEMS.md` `CYCLE-013-F3-HISTORICAL-PLANDOC-MSRV-MENTIONS`
+sub-entry F7-AUDIT-3) must be confirmed at F4 (the F1 delta analysis flagged this as unverified
+for either dependency candidate).
 
 ### 6. Honest-fail backstop — reachable only when BOTH keyring AND the DPAPI store fail
 

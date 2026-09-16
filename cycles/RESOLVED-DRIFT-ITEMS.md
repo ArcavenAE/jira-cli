@@ -190,3 +190,15 @@ row (369->370). 3 carried-forward F4 constraints RESOLVED (`CYCLE-013-F4-LETCHAI
 `CYCLE-013-F4-BC-PROSE-CURRENCY`, `CYCLE-013-F4-STORY-DOC-NITPICKS`); 1 new carry-forward item
 recorded (`CYCLE-013-F4-S3-DOC-NITPICKS`, subsequently RESOLVED at the F4 Wave-2/S3 burst). Prior
 Session Resume Checkpoint (v4.41) archived to `cycles/cycle-013/session-checkpoints.md`.
+
+## cycle-013 Wave-2 integration gate (2026-09-16, rotated from STATE.md "RESOLVED prior burst" at the v4.45->v4.46 CYCLE-013-F6-HARDENED burst)
+
+**RESOLVED (cycle-013 Wave-2 integration gate, 2026-09-16):** the consistency audit's two
+blocking findings closed -- F-2 (HIGH, `docs/specs/ci-gate-completeness.md` stale vs. the landed
+`--all-targets`/1.88 `msrv` job) fixed via PR #822 (squash-merged @ `b960c305`); F-1 (MED,
+ADR-0025's own Status prose stale relative to F2-F4 having landed) fixed against
+`specs/architecture/decisions/ADR-0025-raise-msrv-to-1-88.md`, with `status: proposed` explicitly
+and correctly left unchanged. F-3 (LOW/NIT, 5 historical plan-doc MSRV mentions) recorded as the
+deferred standing item `CYCLE-013-F3-HISTORICAL-PLANDOC-MSRV-MENTIONS`. 3 process-gap standing
+items also recorded per S-7.02 discipline. Regression GREEN + consistency RESOLVED closed the
+Wave-2 integration gate, clearing cycle-013 to proceed to Phase F5.

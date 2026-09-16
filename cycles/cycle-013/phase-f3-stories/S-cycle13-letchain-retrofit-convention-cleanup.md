@@ -25,7 +25,7 @@ inputs:
   - "CLAUDE.md"
   - ".factory/specs/prd/bc-5-boards-sprints.md"
   - ".factory/specs/prd/cross-cutting.md"
-input-hash: "cdc1cd8"
+input-hash: "29ac0d0"
 traces_to: "ADR-0025 Consequences (Negative) §4; BC-5.3.001; BC-5.3.002"
 cycle: cycle-013-msrv-1.88-bump
 estimated_effort: medium

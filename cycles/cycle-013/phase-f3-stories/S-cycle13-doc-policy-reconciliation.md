@@ -21,7 +21,7 @@ inputs:
   - "README.md"
   - "docs/superpowers/specs/2026-03-21-jr-jira-cli-design.md"
   - "CLAUDE.md"
-input-hash: "c3f7137"
+input-hash: "abb7a73"
 traces_to: "ADR-0025 Decision (going-forward MSRV policy); F1 delta-analysis.md §3 (README/CLAUDE.md/design-spec rows)"
 cycle: cycle-013-msrv-1.88-bump
 estimated_effort: xsmall

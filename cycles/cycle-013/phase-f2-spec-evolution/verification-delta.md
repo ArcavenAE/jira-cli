@@ -10,7 +10,7 @@ inputs:
   - .factory/specs/architecture/decisions/ADR-0025-raise-msrv-to-1-88.md
   - .factory/research/msrv-let-chains-comfy-table-2026-07-30.md
   - .factory/research/msrv-1.88-ecosystem-policy-2026-09-15.md
-input-hash: "536fcf1"
+input-hash: "3b233fd"
 ---
 
 # Phase F2 Verification Delta: MSRV 1.88 Bump (cycle-013 `msrv-1.88-bump`)

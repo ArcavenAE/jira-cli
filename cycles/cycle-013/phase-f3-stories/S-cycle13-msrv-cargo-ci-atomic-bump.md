@@ -22,7 +22,7 @@ inputs:
   - "Cargo.toml"
   - ".github/workflows/ci.yml"
   - "tests/ci_gate_completeness.rs"
-input-hash: "eace019"
+input-hash: "2f15ce1"
 traces_to: "ADR-0025 Decision + Consequences (Negative) §1"
 cycle: cycle-013-msrv-1.88-bump
 estimated_effort: small

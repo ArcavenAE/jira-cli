@@ -475,13 +475,18 @@ The pre-existing `F7-GATE-SYSTEMIC-INPUT-HASH-DRIFT-BOOKKEEPING` factory-wide in
 **Severity:** LOW/NIT, non-blocking. Surfaced by the cycle-013 Wave-2 integration gate's
 consistency audit (`.factory/cycles/cycle-013/phase-f4-wave2-gate/consistency-audit.md`, finding
 F-3). Deferred, not a gate blocker (regression GREEN, consistency verdict resolved via F-1/F-2
-fixes; F-3 alone does not reopen the gate).
+fixes; F-3 alone does not reopen the gate). **Scope broadened 2026-09-16 (Phase F7 delta-
+convergence audit, finding F7-AUDIT-3)** from "dated plan docs" to **historical/closed docs
+including ADRs** — see the ADR-0021 sub-entry below, which this item's file list now also covers.
 
 **Files:** `docs/superpowers/plans/2026-04-24-list-rs-split.md:9`,
 `docs/superpowers/plans/2026-04-24-multi-profile-auth.md:9`,
 `docs/superpowers/plans/2026-05-13-search-issue-keys.md:9`,
 `docs/superpowers/specs/2026-04-16-markdown-to-adf-conversion-design.md:228`,
-`docs/superpowers/plans/2026-03-21-jr-implementation.md` (multiple mentions).
+`docs/superpowers/plans/2026-03-21-jr-implementation.md` (multiple mentions),
+`.factory/specs/architecture/decisions/ADR-0021-windows-oauth-secret-storage-dpapi-fallback.md:~724-725`
+(added 2026-09-16, F7-AUDIT-3 — see sub-entry below; already corrected in the same burst that
+added this row, kept listed for the historical-stale-prose-class record).
 
 **Issue:** These dated, historical planning/design documents state "Rust 1.85 MSRV" / "Rust 1.85+"
 as a fact about the environment at time of writing -- now stale since cycle-013 raised MSRV to
@@ -502,6 +507,29 @@ behavioral claim the way the team-field one did; no CI guard (`claude_md_citatio
 `docs/superpowers/plans/` (or a README there) stating these are point-in-time snapshots and
 MSRV/dependency-version mentions are historical, not live -- rather than patching each file
 individually as it happens to get touched. Target: a future maintenance sweep.
+
+### Sub-entry: ADR-0021 stale MSRV-verification note (F7-AUDIT-3, 2026-09-16)
+
+**Found by:** cycle-013 Phase F7 delta-convergence audit
+(`.factory/cycles/cycle-013/phase-f7-convergence/convergence-audit.md`, Dimension 5 / Finding
+F7-AUDIT-3), a fresh-context grep of `.factory/specs/architecture/decisions/*.md` for
+MSRV/`rust-version` mentions outside ADR-0025.
+
+**Location:** `.factory/specs/architecture/decisions/ADR-0021-windows-oauth-secret-storage-dpapi-fallback.md`
+§"Unsafe-code justification" note, `~L724-725` (ADR-0021 is `CLOSED`+`RELEASED`, cycle-004,
+Windows DPAPI fallback — unrelated in substance to cycle-013's MSRV bump).
+
+**Issue:** the note read "`windows-sys` 0.60.2's MSRV against this repo's `rust-version = "1.85"`
+must be confirmed at F4" — citing the pre-cycle-013 floor (1.85) as if still current.
+
+**Disposition:** LOW, cosmetic, non-blocking — same historical-stale-prose class as the plandoc
+mentions above, just in an ADR rather than a dated plan doc, which is why this item's scope and
+file list were broadened to explicitly cover "historical/closed docs including ADRs" (previously
+worded as "dated plan docs" only). **Fixed in the same burst that recorded this sub-entry**
+(one-line prose correction noting the floor was 1.85 at ADR-0021's own F4 confirmation and is now
+1.88 under ADR-0025, unaffected by ADR-0021's own conclusion) — kept as a sub-entry here, not
+moved to `RESOLVED-DRIFT-ITEMS.md`, because its real value is the scope-broadening precedent for
+any future ADR carrying similar point-in-time MSRV/dependency-version prose.
 
 ## cycle-013 Wave-2 integration gate — process-gap findings (2026-09-16)
 

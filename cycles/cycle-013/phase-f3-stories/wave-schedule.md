@@ -12,7 +12,7 @@ timestamp: "2026-09-15T00:00:00"
 inputs:
   - ".factory/cycles/cycle-013/phase-f3-stories/dependency-graph-extended.md"
 traces_to: "dependency-graph-extended.md §3"
-input-hash: "8f72345"
+input-hash: "0608fae"
 ---
 
 # F3 Wave Schedule — `msrv-1.88-bump` (cycle-013)

@@ -119,3 +119,22 @@ INCONSISTENT->RESOLVED via PR #822 + this burst's ADR-0025 prose fix). Archived 
 
 **Resume command (future session's choice):** /vsdd-factory:phase-f5-scoped-adversarial (or /vsdd-factory:next-step) to begin cycle-013's Phase F5 scoped adversarial review now that the Wave-2 integration gate has passed.
 ```
+
+## Checkpoint v4.45 (archived from STATE.md during the v4.45->v4.46 CYCLE-013-F6-HARDENED burst, 2026-09-16)
+
+| Field | Value |
+|-------|-------|
+| **Date** | 2026-09-16 |
+| **Position** | cycle-013 (`msrv-1.88-bump`) **Phase F5 scoped adversarial review CONVERGED**: 3 consecutive CLEAN adversary passes (`cycles/cycle-013/phase-f5-adversarial/pass-01.md`, `pass-02.md`, `pass-03.md`, each fresh-context/different-model-family, scoped to `git diff 7160a534..b960c305`) + code-reviewer APPROVE (`code-review.md`) + security-reviewer CLEAN (`security-review.md`) -- zero unresolved CRIT/HIGH/MED across all five review artifacts (`f5-convergence.md`). No code fixes required -- `develop` remains unchanged at `b960c305`. 1 new LOW standing item recorded (`CYCLE-013-COMFY-TABLE-ZERO-HEADROOM-MSRV`); the existing `CYCLE-013-F3-HISTORICAL-PLANDOC-MSRV-MENTIONS` item verified already complete. Lesson `L-001` codified in `cycles/cycle-013/lessons.md`. 4 stray uncommitted PR #822 review-agent artifacts reconciled and folded into that burst's commit. No DEC minted. Phase F1 (DEC-363), F2 (DEC-364), F3 (DEC-365), F4-both-waves (DEC-366) remain APPROVED/MERGED, unaffected. cycle-007 remains **CLOSED + RELEASED as v0.7.0-dev.6** (DEC-362); cycle-012 remains **CLOSED** (DEC-361). |
+| **Convergence counter** | F5 adversarial convergence loop CLOSED -- 3/3 consecutive CLEAN passes reached. The next possible convergence loop is Phase F6 targeted hardening's own quality-gate checks, not yet started as of this checkpoint. |
+| **In-flight work** | NONE. No open PRs. No story worktrees. `cycles/cycle-013/phase-f5-adversarial/` (6 files), `cycles/cycle-013/lessons.md`, `cycles/cycle-013/burst-log.md`, and `cycles/OPEN-STANDING-ITEMS.md` (comfy-table watch item) committed this burst, alongside the reconciled `code-delivery/pr-review.md`, `code-delivery/PR-822/pr-review.md`, `regression-state.json`, and `sidecar-learning.md`. |
+
+### Resume Prompt
+
+```
+**Date:** 2026-09-16. cycle-013 (msrv-1.88-bump) Phase F5 scoped adversarial review CONVERGED -- 3 consecutive CLEAN adversary passes + code-reviewer APPROVE + security-reviewer CLEAN, zero unresolved CRIT/HIGH/MED. No code fixes required; develop unchanged at b960c305. New LOW standing item CYCLE-013-COMFY-TABLE-ZERO-HEADROOM-MSRV recorded. Lesson L-001 codified (saphyr YamlLoader-avoidance is a security constraint). No DEC minted. Phase F1 (DEC-363)/F2 (DEC-364)/F3 (DEC-365)/F4-both-waves (DEC-366) remain APPROVED/MERGED. cycle-007 remains CLOSED+RELEASED v0.7.0-dev.6 (DEC-362); cycle-012 remains CLOSED (DEC-361).
+
+**Note (superseded by the v4.46 bookkeeping burst):** this checkpoint's own "NEXT = Phase F6 targeted hardening" was, in fact, already executed by the formal-verifier before this checkpoint was archived -- the hardening-record.md it produced (`cycles/cycle-013/phase-f6-hardening/hardening-record.md`, verdict HARDENED_WITH_RESIDUALS) sat uncommitted in the `.factory/` worktree until the F7 delta-convergence audit (`cycles/cycle-013/phase-f7-convergence/convergence-audit.md`) caught the STATE.md/factory-artifacts drift (Finding F7-AUDIT-1, CRIT) and the state-manager remediated it in the v4.45->v4.46 burst. See STATE.md's current Session Resume Checkpoint for the true, reconciled position.
+
+**Resume command (historical, as recorded at v4.45):** /vsdd-factory:phase-f6-targeted-hardening (superseded -- F6 was already complete by the time this checkpoint was archived; see the v4.46 checkpoint for the actual next step).
+```
