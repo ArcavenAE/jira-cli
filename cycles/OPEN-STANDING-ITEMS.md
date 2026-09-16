@@ -580,3 +580,34 @@ landing.
 **Candidate action:** none required now. Watch this pin the next time `comfy-table` is
 bumped -- confirm the new version's own MSRV still sits at or below this repo's floor
 before merging, or raise the floor in lockstep if it doesn't.
+
+## cycle-013 F7 close — STATE.md timestamp auto-drift (2026-09-16)
+
+**ID:** `CYCLE-013-STATEMD-TIMESTAMP-AUTODRIFT`
+**Severity:** LOW, cosmetic, process-gap, non-blocking. Surfaced across multiple cycle-013 bursts
+(observed directly in the Phase F7 re-verification pass's `git status` check, which found only a
+bare `timestamp:` field diff with zero narrative change between bursts).
+
+**Summary:** `STATE.md`'s frontmatter `timestamp:` field is re-stamped by a background process
+(the `stamp-state-timestamp` PostToolUse hook, per BC-5.40.001/S-17.04 -- it unconditionally
+re-stamps `timestamp:` to wall-clock now after every tool-mediated Edit/Write/MultiEdit to
+`.factory/STATE.md`) roughly every 30-40 seconds, independent of any actual content edit. This
+produces perpetual benign working-tree churn in the `factory-artifacts` worktree: a `git status`
+check between two unrelated actions frequently shows `STATE.md` as modified even though no
+narrative field changed, and each such drift accumulates as its own commit if not folded into the
+next substantive burst (as has been the practice this cycle -- see e.g. `factory-artifacts @
+87cf1bbc`, "fold in stamp-state-timestamp residual from prior Edit").
+
+**Why not fixed now:** cosmetic only -- no content or narrative correctness is affected, and the
+existing convention of folding the residual timestamp bump into the next real burst's commit
+already contains the noise without requiring a dedicated fix. Root-causing whether the hook's
+~30-40s cadence is intentional (a liveness/freshness signal) or an unintended side effect of some
+other periodic process is out of scope for a bookkeeping burst.
+
+**Candidate fix:** investigate the stamping hook/process's trigger cadence and whether it should
+debounce (only re-stamp on an actual content-changing write) rather than firing on a fixed
+interval regardless of edit activity. Target: a future self-improvement/maintenance sweep
+(engine-level, `vsdd-factory` repo, `stamp-state-timestamp` PostToolUse hook).
+
+**Source:** cycle-013 Phase F7 human close/release gate burst, observed recurring across F5/F6/F7
+bursts this cycle.

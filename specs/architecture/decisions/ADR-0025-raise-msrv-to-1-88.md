@@ -1,7 +1,7 @@
 ---
 document_type: adr
 adr_id: ADR-0025
-status: proposed
+status: accepted
 date: 2026-09-15
 subsystems_affected: ["SS-02", "SS-08", "SS-09"]
 supersedes: null
@@ -18,7 +18,9 @@ input-hash: "1c24441"
 
 ## Status
 
-**Proposed** (2026-09-15; prose reconciled 2026-09-16 at the cycle-013 Wave-2 integration gate).
+**Accepted** (proposed 2026-09-15; prose reconciled 2026-09-16 at the cycle-013 Wave-2 integration
+gate; **flipped to Accepted 2026-09-16 at the cycle-013 F7 human close/release gate** — DEC-367,
+`.factory/STATE.md` Decisions Log, cycle-012/ADR-0024 lifecycle precedent).
 Gate: F2 spec evolution for cycle-013 `msrv-1.88-bump` (Feature Mode) was approved 2026-09-15
 (DEC-364). Since then, F3 story decomposition was approved 2026-09-15 (DEC-365) and F4 delta
 implementation has landed on `develop` in full: Wave 1 (S1+S2 combined, DEC-366) merged via PR
@@ -30,10 +32,14 @@ cycle-013 Wave-2 integration gate
 (`.factory/cycles/cycle-013/phase-f4-wave2-gate/regression-report.md`, `.../consistency-audit.md`,
 GATE: PASS). The 1.88 target itself was already confirmed by the human at the F1 delta-analysis
 gate (`.factory/cycles/cycle-013/phase-f1-delta-analysis/delta-analysis.md`); this ADR records
-the decision's durable rationale. **Despite F2, F3, and F4 all being approved/merged, this
-document's top-level `status:` field correctly remains `proposed`** — per VSDD convention
-(cycle-012/ADR-0024 precedent), it flips to `Accepted` only at the cycle-013 F7 delta-convergence
-human gate, which has not yet run. No DEC is minted by this document itself.
+the decision's durable rationale. **F1-F6 all APPROVED/COMPLETE and a fresh-context Phase F7
+delta-convergence re-verification pass confirmed all 7 dimensions PASS cleanly with zero open
+findings** (`.factory/cycles/cycle-013/phase-f7-convergence/convergence-audit.md` §Re-verification,
+`factory-artifacts @ 87cf1bbc` → this burst) — the human F7 gate then **APPROVED "Approve & close"**
+plus an explicit decision to **cut a dev release now** (v0.7.0-dev.7), closing cycle-013. Per VSDD
+convention (cycle-012/ADR-0024 lifecycle precedent), this document's top-level `status:` field
+therefore now correctly reads `accepted`, flipped in this same state-manager burst. DEC-367 is the
+decision record of the human F7 gate; no separate DEC is minted by this document itself.
 
 ## Context
 
@@ -203,9 +209,21 @@ CI-gate contract; Story B: let-chain retrofit + convention cleanup; Story C: doc
 reconciliation) — `Cargo.toml`, `.github/workflows/ci.yml`, and `tests/ci_gate_completeness.rs`
 are all at `1.88` on `develop`, confirmed by the cycle-013 Wave-2 integration gate's regression
 report (5271 tests pass / 0 fail, clippy 0-warn, fmt clean, MSRV 1.88 floor build verified) and
-consistency audit. This ADR's own `status:` field stays `proposed`; it is scheduled to flip to
-`Accepted` at the cycle-013 F7 delta-convergence human gate, not before. Next: Phase F5 scoped
-adversarial review.
+consistency audit. This ADR's own `status:` field stayed `proposed` through F5 (CONVERGED) and F6
+(`HARDENED_WITH_RESIDUALS`, 2 LOW residuals only). Next: Phase F5 scoped adversarial review.
+
+### Status as of 2026-09-16 (F7 close — supersedes the two sections above)
+
+Phase F5 scoped adversarial review CONVERGED (3/3 CLEAN passes + code-review APPROVE + security
+CLEAN). Phase F6 targeted hardening COMPLETE (`HARDENED_WITH_RESIDUALS`). A fresh-context Phase F7
+delta-convergence audit found the code/spec delta CONVERGED throughout, remediated 3 process-state
+bookkeeping findings unrelated to this ADR's own content, and a follow-up re-verification pass
+confirmed all 7 convergence dimensions PASS cleanly with zero open findings
+(`.factory/cycles/cycle-013/phase-f7-convergence/convergence-audit.md`). The human F7 gate
+**APPROVED "Approve & close"** for cycle-013, with an explicit decision to cut a dev release now
+(v0.7.0-dev.7, executed separately via the native release-metadata-PR precedent). **This ADR's
+`status:` field is flipped from `proposed` to `accepted` in this same burst** (DEC-367). cycle-013
+is CLOSED.
 
 ## Alternatives Considered
 

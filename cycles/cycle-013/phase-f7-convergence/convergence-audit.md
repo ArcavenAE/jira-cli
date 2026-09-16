@@ -342,3 +342,131 @@ process-integrity basis until the record is honest about what has actually happe
 - MED: 1
 - LOW: 1
 - NIT: 0
+
+---
+
+## Re-verification
+
+**producer:** consistency-validator (fresh context) · **timestamp:** 2026-09-16 ·
+**develop @** `b960c305` (unchanged since the original audit above) · **factory-artifacts @**
+`87cf1bbc` (state-manager remediation burst `d6a5037c` + timestamp-fold `87cf1bbc`, both landed
+after the original audit's `e7451237` baseline).
+
+**Purpose:** confirm the two dimensions that FAILED/flagged in the original audit above
+(Dimension 4 index-consistency DRIFT, MED; Dimension 7 cross-references, CRIT) are now clean,
+and spot-confirm the rest is unaffected. Read-only — no files modified except this append.
+
+### 1. Input-hash drift (Dimension 4) — RE-CHECK
+
+Ran the canonical scan tool (`plugins/vsdd-factory/bin/compute-input-hash --scan cycles/cycle-013`,
+vsdd-factory engine repo) from `.factory/`:
+
+```
+STALE: cycles/cycle-013/session-checkpoints.md
+STALE: cycles/cycle-013/lessons.md
+TOTAL=10 MATCH=8 STALE=2 UNCOMPUTED=0 NOINPUT=0 UPDATED=0 UPDATE_FAILED=0
+```
+
+**Result: MATCHES the burst's claim exactly.** 8/10 MATCH; the only 2 STALE entries are the
+2 accepted `[live-state]` sentinels named in the task (`session-checkpoints.md`,
+`lessons.md`) — both frontmatter-confirmed `input-hash: "[live-state]"`, `inputs: [STATE.md]`,
+`document_type: session-checkpoints` / `lessons`, i.e. intentionally-untracked archive/rolling
+files per the cycle-007 F7 precedent, not real drift. **No unexpected STALE entries.**
+
+Spot-verified the 7 remediated artifacts' frontmatter `input-hash` values against the exact
+hashes the burst's `last_amended` narrative claims — all match byte-for-byte:
+`verification-delta.md` → `3b233fd`, `S-cycle13-msrv-cargo-ci-atomic-bump.md` → `2f15ce1`,
+`S-cycle13-letchain-retrofit-convention-cleanup.md` → `29ac0d0`,
+`S-cycle13-doc-policy-reconciliation.md` → `abb7a73`, `dependency-graph-extended.md` →
+`93f2753`, `wave-schedule.md` → `0608fae`, `hardening-record.md` → `d68d682`.
+
+**Verdict: Dimension 4 now PASS, clean.** (Original MED finding F7-AUDIT-2 — RESOLVED.)
+
+### 2. Cross-references (Dimension 7) — RE-CHECK
+
+- `STATE.md` frontmatter `version: "4.46"`, `phase`/`current_step`/`current_cycle`/
+  `cycle_013_status` all narrate **"Phase F6 targeted hardening COMPLETE
+  (HARDENED_WITH_RESIDUALS) ... NEXT = Phase F7 fresh re-verification, then the human
+  close/release gate."** Grepped the entire file (235 lines) for the string `"NEXT = F6"` and
+  for any residual "F5 CONVERGED, NEXT = Phase F6" framing — **zero matches**. Every headline
+  field, the Phase Progress table (`CYCLE-013-F6-HARDENED-2026-09-16` row, `COMPLETE /
+  HARDENED_WITH_RESIDUALS`), the Session Resume Checkpoint, and the Blocking Issues /
+  Constraints-Carried-Forward sections all agree on the same "F6 complete → NEXT = F7
+  re-verification → human gate" narrative. **Internally self-consistent, no lingering
+  stale-phase language found anywhere in the file.**
+- `cycles/cycle-013/phase-f6-hardening/hardening-record.md` **is tracked** in the
+  `factory-artifacts` worktree (`git ls-files` confirms) and was committed in `d6a5037c`
+  ("record Phase F6 HARDENED_WITH_RESIDUALS + remediate Phase F7 audit findings
+  F7-AUDIT-1/2/3"), one commit before the current tip `87cf1bbc` ("fold in
+  stamp-state-timestamp residual from prior Edit").
+- `git status` inside `.factory/` (factory-artifacts, up to date with `origin/factory-artifacts`)
+  shows exactly 2 modified, unstaged files: `STATE.md` (diff is a single `timestamp:`
+  frontmatter field bump, `22:41:14Z` → `22:41:51Z`, zero narrative change) and
+  `sidecar-learning.md` (diff is one appended `- Session ended at 2026-09-16T22:43:13Z
+  (awaiting /session-review)` line). Both are the benign hook-driven timestamp/session-log
+  churn the task anticipated ("git status clean or only benign timestamp churn") — not
+  unreconciled drift; no other file is dirty or untracked.
+- `stories/STORY-INDEX.md` shows all 3 cycle-013 stories (`S-cycle13-msrv-cargo-ci-atomic-bump`,
+  `S-cycle13-letchain-retrofit-convention-cleanup`, `S-cycle13-doc-policy-reconciliation`) at
+  `status: done`, each citing its correct merge commit/PR — consistent with STATE.md's F4-COMPLETE
+  narrative.
+- `cycles/CYCLE-SUMMARY.md` has no `cycle_013_status` section, which is *correct* (not drift):
+  that file only receives an extracted section when a cycle is compacted out of STATE.md's live
+  frontmatter at cycle CLOSE; cycle-013 is still ACTIVE, so its full status legitimately lives
+  inline in STATE.md's own `cycle_013_status` frontmatter field, exactly as observed.
+
+**Verdict: Dimension 7 now PASS, clean.** (Original CRIT finding F7-AUDIT-1 — RESOLVED.)
+
+### 3. Index-consistency guards — RE-RUN
+
+| Guard | Result | Exit |
+|---|---|---|
+| `scripts/check-spec-counts.sh` | `Check passed: 8 bc files validated` | **0** |
+| `scripts/check-bc-cumulative-counts.sh` | `OK: all cumulative BC counts verified (**769** total across 9 files; Surface H footer checked where present).` | **0** |
+| `cargo test --test claude_md_citations` | **61 passed**; 0 failed; 0 ignored (includes `test_claude_md_citations_resolve_to_real_files`) | green |
+
+All three match the task's expectation (0/0/green, 769 BCs, 61/61) exactly.
+
+### 4. Code/spec dimensions — spot-confirmed unaffected
+
+- **ADR-0025** (`specs/architecture/decisions/ADR-0025-raise-msrv-to-1-88.md`): `status:
+  proposed` — unchanged, as expected (flips to `Accepted` only at the human F7 gate).
+- **`Cargo.toml`**: `rust-version = "1.88"` — matches spec.
+- **`.github/workflows/ci.yml`** `msrv` job: `toolchain: "1.88.0"` +
+  `RUSTUP_TOOLCHAIN: "1.88.0"` + `cargo check --all-targets --all-features --locked` — matches
+  spec (both the toolchain pin and the `--all-targets` scope widening are present).
+- **ADR-0021** (`specs/architecture/decisions/ADR-0021-windows-oauth-secret-storage-dpapi-fallback.md:725`):
+  now reads "...against this repo's `rust-version` floor at the time (1.85; now 1.88 under
+  ADR-0025, unaffected by this ADR's conclusion)..." — the stale-1.85-only prose is fixed.
+  `CYCLE-013-F3-HISTORICAL-PLANDOC-MSRV-MENTIONS` in `cycles/OPEN-STANDING-ITEMS.md` shows its
+  scope broadened 2026-09-16 to "historical/closed docs including ADRs" with this ADR's location
+  cited. (Original LOW finding F7-AUDIT-3 — RESOLVED.)
+- No `src/` changes since the original audit (`develop` head unchanged at `b960c305`); Dimensions
+  1 (spec↔code), 2 (code↔test), 3 (traceability), and 6 (citation-integrity), all clean PASS in
+  the original audit and untouched by this bookkeeping-only remediation, stand unchanged.
+
+### Per-dimension verdict summary (re-verification)
+
+| # | Dimension | Original verdict | Re-verified verdict |
+|---|---|---|---|
+| 1 | spec ↔ code | PASS | PASS (unchanged, not re-derived — no code/spec delta) |
+| 2 | code ↔ test | PASS | PASS (unchanged, not re-derived) |
+| 3 | traceability | PASS | PASS (unchanged, not re-derived) |
+| 4 | index-consistency | PASS w/ MED drift finding | **PASS, clean** (F7-AUDIT-2 RESOLVED) |
+| 5 | ADR-alignment | PASS w/ adjacent LOW finding | **PASS, clean** (F7-AUDIT-3 RESOLVED) |
+| 6 | citation-integrity | PASS | PASS (unchanged, not re-derived) |
+| 7 | cross-references | **FAIL** | **PASS** (F7-AUDIT-1 RESOLVED) |
+
+### Overall verdict
+
+**CONVERGED.** All three original findings (F7-AUDIT-1 CRIT, F7-AUDIT-2 MED, F7-AUDIT-3 LOW) are
+independently confirmed RESOLVED by this fresh-context re-verification: the input-hash scan
+shows only the 2 accepted `[live-state]` sentinels stale (8/10 MATCH, zero unexpected drift);
+`STATE.md` and the actual `.factory/` filesystem state agree with each other everywhere (no
+lingering "NEXT = F6" language anywhere in the file); `hardening-record.md` is committed and
+tracked on `factory-artifacts`; the worktree's only uncommitted changes are the two anticipated
+benign timestamp/session-log churn lines. All three CI-facing index-consistency guards re-run
+green (0/0/green, 769 BCs, 61/61). The code/spec dimensions (ADR-0025 `proposed`, Cargo.toml
+1.88, ci.yml msrv job 1.88.0+`--all-targets`, ADR-0021 prose fix) remain exactly as the prior
+audit found them. **The pipeline is genuinely CONVERGED and ready for the human close/release
+gate.** No further remediation required before that gate convenes.

@@ -202,3 +202,14 @@ and correctly left unchanged. F-3 (LOW/NIT, 5 historical plan-doc MSRV mentions)
 deferred standing item `CYCLE-013-F3-HISTORICAL-PLANDOC-MSRV-MENTIONS`. 3 process-gap standing
 items also recorded per S-7.02 discipline. Regression GREEN + consistency RESOLVED closed the
 Wave-2 integration gate, clearing cycle-013 to proceed to Phase F5.
+
+## cycle-013 Phase F5 scoped adversarial (2026-09-16, rotated from STATE.md "RESOLVED prior burst" at the v4.46->v4.47 CYCLE-013-F7-CONVERGED-CLOSED burst)
+
+**RESOLVED (cycle-013 Phase F5 scoped adversarial, 2026-09-16):** F5 CONVERGED -- 3 consecutive
+CLEAN adversary passes (`cycles/cycle-013/phase-f5-adversarial/pass-01.md`, `pass-02.md`,
+`pass-03.md`) + code-reviewer APPROVE (`code-review.md`) + security-reviewer CLEAN
+(`security-review.md`), zero unresolved CRIT/HIGH/MED across all five review artifacts
+(`f5-convergence.md`). No code fixes required -- `develop` remained unchanged at `b960c305`. 1 new
+LOW standing item recorded (`CYCLE-013-COMFY-TABLE-ZERO-HEADROOM-MSRV`). Lesson `L-001` codified in
+`cycles/cycle-013/lessons.md`. No DEC minted (automated review-gate outcome, cycle-012 F5
+precedent).

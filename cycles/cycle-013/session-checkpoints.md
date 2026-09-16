@@ -138,3 +138,22 @@ INCONSISTENT->RESOLVED via PR #822 + this burst's ADR-0025 prose fix). Archived 
 
 **Resume command (historical, as recorded at v4.45):** /vsdd-factory:phase-f6-targeted-hardening (superseded -- F6 was already complete by the time this checkpoint was archived; see the v4.46 checkpoint for the actual next step).
 ```
+
+## Checkpoint v4.46 (archived from STATE.md during the v4.46->v4.47 CYCLE-013-F7-CONVERGED-CLOSED burst, 2026-09-16)
+
+| Field | Value |
+|-------|-------|
+| **Date** | 2026-09-16 |
+| **Position** | cycle-013 (`msrv-1.88-bump`) **Phase F6 targeted hardening COMPLETE** (`HARDENED_WITH_RESIDUALS`, 2 LOW residuals) recorded + **Phase F7 delta-convergence audit findings (CRIT/MED/LOW) REMEDIATED**, both in the v4.45->v4.46 burst. NEXT was a fresh F7 re-verification pass. |
+| **Convergence counter** | F7 fresh re-verification not yet run as of this checkpoint. |
+| **In-flight work** | NONE. `cycles/cycle-013/phase-f6-hardening/hardening-record.md` and `cycles/cycle-013/phase-f7-convergence/convergence-audit.md` committed. |
+
+### Resume Prompt
+
+```
+**Date:** 2026-09-16. cycle-013 (msrv-1.88-bump) Phase F6 COMPLETE (HARDENED_WITH_RESIDUALS) recorded; Phase F7 delta-convergence audit's 3 findings (F7-AUDIT-1 CRIT, F7-AUDIT-2 MED, F7-AUDIT-3 LOW) all REMEDIATED same burst -- code/spec delta was CONVERGED throughout, only process-state bookkeeping needed reconciling. No DEC minted. develop unchanged at b960c305.
+
+**Note (superseded by the v4.47 CYCLE-013-F7-CONVERGED-CLOSED burst):** the fresh-context F7 re-verification this checkpoint anticipated DID run (`cycles/cycle-013/phase-f7-convergence/convergence-audit.md` §Re-verification, appended in a follow-up factory-artifacts commit @ `87cf1bbc`) and confirmed **CONVERGED** -- all 7 dimensions PASS cleanly, zero open findings. The human F7 close/release gate then convened and **APPROVED "Approve & close"** plus an explicit **"cut a dev release now"** decision (v0.7.0-dev.7). ADR-0025 flipped `proposed`->`accepted`. **DEC-367 minted; cycle-013 CLOSED.** See STATE.md's current Session Resume Checkpoint for the true, reconciled position.
+
+**Resume command (historical, as recorded at v4.46):** /vsdd-factory:phase-f7-delta-convergence (superseded -- the re-verification pass already ran and CONVERGED; see the v4.47 checkpoint for the actual next step, which is the release-completion follow-up).
+```
