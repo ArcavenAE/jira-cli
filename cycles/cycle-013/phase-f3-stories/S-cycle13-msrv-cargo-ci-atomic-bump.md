@@ -22,7 +22,7 @@ inputs:
   - "Cargo.toml"
   - ".github/workflows/ci.yml"
   - "tests/ci_gate_completeness.rs"
-input-hash: "fcbebd5"
+input-hash: "eace019"
 traces_to: "ADR-0025 Decision + Consequences (Negative) §1"
 cycle: cycle-013-msrv-1.88-bump
 estimated_effort: small
@@ -256,8 +256,10 @@ caught transitively by this AC's insta-snapshot review plus the full `cargo test
 `CHANGELOG.md`'s `[Unreleased]` section gains a `Changed` entry documenting: the MSRV raise
 (1.85→1.88), the `comfy-table` re-pin (from `=7.2.1` to the exact version selected in AC-002),
 and the `msrv` job's `--all-targets` scope widening — mirroring the style of the prior
-MSRV-correctness `[Unreleased]` entry already in this file (S-626-1, per F1 §3's citation of
-`CHANGELOG.md` L1065-1096 as "a good template to follow"), including a "User impact: None for
+MSRV-correctness entry already in this file (S-626-1, per F1 §3's citation of
+`CHANGELOG.md` L1065-1096 as "a good template to follow" — that block sits under the dated
+`## [0.6.0] - 2026-08-13` release header, not `[Unreleased]`; this AC's own new entry is the one
+that goes under `[Unreleased]`), including a "User impact: None for
 binary/Homebrew users; source-builders need Rust ≥1.88" line.
 **Test:** N/A (doc artifact; verified by PR review); presence check only.
 
@@ -292,7 +294,7 @@ by this AC or by the Verification Gate below):**
 - The `find_sole_step_by` docstring's past-tense fix-burst-6 history narrative run-line half —
   "...has `run:` == `cargo check --all-features --locked`", but never..." —
   `tests/ci_gate_completeness.rs` ~L6739 (F1 Pass-5: the SOLE remaining gap after enumerating
-  all 15 `cargo check…all-features` occurrences in this file). This is the sibling half of the
+  all 13 `cargo check…all-features` occurrences in this file). This is the sibling half of the
   SAME fix-burst-6 sentence whose other half — `env: {RUSTUP_TOOLCHAIN: "1.85.0"}` at ~L6743 —
   is already on AC-004's HISTORICAL-PRESERVE allow-list above; both halves are preserved
   unchanged TOGETHER, for the same reason the ~L3857/~L3864 paired decoy/result entry on that
@@ -371,7 +373,7 @@ grep -nE 'cargo check[^|]*all-features' tests/ci_gate_completeness.rs .github/wo
 ```
 Every matching line MUST either (a) also show `--all-targets` on the same line (the AC-005-widened
 form — the expected shape for every current-contract reference once this story lands), or (b) be
-on the AC-008 DECOY-PRESERVE allow-list (~L1568, ~L2425 in `tests/ci_gate_completeness.rs`).
+on the AC-008 DECOY-PRESERVE allow-list (~L1568, ~L2425, ~L6739 in `tests/ci_gate_completeness.rs`).
 `tests/common/wf.rs` ~L1782-1784 is out of this grep's file scope entirely (that file is not
 edited by this story, per the Architecture Mapping table and Task 9's note below) and is
 confirmed untouched separately, not via this grep. Any hit that is neither (a) nor (b) is a stale,

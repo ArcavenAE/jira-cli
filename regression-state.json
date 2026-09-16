@@ -1,1 +1,1 @@
-{"status":"pass","timestamp":"2026-09-15T14:30:56Z","command":"cd /Users/zious/Documents/GITHUB/jira-cli/.worktrees/release-v0.7.0-dev.6 && cargo test 2>&1 | tail -100"}
+{"status":"pass","timestamp":"2026-09-15T23:20:13Z","command":"cargo test --test ci_gate_completeness 2>&1 | grep -E \"^test result|FAILED|panicked\" | head"}

@@ -25,7 +25,7 @@ inputs:
   - "CLAUDE.md"
   - ".factory/specs/prd/bc-5-boards-sprints.md"
   - ".factory/specs/prd/cross-cutting.md"
-input-hash: "888cbec"
+input-hash: "cdc1cd8"
 traces_to: "ADR-0025 Consequences (Negative) §4; BC-5.3.001; BC-5.3.002"
 cycle: cycle-013-msrv-1.88-bump
 estimated_effort: medium
@@ -112,7 +112,9 @@ sequenced (the `if let` temporary-scope change) so that this class of collapse p
 matching, not diverging, drop order versus the nested form. This story's ACs trace to the
 EXISTING postconditions of `BC-5.3.001`/`BC-5.3.002` as a regression-proof obligation (the
 refactor must not break them), not as new contract content, plus a prose-currency correction to
-those same BCs' descriptive text (AC-007/AC-008 below).
+those same BCs' descriptive text (AC-007 and AC-009 below; AC-008, also below, is a sibling
+prose-currency correction but covers a different BC — `BC-X.13.007` in `cross-cutting.md`, not
+`BC-5.3.001`/`BC-5.3.002`).
 
 ## Acceptance Criteria
 

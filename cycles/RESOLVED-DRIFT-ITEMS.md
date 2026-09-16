@@ -117,3 +117,30 @@ SATISFIED: all 8 cycle-007 process-gap/novel findings DEFERRED as tracked standi
 CLOSED.** cycle-012 remains CLOSED (DEC-361), unaffected beyond now sharing the release. **All
 nine tracked cycles (001-007, 012) now CLOSED.** Pipeline fully idle/paused at that point.
 `activation_head` -> `7160a534`; `activation_version` -> `v0.7.0-dev.6`.
+
+## RESOLVED prior burst, archived from STATE.md's rotation slot (2026-09-15, v4.40 -- archived during the v4.41->v4.42 CYCLE-013-WAVE1-S1S2-MERGED burst, 2026-09-16)
+
+New feature cycle **cycle-013 (`msrv-1.88-bump`)** established -- pipeline PAUSED/IDLE ->
+ACTIVE. Phase F1 delta-analysis **APPROVED** (DEC-363): classification enhancement/infrastructure,
+standard scope, full F1-F7 route; zero BC/architecture/UX impact, no new VPs; 3-story preview
+decomposition; human F1-gate decisions (a) MSRV target 1.88, (b) widen `msrv` CI job scope to
+`--all-targets`, (c) three dispositions (stale `cycles/CURRENT` pointer fixed this burst,
+design-spec policy-line rewrite deferred to F4, comfy-table pin-with-review). Phase F2 spec
+evolution **APPROVED** (DEC-364): ADR-0025 `proposed` (input-hash `1c24441`) records the decision +
+policy reconciliation, ARCH-INDEX.md row added; verification-delta (input-hash `536fcf1`) confirms
+zero new/changed VPs, architecture unchanged, zero BC edits. `cycles/CURRENT` repointed
+`cycle-002`->`cycle-013`. Carried-forward F4 constraint recorded (`CYCLE-013-F4-LETCHAIN-BC-COUPLING`,
+`CYCLE-013-F4-BC-PROSE-CURRENCY` -- both RESOLVED at F4 Wave 1, 2026-09-16, PR #818 @ `29e2d362`).
+cycle-007 and cycle-012 remain CLOSED (DEC-362/DEC-361), unaffected. STATE.md v4.39->v4.40; Phase
+Progress rows `CYCLE-013-F1-APPROVED-2026-09-15` + `CYCLE-013-F2-APPROVED-2026-09-15` appended (2
+oldest cycle-012 rows archived to `cycles/HISTORY-PHASE-PROGRESS.md`, keeping the table at 10 rows).
+DEC-360/DEC-359 rolled from explicit Decisions Log rows into the collapsed older-decisions row (both
+remain fully documented in `cycles/cycle-012/burst-log.md`/`cycles/CYCLE-SUMMARY.md`, nothing lost).
+
+**Note on session-checkpoint archival (recorded 2026-09-16):** this burst's own `last_amended`
+claimed "Prior Session Resume Checkpoint (v4.39) archived to `cycles/cycle-007/session-checkpoints.md`"
+-- that specific archival DID happen correctly (see that file). A LATER burst (v4.40->v4.41,
+2026-09-15) made the analogous claim for archiving the v4.40 checkpoint to
+`cycles/cycle-013/session-checkpoints.md`, but that one was never actually written; the gap was
+discovered and documented transparently in `cycles/cycle-013/session-checkpoints.md`'s header
+during the 2026-09-16 v4.41->v4.42 burst, rather than silently ignored or fabricated.
