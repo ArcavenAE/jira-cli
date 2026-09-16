@@ -4,7 +4,7 @@ level: ops
 version: "1.0"
 status: archive
 producer: state-manager
-timestamp: 2026-09-16T02:10:00Z
+timestamp: 2026-09-16T03:05:00Z
 cycle: "cycle-013-msrv-1.88-bump"
 inputs: [STATE.md]
 input-hash: "[live-state]"
@@ -48,4 +48,29 @@ DEC-366). Archived verbatim (from STATE.md v4.41) below.
 **Pending human decisions / blockers:** NONE that block pipeline progress. F4 Wave 1 delta implementation (S-cycle13-msrv-cargo-ci-atomic-bump) is the next phase, not yet started -- no human gate pending until Wave 1 merges and Wave 2 is ready to start. LOW standing items unchanged from the prior burst plus one new addition (CYCLE-013-F4-STORY-DOC-NITPICKS) -- full list: CYCLE-007-CR-001-KEYCHAIN-ERROR-VS-ABSENCE, CYCLE-007-PROBE-ROUTING-NO-DEFAULT-CI-TEST, CYCLE-007-LEGACY-OAUTH-UNSET-METHOD-MISREPORT, CYCLE-007-OAUTH-ABSENCE-EXIT-CODE-ASYMMETRY, CANONICAL-COUNTS-BREAKDOWN-STALE, CYCLE-007-AUTH-LIST-LAZY-MIGRATION-WRITE, CYCLE-007-F5-DOC-NITPICKS, CYCLE-007-F6-R1-KEYRING-GATED-HUMAN-TEXT-COVERAGE, CYCLE-007-F6-R2-DERIVE-AUTH-STATE-NO-MUTATION-COVERAGE, CYCLE-013-F4-LETCHAIN-BC-COUPLING, CYCLE-013-F4-BC-PROSE-CURRENCY, CYCLE-013-F4-STORY-DOC-NITPICKS (full detail: cycles/OPEN-STANDING-ITEMS.md). A future session should also confirm release.yml run 34984900326's completion / GitHub Release publish for v0.7.0-dev.6 as a light follow-up.
 
 **Resume command (future session's choice):** /vsdd-factory:phase-f4-delta-implementation (or /vsdd-factory:next-step) to begin cycle-013's F4 Wave 1 delta implementation with S-cycle13-msrv-cargo-ci-atomic-bump.
+```
+
+## Session Resume Checkpoint (2026-09-16, STATE.md v4.42) — CYCLE-013-WAVE1-S1S2-MERGED: cycle-013 Phase F4 Wave 1 (S1+S2 combined) MERGED (DEC-366) — Superseded 2026-09-16 (v4.43 CYCLE-013-F4-COMPLETE)
+
+**Status:** SUPERSEDED 2026-09-16 by the v4.43 CYCLE-013-F4-COMPLETE checkpoint
+(cycle-013 Phase F4 Wave 2, S3 delivery, MERGED via PR #819 @ `cfe1dedc`; F4 phase
+now COMPLETE). Archived verbatim (from STATE.md v4.42) below.
+
+### State
+
+| Field | Value |
+|-------|-------|
+| **Date** | 2026-09-16 |
+| **Position** | cycle-013 (`msrv-1.88-bump`) Phase **F4 Wave 1 (S1+S2 combined) MERGED** (DEC-366): PR #818 (`chore/cycle13-msrv-1.88-atomic-bump` -> `develop`) merged squash @ `29e2d362` (`develop`: `7160a534`->`29e2d362`, 41 files). Human-approved wave-plan deviation (MSRV 1.88 forces 73 clippy `collapsible_if` sites, bump+retrofit inseparable). Quality gates cleared: per-story adversarial convergence 3/3 CLEAN each; security CLEAN; pr-reviewer APPROVE; CI 24/24 green incl. CI Gate + 8 mutation shards; MSRV verified at real 1.88.0; demo SKIPPED (human decision). `.factory` docs reconciled (BC-5.3.001/BC-5.3.002, BC-X.13.007 prose refresh; 4 F3 story-doc nitpicks fixed, input-hashes recomputed). Both stories marked `done`/merged in `stories/STORY-INDEX.md` (v1.6.24->v1.6.25); `stories/sprint-state.yaml` intentionally left untouched (scoped to cycle-012, pre-existing gap). Phase F1 (DEC-363), F2 (DEC-364), F3 (DEC-365) remain APPROVED, unaffected. cycle-007 remains **CLOSED + RELEASED as v0.7.0-dev.6** (DEC-362); cycle-012 remains **CLOSED** (DEC-361). |
+| **Convergence counter** | No active convergence loop right now -- cycle-013 F4 Wave 1's own per-story adversarial convergence (3/3 CLEAN each) is complete and reflected in the Phase Progress row above. S3 (`S-cycle13-doc-policy-reconciliation`) has not yet started; it is docs-only and not expected to need a convergence loop of its own. |
+| **In-flight work** | NONE. No open PRs (PR #818 MERGED this burst). No story worktrees. `code-delivery/S-cycle13-msrv-cargo-ci-atomic-bump/` (pr-description.md, pr-review.md) and the `.factory` doc reconciliation (BC-5.3.001/BC-5.3.002/BC-X.13.007, 2 story files, STORY-INDEX.md) are committed this burst. |
+
+### Resume Prompt
+
+```
+**Date:** 2026-09-16. cycle-013 (`msrv-1.88-bump`) Phase F4 Wave 1 (S1+S2 combined) MERGED (DEC-366): PR #818 (chore/cycle13-msrv-1.88-atomic-bump -> develop) merged squash @ 29e2d362 (develop: 7160a534->29e2d362, 41 files). Human-approved wave-plan deviation (MSRV 1.88 forces 73 clippy collapsible_if sites, bump+retrofit inseparable). Quality gates cleared: per-story adversarial convergence 3/3 CLEAN each; security CLEAN; pr-reviewer APPROVE; CI 24/24 green incl. CI Gate + 8 mutation shards; MSRV verified at real 1.88.0; demo SKIPPED (human decision). .factory docs reconciled (BC-5.3.001/BC-5.3.002, BC-X.13.007 prose refresh; 4 F3 story-doc nitpicks fixed, input-hashes recomputed). Both stories marked done/merged in stories/STORY-INDEX.md (v1.6.24->v1.6.25). Phase F1 (DEC-363), F2 (DEC-364), F3 (DEC-365) remain APPROVED. cycle-007 remains CLOSED+RELEASED v0.7.0-dev.6 (DEC-362); cycle-012 remains CLOSED (DEC-361).
+
+**Pending human decisions / blockers:** NONE that block pipeline progress. S3 (S-cycle13-doc-policy-reconciliation) is the next delta-implementation task, not yet started -- no human gate pending until S3 delivers and the Wave-2 integration gate runs (or unless S3 surfaces a blocker). LOW standing items: CYCLE-007-CR-001-KEYCHAIN-ERROR-VS-ABSENCE, CYCLE-007-PROBE-ROUTING-NO-DEFAULT-CI-TEST, CYCLE-007-LEGACY-OAUTH-UNSET-METHOD-MISREPORT, CYCLE-007-OAUTH-ABSENCE-EXIT-CODE-ASYMMETRY, CANONICAL-COUNTS-BREAKDOWN-STALE, CYCLE-007-AUTH-LIST-LAZY-MIGRATION-WRITE, CYCLE-007-F5-DOC-NITPICKS, CYCLE-007-F6-R1-KEYRING-GATED-HUMAN-TEXT-COVERAGE, CYCLE-007-F6-R2-DERIVE-AUTH-STATE-NO-MUTATION-COVERAGE, CYCLE-013-F4-S3-DOC-NITPICKS. A future session should also confirm release.yml run 34984900326's completion / GitHub Release publish for v0.7.0-dev.6 as a light follow-up (carried forward, unrelated to cycle-013).
+
+**Resume command (future session's choice):** /vsdd-factory:phase-f4-delta-implementation (or /vsdd-factory:next-step) to begin cycle-013's S3 (S-cycle13-doc-policy-reconciliation) delta implementation, folding in the CYCLE-013-F4-S3-DOC-NITPICKS items.
 ```

@@ -144,3 +144,20 @@ claimed "Prior Session Resume Checkpoint (v4.39) archived to `cycles/cycle-007/s
 `cycles/cycle-013/session-checkpoints.md`, but that one was never actually written; the gap was
 discovered and documented transparently in `cycles/cycle-013/session-checkpoints.md`'s header
 during the 2026-09-16 v4.41->v4.42 burst, rather than silently ignored or fabricated.
+
+## RESOLVED prior burst, archived from STATE.md's rotation slot (2026-09-15, v4.41 -- archived during the v4.42->v4.43 CYCLE-013-F4-COMPLETE burst, 2026-09-16)
+
+cycle-013 (`msrv-1.88-bump`) Phase F3 story-decomposition **APPROVED** (DEC-365): 3-story
+decomposition (`S-cycle13-msrv-cargo-ci-atomic-bump` 5 pts Wave 1; `S-cycle13-letchain-retrofit-convention-cleanup`
+5 pts Wave 2; `S-cycle13-doc-policy-reconciliation` 2 pts Wave 2; 12 total points) CONVERGED across
+8 adversary passes -> 3 consecutive CLEAN (Passes 6/7/8), zero CRIT/HIGH/MED; consistency-validator
+CONSISTENT; input-hash drift CLEAN (7/7 MATCH). Human APPROVED with 4 accepted LOW/NIT story-doc
+nitpicks FOLDED INTO F4 (all 4 subsequently resolved -- 4 against the real story files at F4 Wave 1,
+2026-09-16, and the remaining product-tree set at F4 Wave 2/S3, 2026-09-16, PR #819 @ `cfe1dedc`).
+3 stories registered in `stories/STORY-INDEX.md` (`total_stories` 182->185, STORY-INDEX
+v1.6.23->v1.6.24). STATE.md v4.40->v4.41; Phase Progress row `CYCLE-013-F3-APPROVED-2026-09-15`
+appended (oldest row `CYCLE-012-F6-HARDENED-2026-09-15` archived to `cycles/HISTORY-PHASE-PROGRESS.md`).
+Decisions Log: DEC-365 minted; DEC-361 rolled into the collapsed older-decisions row. Prior Session
+Resume Checkpoint (v4.40) archival was claimed but never actually executed (file did not exist prior
+to the v4.41->v4.42 burst); the gap is pre-existing and not recoverable verbatim, and is documented
+transparently in `cycles/cycle-013/session-checkpoints.md`'s header rather than silently ignored.
