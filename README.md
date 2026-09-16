@@ -5,7 +5,7 @@
 [![Release](https://img.shields.io/github/v/release/Zious11/jira-cli?label=release)](https://github.com/Zious11/jira-cli/releases/latest)
 [![Pre-release](https://img.shields.io/github/v/release/Zious11/jira-cli?include_prereleases&label=dev)](https://github.com/Zious11/jira-cli/releases)
 [![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
-[![MSRV](https://img.shields.io/badge/MSRV-1.85-orange.svg)](https://blog.rust-lang.org/)
+[![MSRV](https://img.shields.io/badge/MSRV-1.88-orange.svg)](https://blog.rust-lang.org/)
 [![codecov](https://codecov.io/gh/Zious11/jira-cli/branch/develop/graph/badge.svg)](https://codecov.io/gh/Zious11/jira-cli)
 
 A fast, agent-friendly CLI for Jira Cloud, written in Rust. Built for both humans and AI agents — commands support structured JSON output, actionable error messages with suggested next steps, and `--no-input` mode for fully non-interactive automation.
@@ -32,7 +32,7 @@ curl -fsSL https://raw.githubusercontent.com/Zious11/jira-cli/main/install.sh | 
 To install a specific version:
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/Zious11/jira-cli/main/install.sh | sh -s -- v0.5.0
+curl -fsSL https://raw.githubusercontent.com/Zious11/jira-cli/main/install.sh | sh -s -- v0.6.0
 ```
 
 ### Install with mise
@@ -63,10 +63,26 @@ in per-tool in your `mise.toml`:
 "github:Zious11/jira-cli" = { version = "latest", prerelease = true }
 ```
 
-Windows users need `prerelease = true` for now: the current stable
-(`v0.5.0`) shipped without a Windows asset, so a plain `@latest` resolves
-to a release with no matching download until a Windows binary lands on a
-stable tag (planned for `v0.6.0`).
+Stable releases ship a Windows asset (`x86_64-pc-windows-msvc.zip`) as of
+`v0.6.0`, so `prerelease = true` is no longer required for Windows on a
+plain `@latest`. Set `prerelease = true` only if you want to track
+pre-release builds cut from `develop`, per the block above.
+
+**Windows: clear the "mark of the web" after downloading.** A `.zip`
+fetched via a browser (or mise, or any HTTP download) is tagged by Windows
+as coming from the internet; extracting or running it without clearing
+that tag can trigger a SmartScreen warning, or `jr.exe` can silently
+refuse to run with no explanation. Clear it with PowerShell's
+`Unblock-File` before extracting the archive:
+
+```powershell
+Unblock-File -Path .\jr-x86_64-pc-windows-msvc.zip
+Expand-Archive -Path .\jr-x86_64-pc-windows-msvc.zip -DestinationPath .
+```
+
+If you already extracted first, run `Unblock-File -Path .\jr.exe` on the
+binary itself instead — either order works, as long as the mark is
+cleared before you try to run `jr.exe`.
 
 If mise-installed `jr` refuses to launch on macOS with a Gatekeeper
 warning, clear the quarantine attribute. When mise is active in your
@@ -134,7 +150,7 @@ longer-term fix (Developer ID signing) is tracked as a separate issue.
 # Set up your Jira instance and authenticate
 jr init
 
-# Authenticate with API token (default)
+# Authenticate — interactive picker defaults to OAuth 2.0 (choose API Token if prompted)
 jr auth login
 
 # Non-interactive API token (CI / agents): flags or env vars, no TTY required.
@@ -242,16 +258,16 @@ jr issue comment add JSM-42 "customer is on the paid plan — prioritizing" --in
 | Command | Description |
 |---------|-------------|
 | `jr init` | Configure Jira instance and authenticate (prompts to add another profile if any are already configured) |
-| `jr auth login` | Authenticate with API token (default) or `--oauth` for OAuth 2.0. `--profile NAME` targets a specific profile (creates if absent); `--url URL` sets the Jira instance URL when creating. Non-interactive: `--email`/`--token` or `JR_EMAIL`/`JR_API_TOKEN`; `--client-id`/`--client-secret` or `JR_OAUTH_CLIENT_ID`/`JR_OAUTH_CLIENT_SECRET` for OAuth |
-| `jr auth switch <NAME>` | Set the default profile in `config.toml`. Errors if `NAME` doesn't exist |
+| `jr auth login` | Interactive: shows an OAuth-first picker (`OAuth 2.0 (recommended)` / `API Token`, OAuth pre-selected); non-interactive (`--no-input` or non-TTY stdin) defaults to API token. `--api-token` selects API token directly, skipping the picker; `--oauth` also selects OAuth but is deprecated in favor of the picker or `--api-token`. `--profile NAME` targets a specific profile (creates if absent); `--url URL` sets the Jira instance URL when creating. Non-interactive: `--email`/`--token` or `JR_EMAIL`/`JR_API_TOKEN`; `--client-id`/`--client-secret` or `JR_OAUTH_CLIENT_ID`/`JR_OAUTH_CLIENT_SECRET` for OAuth |
+| `jr auth switch <NAME>` | Set the default profile in `config.toml`. Errors if `NAME` doesn't exist. The global `--profile` flag is rejected on this subcommand (exit 64) — `NAME` is always the switch target, so use `jr auth switch <NAME>` alone |
 | `jr auth list` | List configured profiles (table or JSON via `--output`); active profile marked with `*` |
 | `jr auth status` | Show authentication status for the active profile, or `--profile NAME` for another |
 | `jr auth refresh` | Refresh credentials for the active profile (or `--profile NAME`); same flags/env vars as `auth login` |
-| `jr auth logout` | Clear OAuth tokens for the active profile (or `--profile NAME`); shared API token NOT touched |
+| `jr auth logout` | Clear OAuth tokens for the active profile (or `--profile NAME`); that profile's API token (stored per-profile, not shared) is NOT touched |
 | `jr auth remove <NAME>` | Permanently delete a profile (config entry + cache + per-profile OAuth tokens). Cannot remove the active profile |
 | `jr me` | Show current user info |
-| `jr issue list` | List issues (`--assignee`, `--reporter`, `--recent`, `--status`, `--open`, `--team`, `--asset KEY`, `--jql`, `--limit`/`--all`, `--points`, `--assets`) |
-| `jr issue view KEY` | View issue details (per-field asset rows, enriched JSON, story points) |
+| `jr issue list` | List issues (`--assignee`, `--reporter`, `--recent`, `--updated-recent <duration>`, `--status`, `--open`, `--team`, `--asset KEY`, `--component NAME`, `--created-after`/`--created-before`/`--updated-after`/`--updated-before` (`YYYY-MM-DD`), `--jql`, `--limit`/`--all`, `--points`, `--assets`, `--duedate`, `--fields <CSV>` (requires `--output json`), `--sort <field>:asc\|desc`) |
+| `jr issue view KEY` | View issue details (per-field asset rows, enriched JSON, story points, due date; `--fields <CSV>` requires `--output json`) |
 | `jr issue create` | Create an issue (`--team`, `--points`) |
 | `jr issue edit KEY` | Edit issue fields (`--team`, `--points`, `--no-points`) |
 | `jr issue move KEY [STATUS]` | Transition issue (partial match on status name). `--resolution <name>` atomically sets resolution on the transition for JSM/resolution-required workflows. |
@@ -296,6 +312,7 @@ jr issue comment add JSM-42 "customer is on the paid plan — prioritizing" --in
 | `jr project fields --project FOO` | Show valid issue types, priorities, statuses, and asset custom fields |
 | `jr requesttype list` | List JSM request types for the project's service desk (7d cache) |
 | `jr requesttype fields <NAME\|ID>` | Show fields for a request type (partial name match or numeric ID) |
+| `jr field options <NAME>` | Enumerate a custom field's allowed options via one of `--type` (project+issue-type createmeta), `--request-type` (JSM request-type fields), or `--issue KEY` (issue editmeta) — exactly one required. `--project` is a companion flag (required-or-defaulted for `--type`, optional for `--request-type`, ignored for `--issue`). `--value` filters results by a case-insensitive substring |
 | `jr completion bash\|zsh\|fish` | Generate shell completions |
 
 ## Global Flags
@@ -304,7 +321,7 @@ jr issue comment add JSM-42 "customer is on the paid plan — prioritizing" --in
 |------|-------------|
 | `--output json\|table` | Output format (default: table) |
 | `--project FOO` | Override project key |
-| `--profile NAME` | Override the active profile for this invocation (precedence: this flag > `JR_PROFILE` env > `default_profile` in config > `"default"`) |
+| `--profile NAME` | Override the active profile for this invocation (precedence: this flag > `JR_PROFILE` env > `default_profile` in config > `"default"`). Rejected (exit 64) on `jr auth switch` — that subcommand's switch target is always the positional `NAME` argument |
 | `--no-color` | Disable colored output (also respects `NO_COLOR` env) |
 | `--no-input` | Disable interactive prompts (auto-enabled in pipes/scripts) |
 | `--verbose` | Show HTTP method + URL per request (header-only since v0.6 / SD-003; does NOT print bodies) |
@@ -312,15 +329,31 @@ jr issue comment add JSM-42 "customer is on the paid plan — prioritizing" --in
 
 ## Configuration
 
-```bash
-# Global config
-~/.config/jr/config.toml
+Config and cache locations are platform-specific:
 
+| | Unix (macOS/Linux) | Windows |
+|---|---|---|
+| Global config | `~/.config/jr/config.toml` | `%APPDATA%\jr\config.toml` |
+| Per-profile cache (disposable, 7-day TTL) | `~/.cache/jr/v1/<profile>/teams.json` | `%LOCALAPPDATA%\jr\v1\<profile>\teams.json` |
+
+Config lives under Roaming (`%APPDATA%`) so it can follow a roaming
+Windows profile; cache lives under Local (`%LOCALAPPDATA%`) because it's
+disposable and shouldn't sync. If a command reports "No profiles
+configured" on Windows even though you're sure you've run `jr init`,
+check `%APPDATA%\jr\config.toml` — the Windows equivalent of `~/.config/jr/`.
+
+Credentials (OAuth tokens, API tokens) are stored in Windows Credential
+Manager. Windows Credential Manager caps a single credential blob at
+~2560 bytes, which some Atlassian OAuth refresh tokens exceed; when that
+happens, `jr` automatically falls back to a user-scoped, DPAPI-encrypted
+file at `%LOCALAPPDATA%\jr\secrets\<profile>\oauth-tokens.dat` instead of
+failing the login.
+
+Per-project config is the same on every platform:
+
+```bash
 # Per-project config (in your repo root)
 .jr.toml
-
-# Per-profile cache (disposable, 7-day TTL)
-~/.cache/jr/v1/<profile>/teams.json
 ```
 
 **Global config (multi-profile shape):**
@@ -331,8 +364,8 @@ default_profile = "default"
 url = "https://yourorg.atlassian.net"
 auth_method = "api_token"  # or "oauth"
 # cloud_id, org_id, oauth_scopes, team_field_id, story_points_field_id
-# are auto-discovered during `jr init` / `jr auth login --oauth` and
-# populated here per profile.
+# are auto-discovered during `jr init` / `jr auth login` / `jr auth
+# refresh` (both OAuth and API-token flows) and populated here per profile.
 # oauth_scopes = "read:issue:jira write:issue:jira ... offline_access"
 
 [profiles.sandbox]
@@ -340,6 +373,10 @@ url = "https://yourorg-sandbox.atlassian.net"
 auth_method = "api_token"
 # Sandbox sites usually mirror production custom-field IDs, but `jr` stores
 # them per profile so divergence doesn't silently corrupt cached lookups.
+# Optional free-form label shown in the ENV column of `jr auth list` and the
+# Env: line of `jr auth status` (S-cycle3-env-tag). Hand-edited only — no CLI
+# flag or `jr init` prompt sets it yet.
+env = "sandbox"
 
 [defaults]
 output = "table"
@@ -353,10 +390,31 @@ jr --profile sandbox issue list # one-shot — overrides for this call only
 JR_PROFILE=sandbox jr issue list # session-scoped (works well with direnv)
 ```
 
-A single classic Atlassian API token authenticates the same user against
-any Atlassian Cloud site, so `email` + `api-token` are stored once in the
-OS keychain and shared by all `api_token` profiles. OAuth tokens are
-cloudId-scoped and stored per profile.
+Note: `--profile` and `auth switch` don't combine — `jr auth switch --profile X Y` exits
+64. `auth switch`'s target is always its positional `NAME` argument.
+
+`email` + `api-token` are stored per profile in the OS keychain
+(namespaced as `<profile>:email`/`<profile>:api-token`), symmetric with
+OAuth tokens, which are also stored per profile (namespaced as
+`<profile>:oauth-access-token`/`<profile>:oauth-refresh-token`).
+
+**`cloud_id` auto-discovery.** `cloud_id` (Atlassian's internal tenant
+identifier, required by Assets/CMDB commands) is auto-discovered for
+*both* auth methods, not just OAuth: the OAuth flow gets it for free from
+the `accessible-resources` step during login; an API-token profile
+acquires it via an unauthenticated `GET {site}/_edge/tenant_info` lookup,
+attempted on `jr auth login`, `jr init`, and `jr auth refresh` alike. This
+lookup is best-effort and never blocks login — on failure (network error,
+non-2xx response, malformed body) `jr` prints a warning and leaves any
+existing `cloud_id` untouched, rather than failing the command. Pass
+`--cloud-id <uuid>` on `jr auth login` to set the value explicitly and
+skip the lookup entirely (useful in scripts, or if the endpoint is
+unreachable from your network). If `cloud_id` was never successfully
+acquired for a profile, Assets/CMDB commands (`jr assets ...`,
+`jr issue list --asset ...`) fail with an actionable `"Cloud ID not
+configured. Run \"jr init\" to set up your instance."` error — core
+commands (`jr issue`, `jr board`, `jr sprint`, etc.) are unaffected either
+way, regardless of auth method.
 
 **Per-project config:**
 ```toml
@@ -371,6 +429,15 @@ in the OS keychain lazy-migrate from flat keys (`oauth-access-token`) to
 namespaced keys (`default:oauth-access-token`) on first authenticated
 read. Old cache files at `~/.cache/jr/*.json` orphan harmlessly when the
 new layout starts using `~/.cache/jr/v1/<profile>/`.
+
+**API-token profiles created before per-profile credential storage shipped
+require a one-time re-login.** `email` and `api-token` credentials are
+not lazy-migrated to the new per-profile keychain layout the way OAuth
+tokens are. On any affected profile, the first command that contacts Jira
+exits 2 (not authenticated) with a remediation hint; run
+`jr auth login --profile=<name>` once to store credentials under the new
+namespaced keys. Use the `=` form (`--profile=<name>`) so profile names
+that begin with `-` are not misinterpreted as flags.
 
 ## Scripting & AI Agents
 
@@ -417,6 +484,21 @@ jr completion fish | source
 | 78 | Configuration error |
 | 124 | Timeout / deadline exceeded |
 | 130 | Interrupted (Ctrl+C) |
+
+## Mutation testing
+
+Test-suite quality is enforced two ways:
+
+- **Per-PR (required CI, reflected by the CI badge above):** every pull request is gated
+  by a diff-scoped [cargo-mutants](https://mutants.rs/) run — mutations are generated only
+  against lines changed in the PR, sharded across parallel jobs, and reconciled by
+  `mutants-aggregate` as a required `CI Gate` check. See
+  [`docs/specs/cargo-mutants-policy.md`](docs/specs/cargo-mutants-policy.md).
+- **Nightly (advisory, full-scope):**
+  [`mutants-nightly.yml`](.github/workflows/mutants-nightly.yml) runs a full-scope mutation
+  sweep across the whole codebase (not just PR diffs) on a schedule. Its pooled kill rate is
+  published to that workflow run's **Actions job summary** — it never gates a merge and is
+  not a required check.
 
 ## License
 

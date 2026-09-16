@@ -2,7 +2,11 @@ mod assets;
 pub mod attachments;
 mod changelog;
 mod comments;
-mod create;
+// S-578-3: pub(crate) (not private) so `FieldValueSpec`/`FieldValueKind`
+// (BC-3.8.008 amendment) are reachable from `api::jsm::requests` — a
+// different top-level module tree that needs the shared hint-kind type to
+// thread `JsmRequestBuilder.extra_fields` (S-578-1's shared parser output).
+pub(crate) mod create;
 mod edit;
 mod field_resolve;
 mod format;
@@ -12,10 +16,22 @@ mod jsm_create;
 mod json_output;
 mod links;
 mod list;
+// S-cycle5-mention-resolution-wiring: `resolve_mentions`/`filter_by_name_match`
+// are called from create.rs/edit.rs/interactions.rs/jsm_create.rs (all
+// siblings within this module tree), so `mod` visibility (matching
+// `helpers`/`field_resolve`) is sufficient — no `pub`/`pub(crate)` needed.
+mod mentions;
 mod view;
 pub mod workflow;
 
 pub use format::{format_issue_row, format_issue_rows_public, format_points, issue_table_headers};
+// Re-exported for use by cli::component (BC-8.4.001 — resolve_component is the
+// shared resolver; sibling cli modules cannot reach into cli::issue::helpers directly).
+pub(crate) use helpers::resolve_component;
+// Re-exported for use by cli::component (FIX-F5 — is_numeric_component_id is the
+// single source of truth for the BC-8.4.001 numeric-id bypass predicate; sibling
+// cli modules cannot reach into cli::issue::helpers directly).
+pub(crate) use helpers::is_numeric_component_id;
 
 use anyhow::Result;
 
@@ -78,7 +94,7 @@ pub async fn handle(
             // without exceeding the clippy::too_many_arguments threshold (mirrors
             // handle_comment_edit / handle_move / handle_assign pattern).
             sub @ CommentSubcommand::Add { .. } => {
-                interactions::handle_comment_add(sub, output_format, client).await
+                interactions::handle_comment_add(sub, output_format, client, no_input).await
             }
             CommentSubcommand::Delete { key, id, yes } => {
                 interactions::handle_comment_delete(key, id, yes, output_format, client, no_input)

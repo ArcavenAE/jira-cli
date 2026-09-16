@@ -7,6 +7,7 @@ use crate::api::assets::linked::{
 use crate::api::client::JiraClient;
 use crate::cli::{IssueCommand, OutputFormat};
 use crate::config::Config;
+use crate::error::JrError;
 use crate::output;
 use crate::types::assets::LinkedAsset;
 use crate::types::assets::linked::format_linked_assets;
@@ -21,9 +22,40 @@ pub(super) async fn handle_view(
     config: &Config,
     client: &JiraClient,
 ) -> Result<()> {
-    let IssueCommand::View { key } = command else {
+    let IssueCommand::View { key, fields } = command else {
         unreachable!()
     };
+
+    // S-575-1 (BC-2.3.041): `--fields <CSV>` output-format gate + pre-HTTP
+    // CSV validation, both HTTP-free, followed by an early-return
+    // REPLACE-semantics fetch that skips the cmdb-field fetch/asset
+    // enrichment below entirely (not merely renders it inert) — mirrors
+    // `handle_list`'s BC-2.2.033 Postcondition 4 no-op treatment for
+    // `--points`/`--assets`/`--duedate`. Default behavior (fields == None)
+    // is untouched below.
+    //
+    // DEFENSIVE (S-584-1, BC-2.3.042 per BC-2.2.034 Edge Case EC-2.2.034-3 /
+    // mirrors list.rs): an unnamed `--fields` request (e.g. `comment`) is not a
+    // named field on `IssueFields` — it lands in `IssueFields.extra`'s
+    // `#[serde(flatten)]` catch-all and is serialized to JSON below via
+    // `output::print_output` with ZERO transformation, i.e. raw ADF for
+    // `comment.comments[].body`. Do NOT post-process `extra` here (e.g. to
+    // run `comment` bodies through `adf::adf_to_text` for consistency with
+    // the `issue comments` command's flattened rendering) — that is
+    // explicitly OUT OF SCOPE and would violate BC-2.3.042 Postcondition 1
+    // (raw ADF preserved byte-for-byte, mirroring BC-2.2.034 Postcondition 1)
+    // and Postcondition 3 (zero incremental transformation code, mirroring
+    // BC-2.2.034 Postcondition 3). See also BC-2.2.034.
+    if let Some(csv) = &fields {
+        if !matches!(output_format, OutputFormat::Json) {
+            return Err(JrError::UserError("--fields requires --output json.".into()).into());
+        }
+        let field_list = helpers::parse_fields_csv(csv)?;
+        let field_refs: Vec<&str> = field_list.iter().map(String::as_str).collect();
+        let issue = client.get_issue_with_fields(&key, &field_refs).await?;
+        output::print_output(output_format, &[], &[], &issue)?;
+        return Ok(());
+    }
 
     let active = config.active_profile();
     let sp_field_id = active.story_points_field_id.as_deref();
@@ -90,7 +122,10 @@ pub(super) async fn handle_view(
 
             let mut rows = vec![
                 vec!["Key".into(), issue.key.clone()],
-                vec!["Summary".into(), issue.fields.summary.clone()],
+                vec![
+                    "Summary".into(),
+                    issue.fields.summary.clone().unwrap_or_default(),
+                ],
                 vec![
                     "Type".into(),
                     issue
@@ -153,6 +188,10 @@ pub(super) async fn handle_view(
                         .as_deref()
                         .map(|c| format_comment_date(c, client.verbose()))
                         .unwrap_or_else(|| "-".into()),
+                ],
+                vec![
+                    "Due Date".into(),
+                    format::render_due_date(issue.fields.duedate.as_deref()),
                 ],
                 vec![
                     "Project".into(),
@@ -250,32 +289,32 @@ pub(super) async fn handle_view(
                 rows.push(vec!["Points".into(), points_display]);
             }
 
-            if let Some(field_id) = team_field_id {
-                if let Some(team_uuid) = issue.fields.team_id(field_id, client.verbose()) {
-                    let team_display =
-                        match crate::cache::read_team_cache(&config.active_profile_name) {
-                            Ok(Some(c)) => c
-                                .teams
-                                .into_iter()
-                                .find(|t| t.id == team_uuid)
-                                .map(|t| t.name)
-                                .unwrap_or_else(|| {
-                                    format!(
-                                        "{} (name not cached — run 'jr team list --refresh')",
-                                        team_uuid
-                                    )
-                                }),
-                            Ok(None) => format!(
+            if let Some(field_id) = team_field_id
+                && let Some(team_uuid) = issue.fields.team_id(field_id, client.verbose())
+            {
+                let team_display = match crate::cache::read_team_cache(&config.active_profile_name)
+                {
+                    Ok(Some(c)) => c
+                        .teams
+                        .into_iter()
+                        .find(|t| t.id == team_uuid)
+                        .map(|t| t.name)
+                        .unwrap_or_else(|| {
+                            format!(
                                 "{} (name not cached — run 'jr team list --refresh')",
                                 team_uuid
-                            ),
-                            Err(e) => {
-                                eprintln!("warning: failed to read team cache: {e}");
-                                format!("{} (team cache unreadable)", team_uuid)
-                            }
-                        };
-                    rows.push(vec!["Team".into(), team_display]);
-                }
+                            )
+                        }),
+                    Ok(None) => format!(
+                        "{} (name not cached — run 'jr team list --refresh')",
+                        team_uuid
+                    ),
+                    Err(e) => {
+                        eprintln!("warning: failed to read team cache: {e}");
+                        format!("{} (team cache unreadable)", team_uuid)
+                    }
+                };
+                rows.push(vec!["Team".into(), team_display]);
             }
 
             rows.push(vec!["Description".into(), desc_text]);

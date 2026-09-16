@@ -2,6 +2,8 @@ pub mod api;
 pub mod assets;
 pub mod auth;
 pub mod board;
+pub mod component;
+pub mod field;
 pub mod init;
 pub mod issue;
 pub mod project;
@@ -118,6 +120,16 @@ pub enum Command {
         #[command(subcommand)]
         command: RequestTypeCommand,
     },
+    /// Manage project components
+    Component {
+        #[command(subcommand)]
+        command: ComponentSubcommand,
+    },
+    /// Discover custom-field allowed options (issue #580)
+    Field {
+        #[command(subcommand)]
+        command: FieldCommand,
+    },
     /// Make a raw authenticated HTTP request to the Jira REST API.
     Api {
         /// API path (leading slash optional). Example: /rest/api/3/myself
@@ -206,12 +218,25 @@ pub enum AuthCommand {
         /// Jira instance URL (required when creating a new profile under --no-input).
         #[arg(long)]
         url: Option<String>,
-        /// Use OAuth 2.0 instead of API token (requires your own OAuth app).
-        /// Scope list is Atlassian's recommended classic set by default;
-        /// override via `[profiles.<name>].oauth_scopes` in config.toml — see
-        /// Configuration below.
-        #[arg(long)]
+        /// Use OAuth 2.0 instead of API token. jr ships a built-in OAuth app
+        /// by default (ADR-0006); `--client-id`/`--client-secret` or
+        /// `$JR_OAUTH_CLIENT_ID`/`$JR_OAUTH_CLIENT_SECRET` are an optional
+        /// BYO override. Scope list is Atlassian's recommended classic set by
+        /// default; override via `[profiles.<name>].oauth_scopes` in
+        /// config.toml — see Configuration below.
+        ///
+        /// DEPRECATED (BC-1.2.049): retained as an accepted alias — when the
+        /// non-interactive guard does not reject first, a deprecation notice
+        /// may be emitted on interactive runs. Prefer letting the interactive
+        /// picker default to OAuth, or pass `--api-token` explicitly for the
+        /// other mechanism.
+        #[arg(long, conflicts_with = "api_token")]
         oauth: bool,
+        /// Select the API-token mechanism directly, skipping the
+        /// interactive OAuth-default picker (BC-1.2.050). Mutually
+        /// exclusive with `--oauth`.
+        #[arg(long, conflicts_with = "oauth")]
+        api_token: bool,
         /// Jira email (API token flow). Prefer $JR_EMAIL over this flag.
         #[arg(long)]
         email: Option<String>,
@@ -250,9 +275,22 @@ pub enum AuthCommand {
         /// Profile to refresh credentials for. Defaults to active profile.
         #[arg(long)]
         profile: Option<String>,
-        /// Use OAuth 2.0 instead of API token (matches `jr auth login --oauth`)
-        #[arg(long)]
+        /// Use OAuth 2.0 instead of API token (matches `jr auth login --oauth`).
+        ///
+        /// DEPRECATED (BC-1.2.049): retained as an accepted alias, but has no
+        /// effect on `auth refresh`'s mechanism selection (BC-1.2.051) — the
+        /// profile's own stored `auth_method` is always used. A deprecation
+        /// notice is printed in human-output (Table) mode unless the
+        /// non-interactive OAuth guard rejects the refresh first.
+        #[arg(long, conflicts_with = "api_token")]
         oauth: bool,
+        /// Syntactically accepted for symmetry with `auth login`
+        /// (BC-1.2.050); has no effect on `auth refresh`'s mechanism
+        /// selection — the profile's own stored `auth_method` is always
+        /// used. An informational stderr notice is printed in human-output
+        /// mode. Mutually exclusive with `--oauth`.
+        #[arg(long, conflicts_with = "oauth")]
+        api_token: bool,
         /// Jira email (API token flow). Prefer $JR_EMAIL over this flag.
         #[arg(long)]
         email: Option<String>,
@@ -319,6 +357,9 @@ pub enum IssueCommand {
         /// Show issues created within duration (e.g., 7d, 4w, 2M)
         #[arg(long)]
         recent: Option<String>,
+        /// Show issues updated within duration (e.g., 7d, 4w, 2M)
+        #[arg(long)]
+        updated_recent: Option<String>,
         /// Show only open issues (excludes Done status category)
         #[arg(long, conflicts_with = "status")]
         open: bool,
@@ -328,9 +369,19 @@ pub enum IssueCommand {
         /// Show linked assets column
         #[arg(long)]
         assets: bool,
+        /// Show due date column
+        #[arg(long)]
+        duedate: bool,
         /// Filter by linked asset object key (e.g., CUST-5)
         #[arg(long)]
         asset: Option<String>,
+        /// Filter by component name (repeatable, OR-combined). Prefix forms:
+        /// `not:<NAME>` excludes (issues with no component are still included),
+        /// `none` matches issues with zero components (must be the only
+        /// occurrence), `all:<N1>,<N2>` requires every listed component
+        /// (AND-combined; at most one `all:` occurrence). See BC-2.1.018..022.
+        #[arg(long = "component")]
+        component: Vec<String>,
         /// Show issues created on or after this date (YYYY-MM-DD)
         #[arg(long, conflicts_with = "recent")]
         created_after: Option<String>,
@@ -338,11 +389,28 @@ pub enum IssueCommand {
         #[arg(long)]
         created_before: Option<String>,
         /// Show issues updated on or after this date (YYYY-MM-DD)
-        #[arg(long)]
+        #[arg(long, conflicts_with = "updated_recent")]
         updated_after: Option<String>,
         /// Show issues updated on or before this date (YYYY-MM-DD)
         #[arg(long)]
         updated_before: Option<String>,
+        /// Comma-separated list of fields to request from Jira (e.g.
+        /// "summary,status,comment"), REPLACING the default field set
+        /// (BASE_ISSUE_FIELDS plus any --points/--assets/--duedate extras)
+        /// rather than unioning with it (DEC-298). Requires --output json;
+        /// combined with table mode (default or --output table) exits 64
+        /// pre-HTTP. See BC-2.2.033.
+        #[arg(long)]
+        fields: Option<String>,
+        /// Sort results by a field (e.g. "updated:desc", "key:asc"). Overrides
+        /// the default/board-driven ordering in every JQL composition branch
+        /// (including `--jql`'s own ORDER BY and scrum/kanban board rank
+        /// ordering); appends `, key ASC` as a stable secondary sort unless
+        /// the field is `key` itself. Field name is passed through to Jira
+        /// unvalidated -- the same trust posture as `--jql`. See BC-2.1.024
+        /// and BC-2.1.025.
+        #[arg(long)]
+        sort: Option<String>,
     },
     /// Create a new issue
     Create {
@@ -372,6 +440,14 @@ pub enum IssueCommand {
         /// Labels (can be specified multiple times)
         #[arg(long)]
         label: Vec<String>,
+        /// Set initial components (repeatable). Resolved via the project's
+        /// component list (BC-3.4.025), the same resolver as `jr component`
+        /// and `issue list --component`. No add:/remove: prefix grammar on
+        /// create — a literal `add:X` is resolved as-is and 400s as an
+        /// unknown name (BC-3.4.024). Cannot be combined with --request-type
+        /// (BC-3.4.024 Postcondition 3).
+        #[arg(long = "component")]
+        component: Vec<String>,
         /// Team assignment
         #[arg(long)]
         team: Option<String>,
@@ -381,6 +457,12 @@ pub enum IssueCommand {
         /// Interpret description as Markdown
         #[arg(long)]
         markdown: bool,
+        /// Skip mention resolution entirely (no `GET /user/search` or
+        /// `GET /user?accountId=` calls); the ADF body carries the literal,
+        /// unconverted mention text. No relationship to --markdown — accepted
+        /// as a silent no-op without it (ADR-0023 §6, AC-014/AC-015).
+        #[arg(long = "no-mentions")]
+        no_mentions: bool,
         /// Parent issue key (e.g., for subtasks or stories under epics)
         #[arg(long)]
         parent: Option<String>,
@@ -395,12 +477,15 @@ pub enum IssueCommand {
         /// The project must be a Jira Service Management project.
         #[arg(long = "request-type")]
         request_type: Option<String>,
-        /// Additional request field values as NAME=VALUE pairs (repeatable).
+        /// Set a custom field as NAME=VALUE, or NAME:kind=VALUE (repeatable).
         /// The first '=' splits; subsequent '=' characters are part of the value.
-        /// Duplicate keys use the last value provided. Applies to JSM requests only.
+        /// Duplicate keys use the last value provided. On the platform (non-JSM)
+        /// path, resolves against the project's Create screen (createmeta); with
+        /// --request-type set, resolves against the JSM request type's fields.
         #[arg(long = "field", action = clap::ArgAction::Append)]
         field: Vec<String>,
-        /// Raise the JSM request on behalf of this accountId (JSM requests only).
+        /// Create the request on behalf of this accountId (JSM only; requires
+        /// --request-type).
         /// Maps to the top-level `raiseOnBehalfOf` field in the request body.
         #[arg(long = "on-behalf-of")]
         on_behalf_of: Option<String>,
@@ -409,24 +494,42 @@ pub enum IssueCommand {
     View {
         /// Issue key (e.g., FOO-123)
         key: String,
+        /// Comma-separated list of fields to request from Jira (e.g.
+        /// "summary,comment"), REPLACING the default field set rather than
+        /// unioning with it (DEC-298). Requires --output json; combined with
+        /// table mode (default or --output table) exits 64 pre-HTTP. See
+        /// BC-2.3.041.
+        #[arg(long)]
+        fields: Option<String>,
     },
     /// Edit issue fields
     Edit {
         /// Issue keys (positional; omit when using --jql). Mutually exclusive with --jql.
-        /// Up to 1000 keys per call (Atlassian Bulk API limit).
-        #[arg(num_args = 0..=1001, conflicts_with = "jql")]
+        /// Non-`--component` bulk edits are capped at 1000 keys per call (Atlassian Bulk
+        /// API limit, enforced in `handle_edit`). `--component` bulk edits (S-605-2,
+        /// BC-3.4.023 Postcondition 6) chunk internally into <=1000-key POSTs, so the CLI
+        /// surface allows a much larger key set for that flag — widened from the prior
+        /// `0..=1001` cap so a >1000-key `--component` invocation can reach the handler.
+        #[arg(num_args = 0..=10000, conflicts_with = "jql")]
         keys: Vec<String>,
         /// JQL query to select issues for bulk edit. Mutually exclusive with positional keys.
         #[arg(long, conflicts_with = "keys")]
         jql: Option<String>,
-        /// Maximum number of issues to match via --jql (default 50, hard ceiling 1000).
-        /// Requires --jql; cannot be used with positional keys. If the JQL match count
-        /// exceeds this value, the command errors without mutating.
+        /// Maximum number of issues to match via --jql (default 50, hard ceiling 1000
+        /// for non-`--component` bulk edits; `--component` bulk edits chunk internally
+        /// into <=1000-key POSTs (S-605-2, BC-3.4.023 Postcondition 6) and accept up to
+        /// 10000). Requires --jql; cannot be used with positional keys. If the JQL
+        /// match count exceeds this value, the command errors without mutating.
         ///
         /// Values above 100 trigger cursor pagination on /rest/api/3/search/jql (Jira
-        /// caps maxResults at 100 per page), so --max 1000 triggers up to ~10 search
+        /// caps maxResults at 100 per page), so a large --max triggers multiple search
         /// requests before the bulk call. Use the smallest --max that fits your workflow.
-        #[arg(long, value_parser = clap::value_parser!(u32).range(1..=1000))]
+        ///
+        /// The clap-level range here is widened to 1..=10000 so a >1000 `--component`
+        /// invocation can reach the handler at all; `handle_edit` enforces the tighter
+        /// 1000 ceiling at runtime for every OTHER bulk field flag (it cannot see
+        /// --component's presence from a value_parser alone).
+        #[arg(long, value_parser = clap::value_parser!(u32).range(1..=10_000))]
         max: Option<u32>,
         /// Skip the interactive confirmation prompt for large JQL match sets.
         #[arg(long)]
@@ -447,6 +550,18 @@ pub enum IssueCommand {
         /// Add or remove labels (e.g., --label add:backend --label remove:frontend)
         #[arg(long)]
         label: Vec<String>,
+        /// Add or remove components (e.g., --component add:backend --component
+        /// remove:frontend). Bare values (no prefix) are treated as ADD
+        /// (BC-3.4.022). A single key uses the native `update`-verb PUT path;
+        /// 2+ keys (positional or --jql-resolved) route to a dedicated bulk
+        /// multiselectComponents path (BC-3.4.023, S-605-2), chunked
+        /// internally into <=1000-key POSTs. On 2+ keys, --component cannot
+        /// be combined with --summary/--priority/--type in the same call
+        /// (the bulk path has no way to also carry those fields). Cannot be
+        /// combined with --label on the same call at any key count
+        /// (BC-3.4.020 amendment).
+        #[arg(long = "component")]
+        component: Vec<String>,
         /// Team assignment
         #[arg(long)]
         team: Option<String>,
@@ -476,6 +591,12 @@ pub enum IssueCommand {
         /// Interpret description as Markdown
         #[arg(long)]
         markdown: bool,
+        /// Skip mention resolution entirely (no `GET /user/search` or
+        /// `GET /user?accountId=` calls); the ADF body carries the literal,
+        /// unconverted mention text. No relationship to --markdown — accepted
+        /// as a silent no-op without it (ADR-0023 §6, AC-014/AC-015).
+        #[arg(long = "no-mentions")]
+        no_mentions: bool,
         /// Arbitrary custom field values as NAME=VALUE pairs (repeatable).
         /// The first '=' splits name from value; subsequent '=' are part of the value.
         /// Duplicate keys use the last value provided. Single-key path only (rejected
@@ -643,7 +764,7 @@ pub enum IssueCommand {
         /// Issue key (e.g., FOO-123)
         key: String,
     },
-    /// Attachment operations: list. (S-576-1)
+    /// Attachment operations: list, download, upload, delete. (S-576-1..4)
     Attachment {
         #[command(subcommand)]
         command: AttachmentSubcommand,
@@ -663,6 +784,12 @@ pub enum CommentSubcommand {
         /// Interpret input as Markdown
         #[arg(long)]
         markdown: bool,
+        /// Skip mention resolution entirely (no `GET /user/search` or
+        /// `GET /user?accountId=` calls); the ADF body carries the literal,
+        /// unconverted mention text. No relationship to --markdown — accepted
+        /// as a silent no-op without it (ADR-0023 §6, AC-014/AC-015).
+        #[arg(long = "no-mentions")]
+        no_mentions: bool,
         /// Read comment from file
         #[arg(long)]
         file: Option<String>,
@@ -705,6 +832,12 @@ pub enum CommentSubcommand {
         /// Interpret body as Markdown
         #[arg(long)]
         markdown: bool,
+        /// Skip mention resolution entirely (no `GET /user/search` or
+        /// `GET /user?accountId=` calls); the ADF body carries the literal,
+        /// unconverted mention text. No relationship to --markdown — accepted
+        /// as a silent no-op without it (ADR-0023 §6, AC-014/AC-015).
+        #[arg(long = "no-mentions")]
+        no_mentions: bool,
         /// Mark comment as internal (agent-only visibility)
         #[arg(long, conflicts_with = "public")]
         internal: bool,
@@ -766,6 +899,9 @@ pub enum AttachmentSubcommand {
         all: bool,
 
         /// Download the N most-recent attachments by `created` descending.
+        /// `--filter` predicates (if any) are applied BEFORE this truncation — the
+        /// surviving set is sorted by `created` descending (most recent first),
+        /// then truncated to the first N.
         /// Accepts negative integers — N ≤ 0 is rejected in the handler (exit 64,
         /// `--newest requires a positive integer.`; EC-2.7.009-1; `allow_negative_numbers`
         /// lets clap accept them so the handler can emit the canonical message).
@@ -780,7 +916,10 @@ pub enum AttachmentSubcommand {
 
         /// Output directory for batch downloads.
         /// Requires the `batch` group (`--all` or `--newest`; EC-2.7.008-9 ~812).
-        /// Conflicts with `--id`.
+        /// Conflicts with `--id`. Files land as
+        /// `<40-char-SHA-1-of-the-attachment-id>_<sanitized-filename>` — the
+        /// on-disk name is NOT predictable from `list` output; recover it by
+        /// parsing the `path` field of this command's JSON manifest.
         #[arg(long = "out-dir", requires = "batch", conflicts_with = "id")]
         out_dir: Option<std::path::PathBuf>,
 
@@ -1076,6 +1215,206 @@ pub enum RequestTypeCommand {
     Fields {
         /// Request type name (partial match supported) OR numeric ID
         name_or_id: String,
+    },
+}
+
+/// `jr field` subcommands (issue #580, BC-X.14.001..004).
+#[derive(Subcommand)]
+pub enum FieldCommand {
+    /// Enumerate a custom field's allowed options
+    ///
+    /// Exactly one of `--type`, `--request-type`, `--issue` selects the
+    /// enumeration mode; `--project` is a companion flag whose role
+    /// (required-or-defaulted / optional / ignored) depends on the selected
+    /// mode. See ADR-0019 §1 / BC-X.14.001.
+    Options {
+        /// `customfield_NNNNN` literal, or a human field name resolved via
+        /// `list_fields()` + `partial_match`
+        field: String,
+
+        /// M2: enumerate via project+issue-type createmeta. Requires a
+        /// resolvable `--project` (explicit flag or profile/config default).
+        #[arg(long = "type")]
+        r#type: Option<String>,
+
+        /// M3: enumerate via JSM request-type fields. `--project` is an
+        /// optional companion naming the service-desk project explicitly.
+        #[arg(long = "request-type")]
+        request_type: Option<String>,
+
+        /// M1: enumerate via an existing issue's editmeta. `--project` is
+        /// not consulted (the issue key alone supplies project context).
+        #[arg(long)]
+        issue: Option<String>,
+
+        /// Companion project override — required-or-defaulted for `--type`,
+        /// optional for `--request-type`, ignored for `--issue`.
+        #[arg(long)]
+        project: Option<String>,
+
+        /// Client-side, case-insensitive substring filter against id/label
+        #[arg(long)]
+        value: Option<String>,
+    },
+}
+
+/// Assignee-type policy for issues filed against a component.
+///
+/// Maps to Jira's `assigneeType` field on the component resource
+/// (BC-8.1.005 — component create only; `component edit` has no `--assignee-type` flag).
+#[derive(clap::ValueEnum, Clone, Debug)]
+#[clap(rename_all = "SCREAMING_SNAKE_CASE")]
+pub enum AssigneeType {
+    /// Use the component lead as the default assignee.
+    ComponentLead,
+    /// Use the project lead as the default assignee.
+    ProjectLead,
+    /// Leave issues unassigned by default.
+    Unassigned,
+    /// Inherit the project's default assignee policy.
+    ProjectDefault,
+}
+
+/// Subcommands for `jr component`.
+///
+/// Only `List` is implemented in S-604-1.  Create, edit, delete, and rename
+/// subcommands land in subsequent stories (S-604-2, S-604-3, S-608-1) and are
+/// added here additively — never remove or reorder a sibling variant.
+#[derive(Subcommand)]
+pub enum ComponentSubcommand {
+    /// List components for a project
+    List {
+        /// Project key (overrides the configured default project).
+        /// Required when no project is configured in `.jr.toml`.
+        #[arg(long)]
+        project: Option<String>,
+        /// Enrich each component row with its related issue count.
+        /// Issues one extra HTTP call per component (N+1). BC-8.1.003.
+        #[arg(long)]
+        counts: bool,
+    },
+    /// Create a new component in a project (BC-8.1.005 + BC-8.1.006 for --lead)
+    Create {
+        /// Project key. Required (no `.jr.toml` config fallback — BC-8.1.004 +
+        /// BC-8.1.005); may be supplied here OR via the global `--project`
+        /// flag (F5-A-L2 — clap's local-required-arg check does not see a
+        /// value supplied only in the global position, so `handle_create`
+        /// merges the two and enforces presence itself, exit 64).
+        #[arg(long)]
+        project: Option<String>,
+        /// Component name (BC-8.1.005).
+        /// Leading-dash values accepted (e.g. `-legacy`).
+        #[arg(allow_hyphen_values = true)]
+        name: String,
+        /// Component description (leading-dash values accepted).
+        #[arg(long, allow_hyphen_values = true)]
+        description: Option<String>,
+        /// Component lead: account ID, display-name substring, or email
+        /// (resolved via `search_assignable_users_by_project`; BC-8.1.006).
+        #[arg(long)]
+        lead: Option<String>,
+        /// Default assignee policy for issues in this component (BC-8.1.005).
+        #[arg(long)]
+        assignee_type: Option<AssigneeType>,
+    },
+    /// Edit an existing component's fields (BC-8.1.007)
+    Edit {
+        /// Component name (partial match) or numeric ID (BC-8.1.007 + BC-8.1.008 + BC-8.4.001).
+        /// Leading-dash names accepted (e.g. `-legacy`).
+        #[arg(allow_hyphen_values = true)]
+        name_or_id: String,
+        /// Project key (required for name-based lookup; BC-8.1.004 + BC-8.1.007).
+        #[arg(long)]
+        project: Option<String>,
+        /// New component name (leading-dash values accepted, e.g. `--name -legacy`).
+        #[arg(long, allow_hyphen_values = true)]
+        name: Option<String>,
+        /// New description (leading-dash values accepted).
+        /// Pass an empty string (`--description ""`) to clear the description.
+        #[arg(long, allow_hyphen_values = true)]
+        description: Option<String>,
+        /// New lead: account ID, display-name substring, email, or empty string
+        /// to clear the lead (`--lead ""`; BC-8.1.007).
+        #[arg(long)]
+        lead: Option<String>,
+    },
+    /// Delete a component — requires an explicit disposition for its issues
+    /// (BC-8.2.001 — BC-8.2.008, S-604-3).
+    ///
+    /// Irreversible: no trash/archive/undelete endpoint exists. Snapshots
+    /// every affected issue key via a fully-paginated JQL search BEFORE the
+    /// DELETE fires. Exactly one of `--move-to`/`--orphan` is required —
+    /// neither supplied is an application-level exit-64 guard (NOT a clap
+    /// `ArgGroup::required`, which would wrongly produce exit 2); both
+    /// supplied is a clap `conflicts_with` exit 2.
+    Delete {
+        /// Component name (partial match) or numeric ID (BC-8.1.007/008 +
+        /// BC-8.4.001 resolution semantics, reused here). Leading-dash names
+        /// accepted (e.g. `-legacy`).
+        #[arg(allow_hyphen_values = true)]
+        name_or_id: String,
+        /// Project key (required for name-based lookup; BC-8.1.004).
+        #[arg(long)]
+        project: Option<String>,
+        /// Move this component's issues to another component (by name or
+        /// numeric ID) before deleting it. Must resolve within the SAME
+        /// project as the component being deleted (BC-8.2.002/003).
+        /// Mutually exclusive with `--orphan`.
+        #[arg(long, conflicts_with = "orphan")]
+        move_to: Option<String>,
+        /// Delete the component without moving its issues — they are left
+        /// with no replacement component. Requires interactive confirmation
+        /// (or `--yes` when non-interactive; BC-8.2.006). Mutually exclusive
+        /// with `--move-to`.
+        #[arg(long, conflicts_with = "move_to")]
+        orphan: bool,
+        /// Skip the `--orphan` interactive confirmation prompt (required when
+        /// running non-interactively with `--orphan`; BC-8.2.006). No effect
+        /// on `--move-to`, which never prompts (BC-8.2.006 Invariant 1).
+        #[arg(long)]
+        yes: bool,
+    },
+    /// Rename a component — single-project or `--all-projects` fan-out
+    /// (BC-8.3.001 — BC-8.3.007, S-608-1).
+    ///
+    /// Single-project form (`--project KEY`): `--project` is UNCONDITIONALLY
+    /// required (BC-8.3.001 Precondition 1) — no `.jr.toml` config fallback,
+    /// no numeric-ID exemption (unlike `edit`/`delete`). `--all-projects`
+    /// fans out across every accessible project containing a component named
+    /// `OLD`, matched by EXACT case-insensitive equality — NOT the §8.4
+    /// `partial_match` substring semantics used elsewhere in this command
+    /// family (BC-8.3.002). Exactly one of `--project`/`--all-projects` is
+    /// required — neither supplied is an application-level exit-64 guard
+    /// (BC-8.3.005, DEC-188, mechanically identical to `delete`'s
+    /// `--move-to`/`--orphan` split); both supplied is a clap
+    /// `conflicts_with` exit 2. `--dry-run` is valid with either scope and
+    /// performs the identical read-only discovery with zero mutating HTTP
+    /// (BC-8.3.004).
+    Rename {
+        /// Current component name (partial match, single-project form only)
+        /// or numeric ID. Leading-dash values accepted.
+        #[arg(allow_hyphen_values = true)]
+        old: String,
+        /// New component name. Leading-dash values accepted.
+        #[arg(allow_hyphen_values = true)]
+        new: String,
+        /// Project key — required for the single-project form (BC-8.3.001
+        /// Precondition 1: unconditional, no `.jr.toml` fallback, no
+        /// numeric-ID exemption). Mutually exclusive with `--all-projects`.
+        #[arg(long, conflicts_with = "all_projects")]
+        project: Option<String>,
+        /// Fan out across every accessible project containing a component
+        /// named `OLD`, matched by exact case-insensitive equality
+        /// (BC-8.3.002). A numeric `OLD` is rejected pre-flight under this
+        /// flag (BC-8.3.002 Precondition 2). Mutually exclusive with
+        /// `--project`.
+        #[arg(long, conflicts_with = "project")]
+        all_projects: bool,
+        /// Preview the rename set with zero mutating HTTP calls, using the
+        /// identical discovery scope as the corresponding live run
+        /// (BC-8.3.004).
+        #[arg(long)]
+        dry_run: bool,
     },
 }
 
