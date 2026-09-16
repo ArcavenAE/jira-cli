@@ -6,6 +6,44 @@
 > is RESOLVED/CLOSED — kept for audit trail, not tracked as open debt.
 > STATE.md keeps only a one-line pointer to this file.
 
+## RESOLVED at cycle-013 release-completion follow-up (2026-09-16, v4.48 -- archived from STATE.md's "RESOLVED prior burst" slot during the v4.48 CLOSED+RELEASED burst)
+
+**`CYCLE-013-PR823-MERGE-WITHOUT-COMPLETED-REVIEW`** -- RESOLVED. PR #823
+(`chore/release-v0.7.0-dev.7` -> `develop`) was merged squash @ `aa55705020fd8a01c0dfb36dc85422f21b0d72fc`
+(mergedBy Zious11, mergedAt 2026-09-16T23:10:40Z) before its dispatched fresh-eyes `pr-reviewer-823`
+sub-agent returned a result (the sub-agent stalled -- see `CYCLE-013-PR-REVIEWER-SUBAGENT-STALL` in
+`cycles/OPEN-STANDING-ITEMS.md`). `pr-manager` merged on its own thorough independent verification of
+the release-metadata diff instead of waiting further; Claude Code's own permission classifier flagged
+the action "Merge Without Review." The gap was closed post-hoc: an independent fresh-eyes `pr-reviewer`
+reviewed the merged commit `aa557050` directly (not the pre-merge PR diff) and returned **APPROVE**, all
+4 metadata checks PASS (file-set exactly `Cargo.toml`/`Cargo.lock`/`CHANGELOG.md`; version bump correct;
+lockfile self-version-only change; CHANGELOG reorg verified line-by-line, including the one authorized
+rustls cross-reference reword) -- `code-delivery/RELEASE-v0.7.0-dev.7/pr-review.md` and
+`code-delivery/pr-review.md`. Content independently verified correct; the process gap itself
+(merge-before-review-return) is tracked separately as a recurring infra issue
+(`CYCLE-013-PR-REVIEWER-SUBAGENT-STALL`), not re-litigated here since the merged content carries no
+defect.
+
+**`CYCLE-013-DEV6-CHANGELOG-NOT-ROLLED`** -- RESOLVED. `v0.7.0-dev.6`'s release PR (#815) inserted an
+empty `[0.7.0-dev.6]` CHANGELOG heading without moving the `[Unreleased]` content down into it,
+stranding the cycle-005/006/007/012 entries above the new heading -- a defect that went unnoticed until
+cycle-013's release investigation surfaced it. Backfilled in PR #823 this cycle: the stranded
+cycle-005/006/007/012 + rustls + maintenance content was moved verbatim down into `[0.7.0-dev.6]`,
+confirmed by the post-hoc `pr-reviewer` diff review (byte-identical block moves, one authorized reword
+of the rustls cross-reference sentence). `[Unreleased]` is now empty and dev.7 correctly holds only
+genuinely-new cycle-013 content. See the codified lesson in `cycles/cycle-013/lessons.md` (L-002) for
+the process fix going forward: verify CHANGELOG content actually MOVED, not just that a dated heading
+was inserted.
+
+## RESOLVED at cycle-013 Phase F7 close (2026-09-16, v4.47 -- archived from STATE.md's "RESOLVED prior burst" slot during the v4.48 CLOSED+RELEASED burst)
+
+**RESOLVED prior burst (cycle-013 Phase F6 recorded + Phase F7 audit remediation, 2026-09-16):** Phase
+F6 targeted hardening (`cycles/cycle-013/phase-f6-hardening/hardening-record.md`,
+`HARDENED_WITH_RESIDUALS`) committed to `factory-artifacts`. Phase F7 delta-convergence audit findings
+remediated: `F7-AUDIT-1` (CRIT, STATE.md/factory-artifacts drift), `F7-AUDIT-2` (MED, 5-artifact
+input-hash DRIFT), `F7-AUDIT-3` (LOW, stale ADR-0021 MSRV-1.85 prose) -- all fixed. Code/spec delta
+itself was already CONVERGED throughout. No DEC minted (bookkeeping burst).
+
 ## RESOLVED at cycle-012 F7 close (2026-09-15, v4.35 -- archived from STATE.md's "RESOLVED prior burst" slot during the v4.36->v4.37 CYCLE-007-F5-CONVERGED burst)
 
 cycle-012 Phase F7 **HUMAN GATE APPROVED** -- "Approve & close" (DEC-361); release decision: ship on `develop`, NO TAG (cycle-005 precedent), changes ride `develop @ 80bb4215` into the next tagged release, CHANGELOG `[Unreleased]` entry already present. S-7.02 Cycle-Closing Checklist executed: every process-gap/novel finding is CODIFIED as a lesson (L-008 AC-012 channel wording; L-010 F5 integration-scope value; L-001..L-009 prior) or DEFERRED as tracked LOW debt with a maintenance-sweep target (`M-2`/`OBS-A`/`OBS-3`, pre-existing `SEC-001-EDITMETA-RECURSION-GUARD`) -- no open process-gap finding lacks a follow-up or justified deferral. **cycle-012 CLOSED.** Pipeline PAUSED/idle -- no active cycle; cycle-007 remains PAUSED (resumable). STATE.md v4.34->v4.35; `CYCLE-012-F7-APPROVED-CLOSED-2026-09-15` phase progress row appended (oldest row `CYCLE-012-F4-STARTED-2026-09-13` archived out to `cycles/HISTORY-PHASE-PROGRESS.md`, keeping the table at 10 rows). Prior Session Resume Checkpoint (v4.34) archived to `cycles/cycle-012/session-checkpoints.md`. `cycle_012_status` frontmatter field collapsed to a one-line CLOSED summary (mirroring `cycle_005_status`/`cycle_006_status`); full narrative routed to `cycles/CYCLE-SUMMARY.md#cycle_012_status`.

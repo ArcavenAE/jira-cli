@@ -157,3 +157,22 @@ INCONSISTENT->RESOLVED via PR #822 + this burst's ADR-0025 prose fix). Archived 
 
 **Resume command (historical, as recorded at v4.46):** /vsdd-factory:phase-f7-delta-convergence (superseded -- the re-verification pass already ran and CONVERGED; see the v4.47 checkpoint for the actual next step, which is the release-completion follow-up).
 ```
+
+## Checkpoint v4.47 (archived from STATE.md during the v4.47->v4.48 CLOSED+RELEASED burst, 2026-09-16)
+
+| Field | Value |
+|-------|-------|
+| **Date** | 2026-09-16 |
+| **Position** | cycle-013 (`msrv-1.88-bump`) **Phase F7 CLOSED**: fresh-context delta-convergence re-verification CONFIRMED CONVERGED (all 7 dimensions PASS cleanly, zero open findings); human F7 close/release gate APPROVED "Approve & close" + "cut a dev release now" (`v0.7.0-dev.7`). `DEC-367` minted. `ADR-0025` flipped `proposed`->`accepted`. `v0.7.0-dev.7` release was **IN PROGRESS** as of this checkpoint (tag not yet pushed); `activation_head`/`activation_version` still at `7160a534`/`v0.7.0-dev.6` pending confirmation. |
+| **Convergence counter** | No active convergence loop; F5/F6/F7 all CLOSED. Next event = release-completion follow-up. |
+| **In-flight work** | NONE. `STATE.md`, `specs/architecture/decisions/ADR-0025-raise-msrv-to-1-88.md` (status flip), `cycles/OPEN-STANDING-ITEMS.md` (new standing item) committed this burst. |
+
+### Resume Prompt
+
+```
+**Date:** 2026-09-16. cycle-013 (msrv-1.88-bump) Phase F7 fresh re-verification CONFIRMED CONVERGED (all 7 dimensions PASS cleanly, zero open findings) and the human F7 close/release gate APPROVED "Approve & close" + an explicit "cut a dev release now" decision (v0.7.0-dev.7). DEC-367 minted. ADR-0025 flipped proposed->accepted. cycle-013 is CLOSED. The v0.7.0-dev.7 release itself is IN PROGRESS, executed separately by devops-engineer via the native release-metadata-PR precedent -- tag not yet pushed as of this checkpoint.
+
+**Note (superseded by the v4.48 CLOSED+RELEASED burst):** the release-completion follow-up this checkpoint anticipated DID complete -- release-metadata PR #823 merged squash @ `aa557050` (develop: `b960c305`->`aa557050`, mergedBy Zious11, mergedAt 2026-09-16T23:10:40Z), tag `v0.7.0-dev.7` pushed on `aa557050`, `release.yml` run `35161289923` building the 5-platform prerelease. A review-chain gap (`pr-reviewer-823` stalled; `pr-manager` merged on its own verification; classifier flagged "Merge Without Review") was closed post-hoc by an independent fresh-eyes `pr-reviewer` APPROVE of `aa557050`. `cycle_013_status` flipped CLOSED -> **CLOSED + RELEASED as v0.7.0-dev.7**; `activation_head`/`activation_version` advanced to `aa557050`/`v0.7.0-dev.7`. See STATE.md's current Session Resume Checkpoint for the true, reconciled position.
+
+**Resume command (historical, as recorded at v4.47):** confirm the v0.7.0-dev.7 tag + GitHub Release (superseded -- already confirmed; see the v4.48 checkpoint for the actual next step, which is starting a new cycle from the 008-011 PARKED backlog or a maintenance sweep).
+```

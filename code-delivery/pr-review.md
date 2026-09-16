@@ -1,69 +1,39 @@
-# PR Review — #822
+# PR Review — #823 (chore/release-v0.7.0-dev.7)
 
-- **PR**: #822 (Zious11/jira-cli)
-- **Branch**: `docs/cycle13-wave2-gate-ci-gate-doc-currency` → `develop`
-- **Head commit**: `6c479cdd`
-- **Reviewer**: pr-reviewer (fresh-context)
-- **Date**: 2026-09-16
-- **Verdict**: **APPROVE** — no blocking findings
+- **PR:** https://github.com/Zious11/jira-cli/pull/823
+- **Branch:** `chore/release-v0.7.0-dev.7` → `develop`
+- **Type:** Release-metadata only (v0.7.0-dev.7 dev release)
+- **Reviewer:** pr-reviewer-823 (fresh-eyes)
+- **Verdict:** APPROVE
 
 ## Scope
 
-Docs-only, single file: `docs/specs/ci-gate-completeness.md`. `changedFiles: 1`,
-`additions: 1`, `deletions: 1`. No code or CI-config change. The "1 line" figure is an
-artifact of the touched paragraph being one unwrapped physical line in the markdown — the
-actual change is a paragraph-internal factual reconciliation (several tense edits plus two
-appended correction sentences), which is appropriate for the finding, not scope creep.
-
-This file is the extracted CI-gate HISTORY doc (round-by-round adversarial history), NOT one
-of the six CI-gate enforcement files. Review was scoped accordingly.
-
-## Factual accuracy — verified against live source of truth
-
-Verified independently against the repo's actual files (did not trust the author's claim):
-
-1. **msrv job `--all-targets` claim** — `.github/workflows/ci.yml:263` runs
-   `cargo check --all-targets --all-features --locked` with `env: RUSTUP_TOOLCHAIN: "1.88.0"`
-   and the action pinned to toolchain `1.88.0` (job name "MSRV (1.88.0)", line 249). Confirms
-   the new sentence that the scope widened from lib+bins to `--all-targets` and that
-   `saphyr-parser` (a `[dev-dependencies]` entry) is now compiled/checked by the job via
-   `tests/common/wf.rs`.
-2. **`rust-version` floor** — `Cargo.toml:7` = `rust-version = "1.88"`. Confirms the "1.88
-   floor" and that saphyr-parser's 1.85.0 MSRV now sits below it with headroom.
-3. **Cross-artifact consistency** — `Cargo.toml:78-86` (saphyr-parser dependency comment)
-   already states the same facts and references AC-006; the new doc text is verbatim-aligned
-   with both that comment and CLAUDE.md's ci-gate bullet. The AC-006 reference resolves.
-
-Both corrected claims are accurate: 1.85.0 < 1.88 with headroom; `--all-targets` now in scope.
-
-## Stale-wording scan
-
-Grepped the resulting text for every risk phrase. Each survivor is correctly re-tensed to
-historical narrative, not a live present-tense claim:
-
-- `zero headroom` → "at this repo's **then-current** `rust-version = "1.85"` floor, zero
-  headroom, and **was not** enforced..." (past tense, timestamped to S-CIGATE-3 landing time).
-- `NOT --all-targets` / `lib+bins` → "**was then** deliberately scoped to lib+bins, NOT
-  --all-targets ... **as it read at the time**" (historical), plus the transition sentence
-  "from lib+bins to --all-targets" (correct).
-- `1.85.0` → appears as (a) the crate's stable MSRV fact, (b) historical wiremock context,
-  (c) the correct current-state comparison. All fine.
-- `does NOT` → unrelated pre-existing YAML-parse-tree text.
-
-No leftover stale present-tense MSRV claim remains.
-
-## Narrative framing
-
-Correct history-doc pattern: the edit does not delete the old claims — it re-anchors them to
-"at S-CIGATE-3 landing time" / "then-current" / "as it read at the time" and appends the
-bolded "Since the cycle-013 MSRV-1.88 bump..." correction. Reads as a correction of fact
-layered onto the existing voice, not a rewrite of structure. The tense changes are necessary
-so the appended correction does not contradict surrounding prose — not gratuitous.
+Version bump 0.7.0-dev.6 → 0.7.0-dev.7 plus a CHANGELOG.md reorganization. No source/test/CI files touched.
 
 ## Findings
 
-None (no blocking, no non-blocking).
+### 1. Version bump correctness — PASS
 
-## Recommendation
+- Changed files: exactly `Cargo.toml`, `Cargo.lock`, `CHANGELOG.md` — nothing else (no `src/`, `tests/`, `.github/`).
+- `Cargo.toml` `[package].version`: `0.7.0-dev.6` → `0.7.0-dev.7` (single-line change).
+- `Cargo.lock`: only the `name = "jr"` package `version` line changed (`0.7.0-dev.6` → `0.7.0-dev.7`); total diff is the expected 2 lines — no other package/dependency version lines changed.
 
-APPROVE and merge.
+### 2. CHANGELOG.md correctness — PASS
+
+- `## [Unreleased]` is completely empty (blank line only; no bullet content).
+- New `## [0.7.0-dev.7] - 2026-09-16` sits directly after Unreleased and contains ONLY genuinely-new cycle-013 content: the MSRV-1.88 bump entry, the let-chain retrofit entry, and the docs-PR reconciliation note (#819, #820/#822).
+- `## [0.7.0-dev.6] - 2026-09-15` still exists below dev.7 with the backfilled pre-dev.6 material.
+- The two entries that moved into dev.7 (MSRV + let-chain) are BYTE-IDENTICAL to develop (isolated-block diff empty — verbatim move confirmed).
+- The ONE documented exception is present and is the only other wording change: the rustls entry's cross-reference reworded from
+  `"the MSRV floor within this same Unreleased set was subsequently raised to 1.88 (see the \"MSRV raised to 1.88\" entry above)"`
+  → `"the MSRV floor was subsequently raised to 1.88 in the 0.7.0-dev.7 release (see that section above)"`.
+  No other bullet was dropped, added, or reworded.
+- `## [0.7.0-dev.5]` and everything below is byte-identical to develop (confirmed by diff).
+
+### 3. No source/test/CI drift — PASS
+
+- `git diff origin/develop...origin/chore/release-v0.7.0-dev.7 --stat` shows only `Cargo.toml`, `Cargo.lock`, `CHANGELOG.md`. No other files.
+
+## Conclusion
+
+Low-risk release-metadata PR. All three checks pass cleanly. No defects found. **APPROVE.**

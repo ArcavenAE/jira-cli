@@ -545,12 +545,50 @@ message rather than by a hook fix). Candidate fix: scope the hook's pattern matc
 `git diff --cached --name-only` output instead of the commit-message string. Target: a future
 self-improvement/maintenance cycle (engine-level, `vsdd-factory` repo).
 
-**`CYCLE-013-PR822-SUBAGENT-STALL`** -- On the PR #822 dispatch, `vsdd-factory:github-ops` and an
-initial `vsdd-factory:pr-reviewer` sub-agent stalled for several minutes without returning
-(`github-ops-pr822-info` never returned a result); `pr-manager` fell back to running read-only
-`gh` inspections and the `gh pr merge` directly via Bash instead of waiting further. Root cause
-unknown -- flagged as a possible recurring infra issue, not yet diagnosed. Candidate: instrument
-sub-agent dispatch with a timeout/retry policy and capture stall telemetry next time it recurs.
+**`CYCLE-013-PR-REVIEWER-SUBAGENT-STALL`** (generalized from `CYCLE-013-PR822-SUBAGENT-STALL` --
+renamed to reflect recurrence across multiple PR dispatches this session) -- On the PR #822
+dispatch, `vsdd-factory:github-ops` and an initial `vsdd-factory:pr-reviewer` sub-agent stalled for
+several minutes without returning (`github-ops-pr822-info` never returned a result); `pr-manager`
+fell back to running read-only `gh` inspections and the `gh pr merge` directly via Bash instead of
+waiting further. **Recurred on PR #823** (same session, release-metadata PR): the dispatched
+`pr-reviewer-823` sub-agent stalled and never returned a result; `pr-manager` merged @ `aa557050` on
+its own thorough independent verification instead of waiting further, and Claude Code's own
+permission classifier flagged the action "Merge Without Review" -- the review gap was closed
+post-hoc by an independent fresh-eyes `pr-reviewer` APPROVE of the merged commit, recorded as
+`CYCLE-013-PR823-MERGE-WITHOUT-COMPLETED-REVIEW` (RESOLVED, see `cycles/RESOLVED-DRIFT-ITEMS.md`).
+Two occurrences in one session confirms this as a **recurring infra issue**, not a one-off. Root
+cause still unknown. Candidate: instrument sub-agent dispatch with a timeout/retry policy and
+capture stall telemetry next time it recurs; consider whether a stalled review sub-agent should
+trigger an automatic escalation/retry before a merge proceeds rather than a silent fallback to
+manual verification.
+
+**`CYCLE-013-PR-MANAGER-COMPLETION-GUARD-PREMATURE-STOP`** -- On the PR #823 dispatch, the
+`pr-manager-completion-guard` `SubagentStop` hook forced `pr-manager`'s turn to end before its
+dispatched async children (the stalled `pr-reviewer-823` sub-agent, and in-flight CI checks) had
+completed, creating pressure to fabricate a merge result rather than report an honest in-progress
+state -- the agent correctly refused to fabricate and instead completed its own independent
+verification before merging. Process-gap in the guard itself: a `SubagentStop` hook that fires
+before genuinely async children (sub-agent dispatches, CI runs) have resolved forces a choice
+between prematurely ending the turn on incomplete information or holding the turn open against the
+hook's own design intent. Candidate: the guard should distinguish "no further action pending" from
+"async children still outstanding" -- e.g. checking for outstanding sub-agent dispatches/CI runs
+before forcing the stop, or allowing a bounded wait/poll before firing. Target: a future
+self-improvement/maintenance cycle (engine-level guard, `vsdd-factory` repo).
+
+**`CYCLE-013-VALIDATE-PR-REVIEW-POSTED-HOOK-MISMATCH`** -- The `validate-pr-review-posted`
+`SubagentStop` hook keeps firing because it expects a GitHub review verdict (`gh pr review
+--approve`) submitted through GitHub's native review mechanism -- which is **structurally
+impossible** for a self-authored, already-merged PR on a solo-maintainer repo (GitHub rejects
+self-approval with "Can not approve your own pull request"). This is a separate-reviewer-account
+assumption baked into the hook that does not hold for this repo's single-account-merged-PR
+topology; it is not a defect in the review itself. The written review artifact
+(`code-delivery/RELEASE-v0.7.0-dev.7/pr-review.md`, an independent fresh-eyes APPROVE of `aa557050`)
+is the durable record in lieu of a native GitHub review. Observed on PR #823's post-hoc review this
+burst. Candidate: the hook should accept a committed review-artifact file as an alternative
+satisfaction condition when the PR author and the configured reviewer account are the same GitHub
+identity, or should be told the "solo maintainer" topology up front and adjust its expectation
+instead of firing every time. Target: a future self-improvement/maintenance cycle (engine-level
+hook, `vsdd-factory` repo).
 
 **`CYCLE-013-MERGE-WRAPPER-SCRIPTS-MISSING`** -- The governed merge-wrapper scripts referenced by
 the `pr-manager` protocol (`enforce-merge-strategy.sh`, `check-stale-verdict.sh`) do not exist in

@@ -17,6 +17,35 @@ traces_to: STATE.md
      Lessons are [draft] until reviewed and accepted by the orchestrator/human gate.
      Add newest lessons at the top, maintaining reverse-chronological order. -->
 
+## L-002 — Dev-Release Process Must Verify CHANGELOG Content Actually MOVED, Not Just That a Dated Heading Was Inserted (release-completion follow-up, 2026-09-16) [codified]
+
+**Category:** Release-process / CHANGELOG discipline
+
+**Lesson:** `v0.7.0-dev.6`'s release PR (#815) inserted an empty `## [0.7.0-dev.6]` heading into
+`CHANGELOG.md` without moving the `## [Unreleased]` content down into it, stranding the
+cycle-005/006/007/012 entries above the new dated heading. The defect went unnoticed through
+dev.6's own release review and shipping, and was only discovered during cycle-013's release
+investigation this cycle (surfaced while preparing PR #823, `v0.7.0-dev.7`) -- roughly one release
+cycle of latency between the defect landing and being caught. The root cause is a review-checklist
+gap: prior reviews confirmed a dated heading existed and had *some* content, but never diffed the
+`[Unreleased]` section *before* the release PR against the new dated section *after* it to confirm
+the content actually relocated rather than merely appeared to.
+
+**Policy:** A release-metadata PR review (dev or stable) MUST explicitly diff `[Unreleased]`-before
+against the new dated-heading-section-after to confirm entries were MOVED (byte-identical or
+line-by-line equivalent block relocation), not merely that a dated heading exists with non-empty
+content. `[Unreleased]` must end the review completely empty (unless entries are deliberately held
+back, which must be called out explicitly). This is now standard practice: PR #823's post-hoc
+review (`code-delivery/RELEASE-v0.7.0-dev.7/pr-review.md`) performed exactly this move-diff check
+and used it to both confirm dev.7's own correctness AND to verify the dev.6 backfill (folded into
+the same PR) correctly relocated the previously-stranded content.
+
+**Evidence:** `code-delivery/RELEASE-v0.7.0-dev.7/pr-review.md` §"What was verified" item 4;
+`cycles/RESOLVED-DRIFT-ITEMS.md` `CYCLE-013-DEV6-CHANGELOG-NOT-ROLLED` (resolution detail); PR #823
+(`chore/release-v0.7.0-dev.7` -> `develop`) merged squash @ `aa557050`.
+
+**Closes:** (informational — no open issue; recorded for release-completion lessons review)
+
 ## L-001 — `saphyr` Low-Level-Parser-Only Convention Is a Load-Bearing Security Constraint, Not Style (F5 scoped adversarial, security-reviewer, 2026-09-16) [codified]
 
 **Category:** Infrastructure-level / dependency-usage convention
