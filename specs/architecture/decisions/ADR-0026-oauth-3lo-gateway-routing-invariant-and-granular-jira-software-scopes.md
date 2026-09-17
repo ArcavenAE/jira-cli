@@ -138,6 +138,13 @@ read:jql:jira                         # sprint issue JQL filter
 offline_access
 ```
 
+> **Note on ordering:** the grouping/ordering of the scope-block above is illustrative
+> (grouped by API family for readability). It is NOT the authoritative wire-order — the
+> pinned literal string in `BC-1.3.023` (`bc-1-auth-identity.md`), which mirrors the exact
+> `concat!` order in `src/api/auth.rs`'s `DEFAULT_OAUTH_SCOPES` constant, is authoritative
+> for both content and order. Implementers must match `BC-1.3.023`'s literal, not this
+> block's grouping.
+
 `write:board-scope:jira-software` was not in the original research candidate list — it was
 added by this cycle's own code audit of `sprints.rs` (`add_issues_to_sprint`,
 `move_issues_to_backlog`), both of which are existing, already-correct POST paths that need this
