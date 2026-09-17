@@ -176,3 +176,22 @@ INCONSISTENT->RESOLVED via PR #822 + this burst's ADR-0025 prose fix). Archived 
 
 **Resume command (historical, as recorded at v4.47):** confirm the v0.7.0-dev.7 tag + GitHub Release (superseded -- already confirmed; see the v4.48 checkpoint for the actual next step, which is starting a new cycle from the 008-011 PARKED backlog or a maintenance sweep).
 ```
+
+## Checkpoint v4.48 (archived from STATE.md during the v4.48->v4.49 SESSION-WRAP-PAUSE burst, 2026-09-16)
+
+| Field | Value |
+|-------|-------|
+| **Date** | 2026-09-16 |
+| **Position** | cycle-013 (`msrv-1.88-bump`) **CLOSED + RELEASED as v0.7.0-dev.7**: release-completion follow-up burst confirmed release-metadata PR #823 (`chore/release-v0.7.0-dev.7` -> `develop`) merged squash @ `aa557050` (mergedBy Zious11, mergedAt 2026-09-16T23:10:40Z; `develop`: `b960c305`->`aa557050`); tag `v0.7.0-dev.7` pushed on `aa557050`; `release.yml` run `35161289923` building the 5-platform prerelease. CHANGELOG dev.6 backfill folded into #823, `[Unreleased]` now empty (`CYCLE-013-DEV6-CHANGELOG-NOT-ROLLED` RESOLVED). Review-chain gap (`pr-reviewer-823` stalled; merged on independent verification, classifier-flagged "Merge Without Review") closed post-hoc by an independent fresh-eyes `pr-reviewer` APPROVE of `aa557050` (`CYCLE-013-PR823-MERGE-WITHOUT-COMPLETED-REVIEW` RESOLVED). `cycle_013_status` CLOSED + RELEASED as v0.7.0-dev.7; `activation_head`/`activation_version` advanced to `aa557050`/`v0.7.0-dev.7`. |
+| **Convergence counter** | No active convergence loop. cycle-013 fully CLOSED + RELEASED. Next pipeline-relevant event = new cycle from 008-011 PARKED backlog, or a maintenance sweep. |
+| **In-flight work** | NONE. `STATE.md`, `cycles/OPEN-STANDING-ITEMS.md` (3 new/updated items), `cycles/RESOLVED-DRIFT-ITEMS.md` (2 new resolved-with-note items), `cycles/cycle-013/lessons.md` (L-002), `code-delivery/pr-review.md`, `code-delivery/RELEASE-v0.7.0-dev.7/pr-review.md` committed this burst, alongside benign `sidecar-learning.md` session-log churn. |
+
+### Resume Prompt
+
+```
+**Date:** 2026-09-16. cycle-013 (msrv-1.88-bump) CLOSED + RELEASED as v0.7.0-dev.7 -- release-metadata PR #823 merged squash @ aa557050, tag v0.7.0-dev.7 pushed, release.yml run 35161289923 building. Review-chain gap closed post-hoc by an independent fresh-eyes pr-reviewer APPROVE. cycle_013_status: CLOSED + RELEASED. activation_head/activation_version: aa557050/v0.7.0-dev.7. No cycle ACTIVE (008-011 PARKED). NEXT = start a new cycle from the 008-011 PARKED backlog, or a maintenance sweep.
+
+**Note (superseded by the v4.49 SESSION-WRAP-PAUSE burst):** this session subsequently merged an unrelated external PR -- PR #817 landed as PR #824 and merged (develop: aa557050->01e278fc); #817 closed as superseded; #816 closed; repo var MUTANTS_NIGHTLY_ENABLED=true set. `activation_head`/`activation_version` remained UNCHANGED (aa557050/v0.7.0-dev.7 -- #824 is not a tagged release). The session was then wrapped/paused for clear-safety with no further pipeline work pending. See STATE.md's current Session Resume Checkpoint for the true, reconciled position.
+
+**Resume command (historical, as recorded at v4.48):** /vsdd-factory:next-step (superseded -- see the v4.49 checkpoint for the actual resume command, which is /vsdd-factory:rehydrate-wave then /vsdd-factory:next-step).
+```
