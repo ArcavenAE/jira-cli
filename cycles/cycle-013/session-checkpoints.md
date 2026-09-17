@@ -195,3 +195,22 @@ INCONSISTENT->RESOLVED via PR #822 + this burst's ADR-0025 prose fix). Archived 
 
 **Resume command (historical, as recorded at v4.48):** /vsdd-factory:next-step (superseded -- see the v4.49 checkpoint for the actual resume command, which is /vsdd-factory:rehydrate-wave then /vsdd-factory:next-step).
 ```
+
+## Checkpoint v4.49 (archived from STATE.md during the v4.49->v4.50 MAINTENANCE-SWEEP-STARTED burst, 2026-09-16)
+
+| Field | Value |
+|-------|-------|
+| **Date** | 2026-09-16 |
+| **Position** | cycle-013 (`msrv-1.88-bump`) **CLOSED + RELEASED as v0.7.0-dev.7**; `develop` @ `01e278fc` (advanced from `aa557050` this session by the unrelated, externally-authored PR #824). No cycle ACTIVE (008-011 remain PARKED). Pipeline **PAUSED** at a clean terminal state (session-wrap/pause checkpoint). NEXT was = start a new cycle from the 008-011 PARKED backlog, or a maintenance sweep. |
+| **Convergence counter** | N/A -- no active adversarial/convergence loop. cycle-013 fully CLOSED + RELEASED. |
+| **In-flight work** | NONE -- all PRs resolved this session. cycle-013 released via PR #823 (merged squash @ `aa557050`, tag `v0.7.0-dev.7` pushed). Separately, external PR #817 landed as PR #824 and merged (`develop`: `aa557050`->`01e278fc`); #817 closed as superseded; #816 closed. Repo variable `MUTANTS_NIGHTLY_ENABLED=true` set. `STATE.md`, `sidecar-learning.md`, and `code-delivery/PR-824/pr-review.md` committed this burst. |
+
+### Resume Prompt
+
+```
+**Date:** 2026-09-16. cycle-013 (msrv-1.88-bump) CLOSED + RELEASED as v0.7.0-dev.7; develop @ 01e278fc. No cycle ACTIVE (008-011 PARKED). Pipeline PAUSED at a clean terminal state, no in-flight work. Pending human decisions / blockers: none blocking. Open standing items for a future maintenance sweep tracked in cycles/OPEN-STANDING-ITEMS.md. Advisory: settings.json lacks CLAUDE_AUTOCOMPACT_PCT_OVERRIDE (recommend 70) -- operator's call. Note: local develop working copy was 1 commit behind origin/develop (01e278fc) -- cosmetic, a git pull catches it up.
+
+**Note (superseded by the v4.50 MAINTENANCE-SWEEP-STARTED burst):** the human requested a maintenance sweep this session, resuming from this exact PAUSED terminal state. Local develop was confirmed fast-forwarded to origin @ 01e278fc. The sweep scan phase began (dependency audit, doc drift, pattern consistency, holdout freshness, perf, spec coherence, tech-debt register; DTU + a11y N/A for this CLI-only Rust product); 7 open Dependabot PRs queued for triage. See STATE.md's current Session Resume Checkpoint for the true, reconciled position.
+
+**Resume command (historical, as recorded at v4.49):** /vsdd-factory:rehydrate-wave then /vsdd-factory:next-step (superseded -- see the v4.50 checkpoint for the actual next step, which is running the maintenance-sweep scan phase).
+```
