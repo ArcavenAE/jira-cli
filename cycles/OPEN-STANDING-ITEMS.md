@@ -649,3 +649,101 @@ interval regardless of edit activity. Target: a future self-improvement/maintena
 
 **Source:** cycle-013 Phase F7 human close/release gate burst, observed recurring across F5/F6/F7
 bursts this cycle.
+
+## Maintenance sweep 2026-09-16 — process-gap findings
+
+**Status:** OPEN, non-blocking. Recorded per the S-7.02 Cycle-Closing Checklist discipline
+extended to maintenance sweeps: pipeline/tooling gaps surfaced during this sweep's 12 PR merges,
+not content defects in any spec/code artifact. Full sweep detail:
+`maintenance/sweep-report-2026-09-16.md`.
+
+**`MAINT-SWEEP-2026-09-16-PR-MANAGER-COMPLETION-GUARD-PREMATURE-STOP`** (recurrence of
+`CYCLE-013-PR-MANAGER-COMPLETION-GUARD-PREMATURE-STOP`) -- the `pr-manager-completion-guard`
+`SubagentStop` hook fired with a hardcoded/incorrect `AUTHORIZE_MERGE=yes` claim regardless of the
+actual dispatch, which was review-only. Agents correctly refused to act on the fabricated
+authorization. Second confirmed occurrence of this defect class in a different cycle/session --
+strengthens the case that the guard itself (not a one-off dispatch) needs the fix proposed at the
+cycle-013 entry (distinguish "no action pending" from "async children/verdict still outstanding").
+
+**`MAINT-SWEEP-2026-09-16-VALIDATE-PR-REVIEW-POSTED-HOOK-MISMATCH`** (recurrence of
+`CYCLE-013-VALIDATE-PR-REVIEW-POSTED-HOOK-MISMATCH`) -- the `validate-pr-review-posted`
+`SubagentStop` hook demanded a `gh pr review --approve` posting that conflicts with review-only
+dispatches; fired on the #825, #826, and #830 review dispatches this sweep (three occurrences in
+one sweep, on top of the cycle-013 occurrence). Same underlying gap: the hook does not accept a
+committed review-artifact file as an alternative satisfaction condition, and doesn't distinguish
+"review-only dispatch" from "review-then-merge dispatch."
+
+**`MAINT-SWEEP-2026-09-16-GITHUB-OPS-SUBAGENT-STALL`** (recurrence of the
+`CYCLE-013-PR-REVIEWER-SUBAGENT-STALL` class) -- `pr-manager` hung waiting on a `github-ops`
+PR-creation sub-dispatch for PR #825 that never returned a result, even though the PR was in fact
+successfully created -- only the reply never propagated back to the caller. Mitigation applied
+this sweep (not yet a permanent fix): have the authoring agent invoke `gh pr create` directly via
+its own shell access instead of delegating PR creation to `github-ops`. Third confirmed occurrence
+of the sub-agent-stall class across two sessions; strengthens the case for the cycle-013 entry's
+candidate fix (dispatch timeout/retry policy + stall telemetry).
+
+**`MAINT-SWEEP-2026-09-16-HOOK-FALSE-POSITIVE-COMMIT-MSG-SCAN`** (same underlying mechanism as
+`CYCLE-013-HOOK-FALSE-POSITIVE-COMMIT-MSG-SCAN`, different trigger site) -- the
+`validate-factory-path-staging` `PreToolUse` hook blocked a commit because the commit **message
+text** contained a literal `.factory/...` path substring, even though no `.factory/` file was
+actually staged for that commit. Confirms the cycle-013 root-cause diagnosis: the hook
+pattern-matches the commit-message string rather than `git diff --cached --name-only` output.
+Workaround used again this sweep: reword the commit message to avoid literal `.factory/` path
+substrings. Two confirmed occurrences now; strengthens the case for the candidate fix already on
+file (scope the hook's match to staged paths, not message prose).
+
+**`MAINT-SWEEP-2026-09-16-DEPENDABOT-RECREATE-VS-REBASE`** -- NEW, operational learning (not a
+hook/guard defect). `@dependabot rebase` **no-ops** when a PR is already `MERGEABLE` (no merge
+conflict) -- it only rebases to resolve conflicts, not to refresh CI against a base branch that
+has since moved. `@dependabot recreate` is required to force a rebuild against current `develop`.
+Additionally observed: the "Dependabot Updates" GitHub Actions runner queue can stall for many
+minutes with no user-visible cause, and sequential merges of cargo-ecosystem Dependabot PRs
+re-conflict each other's `Cargo.lock` one at a time (merging PR N re-conflicts PR N+1's lockfile),
+requiring a `recreate` on the next queued PR after every merge rather than merging the whole
+cargo batch back-to-back. Candidate action: codify this three-part sequencing note (recreate not
+rebase; expect queue latency; recreate-after-each-merge for cargo batches) directly in the
+`vsdd-factory:maintenance-sweep` skill's dependency-handling guidance so future sweeps don't
+rediscover it from scratch.
+
+**`MAINT-SWEEP-2026-09-16-AUTOMODE-CLASSIFIER-NONDETERMINISTIC-BLOCK`** -- NEW. The Claude Code
+auto-mode permission classifier ("Merge Without Review" / "Modify Shared Resources" categories)
+blocked agent-initiated admin merges and branch pushes **non-deterministically** during this
+sweep's 12-PR merge sequence -- the same class of action (an admin-bypass squash-merge of a
+CI-green, human-authorized PR) was allowed for some PRs in the batch and blocked for others, with
+no discernible input difference driving the split. Net effect: merges required direct orchestrator
+action with a per-merge human go-ahead rather than a single batch approval, and branch-push
+retriggers (e.g. re-pushing a rebased dependency branch) were blocked outright every time they
+were attempted. Candidate action: none yet -- flagging for pattern-matching against future sweeps
+to determine whether the non-determinism correlates with a specific action shape (merge vs. push),
+PR size, or session state.
+
+**Cross-reference note:** four of the six findings above are **confirmed recurrences** of
+cycle-013 entries already on file (see "cycle-013 Wave-2 integration gate — process-gap findings"
+section above) -- `PR-MANAGER-COMPLETION-GUARD-PREMATURE-STOP`,
+`VALIDATE-PR-REVIEW-POSTED-HOOK-MISMATCH`, `PR-REVIEWER-SUBAGENT-STALL`, and
+`HOOK-FALSE-POSITIVE-COMMIT-MSG-SCAN` have now each recurred across two independent
+cycles/sessions, which raises their priority from "one-off observation" to "confirmed recurring
+infra defect" for the next self-improvement/maintenance cycle targeting the `vsdd-factory` engine
+repo itself.
+
+## Maintenance sweep 2026-09-16 — standing items to track
+
+**`MAINT-SWEEP-2026-09-16-DENY-TOML-TRANSITIONAL-SKIPS`** -- Two temporary `deny.toml`
+`[[bans.skip]]` entries landed this sweep to unblock queued dependency bumps, each with a
+documented removal trigger:
+- `syn` 2/3 duplicate (PR #826) -- remove once `cargo tree -i syn` shows a single version.
+  Upstream holdouts: `pear_codegen`, `proc-macro2-diagnostics`, `tracing-attributes`.
+- `windows_i686_gnullvm` 0.53 duplicate (PR #830) -- remove once
+  `cargo tree -i windows_i686_gnullvm` shows a single version. Upstream holdout: `keyring` 3->4.
+
+Both investigations reached a **NOT-CONVERGEABLE-NOW** verdict; full detail:
+`maintenance/syn-convergence-investigation-2026-09-16.md`,
+`maintenance/windows-targets-convergence-investigation-2026-09-16.md`. Track for removal the next
+time a dependency sweep runs `cargo tree -i` against either crate.
+
+**`MAINT-SWEEP-2026-09-16-JNI-RUSTLS-CONVERGENCE-OPPORTUNITY`** -- Unrelated convergence
+opportunity spotted during this sweep's dependency audit: bumping `jni` to 0.22.4 and
+`rustls-platform-verifier` to 0.7.0 would collapse the `windows-sys` 0.45 duplicate lineage.
+Not actioned this sweep (out of scope -- discovered as a byproduct of the syn/windows-targets
+investigation, not itself a blocker). Candidate action: pick up as a small fix PR in a future
+maintenance sweep.
