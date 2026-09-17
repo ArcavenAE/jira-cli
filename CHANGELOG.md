@@ -4,6 +4,32 @@ All notable changes to jr will be documented here.
 
 ## [Unreleased]
 
+### Fixed
+
+- **`jr board`/`jr sprint` surface an actionable scope hint on an OAuth granular-scope
+  401, instead of the generic POST-framed `InsufficientScope` message
+  (BC-X.15.001, ADR-0026 Decision 3, S-cycle8-agile-scope-mismatch-error-mapping):** when a
+  `jr board list`/`jr board view`/`jr sprint list`/`jr sprint current`/`jr sprint add`/`jr
+  sprint remove` command hits a 401 with a `"scope does not match"` body under OAuth (3LO)
+  auth, the error is now rewritten to a `Not authenticated` message naming the specific
+  missing Jira-Software/Agile scope(s) (e.g. `read:board-scope:jira-software`,
+  `read:board-scope.admin:jira-software`, `read:sprint:jira-software`,
+  `write:board-scope:jira-software`) and directing the user to `jr auth login` to
+  re-consent, rather than the generic, POST-specific `InsufficientScope` template
+  (issue #185) that was misleading for this Agile GET/write scope-mismatch case.
+  **Coverage widened (same-day v1.1 scope expansion, 2026-09-17, AC-009..012):** the
+  same shared rewrite now also covers every *internal* Agile HTTP call reachable within
+  a `jr board`/`jr sprint` invocation, not only the 4 top-level command handlers —
+  `board.rs::resolve_board_id`'s auto-discovery `list_boards` call (shared by both
+  command families), `board.rs::handle_view`'s scrum-branch `list_sprints`/
+  `get_sprint_issues` calls, and `sprint.rs::resolve_scrum_board`'s `get_board_config`
+  call plus `sprint add --current`'s `list_sprints` lookup — each surfacing the same
+  hint as its top-level sibling that calls the identical endpoint. No
+  change to Basic-auth (API-token) 401 behavior, to the non-scope-mismatch OAuth
+  auto-refresh fall-through, or to any other command family's 401 handling —
+  `src/error.rs`'s shared `InsufficientScope` template and
+  `src/cli/issue/jsm_create.rs`'s existing OAuth rewrite (BC-3.8.015) are unchanged.
+
 ### Changed
 
 - **`DEFAULT_OAUTH_SCOPES` grows from 8 to 16 scopes — closes the Agile and component-write
