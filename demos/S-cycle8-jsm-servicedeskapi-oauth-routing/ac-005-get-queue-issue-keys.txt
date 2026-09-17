@@ -1,0 +1,20 @@
+=== AC-005: get_queue_issue_keys targets base_url under OAuth (gateway routing) ===
+
+Test: tests/jsm_request_api.rs::test_bc_4_2_001_get_queue_issue_keys_targets_base_url_under_oauth
+Trace: BC-4.2.001 fix-table row 5
+
+What this proves:
+  src/api/jsm/queues.rs::get_queue_issue_keys previously called
+  self.get_from_instance(&path). Same dual-mock negative-control pattern as AC-001.
+
+Command:
+  cargo test --test jsm_request_api test_bc_4_2_001_get_queue_issue_keys_targets_base_url_under_oauth -- --nocapture --exact
+
+Output:
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 0.10s
+     Running tests/jsm_request_api.rs (target/debug/deps/jsm_request_api-76db06d629b01b97)
+
+running 1 test
+test test_bc_4_2_001_get_queue_issue_keys_targets_base_url_under_oauth ... ok
+
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 12 filtered out; finished in 0.00s

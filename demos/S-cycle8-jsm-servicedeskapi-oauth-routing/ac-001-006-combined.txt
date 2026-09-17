@@ -1,0 +1,26 @@
+=== AC-001..AC-006 combined: all 6 JSM servicedeskapi OAuth-gateway-routing tests ===
+
+Tests (tests/jsm_request_api.rs, filtered by the test_bc_4_2_001 prefix):
+  test_bc_4_2_001_list_service_desks_targets_base_url_under_oauth        (AC-001)
+  test_bc_4_2_001_list_request_types_targets_base_url_under_oauth        (AC-002)
+  test_bc_4_2_001_get_request_type_fields_targets_base_url_under_oauth   (AC-003)
+  test_bc_4_2_001_list_queues_targets_base_url_under_oauth               (AC-004)
+  test_bc_4_2_001_get_queue_issue_keys_targets_base_url_under_oauth      (AC-005)
+  test_bc_4_2_001_create_jsm_request_targets_base_url_under_oauth        (AC-006)
+
+Command:
+  cargo test --test jsm_request_api test_bc_4_2_001 -- --nocapture
+
+Output:
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 0.11s
+     Running tests/jsm_request_api.rs (target/debug/deps/jsm_request_api-76db06d629b01b97)
+
+running 6 tests
+test test_bc_4_2_001_get_request_type_fields_targets_base_url_under_oauth ... ok
+test test_bc_4_2_001_list_queues_targets_base_url_under_oauth ... ok
+test test_bc_4_2_001_list_service_desks_targets_base_url_under_oauth ... ok
+test test_bc_4_2_001_get_queue_issue_keys_targets_base_url_under_oauth ... ok
+test test_bc_4_2_001_list_request_types_targets_base_url_under_oauth ... ok
+test test_bc_4_2_001_create_jsm_request_targets_base_url_under_oauth ... ok
+
+test result: ok. 6 passed; 0 failed; 0 ignored; 0 measured; 7 filtered out; finished in 0.00s

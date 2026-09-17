@@ -1,0 +1,34 @@
+=== AC-001: list_service_desks targets base_url under OAuth (gateway routing) ===
+
+Test: tests/jsm_request_api.rs::test_bc_4_2_001_list_service_desks_targets_base_url_under_oauth
+Trace: BC-4.2.001 fix-table row 1
+
+What this proves:
+  src/api/jsm/servicedesks.rs::list_service_desks previously called
+  self.get_from_instance(&path), which routes to instance_url (the real
+  *.atlassian.net site host). Under OAuth 3LO, the site host rejects the gateway
+  bearer token with 401 -- breaking jr queue, jr requesttype, and
+  jr issue create --request-type, all of which resolve a service desk ID via this
+  function before doing anything else.
+
+  This test constructs the client via JiraClient::new_for_test_with_instance_url(
+  base_url, instance_url, auth_header) with base_url != instance_url, mounts a
+  wiremock server at base_url ONLY, and mounts a SECOND wiremock server at
+  instance_url as a negative control. It asserts:
+    - the base_url mock receives the request (the fixed self.get(&path) call)
+    - the instance_url mock receives ZERO requests (proves no gateway-bypass
+      regression -- this is the built-in "error path" proof for this AC, since a
+      revert back to get_from_instance would immediately route the request to the
+      instance_url mock instead and fail this assertion)
+
+Command:
+  cargo test --test jsm_request_api test_bc_4_2_001_list_service_desks_targets_base_url_under_oauth -- --nocapture --exact
+
+Output:
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 0.16s
+     Running tests/jsm_request_api.rs (target/debug/deps/jsm_request_api-76db06d629b01b97)
+
+running 1 test
+test test_bc_4_2_001_list_service_desks_targets_base_url_under_oauth ... ok
+
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 12 filtered out; finished in 0.00s

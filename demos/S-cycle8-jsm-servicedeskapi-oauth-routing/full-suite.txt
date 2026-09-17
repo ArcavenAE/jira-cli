@@ -1,0 +1,36 @@
+=== AC-007 regression guard: full pre-existing tests/jsm_request_api.rs suite, unmodified, green ===
+
+What this proves:
+  The 7 tests that predate this story (constructed via the ordinary
+  JiraClient::new_for_test, where base_url == instance_url) pass alongside the 6
+  new test_bc_4_2_001_* tests with zero test-file edits required beyond what those
+  6 tests added -- proving the get_from_instance -> get / post_to_instance -> post
+  swap is a byte-for-byte no-op for API-token profiles, where the two hosts already
+  resolve identically (EC-1 in the story spec).
+
+Command:
+  cargo test --test jsm_request_api
+
+Output:
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 0.11s
+     Running tests/jsm_request_api.rs (target/debug/deps/jsm_request_api-76db06d629b01b97)
+
+running 13 tests
+test test_jsm_request_created_extracts_issue_key ... ok
+test test_request_type_struct_round_trip ... ok
+test test_list_request_types_search_query_absent_when_none ... ok
+test test_bc_4_2_001_list_service_desks_targets_base_url_under_oauth ... ok
+test test_bc_4_2_001_get_request_type_fields_targets_base_url_under_oauth ... ok
+test test_get_request_type_fields_returns_field_list ... ok
+test test_bc_4_2_001_list_queues_targets_base_url_under_oauth ... ok
+test test_create_jsm_request_posts_to_servicedeskapi_and_returns_issue_key ... ok
+test test_bc_4_2_001_list_request_types_targets_base_url_under_oauth ... ok
+test test_list_request_types_search_query_forwarded ... ok
+test test_bc_4_2_001_create_jsm_request_targets_base_url_under_oauth ... ok
+test test_bc_4_2_001_get_queue_issue_keys_targets_base_url_under_oauth ... ok
+test test_list_request_types_paginates_is_last_page ... ok
+
+test result: ok. 13 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+(13 = full tests/jsm_request_api.rs suite: 7 pre-existing tests + this story's 6
+test_bc_4_2_001_* tests. No pre-existing test required modification.)
