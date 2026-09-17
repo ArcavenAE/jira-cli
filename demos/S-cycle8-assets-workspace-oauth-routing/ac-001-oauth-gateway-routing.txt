@@ -1,0 +1,30 @@
+=== AC-001: get_or_fetch_workspace_id targets base_url under OAuth (gateway routing) ===
+
+Test: tests/assets.rs::test_bc_4_2_001_get_or_fetch_workspace_id_targets_base_url_under_oauth
+
+What this proves:
+  Before this fix, get_or_fetch_workspace_id called client.get_from_instance(...), which
+  routes to instance_url (the real *.atlassian.net site host). Under OAuth 3LO, the site
+  host rejects the gateway bearer token with 401 -- breaking every jr assets * command,
+  issue list --component's asset-clause path, and issue create/edit --field :asset
+  resolution before they could even reach the (already gateway-correct) AQL/object layer.
+
+  This test constructs the client via JiraClient::new_for_test_with_instance_url(base_url,
+  instance_url, auth_header) with base_url != instance_url, mounts a wiremock server at
+  base_url ONLY for the workspace endpoint, and mounts a SECOND wiremock server at
+  instance_url as a negative control. It asserts:
+    - the base_url mock receives exactly 1 request (the fixed client.get(...) call)
+    - the instance_url mock receives ZERO requests (proves no gateway-bypass regression)
+
+Command:
+  cargo test --test assets test_bc_4_2_001_get_or_fetch_workspace_id_targets_base_url_under_oauth -- --nocapture --exact
+
+Output:
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 0.13s
+     Running tests/assets.rs (target/debug/deps/assets-a44e9348325823bd)
+
+running 1 test
+test test_bc_4_2_001_get_or_fetch_workspace_id_targets_base_url_under_oauth ... ok
+
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 51 filtered out; finished in 0.00s
+

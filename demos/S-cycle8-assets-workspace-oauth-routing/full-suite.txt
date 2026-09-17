@@ -1,0 +1,108 @@
+=== Full regression suite: tests/assets.rs + tests/assets_errors.rs ===
+
+What this proves:
+  AC-003 (downstream Assets calls in objects.rs/linked.rs/schemas.rs/tickets.rs and
+  client.rs's get_assets/post_assets are byte-for-byte unchanged -- confirmed already
+  gateway-correct) and AC-004 (all pre-existing wiremock tests constructed via the
+  ordinary JiraClient::new_for_test, where base_url == instance_url, pass unmodified --
+  proving the fix is a no-op for API-token profiles) are demonstrated by the full suite
+  going green with zero test-file edits required beyond what AC-001/AC-002 added.
+
+Command:
+  cargo test --test assets --test assets_errors
+
+Output (tail):
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 0.12s
+     Running tests/assets.rs (target/debug/deps/assets-a44e9348325823bd)
+
+running 52 tests
+test common::wf::tests::test_char_byte_table_ascii_only_is_identity ... ok
+test common::wf::tests::test_char_byte_table_multibyte_characters_diverge_from_char_index ... ok
+test common::wf::tests::test_line_start_char_idx_recovers_via_col_not_rescan ... ok
+test common::wf::tests::test_find_key_node_properties_detects_anchor_on_mapping_key ... ok
+test common::wf::tests::test_find_key_node_properties_detects_anchor_nested_two_levels_deep ... ok
+test common::wf::tests::test_find_key_node_properties_clean_mapping_returns_empty ... ok
+test common::wf::tests::test_find_key_node_properties_detects_tag_on_mapping_key ... ok
+test common::wf::tests::test_root_level_nested_keys_succeeds_with_no_duplicates ... ok
+test common::wf::tests::test_read_mapping_and_read_sequence_on_nested_structures ... ok
+test common::wf::tests::test_skip_node_advances_past_alias ... ok
+test common::wf::tests::test_wfdoc_parse_accepts_comment_only_stream_as_empty_result ... ok
+test common::wf::tests::test_parse_single_job_panics_on_multi_entry_root - should panic ... ok
+test common::wf::tests::test_find_key_node_properties_panics_on_multi_document_stream - should panic ... ok
+test common::wf::tests::test_descend_as_mappings_panics_on_duplicate_key_within_final_level - should panic ... ok
+test common::wf::tests::test_root_level_nested_keys_panics_on_duplicate_root_env_block - should panic ... ok
+test common::wf::tests::test_parse_single_job_matches_whole_document_parse_for_same_job ... ok
+test common::wf::tests::test_wfdoc_parse_accepts_empty_string_as_empty_result ... ok
+test common::wf::tests::test_wfdoc_parse_accepts_single_explicit_document_marker ... ok
+test common::wf::tests::test_wfdoc_parse_accepts_whitespace_only_stream_as_empty_result ... ok
+test common::wf::tests::test_wfdoc_parse_accepts_single_implicit_document ... ok
+test common::wf::tests::test_wfdoc_parse_job_spans_correct_across_multibyte_content ... ok
+test common::wf::tests::test_wfdoc_parse_panics_on_duplicate_root_jobs_key - should panic ... ok
+test common::wf::tests::test_wfdoc_parse_panics_on_second_yaml_document - should panic ... ok
+test common::wf::tests::test_wfdoc_parse_last_job_span_excludes_trailing_root_key ... ok
+test common::wf::tests::test_wfdoc_parse_last_job_span_includes_full_trailing_block_scalar_when_jobs_is_last_root_key ... ok
+test common::wf::tests::test_wf_rs_test_count_matches_expected_denominator ... ok
+test get_object_attributes_returns_named_attributes ... ok
+test get_connected_tickets_returns_tickets ... ok
+test get_asset_returns_object ... ok
+test list_object_schemas_returns_schemas ... ok
+test cli_json_filter_excludes_system_and_hidden_attributes ... ok
+test enrich_search_attributes_injects_names ... ok
+test get_connected_tickets_empty ... ok
+test list_object_types_returns_flat_array ... ok
+test get_object_type_attributes_returns_definitions ... ok
+test search_assets_is_last_as_string ... ok
+test search_assets_empty ... ok
+test search_assets_returns_objects ... ok
+test search_assets_with_limit ... ok
+test search_assets_paginated ... ok
+test assets_schema_type_substring_rejected ... ok
+test assets_tickets_status_substring_rejected ... ok
+test issue_list_asset_substring_rejected ... ok
+test schema_json_shows_attributes ... ok
+test schema_single_substring_schema_filter_rejected ... ok
+test schema_table_filters_system_attrs ... ok
+test schemas_json_lists_all_schemas ... ok
+test search_attributes_json_includes_names ... ok
+test search_attributes_table_shows_inline_values ... ok
+test test_bc_4_2_001_get_or_fetch_workspace_id_targets_base_url_under_oauth ... ok
+test test_get_or_fetch_workspace_id_cache_hit_issues_no_http_call ... ok
+test types_json_lists_all_types ... ok
+
+test result: ok. 52 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 1.13s
+
+     Running tests/assets_errors.rs (target/debug/deps/assets_errors-5e084b04b8d9611d)
+
+running 29 tests
+test common::wf::tests::test_char_byte_table_ascii_only_is_identity ... ok
+test common::wf::tests::test_char_byte_table_multibyte_characters_diverge_from_char_index ... ok
+test common::wf::tests::test_line_start_char_idx_recovers_via_col_not_rescan ... ok
+test common::wf::tests::test_find_key_node_properties_detects_anchor_on_mapping_key ... ok
+test common::wf::tests::test_find_key_node_properties_detects_anchor_nested_two_levels_deep ... ok
+test common::wf::tests::test_find_key_node_properties_detects_tag_on_mapping_key ... ok
+test common::wf::tests::test_find_key_node_properties_panics_on_multi_document_stream - should panic ... ok
+test common::wf::tests::test_descend_as_mappings_panics_on_duplicate_key_within_final_level - should panic ... ok
+test common::wf::tests::test_parse_single_job_panics_on_multi_entry_root - should panic ... ok
+test common::wf::tests::test_root_level_nested_keys_succeeds_with_no_duplicates ... ok
+test common::wf::tests::test_find_key_node_properties_clean_mapping_returns_empty ... ok
+test common::wf::tests::test_skip_node_advances_past_alias ... ok
+test common::wf::tests::test_read_mapping_and_read_sequence_on_nested_structures ... ok
+test common::wf::tests::test_wfdoc_parse_accepts_comment_only_stream_as_empty_result ... ok
+test common::wf::tests::test_wfdoc_parse_accepts_empty_string_as_empty_result ... ok
+test common::wf::tests::test_root_level_nested_keys_panics_on_duplicate_root_env_block - should panic ... ok
+test common::wf::tests::test_wfdoc_parse_accepts_single_explicit_document_marker ... ok
+test common::wf::tests::test_parse_single_job_matches_whole_document_parse_for_same_job ... ok
+test common::wf::tests::test_wfdoc_parse_accepts_single_implicit_document ... ok
+test common::wf::tests::test_wfdoc_parse_accepts_whitespace_only_stream_as_empty_result ... ok
+test common::wf::tests::test_wfdoc_parse_job_spans_correct_across_multibyte_content ... ok
+test common::wf::tests::test_wfdoc_parse_panics_on_duplicate_root_jobs_key - should panic ... ok
+test common::wf::tests::test_wfdoc_parse_last_job_span_excludes_trailing_root_key ... ok
+test common::wf::tests::test_wfdoc_parse_panics_on_second_yaml_document - should panic ... ok
+test common::wf::tests::test_wfdoc_parse_last_job_span_includes_full_trailing_block_scalar_when_jobs_is_last_root_key ... ok
+test common::wf::tests::test_wf_rs_test_count_matches_expected_denominator ... ok
+test assets_search_network_drop_surfaces_reach_error ... ok
+test assets_search_server_error_surfaces_friendly_message ... ok
+test assets_search_unauthorized_dispatches_reauth_message ... ok
+
+test result: ok. 29 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.01s
+

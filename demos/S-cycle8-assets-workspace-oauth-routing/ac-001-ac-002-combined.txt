@@ -1,0 +1,26 @@
+=== AC-001 + AC-002 combined run: OAuth gateway routing fix + cache-hit regression guard ===
+
+Tests:
+  tests/assets.rs::test_bc_4_2_001_get_or_fetch_workspace_id_targets_base_url_under_oauth
+  tests/assets.rs::test_get_or_fetch_workspace_id_cache_hit_issues_no_http_call
+
+What this proves (combined):
+  Together these two tests fully characterize the fix's blast radius on
+  get_or_fetch_workspace_id (src/api/assets/workspace.rs): a cold cache now correctly
+  targets the OAuth API gateway (base_url) instead of the site host (instance_url), while
+  a warm cache continues to short-circuit before any HTTP call is made -- i.e. the fix
+  changes WHERE a live request goes, not WHETHER/WHEN one is made.
+
+Command:
+  cargo test --test assets get_or_fetch_workspace_id -- --nocapture
+
+Output:
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 0.12s
+     Running tests/assets.rs (target/debug/deps/assets-a44e9348325823bd)
+
+running 2 tests
+test test_get_or_fetch_workspace_id_cache_hit_issues_no_http_call ... ok
+test test_bc_4_2_001_get_or_fetch_workspace_id_targets_base_url_under_oauth ... ok
+
+test result: ok. 2 passed; 0 failed; 0 ignored; 0 measured; 50 filtered out; finished in 0.00s
+
