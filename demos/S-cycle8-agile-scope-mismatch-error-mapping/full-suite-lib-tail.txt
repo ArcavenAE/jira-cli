@@ -1,0 +1,30 @@
+# Full regression safety net: cargo test --lib
+#
+# Proves: the complete unit-test suite (1489 tests, includes the F2
+# pass-through tests and every other pre-existing unit test in the crate)
+# passes with zero failures after this story's changes -- confirming no
+# unintended interaction with any other command family or shared module.
+# Story: S-cycle8-agile-scope-mismatch-error-mapping, Task 10.
+
+$ cargo test --lib
+
+test types::jsm::queue::tests::deserialize_queue_issue_key ... ok
+test types::jsm::queue::tests::deserialize_queue_with_all_fields ... ok
+test types::jsm::queue::tests::deserialize_queue_without_optional_fields ... ok
+test types::jsm::queue::tests::deserialize_queue_issue_key_ignores_extra_fields ... ok
+test cli::field::tests::test_bc_x_14_001_normalize_from_valid_values_never_panics_arbitrary_shapes ... ok
+test jql::proptests::escaped_value_never_has_unescaped_quote ... ok
+test cli::issue::field_resolve::tests::prop_bc_3_4_033_is_adf_field_fires_only_on_allowlist ... ok
+test partial_match::proptests::never_panics_on_arbitrary_input ... ok
+test config::proptests_env_tag::prop_profile_config_env_some_round_trips ... ok
+test config::proptests_env_tag::prop_profile_config_env_none_round_trips_as_none ... ok
+test cli::issue::field_resolve::tests::prop_bc_3_4_033_dispatch_field_value_adf_backed_returns_adf_object ... ok
+test config::proptests_env_tag::prop_profile_config_env_absent_key_always_none ... ok
+test adf::tests::prop_492_block_html_round_trip_line_structure_lossless ... ok
+test adf::tests::prop_492_block_html_holds_core_invariants ... ok
+test api::jira::bulk::unknown_status_grace_tests::test_336_persistent_unknown_status_escalates_to_err_after_grace ... ok
+test api::jira::bulk::unknown_status_grace_tests::test_336_known_status_sequence_returns_ok_without_escalation ... ok
+test api::jira::bulk::unknown_status_grace_tests::test_336_transient_unknown_then_known_resets_tracker ... ok
+
+test result: ok. 1489 passed; 0 failed; 48 ignored; 0 measured; 0 filtered out; finished in 1.21s
+

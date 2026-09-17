@@ -1,0 +1,19 @@
+# AC-005 (EC-X.15.001-1): composite/malformed body -- scope-mismatch wins
+#
+# Proves: a 401 body containing BOTH a scope-mismatch substring AND an
+# expired-token substring (a hypothetical malformed/composite Atlassian error
+# body) resolves in favor of the scope-mismatch branch -- same precedence
+# BC-X.3.005 already establishes for the generic detection rule this call site
+# reuses. The scope-hint rewrite fires; auto-refresh does NOT.
+# Story: S-cycle8-agile-scope-mismatch-error-mapping, BC-X.15.001 EC-X.15.001-1.
+
+$ cargo test --test board_commands test_bc_x_15_001_board_401_composite_body_scope_mismatch_wins -- --nocapture --test-threads=1
+
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 0.11s
+     Running tests/board_commands.rs (target/debug/deps/board_commands-7e0f1accab20f3b8)
+
+running 1 test
+test test_bc_x_15_001_board_401_composite_body_scope_mismatch_wins ... ok
+
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 49 filtered out; finished in 0.91s
+

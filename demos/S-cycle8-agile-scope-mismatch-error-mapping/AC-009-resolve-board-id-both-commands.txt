@@ -1,0 +1,33 @@
+# AC-009: internal resolve_board_id auto-discovery -- shared list_boards() call
+#
+# Proves: board.rs::resolve_board_id's auto-discovery branch (reached when
+# neither --board nor a configured board_id is supplied) issues its own
+# client.list_boards(...) call, shared transitively by sprint.rs::resolve_scrum_board.
+# A scope-mismatch 401 from THIS call, reached via 'jr board view' with no
+# --board configured, is rewritten with the SAME hint AC-001's 'jr board list'
+# uses: read:board-scope:jira-software + read:project:jira (same underlying
+# HTTP call, same missing scope, regardless of which command reached it).
+# Second test proves the same helper fires identically when the call is reached
+# transitively via 'jr sprint list' instead of 'jr board view'.
+# Story: S-cycle8-agile-scope-mismatch-error-mapping, BC-X.15.001 clause 1 (widened, AC-009).
+
+$ cargo test --test board_commands test_bc_x_15_001_resolve_board_id_401_scope_mismatch_rewrite -- --nocapture --test-threads=1
+
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 0.11s
+     Running tests/board_commands.rs (target/debug/deps/board_commands-7e0f1accab20f3b8)
+
+running 1 test
+test test_bc_x_15_001_resolve_board_id_401_scope_mismatch_rewrite ... ok
+
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 49 filtered out; finished in 0.95s
+
+
+$ cargo test --test sprint_commands test_bc_x_15_001_sprint_resolve_board_id_401_scope_mismatch_rewrite -- --nocapture --test-threads=1
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 0.12s
+     Running tests/sprint_commands.rs (target/debug/deps/sprint_commands-bcafc84776d00ac3)
+
+running 1 test
+test test_bc_x_15_001_sprint_resolve_board_id_401_scope_mismatch_rewrite ... ok
+
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 46 filtered out; finished in 1.00s
+

@@ -1,0 +1,21 @@
+# AC-012(a): sprint.rs::resolve_scrum_board -- get_board_config 401
+#
+# Proves: sprint.rs::resolve_scrum_board calls client.get_board_config(board_id)
+# to verify the resolved board is scrum-type -- shared by sprint list/current/
+# add/remove. A scope-mismatch 401 from this call is rewritten with
+# read:board-scope.admin:jira-software (same hint as AC-010's 'jr board view'
+# call -- same underlying HTTP call). Exercised via 'sprint list', 'sprint
+# current', AND 'sprint add --current' to confirm the shared helper's hint is
+# identical across all three call paths.
+# Story: S-cycle8-agile-scope-mismatch-error-mapping, BC-X.15.001 clause 1 (widened, AC-012a).
+
+$ cargo test --test sprint_commands test_bc_x_15_001_resolve_scrum_board_get_board_config_401_scope_mismatch_rewrite -- --nocapture --test-threads=1
+
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 0.10s
+     Running tests/sprint_commands.rs (target/debug/deps/sprint_commands-bcafc84776d00ac3)
+
+running 1 test
+test test_bc_x_15_001_resolve_scrum_board_get_board_config_401_scope_mismatch_rewrite ... ok
+
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 46 filtered out; finished in 1.06s
+

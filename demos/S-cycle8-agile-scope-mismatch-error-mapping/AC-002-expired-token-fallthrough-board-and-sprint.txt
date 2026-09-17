@@ -1,0 +1,32 @@
+# AC-002: expired-token 401 (no scope-mismatch substring) -- falls through to auto-refresh
+#
+# Proves: a 401 body carrying Atlassian's generic expired/invalid-token shape
+# (no scope-mismatch substring) is left UNCHANGED by this story's rewrite and
+# continues to fall through to the existing auto-refresh coordinator exactly as
+# it did before this story, for BOTH 'jr board' and 'jr sprint' call sites.
+# This story's rewrite MUST NOT intercept this class.
+# (Run with JR_RUN_KEYRING_TESTS=1 -- these two tests are gated behind the
+# repo's keyring-test seam per CLAUDE.md; no real OS keychain is touched, the
+# gate only affects an unrelated shared-harness code path.)
+# Story: S-cycle8-agile-scope-mismatch-error-mapping, BC-X.15.001 clause 2.
+
+$ JR_RUN_KEYRING_TESTS=1 cargo test --test board_commands test_bc_x_15_001_board_401_without_scope_substring_falls_through_to_refresh -- --nocapture --test-threads=1 --include-ignored
+
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 0.11s
+     Running tests/board_commands.rs (target/debug/deps/board_commands-7e0f1accab20f3b8)
+
+running 1 test
+test test_bc_x_15_001_board_401_without_scope_substring_falls_through_to_refresh ... ok
+
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 49 filtered out; finished in 0.91s
+
+
+$ JR_RUN_KEYRING_TESTS=1 cargo test --test sprint_commands test_bc_x_15_001_sprint_401_without_scope_substring_falls_through_to_refresh -- --nocapture --test-threads=1 --include-ignored
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 0.11s
+     Running tests/sprint_commands.rs (target/debug/deps/sprint_commands-bcafc84776d00ac3)
+
+running 1 test
+test test_bc_x_15_001_sprint_401_without_scope_substring_falls_through_to_refresh ... ok
+
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 46 filtered out; finished in 0.90s
+

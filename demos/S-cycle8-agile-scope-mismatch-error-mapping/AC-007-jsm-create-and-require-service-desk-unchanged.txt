@@ -1,0 +1,38 @@
+# AC-007: regression guard -- InsufficientScope template + BC-3.8.015 unchanged
+#
+# Proves: this story's rewrite is scoped entirely to board.rs/sprint.rs and
+# does NOT touch src/error.rs's JrError::InsufficientScope Display template or
+# its two construction sites in client.rs, nor
+# src/cli/issue/jsm_create.rs's PRE-EXISTING OAuth InsufficientScope rewrite
+# (BC-3.8.015) or the reference pattern require_service_desk models this
+# story's helper on -- all pass unmodified, and the diff confirms zero lines
+# changed in src/error.rs / src/api/client.rs across this story's commit range.
+# Story: S-cycle8-agile-scope-mismatch-error-mapping, BC-X.15.001 AC-007.
+
+$ cargo test --test issue_create_jsm scope_mismatch -- --nocapture --test-threads=1
+
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 0.11s
+     Running tests/issue_create_jsm.rs (target/debug/deps/issue_create_jsm-b76d93f4af79e14d)
+
+running 2 tests
+test test_jsm_create_basic_auth_scope_mismatch_401_rewrites_to_api_token_hint ... ok
+test test_jsm_create_oauth_scope_mismatch_401_surfaces_write_servicedesk_request_hint ... ok
+
+test result: ok. 2 passed; 0 failed; 0 ignored; 0 measured; 111 filtered out; finished in 0.90s
+
+
+$ cargo test --test issue_create_jsm require_service_desk_oauth_401 -- --nocapture --test-threads=1
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 0.11s
+     Running tests/issue_create_jsm.rs (target/debug/deps/issue_create_jsm-b76d93f4af79e14d)
+
+running 1 test
+test test_require_service_desk_oauth_401_surfaces_read_scope_hint ... ok
+
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 112 filtered out; finished in 0.88s
+
+
+$ git diff a0fffb16^..HEAD -- src/error.rs src/api/client.rs
+(no output -- zero lines changed, confirming AC-007's regression-guard claim)
+
+$ git log --oneline a0fffb16^..HEAD -- src/error.rs src/api/client.rs
+(no output -- neither file touched by any commit in this story's range)

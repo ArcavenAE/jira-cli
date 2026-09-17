@@ -1,0 +1,21 @@
+# AC-012(b): SprintCommand::Add{current:true} -- second, separate list_sprints() call
+#
+# Proves: 'jr sprint add --current' issues client.list_sprints(board_id,
+# Some("active")) as a SEPARATE call from resolve_scrum_board's get_board_config
+# call earlier in the same command invocation (get_board_config succeeds,
+# list_sprints 401s). A scope-mismatch 401 from THIS call is rewritten with the
+# same grouped sprint-scope hint as AC-011/EC-X.15.001-4:
+# read:sprint:jira-software + read:issue-details:jira + read:jql:jira -- distinct
+# from AC-012(a)'s admin-scope hint on the earlier call in the same invocation.
+# Story: S-cycle8-agile-scope-mismatch-error-mapping, BC-X.15.001 clause 1 (widened, AC-012b).
+
+$ cargo test --test sprint_commands test_bc_x_15_001_sprint_add_current_list_sprints_401_scope_mismatch_rewrite -- --nocapture --test-threads=1
+
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 0.11s
+     Running tests/sprint_commands.rs (target/debug/deps/sprint_commands-bcafc84776d00ac3)
+
+running 1 test
+test test_bc_x_15_001_sprint_add_current_list_sprints_401_scope_mismatch_rewrite ... ok
+
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 46 filtered out; finished in 1.03s
+

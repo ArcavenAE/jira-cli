@@ -1,0 +1,32 @@
+# AC-004: Basic/API-token auth short-circuits the new rewrite entirely
+#
+# Proves: is_oauth_auth() == false short-circuits this story's rewrite, so
+# 'jr board'/'jr sprint' NEVER route a Basic-auth (API-token) 401 through it.
+# Constructs an API-token-shaped client, mounts the SAME scope-mismatch 401
+# body used in AC-001, and asserts the OLD (pre-this-story) generic
+# InsufficientScope (issue #185) path fires -- NOT NotAuthenticated/BC-X.3.002,
+# and NOT the new rewrite -- because client.rs::send_inner's pre-existing,
+# auth-scheme-agnostic pre-refresh scope check fires regardless of auth scheme
+# and this story's rewrite never gets a chance to run.
+# Story: S-cycle8-agile-scope-mismatch-error-mapping, BC-X.15.001 clause 4.
+
+$ cargo test --test board_commands test_bc_x_15_001_board_401_under_api_token_unaffected -- --nocapture --test-threads=1
+
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 0.10s
+     Running tests/board_commands.rs (target/debug/deps/board_commands-7e0f1accab20f3b8)
+
+running 1 test
+test test_bc_x_15_001_board_401_under_api_token_unaffected ... ok
+
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 49 filtered out; finished in 1.04s
+
+
+$ cargo test --test sprint_commands test_bc_x_15_001_sprint_401_under_api_token_unaffected -- --nocapture --test-threads=1
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 0.11s
+     Running tests/sprint_commands.rs (target/debug/deps/sprint_commands-bcafc84776d00ac3)
+
+running 1 test
+test test_bc_x_15_001_sprint_401_under_api_token_unaffected ... ok
+
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 46 filtered out; finished in 0.96s
+

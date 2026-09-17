@@ -1,0 +1,87 @@
+# Full regression: tests/board_commands.rs + tests/sprint_commands.rs
+#
+# Proves: Task 7's regression requirement -- the full existing board/sprint
+# integration suites pass with zero regressions to successful-response
+# handling or non-401 error paths, alongside all new AC-001/002/004/005/006/
+# 009/010/011/012 tests wired into the same files.
+# Story: S-cycle8-agile-scope-mismatch-error-mapping, Task 7.
+
+$ cargo test --test board_commands -- --nocapture --test-threads=1
+
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 0.11s
+     Running tests/board_commands.rs (target/debug/deps/board_commands-7e0f1accab20f3b8)
+
+running 50 tests
+test board_list_network_drop_surfaces_reach_error ... ok
+test board_list_server_error_surfaces_friendly_message ... ok
+test board_list_unauthorized_dispatches_reauth_message ... ok
+test board_view_limit_and_all_conflict ... ok
+test common::wf::tests::test_char_byte_table_ascii_only_is_identity ... ok
+test common::wf::tests::test_char_byte_table_multibyte_characters_diverge_from_char_index ... ok
+test common::wf::tests::test_descend_as_mappings_panics_on_duplicate_key_within_final_level - should panic ... 
+thread 'common::wf::tests::test_descend_as_mappings_panics_on_duplicate_key_within_final_level' (7728702) panicked at tests/common/wf.rs:652:9:
+wf.rs: descend_as_mappings: mapping has more than one `CARGO_TERM_COLOR:` key at this level — this is invalid YAML (a duplicate mapping key) that GitHub Actions and actionlint both reject at parse time, but this checker refuses to silently pick a winner rather than rely on that external validation. Remove the duplicate `CARGO_TERM_COLOR:` key.
+note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+ok
+test common::wf::tests::test_find_key_node_properties_clean_mapping_returns_empty ... ok
+test common::wf::tests::test_find_key_node_properties_detects_anchor_nested_two_levels_deep ... ok
+test common::wf::tests::test_find_key_node_properties_detects_anchor_on_mapping_key ... ok
+test common::wf::tests::test_find_key_node_properties_detects_tag_on_mapping_key ... ok
+test common::wf::tests::test_find_key_node_properties_panics_on_multi_document_stream - should panic ... 
+thread 'common::wf::tests::test_find_key_node_properties_panics_on_multi_document_stream' (7728707) panicked at tests/common/wf.rs:552:5:
+wf.rs: find_key_node_properties: expected at most one YAML document in the parsed stream, found 2 — a multi-document stream (`---`-separated) is not supported by this module: every structural lookup built on this event list would silently see only the FIRST document, discarding the rest. Split the extra document(s) into their own file, or extend this module to handle a multi-document stream explicitly, rather than parsing one and silently ignoring the others.
+ok
+test common::wf::tests::test_line_start_char_idx_recovers_via_col_not_rescan ... ok
+test common::wf::tests::test_parse_single_job_matches_whole_document_parse_for_same_job ... ok
+test common::wf::tests::test_parse_single_job_panics_on_multi_entry_root - should panic ... 
+thread 'common::wf::tests::test_parse_single_job_panics_on_multi_entry_root' (7728710) panicked at tests/common/wf.rs:1154:13:
+wf.rs: parse_single_job: expected exactly one root entry (the job id), found 2 — job_block should be a single `<job_id>: {...}` mapping entry, exactly as extract_job_block returns it, not: "a:\n  runs-on: ubuntu-latest\nb:\n  runs-on: ubuntu-latest\n"
+ok
+test common::wf::tests::test_read_mapping_and_read_sequence_on_nested_structures ... ok
+test common::wf::tests::test_root_level_nested_keys_panics_on_duplicate_root_env_block - should panic ... 
+thread 'common::wf::tests::test_root_level_nested_keys_panics_on_duplicate_root_env_block' (7728712) panicked at tests/common/wf.rs:620:5:
+wf.rs: descend_as_mappings: mapping has 2 occurrences of the `env:` key at this level — this is invalid YAML (a duplicate mapping key) that GitHub Actions and actionlint both reject at parse time, but this checker refuses to silently pick a winner rather than rely on that external validation. Remove the duplicate `env:` key.
+ok
+test common::wf::tests::test_root_level_nested_keys_succeeds_with_no_duplicates ... ok
+test common::wf::tests::test_skip_node_advances_past_alias ... ok
+test common::wf::tests::test_wf_rs_test_count_matches_expected_denominator ... ok
+test common::wf::tests::test_wfdoc_parse_accepts_comment_only_stream_as_empty_result ... ok
+test common::wf::tests::test_wfdoc_parse_accepts_empty_string_as_empty_result ... ok
+test common::wf::tests::test_wfdoc_parse_accepts_single_explicit_document_marker ... ok
+test common::wf::tests::test_wfdoc_parse_accepts_single_implicit_document ... ok
+test common::wf::tests::test_wfdoc_parse_accepts_whitespace_only_stream_as_empty_result ... ok
+test common::wf::tests::test_wfdoc_parse_job_spans_correct_across_multibyte_content ... ok
+test common::wf::tests::test_wfdoc_parse_last_job_span_excludes_trailing_root_key ... ok
+test common::wf::tests::test_wfdoc_parse_last_job_span_includes_full_trailing_block_scalar_when_jobs_is_last_root_key ... ok
+test common::wf::tests::test_wfdoc_parse_panics_on_duplicate_root_jobs_key - should panic ... 
+thread 'common::wf::tests::test_wfdoc_parse_panics_on_duplicate_root_jobs_key' (7728724) panicked at tests/common/wf.rs:620:5:
+wf.rs: WfDoc::parse: mapping has 2 occurrences of the `jobs:` key at this level — this is invalid YAML (a duplicate mapping key) that GitHub Actions and actionlint both reject at parse time, but this checker refuses to silently pick a winner rather than rely on that external validation. Remove the duplicate `jobs:` key.
+ok
+test common::wf::tests::test_wfdoc_parse_panics_on_second_yaml_document - should panic ... 
+thread 'common::wf::tests::test_wfdoc_parse_panics_on_second_yaml_document' (7728725) panicked at tests/common/wf.rs:552:5:
+wf.rs: WfDoc::parse: expected at most one YAML document in the parsed stream, found 2 — a multi-document stream (`---`-separated) is not supported by this module: every structural lookup built on this event list would silently see only the FIRST document, discarding the rest. Split the extra document(s) into their own file, or extend this module to handle a multi-document stream explicitly, rather than parsing one and silently ignoring the others.
+ok
+test get_sprint_issues_no_limit ... ok
+test get_sprint_issues_with_limit ... ok
+test list_boards_empty_result ... ok
+test list_boards_with_project_and_type_filter ... ok
+test list_boards_without_filters ... ok
+test resolve_board_auto_discovers_single_scrum_board ... Using board 42 - PROJ Scrum Board (scrum)
+ok
+test resolve_board_errors_on_multiple_boards ... ok
+test resolve_board_errors_on_no_boards ... ok
+test resolve_board_errors_without_project_or_board ... ok
+test resolve_board_uses_explicit_board_override ... ok
+test search_issues_with_limit ... ok
+test test_bc_x_15_001_board_401_composite_body_scope_mismatch_wins ... ok
+test test_bc_x_15_001_board_401_under_api_token_unaffected ... ok
+test test_bc_x_15_001_board_401_unrecognized_body_falls_through_unchanged ... ok
+test test_bc_x_15_001_board_401_without_scope_substring_falls_through_to_refresh ... ignored, requires keyring backend; set JR_RUN_KEYRING_TESTS=1 to run
+test test_bc_x_15_001_board_list_401_scope_mismatch_names_missing_scopes ... ok
+test test_bc_x_15_001_board_view_401_scope_mismatch_names_admin_scope ... ok
+test test_bc_x_15_001_board_view_scrum_get_sprint_issues_401_scope_mismatch_rewrite ... ok
+test test_bc_x_15_001_board_view_scrum_list_sprints_401_scope_mismatch_rewrite ... ok
+test test_bc_x_15_001_resolve_board_id_401_scope_mismatch_rewrite ... ok
+
+test result: ok. 49 passed; 0 failed; 1 ignored; 0 measured; 0 filtered out; finished in 0.99s
+

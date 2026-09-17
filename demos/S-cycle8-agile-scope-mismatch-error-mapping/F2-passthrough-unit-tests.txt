@@ -1,0 +1,23 @@
+# F2 pass-through unit tests: rewrite_agile_scope_error only touches its target
+#
+# Proves (inline unit tests in src/cli/board.rs): the shared
+# rewrite_agile_scope_error helper passes through ANY JrError variant other
+# than InsufficientScope completely unchanged (test 1), and passes through
+# a non-JrError error type completely unchanged (test 2). This confirms the
+# helper is narrowly scoped to its one intercept case and cannot accidentally
+# mutate/misclassify unrelated errors -- the additive-only guarantee
+# Architecture Compliance Rule 4 requires ("no effect on successful-response
+# handling or on the shared InsufficientScope Display template").
+# Story: S-cycle8-agile-scope-mismatch-error-mapping, supporting unit coverage.
+
+$ cargo test --lib test_rewrite_agile_scope_error -- --nocapture --test-threads=1
+
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 0.11s
+     Running unittests src/lib.rs (target/debug/deps/jr-4250bcafccde324f)
+
+running 2 tests
+test cli::board::tests::test_rewrite_agile_scope_error_passes_through_non_insufficient_scope_jrerror_unchanged ... ok
+test cli::board::tests::test_rewrite_agile_scope_error_passes_through_non_jrerror_unchanged ... ok
+
+test result: ok. 2 passed; 0 failed; 0 ignored; 0 measured; 1535 filtered out; finished in 0.01s
+

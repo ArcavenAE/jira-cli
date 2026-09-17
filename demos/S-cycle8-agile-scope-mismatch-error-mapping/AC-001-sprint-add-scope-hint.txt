@@ -1,0 +1,18 @@
+# AC-001: jr sprint add -- OAuth scope-mismatch 401 disambiguation
+#
+# Proves: a scope-mismatch 401 on 'jr sprint add' under OAuth is rewritten with
+# the write-scope hint: write:board-scope:jira-software, directing to
+# 'jr auth login'. Completes the AC-001 4-command-family matrix (list/view,
+# sprint list/current, sprint add/remove).
+# Story: S-cycle8-agile-scope-mismatch-error-mapping, BC-X.15.001 clause 1.
+
+$ cargo test --test sprint_commands test_bc_x_15_001_sprint_add_401_scope_mismatch_names_missing_scope -- --nocapture --test-threads=1
+
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 0.12s
+     Running tests/sprint_commands.rs (target/debug/deps/sprint_commands-bcafc84776d00ac3)
+
+running 1 test
+test test_bc_x_15_001_sprint_add_401_scope_mismatch_names_missing_scope ... ok
+
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 46 filtered out; finished in 1.14s
+

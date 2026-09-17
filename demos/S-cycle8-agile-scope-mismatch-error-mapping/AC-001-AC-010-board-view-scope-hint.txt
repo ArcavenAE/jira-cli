@@ -1,0 +1,18 @@
+# AC-001 / AC-010: jr board view -- unconditional get_board_config 401 hint
+#
+# Proves: 'jr board view' calls client.get_board_config(board_id) unconditionally
+# (there is no --config flag; corrects an earlier draft's stale label) BEFORE
+# branching on board type. A scope-mismatch 401 from this call, under OAuth, is
+# rewritten with the admin-scope hint: read:board-scope.admin:jira-software.
+# Story: S-cycle8-agile-scope-mismatch-error-mapping, BC-X.15.001 clauses 1 & AC-010.
+
+$ cargo test --test board_commands test_bc_x_15_001_board_view_401_scope_mismatch_names_admin_scope -- --nocapture --test-threads=1
+
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 0.13s
+     Running tests/board_commands.rs (target/debug/deps/board_commands-7e0f1accab20f3b8)
+
+running 1 test
+test test_bc_x_15_001_board_view_401_scope_mismatch_names_admin_scope ... ok
+
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 49 filtered out; finished in 1.10s
+

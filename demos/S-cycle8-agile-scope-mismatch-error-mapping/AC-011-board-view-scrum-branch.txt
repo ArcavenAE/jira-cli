@@ -1,0 +1,23 @@
+# AC-011: jr board view scrum branch -- list_sprints + get_sprint_issues 401s
+#
+# Proves: board.rs::handle_view's scrum branch (board type resolves to 'scrum')
+# calls client.list_sprints(...) then client.get_sprint_issues(...). A
+# scope-mismatch 401 from EITHER call, under OAuth, is rewritten with the SAME
+# grouped hint 'jr sprint list'/'jr sprint current' use:
+# read:sprint:jira-software + read:issue-details:jira + read:jql:jira
+# (EC-X.15.001-4 ruling: grouped/over-inclusive-by-design, reused verbatim for
+# consistency rather than deriving a narrower per-call-site hint). Both calls
+# are exercised in turn against a scrum board fixture.
+# Story: S-cycle8-agile-scope-mismatch-error-mapping, BC-X.15.001 clause 1 (widened, AC-011).
+
+$ cargo test --test board_commands board_view_scrum -- --nocapture --test-threads=1
+
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 0.11s
+     Running tests/board_commands.rs (target/debug/deps/board_commands-7e0f1accab20f3b8)
+
+running 2 tests
+test test_bc_x_15_001_board_view_scrum_get_sprint_issues_401_scope_mismatch_rewrite ... ok
+test test_bc_x_15_001_board_view_scrum_list_sprints_401_scope_mismatch_rewrite ... ok
+
+test result: ok. 2 passed; 0 failed; 0 ignored; 0 measured; 48 filtered out; finished in 0.99s
+
