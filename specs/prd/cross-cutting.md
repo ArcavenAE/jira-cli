@@ -1,11 +1,12 @@
 ---
 context: bc-x
 title: "Cross-cutting (HTTP client, Runtime, Users, Teams, Worklogs, Projects, Queues, JQL, Partial-match, JSM Request Types, CI Guards)"
-total_bcs: 159   # cumulative claim (incl. range-collapsed); definitional_count below is individually-bodied headings; +4 added 2026-09-06 (BC-X.7.007..010, cycle-005 `adf-mentions` F2 spec evolution, issue #674 — `@Name` mention resolution: unique-match (007), ambiguous-match disambiguation (008), zero-match HARD ERROR exit 64 (009, human-approved override of the architect's pass-through recommendation); bracket-form accountId mandatory preflight validation (010)); was 155 before this addition
-definitional_count: 93   # count of `#### BC-` headings in this file
+total_bcs: 160   # cumulative claim (incl. range-collapsed); definitional_count below is individually-bodied headings; +1 added 2026-09-17 (BC-X.15.001, cycle-008 `oauth-surface-correctness` F2 spec evolution, ADR-0026 Decision 3, VP-OAUTH-GW-003 — new `## BC-X.15: OAuth Agile-Command Error-Mapping` subsection: `jr board`/`jr sprint` 401 auth-scheme-conditional call-site rewrite disambiguating scope-mismatch vs. expired-token vs. (regression-guard) wrong-host, modeled on `require_service_desk`/BC-X.8.006..007); was 159 before this addition; prior: +4 added 2026-09-06 (BC-X.7.007..010, cycle-005 `adf-mentions` F2 spec evolution, issue #674 — `@Name` mention resolution: unique-match (007), ambiguous-match disambiguation (008), zero-match HARD ERROR exit 64 (009, human-approved override of the architect's pass-through recommendation); bracket-form accountId mandatory preflight validation (010)); was 155 before that addition
+definitional_count: 94   # count of `#### BC-` headings in this file
 last_updated: 2026-09-06
 source_pass: 3
 trace: |
+  - cycle-008 `oauth-surface-correctness` F2 spec evolution (2026-09-17), ADR-0026 Decision 3, VP-OAUTH-GW-003: new subsection `## BC-X.15: OAuth Agile-Command Error-Mapping` added with 1 new BC (BC-X.15.001) — `jr board`/`jr sprint` 401 disambiguates (i) OAuth scope-mismatch (auth-scheme-conditional granular-scope hint) from (ii) expired/invalid token (routes to the existing auto-refresh coordinator, never surfaces `InsufficientScope`) from (iii) wrong-host-401 (regression-guard only — no longer reachable post-ADR-0026 for the 7 routing call sites BC-4.2.001 anchors). New call-site rewrite in `src/cli/board.rs`/`src/cli/sprint.rs`, modeled on the proven `require_service_desk` pattern (BC-X.8.006/BC-X.8.007) — does NOT modify `src/error.rs`'s shared `InsufficientScope` Display template (BC-1.6.042-045 unchanged) and does NOT alter BC-3.8.015's JSM-create POST path (regression-guarded). Cross-reference note added to BC-5.1.001 (`bc-5-boards-sprints.md`) clarifying its existing routing-correct GET currently 401s under OAuth for a SCOPE reason (fixed by BC-1.3.023's ADR-0026 Decision 2 amendment), not a routing reason. definitional_count 93→94; total_bcs 159→160.
   - cycle-005 `adf-mentions` F2 pass-4 INTEGRATE sub-burst (2026-09-06, issue #674, human-approved TIGHTENING decision at the F2 gate; mechanism finalized by the architect as Option (a)): BC-X.7.007 amended in place — inserts `filter_by_name_match` (NEW pure pre-filter, `src/cli/issue/mentions.rs`) BETWEEN the `active==Some(true)` filter and the `disambiguate_user` call; `disambiguate_user` itself is UNCHANGED. A single search result whose display name does NOT case-insensitively-substring-match the query is now filtered OUT before `disambiguate_user` runs, producing an EMPTY list and the same zero-match hard-error path as BC-X.7.009 (was previously a silent resolve via `disambiguate_user`'s `len()==1` short-circuit — EC-X.7.007-5's former OPEN DECISION). EC-X.7.007-5 rewritten from "OPEN DECISION" to RESOLVED; EC-X.7.007-2 scope narrowed to reflect the guaranteed name-match on the lone-result path. New VP-674-021 citation. No BC count change (still 93 individually-bodied / 159 cumulative in this file). See `.factory/specs/prd/holdout-scenarios.md` H-NEW-MENTION-012 (new) and H-NEW-MENTION-002 (fixture updated to a name-matching query, since `query=jsmith` → sole result "John Smith" now hard-errors under the tightened contract).
   - cycle-005 `adf-mentions` F2 spec evolution INTEGRATE sub-burst (2026-09-06, issue #674): +4 BCs BC-X.7.007..010 added to §X.7 Users — `@Name` mention candidate resolution (unique-match BC-X.7.007, reuses `disambiguate_user`'s `Exact` arm; ambiguous-match BC-X.7.008, reuses `ExactMultiple`/`Ambiguous` arms verbatim; zero-match BC-X.7.009, HARD ERROR exit 64 — human-approved decision superseding the architect's own pass-through recommendation from `delta-analysis.md` OQ-4) and bracket-form `[~accountid:<id>]` mandatory accountId preflight validation (BC-X.7.010, `GET /rest/api/3/user?accountId=`, deduplicated per unique id). BC count 155→159 (definitional_count 89→93). See `.factory/phase-f2-spec-evolution/prd-delta-674.md`, `.factory/phase-f2-spec-evolution/verification-delta-674.md`.
   - F2 adversary-convergence round-3 amendments (2026-08-26, cycle field-dx — no BC
@@ -167,12 +168,14 @@ trace: |
 
 # BC-X — Cross-cutting
 
-159 behavioral contracts covering: HTTP client (X.1), Pagination (X.2), Error handling (X.3),
+160 behavioral contracts covering: HTTP client (X.1), Pagination (X.2), Error handling (X.3),
 Rate limiting (X.4), Worklogs & duration (X.5), Teams (X.6), Users (X.7), Projects & Queues (X.8),
 JQL utilities (X.9), Partial-match (X.10), Build-time (X.11), JSM Request Types (X.12),
-CI Guards (X.13), Field Option Discovery (X.14). (+4 BC-X.7.007..010 added 2026-09-06 by issue #674
-markdown mentions — `@Name` resolution (unique/ambiguous/zero-match) + bracket-form accountId
-preflight validation.)
+CI Guards (X.13), Field Option Discovery (X.14), OAuth Agile-Command Error-Mapping (X.15). (+1
+BC-X.15.001 added 2026-09-17 cycle-008 `oauth-surface-correctness` ADR-0026 Decision 3 — `jr
+board`/`jr sprint` OAuth 401 error-mapping call-site rewrite; +4 BC-X.7.007..010 added 2026-09-06
+by issue #674 markdown mentions — `@Name` resolution (unique/ambiguous/zero-match) + bracket-form
+accountId preflight validation.)
 
 ---
 
@@ -2975,6 +2978,150 @@ BC-X.12.003 (`--project` companion resolution via `require_service_desk`/
 disambiguation convention)
 
 [NEW 2026-08-25 issue #580 F2]
+
+---
+
+## BC-X.15: OAuth Agile-Command Error-Mapping
+
+1 behavioral contract covering the Agile-command (`jr board`/`jr sprint`) 401 error-taxonomy fix
+(ADR-0026 Decision 3, cycle-008 `oauth-surface-correctness`, VP-OAUTH-GW-003). Sized and filed as
+a Cross-Cutting subsection, mirroring the `jr requesttype`/Field-Option-Discovery precedent
+(BC-X.12/BC-X.14), rather than a new numbered domain-spec section file — the fix is a general
+401-disambiguation call-site-rewrite pattern (the same one `require_service_desk` already
+established for JSM, BC-X.8.006/BC-X.8.007), not a new Agile domain behavior, so it belongs beside
+its sibling error-mapping contracts rather than inside `bc-5-boards-sprints.md`'s board/sprint
+command-behavior taxonomy.
+
+**Why this BC exists (context):** `jr board`/`jr sprint` today contain ZERO scope/
+`InsufficientScope`-handling code (confirmed by grep, cycle-008 F1 code audit) — a 401 on either
+command family falls straight through to `src/error.rs`'s generic, unconditional, POST-framed
+`InsufficientScope` Display template, which is correct for the ONE call site it was originally
+written for (`src/cli/issue/jsm_create.rs`'s JSM-create POST path, BC-3.8.015) but is misleading
+noise for an Agile GET scope-mismatch or an expired-token 401. ADR-0026 Decision 3 establishes
+that 401 ambiguity is always resolved by a call-site rewrite close to the failing operation, never
+by widening the shared Display template to cover every caller.
+
+#### BC-X.15.001: `jr board`/`jr sprint` 401 disambiguates OAuth scope-mismatch, expired/invalid token, and (regression-guard only) wrong-host — auth-scheme-conditional call-site rewrite modeled on `require_service_desk`
+
+**STATUS: NEW (2026-09-17, cycle-008 `oauth-surface-correctness`, ADR-0026 Decision 3, VP-OAUTH-GW-003)**
+
+**Confidence**: HIGH
+**Subject**: X.15 OAuth Agile-Command Error-Mapping (new call-site rewrite — `jr board`/`jr sprint`)
+**Description**: `jr board`/`jr sprint` handlers gain a new, narrowly-scoped 401 call-site rewrite
+(function names are the implementer's choice at F4, modeled on
+`src/api/jsm/servicedesks.rs::require_service_desk`'s auth-scheme-conditional rewrite pattern)
+that disambiguates a received 401 into exactly one of three classes before choosing (or declining)
+to rewrite the error the user sees.
+
+**Behavior**: For a 401 response received by a `jr board`/`jr sprint` command handler:
+
+1. **Genuine OAuth scope-mismatch (in scope for this BC's rewrite):** when the active auth scheme
+   is OAuth/Bearer (`client.is_oauth_auth() == true`) AND the 401 body carries the scope-mismatch
+   signal (case-insensitive `"scope does not match"` substring, the SAME detection rule BC-X.3.005/
+   BC-1.6.044 already use), the call site rewrites the error to `JrError::NotAuthenticated { hint }`
+   (NOT `InsufficientScope` — the `InsufficientScope` Display is purpose-built for the
+   issue-#185/BC-3.8.015 POST scenario and produces irrelevant POST-specific noise on a GET) with a
+   hint naming the missing granular Jira-Software scope(s) for the failing command family
+   (`read:board-scope:jira-software` + `read:project:jira` for `jr board list`;
+   `read:board-scope.admin:jira-software` for `jr board view --config`;
+   `read:sprint:jira-software` + `read:issue-details:jira` + `read:jql:jira` for `jr sprint
+   list/current`; `write:board-scope:jira-software` for `jr sprint add`/`jr sprint remove`) and
+   directing the user to `jr auth login` to re-consent (mirroring BC-X.8.007's "`jr auth refresh`
+   alone cannot add missing scopes" framing). All scopes named in the hint are members of
+   `DEFAULT_OAUTH_SCOPES` as amended by BC-1.3.023 (ADR-0026 Decision 2), so the hint is genuinely
+   actionable for default-scoped users.
+2. **Expired/invalid token (out of scope for this BC's rewrite — existing behavior preserved):**
+   a 401 whose body carries Atlassian's generic expired/invalid-token shape (no scope-mismatch
+   substring) is left to the existing auto-refresh coordinator (`src/api/refresh_coordinator.rs`)
+   exactly as it does today for every other OAuth-authenticated command family. This BC's rewrite
+   MUST NOT intercept this class — it must fall through unchanged, so that expired-token recovery
+   (silent refresh-and-retry) keeps working for `jr board`/`jr sprint` exactly as it already does
+   elsewhere in the codebase.
+3. **Wrong-host-401 (regression-guard only, not new behavior this BC introduces):** the routing
+   defect ADR-0026 Decision 1 fixes (BC-4.2.001) — a 401 caused by addressing `instance_url`
+   instead of `base_url` under OAuth. `jr board`/`jr sprint` were never among the 7 corrected
+   routing call sites (both already used `client.get(...)`/`base_url` correctly, per F1 code
+   audit — their 401 was always a scope problem, never a routing problem), so this class should
+   never be OBSERVED at these two call sites, pre- or post-ADR-0026. This BC does not add any code
+   to detect or handle this class; it exists purely as a documented regression-guard boundary so
+   a future reader is not misled into thinking `jr board`/`jr sprint`'s 401 was ever a routing bug.
+4. **Basic/API-token auth:** unaffected by this BC — `is_oauth_auth() == false` short-circuits the
+   new rewrite entirely; a Basic-auth 401 on `jr board`/`jr sprint` continues to surface via the
+   universal BC-X.3.002 (`Not authenticated` + `jr auth login`, exit 2) path, unchanged.
+
+**Explicitly NOT changed by this BC:**
+- `src/error.rs`'s `JrError::InsufficientScope` Display template and its two construction sites
+  (`src/api/client.rs::send_inner`'s pre-refresh 401 check, `parse_error`'s post-401 fallback) —
+  BC-1.6.042/043/044/045 remain byte-for-byte correct and unamended; this BC's rewrite operates
+  on the `JrError` variant AFTER those construction sites produce it, exactly like
+  `require_service_desk` already does for JSM.
+- BC-3.8.015 (the JSM-create POST path's OAuth `InsufficientScope` arm) — genuinely the
+  issue-#185 POST scenario, unaffected by this additive, Agile-command-scoped rewrite.
+- `src/cli/board.rs`/`src/cli/sprint.rs`'s existing non-401 behavior, payload shapes, and
+  successful-response handling — this BC is additive at the 401 branch only.
+
+**Edge Cases**:
+- **EC-X.15.001-1**: A 401 with BOTH a scope-mismatch substring AND an expired-token substring in
+  the same body (a hypothetical malformed/composite Atlassian error body) → the scope-mismatch
+  substring check wins (same precedence BC-X.3.005 already establishes for the generic detection
+  rule this BC's call site reuses) — the rewrite fires, producing the scope hint, not the
+  auto-refresh path.
+- **EC-X.15.001-2**: `jr board`/`jr sprint` under an OAuth profile whose token is BOTH expired AND
+  missing a granular scope — the auto-refresh coordinator's own retry-after-refresh 401 is what
+  this call site ultimately observes; if that retry's 401 body still carries the scope-mismatch
+  substring, Class 1 (scope-mismatch rewrite) fires on the POST-refresh attempt, not the
+  pre-refresh one.
+- **EC-X.15.001-3**: A 401 with neither substring (an unrecognized/malformed body) → falls through
+  to the universal BC-X.3.002 `Not authenticated` path, unchanged — this BC's rewrite only
+  narrows the scope-mismatch sub-case, it does not broaden 401 handling for unrecognized bodies.
+
+**Canonical Test Vectors**:
+
+| Command | Auth scheme | 401 body signal | Expected outcome |
+|---|---|---|---|
+| `jr board list` | OAuth/Bearer | `"scope does not match"` (case-insensitive) | exit 2; stderr `NotAuthenticated` hint names `read:board-scope:jira-software`/`read:project:jira`; does NOT contain the generic POST-framed `InsufficientScope` template text |
+| `jr sprint list` | OAuth/Bearer | `"scope does not match"` (case-insensitive) | exit 2; stderr hint names `read:sprint:jira-software`/`read:issue-details:jira`/`read:jql:jira` |
+| `jr board list` | OAuth/Bearer | generic expired-token body (no scope substring) | routes to auto-refresh coordinator; no `InsufficientScope`/scope hint surfaced |
+| `jr board list` | Basic/API-token | any 401 body | exit 2; universal BC-X.3.002 `Not authenticated` + `jr auth login`; NO OAuth-scope language |
+| `jr issue create --request-type ...` (regression guard) | OAuth/Bearer | JSM POST scope-mismatch (BC-3.8.015 fixture) | UNCHANGED byte-for-byte — this BC's rewrite does not touch `jsm_create.rs`'s call site |
+
+**Verification Properties**: VP-OAUTH-GW-003 — wiremock integration tests mocking a 401 response
+body for `jr board list` and `jr sprint list` under both classes (i) scope-mismatch and (ii)
+expired-token (minimum 4 new test cases: 2 commands × 2 classes), asserting the rendered error
+message/exit code for each; plus a REGRESSION assertion that `jsm_create.rs`'s existing call site
+message is UNCHANGED byte-for-byte (BC-3.8.015) — this VP's rewrite is additive only.
+
+**Related BCs**:
+- BC-4.2.001 (`bc-4-assets-cmdb.md`) — Class 3's regression-guard boundary; the routing invariant
+  whose absence-of-defect at these two call sites this BC documents rather than fixes.
+- BC-1.3.023 (`bc-1-auth-identity.md`) — the granular-scope set this BC's Class 1 hint names;
+  makes the hint genuinely actionable via `jr auth login`.
+- BC-5.1.001 (`bc-5-boards-sprints.md`) — receives a cross-reference note (see that BC) pointing
+  back here, since its own routing-correct GET is the one that currently 401s under OAuth for the
+  scope reason this BC's rewrite now surfaces correctly.
+- BC-X.8.006 / BC-X.8.007 (`require_service_desk`'s auth-scheme-conditional 401 rewrite, this
+  file) — the proven pattern this BC's rewrite is modeled on; depends on, does not supersede.
+- BC-1.6.042 / BC-1.6.043 / BC-1.6.044 / BC-1.6.045 (`bc-1-auth-identity.md`) — the generic
+  `InsufficientScope` detection/Display rules this BC's rewrite consumes and re-maps, unchanged.
+- BC-3.8.015 (`bc-3-issue-write.md`) — the one existing caller for whom the generic
+  `InsufficientScope` template is genuinely correct; explicitly unaffected (regression-guarded).
+
+**Capability anchor**: this repository's BC corpus has no `domain-spec/capabilities.md` CAP-NNN
+registry to anchor against (confirmed absent — this is a brownfield spec corpus using
+Confidence/Source/Subject/Behavior/Trace fields, not the CAP-NNN capability-anchor convention);
+this BC instead anchors to ADR-0026 Decision 3 and the established `require_service_desk`
+error-mapping precedent (BC-X.8.006/BC-X.8.007) as its source of truth, per this file's own
+citation convention.
+
+**Trace**: cycle-008 `oauth-surface-correctness` F2 spec evolution (2026-09-17); ADR-0026 Decision
+3; `.factory/cycles/cycle-008/F1-delta-analysis.md` §2.5 (Workstream E root-cause), §3 (BC
+disposition — NEW BC recommendation); `.factory/cycles/cycle-008/verification-delta.md`
+§VP-OAUTH-GW-003; modeled on BC-X.8.006/BC-X.8.007 (this file, `require_service_desk`'s
+auth-scheme-conditional 401 rewrite). Qualitative test coverage: new wiremock integration test
+group in `tests/board_commands.rs`/`tests/sprint_commands.rs`, plus a regression case in
+`tests/issue_create_jsm.rs` pinning BC-3.8.015's unchanged message.
+
+[NEW 2026-09-17 cycle-008 ADR-0026 Decision 3]
 
 ---
 

@@ -10,29 +10,36 @@
 > `MUTANTS-NIGHTLY-VERIFY-FULL-RUN`, `STATE-MD-OVER-SOFT-TARGET`) stay
 > inline in STATE.md itself and are NOT duplicated here except where noted.
 
-## cycle-008 RELEASE GATE — Atlassian Developer Console scope-add (2026-09-17, F1 approval)
+## cycle-008 RELEASE GATE — Atlassian Developer Console scope-add (2026-09-17, F2 approval; updated from F1)
 
 **ID:** `CYCLE-008-CONSOLE-SCOPE-RELEASE-GATE`
-**Severity:** RELEASE-GATE — hard pre-release blocker, human-owned. Does NOT block F2-F6 pipeline
+**Severity:** RELEASE-GATE — hard pre-release blocker, human-owned. Does NOT block F2-F7 pipeline
 work for cycle-008; it blocks only shipping a release that carries the cycle's content.
 **Status:** OPEN, PENDING.
 
-**What:** cycle-008 (`oauth-surface-correctness`)'s F1 delta-analysis human gate (`DEC-368`,
-2026-09-17) locked S2 into scope: adding granular `jira-software` OAuth scopes to
-`DEFAULT_OAUTH_SCOPES` (`src/api/auth.rs`) to fix the `board`/`sprint` "scope does not match" 401 —
-`read:board-scope:jira-software`, `read:project:jira`, `read:sprint:jira-software`,
-`read:issue-details:jira`, `read:jql:jira`, plus `read:board-scope.admin:jira-software` for board
-config and `write:board-scope:jira-software` per the F1 note for backlog support. Per the
-documented `CLAUDE.md` procedure for `DEFAULT_OAUTH_SCOPES` changes, **before any release
-carrying this cycle's content ships**, a human must:
+**What:** cycle-008 (`oauth-surface-correctness`)'s F2 spec-evolution human gate (`DEC-369`,
+2026-09-17) FINALIZED the S2 scope after a deep endpoint-inventory + scope-matrix audit pass
+(`cycles/cycle-008/oauth-endpoint-inventory.md`, `oauth-scope-matrix.md`): the human chose FULL
+OAUTH PARITY, expanding `DEFAULT_OAUTH_SCOPES` (`src/api/auth.rs`) by **ALL 8** new scopes — the 7
+granular `jira-software` Agile scopes originally locked at F1 (`read:board-scope:jira-software`,
+`read:project:jira`, `read:sprint:jira-software`, `read:issue-details:jira`, `read:jql:jira`,
+`read:board-scope.admin:jira-software`, `write:board-scope:jira-software`) PLUS a newly-discovered
+8th scope, `manage:jira-project`, required for `jr component create/edit/delete/rename` (a
+component-write scope gap surfaced by the F2 audit; routing to these endpoints was already
+correct, so this is scope-only). Per the documented `CLAUDE.md` procedure for
+`DEFAULT_OAUTH_SCOPES` changes, **before any release carrying this cycle's content ships**, a
+human must:
 
-1. Add these granular scopes to the embedded `jr` OAuth app's permissions in the Atlassian
-   Developer Console (https://developer.atlassian.com/console/myapps/).
+1. Add ALL 8 of these scopes (`manage:jira-project` + the 7 Agile scopes above) to the embedded
+   `jr` OAuth app's permissions in the Atlassian Developer Console
+   (https://developer.atlassian.com/console/myapps/).
 2. Add a CHANGELOG entry mentioning the resulting re-consent prompt, so existing OAuth users
    aren't surprised when they're asked to re-authorize.
 
 Existing access tokens continue working with the old scopes until expiry; new logins and
-refresh-token mints after the Console change will trigger re-consent.
+refresh-token mints after the Console change will trigger re-consent. The bulk-issue-operations
+API was separately audited and confirmed to need NO scope change (classic `write:jira-work`/
+`read:jira-work` already cover it) — not part of this release-gate item.
 
 **Why tracked here, not just in the CHANGELOG:** this is a release-blocking checklist item, not
 merely a documentation note — a release cut without the Console-side scope grant would ship a

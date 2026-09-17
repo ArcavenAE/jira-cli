@@ -3,9 +3,18 @@ context: bc-3
 title: "Issue Write (create/edit/move/assign/comment/link/open/remote-link)"
 total_bcs: 168   # cumulative claim (incl. range-collapsed); definitional_count below is individually-bodied headings; +12 added 2026-09-12 (BC-3.3.013..015 + BC-3.4.033..037 + BC-3.8.019..022, cycle-012 `field-adf-autoconvert` F2 spec evolution — ADF auto-conversion for `--field` on ADF-backed fields (`:textarea`, `environment`, `description`-via-`--field`) on platform edit, platform create, and JSM create paths; empty-value clear-doc on edit / omit on create/JSM; `customfield_NNNNN` bypass regression pin; `isAdfRequest` accumulation fix for JSM extra fields); was 156 before this addition. Prior: +4 added 2026-09-06 (BC-3.3.012 + BC-3.4.032 + BC-3.5.013 + BC-3.8.018, cycle-005 `adf-mentions` F2 spec evolution, issue #674 — mention resolution wiring for `issue create --description --markdown` (3.3.012), `issue edit --description --markdown` (3.4.032, both dry-run + live call sites), `issue comment add`/`comment edit --markdown` (3.5.013, PRIMARY E2E scenario), JSM `issue create --request-type --markdown` (3.8.018, resolves OQ-1 to in-scope)); was 152 before that addition
 definitional_count: 139   # count of `#### BC-` headings in this file
-last_updated: 2026-09-12
+last_updated: 2026-09-17
 source_pass: 3
 trace: |
+  - cycle-008 `oauth-surface-correctness` F2 gate finalization (2026-09-17, human-approved
+    full-parity decision, ADR-0026): BC-3.2.014 (bulk `issue move` transition) and BC-3.4.018
+    (bulk `issue edit` fields) each gain a cross-reference note closing the audit's bulk-API
+    NEEDS-RESEARCH item as a non-issue — `POST /rest/api/3/bulk/issues/transition`,
+    `POST /rest/api/3/bulk/issues/fields`, and `GET /rest/api/3/bulk/queue/{taskId}` are
+    CONFIRMED covered by the classic `write:jira-work`/`read:jira-work` scopes `jr` already
+    holds (no bulk-specific OAuth scope exists), per
+    `.factory/cycles/cycle-008/oauth-scope-matrix.md` §(a)/(d). No behavior/contract change.
+    COUNT-NEUTRAL: no BC added/removed, total_bcs (168) and definitional_count (139) UNCHANGED.
   - cycle-005 `adf-mentions` F2 spec evolution INTEGRATE sub-burst (2026-09-06, issue #674): +4 BCs added — BC-3.3.012 (§3.3 Create, platform-path mention wiring, mirrors BC-3.3.005 zero-POST-on-failure), BC-3.4.032 (§3.4 Edit, mention resolution at BOTH dry-run and live call sites, preserves the pre-existing dry-run resolution-error-before-preview ordering invariant), BC-3.5.013 (§3.5 Comments, `comment add`/`comment edit --markdown` wiring — `handle_comment_add` gains a new `no_input: bool` parameter; PRIMARY E2E round-trip acceptance scenario per the human-approved scope), BC-3.8.018 (§3.8 JSM Request Create, resolves `delta-analysis.md` OQ-1 to IN-SCOPE — mention resolution runs in the async `handle_jsm_create` caller BEFORE the synchronous `JsmRequestBuilder::build()`). BC-3.3.008, BC-3.4.003, BC-3.4.004, BC-3.5.001, BC-3.5.009, BC-3.8.006 each gain a short `[UPDATED 2026-09-06 issue #674]` cross-reference blockquote to the new wiring BC — no wire-shape change, no separate count. BC count 152→156 (definitional_count 123→127). See `.factory/phase-f2-spec-evolution/prd-delta-674.md`, `.factory/phase-f2-spec-evolution/verification-delta-674.md`.
   - F2 adversary-convergence round-3 amendments (2026-08-26, cycle field-dx — no BC
     added/removed/retired, no count change, still 123 individually-bodied / 152 cumulative in
@@ -649,6 +658,15 @@ by issue #674 markdown-mentions wiring.)
 **Source**: `src/api/jira/bulk.rs::bulk_transition`; `src/types/jira/bulk.rs::BulkTransitionRequest`; `src/types/jira/bulk.rs::BulkTransitionInput`; `src/cli/issue/workflow.rs::handle_move_bulk`
 **Subject**: Issue write
 **Origin**: DOCUMENT-AS-IS (correctness bug fix, live run 27156639337)
+
+> **[CROSS-REFERENCE NOTE, 2026-09-17, cycle-008 `oauth-surface-correctness`, ADR-0026]**
+> `POST /rest/api/3/bulk/issues/transition` and the `GET /rest/api/3/bulk/queue/{taskId}` poll
+> it drives (Invariant 7) are CONFIRMED covered by the classic `write:jira-work`/`read:jira-work`
+> scopes `jr` already holds under OAuth — no bulk-specific scope exists, and 3LO apps are not
+> barred from these endpoints. This resolves the audit's `oauth-endpoint-inventory.md` #20-22
+> NEEDS-RESEARCH item as a non-issue for the transition/poll pair; see
+> `.factory/cycles/cycle-008/oauth-scope-matrix.md` §(a)/(d) for the full analysis. No
+> behavior/contract change.
 
 **Wire schema** — `POST /rest/api/3/bulk/issues/transition` body MUST be:
 
@@ -2573,6 +2591,16 @@ set update; Gate B overlap check; `has_any_field_change` update to include `--fi
 **Description**: When `jr issue edit` is invoked with 2+ positional keys and `--type <NAME>`,
 `handle_edit_bulk_fields` builds a `BulkEditRequest` for `POST /rest/api/3/bulk/issues/fields`.
 This contract governs the canonical wire shape and the name→issueTypeId resolution mechanism.
+
+> **[CROSS-REFERENCE NOTE, 2026-09-17, cycle-008 `oauth-surface-correctness`, ADR-0026]**
+> `POST /rest/api/3/bulk/issues/fields` — the same endpoint underlying every multi-key `issue
+> edit` bulk path (`--type` here, plus `--label`/`--component` at BC-3.4.020/BC-3.4.023) — and
+> the `GET /rest/api/3/bulk/queue/{taskId}` poll it drives are CONFIRMED covered by the classic
+> `write:jira-work`/`read:jira-work` scopes `jr` already holds under OAuth; no bulk-specific
+> scope exists. This resolves the audit's `oauth-endpoint-inventory.md` #20-22 NEEDS-RESEARCH
+> item as a non-issue for the bulk-fields/poll pair; see
+> `.factory/cycles/cycle-008/oauth-scope-matrix.md` §(a)/(d) for the full analysis. No
+> behavior/contract change.
 
 **Preconditions**:
 - 2 or more positional keys are supplied (all in the same Jira project — cross-project guard is BC-3.4.019).

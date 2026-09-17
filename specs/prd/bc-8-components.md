@@ -3,9 +3,19 @@ context: bc-8
 title: "Component Management"
 total_bcs: 28   # brand-new file — no range-collapsed entries; total_bcs == definitional_count
 definitional_count: 28   # count of `#### BC-` headings in this file
-last_updated: 2026-08-19
+last_updated: 2026-09-17
 source_pass: F2
 trace: |
+  - cycle-008 `oauth-surface-correctness` F2 gate finalization (2026-09-17, human-approved
+    full-parity decision, ADR-0026): BC-8.1.005 (create), BC-8.1.007 (edit), BC-8.2.001
+    (delete), and BC-8.3.001 (rename, incl. its `--all-projects` fan-out BC-8.3.002) each gain
+    a cross-reference note — their routing was always correct (`POST`/`PUT`/`DELETE
+    /rest/api/3/component[/{id}]` already address `base_url`, never `instance_url`); a 401
+    under OAuth was a SCOPE problem, now closed by BC-1.3.023's `manage:jira-project` addition
+    (CONFIRMED by `.factory/cycles/cycle-008/oauth-scope-matrix.md`). No new BC authored —
+    routing was never broken, so no behavior/contract change, only the disambiguating note
+    (mirrors the BC-5.1.001 pattern in `bc-5-boards-sprints.md`). COUNT-NEUTRAL: no BC
+    added/removed, total_bcs (28) and definitional_count (28) UNCHANGED.
   - v1.4.2 — F5 feature-level wording amendments (2026-08-19, component-mgmt; no BC
     added/removed/retired, no count change, 28/28): BC-8.4.005 CLARIFIED (O-CS-1) — pins the
     ACTUAL id-listing message all five mutating call sites emit on `ExactMultiple`
@@ -323,6 +333,16 @@ confirmation, both of which assume this exemption)
 `--output json` success data, stderr for the table-mode confirmation line and any error, per
 CLAUDE.md's five output-channel profiles; same profile as the sibling state-changing
 `comment delete` command, BC-3.5.002).
+> **[CROSS-REFERENCE NOTE, 2026-09-17, cycle-008 `oauth-surface-correctness`, ADR-0026]** This
+> BC's routing is, and always has been, CORRECT — `POST /rest/api/3/component` already
+> addresses `base_url` (via `client.post(...)`), never `instance_url`. If this command 401s
+> under an OAuth (3LO) profile, it is a SCOPE problem, not a routing problem:
+> `DEFAULT_OAUTH_SCOPES` lacked the classic `manage:jira-project` scope this endpoint requires
+> (`write:jira-work` does NOT cover component writes — CONFIRMED by
+> `.factory/cycles/cycle-008/oauth-scope-matrix.md`), fixed by BC-1.3.023's finalized-scope-set
+> amendment. A reader debugging this BC's 401 in isolation should consult BC-1.3.023 rather than
+> suspect a routing bug here.
+
 **Behavior**: `--project KEY` is REQUIRED on `create` (clap-required, not config-fallback —
 unlike `list`/`edit`/`delete`, creation has no safe default project to guess and an accidental
 wrong-project create is a real component permanently attached to the wrong project).
@@ -459,6 +479,16 @@ partial update, rename keeps id); `src/cli/component.rs` (pending F4)
 **Output channel profile** **[NEW 2026-08-15, M6 fix-burst]**: 4 (Symmetric — stdout for
 `--output json` success data, stderr for the field-echo confirmation lines and any error, per
 CLAUDE.md's five output-channel profiles; same profile as BC-8.1.005 `create` and BC-3.5.002).
+> **[CROSS-REFERENCE NOTE, 2026-09-17, cycle-008 `oauth-surface-correctness`, ADR-0026]** This
+> BC's routing is, and always has been, CORRECT — `PUT /rest/api/3/component/{id}` already
+> addresses `base_url` (via `client.put_json(...)`), never `instance_url`. If this command 401s
+> under an OAuth (3LO) profile, it is a SCOPE problem, not a routing problem:
+> `DEFAULT_OAUTH_SCOPES` lacked the classic `manage:jira-project` scope this endpoint requires
+> (`write:jira-work` does NOT cover component writes — CONFIRMED by
+> `.factory/cycles/cycle-008/oauth-scope-matrix.md`), fixed by BC-1.3.023's finalized-scope-set
+> amendment. A reader debugging this BC's 401 in isolation should consult BC-1.3.023 rather than
+> suspect a routing bug here.
+
 **Behavior**: `NAME|ID` positional identifies the target component (resolved per §8.4).
 `PUT /rest/api/3/component/{id}` body contains ONLY the fields the user explicitly supplied —
 `--name`, `--description`, `--lead` each independently gate their own body key (`name`,
@@ -790,6 +820,18 @@ shape, structural precedent); `src/cli/component.rs` (pending F4)
 output-channel profiles; same profile as BC-8.1.005/BC-8.1.007/BC-3.5.002). Applies to `jr
 component delete` as a whole (BC-8.2.001..008 are one command's guard/wire-shape contracts,
 not separate profiles).
+> **[CROSS-REFERENCE NOTE, 2026-09-17, cycle-008 `oauth-surface-correctness`, ADR-0026]** This
+> BC's routing is, and always has been, CORRECT — `DELETE /rest/api/3/component/{id}` already
+> addresses `base_url` (via `client.delete(...)`), never `instance_url`. If this command 401s
+> under an OAuth (3LO) profile, it is a SCOPE problem, not a routing problem:
+> `DEFAULT_OAUTH_SCOPES` lacked the classic `manage:jira-project` scope this endpoint requires
+> (`write:jira-work` does NOT cover component writes — CONFIRMED by
+> `.factory/cycles/cycle-008/oauth-scope-matrix.md`; the granular alternative is
+> `delete:project.component:jira`, not adopted here), fixed by BC-1.3.023's finalized-scope-set
+> amendment. The read-only disposition-safety `GET .../relatedIssueCounts` check this BC also
+> issues is unaffected — it is already covered by `read:jira-work`. A reader debugging this
+> BC's 401 in isolation should consult BC-1.3.023 rather than suspect a routing bug here.
+
 **Description**: Component deletion is permanent (research Q1.2: no component trash,
 archive, or undelete endpoint exists on Jira Cloud) and its audit trail is not guaranteed
 (research Q1.3: delete-cascade changelog entries are INCONCLUSIVE, not contractually
@@ -1488,6 +1530,17 @@ confirmed); `src/cli/component.rs` (pending F4)
 CLAUDE.md's five output-channel profiles; same profile as BC-8.1.005/BC-8.1.007/BC-8.2.001).
 Applies to `jr component rename` as a whole, including the `--all-projects` fan-out
 (BC-8.3.002/003) and `--dry-run` (BC-8.3.004) variants — one command, one profile.
+> **[CROSS-REFERENCE NOTE, 2026-09-17, cycle-008 `oauth-surface-correctness`, ADR-0026]** This
+> BC's routing is, and always has been, CORRECT — the `PUT /rest/api/3/component/{id}` it
+> reuses from BC-8.1.007 already addresses `base_url`, never `instance_url` — this applies
+> identically to the `--all-projects` fan-out (BC-8.3.002), which issues the same PUT once per
+> matched project. If this command 401s under an OAuth (3LO) profile, it is a SCOPE problem,
+> not a routing problem: `DEFAULT_OAUTH_SCOPES` lacked the classic `manage:jira-project` scope
+> this endpoint requires (`write:jira-work` does NOT cover component writes — CONFIRMED by
+> `.factory/cycles/cycle-008/oauth-scope-matrix.md`), fixed by BC-1.3.023's finalized-scope-set
+> amendment. A reader debugging this BC's 401 in isolation should consult BC-1.3.023 rather than
+> suspect a routing bug here.
+
 **Behavior**: `rename OLD NEW --project KEY` resolves `OLD` via §8.4, scoped to project `KEY`
 (no cross-project search — the single-project form NEVER touches another project's
 components), then issues `PUT /rest/api/3/component/{id}` with body `{"name": NEW}` (a

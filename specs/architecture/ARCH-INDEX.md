@@ -40,3 +40,4 @@
 | ADR-0023 | Markdown Mention Conversion — Two-Pure-Entrypoints + One-Effectful-Resolver Seam | SS-02, SS-04, SS-05, SS-08 | decisions/ADR-0023-markdown-mention-pure-effectful-conversion-seam.md |
 | ADR-0024 | ADF Auto-Conversion for `--field` on Rich-Text Fields — Allowlist Predicate, Shared Helper, and Empty-Value Semantics | SS-02, SS-04, SS-05, SS-08 | decisions/ADR-0024-adf-autoconversion-for-field-on-richtext-fields.md |
 | ADR-0025 | Raise Minimum Supported Rust Version from 1.85 to 1.88 | SS-02, SS-08, SS-09 | decisions/ADR-0025-raise-msrv-to-1-88.md |
+| ADR-0026 | OAuth 3LO Gateway Routing Invariant and Granular Jira-Software Scopes | SS-02, SS-03, SS-04, SS-05, SS-06, SS-08 | decisions/ADR-0026-oauth-3lo-gateway-routing-invariant-and-granular-jira-software-scopes.md |

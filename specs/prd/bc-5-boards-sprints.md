@@ -10,6 +10,10 @@ trace: |
   - Source broad: .factory/semport/jira-cli/jira-cli-pass-3-behavioral-contracts.md §2.5
   - Source R4: .factory/semport/jira-cli/jira-cli-pass-3-deep-r4.md §3.7 (BC-1138)
   - F2 addition (2026-06-30): BC-5.1.005 — `board view` scrum/kanban dispatch + truncation hint stderr + `--all` suppression (BC-subclause-pass F2)
+  - cycle-008 `oauth-surface-correctness` F2 spec evolution (2026-09-17), ADR-0026 — BC-5.1.001
+    gains a cross-reference note (its routing was always correct; a 401 under OAuth is a SCOPE
+    problem fixed by BC-1.3.023, disambiguated by new BC-X.15.001 in cross-cutting.md).
+    COUNT-NEUTRAL: no BC added/removed, total_bcs (36) and definitional_count (18) UNCHANGED.
 ---
 
 # BC-5 — Boards & Sprints
@@ -29,7 +33,19 @@ Team column parity (5.3), API layer (5.4).
 **Source**: `tests/board_commands.rs::list_boards_with_project_and_type_filter`; `tests/sprint_commands.rs::mount_prereqs`
 **Subject**: Boards & Sprints
 **Behavior**: Boards filtered by `projectKeyOrId=PROJ` + `type=scrum|kanban`.
-**Trace**: Pass 3 BC-401
+
+> **[CROSS-REFERENCE NOTE, 2026-09-17, cycle-008 `oauth-surface-correctness`, ADR-0026]** This
+> BC's routing is, and always has been, CORRECT — this GET already addresses `base_url` (via
+> `client.get(...)`), never `instance_url`; it was never one of the 7 call sites ADR-0026 Decision
+> 1/BC-4.2.001 corrects. If this command 401s under an OAuth (3LO) profile, it is a SCOPE problem,
+> not a routing problem: `DEFAULT_OAUTH_SCOPES` lacked the granular `read:board-scope:jira-software`/
+> `read:project:jira` scopes the Agile REST API requires, fixed by BC-1.3.023's ADR-0026 Decision 2
+> amendment. The disambiguated 401 error message for this class is BC-X.15.001
+> (`cross-cutting.md`) — a reader debugging this BC's 401 in isolation should consult BC-1.3.023
+> and BC-X.15.001 rather than suspect a routing bug here.
+
+**Trace**: Pass 3 BC-401; cycle-008 `oauth-surface-correctness` F2 spec evolution (2026-09-17) —
+cross-reference note added per ADR-0026/F1-delta-analysis §3, no behavior change, no count change.
 
 ---
 
