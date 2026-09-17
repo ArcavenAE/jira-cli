@@ -45,6 +45,7 @@ in both repos, so syncs are conflict-free.
 | `SYNC_UPSTREAM_REPO` | `owner/repo` to merge from on a schedule (forks only) | unset |
 | `GITLEAKS_DISABLED` | `'true'` disables the gitleaks secret-scan job in `ci.yml`; for forks that cannot obtain a gitleaks org/commercial license or prefer an alternative scanner | unset |
 | `MUTANTS_NIGHTLY_ENABLED` | `'true'` runs the advisory `mutants-nightly.yml` full mutation nightly; unset skips it cleanly | `'true'` (the canonical repo sets it to keep the nightly it has always run; forks leave it unset) |
+| `SCORECARD_ENABLED` | `'true'` enables the OpenSSF Scorecard analysis job in `scorecards.yml` (weekly schedule, push to `develop`, branch-protection changes); unset skips it, so forks do not publish scorecard results for a copy of the repo | `'true'` (the job is skipped otherwise, so the canonical repo sets it) |
 
 This is the same fail-safe pattern as `vars.JR_E2E_ENABLED`
 (`docs/specs/e2e-fork-safe-ci-enablement.md`): scheduling-time gates on
