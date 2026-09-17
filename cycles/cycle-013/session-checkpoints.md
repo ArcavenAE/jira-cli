@@ -214,3 +214,22 @@ INCONSISTENT->RESOLVED via PR #822 + this burst's ADR-0025 prose fix). Archived 
 
 **Resume command (historical, as recorded at v4.49):** /vsdd-factory:rehydrate-wave then /vsdd-factory:next-step (superseded -- see the v4.50 checkpoint for the actual next step, which is running the maintenance-sweep scan phase).
 ```
+
+## Checkpoint v4.51 (archived from STATE.md during the v4.51->v4.52 CYCLE-008-OPENED burst, 2026-09-17)
+
+| Field | Value |
+|-------|-------|
+| **Date** | 2026-09-17 |
+| **Position** | **Maintenance sweep COMPLETE.** `develop` @ `0496834d` (12 PRs squash-merged this sweep: `01e278fc`->`0496834d`). cycle-013 (`msrv-1.88-bump`) remains **CLOSED + RELEASED as v0.7.0-dev.7** (`DEC-367`); no cycle ACTIVE (008-011 remain PARKED). Pipeline **PAUSED**. |
+| **Convergence counter** | N/A -- no active adversarial/convergence loop. The maintenance-sweep scan/fix/merge cycle just completed is not a cycle convergence pass. |
+| **In-flight work** | none. Maintenance sweep fully closed: 13 findings, 12 fixes applied (PRs merged), 0 fixes pending. `STATE.md`, `maintenance/sweep-report-2026-09-16.md`, `cycles/OPEN-STANDING-ITEMS.md`, and the 7 scan-artifact files under `maintenance/` committed that burst. |
+
+### Resume Prompt
+
+```
+**Date:** 2026-09-17. Maintenance sweep COMPLETE. develop @ 0496834d (12 PRs squash-merged this sweep: 01e278fc->0496834d). cycle-013 (msrv-1.88-bump) remains CLOSED + RELEASED as v0.7.0-dev.7 (DEC-367); no cycle ACTIVE (008-011 remain PARKED). Pipeline PAUSED. Pending human decisions / blockers: none blocking the pipeline (it stays PAUSED regardless). Outstanding for a future session: dedup decision on the #827/#628 duplicate PR pair; separate review of #574; removal-trigger checks on the two deny.toml transitional skips (syn 2/3, windows_i686_gnullvm 0.53); the jni/rustls-platform-verifier windows-sys-convergence opportunity as a candidate small fix PR. Advisory: settings.json lacks CLAUDE_AUTOCOMPACT_PCT_OVERRIDE (recommend 70) -- operator's call.
+
+**Note (superseded by the v4.52 CYCLE-008-OPENED burst):** a human-supplied bug-fix feature request arrived this session, sourced from live OAuth E2E testing (2026-09-17, read-only, no live mutations): two root-caused OAuth-surface defects (a 9-call-site instance-URL routing bug across JSM/Teams/Assets, masked under api-token auth by base_url==instance_url; and an OAuth Agile-scope gap blocking board/sprint) plus one misleading error-message defect. Feature Mode cycle-008 (`oauth-surface-correctness`) was OPENED and its F1 input brief written to `cycles/cycle-008/feature-request.md`; pipeline flips PAUSED -> FEATURE-MODE, F1 delta analysis STARTING. See STATE.md's current Session Resume Checkpoint for the true, reconciled position.
+
+**Resume command (historical, as recorded at v4.51):** pick up the next PARKED cycle (008-011), or run the next maintenance sweep when due (superseded -- see the v4.52 checkpoint for the actual next step, which is /vsdd-factory:phase-f1-delta-analysis for cycle-008).
+```
