@@ -22,7 +22,7 @@ inputs:
   - ".factory/specs/prd/bc-4-assets-cmdb.md"
   - "src/api/assets/workspace.rs"
   - "src/api/client.rs"
-input-hash: "a7f6dfc"
+input-hash: "ea19c3e"
 traces_to: "ADR-0026 Decision 1; BC-4.2.001 unified fix table row 7"
 cycle: cycle-008-oauth-surface-correctness
 estimated_effort: xsmall
@@ -65,7 +65,7 @@ acceptance_criteria_count: 5
 assumption_validations: []
 risk_mitigations: []
 created: "2026-09-17"
-version: "1.0"
+version: "1.1"
 last_updated: "2026-09-17"
 breaking_change: false
 retroactive: false
@@ -86,9 +86,10 @@ origin: >
 > **tdd_mode:** `strict` — this is a real, correctness-relevant routing fix
 > on the sole prerequisite call for the entire Assets command family
 > (`module_criticality: HIGH` despite the narrow 1-function blast radius,
-> because the whole `jr assets *` surface plus `issue list --component`'s
-> asset-clause path and `--field :asset` resolution are all gated behind
-> this one call). The RED-before-GREEN proof uses the same
+> because the whole `jr assets *` surface plus `issue list --asset`'s
+> asset-clause path, `issue list --assets`'s asset-enrichment column, and
+> `--field :asset` resolution are all gated behind this one call). The
+> RED-before-GREEN proof uses the same
 > `JiraClient::new_for_test_with_instance_url` seam as the sibling JSM
 > routing story.
 
@@ -101,9 +102,10 @@ origin: >
 - **As a** `jr` user authenticated via OAuth (3LO)
 - **I want to** have `get_or_fetch_workspace_id` route its `servicedeskapi` workspace-discovery
   request through the API gateway (`base_url`) instead of the site host (`instance_url`)
-- **So that** `jr assets search/view/schemas/tickets`, `issue list --component`'s asset-clause
-  path, and `issue create/edit --field :asset` resolution all stop 401-ing under OAuth, while
-  remaining byte-for-byte unchanged for API-token profiles
+- **So that** `jr assets search/view/schemas/tickets`, `issue list --asset`'s asset-clause path,
+  `issue list --assets`'s asset-enrichment column, and `issue create/edit --field :asset`
+  resolution all stop 401-ing under OAuth, while remaining byte-for-byte unchanged for
+  API-token profiles
 
 ## Behavioral Contracts
 
@@ -156,9 +158,9 @@ for this AC beyond what AC-001/AC-002 add.
 
 ### AC-005 (traces to CLAUDE.md conventions — CHANGELOG delivery task)
 `CHANGELOG.md`'s `[Unreleased]` section gains a `Fixed` entry describing: `jr assets search/view/
-schemas/tickets`, `issue list --component`, and `issue create/edit --field :asset` now work under
-OAuth (3LO) profiles (previously 401'd due to wrong-host workspace-ID discovery); no behavior
-change for API-token profiles.
+schemas/tickets`, `issue list --asset`/`--assets`, and `issue create/edit --field :asset` (incl.
+JSM `create --request-type --field :asset`) now work under OAuth (3LO) profiles (previously
+401'd due to wrong-host workspace-ID discovery); no behavior change for API-token profiles.
 **Test:** N/A (doc artifact); presence check via PR review.
 
 ## Architecture Mapping

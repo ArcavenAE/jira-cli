@@ -54,3 +54,40 @@ traces_to: STATE.md
 ```
 
 ---
+
+## Session Resume Checkpoint (2026-09-17) — cycle-008 PAUSED mid-F4 Wave 1 (pre-implementation), session-wrap checkpoint
+
+### Spec Versions
+
+| Artifact | Version |
+|----------|---------|
+| STATE.md | v4.56 |
+
+### State
+
+| Field | Value |
+|-------|-------|
+| **Date** | 2026-09-17 |
+| **Position** | cycle-008 (`oauth-surface-correctness`) at Phase F4 (delta implementation), Wave 1 NOT yet started. F1/F2/F3 all APPROVED (`DEC-368`/`DEC-369`/`DEC-370`). S1 worktree created (`.worktrees/cycle8-s1-jsm-oauth-routing`, branch `fix/cycle8-jsm-oauth-routing` @ develop base `0793b9c5`) but no code/tests landed yet -- the S1 Red-Gate test-writer was dispatched then stopped cleanly at wrap. |
+| **Convergence counter** | N/A -- no active adversarial/convergence loop yet in F4. |
+| **Next step** | Resume F4 Wave 1: re-run S1 Red-Gate (test-writer), then implementer, per-story adversarial, demo, PR; then S2/S3/S4 (parallel, W1), S5 (W2, depends on S1), S6 Teams spike (non-gating). |
+
+### Resume Prompt
+
+```
+**Date & position:** 2026-09-17. cycle-008 (`oauth-surface-correctness`) at Phase F4 (delta implementation), Wave 1 NOT yet started. F1/F2/F3 all APPROVED (`DEC-368`/`DEC-369`/`DEC-370`). S1 worktree created (`.worktrees/cycle8-s1-jsm-oauth-routing`, branch `fix/cycle8-jsm-oauth-routing` @ develop base `0793b9c5`) but no code/tests landed yet. NEXT = resume F4 Wave 1: re-run S1 Red-Gate (test-writer), then implementer, per-story adversarial, demo, PR; then S2/S3/S4 (parallel, W1), S5 (W2, depends on S1), S6 Teams spike (non-gating).
+
+**Convergence counter:** N/A -- no active adversarial/convergence loop yet in F4.
+
+**In-flight work:** S1 Red-Gate test-writer was dispatched then STOPPED at wrap with nothing landed (worktree clean at develop base) -- re-dispatch cleanly on resume, no partial state to reconcile. S2/S3/S4/S5 not started. S6 spike not started. The 6 cycle-008 stories are committed (STORY-INDEX.md total_stories 191).
+
+**Pending human decisions / blockers:** (1) CYCLE-008-CONSOLE-SCOPE-RELEASE-GATE -- human-owned pre-RELEASE blocker. (2) GitHub #831 tracked, closes at cycle-008 F7/merge (not yet). (3) Non-blocking process-gaps logged in cycles/OPEN-STANDING-ITEMS.md. (4) Advisory: settings.json lacks CLAUDE_AUTOCOMPACT_PCT_OVERRIDE (recommend 70). (5) Teams S7 re-platform deferred pending S6 spike.
+
+**WIP branch list:** fix/cycle8-jsm-oauth-routing @ 0793b9c5 (no commits ahead of develop -- clean worktree, created but no WIP; branch not pushed, nothing to push). No other cycle-008 WIP branches.
+
+**Resume command:** /vsdd-factory:rehydrate-wave then /vsdd-factory:next-step.
+
+**Counts:** total_bcs 770 (unchanged); VP count 89 (unchanged); holdout scenarios 118 (unchanged); total_stories 191 (unchanged). Prior checkpoint (STATE.md v4.55, cycle-008-F3-approved state) archived verbatim above.
+```
+
+---

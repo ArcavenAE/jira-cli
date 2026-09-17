@@ -789,3 +789,78 @@ opportunity spotted during this sweep's dependency audit: bumping `jni` to 0.22.
 Not actioned this sweep (out of scope -- discovered as a byproduct of the syn/windows-targets
 investigation, not itself a blocker). Candidate action: pick up as a small fix PR in a future
 maintenance sweep.
+
+## cycle-008 F4 Wave 1 delivery burst — process-gap findings (2026-09-17)
+
+**Status:** OPEN, all needing a follow-up story or justified deferral per S-7.02 discipline.
+Surfaced during the cycle-008 F4 Wave 1 delivery burst that produced PRs #832/#833/#834/#835 (all
+4 CI-green, pr-reviewer APPROVE-verdict-as-COMMENTED, HELD at the human consolidated merge gate,
+none merged this burst). Not content defects in any spec/code artifact.
+
+**`CYCLE-008-PR-MANAGER-COMPLETION-GUARD-FALSE-AUTHORIZE`** (recurrence of
+`CYCLE-013-PR-MANAGER-COMPLETION-GUARD-PREMATURE-STOP`) -- **[SAFETY]** The
+`pr-manager-completion-guard` `SubagentStop` hook asserted, repeatedly (5+ times this session), a
+FALSE `AUTHORIZE_MERGE=yes per dispatch convention` claim and pushed dispatched `pr-manager`
+sub-agents toward merging PRs #832/#833/#834/#835 without the human consolidated merge-gate signal
+this burst's dispatch explicitly required. Only agent good-judgment (declining to act on the
+hook's false claim, verifying against the actual dispatch instructions instead) prevented an
+unauthorized merge each time. This is a **recurrence**, not a new class -- the underlying guard
+defect (a `SubagentStop` hook asserting merge authorization state it cannot actually verify) was
+already tracked as `CYCLE-013-PR-MANAGER-COMPLETION-GUARD-PREMATURE-STOP` and evidently was not
+fixed between cycle-013 and cycle-008. Escalating severity to **[SAFETY]** given the 5+ repeat
+count in one session and the fact that good judgment, not a structural control, is the only thing
+preventing an unauthorized merge. Candidate fix: the hook must stop asserting a merge-authorization
+verdict it has no way to actually know; it should either omit any `AUTHORIZE_MERGE` claim entirely
+or derive it from a verifiable, dispatch-scoped source (e.g. a flag explicitly passed at dispatch
+time) rather than a blanket "per dispatch convention" default. Needs a human hook-config fix.
+Target: a future self-improvement/maintenance cycle (engine-level hook, `vsdd-factory` repo).
+
+**`CYCLE-008-SELF-APPROVAL-STRUCTURAL-GAP`** -- Repo-wide, affects every PR (observed again on
+#832/#833/#834/#835 this burst): the single GitHub identity that authors every factory PR is the
+same identity configured to review it, so `gh pr review --approve` 422s with GitHub's own
+self-approval rejection, and the `validate-pr-review-posted` hook (see
+`CYCLE-013-VALIDATE-PR-REVIEW-POSTED-HOOK-MISMATCH`, still open) can never observe a native
+GitHub APPROVE state. Each PR's review lands as a COMMENTED review carrying an explicit APPROVE
+verdict in its body/summary instead. Merging therefore requires a human admin-bypass of branch
+protection, or provisioning a genuinely separate second reviewer account -- neither of which this
+burst's dispatch was authorized to do, which is why all 4 PRs are correctly HELD rather than
+merged. Candidate fix: same as `CYCLE-013-VALIDATE-PR-REVIEW-POSTED-HOOK-MISMATCH`'s candidate --
+accept a committed review-artifact/COMMENTED-with-verdict review as satisfying the gate when
+author and reviewer are the same identity, or formalize the human-admin-bypass step as the
+documented, expected path for a solo-maintainer topology rather than an exception. Target: a
+future self-improvement/maintenance cycle (engine-level hook, `vsdd-factory` repo).
+
+**`CYCLE-008-NESTED-SUBAGENT-STALL-RECURRENCE`** (recurrence of
+`CYCLE-013-PR-REVIEWER-SUBAGENT-STALL`) -- Nested sub-agent dispatches (`github-ops`,
+`pr-reviewer`) stalled under concurrency load this burst (4 stories delivered in parallel/near-parallel
+across S1-S4) -- the stalled sub-agents had completed real work (pushes, review content) but failed
+to hand back a result to their dispatching `pr-manager`. Workaround applied, consistent with the
+cycle-013 precedent: `pr-manager`s performed `git push`/`gh`/review actions directly via Bash
+rather than waiting further on the stalled sub-agent. Confirms this as a **recurring** infra issue
+across cycles, not cycle-013-specific. Root cause still unknown; candidate fix unchanged from the
+cycle-013 entry (timeout/retry policy + stall telemetry on sub-agent dispatch). Target: a future
+self-improvement/maintenance cycle (engine-level, `vsdd-factory` repo).
+
+**`CYCLE-008-WORKTREE-IDENTITY-PREFLIGHT-GAP`** -- Flagged independently by the S1, S3, and S4
+per-story adversarial passes this burst: worktree basenames created for this burst's stories do
+not match their story-id (naming drift), and story dispatches omit the feature-branch-HEAD-SHA
+identity tuple the adversary's "Worktree-Identity Preflight" check expects, so that preflight
+cannot run strictly -- it degrades to a best-effort check rather than a hard gate. Did not block
+any of the 3 passes' convergence (each still reached 3 clean passes), but the preflight's intended
+guarantee (that the adversary is reviewing the code it thinks it's reviewing) is weaker than
+designed. Candidate fix: reconcile worktree naming to always equal the story-id, and have story
+dispatch always include the feature-branch HEAD SHA at hand-off so the tuple exists for the
+preflight to check. Target: a future self-improvement/maintenance cycle (process convention,
+applies to `deliver-story`/per-story-delivery orchestration).
+
+**Carried forward, non-blocking, out-of-scope this cycle (not new items, restated for burst
+continuity):**
+- S3 OBS-2 -- pre-existing `let _ = write_workspace_cache` call site uses `let _ =` rather than
+  `.ok()`, deviating from the `.ok()`-discard convention CLAUDE.md documents for the sibling
+  `write_cmdb_fields_cache`/`write_object_type_attr_cache` model-b writers. Not touched this burst
+  (S3's story scope is the 1-site routing swap only); candidate follow-up: a small doc-hygiene/
+  consistency fix PR normalizing this call site to `.ok()`.
+- S3/S4 stale historical design-doc -- `docs/superpowers/specs/2026-03-24-assets-cmdb-design.md`'s
+  routing prose predates the OAuth gateway-routing fix and no longer accurately describes the
+  `get_or_fetch_workspace_id` call path. Doc-hygiene follow-up, not a blocker; candidate: update
+  or annotate as historical in a future maintenance sweep.
