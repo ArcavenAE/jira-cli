@@ -10,6 +10,41 @@
 > `MUTANTS-NIGHTLY-VERIFY-FULL-RUN`, `STATE-MD-OVER-SOFT-TARGET`) stay
 > inline in STATE.md itself and are NOT duplicated here except where noted.
 
+## cycle-008 RELEASE GATE — Atlassian Developer Console scope-add (2026-09-17, F1 approval)
+
+**ID:** `CYCLE-008-CONSOLE-SCOPE-RELEASE-GATE`
+**Severity:** RELEASE-GATE — hard pre-release blocker, human-owned. Does NOT block F2-F6 pipeline
+work for cycle-008; it blocks only shipping a release that carries the cycle's content.
+**Status:** OPEN, PENDING.
+
+**What:** cycle-008 (`oauth-surface-correctness`)'s F1 delta-analysis human gate (`DEC-368`,
+2026-09-17) locked S2 into scope: adding granular `jira-software` OAuth scopes to
+`DEFAULT_OAUTH_SCOPES` (`src/api/auth.rs`) to fix the `board`/`sprint` "scope does not match" 401 —
+`read:board-scope:jira-software`, `read:project:jira`, `read:sprint:jira-software`,
+`read:issue-details:jira`, `read:jql:jira`, plus `read:board-scope.admin:jira-software` for board
+config and `write:board-scope:jira-software` per the F1 note for backlog support. Per the
+documented `CLAUDE.md` procedure for `DEFAULT_OAUTH_SCOPES` changes, **before any release
+carrying this cycle's content ships**, a human must:
+
+1. Add these granular scopes to the embedded `jr` OAuth app's permissions in the Atlassian
+   Developer Console (https://developer.atlassian.com/console/myapps/).
+2. Add a CHANGELOG entry mentioning the resulting re-consent prompt, so existing OAuth users
+   aren't surprised when they're asked to re-authorize.
+
+Existing access tokens continue working with the old scopes until expiry; new logins and
+refresh-token mints after the Console change will trigger re-consent.
+
+**Why tracked here, not just in the CHANGELOG:** this is a release-blocking checklist item, not
+merely a documentation note — a release cut without the Console-side scope grant would ship a
+client that requests scopes the OAuth app isn't authorized for, breaking the S2 fix in the field.
+
+**Resolution:** PENDING. Clear this item (mark RESOLVED, move to
+`cycles/RESOLVED-DRIFT-ITEMS.md`) only after the Console permission add is confirmed done and the
+CHANGELOG re-consent note is written, both before the release that ships cycle-008's S2 change.
+Also tracked in `.factory/STATE.md`'s `## Blocking Issues` table (same ID).
+
+---
+
 ## cycle-012 Phase F5 follow-ups — M-2, OBS-A, OBS-3 (2026-09-15, Burst 3)
 
 **Status:** OPEN, all LOW, non-blocking. Surfaced by Phase F5 scoped adversarial refinement (code-reviewer
