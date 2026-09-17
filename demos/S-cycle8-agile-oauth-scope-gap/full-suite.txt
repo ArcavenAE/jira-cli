@@ -1,0 +1,56 @@
+=== AC-005 (regression) + general regression safety net: full `cargo test --lib` suite ===
+
+Trace: BC-1.3.023 (regression safety net, no clause-specific trace); ADR-0026 Decision 2/2a
+
+What this proves:
+  Because this story edits a module-scoped `pub const` string literal that
+  every OAuth login/refresh code path reads, a full-library regression run
+  is the honest way to prove the change is additive-only and introduces no
+  compile or behavioral regression anywhere else in the tree — not just in
+  the auth module. This is broader than any single AC; it is the story's
+  overall "nothing else broke" evidence, requested in the story's own Task
+  10 ("Run full cargo test, cargo clippy -- -D warnings, cargo fmt --all --
+  --check").
+
+  1487 tests pass, 0 fail. The 48 ignored tests are the pre-existing gated
+  suites documented in CLAUDE.md's "AI Agent Notes" table (keyring
+  round-trip tests behind JR_RUN_KEYRING_TESTS=1, live-Jira E2E tests behind
+  JR_RUN_E2E=1, OAuth integration tests behind JR_RUN_OAUTH_INTEGRATION=1) —
+  none of them are newly ignored by this story; this is the same ignored
+  count as before the change (unit-test scope only, no network/keychain
+  access, consistent with repo policy against live mutations without
+  explicit approval).
+
+Command:
+  cargo test --lib
+
+Output (tail — full 1487-test listing omitted for length; last lines shown):
+test types::jira::issue::tests::team_id_accepts_object_shape_with_string_id ... ok
+test types::jira::issue::tests::team_id_returns_none_for_array_value ... ok
+test types::jira::issue::tests::team_id_reads_string_value ... ok
+test types::jira::issue::tests::team_id_returns_none_for_missing_key ... ok
+test types::jira::issue::tests::team_id_returns_none_for_null_value ... ok
+test types::jira::issue::tests::team_id_returns_none_for_object_with_non_string_id ... ok
+test types::jira::issue::tests::team_id_returns_none_for_object_with_null_id ... ok
+test types::jira::issue::tests::team_id_returns_none_for_object_without_id_key ... ok
+test types::jira::issue::tests::test_bc_2_3_040_embedded_component_id_absent_deserializes_none ... ok
+test types::jira::issue::tests::test_bc_2_3_040_embedded_component_id_present_deserializes_some ... ok
+test types::jira::issue::tests::version_optional_fields_absent ... ok
+test types::jsm::queue::tests::deserialize_queue_issue_key ... ok
+test types::jsm::queue::tests::deserialize_queue_issue_key_ignores_extra_fields ... ok
+test types::jsm::queue::tests::deserialize_queue_with_all_fields ... ok
+test types::jsm::queue::tests::deserialize_queue_without_optional_fields ... ok
+test cli::issue::field_resolve::tests::prop_bc_3_4_033_is_adf_field_fires_only_on_allowlist ... ok
+test jql::proptests::escaped_value_never_has_unescaped_quote ... ok
+test config::proptests_env_tag::prop_profile_config_env_some_round_trips ... ok
+test partial_match::proptests::never_panics_on_arbitrary_input ... ok
+test config::proptests_env_tag::prop_profile_config_env_none_round_trips_as_none ... ok
+test config::proptests_env_tag::prop_profile_config_env_absent_key_always_none ... ok
+test cli::issue::field_resolve::tests::prop_bc_3_4_033_dispatch_field_value_adf_backed_returns_adf_object ... ok
+test adf::tests::prop_492_block_html_holds_core_invariants ... ok
+test adf::tests::prop_492_block_html_round_trip_line_structure_lossless ... ok
+test api::jira::bulk::unknown_status_grace_tests::test_336_persistent_unknown_status_escalates_to_err_after_grace ... ok
+test api::jira::bulk::unknown_status_grace_tests::test_336_known_status_sequence_returns_ok_without_escalation ... ok
+test api::jira::bulk::unknown_status_grace_tests::test_336_transient_unknown_then_known_resets_tracker ... ok
+
+test result: ok. 1487 passed; 0 failed; 48 ignored; 0 measured; 0 filtered out; finished in 1.27s

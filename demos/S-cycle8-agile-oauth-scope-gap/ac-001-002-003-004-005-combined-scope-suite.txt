@@ -1,0 +1,46 @@
+=== AC-001..005 combined: all OAuth-scope-related unit tests in one run ===
+
+Trace: BC-1.3.023 (all clauses); ADR-0026 Decision 2/2a
+
+What this proves:
+  A single cargo test invocation filtered to "oauth_scopes" pulls in every
+  test that touches DEFAULT_OAUTH_SCOPES, resolve_oauth_scopes, or the
+  config layer's oauth_scopes field — the full regression net for this
+  story, run together rather than one test at a time. All 11 tests pass,
+  confirming:
+    - the new 16-scope pinning test (AC-001..004, this story's primary
+      subject)
+    - the pre-existing resolve_oauth_scopes contract tests (profile
+      selection, None-returns-default, trim/collapse whitespace,
+      empty/whitespace-only-is-config-error, no-shape-validation) are all
+      still green — none of them needed to change because AC-005 holds
+      (resolve_oauth_scopes itself is untouched)
+    - the pre-existing test_default_oauth_scopes_include_servicedesk_request
+      subset-check (one of the 8 pre-existing scopes) still passes,
+      confirming no pre-existing scope was accidentally dropped or reordered
+      out of the literal during the expansion
+    - the config-layer oauth_scopes parsing/migration tests are unaffected
+      by this story (they operate one layer below DEFAULT_OAUTH_SCOPES and
+      have no dependency on its contents)
+
+Command:
+  cargo test --lib oauth_scopes -- --nocapture
+
+Output:
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 0.12s
+     Running unittests src/lib.rs (target/debug/deps/jr-4250bcafccde324f)
+
+running 11 tests
+test cli::auth::tests::resolve_oauth_scopes_inspects_passed_profile_not_active ... ok
+test cli::auth::tests::test_default_oauth_scopes_include_servicedesk_request ... ok
+test cli::auth::tests::default_oauth_scopes_pins_the_full_set_with_offline_access ... ok
+test cli::auth::tests::resolve_oauth_scopes_none_returns_default ... ok
+test cli::auth::tests::resolve_oauth_scopes_trims_and_collapses_whitespace ... ok
+test cli::auth::tests::resolve_oauth_scopes_does_not_validate_scope_shape ... ok
+test config::tests::migrate_legacy_with_only_oauth_scopes_set_creates_profile ... ok
+test cli::auth::tests::resolve_oauth_scopes_empty_string_is_config_error ... ok
+test cli::auth::tests::resolve_oauth_scopes_whitespace_only_is_config_error ... ok
+test config::tests::instance_config_oauth_scopes_missing_is_none ... ok
+test config::tests::instance_config_parses_oauth_scopes_from_toml ... ok
+
+test result: ok. 11 passed; 0 failed; 0 ignored; 0 measured; 1524 filtered out; finished in 0.01s

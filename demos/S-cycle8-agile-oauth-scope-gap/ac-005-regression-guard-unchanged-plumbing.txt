@@ -1,0 +1,60 @@
+=== AC-005: resolve_oauth_scopes / build_authorize_url are UNCHANGED — regression guard ===
+
+Test: src/cli/auth/tests/mod.rs::resolve_oauth_scopes_inspects_passed_profile_not_active
+Trace: BC-1.3.023 "No change is required to the auth-URL builder" clause
+
+What this proves:
+  This story is a pure constant-literal expansion (8 -> 16 scopes) in
+  src/api/auth.rs::DEFAULT_OAUTH_SCOPES. AC-005 requires that the
+  downstream plumbing which reads this constant and builds the OAuth
+  authorize URL — src/cli/auth/login.rs::resolve_oauth_scopes and
+  src/api/auth.rs::build_authorize_url — is UNCHANGED by this story. Both
+  functions already emit the full scope-union string with `prompt=consent`
+  hardcoded, which already satisfies Atlassian's "always request the full
+  intended union on every new consent" requirement regardless of how many
+  scopes are in the set.
+
+  This test is a regression guard, not a new-behavior test: it asserts
+  resolve_oauth_scopes reads the *passed* profile (not the active one) when
+  a profile has a custom oauth_scopes override — proving the resolution
+  function's contract is untouched and still correctly profile-scoped after
+  the DEFAULT_OAUTH_SCOPES literal grew. If this story had accidentally
+  touched resolve_oauth_scopes's profile-selection logic while editing the
+  adjacent constant, this test would catch it.
+
+  The zero-diff claim itself (no lines changed in login.rs or
+  build_authorize_url) is confirmed directly against the source tree below,
+  not just inferred from this test passing.
+
+Command:
+  cargo test --lib cli::auth::tests::resolve_oauth_scopes_inspects_passed_profile_not_active -- --nocapture --exact
+
+Output:
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 0.11s
+     Running unittests src/lib.rs (target/debug/deps/jr-4250bcafccde324f)
+
+running 1 test
+test cli::auth::tests::resolve_oauth_scopes_inspects_passed_profile_not_active ... ok
+
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 1534 filtered out; finished in 0.00s
+
+Direct diff-scope confirmation (run against fix/cycle8-agile-oauth-scopes,
+commit 4f452445f95e07eedc9be8ad83ed580d30e8cb79):
+
+  $ git diff develop...HEAD -- src/cli/auth/login.rs
+  (no output — zero lines changed)
+
+  $ git diff develop...HEAD --stat
+   CHANGELOG.md              |  16 +++++++
+   README.md                 |   9 +++-
+   src/api/auth.rs           |  38 ++++++++++++++---
+   src/cli/auth/tests/mod.rs | 104 ++++++++++++++++++++++++++++++++++++++++++----
+   4 files changed, 151 insertions(+), 16 deletions(-)
+
+  login.rs is not in the changed-file list at all — confirming AC-005's
+  zero-line-changed claim for resolve_oauth_scopes. The src/api/auth.rs
+  diff is scoped to the DEFAULT_OAUTH_SCOPES literal and its doc comment
+  (build_authorize_url itself, elsewhere in the same file, is untouched —
+  confirmed by reading the function body at commit 4f452445, which still
+  consumes DEFAULT_OAUTH_SCOPES/resolve_oauth_scopes's return value
+  opaquely with no scope-count-dependent logic).
