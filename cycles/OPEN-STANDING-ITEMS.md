@@ -1005,3 +1005,41 @@ entries -- the hook likely re-checks a stale read or a regex anchor that doesn't
 leading `→` character; needs a reproduction with the exact `STATE.md` byte content from this
 burst. Target: a future self-improvement/maintenance cycle (engine-level hook, `vsdd-factory`
 repo).
+
+## cycle-008 F5 scoped adversarial -- justified deferrals (S-7.02 cycle-closing checklist, 2026-09-18)
+
+**Status:** CLOSED-BY-DEFERRAL. F5 (scoped adversarial review of the whole cycle-008 delta,
+`0793b9c5`..`fc608cd3`) CONVERGED via 3 clean adversary passes (novelty HIGH -> LOW -> 0.10). Two
+of Pass 1's four findings (F1, F3) were FIXED via FIX-F5-001 (PR `#844`, merged @ `fc608cd3`); the
+remaining two (F2, F4) plus the pre-existing release-gate item are justified deferrals recorded
+here per S-7.02 -- full detail: `cycles/cycle-008/phase-f5-adversarial/convergence-summary.md`.
+
+**`CYCLE-008-F5-KEYRING-WIRING-COVERAGE`** (= F5 Pass 1 finding F2, MEDIUM test-quality) --
+the post-refresh double-fault classification wiring in `src/api/client.rs` (landed `578a7848`,
+wave-gate fix `#836`) has no CI-running test coverage, only `#[ignore]`d keyring-gated integration
+tests. Same structural limitation as every other keyring-dependent code path in this repo (Linux
+CI may lack secret-service; macOS prompts on novel service names) -- not a novel defect, an
+inherited one. Candidate fix: a mockable keyring test seam, which does not currently exist.
+Target: a future test-infrastructure investment, not a cycle-008 fix.
+
+**`CYCLE-008-F5-INIT-MAPERR-MUTANT-RESIDUAL`** (= F5 Pass 1 finding F1's residual after FIX-F5-001,
+LOW mutation-testing residual) -- FIX-F5-001 added a CI-running test pinning `init.rs`'s
+`list_boards` scope-hint STRING through the shared `is_insufficient_scope_error` helper, closing
+the coverage gap Pass 1 flagged. A mutant deleting `init.rs`'s own `.map_err` wiring specifically
+(distinct from the shared helper, which the new tests do cover) still survives CI, since the new
+test does not independently prove that call site is reached only through the intended error path.
+Accepted per the FIX-F5-001 story spec's scope (shared-helper + string-pin coverage, not
+full mutation-kill on every call site). Target: a future mutation-hardening pass (candidate for
+Phase F6 targeted hardening, which is scoped to this exact delta).
+
+**F4-cosmetic** (= F5 Pass 1 finding F4, COSMETIC) -- a discarded `NotAuthenticated` allocation on
+a dead branch, surfaced during F5 Pass 1. Note-only, no behavioral/performance/test impact. Not
+assigned a standing-item ID (cosmetic-only, per S-7.02's disposition guidance that a note-level
+item needs no separate tracking ID once recorded).
+
+**Confirmed still open, unaffected by F5 (no new information from this phase):**
+`CYCLE-008-CONSOLE-SCOPE-RELEASE-GATE` (RELEASE-GATE, human-owned pre-release blocker -- F5's
+Pass 1 independently re-surfaced this as a process-gap observation; unchanged, still
+OPEN/PENDING, tracked in full above); `CYCLE-008-ENV-RESTORE-NON-RAII` and
+`CYCLE-008-WORKTREE-NAME-VS-STORYID` (both carried from S5's merge, 2026-09-18; F5 reviewed the
+whole delta including S5's diff and did not surface either as a new/distinct finding).

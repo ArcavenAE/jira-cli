@@ -1,1 +1,1 @@
-{"status":"pass","timestamp":"2026-09-18T14:00:35Z","command":"cd /Users/zious/Documents/GITHUB/jira-cli/.worktrees/cycle8-s5-jsm-attachments-oauth-verification && cargo test --test attachment_jsm test_bc_4_2_001_jsm_attachment_upload_succeeds_end_to_end_under_oauth 2>&1 | tail -20; echo \"=== REVERTING ===\" && git checkout -- src/api/jsm/attachments.rs && echo \"reverted\" && git status --porcelain src/"}
+{"status":"pass","timestamp":"2026-09-18T15:26:56Z","command":"cargo test --lib board::tests 2>&1 | tail -30"}

@@ -410,3 +410,122 @@ commit is spec/bookkeeping only.
 **Dim-7 Attestation:** PR `#843`'s own CI run validated the full test suite green on the
 integrated tree (24/24 checks). No regression suite runs from this bookkeeping-only `.factory/`
 commit itself.
+
+## Burst: F5 scoped adversarial CONVERGED — FIX-F5-001 merged @ fc608cd3 (2026-09-18)
+
+**Parent-commit:** `926fdb96` (`develop` tip entering this burst — S5/PR `#843` merged in the
+prior burst, `develop`: `578a7848`→`926fdb96`, prior to this burst's own F5 review + FIX-F5-001).
+
+**Trigger:** cycle-008 Phase F5 (scoped adversarial refinement) — 3 fresh-context adversary
+passes against the whole cycle-008 code delta (`git diff 0793b9c5..fc608cd3` — base is the last
+commit before any cycle-008 story merged, through `develop`'s current tip after FIX-F5-001).
+Adversary model family, distinct from the builder model family used for S1-S5.
+
+**Pass 1 (whole delta, fresh context):** CLEAN on CRITICAL/HIGH. 4 findings + 1 process-gap
+observation:
+- **F1** (MEDIUM, test-quality): `init.rs`'s `list_boards` scope-hint call site had no
+  CI-running test — only reachable via the keyring-gated `#[ignore]`d integration test.
+- **F2** (MEDIUM, test-quality): the post-refresh double-fault classification wiring in
+  `client.rs` (landed `578a7848`) is covered only by `#[ignore]`d keyring tests — a structural
+  keyring-testing limitation, not novel to this cycle.
+- **F3** (LOW, convention/fragility): the Agile scope-hint downcast (`rewrite_agile_scope_error`
+  + 2 `issue/list.rs` sites) inspected only the TOP of the `anyhow` error chain — a
+  `.context()`-wrapped `InsufficientScope` would be missed.
+- **F4** (COSMETIC): a discarded `NotAuthenticated` allocation on a dead branch.
+- **Process-gap observation** (not a code finding): `DEFAULT_OAUTH_SCOPES` → Atlassian Developer
+  Console release-gate step has no automated enforcement — already tracked as a hard
+  release-gate blocking issue (`CYCLE-008-CONSOLE-SCOPE-RELEASE-GATE`).
+
+**Disposition & fix:** F3 + F1 dispositioned FIX, bundled as **FIX-F5-001**
+(`fix/cycle8-f5-001-scope-hint-robustness`) — worktree → implement → push → PR `#844` opened
+merge-ready. `src/cli/board.rs` gained a chain-aware `is_insufficient_scope_error(&anyhow::Error)`
+helper (`err.chain().find_map(|c| c.downcast_ref::<JrError>())`), wired into all 3 Agile
+scope-hint call sites, with guard comments on the 6 underlying Agile API functions + the
+`init.rs` call site. New CI-running tests: a context-wrapped-chain test (genuinely fails against
+the pre-fix top-level-only downcast — pins F3's fix) and an init-scope-string test (pins F1's
+fix). F2 and F4 dispositioned DEFER (justified — see standing items below).
+
+**Pass 2 (fix re-review, fresh context):** CLEAN — 0 findings. Confirmed F3's fix is genuinely
+load-bearing (would fail against pre-fix code, not tautological) and the new tests are
+non-vacuous. Novelty LOW (fix-confirmation only).
+
+**PR `#844` review + merge:** Fresh-eyes `pr-reviewer` posted **APPROVE** — 0 blocking findings,
+2 non-blocking nits (`code-delivery/FIX-F5-001-cycle8-scope-hint/pr-review.md`). Build/lint clean
+(`cargo test --lib board::tests` 9/9, `cargo clippy --all-targets` clean, `cargo fmt --check`
+clean). Human merged PR `#844` via manual admin-bypass (same self-approval-structural-gap
+pattern as every other cycle-008 PR): `develop` `926fdb96`→`fc608cd3`. Worktree + branch cleaned
+up.
+
+**Pass 3 (fresh whole-delta convergence-confirmation, fix included, fresh context):** CLEAN — 0
+findings. Novelty **0.10** (< 0.15 convergence threshold). Verdict: spec-faithful (ADR-0026's
+7-swap gateway routing + 16-scope set + `BC-X.15.001`'s 4 command families all confirmed
+correctly implemented across the full delta), regression-safe (all changes OAuth-conditional;
+API-token path confirmed byte-identical; `classify_401_body` confirmed to introduce no
+misclassification), leak-free, well-tested.
+
+**Adversary verdict:** F5 CONVERGED — 3 consecutive passes with 0 CRITICAL/HIGH, novelty decaying
+HIGH → LOW → 0.10 (minimum-3-clean-pass criterion met). Secondary review-tier pass
+(code-reviewer/security-reviewer, optional/additive per the F5 skill) **NOT run** — the delta
+was thoroughly cleared via primary adversary convergence and presents no new attack surface,
+dependencies, or user-facing I/O paths. Full detail:
+`cycles/cycle-008/phase-f5-adversarial/convergence-summary.md`.
+
+**Justified deferrals recorded this burst (S-7.02):** `CYCLE-008-F5-KEYRING-WIRING-COVERAGE`
+(F2, structural keyring-testing limitation), `CYCLE-008-F5-INIT-MAPERR-MUTANT-RESIDUAL` (F1's
+narrow mutation residual, accepted per FIX-F5-001's story-spec scope), F4-cosmetic (note-only, no
+ID assigned). Confirmed still open/unaffected: `CYCLE-008-CONSOLE-SCOPE-RELEASE-GATE`,
+`CYCLE-008-ENV-RESTORE-NON-RAII`, `CYCLE-008-WORKTREE-NAME-VS-STORYID` (all pre-existing, F5
+independently re-confirmed each as unchanged). All recorded in `cycles/OPEN-STANDING-ITEMS.md`.
+
+**Reconciled pre-existing uncommitted `.factory` working-tree drift** (`regression-state.json`,
+`sidecar-learning.md` session-end-marker churn, the untracked
+`code-delivery/FIX-F5-001-cycle8-scope-hint/pr-review.md` artifact) into this single commit
+alongside `STATE.md`, `cycles/cycle-008/burst-log.md` (this entry),
+`cycles/cycle-008/phase-f5-adversarial/convergence-summary.md`, and
+`cycles/OPEN-STANDING-ITEMS.md`.
+
+**Codifications:** No new DEC minted this burst — F5's convergence and FIX-F5-001's merge are
+review-and-fix outcomes within the already-approved F1-F3 scope, not a new pipeline ruling.
+Counts unchanged: 770 BCs / 89 VPs / 118 holdouts / 191 stories (FIX-F5-001 is a robustness fix +
+test-coverage addition, no new BC/VP/story).
+
+**Closes:** Phase F5 (scoped adversarial refinement) for cycle-008, in full.
+
+**Outcome:** cycle-008 Phase F5 CONVERGED. `develop` advanced `926fdb96`→`fc608cd3` (FIX-F5-001
+merged). `activation_head`/`activation_version` unchanged (`aa557050`/`v0.7.0-dev.7` — no
+release cut). **NEXT:** Phase F6 (targeted hardening — formal verification/fuzz/mutation testing
+scoped to the cycle-008 delta, plus full-tree regression and security scans) → F7 (delta
+convergence, human gate).
+
+### Details
+
+| Agent | Task | Output |
+|-------|------|--------|
+| adversary (×3 passes, adversary model family) | Scoped adversarial review of the whole cycle-008 delta | Pass 1: 4 findings + 1 process-gap note; Pass 2: fix confirmation, CLEAN; Pass 3: CLEAN, novelty 0.10 |
+| implementer/devops-engineer (FIX-F5-001 worktree) | `is_insufficient_scope_error` chain-aware helper + 3 call-site rewires + guard comments + 2 new unit tests | `src/cli/board.rs`, `src/cli/issue/list.rs`, `src/cli/init.rs`, `src/api/jira/boards.rs`, `src/api/jira/sprints.rs` |
+| pr-reviewer-f5001-r1 | Fresh-eyes review of PR #844 | APPROVE, `code-delivery/FIX-F5-001-cycle8-scope-hint/pr-review.md` |
+| github-ops-pr-create-f5001, github-ops-ci-844, github-ops-ci-844-snapshot, github-ops-pr844-state-check | PR creation, CI drive, state checks | PR `#844`, CI green |
+| human | Manual admin-bypass merge of PR #844 (self-approval structural gap) | `develop` @ `fc608cd3` |
+| state-manager (this agent) | F5 convergence-summary write, burst-log entry, OPEN-STANDING-ITEMS.md deferrals, STATE.md ONE full-content Write, drift reconciliation, commit + push `factory-artifacts` | This entry; `cycles/cycle-008/phase-f5-adversarial/convergence-summary.md`; `cycles/OPEN-STANDING-ITEMS.md`; `STATE.md` |
+
+**Files touched (Dim-1): 6 unique files (`factory-artifacts`, this burst)**
+
+- `STATE.md`
+- `cycles/cycle-008/burst-log.md` (this entry)
+- `cycles/cycle-008/phase-f5-adversarial/convergence-summary.md` (new)
+- `cycles/OPEN-STANDING-ITEMS.md`
+- `code-delivery/FIX-F5-001-cycle8-scope-hint/pr-review.md` (new, was untracked)
+- `regression-state.json`, `sidecar-learning.md` (benign churn, folded in)
+
+**Dim-2 Attestation:** `scripts/check-spec-counts.sh` / `scripts/check-bc-cumulative-counts.sh` —
+N/A this burst (no `total_bcs`/`total_vps`/`total_stories` numeric change).
+
+**Dim-5 Attestation:** N/A — no binary/WASM artifact produced by this burst.
+
+**Dim-6 Attestation:** N/A on `factory-artifacts` directly — FIX-F5-001's actual code diff landed
+via PR `#844` on `develop` (`fc608cd3`), not via a `factory-artifacts` commit; this burst's
+`.factory/` commit is spec/bookkeeping only.
+
+**Dim-7 Attestation:** PR `#844`'s own CI run validated the full test suite green on the
+integrated tree; `cargo test --lib board::tests` 9/9 pass, `cargo clippy --all-targets` clean,
+`cargo fmt --check` clean, independently re-run by the fresh-eyes `pr-reviewer`.

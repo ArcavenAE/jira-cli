@@ -135,3 +135,25 @@ traces_to: STATE.md
 **Superseded by:** Wave-gate fix PR #836 subsequently MERGED to `develop` manually by the human (squash, `develop`: `a32caef4`->`578a7848`, this burst) after the `pr-manager-completion-guard` classifier denied auto-merge on this self-authored PR (`CYCLE-008-SELF-APPROVAL-STRUCTURAL-GAP`). WAVE-1 GATE NOW FULLY CLOSED; this checkpoint's "NEXT" action (the consolidated merge decision) was thereby cleared. Current checkpoint (STATE.md v4.59, session-wrap-pause, wave-1-gate-closed / S5-not-started state) is in `STATE.md` itself.
 
 ---
+
+## Archived checkpoint — STATE.md v4.60 (F4 delta implementation FULLY COMPLETE, both waves merged, S5/PR #843 merged @ 926fdb96, NEXT = S6 spike then F5/F6/F7)
+
+```
+**Date & position:** 2026-09-18. cycle-008 (`oauth-surface-correctness`) Phase F4 (delta implementation) is FULLY COMPLETE -- both waves merged to develop @ 926fdb96. NEXT = S6 (Teams spike, non-gating), then F5/F6/F7.
+
+**Convergence counter:** N/A -- S5's per-story adversarial converged (4 passes, this burst); Wave-1's wave-level adversarial converged (3 clean passes, prior burst). No active loop.
+
+**In-flight work:** none. S5 worktree and branch (.worktrees/cycle8-s5-jsm-attachments-oauth-verification, fix/cycle8-jsm-attachments-oauth-verification) cleaned up post-merge. No stories mid-TDD; no PRs awaiting review/CI (all Wave-1 + #836 + S5/#843 merged); no sub-agents abandoned mid-step. NEXT: S6 spike (non-gating, no code, investigation report + go/no-go recommendation only), then Phase F5 (scoped adversarial review of the full cycle-008 delta) -> F6 (targeted hardening) -> F7 (delta convergence, human gate).
+
+**Pending human decisions / blockers:** (1) CYCLE-008-CONSOLE-SCOPE-RELEASE-GATE -- Atlassian Developer Console must add all 8 new OAuth scopes (7 granular Agile + manage:jira-project) + re-consent note BEFORE any release ships cycle-008 content (pre-release, human-owned; NOT blocking F5/F6/F7 pipeline work). (2) [SAFETY] self-approval structural gap: recurred on PR #843 exactly as expected (CYCLE-008-SELF-APPROVAL-STRUCTURAL-GAP, updated this burst) -- confirmed it blocks the pr-manager DISPATCH itself, not just GitHub's APPROVED state; a permission-rule or hook fix is recommended for a future maintenance cycle so every future PR doesn't require this manual-merge workaround. (3) 2 new LOW justified deferrals from S5 (CYCLE-008-ENV-RESTORE-NON-RAII, CYCLE-008-WORKTREE-NAME-VS-STORYID) plus other open standing items in cycles/OPEN-STANDING-ITEMS.md (nested-agent stalls, worktree-naming/HEAD-SHA-tuple across Wave 1+2, validate-factory-path-staging cwd false-positive, bc-1 FUEL_EXHAUSTED cap, CHANGELOG [Unreleased] double "### Fixed" deferred to release-notes).
+
+**WIP branch list:** none with commits ahead of develop (all Wave-1 + fix + S5 branches merged & deleted).
+
+**Resume command:** /vsdd-factory:rehydrate-wave then /vsdd-factory:next-step.
+
+**Counts:** total_bcs 770 (unchanged this burst); VP count 89 (unchanged); holdout scenarios 118 (unchanged); total_stories 191 (unchanged this burst). Prior checkpoint (STATE.md v4.59, wave-1-gate-closed/S5-not-started state) archived verbatim above.
+```
+
+**Superseded by:** cycle-008 Phase F5 (scoped adversarial refinement) subsequently CONVERGED this burst (3 clean adversary passes, novelty HIGH->LOW->0.10) -- 2 of Pass 1's 4 findings (F1, F3) FIXED via FIX-F5-001 (PR #844, merged @ `fc608cd3`); remaining 2 (F2, F4) justified-deferred. This checkpoint's "NEXT" action (S6 spike -> F5) has been superseded -- F5 ran and converged directly (S6 remains a non-gating parallel track, not a hard prerequisite to F5). Current checkpoint (STATE.md v4.61, F5-converged / F6-not-started state) is in `STATE.md` itself.
+
+---

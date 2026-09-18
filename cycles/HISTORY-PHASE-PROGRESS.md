@@ -132,3 +132,13 @@ See `cycles/cycle-005/burst-log.md` Bursts 11-12 for full narrative detail (thes
 | Phase | Status | Completed | Gate | Notes | Finding Progression |
 |-------|--------|-----------|------|-------|---------------------|
 | **CYCLE-007-F7-CONVERGED-2026-09-15** | **COMPLETE / CONVERGED** | 2026-09-15 | Delta convergence -- ALL 7 dimensions PASS; human close/release gate PENDING | Fresh-context consistency-validator: spec<->code PASS; code<->test PASS (static + prior green CI/gate evidence; dynamic run hung on build-lock contention with concurrent agents, not force-retried per orchestrator instruction); traceability PASS; index-consistency PASS (`check-spec-counts` + `check-bc-cumulative-counts` both exit 0, 769); ADR alignment PASS (ADR-0011 Profile fence, ADR-0020 Accepted); citation-integrity PASS (`claude_md_citations` 61/61, `bc-citation` 525, `cargo-mutants-policy-citations` 77 pairs); cross-references PASS. Input-hash drift: benign lifecycle drift only, resolved this burst (Job A -- 6 cycle-007 F3 story/wave-schedule artifacts re-hashed via `compute-input-hash --update` in topological order); remaining is the accepted `[live-state]` sentinel + prior-cycle baseline. NEXT = **cycle-007 F7 HUMAN GATE** (final close approval + release decision) -- awaiting human. v4.37->v4.38. | 769 BCs / 86 VPs / 118 holdout / 182 stories; no DEC minted yet -- awaiting human F7-gate ruling |
+
+> Extracted from `.factory/STATE.md`'s `## Phase Progress` table during the
+> 2026-09-18 CYCLE-008-F5-CONVERGED burst (v4.60 -> v4.61), to keep the live
+> table at 11 rows after adding the new `CYCLE-008-F5-CONVERGED-2026-09-18`
+> row. This was the oldest row at that point; archived here verbatim,
+> unedited.
+
+| Phase | Status | Completed | Gate | Notes | Finding Progression |
+|-------|--------|-----------|------|-------|---------------------|
+| **CYCLE-013-CLOSED-RELEASED-v0.7.0-dev.7-2026-09-16** | **COMPLETE / RELEASED** | 2026-09-16 | Release-completion follow-up | PR #823 merged squash @ `aa557050`; tag `v0.7.0-dev.7` pushed; `release.yml` run `35161289923`. `activation_head`/`activation_version` advance to `aa557050`/`v0.7.0-dev.7`. | 769 BCs / 86 VPs / 118 holdout / 185 stories; no new DEC |
