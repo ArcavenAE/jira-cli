@@ -864,3 +864,85 @@ continuity):**
   routing prose predates the OAuth gateway-routing fix and no longer accurately describes the
   `get_or_fetch_workspace_id` call path. Doc-hygiene follow-up, not a blocker; candidate: update
   or annotate as historical in a future maintenance sweep.
+
+## cycle-008 Wave-1 WAVE-GATE convergence + fix PR #836 — process-gap findings (2026-09-17)
+
+**`CYCLE-008-WAVEGATE-OBS-2-INIT-SCOPE-HINT-COVERAGE`** (wave-level adversary observation
+OBS-2, distinct from the pre-existing `S3 OBS-2` above -- disambiguated with a `WAVEGATE-` prefix
+to avoid ID collision) -- The `jr init` per-project setup prompt's `list_boards` OAuth
+scope-mismatch hint (added this burst via the F-WG-1 human-approved widening, `src/cli/init.rs`)
+has ONLY keyring-gated test coverage: `jr init` is interactive-by-default and its integration
+tests are gated behind `JR_RUN_KEYRING_TESTS=1` (per the CLAUDE.md AI Agent Notes keyring-test
+table), so the new wrap is not exercised in the default `cargo test`/CI run. Reviewed and
+**ACCEPTED as correct by inspection** -- the wrap mechanically reuses the identical
+`rewrite_agile_scope_error`-style hint already covered by `board.rs`'s own keyring-gated and
+non-keyring-gated test mix at the `list_boards` call site (same function, same scope strings, no
+new detection logic), so the residual risk is LOW. Not a blocker; candidate follow-up: extend
+`init.rs`'s test suite with a wiremock-based non-interactive path (if one is ever added) to close
+the last mile without requiring `JR_RUN_KEYRING_TESTS=1`.
+
+**`CYCLE-008-WAVEGATE-OBS-3-CHANGELOG-DOUBLE-FIXED-HEADING`** (= wave-level adversarial finding
+F-WAVE-3, LOW, cosmetic) -- `CHANGELOG.md`'s `[Unreleased]` section carries two separate
+`### Fixed` subheadings instead of one merged list. Cosmetic only (no content is lost or
+duplicated, just split across two headings under the same release section). Disposition:
+**DEFERRED** to release-notes consolidation -- the next release-metadata PR that touches
+`CHANGELOG.md`'s `[Unreleased]` section should merge the two `### Fixed` blocks into one before
+cutting a release, following the same consolidation pattern already used for the dev.6/dev.7
+CHANGELOG backfills (see `cycle_013_status` in `STATE.md` frontmatter for that precedent). Not a
+functional defect; not a merge blocker for PR `#836`.
+
+**`CYCLE-008-WAVEGATE-COMPLETION-GUARD-RECURRENCE`** (further recurrence of
+`CYCLE-008-PR-MANAGER-COMPLETION-GUARD-FALSE-AUTHORIZE`, itself a recurrence of
+`CYCLE-013-PR-MANAGER-COMPLETION-GUARD-PREMATURE-STOP`, above) -- The `pr-manager-completion-guard`
+`SubagentStop` hook fired its false `AUTHORIZE_MERGE` assertion MANY MORE times during this
+wave-gate burst than the prior burst's already-elevated count (dispatching the fix-adversarial
+loop, PR `#836` creation/review, and the wave-level adversarial re-runs each re-triggered it).
+Agents correctly ignored every false assertion and PR `#836` remains correctly HELD, unmerged, at
+the human wave-gate -- no unauthorized merge occurred. Escalation to `[SAFETY]` from the prior
+burst stands; this is additional frequency evidence for the same still-open engine-level hook
+defect, not a new root cause. No new candidate fix beyond what's already logged. Target: a future
+self-improvement/maintenance cycle (engine-level hook, `vsdd-factory` repo).
+
+**`CYCLE-008-WAVEGATE-PATH-STAGING-CWD-FALSE-POSITIVE`** (recurrence of the mechanism underlying
+`CYCLE-013-HOOK-FALSE-POSITIVE-COMMIT-MSG-SCAN`, MAINT-SWEEP-2026-09-16's sibling recurrence, and
+now generalized beyond commit-message scanning) -- The `validate-factory-path-staging` `PreToolUse`
+hook mis-detected the agent's current working directory during this burst's `.factory/` git
+operations, producing a false-positive path-staging block unrelated to the actual files being
+staged. Worked around by re-running the git operation with an explicit, unambiguous cwd rather
+than relying on the hook's own detection. Confirms the hook's cwd-detection logic is unreliable
+across more triggering conditions than just the commit-message-scan case originally identified in
+cycle-013. Candidate fix: same root-cause family as `CYCLE-013-HOOK-FALSE-POSITIVE-COMMIT-MSG-SCAN`
+-- the hook should resolve cwd from an authoritative source (e.g. the tool call's own working
+directory parameter) rather than inferring it. Target: a future self-improvement/maintenance
+cycle (engine-level hook, `vsdd-factory` repo).
+
+**`CYCLE-008-WAVEGATE-BC1-FUEL-EXHAUSTED-CAP-RECURRENCE`** -- A validation-hook fuel/step cap
+(`FUEL_EXHAUSTED`) was hit again against `bc-1-auth-identity.md` during this burst's spec-consistency
+propagation sweep (the `read:board-scope.admin:jira-software` + `read:project:jira` co-requirement
+wording fix, mirrored from `BC-X.15.001`). This is a **recurrence** of a known class -- large BC
+files with dense cross-reference trace blocks intermittently exhaust a validation hook's bounded
+execution budget on this specific file. Worked around by keeping the edit narrowly scoped (a
+single wording correction, not a full-file rewrite) so the hook's retry/partial-pass succeeded.
+Not a blocker this burst (the edit landed correctly, confirmed via `git diff`), but the underlying
+cap is a still-open engine-level tuning issue for `bc-1-auth-identity.md` specifically (it is one
+of the larger BC files by trace-block size). Candidate fix: raise the fuel budget for
+large-BC-file validation hooks, or shard the hook's work into smaller per-section passes. Target:
+a future self-improvement/maintenance cycle (engine-level hook tuning, `vsdd-factory` repo).
+
+**`CYCLE-008-WAVEGATE-TEMPLATE-COMPLIANCE-BURST-HEADING-MISMATCH`** (NEW this burst, distinct
+mechanism from the items above) -- `validate-template-compliance`'s generic `burst-log-template.md`
+literally requires an `## Burst 1 (YYYY-MM-DD)` heading (its own placeholder text, never intended
+to be numbered-literally in practice) to appear somewhere in the file, while the sibling
+`validate-burst-log` hook enforces (and this file has used since its very first entry) the
+DIFFERENT format `## Burst: <description> (YYYY-MM-DD)`. No heading in `cycles/cycle-008/burst-log.md`
+has ever satisfied the first hook's literal "Burst 1" substring match -- including its original,
+first-ever entry, predating this burst -- so this is a pre-existing engine-level hook/template
+mismatch, not something this burst introduced. `validate-template-compliance` fired as a
+PostToolUse advisory on this burst's edits (non-reverting; the content landed correctly). Not
+worked around by fabricating a false "Burst 1" heading on a non-first entry, since that would
+misrepresent the historical burst sequence. Candidate fix: either update
+`burst-log-template.md`'s canonical heading to match `validate-burst-log`'s actual enforced
+`## Burst: <desc> (date)` format, or have `validate-template-compliance`'s section-matching logic
+recognize `## Burst:` as satisfying the `## Burst N` template placeholder generically (regex,
+not fixed-string). Target: a future self-improvement/maintenance cycle (engine-level
+hook/template alignment, `vsdd-factory` repo).

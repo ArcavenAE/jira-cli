@@ -127,7 +127,7 @@ read:cmdb-schema:jira
 
 # --- Agile / Jira Software (NEW — granular scopes mandatory; classic scopes do not apply) ---
 read:board-scope:jira-software        # board list/view
-read:board-scope.admin:jira-software  # board view --config
+read:board-scope.admin:jira-software  # board view --config (co-required with read:project:jira below, per oauth-scope-matrix.md #53)
 read:sprint:jira-software             # sprint list/current, board→sprint
 write:board-scope:jira-software       # sprint add/remove (move issues to/from backlog)
 read:project:jira                     # board list project filter
@@ -340,6 +340,33 @@ specification artifact only — no `src/` changes have been made under it. Imple
 scoped to stories S1 (Workstream A), S2 (Workstream B), S3 (Workstream C), S4 (Workstream E), and
 S5 (Workstream A dependency verification) per the F1 delta analysis §7 story-decomposition
 preview.
+
+**Amendment note (2026-09-17, adversary finding F1 residual, product-owner mechanical
+consistency-propagation sweep):** the Decision 2 scope-list's `read:board-scope.admin:jira-software`
+comment (`# board view --config`) is clarified as co-required with `read:project:jira` per
+`oauth-scope-matrix.md` #53 (`get_board_config` requires BOTH scopes, not the admin scope alone).
+No scope-set change (still the finalized 16-scope union already listed above, where
+`read:project:jira` is already present) — wording-accuracy only, matching the same correction
+already applied to BC-X.15.001 in `cross-cutting.md`.
+
+**Amendment note (2026-09-17, wave-level finding F-WG-1, human-approved scope amendment, ruling =
+EXPAND, product-owner burst):** Decision 3's call-site-rewrite coverage is EXTENDED beyond the
+originally-named `jr board`/`jr sprint` boundary (and beyond the same-day F1 amendment above, which
+stayed within that same boundary by adding internal `board.rs`/`sprint.rs` resolution helpers). The
+human ruled that the SAME 401-disambiguation pattern must also cover the identical Agile HTTP calls
+made by two other command families this ADR's original F1 delta analysis did not audit:
+- `src/cli/issue/list.rs::handle_list`'s board-resolution/board-based-JQL path (its
+  `get_board_config` call, and its `list_sprints` call when the resolved board is scrum-type) —
+  same hints as the `board.rs`/`sprint.rs` sites that make the identical underlying calls
+  (`oauth-scope-matrix.md` #53 and #55 respectively).
+- `src/cli/init.rs::handle`'s per-project setup prompt (`list_boards` call) — same hint as
+  `jr board list`/`resolve_board_id` (`oauth-scope-matrix.md` #52).
+No new scope strings are introduced (the finalized 16-scope `DEFAULT_OAUTH_SCOPES` set above is
+unchanged) and no new detection rule is introduced — this is a call-site-count extension of the
+existing Decision 3 pattern, not a new architectural decision. Full disposition, the mechanical
+hint mapping, and the amended acceptance criteria are recorded in `BC-X.15.001`
+(`.factory/specs/prd/cross-cutting.md`) and in the amended
+`S-cycle8-agile-scope-mismatch-error-mapping` story (v1.4, AC-013..AC-015).
 
 ## Alternatives Considered
 

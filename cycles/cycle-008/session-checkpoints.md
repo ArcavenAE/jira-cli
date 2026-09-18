@@ -91,3 +91,25 @@ traces_to: STATE.md
 ```
 
 ---
+
+## Archived checkpoint — STATE.md v4.57 (Wave-1 DELIVERED & CONVERGED, held at human merge gate)
+
+```
+**Date & position:** 2026-09-17. cycle-008 (`oauth-surface-correctness`) at Phase F4 (delta implementation), Wave 1 DELIVERED & CONVERGED, HELD at the human consolidated merge gate. F1/F2/F3 all APPROVED (DEC-368/DEC-369/DEC-370). NEXT = human merge decision for #832/#833/#834/#835 -> wave integration gate + wave-level adversarial convergence (3 clean) -> Wave 2 (S5, depends_on:[S1]) -> S6 Teams spike (non-gating) -> F5/F6/F7.
+
+**Convergence counter:** per-story: S1/S3/S4 = 3/3 clean; S2 = 3/3 clean (after 1 LOW fix on pass 1). Wave-level integration-gate adversarial pass: N/A -- not started (gated on the merge decision).
+
+**In-flight work:** S1/S2/S3/S4 all DELIVERED, PRs open (#833/#834/#832/#835), CI green, none merged. S5/S6 not started. The 6 cycle-008 stories remain committed (STORY-INDEX.md total_stories 191, S4 now at v1.2).
+
+**Pending human decisions / blockers:** (1) Consolidated merge decision for #832/#833/#834/#835 (self-approval structural gap -> admin-bypass expected) -- the immediate next action. (2) CYCLE-008-CONSOLE-SCOPE-RELEASE-GATE -- human-owned pre-RELEASE blocker (unchanged). (3) GitHub #831 tracked, closes at S1 (#833) merge, not yet. (4) 4 new process-gap standing items logged this burst in cycles/OPEN-STANDING-ITEMS.md (1 [SAFETY]). (5) Teams S7 re-platform deferred pending S6 spike.
+
+**WIP branch list:** fix/cycle8-jsm-oauth-routing (S1, PR #833), fix/cycle8-agile-oauth-scopes (S2, PR #834), fix/cycle8-assets-workspace-routing (S3, PR #832), fix/cycle8-agile-scope-error-mapping (S4, PR #835) -- all 4 open against develop, CI green, none merged.
+
+**Resume command:** /vsdd-factory:next-step (after the human merge decision on #832/#833/#834/#835).
+
+**Counts:** total_bcs 770 (unchanged this burst); VP count 89 (unchanged); holdout scenarios 118 (unchanged); total_stories 191 (unchanged this burst, S4 now v1.2). Prior checkpoint (STATE.md v4.56, cycle-008-paused state) archived verbatim above.
+```
+
+**Superseded by:** Wave 1's 4 PRs subsequently MERGED to `develop` (tip `a32caef4`, admin-bypass, human-authorized, next burst); this checkpoint's "NEXT" action (the consolidated merge decision) was thereby cleared. Current checkpoint (STATE.md v4.58, wave-gate CONVERGED / fix PR #836 held) is in `STATE.md` itself.
+
+---

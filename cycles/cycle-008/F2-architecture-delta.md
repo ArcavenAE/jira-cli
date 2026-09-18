@@ -9,7 +9,7 @@ inputs:
   - .factory/cycles/cycle-008/verification-delta.md
 date: 2026-09-17
 status: awaiting-f2-gate
-input-hash: "5627e5f"
+input-hash: "ade2012"
 ---
 
 # Cycle-008 F2 Architecture Delta — Reference Note
@@ -51,7 +51,7 @@ routing cross-reference note is judged useful.
 
 | File | Change | VP |
 |---|---|---|
-| `src/api/auth.rs` (`DEFAULT_OAUTH_SCOPES`) | Add 7 granular scopes (see ADR-0026 Decision 2) | VP-OAUTH-GW-002 |
+| `src/api/auth.rs` (`DEFAULT_OAUTH_SCOPES`) | Add all 8 new scopes: the 7 granular jira-software Agile scopes PLUS the classic `manage:jira-project` scope (see ADR-0026 Decision 2 + Decision 2a) | VP-OAUTH-GW-002 |
 | `src/cli/auth/tests/mod.rs` (`default_oauth_scopes_pins_the_full_set_with_offline_access`) | Update pinned string in same commit | VP-OAUTH-GW-002 |
 | `CHANGELOG.md` (`[Unreleased]`) | Add re-consent note | — |
 
@@ -61,8 +61,20 @@ changes shape.
 
 **Release gate (non-code, human/app-owner action):** Atlassian Developer Console app-permission
 update MUST land before this ships, or OAuth login/refresh hard-fails `invalid_scope` for ALL
-users. Flag explicitly at the F2/F6 human gates as a release-blocking checklist item, not a
-follow-up task.
+users. The Console update must add **all 8 new scopes in one pass** — do not ship only the Agile
+subset:
+- 7 granular jira-software Agile scopes: `read:board-scope:jira-software`,
+  `read:board-scope.admin:jira-software`, `read:sprint:jira-software`,
+  `write:board-scope:jira-software`, `read:project:jira`, `read:issue-details:jira`,
+  `read:jql:jira`.
+- PLUS the classic `manage:jira-project` scope (ADR-0026 Decision 2a) — required separately for
+  `jr component create/edit/delete/rename`; omitting it leaves component-write commands
+  unauthorized under OAuth even though the Agile scope-mismatch (S4) is otherwise fixed.
+
+This is the standing release-gate item `CYCLE-008-CONSOLE-SCOPE-RELEASE-GATE`. Flag explicitly at
+the F2/F6 human gates as a release-blocking checklist item, not a follow-up task. See ADR-0026
+Decision 2 + 2a and its Consequences section for the authoritative "all eight" scope list; CHANGELOG
+`[Unreleased]`'s release-gate note also enumerates all 8.
 
 ### S3 — `assets-workspace-oauth-routing` (Workstream C)
 

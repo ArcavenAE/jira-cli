@@ -150,3 +150,110 @@ CI-validated there, not merged to `develop` this burst.
 **Dim-7 Attestation:** N/A on `factory-artifacts` directly — each PR's own CI run validated its
 full test suite green (S1/S2/S3/S4 all reported CI-green, S3 24/24, S4 23 checks); no regression
 suite runs against `develop` from this bookkeeping-only `.factory/` commit itself.
+
+---
+
+## Burst: Wave-1 WAVE-GATE convergence + fix PR #836 merge-ready (2026-09-17)
+
+**Parent-commit:** 97b58dd9429359b88fa472d02b50f0f69a1e9ad9
+
+**Adversary verdict:** CLEAN — CONVERGED. 3/3 clean fix-adversarial passes on PR #836's
+standalone diff + 3/3 clean wave-level adversarial passes on the final integrated tree (6
+independent passes total, 0 findings remaining). The 4 findings that seeded the loop
+(F-WAVE-1..4) were all dispositioned before the clean streak began — see
+`convergence-trajectory.md` Pass 1 for the pre-fix findings themselves.
+
+**Preceding this burst (other agents, not directly witnessed by state-manager but reflected in
+committed artifacts):** Wave 1 (S1/S2/S3/S4) MERGED to `develop` (tip `a32caef4`) — PR `#833`
+(S1, `4afc5aa5`), `#832` (S3, `9caa7bb5`), `#834` (S2, `5f718d13`), `#835` (S4, `a32caef4`), all
+squash-merged via human-authorized admin-bypass (self-approval structural gap, see
+`cycles/OPEN-STANDING-ITEMS.md`). WAVE INTEGRATION GATE ran: (a) integration-test dimension
+(clippy+fmt clean on integrated `develop`; each Wave-1 PR's own full CI green; PR `#836`'s CI
+runs the full suite, incl. CI Gate, on the integrated tree; a long local `cargo test` was
+Gatekeeper-throttled and stopped as redundant, per `HOST-GATEKEEPER-SYSPOLICYD-FRAGILITY`); (b)
+WAVE-LEVEL ADVERSARIAL: 3 clean passes on the final integrated wave (incl. the fix); (c) demos
+re-validated + secret-scanned clean. Full pass-by-pass detail: `convergence-trajectory.md` (new
+this burst).
+
+**Wave-level adversarial findings (4, all resolved) + 1 human scope ruling (F-WG-1):** see
+`convergence-trajectory.md` Pass 1 for full detail. Summary: F-WAVE-1 (double-fault post-refresh
+401 misclassified) → **FIX** (human-approved, `classify_401_body` in `src/api/client.rs`);
+F-WAVE-2 (unverified Agile 401 wire shape) → **VERIFY LIVE** (human-approved; live read-only
+probe confirmed `"Unauthorized; scope does not match"`, assumption HOLDS, no code change);
+F-WAVE-3 (CHANGELOG double `### Fixed` heading) → **DEFERRED** to release-notes consolidation;
+F-WAVE-4 (`get_board_config` hint omitted `read:project:jira`) → **FIX** (human-approved, hint
+widened, propagated to `BC-X.15.001`/`BC-1.3.023`/`ADR-0026`). **F-WG-1** (independent human
+ruling, same burst): **EXPAND** `BC-X.15.001` coverage from `jr board`/`jr sprint` to also cover
+`jr issue list`'s board-resolution path and `jr init` — widening from 2 to 4 command families
+(`VP-OAUTH-GW-003` min-test 8→11).
+
+**Wave-gate fix PR #836** (branch `fix/cycle8-double-fault-scope-rewrite`): bundles F-WAVE-1 +
+F-WAVE-4 + F-WG-1 in one PR. CONVERGED at 3 clean fix-adversarial passes (on the standalone diff)
++ 3 clean wave-level adversarial passes (on the final integrated tree) — 6 independent passes
+total. CI 24/24 green (incl. CI Gate). `mergeable: MERGEABLE`, `mergeStateStatus: CLEAN`
+(confirmed via `gh pr view 836`). Review verdict: APPROVE (self-review non-independent per the
+repo-wide self-approval structural gap — the 6 independent adversarial passes are the
+substantive coverage). `src/error.rs` untouched throughout. **NOT merged this burst** — HELD at
+the human consolidated wave-gate merge decision, same as the 4 Wave-1 PRs were held at the prior
+burst's merge gate.
+
+| Agent | Task | Output |
+|-------|------|--------|
+| (adversary passes, pre-fix + fix-adversarial + post-fix wave-level, ×7 total incl. the 4-finding pass) | Wave integration gate + wave-level adversarial convergence | 4 findings (F-WAVE-1..4) + human ruling F-WG-1, all dispositioned; 6 clean convergence passes on the fix |
+| pr-manager / github-ops-push-pr836 | Fix PR #836 creation + push (`fix/cycle8-double-fault-scope-rewrite`) | PR `#836` open against `develop` |
+| pr-reviewer-cycle8-wavefix-r1, pr-reviewer-cycle8-wg1-r1 | Fresh-eyes review of PR #836 | APPROVE verdict (posted per self-approval-gap convention) |
+| ci-watch-cycle8-s1 (continued) | CI status monitoring for PR #836 | 24/24 checks green, confirmed `MERGEABLE`/`CLEAN` |
+| product-owner (implied by spec diffs) | Propagated F-WAVE-1/F-WAVE-2/F-WAVE-4/F-WG-1 dispositions into `BC-X.15.001`, `BC-1.3.023`, `ADR-0026` | `specs/prd/cross-cutting.md`, `specs/prd/bc-1-auth-identity.md`, `ADR-0026` amendment notes |
+| story-writer-c8 | S4 v1.2→v1.5 further scope-widening authoring for F-WG-1 (AC-013..015) | `S-cycle8-agile-scope-mismatch-error-mapping.md` v1.5 |
+| state-manager (this agent) | Wave-gate convergence + fix-merge-ready STATE.md update, input-hash reconcile (3 files), `convergence-trajectory.md` (new), `OPEN-STANDING-ITEMS.md` append, commit + push `factory-artifacts` | This entry; `STATE.md` v4.58; `cycles/cycle-008/convergence-trajectory.md` (new); `cycles/OPEN-STANDING-ITEMS.md` new section; `cycles/cycle-008/session-checkpoints.md` archive entry |
+
+**Files touched (Dim-1): 11 unique files (`factory-artifacts`, this burst)**
+
+- `STATE.md`
+- `cycles/cycle-008/burst-log.md` (this entry)
+- `cycles/cycle-008/convergence-trajectory.md` (new)
+- `cycles/cycle-008/session-checkpoints.md`
+- `cycles/OPEN-STANDING-ITEMS.md`
+- `cycles/cycle-008/F2-architecture-delta.md`
+- `cycles/cycle-008/phase-f3-stories/S-cycle8-agile-scope-mismatch-error-mapping.md` (v1.5)
+- `cycles/cycle-008/phase-f3-stories/S-cycle8-assets-workspace-oauth-routing.md`
+- `specs/architecture/decisions/ADR-0026-oauth-3lo-gateway-routing-invariant-and-granular-jira-software-scopes.md`
+- `specs/prd/BC-INDEX.md`, `specs/prd/bc-1-auth-identity.md`, `specs/prd/cross-cutting.md`
+- `code-delivery/pr-review.md`, `regression-state.json`, `sidecar-learning.md` (benign churn,
+  folded in)
+
+**Dim-2 Attestation:** `scripts/check-spec-counts.sh` / `scripts/check-bc-cumulative-counts.sh` —
+N/A this burst (no `total_bcs`/`total_stories`/`total_vps` numeric change — `BC-X.15.001`
+widened in place a second time via F-WG-1, `VP-OAUTH-GW-003` min-test count raised 8→11 as a
+qualitative test-coverage floor, not a new VP id).
+
+**Dim-5 Attestation:** N/A — no binary/WASM artifact produced by this burst.
+
+**Dim-6 Attestation:** N/A on `factory-artifacts` — the actual `src/` fix for F-WAVE-1/F-WAVE-4/
+F-WG-1 lives on PR #836's branch (`fix/cycle8-double-fault-scope-rewrite`), reviewed and
+CI-validated there, not merged to `develop` this burst.
+
+**Dim-7 Attestation:** PR `#836`'s own CI run validated the full test suite green against the
+Wave-1-integrated `develop` tree (24/24 checks, incl. CI Gate) — this IS a real wave-level
+regression-suite validation (unlike the prior burst's Dim-7, which was N/A). No regression suite
+runs from this bookkeeping-only `.factory/` commit itself.
+
+**Codifications:** F-WAVE-1's fix codified as `classify_401_body` (`src/api/client.rs`, PR
+`#836` branch — not yet merged). F-WAVE-4's fix codified into `BC-X.15.001`
+(`specs/prd/cross-cutting.md`), `BC-1.3.023` (`specs/prd/bc-1-auth-identity.md`), and `ADR-0026`
+Decision 2's scope-list comment. F-WG-1's human-approved scope expansion codified into
+`BC-X.15.001` Behavior clause 1 + Canonical Test Vectors (2→4 command families) and
+`S-cycle8-agile-scope-mismatch-error-mapping.md` (v1.2→v1.5, AC-013..015 added). F-WAVE-2's live
+verification codified as a no-code-change confirmation note (no spec edit required — the
+existing BC assumption already matched observed reality). F-WAVE-3 codified only as an open
+standing item (`cycles/OPEN-STANDING-ITEMS.md`), not as a spec/code change — deferred by
+disposition.
+
+**Closes:** F-WAVE-1 (fixed, PR `#836`), F-WAVE-4 (fixed, PR `#836`), F-WG-1 (human ruling
+applied, spec-only — no separate PR, folded into PR `#836`'s companion spec commits on
+`factory-artifacts`). F-WAVE-2 verified, not "closed" via a code change — the underlying
+assumption already held. F-WAVE-3 NOT closed — explicitly deferred to release-notes
+consolidation (tracked, not resolved). Wave 1's own 4 stories (S1-S4) were already closed at the
+prior burst's merge; this burst closes the WAVE INTEGRATION GATE + WAVE-LEVEL ADVERSARIAL
+dimension of the F4 Wave-1 exit criteria. The human consolidated merge of PR `#836` itself
+remains OPEN (see Blocking Issues / Session Resume Checkpoint) — this burst does not close that.

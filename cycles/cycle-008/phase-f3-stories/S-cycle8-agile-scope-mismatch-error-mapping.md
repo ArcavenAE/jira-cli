@@ -23,14 +23,19 @@ inputs:
   - ".factory/specs/prd/bc-5-boards-sprints.md"
   - "src/cli/board.rs"
   - "src/cli/sprint.rs"
+  - "src/cli/issue/list.rs"
+  - "src/cli/init.rs"
   - "src/api/jsm/servicedesks.rs"
   - "src/error.rs"
-input-hash: "c333e12"
+# input-hash BELOW IS STALE as of the F-WG-1 amendment (src/cli/issue/list.rs and src/cli/init.rs
+# added to `inputs:` above) -- state-manager must recompute via `compute-input-hash <file> --update`
+# in the same burst that commits this change (DF-021 drift-detection obligation).
+input-hash: "e41f5cb"
 traces_to: "ADR-0026 Decision 3; BC-X.15.001"
 cycle: cycle-008-oauth-surface-correctness
 estimated_effort: medium
 estimated_days: 2.5
-target_module: "src/cli/board.rs, src/cli/sprint.rs"
+target_module: "src/cli/board.rs, src/cli/sprint.rs, src/cli/issue/list.rs, src/cli/init.rs"
 subsystems: ["SS-02"]
 # SS-02 (CLI Layer, src/cli/) owns this story's entire scope -- both files
 # this story edits (board.rs, sprint.rs) are command handlers under
@@ -68,11 +73,11 @@ implementation_strategy: tdd
 tdd_mode: strict
 module_criticality: MEDIUM
 points: 8
-acceptance_criteria_count: 12
+acceptance_criteria_count: 15
 assumption_validations: []
 risk_mitigations: []
 created: "2026-09-17"
-version: "1.2"
+version: "1.5"
 last_updated: "2026-09-17"
 breaking_change: false
 retroactive: false
@@ -103,6 +108,50 @@ origin: >
   records the F4 ruling to KEEP the grouped jr sprint list/current hint as
   spec-conformant (EC-X.15.001-4). BC-X.15.001's id and the corpus's total
   BC count are unchanged -- this is a coverage clarification, not a new BC.
+  UPDATED 2026-09-17 (v1.3, mechanical consistency-propagation sweep, adversary
+  finding F1 residual, product-owner burst): AC-001's board-view bullet and
+  AC-010/AC-012(a)'s get_board_config narratives + AC-010's Test assertion
+  corrected from naming read:board-scope.admin:jira-software alone to naming
+  it together with read:project:jira, per oauth-scope-matrix.md #53
+  (get_board_config requires BOTH scopes) -- this story's own get_board_config
+  references had not yet been brought into line with the same correction
+  already applied to BC-X.15.001 in cross-cutting.md. No AC id, BC id, or
+  count change -- wording-accuracy only.
+  UPDATED 2026-09-17 (v1.4, wave-level finding F-WG-1, human-approved scope
+  amendment, ruling = EXPAND, product-owner burst): EXPANDED a second time,
+  this time BEYOND the jr board/jr sprint boundary entirely -- adds
+  AC-013..AC-015 covering the SAME Agile HTTP calls made by two other command
+  families the original F1 delta analysis did not audit: jr issue list's
+  board-resolution/board-based-JQL path (src/cli/issue/list.rs::handle_list's
+  get_board_config and list_sprints calls) and jr init's per-project
+  board-selection prompt (src/cli/init.rs::handle's list_boards call). Hint
+  mappings are purely mechanical -- same endpoint, same hint as the existing
+  board.rs/sprint.rs sites, per oauth-scope-matrix.md #52/#53/#55-57 -- no new
+  scope strings, no new detection rule, reuses the same shared
+  rewrite_agile_scope_error helper (or its equivalent per-file rewrite, per
+  Task 4's implementer-choice note) this story already implements for the
+  board/sprint call sites. BC-X.15.001's id and the corpus's total BC count
+  are unchanged -- this is a further call-site coverage widening, not a new
+  contract. acceptance_criteria_count 12->15; version 1.3->1.4; target_module
+  and inputs/File Structure gain src/cli/issue/list.rs and src/cli/init.rs.
+  NOTE: this widening changes the story's effective scope boundary vs. its
+  subsystems: ["SS-02"] declaration -- src/cli/issue/list.rs and
+  src/cli/init.rs are both still under src/cli/ (SS-02, CLI Layer), so no
+  subsystem-ownership change is needed, but the architect should confirm this
+  at the next VP-citation propagation pass per
+  vp_index_is_vp_catalog_source_of_truth (VP-OAUTH-GW-003's minimum
+  test-case count also grew, 8->11, see cross-cutting.md trace).
+  UPDATED 2026-09-17 (v1.5, wave-level finding OBS-1, LOW, product-owner
+  burst): AC-013/AC-014/AC-015's Test: fields named
+  test_bc_x_15_001_*_401_scope_mismatch_rewrite placeholders that do not
+  match the tests as actually implemented -- coverage was already correct and
+  complete, only the test-name/file citations had drifted. Corrected to the
+  real symbols: test_issue_list_board_config_401_scope_mismatch_names_admin_scope
+  and test_issue_list_sprints_401_scope_mismatch_names_grouped_scopes (both
+  tests/issue_list_oauth_scope.rs, AC-013/AC-014), and
+  test_init_list_boards_401_scope_mismatch_names_missing_scopes
+  (tests/init_oauth_scope.rs, #[ignore]d + JR_RUN_KEYRING_TESTS-gated, AC-015).
+  No AC logic, hint, count, or id change -- wording/traceability only.
 ---
 
 > **tdd_mode:** `strict` — this story introduces new, non-trivial branching
@@ -131,7 +180,7 @@ origin: >
 
 | BC | Role | Clauses this story implements |
 |----|------|-------------------------------|
-| BC-X.15.001 | PRIMARY (new; Behavior clause 1 coverage CLARIFIED/WIDENED at F1, 2026-09-17 — same BC id, no new contract) | All 4 Behavior clauses (scope-mismatch rewrite — now spanning all 8 call sites listed in clause 1's mapping, not only the 4 originally-named top-level handlers — expired-token fall-through, wrong-host regression-guard boundary, Basic-auth short-circuit) and its 4 documented Edge Cases (EC-X.15.001-1..4) |
+| BC-X.15.001 | PRIMARY (new; Behavior clause 1 coverage CLARIFIED/WIDENED at F1, 2026-09-17, then WIDENED AGAIN at F-WG-1, 2026-09-17 — same BC id, no new contract) | All 4 Behavior clauses (scope-mismatch rewrite — now spanning all 11 call sites listed in clause 1's mapping, not only the 4 originally-named top-level handlers, and not only the 4 internal board/sprint helpers added at F1 — F-WG-1 adds 3 more call sites in `jr issue list`/`jr init`, entirely outside the `jr board`/`jr sprint` boundary — expired-token fall-through, wrong-host regression-guard boundary, Basic-auth short-circuit) and its 4 documented Edge Cases (EC-X.15.001-1..4) |
 | BC-5.1.001 | CROSS-REFERENCE (unchanged) | The cross-reference note added at F2 pointing readers debugging `jr board list`'s 401 at BC-X.15.001 and BC-1.3.023 rather than suspecting a routing bug |
 
 **Anchor justification:** BC-X.15.001 is a NEW BC authored specifically for this workstream at the
@@ -141,7 +190,10 @@ implementation vehicle — no other story in this cycle touches `src/cli/board.r
 Its scope was clarified/widened by an F1 human ruling on 2026-09-17 (same BC id, same total BC
 count — a call-site coverage widening, not a new contract) to explicitly cover 4 additional
 internal board/sprint resolution call sites (AC-009..AC-012) alongside the originally-named 4
-top-level command handlers (AC-001).
+top-level command handlers (AC-001). It was widened a second time, same day, by wave-level finding
+F-WG-1 (human ruling = EXPAND) to cover 3 further call sites (AC-013..AC-015) in two command
+families entirely outside the `jr board`/`jr sprint` boundary — `jr issue list`'s board-resolution
+path and `jr init`'s board-selection prompt — again same BC id, same total BC count.
 
 ## Acceptance Criteria
 
@@ -154,7 +206,8 @@ missing granular scope(s) for the specific failing command:
 - `jr board list` → `read:board-scope:jira-software` + `read:project:jira`
 - `jr board view` (its unconditional `get_board_config` call — there is no `--config` flag; this
   call fires for every `jr board view` invocation regardless of board type) →
-  `read:board-scope.admin:jira-software`
+  `read:board-scope.admin:jira-software` and `read:project:jira` (per `oauth-scope-matrix.md` #53 —
+  `get_board_config` requires BOTH scopes, not the admin scope alone)
 - `jr sprint list`/`jr sprint current` → `read:sprint:jira-software` + `read:issue-details:jira` +
   `read:jql:jira`
 - `jr sprint add`/`jr sprint remove` → `write:board-scope:jira-software`
@@ -258,11 +311,13 @@ scope-mismatch substring, assert the `read:board-scope:jira-software`/`read:proj
 `src/cli/board.rs::handle_view` calls `client.get_board_config(board_id)` unconditionally, BEFORE
 branching on board type — this fires for every `jr board view` invocation, kanban or scrum. A 401
 from this call, under OAuth with the scope-mismatch substring, is rewritten with the hint
-`read:board-scope.admin:jira-software` naming the admin-scope requirement. (Note: this corrects the
-F3 finding — there is no `--config` flag; this call is unconditional, not flag-gated.)
+`read:board-scope.admin:jira-software` and `read:project:jira` naming both co-required scopes (per
+`oauth-scope-matrix.md` #53 — `get_board_config` requires BOTH, not the admin scope alone). (Note:
+this corrects the F3 finding — there is no `--config` flag; this call is unconditional, not
+flag-gated.)
 **Test:** `test_bc_x_15_001_board_view_get_board_config_401_scope_mismatch_rewrite` — mounts a
 `get_board_config` 401 with the scope-mismatch substring during a `jr board view` invocation,
-asserts the `read:board-scope.admin:jira-software` hint.
+asserts the `read:board-scope.admin:jira-software` and `read:project:jira` hint.
 
 ### AC-011 (**[NEW, F1 scope expansion, 2026-09-17]** — traces to BC-X.15.001 clause 1, widened, and EC-X.15.001-4 — `board.rs::handle_view`'s scrum-branch `list_sprints`/`get_sprint_issues` calls)
 `src/cli/board.rs::handle_view`'s scrum branch (board type resolves to `"scrum"`) calls
@@ -279,8 +334,9 @@ assert the grouped sprint-scope hint in both cases.
 ### AC-012 (**[NEW, F1 scope expansion, 2026-09-17]** — traces to BC-X.15.001 clause 1, widened, and EC-X.15.001-4 — `sprint.rs`'s two remaining internal call sites: `resolve_scrum_board`'s `get_board_config` call, and `SprintCommand::Add { current: true, .. }`'s `list_sprints` lookup)
 (a) `src/cli/sprint.rs::resolve_scrum_board` calls `client.get_board_config(board_id)` to verify the
 resolved board is scrum-type — shared by `sprint list`/`current`/`add`/`remove`. A 401 from this
-call is rewritten with `read:board-scope.admin:jira-software` (same hint as AC-010's `board view`
-call — same underlying HTTP call).
+call is rewritten with `read:board-scope.admin:jira-software` and `read:project:jira` (same hint as
+AC-010's `board view` call — same underlying HTTP call, same co-required scopes per
+`oauth-scope-matrix.md` #53).
 (b) `SprintCommand::Add { current: true, .. }`'s active-sprint-id resolution calls
 `client.list_sprints(board_id, Some("active"))` — a SEPARATE call from `resolve_scrum_board`'s
 `get_board_config` call earlier in the same command invocation. A 401 from THIS call is rewritten
@@ -294,12 +350,66 @@ helper's hint is identical across all three call paths) and
 `list_sprints` 401s — asserting the grouped sprint-scope hint fires here too, distinct from (a)'s
 admin-scope hint).
 
+### AC-013 (**[NEW, F-WG-1 wave-level finding, human ruling = EXPAND, 2026-09-17]** — traces to BC-X.15.001 clause 1, widened beyond board/sprint — `src/cli/issue/list.rs::handle_list`'s `get_board_config` call)
+`src/cli/issue/list.rs::handle_list`'s board-resolution/board-based-JQL path (reached when `--jql`
+is absent and a `board_id` is configured, before falling back to sprint-based or project-scoped
+JQL) calls `client.get_board_config(bid)`. A 401 from THIS call, under OAuth with the
+`"scope does not match"` substring, is rewritten via the same shared rewrite helper used by
+AC-001/AC-010, with the SAME hint AC-010 uses (same underlying HTTP call, same co-required scopes
+per `oauth-scope-matrix.md` #53): `read:board-scope.admin:jira-software` and `read:project:jira`.
+**Test:** `test_issue_list_board_config_401_scope_mismatch_names_admin_scope`
+(`tests/issue_list_oauth_scope.rs`) — mounts a `get_board_config` 401 with the scope-mismatch
+substring during a `jr issue list` invocation with a configured `board_id` and no `--jql`, asserts
+the `read:board-scope.admin:jira-software` and `read:project:jira` hint. **[Wave-level finding
+OBS-1, LOW, spec-only wording correction, 2026-09-17]** — the AC previously named a
+`test_bc_x_15_001_issue_list_get_board_config_401_scope_mismatch_rewrite` placeholder that does
+not match the test as actually implemented; coverage was correct, only the name/file citation
+drifted. Corrected to the real test symbol above; no code or AC-logic change.
+
+### AC-014 (**[NEW, F-WG-1 wave-level finding, human ruling = EXPAND, 2026-09-17]** — traces to BC-X.15.001 clause 1, widened, and EC-X.15.001-4 — `src/cli/issue/list.rs::handle_list`'s `list_sprints` call)
+`src/cli/issue/list.rs::handle_list`'s same board-resolution path, once `get_board_config` resolves
+a scrum-type board, calls `client.list_sprints(bid, Some("active"))` to find the active sprint for
+its JQL. A 401 from THIS call, under OAuth with the scope-mismatch substring, is rewritten with the
+SAME grouped hint AC-011/AC-012(b) use (EC-X.15.001-4: grouped/over-inclusive-by-design, reused
+verbatim for consistency across every `list_sprints` call site): `read:sprint:jira-software` +
+`read:issue-details:jira` + `read:jql:jira`.
+**Test:** `test_issue_list_sprints_401_scope_mismatch_names_grouped_scopes`
+(`tests/issue_list_oauth_scope.rs`) — mounts a `list_sprints` 401 with the scope-mismatch substring
+during a `jr issue list` invocation against a scrum board fixture (i.e. `get_board_config`
+succeeds, `list_sprints` 401s), asserts the grouped sprint-scope hint. **[Wave-level finding OBS-1,
+LOW, spec-only wording correction, 2026-09-17]** — the AC previously named a
+`test_bc_x_15_001_issue_list_list_sprints_401_scope_mismatch_rewrite` placeholder that does not
+match the test as actually implemented; coverage was correct, only the name/file citation drifted.
+Corrected to the real test symbol above; no code or AC-logic change.
+
+### AC-015 (**[NEW, F-WG-1 wave-level finding, human ruling = EXPAND, 2026-09-17]** — traces to BC-X.15.001 clause 1, widened beyond board/sprint — `src/cli/init.rs::handle`'s `list_boards` call)
+`src/cli/init.rs::handle`'s interactive per-project setup step (reached after the user confirms
+"Configure this directory as a Jira project?") calls `client.list_boards(None, None)` to populate
+the board-selection prompt. A 401 from THIS call, under OAuth with the scope-mismatch substring, is
+rewritten via the same shared rewrite helper, with the SAME hint AC-001/AC-009 use for
+`jr board list`/`resolve_board_id` (same underlying HTTP call, same missing scope, regardless of
+which command reached it): `read:board-scope:jira-software` and `read:project:jira`.
+**Test:** `test_init_list_boards_401_scope_mismatch_names_missing_scopes`
+(`tests/init_oauth_scope.rs`, `#[ignore]`d + `JR_RUN_KEYRING_TESTS`-gated, consistent with this
+repo's existing keyring-touching `auth`/`init` test convention) — mounts a `list_boards` 401 with
+the scope-mismatch substring during a `jr init` invocation that reaches the per-project setup step,
+asserts the `read:board-scope:jira-software`/`read:project:jira` hint. (`jr init` is
+interactive-only per its existing design — this test mocks the same confirm/select prompts its
+existing test suite already mocks, per Task 1's read of `src/cli/init.rs`.) **[Wave-level finding
+OBS-1, LOW, spec-only wording correction, 2026-09-17]** — the AC previously named a
+`test_bc_x_15_001_init_list_boards_401_scope_mismatch_rewrite` placeholder that does not match the
+test as actually implemented (including the `#[ignore]`/keyring-gating detail, which was
+unspecified before); coverage was correct, only the name/file/gating citation drifted. Corrected to
+the real test symbol above; no code or AC-logic change.
+
 ## Architecture Mapping
 
 | Component | Module | Pure/Effectful |
 |-----------|--------|-----------------|
 | New 401 call-site rewrite (board, top-level + internal `resolve_board_id`/`handle_view` call sites) | `src/cli/board.rs` | Effectful (consumes an `Err(JrError)` from an already-issued HTTP call; itself performs no I/O) |
 | New 401 call-site rewrite (sprint, top-level + internal `resolve_scrum_board`/`SprintCommand::Add{current}` call sites) | `src/cli/sprint.rs` | Effectful (same) |
+| **[NEW, F-WG-1]** New 401 call-site rewrite (`handle_list`'s board-resolution path: `get_board_config` + `list_sprints`) | `src/cli/issue/list.rs` | Effectful (same — consumes an `Err(JrError)` from an already-issued HTTP call; reuses the shared rewrite helper, does not duplicate its logic) |
+| **[NEW, F-WG-1]** New 401 call-site rewrite (`handle`'s per-project setup prompt: `list_boards`) | `src/cli/init.rs` | Effectful (same) |
 | Reference pattern (read-only) | `src/api/jsm/servicedesks.rs::require_service_desk` | Effectful (existing, unmodified) |
 | Shared error type (read-only) | `src/error.rs::JrError` | N/A (unmodified; this story constructs existing variants, adds no new variant) |
 
@@ -345,6 +455,10 @@ admin-scope hint).
     `list_sprints`/`get_sprint_issues` calls, `sprint.rs::resolve_scrum_board`'s `get_board_config`
     call, and `sprint.rs`'s `SprintCommand::Add { current: true, .. }` `list_sprints` lookup) —
     `test-writer`
+2c. [ ] **[NEW, F-WG-1 wave-level finding, human ruling = EXPAND]** Write failing tests for
+    AC-013, AC-014, AC-015 — the 3 call sites outside `jr board`/`jr sprint`:
+    `src/cli/issue/list.rs::handle_list`'s `get_board_config` call, its `list_sprints` call, and
+    `src/cli/init.rs::handle`'s `list_boards` call — `test-writer`
 3. [ ] Verify Red Gate: all new tests (including the AC-009..AC-012 additions) fail against current
    code (no rewrite exists yet; `jr board`/`jr sprint` currently surface the raw generic
    `InsufficientScope`/fall-through path for every 401 shape, at every call site)
@@ -362,15 +476,24 @@ admin-scope hint).
     `sprint.rs::SprintCommand::Add { current: true, .. }`'s `list_sprints` lookup — each site uses
     the hint matching its underlying HTTP call per BC-X.15.001 Behavior clause 1's mapping table,
     reusing the grouped sprint-scope hint per EC-X.15.001-4 where applicable — `implementer`
-6. [ ] Confirm Green Gate: all new tests pass, including AC-009..AC-012
+5c. [ ] **[NEW, F-WG-1 wave-level finding, human ruling = EXPAND]** Wire the SAME shared rewrite
+    helper (or an equivalent call importable from `src/cli/issue/list.rs`/`src/cli/init.rs` without
+    an awkward cross-module dependency — implementer's choice, document in the PR) into the 3
+    call sites outside `jr board`/`jr sprint` (AC-013, AC-014, AC-015):
+    `src/cli/issue/list.rs::handle_list`'s `get_board_config` call (admin+project hint, same as
+    AC-010); its `list_sprints` call (grouped sprint hint, same as AC-011/AC-012(b)); and
+    `src/cli/init.rs::handle`'s `list_boards` call (board+project hint, same as AC-001/AC-009) —
+    `implementer`
+6. [ ] Confirm Green Gate: all new tests pass, including AC-009..AC-012 and AC-013..AC-015
 7. [ ] Run full existing `tests/board_commands.rs`/`tests/sprint_commands.rs` — confirm zero
    regressions to successful-response handling or non-401 error paths
 8. [ ] Diff review + full `cargo test --test jsm_request_api` (or BC-3.8.015's actual test
    location) confirming `src/error.rs` and `jsm_create.rs`'s existing rewrite are untouched
    (AC-007) — `implementer`
 9. [ ] Add a CHANGELOG entry under `[Unreleased] > Fixed` (AC-008), before creating the PR — update
-   the entry text to reflect the widened coverage (all Agile HTTP calls reachable within `jr
-   board`/`jr sprint`, not only the 4 top-level command handlers)
+   the entry text to reflect the widened coverage: all Agile HTTP calls reachable within `jr
+   board`/`jr sprint` (not only the 4 top-level command handlers), PLUS `jr issue list`'s
+   board-resolution path and `jr init`'s board-selection prompt (F-WG-1)
 10. [ ] Run full `cargo test`, `cargo clippy -- -D warnings`, `cargo fmt --all -- --check`
 
 ## Previous Story Intelligence
@@ -400,6 +523,10 @@ various 401 body shapes each AC requires.
 |------|--------|---------|
 | `src/cli/board.rs` | modify | New 401 call-site rewrite wired into `list`/`view` (both branches' unconditional `get_board_config` call), `resolve_board_id` (internal, `list_boards`), and `handle_view`'s scrum branch (`list_sprints`/`get_sprint_issues`) (AC-001, AC-002, AC-004, AC-005, AC-006, AC-009, AC-010, AC-011) |
 | `src/cli/sprint.rs` | modify | New 401 call-site rewrite wired into `list`/`current`/`add`/`remove`, plus the internal `resolve_scrum_board` (`get_board_config`) and `SprintCommand::Add { current: true, .. }`'s `list_sprints` lookup (AC-001, AC-002, AC-004, AC-005, AC-006, AC-009, AC-012) |
+| `src/cli/issue/list.rs` | modify | **[NEW, F-WG-1]** New 401 call-site rewrite wired into `handle_list`'s board-resolution path — `get_board_config` and `list_sprints` calls (AC-013, AC-014), reusing the shared rewrite helper from `board.rs`/`sprint.rs` |
+| `src/cli/init.rs` | modify | **[NEW, F-WG-1]** New 401 call-site rewrite wired into `handle`'s per-project setup prompt — `list_boards` call (AC-015), reusing the shared rewrite helper |
 | `tests/board_commands.rs` | modify/add | New 401-classification test cases |
 | `tests/sprint_commands.rs` | modify/add | New 401-classification test cases |
-| `CHANGELOG.md` | modify | `[Unreleased] > Fixed` entry (AC-008) |
+| `tests/issue_list.rs` (or wherever `jr issue list`'s existing test suite lives — confirmed by implementer at Task 1) | modify/add | **[NEW, F-WG-1]** New 401-classification test cases (AC-013, AC-014) |
+| `tests/init_commands.rs` (or wherever `jr init`'s existing test suite lives — confirmed by implementer at Task 1) | modify/add | **[NEW, F-WG-1]** New 401-classification test case (AC-015) |
+| `CHANGELOG.md` | modify | `[Unreleased] > Fixed` entry (AC-008), updated to also mention `jr issue list`/`jr init` coverage |

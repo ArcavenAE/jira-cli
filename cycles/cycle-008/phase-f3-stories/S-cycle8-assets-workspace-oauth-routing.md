@@ -22,7 +22,7 @@ inputs:
   - ".factory/specs/prd/bc-4-assets-cmdb.md"
   - "src/api/assets/workspace.rs"
   - "src/api/client.rs"
-input-hash: "ea19c3e"
+input-hash: "c98a6ef"
 traces_to: "ADR-0026 Decision 1; BC-4.2.001 unified fix table row 7"
 cycle: cycle-008-oauth-surface-correctness
 estimated_effort: xsmall

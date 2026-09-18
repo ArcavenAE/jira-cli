@@ -905,7 +905,7 @@ BC-2.3.040.
 
 | L3 BC ID | Summary | Pass 3 BC ID | Source | Confidence |
 |---|---|---|---|---|
-| BC-X.15.001 | `jr board`/`jr sprint` 401 disambiguates OAuth scope-mismatch, expired/invalid token, and (regression-guard only) wrong-host — auth-scheme-conditional call-site rewrite modeled on `require_service_desk` | — (cycle-008 ADR-0026) | src/cli/board.rs (new call-site rewrite); src/cli/sprint.rs (new call-site rewrite) | HIGH |
+| BC-X.15.001 | `jr board`/`jr sprint`/`jr issue list`/`jr init` 401 disambiguates OAuth scope-mismatch, expired/invalid token, and (regression-guard only) wrong-host — auth-scheme-conditional call-site rewrite modeled on `require_service_desk` | — (cycle-008 ADR-0026) | src/cli/board.rs (new call-site rewrite); src/cli/sprint.rs (new call-site rewrite); src/cli/issue/list.rs and src/cli/init.rs (new call-site rewrite, F-WG-1 widening 2026-09-17) | HIGH |
 
 ---
 

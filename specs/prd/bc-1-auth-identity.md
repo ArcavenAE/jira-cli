@@ -6,6 +6,15 @@ definitional_count: 72   # count of `#### BC-` headings in this file
 last_updated: 2026-09-17
 source_pass: 21
 trace: |
+  - cycle-008 `oauth-surface-correctness` adversary finding F1 residual mechanical
+    consistency-propagation sweep (2026-09-17, product-owner burst): BC-1.3.023's scope
+    justification table row for `read:board-scope.admin:jira-software` corrected from naming only
+    `jr board view --config` to also naming `read:project:jira` as a co-required scope, per
+    `oauth-scope-matrix.md` #53 (`get_board_config` requires
+    `read:board-scope.admin:jira-software` AND `read:project:jira`, not the admin scope alone).
+    This brings the row into line with the same correction already applied to BC-X.15.001 in
+    `cross-cutting.md`. NO scope-set change (still the finalized 16-scope union), NO BC id
+    change, NO count change — wording-accuracy only.
   - cycle-008 `oauth-surface-correctness` F2 gate finalization (2026-09-17, human-approved
     full-parity decision): BC-1.3.023 AMENDED again — adds `manage:jira-project` to
     DEFAULT_OAUTH_SCOPES, closing the component-write scope gap CONFIRMED by
@@ -834,7 +843,7 @@ read:jira-work write:jira-work read:jira-user read:servicedesk-request write:ser
 |---|---|
 | `manage:jira-project` **[NEW, F2 gate finalization]** | `jr component create/edit/delete/rename` (`POST`/`PUT`/`DELETE /rest/api/3/component[/{id}]`) — CONFIRMED by the cycle-008 `oauth-scope-matrix.md` deep-research pass. `write:jira-work` does NOT cover component writes — this is a DIFFERENT classic scope, not a granular alternative. Read-only component operations (`jr component list`; delete's `relatedIssueCounts` disposition-safety check) remain covered by `read:jira-work` and require no change. |
 | `read:board-scope:jira-software` | `jr board list/view` (BC-5.1.001 — currently 401s under OAuth for a SCOPE reason, not a routing reason; see the cross-reference note on BC-5.1.001) |
-| `read:board-scope.admin:jira-software` | `jr board view --config` |
+| `read:board-scope.admin:jira-software` | `jr board view` → `get_board_config` — co-required with `read:project:jira` per `oauth-scope-matrix.md` #53 (`get_board_config` requires BOTH scopes, not the admin scope alone) |
 | `read:sprint:jira-software` | `jr sprint list/current`, board→sprint traversal |
 | `write:board-scope:jira-software` | `jr sprint add`/`jr sprint remove` (`add_issues_to_sprint`/`move_issues_to_backlog`, `src/api/jira/sprints.rs`) — existing, already-correct POST paths that need this scope to function under OAuth; NOT in the original research candidate list, added by this cycle's own code audit |
 | `read:project:jira` | `jr board list --project` filter |
