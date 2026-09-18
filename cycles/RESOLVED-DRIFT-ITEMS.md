@@ -6,6 +6,43 @@
 > is RESOLVED/CLOSED — kept for audit trail, not tracked as open debt.
 > STATE.md keeps only a one-line pointer to this file.
 
+## RESOLVED at cycle-008 Phase F7 close (2026-09-18, DEC-371 -- archived from `cycles/OPEN-STANDING-ITEMS.md` during the F7 CONVERGED+CLOSED burst)
+
+**`CYCLE-008-F6-MUTANTS-EXAMINE-GLOBS-GAP`** -- RESOLVED, 6 of 7 files. Recorded during the F6
+targeted-hardening burst (2026-09-18) as a MEDIUM coverage gap: `.cargo/mutants.toml`'s
+`examine_globs` list excluded SEVEN cycle-008-delta files (corrected from an original 2-file
+undercount during the F7 pre-gate consistency reconcile) -- `src/api/client.rs`,
+`src/cli/board.rs`, `src/cli/sprint.rs`, `src/cli/issue/list.rs`, `src/cli/init.rs` (F-WG-1's
+widened `rewrite_agile_scope_error` call sites, `BC-X.15.001`), and `src/api/jsm/queues.rs`,
+`src/api/assets/workspace.rs` (2 of `BC-4.2.001`'s 7 routing-swap sites) -- so the CI `--in-diff`
+mutation gate structurally never mutated this cycle's highest-value new logic in any of these
+seven files. A delta config-scoped `cargo-mutants` run against the globs that WERE in scope
+(3 JSM files: `servicedesks.rs`/`request_types.rs`/`requests.rs`) came back 6/6 CAUGHT, but never
+touched the seven excluded files.
+
+At the F7 human gate, the human's explicit decision was: **"fix examine_globs first, then
+close."** `FIX-F7-001` (PR #845, `develop`: `fc608cd3`->`0834c9f0`) executed that fix: added 6 of
+the 7 files (`src/api/client.rs`, `src/cli/board.rs`, `src/cli/sprint.rs`,
+`src/cli/issue/list.rs`, `src/api/jsm/queues.rs`, `src/api/assets/workspace.rs`) to
+`.cargo/mutants.toml` `examine_globs` (25->31 entries), plus 5 anchored `exclude_re` entries
+scoping out the `classify_401_body` wiring sites inside `JiraClient::send_inner`'s
+post-refresh/reconcile retry paths -- reachable only through the keychain-gated OAuth refresh
+flow (`JR_RUN_KEYRING_TESTS=1`, `#[ignore]`'d in `tests/oauth_refresh_integration.rs`) and would
+otherwise flood the gate with un-actionable MISSED survivors. `docs/specs/cargo-mutants-policy.md`
+Sec.Scope updated to match; `scripts/check-cargo-mutants-policy-citations.sh` /
+`tests/mutants_glob_existence.rs` confirmed green.
+
+**`src/cli/init.rs` (the 7th file) was deliberately NOT added** -- its entire `handle()` function
+has zero default-CI mutation coverage (`jr init` is exercised by exactly one `#[ignore]`'d,
+keyring-gated test), so every one of its mutants would survive by default -- the same
+whole-file-flooding class as the pre-existing `auth.rs`/`login.rs` FIX-F6-1 deferral, not a
+single narrowly-anchored `exclude_re`. Tracked forward as the new follow-up item
+`CYCLE-008-INIT-MUTATION-COVERAGE-SEAM` (`cycles/OPEN-STANDING-ITEMS.md`), which also subsumes
+the related `CYCLE-008-F5-INIT-MAPERR-MUTANT-RESIDUAL` item (same root file, same underlying
+gap). This is a documented, human-endorsed partial resolution (6/7), not a full close of the
+mutation-coverage question -- the file-count-corrected residual was explicitly surfaced and
+weighed at the F7 human gate, which approved closing the cycle on this basis.
+
 ## RESOLVED at cycle-013 release-completion follow-up (2026-09-16, v4.48 -- archived from STATE.md's "RESOLVED prior burst" slot during the v4.48 CLOSED+RELEASED burst)
 
 **`CYCLE-013-PR823-MERGE-WITHOUT-COMPLETED-REVIEW`** -- RESOLVED. PR #823

@@ -157,3 +157,25 @@ traces_to: STATE.md
 **Superseded by:** cycle-008 Phase F5 (scoped adversarial refinement) subsequently CONVERGED this burst (3 clean adversary passes, novelty HIGH->LOW->0.10) -- 2 of Pass 1's 4 findings (F1, F3) FIXED via FIX-F5-001 (PR #844, merged @ `fc608cd3`); remaining 2 (F2, F4) justified-deferred. This checkpoint's "NEXT" action (S6 spike -> F5) has been superseded -- F5 ran and converged directly (S6 remains a non-gating parallel track, not a hard prerequisite to F5). Current checkpoint (STATE.md v4.61, F5-converged / F6-not-started state) is in `STATE.md` itself.
 
 ---
+
+## Archived checkpoint (from STATE.md v4.63, F6 HARDENED_WITH_RESIDUALS / F7 pre-gate-reconciled state)
+
+```
+**Date & position:** 2026-09-18 (F7 pre-gate consistency-reconcile burst applied on top of the prior F6 burst, same date). cycle-008 (`oauth-surface-correctness`) Phase F6 (targeted hardening) is HARDENED_WITH_RESIDUALS, NO BLOCKING findings -- develop tip UNCHANGED at fc608cd3 (no F6 code fix landed). This burst corrected 2 MEDIUM + recorded 1 LOW documentation-accuracy finding; no phase advance. NEXT = Phase F7 (delta convergence, final human gate).
+
+**Convergence counter:** F6 ran no adversary pass (not applicable to a hardening phase); trajectory-tail carried forward unchanged from F5 (->4->0->0->0). No active loop.
+
+**In-flight work:** none. No stories mid-TDD; no PRs awaiting review/CI; no sub-agents abandoned mid-step. NEXT: Phase F7 (delta convergence -- 5/7-dimension convergence check on the delta plus regression validation on the full codebase, final human gate). At F7, the human must be shown the CYCLE-008-F6-MUTANTS-EXAMINE-GLOBS-GAP residual (MEDIUM -- .cargo/mutants.toml's examine_globs excludes 7 delta files: src/api/client.rs, src/cli/board.rs, src/cli/sprint.rs, src/cli/issue/list.rs, src/cli/init.rs, src/api/jsm/queues.rs, src/api/assets/workspace.rs) for an explicit disposition ruling. S6 remains not-started and non-blocking.
+
+**Pending human decisions / blockers:** (1) CYCLE-008-CONSOLE-SCOPE-RELEASE-GATE -- Console scope-add BEFORE any release ships cycle-008 content (pre-release, human-owned; NOT blocking F7 pipeline work). (2) CYCLE-008-F6-MUTANTS-EXAMINE-GLOBS-GAP (MEDIUM) -- disposition needed at F7. (3) self-approval structural gap. (4) other open standing items (2 F5 deferrals, 2 S5 LOW deferrals, 3 F6 LOW/note deferrals).
+
+**WIP branch list:** none with commits ahead of develop.
+
+**Resume command:** /vsdd-factory:rehydrate-wave then /vsdd-factory:next-step.
+
+**Counts:** total_bcs 770 (unchanged); VP count 89 (unchanged); holdout scenarios 118 (unchanged); total_stories 191 (unchanged).
+```
+
+**Superseded by:** the human F7 gate convened and **APPROVED** the close, on the explicit condition "fix examine_globs first (FIX-F7-001, PR #845 @ `0834c9f0`), then close." That condition was satisfied and cycle-008 is now **CLOSED** (DEC-371). The `CYCLE-008-F6-MUTANTS-EXAMINE-GLOBS-GAP` residual this checkpoint flagged for F7 disposition is now RESOLVED 6/7 (7th file, `src/cli/init.rs`, deferred as `CYCLE-008-INIT-MUTATION-COVERAGE-SEAM`). Current checkpoint (STATE.md v4.64, F7 CONVERGED+CLOSED state) is in `STATE.md` itself.
+
+---

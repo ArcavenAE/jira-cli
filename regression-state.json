@@ -1,1 +1,1 @@
-{"status":"pass","timestamp":"2026-09-18T19:01:47Z","command":"cargo test --test mutants_glob_existence 2>&1 | tail -10"}
+{"status":"pass","timestamp":"2026-09-18T20:04:27Z","command":"cd /Users/zious/Documents/GITHUB/jira-cli/.worktrees/cycle8-f7-001 && cargo test --test mutants_glob_existence 2>&1 | tail -30"}

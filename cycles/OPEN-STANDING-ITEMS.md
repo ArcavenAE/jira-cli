@@ -1035,14 +1035,16 @@ inherited one. Candidate fix: a mockable keyring test seam, which does not curre
 Target: a future test-infrastructure investment, not a cycle-008 fix.
 
 **`CYCLE-008-F5-INIT-MAPERR-MUTANT-RESIDUAL`** (= F5 Pass 1 finding F1's residual after FIX-F5-001,
-LOW mutation-testing residual) -- FIX-F5-001 added a CI-running test pinning `init.rs`'s
-`list_boards` scope-hint STRING through the shared `is_insufficient_scope_error` helper, closing
-the coverage gap Pass 1 flagged. A mutant deleting `init.rs`'s own `.map_err` wiring specifically
-(distinct from the shared helper, which the new tests do cover) still survives CI, since the new
-test does not independently prove that call site is reached only through the intended error path.
-Accepted per the FIX-F5-001 story spec's scope (shared-helper + string-pin coverage, not
-full mutation-kill on every call site). Target: a future mutation-hardening pass (candidate for
-Phase F6 targeted hardening, which is scoped to this exact delta).
+LOW mutation-testing residual) -- **SUBSUMED 2026-09-18 (F7 close, DEC-371) by
+`CYCLE-008-INIT-MUTATION-COVERAGE-SEAM`** above -- same root cause (`init.rs::handle` has no
+default-CI mutation coverage), now tracked as the single canonical item going forward. Original
+text preserved: FIX-F5-001 added a CI-running test pinning `init.rs`'s `list_boards` scope-hint
+STRING through the shared `is_insufficient_scope_error` helper, closing the coverage gap Pass 1
+flagged. A mutant deleting `init.rs`'s own `.map_err` wiring specifically (distinct from the
+shared helper, which the new tests do cover) still survives CI, since the new test does not
+independently prove that call site is reached only through the intended error path. Accepted per
+the FIX-F5-001 story spec's scope (shared-helper + string-pin coverage, not full mutation-kill on
+every call site).
 
 **F4-cosmetic** (= F5 Pass 1 finding F4, COSMETIC) -- a discarded `NotAuthenticated` allocation on
 a dead branch, surfaced during F5 Pass 1. Note-only, no behavioral/performance/test impact. Not
@@ -1064,25 +1066,27 @@ cycle-008 delta `0793b9c5`..`fc608cd3`, plus full-tree regression and security s
 closure precedent. `develop` tip UNCHANGED at `fc608cd3` (no F6 code fix landed). Full detail:
 `cycles/cycle-008/phase-f6-hardening/hardening-record.md`.
 
-**`CYCLE-008-F6-MUTANTS-EXAMINE-GLOBS-GAP`** (MEDIUM, coverage gap in security-adjacent code; no
-known defect -- **flagged PROMINENTLY, to be raised at the F7 human gate**) -- `.cargo/mutants.toml`'s
-`examine_globs` list excludes SEVEN cycle-008-delta files, not two as originally recorded:
-`src/api/client.rs`, `src/cli/board.rs`, `src/cli/sprint.rs`, `src/cli/issue/list.rs`,
-`src/cli/init.rs` (F-WG-1's widened `rewrite_agile_scope_error` call sites across these three,
-`BC-X.15.001`), and `src/api/jsm/queues.rs`, `src/api/assets/workspace.rs` (2 of `BC-4.2.001`'s 7
-routing-swap sites). So the CI `--in-diff` mutation gate structurally never mutates this cycle's
-highest-value new logic in any of these seven files (`classify_401_body`,
-`is_insufficient_scope_error`, `rewrite_agile_scope_error`, and the JSM/Assets routing swaps
-outside the 3 in-scope JSM files). A delta config-scoped `cargo-mutants` run against the globs
-that ARE in scope covered only 3 in-scope JSM files
-(`servicedesks.rs`/`request_types.rs`/`requests.rs`) and came back 6/6 CAUGHT, but that scope
-never touches any of the seven excluded files above. Recommended fix: add ALL SEVEN files to
-`examine_globs` (+ update `docs/specs/cargo-mutants-policy.md` Sec.Scope + keep
-`scripts/check-cargo-mutants-policy-citations.sh` / `tests/mutants_glob_existence.rs` green).
-Deferred pending human sign-off at F7 because it is a repo-wide mutation-**policy** change, not
-feature scope -- unit tests + F5's independent verification already cover the logic itself.
-(Corrected 2026-09-18, F7 pre-gate consistency reconcile -- originally undersold as a 2-file gap;
-the human disposition at F7 must weigh the full seven-file scope, not the original two.)
+**`CYCLE-008-F6-MUTANTS-EXAMINE-GLOBS-GAP`** -- **RESOLVED 2026-09-18 (F7 close, DEC-371)**, 6 of 7
+files. Human F7-gate decision: "fix examine_globs first, then close" -- FIX-F7-001 (PR #845,
+`develop@fc608cd3`->`0834c9f0`) added `src/api/client.rs`, `src/cli/board.rs`, `src/cli/sprint.rs`,
+`src/cli/issue/list.rs`, `src/api/jsm/queues.rs`, `src/api/assets/workspace.rs` to
+`.cargo/mutants.toml` `examine_globs` (25->31 entries) plus 5 anchored `exclude_re` entries scoping
+out the keychain-gated post-refresh-retry wiring in `JiraClient::send_inner` (reachable only via
+`JR_RUN_KEYRING_TESTS=1`-gated `#[ignore]`'d tests). `src/cli/init.rs` (the 7th file) was
+DELIBERATELY DEFERRED, not resolved -- see the new follow-up item
+`CYCLE-008-INIT-MUTATION-COVERAGE-SEAM` immediately below. Full resolved-item text and rationale
+archived to `cycles/RESOLVED-DRIFT-ITEMS.md`.
+
+**`CYCLE-008-INIT-MUTATION-COVERAGE-SEAM`** (NEW, LOW, follow-up minted at F7 close 2026-09-18,
+DEC-371) -- `src/cli/init.rs` was deliberately excluded from FIX-F7-001's `examine_globs` addition:
+`jr init`'s entire `handle()` function has zero default-CI mutation coverage (exercised by exactly
+one `#[ignore]`'d, keychain-gated test), so every mutant introduced into it would survive by
+default -- the same whole-file-flooding class as the pre-existing `auth.rs`/`login.rs` FIX-F6-1
+deferral, not a single narrowly-anchored `exclude_re` fix. This SUBSUMES
+`CYCLE-008-F5-INIT-MAPERR-MUTANT-RESIDUAL` below (same root file, same underlying gap -- tracked
+here going forward as the single canonical item). Target: a future test-infrastructure investment
+(a mockable keyring/init test seam) that would let `init.rs` carry real default-CI coverage before
+it can safely join `examine_globs`.
 
 **`CYCLE-008-F6-PUREFN-MUTATION-HOST-DEFERRED`** (LOW) -- empirical `cargo-mutants` confirmation
 of the 3 new pure fns (`classify_401_body`, `is_insufficient_scope_error`, and the
@@ -1112,3 +1116,48 @@ duplicated as a separate root cause.
 OPEN/PENDING, unchanged); `CYCLE-008-F5-KEYRING-WIRING-COVERAGE`, `CYCLE-008-F5-INIT-MAPERR-MUTANT-RESIDUAL`,
 `CYCLE-008-ENV-RESTORE-NON-RAII`, `CYCLE-008-WORKTREE-NAME-VS-STORYID` (all carried from F5/S5;
 F6's checks did not surface any of them as newly resolved or newly distinct).
+
+## cycle-008 Phase F7 close -- S-7.02 Cycle-Closing Checklist (2026-09-18, DEC-371)
+
+**Status:** cycle-008 (`oauth-surface-correctness`) **CLOSED** at the F7 human gate (APPROVED).
+Operator decision: "fix examine_globs first (FIX-F7-001, PR #845 @ `0834c9f0`), then close" --
+satisfied, then closed. Shipped on `develop @ 0834c9f0`, **NO immediate release cut**. Full
+convergence detail: `cycles/cycle-008/phase-f7-convergence/delta-convergence-report.md`.
+
+Every cycle-008 process-gap/novel finding is tracked as an OPEN-STANDING-ITEM or
+resolved-with-note; none left uncovered at close:
+
+- `CYCLE-008-CONSOLE-SCOPE-RELEASE-GATE` -- **OPEN**, human/release-owned pre-release blocker
+  (see top of this file). Does not block the cycle's own close, only shipping a release that
+  carries its content.
+- `CYCLE-008-F6-MUTANTS-EXAMINE-GLOBS-GAP` -- **RESOLVED 6/7** via FIX-F7-001 (above). 7th file
+  (`src/cli/init.rs`) residual -> new follow-up `CYCLE-008-INIT-MUTATION-COVERAGE-SEAM`.
+- `CYCLE-008-F5-KEYRING-WIRING-COVERAGE` -- **OPEN**, carried forward unchanged (future
+  test-infrastructure investment; a mockable keyring test seam does not currently exist).
+- `CYCLE-008-F5-INIT-MAPERR-MUTANT-RESIDUAL` -- **SUBSUMED** by `CYCLE-008-INIT-MUTATION-COVERAGE-SEAM`
+  (above).
+- `CYCLE-008-F6-PUREFN-MUTATION-HOST-DEFERRED` -- **OPEN**, carried forward unchanged (host-speed
+  limitation; candidate for the nightly mutation workflow now that `examine_globs` is widened).
+- `CYCLE-008-SELF-APPROVAL-STRUCTURAL-GAP` -- **OPEN**, carried forward unchanged (repo-wide,
+  engine-level fix target, not a cycle-008 fix).
+- `CYCLE-008-ENV-RESTORE-NON-RAII` -- **OPEN**, carried forward unchanged (test-quality debt from
+  S5, `tests/attachment_jsm.rs`).
+- `CYCLE-008-WORKTREE-NAME-VS-STORYID` -- **OPEN**, carried forward unchanged (S5 worktree-naming
+  convention debt).
+- The pre-existing `F7-GATE-SYSTEMIC-INPUT-HASH-DRIFT-BOOKKEEPING` maintenance note (factory-wide
+  bookkeeping-hash churn, not cycle-008-specific) was independently re-confirmed by this close's
+  input-hash drift scan -- no cycle-008 semantic spec drift found; **OPEN**, unchanged, pre-existing
+  factory-wide debt.
+- Two unrelated findings surfaced incidentally by the F7 pre-gate consistency/input-hash scan and
+  confirmed OUT OF cycle-008's scope: a drift note on `bc-2-issue-read.md` (pre-existing, no
+  cycle-008 workstream touches that file per F1 §3's confirmed no-overlap grep) and 4 historical
+  input artifacts whose `inputs:` sources no longer resolve to re-hashable content (superseded/
+  archived source docs from earlier cycles, `ACCEPTED SENTINEL`-class per the cycle-013 precedent).
+  Both recorded as **maintenance-sweep candidates only** -- not actioned, not blocking, not
+  cycle-008 content.
+- S6 (`S-cycle8-teams-graphql-oauth-replatform-spike`) -- confirmed **NOT STARTED / deferred
+  non-gating** at close, per `cycles/cycle-008/oauth-scope-matrix.md` §3 (wave plan) and ADR-0026's
+  Consequences section (Workstream D deferred, Teams spike investigation-only). `jr team list`
+  remains status-quo-broken under OAuth -- a documented gap, not a regression introduced by this
+  cycle. Not tracked as a new standing item (already fully described in ADR-0026 and the S6 story
+  file itself, `cycles/cycle-008/phase-f3-stories/S-cycle8-teams-graphql-oauth-replatform-spike.md`).

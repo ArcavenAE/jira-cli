@@ -718,3 +718,101 @@ this burst; `develop` tip remains `fc608cd3` from the F5/F6 bursts.
 
 **Dim-7 Attestation:** N/A — no `src/` change this burst; regression suite last verified PASS
 during the F6 burst (1498 lib tests + 49 integration binaries, 0 failures).
+
+## Burst: F7 CONVERGED — cycle-008 CLOSED (2026-09-18)
+
+**Parent-commit:** `0834c9f0` (`develop` tip entering this burst — FIX-F7-001/PR `#845` merged in
+the immediately-prior session). This burst produces no new `develop`-side commit — it is the
+`factory-artifacts` atomic commit recording the F7 close (state-manager commit — SHA recorded
+after push).
+
+**Trigger:** Human F7 gate decision. Operator's explicit instruction: "fix examine_globs first,
+then close." `FIX-F7-001` (PR #845, `develop`: `fc608cd3`->`0834c9f0`) landed first, satisfying
+that condition — 6 of the 7 `CYCLE-008-F6-MUTANTS-EXAMINE-GLOBS-GAP` delta files
+(`src/api/client.rs`, `src/cli/board.rs`, `src/cli/sprint.rs`, `src/cli/issue/list.rs`,
+`src/api/jsm/queues.rs`, `src/api/assets/workspace.rs`) added to `.cargo/mutants.toml`
+`examine_globs` (25→31 entries) with 5 anchored `exclude_re` entries scoping out the
+keychain-gated `classify_401_body` post-refresh-retry wiring; `src/cli/init.rs` (the 7th file)
+deliberately deferred with documented rationale (zero default-CI coverage on `handle()`, same
+whole-file-flooding class as the pre-existing `auth.rs`/`login.rs` deferral) — new follow-up item
+`CYCLE-008-INIT-MUTATION-COVERAGE-SEAM` minted, subsuming `CYCLE-008-F5-INIT-MAPERR-MUTANT-RESIDUAL`.
+
+**Adversary verdict:** N/A — this is an F7 delta-convergence/close burst, not an
+adversarial-review pass. F5's own adversary verdict (CONVERGED, 3 clean passes, novelty 0.10,
+prior burst) is unchanged and carried forward unaffected into this close.
+
+**F7 delta convergence: ALL 5 DIMENSIONS PASS.** Spec (F5 novelty 0.10 < 0.15); Test (delta
+config-scoped mutation 6/6 = 100%, examine_globs gap now 6/7 closed); Implementation (F5 3 clean
+passes, 0 CRIT/HIGH); Verification (F6 security clean, purity intact, Kani/fuzz justified-skip);
+Holdout (green regression + E2E + Wave-1 integration-gate holdouts; `dtu_required: false`). Full
+regression on the full codebase: green on `develop`, CI-authoritative on `0834c9f0`. Consistency
+audit (fresh context): CONSISTENT — the 2 MEDIUM doc-drifts found and fixed at the prior F7
+pre-gate reconcile burst (ADR-0026 backlink status; examine_globs file-list) reconfirmed accurate
+and unchanged; all guard scripts green. Input-hash drift scan: no cycle-008 semantic spec drift —
+factory-wide bookkeeping-hash churn (pre-existing, `F7-GATE-SYSTEMIC-INPUT-HASH-DRIFT-BOOKKEEPING`)
+plus 2 findings confirmed unrelated to cycle-008 (a `bc-2-issue-read.md` drift note; 4 historical
+input artifacts whose sources no longer resolve), both recorded as maintenance-sweep candidates
+only, not actioned. Full report: `cycles/cycle-008/phase-f7-convergence/delta-convergence-report.md`.
+Full traceability chain extension (BC-4.2.001/BC-X.15.001/BC-1.3.023 → VP-OAUTH-GW-001/002/003 →
+tests → src → F5/F6 evidence): `cycles/cycle-008/phase-f7-convergence/traceability-chain-delta.md`.
+
+**ADR-0026** `status:` flipped `proposed` → `accepted` (this burst), with a "Status as of
+2026-09-18 (F7 close)" section appended, mirroring the ADR-0025/cycle-013 close precedent.
+
+**Codifications:** `DEC-371` minted — cycle-008 Phase F7 delta convergence HUMAN GATE APPROVED +
+cycle CLOSED (full decision text in STATE.md's Decisions Log). No new BC/VP/lesson codified this
+burst — F7's convergence verdict and the human's close ruling are the only new pipeline facts;
+counts unchanged (`total_bcs` 770, VP 89, holdout 118, `total_stories` 191).
+
+**Closes:** Phase F7 (delta convergence) for cycle-008, in full — and with it, cycle-008
+(`oauth-surface-correctness`) itself, in full (F1 DEC-368, F2 DEC-369, F3 DEC-370, F4 both waves
+merged, F5 CONVERGED, F6 HARDENED_WITH_RESIDUALS, F7 CONVERGED+CLOSED DEC-371).
+
+**S-7.02 Cycle-Closing Checklist:** every cycle-008 process-gap/novel finding confirmed tracked as
+an OPEN-STANDING-ITEM or resolved-with-note — enumerated in full in
+`cycles/OPEN-STANDING-ITEMS.md`'s new "cycle-008 Phase F7 close" section. S6
+(`S-cycle8-teams-graphql-oauth-replatform-spike`) confirmed NOT STARTED / deferred non-gating,
+accepted per the wave-schedule and ADR-0026's Consequences section — `jr team list` remains
+status-quo-broken under OAuth, a documented gap, not a regression.
+
+**Outcome:** cycle-008 (`oauth-surface-correctness`) **CLOSED**. Shipped on `develop @ 0834c9f0`,
+**NO immediate release cut** — `CYCLE-008-CONSOLE-SCOPE-RELEASE-GATE` (Atlassian Developer
+Console scope registration, human-owned) remains the sole open pre-release blocker; this cycle's
+content rolls into a later dev release once that step completes (cycle-005/cycle-012 precedent).
+`activation_head`/`activation_version` UNCHANGED at `aa557050`/`v0.7.0-dev.7`. Counts unchanged:
+`total_bcs` 770, VP 89, holdout 118, `total_stories` 191. **NEXT:** no cycle ACTIVE — cycles
+009-011 remain PARKED, S6 remains non-gating/not-started; pipeline returns to PAUSED pending
+human direction (a maintenance sweep, the Console scope-add release step, or opening a new
+cycle).
+
+### Details
+
+| Agent | Task | Output |
+|-------|------|--------|
+| state-manager (this agent) | Wrote F7 convergence report + traceability chain delta; flipped ADR-0026 to accepted + appended close status; minted DEC-371; resolved `CYCLE-008-F6-MUTANTS-EXAMINE-GLOBS-GAP` (6/7, archived to `RESOLVED-DRIFT-ITEMS.md`) + minted `CYCLE-008-INIT-MUTATION-COVERAGE-SEAM`; STATE.md ONE full-content Write marking cycle-008 CLOSED; drift reconciliation; commit + push `factory-artifacts` | `cycles/cycle-008/phase-f7-convergence/delta-convergence-report.md`; `cycles/cycle-008/phase-f7-convergence/traceability-chain-delta.md`; `specs/architecture/decisions/ADR-0026-...md`; `cycles/OPEN-STANDING-ITEMS.md`; `cycles/RESOLVED-DRIFT-ITEMS.md`; `cycles/cycle-008/burst-log.md` (this entry); `cycles/cycle-008/session-checkpoints.md`; `STATE.md` |
+
+**Files touched (Dim-1): 9 unique files, this burst**
+
+- `STATE.md`
+- `cycles/cycle-008/burst-log.md` (this entry)
+- `cycles/cycle-008/session-checkpoints.md`
+- `cycles/cycle-008/phase-f7-convergence/delta-convergence-report.md` (new)
+- `cycles/cycle-008/phase-f7-convergence/traceability-chain-delta.md` (new)
+- `specs/architecture/decisions/ADR-0026-oauth-3lo-gateway-routing-invariant-and-granular-jira-software-scopes.md`
+- `cycles/OPEN-STANDING-ITEMS.md`
+- `cycles/RESOLVED-DRIFT-ITEMS.md`
+- `regression-state.json`, `sidecar-learning.md` (pre-existing benign churn, folded in per
+  TD-VSDD-053 single-commit protocol)
+
+**Dim-2 Attestation:** `scripts/check-spec-counts.sh` / `scripts/check-bc-cumulative-counts.sh` —
+N/A this burst (no `total_bcs`/`total_vps`/`total_stories` numeric change; 770/89/118/191 all
+unchanged).
+
+**Dim-5 Attestation:** N/A — no binary/WASM artifact produced by this burst.
+
+**Dim-6 Attestation:** N/A on `factory-artifacts` — this burst records the ALREADY-MERGED
+FIX-F7-001 (PR #845, `develop@0834c9f0`); no NEW `develop` code change originates from this
+burst itself.
+
+**Dim-7 Attestation:** N/A — no `src/` change originates from this burst; `develop`'s full
+regression/CI was validated at FIX-F7-001's own merge (`0834c9f0`), CI-authoritative.

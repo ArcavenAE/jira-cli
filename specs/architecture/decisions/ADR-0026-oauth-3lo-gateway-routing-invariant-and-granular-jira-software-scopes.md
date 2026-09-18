@@ -1,7 +1,7 @@
 ---
 document_type: adr
 adr_id: ADR-0026
-status: proposed
+status: accepted
 date: 2026-09-17
 subsystems_affected: [SS-02, SS-03, SS-04, SS-05, SS-06, SS-08]
 supersedes: null
@@ -367,6 +367,25 @@ existing Decision 3 pattern, not a new architectural decision. Full disposition,
 hint mapping, and the amended acceptance criteria are recorded in `BC-X.15.001`
 (`.factory/specs/prd/cross-cutting.md`) and in the amended
 `S-cycle8-agile-scope-mismatch-error-mapping` story (v1.4, AC-013..AC-015).
+
+### Status as of 2026-09-18 (F7 close — supersedes the section above)
+
+Phase F5 scoped adversarial review CONVERGED (3 clean passes on the whole delta `0793b9c5`..`fc608cd3`,
+novelty 0.10; FIX-F5-001 merged `develop@fc608cd3`, PR #844). Phase F6 targeted hardening COMPLETE
+(`HARDENED_WITH_RESIDUALS`, no BLOCKING findings — `cycles/cycle-008/phase-f6-hardening/hardening-record.md`).
+Per the human's explicit F7-gate instruction ("fix examine_globs first, then close"), FIX-F7-001
+(PR #845, `develop@0834c9f0`) landed first, closing the `CYCLE-008-F6-MUTANTS-EXAMINE-GLOBS-GAP`
+residual for 6 of the 7 delta files (the 7th, `src/cli/init.rs`, deferred with documented
+rationale — `CYCLE-008-INIT-MUTATION-COVERAGE-SEAM`). Phase F7 delta-convergence then reached all
+5 convergence dimensions PASS with a CONSISTENT audit
+(`.factory/cycles/cycle-008/phase-f7-convergence/delta-convergence-report.md`). The human F7 gate
+**APPROVED** the close on that basis. **This ADR's `status:` field is flipped from `proposed` to
+`accepted` in this same burst** (DEC-371). cycle-008 (`oauth-surface-correctness`) is **CLOSED** —
+shipped on `develop @ 0834c9f0`, **NO immediate release cut** (`CYCLE-008-CONSOLE-SCOPE-RELEASE-GATE`,
+the Atlassian Developer Console scope registration, remains the sole open human-owned pre-release
+blocker; this cycle's content rolls into a later dev release once that step completes, same
+deferred-release pattern as cycle-005/cycle-012's F7 close). `activation_head`/`activation_version`
+stay unchanged at `aa557050`/`v0.7.0-dev.7`.
 
 ## Alternatives Considered
 
