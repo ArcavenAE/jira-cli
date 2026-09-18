@@ -287,6 +287,47 @@ a doc/comment mismatch.
 
 ---
 
+## Standing item — AUTH-REFRESH-TARGET-PROFILE-NOT-SHOWN (2026-09-18, backlog capture)
+
+**ID:** `AUTH-REFRESH-TARGET-PROFILE-NOT-SHOWN`
+**Title:** `jr auth refresh` does not tell the user which profile / authenticated session it is refreshing.
+**Severity:** LOW, non-blocking. DX/UX enhancement -- not a correctness bug (the refresh still targets
+the correct profile; the user just isn't shown which one).
+**Status:** OPEN, DEFERRED.
+**Classification:** DX/UX enhancement, auth command family. Continuation of the cycle-003
+auth-profile-dx / cycle-007 auth-correctness-dx theme; not tied to cycle-008 (CLOSED) or the
+in-flight Teams spike (S6).
+**Reported by:** human operator, 2026-09-18.
+**Added:** 2026-09-18, lightweight backlog-capture burst (state-manager, TD-VSDD-053 single-commit).
+This is a record-only capture -- not a phase advance, no code change, no DEC minted, pipeline stays
+PAUSED, no cycle ACTIVE.
+
+**Symptom:** When refreshing an auth login, the interactive flow prompts the user (e.g. to allow the
+refresh / keychain access) WITHOUT naming the target profile or its instance URL. On a multi-profile
+setup the user cannot tell which authenticated session is being refreshed.
+
+**Grounding / code anchor:** `src/cli/auth/refresh.rs::refresh_credentials` already resolves the
+`target` profile name (from the `--profile` flag override, else `config.active_profile_name`) and
+validates it -- but never surfaces `target` to the user in the interactive path before dispatching to
+`login_oauth`/`login_token`. The resolved target is available; it's simply not echoed.
+
+**Fix direction (for a future implementer, NOT to be done now):** at the start of an interactive
+`jr auth refresh` (Table/human mode), emit a stderr notice naming the target profile and its
+configured instance URL (e.g. `Refreshing credentials for profile "1898-prod"
+(https://1898andco.atlassian.net)...`) BEFORE the keychain/OAuth prompt. Apply to BOTH the OAuth and
+API-token refresh paths. Precedent already exists in the codebase: `src/cli/auth/login.rs`'s URL
+prompt names `{target_for_check}`, and `src/cli/auth/remove.rs`'s confirm names the profile -- mirror
+that. Keep it stderr-only (Output channel profile 4/Symmetric); `--output json` payload MUST remain
+unchanged; suppressed under `--no-input`/non-TTY.
+
+**Disposition:** DEFERRED -- candidate for a future auth-DX cycle (theme continuation of cycle-003
+auth-profile-dx / cycle-007 auth-correctness-dx). Not tied to cycle-008 (which is CLOSED) and not tied
+to the in-flight Teams spike. No target release assigned yet.
+
+**Target:** a future auth-DX cycle. No target release assigned yet.
+
+---
+
 ## cycle-007 F4 Wave-1 action item — #804-AWAITING-HUMAN-UI-MERGE (2026-09-11, Burst 3)
 
 **ID:** `#804-AWAITING-HUMAN-UI-MERGE`

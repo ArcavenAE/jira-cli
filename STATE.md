@@ -4,7 +4,7 @@ level: ops
 version: "4.67"
 status: active
 producer: state-manager
-timestamp: 2026-09-18T22:52:16Z
+timestamp: 2026-09-18T22:59:13Z
 phase: "PAUSED 2026-09-18. cycle-008 (oauth-surface-correctness) CLOSED in full (F1-F7, DEC-371, ADR-0026 accepted); shipped on develop @ 3d9ca35e (develop advanced from 0834c9f0 via PR #846, docs(cycle-008): note OAuth re-consent for the expanded 16-scope set), NO release cut (activation_head/activation_version unchanged at aa557050/v0.7.0-dev.7). CYCLE-008-CONSOLE-SCOPE-RELEASE-GATE resolved 2026-09-18 (5859ad43, operator-confirmed) -- cycle-008 carries ZERO open blockers and zero open PRs. This burst (v4.66->v4.67) is a lightweight VERIFICATION-OUTCOME checkpoint (not a phase advance, no DEC): the recommended non-blocking jr auth login 16-scope smoke test was RUN and PASSED 2026-09-18 -- the operator built a develop binary (jr 0.7.0-dev.7 @ 3d9ca35e) with embedded jr OAuth app credentials, ran jr auth login against a throwaway profile, and OAuth completed successfully, definitively proving all 16 DEFAULT_OAUTH_SCOPES are accepted with zero invalid_scope error; the client-side regression pin default_oauth_scopes_pins_the_full_set_with_offline_access also PASSES. cycle-008 is now release-VALIDATED, not merely release-clear. NEXT = human direction: cutting the dev release, a maintenance sweep (6 open Dependabot PRs #837-842 + tracked hygiene items), the S6 Teams spike, or opening cycle-009. Cycles 009-011 remain PARKED; S6 remains deferred/non-gating."
 pipeline: PAUSED
 inputs: []
