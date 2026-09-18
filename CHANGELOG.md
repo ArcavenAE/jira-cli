@@ -99,6 +99,13 @@ All notable changes to jr will be documented here.
   `get_from_instance`/`post_to_instance`. Under OAuth, the two hosts diverge and the old
   routing 401'd; under API-token auth `base_url() == instance_url()`, so this is a no-op
   for that auth scheme — no payload/response-shape change anywhere.
+  **Verified end-to-end (S-cycle8-jsm-attachments-oauth-verification, BC-4.2.001,
+  verification-only, no `src/` change):** a new regression test proves the JSM two-step
+  servicedeskapi *upload* flow (`jr issue attachment upload --public/--internal` on JSM
+  issues) succeeds end-to-end under an OAuth-constructed client, closing the last piece
+  of the JSM OAuth-routing dependency chain. (Download/delete use the platform
+  `/rest/api/3/attachment` endpoints and were unaffected by the servicedeskapi routing
+  bug.)
 - **`jr assets search/view/schemas/tickets`, `issue list --asset`/`--assets`, and `issue
   create/edit --field :asset` (including JSM `create --request-type ... --field :asset`) now
   work under OAuth (3LO) profiles (S-cycle8-assets-workspace-oauth-routing,
