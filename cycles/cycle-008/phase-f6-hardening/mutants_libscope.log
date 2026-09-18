@@ -1,0 +1,13 @@
+Found 19 mutants to test
+ok       Unmutated baseline in 712s build + 141s test
+TIMEOUT  src/cli/board.rs:23:5: replace resolve_board_id -> Result<u64> with Ok(0) in 8s build + 180s test
+MISSED   src/cli/board.rs:23:5: replace resolve_board_id -> Result<u64> with Ok(1) in 3s build + 25s test
+ERROR interrupted
+ERROR scenario execution internal error err=interrupted phase=Test
+ERROR interrupted
+ERROR scenario execution internal error err=interrupted phase=Build
+ERROR interrupted
+ERROR scenario execution internal error err=interrupted phase=Build
+ERROR interrupted
+ERROR scenario execution internal error err=interrupted phase=Build
+Error: interrupted

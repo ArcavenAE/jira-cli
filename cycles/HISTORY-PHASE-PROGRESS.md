@@ -142,3 +142,13 @@ See `cycles/cycle-005/burst-log.md` Bursts 11-12 for full narrative detail (thes
 | Phase | Status | Completed | Gate | Notes | Finding Progression |
 |-------|--------|-----------|------|-------|---------------------|
 | **CYCLE-013-CLOSED-RELEASED-v0.7.0-dev.7-2026-09-16** | **COMPLETE / RELEASED** | 2026-09-16 | Release-completion follow-up | PR #823 merged squash @ `aa557050`; tag `v0.7.0-dev.7` pushed; `release.yml` run `35161289923`. `activation_head`/`activation_version` advance to `aa557050`/`v0.7.0-dev.7`. | 769 BCs / 86 VPs / 118 holdout / 185 stories; no new DEC |
+
+> Extracted from `.factory/STATE.md`'s `## Phase Progress` table during the
+> 2026-09-18 CYCLE-008-F6-HARDENED burst (v4.61 -> v4.62), to keep the live
+> table at 11 rows after adding the new `CYCLE-008-F6-HARDENED-2026-09-18`
+> row. This was the oldest row at that point; archived here verbatim,
+> unedited.
+
+| Phase | Status | Completed | Gate | Notes | Finding Progression |
+|-------|--------|-----------|------|-------|---------------------|
+| **CYCLE-013-F7-CONVERGED-CLOSED-2026-09-16** | **COMPLETE / CONVERGED / CLOSED** | 2026-09-16 | F7 human close/release gate | Fresh-context re-verification CONVERGED, all 7 dimensions PASS. Human: APPROVE & CLOSE + cut a dev release now (`v0.7.0-dev.7`). **DEC-367 minted.** `ADR-0025` accepted. | 769 BCs / 86 VPs / 118 holdout / 185 stories; DEC-367 minted |

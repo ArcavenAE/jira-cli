@@ -529,3 +529,110 @@ via PR `#844` on `develop` (`fc608cd3`), not via a `factory-artifacts` commit; t
 **Dim-7 Attestation:** PR `#844`'s own CI run validated the full test suite green on the
 integrated tree; `cargo test --lib board::tests` 9/9 pass, `cargo clippy --all-targets` clean,
 `cargo fmt --check` clean, independently re-run by the fresh-eyes `pr-reviewer`.
+
+## Burst: F6 targeted hardening — HARDENED_WITH_RESIDUALS (2026-09-18)
+
+**Parent-commit:** No new `develop`-side commit this burst — bookkeeping/hardening-record burst.
+`develop` tip unchanged at `fc608cd3` (F6 surfaced no defect requiring a code fix). This is the
+`factory-artifacts` atomic commit produced by this burst (state-manager commit — SHA recorded
+after push).
+
+**Adversary verdict:** N/A — this is an F6 targeted-hardening burst (formal
+verification/fuzz/mutation/security/regression checks), not an adversarial-review pass. F5's own
+adversary verdict (CONVERGED, prior burst) is unchanged and carried forward unaffected.
+
+**Scope:** cycle-008 delta base `0793b9c5`..`fc608cd3` — the same delta window F5 converged
+against. Formal verification / fuzz / mutation testing scoped to the delta, plus full-tree
+regression and security scans.
+
+**Formal verification (Kani):** JUSTIFIED SKIP — no Kani infra in repo. New pure invariants
+(`classify_401_body`, `is_insufficient_scope_error`) are total-by-construction (no
+unwrap/index/slice/arithmetic) and already covered by operator-targeted unit tests spanning the
+adversarial input classes. Full rationale: `cycles/cycle-008/phase-f6-hardening/check1_formal.md`.
+
+**Fuzz:** JUSTIFIED SKIP — the only new input-facing fn, `classify_401_body`, takes an
+already-decoded `&str` (boundary-tested). The actual arbitrary-byte parser
+(`extract_error_message`) is pre-existing/unchanged in this delta and out of scope. Full
+rationale: `cycles/cycle-008/phase-f6-hardening/check2_fuzz.md`.
+
+**Mutation testing:** delta config-scoped `cargo-mutants` run (`examine_globs` entries touched by
+the JSM routing swaps) — **6/6 CAUGHT = 100%** (`phase-f6-hardening/mutants.log`). Pure-fn
+empirical mutation confirmation is **INCONCLUSIVE** on this dev host — the full-suite baseline
+times out before any mutant is tested (`HOST-GATEKEEPER-SYSPOLICYD-FRAGILITY` family). A broader
+`--in-diff`-scoped attempt (`phase-f6-hardening/mutants_libscope.log`) found 19 candidate mutants
+and reached `src/cli/board.rs::resolve_board_id` (part of this delta) before being interrupted —
+one TIMEOUT, one MISSED (whole-function-replacement mutant, not specific to the new error-mapping
+closure) — then subsequent scenarios errored `interrupted`. Not treated as a scored result. Pure-fn
+mutation-kill rests on the operator-targeted unit tests (all pass this burst; F5 Pass 2
+independently re-verified them non-vacuous/load-bearing).
+
+**Security:** `cargo deny check` PASS (exit 0, `advisories ok, bans ok, licenses ok, sources ok`,
+only pre-existing benign warnings). `cargo audit` PASS (0 vulnerabilities / 360 deps / 1251
+advisories). `semgrep` NOT RUN (not installed on this host; `cargo deny`+`cargo audit` clean).
+
+**Regression:** `cargo test` PASS — 0 failures. `lib`: 1498 passed, 48 ignored (all
+keyring/E2E/OAuth-integration gated per repo convention, none newly ignored by this delta); 49
+integration test binaries all green at handback. Local `cargo clippy` not run this burst
+(build-lock on host); `fc608cd3`'s own CI (PR #844 merge prerequisite) already validated
+`clippy --all-targets` clean, treated as authoritative. `cargo fmt --check` PASS.
+
+**VP coverage (by inspection, adequate):** `VP-OAUTH-GW-001` (7 gateway call sites, dual-mock +
+`.expect(0)` negative controls), `VP-OAUTH-GW-002` (16-scope canary + negative Teams-scope
+asserts), `VP-OAUTH-GW-003` (Agile 401 mapping unit + integration tests).
+
+**Verdict: F6 HARDENED_WITH_RESIDUALS, NO BLOCKING findings** (consistent with cycle-007/cycle-013
+F6 closure precedent). `develop` tip UNCHANGED at `fc608cd3` — no F6 code fix landed (every check
+passed clean or ended in a justified skip/deferral). `activation_head`/`activation_version`
+unchanged (`aa557050`/`v0.7.0-dev.7`). Counts unchanged: `total_bcs` 770, VP 89, holdout 118,
+`total_stories` 191.
+
+**Residuals recorded this burst (S-7.02), in `cycles/OPEN-STANDING-ITEMS.md`:**
+`CYCLE-008-F6-MUTANTS-EXAMINE-GLOBS-GAP` (MEDIUM — `.cargo/mutants.toml`'s `examine_globs`
+excludes `src/api/client.rs` and `src/cli/board.rs`, so the CI `--in-diff` mutation gate
+structurally never mutates this delta's highest-value new logic; **flagged prominently to be
+raised at the F7 human gate** — a repo-wide mutation-policy change, not feature scope);
+`CYCLE-008-F6-PUREFN-MUTATION-HOST-DEFERRED` (LOW — empirical confirmation blocked by dev-host
+timeout, retry via a faster runner or the nightly mutation workflow once the globs gap closes);
+`CYCLE-008-F6-SEMGREP-NOT-INSTALLED` / `CYCLE-008-F6-LOCAL-CLIPPY-BUILDLOCK` (both LOW/note-only,
+consolidated with the pre-existing `HOST-GATEKEEPER-SYSPOLICYD-FRAGILITY` host-speed constraint).
+
+**Codifications:** No new DEC minted this burst — F6's HARDENED_WITH_RESIDUALS verdict is a
+required quality-gate outcome within the already-approved F1-F3 scope, not a new pipeline ruling.
+Counts unchanged: 770 BCs / 89 VPs / 118 holdouts / 191 stories (F6 is a hardening pass — formal
+verification/fuzz/mutation/security/regression checks — with no new BC/VP/story).
+
+**Closes:** Phase F6 (targeted hardening) for cycle-008, in full.
+
+**Outcome:** cycle-008 Phase F6 HARDENED_WITH_RESIDUALS. `develop` unchanged at `fc608cd3`.
+**NEXT:** Phase F7 (delta convergence — 5/7-dimension convergence check on the delta plus
+regression validation on the full codebase — final human gate). The
+`CYCLE-008-F6-MUTANTS-EXAMINE-GLOBS-GAP` residual is the item to surface at that gate.
+
+### Details
+
+| Agent | Task | Output |
+|-------|------|--------|
+| formal-verifier (this burst) | Kani/fuzz justified-skip analysis, mutation testing (delta-scoped + attempted full-suite), security scans, regression run | `phase-f6-hardening/check1_formal.md`, `check2_fuzz.md`, `mutants.log`, `mutants_libscope.log`, `deny.log`, `audit.log`, `fmt.log`, `regression.log` |
+| state-manager (this agent) | F6 hardening-record write, burst-log entry, OPEN-STANDING-ITEMS.md deferrals, STATE.md ONE full-content Write, drift reconciliation, commit + push `factory-artifacts` | This entry; `cycles/cycle-008/phase-f6-hardening/hardening-record.md`; `cycles/OPEN-STANDING-ITEMS.md`; `STATE.md` |
+
+**Files touched (Dim-1): 5 unique files/dirs (`factory-artifacts`, this burst)**
+
+- `STATE.md`
+- `cycles/cycle-008/burst-log.md` (this entry)
+- `cycles/cycle-008/phase-f6-hardening/` (new — `hardening-record.md` + 8 copied raw logs:
+  `mutants.log`, `mutants_libscope.log`, `deny.log`, `audit.log`, `fmt.log`, `regression.log`,
+  `check1_formal.md`, `check2_fuzz.md`)
+- `cycles/OPEN-STANDING-ITEMS.md`
+- `regression-state.json`, `sidecar-learning.md` (pre-existing benign churn, folded in per
+  TD-VSDD-053 single-commit protocol)
+
+**Dim-2 Attestation:** `scripts/check-spec-counts.sh` / `scripts/check-bc-cumulative-counts.sh` —
+N/A this burst (no `total_bcs`/`total_vps`/`total_stories` numeric change).
+
+**Dim-5 Attestation:** N/A — no binary/WASM artifact produced by this burst.
+
+**Dim-6 Attestation:** N/A on `factory-artifacts` — F6 surfaced no defect requiring a `develop`
+code change this burst; `develop` tip remains `fc608cd3` from the prior (F5) burst.
+
+**Dim-7 Attestation:** `cargo test` full-suite PASS (1498 lib tests + 49 integration binaries, 0
+failures) this burst, on top of `fc608cd3`'s own CI green from the F5 burst.

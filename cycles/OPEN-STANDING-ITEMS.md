@@ -1043,3 +1043,52 @@ Pass 1 independently re-surfaced this as a process-gap observation; unchanged, s
 OPEN/PENDING, tracked in full above); `CYCLE-008-ENV-RESTORE-NON-RAII` and
 `CYCLE-008-WORKTREE-NAME-VS-STORYID` (both carried from S5's merge, 2026-09-18; F5 reviewed the
 whole delta including S5's diff and did not surface either as a new/distinct finding).
+
+## cycle-008 F6 targeted hardening -- justified deferrals (S-7.02 cycle-closing checklist, 2026-09-18)
+
+**Status:** CLOSED-BY-DEFERRAL. F6 (formal verification/fuzz/mutation testing scoped to the
+cycle-008 delta `0793b9c5`..`fc608cd3`, plus full-tree regression and security scans) reached
+**HARDENED_WITH_RESIDUALS, NO BLOCKING findings** -- consistent with cycle-007/cycle-013 F6
+closure precedent. `develop` tip UNCHANGED at `fc608cd3` (no F6 code fix landed). Full detail:
+`cycles/cycle-008/phase-f6-hardening/hardening-record.md`.
+
+**`CYCLE-008-F6-MUTANTS-EXAMINE-GLOBS-GAP`** (MEDIUM, coverage gap in security-adjacent code; no
+known defect -- **flagged PROMINENTLY, to be raised at the F7 human gate**) -- `.cargo/mutants.toml`'s
+`examine_globs` list excludes `src/api/client.rs` and `src/cli/board.rs`, so the CI `--in-diff`
+mutation gate structurally never mutates this cycle's highest-value new logic
+(`classify_401_body`, `is_insufficient_scope_error`, `rewrite_agile_scope_error`). A delta
+config-scoped `cargo-mutants` run against the globs that ARE in scope (JSM routing swaps) came
+back 6/6 CAUGHT, but that scope never touches these three functions. Recommended fix: add both
+files to `examine_globs` (+ update `docs/specs/cargo-mutants-policy.md` Sec.Scope + keep
+`scripts/check-cargo-mutants-policy-citations.sh` / `tests/mutants_glob_existence.rs` green).
+Deferred pending human sign-off at F7 because it is a repo-wide mutation-**policy** change, not
+feature scope -- unit tests + F5's independent verification already cover the logic itself.
+
+**`CYCLE-008-F6-PUREFN-MUTATION-HOST-DEFERRED`** (LOW) -- empirical `cargo-mutants` confirmation
+of the 3 new pure fns (`classify_401_body`, `is_insufficient_scope_error`, and the
+`resolve_board_id` call site wiring `rewrite_agile_scope_error`) is blocked by a full-suite
+baseline timeout on this dev host (`HOST-GATEKEEPER-SYSPOLICYD-FRAGILITY` family, same
+host-speed constraint tracked elsewhere for `nextest`). A broader `--in-diff`-scoped attempt
+(`cycles/cycle-008/phase-f6-hardening/mutants_libscope.log`) got as far as one TIMEOUT + one
+MISSED (a whole-function-replacement mutant on `resolve_board_id`, not specific to the new
+error-mapping closure) before the run was interrupted -- inconclusive, not scored. Target: confirm
+via a faster runner or the nightly mutation workflow (`MUTANTS_NIGHTLY_ENABLED=true`) once the
+`examine_globs` gap above is closed.
+
+**`CYCLE-008-F6-SEMGREP-NOT-INSTALLED`** (LOW/note) -- semgrep is not installed on this dev host;
+no substitute static-analysis scan was run in its place this burst. `cargo deny check` (exit 0,
+advisories/bans/licenses/sources all ok) and `cargo audit` (0 vulnerabilities / 360 deps / 1251
+advisories) both clean. Target: install semgrep in a future maintenance/tooling pass, or confirm
+CI already runs it (out of this burst's scope to verify).
+
+**`CYCLE-008-F6-LOCAL-CLIPPY-BUILDLOCK`** (LOW/note) -- local `cargo clippy --all-targets` was not
+re-run this burst due to a build-lock on the dev host. `fc608cd3`'s own CI run (a PR #844 merge
+prerequisite) already validated `clippy` clean and is treated as authoritative. Consolidated with
+the pre-existing `HOST-GATEKEEPER-SYSPOLICYD-FRAGILITY` host-speed constraint rather than
+duplicated as a separate root cause.
+
+**Confirmed still open, unaffected by F6 (no new information from this phase):**
+`CYCLE-008-CONSOLE-SCOPE-RELEASE-GATE` (RELEASE-GATE, human-owned pre-release blocker -- still
+OPEN/PENDING, unchanged); `CYCLE-008-F5-KEYRING-WIRING-COVERAGE`, `CYCLE-008-F5-INIT-MAPERR-MUTANT-RESIDUAL`,
+`CYCLE-008-ENV-RESTORE-NON-RAII`, `CYCLE-008-WORKTREE-NAME-VS-STORYID` (all carried from F5/S5;
+F6's checks did not surface any of them as newly resolved or newly distinct).

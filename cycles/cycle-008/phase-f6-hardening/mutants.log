@@ -1,0 +1,4 @@
+Found 6 mutants to test
+ok       Unmutated baseline in 55s build + 153s test
+6 mutants tested in 9m: 6 caught
+MUTANTS_EXIT=0

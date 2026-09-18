@@ -1,1 +1,1 @@
-{"status":"pass","timestamp":"2026-09-18T15:26:56Z","command":"cargo test --lib board::tests 2>&1 | tail -30"}
+{"status":"pass","timestamp":"2026-09-18T16:03:22Z","command":"SD=/private/tmp/claude-501/-Users-zious-Documents-GITHUB-jira-cli/fbb8f997-6f4c-412c-b371-c6f9694a781a/scratchpad/f6 && cargo test > \"$SD/regression.log\" 2>&1 ; echo \"TEST_EXIT=$?\" >> \"$SD/regression.log\""}
