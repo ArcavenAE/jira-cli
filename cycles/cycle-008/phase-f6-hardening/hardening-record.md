@@ -39,13 +39,22 @@ Full text recorded in `cycles/OPEN-STANDING-ITEMS.md` under "cycle-008 F6 target
 justified deferrals". Summary:
 
 1. **`CYCLE-008-F6-MUTANTS-EXAMINE-GLOBS-GAP`** (MEDIUM, **flagged prominently for the F7 human
-   gate**) — `.cargo/mutants.toml`'s `examine_globs` excludes `src/api/client.rs` and
-   `src/cli/board.rs`, so the CI `--in-diff` mutation gate structurally never mutates this
-   delta's highest-value new logic (`classify_401_body`, `is_insufficient_scope_error`,
-   `rewrite_agile_scope_error`). Recommended fix: add both files to `examine_globs` (+ update
-   `docs/specs/cargo-mutants-policy.md` §Scope + keep `check-cargo-mutants-policy-citations.sh` /
-   `tests/mutants_glob_existence.rs` green). Deferred pending human sign-off at F7 — this is a
-   repo-wide mutation-**policy** change, not feature scope.
+   gate**) — `.cargo/mutants.toml`'s `examine_globs` excludes SEVEN cycle-008-delta files, not two
+   as originally recorded: `src/api/client.rs`, `src/cli/board.rs`, `src/cli/sprint.rs`,
+   `src/cli/issue/list.rs`, `src/cli/init.rs` (F-WG-1's widened `rewrite_agile_scope_error` call
+   sites, `BC-X.15.001`), and `src/api/jsm/queues.rs`, `src/api/assets/workspace.rs` (2 of
+   `BC-4.2.001`'s 7 routing-swap sites). So the CI `--in-diff` mutation gate structurally never
+   mutates this delta's highest-value new logic in any of these seven files
+   (`classify_401_body`, `is_insufficient_scope_error`, `rewrite_agile_scope_error`, and the
+   JSM/Assets routing swaps outside the 3 in-scope JSM files). The delta config-scoped
+   `cargo-mutants` run above covered only 3 in-scope JSM files
+   (`servicedesks.rs`/`request_types.rs`/`requests.rs`, the source of the 6 mutants) — it never
+   touched any of the seven excluded files. Recommended fix: add ALL SEVEN files to
+   `examine_globs` (+ update `docs/specs/cargo-mutants-policy.md` §Scope + keep
+   `check-cargo-mutants-policy-citations.sh` / `tests/mutants_glob_existence.rs` green). Deferred
+   pending human sign-off at F7 — this is a repo-wide mutation-**policy** change, not feature
+   scope. (Corrected 2026-09-18, F7 pre-gate consistency reconcile — originally undersold as a
+   2-file gap.)
 2. **`CYCLE-008-F6-PUREFN-MUTATION-HOST-DEFERRED`** (LOW) — empirical `cargo-mutants` confirmation
    of the 3 new pure fns is blocked by the slow-dev-host baseline timeout (see Mutation row
    above). Confirm via a faster runner or the nightly mutation workflow

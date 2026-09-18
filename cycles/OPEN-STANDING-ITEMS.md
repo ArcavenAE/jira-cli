@@ -148,6 +148,18 @@ this is an accepted repo-wide convention (STATE.md is the single source of truth
 status is decorative/not authoritative) or a genuine drift gap worth fixing everywhere. Do not
 assume either answer; check a sample of closed-cycle story files before scoping the fix.
 
+**Confirmed repeat pattern (2026-09-18, cycle-008 F7 pre-gate consistency reconcile):**
+cycle-008's own `cycles/cycle-008/phase-f3-stories/S-cycle8-*.md` story files exhibit the identical
+pattern — all 5 delivered/merged stories (S1 `jsm-servicedeskapi-oauth-routing`, S2
+`agile-oauth-scope-gap`, S3 `assets-workspace-oauth-routing`, S4
+`agile-scope-mismatch-error-mapping`, S5 `jsm-attachments-oauth-verification`) still read
+`status: draft` in their own frontmatter after merge, exactly as cycle-007 did. `STORY-INDEX.md`
+correctly shows all 5 as **done** (with citing PRs/SHAs) — it is the authoritative per-story
+status source, consistent with `.factory/STATE.md` being authoritative at the cycle level. This is
+now confirmed repo-wide convention across at least cycle-007 and cycle-008 (not yet re-checked
+against 001-006/012 — that portion of the open question above remains open). No cycle-008 action
+taken; record-only.
+
 **Source:** cycle-007 Wave-2 integration gate, adversary Pass C (2026-09-15).
 
 ---
@@ -1054,15 +1066,23 @@ closure precedent. `develop` tip UNCHANGED at `fc608cd3` (no F6 code fix landed)
 
 **`CYCLE-008-F6-MUTANTS-EXAMINE-GLOBS-GAP`** (MEDIUM, coverage gap in security-adjacent code; no
 known defect -- **flagged PROMINENTLY, to be raised at the F7 human gate**) -- `.cargo/mutants.toml`'s
-`examine_globs` list excludes `src/api/client.rs` and `src/cli/board.rs`, so the CI `--in-diff`
-mutation gate structurally never mutates this cycle's highest-value new logic
-(`classify_401_body`, `is_insufficient_scope_error`, `rewrite_agile_scope_error`). A delta
-config-scoped `cargo-mutants` run against the globs that ARE in scope (JSM routing swaps) came
-back 6/6 CAUGHT, but that scope never touches these three functions. Recommended fix: add both
-files to `examine_globs` (+ update `docs/specs/cargo-mutants-policy.md` Sec.Scope + keep
+`examine_globs` list excludes SEVEN cycle-008-delta files, not two as originally recorded:
+`src/api/client.rs`, `src/cli/board.rs`, `src/cli/sprint.rs`, `src/cli/issue/list.rs`,
+`src/cli/init.rs` (F-WG-1's widened `rewrite_agile_scope_error` call sites across these three,
+`BC-X.15.001`), and `src/api/jsm/queues.rs`, `src/api/assets/workspace.rs` (2 of `BC-4.2.001`'s 7
+routing-swap sites). So the CI `--in-diff` mutation gate structurally never mutates this cycle's
+highest-value new logic in any of these seven files (`classify_401_body`,
+`is_insufficient_scope_error`, `rewrite_agile_scope_error`, and the JSM/Assets routing swaps
+outside the 3 in-scope JSM files). A delta config-scoped `cargo-mutants` run against the globs
+that ARE in scope covered only 3 in-scope JSM files
+(`servicedesks.rs`/`request_types.rs`/`requests.rs`) and came back 6/6 CAUGHT, but that scope
+never touches any of the seven excluded files above. Recommended fix: add ALL SEVEN files to
+`examine_globs` (+ update `docs/specs/cargo-mutants-policy.md` Sec.Scope + keep
 `scripts/check-cargo-mutants-policy-citations.sh` / `tests/mutants_glob_existence.rs` green).
 Deferred pending human sign-off at F7 because it is a repo-wide mutation-**policy** change, not
 feature scope -- unit tests + F5's independent verification already cover the logic itself.
+(Corrected 2026-09-18, F7 pre-gate consistency reconcile -- originally undersold as a 2-file gap;
+the human disposition at F7 must weigh the full seven-file scope, not the original two.)
 
 **`CYCLE-008-F6-PUREFN-MUTATION-HOST-DEFERRED`** (LOW) -- empirical `cargo-mutants` confirmation
 of the 3 new pure fns (`classify_401_body`, `is_insufficient_scope_error`, and the

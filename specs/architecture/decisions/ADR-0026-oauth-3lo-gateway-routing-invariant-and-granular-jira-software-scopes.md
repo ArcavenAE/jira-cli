@@ -450,15 +450,13 @@ hint mapping, and the amended acceptance criteria are recorded in `BC-X.15.001`
 
 > **Bidirectional backlink note:** the forward-reference backlinks from
 > `docs/adr/0009-handle-open-instance-url.md`, `docs/adr/0006-embedded-jr-oauth-app.md`, and
-> `docs/adr/0013-pkce-deferral.md` to this ADR are **DEFERRED to the cycle-008 F4 implementation
-> PR, not yet applied.** `docs/adr/` is the pre-VSDD-factory ADR track (ADR-0001–0016) and lives in
-> the product repo's `develop` tree, not under `.factory/` — it is out of scope for a `.factory`-only
-> F2 spec-evolution burst and can only be edited through the normal PR flow against `develop`. An
-> earlier working-tree edit that added these three backlinks directly was intentionally reverted for
-> exactly this reason; no `docs/adr/` file currently references ADR-0026. When F4 lands, add a short
-> forward-reference note to each of the three files' own "Related ADRs" section pointing at
-> ADR-0026, via a direct, minimal `Edit` to each file (not the `create-adr` skill's `--supersedes`
-> bidirectional-patch mechanism, which only operates on `.factory/specs/architecture/decisions/`
-> files). The `.factory`-side cross-references in this ADR's own "Related ADRs" section above, and
-> in ARCH-INDEX.md, are real and already in place — only the reverse-direction `docs/adr/` backlinks
-> are deferred.
+> `docs/adr/0013-pkce-deferral.md` to this ADR **WERE APPLIED via PR #833 (S1, commit `4afc5aa5`),
+> fulfilling S1's AC-009 — no longer deferred.** `docs/adr/` is the pre-VSDD-factory ADR track
+> (ADR-0001–0016) and lives in the product repo's `develop` tree, not under `.factory/`; it was out
+> of scope for the `.factory`-only F2 spec-evolution burst and could only be edited through the
+> normal PR flow against `develop` — which is exactly the path S1/PR #833 took when it landed. All
+> three files now carry a short forward-reference note in their own "Related ADRs" section pointing
+> at ADR-0026. The `.factory`-side cross-references in this ADR's own "Related ADRs" section above,
+> and in ARCH-INDEX.md, remain real and in place — both directions are now applied. (Corrected
+> 2026-09-18, F7 pre-gate consistency reconcile; this note previously said the backlinks were
+> deferred/reverted, which was stale.)

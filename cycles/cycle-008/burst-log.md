@@ -636,3 +636,85 @@ code change this burst; `develop` tip remains `fc608cd3` from the prior (F5) bur
 
 **Dim-7 Attestation:** `cargo test` full-suite PASS (1498 lib tests + 49 integration binaries, 0
 failures) this burst, on top of `fc608cd3`'s own CI green from the F5 burst.
+
+## Burst: F7 pre-gate consistency reconcile (2026-09-18)
+
+**Parent-commit:** No `develop`-side commit this burst — pure `.factory`-only documentation
+reconcile, no `src/` change. `develop` tip unchanged at `fc608cd3`. This is the `factory-artifacts`
+atomic commit produced by this burst (state-manager commit — SHA recorded after push).
+
+**Adversary verdict:** N/A — this is a doc-accuracy reconcile burst, not an adversarial-review
+pass. F5's CONVERGED verdict (prior burst) is unchanged and carried forward unaffected.
+
+**Trigger:** Two MEDIUM documentation-drift findings surfaced by the F7 pre-gate consistency audit,
+reconciled ahead of the actual F7 human gate so that gate rests on accurate information. No phase
+advance — cycle-008 stays F6-complete; NEXT remains F7.
+
+**Finding 1 (MEDIUM) — stale "backlinks deferred" language, now false:** PR `#833` (S1, commit
+`4afc5aa5`, AC-009) actually applied the forward-reference backlinks from
+`docs/adr/0009-handle-open-instance-url.md`, `docs/adr/0006-embedded-jr-oauth-app.md`, and
+`docs/adr/0013-pkce-deferral.md` to `ADR-0026` — verified all three now contain a backlink. Two
+artifacts still said DEFERRED/not-applied: (a) `ADR-0026`'s "Bidirectional backlink note" (final
+blockquote); (b) `cycles/cycle-008/F2-architecture-delta.md`'s "New artifacts this phase" table
+row. Both corrected to state APPLIED via PR `#833`/`4afc5aa5`, no longer deferred.
+`F2-architecture-delta.md`'s `input-hash` frontmatter recomputed and updated (`ade2012` ->
+`0b84b17`) via `compute-input-hash --update`, per the `validate-input-hash` hook's block on the
+first edit attempt.
+
+**Finding 2 (MEDIUM) — `CYCLE-008-F6-MUTANTS-EXAMINE-GLOBS-GAP` undersold the gap:** the standing
+item said `.cargo/mutants.toml`'s `examine_globs` excludes only `src/api/client.rs` +
+`src/cli/board.rs`. Verified INCOMPLETE — `examine_globs` also excludes `src/cli/sprint.rs`,
+`src/cli/issue/list.rs`, `src/cli/init.rs` (F-WG-1's widened `rewrite_agile_scope_error` call
+sites, `BC-X.15.001`) and `src/api/jsm/queues.rs`, `src/api/assets/workspace.rs` (2 of
+`BC-4.2.001`'s 7 routing-swap sites) — the full 7-file set, confirmed by grepping
+`.cargo/mutants.toml` for each candidate path. So the delta-scoped mutation run only ever covered
+3 in-scope JSM files (`servicedesks.rs`/`request_types.rs`/`requests.rs` → the 6 mutants), not the
+full delta. Corrected the file list (and the "add both files" -> "add all 7 files" recommended-fix
+language) in all 3 locations: `STATE.md` (multiple fields/sections), `cycles/OPEN-STANDING-ITEMS.md`,
+and `cycles/cycle-008/phase-f6-hardening/hardening-record.md`. Severity stays MEDIUM, still flagged
+for explicit human disposition at F7.
+
+**Finding 3 (LOW, record-only):** confirmed cycle-008's own `cycles/cycle-008/phase-f3-stories/S-cycle8-*.md`
+story files repeat cycle-007's `CYCLE-007-STORY-STATUS-DRAFT-POSTMERGE` pattern — all 5 delivered
+stories still read `status: draft` post-merge; `STORY-INDEX.md` correctly shows all 5 as `done`
+and remains the authoritative per-story status source. Appended as a confirmation note under the
+existing standing item in `cycles/OPEN-STANDING-ITEMS.md`, resolving part of that item's open
+question. No cycle-008 action.
+
+**Codifications:** No new DEC minted this burst — a pure documentation-accuracy correction is not
+a pipeline ruling. Counts unchanged: 770 BCs / 89 VPs / 118 holdouts / 191 stories.
+
+**Closes:** Nothing — this burst does not close a phase. cycle-008 stays F6-complete; F7 has not
+been run/converged/approved.
+
+**Outcome:** 2 MEDIUM documentation-drift findings corrected; 1 LOW record-only note added.
+`develop` unchanged at `fc608cd3`. **NEXT:** unchanged — Phase F7 (delta convergence, final human
+gate), now resting on corrected pre-gate documentation.
+
+### Details
+
+| Agent | Task | Output |
+|-------|------|--------|
+| state-manager (this agent) | Reconciled ADR-0026 backlink-status claim + F2-architecture-delta.md row; corrected examine_globs file-count in 3 locations; recorded finding 3; STATE.md ONE full-content Write; drift reconciliation; commit + push `factory-artifacts` | This entry; `specs/architecture/decisions/ADR-0026-oauth-3lo-gateway-routing-invariant-and-granular-jira-software-scopes.md`; `cycles/cycle-008/F2-architecture-delta.md`; `cycles/OPEN-STANDING-ITEMS.md`; `cycles/cycle-008/phase-f6-hardening/hardening-record.md`; `STATE.md` |
+
+**Files touched (Dim-1): 7 unique files, this burst**
+
+- `STATE.md`
+- `cycles/cycle-008/burst-log.md` (this entry)
+- `specs/architecture/decisions/ADR-0026-oauth-3lo-gateway-routing-invariant-and-granular-jira-software-scopes.md`
+- `cycles/cycle-008/F2-architecture-delta.md`
+- `cycles/OPEN-STANDING-ITEMS.md`
+- `cycles/cycle-008/phase-f6-hardening/hardening-record.md`
+- `regression-state.json`, `sidecar-learning.md` (pre-existing benign churn, folded in per
+  TD-VSDD-053 single-commit protocol)
+
+**Dim-2 Attestation:** `scripts/check-spec-counts.sh` / `scripts/check-bc-cumulative-counts.sh` —
+N/A this burst (no `total_bcs`/`total_vps`/`total_stories` numeric change).
+
+**Dim-5 Attestation:** N/A — no binary/WASM artifact produced by this burst.
+
+**Dim-6 Attestation:** N/A on `factory-artifacts` — no defect requiring a `develop` code change
+this burst; `develop` tip remains `fc608cd3` from the F5/F6 bursts.
+
+**Dim-7 Attestation:** N/A — no `src/` change this burst; regression suite last verified PASS
+during the F6 burst (1498 lib tests + 49 integration binaries, 0 failures).

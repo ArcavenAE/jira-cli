@@ -9,7 +9,7 @@ inputs:
   - .factory/cycles/cycle-008/verification-delta.md
 date: 2026-09-17
 status: awaiting-f2-gate
-input-hash: "ade2012"
+input-hash: "0b84b17"
 ---
 
 # Cycle-008 F2 Architecture Delta — Reference Note
@@ -26,7 +26,7 @@ only. S7 deferred.** No `src/` changes were made in this pass — architecture/s
 | ADR-0026 | `.factory/specs/architecture/decisions/ADR-0026-oauth-3lo-gateway-routing-invariant-and-granular-jira-software-scopes.md` |
 | ARCH-INDEX row | `.factory/specs/architecture/ARCH-INDEX.md` (ADR-0026 row appended after ADR-0025) |
 | Verification delta | `.factory/cycles/cycle-008/verification-delta.md` (VP-OAUTH-GW-001/002/003) |
-| Backlink notes (pre-existing ADRs) | **DEFERRED to the cycle-008 F4 implementation PR, not yet applied.** `docs/adr/0009-handle-open-instance-url.md`, `docs/adr/0006-embedded-jr-oauth-app.md`, `docs/adr/0013-pkce-deferral.md` do NOT yet carry a backlink to ADR-0026 — an earlier working-tree edit adding these three backlinks directly was reverted, since `docs/adr/` lives in the product repo's `develop` tree and is out of scope for a `.factory`-only spec-evolution burst; it can only be edited through the normal PR flow. See ADR-0026's own "Bidirectional backlink note" for the full rationale. |
+| Backlink notes (pre-existing ADRs) | **APPLIED via PR #833 (S1, commit `4afc5aa5`, fulfilling S1's AC-009) — no longer deferred.** `docs/adr/0009-handle-open-instance-url.md`, `docs/adr/0006-embedded-jr-oauth-app.md`, `docs/adr/0013-pkce-deferral.md` now each carry a backlink to ADR-0026, landed through the normal PR flow against `develop` (the path anticipated when this row was first written, since `docs/adr/` lives in the product repo's `develop` tree and was out of scope for a `.factory`-only spec-evolution burst). See ADR-0026's own "Bidirectional backlink note" for the full rationale. (Corrected 2026-09-18, F7 pre-gate consistency reconcile.) |
 
 ## Workstream → files/functions → VP → BC-delta owner map
 
