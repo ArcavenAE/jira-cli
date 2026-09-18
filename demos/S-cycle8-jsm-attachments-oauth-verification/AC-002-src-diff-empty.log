@@ -1,0 +1,2 @@
+$ git diff --stat develop..HEAD -- src/
+(exit code: 0; no output above this line means the diff is empty)
