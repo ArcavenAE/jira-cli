@@ -172,3 +172,13 @@ See `cycles/cycle-005/burst-log.md` Bursts 11-12 for full narrative detail (thes
 | Phase | Status | Completed | Gate | Notes | Finding Progression |
 |-------|--------|-----------|------|-------|---------------------|
 | **CYCLE-008-F2-APPROVED-2026-09-17** | **COMPLETE** | 2026-09-17 | F2 human gate approval -- spec-evolution scope-set ruling | Human chose **FULL OAUTH PARITY** (16 scopes). `ADR-0026` Decisions 1-4 FINALIZED. BC delta: 769 -> 770. **DEC-369 minted.** | 770 BCs / 89 VPs / 118 holdout / 185 stories; DEC-369 minted |
+
+> Extracted from `.factory/STATE.md`'s `## Phase Progress` table during the
+> 2026-09-18 OAUTH-16-SCOPE-SMOKE-TEST-PASS verification-outcome checkpoint
+> burst (v4.66 -> v4.67), to keep the live table at 12 rows after adding the
+> new `OAUTH-16-SCOPE-SMOKE-TEST-PASS-2026-09-18` row. This was the oldest
+> row at that point; archived here verbatim, unedited.
+
+| Phase | Status | Completed | Gate | Notes | Finding Progression |
+|-------|--------|-----------|------|-------|---------------------|
+| **CYCLE-008-F3-APPROVED-2026-09-17** | **COMPLETE** | 2026-09-17 | F3 human gate approval -- incremental story decomposition ruling | Human APPROVED the package: 6 stories, **20 points total**. F3 consistency audit: **CONSISTENT.** `total_stories` 185 -> 191. **DEC-370 minted.** | 770 BCs / 89 VPs / 118 holdout / 191 stories; DEC-370 minted |

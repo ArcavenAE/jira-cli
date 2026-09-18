@@ -223,3 +223,25 @@ traces_to: STATE.md
 **Superseded by:** PR `#846` (`docs(cycle-008): note OAuth re-consent for the expanded 16-scope set`, the merge-ready PR referenced above) subsequently MERGED to `develop`, advancing its tip `0834c9f0`->`3d9ca35e` -- cycle-008 now has zero open PRs in addition to zero open pre-release blockers. A `SESSION-WRAP-PAUSE-2026-09-18` checkpoint (skill `/vsdd-factory:wrap` Step 4) then ran to make this closed/resolved/merged state durable for a session `/clear`: verified nothing in-flight (no stories mid-TDD, no open PRs, no abandoned sub-agent steps, no WIP branches), and reconciled STATE.md's develop-tip bookkeeping ("current tip" references updated to `3d9ca35e`; historical FIX-F7-001/shipping citations of `0834c9f0` left untouched as accurate past-state records). No new DEC minted. Current checkpoint (STATE.md v4.66, session-wrap-pause state) is in `STATE.md` itself.
 
 ---
+
+## Archived checkpoint (from STATE.md v4.66, SESSION-WRAP-PAUSE state)
+
+```
+**Date & position:** 2026-09-18. cycle-008 (`oauth-surface-correctness`) CLOSED in full (F1-F7, `DEC-371`, `ADR-0026` accepted); `CYCLE-008-CONSOLE-SCOPE-RELEASE-GATE` RESOLVED (`5859ad43`). PR `#846` MERGED to `develop`, advancing its tip `0834c9f0`->`3d9ca35e` -- zero open PRs. **No cycle ACTIVE; pipeline PAUSED.** This is a SESSION-WRAP-PAUSE checkpoint (skill `/vsdd-factory:wrap` Step 4) -- next = human direction.
+
+**Convergence counter:** N/A -- no active convergence/adversarial loop (cycle-008 CLOSED). trajectory-tail carried forward unchanged from F5 (`→4→0→0→0`).
+
+**In-flight work:** NONE. No stories mid-TDD; no open PRs (`#846`, the last one, is MERGED); no sub-agents abandoned mid-step; no WIP branches; no active story worktrees. Both the product-repo working tree and the `.factory` worktree are clean as of this commit.
+
+**Pending human decisions / blockers:** none blocking. cycle-008 carries ZERO open pre-release blockers and ZERO open PRs. Optional next actions (human-owned, none gating): the recommended non-blocking `jr auth login` 16-scope smoke test (confirm all 16 scopes appear on consent / no `invalid_scope`); cutting the dev release now that cycle-008 is clear; a maintenance sweep (6 open Dependabot PRs `#837`-`#842` + the accumulated LOW standing-item debt in `cycles/OPEN-STANDING-ITEMS.md`); the S6 Teams spike (non-gating, not started); or opening cycle-009 (009-011 remain PARKED).
+
+**WIP branch list:** none.
+
+**Resume command:** `/vsdd-factory:rehydrate-wave` then `/vsdd-factory:next-step`.
+
+**Counts:** `total_bcs` **770** (unchanged); VP count **89** (unchanged); holdout scenarios **118** (unchanged); `total_stories` **191** (unchanged). Prior checkpoint (STATE.md v4.65, gate-resolved state) archived verbatim to `cycles/cycle-008/session-checkpoints.md`.
+```
+
+**Superseded by:** the recommended non-blocking `jr auth login` 16-scope smoke test (listed as an optional next action above) was subsequently RUN and PASSED 2026-09-18 -- the operator built a develop binary (jr 0.7.0-dev.7 @ develop tip `3d9ca35e`) with the embedded `jr` OAuth app credentials injected at build time, ran `jr auth login` against a throwaway profile, and OAuth authentication completed successfully under all 16 `DEFAULT_OAUTH_SCOPES` with zero `invalid_scope`; the client-side regression pin `default_oauth_scopes_pins_the_full_set_with_offline_access` also PASSES. A lightweight `OAUTH-16-SCOPE-SMOKE-TEST-PASS-2026-09-18` verification-outcome checkpoint (STATE.md v4.66->v4.67) then ran to record this durably: no phase advance, no code change, no DEC. cycle-008 is now release-VALIDATED, not merely release-clear, and the smoke test is removed from the optional-next-actions list (DONE+PASSED). Current checkpoint (STATE.md v4.67, verification-outcome state) is in `STATE.md` itself.
+
+---
