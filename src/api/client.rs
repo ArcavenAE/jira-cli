@@ -766,15 +766,10 @@ impl JiraClient {
         // request with a new token. So consuming the body here is safe.
         let first_401_body = first_response.bytes().await.unwrap_or_default();
         let first_401_message = extract_error_message(&first_401_body);
-        if first_401_message
-            .to_ascii_lowercase()
-            .contains("scope does not match")
-        {
-            return Err(JrError::InsufficientScope {
-                message: first_401_message,
-                required_scope: None,
-            }
-            .into());
+        let first_401_classified =
+            classify_401_body(&first_401_message, "Run \"jr auth login\" to connect.");
+        if matches!(first_401_classified, JrError::InsufficientScope { .. }) {
+            return Err(first_401_classified.into());
         }
 
         // -------------------------------------------------------------------
@@ -850,9 +845,20 @@ impl JiraClient {
                 {
                     if retry_response.status() == StatusCode::UNAUTHORIZED {
                         // Retry also returned 401 — no second refresh (one-attempt cap).
-                        return Err(JrError::NotAuthenticated {
-                            hint: "run 'jr auth refresh' to re-authenticate".to_string(),
-                        }
+                        //
+                        // F-WAVE-1 BUG FIX: read the retry 401's body and classify it,
+                        // rather than unconditionally assuming a plain auth failure. A
+                        // refresh can succeed and still yield an under-scoped token
+                        // ("double fault") — that 401 body contains "scope does not
+                        // match" and must surface as InsufficientScope, not
+                        // NotAuthenticated (re-running `jr auth refresh` cannot add
+                        // scopes, so that hint would be actively misleading here).
+                        let retry_401_body = retry_response.bytes().await.unwrap_or_default();
+                        let retry_401_message = extract_error_message(&retry_401_body);
+                        return Err(classify_401_body(
+                            &retry_401_message,
+                            "run 'jr auth refresh' to re-authenticate",
+                        )
                         .into());
                     }
                     return Err(Self::parse_error(retry_response).await);
@@ -907,9 +913,14 @@ impl JiraClient {
                         || retry_response.status().is_server_error()
                     {
                         if retry_response.status() == StatusCode::UNAUTHORIZED {
-                            return Err(JrError::NotAuthenticated {
-                                hint: "run 'jr auth refresh' to re-authenticate".to_string(),
-                            }
+                            // F-WAVE-1: same double-fault classification fix as the
+                            // primary post-refresh 401 handler above — see its comment.
+                            let retry_401_body = retry_response.bytes().await.unwrap_or_default();
+                            let retry_401_message = extract_error_message(&retry_401_body);
+                            return Err(classify_401_body(
+                                &retry_401_message,
+                                "run 'jr auth refresh' to re-authenticate",
+                            )
                             .into());
                         }
                         return Err(Self::parse_error(retry_response).await);
@@ -1038,20 +1049,7 @@ impl JiraClient {
         };
 
         if status == 401 {
-            if message
-                .to_ascii_lowercase()
-                .contains("scope does not match")
-            {
-                return JrError::InsufficientScope {
-                    message,
-                    required_scope: None,
-                }
-                .into();
-            }
-            return JrError::NotAuthenticated {
-                hint: "Run \"jr auth login\" to connect.".to_string(),
-            }
-            .into();
+            return classify_401_body(&message, "Run \"jr auth login\" to connect.").into();
         }
 
         JrError::ApiError { status, message }.into()
@@ -1519,6 +1517,163 @@ fn sanitize_for_stderr(input: String) -> String {
         }
     }
     out
+}
+
+/// Classify a 401 response body's message into the correct `JrError` variant.
+///
+/// Pure, sync, no I/O — the single shared decision point for every call site
+/// that must turn a 401 response body into either `JrError::InsufficientScope`
+/// or `JrError::NotAuthenticated`. If `message` contains `"scope does not
+/// match"` (case-insensitive, ASCII), the 401 is a scope-mismatch — a token
+/// refresh cannot fix it — and `InsufficientScope` is returned. Otherwise the
+/// 401 is treated as a plain authentication failure (expired/revoked/missing
+/// token) and `NotAuthenticated` is returned, using the caller-supplied
+/// `not_authenticated_hint` so each call site can keep its own existing hint
+/// text (e.g. "Run \"jr auth login\" to connect." pre-refresh/`parse_error`
+/// vs "run 'jr auth refresh' to re-authenticate" post-refresh).
+///
+/// F-WAVE-1 (cycle-008 wave-gate fix): extracted so the post-refresh 401
+/// handler in `send_inner` can share this classification instead of
+/// hardcoding `NotAuthenticated` without reading the retry response's body —
+/// see `BC-X.15.*`/`docs/specs/` history around the "double fault" scenario
+/// (expired token that refreshes into a still-under-scoped token).
+fn classify_401_body(message: &str, not_authenticated_hint: &str) -> JrError {
+    if message
+        .to_ascii_lowercase()
+        .contains("scope does not match")
+    {
+        JrError::InsufficientScope {
+            message: message.to_string(),
+            required_scope: None,
+        }
+    } else {
+        JrError::NotAuthenticated {
+            hint: not_authenticated_hint.to_string(),
+        }
+    }
+}
+
+/// Pure, sync, no-I/O, no-keyring unit tests for `classify_401_body` — the
+/// F-WAVE-1 (cycle-008) extraction that is the core of the double-fault fix.
+/// Co-located with the helper because it is module-private (not `pub`).
+///
+/// Every test here runs under plain `cargo test` (no `#[ignore]`, no keyring
+/// gate, no async runtime) — this closes the mutation-coverage gap the
+/// implementation-only commit (db240dbc) left open.
+#[cfg(test)]
+mod classify_401_body_tests {
+    use super::classify_401_body;
+    use crate::error::JrError;
+
+    const LOGIN_HINT: &str = "Run \"jr auth login\" to connect.";
+    const REFRESH_HINT: &str = "run 'jr auth refresh' to re-authenticate";
+
+    /// Mutation coverage: kills a mutant that flips `.contains(...)` to
+    /// `!.contains(...)` (or otherwise inverts the branch condition) — an
+    /// exact-match message on the scope-mismatch substring must classify as
+    /// `InsufficientScope`, not `NotAuthenticated`.
+    #[test]
+    fn test_classify_401_body_returns_insufficient_scope_for_scope_mismatch_message() {
+        let err = classify_401_body("scope does not match", LOGIN_HINT);
+        match err {
+            JrError::InsufficientScope {
+                message,
+                required_scope,
+            } => {
+                assert_eq!(message, "scope does not match");
+                assert_eq!(required_scope, None);
+            }
+            other => panic!("expected InsufficientScope, got {other:?}"),
+        }
+    }
+
+    /// The real Atlassian gateway wire message embeds the substring inside a
+    /// larger sentence — proves `contains`, not an exact-equality check, is
+    /// used. Kills a mutant that replaces `.contains(...)` with `== `.
+    #[test]
+    fn test_classify_401_body_returns_insufficient_scope_for_real_wire_message() {
+        let err = classify_401_body("Unauthorized; scope does not match", LOGIN_HINT);
+        assert!(
+            matches!(err, JrError::InsufficientScope { .. }),
+            "expected InsufficientScope for the real Atlassian wire message"
+        );
+    }
+
+    /// Mutation coverage: kills a mutant that drops `.to_ascii_lowercase()`
+    /// (or narrows it to only lowercase input) — the match must be
+    /// case-insensitive in both directions (title case and all-caps).
+    #[test]
+    fn test_classify_401_body_scope_mismatch_match_is_case_insensitive() {
+        for message in [
+            "Scope Does Not Match",
+            "SCOPE DOES NOT MATCH",
+            "ScOpE dOeS nOt MaTcH",
+        ] {
+            let err = classify_401_body(message, LOGIN_HINT);
+            assert!(
+                matches!(err, JrError::InsufficientScope { .. }),
+                "expected InsufficientScope for case-varied message {message:?}, got {err:?}"
+            );
+        }
+    }
+
+    /// Kills a mutant that hardcodes the pre-refresh hint text inside
+    /// `classify_401_body` instead of using the caller-supplied
+    /// `not_authenticated_hint` parameter — this parameterization is exactly
+    /// what the double-fault fix relies on (`send_inner`'s post-refresh 401
+    /// handler passes the *refresh* hint, not the *login* hint).
+    #[test]
+    fn test_classify_401_body_not_authenticated_carries_login_hint_verbatim() {
+        let err = classify_401_body("token expired", LOGIN_HINT);
+        match err {
+            JrError::NotAuthenticated { hint } => assert_eq!(hint, LOGIN_HINT),
+            other => panic!("expected NotAuthenticated, got {other:?}"),
+        }
+    }
+
+    /// Same as above but with the second real call-site hint value, proving
+    /// the parameter — not a hardcoded literal — determines the output for
+    /// either of the two hints actually used in production.
+    #[test]
+    fn test_classify_401_body_not_authenticated_carries_refresh_hint_verbatim() {
+        let err = classify_401_body("token expired", REFRESH_HINT);
+        match err {
+            JrError::NotAuthenticated { hint } => assert_eq!(hint, REFRESH_HINT),
+            other => panic!("expected NotAuthenticated, got {other:?}"),
+        }
+    }
+
+    /// Mutation-hardening: an empty message must not accidentally satisfy a
+    /// loosened/empty-substring match (e.g. a mutant that replaces the
+    /// literal with `""`, which `.contains("")` always matches).
+    #[test]
+    fn test_classify_401_body_returns_not_authenticated_for_empty_message() {
+        let err = classify_401_body("", LOGIN_HINT);
+        match err {
+            JrError::NotAuthenticated { hint } => assert_eq!(hint, LOGIN_HINT),
+            other => panic!("expected NotAuthenticated for empty message, got {other:?}"),
+        }
+    }
+
+    /// Mutation-hardening: near-miss substrings that share words with, but do
+    /// not equal, "scope does not match" must NOT trip the scope-mismatch
+    /// branch. Guards against a loosened match (e.g. a mutant that checks
+    /// only "scope" or only "does not match" in isolation).
+    #[test]
+    fn test_classify_401_body_returns_not_authenticated_for_near_miss_substrings() {
+        for message in [
+            "scope does not",
+            "does not match",
+            "scope mismatch",
+            "the requested scope was not granted",
+        ] {
+            let err = classify_401_body(message, LOGIN_HINT);
+            assert!(
+                matches!(err, JrError::NotAuthenticated { .. }),
+                "expected NotAuthenticated for near-miss message {message:?}, got {err:?}"
+            );
+        }
+    }
 }
 
 /// Extract a human-readable error message from a Jira error response body.
