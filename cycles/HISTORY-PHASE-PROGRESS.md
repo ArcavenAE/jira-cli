@@ -162,3 +162,13 @@ See `cycles/cycle-005/burst-log.md` Bursts 11-12 for full narrative detail (thes
 | Phase | Status | Completed | Gate | Notes | Finding Progression |
 |-------|--------|-----------|------|-------|---------------------|
 | **CYCLE-008-F1-APPROVED-2026-09-17** | **COMPLETE** | 2026-09-17 | F1 human gate approval -- delta-analysis scope ruling | Human APPROVED. Scope locked: S1-S5 DELIVER, S6 SPIKE ONLY, S7 DEFERRED. **DEC-368 minted.** | 769 BCs / 86 VPs / 118 holdout / 185 stories; DEC-368 minted |
+
+> Extracted from `.factory/STATE.md`'s `## Phase Progress` table during the
+> 2026-09-18 SESSION-WRAP-PAUSE-2026-09-18 checkpoint burst (v4.65 -> v4.66,
+> skill `/vsdd-factory:wrap` Step 4), to keep the live table at 12 rows after
+> adding the new `SESSION-WRAP-PAUSE-2026-09-18` row. This was the oldest row
+> at that point; archived here verbatim, unedited.
+
+| Phase | Status | Completed | Gate | Notes | Finding Progression |
+|-------|--------|-----------|------|-------|---------------------|
+| **CYCLE-008-F2-APPROVED-2026-09-17** | **COMPLETE** | 2026-09-17 | F2 human gate approval -- spec-evolution scope-set ruling | Human chose **FULL OAUTH PARITY** (16 scopes). `ADR-0026` Decisions 1-4 FINALIZED. BC delta: 769 -> 770. **DEC-369 minted.** | 770 BCs / 89 VPs / 118 holdout / 185 stories; DEC-369 minted |

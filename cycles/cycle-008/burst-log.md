@@ -894,3 +894,80 @@ burst; the referenced `docs/cycle8-oauth-reconsent-changelog` branch/PR is not c
 by this agent (recorded as reported by the operator/orchestrator, not verified here).
 
 **Dim-7 Attestation:** N/A — no `src/` change originates from this burst.
+
+---
+
+## Burst — SESSION-WRAP-PAUSE-2026-09-18 (session-wrap checkpoint, skill /vsdd-factory:wrap Step 4)
+
+**Trigger:** human request to perform the SESSION-WRAP-PAUSE checkpoint (skill `/vsdd-factory:wrap`
+Step 4) so the closed/paused cycle-008 state is durable for a session `/clear`. Nothing in-flight:
+no stories mid-TDD, no open PRs (`#846`, the last, is MERGED), no sub-agents abandoned mid-step, no
+WIP branches, no active story worktrees.
+
+**What changed:** PR `#846` (`docs(cycle-008): note OAuth re-consent for the expanded 16-scope
+set`) — the merge-ready PR referenced in the prior burst's checkpoint — has since MERGED to
+`develop`, advancing its tip `0834c9f0` -> `3d9ca35e`. This burst (1) reconciles STATE.md's
+develop-tip bookkeeping drift: the "current tip" references (Last Updated cell, Activation HEAD
+cell, Concurrent Cycles paragraph) are updated `0834c9f0` -> `3d9ca35e`, while historical
+FIX-F7-001-landing and shipping citations of `0834c9f0` (e.g. "`FIX-F7-001` landed
+`fc608cd3`->`0834c9f0`", "Shipped on `develop @ 0834c9f0`") are left untouched as accurate
+past-state records — those describe what was true at F7 close, not the live tip; (2) archives the
+prior `## Session Resume Checkpoint` (STATE.md v4.65, gate-resolved state) to
+`cycles/cycle-008/session-checkpoints.md` and writes one new checkpoint reflecting this pause; (3)
+appends a `SESSION-WRAP-PAUSE-2026-09-18` Phase Progress row (archiving the now-13th-oldest row,
+`CYCLE-008-F2-APPROVED-2026-09-17`, to `cycles/HISTORY-PHASE-PROGRESS.md` to keep the live table at
+12 rows); (4) refreshes `timestamp:`, `phase:`, `current_step:`, `last_amended:`, and bumps
+`version:` `4.65` -> `4.66` (single point bump, no double-bump); (5) folds the pending
+`sidecar-learning.md` session-end-marker churn into this burst's single atomic commit per
+TD-VSDD-053.
+
+**Adversary verdict:** N/A — no adversarial review dispatched for this bookkeeping/checkpoint
+burst (same class as the F7 pre-gate reconcile and Console-gate-resolution bursts).
+
+**Codifications:** No new DEC minted — this is a session-wrap-pause checkpoint, not a pipeline
+ruling. No BC/VP/lesson codified. Counts unchanged (`total_bcs` 770, VP 89, holdout 118,
+`total_stories` 191). `activation_head`/`activation_version` unchanged (`aa557050`/`v0.7.0-dev.7`,
+no release cut).
+
+**Closes:** nothing new — cycle-008 already carried ZERO open pre-release blockers entering this
+burst (`CYCLE-008-CONSOLE-SCOPE-RELEASE-GATE` resolved `5859ad43`, prior burst). This burst records
+that PR `#846` — the last open item referenced by that resolution — has itself now merged, leaving
+zero open PRs as well.
+
+**Outcome:** `STATE.md` (ONE full-content Write): frontmatter `version`/`timestamp`/`phase`/
+`current_step`/`last_amended` refreshed per the SESSION-WRAP-PAUSE protocol; banner `wc -l` claim
+and dual-margin corrected to the real post-commit line count; Last Updated / Activation HEAD /
+Concurrent Cycles develop-tip references reconciled to `3d9ca35e`; new Phase Progress row appended;
+Skip Log row appended (human gate skipped — pure checkpoint bookkeeping); Session Resume Checkpoint
+replaced with the new one. `cycles/cycle-008/session-checkpoints.md`: prior checkpoint archived
+verbatim + superseded-by note. `cycles/HISTORY-PHASE-PROGRESS.md`: oldest live row archived.
+`cycles/cycle-008/burst-log.md`: this entry. `sidecar-learning.md`: pending session-end-marker
+churn folded into this commit. Pipeline stays PAUSED throughout — no cycle ACTIVE, no phase
+transition.
+
+### Details
+
+| Agent | Task | Output |
+|-------|------|--------|
+| state-manager (this agent) | SESSION-WRAP-PAUSE-2026-09-18 checkpoint (skill `/vsdd-factory:wrap` Step 4): reconciled develop-tip drift (`0834c9f0`->`3d9ca35e` via PR `#846`) in current-tip references only; archived prior checkpoint + oldest Phase Progress row; wrote new checkpoint; STATE.md ONE full-content Write; commit + push `factory-artifacts` | `STATE.md`; `cycles/cycle-008/session-checkpoints.md`; `cycles/HISTORY-PHASE-PROGRESS.md`; `cycles/cycle-008/burst-log.md` (this entry); `sidecar-learning.md` |
+
+**Files touched (Dim-1): 5 unique files, this burst**
+
+- `STATE.md`
+- `cycles/cycle-008/burst-log.md` (this entry)
+- `cycles/cycle-008/session-checkpoints.md`
+- `cycles/HISTORY-PHASE-PROGRESS.md`
+- `sidecar-learning.md` (pre-existing benign churn, folded in per TD-VSDD-053 single-commit
+  protocol)
+
+**Dim-2 Attestation:** `scripts/check-spec-counts.sh` / `scripts/check-bc-cumulative-counts.sh` —
+N/A this burst (no `total_bcs`/`total_vps`/`total_stories` numeric change; 770/89/118/191 all
+unchanged).
+
+**Dim-5 Attestation:** N/A — no binary/WASM artifact produced by this burst.
+
+**Dim-6 Attestation:** N/A on `factory-artifacts` for THIS burst's own actions — this burst makes
+no `develop` code change. It DOES record, as a bookkeeping fact, that `develop` itself advanced
+`0834c9f0`->`3d9ca35e` via PR `#846` (merged by others/prior action, not by this agent).
+
+**Dim-7 Attestation:** N/A — no `src/` change originates from this burst.

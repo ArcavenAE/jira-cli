@@ -201,3 +201,25 @@ traces_to: STATE.md
 **Superseded by:** operator confirmed, out-of-band from the pipeline, that `CYCLE-008-CONSOLE-SCOPE-RELEASE-GATE` (pending item (1) above) is RESOLVED -- all 8 Console scopes confirmed added; re-consent CHANGELOG note delivered via a merge-ready PR (`docs/cycle8-oauth-reconsent-changelog`). cycle-008 now carries ZERO open pre-release blockers (release-clear pending the recommended, non-blocking live-login smoke test). No new DEC minted (standing-item disposition, not a pipeline ruling). Current checkpoint (STATE.md v4.65, gate-resolved state) is in `STATE.md` itself.
 
 ---
+
+## Archived checkpoint (from STATE.md v4.65, gate-resolved state)
+
+```
+**Date & position:** 2026-09-18. cycle-008 (`oauth-surface-correctness`) is CLOSED in full (F1-F7, `DEC-371`); its sole remaining item, `CYCLE-008-CONSOLE-SCOPE-RELEASE-GATE`, is now **RESOLVED** per explicit operator confirmation. `develop` tip UNCHANGED at `0834c9f0`. **No cycle ACTIVE; pipeline PAUSED.**
+
+**Convergence counter:** this burst ran no adversary pass (standing-item disposition); trajectory-tail carried forward unchanged from F5 (`→4→0→0→0`). No active loop.
+
+**In-flight work:** none. No stories mid-TDD; no PRs awaiting review/CI dispatched by this agent; no sub-agents abandoned mid-step. The `docs/cycle8-oauth-reconsent-changelog` branch/PR is reported merge-ready but not created, merged, or otherwise touched by this agent -- recorded as reported, not independently verified. NEXT (future session): no cycle ACTIVE -- candidates are (a) the recommended live-login smoke test (confirm all 16 OAuth scopes appear on consent / no `invalid_scope`), (b) cutting the dev release now that cycle-008 has zero open blockers, (c) opening a new cycle (009-011 remain PARKED), (d) a maintenance sweep to burn down the accumulated LOW standing-item debt, or (e) an optional `/session-review` of cycle-008.
+
+**Pending human decisions / blockers:** **(1)** `[SAFETY]` self-approval structural gap (`CYCLE-008-SELF-APPROVAL-STRUCTURAL-GAP`) -- a permission-rule or hook fix is recommended for a future maintenance cycle. **(2)** other open standing items (`CYCLE-008-INIT-MUTATION-COVERAGE-SEAM`; `CYCLE-008-F5-KEYRING-WIRING-COVERAGE`; 2 S5 LOW deferrals; 3 F6 LOW/note deferrals) in `cycles/OPEN-STANDING-ITEMS.md`, none release-gating. `CYCLE-008-CONSOLE-SCOPE-RELEASE-GATE` is no longer pending -- RESOLVED this burst; the recommended live-login smoke test above is advisory, not a blocker.
+
+**WIP branch list:** none with commits ahead of `develop` (all Wave-1 + fix + S5 + FIX-F5-001 + FIX-F7-001 branches merged & deleted). `docs/cycle8-oauth-reconsent-changelog` is reported as a separate, merge-ready PR not touched by this agent.
+
+**Resume command:** `/vsdd-factory:rehydrate-wave` then `/vsdd-factory:next-step`.
+
+**Counts:** `total_bcs` **770** (unchanged this burst); VP count **89** (unchanged); holdout scenarios **118** (unchanged); `total_stories` **191** (unchanged this burst). Prior checkpoint (STATE.md v4.64, F7-CONVERGED+CLOSED state) archived verbatim to `cycles/cycle-008/session-checkpoints.md`.
+```
+
+**Superseded by:** PR `#846` (`docs(cycle-008): note OAuth re-consent for the expanded 16-scope set`, the merge-ready PR referenced above) subsequently MERGED to `develop`, advancing its tip `0834c9f0`->`3d9ca35e` -- cycle-008 now has zero open PRs in addition to zero open pre-release blockers. A `SESSION-WRAP-PAUSE-2026-09-18` checkpoint (skill `/vsdd-factory:wrap` Step 4) then ran to make this closed/resolved/merged state durable for a session `/clear`: verified nothing in-flight (no stories mid-TDD, no open PRs, no abandoned sub-agent steps, no WIP branches), and reconciled STATE.md's develop-tip bookkeeping ("current tip" references updated to `3d9ca35e`; historical FIX-F7-001/shipping citations of `0834c9f0` left untouched as accurate past-state records). No new DEC minted. Current checkpoint (STATE.md v4.66, session-wrap-pause state) is in `STATE.md` itself.
+
+---
