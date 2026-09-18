@@ -4,8 +4,50 @@ All notable changes to jr will be documented here.
 
 ## [Unreleased]
 
+### Fixed
+
+- **`jr board`/`jr sprint` surface an actionable scope hint on an OAuth granular-scope
+  401, instead of the generic POST-framed `InsufficientScope` message
+  (BC-X.15.001, ADR-0026 Decision 3, S-cycle8-agile-scope-mismatch-error-mapping):** when a
+  `jr board list`/`jr board view`/`jr sprint list`/`jr sprint current`/`jr sprint add`/`jr
+  sprint remove` command hits a 401 with a `"scope does not match"` body under OAuth (3LO)
+  auth, the error is now rewritten to a `Not authenticated` message naming the specific
+  missing Jira-Software/Agile scope(s) (e.g. `read:board-scope:jira-software`,
+  `read:board-scope.admin:jira-software`, `read:sprint:jira-software`,
+  `write:board-scope:jira-software`) and directing the user to `jr auth login` to
+  re-consent, rather than the generic, POST-specific `InsufficientScope` template
+  (issue #185) that was misleading for this Agile GET/write scope-mismatch case.
+  **Coverage widened (same-day v1.1 scope expansion, 2026-09-17, AC-009..012):** the
+  same shared rewrite now also covers every *internal* Agile HTTP call reachable within
+  a `jr board`/`jr sprint` invocation, not only the 4 top-level command handlers —
+  `board.rs::resolve_board_id`'s auto-discovery `list_boards` call (shared by both
+  command families), `board.rs::handle_view`'s scrum-branch `list_sprints`/
+  `get_sprint_issues` calls, and `sprint.rs::resolve_scrum_board`'s `get_board_config`
+  call plus `sprint add --current`'s `list_sprints` lookup — each surfacing the same
+  hint as its top-level sibling that calls the identical endpoint. No
+  change to Basic-auth (API-token) 401 behavior, to the non-scope-mismatch OAuth
+  auto-refresh fall-through, or to any other command family's 401 handling —
+  `src/error.rs`'s shared `InsufficientScope` template and
+  `src/cli/issue/jsm_create.rs`'s existing OAuth rewrite (BC-3.8.015) are unchanged.
+
 ### Changed
 
+- **`DEFAULT_OAUTH_SCOPES` grows from 8 to 16 scopes — closes the Agile and component-write
+  OAuth gaps (S-cycle8-agile-oauth-scope-gap, BC-1.3.023, ADR-0026 Decision 2/2a):** the
+  embedded `jr` OAuth app's default scope set gains `manage:jira-project` and the 7 granular
+  Jira-Software/Agile scopes (`read:board-scope:jira-software`,
+  `read:board-scope.admin:jira-software`, `read:sprint:jira-software`,
+  `write:board-scope:jira-software`, `read:project:jira`, `read:issue-details:jira`,
+  `read:jql:jira`), on top of the 8 existing classic/CMDB scopes (unchanged in position, no
+  scope removed). Existing OAuth users will see a re-consent (`prompt=consent`) prompt on
+  their next login or token refresh — this is expected: a new OAuth grant always overrides
+  the prior grant's scopes with the full requested union. This unblocks `jr board`,
+  `jr sprint`, and `jr component create/edit/delete/rename` under OAuth (pending the
+  routing/error-mapping fixes in this cycle's sibling stories where applicable).
+  **RELEASE GATE:** the Atlassian Developer Console registration for the embedded `jr` OAuth
+  app MUST be updated to include all 8 new scopes before this change ships in a tagged
+  release — shipping without the Console update hard-fails `invalid_scope` for every OAuth
+  login/refresh, not just Agile/component-command users.
 - **`mutants-nightly.yml` gated behind `vars.MUTANTS_NIGHTLY_ENABLED` (fork-friendly-release-ops):**
   the advisory full mutation nightly now runs only where the repository variable
   `MUTANTS_NIGHTLY_ENABLED` is set to `'true'`, matching the fail-safe opt-in pattern of
@@ -13,6 +55,30 @@ All notable changes to jr will be documented here.
   does not spend runner-minutes on a full mutation run it did not ask for. The canonical
   repo sets the variable to `'true'` to keep the nightly it has always run.
   See `docs/specs/fork-friendly-release-ops.md`.
+
+### Fixed
+
+- **`jr queue`, `jr requesttype`, and `jr issue create --request-type` now work under
+  OAuth (3LO) profiles (S-cycle8-jsm-servicedeskapi-oauth-routing, cycle-008, BC-4.2.001,
+  ADR-0026, issue #831):** the six JSM `servicedeskapi` call sites
+  (`list_service_desks`, `list_request_types`, `get_request_type_fields`, `list_queues`,
+  `get_queue_issue_keys`, `create_jsm_request`) now route through `base_url` (the OAuth
+  API gateway) via `get`/`post`, instead of `instance_url` (the site host) via
+  `get_from_instance`/`post_to_instance`. Under OAuth, the two hosts diverge and the old
+  routing 401'd; under API-token auth `base_url() == instance_url()`, so this is a no-op
+  for that auth scheme — no payload/response-shape change anywhere.
+- **`jr assets search/view/schemas/tickets`, `issue list --asset`/`--assets`, and `issue
+  create/edit --field :asset` (including JSM `create --request-type ... --field :asset`) now
+  work under OAuth (3LO) profiles (S-cycle8-assets-workspace-oauth-routing,
+  cycle-008, BC-4.2.001, ADR-0026 Decision 1):** `get_or_fetch_workspace_id`
+  (`src/api/assets/workspace.rs`) — the sole prerequisite workspace-ID discovery call for the
+  entire Assets command family — routed its `GET /rest/servicedeskapi/assets/workspace` request
+  through `instance_url` (the real `*.atlassian.net` site host) instead of `base_url` (the OAuth
+  API gateway). Under OAuth, those two hosts diverge and the site host rejects the gateway
+  bearer token with a 401, breaking every downstream Assets command before it could even reach
+  the (already gateway-correct) AQL/object layer. The call now routes through `base_url`, same
+  as every other gateway-scoped Jira Cloud REST call. No behavior change for API-token profiles,
+  where `base_url() == instance_url()`.
 
 ## [0.7.0-dev.7] - 2026-09-16
 

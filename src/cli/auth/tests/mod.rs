@@ -351,6 +351,17 @@ fn resolve_oauth_scopes_inspects_passed_profile_not_active() {
 /// The literal must also stay in lockstep with the `jr` Atlassian
 /// Developer Console app's registered permissions — a mismatch causes
 /// authorize to reject with `invalid_scope`.
+///
+/// BC-1.3.023 (finalized, F2 human gate, ADR-0026 Decision 2/2a):
+/// `DEFAULT_OAUTH_SCOPES` grows from the 8 classic/CMDB scopes to the
+/// FULL-PARITY 16-scope set — the 8 pre-existing scopes unchanged in
+/// position, followed by `manage:jira-project`, followed by the 7
+/// granular Jira-Software/Agile scopes in BC-1.3.023's Behavior-section
+/// order. AC-001/AC-002/AC-003/AC-004.
+///
+/// RED GATE (S-cycle8-agile-oauth-scope-gap, test-writer): this test
+/// MUST fail against the current 8-scope constant — it is rewritten
+/// ahead of the `src/api/auth.rs` implementation edit, per BC-5.38.001.
 #[test]
 fn default_oauth_scopes_pins_the_full_set_with_offline_access() {
     // Each scope is checked individually so a future addition can
@@ -358,6 +369,7 @@ fn default_oauth_scopes_pins_the_full_set_with_offline_access() {
     // assertion still pins each scope exactly to catch typos.
     let scopes = auth::DEFAULT_OAUTH_SCOPES;
     for required in [
+        // 8 pre-existing scopes (unchanged in position, AC-001).
         "read:jira-work",
         "write:jira-work",
         "read:jira-user",
@@ -366,21 +378,80 @@ fn default_oauth_scopes_pins_the_full_set_with_offline_access() {
         "read:cmdb-object:jira",
         "read:cmdb-schema:jira",
         "offline_access",
+        // `manage:jira-project` (AC-003, component-write scope, NEW).
+        "manage:jira-project",
+        // 7 granular Jira-Software/Agile scopes (AC-001, NEW).
+        "read:board-scope:jira-software",
+        "read:board-scope.admin:jira-software",
+        "read:sprint:jira-software",
+        "write:board-scope:jira-software",
+        "read:project:jira",
+        "read:issue-details:jira",
+        "read:jql:jira",
     ] {
         assert!(
             scopes.split_whitespace().any(|s| s == required),
             "DEFAULT_OAUTH_SCOPES is missing required scope `{required}`: {scopes:?}"
         );
     }
-    // Whole-string canary: a single trailing comma or stray comment
-    // would still satisfy the per-scope check above, so pin the full
-    // expected set.
-    let expected = "read:jira-work write:jira-work read:jira-user \
-                        read:servicedesk-request write:servicedesk-request \
-                        read:cmdb-object:jira read:cmdb-schema:jira \
-                        offline_access";
-    let normalize = |s: &str| s.split_whitespace().collect::<Vec<_>>().join(" ");
-    assert_eq!(normalize(scopes), normalize(expected));
+
+    // Total-count canary (AC-001): exactly 16 scopes, no more, no fewer.
+    // A per-scope `assert!` loop alone would pass if an unexpected 17th
+    // scope were accidentally introduced.
+    assert_eq!(
+        scopes.split_whitespace().count(),
+        16,
+        "DEFAULT_OAUTH_SCOPES must contain exactly 16 scopes: {scopes:?}"
+    );
+
+    // Whole-string canary (F1 hardening): a single trailing comma or
+    // stray comment would still satisfy the per-scope check above, so
+    // pin the full expected set, exact ordering AND exact spacing
+    // (AC-001): 8 pre-existing scopes unchanged in position, then
+    // `manage:jira-project`, then the 7 granular Agile scopes in
+    // BC-1.3.023's Behavior-section order.
+    //
+    // This is a RAW exact-literal comparison — deliberately NOT
+    // normalized via `split_whitespace().join(" ")` on either side.
+    // A prior version of this test normalized both `scopes` and
+    // `expected` before comparing, which strips leading/trailing
+    // whitespace and collapses internal runs, so it could never catch
+    // a stray leading/trailing space introduced into
+    // `DEFAULT_OAUTH_SCOPES`. That matters because
+    // `resolve_oauth_scopes`'s `None` path returns
+    // `DEFAULT_OAUTH_SCOPES` verbatim (no `.trim()`) — a stray space
+    // would propagate into the authorize URL as a literal `%20`,
+    // producing `invalid_scope` from Atlassian for every OAuth user.
+    // The `expected` literal below is built with `concat!` (matching
+    // `DEFAULT_OAUTH_SCOPES`'s own definition style) rather than a
+    // `\`-continued multi-line string literal, specifically so this
+    // comparison is NOT accidentally whitespace-forgiving via Rust's
+    // line-continuation whitespace-stripping rule.
+    let expected = concat!(
+        "read:jira-work write:jira-work read:jira-user ",
+        "read:servicedesk-request write:servicedesk-request ",
+        "read:cmdb-object:jira read:cmdb-schema:jira ",
+        "offline_access manage:jira-project ",
+        "read:board-scope:jira-software read:board-scope.admin:jira-software ",
+        "read:sprint:jira-software write:board-scope:jira-software ",
+        "read:project:jira read:issue-details:jira read:jql:jira",
+    );
+    assert_eq!(
+        scopes, expected,
+        "DEFAULT_OAUTH_SCOPES must match the pinned literal exactly \
+         (ordering AND spacing, including no leading/trailing whitespace): {scopes:?}"
+    );
+
+    // Direct leading/trailing-whitespace guard (F1 hardening): belt-and-
+    // suspenders alongside the exact-literal comparison above. A stray
+    // space at either end would fail the `assert_eq!` above too, but
+    // this assertion names the specific failure mode explicitly so a
+    // future reader (or a mutation-testing run) sees exactly what broke.
+    assert_eq!(
+        scopes.trim(),
+        scopes,
+        "DEFAULT_OAUTH_SCOPES must have no leading/trailing whitespace: {scopes:?}"
+    );
 
     // Regression guard for the multi-line literal: assert no double
     // spaces in the actual constant. Atlassian's authorize endpoint
@@ -393,6 +464,21 @@ fn default_oauth_scopes_pins_the_full_set_with_offline_access() {
     assert!(
         !scopes.contains("  "),
         "DEFAULT_OAUTH_SCOPES has consecutive spaces: {scopes:?}"
+    );
+
+    // AC-002/AC-004: Teams scopes (`view:team:teams`,
+    // `view:membership:teams`) are explicitly EXCLUDED this cycle —
+    // Workstream D (Teams) is deferred to the S6 spike (ADR-0026
+    // Decision 2 / Decision 4) and is not approved to land in this
+    // constant yet. A future accidental re-add must fail this test
+    // immediately (EC-3).
+    assert!(
+        !scopes.contains("view:team:teams"),
+        "DEFAULT_OAUTH_SCOPES must NOT contain view:team:teams (Workstream D deferred to S6 spike): {scopes:?}"
+    );
+    assert!(
+        !scopes.contains("view:membership:teams"),
+        "DEFAULT_OAUTH_SCOPES must NOT contain view:membership:teams (Workstream D deferred to S6 spike): {scopes:?}"
     );
 }
 
