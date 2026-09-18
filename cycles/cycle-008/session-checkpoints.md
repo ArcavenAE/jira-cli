@@ -179,3 +179,25 @@ traces_to: STATE.md
 **Superseded by:** the human F7 gate convened and **APPROVED** the close, on the explicit condition "fix examine_globs first (FIX-F7-001, PR #845 @ `0834c9f0`), then close." That condition was satisfied and cycle-008 is now **CLOSED** (DEC-371). The `CYCLE-008-F6-MUTANTS-EXAMINE-GLOBS-GAP` residual this checkpoint flagged for F7 disposition is now RESOLVED 6/7 (7th file, `src/cli/init.rs`, deferred as `CYCLE-008-INIT-MUTATION-COVERAGE-SEAM`). Current checkpoint (STATE.md v4.64, F7 CONVERGED+CLOSED state) is in `STATE.md` itself.
 
 ---
+
+## Archived checkpoint (from STATE.md v4.64, F7 CONVERGED + cycle CLOSED state)
+
+```
+**Date & position:** 2026-09-18. cycle-008 (`oauth-surface-correctness`) Phase F7 (delta convergence) CONVERGED -- cycle CLOSED (DEC-371, human F7 gate APPROVED). develop tip UNCHANGED at 0834c9f0 (FIX-F7-001 already merged prior session; no new code this burst). No cycle ACTIVE; pipeline PAUSED.
+
+**Convergence counter:** F7 close ran no adversary pass (bookkeeping/close burst); trajectory-tail carried forward unchanged from F5 (->4->0->0->0). No active loop.
+
+**In-flight work:** none. No stories mid-TDD; no PRs awaiting review/CI; no sub-agents abandoned mid-step. cycle-008 is fully CLOSED (F1-F7). NEXT (future session): no cycle ACTIVE -- candidates are (a) the human's Console scope-add release step (unblocking a dev release carrying cycle-008 content), (b) opening a new cycle (009-011 remain PARKED), (c) a maintenance sweep to burn down the accumulated LOW standing-item debt, or (d) an optional /session-review of cycle-008.
+
+**Pending human decisions / blockers:** (1) CYCLE-008-CONSOLE-SCOPE-RELEASE-GATE -- Atlassian Developer Console must add all 8 new OAuth scopes (7 granular Agile + manage:jira-project) + re-consent note BEFORE any release ships cycle-008 content (pre-release, human-owned; does not block any further pipeline work). (2) [SAFETY] self-approval structural gap (CYCLE-008-SELF-APPROVAL-STRUCTURAL-GAP) -- a permission-rule or hook fix is recommended for a future maintenance cycle. (3) other open standing items (CYCLE-008-INIT-MUTATION-COVERAGE-SEAM new; CYCLE-008-F5-KEYRING-WIRING-COVERAGE; 2 S5 LOW deferrals; 3 F6 LOW/note deferrals) in cycles/OPEN-STANDING-ITEMS.md.
+
+**WIP branch list:** none with commits ahead of develop (all Wave-1 + fix + S5 + FIX-F5-001 + FIX-F7-001 branches merged & deleted).
+
+**Resume command:** /vsdd-factory:rehydrate-wave then /vsdd-factory:next-step.
+
+**Counts:** total_bcs 770 (unchanged this burst); VP count 89 (unchanged); holdout scenarios 118 (unchanged); total_stories 191 (unchanged this burst).
+```
+
+**Superseded by:** operator confirmed, out-of-band from the pipeline, that `CYCLE-008-CONSOLE-SCOPE-RELEASE-GATE` (pending item (1) above) is RESOLVED -- all 8 Console scopes confirmed added; re-consent CHANGELOG note delivered via a merge-ready PR (`docs/cycle8-oauth-reconsent-changelog`). cycle-008 now carries ZERO open pre-release blockers (release-clear pending the recommended, non-blocking live-login smoke test). No new DEC minted (standing-item disposition, not a pipeline ruling). Current checkpoint (STATE.md v4.65, gate-resolved state) is in `STATE.md` itself.
+
+---

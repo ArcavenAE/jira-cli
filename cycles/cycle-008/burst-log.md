@@ -816,3 +816,81 @@ burst itself.
 
 **Dim-7 Attestation:** N/A — no `src/` change originates from this burst; `develop`'s full
 regression/CI was validated at FIX-F7-001's own merge (`0834c9f0`), CI-authoritative.
+
+## Burst — CYCLE-008-CONSOLE-SCOPE-RELEASE-GATE RESOLVED (2026-09-18, standing-item disposition, post-F7-close)
+
+**Parent commit:** `f30459eb` (STATE.md v4.64, cycle-008 F7 CONVERGED+CLOSED burst, prior commit
+on `factory-artifacts`).
+
+**Trigger:** explicit operator confirmation, out-of-band from the pipeline, that the Console-side
+half of `CYCLE-008-CONSOLE-SCOPE-RELEASE-GATE` (the cycle's sole remaining open pre-release
+blocker, left open at the F7 close) is complete.
+
+**What changed:** the operator confirmed on 2026-09-18 that all 8 new cycle-008 OAuth scopes
+(`manage:jira-project`, `read:board-scope:jira-software`, `read:board-scope.admin:jira-software`,
+`read:sprint:jira-software`, `write:board-scope:jira-software`, `read:project:jira`,
+`read:issue-details:jira`, `read:jql:jira`) were added to the embedded `jr` OAuth app's
+permissions in the Atlassian Developer Console (`DEFAULT_OAUTH_SCOPES` now 16 total) — the
+Console-registration half of the gate. The re-consent CHANGELOG note (the second half) is
+delivered via PR on branch `docs/cycle8-oauth-reconsent-changelog` → `develop` `[Unreleased]`
+(merge-ready, not yet merged as of this record). Both halves of the CLAUDE.md-documented
+`DEFAULT_OAUTH_SCOPES`-change procedure are now satisfied (delivered, or in a merge-ready PR).
+
+**Recorded, not litigated:** this agent did not verify the Console change itself (no access to the
+Atlassian Developer Console) — the resolution rests on explicit operator confirmation, recorded
+verbatim per instruction. A recommended (non-blocking) pre-release smoke test is noted: run a
+definitive `jr auth login` on an OAuth profile and confirm all 16 scopes appear on the consent
+screen / login succeeds without `invalid_scope`.
+
+**Adversary verdict:** N/A — no adversarial review dispatched for this bookkeeping disposition
+(same class as prior pure-bookkeeping bursts this cycle, e.g. the F7 pre-gate reconcile burst).
+
+**Codifications:** No new DEC minted — this is a standing-item disposition, not a pipeline ruling.
+References `DEC-371` (the cycle-008 F7 close, which left this item as the cycle's sole open
+pre-release blocker). No BC/VP/lesson codified. Counts unchanged (`total_bcs` 770, VP 89, holdout
+118, `total_stories` 191).
+
+**Closes:** `CYCLE-008-CONSOLE-SCOPE-RELEASE-GATE` (RELEASE-GATE, human-owned) — RESOLVED. cycle-008
+now carries ZERO open pre-release blockers (release-clear pending the recommended live-login smoke
+test, which is advisory, not a blocker).
+
+**Outcome:** `cycles/OPEN-STANDING-ITEMS.md` updated — the item's full section replaced with a
+short RESOLVED pointer to `cycles/RESOLVED-DRIFT-ITEMS.md`. `cycles/RESOLVED-DRIFT-ITEMS.md`
+received the full archived original text + resolution facts as a new top section.
+`cycles/cycle-008/blocking-issues-resolved.md` created — the per-cycle resolved-blocking-issues
+record (BC-5.45.001-class routing: resolved blocking issues move out of STATE.md's open table into
+a cycle-scoped file). `STATE.md` (ONE full-content Write): `## Blocking Issues` table cleared to
+zero rows with a resolved-note; Session Resume Checkpoint's "Pending human decisions / blockers"
+updated to drop item (1); headline fields (Pipeline Status, Current Phase Steps, Convergence
+Status, Concurrent Cycles, Constraints Carried Forward) all updated to reflect zero open
+pre-release blockers. Pipeline stays PAUSED throughout — no cycle ACTIVE, no phase transition.
+Pre-existing uncommitted `.factory` drift (`sidecar-learning.md` session-end-marker churn)
+reconciled into this burst's single atomic commit per TD-VSDD-053.
+
+### Details
+
+| Agent | Task | Output |
+|-------|------|--------|
+| state-manager (this agent) | Recorded operator-confirmed resolution of `CYCLE-008-CONSOLE-SCOPE-RELEASE-GATE`; archived full item text to `RESOLVED-DRIFT-ITEMS.md`; replaced with a pointer in `OPEN-STANDING-ITEMS.md`; created `cycles/cycle-008/blocking-issues-resolved.md`; STATE.md ONE full-content Write clearing the open-blockers table; commit + push `factory-artifacts` | `cycles/OPEN-STANDING-ITEMS.md`; `cycles/RESOLVED-DRIFT-ITEMS.md`; `cycles/cycle-008/blocking-issues-resolved.md`; `cycles/cycle-008/burst-log.md` (this entry); `STATE.md` |
+
+**Files touched (Dim-1): 6 unique files, this burst**
+
+- `STATE.md`
+- `cycles/cycle-008/burst-log.md` (this entry)
+- `cycles/cycle-008/blocking-issues-resolved.md` (new)
+- `cycles/OPEN-STANDING-ITEMS.md`
+- `cycles/RESOLVED-DRIFT-ITEMS.md`
+- `sidecar-learning.md` (pre-existing benign churn, folded in per TD-VSDD-053 single-commit
+  protocol)
+
+**Dim-2 Attestation:** `scripts/check-spec-counts.sh` / `scripts/check-bc-cumulative-counts.sh` —
+N/A this burst (no `total_bcs`/`total_vps`/`total_stories` numeric change; 770/89/118/191 all
+unchanged).
+
+**Dim-5 Attestation:** N/A — no binary/WASM artifact produced by this burst.
+
+**Dim-6 Attestation:** N/A on `factory-artifacts` — no `develop` code change originates from this
+burst; the referenced `docs/cycle8-oauth-reconsent-changelog` branch/PR is not created or touched
+by this agent (recorded as reported by the operator/orchestrator, not verified here).
+
+**Dim-7 Attestation:** N/A — no `src/` change originates from this burst.

@@ -6,6 +6,64 @@
 > is RESOLVED/CLOSED — kept for audit trail, not tracked as open debt.
 > STATE.md keeps only a one-line pointer to this file.
 
+## RESOLVED — CYCLE-008-CONSOLE-SCOPE-RELEASE-GATE (2026-09-18, operator-confirmed disposition -- archived from `cycles/OPEN-STANDING-ITEMS.md`, post-F7-close standing-item burst)
+
+**ID:** `CYCLE-008-CONSOLE-SCOPE-RELEASE-GATE`
+**Status:** RESOLVED 2026-09-18, operator-confirmed. No new DEC minted (standing-item
+disposition, not a pipeline ruling) -- references `DEC-371` (the cycle-008 F7 close itself, which
+left this item as the cycle's sole open pre-release blocker).
+
+**Original item (verbatim, as tracked from 2026-09-17 F2 approval through F7 close):**
+
+> **Severity:** RELEASE-GATE — hard pre-release blocker, human-owned. Does NOT block F2-F7
+> pipeline work for cycle-008; it blocks only shipping a release that carries the cycle's content.
+>
+> **What:** cycle-008 (`oauth-surface-correctness`)'s F2 spec-evolution human gate (`DEC-369`,
+> 2026-09-17) FINALIZED the S2 scope after a deep endpoint-inventory + scope-matrix audit pass
+> (`cycles/cycle-008/oauth-endpoint-inventory.md`, `oauth-scope-matrix.md`): the human chose FULL
+> OAUTH PARITY, expanding `DEFAULT_OAUTH_SCOPES` (`src/api/auth.rs`) by **ALL 8** new scopes — the
+> 7 granular `jira-software` Agile scopes originally locked at F1 (`read:board-scope:jira-software`,
+> `read:project:jira`, `read:sprint:jira-software`, `read:issue-details:jira`, `read:jql:jira`,
+> `read:board-scope.admin:jira-software`, `write:board-scope:jira-software`) PLUS a
+> newly-discovered 8th scope, `manage:jira-project`, required for `jr component
+> create/edit/delete/rename` (a component-write scope gap surfaced by the F2 audit; routing to
+> these endpoints was already correct, so this is scope-only). Per the documented `CLAUDE.md`
+> procedure for `DEFAULT_OAUTH_SCOPES` changes, before any release carrying this cycle's content
+> ships, a human must: (1) add ALL 8 of these scopes to the embedded `jr` OAuth app's permissions
+> in the Atlassian Developer Console (https://developer.atlassian.com/console/myapps/); (2) add a
+> CHANGELOG entry mentioning the resulting re-consent prompt, so existing OAuth users aren't
+> surprised when they're asked to re-authorize. Existing access tokens continue working with the
+> old scopes until expiry; new logins and refresh-token mints after the Console change will
+> trigger re-consent. The bulk-issue-operations API was separately audited and confirmed to need
+> NO scope change (classic `write:jira-work`/`read:jira-work` already cover it) — not part of this
+> release-gate item.
+>
+> **Why tracked here, not just in the CHANGELOG:** this is a release-blocking checklist item, not
+> merely a documentation note — a release cut without the Console-side scope grant would ship a
+> client that requests scopes the OAuth app isn't authorized for, breaking the S2 fix in the field.
+
+**Resolution facts (recorded accurately, operator-confirmed 2026-09-18):**
+
+1. The operator (human) confirmed they added all 8 new cycle-008 OAuth scopes to the embedded
+   `jr` OAuth app in the Atlassian Developer Console: `manage:jira-project`,
+   `read:board-scope:jira-software`, `read:board-scope.admin:jira-software`,
+   `read:sprint:jira-software`, `write:board-scope:jira-software`, `read:project:jira`,
+   `read:issue-details:jira`, `read:jql:jira` -- the full `DEFAULT_OAUTH_SCOPES` set is now 16.
+   This is the Console-registration half of the gate.
+2. The re-consent CHANGELOG note (the second half of the gate) is delivered via PR on branch
+   `docs/cycle8-oauth-reconsent-changelog` (-> `develop` `[Unreleased]`) -- merge-ready, not yet
+   merged as of this record.
+3. **Recommended pre-release verification (NOT a blocker, advice only):** a definitive `jr auth
+   login` on an OAuth profile should show all 16 scopes on the consent screen / succeed without
+   `invalid_scope` -- this is the authoritative confirmation the Console registration actually
+   took (a typo such as the `.admin` in `read:board-scope.admin:jira-software` would only surface
+   at this live-login step). Recorded as the recommended release-time smoke test, to be run before
+   the release that ships cycle-008's content.
+
+**Outcome:** cycle-008 now carries ZERO open pre-release blockers. See
+`cycles/cycle-008/blocking-issues-resolved.md` for the per-cycle blocking-issues-table resolution
+record, and `STATE.md`'s `## Blocking Issues` section for the current (cleared) state.
+
 ## RESOLVED at cycle-008 Phase F7 close (2026-09-18, DEC-371 -- archived from `cycles/OPEN-STANDING-ITEMS.md` during the F7 CONVERGED+CLOSED burst)
 
 **`CYCLE-008-F6-MUTANTS-EXAMINE-GLOBS-GAP`** -- RESOLVED, 6 of 7 files. Recorded during the F6

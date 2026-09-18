@@ -10,45 +10,25 @@
 > `MUTANTS-NIGHTLY-VERIFY-FULL-RUN`, `STATE-MD-OVER-SOFT-TARGET`) stay
 > inline in STATE.md itself and are NOT duplicated here except where noted.
 
-## cycle-008 RELEASE GATE — Atlassian Developer Console scope-add (2026-09-17, F2 approval; updated from F1)
+## cycle-008 RELEASE GATE — Atlassian Developer Console scope-add — RESOLVED 2026-09-18
 
 **ID:** `CYCLE-008-CONSOLE-SCOPE-RELEASE-GATE`
-**Severity:** RELEASE-GATE — hard pre-release blocker, human-owned. Does NOT block F2-F7 pipeline
-work for cycle-008; it blocks only shipping a release that carries the cycle's content.
-**Status:** OPEN, PENDING.
+**Status:** **RESOLVED 2026-09-18, operator-confirmed.** Full original item text + resolution
+facts archived verbatim to `cycles/RESOLVED-DRIFT-ITEMS.md`
+(§"RESOLVED — CYCLE-008-CONSOLE-SCOPE-RELEASE-GATE"); per-cycle resolution record also at
+`cycles/cycle-008/blocking-issues-resolved.md`. Also updated in `.factory/STATE.md`'s
+`## Blocking Issues` table (same ID) — cycle-008 now carries **ZERO** open pre-release blockers.
 
-**What:** cycle-008 (`oauth-surface-correctness`)'s F2 spec-evolution human gate (`DEC-369`,
-2026-09-17) FINALIZED the S2 scope after a deep endpoint-inventory + scope-matrix audit pass
-(`cycles/cycle-008/oauth-endpoint-inventory.md`, `oauth-scope-matrix.md`): the human chose FULL
-OAUTH PARITY, expanding `DEFAULT_OAUTH_SCOPES` (`src/api/auth.rs`) by **ALL 8** new scopes — the 7
-granular `jira-software` Agile scopes originally locked at F1 (`read:board-scope:jira-software`,
-`read:project:jira`, `read:sprint:jira-software`, `read:issue-details:jira`, `read:jql:jira`,
-`read:board-scope.admin:jira-software`, `write:board-scope:jira-software`) PLUS a newly-discovered
-8th scope, `manage:jira-project`, required for `jr component create/edit/delete/rename` (a
-component-write scope gap surfaced by the F2 audit; routing to these endpoints was already
-correct, so this is scope-only). Per the documented `CLAUDE.md` procedure for
-`DEFAULT_OAUTH_SCOPES` changes, **before any release carrying this cycle's content ships**, a
-human must:
-
-1. Add ALL 8 of these scopes (`manage:jira-project` + the 7 Agile scopes above) to the embedded
-   `jr` OAuth app's permissions in the Atlassian Developer Console
-   (https://developer.atlassian.com/console/myapps/).
-2. Add a CHANGELOG entry mentioning the resulting re-consent prompt, so existing OAuth users
-   aren't surprised when they're asked to re-authorize.
-
-Existing access tokens continue working with the old scopes until expiry; new logins and
-refresh-token mints after the Console change will trigger re-consent. The bulk-issue-operations
-API was separately audited and confirmed to need NO scope change (classic `write:jira-work`/
-`read:jira-work` already cover it) — not part of this release-gate item.
-
-**Why tracked here, not just in the CHANGELOG:** this is a release-blocking checklist item, not
-merely a documentation note — a release cut without the Console-side scope grant would ship a
-client that requests scopes the OAuth app isn't authorized for, breaking the S2 fix in the field.
-
-**Resolution:** PENDING. Clear this item (mark RESOLVED, move to
-`cycles/RESOLVED-DRIFT-ITEMS.md`) only after the Console permission add is confirmed done and the
-CHANGELOG re-consent note is written, both before the release that ships cycle-008's S2 change.
-Also tracked in `.factory/STATE.md`'s `## Blocking Issues` table (same ID).
+**Summary of resolution:** the operator confirmed on 2026-09-18 that all 8 new cycle-008 OAuth
+scopes were added to the embedded `jr` OAuth app's Atlassian Developer Console registration
+(`DEFAULT_OAUTH_SCOPES` now 16 total); the re-consent CHANGELOG note is delivered via PR on branch
+`docs/cycle8-oauth-reconsent-changelog` (merge-ready, → `develop` `[Unreleased]`). **Recommended
+pre-release verification (NOT a blocker):** a definitive `jr auth login` on an OAuth profile should
+show all 16 scopes on the consent screen / succeed without `invalid_scope` — the authoritative
+confirmation the Console registration took (a typo like the `.admin` in
+`read:board-scope.admin:jira-software` would only surface there). No new DEC minted for this
+disposition (standing-item resolution, not a pipeline ruling); see `DEC-371` for the cycle-008 F7
+close itself.
 
 ---
 

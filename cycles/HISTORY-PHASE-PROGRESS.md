@@ -152,3 +152,13 @@ See `cycles/cycle-005/burst-log.md` Bursts 11-12 for full narrative detail (thes
 | Phase | Status | Completed | Gate | Notes | Finding Progression |
 |-------|--------|-----------|------|-------|---------------------|
 | **CYCLE-013-F7-CONVERGED-CLOSED-2026-09-16** | **COMPLETE / CONVERGED / CLOSED** | 2026-09-16 | F7 human close/release gate | Fresh-context re-verification CONVERGED, all 7 dimensions PASS. Human: APPROVE & CLOSE + cut a dev release now (`v0.7.0-dev.7`). **DEC-367 minted.** `ADR-0025` accepted. | 769 BCs / 86 VPs / 118 holdout / 185 stories; DEC-367 minted |
+
+> Extracted from `.factory/STATE.md`'s `## Phase Progress` table during the
+> 2026-09-18 CYCLE-008-CONSOLE-GATE-RESOLVED standing-item disposition burst
+> (v4.64 -> v4.65), to keep the live table at 12 rows after adding the new
+> `CYCLE-008-CONSOLE-GATE-RESOLVED-2026-09-18` row. This was the oldest row
+> at that point; archived here verbatim, unedited.
+
+| Phase | Status | Completed | Gate | Notes | Finding Progression |
+|-------|--------|-----------|------|-------|---------------------|
+| **CYCLE-008-F1-APPROVED-2026-09-17** | **COMPLETE** | 2026-09-17 | F1 human gate approval -- delta-analysis scope ruling | Human APPROVED. Scope locked: S1-S5 DELIVER, S6 SPIKE ONLY, S7 DEFERRED. **DEC-368 minted.** | 769 BCs / 86 VPs / 118 holdout / 185 stories; DEC-368 minted |
