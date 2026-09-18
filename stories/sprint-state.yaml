@@ -1,25 +1,51 @@
 ---
 document_type: sprint-state
 level: ops
-version: "1.0"
+version: "1.1"
 status: active
 producer: state-manager
-timestamp: 2026-09-14T18:00:00Z
-cycle: "cycle-012-field-adf-autoconvert"
+timestamp: 2026-09-18T14:00:00Z
+cycle: "cycle-008-oauth-surface-correctness"
 traces_to: STATE.md
 ---
 
-# Sprint State — cycle-012-field-adf-autoconvert
+# Sprint State — cycle-008-oauth-surface-correctness
 
-## cycle-012 Stories
+## cycle-008 Stories
 
 | Story | Wave | Points | Status | PR | Merged |
 |-------|------|--------|--------|----|--------|
-| S-cycle12-platform-adf-autoconvert | Wave 1 | 13 | merged | #809 | 2026-09-14 @ e926cb70 (squash, develop) |
-| S-cycle12-jsm-adf-autoconvert | Wave 2 | 13 | ready | — | pending (depends_on: S-cycle12-platform-adf-autoconvert SATISFIED) |
+| S-cycle8-jsm-servicedeskapi-oauth-routing | Wave 1 | 5 | merged | #833 | 2026-09-17 @ 4afc5aa5 (squash, develop) |
+| S-cycle8-agile-oauth-scope-gap | Wave 1 | 3 | merged | #834 | 2026-09-17 @ 5f718d13 (squash, develop) |
+| S-cycle8-assets-workspace-oauth-routing | Wave 1 | 2 | merged | #832 | 2026-09-17 @ 9caa7bb5 (squash, develop) |
+| S-cycle8-agile-scope-mismatch-error-mapping | Wave 1 | 8 | merged | #835 | 2026-09-17 @ a32caef4 (squash, develop) |
+| (wave-gate fix, not a story) | Wave 1 gate | — | merged | #836 | 2026-09-17 @ 578a7848 (squash, develop) |
+| S-cycle8-jsm-attachments-oauth-verification | Wave 2 | 2 | merged | #843 | 2026-09-18 @ 926fdb96 (squash, develop; mergedAt 2026-09-18T14:40:40Z) |
+| S-cycle8-teams-graphql-oauth-replatform-spike | non-gating parallel track | 3 | draft | — | not started (spike — no code delivery) |
 
 ## Notes
 
-- Wave 1 COMPLETE: S-cycle12-platform-adf-autoconvert merged 2026-09-14, PR #809 @ e926cb70.
-- Wave 2 ELIGIBLE: S-cycle12-jsm-adf-autoconvert dependency satisfied (is_adf_field_value pub(crate) on develop@e926cb70).
-- cycle-007 PAUSED: Wave-2 integration gate PENDING (resume after cycle-012 closes).
+- Wave 1 COMPLETE 2026-09-17: S1/S2/S3/S4 all merged (PRs #833/#834/#832/#835, human admin-bypass
+  per `CYCLE-008-SELF-APPROVAL-STRUCTURAL-GAP`). Wave integration gate + wave-level adversarial
+  CONVERGED (3 clean passes incl. the fix); wave-gate fix PR #836 (F-WAVE-1 + F-WAVE-4 + F-WG-1)
+  merged 2026-09-17 @ 578a7848. Wave-1 gate fully CLOSED.
+- Wave 2 COMPLETE 2026-09-18: S5 (`S-cycle8-jsm-attachments-oauth-verification`, verification-only,
+  `tdd_mode: facade`, zero `src/` diff) merged via PR #843 @ 926fdb96, human manual admin-bypass
+  merge (same self-approval structural gap as every other cycle-008 PR). `depends_on:[S1]` was
+  SATISFIED at S1's merge. 4-pass per-story adversarial convergence (1 MEDIUM CHANGELOG-scope fix
+  in `da7fc4df`, then 3 clean/nitpick). Full detail: `cycles/cycle-008/convergence-trajectory.md`
+  "S5 (Wave 2)" section, `cycles/cycle-008/burst-log.md`.
+- cycle-008 Phase F4 (delta implementation) is now COMPLETE — both waves merged. `develop` tip
+  `926fdb96`.
+- S6 (`S-cycle8-teams-graphql-oauth-replatform-spike`) is a non-gating parallel-track SPIKE (no
+  code delivery, no BC anchor, no Red Gate, no merge) — remains `draft`, not started. Does not
+  block F5/F6/F7.
+- RELEASE GATE still open (human-owned, pre-release): `CYCLE-008-CONSOLE-SCOPE-RELEASE-GATE` —
+  all 8 new OAuth scopes must be added to the Atlassian Developer Console app permissions + a
+  CHANGELOG re-consent note before any release ships cycle-008 content.
+- cycle-012 (`field-adf-autoconvert`) CLOSED 2026-09-15 (DEC-361), both waves merged
+  (PR #809 @ e926cb70, PR #812 @ 2a0b0fae per `cycles/CYCLE-SUMMARY.md#cycle_012_status`) —
+  superseded by this cycle-008 tracking; historical cycle-012 detail preserved verbatim at
+  `cycles/CYCLE-SUMMARY.md#cycle_012_status` and is no longer carried in this file's live table
+  (this file tracks the CURRENT/active cycle only; see `STATE.md` `cycle_012_status` frontmatter
+  field for the authoritative historical record).

@@ -830,6 +830,19 @@ author and reviewer are the same identity, or formalize the human-admin-bypass s
 documented, expected path for a solo-maintainer topology rather than an exception. Target: a
 future self-improvement/maintenance cycle (engine-level hook, `vsdd-factory` repo).
 
+**UPDATE (2026-09-18, S5/PR #843 delivery burst):** confirmed this gap is broader than GitHub
+approval state alone -- it now ALSO blocks the orchestrator's own `pr-manager` DISPATCH: the
+auto-mode classifier issues a `[Self-Approval]` denial on any dispatch that carries merge
+authorization for a self-authored PR, not merely on the `gh pr review --approve` call. Practical
+effect, confirmed again on PR #843: every cycle-008 self-authored story PR requires the
+orchestrator to dispatch `pr-manager` in a merge-ready-STOP scope (create PR, drive CI green,
+post the COMMENTED-with-verdict review, then stop short of merging) and hand the actual merge
+action to the human. #843 was merged this way -- human manual admin-bypass merge @ `926fdb96`,
+mergedAt 2026-09-18T14:40:40Z, after pr-manager/pr-reviewer completed their merge-ready-STOP
+scope. No new ID -- folded into this existing entry per S-7.02 cycle-closing-checklist guidance
+(observation, not a new defect class; same candidate fix as above, now covering the dispatch-time
+classifier as well as the GitHub-side approval mechanics).
+
 **`CYCLE-008-NESTED-SUBAGENT-STALL-RECURRENCE`** (recurrence of
 `CYCLE-013-PR-REVIEWER-SUBAGENT-STALL`) -- Nested sub-agent dispatches (`github-ops`,
 `pr-reviewer`) stalled under concurrency load this burst (4 stories delivered in parallel/near-parallel
@@ -946,3 +959,49 @@ misrepresent the historical burst sequence. Candidate fix: either update
 recognize `## Burst:` as satisfying the `## Burst N` template placeholder generically (regex,
 not fixed-string). Target: a future self-improvement/maintenance cycle (engine-level
 hook/template alignment, `vsdd-factory` repo).
+
+## cycle-008 F4 Wave 2 S5 delivery -- justified deferrals (S-7.02 cycle-closing checklist, 2026-09-18)
+
+**Status:** CLOSED-BY-DEFERRAL. Both items below are LOW severity, surfaced by the per-story
+adversarial review of `S-cycle8-jsm-attachments-oauth-verification` (PR `#843`, MERGED @
+`926fdb96`). Per S-7.02, a justified deferral recorded here is sufficient disposition -- neither
+warrants a new follow-up story on its own.
+
+**`CYCLE-008-ENV-RESTORE-NON-RAII`** -- `tests/attachment_jsm.rs`'s new test
+(`test_bc_4_2_001_jsm_attachment_upload_succeeds_end_to_end_under_oauth`) sets `JR_CACHE_DIR` via
+`unsafe { std::env::set_var(...) }` and restores it with a manual `remove_var` call at the end of
+the test body. On a panic mid-test (an assertion failure before that line runs), the env var leaks
+to whatever test runs next in-process. LOW -- this exactly matches the pre-existing
+`tests/project_meta.rs` pattern already accepted elsewhere in the suite, so it is not a novel
+defect, only an inherited one. Candidate fix: a pattern-wide RAII env-restore-guard helper (a small
+`struct EnvVarGuard` whose `Drop` unconditionally restores/removes the var, mirroring the
+`AttachmentDropGuard`/`ComponentDropGuard` idiom CLAUDE.md documents for live-fixture teardown) --
+out of scope for a facade/verification-only story whose story-level diff is a single new test.
+Target: a future maintenance sweep, applied across all `JR_CACHE_DIR`/env-mutating test sites at
+once rather than piecemeal.
+
+**`CYCLE-008-WORKTREE-NAME-VS-STORYID`** -- The S5 worktree's basename
+(`cycle8-s5-jsm-attachments-oauth-verification`) does not satisfy the strict anchored-match rule
+against its story-id (`S-cycle8-jsm-attachments-oauth-verification`) -- missing the `S-` prefix
+and carrying an extra `s5-` wave-slug segment. This degrades the adversary's Worktree-Identity
+Preflight to a best-effort check (same class as `CYCLE-008-WORKTREE-IDENTITY-PREFLIGHT-GAP`
+above, recurring here on Wave 2 after being flagged on S1/S3/S4 in Wave 1) -- flagged across two
+adversarial passes on this story, did not block convergence (3 clean passes still reached).
+Candidate fix: same as the Wave-1 entry -- reconcile worktree-naming convention (drop wave-slug
+segments, anchor strictly to the story-id) vs. the preflight's anchored-match rule, in one pass
+across both. Target: a future self-improvement/maintenance cycle (process convention, applies to
+`deliver-story`/per-story-delivery orchestration).
+
+**`CYCLE-008-S5-TRAJECTORY-TAIL-HOOK-FALSE-POSITIVE`** (new mechanism, same family as
+`CYCLE-008-WAVEGATE-PATH-STAGING-CWD-FALSE-POSITIVE`/`CYCLE-013-HOOK-FALSE-POSITIVE-COMMIT-MSG-SCAN`)
+-- `validate-trajectory-tail-cell-completeness` repeatedly (3+ times) reported the `→1→0→0→0`
+arrow-sequence missing from `STATE.md`'s frontmatter `current_step` field and "Last Updated"
+table cell during this burst's `STATE.md` write, even after independent on-disk verification
+(`grep -c`, a Python substring check, and a file checksum taken immediately after each edit)
+confirmed the exact literal token `trajectory_tail →1→0→0→0` present in both locations. The
+`PostToolUse` `Edit`/`Write` hook is advisory (non-reverting) -- the correct content is confirmed
+committed to disk. Candidate fix: same root-cause family as the other two false-positive
+entries -- the hook likely re-checks a stale read or a regex anchor that doesn't tolerate the
+leading `→` character; needs a reproduction with the exact `STATE.md` byte content from this
+burst. Target: a future self-improvement/maintenance cycle (engine-level hook, `vsdd-factory`
+repo).

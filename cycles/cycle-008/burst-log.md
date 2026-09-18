@@ -257,3 +257,156 @@ consolidation (tracked, not resolved). Wave 1's own 4 stories (S1-S4) were alrea
 prior burst's merge; this burst closes the WAVE INTEGRATION GATE + WAVE-LEVEL ADVERSARIAL
 dimension of the F4 Wave-1 exit criteria. The human consolidated merge of PR `#836` itself
 remains OPEN (see Blocking Issues / Session Resume Checkpoint) — this burst does not close that.
+
+---
+
+## Burst: F4 Wave 2 (S5) DELIVERED, CONVERGED & MERGED — Wave-1 gate fix PR #836 also merged; Wave 2 CLOSED (2026-09-18)
+
+**Parent-commit:** `578a7848` (`develop` tip entering this burst — wave-gate fix PR `#836`
+merged in the interim, `develop`: `a32caef4`→`578a7848`, prior to this burst's own S5 work).
+
+**Trigger:** cycle-008 (`oauth-surface-correctness`) resumed from the
+`SESSION-WRAP-PAUSE-2026-09-18` checkpoint (STATE.md v4.59) with Wave-1's gate fully closed and
+an S5 worktree already created but no code/tests landed. Ran Wave 2's sole story, S5
+(`S-cycle8-jsm-attachments-oauth-verification`), through the per-story TDD + adversarial pipeline.
+
+**Actions taken:**
+1. **Human merged wave-gate fix PR `#836`** manually (squash, admin-bypass, `develop`:
+   `a32caef4`→`578a7848`) ahead of this burst's own dispatch — recorded here for continuity since
+   the prior burst's `convergence-trajectory.md` entry had left it open at the human wave-gate
+   merge decision.
+2. **S5** `S-cycle8-jsm-attachments-oauth-verification` → dispatched `test-writer` to re-run the
+   (inverted) Red Gate: `depends_on:[S1]` was SATISFIED (S1 merged PR `#833` @ `4afc5aa5` in
+   Wave 1), so the new end-to-end test
+   (`test_bc_4_2_001_jsm_attachment_upload_succeeds_end_to_end_under_oauth`,
+   `tests/attachment_jsm.rs`, +209 lines) was written EXPECTING TO PASS against already-merged
+   `develop` — AC-003 forbids a pre-fix-style failing test for this facade story. It passed on
+   first run. Verification-only: **zero `src/` diff**, 2-file diff total
+   (`tests/attachment_jsm.rs` + `CHANGELOG.md`, +7 lines).
+3. **Per-story adversarial review** ran 4 passes to convergence: Pass 1 SUBSTANTIVE (1 MEDIUM —
+   `CHANGELOG.md` overclaimed download/delete coverage alongside upload; disposition **FIX**,
+   narrowed to upload-only with a clarifying platform-endpoint clause, landed at commit
+   `da7fc4df`); Passes 2-4 NITPICK_ONLY, novelty decayed to zero — 3 consecutive clean/nitpick
+   passes, CONVERGED. Full detail: `cycles/cycle-008/convergence-trajectory.md`'s new "S5 (Wave
+   2)" section (added this burst), including the Red-Gate-inversion rationale and the
+   negative-control assertion design (`base_url` hit exactly once × 4 endpoints, `instance_url`
+   hit exactly zero times, `JR_CACHE_DIR` isolation forcing the real `list_service_desks` call).
+4. **Demo evidence** recorded on `factory-artifacts` @ `5cc246c6` per the #708 demo-evidence
+   convention (test output transcript demonstrating the passing end-to-end assertions; no visual
+   demo needed for a test-only facade story).
+5. **PR `#843`** (`fix/cycle8-jsm-attachments-oauth-verification` → `develop`) opened, pushed, and
+   driven to CI 24/24 green. Fresh-eyes `pr-reviewer` review performed genuine verification, not
+   just diff-reading: ran the new test locally (`ok, 1 passed`); temporarily mutated
+   `post_request_attachment` (`src/api/jsm/attachments.rs`) to route via `instance_url()` instead
+   of `base_url()` and confirmed the test FAILS as designed, then reverted (worktree confirmed
+   clean); verified the 4-endpoint chain against the real `src/api/jsm/servicedesks.rs`/
+   `attachments.rs` call graph; confirmed the CHANGELOG fix from Pass 1 is accurate and correctly
+   scoped. Verdict: **COMMENTED** (self-approval structural gap — same convention as S1-S4/#836)
+   with an explicit non-blocking recommendation, 0 CRITICAL/HIGH/MEDIUM, 1 LOW (env-var restore
+   non-RAII, `discussion_r4047408907`), 1 INFO. PR marked **merge-ready** — human merge required
+   (self-approval structural gap blocks the dispatch, not just GitHub's approval state; see (7)
+   below).
+6. **Human merged PR `#843`** manually via admin-bypass (squash, `develop`: `578a7848`→`926fdb96`,
+   mergedAt 2026-09-18T14:40:40Z) after the `pr-manager`-dispatch classifier's `[Self-Approval]`
+   denial (recurrence of `CYCLE-008-SELF-APPROVAL-STRUCTURAL-GAP`, expected per the Wave-1
+   precedent). Worktree (`.worktrees/cycle8-s5-jsm-attachments-oauth-verification`) and branch
+   (`fix/cycle8-jsm-attachments-oauth-verification`) cleaned up post-merge.
+7. **Process-gap findings recorded** to `cycles/OPEN-STANDING-ITEMS.md`: (a) an UPDATE folded
+   into the existing `CYCLE-008-SELF-APPROVAL-STRUCTURAL-GAP` entry — the gap is now confirmed to
+   block the orchestrator's `pr-manager` DISPATCH itself (a `[Self-Approval]` classifier denial on
+   any dispatch carrying merge authorization), not merely GitHub's `APPROVED` state; (b) new
+   section "cycle-008 F4 Wave 2 S5 delivery — justified deferrals" with two LOW items, both
+   CLOSED-BY-DEFERRAL per S-7.02: `CYCLE-008-ENV-RESTORE-NON-RAII` (manual `JR_CACHE_DIR`
+   set/remove_var in the new test leaks on panic-unwind, matches the pre-existing
+   `tests/project_meta.rs` pattern) and `CYCLE-008-WORKTREE-NAME-VS-STORYID` (S5's worktree
+   basename didn't anchor-match its story-id — recurrence of
+   `CYCLE-008-WORKTREE-IDENTITY-PREFLIGHT-GAP` on Wave 2).
+8. **STORY-INDEX.md updated** (v1.6.27 → v1.6.28): S5 status draft→done (PR #843 @ `926fdb96`).
+   Also reconciled STALE `draft` labels on the 4 already-merged Wave-1 stories (S1/S2/S3/S4, both
+   Story Manifest + Feature Followup rows each) — all four had been on `develop` since
+   2026-09-17 but the index was never updated at that merge; drift now closed. S6
+   (`S-cycle8-teams-graphql-oauth-replatform-spike`) correctly LEFT AS `draft` (spike, not
+   started — not drift).
+9. **STATE.md updated** (v4.59 → v4.60, single full-content Write per hook-guard discipline):
+   `phase`/`current_step`/`cycle_008_status` updated to record F4 Wave 2 (S5) DELIVERED,
+   CONVERGED & MERGED — **cycle-008 F4 (delta implementation) now COMPLETE** (both waves merged);
+   Phase Progress row `CYCLE-008-F4-WAVE2-S5-MERGED-2026-09-18` appended. Session Resume
+   Checkpoint replaced; prior (v4.59, wave-1-gate-closed/S5-not-started state) archived to
+   `cycles/cycle-008/session-checkpoints.md`.
+10. Reconciled pre-existing uncommitted `.factory` working-tree drift (`regression-state.json`,
+    `sidecar-learning.md` session-end-marker churn, `code-delivery/pr-review.md`'s PR #843 review
+    refresh) into this single commit alongside `STATE.md`, `STORY-INDEX.md`,
+    `cycles/cycle-008/burst-log.md` (this entry), `cycles/cycle-008/convergence-trajectory.md`,
+    `cycles/OPEN-STANDING-ITEMS.md`, and the new
+    `code-delivery/S-cycle8-jsm-attachments-oauth-verification/pr-description.md`.
+
+**Adversary verdict:** CONVERGED — 4 passes (1 SUBSTANTIVE fix + 3 clean/nitpick), 0
+CRITICAL/HIGH/MEDIUM remaining at merge time.
+
+**Codifications:** No new DEC minted this burst — S5's merge is an automated bookkeeping
+outcome (the F1/F2/F3 human gates already scoped and approved this story; no new pipeline
+ruling is made by merging it). Counts unchanged: 770 BCs / 89 VPs / 118 holdouts / 191 stories
+(`BC-4.2.001` cited transitively, no amendment; no new VP per F2-architecture-delta.md §S5).
+
+**Closes:** GitHub issue `#831` was already closed at S1's merge (Wave 1); this burst closes
+nothing new on that front. **Closes cycle-008 Phase F4 (delta implementation) in full** — both
+Wave 1 (S1-S4 + wave-gate fix `#836`) and Wave 2 (S5) are now merged to `develop`. **Does NOT
+close:** cycle-008 itself (S6 spike, F5/F6/F7 remain); the
+`CYCLE-008-CONSOLE-SCOPE-RELEASE-GATE` release-gate item (still PENDING, human-owned,
+pre-release).
+
+**Outcome:** cycle-008 (`oauth-surface-correctness`) Phase F4 Wave 2 (S5) DELIVERED, CONVERGED &
+MERGED. `develop` advanced `578a7848`→`926fdb96` (main checkout synced; S5 worktree + branch
+removed). F4 is now COMPLETE. `activation_head`/`activation_version` unchanged
+(`aa557050`/`v0.7.0-dev.7` — no release cut). **NEXT:** S6 (`S-cycle8-teams-graphql-oauth-replatform-spike`,
+non-gating parallel track, spike investigation only) → F5 (scoped adversarial) → F6 (targeted
+hardening) → F7 (delta convergence, human gate).
+
+### Counts reconciled this burst
+
+No BCs/VPs/holdouts/stories added or removed — 770 BCs / 89 VPs / 118 holdouts / 191 stories
+unchanged (S5 cites `BC-4.2.001` transitively; no new BC/VP/story).
+
+### Details
+
+| Agent | Task | Output |
+|-------|------|--------|
+| test-writer | Re-ran S5's inverted Red Gate: new end-to-end OAuth JSM-attachment test, expected-to-pass | `tests/attachment_jsm.rs` (+209 lines) |
+| adversary (×4 passes) | Per-story adversarial convergence | 1 MEDIUM (CHANGELOG overclaim, fixed `da7fc4df`) + 3 clean/nitpick passes |
+| demo-recorder | Demo evidence (test-output transcript) | `factory-artifacts` @ `5cc246c6` |
+| pr-manager, github-ops-ci-843, github-ops-push-pr | PR creation, CI drive, push | PR `#843` |
+| github-ops-pr843-edit1 | CHANGELOG narrowing fix per Pass-1 disposition | commit `da7fc4df` |
+| pr-reviewer-cycle8-s1-r1 (continued) | Fresh-eyes review of PR #843, incl. mutation-style verification of the routing assertions | COMMENTED verdict, `code-delivery/pr-review.md` |
+| ci-watch-cycle8-s1 (continued) | CI status monitoring for PR #843 | 24/24 checks green |
+| github-ops-demo-verify | Demo evidence validation | confirmed clean |
+| human | Manual admin-bypass merge of PR #843 (self-approval structural gap) | `develop` @ `926fdb96` |
+| story-writer-c8 | (none this burst — S5 spec unchanged from F3 registration) | — |
+| state-manager (this agent) | Burst-complete STATE.md update, STORY-INDEX.md drift reconciliation, convergence-trajectory.md S5 section, OPEN-STANDING-ITEMS.md updates, commit + push `factory-artifacts` | This entry; `STATE.md` v4.60; `stories/STORY-INDEX.md` v1.6.28; `cycles/cycle-008/convergence-trajectory.md`; `cycles/OPEN-STANDING-ITEMS.md` |
+
+**Files touched (Dim-1): 8 unique files (`factory-artifacts`, this burst)**
+
+- `STATE.md`
+- `stories/STORY-INDEX.md`
+- `cycles/cycle-008/burst-log.md` (this entry)
+- `cycles/cycle-008/convergence-trajectory.md`
+- `cycles/OPEN-STANDING-ITEMS.md`
+- `cycles/cycle-008/session-checkpoints.md`
+- `code-delivery/S-cycle8-jsm-attachments-oauth-verification/pr-description.md` (new, was
+  untracked)
+- `code-delivery/pr-review.md`, `regression-state.json`, `sidecar-learning.md` (benign churn,
+  folded in)
+
+**Dim-2 Attestation:** `scripts/check-spec-counts.sh` / `scripts/check-bc-cumulative-counts.sh` —
+N/A this burst (no `total_bcs`/`total_vps`/`total_stories` numeric change; `total_stories`
+STORY-INDEX.md updates this burst are status-only, not count changes).
+
+**Dim-5 Attestation:** N/A — no binary/WASM artifact produced by this burst (S5's `src/` diff is
+zero; the test-only diff lives on PR #843's branch, already merged to `develop`).
+
+**Dim-6 Attestation:** N/A on `factory-artifacts` directly — S5's actual test diff landed via PR
+`#843` on `develop` (`926fdb96`), not via a `factory-artifacts` commit; this burst's `.factory/`
+commit is spec/bookkeeping only.
+
+**Dim-7 Attestation:** PR `#843`'s own CI run validated the full test suite green on the
+integrated tree (24/24 checks). No regression suite runs from this bookkeeping-only `.factory/`
+commit itself.

@@ -115,5 +115,77 @@ Wave 1 (S1-S4) MERGED to `develop` (PRs `#832`/`#833`/`#834`/`#835`, admin-bypas
 human-authorized, prior burst). Wave-gate fix (PR `#836`) CONVERGED at 3+3 clean passes,
 CI 24/24 green, `MERGEABLE`/`CLEAN`, review APPROVE (self-review non-independent per the
 repo-wide self-approval structural gap — the 6 independent adversarial passes above cover
-it). **NOT merged this burst** — held at the human wave-gate merge decision. See
-`STATE.md` Blocking Issues and Session Resume Checkpoint for the pending action.
+it). Subsequently MERGED by the human manually (squash, `develop`: `a32caef4`→`578a7848`) —
+see the S5 section below for what followed.
+
+---
+
+## S5 (Wave 2) — `S-cycle8-jsm-attachments-oauth-verification`, PR #843, MERGED @ `926fdb96`
+
+**This section records S5's own per-story Red-Gate + adversarial-convergence outcome**, mirroring
+how S1-S4's per-story trajectories are recorded (their detail lives under
+`code-delivery/S-cycle8-*/pr-review.md` and `demos/S-cycle8-*/`, summarized in
+`cycles/cycle-008/burst-log.md`'s per-story "Actions taken" narrative) — S5's equivalent evidence
+lives at `code-delivery/S-cycle8-jsm-attachments-oauth-verification/pr-description.md` and
+`code-delivery/pr-review.md` (PR #843 fresh-eyes review, superseding the file's prior PR #836
+content).
+
+### Red-Gate outcome — INVERTED gate (facade/verification-only story)
+
+S5 is `tdd_mode: facade` — a verification-only story with **zero `src/` diff** (confirmed via
+`git diff origin/develop...HEAD -- src/` = 0 lines). This makes its Red Gate structurally
+INVERTED relative to a normal implementation story:
+
+- **Normal Red Gate:** the new test is written first and MUST FAIL against the pre-fix code,
+  proving the test is load-bearing before any implementation lands.
+- **S5's inverted Red Gate:** there is no implementation left to gate — `S-cycle8-jsm-servicedeskapi-oauth-routing`
+  (S1) already landed the fix this story depends on (`depends_on:[S1]`, SATISFIED at S1's merge,
+  PR `#833` @ `4afc5aa5`). AC-003 of the story spec explicitly FORBIDS writing a test that fails
+  against the already-merged S1 fix — the new end-to-end test
+  (`test_bc_4_2_001_jsm_attachment_upload_succeeds_end_to_end_under_oauth`,
+  `tests/attachment_jsm.rs`) was EXPECTED TO PASS on first run, and did.
+- **Where the gate's "teeth" actually live**, given the test can't gate on red→green: the
+  meaningful negative-control assertions built into the test itself — each of the 4 chained
+  endpoints in the upload flow (GET project, GET servicedesk list, POST attachTemporaryFile, POST
+  request-attachment) must hit `base_url` **exactly once** AND `instance_url` **exactly zero
+  times**, using `JiraClient::new_for_test_with_instance_url` (`base_url != instance_url`) so a
+  routing regression is structurally distinguishable from a passing test for the wrong reason.
+  `JR_CACHE_DIR` isolation (fresh per-test temp dir) forces the real `list_service_desks` call to
+  execute rather than short-circuiting through a cached service-desk ID — without this, the test
+  could pass while never exercising the routing path S1 fixed.
+- **Independently verified, not just asserted:** the PR #843 fresh-eyes review (`pr-reviewer`,
+  `code-delivery/pr-review.md`) temporarily mutated `post_request_attachment`
+  (`src/api/jsm/attachments.rs`) to route via `instance_url()` instead of `base_url()`, re-ran the
+  test, and confirmed it FAILS as designed (`POST .../attachment must be hit exactly once against
+  base_url; got 0`) — then reverted, worktree confirmed clean. This is the mutation-style proof
+  that the negative-control assertions are real, not tautological.
+
+### Finding Progression (per-story adversarial, S5)
+
+| Pass | Date | Total | CRIT | HIGH | MED | LOW | Novelty | Verdict |
+|------|------|-------|------|------|-----|-----|---------|---------|
+| 1 | 2026-09-18 | 1 | 0 | 0 | 1 | 0 | HIGH | SUBSTANTIVE — CHANGELOG-overclaim (fixed `da7fc4df`) |
+| 2 | 2026-09-18 | 0 | 0 | 0 | 0 | 0 | LOW | NITPICK_ONLY |
+| 3 | 2026-09-18 | 0 | 0 | 0 | 0 | 0 | none | NITPICK_ONLY |
+| 4 | 2026-09-18 | 0 | 0 | 0 | 0 | 0 | none | NITPICK_ONLY — CONVERGED |
+
+**Pass 1 finding (MEDIUM):** the story's initial `CHANGELOG.md` entry overclaimed download/delete
+coverage alongside upload. Disposition: **FIX** — narrowed to the upload path only, with a
+clarifying clause that download/delete already use the platform `/rest/api/3/attachment`
+endpoints (unaffected by this story), landed at commit `da7fc4df`. Passes 2-4: NITPICK_ONLY,
+novelty decayed to zero — 3 consecutive clean/nitpick-only passes, convergence criterion met.
+
+**Trajectory shorthand (S5, per-story):** `1→0→0→0`.
+
+### Outcome
+
+S5 CONVERGED (3 clean/nitpick passes after 1 fix). PR #843 reached CI 24/24 green, `pr-reviewer`
+review posted **COMMENTED** with an explicit non-blocking verdict (self-approval structural gap —
+same convention as S1-S4/PR #836; see `cycles/OPEN-STANDING-ITEMS.md`'s
+`CYCLE-008-SELF-APPROVAL-STRUCTURAL-GAP` entry, updated this burst to also cover dispatch-time
+blocking). **MERGED** by the human via manual admin-bypass @ `926fdb96` (squash,
+`develop`: `578a7848`→`926fdb96`), mergedAt 2026-09-18T14:40:40Z. Two LOW findings deferred, not
+blocking (`CYCLE-008-ENV-RESTORE-NON-RAII`, `CYCLE-008-WORKTREE-NAME-VS-STORYID` — see
+`cycles/OPEN-STANDING-ITEMS.md`). This closes cycle-008 F4 Wave 2 in full (S5 was Wave 2's sole
+story). **NEXT:** S6 (`S-cycle8-teams-graphql-oauth-replatform-spike`, non-gating parallel
+track) → F5/F6/F7.
