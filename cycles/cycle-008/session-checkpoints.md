@@ -113,3 +113,25 @@ traces_to: STATE.md
 **Superseded by:** Wave 1's 4 PRs subsequently MERGED to `develop` (tip `a32caef4`, admin-bypass, human-authorized, next burst); this checkpoint's "NEXT" action (the consolidated merge decision) was thereby cleared. Current checkpoint (STATE.md v4.58, wave-gate CONVERGED / fix PR #836 held) is in `STATE.md` itself.
 
 ---
+
+## Archived checkpoint — STATE.md v4.58 (Wave integration gate + wave-level adversarial CONVERGED, fix PR #836 merge-ready, held at human wave-gate merge decision)
+
+```
+**Date & position:** 2026-09-17. cycle-008 (`oauth-surface-correctness`) at Phase F4 (delta implementation), Wave 1 MERGED to develop (tip a32caef4), WAVE INTEGRATION GATE + WAVE-LEVEL ADVERSARIAL CONVERGED, wave-gate fix PR #836 merge-ready, HELD at the human consolidated wave-gate merge decision. F1/F2/F3 all APPROVED (DEC-368/DEC-369/DEC-370). NEXT = human merge decision for #836 -> wave gate fully closed -> Wave 2 (S5, depends_on:[S1], now unblocked) -> S6 Teams spike (non-gating) -> F5/F6/F7.
+
+**Convergence counter:** per-story (S1-S4, pre-merge): 3/3 clean each (S2 after 1 LOW fix). Wave-level integration-gate adversarial: 3/3 clean (converged, after an initial 4-finding pass). Fix PR #836 fix-adversarial (standalone diff): 3/3 clean.
+
+**In-flight work:** S1/S2/S3/S4 MERGED (PRs #833/#834/#832/#835, develop tip a32caef4). Wave-gate fix PR #836 open against develop, CI 24/24 green, MERGEABLE/CLEAN, not yet merged. S5/S6 not started (S5 now unblocked -- depends_on:[S1] cleared). The 6 cycle-008 stories remain committed (STORY-INDEX.md total_stories 191, S4 now at v1.5, S3 at v1.1).
+
+**Pending human decisions / blockers:** (1) Merge decision for PR #836 (self-approval structural gap -> admin-bypass expected) -- the immediate next action. (2) CYCLE-008-CONSOLE-SCOPE-RELEASE-GATE -- human-owned pre-RELEASE blocker (unchanged). (3) GitHub #831 tracked, closes at S1 (#833) merge -- S1 is merged; verify issue auto-closed or close manually. (4) 7 process-gap standing items logged this burst in cycles/OPEN-STANDING-ITEMS.md (4 recurrences, 3 new). (5) Teams S7 re-platform deferred pending S6 spike.
+
+**WIP branch list:** fix/cycle8-double-fault-scope-rewrite (PR #836, open against develop, CI green, not merged). Wave-1 branches (fix/cycle8-jsm-oauth-routing, fix/cycle8-agile-oauth-scopes, fix/cycle8-assets-workspace-routing, fix/cycle8-agile-scope-error-mapping) merged/squashed into develop @ a32caef4 prior burst.
+
+**Resume command:** /vsdd-factory:next-step (after the human merge decision on #836).
+
+**Counts:** total_bcs 770 (unchanged this burst); VP count 89 (unchanged); holdout scenarios 118 (unchanged); total_stories 191 (unchanged this burst, S4 now v1.5, S3 v1.1). Prior checkpoint (STATE.md v4.57, Wave-1-delivered-held-at-gate state) archived verbatim above.
+```
+
+**Superseded by:** Wave-gate fix PR #836 subsequently MERGED to `develop` manually by the human (squash, `develop`: `a32caef4`->`578a7848`, this burst) after the `pr-manager-completion-guard` classifier denied auto-merge on this self-authored PR (`CYCLE-008-SELF-APPROVAL-STRUCTURAL-GAP`). WAVE-1 GATE NOW FULLY CLOSED; this checkpoint's "NEXT" action (the consolidated merge decision) was thereby cleared. Current checkpoint (STATE.md v4.59, session-wrap-pause, wave-1-gate-closed / S5-not-started state) is in `STATE.md` itself.
+
+---
