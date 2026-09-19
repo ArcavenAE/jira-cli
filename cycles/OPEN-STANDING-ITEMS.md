@@ -1182,3 +1182,57 @@ resolved-with-note; none left uncovered at close:
   remains status-quo-broken under OAuth -- a documented gap, not a regression introduced by this
   cycle. Not tracked as a new standing item (already fully described in ADR-0026 and the S6 story
   file itself, `cycles/cycle-008/phase-f3-stories/S-cycle8-teams-graphql-oauth-replatform-spike.md`).
+  **Superseded 2026-09-19:** the spike subsequently ran to completion (research-only, zero `src/`
+  changes) with go/no-go = DEFER-INDEFINITELY -- see the new standing item
+  `S6-TEAMS-OAUTH-BLOCKED-ON-ATLASSIAN-SCOPE-PROVISIONING` below, which now carries this forward.
+
+## S6 Teams spike COMPLETE -- DEFER-INDEFINITELY, externally blocked on Atlassian scope provisioning (2026-09-19)
+
+**ID:** `S6-TEAMS-OAUTH-BLOCKED-ON-ATLASSIAN-SCOPE-PROVISIONING`
+**Severity:** LOW / external blocker (not a cycle-008 release blocker; `jr team list` under OAuth
+was already status-quo-broken before cycle-008 and remains so -- this is a documented gap, not a
+regression).
+**Status:** OPEN, standing item. No `src/` change accompanies this entry; pipeline stays PAUSED, no
+cycle ACTIVE. Counts unchanged (`total_bcs` 770, VP 89, holdout 118, `total_stories` 191);
+`activation_head`/`activation_version` unchanged (`aa557050`/`v0.7.0-dev.7`).
+
+**Summary:** the `S-cycle8-teams-graphql-oauth-replatform-spike` (cycle-008 Workstream D,
+non-gating, investigation-only) is now **COMPLETE**. Findings AC-001 (GraphQL host/query shape
+confirmed, translation-layer required, OAuth host `api.atlassian.com/graphql`), AC-003
+(`get_org_metadata`/`jr init` CONFIRMED IN-SCOPE -- also OAuth-broken, increasing blast radius),
+and AC-004 (CONFIRMED-FORK-REQUIRED -- an `is_oauth_auth()`-gated host fork is a genuine third host
+class jr does not currently model) all stand as documented in the spike report. The single gating
+blocker, **AC-002** (whether `view:team:teams` -- the confirmed exact read-query scope -- is
+addable to jr's standalone Jira Cloud 3LO app), is now **empirically resolved as
+CONFIRMED-NOT-GRANTABLE**: a controlled differential authorize-endpoint test on 2026-09-19, run by
+the operator against jr's real embedded OAuth app from their live authenticated Atlassian browser
+session (the only variable being the `scope` parameter), showed a control request
+(`read:jira-work offline_access`) render a valid consent screen while the identical request plus
+`view:team:teams` produced Atlassian's owner-facing "Something went wrong / INFORMATION FOR THE
+OWNER OF JIRA-CLI JR" consent-server error instead of a consent screen. No consent was completed
+and no tokens/grants were created. Full method + result:
+`cycles/cycle-008/teams-graphql-spike-report.md` §"Operator empirical verification (2026-09-19)".
+
+**Go/no-go: DEFER-INDEFINITELY** (not a flat REJECT -- no cited Atlassian rule categorically bars
+3LO from the Teams read query; the barrier is an absent Console self-service provisioning path,
+now confirmed empirically unusable for this app, not a documented prohibition). `jr team list` /
+Teams functionality remains **API-token-only** (works under Basic/API-token auth via the
+site-local `/gateway/api/graphql`; broken under OAuth 3LO) -- documented, accepted, and unchanged
+from pre-cycle-008 behavior. OAuth users needing Teams data have a workaround: use an API-token
+profile.
+
+**Reopen trigger (the only unblock):** Atlassian provisioning/enabling `view:team:teams`
+(read-only team-query scope) for jr's standalone 3LO app -- requires an app-owner request via the
+Teams platform "Contact us" page (`developer.atlassian.com/platform/teams/overview/contact-us/`)
+and/or a post on `community.developer.atlassian.com` (tag teams/3lo, referencing community threads
+#80920/#94060). Until Atlassian confirms provisioning, there is nothing implementable: a future
+`S7 teams-graphql-oauth-replatform` implementation story stays blocked/unopened, not merely
+deprioritized.
+
+**No DEC minted for this disposition** -- consistent with this file's and `STATE.md`'s existing
+convention that verification-outcome / standing-item-resolution checkpoints (e.g. the
+`OAUTH-16-SCOPE-SMOKE-TEST-PASS-2026-09-18` and `CYCLE-008-CONSOLE-SCOPE-RELEASE-GATE` resolution
+bursts) are recorded as bookkeeping, not new pipeline rulings, when they neither advance a phase
+nor change spec/BC/VP/ADR content. `DEC-371` (cycle-008 F7 close, which already scoped S6 as
+"spike, non-gating") remains the most recent decision touching this workstream; it is referenced,
+not superseded. Full record: `cycles/cycle-008/teams-graphql-spike-report.md`, `STATE.md`.

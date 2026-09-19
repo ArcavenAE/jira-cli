@@ -245,3 +245,23 @@ traces_to: STATE.md
 **Superseded by:** the recommended non-blocking `jr auth login` 16-scope smoke test (listed as an optional next action above) was subsequently RUN and PASSED 2026-09-18 -- the operator built a develop binary (jr 0.7.0-dev.7 @ develop tip `3d9ca35e`) with the embedded `jr` OAuth app credentials injected at build time, ran `jr auth login` against a throwaway profile, and OAuth authentication completed successfully under all 16 `DEFAULT_OAUTH_SCOPES` with zero `invalid_scope`; the client-side regression pin `default_oauth_scopes_pins_the_full_set_with_offline_access` also PASSES. A lightweight `OAUTH-16-SCOPE-SMOKE-TEST-PASS-2026-09-18` verification-outcome checkpoint (STATE.md v4.66->v4.67) then ran to record this durably: no phase advance, no code change, no DEC. cycle-008 is now release-VALIDATED, not merely release-clear, and the smoke test is removed from the optional-next-actions list (DONE+PASSED). Current checkpoint (STATE.md v4.67, verification-outcome state) is in `STATE.md` itself.
 
 ---
+
+```
+**Date & position:** 2026-09-18. cycle-008 (`oauth-surface-correctness`) CLOSED in full (F1-F7, `DEC-371`, `ADR-0026` accepted); `CYCLE-008-CONSOLE-SCOPE-RELEASE-GATE` RESOLVED (`5859ad43`). PR `#846` MERGED to `develop` (tip `3d9ca35e`) -- zero open PRs. The recommended non-blocking `jr auth login` 16-scope smoke test subsequently RAN and PASSED -- cycle-008 is now release-VALIDATED, not merely release-clear. **No cycle ACTIVE; pipeline PAUSED.** This is a lightweight VERIFICATION-OUTCOME checkpoint (`OAUTH-16-SCOPE-SMOKE-TEST-PASS-2026-09-18`) -- next = human direction.
+
+**Convergence counter:** N/A -- no active convergence/adversarial loop (cycle-008 CLOSED). trajectory-tail carried forward unchanged from F5 (`→4→0→0→0`).
+
+**In-flight work:** NONE. No stories mid-TDD; no open PRs; no sub-agents abandoned mid-step; no WIP branches; no active story worktrees. Both the product-repo working tree and the `.factory` worktree are clean as of this commit. The smoke test itself was an operator-run, out-of-band verification action (a throwaway auth profile against a live Jira site), not a pipeline-dispatched task.
+
+**Pending human decisions / blockers:** none blocking. cycle-008 carries ZERO open pre-release blockers and ZERO open PRs, and is now release-VALIDATED (16-scope smoke test PASSED 2026-09-18). Optional next actions (human-owned, none gating): cutting the dev release; a maintenance sweep (6 open Dependabot PRs `#837`-`#842` + the accumulated LOW standing-item debt in `cycles/OPEN-STANDING-ITEMS.md`); the S6 Teams spike (non-gating, not started); or opening cycle-009 (009-011 remain PARKED).
+
+**WIP branch list:** none.
+
+**Resume command:** `/vsdd-factory:rehydrate-wave` then `/vsdd-factory:next-step`.
+
+**Counts:** `total_bcs` **770** (unchanged); VP count **89** (unchanged); holdout scenarios **118** (unchanged); `total_stories` **191** (unchanged). Prior checkpoint (STATE.md v4.66, SESSION-WRAP-PAUSE state) archived verbatim to `cycles/cycle-008/session-checkpoints.md`.
+```
+
+**Superseded by:** the S6 Teams-under-OAuth spike (`S-cycle8-teams-graphql-oauth-replatform-spike`, listed as an optional next action above) subsequently ran to COMPLETION 2026-09-19 -- research-only, zero `src/` changes. AC-002 (scope addability, the sole gating blocker) was empirically resolved as CONFIRMED-NOT-GRANTABLE via a 2026-09-19 operator-run differential authorize-endpoint test against jr's real embedded OAuth app; go/no-go firmed to DEFER-INDEFINITELY. A `S6-TEAMS-SPIKE-COMPLETE-DEFER-INDEFINITELY-2026-09-19` spike-outcome checkpoint (STATE.md v4.67->v4.68) then ran to record this durably: no phase advance, no code change, no DEC. `jr team list` / Teams functionality remains API-token-only, documented, not a regression; reopen trigger = Atlassian provisioning the `view:team:teams` scope. Full record: `cycles/cycle-008/teams-graphql-spike-report.md`, `cycles/OPEN-STANDING-ITEMS.md` (`S6-TEAMS-OAUTH-BLOCKED-ON-ATLASSIAN-SCOPE-PROVISIONING`). Current checkpoint (STATE.md v4.68, spike-outcome state) is in `STATE.md` itself.
+
+---

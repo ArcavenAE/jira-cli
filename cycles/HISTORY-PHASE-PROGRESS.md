@@ -182,3 +182,16 @@ See `cycles/cycle-005/burst-log.md` Bursts 11-12 for full narrative detail (thes
 | Phase | Status | Completed | Gate | Notes | Finding Progression |
 |-------|--------|-----------|------|-------|---------------------|
 | **CYCLE-008-F3-APPROVED-2026-09-17** | **COMPLETE** | 2026-09-17 | F3 human gate approval -- incremental story decomposition ruling | Human APPROVED the package: 6 stories, **20 points total**. F3 consistency audit: **CONSISTENT.** `total_stories` 185 -> 191. **DEC-370 minted.** | 770 BCs / 89 VPs / 118 holdout / 191 stories; DEC-370 minted |
+
+> Extracted from `.factory/STATE.md`'s `## Phase Progress` table during the
+> 2026-09-19 S6-TEAMS-SPIKE-COMPLETE-DEFER-INDEFINITELY spike-outcome
+> checkpoint burst (v4.67 -> v4.68), to keep the live table at 12 rows after
+> adding the new `S6-TEAMS-SPIKE-COMPLETE-DEFER-INDEFINITELY-2026-09-19` row.
+> This was the oldest row at that point; content preserved, with one
+> formatting normalization: the source row's stray extra pipe-delimited cell
+> ("agent state-manager" / "notes: ...") is merged into a single Notes cell
+> here to match this table's 6-column header (`table_cell_count` guard).
+
+| Phase | Status | Completed | Gate | Notes | Finding Progression |
+|-------|--------|-----------|------|-------|---------------------|
+| **SESSION-WRAP-PAUSE-2026-09-17** | **COMPLETE** | 2026-09-17 | session-wrap checkpoint | agent state-manager -- notes: "cycle-008 paused mid-F4 Wave 1; F1/F2/F3 APPROVED" | 770 BCs / 89 VPs / 118 holdout / 191 stories; no DEC minted |
