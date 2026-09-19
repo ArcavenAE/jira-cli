@@ -290,3 +290,28 @@ burst (v4.68 -> v4.69), superseded by the current checkpoint now in `STATE.md` i
 **Superseded by:** a `S6-TEAMS-MAINTENANCE-REVISIT-SETUP-2026-09-19` documentation/standing-item burst (STATE.md v4.68->v4.69) that (a) appended a "Console entitlement inspection (2026-09-19)" addendum plus a consolidated "Investigation trail" recap to `cycles/cycle-008/teams-graphql-spike-report.md` -- a SECOND independent proof of AC-002 CONFIRMED-NOT-GRANTABLE (exhaustive Developer Console API-catalog inspection: 8 configurable APIs for jr's app, no Teams tile, Compass GraphQL present ruling out a blanket GraphQL exclusion); (b) converted the `S6-TEAMS-OAUTH-BLOCKED-ON-ATLASSIAN-SCOPE-PROVISIONING` standing item into an explicit recurring MAINTENANCE-REVISIT item with a documented recheck procedure; (c) added an `external_blocker_rechecks:` manual-checklist pointer section to `.factory/maintenance-config.yaml`. No phase advance, no `src/` change, no DEC. Current checkpoint (STATE.md v4.69, maintenance-revisit-setup state) is in `STATE.md` itself.
 
 ---
+
+## Archived checkpoint (STATE.md v4.69, S6-TEAMS-MAINTENANCE-REVISIT-SETUP documentation/standing-item state)
+
+Archived 2026-09-19 during the `ENGINE-STANDING-ITEM-LOG-DCHAIN-CITE` bookkeeping burst
+(v4.69 -> v4.70), superseded by the current checkpoint now in `STATE.md` itself.
+
+```
+**Date & position:** 2026-09-19. cycle-008 (`oauth-surface-correctness`) CLOSED in full (F1-F7, `DEC-371`, `ADR-0026` accepted); release-VALIDATED; zero open pre-release blockers; zero open PRs. Its non-gating **S6 Teams-under-OAuth spike remains COMPLETE** -- go/no-go **DEFER-INDEFINITELY**, AC-002 now **CONFIRMED-NOT-GRANTABLE via two independent proofs** (2026-09-19 operator authorize-endpoint differential test + 2026-09-19 Developer Console API-catalog entitlement inspection). `jr team list` stays API-token-only, documented, not a regression; standing item `S6-TEAMS-OAUTH-BLOCKED-ON-ATLASSIAN-SCOPE-PROVISIONING` converted into a recurring MAINTENANCE-REVISIT item with a documented recheck procedure. **No cycle ACTIVE; pipeline PAUSED.** This is a lightweight DOCUMENTATION/STANDING-ITEM checkpoint (`S6-TEAMS-MAINTENANCE-REVISIT-SETUP-2026-09-19`) -- next = human direction.
+
+**Convergence counter:** N/A -- no active convergence/adversarial loop (cycle-008 CLOSED). trajectory-tail carried forward unchanged from F5 (`→4→0→0→0`).
+
+**In-flight work:** NONE. No stories mid-TDD; no open PRs; no sub-agents abandoned mid-step; no WIP branches; no active story worktrees. Both the product-repo working tree and the `.factory` worktree are clean as of this commit. The Console entitlement inspection itself was an operator-run, out-of-band verification action (a direct Developer Console session inspection), not a pipeline-dispatched task; the pipeline's role this burst was documenting that outcome durably and setting up the recurring recheck.
+
+**Pending human decisions / blockers:** none blocking. cycle-008 carries ZERO open pre-release blockers and ZERO open PRs, is release-VALIDATED, and its S6 spike is DONE (DEFER-INDEFINITELY, doubly confirmed). Optional next actions (human-owned, none gating): cutting the dev release; a maintenance sweep (6 open Dependabot PRs `#837`-`#842` + the accumulated LOW standing-item debt in `cycles/OPEN-STANDING-ITEMS.md`, now including the first scheduled recheck window for the S6 Teams item); or opening cycle-009 (009-011 remain PARKED). A future `S7 teams-graphql-oauth-replatform` story stays blocked/unopened pending the external reopen trigger (Atlassian scope provisioning) -- not a human action item within this repo; the only recurring human/orchestrator action is the periodic recheck itself (see `cycles/OPEN-STANDING-ITEMS.md` and `.factory/maintenance-config.yaml`'s `external_blocker_rechecks:`).
+
+**WIP branch list:** none.
+
+**Resume command:** `/vsdd-factory:rehydrate-wave` then `/vsdd-factory:next-step`.
+
+**Counts:** `total_bcs` **770** (unchanged); VP count **89** (unchanged); holdout scenarios **118** (unchanged); `total_stories` **191** (unchanged). Prior checkpoint (STATE.md v4.68, spike-outcome state) archived verbatim to `cycles/cycle-008/session-checkpoints.md`.
+```
+
+**Superseded by:** an `ENGINE-STANDING-ITEM-LOG-DCHAIN-CITE-2026-09-19` bookkeeping burst (STATE.md v4.69->v4.70) that logged a new ENGINE/TOOLING follow-up standing item (`ENGINE-VALIDATE-DISPATCH-ADVANCE-STALE-DCHAIN-CITE`, human-reported, MEDIUM severity) to `cycles/OPEN-STANDING-ITEMS.md`, documenting that the vsdd-factory engine's `validate-dispatch-advance` PostToolUse hook forces a placeholder `D-NNN` "D-chain cite" into STATE.md `current_step` even though this project's decision scheme is `DEC-NNN`, not `D-NNN` (the D-chain convention was dropped ~7 months / 300+ decisions ago). No phase advance, no `src/` change, no DEC. Current checkpoint (STATE.md v4.70, standing-item-log state) is in `STATE.md` itself.
+
+---

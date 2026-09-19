@@ -1291,3 +1291,48 @@ nor change spec/BC/VP/ADR content. `DEC-371` (cycle-008 F7 close, which already 
 "spike, non-gating") remains the most recent decision touching this workstream; it is referenced,
 not superseded. Full record: `cycles/cycle-008/teams-graphql-spike-report.md`, `STATE.md`,
 `.factory/maintenance-config.yaml` (`external_blocker_rechecks:` pointer).
+
+---
+
+## Standing item — ENGINE-VALIDATE-DISPATCH-ADVANCE-STALE-DCHAIN-CITE (2026-09-19, backlog capture)
+
+**ID:** `ENGINE-VALIDATE-DISPATCH-ADVANCE-STALE-DCHAIN-CITE`
+**Title:** vsdd-factory `validate-dispatch-advance` PostToolUse hook forces a placeholder `D-NNN`
+"D-chain cite" into STATE.md `current_step`, but this repo has no D-NNN scheme.
+**Severity:** MEDIUM (data-integrity/hygiene -- the hook induces fabricated placeholder citations
+in the live state file; not a functional/blocking defect).
+**Classification:** ENGINE/TOOLING follow-up -- the fix lives in the vsdd-factory engine repo
+(`~/Documents/GITHUB/vsdd-factory`), NOT in jira-cli. This is not a jira-cli product item.
+**Reported by:** human operator (via orchestrator), 2026-09-19.
+**Status:** OPEN, engine follow-up, non-blocking. No target date.
+
+**Symptom:** the `validate-dispatch-advance` PostToolUse hook requires a literal `D-\d+` substring
+(e.g. `"D-chain cite D-NNN latest brownfield"`) somewhere in STATE.md `current_step`. This project
+uses `DEC-NNN` decisions, not `D-NNN`. The `D-chain` convention was dropped ~7 months / 300+
+decisions ago during a `/compact-state` pass (commit `fdc7c9e9`, "slim STATE.md 447->196 lines")
+and is not documented in any current state-manager role doc, `CLAUDE.md`, `FACTORY.md`, or
+`VSDD.md`. Consequence: inconsistent burst behavior -- one recent state-manager burst REFUSED to
+fabricate the citation (leaving only an advisory), a later burst ADDED a mechanical, labeled
+placeholder `D-NNN` solely to satisfy the regex (see this file's own STATE.md v4.69 `current_step`
+for a live example of the labeled-placeholder workaround: `"D-chain cite D-371..D-2026 (sample)
+latest brownfield: this project numbers pipeline decisions DEC-NNN (not the vsdd-factory-engine-
+default D-NNN scheme); this range is a mechanical citation satisfying the dispatch-advance hook's
+literal D-NNN scan only..."`). Either way the hook degrades STATE.md quality (fabricated/noise
+citation) or emits spurious advisories.
+
+**Related minor note (same engine, same item):** the `validate-factory-path-staging` PreToolUse
+hook false-positives on the `cd .factory && git ...` command form (branch-detection on the raw
+command string); using the `git -C .factory <cmd>` form avoids it (this same false-positive class
+is also separately tracked as `CYCLE-013-HOOK-FALSE-POSITIVE-COMMIT-MSG-SCAN` above, for the
+commit-message-prose variant). Worth aligning the state-manager git convention to `git -C .factory`
+and/or fixing the hook's detection.
+
+**Fix direction (in vsdd-factory engine, for a future engine cycle -- NOT to be done now):** EITHER
+(a) scope down / remove the `D-chain cite` requirement in `validate-dispatch-advance` (preferred --
+the convention is defunct in this project), OR (b) formally revive and document the D-chain
+convention in the state-manager role instructions if it is meant to exist. Also fix or document
+`validate-factory-path-staging`'s `cd .factory && git` false-positive.
+
+**Disposition:** OPEN, engine follow-up, non-blocking. No target date. This is a record-only
+capture -- not a phase advance, no code change, no DEC minted, pipeline stays PAUSED, no cycle
+ACTIVE.

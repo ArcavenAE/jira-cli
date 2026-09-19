@@ -205,3 +205,13 @@ See `cycles/cycle-005/burst-log.md` Bursts 11-12 for full narrative detail (thes
 | Phase | Status | Completed | Gate | Notes | Finding Progression |
 |-------|--------|-----------|------|-------|---------------------|
 | **CYCLE-008-F4-WAVE1-DELIVERED-2026-09-17** | **COMPLETE** | 2026-09-17 | automated bookkeeping -- superseded | S1/S2/S3/S4 all DELIVERED and CONVERGED, CI green, demo evidence committed. | 770 BCs / 89 VPs / 118 holdout / 191 stories; no DEC minted at this row |
+
+> Extracted from `.factory/STATE.md`'s `## Phase Progress` table during the
+> 2026-09-19 ENGINE-STANDING-ITEM-LOG-DCHAIN-CITE bookkeeping burst
+> (v4.69 -> v4.70), to keep the live table at 12 rows after adding the
+> new `ENGINE-STANDING-ITEM-LOG-DCHAIN-CITE-2026-09-19` row. This was the
+> oldest row at that point; archived here verbatim, unedited.
+
+| Phase | Status | Completed | Gate | Notes | Finding Progression |
+|-------|--------|-----------|------|-------|---------------------|
+| **CYCLE-008-F4-WAVE1-GATE-CONVERGED-2026-09-17** | **COMPLETE** | 2026-09-17 | automated bookkeeping -- superseded | Wave 1 (S1-S4) MERGED to `develop` (tip `a32caef4`, admin-bypass). WAVE INTEGRATION GATE CONVERGED. Wave-gate fix PR `#836` CONVERGED. | 770 BCs / 89 VPs / 118 holdout / 191 stories; no DEC minted |
