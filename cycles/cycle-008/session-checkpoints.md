@@ -265,3 +265,28 @@ traces_to: STATE.md
 **Superseded by:** the S6 Teams-under-OAuth spike (`S-cycle8-teams-graphql-oauth-replatform-spike`, listed as an optional next action above) subsequently ran to COMPLETION 2026-09-19 -- research-only, zero `src/` changes. AC-002 (scope addability, the sole gating blocker) was empirically resolved as CONFIRMED-NOT-GRANTABLE via a 2026-09-19 operator-run differential authorize-endpoint test against jr's real embedded OAuth app; go/no-go firmed to DEFER-INDEFINITELY. A `S6-TEAMS-SPIKE-COMPLETE-DEFER-INDEFINITELY-2026-09-19` spike-outcome checkpoint (STATE.md v4.67->v4.68) then ran to record this durably: no phase advance, no code change, no DEC. `jr team list` / Teams functionality remains API-token-only, documented, not a regression; reopen trigger = Atlassian provisioning the `view:team:teams` scope. Full record: `cycles/cycle-008/teams-graphql-spike-report.md`, `cycles/OPEN-STANDING-ITEMS.md` (`S6-TEAMS-OAUTH-BLOCKED-ON-ATLASSIAN-SCOPE-PROVISIONING`). Current checkpoint (STATE.md v4.68, spike-outcome state) is in `STATE.md` itself.
 
 ---
+
+## Archived checkpoint (STATE.md v4.68, S6-TEAMS-SPIKE-COMPLETE-DEFER-INDEFINITELY spike-outcome state)
+
+Archived 2026-09-19 during the `S6-TEAMS-MAINTENANCE-REVISIT-SETUP` documentation/standing-item
+burst (v4.68 -> v4.69), superseded by the current checkpoint now in `STATE.md` itself.
+
+```
+**Date & position:** 2026-09-19. cycle-008 (`oauth-surface-correctness`) CLOSED in full (F1-F7, `DEC-371`, `ADR-0026` accepted); release-VALIDATED; zero open pre-release blockers; zero open PRs. Its non-gating **S6 Teams-under-OAuth spike is now COMPLETE** -- go/no-go **DEFER-INDEFINITELY** (AC-002 empirically CONFIRMED-NOT-GRANTABLE via a 2026-09-19 operator differential authorize-endpoint test; `jr team list` stays API-token-only, documented, not a regression). **No cycle ACTIVE; pipeline PAUSED.** This is a lightweight SPIKE-OUTCOME checkpoint (`S6-TEAMS-SPIKE-COMPLETE-DEFER-INDEFINITELY-2026-09-19`) -- next = human direction.
+
+**Convergence counter:** N/A -- no active convergence/adversarial loop (cycle-008 CLOSED). trajectory-tail carried forward unchanged from F5 (`→4→0→0→0`).
+
+**In-flight work:** NONE. No stories mid-TDD; no open PRs; no sub-agents abandoned mid-step; no WIP branches; no active story worktrees. Both the product-repo working tree and the `.factory` worktree are clean as of this commit. The S6 empirical test itself was an operator-run, out-of-band verification action (a differential authorize-endpoint test against jr's real embedded OAuth app), not a pipeline-dispatched task; the pipeline's role this burst was recording that outcome durably.
+
+**Pending human decisions / blockers:** none blocking. cycle-008 carries ZERO open pre-release blockers and ZERO open PRs, is release-VALIDATED, and its S6 spike is DONE (DEFER-INDEFINITELY). Optional next actions (human-owned, none gating): cutting the dev release; a maintenance sweep (6 open Dependabot PRs `#837`-`#842` + the accumulated LOW standing-item debt in `cycles/OPEN-STANDING-ITEMS.md`); or opening cycle-009 (009-011 remain PARKED). A future `S7 teams-graphql-oauth-replatform` story stays blocked/unopened pending the external reopen trigger (Atlassian scope provisioning) -- not a human action item within this repo.
+
+**WIP branch list:** none.
+
+**Resume command:** `/vsdd-factory:rehydrate-wave` then `/vsdd-factory:next-step`.
+
+**Counts:** `total_bcs` **770** (unchanged); VP count **89** (unchanged); holdout scenarios **118** (unchanged); `total_stories` **191** (unchanged). Prior checkpoint (STATE.md v4.67, verification-outcome state) archived verbatim to `cycles/cycle-008/session-checkpoints.md`.
+```
+
+**Superseded by:** a `S6-TEAMS-MAINTENANCE-REVISIT-SETUP-2026-09-19` documentation/standing-item burst (STATE.md v4.68->v4.69) that (a) appended a "Console entitlement inspection (2026-09-19)" addendum plus a consolidated "Investigation trail" recap to `cycles/cycle-008/teams-graphql-spike-report.md` -- a SECOND independent proof of AC-002 CONFIRMED-NOT-GRANTABLE (exhaustive Developer Console API-catalog inspection: 8 configurable APIs for jr's app, no Teams tile, Compass GraphQL present ruling out a blanket GraphQL exclusion); (b) converted the `S6-TEAMS-OAUTH-BLOCKED-ON-ATLASSIAN-SCOPE-PROVISIONING` standing item into an explicit recurring MAINTENANCE-REVISIT item with a documented recheck procedure; (c) added an `external_blocker_rechecks:` manual-checklist pointer section to `.factory/maintenance-config.yaml`. No phase advance, no `src/` change, no DEC. Current checkpoint (STATE.md v4.69, maintenance-revisit-setup state) is in `STATE.md` itself.
+
+---

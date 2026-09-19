@@ -1186,13 +1186,14 @@ resolved-with-note; none left uncovered at close:
   changes) with go/no-go = DEFER-INDEFINITELY -- see the new standing item
   `S6-TEAMS-OAUTH-BLOCKED-ON-ATLASSIAN-SCOPE-PROVISIONING` below, which now carries this forward.
 
-## S6 Teams spike COMPLETE -- DEFER-INDEFINITELY, externally blocked on Atlassian scope provisioning (2026-09-19)
+## S6 Teams spike COMPLETE -- DEFER-INDEFINITELY, externally blocked on Atlassian scope provisioning (2026-09-19) -- MAINTENANCE-REVISIT
 
 **ID:** `S6-TEAMS-OAUTH-BLOCKED-ON-ATLASSIAN-SCOPE-PROVISIONING`
 **Severity:** LOW / external blocker (not a cycle-008 release blocker; `jr team list` under OAuth
 was already status-quo-broken before cycle-008 and remains so -- this is a documented gap, not a
 regression).
-**Status:** OPEN, standing item. No `src/` change accompanies this entry; pipeline stays PAUSED, no
+**Status:** OPEN, standing item, **RECURRING MAINTENANCE-REVISIT item** (see subsection below) --
+not a one-and-done record. No `src/` change accompanies this entry; pipeline stays PAUSED, no
 cycle ACTIVE. Counts unchanged (`total_bcs` 770, VP 89, holdout 118, `total_stories` 191);
 `activation_head`/`activation_version` unchanged (`aa557050`/`v0.7.0-dev.7`).
 
@@ -1221,6 +1222,22 @@ site-local `/gateway/api/graphql`; broken under OAuth 3LO) -- documented, accept
 from pre-cycle-008 behavior. OAuth users needing Teams data have a workaround: use an API-token
 profile.
 
+**Update (2026-09-19, Console entitlement inspection):** a SECOND independent proof was obtained,
+by a structurally different method than the authorize differential test above. Using the
+operator's authenticated Developer Console session, jr's embedded OAuth app's Permissions page was
+inspected directly and its full configurable API catalog enumerated exhaustively: 8 APIs total
+(Personal data reporting 0 scopes, User identity 2, Confluence 0, Jira 15, Compass GraphQL 0,
+Goals 0, Projects 0, Focus 0; 17 scopes used overall). No "Teams" API tile exists anywhere in this
+catalog, and no hidden "browse more APIs" control exists to reveal one (only an unrelated "Add
+Marketplace or custom app" button is present). Notably, **Compass GraphQL IS offered** while
+**Teams GraphQL is NOT** -- ruling out a blanket "GraphQL APIs are unavailable to 3LO apps"
+explanation; Teams specifically is withheld, not GraphQL categorically. This confirms the operator
+did not miss a hidden Console setting -- the entitlement genuinely is not available. Full method +
+result: `cycles/cycle-008/teams-graphql-spike-report.md` §"Console entitlement inspection
+(2026-09-19)". **AC-002 verdict: CONFIRMED-NOT-GRANTABLE, now substantiated by two independent
+proofs** (empirical authorize differential test + exhaustive Console catalog inspection).
+**AC-006 verdict: DEFER-INDEFINITELY** (unchanged).
+
 **Reopen trigger (the only unblock):** Atlassian provisioning/enabling `view:team:teams`
 (read-only team-query scope) for jr's standalone 3LO app -- requires an app-owner request via the
 Teams platform "Contact us" page (`developer.atlassian.com/platform/teams/overview/contact-us/`)
@@ -1229,10 +1246,48 @@ and/or a post on `community.developer.atlassian.com` (tag teams/3lo, referencing
 `S7 teams-graphql-oauth-replatform` implementation story stays blocked/unopened, not merely
 deprioritized.
 
+### Recheck each maintenance sweep
+
+This item is a **recurring maintenance-revisit check**, not a closed record. Every future
+maintenance sweep that touches this file (or is otherwise auditing `cycles/OPEN-STANDING-ITEMS.md`
+standing debt) should re-run the check below and update this entry's status in place -- do NOT
+re-run the full spike investigation from scratch; only the recheck procedure is needed unless it
+signals a change.
+
+**Signal to watch for:** Atlassian exposing the platform Teams API / `view:team:teams` scope to
+standalone Jira Cloud OAuth 2.0 (3LO) apps -- i.e., any change that would flip AC-002 from
+CONFIRMED-NOT-GRANTABLE to grantable.
+
+**How to recheck (either is sufficient; both are cheap, no `src/` change, no pipeline phase):**
+
+1. **Console check.** In the jr app's Developer Console Permissions page, check whether a "Teams"
+   API now appears in the configurable API catalog. Baseline as of 2026-09-19 (8 APIs, no Teams):
+   Personal data reporting, User identity, Confluence, Jira, Compass GraphQL, Goals, Projects,
+   Focus. If a Teams tile now appears -> **REOPEN**.
+2. **Empirical check.** Request scope `view:team:teams` in an authorize URL against jr's embedded
+   app with an authenticated session (mirrors the 2026-09-19 differential test method above). A
+   rendered consent screen (instead of the owner-facing "Something went wrong" error) means the
+   scope is now grantable -> **REOPEN**.
+
+**If reopened:** the implementation shape is already mapped in the spike report -- a translation
+layer (`teamSearchV2` Relay response -> existing `TeamsResponse`), an `is_oauth_auth()`-gated host
+fork (a third host class, `api.atlassian.com/graphql`, alongside `base_url`/`instance_url`), an
+`ADR-0026` Decision 1 amendment documenting that third host class, and `jr init` regression
+coverage (since AC-003 found `get_org_metadata` also in-scope). Open it as a scoped feature cycle
+(the conditional S7 `teams-graphql-oauth-replatform`) rather than a maintenance-sweep fix -- it is
+implementation work, not a doc/config change. See `cycles/cycle-008/teams-graphql-spike-report.md`
+AC-006 "Confirmed shape a future S7 would start from" for the full starting design.
+
+**Always-available fallback (unaffected either way):** Teams functionality works today under
+API-token (Basic auth) profiles via the site-local `/gateway/api/graphql` gateway -- this gap is
+an OAuth-3LO-only enhancement opportunity, not a fix for a feature that is broken for everyone.
+OAuth users needing Teams data can use an API-token profile in the meantime.
+
 **No DEC minted for this disposition** -- consistent with this file's and `STATE.md`'s existing
 convention that verification-outcome / standing-item-resolution checkpoints (e.g. the
 `OAUTH-16-SCOPE-SMOKE-TEST-PASS-2026-09-18` and `CYCLE-008-CONSOLE-SCOPE-RELEASE-GATE` resolution
 bursts) are recorded as bookkeeping, not new pipeline rulings, when they neither advance a phase
 nor change spec/BC/VP/ADR content. `DEC-371` (cycle-008 F7 close, which already scoped S6 as
 "spike, non-gating") remains the most recent decision touching this workstream; it is referenced,
-not superseded. Full record: `cycles/cycle-008/teams-graphql-spike-report.md`, `STATE.md`.
+not superseded. Full record: `cycles/cycle-008/teams-graphql-spike-report.md`, `STATE.md`,
+`.factory/maintenance-config.yaml` (`external_blocker_rechecks:` pointer).

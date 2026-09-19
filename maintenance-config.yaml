@@ -28,3 +28,42 @@ perf:
 quality_gate:
   enabled: true
   auto_merge: false        # human approval required for all merges
+
+# external_blocker_rechecks:
+# ---------------------------------------------------------------------------
+# NOTE (human/orchestrator checklist, NOT auto-processed): this section is a
+# documented manual pointer for the maintenance sweep / orchestrator to
+# consult. The fixed sweep categories above (dependency_audit,
+# documentation_drift, pattern_consistency, holdout, perf, quality_gate) do
+# NOT read or act on this list automatically -- there is no scanner wired to
+# it. A human or the orchestrator agent should read this list during (or
+# after) a maintenance sweep and manually carry out each entry's recheck
+# procedure. Added 2026-09-19 alongside the first entry below; add future
+# externally-blocked standing items here as they arise (same shape: id,
+# recheck summary, pointers).
+external_blocker_rechecks:
+  - id: S6-TEAMS-OAUTH-BLOCKED-ON-ATLASSIAN-SCOPE-PROVISIONING
+    summary: >
+      Whether Atlassian has opened the platform Teams API / view:team:teams
+      OAuth scope to standalone Jira Cloud 3LO apps. As of 2026-09-19,
+      doubly-confirmed CONFIRMED-NOT-GRANTABLE (empirical authorize
+      differential test + exhaustive Developer Console API-catalog
+      inspection -- 8 APIs configurable for jr's app, no Teams tile).
+    recheck_summary: >
+      Either is sufficient: (a) check the jr app's Developer Console
+      Permissions page for a new "Teams" API tile (baseline 8 APIs, no
+      Teams, as of 2026-09-19); (b) request scope view:team:teams in an
+      authorize URL against jr's embedded app with an authenticated
+      session -- a rendered consent screen (not the owner-facing "Something
+      went wrong" error) means it is now grantable. Either signal ->
+      REOPEN the standing item and consider opening the conditional S7
+      teams-graphql-oauth-replatform feature cycle.
+    standing_item: .factory/cycles/OPEN-STANDING-ITEMS.md (search
+      S6-TEAMS-OAUTH-BLOCKED-ON-ATLASSIAN-SCOPE-PROVISIONING, "Recheck each
+      maintenance sweep" subsection)
+    spike_report: .factory/cycles/cycle-008/teams-graphql-spike-report.md
+    fallback: >
+      Teams functionality works today under API-token (Basic auth)
+      profiles regardless of this recheck's outcome -- this is an
+      OAuth-3LO enhancement opportunity, not a fix for something broken
+      for everyone.

@@ -195,3 +195,13 @@ See `cycles/cycle-005/burst-log.md` Bursts 11-12 for full narrative detail (thes
 | Phase | Status | Completed | Gate | Notes | Finding Progression |
 |-------|--------|-----------|------|-------|---------------------|
 | **SESSION-WRAP-PAUSE-2026-09-17** | **COMPLETE** | 2026-09-17 | session-wrap checkpoint | agent state-manager -- notes: "cycle-008 paused mid-F4 Wave 1; F1/F2/F3 APPROVED" | 770 BCs / 89 VPs / 118 holdout / 191 stories; no DEC minted |
+
+> Extracted from `.factory/STATE.md`'s `## Phase Progress` table during the
+> 2026-09-19 S6-TEAMS-MAINTENANCE-REVISIT-SETUP documentation/standing-item
+> burst (v4.68 -> v4.69), to keep the live table at 12 rows after adding the
+> new `S6-TEAMS-MAINTENANCE-REVISIT-SETUP-2026-09-19` row. This was the
+> oldest row at that point; archived here verbatim, unedited.
+
+| Phase | Status | Completed | Gate | Notes | Finding Progression |
+|-------|--------|-----------|------|-------|---------------------|
+| **CYCLE-008-F4-WAVE1-DELIVERED-2026-09-17** | **COMPLETE** | 2026-09-17 | automated bookkeeping -- superseded | S1/S2/S3/S4 all DELIVERED and CONVERGED, CI green, demo evidence committed. | 770 BCs / 89 VPs / 118 holdout / 191 stories; no DEC minted at this row |

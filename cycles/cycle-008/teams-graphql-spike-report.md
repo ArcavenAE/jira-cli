@@ -1,7 +1,7 @@
 # Spike Report — Teams GraphQL OAuth Re-platform Investigation
 
 **Story:** `S-cycle8-teams-graphql-oauth-replatform-spike` (cycle-008 "oauth-surface-correctness", Workstream D, non-gating)
-**Date:** 2026-09-18 (revised 2026-09-18 — AC-002/AC-006 re-investigated after operator Console evidence; see "Revision 2" note)
+**Date:** 2026-09-18 (revised 2026-09-18 — AC-002/AC-006 re-investigated after operator Console evidence; see "Revision 2" note); addenda 2026-09-19 (operator empirical authorize differential test; Console entitlement inspection) firmed AC-002 to CONFIRMED-NOT-GRANTABLE via two independent proofs and AC-006 to DEFER-INDEFINITELY — see "Investigation trail / what we did" recap below
 **Author:** research-agent (investigation-only; ZERO `src/` changes, no BC/VP/ADR authored, no PR, no merge)
 
 > **Revision 2 (2026-09-18):** B1/AC-002 re-investigated at the coordinator's request after the operator (app owner) inspected the jr app's Console Permissions and saw **no Teams scope/API available to add**, which appeared to contradict the official docs' statement that OAuth 2.0 works for Teams. This revision pins the **exact** read-query scope, reconciles the contradiction with citations, and firms the go/no-go. AC-001/AC-003/AC-004 findings are unchanged; only the AC-002 finding, the AC-006 go/no-go, and the affected summary rows are rewritten.
@@ -305,3 +305,128 @@ story stays blocked/unopened, not merely deprioritized. Tracked as a standing it
 `DEFAULT_OAUTH_SCOPES`** as part of this addendum or the operator's test — consistent with this
 report's own "Do not add `view:team:teams` to `DEFAULT_OAUTH_SCOPES`" guidance (AC-002 §(4)) and
 its "investigation-only" framing at the top of this document. The spike (`S-cycle8-teams-graphql-oauth-replatform-spike`) is COMPLETE.
+
+---
+
+## Console entitlement inspection (2026-09-19)
+
+**Status: SECOND independent confirmation of AC-002 CONFIRMED-NOT-GRANTABLE, obtained by a
+different method than the 2026-09-19 authorize-endpoint differential test above.** This addendum
+records a direct inspection of jr's embedded OAuth app's own Developer Console configuration
+surface, carried out by the operator (app owner) using their authenticated Developer Console
+session. No further re-investigation of AC-001/AC-003/AC-004 was performed or is warranted; those
+findings remain unchanged from Revision 2. Per this report's standing "Do not record any literal
+OAuth `client_id` or the app's Console UUID" convention, this app is referred to generically
+throughout as "jr's embedded OAuth app" / "the jr app's Developer Console Permissions page."
+
+**Method.** Using the operator's authenticated Developer Console session, inspected the jr app's
+Permissions page directly — the same Console surface AC-002 §(2) already found to expose no
+self-service Teams tile for a standalone 3LO app, this time enumerated exhaustively rather than
+inferred from the operator's earlier "nothing to add" report.
+
+**Result — the app's full configurable API catalog (8 APIs total):**
+
+| API | Scopes used by jr |
+|---|---|
+| Personal data reporting | 0 |
+| User identity | 2 |
+| Confluence | 0 |
+| Jira | 15 |
+| Compass GraphQL | 0 |
+| Goals | 0 |
+| Projects | 0 |
+| Focus | 0 |
+
+The app is registered as OAuth 2.0 with 17 scopes used in total across these APIs. There is **no
+"Teams" API** anywhere in this configurable catalog, and no separate "browse more APIs" / "see
+all APIs" control exists on this page — the only other button present is "Add Marketplace or
+custom app," which is unrelated to first-party platform API selection and does not surface a
+hidden Teams entry.
+
+**Key finding — GraphQL APIs are not categorically unavailable to standalone 3LO apps.**
+**Compass GraphQL IS offered** in this catalog (0 scopes currently used, but the tile exists and
+is addable) **while Teams GraphQL is NOT offered at all.** This rules out the hypothesis that the
+Console simply hides every GraphQL-backed platform API from standalone 3LO apps as a category —
+Compass GraphQL is proof the Console can and does expose at least one GraphQL platform API to this
+exact app type. Teams specifically is the one withheld, not GraphQL APIs in general.
+
+**Interpretation.** This inspection independently corroborates AC-002 §(2)'s "no documented
+self-service Teams (or Identity/platform-Teams) API tile" finding, but strengthens it in two ways:
+(1) it is an exhaustive enumeration of the entire catalog (8 APIs, byte-for-byte accounted for),
+not a report of "I looked and didn't see one"; (2) the Compass-present / Teams-absent contrast
+rules out the most plausible alternative explanation (a blanket GraphQL-API exclusion) that the
+earlier finding could not itself rule out. **The operator did not miss a hidden Console setting —
+across an exhaustively enumerated 8-API catalog, the entitlement genuinely is not available for
+this app.**
+
+This is the **second independent proof** of AC-002, obtained by a different method (direct Console
+catalog enumeration) than the 2026-09-19 authorize-endpoint differential test recorded above
+(empirical consent-server behavior). The two methods agree: `view:team:teams` cannot be granted to
+jr's standalone 3LO app today.
+
+---
+
+## Investigation trail / what we did (consolidated recap)
+
+The full S6 investigation ran across four stages, summarized here so the whole arc is readable in
+one place without cross-referencing every section above:
+
+1. **Spike findings (AC-001..AC-006, Revision 2, 2026-09-18).** A `research-agent`-run,
+   investigation-only spike (zero `src/` changes, no BC/VP/ADR authored) against
+   `S-cycle8-teams-graphql-oauth-replatform-spike`. Confirmed the GraphQL host/query/pagination
+   shape a future replatform would use (AC-001: `POST https://api.atlassian.com/graphql`,
+   `team { teamSearchV2(...) }`, cursor pagination, translation-layer required — NOT drop-in
+   compatible with the existing `TeamsResponse` type); confirmed the exact required read-query
+   scope (`view:team:teams`, AC-002); confirmed `get_org_metadata`/`jr init` are ALSO broken under
+   OAuth via the same host-routing gap, increasing the blast radius (AC-003); confirmed a future
+   fix needs an `is_oauth_auth()`-gated host fork against a genuine third host class the codebase
+   does not currently model (AC-004). AC-002's Console-addability sub-finding — no self-service
+   Teams tile exists for a standalone 3LO app — was the spike's sole gating blocker, but was
+   explicitly NOT treated as a categorical prohibition (Forge apps CAN declare the scope via
+   manifest; OAuth 3LO is affirmatively documented as protocol-supported at the schema layer) —
+   hence the initial go/no-go was DEFER, not REJECT.
+2. **Docs re-check establishing OAuth 3LO is documented-supported at the schema layer.** Revision
+   2's reconciliation work (AC-002 §(4)) established that Atlassian's own Teams GraphQL docs
+   affirmatively state OAuth 2.0 can request Teams data on a user's behalf, and that
+   `view:team:teams` is a real, field-level-enforced scope (confirmed via live gateway error
+   `requiredScopes` and Atlassian issue AX-446) — so the "docs say OAuth works" and "operator sees
+   nothing to add" observations were reconciled as describing two different layers (schema
+   capability vs. Console provisioning), not a contradiction. This is why the original verdict was
+   a reopenable DEFER rather than a flat REJECT: a missing provisioning mechanism is not the same
+   claim as a documented prohibition.
+3. **Empirical authorize differential test (2026-09-19).** The operator (app owner) ran a
+   controlled two-request differential test against jr's real embedded OAuth app's live authorize
+   endpoint, from their own authenticated Atlassian browser session, varying only the `scope`
+   parameter: a control request (`read:jira-work offline_access`) rendered a valid consent screen;
+   the identical request plus `view:team:teams` instead produced Atlassian's owner-facing
+   "Something went wrong / INFORMATION FOR THE OWNER OF JIRA-CLI JR" consent-server error, with no
+   consent screen rendered, no consent completed, and no tokens/grants created on either request.
+   This isolated `view:team:teams` as the specific, sole cause of the failure — the first
+   independent proof that the scope cannot be granted to this app today.
+4. **Console entitlement inspection (2026-09-19, this addendum).** The operator directly
+   inspected jr's embedded OAuth app's Developer Console Permissions page and exhaustively
+   enumerated its full 8-API configurable catalog (Personal data reporting, User identity,
+   Confluence, Jira, Compass GraphQL, Goals, Projects, Focus) — no Teams API tile present anywhere
+   in it, and no hidden "browse more APIs" control exists to reveal one. The Compass-GraphQL-present
+   / Teams-GraphQL-absent contrast additionally rules out a blanket "GraphQL APIs are unavailable
+   to 3LO apps" explanation. This is the second independent proof, obtained by a structurally
+   different method (Console catalog enumeration vs. live consent-server behavior), and it agrees
+   with stage 3's result.
+
+**Final verdict:** **AC-002 = CONFIRMED-NOT-GRANTABLE**, now substantiated by **two independent
+proofs** (the empirical authorize differential test, and this exhaustive Console catalog
+inspection) that agree with each other and with no third possible explanation left unaccounted
+for. **AC-006 = DEFER-INDEFINITELY** (unchanged from the prior addendum's firming) — not a flat
+REJECT, because no Atlassian documentation categorically bars 3LO apps from the Teams read query;
+the barrier is a missing self-service provisioning mechanism, now doubly confirmed as
+non-bypassable by any action available within this app's own Console registration. The reopen
+trigger remains solely an Atlassian-side provisioning action (see the "Reopen trigger" language in
+`S6-TEAMS-OAUTH-BLOCKED-ON-ATLASSIAN-SCOPE-PROVISIONING`, `cycles/OPEN-STANDING-ITEMS.md`) — this
+item is now additionally set up as a recurring maintenance-revisit check (see that standing item's
+"Recheck each maintenance sweep" subsection) so future sweeps re-test whether Atlassian has since
+opened the entitlement, rather than requiring a fresh ad hoc investigation each time.
+
+**No `src/` changes, no BC/VP/ADR authored, no PR, no merge, no scope added to
+`DEFAULT_OAUTH_SCOPES`** as part of this Console-inspection addendum either. The spike
+(`S-cycle8-teams-graphql-oauth-replatform-spike`) remains COMPLETE; this addendum only adds a
+second confirming data point and a consolidated recap.
