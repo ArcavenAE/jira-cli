@@ -14,7 +14,7 @@
 |-------|-------|
 | Total rounds | 14 |
 | Fix PRs | 8 (#644, #645, #646, #647, #648, #649, #650, #651, #652) |
-| Fix PRs merged by | Human (DEC-173) |
+| Fix PRs merged by | Human (D-173) |
 | Convergence window | r12 CLEAN (1/3) → r13 CLEAN (2/3) → r14 CLEAN (3/3) |
 | Spec version range | v1.3.99 (pre-F5) → v1.3.106 (F5 final) |
 | BC-INDEX version | v6.38 → v6.44 |
@@ -119,7 +119,7 @@ Discharge pattern: codify accepted edges into spec ECs so fresh adversaries read
 
 **(a) Orchestrator fix-routing over-reach:** F5-R1-004 fix direction targeted shared `get_attachment_metadata` without checking BC-2.7.012, causing r3 HIGH F5-R3-001. Pattern: fix sub-agent must cross-check all BC anchors before targeting shared functions.
 
-**(b) validate-pr-review-posted hook conflicts with DEC-173:** 2 data points (PR #648, #651) where self-authored-PR reality collided with hook expectations. Backlog item: PR-MANAGER-HOOK-VS-DEC-128-CONFLICT.
+**(b) validate-pr-review-posted hook conflicts with D-173:** 2 data points (PR #648, #651) where self-authored-PR reality collided with hook expectations. Backlog item: PR-MANAGER-HOOK-VS-D-128-CONFLICT.
 
 **(c) Loop-exhaust pattern:** Rounds 4-9 findings were predominantly doc-fallout of the loop's own fix commits. Spec-codification of accepted edges (v1.3.105/106) is what broke the rediscovery cycle. Lesson: codify accepted behaviors into EC/spec EARLY to collapse the adversary's finding space.
 

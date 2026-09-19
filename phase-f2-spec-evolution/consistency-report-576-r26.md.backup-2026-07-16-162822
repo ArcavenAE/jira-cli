@@ -56,7 +56,7 @@ traces_to: ".factory/specs/prd/BC-INDEX.md"
 |---|-------|--------|
 | P16-001a | error-taxonomy.md §3: `404 — attachment list` row added (exit 64 canonical only; BC-2.7.006) | pass |
 | P16-001b | error-taxonomy.md §3: `404 — attachment download` row added (exit 64 canonical only, body NOT surfaced; BC-2.7.012/EC-2.7.007-1) | pass |
-| P16-001c | error-taxonomy.md §3: `404 — attachment delete` split two-sub-case row added (DELETE 404 canonical+body per DEC-168; pre-prompt GET 404 canonical only; multi/bulk benign-skip exception) | pass |
+| P16-001c | error-taxonomy.md §3: `404 — attachment delete` split two-sub-case row added (DELETE 404 canonical+body per D-168; pre-prompt GET 404 canonical only; multi/bulk benign-skip exception) | pass |
 | P16-001d | error-taxonomy.md §3: `413 — attachment upload` row added (exit 1; first 413 row in product; BC-3.9.001/BC-3.9.012) | pass |
 | P16-001e | error-taxonomy.md `last_updated` bumped to 2026-07-16; F2 amendment trace line added | pass |
 | P16-002a | prd-delta-576.md Scope table S3 row: BC-3.9.014 added with P16-002 ORCHESTRATOR RULING note | pass |
@@ -131,7 +131,7 @@ Line 97:
 > `| 404 — attachment download (KEY or AID) | UserError(...) | 64 | "Issue <KEY> not found or not accessible." or "Attachment <AID> not found or not accessible." (canonical string only; Jira body NOT surfaced — read-path convention; BC-2.7.012 / EC-2.7.007-1) |`
 
 Line 98:
-> `| 404 — attachment delete (single AID, DELETE or pre-prompt metadata-GET) | UserError(...) | 64 | DELETE 404: canonical string + Jira body surfaced (DEC-168; BC-3.9.008/BC-3.9.013). Pre-prompt metadata-GET 404: canonical string only, no body (BC-3.9.015 — read GET, not write). Multi/bulk/--replace-existing 404 = benign-skip exception, NOT exit 64 (BC-3.9.013) |`
+> `| 404 — attachment delete (single AID, DELETE or pre-prompt metadata-GET) | UserError(...) | 64 | DELETE 404: canonical string + Jira body surfaced (D-168; BC-3.9.008/BC-3.9.013). Pre-prompt metadata-GET 404: canonical string only, no body (BC-3.9.015 — read GET, not write). Multi/bulk/--replace-existing 404 = benign-skip exception, NOT exit 64 (BC-3.9.013) |`
 
 Line 99:
 > `| 413 — attachment upload | ApiError(413, ...) | 1 | "Attachment too large: the file exceeds the server-configured limit." (no numeric limit stated; first 413 surface in the product; BC-3.9.001/BC-3.9.012) |`
@@ -197,7 +197,7 @@ Line 99:
 **Quote-verified verbatim** (`bc-3-issue-write.md` BC-3.9.015 Metadata-fetch failure clause, lines 3653–3658):
 
 > `**Metadata-fetch failure (P16-005)**: if the pre-prompt GET /rest/api/3/attachment/{id} fails, the gate is NEVER presented — all failure paths fire before any prompt or stdin read:`
-> `- **404**: exit 64 immediately: "Attachment <AID> not found or not accessible." — canonical string only (aligns with read-path 404 convention per BC-2.7.012's read-vs-write divergence); Jira body NOT surfaced; differs from BC-3.9.008's DELETE 404 (canonical + Jira body per DEC-168) because the pre-prompt fetch is a read GET, not a write operation; no DELETE issued.`
+> `- **404**: exit 64 immediately: "Attachment <AID> not found or not accessible." — canonical string only (aligns with read-path 404 convention per BC-2.7.012's read-vs-write divergence); Jira body NOT surfaced; differs from BC-3.9.008's DELETE 404 (canonical + Jira body per D-168) because the pre-prompt fetch is a read GET, not a write operation; no DELETE issued.`
 > `- **403**: exit 1; "Permission denied: cannot access attachment <AID>." — aligned with BC-2.7.012 (403 on a read GET = runtime error, not a UserError; permission denied is not a user input mistake).`
 > `- **401**: exit 2 (JrError::NotAuthenticated; standard auth taxonomy; jr auth login hint on stderr).`
 > `- **5xx or network error**: exit 1 (standard API/transport taxonomy per Section 1).`
@@ -235,7 +235,7 @@ Cross-refs scanned:
 |---|---|---|---|---|
 | 404 — attachment list | 64, "Issue <KEY> not found or not accessible." canonical only | BC-2.7.006 | 64, same string | ✓ |
 | 404 — attachment download | 64, "Issue <KEY>…" or "Attachment <AID>…" canonical only | BC-2.7.012/EC-2.7.007-1 | 64, same strings | ✓ |
-| 404 — attachment delete, DELETE 404 | 64, canonical + Jira body | BC-3.9.008/BC-3.9.013 per DEC-168 | 64, canonical + body | ✓ |
+| 404 — attachment delete, DELETE 404 | 64, canonical + Jira body | BC-3.9.008/BC-3.9.013 per D-168 | 64, canonical + body | ✓ |
 | 404 — attachment delete, pre-prompt GET 404 | 64, canonical only, no body | BC-3.9.015 (read GET, not write) | 64, "Attachment <AID> not found or not accessible.", no body | ✓ |
 | 404 — attachment delete, multi/bulk benign-skip | NOT exit 64 (benign skip) | BC-3.9.013 | benign race exception | ✓ |
 | 413 — attachment upload | exit 1, "Attachment too large: the file exceeds the server-configured limit." | BC-3.9.001/BC-3.9.012 (EC-3.9.012-3: "exit 1; message does NOT state a numeric size limit") | exit 1, same message | ✓ |
@@ -262,7 +262,7 @@ BC-2.7.012 (from line 929 of bc-2-issue-read.md): "| AID 403 from metadata endpo
 
 Messages are verbatim identical. Exit codes match (both 1). BC-2.7.012 cross-reference in BC-3.9.015 is accurate.
 
-Error-taxonomy delete 404 sub-case row (line 98) distinguishes pre-prompt GET 404 (canonical only, BC-3.9.015) from DELETE 404 (canonical+body, DEC-168). BC-3.9.015 line 3654 confirms the same distinction: "canonical string only…differs from BC-3.9.008's DELETE 404 (canonical + Jira body per DEC-168) because the pre-prompt fetch is a read GET, not a write operation." No contradiction.
+Error-taxonomy delete 404 sub-case row (line 98) distinguishes pre-prompt GET 404 (canonical only, BC-3.9.015) from DELETE 404 (canonical+body, D-168). BC-3.9.015 line 3654 confirms the same distinction: "canonical string only…differs from BC-3.9.008's DELETE 404 (canonical + Jira body per D-168) because the pre-prompt fetch is a read GET, not a write operation." No contradiction.
 
 The general 403 row (exit 1) is consistent with BC-3.9.015's metadata-fetch 403 (exit 1). No override row in error-taxonomy needed for 403 on metadata-GET — exit code matches default; specific message is product-layer behavior.
 

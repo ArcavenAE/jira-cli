@@ -130,7 +130,7 @@ on `develop` at `d7875e6`.
 
 | Phase | Passes | Fix Rounds | Clean Window | Verdict |
 |-------|--------|-----------|--------------|---------|
-| F3 story spec (S-ADF-CODE-MARK-1) | 10 | 6 | p8/p9/p10 on v1.7 | CONVERGED STRICT (DEC-160) |
+| F3 story spec (S-ADF-CODE-MARK-1) | 10 | 6 | p8/p9/p10 on v1.7 | CONVERGED STRICT (D-160) |
 | F4 delivery (Step 4.5) | 4 | — | p2/p3/p4 | CONVERGED STRICT |
 
 F3 fix rounds addressed: severity HIGH→MEDIUM (pass 1), spec-companion clause clarifications for MIXED-RANGE/DEMOTE (passes 2–4), AC-009 proptest weight-uniformity (pass 5), AC-008 comment-refresh scope extension (pass 6). All EC-2/EC-3/EC-4/PANEL-ANCHOR anchors resolved as **CONFIRMED-INPUT** (Task 3 was a no-op — no MIXED-RANGE or DEMOTE outcomes; no spec-companion commits required).

@@ -36,7 +36,7 @@ Part B).
 
 Adversarial Spec-Delta Review — Component Management (F2, pass 19). VERDICT: CLEAN (zero
 HIGH/MEDIUM/LOW). Counts: 0 CRIT, 0 HIGH, 0 MEDIUM, 0 LOW, 1 INFO. THIRD CONSECUTIVE CLEAN
-(17/18/19) — F2 adversarial convergence achieved under DEC-245 strict bar (3 clean, zero H/M/L).
+(17/18/19) — F2 adversarial convergence achieved under D-245 strict bar (3 clean, zero H/M/L).
 
 ## Part A — Re-Verification of Prior Fixes
 
@@ -86,7 +86,7 @@ management bundle:
   → `SnapshotIncomplete` → exit 1 on JRACLOUD-95368 drift mid-snapshot; `ORDER BY key ASC` is
   enforced; the affected-issue snapshot keys on `component=<resolvedId>`, not name; full
   pagination remains fail-closed.
-- **Wire-shape taxonomy (DEC-280)** — the 3 distinct shapes remain internally consistent: the
+- **Wire-shape taxonomy (D-280)** — the 3 distinct shapes remain internally consistent: the
   2×ceil chunking for bulk `--move-to` (BC-3.4.023 Precondition 6 / VP-012) is correctly applied;
   the echo path's 3-surface string shape is unchanged; the dry-run array shape (BC-3.4.021 /
   VP-028) remains structurally distinct from the live-call payload; the
@@ -98,7 +98,7 @@ management bundle:
   and the documented reserved-syntax gaps are all internally consistent; VP-013/VP-015 correctly
   cover this surface.
 - **CRUD / delete-safety / rename / resolver surfaces** — 8.1 (list/create/edit, `--counts` N+1
-  fail-soft, create omit-if-absent + `assigneeType` enum exit-2 DEC-188, edit partial-PUT
+  fail-soft, create omit-if-absent + `assigneeType` enum exit-2 D-188, edit partial-PUT
   `--lead ""`→null); 8.2 (disposition guard app-level exit-64, orphan confirm gate); 8.3
   (single/`--all-projects` exact-equality vs `partial_match`, numeric-OLD rejection, case-only
   no-short-circuit, per-project atomic fail-soft exit-1); 8.4 (numeric bypass, single-project
@@ -158,7 +158,7 @@ Component.id/echo/message-taxonomy/counts/output-profile/ADR-0018/frontmatter-tr
 one non-blocking INFO note recorded (a re-confirmation of the already-known polymorphic `renamed`
 JSON-key design observation), with no concrete failure scenario.
 **Convergence:** THIRD CONSECUTIVE CLEAN PASS (17/18/19) — F2 adversarial convergence achieved
-under the DEC-245 strict bar (minimum 3 clean passes, zero HIGH/MEDIUM/LOW each). No fix burst
+under the D-245 strict bar (minimum 3 clean passes, zero HIGH/MEDIUM/LOW each). No fix burst
 required.
 **Readiness:** No revision required; perimeter (BCs, ADR-0018, deltas, VP catalog) left
 byte-identical this pass, consistent with a concurrent consistency audit running against the
@@ -173,4 +173,4 @@ identical perimeter; BC/VP counts unchanged (bc-8 = 28 BCs, VP run 001–028, gr
 | **Duplicate/variant findings** | 1 (P19-INFO-1 is a re-confirmation of the pass-18 INFO observation on the same surface — not a newly discovered issue) |
 | **Novelty score** | ZERO — substantive spec (BCs/VPs/ADR/arch-delta) internally consistent and complete across the full hunt matrix for a third consecutive pass; the sole residue is a previously-known, non-blocking design observation, not a new gap |
 | **Trajectory** | P14: 0 HIGH/MED + 3 LOW → P16: 0 HIGH + 1 MEDIUM + 0 LOW (isolated, non-propagating, fixed same burst) → P17: 0 HIGH/MEDIUM/LOW + 3 INFO (CLEAN, clean pass 1 of 3) → P18: 0 HIGH/MEDIUM/LOW + 3 INFO (CLEAN, clean pass 2 of 3) → P19: 0 HIGH/MEDIUM/LOW + 1 INFO (CLEAN, clean pass 3 of 3 — **CONVERGED**) |
-| **Verdict** | **CONVERGED.** Three consecutive fully clean passes (17/18/19) under the DEC-245 strict bar (zero HIGH/MEDIUM/LOW per pass, INFO-only counts as CLEAN) — F2 adversarial convergence achieved for the component-management bundle. No severity has recurred at HIGH or CRITICAL since pass 12; the sole MEDIUM since then (pass 16) was isolated and resolved the same burst, confirmed resolved across passes 17-19. No further adversarial passes are required against this perimeter absent a spec change (new fix burst, BC edit, ADR revision) that would invalidate the frozen `input-hash`. |
+| **Verdict** | **CONVERGED.** Three consecutive fully clean passes (17/18/19) under the D-245 strict bar (zero HIGH/MEDIUM/LOW per pass, INFO-only counts as CLEAN) — F2 adversarial convergence achieved for the component-management bundle. No severity has recurred at HIGH or CRITICAL since pass 12; the sole MEDIUM since then (pass 16) was isolated and resolved the same burst, confirmed resolved across passes 17-19. No further adversarial passes are required against this perimeter absent a spec change (new fix burst, BC edit, ADR revision) that would invalidate the frozen `input-hash`. |

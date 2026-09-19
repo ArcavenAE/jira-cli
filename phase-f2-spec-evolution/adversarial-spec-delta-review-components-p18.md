@@ -77,7 +77,7 @@ None. Independent re-derivation verified PASS across the full component-manageme
 - **Snapshot fail-closed behavior** — BC-8.2.007 Precondition 5 correctly triggers `has_more=true`
   → `SnapshotIncomplete` → exit 1 on JRACLOUD-95368 drift mid-snapshot; `ORDER BY key ASC` is
   enforced; the affected-issue snapshot keys on `component=<resolvedId>`, not name.
-- **Wire-shape taxonomy (DEC-280)** — the 3 distinct shapes remain internally consistent: the
+- **Wire-shape taxonomy (D-280)** — the 3 distinct shapes remain internally consistent: the
   2×ceil chunking for bulk `--move-to` (BC-3.4.023 Precondition 6 / VP-012) is correctly applied;
   the echo path's `BTreeMap` shape (post the earlier H1 correction) is unchanged; the dry-run
   array shape (BC-3.4.021 / VP-028) remains structurally distinct from the live-call payload.
@@ -112,7 +112,7 @@ None. Independent re-derivation verified PASS across the full component-manageme
 - **Location:** `.factory/phase-f2-spec-evolution/prd-delta-components.md` error-taxonomy summary
   table.
 - **Description:** BC-8.1.007's Behavior section correctly and unambiguously specifies that
-  `component edit` with no field flags exits 64 (DEC-188 UserError), but the prd-delta summary
+  `component edit` with no field flags exits 64 (D-188 UserError), but the prd-delta summary
   table has no corresponding row. As with P18-INFO-1, this is a summary-table omission only — the
   authoritative BC is complete and unambiguous.
 - **Proposed Fix:** None required. Optionally add the row to the summary table for
@@ -125,14 +125,14 @@ None. Independent re-derivation verified PASS across the full component-manageme
 - **Location:** `.factory/specs/prd/bc-8-components.md` BC-8.1.007 Behavior field.
 - **Description:** BC-8.1.007's Behavior text says the no-fields guard "mirrors issue edit's
   equivalent guard." Issue edit's no-fields guard (BC-3.4.012) exits 1, while component edit's
-  no-fields guard correctly exits 64 (DEC-188 UserError) — a deliberate and correct divergence.
+  no-fields guard correctly exits 64 (D-188 UserError) — a deliberate and correct divergence.
   "Mirrors" refers to the conceptual guard-shape (reject an edit with no field changes specified),
   not the exit code, and BC-8.1.007 states its own exit code (64) unambiguously elsewhere in the
   same BC, so there is no actual contradiction — only a phrasing that a fast reader could
   momentarily misparse as an exit-code parity claim.
 - **Proposed Fix:** None required for correctness. Consider adding a one-clause disambiguation
   (e.g., "…mirrors issue edit's equivalent guard in shape, though the exit code differs per
-  DEC-188") in a future pass.
+  D-188") in a future pass.
 - **Status:** Noted, no action required.
 
 ## Summary

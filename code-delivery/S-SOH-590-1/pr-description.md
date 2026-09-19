@@ -1,7 +1,7 @@
 # [S-SOH-590-1] case-insensitive HTTP method on `jr api -X` (fixes #590, closes #582)
 
 **Epic:** none — quick-dev ops bug fix
-**Mode:** feature (quick-dev route, DEC-165)
+**Mode:** feature (quick-dev route, D-165)
 **Routing:** F1 TRIVIAL verdict — single `#[arg]` attribute addition, no new BCs required
 
 ![Tests](https://img.shields.io/badge/tests-2010%2F2010-brightgreen)
@@ -151,7 +151,7 @@ Pre-existing regression anchor: `test_handler_api_put_with_method_flag` (lowerca
 
 ## Demo Evidence
 
-**WAIVED — quick-dev routing (DEC-165).** This story is a one-attribute clap fix with
+**WAIVED — quick-dev routing (D-165).** This story is a one-attribute clap fix with
 direct test evidence (wiremock dispatch assertions + Red Gate log). No interactive demo
 recording is required or meaningful for a pure argument-parsing bugfix. The three new
 dispatch tests constitute the evidence of correct behavior.
@@ -160,14 +160,14 @@ dispatch tests constitute the evidence of correct behavior.
 
 ## Holdout Evaluation
 
-**N/A — evaluated at wave gate.** Quick-dev route per DEC-165; no holdout scenarios
+**N/A — evaluated at wave gate.** Quick-dev route per D-165; no holdout scenarios
 defined for F1 TRIVIAL scope (no blocking BCs, no architectural change).
 
 ---
 
 ## Adversarial Review
 
-**WAIVED — quick-dev route (DEC-165).** Per-story adversarial convergence is waived for
+**WAIVED — quick-dev route (D-165).** Per-story adversarial convergence is waived for
 F1 TRIVIAL stories. The diff is a single `#[arg]` attribute addition and three test
 additions. No spec gap or implementation ambiguity exists. PR reviewer convergence loop
 (Step 5) remains REQUIRED as normal.
@@ -176,7 +176,7 @@ additions. No spec gap or implementation ambiguity exists. PR reviewer convergen
 
 ## Security Review
 
-Quick-dev judgment applied per DEC-165 (full security-reviewer dispatch optional for
+Quick-dev judgment applied per D-165 (full security-reviewer dispatch optional for
 non-CRIT modules with trivial diffs).
 
 **Module criticality:** LOW (`src/cli/mod.rs` is a clap arg struct; not a CRIT module).
@@ -261,7 +261,7 @@ None. This is a parse-layer bugfix with no feature-flag surface.
 ai-generated: true
 pipeline-mode: feature-quick-dev
 factory-version: "1.0.0"
-routing: DEC-165 quick-dev (F1 TRIVIAL verdict)
+routing: D-165 quick-dev (F1 TRIVIAL verdict)
 pipeline-stages:
   spec-crystallization: completed (F1 delta analysis)
   story-decomposition: completed (S-SOH-590-1.md)
@@ -269,7 +269,7 @@ pipeline-stages:
   holdout-evaluation: waived (quick-dev, no blocking BCs)
   adversarial-review: waived (quick-dev)
   formal-verification: skipped (trivial diff, no formal proof target)
-  convergence: N/A (waived per DEC-165)
+  convergence: N/A (waived per D-165)
 convergence-metrics:
   spec-novelty: N/A
   test-kill-rate: N/A (scope: VP-590-001 dispatch tests only)
@@ -295,7 +295,7 @@ github-issues: ["#590", "#582"]
 - [x] No critical/high security findings (LOW module, trivial diff)
 - [x] Red Gate verified (cec775e fail → cb3b471 pass)
 - [x] CHANGELOG.md entry present (AC-006)
-- [x] Demo evidence waived per DEC-165 (noted in PR description)
-- [x] Adversarial convergence waived per DEC-165 (noted in PR description)
+- [x] Demo evidence waived per D-165 (noted in PR description)
+- [x] Adversarial convergence waived per D-165 (noted in PR description)
 - [ ] PR reviewer approval (convergence loop required)
-- [ ] Human merge authorization (HELD-FOR-HUMAN-MERGE per DEC-128)
+- [ ] Human merge authorization (HELD-FOR-HUMAN-MERGE per D-128)

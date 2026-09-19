@@ -10,7 +10,7 @@ status: pending-adjudication
 
 # Improvement Proposals: Issue #577 (SOH-COMMENT-CRUD-1)
 
-**72h review window opens 2026-07-15. Adjudication by human; routing to drbothen/vsdd-factory per DEC-164 precedent.**
+**72h review window opens 2026-07-15. Adjudication by human; routing to drbothen/vsdd-factory per D-164 precedent.**
 
 All proposals target engine-side improvements (vsdd-factory prompt templates, skill checklists, agent configs). None require product source changes.
 
@@ -28,7 +28,7 @@ All proposals target engine-side improvements (vsdd-factory prompt templates, sk
 | IP-577-08 | agent/pr-manager | pr-manager fallback-to-comment is now STANDARD (not optional) when the `validate-pr-review-posted` hook cannot verify a posted review: post the review summary as a `gh pr comment` before declaring review-complete | PG-F4-9: pr-manager declared review-complete on PR #617 without posting evidence; hook could not verify; user oversight required ("did we review 617?") | engine: pr-manager delivery checklist | MEDIUM |
 | IP-577-09 | wave-process | Wave-level integration review checklist must include a mandatory union-audit of all cross-story doc artifacts (comment-crud.md class, json-output-shapes registry, visibility-field wire shape documents) | PG-F4-4: cross-story doc artifact had visibility-field vs merged wire shape contradiction invisible to per-story loops; caught only at wave integration pass 1 after merge; required separate fix pass | engine: wave integration review checklist | MEDIUM |
 | IP-577-10 | template/story | Relocation stories (stories that move a handler between modules) must include a mandatory BC Source citation sweep task: grep all BC Source lines for the old module path and update to the new path atomically | PG-F4-2: S-577-1 handle_comment relocation broke 10 BC Source citations; required separate factory-artifacts fix commit 45b4f86; 9 additional BC Source lines needed wave-D sync | engine: story-writer checklist for relocation-class stories | LOW |
-| IP-577-11 | template/story | Story-writer must clippy lint-check pinned function signatures before finalizing: if a pinned signature has ≥8 parameters, flag for enum-param refactor in the story or document as a known deviation | PG-F4-3: story pinned ≥8-param fn signatures that trip clippy::too_many_arguments (threshold 7); forced in-flight D1 deviation + DEC-172 ratification; avoidable at story-authoring time | engine: story-writer checklist | LOW |
+| IP-577-11 | template/story | Story-writer must clippy lint-check pinned function signatures before finalizing: if a pinned signature has ≥8 parameters, flag for enum-param refactor in the story or document as a known deviation | PG-F4-3: story pinned ≥8-param fn signatures that trip clippy::too_many_arguments (threshold 7); forced in-flight D1 deviation + D-172 ratification; avoidable at story-authoring time | engine: story-writer checklist | LOW |
 
 ---
 

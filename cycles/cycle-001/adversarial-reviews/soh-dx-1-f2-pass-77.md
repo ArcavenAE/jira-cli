@@ -4,7 +4,7 @@ bundle: SOH-DX-1
 phase: F2
 aperture: DELTA-COMPLETENESS + AC-FALSIFIABILITY
 spec_version: v1.3.163
-reviewer_role: consistency-validator (DEC-190 substitute basis)
+reviewer_role: consistency-validator (D-190 substitute basis)
 date: 2026-07-28
 verdict: CLEAN
 in_delta_gaps: 0
@@ -21,7 +21,7 @@ findings:
 **Bundle:** SOH-DX-1 = #639 (HIGH/BREAKING: `--field`/`--on-behalf-of` warn→exit-64) + #627 (LOW: PG-365-1 regex) + #626 (LOW/MED: MSRV false-green + SHA pin)
 **Spec version audited:** v1.3.163
 **Aperture:** DELTA-COMPLETENESS (Dimension A) + AC-FALSIFIABILITY (Dimension B)
-**Basis:** DEC-190 substitute (consistency-validator standing in for adversary agent)
+**Basis:** D-190 substitute (consistency-validator standing in for adversary agent)
 **Verdict:** CLEAN — no in-delta GAPs found
 
 ---
@@ -37,17 +37,17 @@ Source: `.factory/phase-f1-delta/SOH-DX-1/delta-analysis.md` (42+ obligations ac
 | 3 | AC-7 rename (disambiguate from BC-3.8.006) | §1 Item 1 | DISCHARGED | New name pinned in bc-3-issue-write.md Trace field |
 | 4 | AC-4 test body update (absence-of-new-error negatives) | §1/§5a | DEFERRED F3 (explicit) | Labeled DEFERRED/F3 in spec; blocking AC in S-639-1 |
 | 5 | AC-6 test body update (re-point assertions) | §1/§5a | DEFERRED F3 (explicit) | Labeled DEFERRED/F3 in spec; blocking AC in S-639-1 |
-| 6 | `Cargo.toml` version bump to v0.7.0-dev.1 | §1 Item 1 | DEFERRED F4 (S-639-1 obligation c) | SEMVER resolved at DEC-188 |
+| 6 | `Cargo.toml` version bump to v0.7.0-dev.1 | §1 Item 1 | DEFERRED F4 (S-639-1 obligation c) | SEMVER resolved at D-188 |
 | 7 | `CHANGELOG.md` ### Breaking Changes entry | §1 Item 1 | DEFERRED F4 (S-639-1 obligation c) | Paired with version bump |
 | 8 | BC-3.8.012 body supersession (exit-64 pre-flight) | §4 Item 1 | DISCHARGED | bc-3-issue-write.md line 3046 (AMENDED 2026-07-25) |
 | 9 | BC-3.8.013 body supersession (`--on-behalf-of`) | §4 Item 1 | DISCHARGED | bc-3-issue-write.md line 3146 (AMENDED 2026-07-25) |
-| 10 | BC-INDEX.md §3.8 rows update (BC-3.8.012/013) | §4 Item 1 | DISCHARGED | BC-INDEX.md line 361-362 updated with DEC-188 amendment tag |
+| 10 | BC-INDEX.md §3.8 rows update (BC-3.8.012/013) | §4 Item 1 | DISCHARGED | BC-INDEX.md line 361-362 updated with D-188 amendment tag |
 | 11 | Amendment note at bc-3-issue-write.md ~BC-3.3.001 | §5b | DISCHARGED | Lines 537-538: verbatim supersession note referencing v0.7.0-dev.1 |
 | 12 | One-error-regardless-of-count idempotency | §5c | DISCHARGED | Spec body: "ONE check, ONE error" at BC-3.8.012 line 3064 |
 | 13 | CLAUDE.md dispatch-fork gotcha update | §1 | DEFERRED F4 (S-639-1 obligation d) | Tagged in spec delivery block |
 | 14 | ADR-0014 amendment (4 sites) | §1/§4 | DEFERRED F4 (S-639-1 obligation a) | Tagged in delivery block; 4 sites enumerated |
-| 15 | No new ADR warranted (#639) | §4 | DISCHARGED | Documented in spec delivery block; DEC-188 covers the decision |
-| 16 | SEMVER resolved to 0.7.0-dev.1 | §7 | DISCHARGED | DEC-188 |
+| 15 | No new ADR warranted (#639) | §4 | DISCHARGED | Documented in spec delivery block; D-188 covers the decision |
+| 16 | SEMVER resolved to 0.7.0-dev.1 | §7 | DISCHARGED | D-188 |
 | 17 | E2E blast radius assessment | §5/§7 | DISCHARGED | F64-001 (2026-07-28): zero E2E impact, guard fires pre-HTTP |
 | 18 | `src/cli/mod.rs` help text update | §1 | DEFERRED F4 (S-639-1 obligation e) | Tagged in delivery block |
 | 19 | `jsm_create.rs` comment correction (3 sites) | §1 | DEFERRED F4 (S-639-1 obligation f) | Tagged in delivery block |
@@ -143,8 +143,8 @@ Spec version v1.3.162 removed Subject column from BC-INDEX Section 1 tables (6 s
 ### 3c. S-383 supersession annotation
 
 `.factory/stories/S-383-platform-inverse-warnings.md` carries:
-- Frontmatter: `contract_superseded_by: "SOH-DX-1 (DEC-188) / S-639-1"`
-- Banner: "CONTRACT SUPERSEDED (2026-07-25, DEC-188 / SOH-DX-1)"
+- Frontmatter: `contract_superseded_by: "SOH-DX-1 (D-188) / S-639-1"`
+- Banner: "CONTRACT SUPERSEDED (2026-07-25, D-188 / SOH-DX-1)"
 
 Original 7 ACs (warn-and-proceed, exit 0) are preserved as historical record. No stale ACs remain active. DISCHARGED.
 

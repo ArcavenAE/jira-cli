@@ -124,7 +124,7 @@ a documented, accepted, non-blocking deferral per the F5 record.
   `cef4a021`): Mutation Test Plan pass → 8 shards pass → Aggregate pass → CI
   Gate pass, with **no `>120`-mutant escape-hatch invoked** on either PR
   (Wave 1's PR #778 needed the escape-hatch/admin-bypass at 281 in-diff
-  mutants per DEC-352 — a separate, earlier merge; both F6-relevant PRs
+  mutants per D-352 — a separate, earlier merge; both F6-relevant PRs
   #794/#795 ran to full completion with zero escalation).
 - `verification-delta-674.md` §9 enumerates 10 expected surviving-mutant
   classes (bracket/`@Name` boundary mutations, charset mutations,

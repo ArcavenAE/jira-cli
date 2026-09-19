@@ -9,7 +9,7 @@
 This PR fixes a HIGH regression (F5-R3-001) introduced by PR #644's F5-R1-004
 and a LOW defensive-hardening item (F5-R3-002). The core fix moves 404 body
 formatting out of the `get_attachment_metadata` API layer and back to each call
-site, restoring the BC-2.7.012 / DEC-168 body-surfacing asymmetry: the download
+site, restoring the BC-2.7.012 / D-168 body-surfacing asymmetry: the download
 path shows a canonical-only message; the interactive delete gate surfaces the
 Jira error body; the bulk dry-run swallows errors. Verified by running the suite.
 
@@ -65,7 +65,7 @@ Jira error body; the bulk dry-run swallows errors. Verified by running the suite
 The core fix is correct: `get_attachment_metadata` no longer bakes call-site
 formatting into the API layer, and the two 404-sensitive call sites format per
 their own BC contracts (download canonical-only; delete gate body-surfacing). The
-asymmetry documented in BC-2.7.012 / DEC-168 is restored, the regression guard is
+asymmetry documented in BC-2.7.012 / D-168 is restored, the regression guard is
 preserved and passing, and the new tests are genuine RED gates rather than
 tautologies. Diff is 213/-23 lines — well under the 500-line threshold; two clean
 conventional commits (RED tests, then implementation); CLAUDE.md updated in

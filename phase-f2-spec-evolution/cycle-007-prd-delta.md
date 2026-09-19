@@ -150,7 +150,7 @@ message and Postconditions 2/3's command syntax corrected to match. New **cycle-
 added to its existing F4 doc-fallout obligation: the exit-code change (64→2) is itself an
 observably breaking change for any script/CI wrapper that greps for exit 64 on this credential-
 absence path — the F4 implementing story MUST add a CHANGELOG breaking-change entry styled after
-the existing BC-1.2.051/DEC-321 precedent.
+the existing BC-1.2.051/D-321 precedent.
 
 ### 3.1 — Scope narrowing (§5.1, locked at the F1 gate — reverses part of #786's original framing)
 

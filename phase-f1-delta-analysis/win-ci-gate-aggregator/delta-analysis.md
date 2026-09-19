@@ -3,7 +3,7 @@ drift_item: WIN-CI-GATE-AGGREGATOR
 phase: F1 Delta Analysis
 date: 2026-06-14
 analyst: architect
-traces_to: STATE.md DEC-096, DEC-097, DEC-101
+traces_to: STATE.md D-096, D-097, D-101
 ---
 
 # Phase F1 Delta Analysis — WIN-CI-GATE-AGGREGATOR
@@ -12,7 +12,7 @@ traces_to: STATE.md DEC-096, DEC-097, DEC-101
 
 **Enhancement** (CI-infra hardening).
 
-This is not a bug fix — the acute branch-protection breakage was already resolved in DEC-097. It is an enhancement that eliminates a recurring fragility class: any future change to the `strategy.matrix.os` values in `ci.yml` will silently invalidate required status check contexts, forcing another emergency `PATCH required_status_checks` as happened with DEC-096. The aggregator converts that O(n-matrix-legs) maintenance surface into a single stable context.
+This is not a bug fix — the acute branch-protection breakage was already resolved in D-097. It is an enhancement that eliminates a recurring fragility class: any future change to the `strategy.matrix.os` values in `ci.yml` will silently invalidate required status check contexts, forcing another emergency `PATCH required_status_checks` as happened with D-096. The aggregator converts that O(n-matrix-legs) maintenance surface into a single stable context.
 
 ## 2. Routing Recommendation
 
@@ -33,7 +33,7 @@ Justification:
 | File | Change |
 |------|--------|
 | `.github/workflows/ci.yml` | Add `ci-gate` aggregator job (15–25 lines) |
-| `CLAUDE.md` | Optional: add bullet under "Key Decisions" noting `ci-gate` is the single required check (mirrors DEC-097 pattern) |
+| `CLAUDE.md` | Optional: add bullet under "Key Decisions" noting `ci-gate` is the single required check (mirrors D-097 pattern) |
 | `docs/adr/ADR-0016.md` | Optional: informational note in §5 CI section — "ci-gate is the required status check; add new CI jobs to ci-gate.needs, not to branch protection" |
 
 ### Files NOT Changed
@@ -112,7 +112,7 @@ This catches the next drift: someone adds a new required-candidate CI job and fo
 
 ## 5. Branch-Protection Migration
 
-**This is a repo-admin action. The harness cannot perform it** (same harness-blocked constraint as DEC-097).
+**This is a repo-admin action. The harness cannot perform it** (same harness-blocked constraint as D-097).
 
 ### Ordering (critical — wrong order = lock-out)
 
@@ -134,7 +134,7 @@ This catches the next drift: someone adds a new required-candidate CI job and fo
 
 `"CI Gate"` must match the `name:` field of the job exactly. If no `name:` is set, it defaults to the job key `ci-gate`. Set `name: CI Gate` in the job definition to get a human-readable context name.
 
-`strict: false` is preserved (omit from payload to keep existing value per PATCH semantics confirmed in DEC-097 research).
+`strict: false` is preserved (omit from payload to keep existing value per PATCH semantics confirmed in D-097 research).
 
 ### Commands (gh CLI)
 

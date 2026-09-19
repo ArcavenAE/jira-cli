@@ -348,4 +348,4 @@ discards `fields` — by design, unaffected); `src/types/jira/issue.rs::IssueFie
   `pub(crate)` helper. Recorded as drift item `BUCKET1-DEFECTS-FOLLOWUP-S1-S2`.
 
 Full detail: `STATE.md`, `cycles/cycle-001/burst-log.md` § BUCKET1-DEFECTS-COMPLETE,
-`cycles/cycle-001/decisions-archive.md` DEC-276.
+`cycles/cycle-001/decisions-archive.md` D-276.

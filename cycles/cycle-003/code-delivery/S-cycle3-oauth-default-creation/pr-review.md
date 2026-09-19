@@ -37,7 +37,7 @@ debug-gate it). Not re-escalated.
 
 ## Other requested items — all pass
 
-- **DEC-327 precedence:** explicit flag > non-interactive token-first > interactive picker;
+- **D-327 precedence:** explicit flag > non-interactive token-first > interactive picker;
   env vars do not suppress the picker interactively. Correct.
 - **BC-1.1.015:** `src/api/client.rs` untouched; `unwrap_or("api_token")` preserved (pinned by
   VP-AUTHDX-002 proptest + gated end-to-end test).

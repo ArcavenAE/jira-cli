@@ -165,7 +165,7 @@ bypass.
   exclusive outcomes for that input.
 - **Scope-selection guard (BC-8.3.005)**: `--project` and `--all-projects` are clap
   `conflicts_with`-paired — BOTH supplied → clap exit 2. NEITHER supplied → an
-  APPLICATION-LEVEL guard (`JrError::UserError`, exit 64, DEC-188 mechanism — NOT a clap
+  APPLICATION-LEVEL guard (`JrError::UserError`, exit 64, D-188 mechanism — NOT a clap
   `ArgGroup::required(true)`, which would wrongly exit 2), naming both flags. Mechanically
   IDENTICAL two-guard shape to BC-8.2.001's `--move-to`/`--orphan` split.
 - **Case-only rename (BC-8.3.006)**: `partial_match`'s case-insensitive lookup is used to FIND
@@ -352,7 +352,7 @@ EC-8.3.002-4/EC-8.3.004-2 (numeric+dry-run ordering, AC-012) are already covered
 
 | Rule | Source | Enforcement |
 |------|--------|--------------|
-| `--all-projects` scope-selection NEITHER-case is an application-level exit-64 guard, NEVER a clap `ArgGroup::required(true)` | BC-8.3.005 Behavior, DEC-188 | AC-013 |
+| `--all-projects` scope-selection NEITHER-case is an application-level exit-64 guard, NEVER a clap `ArgGroup::required(true)` | BC-8.3.005 Behavior, D-188 | AC-013 |
 | `--all-projects` matching is EXACT case-insensitive equality — NEVER `partial_match`'s substring semantics | BC-8.3.002 Matching-semantics divergence | AC-005 |
 | A numeric `OLD` is REJECTED under `--all-projects` (both live and `--dry-run`), unaffected under the single-project form | BC-8.3.002 Precondition 2 | AC-007, AC-012 |
 | `rename`'s single-project form has NO numeric-ID exemption from supplying `--project` (unlike `edit`/`delete`) | BC-8.3.001 Precondition 1 | Code review; contrast with S-604-2's BC-8.1.004 exemption |

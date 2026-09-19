@@ -1,6 +1,6 @@
 # Review Findings — S-MUTANTS-SCOPE-GUARDS-1
 
-**PR:** #572 — ci(mutants): add mutants-policy citation guard + examine_globs existence guard (DEC-150)
+**PR:** #572 — ci(mutants): add mutants-policy citation guard + examine_globs existence guard (D-150)
 **Branch:** ci/mutants-scope-guards
 **Reviewed:** 2026-07-04
 

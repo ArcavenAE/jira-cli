@@ -29,7 +29,7 @@ bundle: SOH-DX-1
 aperture: emit-site / observable-contract
 spec_version: v1.3.166
 date: 2026-07-29
-basis: DEC-190 substitute (consistency-validator, not adversary agent)
+basis: D-190 substitute (consistency-validator, not adversary agent)
 isolation: sibling reviews not read
 ---
 

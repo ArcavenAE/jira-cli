@@ -7,7 +7,7 @@ producer: security-reviewer
 timestamp: 2026-07-09
 phase: phase-f2-spec-evolution
 issue: 577
-trigger: DEC-168 ruling 4
+trigger: D-168 ruling 4
 inputs:
   - ".factory/specs/prd/bc-3-issue-write.md"
   - ".factory/specs/prd/holdout-scenarios.md"
@@ -30,19 +30,19 @@ severity_summary: "3 LOW, 5 INFO — no CRITICAL, no HIGH, no MEDIUM"
 **Scope**: Pre-implementation spec-level audit of BC-3.5.002..BC-3.5.012,
 VP-577-001..VP-577-007, H-NEW-COMMENT-001..H-NEW-COMMENT-004 (spec v1.3.28, 2026-07-09).
 
-**Trigger**: DEC-168 ruling 4 ("security reviewer pass at F2 pre-spec-crystallization").
+**Trigger**: D-168 ruling 4 ("security reviewer pass at F2 pre-spec-crystallization").
 
 ---
 
 ## Executive Summary
 
 The SOH-COMMENT-CRUD-1 F2 spec delta is security-sound at its core. The body-only PUT
-invariant (BC-3.5.005 / DEC-168 ruling 1) correctly inverts the original footgun claim:
+invariant (BC-3.5.005 / D-168 ruling 1) correctly inverts the original footgun claim:
 omitting `properties` preserves Jira's `sd.public.comment` state; the dangerous path is
 explicitly sending a `properties` array the caller does not fully control. The spec
 enforces fail-absent behavior, always-confirm on `--public`, and visibility labelling in
 `comment view`. Three LOW items require minor spec text corrections before F3 story
-decomposition; none require reopening any DEC-168 ruling.
+decomposition; none require reopening any D-168 ruling.
 
 ---
 
@@ -209,12 +209,12 @@ decomposition; none require reopening any DEC-168 ruling.
 
 ## Positive Findings (Defensive Measures Present)
 
-1. **Body-only default eliminates GET-then-PUT race** (BC-3.5.005 / DEC-168 ruling 1):
-   DEC-168 replaced the F1 GET-preserve-PUT pattern with a body-only default. This
+1. **Body-only default eliminates GET-then-PUT race** (BC-3.5.005 / D-168 ruling 1):
+   D-168 replaced the F1 GET-preserve-PUT pattern with a body-only default. This
    eliminates the TOCTOU race where stale GET state could inadvertently flip visibility.
    Simpler invariants are more implementable correctly.
 
-2. **Fail-absent on unknown state** (DEC-168 design): No "safe default" is assumed for
+2. **Fail-absent on unknown state** (D-168 design): No "safe default" is assumed for
    visibility. Body-only is property-preserving by Atlassian's architectural design
    (research Claim 1 REFUTED-footgun). No code path defaults to "make public" on an
    ambiguous state.

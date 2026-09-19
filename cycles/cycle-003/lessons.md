@@ -40,7 +40,7 @@ traces_to: STATE.md
 
 ## Infrastructure-Level
 
-1. **[infra-observation] `gh pr merge`/push actions initiated by an agent are auto-denied by the Claude Code auto-mode permission classifier, even when the merge DECISION is fully autonomous per policy (DEC-330/DEC-331).** First surfaced blocking PR #757; reaffirmed at every subsequent session resume through cycle-003's close — the resuming session must drive `gh pr merge`/push from the MAIN session loop, not via github-ops sub-agents, until this permission-classifier gap is resolved. Not a VSDD agent-prompt gap; a harness/infra behavior worth revisiting (e.g. a scoped session permission rule for the merge command) so the merge ACTION can be as autonomous as the merge DECISION.
+1. **[infra-observation] `gh pr merge`/push actions initiated by an agent are auto-denied by the Claude Code auto-mode permission classifier, even when the merge DECISION is fully autonomous per policy (D-330/D-331).** First surfaced blocking PR #757; reaffirmed at every subsequent session resume through cycle-003's close — the resuming session must drive `gh pr merge`/push from the MAIN session loop, not via github-ops sub-agents, until this permission-classifier gap is resolved. Not a VSDD agent-prompt gap; a harness/infra behavior worth revisiting (e.g. a scoped session permission rule for the merge command) so the merge ACTION can be as autonomous as the merge DECISION.
    _Discovered: F4 Wave 3, PR #757, 2026-09-02; reaffirmed through cycle close, 2026-09-03_
 
 ## Policy Candidates

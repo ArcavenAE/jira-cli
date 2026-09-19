@@ -38,7 +38,7 @@ traces_to: STATE.md
 - cycles/cycle-002/burst-log.md
 - cycles/cycle-002/session-checkpoints.md
 
-**Codifications:** ADR-0019 § Amendment 2026-08-26 codifies D1 (3-bool arity domain + sibling `resolve_m2_project`), D2 (create-path Gate-B extension via shared `detect_flag_field_overlap`), D3 (`str::split_once('>')` mandated at every cascading-split call site). DEC-310 minted (proposed) to replace the collided DEC-307 governance flag on BC-3.8.012's DEC-188 reversal — not yet formally registered (owed at cycle close). VP-INDEX (inline convention) grows VP-578-020/021/022 + VP-580-010/011 (5 new ids) plus VP-580-006/009 rewritten/realized.
+**Codifications:** ADR-0019 § Amendment 2026-08-26 codifies D1 (3-bool arity domain + sibling `resolve_m2_project`), D2 (create-path Gate-B extension via shared `detect_flag_field_overlap`), D3 (`str::split_once('>')` mandated at every cascading-split call site). D-310 minted (proposed) to replace the collided D-307 governance flag on BC-3.8.012's D-188 reversal — not yet formally registered (owed at cycle close). VP-INDEX (inline convention) grows VP-578-020/021/022 + VP-580-010/011 (5 new ids) plus VP-580-006/009 rewritten/realized.
 
 **Dim-2 Attestation:** N/A for this burst — this is a spec-only F2 convergence burst (no `src/` changes). `scripts/check-spec-counts.sh` → exit 0 ("Check passed: 8 bc files validated"). `scripts/check-bc-cumulative-counts.sh` → exit 0 ("OK: all cumulative BC counts verified (719 total across 9 files; Surface H footer checked where present)"). Both re-run post-burst by state-manager to confirm the verifier's reported validation-hook timeout during its own edit pass was tooling noise, not a real rejection.
 
@@ -48,7 +48,7 @@ traces_to: STATE.md
 
 **Dim-7 Attestation:** N/A — no test suite changed this burst. Spec-level verification for this burst is `scripts/check-spec-counts.sh` and `scripts/check-bc-cumulative-counts.sh` (both PASS, see Dim-2 above); BC/VP realization tests are deferred to F4 implementation per this repo's `convention: inline-proptest` (no centralized VP registry, VPs realized as proptests/unit tests at implementation time).
 
-**Closes:** A-M1/D1 (M2 default-project parity), B-F3/D2 (create-path Gate-B collision guard), B-F2/D3 (cascading `>`-split hardening), A-M2 (BC-X.14.002 example fix), B-F1 (BC-X.14.001 M3 pagination postcondition correction), C-M1 (DEC-307→DEC-310 renumber, 2-file scope). ~9 LOW findings closed (BC-3.4.026 scope qualifier; BC-X.14.001 precondition + reverse-resolution EC; `:asset` failure taxonomy VP-578-022; empty cascading-segment EC; `--value ""` + graceful-degrade VP-580-011; H-NEW-PREFLIGHT-006 removal-obligation addition). **Does NOT close:** the F2 mandatory adversarial spec-convergence loop itself (streak reset to 0/3, still open) or the two process-gap findings below (still open, routed to next burst).
+**Closes:** A-M1/D1 (M2 default-project parity), B-F3/D2 (create-path Gate-B collision guard), B-F2/D3 (cascading `>`-split hardening), A-M2 (BC-X.14.002 example fix), B-F1 (BC-X.14.001 M3 pagination postcondition correction), C-M1 (D-307→D-310 renumber, 2-file scope). ~9 LOW findings closed (BC-3.4.026 scope qualifier; BC-X.14.001 precondition + reverse-resolution EC; `:asset` failure taxonomy VP-578-022; empty cascading-segment EC; `--value ""` + graceful-degrade VP-580-011; H-NEW-PREFLIGHT-006 removal-obligation addition). **Does NOT close:** the F2 mandatory adversarial spec-convergence loop itself (streak reset to 0/3, still open) or the two process-gap findings below (still open, routed to next burst).
 
 ### Counts reconciled this burst
 
@@ -56,36 +56,36 @@ No BCs added or removed — total stays **719** (bc-3-issue-write.md 123/152 ind
 
 ### [process-gap] Findings (not fixed this burst — routed forward)
 
-1. **DEC-survey-scope gap (root cause of C-M1).** The original DEC-307 proposal was derived
+1. **DEC-survey-scope gap (root cause of C-M1).** The original D-307 proposal was derived
    from a `specs/`-only grep for the highest allocated `DEC-NNN`. That scope is wrong — DEC
    numbers get allocated from cycle-gate decisions recorded in `STATE.md` and `cycles/`
-   history too (DEC-309 — cycle-001 F7 closure — was invisible to a specs-only scan). **Any
+   history too (D-309 — cycle-001 F7 closure — was invisible to a specs-only scan). **Any
    future "what's the next sequential DEC number" survey MUST scan the whole `.factory/`
    tree**, not just `specs/`. Logged to STATE.md Drift/Standing Items and the process-gap
    follow-up list.
-2. **DEC-307→DEC-310 renumbering is INCOMPLETE — found by state-manager's defensive sweep
+2. **D-307→D-310 renumbering is INCOMPLETE — found by state-manager's defensive sweep
    (S-7.02), not fixed this burst.** The architect's fix note in `prd-delta-field-dx.md`
-   §C-M1 explicitly scopes the renumber to two files ("renumbered DEC-307 in
+   §C-M1 explicitly scopes the renumber to two files ("renumbered D-307 in
    `prd-delta-field-dx.md` (this document) and `bc-3-issue-write.md`"). A corpus grep for
-   the literal string `DEC-307` in a field-dx/BC-3.8.012-reversal context, run by
+   the literal string `D-307` in a field-dx/BC-3.8.012-reversal context, run by
    state-manager after the burst closed, found **35 residual occurrences still unswept**
    across **six further files**:
-   - `phase-f2-spec-evolution/verification-delta-field-dx.md` — 7 occurrences (VP-578-017/018/019 inline comments + §1/§1.1/§5 prose all still say "DEC-307 reversal")
+   - `phase-f2-spec-evolution/verification-delta-field-dx.md` — 7 occurrences (VP-578-017/018/019 inline comments + §1/§1.1/§5 prose all still say "D-307 reversal")
    - `phase-f2-spec-evolution/architecture-delta-field-dx.md` — 1 occurrence
-   - `specs/architecture/decisions/ADR-0019-field-dx-context-hint-shape-delimiter.md` — 1 occurrence (§References, "governance-flagged separately as DEC-307")
+   - `specs/architecture/decisions/ADR-0019-field-dx-context-hint-shape-delimiter.md` — 1 occurrence (§References, "governance-flagged separately as D-307")
    - `specs/prd/holdout-scenarios.md` — 15 occurrences (H-NEW-PREFLIGHT-001/003/006 changelog entries + NFR source line ~2580)
    - `specs/prd/CANONICAL-COUNTS.md` — 4 occurrences (`last_verified` changelog prose)
    - `specs/prd/BC-INDEX.md` — 7 occurrences (`last_updated` changelog prose)
 
    state-manager cannot fix these directly (specification content is out of scope for this
    role — bookkeeping only). **Routed back as an owed follow-up**: a fix pass sweeping all
-   six files DEC-307 → DEC-310 (matching the same disambiguation the architect already
+   six files D-307 → D-310 (matching the same disambiguation the architect already
    applied to `bc-3-issue-write.md` and `prd-delta-field-dx.md`) is needed **before F2 Step 5
    spec version-bump/changelog and before cycle close**. This is the same recurring gap as
    process-gap follow-up #5 ("no reversal-propagation checklist") — evidenced again here.
 3. **DEC-namespace collision itself is a process-gap, independent of the survey-scope bug.**
-   Spec-authored DECs (e.g. DEC-188, the proposed field-dx DEC-310) and cycle-gate DECs (e.g.
-   DEC-309, cycle-001's F7 closure) currently share one flat `DEC-NNN` numbering prefix with
+   Spec-authored DECs (e.g. D-188, the proposed field-dx D-310) and cycle-gate DECs (e.g.
+   D-309, cycle-001's F7 closure) currently share one flat `DEC-NNN` numbering prefix with
    no central registry file — this is what made the collision possible even with a correct
    survey scope. Flagged for a cycle-close decision: split the namespaces (e.g. `DEC-` vs
    `CYCLE-DEC-`) or stand up a single authoritative `DECISIONS-INDEX.md`.
@@ -104,9 +104,9 @@ No BCs added or removed — total stays **719** (bc-3-issue-write.md 123/152 ind
 
 ## Burst: Burst 2 — F2 adversary-convergence round-2, second fresh 3-pass streak, 5 MEDIUM + 2 LOW fixed (2026-08-26)
 
-**Parent-commit:** b5bbff1feae1c68123a3616d67d4addf6df4df67 (factory(F2): complete DEC-307->DEC-310 propagation sweep)
+**Parent-commit:** b5bbff1feae1c68123a3616d67d4addf6df4df67 (factory(F2): complete D-307->D-310 propagation sweep)
 
-**Adversary verdict:** NOT-CLEAN ×3 again. After Burst 1's fix-and-reconverge and the subsequent DEC-307→DEC-310 propagation sweep closed, a SECOND fresh 3-pass adversary streak was run against the now-fully-propagated delta to attempt the required 3/3 CLEAN. **It again returned ALL NOT-CLEAN** — 5 MEDIUM + 2 LOW findings, smaller than Burst 1's 6 MEDIUM + ~9 LOW but still non-clean. Fixed this burst via a PO → verifier → PO back-fill chain (no architect step needed this round — all findings were spec-body/verification-doc corrections, not design decisions). Clean-pass streak: **remains 0/3** — this is the second consecutive fresh-streak failure to reach 3/3 CLEAN; a fresh, fully-clean 3-pass run is still required before F2 Step 5/8.
+**Adversary verdict:** NOT-CLEAN ×3 again. After Burst 1's fix-and-reconverge and the subsequent D-307→D-310 propagation sweep closed, a SECOND fresh 3-pass adversary streak was run against the now-fully-propagated delta to attempt the required 3/3 CLEAN. **It again returned ALL NOT-CLEAN** — 5 MEDIUM + 2 LOW findings, smaller than Burst 1's 6 MEDIUM + ~9 LOW but still non-clean. Fixed this burst via a PO → verifier → PO back-fill chain (no architect step needed this round — all findings were spec-body/verification-doc corrections, not design decisions). Clean-pass streak: **remains 0/3** — this is the second consecutive fresh-streak failure to reach 3/3 CLEAN; a fresh, fully-clean 3-pass run is still required before F2 Step 5/8.
 
 **Files touched (Dim-1): 5 unique files**
 
@@ -248,7 +248,7 @@ No BCs added or removed — total stays **719** (bc-3-issue-write.md 123/152 ind
 | F-2/D4 | (architect-decided) | Non-cascading-field `>`-collision and bare-form `>`-literal behavior were both underspecified — D3 mandates unconditional `str::split_once('>')` but never addressed what happens when the matched parent isn't actually cascading, nor what the bare (non-hinted) form does with a literal `>` | New BC-3.4.027 EC-3.4.027-7 (structural empty-`children` detection, pinned message) + `AllowedValue.children` type note; new BC-3.4.015 bare-form-`>`-is-literal note; new VP-578-023 minted (verifier), inline BC-body anchor back-filled (product-owner) |
 | LOWs | LOW | `:asset=:`/`:asset=:Y:Z` check-order ambiguity (EC-2c empty-workspace vs EC-2b/2d objectId checks); M3 numeric-bypass edge undocumented for `jr field options`; ADR-0019 §1 `has_project` note lacked a superseded pointer | EC-2c pinned to evaluate BEFORE objectId-segment checks (BC-3.4.030 Parsing rule 2 + BC-3.4.031 EC-2c, cross-referenced); new `jr field options` M3 numeric-bypass paragraph (inherits `jr requesttype fields` convention unmodified); ADR-0019 §1 gains `[superseded 2026-08-26 — see Amendment D1]` inline marker |
 
-**Closes:** MED-1/F-3 (platform-vs-JSM collision-guard scope made explicit everywhere), MED-2 (BC-INDEX.md title-row prose, state-manager), MED-3 (VP-578-013 per-kind split realized), F-1 (`--value` filter × `Option<String>` reconciled), F-2/D4 (non-cascading collision + bare-form literal, VP-578-023 minted + back-filled), all LOWs. **Does NOT close:** the F2 mandatory adversarial spec-convergence loop itself (streak remains 0/3 — Pass 3's CLEAN verdict does not carry over into a new streak attempt; a fresh 3-pass run starting from Pass 1 is required). **Also DEFERRED, not closed:** F-3's JSM collision-guard extension (BC-3.8.008's dedicated-flag wire-key collision) remains an open product decision, owed at the F2 human gate; DEC-310 formal registration and the DEC-namespace disambiguation question also remain owed at cycle close (unchanged from round-3).
+**Closes:** MED-1/F-3 (platform-vs-JSM collision-guard scope made explicit everywhere), MED-2 (BC-INDEX.md title-row prose, state-manager), MED-3 (VP-578-013 per-kind split realized), F-1 (`--value` filter × `Option<String>` reconciled), F-2/D4 (non-cascading collision + bare-form literal, VP-578-023 minted + back-filled), all LOWs. **Does NOT close:** the F2 mandatory adversarial spec-convergence loop itself (streak remains 0/3 — Pass 3's CLEAN verdict does not carry over into a new streak attempt; a fresh 3-pass run starting from Pass 1 is required). **Also DEFERRED, not closed:** F-3's JSM collision-guard extension (BC-3.8.008's dedicated-flag wire-key collision) remains an open product decision, owed at the F2 human gate; D-310 formal registration and the DEC-namespace disambiguation question also remain owed at cycle close (unchanged from round-3).
 
 ### Counts reconciled this burst
 
@@ -304,7 +304,7 @@ No BCs added or removed — total stays **719** (bc-3-issue-write.md 123/152 ind
 | MED-2 | MEDIUM | `verification-delta-field-dx.md` still claimed VP-578-023's BC-body anchor had a "sole pending back-fill" at BC-3.4.015, but the product-owner had already back-filled it | Back-fill confirmed DONE at both anchor sites (BC-3.4.027 + BC-3.4.015); stale "pending" claim reconciled; `related_bcs` gained BC-3.4.015 + BC-3.4.021 |
 | LOWs | LOW | M2 sub-headings unbracketed (inconsistent with M3's convention); a stale changelog line duplicated prose instead of pointing at the resolution; the round-4 "four vs three new static keys" arithmetic slip (should read 5+3+1=9) | M2 sub-headings bracketed; changelog line converted to a resolution pointer; "9 = 5+3+1" arithmetic reconciled everywhere it's cited |
 
-**Closes:** F-NEW-1 (create-path governed set 5→9, VP-578-021 extended), F-NEW-2 (dry-run per-kind wire shape pinned, VP-578-024 minted), MED-1 (VP-578-013 EC citation fixed), MED-2 (VP-578-023 back-fill reconciliation), all LOWs. **Does NOT close:** the F2 mandatory adversarial spec-convergence loop itself (streak remains 0/3 — Pass 3's CLEAN verdict does not carry over into a new streak attempt; a fresh 3-pass run starting from Pass 1 is still required). **Also NOT closed (unchanged from round-4):** DEC-310 formal registration, the DEC-namespace disambiguation question, and F-3's JSM collision-guard extension (open product decision) all remain owed at the F2 human gate.
+**Closes:** F-NEW-1 (create-path governed set 5→9, VP-578-021 extended), F-NEW-2 (dry-run per-kind wire shape pinned, VP-578-024 minted), MED-1 (VP-578-013 EC citation fixed), MED-2 (VP-578-023 back-fill reconciliation), all LOWs. **Does NOT close:** the F2 mandatory adversarial spec-convergence loop itself (streak remains 0/3 — Pass 3's CLEAN verdict does not carry over into a new streak attempt; a fresh 3-pass run starting from Pass 1 is still required). **Also NOT closed (unchanged from round-4):** D-310 formal registration, the DEC-namespace disambiguation question, and F-3's JSM collision-guard extension (open product decision) all remain owed at the F2 human gate.
 
 ### Counts reconciled this burst
 
@@ -361,7 +361,7 @@ No BCs added or removed — total stays **719** (bc-3-issue-write.md 123/152 ind
 | LOW | LOW | BC-3.4.021 Invariant 1 did not qualify F-NEW-2 (round-5) as an exception to the general invariant | Exception qualifier added |
 | LOW | LOW | VP-578-005 lacked a coverage note for the colon-in-field-name case | Coverage note added (verifier) |
 
-**Closes:** M-1 (D2 governed-set count corrected 9→10), all 4 LOWs. **Does NOT close:** the F2 mandatory adversarial spec-convergence loop itself (streak remains 0/3 — Pass 1's NOT-CLEAN verdict resets the streak even though Passes 2 and 3 were both CLEAN; a fresh 3-pass run starting from Pass 1 is still required). **Notable trajectory signal:** this is the first round in this session where TWO passes in the same streak (Passes 2 and 3) came back CLEAN — the delta's defect surface is at the floor; only the M-1 count contradiction (now fixed) broke the streak this round. **Also NOT closed (unchanged from round-5):** DEC-310 formal registration, the DEC-namespace disambiguation question, and F-3's JSM collision-guard extension (open product decision) all remain owed at the F2 human gate.
+**Closes:** M-1 (D2 governed-set count corrected 9→10), all 4 LOWs. **Does NOT close:** the F2 mandatory adversarial spec-convergence loop itself (streak remains 0/3 — Pass 1's NOT-CLEAN verdict resets the streak even though Passes 2 and 3 were both CLEAN; a fresh 3-pass run starting from Pass 1 is still required). **Notable trajectory signal:** this is the first round in this session where TWO passes in the same streak (Passes 2 and 3) came back CLEAN — the delta's defect surface is at the floor; only the M-1 count contradiction (now fixed) broke the streak this round. **Also NOT closed (unchanged from round-5):** D-310 formal registration, the DEC-namespace disambiguation question, and F-3's JSM collision-guard extension (open product decision) all remain owed at the F2 human gate.
 
 ### Counts reconciled this burst
 
@@ -389,7 +389,7 @@ No BCs added or removed — total stays **719** (bc-3-issue-write.md 123/152 ind
 
 **Pass 2 (completeness) — CLEAN:** no new CRITICAL/HIGH/MEDIUM findings — six rounds of convergence have driven the delta's defect surface to the floor. Surfaced 1 LOW doc-hygiene item.
 
-**Pass 3 (traceability) — CLEAN:** confirmed the VP inventory (32, no orphans), TEN-count consistency across all 4 contract surfaces, DEC-310 governance chain, holdout coverage, and the 719/32/106 counts all reconcile. Surfaced 1 LOW doc-hygiene item.
+**Pass 3 (traceability) — CLEAN:** confirmed the VP inventory (32, no orphans), TEN-count consistency across all 4 contract surfaces, D-310 governance chain, holdout coverage, and the 719/32/106 counts all reconcile. Surfaced 1 LOW doc-hygiene item.
 
 **Files touched (Dim-1): 3 unique files**
 
@@ -407,7 +407,7 @@ No `phase-f2-spec-evolution/`, `specs/prd/`, `specs/architecture/` files were to
 
 **Dim-7 Attestation:** N/A — no test suite changed this burst. Spec-level verification is `scripts/check-spec-counts.sh` and `scripts/check-bc-cumulative-counts.sh` (both PASS, see Dim-2 above); BC/VP realization tests remain deferred to F4 implementation per this repo's `convention: inline-proptest`.
 
-**Codifications:** **F2 mandatory adversarial spec-convergence is CONVERGED (3/3 CONSECUTIVE CLEAN).** Spec version bumped **v1.5.0 → v1.6.0** (MINOR per DF-030) in `spec-changelog.md`; the MINOR-vs-MAJOR question on the BC-3.8.012/DEC-310 reversal remains explicitly flagged for the F2 human gate, not forced. F2 is now ready for **Step 8 (human gate)**.
+**Codifications:** **F2 mandatory adversarial spec-convergence is CONVERGED (3/3 CONSECUTIVE CLEAN).** Spec version bumped **v1.5.0 → v1.6.0** (MINOR per DF-030) in `spec-changelog.md`; the MINOR-vs-MAJOR question on the BC-3.8.012/D-310 reversal remains explicitly flagged for the F2 human gate, not forced. F2 is now ready for **Step 8 (human gate)**.
 
 **4 residual LOW doc-hygiene findings (tracked, non-blocking — do NOT reset the clean streak per the mandatory rule, which resets only on NOT-CLEAN/MEDIUM+ verdicts):**
 
@@ -418,13 +418,13 @@ No `phase-f2-spec-evolution/`, `specs/prd/`, `specs/architecture/` files were to
 | DOC-3 | LOW | M1 (`jr field options`)'s editmeta FALLBACK path lacks an explicit status/permission-dependency caveat |
 | DOC-4 | LOW | `prd-delta-field-dx.md`'s Summary section says "9 amended BCs" but should include BC-3.4.021/028/030 (round-5/round-6 amendments) |
 
-**Closes:** the F2 mandatory adversarial spec-convergence loop itself (3/3 CONSECUTIVE CLEAN reached; no further adversary passes required for F2). **Does NOT close:** DEC-310 formal registration, the DEC-namespace disambiguation question, the F-3 JSM collision-guard-extension product decision, the MINOR-vs-MAJOR spec-version confirmation, or the 4 residual LOW doc-hygiene items above — all owed at the F2 human gate / cycle close per the cycle-closing checklist in STATE.md's Session Resume Checkpoint.
+**Closes:** the F2 mandatory adversarial spec-convergence loop itself (3/3 CONSECUTIVE CLEAN reached; no further adversary passes required for F2). **Does NOT close:** D-310 formal registration, the DEC-namespace disambiguation question, the F-3 JSM collision-guard-extension product decision, the MINOR-vs-MAJOR spec-version confirmation, or the 4 residual LOW doc-hygiene items above — all owed at the F2 human gate / cycle close per the cycle-closing checklist in STATE.md's Session Resume Checkpoint.
 
 ### Cycle-closing checklist status (as of this burst)
 
 Process-gap follow-ups still owed at cycle close (none closed by this bookkeeping burst):
 
-1. **Register DEC-310** formally (proposed, propagation complete; formal registration step remains).
+1. **Register D-310** formally (proposed, propagation complete; formal registration step remains).
 2. **DEC-namespace disambiguation question** — spec-authored DECs and cycle-gate DECs share one flat `DEC-NNN` prefix with no central registry; needs a cycle-close decision.
 3. **Reversal-propagation checklist** for the PO/state-manager workflow — still not built (recurring gap noted rounds 1-6).
 4. **`COUNT-RECONCILIATION-FORCED-CONSISTENCY-PATTERN`** lesson from round-6 (a count-discrepancy reconciliation must re-derive the semantically correct count from the underlying distinct entities, not force consistency onto whichever number appeared first) — logged in `cycles/cycle-002/lessons.md`; candidate for a spec-authoring checklist item, not yet actioned.
@@ -445,31 +445,31 @@ No BCs added or removed — total stays **719** (bc-3-issue-write.md 123/152 ind
 | adversary | Fresh-context pass #3 (traceability lens) | **CLEAN** — 1 LOW |
 | state-manager | Re-run guard scripts (PASS, 719/no drift), update STATE.md to record F2 CONVERGED (streak 3/3), reconcile spec-changelog.md's [1.6.0] PROCESS-INTEGRITY CAVEAT, log this burst, commit | `STATE.md`; `spec-changelog.md`; this file |
 
-## Burst: Burst 8 — F2 human gate APPROVED + DEC-310 REGISTERED + F2->F3 transition (2026-08-26)
+## Burst: Burst 8 — F2 human gate APPROVED + D-310 REGISTERED + F2->F3 transition (2026-08-26)
 
 **Parent-commit:** the commit landing Burst 7 above (F2-CONVERGENCE-CLOSE, streak-6 3/3 CONSECUTIVE CLEAN).
 
-**Adversary verdict:** N/A -- this burst is a human gate-decision and DEC-310-registration bookkeeping burst, not an adversary pass. No adversary was dispatched this burst; F2's mandatory adversarial spec-convergence loop already reached 3/3 CONSECUTIVE CLEAN in Burst 7 and is not reopened here.
+**Adversary verdict:** N/A -- this burst is a human gate-decision and D-310-registration bookkeeping burst, not an adversary pass. No adversary was dispatched this burst; F2's mandatory adversarial spec-convergence loop already reached 3/3 CONSECUTIVE CLEAN in Burst 7 and is not reopened here.
 
 **Human decision:** the human reviewed the F2 gate (Step 8) on 2026-08-26 and delivered four decisions:
 
 1. **F2 gate APPROVED** -> pipeline transitions **F2 -> F3** (incremental stories).
 2. **Spec version DEFERRED.** The human said BOTH v1.6.0 (MINOR) and v2.0.0 (MAJOR) framings offered at the gate are WRONG and explicitly said not to bump the version right now. The spec-version determination is therefore OPEN/deferred, not settled -- the pre-existing v1.6.0 authoring-time frontmatter in `BC-INDEX.md`/`spec-changelog.md` is NOT reverted (that would be out-of-scope churn for this burst); this burst only records that the version is unconfirmed.
 3. **F-3 (JSM collision-guard extension) RESOLVED.** JSM create keeps its pre-existing last-wins behavior; the spec already documents the divergence (BC-3.8.008, PO-verified). The MED-1/F-3 owed-at-gate item is closed, no D2 guard extension.
-4. **DEC-310 REGISTER NOW.** The product-owner updated all inline spec surfaces (`bc-3-issue-write.md`, `BC-INDEX.md`, `CANONICAL-COUNTS.md`, `prd-delta-field-dx.md`) from "proposed" to "registered (2026-08-26, human-approved)" ahead of this burst (uncommitted at burst start). state-manager finishes the registration in the remaining bookkeeping surfaces this burst: `STATE.md` Decisions Log (DEC-310 flipped proposed -> REGISTERED, `DEC-310-FORMAL-REGISTRATION-OPEN` flag removed), `spec-changelog.md`'s `[1.6.0]` entry (all "proposed" DEC-310 language flipped to registered, plus a DEFERRED note on the spec-version classification and a corrected F2-convergence-gate Impact Assessment row), and this file (new Burst 8).
+4. **D-310 REGISTER NOW.** The product-owner updated all inline spec surfaces (`bc-3-issue-write.md`, `BC-INDEX.md`, `CANONICAL-COUNTS.md`, `prd-delta-field-dx.md`) from "proposed" to "registered (2026-08-26, human-approved)" ahead of this burst (uncommitted at burst start). state-manager finishes the registration in the remaining bookkeeping surfaces this burst: `STATE.md` Decisions Log (D-310 flipped proposed -> REGISTERED, `D-310-FORMAL-REGISTRATION-OPEN` flag removed), `spec-changelog.md`'s `[1.6.0]` entry (all "proposed" D-310 language flipped to registered, plus a DEFERRED note on the spec-version classification and a corrected F2-convergence-gate Impact Assessment row), and this file (new Burst 8).
 
 **Files touched (Dim-1): 8 unique files** (4 by the PO ahead of this burst, 4 by state-manager this burst)
 
-- `phase-f2-spec-evolution/prd-delta-field-dx.md` (PO: DEC-310 proposed -> registered)
-- `specs/prd/BC-INDEX.md` (PO: DEC-310 proposed -> registered)
-- `specs/prd/CANONICAL-COUNTS.md` (PO: DEC-310 proposed -> registered)
-- `specs/prd/bc-3-issue-write.md` (PO: DEC-310 proposed -> registered)
-- `STATE.md` (state-manager: F2 gate APPROVED, phase F2->F3, DEC-310 REGISTERED, F-3 RESOLVED, spec version DEFERRED)
-- `spec-changelog.md` (state-manager: `[1.6.0]` entry's DEC-310 language reconciled to registered; spec-version DEFERRED note added; convergence-gate Impact Assessment row corrected)
+- `phase-f2-spec-evolution/prd-delta-field-dx.md` (PO: D-310 proposed -> registered)
+- `specs/prd/BC-INDEX.md` (PO: D-310 proposed -> registered)
+- `specs/prd/CANONICAL-COUNTS.md` (PO: D-310 proposed -> registered)
+- `specs/prd/bc-3-issue-write.md` (PO: D-310 proposed -> registered)
+- `STATE.md` (state-manager: F2 gate APPROVED, phase F2->F3, D-310 REGISTERED, F-3 RESOLVED, spec version DEFERRED)
+- `spec-changelog.md` (state-manager: `[1.6.0]` entry's D-310 language reconciled to registered; spec-version DEFERRED note added; convergence-gate Impact Assessment row corrected)
 - `cycles/cycle-002/burst-log.md` (this entry)
 - `cycles/cycle-002/session-checkpoints.md` (state-manager: prior streak-6/convergence-close checkpoint archived from STATE.md, with a superseding note recording the gate's APPROVED outcome)
 
-**Dim-2 Attestation:** N/A for this burst -- spec-only F2-gate-close bookkeeping burst (no `src/` changes). `scripts/check-spec-counts.sh` -> exit 0 ("Check passed: 8 bc files validated"). `scripts/check-bc-cumulative-counts.sh` -> exit 0 ("OK: all cumulative BC counts verified (719 total across 9 files; Surface H footer checked where present)"). Both re-run by state-manager both before and after this burst's edits -- the PO's DEC-310 inline-surface edits changed no counts (719 unchanged).
+**Dim-2 Attestation:** N/A for this burst -- spec-only F2-gate-close bookkeeping burst (no `src/` changes). `scripts/check-spec-counts.sh` -> exit 0 ("Check passed: 8 bc files validated"). `scripts/check-bc-cumulative-counts.sh` -> exit 0 ("OK: all cumulative BC counts verified (719 total across 9 files; Surface H footer checked where present)"). Both re-run by state-manager both before and after this burst's edits -- the PO's D-310 inline-surface edits changed no counts (719 unchanged).
 
 **Dim-5 Attestation:** N/A -- no binary/WASM artifact produced by this burst (bookkeeping/decision-recording delta only).
 
@@ -477,9 +477,9 @@ No BCs added or removed — total stays **719** (bc-3-issue-write.md 123/152 ind
 
 **Dim-7 Attestation:** N/A -- no test suite changed this burst. Spec-level verification is `scripts/check-spec-counts.sh` and `scripts/check-bc-cumulative-counts.sh` (both PASS, see Dim-2 above); BC/VP realization tests remain deferred to F4 implementation per this repo's `convention: inline-proptest`.
 
-**Codifications:** F2 human gate **APPROVED**. DEC-310 **REGISTERED** (2026-08-26, human-approved). F-3 (JSM D2 collision-guard extension) **RESOLVED** -- retain last-wins, no extension. Spec version (v1.6.0 MINOR vs v2.0.0 MAJOR) **DEFERRED** -- neither confirmed nor overridden, human declined to settle it now. Pipeline transitions **F2 -> F3**; F3 (incremental stories) has not yet started.
+**Codifications:** F2 human gate **APPROVED**. D-310 **REGISTERED** (2026-08-26, human-approved). F-3 (JSM D2 collision-guard extension) **RESOLVED** -- retain last-wins, no extension. Spec version (v1.6.0 MINOR vs v2.0.0 MAJOR) **DEFERRED** -- neither confirmed nor overridden, human declined to settle it now. Pipeline transitions **F2 -> F3**; F3 (incremental stories) has not yet started.
 
-**Closes:** DEC-310 formal registration (owed-at-gate item #1, closed). F-3 JSM collision-guard-extension product decision (owed-at-gate item, closed -- RESOLVED). The F2 human gate itself (Step 8, APPROVED). **Does NOT close:** the DEC-namespace disambiguation question (human did not choose a split at this gate -- remains open, tracked debt); the spec-version determination (explicitly DEFERRED, not forced); the 4 residual LOW doc-hygiene items from streak-6 (non-blocking, tracked in `STATE.md` Drift/Standing Items); the pre-existing, NOT field-dx-scoped `F7-GATE-SYSTEMIC-INPUT-HASH-DRIFT` standing item (~145 historical stale artifacts from closed cycles, factory-wide, unrelated to this bundle).
+**Closes:** D-310 formal registration (owed-at-gate item #1, closed). F-3 JSM collision-guard-extension product decision (owed-at-gate item, closed -- RESOLVED). The F2 human gate itself (Step 8, APPROVED). **Does NOT close:** the DEC-namespace disambiguation question (human did not choose a split at this gate -- remains open, tracked debt); the spec-version determination (explicitly DEFERRED, not forced); the 4 residual LOW doc-hygiene items from streak-6 (non-blocking, tracked in `STATE.md` Drift/Standing Items); the pre-existing, NOT field-dx-scoped `F7-GATE-SYSTEMIC-INPUT-HASH-DRIFT` standing item (~145 historical stale artifacts from closed cycles, factory-wide, unrelated to this bundle).
 
 ### Counts reconciled this burst
 
@@ -489,9 +489,9 @@ No BCs added or removed -- total stays **719** (`bc-3-issue-write.md` 123/152 in
 
 | Agent | Task | Output |
 |-------|------|--------|
-| human | F2 Step 8 gate review; delivered 4 decisions (gate APPROVED, spec version DEFERRED, F-3 RESOLVED, DEC-310 REGISTER NOW) | verbal/session decision, recorded here and in `STATE.md` |
-| product-owner | Flip inline spec surfaces (`bc-3-issue-write.md`, `BC-INDEX.md`, `CANONICAL-COUNTS.md`, `prd-delta-field-dx.md`) DEC-310 proposed -> registered | those 4 files (uncommitted at burst start, committed together with this burst) |
-| state-manager | Re-verify guard scripts (PASS, 719/no drift), update `STATE.md` (phase F2->F3, DEC-310 REGISTERED, F-3 RESOLVED, spec version DEFERRED), reconcile `spec-changelog.md`'s `[1.6.0]` entry, archive the prior streak-6 checkpoint to `session-checkpoints.md`, log this burst, commit all 8 touched files, push | `STATE.md`; `spec-changelog.md`; this file; `cycles/cycle-002/session-checkpoints.md`; the 4 PO-edited spec files |
+| human | F2 Step 8 gate review; delivered 4 decisions (gate APPROVED, spec version DEFERRED, F-3 RESOLVED, D-310 REGISTER NOW) | verbal/session decision, recorded here and in `STATE.md` |
+| product-owner | Flip inline spec surfaces (`bc-3-issue-write.md`, `BC-INDEX.md`, `CANONICAL-COUNTS.md`, `prd-delta-field-dx.md`) D-310 proposed -> registered | those 4 files (uncommitted at burst start, committed together with this burst) |
+| state-manager | Re-verify guard scripts (PASS, 719/no drift), update `STATE.md` (phase F2->F3, D-310 REGISTERED, F-3 RESOLVED, spec version DEFERRED), reconcile `spec-changelog.md`'s `[1.6.0]` entry, archive the prior streak-6 checkpoint to `session-checkpoints.md`, log this burst, commit all 8 touched files, push | `STATE.md`; `spec-changelog.md`; this file; `cycles/cycle-002/session-checkpoints.md`; the 4 PO-edited spec files |
 
 ## Burst: Burst 9 — F3 story decomposition COMPLETE: 5 stories, 19 BCs + 32 VPs covered, acyclic wave plan (2026-08-26)
 
@@ -505,7 +505,7 @@ No BCs added or removed -- total stays **719** (`bc-3-issue-write.md` 123/152 in
 | S-578-1 (field value-kind hint-syntax parser) | 1 | [] | 5 | BC-3.4.026 | (parser foundation) |
 | S-578-2 (`issue edit --field` hint dispatch) | 2 | [S-578-1] | 13 | BC-3.4.015/016/021/027/028/029/030/031 | VP-578-* |
 | S-578-3 (JSM `issue create --field` hint dispatch) | 2 | [S-578-1] | 8 | BC-3.8.008 | VP-578-* |
-| S-578-4 (platform `issue create --field` support) | 3 | [S-580-1, S-578-2] | — | BC-3.3.010/011, BC-3.8.012/013 (DEC-310 reversal), BC-3.4.014 | VP-578-* |
+| S-578-4 (platform `issue create --field` support) | 3 | [S-580-1, S-578-2] | — | BC-3.3.010/011, BC-3.8.012/013 (D-310 reversal), BC-3.4.014 | VP-578-* |
 
 Topological order: {S-580-1, S-578-1} → {S-578-2, S-578-3} → S-578-4. Acyclic (verified). All 19 BCs traced by at least one AC across the 5 stories; VP-578-001..024 + VP-580-005..012 (32 total) realized. `STORY-INDEX.md` `total_stories` bumped 156→161 (5 new Feature-Followup rows), version v1.6.09→v1.6.10.
 
@@ -740,7 +740,7 @@ No BCs/VPs/holdouts added or removed — 719 BCs / 32 VPs / 106 holdouts unchang
 
 **Dispatched:** per-story-delivery pipeline for S-578-3 (stub-architect → test-writer → implementer → demo-recorder → pr-manager → devops-engineer), following the pre-documented guard-replacement Red-Gate strategy (keep `reject_unsupported_hint_kinds` through stub+test steps, remove its `jsm_create.rs` call site AND delete the now-unused helper itself — S-578-3 is its last caller — only in the implement step).
 
-**Adversary verdict:** 4-pass per-story adversary convergence. Pass 1 BLOCKING (1 HIGH + 2 MEDIUM, ADV-S578-3-P1-001..003) — the significant fix was porting `field_resolve.rs::compose_asset_hint`'s 4-check `:asset` value-shape validation (missing `:`, empty workspace segment, empty/non-numeric object-id segment) into the JSM L2 resolver (`jsm_create.rs::resolve_asset_field_l2`), which had dropped it entirely, diverging from DEC-188's pre-flight-guard convention; also corrected BC-3.8.008's EC-3.8.008-1/EC-3.8.008-3 wording (STRING_WRAP, adjudicated by PO, replacing a drafted-by-analogy OBJECT-wrap that had contradicted AC-002's bare-parity shape and the shipped code). Passes 2/3 NITPICK_ONLY, Pass 4 fully **CLEAN** — 3/3 consecutive clean. Full detail: `cycles/cycle-002/S-578-3/adversary-convergence-state.json`.
+**Adversary verdict:** 4-pass per-story adversary convergence. Pass 1 BLOCKING (1 HIGH + 2 MEDIUM, ADV-S578-3-P1-001..003) — the significant fix was porting `field_resolve.rs::compose_asset_hint`'s 4-check `:asset` value-shape validation (missing `:`, empty workspace segment, empty/non-numeric object-id segment) into the JSM L2 resolver (`jsm_create.rs::resolve_asset_field_l2`), which had dropped it entirely, diverging from D-188's pre-flight-guard convention; also corrected BC-3.8.008's EC-3.8.008-1/EC-3.8.008-3 wording (STRING_WRAP, adjudicated by PO, replacing a drafted-by-analogy OBJECT-wrap that had contradicted AC-002's bare-parity shape and the shipped code). Passes 2/3 NITPICK_ONLY, Pass 4 fully **CLEAN** — 3/3 consecutive clean. Full detail: `cycles/cycle-002/S-578-3/adversary-convergence-state.json`.
 
 **What happened:** S-578-3 (JSM `issue create --field` hint-kind dispatch, 8 pts — Wave 2 story 2/2) threaded `FieldValueSpec` through `JsmRequestBuilder.extra_fields` (`src/api/jsm/requests.rs`, was `HashMap<String,String>`) and implemented kind-aware `requestFieldValues` composition in `build()`'s loop: bare/`:option` unchanged string-wrap (VP-578-015 byte-identity regression pin — `:option` cascading NOT extended to JSM, `>` stays an opaque literal per EC-3.8.008-1); `:id`→`{"id":V}`; `:name`→`{"name":V}`; `:asset`→pure array-wrap of an already-L2-resolved value (`build()` never calls `get_or_fetch_workspace_id` — no L4→L4 edge, ADR-0019 §2 "L2 resolves, build() only wraps"). `jsm_create.rs::resolve_asset_field_l2` performs the `:asset` L2 workspace-id resolution (mirrors S-578-2's platform-side split) plus its 4-row cold-cache failure taxonomy (VP-578-022). The S-578-1 interim `reject_unsupported_hint_kinds` guard's `jsm_create.rs` call site was removed, and — as its last remaining caller — the helper function itself was deleted from `create.rs`.
 
@@ -754,7 +754,7 @@ No BCs/VPs/holdouts added or removed — 719 BCs / 32 VPs / 106 holdouts unchang
 
 **One content lesson + one infra-observation lesson captured this burst** (see `cycles/cycle-002/lessons.md` Content-Level 1-2, Infrastructure-Level 3): the `:option` JSM wire-shape spec conflict (drafted-by-analogy OBJECT-wrap vs. shipped STRING-wrap, caught pre-convergence); the `:asset` validation-gap + PR coverage-count-inflation pair (adversary P1 + pr-reviewer B1); pr-manager over-orchestration + an auto-mode permission-classifier denial of `gh pr merge --admin`, resolved by human manual merge.
 
-**New tracked debt this burst (see STATE.md Drift/Standing Items):** `S-578-3-SHARED-ASSET-VALIDATOR` (LOW, extract shared `validate_asset_value` helper + hoist JSM `:asset` validation ordering to match DEC-188); `S-578-3-FIELDVALUESPEC-RELOCATION` (LOW, architectural — move `FieldValueSpec`/`FieldValueKind` to a neutral `src/types/` module, removing the only `api/`→`cli/` import inversion); `S-578-3-PR742-RESIDUAL-NITS` (LOW, residual pr-reviewer non-blocking nits).
+**New tracked debt this burst (see STATE.md Drift/Standing Items):** `S-578-3-SHARED-ASSET-VALIDATOR` (LOW, extract shared `validate_asset_value` helper + hoist JSM `:asset` validation ordering to match D-188); `S-578-3-FIELDVALUESPEC-RELOCATION` (LOW, architectural — move `FieldValueSpec`/`FieldValueKind` to a neutral `src/types/` module, removing the only `api/`→`cli/` import inversion); `S-578-3-PR742-RESIDUAL-NITS` (LOW, residual pr-reviewer non-blocking nits).
 
 **Files touched (Dim-1): 8 unique files (factory-artifacts, this burst)**
 
@@ -797,15 +797,15 @@ No BCs/VPs/holdouts added or removed — 719 BCs / 32 VPs / 106 holdouts unchang
 | devops-engineer / human | Squash-merge PR #742 to `develop` (human manual merge — auto-mode permission classifier denied `gh pr merge --admin`) | `develop` @ `41763ff0` |
 | state-manager | Record S-578-3 delivery: update `sprint-state.yaml`, `STORY-INDEX.md`, `STATE.md`; write red-gate-log.md + adversary-convergence-state.json; commit spec propagation edits; log this burst + 2 content lessons + 1 infra-observation lesson; commit + push | `STATE.md`; `sprint-state.yaml`; `stories/STORY-INDEX.md`; `cycles/cycle-002/S-578-3/*`; `cycles/cycle-002/lessons.md`; `specs/prd/bc-3-issue-write.md`; `stories/S-578-3-jsm-create-field-hint-dispatch.md`; this file |
 
-## Burst: Burst 14 — F4 Wave 3: S-578-4 (platform `issue create --field` support, DEC-188 reversal via DEC-310) DELIVERED + MERGED (PR #746 @ ae8514b8) — **WAVE 3 COMPLETE / cycle-002 PHASE F4 COMPLETE** (2026-08-30/31)
+## Burst: Burst 14 — F4 Wave 3: S-578-4 (platform `issue create --field` support, D-188 reversal via D-310) DELIVERED + MERGED (PR #746 @ ae8514b8) — **WAVE 3 COMPLETE / cycle-002 PHASE F4 COMPLETE** (2026-08-30/31)
 
 Session resumed from the `WRAP-F4-WAVE2-COMPLETE-PAUSE` position (STATE.md v3.23) and delivered the LAST story of the field-dx bundle, closing all three waves and Phase F4 (delta implementation) in full.
 
-**Story:** S-578-4 — platform (non-JSM) `issue create --field` support. `resolve_edit_fields` extended with a createmeta-vs-editmeta source parameter (one shared function, not a second implementation); resolution pipeline sourced from `get_createmeta_fields` (S-580-1, reused verbatim). Reverses DEC-188's platform-path `--field`-alone pre-flight exit-64 guard via DEC-310 (human-approved F2 gate) — a deliberate, documented reversal of S-639-1's own guard. `--on-behalf-of`'s BC-3.8.013 guard unchanged in mechanism; only its trigger scope widens now the combined pre-emption check is gone. BC-3.3.010/3.3.011/3.4.014(amended)/3.8.012(reversed)/3.8.013(unchanged); 13 pts, largest story in the bundle tied with S-578-2; `depends_on:[S-580-1, S-578-2]`, both satisfied.
+**Story:** S-578-4 — platform (non-JSM) `issue create --field` support. `resolve_edit_fields` extended with a createmeta-vs-editmeta source parameter (one shared function, not a second implementation); resolution pipeline sourced from `get_createmeta_fields` (S-580-1, reused verbatim). Reverses D-188's platform-path `--field`-alone pre-flight exit-64 guard via D-310 (human-approved F2 gate) — a deliberate, documented reversal of S-639-1's own guard. `--on-behalf-of`'s BC-3.8.013 guard unchanged in mechanism; only its trigger scope widens now the combined pre-emption check is gone. BC-3.3.010/3.3.011/3.4.014(amended)/3.8.012(reversed)/3.8.013(unchanged); 13 pts, largest story in the bundle tied with S-578-2; `depends_on:[S-580-1, S-578-2]`, both satisfied.
 
 **Quality gates:** Red Gate PASS. Per-story adversarial convergence **CONVERGED STRICT** — 14 passes, final 3 CLEAN (zero production-logic defects after pass 2); convergence state at `cycles/cycle-002/S-578-4/adversary-convergence-state.json`. security-reviewer: CLEAN. pr-reviewer: APPROVE, 1 review cycle, 0 blocking findings. CI: 15/15 green including CI Gate + mutation testing. Demo evidence: `.factory/demos/S-578-4/` (6 VHS demos + evidence-report.md).
 
-**Process-gap lessons captured during convergence** (see `cycles/cycle-002/lessons.md` Process-Level 3–5): an AC-to-Task placement conflict inside the story spec (AC-016 vs. Task-2); a File-Structure/Architecture-Mapping self-contradiction ("edit.rs MUST NOT change" vs. required `resolve_edit_fields` signature extension touching edit.rs call sites) — implementation correctly followed Architecture Mapping; a test-inversion instruction gap (Task-2 updated test bodies for the DEC-310-reversed behavior but not test names/doc-comments, leaving 5 stale-name/stale-comment strays surfaced across passes P8/P10/P11).
+**Process-gap lessons captured during convergence** (see `cycles/cycle-002/lessons.md` Process-Level 3–5): an AC-to-Task placement conflict inside the story spec (AC-016 vs. Task-2); a File-Structure/Architecture-Mapping self-contradiction ("edit.rs MUST NOT change" vs. required `resolve_edit_fields` signature extension touching edit.rs call sites) — implementation correctly followed Architecture Mapping; a test-inversion instruction gap (Task-2 updated test bodies for the D-310-reversed behavior but not test names/doc-comments, leaving 5 stale-name/stale-comment strays surfaced across passes P8/P10/P11).
 
 **Infra observation:** the `github-ops` sub-agent stalled on every dispatch this session (dependency check, stale-verdict check, merge) without returning completion reports, though the underlying `gh`/`git` actions succeeded; pr-manager fell back to direct `gh`/`git` verification each time. Logged as an observation (lessons.md Infrastructure-Level 4), not a process gap requiring a follow-up story.
 
@@ -892,7 +892,7 @@ No BCs/VPs/holdouts added or removed this burst (FIX-F5-001 is a bug fix against
 
 **Fuzz testing:** `cargo-fuzz` not set up (no `fuzz/` directory, no `fuzz_target!` usage). Justified **proptest arbitrary-input substitution** — all 3 named input-parsing surfaces have arbitrary-Unicode-input property coverage with no-panic + no-malformed-JSON oracles: `parse_field_kv` (`NAME[:kind]=VALUE` splitting), `:asset` `WS:OBJ` composition, `:option` cascading `Parent>Child` split. **No uncovered input surface.**
 
-**Mutation testing — config gap found and fixed:** the formal-verifier's mutation pass identified that `src/cli/field.rs` (91 in-diff mutants) and `src/cli/issue/field_resolve.rs` (45 in-diff mutants, including the #1-priority resolution/dispatch hub) were **not** members of `.cargo/mutants.toml::examine_globs`, so the required `mutants` CI gate's config-scoped `--in-diff` run covered only 71 of the 207 field-dx delta mutants, silently skipping the two core field-dx source files. This is the same drift class the policy's own changelog records for `edit.rs`/`jsm_create.rs` (DEC-149) and `queue.rs`/`main.rs` (S-MUTANTS-SCOPE-1).
+**Mutation testing — config gap found and fixed:** the formal-verifier's mutation pass identified that `src/cli/field.rs` (91 in-diff mutants) and `src/cli/issue/field_resolve.rs` (45 in-diff mutants, including the #1-priority resolution/dispatch hub) were **not** members of `.cargo/mutants.toml::examine_globs`, so the required `mutants` CI gate's config-scoped `--in-diff` run covered only 71 of the 207 field-dx delta mutants, silently skipping the two core field-dx source files. This is the same drift class the policy's own changelog records for `edit.rs`/`jsm_create.rs` (D-149) and `queue.rs`/`main.rs` (S-MUTANTS-SCOPE-1).
 
 **What happened — FIX-F6-001:** delivered on a dedicated fix branch as **FIX-F6-MUTANTS-SCOPE**: both files added to `.cargo/mutants.toml::examine_globs` (18 → 20 entries); `docs/specs/cargo-mutants-policy.md` §Scope citation list updated to match (`scripts/check-cargo-mutants-policy-citations.sh` → green, 69 policy/source symbol-citation pairs). **PR #749, merged to `develop` @ `dd311e13`.** A numeric mutation run was then executed on the two newly-covered files (`cargo mutants --no-config --file src/cli/field.rs --file src/cli/issue/field_resolve.rs --jobs 3 --timeout 240`): 177 total mutants generated; 142 scored conclusively → **93 caught, 0 MISSED, 38 timeout, 11 unviable**. **Kill rate on conclusively-scored mutants = 93/93 = 100%; zero test-quality-gap survivors.** The 38 timeouts + 35 unscored mutants are attributed to host-contention artifacts (concurrent-agent load on the shared session host ballooned per-mutant build times to ~13 minutes), not genuine survivors — corroborated by the formal-verifier's independent static coverage pass, which separately found 0 test-quality-gap survivors across the same functions via VP→test mapping. The six examine_globs-covered field-dx delta files (`create.rs`, `edit.rs`, `jsm_create.rs`, `issues.rs`, `requests.rs`, `editmeta.rs`) remained mutation-verified ≥90% via their own PR's required CI at merge time — no re-run needed.
 
@@ -958,7 +958,7 @@ No BCs/VPs/holdouts added or removed this burst (FIX-F6-001 is a mutation-testin
 
 **Cycle-closing checklist (S-7.02, run before declaring CLOSED):** reviewed the 3 `[process-gap]` findings logged this cycle in `cycles/cycle-002/lessons.md` (Process-Level items 3, 4, 5 — AC-016↔Task-2 story placement conflict; story "edit.rs MUST NOT change" vs Architecture-Mapping self-contradiction; Task-2 test-inversion left stale test-names/comments). For each, checked STORY-INDEX.md for an existing follow-up story targeting the SELF-IMPROVEMENT epic — none of the 123 tracked stories (including the 10-item `S-PG-*` self-improvement backlog) targets any of these 3 findings specifically. **Outcome: all 3 lack a follow-up story, so a justified-deferral entry was added to STATE.md Drift/Standing Items** (target: a future maintenance/self-improvement cycle; reason: process-doc refinement, each is a spec-authoring/story-template/task-instruction discipline gap, not a code defect — none is blocking). Checklist completion recorded per-finding as `[codified]` notes in `cycles/cycle-002/lessons.md` items 3/4/5.
 
-**Cycle close:** with the human's "Approve & release" decision and the cycle-closing checklist satisfied, **cycle-002 (`field-dx`) is now CLOSED** — MAXIMUM_VIABLE_REFINEMENT_REACHED, human-authorized at the F7 gate. Phase F7 advances from PASS/AWAITING-GATE to **COMPLETE**. Recorded as **DEC-311** in STATE.md's Decisions Log (Made By: human). No BC/VP/holdout counts changed this burst (719/32/106); no code changed (bookkeeping-only burst).
+**Cycle close:** with the human's "Approve & release" decision and the cycle-closing checklist satisfied, **cycle-002 (`field-dx`) is now CLOSED** — MAXIMUM_VIABLE_REFINEMENT_REACHED, human-authorized at the F7 gate. Phase F7 advances from PASS/AWAITING-GATE to **COMPLETE**. Recorded as **D-311** in STATE.md's Decisions Log (Made By: human). No BC/VP/holdout counts changed this burst (719/32/106); no code changed (bookkeeping-only burst).
 
 **NEXT:** the release step (version bump / CHANGELOG finalize / tag / GitHub release) at `develop` @ `2000c455`, then a post-pipeline session review.
 
@@ -974,7 +974,7 @@ No BCs/VPs/holdouts added or removed this burst (human-gate closure + checklist 
 
 | Agent | Task | Output |
 |-------|------|--------|
-| state-manager | Run S-7.02 cycle-closing checklist against the 3 logged process-gap findings; add justified-deferral entries to STATE.md; record `[codified]` notes in `lessons.md`; write DEC-311; mark F7 COMPLETE and cycle-002 CLOSED in STATE.md (v3.27→v3.28); log this burst; commit + push | `STATE.md`; `cycles/cycle-002/lessons.md`; `cycles/cycle-002/burst-log.md` (this file) |
+| state-manager | Run S-7.02 cycle-closing checklist against the 3 logged process-gap findings; add justified-deferral entries to STATE.md; record `[codified]` notes in `lessons.md`; write D-311; mark F7 COMPLETE and cycle-002 CLOSED in STATE.md (v3.27→v3.28); log this burst; commit + push | `STATE.md`; `cycles/cycle-002/lessons.md`; `cycles/cycle-002/burst-log.md` (this file) |
 
 **Files touched (Dim-1): 3 unique files (factory-artifacts, this burst)**
 
@@ -994,7 +994,7 @@ No BCs/VPs/holdouts added or removed this burst (human-gate closure + checklist 
 
 **Parent-commit:** `2000c455` (FIX-F7-001 merge, `develop` tip at the F7 human-gate close recorded in Burst 18).
 
-**Trigger:** with cycle-002 CLOSED (DEC-311, human-authorized at the F7 gate) and no further work queued, the release step ran next: version bump, tag, and `release.yml` dispatch.
+**Trigger:** with cycle-002 CLOSED (D-311, human-authorized at the F7 gate) and no further work queued, the release step ran next: version bump, tag, and `release.yml` dispatch.
 
 **Release actions taken:**
 1. Version-bump PR **#751** merged to `develop` — `develop` advanced `2000c455` → `87f17aff`.

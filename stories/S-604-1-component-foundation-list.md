@@ -77,7 +77,7 @@ origin: >
   GitHub issue #604 (`jr component list/create/edit/delete`). This is the FOUNDATION story
   of the four-issue component-management bundle (#604/#605/#606/#608) — every other story
   in the bundle depends on the types, API client, cache family, and shared resolver this
-  story establishes. Routed through full F1-F7 Feature Mode per DEC-278 umbrella decision.
+  story establishes. Routed through full F1-F7 Feature Mode per D-278 umbrella decision.
   See ADR-0018 for the consolidated architecture rationale and
   .factory/phase-f1-delta-analysis/impact-boundary-components.md for the F1 delta.
 files_modified:

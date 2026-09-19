@@ -410,10 +410,10 @@ makes the ordering claims below falsifiable rather than aspirational.
   `test_adr_0018_component_edit_failed_does_not_invalidate_cache`.
 - **BC-8.1.004 numeric exemption (AC-017).** Name path requires `config.project_key(...)` and exits
   64 when absent; numeric path never consults it. Both arms covered.
-- **DEC-188 exit-code class (AC-005).** Grep-verified: no app-level `assignee_type` guard exists
+- **D-188 exit-code class (AC-005).** Grep-verified: no app-level `assignee_type` guard exists
   anywhere in `component.rs` (the only two hits are `handle_list`'s display of existing values).
   Rejection is purely clap's `ValueEnum` → exit 2, with `.expect(0)` on the POST. **This part of
-  DEC-188 is correctly implemented** — finding 1 concerns the accepted value *spelling*, not the
+  D-188 is correctly implemented** — finding 1 concerns the accepted value *spelling*, not the
   exit class, and the two must not be conflated when fixing it.
 - **JSON render invariant (#526).** Both new JSON paths route through `output::render_json`; no
   direct `to_string_pretty`. Compliant.

@@ -18,7 +18,7 @@ BC-8.3.001–007, story S-608-1 ACs (18), and the literal AC command strings.
 - `project: Option<String>` ⨉ `all_projects: bool` are `conflicts_with`-paired →
   local both-supplied = clap exit 2 (AC-013 Part A).
 - Neither-supplied = application-level `JrError::UserError` exit 64 (NOT `ArgGroup::required`),
-  per BC-8.3.005 / DEC-188.
+  per BC-8.3.005 / D-188.
 - Global-position `--project` + `--all-projects` footgun guarded: exit 64, zero HTTP,
   message names both flags + "supply exactly one". Test pins exit code, message, and
   `received_requests().is_empty()`.

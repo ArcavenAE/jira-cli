@@ -285,4 +285,4 @@ generated-at: "2026-08-21"
 - [ ] No critical/high security findings unresolved (pending Step 4 security review)
 - [x] Rollback: standard `git revert` — no schema/data migration, no feature flag
 - [x] No feature flag needed (opt-in flag by construction)
-- [ ] Human review completed (pr-reviewer convergence + human merge authority per DEC-128)
+- [ ] Human review completed (pr-reviewer convergence + human merge authority per D-128)

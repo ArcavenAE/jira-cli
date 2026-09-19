@@ -29,7 +29,7 @@ recorded: "2026-09-14"
 ### Pass 1 — tree a013921b — FINDINGS
 
 **MEDIUM (fixed):**
-- F-1: `--markdown` + `--field` description guard used case-insensitive/parsed-key match instead of raw-token case-sensitive match. Violated ADR-0024 uniform-exit-64 / DEC-359.
+- F-1: `--markdown` + `--field` description guard used case-insensitive/parsed-key match instead of raw-token case-sensitive match. Violated ADR-0024 uniform-exit-64 / D-359.
 
 **LOW (fixed):** Table-marker stream issue.
 

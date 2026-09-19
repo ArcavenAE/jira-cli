@@ -15,7 +15,7 @@
 | CV passes | 28+ |
 | Convergence criterion | Full STRICT (3 consecutive zero-finding passes) |
 | Convergence window | passes 46/47/48 CLEAN×3 |
-| Human criterion confirmations | 3× (pass-6 checkpoint, pass-14 checkpoint, pass-38/DEC-169 checkpoint) |
+| Human criterion confirmations | 3× (pass-6 checkpoint, pass-14 checkpoint, pass-38/D-169 checkpoint) |
 | Spec versions this session | v1.3.28 → v1.3.39 (12 versions) |
 | VP family at convergence | 30 (VP-577-001..030) |
 | BC count at convergence | 624 |
@@ -28,14 +28,14 @@
 
 | Version | Change Summary |
 |---------|---------------|
-| v1.3.28 | Baseline after DEC-168 F1 gate + initial F2 spec delta (4 human rulings applied) |
+| v1.3.28 | Baseline after D-168 F1 gate + initial F2 spec delta (4 human rulings applied) |
 | v1.3.29 | Fix round 32: 1H+3L from pass-32 (JSDPUBLIC footgun clarification, exit-code alignment) |
 | v1.3.30 | Fix round 33: pass-33 findings (VP reachability, body-source precedence) |
 | v1.3.31 | Fix round 34: pass-34 findings (EC cross-reference cleanup) |
 | v1.3.32 | Fix round 35: pass-35 findings (VP-577-027/028 reformulation) |
 | v1.3.33 | Fix round 36: pass-36 findings (F-A4 --yes silent-no-op ratification) |
-| v1.3.34 | Fix round 37: pass-37 findings (DEC-169 rulings incorporated) |
-| v1.3.35 | Fix round 38: pass-38/DEC-169 checkpoint — coverage sweep, VP-577-029/030 family 30 |
+| v1.3.34 | Fix round 37: pass-37 findings (D-169 rulings incorporated) |
+| v1.3.35 | Fix round 38: pass-38/D-169 checkpoint — coverage sweep, VP-577-029/030 family 30 |
 | v1.3.36 | Fix round 40: pass-40 3L hygiene (1 premise-corrected, SEC-577-001 pointer, VP-577-013 harmonized) |
 | v1.3.37 | Fix round 41: pass-41 1L (sd.public.comment key pin) |
 | v1.3.38 | Fix round 42: pass-44 2L user-journey lens; error-taxonomy Section-3 override rows |
@@ -64,7 +64,7 @@ Passes 45–48: second window (1, 0, 0, 0); converged on pass 48.
 | Structural contradictions | 32–35 | Resolved; ambiguities eliminated |
 | BC/VP coherence | 33–38 | VP-577-029/030 added; VP-577-027/028 reformulated |
 | Security / exit-code mapping | 36–38 | SEC-577-001..004 addressed; error-taxonomy override rows added |
-| Migration / preservation semantics | 32–35 | DEC-168 body-only PUT rationale documented |
+| Migration / preservation semantics | 32–35 | D-168 body-only PUT rationale documented |
 | Coverage pins | 39 | 17-item accepted inventory in pass-39 report |
 | User-journey lens | 44 | Error-taxonomy Section-3 override rows; streak reset 0/3 |
 | Text hygiene / mis-cites | 45 | Setup-note gate-cite corrected |
@@ -74,8 +74,8 @@ Passes 45–48: second window (1, 0, 0, 0); converged on pass 48.
 
 ## Key Decisions
 
-- **DEC-168 (F1 gate, 2026-07-09)**: 4 human rulings — body-only PUT default, CLI Option A clean break, delete 404→exit 64, standard route scope.
-- **DEC-169 (mid-F2 checkpoint, 2026-07-11)**: Full STRICT confirmed 3rd time; F-A4 `--yes` silent no-op RATIFIED (research-backed, 9/9 CLIs lenient).
+- **D-168 (F1 gate, 2026-07-09)**: 4 human rulings — body-only PUT default, CLI Option A clean break, delete 404→exit 64, standard route scope.
+- **D-169 (mid-F2 checkpoint, 2026-07-11)**: Full STRICT confirmed 3rd time; F-A4 `--yes` silent no-op RATIFIED (research-backed, 9/9 CLIs lenient).
 
 ---
 
@@ -102,7 +102,7 @@ All 17 session pass reports at:
 - VPs: VP-577-001..030 (30 properties)
 - Holdouts: H-NEW-COMMENT-001..004 + H-NEW-COMMENT-010 (+5 from F2)
 - Security review: `adversarial-review/security-review-577.md` (point-in-time v1.3.28; 3 LOWs remediated in text v1.3.28→v1.3.39 — note for human gate)
-- DEC-169 ratified rulings summary: available in STATE.md Decisions Log
+- D-169 ratified rulings summary: available in STATE.md Decisions Log
 - Follow-up story candidates: documented in v1.3.28+ Follow-up Obligations + BC notes
 
 **Next step:** fresh-context consistency audit → input-drift check → F2 human gate package.

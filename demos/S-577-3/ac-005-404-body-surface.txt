@@ -13,7 +13,7 @@ AC-005 assertions verified in test body:
   Invocation: jr issue comment delete FOO-1 --id 10001 --yes
   Wiremock: 404 + body {"errorMessages":["Comment with id '10001' does not exist."]}
 
-  - exit code == 64 (NOT idempotent — DEC-168 ruling 3 override of F1 draft)
+  - exit code == 64 (NOT idempotent — D-168 ruling 3 override of F1 draft)
   - stderr contains "comment not found or permission denied: FOO-1#10001"
     (full preamble with KEY#ID identifier suffix, per BC-3.5.004)
   - stderr contains "Comment with id '10001' does not exist."

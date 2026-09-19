@@ -1,7 +1,7 @@
 ---
 document_type: session-review
 date: 2026-09-03
-run_id: cycle-003 (auth-profile-dx) — resume→F6→F7→release — develop @ 42e92b46 — v0.7.0-dev.4 SHIPPED (DEC-333)
+run_id: cycle-003 (auth-profile-dx) — resume→F6→F7→release — develop @ 42e92b46 — v0.7.0-dev.4 SHIPPED (D-333)
 path: 4
 path_name: feature
 product: jr (jira-cli)
@@ -18,14 +18,14 @@ proposals_outcome: pending — see improvement-proposals-cycle-003-auth-profile-
 **Cycle:** cycle-003 (`auth-profile-dx`)
 **Session scope:** resume from PAUSED (F5 already CONVERGED) → F6 targeted hardening → F7 delta convergence → release v0.7.0-dev.4 → cycle CLOSE
 **Mode:** Feature Mode (F1–F7), brownfield, Rust
-**Dates:** session resumed 2026-09-02 (F5 CONVERGED checkpoint) → 2026-09-03 (release SHIPPED, DEC-333); full cycle-003 arc began 2026-08-24 (F1 gate)
+**Dates:** session resumed 2026-09-02 (F5 CONVERGED checkpoint) → 2026-09-03 (release SHIPPED, D-333); full cycle-003 arc began 2026-08-24 (F1 gate)
 **Release:** v0.7.0-dev.4 @ `42e92b46` — SHIPPED (`release.yml` run `33769389700` SUCCESS, GitHub prerelease, 10 assets/5 targets)
 **Reviewer model:** adversary tier (session-reviewer agent), independent of the builder model
 **Prior review:** review-2026-07-25-soh-attachments-1.md (SOH-ATTACHMENTS-1, cycle-001 lineage)
 
 ## Executive Summary
 
-This session picked up cycle-003 at F5-CONVERGED/PAUSED and drove it to a shipped release in roughly one calendar day: F6 targeted hardening passed clean on the first attempt (mutation 100% 28/28, security 0 CRIT/HIGH, regression 4763/0/157, Kani→proptest 0 GAP, fuzz justified-skip), F7 delta convergence scored 5/5 dimensions PASS with a holdout mean of 0.895, and a fresh-context consistency audit run *before* the human gate caught 12 doc/index findings (1 CRIT/3 HIGH/2 MED/6 LOW, all documentation/index layer, zero code defects) that a fully-converged pipeline had otherwise missed. The human approved F7 (DEC-332), directed the one outstanding HIGH be closed via a pre-release docs PR (#766, merged clean, CI 15/15), then explicitly authorized the release (DEC-333); the version-bump PR (#767) and a 5-target GitHub Actions release run both succeeded on the first attempt. All three tracked cycles (cycle-001, cycle-002, cycle-003) are now CLOSED.
+This session picked up cycle-003 at F5-CONVERGED/PAUSED and drove it to a shipped release in roughly one calendar day: F6 targeted hardening passed clean on the first attempt (mutation 100% 28/28, security 0 CRIT/HIGH, regression 4763/0/157, Kani→proptest 0 GAP, fuzz justified-skip), F7 delta convergence scored 5/5 dimensions PASS with a holdout mean of 0.895, and a fresh-context consistency audit run *before* the human gate caught 12 doc/index findings (1 CRIT/3 HIGH/2 MED/6 LOW, all documentation/index layer, zero code defects) that a fully-converged pipeline had otherwise missed. The human approved F7 (D-332), directed the one outstanding HIGH be closed via a pre-release docs PR (#766, merged clean, CI 15/15), then explicitly authorized the release (D-333); the version-bump PR (#767) and a 5-target GitHub Actions release run both succeeded on the first attempt. All three tracked cycles (cycle-001, cycle-002, cycle-003) are now CLOSED.
 
 The dominant story this session is not code-quality — the pipeline mechanics behind F6/F7 stayed clean — it is **operational friction between the VSDD workflow and its own execution harness**: long-running verification (full `cargo test`, `cargo-mutants`) was repeatedly killed by background-task lifecycle rules that don't distinguish a legitimately long-running verification job from an abandoned one; macOS keychain prompts made the auth test suite slow and semi-interactive; a posting-hook and an explicit report-only dispatch directive contradicted each other and burned agent turns; and two factory git-hooks produced false positives that required workaround rather than being fixed at the source. None of these were process failures in the VSDD sense (no gate was skipped, no quality bar was lowered) — they were friction in the substrate the pipeline runs on, and they are the actionable material of this review.
 
@@ -42,7 +42,7 @@ The dominant story this session is not code-quality — the pipeline mechanics b
 | F7 holdout mean satisfaction | 0.895 | 1.00 (SOH-ATTACHMENTS-1, 12/12 MUST-PASS) | LOWER (still well above any documented pass floor; no regression flagged) |
 | F7 pre-gate consistency audit findings | 12 (1 CRIT/3 HIGH/2 MED/6 LOW), all doc/index-layer, 0 code defects | not run as a distinct pre-gate step in SOH-ATTACHMENTS-1 | NEW PRACTICE, high value |
 | Regression at F7 | 4763 passed / 0 failed / 157 ignored | 2341 passed / 0 failed (SOH-ATTACHMENTS-1) | GROWING (test suite ~2x larger cycle-over-cycle) |
-| Human gate decisions this session | 2 (DEC-332 F7 approval, DEC-333 release authorization) | 3 (DEC-184..186, SOH-ATTACHMENTS-1) | LOWER (narrower session scope) |
+| Human gate decisions this session | 2 (D-332 F7 approval, D-333 release authorization) | 3 (D-184..186, SOH-ATTACHMENTS-1) | LOWER (narrower session scope) |
 | PRs merged this session | 2 (#766 docs fix, #767 version bump) | 15 (SOH-ATTACHMENTS-1, full delivery+F5 arc) | LOWER (narrower session scope) |
 | Gate failures | 0 | 0 | PASS |
 | Background-job kills during verification | ≥2 documented (sub-agent background `cargo test`/mutants; one main-loop background job at ~1600s) | not previously logged as a named pattern | NEW PATTERN, HIGH priority |
@@ -118,12 +118,12 @@ Qualitative cost drivers this session, reconstructed from the burst log:
 |------|--------|-------|
 | F6 targeted hardening (automated) | PASS, first attempt | 0 FIX-F6 candidates; cleanest F6 on record for this project |
 | F7 pre-gate consistency audit | 12 findings, 6 fixed at audit time, 3 deferred to pre-release PR, 3 deferred to future cycle | All doc/index-layer; zero code defects |
-| F7 human approval gate | APPROVED — CONVERGED (DEC-332) | Human directed HIGH-3 be fixed via a docs PR before release (partial override — not a rejection, a scoping refinement of what "convergence" required before shipping) |
+| F7 human approval gate | APPROVED — CONVERGED (D-332) | Human directed HIGH-3 be fixed via a docs PR before release (partial override — not a rejection, a scoping refinement of what "convergence" required before shipping) |
 | Docs fix PR #766 | PASS, CI 15/15, merged clean | W1/W2 review nits fixed in-PR, no re-round needed |
-| Release version-bump PR #767 | PASS, human-authorized directly (DEC-333), not auto-merge-policy-covered | First attempt clean |
+| Release version-bump PR #767 | PASS, human-authorized directly (D-333), not auto-merge-policy-covered | First attempt clean |
 | `release.yml` run 33769389700 | SUCCESS, 5 targets, 10 assets | First attempt clean |
 
-**Human override/correction frequency:** One partial-approval-with-directive (DEC-332: approve F7 but require HIGH-3 fixed pre-release) — this is a gate-threshold judgment call by the human, not a correction of agent output; the finding itself (HIGH-3) was correctly surfaced by the agent-run consistency audit. No agent output was corrected by the human this session; the human's role was disposition (what to fix now vs. defer) rather than defect-catching.
+**Human override/correction frequency:** One partial-approval-with-directive (D-332: approve F7 but require HIGH-3 fixed pre-release) — this is a gate-threshold judgment call by the human, not a correction of agent output; the finding itself (HIGH-3) was correctly surfaced by the agent-run consistency audit. No agent output was corrected by the human this session; the human's role was disposition (what to fix now vs. defer) rather than defect-catching.
 
 **Phase skip frequency:** None this session — F6 and F7 both ran in full; the only "skips" are the long-standing, re-affirmed justified skips (Kani formal verification, cargo-fuzz — both "not set up in repo," proptest substitution accepted) which are pre-existing project posture, not new decisions.
 
@@ -139,7 +139,7 @@ One adjacent, non-wall-integrity observation: the **state-manager citation-conve
 
 ## 7. Quality Signal Analysis
 
-**F6 mutation testing:** 100% kill rate (28/28), 0 survivors, 0 timeouts, 0 unviable. Scoped to `--in-diff` against `examine_globs`; per-file breakdown: `src/output.rs` 25 mutants (the DEC-314 env-tag display sanitizer — a security-relevant control-char/ANSI-injection guard added this cycle), `src/cache.rs` 2, `src/main.rs` 1. All caught.
+**F6 mutation testing:** 100% kill rate (28/28), 0 survivors, 0 timeouts, 0 unviable. Scoped to `--in-diff` against `examine_globs`; per-file breakdown: `src/output.rs` 25 mutants (the D-314 env-tag display sanitizer — a security-relevant control-char/ANSI-injection guard added this cycle), `src/cache.rs` 2, `src/main.rs` 1. All caught.
 
 **Security scan:** 0 CRITICAL / 0 HIGH / 0 MEDIUM; 1 pre-existing LOW (yanked `chacha20` crate, not delta-introduced, tracked for a routine `cargo update` at the next maintenance sweep).
 
@@ -159,13 +159,13 @@ One adjacent, non-wall-integrity observation: the **state-manager citation-conve
 
 **NEW pattern — KEYCHAIN-PROMPT-TEST-SLOWDOWN (MEDIUM severity, first occurrence as a named pattern, though the underlying gap — VP-AUTHDX-005/006/007/008 gated behind `JR_RUN_KEYRING_TESTS=1` — has been a known, accepted spec boundary since cycle-003's F1):** worth promoting from "accepted spec boundary" to "active friction" now that it has a session-level cost attached (slow, semi-interactive F6/F7 runs), not just a CI-coverage-gap framing.
 
-**NEW pattern — REPORT-ONLY-DISPATCH-VS-POSTING-HOOK-CONFLICT (MEDIUM severity, first occurrence):** structurally similar to the previously-tracked "hook vs. DEC-173" conflict class from SOH-ATTACHMENTS-1 (a hook enforcing a blanket rule collides with an orchestrator-level exception) — this is very likely the same underlying pattern class (hooks that cannot see dispatch-level intent) recurring in a new instance. Recommend merging this into the existing hook-vs-standing-rule pattern lineage rather than tracking as fully novel — see Improvement Proposal 5.
+**NEW pattern — REPORT-ONLY-DISPATCH-VS-POSTING-HOOK-CONFLICT (MEDIUM severity, first occurrence):** structurally similar to the previously-tracked "hook vs. D-173" conflict class from SOH-ATTACHMENTS-1 (a hook enforcing a blanket rule collides with an orchestrator-level exception) — this is very likely the same underlying pattern class (hooks that cannot see dispatch-level intent) recurring in a new instance. Recommend merging this into the existing hook-vs-standing-rule pattern lineage rather than tracking as fully novel — see Improvement Proposal 5.
 
 **NEW pattern — GIT-HOOK-FALSE-POSITIVE-ON-COMPOUND-COMMAND (MEDIUM severity, 2 instances this session):** (a) `validate-factory-path-staging` blocked a `git add` bundling explicit non-`.factory` files and mis-attributed the branch as `develop` inside a worktree; (b) `verify-git-push` blocked a command because `--force` appeared in a co-located `git worktree remove --force` even though the actual `git push` in the same compound command carried no force flag. Both are **scope-detection bugs in hooks that pattern-match across an entire compound shell command rather than parsing the specific verb/args they're meant to gate.** This is a distinct pattern from the two above (it's about hook precision, not hook-vs-policy conflict) — see Improvement Proposal 6.
 
 **Cross-run: input-hash cascade non-convergence under repeated `--update` — recurring, not new.** cycle-003's bookkeeping artifacts (manifest/graph/schedule/holdout files) did not fully converge under repeated `--update` due to circular input dependencies among the files themselves; documented as non-blocking (6 residual STALE files at cycle-close). This is structurally the same class of problem as TWIN-ARTIFACT-SWEEP (already an open pattern in this database) — propagation order matters when artifacts reference each other. Recommend `--update` be applied in topological/dependency order rather than an arbitrary or alphabetical order. See Improvement Proposal 7.
 
-**Cross-run: STATE-MANAGER-MONOLITHIC-WRITE-STALL — not observed this session.** Notably, the previously-tracked pattern (5 prior occurrences across SOH-BUGS-1/SOH-COMMENT-CRUD-1/SOH-ATTACHMENTS-1) did not recur in this session's burst log — the F7-close and release-cut bursts each used "one full-content Write, no Edit chain" per the codified DEC-247/feedback_statemd_full_write convention. This is a **positive cross-run signal**: the standing practice appears to be holding. Worth explicitly noting as resolved-in-practice rather than silently dropping it from future reviews' attention.
+**Cross-run: STATE-MANAGER-MONOLITHIC-WRITE-STALL — not observed this session.** Notably, the previously-tracked pattern (5 prior occurrences across SOH-BUGS-1/SOH-COMMENT-CRUD-1/SOH-ATTACHMENTS-1) did not recur in this session's burst log — the F7-close and release-cut bursts each used "one full-content Write, no Edit chain" per the codified D-247/feedback_statemd_full_write convention. This is a **positive cross-run signal**: the standing practice appears to be holding. Worth explicitly noting as resolved-in-practice rather than silently dropping it from future reviews' attention.
 
 **Cross-run: fresh-context audit before human gate is a repeat-validated high-value practice.** This is the second project cycle (after SOH-ATTACHMENTS-1's Step-7 secondary review) where a fresh-context / cross-perspective check surfaced real findings a converged pipeline missed, at a point before the human gate rather than after. The pattern is now 2-for-2 in this project's history. Recommend formal codification (Improvement Proposal 4) rather than continued ad hoc application.
 
@@ -235,7 +235,7 @@ Summary:
 - **Category:** agent / gate
 - **Priority:** MEDIUM
 - **Evidence:** pr-reviewer burned ~3 turns refusing a posting-hook's demand to post `pr-review.md`/`gh pr review` when the orchestrator's explicit dispatch was report-only.
-- **Recommendation:** Either (a) have the orchestrator pre-authorize the `pr-review.md` artifact write up front whenever it dispatches a report-only review, or (b) make the posting-hook aware of a report-only dispatch flag so it doesn't fire in that mode. Likely the same underlying pattern class as the previously-tracked "hook vs. DEC-173" conflict (SOH-ATTACHMENTS-1) — should be merged into that lineage in the pattern database rather than tracked as fully separate.
+- **Recommendation:** Either (a) have the orchestrator pre-authorize the `pr-review.md` artifact write up front whenever it dispatches a report-only review, or (b) make the posting-hook aware of a report-only dispatch flag so it doesn't fire in that mode. Likely the same underlying pattern class as the previously-tracked "hook vs. D-173" conflict (SOH-ATTACHMENTS-1) — should be merged into that lineage in the pattern database rather than tracked as fully separate.
 - **Affected files:** posting-hook configuration (engine-side); orchestrator pr-reviewer dispatch template.
 - **Risk:** Option (b) requires the hook to trust a self-reported dispatch-mode flag; option (a) is simpler and lower-risk.
 
@@ -268,9 +268,9 @@ Summary:
 ## Reinforcement (What Worked Well)
 
 1. **Fresh-context consistency audit before the human gate** proved its value a second time (2/2 cycles where a cross-perspective check found real findings a converged pipeline missed) — see Proposal 4 for codification.
-2. **Main-loop-driven git writes (per DEC-331)** worked cleanly for both the docs PR and the release — no permission-classifier friction this session on the actions that were run from the main loop (the classifier gap on agent-initiated `gh pr merge` remains a known, separately-tracked constraint, not newly resolved).
+2. **Main-loop-driven git writes (per D-331)** worked cleanly for both the docs PR and the release — no permission-classifier friction this session on the actions that were run from the main loop (the classifier gap on agent-initiated `gh pr merge` remains a known, separately-tracked constraint, not newly resolved).
 3. **Clean 5-target release on the first attempt** — the release pipeline continues to be a solved, low-friction part of this project (2/2 recent cycles, cycle-002 and cycle-003, both first-attempt clean).
-4. **STATE-MANAGER-MONOLITHIC-WRITE-STALL did not recur this session** — the "one full-content Write, no Edit chain" discipline (DEC-247) appears to be holding after 5 prior occurrences across three earlier cycles. Worth confirming this is durable rather than coincidental over the next 1-2 cycles before declaring the pattern closed.
+4. **STATE-MANAGER-MONOLITHIC-WRITE-STALL did not recur this session** — the "one full-content Write, no Edit chain" discipline (D-247) appears to be holding after 5 prior occurrences across three earlier cycles. Worth confirming this is durable rather than coincidental over the next 1-2 cycles before declaring the pattern closed.
 
 ---
 

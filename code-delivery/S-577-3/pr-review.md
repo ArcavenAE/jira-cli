@@ -7,7 +7,7 @@
 
 ## Zero-trust verification
 
-### 1. DEC-174 mechanism — CONFIRMED correct
+### 1. D-174 mechanism — CONFIRMED correct
 The interactive path deliberately avoids `dialoguer::interact_on(&Term::stderr())` and instead writes the prompt with `eprint!` to stderr and reads with `io::stdin().lock().read_line()`. Inline rationale is accurate: console's upfront `is_term()` gate returns `NotConnected` on piped stderr. EOF (`Ok(0)`) → `JrError::Interrupted` (exit 130). Default-N semantics correct: only `y`/`yes` (case-insensitive via `to_ascii_lowercase`) confirm. Release-safe because `src/main.rs` auto-sets `no_input=true` on non-TTY stdin, so the direct read is only reached with a real terminal or the debug-only `JR_STDIN_IS_TTY` seam.
 
 ### 2. KEY#ID preamble (BC-3.5.004) — CONFIRMED

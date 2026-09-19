@@ -1,4 +1,4 @@
-# PR Review — #697 `feat(edit)!: --dry-run reads stdin and renders ADF preview (#692, DEC-274)`
+# PR Review — #697 `feat(edit)!: --dry-run reads stdin and renders ADF preview (#692, D-274)`
 
 **Verdict: no blocking findings.** Posted as a COMMENT-state review (GitHub blocks
 self-approval for the PR author's own account); treat this as an approve-equivalent

@@ -203,7 +203,7 @@ cargo test 1252 passed, 0 failed.
 and Rust reference semantics confirmation. Thread resolved as not-applicable.
 
 **Process note:** This is the **first Copilot false-positive in 30+ rounds in this session.**
-DEC-018 (always validate Copilot reviews with Perplexity or empirical verification before
+D-018 (always validate Copilot reviews with Perplexity or empirical verification before
 acting) caught it. New lesson captured in lessons.md: "Empirical-first when Copilot's
 claim seems counterintuitive."
 
@@ -259,7 +259,7 @@ Phase 8 stop condition met. PR #358 is CONVERGED. Awaiting human merge.
 
 **Final state:** head 925da89; CI 8/8 green; cargo test 1252 passed; 5/5 threads resolved; mergeable CLEAN.
 
-**Notable:** Second fastest convergence in cycle-001 (5 rounds). First trajectory with an explicit false-positive marker (1-FP). DEC-018 empirical-first discipline caught the false-positive — without verification, the "fix" would have broken a working test.
+**Notable:** Second fastest convergence in cycle-001 (5 rounds). First trajectory with an explicit false-positive marker (1-FP). D-018 empirical-first discipline caught the false-positive — without verification, the "fix" would have broken a working test.
 
 ---
 

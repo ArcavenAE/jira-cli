@@ -69,7 +69,7 @@ files_modified:
 F1 Delta Analysis: `.factory/phase-f1-delta-analysis/delta-analysis.md`
 F2 Spec Delta: `.factory/phase-f2-spec-evolution/spec-delta-S-FORK-OPS-SIGN-1.md`
 Converged spec section: `docs/specs/fork-friendly-release-ops.md` § "Security constraints (sign-and-publish.yml / backfill-release.yml)"
-Blocking decision: DEC-104 (fork signing enablement)
+Blocking decision: D-104 (fork signing enablement)
 
 ## Behavioral Contracts
 
@@ -116,7 +116,7 @@ gate already follows this pattern; this story does NOT change whether signing is
 
 **S-CIGATE-1** established the `ci-gate.needs` wiring convention. New required CI checks MUST
 be added to `ci-gate.needs` in `ci.yml`, never wired directly into branch protection (prevents
-the matrix-rename fragility class documented in DEC-096/DEC-097). This story follows that
+the matrix-rename fragility class documented in D-096/D-097). This story follows that
 convention for the new `check-signing-workflow-injection` script.
 
 **N/A — no prior story has modified `sign-and-publish.yml` or `backfill-release.yml`** for
@@ -128,7 +128,7 @@ introduced by PR #530 (commit 99f212d); this story is the first hardening pass.
 | Rule | Source | Constraint |
 |------|--------|-----------|
 | CI gate wiring | CLAUDE.md "CI Gate" convention + S-CIGATE-1 | New required CI checks go into `ci-gate.needs` in `.github/workflows/ci.yml`, NEVER directly into branch protection. The job name "CI Gate" is THE single required branch-protection status. Adding the injection-check script to `ci-gate.needs` is the correct and ONLY wiring path. |
-| SIGNING_ENABLED must remain unset | F2 spec delta §Summary + DEC-104 | The canonical repo has `vars.SIGNING_ENABLED` unset — signing stays INERT. This story MUST NOT set or change `SIGNING_ENABLED`. The fix unblocks forks; it does not enable signing in the canonical repo. |
+| SIGNING_ENABLED must remain unset | F2 spec delta §Summary + D-104 | The canonical repo has `vars.SIGNING_ENABLED` unset — signing stays INERT. This story MUST NOT set or change `SIGNING_ENABLED`. The fix unblocks forks; it does not enable signing in the canonical repo. |
 | No inline `${{ }}` in run-blocks for high-risk context | `docs/specs/fork-friendly-release-ops.md` § "No inline context data in shell run-blocks" | Any context value NOT on the short allowlist (github.sha, github.run_id, github.run_number, github.repository, github.repository_owner) MUST be bound via step `env:` and referenced as a quoted shell variable. Allowlist is the ONLY exception set; everything else is high-risk by default. |
 | Dangerous-sink prohibition | `docs/specs/fork-friendly-release-ops.md` § "Dangerous-sink rule" | Env-bound values MUST NOT be passed to eval, bash -c, backticks, unquoted substitution, $(( )), ${!var}, source/., here-strings/here-docs feeding a parser, or xargs sh/printf-v-then-execute. Double-quoting is insufficient at a dangerous sink. |
 | Guard scope for CI injection check | F2 spec delta § "Required CI regression guard" | The CI guard MUST NOT flag `env:`, `with:`, or `if:` keys — ONLY textual content inside a `run:` script body. A correct step that binds HEAD_BRANCH in `env:` must pass the guard cleanly. |
@@ -455,7 +455,7 @@ housekeeping story should address this (e.g. a scheduled job that deletes alpha 
 older than N days with no associated binary assets). Sequence-number gaps are acceptable and harmless.
 
 **Enabling SIGNING_ENABLED in the canonical repo:** Out of scope. This story fixes the security
-and correctness defects that BLOCKED DEC-104; DEC-104 itself (the decision to enable signing)
+and correctness defects that BLOCKED D-104; D-104 itself (the decision to enable signing)
 is a separate deliberate act.
 
 **Any change to Cargo.toml, deny.toml, or src/:** No Rust source or dependency changes.
@@ -490,7 +490,7 @@ S-E2E-FORK-1 and S-CIGATE-1 are lineage ancestors (patterns followed) but are al
 there is no runtime dependency. Topological order: leaf node. Can be implemented in any wave.
 
 **blocks: []** — No story depends on this story within the current story graph.
-DEC-104 (signing enablement) is a DECISION, not a story — it is unblocked by this story but
+D-104 (signing enablement) is a DECISION, not a story — it is unblocked by this story but
 not a tracked dependency in the story graph.
 
 This is a LEAF story in the dependency graph.

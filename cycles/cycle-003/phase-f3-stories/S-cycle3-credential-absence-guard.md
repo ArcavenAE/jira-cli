@@ -2,7 +2,7 @@
 document_type: story
 story_id: "S-cycle3-credential-absence-guard"
 epic_id: "AUTH-PROFILE-DX-1"
-title: "No-copy detect-and-instruct guard for absent per-profile API-token credentials (DEC-326)"
+title: "No-copy detect-and-instruct guard for absent per-profile API-token credentials (D-326)"
 wave: feature-followup
 status: ready
 intent: feature
@@ -66,7 +66,7 @@ breaking_change: true
 retroactive: false
 origin: >
   cycle-003 auth-profile-dx, Wave 2 (depends on S-cycle3-percred-storage). THE HIGH-RISK
-  STORY IN THIS CYCLE (F1 delta analysis §3). Implements the F2-gate-redesigned (DEC-326,
+  STORY IN THIS CYCLE (F1 delta analysis §3). Implements the F2-gate-redesigned (D-326,
   HUMAN DECISION) no-copy detect-and-instruct contract for load_api_token's absent-credential
   branch: the legacy shared flat email/api-token pair is NEVER read as a credential, NEVER
   copied into any profile's namespaced slot, and NEVER deleted -- for any profile, including
@@ -90,7 +90,7 @@ fix only: AC-004 now carries an explicit `BC-1.4.029` trace alongside its existi
 `BC-1.4.032`/`VP-AUTHDX-006` trace. No AC text, scope, coverage, or dependency was changed.
 
 **Renamed from F1's preliminary `S-cycle3-percred-migration`.** That design (lazy
-copy-then-delete of the shared flat pair) was REJECTED at the F2 gate (DEC-326, HUMAN
+copy-then-delete of the shared flat pair) was REJECTED at the F2 gate (D-326, HUMAN
 DECISION) — see ADR-0020 § Decision 2 for the full rationale: a Basic-auth email/token pair
 carries no environment binding, so copying it can silently hand a freshly sandbox/uat-tagged
 profile the same credential as whatever environment the legacy pair happens to belong to

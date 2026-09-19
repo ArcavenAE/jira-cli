@@ -81,4 +81,4 @@ Legitimately passing at Red Gate:
 - Stories ready for implementation: S-604-2
 - Implementation guidance: implement `handle_create` and `handle_edit` in `src/cli/component.rs`; flesh out `create_component` and `update_component` in `src/api/jira/components.rs`; drive all 17 behavioral tests green without touching AC-005 (already green); all tests must be green at convergence SHA.
 - Implementation commit: `9032c903` — drove all 17 behavioral tests green; full-tree `cargo test` pass.
-- Converged SHA: `4f48def5` (Step-4.5 adversarial convergence complete, 3/3 CLEAN under DEC-245 strict bar).
+- Converged SHA: `4f48def5` (Step-4.5 adversarial convergence complete, 3/3 CLEAN under D-245 strict bar).

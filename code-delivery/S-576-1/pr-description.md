@@ -268,7 +268,7 @@ graph LR
 
 ### CWE-116: Terminal Injection — `display_sanitize_filename` (MITIGATED)
 - `display_sanitize_filename` covers the full extended set: ASCII 0x00–0x1F/0x7F + bidi controls U+202A..U+202E + bidi isolates U+2066..U+2069 + line separators U+2028/U+2029 + NEL U+0085. Applied to every Filename table cell. Implementation verified correct by security reviewer.
-- S3 and S4 reuse this function; it is not duplicated (DEC-184 R3.13).
+- S3 and S4 reuse this function; it is not duplicated (D-184 R3.13).
 
 ### SEC-001: displayName/mimeType table cells not sanitized (LOW — Accepted)
 - **CWE:** CWE-116 | **OWASP:** A03:2021
@@ -417,4 +417,4 @@ remote-sha: d95fea4f
 - [x] #526 JSON render invariant: all `--output json` paths route through `output::render_json`
 - [x] `pub fn serialize_attachment_curated` + `pub mod attachments` for VP-576-004 cross-path (S-576-3)
 - [x] `.cargo/mutants.toml` examine_globs entries added (S1 obligation (f), P22-001)
-- [x] Human squash-merge (DEC-128 precedent — PR manager does not auto-merge story PRs)
+- [x] Human squash-merge (D-128 precedent — PR manager does not auto-merge story PRs)

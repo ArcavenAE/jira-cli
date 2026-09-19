@@ -25,7 +25,7 @@ story: S-626-1
 step: 4.5
 aperture: ci-correctness / msrv-truth
 date: 2026-07-30
-basis: DEC-190 substitute (consistency-validator, not adversary agent)
+basis: D-190 substitute (consistency-validator, not adversary agent)
 isolation: sibling reviews not read
 ---
 

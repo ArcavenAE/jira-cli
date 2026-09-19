@@ -162,7 +162,7 @@ Why this is the cleanest option that satisfies (a) remove double-name ambiguity 
 - **Kills the third usage string** — once `--profile` is a hard error on switch, users
   are told exactly what to type; the confusing `--profile X X` incantation is gone.
 - Mirrors the existing pattern already in `run()` where `--profile` is validated centrally
-  (`src/main.rs` ~line 159 `validate_profile_name`) and DEC-188's exit-64 pre-flight
+  (`src/main.rs` ~line 159 `validate_profile_name`) and D-188's exit-64 pre-flight
   guards in `issue create` (precedent for a manual exit-64 guard rather than a clap
   `requires`/`conflicts` attribute — CLAUDE.md explicitly notes clap `requires` yields
   exit 2, not the desired exit-64 `UserError`).

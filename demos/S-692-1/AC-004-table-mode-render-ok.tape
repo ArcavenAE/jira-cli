@@ -15,7 +15,7 @@ Set Framerate 24
 Set TypingSpeed 30ms
 Set Shell "bash"
 
-# S-692-1 / issue #692 (DEC-274): human/table mode doesn't dump raw ADF
+# S-692-1 / issue #692 (D-274): human/table mode doesn't dump raw ADF
 # JSON (poor UX) — instead it prints a "markdown rendering: enabled" line
 # followed by a "description (ADF): rendered OK" confirmation, proving the
 # same conversion succeeded without a wall of JSON.

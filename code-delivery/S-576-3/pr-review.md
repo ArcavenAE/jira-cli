@@ -120,4 +120,4 @@ as benign skip and aborts on non-404; (3) `--dry-run` suppresses the gate but no
 file pre-checks; (4) `X-Atlassian-Token: no-check` on every upload request;
 (5) no blocking spec violations. Non-blocking suggestions: 401 auto-refresh
 bypass (documented, ADR-0017 multipart constraint) and benign-404 substring
-match (DEC-168). APPROVED.
+match (D-168). APPROVED.

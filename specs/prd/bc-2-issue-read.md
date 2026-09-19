@@ -7,15 +7,15 @@ last_updated: 2026-08-24
 source_pass: 3
 trace: |
   - v1.5.1 — F5 scoped-adversarial reconciliation, list-read-ergonomics cycle (2026-08-24,
-    DEC-306, F5 finding ADV-LRE-F5-A-MED-001, human-adjudicated): resolves a 3-layer spec
+    D-306, F5 finding ADV-LRE-F5-A-MED-001, human-adjudicated): resolves a 3-layer spec
     self-contradiction discovered during cycle-level F5 review (research:
     `.factory/research/recent-vs-updated-recent-asymmetry-2026-08-24.md`). The HUMAN ruling
     (Option 1 of the research's 4 enumerated options): `--updated-recent` used ALONE (no
     `--project`, no configured default `project`/`board_id`, no other filter) now PROCEEDS to
     a query exactly like `--recent` and every other filter source — the dedicated
     `--updated-recent`-alone exit-64 guard added during S-579-1 Step-4.5 (an implementer-level
-    choice, never human-ratified by DEC-298) is REMOVED at the code level (separate implementer
-    task, same DEC-306). Spec-side: BC-2.1.023 Behavior clause amended to make its pre-existing
+    choice, never human-ratified by D-298) is REMOVED at the code level (separate implementer
+    task, same D-306). Spec-side: BC-2.1.023 Behavior clause amended to make its pre-existing
     "mirrors `--recent` exactly" claim explicit and genuinely accurate for the no-scope case;
     new Postcondition 4 states the alone-case independently satisfies BC-2.1.006's "at least
     one filter" requirement; EC-2.1.023-4 rewritten (previous text was factually backwards —
@@ -47,14 +47,14 @@ trace: |
     addition); BC-2.1.007 AMENDED (stable clause order gains `updated-recent` immediately
     after `recent` and before `asset` — mirroring `--recent`'s own position). `conflicts_with`
     is `updated_after` only, deliberately mirroring the pre-existing `--recent`×
-    `--created-after` asymmetry (not silently fixed — human-locked DEC-298). `--resolved-recent`
+    `--created-after` asymmetry (not silently fixed — human-locked D-298). `--resolved-recent`
     is explicitly DEFERRED, not specified by any BC in this delta (NULL-semantics design
-    question, out of scope per DEC-298/F1 Decision 3). S-4 (#588, `--sort <field>:asc|desc`):
+    question, out of scope per D-298/F1 Decision 3). S-4 (#588, `--sort <field>:asc|desc`):
     BC-2.1.024 ADDED (syntax parse/validate: exactly one `:` separator, case-insensitive
     direction, pre-HTTP exit 64 on malformed input, NO field-name allowlist); BC-2.1.025
     ADDED (`--sort` overrides `order_by` uniformly in ALL 4 composition branches — `--jql`,
     scrum-active-sprint, kanban, default-project — including board-driven `rank ASC`
-    branches, human-locked "always wins" per DEC-298; appends `, key ASC` secondary stable
+    branches, human-locked "always wins" per D-298; appends `, key ASC` secondary stable
     sort unless the field is `key` itself; field name passed through to Jira UNVALIDATED,
     mirroring `--jql`'s trust posture; unsortable field → Jira's own 400 `JrError::ApiError`,
     exit 1; NOT added to BC-2.1.006's filter-source enumeration — it doesn't restrict the
@@ -102,7 +102,7 @@ trace: |
   - Source broad: .factory/semport/jira-cli/jira-cli-pass-3-behavioral-contracts.md §2.2
   - Source R1: .factory/semport/jira-cli/jira-cli-pass-3-deep-r1.md §3.2
   - Source R4: .factory/semport/jira-cli/jira-cli-pass-3-deep-r4.md §3.1
-  - SOH-ATTACHMENTS-1 F2 addition (2026-07-15): BC-2.7.001..012 — Attachment Read: attachment list (table+JSON, filters mime/name/size-max), attachment download (single/batch/newest, streaming, redirect-following, CWE-22 sanitization, SHA-1 default path, JSDCLOUD-10841 JSM uniform), error taxonomy (DEC-179, issues #576 #585)
+  - SOH-ATTACHMENTS-1 F2 addition (2026-07-15): BC-2.7.001..012 — Attachment Read: attachment list (table+JSON, filters mime/name/size-max), attachment download (single/batch/newest, streaming, redirect-following, CWE-22 sanitization, SHA-1 default path, JSDCLOUD-10841 JSM uniform), error taxonomy (D-179, issues #576 #585)
   - SOH-ATTACHMENTS-1 adversary pass-19 (2026-07-16): BC-2.7.002 BTreeMap-alphabetical key order clause + example reorder (P19-001); EC-2.7.001-2 JSON-mode filter-count hint clause (P19-002); EC-2.7.007-5 best-effort MUST + tokio ctrl_c implementation note (P19-003); spec v1.3.59
   - SOH-ATTACHMENTS-1 adversary pass-20 (2026-07-16): BC-2.7.007 `--out` unconditional step-1 clause added — step 1 always issued even with `--out`; pre-stream existence validation; one extra GET accepted cost (P20-003); VP-576-004 attachment-object JSON transformation pin added to BC-2.7.002 — `"self"` OMITTED, `"content"` RENAMED to `"contentUrl"` (P20-006); spec v1.3.60
   - SOH-ATTACHMENTS-1 adversary pass-21 (2026-07-16): BC-2.7.012 KEY-404 batch-paths-only annotation — `--id` does not server-verify KEY per BC-2.7.007 (P21-006); spec v1.3.61
@@ -203,13 +203,13 @@ shape as the 2026-08-15 `--component` addition. **Previous version (superseded, 
 audit trail):** stderr literal ended `"... --asset, --component, or --jql. ..."` (14 sources,
 no `--updated-recent`).
 
-**[AMENDED 2026-08-24, DEC-306 — F5 finding ADV-LRE-F5-A-MED-001, human-adjudicated]**
+**[AMENDED 2026-08-24, D-306 — F5 finding ADV-LRE-F5-A-MED-001, human-adjudicated]**
 `--updated-recent` (filter source #15) is a full, non-special-cased peer of the other 14
 filter sources in this enumeration: supplying it alone (no `--project`, no configured default
 `project`/`board_id`, and no other filter) satisfies this guard's "at least one filter"
 requirement and the command PROCEEDS to a query — it does NOT exit 64. A dedicated
 `--updated-recent`-alone guard existed in code from S-579-1 (an implementer-level Step-4.5
-choice, never ratified by DEC-298) and made `--updated-recent` the sole exception to this
+choice, never ratified by D-298) and made `--updated-recent` the sole exception to this
 enumeration's own logic; that guard is REMOVED by this reconciliation. See BC-2.1.023
 EC-2.1.023-4 for the corrected alone-case contract.
 
@@ -837,17 +837,17 @@ clause-building line — the direct structural template); `src/cli/issue/list.rs
 **Subject**: Issue read — `--updated-recent` filter (issue #579)
 **Behavior**: `--updated-recent <duration>` mirrors `--recent` (BC-2.1.008) exactly, with the
 JQL field swapped from `created` to `updated` — including the no-scope ("alone") case
-**[AMENDED 2026-08-24, DEC-306 — F5 finding ADV-LRE-F5-A-MED-001, human-adjudicated]**: used
+**[AMENDED 2026-08-24, D-306 — F5 finding ADV-LRE-F5-A-MED-001, human-adjudicated]**: used
 with no `--project`, no configured default `project` or `board_id`, and no other filter,
 `--updated-recent` proceeds to a query exactly as `--recent` does, with no dedicated guard of
 its own (see EC-2.1.023-4). This supersedes the S-579-1 Step-4.5 guard that briefly made
 `--updated-recent` the sole one of the 15 filter sources (BC-2.1.006) that refused when used
-alone — that guard was an implementer-level choice, never ratified by DEC-298, and is REMOVED
+alone — that guard was an implementer-level choice, never ratified by D-298, and is REMOVED
 by this reconciliation. It reuses `jql::validate_duration` — the SAME
 validator `--recent` uses — NOT `src/duration.rs` (that parser is worklog-duration syntax,
 `1h30m`/`2d 3h 30m`, a different grammar entirely). `--resolved-recent`
 (`resolutiondate`-based) is explicitly OUT OF SCOPE for this BC and this bundle — deferred per
-DEC-298/F1 Decision 3, owing to `resolutiondate`'s different NULL semantics (unresolved issues
+D-298/F1 Decision 3, owing to `resolutiondate`'s different NULL semantics (unresolved issues
 have `resolutiondate = null`) requiring its own design conversation.
 **Preconditions**:
 1. `--updated-recent <duration>` is supplied.
@@ -862,7 +862,7 @@ have `resolutiondate = null`) requiring its own design conversation.
    with `--recent`, `--created-after/before`, `--updated-after/before`, `--status`,
    `--component`, and every other filter — no new conflicts beyond Edge Case
    EC-2.1.023-2 below.
-4. **[AMENDED 2026-08-24, DEC-306 — F5 finding ADV-LRE-F5-A-MED-001, human-adjudicated]**
+4. **[AMENDED 2026-08-24, D-306 — F5 finding ADV-LRE-F5-A-MED-001, human-adjudicated]**
    `--updated-recent` used ALONE — no `--project`, no configured default `project` or
    `board_id`, and no other filter — independently satisfies BC-2.1.006's "at least one
    filter" requirement. It is filter source #15 in that enumeration and, like the other 14
@@ -878,11 +878,11 @@ have `resolutiondate = null`) requiring its own design conversation.
   `--updated-after` ONLY — it does NOT conflict with `--updated-before` — deliberately
   mirroring the pre-existing, asymmetric `--recent`×`--created-after` pattern (`--recent`
   conflicts with `--created-after` but not `--created-before`). This is a pre-existing
-  codebase inconsistency this BC does not silently "fix" (human-locked DEC-298).
+  codebase inconsistency this BC does not silently "fix" (human-locked D-298).
 - EC-2.1.023-3: `--updated-recent 30d --recent 30d` (both present) → both clauses compose,
   AND-joined: `... AND created >= -30d AND updated >= -30d ...` (the `recent` clause emits
   before the `updated-recent` clause, per BC-2.1.007's stable order). No error.
-- EC-2.1.023-4 **[AMENDED 2026-08-24, DEC-306 — F5 finding ADV-LRE-F5-A-MED-001,
+- EC-2.1.023-4 **[AMENDED 2026-08-24, D-306 — F5 finding ADV-LRE-F5-A-MED-001,
   human-adjudicated]**: `--updated-recent 7d` with no `--project`, no configured default
   `project`, no configured `board_id`, and no other filter → exit 0, proceeds to a query
   composing `updated >= -7d ORDER BY updated DESC` (or the board/sprint-aware order-by branch
@@ -902,8 +902,8 @@ have `resolutiondate = null`) requiring its own design conversation.
   Behavior clause and BC-2.1.006's filter-source enumeration (which already listed
   `--updated-recent` as a satisfying source). The dedicated `--updated-recent`-alone guard
   (plus its scrum-no-active-sprint backstop) was an implementer-level choice introduced during
-  S-579-1 Step-4.5, never ratified by DEC-298, and is REMOVED by this reconciliation (code-side
-  removal tracked as a separate implementer task under this same DEC-306).
+  S-579-1 Step-4.5, never ratified by D-298, and is REMOVED by this reconciliation (code-side
+  removal tracked as a separate implementer task under this same D-306).
 **Verification Properties**:
 - VP-UPDATED-RECENT-001: `build_filter_clauses` composes `updated >= -{d}` for
   `--updated-recent <duration>`, positioned immediately after the `--recent` clause slot and
@@ -911,7 +911,7 @@ have `resolutiondate = null`) requiring its own design conversation.
   combined-unit durations are rejected pre-HTTP with zero `POST /rest/api/3/search/jql` calls
   (`.expect(0)`), via the identical `jql::validate_duration` error shape BC-2.1.008 already
   pins for `--recent`.
-- VP-UPDATED-RECENT-002 **[NEW 2026-08-24, DEC-306]**: `jr issue list --updated-recent 7d`
+- VP-UPDATED-RECENT-002 **[NEW 2026-08-24, D-306]**: `jr issue list --updated-recent 7d`
   invoked with no `--project`, no configured default `project`/`board_id`, and no other
   filter → exit 0, exactly ONE `POST /rest/api/3/search/jql` call fired, with the request body
   containing `updated >= -7d` and NO `project = ` clause — proving `--updated-recent` alone
@@ -919,7 +919,7 @@ have `resolutiondate = null`) requiring its own design conversation.
   (implicit) `--recent`-alone behavior; both flags asserted identical on this dimension.
 **Trace**: F1 delta analysis §S-3, Decision 3; BC-2.1.008 (`--recent` — direct structural
 template, shared validator); BC-2.1.006 (amended, filter-source #15); BC-2.1.007 (amended,
-stable-order position); DEC-306 (2026-08-24, F5 finding ADV-LRE-F5-A-MED-001,
+stable-order position); D-306 (2026-08-24, F5 finding ADV-LRE-F5-A-MED-001,
 human-adjudicated — removed the `--updated-recent`-alone exit-64 guard, see
 `.factory/research/recent-vs-updated-recent-asymmetry-2026-08-24.md`)
 
@@ -989,7 +989,7 @@ advisory-only `key ASC` recommendation — confirms nothing proactively appends 
 **Behavior**: When `--sort <field>:<dir>` is present (syntax validated by BC-2.1.024), it
 OVERRIDES the `order_by` value computed by ALL FOUR JQL-composition branches — `--jql`
 (BC-2.1.002), scrum-active-sprint (BC-2.1.003), kanban (BC-2.1.004), and default-project
-(BC-2.1.005) — applied UNIFORMLY, with no board-specific exception (human-locked DEC-298:
+(BC-2.1.005) — applied UNIFORMLY, with no board-specific exception (human-locked D-298:
 "always wins" for predictability). When `--sort` is ABSENT, every branch's `order_by` value
 is BYTE-FOR-BYTE UNCHANGED from BC-2.1.002/003/004/005's pinned literals — `--sort` is a
 strictly additive, opt-in override with zero effect on default behavior.
@@ -1223,7 +1223,7 @@ HashMap<String, Value>` `#[serde(flatten)]`); `src/api/jira/issues.rs::search_is
 REPLACES `BASE_ISSUE_FIELDS` (BC-2.2.028) plus any config-driven extras (`--points`'s
 `customfield_NNNNN`, `--assets`'s CMDB field ids, the team field id) in the Jira `fields=`
 request parameter sent via BC-2.6.052's field-override client method — it does NOT union
-with them (human-locked DEC-298: REPLACE, not UNION). `--fields` requires `--output json`;
+with them (human-locked D-298: REPLACE, not UNION). `--fields` requires `--output json`;
 combined with table mode (default, or explicit `--output table`) → exit 64 pre-HTTP.
 **Preconditions**:
 1. `--fields <CSV>` is supplied (comma-separated field names, e.g.
@@ -1541,7 +1541,7 @@ mirrors); `src/cli/issue/view.rs` (pending F4)
 **Behavior**: Mirrors BC-2.2.033 exactly, applied to `jr issue view <KEY>` via a new
 `get_issue_with_fields`-shaped client method (BC-2.6.052). `--fields` requires `--output
 json`; table-mode combination → exit 64 pre-HTTP. REPLACE semantics (not UNION), same as the
-list twin (human-locked DEC-298).
+list twin (human-locked D-298).
 **Preconditions**:
 1. `--fields <CSV>` is supplied.
 2. `--output json` is also set. If NOT set → exit 64, PRE-HTTP, stderr: `--fields requires
@@ -1830,7 +1830,7 @@ When the issue has zero attachments, the handler exits 0 with no table, empty st
 
 **CLI flags** (pinned for e2e surface guard): `<KEY>` (positional, required); `--filter <FILTER>` (repeatable; key=value form); `--output json`; `--no-input`; `--profile <NAME>`; `--no-color`.
 
-**Trace**: F2 spec evolution (SOH-ATTACHMENTS-1 2026-07-15; DEC-179 ratified design; research §1a VERIFIED — no dedicated list endpoint); v1.3.96 — P2-001 ratification (EC-2.7.001-3 empty-string values treated as absent)
+**Trace**: F2 spec evolution (SOH-ATTACHMENTS-1 2026-07-15; D-179 ratified design; research §1a VERIFIED — no dedicated list endpoint); v1.3.96 — P2-001 ratification (EC-2.7.001-3 empty-string values treated as absent)
 
 ---
 
@@ -1875,7 +1875,7 @@ All `--output json` paths MUST route through `output::render_json` or `output::p
 
 **Authority for all attachment-object serializations**: the curated form defined in this BC is the single canonical attachment-object JSON shape for `jr` attachment **list** and **upload** (platform POST + bulk echo) responses. **`download` is excluded**: the download JSON shape is the distinct `{"downloaded":[...]}` manifest defined in BC-2.7.007 (EC-2.7.007-7), not an attachment-object array. [P6-003 correction] BC-3.9.009 (upload JSON output) cross-references this BC as the authority. The `"self"` field MUST be omitted and `"content"` MUST be renamed to `"contentUrl"` across every code path that serializes a Jira attachment object.
 
-**Trace**: F2 spec evolution (SOH-ATTACHMENTS-1 2026-07-15; #585 absorbed — research §7 VERIFIED; DEC-179 ratified design); v1.3.95 (2026-07-19) P1-002 author-curated-form ruling — "User serde shape / pass-through" contradiction resolved; author JSON shape is curated `{accountId, displayName}` only
+**Trace**: F2 spec evolution (SOH-ATTACHMENTS-1 2026-07-15; #585 absorbed — research §7 VERIFIED; D-179 ratified design); v1.3.95 (2026-07-19) P1-002 author-curated-form ruling — "User serde shape / pass-through" contradiction resolved; author JSON shape is curated `{accountId, displayName}` only
 
 **VP-576-004**: curated attachment-object JSON transformation pin — `jr issue attachment list <KEY> --output json` and `jr issue attachment upload <KEY> <FILE> --output json` via wiremock: inspect every JSON object in the returned array and assert: (1) NO element contains a `"self"` key — the Jira API `"self"` field MUST be omitted from `jr` output; (2) every element contains a `"contentUrl"` key and NO element contains a `"content"` key — the Jira API `"content"` field MUST be renamed to `"contentUrl"`. These two invariants hold for ALL serialization paths — list (BC-2.7.002) and upload platform POST (BC-3.9.009). A regression that passes `"self"` through or emits `"content"` instead of `"contentUrl"` MUST fail these assertions. Pins BC-2.7.002 authority clause ("the `'self'` field MUST be omitted and `'content'` MUST be renamed to `'contentUrl'` across every code path that serializes a Jira attachment object"); cross-references BC-3.9.009 (upload JSON output authority). P20-006. **Story allocation (P24-002)**: list half verified at S1 (BC-2.7.002 home); upload-platform-POST half verified at S3 (BC-3.9.009); the full cross-path test lands at S3 — S3 depends_on S1 for the shared curated-serialization plumbing (earliest consumer S1 ships it, per the R3.13 principle). NOT part of the S1 acceptance matrix as a whole; the S1 matrix includes only the list half.
 
@@ -1900,7 +1900,7 @@ After filtering, the table is rendered (BC-2.7.001) with only matching rows. Whe
 **EC-2.7.003-1** (zero matches): empty table or `[]` JSON, exit 0. Hint fires: `"Showing 0 of M attachments."`
 **EC-2.7.003-2** (unknown filter key or missing `=` — applies to the entire `--filter` family across `attachment list` and `attachment download`): if a `--filter` value does not contain `=`, exit 64 before any HTTP call: `"Invalid filter '<VALUE>': expected key=value form. Accepted keys: mime=, name=, size-max=."`. If `=` is present but the key before it is not `mime`, `name`, or `size-max`, exit 64: `"Unknown filter key '<KEY>'. Accepted keys: mime=, name=, size-max=."`. This validation is an application pre-flight check; no HTTP call is issued on either path.
 
-**Trace**: F2 spec evolution (SOH-ATTACHMENTS-1 2026-07-15; DEC-179 ratified design)
+**Trace**: F2 spec evolution (SOH-ATTACHMENTS-1 2026-07-15; D-179 ratified design)
 
 ---
 
@@ -1968,7 +1968,7 @@ When `<KEY>` does not exist or the authenticated user lacks Browse Projects perm
 | 5xx | 1 | `API error (<N>)` |
 | Network error | 1 | Connectivity hint |
 
-**Trace**: F2 spec evolution (SOH-ATTACHMENTS-1 2026-07-15; DEC-179 ratified design; follows BC-2.3.033/034 universal error pattern); P15-005 (403 row added — consistent with BC-2.7.012 403 = exit 1)
+**Trace**: F2 spec evolution (SOH-ATTACHMENTS-1 2026-07-15; D-179 ratified design; follows BC-2.3.033/034 universal error pattern); P15-005 (403 row added — consistent with BC-2.7.012 403 = exit 1)
 
 ---
 
@@ -1997,7 +1997,7 @@ When `<KEY>` does not exist or the authenticated user lacks Browse Projects perm
 
 **Output path**: for single `--id` without `--out`, the default filename is the bare sanitized basename (no SHA-1 prefix) — see BC-2.7.010 (single-id bare naming rule) and the degenerate-name fallback (id-as-filename when sanitization yields None). `--out <PATH>` overrides the default with an explicit file path; the user-supplied path is NOT sanitized against CWE-22 (trusted input from the operator).
 
-**Overwrite behavior** (DEC-179 ruling 3): if the computed or specified output path already exists as a regular file, the handler MUST refuse with exit 64: `"File already exists: <path>. Use --force to overwrite."` The `--force` flag bypasses this check and overwrites silently. This prevents accidental data loss for idempotent re-runs.
+**Overwrite behavior** (D-179 ruling 3): if the computed or specified output path already exists as a regular file, the handler MUST refuse with exit 64: `"File already exists: <path>. Use --force to overwrite."` The `--force` flag bypasses this check and overwrites silently. This prevents accidental data loss for idempotent re-runs.
 
 On success, a completion hint is emitted to stderr: `"Downloaded: <path> (<size_human>)."` Nothing is written to stdout (profile 3).
 
@@ -2033,7 +2033,7 @@ On success, a completion hint is emitted to stderr: `"Downloaded: <path> (<size_
 
 **CLI flags** (pinned for e2e surface guard): `<KEY>` (positional, required); `--id <AID>` (single download); `--all` (batch); `--newest <N>` (top-N); `--out <PATH>` (single-file path override; requires `--id`, clap `requires` — EC-2.7.007-9); `--out-dir <DIR>` (batch target directory; requires `--all` or `--newest` via clap `ArgGroup` + `requires` — EC-2.7.008-9); `--force` (overwrite existing); `--filter <FILTER>` (repeatable; `conflicts_with = "id"` — exit 2 when combined with `--id` — EC-2.7.007-10); `--output json`; `--no-input`; `--profile <NAME>`; `--no-color`.
 
-**Trace**: F2 spec evolution (SOH-ATTACHMENTS-1 2026-07-15; DEC-179 ratified design; research §1b–1d VERIFIED; JSDCLOUD-10841 §P2-6 VERIFIED — platform endpoint for JSM; JRACLOUD-97046 §6 no-redirect-false; GHSA-9857-6MW7-FQ2M corroboration); SEC-576-003 (CWE-522 credential-stripping wiremock-test requirement added 2026-07-15); P26-003 (step 1 partial-struct clause added — metadata deserialization is absent-tolerant on all fields except `filename`; partial form distinguished from shared LIST-path struct); P27-001 (EC-2.7.007-7 `filename` semantics clause added: RAW Jira name pre-sanitization; on-disk basename recoverable from `path`); P32-001 (ordering sentence added to `--out` unconditional step-1 paragraph: local pre-flight checks EC-2.7.007-6/EC-2.7.007-11/overwrite-refuse fire BEFORE step-1 metadata GET; fail cheap/offline first; double-fault local check wins); v1.3.80 — SEC-576-009 (CWE-22: `?redirect=false` prohibition promoted from CRITICAL note in "Redirect following" paragraph to explicit body clause in step 2 wire path); SEC-576-010 (EC-2.7.007-12 added: single-id overwrite-refuse pre-flight as numbered EC — exit 64, `--force` bypass, pre-HTTP ordering per P32-001, §2.7 taxonomy compliance); v1.3.97 — P8-002 correction (EC-2.7.007-5 implementation-strategy note corrected: SIGINT cleanup NOT implemented in this bundle; orphaned tmp files accepted best-effort residual; deferred S-576 bundle debt)
+**Trace**: F2 spec evolution (SOH-ATTACHMENTS-1 2026-07-15; D-179 ratified design; research §1b–1d VERIFIED; JSDCLOUD-10841 §P2-6 VERIFIED — platform endpoint for JSM; JRACLOUD-97046 §6 no-redirect-false; GHSA-9857-6MW7-FQ2M corroboration); SEC-576-003 (CWE-522 credential-stripping wiremock-test requirement added 2026-07-15); P26-003 (step 1 partial-struct clause added — metadata deserialization is absent-tolerant on all fields except `filename`; partial form distinguished from shared LIST-path struct); P27-001 (EC-2.7.007-7 `filename` semantics clause added: RAW Jira name pre-sanitization; on-disk basename recoverable from `path`); P32-001 (ordering sentence added to `--out` unconditional step-1 paragraph: local pre-flight checks EC-2.7.007-6/EC-2.7.007-11/overwrite-refuse fire BEFORE step-1 metadata GET; fail cheap/offline first; double-fault local check wins); v1.3.80 — SEC-576-009 (CWE-22: `?redirect=false` prohibition promoted from CRITICAL note in "Redirect following" paragraph to explicit body clause in step 2 wire path); SEC-576-010 (EC-2.7.007-12 added: single-id overwrite-refuse pre-flight as numbered EC — exit 64, `--force` bypass, pre-HTTP ordering per P32-001, §2.7 taxonomy compliance); v1.3.97 — P8-002 correction (EC-2.7.007-5 implementation-strategy note corrected: SIGINT cleanup NOT implemented in this bundle; orphaned tmp files accepted best-effort residual; deferred S-576 bundle debt)
 
 ---
 
@@ -2068,7 +2068,7 @@ On completion a summary hint emits to stderr: `"Downloaded N of M attachments to
 
 **EC-2.7.008-10** (filtered-to-zero on a non-empty issue): when `--all` is used with one or more `--filter` flags and the filter set matches zero attachments from a non-empty issue (i.e., the issue has ≥1 attachments but none pass the filter), the behavior is **distinct** from EC-2.7.008-1 (empty-issue path): → exit 0; stderr: `"No attachments matched the filter on <KEY>."` (canonical string; different from `"No attachments on <KEY>."` which is the empty-issue message); JSON mode: stdout `{"downloaded":[]}` (empty array, consistent with EC-2.7.008-6 uniform `downloaded` array shape); **JSON-mode stderr**: the `"No attachments matched the filter"` message is a HINT — suppressed in JSON mode (same class as EC-2.7.001-1 zero-attachment hint; the empty `downloaded` array is self-describing; per EC-2.7.008-6 hint-vs-error principle, INFO-NEW-6); no download requests issued. P15-007.
 
-**Trace**: F2 spec evolution (SOH-ATTACHMENTS-1 2026-07-15; DEC-179 ratified design); P15-007 (EC-2.7.008-10 filtered-to-zero non-empty); P25-001 (EC-2.7.008-6 JSON-mode hint-vs-error policy; EC-2.7.008-7 human-mode summary scoping; Per-file download error policy point (3) scoped); INFO-NEW-6 (EC-2.7.008-10 JSON-mode stderr: filtered-to-zero hint suppressed — per EC-2.7.008-6 hint-vs-error principle); P27-001 (EC-2.7.008-6 `filename` semantics clause added: RAW Jira name pre-sanitization; on-disk basename recoverable from `path`); P27-003 (EC-2.7.008-6 collision-skip hint-vs-error classification: collision-skip warnings are NON-ERROR hints, suppressed in JSON mode); P31-002 (EC-2.7.008-6 `size` semantics sentence added: written-bytes authoritative, NOT list-reported `fields.attachment[].size`; "Shape aligns" → "Shape and field semantics align"; Batch metadata source scoped: list response for naming/filtering/pre-download; manifest `size` = written-bytes); P34-004 (EC-2.7.008-1 JSON-mode clause added: `{"downloaded":[]}` in JSON mode; "No attachments on <KEY>." is a HINT suppressed in JSON mode; EC-2.7.001-1 unification clarified as STRING-only); v1.3.80 — SEC-576-011 (CWE-116: display-sanitization cross-reference added to Overwrite behavior paragraph — collision-skip warning filename MUST be display-sanitized before TTY write; RAW value retained in JSON mode); v1.3.94 — PRE-F4-UNICODE-DISPLAY-SANITIZATION: cross-ref wording updated — inline range removed, now points to BC-2.7.011 display-sanitization character set (preferred over re-stating range)
+**Trace**: F2 spec evolution (SOH-ATTACHMENTS-1 2026-07-15; D-179 ratified design); P15-007 (EC-2.7.008-10 filtered-to-zero non-empty); P25-001 (EC-2.7.008-6 JSON-mode hint-vs-error policy; EC-2.7.008-7 human-mode summary scoping; Per-file download error policy point (3) scoped); INFO-NEW-6 (EC-2.7.008-10 JSON-mode stderr: filtered-to-zero hint suppressed — per EC-2.7.008-6 hint-vs-error principle); P27-001 (EC-2.7.008-6 `filename` semantics clause added: RAW Jira name pre-sanitization; on-disk basename recoverable from `path`); P27-003 (EC-2.7.008-6 collision-skip hint-vs-error classification: collision-skip warnings are NON-ERROR hints, suppressed in JSON mode); P31-002 (EC-2.7.008-6 `size` semantics sentence added: written-bytes authoritative, NOT list-reported `fields.attachment[].size`; "Shape aligns" → "Shape and field semantics align"; Batch metadata source scoped: list response for naming/filtering/pre-download; manifest `size` = written-bytes); P34-004 (EC-2.7.008-1 JSON-mode clause added: `{"downloaded":[]}` in JSON mode; "No attachments on <KEY>." is a HINT suppressed in JSON mode; EC-2.7.001-1 unification clarified as STRING-only); v1.3.80 — SEC-576-011 (CWE-116: display-sanitization cross-reference added to Overwrite behavior paragraph — collision-skip warning filename MUST be display-sanitized before TTY write; RAW value retained in JSON mode); v1.3.94 — PRE-F4-UNICODE-DISPLAY-SANITIZATION: cross-ref wording updated — inline range removed, now points to BC-2.7.011 display-sanitization character set (preferred over re-stating range)
 
 ---
 
@@ -2095,7 +2095,7 @@ If the issue has fewer than N attachments after filtering, all available attachm
 
 **EC-2.7.009-4** (empty attachment list on `--newest`): when the issue has zero attachments, `--newest N` behavior follows EC-2.7.008-1 — exit 0; stderr `"No attachments on <KEY>."` (HINT, suppressed in JSON mode); JSON mode: stdout `{"downloaded":[]}` (empty array); no download requests issued. P34-004.
 
-**Trace**: F2 spec evolution (SOH-ATTACHMENTS-1 2026-07-15; DEC-179 ratified design); P15-007 (EC-2.7.009-3 filtered-to-zero non-empty); INFO-NEW-6 (EC-2.7.009-3 JSON-mode stderr: filtered-to-zero hint suppressed — per EC-2.7.008-6 hint-vs-error principle); P34-004 (EC-2.7.009-4 empty-issue cross-ref to EC-2.7.008-1)
+**Trace**: F2 spec evolution (SOH-ATTACHMENTS-1 2026-07-15; D-179 ratified design); P15-007 (EC-2.7.009-3 filtered-to-zero non-empty); INFO-NEW-6 (EC-2.7.009-3 JSON-mode stderr: filtered-to-zero hint suppressed — per EC-2.7.008-6 hint-vs-error principle); P34-004 (EC-2.7.009-4 empty-issue cross-ref to EC-2.7.008-1)
 
 ---
 
@@ -2142,7 +2142,7 @@ When `--out <PATH>` is supplied on the single-file path (BC-2.7.007), all defaul
 
 **`path` field non-determinism (P18-004 ruling)**: the `path` value in the download JSON manifest (EC-2.7.007-7 / EC-2.7.008-6) is the output path exactly as constructed by `jr`: the user-supplied `--out` value verbatim, or the out-dir joined with the final filename (BC-2.7.010 naming rules above). The path is NOT canonicalized and NOT made absolute. Consequently: snapshot tests MUST redact or normalize `path` (e.g., via a TempDir root substitution); exact-match assertions on `path` are only valid with a controlled current working directory.
 
-**Trace**: F2 spec evolution (SOH-ATTACHMENTS-1 2026-07-15; DEC-179 ratified design; #576 SHA-1-prefix proposal incorporated); P18-004 (path-non-determinism ruling added); v1.3.80 — SEC-576-008 (INFO: degenerate-fallback server-ID trust assumption note added — numeric invariant is API-behavioral for batch mode, not client-validated; single-id path holds by construction via AID validation); SEC-576-011 (CWE-116: display-sanitization cross-reference added to degenerate-name warning — `<raw>` MUST be display-sanitized before TTY write; RAW value retained in JSON mode); v1.3.94 — PRE-F4-UNICODE-DISPLAY-SANITIZATION: cross-ref wording updated — inline range removed, now points to BC-2.7.011 display-sanitization character set
+**Trace**: F2 spec evolution (SOH-ATTACHMENTS-1 2026-07-15; D-179 ratified design; #576 SHA-1-prefix proposal incorporated); P18-004 (path-non-determinism ruling added); v1.3.80 — SEC-576-008 (INFO: degenerate-fallback server-ID trust assumption note added — numeric invariant is API-behavioral for batch mode, not client-validated; single-id path holds by construction via AID validation); SEC-576-011 (CWE-116: display-sanitization cross-reference added to degenerate-name warning — `<raw>` MUST be display-sanitized before TTY write; RAW value retained in JSON mode); v1.3.94 — PRE-F4-UNICODE-DISPLAY-SANITIZATION: cross-ref wording updated — inline range removed, now points to BC-2.7.011 display-sanitization character set
 
 ---
 
@@ -2184,9 +2184,9 @@ Since step 4 of sanitization already strips `../`, `/`, `\`, `:`, the join will 
 
 **VP-576-001**: `sanitize_attachment_filename` property-based test — for every input in the required test matrix (BC-2.7.011 "Unit test coverage required" list): assert (1) no `Some(name)` result contains `/`, `\`, `:`, or a NUL byte; (2) `Some(name)` length in bytes is ≤ 214; (3) all `Some(name)` values are valid UTF-8 (no truncated multi-byte codepoints — `std::str::from_utf8` succeeds); (4) the specific cases `"."`, `".."`, empty string, and NUL-byte inputs each return `None`; (5) `"../../etc/passwd"` returns `Some("passwd")`; (6) `"/etc/passwd"` returns `Some("passwd")`; (7) a 214-byte ASCII prefix + 3-byte UTF-8 char returns `Some(214-byte prefix)` (char dropped, not split). Additional containment assertion for any `Some(name)`: `resolved_dir.join(&name).starts_with(&resolved_dir)` must hold for any `out_dir = TempDir::new()`. Pins BC-2.7.011 steps 1–5 and the defense-in-depth containment check. P14-007.
 
-**Display sanitization for terminal output (SEC-576-011 — CWE-116)**: When any server-supplied attachment `filename` value is written to a TTY (confirmation prompts, collision-skip warnings, degenerate-name warnings, table cells, or any other human-readable stderr/stdout) — distinct from the disk-write path governed by `sanitize_attachment_filename` above — ALL of the following characters MUST be replaced with `?` before writing: (1) ASCII control characters in the byte range 0x00–0x1F and 0x7F; (2) Unicode bidirectional controls U+202A..U+202E (LRE/RLE/PDF/LRO/RLO) and U+2066..U+2069 (LRI/RLI/FSI/PDI); (3) Unicode line/paragraph separators U+2028 and U+2029; (4) NEL U+0085. This prevents terminal injection via `\r` (cursor-to-start overwrite of the visible prompt or warning text), ANSI escape sequences, and bidi-override visual reordering of displayed filenames in confirmation prompts. **Implementation form**: match on `char` values (Rust chars, not bytes) so multi-byte UTF-8 sequences are handled correctly; each matched char is replaced with a single `?`. The sanitization is display-only: the RAW value continues to be used for disk writes (the `sanitize_attachment_filename` pipeline above), JSON output (`downloaded[].filename`, attachment list array), and all Jira API calls. The `--no-color` flag controls only `jr`'s own ANSI output and does NOT strip attacker-injected control characters from displayed filenames. **Implementation note**: a `display_sanitize_filename(name: &str) -> String` helper function (or equivalent inline sanitization) MUST be applied at every call site that echoes a server-supplied filename to stderr or stdout in human mode. **Unit test mandate**: the `display_sanitize_filename` test set MUST include at least one bidi case (U+202E RIGHT-TO-LEFT OVERRIDE → `?`), one separator case (U+2028 LINE SEPARATOR → `?`), and NEL (U+0085 → `?`), in addition to ASCII control character coverage. **Stderr-clause taxonomy (§2.7 taxonomy, P25/P30)**: display sanitization applies in human mode only; it is not a new hint or error class — it modifies the display channel of existing warnings and prompts already classified in this taxonomy. JSON mode paths already carry RAW values by spec, so display sanitization has no JSON-mode interaction. **Earliest consumer: S1** (Story 1 — first surface to write server-supplied filenames to human-readable output; S1 story-writers must apply display-sanitization to attachment list table cells (BC-2.7.001); S3 and S4 story-writers must allocate display-sanitization at confirmation prompt call sites per DEC-184 R3.13). Cross-referenced from: BC-2.7.008 Overwrite behavior (collision-skip warnings), BC-2.7.010 degenerate-name warning, BC-3.9.015 step 1 (delete confirmation prompt), BC-3.9.017 step 2 (`--replace-existing` prompt). **Scope**: the sanitization covers ASCII controls (0x00–0x1F, 0x7F) plus the enumerated Unicode injection vectors above (bidi controls U+202A..U+202E and U+2066..U+2069, line/paragraph separators U+2028/U+2029, NEL U+0085) — a closed enumerated set. Remaining Unicode confusables and homoglyphs — non-control characters that may visually resemble other glyphs — are explicitly OUT of scope: visual spoofing via lookalike glyphs does not constitute a terminal-injection vector (no cursor movement, no control-sequence injection, no bidi-override reordering effect), and expanding to confusables would not close a meaningful attack surface while substantially increasing implementation complexity and false-positive risk. The enumeration remains closed.
+**Display sanitization for terminal output (SEC-576-011 — CWE-116)**: When any server-supplied attachment `filename` value is written to a TTY (confirmation prompts, collision-skip warnings, degenerate-name warnings, table cells, or any other human-readable stderr/stdout) — distinct from the disk-write path governed by `sanitize_attachment_filename` above — ALL of the following characters MUST be replaced with `?` before writing: (1) ASCII control characters in the byte range 0x00–0x1F and 0x7F; (2) Unicode bidirectional controls U+202A..U+202E (LRE/RLE/PDF/LRO/RLO) and U+2066..U+2069 (LRI/RLI/FSI/PDI); (3) Unicode line/paragraph separators U+2028 and U+2029; (4) NEL U+0085. This prevents terminal injection via `\r` (cursor-to-start overwrite of the visible prompt or warning text), ANSI escape sequences, and bidi-override visual reordering of displayed filenames in confirmation prompts. **Implementation form**: match on `char` values (Rust chars, not bytes) so multi-byte UTF-8 sequences are handled correctly; each matched char is replaced with a single `?`. The sanitization is display-only: the RAW value continues to be used for disk writes (the `sanitize_attachment_filename` pipeline above), JSON output (`downloaded[].filename`, attachment list array), and all Jira API calls. The `--no-color` flag controls only `jr`'s own ANSI output and does NOT strip attacker-injected control characters from displayed filenames. **Implementation note**: a `display_sanitize_filename(name: &str) -> String` helper function (or equivalent inline sanitization) MUST be applied at every call site that echoes a server-supplied filename to stderr or stdout in human mode. **Unit test mandate**: the `display_sanitize_filename` test set MUST include at least one bidi case (U+202E RIGHT-TO-LEFT OVERRIDE → `?`), one separator case (U+2028 LINE SEPARATOR → `?`), and NEL (U+0085 → `?`), in addition to ASCII control character coverage. **Stderr-clause taxonomy (§2.7 taxonomy, P25/P30)**: display sanitization applies in human mode only; it is not a new hint or error class — it modifies the display channel of existing warnings and prompts already classified in this taxonomy. JSON mode paths already carry RAW values by spec, so display sanitization has no JSON-mode interaction. **Earliest consumer: S1** (Story 1 — first surface to write server-supplied filenames to human-readable output; S1 story-writers must apply display-sanitization to attachment list table cells (BC-2.7.001); S3 and S4 story-writers must allocate display-sanitization at confirmation prompt call sites per D-184 R3.13). Cross-referenced from: BC-2.7.008 Overwrite behavior (collision-skip warnings), BC-2.7.010 degenerate-name warning, BC-3.9.015 step 1 (delete confirmation prompt), BC-3.9.017 step 2 (`--replace-existing` prompt). **Scope**: the sanitization covers ASCII controls (0x00–0x1F, 0x7F) plus the enumerated Unicode injection vectors above (bidi controls U+202A..U+202E and U+2066..U+2069, line/paragraph separators U+2028/U+2029, NEL U+0085) — a closed enumerated set. Remaining Unicode confusables and homoglyphs — non-control characters that may visually resemble other glyphs — are explicitly OUT of scope: visual spoofing via lookalike glyphs does not constitute a terminal-injection vector (no cursor movement, no control-sequence injection, no bidi-override reordering effect), and expanding to confusables would not close a meaningful attack surface while substantially increasing implementation complexity and false-positive risk. The enumeration remains closed.
 
-**Trace**: F2 spec evolution (SOH-ATTACHMENTS-1 2026-07-15; research §4 CWE-22 VERIFIED HIGH; DEC-179 SQ-1 resolved; OWASP/CWE-22/CWE-31 first-principles); SEC-576-001 (CWE-22 Windows device-name caller note + unit test matrix added 2026-07-15); SEC-576-002 (CWE-22 corrected two-step containment check procedure added 2026-07-15); SEC-576-007 (trailing-whitespace/dot strip step 5.5 added 2026-07-15); P14-007 (VP-576-001 added); P25-002 (containment step-1 case (c) reworded — pure does-not-apply exclusion for `--out <PATH>`: trusted operator input; neither step 1 nor step 2 applies to `--out`-supplied paths); v1.3.80 — SEC-576-011 (CWE-116: display-sanitization clause added — distinct display-channel requirement from disk-write pipeline; covers all TTY output of server-supplied filenames; earliest consumer S2; cross-referenced from BC-2.7.008, BC-2.7.010, BC-3.9.015, BC-3.9.017); v1.3.81 — r43 micro-fix round: earliest consumer corrected S2→S1 (BC-2.7.001 list table cells ship with S1 per prd-delta Scope table; NEW-576-V3-001); S3 added to allocation guidance sentence alongside S4 (GAP-R43-002); Unicode bidi/line-terminator accepted-residual scope note appended (NEW-576-V3-002); v1.3.94 — PRE-F4-UNICODE-DISPLAY-SANITIZATION (human ruling 2026-07-17 DISCHARGED): display-sanitization character set extended beyond ASCII — Unicode bidi controls U+202A..U+202E and U+2066..U+2069, line/paragraph separators U+2028/U+2029, and NEL U+0085 added to the enumerated set; implementation form specified (char-level matching, not bytes); unit-test mandate added (U+202E/U+2028/U+0085 required cases); scope note REPLACED with closed-enumeration scope statement — confusables/homoglyphs OUT of scope with rationale (not a terminal-injection vector)
+**Trace**: F2 spec evolution (SOH-ATTACHMENTS-1 2026-07-15; research §4 CWE-22 VERIFIED HIGH; D-179 SQ-1 resolved; OWASP/CWE-22/CWE-31 first-principles); SEC-576-001 (CWE-22 Windows device-name caller note + unit test matrix added 2026-07-15); SEC-576-002 (CWE-22 corrected two-step containment check procedure added 2026-07-15); SEC-576-007 (trailing-whitespace/dot strip step 5.5 added 2026-07-15); P14-007 (VP-576-001 added); P25-002 (containment step-1 case (c) reworded — pure does-not-apply exclusion for `--out <PATH>`: trusted operator input; neither step 1 nor step 2 applies to `--out`-supplied paths); v1.3.80 — SEC-576-011 (CWE-116: display-sanitization clause added — distinct display-channel requirement from disk-write pipeline; covers all TTY output of server-supplied filenames; earliest consumer S2; cross-referenced from BC-2.7.008, BC-2.7.010, BC-3.9.015, BC-3.9.017); v1.3.81 — r43 micro-fix round: earliest consumer corrected S2→S1 (BC-2.7.001 list table cells ship with S1 per prd-delta Scope table; NEW-576-V3-001); S3 added to allocation guidance sentence alongside S4 (GAP-R43-002); Unicode bidi/line-terminator accepted-residual scope note appended (NEW-576-V3-002); v1.3.94 — PRE-F4-UNICODE-DISPLAY-SANITIZATION (human ruling 2026-07-17 DISCHARGED): display-sanitization character set extended beyond ASCII — Unicode bidi controls U+202A..U+202E and U+2066..U+2069, line/paragraph separators U+2028/U+2029, and NEL U+0085 added to the enumerated set; implementation form specified (char-level matching, not bytes); unit-test mandate added (U+202E/U+2028/U+0085 required cases); scope note REPLACED with closed-enumeration scope statement — confusables/homoglyphs OUT of scope with rationale (not a terminal-injection vector)
 
 ---
 
@@ -2200,7 +2200,7 @@ Since step 4 of sanitization already strips `../`, `/`, `\`, `:`, the join will 
 
 **Unknown attachment ID**: when `--id <AID>` references a non-existent attachment, `GET /rest/api/3/attachment/{id}` (metadata step 1, per BC-2.7.007 two-step wire path) returns 404 → handler exits 64: `"Attachment <AID> not found or not accessible."` (canonical not-found string). A 403 response instead exits 1: `"Permission denied: cannot access attachment <AID>."` (403 = exists-but-inaccessible, not missing; consistent with 403 = exit 1 across all attachment operations).
 
-**404 body-surfacing asymmetry (deliberate read-vs-write divergence)**: A 404 from the download metadata endpoint (`GET /rest/api/3/attachment/{id}`) emits the canonical string ONLY — the Jira error body is NOT appended. This diverges from `attachment delete` (BC-3.9.008), where a 404 surfaces the Jira error body per DEC-168. Rationale: delete is a write operation targeting a specific user-named resource (DEC-168: 404 on a targeted delete is a user error requiring the Jira body context); download metadata fetch is a read operation where the canonical string is sufficient and the Jira body would add no actionable information.
+**404 body-surfacing asymmetry (deliberate read-vs-write divergence)**: A 404 from the download metadata endpoint (`GET /rest/api/3/attachment/{id}`) emits the canonical string ONLY — the Jira error body is NOT appended. This diverges from `attachment delete` (BC-3.9.008), where a 404 surfaces the Jira error body per D-168. Rationale: delete is a write operation targeting a specific user-named resource (D-168: 404 on a targeted delete is a user error requiring the Jira body context); download metadata fetch is a read operation where the canonical string is sufficient and the Jira body would add no actionable information.
 
 **Match-by-ID invariant** (JRACLOUD-96384 + JRACLOUD-78388, both confirmed in research §6): attachment operations MUST identify attachments by their numeric `id`, not by `filename`. Multiple attachments with the same `filename` on one issue are legal in Jira (JRACLOUD-96384); filename-based matching is ambiguous and unreliable. There is also no reliable REST mapping from a comment to the attachments it contains (JRACLOUD-78388). `--id <AID>` is the sole selector for single-file download operations.
 
@@ -2224,7 +2224,7 @@ Since step 4 of sanitization already strips `../`, `/`, `\`, `:`, the join will 
 
 **INFO (F5-R6-002)**: mid-stream body-read abort (HTTP 200 response has started streaming but the connection drops before all chunks arrive) surfaces as a generic `"stream error: {e}"` exit 1 message — this is a distinct sub-case from the content-GET `NetworkError` row in the taxonomy table above (which covers failure-to-connect or connection drop before the first byte). The two cases produce different error messages: the NetworkError row produces `"Could not reach <host> — check your connection"` (via `JrError::NetworkError`); the mid-stream abort produces `"stream error: {e}"` (via the `bytes_stream()` chunk error arm in `stream_to_file`). This wording divergence is accepted — the mid-stream abort is classified as a streaming I/O error, not a network-connectivity error, and does not route through `classify_write_error`.
 
-**Trace**: F2 spec evolution (SOH-ATTACHMENTS-1 2026-07-15; DEC-179 ratified design; research §6 JRACLOUD-96384/-78388 VERIFIED); P21-006 (KEY-404 batch-paths-only annotation — `--id` does not server-verify KEY per BC-2.7.007); P22-003 (body prose "Unknown issue key" sentence prepended with batch-only caveat: batch paths only — `--all`/`--newest`; `--id` does not server-verify KEY per BC-2.7.007); P26-001 (KEY-403 batch-paths-only row added to error table — mirrors BC-2.7.006 P15-005 row; error-taxonomy row 95 issue-GET sub-variant citation re-pointed to BC-2.7.012); v1.3.102 — F5-R5-001 research-backed amendment (2026-07-24): disk-write error rows amended to HYBRID shape per `.factory/research/f5-r5-001-disk-error-taxonomy-2026-07-24.md` (friendly prefix + `<os_error>` + remediation hint); `<dest>` = final path not `tmp_<hex>`; `ErrorKind` detection at all three io sites in `stream_to_file` (implementation pending — SOH-ATTACHMENTS-1 Story 2); MSRV-1.85 stability confirmed; pure classifier fn unit-test mandate added; v1.3.103 — FIX-F5-010 Windows CI collision: permission-denied row amended — `(writing <dest>)` parenthetical added after `<dir>` so rename-failure errors include the display-sanitized destination filename; P9-001 reconciliation note added to classification paragraph (BC-2.7.007 P9-001 CWE-116); v1.3.104 — F5-R6-001: io-site count corrected three→four (add `flush`; delayed-allocation rationale added: ENOSPC can surface at flush on Linux ext4 and similar filesystems where dirty pages are deferred); F5-R6-002: INFO note added — mid-stream body-read abort (`"stream error: {e}"` exit 1) is a distinct sub-case from the content-GET NetworkError row; accepted wording divergence documented
+**Trace**: F2 spec evolution (SOH-ATTACHMENTS-1 2026-07-15; D-179 ratified design; research §6 JRACLOUD-96384/-78388 VERIFIED); P21-006 (KEY-404 batch-paths-only annotation — `--id` does not server-verify KEY per BC-2.7.007); P22-003 (body prose "Unknown issue key" sentence prepended with batch-only caveat: batch paths only — `--all`/`--newest`; `--id` does not server-verify KEY per BC-2.7.007); P26-001 (KEY-403 batch-paths-only row added to error table — mirrors BC-2.7.006 P15-005 row; error-taxonomy row 95 issue-GET sub-variant citation re-pointed to BC-2.7.012); v1.3.102 — F5-R5-001 research-backed amendment (2026-07-24): disk-write error rows amended to HYBRID shape per `.factory/research/f5-r5-001-disk-error-taxonomy-2026-07-24.md` (friendly prefix + `<os_error>` + remediation hint); `<dest>` = final path not `tmp_<hex>`; `ErrorKind` detection at all three io sites in `stream_to_file` (implementation pending — SOH-ATTACHMENTS-1 Story 2); MSRV-1.85 stability confirmed; pure classifier fn unit-test mandate added; v1.3.103 — FIX-F5-010 Windows CI collision: permission-denied row amended — `(writing <dest>)` parenthetical added after `<dir>` so rename-failure errors include the display-sanitized destination filename; P9-001 reconciliation note added to classification paragraph (BC-2.7.007 P9-001 CWE-116); v1.3.104 — F5-R6-001: io-site count corrected three→four (add `flush`; delayed-allocation rationale added: ENOSPC can surface at flush on Linux ext4 and similar filesystems where dirty pages are deferred); F5-R6-002: INFO note added — mid-stream body-read abort (`"stream error: {e}"` exit 1) is a distinct sub-case from the content-GET NetworkError row; accepted wording divergence documented
 
 ---
 

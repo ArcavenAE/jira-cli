@@ -77,7 +77,7 @@ breaking_change: false
 retroactive: false
 origin: >
   cycle-004 windows-correctness, Wave 1 (no deps, file-disjoint from
-  S-cycle4-cloud-id-correctness). Implements DEC-334/DEC-335's durable fix for #759:
+  S-cycle4-cloud-id-correctness). Implements D-334/D-335's durable fix for #759:
   jr auth login --oauth deterministically fails on Windows because store_oauth_tokens
   writes the OAuth access/refresh pair straight to keyring::Entry::set_password, which
   on the windows-native backend hard-fails at 2560 bytes (keyring::Error::TooLong).
@@ -146,7 +146,7 @@ message-differentiation logic at `oauth_login`'s and `refresh_oauth_token_with_u
 `map_err` closures (BC-1.4.039 Postcondition 1) branches on
 `e.downcast_ref::<DpapiFallbackFailed>()` and `e.downcast_ref::<ProfilePathEscape>()` —
 both types are defined in `src/api/auth_windows_store.rs`, which this story creates. This
-also implements DEC-335's bundling instruction: honest-fail-message cannot compile, let
+also implements D-335's bundling instruction: honest-fail-message cannot compile, let
 alone land, before this story's marker types exist, so the `depends_on` edge structurally
 enforces "ship in the same release, this story first" rather than the independent
 fast-follow sequencing F1 §12 item 6 offered as an alternative.
@@ -452,7 +452,7 @@ N/A — not a UI story.
 | Agent context window | 200K (Sonnet) |
 | **Budget usage** | **~21%** |
 
-At the upper edge of the 20-30% target. DEC-335 locks this cycle's F3 scope at 4 stories
+At the upper edge of the 20-30% target. D-335 locks this cycle's F3 scope at 4 stories
 (dpapi-storage-fix / honest-fail-message / windows-docs / cloud-id-correctness) — this
 story is not further split at F3 per that decision. **Recommendation for F4:** if the
 implementer's actual working context (real file sizes once `auth_windows_store.rs` is
@@ -588,9 +588,9 @@ scope, not this story's.
   below; this story specifies and implements the code, the spike/manual-gate are
   F4/F7 process steps, not additional story scope.
 
-## Windows Validation (DEC-335)
+## Windows Validation (D-335)
 
-Per DEC-335 and F1 §10 / architecture-delta §9 item 3: this story's cross-platform-testable
+Per D-335 and F1 §10 / architecture-delta §9 item 3: this story's cross-platform-testable
 seams (the pure `envelope`/`should_fallback_to_dpapi`/`reject_unsafe_profile_component`
 functions, the routing decision, the atomic-write sequencing, the age-gated cleanup) run in
 default CI. The genuinely Windows-only bits (the real `CryptProtectData`/`CryptUnprotectData`

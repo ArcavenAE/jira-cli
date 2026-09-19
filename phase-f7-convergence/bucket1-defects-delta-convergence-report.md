@@ -17,7 +17,7 @@ Four independent, file-disjoint issue fixes bundled into one Feature Mode F1-F7 
 (open-issue triage "Bucket #1"):
 
 - **S-692-1** (#697, `83b529d2`) — `issue edit --dry-run` reads stdin and renders an ADF
-  preview for `--description`/`--description-stdin` (BC-3.4.021 REVERSED under DEC-274,
+  preview for `--description`/`--description-stdin` (BC-3.4.021 REVERSED under D-274,
   breaking).
 - **S-663-1** (#696, `c9218389`) — `auth switch --profile` now exits 64 instead of a
   silent no-op (new BC-1.2.047, BC-1.2.018 amended, breaking).
@@ -177,7 +177,7 @@ to concrete covering tests/behavior (full detail in the companion traceability f
 ## Traceability Chain
 
 See `.factory/phase-f7-convergence/bucket1-defects-traceability-chain-delta.md` for the
-full 4-level BC -> Story -> src -> test chain for all 4 stories, plus the DEC-274 note on
+full 4-level BC -> Story -> src -> test chain for all 4 stories, plus the D-274 note on
 BC-3.4.021 and the cross-story/shared-infrastructure holdout mapping.
 
 ## Deferred follow-ups (noted, not actioned by this F7 pass)

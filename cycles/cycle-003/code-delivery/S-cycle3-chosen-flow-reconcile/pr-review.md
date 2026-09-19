@@ -1,6 +1,6 @@
 # PR #762 — Final Fresh-Eyes AI Review
 
-**Story:** S-cycle3-chosen-flow-reconcile (DEC-321 refresh mechanism-override removal + I-6 relogin-then-replace)
+**Story:** S-cycle3-chosen-flow-reconcile (D-321 refresh mechanism-override removal + I-6 relogin-then-replace)
 **PR:** https://github.com/Zious11/jira-cli/pull/762 (head `4d9fb9a5`)
 **Verdict:** APPROVE-WITH-NITS
 **Merge recommendation:** MERGE once the three pending CI legs (Test ubuntu, Test windows, Coverage) go green. No blocking findings.
@@ -21,7 +21,7 @@ All load-bearing claims were verified directly against the PR head source, not o
 
 On the PR head, `clear_all_credentials(` has exactly three occurrences in `src/`: the definition plus two `#[cfg(test)]` callers (auth.rs:1644, 1945). Zero production call sites. `refresh.rs` references it only in a comment. Marked TEST-ONLY with a landmine doc warning against reintroduction.
 
-### DEC-321 — CONFIRMED
+### D-321 — CONFIRMED
 
 `chosen_flow_for_profile(profile)` is single-arg, resolving solely from `profile.auth_method` (`Some("oauth")`→OAuth, else Token). The `oauth_override` parameter is removed (compile-enforced). `args.oauth`/`args.api_token` are still read for the BC-1.1.016 non-interactive guard and BC-1.2.049/050 notices, but never reach flow selection. Dead `#[cfg(test)] chosen_flow` wrapper removed.
 

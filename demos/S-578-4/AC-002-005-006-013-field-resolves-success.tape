@@ -1,10 +1,10 @@
-# S-578-4 — AC-002 (DEC-188 guard removed, VP-578-017), AC-005 (customfield_NNNNN
+# S-578-4 — AC-002 (D-188 guard removed, VP-578-017), AC-005 (customfield_NNNNN
 # bypass), AC-006 (createmeta source substitution: get_issue_types_for_project +
 # get_createmeta_fields, S-580-1/S-331 reused verbatim), AC-013 (create-path echo),
 # AC-015 (field resolution runs after project/type, before POST).
 #
 # `jr issue create --field a=b` used to exit 64 with "--field is only valid with
-# --request-type" (DEC-188). This demo shows the reversal: the SAME invocation
+# --request-type" (D-188). This demo shows the reversal: the SAME invocation
 # shape now resolves the field via createmeta and creates the issue (exit 0).
 # `--verbose` (RUST_LOG scoped to the `jr` crate only, to keep hyper/reqwest DEBUG
 # noise out of frame) makes the two createmeta GETs and the create POST visible —

@@ -4,7 +4,7 @@
 **Spec version trail:** v1.2.0 → v1.9.1
 **Commit (frozen):** factory-artifacts @ 634cb88
 **Date converged:** 2026-06-16
-**DEC:** DEC-106
+**DEC:** D-106
 
 ---
 

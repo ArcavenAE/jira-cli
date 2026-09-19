@@ -19,7 +19,7 @@ identifies gaps for Phase 3 remediation. No workflow files were modified.
 ## §1: Existing Workflows Inventory
 
 **Workflow files found:** 2 (`.github/workflows/ci.yml`, `.github/workflows/release.yml`)
-**Last updated:** 2026-06-28 — §1.1a `mutants` job promoted to HARD-REQUIRED (PR #567, DEC-144): ci-gate.needs wired, `--timeout 240` per-mutant ceiling, `timeout-minutes: 90`, 5 false-green guards, cargo-mutants @27 pin. Live policy: `docs/specs/cargo-mutants-policy.md`. Prior: 2026-05-16 — §1.1 job catalog updated to include `mutants` job (issue #346, F2 arch update)
+**Last updated:** 2026-06-28 — §1.1a `mutants` job promoted to HARD-REQUIRED (PR #567, D-144): ci-gate.needs wired, `--timeout 240` per-mutant ceiling, `timeout-minutes: 90`, 5 false-green guards, cargo-mutants @27 pin. Live policy: `docs/specs/cargo-mutants-policy.md`. Prior: 2026-05-16 — §1.1 job catalog updated to include `mutants` job (issue #346, F2 arch update)
 **Supplementary:** `.github/dependabot.yml`, `.github/CODEOWNERS`
 
 ---
@@ -42,7 +42,7 @@ identifies gaps for Phase 3 remediation. No workflow files were modified.
 | `msrv` | `ubuntu-latest` | `cargo check --all-features` against `dtolnay/rust-toolchain@1.85.0` — MSRV pin verification |
 | `deny` | `ubuntu-latest` | `EmbarkStudios/cargo-deny-action@v2` — license allowlist + advisory check |
 | `coverage` | `ubuntu-latest` | `cargo llvm-cov` → `lcov.info` → Codecov upload (`fail_ci_if_error: false`) |
-| `mutants` | `ubuntu-latest` | `cargo-mutants` mutation testing — **HARD-REQUIRED** (in `ci-gate.needs` as of PR #567); scoped via `.cargo/mutants.toml::examine_globs` (scope: see `docs/specs/cargo-mutants-policy.md §Scope`; 11 files as of PR #570 2026-07-02 including edit/jsm_create/requesttype/jsm-requests/jsm-request_types); PR-only trigger; `--in-diff <diff-file>`; cargo-mutants @27 pinned; `--timeout 240` per-mutant ceiling (CLI-only; NOT in TOML); `timeout-minutes: 90`; 90% kill-rate target; 5 false-green guards (base-ref-drift, malformed-JSON, per-field int, schema-drift, warning-only reconciliation). DEC-144. See §1.1a + `docs/specs/cargo-mutants-policy.md` for full specification. |
+| `mutants` | `ubuntu-latest` | `cargo-mutants` mutation testing — **HARD-REQUIRED** (in `ci-gate.needs` as of PR #567); scoped via `.cargo/mutants.toml::examine_globs` (scope: see `docs/specs/cargo-mutants-policy.md §Scope`; 11 files as of PR #570 2026-07-02 including edit/jsm_create/requesttype/jsm-requests/jsm-request_types); PR-only trigger; `--in-diff <diff-file>`; cargo-mutants @27 pinned; `--timeout 240` per-mutant ceiling (CLI-only; NOT in TOML); `timeout-minutes: 90`; 90% kill-rate target; 5 false-green guards (base-ref-drift, malformed-JSON, per-field int, schema-drift, warning-only reconciliation). D-144. See §1.1a + `docs/specs/cargo-mutants-policy.md` for full specification. |
 
 **Caching:** `Swatinem/rust-cache@v2` on `clippy`, `test`, `msrv`, `coverage` jobs.
 
@@ -59,7 +59,7 @@ identifies gaps for Phase 3 remediation. No workflow files were modified.
 
 ### 1.1a `mutants` Job — Full Specification
 
-**Added by:** Issue #346 (F2 arch update, 2026-05-16). **Promoted to HARD-REQUIRED:** PR #567 (DEC-144, 2026-06-28).
+**Added by:** Issue #346 (F2 arch update, 2026-05-16). **Promoted to HARD-REQUIRED:** PR #567 (D-144, 2026-06-28).
 
 **Purpose:** Mutation testing on the bulk create/edit modules to detect weak test assertions — tests that pass even when the implementation is silently broken by small code mutations (negated conditions, removed returns, swapped operators). Complements unit tests, integration tests, and proptests as a meta-verification layer.
 
@@ -113,7 +113,7 @@ The convention and rationale are codified in `docs/specs/cargo-mutants-policy.md
 
 **Policy document:** `docs/specs/cargo-mutants-policy.md` — the **authoritative live specification** for all mutation gate behavior, skip convention, kill-rate rationale, timeout calibration, guard descriptions, and deferral policy. Required reading before applying any `#[mutants::skip]` annotation. In case of conflict between this §1.1a summary and the policy doc, the policy doc takes precedence.
 
-**Gate promotion record:** PR #346 added the advisory-only `mutants` job (2026-05-16). PR #567 promoted it to HARD-REQUIRED (ci-gate.needs) with `--timeout 240`, `timeout-minutes: 90`, and the five false-green guards (2026-06-28). DEC-144.
+**Gate promotion record:** PR #346 added the advisory-only `mutants` job (2026-05-16). PR #567 promoted it to HARD-REQUIRED (ci-gate.needs) with `--timeout 240`, `timeout-minutes: 90`, and the five false-green guards (2026-06-28). D-144.
 
 ---
 
@@ -199,7 +199,7 @@ All files require review from `@Zious11`. This satisfies the "code owner approva
 | Action SHA pinning | **MISSING** | All actions use version tags (`@v6`, `@v2`, `@v7`, `@v8`, `@stable`, `@1.85.0`) rather than full SHA hashes |
 | MSRV verification in CI | **PRESENT** | `ci.yml` `msrv` job: `dtolnay/rust-toolchain@1.85.0` + `cargo check --all-features` |
 | Coverage reporting | **PRESENT** | `ci.yml` `coverage` job: `cargo llvm-cov` → Codecov |
-| Mutation testing (meta-verification layer) | **PRESENT** | `ci.yml` `mutants` job (added issue #346): `cargo-mutants` scoped to 11 modules via `.cargo/mutants.toml::examine_globs` (see §1.1a); PR-only; `--in-diff <diff-file>` mode (v27 file-path form); 90% kill-rate target (`caught / (caught + missed + timeout)`); `timeout-minutes: 90` (raised from 60 in PR #567, DEC-144). Policy in `docs/specs/cargo-mutants-policy.md`. |
+| Mutation testing (meta-verification layer) | **PRESENT** | `ci.yml` `mutants` job (added issue #346): `cargo-mutants` scoped to 11 modules via `.cargo/mutants.toml::examine_globs` (see §1.1a); PR-only; `--in-diff <diff-file>` mode (v27 file-path form); 90% kill-rate target (`caught / (caught + missed + timeout)`); `timeout-minutes: 90` (raised from 60 in PR #567, D-144). Policy in `docs/specs/cargo-mutants-policy.md`. |
 
 **Summary counts:**
 - PRESENT: 10
@@ -365,7 +365,7 @@ gh api repos/Zious11/jira-cli/branches/main/protection
 
 | Addition | Issue | Description |
 |---|---|---|
-| `mutants` CI job | #346 (advisory), #567 (HARD-REQUIRED; DEC-144) | Mutation testing on bulk/create/edit/adf/issues/cache/jsm modules (see §1.1a + `docs/specs/cargo-mutants-policy.md`). **HARD-REQUIRED** via `ci-gate.needs` as of PR #567. PR-only, `--in-diff <diff-file>` mode (v27 file-path form; scope via `.cargo/mutants.toml::examine_globs`), 90% kill-rate target (`caught / (caught + missed + timeout)`), `--timeout 240` per-mutant ceiling (CLI-only), `timeout-minutes: 90`, 5 false-green guards. |
+| `mutants` CI job | #346 (advisory), #567 (HARD-REQUIRED; D-144) | Mutation testing on bulk/create/edit/adf/issues/cache/jsm modules (see §1.1a + `docs/specs/cargo-mutants-policy.md`). **HARD-REQUIRED** via `ci-gate.needs` as of PR #567. PR-only, `--in-diff <diff-file>` mode (v27 file-path form; scope via `.cargo/mutants.toml::examine_globs`), 90% kill-rate target (`caught / (caught + missed + timeout)`), `--timeout 240` per-mutant ceiling (CLI-only), `timeout-minutes: 90`, 5 false-green guards. |
 
 ### Defer as tech debt (Phase 3+ or post-v1.0)
 

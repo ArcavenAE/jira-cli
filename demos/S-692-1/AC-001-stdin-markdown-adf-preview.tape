@@ -15,7 +15,7 @@ Set Framerate 24
 Set TypingSpeed 30ms
 Set Shell "bash"
 
-# S-692-1 / issue #692 (DEC-274): `jr issue edit --dry-run` now reads
+# S-692-1 / issue #692 (D-274): `jr issue edit --dry-run` now reads
 # --description-stdin and renders the markdown to ADF locally, emitting BOTH
 # the raw input (plannedChanges.description) and the rendered ADF document
 # (plannedChanges.descriptionAdf) — with zero HTTP calls. All config/auth/

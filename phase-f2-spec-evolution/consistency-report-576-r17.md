@@ -92,7 +92,7 @@ Also confirmed: EC-3.9.013-3 (bc-3 line 3569):
 EC-3.9.013-3 present ✓; `<VALUE>` form ✓; taxonomy table row (bc-3 line 3556) also present ✓
 
 Also confirmed: BC-INDEX BC-3.9.013 row:
-> `| BC-3.9.013 | Delete error taxonomy: **invalid AID (non-numeric) exit 64 zero HTTP** (P7-001 CWE-88 — prior "sent verbatim" text reversed); AID 404 exit 64 + Jira body surfaced (DEC-168); 403 exit 1; 401 exit 2; 5xx exit 1; network exit 1 | ...`
+> `| BC-3.9.013 | Delete error taxonomy: **invalid AID (non-numeric) exit 64 zero HTTP** (P7-001 CWE-88 — prior "sent verbatim" text reversed); AID 404 exit 64 + Jira body surfaced (D-168); 403 exit 1; 401 exit 2; 5xx exit 1; network exit 1 | ...`
 
 P7-001 citation in BC-INDEX ✓; "prior 'sent verbatim' text reversed" correction marker ✓
 
@@ -332,7 +332,7 @@ bc-2 was modified by P6 (P6-003, 2026-07-16) and P7 (P7-001 AID validation, P7-0
 | Cache Types count at 7 (P6-004) | PASS ✓ | Inherited from R16 PASS; no P7 regression signals; CANONICAL-COUNTS at 7 |
 | BC-3.9.003 step-1: get_or_fetch_project_meta reuse | PASS ✓ | Inherited from R16 PASS; no P7 regression signals |
 | BC-X.8.010: reuse-contract (P7 minor fold-in) | PASS ✓ | P7 minor fold-in softened "no new reader/writer functions" to "implementer's choice at S5" — no new cache FILE; behavioral semantics unchanged |
-| Four-gate mechanism coherence (EC-3.5.003-3/008-5/3.9.014/3.9.015-5) | PASS ✓ | Inherited from R16 PASS; all four gates use DEC-174 read_line Ok(0)/Err mechanism language |
+| Four-gate mechanism coherence (EC-3.5.003-3/008-5/3.9.014/3.9.015-5) | PASS ✓ | Inherited from R16 PASS; all four gates use D-174 read_line Ok(0)/Err mechanism language |
 | BC heading counts match CANONICAL-COUNTS | PASS ✓ | bc-3: 111, bc-2: 64, cross-cutting: 84 — all match |
 | ADR-0017 in both ADR indices | PASS ✓ | Inherited from R16 PASS; no P7 regression signals |
 | Security review verdict APPROVE | PASS ✓ | Inherited from R16 PASS; CONS-576-005 "RESOLVED (security-review-576.md verdict: APPROVE, status: final)" |

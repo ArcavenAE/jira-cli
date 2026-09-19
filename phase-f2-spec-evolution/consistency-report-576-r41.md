@@ -301,7 +301,7 @@ skips P33 to the last BC-INDEX-touching pass (P32). **PASS.**
 
 > **Canonical grand total: 657** (+33 (=+27 initial CREATE 2026-07-15 + 6 round-B
 > BC-3.9.015..020) BC-2.7.001..012 + BC-3.9.001..014 + BC-X.8.010 added 2026-07-15
-> via SOH-ATTACHMENTS-1 F2 DEC-179 issues #576 #585; …)
+> via SOH-ATTACHMENTS-1 F2 D-179 issues #576 #585; …)
 
 Corrected "+33 (=+27+6)" present. Arithmetic: 27 + 6 = 33. ✓ **PASS.**
 
@@ -317,7 +317,7 @@ Line 66 already explicitly calls out +6 BCs (BC-3.9.015..020) separately — coh
 **CANONICAL-COUNTS line 79 (L2 alignment table bc-3 row) — verbatim:**
 
 > | bc-03-issue-write.md | 140 | bc-3-issue-write.md | 140 | YES (bumped 2026-07-15;
-> +14 BCs BC-3.9.001..014 added SOH-ATTACHMENTS-1 F2 DEC-179; +6 BCs BC-3.9.015..020
+> +14 BCs BC-3.9.001..014 added SOH-ATTACHMENTS-1 F2 D-179; +6 BCs BC-3.9.015..020
 > added adversary pass-1 round B 2026-07-15) |
 
 Line 79 also explicitly calls out the +6 round-B BCs — coherent with "+33 = +27 + 6".
@@ -536,7 +536,7 @@ P34. ECHO-BREAKER LIST-B empty claim confirmed. **PASS.**
 | INFO-6 | No holdout scenario for collision-skip exit-0 path | CONFIRMED — LIST-B is empty (no holdout changes in P34); collision-skip exit-0 path (BC-2.7.008 `--force` absent) still has no dedicated holdout scenario. |
 | INFO-8 | STATE.md spec version stale | CONFIRMED — STATE.md `current_step` and phase rows reference "spec v1.3.73" and "PASS-33 REMEDIATED"; v1.3.74 not yet recorded. |
 | INFO-15 | impact-boundary-576.md BC-3.9.004 INCONCLUSIVE annotation | CONFIRMED — impact-boundary-576.md line 159 still reads "(key order shown is illustrative; shape INCONCLUSIVE pending S5 live capture — if curated per BC-2.7.002, BTreeMap-alphabetical applies, P19-001)"; P34-001 annotations did not touch BC-3.9.004 row. |
-| INFO-NEW-5 | BC-3.9.009 Trace field not updated with P24-001 citation | CONFIRMED — bc-3-issue-write.md BC-3.9.009 Trace (around line 3489) reads "F2 spec evolution (2026-07-15 SOH-ATTACHMENTS-1, DEC-179); JSON render invariant #526 (`output::render_json` required for all `--output json` paths)" — no P24-001 citation. P34 did not touch bc-3; carry-forward unchanged. |
+| INFO-NEW-5 | BC-3.9.009 Trace field not updated with P24-001 citation | CONFIRMED — bc-3-issue-write.md BC-3.9.009 Trace (around line 3489) reads "F2 spec evolution (2026-07-15 SOH-ATTACHMENTS-1, D-179); JSON render invariant #526 (`output::render_json` required for all `--output json` paths)" — no P24-001 citation. P34 did not touch bc-3; carry-forward unchanged. |
 
 **INFO-11 retirement:**
 

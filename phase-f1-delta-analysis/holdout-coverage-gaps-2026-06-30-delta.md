@@ -21,7 +21,7 @@ author: product-owner
 
 ## Preamble: Anchor-First Protocol
 
-The broken-anchor class (DEC-137/DEC-138) blocks holdout authoring when the anchoring BC
+The broken-anchor class (D-137/D-138) blocks holdout authoring when the anchoring BC
 lacks individually-bodied sub-clauses that describe observable behavior. Every verdict below
 was made by reading the BC body in the relevant spec file (bc-2-issue-read.md, bc-3-issue-write.md,
 bc-5-boards-sprints.md, cross-cutting.md) and confirming adequate Preconditions, Postconditions,

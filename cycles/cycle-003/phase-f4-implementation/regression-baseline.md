@@ -12,7 +12,7 @@
 
 ## Notes
 
-Full integration suite deferred to per-PR ci-gate (authoritative); this baseline confirms develop compiles + unit tests + lint/fmt are green. develop @ 87f17aff is the released v0.7.0-dev.3 tip (cycle-002 F7 recorded 4660/0/106 full-suite PASS, DEC-311).
+Full integration suite deferred to per-PR ci-gate (authoritative); this baseline confirms develop compiles + unit tests + lint/fmt are green. develop @ 87f17aff is the released v0.7.0-dev.3 tip (cycle-002 F7 recorded 4660/0/106 full-suite PASS, D-311).
 
 ## Verdict
 

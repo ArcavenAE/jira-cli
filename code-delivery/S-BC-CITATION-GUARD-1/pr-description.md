@@ -1,15 +1,15 @@
-# [S-BC-CITATION-GUARD-1] CITATION-GUARDS Story B: BC-body Trace/Source file::symbol citation guard (DEC-148)
+# [S-BC-CITATION-GUARD-1] CITATION-GUARDS Story B: BC-body Trace/Source file::symbol citation guard (D-148)
 
 **Epic:** BC-X.13 CI-guards subsystem — CITATION-GUARDS bundle
 **Mode:** feature (F3 incremental)
-**Convergence:** CONVERGED after 4 adversarial passes (DEC-154-family; final window passes 2/3/4 clean; DEC-155)
+**Convergence:** CONVERGED after 4 adversarial passes (D-154-family; final window passes 2/3/4 clean; D-155)
 
 ![Tests](https://img.shields.io/badge/tests-bash_self--test_10%2F10-brightgreen)
 ![Mutation](https://img.shields.io/badge/mutation-clean--skip_(no_src%2F_change)-brightgreen)
 ![Cargo Suite](https://img.shields.io/badge/cargo_test-green-brightgreen)
 ![Self-test](https://img.shields.io/badge/self--test-10%2F10_fixtures-green)
 
-Adds `scripts/check-bc-citation-symbols.sh` (Guard 1, `BC-CITE-001`) — a bash script that validates every `src/` file path and symbol cited in `**Trace**:` / `**Source**:` fields of `.factory/specs/prd/bc-*.md` bodies. The guard uses a two-pass extractor, a 7-branch symbol dispatch, a coverage-floor (N=309, FLOOR=231), and 10 hermetic self-test fixtures (A–K). It runs as two new steps in the existing `spec-guard` CI job. This closes the DEC-148 citation-debt cycle: after ADR-0012 extracted `handle_jsm_create` → `jsm_create.rs` and `handle_edit` → `edit.rs`, 12 stale citations in bc-3 went undetected for ~30 adversarial passes.
+Adds `scripts/check-bc-citation-symbols.sh` (Guard 1, `BC-CITE-001`) — a bash script that validates every `src/` file path and symbol cited in `**Trace**:` / `**Source**:` fields of `.factory/specs/prd/bc-*.md` bodies. The guard uses a two-pass extractor, a 7-branch symbol dispatch, a coverage-floor (N=309, FLOOR=231), and 10 hermetic self-test fixtures (A–K). It runs as two new steps in the existing `spec-guard` CI job. This closes the D-148 citation-debt cycle: after ADR-0012 extracted `handle_jsm_create` → `jsm_create.rs` and `handle_edit` → `edit.rs`, 12 stale citations in bc-3 went undetected for ~30 adversarial passes.
 
 **Two-branch pairing:** This PR pairs with factory-artifacts commit `2b09313` (Task 0: 12+ stale citations fixed in `bc-*.md` files — auth refactor, assets refactor, snapshot reloc, bc-3 multi-line re-flow). The guard reads `origin/factory-artifacts`; that commit was pushed to `factory-artifacts` before this PR opened, so AC-001's canonical run already passes GREEN.
 
@@ -36,11 +36,11 @@ graph TD
 
 **Decision:** Add Guard 1 as steps in the existing `spec-guard` job, which already performs the dual-worktree checkout (`git worktree add .factory origin/factory-artifacts`) that makes both trees available simultaneously.
 
-**Rationale:** Option (a) reuses the established dual-mount pattern (DEC-129 lesson). Options (b) pre-commit-only and (c) dual-checkout new job were rejected — (b) doesn't protect CI; (c) duplicates the worktree setup already proven in `spec-guard`. No `ci-gate.needs` change required: `spec-guard` was already in `ci-gate.needs`.
+**Rationale:** Option (a) reuses the established dual-mount pattern (D-129 lesson). Options (b) pre-commit-only and (c) dual-checkout new job were rejected — (b) doesn't protect CI; (c) duplicates the worktree setup already proven in `spec-guard`. No `ci-gate.needs` change required: `spec-guard` was already in `ci-gate.needs`.
 
 **Alternatives Considered:**
 1. Pre-commit hook only — rejected: doesn't protect the CI merge gate; can be bypassed.
-2. New dedicated CI job with own checkout — rejected: duplicates the `spec-guard` dual-worktree setup; `ci-gate.needs` would require an extra entry (DEC-096/097 fragility class).
+2. New dedicated CI job with own checkout — rejected: duplicates the `spec-guard` dual-worktree setup; `ci-gate.needs` would require an extra entry (D-096/097 fragility class).
 
 **Consequences:**
 - Guard 1 reuses the same job that already validates BC counts, numeric-count lint, and Guard 2. Consistent per-guard sequencing: `--self-test` step then canonical step.
@@ -139,7 +139,7 @@ graph LR
 |---------|--------------|-------------|------------|
 | A | dead-symbol — fn-grep NO-MATCH | 1 | AC-002, AC-003 |
 | B | dead-file + tier-ii .snap sub-probes | 1 / 0 | AC-002, AC-003b |
-| C | import-only false-green protection (DEC-148 class) | 1 | AC-002 |
+| C | import-only false-green protection (D-148 class) | 1 | AC-002 |
 | D | Source-field extraction | 1 | AC-002, AC-004 |
 | E | two-pass extraction §-form → "1 citations checked" | 0 | AC-002 |
 | F | success path + pub(crate) const + fn-with-paren strip | 0 | AC-002 |
@@ -165,11 +165,11 @@ N/A — evaluated at wave gate per VSDD pipeline. This story is infrastructure (
 | Pass | Scope | Findings | Critical | High | Status |
 |------|-------|----------|----------|------|--------|
 | 1 | Full spec v1.2 | F-B1-01..10 | 2 | 3 | Fixed (v1.2) |
-| 2 | Full spec v1.3 | F-B2-01..09 | 1 | 2 | Fixed + DEC-154 Option A grammar extension (v1.3) |
+| 2 | Full spec v1.3 | F-B2-01..09 | 1 | 2 | Fixed + D-154 Option A grammar extension (v1.3) |
 | 3 | Full spec v1.5 | F-B3-01..06 | 1 | 1 | Fixed (v1.5) |
 | 4 (window-pass) | Full spec v1.9 | 0 blocking | 0 | 0 | CLEAN |
 
-**Convergence:** CONVERGED at DEC-155 (2026-07-06) — 15 fresh-context adversary passes, 9 fix rounds (v1.1→v1.9); clean window = passes 13/14/15 (CLEAN×3). Step 4.5 (pre-PR convergence): 4 fresh-context passes, 1 fix round + spec-amendment round (DEC-154-family F-01 two-tier adjudication), final window passes 2/3/4 clean. All 7 ACs PASS.
+**Convergence:** CONVERGED at D-155 (2026-07-06) — 15 fresh-context adversary passes, 9 fix rounds (v1.1→v1.9); clean window = passes 13/14/15 (CLEAN×3). Step 4.5 (pre-PR convergence): 4 fresh-context passes, 1 fix round + spec-amendment round (D-154-family F-01 two-tier adjudication), final window passes 2/3/4 clean. All 7 ACs PASS.
 
 <details>
 <summary><strong>Notable High-Severity Findings & Resolutions</strong></summary>
@@ -184,7 +184,7 @@ N/A — evaluated at wave gate per VSDD pipeline. This story is infrastructure (
 
 ### F-B2-02 (HIGH): Single-pass extractor silently dropped 11 tokens
 - **Problem:** Prior regex `` `src/[^` ]+` `` stopped at first space, silently dropping §-form and comma-space line-ref tokens.
-- **Resolution:** Two-pass extractor: Pass 1 (backtick-only stop) + Pass 2 (space-split reduce). DEC-154 grammar extension.
+- **Resolution:** Two-pass extractor: Pass 1 (backtick-only stop) + Pass 2 (space-split reduce). D-154 grammar extension.
 
 ### F-01 (two-tier adjudication): Tier-ii non-.rs tokens
 - **Problem:** Non-.rs `src/` tokens (e.g., `.snap` files) were either mis-handled or not counted in N.
@@ -332,7 +332,7 @@ pipeline-stages:
   story-decomposition: completed (S-BC-CITATION-GUARD-1 v1.12)
   tdd-implementation: completed (6 commits; red-gate → green)
   holdout-evaluation: "N/A — evaluated at wave gate"
-  adversarial-review: "completed — 15 passes, 9 fix rounds; CONVERGED (DEC-155)"
+  adversarial-review: "completed — 15 passes, 9 fix rounds; CONVERGED (D-155)"
   formal-verification: skipped (bash script; no formal-verify surface)
   convergence: achieved (passes 13/14/15 CLEAN × 3)
 convergence-metrics:

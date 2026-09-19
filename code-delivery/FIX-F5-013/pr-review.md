@@ -8,7 +8,7 @@ guard note. FIX-F5-013 / F5-R11-001.
 
 ## Verdict: PASS — no blocking findings
 
-Per DEC-173, this agent does not post an `--approve` verdict. Review is posted as a
+Per D-173, this agent does not post an `--approve` verdict. Review is posted as a
 `gh pr review --comment` (review event, not a `gh pr comment`) and the PASS assessment is
 returned to the orchestrating agent for the human merge decision.
 

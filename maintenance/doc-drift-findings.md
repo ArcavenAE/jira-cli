@@ -82,13 +82,13 @@ table were spot-checked against `src/cli/mod.rs` and matched.
 
 ## CLAUDE.md
 
-5. **[DRIFT — LOW, confirmed via DEC-299] Stale "future Confluence... support"
+5. **[DRIFT — LOW, confirmed via D-299] Stale "future Confluence... support"
    architectural line.**
    CLAUDE.md:129 reads:
    > "Product-namespaced `api/jira/` and `types/jira/` so future
    > Confluence/JSM/Assets support adds sibling directories."
 
-   `.factory/STATE.md` (line 119, DEC-299, 2026-08-21) records a **standing
+   `.factory/STATE.md` (line 119, D-299, 2026-08-21) records a **standing
    scope decision**: Confluence content-modification is permanently OUT OF
    SCOPE for `jr` (issues #581/#669 closed not-planned on this basis), and
    explicitly calls out this exact CLAUDE.md line as owed a trim: *"CLAUDE.md's
@@ -137,11 +137,11 @@ table were spot-checked against `src/cli/mod.rs` and matched.
    (docs only).
 
 10. **[NOT FOUND — clarification] "Over-long Confluence architectural-line"
-    wording in the task prompt.** No literal string "DEC-299" or "over-long"
-    exists inside CLAUDE.md itself; DEC-299 and its exact wording live in
+    wording in the task prompt.** No literal string "D-299" or "over-long"
+    exists inside CLAUDE.md itself; D-299 and its exact wording live in
     `.factory/STATE.md` (see finding #5). Flagging so the distinction is clear
     for whoever actions this: the fix target is CLAUDE.md:129, the authority
-    for the fix is `.factory/STATE.md`'s DEC-299 row, not any in-CLAUDE.md
+    for the fix is `.factory/STATE.md`'s D-299 row, not any in-CLAUDE.md
     marker.
 
 No other backtick-quoted file-path citations, ADR listing, or "AI Agent Notes"
@@ -243,7 +243,7 @@ authoritative recount):**
 3. README: refresh the `v0.5.0` version-pin example to a current tag while
    touching #2 (finding #3, optional/opportunistic).
 4. CLAUDE.md: drop "Confluence" from the `api/jira/`/`types/jira/` sibling-
-   directories line per DEC-299 (finding #5) — this fix is already
+   directories line per D-299 (finding #5) — this fix is already
    pre-authorized by the repo's own standing decision log.
 5. CLAUDE.md: update `cli/issue/list.rs` LOC from 1,256 to 2,012 and
    `cli/issue/create.rs` from 394 to 530 in "Known Size Deviations" (findings

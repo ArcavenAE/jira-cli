@@ -74,7 +74,7 @@ overriding its own earlier draft note, not a story-writer error.
 
 ## 2. Scope Fidelity — PASS
 
-Cross-checked the F1-approved delivery scope (DEC-368: "DELIVER Workstreams A/B/C/E... Workstream
+Cross-checked the F1-approved delivery scope (D-368: "DELIVER Workstreams A/B/C/E... Workstream
 D = SPIKE ONLY") and ADR-0026's unified fix table / 16-scope set against the 6 stories:
 
 - **All 6 JSM `servicedeskapi` routing call sites** (`list_service_desks`, `list_request_types`,
@@ -103,7 +103,7 @@ D = SPIKE ONLY") and ADR-0026's unified fix table / 16-scope set against the 6 s
 - **The Teams spike is spike-only, no code delivery** — S6's frontmatter (`bcs: []`,
   `implementation_strategy: research`) and its explicit "What this story explicitly does NOT
   deliver" section (no `src/` edit, no new BC/VP/ADR amendment, no `DEFAULT_OAUTH_SCOPES` edit)
-  correctly enforce DEC-368's "SPIKE ONLY this cycle" constraint. **Confirmed: no Teams
+  correctly enforce D-368's "SPIKE ONLY this cycle" constraint. **Confirmed: no Teams
   re-platform CODE story exists in this batch** — the scope-fidelity "nothing more" check passes.
 - **Nothing extra**: no story touches any file in F1 §8 / F2-architecture-delta.md's "Files
   confirmed NOT touched" regression baseline (`src/api/jira/issues.rs`, `users.rs`, `sprints.rs`
@@ -144,7 +144,7 @@ D = SPIKE ONLY") and ADR-0026's unified fix table / 16-scope set against the 6 s
   already established for content-accuracy-vs-compile-order edges in cycle-013.
 - **Wave-1/Wave-2/parallel-track layering correct:** Wave 1 = {S1,S2,S3,S4} (indegree 0
   immediately), Wave 2 = {S5} (indegree 0 only after S1 completes), S6 = non-gating parallel track
-  (matches DEC-368 / F1 §6a's explicit "spike, non-gating" framing). Critical path S1→S5 = 5+2 = 7
+  (matches D-368 / F1 §6a's explicit "spike, non-gating" framing). Critical path S1→S5 = 5+2 = 7
   points, correctly computed in `wave-schedule.md` §Summary.
 - **Cross-cycle overlap correctly flagged, correctly NOT gated:** `src/api/auth.rs` overlap with
   two still-undispatched cycle-007 `status: draft` stories

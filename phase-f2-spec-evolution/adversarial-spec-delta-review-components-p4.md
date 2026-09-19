@@ -10,13 +10,13 @@ LOW-2 [bc-3 BC-3.4.021 L2233, BC-3.4.013 L1116, BC-3.4.012 L962-966]: dry-run pl
 
 LOW-3 [ADR-0018 §3 L132-143, §1 L80-92 — architect]: snapshot clause shown without ORDER BY key ASC (BC-8.2.007 H1 made it mandatory); §1/§3 don't reflect M1/M2 numeric source/target confirmation GET. ADR behind its BCs. Fix: refresh clause + note numeric-confirmation GET. [OWNED BY ARCHITECT — concurrent, not touched by this burst]
 
-LOW-4 [bc-8 BC-8.2.001 Postconditions L413-426 vs BC-8.3.005 L1137-1158]: BC-8.3.005 carries explicit DEC-188 note (neither-scope MUST be app-level JrError::UserError exit 64, NOT ArgGroup::required→exit 2) and says it's "mechanically identical to BC-8.2.001", but BC-8.2.001 lacks the same mechanism note. Parity/clarity gap (exit code unambiguous via prd-delta taxonomy). Fix: propagate the DEC-188 mechanism note to BC-8.2.001.
+LOW-4 [bc-8 BC-8.2.001 Postconditions L413-426 vs BC-8.3.005 L1137-1158]: BC-8.3.005 carries explicit D-188 note (neither-scope MUST be app-level JrError::UserError exit 64, NOT ArgGroup::required→exit 2) and says it's "mechanically identical to BC-8.2.001", but BC-8.2.001 lacks the same mechanism note. Parity/clarity gap (exit code unambiguous via prd-delta taxonomy). Fix: propagate the D-188 mechanism note to BC-8.2.001.
 
 INFO-1: BC-8.2.008 non-idempotent delete (source-not-found → exit 64 not 0) diverges from research Q1.6 + CLAUDE.md idempotency convention but is well-reasoned/documented — accepted, on record.
 
 INFO-2 [process-gap]: VP-COMPONENT-* cited inline with NO VP-INDEX/verification-architecture registry (verification-delta §4 R-4); no automated BC-cited-VP↔formalization consistency guard — MEDIUM-1 is exactly that class. Recommend architect seed a VP registry + check.
 
-Verified CLEAN: delete-safety snapshot pagination/anti-loop fail-closed, cross-project resolver scoping, wire-shape asymmetry, exit-code DEC-188 class, filter #606, rename #608, BC↔VP 001-026, ADR↔BC (aside LOW-3 staleness), output-channel profiles, Component.id split. No #607/#609 drift.
+Verified CLEAN: delete-safety snapshot pagination/anti-loop fail-closed, cross-project resolver scoping, wire-shape asymmetry, exit-code D-188 class, filter #606, rename #608, BC↔VP 001-026, ADR↔BC (aside LOW-3 staleness), output-channel profiles, Component.id split. No #607/#609 drift.
 
 ---
 
@@ -27,5 +27,5 @@ Verified CLEAN: delete-safety snapshot pagination/anti-loop fail-closed, cross-p
 - LOW-1: FIXED — numeric-source --project mismatch check extended to all dispositions (--orphan, neither-flag); config-default-project handling documented.
 - LOW-2: FIXED — BC-3.4.012 "byte-for-byte across three surfaces" claim scoped to exclude dry-run JSON (which is array-of-objects, not string).
 - LOW-3: NOT TOUCHED — owned by architect (ADR-0018), concurrent work.
-- LOW-4: FIXED — DEC-188 mechanism note propagated to BC-8.2.001.
+- LOW-4: FIXED — D-188 mechanism note propagated to BC-8.2.001.
 - INFO-1, INFO-2: accepted / on record, no action required this burst.

@@ -405,7 +405,7 @@ today's `mutants` job)
 ```
 
 **Design notes:**
-- This job is **never** a `ci-gate.needs` member (DEC-096/097 compliance —
+- This job is **never** a `ci-gate.needs` member (D-096/097 compliance —
   only `mutants-aggregate` is). It is admitted into `ci.yml`'s job universe
   via `PINNED_GATE_EXCLUDED_JOBS`, not `ci-gate.needs` — see
   `architecture-delta.md §Guardrail Lockstep Plan`.

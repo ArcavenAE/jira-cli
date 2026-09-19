@@ -12,7 +12,7 @@
 
 **Status:** Ready for implementation (F4)
 **Issue:** #639
-**Epic:** SOH-DX-1 (DEC-188)
+**Epic:** SOH-DX-1 (D-188)
 **Semver impact:** BREAKING — 0.6.0-dev.11 → 0.6.0-dev.12 (version-retarget ruling 2026-07-29; no train bump; see spec-changelog.md [1.3.169])
 **BC references:** BC-3.8.012, BC-3.8.013
 **Story:** `.factory/stories/S-639-1.md`
@@ -24,7 +24,7 @@
 `jr issue create --field KEY=VALUE` and `jr issue create --on-behalf-of USER` silently warn to
 stderr and proceed on the platform path (no `--request-type`). This makes the flags appear to do
 something useful when they do not. The current behavior is classified as a behavioral defect per
-DEC-188: warn-and-proceed is strictly worse than a clear exit-64 error.
+D-188: warn-and-proceed is strictly worse than a clear exit-64 error.
 
 ## Behavior Change (BREAKING)
 
@@ -153,5 +153,5 @@ unsupported flags.
 - BC-3.8.012: `--field` without `--request-type` behavioral contract
 - BC-3.8.013: `--on-behalf-of` without `--request-type` behavioral contract
 - ADR-0014: JSM request-type dispatch fork
-- DEC-188: Decision to promote from warn-and-proceed to exit-64
+- D-188: Decision to promote from warn-and-proceed to exit-64
 - `.factory/stories/S-639-1.md`: Full implementation story with all 21 ACs

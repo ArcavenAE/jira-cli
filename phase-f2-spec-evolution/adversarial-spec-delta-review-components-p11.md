@@ -28,7 +28,7 @@ file present for this bundle at review time).
 
 | ID | Previous Severity | Status | Notes |
 |----|-------------------|--------|-------|
-| ADV-P10-MED-001 (live-smoke gate mandates a REPLACE `jr` never emits — VP-012 §1.2/§5 + BC-3.4.023 Delivery note) | MEDIUM | PARTIALLY_RESOLVED | VP-COMPONENT-012 §1.2/§5 and BC-3.4.023's own Delivery note were corrected to "one ADD, one REMOVE" (VP-012 §1.2 now reads "F4/F6 MUST gate shipping behind a live smoke test (1×ADD, 1×REMOVE across ≥2 issues in one project…)"; BC-3.4.023 Delivery note matches). prd-delta-components.md's DEC-280 Linkage section (L230-231) was NOT re-synced and still reads the stale "(one ADD, one REMOVE, one REPLACE against ≥2 issues in one project)" — see ADV-P11-MED-001 below, same defect, different surface. |
+| ADV-P10-MED-001 (live-smoke gate mandates a REPLACE `jr` never emits — VP-012 §1.2/§5 + BC-3.4.023 Delivery note) | MEDIUM | PARTIALLY_RESOLVED | VP-COMPONENT-012 §1.2/§5 and BC-3.4.023's own Delivery note were corrected to "one ADD, one REMOVE" (VP-012 §1.2 now reads "F4/F6 MUST gate shipping behind a live smoke test (1×ADD, 1×REMOVE across ≥2 issues in one project…)"; BC-3.4.023 Delivery note matches). prd-delta-components.md's D-280 Linkage section (L230-231) was NOT re-synced and still reads the stale "(one ADD, one REMOVE, one REPLACE against ≥2 issues in one project)" — see ADV-P11-MED-001 below, same defect, different surface. |
 | ADV-P10-LOW-001 (BC-8.1.001 "(endpoint confirmed non-paginated)" unsupported citation) | LOW | RESOLVED | BC-8.1.001 Source/Behavior softened to "assumed non-paginated … pending F4 live verification" with the superseded wording retained for audit trail (bc-8-components.md L49-57, L65-68). prd-delta-components.md's own summary table row (L50) was NOT re-synced and still reads "(non-paginated)" as fact — see ADV-P11-LOW-001 below, same defect, different surface. |
 | ADV-P10-INFO-001 (BC-8.2.007 Postcondition 5 JRACLOUD-95368 drift-abort sub-path had no named exit code/message) | INFO | RESOLVED | BC-8.2.007 Postcondition 5 now names the synthesized outcome: exit 1, `JrError::UserError`-shaped message "could not reliably enumerate affected issues — aborting delete" (bc-8-components.md L1323-1331). prd-delta-components.md's Error Taxonomy table gained a matching new row (L173). However, VP-COMPONENT-017's drift-abort wiremock fixture (both in verification-delta-components.md and in BC-8.2.007's own VP-017 subsection) still pins only `.expect(0)` on DELETE and does not assert the new exit code/message — see ADV-P11-LOW-002 below. |
 | ADV-P10-INFO-002 (BC-8.1.004 H1 reads as unconditional exit-64 for edit/delete, though numeric-ID exemption makes it conditional) | INFO | RESOLVED | BC-8.1.004 H1 now reads "...for `list`/`edit`/`delete` ONLY" with the numeric-ID exemption caveat folded into the summary row in prd-delta-components.md (L53) and cross-checked against the body's EC-8.1.004-6..8 exemption language — no residual title/body mismatch found on re-verification. |
@@ -37,16 +37,16 @@ file present for this bundle at review time).
 
 ### MEDIUM
 
-#### ADV-P11-MED-001: prd-delta-components.md's DEC-280 Linkage still mandates the retired REPLACE live-smoke criterion, one line after pass-10 fixed it everywhere else
+#### ADV-P11-MED-001: prd-delta-components.md's D-280 Linkage still mandates the retired REPLACE live-smoke criterion, one line after pass-10 fixed it everywhere else
 
 - **Severity:** MEDIUM
 - **Category:** spec-fidelity / derivative-doc propagation lag
-- **Location:** `.factory/phase-f2-spec-evolution/prd-delta-components.md` DEC-280 Linkage
+- **Location:** `.factory/phase-f2-spec-evolution/prd-delta-components.md` D-280 Linkage
   section (~L230-231)
 - **Description:** Pass 10's MEDIUM-1 established that `jr` never emits a `REPLACE`
   `bulkEditMultiSelectFieldOption` — only `ADD`/`REMOVE` — and corrected the live-smoke gate
   wording in `VP-COMPONENT-012` §1.2/§5 and in BC-3.4.023's own Delivery note to "one ADD, one
-  REMOVE across ≥2 issues in one project." That fix-burst missed this document's own DEC-280
+  REMOVE across ≥2 issues in one project." That fix-burst missed this document's own D-280
   Linkage section, one paragraph below the Count Propagation section, which still reads "one ADD,
   one REMOVE, one REPLACE against ≥2 issues in one project" — the exact unsatisfiable criterion
   pass-10 retired. This is the third derivative surface carrying this wording (VP-012 §1.2, VP-012
@@ -60,7 +60,7 @@ file present for this bundle at review time).
   precedent". BC-3.4.023's own Delivery note (bc-3-issue-write.md, current) and VP-COMPONENT-012
   §1.2/§5 (verification-delta-components.md, current) both now read "one ADD, one REMOVE across
   ≥2 issues in one project" — this document is the sole remaining holdout.
-- **Impact:** A reader tracing DEC-280 from this summary document (rather than the BC/VP bodies
+- **Impact:** A reader tracing D-280 from this summary document (rather than the BC/VP bodies
   directly) would re-derive the same unsatisfiable "1×REPLACE" acceptance criterion pass-10 just
   eliminated, reintroducing the risk of F4/F6 wasting effort exercising a code path `jr` cannot
   construct, or misreading it as license for out-of-scope `set:`/`replace:` CLI grammar (#607
@@ -178,7 +178,7 @@ file present for this bundle at review time).
   This pass found FOUR such instances, all still on the SAME axis (a fix-burst edits the
   authoritative BC/VP body text but the two F2 derivative reconciliation docs —
   `prd-delta-components.md` and `verification-delta-components.md` — are not swept for every
-  citing/summarizing location in the same commit): MED-1 (DEC-280 Linkage parenthetical), LOW-1
+  citing/summarizing location in the same commit): MED-1 (D-280 Linkage parenthetical), LOW-1
   (BC-8.1.001 summary row), LOW-2 (VP-COMPONENT-017 fixture description in both derivative and
   BC-inline copies), and INFO-1 (changelog header). The trigger condition from pass 10 is
   satisfied — this is now formally promoted from "pattern watch" to a documented, recurring

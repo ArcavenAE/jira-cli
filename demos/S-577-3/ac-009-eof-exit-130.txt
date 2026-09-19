@@ -16,7 +16,7 @@ AC-009 assertions verified in test body:
 
   The JR_STDIN_IS_TTY=1 seam suppresses the auto-no-input flip so the interactive
   prompt fires. stdin().lock().read_line() returns Ok(0) (EOF) which the handler
-  maps to JrError::Interrupted per DEC-174 (do NOT use dialoguer::interact_on —
+  maps to JrError::Interrupted per D-174 (do NOT use dialoguer::interact_on —
   piped-stderr NotConnected failure; manual eprint! + read_line is unconditional).
 
   - exit code == 130 (JrError::Interrupted, from error.rs::exit_code())

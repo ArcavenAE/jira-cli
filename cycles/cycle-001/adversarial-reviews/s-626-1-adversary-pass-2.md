@@ -26,7 +26,7 @@ story: S-626-1
 cycle: cycle-001
 pass: 2
 agent: adversary
-basis: TRUE ADVERSARY AGENT (not a DEC-190 substitute)
+basis: TRUE ADVERSARY AGENT (not a D-190 substitute)
 date: 2026-07-30
 feature_head: 20d533e45e42eaf08b4f2d172fe8b86a8490fb44
 pr: 667

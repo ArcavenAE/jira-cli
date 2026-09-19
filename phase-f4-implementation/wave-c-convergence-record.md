@@ -27,7 +27,7 @@ Zero [process-gap] findings across passes 3/4/5 (S-7.02 step 2/3 satisfied vacuo
 Settled adjudications carried to wave D:
 - **BC Source citations sync at bundle close** (BC-3.5.003 precedent): bc-3-issue-write.md Source-field citations for edit/view handlers will be updated at bundle close (S-577-5), not in each wave. No re-convergence required for source-citation-only updates.
 - **Red Gate provenance docstrings accepted**: pass-2 src findings addressed via targeted docstring update (PR #619); pattern is low-delta with no behavioral change; accepted for wave-C integration close.
-- **Inert flags DEC-169 adjudication**: --yes flag silent no-op (EC-3.5.008-4) remains settled; no further wave-C action required.
+- **Inert flags D-169 adjudication**: --yes flag silent no-op (EC-3.5.008-4) remains settled; no further wave-C action required.
 
 Wave-D preflight items:
 - **(a) JSM sd.public.comment wire-shape live verification** recommended before S-577-5 delivery (PR #616 review advisory): confirm that a PUT with a visibility `properties` array is accepted by live Jira JSM before implementing the --internal/--public path; JSDCLOUD-6050 caveat is research-confirmed but live-wire has not been tested in this cycle.

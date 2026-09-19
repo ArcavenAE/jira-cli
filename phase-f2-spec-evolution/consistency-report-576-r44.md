@@ -111,7 +111,7 @@ r43 required: (a) correct "Earliest consumer: S2" → S1 in BC-2.7.011 primary c
 > `**Earliest consumer: S1** (Story 1 — first surface to write server-supplied filenames
 > to human-readable output; S1 story-writers must apply display-sanitization to attachment
 > list table cells (BC-2.7.001); S3 and S4 story-writers must allocate display-sanitization
-> at confirmation prompt call sites per DEC-184 R3.13).`
+> at confirmation prompt call sites per D-184 R3.13).`
 
 Assessment of closure:
 
@@ -119,7 +119,7 @@ Assessment of closure:
 - "S1 story-writers must apply display-sanitization to attachment list table cells
   (BC-2.7.001)" ✓ — S1 obligation explicitly stated with BC anchor
 - "S3 and S4 story-writers must allocate display-sanitization at confirmation prompt call
-  sites per DEC-184 R3.13" ✓ — S3 added alongside S4 (GAP-R43-002 closed)
+  sites per D-184 R3.13" ✓ — S3 added alongside S4 (GAP-R43-002 closed)
 
 **Cross-reference sentence immediately follows:**
 > `Cross-referenced from: BC-2.7.008 Overwrite behavior (collision-skip warnings),
@@ -289,7 +289,7 @@ EXIT: 0
 | r43 Finding | Status |
 |-------------|--------|
 | GAP-R43-001: BC-INDEX rows stale for 6 BCs modified in v1.3.80 | CLOSED — all 6 rows updated; BC-INDEX v6.34; rows are consistent with BC body files |
-| GAP-R43-002: BC-2.7.011 allocation sentence omitted S3 | CLOSED — "S3 and S4 story-writers must allocate display-sanitization at confirmation prompt call sites per DEC-184 R3.13" ✓ |
+| GAP-R43-002: BC-2.7.011 allocation sentence omitted S3 | CLOSED — "S3 and S4 story-writers must allocate display-sanitization at confirmation prompt call sites per D-184 R3.13" ✓ |
 | NEW-576-V3-001 (fold): "Earliest consumer: S2" understated S1 | CLOSED — body reads "Earliest consumer: S1"; BC-INDEX row reads "earliest consumer S1 (list table cells)" ✓ |
 | NEW-576-V3-002: Unicode bidi out-of-scope note absent | CLOSED — scope note appended; does not contradict primary clause ✓ |
 | INFO-R43-001: stale "Spec version: 1.3.79" duplicate line in prd-delta | CLOSED — stale line removed; exactly one closing-count line in SEC-576-V2-ROUND section (Spec version: 1.3.80) ✓ |

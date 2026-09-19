@@ -155,7 +155,7 @@ All 17 check areas pass. Six INFO-level annotation gaps (five carry-forward from
 
 **Quote-verified verbatim** (`bc-3-issue-write.md` BC-3.9.015 Metadata-fetch failure paragraph, line 3641):
 
-> **Metadata-fetch failure**: if the pre-prompt `GET /rest/api/3/attachment/{id}` returns 404, exit 64 immediately: `"Attachment <AID> not found or not accessible."` — aligns with the read-path 404 convention (canonical string only, per BC-2.7.012's read-vs-write divergence); differs from BC-3.9.008's DELETE 404 (canonical + Jira body per DEC-168) because the pre-prompt fetch is a read GET, not a write operation; no DELETE issued.
+> **Metadata-fetch failure**: if the pre-prompt `GET /rest/api/3/attachment/{id}` returns 404, exit 64 immediately: `"Attachment <AID> not found or not accessible."` — aligns with the read-path 404 convention (canonical string only, per BC-2.7.012's read-vs-write divergence); differs from BC-3.9.008's DELETE 404 (canonical + Jira body per D-168) because the pre-prompt fetch is a read GET, not a write operation; no DELETE issued.
 
 **Result**: The prior "mirrors BC-3.9.013 / BC-3.9.008 pre-flight guard" language has been replaced with the softened phrasing that correctly distinguishes the read vs write GET context and cross-references the read-vs-write divergence documented in BC-2.7.012. PRESENT AND CORRECTLY STATED ✓
 

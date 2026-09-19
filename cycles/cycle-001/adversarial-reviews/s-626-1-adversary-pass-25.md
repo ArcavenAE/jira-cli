@@ -37,7 +37,7 @@ isolation: ELIGIBLE (three Globs used repo root with patterns anchored at whitel
 
 ## Provenance
 
-This artifact is a **DIRECT CAPTURE** of adversary reviewer output relayed by the orchestrator, recorded same-session. Pass-25 ran against feature HEAD `14416fd9` (the DEC-223 fresh STRICT window). This is the second pass in the fresh STRICT window (passes 24/25/26) mandated by DEC-223.
+This artifact is a **DIRECT CAPTURE** of adversary reviewer output relayed by the orchestrator, recorded same-session. Pass-25 ran against feature HEAD `14416fd9` (the D-223 fresh STRICT window). This is the second pass in the fresh STRICT window (passes 24/25/26) mandated by D-223.
 
 **Policy rubric:** `.factory/policies.yaml` does not exist. Baseline applied (POL-11 positive-coverage, S-7.01 partial-fix discipline, semantic-anchoring severity ladder, six mandated axes).
 
@@ -45,7 +45,7 @@ This artifact is a **DIRECT CAPTURE** of adversary reviewer output relayed by th
 
 ## RECORD PROMINENTLY — SECOND CONSECUTIVE CLEAN VERDICT; WINDOW 2/3
 
-**Pass-25 is the SECOND consecutive CLEAN verdict.** Window 24/25/26 = 2/3. One more CLEAN pass (pass-26) would complete the 3/3 strict window required by DEC-199 and DEC-223.
+**Pass-25 is the SECOND consecutive CLEAN verdict.** Window 24/25/26 = 2/3. One more CLEAN pass (pass-26) would complete the 3/3 strict window required by D-199 and D-223.
 
 **Value of multi-pass window concretely demonstrated:** Pass-25 found three things that pass-24 missed. The PRE-FLIGHT CHECK corrective held for both passes (isolation CLEAN/ELIGIBLE in both). All five findings in pass-25 were not found by pass-24.
 
@@ -55,7 +55,7 @@ This artifact is a **DIRECT CAPTURE** of adversary reviewer output relayed by th
 
 **ELIGIBLE.** The reviewer disclosed that three Glob calls used the repository root as path but with patterns ANCHORED at whitelisted subdirectories (`stories/S-626-1.md`, `demos/S-626-1/*`, `tests/ci_gate_completeness.rs`). Because the patterns are anchored at whitelisted paths, no `.factory/`-root file (STATE.md, ADV-P1-INDEX.md, prior pass artifacts) could be matched. Zero banned content surfaced; self-disclosed unprompted.
 
-Per the ISOLATION ELIGIBILITY PRINCIPLE (DEC-224): ELIGIBLE, as nothing surfaced and neither deviation could reach a banned file.
+Per the ISOLATION ELIGIBILITY PRINCIPLE (D-224): ELIGIBLE, as nothing surfaced and neither deviation could reach a banned file.
 
 ---
 
@@ -99,7 +99,7 @@ Pass-25 verified all findings from pass-24 (the immediately preceding executed p
 - **Severity:** LOW
 - **Category:** stale-line-citation / anchor-migration-gap
 - **Location:** `tests/ci_gate_completeness.rs` — docstring for one or more pin assertions
-- **Description:** The anchor migration (DEC-213 + DEC-222) reached `ci.yml` and `.factory/stories/` but NOT the paired Rust pin's docstring in `tests/ci_gate_completeness.rs`. Two stale line citations remain:
+- **Description:** The anchor migration (D-213 + D-222) reached `ci.yml` and `.factory/stories/` but NOT the paired Rust pin's docstring in `tests/ci_gate_completeness.rs`. Two stale line citations remain:
   - `ci.yml:~124` (actual: ~125 after the +1 shift from `14416fd9`)
   - `ci.yml:~137` (actual: ~138, AND this reference is **inverted** — it cites the line number of the command that the pin paragraph *contrasts against*, not the line being asserted)
   
@@ -126,7 +126,7 @@ Pass-25 verified all findings from pass-24 (the immediately preceding executed p
 
 - **Evidence:** Three `None => "-".to_string()` arms in board.rs/list.rs/sprint.rs; Postcondition 1 does not enumerate this arm; no test fixture with `team_id = None` in a mixed set.
 - **Proposed Fix:** (1) Extend Postcondition 1 to enumerate all three cell states with their precise conditions. (2) Verify BC-5.3.002/003/004 for the same under-enumeration shape. Route a test-coverage story for the `"-"` arm.
-- **Status:** FIXED (spec part) — this burst (bc-5-boards-sprints.md Postcondition 1 extended to enumerate all three cell states; BC-5.3.002/003/004 swept — all three CLEAN with reasons; `"-"` arm recorded in Trace as unpinned). **Test coverage ROUTED** — the mixed-set test was deliberately NOT written; deferred as separate scope decision (DEC-226) and tracked as MIXED-SET-DASH-ARM-UNPINNED drift item.
+- **Status:** FIXED (spec part) — this burst (bc-5-boards-sprints.md Postcondition 1 extended to enumerate all three cell states; BC-5.3.002/003/004 swept — all three CLEAN with reasons; `"-"` arm recorded in Trace as unpinned). **Test coverage ROUTED** — the mixed-set test was deliberately NOT written; deferred as separate scope decision (D-226) and tracked as MIXED-SET-DASH-ARM-UNPINNED drift item.
 
 ---
 
@@ -164,7 +164,7 @@ Pass-25 verified all findings from pass-24 (the immediately preceding executed p
 
 **Overall Assessment:** CLEAN — 0 substantive gaps, 0 code defects; **SEVENTEENTH consecutive zero-src/-defect pass**. Isolation ELIGIBLE (three Globs anchored at whitelisted subdirs; no banned content surfaced). Window 24/25/26 = 2/3. **Found three things pass-24 missed** — concretely demonstrating the value of a multi-pass window.
 
-**LOW-003 is the most consequential finding:** BC-5.3.001 Postcondition 1 under-enumeration (two cell states vs three). The `"-"` mixed-set arm has zero test or mutation pressure; spec now enumerates it and Trace records it as unpinned. Test coverage routed as DEC-226 + MIXED-SET-DASH-ARM-UNPINNED drift item.
+**LOW-003 is the most consequential finding:** BC-5.3.001 Postcondition 1 under-enumeration (two cell states vs three). The `"-"` mixed-set arm has zero test or mutation pressure; spec now enumerates it and Trace records it as unpinned. Test coverage routed as D-226 + MIXED-SET-DASH-ARM-UNPINNED drift item.
 
 **CI FLOOR AUDITED SOUND (FIFTH CONSECUTIVE INDEPENDENT CONFIRMATION):** All 8 pin assertions independently verified non-comment-satisfiable.
 

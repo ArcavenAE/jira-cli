@@ -15,5 +15,5 @@ AC-012 assertions verified in test body (BC-3.5.008, VP-577-030 variant 2):
   - exit code == 130 (JrError::Interrupted — EC-3.5.008-5)
   - wiremock PUT has .expect(0); confirmed 0 PUT requests sent
   - NOTE: Ok(0) from read_line (EOF) MUST map to JrError::Interrupted, NOT cancel path
-  - DEC-174 mechanism: eprint! + read_line (NOT dialoguer::interact_on — piped-stderr
+  - D-174 mechanism: eprint! + read_line (NOT dialoguer::interact_on — piped-stderr
     NotConnected failure); EOF/io::Error → exit 130

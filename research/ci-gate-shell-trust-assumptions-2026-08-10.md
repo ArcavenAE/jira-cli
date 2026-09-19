@@ -1,7 +1,7 @@
 ---
 document_type: research
 date: 2026-08-10
-decision_id: DEC-246-FOLLOWUP
+decision_id: D-246-FOLLOWUP
 story_id: S-626-1
 topic: >-
   External validation of the six environmental assumptions underpinning the

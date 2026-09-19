@@ -81,7 +81,7 @@ disclosed. Version-scoped, single-crate, no global-policy change.
 ## Non-blocking nits (no changes required)
 - Block header comment (line 25) still reads "Unavoidable duplicate crate versions
   as of 2026-05-07," now stale — but consistent with later entries (cpufeatures
-  DEC-185, windows-sys ADR-0021) that also postdate it; each new `reason` carries its
+  D-185, windows-sys ADR-0021) that also postdate it; each new `reason` carries its
   own inline date.
 - `syn = "2"` will surface an `unnecessary-skip` warning on develop until the
   Dependabot bumps introduce syn 3. Expected, documented, self-resolving.

@@ -8,7 +8,7 @@ Next dev pre-release in the 0.7.0 series. Bumps `Cargo.toml`/`Cargo.lock` from `
 - **Added:** `jr field options <field>` (S-580-1, BC-580, #578, #740) — lists a field's allowed options via M1/M2/M3 context-mechanism resolution (createmeta/editmeta/JSM requesttype-fields), with `--value` filtering and table/JSON output.
 - **Changed:** `issue edit --field NAME:kind=VALUE` now dispatches real resolution for `:option`/`:id`/`:name`/`:asset` (S-578-2, BC-3.4.015/016/021/027-031, #578, #741) — replaces S-578-1's interim exit-64 guard.
 - **Changed:** JSM `issue create --field` now dispatches the same kind-hint resolution as `issue edit --field` (S-578-3, BC-3.8.008, #578, #742), including `:asset`'s workspace-scoped CMDB L2 resolution.
-- **Changed:** `jr issue create --field NAME=VALUE` (platform, non-JSM path) no longer exits 64 pre-flight — it now resolves via the project's Create screen (`createmeta`) (S-578-4, BC-3.3.010/011, DEC-310 — reverses DEC-188 from S-639-1). `--on-behalf-of` is unchanged (still requires `--request-type`, BC-3.8.013). A new dedicated-flag × `--field` collision guard (D2) rejects a pair that targets the same wire key as a dedicated flag before any HTTP call.
+- **Changed:** `jr issue create --field NAME=VALUE` (platform, non-JSM path) no longer exits 64 pre-flight — it now resolves via the project's Create screen (`createmeta`) (S-578-4, BC-3.3.010/011, D-310 — reverses D-188 from S-639-1). `--on-behalf-of` is unchanged (still requires `--request-type`, BC-3.8.013). A new dedicated-flag × `--field` collision guard (D2) rejects a pair that targets the same wire key as a dedicated flag before any HTTP call.
 
 ### Internal / CI
 

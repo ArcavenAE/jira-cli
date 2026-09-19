@@ -21,27 +21,27 @@ to `src/`, `tests/`, or any binary/build artifact.
 The "Known Size Deviations" entry still said `create.rs` was ~530 LOC (from the
 2026-08-25 measurement). Since then, S-578-1's `parse_field_kv` hint-syntax work and
 S-578-4's platform-path `--field` `createmeta` resolution (BC-3.3.010/BC-3.3.011,
-DEC-310) grew the file to **~1,253 LOC** — crossing ADR-0012's 1,000-LOC shard
+D-310) grew the file to **~1,253 LOC** — crossing ADR-0012's 1,000-LOC shard
 threshold with no DOCUMENT-AS-IS write-up justifying the deviation. Fixed: the entry
 is re-measured (2026-08-31) and rewritten to explain exactly what grew the file (the
 step 2a hint-parse guard, the step 2b `CREATE_D2_GOVERNED_KEYS` collision guard, the
 step 4b `get_issue_types_for_project` + `get_createmeta_fields` resolution via
-`field_resolve.rs`'s `dispatch_field_value`, and the DEC-310 guard-reversal removal of
-the S-639-1/DEC-188 pre-flight exit) and to state the DOCUMENT-AS-IS rationale
+`field_resolve.rs`'s `dispatch_field_value`, and the D-310 guard-reversal removal of
+the S-639-1/D-188 pre-flight exit) and to state the DOCUMENT-AS-IS rationale
 explicitly, consistent with the treatment already given to `component.rs` /
 `attachments.rs` / `field_resolve.rs`.
 
 ### 2. MEDIUM — `docs/specs/issue-create-preflight-guards.md` presented a reversed guard as current
 
-The spec described the DEC-188 `--field`-alone pre-flight exit-64 guard on
-`jr issue create` as current behavior, with no note that **DEC-310** (S-578-4, #578,
+The spec described the D-188 `--field`-alone pre-flight exit-64 guard on
+`jr issue create` as current behavior, with no note that **D-310** (S-578-4, #578,
 registered 2026-08-26) reversed the `--field` half of it — the platform path now
 resolves `--field` via `createmeta` instead of rejecting it outright. Fixed: added a
 top-of-file superseded-notice callout and inline superseded-row annotations in the
 behavior table, scoped precisely — the `--on-behalf-of` guard (BC-3.8.013) is
 **unchanged** and the doc's ordering/mechanics/rationale content for it remains
 accurate. The `--field` content is now explicitly marked historical (describing the
-now-superseded DEC-188 shape), pointing readers at CLAUDE.md's DEC-310 gotcha entry
+now-superseded D-188 shape), pointing readers at CLAUDE.md's D-310 gotcha entry
 and the amended ADR-0014 notes for current behavior.
 
 ### 3. MEDIUM — `CHANGELOG.md` missing entries for shipped field-dx work
@@ -70,12 +70,12 @@ graph LR
     S5801[S-580-1<br/>merged #740] --> F7001[FIX-F7-001<br/>this PR]
     S5782[S-578-2<br/>merged #741] --> F7001
     S5783[S-578-3<br/>merged #742] --> F7001
-    S5784[S-578-4<br/>merged, DEC-310] --> F7001
+    S5784[S-578-4<br/>merged, D-310] --> F7001
     style F7001 fill:#FFD700
 ```
 
 No upstream dependency PRs are open — S-580-1 (#740), S-578-2 (#741, part of #739's
-parser work plus its own dispatch PR), S-578-3 (#742), and S-578-4 (DEC-310) are all
+parser work plus its own dispatch PR), S-578-3 (#742), and S-578-4 (D-310) are all
 already merged to `develop`; this PR only reconciles documentation with that already-
 merged state. No downstream PRs are blocked on this one.
 
@@ -86,7 +86,7 @@ merged state. No downstream PRs are blocked on this one.
 N/A — doc-only change (`CLAUDE.md`, `docs/specs/issue-create-preflight-guards.md`,
 `CHANGELOG.md`). There is no user-facing behavior to demo; the driving evidence is the
 F7 pre-gate consistency-audit findings themselves (3 gaps identified: stale
-`create.rs` size-deviation entry, stale DEC-188-vs-DEC-310 guard description, missing
+`create.rs` size-deviation entry, stale D-188-vs-D-310 guard description, missing
 CHANGELOG entries for S-580-1/S-578-2/S-578-3), each addressed in the "What Changed"
 section above and verifiable by reading the resulting doc diff.
 
@@ -97,7 +97,7 @@ section above and verifiable by reading the resulting doc diff.
 ```mermaid
 flowchart LR
     AUDIT["F7 pre-gate consistency audit"] --> F1["Finding 1 (HIGH)<br/>CLAUDE.md create.rs stale"]
-    AUDIT --> F2["Finding 2 (MEDIUM)<br/>preflight-guards.md stale vs DEC-310"]
+    AUDIT --> F2["Finding 2 (MEDIUM)<br/>preflight-guards.md stale vs D-310"]
     AUDIT --> F3["Finding 3 (MEDIUM)<br/>CHANGELOG missing S-580-1/S-578-2/S-578-3"]
     F1 --> D1["CLAUDE.md size-deviation entry rewritten"]
     F2 --> D2["issue-create-preflight-guards.md superseded-notice added"]
@@ -170,7 +170,7 @@ No feature flags involved.
 | Requirement | Driver | Change | Status |
 |---|---|---|---|
 | F7 audit finding 1 (HIGH) | ADR-0012 shard-threshold consistency | `CLAUDE.md` size-deviation entry rewrite | Fixed |
-| F7 audit finding 2 (MEDIUM) | DEC-310 documentation consistency | `docs/specs/issue-create-preflight-guards.md` superseded-notice | Fixed |
+| F7 audit finding 2 (MEDIUM) | D-310 documentation consistency | `docs/specs/issue-create-preflight-guards.md` superseded-notice | Fixed |
 | F7 audit finding 3 (MEDIUM) | CHANGELOG completeness (S-580-1, S-578-2, S-578-3) | `CHANGELOG.md` Added/Changed entries | Fixed |
 
 ---

@@ -53,8 +53,8 @@ BC files, STORY-INDEX.md).
 > responsibility per the F1 preview story decomposition..."
 
 **Problem:** Both passages read as though the F2 gate has not yet happened and no
-implementation exists. In fact: the F2 gate was approved the same day (DEC-364,
-2026-09-15), and F3 (DEC-365) and F4 (both waves, DEC-366 + bookkeeping completion) have
+implementation exists. In fact: the F2 gate was approved the same day (D-364,
+2026-09-15), and F3 (D-365) and F4 (both waves, D-366 + bookkeeping completion) have
 since landed on `develop` — `Cargo.toml`'s `rust-version` is now `"1.88"`, `comfy-table` is
 re-pinned to `=7.2.2`, and `.github/workflows/ci.yml`'s `msrv` job now runs
 `toolchain: "1.88.0"` / `RUSTUP_TOOLCHAIN: "1.88.0"` / `cargo check --all-targets
@@ -64,13 +64,13 @@ is therefore false as of the `develop` tip under audit.
 
 **Not a contradiction of the top-level `status: proposed` field** (that field is correctly
 still `proposed` — VSDD convention flips it to `Accepted` only at F7, confirmed by STATE.md's
-DEC-364/366 entries and the cycle-012/ADR-0024 precedent they cite). The defect is narrower:
+D-364/366 entries and the cycle-012/ADR-0024 precedent they cite). The defect is narrower:
 the ADR's *prose*, which narrates gate/implementation state as of authoring time, was never
 revisited after F2/F3/F4 each closed, so a reader of the ADR file alone (without STATE.md)
 would incorrectly conclude implementation has not started.
 
 **Fix:** At F7 (when status flips to Accepted), or as a lightweight interim edit now, refresh
-both passages: (a) note the F2 gate was approved 2026-09-15 (DEC-364); (b) note F4
+both passages: (a) note the F2 gate was approved 2026-09-15 (D-364); (b) note F4
 implementation (both waves) merged 2026-09-16 (`29e2d362`, `cfe1dedc`) — Cargo.toml, ci.yml,
 and `tests/ci_gate_completeness.rs` are already at 1.88; (c) status remains `proposed` only
 because F7 delta-convergence has not yet run. This is prose-currency housekeeping, not a
@@ -155,7 +155,7 @@ this gate to pass.
 ## Detailed Analysis — Items That Checked Out Clean
 
 - **ADR-0025 status = `proposed`:** correct per VSDD convention (flips to Accepted only at
-  F7); STATE.md DEC-364/DEC-366 entries explicitly cite the cycle-012/ADR-0024 precedent for
+  F7); STATE.md D-364/D-366 entries explicitly cite the cycle-012/ADR-0024 precedent for
   this. Not a finding.
 - **CLAUDE.md MSRV coherence:** the "rust-toolchain.toml outranks rustup default" gotcha
   (line 247) correctly frames its `1.85.0` values as historical/S-626-1-specific and states
@@ -195,7 +195,7 @@ this gate to pass.
 - **VP-CIGATE-001:** pre-existing VP (originated cycle-001/S-626-1), correctly re-traced by
   cycle-013 without being counted as new — verification-delta.md explicitly reasons through
   why this is a literal-value update to an existing VP's parameter, not a new VP.
-- **`cycles/CURRENT`:** correctly points to `cycle-013` (fixed per DEC-363 disposition).
+- **`cycles/CURRENT`:** correctly points to `cycle-013` (fixed per D-363 disposition).
 - **ARCH-INDEX.md:** row 42 for ADR-0025 present and consistent with frontmatter
   (`subsystems_affected: ["SS-02", "SS-08", "SS-09"]`).
 - **Build sanity:** `cargo build --release` succeeds clean at HEAD.

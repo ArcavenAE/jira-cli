@@ -16,7 +16,7 @@ bundle: SOH-DX-1
 aperture: reality-check
 spec_version: v1.3.165
 date: 2026-07-29
-basis: DEC-190 substitute (consistency-validator, not adversary agent)
+basis: D-190 substitute (consistency-validator, not adversary agent)
 isolation: sibling reviews not read
 ---
 
@@ -87,7 +87,7 @@ CLAUDE.md documents this script as: "Exits 0 if frontmatter counts match body co
 - **Severity:** LOW
 - **Category:** spec-fidelity
 - **Classification:** REFINEMENT (spec correctly labels these as F4 obligations; no incorrect factual claim)
-- **Provenance:** IN-DELTA. Introduced v1.3.107 SOH-DX-1 DEC-188 F2 amendment; test names are delivery targets for F4 phase.
+- **Provenance:** IN-DELTA. Introduced v1.3.107 SOH-DX-1 D-188 F2 amendment; test names are delivery targets for F4 phase.
 - **Location:** `.factory/specs/prd/bc-3-issue-write.md` BC-3.8.012/013 Trace/AC; `tests/issue_create_jsm.rs`; `tests/common/fixtures.rs`
 
 **Evidence:**

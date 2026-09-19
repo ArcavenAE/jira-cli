@@ -8,7 +8,7 @@ MEDIUM-3 [verification-delta §3 L544-566 vs bc-3 BC-3.4.017/020/021; prd-delta 
 
 LOW-1 [bc-8 BC-8.3.002 Precond2 ~1491-1510, BC-8.3.004 ~1577-1595]: numeric-OLD exit-64 rejection under --all-projects vs --dry-run per-project discovery order unstated; almost certainly pre-flight-first (VP-026 pins zero HTTP) but no explicit EC. Fix: EC pinning exit-64-before-discovery.
 
-INFO-1: reserved-syntax escape-hatches (none/not:/all:/comma/100) all documented w/ --jql workaround — consistent. INFO-2: ADR-0018 §1/§2 now CURRENT (all 4 confirming-GET numeric paths + cache derivation) — no staleness. INFO-3: DEC-188 exit-code class consistently applied. INFO-4: Component.id typing chain sound (embedded Option<String>, full-resource String, bulk u64 parse, cache String). INFO-5: VP 001-026 all anchored, 014/021 split holds, VP-012 sole live-Jira. Novelty MEDIUM (MEDIUM-1/2 trace to P6 edits; MEDIUM-3 standing gap).
+INFO-1: reserved-syntax escape-hatches (none/not:/all:/comma/100) all documented w/ --jql workaround — consistent. INFO-2: ADR-0018 §1/§2 now CURRENT (all 4 confirming-GET numeric paths + cache derivation) — no staleness. INFO-3: D-188 exit-code class consistently applied. INFO-4: Component.id typing chain sound (embedded Option<String>, full-resource String, bulk u64 parse, cache String). INFO-5: VP 001-026 all anchored, 014/021 split holds, VP-012 sole live-Jira. Novelty MEDIUM (MEDIUM-1/2 trace to P6 edits; MEDIUM-3 standing gap).
 
 ---
 

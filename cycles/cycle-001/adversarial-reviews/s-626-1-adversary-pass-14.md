@@ -201,7 +201,7 @@ Independent re-derivation from primary artifacts at feature HEAD `c88374b4`. All
 - **Severity:** LOW
 - **Category:** spec-fidelity / REFINEMENT · confirmation
 - **Location:** `.factory/stories/S-MAINT-576-HYG-1.md`; `.factory/stories/STORY-INDEX.md`
-- **Description:** Pass 13 (MED-004) identified S-576-1 through S-576-4 carrying `status: ready` while STORY-INDEX records them as `completed`. Human ruling (DEC-208) routed this as `S-MAINT-576-HYG-1`. This pass confirmed: (a) `S-MAINT-576-HYG-1.md` exists as a draft story in `.factory/stories/`; (b) the story is registered in STORY-INDEX; (c) the story's scope covers status drift, `delivered` vs `completed` convention, subsystem corrections, and the STORY-INDEX↔story-file coherence guard gap. The root issue is not resolved (story is draft), but the routing is complete.
+- **Description:** Pass 13 (MED-004) identified S-576-1 through S-576-4 carrying `status: ready` while STORY-INDEX records them as `completed`. Human ruling (D-208) routed this as `S-MAINT-576-HYG-1`. This pass confirmed: (a) `S-MAINT-576-HYG-1.md` exists as a draft story in `.factory/stories/`; (b) the story is registered in STORY-INDEX; (c) the story's scope covers status drift, `delivered` vs `completed` convention, subsystem corrections, and the STORY-INDEX↔story-file coherence guard gap. The root issue is not resolved (story is draft), but the routing is complete.
 - **Evidence:** `stories/S-MAINT-576-HYG-1.md` existence; `STORY-INDEX.md` S-MAINT-576-HYG-1 row; `S-576-1.md` through `S-576-4.md` frontmatter `status: ready`.
 - **Proposed Fix:** None beyond the routing — resolution is scoped to S-MAINT-576-HYG-1.
 - **Status:** ROUTED to S-MAINT-576-HYG-1.

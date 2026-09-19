@@ -6,7 +6,7 @@ date: "2026-06-13"
 change_type: "Red-Gate doc-target reconciliation"
 spec_changelog_version: "1.3.13"
 behavioral_re_gate_required: false
-adversarial_re_convergence: "complete (3-clean; DEC-080/082/084 pre-existing)"
+adversarial_re_convergence: "complete (3-clean; D-080/082/084 pre-existing)"
 ---
 
 # Spec Change Record: S-WIN-6 AC-005 Red-Gate Reconciliation
@@ -84,8 +84,8 @@ Red-Gate defect (product test cannot read `.factory/` in CI)
 ## Adversarial Re-Convergence Status
 
 3-clean adversarial re-convergence was already complete before this Red-Gate
-finding was identified (DEC-080: F3 CONVERGED Pass P6/P7/P8; DEC-082: corrections
-propagated; DEC-084: F3 re-gate RE-AFFIRMED by human). This correction is a
+finding was identified (D-080: F3 CONVERGED Pass P6/P7/P8; D-082: corrections
+propagated; D-084: F3 re-gate RE-AFFIRMED by human). This correction is a
 doc-target reconciliation within the approved story — the DECISION and the
 story's functional intent are unchanged. No new adversarial re-convergence or
 behavioral re-gate is required.

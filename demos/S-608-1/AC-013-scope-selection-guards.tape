@@ -26,7 +26,7 @@ Enter
 Show
 
 # AC-013 Part 1: neither --project nor --all-projects -> application-level
-# exit 64 guard (DEC-188, JrError::UserError), naming both flags. Zero HTTP
+# exit 64 guard (D-188, JrError::UserError), naming both flags. Zero HTTP
 # (JR_BASE_URL points at the local mock; the guard fires pre-flight).
 Type "jr --no-input component rename A B"
 Enter

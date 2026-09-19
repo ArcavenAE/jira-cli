@@ -56,7 +56,7 @@ traces_to: ".factory/phase-f2-spec-evolution/prd-delta-576.md"
 | **Artifacts Scanned** | 14 (all surface-set items specified in task brief) |
 | **Spec Version** | v1.3.44 (post-security-fix, post-r1-fixes, post-r2-fixes state) |
 | **Feature** | SOH-ATTACHMENTS-1 (issues #576 + #585) |
-| **Gate** | DEC-179 F2 spec bundle — round 3 after r2 GAPS-FOUND corrections |
+| **Gate** | D-179 F2 spec bundle — round 3 after r2 GAPS-FOUND corrections |
 
 **Review methodology**: Fresh-context read of all 14 surface-set artifacts BEFORE consulting
 `consistency-report-576-r1.md` and `consistency-report-576-r2.md`. Independent findings formed
@@ -218,7 +218,7 @@ applicable to this review pass.
 
 | Finding | Severity | Closure Status | Evidence |
 |---------|----------|---------------|----------|
-| NEW-001 — BC-3.9.001 "10 MB" / ADR-0017 "250 MB" contradict INCONCLUSIVE | LOW | **RESOLVED** | BC-3.9.001 body now reads "The limit is instance-configured and not knowable from the client side (sources conflict on the default figure; research §3a verdict: INCONCLUSIVE…)"; ADR-0017 §Context now reads "instance-configured and site/plan-dependent; the research verdict is inconclusive across sources — do not hard-code a figure; DEC-179 ruling 4" |
+| NEW-001 — BC-3.9.001 "10 MB" / ADR-0017 "250 MB" contradict INCONCLUSIVE | LOW | **RESOLVED** | BC-3.9.001 body now reads "The limit is instance-configured and not knowable from the client side (sources conflict on the default figure; research §3a verdict: INCONCLUSIVE…)"; ADR-0017 §Context now reads "instance-configured and site/plan-dependent; the research verdict is inconclusive across sources — do not hard-code a figure; D-179 ruling 4" |
 | NEW-002 — ADR-0017 §Context non-existent endpoint URL | LOW | **RESOLVED** | ADR-0017 §Context now correctly cites "`GET /rest/api/3/attachment/content/{id}` content endpoint" |
 | NEW-003 — BC-INDEX Section 3.9 rows cite `interactions.rs` | LOW | **RESOLVED** | All 14 Section 3.9 BC-INDEX rows now cite `src/cli/issue/attachments.rs` or `src/api/jsm/attachments.rs` as appropriate |
 | NEW-004 — CANONICAL-COUNTS.md BC-X.4.009 note stale numbers | INFO | **RESOLVED** | Lines 63–65 now read "cross-cutting's `total_bcs: 150` and in the **651 sum**. It does NOT add +1 beyond the 650." |
@@ -331,7 +331,7 @@ JSDCLOUD-10841 ban paragraph. Correct before S3 story authoring.
 
 **GAPS-FOUND** — 2 minor findings (1 LOW cross-reference error in BC-3.9.007; 1 INFO stale
 frontmatter in prd-delta-576.md). No finding blocks story decomposition. The BC bodies are
-the authoritative specification and are correctly formed with all DEC-179 rulings and
+the authoritative specification and are correctly formed with all D-179 rulings and
 SEC-576-001..007 security fixes properly applied.
 
 Recommended resolution order:
@@ -345,7 +345,7 @@ Recommended resolution order:
 | Metric | Value |
 |--------|-------|
 | **Total Checks** | 16 (4 standard N/A; 12 ops-specific) |
-| **Passed** | 10 (security fixes, counts, DEC-179 rulings, research facts, citations, status markers, ADR) |
+| **Passed** | 10 (security fixes, counts, D-179 rulings, research facts, citations, status markers, ADR) |
 | **Failed** | 0 |
 | **Gaps Found** | 2 (NEW-R3-001 INFO, NEW-R3-002 LOW) |
 | **Warnings** | 0 |
@@ -365,10 +365,10 @@ Recommended resolution order:
 - SEC-576-006: Stale-ID self-healing 4-step procedure in BC-X.8.010; single-attempt guard stated ✓
 - SEC-576-007: Step 5.5 trailing-whitespace/dot strip in BC-2.7.011 ✓
 
-**DEC-179 design rulings in BC bodies:**
+**D-179 design rulings in BC bodies:**
 - Platform-POST default (BC-3.9.001/002) ✓; `--internal` non-JSM = OQ-9 silent no-op (BC-3.9.004 EC-3.9.004-1) ✓
-- `--public` non-JSM = exit 64 (BC-3.9.005) ✓; DEC-174 eprint!+read_line NOT dialoguer (BC-3.9.014) ✓
-- DEC-168 delete 404 = exit 64 + surface body (BC-3.9.008/013) ✓; JSDCLOUD-10841 platform endpoint (BC-2.7.007) ✓
+- `--public` non-JSM = exit 64 (BC-3.9.005) ✓; D-174 eprint!+read_line NOT dialoguer (BC-3.9.014) ✓
+- D-168 delete 404 = exit 64 + surface body (BC-3.9.008/013) ✓; JSDCLOUD-10841 platform endpoint (BC-2.7.007) ✓
 - JRACLOUD-97046 no `?redirect=false` (BC-2.7.007) ✓; P2-4a internal-by-default JSM (BC-3.9.002) ✓
 - P2-3c INCONCLUSIVE deferred to S5 (BC-3.9.007/011) ✓; JRACLOUD-96384 match-by-id (BC-2.7.012) ✓
 
@@ -390,7 +390,7 @@ consistency-report-576-r1.md and consistency-report-576-r2.md. Prior reports wer
 to verify closure of CONS-576-001..007 and NEW-001..005.
 
 Checks performed:
-- **(a) BC-body vs ratified-design/research contradictions**: each DEC-179 ruling cross-referenced against BC text; all research INCONCLUSIVE verdicts verified not hard-coded in BC bodies or ADR.
+- **(a) BC-body vs ratified-design/research contradictions**: each D-179 ruling cross-referenced against BC text; all research INCONCLUSIVE verdicts verified not hard-coded in BC bodies or ADR.
 - **(b) Index-row vs body fidelity**: BC-INDEX section headers, row counts, and Source columns compared against BC bodies; all corrections from prior rounds confirmed.
 - **(c) Source/Trace citations vs F1 NEW-file layout**: direct grep for `interactions.rs` in attachment BC scope confirmed zero residual; all citations verified against impact-boundary §1.1 and §R2.1 classification tables.
 - **(d) Hard-coded figures marked INCONCLUSIVE**: BC-3.9.001 and ADR-0017 verified to use INCONCLUSIVE/instance-configured language.

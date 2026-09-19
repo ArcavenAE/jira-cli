@@ -33,9 +33,9 @@ These rows had Status = RESOLVED / CLOSED in STATE.md and are archived here. The
 | CV2-001 | STATE.md stale story count | STATE.md line 54 fixed (30→31, W3:8→W3:9) | MEDIUM | **RESOLVED** | 2026-05-07 |
 | CV2-002 | STORY-INDEX S-2.04 BC column incomplete | S-2.04 BC column completed (3→7 BCs); v1.4.2 | MEDIUM | **RESOLVED** | 2026-05-07 |
 | CV2-003 | SD-003 holdout gap | H-NEW-VERBOSE-001/002 registered; WAVE-PLAN updated (v1.1.1); S-0.06 cross-link added | MEDIUM | **RESOLVED** | 2026-05-07 |
-| S-0.05-DEV | SD-002 doc-vs-code drift (gate canonization) | SD-002 canonized to Option B-revised (`#[cfg(debug_assertions)]`) during S-0.05 implementation. 151-subprocess-test compatibility preserved. Threat model mitigation equivalent to Option A original. Doc updates: SD-002.md (Resolution, Options, Decision Log, version 1.0.1) + S-0.05 (Context, BC, ACs, Implementation Notes, Compliance Rules) + S-0.07 (Context, AC-004, holdout spec SD field) + STATE.md (DEC-007, Current Phase Steps). | MEDIUM | **RESOLVED** | 2026-05-07 |
+| S-0.05-DEV | SD-002 doc-vs-code drift (gate canonization) | SD-002 canonized to Option B-revised (`#[cfg(debug_assertions)]`) during S-0.05 implementation. 151-subprocess-test compatibility preserved. Threat model mitigation equivalent to Option A original. Doc updates: SD-002.md (Resolution, Options, Decision Log, version 1.0.1) + S-0.05 (Context, BC, ACs, Implementation Notes, Compliance Rules) + S-0.07 (Context, AC-004, holdout spec SD field) + STATE.md (D-007, Current Phase Steps). | MEDIUM | **RESOLVED** | 2026-05-07 |
 | S-1.05-AC-001 | Repo-level GitHub Secret Scanning | User enabled secret_scanning + push_protection on Zious11/jira-cli via `gh api PATCH security_and_analysis` (2026-05-08). Verified via `gh api repos/Zious11/jira-cli --jq '.security_and_analysis'` showing both enabled. CI gitleaks job + GitHub native scanner now both active for layered defense. | HIGH | **RESOLVED** | 2026-05-08 |
-| S-2.02-DEFER | JSON field-name reconciliation: `transitioned` vs `changed` | Verified canonical field name is `changed` per src/cli/issue/json_output.rs:4-10; documented in S-2.07 v2.0.0 AC-005 and DEC-011; holdout-scenarios.md:84 corrected to `"changed": false` in same factory-artifacts commit | LOW | **RESOLVED** | 2026-05-08 |
+| S-2.02-DEFER | JSON field-name reconciliation: `transitioned` vs `changed` | Verified canonical field name is `changed` per src/cli/issue/json_output.rs:4-10; documented in S-2.07 v2.0.0 AC-005 and D-011; holdout-scenarios.md:84 corrected to `"changed": false` in same factory-artifacts commit | LOW | **RESOLVED** | 2026-05-08 |
 | S-2.06-DEFER-01 | src/duration.rs parse_duration calculator | H-018 replaced in place (Option 2) per research-agent recommendation; follow-up Option 4 story queued in Wave 3 as S-3.10 to delete the deprecated calculator. See `.factory/research/H-018-holdout-strategy-research.md`. | LOW | **RESOLVED** | 2026-05-08 |
 | WV2-ADV-01 | S-2.07 spec + 11 test docstrings BC-7.3.004 semantic mis-anchor | Story spec re-anchored to BC-7.1.001 + BC-7.4.013-016 (Fix-PR A). Develop-side test docstring re-anchoring deferred as WV2-FIX-A-FOLLOWUP-01. | BLOCKING | **RESOLVED** — 2026-05-08 — Fix-PR A (spec portion resolved; test docstrings deferred as FOLLOWUP-01) | 2026-05-08 |
 | WV2-ADV-03 | S-2.06 spec + 2 holdout test names BC-6.2.013 mis-anchor | Story spec re-anchored to BC-6.2.006 (Fix-PR A). Develop-side test name rename deferred as WV2-FIX-A-FOLLOWUP-02. | BLOCKING | **RESOLVED** — 2026-05-08 — Fix-PR A (spec portion resolved; test function names deferred as FOLLOWUP-02) | 2026-05-08 |
@@ -63,30 +63,30 @@ These rows had Status = RESOLVED / CLOSED / COMPLETE in the Drift Items table an
 
 | ID | Area | Description | Severity | Status | Resolved Date |
 |----|------|-------------|----------|--------|---------------|
-| DRIFT-E2E-1 | E2E cycle-close: mechanical jr-invocation-vs-clap-tree guard | Recommended in DEC-038 [process-gap]. Shipped via PR #443 (merge c395e27, 2026-05-31): tests/e2e_cli_surface_guard.rs validates 25 jr subcommand paths + ~40 (path,flag) assertions against `jr --help` offline at CI time. Post-merge live e2e run 26722732004 = 57/0 SUCCESS. | LOW | **RESOLVED — shipped PR #443 @ c395e27 (2026-05-31); live 57/0 run 26722732004 (DEC-048).** | 2026-05-31 |
-| OQ-1 | e2e-sprint-coverage | Sprint coverage gap: ES board 1 = "simple board" (team-managed project). `jr sprint` unsupported for team-managed boards; live suite skips sprint tests but passes green. Real sprint coverage needs company-managed Scrum board or jr enhancement. | LOW | **RESOLVED 2026-05-29** — board recreated as company-managed Scrum (id 3); JR_E2E_BOARD_ID updated 1→3; run 26659977426 20/0 sprint tests RUN+PASS (DEC-036). | 2026-05-29 |
-| R-NEW-1 | e2e-provisioning | E2E provisioning: jira-e2e GitHub env + secrets/vars + ES project + board 1 created. | MEDIUM | **COMPLETE 2026-05-29** (DEC-035). | 2026-05-29 |
-| E2E-PG-1 | mechanical jr-invocation-vs-clap-tree validator (assumed-CLI-surface defect class, ~10x recurrence) | **RESOLVED 2026-05-31** — tests/e2e_cli_surface_guard.rs shipped via PR #443 (merge c395e27; 11/11 CI; live e2e run 26722732004 = 57/0). See DEC-048 + DRIFT-E2E-1. | self-improvement/test-infra | **CLOSED** | 2026-05-31 |
-| DRIFT-E2E-ALT | e2e-issuetype-coverage | Gated test `test_e2e_issue_edit_issuetype_multikey_bulk_roundtrip` clean-skips until `JR_E2E_ISSUE_TYPE_ALT` is set in the jira-e2e GitHub Environment AND the E2E project has a 2nd issue type. Live validation of issueType bulk resolution deferred to CI (nightly e2e.yml). Owner: maintainer. Target: next E2E env touch. | LOW | **RESOLVED 2026-06-01** — JR_E2E_ISSUE_TYPE_ALT=Bug set in jira-e2e GitHub Environment (PR #454). Live run 26779732719 = 66/0: test now RUN and PASSES live (DEC-058). | 2026-06-01 |
+| DRIFT-E2E-1 | E2E cycle-close: mechanical jr-invocation-vs-clap-tree guard | Recommended in D-038 [process-gap]. Shipped via PR #443 (merge c395e27, 2026-05-31): tests/e2e_cli_surface_guard.rs validates 25 jr subcommand paths + ~40 (path,flag) assertions against `jr --help` offline at CI time. Post-merge live e2e run 26722732004 = 57/0 SUCCESS. | LOW | **RESOLVED — shipped PR #443 @ c395e27 (2026-05-31); live 57/0 run 26722732004 (D-048).** | 2026-05-31 |
+| OQ-1 | e2e-sprint-coverage | Sprint coverage gap: ES board 1 = "simple board" (team-managed project). `jr sprint` unsupported for team-managed boards; live suite skips sprint tests but passes green. Real sprint coverage needs company-managed Scrum board or jr enhancement. | LOW | **RESOLVED 2026-05-29** — board recreated as company-managed Scrum (id 3); JR_E2E_BOARD_ID updated 1→3; run 26659977426 20/0 sprint tests RUN+PASS (D-036). | 2026-05-29 |
+| R-NEW-1 | e2e-provisioning | E2E provisioning: jira-e2e GitHub env + secrets/vars + ES project + board 1 created. | MEDIUM | **COMPLETE 2026-05-29** (D-035). | 2026-05-29 |
+| E2E-PG-1 | mechanical jr-invocation-vs-clap-tree validator (assumed-CLI-surface defect class, ~10x recurrence) | **RESOLVED 2026-05-31** — tests/e2e_cli_surface_guard.rs shipped via PR #443 (merge c395e27; 11/11 CI; live e2e run 26722732004 = 57/0). See D-048 + DRIFT-E2E-1. | self-improvement/test-infra | **CLOSED** | 2026-05-31 |
+| DRIFT-E2E-ALT | e2e-issuetype-coverage | Gated test `test_e2e_issue_edit_issuetype_multikey_bulk_roundtrip` clean-skips until `JR_E2E_ISSUE_TYPE_ALT` is set in the jira-e2e GitHub Environment AND the E2E project has a 2nd issue type. Live validation of issueType bulk resolution deferred to CI (nightly e2e.yml). Owner: maintainer. Target: next E2E env touch. | LOW | **RESOLVED 2026-06-01** — JR_E2E_ISSUE_TYPE_ALT=Bug set in jira-e2e GitHub Environment (PR #454). Live run 26779732719 = 66/0: test now RUN and PASSES live (D-058). | 2026-06-01 |
 | BUG-LABEL-400 | issue-edit-label | jr `issue edit --label add:/remove:` (single key) sends malformed bulk payload → HTTP 400 on real Jira. Root cause: fabricated editedFieldsInput schema (`labels.labelsAction` + `{"name":..}` items) matches no real Jira schema; wiremock-only coverage never validated live. **RESOLVED by fix chain: #447 (single-key PUT /rest/api/3/issue/{key} update.labels) + #448 (multi-key labelsFields schema) + #449 (integer taskId deserializer) + #450 (numeric issue IDs deserializer). Final live run 26735722804 (develop @ cff86d2) = 61/0 ALL GREEN.** | HIGH | **RESOLVED — fix chain #447-#450 live-green (run 26735722804, 61/0, 2026-06-01)** | 2026-06-01 |
 
 ---
 
 ## Resolved Blocking Issues / Drift Items extracted from STATE.md on 2026-06-14
 
-### WIN-BRANCH-PROTECTION (DEC-096 / DEC-097) — RESOLVED 2026-06-14
+### WIN-BRANCH-PROTECTION (D-096 / D-097) — RESOLVED 2026-06-14
 
 | Field | Value |
 |-------|-------|
 | **ID** | WIN-BRANCH-PROTECTION |
 | **Severity** | HIGH |
-| **Opened** | 2026-06-14 (DEC-096) |
-| **Resolved** | 2026-06-14 (DEC-097) |
+| **Opened** | 2026-06-14 (D-096) |
+| **Resolved** | 2026-06-14 (D-097) |
 | **Root Cause** | clippy→matrix rename (ADR-0016 Decision 3) made the branch-protection required context `Clippy` permanently unsatisfiable — all PRs to develop and main were BLOCKED. |
 | **Fix Applied** | PATCH `.../protection/required_status_checks` (scoped endpoint, NOT top-level PUT — preserves code-owner review settings) on BOTH develop AND main branches. New required contexts: Format, Clippy (ubuntu-latest), Clippy (windows-latest), Test (ubuntu-latest), Test (macos-latest), Test (windows-latest), MSRV (1.85.0), Deny (licenses + vulnerabilities) — all app_id 15368. Stale bare `Clippy` context removed. require_code_owner_reviews preserved. |
 | **Verification** | `gh pr view 510 --json mergeStateStatus` changed from BLOCKED → CLEAN. PR #510 mergeable. |
 | **Lesson** | LESSON-MATRIX-BRANCH-PROTECTION: whenever a CI job is renamed or converted to a matrix, re-verify branch-protection required_status_checks immediately. Use SCOPED endpoint only. |
-| **Decision** | DEC-097 |
+| **Decision** | D-097 |
 
 ### Closed Open Issues Tracker row — #510 MERGED (2026-06-14)
 
@@ -98,20 +98,20 @@ These rows had Status = RESOLVED / CLOSED / COMPLETE in the Drift Items table an
 
 ## Resolved Blocking Issues / Drift Items extracted from STATE.md on 2026-06-15
 
-### CIGATE-BRANCH-PROTECTION-SWAP (DEC-103) — RESOLVED 2026-06-15
+### CIGATE-BRANCH-PROTECTION-SWAP (D-103) — RESOLVED 2026-06-15
 
 | Field | Value |
 |-------|-------|
 | **ID** | CIGATE-BRANCH-PROTECTION-SWAP |
 | **Severity** | LOW |
-| **Opened** | 2026-06-15 (DEC-102; recorded when S-CIGATE-1 ci-gate aggregator was delivered via PR #518 → develop @ e9b2269 and harness-blocked swap was identified as the remaining activation step) |
-| **Resolved** | 2026-06-15 (DEC-103; user-executed) |
+| **Opened** | 2026-06-15 (D-102; recorded when S-CIGATE-1 ci-gate aggregator was delivered via PR #518 → develop @ e9b2269 and harness-blocked swap was identified as the remaining activation step) |
+| **Resolved** | 2026-06-15 (D-103; user-executed) |
 | **Root Cause** | After ci-gate aggregator job was shipped in ci.yml (PR #518), the 8 per-job required status check contexts on develop and main still needed to be replaced with a single `CI Gate` context to activate the aggregator as the authoritative gate. This was a repo-admin action the harness could not perform. |
 | **Fix Applied** | Safe 2-step add-before-remove: (1) added `CI Gate` (app_id 15368) to required_status_checks on both develop and main; (2) removed the 8 old per-job contexts (Format, Clippy (ubuntu-latest), Clippy (windows-latest), Test (ubuntu-latest), Test (macos-latest), Test (windows-latest), MSRV (1.85.0), Deny (licenses + vulnerabilities)). spec-guard promoted to a blocking check via the aggregator. require_code_owner_reviews and strict mode preserved. |
 | **Verification** | Both develop and main now have exactly ONE required status check: `CI Gate` (app_id 15368). Verified read-only by user. |
-| **Lesson** | LESSON-MATRIX-BRANCH-PROTECTION (already codified DEC-096): the durable fix is an aggregator gate job in ci.yml so that required_status_checks membership is decoupled from individual job names. The aggregator (S-CIGATE-1) is that fix — now activated. |
-| **Decision** | DEC-103 |
-| **Related** | DEC-096 (matrix-rename fragility class discovered), DEC-097 (intermediate fix: 8 matrixed contexts), DEC-102 (ci-gate aggregator shipped), DEC-103 (swap complete; fragility class structurally eliminated) |
+| **Lesson** | LESSON-MATRIX-BRANCH-PROTECTION (already codified D-096): the durable fix is an aggregator gate job in ci.yml so that required_status_checks membership is decoupled from individual job names. The aggregator (S-CIGATE-1) is that fix — now activated. |
+| **Decision** | D-103 |
+| **Related** | D-096 (matrix-rename fragility class discovered), D-097 (intermediate fix: 8 matrixed contexts), D-102 (ci-gate aggregator shipped), D-103 (swap complete; fragility class structurally eliminated) |
 
 ---
 
@@ -125,24 +125,24 @@ These rows had Status = RESOLVED / CLOSED / COMPLETE in the Drift Items table an
 
 ---
 
-## Resolved Drift Items extracted from STATE.md on 2026-06-17 (Issue #522 follow-ups folded, DEC-118)
+## Resolved Drift Items extracted from STATE.md on 2026-06-17 (Issue #522 follow-ups folded, D-118)
 
 | ID | Area | Description | Severity | Status | Resolved Date |
 |----|------|-------------|----------|--------|---------------|
-| CLAUDE.md-S522-GOTCHA | root CLAUDE.md block-HTML gotcha | Added push_text/push_code/text_to_adf INV-1 chokepoint gotcha to root CLAUDE.md: Other→space for \r\n/\r/bare-\n, codeBlock preserves \n, HtmlBlock→Algorithm B; block→hardBreak vs inline→space asymmetry; CR-01 HIGH bug note; Unicode-line-sep OOS note. Follow-up from F7 non-blocking item CLAUDE.md-S522-GOTCHA. | LOW | **RESOLVED @ 5a0b7d8** (DEC-118 — human-approved fold-in before PR) | 2026-06-17 |
-| MUTANTS-ADF-GLOB | .cargo/mutants.toml examine_globs omits src/adf.rs | Added `src/adf.rs` to `examine_globs` in .cargo/mutants.toml. Canonical `cargo mutants --in-diff <develop...HEAD> --list` now lists 21 src/adf.rs mutants (was 0 — false-green eliminated). Surfaced during F6 (#522); verified in follow-up commit @ 5a0b7d8. | MED | **RESOLVED @ 5a0b7d8** (DEC-118 — human-approved fold-in before PR) | 2026-06-17 |
+| CLAUDE.md-S522-GOTCHA | root CLAUDE.md block-HTML gotcha | Added push_text/push_code/text_to_adf INV-1 chokepoint gotcha to root CLAUDE.md: Other→space for \r\n/\r/bare-\n, codeBlock preserves \n, HtmlBlock→Algorithm B; block→hardBreak vs inline→space asymmetry; CR-01 HIGH bug note; Unicode-line-sep OOS note. Follow-up from F7 non-blocking item CLAUDE.md-S522-GOTCHA. | LOW | **RESOLVED @ 5a0b7d8** (D-118 — human-approved fold-in before PR) | 2026-06-17 |
+| MUTANTS-ADF-GLOB | .cargo/mutants.toml examine_globs omits src/adf.rs | Added `src/adf.rs` to `examine_globs` in .cargo/mutants.toml. Canonical `cargo mutants --in-diff <develop...HEAD> --list` now lists 21 src/adf.rs mutants (was 0 — false-green eliminated). Surfaced during F6 (#522); verified in follow-up commit @ 5a0b7d8. | MED | **RESOLVED @ 5a0b7d8** (D-118 — human-approved fold-in before PR) | 2026-06-17 |
 
 ---
 
-## Resolved Blocking Issues / Drift Items extracted from STATE.md on 2026-06-17 (Issue #522 CYCLE CLOSED, DEC-119)
+## Resolved Blocking Issues / Drift Items extracted from STATE.md on 2026-06-17 (Issue #522 CYCLE CLOSED, D-119)
 
 | ID | Area | Description | Severity | Status | Resolved Date |
 |----|------|-------------|----------|--------|---------------|
-| PRE-EXISTING-LONE-CR | src/adf.rs push_text/push_code/text_to_adf | heading+codeBlock raw `\r` survival + bare `\n` Other-ctx (CR-01). EC-11+EC-12+CR-01 fixed. F5 CONVERGED; F6 PASS (1850/0, 100k proptest); F7 5/5 PASS. Shipped in PR #523 @ 53f6d98. BC-7.2.011 v1.11.0. | HIGH | **RESOLVED — shipped in PR #523 @ 53f6d98 (DEC-119)** | 2026-06-17 |
+| PRE-EXISTING-LONE-CR | src/adf.rs push_text/push_code/text_to_adf | heading+codeBlock raw `\r` survival + bare `\n` Other-ctx (CR-01). EC-11+EC-12+CR-01 fixed. F5 CONVERGED; F6 PASS (1850/0, 100k proptest); F7 5/5 PASS. Shipped in PR #523 @ 53f6d98. BC-7.2.011 v1.11.0. | HIGH | **RESOLVED — shipped in PR #523 @ 53f6d98 (D-119)** | 2026-06-17 |
 
 ---
 
-## Resolved Drift Items extracted from STATE.md on 2026-06-18 (S-FORK-OPS-SIGN-1 CYCLE CLOSED, DEC-121)
+## Resolved Drift Items extracted from STATE.md on 2026-06-18 (S-FORK-OPS-SIGN-1 CYCLE CLOSED, D-121)
 
 | ID | Area | Description | Severity | Status | Resolved Date |
 |----|------|-------------|----------|--------|---------------|
@@ -154,7 +154,7 @@ These rows had Status = RESOLVED / CLOSED / COMPLETE in the Drift Items table an
 
 ---
 
-## Resolved Drift Items extracted from STATE.md on 2026-06-18 (S-TESTTOOL-1 CYCLE CLOSED, DEC-120)
+## Resolved Drift Items extracted from STATE.md on 2026-06-18 (S-TESTTOOL-1 CYCLE CLOSED, D-120)
 
 | ID | Area | Description | Severity | Status | Resolved Date |
 |----|------|-------------|----------|--------|---------------|
@@ -211,7 +211,7 @@ PR #543 squash-merged into develop @ 6bdb251 (docs: 2026-06-19 maintenance sweep
 
 ---
 
-## Resolved Drift Items extracted from STATE.md on 2026-06-24 (maintenance sweep 2026-06-22 CLOSED — DEC-131)
+## Resolved Drift Items extracted from STATE.md on 2026-06-24 (maintenance sweep 2026-06-22 CLOSED — D-131)
 
 PRs #547/#548/#549 squash-merged to develop @ 4022e00. The 5 items below were open in STATE.md Drift Items and are now fully resolved.
 
@@ -225,7 +225,7 @@ PRs #547/#548/#549 squash-merged to develop @ 4022e00. The 5 items below were op
 
 ---
 
-## Resolved Drift Items extracted from STATE.md on 2026-06-25 (Bundle D + SEC-001 CLOSED — DEC-132)
+## Resolved Drift Items extracted from STATE.md on 2026-06-25 (Bundle D + SEC-001 CLOSED — D-132)
 
 PRs #551/#552/#553 squash-merged to develop @ 35e20c9. The items below were TRACKED/OPEN in STATE.md Drift Items and are now fully resolved.
 
@@ -240,26 +240,26 @@ PRs #551/#552/#553 squash-merged to develop @ 35e20c9. The items below were TRAC
 
 ---
 
-## Resolved 2026-06-27 — BC-sub-clause pass close (DEC-138)
+## Resolved 2026-06-27 — BC-sub-clause pass close (D-138)
 
 The items below were TRACKED/OPEN in STATE.md Drift Items and are now fully resolved.
 
 | ID | Area | Description | Severity | Status | Resolved Date |
 |----|------|-------------|----------|--------|---------------|
-| MISSING-BC-SUBCLAUSE-PATTERN | spec/process | Recurring blocker: ADF markdown→ADF behaviors (#471/472/474/483/489/492/522/473), cache D2 warm-hit no-HTTP, and read error-channel/partial_match behaviors lacked dedicated BC sub-clauses — breaking the holdout authoring anchor chain (broken-anchor class). BC-sub-clause pass authored BC-7.2.013 (footnote→ADF), BC-7.2.014 (bare-URL autolink), BC-7.3.010 (JSON render invariant + error channel), BC-6.2.018 (cache warm-hit zero-HTTP), BC-X.10.001 EC-1 (partial_match no-network). Confirmed #474/483/489/522 already bodied — no action needed. 603→605. MEDIUM drift item RESOLVED. | MEDIUM | **RESOLVED — 2026-06-27; DEC-138; factory-artifacts ba60b15** | 2026-06-27 |
+| MISSING-BC-SUBCLAUSE-PATTERN | spec/process | Recurring blocker: ADF markdown→ADF behaviors (#471/472/474/483/489/492/522/473), cache D2 warm-hit no-HTTP, and read error-channel/partial_match behaviors lacked dedicated BC sub-clauses — breaking the holdout authoring anchor chain (broken-anchor class). BC-sub-clause pass authored BC-7.2.013 (footnote→ADF), BC-7.2.014 (bare-URL autolink), BC-7.3.010 (JSON render invariant + error channel), BC-6.2.018 (cache warm-hit zero-HTTP), BC-X.10.001 EC-1 (partial_match no-network). Confirmed #474/483/489/522 already bodied — no action needed. 603→605. MEDIUM drift item RESOLVED. | MEDIUM | **RESOLVED — 2026-06-27; D-138; factory-artifacts ba60b15** | 2026-06-27 |
 
 ---
 
-## Resolved 2026-06-30 — cold-resume snapshot / two spec-only cycles closed (DEC-146/DEC-147)
+## Resolved 2026-06-30 — cold-resume snapshot / two spec-only cycles closed (D-146/D-147)
 
 The items below were TRACKED/OPEN/RESOLVED in STATE.md Drift Items and are archived here on the 2026-06-30 cold-resume snapshot. Develop UNCHANGED @ 3b122a8.
 
 | ID | Area | Description | Severity | Status | Resolved Date |
 |----|------|-------------|----------|--------|---------------|
-| HOLDOUT-COVERAGE-GAPS-2026-06-25 | holdout coverage | HIGH gaps CLOSED by D4 (2026-06-26). MED gaps CLOSED 2026-06-30 (DEC-146): 8 holdouts (71→79). ALL 3 BLOCKED TARGETS CLOSED 2026-06-30 (DEC-147): `issue edit --label` → BC-3.4.020 + H-NEW-LABEL-FORK-001; `board view` → BC-5.1.005 + H-NEW-BOARD-VIEW-001; `issue edit --dry-run` → BC-3.4.021 + H-NEW-DRY-RUN-001. Holdouts 82. Epic fully closed. | LOW | **RESOLVED — all targets closed 2026-06-30 (DEC-146/147)** | 2026-06-30 |
-| HOLDOUT-BLOCKED-TARGETS-BC-PASS | holdout coverage | 3 targets: `issue edit --label` single-vs-bulk fork, `board view` truncation/scrum-vs-kanban, `issue edit --dry-run` plannedChanges. CLOSED 2026-06-30 (DEC-147): BC-3.4.020/021/5.1.005 authored; holdouts H-NEW-LABEL-FORK-001/DRY-RUN-001/BOARD-VIEW-001 delivered. Holdouts 79→82. | MEDIUM | **RESOLVED — BCs authored + holdouts delivered (DEC-147)** | 2026-06-30 |
-| E2E-EDGE-CASE-GAPS-2026-06-27 | E2E coverage | All 3 tiers delivered (DEC-141): offline-CLI PR #563 (DEC-139), wiremock PR #564 (DEC-140), holdout spec G-ADF-FOOTNOTE (DEC-141 — H-NEW-ADF-006 re-anchor + H-NEW-ADF-009 + H-NEW-ADF-008 sibling re-anchor; holdouts 70→71). G-ADF-BARE-URL covered by H-NEW-ADF-008 re-anchor to BC-7.2.014. Epic fully closed. | MEDIUM | **RESOLVED — 2026-06-27 (DEC-141)** | 2026-06-27 |
-| MUTATION-CI-TIMEOUT | ci-budget | PR #567 squash-merged → develop @ 3b122a8. cargo-mutants HARD-REQUIRED via ci-gate.needs; absolute --timeout 240; `timeout-minutes: 90`; 5 false-green guards; 15/15 CI green. S-MUTATION-CI-TIMEOUT-1 filed (retroactive). Stories 96→97. DEC-144. | MEDIUM | **RESOLVED — 2026-06-28 (DEC-144); PR #567 @ 3b122a8** | 2026-06-28 |
+| HOLDOUT-COVERAGE-GAPS-2026-06-25 | holdout coverage | HIGH gaps CLOSED by D4 (2026-06-26). MED gaps CLOSED 2026-06-30 (D-146): 8 holdouts (71→79). ALL 3 BLOCKED TARGETS CLOSED 2026-06-30 (D-147): `issue edit --label` → BC-3.4.020 + H-NEW-LABEL-FORK-001; `board view` → BC-5.1.005 + H-NEW-BOARD-VIEW-001; `issue edit --dry-run` → BC-3.4.021 + H-NEW-DRY-RUN-001. Holdouts 82. Epic fully closed. | LOW | **RESOLVED — all targets closed 2026-06-30 (D-146/147)** | 2026-06-30 |
+| HOLDOUT-BLOCKED-TARGETS-BC-PASS | holdout coverage | 3 targets: `issue edit --label` single-vs-bulk fork, `board view` truncation/scrum-vs-kanban, `issue edit --dry-run` plannedChanges. CLOSED 2026-06-30 (D-147): BC-3.4.020/021/5.1.005 authored; holdouts H-NEW-LABEL-FORK-001/DRY-RUN-001/BOARD-VIEW-001 delivered. Holdouts 79→82. | MEDIUM | **RESOLVED — BCs authored + holdouts delivered (D-147)** | 2026-06-30 |
+| E2E-EDGE-CASE-GAPS-2026-06-27 | E2E coverage | All 3 tiers delivered (D-141): offline-CLI PR #563 (D-139), wiremock PR #564 (D-140), holdout spec G-ADF-FOOTNOTE (D-141 — H-NEW-ADF-006 re-anchor + H-NEW-ADF-009 + H-NEW-ADF-008 sibling re-anchor; holdouts 70→71). G-ADF-BARE-URL covered by H-NEW-ADF-008 re-anchor to BC-7.2.014. Epic fully closed. | MEDIUM | **RESOLVED — 2026-06-27 (D-141)** | 2026-06-27 |
+| MUTATION-CI-TIMEOUT | ci-budget | PR #567 squash-merged → develop @ 3b122a8. cargo-mutants HARD-REQUIRED via ci-gate.needs; absolute --timeout 240; `timeout-minutes: 90`; 5 false-green guards; 15/15 CI green. S-MUTATION-CI-TIMEOUT-1 filed (retroactive). Stories 96→97. D-144. | MEDIUM | **RESOLVED — 2026-06-28 (D-144); PR #567 @ 3b122a8** | 2026-06-28 |
 | HOLDOUT-STALE-2026-06-25 | holdout staleness | H-NEW-MP-001 (--story-points→--points) FIXED in D4; H-007 (ADR-0015 mechanism) FIXED in D4 (re-anchored to BC-3.2.013 proactive + BC-3.2.009 fallback). H-019 FIXED. H-028 FALSE POSITIVE. No remaining stale holdouts. | LOW | **RESOLVED — all stale items fixed by D4 (2026-06-26)** | 2026-06-26 |
 | DOC-DRIFT-2026-06-25 | doc hygiene | D1 bundle: CLAUDE.md missing BC-7.2.012 Gotchas entry (ADF recursion guard, SEC-001, #553); CHANGELOG [Unreleased] missing #551/#550. All of DRIFT-S3-001/002/003/004 RESOLVED — DRIFT-S3-003 via D2 factory commit 89d94d8; DRIFT-S3-001/002/004 via PR #554 (squash-merged → develop @ aa2cdca). | MEDIUM | **RESOLVED — PR #554 merged 2026-06-25 (develop @ aa2cdca)** | 2026-06-25 |
 | PATTERN-HYGIENE-2026-06-25 | code hygiene | D3 bundle: PF-010/011 bare .unwrap() w/o invariant comment in src/cli/assets/schemas.rs; PF-016 src/cli/issue/create.rs 2,880 LOC; PF-017 src/cli/issue/workflow.rs 1,341 LOC. Unwrap-comment hygiene PF-008/012/013/014. | LOW | **RESOLVED — PR #555 merged 2026-06-25 (develop @ 6b395d3). PF-010..014/016/017 closed.** | 2026-06-25 |
@@ -268,55 +268,55 @@ The items below were TRACKED/OPEN/RESOLVED in STATE.md Drift Items and are archi
 
 ---
 
-## Resolved 2026-06-30 — CITATION-DEBT-FILEWIDE cycle CLOSED (DEC-148)
+## Resolved 2026-06-30 — CITATION-DEBT-FILEWIDE cycle CLOSED (D-148)
 
 CITATION-DEBT-FILEWIDE-2026-06-30 (MEDIUM drift item) was opened at the end of the BC-SUB-CLAUSE
-+ HOLDOUT cycle (DEC-147) to track file-wide ADR-0012 relocation citation debt in
++ HOLDOUT cycle (D-147) to track file-wide ADR-0012 relocation citation debt in
 `.factory/specs/prd/` files. This entry records the RESOLVED-PARTIAL closure of that item.
 
 | ID | Area | Description | Severity | Status | Resolved Date |
 |----|------|-------------|----------|--------|---------------|
-| CITATION-DEBT-FILEWIDE-2026-06-30 | spec/metadata | Pre-existing stale citations in bc-3-issue-write.md, bc-2-issue-read.md, and BC-INDEX.md from ADR-0012 Seam A/B module extractions (create.rs→edit.rs/jsm_create.rs; helpers.rs→field_resolve.rs). **RESOLVED-PARTIAL — `.factory/specs/prd/` perimeter DONE (DEC-148):** 12 relocations + BC-3.4.016 sibling-propagation add + 2 descriptor rewrites + 2 changelog symbol fixes + 1 prose fix in bc-3-issue-write.md; 1 relocation in bc-2-issue-read.md; 11 relocations + 1 symbol correction + 1 add in BC-INDEX.md. 7 adversary passes → 3 consecutive CLEAN. check scripts exit 0. **Remaining product-file ring** (docs/adr/0014:176, docs/specs/jsm-e2e-coverage:49, docs/specs/2026-05-13-search-issue-keys:129, src/api/jira/issues.rs:285 rustdoc, archived docs×2) split to CITATION-DEBT-PRODUCT-FILES-2026-06-30 (MEDIUM, OPEN) per DEC-147 DEFERRAL-PERIMETER-SCOPING. | MEDIUM | **RESOLVED-PARTIAL — DEC-148 (2026-06-30); product-file ring → CITATION-DEBT-PRODUCT-FILES-2026-06-30** | 2026-06-30 |
+| CITATION-DEBT-FILEWIDE-2026-06-30 | spec/metadata | Pre-existing stale citations in bc-3-issue-write.md, bc-2-issue-read.md, and BC-INDEX.md from ADR-0012 Seam A/B module extractions (create.rs→edit.rs/jsm_create.rs; helpers.rs→field_resolve.rs). **RESOLVED-PARTIAL — `.factory/specs/prd/` perimeter DONE (D-148):** 12 relocations + BC-3.4.016 sibling-propagation add + 2 descriptor rewrites + 2 changelog symbol fixes + 1 prose fix in bc-3-issue-write.md; 1 relocation in bc-2-issue-read.md; 11 relocations + 1 symbol correction + 1 add in BC-INDEX.md. 7 adversary passes → 3 consecutive CLEAN. check scripts exit 0. **Remaining product-file ring** (docs/adr/0014:176, docs/specs/jsm-e2e-coverage:49, docs/specs/2026-05-13-search-issue-keys:129, src/api/jira/issues.rs:285 rustdoc, archived docs×2) split to CITATION-DEBT-PRODUCT-FILES-2026-06-30 (MEDIUM, OPEN) per D-147 DEFERRAL-PERIMETER-SCOPING. | MEDIUM | **RESOLVED-PARTIAL — D-148 (2026-06-30); product-file ring → CITATION-DEBT-PRODUCT-FILES-2026-06-30** | 2026-06-30 |
 
 ---
 
-## Resolved 2026-07-02 — CITATION-DEBT-PRODUCT-FILES SHIPPED (DEC-149)
+## Resolved 2026-07-02 — CITATION-DEBT-PRODUCT-FILES SHIPPED (D-149)
 
-CITATION-DEBT-PRODUCT-FILES-2026-06-30 (MEDIUM drift item, opened DEC-147/DEC-148) tracked
+CITATION-DEBT-PRODUCT-FILES-2026-06-30 (MEDIUM drift item, opened D-147/D-148) tracked
 ADR-0012 relocation citation debt in PRODUCT files on the develop branch, requiring a develop PR.
 Both PRs shipped 2026-07-02 (human-merged, admin bypass, CI green throughout).
 
 | ID | Area | Description | Severity | Status | Resolved Date |
 |----|------|-------------|----------|--------|---------------|
-| CITATION-DEBT-PRODUCT-FILES-2026-06-30 | spec/metadata | ADR-0012 relocation citations in PRODUCT files: docs/adr/0014-jsm-request-type-dispatch.md:176 (HIGH — mislabeled create.rs as "canonical implementation"), docs/specs/jsm-e2e-coverage.md:49 (MED), docs/specs/2026-05-13-search-issue-keys.md:129 (MED), src/api/jira/issues.rs:285 rustdoc (LOW). **RESOLVED — PR #568** `docs: fix ADR-0012 Seam A/B relocation citations (create.rs → edit.rs / jsm_create.rs)`: 7 doc/comment-only citation corrections across 4 product files (docs/adr/0014-jsm-request-type-dispatch.md, docs/specs/jsm-e2e-coverage.md, docs/specs/2026-05-13-search-issue-keys.md, src/api/jira/issues.rs). Cleared the HIGH (ADR-0014 mislabeled create.rs). No behavior change. Adversarially converged (multiple rounds → 3 consecutive clean passes on final diff). Human-merged (admin bypass) after rebase onto #569. develop 3b122a8 → 39caf39. | MEDIUM | **RESOLVED — 2026-07-02; DEC-149; PR #568 @ 39caf39** | 2026-07-02 |
-| ANYHOW-RUSTSEC-2026-0190 | security/deps | anyhow 1.0.102 unsoundness advisory (RUSTSEC-2026-0190) discovered while preparing PR #568; freshly-published advisory was turning ci-gate red on all open PRs via cargo-deny. **RESOLVED — PR #569** `chore(deps): bump anyhow 1.0.102 → 1.0.103 (RUSTSEC-2026-0190)`: Cargo.lock + CHANGELOG only; fixed-first per human direction (separation of concerns); #568 rebased onto #569 after. develop e79943b (PR #569) → 39caf39 (PR #568). | HIGH | **RESOLVED — 2026-07-02; DEC-149; PR #569 @ e79943b** | 2026-07-02 |
+| CITATION-DEBT-PRODUCT-FILES-2026-06-30 | spec/metadata | ADR-0012 relocation citations in PRODUCT files: docs/adr/0014-jsm-request-type-dispatch.md:176 (HIGH — mislabeled create.rs as "canonical implementation"), docs/specs/jsm-e2e-coverage.md:49 (MED), docs/specs/2026-05-13-search-issue-keys.md:129 (MED), src/api/jira/issues.rs:285 rustdoc (LOW). **RESOLVED — PR #568** `docs: fix ADR-0012 Seam A/B relocation citations (create.rs → edit.rs / jsm_create.rs)`: 7 doc/comment-only citation corrections across 4 product files (docs/adr/0014-jsm-request-type-dispatch.md, docs/specs/jsm-e2e-coverage.md, docs/specs/2026-05-13-search-issue-keys.md, src/api/jira/issues.rs). Cleared the HIGH (ADR-0014 mislabeled create.rs). No behavior change. Adversarially converged (multiple rounds → 3 consecutive clean passes on final diff). Human-merged (admin bypass) after rebase onto #569. develop 3b122a8 → 39caf39. | MEDIUM | **RESOLVED — 2026-07-02; D-149; PR #568 @ 39caf39** | 2026-07-02 |
+| ANYHOW-RUSTSEC-2026-0190 | security/deps | anyhow 1.0.102 unsoundness advisory (RUSTSEC-2026-0190) discovered while preparing PR #568; freshly-published advisory was turning ci-gate red on all open PRs via cargo-deny. **RESOLVED — PR #569** `chore(deps): bump anyhow 1.0.102 → 1.0.103 (RUSTSEC-2026-0190)`: Cargo.lock + CHANGELOG only; fixed-first per human direction (separation of concerns); #568 rebased onto #569 after. develop e79943b (PR #569) → 39caf39 (PR #568). | HIGH | **RESOLVED — 2026-07-02; D-149; PR #569 @ e79943b** | 2026-07-02 |
 
 ---
 
-## Resolved 2026-07-02 — MUTANTS-EXAMINE-GLOBS cycle SHIPPED (DEC-150)
+## Resolved 2026-07-02 — MUTANTS-EXAMINE-GLOBS cycle SHIPPED (D-150)
 
 PR #570 squash-merged by human 2026-07-02. develop 39caf39 → c4b3aa9. Story worktree cleaned up.
 Two drift items closed as part of cycle close-out.
 
 | ID | Area | Description | Severity | Status | Resolved Date |
 |----|------|-------------|----------|--------|---------------|
-| MUTANTS-EXAMINE-GLOBS-STALE-AFTER-SEAM-B | mutation coverage | `.cargo/mutants.toml::examine_globs` listed only `src/cli/issue/create.rs` after ADR-0012 Seam A/B split (PRs #556/#558). Surfaced by #568 adversarial gate (DEC-149). **RESOLVED — PR #570** `ci(mutants): restore scope — add edit.rs + jsm_create.rs to examine_globs; fix policy-doc citations (DEC-149)`: added `src/cli/issue/edit.rs` (~99 mutants) and `src/cli/issue/jsm_create.rs` (~9 mutants) to `examine_globs`; corrected function-location citations in policy doc (`docs/specs/cargo-mutants-policy.md`); repointed stale ci.yml:195 scope comment (authorized F5 F-1 MED). Full VSDD pipeline: F1→F3 story #100 (S-MUTANTS-EXAMINE-GLOBS-1 v1.2)→F4 delivery (3 commits: 5486c34, 1da0571, 475a1aa)→F5 CONVERGED (2 fix rounds + 3 clean diverse-lens passes)→consistency-validator CONSISTENT→PR #570 created→mutants job PASS 35s 0-mutant path→human-merged 2026-07-02 (DEC-128 honored). Scope: ~594→~702 mutants (+18%). | MEDIUM | **RESOLVED — 2026-07-02; DEC-150; PR #570; develop @ c4b3aa9** | 2026-07-02 |
-| CICD-SETUP-TIMEOUT-MINUTES-STALE | doc hygiene | `.factory/cicd-setup.md` §2 VSDD checklist row claimed `timeout-minutes: 60`; actual value has been 90 since PR #567 (S-MUTATION-CI-TIMEOUT-1, DEC-144, 2026-06-28). Pre-existing drift surfaced by F5 adversarial gate round-1 pass-3 of the MUTANTS-EXAMINE-GLOBS cycle. **RESOLVED — factory-artifacts cycle-close commit 2026-07-02 (DEC-150):** `.factory/cicd-setup.md` §2 timeout-minutes 60→90; §1.1 job-catalog scope shorthand updated; §1.1a scope list updated to all 11 examine_globs entries. Note: this drift item was separate from AC-003 scope (examine_globs coverage prose); both fixed in same factory-artifacts commit per DEC-144/PR #567 as source. | LOW | **RESOLVED — 2026-07-02; DEC-150; factory-artifacts commit** | 2026-07-02 |
+| MUTANTS-EXAMINE-GLOBS-STALE-AFTER-SEAM-B | mutation coverage | `.cargo/mutants.toml::examine_globs` listed only `src/cli/issue/create.rs` after ADR-0012 Seam A/B split (PRs #556/#558). Surfaced by #568 adversarial gate (D-149). **RESOLVED — PR #570** `ci(mutants): restore scope — add edit.rs + jsm_create.rs to examine_globs; fix policy-doc citations (D-149)`: added `src/cli/issue/edit.rs` (~99 mutants) and `src/cli/issue/jsm_create.rs` (~9 mutants) to `examine_globs`; corrected function-location citations in policy doc (`docs/specs/cargo-mutants-policy.md`); repointed stale ci.yml:195 scope comment (authorized F5 F-1 MED). Full VSDD pipeline: F1→F3 story #100 (S-MUTANTS-EXAMINE-GLOBS-1 v1.2)→F4 delivery (3 commits: 5486c34, 1da0571, 475a1aa)→F5 CONVERGED (2 fix rounds + 3 clean diverse-lens passes)→consistency-validator CONSISTENT→PR #570 created→mutants job PASS 35s 0-mutant path→human-merged 2026-07-02 (D-128 honored). Scope: ~594→~702 mutants (+18%). | MEDIUM | **RESOLVED — 2026-07-02; D-150; PR #570; develop @ c4b3aa9** | 2026-07-02 |
+| CICD-SETUP-TIMEOUT-MINUTES-STALE | doc hygiene | `.factory/cicd-setup.md` §2 VSDD checklist row claimed `timeout-minutes: 60`; actual value has been 90 since PR #567 (S-MUTATION-CI-TIMEOUT-1, D-144, 2026-06-28). Pre-existing drift surfaced by F5 adversarial gate round-1 pass-3 of the MUTANTS-EXAMINE-GLOBS cycle. **RESOLVED — factory-artifacts cycle-close commit 2026-07-02 (D-150):** `.factory/cicd-setup.md` §2 timeout-minutes 60→90; §1.1 job-catalog scope shorthand updated; §1.1a scope list updated to all 11 examine_globs entries. Note: this drift item was separate from AC-003 scope (examine_globs coverage prose); both fixed in same factory-artifacts commit per D-144/PR #567 as source. | LOW | **RESOLVED — 2026-07-02; D-150; factory-artifacts commit** | 2026-07-02 |
 
 ---
 
-## Resolved 2026-07-28/29 — F2 adversary grind closure (DEC-190 / DEC-191)
+## Resolved 2026-07-28/29 — F2 adversary grind closure (D-190 / D-191)
 
 Seven drift items confirmed closed during SOH-DX-1 F2 adversary grind and state compaction on 2026-07-28/29.
 
 | ID | Area | Description | Severity | Status | Resolved Date |
 |----|------|-------------|----------|--------|---------------|
 | ZERO-HTTP-PROOF-VERIFIED | spec integrity | AC-8 and AC-13 zero-HTTP proof depends on wiremock received_requests() capturing requests to unregistered paths. Verified against wiremock-0.6.5 source: handle_request pushes every request UNCONDITIONALLY before mock_set.handle_request — unmatched paths ARE recorded; spec claim holds; failure mode safe (recording disabled → unwrap() panics loudly). Surfaced as UNVERIFIED in pass-69; resolved by orchestrator against crate source. | INFO | CLOSED — verified correct (2026-07-28) | 2026-07-28 |
-| ADVERSARY-AGENT-NONFUNCTIONAL | platform/tooling | Adversary agent dispatches failing at 14-30% rate. Root cause RE-ATTRIBUTED to platform defect GitHub issue #47936 (background subagents terminate mid-work with no result block; NOT a prompting issue). Merged into AGENT-IDLE-NO-REPORT. Route to Anthropic. Engine bug claims (a)/(b) in ENGINE-ADVERSARY-TWO-BUGS were subsequently refuted by orchestrator verification 2026-07-30 (DEC-198); ENGINE-ADVERSARY-TWO-BUGS archived as CLOSED-INVALID. Adversary-specific failures re-attributed to malformed dispatch (not engine bugs, not platform defect #47936). | HIGH | CLOSED — MERGED INTO AGENT-IDLE-NO-REPORT; re-attributed to platform defect #47936 (2026-07-28); adversary-specific failures further re-attributed to malformed dispatch (DEC-198 2026-07-30) | 2026-07-28 |
-| SUBSTITUTE-ADVERSARY-RATIFICATION-PENDING | process/gate | Passes 48-52 ran via consistency-validator with adversarial checklist rather than adversary agent; fresh context and adversarial framing preserved but adversary system prompt absent. Required human ruling on DEC-189 window eligibility. **AMENDMENT NOTE (DEC-198 2026-07-30):** The factual premise of DEC-190 ("adversary agent non-functional / blocked by engine bugs") was FALSE — ENGINE-ADVERSARY-TWO-BUGS CLOSED-INVALID. DEC-190 is amended but its substitute-pass window-eligibility ruling is NOT retroactively voided. See DEC-190 inline amendment in STATE.md Decisions Log. | MEDIUM | RESOLVED — DEC-190 (2026-07-27): human instruction "keep grinding to 3 strict" ratified substitute passes as DEC-189 window-eligible; DEC-190 MUST be disclosed at F2 gate; DEC-190 premise subsequently corrected (DEC-198 2026-07-30) | 2026-07-27 |
+| ADVERSARY-AGENT-NONFUNCTIONAL | platform/tooling | Adversary agent dispatches failing at 14-30% rate. Root cause RE-ATTRIBUTED to platform defect GitHub issue #47936 (background subagents terminate mid-work with no result block; NOT a prompting issue). Merged into AGENT-IDLE-NO-REPORT. Route to Anthropic. Engine bug claims (a)/(b) in ENGINE-ADVERSARY-TWO-BUGS were subsequently refuted by orchestrator verification 2026-07-30 (D-198); ENGINE-ADVERSARY-TWO-BUGS archived as CLOSED-INVALID. Adversary-specific failures re-attributed to malformed dispatch (not engine bugs, not platform defect #47936). | HIGH | CLOSED — MERGED INTO AGENT-IDLE-NO-REPORT; re-attributed to platform defect #47936 (2026-07-28); adversary-specific failures further re-attributed to malformed dispatch (D-198 2026-07-30) | 2026-07-28 |
+| SUBSTITUTE-ADVERSARY-RATIFICATION-PENDING | process/gate | Passes 48-52 ran via consistency-validator with adversarial checklist rather than adversary agent; fresh context and adversarial framing preserved but adversary system prompt absent. Required human ruling on D-189 window eligibility. **AMENDMENT NOTE (D-198 2026-07-30):** The factual premise of D-190 ("adversary agent non-functional / blocked by engine bugs") was FALSE — ENGINE-ADVERSARY-TWO-BUGS CLOSED-INVALID. D-190 is amended but its substitute-pass window-eligibility ruling is NOT retroactively voided. See D-190 inline amendment in STATE.md Decisions Log. | MEDIUM | RESOLVED — D-190 (2026-07-27): human instruction "keep grinding to 3 strict" ratified substitute passes as D-189 window-eligible; D-190 MUST be disclosed at F2 gate; D-190 premise subsequently corrected (D-198 2026-07-30) | 2026-07-27 |
 | PHANTOM-ADR-0017 | spec/metadata | ADR-0017 cited in six real files but appeared missing from docs/adr/. Verified FALSE POSITIVE: ADR-0017 exists at .factory/specs/architecture/decisions/ADR-0017-first-multipart-streaming-http-surface.md (ARCH-INDEX.md:34; Accepted 2026-07-15). Prior search missed the documented canonical location (.factory/specs/architecture/decisions/ per ARCH-INDEX.md:3-5 split). | MEDIUM | CLOSED — FALSE POSITIVE (2026-07-28) | 2026-07-28 |
 | CANONICAL-COUNTS-STALE-ADR-LOCATIONS | spec/metadata | CANONICAL-COUNTS.md §ADRs claimed ADR-0007..0013 in `.factory/architecture/adr/` (directory does not exist). Corrected per ARCH-INDEX.md:3-5: ADR-0001..0016 in docs/adr/, ADR-0017+ in .factory/specs/architecture/decisions/. Count of 17 preserved and confirmed correct. | LOW | CLOSED — FIXED (2026-07-28 LEDGER-BURST) | 2026-07-28 |
-| STRICT-WINDOW-NO-FIXED-POINT | process/criterion | DEC-189's zero-findings redefinition of "clean" had no reachable fixed point on a mature spec — the documented cause of the grinding stall (passes 68+69 returned ZERO findings confirming the fixed point was reachable; DEC-189's criterion blocked closure). Root cause: DEC-189 was stricter than VSDD prescribes. | MEDIUM | CLOSED — RESOLVED by DEC-191 (2026-07-28): VSDD gap-vs-refinement criterion adopted; reachable fixed point confirmed | 2026-07-28 |
+| STRICT-WINDOW-NO-FIXED-POINT | process/criterion | D-189's zero-findings redefinition of "clean" had no reachable fixed point on a mature spec — the documented cause of the grinding stall (passes 68+69 returned ZERO findings confirming the fixed point was reachable; D-189's criterion blocked closure). Root cause: D-189 was stricter than VSDD prescribes. | MEDIUM | CLOSED — RESOLVED by D-191 (2026-07-28): VSDD gap-vs-refinement criterion adopted; reachable fixed point confirmed | 2026-07-28 |
 | SPEC-INLINE-REVERT-SIGNAL | spec integrity | P73-001 (REFINEMENT, LOW): bc-3-issue-write.md lines ~3427/3484 carry 8a0a2422 hyphenation workarounds with no inline pending-revert-by-S-627-1 marker; the F1 delta-analysis was the sole source of the revert obligation. Fix: carry the revert obligation into the S-627-1 story body. | LOW | CLOSED — DISCHARGED: [PENDING-REVERT-S-627-1] inline annotations added to bc-3-issue-write.md BC-3.9.001 Trace and BC-3.9.003 Trace in spec v1.3.162 (six-axis review remediation) | 2026-07-29 |
 
 ---
@@ -348,17 +348,17 @@ Three LOW REFINEMENT findings fixed in spec v1.3.167 after passes 82/83/84.
 | ID | Area | Description | Severity | Original Status | Archived Date |
 |----|------|-------------|----------|-----------------|---------------|
 | F7-001..F7-003 | spec precision | Minor precision gaps: CLAUDE.md symmetric label; F2-record archival note; BC-7.2.011 "13 tests". Accepted as low-priority deferred items with no blocking action. | LOW | ACCEPTED-DEFERRED | 2026-07-29 |
-| HOLDOUT-RESIDUAL-EDIT-FIELD-002-STDERR | holdout quality | H-NEW-EDIT-FIELD-002 stderr criterion is looser than sibling scenarios (DEC-146). Accepted as deliberate asymmetry per DEC-146; no corrective action planned. | LOW | ACCEPTED | 2026-07-29 |
+| HOLDOUT-RESIDUAL-EDIT-FIELD-002-STDERR | holdout quality | H-NEW-EDIT-FIELD-002 stderr criterion is looser than sibling scenarios (D-146). Accepted as deliberate asymmetry per D-146; no corrective action planned. | LOW | ACCEPTED | 2026-07-29 |
 | BC-INDEX-TD031-EDIT-LOCKOUT | spec integrity | Counts synced 2026-07-09; BC-INDEX 243-bare-cite sweep COMPLETED adversary-pass-14; bc-2 46-cite sweep COMPLETED; DRIFT-002 unblocked. TD-031-FULL-CLEANUP RESOLVED. | MEDIUM | MITIGATED-FURTHER — RESOLVED | 2026-07-29 |
-| PG-MERGE-AUTH-BYPASS | process/gate | pr-manager executed gh pr merge on PR #544 despite orchestrator hold. DEC-128 Constraint 4 CODIFIED. Residual gaps tracked under story 91 per DEC-145; no further STATE.md tracking needed. | LOW | MITIGATED-WITH-RESIDUAL-GAPS (story 91) | 2026-07-29 |
+| PG-MERGE-AUTH-BYPASS | process/gate | pr-manager executed gh pr merge on PR #544 despite orchestrator hold. D-128 Constraint 4 CODIFIED. Residual gaps tracked under story 91 per D-145; no further STATE.md tracking needed. | LOW | MITIGATED-WITH-RESIDUAL-GAPS (story 91) | 2026-07-29 |
 | TRAJECTORY-TAIL-STALE-DUP | factory process | Orphaned duplicate of p121 trajectory line deleted. Root cause: no guard on trajectory-append correctness. The guard gap is absorbed into the general class of guard gaps tracked by other open items. | LOW | FIXED — guard gap archived | 2026-07-29 |
 
 ---
 
-## Archived 2026-07-30 — DEC-198-LEDGER-CORRECTION-BURST (ENGINE-ADVERSARY-TWO-BUGS misdiagnosis correction)
+## Archived 2026-07-30 — D-198-LEDGER-CORRECTION-BURST (ENGINE-ADVERSARY-TWO-BUGS misdiagnosis correction)
 
 ENGINE-ADVERSARY-TWO-BUGS was opened during the SOH-DX-1 F2 adversary grind and recorded as two bugs in the VSDD engine's adversary.md. Orchestrator verification 2026-07-30 against the engine source at vsdd-factory/plugins/vsdd-factory/agents/adversary.md and vsdd-factory/plugins/vsdd-factory/skills/adversarial-review/SKILL.md refuted both claims. The proposed remedy would have actively harmed the adversarial review mechanism. Real root cause was orchestrator malformed dispatches.
 
 | ID | Area | Description | Severity | Status | Resolved Date |
 |----|------|-------------|----------|--------|---------------|
-| ENGINE-ADVERSARY-TWO-BUGS | engine process | Two claimed engine bugs in adversary.md. **(a) Claimed:** "§Output Format L121 mandates writing findings to .factory/cycles/<current>/adversarial-reviews/ while frontmatter grants no Write; L347 contradicts it." **REFUTED:** adversary.md §Tool Access explicitly states read-only profile with denial of Write/Edit/Bash and notes "Findings are returned as chat text — the orchestrator persists them via state-manager (see adversarial-review SKILL.md 'Post-Adversary Persistence')." L121 specifies the orchestrator's persistence destination, not an action for the agent. Confusing wording, but no contradiction exists. **(b) Claimed:** "Partial-Fix Regression Discipline axis requires prior-pass findings that L22 forbids reading, discoverable only via git which Bash denies." **REFUTED:** that axis says prior-pass findings are "visible via the convergence report or fix commit" — supplied by the orchestrator in the dispatch prompt. adversary.md §"Accumulate Invariants Across Passes" is explicit: "your prompt must include ALL confirmed invariants from prior passes." The orchestrator is the designated channel; no forbidden read is required. **Proposed remedy actively harmful:** ENGINE-ADVERSARY-TWO-BUGS proposed granting the adversary Write access. adversarial-review SKILL.md records this was explicitly considered and rejected: "Information asymmetry is the mechanism that makes adversarial review effective. If the adversary could write files, it could see its own prior reviews (breaking fresh-context) or modify specs (crossing the builder/reviewer boundary). Read-only access enforces both constraints structurally." **Real root cause:** orchestrator malformed dispatches — missing invariant list in dispatch prompt; expectation that agent would write files it by design cannot write; Post-Adversary Persistence procedure (SKILL.md §167-178) never executed in this cycle. The agent was usable the whole time. **Consequence for DEC-190:** the factual basis of DEC-190 ("adversary non-functional") was false. DEC-190 is amended inline in STATE.md Decisions Log; its window-eligibility ruling is NOT retroactively voided. | MEDIUM | CLOSED — INVALID (misdiagnosis, 2026-07-30). No engine bugs present. Root cause = orchestrator malformed dispatch. DEC-190 amended inline. | 2026-07-30 |
+| ENGINE-ADVERSARY-TWO-BUGS | engine process | Two claimed engine bugs in adversary.md. **(a) Claimed:** "§Output Format L121 mandates writing findings to .factory/cycles/<current>/adversarial-reviews/ while frontmatter grants no Write; L347 contradicts it." **REFUTED:** adversary.md §Tool Access explicitly states read-only profile with denial of Write/Edit/Bash and notes "Findings are returned as chat text — the orchestrator persists them via state-manager (see adversarial-review SKILL.md 'Post-Adversary Persistence')." L121 specifies the orchestrator's persistence destination, not an action for the agent. Confusing wording, but no contradiction exists. **(b) Claimed:** "Partial-Fix Regression Discipline axis requires prior-pass findings that L22 forbids reading, discoverable only via git which Bash denies." **REFUTED:** that axis says prior-pass findings are "visible via the convergence report or fix commit" — supplied by the orchestrator in the dispatch prompt. adversary.md §"Accumulate Invariants Across Passes" is explicit: "your prompt must include ALL confirmed invariants from prior passes." The orchestrator is the designated channel; no forbidden read is required. **Proposed remedy actively harmful:** ENGINE-ADVERSARY-TWO-BUGS proposed granting the adversary Write access. adversarial-review SKILL.md records this was explicitly considered and rejected: "Information asymmetry is the mechanism that makes adversarial review effective. If the adversary could write files, it could see its own prior reviews (breaking fresh-context) or modify specs (crossing the builder/reviewer boundary). Read-only access enforces both constraints structurally." **Real root cause:** orchestrator malformed dispatches — missing invariant list in dispatch prompt; expectation that agent would write files it by design cannot write; Post-Adversary Persistence procedure (SKILL.md §167-178) never executed in this cycle. The agent was usable the whole time. **Consequence for D-190:** the factual basis of D-190 ("adversary non-functional") was false. D-190 is amended inline in STATE.md Decisions Log; its window-eligibility ruling is NOT retroactively voided. | MEDIUM | CLOSED — INVALID (misdiagnosis, 2026-07-30). No engine bugs present. Root cause = orchestrator malformed dispatch. D-190 amended inline. | 2026-07-30 |

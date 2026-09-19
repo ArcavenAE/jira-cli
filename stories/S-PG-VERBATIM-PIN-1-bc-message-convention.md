@@ -200,7 +200,7 @@ drift item LOOSE-CONTAINS-MASKS-BC-VERBATIM-MESSAGE-DRIFT — pending BC authors
 ### AC-004 — Optional jr-side lint script, self-tested, non-blocking on day one
 
 `scripts/check-verbatim-pin-convention.sh` is created following this repo's existing
-`--self-test` convention (DEC-148/DEC-150 shape), proven to flag at least one known-bad fixture.
+`--self-test` convention (D-148/D-150 shape), proven to flag at least one known-bad fixture.
 Its CI wiring status (advisory-only vs. hard-gate) is an explicit, documented decision — not
 silently defaulted — given the false-positive risk noted in AC-003. (traces to drift item
 LOOSE-CONTAINS-MASKS-BC-VERBATIM-MESSAGE-DRIFT — pending BC authorship)

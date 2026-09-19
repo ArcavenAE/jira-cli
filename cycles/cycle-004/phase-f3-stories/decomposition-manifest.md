@@ -16,7 +16,7 @@ inputs:
   - ".factory/cycles/cycle-004/phase-f2-spec-evolution/architecture-delta.md"
   - ".factory/cycles/cycle-004/phase-f2-spec-evolution/vp-delta.md"
   - ".factory/stories/STORY-INDEX.md"
-traces_to: "DEC-334; DEC-335; ADR-0021; ADR-0022; A-PA-LOW-001"
+traces_to: "D-334; D-335; ADR-0021; ADR-0022; A-PA-LOW-001"
 input-hash: "8a7ca2b"
 ---
 
@@ -24,7 +24,7 @@ input-hash: "8a7ca2b"
 
 **PLANNING + DELIVERY RECORD.** Unlike cycle-003's manifest (a pure planning pass ahead of
 a separate story-writing burst), this manifest is written alongside the four
-`S-cycle4-*.md` story files it describes, since DEC-335 already locked the exact 4-story
+`S-cycle4-*.md` story files it describes, since D-335 already locked the exact 4-story
 scope at the F1 human gate — no separate story-set proposal/approval round was needed
 before writing. `STORY-INDEX.md` has NOT been touched (state-manager's later step).
 
@@ -43,7 +43,7 @@ which this cycle's stories are additive to, not a replacement of — `S-WIN-1` t
 keyring feature, and CI/release plumbing; none of those stories touch OAuth credential
 storage or `cloud_id` acquisition, so there is zero scope overlap).
 
-## 1. DEC-335 Scope Recap (binding, not re-litigated)
+## 1. D-335 Scope Recap (binding, not re-litigated)
 
 Four stories, exactly as locked at the F1 human gate:
 
@@ -57,7 +57,7 @@ Four stories, exactly as locked at the F1 human gate:
 4. **`cloud_id-correctness`** (human-added) — fetch+persist `cloud_id` via
    `GET /_edge/tenant_info` on API-token login; closes A-PA-LOW-001.
 
-**DEC-335's bundling instruction for items 1+2:** "the human BUNDLED stories 1+2 into ONE
+**D-335's bundling instruction for items 1+2:** "the human BUNDLED stories 1+2 into ONE
 RELEASE." This manifest implements that as a hard `depends_on` edge
 (`S-cycle4-honest-fail-message` depends on `S-cycle4-dpapi-storage-fix`) rather than a
 merge into one story file, for three reasons: (a) the two items have genuinely distinct,
@@ -211,9 +211,9 @@ minting a new VP ID (out of scope for F3 story decomposition); flagging here for
 authorized to decide whether `bc-1-auth-identity.md` should gain a formal VP anchor for
 this production-path property in a future F2 amendment.
 
-## 5. Windows-Only Testability and the F4/F7 Validation Split (DEC-335)
+## 5. Windows-Only Testability and the F4/F7 Validation Split (D-335)
 
-Per DEC-335 and F1 §10 / architecture-delta §9 item 3, `S-cycle4-dpapi-storage-fix`'s
+Per D-335 and F1 §10 / architecture-delta §9 item 3, `S-cycle4-dpapi-storage-fix`'s
 story body states this explicitly under its own "Windows Validation" section:
 
 1. **F4 CI spike (REQUIRED):** determine whether `windows-latest` GitHub Actions CI can
@@ -242,7 +242,7 @@ Full anchor justifications live in each story file's own "Anchor Justification" 
 self-containedness:
 
 - `S-cycle4-dpapi-storage-fix` → `S-cycle4-honest-fail-message`: hard compile-time
-  dependency (marker types). Realizes DEC-335's release-bundling instruction.
+  dependency (marker types). Realizes D-335's release-bundling instruction.
 - `S-cycle4-cloud-id-correctness` → `S-cycle4-windows-docs`: content-accuracy dependency,
   not a compile/file dependency — `windows-docs`' `cloud_id` caveat paragraph must
   describe the CORRECTED (post-fix) behavior, not the pre-fix "OAuth-only" limitation.

@@ -47,6 +47,6 @@ depends_on: [] — no upstream PR dependencies.
 
 ## Merge Gate Status
 
-**HELD_AT_MERGE** — merge authorization not granted per DEC-128. Human merge required.
+**HELD_AT_MERGE** — merge authorization not granted per D-128. Human merge required.
 
 Merge is ready: all gates passed (security PASS, review APPROVE, CI 15/15 green, no dependencies).

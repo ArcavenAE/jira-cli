@@ -118,7 +118,7 @@ Synthesis of the above plus common CI patterns (lower confidence — opinion/com
 2. **Prove baseline once, then `--baseline=skip` everywhere.** A dedicated prior `cargo test` job is the correctness anchor; if it's green, shards can skip baseline safely. This is the officially-sanctioned pattern (mutants.rs/shards.html).
 3. **Per-PR scope via `--in-diff`** keeps the required gate bounded to changed code — the standard "only-on-changed-files" pattern. Run a **separate, non-required, scheduled full-scope job** (nightly, like the existing `e2e.yml` cadence) to catch the cross-region gaps `--in-diff` misses.
 4. **Outcome policy — decide what fails the gate.** cargo-mutants exit codes distinguish outcomes; a common pattern is to **fail only on surviving (missed) mutants and treat timeouts/unviable as non-blocking** (or warn), so async-hang timeouts don't sink a PR. Confirm the exact exit-code-to-outcome mapping for 27.x before wiring the gate condition (the docs expose `--error-when` style controls and JSON in `mutants.out`; verify against `cargo mutants --help` on 27.1.0 — **flagged: not version-verified in this pass**).
-5. **CI-Gate aggregation pattern (project-specific):** per this repo's convention (DEC-096/097), do NOT wire each shard matrix job directly into branch protection. Add a single aggregator job (`needs: [all shards]`) that succeeds only if every shard succeeded, and make **that** the required check fed into `ci-gate.needs`. This avoids matrix-rename fragility — matching the repo's existing required-check architecture in CLAUDE.md.
+5. **CI-Gate aggregation pattern (project-specific):** per this repo's convention (D-096/097), do NOT wire each shard matrix job directly into branch protection. Add a single aggregator job (`needs: [all shards]`) that succeeds only if every shard succeeded, and make **that** the required check fed into `ci-gate.needs`. This avoids matrix-rename fragility — matching the repo's existing required-check architecture in CLAUDE.md.
 
 **Confidence:** Medium. Items 2–3 are official; 1 follows from §4; 4–5 are pattern/opinion and item 4 needs an exit-code verification against 27.1.0.
 
@@ -202,7 +202,7 @@ jobs:
 - `--in-diff pr.diff` with the same file on every shard is mandatory for correct sharding.
 - Start at 8 shards; if any shard still approaches the budget, raise to 16/32 (keep ≥10 mutants/shard).
 - Keep a separate **non-required, scheduled full-scope** `cargo mutants` run (no `--in-diff`) to cover the cross-region gaps the diff scope misses.
-- Wire `mutants-gate` (not the matrix) into `ci-gate.needs` per DEC-096/097.
+- Wire `mutants-gate` (not the matrix) into `ci-gate.needs` per D-096/097.
 
 ---
 
@@ -224,7 +224,7 @@ jobs:
 | Perplexity perplexity_reason | 1 | Synthesis on rust-cache/sccache effectiveness for the mutation workload + `--jobs` memory tradeoff on 4c/16GB runners (cross-validation). |
 | Perplexity perplexity_ask | 1 | Version verification: latest cargo-mutants (27.1.0, 2026-06-02). |
 | WebFetch | 5 | Official mutants.rs pages: performance.html, ci.html, shards.html, in-diff.html, timeouts.html (1 was a 404). |
-| Training data | 1 area | CI-gate aggregation / DEC-096-097 mapping is project convention from CLAUDE.md, not external. |
+| Training data | 1 area | CI-gate aggregation / D-096-097 mapping is project convention from CLAUDE.md, not external. |
 
 **Total MCP tool calls:** 3 Perplexity + 5 WebFetch = 8.
 **Training data reliance:** low — every performance/flag claim is grounded in official mutants.rs docs (27.x) or cross-validated via Perplexity; opinion items (`--jobs` value, required-gate policy) are explicitly flagged as such.

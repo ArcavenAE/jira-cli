@@ -50,7 +50,7 @@ traces_to: ".factory/phase-f2-spec-evolution/prd-delta-576.md"
 | **Artifacts Scanned** | 11 (10 from r1 scope + research file) |
 | **Spec Version** | v1.3.44 (post-security-fix state) |
 | **Feature** | SOH-ATTACHMENTS-1 (issues #576 + #585) |
-| **Gate** | DEC-179 F2 spec bundle — round 2 after r1 GAPS-FOUND corrections |
+| **Gate** | D-179 F2 spec bundle — round 2 after r1 GAPS-FOUND corrections |
 
 **Review methodology**: Fresh-context read of all 11 artifacts BEFORE consulting
 `consistency-report-576-r1.md`. Independent findings formed first, then r1 used only to
@@ -59,7 +59,7 @@ r1, and (b) an r1 closure table.
 
 **Verdict: GAPS-FOUND** — 3 LOW and 2 INFO findings identified. One r1 finding
 (CONS-576-002) is only partially resolved. No CRITICAL or HIGH findings. The BC bodies
-are semantically correct and implement all DEC-179 rulings and SEC-576-001..007 security
+are semantically correct and implement all D-179 rulings and SEC-576-001..007 security
 fixes. Issues are citation drift, two factual errors in ADR-0017 context, and residual
 stale numbers in process/historical artifacts.
 
@@ -201,7 +201,7 @@ The following were independently verified as consistent in r2 (fresh read):
 
 - **All 7 SEC-576 security fixes present in BC bodies**: SEC-576-001 Windows device-name caller note in BC-2.7.011 ✓; SEC-576-002 two-step canonicalize procedure in BC-2.7.011 ✓; SEC-576-003 EC-2.7.007-3 wiremock test requirement in BC-2.7.007 ✓; SEC-576-004 multipart encoding note in BC-3.9.001 ✓; SEC-576-005 EC-3.9.001-5 in BC-3.9.001 AND parallel step-1 note in BC-3.9.003 ✓; SEC-576-006 stale-ID self-healing 4-step procedure in BC-X.8.010 ✓; SEC-576-007 step 5.5 trailing-strip in BC-2.7.011 ✓.
 
-- **All DEC-179 design rulings correctly reflected in BC bodies**: Platform-POST default BC-3.9.001/002 ✓; `--internal` non-JSM = silent no-op OQ-9 in BC-3.9.004 ✓; `--public` non-JSM = exit 64 in BC-3.9.005 ✓; DEC-174 eprint!+read_line in BC-3.9.014 ✓; DEC-168 delete 404 = exit 64 in BC-3.9.008 ✓; JSDCLOUD-10841 platform endpoint in BC-2.7.007 ✓; JRACLOUD-97046 no `?redirect=false` in BC-2.7.007 ✓; P2-4a internal-by-default JSM in BC-3.9.002 ✓; JRACLOUD-96384 match-by-id in BC-2.7.012 ✓.
+- **All D-179 design rulings correctly reflected in BC bodies**: Platform-POST default BC-3.9.001/002 ✓; `--internal` non-JSM = silent no-op OQ-9 in BC-3.9.004 ✓; `--public` non-JSM = exit 64 in BC-3.9.005 ✓; D-174 eprint!+read_line in BC-3.9.014 ✓; D-168 delete 404 = exit 64 in BC-3.9.008 ✓; JSDCLOUD-10841 platform endpoint in BC-2.7.007 ✓; JRACLOUD-97046 no `?redirect=false` in BC-2.7.007 ✓; P2-4a internal-by-default JSM in BC-3.9.002 ✓; JRACLOUD-96384 match-by-id in BC-2.7.012 ✓.
 
 - **BC counts consistent across all 8 surfaces**: CANONICAL-COUNTS.md sum 651 = BC-INDEX.md `total_bcs` 651 = sum of per-file frontmatter (106 + 134 + 150 + 57 + 32 + 36 + 43 + 93 = 651) ✓; Section 2.7 12 bodies, Section 3.9 14 bodies, BC-X.8.010 1 body = 27 new ✓; 624 + 27 = 651 ✓.
 
@@ -215,7 +215,7 @@ The following were independently verified as consistent in r2 (fresh read):
 
 - **spec-changelog [1.3.43] and [1.3.44] entries accurate**: [1.3.43] describes 27 new BCs with correct counts per section; [1.3.44] describes 5 BC modifications (BC-2.7.007, BC-2.7.011, BC-3.9.001, BC-3.9.003, BC-X.8.010) matching actual BC text changes; ADR-0017 reference corrected from "planned" to "Accepted" ✓.
 
-- **Cross-BC interaction correctness**: BC-2.7.010 SHA-1 prefix design addresses BC-2.7.011 Windows device-name caller note ✓; BC-3.9.003 step-1 note cites SEC-576-005 + BC-X.8.010 serviceDeskId cache ✓; BC-3.9.008 DEC-168 delete 404 = exit 64 is correctly asymmetric with single-key move idempotency (BC-3.2.001) ✓; BC-3.9.014 confirmation gate mechanics mirror BC-3.5.007/BC-3.5.008 pattern ✓.
+- **Cross-BC interaction correctness**: BC-2.7.010 SHA-1 prefix design addresses BC-2.7.011 Windows device-name caller note ✓; BC-3.9.003 step-1 note cites SEC-576-005 + BC-X.8.010 serviceDeskId cache ✓; BC-3.9.008 D-168 delete 404 = exit 64 is correctly asymmetric with single-key move idempotency (BC-3.2.001) ✓; BC-3.9.014 confirmation gate mechanics mirror BC-3.5.007/BC-3.5.008 pattern ✓.
 
 - **Research facts correctly cited in BCs**: P2-1b `TempAttachmentResponse` shape in BC-3.9.003 ✓; P2-3c INCONCLUSIVE service-desk-api schema correctly deferred in BC-3.9.007/BC-3.9.011 ✓; P2-8 `tokio-util` already transitive noted in ADR-0017 ✓; GHSA-9857-6MW7-FQ2M cited by BC-2.7.007 EC-2.7.007-3 via ADR-0017 ✓.
 
@@ -243,7 +243,7 @@ The following were independently verified as consistent in r2 (fresh read):
 
 5 new findings. 6 of 7 r1 findings fully resolved; 1 partially resolved (CONS-576-002 CLI
 handler residual). No CRITICAL or HIGH findings. BC bodies are semantically correct and
-implement all DEC-179 rulings and SEC-576-001..007 security fixes. The most actionable
+implement all D-179 rulings and SEC-576-001..007 security fixes. The most actionable
 finding before story decomposition is NEW-003: story authors must know to implement
 attachment CLI handlers in `src/cli/issue/attachments.rs`, not `interactions.rs`.
 

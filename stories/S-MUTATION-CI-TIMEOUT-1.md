@@ -56,7 +56,7 @@ predecessor_cycles: >
   fixes: CHANGELOG + version pin + reconciliation), 012c200 (schema-drift/integer guard
   docs), 3b122a8 (merge).
 origin: >
-  DEC-136 root-cause analysis: cargo-mutants job had no per-mutant timeout ceiling, causing
+  D-136 root-cause analysis: cargo-mutants job had no per-mutant timeout ceiling, causing
   CI wall-clock timeouts (60 min) when long-running tests ran for each mutant. Also: job
   was advisory-only (not in ci-gate.needs), so a kill-rate failure did not block PRs.
   This cycle established the hard-required gate, the absolute --timeout 240 ceiling, and
@@ -97,7 +97,7 @@ files_modified:
 **DONE — already delivered.**
 
 This story is a RETROACTIVE TRACEABILITY BACKFILL. PR #567 was merged to `develop` (develop
-@ 3b122a8) before a story file was written, following the DEC-136 retroactive-F3 pattern
+@ 3b122a8) before a story file was written, following the D-136 retroactive-F3 pattern
 established by PRs #560/#561 and their traceability story S-D4-TEST-HARDENING-BACKFILL-1.
 This document provides the missing F3 artifact and closes the deviation. All acceptance
 criteria are characterization pins verified PASS at the time of merge.
@@ -166,7 +166,7 @@ Well within a 20% agent context window budget. No splitting required.
 
 **Predecessor context (S-D4-TEST-HARDENING-BACKFILL-1, PRs #560/#561):**
 S-D4-TEST-HARDENING-BACKFILL-1 established the retroactive-F3 traceability pattern used
-here (DEC-136). That story covered per-profile cache isolation and fields.json self-heal
+here (D-136). That story covered per-profile cache isolation and fields.json self-heal
 pins. This story follows the same structure: `retroactive: true`, `status: done`,
 `bcs: []` with policy-doc governance, and `predecessor_cycles:` naming the delivering PR.
 
@@ -176,7 +176,7 @@ pins. This story follows the same structure: `retroactive: true`, `status: done`
 
 | Rule | Source | Constraint |
 |------|--------|-----------|
-| ci-gate.needs wiring pattern | DEC-096/DEC-097 | New required CI checks MUST be added to `ci-gate.needs`, never directly to branch protection. The `mutants` job follows this pattern — wired via `ci-gate.needs`, not as a separate branch-protection check. |
+| ci-gate.needs wiring pattern | D-096/D-097 | New required CI checks MUST be added to `ci-gate.needs`, never directly to branch protection. The `mutants` job follows this pattern — wired via `ci-gate.needs`, not as a separate branch-protection check. |
 | `mutants` skips on push events | `docs/specs/cargo-mutants-policy.md §CI Integration` | The `mutants` job runs on `pull_request` events only (not push). The ci-gate job checks `failure` and `cancelled` statuses only — `skipped` passes through safely. No push regression exposure. |
 | Absolute `--timeout` is CLI-only | `.cargo/mutants.toml` | The per-mutant timeout ceiling is set via `cargo mutants --timeout 240` in `ci.yml`. The `.cargo/mutants.toml` does NOT contain `minimum_test_timeout` or `timeout_multiplier` — both were removed. CLI-only is the canonical source of truth (visible in the job YAML without parsing TOML). |
 | @27 version pin | `docs/specs/cargo-mutants-policy.md §CI Integration` | `cargo-mutants` is pinned to @27 in `ci.yml`. This pin protects verified exit-code semantics, JSON output schema, and timeout flag behavior. Schema-drift guards validate at runtime; @27 pin is the primary protection layer. |
@@ -259,7 +259,7 @@ The `Check kill rate` step in `.github/workflows/ci.yml` includes a base-ref-dri
   does not touch any `examine_globs` file): the guard exits 0 (PASS — no killable mutants
   is a legitimate state, not a drift signal).
 
-This guard closes the DEC-136 false-green class where a misconfigured base-ref checkout
+This guard closes the D-136 false-green class where a misconfigured base-ref checkout
 could produce 0 mutants with 100% kill rate, silently passing the threshold check.
 
 Verified PASS (develop @ 3b122a8).
@@ -390,7 +390,7 @@ All tests pass at delivering commit (develop @ 3b122a8). `cargo test` green.
 | Test name | Governing artifact | AC |
 |-----------|-------------------|-----|
 | `test_mutants_is_in_ci_gate_needs` (NEW) | `docs/specs/cargo-mutants-policy.md §CI Integration` | AC-001 |
-| `test_ci_gate_needs_exactly_the_required_jobs` (UPDATED — 8-job set) | DEC-096/DEC-097 + policy doc | AC-001 |
+| `test_ci_gate_needs_exactly_the_required_jobs` (UPDATED — 8-job set) | D-096/D-097 + policy doc | AC-001 |
 | `test_ci_gate_excludes_advisory_and_secret_scan_jobs` (RENAMED from `test_ci_gate_excludes_pr_only_jobs`) | N/A (stale `mutants` exclusion removed) | AC-001 |
 
 **Total new tests: 1** (`test_mutants_is_in_ci_gate_needs`). 1 updated, 1 renamed. All pass at develop @ 3b122a8.

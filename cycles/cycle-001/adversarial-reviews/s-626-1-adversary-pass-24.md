@@ -37,7 +37,7 @@ isolation: ELIGIBLE (two self-disclosed letter-of-rule deviations; zero banned c
 
 ## Provenance
 
-This artifact is a **DIRECT CAPTURE** of adversary reviewer output relayed by the orchestrator, recorded same-session. Pass-24 ran against feature HEAD `14416fd9` (the DEC-223 window against the fix-round-10 product commit). This is the first pass in the fresh STRICT window (passes 24/25/26) mandated by DEC-223.
+This artifact is a **DIRECT CAPTURE** of adversary reviewer output relayed by the orchestrator, recorded same-session. Pass-24 ran against feature HEAD `14416fd9` (the D-223 window against the fix-round-10 product commit). This is the first pass in the fresh STRICT window (passes 24/25/26) mandated by D-223.
 
 **Policy rubric:** `.factory/policies.yaml` does not exist. Baseline applied (POL-11 positive-coverage, S-7.01 partial-fix discipline, semantic-anchoring severity ladder, six mandated axes).
 
@@ -59,7 +59,7 @@ This artifact is a **DIRECT CAPTURE** of adversary reviewer output relayed by th
 
 **Orchestrator ruling: ELIGIBLE.** The principled distinction: passes 9, 11, and 22 were VOIDED because banned content **ACTUALLY SURFACED** — prior-pass verdicts, finding IDs, and tallies became visible to the reviewer and could contaminate the review. In passes 24/25/26, nothing surfaced and neither deviation could reach a banned file. The isolation rule exists to prevent contamination, not to punish path syntax. Self-disclosure is a positive signal; the reviewer enumerated its search patterns before executing and flagged every deviation without prompting.
 
-**This ruling is codified as DEC-224 (ISOLATION ELIGIBILITY PRINCIPLE ESTABLISHED).**
+**This ruling is codified as D-224 (ISOLATION ELIGIBILITY PRINCIPLE ESTABLISHED).**
 
 ---
 
@@ -134,7 +134,7 @@ Pass-24 verified all findings from pass-23 (the immediately preceding executed p
 | LOW | 1 |
 | INFO | 0 |
 
-**Overall Assessment:** CLEAN — 0 substantive gaps, 0 code defects; 1 LOW documentation finding explicitly declined to escalate; **SIXTEENTH consecutive zero-src/-defect pass**. Isolation ELIGIBLE (two self-disclosed letter-of-rule deviations; zero banned content surfaced; ISOLATION ELIGIBILITY PRINCIPLE ESTABLISHED as DEC-224).
+**Overall Assessment:** CLEAN — 0 substantive gaps, 0 code defects; 1 LOW documentation finding explicitly declined to escalate; **SIXTEENTH consecutive zero-src/-defect pass**. Isolation ELIGIBLE (two self-disclosed letter-of-rule deviations; zero banned content surfaced; ISOLATION ELIGIBILITY PRINCIPLE ESTABLISHED as D-224).
 
 **FIRST CLEAN VERDICT IN THE CYCLE.** After 23 recorded passes (all NOT CLEAN or VOID), pass-24 is the first to return CLEAN. Window 24/25/26 = 1/3.
 

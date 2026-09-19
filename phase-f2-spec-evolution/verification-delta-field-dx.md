@@ -39,9 +39,9 @@ realizes_inline_vps:       # proptest/unit REALIZATIONS of EXISTING inline VPs �
   - VP-578-012   # :asset composer safety proptest — never malformed JSON body (BC-3.4.030) — absorbs former VP-578-046 + malformed-:asset part of VP-578-045. EXTENDED per F2 adversary-convergence round-2 Pass2-F3: the `WORKSPACE:OBJECTID` first-colon split MUST use `str::split_once(':')`; a no-panic proptest over arbitrary UTF-8 (multibyte scalar adjacent to `:`, e.g. `cf:asset=Wé:123`, EC-3.4.030-6) is folded into VP-578-012 — no new VP id, mirroring VP-578-008's D3 `>`-split extension
   - VP-578-013   # malformed-hint edge-case catalog: exit-64, one-error-per-invocation (BC-3.4.031) — absorbs former VP-578-045
   - VP-578-014   # EC-6/EC-7 regression pins: colon-in-VALUE resolves normally, unknown-kind fires the specific error (BC-3.4.031)
-  - VP-578-017   # DEC-310 reversal: `--field` alone (no `--request-type`, well-formed) → exit 0, platform POST with field merged (BC-3.8.012) — realized §1.1 (rewritten holdouts H-NEW-PREFLIGHT-001/006 + create.rs guard-removal regression tests)
-  - VP-578-018   # DEC-310 reversal: `--field --on-behalf-of` (no `--request-type`) → exit 64 via BC-3.8.013 standalone guard only, combined guard REMOVED (BC-3.8.012/013) — realized §1.1 (rewritten holdout H-NEW-PREFLIGHT-003 + create.rs guard-removal/combined-narrowing regression tests)
-  - VP-578-019   # DEC-310 reversal regression pin: `--on-behalf-of` alone → exit 64 via BC-3.8.013, unchanged wire-for-wire (BC-3.8.013) — realized §1.1 (unchanged holdout H-NEW-PREFLIGHT-002 + create.rs guard-removal regression tests)
+  - VP-578-017   # D-310 reversal: `--field` alone (no `--request-type`, well-formed) → exit 0, platform POST with field merged (BC-3.8.012) — realized §1.1 (rewritten holdouts H-NEW-PREFLIGHT-001/006 + create.rs guard-removal regression tests)
+  - VP-578-018   # D-310 reversal: `--field --on-behalf-of` (no `--request-type`) → exit 64 via BC-3.8.013 standalone guard only, combined guard REMOVED (BC-3.8.012/013) — realized §1.1 (rewritten holdout H-NEW-PREFLIGHT-003 + create.rs guard-removal/combined-narrowing regression tests)
+  - VP-578-019   # D-310 reversal regression pin: `--on-behalf-of` alone → exit 64 via BC-3.8.013, unchanged wire-for-wire (BC-3.8.013) — realized §1.1 (unchanged holdout H-NEW-PREFLIGHT-002 + create.rs guard-removal regression tests)
   - VP-580-005   # graceful-degrade: no enumerable options → exit 0, no panic on untyped allowedValues (BC-X.14.004) — absorbs former VP-580-041
 related_bcs:
   - BC-3.3.010
@@ -149,7 +149,7 @@ BC-3.4.021 — see §5): VP-578-001/002/003 on BC-3.3.010
 guarantees this delta realizes (§1), VP-578-015/016 the JSM parity pair (frontmatter
 `aligns_with_inline_vps`; VP-578-016 is **UNVERIFIED / parity-PENDING** — its `requestFieldValues`
 write shapes are realized at F4 against live JSM, not pinned firm by this delta — see §1.1),
-VP-578-017/018/019 the DEC-310 reversal's own VPs on BC-3.8.012/013, VP-578-020 the createmeta-family
+VP-578-017/018/019 the D-310 reversal's own VPs on BC-3.8.012/013, VP-578-020 the createmeta-family
 offset-pagination guarantee on BC-3.3.010 — covering **BOTH** the FIELDS (`get_createmeta_fields`, `--field`)
 and ISSUE-TYPES (`get_issue_types_for_project`, `--type`) createmeta endpoints — VP-578-021/022 the
 two earlier F2-amendment additions (create-path Gate-B guard on BC-3.3.010; `:asset` cold-cache failure
@@ -185,7 +185,7 @@ plus the four F2 adversary-convergence round-1/2 additions VP-578-021, VP-578-02
 VP-580-011, plus the round-4 D4/F-2 addition VP-578-023, plus the **round-5 F-NEW-2 addition
 VP-578-024** — dry-run `plannedChanges` hint-preview shape),
 grouped by concern. **All ids are the canonical inline ids** (§0.1). A further **eight** declared
-#578 inline VPs (VP-578-001..004, 017..020) are realized by reuse, by the DEC-310 reversal's
+#578 inline VPs (VP-578-001..004, 017..020) are realized by reuse, by the D-310 reversal's
 holdout/regression work, and (VP-578-020) by the new createmeta-pagination tests (**both** the
 FIELDS and ISSUE-TYPES createmeta endpoints) — catalogued separately in **§1.1** — as is the
 JSM-parity pair VP-578-015/016 (frontmatter
@@ -270,7 +270,7 @@ BC-body declaration is now DONE at both sites and VP-578-024 was assigned this r
 realized as follows.
 **None is left without a realization pointer.**
 VP-578-001..004 are the platform-**create** path VPs (realized largely by reuse of the VP-396-009
-**edit**-path realizations, transplanted to create); VP-578-017/018/019 are the **DEC-310 reversal's**
+**edit**-path realizations, transplanted to create); VP-578-017/018/019 are the **D-310 reversal's**
 own VPs (realized by the rewritten holdout scenarios + the `create.rs` guard-removal regression
 tests); **VP-578-020** (FIELDS half = adversary pass-28 F-1; ISSUE-TYPES half = adversary pass-29 F-1)
 is the createmeta-family offset-pagination guarantee across **both** createmeta endpoints (FIELDS via
@@ -300,9 +300,9 @@ caveat, and introduces no additional unverified JSM wire-shape assertion of its 
 | VP-578-002 | Field-list cache (`fields.json`) **shared** between `issue edit --field` and `issue create --field` (same profile) | BC-3.3.010 | `tests/issue_create_field.rs` warm-cache reuse assertion (a cache populated by `edit --field` satisfies `create --field`); shares the `resolve_edit_fields` / `write_fields_cache` realization from VP-396-009. |
 | VP-578-003 | **All-or-nothing** multi-`--field` failure on create (zero POST on any resolution failure) | BC-3.3.010 | `tests/issue_create_field.rs` create-path variant; explicitly **transplants** VP-396-009's edit-path all-or-nothing semantics to the create path (per the BC-3.3.010 / VP-578-003 body). |
 | VP-578-004 | Create-path `--field` **error-taxonomy** rows each independently exercised | BC-3.3.011 | Per-row wiremock tests in `tests/issue_create_field.rs` asserting exit 64, zero POST, and the exact load-bearing substring for each taxonomy row (same discipline the inline VP-578-004 body prescribes). |
-| VP-578-017 | `--field a=b` alone (no `--request-type`, well-formed) → exit 0, platform POST fires with the field merged in; stderr has NO `"--field is only valid with"` | BC-3.8.012 (CURRENT) | **Rewritten** holdout scenarios **H-NEW-PREFLIGHT-001** (table mode) + **H-NEW-PREFLIGHT-006** (`--output json` variant), plus the `create.rs` guard-**removal** regression tests inverting the dead DEC-188 exit-64 assertions. |
+| VP-578-017 | `--field a=b` alone (no `--request-type`, well-formed) → exit 0, platform POST fires with the field merged in; stderr has NO `"--field is only valid with"` | BC-3.8.012 (CURRENT) | **Rewritten** holdout scenarios **H-NEW-PREFLIGHT-001** (table mode) + **H-NEW-PREFLIGHT-006** (`--output json` variant), plus the `create.rs` guard-**removal** regression tests inverting the dead D-188 exit-64 assertions. |
 | VP-578-018 | `--field a=b --on-behalf-of X` (no `--request-type`) → exit 64 via BC-3.8.013's **standalone** guard only (combined guard REMOVED, createmeta resolution never reached) | BC-3.8.012 / BC-3.8.013 (CURRENT) | **Rewritten** holdout scenario **H-NEW-PREFLIGHT-003**, plus the `create.rs` guard-removal / combined-check-narrowing regression tests. |
-| VP-578-019 | Regression pin: `--on-behalf-of X` **alone** → exit 64 via BC-3.8.013, **unchanged wire-for-wire** from DEC-188-era behavior (proves the reversal did not weaken BC-3.8.013) | BC-3.8.013 | **Unchanged** holdout scenario **H-NEW-PREFLIGHT-002** + the `create.rs` guard-removal regression tests (which assert BC-3.8.013's standalone guard survives untouched). |
+| VP-578-019 | Regression pin: `--on-behalf-of X` **alone** → exit 64 via BC-3.8.013, **unchanged wire-for-wire** from D-188-era behavior (proves the reversal did not weaken BC-3.8.013) | BC-3.8.013 | **Unchanged** holdout scenario **H-NEW-PREFLIGHT-002** + the `create.rs` guard-removal regression tests (which assert BC-3.8.013's standalone guard survives untouched). |
 | **VP-578-020** *(NEW — FIELDS half: adversary pass-28 F-1; ISSUE-TYPES half: adversary pass-29 F-1 — attribution synced to BC-3.3.010, C-LOW)* | Createmeta-**family** multi-page resolution across **BOTH** offset-paginated createmeta endpoints (ADR-0019 §1): **(a) FIELDS** — `get_createmeta_fields` is offset-paginated, so a `--field` whose target field falls on fields-**page ≥2** is collected and resolves normally (**exit 0**, field merged into the create POST body), **never silently dropped** because only page 1 was read; **AND (b) ISSUE-TYPES** — `get_issue_types_for_project` (the `--type` name→id resolution, `src/api/jira/issues.rs`) is **likewise** offset-paginated (`startAt`/`maxResults`/`total`), so a `--type` whose entry falls on issuetypes-**page ≥2** resolves to its `issueTypeId` (**exit 0**), **never dropped** for the same reason. Mirrors the `list_worklogs` / BC-X.5.002 all-pages precedent (single-page fetch silently truncates → must paginate). | BC-3.3.010 | Two new **two-page createmeta wiremock** tests in `tests/issue_create_field.rs`, **one per endpoint**: **(a) fields** — page 1 returns `maxResults` fields **without** the target, page 2 returns the target field; asserts the `--field` resolves to **exit 0** with the field present in the composed POST body, **and** that the client fetches **BOTH** pages. **(b) issue-types** — page 1 returns `maxResults` issue types **without** the target `--type`, page 2 returns the target; asserts the `--type` resolves (to its `issueTypeId`, **exit 0**) **and** that **BOTH** pages are fetched. In each case a `.expect(1)`-style single-page assumption would false-red. Models the `list_worklogs` all-pages pagination test precedent. |
 
 ---
@@ -890,7 +890,7 @@ fail-fast):
 vector of `--field` pairs containing ≥1 malformed hinted pair, `parse_field_kv` returns
 `Err` (not a `Vec<Err>`, not a panic), and the process exits 64 once. This mirrors the
 existing "repeated `--field` occurrences still yield exactly one error" guarantee documented
-for DEC-188 and the bare parser.
+for D-188 and the bare parser.
 
 **Recommended strategy** — the `prop_oneof!` MUST generate **all four valid kind markers** plus the
 two kind-tag defects; the empty-value assertion is **per-kind**, NOT a blanket `.is_err()` (the
@@ -1084,7 +1084,7 @@ separately, post-arity, by `resolve_m2_project`, VP-580-010):
    present simultaneously → exit 64 with a mutual-exclusion message listing the conflicting flags.
 5. **Pre-HTTP.** Every rejection in (3)–(4) fires **before** any network call (assert no request is
    made on the rejection paths — protects the "one mode, enforced before any HTTP" contract). This
-   is the analogue of DEC-188's pre-flight-before-HTTP placement / ADR-0014's dispatch-fork guard.
+   is the analogue of D-188's pre-flight-before-HTTP placement / ADR-0014's dispatch-fork guard.
 
 **Recommended strategy** — extract the arity decision into a **pure function** taking the three
 MODE-SELECTOR booleans (`has_type`, `has_request_type`, `has_issue`) → `Result<Context,
@@ -1579,7 +1579,7 @@ cleared this pass (§5).
 twenty core VP guarantees (§1) are realized as **new** inline `proptest!`/unit/integration tests
 at the cited locations in F4, and as `examine_globs` additions in F6; the remaining eight declared
 #578 inline VPs realized outside the core surface (§1.1 — VP-578-001..004, 017..020) are realized by
-reuse of the VP-396-009 edit-path realizations transplanted to the create path, by the DEC-310
+reuse of the VP-396-009 edit-path realizations transplanted to the create path, by the D-310
 reversal's rewritten holdout scenarios + `create.rs` guard-removal regression tests, and (VP-578-020)
 by new two-page createmeta wiremock tests (**both** the FIELDS and ISSUE-TYPES createmeta endpoints)
 in `tests/issue_create_field.rs`. The full declared inline inventory

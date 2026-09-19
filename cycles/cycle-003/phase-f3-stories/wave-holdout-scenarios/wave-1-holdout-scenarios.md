@@ -63,9 +63,9 @@ per-profile one, which would silently disagree with each other).
 
 ## 2. Regression Scenarios — Existing Auth Behavior Preserved
 
-### H-W1-REG-001 — Non-interactive CI token-first contract unaffected by `env` field (DEC-313 precursor check)
+### H-W1-REG-001 — Non-interactive CI token-first contract unaffected by `env` field (D-313 precursor check)
 
-Wave 1 does not itself implement DEC-313's OAuth-default-at-creation picker (that's Wave
+Wave 1 does not itself implement D-313's OAuth-default-at-creation picker (that's Wave
 4), but it DOES touch `src/cli/auth/login.rs::login_token` (the api-token write path
 `S-cycle3-percred-storage` switches to `store_api_token`). This regression scenario
 confirms Wave 1 alone does not change today's non-interactive behavior ahead of Wave 4.

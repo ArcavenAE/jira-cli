@@ -7,7 +7,7 @@ Per-story Step-4.5 convergence:
 **S-577-5 (edit visibility):** 1M+1L→0→0→0 (pass-1 findings; window p2/p3/p4 CLEAN×3 STRICT).
 
 - **Pass-1 finding 1 (1M):** Adversary false claim that `--yes` flag requires `--public` (CHANGELOG described it as required; clap model is independent optional flags — `--yes` silences the y/N prompt regardless of visibility flag; fixed by adversary, a437135).
-- **Pass-1 finding 2 (1L):** E2E scope substitution PG-F4-11 — implementer improvised sd.public.comment property probe in place of story-mandated role/group visibility restriction; human-directed research before adjudication (research/issue-577-jsm-visibility-restriction-2026-07-14.md; 6 cited answers); DEC-175 RESTORE ruling; implemented fbf1a1e.
+- **Pass-1 finding 2 (1L):** E2E scope substitution PG-F4-11 — implementer improvised sd.public.comment property probe in place of story-mandated role/group visibility restriction; human-directed research before adjudication (research/issue-577-jsm-visibility-restriction-2026-07-14.md; 6 cited answers); D-175 RESTORE ruling; implemented fbf1a1e.
 - **Red Gate:** 09d8467 (10 red + 3 green; stub output validated).
 - **Implementation:** 9ca64ec (26/26 tests green; mutation gate via diff-mutants, PASS).
 - **Demos:** 12/12 AC demos PASS.
@@ -36,8 +36,8 @@ Whole-bundle collateral sweep (d0faf1c...f4ab77b): CLEAN. mutants.toml end-state
 |----|-------|-----|-------|
 | #610 | S-577-1 | 907a795 | comment group + clap authoring |
 | #611 | S-577-2 | bbe54e9 | comment add handler |
-| #613 | fix/docs | — | wave-A docs fix (DEC-173) |
-| #614 | fix/src | — | wave-A src fix (DEC-173) |
+| #613 | fix/docs | — | wave-A docs fix (D-173) |
+| #614 | fix/src | — | wave-A src fix (D-173) |
 | #615 | S-577-3 | d0faf1c | comment delete handler; wave-B tip |
 | #616 | S-577-6 | d14fb10 | comment view handler (incl. mutation-gate fix 32e8991) |
 | #617 | S-577-4 | f9ad71e | comment edit core |
@@ -52,7 +52,7 @@ F5-forward notes:
 
 - **H-NEW-COMMENT-002 wording pin** (holdout): verified satisfied — wording matches the adversary-reviewed spec text exactly; no F5 action required.
 - **Deferred EJ probe (BC-3.5.006):** e2e visibility read-back (`test_e2e_comment_edit_visibility_merge_semantics`) completes when e2e.yml runs green nightly. F7 checklist item — close BC-3.5.006 probe pending that first green nightly run.
-- **Stderr-hint follow-up story candidate (DEC-169 item 3):** house-wide `--yes` / `--no-resolution` / `--no-input` silent-flag hint pattern; open for cycle close; not required for F5/F6/F7.
+- **Stderr-hint follow-up story candidate (D-169 item 3):** house-wide `--yes` / `--no-resolution` / `--no-input` silent-flag hint pattern; open for cycle close; not required for F5/F6/F7.
 - **Story-frontmatter sync verification:** S-577-1..6 story file `status:` fields should be synced to DELIVERED at bundle close (F7 checklist).
 
 All worktrees cleaned: S-577-4 (.worktrees/S-577-4, feat/comment-edit-handler), S-577-5 (.worktrees/S-577-5, feat/comment-edit-visibility), docs/577-s5-deferral-sweep — all removed post-merge.

@@ -11,9 +11,9 @@ superseded_by: null
 # ADR-0026: OAuth 3LO Gateway Routing Invariant and Granular Jira-Software Scopes
 
 > **Cycle:** cycle-008 "oauth-surface-correctness" (Feature-Mode F2, delta-only).
-> **Inputs:** `.factory/cycles/cycle-008/F1-delta-analysis.md` (approved scope, DEC-368),
+> **Inputs:** `.factory/cycles/cycle-008/F1-delta-analysis.md` (approved scope, D-368),
 > `.factory/cycles/cycle-008/research-oauth-endpoints.md` (Perplexity deep-research + WebFetch verification).
-> **Approved F1 scope (DEC-368):** DELIVER Workstreams A/B/C/E (S1/S2/S3/S4/S5 below).
+> **Approved F1 scope (D-368):** DELIVER Workstreams A/B/C/E (S1/S2/S3/S4/S5 below).
 > Workstream D (Teams) = SPIKE ONLY this cycle (S6) — see §Deferred/Context.
 > **F2 gate finalization inputs:** `.factory/cycles/cycle-008/oauth-scope-matrix.md` (per-endpoint
 > scope audit against all 82 inventoried endpoints; FINAL recommended `DEFAULT_OAUTH_SCOPES` set,
@@ -380,7 +380,7 @@ rationale — `CYCLE-008-INIT-MUTATION-COVERAGE-SEAM`). Phase F7 delta-convergen
 5 convergence dimensions PASS with a CONSISTENT audit
 (`.factory/cycles/cycle-008/phase-f7-convergence/delta-convergence-report.md`). The human F7 gate
 **APPROVED** the close on that basis. **This ADR's `status:` field is flipped from `proposed` to
-`accepted` in this same burst** (DEC-371). cycle-008 (`oauth-surface-correctness`) is **CLOSED** —
+`accepted` in this same burst** (D-371). cycle-008 (`oauth-surface-correctness`) is **CLOSED** —
 shipped on `develop @ 0834c9f0`, **NO immediate release cut** (`CYCLE-008-CONSOLE-SCOPE-RELEASE-GATE`,
 the Atlassian Developer Console scope registration, remains the sole open human-owned pre-release
 blocker; this cycle's content rolls into a later dev release once that step completes, same
@@ -424,7 +424,7 @@ stay unchanged at `aa557050`/`v0.7.0-dev.7`.
 ## Source / Origin
 
 - `.factory/cycles/cycle-008/F1-delta-analysis.md` §1 (Root Cause Confirmation), §2.1–§2.5
-  (Impact Boundary Per Workstream), §6 (Open Decisions, DEC-368 gate) — code-audited, not
+  (Impact Boundary Per Workstream), §6 (Open Decisions, D-368 gate) — code-audited, not
   brief-derived; every symbol cited in Decision 1's table is sourced from this document's §2.1
   and §2.3 tables.
 - `.factory/cycles/cycle-008/research-oauth-endpoints.md` Q1–Q5 — Perplexity `sonar-deep-research`

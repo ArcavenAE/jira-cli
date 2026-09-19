@@ -9,7 +9,7 @@
 ![Mutation](https://img.shields.io/badge/mutation-N%2FA-lightgrey)
 ![Holdout](https://img.shields.io/badge/holdout-N%2FA-lightgrey)
 
-Adds a `ci-gate` aggregator job to `.github/workflows/ci.yml` that acts as the single required branch-protection status check for `develop` and `main`. The job fans in results from the six unconditional CI jobs (`fmt`, `clippy`, `test`, `msrv`, `deny`, `spec-guard`) and fails if any of them failed or were cancelled. This decouples the required-status-check surface from CI matrix expansion — adding a new OS target or CI job no longer silently invalidates branch protection (cf. DEC-096/DEC-097). Six hermetic drift-prevention tests in `tests/ci_gate_completeness.rs` pin the structural invariants of the aggregator against future regressions.
+Adds a `ci-gate` aggregator job to `.github/workflows/ci.yml` that acts as the single required branch-protection status check for `develop` and `main`. The job fans in results from the six unconditional CI jobs (`fmt`, `clippy`, `test`, `msrv`, `deny`, `spec-guard`) and fails if any of them failed or were cancelled. This decouples the required-status-check surface from CI matrix expansion — adding a new OS target or CI job no longer silently invalidates branch protection (cf. D-096/D-097). Six hermetic drift-prevention tests in `tests/ci_gate_completeness.rs` pin the structural invariants of the aggregator against future regressions.
 
 ---
 
@@ -33,7 +33,7 @@ graph TD
 
 ### ADR: ci-gate as single required status check (traces to ADR-0016 Decision 3)
 
-**Context:** S-WIN-5 expanded the CI matrix to include Windows jobs, adding new GitHub check context strings (`Clippy (windows-latest)`, `Test (windows-latest)`) to ci.yml. These new legs were NOT in branch protection's required-checks list. DEC-097 patched this reactively. The root cause: required-status-checks grows O(n) with matrix expansion, and humans/bots forget to update it.
+**Context:** S-WIN-5 expanded the CI matrix to include Windows jobs, adding new GitHub check context strings (`Clippy (windows-latest)`, `Test (windows-latest)`) to ci.yml. These new legs were NOT in branch protection's required-checks list. D-097 patched this reactively. The root cause: required-status-checks grows O(n) with matrix expansion, and humans/bots forget to update it.
 
 **Decision:** Add a `ci-gate` aggregator job with `if: ${{ always() }}` that fans in results from all six unconditional CI jobs. Make `ci-gate` (context string `"CI Gate"`) the single required branch-protection check. Branch protection becomes O(1) regardless of matrix growth.
 
@@ -68,9 +68,9 @@ No story dependencies (`depends_on: []`). Standalone CI-infra story.
 
 ```mermaid
 flowchart LR
-    DEC096["DEC-096\nMatrix rename\nfragility"] --> AC001["AC-001\nci-gate job exists\nwith correct structure"]
-    DEC097["DEC-097\nReactive PATCH\nprecedent"] --> AC002["AC-002\npass/fail semantics\nif always()"]
-    DEC101["DEC-101\nspec-guard promotion"] --> AC003["AC-003\ncorrect needs set\nPR-only excluded"]
+    DEC096["D-096\nMatrix rename\nfragility"] --> AC001["AC-001\nci-gate job exists\nwith correct structure"]
+    DEC097["D-097\nReactive PATCH\nprecedent"] --> AC002["AC-002\npass/fail semantics\nif always()"]
+    DEC101["D-101\nspec-guard promotion"] --> AC003["AC-003\ncorrect needs set\nPR-only excluded"]
     AC001 --> T1["test_ci_gate_job_exists_with_correct_shell"]
     AC001 --> T6["test_ci_gate_pass_fail_semantics_are_structurally_placed"]
     AC002 --> T2["test_ci_gate_fails_on_failed_or_cancelled_need"]
@@ -260,9 +260,9 @@ git push origin develop
 
 | Requirement | Story AC | Test | Verification | Status |
 |-------------|---------|------|-------------|--------|
-| WIN-CI-GATE-AGGREGATOR / DEC-097 | AC-001 | `test_ci_gate_job_exists_with_correct_shell` | source-text grep | PASS |
-| WIN-CI-GATE-AGGREGATOR / DEC-096 skipped-job trap | AC-002 | `test_ci_gate_fails_on_failed_or_cancelled_need` + `test_ci_gate_pass_fail_semantics_are_structurally_placed` | source-text grep | PASS |
-| DEC-101 spec-guard promotion | AC-003 | `test_ci_gate_needs_exactly_the_required_jobs` + `test_ci_gate_excludes_pr_only_jobs` | source-text grep | PASS |
+| WIN-CI-GATE-AGGREGATOR / D-097 | AC-001 | `test_ci_gate_job_exists_with_correct_shell` | source-text grep | PASS |
+| WIN-CI-GATE-AGGREGATOR / D-096 skipped-job trap | AC-002 | `test_ci_gate_fails_on_failed_or_cancelled_need` + `test_ci_gate_pass_fail_semantics_are_structurally_placed` | source-text grep | PASS |
+| D-101 spec-guard promotion | AC-003 | `test_ci_gate_needs_exactly_the_required_jobs` + `test_ci_gate_excludes_pr_only_jobs` | source-text grep | PASS |
 | EC-002 event-conditional drift | AC-003 / EC-002 | `test_ci_gate_needs_jobs_have_no_event_conditional_if` | source-text grep | PASS |
 | AC-004 hermetic drift test | AC-004 | all 6 tests in `tests/ci_gate_completeness.rs` | `cargo test --test ci_gate_completeness` | PASS |
 | AC-005 documentation | AC-005 | N/A | source-text inspection | PASS |
@@ -272,9 +272,9 @@ git push origin develop
 <summary><strong>Full VSDD Contract Chain</strong></summary>
 
 ```
-DEC-096 (matrix fragility) -> WIN-CI-GATE-AGGREGATOR -> AC-001/AC-002 -> test_ci_gate_job_exists_with_correct_shell -> .github/workflows/ci.yml -> HERMETIC-PASS
-DEC-097 (reactive PATCH) -> WIN-CI-GATE-AGGREGATOR -> AC-002 -> test_ci_gate_fails_on_failed_or_cancelled_need -> .github/workflows/ci.yml -> HERMETIC-PASS
-DEC-101 (spec-guard promotion) -> WIN-CI-GATE-AGGREGATOR -> AC-003 -> test_ci_gate_needs_exactly_the_required_jobs -> .github/workflows/ci.yml -> HERMETIC-PASS
+D-096 (matrix fragility) -> WIN-CI-GATE-AGGREGATOR -> AC-001/AC-002 -> test_ci_gate_job_exists_with_correct_shell -> .github/workflows/ci.yml -> HERMETIC-PASS
+D-097 (reactive PATCH) -> WIN-CI-GATE-AGGREGATOR -> AC-002 -> test_ci_gate_fails_on_failed_or_cancelled_need -> .github/workflows/ci.yml -> HERMETIC-PASS
+D-101 (spec-guard promotion) -> WIN-CI-GATE-AGGREGATOR -> AC-003 -> test_ci_gate_needs_exactly_the_required_jobs -> .github/workflows/ci.yml -> HERMETIC-PASS
 EC-002 (event-conditional drift) -> AC-003 -> test_ci_gate_needs_jobs_have_no_event_conditional_if -> .github/workflows/ci.yml -> HERMETIC-PASS
 ```
 

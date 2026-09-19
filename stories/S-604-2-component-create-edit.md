@@ -65,7 +65,7 @@ origin: >
   component-management bundle — implements the two non-destructive mutating subcommands
   (`create`, `edit`) on top of S-604-1's types/API-client/cache/resolver foundation.
   `delete` is deliberately split into its own story (S-604-3) because it carries
-  materially different safety obligations (DEC-279) that would overload this story's
+  materially different safety obligations (D-279) that would overload this story's
   token budget and blur its adversarial-review focus.
 files_modified:
   - src/api/jira/components.rs
@@ -95,7 +95,7 @@ mutation.
 Read **BC-8.1.005, BC-8.1.006, BC-8.1.007, BC-8.1.008** in `bc-8-components.md` in full — this
 story summarizes them but the BCs carry extensive adversarial-review correction history
 (numeric-source project-confirmation mechanism, `--lead ""` semantics, exit-code class
-fixes per DEC-188). Only the LATEST, non-superseded text in each BC is normative. Also read
+fixes per D-188). Only the LATEST, non-superseded text in each BC is normative. Also read
 **BC-8.1.004**'s NUMERIC-ID EXEMPTION clause (edit's no-`--project` numeric bypass) and
 **ADR-0018 Decision §1** (the confirming-GET mechanism) and **§2** (cache invalidation).
 
@@ -118,7 +118,7 @@ fixes per DEC-188). Only the LATEST, non-superseded text in each BC is normative
   "assigneeType": TYPE (if supplied)}` — absent optional flags are OMITTED from the body
   entirely, never sent as `null` (VP-COMPONENT-022). `--assignee-type` is a clap `ValueEnum`
   (`PROJECT_LEAD`, `COMPONENT_LEAD`, `UNASSIGNED`, `PROJECT_DEFAULT`) — an out-of-enum value is
-  a clap exit-2 rejection, NOT this codebase's own exit 64 (DEC-188 exit-code class — do NOT
+  a clap exit-2 rejection, NOT this codebase's own exit 64 (D-188 exit-code class — do NOT
   add an app-level guard for this). On success (201): `--output json` →
   `{"id": "<id>", "name": "<name>", "project": "<key>"}`; table mode → stderr `Created
   component "<name>" (id <id>) in project <key>.`. A name-collision 400 is surfaced verbatim
@@ -185,7 +185,7 @@ PROJECT_LEAD` → body contains exactly `name`, `project`, `description`, `leadA
 table mode emits stderr `Created component "<name>" (id <id>) in project <key>.`.
 **Test:** `test_bc_8_1_005_component_create_success_output_both_modes()`
 
-### AC-005 (traces to BC-8.1.005 Edge Case EC-8.1.005-2 / DEC-188)
+### AC-005 (traces to BC-8.1.005 Edge Case EC-8.1.005-2 / D-188)
 `--assignee-type BOGUS` → clap exit 2 (`ValueEnum` rejection), zero HTTP — NOT this
 codebase's exit 64.
 **Test:** `test_bc_8_1_005_component_create_bad_assignee_type_exits_2()`
@@ -330,8 +330,8 @@ subsequent `component list` in the same test does not read a stale cached entry.
 
 | Rule | Source | Enforcement |
 |------|--------|--------------|
-| `--assignee-type` invalid value is clap exit 2, NEVER this codebase's own exit 64 | BC-8.1.005 EC-8.1.005-2, DEC-188 | AC-005; code review — no app-level guard added for this flag |
-| `create --lead ""` and `edit`'s no-fields guard are APPLICATION-LEVEL `JrError::UserError` checks, not clap mechanisms | BC-8.1.006, BC-8.1.007 Precondition 1, DEC-188 | AC-006, AC-010, AC-011 |
+| `--assignee-type` invalid value is clap exit 2, NEVER this codebase's own exit 64 | BC-8.1.005 EC-8.1.005-2, D-188 | AC-005; code review — no app-level guard added for this flag |
+| `create --lead ""` and `edit`'s no-fields guard are APPLICATION-LEVEL `JrError::UserError` checks, not clap mechanisms | BC-8.1.006, BC-8.1.007 Precondition 1, D-188 | AC-006, AC-010, AC-011 |
 | `edit`'s Precondition 1 (no-fields check) is evaluated BEFORE §8.4 resolution AND before the numeric-source confirming GET | BC-8.1.007 Preconditions ordering note (P16 fix-burst) | AC-010, AC-011 |
 | Numeric-source confirming GET reuses the SAME single-resource GET the numeric bypass already requires — never a second, separate GET | ADR-0018 Decision §1 | Code review; wiremock `.expect(1)` on the confirming-GET route |
 | Resolver/confirming-GET 404 → exit 64; mutating-call 404 after successful resolution → exit 1 | BC-8.1.007 Idempotency section, VP-COMPONENT-024 | AC-014 vs AC-016 |

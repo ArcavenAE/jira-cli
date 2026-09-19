@@ -54,7 +54,7 @@ shrink the `fields=` request short of a raw `jr api` call, and the default set d
 scale down.
 
 **Decision:** `--fields <CSV>` fully REPLACES the requested field set (human-locked
-DEC-298) rather than unioning with the default — this is the behavior a user asking for
+D-298) rather than unioning with the default — this is the behavior a user asking for
 "only these fields" expects, and unioning would silently defeat the wire-cost reduction
 that's the whole point of the flag. New client methods (`get_issue_with_fields`,
 `search_issues_with_fields`) are added as additive siblings to `get_issue`/`search_issues`
@@ -274,7 +274,7 @@ Standard `git revert` on `develop`; no feature flag, no migration, no schema cha
 - [x] Demo evidence recorded for all visually-distinct ACs (8/12; remaining 4 test-only per precedent)
 - [x] `pr-reviewer` convergence (pending review cycle)
 - [ ] Dependency PRs merged first — N/A, no `depends_on` for S-575-1
-- [x] Human merge authorization required (DEC-128) — this PR stops before merge
+- [x] Human merge authorization required (D-128) — this PR stops before merge
 
 ---
 

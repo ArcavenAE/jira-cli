@@ -18,7 +18,7 @@
 legs (ubuntu/macos/windows) and `Coverage`, all IN_PROGRESS. All resolved jobs green:
 Format, Clippy (ubuntu + windows), MSRV 1.85.0, Deny, Spec Guards, Secret Scan,
 Mutation testing, Signing Workflow Injection Guard, dependency-review. No failures.
-Not merge authorization — human owns merge (DEC-128); CI must finish green first.
+Not merge authorization — human owns merge (D-128); CI must finish green first.
 
 ## Prior findings — all fixes verified at this SHA
 

@@ -217,7 +217,7 @@ P22-003 note and citation present. P21-006 citation also present (carried). ✓
 
 **BC-2.7.012 Trace field** (line 949):
 
-> `**Trace**: F2 spec evolution (SOH-ATTACHMENTS-1 2026-07-15; DEC-179 ratified design; research §6 JRACLOUD-96384/-78388 VERIFIED); P21-006 (KEY-404 batch-paths-only annotation — \`--id\` does not server-verify KEY per BC-2.7.007)`
+> `**Trace**: F2 spec evolution (SOH-ATTACHMENTS-1 2026-07-15; D-179 ratified design; research §6 JRACLOUD-96384/-78388 VERIFIED); P21-006 (KEY-404 batch-paths-only annotation — \`--id\` does not server-verify KEY per BC-2.7.007)`
 
 P21-006 now present in Trace (resolves r31 INFO-NEW-2 Trace sub-item). P22-003 citation NOT in Trace body field (see INFO-NEW-1 below). ✓ (partial — see INFO)
 

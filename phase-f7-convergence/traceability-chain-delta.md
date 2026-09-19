@@ -2,7 +2,7 @@
 document_type: f7-traceability-chain-delta
 feature: field-dx (GitHub #578 + #580)
 spec_files: [".factory/specs/prd/bc-3-issue-write.md", ".factory/specs/prd/cross-cutting.md"]
-spec_version_field_dx: v1.3.107 -> v1.3.164 (bc-3-issue-write.md, DEC-188/DEC-310 amendment trail)
+spec_version_field_dx: v1.3.107 -> v1.3.164 (bc-3-issue-write.md, D-188/D-310 amendment trail)
 bc_index_total: 719 (unchanged through F4/F5/F6 — field-dx BCs already counted at F2 close)
 pr: "#739, #740, #741, #742, #746 (5 stories) + #747 (FIX-F5-001), #749 (FIX-F6-001), #750 (FIX-F7-001)"
 develop_tip: 2000c455
@@ -15,7 +15,7 @@ status: see delta-convergence-report.md
 # Traceability Chain — field-dx Delta
 
 4-level hierarchy (BC -> VP -> test -> src) for each of the 5 field-dx stories, plus
-cross-references (DEC-310 reversal, S-578-4's dependency on S-580-1/S-578-2, and the
+cross-references (D-310 reversal, S-578-4's dependency on S-580-1/S-578-2, and the
 `field_resolve.rs` module shared by the edit and create paths). This file is the
 bundle-prefixed F7 traceability record for cycle-002's field-dx bundle, following the
 naming convention already established by `bucket1-defects-traceability-chain-delta.md`,
@@ -167,7 +167,7 @@ BC-3.8.008 (AMENDED: JsmRequestBuilder::build() extra_fields serialization now k
      (LOW)
 ```
 
-## S-578-4 — platform `issue create --field` (non-JSM) path (closes #578 part 5, DEC-310, PR #746 @ `ae8514b8`)
+## S-578-4 — platform `issue create --field` (non-JSM) path (closes #578 part 5, D-310, PR #746 @ `ae8514b8`)
 
 ```
 BC-3.3.010 (NEW: platform create-path --field resolves via createmeta, never editmeta;
@@ -176,11 +176,11 @@ BC-3.3.010 (NEW: platform create-path --field resolves via createmeta, never edi
 BC-3.3.011 (NEW: create-path --field error-taxonomy — 10 rows, each independently exercised)
 BC-3.4.014 (AMENDED: field echo extended to bare + all 4 hint kinds on the create path,
             JSON mode unchanged — no changed_fields key)
-BC-3.8.012 (REVERSED in place, DEC-310 reverses DEC-188: --field-alone platform-create
-            exit-64 pre-flight guard REMOVED; `[DEC-188 BEHAVIOR, 2026-05..2026-08-25]`
+BC-3.8.012 (REVERSED in place, D-310 reverses D-188: --field-alone platform-create
+            exit-64 pre-flight guard REMOVED; `[D-188 BEHAVIOR, 2026-05..2026-08-25]`
             historical section retained; guard now resolves via createmeta instead of
             rejecting)
-BC-3.8.013 (AMENDED alongside BC-3.8.012 — --on-behalf-of-alone guard unaffected by DEC-310,
+BC-3.8.013 (AMENDED alongside BC-3.8.012 — --on-behalf-of-alone guard unaffected by D-310,
             still exits 64 without --request-type; only the --field-alone half reversed)
   -> STORY S-578-4 (.factory/stories/S-578-4-platform-create-field-support.md, 13 pts, P0,
                     depends_on: [S-580-1, S-578-2])
@@ -224,9 +224,9 @@ BC-3.8.013 (AMENDED alongside BC-3.8.012 — --on-behalf-of-alone guard unaffect
        test_bc_3_4_030_create_path_asset_cold_cache_403_404_assets_unavailable (VP-578-022)
        test_bc_3_4_030_create_path_asset_cold_cache_5xx_network_standard_mapping (VP-578-022)
        test_ac12_help_text_substring_count_is_1_on_behalf_of_only (BC-3.8.013 regression pin —
-         confirms the --on-behalf-of guard is UNAFFECTED by DEC-310)
+         confirms the --on-behalf-of guard is UNAFFECTED by D-310)
   -> holdout anchors H-NEW-PREFLIGHT-001..006 (BC-3.8.012/013 pre-flight guard scenarios,
-     DEC-188-era, re-validated post-DEC-310 reversal for the --field-alone half)
+     D-188-era, re-validated post-D-310 reversal for the --field-alone half)
   -> PR #746 (ae8514b8), CI green
   -> FIX-F5-001, PR #747 @ 4e4ae4f5: `get_issue_types_for_project` pagination-termination
      bound + total-absent heuristic, mirroring get_createmeta_fields (F5 MEDIUM finding,
@@ -235,7 +235,7 @@ BC-3.8.013 (AMENDED alongside BC-3.8.012 — --on-behalf-of-alone guard unaffect
      src/cli/field.rs + src/cli/issue/field_resolve.rs (18->20); numeric mutation run
      93/93 caught, 0 missed on both newly-covered files
   -> FIX-F7-001, PR #750 @ 2000c455: create.rs size-deviation CLAUDE.md write-up +
-     DEC-310 pre-flight note + field-dx CHANGELOG entries (documentation-only, no BC/test
+     D-310 pre-flight note + field-dx CHANGELOG entries (documentation-only, no BC/test
      change)
 ```
 
@@ -243,15 +243,15 @@ BC-3.8.013 (AMENDED alongside BC-3.8.012 — --on-behalf-of-alone guard unaffect
 
 ## Cross-References
 
-- **DEC-310 reverses DEC-188** (STATE.md Decisions Log): DEC-188 (2026-05..2026-07, issue
+- **D-310 reverses D-188** (STATE.md Decisions Log): D-188 (2026-05..2026-07, issue
   #639) introduced the platform-create `--field`-alone / `--on-behalf-of`-alone exit-64
-  pre-flight guard (BC-3.8.012/013). DEC-310 (registered 2026-08-25/26, human-approved at the
+  pre-flight guard (BC-3.8.012/013). D-310 (registered 2026-08-25/26, human-approved at the
   F2 gate) reverses ONLY the `--field`-alone half in place: non-JSM `--field` support was the
-  entire point of issue #578, and the DEC-188 guard predates that scope and would otherwise
+  entire point of issue #578, and the D-188 guard predates that scope and would otherwise
   block it needlessly. The `--on-behalf-of`-alone half of BC-3.8.013 is explicitly UNAFFECTED
   — it still exits 64 without `--request-type`, pinned by `test_ac12_help_text_substring_count_is_1_on_behalf_of_only`
-  in S-578-4's test suite. `bc-3-issue-write.md` line ~75 documents the DEC-307->DEC-310
-  renumbering (DEC-307 was found already allocated); the historical `[DEC-188 BEHAVIOR,
+  in S-578-4's test suite. `bc-3-issue-write.md` line ~75 documents the D-307->D-310
+  renumbering (D-307 was found already allocated); the historical `[D-188 BEHAVIOR,
   2026-05..2026-08-25]` section is retained in place in BC-3.8.012's body rather than deleted,
   per the repo's amendment-not-erasure convention for BC history.
 

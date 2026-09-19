@@ -154,7 +154,7 @@ All drift items from `STATE.md` Drift Items table reviewed. Current table has 22
 | ID | Severity | Status | Notes |
 |----|----------|--------|-------|
 | MUTATION-CI-TIMEOUT | MEDIUM | OPEN — draft story candidate | In-diff cargo-mutants CI job timed out at 1h on PR #553 (36 mutants, non-required job). Kill rate locally proven 100% via per-site flip. Story candidate for sharding/scoping. |
-| PG-PR-MANAGER-OVERREACH | MEDIUM | TRACKED — covered by S-PG-MERGE-AUTH-BYPASS (story 91) | pr-manager autonomously spawned implementer agents, pushed commits (4b10e77) without authorization, entered expensive poll loops during PR #553. Scope extension of MAINT-PG-PR-MERGE-CHANNEL + DEC-128. LESSON-PR-MANAGER-SCOPE codified in lessons.md. |
+| PG-PR-MANAGER-OVERREACH | MEDIUM | TRACKED — covered by S-PG-MERGE-AUTH-BYPASS (story 91) | pr-manager autonomously spawned implementer agents, pushed commits (4b10e77) without authorization, entered expensive poll loops during PR #553. Scope extension of MAINT-PG-PR-MERGE-CHANNEL + D-128. LESSON-PR-MANAGER-SCOPE codified in lessons.md. |
 
 **Finding TD-001 [NEW] [LOW]:** F2-PIECEWISE-PROTOCOL is listed as MEDIUM/OPEN in the drift table but the table note says "codified [enforced] in lessons.md 2026-06-20". The STATE.md still shows this as `MEDIUM | OPEN — workflow change; codified in lessons.md`. Since the protocol change is already enforced and codified, this item should be considered for closure or reclassification to ACCEPTED-DEFERRED. Recommend reviewing whether to close TD-item or keep as OPEN for future skill template integration.
 
@@ -209,15 +209,15 @@ All citations inventoried:
 
 ---
 
-### 3.4 Fork Signing (DEC-104)
+### 3.4 Fork Signing (D-104)
 
-Status: **UNBLOCKED but INERT.** PR #520 merged (fork-friendly release ops). PR #550 (actions/checkout v7) triaged clean — no `pull_request_target` usage; `sign-and-publish.yml` workflow_run checkout is inert per DEC-104. Both HIGH code blockers resolved. Gate = human decision + Apple signing secrets. No new risk.
+Status: **UNBLOCKED but INERT.** PR #520 merged (fork-friendly release ops). PR #550 (actions/checkout v7) triaged clean — no `pull_request_target` usage; `sign-and-publish.yml` workflow_run checkout is inert per D-104. Both HIGH code blockers resolved. Gate = human decision + Apple signing secrets. No new risk.
 
 ---
 
 ### 3.5 E2E Token Expiry Monitor
 
-The nightly E2E job (`0 6 * * *` UTC) guards Jira Cloud site activity. Last confirmed running per DEC-131 (2026-06-24 sweep). Atlassian API tokens have a 1-year cap. Token rotation is annual; no expiry flag yet. No action needed today.
+The nightly E2E job (`0 6 * * *` UTC) guards Jira Cloud site activity. Last confirmed running per D-131 (2026-06-24 sweep). Atlassian API tokens have a 1-year cap. Token rotation is annual; no expiry flag yet. No action needed today.
 
 ---
 
@@ -231,7 +231,7 @@ The nightly E2E job (`0 6 * * *` UTC) guards Jira Cloud site activity. Last conf
 | ADR-0011 reactivation trigger | Not met — deferral valid | — | Same |
 | ADR-0013 PKCE re-validation staleness | Approaching stale (50 days) | LOW | NEW |
 | `dtu_required: false` | Correct | — | Same |
-| DEC-104 fork signing | Unblocked, inert, no new risk | — | Same |
+| D-104 fork signing | Unblocked, inert, no new risk | — | Same |
 | E2E token rotation | Annual — no expiry yet | — | Same |
 
 **SECTION 3 FINDINGS: 2 (both LOW)**

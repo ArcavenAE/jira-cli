@@ -20,7 +20,7 @@ Diff + PR description only (information wall respected — no `.factory/` pipeli
 | 5 | Commit quality | PASS — conventional format, scoped, clear |
 | 6 | Diff size | PASS — 330/-47, focused |
 | 7 | Missing changes | PASS — reorder, new symmetric primitive, doc updates, tests all present |
-| 8 | Dependency status | PASS — mirrors already-merged sibling I-6/DEC-321 fix (#762 on develop) |
+| 8 | Dependency status | PASS — mirrors already-merged sibling I-6/D-321 fix (#762 on develop) |
 
 ## Verification of the four load-bearing claims
 
@@ -30,7 +30,7 @@ Diff + PR description only (information wall respected — no `.factory/` pipeli
 
 3. **Successful switch still clears outgoing orphans.** `match outgoing { "oauth" => oauth_pair, "api_token" => api_token_pair, _ => Ok(()) }` dispatches on the OUTGOING method, so the just-stored new-mechanism pair is never touched and the orphaned outgoing pair is removed. Success-half test (`oauth → api_token`) asserts both new creds stored AND no orphaned oauth creds. Failing-half (`api_token → oauth`) covers the other direction. Unknown-`outgoing` arm safely no-ops.
 
-4. **Conventions + CHANGELOG clean.** Accurate `### Fixed` entry cross-referencing sibling I-6/DEC-321. `with_context` message updated `before` → `after switching`. No-op guards (None / same-mechanism) and the `emit_switch_notice` gate preserved.
+4. **Conventions + CHANGELOG clean.** Accurate `### Fixed` entry cross-referencing sibling I-6/D-321. `with_context` message updated `before` → `after switching`. No-op guards (None / same-mechanism) and the `emit_switch_notice` gate preserved.
 
 ## Non-blocking notes (not escalated)
 

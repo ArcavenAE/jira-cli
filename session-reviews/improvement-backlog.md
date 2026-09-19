@@ -22,7 +22,7 @@ Proposals deferred from completed session reviews accumulate here after their 72
 
 ## IP-577 Cycle (SOH-COMMENT-CRUD-1 — review 2026-07-15)
 
-**Status:** CLOSED. All 11 proposals ROUTED-UPSTREAM to drbothen/vsdd-factory (5 new issues #652-#656 + 6 comments on existing issues). DEC-177. 2026-07-15.
+**Status:** CLOSED. All 11 proposals ROUTED-UPSTREAM to drbothen/vsdd-factory (5 new issues #652-#656 + 6 comments on existing issues). D-177. 2026-07-15.
 
 All proposals target engine-side improvements (drbothen/vsdd-factory prompt templates, skill checklists, agent configs). None require product source changes. See `improvement-proposals-issue-577.md` for full detail + deduplication routing hints. Routing record: `ip-577-routing/` (manifest.tsv + 11 bodies).
 

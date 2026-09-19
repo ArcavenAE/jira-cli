@@ -1,6 +1,6 @@
 ---
 document_type: spec-change-record
-governing_decision: DEC-082
+governing_decision: D-082
 research_source: ".factory/research/windows-build-f4-preflight-verification.md"
 date: 2026-06-13
 produced_by: spec-steward
@@ -12,11 +12,11 @@ adr_delta: 0
 story_delta: 0
 ---
 
-# Spec Change Record — DEC-082 (Pre-F4 External-Claim Verification Corrections)
+# Spec Change Record — D-082 (Pre-F4 External-Claim Verification Corrections)
 
 ## Governing Decision
 
-**DEC-082** (2026-06-13) — recorded in `.factory/STATE.md` Decisions Log.
+**D-082** (2026-06-13) — recorded in `.factory/STATE.md` Decisions Log.
 
 Pre-F4 external-claim verification by research-agent using primary sources (keyring 3.6.3
 Cargo.toml, actions/runner-images Windows manifests, MSYS2 package index, reqwest 0.13.0
@@ -43,7 +43,7 @@ Primary source: `.factory/research/windows-build-f4-preflight-verification.md`
 
 | Field | Before | After | Governance type |
 |-------|--------|-------|----------------|
-| `date:` (frontmatter) | `2026-06-12` | `2026-06-13` | Date — reflects DEC-082 amendment effective date |
+| `date:` (frontmatter) | `2026-06-12` | `2026-06-13` | Date — reflects D-082 amendment effective date |
 | Decision 2 body | F-WIN-F3-003 amendment block (Git Bash zip primary) | C-V3 re-amendment superseding block (Compress-Archive/pwsh primary) | Content change by architect — governance confirms date updated |
 | Decision 5b body | "may need a [[bans.skip]] — verify at F4" | "REQUIRED — windows-sys 0.60 skip mandatory, not conditional" | Content change by architect — governance confirms date updated |
 | Decision 1 body | No TLS backend note | C-V5 inoculation note added (aws-lc-rs, not ring) | Content change by architect |
@@ -77,7 +77,7 @@ confirms the ADR-0016 row carries the complete and correct amendment chain.
 
 | Field | Before | After | Governance type |
 |-------|--------|-------|----------------|
-| `date:` (frontmatter) | `2026-06-12` | `2026-06-13` | Date — reflects DEC-082 amendment effective date |
+| `date:` (frontmatter) | `2026-06-12` | `2026-06-13` | Date — reflects D-082 amendment effective date |
 | §3.3 (Packaging) body | "Git Bash zip primary" | "Compress-Archive (pwsh) primary; zip NOT available" via strikethrough+correction block | Content change by architect |
 | §5.3 (deny.toml) body | "run cargo deny check; add skip if needed" | Strikethrough + C-V2(b) correction block: windows-sys 0.60 skip REQUIRED | Content change by architect |
 | R-W1 risk record | "may need skip" wording | "REQUIRED (C-V2b research-confirmed); not conditional" | Content change by architect |
@@ -101,7 +101,7 @@ confirms the ADR-0016 row carries the complete and correct amendment chain.
 | AC test assertions | 1 test | 2 tests (AC-001 Cargo.toml + AC-002 deny.toml) | Content change by story-writer |
 
 **Traceability:** `last_updated: "2026-06-13"` is correct and was set by the story-writer
-during DEC-082 propagation. No further date change needed. Research citation is present:
+during D-082 propagation. No further date change needed. Research citation is present:
 `C-V2(b)` cited in AC-002, EC-001, architecture compliance rules, and library requirements.
 
 ---
@@ -130,11 +130,11 @@ in architecture compliance rule, library requirements, and step rationale.
 
 | Field | Before | After | Governance type |
 |-------|--------|-------|----------------|
-| `last_updated:` | `"2026-06-12"` | `"2026-06-13"` | GOVERNANCE CHANGE — date updated to reflect DEC-082 amendment |
+| `last_updated:` | `"2026-06-12"` | `"2026-06-13"` | GOVERNANCE CHANGE — date updated to reflect D-082 amendment |
 | AC-005 body | Exact match on amendment-annotation text | Genericized: verify row exists; do NOT overwrite regardless of annotation text | Content change by story-writer (prevents future stale-annotation failures) |
 
 **Note on AC-005 change:** The original AC-005 referenced exact amendment-annotation text
-from a specific point in time. DEC-082 added another amendment annotation (C-V3, C-V2b),
+from a specific point in time. D-082 added another amendment annotation (C-V3, C-V2b),
 making the exact-text assertion stale immediately. The story-writer genericized AC-005 to
 a substring check (ADR-0016 row exists with Accepted status; any annotation text passes).
 This is a correct and necessary change. `last_updated:` bumped from 2026-06-12 to
@@ -148,10 +148,10 @@ This is a correct and necessary change. `last_updated:` bumped from 2026-06-12 t
 
 | Field | Before | After | Governance type |
 |-------|--------|-------|----------------|
-| `version:` | `"1.4.37"` (implied pre-DEC-082) | `"1.4.38"` | Bumped by story-writer during DEC-082 propagation |
+| `version:` | `"1.4.37"` (implied pre-D-082) | `"1.4.38"` | Bumped by story-writer during D-082 propagation |
 | `last_updated:` | Previous F3 convergence timestamp | `2026-06-13 (Windows-build F3 … Pre-F4 BLOCKER corrections applied: S-WIN-3 deny.toml … REQUIRED … C-V2b; S-WIN-4 Package (Windows) step replaced … C-V3)` | Updated by story-writer |
 
-**Version assessment:** STORY-INDEX version `1.4.38` is the correct post-DEC-082 value.
+**Version assessment:** STORY-INDEX version `1.4.38` is the correct post-D-082 value.
 The story-writer bumped from `1.4.37` to `1.4.38` (PATCH increment per the existing
 convention of incrementing the patch digit for corrections that do not add new stories).
 Count `total_stories: 74` is unchanged and correct.
@@ -164,12 +164,12 @@ Count `total_stories: 74` is unchanged and correct.
 
 | Field | Before | After | Governance type |
 |-------|--------|-------|----------------|
-| Latest version | `[1.3.10]` (2026-06-11) | `[1.3.11]` (2026-06-13) | GOVERNANCE CHANGE — spec-steward added DEC-082 entry |
+| Latest version | `[1.3.10]` (2026-06-11) | `[1.3.11]` (2026-06-13) | GOVERNANCE CHANGE — spec-steward added D-082 entry |
 
 **Version rationale:** PATCH increment (0.0.X). Clarifications and corrections to spec
 artifacts with no BC/NFR body changes (BC 597 / NFR 42 unchanged). Per this project's
 semver for specs: MAJOR = removed/semantically-changed requirements; MINOR = new
-requirements; PATCH = clarifications and corrections. DEC-082 falls into PATCH.
+requirements; PATCH = clarifications and corrections. D-082 falls into PATCH.
 
 ---
 
@@ -181,18 +181,18 @@ requirements; PATCH = clarifications and corrections. DEC-082 falls into PATCH.
 | NFR corpus (nfr-catalog.md) | 42 | UNCHANGED — no NFR modified |
 | ADR count (adr-index.md rows) | 16 | UNCHANGED — ADR-0016 amended in place, not added |
 | STORY-INDEX total_stories | 74 | UNCHANGED — no story added or removed |
-| STORY-INDEX version | 1.4.38 | Correct (bumped by story-writer for DEC-082 corrections) |
+| STORY-INDEX version | 1.4.38 | Correct (bumped by story-writer for D-082 corrections) |
 | spec-changelog latest | 1.3.11 | Correct (PATCH bump added by spec-steward) |
-| STATE.md DEC-082 entry | Present | Correct — full governing-decision record in decisions log |
+| STATE.md D-082 entry | Present | Correct — full governing-decision record in decisions log |
 
-**BC 597 unchanged (no BC modified):** Confirmed. DEC-082 corrections touched ADR, architecture
+**BC 597 unchanged (no BC modified):** Confirmed. D-082 corrections touched ADR, architecture
 delta, and story files only. No BC body in `.factory/specs/prd/bc-*.md` was modified.
 
 **ADR 16 unchanged (ADR-0016 amended in place):** Confirmed. The adr-index.md row count
 is 16 (ADR-0001 through ADR-0016). No new ADR was added; ADR-0016 was amended. The
 count is correct.
 
-**total_stories 74 unchanged:** Confirmed. S-WIN-1..6 were added during F3 (68→74); DEC-082
+**total_stories 74 unchanged:** Confirmed. S-WIN-1..6 were added during F3 (68→74); D-082
 did not add or remove any story. The count is correct and consistent with the STORY-INDEX
 manifest.
 
@@ -207,10 +207,10 @@ Research source (primary-source verification)
       → Claim C-V3: zip NOT on windows-latest PATH; Compress-Archive is available
       → Claim C-V5: aws-lc-rs backend confirmed (note, no correction needed)
 
-DEC-082 (governing decision)
+D-082 (governing decision)
   → STATE.md decisions log (2026-06-13)
-  → STATE.md phase progress row (Windows-build, DEC-079/080/081/082)
-  → STATE.md current_step (DEC-082 research complete)
+  → STATE.md phase progress row (Windows-build, D-079/080/081/082)
+  → STATE.md current_step (D-082 research complete)
 
 ADR-0016 amendments (architect)
   → Decision 2: C-V3 re-amendment supersedes F-WIN-F3-003
@@ -229,12 +229,12 @@ Story amendments (story-writer)
   → S-WIN-6: AC-005 genericized (stale exact-annotation text removed)
 
 STORY-INDEX v1.4.38 (story-writer bump)
-  → last_updated prose names both DEC-082 corrections
+  → last_updated prose names both D-082 corrections
 
 spec-changelog v1.3.11 (spec-steward PATCH entry — this document)
-  → links to DEC-082, research source, all corrected artifacts
+  → links to D-082, research source, all corrected artifacts
 
-spec-change-record-DEC-082.md (this file — spec-steward)
+spec-change-record-D-082.md (this file — spec-steward)
   → per-artifact change log with old→new metadata
 ```
 
@@ -245,7 +245,7 @@ spec-change-record-DEC-082.md (this file — spec-steward)
 The orchestrator must ensure the following occur before S-WIN-3 and S-WIN-4 enter F4
 implementation:
 
-1. **F5 adversarial re-review (scoped):** Adversarial agent reviews the DEC-082 correction
+1. **F5 adversarial re-review (scoped):** Adversarial agent reviews the D-082 correction
    set (ADR-0016 Decision 2 + Decision 5b + S-WIN-3 AC-002 + S-WIN-4 AC-002) for internal
    consistency and any residual leaks of the superseded assumptions (windows-sys 0.61
    language or `zip` references).
@@ -266,4 +266,4 @@ implementation:
 
 ---
 
-*Produced by: spec-steward | Governing decision: DEC-082 | Spec version: 1.3.10 → 1.3.11*
+*Produced by: spec-steward | Governing decision: D-082 | Spec version: 1.3.10 → 1.3.11*

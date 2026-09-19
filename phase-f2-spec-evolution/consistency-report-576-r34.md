@@ -552,7 +552,7 @@ Both bc-3-issue-write.md (line 98: v1.3.64 frontmatter entry present) and the sp
 
 BC-3.9.009 Trace field (bc-3 line 3484) was NOT updated with a P24-001 citation:
 
-> `**Trace**: F2 spec evolution (2026-07-15 SOH-ATTACHMENTS-1, DEC-179); JSON render invariant #526 (\`output::render_json\` required for all \`--output json\` paths)`
+> `**Trace**: F2 spec evolution (2026-07-15 SOH-ATTACHMENTS-1, D-179); JSON render invariant #526 (\`output::render_json\` required for all \`--output json\` paths)`
 
 No P24-001 citation, no P19-001 citation. The BC-INDEX row for BC-3.9.009 carries both citations ("— (SOH-ATTACHMENTS-1 F2; P19-001; P24-001)"). This is consistent with the precedent for P19-001: the BC-3.9.009 Trace body was not updated when P19-001 added BTreeMap-alphabetical ordering (only BC-INDEX carries P19-001). The Trace field documents originating context; BC-INDEX serves as the aggregated amendment record for correction/narrowing fix rounds (contrast behavioral additions such as P23-002 which DID update BC-3.9.005/BC-3.9.020 Traces). The pattern is internally consistent but not explicitly documented.
 

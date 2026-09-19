@@ -54,7 +54,7 @@ risk_mitigations: []
 created: "2026-08-20"
 last_updated: "2026-08-20"
 changelog:
-  - "1.0 (2026-08-20): Initial draft — opened from the F7 component-mgmt cycle §6 Keep-Deferred Disposition, item VALIDATE-PR-REVIEW-POSTED-ASSUMES-DISTINCT-REVIEWER (S-604-3, fifth+ consecutive occurrence this cycle; human F7 final-authorization gate; human ratified the recommendation to open a follow-up story). Self-improvement / engine-process scope, anchored to the SELF-IMPROVEMENT epic (precedent: S-PG-MERGE-AUTH-BYPASS, whose own DEC-128/DEC-145 history documents the same-account tool-permission classifier as an existing, load-bearing merge-authorization control — this story addresses the review-posting side of that same boundary). No BCs yet — PO authorship required before status=ready (S-7.01 gate)."
+  - "1.0 (2026-08-20): Initial draft — opened from the F7 component-mgmt cycle §6 Keep-Deferred Disposition, item VALIDATE-PR-REVIEW-POSTED-ASSUMES-DISTINCT-REVIEWER (S-604-3, fifth+ consecutive occurrence this cycle; human F7 final-authorization gate; human ratified the recommendation to open a follow-up story). Self-improvement / engine-process scope, anchored to the SELF-IMPROVEMENT epic (precedent: S-PG-MERGE-AUTH-BYPASS, whose own D-128/D-145 history documents the same-account tool-permission classifier as an existing, load-bearing merge-authorization control — this story addresses the review-posting side of that same boundary). No BCs yet — PO authorship required before status=ready (S-7.01 gate)."
 breaking_change: false
 lineage:
   - S-PG-MERGE-AUTH-BYPASS
@@ -80,7 +80,7 @@ gate): "Open follow-up story targeting the self-improvement epic — engine-leve
 same-account review/approval handling, or an explicit documented human-in-the-loop step if
 that's the intended design." STATE.md's own delivery narrative corroborates this as a recurring,
 already-observed pattern across this cycle (e.g. the S-605-1/S-604-2/S-604-3 delivery records
-each cite DEC-284/285/289/290-style precedent: "the `gh pr merge` call was denied by the
+each cite D-284/285/289/290-style precedent: "the `gh pr merge` call was denied by the
 same-account tool-permission classifier... human completed the squash-merge on GitHub directly").
 
 ## Behavioral Contracts
@@ -115,10 +115,10 @@ under a single GitHub identity for both authoring and any review-posting/merge s
 perform, so `validate-pr-review-posted` (part of the `validate-pr-merge-prerequisites` hook
 family) consistently finds itself unable to satisfy a same-account review requirement — and this
 has recurred on every story delivered this cycle (component-mgmt's S-604-1 through S-608-1 all
-required a human to complete the squash-merge manually, per DEC-283 through DEC-292's repeated
+required a human to complete the squash-merge manually, per D-283 through D-292's repeated
 "same-account tool-permission classifier" notes in STATE.md). This is currently handled
 correctly in the *safety* sense (the classifier fails closed, denying self-approval rather than
-silently bypassing it — see S-PG-MERGE-AUTH-BYPASS's DEC-145 re-assessment, which notes this as
+silently bypassing it — see S-PG-MERGE-AUTH-BYPASS's D-145 re-assessment, which notes this as
 one of the engine's real defense-in-depth controls), but it is *not yet a deliberate, documented*
 design decision — it currently reads as an unaddressed assumption baked into the check's logic
 rather than an intentional human-in-the-loop step, per the F7 disposition's own framing.
@@ -129,7 +129,7 @@ rather than an intentional human-in-the-loop step, per the F7 disposition's own 
 |---|---|
 | Story spec (this file) | ~2,800 |
 | F7 delta-convergence report §6 (relevant row) | ~1,200 |
-| STATE.md DEC-283..292 same-account precedent notes (already cited in this cycle's delivery records) | ~2,000 |
+| STATE.md D-283..292 same-account precedent notes (already cited in this cycle's delivery records) | ~2,000 |
 | Engine `validate-pr-review-posted` / `validate-pr-merge-prerequisites` hook source (once located) | ~3,000 |
 | S-PG-MERGE-AUTH-BYPASS (cross-reference — related merge-authorization boundary) | ~2,500 |
 | **Total** | **~11,500** |
@@ -139,7 +139,7 @@ Well within budget. No split required.
 ## Previous Story Intelligence
 
 **S-PG-MERGE-AUTH-BYPASS** is the directly related prior story: its 2026-06-28 re-assessment
-(DEC-145) explicitly names "the same-account tool-permission classifier" as an existing, working
+(D-145) explicitly names "the same-account tool-permission classifier" as an existing, working
 defense-in-depth control ("behavioral evidence is encouraging — pr-manager held at merge on PRs
 #566 and #567 this session, refusing even orchestrator-relayed authorization"). This story does
 NOT propose weakening or bypassing that control — the classifier correctly fails closed. This
@@ -148,7 +148,7 @@ without weakening the safety property, fixing) what `validate-pr-review-posted` 
 should do when it detects the same-account condition, so the outcome is a clear, expected,
 documented step rather than a recurring surprise each story requires a human to manually resolve.
 
-**Every component-mgmt story's DEC-28x/29x precedent notes** (DEC-283 through DEC-292, cited
+**Every component-mgmt story's D-28x/29x precedent notes** (D-283 through D-292, cited
 verbatim in STATE.md's per-story merge burst narratives) are the concrete recurrence evidence —
 5+ consecutive instances, each independently confirming the same root cause and the same
 human-completes-manually resolution.
@@ -157,7 +157,7 @@ human-completes-manually resolution.
 
 | Rule | Source | Constraint |
 |------|--------|-----------|
-| Do not weaken the same-account fail-closed safety property | S-PG-MERGE-AUTH-BYPASS DEC-145 precedent | Whatever this story does, it must not make it easier for a delivery agent to self-approve/self-merge without a human step — that would reopen the exact PG-MERGE-AUTH-BYPASS-class risk. A "fix" here means clarity and non-surprising behavior, not bypassing the boundary. |
+| Do not weaken the same-account fail-closed safety property | S-PG-MERGE-AUTH-BYPASS D-145 precedent | Whatever this story does, it must not make it easier for a delivery agent to self-approve/self-merge without a human step — that would reopen the exact PG-MERGE-AUTH-BYPASS-class risk. A "fix" here means clarity and non-surprising behavior, not bypassing the boundary. |
 | Two acceptable dispositions, both explicit | Recommended disposition (verbatim: "engine-level fix... or an explicit documented human-in-the-loop step if that's the intended design") | The implementer must choose and document one of: (a) a genuine fix that changes the check's behavior in the same-account case (e.g., a distinct, non-generic message explaining the human handoff is expected, rather than a confusing denial), or (b) an explicit statement in the engine's docs that this is permanent, intended human-in-the-loop design, with no further engine-side change needed beyond documentation. Silently doing nothing is not an acceptable outcome — the F7 gate explicitly asked for one or the other. |
 | Dark Factory engine only | Scope boundary (mirrors S-PG-MERGE-AUTH-BYPASS Rule 1) | Zero changes to `jr` product files. |
 
@@ -175,10 +175,10 @@ no Cargo.toml changes, no GitHub Actions changes.
 
 ## Acceptance Criteria
 
-### AC-001 — Recurrence evidence consolidated from this cycle's DEC-28x/29x notes
+### AC-001 — Recurrence evidence consolidated from this cycle's D-28x/29x notes
 
 The 5+ consecutive occurrences (component-mgmt's own stories, each citing the same-account
-tool-permission classifier per DEC-283 through DEC-292 in STATE.md) are consolidated into one
+tool-permission classifier per D-283 through D-292 in STATE.md) are consolidated into one
 documented account confirming this is a systemic, not per-story, condition. (traces to drift item
 VALIDATE-PR-REVIEW-POSTED-ASSUMES-DISTINCT-REVIEWER — pending BC authorship)
 
@@ -193,7 +193,7 @@ VALIDATE-PR-REVIEW-POSTED-ASSUMES-DISTINCT-REVIEWER — pending BC authorship)
 
 Whatever change is made (if any), a same-account delivery agent still cannot self-approve/
 self-merge without the documented human step — the fail-closed property from
-S-PG-MERGE-AUTH-BYPASS's DEC-145 is not weakened. (traces to drift item
+S-PG-MERGE-AUTH-BYPASS's D-145 is not weakened. (traces to drift item
 VALIDATE-PR-REVIEW-POSTED-ASSUMES-DISTINCT-REVIEWER — pending BC authorship)
 
 ### AC-004 — Message/documentation clarity: a delivery agent hitting this condition gets an unambiguous, expected outcome
@@ -206,10 +206,10 @@ VALIDATE-PR-REVIEW-POSTED-ASSUMES-DISTINCT-REVIEWER — pending BC authorship)
 
 ## Tasks
 
-1. Consolidate the DEC-283..292 recurrence evidence from STATE.md into one account (AC-001).
+1. Consolidate the D-283..292 recurrence evidence from STATE.md into one account (AC-001).
 2. Locate the `validate-pr-review-posted` check / `validate-pr-merge-prerequisites` hook source.
 3. Decide the disposition (fix vs. documented human-in-the-loop) in consultation with the
-   existing S-PG-MERGE-AUTH-BYPASS precedent and its DEC-145 safety-property constraint (AC-002).
+   existing S-PG-MERGE-AUTH-BYPASS precedent and its D-145 safety-property constraint (AC-002).
 4. Implement the chosen disposition — behavior change and/or message/doc clarity (AC-003, AC-004).
 5. Cross-reference the merge-authorization-contract doc if it exists (companion to
    S-PG-MERGE-AUTH-BYPASS).

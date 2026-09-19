@@ -97,7 +97,7 @@ graph TD
 graph LR
     SE2E[S-E2E-FORK-1 MERGED] -->|fork-safe gate pattern| SSIGN[S-FORK-OPS-SIGN-1]
     SCIGATE[S-CIGATE-1 MERGED] -->|ci-gate.needs convention| SSIGN
-    SSIGN -->|unblocks| DEC104[DEC-104 signing enablement]
+    SSIGN -->|unblocks| DEC104[D-104 signing enablement]
 ```
 
 No unmerged dependencies. This is a leaf node in the story graph.

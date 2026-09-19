@@ -46,7 +46,7 @@ let next = rest[search_start..].find("\n  ")?;
 search_start = search_start + next + 1;
 ```
 
-**Routed to:** Human owner (DEC-128 prohibits pr-manager self-fix)
+**Routed to:** Human owner (D-128 prohibits pr-manager self-fix)
 
 ---
 
@@ -80,9 +80,9 @@ All 15 checks PASS after commit d32ac27:
 
 ---
 
-## DEC-128 Hold
+## D-128 Hold
 
-Per dispatch instruction: "CRITICAL (DEC-128): do NOT merge; do NOT push commits; do NOT self-fix reviewer findings — report them back."
+Per dispatch instruction: "CRITICAL (D-128): do NOT merge; do NOT push commits; do NOT self-fix reviewer findings — report them back."
 
 Review converged (0 blocking findings after cycle 2). CI Gate green. PR is merge-ready.
 **Awaiting human merge authorization.**

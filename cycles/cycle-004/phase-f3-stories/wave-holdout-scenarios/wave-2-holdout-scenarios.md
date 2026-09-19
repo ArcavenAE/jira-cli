@@ -113,7 +113,7 @@ smoke-test gate (per `wave-schedule.md` §4) and, subsequently, cycle-004's F7
 delta-convergence gate.
 
 **MUST-PASS. MANDATORY — this is the final CI-side gate before F7's manual-validation
-step, per DEC-335's Windows-validation split.**
+step, per D-335's Windows-validation split.**
 
 ---
 

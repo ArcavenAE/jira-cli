@@ -35,4 +35,4 @@
 - Security review: APPROVE (no CRITICAL/HIGH)
 - PR review cycle 1: APPROVE (0 blocking findings)
 - Convergence: ACHIEVED in 1 cycle
-- DEC-128 constraint: HELD-FOR-HUMAN-MERGE (no merge authorization)
+- D-128 constraint: HELD-FOR-HUMAN-MERGE (no merge authorization)

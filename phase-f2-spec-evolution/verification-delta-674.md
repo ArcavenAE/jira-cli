@@ -426,7 +426,7 @@ empirical-schema question has since been resolved: AC-015 empirically pinned
 the observed Atlaskit `adf-schema` mark-composition rule as an example anchor
 in `src/adf.rs::tests` (test evidence lives there, not in this delta doc),
 and the feature cycle carrying that resolution fully converged and CLOSED per
-DEC-353. The residual sub-case this VP originally flagged as open — whether a
+D-353. The residual sub-case this VP originally flagged as open — whether a
 mention node lacking `attrs.text` could reach the mark-composition path at
 all — is documented UNREACHABLE: BC-X.7.010's mandatory preflight always
 populates `attrs.text` on a bracket-form mention before conversion, so that
@@ -787,7 +787,7 @@ non-reducible 2+ ambiguity. Complementary, non-overlapping. Suggested name:
 
 ## 7. New Verification Properties — E2E Round-Trip Acceptance (JR_RUN_E2E-gated)
 
-The human added a NEW live-Jira E2E requirement (DEC-344). Each wiring BC folds
+The human added a NEW live-Jira E2E requirement (D-344). Each wiring BC folds
 its round-trip acceptance into a `JR_RUN_E2E=1` + `#[ignore]`-gated test in
 `tests/e2e_live.rs`, inert in `cargo test`/`ci.yml`, running only in
 `.github/workflows/e2e.yml`. All four use a CONTROLLED test account

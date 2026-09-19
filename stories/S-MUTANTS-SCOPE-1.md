@@ -120,7 +120,7 @@ lineage:
   - S-346                      # cargo-mutants CI job + whitelist policy (PR #373, 2026-05-16)
   - S-TESTTOOL-1                # examine_globs expansion: issues.rs + cache.rs (PR #533, 2026-06-18)
   - S-MUTATION-CI-TIMEOUT-1     # --timeout 240, false-green guards (PR #567, 2026-06-28)
-  - S-MUTANTS-EXAMINE-GLOBS-1   # examine_globs expansion: edit.rs + jsm_create.rs (DEC-149)
+  - S-MUTANTS-EXAMINE-GLOBS-1   # examine_globs expansion: edit.rs + jsm_create.rs (D-149)
   - S-MUTANTS-SCOPE-GUARDS-1    # Guard 2/Guard 3 self-verifying machinery this story relies on
   - S-693-1                     # PR #698 — merged through the false-green this story closes
   - S-663-1                     # PR #696 — merged through the false-green this story closes
@@ -200,7 +200,7 @@ of zero.
 | Governing BC | `BC-X.3.006` — `.factory/specs/prd/cross-cutting.md` §X.3 |
 | Governing policy doc (examine_globs half) | `docs/specs/cargo-mutants-policy.md §Scope` |
 | Root cause examples | PR #696 (`c9218389`), PR #698 (`c34f4db9`), PR #700 (`89164b8d`) |
-| Preceding scope story (template for this half) | `S-MUTANTS-EXAMINE-GLOBS-1` (edit.rs + jsm_create.rs, DEC-149) |
+| Preceding scope story (template for this half) | `S-MUTANTS-EXAMINE-GLOBS-1` (edit.rs + jsm_create.rs, D-149) |
 | Preceding self-verifying guards | `S-MUTANTS-SCOPE-GUARDS-1` (Guard 2 citation check, Guard 3 glob-existence test) |
 
 ---
@@ -382,7 +382,7 @@ Well within 20–30% of a typical implementer agent's context window. No splitti
 
 ## Previous Story Intelligence
 
-**S-MUTANTS-EXAMINE-GLOBS-1 (DEC-149):** Direct template for the `examine_globs`/policy-doc
+**S-MUTANTS-EXAMINE-GLOBS-1 (D-149):** Direct template for the `examine_globs`/policy-doc
 half of this story. Two-file scope addition, function-location citation bullets, count-line
 correction, policy-doc changelog entry. Key difference: that story made zero `src/` changes
 (pure CI-config + docs); this story additionally requires a `src/main.rs` refactor and two
@@ -791,7 +791,7 @@ refactor and a new out-of-process signal test with a non-trivial readiness-hands
   test (VP-MUTANTS-SCOPE-1-002) plus `tests/jr_test_block_until_sigint_release_gate.rs`;
   `libc` promoted to an explicit `[dev-dependencies]` edge; CLAUDE.md test-seam bullet added.
   AC-005 delta mutation: 3/3 caught, 0 missed, 4 unviable, 0 timeout — 100% viable kill rate.
-- **F5 scoped adversarial review CONVERGED to the STRICT DEC-245 bar** (human-directed): 12
+- **F5 scoped adversarial review CONVERGED to the STRICT D-245 bar** (human-directed): 12
   total passes, 3 consecutive clean passes (10/11/12), 0 CRIT/HIGH across all 12; the sole
   pass-1 HIGH finding (a duplicated interrupt branch in the seam) was fixed same-pass and
   never recurred.
@@ -814,7 +814,7 @@ refactor and a new out-of-process signal test with a non-trivial readiness-hands
   `a2a7749e`; `queue.rs`/`main.rs` are now both inside `examine_globs`.
 - Process-gap findings recorded during delivery: `PR-MANAGER-COMPLETION-GUARD-STEP10-LOOP`
   (NEW, LOW) — pr-manager's SubagentStop completion guard oscillated demanding a nonexistent
-  step 10 when steps 8/9 were justifiably `status=na` per DEC-128; recovered via a fresh
+  step 10 when steps 8/9 were justifiably `status=na` per D-128; recovered via a fresh
   pr-reviewer dispatch + `TaskStop`. `CLIPPY-RELEASE-ALL-TARGETS-PREEXISTING-CONST-EVAL-FAIL`
   (NEW, LOW, pre-existing, unrelated to this story) — `cargo clippy --release --all-targets`
   fails repo-wide on a const-eval assertion in `tests/config_dir_release_gate.rs`, reproduced
@@ -830,4 +830,4 @@ refactor and a new out-of-process signal test with a non-trivial readiness-hands
   `draft`→`done`.
 
 Full detail: `STATE.md`, `cycles/cycle-001/burst-log.md` § S-MUTANTS-SCOPE-1-CLOSED,
-`cycles/cycle-001/decisions-archive.md` DEC-277.
+`cycles/cycle-001/decisions-archive.md` D-277.

@@ -71,9 +71,9 @@ file present for this bundle at review time).
   fabricating a REPLACE call `jr` never issues in production (testing dead code, wasted effort and
   a false sense of live-validation coverage for a path no user can reach), or (b) misreading the
   gate as license to add out-of-scope `set:`/`replace:` CLI grammar (#607 territory — explicitly
-  out of scope for this bundle per DEC-280/#605). Either outcome is a real implementation-time
+  out of scope for this bundle per D-280/#605). Either outcome is a real implementation-time
   cost traceable directly to this wording. The ADD+REMOVE operations `jr` does emit already fully
-  exercise the load-bearing wire elements DEC-280 exists to validate (the `multiselectComponents`
+  exercise the load-bearing wire elements D-280 exists to validate (the `multiselectComponents`
   envelope, the integer `componentId` typing, the camelCase/lowercase field-name asymmetry, and
   the async bulk-task poll) — REPLACE differs from ADD/REMOVE only in the `bulkEditMultiSelectFieldOption`
   enum string, not in envelope shape, so a REPLACE-specific live call would not validate anything

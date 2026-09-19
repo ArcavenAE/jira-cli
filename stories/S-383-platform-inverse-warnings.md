@@ -4,7 +4,7 @@ story_id: "S-383"
 title: "Emit stderr warnings when --field/--on-behalf-of used without --request-type on platform path (closes #383)"
 wave: feature-followup
 status: completed
-contract_superseded_by: "SOH-DX-1 (DEC-188) / S-639-1"
+contract_superseded_by: "SOH-DX-1 (D-188) / S-639-1"
 intent: enhancement
 feature_type: backend
 scope: standard
@@ -61,7 +61,7 @@ breaking_change: false
 # F3 story produced on human GO after F2 convergence log sealed.
 ---
 
-> **CONTRACT SUPERSEDED (2026-07-25, DEC-188 / SOH-DX-1):** the warn-and-proceed behavior specified by this story's ACs (verbatim warning strings, exit 0) was superseded by pre-flight exit-64 guards — see BC-3.8.012/013 [AMENDED] in specs/prd/bc-3-issue-write.md. This story remains the historical record of the S-383 delivery; do NOT implement from these ACs. The implementing successor story is **S-639-1**.
+> **CONTRACT SUPERSEDED (2026-07-25, D-188 / SOH-DX-1):** the warn-and-proceed behavior specified by this story's ACs (verbatim warning strings, exit 0) was superseded by pre-flight exit-64 guards — see BC-3.8.012/013 [AMENDED] in specs/prd/bc-3-issue-write.md. This story remains the historical record of the S-383 delivery; do NOT implement from these ACs. The implementing successor story is **S-639-1**.
 
 # S-383 — Platform-Path Inverse Warnings: --field and --on-behalf-of
 
@@ -71,7 +71,7 @@ As a `jr issue create` caller who supplies `--field` or `--on-behalf-of` without
 I want a clear stderr warning that these flags are ignored on the platform path,
 so that I understand my flags are silently dropped and can correct my invocation.
 
-*Historical note: this story's warn-and-proceed contract was superseded by exit-64 enforcement in SOH-DX-1 / DEC-188. See banner above.*
+*Historical note: this story's warn-and-proceed contract was superseded by exit-64 enforcement in SOH-DX-1 / D-188. See banner above.*
 
 ## Source of Truth
 

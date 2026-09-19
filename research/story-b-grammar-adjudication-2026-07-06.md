@@ -2,7 +2,7 @@
 
 **Date:** 2026-07-06
 **Scope:** Internal repo archaeology (Read/Grep/Glob). No external MCP calls needed — every claim is anchored to on-disk artifacts on develop @ ab78a2d.
-**Purpose:** Resolve the DEC-153 contradiction between (i) no permissive fallback, (ii) v1 grammar = fn-grep + UPPER_CASE + Type::method dual-check, and (iii) AC-001 guard GREEN on develop HEAD.
+**Purpose:** Resolve the D-153 contradiction between (i) no permissive fallback, (ii) v1 grammar = fn-grep + UPPER_CASE + Type::method dual-check, and (iii) AC-001 guard GREEN on develop HEAD.
 
 ---
 
@@ -25,7 +25,7 @@ Applying the scope filter to `.factory/specs/prd/bc-*.md` yields **182 Trace/Sou
 
 Distinct extractable-token instances on ^Trace/Source lines. Duplicates ARE counted (each occurrence is a validation invocation). Confidence: HIGH for classes 4-11; MEDIUM (±5) for classes 1-3 due to token-vs-line disambiguation on multi-token Trace/Source lines. All classes verified from `.factory/specs/prd/bc-*.md` grep output captured this session.
 
-| # | Class | Shape (after token strip) | Coverage under DEC-153 v1 | Count |
+| # | Class | Shape (after token strip) | Coverage under D-153 v1 | Count |
 |---|-------|---------------------------|--------------------------|-------|
 | 1 | Bare-file (`.rs`) | `src/adf.rs`, `src/config.rs`, `src/cli/issue/edit.rs`, `src/api/auth.rs`, … | COVERED (exists check) | ~30 |
 | 2 | Bare-file (`.snap`) | `src/snapshots/jr__adf__tests__markdown_complex_to_adf.snap`, `src/cli/snapshots/jr__cli__auth__tests__list_table_snapshot.snap`, … | COVERED (exists check) | 4 |
@@ -96,10 +96,10 @@ These are TRUE dead citations that any working guard SHOULD catch — they are n
 ### 1.4 ANSWER
 
 - Pass-2's ~24 estimate was for the `::tests` module-path class only. Ground truth = 24 exact for that class.
-- Total uncovered by DEC-153 v1 grammar = **29 token occurrences** (4 CamelCase + 24 tests + 1 tests::testfn).
+- Total uncovered by D-153 v1 grammar = **29 token occurrences** (4 CamelCase + 24 tests + 1 tests::testfn).
 - Plus 10 extraction failures on comma-space line-ref lists (class 14) and 1 on fn-with-space-args (class 15) — these fail extraction entirely under the current regex, so they can neither pass nor fail validation.
 - Plus 5 continuation-line tokens (class 16), one of which (FieldsCache) is a CamelCase type.
-- The "AC-001 GREEN on develop HEAD" clause of DEC-153 is jointly UNSATISFIABLE with the "no permissive fallback + v1 grammar limited to fn/UPPER/Type::method" clauses. **The contradiction is real, not a pass-2 miscount.**
+- The "AC-001 GREEN on develop HEAD" clause of D-153 is jointly UNSATISFIABLE with the "no permissive fallback + v1 grammar limited to fn/UPPER/Type::method" clauses. **The contradiction is real, not a pass-2 miscount.**
 
 ---
 
@@ -173,7 +173,7 @@ All three uncovered classes admit a feasible, false-green-resistant anchored-gre
 2. If symbol is literal `tests` → run `mod tests` anchored grep. Skip fn-grep primary.
 3. If symbol matches `tests::<snake_case>` → run `mod tests` check AND `fn <snake_case>` check. Skip fn-grep primary.
 4. Otherwise (existing v1 branches): snake_case fn → fn-grep; UPPER_CASE → const/static; `Type::method` → dual-check.
-5. **No permissive fallback.** Any symbol not matching a branch is reported DEAD (per DEC-153 (i)).
+5. **No permissive fallback.** Any symbol not matching a branch is reported DEAD (per D-153 (i)).
 
 **Coverage after A:**
 - Classes 1-7 + 8 + 9 + 10: 100% covered.
@@ -226,7 +226,7 @@ All three uncovered classes admit a feasible, false-green-resistant anchored-gre
 
 **Grammar delta:** every symbol not matching a v1 branch is emitted as a WARNING to stderr (`WARN: could not validate <token> — shape unrecognized`), with exit code 0 (guard passes). Optional CI knob to escalate warnings to errors.
 
-**Coverage:** 29 tokens go unvalidated. Silent-under-coverage risk is exactly what DEC-148 identified this guard class as designed to prevent. Even the drift class the guard exists to catch (BC citation `src/foo::TypeName` stays after `TypeName` is renamed) would silently pass under Option C.
+**Coverage:** 29 tokens go unvalidated. Silent-under-coverage risk is exactly what D-148 identified this guard class as designed to prevent. Even the drift class the guard exists to catch (BC citation `src/foo::TypeName` stays after `TypeName` is renamed) would silently pass under Option C.
 
 **Cost:** LOW to implement, but VIOLATES the guard's value proposition. The whole point of the guard is that citation drift breaks the build; silent-under-coverage undoes that.
 
@@ -275,13 +275,13 @@ Assuming Trace/Source-scoped tokens only (excluding class 16 continuation lines 
 
 ---
 
-## 5 — FINAL RECOMMENDATION (DEC-154 draft)
+## 5 — FINAL RECOMMENDATION (D-154 draft)
 
 **RECOMMEND OPTION A (extend v1 grammar), with F-B2-02 regex fix bundled in.**
 
-### 5.1 Exact grammar spec deltas (relative to draft Task 2 Step 4 as ratified by DEC-153)
+### 5.1 Exact grammar spec deltas (relative to draft Task 2 Step 4 as ratified by D-153)
 
-Add three symbol-shape branches to the extractor's symbol-verification block. All three run in place of (not in addition to) the DEC-153 (i) "no permissive fallback" branch. Any symbol not matching a v1 branch remains DEAD.
+Add three symbol-shape branches to the extractor's symbol-verification block. All three run in place of (not in addition to) the D-153 (i) "no permissive fallback" branch. Any symbol not matching a v1 branch remains DEAD.
 
 **Branch dispatch order** (first match wins; each shape guard is on the substring AFTER `::`, treating `Type::method` as a special two-segment case):
 
@@ -297,9 +297,9 @@ Add three symbol-shape branches to the extractor's symbol-verification block. Al
    grep -Eq '^[[:space:]]*(pub(\([^)]*\))?[[:space:]]+)?(struct|enum|type|trait|union)[[:space:]]+<Type>[<[:space:](]' <src_file>
    ```
 
-4. If the post-`::` symbol matches `^[A-Z][A-Za-z0-9_]*::[a-z_][a-z0-9_]*$` (`Type::method`) → DEC-153 (ii) dual-check unchanged.
+4. If the post-`::` symbol matches `^[A-Z][A-Za-z0-9_]*::[a-z_][a-z0-9_]*$` (`Type::method`) → D-153 (ii) dual-check unchanged.
 
-5. If the post-`::` symbol matches `^[A-Z_][A-Z0-9_]+$` (UPPER_CASE) → DEC-153 (ii) const/static check unchanged.
+5. If the post-`::` symbol matches `^[A-Z_][A-Z0-9_]+$` (UPPER_CASE) → D-153 (ii) const/static check unchanged.
 
 6. If the post-`::` symbol matches `^[a-z_][a-z0-9_]*$` (single snake_case) → fn-grep unchanged.
 
@@ -332,9 +332,9 @@ Minimum: +3 (I, J, K). Recommended: +5 (I, J, K, L, M). Final Guard 1 fixture co
 - N (Trace/Source-scoped, extractable under Option A + F-B2-02 fix): **326**.
 - FLOOR = floor(0.75 × N) = **244**.
 
-### 5.4 Rationale (one-paragraph DEC-154 form)
+### 5.4 Rationale (one-paragraph D-154 form)
 
-DEC-153 ratified a v1 grammar (fn-grep + UPPER_CASE + Type::method) and a no-permissive-fallback stance, then required AC-001 GREEN on develop HEAD. Ground-truth census on develop @ ab78a2d shows 29 token occurrences on Trace/Source lines whose shape falls OUTSIDE the DEC-153 v1 grammar — 24 `::tests` module-paths (dominated by `src/adf.rs::tests` × 20), 4 standalone CamelCase types (BulkTransitionRequest, BulkTransitionInput, AdfBuilder, ListFrame), and 1 `::tests::testfn`. The three constraints are therefore jointly unsatisfiable. Three feasible, false-green-resistant anchored-grep checks (verified against every real cited file) close the gap for 2 new grep primitives and 3-5 new fixtures: `mod tests` anchor for `::tests`, `struct|enum|type|trait|union` anchor for standalone CamelCase, and a compose-of-existing-primitives for `::tests::testfn`. Grammar-extension (Option A) dominates BC-body cleanup (Option B, ~45 rewrites + ongoing convention tax) and skip-with-warning (Option C, resurfaces the DEC-148 drift class). Bundle the F-B2-02 regex fix (space-tolerant extraction) to recover 11 additional tokens currently silently dropped by the extractor, and pre-fix 5 continuation-line tokens and 3 truly-dead paths as one-time citation hygiene. Result: N = 326, FLOOR = 244, guard GREEN feasible on develop HEAD without weakening DEC-153's no-permissive-fallback stance.
+D-153 ratified a v1 grammar (fn-grep + UPPER_CASE + Type::method) and a no-permissive-fallback stance, then required AC-001 GREEN on develop HEAD. Ground-truth census on develop @ ab78a2d shows 29 token occurrences on Trace/Source lines whose shape falls OUTSIDE the D-153 v1 grammar — 24 `::tests` module-paths (dominated by `src/adf.rs::tests` × 20), 4 standalone CamelCase types (BulkTransitionRequest, BulkTransitionInput, AdfBuilder, ListFrame), and 1 `::tests::testfn`. The three constraints are therefore jointly unsatisfiable. Three feasible, false-green-resistant anchored-grep checks (verified against every real cited file) close the gap for 2 new grep primitives and 3-5 new fixtures: `mod tests` anchor for `::tests`, `struct|enum|type|trait|union` anchor for standalone CamelCase, and a compose-of-existing-primitives for `::tests::testfn`. Grammar-extension (Option A) dominates BC-body cleanup (Option B, ~45 rewrites + ongoing convention tax) and skip-with-warning (Option C, resurfaces the D-148 drift class). Bundle the F-B2-02 regex fix (space-tolerant extraction) to recover 11 additional tokens currently silently dropped by the extractor, and pre-fix 5 continuation-line tokens and 3 truly-dead paths as one-time citation hygiene. Result: N = 326, FLOOR = 244, guard GREEN feasible on develop HEAD without weakening D-153's no-permissive-fallback stance.
 
 ---
 

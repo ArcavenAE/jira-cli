@@ -20,7 +20,7 @@ commits:
 
 No blockers. One LOW documentation observation that is a pre-existing spec
 divergence (e2e-coverage-spec.md was not updated to reflect the single-token
-assertion refinement), already noted in DEC-074 as deferred.
+assertion refinement), already noted in D-074 as deferred.
 
 ---
 
@@ -232,7 +232,7 @@ adopted to resist comfy-table cell-wrap word-splitting. The story explains: "com
 (src/output.rs ContentArrangement::Dynamic) may word-wrap the description cell and insert
 a newline between adjacent words, which would cause `contains("Section Header")` to fail."
 
-The spec was not updated to reflect this AC-1 refinement (DEC-074 notes this as
+The spec was not updated to reflect this AC-1 refinement (D-074 notes this as
 "F3 fresh adversary caught F1 (comfy-table cell-wrap fragility) → fixed"). The spec
 remains at the multi-word form as an artifact of the F2→F3 timeline.
 
@@ -288,7 +288,7 @@ Stories 68) hold. The gate-guard false-green regression (F-1, async fn) was corr
 identified and fixed in ca07cbc. No CLAUDE.md update is required.
 
 The single LOW observation (spec AC-1 assertion strings not updated to single-token)
-is pre-existing spec drift documented in DEC-074, does not affect test correctness, and
+is pre-existing spec drift documented in D-074, does not affect test correctness, and
 does not block the merge gate.
 
 **Recommended action:** Proceed to merge PR #499. Post-merge: update STORY-INDEX.md

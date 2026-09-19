@@ -14,9 +14,9 @@ related: ["ADR-0007", "ADR-0012", "ADR-0014", "ADR-0015"]
 ## Status
 
 **Accepted** (2026-08-15). Gate: F2 spec evolution for the component-management bundle
-(Feature Mode cycle `component-mgmt`, DEC-278/DEC-279/DEC-280; issues #604/#605/#606/#608).
+(Feature Mode cycle `component-mgmt`, D-278/D-279/D-280; issues #604/#605/#606/#608).
 Formalizes, at the architecture layer, decisions already recorded in
-`.factory/spec-changelog.md` (DEC-278/279/280) and `bc-8-components.md` /
+`.factory/spec-changelog.md` (D-278/279/280) and `bc-8-components.md` /
 `bc-2-issue-read.md` §2.1 / `bc-3-issue-write.md` §3.4. This ADR does not introduce new
 product behavior — it is the architectural record of WHY the PRD-level decisions took the
 shape they did, and binds them to concrete module/cache/wire-format choices for F4
@@ -62,7 +62,7 @@ move` resolution:
    `"labels"` or `issueType`/`"issuetype"` asymmetries CLAUDE.md already documents for this
    codebase.
 
-The PRD-level decisions (DEC-278 umbrella, DEC-279 delete safety, DEC-280 wire-shape) are
+The PRD-level decisions (D-278 umbrella, D-279 delete safety, D-280 wire-shape) are
 already recorded in `bc-8-components.md`, `bc-2-issue-read.md` §2.1 (BC-2.1.018..022,
 BC-2.3.040), and `bc-3-issue-write.md` §3.4 (BC-3.4.022..025). This ADR is the architecture
 layer's record of the underlying module/cache/wire-format rationale — one decision, not four,
@@ -158,7 +158,7 @@ as one decision:
    `cache::write_object_type_attr_cache`: a failed cache write must never break a successful
    component command.
 
-3. **Delete safety (DEC-279): refuse to run without an explicit disposition; gate only the
+3. **Delete safety (D-279): refuse to run without an explicit disposition; gate only the
    irreversible path behind confirmation; snapshot before mutating.** `jr component delete`
    REQUIRES exactly one of `--move-to <NAME|ID>` (maps to the `moveIssuesTo` query parameter —
    the safe, non-destructive-to-issue-data path) or `--orphan` (the `moveIssuesTo`-absent
@@ -194,9 +194,9 @@ as one decision:
    cross-project collision BC-8.4.004's resolver-scoping invariant exists to prevent. The
    component is always resolved to its numeric id first (via the same project-scoped resolver
    described in Decision §1); the snapshot JQL is built from that id, never from the raw
-   name input. See BC-8.2.007 (Postcondition 4) and DEC-279.
+   name input. See BC-8.2.007 (Postcondition 4) and D-279.
 
-4. **Wire-shape asymmetry (DEC-280): the single-issue `update` verb and the bulk endpoint are
+4. **Wire-shape asymmetry (D-280): the single-issue `update` verb and the bulk endpoint are
    two genuinely different shapes — implement both explicitly, never assume one from the
    other.** Single-key `issue edit --component` (BC-3.4.022) sends the native Jira `update`
    verb, editmeta-gated (checking `fields.components.operations` for `add`/`remove`
@@ -235,7 +235,7 @@ whereas component-bearing projects can number in the hundreds on a large Jira in
 
 **Why gate only `--orphan`, not `--move-to`, behind confirmation?** Research §Q1.6 states this
 explicitly and the codebase's own `--yes`/interactive-confirm convention (comment delete,
-DEC-168 family) already establishes the precedent of gating the *irreversible* action, not
+D-168 family) already establishes the precedent of gating the *irreversible* action, not
 every mutating action, to avoid friction accumulating on the safe path. Gating both would be a
 defensible stricter choice but was rejected as unnecessary friction, consistent with research's
 explicit recommendation.
@@ -303,7 +303,7 @@ atypical instance configurations.
 
 ### Status as of 2026-08-15
 
-Accepted at the F2 gate for the component-management bundle. PRD-level decisions DEC-278/
+Accepted at the F2 gate for the component-management bundle. PRD-level decisions D-278/
 279/280 are already recorded (`bc-8-components.md`, `bc-2-issue-read.md` §2.1,
 `bc-3-issue-write.md` §3.4). This ADR is the architecture-layer ratification; no code exists
 yet (`src/cli/component.rs`, `src/api/jira/components.rs`, `src/types/jira/component.rs`, and
@@ -356,10 +356,10 @@ ordering (§5).
   norms; Q2 bulk wire shape — allowlist confirmation, exact JSON shape, asymmetry
   classification, live-run caveat).
 - Behavioral contracts: `bc-8-components.md` (BC-8.1.001..008 CRUD, BC-8.2.001..008 delete
-  safety/DEC-279, BC-8.3.001..007 rename, BC-8.4.001..005 resolver contracts);
+  safety/D-279, BC-8.3.001..007 rename, BC-8.4.001..005 resolver contracts);
   `bc-2-issue-read.md` §2.1 (BC-2.1.018..022 filter, BC-2.3.040 `Component.id` field);
-  `bc-3-issue-write.md` §3.4 (BC-3.4.022..025 wire shapes/DEC-280).
-- Decision log: `.factory/spec-changelog.md` (DEC-278/279/280 entries, component-mgmt cycle);
+  `bc-3-issue-write.md` §3.4 (BC-3.4.022..025 wire shapes/D-280).
+- Decision log: `.factory/spec-changelog.md` (D-278/279/280 entries, component-mgmt cycle);
   `.factory/STATE.md`.
 - Structural precedent code (as-built, cited for pattern only — not yet extended by this
   bundle): `src/cli/team.rs`, `src/api/jira/teams.rs`,

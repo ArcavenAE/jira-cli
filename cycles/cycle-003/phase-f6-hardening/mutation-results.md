@@ -31,7 +31,7 @@ Source of truth: `mutants.out/outcomes.json`
 
 | File | Mutants caught | Cycle-003 relevance |
 |------|----------------|---------------------|
-| `src/output.rs` | 25 | `sanitize_env_display` / `strip_control_and_ansi` — the **DEC-314 `env`-tag display sanitizer** (terminal-escape / control-char injection guard; security-relevant, same CWE-116-adjacent class as `attachments.rs::display_sanitize_filename`). Added to `examine_globs` this cycle (S-cycle3-env-tag). |
+| `src/output.rs` | 25 | `sanitize_env_display` / `strip_control_and_ansi` — the **D-314 `env`-tag display sanitizer** (terminal-escape / control-char injection guard; security-relevant, same CWE-116-adjacent class as `attachments.rs::display_sanitize_filename`). Added to `examine_globs` this cycle (S-cycle3-env-tag). |
 | `src/cache.rs` | 2 | `cache_dir` / `clear_profile_cache` — per-profile cache path construction touched by the profile restructuring. |
 | `src/main.rs` | 1 | `run` return-value mutant — top-level dispatch. |
 

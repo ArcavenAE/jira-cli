@@ -2,7 +2,7 @@
 document_type: story
 story_id: "S-cycle3-oauth-default-creation"
 epic_id: "AUTH-PROFILE-DX-1"
-title: "OAuth-default-at-creation picker + non-interactive guard + --oauth/--api-token flags (DEC-313/DEC-323)"
+title: "OAuth-default-at-creation picker + non-interactive guard + --oauth/--api-token flags (D-313/D-323)"
 wave: feature-followup
 status: ready
 intent: feature
@@ -71,11 +71,11 @@ origin: >
   re-declaration credential-clear reuses clear_profile_creds's API-token-pair branch, which
   S-cycle3-remove-logout-semantics adds; recommended, not required, to also land after
   S-cycle3-adr0011-newtype to avoid file-collision churn). `jr auth login` bare/interactive
-  defaults to an OAuth-first picker mirroring `jr init` (DEC-313); non-interactive invocation
+  defaults to an OAuth-first picker mirroring `jr init` (D-313); non-interactive invocation
   is airtight-guarded to NEVER launch a browser, covering both the no-flag default (BC-1.1.014)
   and the explicit --oauth / implicit oauth-profile-refresh cases (BC-1.1.016, closes
   adversarial finding I-1); new symmetric --oauth (deprecated alias)/--api-token flags land
-  on both `auth login` and `auth refresh` (DEC-323). NOTE: S-MAINT-532 (draft, pre-existing
+  on both `auth login` and `auth refresh` (D-323). NOTE: S-MAINT-532 (draft, pre-existing
   story) is explicitly OUT OF SCOPE for this cycle and is not folded into this story or any
   other cycle-003 story.
 ---
@@ -231,7 +231,7 @@ to api-token credential resolution on a profile with NO stored credential yet (a
 profile) should surface that story's actionable error, not a bespoke one — do not duplicate
 error text.
 
-**Cross-story fixture awareness — `auth list` 5-column snapshot break (DEC-324, owned by
+**Cross-story fixture awareness — `auth list` 5-column snapshot break (D-324, owned by
 `S-cycle3-env-tag`, NOT this story's scope to implement, but load-bearing for this story's
 own test fixtures):** by the time this story lands (Wave 4, after Wave 1's
 `S-cycle3-env-tag`), `jr auth list`'s table snapshot has ALREADY moved from 4 columns

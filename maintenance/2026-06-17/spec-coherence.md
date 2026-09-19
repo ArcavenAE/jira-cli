@@ -203,7 +203,7 @@ Cross-checking all OPEN drift items against current code and PR history: no OPEN
 
 ### 3.4 Items potentially CLOSEABLE but still marked OPEN
 
-None identified. The WIN-CI-GATE-AGGREGATOR item is correctly marked CLOSED (DEC-103).
+None identified. The WIN-CI-GATE-AGGREGATOR item is correctly marked CLOSED (D-103).
 
 ---
 

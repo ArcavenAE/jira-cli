@@ -31,7 +31,7 @@ cycle-002's, not built from scratch.
 ## Chain shape
 
 ```
-DEC-3xx -> BC-S.SS.NNN -> VP-AUTHDX-NNN -> test_xxx -> src/xxx.rs -> PR#/commit -> F5-ADV-CONVERGED -> F6(mutation/kani-sub)
+D-3xx -> BC-S.SS.NNN -> VP-AUTHDX-NNN -> test_xxx -> src/xxx.rs -> PR#/commit -> F5-ADV-CONVERGED -> F6(mutation/kani-sub)
 ```
 
 `F5-ADV-CONVERGED` = 3/3 clean adversarial re-run passes (Pass A/lifecycle, Pass B/error-concurrency,
@@ -45,8 +45,8 @@ substitution verdict from `.factory/cycles/cycle-003/phase-f6-hardening/summary.
 
 | Field | Value |
 |---|---|
-| DEC | DEC-314 (`ProfileConfig.env` schema field), DEC-324 (`auth list` 5-column surfacing) |
-| BC-1.6.046 | AMENDED — `auth list` 5th column, DEC-324 breaking snapshot change |
+| DEC | D-314 (`ProfileConfig.env` schema field), D-324 (`auth list` 5-column surfacing) |
+| BC-1.6.046 | AMENDED — `auth list` 5th column, D-324 breaking snapshot change |
 | BC-1.6.047 | NEW — `env` JSON/status surfacing, channel-split verbatim-vs-sanitized |
 | BC-6.1.015 | NEW — `ProfileConfig.env` schema field |
 | VP-AUTHDX-009 | Tolerant-reader round-trip / deserialization indistinguishability (bounds: BC-6.1.015) |
@@ -62,7 +62,7 @@ BC-1.4.027/HIGH-1 and BC-1.4.029/HIGH-2 do **not** apply here — see story 2/3 
 
 | Field | Value |
 |---|---|
-| DEC | DEC-315 (per-profile write clause, namespaced-key split) |
+| DEC | D-315 (per-profile write clause, namespaced-key split) |
 | BC-1.1.009 | AMENDED — `auth login --profile <new>` per-profile write clause |
 | BC-1.1.010 | AMENDED — `auth login --profile X` vs `JR_PROFILE` per-profile write clause |
 | BC-1.2.017 | AMENDED — same per-profile write clause, `JR_PROFILE=ghost` scenario |
@@ -79,7 +79,7 @@ BC-1.4.027/HIGH-1 and BC-1.4.029/HIGH-2 do **not** apply here — see story 2/3 
 
 | Field | Value |
 |---|---|
-| DEC | DEC-326 (no-copy detect-and-instruct, supersedes DEC-325(a)'s lazy-migration clause) |
+| DEC | D-326 (no-copy detect-and-instruct, supersedes D-325(a)'s lazy-migration clause) |
 | BC-1.4.025 | AMENDED — regression-confirmation clause; `load_oauth_tokens` MUST-NOT-TOUCH baseline |
 | BC-1.4.029 | AMENDED — cross-ref confirming `load_api_token`'s non-inheritance mirrors `load_oauth_tokens("sandbox")`'s. **HIGH-2 (consistency audit): no AC traced to this BC in `S-cycle3-credential-absence-guard.md` — FIXED this burst.** |
 | BC-1.4.032 | NEW, REDESIGNED — no-copy detect-and-instruct (HIGHEST-RISK new contract in the cycle) |
@@ -99,13 +99,13 @@ BC-1.4.027/HIGH-1 and BC-1.4.029/HIGH-2 do **not** apply here — see story 2/3 
 
 | Field | Value |
 |---|---|
-| DEC | DEC-322 (`auth logout` non-destructive session-clear vs. `auth remove` full-delete) |
+| DEC | D-322 (`auth logout` non-destructive session-clear vs. `auth remove` full-delete) |
 | BC-1.2.013 | AMENDED — non-destructive `logout`, informational stderr notice on api-token profiles (I-3/SR-015) |
 | BC-1.2.014 | AMENDED — 4-step delete with credentials-before-config reordering, genuine keychain errors surfaced not swallowed (I-4/SR-008) |
 | VP | None dedicated — ordinary AC `VP-1.2.014-001` anchored directly to BC-1.2.014's Postconditions |
 | test | `VP-1.2.014-001` (ordinary F4 acceptance test, not a promoted VP-AUTHDX property) |
 | src | `src/cli/auth/logout.rs`, `src/cli/auth/remove.rs`, `src/api/auth.rs::clear_profile_creds`/`clear_all_credentials` |
-| PR/commit | PR #757 @ `5e9dba8a` — Burst 13 notes a HIGH security finding (SEC-1) found+fixed within this PR, leading to DEC-331's refined auto-merge policy |
+| PR/commit | PR #757 @ `5e9dba8a` — Burst 13 notes a HIGH security finding (SEC-1) found+fixed within this PR, leading to D-331's refined auto-merge policy |
 | F5 | ADV-CONVERGED |
 | F6 | Mutation: `refresh_coordinator.rs` unchanged in delta (0 mutants); `cli/auth/*.rs` outside `examine_globs` (documented policy) |
 
@@ -113,7 +113,7 @@ BC-1.4.027/HIGH-1 and BC-1.4.029/HIGH-2 do **not** apply here — see story 2/3 
 
 | Field | Value |
 |---|---|
-| DEC | DEC-317 (un-defer ADR-0011, `Profile` newtype hard-fence) |
+| DEC | D-317 (un-defer ADR-0011, `Profile` newtype hard-fence) |
 | BC-6.2.015 | AMENDED — target contract for the compile-time hard fence (`cache.rs` + `api/auth.rs`'s 4 credential functions + `Config::active_profile_name` + `JiraClient::profile_name`) |
 | VP | None dedicated — BC-6.2.015 frames this as mechanical, not behavioral; existing cross-profile isolation tests (BC-6.2.009/BC-6.2.010) are the operative regression safety net |
 | test | BC-6.2.009/BC-6.2.010 existing regression suite (unchanged pass/fail baseline) |
@@ -128,11 +128,11 @@ BC-1.4.027/HIGH-1 and BC-1.4.029/HIGH-2 do **not** apply here — see story 2/3 
 
 | Field | Value |
 |---|---|
-| DEC | DEC-313 (interactive OAuth-default picker), DEC-323 (`--api-token` flag), DEC-327 (env-var suppresses picker, non-interactive only, refines DEC-313) |
+| DEC | D-313 (interactive OAuth-default picker), D-323 (`--api-token` flag), D-327 (env-var suppresses picker, non-interactive only, refines D-313) |
 | BC-1.1.013 | NEW — interactive OAuth-default picker |
 | BC-1.1.014 | NEW — non-interactive api-token default (regression-safety pin) |
 | BC-1.1.015 | NEW — runtime-default unchanged |
-| BC-1.1.016 | NEW — airtight non-interactive OAuth guard (F2-gate hardening, closes adversarial finding I-1); reconciled 2026-09-02/03 against DEC-321 (F5 MED-1) |
+| BC-1.1.016 | NEW — airtight non-interactive OAuth guard (F2-gate hardening, closes adversarial finding I-1); reconciled 2026-09-02/03 against D-321 (F5 MED-1) |
 | BC-1.2.049 | NEW — `--oauth` deprecated-but-accepted alias |
 | BC-1.2.050 | NEW — `--api-token` explicit flag |
 | VP-AUTHDX-001 | Non-interactive invocation never launches OAuth browser flow (SAFETY INVARIANT) |
@@ -152,7 +152,7 @@ added by story 4.
 
 | Field | Value |
 |---|---|
-| DEC | DEC-321 (refresh override removed, "relogin-then-replace" ordering fix I-6) |
+| DEC | D-321 (refresh override removed, "relogin-then-replace" ordering fix I-6) |
 | BC-1.2.048 | NEW — general `auth_method`-is-intrinsic invariant |
 | BC-1.2.051 | NEW — specific `auth refresh --oauth`/`--api-token` override removal |
 | VP-AUTHDX-003 | `auth_method`-is-intrinsic invariant, 2×3 mechanism/flag proptest matrix (SAFETY INVARIANT) |
@@ -167,7 +167,7 @@ added by story 4.
 | PR/commit | Scope | DEC/BC touched | F5 status |
 |---|---|---|---|
 | PR #763 @ `aafa9f9f` | Login-switch relogin-then-replace fix (mirrors story 7's I-6 pattern on the `auth login` mechanism-switch path) | BC-1.1.013 EC-1.1.013-2 (re-declaration credential-clear) | Fixed + merged |
-| PR #764 @ `202414f2` | F5-refinement bundle: 1 MED (locked-keychain refresh-error swallow) + 3 LOW | Reconciles BC-1.1.016↔DEC-321 (spec-only, MED-1) and VP-AUTHDX-005/006/008 coverage-boundary (spec-only, MED-2) | Fixed + merged; `develop` reaches current tip `202414f2` here |
+| PR #764 @ `202414f2` | F5-refinement bundle: 1 MED (locked-keychain refresh-error swallow) + 3 LOW | Reconciles BC-1.1.016↔D-321 (spec-only, MED-1) and VP-AUTHDX-005/006/008 coverage-boundary (spec-only, MED-2) | Fixed + merged; `develop` reaches current tip `202414f2` here |
 
 ## VP-AUTHDX Test-Existence cross-check (from consistency-audit-delta.md)
 
@@ -194,7 +194,7 @@ All 9/9 VPs have confirmed, existing, correctly-shaped tests. No gap.
 | BC-6.2.015 (AMENDED) | un-defers | ADR-0011 (`Profile` newtype, pre-existing Deferred artifact) |
 | BC-1.2.048/BC-1.2.051 | removes-override-from | pre-existing `chosen_flow_for_profile` (`src/cli/auth/mod.rs`) |
 | `S-cycle3-oauth-default-creation` | sequence-aware-of, no code overlap | `S-384` (`is_oauth_auth()` JSM 401-hint gating, ready/undelivered) |
-| `S-cycle3-oauth-default-creation` | folds-in-recommendation (human confirmed: kept separate, DEC-329) | `S-MAINT-532` (global `--profile` fallback coverage, deferred out of cycle-003) |
+| `S-cycle3-oauth-default-creation` | folds-in-recommendation (human confirmed: kept separate, D-329) | `S-MAINT-532` (global `--profile` fallback coverage, deferred out of cycle-003) |
 | — | no interaction, disjoint dispatch path | `S-663-1` (`auth switch --profile` guard, DONE, touches `AuthCommand::Switch` only) |
 
 ## Traceability link count

@@ -200,7 +200,7 @@ N/A — evaluated at wave gate per factory pattern. H-NEW-ADF-010 is a code-leve
 | F3-3 | Spec adversarial | AC-011 mis-cite; template exception noted | 0 | 0 | 1 | Fixed |
 | F3-4..10 | Spec adversarial | LOW refinements; AC-002 mis-anchor; Demo Plan; case cap; twin comment refresh | 0 | 0 | 5 | Fixed |
 
-**Convergence:** F3 CONVERGED STRICT — DEC-160. Clean window on passes p2/p3/p4 (F3 passes 8/9/10). 10 total passes, 6 fix rounds. Step 4.5 criterion: STRICT (human ruling).
+**Convergence:** F3 CONVERGED STRICT — D-160. Clean window on passes p2/p3/p4 (F3 passes 8/9/10). 10 total passes, 6 fix rounds. Step 4.5 criterion: STRICT (human ruling).
 
 **Implementation adversarial (Step 4.5):** N/A — evaluated at Phase 5. All changes are in `src/adf.rs` (pure-core), CLAUDE.md, and test files.
 
@@ -360,7 +360,7 @@ pipeline-mode: feature
 factory-version: "1.0.0-rc.22"
 pipeline-stages:
   spec-crystallization: completed (F2, 19 passes / 13 fix rounds, STRICT)
-  story-decomposition: completed (F3, 10 passes / 6 fix rounds, CONVERGED STRICT DEC-160)
+  story-decomposition: completed (F3, 10 passes / 6 fix rounds, CONVERGED STRICT D-160)
   tdd-implementation: completed (Red-Gate: 8 RED CONFIRMED-INPUT, Task 3 no-op)
   holdout-evaluation: completed (H-NEW-ADF-010 Calls A-E PASS)
   adversarial-review: completed (Step 4.5 CONVERGED STRICT, window p2/p3/p4)

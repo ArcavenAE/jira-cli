@@ -158,7 +158,7 @@ No dead/renamed test citation found for any cycle-013-touched BC.
 - `git diff --shortstat 7160a534..b960c305` reproduces **46 files changed, 1073 insertions(+),
   1050 deletions(-)** exactly matching every burst/report citation of this figure across
   STATE.md, F5 pass files, and the F6 hardening record.
-- F1 (DEC-363) → F2 (DEC-364) → F3 (DEC-365) → F4/Wave-1 (DEC-366) → Wave-2 gate (no DEC,
+- F1 (D-363) → F2 (D-364) → F3 (D-365) → F4/Wave-1 (D-366) → Wave-2 gate (no DEC,
   automated) → F5 (no DEC, automated, CONVERGED) chain is unbroken and internally consistent
   across `STATE.md`'s Decisions Log, Phase Progress table, and the per-phase artifact files.
 

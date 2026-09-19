@@ -45,8 +45,8 @@ WV2-ADV-03, WV2-ADV-11.
 | BC-INDEX body titles | Other sampled BCs (BC-7.3.001/004/005, BC-6.2.013) | PASS |
 | Architecture cross-cutting | line 164 reflects timeSpent passthrough | PASS |
 | Risk register | R-M4 shows RESOLVED with PR/SHA | PASS |
-| DEC-010 research doc | file exists and is committed (factory-artifacts 37a4be6) | PASS |
-| DEC-011 research doc | file exists and is committed (factory-artifacts d1135ca) | PASS |
+| D-010 research doc | file exists and is committed (factory-artifacts 37a4be6) | PASS |
+| D-011 research doc | file exists and is committed (factory-artifacts d1135ca) | PASS |
 | CLAUDE.md links | docs/specs/json-output-shapes.md exists | PASS |
 | CLAUDE.md links | docs/specs/test-naming-convention.md exists | PASS |
 | CLAUDE.md links | docs/superpowers/specs/2026-04-30-embedded-oauth-app-design.md exists | PASS |
@@ -55,7 +55,7 @@ WV2-ADV-03, WV2-ADV-11.
 | STATE.md Phase 3 count | 23/31 arithmetic vs actual wave totals | FAIL (NIT) |
 | STATE.md Drift Items | RESOLVED items have resolution rationale | PASS |
 | STATE.md Drift Items | DEFERRED items have target story or rationale | PASS |
-| STATE.md DEC-010/011 | both decisions reference committed research docs | PASS |
+| STATE.md D-010/011 | both decisions reference committed research docs | PASS |
 | Research docs committed | H-018-holdout-strategy-research.md committed (e199d17) | PASS |
 | H-018 in-place rewrite | holdout-scenarios.md line 195 correctly updated | PASS |
 
@@ -433,7 +433,7 @@ target story (e.g., "next S-0.06 touch" or bundle into Wave 3 cleanup). The
 - Plus H-NEW-MP-001, H-NEW-VERBOSE-001, H-NEW-VERBOSE-002, H-NEW-AUTH-002 = 4
 - Total: 51 entries = matches `total_holdouts: 51` in frontmatter
 
-### DEC-010 / DEC-011 research doc verification
+### D-010 / D-011 research doc verification
 
 - `S-2.06-jira-timetracking-verification.md` — committed at factory-artifacts SHA 37a4be6
 - `S-2.07-json-policy-and-conventions-research.md` — committed at factory-artifacts SHA d1135ca
@@ -452,7 +452,7 @@ target story (e.g., "next S-0.06 touch" or bundle into Wave 3 cleanup). The
 
 ### Architecture cross-cutting validation
 
-- `cross-cutting.md:164` — NFR-R-C gap section correctly reads "RESOLVED 2026-05-08" with S-2.06 PR/SHA/DEC-010 citation
+- `cross-cutting.md:164` — NFR-R-C gap section correctly reads "RESOLVED 2026-05-08" with S-2.06 PR/SHA/D-010 citation
 - `risk-register.md:40` — R-M4 row reads "RESOLVED 2026-05-08 — S-2.06 v2.0.0 (PR #308 / c8f15d8) via Option 1"
 - Both reflect the post-b3dd381 retroactive sweep state
 
@@ -472,9 +472,9 @@ target story (e.g., "next S-0.06 touch" or bundle into Wave 3 cleanup). The
 |------|-----------------|-------------------|
 | DRIFT-002 | "RESOLVED — SD-002 = Option A" | Yes — S-0.05 delivered |
 | OBS-13-2 | "RESOLVED — Story Manifest table added" | Yes — STORY-INDEX v1.4.1 |
-| S-0.05-DEV | "RESOLVED — SD-002 canonized" | Yes — STATE.md DEC-007 |
+| S-0.05-DEV | "RESOLVED — SD-002 canonized" | Yes — STATE.md D-007 |
 | S-2.06-DEFER-01 | "RESOLVED — H-018 replaced in place; S-3.10 queued" | Yes — e199d17 commit |
-| S-2.02-DEFER | "RESOLVED — field name is 'changed' per json_output.rs:4-10" | Yes — DEC-011 + holdout-scenarios.md:84 update |
+| S-2.02-DEFER | "RESOLVED — field name is 'changed' per json_output.rs:4-10" | Yes — D-011 + holdout-scenarios.md:84 update |
 
 ---
 

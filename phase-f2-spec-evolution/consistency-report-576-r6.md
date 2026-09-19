@@ -61,7 +61,7 @@ traces_to: ".factory/phase-f2-spec-evolution/prd-delta-576.md"
 | **Artifacts Scanned** | 15 (all surface-set items specified in task brief, plus holdout-scenarios.md) |
 | **Spec Version** | v1.3.45 (post-adversary-pass-1 rounds A+B state: +20 corrections + 6 new BCs + 7 new holdouts) |
 | **Feature** | SOH-ATTACHMENTS-1 (issues #576 + #585) |
-| **Gate** | DEC-179 F2 spec bundle — round 6 after r5 CONSISTENT verdict |
+| **Gate** | D-179 F2 spec bundle — round 6 after r5 CONSISTENT verdict |
 
 **Review methodology**: Independent fresh-context read of all surface-set artifacts BEFORE
 consulting consistency-report-576-r1.md through r5.md. Independent findings formed first.
@@ -138,10 +138,10 @@ boundary function table, but the BC body is internally correct.
 | Step | BC | Behavior |
 |------|-----|---------|
 | Pre-prompt metadata GET | BC-3.9.015 | `GET /rest/api/3/attachment/{id}` → filename for prompt |
-| Interactive gate | BC-3.9.015 | `eprint!+read_line` (DEC-174); `--yes` bypasses; non-TTY exit 64 |
+| Interactive gate | BC-3.9.015 | `eprint!+read_line` (D-174); `--yes` bypasses; non-TTY exit 64 |
 | Cancel path | BC-3.9.015 | exit 0; JSON `{"cancelled":true,"deleted":false}` |
 | Wire DELETE | BC-3.9.008 | `DELETE /rest/api/3/attachment/{id}`; 204 = exit 0 |
-| 404 on DELETE | BC-3.9.008 | exit 64 + surface Jira body (DEC-168; NOT exit 0) |
+| 404 on DELETE | BC-3.9.008 | exit 64 + surface Jira body (D-168; NOT exit 0) |
 | JSON success | BC-3.9.010 | `{"deleted":true,"id":"<AID>"}` (BTreeMap-ordered) |
 | Error taxonomy | BC-3.9.013 | 401/403/5xx per standard exits |
 
@@ -350,8 +350,8 @@ performed independently — see §10 below.
 
 BC-INDEX.md Coverage Statistics body-note (line 794) now includes all three entries that
 were missing at r5:
-- "+11 BC-3.5.002..BC-3.5.012 added 2026-07-11..14 via DEC-168 comment delete/edit/view"
-- "+27 SOH-ATTACHMENTS-1 F2 added 2026-07-15 via DEC-179 issues #576 #585"
+- "+11 BC-3.5.002..BC-3.5.012 added 2026-07-11..14 via D-168 comment delete/edit/view"
+- "+27 SOH-ATTACHMENTS-1 F2 added 2026-07-15 via D-179 issues #576 #585"
 - "+6 BC-3.9.015..020 added 2026-07-15 via SOH-ATTACHMENTS-1 adversary pass-1 round B
   scope expansion ruling R1/R2"
 
@@ -589,7 +589,7 @@ CONS-576-001 **REMAINS RESOLVED**. ✓
 CANONICAL-COUNTS.md §ADRs (line 157): "**Canonical ADR count: 17** (ADR-0001..ADR-0017;
 all present, no gaps)" — ADR-0017 explicitly listed as "First multipart/streaming HTTP
 surface — reqwest multipart+stream features + tokio-util direct dependency (SOH-ATTACHMENTS-1
-F2 DEC-179, 2026-07-15)". ARCH-INDEX.md and adr-index.md both reflect ADR-0017 Accepted.
+F2 D-179, 2026-07-15)". ARCH-INDEX.md and adr-index.md both reflect ADR-0017 Accepted.
 NEW-R4-002 **RESOLVED**. ✓
 
 ---

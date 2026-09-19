@@ -113,7 +113,7 @@ override must leave byte-for-byte unchanged when `--sort` is absent) and BC-2.1.
 - **Field name preserved verbatim (BC-2.1.024 Postcondition 1)**: valid input parses to
   `(field: String, direction)` with `field` preserved VERBATIM (original casing, no trimming
   beyond the split); `direction` normalized to `ASC`/`DESC` for JQL composition.
-- **Uniform override across all 4 branches (BC-2.1.025 Behavior, human-locked DEC-298
+- **Uniform override across all 4 branches (BC-2.1.025 Behavior, human-locked D-298
   "always wins")**: when present, `--sort` OVERRIDES the `order_by` value computed by ALL
   FOUR JQL-composition branches — `--jql`, scrum-active-sprint, kanban, default-project —
   applied UNIFORMLY, no board-specific exception. When ABSENT, every branch's `order_by`

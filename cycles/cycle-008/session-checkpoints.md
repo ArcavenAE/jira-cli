@@ -17,7 +17,7 @@ traces_to: STATE.md
      Only the LATEST checkpoint lives in STATE.md.
      Prior checkpoints are archived here for historical reference. -->
 
-## Session Resume Checkpoint (2026-09-17) — cycle-008 F3 incremental stories APPROVED (DEC-370), advancing F3 -> F4
+## Session Resume Checkpoint (2026-09-17) — cycle-008 F3 incremental stories APPROVED (D-370), advancing F3 -> F4
 
 ### Spec Versions
 
@@ -31,14 +31,14 @@ traces_to: STATE.md
 | Field | Value |
 |-------|-------|
 | **Date** | 2026-09-17 |
-| **Position** | cycle-008 (`oauth-surface-correctness`) Phase F3 incremental stories APPROVED (`DEC-370`); phase advancing F3 -> F4 delta implementation. Approved the finalized 6-story/20-point package and wave plan (W1 = S1/S2/S3/S4 parallel; W2 = S5 gated on S1 merge; S6 spike non-gating). F3 consistency audit verdict CONSISTENT; F-1/F-2 MINOR findings resolved this burst as doc-hygiene fixes. `develop` unchanged at `0496834d`. cycle-013 remains CLOSED + RELEASED as v0.7.0-dev.7 (`DEC-367`); cycles 009-011 remain PARKED. Pipeline was FEATURE-MODE. |
+| **Position** | cycle-008 (`oauth-surface-correctness`) Phase F3 incremental stories APPROVED (`D-370`); phase advancing F3 -> F4 delta implementation. Approved the finalized 6-story/20-point package and wave plan (W1 = S1/S2/S3/S4 parallel; W2 = S5 gated on S1 merge; S6 spike non-gating). F3 consistency audit verdict CONSISTENT; F-1/F-2 MINOR findings resolved this burst as doc-hygiene fixes. `develop` unchanged at `0496834d`. cycle-013 remains CLOSED + RELEASED as v0.7.0-dev.7 (`D-367`); cycles 009-011 remain PARKED. Pipeline was FEATURE-MODE. |
 | **Convergence counter** | N/A -- cycle-008 has not reached F5 scoped adversarial review yet; F4 delta implementation is next. |
 | **Next step** | Dispatch `/vsdd-factory:phase-f4-delta-implementation` for cycle-008 Wave 1 (S1/S2/S3/S4 in parallel). |
 
 ### Resume Prompt
 
 ```
-**Date & position:** 2026-09-17. cycle-008 (`oauth-surface-correctness`) Phase F3 incremental stories APPROVED (`DEC-370`); phase advancing F3 -> F4 delta implementation. Approved the finalized 6-story/20-point package and wave plan (W1 = S1/S2/S3/S4 parallel; W2 = S5 gated on S1 merge; S6 spike non-gating). F3 consistency audit verdict CONSISTENT; F-1/F-2 MINOR findings resolved this burst as doc-hygiene fixes. `develop` unchanged at `0496834d`. cycle-013 remains CLOSED + RELEASED as v0.7.0-dev.7 (`DEC-367`); cycles 009-011 remain PARKED. Pipeline is FEATURE-MODE. NEXT = dispatch `/vsdd-factory:phase-f4-delta-implementation` for cycle-008 Wave 1.
+**Date & position:** 2026-09-17. cycle-008 (`oauth-surface-correctness`) Phase F3 incremental stories APPROVED (`D-370`); phase advancing F3 -> F4 delta implementation. Approved the finalized 6-story/20-point package and wave plan (W1 = S1/S2/S3/S4 parallel; W2 = S5 gated on S1 merge; S6 spike non-gating). F3 consistency audit verdict CONSISTENT; F-1/F-2 MINOR findings resolved this burst as doc-hygiene fixes. `develop` unchanged at `0496834d`. cycle-013 remains CLOSED + RELEASED as v0.7.0-dev.7 (`D-367`); cycles 009-011 remain PARKED. Pipeline is FEATURE-MODE. NEXT = dispatch `/vsdd-factory:phase-f4-delta-implementation` for cycle-008 Wave 1.
 
 **Convergence counter:** N/A -- cycle-008 has not reached F5 scoped adversarial review yet; F4 delta implementation is next.
 
@@ -68,14 +68,14 @@ traces_to: STATE.md
 | Field | Value |
 |-------|-------|
 | **Date** | 2026-09-17 |
-| **Position** | cycle-008 (`oauth-surface-correctness`) at Phase F4 (delta implementation), Wave 1 NOT yet started. F1/F2/F3 all APPROVED (`DEC-368`/`DEC-369`/`DEC-370`). S1 worktree created (`.worktrees/cycle8-s1-jsm-oauth-routing`, branch `fix/cycle8-jsm-oauth-routing` @ develop base `0793b9c5`) but no code/tests landed yet -- the S1 Red-Gate test-writer was dispatched then stopped cleanly at wrap. |
+| **Position** | cycle-008 (`oauth-surface-correctness`) at Phase F4 (delta implementation), Wave 1 NOT yet started. F1/F2/F3 all APPROVED (`D-368`/`D-369`/`D-370`). S1 worktree created (`.worktrees/cycle8-s1-jsm-oauth-routing`, branch `fix/cycle8-jsm-oauth-routing` @ develop base `0793b9c5`) but no code/tests landed yet -- the S1 Red-Gate test-writer was dispatched then stopped cleanly at wrap. |
 | **Convergence counter** | N/A -- no active adversarial/convergence loop yet in F4. |
 | **Next step** | Resume F4 Wave 1: re-run S1 Red-Gate (test-writer), then implementer, per-story adversarial, demo, PR; then S2/S3/S4 (parallel, W1), S5 (W2, depends on S1), S6 Teams spike (non-gating). |
 
 ### Resume Prompt
 
 ```
-**Date & position:** 2026-09-17. cycle-008 (`oauth-surface-correctness`) at Phase F4 (delta implementation), Wave 1 NOT yet started. F1/F2/F3 all APPROVED (`DEC-368`/`DEC-369`/`DEC-370`). S1 worktree created (`.worktrees/cycle8-s1-jsm-oauth-routing`, branch `fix/cycle8-jsm-oauth-routing` @ develop base `0793b9c5`) but no code/tests landed yet. NEXT = resume F4 Wave 1: re-run S1 Red-Gate (test-writer), then implementer, per-story adversarial, demo, PR; then S2/S3/S4 (parallel, W1), S5 (W2, depends on S1), S6 Teams spike (non-gating).
+**Date & position:** 2026-09-17. cycle-008 (`oauth-surface-correctness`) at Phase F4 (delta implementation), Wave 1 NOT yet started. F1/F2/F3 all APPROVED (`D-368`/`D-369`/`D-370`). S1 worktree created (`.worktrees/cycle8-s1-jsm-oauth-routing`, branch `fix/cycle8-jsm-oauth-routing` @ develop base `0793b9c5`) but no code/tests landed yet. NEXT = resume F4 Wave 1: re-run S1 Red-Gate (test-writer), then implementer, per-story adversarial, demo, PR; then S2/S3/S4 (parallel, W1), S5 (W2, depends on S1), S6 Teams spike (non-gating).
 
 **Convergence counter:** N/A -- no active adversarial/convergence loop yet in F4.
 
@@ -95,7 +95,7 @@ traces_to: STATE.md
 ## Archived checkpoint — STATE.md v4.57 (Wave-1 DELIVERED & CONVERGED, held at human merge gate)
 
 ```
-**Date & position:** 2026-09-17. cycle-008 (`oauth-surface-correctness`) at Phase F4 (delta implementation), Wave 1 DELIVERED & CONVERGED, HELD at the human consolidated merge gate. F1/F2/F3 all APPROVED (DEC-368/DEC-369/DEC-370). NEXT = human merge decision for #832/#833/#834/#835 -> wave integration gate + wave-level adversarial convergence (3 clean) -> Wave 2 (S5, depends_on:[S1]) -> S6 Teams spike (non-gating) -> F5/F6/F7.
+**Date & position:** 2026-09-17. cycle-008 (`oauth-surface-correctness`) at Phase F4 (delta implementation), Wave 1 DELIVERED & CONVERGED, HELD at the human consolidated merge gate. F1/F2/F3 all APPROVED (D-368/D-369/D-370). NEXT = human merge decision for #832/#833/#834/#835 -> wave integration gate + wave-level adversarial convergence (3 clean) -> Wave 2 (S5, depends_on:[S1]) -> S6 Teams spike (non-gating) -> F5/F6/F7.
 
 **Convergence counter:** per-story: S1/S3/S4 = 3/3 clean; S2 = 3/3 clean (after 1 LOW fix on pass 1). Wave-level integration-gate adversarial pass: N/A -- not started (gated on the merge decision).
 
@@ -117,7 +117,7 @@ traces_to: STATE.md
 ## Archived checkpoint — STATE.md v4.58 (Wave integration gate + wave-level adversarial CONVERGED, fix PR #836 merge-ready, held at human wave-gate merge decision)
 
 ```
-**Date & position:** 2026-09-17. cycle-008 (`oauth-surface-correctness`) at Phase F4 (delta implementation), Wave 1 MERGED to develop (tip a32caef4), WAVE INTEGRATION GATE + WAVE-LEVEL ADVERSARIAL CONVERGED, wave-gate fix PR #836 merge-ready, HELD at the human consolidated wave-gate merge decision. F1/F2/F3 all APPROVED (DEC-368/DEC-369/DEC-370). NEXT = human merge decision for #836 -> wave gate fully closed -> Wave 2 (S5, depends_on:[S1], now unblocked) -> S6 Teams spike (non-gating) -> F5/F6/F7.
+**Date & position:** 2026-09-17. cycle-008 (`oauth-surface-correctness`) at Phase F4 (delta implementation), Wave 1 MERGED to develop (tip a32caef4), WAVE INTEGRATION GATE + WAVE-LEVEL ADVERSARIAL CONVERGED, wave-gate fix PR #836 merge-ready, HELD at the human consolidated wave-gate merge decision. F1/F2/F3 all APPROVED (D-368/D-369/D-370). NEXT = human merge decision for #836 -> wave gate fully closed -> Wave 2 (S5, depends_on:[S1], now unblocked) -> S6 Teams spike (non-gating) -> F5/F6/F7.
 
 **Convergence counter:** per-story (S1-S4, pre-merge): 3/3 clean each (S2 after 1 LOW fix). Wave-level integration-gate adversarial: 3/3 clean (converged, after an initial 4-finding pass). Fix PR #836 fix-adversarial (standalone diff): 3/3 clean.
 
@@ -176,14 +176,14 @@ traces_to: STATE.md
 **Counts:** total_bcs 770 (unchanged); VP count 89 (unchanged); holdout scenarios 118 (unchanged); total_stories 191 (unchanged).
 ```
 
-**Superseded by:** the human F7 gate convened and **APPROVED** the close, on the explicit condition "fix examine_globs first (FIX-F7-001, PR #845 @ `0834c9f0`), then close." That condition was satisfied and cycle-008 is now **CLOSED** (DEC-371). The `CYCLE-008-F6-MUTANTS-EXAMINE-GLOBS-GAP` residual this checkpoint flagged for F7 disposition is now RESOLVED 6/7 (7th file, `src/cli/init.rs`, deferred as `CYCLE-008-INIT-MUTATION-COVERAGE-SEAM`). Current checkpoint (STATE.md v4.64, F7 CONVERGED+CLOSED state) is in `STATE.md` itself.
+**Superseded by:** the human F7 gate convened and **APPROVED** the close, on the explicit condition "fix examine_globs first (FIX-F7-001, PR #845 @ `0834c9f0`), then close." That condition was satisfied and cycle-008 is now **CLOSED** (D-371). The `CYCLE-008-F6-MUTANTS-EXAMINE-GLOBS-GAP` residual this checkpoint flagged for F7 disposition is now RESOLVED 6/7 (7th file, `src/cli/init.rs`, deferred as `CYCLE-008-INIT-MUTATION-COVERAGE-SEAM`). Current checkpoint (STATE.md v4.64, F7 CONVERGED+CLOSED state) is in `STATE.md` itself.
 
 ---
 
 ## Archived checkpoint (from STATE.md v4.64, F7 CONVERGED + cycle CLOSED state)
 
 ```
-**Date & position:** 2026-09-18. cycle-008 (`oauth-surface-correctness`) Phase F7 (delta convergence) CONVERGED -- cycle CLOSED (DEC-371, human F7 gate APPROVED). develop tip UNCHANGED at 0834c9f0 (FIX-F7-001 already merged prior session; no new code this burst). No cycle ACTIVE; pipeline PAUSED.
+**Date & position:** 2026-09-18. cycle-008 (`oauth-surface-correctness`) Phase F7 (delta convergence) CONVERGED -- cycle CLOSED (D-371, human F7 gate APPROVED). develop tip UNCHANGED at 0834c9f0 (FIX-F7-001 already merged prior session; no new code this burst). No cycle ACTIVE; pipeline PAUSED.
 
 **Convergence counter:** F7 close ran no adversary pass (bookkeeping/close burst); trajectory-tail carried forward unchanged from F5 (->4->0->0->0). No active loop.
 
@@ -205,7 +205,7 @@ traces_to: STATE.md
 ## Archived checkpoint (from STATE.md v4.65, gate-resolved state)
 
 ```
-**Date & position:** 2026-09-18. cycle-008 (`oauth-surface-correctness`) is CLOSED in full (F1-F7, `DEC-371`); its sole remaining item, `CYCLE-008-CONSOLE-SCOPE-RELEASE-GATE`, is now **RESOLVED** per explicit operator confirmation. `develop` tip UNCHANGED at `0834c9f0`. **No cycle ACTIVE; pipeline PAUSED.**
+**Date & position:** 2026-09-18. cycle-008 (`oauth-surface-correctness`) is CLOSED in full (F1-F7, `D-371`); its sole remaining item, `CYCLE-008-CONSOLE-SCOPE-RELEASE-GATE`, is now **RESOLVED** per explicit operator confirmation. `develop` tip UNCHANGED at `0834c9f0`. **No cycle ACTIVE; pipeline PAUSED.**
 
 **Convergence counter:** this burst ran no adversary pass (standing-item disposition); trajectory-tail carried forward unchanged from F5 (`→4→0→0→0`). No active loop.
 
@@ -227,7 +227,7 @@ traces_to: STATE.md
 ## Archived checkpoint (from STATE.md v4.66, SESSION-WRAP-PAUSE state)
 
 ```
-**Date & position:** 2026-09-18. cycle-008 (`oauth-surface-correctness`) CLOSED in full (F1-F7, `DEC-371`, `ADR-0026` accepted); `CYCLE-008-CONSOLE-SCOPE-RELEASE-GATE` RESOLVED (`5859ad43`). PR `#846` MERGED to `develop`, advancing its tip `0834c9f0`->`3d9ca35e` -- zero open PRs. **No cycle ACTIVE; pipeline PAUSED.** This is a SESSION-WRAP-PAUSE checkpoint (skill `/vsdd-factory:wrap` Step 4) -- next = human direction.
+**Date & position:** 2026-09-18. cycle-008 (`oauth-surface-correctness`) CLOSED in full (F1-F7, `D-371`, `ADR-0026` accepted); `CYCLE-008-CONSOLE-SCOPE-RELEASE-GATE` RESOLVED (`5859ad43`). PR `#846` MERGED to `develop`, advancing its tip `0834c9f0`->`3d9ca35e` -- zero open PRs. **No cycle ACTIVE; pipeline PAUSED.** This is a SESSION-WRAP-PAUSE checkpoint (skill `/vsdd-factory:wrap` Step 4) -- next = human direction.
 
 **Convergence counter:** N/A -- no active convergence/adversarial loop (cycle-008 CLOSED). trajectory-tail carried forward unchanged from F5 (`→4→0→0→0`).
 
@@ -247,7 +247,7 @@ traces_to: STATE.md
 ---
 
 ```
-**Date & position:** 2026-09-18. cycle-008 (`oauth-surface-correctness`) CLOSED in full (F1-F7, `DEC-371`, `ADR-0026` accepted); `CYCLE-008-CONSOLE-SCOPE-RELEASE-GATE` RESOLVED (`5859ad43`). PR `#846` MERGED to `develop` (tip `3d9ca35e`) -- zero open PRs. The recommended non-blocking `jr auth login` 16-scope smoke test subsequently RAN and PASSED -- cycle-008 is now release-VALIDATED, not merely release-clear. **No cycle ACTIVE; pipeline PAUSED.** This is a lightweight VERIFICATION-OUTCOME checkpoint (`OAUTH-16-SCOPE-SMOKE-TEST-PASS-2026-09-18`) -- next = human direction.
+**Date & position:** 2026-09-18. cycle-008 (`oauth-surface-correctness`) CLOSED in full (F1-F7, `D-371`, `ADR-0026` accepted); `CYCLE-008-CONSOLE-SCOPE-RELEASE-GATE` RESOLVED (`5859ad43`). PR `#846` MERGED to `develop` (tip `3d9ca35e`) -- zero open PRs. The recommended non-blocking `jr auth login` 16-scope smoke test subsequently RAN and PASSED -- cycle-008 is now release-VALIDATED, not merely release-clear. **No cycle ACTIVE; pipeline PAUSED.** This is a lightweight VERIFICATION-OUTCOME checkpoint (`OAUTH-16-SCOPE-SMOKE-TEST-PASS-2026-09-18`) -- next = human direction.
 
 **Convergence counter:** N/A -- no active convergence/adversarial loop (cycle-008 CLOSED). trajectory-tail carried forward unchanged from F5 (`→4→0→0→0`).
 
@@ -272,7 +272,7 @@ Archived 2026-09-19 during the `S6-TEAMS-MAINTENANCE-REVISIT-SETUP` documentatio
 burst (v4.68 -> v4.69), superseded by the current checkpoint now in `STATE.md` itself.
 
 ```
-**Date & position:** 2026-09-19. cycle-008 (`oauth-surface-correctness`) CLOSED in full (F1-F7, `DEC-371`, `ADR-0026` accepted); release-VALIDATED; zero open pre-release blockers; zero open PRs. Its non-gating **S6 Teams-under-OAuth spike is now COMPLETE** -- go/no-go **DEFER-INDEFINITELY** (AC-002 empirically CONFIRMED-NOT-GRANTABLE via a 2026-09-19 operator differential authorize-endpoint test; `jr team list` stays API-token-only, documented, not a regression). **No cycle ACTIVE; pipeline PAUSED.** This is a lightweight SPIKE-OUTCOME checkpoint (`S6-TEAMS-SPIKE-COMPLETE-DEFER-INDEFINITELY-2026-09-19`) -- next = human direction.
+**Date & position:** 2026-09-19. cycle-008 (`oauth-surface-correctness`) CLOSED in full (F1-F7, `D-371`, `ADR-0026` accepted); release-VALIDATED; zero open pre-release blockers; zero open PRs. Its non-gating **S6 Teams-under-OAuth spike is now COMPLETE** -- go/no-go **DEFER-INDEFINITELY** (AC-002 empirically CONFIRMED-NOT-GRANTABLE via a 2026-09-19 operator differential authorize-endpoint test; `jr team list` stays API-token-only, documented, not a regression). **No cycle ACTIVE; pipeline PAUSED.** This is a lightweight SPIKE-OUTCOME checkpoint (`S6-TEAMS-SPIKE-COMPLETE-DEFER-INDEFINITELY-2026-09-19`) -- next = human direction.
 
 **Convergence counter:** N/A -- no active convergence/adversarial loop (cycle-008 CLOSED). trajectory-tail carried forward unchanged from F5 (`→4→0→0→0`).
 
@@ -297,7 +297,7 @@ Archived 2026-09-19 during the `ENGINE-STANDING-ITEM-LOG-DCHAIN-CITE` bookkeepin
 (v4.69 -> v4.70), superseded by the current checkpoint now in `STATE.md` itself.
 
 ```
-**Date & position:** 2026-09-19. cycle-008 (`oauth-surface-correctness`) CLOSED in full (F1-F7, `DEC-371`, `ADR-0026` accepted); release-VALIDATED; zero open pre-release blockers; zero open PRs. Its non-gating **S6 Teams-under-OAuth spike remains COMPLETE** -- go/no-go **DEFER-INDEFINITELY**, AC-002 now **CONFIRMED-NOT-GRANTABLE via two independent proofs** (2026-09-19 operator authorize-endpoint differential test + 2026-09-19 Developer Console API-catalog entitlement inspection). `jr team list` stays API-token-only, documented, not a regression; standing item `S6-TEAMS-OAUTH-BLOCKED-ON-ATLASSIAN-SCOPE-PROVISIONING` converted into a recurring MAINTENANCE-REVISIT item with a documented recheck procedure. **No cycle ACTIVE; pipeline PAUSED.** This is a lightweight DOCUMENTATION/STANDING-ITEM checkpoint (`S6-TEAMS-MAINTENANCE-REVISIT-SETUP-2026-09-19`) -- next = human direction.
+**Date & position:** 2026-09-19. cycle-008 (`oauth-surface-correctness`) CLOSED in full (F1-F7, `D-371`, `ADR-0026` accepted); release-VALIDATED; zero open pre-release blockers; zero open PRs. Its non-gating **S6 Teams-under-OAuth spike remains COMPLETE** -- go/no-go **DEFER-INDEFINITELY**, AC-002 now **CONFIRMED-NOT-GRANTABLE via two independent proofs** (2026-09-19 operator authorize-endpoint differential test + 2026-09-19 Developer Console API-catalog entitlement inspection). `jr team list` stays API-token-only, documented, not a regression; standing item `S6-TEAMS-OAUTH-BLOCKED-ON-ATLASSIAN-SCOPE-PROVISIONING` converted into a recurring MAINTENANCE-REVISIT item with a documented recheck procedure. **No cycle ACTIVE; pipeline PAUSED.** This is a lightweight DOCUMENTATION/STANDING-ITEM checkpoint (`S6-TEAMS-MAINTENANCE-REVISIT-SETUP-2026-09-19`) -- next = human direction.
 
 **Convergence counter:** N/A -- no active convergence/adversarial loop (cycle-008 CLOSED). trajectory-tail carried forward unchanged from F5 (`→4→0→0→0`).
 
@@ -313,5 +313,30 @@ Archived 2026-09-19 during the `ENGINE-STANDING-ITEM-LOG-DCHAIN-CITE` bookkeepin
 ```
 
 **Superseded by:** an `ENGINE-STANDING-ITEM-LOG-DCHAIN-CITE-2026-09-19` bookkeeping burst (STATE.md v4.69->v4.70) that logged a new ENGINE/TOOLING follow-up standing item (`ENGINE-VALIDATE-DISPATCH-ADVANCE-STALE-DCHAIN-CITE`, human-reported, MEDIUM severity) to `cycles/OPEN-STANDING-ITEMS.md`, documenting that the vsdd-factory engine's `validate-dispatch-advance` PostToolUse hook forces a placeholder `D-NNN` "D-chain cite" into STATE.md `current_step` even though this project's decision scheme is `DEC-NNN`, not `D-NNN` (the D-chain convention was dropped ~7 months / 300+ decisions ago). No phase advance, no `src/` change, no DEC. Current checkpoint (STATE.md v4.70, standing-item-log state) is in `STATE.md` itself.
+
+---
+
+## Archived checkpoint (STATE.md v4.70, ENGINE-STANDING-ITEM-LOG-DCHAIN-CITE bookkeeping state)
+
+Archived 2026-09-19 during the `DCHAIN-MIGRATION-DEC-TO-D-2026-09-19` migration burst
+(v4.70 -> v4.71), superseded by the current checkpoint now in `STATE.md` itself.
+
+```
+**Date & position:** 2026-09-19. cycle-008 (`oauth-surface-correctness`) CLOSED in full (F1-F7, `D-371`, `ADR-0026` accepted); release-VALIDATED; zero open pre-release blockers; zero open PRs. Its non-gating **S6 Teams-under-OAuth spike remains COMPLETE** -- go/no-go **DEFER-INDEFINITELY**, doubly confirmed. This burst logged a NEW **ENGINE/TOOLING** standing item, `ENGINE-VALIDATE-DISPATCH-ADVANCE-STALE-DCHAIN-CITE` (MEDIUM, human-reported): the vsdd-factory engine's `validate-dispatch-advance` hook forces a stale placeholder `D-NNN` citation into STATE.md `current_step`, a defunct convention vs. this project's `DEC-NNN` scheme; fix direction points at the vsdd-factory engine repo, not jira-cli. Also noted a related `validate-factory-path-staging` `cd .factory && git` false-positive; this burst's own commit used the `git -C .factory <cmd>` form to avoid it. **No cycle ACTIVE; pipeline PAUSED.** This is a lightweight RECORD-ONLY/BACKLOG-CAPTURE checkpoint (`ENGINE-STANDING-ITEM-LOG-DCHAIN-CITE-2026-09-19`) -- next = human direction.
+
+**Convergence counter:** N/A -- no active convergence/adversarial loop (cycle-008 CLOSED). trajectory-tail carried forward unchanged from F5 (`→4→0→0→0`).
+
+**In-flight work:** NONE. No stories mid-TDD; no open PRs; no sub-agents abandoned mid-step; no WIP branches; no active story worktrees. Both the product-repo working tree and the `.factory` worktree are clean of this burst's changes (a pre-existing, unrelated `sidecar-learning.md` modification from a prior session was left untouched -- not part of this commit). This burst's only action was appending a new standing item to `cycles/OPEN-STANDING-ITEMS.md` and the associated STATE.md/archive bookkeeping; no pipeline-dispatched task ran.
+
+**Pending human decisions / blockers:** none blocking. cycle-008 carries ZERO open pre-release blockers and ZERO open PRs, is release-VALIDATED, and its S6 spike is DONE (DEFER-INDEFINITELY, doubly confirmed). Optional next actions (human-owned, none gating): cutting the dev release; a maintenance sweep (6 open Dependabot PRs `#837`-`#842` + the accumulated LOW/MEDIUM standing-item debt in `cycles/OPEN-STANDING-ITEMS.md`, now including this burst's engine-tooling item and the S6 Teams recheck window); or opening cycle-009 (009-011 remain PARKED). The `ENGINE-VALIDATE-DISPATCH-ADVANCE-STALE-DCHAIN-CITE` item has no fix path within this repo -- its resolution is a future vsdd-factory engine cycle, not a jira-cli action item.
+
+**WIP branch list:** none.
+
+**Resume command:** `/vsdd-factory:rehydrate-wave` then `/vsdd-factory:next-step`.
+
+**Counts:** `total_bcs` **770** (unchanged); VP count **89** (unchanged); holdout scenarios **118** (unchanged); `total_stories` **191** (unchanged). Prior checkpoint (STATE.md v4.69, maintenance-revisit-setup state) archived verbatim to `cycles/cycle-008/session-checkpoints.md`.
+```
+
+**Superseded by:** a `DCHAIN-MIGRATION-DEC-TO-D-2026-09-19` migration burst (STATE.md v4.70->v4.71) that executed a human-approved (2x), one-time bulk rename of every `DEC-NNN` decision-ID token to `D-NNN` throughout `.factory/` (word-boundary-safe, ~7,215 occurrences / 532 files), resolving `ENGINE-VALIDATE-DISPATCH-ADVANCE-STALE-DCHAIN-CITE` in full (archived to `cycles/RESOLVED-DRIFT-ITEMS.md`) and minting `D-372` for the migration ruling itself. No `src/`/product-repo change (a separate agent handled that rename on `develop`). Current checkpoint (STATE.md v4.71, migration-complete state) is in `STATE.md` itself.
 
 ---

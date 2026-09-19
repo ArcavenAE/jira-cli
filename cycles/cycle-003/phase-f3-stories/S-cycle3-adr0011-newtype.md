@@ -2,7 +2,7 @@
 document_type: story
 story_id: "S-cycle3-adr0011-newtype"
 epic_id: "AUTH-PROFILE-DX-1"
-title: "Profile(String) newtype -- un-defer ADR-0011, thread through ~60-80 call sites (DEC-317)"
+title: "Profile(String) newtype -- un-defer ADR-0011, thread through ~60-80 call sites (D-317)"
 wave: feature-followup
 status: ready
 intent: feature
@@ -58,7 +58,7 @@ origin: >
   S-cycle3-credential-absence-guard, S-cycle3-remove-logout-semantics -- sequenced LAST among
   the credential-restructuring stories so the call-site sweep covers the enlarged,
   post-restructuring surface exactly once, per ADR-0011's own Sequencing). Un-defers ADR-0011
-  (Status: Deferred -> Accepted, DEC-317) by introducing a Profile(String) newtype and
+  (Status: Deferred -> Accepted, D-317) by introducing a Profile(String) newtype and
   threading it through every per-profile cache function (12+ in src/cache.rs), plus
   src/api/auth.rs's four credential functions (store_api_token/load_api_token/
   store_oauth_tokens/load_oauth_tokens), Config::active_profile_name, and
@@ -114,7 +114,7 @@ leakage risk.
 
 | BC | Status | What this story delivers |
 |----|--------|---------------------------|
-| BC-6.2.015 | AMENDED | The compile-time hard fence: `pub struct Profile(String)` with `From<String>`/`AsRef<str>`/`Display` impls, threaded through 12+ `src/cache.rs` functions, `src/api/auth.rs`'s 4 credential functions, `Config::active_profile_name`, `JiraClient::profile_name`. Design ACCEPTED at the F2 gate (DEC-317); this story is the F4 implementation. |
+| BC-6.2.015 | AMENDED | The compile-time hard fence: `pub struct Profile(String)` with `From<String>`/`AsRef<str>`/`Display` impls, threaded through 12+ `src/cache.rs` functions, `src/api/auth.rs`'s 4 credential functions, `Config::active_profile_name`, `JiraClient::profile_name`. Design ACCEPTED at the F2 gate (D-317); this story is the F4 implementation. |
 
 ## Current State (read before implementing)
 

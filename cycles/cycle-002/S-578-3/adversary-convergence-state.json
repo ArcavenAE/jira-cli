@@ -11,7 +11,7 @@
       "id": "P1",
       "classification": "BLOCKING",
       "findings": [
-        {"id": "ADV-S578-3-P1-001", "severity": "HIGH", "category": "spec-conformance", "description": "JSM :asset L2 resolver (jsm_create.rs::resolve_asset_field_l2) dropped the platform sibling's (field_resolve.rs::compose_asset_hint) 4-check value-shape validation -- a malformed :asset value (missing ':', empty workspace segment, empty/non-numeric object-id segment) was not rejected before the workspace-discovery GET, diverging from DEC-188's pre-flight-guard convention"},
+        {"id": "ADV-S578-3-P1-001", "severity": "HIGH", "category": "spec-conformance", "description": "JSM :asset L2 resolver (jsm_create.rs::resolve_asset_field_l2) dropped the platform sibling's (field_resolve.rs::compose_asset_hint) 4-check value-shape validation -- a malformed :asset value (missing ':', empty workspace segment, empty/non-numeric object-id segment) was not rejected before the workspace-discovery GET, diverging from D-188's pre-flight-guard convention"},
         {"id": "ADV-S578-3-P1-002", "severity": "MEDIUM", "category": "coverage", "description": ":asset cold-cache 4-row failure taxonomy (VP-578-022) lacked negative-path tests for the four malformed value shapes"},
         {"id": "ADV-S578-3-P1-003", "severity": "MEDIUM", "category": "spec-fidelity", "description": "EC-3.8.008-1 (:option cascading opacity on JSM) and EC-3.8.008-3 (L2-validation ordering) wording in BC-3.8.008 conflicted with the shipped code's actual behavior -- BC drafted-by-analogy against an OBJECT-wrap wire shape that contradicted AC-002's bare-parity STRING-wrap and the shipped code"}
       ],

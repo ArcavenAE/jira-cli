@@ -2,7 +2,7 @@
 
 **Date:** 2026-08-19
 **Type:** general (technology/API implementation)
-**Scope:** Jira Cloud REST API v3 Bulk Operations — validates the 8 wire-shape claims that gate S-605-2 (DEC-280, BC-3.4.023) BEFORE implementation
+**Scope:** Jira Cloud REST API v3 Bulk Operations — validates the 8 wire-shape claims that gate S-605-2 (D-280, BC-3.4.023) BEFORE implementation
 **Method:** READ-ONLY doc/community/source research. No live Jira API calls, no state changes.
 **Author:** research-agent
 
@@ -136,7 +136,7 @@ These are the *only* residual uncertainties; all are the "documented + triple-co
 - **G3:** The two-sequential-POST requirement for mixed add/remove (Claim 6) is structurally certain for components but live-confirmed only for labels. Smoke test should run one ADD POST then one REMOVE POST and confirm both terminal-COMPLETE (already AC-002 + AC-010 shape).
 - **G4:** `REMOVE_ALL`/`REPLACE` are out of `jr` scope (#607) — no need to smoke-test them for S-605-2.
 
-If the live run contradicts any documented shape, **correct BC-3.4.023 to the observed truth first** (do not patch around it), per the DEC-280 / #446 precedent.
+If the live run contradicts any documented shape, **correct BC-3.4.023 to the observed truth first** (do not patch around it), per the D-280 / #446 precedent.
 
 ---
 
@@ -167,7 +167,7 @@ All accessed 2026-08-19.
 |------|---------|---------|
 | **Perplexity perplexity_research (PRIMARY)** | 1 | Deep multi-source validation of all 8 claims + sendBulkNotification against current Atlassian primary docs + community, with explicit live-wire-vs-doc flagging |
 | Perplexity perplexity_search | 1 | Raw-source cross-validation: verbatim Atlassian POST example (`multiselectComponents`/`componentId 2154`), GET-fields enum, withone.ai schema, apidog mirror, community threads |
-| Read | 3 | Existing story spec, prior DEC-280 research (§Q2), RESEARCH-INDEX |
+| Read | 3 | Existing story spec, prior D-280 research (§Q2), RESEARCH-INDEX |
 | Grep/Read (repo) | 3 | Confirm `bulk.rs` already POSTs `/bulk/issues/fields`, polls `/bulk/queue/{taskId}`, and that `bulk_edit_fields` is generic + omits `sendBulkNotification` (reuse feasibility) |
 | Training data | 0 areas | Not relied upon for any factual claim; all verdicts tied to cited sources or repo code |
 

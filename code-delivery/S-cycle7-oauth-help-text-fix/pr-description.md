@@ -242,8 +242,8 @@ cycle: cycle-007-auth-correctness-dx
 story: S-cycle7-oauth-help-text-fix
 story-label: Story C (Wave 1)
 pipeline-stages:
-  spec-crystallization: completed (F1/F2 APPROVED, DEC-354/DEC-355)
-  story-decomposition: completed (F3 APPROVED, DEC-356)
+  spec-crystallization: completed (F1/F2 APPROVED, D-354/D-355)
+  story-decomposition: completed (F3 APPROVED, D-356)
   tdd-implementation: completed (red-gate + fix + CHANGELOG)
   holdout-evaluation: "N/A — evaluated at wave gate"
   adversarial-review: completed (5 passes, CONVERGED passes 3/4/5)

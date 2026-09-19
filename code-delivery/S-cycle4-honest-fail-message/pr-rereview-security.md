@@ -22,7 +22,7 @@ Reviewed `git diff b2a0c5d7..origin/feat/cycle4-honest-fail-message` (4 commits:
 
 - `src/api/auth.rs` — `site1_login_store_failure_message` / `site3_refresh_store_failure_message`
   wording corrections; new `normalize_for_phrase_scan` test helper + 2 tests hardening the
-  DEC-334 source-scan regression guard.
+  D-334 source-scan regression guard.
 - `src/cli/auth/login.rs` — new `should_mark_auth_method_before_attempt` /
   `mark_auth_method_if_new`, wired into `handle_login` to persist `auth_method` before the
   credential flow for brand-new profiles.
@@ -133,7 +133,7 @@ No. Re-read both `site1_login_store_failure_message` and
 The wording changes in this delta only add/reword the cleanup-command guidance
 (`jr auth logout`, the "if {profile} is not your active profile, jr auth remove..."
 caveat) and correct the revoke-scope warning; they do not add any new interpolated
-field. `DEC-334`'s revoke-URL / ACCOUNT-WIDE warning text is unchanged in substance
+field. `D-334`'s revoke-URL / ACCOUNT-WIDE warning text is unchanged in substance
 (still a link + a warning, no credential material). No new logging call sites were
 added — `info!` in `refresh_oauth_token_with_url` (pre-existing, unchanged) explicitly
 documents "refresh_token value is intentionally NOT logged — only the profile."
@@ -163,7 +163,7 @@ by reading both the old inline expression (still visible via `git show b2a0c5d7`
 new function body side by side. `handle_remove_in_memory` (the only deletion-gating logic
 touched by this review's scope) is untouched by this diff.
 
-### DEC-334 revoke-advice truthfulness
+### D-334 revoke-advice truthfulness
 
 Re-confirmed the corrected wording present in both `site1_login_store_failure_message`
 arms (`DpapiFallbackFailed` and legacy) states, verbatim: "this is ACCOUNT-WIDE and will
@@ -172,14 +172,14 @@ again" — consistent with `jr`'s single shared embedded OAuth app design (ADR-0
 non-harmful: it presents the revoke as an *optional* extra step, not a required
 remediation, and correctly warns of the blast radius before the user acts. Site 3's
 message correctly omits any revoke instruction entirely (a refresh-token failure does not
-imply the grant is bad). The DEC-334 regression guard
+imply the grant is bad). The D-334 regression guard
 (`test_no_account_wide_harmful_revoke_framing_in_auth_source`) was independently run and
 passes, and the new `normalize_for_phrase_scan` line-wrap/continuation hardening
 (`test_normalize_for_phrase_scan_catches_wrapped_forbidden_phrase`,
 `test_normalize_for_phrase_scan_catches_backslash_continued_phrase`) is a genuine
 strengthening of that guard, not cosmetic — verified by reading the normalization logic
 itself (strips `///` prefixes and `\`-continuation markers, then collapses whitespace)
-and confirming it would in fact have caught the DEC-334-era wrapped phrasing bug this
+and confirming it would in fact have caught the D-334-era wrapped phrasing bug this
 same file's rustdoc cites as its own motivating example.
 
 ## Non-security observation (not a CWE finding, not blocking)

@@ -1,7 +1,7 @@
 # S-578-4 — AC-002 error path (pairs with the success tape). Confirms the
 # reversal cuts BOTH ways: a `--field` that fails now fails with a
 # createmeta-RESOLUTION error ("is not on the Create screen"), never the old,
-# now-deleted DEC-188 guard string "--field is only valid with --request-type".
+# now-deleted D-188 guard string "--field is only valid with --request-type".
 # Also exercises AC-005's cache-first NAME resolution path (this field is
 # looked up by human display name via GET /rest/api/3/field — the customfield_
 # bypass form is exercised separately in the paired success tape).

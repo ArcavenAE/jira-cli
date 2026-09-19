@@ -2,7 +2,7 @@
 
 **Epic:** cycle-component-mgmt — Component management bundle (#604/#605/#606/#608)
 **Mode:** feature
-**Convergence:** CONVERGED after 12 adversarial passes (3/3 CLEAN under DEC-245 strict bar)
+**Convergence:** CONVERGED after 12 adversarial passes (3/3 CLEAN under D-245 strict bar)
 
 ![Tests](https://img.shields.io/badge/tests-29%2F29-brightgreen)
 ![Coverage](https://img.shields.io/badge/coverage-additive%20only-brightgreen)
@@ -155,7 +155,7 @@ graph LR
     Unit["9 Unit Tests<br/>(inline src/)"]
     Integration["42 Integration Tests<br/>(tests/component_commands.rs)"]
     LibSuite["1127 lib tests<br/>(full suite)"]
-    Adversarial["3 Adversarial Passes<br/>(DEC-245 strict bar)"]
+    Adversarial["3 Adversarial Passes<br/>(D-245 strict bar)"]
 
     Unit -->|9/9| Pass1["PASS"]
     Integration -->|42/42| Pass2["PASS"]
@@ -173,7 +173,7 @@ graph LR
 | **New tests** | 29 added (16 integration + 13 unit), 0 modified |
 | **Total suite** | 1127 lib + all integration groups, 0 failed |
 | **Diff** | 2406 insertions, 0 deletions, 23 files — purely additive |
-| **Adversarial** | 12 passes, 3/3 CLEAN under DEC-245 strict bar on commit `4bc72b8c` |
+| **Adversarial** | 12 passes, 3/3 CLEAN under D-245 strict bar on commit `4bc72b8c` |
 | **Regressions** | 0 |
 
 <details>
@@ -238,12 +238,12 @@ N/A — evaluated at wave gate (Phase 4 holdout is a wave-level gate; this story
 
 | Pass | Bar | Findings | Critical | High | Status |
 |------|-----|----------|----------|------|--------|
-| 1–9 | DEC-245 strict | Multiple | 0 | 0 | Fixed |
-| 10 | DEC-245 strict | 0 | 0 | 0 | CLEAN |
-| 11 | DEC-245 strict | 0 | 0 | 0 | CLEAN |
-| 12 | DEC-245 strict | 0 | 0 | 0 | CLEAN |
+| 1–9 | D-245 strict | Multiple | 0 | 0 | Fixed |
+| 10 | D-245 strict | 0 | 0 | 0 | CLEAN |
+| 11 | D-245 strict | 0 | 0 | 0 | CLEAN |
+| 12 | D-245 strict | 0 | 0 | 0 | CLEAN |
 
-**Convergence:** 3/3 CLEAN at passes 10–12 (DEC-245 strict bar) on commit `4bc72b8c`. The delta from that commit to HEAD (`d20eb2a6`) is purely additive documentation/demo evidence — no code changes, 0 deletions.
+**Convergence:** 3/3 CLEAN at passes 10–12 (D-245 strict bar) on commit `4bc72b8c`. The delta from that commit to HEAD (`d20eb2a6`) is purely additive documentation/demo evidence — no code changes, 0 deletions.
 
 ---
 
@@ -385,7 +385,7 @@ pipeline-stages:
 convergence-metrics:
   adversarial-passes: 12
   clean-passes: 3
-  strict-bar: DEC-245
+  strict-bar: D-245
   commit-at-convergence: "4bc72b8c"
   delta-to-head: "demo evidence only (additive)"
 story-id: "S-604-1"
@@ -407,7 +407,7 @@ models-used:
 - [ ] All CI status checks passing (`ci-gate` / "CI Gate" required check)
 - [ ] Coverage delta is positive (29 new tests, 0 regressions)
 - [ ] No critical/high security findings (scan above: 0 critical, 0 high)
-- [ ] Adversarial convergence: 3/3 CLEAN (DEC-245 strict bar)
+- [ ] Adversarial convergence: 3/3 CLEAN (D-245 strict bar)
 - [ ] Demo evidence: 19/19 ACs covered in `docs/demo-evidence/S-604-1/`
 - [ ] No upstream PR dependencies (`depends_on: []`)
-- [ ] Human merge authorization required (AUTHORIZE_MERGE=no, DEC-128/DEC-282)
+- [ ] Human merge authorization required (AUTHORIZE_MERGE=no, D-128/D-282)

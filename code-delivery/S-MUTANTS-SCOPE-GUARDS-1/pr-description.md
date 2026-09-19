@@ -1,6 +1,6 @@
-# [S-MUTANTS-SCOPE-GUARDS-1] CITATION-GUARDS Story A: mutants-policy function-location guard + examine_globs file-existence guard (DEC-150)
+# [S-MUTANTS-SCOPE-GUARDS-1] CITATION-GUARDS Story A: mutants-policy function-location guard + examine_globs file-existence guard (D-150)
 
-**Epic:** CITATION-GUARDS — DEC-150 process-gap dispositions
+**Epic:** CITATION-GUARDS — D-150 process-gap dispositions
 **Mode:** feature
 **Convergence:** CONVERGED after 9 adversarial passes (5 fix rounds; passes 7/8/9 = NITPICK_ONLY/NITPICK_ONLY/CLEAN, MERGE-READY verdict)
 
@@ -40,7 +40,7 @@ graph TD
 <details>
 <summary><strong>Architecture Decision Record</strong></summary>
 
-### ADR: CI guards for cargo-mutants policy staleness (DEC-150)
+### ADR: CI guards for cargo-mutants policy staleness (D-150)
 
 **Context:** ADR-0012 Seam A/B split relocated `handle_jsm_create` from `create.rs` to
 `jsm_create.rs`; the `§Scope` bulleted list in `docs/specs/cargo-mutants-policy.md` was not
@@ -55,7 +55,7 @@ coverage-floor assertion for Guard 3. Both guards run in existing CI jobs (`spec
 `test` respectively) with no new required status check needed.
 
 **Rationale:** CI-infra-only scope; no product behavioral contracts apply (policy-doc-only
-story per S-MUTATION-CI-TIMEOUT-1/DEC-144 precedent). Both guards follow the CI-CITE-001
+story per S-MUTATION-CI-TIMEOUT-1/D-144 precedent). Both guards follow the CI-CITE-001
 pattern already established by `tests/claude_md_citations.rs` (collect-all, then report).
 
 **Alternatives Considered:**
@@ -184,7 +184,7 @@ Check passed: 11 bullets parsed, 21 (file, fn) pairs validated
 
 ## Holdout Evaluation
 
-N/A — evaluated at wave gate. This is a policy-doc-only CI-infrastructure story (no BC-S.SS.NNN; per S-MUTATION-CI-TIMEOUT-1/DEC-144 precedent). Holdout evaluation is not applicable.
+N/A — evaluated at wave gate. This is a policy-doc-only CI-infrastructure story (no BC-S.SS.NNN; per S-MUTATION-CI-TIMEOUT-1/D-144 precedent). Holdout evaluation is not applicable.
 
 ---
 

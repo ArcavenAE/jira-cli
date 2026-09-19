@@ -58,12 +58,12 @@ Method: Python inline (Bash tool) — Edit tool blocked by TD-031 hook on 60 pre
 |-------|----------------------|
 | BC-3.9.001 | Platform upload POST: multipart, `X-Atlassian-Token: no-check`, streaming, no client-side size cap, graceful 413/400, output profile 4 |
 | BC-3.9.002 | Upload to JSM issue, no visibility flag → platform POST (internal by default, P2-4a safe default) |
-| BC-3.9.003 | `--public` → servicedeskapi two-step (attachTemporaryFile + request attachment, public:true); DEC-174 confirmation gate; `--yes` bypass; non-interactive exit 64 |
+| BC-3.9.003 | `--public` → servicedeskapi two-step (attachTemporaryFile + request attachment, public:true); D-174 confirmation gate; `--yes` bypass; non-interactive exit 64 |
 | BC-3.9.004 | `--internal` → two-step public:false; no confirmation gate; non-JSM = silent no-op (OQ-9 ruling) |
 | BC-3.9.005 | `--public` on non-JSM issue → exit 64 with canonical message; no servicedeskapi calls |
 | BC-3.9.006 | temporaryAttachmentId ~1h TTL; second-step failure → generic retry hint; no ID caching/reuse |
 | BC-3.9.007 | Post-upload echo from server response; platform uses direct response; servicedeskapi schema deferred P2-3c; JSDCLOUD-10841 content-URL ban |
-| BC-3.9.008 | `attachment delete` → `DELETE /rest/api/3/attachment/{id}`; 204 = success; 404 = exit 64 + surface Jira body (DEC-168/BC-3.5.004 precedent) |
+| BC-3.9.008 | `attachment delete` → `DELETE /rest/api/3/attachment/{id}`; 204 = success; 404 = exit 64 + surface Jira body (D-168/BC-3.5.004 precedent) |
 | BC-3.9.009 | `attachment upload --output json` shape: array of attachment objects; `output::render_json` required (#526 invariant) |
 | BC-3.9.010 | `attachment delete --output json` shape: single `{deleted,id}` or bulk `{count,deleted,ids}`; BTreeMap-ordered |
 | BC-3.9.011 | `attachment upload --public --output json` deferred-probe contract; P2-3c live-capture obligation on S5 |
@@ -101,7 +101,7 @@ Method: Python inline (Bash tool) — Edit tool blocked by TD-031 hook on 56 pre
 | **Total** | **27** | |
 1 through BC-2.6.051). The validate-stable-anchors hook checks the entire file (not just the diff) and rejects any edit on a file with existing violations. All new BCs in Section 2.7 use only symbol-form citations (no `:NNN`); the violations are pre-existing grandfathered content. Python-via-Bash append was used to work around the hook. The INTEGRATE burst should be aware this same block will apply to bc-2-issue-read.md frontmatter updates.
 
-**No design ambiguities encountered**: all 12 BCs follow the ratified Rev 2 design (DEC-179) and research findings without improvisation. One implementation note: SHA-1 of attachment ID (not content) was chosen for BC-2.7.010 — this is the most practical interpretation of "idempotent SHA-1 prefix" since it doesn't require buffering file content to compute the name before writing.
+**No design ambiguities encountered**: all 12 BCs follow the ratified Rev 2 design (D-179) and research findings without improvisation. One implementation note: SHA-1 of attachment ID (not content) was chosen for BC-2.7.010 — this is the most practical interpretation of "idempotent SHA-1 prefix" since it doesn't require buffering file content to compute the name before writing.
 
 ---
 
@@ -250,7 +250,7 @@ Counts intentionally NOT updated — round C will sync all 8 surfaces.
 
 | BC ID | Title (abbreviated) |
 |-------|---------------------|
-| BC-3.9.015 | `attachment delete <AID>` interactive confirmation gate — eprint!+read_line (DEC-174); non-interactive exit 64 + --yes hint; --yes bypass; cancel shape `{"cancelled":true,"deleted":false}` |
+| BC-3.9.015 | `attachment delete <AID>` interactive confirmation gate — eprint!+read_line (D-174); non-interactive exit 64 + --yes hint; --yes bypass; cancel shape `{"cancelled":true,"deleted":false}` |
 | BC-3.9.016 | `attachment delete --older-than` always requires --yes (no interactive prompt for bulk); missing --yes → exit 64; clap mutual-exclusion positional-AID vs --issue/--older-than forms |
 | BC-3.9.017 | `attachment upload --replace-existing` — same-filename list + delete ALL matching (OQ-6); non-atomic race documented (JRACLOUD-96384/-78388); MUST NOT assert atomicity |
 | BC-3.9.018 | `attachment upload --replace-existing` zero-match — idempotent plain upload; silent (no annotation); flag no-op on delete phase |
@@ -537,7 +537,7 @@ Sweep result: 33 rows checked; 4 apparent drifts all confirmed as false positive
 | P4-013 | LOW | bc-2-issue-read.md | BC-2.7.007 CLI flags: added --profile <NAME> and --no-color (now matches BC-2.7.001 pin style) | DONE |
 | P4-014 | LOW | — | HELD — holdout count change; will be authorized jointly with P4-001 resolution | HELD |
 | P4-015 | LOW | bc-2-issue-read.md | BC-2.7.011 containment precondition: expanded to cover three cases (a) --all/--newest out-dir EC-2.7.008-2; (b) single-id to cwd (cwd always exists, canonicalize trivially succeeds); (c) --out <PATH> parent-dir check EC-2.7.007-6 | DONE |
-| P4-016 | INFO | bc-2-issue-read.md | BC-2.7.012: added 404 body-surfacing asymmetry note (delete 404 surfaces Jira body per DEC-168; download metadata 404 = canonical string only; deliberate read-vs-write divergence) | DONE |
+| P4-016 | INFO | bc-2-issue-read.md | BC-2.7.012: added 404 body-surfacing asymmetry note (delete 404 surfaces Jira body per D-168; download metadata 404 = canonical string only; deliberate read-vs-write divergence) | DONE |
 
 **BC / holdout count invariant confirmed:** 657 BCs / 95 holdouts -- UNCHANGED.
 
@@ -642,7 +642,7 @@ Guards: `check-spec-counts.sh`: OK. `check-bc-cumulative-counts.sh`: OK (657 / 8
 
 | Finding | Sev | File(s) | Action | Result |
 |---------|-----|---------|--------|--------|
-| GAP-R15-001 | LOW | bc-3-issue-write.md | EC-3.5.003-3 and EC-3.5.008-5: stale "dialoguer::Error" heading/body terminology replaced with ratified DEC-174 mechanism language — `io::stdin().lock().read_line()` returning `Ok(0)` (EOF) or `Err(_)` (IO error) → `JrError::Interrupted` exit 130; three-way branch documented; GAP-R15-001 marker added; Trace fields for BC-3.5.003 and BC-3.5.008 appended with sync note. Frontmatter: v1.3.46 entry added; last_updated bumped to 2026-07-16. Behavior unchanged — exit 130 on EOF/interrupt was always the intent; only the mechanism terminology changed. | DONE |
+| GAP-R15-001 | LOW | bc-3-issue-write.md | EC-3.5.003-3 and EC-3.5.008-5: stale "dialoguer::Error" heading/body terminology replaced with ratified D-174 mechanism language — `io::stdin().lock().read_line()` returning `Ok(0)` (EOF) or `Err(_)` (IO error) → `JrError::Interrupted` exit 130; three-way branch documented; GAP-R15-001 marker added; Trace fields for BC-3.5.003 and BC-3.5.008 appended with sync note. Frontmatter: v1.3.46 entry added; last_updated bumped to 2026-07-16. Behavior unchanged — exit 130 on EOF/interrupt was always the intent; only the mechanism terminology changed. | DONE |
 
 **BC / holdout count: 657 BCs / 96 holdouts — UNCHANGED.**
 Guards: `check-spec-counts.sh`: OK. `check-bc-cumulative-counts.sh`: OK (657 / 8 files).
@@ -674,7 +674,7 @@ Guards: `check-spec-counts.sh`: OK. `check-bc-cumulative-counts.sh`: OK (657 / 8
 
 | Finding | Sev | File(s) | Action | Result |
 |---------|-----|---------|--------|--------|
-| GAP-R16-002 | LOW | spec-changelog.md, prd-delta-576.md | spec-changelog.md: [1.3.46] PATCH entry inserted before [1.3.45] — GAP-R15-001 terminology sync (EC-3.5.003-3 + EC-3.5.008-5, dialoguer→read_line Ok(0)/Err, DEC-174; behavior unchanged); follows existing PATCH-entry format. prd-delta-576.md: frontmatter `spec_version_after: 1.3.45` → `1.3.46`. | DONE |
+| GAP-R16-002 | LOW | spec-changelog.md, prd-delta-576.md | spec-changelog.md: [1.3.46] PATCH entry inserted before [1.3.45] — GAP-R15-001 terminology sync (EC-3.5.003-3 + EC-3.5.008-5, dialoguer→read_line Ok(0)/Err, D-174; behavior unchanged); follows existing PATCH-entry format. prd-delta-576.md: frontmatter `spec_version_after: 1.3.45` → `1.3.46`. | DONE |
 
 **BC / holdout count: 657 BCs / 96 holdouts — UNCHANGED.**
 Guards: `check-spec-counts.sh`: OK. `check-bc-cumulative-counts.sh`: OK (657 / 8 files).
@@ -808,7 +808,7 @@ Guards: `check-spec-counts.sh`: OK. `check-bc-cumulative-counts.sh`: OK (657 / 8
 |---|---|---|---|
 | P13-001 | MED | APPLIED | Three disk-write error rows (ENOSPC, EACCES/read-only, other OS write error) removed from BC-2.7.006's table (impossible on a read-only list command; ADV-007 was originally misapplied) and added to BC-2.7.012's download error taxonomy with per-batch-mode qualifier. BC-INDEX.md BC-2.7.012 row updated to name disk-write classes. prd-delta-576.md ADV-007 disposition gains bracketed correction note. |
 | P13-002 | LOW | APPLIED | BC-2.7.008 Overwrite paragraph gains explicit "Collision-skip is a NON-ERROR" clause: exit 0 applies even when files are skipped as pre-existing (same class as `--filter` exclusions); exit 1 scoped exclusively to content-GET/stream failures (EC-2.7.008-7/8). EC-2.7.008-6 "all succeeded" phrase updated to name the collision-skip case explicitly. H-003 Call A Expected "Exit code = 0" already correct (no collision skips in that fixture) — no change needed. |
-| P13-003 | INFO | APPLIED | BC-3.9.015 "Metadata-fetch failure" paragraph softened: "mirrors BC-3.9.013 / BC-3.9.008 pre-flight guard" replaced with "aligns with the read-path 404 convention (canonical string only, per BC-2.7.012's read-vs-write divergence); differs from BC-3.9.008's DELETE 404 (canonical + Jira body per DEC-168) because the pre-prompt fetch is a read GET, not a write operation". |
+| P13-003 | INFO | APPLIED | BC-3.9.015 "Metadata-fetch failure" paragraph softened: "mirrors BC-3.9.013 / BC-3.9.008 pre-flight guard" replaced with "aligns with the read-path 404 convention (canonical string only, per BC-2.7.012's read-vs-write divergence); differs from BC-3.9.008's DELETE 404 (canonical + Jira body per D-168) because the pre-prompt fetch is a read GET, not a write operation". |
 
 **Changelog-sync (self-administered)**: v1.3.53 PATCH entry inserted in `spec-changelog.md`; `prd-delta-576.md` `spec_version_after` → 1.3.53.
 

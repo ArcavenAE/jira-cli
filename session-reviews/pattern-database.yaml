@@ -96,15 +96,15 @@ patterns:
     first_observed: 2026-07-07
     occurrences: 2
     affected_cycles:
-      - "cycle-001 (ADF-CODE-MARK-EXCLUSIVITY, DEC-158 — escalated after 11 rounds)"
-      - "cycle-001 (SOH-COMMENT-CRUD-1, DEC-169 — STRICT confirmed 3rd time at pass-38; mid-F2 design corrections at checkpoint)"
+      - "cycle-001 (ADF-CODE-MARK-EXCLUSIVITY, D-158 — escalated after 11 rounds)"
+      - "cycle-001 (SOH-COMMENT-CRUD-1, D-169 — STRICT confirmed 3rd time at pass-38; mid-F2 design corrections at checkpoint)"
     status: open
     linked_proposal: IP-571-02
     upstream_ref: "drbothen/vsdd-factory#578 (2026-07-08)"
     description: >
       Convergence criterion clarified/escalated mid-cycle rather than being finalized at
       F1 gate. In #571 the criterion was escalated at pass 11; in #577 STRICT was confirmed
-      a 3rd time at pass-38 checkpoint (DEC-169) alongside design corrections (--yes no-op
+      a 3rd time at pass-38 checkpoint (D-169) alongside design corrections (--yes no-op
       ratification). Each mid-cycle checkpoint resets the streak and consumes additional passes.
       Criterion should be selected definitively at F1 gate time.
     severity: LOW
@@ -281,7 +281,7 @@ patterns:
     first_observed: 2026-07-14
     occurrences: 4
     affected_cycles:
-      - "cycle-001 (SOH-ATTACHMENTS-1: pr-reviewer hook vs. DEC-173, 3 occurrences across the bundle)"
+      - "cycle-001 (SOH-ATTACHMENTS-1: pr-reviewer hook vs. D-173, 3 occurrences across the bundle)"
       - "cycle-003 (auth-profile-dx: pr-reviewer posting-hook demanded gh pr review / pr-review.md post, contradicting an explicit report-only dispatch; ~3 turns burned before resolution)"
     status: open
     linked_proposal: IP-CYCLE003-05
@@ -289,7 +289,7 @@ patterns:
     description: >
       A hook enforces a blanket rule (always post pr-review.md / always require AUTHORIZE_MERGE)
       with no visibility into an orchestrator-level, dispatch-scoped exception (report-only mode;
-      DEC-173 self-authored PRs). Each occurrence costs agent turns spent refusing/negotiating
+      D-173 self-authored PRs). Each occurrence costs agent turns spent refusing/negotiating
       before the human or orchestrator manually reconciles the conflict. 4th occurrence across two
       cycles -- recommend either pre-authorizing the hook-required artifact write up front in the
       dispatch, or teaching the hook to recognize a dispatch-scoped exception flag.

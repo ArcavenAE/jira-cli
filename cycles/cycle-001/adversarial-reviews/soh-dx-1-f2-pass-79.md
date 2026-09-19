@@ -24,7 +24,7 @@ bundle: SOH-DX-1
 aperture: holdout-scenario-quality
 spec_version: v1.3.165
 date: 2026-07-29
-basis: DEC-190 substitute (consistency-validator, not adversary agent)
+basis: D-190 substitute (consistency-validator, not adversary agent)
 isolation: sibling reviews not read
 ---
 
@@ -51,7 +51,7 @@ or informational. The checklist sections below record evidence supporting each v
 
 - `/Users/zious/Documents/GITHUB/jira-cli/.factory/specs/prd/holdout-scenarios.md` — PRIMARY (Group 20, H-NEW-PREFLIGHT-001..006; also H-NEW-ATTACHMENT-* and H-NEW-COMMENT-* for house-style benchmarking)
 - `/Users/zious/Documents/GITHUB/jira-cli/.factory/specs/prd/bc-3-issue-write.md` — BC-3.8.012 and BC-3.8.013 bodies (current behavior, error strings, EC entries, guard ordering)
-- `/Users/zious/Documents/GITHUB/jira-cli/.factory/specs/prd/error-taxonomy.md` — Section 6 DEC-188 pre-flight error strings and exit codes
+- `/Users/zious/Documents/GITHUB/jira-cli/.factory/specs/prd/error-taxonomy.md` — Section 6 D-188 pre-flight error strings and exit codes
 - `/Users/zious/Documents/GITHUB/jira-cli/.factory/specs/prd/CANONICAL-COUNTS.md` — holdout count verification (106)
 - `/Users/zious/Documents/GITHUB/jira-cli/.factory/specs/prd/README.md` — holdout count (106) at two sites
 - `/Users/zious/Documents/GITHUB/jira-cli/src/cli/issue/create.rs` — current implementation (warns and proceeds; guard not yet present)
@@ -112,7 +112,7 @@ config-migration stderr from contaminating the JSON parse assertion. ✓
 
 ### Item 3 — Verbatim Error-String Fidelity
 
-Checked against `error-taxonomy.md §6` DEC-188 table and BC-3.8.012/013 fenced blocks:
+Checked against `error-taxonomy.md §6` D-188 table and BC-3.8.012/013 fenced blocks:
 
 - 001: exact match to error-taxonomy.md row 1 ✓
 - 002: exact match to error-taxonomy.md row 2 ✓

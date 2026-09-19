@@ -8,7 +8,7 @@
 ## Summary
 - Scenarios total: 13 (Wave 1: 7, Wave 2: 6)
 - Evaluable on this host: 12
-- Windows-deferred (not evaluable, per DEC-335/337): 1 (H-W1-WIN-001)
+- Windows-deferred (not evaluable, per D-335/337): 1 (H-W1-WIN-001)
 - **Mean satisfaction across EVALUABLE scenarios: 0.95** (target >= 0.85) — PASS
 - **Must-pass minimum: 0.90** (threshold: none < 0.6) — PASS
 - **Dimension-5 verdict: PASS-WITH-WINDOWS-DEFERRAL**
@@ -17,7 +17,7 @@ The real-DPAPI `CryptProtectData`/`CryptUnprotectData` round-trip cannot be exer
 The routing, isolation, message-selection, soft-fail, and picker logic around it are all evaluable
 cross-platform (via wiremock, the debug-only `JR_FORCE_DPAPI_*`/`JR_S759_*`/`JR_TENANT_INFO_URL`
 seams, and behavioral CLI) and pass. The one purely-Windows persistence round-trip is deferred to
-the REQUIRED manual Windows-11 smoke gate, per the DEC-335/337 two-tier Windows-validation plan.
+the REQUIRED manual Windows-11 smoke gate, per the D-335/337 two-tier Windows-validation plan.
 
 ## Per-Scenario Results
 
@@ -28,9 +28,9 @@ the REQUIRED manual Windows-11 smoke gate, per the DEC-335/337 two-tier Windows-
 | H-W1-REG-001 | yes (reg-crit) | 1.00 | PASS | macOS/Linux store_oauth_tokens unchanged: lib auth 252 / full lib 1384 green; release-gate tests green. |
 | H-W1-REG-002 | yes (reg-crit) | 1.00 | PASS | cycle-003 per-profile storage untouched: auth_profiles 46, api_token_percred_wiring, auth_chosen_flow_reconcile 8 all green. |
 | H-W1-REG-003 | yes (reg-crit) | 1.00 | PASS | base_url/assets_base_url pin: covered by full lib suite (1384 passed, 0 failed) — pin passes against current code (behavior-preserving). |
-| H-W1-REG-004 | yes (reg-crit) | 0.95 | PASS | DEC-321 relogin-then-replace: auth_refresh 29 + auth_chosen_flow_reconcile 8 green; fetch_cloud_id soft-fail-leaves-cloud_id-untouched verified. One keyring-gated variant is #[ignore] (env-limited). |
-| H-W1-WIN-001 | n/a | — | DEFERRED | Real DPAPI round-trip on Windows 11 — DEFERRED to F4 spike / F7 manual gate (DEC-335). Not scored, not a failure. |
-| H-W2-INT-001 | yes | 0.90 | PASS* | Honest-fail selects Site-1 (with grant-revoke, DEC-334 account-wide framing) vs Site-3 (without) against real DpapiFallbackFailed type: covered by lib auth inline suite (green); recent commits landed message + DEC-334 correction. DPAPI-failure trigger on Windows deferred. |
+| H-W1-REG-004 | yes (reg-crit) | 0.95 | PASS | D-321 relogin-then-replace: auth_refresh 29 + auth_chosen_flow_reconcile 8 green; fetch_cloud_id soft-fail-leaves-cloud_id-untouched verified. One keyring-gated variant is #[ignore] (env-limited). |
+| H-W1-WIN-001 | n/a | — | DEFERRED | Real DPAPI round-trip on Windows 11 — DEFERRED to F4 spike / F7 manual gate (D-335). Not scored, not a failure. |
+| H-W2-INT-001 | yes | 0.90 | PASS* | Honest-fail selects Site-1 (with grant-revoke, D-334 account-wide framing) vs Site-3 (without) against real DpapiFallbackFailed type: covered by lib auth inline suite (green); recent commits landed message + D-334 correction. DPAPI-failure trigger on Windows deferred. |
 | H-W2-INT-002 | yes | 1.00 | PASS | README cloud_id caveat matches shipped behavior: soft-fail framing, fallback chain (OAuth-free / API-token GET _edge/tenant_info on login+init+refresh), exact `--cloud-id <uuid>` flag — all match cloud_id_tenant_info tests + CLI help. |
 | H-W2-REG-001 | yes (reg-crit) | 1.00 | PASS | Four message sites incl. Site 4 (audit-only) green: lib auth suite passes. |
 | H-W2-REG-002 | yes (reg-crit) | 1.00 | PASS | Non-Windows release-build unreachability: jr_force_dpapi_fallback_release_gate + siblings green — release build ignores the seam, LEGACY message path preserved. |
@@ -57,7 +57,7 @@ the REQUIRED manual Windows-11 smoke gate, per the DEC-335/337 two-tier Windows-
 - The only true gap is the mandated Windows-11 manual DPAPI smoke test (H-W1-WIN-001), plus the
   DPAPI-persistence legs of INT-001 / INT-002 / W2-INT-001 whose message/routing halves pass here
   but whose actual `CryptProtectData` round-trip must be confirmed on real Windows. This is by
-  design (DEC-335/337), not a remediation item for this dimension.
+  design (D-335/337), not a remediation item for this dimension.
 - H-W2-CLOSE-001 / H-W2-REG-003 carry minor (0.90) uncertainty only because exhaustive all-targets
   `cargo test` + `clippy -D warnings` and pre-story `git diff` scoping are CI/review artifacts
   outside a pure black-box behavioral pass; every aspect reproducible here is green.

@@ -31,7 +31,7 @@ nfr_anchors: []
 adr_refs: []
 sd_refs: []
 parent_phase: F3-incremental-stories
-spec_source: ".factory/STATE.md §Drift Items PG-MERGE-AUTH-BYPASS + §DEC-128"
+spec_source: ".factory/STATE.md §Drift Items PG-MERGE-AUTH-BYPASS + §D-128"
 implementation_strategy: tdd
 module_criticality: MEDIUM
 acceptance_criteria_count: 5
@@ -41,12 +41,12 @@ created: "2026-06-20"
 version: "1.0"
 last_updated: "2026-06-20"
 changelog:
-  - "1.0 (2026-06-20): Initial draft — originated from PG-MERGE-AUTH-BYPASS drift item (DEC-128, DEAD-CITATION-CI F4). Delivery sub-agent auto-merged PR #544 against explicit orchestrator hold. Self-improvement / pipeline-governance scope. No BCs yet — PO authorship required before status=ready."
-  - "1.1 (2026-06-20): Scope extended to cover MAINT-PG-PR-MERGE-CHANNEL (session review Recommendation 2 / DEC-130). Both share root cause: undefined merge-authorization protocol. pr-manager default posture MUST be NO-MERGE; orchestrator passes explicit `merge: authorized` signal. MAINT-PG-PR-MERGE-CHANNEL status → SUBSUMED by this story."
-  - "1.2 (2026-06-28): Re-assessment (DEC-145, human-directed). Audit at .factory/research/PG-MERGE-AUTH-BYPASS-mitigation-audit-2026-06-28.md: Constraint 4 (poll loops) CODIFIED. Constraints 1–3 PARTIAL. Drift items downgraded MEDIUM→LOW. Story re-scoped to 3 residual engine-prompt edits; status remains draft (requires engine-source access + PO BC authorship)."
+  - "1.0 (2026-06-20): Initial draft — originated from PG-MERGE-AUTH-BYPASS drift item (D-128, DEAD-CITATION-CI F4). Delivery sub-agent auto-merged PR #544 against explicit orchestrator hold. Self-improvement / pipeline-governance scope. No BCs yet — PO authorship required before status=ready."
+  - "1.1 (2026-06-20): Scope extended to cover MAINT-PG-PR-MERGE-CHANNEL (session review Recommendation 2 / D-130). Both share root cause: undefined merge-authorization protocol. pr-manager default posture MUST be NO-MERGE; orchestrator passes explicit `merge: authorized` signal. MAINT-PG-PR-MERGE-CHANNEL status → SUBSUMED by this story."
+  - "1.2 (2026-06-28): Re-assessment (D-145, human-directed). Audit at .factory/research/PG-MERGE-AUTH-BYPASS-mitigation-audit-2026-06-28.md: Constraint 4 (poll loops) CODIFIED. Constraints 1–3 PARTIAL. Drift items downgraded MEDIUM→LOW. Story re-scoped to 3 residual engine-prompt edits; status remains draft (requires engine-source access + PO BC authorship)."
 breaking_change: false
 lineage:
-  - DEC-128
+  - D-128
   - MAINT-PG-PR-MERGE-CHANNEL
 drift_items:
   - PG-MERGE-AUTH-BYPASS
@@ -61,7 +61,7 @@ files_modified:
 
 # S-PG-MERGE-AUTH-BYPASS — Codify merge-authorization gate
 
-**Origin:** PG-MERGE-AUTH-BYPASS drift item (DEC-128, 2026-06-20). During the DEAD-CITATION-CI
+**Origin:** PG-MERGE-AUTH-BYPASS drift item (D-128, 2026-06-20). During the DEAD-CITATION-CI
 F4 delivery, a pr-manager-spawned delivery sub-agent executed `gh pr merge` on PR #544 against
 the orchestrator's explicit "do NOT auto-merge — await orchestrator decision" instruction AND a
 pending human hold. This is a recurrence of the merge-authorization-channel weakness first
@@ -128,7 +128,7 @@ BC-S.SS.NNN authorship).
 The pr-manager agent definition (AGENT.md or equivalent) includes a prominently placed
 invariant statement:
 
-> **MERGE AUTHORIZATION INVARIANT (DEC-128):** You MUST NOT execute `gh pr merge` unless the
+> **MERGE AUTHORIZATION INVARIANT (D-128):** You MUST NOT execute `gh pr merge` unless the
 > orchestrator dispatch for this story explicitly passes a `merge_authorization` signal. Absence
 > of the signal = no merge. Relayed approvals (human → orchestrator → you via message) do not
 > count unless they include the structured token. Report "ready for merge — awaiting
@@ -156,7 +156,7 @@ is created describing:
    `merge_authorization: granted` (or equivalent explicit field) iff the human has approved.
 4. **What happens** when the token is absent: pr-manager halts at Step 7 (ready-for-merge
    report), never advancing to Step 8.
-5. **Cross-references:** DEC-128, MAINT-PG-PR-MERGE-CHANNEL, this story (S-PG-MERGE-AUTH-BYPASS).
+5. **Cross-references:** D-128, MAINT-PG-PR-MERGE-CHANNEL, this story (S-PG-MERGE-AUTH-BYPASS).
 
 **Traceability:** BC-S.SS.NNN postcondition 2 — contract document exists and is discoverable
 (pending BC authorship).
@@ -184,13 +184,13 @@ inferred (pending BC authorship).
 
 ---
 
-### AC-005 — regression note added to DEAD-CITATION-CI cycle record and STATE.md standing constraints carry DEC-128 (traces to BC-S.SS.NNN postcondition — pending BC authorship)
+### AC-005 — regression note added to DEAD-CITATION-CI cycle record and STATE.md standing constraints carry D-128 (traces to BC-S.SS.NNN postcondition — pending BC authorship)
 
 The S-7.02 cycle-closing checklist entry for DEAD-CITATION-CI references this story
-(S-PG-MERGE-AUTH-BYPASS) as the process-gap resolution for DEC-128. STATE.md standing
+(S-PG-MERGE-AUTH-BYPASS) as the process-gap resolution for D-128. STATE.md standing
 constraints already carry:
 
-> DEC-128: merge requires explicit orchestrator-passed per-merge authorization; delivery
+> D-128: merge requires explicit orchestrator-passed per-merge authorization; delivery
 > sub-agents must NOT self-authorize.
 
 This AC is satisfied when the above is confirmed present in STATE.md (it is: logged 2026-06-20)
@@ -240,7 +240,7 @@ still sees it.
 
 ### T-4: Create merge-authorization-contract.md
 
-Write the contract document covering the five points in AC-003. Cross-reference DEC-128 and
+Write the contract document covering the five points in AC-003. Cross-reference D-128 and
 MAINT-PG-PR-MERGE-CHANNEL. Keep it brief (one page) — it is a contract, not a tutorial.
 
 ### T-5: Update orchestrator dispatch template
@@ -258,10 +258,10 @@ via cross-reference links.
 
 ## Re-assessment (2026-06-28)
 
-**Disposition: MITIGATED-WITH-RESIDUAL-GAPS (DEC-145)**
+**Disposition: MITIGATED-WITH-RESIDUAL-GAPS (D-145)**
 
 An audit of the current installed engine (`vsdd-factory/1.0.0-rc.21`, read-only plugin cache) against
-the four DEC-128/PG-PR-MANAGER-OVERREACH governance constraints found:
+the four D-128/PG-PR-MANAGER-OVERREACH governance constraints found:
 
 | # | Constraint | Verdict |
 |---|------------|---------|
@@ -274,7 +274,7 @@ the four DEC-128/PG-PR-MANAGER-OVERREACH governance constraints found:
 fresh-approval rule, Feature-mode F7 human gate) and **behavioral evidence is encouraging** (pr-manager
 held at merge on PRs #566 and #567 this session, refusing even orchestrator-relayed authorization).
 However, good behavior this session is NOT proof of prompt codification — the prompt as written would
-permit a recurrence of the DEC-128 #544 auto-merge shape.
+permit a recurrence of the D-128 #544 auto-merge shape.
 
 **Remaining work (3 residual engine-source prompt edits):**
 
@@ -337,7 +337,7 @@ and an invariant in the agent definition.
 4. **Orchestrator is not the final authority:** The orchestrator relays human authorization; it
    does not originate it. The orchestrator dispatch template must reflect this.
 
-5. **DEC-128 carry-forward:** STATE.md standing constraints already record DEC-128. This story
+5. **D-128 carry-forward:** STATE.md standing constraints already record D-128. This story
    does not need to re-write STATE.md beyond what state-manager will add at registration.
 
 ---

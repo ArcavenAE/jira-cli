@@ -1,7 +1,7 @@
 # S-692-1 Demo Evidence
 
 Story: `jr issue edit --dry-run` reads `--description-stdin`/`--description` and
-renders the markdown → ADF preview locally (DEC-274, issue #692). Before this
+renders the markdown → ADF preview locally (D-274, issue #692). Before this
 story, `--dry-run` only echoed the raw description text — it never actually ran
 the `markdown_to_adf` conversion, so a description that would be rejected by
 Jira on write (e.g. the depth-guard case in AC-003) sailed through a dry-run

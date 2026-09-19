@@ -282,7 +282,7 @@ already-applied narrowing); §1.2 covers 014..024 (the range the prior revision 
   >1000 issues occur together); the restatement now matches the BC verbatim.
 - **Verifies:** BC-3.4.023 (Postconditions 1–6; EC-3.4.023-2/4).
 - **Method:** `WIREMOCK` for the emitted shape (integer-type assertion, camelCase/lowercase
-  asymmetry, `.expect(0)` on single-key PUT) **+ `LIVE-JIRA` (REQUIRED)**. Per DEC-280 the shape is
+  asymmetry, `.expect(0)` on single-key PUT) **+ `LIVE-JIRA` (REQUIRED)**. Per D-280 the shape is
   triple-corroborated in docs but never confirmed against a live run; wiremock proves only that
   `jr` *emits* the documented shape, not that live Jira *accepts* it. **[SCOPED 2026-08-15, pass-10
   fix-burst — resolves MEDIUM-1 found by adversarial spec-delta review pass 10]** F4/F6 MUST gate
@@ -469,14 +469,14 @@ already-applied narrowing); §1.2 covers 014..024 (the range the prior revision 
   `leadAccountId`, `assigneeType` and no other keys. `assigneeType` values are constrained to the
   four-member enum (`PROJECT_LEAD`, `COMPONENT_LEAD`, `UNASSIGNED`, `PROJECT_DEFAULT`); an
   out-of-enum value is exit-2 pre-flight (clap `value_parser`/`ValueEnum` rejection, zero HTTP)
-  **[CORRECTED 2026-08-15, H2 fix-burst, DEC-188]**.
+  **[CORRECTED 2026-08-15, H2 fix-burst, D-188]**.
 - **Verifies:** BC-8.1.005 (Behavior body-shape; EC-8.1.005-2).
 - **Method:** `WIREMOCK` — body-match asserting each omitted key is ENTIRELY ABSENT (not `null`);
   a full-flags fixture asserting the exact 5-key set; a clap-level exit-2 assertion for the
   out-of-enum `--assignee-type` (no HTTP; process-level assertion, not wiremock, since no
   request is ever sent). **Previous version (superseded):** asserted "clap-level exit-64" for
   the out-of-enum case — a clap `value_parser`/`ValueEnum` rejection is always exit 2, never the
-  app's own exit 64 (DEC-188's exit-code class); the mechanism (clap-level, zero HTTP)
+  app's own exit 64 (D-188's exit-code class); the mechanism (clap-level, zero HTTP)
   was already correct, only the exit code was wrong. Fully offline.
 
 #### VP-COMPONENT-023 — edit partial PUT: only-supplied fields + `--lead ""`→null — WIREMOCK
@@ -621,7 +621,7 @@ already-applied narrowing); §1.2 covers 014..024 (the range the prior revision 
 | WIREMOCK **+ LIVE-JIRA required** | 012 |
 | KANI | *(none — all properties are HTTP-shape / call-arity / string-composition / pure-function assertions best covered by wiremock/proptest/unit; no VP warrants a model-checked proof)* |
 
-**Live-Jira requirement:** exactly **one** VP — **VP-COMPONENT-012** (bulk wire shape, DEC-280) —
+**Live-Jira requirement:** exactly **one** VP — **VP-COMPONENT-012** (bulk wire shape, D-280) —
 requires a live-Jira smoke gate. Every other VP, including all six newly-formalized VPs
 (021/022/023/024 from the H3 refresh, plus 025/026 from this spec-tightening burst, plus
 027/028 from the pass-7 fix-burst, §12) plus 014, is fully offline-dischargeable. VP-COMPONENT-007
@@ -745,7 +745,7 @@ fix-burst (§12); R-4 remains open/advisory.
 
 ## 5. Live-Jira validation callout (F4/F6 gating)
 
-- **VP-COMPONENT-012 (BC-3.4.023 bulk wire shape) — LIVE-JIRA REQUIRED (DEC-280).** The
+- **VP-COMPONENT-012 (BC-3.4.023 bulk wire shape) — LIVE-JIRA REQUIRED (D-280).** The
   `multiselectComponents` / integer-`componentId` shape is documented + triple-corroborated but
   never observed against a live run (research §Q2.4). Wiremock proves only that `jr` emits the
   documented shape. **[SCOPED 2026-08-15, pass-10 fix-burst — resolves MEDIUM-1 found by
@@ -798,7 +798,7 @@ fix-burst (§12); R-4 remains open/advisory.
 - **Residuals for PO:** R-1/R-2/R-3 CLOSED §7 — R-1 by explicit cross-reference (no dedicated
   VP), R-2/R-3 by minting VP-025/VP-026. R-5 CLOSED §12 — VP-396-005 cited for BC-3.4.017; VP-027/028
   minted for BC-3.4.020/021. R-4 (no ARCH-INDEX) remains open/advisory.
-- **Live-Jira:** exactly one VP — **VP-COMPONENT-012** (bulk wire shape, DEC-280).
+- **Live-Jira:** exactly one VP — **VP-COMPONENT-012** (bulk wire shape, D-280).
   VP-021/022/023/024/025/026/027/028 are all offline-dischargeable.
 
 ---
@@ -932,21 +932,21 @@ property text lives inline at each VP's entry in §1.1 (already updated above).
   `--move-to` scoping, only a missed early warning); no VP or test-fixture change follows from
   this, since there is no behavior to pin beyond what VP-004/006 already cover for the flag case.
   Resolves LOW-1.
-- **HIGH-1 (BC-8.1.004 numeric-ID exemption) and LOW-4 (BC-8.2.001 DEC-188 mechanism-note
+- **HIGH-1 (BC-8.1.004 numeric-ID exemption) and LOW-4 (BC-8.2.001 D-188 mechanism-note
   parity) are BC-body-only corrections with NO VP impact** — no property text in this doc
   changes for either. HIGH-1 resolves a contradiction about WHETHER a project/config is required
   before `edit`/`delete`'s numeric-bypass resolution runs (a precondition-ordering question, not
   a new HTTP-call-arity assertion — VP-COMPONENT-014's "zero resolver GET fired for a numeric id"
   pin already covers the resolver-level behavior this exemption enables). LOW-4 adds an explicit
-  DEC-188 mechanism note to BC-8.2.001 Postcondition 3, mirroring BC-8.3.005's existing note — a
+  D-188 mechanism note to BC-8.2.001 Postcondition 3, mirroring BC-8.3.005's existing note — a
   documentation-parity fix with no behavioral or property change (the exit-code-64-vs-2 split was
-  already correct and already covered by BC-8.2.001's own Postcondition 1/2 language; DEC-188
+  already correct and already covered by BC-8.2.001's own Postcondition 1/2 language; D-188
   itself, not any VP in this doc, is the mechanism-class authority).
 
 **BC-side companion edits (product-owner, same burst, not part of this formal-verifier doc):**
 BC-8.1.004 (HIGH-1: numeric-ID exemption for `edit`/`delete`, new EC-8.1.004-6/7/8), BC-8.1.008
 EC-8.1.008-1 (HIGH-1: cross-reference note), BC-8.2.001 EC-8.2.001-4 (HIGH-1: cross-reference
-note) and Postcondition 3 (LOW-4: DEC-188 mechanism note), BC-8.2.002 M1 (LOW-1: scope broadened
+note) and Postcondition 3 (LOW-4: D-188 mechanism note), BC-8.2.002 M1 (LOW-1: scope broadened
 to `--orphan`, config-default limitation documented), BC-8.2.006 (LOW-1: new Precondition 4,
 EC-8.2.006-5), BC-3.4.012 (LOW-2: "byte-for-byte across three surfaces" claim scoped to exclude
 dry-run JSON, per the pre-existing H1 array-vs-string type asymmetry). LOW-3 (ADR-0018 staleness)

@@ -51,7 +51,7 @@ anti-loop guard with a repeated `nextPageToken` rather than faking `has_more`.
 ### MEDIUM-1 — `--output json` decline emits nothing, diverging from the precedent the code cites
 `src/cli/component.rs:1004-1024`
 
-The comment at `:1004` says the block "mirrors `handle_comment_delete`'s DEC-174 rationale". It
+The comment at `:1004` says the block "mirrors `handle_comment_delete`'s D-174 rationale". It
 mirrors the *stdin-read mechanism* but not the *output contract*: `handle_comment_delete`
 (`src/cli/issue/interactions.rs:181-192`) emits `{"cancelled": true, "deleted": false}` on stdout
 in JSON mode when declined; `handle_delete` does a bare `return Ok(())` with zero output in either
@@ -108,7 +108,7 @@ both cases. (Independently matches the prior review's third INFO item.)
 ### LOW-4 — PR description does not match the diff in four places
 1. Architecture mermaid node `5: orphan confirm → dialoguer::Confirm (BC-8.2.006)` is **wrong** —
    the implementation deliberately does *not* use dialoguer (direct `stdin().lock().read_line()`
-   per DEC-174), and `component.rs:1004` says so explicitly.
+   per D-174), and `component.rs:1004` says so explicitly.
 2. "78 new/modified test functions" — 78 is the file's **total** test count; ~27 are S-604-3 tests.
 3. BC table, BC-8.2.005 row: "`--move-to <SELF>` → exit 64 pre-flight, **zero HTTP**" — not zero
    HTTP. Source resolution fires, and for a numeric target AC-009 Case B itself mounts the target
@@ -136,4 +136,4 @@ bare-name JQL. No CRITICAL or HIGH defect exists at this SHA.
 
 MEDIUM-1 is the only finding I would want landed before merge (~10 lines plus one assertion).
 MEDIUM-2 and all four LOWs are legitimately follow-up-able if the branch should not be churned
-further. Human owns the merge decision (DEC-128); CI Gate must be green independently.
+further. Human owns the merge decision (D-128); CI Gate must be green independently.

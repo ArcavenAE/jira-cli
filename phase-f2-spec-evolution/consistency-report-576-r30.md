@@ -127,7 +127,7 @@ All four steps of the JSM HTTP sequence present: issue GET, project GET (cache-m
 
 **Quote-verified** (`bc-3-issue-write.md` line 3351):
 
-> `**(b) Non-JSM branch — OQ-9 silent no-op** (\`projectTypeKey != "service_desk"\`): \`jr\` falls back silently to the platform POST path (BC-3.9.001). HTTP sequence: step 0 issue GET → project GET (cache-miss only) → platform POST \`/rest/api/3/issue/{key}/attachments\`; zero servicedeskapi calls issued. No error is emitted, no warning is written. Rationale: platform POST is already internal by default (P2-4a); \`--internal\` expresses intent that is already satisfied — silently. This is the OQ-9 design ruling from DEC-179.`
+> `**(b) Non-JSM branch — OQ-9 silent no-op** (\`projectTypeKey != "service_desk"\`): \`jr\` falls back silently to the platform POST path (BC-3.9.001). HTTP sequence: step 0 issue GET → project GET (cache-miss only) → platform POST \`/rest/api/3/issue/{key}/attachments\`; zero servicedeskapi calls issued. No error is emitted, no warning is written. Rationale: platform POST is already internal by default (P2-4a); \`--internal\` expresses intent that is already satisfied — silently. This is the OQ-9 design ruling from D-179.`
 
 Non-JSM OQ-9 HTTP sequence: issue GET → project GET (cache-miss) → platform POST; zero servicedeskapi calls. ✓
 
@@ -399,7 +399,7 @@ Eight newly-authored behavioral sentences from P20 are audited below. Special sc
 
 **Licensing basis**:
 - Issue GET and project GET: BC-3.9.004 Step 0 (inherited).
-- Platform POST: BC-3.9.001 governs the platform POST path; OQ-9 ruling from DEC-179 routes `--internal` on non-JSM to this path.
+- Platform POST: BC-3.9.001 governs the platform POST path; OQ-9 ruling from D-179 routes `--internal` on non-JSM to this path.
 - Zero servicedeskapi calls: OQ-9 ruling explicitly states no servicedeskapi calls on non-JSM; BC-3.9.004 body confirms "zero servicedeskapi calls issued."
 
 **Assessment**: All elements licensed. No over-claim. ✓

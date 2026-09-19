@@ -1,7 +1,7 @@
 ---
 document_type: story
 story_id: "S-MUTANTS-SCOPE-GUARDS-1"
-title: "CITATION-GUARDS Story A: mutants-policy function-location guard + examine_globs file-existence guard (DEC-150)"
+title: "CITATION-GUARDS Story A: mutants-policy function-location guard + examine_globs file-existence guard (D-150)"
 wave: feature-followup
 status: delivered
 intent: ci-hardening
@@ -25,8 +25,8 @@ behavioral_contracts: []
 # Gate does not apply to CI-infrastructure stories where the governing artifact is an internal
 # policy doc (not a product contract). Status=draft is correct during authoring; status may
 # advance to ready when story convergence completes — NO BC prerequisite applies for
-# policy-doc-only stories (per S-MUTATION-CI-TIMEOUT-1/DEC-144 precedent; L-4 fix).
-# Pattern: S-MUTANTS-EXAMINE-GLOBS-1 (DEC-149), S-MUTATION-CI-TIMEOUT-1 (DEC-144), S-TESTTOOL-1 (MAINT-MUTANTS-GLOBS-01).
+# policy-doc-only stories (per S-MUTATION-CI-TIMEOUT-1/D-144 precedent; L-4 fix).
+# Pattern: S-MUTANTS-EXAMINE-GLOBS-1 (D-149), S-MUTATION-CI-TIMEOUT-1 (D-144), S-TESTTOOL-1 (MAINT-MUTANTS-GLOBS-01).
 bcs: []
 verification_properties: []
 holdout_anchors: []
@@ -46,8 +46,8 @@ last_updated: "2026-07-04"
 breaking_change: false
 retroactive: false
 origin: >
-  DEC-150 process-gap dispositions: MUTANTS-POLICY-CITATION-GUARD (Guard 2) and
-  MUTANTS-GLOB-EXISTENCE-GUARD (Guard 3). Root cause DEC-149 (CITATION-GUARDS bundle):
+  D-150 process-gap dispositions: MUTANTS-POLICY-CITATION-GUARD (Guard 2) and
+  MUTANTS-GLOB-EXISTENCE-GUARD (Guard 3). Root cause D-149 (CITATION-GUARDS bundle):
   ADR-0012 Seam A/B left cargo-mutants-policy.md §Scope function-location bulleted list citing
   handle_jsm_create in create.rs after it relocated to jsm_create.rs; this false coverage
   claim survived without detection because no CI guard existed. Symmetric gap for Guard 3:
@@ -860,7 +860,7 @@ changelog:
     L-4: CI-MUTANTS-CITE-001 literal pin added as preamble check 2 in --self-test
     (grep -q CI-MUTANTS-CITE-001 BASH_SOURCE[0]; mirrors JRACLOUD-95368 pattern).
     L-5: AC-007 CHANGELOG pin relaxed from byte-for-byte to content-equivalent-modulo-wrapping
-    (key strings: topic prefix, DEC-150, file paths, capability descriptions must all be present).
+    (key strings: topic prefix, D-150, file paths, capability descriptions must all be present).
     L-7: bash -n BASH_SOURCE[0] syntax self-check added as preamble check 1 in --self-test
     (mirrors check-signing-workflow-injection.sh:66; surfaces syntax errors before fixtures run).
     L-3/L-6: no action (verified correct per coordinator)."
@@ -944,7 +944,7 @@ changelog:
     explicit. Previous Story Intelligence rewritten with correct attribution. Traceability row updated.
     EC-006 note corrected. Architecture Mapping dependency note updated. M-GT-1: Out of Scope 'Scope
     change column' → 'Change column' (actual header: | Date | Cycle | Change |). M-GT-2: Task 6 +
-    AC-007 CHANGELOG entry format changed to bolded topic prefix: - **CI: ...(DEC-150):** ... (matches
+    AC-007 CHANGELOG entry format changed to bolded topic prefix: - **CI: ...(D-150):** ... (matches
     CHANGELOG.md convention). L-GT-1: Task 4 'after the existing four steps' changed to 'at the end of
     the steps list, after check-bc-cumulative-counts (DRIFT-002)' (job has 7 steps). L-GT-2: Behavioral
     Contracts table §Absolute Timeout Ceiling row dropped (conflated per-mutant --timeout 240 H3 with
@@ -1033,17 +1033,17 @@ changelog:
   - "1.0 (2026-07-02): Initial F3 story — S-MUTANTS-SCOPE-GUARDS-1 (story #101, 100→101). CITATION-GUARDS
     Story A: Guard 2 (scripts/check-cargo-mutants-policy-citations.sh + spec-guard CI step) + Guard 3
     (tests/mutants_glob_existence.rs, rides test job). Policy-doc-only governance. 7 ACs. 6-file set.
-    F1 delta analysis: citation-guards-2026-07-02-delta.md. DEC-150 origin."
+    F1 delta analysis: citation-guards-2026-07-02-delta.md. D-150 origin."
 lineage:
-  - S-MUTANTS-EXAMINE-GLOBS-1       # DEC-149: fixed the stale citations that triggered this guard need
-  - S-MUTATION-CI-TIMEOUT-1         # DEC-144: established mutation gate; this story guards its scope config
+  - S-MUTANTS-EXAMINE-GLOBS-1       # D-149: fixed the stale citations that triggered this guard need
+  - S-MUTATION-CI-TIMEOUT-1         # D-144: established mutation gate; this story guards its scope config
   - S-TESTTOOL-1                    # MAINT-MUTANTS-GLOBS-01: last examine_globs expansion; this story guards future ones
   - S-MAINT-DEAD-CITATION-CI        # prior art: same CI-guard pattern (tests/claude_md_citations.rs)
 drift_items:
   - MUTANTS-POLICY-CITATION-GUARD
   - MUTANTS-GLOB-EXISTENCE-GUARD
-  - DEC-149
-  - DEC-150
+  - D-149
+  - D-150
 files_modified:
   - scripts/check-cargo-mutants-policy-citations.sh   # NEW — Guard 2: parse §Scope bulleted list, verify each (file, function) pair
   - tests/mutants_glob_existence.rs                   # NEW — Guard 3: parse examine_globs, assert each glob expands to ≥1 real file (glob::glob() expansion)
@@ -1059,8 +1059,8 @@ files_modified:
 
 **Status:** DRAFT — F3 complete (2026-07-02); awaiting F4 dispatch.
 
-**Origin:** DEC-150 process-gap dispositions (MUTANTS-POLICY-CITATION-GUARD + MUTANTS-GLOB-EXISTENCE-GUARD).
-Triggered by DEC-149 CITATION-DEBT-PRODUCT-FILES cycle: after ADR-0012 Seam A/B extracted
+**Origin:** D-150 process-gap dispositions (MUTANTS-POLICY-CITATION-GUARD + MUTANTS-GLOB-EXISTENCE-GUARD).
+Triggered by D-149 CITATION-DEBT-PRODUCT-FILES cycle: after ADR-0012 Seam A/B extracted
 `handle_jsm_create` to `src/cli/issue/jsm_create.rs`, the `docs/specs/cargo-mutants-policy.md`
 §Scope function-location bulleted list still cited it in `create.rs` — a false coverage claim. No CI guard
 existed to detect it. Guard 3 closes the symmetric gap: a refactor that moves or renames any file
@@ -1077,13 +1077,13 @@ in `.cargo/mutants.toml::examine_globs` silently drops that file from mutation s
 **Policy-doc-only governance. No BC authored.** The governing artifact is
 `docs/specs/cargo-mutants-policy.md`. The `bcs: []` field is intentional. The Spec-First Gate
 (S-7.01) does not apply: no behavioral contract governs CI-infrastructure scope-guard configuration.
-This pattern follows S-MUTATION-CI-TIMEOUT-1 (DEC-144, PR #567), S-TESTTOOL-1 (MAINT-MUTANTS-GLOBS-01,
-PR #533), and S-MUTANTS-EXAMINE-GLOBS-1 (DEC-149) — all policy-doc-only CI-infrastructure stories
+This pattern follows S-MUTATION-CI-TIMEOUT-1 (D-144, PR #567), S-TESTTOOL-1 (MAINT-MUTANTS-GLOBS-01,
+PR #533), and S-MUTANTS-EXAMINE-GLOBS-1 (D-149) — all policy-doc-only CI-infrastructure stories
 with empty `bcs:`.
 
 **Scope classification:** CI guard infrastructure only. Zero production `src/` changes. The mutation
 gate on the fix PR itself passes via the 0-mutant path (scripts and test files are not in
-`examine_globs` → no killable mutants — DEC-144 precedent confirmed on PR #567 and PR #568).
+`examine_globs` → no killable mutants — D-144 precedent confirmed on PR #567 and PR #568).
 
 **F1 §4 vs §11 divergence note (pass-2 I-5):** F1 §4's initial impact-boundary analysis listed
 `docs/specs/cargo-mutants-policy.md` as NOT-CHANGED. F1 §11 (story shaping) overrides this:
@@ -1120,15 +1120,15 @@ corrupt mutation-test scope without immediate CI detection.
 
 | Source | Link |
 |--------|------|
-| Drift item origin | DEC-150 (MUTANTS-POLICY-CITATION-GUARD + MUTANTS-GLOB-EXISTENCE-GUARD) |
-| Root cause cycle | DEC-149 (CITATION-DEBT-PRODUCT-FILES cycle) |
+| Drift item origin | D-150 (MUTANTS-POLICY-CITATION-GUARD + MUTANTS-GLOB-EXISTENCE-GUARD) |
+| Root cause cycle | D-149 (CITATION-DEBT-PRODUCT-FILES cycle) |
 | F1 delta analysis | `.factory/phase-f1-delta-analysis/citation-guards-2026-07-02-delta.md §2` |
 | Governing policy doc | `docs/specs/cargo-mutants-policy.md §Scope` |
 | Prior art: citation guard | `tests/claude_md_citations.rs` (Guard 3 follows this exact pattern) |
 | Prior art: self-test flag | `scripts/check-signing-workflow-injection.sh --self-test` |
 | Prior art: CI step fixture | `tests/spec-count-fixtures/run-tests.sh` |
 | CI topology source | F1 §3 (spec-guard job verified against live `ci.yml`) |
-| Preceding scope story | S-MUTANTS-EXAMINE-GLOBS-1 (DEC-149, PRs #568+#570 MERGED) — PR #568 fixed primary citations; PR #570 (c4b3aa9) restored mutants.toml scope; Task 5 SWEEP in this PR removes residual drift before Guard 2 passes GREEN |
+| Preceding scope story | S-MUTANTS-EXAMINE-GLOBS-1 (D-149, PRs #568+#570 MERGED) — PR #568 fixed primary citations; PR #570 (c4b3aa9) restored mutants.toml scope; Task 5 SWEEP in this PR removes residual drift before Guard 2 passes GREEN |
 | Open gap context | STATE.md MUTANTS-ARBITER-OFFLINE-SELFTEST (justifies mandatory --self-test) |
 
 ---
@@ -1416,7 +1416,7 @@ Task 3). Only then does the implementer write the bash parsing logic and all thr
      - `\b` replaced with `([^[:alnum:]_]|$)` (pass-2 C-3 FIX — POSIX-portable; `\b` is GNU-only).
      Does NOT match imports or call sites. A plain `grep -q "$function"` would false-green on
      `use super::jsm_create::{JsmCreateArgs, handle_jsm_create};` at `src/cli/issue/create.rs:15` —
-     the exact DEC-149 drift class. NEVER use plain `grep -q`.
+     the exact D-149 drift class. NEVER use plain `grep -q`.
 
    - **Missing-cited-file behavior (F-4 FIX):** If the cited source FILE does not exist at all
      (not just missing function): emit `DEAD: <file> not found` (one line; no per-function loop
@@ -2741,13 +2741,13 @@ Task 3). Only then does the implementer write the bash parsing logic and all thr
      ```yaml
      - name: check-cargo-mutants-policy-citations self-test (Guard 2)
        run: bash scripts/check-cargo-mutants-policy-citations.sh --self-test
-     - name: check-cargo-mutants-policy-citations (Guard 2, DEC-150)
+     - name: check-cargo-mutants-policy-citations (Guard 2, D-150)
        run: bash scripts/check-cargo-mutants-policy-citations.sh
      ```
    - Guard 3 (`tests/mutants_glob_existence.rs`) needs NO ci.yml change — it rides
      the existing `test` job automatically (`cargo test --all-features`).
    - No `ci-gate.needs` change required: `spec-guard` and `test` are already in the gate
-     per DEC-096/DEC-097 convention.
+     per D-096/D-097 convention.
    - **Note (pass-3 L-2 / F-H4 FIX, LOW-2 FIX):** Story A sets the name to
      `"Spec Guards (BC counts, numeric-count lint, mutants policy scope)"`. The `numeric-count lint`
      component reflects the still-active `check-bc-no-numeric-test-counts` step already in the job.
@@ -2803,7 +2803,7 @@ Task 3). Only then does the implementer write the bash parsing logic and all thr
    sub-headers under each `## [version]` section; the entry goes under `### Added`).
    **M-GT-2 FIX — format must match CHANGELOG.md convention (bolded topic prefix):**
    ```
-   - **CI: mutants-policy citation guard (Guard 2) + examine_globs existence guard (Guard 3) (DEC-150):** adds `scripts/check-cargo-mutants-policy-citations.sh` (validates §Scope function-location bulleted list; CI-MUTANTS-CITE-001; self-test fixtures; SCOPE-EMPTY guard) and `tests/mutants_glob_existence.rs` (validates examine_globs entries resolve to real files; coverage floor; MUTANTS-GLOBS-KEY-MISSING guard).
+   - **CI: mutants-policy citation guard (Guard 2) + examine_globs existence guard (Guard 3) (D-150):** adds `scripts/check-cargo-mutants-policy-citations.sh` (validates §Scope function-location bulleted list; CI-MUTANTS-CITE-001; self-test fixtures; SCOPE-EMPTY guard) and `tests/mutants_glob_existence.rs` (validates examine_globs entries resolve to real files; coverage floor; MUTANTS-GLOBS-KEY-MISSING guard).
    ```
 
 7. Modify `CLAUDE.md`: Add doc-fallout notes in "AI Agent Notes" section for each guard
@@ -2811,10 +2811,10 @@ Task 3). Only then does the implementer write the bash parsing logic and all thr
    - `scripts/check-cargo-mutants-policy-citations.sh` — runs in spec-guard CI job; validates
      §Scope function-location bulleted list against `src/`; exits 1 with CI-MUTANTS-CITE-001
      offender list if any symbol citation is stale. `--policy-doc` + `--src-root` (self-test only)
-     + `--self-test` flags for offline verification. (DEC-150 Guard 2)
+     + `--self-test` flags for offline verification. (D-150 Guard 2)
    - `tests/mutants_glob_existence.rs` — always-run guard validating every `examine_globs`
      entry in `.cargo/mutants.toml` resolves to ≥1 real file; fails loudly if a refactor
-     orphans a glob entry. (DEC-150 Guard 3)
+     orphans a glob entry. (D-150 Guard 3)
 
 8. Self-verify: read back all modified files. Confirm:
    - `check-cargo-mutants-policy-citations.sh --self-test` exits 0 (preamble checks pass; logic
@@ -2874,7 +2874,7 @@ Task 3). Only then does the implementer write the bash parsing logic and all thr
      command, (4) action on failure (F-58-2 FIX). (AC-007 item (a))
    - **AC-007 (F-4-P45):** `CHANGELOG.md` `## [Unreleased]` → `### Added` contains an entry
      matching the canonical string from Task 6: topic prefix `**CI: mutants-policy citation guard
-     (Guard 2) + examine_globs existence guard (Guard 3) (DEC-150):**`, file paths
+     (Guard 2) + examine_globs existence guard (Guard 3) (D-150):**`, file paths
      `scripts/check-cargo-mutants-policy-citations.sh` and `tests/mutants_glob_existence.rs`,
      capability keywords `CI-MUTANTS-CITE-001`, `SCOPE-EMPTY guard`, `coverage floor`,
      `MUTANTS-GLOBS-KEY-MISSING guard` all present (L-5 FIX: exact line-wrapping may differ).
@@ -3000,7 +3000,7 @@ Task 3). Only then does the implementer write the bash parsing logic and all thr
 
 ## Previous Story Intelligence
 
-**S-MUTANTS-EXAMINE-GLOBS-1 (DEC-149, PRs #568+#570 MERGED):**
+**S-MUTANTS-EXAMINE-GLOBS-1 (D-149, PRs #568+#570 MERGED):**
 PR #568 (`docs: fix ADR-0012 Seam A/B relocation citations`) fixed the primary function-location
 citations in `docs/specs/cargo-mutants-policy.md` §Scope. PR #570 (`ci(mutants): restore
 examine_globs coverage for edit.rs + jsm_create.rs`, commit c4b3aa9) restored the
@@ -3019,11 +3019,11 @@ and local-variable-token drift that PR #568 did not address.
 Direct prior-art story for Guard 3's Rust integration test pattern. That story produced
 `tests/claude_md_citations.rs`: `include_str!` + `Path::exists()` for CLAUDE.md citations.
 Guard 3 follows the identical approach for `.cargo/mutants.toml::examine_globs`. Key lesson
-from DEC-129 (DEAD-CITATION-CI topology): a Rust test running in the `test` job does NOT have
+from D-129 (DEAD-CITATION-CI topology): a Rust test running in the `test` job does NOT have
 factory-artifacts access — which is exactly why Guard 3 works (`.cargo/mutants.toml` and
 `src/` files both live on the develop branch; no cross-branch mount needed).
 
-**S-MUTATION-CI-TIMEOUT-1 (DEC-144, PR #567, 2026-06-28):**
+**S-MUTATION-CI-TIMEOUT-1 (D-144, PR #567, 2026-06-28):**
 Established the `--timeout 240` absolute ceiling and 5 false-green guards. This story adds
 no mutation-gate behavior changes — it only adds guards on the governance documents that
 describe the gate. The mutation gate on the fix PR passes via the 0-mutant path
@@ -3040,15 +3040,15 @@ PR touching `edit.rs` exercises the non-zero-mutant path.
 
 | Rule | Source | Constraint |
 |------|--------|-----------|
-| ci-gate.needs wiring unchanged | DEC-096/DEC-097 | No change to ci-gate composition. Both `spec-guard` and `test` are already in `ci-gate.needs`. New guards ride existing required jobs without branch-protection modifications. |
+| ci-gate.needs wiring unchanged | D-096/D-097 | No change to ci-gate composition. Both `spec-guard` and `test` are already in `ci-gate.needs`. New guards ride existing required jobs without branch-protection modifications. |
 | Guard 2 in spec-guard job | F1 §3 (CI checkout topology) | `docs/specs/cargo-mutants-policy.md` and `src/` both live on develop. No factory-artifacts mount needed. Spec-guard job correct location for Guard 2. |
 | Guard 3 in test job | F1 §3/§4 | `.cargo/mutants.toml` and `src/` both live on develop. Rust integration test rides `test` job — NO ci.yml step needed for Guard 3. Do NOT add a spec-guard step for Guard 3. |
 | `--self-test` flag REQUIRED | F1 §7 / MUTANTS-ARBITER-OFFLINE-SELFTEST | Each new bash script MUST include `--self-test` fixture mode to prevent the MUTANTS-ARBITER-OFFLINE-SELFTEST class of gap. The flag seeds a stale fixture and asserts exit 1; run as a separate CI step BEFORE the actual guard check. |
-| SWEEP-WHOLE-TOUCHED-FILE-NOT-JUST-TARGET-LINE | DEC-149 (lesson codified) | When modifying `docs/specs/cargo-mutants-policy.md`, scan the entire file for same-class stale references (per S-MUTANTS-EXAMINE-GLOBS-1 AC-002 lesson). |
+| SWEEP-WHOLE-TOUCHED-FILE-NOT-JUST-TARGET-LINE | D-149 (lesson codified) | When modifying `docs/specs/cargo-mutants-policy.md`, scan the entire file for same-class stale references (per S-MUTANTS-EXAMINE-GLOBS-1 AC-002 lesson). |
 | Zero `src/` changes | F1 §7 regression baseline | No production Rust source file is modified. Only scripts, one Rust integration test, and documentation files. |
-| Mutation gate passes via 0-mutant path | DEC-144 precedent | scripts/tests are not in `examine_globs`. No killable mutants in the fix PR diff. Expected ~32-34s on `--in-diff` run. |
+| Mutation gate passes via 0-mutant path | D-144 precedent | scripts/tests are not in `examine_globs`. No killable mutants in the fix PR diff. Expected ~32-34s on `--in-diff` run. |
 | `toml` crate is already a dependency | Cargo.toml inspection | `toml = "1"` is in main dependencies (not dev-only). Guard 3 test may use it without adding a new dev-dependency. |
-| Definition-anchored grep REQUIRED — no plain `grep -q` | pass-1 C-1/pass-2 C-3/pass-2 I-1 adversary findings | Guard 2 MUST use the broadened POSIX-portable regex (v1.3): `grep -Eq "^[[:space:]]*(pub(\([^)]*\))?[[:space:]]+)?((unsafe\|const\|async\|extern[[:space:]]+\"[^\"]*\")[[:space:]]+)*fn[[:space:]]+${function}([^[:alnum:]_]\|$)"`. Improvements: `const/unsafe/extern "ABI"` qualifiers covered (I-1); `\b` replaced with `([^[:alnum:]_]\|$)` (C-3, portable to BSD grep). Plain `grep -q "$function"` false-greens on `src/cli/issue/create.rs:15` (`use super::jsm_create::{JsmCreateArgs, handle_jsm_create};`) — the exact DEC-149 scenario. A PR using plain grep-q MUST NOT merge. |
+| Definition-anchored grep REQUIRED — no plain `grep -q` | pass-1 C-1/pass-2 C-3/pass-2 I-1 adversary findings | Guard 2 MUST use the broadened POSIX-portable regex (v1.3): `grep -Eq "^[[:space:]]*(pub(\([^)]*\))?[[:space:]]+)?((unsafe\|const\|async\|extern[[:space:]]+\"[^\"]*\")[[:space:]]+)*fn[[:space:]]+${function}([^[:alnum:]_]\|$)"`. Improvements: `const/unsafe/extern "ABI"` qualifiers covered (I-1); `\b` replaced with `([^[:alnum:]_]\|$)` (C-3, portable to BSD grep). Plain `grep -q "$function"` false-greens on `src/cli/issue/create.rs:15` (`use super::jsm_create::{JsmCreateArgs, handle_jsm_create};`) — the exact D-149 scenario. A PR using plain grep-q MUST NOT merge. |
 | §Scope-only parsing; fence-skip defensive | pass-1 C-1/pass-2 I-4 adversary findings | Guard 2 MUST scope parsing to `## Scope` section only (stop before `### Sibling Candidates` subsection at lines 40–49, which lists EXCLUDED files). Fence-skip within §Scope is defensive only — the current §Scope section (lines 16–31) contains no fenced code blocks; §Whitelist-Convention (~lines 359–388) is OUTSIDE §Scope and never reached. |
 
 ---
@@ -3393,7 +3393,7 @@ documenting Guard 2 (`scripts/check-cargo-mutants-policy-citations.sh`) and Guar
 (`tests/mutants_glob_existence.rs`): what each guard checks, which CI job runs it, how to
 reproduce locally, and what action to take on failure.
 
-**(b) `CHANGELOG.md`:** One `[Unreleased]` entry added under `### Added`; the entry content is equivalent to the canonical string specified in Task 6 (L-5 FIX: exact line-wrapping may differ to fit the repo's CHANGELOG column width — the topic prefix `**CI: mutants-policy citation guard (Guard 2) + examine_globs existence guard (Guard 3) (DEC-150):**`, the file paths `scripts/check-cargo-mutants-policy-citations.sh` and `tests/mutants_glob_existence.rs`, and the capability descriptions `CI-MUTANTS-CITE-001`, `SCOPE-EMPTY guard`, `coverage floor`, `MUTANTS-GLOBS-KEY-MISSING guard` must all be present).
+**(b) `CHANGELOG.md`:** One `[Unreleased]` entry added under `### Added`; the entry content is equivalent to the canonical string specified in Task 6 (L-5 FIX: exact line-wrapping may differ to fit the repo's CHANGELOG column width — the topic prefix `**CI: mutants-policy citation guard (Guard 2) + examine_globs existence guard (Guard 3) (D-150):**`, the file paths `scripts/check-cargo-mutants-policy-citations.sh` and `tests/mutants_glob_existence.rs`, and the capability descriptions `CI-MUTANTS-CITE-001`, `SCOPE-EMPTY guard`, `coverage floor`, `MUTANTS-GLOBS-KEY-MISSING guard` must all be present).
 
 **(c) `CLAUDE.md`:** Two new bullets added to the "AI Agent Notes" section:
 - One for Guard 2: script name, CI job (`spec-guard`), trigger condition, `--self-test` flag.
@@ -3460,7 +3460,7 @@ enumerated here to prevent future adversary passes from re-raising it.
 Guard 2 deliberately parses §Scope ONLY (lines 16–31). The policy doc also contains function names
 in other sections that Guard 2 will NOT catch:
 - `## Changelog` table (line ~658+): function names in the "Change" column (actual header: `| Date | Cycle | Change |`) (e.g. `handle_edit`,
-  `handle_jsm_create`, `parse_field_kv` in the DEC-149 row at line ~662).
+  `handle_jsm_create`, `parse_field_kv` in the D-149 row at line ~662).
 - `### Root Cause: Real Wall-Clock Sleeps in \`bulk.rs\` Scope` (line ~104): `bulk.rs` and function
   names cited in the root-cause narrative.
 These citations are outside §Scope by design. Extending Guard 2 to parse the full file was rejected

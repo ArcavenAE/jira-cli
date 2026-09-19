@@ -43,7 +43,7 @@ traces_to: STATE.md
 - RELEASE GATE still open (human-owned, pre-release): `CYCLE-008-CONSOLE-SCOPE-RELEASE-GATE` —
   all 8 new OAuth scopes must be added to the Atlassian Developer Console app permissions + a
   CHANGELOG re-consent note before any release ships cycle-008 content.
-- cycle-012 (`field-adf-autoconvert`) CLOSED 2026-09-15 (DEC-361), both waves merged
+- cycle-012 (`field-adf-autoconvert`) CLOSED 2026-09-15 (D-361), both waves merged
   (PR #809 @ e926cb70, PR #812 @ 2a0b0fae per `cycles/CYCLE-SUMMARY.md#cycle_012_status`) —
   superseded by this cycle-008 tracking; historical cycle-012 detail preserved verbatim at
   `cycles/CYCLE-SUMMARY.md#cycle_012_status` and is no longer carried in this file's live table

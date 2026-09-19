@@ -92,7 +92,7 @@ findings; no regression from Pass A's reviewed state.
 **Convergence counter:** 3 of 3 -- **CONVERGED**
 
 Third consecutive independent CLEAN pass. `VERDICT CLEAN NITPICK_ONLY` -- zero CRIT/HIGH/MED. F5
-scoped adversarial refinement CONVERGED per the standard 3-consecutive-CLEAN bar (DEC-360 precedent).
+scoped adversarial refinement CONVERGED per the standard 3-consecutive-CLEAN bar (D-360 precedent).
 
 ---
 

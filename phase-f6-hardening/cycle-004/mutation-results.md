@@ -29,7 +29,7 @@ $ cargo mutants --in-diff <42e92b46..HEAD diff> --list
 cycle-004 security-critical delta**. The DPAPI credential-storage fallback, the tenant_info
 cloud_id acquisition, and the credential-clear/switch paths shipped with **no mutation-testing
 signal in CI whatsoever**. This is the same drift class the policy already recognises
-(P22-001 / DEC-149 / S-MUTANTS-SCOPE-1 / FIX-F6-MUTANTS-SCOPE: "new CLI/security handler file
+(P22-001 / D-149 / S-MUTANTS-SCOPE-1 / FIX-F6-MUTANTS-SCOPE: "new CLI/security handler file
 → add to `mutants.toml` at creation") — it slipped again for the whole auth cluster this cycle.
 
 To generate mutants at all, this F6 pass **overrode** `examine_globs` with explicit

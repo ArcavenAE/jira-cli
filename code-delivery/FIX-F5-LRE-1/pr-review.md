@@ -2,7 +2,7 @@
 
 **Verdict: APPROVE**
 
-Finding ADV-LRE-F5-A-MED-001 (list-read-ergonomics F5 reconciliation, human ruling DEC-306).
+Finding ADV-LRE-F5-A-MED-001 (list-read-ergonomics F5 reconciliation, human ruling D-306).
 Base `develop` `748247e3` → branch `fix/updated-recent-mirror-recent`.
 Reviewed diff: `git diff 748247e3..HEAD` — `src/cli/issue/list.rs`, `tests/issue_commands.rs`.
 
@@ -61,7 +61,7 @@ captured request bodies rather than tautologies — all affected tests pass loca
 | Severity | Category | Finding | Suggestion |
 |----------|----------|---------|------------|
 | NIT | coherence | New combined test `test_issue_list_fields_and_sort_compose_end_to_end` omits the `test_bc_*` id prefix used by its neighbors. | Optional: add a BC id prefix for consistency; non-gating. |
-| (observation) | — | The change deliberately enables an unbounded, cross-project query for `--updated-recent` alone. | Not a defect — explicit human ruling DEC-306, documented in-code. Flagged for visibility only. |
+| (observation) | — | The change deliberately enables an unbounded, cross-project query for `--updated-recent` alone. | Not a defect — explicit human ruling D-306, documented in-code. Flagged for visibility only. |
 
 No BLOCKING or WARNING findings.
 

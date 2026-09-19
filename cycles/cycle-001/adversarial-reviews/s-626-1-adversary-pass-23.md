@@ -124,13 +124,13 @@ Pass-23 verified all 3 findings from pass-22 (the most recent executed pass, tho
 - **Location:** `ci.yml :: mutants / "Check kill rate"` else branch — comment preceding the `binaries=` assignment (approximately line 93 of `7798b1bf`, line 94 of `14416fd9`)
 - **Description:** The comment at `ci.yml:~93` cited `ci.yml:~415-426` as "the location of the mutants job F5 fix." However, that range is the **F2** fix (the `jq empty` malformed-JSON guard at `ci.yml :: mutants / "Parse test output"`), not the F5 fix. The actual F5 fix (`grep -c` producing `"0\n0"` on empty match) is located at approximately `ci.yml:~471-484` — off by ~57 lines from the cited range.
 
-  **Root cause:** The anchor-form citation migration (DEC-213) was scoped by the orchestrator to `.factory/stories/` and `.factory/specs/` and was never extended to `ci.yml` itself — the one file whose five commits caused every line shift. So `ci.yml`'s own internal self-citations were left in exactly the form the migration existed to eliminate. When fix rounds shifted ci.yml's line numbers, the self-citation went stale. Also violated CLAUDE.md #408 (`never a bare <file>:NN-MM for new citations`).
+  **Root cause:** The anchor-form citation migration (D-213) was scoped by the orchestrator to `.factory/stories/` and `.factory/specs/` and was never extended to `ci.yml` itself — the one file whose five commits caused every line shift. So `ci.yml`'s own internal self-citations were left in exactly the form the migration existed to eliminate. When fix rounds shifted ci.yml's line numbers, the self-citation went stale. Also violated CLAUDE.md #408 (`never a bare <file>:NN-MM for new citations`).
 
   **Impact:** MEDIUM (misleading internal comment; a maintainer reading the comment to locate the F5 fix would be directed to the F2 fix instead).
 
 - **Evidence:** Comment text at `ci.yml:~93` (pre-fix): `# ... see ci.yml:~415-426 for the mutants job F5 fix`. Range `~415-426` is `ci.yml :: mutants / "Parse test output"` (the `jq empty` block, i.e., the F2 malformed-JSON guard). The F5 fix (`grep -c` exiting 1 on empty match) is at approximately `ci.yml:~471-484`.
 - **Proposed Fix:** Convert to structural form per CLAUDE.md #408: `ci.yml :: mutants / "Check kill rate" else branch — "grep -c '' exits 1 on empty match"`. This form is drift-immune: it identifies the job, step, and code-unique string rather than a line number. A sweep of all 10 workflow files confirmed zero other line-number citations, so the class is closed at this site.
-- **Status:** FIXED — fix round 10 (`14416fd9`: comment converted to `ci.yml :: mutants / "Check kill rate" else branch — "grep -c '' exits 1 on empty match"` structural form; one comment line became two, shifting everything below old line 93 by +1; **DEC-222: anchor-form convention extended to workflow files**). A sweep of ALL TEN workflow files found ZERO other line-number citations — class closed, not merely the site. **POL-11 pin still passes: all 8 assertions verified unaffected by the +1 shift.** Gates: full suite 2345/0/100, `ci_gate_completeness` 8 tests, clippy clean, fmt clean.
+- **Status:** FIXED — fix round 10 (`14416fd9`: comment converted to `ci.yml :: mutants / "Check kill rate" else branch — "grep -c '' exits 1 on empty match"` structural form; one comment line became two, shifting everything below old line 93 by +1; **D-222: anchor-form convention extended to workflow files**). A sweep of ALL TEN workflow files found ZERO other line-number citations — class closed, not merely the site. **POL-11 pin still passes: all 8 assertions verified unaffected by the +1 shift.** Gates: full suite 2345/0/100, `ci_gate_completeness` 8 tests, clippy clean, fmt clean.
 
 ---
 
@@ -143,7 +143,7 @@ Pass-23 verified all 3 findings from pass-22 (the most recent executed pass, tho
 - **Location:** `.factory/specs/prd/bc-5-boards-sprints.md` — BC-5.3.001 `**Behavior**` field
 - **Description:** The Behavior field opens with: *"Column gating is conjunctive — **both conditions** required (Table mode AND configured field AND ≥1 populated UUID)."* The parenthetical then enumerates **three** conditions (Table mode, configured field, populated UUID), directly contradicting the "both conditions" claim. The contract was apparently originally written when only two conditions existed (configured field AND populated UUID), and "Table mode" was added as a third conjunct later — but the count-word "both" was not updated. The Postcondition 1 also correctly lists all three conditions without using "both", making the Behavior's "both" the sole error site.
 
-  **Carried-over context:** The class sweep directed by DEC-218 (pass-21 round) covered 7 count-word sites in `specs/`. Six were verified correct and left alone, including notably `edge-case-catalog.md:247` (EC-OUT-001) which uses "both conditions: configured AND populated" — correctly, because Table mode is presupposed in that edge case's boundary. Only this one site was wrong.
+  **Carried-over context:** The class sweep directed by D-218 (pass-21 round) covered 7 count-word sites in `specs/`. Six were verified correct and left alone, including notably `edge-case-catalog.md:247` (EC-OUT-001) which uses "both conditions: configured AND populated" — correctly, because Table mode is presupposed in that edge case's boundary. Only this one site was wrong.
 
 - **Evidence:** `bc-5-boards-sprints.md` BC-5.3.001 Behavior field: `"Column gating is conjunctive — both conditions required (Table mode AND configured field AND ≥1 populated UUID)."` Three conditions are enumerated but only "both" (two) is claimed.
 - **Proposed Fix:** Change "both conditions" to "all three conditions" in the Behavior field. Verify BC-5.3.002's Behavior/Postcondition are internally consistent (¬A∨¬B∨¬C is correct OR-semantics on the negation of a three-part AND — Table mode is not separately enumerated in BC-5.3.002 because it's a boundary/edge variant, not because there are only two conditions).
@@ -167,7 +167,7 @@ Pass-23 verified all 3 findings from pass-22 (the most recent executed pass, tho
 
 **CI FLOOR PIN EXHAUSTIVELY VERIFIED:** 8/8 assertions in the POL-11 pin are non-comment-satisfiable. Both false-green vectors closed by `7798b1bf` are confirmed closed. No third vector found.
 
-**Window status:** NOT CLEAN — window 23/24/25 CLOSED 0/1 (pass-23 NOT CLEAN; passes 24/25 not dispatched). Fresh STRICT window = passes 24/25/26 (DEC-223).
+**Window status:** NOT CLEAN — window 23/24/25 CLOSED 0/1 (pass-23 NOT CLEAN; passes 24/25 not dispatched). Fresh STRICT window = passes 24/25/26 (D-223).
 
 ---
 

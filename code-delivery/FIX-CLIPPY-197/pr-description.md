@@ -261,5 +261,5 @@ generated-at: "2026-07-09"
 - [x] No critical/high security findings unresolved (0 findings)
 - [x] Rollback procedure validated (single-commit revert)
 - [x] No feature flags (not applicable)
-- [ ] Human review completed (HELD-FOR-HUMAN-MERGE per DEC-128)
+- [ ] Human review completed (HELD-FOR-HUMAN-MERGE per D-128)
 - [x] No monitoring alerts required (no production surface)

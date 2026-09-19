@@ -96,21 +96,21 @@ BC-X.12.004 §Behavior is consistent (expected: already correct per the evidence
 - `risk-register.md` §Risk Summary table: 36 rows with individual risk IDs.
   Breakdown per-delta:
   - Baseline (pre-Phase-1d convergence): 26 risks
-  - Phase-1d post-convergence DEC-009 update: 28 risks (net +2 undocumented in CANONICAL-COUNTS)
-  - S-3.03 additions: +5 risks (R-NEW-AR-1..5 per DEC-013)
-  - S-3.07 additions: +1 risk (R-NEW-S307-1 per DEC-014)
+  - Phase-1d post-convergence D-009 update: 28 risks (net +2 undocumented in CANONICAL-COUNTS)
+  - S-3.03 additions: +5 risks (R-NEW-AR-1..5 per D-013)
+  - S-3.07 additions: +1 risk (R-NEW-S307-1 per D-014)
   - #288 additions: +2 risks (R-NEW-JSM-RT-001..002 per prd-delta.md)
   - Running total: 26 + 2 + 5 + 1 + 2 = 36
 
 - The gap of 8 between CANONICAL-COUNTS (28) and the actual register (36) is pre-existing
   relative to #288: the S-3.03 and S-3.07 risk additions (6 risks, adding to what was 28)
-  were not propagated to CANONICAL-COUNTS when DEC-013/DEC-014 were logged. The #288
+  were not propagated to CANONICAL-COUNTS when D-013/D-014 were logged. The #288
   prd-delta added 2 more risks without updating CANONICAL-COUNTS, compounding the gap.
 
 **Why this matters**: CANONICAL-COUNTS is the authoritative summary referenced by F1d
 adversary and product-owner to validate arithmetic completeness. A stale risk count means
 the risk corpus is under-audited. The 8-risk gap spans multiple stories (S-3.03, S-3.07,
-#288) and has been accumulating since at least DEC-013 (2026-05-08). This is not a trivial
+#288) and has been accumulating since at least D-013 (2026-05-08). This is not a trivial
 documentation gap — risk counts are used in the Per-Mandate Audit to confirm that the
 risk register is complete and that new feature work has assessed its risks.
 
@@ -245,7 +245,7 @@ contradicts the three other sources and the jr CLI convention for list commands.
 **2. F39 (CONCERN) — CANONICAL-COUNTS risk total 28 vs actual 36 (8-risk gap)**:
 The risk register grew by 8 risks across S-3.03 (5 risks R-NEW-AR-1..5), S-3.07 (1 risk
 R-NEW-S307-1), and #288 (2 risks R-NEW-JSM-RT-001..002) without CANONICAL-COUNTS being
-updated. The gap has been accumulating since 2026-05-08 (DEC-013). Risk audit completeness
+updated. The gap has been accumulating since 2026-05-08 (D-013). Risk audit completeness
 is compromised for the three most recently delivered stories.
 
 **3. F41 (NIT) — DRIFT-008 process-gap codification does not name risk/holdout/ADR scopes

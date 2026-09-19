@@ -201,7 +201,7 @@ Three holdout scenarios authored in story spec (H-CITE-001, H-CITE-002, H-CITE-0
 
 **Convergence:** Adversary produced 0 new findings after pass 3 (forced to hallucinate). CONVERGED.
 
-**Decisions logged:** DEC-125 (pure/effectful split), DEC-126 (no allowlist), DEC-127 (`.yaml` EC-CITE-035 pin).
+**Decisions logged:** D-125 (pure/effectful split), D-126 (no allowlist), D-127 (`.yaml` EC-CITE-035 pin).
 
 ---
 
@@ -321,9 +321,9 @@ target-module: tests
 no-src-changes: true
 no-ci-yaml-changes: true
 decisions-logged:
-  - DEC-125
-  - DEC-126
-  - DEC-127
+  - D-125
+  - D-126
+  - D-127
 models-used:
   builder: claude-sonnet-4-6
   adversary: claude-sonnet-4-6 (fresh-context)

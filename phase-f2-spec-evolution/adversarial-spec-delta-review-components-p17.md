@@ -59,9 +59,9 @@ in every area re-walked this pass:
 
 - **CRUD/exit-code taxonomy** — numeric-ID exemption applies uniformly to `list`/`edit`/`delete`
   and is correctly excluded from `rename` (name-only target by definition); `create`'s
-  clap-required-arg enum maps to exit 2 per DEC-188; `edit` remains a partial-PUT (only supplied
+  clap-required-arg enum maps to exit 2 per D-188; `edit` remains a partial-PUT (only supplied
   fields sent).
-- **Delete safety (DEC-279)** — disposition guard fires at the application level (exit 64, not
+- **Delete safety (D-279)** — disposition guard fires at the application level (exit 64, not
   clap); `--move-to` resolves the TARGET component before the DELETE fires; both SOURCE and
   TARGET numeric-ID inputs get their own project-membership confirming `GET`; self-move is
   rejected via numeric-ID equality (not name string compare); the orphan-count confirmation gate
@@ -82,7 +82,7 @@ in every area re-walked this pass:
   the four call sites (list/edit/delete SOURCE/delete TARGET via `--move-to`); the
   `--all-projects` flag's exact-equality matching (VP-COMPONENT-026) and component-ID global
   uniqueness assumption are unchanged and unbroken.
-- **Wire shapes (DEC-280)** — the three distinct shapes (update-verb object for `edit`/`rename`;
+- **Wire shapes (D-280)** — the three distinct shapes (update-verb object for `edit`/`rename`;
   bulk `multiselectComponents` integer `componentId` array with 2×ceil chunking for `delete
   --move-to`; additive array for `create`) remain internally consistent and match research Q2.2;
   the live-smoke gate still exercises ADD and REMOVE only (no REPLACE), matching the pass-10 fix.

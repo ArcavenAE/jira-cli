@@ -18,7 +18,7 @@ file across every field-dx PR shipped to date (#578 parts 1–5, S-580-1). This 
 gap by adding both files to scope, backfilling the required `docs/specs/cargo-mutants-policy.md`
 §Scope citations, and recording the change in CHANGELOG.md. No production source code is
 touched — this is a pure test-infrastructure/config fix, same drift class as
-P22-001/DEC-149/S-MUTANTS-SCOPE-1.
+P22-001/D-149/S-MUTANTS-SCOPE-1.
 
 ---
 
@@ -55,7 +55,7 @@ No open dependency PRs; this is a standalone follow-up fix against already-merge
 
 ```mermaid
 flowchart LR
-    BC[P22-001 / DEC-149 / S-MUTANTS-SCOPE-1<br/>mutants examine_globs drift class] --> AC1[New CLI handler file<br/>must be added to examine_globs at creation]
+    BC[P22-001 / D-149 / S-MUTANTS-SCOPE-1<br/>mutants examine_globs drift class] --> AC1[New CLI handler file<br/>must be added to examine_globs at creation]
     AC1 --> T1[check-cargo-mutants-policy-citations.sh<br/>69 file,fn pairs, exit 0]
     AC1 --> T2[mutants_glob_existence.rs<br/>every examine_globs entry resolves]
     T1 --> S1["docs/specs/cargo-mutants-policy.md"]

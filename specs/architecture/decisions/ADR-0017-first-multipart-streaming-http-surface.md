@@ -14,7 +14,7 @@ related: ["ADR-0001", "ADR-0003"]
 
 ## Status
 
-**Accepted** (2026-07-15). Gate: DEC-179, item 7 of the F1 SOH-ATTACHMENTS-1 dependency gate.
+**Accepted** (2026-07-15). Gate: D-179, item 7 of the F1 SOH-ATTACHMENTS-1 dependency gate.
 **Amended** (2026-07-17): Cargo.toml delivery split across S-576-2 and S-576-3 delivery slots per adversarial finding P1-010, F3 pass 1. See § Decision amendment below.
 **Amended** (2026-07-18): Authorized-dependency clause added for the `sha1` crate (RustCrypto) in the S-576-2 delivery slot; "No new crate" claims scoped to the HTTP surface (reqwest features + tokio-util). See § Authorized Dependencies. Traces P26-001, F3 pass 26.
 **Amended** (2026-07-19): Pre-gate cosmetics — command-name corrected (`attachments get` → `attachment download`); attachment ID type corrected (UUIDs → numeric IDs). Traces carried INFO from F3 passes 26–77.
@@ -37,7 +37,7 @@ The SOH-ATTACHMENTS-1 feature (issue #576) requires two new HTTP surface capabil
 2. **Attachment download** — Jira serves attachment binary content from pre-signed media URLs.
    Attachments can reach very large sizes on instances with permissive limits
    (Jira Cloud attachment limits are instance-configured and site/plan-dependent; the research
-   verdict is inconclusive across sources — do not hard-code a figure; DEC-179 ruling 4).
+   verdict is inconclusive across sources — do not hard-code a figure; D-179 ruling 4).
    Buffering the entire body in memory (`bytes()`) before writing to disk is unsafe at those
    sizes; streaming (`bytes_stream()`) and writing chunks incrementally is required. The
    `stream` reqwest feature exposes `Response::bytes_stream()` as a `Stream<Item = Bytes>`.
@@ -86,7 +86,7 @@ Specifically:
    sufficient and is the conservative explicit choice.
 
 Cargo.toml delivery is **split across two story slots** per the earliest-consumer principle
-(DEC-184 R3.13; amended 2026-07-17, adversarial finding P1-010, F3 pass 1):
+(D-184 R3.13; amended 2026-07-17, adversarial finding P1-010, F3 pass 1):
 
 - **S-576-2 delivery slot (earliest consumer):** reqwest `stream` feature only — required by
   `Response::bytes_stream()` in `get_attachment_content` for streaming large downloads. `tokio-util`
@@ -147,14 +147,14 @@ be omitted.
 
 - Binary size will increase by a small amount due to the multipart encoder and stream
   combinator code being compiled in. The exact delta will be measured at S3 delivery against
-  the 7.09 MB v0.6.0-dev.10 binary-size baseline (established at the F1 gate, DEC-179;
+  the 7.09 MB v0.6.0-dev.10 binary-size baseline (established at the F1 gate, D-179;
   noted in the task brief — not in the research file); it is expected to be small.
 - `cargo deny` must be re-run after Cargo.toml edits to confirm no advisory or license
   regression from the explicit tokio-util promotion.
 
 ### Status as of 2026-07-15 (original)
 
-Accepted at the F1 gate (DEC-179 item 7). Cargo.toml changes were deferred to Story 3 of the
+Accepted at the F1 gate (D-179 item 7). Cargo.toml changes were deferred to Story 3 of the
 SOH-ATTACHMENTS-1 wave. The decision was binding; the implementation was not yet delivered.
 
 ### Status as of 2026-07-17 (amendment — P1-010, F3 pass 1)
@@ -225,7 +225,7 @@ SHA-1 is cryptographically broken (practical chosen-prefix collision attacks dem
 - Research and supply-chain audit: `.factory/research/issue-576-attachments-api-2026-07-15.md`
   Part 2 item 8 — `cargo deny` advisories clean, `cargo audit` (347 deps) clean, no
   RustSec/GHSA advisory against reqwest 0.13.x or tokio-util 0.7.x.
-- Gate decision: DEC-179 item 7 (F1 gate for SOH-ATTACHMENTS-1).
+- Gate decision: D-179 item 7 (F1 gate for SOH-ATTACHMENTS-1).
 - Related ADRs: ADR-0001 (thin client — single JiraClient), ADR-0003 (reqwest + rustls).
 - Cross-host redirect strip behavior: GHSA-9857-6MW7-FQ2M (a `gix-transport` advisory, NOT a
   reqwest advisory; its mitigation language — reqwest "compares host strings and strips sensitive

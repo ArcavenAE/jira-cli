@@ -17,7 +17,7 @@ traces_to:
 
 | File | Action | What Was Added |
 |------|--------|----------------|
-| `.factory/specs/architecture/decisions/ADR-0018-component-resolution-caching-mutation-strategy.md` | NEW | Full ADR: resolution strategy, caching layout, delete-safety policy (DEC-279), wire-shape asymmetry (DEC-280) — one consolidated decision per F1's recommendation |
+| `.factory/specs/architecture/decisions/ADR-0018-component-resolution-caching-mutation-strategy.md` | NEW | Full ADR: resolution strategy, caching layout, delete-safety policy (D-279), wire-shape asymmetry (D-280) — one consolidated decision per F1's recommendation |
 | `.factory/specs/architecture/ARCH-INDEX.md` | APPENDED | ADR-0018 row in the Architecture Decisions table |
 | `.factory/architecture/adr-index.md` | APPENDED | ADR-0018 summary row (dual-tracking, mirrors the ADR-0017 precedent — a cross-reference row pointing at the VSDD-canonical `decisions/` file, consistent with this file's own note that ADR-0017+ live under `.factory/specs/architecture/decisions/`) |
 | `.factory/architecture/component-graph.md` | APPENDED | `Component Management Delta — DAG Verification` section: 3 new module nodes (`cli::component`, `api::jira::components`, `types::jira::component`), all new/modified dependency edges, cycle check, purity-boundary cross-check — mirrors the existing `Issue #288 Delta — DAG Verification` section's structure exactly |
@@ -30,7 +30,7 @@ the `architecture-delta.md` (issue #288) precedent this delta follows structural
 **Not touched by this burst (explicitly out of architect scope):** `src/`, `docs/adr/` (the
 product-repo ADR file is an F4 story deliverable — see the ADR's own placement note), story
 files, `.factory/specs/prd/*.md` BC files (product-owner scope — the PRD-side decisions
-DEC-278/279/280 and the `cross-cutting.md` BC-X.10.001 caller-citation amendment were already
+D-278/279/280 and the `cross-cutting.md` BC-X.10.001 caller-citation amendment were already
 recorded by the product-owner in the prior F2 burst; see `.factory/spec-changelog.md` and
 `.factory/phase-f2-spec-evolution/prd-delta-components.md`), `regression-state.json`,
 `sidecar-learning.md`, `.claude/`. `module-criticality.md` and `risk-register.md` were also
@@ -60,7 +60,7 @@ delete-safety, and mutation-wire-shape strategy."
 §3: "Recommend one ADR, not several — the three sub-questions below are facets of a single
 decision... splitting them would fragment a decision that needs to be read as a whole" — F1
 enumerated 3 facets; this ADR covers 4, folding in the wire-shape asymmetry F1's §3 flagged as
-a separate "research gap" that DEC-280 subsequently resolved):
+a separate "research gap" that D-280 subsequently resolved):
 
 1. **Resolution strategy** — client-side, per-project, via the existing `partial_match`
    primitive with a numeric-ID bypass (mirrors `jr requesttype fields <NAME|ID>`); resolver is
@@ -72,10 +72,10 @@ a separate "research gap" that DEC-280 subsequently resolved):
    `profile: &str` first arg on every reader/writer. 7-day TTL + explicit invalidation on
    every mutating command (create/edit/rename/delete), mirroring
    `invalidate_project_meta_cache`. Model-b (swallow + warn) writer.
-3. **Delete-safety policy (DEC-279)** — `component delete` refuses to run without exactly one
+3. **Delete-safety policy (D-279)** — `component delete` refuses to run without exactly one
    of `--move-to`/`--orphan`; only `--orphan` requires `--yes`/interactive confirm; affected
    issues are snapshotted via read-only JQL BEFORE the DELETE, for both dispositions.
-4. **Wire-shape asymmetry (DEC-280)** — three distinct, explicitly-pinned wire shapes: single-
+4. **Wire-shape asymmetry (D-280)** — three distinct, explicitly-pinned wire shapes: single-
    key `update`-verb object form (`{"add":{"name":X}}`, editmeta-gated), bulk
    `multiselectComponents` integer-`componentId` form (live-smoke-test-gated per
    `FIX-BULK-TRANSITION-001` precedent), and create-time additive `{"name":X}` array form.
@@ -185,7 +185,7 @@ tooling that reads this file positionally).
   impact-boundary-components.md`.
 - PRD-side decisions this ADR formalizes (already recorded by product-owner, NOT re-authored
   here): `bc-8-components.md`, `bc-2-issue-read.md` §2.1, `bc-3-issue-write.md` §3.4;
-  `.factory/spec-changelog.md` (DEC-278/279/280); `.factory/phase-f2-spec-evolution/
+  `.factory/spec-changelog.md` (D-278/279/280); `.factory/phase-f2-spec-evolution/
   prd-delta-components.md`.
 - Research consumed: `.factory/research/component-delete-and-bulk-wire-2026-08-15.md`
   (Q1 delete safety, Q2 bulk wire shape).

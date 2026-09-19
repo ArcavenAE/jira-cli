@@ -11,7 +11,7 @@ traces_to:
   - .factory/phase-f2-spec-evolution/cycle-006/mutants-sharding-invariants.md
   - .factory/phase-f2-spec-evolution/cycle-006/ci-yml-design.md
 governance: policy-doc-only (docs/specs/cargo-mutants-policy.md §Spec Anchor) — NO new PRD BC
-  (DEC-348; precedent MUTATION-CI-TIMEOUT 2026-06-28). VPs live in this standalone F2 record,
+  (D-348; precedent MUTATION-CI-TIMEOUT 2026-06-28). VPs live in this standalone F2 record,
   mirroring verification-delta-components.md's "VPs formalized in a standalone F2 doc" pattern.
 scope_note: DESIGN ONLY. This document edits NO in-repo file (ci.yml, scripts/*,
   tests/*, .cargo/mutants.toml, docs/specs/*). It specifies WHAT F4 must assert and the

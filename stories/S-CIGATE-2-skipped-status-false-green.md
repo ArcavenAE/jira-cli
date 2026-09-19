@@ -62,7 +62,7 @@ risk_mitigations:
      future maintainer who adds a job to `ci-gate.needs` but forgets to add the matching
      `needs.<job>.result != 'success'` clause to the allowlist condition doesn't get an
      error; the gate silently stops checking that job. Weakening by omission is invisible
-     at review time, which is exactly this repo's documented drift class (DEC-096/DEC-097).
+     at review time, which is exactly this repo's documented drift class (D-096/D-097).
      Option B was independently found by both this story's v1.0 investigation AND the
      research pass to require FIVE step-level edits inside the `mutants` job (harden-runner,
      checkout with `fetch-depth: 0`, install-action, rust-cache, run-mutants — not the
@@ -91,7 +91,7 @@ last_updated: "2026-08-07"
 breaking_change: false
 files_modified:
   - .github/workflows/ci.yml          # MODIFY: ci-gate's step body replaced with a call to scripts/check-ci-gate.sh over toJSON(needs); spec-guard gains two new steps (self-test + real invocation) mirroring the existing check-cargo-mutants-policy-citations/check-bc-citation-symbols self-test pairing pattern. mutants job UNCHANGED.
-  - scripts/check-ci-gate.sh          # CREATE: fail-closed needs-result evaluator with a hardcoded ALLOWED_SKIPS allowlist (mutants only), a default-failure arm for any unrecognized result value, an empty-needs guard, per-job OK/FAIL log lines, and a --self-test flag running built-in JSON fixtures. Modeled on scripts/check-signing-workflow-injection.sh's doc-header/usage/self-test conventions (DEC-148/DEC-150 pattern).
+  - scripts/check-ci-gate.sh          # CREATE: fail-closed needs-result evaluator with a hardcoded ALLOWED_SKIPS allowlist (mutants only), a default-failure arm for any unrecognized result value, an empty-needs guard, per-job OK/FAIL log lines, and a --self-test flag running built-in JSON fixtures. Modeled on scripts/check-signing-workflow-injection.sh's doc-header/usage/self-test conventions (D-148/D-150 pattern).
   - tests/ci_gate_completeness.rs     # MODIFY: assertions retargeted from ci-gate's inline YAML condition to (a) ci-gate's step now invoking scripts/check-ci-gate.sh with needs JSON, (b) the mutants job remaining unchanged (job-level if: still present — this is now an invariant to preserve, not remove), (c) the spec-guard job containing the two new self-test/real-check steps. Top-of-file doc comment corrected (still describes the old, wrong "skipped is fine" narrative).
   - CLAUDE.md                         # MODIFY: extend the existing ci-gate Conventions bullet — new required CI jobs must be added to ci-gate.needs AND, if they can legitimately report `skipped`, to scripts/check-ci-gate.sh's ALLOWED_SKIPS list; the gate script's own --self-test is the enforcement mechanism, not a doc-only convention.
 ---
@@ -151,7 +151,7 @@ option's central advantage.
 No product BCs are added or modified. BC catalog is untouched by this story. This story
 traces its ACs to the drift item **CIGATE-SKIP-PROPAGATION** (a new drift-item name — no
 prior STATE.md DEC number exists for this specific defect; the closest related DEC numbers,
-DEC-096/DEC-097, cover the *originating* skipped-job-trap design problem that `ci-gate`
+D-096/D-097, cover the *originating* skipped-job-trap design problem that `ci-gate`
 itself was built to solve, not this regression of that fix). This follows the same
 no-BC convention used by S-CIGATE-1 and S-627-1 for CI-infra-only stories.
 
@@ -192,7 +192,7 @@ top-of-file doc comment (verified present, `tests/ci_gate_completeness.rs` lines
 > `mutants` IS in `needs` (MUTATION-CI-TIMEOUT, 2026-06-28). It carries
 > `if: github.event_name == 'pull_request'` and emits `skipped` on push events. The
 > ci-gate pass condition checks for `failure` or `cancelled` only — `skipped` is neither, so
-> ci-gate passes on push events. **This is the correct behavior** per DEC-096/097 and
+> ci-gate passes on push events. **This is the correct behavior** per D-096/097 and
 > delta-analysis §5.
 
 and `test_mutants_is_in_ci_gate_needs`'s own failure message (verified present, lines
@@ -295,7 +295,7 @@ if: >-
 in this hand-maintained OR-chain, the gate does not error — it silently stops checking that
 job at all. Weakening by *omission* is invisible to a code reviewer scanning a diff (a
 missing line reads as "nothing changed here," not as "a gap was introduced"). This is
-precisely the drift class this repo has already suffered twice (DEC-096/DEC-097) and that
+precisely the drift class this repo has already suffered twice (D-096/D-097) and that
 `S-CIGATE-1` was built to prevent structurally, not just by convention.
 
 ### Option B — skipped-safe gate + step-level PR-only gating on `mutants` (REJECTED)
@@ -365,7 +365,7 @@ B's false-red risk.
 ### Companion: extracted script with a self-test (approved, in scope)
 
 Per this repo's established pattern (`scripts/check-signing-workflow-injection.sh
---self-test`, DEC-148/DEC-150), the gate's decision logic is extracted into
+--self-test`, D-148/D-150), the gate's decision logic is extracted into
 `scripts/check-ci-gate.sh` rather than left as an inline, untestable YAML expression, and
 gains a `--self-test` flag exercising a fixed set of built-in JSON fixtures covering (at
 minimum): all-success; one job reporting `failure`; an unlisted job reporting `skipped`
@@ -490,7 +490,7 @@ rather than by extrapolation — see Verification Log._
 _Extracted from this story's own root-cause analysis (no architecture.md/ADR exists for CI
 workflow internals in this repo) and from the precedent set by `S-CIGATE-1`/`S-626-1`, the
 two prior stories to touch this exact file, plus `scripts/check-signing-workflow-injection.sh`
-for the extracted-script-with-self-test pattern (DEC-148/DEC-150)._
+for the extracted-script-with-self-test pattern (D-148/D-150)._
 
 ## Library & Framework Requirements (MANDATORY)
 

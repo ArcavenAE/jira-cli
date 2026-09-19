@@ -16,7 +16,7 @@ input-hash: "0b84b17"
 
 Single-page reference for the product-owner (BC delta) and story-writer (F3), summarizing the
 architecture-side decisions made this phase and exactly which files/functions each approved
-workstream touches. Scope is locked at DEC-368 (F1 gate): **deliver S1/S2/S3/S4/S5. S6 = spike
+workstream touches. Scope is locked at D-368 (F1 gate): **deliver S1/S2/S3/S4/S5. S6 = spike
 only. S7 deferred.** No `src/` changes were made in this pass — architecture/spec artifacts only.
 
 ## New artifacts this phase
@@ -143,7 +143,7 @@ site — already correct); `src/error.rs` (type/Display definitions unchanged); 
 
 ## Open items for the human at the F2 gate
 
-1. **Confirm DEC-368 scope is still correct** — this architecture pass did not change the F1
+1. **Confirm D-368 scope is still correct** — this architecture pass did not change the F1
    gate's scope decision (S1-S5 deliver, S6 spike, S7 deferred); it only designed the delta
    within that already-approved boundary.
 2. **Developer Console release-gate acknowledgment** — recommend the human explicitly

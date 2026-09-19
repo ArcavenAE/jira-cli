@@ -19,7 +19,7 @@ traces_to: STATE.md
 ## Resolved at standing-item disposition burst (2026-09-18, post-F7-close) — operator-confirmed
 
 This disposition is a standing-item resolution, not a pipeline ruling — no new DEC was minted.
-It references `DEC-371` (the cycle-008 F7 close itself, which left this item as the cycle's sole
+It references `D-371` (the cycle-008 F7 close itself, which left this item as the cycle's sole
 open pre-release blocker).
 
 | ID | Issue | Severity | Blocking Phase | Owner | Resolution |

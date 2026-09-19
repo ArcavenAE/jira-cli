@@ -77,7 +77,7 @@ Lessons 1+2 recurrence, now codified).
 | **Threads resolved** | 3/3 (PRRT_kwDORs-xfc6BRm7j, PRRT_kwDORs-xfc6BRm7q, PRRT_kwDORs-xfc6BRm7w) |
 | **Replies posted** | 3223391764, 3223391824, 3223391863 |
 | **CI result** | 8/8 green on 144aaff |
-| **Perplexity validation** | All 3 findings validated per DEC-018 before acting |
+| **Perplexity validation** | All 3 findings validated per D-018 before acting |
 
 #### R1 Findings
 
@@ -150,7 +150,7 @@ Lessons 1+2 recurrence, now codified).
   Perplexity for "obvious" patterns) and Lesson 2 (skipping state-manager for "small" PRs).
   Both addenda recorded in cycles/cycle-001/lessons.md (2026-05-12).
 
-- Per DEC-018, Perplexity validation MUST be run before acting on each Copilot finding,
+- Per D-018, Perplexity validation MUST be run before acting on each Copilot finding,
   regardless of how obvious the fix looks.
 
 - Release-mode clippy (`--release`) added as a new quality gate for this PR and going forward,

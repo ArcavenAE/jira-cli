@@ -34,7 +34,7 @@ traces_to: STATE.md
    - Story B1 (`S-cycle7-auth-state-derivation`): `.worktrees/S-cycle7-auth-state-derivation` / `feat/cycle7-auth-state-derivation`
    - Story C (`S-cycle7-oauth-help-text-fix`): `.worktrees/S-cycle7-oauth-help-text-fix` / `fix/cycle7-oauth-help-text`
    - Story D (`S-cycle7-readme-migration-note`): `.worktrees/S-cycle7-readme-migration-note` / `docs/cycle7-readme-migration-note`
-   Merge order: Story A must land on `develop` before Story B1 (both touch `src/api/auth.rs`; auth.rs merge-order note from DEC-356 honored). C and D are parallelizable in Wave 1. Wave 2 = B2 (`S-cycle7-auth-status-json`, depends on B1 merge).
+   Merge order: Story A must land on `develop` before Story B1 (both touch `src/api/auth.rs`; auth.rs merge-order note from D-356 honored). C and D are parallelizable in Wave 1. Wave 2 = B2 (`S-cycle7-auth-status-json`, depends on B1 merge).
 
 3. **Per-story delivery started** with Story A (`S-cycle7-credential-absence-fix`) on `.worktrees/S-cycle7-credential-absence-fix` / `fix/cycle7-credential-absence`.
 
@@ -50,7 +50,7 @@ traces_to: STATE.md
 
 **Codifications:** No new DEC minted this burst (this is a process-resume burst, not a scope or spec gate). `CYCLE-007-F4-BASELINE-RERUN-PENDING` is now RESOLVED. `HOST-GATEKEEPER-SYSPOLICYD-FRAGILITY` recorded as a new LOW/non-blocking/dev-host-only standing item.
 
-**Closes:** `CYCLE-007-F4-BASELINE-RERUN-PENDING` drift item. **Does NOT close:** cycle-007 itself (F4 IN PROGRESS, Wave-1 delivery started but not complete); the `HOST-GATEKEEPER-SYSPOLICYD-FRAGILITY` standing item (open until next OS reboot or uptime reset, or indefinitely if the CI-only workflow is accepted); any carried-forward standing items from prior cycles; `FIX-F6-A` / `F6-MUTATION-EXAMINE-GLOBS-EXPANSION` (deferred explicitly by DEC-356).
+**Closes:** `CYCLE-007-F4-BASELINE-RERUN-PENDING` drift item. **Does NOT close:** cycle-007 itself (F4 IN PROGRESS, Wave-1 delivery started but not complete); the `HOST-GATEKEEPER-SYSPOLICYD-FRAGILITY` standing item (open until next OS reboot or uptime reset, or indefinitely if the CI-only workflow is accepted); any carried-forward standing items from prior cycles; `FIX-F6-A` / `F6-MUTATION-EXAMINE-GLOBS-EXPANSION` (deferred explicitly by D-356).
 
 **Outcome:** cycle-007 (`auth-correctness-dx`) is ACTIVE, Phase F4 (delta implementation) IN PROGRESS. Baseline GREEN @ develop@`14e695ae` (5,267/5,091/0/176). Wave-1 worktrees created. Story A delivery started. All counts unchanged (757 BCs / 82 VPs / 118 holdouts / 180 stories).
 
@@ -506,7 +506,7 @@ and cycle-012 both took).
 **What dev.6 contains:** this release ROLLS UP every previously-untagged `develop` change since dev.5 —
 cycle-005 (`adf-mentions`, was ship-on-develop-no-tag at its own F7 close), cycle-006
 (`mutants-ci-sharding`, was ship-on-develop-no-tag), the 2026-09-10 maintenance sweep merges, cycle-012
-(`field-adf-autoconvert`, was ship-on-develop-no-tag at DEC-361), and cycle-007 (`auth-correctness-dx`)
+(`field-adf-autoconvert`, was ship-on-develop-no-tag at D-361), and cycle-007 (`auth-correctness-dx`)
 itself, plus an independent rustls 0.23.45 security bump that had also landed on `develop` untagged.
 **dev.6 is therefore the first tagged prerelease to capture cycle-005's and cycle-012's changes.**
 
@@ -520,7 +520,7 @@ AUTH-LIST-LAZY-MIGRATION-WRITE`, the bundled `CYCLE-007-F5-DOC-NITPICKS`, and F6
 R3 is the same item as CR-001, not separately tracked). None left without a follow-up or justified
 deferral. No new deferrals invented.
 
-**DEC-362 minted:** cycle-007 F7 HUMAN GATE APPROVED — "Approve & close" + "cut a dev release" → released
+**D-362 minted:** cycle-007 F7 HUMAN GATE APPROVED — "Approve & close" + "cut a dev release" → released
 as v0.7.0-dev.6. See STATE.md Decisions Log for full text.
 
 **Adversary verdict:** N/A this burst — no adversarial review is run at the F7 human-gate closure step
@@ -533,7 +533,7 @@ lessons.md`) or DEFERRED as a tracked standing item in `cycles/OPEN-STANDING-ITE
 paragraph above) — no new lesson entries or deferrals were required or invented this burst.
 
 **Closes:** the cycle-007 F7 human gate (final close approval + release decision) — the single pending
-decision point carried since Burst 7 — is now closed via DEC-362. This also closes cycle-007
+decision point carried since Burst 7 — is now closed via D-362. This also closes cycle-007
 (`auth-correctness-dx`) itself: **CLOSED + RELEASED as v0.7.0-dev.6.**
 
 **Outcome:** **cycle-007 (`auth-correctness-dx`) CLOSED + RELEASED as v0.7.0-dev.6.** All nine tracked
@@ -554,7 +554,7 @@ workflow are tracked in the repo's own git history — `develop @ 7160a534`, tag
 duplicated as factory-artifacts files.)
 
 **Dim-2 Attestation:** No BC/VP/holdout INDEX content changed this burst. Counts unchanged: 769 BCs / 86
-VPs / 118 holdouts / 182 stories. DEC-362 minted (human F7-gate approval + release ruling).
+VPs / 118 holdouts / 182 stories. D-362 minted (human F7-gate approval + release ruling).
 
 **Dim-5 Attestation:** N/A on the factory-artifacts side — the release binary/prerelease artifacts are
 produced by `release.yml` run `34984900326` on the repo side, not by state-manager.

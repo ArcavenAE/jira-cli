@@ -20,7 +20,7 @@ inputs:
   - ".factory/phase-f1-delta-analysis/impact-boundary-576.md"
   - ".factory/specs/architecture/decisions/ADR-0017-first-multipart-streaming-http-surface.md"
 input-hash: "fa52806"
-traces_to: "DEC-179 item 6"
+traces_to: "D-179 item 6"
 total_findings: 7
 critical: 0
 high: 0

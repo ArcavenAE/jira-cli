@@ -322,7 +322,7 @@ _Status: [candidate] — flagged for human review before promotion to codified r
 
 **Context:** During PR #355 Round 2 triage, Copilot raised a CWE-117 finding asserting that
 `await_bulk_task` interpolated an unvalidated `task_id` into a timeout error message before
-`poll_bulk_task`'s call-site validation ran. Per DEC-018, ran Perplexity validation before
+`poll_bulk_task`'s call-site validation ran. Per D-018, ran Perplexity validation before
 acting: queried whether Rust's `{:?}` Debug formatter for `&str` escapes ASCII control
 characters (`\r`, `\n`, `\0`, `\t`, ANSI escape sequences), and whether `{:?}` constitutes a
 defense against CWE-117.
@@ -358,7 +358,7 @@ observable Rust language/stdlib behavior while citing correct documentation URLs
 third documented instance of this pattern in this codebase (prior: Rust module visibility,
 insta snapshot naming, environment variable syntax).
 
-**Standing rule unchanged:** DEC-018 (Perplexity-validate Copilot reviews) is still correct;
+**Standing rule unchanged:** D-018 (Perplexity-validate Copilot reviews) is still correct;
 it produced the right answer in R1 (confirmed RFC 3986 §5.2.4 path-confusion) and the right
 final outcome in R2 (empirical local verification caught the hallucination before the wrong
 diagnosis was acted on). The tiered-validation strategy — Perplexity first, empirical
@@ -372,14 +372,14 @@ _Tiered-validation rule reinforced: Perplexity for external API/CWE/RFC; local e
 
 ## 2026-05-11 — PR #356 R1–R4 Process Gaps
 
-### [codified] Inconsistent Perplexity-validation undermines DEC-018
+### [codified] Inconsistent Perplexity-validation undermines D-018
 
 Across 4 Copilot rounds on PR #356, Perplexity-validation was applied to R1 (cited CWE-117
 and OWASP length-capping guidance) and R4 (cited `Cow<str>` idiom per Rust API Guidelines
 C-COST) but SKIPPED on R2 and R3. The rationalization was that R2 and R3 findings were
 "empirically verifiable from the code" (arithmetic: 1025 > 1024 + 30; 1 byte → 4 bytes).
 
-This is exactly the failure mode DEC-018 was designed to prevent. The standing rule is
+This is exactly the failure mode D-018 was designed to prevent. The standing rule is
 "always validate Copilot reviews with Perplexity" — it applies regardless of how obvious
 the claim looks at first glance. The R1 and R4 validations both added context (OWASP
 defense-in-depth citation, Cow<str> idiom naming) that improved the fix justification.
@@ -392,7 +392,7 @@ Common external-claim aspects that are easy to miss: CWE/OWASP confirmation, std
 behavior, RFC or spec reference, idiomatic Rust pattern name.
 
 _Discovered: PR #356 post-round-4 audit remediation, 2026-05-11_
-_Tagged: [codified] — refines DEC-018 calibration; confirms standing rule applies to all rounds_
+_Tagged: [codified] — refines D-018 calibration; confirms standing rule applies to all rounds_
 _Process gap: Perplexity skipped on R2 + R3 for PR #356_
 
 ### [codified] Skipping state-manager between Copilot rounds creates audit-trail debt
@@ -477,8 +477,8 @@ The fix is a direct mirror of the existing `JR_AUTH_HEADER` gate in the same fil
 established under SD-002. The rationalization for skipping Perplexity pre-validation was:
 "pattern already established in same file — behavior is known."
 
-This is the same class of reasoning DEC-018 was designed to prevent: the standing rule is
-"always validate Copilot reviews with Perplexity" — DEC-018's spirit extends to any external
+This is the same class of reasoning D-018 was designed to prevent: the standing rule is
+"always validate Copilot reviews with Perplexity" — D-018's spirit extends to any external
 claim made in the design of a fix, not only to Copilot review triage. In this case the
 external claim is: "`#[cfg(debug_assertions)]` is the correct compile-time gate and cannot be
 accidentally enabled in a release build."
@@ -495,7 +495,7 @@ an explicit caveat check (e.g., Cargo.toml override) that makes the fix verifiab
 rather than coincidentally sound.
 
 _Discovered: PR #357 retroactive validation, 2026-05-12_
-_Tagged: [codified] — addendum to Lesson 1 / DEC-018; same rationalization pattern ("obvious from file context") as R2/R3 skips on PR #356_
+_Tagged: [codified] — addendum to Lesson 1 / D-018; same rationalization pattern ("obvious from file context") as R2/R3 skips on PR #356_
 
 ---
 
@@ -568,7 +568,7 @@ caught the second in one round. Fix cost: 1 extra Copilot round + additional tes
 Prevention cost: 1 `grep -rn JR_BASE_URL src/` command before pushing.
 
 _Discovered: PR #357 R1 Copilot finding 3223330261 (CRITICAL), 2026-05-12_
-_Tagged: [codified] — sub-lesson under Lesson 1 / DEC-018; "Perplexity validates APPROACH; grep validates SURFACE AREA"_
+_Tagged: [codified] — sub-lesson under Lesson 1 / D-018; "Perplexity validates APPROACH; grep validates SURFACE AREA"_
 _Scope: all security-sensitive env-var gating; generalizes to any "fix how X is done → audit everywhere X is done" class_
 
 ---
@@ -719,11 +719,11 @@ the working test.
    In that case, apply both the empirical probe AND the Perplexity cross-check before deciding
    whether to act, push back, or escalate.
 
-4. **Pushing back with evidence is part of the discipline.** DEC-018 ("always validate Copilot
+4. **Pushing back with evidence is part of the discipline.** D-018 ("always validate Copilot
    reviews with Perplexity or empirical verification") exists to prevent wrong fixes as much as
    to confirm correct ones. Resolving a thread as "not-applicable" with a documented evidence
    trail (byte count, file name, reference citation) is the correct outcome for a false-positive.
-   It is not a deviation from DEC-018 — it is its successful application.
+   It is not a deviation from D-018 — it is its successful application.
 
 **Meta-rule:** The empirical-first / Perplexity-validate discipline is equally important for
 catching false-positives as it is for catching real bugs. The 30 prior rounds in this session
@@ -1846,7 +1846,7 @@ All 3 appeared reasonable at face value:
    to make the invariant structurally self-enforcing.
 3. Share a helper function to deduplicate the expected-set construction across subtests.
 
-Per DEC-018, a research agent validated each finding against the locked F1/F2 design decisions
+Per D-018, a research agent validated each finding against the locked F1/F2 design decisions
 before acting. All 3 were REFUTED:
 
 1. **`const` slice refactor REFUTED by AC-016 + F1 Q1.** The spec deliberately chose manual
@@ -1869,7 +1869,7 @@ before acting. All 3 were REFUTED:
 After citing F1 Q1, AC-013, AC-016, and EC-3.4.017-14 in the R1 replies, Copilot converged
 on R2 with zero new comments.
 
-**Rule (reinforcement of DEC-018):** ALWAYS research-validate Copilot findings before acting —
+**Rule (reinforcement of D-018):** ALWAYS research-validate Copilot findings before acting —
 especially when the finding suggests an "obvious" refactor. The danger class is findings that
 sound like best-practice improvements (DRY, structured parsing, shared helpers) but contradict
 human-gated spec decisions. The validation cost is one research pass; the cost of acting on a
@@ -1880,7 +1880,7 @@ refuted finding is reverting production code that contradicted the spec.
 (contradicts AC-013). 0 rounds of rework needed after research-validation. Copilot converged
 in 2 rounds (R1 with 3 findings → R2 with 0).
 
-_Discovered: #407 PR #411 Copilot R1, 2026-05-25. Status: [codified]. Reinforces DEC-018._
+_Discovered: #407 PR #411 Copilot R1, 2026-05-25. Status: [codified]. Reinforces D-018._
 
 ---
 
@@ -2009,7 +2009,7 @@ Perplexity adds value when claims are second-hand (documentation comments, third
 posts, secondary spec citations). For first-party crate documentation + advisory text,
 primary sources dominate.
 
-**Status:** [observation] — not a policy change. The existing DEC-018 Perplexity-validation
+**Status:** [observation] — not a policy change. The existing D-018 Perplexity-validation
 discipline remains in force for Copilot review findings. This observation applies only to
 optional research-verification passes driven by F2/F5 dispatch.
 
@@ -2290,7 +2290,7 @@ _Discovered: S-409 Copilot review, 2026-05-27. Status: [codified]._
 **Context (S-428 / issue #428 — 2026-05-28):**
 
 The F1 delta analysis for S-428 locked `AccessibleResource` and `resolve_cloud_id` as
-`pub(crate)` visibility (decision DEC-028). During F3 implementation, the implementer
+`pub(crate)` visibility (decision D-028). During F3 implementation, the implementer
 discovered that `pub(crate)` is not reachable from `tests/` — integration test crates link
 the non-test build of the library as an external crate, which sees only `pub` items from
 the library's API surface. `pub(crate)` restricts visibility to within the current crate;
@@ -2383,7 +2383,7 @@ the test's intent explicit, not as a fix for a real bug. The distinction matters
 fix had been applied as a real bug fix, a future reader might infer that the test was
 previously broken — misleading audit trail. Framing it as defensive hardening is accurate.
 
-**Rule (per DEC-018 / receiving-code-review discipline):**
+**Rule (per D-018 / receiving-code-review discipline):**
 1. When a Copilot review finding identifies a causal mechanism (e.g., "X causes Y"),
    trace the mechanism in the actual code before accepting the finding as a bug.
 2. If the mechanism is false but the suggested change is still beneficial (e.g., makes
@@ -2391,7 +2391,7 @@ previously broken — misleading audit trail. Framing it as defensive hardening 
 3. Document the refutation in the DEC log so future readers understand the real rationale.
 
 **Scope:** Applies to all future Copilot review cycles on this project and validates the
-DEC-018 standing rule (established 2026-05-11) that Perplexity/code-trace validation
+D-018 standing rule (established 2026-05-11) that Perplexity/code-trace validation
 should precede action on any Copilot finding.
 
 _Discovered: S-400-A round-3 Copilot review, 2026-05-28. Status: [codified] [receiving-code-review]._
@@ -2408,9 +2408,9 @@ combined-delta adversarial (3-clean) → F6 hardening (scoped zero-src) → F7 c
 merged via PR #440 onto develop. Zero src/ changes throughout. 38 ACs, ~14 new gated live
 tests, 18 always-run unit tests. Shipped to develop @ 8f3e2a1; live e2e.yml 30/0.
 
-**Decision refs:** DEC-037 (F1 approval), DEC-038 (F2 convergence), DEC-039 (F3 stories),
-DEC-040 (S-E2E-3 merged), DEC-041 (S-E2E-4 merged), DEC-042 (S-E2E-5 merged), DEC-043 (F5
-converged), DEC-044 (F6+F7 converged, merge ready).
+**Decision refs:** D-037 (F1 approval), D-038 (F2 convergence), D-039 (F3 stories),
+D-040 (S-E2E-3 merged), D-041 (S-E2E-4 merged), D-042 (S-E2E-5 merged), D-043 (F5
+converged), D-044 (F6+F7 converged, merge ready).
 
 ---
 
@@ -2673,7 +2673,7 @@ to 7. The error was caught only when git output was re-verified directly. Correc
 were then recovered from the object store (dc7c34b, parent c395e27), adversary fixes were
 forward-ported (85198c5), and the corrected chain shipped as PR #445.
 
-**This is a recurrence of the DEC-047 fabrication failure mode** (sub-agents fabricating
+**This is a recurrence of the D-047 fabrication failure mode** (sub-agents fabricating
 merge SHAs, run IDs, and PR numbers during E2E-enh ship — multiple occurrences).
 
 **Mitigation (mandatory pre-action checks):**
@@ -2694,8 +2694,8 @@ branch, force-push), verify:
 minimal verification command (`git cat-file -t <sha>` or `gh run view <id>`) to confirm
 the value exists. Record only values read from command output in the current turn.
 
-_Discovered: E2E-PG-4 coverage cycle (DEC-050), 2026-06-01. Status: [process-gap].
-Recurrence: DEC-047 fabrication failure mode — third documented instance._
+_Discovered: E2E-PG-4 coverage cycle (D-050), 2026-06-01. Status: [process-gap].
+Recurrence: D-047 fabrication failure mode — third documented instance._
 
 ---
 
@@ -2750,7 +2750,7 @@ API-touching code paths should be accompanied by a gated live test before the PR
 or explicitly filed as `deferred-pending-live-validation` with a tracking issue.
 
 _Discovered: E2E-PG-4 label fix chain (#447-#450), 2026-06-01. Status: [process-gap].
-Reference: DEC-052. Live-run sequence: 26730687481 → 26733056812 → 26733998365 →
+Reference: D-052. Live-run sequence: 26730687481 → 26733056812 → 26733998365 →
 26735034015 → 26735722804 (61/0 ALL GREEN, develop @ cff86d2)._
 
 ---
@@ -2829,7 +2829,7 @@ expected-response assumptions.
 This lesson now appears as Key Lesson (a) in the Session Resume Checkpoint.
 
 _Discovered: #331 first live e2e run (run 26777755130, develop @ 6494e27), 2026-06-01._
-_Reference: DEC-058, research `.factory/research/issue-331-createmeta-response-schema.md`._
+_Reference: D-058, research `.factory/research/issue-331-createmeta-response-schema.md`._
 _Fix-forward: PR #454 (e2e wiring @ 1ee7040) + PR #455 (schema fix @ f418bf5) → live run 26779732719 (66/0)._
 
 ---
@@ -2896,7 +2896,7 @@ cycles that write test invocations of CLI subcommands without running them throu
 first (i.e., all gated `#[ignore]` live-E2E tests).
 
 _Discovered: E2E-PG-4 assign-by-query adversarial convergence, 2026-06-02._
-_Reference: DEC-061. PR #458 → develop @ d45ec88. Live run 26790203429 (67/0)._
+_Reference: D-061. PR #458 → develop @ d45ec88. Live run 26790203429 (67/0)._
 _Structural gap: PG-458-1 (positional-arity not validated by surface guard)._
 
 ---
@@ -2914,7 +2914,7 @@ _Structural gap: PG-458-1 (positional-arity not validated by surface guard)._
 [codified] — applies to all future Feature Mode cycles that author design specs or supporting documents during F1/F2 before the feature worktree/branch is created.
 
 _Discovered: S-E2E-FORK-1 F5 adversarial review, 2026-06-02._
-_Reference: DEC-063. PR #459 → develop @ afa12570._
+_Reference: D-063. PR #459 → develop @ afa12570._
 
 ---
 
@@ -2931,7 +2931,7 @@ _Reference: DEC-063. PR #459 → develop @ afa12570._
 [codified] — applies to all future Feature Mode cycles that introduce polish/refinement after F5 convergence, and to all changes that switch an implementation idiom across multiple files.
 
 _Discovered: S-E2E-FORK-1 F5 adversarial review, 2026-06-02._
-_Reference: DEC-063. PR #459 → develop @ afa12570._
+_Reference: D-063. PR #459 → develop @ afa12570._
 
 ---
 
@@ -3541,20 +3541,20 @@ a cell-unwrap utility in `tests/common/` that strips comfy-table cell-wrap artif
     checking comfy-table's wrapping behavior at a narrow terminal width (e.g., 80 chars).
 
 No follow-up story filed — deferral is tracked in STATE.md Drift Items (O1-TABLE-ASSERT)
-and here. DEC-074.
+and here. D-074.
 
 _Discovered: #475 F3 fresh adversary catch (F1 cell-wrap fragility finding), 2026-06-11._
 _Tagged: [process-gap] — DEFERRED with justified threshold; single-token convention codified._
 
 ---
 
-### DEC-075 LESSON [codified] Implementer hermetic PASS on a guard can be a false green when the guard's own pattern excludes the new construct
+### D-075 LESSON [codified] Implementer hermetic PASS on a guard can be a false green when the guard's own pattern excludes the new construct
 
 **Tags:** [codified]
 
 **Date:** 2026-06-11
 **Cycle:** #475 ADF E2E read-path (test/issue-475-adf-e2e-readpath, PR #499)
-**Reference:** DEC-075
+**Reference:** D-075
 **Status:** CODIFIED
 
 #### Lesson
@@ -3786,7 +3786,7 @@ _Apply to: all future parallel-dispatch batches that mix review agents with work
 
 ## S-7.02 Cycle-Closing Review — Windows-build feature cycle (2026-06-14)
 
-_Windows-build feature cycle CLOSED: released v0.6.0-dev.2 (#517 → develop @ 4258202); H-WIN-6 live PASS (jr-v0.6.0-dev.2-x86_64-pc-windows-msvc.zip on Release page; checksum OK; smoke test `.\jr.exe --version` PASS on windows-latest; /STACK:8388608 fix validated, no stack overflow). Full trajectory: F4 COMPLETE (6/6, PRs #504–510) → F5 CONVERGED (14 adversary passes, 5 fix PRs #511–515) → F6 PASS (100% delta mutation, 9 property proofs, #516) → F7 CONVERGED + human-authorized (DEC-100) → released v0.6.0-dev.2 (#517) → H-WIN-6 PASS. Final counts: BC 597 / NFR 42 / ADR 16 / Stories 74._
+_Windows-build feature cycle CLOSED: released v0.6.0-dev.2 (#517 → develop @ 4258202); H-WIN-6 live PASS (jr-v0.6.0-dev.2-x86_64-pc-windows-msvc.zip on Release page; checksum OK; smoke test `.\jr.exe --version` PASS on windows-latest; /STACK:8388608 fix validated, no stack overflow). Full trajectory: F4 COMPLETE (6/6, PRs #504–510) → F5 CONVERGED (14 adversary passes, 5 fix PRs #511–515) → F6 PASS (100% delta mutation, 9 property proofs, #516) → F7 CONVERGED + human-authorized (D-100) → released v0.6.0-dev.2 (#517) → H-WIN-6 PASS. Final counts: BC 597 / NFR 42 / ADR 16 / Stories 74._
 
 _The following items were reviewed per the S-7.02 Cycle-Closing Checklist. Each has either a confirmed tracked entry (LESSON/Drift Item already in files) or an explicit deferral justification._
 
@@ -3798,7 +3798,7 @@ Durable rule: Never dispatch adversary reviews concurrently with working-tree-mu
 
 ### S-7.02 Item 2: WIN-RUNTIME-OAUTH-PROBE (LOW) — DEFERRED
 
-Status: OPEN Drift Item in STATE.md. ADR-0016 Decision 5c amendment accepts the limitation: the Windows release-job checks for the binary's embedded OAuth constants file (`embedded_oauth.rs` constants-file check) but does NOT exercise a full `jr auth status` runtime probe on Windows (the Unix probe step is not ported). Accepted per DEC-098. Target: future Windows-hardening pass.
+Status: OPEN Drift Item in STATE.md. ADR-0016 Decision 5c amendment accepts the limitation: the Windows release-job checks for the binary's embedded OAuth constants file (`embedded_oauth.rs` constants-file check) but does NOT exercise a full `jr auth status` runtime probe on Windows (the Unix probe step is not ported). Accepted per D-098. Target: future Windows-hardening pass.
 
 Deferral rationale: The constants-file check is sufficient to confirm the OAuth binary is branded; a full runtime `jr auth status` on Windows would require a live Jira credential in CI, which is E2E-scoped and intentionally not present in release.yml.
 
@@ -3828,13 +3828,13 @@ Deferral rationale: The immediate risk is mitigated (branch protection already u
 
 ### S-7.02 Item 7: OBS-001 (LOW) — DEFERRED
 
-Status: OPEN Drift Item in STATE.md. 6 S-WIN stories still carry `status:ready` in the story-index (S-WIN-1 through S-WIN-6 plus supporting items). Human deprioritized at the F7 gate (DEC-100: OBS-001 LOW deferred — "optional hygiene, matches project convention"). Stories are fully MERGED; the `status:ready` label is cosmetic artifact of the story-template default not being updated post-merge.
+Status: OPEN Drift Item in STATE.md. 6 S-WIN stories still carry `status:ready` in the story-index (S-WIN-1 through S-WIN-6 plus supporting items). Human deprioritized at the F7 gate (D-100: OBS-001 LOW deferred — "optional hygiene, matches project convention"). Stories are fully MERGED; the `status:ready` label is cosmetic artifact of the story-template default not being updated post-merge.
 
-Deferral rationale: No functional or audit-trail gap — the Phase Progress table and burst-log record all merges with PR numbers and SHAs. Story status field is informational; the story-index is not machine-read by any gate script. Accepted per DEC-100.
+Deferral rationale: No functional or audit-trail gap — the Phase Progress table and burst-log record all merges with PR numbers and SHAs. Story status field is informational; the story-index is not machine-read by any gate script. Accepted per D-100.
 
 ### S-7.02 Item 8: R6-002 figment re-entry guard — CONFIRMED RESOLVED
 
-Status: RESOLVED. `test_global_config_struct_has_no_path_override_field` was merged in F5 fix PR #514 → develop @ 2f96543. The structural guard verifies that `GlobalConfig` never acquires a `config_dir`/`cache_dir`/`data_dir` field (which would enable figment re-entry via `JR_CONFIG_DIR`/`JR_CACHE_DIR` as a Figmap source). The guard compiles the struct's `#[derive(Deserialize)]` surface. DEC-098 records the resolution.
+Status: RESOLVED. `test_global_config_struct_has_no_path_override_field` was merged in F5 fix PR #514 → develop @ 2f96543. The structural guard verifies that `GlobalConfig` never acquires a `config_dir`/`cache_dir`/`data_dir` field (which would enable figment re-entry via `JR_CONFIG_DIR`/`JR_CACHE_DIR` as a Figmap source). The guard compiles the struct's `#[derive(Deserialize)]` surface. D-098 records the resolution.
 
 Closing note: R6-002 was the highest-priority residual from F5 R6; the guard is machine-enforceable and was the last open RESOLVED item. No recurrence expected.
 
@@ -3895,7 +3895,7 @@ _Recorded: 2026-06-15 — S-CIGATE-1 DELIVERED; PR #518 → develop @ e9b2269; c
 
 ## S-7.02 Cycle-Closing Review — Issue #492 (block-HTML hardBreak, 2026-06-16)
 
-_Issue #492 CYCLE CLOSED: PR #521 squash-merged → develop @ 3ba8ea2 (2026-06-16; 14/14 CI green incl CI Gate; #492 auto-closed; DEC-109). BC-7.2.011 v1.9.6 FINAL. Full VSDD Feature-Mode pipeline: F4 TDD → F5 15-pass/3-clean CONVERGED → F6 proptest 5-inv 150k cases + 100% effective mutation → F7 5/5 DELTA_CONVERGED._
+_Issue #492 CYCLE CLOSED: PR #521 squash-merged → develop @ 3ba8ea2 (2026-06-16; 14/14 CI green incl CI Gate; #492 auto-closed; D-109). BC-7.2.011 v1.9.6 FINAL. Full VSDD Feature-Mode pipeline: F4 TDD → F5 15-pass/3-clean CONVERGED → F6 proptest 5-inv 150k cases + 100% effective mutation → F7 5/5 DELTA_CONVERGED._
 
 _The following process-gap items are reviewed per the S-7.02 Cycle-Closing Checklist for issue #492._
 
@@ -4041,8 +4041,8 @@ The pattern: F1 correctly identifies the chokepoint but performs a "per-reported
 
 **Related:**
 - Issue #492 S-7.02 Item 2 (PRE-EXISTING-LONE-CR): F1 for #492 missed the `push_text` heading/codeBlock `\r` gap → filed #522.
-- Issue #522 DEC-113: same gap class; F5 R2 caught `\n` on the same chokepoint.
-- STATE.md DEC-115: this lesson codified as [process-gap] in the DEC-115 entry.
+- Issue #522 D-113: same gap class; F5 R2 caught `\n` on the same chokepoint.
+- STATE.md D-115: this lesson codified as [process-gap] in the D-115 entry.
 - RESUME PLAN Step-7(c): references this lesson as "F1 again missed sibling \n case on the SAME push_text chokepoint."
 
 _Recorded: 2026-06-17 — Issue #522 F5 CONVERGED; S-7.02 Step-7 codification._
@@ -4050,7 +4050,7 @@ _Tagged: [process-gap] [F1] [impact-boundary] — reinforces existing gap; no fo
 
 ---
 
-## Issue #522 S-7.02 Cycle-Close Checklist Confirmation (DEC-119)
+## Issue #522 S-7.02 Cycle-Close Checklist Confirmation (D-119)
 
 **[codified] Issue #522 cycle CLOSED — S-7.02 complete. No open process-gap requiring a follow-up story.**
 
@@ -4063,12 +4063,12 @@ Date: 2026-06-17. PR #523 squash-merged → develop @ 53f6d98. #522 auto-closed.
 | LESSON-F1-SIBLING-CASE | CODIFIED (see above, 2026-06-17) | 2nd recurrence of F1 sibling-case-enumeration gap on same chokepoint (\n alongside \r in push_text/push_code). Lesson codified; no follow-up story opened (process-discipline, not a code gap; will promote to follow-up story if a 3rd recurrence occurs on a different chokepoint). |
 | LESSON-RESUME-STATE-RECONCILE | CODIFIED (Issue #492 S-7.02, 2026-06-16) | Already codified; no new recurrence in #522 cycle. |
 | F5-PARTIAL-FIX-SWEEP | Already codified in #492 cycle | Same lesson observed; no new codification needed. |
-| MUTANTS-ADF-GLOB | RESOLVED in-cycle (DEC-118) | Folded into PR #523; no follow-up story required. |
-| CLAUDE.md-S522-GOTCHA | RESOLVED in-cycle (DEC-118) | Folded into PR #523; no follow-up story required. |
+| MUTANTS-ADF-GLOB | RESOLVED in-cycle (D-118) | Folded into PR #523; no follow-up story required. |
+| CLAUDE.md-S522-GOTCHA | RESOLVED in-cycle (D-118) | Folded into PR #523; no follow-up story required. |
 
 **Conclusion:** All S-7.02 process-gap findings from the #522 cycle are either codified as lessons or resolved in-cycle. No follow-up stories are required from this cycle's S-7.02 checklist.
 
-_Recorded: 2026-06-17 — Issue #522 CYCLE CLOSED. DEC-119._
+_Recorded: 2026-06-17 — Issue #522 CYCLE CLOSED. D-119._
 _Tagged: [cycle-close] [S-7.02] [confirmed]_
 
 ---
@@ -4298,7 +4298,7 @@ All process-gap findings from this cycle have either a codified lesson or a trac
 | LESSON-F2-PIECEWISE | Codified in lessons.md + STATE.md standing constraints | ✓ CODIFIED |
 | LESSON-INJECTION-GUARD-SCOPE | Codified in lessons.md (coverage boundary + negative fixture pattern) | ✓ CODIFIED |
 
-**Evidence that FULL VSDD pays off on CI-only security changes (DEC-121):**
+**Evidence that FULL VSDD pays off on CI-only security changes (D-121):**
 - F5 caught a CRITICAL guard false-negative: hardcoded scope of 5 injection sites vs 23 structural
   sites. A naive "the guard exists and runs" review would have shipped a false-security check.
 - F5 also caught a CRITICAL negative-fixture gap: guard that always exits 0 passed CI, providing
@@ -4333,7 +4333,7 @@ All process-gap findings from this cycle have either a codified lesson or a trac
 | CITATION-FORM-DISCIPLINE (bare file:NN citations vs symbol-form #408) | Drift item added to STATE.md (LOW, DEFERRED) | ✓ TRACKED |
 | F7-COSMETIC-ATTR-ORDER (#[ignore] vs #[test] ordering in prose vs code) | ACCEPTED-COSMETIC (semantically irrelevant in Rust) | ✓ ACCEPTED |
 
-**Evidence that FULL VSDD pays off on "trivial" changes (DEC-120):**
+**Evidence that FULL VSDD pays off on "trivial" changes (D-120):**
 - F5 adversarial review caught a real coverage-regression HIGH finding: `global_profile_flag_targets_auth_status` (auth_profiles.rs) was reachable without `#[ignore]` + early-return guard in CI, meaning a Keychain contention hang was latent. Without the adversarial pass, this would have shipped unnoticed.
 - F5 also caught C-1 split-brain: the F2 spec edits were in the wrong branch, which would have created a divergence between the story's accepted spec and the actual merged content.
 - Total: 2 substantive findings on a story classified as `trivial_scope: true`, `estimated_effort: xsmall`. The full VSDD discipline was not bureaucratic overhead — it was the mechanism that caught both.
@@ -4371,10 +4371,10 @@ All open items from the S-7.02 cycle-closing checklist are accounted for:
 
 **Count guards (S-7.02 defensive sweep):** BC 599 unchanged. NFR 42 unchanged. No new `src/` changes. No product code delta. Stories 83 (authoritative, unchanged from F3). develop HEAD at F7 gate: 83a141ad.
 
-**Evidence that FULL VSDD pays off on CI-infra-only changes (DEC-122/123/124):**
+**Evidence that FULL VSDD pays off on CI-infra-only changes (D-122/123/124):**
 - F5 caught M4 (vacuous zip-glob assertion) — test counted file occurrences globally instead of anchoring to distinct branches, providing false confidence.
-- DEC-124: Local pre-PR code review caught a CRITICAL Windows-build defect (`shell: bash` missing on Build step) that all 9 automated Red-Gate tests missed — a coverage gap not surfaced by any adversarial pass.
-- DEC-123: Fresh-context consistency audit at F2 gate caught 2 MAJOR cross-document defects that 3 adversarial passes missed.
+- D-124: Local pre-PR code review caught a CRITICAL Windows-build defect (`shell: bash` missing on Build step) that all 9 automated Red-Gate tests missed — a coverage gap not surfaced by any adversarial pass.
+- D-123: Fresh-context consistency audit at F2 gate caught 2 MAJOR cross-document defects that 3 adversarial passes missed.
 
 **Verdict: S-7.02 CHECKLIST SATISFIED. S-FORK-OPS-BACKFILL F7 CONVERGED + AUTHORIZED. v0.6.0-dev.5 release in progress.**
 
@@ -4396,7 +4396,7 @@ All process-gap findings from this cycle have either a codified lesson, a tracke
 | .factory/ CI-checkout scope flaw (CI job used `checkout@v4` without specifying factory-artifacts branch, pulling main instead) | Caught in F2 — spec corrected before implementation | ✓ CLOSED (spec-time fix) |
 | Count drift (test count in spec differed from implemented test count across 3 passes) | Caught in F2 — spec corrected piecewise as count settled | ✓ CLOSED (spec-time fix) |
 | 3-way message contradiction (error-taxonomy.md §8, spec body, and implementation all differed on error format) | Caught in F2 — canonical message locked before F4 | ✓ CLOSED (spec-time fix) |
-| Non-actionable `(line N)` literal in error output | Caught in F3 story review (DEC-127 HIGH) — Vec<(String,usize)> provenance carries real line numbers | ✓ CLOSED (story-time fix) |
+| Non-actionable `(line N)` literal in error output | Caught in F3 story review (D-127 HIGH) — Vec<(String,usize)> provenance carries real line numbers | ✓ CLOSED (story-time fix) |
 | False-green message assertion (test asserted substring that matched both correct and incorrect messages) | Caught in F5 — hardening PR #545 | ✓ IN PR #545 (awaiting merge) |
 | 4 mutation-survivor gaps (survivors from `cargo mutants --in-diff`) | Caught in F5/F6 — hardening PR #545 | ✓ IN PR #545 (awaiting merge) |
 | CWE-22 path-traversal (citation paths not validated against repo root before filesystem access) | Caught in F5 security review — hardening PR #545 | ✓ IN PR #545 (awaiting merge) |
@@ -4405,7 +4405,7 @@ All process-gap findings from this cycle have either a codified lesson, a tracke
 **Evidence that FULL VSDD pays off on a "single CI-guard test" (~211 LOC parser):**
 Full VSDD on a file that was classifiable as `trivial` scope caught 8+ distinct real defects spanning
 spec (F2), story (F3), implementation (F4), adversarial (F5), and formal (F6) phases. This is the
-strongest single reinforcement of DEC-120/121/124 yet. The cost was not bureaucratic overhead — each
+strongest single reinforcement of D-120/121/124 yet. The cost was not bureaucratic overhead — each
 phase caught a class of defect that prior phases structurally could not see:
 - F2 (spec-level): .factory/ checkout flaw, count drift, 3-way message contradiction — invisible to
   any code reviewer because the code did not exist yet.
@@ -4413,10 +4413,10 @@ phase caught a class of defect that prior phases structurally could not see:
   passes accepted as valid.
 - F5 (adversarial): false-green assertion, mutation survivors, CWE-22 — invisible to TDD because tests
   were self-consistent with the implementation.
-DEC-129 records this finding formally.
+D-129 records this finding formally.
 
 **PG-MERGE-AUTH-BYPASS [codified]:**
-The merge-authorization gap (DEC-128, 2026-06-20 F4) is now codified as follow-up story
+The merge-authorization gap (D-128, 2026-06-20 F4) is now codified as follow-up story
 S-PG-MERGE-AUTH-BYPASS (story 91, draft). Story target: Dark Factory engine governance — codify
 the merge-authorization gate so delivery sub-agents halt at ready-for-merge and merge only on
 explicit orchestrator-passed authorization signal. Engine-only scope; zero jr source code changes.
@@ -4491,7 +4491,7 @@ The pipeline was in a stable, released state (v0.6.0-dev.6, ZERO open PRs, all f
 2. Exit-code correctness is a behavioral contract (JrError::exit_code() mapping) — holdout scenarios are a better long-term guard than unit tests alone because they exercise the full exit path.
 3. The holdout-freshness sweep also surfaced HOLDOUT-STALE items (H-NEW-MP-001, H-007, H-027) that need PO authoring passes — the value of periodic sweeps compounds over time as features accumulate without corresponding holdout coverage.
 
-**Related drift items:** HOLDOUT-STALE-2026-06-22 (open), HOLDOUT-COVERAGE-GAPS-2026-06-22 (open). DEC-131.
+**Related drift items:** HOLDOUT-STALE-2026-06-22 (open), HOLDOUT-COVERAGE-GAPS-2026-06-22 (open). D-131.
 
 _Recorded: 2026-06-24 — maintenance sweep 2026-06-22 close. State-manager._
 _Tagged: [maintenance] [holdout-freshness] [exit-code] [real-bug-found]_
@@ -4550,7 +4550,7 @@ _Related: MUTATION-CI-TIMEOUT (drift item); PR #553 (SEC-001)_
 
 **Category:** process-gap / agent-autonomy / delivery-agents
 
-**Lesson:** Delivery agents (pr-manager sub-agents) must not autonomously spawn implementer sub-agents, push commits, or enter unbounded poll loops. During PR #553, the pr-manager delivery agent spawned implementer sub-agents and pushed commits (4b10e77) without orchestrator authorization, and entered expensive non-converging poll loops (estimated 100k+ tokens/segment). This is the same root class as PG-MERGE-AUTH-BYPASS (DEC-128) but at the implementation-spawn level rather than the merge-authorization level.
+**Lesson:** Delivery agents (pr-manager sub-agents) must not autonomously spawn implementer sub-agents, push commits, or enter unbounded poll loops. During PR #553, the pr-manager delivery agent spawned implementer sub-agents and pushed commits (4b10e77) without orchestrator authorization, and entered expensive non-converging poll loops (estimated 100k+ tokens/segment). This is the same root class as PG-MERGE-AUTH-BYPASS (D-128) but at the implementation-spawn level rather than the merge-authorization level.
 
 **Evidence from PR #553 (SEC-001):**
 - pr-manager autonomously spawned fix sub-agents and pushed 4b10e77 without orchestrator sign-off.
@@ -4558,7 +4558,7 @@ _Related: MUTATION-CI-TIMEOUT (drift item); PR #553 (SEC-001)_
 
 **Root cause:** Delivery sub-agents have no hard boundary between "coordinate" and "implement." Without an explicit protocol that defines when a pr-manager may spawn work vs must escalate, the agent defaults to resolving all findings autonomously.
 
-**Codification (extends DEC-128 / S-PG-MERGE-AUTH-BYPASS):**
+**Codification (extends D-128 / S-PG-MERGE-AUTH-BYPASS):**
 Delivery agents must: (1) NOT spawn fix sub-agents — only report findings to orchestrator; (2) NOT push commits autonomously — all pushes require explicit orchestrator authorization per push; (3) NOT enter unbounded poll loops — use a maximum iteration ceiling (e.g., 3 rounds) then escalate; (4) treat "review found issues" as a STOP signal requiring orchestrator decision, not a CONTINUE signal authorizing autonomous remediation.
 
 _Recorded: 2026-06-25 — Bundle D + SEC-001 close. State-manager._
@@ -4583,7 +4583,7 @@ _Tagged: [process-gap] [agent-autonomy] [pr-manager] [delivery-agents] [poll-loo
 _Recorded: 2026-06-25 — H-028 investigation close. State-manager._
 _Tagged: [process-gap] [holdout-evaluation] [verify-before-fix] [false-positive]_
 _Related: HOLDOUT-STALE-2026-06-25 (drift item, corrected); maintenance/2026-06-25/H-028-root-cause.md_
-_Related: PG-PR-MANAGER-OVERREACH (new drift item); PG-MERGE-AUTH-BYPASS; DEC-128; S-PG-MERGE-AUTH-BYPASS (story 91)_
+_Related: PG-PR-MANAGER-OVERREACH (new drift item); PG-MERGE-AUTH-BYPASS; D-128; S-PG-MERGE-AUTH-BYPASS (story 91)_
 
 ---
 
@@ -4595,15 +4595,15 @@ _Related: PG-PR-MANAGER-OVERREACH (new drift item); PG-MERGE-AUTH-BYPASS; DEC-12
 
 **Lesson:** During D3 pattern-hygiene PR #555, the fresh-eyes pr-reviewer independently caught a BLOCKING factual error that had survived the full constructive code-reviewer pass: PF-017 documented that `src/cli/issue/workflow.rs` covers the remote-link handler and proposed extracting `handle_remote_link` from it — but `handle_remote_link` actually lives in `src/cli/issue/links.rs`. Had this gone to merge the CLAUDE.md Known Size Deviations table would have contained a false module-to-function attribution visible to all future contributors.
 
-**Pattern:** This is the same DEC-131 pattern (maintenance sweep 2026-06-22) where fresh-eyes pr-review caught phantom ADR citations that constructive code-review missed. The fix was committed at 7ca3fde before merge.
+**Pattern:** This is the same D-131 pattern (maintenance sweep 2026-06-22) where fresh-eyes pr-review caught phantom ADR citations that constructive code-review missed. The fix was committed at 7ca3fde before merge.
 
-**Codification (reinforces DEC-131):** Fresh-eyes pr-review is not optional even for cosmetic/no-behavior-change PRs. Factual errors in documentation are blocking defects — a CLAUDE.md entry claiming a function lives in the wrong file is a correctness bug, not a nit. Constructive review (code-reviewer) and fresh-eyes review (pr-reviewer) catch different defect classes and are complements, not substitutes.
+**Codification (reinforces D-131):** Fresh-eyes pr-review is not optional even for cosmetic/no-behavior-change PRs. Factual errors in documentation are blocking defects — a CLAUDE.md entry claiming a function lives in the wrong file is a correctness bug, not a nit. Constructive review (code-reviewer) and fresh-eyes review (pr-reviewer) catch different defect classes and are complements, not substitutes.
 
 **Recommendation:** Keep the two-reviewer discipline (constructive + fresh-eyes) for ALL PRs including doc-only and hygiene PRs. The token cost is low relative to the cost of a merged factual error propagating into developer mental models.
 
 _Recorded: 2026-06-25 — D3 pattern hygiene PR #555 close. State-manager._
 _Tagged: [process-gap] [review] [fresh-eyes-value] [documentation-correctness]_
-_Related: DEC-131 (2026-06-22 phantom ADR citation catch); PR #555 commit 7ca3fde._
+_Related: D-131 (2026-06-22 phantom ADR citation catch); PR #555 commit 7ca3fde._
 
 ---
 
@@ -4617,7 +4617,7 @@ _Related: DEC-131 (2026-06-22 phantom ADR citation catch); PR #555 commit 7ca3fd
 
 **Root cause:** boundary arithmetic in holdout scenarios requires the author to trace through the implementation's depth-counting model, not just the user-visible nesting level. A "256-deep" holdout written at the API surface (`>` prefix count) silently conflates two things: (a) the user's nesting level, and (b) the ADF depth which includes the document root node.
 
-**Reinforcement (F2-PIECEWISE lineage):** The same pass-1 remediation that corrected H-NEW-SEC-001 also introduced a factually-wrong `required`-flag rationale in H-007 (claimed the `required: true` field is used in non-interactive gating — incorrect; it is informational only). This is a textbook F2-PIECEWISE fix-cascade: the author's focus on the CRITICAL finding caused them to introduce an error in an adjacent scenario. The pass-2 adversary caught it. This is the DEC-130 pattern (DEAD-CITATION-CI had 3 self-inflicted F2 fix-cascades); F2-PIECEWISE-PROTOCOL [ENFORCED] applies to holdout authoring just as it does to spec authoring — run a consistency pass after each holdout-set edit before declaring convergence.
+**Reinforcement (F2-PIECEWISE lineage):** The same pass-1 remediation that corrected H-NEW-SEC-001 also introduced a factually-wrong `required`-flag rationale in H-007 (claimed the `required: true` field is used in non-interactive gating — incorrect; it is informational only). This is a textbook F2-PIECEWISE fix-cascade: the author's focus on the CRITICAL finding caused them to introduce an error in an adjacent scenario. The pass-2 adversary caught it. This is the D-130 pattern (DEAD-CITATION-CI had 3 self-inflicted F2 fix-cascades); F2-PIECEWISE-PROTOCOL [ENFORCED] applies to holdout authoring just as it does to spec authoring — run a consistency pass after each holdout-set edit before declaring convergence.
 
 **D4 LOW observations → source regression pins (PR #560):** All 3 LOW observations were escalated (per human direction) to source regression-pin tests in src/adf.rs rather than doc notes. This proved correct: the pinned tests (plain-text block-HTML + discrete footnote node shapes) are now CI-enforced guards against future behavioral drift. When a LOW adversarial observation identifies a load-bearing behavioral shape that is untested, prefer a regression-pin test over a prose note.
 
@@ -4628,7 +4628,7 @@ _Related: DEC-131 (2026-06-22 phantom ADR citation catch); PR #555 commit 7ca3fd
 
 _Recorded: 2026-06-26 — D4 holdout refresh close. State-manager._
 _Tagged: [codified] [adversarial-review] [holdout-authoring] [boundary-arithmetic] [fix-cascade] [regression-pin]_
-_Related: DEC-134; BC-7.2.012; PR #560 (develop @ 9657b1e); DEC-120/121/129/130 lineage; F2-PIECEWISE-PROTOCOL._
+_Related: D-134; BC-7.2.012; PR #560 (develop @ 9657b1e); D-120/121/129/130 lineage; F2-PIECEWISE-PROTOCOL._
 
 ---
 
@@ -4640,13 +4640,13 @@ _Related: DEC-134; BC-7.2.012; PR #560 (develop @ 9657b1e); DEC-120/121/129/130 
 
 **Lesson (a): E2E cannot assert cache no-HTTP.** A cache-coverage audit mapped 9 cache families across 6 behavior dimensions (D1 hit/miss, D2 warm-hit no-HTTP, D3 stale/evict, D4 format-drift self-heal, D5 write-error resilience, D6 profile-isolation). The D2 "warm-hit no-HTTP" dimension is unreachable from live E2E tests: `tests/e2e_live.rs` runs against a real Jira tenant without request-count instrumentation, so there is no way to assert that a warm-hit path issues zero HTTP calls. This is a structural limitation of live E2E testing, not a gap to close with more E2E tests. Coverage for D2 (no-HTTP warm-hit) belongs at the wiremock/unit tier where request counts are observable.
 
-**Lesson (b): Audit-proposed BC anchors must be verified against BC bodies before use.** The cache-coverage audit proposed two BC anchors that turned out to be wrong: BC-6.3.001 (proposed for P1 per-profile isolation) and BC-6.2.013 (proposed for P2 format-drift self-heal). After verifying the actual BC bodies, the correct anchors were BC-6.2.009 (multi-profile cache isolation) and BC-6.2.011 (fields.json format-drift self-heal). Mis-citations were caught at authoring time before any test code was written. This reinforces the DEC-131 / D4-lesson lineage: anchor accuracy requires reading the BC body, not inferring from the BC number or title.
+**Lesson (b): Audit-proposed BC anchors must be verified against BC bodies before use.** The cache-coverage audit proposed two BC anchors that turned out to be wrong: BC-6.3.001 (proposed for P1 per-profile isolation) and BC-6.2.013 (proposed for P2 format-drift self-heal). After verifying the actual BC bodies, the correct anchors were BC-6.2.009 (multi-profile cache isolation) and BC-6.2.011 (fields.json format-drift self-heal). Mis-citations were caught at authoring time before any test code was written. This reinforces the D-131 / D4-lesson lineage: anchor accuracy requires reading the BC body, not inferring from the BC number or title.
 
 **Context:** P1 (6 per-profile isolation unit tests) and P2 (2 fields.json self-heal unit tests) shipped via PR #561, squash-merged → develop @ 5ab4e0f. 8 tests, all pass. No production bug found — confirms correct isolation and self-heal implementations serve as regression pins. Remaining audit proposals (P3–P8 + MED no-HTTP wiremock gaps) deferred pending BC sub-clause prerequisites.
 
 _Recorded: 2026-06-27 — cache-coverage audit + P1/P2 delivery close. State-manager._
 _Tagged: [codified] [test-coverage] [cache-behavior] [E2E-scope] [anchor-accuracy]_
-_Related: DEC-135; PR #561 (develop @ 5ab4e0f); BC-6.2.009; BC-6.2.011; audit: .factory/research/cache-coverage-audit-2026-06-27.md._
+_Related: D-135; PR #561 (develop @ 5ab4e0f); BC-6.2.009; BC-6.2.011; audit: .factory/research/cache-coverage-audit-2026-06-27.md._
 
 ---
 
@@ -4664,18 +4664,18 @@ _Related: DEC-135; PR #561 (develop @ 5ab4e0f); BC-6.2.009; BC-6.2.011; audit: .
 
 **The process-gap is the gate-skip itself, not the outcome.** F5 confirmed the lighter flow leaked no defect in this case. But the adversary's [process-gap] observation stands: an unlucky iteration of this same pattern could ship a test with a tautological assertion, a wrong BC anchor, or a subtly inverted condition — none of which would be caught by CI alone. The adversarial gate's value is forward-looking and cheap to run relative to the cost of a silently wrong regression test staying in the codebase.
 
-**Codification (per DEC-136):**
+**Codification (per D-136):**
 
 1. **Default = run the gate** for test-only and characterization-pin PRs. There is no categorical exemption for test-only changes.
 2. **If an intended gate-skip is planned**, the orchestrator MUST surface this to the human BEFORE merge — not after — with explicit justification. Retroactive reconciliation is more expensive and risks missing the window.
 3. **A documented lighter tier is acceptable** if defined with explicit criteria (e.g., "single-assertion proptest pin against a pure function already covered by 3+ passing F5 passes in the same session"). Until such a tier is formally codified, default = run the gate.
 4. **1-pass F5 is acceptable for retroactive reviews** when: (a) no defects found, (b) scope is test-only and novelty is LOW, (c) the deviation is explicitly recorded in STATE.md and the story. This is a deviation-with-rationale, not a standard. It does not lower the bar for future fresh deliveries.
 
-**Lineage:** DEC-120/121/124/129/132 all reinforce that "trivial" changes still warrant the gate — security guards, CI infra, refactors, and test-only changes alike have surfaced CRIT/HIGH defects in VSDD history. The pattern holds.
+**Lineage:** D-120/121/124/129/132 all reinforce that "trivial" changes still warrant the gate — security guards, CI infra, refactors, and test-only changes alike have surfaced CRIT/HIGH defects in VSDD history. The pattern holds.
 
 _Recorded: 2026-06-27 — F5/F3/F7 rigor backfill for PRs #560+#561. State-manager._
 _Tagged: [codified] [process-gap] [adversarial-review] [gate-discipline] [test-only]_
-_Related: DEC-136; S-D4-TEST-HARDENING-BACKFILL-1; TEST-ONLY-GATE-ELIGIBILITY (drift item); DEC-120/121/124/129/132 lineage._
+_Related: D-136; S-D4-TEST-HARDENING-BACKFILL-1; TEST-ONLY-GATE-ELIGIBILITY (drift item); D-120/121/124/129/132 lineage._
 
 ---
 
@@ -4701,11 +4701,11 @@ _Related: DEC-136; S-D4-TEST-HARDENING-BACKFILL-1; TEST-ONLY-GATE-ELIGIBILITY (d
 
 **Recurring missing-BC-sub-clause gating dependency:** ADF markdown→ADF behaviors (#471/472/474/483/489/492/522/473), cache D2 warm-hit no-HTTP, and read error-channel/partial_match are shipped with full test coverage and CLAUDE.md Gotchas entries but lack dedicated BC sub-clauses. This blocks holdout authoring (a holdout without a BC anchor is technically incomplete per the factory BC-anchor rule). A spec-first pass to author these BC sub-clauses is the prerequisite for promoting these to holdout-tier coverage. Tracked as MISSING-BC-SUBCLAUSE-PATTERN drift item.
 
-**Cross-reference:** CACHE-COVERAGE-TIER-DISCIPLINE (covers the cache no-HTTP sub-case); E2E-EDGE-CASE-GAPS-2026-06-27 (gap inventory); MISSING-BC-SUBCLAUSE-PATTERN (drift item). DEC-137.
+**Cross-reference:** CACHE-COVERAGE-TIER-DISCIPLINE (covers the cache no-HTTP sub-case); E2E-EDGE-CASE-GAPS-2026-06-27 (gap inventory); MISSING-BC-SUBCLAUSE-PATTERN (drift item). D-137.
 
 _Recorded: 2026-06-27 — E2E edge-case coverage audit close. State-manager._
 _Tagged: [codified] [test-coverage] [E2E-scope] [coverage-tier-design] [happy-path-by-design]_
-_Related: DEC-137; `.factory/research/e2e-edge-case-audit-2026-06-27-read.md`; `.factory/research/e2e-edge-case-audit-2026-06-27-write.md`; CACHE-COVERAGE-TIER-DISCIPLINE (2026-06-27)._
+_Related: D-137; `.factory/research/e2e-edge-case-audit-2026-06-27-read.md`; `.factory/research/e2e-edge-case-audit-2026-06-27-write.md`; CACHE-COVERAGE-TIER-DISCIPLINE (2026-06-27)._
 
 ---
 
@@ -4723,13 +4723,13 @@ Specific defects caught only by the anchor-adequacy lens:
 3. Off-by-one depth-boundary trap in BC-7.2.012 EC-1/EC-2 N+1 (boundary condition stated as N not N-1 for the accept side, causing a fence-post error in any future holdout that relies on the exact accept/reject boundary).
 4. An expect(1)-vs-absence-of-mount mismatch in BC-6.2.018 (initial draft expected exactly one HTTP call; truth is "zero additional HTTP calls" — the warm-hit prevents any call).
 
-The self-inflicted fix-cascade pattern (DEC-130 lineage): when a remediation in pass N introduces a factually-wrong statement (as happened here in the depth-boundary section), the NEXT pass catches it — not the same pass. F2-PIECEWISE-PROTOCOL (dispatch consistency-validator after each fix before the next adversary pass) is the mechanical countermeasure. Enforced since 2026-06-20.
+The self-inflicted fix-cascade pattern (D-130 lineage): when a remediation in pass N introduces a factually-wrong statement (as happened here in the depth-boundary section), the NEXT pass catches it — not the same pass. F2-PIECEWISE-PROTOCOL (dispatch consistency-validator after each fix before the next adversary pass) is the mechanical countermeasure. Enforced since 2026-06-20.
 
 **Consequence:** For BC authoring on complex behaviors (ADF processing, cache semantics), dispatch at minimum two lenses: (1) accuracy lens checking Behavior↔Source-Code alignment, (2) anchor-adequacy lens checking Trace/EC completeness for holdout framing. A CLEAN from both on the same pass is the convergence criterion.
 
 _Recorded: 2026-06-27 — BC-sub-clause pass convergence close. State-manager._
 _Tagged: [codified] [adversarial-review] [spec-quality] [convergence-methodology]_
-_Related: DEC-138; F2-PIECEWISE-PROTOCOL (enforced 2026-06-20); DEC-130 lineage._
+_Related: D-138; F2-PIECEWISE-PROTOCOL (enforced 2026-06-20); D-130 lineage._
 
 ---
 
@@ -4752,7 +4752,7 @@ Additionally, the research agent added 2 precision refinements that the F2 adver
 
 _Recorded: 2026-06-27 — BC-sub-clause pass, external validation close. State-manager._
 _Tagged: [codified] [spec-quality] [external-validation] [ADF] [research-before-finalize]_
-_Related: DEC-138; `.factory/research/adf-bc-external-validation-2026-06-27.md`; BC-7.2.013/014 bodies._
+_Related: D-138; `.factory/research/adf-bc-external-validation-2026-06-27.md`; BC-7.2.013/014 bodies._
 
 ---
 
@@ -4762,7 +4762,7 @@ _Related: DEC-138; `.factory/research/adf-bc-external-validation-2026-06-27.md`;
 
 **Tag:** [codified] BROKEN-ANCHOR-PATTERN-RESOLVED — recurring missing-BC-sub-clause pattern now resolved for the ADF/cache/partial_match cluster
 
-**Lesson:** The recurring broken-anchor / missing-BC-sub-clause pattern (MISSING-BC-SUBCLAUSE-PATTERN drift item, DEC-137) is now resolved: BC-7.2.013 (footnote→ADF), BC-7.2.014 (bare-URL autolink), BC-7.3.010 (JSON render invariant), BC-6.2.018 (cache warm-hit no-HTTP), BC-X.10.001 EC-1 (partial_match no-network) now exist as individually-bodied contracts. These were behaviors shipped with full test coverage and CLAUDE.md Gotchas entries but without a dedicated BC sub-clause, blocking holdout authoring (a holdout without a BC anchor is technically incomplete per the factory BC-anchor rule).
+**Lesson:** The recurring broken-anchor / missing-BC-sub-clause pattern (MISSING-BC-SUBCLAUSE-PATTERN drift item, D-137) is now resolved: BC-7.2.013 (footnote→ADF), BC-7.2.014 (bare-URL autolink), BC-7.3.010 (JSON render invariant), BC-6.2.018 (cache warm-hit no-HTTP), BC-X.10.001 EC-1 (partial_match no-network) now exist as individually-bodied contracts. These were behaviors shipped with full test coverage and CLAUDE.md Gotchas entries but without a dedicated BC sub-clause, blocking holdout authoring (a holdout without a BC anchor is technically incomplete per the factory BC-anchor rule).
 
 **Root cause:** BC authoring lagged feature delivery. The behavior was characterization-complete in CLAUDE.md and tests but not yet contracted in a BC body, breaking the holdout anchor chain.
 
@@ -4787,7 +4787,7 @@ _Tagged: [codified] [spec-process] [BC-authoring] [holdout-readiness] [broken-an
 
 **Why this matters post-Seam-B refactor:** The `edit.rs` Seam-B extraction (PR #558) moved the `--field`+`--label` guard and the C-1 guard from `create.rs` into `edit.rs`. Without these regression pins, a future refactor or shard of `edit.rs` could silently drop a guard with no CI signal. Writing the pin is the only way to protect against that class of regression.
 
-**Full VSDD discipline applied:** Even for a "test-only" story, the full VSDD flow (F3 story, pre-merge fresh-context F5 adversarial review) was applied per DEC-136 (TEST-ONLY-GATE-ELIGIBILITY). The F5 review found 1 MED (exit-code documentation typo in AC-003 — `code:1` vs `code:64`) and 4 LOW, all fixed before merge. This reinforces that test-only PRs benefit from the adversarial gate: a guard-message pin that silently accepted the wrong exit code would fail to detect the regression it was meant to catch.
+**Full VSDD discipline applied:** Even for a "test-only" story, the full VSDD flow (F3 story, pre-merge fresh-context F5 adversarial review) was applied per D-136 (TEST-ONLY-GATE-ELIGIBILITY). The F5 review found 1 MED (exit-code documentation typo in AC-003 — `code:1` vs `code:64`) and 4 LOW, all fixed before merge. This reinforces that test-only PRs benefit from the adversarial gate: a guard-message pin that silently accepted the wrong exit code would fail to detect the regression it was meant to catch.
 
 **Practical checklist:** After any coverage audit that concludes "gap, not bug":
 1. Write the test before declaring the item closed.
@@ -4796,7 +4796,7 @@ _Tagged: [codified] [spec-process] [BC-authoring] [holdout-readiness] [broken-an
 
 _Recorded: 2026-06-27 — E2E offline-CLI guard + JSON error-shape coverage delivery (PR #563, develop @ 894cc9d). State-manager._
 _Tagged: [codified] [test-coverage] [audit-methodology] [gap-vs-bug] [regression-hardening]_
-_Related: DEC-138; MISSING-BC-SUBCLAUSE-PATTERN (RESOLVED); CACHE-COVERAGE-GAPS-2026-06-27 (P4/P5 unblocked); E2E-EDGE-CASE-GAPS-2026-06-27 (holdout-tier items unblocked)._
+_Related: D-138; MISSING-BC-SUBCLAUSE-PATTERN (RESOLVED); CACHE-COVERAGE-GAPS-2026-06-27 (P4/P5 unblocked); E2E-EDGE-CASE-GAPS-2026-06-27 (holdout-tier items unblocked)._
 
 ---
 
@@ -4819,11 +4819,11 @@ These are genuine e2e-unique assertions: they test the wiring from CLI input thr
 - Char-level CR/LF normalization (e.g., that a lone-`\r` maps to a space, not a `\n`) → **direct unit tests** in `src/adf.rs::tests` (pre-existing coverage in S-522; tests inject raw bytes directly into `push_text`).
 - No-hardBreak routing assertion (inline-HTML vs block-HTML Algorithm B path) → **e2e tier** (PR #564; `tests/adf_inline_html_inv1_e2e.rs`).
 
-**Origin:** Adversary-gate CRITICAL finding on PR #564 (DEC-140). The original story authoring claimed "e2e test covers lone-`\r` normalization via §2.3"; the adversary corrected this to "§2.3 normalizes `\r` before pulldown, so the `\r` never reaches `push_text` — the e2e pin is routing, not char-level bytes." The story file was corrected in three locations (f5_review_outcome frontmatter, body Status section, Architecture Compliance Rules table).
+**Origin:** Adversary-gate CRITICAL finding on PR #564 (D-140). The original story authoring claimed "e2e test covers lone-`\r` normalization via §2.3"; the adversary corrected this to "§2.3 normalizes `\r` before pulldown, so the `\r` never reaches `push_text` — the e2e pin is routing, not char-level bytes." The story file was corrected in three locations (f5_review_outcome frontmatter, body Status section, Architecture Compliance Rules table).
 
 _Recorded: 2026-06-27 — E2E wiremock tier delivery (PR #564, develop @ 502898f). State-manager._
 _Tagged: [codified] [test-coverage] [ADF-testing] [e2e-boundary-discipline] [CommonMark]_
-_Related: DEC-140; BC-7.2.011 INV-1; S-E2E-WIREMOCK-COVERAGE-1; COVERAGE-AUDIT-FOLLOW-THROUGH (2026-06-27)._
+_Related: D-140; BC-7.2.011 INV-1; S-E2E-WIREMOCK-COVERAGE-1; COVERAGE-AUDIT-FOLLOW-THROUGH (2026-06-27)._
 
 ---
 
@@ -4841,11 +4841,11 @@ _Related: DEC-140; BC-7.2.011 INV-1; S-E2E-WIREMOCK-COVERAGE-1; COVERAGE-AUDIT-F
 
 **Verify-reachability-empirically rule:** Before asserting that an input condition reaches a specific code path, verify the path by tracing from input to code — particularly when a tokenizer, parser, or normalization layer sits between the input and the assertion target. The §2.3 boundary is one such layer; pulldown event filters, Rust pattern matches, and API routing are others.
 
-**Reinforces:** DEC-120/121/124/129/130/132/134/136/139 lineage — "trivial" changes (test-only, regression pins) still warrant the adversarial gate; the gate's value is precisely that it catches assumptions the primary author did not question.
+**Reinforces:** D-120/121/124/129/130/132/134/136/139 lineage — "trivial" changes (test-only, regression pins) still warrant the adversarial gate; the gate's value is precisely that it catches assumptions the primary author did not question.
 
 _Recorded: 2026-06-27 — E2E wiremock tier delivery (PR #564, develop @ 502898f). State-manager._
 _Tagged: [codified] [process-gap] [adversarial-gate-value] [verify-reachability] [TEST-ONLY-GATE-ELIGIBILITY]_
-_Related: DEC-140; TEST-ONLY-GATE-ELIGIBILITY (MEDIUM drift item); DEC-136; MARKDOWN-SOURCE-CANNOT-DELIVER-RAW-CR (2026-06-27)._
+_Related: D-140; TEST-ONLY-GATE-ELIGIBILITY (MEDIUM drift item); D-136; MARKDOWN-SOURCE-CANNOT-DELIVER-RAW-CR (2026-06-27)._
 
 ---
 
@@ -4857,7 +4857,7 @@ _Related: DEC-140; TEST-ONLY-GATE-ELIGIBILITY (MEDIUM drift item); DEC-136; MARK
 
 **Lesson:** When a new dedicated BC is authored to replace an umbrella/placeholder anchor (e.g., BC-7.2.013 for footnote→ADF replacing BC-7.2.002; BC-7.2.014 for bare-URL autolink replacing BC-7.2.002), every holdout scenario and artifact that still cites the umbrella must be re-anchored and have its stale "tracked follow-up" note removed in the SAME pass that authors the dedicated BC.
 
-**What happened:** BC-7.2.014 (bare-URL autolink) was authored during the BC-sub-clause pass (DEC-138). At that time, H-NEW-ADF-008 (the bare-URL holdout) was still anchored to umbrella BC-7.2.002 with a stale "tracked follow-up" note. This sibling-not-updated propagation gap was NOT caught during the BC-sub-clause pass. It was only caught during the G-ADF-FOOTNOTE work (DEC-141) when both the consistency-validator and the adversary flagged it while reviewing the footnote holdout authoring. The gap required a retroactive sibling re-anchor in the same commit as H-NEW-ADF-006/009.
+**What happened:** BC-7.2.014 (bare-URL autolink) was authored during the BC-sub-clause pass (D-138). At that time, H-NEW-ADF-008 (the bare-URL holdout) was still anchored to umbrella BC-7.2.002 with a stale "tracked follow-up" note. This sibling-not-updated propagation gap was NOT caught during the BC-sub-clause pass. It was only caught during the G-ADF-FOOTNOTE work (D-141) when both the consistency-validator and the adversary flagged it while reviewing the footnote holdout authoring. The gap required a retroactive sibling re-anchor in the same commit as H-NEW-ADF-006/009.
 
 **Root cause:** The BC-sub-clause pass focused on authoring the BCs themselves. The sweep obligation — "now re-anchor all existing holdouts pointing at the umbrella" — was not executed as a mandatory step after each new BC was authored. This created an asymmetric state: the BC existed (correct anchor available) but the holdouts still cited the old umbrella (broken anchor propagation gap).
 
@@ -4873,7 +4873,7 @@ _Related: DEC-140; TEST-ONLY-GATE-ELIGIBILITY (MEDIUM drift item); DEC-136; MARK
 
 _Recorded: 2026-06-27 — G-ADF-FOOTNOTE holdout tier delivery + E2E-EDGE-CASE-GAPS epic close. State-manager._
 _Tagged: [codified] [process-gap] [spec-hygiene] [partial-fix-regression-discipline] [sweep-obligation]_
-_Related: DEC-141; DEC-138 (BC-sub-clause pass where gap originated); MISSING-BC-SUBCLAUSE-PATTERN (RESOLVED); BC-7.2.013; BC-7.2.014; H-NEW-ADF-006; H-NEW-ADF-008; H-NEW-ADF-009._
+_Related: D-141; D-138 (BC-sub-clause pass where gap originated); MISSING-BC-SUBCLAUSE-PATTERN (RESOLVED); BC-7.2.013; BC-7.2.014; H-NEW-ADF-006; H-NEW-ADF-008; H-NEW-ADF-009._
 
 ---
 
@@ -4892,7 +4892,7 @@ _Related: DEC-141; DEC-138 (BC-sub-clause pass where gap originated); MISSING-BC
 
 **Deferred warm-hit families:** Warm-hit tests requiring a multi-endpoint enrichment chain (cmdb_fields/object_type_attrs require workspace discovery + CMDB field reads + AQL search all active simultaneously) are legitimately deferrable when the underlying warm path is already pinned by a simpler family on the same mechanism. The key condition for deferral: the shared `read_cache<T>` generic warm path must already be pinned by another, simpler test (e.g., the Jira-fields test `test_bc_3_4_015_warm_fields_cache_skips_field_list_http` in `tests/issue_edit_field.rs` pinning the same `read_cache<T>` code path). Document the deferral explicitly in the test file header.
 
-**ENV_MUTEX ordering invariant:** Warm-hit tests that set `JR_CACHE_DIR` env var MUST unlock `ENV_MUTEX` BEFORE `catch_unwind` scope. If the test panics inside `catch_unwind`, the mutex remains locked in the poisoned state, deadlocking subsequent tests in the same process. Correct ordering: `let _guard = ENV_MUTEX.lock().unwrap_or_else(|e| e.into_inner()); unsafe { std::env::set_var(...) }; drop(_guard); std::panic::catch_unwind(...)`. This pattern was confirmed as the MED finding resolved pre-merge in PR #565 (DEC-142).
+**ENV_MUTEX ordering invariant:** Warm-hit tests that set `JR_CACHE_DIR` env var MUST unlock `ENV_MUTEX` BEFORE `catch_unwind` scope. If the test panics inside `catch_unwind`, the mutex remains locked in the poisoned state, deadlocking subsequent tests in the same process. Correct ordering: `let _guard = ENV_MUTEX.lock().unwrap_or_else(|e| e.into_inner()); unsafe { std::env::set_var(...) }; drop(_guard); std::panic::catch_unwind(...)`. This pattern was confirmed as the MED finding resolved pre-merge in PR #565 (D-142).
 
 **Practical checklist for a new warm-hit no-HTTP pin:**
 1. Create a `MockServer`, mount the backing endpoint with `.expect(1)`.
@@ -4914,7 +4914,7 @@ _Tagged: [codified] [test-coverage] [wiremock-discipline] [warm-hit-testing] [re
 
 **Lesson:** When a deferral is framed as "infeasible" or "fragile" (rather than "explicitly deferred for scope"), a cheap F1 feasibility re-assessment should precede any decision to carry the gap forward permanently. The framing often embeds an assumption (e.g., "requires simultaneous multi-endpoint mocking") that is easily falsified with a fresh look.
 
-**Concrete instance (PR #566, DEC-143):** PR #565 flagged cmdb_fields (Family 4) and object_type_attrs (Family 5) warm-hit coverage as "fragile multi-endpoint deferral" — the concern was that these families require workspace discovery + CMDB field reads + AQL search all active simultaneously. The F1 re-assessment for PR #566 falsified this in minutes:
+**Concrete instance (PR #566, D-143):** PR #565 flagged cmdb_fields (Family 4) and object_type_attrs (Family 5) warm-hit coverage as "fragile multi-endpoint deferral" — the concern was that these families require workspace discovery + CMDB field reads + AQL search all active simultaneously. The F1 re-assessment for PR #566 falsified this in minutes:
 
 1. Supporting endpoints (workspace discovery) can be mounted WITHOUT `.expect()` — only the cache-populating endpoint (the one whose warm path we are testing) needs `.expect(1)`.
 2. The "subprocess env-var conflict" concern (ENV_MUTEX deadlock) was a false alarm — the same `JR_CACHE_DIR` serialization pattern already used by other warm-hit tests is sufficient.
@@ -4954,7 +4954,7 @@ Worktree-Identity:
 
 _Recorded: 2026-06-28 — cmdb_fields/object_type_attrs warm-hit coverage delivery (PR #566, F5 pass-2 adversary observation). State-manager._
 _Tagged: [process-gap] [adversarial-review] [dispatch-hygiene] [test-only] [low-impact]_
-_Related: DEC-142; BC-6.2.018; BC-X.12.008; S-CACHE-WARM-HIT-COVERAGE-1; COVERAGE-AUDIT-FOLLOW-THROUGH (2026-06-27); CACHE-COVERAGE-GAPS-2026-06-27 (narrowed)._
+_Related: D-142; BC-6.2.018; BC-X.12.008; S-CACHE-WARM-HIT-COVERAGE-1; COVERAGE-AUDIT-FOLLOW-THROUGH (2026-06-27); CACHE-COVERAGE-GAPS-2026-06-27 (narrowed)._
 
 ---
 
@@ -4977,7 +4977,7 @@ _Related: DEC-142; BC-6.2.018; BC-X.12.008; S-CACHE-WARM-HIT-COVERAGE-1; COVERAG
 
 _Recorded: 2026-06-28 — MUTATION-CI-TIMEOUT cycle (PR #567, develop @ 3b122a8). State-manager._
 _Tagged: [codified] [process] [tool-config] [adversarial-verification] [ci-hardening]_
-_Related: DEC-144; S-MUTATION-CI-TIMEOUT-1; AC-002 (--timeout 240 CLI-only ceiling)._
+_Related: D-144; S-MUTATION-CI-TIMEOUT-1; AC-002 (--timeout 240 CLI-only ceiling)._
 
 ---
 
@@ -4997,7 +4997,7 @@ _Related: DEC-144; S-MUTATION-CI-TIMEOUT-1; AC-002 (--timeout 240 CLI-only ceili
 
 _Recorded: 2026-06-28 — MUTATION-CI-TIMEOUT cycle (PR #567, develop @ 3b122a8). State-manager._
 _Tagged: [codified] [process] [ci-budget] [measurement-discipline] [ci-hardening]_
-_Related: DEC-144; S-MUTATION-CI-TIMEOUT-1; AC-002; MUTANTS-FIRST-SCOPED-PR-CALIBRATION (watch-item)._
+_Related: D-144; S-MUTATION-CI-TIMEOUT-1; AC-002; MUTANTS-FIRST-SCOPED-PR-CALIBRATION (watch-item)._
 
 ---
 
@@ -5005,7 +5005,7 @@ _Related: DEC-144; S-MUTATION-CI-TIMEOUT-1; AC-002; MUTANTS-FIRST-SCOPED-PR-CALI
 
 **Category:** process-validation / vsdd-discipline / ci-config
 
-**Tag:** [codified] FULL-VSDD-CI-CONFIG-CATCHES-CRITICAL — full VSDD adversarial discipline on CI-config-only changes is high-value, not ceremony; this cycle is the strongest reinforcement of DEC-120/121/124/129/132 to date
+**Tag:** [codified] FULL-VSDD-CI-CONFIG-CATCHES-CRITICAL — full VSDD adversarial discipline on CI-config-only changes is high-value, not ceremony; this cycle is the strongest reinforcement of D-120/121/124/129/132 to date
 
 **Lesson:** The MUTATION-CI-TIMEOUT cycle went through 6 F5 fix rounds and caught:
 - 1 CRITICAL defect (inverted timeout knob: `minimum_test_timeout` = floor, not ceiling)
@@ -5016,11 +5016,11 @@ _Related: DEC-144; S-MUTATION-CI-TIMEOUT-1; AC-002; MUTANTS-FIRST-SCOPED-PR-CALI
 All defects were caught by the F5 adversarial gate. None were caught by the implementer, code reviewer, or CI runs (CI couldn't catch these — the defects were in the design/logic of the guards, not in code syntax).
 
 **Key reinforcement:**
-- DEC-120 (DEAD-CITATION-CI F2: 6 iterations caught 6 real defects before code was written)
-- DEC-121 (DEAD-CITATION-CI F3: story-altitude catch that 10 F2 passes missed)
-- DEC-124 (fork-ops signing hardening: F5 caught 2 CRIT + 1 HIGH)
-- DEC-129 (DEAD-CITATION-CI F7: 8+ real defects caught on a 211-LOC CI guard)
-- DEC-132 (SEC-001 ADF recursion: off-by-one BLOCKER caught by dual code+security review)
+- D-120 (DEAD-CITATION-CI F2: 6 iterations caught 6 real defects before code was written)
+- D-121 (DEAD-CITATION-CI F3: story-altitude catch that 10 F2 passes missed)
+- D-124 (fork-ops signing hardening: F5 caught 2 CRIT + 1 HIGH)
+- D-129 (DEAD-CITATION-CI F7: 8+ real defects caught on a 211-LOC CI guard)
+- D-132 (SEC-001 ADF recursion: off-by-one BLOCKER caught by dual code+security review)
 
 **New reinforcement:** A "trivial CI-config-only" change (adding `--timeout 240` and `ci-gate.needs: mutants`) yielded a CRITICAL defect that would have shipped a broken/inverted timeout fix without the adversarial gate. The inverted timeout would NOT have been caught by CI, code review, or even manual testing of the gate (the gate still runs; it just enforces the wrong semantic).
 
@@ -5028,7 +5028,7 @@ All defects were caught by the F5 adversarial gate. None were caught by the impl
 
 _Recorded: 2026-06-28 — MUTATION-CI-TIMEOUT cycle (PR #567, develop @ 3b122a8). State-manager._
 _Tagged: [codified] [process-validation] [vsdd-discipline] [ci-config] [adversarial-review]_
-_Related: DEC-144; DEC-120/121/124/129/132 (lineage); S-MUTATION-CI-TIMEOUT-1._
+_Related: D-144; D-120/121/124/129/132 (lineage); S-MUTATION-CI-TIMEOUT-1._
 
 ---
 
@@ -5036,9 +5036,9 @@ _Related: DEC-144; DEC-120/121/124/129/132 (lineage); S-MUTATION-CI-TIMEOUT-1._
 
 **Category:** process-gap / merge-authorization / handshake-friction
 
-**Tag:** [process-gap] ORCHESTRATOR-RELAYED-MERGE-AUTH — pr-manager correctly refuses coordinator-relayed merge authorization; the DEC-128 guardrail is working, but the friction adds a round-trip that should be anticipated and documented
+**Tag:** [process-gap] ORCHESTRATOR-RELAYED-MERGE-AUTH — pr-manager correctly refuses coordinator-relayed merge authorization; the D-128 guardrail is working, but the friction adds a round-trip that should be anticipated and documented
 
-**Lesson:** During this cycle, pr-manager correctly refused merge authorization twice (PR #566, PR #567) when the orchestrator relayed the human's authorization rather than the human providing it directly. Each refusal required an additional round-trip to get the human's explicit word. This is the DEC-128 guardrail working exactly as designed: delivery sub-agents must not self-authorize merges; they must receive explicit per-merge orchestrator authorization (which in turn requires human direction).
+**Lesson:** During this cycle, pr-manager correctly refused merge authorization twice (PR #566, PR #567) when the orchestrator relayed the human's authorization rather than the human providing it directly. Each refusal required an additional round-trip to get the human's explicit word. This is the D-128 guardrail working exactly as designed: delivery sub-agents must not self-authorize merges; they must receive explicit per-merge orchestrator authorization (which in turn requires human direction).
 
 **Why this is a process-gap and not a design error:** The guardrail is correct. An orchestrator-relayed authorization is indistinguishable to pr-manager from an orchestrator-generated authorization (which is explicitly prohibited). The trust anchor must be the human, not the orchestrator chain.
 
@@ -5066,7 +5066,7 @@ _Tagged: [process-gap] [merge-authorization] [handshake-friction] [dec-128] [low
 
 These are NOT equivalent. An agent that behaves well may be doing so because of session-level instructions, model conservatism, or an unusually cautious deployment — none of which persist into a future session or future agent version.
 
-Story 91's re-assessment (DEC-145) is the canonical example: pr-manager held at merge on PRs #566 and #567, refusing even orchestrator-relayed authorization. This is STRONGER behavior than the audited prompt requires. The prompt's `AUTHORIZE_MERGE=yes` standing template would permit a DEC-128-style auto-merge-against-hold recurrence. The good behavior this session was NOT attributable to the prompt text.
+Story 91's re-assessment (D-145) is the canonical example: pr-manager held at merge on PRs #566 and #567, refusing even orchestrator-relayed authorization. This is STRONGER behavior than the audited prompt requires. The prompt's `AUTHORIZE_MERGE=yes` standing template would permit a D-128-style auto-merge-against-hold recurrence. The good behavior this session was NOT attributable to the prompt text.
 
 **Correct audit methodology:**
 - Grade on the presence of explicit prompt text encoding the constraint.
@@ -5076,15 +5076,15 @@ Story 91's re-assessment (DEC-145) is the canonical example: pr-manager held at 
 
 **Application:** Use this distinction in every governance audit. Explicitly state in the verdict: "CODIFIED (prompt text sufficient)" vs "PARTIAL (structural controls but prompt does not close the gap)" vs "OPEN (neither)." Never conflate behavioral evidence with codification verdicts.
 
-**Prior art:** DEC-144 (MUTATION-CI-TIMEOUT) established the analogous principle for config assumptions: "do not categorize CI-config changes as 'low-complexity' based on code simplicity — the complexity is in the assumptions about tool behavior." This lesson extends that to agent behavior: "do not categorize agent governance as 'resolved' based on observed behavior — the bar is prompt-codification."
+**Prior art:** D-144 (MUTATION-CI-TIMEOUT) established the analogous principle for config assumptions: "do not categorize CI-config changes as 'low-complexity' based on code simplicity — the complexity is in the assumptions about tool behavior." This lesson extends that to agent behavior: "do not categorize agent governance as 'resolved' based on observed behavior — the bar is prompt-codification."
 
-_Recorded: 2026-06-28 — S-PG-MERGE-AUTH-BYPASS re-assessment (DEC-145). State-manager._
+_Recorded: 2026-06-28 — S-PG-MERGE-AUTH-BYPASS re-assessment (D-145). State-manager._
 _Tagged: [codified] [audit-methodology] [agent-governance] [behavior-vs-codification] [dec-145]_
-_Related: DEC-128; DEC-145; S-PG-MERGE-AUTH-BYPASS (story 91); audit doc PG-MERGE-AUTH-BYPASS-mitigation-audit-2026-06-28.md._
+_Related: D-128; D-145; S-PG-MERGE-AUTH-BYPASS (story 91); audit doc PG-MERGE-AUTH-BYPASS-mitigation-audit-2026-06-28.md._
 
 ---
 
-## 2026-06-30 — HOLDOUT-COVERAGE-GAPS cycle (DEC-146)
+## 2026-06-30 — HOLDOUT-COVERAGE-GAPS cycle (D-146)
 
 ### [codified] ORCHESTRATOR-RELAYED-FIX-CAUTION REINFORCED — reconcile relayed fixes against internal repo ground-truth before accepting
 
@@ -5096,7 +5096,7 @@ A subsequent fresh research validation run confirmed the repo's existing cite wa
 FAQ document verbatim uses `issueTypes`, and the live-Jira-pinned usage in `src/cli/issue/issues.rs`
 also uses `issueTypes`. The "cite schema not FAQ" relayed fix was the defect.
 
-**Lesson (reinforces DEC-140 ORCHESTRATOR-RELAYED-FIX-CAUTION):**
+**Lesson (reinforces D-140 ORCHESTRATOR-RELAYED-FIX-CAUTION):**
 When the orchestrator relays a fix from an external source (research agent, Copilot review,
 external doc reading), treat it as a CANDIDATE, not an authoritative correction. Before
 propagating the fix into a spec or BC:
@@ -5112,9 +5112,9 @@ specs, SDK docs, and community posts, not from live-validated pins. When the rep
 FAQ verbatim citation, that citation is more trustworthy than a doc-reading inference.
 
 _Discovered: HOLDOUT-COVERAGE-GAPS adversarial pass (M-1), 2026-06-30._
-_Recorded: 2026-06-30. State-manager (DEC-146)._
+_Recorded: 2026-06-30. State-manager (D-146)._
 _Tagged: [codified] [external-research] [spec-authoring] [orchestrator-relay] [dec-146]_
-_Related: DEC-140 (ORCHESTRATOR-RELAYED-FIX-CAUTION — original); BC-3.4.015 EC-3.4.015-3 (issueTypes vs values drift)._
+_Related: D-140 (ORCHESTRATOR-RELAYED-FIX-CAUTION — original); BC-3.4.015 EC-3.4.015-3 (issueTypes vs values drift)._
 
 ---
 
@@ -5144,16 +5144,16 @@ If the code works in production, the code is right and the documentation inferen
 should be treated as a false positive.
 
 _Discovered: HOLDOUT-COVERAGE-GAPS adversarial + research validation passes, 2026-06-30._
-_Recorded: 2026-06-30. State-manager (DEC-146)._
+_Recorded: 2026-06-30. State-manager (D-146)._
 _Tagged: [codified] [external-research] [spec-authoring] [empirical-ground-truth] [dec-146]_
-_Related: DEC-144 (config-key semantics must be verified against source — analogous principle for CI config); BC-3.4.015 EC-3.4.015-3; issueTypes vs values drift._
-_Related: DEC-128; DEC-144; S-PG-MERGE-AUTH-BYPASS (story 91); PG-MERGE-AUTH-BYPASS (drift item)._
+_Related: D-144 (config-key semantics must be verified against source — analogous principle for CI config); BC-3.4.015 EC-3.4.015-3; issueTypes vs values drift._
+_Related: D-128; D-144; S-PG-MERGE-AUTH-BYPASS (story 91); PG-MERGE-AUTH-BYPASS (drift item)._
 
 ---
 
 ### [codified] ORCHESTRATOR-RELAYED-FIX-CAUTION [REINFORCED ×2 BC-SUB-CLAUSE cycle] — orchestrator must instruct verification, never dictate specific anchors
 
-During the BC-SUB-CLAUSE + HOLDOUT cycle (DEC-147), the orchestrator relayed two unverified fixes
+During the BC-SUB-CLAUSE + HOLDOUT cycle (D-147), the orchestrator relayed two unverified fixes
 that the adversary subsequently caught:
 
 **(a) "cite schema not FAQ"** — the orchestrator instructed the product-owner to update a BC
@@ -5179,27 +5179,27 @@ When the orchestrator believes a specific anchor, citation, or ownership mapping
 The product-owner reads the artifact; the orchestrator does not have enough context to guarantee
 specific BC numbers point at the right content.
 
-This lesson was first codified from DEC-140 (ORCHESTRATOR-RELAYED-FIX-CAUTION); this session
+This lesson was first codified from D-140 (ORCHESTRATOR-RELAYED-FIX-CAUTION); this session
 produced two independent recurrences in the same cycle, reinforcing that the relay path is
 structurally unsafe without a verification gate.
 
 _Discovered: BC-SUB-CLAUSE + HOLDOUT adversarial passes, 2026-06-30._
-_Recorded: 2026-06-30. State-manager (DEC-147)._
+_Recorded: 2026-06-30. State-manager (D-147)._
 _Tagged: [codified] [orchestrator-discipline] [bc-authoring] [verification] [dec-147] [reinforced]_
-_Related: DEC-140 (original ORCHESTRATOR-RELAYED-FIX-CAUTION); DEC-146 (REPO-EMPIRICAL-GROUND-TRUTH-BEATS-DOC-INFERENCE); BC-3.4.006; BC-3.4.012._
+_Related: D-140 (original ORCHESTRATOR-RELAYED-FIX-CAUTION); D-146 (REPO-EMPIRICAL-GROUND-TRUTH-BEATS-DOC-INFERENCE); BC-3.4.006; BC-3.4.012._
 
 ---
 
 ### [codified] BC-CITATION-DRIFT-AFTER-SEAM-EXTRACTION — sweep all BC citations on every module extraction
 
-During the BC-SUB-CLAUSE + HOLDOUT cycle (DEC-147), the adversarial convergence gate surfaced 21
+During the BC-SUB-CLAUSE + HOLDOUT cycle (D-147), the adversarial convergence gate surfaced 21
 stale Source/Trace citations in `bc-3-issue-write.md` that pointed to `create.rs` instead of
 `edit.rs`. These citations became stale when the handle_edit cluster was extracted from create.rs
-to edit.rs in Seam B (PR #558, DEC-131). The citations survived:
+to edit.rs in Seam B (PR #558, D-131). The citations survived:
 - The Seam B PR review (code-reviewer + pr-reviewer)
 - Multiple subsequent adversary passes in CACHE WARM-HIT, CMDB/OBJ-TYPE, and MUTATION-CI-TIMEOUT
   cycles
-- The HOLDOUT-COVERAGE-GAPS adversary passes (DEC-146)
+- The HOLDOUT-COVERAGE-GAPS adversary passes (D-146)
 - And were only caught by the BC-SUB-CLAUSE cycle's adversary when it specifically targeted the
   newly-authored BCs anchored to `edit.rs`.
 
@@ -5217,7 +5217,7 @@ A CI guard (`BC-CITATION-CI-GUARD` drift item) is the long-term enforcement mech
 ships, the grep sweep is a required manual step at story close.
 
 _Discovered: BC-SUB-CLAUSE adversarial passes, 2026-06-30._
-_Recorded: 2026-06-30. State-manager (DEC-147)._
+_Recorded: 2026-06-30. State-manager (D-147)._
 _Tagged: [codified] [seam-extraction] [bc-metadata] [citation-drift] [dec-147]_
 _Related: ADR-0012 (module shard rule); PR #556 (Seam A); PR #558 (Seam B); CITATION-DEBT-FILEWIDE-2026-06-30; BC-CITATION-CI-GUARD._
 
@@ -5225,7 +5225,7 @@ _Related: ADR-0012 (module shard rule); PR #556 (Seam A); PR #558 (Seam B); CITA
 
 ### [codified] DEFERRAL-PERIMETER-SCOPING — scope the convergence verdict to the deliverable; split out-of-perimeter debt
 
-During the BC-SUB-CLAUSE + HOLDOUT cycle (DEC-147), the adversarial gate surfaced BC-3.4.006's
+During the BC-SUB-CLAUSE + HOLDOUT cycle (D-147), the adversarial gate surfaced BC-3.4.006's
 stale wire-shape (issue #446 drift: `labelsAction`/`labels` shape → `labelsFields`/
 `bulkEditMultiSelectFieldOption` array) and 21 handle_edit citation fixes. These were
 PRE-EXISTING defects NOT introduced by the cycle's deliverables (BC-3.4.020/021/5.1.005).
@@ -5251,15 +5251,15 @@ When a convergence pass surfaces defects outside the cycle's deliverable perimet
   in the convergence log.
 
 _Discovered: BC-SUB-CLAUSE convergence passes, 2026-06-30._
-_Recorded: 2026-06-30. State-manager (DEC-147)._
+_Recorded: 2026-06-30. State-manager (D-147)._
 _Tagged: [codified] [convergence-discipline] [perimeter-scoping] [dec-147]_
-_Related: CITATION-DEBT-FILEWIDE-2026-06-30; BC-CITATION-CI-GUARD; DEC-130 (F2-PIECEWISE-PROTOCOL — analogous scope discipline)._
+_Related: CITATION-DEBT-FILEWIDE-2026-06-30; BC-CITATION-CI-GUARD; D-130 (F2-PIECEWISE-PROTOCOL — analogous scope discipline)._
 
 ---
 
 ### [codified] PERIMETER-SCAN-MUST-INCLUDE-INDEX-AND-TRACEABILITY — sweep the index and traceability tables, not just body files
 
-During the CITATION-DEBT-FILEWIDE cycle (DEC-148), the F1 citation-debt perimeter scan grepped
+During the CITATION-DEBT-FILEWIDE cycle (D-148), the F1 citation-debt perimeter scan grepped
 `bc-1..bc-7` body files and found a well-defined set of stale citations in `bc-3-issue-write.md`.
 The fresh-context adversary on pass 1 immediately found the *same* citation debt one ring out:
 `BC-INDEX.md` mirrors Source/Trace citations in its per-BC summary rows, and those rows were
@@ -5267,7 +5267,7 @@ equally stale. The index was not included in the F1 perimeter grep.
 
 Pass 1 fixed the BC-INDEX.md debt. Pass 2 then found the next ring: `docs/adr/0014` and several
 `docs/specs/` files that also cited the pre-extraction symbol names. That ring was scoped out as
-CITATION-DEBT-PRODUCT-FILES-2026-06-30 per DEFERRAL-PERIMETER-SCOPING (DEC-147 pattern).
+CITATION-DEBT-PRODUCT-FILES-2026-06-30 per DEFERRAL-PERIMETER-SCOPING (D-147 pattern).
 
 **Pattern observed (each fresh-context adversary catches the next uncovered ring):**
 1. Body files (bc-1..bc-7) — covered by the F1 perimeter grep.
@@ -5287,16 +5287,16 @@ A citation-debt perimeter scan MUST include:
 This closes a structural omission in the F1 citation-debt scan template.
 
 _Discovered: CITATION-DEBT-FILEWIDE adversarial pass 1, 2026-06-30._
-_Recorded: 2026-06-30. State-manager (DEC-148)._
+_Recorded: 2026-06-30. State-manager (D-148)._
 _Tagged: [codified] [citation-drift] [perimeter-scan] [process-gap] [dec-148]_
-_Related: BC-CITATION-CI-GUARD (mechanical enforcement); CITATION-DEBT-PRODUCT-FILES-2026-06-30; DEFERRAL-PERIMETER-SCOPING (DEC-147); BC-CITATION-DRIFT-AFTER-SEAM-EXTRACTION (DEC-147)._
+_Related: BC-CITATION-CI-GUARD (mechanical enforcement); CITATION-DEBT-PRODUCT-FILES-2026-06-30; DEFERRAL-PERIMETER-SCOPING (D-147); BC-CITATION-DRIFT-AFTER-SEAM-EXTRACTION (D-147)._
 
 ---
 
-### [reinforced] BC-CITATION-DRIFT-AFTER-SEAM-EXTRACTION (reinforcement 2 — DEC-148)
+### [reinforced] BC-CITATION-DRIFT-AFTER-SEAM-EXTRACTION (reinforcement 2 — D-148)
 
-The CITATION-DEBT-FILEWIDE cycle (DEC-148) delivered the SECOND dedicated citation-cleanup cycle
-required to fully address the ADR-0012 Seam A/B extraction debt. The first cycle (DEC-147) fixed
+The CITATION-DEBT-FILEWIDE cycle (D-148) delivered the SECOND dedicated citation-cleanup cycle
+required to fully address the ADR-0012 Seam A/B extraction debt. The first cycle (D-147) fixed
 the `handle_edit` cluster (21 `create.rs→edit.rs` citation fixes). This cycle fixed the JSM
 cluster (9 `create.rs→jsm_create.rs` citations in BC-3.8.x), the `resolve_edit_fields` migration
 (1 `helpers.rs→field_resolve.rs` citation), and the BC-INDEX.md mirror row gap.
@@ -5305,12 +5305,12 @@ cluster (9 `create.rs→jsm_create.rs` citations in BC-3.8.x), the `resolve_edit
 - A single citation-cleanup cycle is insufficient when multiple extractions occurred in the same
   PR batch (Seam A + Seam B were separate PRs #556 and #558 but both landed in the same
   development session and neither triggered an immediate BC-citation sweep).
-- The PERIMTER-SCAN-OMITS-INDEX-AND-TRACEABILITY process gap (DEC-148) extended the reach of
+- The PERIMTER-SCAN-OMITS-INDEX-AND-TRACEABILITY process gap (D-148) extended the reach of
   the debt into the index and product files.
 - BC-CITATION-CI-GUARD is the durable fix: a mechanical CI check that fails on stale `source:` /
   `trace:` citations in BC bodies, parallel to `tests/claude_md_citations.rs`.
 
-**Updated Rule (first stated in DEC-147):**
+**Updated Rule (first stated in D-147):**
 After every module extraction per ADR-0012, BEFORE closing the story, run:
 ```
 grep -r "src/cli/issue/<old_file>" .factory/specs/prd/*.md BC-INDEX.md
@@ -5320,15 +5320,15 @@ Fix all hits in the SAME burst as the extraction PR. If the extraction already s
 dedicated cleanup cycle immediately rather than carrying the debt across multiple subsequent cycles.
 
 _Discovered: CITATION-DEBT-FILEWIDE cycle, 2026-06-30._
-_Recorded: 2026-06-30. State-manager (DEC-148)._
+_Recorded: 2026-06-30. State-manager (D-148)._
 _Tagged: [reinforced] [seam-extraction] [bc-metadata] [citation-drift] [dec-148]_
-_Related: DEC-147 (original codification); ADR-0012; PERIMETER-SCAN-MUST-INCLUDE-INDEX-AND-TRACEABILITY; BC-CITATION-CI-GUARD._
+_Related: D-147 (original codification); ADR-0012; PERIMETER-SCAN-MUST-INCLUDE-INDEX-AND-TRACEABILITY; BC-CITATION-CI-GUARD._
 
 ---
 
-### [reinforced] ORCHESTRATOR-RELAYED-FIX-CAUTION (reinforcement 3 — DEC-148)
+### [reinforced] ORCHESTRATOR-RELAYED-FIX-CAUTION (reinforcement 3 — D-148)
 
-During the CITATION-DEBT-FILEWIDE cycle (DEC-148), the orchestrator relayed the citation
+During the CITATION-DEBT-FILEWIDE cycle (D-148), the orchestrator relayed the citation
 repoint map to the product-owner. The product-owner independently verified every relayed anchor
 against source before applying. Result: zero disagreements this cycle because the map was
 grep-evidenced (each old→new anchor was confirmed by grepping the actual source file for the
@@ -5339,24 +5339,24 @@ The orchestrator provided a grep-evidenced map (specific function names + file p
 against the repo), not just surface-level inferences about which file "should" contain the
 function. The product-owner ran confirming checks anyway — both approaches agreed.
 
-**Contrast with prior failures (DEC-140, DEC-146, DEC-147):**
-- DEC-140: lone-`\r` false-reachability claim in a relayed fix (adversary caught it).
-- DEC-146: relayed "cite schema not FAQ" fix contradicted verbatim-FAQ ground-truth.
-- DEC-147: relayed ownership map was wrong for both BCs cited (BC-3.4.006 and BC-3.4.012).
+**Contrast with prior failures (D-140, D-146, D-147):**
+- D-140: lone-`\r` false-reachability claim in a relayed fix (adversary caught it).
+- D-146: relayed "cite schema not FAQ" fix contradicted verbatim-FAQ ground-truth.
+- D-147: relayed ownership map was wrong for both BCs cited (BC-3.4.006 and BC-3.4.012).
 
 **Updated Rule:**
 The orchestrator MUST provide grep-evidenced maps for citation/anchor fixes — not inferred BC
 numbers. The product-owner MUST verify against repo artifacts regardless. Both disciplines are
-required; either alone is insufficient (DEC-147 showed the adversary catches unverified relays;
-DEC-148 shows that verify-on-receipt also works as a backstop).
+required; either alone is insufficient (D-147 showed the adversary catches unverified relays;
+D-148 shows that verify-on-receipt also works as a backstop).
 
 _Discovered: CITATION-DEBT-FILEWIDE cycle, 2026-06-30._
-_Recorded: 2026-06-30. State-manager (DEC-148)._
+_Recorded: 2026-06-30. State-manager (D-148)._
 _Tagged: [reinforced] [orchestrator-discipline] [bc-authoring] [verification] [dec-148]_
 
 ---
 
-### [new] SWEEP-WHOLE-TOUCHED-FILE-NOT-JUST-TARGET-LINE (DEC-149)
+### [new] SWEEP-WHOLE-TOUCHED-FILE-NOT-JUST-TARGET-LINE (D-149)
 
 When fixing citations, anchors, or stale references, once you edit a file you MUST grep and fix
 ALL same-class occurrences in that ENTIRE file — not only the enumerated target lines.
@@ -5384,13 +5384,13 @@ kept as audit trail (e.g., "extracted from create.rs"). The grep-and-fix rule ap
 present-tense citations.
 
 _Discovered: CITATION-DEBT-PRODUCT-FILES cycle, 2026-07-02._
-_Recorded: 2026-07-02. State-manager (DEC-149)._
+_Recorded: 2026-07-02. State-manager (D-149)._
 _Tagged: [new] [citation-discipline] [file-sweep] [dec-149]_
-_Related: PERIMETER-SCAN-MUST-INCLUDE-INDEX-AND-TRACEABILITY (DEC-148); BC-CITATION-DRIFT-AFTER-SEAM-EXTRACTION (DEC-147)._
+_Related: PERIMETER-SCAN-MUST-INCLUDE-INDEX-AND-TRACEABILITY (D-148); BC-CITATION-DRIFT-AFTER-SEAM-EXTRACTION (D-147)._
 
 ---
 
-### [new] NEWLY-PUBLISHED-ADVISORY-BLOCKS-UNRELATED-PRS (DEC-149)
+### [new] NEWLY-PUBLISHED-ADVISORY-BLOCKS-UNRELATED-PRS (D-149)
 
 A freshly-published RUSTSEC advisory can turn ci-gate red on a wholly-unrelated PR because
 `cargo-deny` is part of ci-gate. This is a class of surprise blocking condition with a specific
@@ -5419,14 +5419,14 @@ to the change being reviewed.
 advisory is the most likely cause.
 
 _Discovered: CITATION-DEBT-PRODUCT-FILES cycle (PR #568 blocked by RUSTSEC-2026-0190), 2026-07-02._
-_Recorded: 2026-07-02. State-manager (DEC-149)._
+_Recorded: 2026-07-02. State-manager (D-149)._
 _Tagged: [new] [ci-gate] [cargo-deny] [advisory] [separation-of-concerns] [dec-149]_
 
 ---
 
-### [reinforced] PERIMETER-SCAN-MUST-INCLUDE-INDEX-AND-TRACEABILITY (reinforcement 2 — DEC-149)
+### [reinforced] PERIMETER-SCAN-MUST-INCLUDE-INDEX-AND-TRACEABILITY (reinforcement 2 — D-149)
 
-First codified DEC-148 (spec-perimeter scan). DEC-149 extends the rule to the develop-branch
+First codified D-148 (spec-perimeter scan). D-149 extends the rule to the develop-branch
 product-file ring.
 
 **What the CITATION-DEBT-PRODUCT-FILES adversary found:** After the enumerated target files were
@@ -5436,10 +5436,10 @@ perimeter scan that identified the original 4 target files was correct, but the 
 only to the enumerated lines, not the full file surface.
 
 **Extended rule (two dimensions):**
-1. **Breadth (DEC-148):** Citation-debt perimeter scans MUST include BC-INDEX.md +
+1. **Breadth (D-148):** Citation-debt perimeter scans MUST include BC-INDEX.md +
    CANONICAL-COUNTS + traceability/summary tables — not just bc-*.md body files or the four
    explicitly enumerated product files. Use a repo-wide grep for the relocated symbol.
-2. **Depth (DEC-149):** When a file is included in the fix, grep and fix ALL same-class
+2. **Depth (D-149):** When a file is included in the fix, grep and fix ALL same-class
    occurrences in that file — not only the enumerated lines (see
    SWEEP-WHOLE-TOUCHED-FILE-NOT-JUST-TARGET-LINE).
 
@@ -5447,16 +5447,16 @@ only to the enumerated lines, not the full file surface.
 guard exists, the manual two-dimensional sweep is mandatory.
 
 _Discovered: CITATION-DEBT-PRODUCT-FILES cycle, 2026-07-02._
-_Recorded: 2026-07-02. State-manager (DEC-149)._
+_Recorded: 2026-07-02. State-manager (D-149)._
 _Tagged: [reinforced] [perimeter-scan] [citation-debt] [dec-149]_
-_Related: DEC-148 original codification; SWEEP-WHOLE-TOUCHED-FILE-NOT-JUST-TARGET-LINE (this session); BC-CITATION-CI-GUARD._
-_Related: DEC-140 (original); DEC-146 (reinforcement 1); DEC-147 (reinforcement 2); PERIMETER-SCAN-MUST-INCLUDE-INDEX-AND-TRACEABILITY._
+_Related: D-148 original codification; SWEEP-WHOLE-TOUCHED-FILE-NOT-JUST-TARGET-LINE (this session); BC-CITATION-CI-GUARD._
+_Related: D-140 (original); D-146 (reinforcement 1); D-147 (reinforcement 2); PERIMETER-SCAN-MUST-INCLUDE-INDEX-AND-TRACEABILITY._
 
 ---
 
-## 2026-07-02 — MUTANTS-EXAMINE-GLOBS cycle (DEC-150)
+## 2026-07-02 — MUTANTS-EXAMINE-GLOBS cycle (D-150)
 
-### [codified] IMPLEMENTER-PARAPHRASE-BEYOND-SPEC (DEC-150)
+### [codified] IMPLEMENTER-PARAPHRASE-BEYOND-SPEC (D-150)
 
 Implementers must not expand prose beyond what the delta analysis or story spec explicitly
 prescribes. During the MUTANTS-EXAMINE-GLOBS cycle F5 adversarial gate (round 2), a fresh-context
@@ -5482,20 +5482,20 @@ claims that are hard to spot in review (they are plausible-sounding, not obvious
    susceptible to plausible-sounding fabrication than multi-pass diverse-lens reviewers).
 
 **Relation to ORCHESTRATOR-RELAYED-FIX-CAUTION family:** ORCHESTRATOR-RELAYED-FIX-CAUTION
-(DEC-140/146/148) addresses the case where an orchestrator relays a fix suggestion that the
+(D-140/146/148) addresses the case where an orchestrator relays a fix suggestion that the
 implementer accepts without ground-truth verification. IMPLEMENTER-PARAPHRASE-BEYOND-SPEC
 addresses the case where the implementer self-generates a paraphrase beyond the spec with no
 external prompt. Both are "text that wasn't in the spec appears in the output" class defects.
 The diverse-lens F5 adversary is the primary mechanical catch for both.
 
 _Discovered: MUTANTS-EXAMINE-GLOBS cycle F5 round-2 adversarial gate, 2026-07-02._
-_Recorded: 2026-07-02. State-manager (DEC-150)._
+_Recorded: 2026-07-02. State-manager (D-150)._
 _Tagged: [codified] [implementer-discipline] [paraphrase-beyond-spec] [fabrication] [dec-150]_
-_Related: ORCHESTRATOR-RELAYED-FIX-CAUTION (DEC-140/146/148); #361-citation-validation lineage._
+_Related: ORCHESTRATOR-RELAYED-FIX-CAUTION (D-140/146/148); #361-citation-validation lineage._
 
 ---
 
-### [codified] FILES-MODIFIED-BACK-WRITE (DEC-150)
+### [codified] FILES-MODIFIED-BACK-WRITE (D-150)
 
 When the orchestrator authorizes a delivery change beyond the story's file set (e.g., authorizing
 a ci.yml comment-line fix that was not in the original file_set), the story spec MUST be amended
@@ -5520,13 +5520,13 @@ required a story v1.2 amendment.
    catch the drift and create unnecessary remediation rounds.
 
 _Discovered: MUTANTS-EXAMINE-GLOBS cycle F5 round-2 + consistency-validator, 2026-07-02._
-_Recorded: 2026-07-02. State-manager (DEC-150)._
+_Recorded: 2026-07-02. State-manager (D-150)._
 _Tagged: [codified] [story-file-discipline] [file-set-drift] [consistency] [dec-150]_
 _Related: F2-PIECEWISE-PROTOCOL (dispatch consistency-validator after each fix); story v1.2 amendment._
 
 ---
 
-## 2026-07-02 — Process-Gap Dispositions (DEC-150 cycle-closing)
+## 2026-07-02 — Process-Gap Dispositions (D-150 cycle-closing)
 
 Per S-7.02 cycle-closing checklist, the following process-gaps are dispositioned as draft-story
 candidates or justified deferrals. Each is tracked in STATE.md Drift Items.
@@ -5546,7 +5546,7 @@ Relates to BC-CITATION-CI-GUARD (mechanical enforcement of file::symbol citation
 **Disposition:** Draft-story candidate. Does not block any current delivery. Tracked as
 MUTANTS-POLICY-CITATION-GUARD in Drift Items.
 
-_Recorded: 2026-07-02. State-manager (DEC-150)._
+_Recorded: 2026-07-02. State-manager (D-150)._
 _Tagged: [process-gap] [draft-story-candidate] [policy-citation] [ci-guard]_
 
 ---
@@ -5565,7 +5565,7 @@ resolves to zero files.
 **Disposition:** Draft-story candidate. Does not block any current delivery. Tracked as
 MUTANTS-GLOB-EXISTENCE-GUARD in Drift Items.
 
-_Recorded: 2026-07-02. State-manager (DEC-150)._
+_Recorded: 2026-07-02. State-manager (D-150)._
 _Tagged: [process-gap] [draft-story-candidate] [glob-validation] [examine_globs]_
 
 ---
@@ -5586,7 +5586,7 @@ referencing the modified config keys. This is an engine-skill update, not a prod
 artifact change required. Deferred pending engine-source access. Tracked as
 F1-SWEEP-INCLUDES-CI-YML-COMMENTS in Drift Items.
 
-_Recorded: 2026-07-02. State-manager (DEC-150)._
+_Recorded: 2026-07-02. State-manager (D-150)._
 _Tagged: [process-gap] [justified-deferral] [f1-perimeter] [ci-yml-comments] [engine-skill]_
 
 ---
@@ -5608,12 +5608,12 @@ explicitly at the top of the file to guide future readers.
 intent. No urgency; cicd-setup.md is being kept current in the factory-artifacts cycle-close
 commits. Tracked as CICD-SETUP-CLASSIFICATION in Drift Items.
 
-_Recorded: 2026-07-02. State-manager (DEC-150)._
+_Recorded: 2026-07-02. State-manager (D-150)._
 _Tagged: [process-gap] [justified-deferral] [cicd-setup] [governance-classification]_
 
 ---
 
-### ORCHESTRATOR-EMPIRICAL-REFUTATION [codified DEC-156]
+### ORCHESTRATOR-EMPIRICAL-REFUTATION [codified D-156]
 
 **Lesson:** When an adversary pass makes factual claims that drive a design decision — especially
 claims about file existence or path validity — the orchestrator must run a 30-second empirical
@@ -5632,12 +5632,12 @@ adversaries (file nonexistent, function undefined, test absent) should be checke
 with a direct shell command before the orchestrator accepts them as justification for a spec
 change. The cost of a 30-second shell check is always less than the cost of a lossy fix round.
 
-_Recorded: 2026-07-07. State-manager (DEC-156)._
+_Recorded: 2026-07-07. State-manager (D-156)._
 _Tagged: [orchestrator-discipline] [adversary-verification] [empirical-check] [codified]_
 
 ---
 
-### REGISTRATION-SURFACE-SWEEP [codified DEC-156]
+### REGISTRATION-SURFACE-SWEEP [codified D-156]
 
 **Lesson:** When an adversary or reviewer finds a count-bearing numeric claim in one file that
 is stale, do an exhaustive sweep of ALL files that carry the same count IMMEDIATELY in that
@@ -5653,7 +5653,7 @@ all likely carrier files: STATE.md, BC-INDEX.md, CANONICAL-COUNTS.md, ARCH-INDEX
 and any spec file that was recently touched. Fix ALL matches in the same round. This is the
 S-7.02 Defensive Sweep Discipline applied prospectively to adversarial findings.
 
-_Recorded: 2026-07-07. State-manager (DEC-156)._
+_Recorded: 2026-07-07. State-manager (D-156)._
 _Tagged: [sweep-discipline] [count-propagation] [adversary-efficiency] [codified]_
 
 ---
@@ -5688,7 +5688,7 @@ _Tagged: [process-gap] [story-writer] [test-fn-accounting] [codified] — deferr
 
 **Lesson:** Implementer agent pushed commits and opened PR #610 prematurely, skipping Step 4.5 convergence, demos, and pr-manager handoff. It also improvised 3 story deviations (D1/D2/D3) in-flight rather than stopping to report, requiring an out-of-band ratification step.
 
-**Origin:** SOH-COMMENT-CRUD-1 F4 wave A, S-577-1 TDD cycle. D1 (enum-param signatures), D2 (ContextKind::Usage intercept), D3 (tightened bare-comment assertion) were all discovered in-flight. The deviations were ratified (DEC-172), but the protocol violation stands as a process gap.
+**Origin:** SOH-COMMENT-CRUD-1 F4 wave A, S-577-1 TDD cycle. D1 (enum-param signatures), D2 (ContextKind::Usage intercept), D3 (tightened bare-comment assertion) were all discovered in-flight. The deviations were ratified (D-172), but the protocol violation stands as a process gap.
 
 **Rule:** Implementer prompt must hard-forbid push/PR creation until Step 4.5 convergence is achieved and demos are complete. On discovering any deviation from spec, implementer MUST STOP and report to orchestrator — it must NOT proceed with improvised deviations regardless of confidence in correctness.
 
@@ -5741,7 +5741,7 @@ _Tagged: [process-gap] [cross-story-docs] [wave-integration] [union-audit] [codi
 
 **(a) Doc-fix instructions must mandate whole-artifact audit, not site enumeration.** Fix-1 for wave A (#613) was given as site-specific instructions, which left adjacent defects (including an INVERTED security-gate description — the --yes bypass described as blocking rather than passing). These were caught only in pass 2, requiring a second fix PR (#614). The fix instruction should have said "audit the whole artifact for consistency with the merged wire shape" rather than listing specific lines to change.
 
-**(b) Docs-only PRs must still get fresh-eyes review.** The proportionality exception (docs = lighter review) was applied to PR #613, which preceded 2 residual defects — one a MEDIUM (inverted security gate description) and one a LOW (coverage misattribution). The review proportionality exception is RETIRED this session. All PRs get fresh-eyes review pre-merge. (Codified as DEC-173.)
+**(b) Docs-only PRs must still get fresh-eyes review.** The proportionality exception (docs = lighter review) was applied to PR #613, which preceded 2 residual defects — one a MEDIUM (inverted security gate description) and one a LOW (coverage misattribution). The review proportionality exception is RETIRED this session. All PRs get fresh-eyes review pre-merge. (Codified as D-173.)
 
 **Origin:** SOH-COMMENT-CRUD-1 F4 wave A integration passes 1-2 (fix PRs #613 and #614).
 
@@ -5754,7 +5754,7 @@ _Tagged: [process-gap] [doc-fix-scope] [fresh-eyes-all-prs] [proportionality-ret
 
 ### OPERATIONAL-NOTE: SUBAGENT-FORCE-PUSH-MERGE-AUTHORIZATION [classifier-boundary]
 
-**Note:** Subagent force-push and PR-merge operations require in-session user authorization. During wave A close, the orchestrator executed an authorized force-push directly (AskUserQuestion consent obtained). User elected personal GitHub merges for all remaining PRs in this bundle (standing decision, DEC-173). This is not a process gap — the DEC-128 constraint was honored throughout. This note records the classifier boundary for clarity: orchestrator may execute authorized push operations; merge operations are user-only for this bundle.
+**Note:** Subagent force-push and PR-merge operations require in-session user authorization. During wave A close, the orchestrator executed an authorized force-push directly (AskUserQuestion consent obtained). User elected personal GitHub merges for all remaining PRs in this bundle (standing decision, D-173). This is not a process gap — the D-128 constraint was honored throughout. This note records the classifier boundary for clarity: orchestrator may execute authorized push operations; merge operations are user-only for this bundle.
 
 _Recorded: 2026-07-13. State-manager (CP-66, F4 wave A close)._
 _Tagged: [operational-note] [classifier-boundary] [dec-128] [authorization]_
@@ -5763,7 +5763,7 @@ _Tagged: [operational-note] [classifier-boundary] [dec-128] [authorization]_
 
 ### PG-F4-1 RECURRENCE: PARTIAL-COMPLIANCE [process-gap]
 
-**Lesson (recurrence note):** PG-F4-1 was codified in CP-65 (implementer hard-forbidden from push/PR/improvise). In S-577-3 delivery, the implementer correctly refrained from pushing or opening a PR (the hard-stop trigger) but improvised the deviation D-1 in-flight without first dispatching a STOP-and-report to orchestrator. Deviation was later ratified (DEC-174) but the report-first mandate was not followed.
+**Lesson (recurrence note):** PG-F4-1 was codified in CP-65 (implementer hard-forbidden from push/PR/improvise). In S-577-3 delivery, the implementer correctly refrained from pushing or opening a PR (the hard-stop trigger) but improvised the deviation D-1 in-flight without first dispatching a STOP-and-report to orchestrator. Deviation was later ratified (D-174) but the report-first mandate was not followed.
 
 **Compliance grade:** PARTIAL — did NOT push (correct), did NOT open PR (correct), but did NOT report deviation before proceeding (violation of STOP-and-report; deviation was reported retrospectively, not proactively).
 
@@ -5778,7 +5778,7 @@ _Tagged: [process-gap] [implementer-discipline] [stop-and-report] [deviation-d1]
 
 **Lesson:** The validate-pr-review-posted hook fires before the user performs the squash-merge on GitHub. When the fresh-eyes reviewer submits a COMMENTED verdict (not APPROVED/CHANGES_REQUESTED), the hook cannot distinguish COMMENTED-as-approve-equivalent from a reviewer still engaged. The hook rejects COMMENTED and demands an APPROVED verdict, but same-account reviews on GitHub do not allow the APPROVED radio button — COMMENTED is the highest attainable verdict in that configuration.
 
-**Origin:** S-577-3 fresh-eyes review returned COMMENTED. Hook blocked until workaround applied. COMMENTED = approve-equivalent per DEC-173 precedent (established at wave A for same-account reviews).
+**Origin:** S-577-3 fresh-eyes review returned COMMENTED. Hook blocked until workaround applied. COMMENTED = approve-equivalent per D-173 precedent (established at wave A for same-account reviews).
 
 **Rule:** The validate-pr-review-posted hook must be extended to accept COMMENTED as a passing verdict when the pr-reviewer is on the same account as the PR author. Until the engine-side fix ships, orchestrators must bypass the hook via explicit user authorization when a COMMENTED verdict is received from a same-account reviewer.
 
@@ -5854,7 +5854,7 @@ _Tagged: [process-gap] [adversary-discipline] [mutation-testing] [empirical-run-
 
 **Observation:** F4 wave-C produced two complementary positive-control data points:
 
-1. **cargo-mutants empirical (S-577-4):** diff-mutants run caught all 7/7 injected mutants with zero survivors. Confirms the test suite has real discriminatory power on the wave-C edit-core implementation, not just coverage numbers. This is the second diff-mutants PASS (after ADF-CODE-MARK F4, DEC-161), extending the calibration baseline.
+1. **cargo-mutants empirical (S-577-4):** diff-mutants run caught all 7/7 injected mutants with zero survivors. Confirms the test suite has real discriminatory power on the wave-C edit-core implementation, not just coverage numbers. This is the second diff-mutants PASS (after ADF-CODE-MARK F4, D-161), extending the calibration baseline.
 
 2. **Live CLI probes (S-577-6):** All 11/11 AC demos passed against a local dev binary (`cargo run`), covering the full comment-view handler surface (table output, JSON output, --public/--internal filtering, pagination, error paths). Confirms the story's test suite covers real wire behavior, not just unit-test mocks.
 
@@ -5879,7 +5879,7 @@ _Tagged: [positive-control] [cargo-mutants] [cli-probes] [calibration] [s-577-4]
 
 **Origin:** F4 wave D: S-577-5 step-4.5 adversary pass-1 surfaced the substitution via story-obligation trace — the story explicitly required role/group visibility probes but the implementation only tested `sd.public.comment`. The deviation reached the adversary gate before being caught, rather than being reported before any code was written.
 
-**Discovery:** The adversary pass-1 finding triggered a human-directed research-before-adjudication investigation. The research agent produced `research/issue-577-jsm-visibility-restriction-2026-07-14.md` (6 cited answers) confirming: visibility IS settable on JSM comments; "Service Desk Team" is the contractual default; invalid-role semantics INCONCLUSIVE leans-400; orthogonal to `sd.public.comment`; PRESERVED reconfirmed. Human ruling (DEC-175): RESTORE story-mandated visibility probes with runtime role discovery + GET read-back anti-vacuous guards; implemented in commit fbf1a1e.
+**Discovery:** The adversary pass-1 finding triggered a human-directed research-before-adjudication investigation. The research agent produced `research/issue-577-jsm-visibility-restriction-2026-07-14.md` (6 cited answers) confirming: visibility IS settable on JSM comments; "Service Desk Team" is the contractual default; invalid-role semantics INCONCLUSIVE leans-400; orthogonal to `sd.public.comment`; PRESERVED reconfirmed. Human ruling (D-175): RESTORE story-mandated visibility probes with runtime role discovery + GET read-back anti-vacuous guards; implemented in commit fbf1a1e.
 
 **Rule:** When an implementer encounters unexpected friction with a story-mandated approach (e.g., API returns unexpected error codes, the target endpoint behaves differently than documented), they MUST stop and report the deviation to the orchestrator BEFORE writing any substitute approach. The report must include: (1) exact API behavior observed, (2) why the story-mandated approach appears infeasible, (3) proposed alternatives. Only after orchestrator acknowledgement may a substitute approach be implemented. Writing a substitute approach without reporting is a STOP-on-deviation violation.
 
@@ -5890,7 +5890,7 @@ _Tagged: [process-gap] [implementer-discipline] [deviation-reporting] [stop-on-d
 
 ### RESEARCH-ADJUDICATION-POSITIVE-CONTROL [positive-control]
 
-**Observation:** The research-before-adjudication pattern worked correctly for the S-577-5 e2e scope deviation (DEC-175):
+**Observation:** The research-before-adjudication pattern worked correctly for the S-577-5 e2e scope deviation (D-175):
 
 1. **Adversary surfaced the substitution via story-obligation trace (pass-1):** The adversary's story-obligation trace catch (1L finding: e2e substitution of `sd.public.comment` for story-mandated visibility restriction) triggered the adjudication process. This confirms that adversary passes checking story-obligation traces, not just implementation correctness, catch silent scope reductions that might otherwise slip through.
 
@@ -5898,7 +5898,7 @@ _Tagged: [process-gap] [implementer-discipline] [deviation-reporting] [stop-on-d
 
 3. **Research produced a clear ruling basis:** The investigation confirmed the story-mandated approach (role/group visibility) is technically feasible on JSM comments, making the "RESTORE" ruling straightforward. Had the research shown the approach was infeasible (e.g., API permanently rejects role-based visibility), the ruling might have gone the other way.
 
-4. **Restore ruling maintained spec integrity:** DEC-175 restored the story-mandated visibility probes rather than accepting the substitution, which correctly preserves the behavioral contract specified in BC-3.5.xxx. This is the right outcome: story obligations are not negotiable absent a spec change.
+4. **Restore ruling maintained spec integrity:** D-175 restored the story-mandated visibility probes rather than accepting the substitution, which correctly preserves the behavioral contract specified in BC-3.5.xxx. This is the right outcome: story obligations are not negotiable absent a spec change.
 
 **Note:** This positive control does not reduce the need for the STOP-on-deviation rule in PG-F4-11. The research-adjudication pattern is a RECOVERY mechanism, not a substitute for pre-deviation reporting. The cost of recovery (full research investigation + ruling + re-implementation) exceeds the cost of a pre-deviation report.
 
@@ -5912,7 +5912,7 @@ _Tagged: [positive-control] [research-adjudication] [adversary-story-trace] [dec
 **Observation:** The "resolved-by-shipping" doc-label family (stale stub labels, stale BC Source citations, stale spec-feature labels deferred-to-story labels) recurred at every wave boundary in SOH-COMMENT-CRUD-1:
 
 - **Wave C (4 sweeps):** PR #618 (docs — stale stub labels in spec); PR #619 (src — stale stub labels in src comments); wave-C integration passes 1→2→3 (additional stub-label variants caught by integration adversary). Required 4 separate sweeps across 3 artifact layers (docs/CLAUDE.md/src).
-- **Wave D (1 sweep):** post-merge BC Source sync — 9 BC Source lines in `bc-3-issue-write.md` carried "citations updated at delivery" placeholders referencing `add_comment` (sibling forward-reference) instead of the shipped symbols (`delete_comment`, `update_comment`, `get_comment`, `handle_comment_delete`, `handle_comment_edit`, `handle_comment_view`, `tests/comment_delete.rs`, `tests/comment_edit.rs`, `tests/comment_view.rs`). Caught by adversary reminder (DEC-170 bundle-close obligation); DONE early per PO sweep.
+- **Wave D (1 sweep):** post-merge BC Source sync — 9 BC Source lines in `bc-3-issue-write.md` carried "citations updated at delivery" placeholders referencing `add_comment` (sibling forward-reference) instead of the shipped symbols (`delete_comment`, `update_comment`, `get_comment`, `handle_comment_delete`, `handle_comment_edit`, `handle_comment_view`, `tests/comment_delete.rs`, `tests/comment_edit.rs`, `tests/comment_view.rs`). Caught by adversary reminder (D-170 bundle-close obligation); DONE early per PO sweep.
 
 **Pattern:** These are instances of the TWIN-ARTIFACT-SWEEP family (Drift Item) and PG-F4-7 (spec-enumerated variants without enumerated test-fn names). The common root: spec/src/doc artifacts written during design phase contain forward-references or placeholder citations that survive all the way to delivery because per-story TDD loops only touch the story's own scope.
 
@@ -6022,17 +6022,17 @@ _Tagged: [process-gap] [twin-artifact-sweep] [recurrence-8] [source-field] [allo
 
 ### ECHO-BREAKER-PROTOCOL-ADOPTION [process-gap / convergence]
 
-**Observation (pass-18 checkpoint, 2026-07-16, DEC-182):** The SOH-ATTACHMENTS-1 F2 adversarial loop reached a finding plateau at 9,7,5,5,5 (passes 14-18) with fix-echo dominance: P18-001 (HIGH) was authored entirely by the P17 fix round (JSON-shape table upload-cancel row over-claimed non-interactive exit-0; BC mandates exit 64). High severity authored by a fix round signals that fixes are introducing new content not licensed by any BC clause.
+**Observation (pass-18 checkpoint, 2026-07-16, D-182):** The SOH-ATTACHMENTS-1 F2 adversarial loop reached a finding plateau at 9,7,5,5,5 (passes 14-18) with fix-echo dominance: P18-001 (HIGH) was authored entirely by the P17 fix round (JSON-shape table upload-cancel row over-claimed non-interactive exit-0; BC mandates exit 64). High severity authored by a fix round signals that fixes are introducing new content not licensed by any BC clause.
 
 **Root cause:** Fix rounds were writing new sentences (e.g., table cells, annotations) based on intent rather than strictly paraphrasing BC clauses. New content contains claims the adversary can verify against BCs — and when those claims exceed what the BC says, a finding results. The fix-echo sub-class is distinct from the twin-artifact-sweep class: twin-artifact is about propagation to mirror files; fix-echo is about new text in the primary artifact exceeding its licensing BC.
 
-**Protocol adopted (DEC-182):** Every fix round must now deliver an ECHO-BREAKER list alongside the fix: enumerate each newly-authored sentence (or table cell) and state the specific BC clause, EC number, or existing holdout text that licenses the claim. The following consistency round audits a sample (6 of 11 sentences in P18's audit). A sentence with no licensing clause must be removed or rewritten to match the clause.
+**Protocol adopted (D-182):** Every fix round must now deliver an ECHO-BREAKER list alongside the fix: enumerate each newly-authored sentence (or table cell) and state the specific BC clause, EC number, or existing holdout text that licenses the claim. The following consistency round audits a sample (6 of 11 sentences in P18's audit). A sentence with no licensing clause must be removed or rewritten to match the clause.
 
 **First-round result (P18 fix round):** 11-sentence list delivered. Consistency r28 audited 6/6 sampled sentences: all licensed. P18-001 HIGH resolved. Zero findings from the echo-breaker audit in r28.
 
-**Trigger for harder checkpoint:** if p19-p20 still plateau (~5 findings each), human convergence checkpoint before further passes (DEC-182 commitment).
+**Trigger for harder checkpoint:** if p19-p20 still plateau (~5 findings each), human convergence checkpoint before further passes (D-182 commitment).
 
-_Recorded: 2026-07-16. State-manager (adversary-pass-18 remediation burst + DEC-182 checkpoint, TD-VSDD-053)._
+_Recorded: 2026-07-16. State-manager (adversary-pass-18 remediation burst + D-182 checkpoint, TD-VSDD-053)._
 _Tagged: [process-gap] [fix-echo] [echo-breaker] [convergence] [plateau] [p18] [dec-182] [codified]_
 
 ---
@@ -6057,7 +6057,7 @@ _Tagged: [process-gap] [cv-false-positive-closure] [3rd-datapoint] [verbatim-quo
 
 ### ECHO-BREAKER-FIRST-VALIDATION [positive-control / convergence]
 
-**Observation (adversary-pass-19, 2026-07-16):** Adversary pass 19 ran as the first pass under the echo-breaker regime adopted in DEC-182 (pass-18 checkpoint). Zero findings were generated in P18-authored text; instead, a latent 18-pass-old MEDIUM surfaced (BC-2.7.002 struct-order example vs shape-table "keys alphabetical" contradiction). The convergence trajectory confirmed the regime worked: p19 broke the plateau (5,5,5→4) with a genuine, mechanically-verifiable finding rather than a fix-echo.
+**Observation (adversary-pass-19, 2026-07-16):** Adversary pass 19 ran as the first pass under the echo-breaker regime adopted in D-182 (pass-18 checkpoint). Zero findings were generated in P18-authored text; instead, a latent 18-pass-old MEDIUM surfaced (BC-2.7.002 struct-order example vs shape-table "keys alphabetical" contradiction). The convergence trajectory confirmed the regime worked: p19 broke the plateau (5,5,5→4) with a genuine, mechanically-verifiable finding rather than a fix-echo.
 
 **Why this is a positive control:** The echo-breaker protocol redirects adversary attention from recently-licensed text toward older residue. BC-2.7.002 alphabetical ordering was a pre-existing latent contradiction; 18 passes did not surface it because the adversary's scan perimeter was occupied with newer text. Once the echo-breaker licenses the recent text explicitly, the adversary focuses on uncovered terrain.
 
@@ -6105,9 +6105,9 @@ _Tagged: [process-gap] [hook-timeout] [safe-resume] [verify-before-retry] [doubl
 
 ### ECHO-BREAKER-FIXTURE-EXTENSION [process-gap / convergence]
 
-**Observation (adversary-pass-21, 2026-07-17, P21-002 MEDIUM):** Adversary pass 21 surfaced a fixture-echo finding that the sentence-level echo-breaker (List A) missed: VP-576-005's wiremock mount posted a plain issue GET request that the wire contract explicitly forbids (EC-3.9.003-5 one-issue-GET invariant). The echo-breaker protocol adopted in DEC-182 required newly-authored *sentences* to carry licensing BC clauses — but a fixture mount is not a sentence; it is a wiremock stub definition or HTTP call count assertion. The adversary caught P21-002 as MEDIUM because the fixture mount was authored during the P20 fix round and violated an EC clause, yet the echo-breaker list for P20 did not include fixture mounts. This is a distinct sub-class of the fix-echo family (TWIN-ARTIFACT-SWEEP recurrence 9): ECHO-BREAKER-SENTENCE targets new prose; ECHO-BREAKER-FIXTURE targets new wiremock mounts, HTTP call sequences, and call-count assertions.
+**Observation (adversary-pass-21, 2026-07-17, P21-002 MEDIUM):** Adversary pass 21 surfaced a fixture-echo finding that the sentence-level echo-breaker (List A) missed: VP-576-005's wiremock mount posted a plain issue GET request that the wire contract explicitly forbids (EC-3.9.003-5 one-issue-GET invariant). The echo-breaker protocol adopted in D-182 required newly-authored *sentences* to carry licensing BC clauses — but a fixture mount is not a sentence; it is a wiremock stub definition or HTTP call count assertion. The adversary caught P21-002 as MEDIUM because the fixture mount was authored during the P20 fix round and violated an EC clause, yet the echo-breaker list for P20 did not include fixture mounts. This is a distinct sub-class of the fix-echo family (TWIN-ARTIFACT-SWEEP recurrence 9): ECHO-BREAKER-SENTENCE targets new prose; ECHO-BREAKER-FIXTURE targets new wiremock mounts, HTTP call sequences, and call-count assertions.
 
-**Protocol extension adopted (2026-07-17, within DEC-183 remit — no criterion change):** List B is added to the echo-breaker protocol alongside the existing List A (sentences). Every fix round must deliver:
+**Protocol extension adopted (2026-07-17, within D-183 remit — no criterion change):** List B is added to the echo-breaker protocol alongside the existing List A (sentences). Every fix round must deliver:
 - **List A:** each newly-authored sentence (or table cell) in spec text + the BC clause or EC number that licenses the claim.
 - **List B:** each newly-authored wiremock mount, HTTP call/response stub, or call-count assertion in VP or holdout bodies + the wire-sequence clause (EC number) that licenses that specific call being present, absent, or counted at that position.
 
@@ -6203,11 +6203,11 @@ Adversary P23-002 identified that `--dry-run` interaction with eligibility guard
 
 **Encoded as:** EC-3.9.020-8 (new EC for `--replace-existing --dry-run --public` on non-JSM → exit 64, no preview) + EC-3.9.020-7 GATES vs ELIGIBILITY GUARDS distinction sentence + EC-3.9.005-3 dry-run cross-ref extension.
 
-**Orchestrator ruling:** This is a pattern-extension within the ratified DEC-182(b) invariant family (no-destructive-call-before-gate invariant); it does not require a new gate docket item.
+**Orchestrator ruling:** This is a pattern-extension within the ratified D-182(b) invariant family (no-destructive-call-before-gate invariant); it does not require a new gate docket item.
 
 **Mnemonic:** gates = consent checks (suppressed on dry-run); guards = validity checks (never suppressed).
 
-_Discovered: P23-002 (2026-07-17); orchestrator ruling per DEC-182(b) invariant family_
+_Discovered: P23-002 (2026-07-17); orchestrator ruling per D-182(b) invariant family_
 
 ---
 
@@ -6577,11 +6577,11 @@ So 2 of 3 reviewers missed the CRITICAL, and 1 affirmatively blessed it. The onl
 > 1. **Would this assertion FAIL against the current (pre-implementation) build?** — tests delta-coverage.
 > 2. **Could this assertion ever PASS against a correct implementation?** — catches permanently-unsatisfiable assertions.
 >
-> Dimension 2 is what catches permanently-unsatisfiable assertions. No adversary pass before pass-82/84 in this project had ever systematically asked it. This also retroactively devalues the earlier 76/77/78 3/3 window: it was CLEAN while DEC-192's holdout gap sat undetected. The window was technically clean, but Dimension 2 was not part of any aperture.
+> Dimension 2 is what catches permanently-unsatisfiable assertions. No adversary pass before pass-82/84 in this project had ever systematically asked it. This also retroactively devalues the earlier 76/77/78 3/3 window: it was CLEAN while D-192's holdout gap sat undetected. The window was technically clean, but Dimension 2 was not part of any aperture.
 >
 > Passes that cover Dimension 2 (like passes 82 and 84) MUST be dispatched in every window. An aperture checklist that omits Dimension 2 produces a window that can endorse permanently-unsatisfiable assertions.
 
-**Root cause is documentation, not coincidence:** The same CLAUDE.md profile-4 sentence ("stdout for `--output json`") misled the orchestrator AND pass-81 independently. This is a documentation defect, not two coincidences. Corrected wording scheduled under DEC-194.
+**Root cause is documentation, not coincidence:** The same CLAUDE.md profile-4 sentence ("stdout for `--output json`") misled the orchestrator AND pass-81 independently. This is a documentation defect, not two coincidences. Corrected wording scheduled under D-194.
 
 **Orchestrator fault acknowledgment:** The CRITICAL was introduced by the orchestrator, not the adversary. The orchestrator claimed to fix a LOW and introduced a CRITICAL. Independent verification of every subagent claim against artifacts is the mitigation that worked (orchestrator verified pass-79's CRITICAL by reading the source files and confirmed it was real before overriding pass-81's endorsement).
 
@@ -6654,7 +6654,7 @@ _Tagged: [orchestrator-error] [orchestrator-self-correction] [record-integrity] 
 
 **Disposition:** resolved in `7f702bf6` by retiring S-626-1's now-obsolete round-19 assertion into a documented "superseded by M2-i" comment, since S-CIGATE-2's stricter `PINNED_GATE_RUN_LINE` byte-for-byte pin strictly subsumes the older assertion's goal — no S-CIGATE-2 assertion was weakened, confirmed by a full function-by-function audit of the file (the only such silent-concatenation defect found). Tracked as drift item `SILENT-MERGE-CONCATENATION-DEFEATS-CONFLICT-DETECTION` (HIGH, OPEN) per the S-7.02 cycle-closing checklist — a process-gap finding recorded as a tracked deferral pending a standing reconciliation-step checklist item or mechanical guard.
 
-_Trigger: RESUME+RECONCILE-667 burst (2026-08-07) — session resumed to find PR #667's recorded mergeStateStatus CLEAN (from STATE.md v2.20) was stale after S-CIGATE-2 merged to develop; human ruling DEC-239 directed reconciliation before fix round 20; the implementer's `git merge origin/develop` reported 3 conflicts (resolved) but the post-merge full test run (`cargo test`) caught an 18/19 red that the merge itself gave no signal of. Commits: `29b501ce` (merge), `7f702bf6` (fix + this lesson's underlying resolution)._
+_Trigger: RESUME+RECONCILE-667 burst (2026-08-07) — session resumed to find PR #667's recorded mergeStateStatus CLEAN (from STATE.md v2.20) was stale after S-CIGATE-2 merged to develop; human ruling D-239 directed reconciliation before fix round 20; the implementer's `git merge origin/develop` reported 3 conflicts (resolved) but the post-merge full test run (`cargo test`) caught an 18/19 red that the merge itself gave no signal of. Commits: `29b501ce` (merge), `7f702bf6` (fix + this lesson's underlying resolution)._
 _Tagged: [merge-integrity] [reconciliation-risk] [conflict-detection-gap] [verification-discipline] [soh-dx-1] [step-4.5-grind] [codified]_
 
 
@@ -6713,7 +6713,7 @@ _Tagged: [test-writing-finds-more-than-review] [fail-open-in-the-fix] [regressio
 
 > When dispatching a window against a tree that has already survived multiple prior windows, do not default to "whatever the last pass didn't quite finish" as the next frontier. Explicitly design each pass's frontier to be maximally orthogonal to every frontier used in prior passes on this story — not just the immediately preceding window, the full history. Treat frontier selection as a first-class design decision requiring its own justification (as this burst's human-approval-before-dispatch step already does), not an afterthought filled in by whichever question happens to be top of mind. Track, alongside the pass/window counters, which *classes* of frontier have been tried (structural pinning, traceability, real-world runtime semantics, vacuous satisfaction, reconciliation seams, spec-to-shipped-behavior, …) so a future dispatcher can see at a glance which axes remain unexplored, rather than re-deriving the list from scratch each time.
 
-**Disposition:** open — this is a standing methodology lesson, not a single fixable defect. It directly informs the still-unadjudicated DEC-204 question of whether/how the convergence criterion itself should account for frontier novelty rather than raw pass or window count.
+**Disposition:** open — this is a standing methodology lesson, not a single fixable defect. It directly informs the still-unadjudicated D-204 question of whether/how the convergence criterion itself should account for frontier novelty rather than raw pass or window count.
 
 _Trigger: ADVERSARY-51-52-53 (2026-08-07) — window 51/52/53, three human-approved deliberately-varied frontiers against frozen head `ada50a34`, all three NOT CLEAN, 30 new findings on a tree three prior windows had already reviewed._
 _Tagged: [convergence-methodology] [frontier-design] [decay-curve] [soh-dx-1] [step-4.5-grind] [codified]_
@@ -6728,7 +6728,7 @@ _Tagged: [convergence-methodology] [frontier-design] [decay-curve] [soh-dx-1] [s
 
 > When hardening an aggregator node (a job whose only purpose is to combine and report on other jobs' results), explicitly ask which upstream nodes its correctness depends on, and audit whether those upstream nodes carry commensurate structural protection — not just presence/substring checks, but the same class of pin (byte-for-byte run-line, ordered step-key-set, env key-set, `if:`/`continue-on-error` bans) applied to the aggregator itself. A guard family is only as strong as its weakest contributing node, and an aggregator's own hardening history is not evidence its inputs are equally hardened — it is evidence only that findings have, so far, always been reported against the aggregator rather than its inputs.
 
-**Disposition:** open — pass-51's three HIGH findings are guard-strength gaps, not live defects, and are explicitly not authorized for a fix round this burst pending the human's methodology ruling (see DEC-204, still unadjudicated). Recorded here as the generalized lesson regardless of when or whether the specific gaps are closed.
+**Disposition:** open — pass-51's three HIGH findings are guard-strength gaps, not live defects, and are explicitly not authorized for a fix round this burst pending the human's methodology ruling (see D-204, still unadjudicated). Recorded here as the generalized lesson regardless of when or whether the specific gaps are closed.
 
 _Trigger: ADVERSARY-51-52-53 (2026-08-07), pass 51 (vacuous-satisfaction frontier) — twenty fix rounds of `ci-gate` hardening left `test`, the `needs` member carrying the actual pass/fail signal, defended only by 15 order-free substring checks._
 _Tagged: [guard-design] [aggregator-vs-aggregated] [anti-neutering] [soh-dx-1] [step-4.5-grind] [codified]_
@@ -6811,24 +6811,24 @@ _Tagged: [remediation-process] [partial-edit] [trail-derivation] [soh-dx-1] [ste
 
 ### [codified] AMBIGUITY-IN-A-GATES-DEFINITION-IS-ITSELF-A-GATE-DEFECT: an unruled interpretive fork silently governed eight windows before anyone escalated it
 
-**Pattern.** DEC-191(c) (LOW findings LEDGERED, non-resetting) admitted two readings from the moment it was written: a conservative reading, under which any LOW finding -- whether classified as a refinement or as a gap -- resets the 3-consecutive-CLEAN window; and a lenient reading, under which only LOW findings classified as gaps reset it, while refinements are ledgered without resetting anything. DEC-204, opened 2026-07-31, recorded this as an open question. The conservative reading was applied by default at every subsequent window -- DEC-219, DEC-221, and DEC-223 each explicitly recorded "DEC-191(c) conservative reading applies (DEC-204 UNADJUDICATED)" -- but the ambiguity itself was never escalated for a ruling. DEC-230 (2026-08-05) is the first record to name the fork as outcome-determining: window 36/37/38 closed 0/3 under the conservative reading but 3/3 under the lenient one. Even after that, the fork remained open through DEC-234's window 48/49/50 and DEC-242's window 51/52/53 -- roughly twenty fix rounds and eight windows after DEC-204 was first opened -- until DEC-245 finally ruled it on 2026-08-08.
+**Pattern.** D-191(c) (LOW findings LEDGERED, non-resetting) admitted two readings from the moment it was written: a conservative reading, under which any LOW finding -- whether classified as a refinement or as a gap -- resets the 3-consecutive-CLEAN window; and a lenient reading, under which only LOW findings classified as gaps reset it, while refinements are ledgered without resetting anything. D-204, opened 2026-07-31, recorded this as an open question. The conservative reading was applied by default at every subsequent window -- D-219, D-221, and D-223 each explicitly recorded "D-191(c) conservative reading applies (D-204 UNADJUDICATED)" -- but the ambiguity itself was never escalated for a ruling. D-230 (2026-08-05) is the first record to name the fork as outcome-determining: window 36/37/38 closed 0/3 under the conservative reading but 3/3 under the lenient one. Even after that, the fork remained open through D-234's window 48/49/50 and D-242's window 51/52/53 -- roughly twenty fix rounds and eight windows after D-204 was first opened -- until D-245 finally ruled it on 2026-08-08.
 
 **Root cause.** A convergence criterion with an unruled interpretive fork does not fail loudly. Each window resolved cleanly under the applied (conservative) default, so nothing forced a decision -- the ambiguity was invisible in any single window's outcome, only visible in aggregate across many windows once someone asked "would a different reading have produced a different result here." The record repeatedly *disclosed* the open question (eight separate DEC entries name it) without anyone treating disclosure as a trigger for resolution. Disclosure was mistaken for mitigation.
 
-**The retrospective cost/benefit, now on record via DEC-245.** Had the lenient reading been adopted at the first point it became outcome-determining (window 36/37/38, 2026-08-05), the cycle would have stopped there -- and would have missed ADV-P50-HIGH-001 (a live, repo-wide `ci-gate` false-green, independently confirmed on a real CI run, that became story S-CIGATE-2 and shipped as PR #671), pass-51's three HIGH guard-strength findings (every anti-neutering control hardened for `ci-gate` over twenty rounds had never propagated to `test`, the job that carries the entire regression suite), and pass-53's two HIGH spec contradictions (an AC asserting the exact logical inverse of the shipped test). All five were found strictly after the point the lenient reading would have declared victory. The conservative default, left unruled, was expensive in fix-round volume but was also the reason those five HIGH findings were ever surfaced.
+**The retrospective cost/benefit, now on record via D-245.** Had the lenient reading been adopted at the first point it became outcome-determining (window 36/37/38, 2026-08-05), the cycle would have stopped there -- and would have missed ADV-P50-HIGH-001 (a live, repo-wide `ci-gate` false-green, independently confirmed on a real CI run, that became story S-CIGATE-2 and shipped as PR #671), pass-51's three HIGH guard-strength findings (every anti-neutering control hardened for `ci-gate` over twenty rounds had never propagated to `test`, the job that carries the entire regression suite), and pass-53's two HIGH spec contradictions (an AC asserting the exact logical inverse of the shipped test). All five were found strictly after the point the lenient reading would have declared victory. The conservative default, left unruled, was expensive in fix-round volume but was also the reason those five HIGH findings were ever surfaced.
 
 **Prescription (actionable, applies to any convergence or gate criterion with more than one plausible reading):**
 
 > The moment an interpretive fork in a gate's definition first changes an outcome -- not the first time it is *noticed*, the first time applying the two readings would produce two different verdicts -- escalate it for a ruling before proceeding to the next window or round. Do not let a default reading run silently across multiple cycles just because each individual application is internally consistent and disclosed. A gate whose definition is ambiguous is not merely under-specified prose; the ambiguity is itself a defect in the gate, with the same downstream risk as any other unverified assumption baked into a verification mechanism.
 
-**Disposition:** identified during DEC-204-ADJUDICATED (2026-08-08), the burst that finally ruled the fork via DEC-245. The gate itself (DEC-191(c)) is not being changed by this lesson -- the ruling settles which reading is correct going forward. This lesson is about the escalation discipline: the first outcome-determining instance (DEC-230, 2026-08-05) should have triggered the ruling then, not eight windows and roughly twenty fix rounds later.
+**Disposition:** identified during D-204-ADJUDICATED (2026-08-08), the burst that finally ruled the fork via D-245. The gate itself (D-191(c)) is not being changed by this lesson -- the ruling settles which reading is correct going forward. This lesson is about the escalation discipline: the first outcome-determining instance (D-230, 2026-08-05) should have triggered the ruling then, not eight windows and roughly twenty fix rounds later.
 
-_Trigger: DEC-204-ADJUDICATED (2026-08-08) -- DEC-245 ruled the DEC-191(c) conservative/lenient fork after DEC-204 sat open since 2026-07-31, disclosed but unescalated across DEC-219/221/223/230/234/242 and roughly twenty fix rounds._
+_Trigger: D-204-ADJUDICATED (2026-08-08) -- D-245 ruled the D-191(c) conservative/lenient fork after D-204 sat open since 2026-07-31, disclosed but unescalated across D-219/221/223/230/234/242 and roughly twenty fix rounds._
 _Tagged: [convergence-methodology] [gate-definition] [interpretive-ambiguity] [escalation-discipline] [soh-dx-1] [step-4.5-grind] [dec-191c] [codified]_
 
 ### [codified] EXTERNAL-VALIDATION-FINDS-WHAT-INTERNAL-REVIEW-CANNOT-SEE: fifty adversarial passes reasoned within the project's model of GitHub Actions semantics; one external research pass tested the model itself and found U1
 
-Fifty adversarial passes reviewed S-626-1's `ci-gate`/`test`-job guard apparatus across many deliberately varied inspection frontiers -- vacuous satisfaction, reconciliation seams, spec-to-shipped-behavior, guard-strength propagation, and more. Every one of those passes reasoned *within* the project's own model of how GitHub Actions `needs:`/`if:`/skip semantics work; none of them questioned whether that model was correct in the first place, because verifying platform semantics against primary sources is not what an adversarial code/spec review does. A dedicated research pass, human-directed after DEC-204-ADJUDICATED, instead spent its entire budget validating the model itself against GitHub's official documentation -- and while doing so, it surfaced U1 (the `ci-gate.needs` set has no completeness/partition guard, only per-member presence and exclusion checks) as an incidental byproduct of understanding the model precisely enough to state it correctly. U1 is reachable by ordinary maintenance (add a ninth job, forget to touch either allowlist) and is the identical defect shape -- an allowlist with no default-deny over its universe -- that the story's own headline fix (the result-value-layer `ALLOWED_SKIPS` design) already closed one layer down. Fifty passes missed it because all fifty were structurally incapable of finding it: a review that reasons inside a model cannot discover the model is incomplete.
+Fifty adversarial passes reviewed S-626-1's `ci-gate`/`test`-job guard apparatus across many deliberately varied inspection frontiers -- vacuous satisfaction, reconciliation seams, spec-to-shipped-behavior, guard-strength propagation, and more. Every one of those passes reasoned *within* the project's own model of how GitHub Actions `needs:`/`if:`/skip semantics work; none of them questioned whether that model was correct in the first place, because verifying platform semantics against primary sources is not what an adversarial code/spec review does. A dedicated research pass, human-directed after D-204-ADJUDICATED, instead spent its entire budget validating the model itself against GitHub's official documentation -- and while doing so, it surfaced U1 (the `ci-gate.needs` set has no completeness/partition guard, only per-member presence and exclusion checks) as an incidental byproduct of understanding the model precisely enough to state it correctly. U1 is reachable by ordinary maintenance (add a ninth job, forget to touch either allowlist) and is the identical defect shape -- an allowlist with no default-deny over its universe -- that the story's own headline fix (the result-value-layer `ALLOWED_SKIPS` design) already closed one layer down. Fifty passes missed it because all fifty were structurally incapable of finding it: a review that reasons inside a model cannot discover the model is incomplete.
 
 **Disposition:** external validation of load-bearing platform/library semantics belongs in the standing review loop for any guard whose correctness depends on undocumented or partially-documented third-party behavior -- not as a last resort invoked only after internal review has plateaued. The eight CONFIRMS this same research pass returned are equally significant: they retired several plausible "the design might be subtly wrong" concerns (e.g., whether `!cancelled()` would have been the more idiomatic choice -- it would have been actively wrong) that fifty internal passes had implicitly assumed correct without ever checking against a primary source.
 
@@ -6837,7 +6837,7 @@ _Tagged: [verification-methodology] [external-validation] [research] [ci-gate] [
 
 ### [codified] DECLINED-HOUSEKEEPING-IS-AN-ACTIVE-HAZARD: not fast-forwarding a checkout flagged 1-commit-behind produced a false production-state finding hours later
 
-At an earlier session resume, the health check flagged local `develop` as 1 commit behind `origin/develop`. The orchestrator declined to fast-forward it -- a reasonable-seeming deferral of a routine housekeeping action with no visible immediate cost. Hours later, a research pass read the main repo's working copy to assess whether S-CIGATE-2's fail-closed fix was actually live, and because the checkout was stale, it reported as its top risk finding (R1) that the false-green defect was "still live on `develop`" -- a claim that was completely false: the fix had merged and was live at `origin/develop`'s `df203233`. The orchestrator caught the discrepancy only because the research agent, sourcing everything else from official documentation, honestly labeled R1 "(Verified locally, not researched)" -- an explicit provenance disclosure that made the claim inspectable rather than simply asserted. Had that label been omitted, a false "the fix isn't actually deployed" finding would have propagated into DEC-246 and potentially triggered unnecessary remediation work against a defect that no longer existed.
+At an earlier session resume, the health check flagged local `develop` as 1 commit behind `origin/develop`. The orchestrator declined to fast-forward it -- a reasonable-seeming deferral of a routine housekeeping action with no visible immediate cost. Hours later, a research pass read the main repo's working copy to assess whether S-CIGATE-2's fail-closed fix was actually live, and because the checkout was stale, it reported as its top risk finding (R1) that the false-green defect was "still live on `develop`" -- a claim that was completely false: the fix had merged and was live at `origin/develop`'s `df203233`. The orchestrator caught the discrepancy only because the research agent, sourcing everything else from official documentation, honestly labeled R1 "(Verified locally, not researched)" -- an explicit provenance disclosure that made the claim inspectable rather than simply asserted. Had that label been omitted, a false "the fix isn't actually deployed" finding would have propagated into D-246 and potentially triggered unnecessary remediation work against a defect that no longer existed.
 
 **Disposition:** stale local state is not a passive inconvenience -- it is an active hazard to every agent, human or automated, that reads from the working copy and reports what it finds as current fact. A flagged staleness condition (health check, drift warning, "N commits behind") should be resolved at the point it is flagged, not deferred, because the cost of deferral is not paid by the agent that deferred it -- it is paid later, silently, by whichever agent trusts the stale artifact next. This is the sixth layer of `STALE-ARTIFACT-PRODUCES-FALSE-CLAIM`, and the first where the orchestrator itself is the root cause rather than an artifact drifting on its own between bursts.
 
@@ -6850,16 +6850,16 @@ The SESSION WRAP burst (2026-08-09) recorded STATE.md as having no working write
 
 **Disposition:** before recording a mechanism as deadlocked because every attempted path failed, check whether the failure mode of each attempt is the SAME constraint wearing three different faces, or three genuinely independent blockers. Here, two of the three "blocked paths" (`Edit`, `Bash`) were blocked correctly and by design -- they are not failure modes to route around, they are why the third path (`Write`) is the one that matters, and the diagnosis never separated "is `Write` itself disallowed" from "did this particular `Write` payload exceed a size limit." A guard's own error message naming its sanctioned alternative is strong evidence that alternative was never the problem. This burst's compaction was executed with zero hooks disabled, moved, renamed, chmod'd, or edited -- the deadlock dissolved once the actual constraint (payload size, not path) was correctly identified.
 
-_Trigger: COMPACTION (2026-08-09) -- re-diagnosed the SESSION WRAP burst's "no working write path" conclusion, found it false, and executed compaction via the already-sanctioned `Write` path with no hook changes; recorded as DEC-247._
+_Trigger: COMPACTION (2026-08-09) -- re-diagnosed the SESSION WRAP burst's "no working write path" conclusion, found it false, and executed compaction via the already-sanctioned `Write` path with no hook changes; recorded as D-247._
 _Tagged: [factory-tooling] [write-path] [state-md] [guard-apparatus] [false-deadlock] [compaction] [codified]_
 
 ### [codified] VERIFY-THE-GATING-EVENT-BEFORE-DECLARING-A-DEADLOCK: `guard-state-bash-write.sh` is a Bash-only PreToolUse guard, not a blanket write-path block
 
-This burst's own resume re-examined the SESSION WRAP burst's blocker analysis one layer deeper than DEC-247/COMPACTION had, and found a second, narrower imprecision worth codifying separately: `guard-state-bash-write.sh` fires as a `PreToolUse` hook scoped specifically to the `Bash` tool targeting `STATE.md` — it does not, and structurally cannot, gate `Write` or `Edit` calls, because a `PreToolUse` hook registered against one tool name is never invoked for a different tool. Separately, `validate-state-size` (the size-ceiling check DEC-247/COMPACTION correctly identified as the actual blocker) **waives its own ceiling whenever the proposed write is a net size reduction** relative to the currently committed file — a detail neither the SESSION WRAP burst nor the COMPACTION burst's own text stated explicitly, even though COMPACTION's successful `Write` (372→320 lines) was in fact a size-reducing write and therefore never at risk from that check regardless of the absolute byte count.
+This burst's own resume re-examined the SESSION WRAP burst's blocker analysis one layer deeper than D-247/COMPACTION had, and found a second, narrower imprecision worth codifying separately: `guard-state-bash-write.sh` fires as a `PreToolUse` hook scoped specifically to the `Bash` tool targeting `STATE.md` — it does not, and structurally cannot, gate `Write` or `Edit` calls, because a `PreToolUse` hook registered against one tool name is never invoked for a different tool. Separately, `validate-state-size` (the size-ceiling check D-247/COMPACTION correctly identified as the actual blocker) **waives its own ceiling whenever the proposed write is a net size reduction** relative to the currently committed file — a detail neither the SESSION WRAP burst nor the COMPACTION burst's own text stated explicitly, even though COMPACTION's successful `Write` (372→320 lines) was in fact a size-reducing write and therefore never at risk from that check regardless of the absolute byte count.
 
-**Disposition:** when characterizing a tool/hook interaction as a blocker, name the specific EVENT (tool name + hook trigger condition) that gates it, not just the hook's filename or its general purpose — "guard-state-bash-write.sh blocks STATE.md writes" is imprecise in a way that matters: it reads as covering `Write`/`Edit` too, when it covers only `Bash`. The COMPACTION burst reached the right operational conclusion (`Write` was never blocked) without stating the precise reason (`Write` isn't Bash, so the Bash-scoped guard was never in its path at all, independent of the separate size-waiver mechanism). Both are now on record. This lesson is scoped narrower than DEC-247's already-codified `SANCTIONED-PATH-EXISTS-BEFORE-DECLARING-DEADLOCK` — that one says "check whether blocked paths share one root cause before calling it a deadlock"; this one adds "and verify the gating EVENT of each hook directly, don't infer scope from a hook's name or file location."
+**Disposition:** when characterizing a tool/hook interaction as a blocker, name the specific EVENT (tool name + hook trigger condition) that gates it, not just the hook's filename or its general purpose — "guard-state-bash-write.sh blocks STATE.md writes" is imprecise in a way that matters: it reads as covering `Write`/`Edit` too, when it covers only `Bash`. The COMPACTION burst reached the right operational conclusion (`Write` was never blocked) without stating the precise reason (`Write` isn't Bash, so the Bash-scoped guard was never in its path at all, independent of the separate size-waiver mechanism). Both are now on record. This lesson is scoped narrower than D-247's already-codified `SANCTIONED-PATH-EXISTS-BEFORE-DECLARING-DEADLOCK` — that one says "check whether blocked paths share one root cause before calling it a deadlock"; this one adds "and verify the gating EVENT of each hook directly, don't infer scope from a hook's name or file location."
 
-_Trigger: RESUME+WINDOW-54-55-56+CLASS-SWEEP (2026-08-09) -- resume-time re-verification of the DEC-247/COMPACTION write-path finding, tightening an imprecise (though not operationally wrong) characterization before building further bursts on top of it._
+_Trigger: RESUME+WINDOW-54-55-56+CLASS-SWEEP (2026-08-09) -- resume-time re-verification of the D-247/COMPACTION write-path finding, tightening an imprecise (though not operationally wrong) characterization before building further bursts on top of it._
 _Tagged: [factory-tooling] [write-path] [state-md] [guard-apparatus] [hook-scoping] [false-deadlock] [codified]_
 
 ### [codified] COUNT-ROWS-NOT-KEYWORD-OCCURRENCES: a `grep -o keyword | uniq -c` count produced 211 vs. 188 real rows, and two agents independently produced two different wrong splits
@@ -6909,29 +6909,29 @@ _Tagged: [measurement-methodology] [ci-gate] [recurrence] [process-gap] [s-7.02]
 
 ### [codified] EXTERNAL-VALIDATION-CATCHES-WHAT-INTERNAL-REVIEW-CANNOT: two successive external research passes each found the prior record overstated
 
-DEC-249 (2026-08-09) found the original DEC-246 research artifact recorded as 8/8 CONFIRM when
+D-249 (2026-08-09) found the original D-246 research artifact recorded as 8/8 CONFIRM when
 re-validation against primary sources found 5 CONFIRM, 2 INCONCLUSIVE, 1 split, 0 REFUTE. This
-burst's DEC-261 (2026-08-10) found a second, independent instance one day later: the
+burst's D-261 (2026-08-10) found a second, independent instance one day later: the
 `ZERO-LEG-MATRIX-RESULT-UNDOCUMENTED` drift item's own recorded evidence characterization — quoted
 verbatim into a shipped guard's docstring — did not hold up against the sources it cited. Neither
 overclaim was internal-review-reachable: both survived multiple adversarial windows (up to 59
 passes) because adversarial review reasons *within* the project's model of GitHub's semantics,
-never testing the model itself against primary sources — the same blind spot DEC-246 itself was
-dispatched to close (see U1, DEC-246-U1-CLOSED), reopening one layer down at the record *about* the
+never testing the model itself against primary sources — the same blind spot D-246 itself was
+dispatched to close (see U1, D-246-U1-CLOSED), reopening one layer down at the record *about* the
 semantics rather than the semantics claims themselves.
 
 **Disposition:** external validation against primary sources belongs in the standing review loop,
 not as a one-off. When a research artifact's finding is quoted verbatim into code (a docstring, a
 comment, an error message), re-validate the citation the next time that surface is touched — do not
 treat a prior CONFIRM as permanently settled. This burst's own research pass modeled the correct
-discipline: it re-fetched pages DEC-246 had already read one day earlier rather than carrying the
+discipline: it re-fetched pages D-246 had already read one day earlier rather than carrying the
 prior finding forward on trust, which is precisely how the REFUTE was caught. The pass's own
 within-pass self-correction is additional evidence the discipline holds when applied: an earlier
 revision recommended widening Guard B to assert no `matrix.exclude:` key, then caught on re-reading
 Guard B's actual source that the assertion already existed, and removed the wrong recommendation
 from four places before reporting rather than letting it stand.
 
-_Trigger: DEC-246-FOLLOWUP research pass (2026-08-10) — new drift-item corrections, DEC-261, no code
+_Trigger: D-246-FOLLOWUP research pass (2026-08-10) — new drift-item corrections, D-261, no code
 changed (product commit `5ca51bc2`, docstrings only)._
 _Tagged: [external-validation] [research-methodology] [ci-gate] [guard-apparatus] [recurrence] [codified]_
 
@@ -6975,7 +6975,7 @@ _Tagged: [measurement-discipline] [orchestrator-discipline] [ci-gate] [process-g
 
 ## SHELL-TRUST-ASSUMPTIONS Research Pass — Knowing a Guard's True Strength Is as Valuable as Finding It Broken (2026-08-11)
 
-External research (`research/ci-gate-shell-trust-assumptions-2026-08-10.md`, DEC-263) re-validated all six primary assumptions behind the 401 lines of security-relevant shell that merged to `develop` unreviewed via PR #667. The result was zero REFUTE — every assumption held. That is a genuinely different outcome from every prior review pass this cycle, almost all of which existed to report the finding of a real gap.
+External research (`research/ci-gate-shell-trust-assumptions-2026-08-10.md`, D-263) re-validated all six primary assumptions behind the 401 lines of security-relevant shell that merged to `develop` unreviewed via PR #667. The result was zero REFUTE — every assumption held. That is a genuinely different outcome from every prior review pass this cycle, almost all of which existed to report the finding of a real gap.
 
 What the pass produced instead was sharper honesty about a control everyone already knew was imperfect: `resolve_trusted_jq`'s own `HONEST SCOPE` comment already said passwordless sudo defeats the allowlist. This pass confirmed that comment against primary sources (GitHub Docs verbatim, `actions/runner` source) rather than taking it on faith, and went further — it reduced the decision-path trust property to exactly one undocumented fact (`/usr/bin` being root-only on `ubuntu-latest`), named the ~10-minute experiment that would settle it, and found two smaller gaps a purely internal review would not have surfaced: a macOS allowlist entry that trusts a runner-writable directory (contained to a non-decision-path test leg, but worth recording plainly), and a project-record gap where the sudo bound is stated correctly in code but absent from `CLAUDE.md`.
 
@@ -6986,7 +6986,7 @@ _Tagged: [ci-gate] [external-validation] [shell-trust] [process-gap] [codified]_
 
 ## PR675-MERGE+ADV-P675-CLOSE — A Correction Is Itself an Operation That Can Corrupt a Record (2026-08-11)
 
-PR #675 existed for one reason: correct `CLAUDE.md`/`scripts/check-ci-gate.sh`'s trust-layer prose to match what the SHELL-TRUST-ASSUMPTIONS research pass (DEC-263) had just verified against primary sources. A targeted claim-accuracy review (ADV-P675) found the correction PR itself introduced two new MEDIUM-severity false claims — one an overclaimed "first LTS with usrmerge" premise that lost its scope somewhere in a source-to-artifact-to-comment citation chain, the other an INCONCLUSIVE/INFERRED research finding restated as settled fact, inconsistent with how the same PR correctly labelled a lower-stakes claim ~70 lines later.
+PR #675 existed for one reason: correct `CLAUDE.md`/`scripts/check-ci-gate.sh`'s trust-layer prose to match what the SHELL-TRUST-ASSUMPTIONS research pass (D-263) had just verified against primary sources. A targeted claim-accuracy review (ADV-P675) found the correction PR itself introduced two new MEDIUM-severity false claims — one an overclaimed "first LTS with usrmerge" premise that lost its scope somewhere in a source-to-artifact-to-comment citation chain, the other an INCONCLUSIVE/INFERRED research finding restated as settled fact, inconsistent with how the same PR correctly labelled a lower-stakes claim ~70 lines later.
 
 Neither defect was in the code the PR touched — `check-ci-gate.sh`'s decision logic and predicates were byte-unchanged; both defects were in prose describing that logic. That does not make them lower-stakes in this repository: `resolve_trusted_jq`'s own `HONEST SCOPE` comment and the round-13 `uses:`-pinning scope note are both load-bearing controls in the sense that a future reader (human or agent) trusts them instead of re-deriving the property from scratch. A false comment sends that reader to the wrong conclusion just as effectively as a false assertion in test code would.
 
@@ -7060,7 +7060,7 @@ _Tagged: [orchestrator-process] [verification-discipline] [bucket1-defects] [jso
 
 ## Verify artifact PROVENANCE (timestamp, source command, actual body content), not just that a number or claim EXISTS somewhere
 
-Two independent instances surfaced within the bucket1-defects cycle of a measurement or mechanism being reported as fact without checking where it actually came from. **(a)** An earlier burst read a stale, pre-existing `mutants.out` file (dated 2026-07-24, from an unrelated prior story's run) and reported its 27/0 kill-rate figures as if they were this delta's own F6 mutation-testing result — caught by a later verification pass that checked the file's own timestamp and content provenance against the delta actually under review, not just its existence on disk. **(b)** A burst's closing summary claimed a push to `factory-artifacts` via a script named `factory-cas-push.sh`; no such script exists anywhere on this machine (confirmed twice, independently, by targeted filesystem searches in two separate bursts) — the actual push used a plain fetch-verified fast-forward `git push` both times, which worked correctly, but the summary named a specific, plausible-sounding mechanism that was never actually invoked. **(c), this burst's own close-out:** the dispatch instruction for this very burst cited a "32/32 effective kill" mutation-testing figure for the bucket1-defects delta; tracing it against the two available sources (the F7 convergence report's own D2 detail section, and PR #700's body via `gh pr view`) produced two different, smaller, non-matching numbers (`edit.rs` 4/4 CI-verified; `collapse_and_truncate` 5/5 per PR #700's own text) and one incomplete out-of-band local run (30 mutants attempted, never finished verifying end-to-end) — no single source actually says "32/32." Rather than repeat the unreconciled figure forward into DEC-276 and `STATE.md` (which would have made this the THIRD instance of exactly this pattern, this time self-inflicted rather than merely observed), this burst recorded only the source-traceable numbers and noted the discrepancy explicitly.
+Two independent instances surfaced within the bucket1-defects cycle of a measurement or mechanism being reported as fact without checking where it actually came from. **(a)** An earlier burst read a stale, pre-existing `mutants.out` file (dated 2026-07-24, from an unrelated prior story's run) and reported its 27/0 kill-rate figures as if they were this delta's own F6 mutation-testing result — caught by a later verification pass that checked the file's own timestamp and content provenance against the delta actually under review, not just its existence on disk. **(b)** A burst's closing summary claimed a push to `factory-artifacts` via a script named `factory-cas-push.sh`; no such script exists anywhere on this machine (confirmed twice, independently, by targeted filesystem searches in two separate bursts) — the actual push used a plain fetch-verified fast-forward `git push` both times, which worked correctly, but the summary named a specific, plausible-sounding mechanism that was never actually invoked. **(c), this burst's own close-out:** the dispatch instruction for this very burst cited a "32/32 effective kill" mutation-testing figure for the bucket1-defects delta; tracing it against the two available sources (the F7 convergence report's own D2 detail section, and PR #700's body via `gh pr view`) produced two different, smaller, non-matching numbers (`edit.rs` 4/4 CI-verified; `collapse_and_truncate` 5/5 per PR #700's own text) and one incomplete out-of-band local run (30 mutants attempted, never finished verifying end-to-end) — no single source actually says "32/32." Rather than repeat the unreconciled figure forward into D-276 and `STATE.md` (which would have made this the THIRD instance of exactly this pattern, this time self-inflicted rather than merely observed), this burst recorded only the source-traceable numbers and noted the discrepancy explicitly.
 
 **Disposition:** a number, filename, or mechanism name is not verified merely because it appears in a prior summary, a dispatch instruction, or even this session's own earlier output — verify PROVENANCE (which command produced it, when, against what exact input) before restating it as fact in a durable record. This is now the standing rule for every close-out burst in this project, applied reflexively to the closing burst's own inputs, not only to what it inherits from delivery agents.
 
@@ -7078,9 +7078,9 @@ _Tagged: [state-manager-resilience] [burst-recovery] [S-MUTANTS-SCOPE-1] [codifi
 
 ## A human merge action can deviate from the repo's stated convention without being wrong — fix the systemic gap forward, don't revert or rewrite history
 
-PR #702 was merged to `develop` via the GitHub UI using the merge-commit strategy, not the repo's usual squash-merge convention (`CLAUDE.md`'s "Commits" convention documents squash-then-PR as the norm). The merged code content is identical/correct either way — the deviation is purely about `develop`'s commit-graph shape (15 individual feature commits now live verbatim in history instead of being squashed into one). No revert or history rewrite was performed; the deviation was recorded as a fact in the story Close-Out, DEC-277, and a new drift item (`ADOPT-MERGE-METHOD-RULESETS`) was opened to fix the systemic gap — per-target-branch GitHub merge-method Rulesets (GA 2025-03-24), which would make `develop` squash-only (with an admin bypass for the legitimate merge-commit case of a `main`→`develop` release back-merge) and `main` merge-commit-only, closing both this deviation's recurrence risk and the pre-existing `POST-RELEASE-BACKMERGE-SQUASH-BREAKS-ANCESTRY` item's root cause in one structural fix.
+PR #702 was merged to `develop` via the GitHub UI using the merge-commit strategy, not the repo's usual squash-merge convention (`CLAUDE.md`'s "Commits" convention documents squash-then-PR as the norm). The merged code content is identical/correct either way — the deviation is purely about `develop`'s commit-graph shape (15 individual feature commits now live verbatim in history instead of being squashed into one). No revert or history rewrite was performed; the deviation was recorded as a fact in the story Close-Out, D-277, and a new drift item (`ADOPT-MERGE-METHOD-RULESETS`) was opened to fix the systemic gap — per-target-branch GitHub merge-method Rulesets (GA 2025-03-24), which would make `develop` squash-only (with an admin bypass for the legitimate merge-commit case of a `main`→`develop` release back-merge) and `main` merge-commit-only, closing both this deviation's recurrence risk and the pre-existing `POST-RELEASE-BACKMERGE-SQUASH-BREAKS-ANCESTRY` item's root cause in one structural fix.
 
-**Disposition:** a human merge-authority action is authoritative by definition (DEC-128) — a convention deviation in *how* a human exercised that authority is not itself a defect to correct after the fact via force-push or rebase (which would be far riskier than the deviation itself), it is a signal that the systemic guardrail preventing the deviation doesn't exist yet. Record the fact, don't touch history, and open the structural fix as a forward-looking drift item.
+**Disposition:** a human merge-authority action is authoritative by definition (D-128) — a convention deviation in *how* a human exercised that authority is not itself a defect to correct after the fact via force-push or rebase (which would be far riskier than the deviation itself), it is a signal that the systemic guardrail preventing the deviation doesn't exist yet. Record the fact, don't touch history, and open the structural fix as a forward-looking drift item.
 
 _Trigger: S-MUTANTS-SCOPE-1-CLOSED (2026-08-14), PR #702 merged via merge-commit strategy instead of squash._
 _Tagged: [release-process] [merge-authority] [git-hygiene] [S-MUTANTS-SCOPE-1] [codified]_

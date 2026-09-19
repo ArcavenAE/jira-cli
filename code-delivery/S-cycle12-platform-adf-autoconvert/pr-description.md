@@ -18,7 +18,7 @@ plain-text `--field NAME=VALUE` is transparently converted to an ADF document ob
 (`{"type":"doc","version":1,"content":[]}`) instead of triggering the JRACLOUD-79318
 empty-text-node 400; empty-value creates omit the field entirely. Two NET-NEW exit-64 guards
 prevent `--markdown + --field description=VALUE` combinations that would produce conflicting
-ADF renderings (uniform with the JSM path per ADR-0024 / DEC-359). The `pub(crate)
+ADF renderings (uniform with the JSM path per ADR-0024 / D-359). The `pub(crate)
 is_adf_field_value` predicate introduced here is the Wave-2 start condition for
 S-cycle12-jsm-adf-autoconvert.
 
@@ -276,7 +276,7 @@ deferred to the wave-gate phase.
 
 ### Pass 1 MEDIUM: `--markdown + --field` guard used case-insensitive / parsed-key match
 - **Location:** `src/cli/issue/create.rs` / `src/cli/issue/edit.rs` — step 2c guard
-- **Category:** spec-fidelity (ADR-0024 §uniform-exit-64 / DEC-359)
+- **Category:** spec-fidelity (ADR-0024 §uniform-exit-64 / D-359)
 - **Problem:** Guard matched on a parsed/normalized key instead of the raw token (case-sensitive, substring before first `=`). Violated the spec's `raw-token case-sensitive match` requirement.
 - **Resolution:** Guard changed to match on `raw_kv.splitn(2, '=').next().unwrap_or("") == "description"`. Fixed at `792e72c8`.
 - **Test:** `test_bc_3_3_014_5_markdown_field_description_conflict_exits_64_create` / `test_bc_3_4_035_3_markdown_field_description_conflict_exits_64_edit`

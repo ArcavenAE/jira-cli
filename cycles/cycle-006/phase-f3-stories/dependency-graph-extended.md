@@ -66,7 +66,7 @@ Task 1):** this story's Task 1 records that PR #778 (a cycle-005 artifact,
 the OLD single-job `mutants` gate BEFORE this story's `ci.yml` changes
 land, and that cycle-006 is intended to land to `develop` BEFORE PR #778
 rebases onto the new sharded gate (per `STATE.md`'s recorded sequencing,
-DEC-348). This is a **process/scheduling relationship between two
+D-348). This is a **process/scheduling relationship between two
 DIFFERENT cycles' artifacts**, not a story-to-story dependency-graph
 edge: cycle-005 is PAUSED (its own graph is a separate, already-acyclic
 2-node chain, `S-cycle5-mention-pure-conversion` -> `S-cycle5-mention-
@@ -162,7 +162,7 @@ burst) continuing to hold.
 
 ## BC Clause Coverage Matrix
 
-**N/A — governance is policy-doc-only for this cycle (DEC-348/DEC-349, no
+**N/A — governance is policy-doc-only for this cycle (D-348/D-349, no
 new PRD BC).** There are no BC clauses to enumerate a coverage matrix
 against. The equivalent traceability artifact for this cycle is the
 Invariant/VP Coverage Matrix below.
@@ -278,7 +278,7 @@ explicit carried-forward/rides-AC-001 disposition) lives in the story's
 own "Aggregator Step -> AC/Task Coverage Audit" section.
 The one explicitly accepted, out-of-scope residual (§5A common-mode
 `mutants-diff-file` corruption, EC-016 above) is NOT a gap — it is a
-documented, F2-human-approved (DEC-349) residual with its own accepted-risk
+documented, F2-human-approved (D-349) residual with its own accepted-risk
 justification (backstopped by the nightly full run) and is recorded as
 such in the story's Edge Cases table and Out of Scope section, not
 entered here as an unjustified omission.

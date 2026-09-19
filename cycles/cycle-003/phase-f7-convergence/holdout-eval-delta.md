@@ -50,7 +50,7 @@ framework.
 | H-W2-INT-001 | 2 | yes | no | Config-only profile (namespaced keys absent) → `issue list` returns EXACT text: `No credentials stored for profile 'fresh'. This version of jr requires per-profile credentials — run \`jr auth login fresh\` to set them up.` exit 64, both JSON and human. | 1.0 |
 | H-W2-INT-002 | 2 | yes | no | One namespaced key deleted (partial pair) → distinct branch: `Incomplete credentials stored for profile 'doomed' — run \`jr auth login doomed\` to fix this.` exit 64. Names correct remediation (`login`), drops any `logout` reference; refuses to proceed on half-credential (VP-AUTHDX-008 upheld). | 0.9 |
 | H-W2-REG-001 | 2 | yes (reg-critical) | yes | `load_oauth_tokens` MUST-NOT-TOUCH test-suite-green is a source/test-suite gate outside the black-box surface. Observable proxy: OAuth read paths intact — oauth-method profiles logout ("Logged out of profile"), remove, and refresh (resolves oauth) all behave correctly; build compiles. | 0.8 |
-| H-W2-REG-002 | 2 | yes (reg-critical) | no | Literal profile named `default` (namespaced keys absent) → SAME absence guard: `No credentials stored for profile 'default'...` exit 64. No silent auto-migration/copy; `default` not special-cased (DEC-326 upheld). | 1.0 |
+| H-W2-REG-002 | 2 | yes (reg-critical) | no | Literal profile named `default` (namespaced keys absent) → SAME absence guard: `No credentials stored for profile 'default'...` exit 64. No silent auto-migration/copy; `default` not special-cased (D-326 upheld). | 1.0 |
 | H-W2-REG-003 | 2 | yes (reg-critical) | yes | Namespaced-first resolution confirmed; when namespaced keys are present, flat legacy keys are NEVER touched (alpha/beta proof). No silent legacy SUCCESS/credential-bleed observed in any case. HOWEVER `--verbose` shows jr DOES issue a `get_password` PROBE on the flat legacy `email` account when namespaced keys are ABSENT. The final use-vs-refuse outcome when readable legacy keys exist could NOT be observed (unavoidable Keychain ACL prompt on externally-created items; `-A`/`-T` did not cover the ad-hoc-signed debug binary). Strict "never read" appears contradicted by the probe; the safety-critical "never used/copied" intent held in every observable case. See Findings. | 0.7 |
 | H-W2-REG-004 | 2 | yes (MANDATORY, VP-AUTHDX-007) | partial | Exercised against the REAL macOS Keychain (test service namespace, not a double): absence→instruct (guard fires), remediate (`auth login` writes namespaced keys to real keychain), success (subsequent `auth status`/read resolves them, "stored in keychain"). Real-backend error taxonomy directly observed; full formal E2E harness cycle is a test-suite artifact. | 0.9 |
 | H-W3-INT-001 | 3 | yes | no | `auth remove beta` exits 0 ("Removed profile"), profile gone from `auth list`. Re-adding a `beta` config entry (no login) → absence guard fires, proving the namespaced pair was deleted (no residual bleed into a same-named profile). | 1.0 |
@@ -112,7 +112,7 @@ against the REAL macOS Keychain and is only partially gated (formal harness cycl
    correctness fix) cannot be induced through the public CLI. Recommend a fault-injection
    unit/integration test remains the authority here.
 
-3. **DEC-313 CI-hang guards are airtight (all three MANDATORY scenarios clean).**
+3. **D-313 CI-hang guards are airtight (all three MANDATORY scenarios clean).**
    H-W4-REG-001/002/003 each exit 64 instantly with no listener bind / no browser, in both
    JSON and human modes. This is the cycle's highest-stakes surface and it is solid.
 

@@ -7,7 +7,7 @@
   "feature_branch": "feature/S-604-1-component-foundation",
   "converged_sha": "4bc72b8c",
   "converged": true,
-  "convergence_bar": "DEC-245-strict",
+  "convergence_bar": "D-245-strict",
   "total_passes": 12,
   "passes_clean": 3,
   "clean_window": [10, 11, 12],
@@ -96,7 +96,7 @@
       "findings": 0,
       "delta": 0,
       "classification": "CLEAN/NITPICK_ONLY",
-      "summary": "CLEAN; window pass 3/3 — CONVERGED. Residual INFO (non-blocking per DEC-245): helpers.rs:881 'When implemented:' comment preamble; two ..._zero_http test-name overclaims on a pure fn."
+      "summary": "CLEAN; window pass 3/3 — CONVERGED. Residual INFO (non-blocking per D-245): helpers.rs:881 'When implemented:' comment preamble; two ..._zero_http test-name overclaims on a pure fn."
     }
   ],
   "residual_info_non_blocking": [
@@ -104,13 +104,13 @@
       "location": "src/cli/issue/helpers.rs:881",
       "description": "'When implemented:' comment preamble — pre-implementation narrative voice retained in a post-implementation comment",
       "classification": "INFO",
-      "disposition": "non-blocking per DEC-245 (INFO does not reset the window)"
+      "disposition": "non-blocking per D-245 (INFO does not reset the window)"
     },
     {
       "location": "tests/ (two test fn names)",
       "description": "..._zero_http test-name overclaims on a pure fn — test names assert 'zero HTTP calls' but the fn under test is pure (no HTTP path possible)",
       "classification": "INFO",
-      "disposition": "non-blocking per DEC-245 (INFO does not reset the window)"
+      "disposition": "non-blocking per D-245 (INFO does not reset the window)"
     }
   ],
   "stale_comment_instances_surfaced": 5,

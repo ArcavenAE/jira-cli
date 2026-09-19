@@ -13,7 +13,7 @@ status: see delta-convergence-report.md
 # Traceability Chain — bucket1-defects Delta
 
 4-level hierarchy (BC -> Story -> src -> test) for each of the four stories, plus
-DEC-274's reversal note on BC-3.4.021 and cross-references to shared infrastructure.
+D-274's reversal note on BC-3.4.021 and cross-references to shared infrastructure.
 This file APPENDS to, and does not replace, the S-388 traceability record that
 previously occupied the generic `traceability-chain-delta.md` filename — see the
 Note at the end of the companion convergence report for why this bundle uses a
@@ -49,13 +49,13 @@ BC-1.2.018 (AMENDED: auth switch carved out as the sole --profile-rejecting subc
   -> also the regression pin for wave holdout H-BUCKET1-005
 ```
 
-## S-692-1 — `issue edit --dry-run` stdin/bare-description ADF preview (closes #692, DEC-274)
+## S-692-1 — `issue edit --dry-run` stdin/bare-description ADF preview (closes #692, D-274)
 
 ```
-BC-3.4.021 (STATUS: UPDATED under DEC-274 -- REVERSES pre-existing Invariant 3;
+BC-3.4.021 (STATUS: UPDATED under D-274 -- REVERSES pre-existing Invariant 3;
             scope extended to bare --description by adversary pass-3 MEDIUM-1,
             ratified at the same F2 gate)
-  -> DEC-274 (RATIFIED 2026-08-13, decisions-archive.md / STATE.md Decisions Log)
+  -> D-274 (RATIFIED 2026-08-13, decisions-archive.md / STATE.md Decisions Log)
   -> STORY S-692-1 (.factory/stories/S-692-1-dry-run-stdin-adf-preview.md, 14 ACs, 5 pts, breaking_change: true)
   -> src/cli/issue/edit.rs (handle_edit dry-run block, lines ~397-434 pre-step +
                             ~505-598 JSON/table emission; MANDATED ORDERING: stdin
@@ -173,7 +173,7 @@ H-BUCKET1-007 (attachment subcommands' actual behavior byte-identical, docs-only
 .factory/specs/prd/BC-INDEX.md v6.77, total_bcs: 661 (+1 for BC-1.2.047 only -- the
   other three amendments are in-place, no count change; internally consistent with
   each amended BC body's own STATUS/trace notes).
-CHANGELOG.md [Unreleased] -- Breaking Changes: S-663-1 (#663), S-692-1 (#692, DEC-274);
+CHANGELOG.md [Unreleased] -- Breaking Changes: S-663-1 (#663), S-692-1 (#692, D-274);
   Added: S-693-1 (#693); Internal: #699 ancestry reconnect. (S-694-1 docs-only, no
   CHANGELOG entry expected/found -- consistent with its docs-only scope.)
 ```

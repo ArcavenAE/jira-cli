@@ -126,7 +126,7 @@
   ],
   "human_overrides": 0,
   "human_authorizations": 1,
-  "human_authorization_note": "deny.toml cpufeatures skip — AUDIT-576-004/DEC-185 authorization, not an override of adversary verdict.",
+  "human_authorization_note": "deny.toml cpufeatures skip — AUDIT-576-004/D-185 authorization, not an override of adversary verdict.",
   "spec_trajectory": "v1.3.96 (inherited from S-576-1 delivery) → v1.3.97 (P8-002 EC-2.7.007-5 SIGINT-cleanup note corrected to reality)",
   "story_trajectory": "v1.33 (fix-round-1 sort+serde) → v1.34 (fix-round-2 canonical string) → v1.35 (fix-round-3 --force help) → v1.36 (fix-round-5/6 coverage+refactor) → v1.37 (fix-round-7 struct-name) → v1.38 (fix-round-8/9 CWE-116 sanitization + AC-018 + counts 27→28→29)",
   "worktree_head": "8608d916",

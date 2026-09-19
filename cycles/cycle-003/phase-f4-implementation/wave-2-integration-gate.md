@@ -2,7 +2,7 @@
 
 - **Story:** S-cycle3-credential-absence-guard (PR #756)
 - **develop tip SHA:** `5c568d0fa6856d1b4606ef053d1579e3afb6fcaa` (fast-forwarded from local `d3ba2726`; matches expected `5c568d0f`)
-- **Merge commit:** `5c568d0f feat(auth): no-copy detect-and-instruct guard for absent per-profile credentials (S-cycle3-credential-absence-guard, DEC-326) (#756)`
+- **Merge commit:** `5c568d0f feat(auth): no-copy detect-and-instruct guard for absent per-profile credentials (S-cycle3-credential-absence-guard, D-326) (#756)`
 
 ## Local bounded-signal results
 

@@ -1,4 +1,4 @@
-## Fresh-eyes review (DEC-173 requirement)
+## Fresh-eyes review (D-173 requirement)
 
 **Verdict: APPROVED_WITH_COMMENTS** — green light to merge. All findings are NON_BLOCKING.
 
@@ -19,7 +19,7 @@
 
 ---
 
-## Security review (DEC-173 requirement)
+## Security review (D-173 requirement)
 
 **Verdict: LOW_RISK** — no CRITICAL or HIGH findings.
 

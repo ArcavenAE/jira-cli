@@ -51,7 +51,7 @@ file present for this bundle at review time).
   "NOT exit 0/idempotent-skip". EC-8.2.008-1 pins the race case as exit 1. `prd-delta-
   components.md`'s summary and taxonomy rows both describe delete as non-idempotent. The H1 is
   the sole outlier among five corroborating surfaces (body, VP, EC, prd-delta summary, prd-delta
-  taxonomy) and appears to be stale pre-DEC-279 draft wording that survived 9 review passes
+  taxonomy) and appears to be stale pre-D-279 draft wording that survived 9 review passes
   because nothing downstream cites the H1 text itself.
 - **Evidence:** H1 (L1322): "…a 404 on the target component is idempotent-friendly (exit 0)".
   Idempotency (L1334-1342): "…this is the ordinary not-found exit-64 path — NOT treated as
@@ -65,7 +65,7 @@ file present for this bundle at review time).
 - **Impact:** A story-writer or implementer reading only the H1 (the highest-visibility summary
   line of the BC, and the one that appears verbatim in tables-of-contents-style scans) could
   implement a false-success exit-0 on an irreversible delete operation — exactly the failure
-  class DEC-279 (delete safety) exists to prevent. Title↔postcondition contradiction on a
+  class D-279 (delete safety) exists to prevent. Title↔postcondition contradiction on a
   delete-safety-critical BC is HIGH, not MEDIUM: unlike ADV-P8-MED-001 (a scope-omission on a
   shared taxonomy BC), this is a direct behavioral reversal in the title of the taxonomy's own
   origin BC.
@@ -86,17 +86,17 @@ file present for this bundle at review time).
   (~L843-844) vs BC-8.2.008 canonical shape (~L1329-1331)
 - **Description:** BC-8.2.002's inline `--output json` literal reads `{"deleted": "<sourceId>",
   "movedIssuesTo": "<targetId>", "affectedIssueCount": N}` — three keys. BC-8.2.008's Behavior
-  section defines the canonical, DEC-279-driven shape as four keys: `{"deleted": "<sourceId>",
+  section defines the canonical, D-279-driven shape as four keys: `{"deleted": "<sourceId>",
   "movedIssuesTo": "<targetId>" (or `null` under `--orphan`), "affectedIssueCount": N,
   "affectedIssues": ["<KEY-1>", ...]}`. The two literals describe the SAME wire response (both
   cite BC-8.2.007's snapshot as the source of `N`/the affected set) but only BC-8.2.008 carries
-  `affectedIssues` — the reconstruction-record array that DEC-279/VP-COMPONENT-017 exists to
+  `affectedIssues` — the reconstruction-record array that D-279/VP-COMPONENT-017 exists to
   guarantee (per BC-8.2.008's own Trace-adjacent text at ~L1227/L1271: "giving the user a
-  reconstructable record independent of…", "defeating DEC-279's [reconstruction guarantee]").
+  reconstructable record independent of…", "defeating D-279's [reconstruction guarantee]").
   An implementer or test-writer building the JSON-emission code from BC-8.2.002 alone (the BC
   that actually defines the `--move-to` disposition's HTTP call and is the more natural
   "how do I build this payload" reference) would drop the fourth key, silently defeating the
-  DEC-279 guarantee BC-8.2.008 is the canonical owner of.
+  D-279 guarantee BC-8.2.008 is the canonical owner of.
 - **Evidence:** BC-8.2.002 (L843-844): `` `--output json`: `{"deleted": "<sourceId>",
   "movedIssuesTo": "<targetId>", "affectedIssueCount": N}` `` — 3 keys, no `affectedIssues`.
   BC-8.2.008 (L1329-1331): `` `{"deleted": "<sourceId>", "movedIssuesTo": "<targetId>" (or
@@ -202,6 +202,6 @@ posture as pass 8) |
 only correction with an unusually consequential blast radius — a delete-safety BC's own H1 — not
 a widening of scope; expect CONVERGENCE_REACHED at pass 10) |
 
-Novelty LOW — both residues are one-surface doc fixes (a stale pre-DEC-279 title and a
+Novelty LOW — both residues are one-surface doc fixes (a stale pre-D-279 title and a
 literal-subset), no behavioral defect. The HIGH severity on HIGH-1 reflects consequence
 (a delete-safety title reversal), not novelty or scope growth.

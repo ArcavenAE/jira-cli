@@ -26,7 +26,7 @@ BC content, and is orthogonal to the bundle itself.
 ## Summary
 
 - **1 new BC**: BC-1.2.047 (`bc-1-auth-identity.md`).
-- **3 amended BCs**: BC-3.4.021 (`bc-3-issue-write.md`, REVERSAL of Invariant 3 under DEC-274),
+- **3 amended BCs**: BC-3.4.021 (`bc-3-issue-write.md`, REVERSAL of Invariant 3 under D-274),
   BC-1.2.018 (`bc-1-auth-identity.md`, carve-out amendment), BC-X.8.009 (`cross-cutting.md`,
   additive amendment).
 - **0 BC body changes** for #694 (`bc-2-issue-read.md`) — frontmatter changelog note only,
@@ -40,14 +40,14 @@ BC content, and is orthogonal to the bundle itself.
 
 ---
 
-## 1. #692 — BC-3.4.021 (bc-3-issue-write.md) — REVERSED under DEC-274
+## 1. #692 — BC-3.4.021 (bc-3-issue-write.md) — REVERSED under D-274
 
-**Status**: UPDATED (reversal, not silent amend). DEC-274 is the superseding decision, recorded
-in-body via a `STATUS: UPDATED (DEC-274, ...)` marker directly under the BC heading, and cited in
-the BC's Trace line. STATE.md's own DEC-274 record is owned by the state-manager (out of scope
-here) — this BC's text is written so it correctly points at DEC-274 once that record lands.
+**Status**: UPDATED (reversal, not silent amend). D-274 is the superseding decision, recorded
+in-body via a `STATUS: UPDATED (D-274, ...)` marker directly under the BC heading, and cited in
+the BC's Trace line. STATE.md's own D-274 record is owned by the state-manager (out of scope
+here) — this BC's text is written so it correctly points at D-274 once that record lands.
 
-### Before (pre-DEC-274, now preserved verbatim in the BC's "Previous version" block)
+### Before (pre-D-274, now preserved verbatim in the BC's "Previous version" block)
 
 - **Invariant 3**: `--dry-run` does NOT read stdin for `--description-stdin` — the literal
   placeholder string (`"<from stdin — not yet read in dry-run>"` / `"(read from stdin — not yet
@@ -55,7 +55,7 @@ here) — this BC's text is written so it correctly points at DEC-274 once that 
 - Postconditions-json item 3's `--description-stdin` bullet, Postconditions-table item 3, and
   EC-3.4.021-6 all pinned the literal placeholder and asserted stdin is never read.
 
-### After (DEC-274)
+### After (D-274)
 
 - **Invariant 3 REVERSED**: `--dry-run` now reads stdin (same `spawn_blocking` + `read_to_string`
   idiom as the live path) and renders it to ADF (`adf::markdown_to_adf` if `--markdown` else
@@ -97,11 +97,11 @@ here) — this BC's text is written so it correctly points at DEC-274 once that 
 
 ### Rationale
 
-The pre-DEC-274 behavior was EXPLICIT, INTENTIONAL, spec-locked (BC-3.4.021 Invariant 3 asserted
+The pre-D-274 behavior was EXPLICIT, INTENTIONAL, spec-locked (BC-3.4.021 Invariant 3 asserted
 it as "correct… not a bug"). The research brief confirmed this is a genuine ratified-contract
 reversal, not a plain bug fix: dry-run is the ONLY non-mutating path in `issue edit`, so skipping
 ADF conversion there means Jira-rejection failure modes (malformed ADF, the depth guard) were
-uncatchable without a live write. DEC-274 authorizes the reversal; this BC delta implements it
+uncatchable without a live write. D-274 authorizes the reversal; this BC delta implements it
 while preserving every other invariant of the BC (top-level key count, raw-input semantics,
 exit-64-suppression scope) unchanged.
 
@@ -209,8 +209,8 @@ actionable findings (plus 1 INFO requiring no spec edit, carried to the F4 test-
 All 7 actionable findings were fixed in place in the same BC bodies described above:
 
 - **MEDIUM-1** (#692): BC-3.4.021's `STATUS: UPDATED` note now states explicitly, in-body, that
-  **DEC-274 is RATIFIED AT THIS F2 GATE** (not merely proposed) — closing a self-consistency gap
-  where the BC cited DEC-274 as settled while STATE.md still carried it PENDING. (STATE.md's own
+  **D-274 is RATIFIED AT THIS F2 GATE** (not merely proposed) — closing a self-consistency gap
+  where the BC cited D-274 as settled while STATE.md still carried it PENDING. (STATE.md's own
   flip to RATIFIED is finalized by the state-manager at F2 commit — not performed by this pass.)
 - **MEDIUM-2** (#663): New EC-1.2.047-4 + VP-663-003 on BC-1.2.047 — the guard keys ONLY on the
   `--profile` CLI flag (`cli.profile.is_some()`), never on `JR_PROFILE`/config default/the
@@ -260,7 +260,7 @@ underlying product change is non-breaking):
 **Required at release, NOT performed by this F2 pass:** both changes need `Breaking:` entries in
 the product's own `CHANGELOG.md` (distinct from `.factory/spec-changelog.md`) at the release that
 ships them, per the project's documented "Errors: always suggest what to do next" /
-migration-note convention used elsewhere for breaking changes (e.g. DEC-188/S-639-1's
+migration-note convention used elsewhere for breaking changes (e.g. D-188/S-639-1's
 `--field`/`--on-behalf-of` pre-flight promotion, issue #639). F3's story files for these two
 issues should each carry a `breaking_change: true`-equivalent marker (mirroring `S-639-1.md`'s
 precedent) and an explicit acceptance criterion requiring the `CHANGELOG.md` `Breaking:` entry

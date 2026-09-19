@@ -77,5 +77,5 @@ Captured at: (pending — will be tagged on factory-artifacts branch at converge
 
 ## Notes
 
-- Pre-VSDD docs treatment decision (DEC-001) deferred to Phase 0 → Phase 1 gate.
+- Pre-VSDD docs treatment decision (D-001) deferred to Phase 0 → Phase 1 gate.
 - dx-engineer running env preflight in parallel with state initialization.

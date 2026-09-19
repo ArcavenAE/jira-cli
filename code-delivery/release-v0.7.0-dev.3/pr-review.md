@@ -3,7 +3,7 @@
 **Branch:** `chore/release-v0.7.0-dev.3` → `develop`
 **Commit reviewed:** `6f9cd6baa994588dbb9694b157fa4eafabd3e395`
 **Review type:** Sanity check (dev-release, metadata-only diff)
-**Verdict:** PASS / APPROVE-equivalent — no blocking findings. (Formal `--comment` review; agent `--approve` withheld per DEC-173 — same-account reviewer, COMMENTED = approve-equivalent.)
+**Verdict:** PASS / APPROVE-equivalent — no blocking findings. (Formal `--comment` review; agent `--approve` withheld per D-173 — same-account reviewer, COMMENTED = approve-equivalent.)
 
 ## Scope
 

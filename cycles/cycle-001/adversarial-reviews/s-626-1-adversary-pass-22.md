@@ -37,13 +37,13 @@ isolation: BREACH
 
 ## VOID RULING — ISOLATION BREACH
 
-**THIS PASS IS VOID FOR WINDOW ELIGIBILITY per DEC-206 and DEC-220.**
+**THIS PASS IS VOID FOR WINDOW ELIGIBILITY per D-206 and D-220.**
 
 Consistent with the strictest precedent applied to passes 9 and 11, pass-22 is VOID for window eligibility. Void applies to eligibility only, never to finding validity. All three findings were fully valid and were fixed in round 9 (product commit `7798b1bf`).
 
 **Isolation breach (recorded verbatim-in-substance):** The reviewer ran ONE grep scoped at `.factory/` ROOT — violating the hygiene rule in its own dispatch — which returned banned content from `ADV-P1-INDEX.md` and `s-626-1-adversary-pass-{9,10,15,18,21}.md`, including prior-pass finding IDs (`ADV-P15-MED-003`), verdicts, and finding tallies. The reviewer disclosed the leak verbatim and unprompted, and argued containment: all three findings were derived from primary artifacts (`ci.yml`, `tests/ci_gate_completeness.rs`, `demos/S-626-1/INDEX.md`, `S-626-1.md`) BEFORE that grep, and the leaked material concerned `handle_board_view` and outer-gate coverage, neither of which it cites or relies on. Orchestrator ruling: VOID for window eligibility, consistent with the strictest precedent applied to passes 9 and 11. Findings retained and fixed.
 
-**Window consequence:** The 22/23/24 STRICT window (DEC-219) is CLOSED. Passes 23/24 of that window were not dispatched. The fresh STRICT window is passes 23/24/25 (DEC-221).
+**Window consequence:** The 22/23/24 STRICT window (D-219) is CLOSED. Passes 23/24 of that window were not dispatched. The fresh STRICT window is passes 23/24/25 (D-221).
 
 ---
 
@@ -79,7 +79,7 @@ Pass-22 gave a dedicated verdict of **SOUND on all seven audited dimensions** fo
 
 ## Isolation
 
-**BREACH.** The reviewer ran a single grep scoped at `.factory/` ROOT rather than `.factory/stories/` (the permitted scope). The root-scoped grep returned content from banned paths: `ADV-P1-INDEX.md` and multiple `s-626-1-adversary-pass-N.md` files including passes 9, 10, 15, 18, and 21. The returned content included prior-pass finding IDs (e.g., `ADV-P15-MED-003`), verdicts, and finding tallies. The reviewer disclosed the leak verbatim and unprompted, arguing that all three of its findings had been derived from primary artifacts BEFORE the grep and that the leaked material concerned `handle_board_view` and outer-gate coverage, neither of which it cited or relied on. Containment argument noted but VOID ruling applied on the strictest precedent per DEC-206.
+**BREACH.** The reviewer ran a single grep scoped at `.factory/` ROOT rather than `.factory/stories/` (the permitted scope). The root-scoped grep returned content from banned paths: `ADV-P1-INDEX.md` and multiple `s-626-1-adversary-pass-N.md` files including passes 9, 10, 15, 18, and 21. The returned content included prior-pass finding IDs (e.g., `ADV-P15-MED-003`), verdicts, and finding tallies. The reviewer disclosed the leak verbatim and unprompted, arguing that all three of its findings had been derived from primary artifacts BEFORE the grep and that the leaked material concerned `handle_board_view` and outer-gate coverage, neither of which it cited or relied on. Containment argument noted but VOID ruling applied on the strictest precedent per D-206.
 
 Recurring mechanism: root-scoped `.factory/` grep. All THREE self-disclosed isolation breaches (passes 9, 11, 22) used this exact mechanism. Behavioral corrective (scoped dispatch) has held for passes 12-21 (10 clean) but failed once at pass-22. Effective-but-not-sufficient per REVIEW-ISOLATION-NOT-MECHANICALLY-ENFORCED drift item.
 
@@ -112,8 +112,8 @@ Pass-22 verified all 7 findings from pass-21 (the most recent executed pass). Fi
 | ADV-P21-MED-003 | Pin docstring over-claimed pipefail assertion that didn't exist | FIXED — fix round 8 (84ab32ac) ✓ | two assertions added for set +o/-o pipefail |
 | ADV-P21-LOW-001 | BC-5.3.003 Source field omits board-view fallback test | FIXED — fix round 8 (84ab32ac) ✓ | test added to Source; BC-5.3.002 gap also found and closed |
 | ADV-P21-LOW-002 | AC-9 heading enumerated 2 BCs vs footer 3 | FIXED — fix round 8 (84ab32ac) ✓ | heading now enumerates all three BCs |
-| ADV-P21-LOW-003 | S-BC-CITATION-GUARD-1.md raw "live ci.yml line 111" citations | DEFERRED — DEC-217 (template drift blocks; no fix in this round) | |
-| ADV-P21-INFO-001 | bc-02/bc-03 domain-spec bc_count stale | FIXED — fix round 8 (84ab32ac) ✓ | class sweep fixed both; DEC-218 |
+| ADV-P21-LOW-003 | S-BC-CITATION-GUARD-1.md raw "live ci.yml line 111" citations | DEFERRED — D-217 (template drift blocks; no fix in this round) | |
+| ADV-P21-INFO-001 | bc-02/bc-03 domain-spec bc_count stale | FIXED — fix round 8 (84ab32ac) ✓ | class sweep fixed both; D-218 |
 
 ---
 
@@ -129,7 +129,7 @@ Pass-22 verified all 7 findings from pass-21 (the most recent executed pass). Fi
   **Subordinate instance:** `contains("-lt 90")` did not bind the threshold to `${binaries}`. Rewriting the gate as `[ "${total}" -lt 90 ]` would gut the instrument (total ≈ 2345) while the pin stayed green.
 - **Evidence:** The literal `ci_gate_completeness` appears in the extracted block at: (a) the command form `grep -q "ci_gate_completeness"`; (b) the diagnostic string `tests/ci_gate_completeness did not run`; (c) the justification comment. The subordinate instance: `contains("-lt 90")` does not distinguish `[ "${binaries}" -lt 90 ]` from `[ "${total}" -lt 90 ]`.
 - **Proposed Fix:** Tighten the canary assertion to `assert!(test_block.contains("grep -q \"ci_gate_completeness\""))` — command form only, which a mere comment cannot satisfy. Tighten the threshold assertion to `assert!(test_block.contains("\"${binaries}\" -lt 90"))` — binding the variable. Prove discrimination by removing only the command while leaving the comment, confirm the assertion FAILS. Both fixes were applied by `7798b1bf` and verified.
-- **Status:** FIXED — fix round 9 (`7798b1bf`: canary → `grep -q "ci_gate_completeness"` command form; threshold → `"${binaries}" -lt 90` binding variable; discrimination proven per assertion; suite 2345/0/100; ci_gate_completeness 8 tests; clippy/fmt clean). **THIS PASS VOID FOR WINDOW — breach ruled per DEC-220.**
+- **Status:** FIXED — fix round 9 (`7798b1bf`: canary → `grep -q "ci_gate_completeness"` command form; threshold → `"${binaries}" -lt 90` binding variable; discrimination proven per assertion; suite 2345/0/100; ci_gate_completeness 8 tests; clippy/fmt clean). **THIS PASS VOID FOR WINDOW — breach ruled per D-220.**
 
 ---
 
@@ -143,7 +143,7 @@ Pass-22 verified all 7 findings from pass-21 (the most recent executed pass). Fi
   (a) **Regeneration Log intro head stale:** The intro line still read "All 11 artifacts verified at head `a247a343` (2026-08-03)", contradicting the INDEX Head stamp (`84ab32ac`), all 11 individual table rows in the Regeneration Log, the "11/11" completeness line, and all 11 per-file `# Head:` stamps. The intro head had been updated to `84ab32ac` in Round 10 but the Per-AC table and per-artifact stamps lagged.
   (b) **Per-AC Evidence table AC-003 command stale:** The Per-AC Evidence table still recorded AC-003's command as `sed -n '152,179p' ci.yml` — the pre-84ab32ac range. The Round-10 correction (to `sed -n '155,182p' ci.yml`) propagated to the narrative section and to `AC-003.txt` but NOT to the Per-AC table. The command in the table was internally inconsistent with the evidence it pointed at.
 - **Evidence:** INDEX.md Regeneration Log intro vs Per-AC table vs artifact stamps — three-surface inconsistency. Command `sed -n '152,179p'` vs `sed -n '155,182p'` in the two locations.
-- **Status:** FIXED — fix round 9 (INDEX.md: Regeneration Log intro corrected to `7798b1bf` (2026-08-04); Per-AC AC-003 command corrected to `sed -n '155,182p' ci.yml` (182−155+1=28 ✓). All 11 artifacts re-stamped to `7798b1bf`. Superseded-head sweep found no site referencing `a247a343`/`9312f11f`/`6d73b3ef`/`c88374b4`/`64e2a4bc` outside explicitly-historical log entries). **THIS PASS VOID FOR WINDOW — breach ruled per DEC-220.**
+- **Status:** FIXED — fix round 9 (INDEX.md: Regeneration Log intro corrected to `7798b1bf` (2026-08-04); Per-AC AC-003 command corrected to `sed -n '155,182p' ci.yml` (182−155+1=28 ✓). All 11 artifacts re-stamped to `7798b1bf`. Superseded-head sweep found no site referencing `a247a343`/`9312f11f`/`6d73b3ef`/`c88374b4`/`64e2a4bc` outside explicitly-historical log entries). **THIS PASS VOID FOR WINDOW — breach ruled per D-220.**
 
 ---
 
@@ -153,7 +153,7 @@ Pass-22 verified all 7 findings from pass-21 (the most recent executed pass). Fi
 - **Location:** `stories/S-626-1.md` File Structure Requirements table (`tests/ci_gate_completeness.rs` row) + MUST-NOT exception list + `stories/STORY-INDEX.md` S-626-1 row
 - **Description:** The authorization trail for `tests/ci_gate_completeness.rs` at three sites listed only `9312f11f + a247a343` — the first two POL-11 commits that modified the file on this branch. Two further commits were missing: `84ab32ac` (added `set +o pipefail` / `set -o pipefail` assertions + corrected threshold breakdown comment) and `7798b1bf` (tightened canary to command form and threshold to `${binaries}` variable). The complete set was verified against `git log --oneline -- tests/ci_gate_completeness.rs` on branch `ci/fix-toolchain-sha-msrv`. Non-blocking: the authorization holds (the commits WERE authorized; they just were not cited). But an incomplete audit record for a file that is an explicit exception to a `MUST NOT change` fence is worth correcting.
 - **Evidence:** S-626-1.md FSR row for `tests/ci_gate_completeness.rs` lists `POL-11, commits 9312f11f + a247a343`. `git log --oneline -- tests/ci_gate_completeness.rs` on the branch shows four commits: `9312f11f`, `a247a343`, `84ab32ac`, `7798b1bf`. The trailing two are absent.
-- **Status:** FIXED — fix round 9 (S-626-1 v1.14→v1.15: authorization trail extended to all four commits at both body sites (FSR row + MUST-NOT exception list); STORY-INDEX v1.5.59→v1.5.60 S-626-1 row updated. Complete set verified against `git log --oneline -- tests/ci_gate_completeness.rs`). **THIS PASS VOID FOR WINDOW — breach ruled per DEC-220.**
+- **Status:** FIXED — fix round 9 (S-626-1 v1.14→v1.15: authorization trail extended to all four commits at both body sites (FSR row + MUST-NOT exception list); STORY-INDEX v1.5.59→v1.5.60 S-626-1 row updated. Complete set verified against `git log --oneline -- tests/ci_gate_completeness.rs`). **THIS PASS VOID FOR WINDOW — breach ruled per D-220.**
 
 ---
 
@@ -167,11 +167,11 @@ Pass-22 verified all 7 findings from pass-21 (the most recent executed pass). Fi
 | LOW | 2 |
 | INFO | 0 |
 
-**Overall Assessment:** NOT CLEAN — 1 MEDIUM + 2 LOW; **VOID for window eligibility — ISOLATION BREACH (DEC-220)**. Findings valid and fixed in round 9 (`7798b1bf`). CI floor mechanism audited SOUND on all SEVEN dimensions, independently of the F-01 pin defect. Zero code defects in `src/`; FOURTEENTH consecutive zero-src/-defect pass.
+**Overall Assessment:** NOT CLEAN — 1 MEDIUM + 2 LOW; **VOID for window eligibility — ISOLATION BREACH (D-220)**. Findings valid and fixed in round 9 (`7798b1bf`). CI floor mechanism audited SOUND on all SEVEN dimensions, independently of the F-01 pin defect. Zero code defects in `src/`; FOURTEENTH consecutive zero-src/-defect pass.
 
 **CI FLOOR AUDITED SOUND (SEVEN DIMENSIONS):** The mechanism genuinely detects orphaning, has reachable diagnostics, sound colour override, correct threshold arithmetic (13 units of headroom), platform-invariant count, and Windows fail-CLOSED behavior. The defect (F-01) was in the REGRESSION PIN for the mechanism, not the mechanism itself.
 
-**Window status:** VOID — isolation breach. The 22/23/24 window (DEC-219) is CLOSED (pass-22 VOID + NOT CLEAN; passes 23/24 not dispatched). Fresh STRICT window = passes 23/24/25 (DEC-221).
+**Window status:** VOID — isolation breach. The 22/23/24 window (D-219) is CLOSED (pass-22 VOID + NOT CLEAN; passes 23/24 not dispatched). Fresh STRICT window = passes 23/24/25 (D-221).
 
 ---
 
@@ -179,7 +179,7 @@ Pass-22 verified all 7 findings from pass-21 (the most recent executed pass). Fi
 
 | Field | Value |
 |-------|-------|
-| **Pass** | 22 (VOID — isolation breach; DEC-220; window 22/23/24 CLOSED) |
+| **Pass** | 22 (VOID — isolation breach; D-220; window 22/23/24 CLOSED) |
 | **New findings** | 3 (0 HIGH + 1 MEDIUM + 2 LOW) |
 | **Duplicate/variant findings** | 0 |
 | **Novelty score** | 1.00 (3/3 — all findings novel; no carryover duplicates) |
@@ -188,5 +188,5 @@ Pass-22 verified all 7 findings from pass-21 (the most recent executed pass). Fi
 | **Code defects in src/** | 0 (FOURTEENTH consecutive pass) |
 | **Product defects total** | 0 |
 | **Trajectory** | P6=10, P7=13, P8=5, P9=15, P10=18, P11=13, P12=10, P13=10, P14=9, P15=15, P18=10, P19=10, P21=7, P22=3 [VOID] |
-| **Verdict** | FINDINGS_REMAIN — VOID for window eligibility (isolation breach, DEC-220); findings valid (1M+2L); all fixed in round 9 (7798b1bf); CI floor SOUND (seven dimensions); mechanism audited at 84ab32ac |
+| **Verdict** | FINDINGS_REMAIN — VOID for window eligibility (isolation breach, D-220); findings valid (1M+2L); all fixed in round 9 (7798b1bf); CI floor SOUND (seven dimensions); mechanism audited at 84ab32ac |
 | **Reviewer recommendation** | Fix round 9 should close all three findings. The canary tightening (command form, not bare substring) and threshold binding (variable, not bare constant) are the minimum discriminating changes. Prove by removing the command while leaving the comment — each assertion must FAIL independently. A full per-assertion prose-satisfiability audit of all eight assertions in the pin would bound any remaining exposure. |

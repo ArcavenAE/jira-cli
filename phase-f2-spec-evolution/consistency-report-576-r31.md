@@ -115,7 +115,7 @@ Both guards exit 0. No count drift.
 
 **Quote-verified verbatim** (`bc-3-issue-write.md` BC-3.9.010 body, line 3494):
 
-> `**404 is NOT a failure on the bulk path**: a 404 response to any individual DELETE is treated as already-deleted (benign race) per EC-3.9.010-4 and BC-3.9.013 multi-delete 404 exception; the 404'd AID is excluded from `count` and `ids`, and iteration continues. The first NON-404 failure (403, 401, 5xx, network) stops the batch immediately and surfaces the error. ... **Single-vs-bulk 404 divergence (cross-ref BC-3.9.008 / BC-3.9.013)**: 404 on a single-AID targeted delete exits 64 per BC-3.9.008 (DEC-168: targeted delete of a specific ID is a user error); 404 on any AID in a multi-AID bulk delete is a benign skip per BC-3.9.013 — these behaviors are intentionally asymmetric and MUST NOT be unified. [P21-001]`
+> `**404 is NOT a failure on the bulk path**: a 404 response to any individual DELETE is treated as already-deleted (benign race) per EC-3.9.010-4 and BC-3.9.013 multi-delete 404 exception; the 404'd AID is excluded from `count` and `ids`, and iteration continues. The first NON-404 failure (403, 401, 5xx, network) stops the batch immediately and surfaces the error. ... **Single-vs-bulk 404 divergence (cross-ref BC-3.9.008 / BC-3.9.013)**: 404 on a single-AID targeted delete exits 64 per BC-3.9.008 (D-168: targeted delete of a specific ID is a user error); 404 on any AID in a multi-AID bulk delete is a benign skip per BC-3.9.013 — these behaviors are intentionally asymmetric and MUST NOT be unified. [P21-001]`
 
 "404 is NOT a failure on the bulk path" present; single-vs-bulk divergence cross-ref present; "intentionally asymmetric MUST NOT be unified" present. ✓
 
@@ -267,7 +267,7 @@ Annotation "(batch paths only — `--id` does not server-verify KEY per BC-2.7.0
 
 BC-INDEX row updated with batch-paths-only annotation and P21-006 citation. ✓
 
-**Note — BC-2.7.012 Trace not updated with P21-006 citation**: The Trace for BC-2.7.012 in bc-2-issue-read.md (line 946) still reads "F2 spec evolution (SOH-ATTACHMENTS-1 2026-07-15; DEC-179 ratified design; research §6 JRACLOUD-96384/-78388 VERIFIED)" — no P21-006 citation added. The BC-INDEX row correctly cites P21-006; the bc-2 body Trace does not. Non-blocking (see INFO-NEW-2). Also, bc-2 frontmatter trace has no P21 (or P20) entries — see INFO-NEW-3.
+**Note — BC-2.7.012 Trace not updated with P21-006 citation**: The Trace for BC-2.7.012 in bc-2-issue-read.md (line 946) still reads "F2 spec evolution (SOH-ATTACHMENTS-1 2026-07-15; D-179 ratified design; research §6 JRACLOUD-96384/-78388 VERIFIED)" — no P21-006 citation added. The BC-INDEX row correctly cites P21-006; the bc-2 body Trace does not. Non-blocking (see INFO-NEW-2). Also, bc-2 frontmatter trace has no P21 (or P20) entries — see INFO-NEW-3.
 
 **Result**: APPLIED ✓ (with INFO-NEW-2 noting Trace gap).
 
@@ -371,7 +371,7 @@ All 6 P21 items have APPLIED disposition rows (P21-001..P21-006). ✓
 - BC-3.5.004 comment delete 404 → exit 64 — single comment delete, not bulk attachment. ✓ (correct)
 - BC-3.9.003 Step 0 "404 → exit 64 per EC-3.9.012-2" — issue existence check, not bulk delete. ✓ (correct)
 - BC-3.9.004 Step 0 same — issue existence check. ✓ (correct)
-- BC-3.9.008 "HTTP 404 (attachment not found): exit 64" — single-AID targeted delete per DEC-168. ✓ (must remain)
+- BC-3.9.008 "HTTP 404 (attachment not found): exit 64" — single-AID targeted delete per D-168. ✓ (must remain)
 - EC-3.9.012-2 "issue key 404: exit 64" — upload error on issue not found. ✓ (correct)
 - BC-3.9.013 title "AID 404 exit 64 + surface body" — single-AID context (EC-3.9.013-1); the multi-delete 404 exception is documented separately. ✓ (correct)
 - EC-3.9.013-1 "AID 404: exit 64" — single-AID targeted delete. ✓ (correct; multi-delete exception in table note above)
@@ -405,11 +405,11 @@ All 6 P21 items have APPLIED disposition rows (P21-001..P21-006). ✓
 
 #### Sentence 3: BC-3.9.010 "intentionally asymmetric MUST NOT be unified" (bc-3 line 3494)
 
-**New text**: `"404 on a single-AID targeted delete exits 64 per BC-3.9.008 (DEC-168: targeted delete of a specific ID is a user error); 404 on any AID in a multi-AID bulk delete is a benign skip per BC-3.9.013 — these behaviors are intentionally asymmetric and MUST NOT be unified."`
+**New text**: `"404 on a single-AID targeted delete exits 64 per BC-3.9.008 (D-168: targeted delete of a specific ID is a user error); 404 on any AID in a multi-AID bulk delete is a benign skip per BC-3.9.013 — these behaviors are intentionally asymmetric and MUST NOT be unified."`
 
-**Licensing basis**: BC-3.9.008 (single-AID delete 404 = exit 64, DEC-168 precedent); BC-3.9.013 multi-delete exception (bulk 404 = benign-skip). The "intentionally asymmetric MUST NOT be unified" phrasing is a design constraint that makes the split explicit and prevents future unification that would be a behavioral regression.
+**Licensing basis**: BC-3.9.008 (single-AID delete 404 = exit 64, D-168 precedent); BC-3.9.013 multi-delete exception (bulk 404 = benign-skip). The "intentionally asymmetric MUST NOT be unified" phrasing is a design constraint that makes the split explicit and prevents future unification that would be a behavioral regression.
 
-**Assessment**: Licensed by BC-3.9.008 (DEC-168) + BC-3.9.013 (multi-delete exception). No over-claim. ✓
+**Assessment**: Licensed by BC-3.9.008 (D-168) + BC-3.9.013 (multi-delete exception). No over-claim. ✓
 
 #### Sentence 4 (SPECIAL SCRUTINY): BC-3.9.004 branch-(a) "up to 2 cache-miss GETs" (bc-3 line 3345)
 

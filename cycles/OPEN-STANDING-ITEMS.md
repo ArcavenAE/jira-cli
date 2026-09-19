@@ -27,7 +27,7 @@ pre-release verification (NOT a blocker):** a definitive `jr auth login` on an O
 show all 16 scopes on the consent screen / succeed without `invalid_scope` — the authoritative
 confirmation the Console registration took (a typo like the `.admin` in
 `read:board-scope.admin:jira-software` would only surface there). No new DEC minted for this
-disposition (standing-item resolution, not a pipeline ruling); see `DEC-371` for the cycle-008 F7
+disposition (standing-item resolution, not a pipeline ruling); see `D-371` for the cycle-008 F7
 close itself.
 
 ---
@@ -39,7 +39,7 @@ close itself.
 CRIT/HIGH/MED-tier Pass-1 findings OBS-1/H-1/M-1/M-3). Full F5 trajectory: `cycles/cycle-012/convergence-trajectory.md`.
 
 **`M-2` (F5 code-review, 2026-09-14):** The `--markdown` + `--field description=` conflict predicate
-(DEC-359's uniform-exit-64 guard) is triplicated verbatim across `src/cli/issue/create.rs`,
+(D-359's uniform-exit-64 guard) is triplicated verbatim across `src/cli/issue/create.rs`,
 `src/cli/issue/edit.rs`, and `src/cli/issue/jsm_create.rs`. Extract a shared
 `field_pairs_raw_key_matches` helper into `src/cli/issue/field_resolve.rs` so the three call sites share
 one implementation instead of three copies that can drift independently. Deferred to a future maintenance
@@ -348,7 +348,7 @@ CLOSED, `develop` tip advances past `5b5b4432`, and Wave-1 is complete (A/C/D me
 
 ---
 
-## S-7.02 cycle-closing checklist deferrals — cycle-005 close (Burst 13, DEC-353, 2026-09-09)
+## S-7.02 cycle-closing checklist deferrals — cycle-005 close (Burst 13, D-353, 2026-09-09)
 
 Human chose RECORD DEFERRALS ONLY, no follow-up stories opened. `INTERIM-SHIPPABILITY-WINDOW-CYCLE5-W1` is RESOLVED/CLOSED (see `cycles/RESOLVED-DRIFT-ITEMS.md`), not carried here. `CYCLE5-F7-DOC-1`, `CYCLE5-F7-DOC-2`, and `CYCLE5-STEP45-LOW-1` are RESOLVED as of MAINTENANCE-SWEEP-2026-09-10 (see `cycles/RESOLVED-DRIFT-ITEMS.md`), not carried here. The following 4 items remain open, non-blocking, human-owned or targeted at a future maintenance/self-improvement cycle:
 
@@ -361,7 +361,7 @@ Human chose RECORD DEFERRALS ONLY, no follow-up stories opened. `INTERIM-SHIPPAB
 
 `PR-REVIEW-SELF-APPROVE-HOOK-LOOP` | process-gap, vsdd-factory engine tooling (not a jira-cli product defect) | vsdd-factory engine fix — The pr-review completion hook demands `gh pr review --approve`, which GitHub refuses on a self-authored PR, causing an unbreakable loop -- observed on PR #795's redundant reviewer, and recurred on PR #796/#798/#799 (this session's self-mention CI enablement, E2E-dynamic-tests, and mutants-nightly-rebalance PRs). Feedback filed; same family as `PR-MANAGER-COMPLETION-GUARD-HOOK-LOOP`/`FACTORY-HOOK-FUEL-EXHAUSTED` below.
 
-## S-7.02 cycle-closing checklist deferrals — cycle-006 close (Burst 13, DEC-351)
+## S-7.02 cycle-closing checklist deferrals — cycle-006 close (Burst 13, D-351)
 
 Human chose RECORD DEFERRALS ONLY, NO follow-up stories opened; originally 6 items, now 5 open (`CYCLE6-LOW-STALE-CHECK-KILL-RATE-COMMENTS` RESOLVED — see `cycles/RESOLVED-DRIFT-ITEMS.md`):
 
@@ -1056,7 +1056,7 @@ inherited one. Candidate fix: a mockable keyring test seam, which does not curre
 Target: a future test-infrastructure investment, not a cycle-008 fix.
 
 **`CYCLE-008-F5-INIT-MAPERR-MUTANT-RESIDUAL`** (= F5 Pass 1 finding F1's residual after FIX-F5-001,
-LOW mutation-testing residual) -- **SUBSUMED 2026-09-18 (F7 close, DEC-371) by
+LOW mutation-testing residual) -- **SUBSUMED 2026-09-18 (F7 close, D-371) by
 `CYCLE-008-INIT-MUTATION-COVERAGE-SEAM`** above -- same root cause (`init.rs::handle` has no
 default-CI mutation coverage), now tracked as the single canonical item going forward. Original
 text preserved: FIX-F5-001 added a CI-running test pinning `init.rs`'s `list_boards` scope-hint
@@ -1087,7 +1087,7 @@ cycle-008 delta `0793b9c5`..`fc608cd3`, plus full-tree regression and security s
 closure precedent. `develop` tip UNCHANGED at `fc608cd3` (no F6 code fix landed). Full detail:
 `cycles/cycle-008/phase-f6-hardening/hardening-record.md`.
 
-**`CYCLE-008-F6-MUTANTS-EXAMINE-GLOBS-GAP`** -- **RESOLVED 2026-09-18 (F7 close, DEC-371)**, 6 of 7
+**`CYCLE-008-F6-MUTANTS-EXAMINE-GLOBS-GAP`** -- **RESOLVED 2026-09-18 (F7 close, D-371)**, 6 of 7
 files. Human F7-gate decision: "fix examine_globs first, then close" -- FIX-F7-001 (PR #845,
 `develop@fc608cd3`->`0834c9f0`) added `src/api/client.rs`, `src/cli/board.rs`, `src/cli/sprint.rs`,
 `src/cli/issue/list.rs`, `src/api/jsm/queues.rs`, `src/api/assets/workspace.rs` to
@@ -1099,7 +1099,7 @@ DELIBERATELY DEFERRED, not resolved -- see the new follow-up item
 archived to `cycles/RESOLVED-DRIFT-ITEMS.md`.
 
 **`CYCLE-008-INIT-MUTATION-COVERAGE-SEAM`** (NEW, LOW, follow-up minted at F7 close 2026-09-18,
-DEC-371) -- `src/cli/init.rs` was deliberately excluded from FIX-F7-001's `examine_globs` addition:
+D-371) -- `src/cli/init.rs` was deliberately excluded from FIX-F7-001's `examine_globs` addition:
 `jr init`'s entire `handle()` function has zero default-CI mutation coverage (exercised by exactly
 one `#[ignore]`'d, keychain-gated test), so every mutant introduced into it would survive by
 default -- the same whole-file-flooding class as the pre-existing `auth.rs`/`login.rs` FIX-F6-1
@@ -1138,7 +1138,7 @@ OPEN/PENDING, unchanged); `CYCLE-008-F5-KEYRING-WIRING-COVERAGE`, `CYCLE-008-F5-
 `CYCLE-008-ENV-RESTORE-NON-RAII`, `CYCLE-008-WORKTREE-NAME-VS-STORYID` (all carried from F5/S5;
 F6's checks did not surface any of them as newly resolved or newly distinct).
 
-## cycle-008 Phase F7 close -- S-7.02 Cycle-Closing Checklist (2026-09-18, DEC-371)
+## cycle-008 Phase F7 close -- S-7.02 Cycle-Closing Checklist (2026-09-18, D-371)
 
 **Status:** cycle-008 (`oauth-surface-correctness`) **CLOSED** at the F7 human gate (APPROVED).
 Operator decision: "fix examine_globs first (FIX-F7-001, PR #845 @ `0834c9f0`), then close" --
@@ -1287,52 +1287,28 @@ OAuth users needing Teams data can use an API-token profile in the meantime.
 convention that verification-outcome / standing-item-resolution checkpoints (e.g. the
 `OAUTH-16-SCOPE-SMOKE-TEST-PASS-2026-09-18` and `CYCLE-008-CONSOLE-SCOPE-RELEASE-GATE` resolution
 bursts) are recorded as bookkeeping, not new pipeline rulings, when they neither advance a phase
-nor change spec/BC/VP/ADR content. `DEC-371` (cycle-008 F7 close, which already scoped S6 as
+nor change spec/BC/VP/ADR content. `D-371` (cycle-008 F7 close, which already scoped S6 as
 "spike, non-gating") remains the most recent decision touching this workstream; it is referenced,
 not superseded. Full record: `cycles/cycle-008/teams-graphql-spike-report.md`, `STATE.md`,
 `.factory/maintenance-config.yaml` (`external_blocker_rechecks:` pointer).
 
 ---
 
-## Standing item — ENGINE-VALIDATE-DISPATCH-ADVANCE-STALE-DCHAIN-CITE (2026-09-19, backlog capture)
+## Standing item — ENGINE-VALIDATE-DISPATCH-ADVANCE-STALE-DCHAIN-CITE — RESOLVED 2026-09-19
 
 **ID:** `ENGINE-VALIDATE-DISPATCH-ADVANCE-STALE-DCHAIN-CITE`
-**Title:** vsdd-factory `validate-dispatch-advance` PostToolUse hook forces a placeholder `D-NNN`
-"D-chain cite" into STATE.md `current_step`, but this repo has no D-NNN scheme.
-**Severity:** MEDIUM (data-integrity/hygiene -- the hook induces fabricated placeholder citations
-in the live state file; not a functional/blocking defect).
-**Classification:** ENGINE/TOOLING follow-up -- the fix lives in the vsdd-factory engine repo
-(`~/Documents/GITHUB/vsdd-factory`), NOT in jira-cli. This is not a jira-cli product item.
-**Reported by:** human operator (via orchestrator), 2026-09-19.
-**Status:** OPEN, engine follow-up, non-blocking. No target date.
+**Status:** **RESOLVED 2026-09-19, human-approved (2x) DEC->D decision-ID migration.** Full
+original item text + resolution facts archived verbatim to `cycles/RESOLVED-DRIFT-ITEMS.md`
+(§"RESOLVED — ENGINE-VALIDATE-DISPATCH-ADVANCE-STALE-DCHAIN-CITE"). New decision `D-372` minted
+for the migration ruling; see `STATE.md` Decisions Log.
 
-**Symptom:** the `validate-dispatch-advance` PostToolUse hook requires a literal `D-\d+` substring
-(e.g. `"D-chain cite D-NNN latest brownfield"`) somewhere in STATE.md `current_step`. This project
-uses `DEC-NNN` decisions, not `D-NNN`. The `D-chain` convention was dropped ~7 months / 300+
-decisions ago during a `/compact-state` pass (commit `fdc7c9e9`, "slim STATE.md 447->196 lines")
-and is not documented in any current state-manager role doc, `CLAUDE.md`, `FACTORY.md`, or
-`VSDD.md`. Consequence: inconsistent burst behavior -- one recent state-manager burst REFUSED to
-fabricate the citation (leaving only an advisory), a later burst ADDED a mechanical, labeled
-placeholder `D-NNN` solely to satisfy the regex (see this file's own STATE.md v4.69 `current_step`
-for a live example of the labeled-placeholder workaround: `"D-chain cite D-371..D-2026 (sample)
-latest brownfield: this project numbers pipeline decisions DEC-NNN (not the vsdd-factory-engine-
-default D-NNN scheme); this range is a mechanical citation satisfying the dispatch-advance hook's
-literal D-NNN scan only..."`). Either way the hook degrades STATE.md quality (fabricated/noise
-citation) or emits spurious advisories.
-
-**Related minor note (same engine, same item):** the `validate-factory-path-staging` PreToolUse
-hook false-positives on the `cd .factory && git ...` command form (branch-detection on the raw
-command string); using the `git -C .factory <cmd>` form avoids it (this same false-positive class
-is also separately tracked as `CYCLE-013-HOOK-FALSE-POSITIVE-COMMIT-MSG-SCAN` above, for the
-commit-message-prose variant). Worth aligning the state-manager git convention to `git -C .factory`
-and/or fixing the hook's detection.
-
-**Fix direction (in vsdd-factory engine, for a future engine cycle -- NOT to be done now):** EITHER
-(a) scope down / remove the `D-chain cite` requirement in `validate-dispatch-advance` (preferred --
-the convention is defunct in this project), OR (b) formally revive and document the D-chain
-convention in the state-manager role instructions if it is meant to exist. Also fix or document
-`validate-factory-path-staging`'s `cd .factory && git` false-positive.
-
-**Disposition:** OPEN, engine follow-up, non-blocking. No target date. This is a record-only
-capture -- not a phase advance, no code change, no DEC minted, pipeline stays PAUSED, no cycle
-ACTIVE.
+**Summary of resolution:** the human operator explicitly approved (twice) a one-time bulk
+migration renaming every `DEC-NNN` decision-ID token to `D-NNN` throughout `.factory/`
+(word-boundary-safe, ~7,215 occurrences / 532 files, verified 0 `DEC-\d+` remaining
+corpus-wide). This formally REVIVES the `D-chain` convention per fix-direction option (b) of the
+original item -- decisions are now genuinely numbered `D-NNN`, not a fabricated placeholder. The
+`validate-dispatch-advance` hook's D-chain currency check now passes on real content (`current_step`
+cites `D-372`, the file's genuine max). jira-cli's slim STATE.md style (dense single-paragraph
+field values, no dense burst-narrative breakdown) is unchanged by this migration. The related
+`validate-factory-path-staging` `cd .factory && git` false-positive note is NOT resolved by this
+migration -- still tracked under `CYCLE-013-HOOK-FALSE-POSITIVE-COMMIT-MSG-SCAN` above.

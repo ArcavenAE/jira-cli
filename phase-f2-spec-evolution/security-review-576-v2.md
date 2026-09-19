@@ -38,13 +38,13 @@ severity_summary: >
   New (v1.3.44→v1.3.79): 1 MEDIUM (CWE-116 terminal escape injection in confirmation prompts — SPEC-CHANGES-REQUIRED);
   1 LOW (CWE-22 `?redirect=false` prohibition in Trace only, not in BC body — SPEC-CHANGES-REQUIRED);
   1 INFO (CWE-22 degenerate-fallback server-ID trust assumption); 1 INFO (overwrite-refuse pre-flight underspecified).
-traces_to: "DEC-184 F2 gate — human-directed upgrade from scoped spot-check to full re-review"
+traces_to: "D-184 F2 gate — human-directed upgrade from scoped spot-check to full re-review"
 ---
 
 # Security Re-Review v2: SOH-ATTACHMENTS-1 Attachment Read/Write (#576 + #585)
 
 **Review scope**: Full spec-level security re-review of the SOH-ATTACHMENTS-1 package at
-v1.3.79 (DEC-184). Baseline: prior review `security-review-576.md` (APPROVE at v1.3.44).
+v1.3.79 (D-184). Baseline: prior review `security-review-576.md` (APPROVE at v1.3.44).
 Focus on the post-v1.3.44 delta: fix rounds P14–P40, all six new delete BCs (BC-3.9.015..020),
 and closing micro-rounds. No implementation exists; this is a spec-only review.
 

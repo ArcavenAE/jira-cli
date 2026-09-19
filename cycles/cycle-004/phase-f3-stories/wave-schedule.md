@@ -13,7 +13,7 @@ inputs:
   - ".factory/cycles/cycle-004/phase-f3-stories/dependency-graph-extended.md"
   - ".factory/cycles/cycle-004/phase-f3-stories/conflict-report.md"
   - ".factory/cycles/cycle-004/phase-f3-stories/decomposition-manifest.md"
-traces_to: "dependency-graph-extended.md §4a; DEC-335"
+traces_to: "dependency-graph-extended.md §4a; D-335"
 input-hash: "9dee440"
 ---
 
@@ -100,7 +100,7 @@ stories do. See §7a below.
   append-collision, not a real conflict (§7a).
 - **Gate:** standard wave-gate (full regression on `develop`, adversarial review of the
   wave diff, holdout eval, demo evidence per §6 below) before Wave 2 opens.
-- **Windows validation note (DEC-335):** `S-cycle4-dpapi-storage-fix`'s F4 CI spike
+- **Windows validation note (D-335):** `S-cycle4-dpapi-storage-fix`'s F4 CI spike
   (does `windows-latest` CI exercise DPAPI end-to-end?) should run during this wave, since
   its outcome informs how Wave 1's own wave-gate demo evidence is captured (automated
   Windows-CI evidence vs. a placeholder pending the F7 manual gate).
@@ -139,7 +139,7 @@ the wave boundary in §1).
 
 ---
 
-## 4. Windows-Validation Schedule (DEC-335)
+## 4. Windows-Validation Schedule (D-335)
 
 Per `decomposition-manifest.md` §5 and `S-cycle4-dpapi-storage-fix.md`'s own "Windows
 Validation" section:

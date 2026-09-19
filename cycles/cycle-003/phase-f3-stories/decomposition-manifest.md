@@ -14,7 +14,7 @@ inputs:
   - ".factory/cycles/cycle-003/phase-f2-spec-evolution/adr-0011-amendment-staged.md"
   - ".factory/cycles/cycle-003/phase-f2-spec-evolution/architecture-delta.md"
   - ".factory/stories/STORY-INDEX.md"
-traces_to: "DEC-312..DEC-328; ADR-0020; ADR-0011 (staged amendment)"
+traces_to: "D-312..D-328; ADR-0020; ADR-0011 (staged amendment)"
 input-hash: "c0cb18a"
 ---
 
@@ -64,30 +64,30 @@ zero gaps, zero double-coverage** — verified below.
 
 | BC | Status | Covering Story |
 |---|---|---|
-| BC-1.1.009 | AMENDED (DEC-315 — per-profile write clause) | `S-cycle3-percred-storage` |
-| BC-1.1.010 | AMENDED (DEC-315 — per-profile write clause) | `S-cycle3-percred-storage` |
-| BC-1.1.013 | NEW (DEC-313 — interactive OAuth-default picker) | `S-cycle3-oauth-default-creation` |
-| BC-1.1.014 | NEW (DEC-313 — non-interactive api-token default) | `S-cycle3-oauth-default-creation` |
-| BC-1.1.015 | NEW (DEC-313 — runtime-default-unchanged pin) | `S-cycle3-oauth-default-creation` |
+| BC-1.1.009 | AMENDED (D-315 — per-profile write clause) | `S-cycle3-percred-storage` |
+| BC-1.1.010 | AMENDED (D-315 — per-profile write clause) | `S-cycle3-percred-storage` |
+| BC-1.1.013 | NEW (D-313 — interactive OAuth-default picker) | `S-cycle3-oauth-default-creation` |
+| BC-1.1.014 | NEW (D-313 — non-interactive api-token default) | `S-cycle3-oauth-default-creation` |
+| BC-1.1.015 | NEW (D-313 — runtime-default-unchanged pin) | `S-cycle3-oauth-default-creation` |
 | BC-1.1.016 | NEW (F2-gate hardening — airtight non-interactive guard) | `S-cycle3-oauth-default-creation` |
-| BC-1.2.013 | AMENDED (DEC-322/I-3 — non-destructive logout + stderr notice) | `S-cycle3-remove-logout-semantics` |
-| BC-1.2.014 | AMENDED (DEC-322/I-4 — 4-step remove, reordered) | `S-cycle3-remove-logout-semantics` |
-| BC-1.2.017 | AMENDED (DEC-315 — per-profile write clause) | `S-cycle3-percred-storage` |
-| BC-1.2.048 | NEW (DEC-313 — auth_method-is-intrinsic invariant) | `S-cycle3-chosen-flow-reconcile` |
-| BC-1.2.049 | NEW (DEC-323 — `--oauth` deprecated-alias) | `S-cycle3-oauth-default-creation` |
-| BC-1.2.050 | NEW (DEC-323 — `--api-token` flag) | `S-cycle3-oauth-default-creation` |
-| BC-1.2.051 | NEW (DEC-321 — `refresh` override removal) | `S-cycle3-chosen-flow-reconcile` |
+| BC-1.2.013 | AMENDED (D-322/I-3 — non-destructive logout + stderr notice) | `S-cycle3-remove-logout-semantics` |
+| BC-1.2.014 | AMENDED (D-322/I-4 — 4-step remove, reordered) | `S-cycle3-remove-logout-semantics` |
+| BC-1.2.017 | AMENDED (D-315 — per-profile write clause) | `S-cycle3-percred-storage` |
+| BC-1.2.048 | NEW (D-313 — auth_method-is-intrinsic invariant) | `S-cycle3-chosen-flow-reconcile` |
+| BC-1.2.049 | NEW (D-323 — `--oauth` deprecated-alias) | `S-cycle3-oauth-default-creation` |
+| BC-1.2.050 | NEW (D-323 — `--api-token` flag) | `S-cycle3-oauth-default-creation` |
+| BC-1.2.051 | NEW (D-321 — `refresh` override removal) | `S-cycle3-chosen-flow-reconcile` |
 | BC-1.4.025 | AMENDED (regression-confirmation clause vs. new sibling migration) | `S-cycle3-credential-absence-guard` |
-| BC-1.4.027 | AMENDED (DEC-315 — namespaced-keys split) | `S-cycle3-percred-storage` |
+| BC-1.4.027 | AMENDED (D-315 — namespaced-keys split) | `S-cycle3-percred-storage` |
 | BC-1.4.029 | AMENDED (cross-ref to `load_api_token` non-inheritance) | `S-cycle3-credential-absence-guard` |
-| BC-1.4.031 | NEW (DEC-315 — `store_api_token`/`load_api_token`) | `S-cycle3-percred-storage` |
-| BC-1.4.032 | NEW, REDESIGNED (no-copy detect-and-instruct, DEC-326) | `S-cycle3-credential-absence-guard` |
+| BC-1.4.031 | NEW (D-315 — `store_api_token`/`load_api_token`) | `S-cycle3-percred-storage` |
+| BC-1.4.032 | NEW, REDESIGNED (no-copy detect-and-instruct, D-326) | `S-cycle3-credential-absence-guard` |
 | BC-1.4.033 | NEW, REDESIGNED (partial-write recovery, namespaced-only) | `S-cycle3-credential-absence-guard` |
 | BC-1.4.034 | NEW (one-time re-login breaking-change contract) | `S-cycle3-credential-absence-guard` |
-| BC-1.6.046 | AMENDED (DEC-324 — `auth list` 5-column ENV break) | `S-cycle3-env-tag` |
-| BC-1.6.047 | NEW (DEC-314/324 — `env` JSON/status surfacing) | `S-cycle3-env-tag` |
-| BC-6.1.015 | NEW (DEC-314 — `ProfileConfig.env` schema field) | `S-cycle3-env-tag` |
-| BC-6.2.015 | AMENDED (DEC-317 — hard-fence `Profile` newtype target contract) | `S-cycle3-adr0011-newtype` |
+| BC-1.6.046 | AMENDED (D-324 — `auth list` 5-column ENV break) | `S-cycle3-env-tag` |
+| BC-1.6.047 | NEW (D-314/324 — `env` JSON/status surfacing) | `S-cycle3-env-tag` |
+| BC-6.1.015 | NEW (D-314 — `ProfileConfig.env` schema field) | `S-cycle3-env-tag` |
+| BC-6.2.015 | AMENDED (D-317 — hard-fence `Profile` newtype target contract) | `S-cycle3-adr0011-newtype` |
 
 **Coverage check:** 24/24 BCs assigned to exactly one story. No BC appears twice. No BC has zero
 coverage.
@@ -123,7 +123,7 @@ not actually a cross-story VP split).
 **Title:** Add `ProfileConfig.env` tag + surface in `auth list`/`auth status`
 
 **BCs covered:** BC-6.1.015 (NEW — schema field), BC-1.6.046 (AMENDED — `auth list` 5th column,
-DEC-324 breaking snapshot change), BC-1.6.047 (NEW — JSON/status surfacing, channel-split
+D-324 breaking snapshot change), BC-1.6.047 (NEW — JSON/status surfacing, channel-split
 verbatim-vs-sanitized)
 
 **VPs upheld:** VP-AUTHDX-009 (tolerant-reader round-trip / deserialization indistinguishability,
@@ -153,7 +153,7 @@ from CLAUDE.md's own module map and the F1/F2 documents, not a lookup against a 
 insta-snapshot regeneration, one property test).
 
 **Notes:**
-- **`auth list` 5-column insta-snapshot break (DEC-324) — MUST be handled in this story.**
+- **`auth list` 5-column insta-snapshot break (D-324) — MUST be handled in this story.**
   BC-1.6.046 is an explicit, acknowledged breaking change: the pinned 4-column snapshot
   (`NAME, URL, AUTH, STATUS`) becomes 5 columns (`NAME, URL, ENV, AUTH, STATUS`). The
   implementing story's Tasks list MUST include: (a) regenerating
@@ -232,7 +232,7 @@ clause updates + bounded-generator property test + keyring-gated integration tes
 
 **Rename rationale:** F1's preliminary story #3 was scoped as a "migration" (lazy copy-then-delete
 of the shared flat pair, mirroring `load_oauth_tokens`). **That design was REJECTED by explicit
-human decision at the F2 gate (DEC-326)** — ADR-0020 § Decision 2 replaces it in full with a
+human decision at the F2 gate (D-326)** — ADR-0020 § Decision 2 replaces it in full with a
 no-copy detect-and-instruct guard: the legacy flat pair is never read as a credential, never
 copied, never deleted, for any profile including `"default"`. There is no migration left in this
 story's scope, so "migration" in the story name is actively misleading — renamed to
@@ -549,7 +549,7 @@ target).
 
 **`S-cycle3-cache-keychain-version-bump`** (F1 §2 item 8, CONDITIONAL on Open Question 1) is
 **dropped, not deferred or renamed.** ADR-0020 § Decision 3 and BC-6.2.004's cycle-003
-confirmation (DEC-325a) both resolve F1's Open Question 1 definitively: no keychain version
+confirmation (D-325a) both resolve F1's Open Question 1 definitively: no keychain version
 marker is introduced (unproven, non-disposable-data infrastructure with no existing lever, per
 § Alternatives Considered), and the cache-root `v1/` segment is explicitly
 **DOCUMENTED-UNCHANGED this cycle** — "cycle-003's new per-profile keychain layout... does not
@@ -632,7 +632,7 @@ review.
   `S-cycle3-credential-absence-guard`, `S-cycle3-remove-logout-semantics`,
   `S-cycle3-adr0011-newtype`, `S-cycle3-oauth-default-creation`, `S-cycle3-chosen-flow-reconcile`.
 - **1 F1 candidate dropped** (`S-cycle3-cache-keychain-version-bump` — resolved as a documented
-  no-op by ADR-0020 §3/DEC-325a, no code change remains).
+  no-op by ADR-0020 §3/D-325a, no code change remains).
 - **2 F1 candidates confirmed interleaved, not standalone** (`S-cycle3-docs`,
   `S-cycle3-regression-coverage`) — except the ADR-0011 file application, which is a named,
   binding task inside `S-cycle3-adr0011-newtype`.

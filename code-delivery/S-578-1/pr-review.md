@@ -68,7 +68,7 @@ Re-confirmed with fresh eyes:
   immediately after `parse_field_kv` in both `edit.rs::handle_edit` and
   `jsm_create.rs::handle_jsm_create`, before any HTTP call. I checked the third potential path
   and confirmed it is **not** a gap: the platform `issue create` path never reaches
-  `parse_field_kv` at all, because the DEC-188 pre-flight guard (`src/cli/issue/create.rs`,
+  `parse_field_kv` at all, because the D-188 pre-flight guard (`src/cli/issue/create.rs`,
   presence-only on `field_pairs`) already exits 64 on any `--field` without `--request-type`. So
   the parser-only scope of this story cannot silently discard a user's `:kind` intent anywhere.
 - **Multibyte safety.** Slicing uses byte indices returned by `find('=')` and `rfind(':')`, both

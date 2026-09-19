@@ -2,7 +2,7 @@
 document_type: story
 story_id: "S-cycle3-remove-logout-semantics"
 epic_id: "AUTH-PROFILE-DX-1"
-title: "auth remove 4-step delete (reordered) + auth logout non-destructive notice (DEC-322)"
+title: "auth remove 4-step delete (reordered) + auth logout non-destructive notice (D-322)"
 wave: feature-followup
 status: ready
 intent: feature
@@ -137,7 +137,7 @@ use.
   branch.
 - `src/api/auth.rs::clear_all_credentials(profiles: &[&str])` (`~line 467`) currently clears
   the SHARED flat `KEY_EMAIL`/`KEY_API_TOKEN` keys UNCONDITIONALLY for every call, plus
-  per-profile OAuth pairs for the listed profiles. Per DEC-315/BC-1.4.027 (amended, landed by
+  per-profile OAuth pairs for the listed profiles. Per D-315/BC-1.4.027 (amended, landed by
   `S-cycle3-percred-storage`), `KEY_EMAIL`/`KEY_API_TOKEN` are the LEGACY flat keys — this
   story's "genuine keychain error surfaced, not swallowed" tightening (I-4/SR-008) applies to
   the credential-deletion steps this function performs on behalf of `auth remove`; do NOT

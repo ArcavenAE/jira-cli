@@ -42,7 +42,7 @@ retain `&str`, with `Profile` constructed at the boundary. Defensible: those res
 behavior gap.
 
 ### ADR-0011 + CHANGELOG — both present
-ADR-0011 Status is `Accepted` (DEC-317). CHANGELOG has an `### Internal` entry noting no
+ADR-0011 Status is `Accepted` (D-317). CHANGELOG has an `### Internal` entry noting no
 user-visible change.
 
 ### Conventions

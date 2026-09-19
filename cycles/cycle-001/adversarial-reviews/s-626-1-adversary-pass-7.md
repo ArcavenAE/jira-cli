@@ -178,7 +178,7 @@ All three improve the delivery. None would be caught by a mechanical AC-checking
 ## F-13 MEDIUM [process-gap] PRE-EXISTING — `security` (gitleaks) job absent from `ci-gate.needs` so a secret-scan failure cannot block merge
 **PROCESS-GAP · pre-existing, confirmed in-delta**
 
-The `security` job (gitleaks secret scan) is absent from `ci-gate.needs`. The ci-gate aggregator pattern (S-CIGATE-1, DEC-102/103) requires all blocking checks to be in `ci-gate.needs`. With `security` absent, a gitleaks finding that would catch a committed secret cannot block a merge to develop or main. Additionally, the security job is PR-only — pushes to protected branches get no scan at all.
+The `security` job (gitleaks secret scan) is absent from `ci-gate.needs`. The ci-gate aggregator pattern (S-CIGATE-1, D-102/103) requires all blocking checks to be in `ci-gate.needs`. With `security` absent, a gitleaks finding that would catch a committed secret cannot block a merge to develop or main. Additionally, the security job is PR-only — pushes to protected branches get no scan at all.
 
 This is pre-existing, untouched by S-626-1. It is confirmed here as a live gap visible in the in-scope `ci.yml`. Recommended routing: a dedicated CI-governance story, NOT folded into SOH-DX-1.
 
@@ -213,7 +213,7 @@ Same class as pass-6 L-002. The four BC-5.3.00x entries in `bc-5-boards-sprints.
 - **Routed to `.factory/` fix round:** F-01 (SS-11 → SS-02+SS-09 across 5 stories); F-03 (demo regeneration — AC-002/003/009/full-suite.txt/INDEX.md at HEAD 64e2a4bc with correct filter and `cargo clean` evidence); F-05 (INV-READ-009 behavioral restatement, let-chain prescription removed, symbol-form citation); F-06 (S-626-1 bcs anchoring); F-08 (AC-9 wording: "regression-detecting integration coverage"); F-11/F-15 (symbol-form citations in bc-5).
 - **Routed to S-641-1:** F-02 (positive-coverage assertion — AC-1/AC-2 scope); F-04 (cold-cache demo evidence — relates to S-641-1 AC-2); F-09 (dependabot ignore entry); F-10 (CLAUDE.md action-input claim — LOW-004 already in S-641-1); F-12 (noted).
 - **Confirmed pre-existing / noted in Drift:** F-13 (GITLEAKS-NOT-IN-CI-GATE-NEEDS added to Drift — dedicated CI-governance story recommended); F-07 (enforcement gap already in Drift); F-14 (script hardcoded-line; accepted LOW).
-- **Convergence: 0/3.** Passes 6+7 both NOT CLEAN. Window continues under DEC-199 (GRIND to 3/3 CLEAN).
+- **Convergence: 0/3.** Passes 6+7 both NOT CLEAN. Window continues under D-199 (GRIND to 3/3 CLEAN).
 
 ---
 

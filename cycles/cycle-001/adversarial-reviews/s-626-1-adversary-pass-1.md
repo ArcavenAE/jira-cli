@@ -27,7 +27,7 @@ story: S-626-1
 cycle: cycle-001
 pass: 1
 agent: adversary
-basis: TRUE ADVERSARY AGENT (not a DEC-190 substitute) — first adversary application in this bundle
+basis: TRUE ADVERSARY AGENT (not a D-190 substitute) — first adversary application in this bundle
 date: 2026-07-30
 feature_head: 148a9489f3d0f213ed402caf4522ce04ea5ffad3
 pr: 667

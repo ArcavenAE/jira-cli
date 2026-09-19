@@ -47,7 +47,7 @@ Three non-blocking `warning[license-not-encountered]` and one
 | `license-not-encountered` | `deny.toml:8` | `"BSD-2-Clause"` allowance in `deny.toml` matched no crate currently in the tree |
 | `license-not-encountered` | `deny.toml:15` | `"OpenSSL"` allowance matched no crate currently in the tree |
 | `license-not-encountered` | `deny.toml:13` | `"Unicode-DFS-2016"` allowance matched no crate currently in the tree |
-| `unmatched-skip` | `deny.toml:280-282` | `cpufeatures = "^0.2"` skip entry (DEC-185, documented reason: sha1 v0.10.7 needs cpufeatures 0.2.17 vs chacha20 v0.10.0/rand v0.10.1 needing cpufeatures 0.3.0) was not encountered — the skip is currently unused in the resolved graph |
+| `unmatched-skip` | `deny.toml:280-282` | `cpufeatures = "^0.2"` skip entry (D-185, documented reason: sha1 v0.10.7 needs cpufeatures 0.2.17 vs chacha20 v0.10.0/rand v0.10.1 needing cpufeatures 0.3.0) was not encountered — the skip is currently unused in the resolved graph |
 
 No advisories/bans/licenses/sources rule **failed**; these four are warnings about
 stale/unmatched `deny.toml` entries only.

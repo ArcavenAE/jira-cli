@@ -24,7 +24,7 @@ info_findings_resolved: 0
 ## 1. Scope
 
 This is the F2-PIECEWISE-PROTOCOL consistency check for the SEC-576-V2-ROUND (v1.3.79→v1.3.80).
-F2 gate was APPROVED (DEC-184). Four findings from `security-review-576-v2.md` were applied:
+F2 gate was APPROVED (D-184). Four findings from `security-review-576-v2.md` were applied:
 
 - **SEC-576-009** (LOW, CWE-22): `?redirect=false` prohibition promoted from Trace field to
   BC-2.7.007 step 2 body clause.
@@ -161,12 +161,12 @@ All newly-authored sentences examined. Grounding:
 | EC-2.7.007-12 taxonomy classification as ERROR/exit-64, no manifest envelope | EC-2.7.007-6 and EC-2.7.007-11 pattern (pre-HTTP exit 64, no output); §2.7 taxonomy (P25/P30) |
 | SEC-576-008 batch-mode trust assumption: "legitimate Jira server always returns numeric IDs" | BC-2.7.007 AID validation paragraph (CWE-88 `^[0-9]+$`); R3.10 fallback naming rule in BC-2.7.010 |
 | SEC-576-011 primary clause: "display-only; RAW value continues for disk writes, JSON output, API calls" | P27-001 (RAW/path keystone, EC-2.7.007-7 / EC-2.7.008-6 `filename` semantics); BC-2.7.011 disk-write pipeline (pre-existing) |
-| "Earliest consumer: S2; S4 story-writers must allocate display-sanitization at confirmation prompt call sites per DEC-184 R3.13" | DEC-184 R3.13 (earliest-consumer story allocation principle); story S2 = attachment download (BC-2.7.007..012); story S4 = attachment delete (BC-3.9.015) |
+| "Earliest consumer: S2; S4 story-writers must allocate display-sanitization at confirmation prompt call sites per D-184 R3.13" | D-184 R3.13 (earliest-consumer story allocation principle); story S2 = attachment download (BC-2.7.007..012); story S4 = attachment delete (BC-3.9.015) |
 | Display-sanitization cross-refs in BC-2.7.008 / BC-2.7.010 / BC-3.9.015 / BC-3.9.017 | Each is a derivative of the primary BC-2.7.011 clause — not re-derived from the security review text; each cites "per BC-2.7.011 display-sanitization requirement" |
 
 **Assessment:** No newly-authored sentence is merely echoed from the security review text. All are
 grounded in: (a) pre-existing BC-licensing clauses; (b) external research artifacts cited in the
-Trace field (JRACLOUD-97046, GHSA-9857-6MW7-FQ2M); or (c) standing process decisions (DEC-184
+Trace field (JRACLOUD-97046, GHSA-9857-6MW7-FQ2M); or (c) standing process decisions (D-184
 R3.13, §2.7 taxonomy per P25/P30). **ECHO-BREAKER PASS.**
 
 ---
@@ -320,7 +320,7 @@ EXIT: 0
 The BC-2.7.011 primary clause states:
 > `**Earliest consumer: S2** (Story 2 — first surface to write server-supplied filenames to
 > human-readable output; S4 story-writers must allocate display-sanitization at confirmation prompt
-> call sites per DEC-184 R3.13).`
+> call sites per D-184 R3.13).`
 
 From prd-delta-576.md Scope table:
 - S2 = `jr issue attachment download` (BC-2.7.007..012): first surface with filename display
@@ -348,7 +348,7 @@ reading BC-3.9.017 step 2) would see only the S4 call-out and might miss the S3 
 guidance sentence.**
 
 The sentence "S4 story-writers must allocate display-sanitization at confirmation prompt call sites
-per DEC-184 R3.13" should read "S3 and S4 story-writers must allocate display-sanitization at
+per D-184 R3.13" should read "S3 and S4 story-writers must allocate display-sanitization at
 confirmation prompt call sites" — or the S3 call-out should appear elsewhere in the clause. S3
 story-writers are not directly alerted by the primary clause to their display-sanitization
 obligation at BC-3.9.017 step 2 confirmation prompts. The cross-reference in BC-3.9.017 step 2

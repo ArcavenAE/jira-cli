@@ -9,7 +9,7 @@
 ![Convergence](https://img.shields.io/badge/adversarial-11_passes_%2F_CONVERGED-green)
 ![Holdout](https://img.shields.io/badge/holdout-H--NEW--ATTACHMENT--005%2F006%2F012-blue)
 
-This PR delivers the `jr issue attachment delete` command — the fourth story of the SOH-ATTACHMENTS-1 bundle. It adds single-AID targeted delete (with a `eprint!`-based confirmation gate, pre-prompt metadata GET for filename, and DEC-168 404 body surfacing), multi-AID bulk delete (fail-soft 404 skip, non-404 abort), `--issue KEY --older-than DUR` age-filtered bulk delete (dedicated `parse_age_duration` private helper with a three-band overflow onion guard), `--dry-run` for both single-AID (EC-3.9.020-3) and bulk (EC-3.9.020-1/2) forms, CWE-116 `display_sanitize_filename` on prompt filenames, and a full delete error taxonomy (BC-3.9.013). DEC-168 ruling is codified: targeted 404 exits 64 with canonical prefix + Jira body; bulk 404 is a benign skip. Three arithmetic overflow bands caught by adversarial review (P1-001/P2-001/P6-001) now guarded via clamp + `TimeDelta::try_seconds` + `checked_sub_signed`.
+This PR delivers the `jr issue attachment delete` command — the fourth story of the SOH-ATTACHMENTS-1 bundle. It adds single-AID targeted delete (with a `eprint!`-based confirmation gate, pre-prompt metadata GET for filename, and D-168 404 body surfacing), multi-AID bulk delete (fail-soft 404 skip, non-404 abort), `--issue KEY --older-than DUR` age-filtered bulk delete (dedicated `parse_age_duration` private helper with a three-band overflow onion guard), `--dry-run` for both single-AID (EC-3.9.020-3) and bulk (EC-3.9.020-1/2) forms, CWE-116 `display_sanitize_filename` on prompt filenames, and a full delete error taxonomy (BC-3.9.013). D-168 ruling is codified: targeted 404 exits 64 with canonical prefix + Jira body; bulk 404 is a benign skip. Three arithmetic overflow bands caught by adversarial review (P1-001/P2-001/P6-001) now guarded via clamp + `TimeDelta::try_seconds` + `checked_sub_signed`.
 
 Depends on: S-576-1 (merged, PR #630). Blocks: S-576-5 (EJ e2e teardown uses `jr issue attachment delete`). Does **not** close #576 (S-576-5 closes it).
 
@@ -20,7 +20,7 @@ Depends on: S-576-1 (merged, PR #630). Blocks: S-576-5 (EJ e2e teardown uses `jr
 ```mermaid
 graph TD
     CLI["src/cli/issue/mod.rs<br/>(dispatch)"] -->|AttachmentSubcommand::Delete| HD["handle_attachment_delete<br/>src/cli/issue/attachments.rs"]
-    HD -->|single-AID gate| GATE["attachment_delete_confirmation_gate<br/>attachments.rs (eprint!+read_line DEC-174)"]
+    HD -->|single-AID gate| GATE["attachment_delete_confirmation_gate<br/>attachments.rs (eprint!+read_line D-174)"]
     HD -->|age filter| FILTER["filter_attachments_older_than<br/>attachments.rs (pure core)"]
     HD -->|HTTP DELETE| DA["delete_attachment<br/>src/api/jira/attachments.rs"]
     HD -->|HTTP GET for metadata| GA["get_attachment_metadata<br/>src/api/jira/attachments.rs"]
@@ -37,7 +37,7 @@ graph TD
 <details>
 <summary><strong>Architecture Decision Record</strong></summary>
 
-### ADR: Targeted-vs-bulk 404 asymmetry (DEC-168)
+### ADR: Targeted-vs-bulk 404 asymmetry (D-168)
 
 **Context:** `DELETE /rest/api/3/attachment/<id>` can return 404 in two contexts: a user explicitly naming a specific attachment that no longer exists (targeted delete), or a bulk loop where an attachment was deleted between list-time and delete-time (stale in bulk).
 
@@ -47,7 +47,7 @@ graph TD
 
 **Alternatives Considered:**
 1. Unified exit 64 for all 404s — rejected because it would make bulk operations fragile on concurrent delete workloads.
-2. Silent exit 0 for targeted 404 — rejected per DEC-168; the user named a target that doesn't exist, which is always an error worth surfacing.
+2. Silent exit 0 for targeted 404 — rejected per D-168; the user named a target that doesn't exist, which is always an error worth surfacing.
 
 **Consequences:**
 - Two separate API functions: `delete_attachment_targeted` (maps 404 → `JrError::UserError`) vs `delete_attachment` (maps 404 → benign, used in bulk loop). Do NOT unify them.
@@ -73,7 +73,7 @@ graph LR
 
 ```mermaid
 flowchart LR
-    BC008["BC-3.9.008<br/>DELETE endpoint + DEC-168"] --> AC001["AC-001<br/>AID validation + 404 body"]
+    BC008["BC-3.9.008<br/>DELETE endpoint + D-168"] --> AC001["AC-001<br/>AID validation + 404 body"]
     BC015["BC-3.9.015<br/>Single-AID gate"] --> AC002["AC-002<br/>Gate confirm/cancel VP-576-002"]
     BC010["BC-3.9.010<br/>Response shapes"] --> AC003["AC-003<br/>Single JSON shape"]
     BC016["BC-3.9.016<br/>--yes required bulk"] --> AC004["AC-004<br/>Bulk --yes; fail-soft 404"]
@@ -324,7 +324,7 @@ git push origin develop
 
 | Requirement | Story AC | Test | Status |
 |-------------|---------|------|--------|
-| BC-3.9.008 DELETE endpoint + DEC-168 | AC-001 | `test_bc_3_9_008_delete_endpoint_aid_validation_404_exit_64` | PASS |
+| BC-3.9.008 DELETE endpoint + D-168 | AC-001 | `test_bc_3_9_008_delete_endpoint_aid_validation_404_exit_64` | PASS |
 | BC-3.9.015 single-AID gate + VP-576-002 | AC-002 | `test_vp_576_002_delete_gate_confirm_proceeds` / `cancel_stays` | PASS |
 | BC-3.9.010 response shapes | AC-003, AC-005 | `test_bc_3_9_010_single_aid_json_shape`, `test_bc_3_9_010_bulk_json_shape` | PASS |
 | BC-3.9.016 --yes required bulk | AC-004, AC-011 | `test_bc_3_9_016_bulk_requires_yes_exits_64` | PASS |
@@ -341,7 +341,7 @@ BC-3.9.015 -> AC-002 -> test_bc_3_9_015_aid_validation_before_gate -> attachment
 BC-3.9.019 -> AC-007 -> test_bc_3_9_019_p2_001_chrono_band_1e12d_is_err -> attachments.rs::parse_age_duration -> ADV-PASS-11-CONVERGED
 BC-3.9.019 -> AC-007 -> test_bc_3_9_019_p6_001_datetime_band_1e11d_is_err -> attachments.rs::filter_attachments_older_than -> ADV-PASS-11-CONVERGED
 BC-3.9.020 -> AC-009 -> test_bc_3_9_020_dry_run_multi_aid_metadata_fan_out -> attachments.rs::handle_attachment_delete (multi-AID dry-run path) -> ADV-PASS-11-CONVERGED
-DEC-168 -> AC-001/AC-013 -> test_bc_3_9_008_404_body_surfaced_to_stderr -> api/jira/attachments.rs::delete_attachment_targeted -> ADV-PASS-11-CONVERGED
+D-168 -> AC-001/AC-013 -> test_bc_3_9_008_404_body_surfaced_to_stderr -> api/jira/attachments.rs::delete_attachment_targeted -> ADV-PASS-11-CONVERGED
 ```
 
 </details>
@@ -355,7 +355,7 @@ All 16 ACs covered by 7 VHS terminal recordings. Evidence at `docs/demo-evidence
 | Recording | GIF | ACs Covered |
 |-----------|-----|-------------|
 | `AC-001-002-003-010-single-gate` | `AC-001-002-003-010-single-gate.gif` | AC-001, AC-002, AC-003, AC-010 |
-| `AC-001-013-dec168-targeted-404` | `AC-001-013-dec168-targeted-404.gif` | AC-001, AC-013 (DEC-168 canonical prefix+body) |
+| `AC-001-013-dec168-targeted-404` | `AC-001-013-dec168-targeted-404.gif` | AC-001, AC-013 (D-168 canonical prefix+body) |
 | `AC-004-005-bulk-failsoft` | `AC-004-005-bulk-failsoft.gif` | AC-004, AC-005 |
 | `AC-006-007-011-issue-older-than` | `AC-006-007-011-issue-older-than.gif` | AC-006, AC-007, AC-011 |
 | `AC-007-016-duration-errors` | `AC-007-016-duration-errors.gif` | AC-007, AC-016 |
@@ -418,6 +418,6 @@ generated-at: "2026-07-21"
 - [ ] Coverage delta is positive or neutral
 - [ ] No critical/high security findings unresolved
 - [ ] Rollback procedure validated
-- [ ] Human review completed (DEC-128 — human squash-merge required)
+- [ ] Human review completed (D-128 — human squash-merge required)
 - [ ] Demo evidence verified: 16/16 ACs covered
 - [ ] Dependency PR S-576-1 merged (PR #630, ✅ confirmed)

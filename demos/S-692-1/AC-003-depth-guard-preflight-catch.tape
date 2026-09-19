@@ -15,7 +15,7 @@ Set Framerate 24
 Set TypingSpeed 30ms
 Set Shell "bash"
 
-# S-692-1 / issue #692 (DEC-274, BC-7.2.012 depth guard): this is the whole
+# S-692-1 / issue #692 (D-274, BC-7.2.012 depth guard): this is the whole
 # point of the story. Before #692, --dry-run only echoed flags — it never
 # actually ran the markdown->ADF conversion, so a pathologically nested
 # markdown description (which Jira would reject with HTTP 400/CWE-674 guard)

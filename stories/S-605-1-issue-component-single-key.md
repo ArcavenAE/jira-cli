@@ -68,7 +68,7 @@ last_updated: "2026-08-15"
 breaking_change: false
 retroactive: false
 origin: >
-  GitHub issue #605 (`issue create/edit --component`), single-issue facet (DEC-280). Depends
+  GitHub issue #605 (`issue create/edit --component`), single-issue facet (D-280). Depends
   on S-604-1 for the shared `resolve_component` resolver and the `Component` full-resource
   type (used to parse the project component-list GET this story's resolver call fires). The
   multi-key bulk facet (BC-3.4.023, integer `componentId`, LIVE-JIRA-gated) is split into its
@@ -142,7 +142,7 @@ mutual-exclusion 13-flag list gains `--component`), **BC-3.4.021** (`--dry-run`'
   intentional, not a bug). `POST /rest/api/3/issue` body's `fields.components` array gets one
   `{"name": "<X>"}` object per supplied value, in CLI input order. Names resolve via §8.4
   BEFORE the POST. `--component` combined with `--request-type` (the JSM dispatch fork) → exit
-  64 pre-flight (DEC-188 precedent, mirrors `--field`/`--on-behalf-of`'s S-639-1 guard), BEFORE
+  64 pre-flight (D-188 precedent, mirrors `--field`/`--on-behalf-of`'s S-639-1 guard), BEFORE
   project-key resolution/prompts/any HTTP — stderr names both flags and suggests a follow-up
   `jr issue edit --component`.
 - **Resolution mechanism (BC-3.4.025)**: `create`'s `--component` resolution uses `GET

@@ -37,7 +37,7 @@ isolation: CLEAN
 
 ## Provenance
 
-This artifact is a **DIRECT CAPTURE** of adversary reviewer output relayed by the orchestrator, recorded same-session. The reviewer's findings were relayed verbatim immediately after the pass completed. Pass-21 is the first pass of the 21/22/23 STRICT window authorized by DEC-216. Product head at time of review: `a247a343` (fix round 7 product commit; fix round 8 then produced `84ab32ac` closing all findings except F-06).
+This artifact is a **DIRECT CAPTURE** of adversary reviewer output relayed by the orchestrator, recorded same-session. The reviewer's findings were relayed verbatim immediately after the pass completed. Pass-21 is the first pass of the 21/22/23 STRICT window authorized by D-216. Product head at time of review: `a247a343` (fix round 7 product commit; fix round 8 then produced `84ab32ac` closing all findings except F-06).
 
 **Policy rubric:** `.factory/policies.yaml` does not exist. Baseline applied (POL-11 positive-coverage, S-7.01 partial-fix discipline, semantic-anchoring severity ladder, six mandated axes).
 
@@ -71,19 +71,19 @@ Finding IDs for this pass use the format `ADV-P21-[SEV]-NNN`. Consistent with pr
 
 ## Part A — Fix Verification
 
-Pass-21 verified all 10 findings from pass-19 (the most recent executed pass; pass-20 was SUPERSEDED per DEC-216). Fix rounds 7 and PRE-WINDOW-PREP applied between passes.
+Pass-21 verified all 10 findings from pass-19 (the most recent executed pass; pass-20 was SUPERSEDED per D-216). Fix rounds 7 and PRE-WINDOW-PREP applied between passes.
 
 | ID | Previous Finding | Status | Notes |
 |----|-----------------|--------|-------|
 | ADV-P19-HIGH-001 | POL-11 floor `> 0` inert — inline src/ tests bypass check | FIXED — fix round 7 (a247a343: binary-count floor `-lt 90` + named canary) ✓ | All four CI-as-code defects in 9312f11f closed |
-| ADV-P19-HIGH-002 | tests/ci_gate_completeness.rs + tests/cli_handler.rs absent from four spec surfaces | FIXED — fix round 7 (S-626-1 v1.13; DEC-214) ✓ | |
+| ADV-P19-HIGH-002 | tests/ci_gate_completeness.rs + tests/cli_handler.rs absent from four spec surfaces | FIXED — fix round 7 (S-626-1 v1.13; D-214) ✓ | |
 | ADV-P19-MED-001 | `FAIL (POL-11)` diagnostic unreachable under pipefail + set -e | FIXED — fix round 7 (a247a343: script restructured; diagnostic reachable) ✓ | |
 | ADV-P19-MED-002 | ANSI codes from file-scope CARGO_TERM_COLOR would zero anchored regex | FIXED — fix round 7 (a247a343: CARGO_TERM_COLOR: never at step level) ✓ | CI ran SUCCESS for 9312f11f; speculation of confirmed break refuted |
 | ADV-P19-MED-003 | Pin asserts only contains("FAIL (POL-11)") — not exit 1, floor count, positive-coverage | FIXED — fix round 7 (a247a343: pin extended to four surfaces) ✓ | |
 | ADV-P19-MED-004 | Round-6 sweep missed one site in S-MUTANTS-EXAMINE-GLOBS-1.md while correcting seven siblings | CLOSED — PRE-WINDOW-PREP burst: conform-to-template pass (S-MUTANTS v1.2→v1.3); all 5 anchor sites now corrected ✓ | Template-compliance hook was the blocker; fully resolved |
 | ADV-P19-MED-005 | STORY-INDEX S-641-1 row stale by TWO revisions (v0.6 in row; file at v0.7) | FIXED — fix round 7 (STORY-INDEX v1.5.57; S-641-1 v0.8) ✓ | |
-| ADV-P19-MED-006 | fmt and clippy positive-coverage gap (ROUTED per DEC-215) | OPEN — ROUTED per DEC-215; not actioned before this window | Tracked as FMT-CLIPPY-NO-POSITIVE-COVERAGE drift item |
-| ADV-P19-LOW-001 | S-640-1 cited RUSTUP_TOOLCHAIN ~16 lines from actual location | FIXED — fix round 7 (S-640-1 v0.6; DEC-213 anchor form) ✓ | |
+| ADV-P19-MED-006 | fmt and clippy positive-coverage gap (ROUTED per D-215) | OPEN — ROUTED per D-215; not actioned before this window | Tracked as FMT-CLIPPY-NO-POSITIVE-COVERAGE drift item |
+| ADV-P19-LOW-001 | S-640-1 cited RUSTUP_TOOLCHAIN ~16 lines from actual location | FIXED — fix round 7 (S-640-1 v0.6; D-213 anchor form) ✓ | |
 | ADV-P19-INFO-001 | Demo pack lacked negative-path proof at dispatch | FIXED — PRE-WINDOW-PREP burst: negative-path evidence added to full-suite.txt ✓ | Closed in PRE-WINDOW-PREP burst |
 
 ---
@@ -99,7 +99,7 @@ Pass-21 verified all 10 findings from pass-19 (the most recent executed pass; pa
 - **Description:** The File Structure Requirements row added by fix round 7 (S-626-1 v1.13) to declare `tests/ci_gate_completeness.rs` contained two false claims: (1) The cited test name `test_ci_gate_named_canary_check` **does not exist** anywhere in the worktree. The canary assertion lives inside `test_verify_test_job_has_zero_test_floor` — there is no separate `test_ci_gate_named_canary_check` function. (2) The scope annotation states "9-job needs list" while `ci-gate.needs` has **EIGHT** entries, as the guard's own docstring correctly states. This is the same dead-symbol class pass 15 (F-03) had closed (`handle_board_view`→`handle_view`), re-instantiated by a later round's own fix prose.
 - **Evidence:** `grep -r "test_ci_gate_named_canary_check" tests/` → zero results. `ci-gate.needs:` list in ci.yml (8 entries: test, fmt, clippy, msrv, deny, mutants, security, docs). Guard docstring in `tests/ci_gate_completeness.rs` correctly says "8-job needs list."
 - **Proposed Fix:** S-626-1 FSR row: `test_ci_gate_named_canary_check` → `test_verify_test_job_has_zero_test_floor`; "9-job" → "8-job" (verify count against ci.yml).
-- **Status:** FIXED — fix round 8 (S-626-1 v1.13→v1.14: test name corrected to `test_verify_test_job_has_zero_test_floor`; "8-job" verified against ci.yml eight-element `needs:` list; DEC-217).
+- **Status:** FIXED — fix round 8 (S-626-1 v1.13→v1.14: test name corrected to `test_verify_test_job_has_zero_test_floor`; "8-job" verified against ci.yml eight-element `needs:` list; D-217).
 
 ---
 
@@ -142,7 +142,7 @@ Pass-21 verified all 10 findings from pass-19 (the most recent executed pass; pa
 - **Severity:** LOW
 - **Category:** spec-fidelity / internal-inconsistency
 - **Location:** `.factory/stories/S-626-1.md` AC-9 heading line vs AC-9 footer trace block
-- **Description:** AC-9's heading line enumerated two BCs ("BC-5.3.001, BC-5.3.002"). Its own footer's `behavioral_contracts:` trace block listed three: BC-5.3.001, BC-5.3.002, and BC-5.3.003 (added by DEC-210, v1.11). The heading was not updated when v1.11 extended the footer. A reviewer scanning the heading alone would miss BC-5.3.003 coverage.
+- **Description:** AC-9's heading line enumerated two BCs ("BC-5.3.001, BC-5.3.002"). Its own footer's `behavioral_contracts:` trace block listed three: BC-5.3.001, BC-5.3.002, and BC-5.3.003 (added by D-210, v1.11). The heading was not updated when v1.11 extended the footer. A reviewer scanning the heading alone would miss BC-5.3.003 coverage.
 - **Evidence:** S-626-1.md v1.13 AC-9 heading vs `behavioral_contracts:` trace in the same AC. STORY-INDEX S-626-1 row correctly lists three BCs; heading was the sole surface lagging behind.
 - **Proposed Fix:** Update AC-9 heading to enumerate all three BCs: "BC-5.3.001, BC-5.3.002, BC-5.3.003". No other AC has a heading trace, so AC-9 is the only mismatch.
 - **Status:** FIXED — fix round 8 (S-626-1 v1.14: AC-9 heading now enumerates all three BCs; verified no other AC has a heading trace, so AC-9 was the only mismatch).
@@ -156,7 +156,7 @@ Pass-21 verified all 10 findings from pass-19 (the most recent executed pass; pa
 - **Description:** Two citations assert "verified against **live** ci.yml line 111." The word "live" asserts the line number is current. Line 111 of ci.yml now holds unrelated POL-11 text inserted by `9312f11f`. The line numbers are legitimately historical (they point to the state at time of delivery), but "live" asserts the opposite — that they are current. A maintainer following the citation would reach the wrong line. Changing "live" to "as-of-delivery" or "historical" would be accurate.
 - **Evidence:** ci.yml line 111 content post-`9312f11f`: unrelated POL-11 script text. S-BC-CITATION-GUARD-1.md citations asserting "live ci.yml line 111." The line number was correct at delivery; "live" asserted incorrectly.
 - **Proposed Fix:** Change "verified against **live** ci.yml line 111" → "verified against ci.yml line 111 as-of delivery commit" at both citation sites. Version-bump the file.
-- **Status:** DEFERRED — `S-BC-CITATION-GUARD-1.md` is `status: delivered` and carries pre-existing template drift (9 missing frontmatter keys; missing `## Architecture Mapping` and `## Purity Classification`; `## Library and Framework Requirements` under a variant name). A compliance hook blocks every edit. Agent proposed adding `[TODO: populated retroactively]` placeholder sections to unblock; **orchestrator DECLINED** — inserting placeholder sections into a delivered artifact creates false completeness (the exact defect class this cycle has spent eight rounds removing), disproportionate trade for a two-word annotation. Partial edit at line 721 was **REVERTED** to restore file consistency. Both citations remain unannotated. Route F-06 with its blocking dependency. (DEC-217 rationale recorded.)
+- **Status:** DEFERRED — `S-BC-CITATION-GUARD-1.md` is `status: delivered` and carries pre-existing template drift (9 missing frontmatter keys; missing `## Architecture Mapping` and `## Purity Classification`; `## Library and Framework Requirements` under a variant name). A compliance hook blocks every edit. Agent proposed adding `[TODO: populated retroactively]` placeholder sections to unblock; **orchestrator DECLINED** — inserting placeholder sections into a delivered artifact creates false completeness (the exact defect class this cycle has spent eight rounds removing), disproportionate trade for a two-word annotation. Partial edit at line 721 was **REVERTED** to restore file consistency. Both citations remain unannotated. Route F-06 with its blocking dependency. (D-217 rationale recorded.)
 
 ---
 
@@ -169,7 +169,7 @@ Pass-21 verified all 10 findings from pass-19 (the most recent executed pass; pa
 - **Description:** `bc-02-issue-read.md` carries `bc_count: 94` in frontmatter and "92 BCs" in body prose. Both surfaces are stale. CANONICAL-COUNTS.md carries **106** as the correct total for this domain (SOH-ATTACHMENTS-1 added BC-2.7.001..012). Root cause: SOH-ATTACHMENTS-1 added the 12 attachment BCs to the PRD without updating the domain-spec file. Drift persisted across six adversary passes unflagged.
 - **Evidence:** `bc-02-issue-read.md` frontmatter `bc_count: 94`; body preamble "92 BCs"; CANONICAL-COUNTS.md bc-02 row = 106. Delta: 94→106 = +12 (SOH-ATTACHMENTS-1 attachment BCs).
 - **Proposed Fix:** Update both frontmatter (`bc_count: 94` → `bc_count: 106`) and body preamble ("92 BCs" → "106 BCs"). Class sweep: check all domain-spec files for the same drift pattern.
-- **Status:** FIXED — fix round 8 (bc-02-issue-read.md: both surfaces corrected to 106. CLASS SWEEP COMPLETED: all 10 files under `specs/domain-spec/` enumerated; only ONE further drift found: `bc-03-issue-write.md` `bc_count: 120` → `140` (same root cause); bc-01/04/05/06/07 all already correct; cross-cutting.md/README.md/state-machines.md carry no BC-count claim. bc-02's "Largest BC" superlative DROPPED — relative ranking is perpetual drift debt). DEC-218 directed the class sweep.
+- **Status:** FIXED — fix round 8 (bc-02-issue-read.md: both surfaces corrected to 106. CLASS SWEEP COMPLETED: all 10 files under `specs/domain-spec/` enumerated; only ONE further drift found: `bc-03-issue-write.md` `bc_count: 120` → `140` (same root cause); bc-01/04/05/06/07 all already correct; cross-cutting.md/README.md/state-machines.md carry no BC-count claim. bc-02's "Largest BC" superlative DROPPED — relative ranking is perpetual drift debt). D-218 directed the class sweep.
 
 ---
 
@@ -189,7 +189,7 @@ Pass-21 verified all 10 findings from pass-19 (the most recent executed pass; pa
 
 **Reviewer judgment (verbatim):** *"NOT converged, but narrowly and non-structurally… no finding challenges the delivered behaviour, the guard's soundness, or the demo pack's fidelity… I would expect a single tight fix round to close all seven, after which this artifact set should converge."*
 
-**Window status:** NOT CLEAN; window 0/1 of 21/22/23 (ELIGIBLE — isolation CLEAN). Passes 22/23 NOT DISPATCHED (superseded when pass-21 returned NOT CLEAN, since running against known-defective state would waste them). Fresh STRICT window = passes 22/23/24 (DEC-219).
+**Window status:** NOT CLEAN; window 0/1 of 21/22/23 (ELIGIBLE — isolation CLEAN). Passes 22/23 NOT DISPATCHED (superseded when pass-21 returned NOT CLEAN, since running against known-defective state would waste them). Fresh STRICT window = passes 22/23/24 (D-219).
 
 ---
 

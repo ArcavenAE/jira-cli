@@ -51,7 +51,7 @@ release-gate test binaries due to load-induced timeouts (environmental, not a co
 fault) — verdict rests on the authoritative CI aggregate.
 
 **D4 — Security scans.** `cargo audit` exit 0 (0 vulns / 356 deps). `cargo deny check`
-exit 0 (`advisories ok, bans ok, licenses ok, sources ok`); DEC-185 sha1/cpufeatures
+exit 0 (`advisories ok, bans ok, licenses ok, sources ok`); D-185 sha1/cpufeatures
 duplicate is an authorized `bans.skip`, not a finding. semgrep unavailable.
 
 ## Documented skips

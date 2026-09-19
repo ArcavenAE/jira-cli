@@ -1,10 +1,10 @@
 # F4 Wave B Convergence Record — SOH-COMMENT-CRUD-1 (issue #577) — CONVERGED 2026-07-14
 
-Merged: d0faf1c (S-577-3 comment delete, PR #615, user-merged; base 729b8c4). Deviation D-1 ratified DEC-174.
+Merged: d0faf1c (S-577-3 comment delete, PR #615, user-merged; base 729b8c4). Deviation D-1 ratified D-174.
 
 Wave-level integration convergence: 3 passes, ALL CLEAN (STRICT 3/3).
 
-**Pass 1 (2026-07-13, pre-wrap):** CLEAN. Dismissed non-finding: delete's single-line blocking stdin read vs add's spawn_blocking — adjudicated justified (implementation-specific to DEC-174 dialoguer UNUSABLE finding; not a cross-story inconsistency).
+**Pass 1 (2026-07-13, pre-wrap):** CLEAN. Dismissed non-finding: delete's single-line blocking stdin read vs add's spawn_blocking — adjudicated justified (implementation-specific to D-174 dialoguer UNUSABLE finding; not a cross-story inconsistency).
 
 **Pass 2 (2026-07-14, fresh context):** CLEAN. Verified: dispatch seam arg threading (cli.no_input, not re-derived is_terminal); delete_comment injection surface nil (validate_comment_id pre-validation); exit taxonomy vs BC-3.5.004; holdout anchors H-NEW-COMMENT-003/005; mutants.toml choreography; #526 render invariant. Borderline: json-output-shapes.md cancel-shape doc gap ruled into settled stub-marker deferral (item 3). Adjudicated src/main.rs compact H-020 error envelope as pre-existing/non-delta.
 

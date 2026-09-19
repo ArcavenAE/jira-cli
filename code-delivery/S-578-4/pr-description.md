@@ -1,4 +1,4 @@
-# [S-578-4] `issue create --field` Platform-Path Support — createmeta Resolution + DEC-188 Reversal
+# [S-578-4] `issue create --field` Platform-Path Support — createmeta Resolution + D-188 Reversal
 
 **Epic:** field-dx bundle (GitHub issues #580 / #578) — part 5 of 5
 **Mode:** feature
@@ -14,8 +14,8 @@ path. Resolution runs against `createmeta` (`GET .../createmeta/<proj>/issuetype
 reused verbatim from S-580-1's `get_createmeta_fields`) through the same `resolve_edit_fields`
 dispatch machinery `issue edit --field` already uses (S-578-2), now parameterized by a
 createmeta-vs-editmeta source. This closes #578 item 2 and is the final story in the field-dx
-bundle. It also **reverses** DEC-188 (S-639-1's `--field`-alone exit-64 pre-flight guard) per
-DEC-310, a human-approved decision registered at the Feature-Mode F2 gate — a deliberate,
+bundle. It also **reverses** D-188 (S-639-1's `--field`-alone exit-64 pre-flight guard) per
+D-310, a human-approved decision registered at the Feature-Mode F2 gate — a deliberate,
 documented un-guard, not a regression. `--on-behalf-of`'s own pre-flight guard (BC-3.8.013) is
 unchanged. A new ten-member dedicated-flag × `--field` collision guard (D2) prevents a `--field`
 pair from silently colliding with a dedicated flag's wire key before any HTTP call.
@@ -40,16 +40,16 @@ graph TD
 <details>
 <summary><strong>Architecture Decision Record</strong></summary>
 
-### ADR: Reuse the edit-path dispatch machinery for create-path field resolution (DEC-310)
+### ADR: Reuse the edit-path dispatch machinery for create-path field resolution (D-310)
 
-**Context:** S-639-1 (DEC-188) shipped an exit-64 pre-flight guard rejecting `--field` on the
+**Context:** S-639-1 (D-188) shipped an exit-64 pre-flight guard rejecting `--field` on the
 platform create path entirely, on the premise that createmeta-driven resolution was out of
 scope for that cycle. The field-dx bundle subsequently built the full hinted-dispatch pipeline
 for the edit path (S-578-2) and JSM create path (S-578-3), leaving the platform create path as
 the only remaining `--field` surface still hard-blocked.
 
 **Decision:** Extend `resolve_edit_fields` with a createmeta-vs-editmeta source parameter
-instead of writing a second, independent resolution function, and remove the DEC-188 guard for
+instead of writing a second, independent resolution function, and remove the D-188 guard for
 `--field` specifically (not `--on-behalf-of`, which keeps its own unrelated guard).
 
 **Rationale:** One shared dispatch function means hint-kind parsing (`:option`/`:id`/`:name`/
@@ -60,7 +60,7 @@ maintained copies.
 **Alternatives Considered:**
 1. A separate `resolve_create_fields` function — rejected: duplicates ~600 LOC of dispatch logic
    for a source-only difference (createmeta GET vs editmeta GET).
-2. Leaving the DEC-188 guard in place and only building JSM-path support (already done in
+2. Leaving the D-188 guard in place and only building JSM-path support (already done in
    S-578-3) — rejected: leaves the platform path as a documented, permanent gap without a
    supporting rationale once the resolution machinery already exists.
 
@@ -96,7 +96,7 @@ Both dependencies (`S-580-1`, `S-578-2`) are merged to `develop`. This is the fi
 flowchart LR
     BC1[BC-3.3.010<br/>createmeta resolution algorithm] --> AC5[AC-005..008<br/>resolution steps]
     BC2[BC-3.3.011<br/>error taxonomy, 10 rows] --> AC12[AC-012<br/>taxonomy table]
-    BC3[BC-3.8.012<br/>DEC-188 guard REMOVED] --> AC2[AC-002<br/>no exit-64 pre-flight]
+    BC3[BC-3.8.012<br/>D-188 guard REMOVED] --> AC2[AC-002<br/>no exit-64 pre-flight]
     BC4[BC-3.8.013<br/>--on-behalf-of unchanged] --> AC3[AC-003/004<br/>standalone guard only]
     BC5[BC-3.4.014<br/>create echo amendment] --> AC13[AC-013<br/>field echo]
     AC5 --> T1[issue_create_field.rs]
@@ -116,7 +116,7 @@ flowchart LR
 | Metric | Value | Status |
 |--------|-------|--------|
 | `issue_create_field` (new suite) | 62 pass | PASS |
-| `issue_create_jsm` (inverted DEC-188 tests + regressions) | 107 pass | PASS |
+| `issue_create_jsm` (inverted D-188 tests + regressions) | 107 pass | PASS |
 | `issue_edit_field` (regression — shared `resolve_edit_fields`) | 90 pass | PASS |
 | Full workspace suite | green | PASS |
 | `cargo clippy -- -D warnings` | clean | PASS |
@@ -133,7 +133,7 @@ graph LR
     Full["Full Suite"]
 
     New -->|AC-005..019| Pass1["PASS"]
-    Inverted -->|DEC-188 test inversion| Pass2["PASS"]
+    Inverted -->|D-188 test inversion| Pass2["PASS"]
     Shared -->|resolve_edit_fields shared fn| Pass3["PASS"]
     Full --> Pass4["green"]
 
@@ -152,7 +152,7 @@ graph LR
   keys for `--points`/`--team`), POST-body wire-shape assertions (added Pass 4), the create-path
   echo (BC-3.4.014 amendment), and the negative regression pin for the documented
   display-name-spelling residual (AC-011).
-- `tests/issue_create_jsm.rs` carries the DEC-188 **test inversion** per BC-3.8.012's F3/F4
+- `tests/issue_create_jsm.rs` carries the D-188 **test inversion** per BC-3.8.012's F3/F4
   removal obligations: AC-1/3/5/7/9/10/11/13/17/18/19 were rewritten from exit-64 assertions to
   exit-0/createmeta-resolution assertions; AC-2/16/20 (`--on-behalf-of`-alone, unaffected) and
   AC-6/21 (JSM non-mis-fire) were left authoritative as-is; AC-12's help-text substring count
@@ -217,8 +217,8 @@ Reviewed via `gh pr diff 746` plus verification of the two reused HTTP functions
   `issue_type_id`) are percent-encoded via `urlencoding::encode` in the reused
   `get_issue_types_for_project`/`get_createmeta_fields`. Createmeta pagination is bounded
   by `MAX_CREATEMETA_PAGES` (CWE-400/770 guard).
-- **Auth/authorization exposure from the DEC-188 guard removal: NONE beyond the intended,
-  documented DEC-310 widening.** `resolve_against_createmeta` only sets fields present in
+- **Auth/authorization exposure from the D-188 guard removal: NONE beyond the intended,
+  documented D-310 widening.** `resolve_against_createmeta` only sets fields present in
   the createmeta response for the resolved project/issue-type; Jira's server-side
   field-level security still gates the actual create POST. `--on-behalf-of`'s guard is
   untouched; JSM dispatch fork untouched.
@@ -232,7 +232,7 @@ INFO/LOW (no action required): the D2 collision guard's documented non-firing re
 `--field description=X` cannot smuggle a description bypass (ADF `doc` type has no
 dispatch arm → exit 64); authorization for the platform `--field` path now rests entirely
 on Jira server-side enforcement, consistent with a thin-client design and the
-human-approved DEC-310 reversal.
+human-approved D-310 reversal.
 
 </details>
 
@@ -266,7 +266,7 @@ None — this ships as default CLI behavior, consistent with `jr`'s no-feature-f
 | BC-3.3.010 (resolution algorithm) | AC-005..008, AC-015 | `test_bc_3_3_010_*` in `issue_create_field.rs` | PASS |
 | BC-3.3.011 (error taxonomy) | AC-012 | `test_bc_3_3_011_error_taxonomy_all_10_rows` | PASS |
 | BC-3.4.014 (create echo amendment) | AC-013, AC-014 | `test_bc_3_4_014_*` | PASS |
-| BC-3.8.012 (DEC-188 reversal, CURRENT BEHAVIOR) | AC-002, AC-016 | `test_bc_3_8_012_*` | PASS |
+| BC-3.8.012 (D-188 reversal, CURRENT BEHAVIOR) | AC-002, AC-016 | `test_bc_3_8_012_*` | PASS |
 | BC-3.8.013 (unchanged) | AC-003, AC-004 | `test_bc_3_8_013_*`, `test_vp_578_019_*` | PASS |
 | D2 collision guard (Invariant 5) | AC-011 | `test_vp_578_021_*` (5 tests) | PASS |
 
@@ -310,7 +310,7 @@ pipeline-stages:
 adversarial-passes: 14
 story: S-578-4
 bundle: field-dx
-decisions: [DEC-310 (reverses DEC-188)]
+decisions: [D-310 (reverses D-188)]
 generated-at: "2026-08-31"
 ```
 

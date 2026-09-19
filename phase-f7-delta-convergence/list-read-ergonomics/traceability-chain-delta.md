@@ -47,7 +47,7 @@ functions (uncommitted `.factory` diff at report time).
 ## S-579-1 — `--updated-recent <duration>` on `issue list`
 
 **Story:** `.factory/stories/S-579-1-updated-recent-filter.md` · **PR #725** · squash `8291b471`
-**BCs:** BC-2.1.023 (new), BC-2.1.006 (amended), BC-2.1.007 (amended) · **VPs:** VP-UPDATED-RECENT-001, VP-UPDATED-RECENT-002 **[NEW 2026-08-24, DEC-306]**
+**BCs:** BC-2.1.023 (new), BC-2.1.006 (amended), BC-2.1.007 (amended) · **VPs:** VP-UPDATED-RECENT-001, VP-UPDATED-RECENT-002 **[NEW 2026-08-24, D-306]**
 
 | BC | AC | Test (verified present) | Code |
 |---|---|---|---|
@@ -57,10 +57,10 @@ functions (uncommitted `.factory` diff at report time).
 | BC-2.1.023 postcondition 3 / EC-2.1.023-3 (free composition) | AC-004 | `test_bc_2_1_023_issue_list_updated_recent_composes_freely_with_recent` | `src/cli/issue/list.rs::build_filter_clauses` |
 | BC-2.1.007 amendment (stable-order position) | AC-005 | `test_bc_2_1_007_issue_list_updated_recent_clause_ordering_after_recent_before_asset` (`tests/issue_commands.rs:~12083`, confirmed present) | `src/cli/issue/list.rs:1167-1170` |
 | BC-2.1.006 amendment (14→15 filter sources) | AC-006 | `test_bc_2_1_006_issue_list_no_filters_stderr_enumerates_15_sources` (`tests/issue_commands.rs:~12160`, confirmed present) | `src/cli/mod.rs:66` `NO_FILTERS_SPECIFIED_MSG` |
-| BC-2.1.023 postcondition 4 / EC-2.1.023-4 **[REWRITTEN 2026-08-24, DEC-306]** (alone-case mirrors `--recent`) | AC-007 | `test_bc_2_1_023_issue_list_updated_recent_alone_proceeds_like_recent` (`tests/issue_commands.rs:~12208`, confirmed present) | `src/cli/issue/list.rs:238-255` (guard **removed** by FIX-F5-LRE-1) |
+| BC-2.1.023 postcondition 4 / EC-2.1.023-4 **[REWRITTEN 2026-08-24, D-306]** (alone-case mirrors `--recent`) | AC-007 | `test_bc_2_1_023_issue_list_updated_recent_alone_proceeds_like_recent` (`tests/issue_commands.rs:~12208`, confirmed present) | `src/cli/issue/list.rs:238-255` (guard **removed** by FIX-F5-LRE-1) |
 | BC-2.1.023 postcondition 1 (field-swap fidelity) | AC-008 | `test_bc_2_1_023_issue_list_updated_recent_uses_updated_field_not_created` | `src/cli/issue/list.rs::build_filter_clauses` |
 
-**Adversarial passes:** per-story Step-4.5 CONVERGED (`done`, STORY-INDEX). **DEC-306
+**Adversarial passes:** per-story Step-4.5 CONVERGED (`done`, STORY-INDEX). **D-306
 amendment:** spec `bc-2-issue-read.md` amended (commit `2b0acfb0` on `factory-artifacts`); code
 fix delivered via **FIX-F5-LRE-1** (PR #733, squash `28596274`) — removed the dedicated
 `--updated-recent`-alone exit-64 guard, retained the terminal `all_parts.is_empty()` BC-2.1.006
@@ -141,7 +141,7 @@ PASS, `pr-reviewer` APPROVE (1 non-blocking NIT — mock symmetry, tracked as
 
 ```
 ADV-LRE-F5-A-MED-001 (F5 Round 1 finding, cycle-level)
-  -> DEC-306 (human ruling)
+  -> D-306 (human ruling)
   -> FIX-F5-LRE-1 (PR #733, squash 28596274)
        amends: BC-2.1.023 (postcondition 4 + EC-2.1.023-4 rewritten), spec bc-2-issue-read.md
        code:   src/cli/issue/list.rs (guard removed)

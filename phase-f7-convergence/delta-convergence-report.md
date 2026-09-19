@@ -20,7 +20,7 @@ gate_status: AWAITING HUMAN AUTHORIZATION — cycle-002 not yet marked closed
 **Cycle:** cycle-002, `feature_mode_bundle: field-dx`
 **Spec delta:** `bc-3-issue-write.md` v1.3.107 → v1.3.164 across the F2 evolution window
 (BC-3.4.026/027/028/029/030/031 new; BC-X.14.001..004 new in `cross-cutting.md`; BC-3.3.010/011
-new; BC-3.4.014/015/016/021 amended; BC-3.8.012 REVERSED in place under DEC-310, BC-3.8.013
+new; BC-3.4.014/015/016/021 amended; BC-3.8.012 REVERSED in place under D-310, BC-3.8.013
 amended alongside). BC-INDEX total 719, unchanged since F2 close of this bundle.
 
 **Stories delivered (5, all `done` and MERGED to `develop`):**
@@ -31,7 +31,7 @@ amended alongside). BC-INDEX total 719, unchanged since F2 close of this bundle.
 | S-580-1 | `jr field options <field>` — M1/M2/M3 context-mechanism resolution | 8 | #740 | `74221bbc` | #580 |
 | S-578-2 | `issue edit --field` hint-kind dispatch + cascading select + dry-run | 13 | #741 | `a3739763` | #578 part 3 |
 | S-578-3 | JSM `issue create --field` hint-kind uniformity | 8 | #742 | `41763ff0` | #578 part 4 |
-| S-578-4 | Platform `issue create --field` path — createmeta resolution, reverses DEC-188 | 13 | #746 | `ae8514b8` | #578 part 5 |
+| S-578-4 | Platform `issue create --field` path — createmeta resolution, reverses D-188 | 13 | #746 | `ae8514b8` | #578 part 5 |
 
 Plus three feature-level fix PRs (F5/F6/F7 scoped adversarial and hardening remediation):
 
@@ -39,7 +39,7 @@ Plus three feature-level fix PRs (F5/F6/F7 scoped adversarial and hardening reme
 |---|---|---|
 | FIX-F5-001 | `get_issue_types_for_project` pagination-termination bound + total-absent heuristic (mirrors `get_createmeta_fields`); F5 sole MEDIUM finding | #747, `4e4ae4f5` |
 | FIX-F6-001 | `.cargo/mutants.toml::examine_globs` gained `field.rs` + `field_resolve.rs` (18→20); policy §Scope citations updated | #749, `dd311e13` |
-| FIX-F7-001 | `create.rs` size-deviation CLAUDE.md write-up + DEC-310 pre-flight note + field-dx CHANGELOG entries (documentation-only) | #750, `2000c455` |
+| FIX-F7-001 | `create.rs` size-deviation CLAUDE.md write-up + D-310 pre-flight note + field-dx CHANGELOG entries (documentation-only) | #750, `2000c455` |
 
 **`develop` HEAD:** `2000c455`. **`activation_version`:** `v0.7.0-dev.2` (unchanged, re-derived
 and confirmed against `Cargo.toml` at `2000c455`).
@@ -118,7 +118,7 @@ with this repository's standing count across recent cycles.
 ## 4. Traceability Chain
 
 Full 4-level chain (BC → VP → test → src) for all field-dx BCs across the 5 stories, plus the
-DEC-310/DEC-188 reversal cross-reference, the S-578-4→S-580-1/S-578-2 dependency chain, and the
+D-310/D-188 reversal cross-reference, the S-578-4→S-580-1/S-578-2 dependency chain, and the
 shared `field_resolve.rs` module note, is at:
 
 **`.factory/phase-f7-convergence/traceability-chain-delta.md`**

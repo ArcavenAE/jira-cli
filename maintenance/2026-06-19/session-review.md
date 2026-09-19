@@ -435,7 +435,7 @@ a maintenance sweep.
 **Action:** Create `scripts/check-claude-md-citations.sh` that extracts all path-like
 references in CLAUDE.md matching `.factory/research/*.md`, `docs/adr/*.md`, and
 `docs/specs/*.md` patterns, then verifies each exists on disk. Add to CI alongside the
-existing three count guard scripts. Wire into `ci-gate.needs` per DEC-096/097 (no direct
+existing three count guard scripts. Wire into `ci-gate.needs` per D-096/097 (no direct
 branch protection wiring).
 
 **Risk:** LOW. Read-only script; no behavioral change. False positives possible if CLAUDE.md

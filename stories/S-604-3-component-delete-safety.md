@@ -68,7 +68,7 @@ last_updated: "2026-08-15"
 breaking_change: false
 retroactive: false
 origin: >
-  GitHub issue #604 (`jr component list/create/edit/delete`), delete-safety facet (DEC-279).
+  GitHub issue #604 (`jr component list/create/edit/delete`), delete-safety facet (D-279).
   Split from S-604-2 into its own story because `component delete` is irreversible (no
   trash/archive/undelete endpoint exists — research §Q1.2) with an unconfirmed audit trail
   (§Q1.3), demanding a dedicated disposition-required guard, a JQL pre-delete snapshot with
@@ -91,7 +91,7 @@ input-hash: "908b782"
 > before-DELETE) must be pinned by a mutation-resistant wiremock assertion, not merely a
 > happy-path test.
 
-# S-604-3: `jr component delete` — disposition-required, snapshot-before-delete safety (DEC-279)
+# S-604-3: `jr component delete` — disposition-required, snapshot-before-delete safety (D-279)
 
 ## Narrative
 
@@ -133,7 +133,7 @@ Also read `research/component-delete-and-bulk-wire-2026-08-15.md` §Q1 and **ADR
   names BOTH flags, ZERO `DELETE`/snapshot-search calls. Both supplied → clap
   `conflicts_with` mutual exclusion, exit 2 — implemented as a clap mechanism for the
   both-case, but the NEITHER-case MUST be an application-level `JrError::UserError` check
-  (NOT a clap `ArgGroup::required(true)`, which would wrongly produce exit 2 — DEC-188 class,
+  (NOT a clap `ArgGroup::required(true)`, which would wrongly produce exit 2 — D-188 class,
   mechanically identical to BC-8.3.005's `--project`/`--all-projects` split). The `NAME|ID`
   not-found check (§8.4) fires and is reported BEFORE this disposition guard for a NAME input
   — but for a NUMERIC `NAME|ID` with neither flag supplied, there is NO HTTP call available in
@@ -201,7 +201,7 @@ Also read `research/component-delete-and-bulk-wire-2026-08-15.md` §Q1 and **ADR
 `--move-to <NAME|ID>` and `--orphan`, ZERO `DELETE`/snapshot-search calls (VP-COMPONENT-003).
 **Test:** `test_bc_8_2_001_component_delete_neither_flag_exits_64_zero_http()`
 
-### AC-002 (traces to BC-8.2.001 postcondition 2 / DEC-188 mechanism)
+### AC-002 (traces to BC-8.2.001 postcondition 2 / D-188 mechanism)
 `--move-to X --orphan` together → clap exit 2 (mutual exclusion), before any resolution or
 HTTP. The neither-flag case (AC-001) is produced by an application-level guard, NOT a clap
 `ArgGroup::required(true)` (which would wrongly exit 2).
@@ -403,7 +403,7 @@ dispatch rather than force-fitting.
 
 | Rule | Source | Enforcement |
 |------|--------|--------------|
-| Disposition-required NEITHER-case is an application-level `JrError::UserError` (exit 64), NEVER a clap `ArgGroup::required(true)` (which produces exit 2) | BC-8.2.001 Postcondition 3, DEC-188 | AC-001, AC-002 |
+| Disposition-required NEITHER-case is an application-level `JrError::UserError` (exit 64), NEVER a clap `ArgGroup::required(true)` (which produces exit 2) | BC-8.2.001 Postcondition 3, D-188 | AC-001, AC-002 |
 | Snapshot JQL is ALWAYS `component = <resolvedId> ORDER BY key ASC`, NEVER a bare-name clause | BC-8.2.007 Postcondition 4 | AC-017 |
 | Snapshot pagination MUST run to full completion; ANY non-normal-completion outcome (including the anti-loop guard's successful partial return) is fail-closed | BC-8.2.007 Postcondition 5 | AC-018, AC-019 |
 | Numeric-source/target confirming GET is a SINGLE-object GET, never a name-list GET — reuses the existing numeric-bypass confirming call, not a new HTTP shape | ADR-0018 Decision §1 | Code review; wiremock route assertions |

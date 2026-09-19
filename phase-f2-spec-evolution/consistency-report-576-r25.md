@@ -87,7 +87,7 @@ traces_to: ".factory/specs/prd/BC-INDEX.md"
 | — | Residue scan: no live "255-byte cap" claims; no en-dash `–-public`; no "two consumers" | pass |
 | — | Residue scan: no stale ungated `--replace-existing` language | pass |
 | — | Residue scan: no stale holdout 97 in primary counting artifacts | pass |
-| — | State.md: three DEC-179/BC estimate sites say 33 and are internally consistent | pass (INFO-8) |
+| — | State.md: three D-179/BC estimate sites say 33 and are internally consistent | pass (INFO-8) |
 | — | Guard: check-spec-counts.sh exits 0 | pass |
 | — | Guard: check-bc-cumulative-counts.sh exits 0 | pass |
 | INFO-1..4 | Carry-forward cosmetics from R21/R22/R23 | carry-forward |
@@ -281,7 +281,7 @@ Both guards exit 0. No count drift.
 >
 > **Spec impact**: BC-3.9.017 step 2 rewritten (P15-002); EC-3.9.017-9..12 added; BC-3.9.014 expanded to THREE consumers; EC-3.9.003-5 extended; EC-3.9.020-7 extended; BC-3.9.018 zero-match alignment noted; VP-576-003 `--yes` rationale updated; H-NEW-ATTACHMENT-010 added (holdouts 97→98).
 
-**Result**: R3.12 section present. Ruling text covers all gate variants (interactive/non-interactive/combined/--yes/zero-match/dry-run). DEC-180 precedent basis cited. Spec impact summary matches all verified changes. ADDED ✓
+**Result**: R3.12 section present. Ruling text covers all gate variants (interactive/non-interactive/combined/--yes/zero-match/dry-run). D-180 precedent basis cited. Spec impact summary matches all verified changes. ADDED ✓
 
 ---
 
@@ -483,7 +483,7 @@ VP count 33 (unchanged from P14). Verified via:
 
 The task required verification that the PO's correction of the bundle new-BC estimate (~27 → 33) landed at THREE sites in STATE.md and is internally consistent.
 
-**Site 1** — DEC-179 row (STATE.md line 100):
+**Site 1** — D-179 row (STATE.md line 100):
 
 > (9) scale: 5 stories, 1 wave, ~27 new behavioral contracts estimated **(actual delivered: 33; Sections 2.7/3.9/X.8, 624→657)**
 
@@ -621,8 +621,8 @@ _This report covers spec-evolution artifact drift only (F2 patch round). Impleme
 | CANONICAL-COUNTS.md | — | consistent | Group 19 updated to ..010; holdout total 98 |
 | spec-changelog.md | [1.3.55] added | consistent | Impact table matches all P15 changes |
 | prd-delta-576.md | spec_version_after 1.3.55, holdout_count_after 98 | consistent | P15 section complete; all 9 findings dispositioned |
-| impact-boundary-576.md | R3.12 section added | consistent | Gate ruling, DEC-180 precedent basis, spec impact summary |
-| STATE.md | live rows NOT updated for P15 | STALE (INFO-8) | DEC-179/BC estimate corrections (three sites, ~27→33) are correct; live status rows (current_step, Current Phase, pipeline tracker) still show v1.3.54 / 97 holdouts |
+| impact-boundary-576.md | R3.12 section added | consistent | Gate ruling, D-180 precedent basis, spec impact summary |
+| STATE.md | live rows NOT updated for P15 | STALE (INFO-8) | D-179/BC estimate corrections (three sites, ~27→33) are correct; live status rows (current_step, Current Phase, pipeline tracker) still show v1.3.54 / 97 holdouts |
 | prd-delta-576-worklog.md | last entry P13 | STALE (INFO-9) | P14/P15 entries absent; worklog diverged from prd-delta-576.md at P14 |
 
 ---
@@ -648,7 +648,7 @@ The following INFO-level annotation gaps remain or are newly identified; none af
 - **INFO-5 — RESOLVED** (was R23, resolved P14): `bc-3-issue-write.md` footer was stale; corrected by P14. Carry-forward note only for audit trail.
 - **INFO-6** (carry-forward R23/R24): No holdout for the collision-skip exit-0 path (re-run `--all` on an issue where files were already downloaded → all skip → exit 0, empty `downloaded` array). Not introduced or worsened by P15.
 - **INFO-7** (carry-forward R24): `BC-INDEX.md` BC-3.9.020 row summary uses `attachment delete --dry-run:` as its lead text, while the BC body was retitled at P14-010 to include upload path (c). Cosmetic BC-INDEX summary inconsistency; authoritative BC body is correct. Not worsened by P15.
-- **INFO-8** (NEW R25): `STATE.md` live status rows were **NOT updated** for the P15 pass. The `current_step` field (line 15) still reads spec v1.3.54, holdouts 97, VP 33; the "Current Phase" row (line 43) still shows "Spec v1.3.54. BC 657. Holdouts 97. VP 33." and the pipeline tracker row (line 57) ends at P14. The task explicitly directed "do not edit STATE.md yourself." This is a protocol deviation — state-manager ordinarily updates STATE.md at each fix round. The DEC-179/BC estimate corrections (three sites, ~27→33) are confirmed correctly landed. STATE.md stale status is non-blocking for the spec validation.
+- **INFO-8** (NEW R25): `STATE.md` live status rows were **NOT updated** for the P15 pass. The `current_step` field (line 15) still reads spec v1.3.54, holdouts 97, VP 33; the "Current Phase" row (line 43) still shows "Spec v1.3.54. BC 657. Holdouts 97. VP 33." and the pipeline tracker row (line 57) ends at P14. The task explicitly directed "do not edit STATE.md yourself." This is a protocol deviation — state-manager ordinarily updates STATE.md at each fix round. The D-179/BC estimate corrections (three sites, ~27→33) are confirmed correctly landed. STATE.md stale status is non-blocking for the spec validation.
 - **INFO-9** (NEW R25): `prd-delta-576-worklog.md` has no entries for P14 or P15 fix rounds. The worklog ends at P13 (line ~ending). P14 and P15 fix-round dispositions are recorded only in `prd-delta-576.md`. This split is cosmetically inconsistent — earlier passes (P1–P13) used both artifacts in tandem — but non-blocking. The `prd-delta-576.md` P15 section is complete and accurate.
 
 ---
@@ -686,4 +686,4 @@ This report was produced by a fresh-context consistency validator (cv-f2-576-r25
 4. **R3.12 keystone**: Seven keystone checks (gate mechanics ↔ consumers, guard order, EC-3.9.003-5 suppression, EC-3.9.020-7 all-consumers, BC-3.9.018 zero-match, EOF branch inheritance, H-004/H-010 complementary coverage) traced through artifact text.
 5. **Guard scripts**: Both `check-spec-counts.sh` and `check-bc-cumulative-counts.sh` executed and verified "OK".
 6. **Count sweep**: BC (657), holdout (98), VP (33) verified across all relevant surfaces.
-7. **STATE.md**: Three DEC-179 BC estimate sites verified (all say 33, arithmetic 12+20+1=33 confirmed); live status rows noted as stale (INFO-8).
+7. **STATE.md**: Three D-179 BC estimate sites verified (all say 33, arithmetic 12+20+1=33 confirmed); live status rows noted as stale (INFO-8).

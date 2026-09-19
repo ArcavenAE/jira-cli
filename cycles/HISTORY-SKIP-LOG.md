@@ -25,4 +25,4 @@
 | F6 Kani formal verification (cycle-004) | yes | Not set up in repo; proptest/unit substitution justified -- VP-AUTHDX-010..023 (all 14 new cycle-004 VPs) covered, 0 GAP. |
 | F6 cargo-fuzz (cycle-004) | yes | Not set up in repo; proptest arbitrary-input substitution justified -- 0 uncovered input surface. |
 | F6 DTU adversarial testing / accessibility re-check (cycle-004) | yes | `dtu_required: false`; `tenant_info` is a real endpoint, not a cloned DTU; `feature_type: backend`, no UI surface. |
-| REQUIRED manual Windows-11 physical smoke test (cycle-004, Burst 21) | superseded, not skipped | Human explicitly authorized the `windows-latest` CI runner (PR #776) as the verification path instead of a physical machine -- see DEC-342. |
+| REQUIRED manual Windows-11 physical smoke test (cycle-004, Burst 21) | superseded, not skipped | Human explicitly authorized the `windows-latest` CI runner (PR #776) as the verification path instead of a physical machine -- see D-342. |

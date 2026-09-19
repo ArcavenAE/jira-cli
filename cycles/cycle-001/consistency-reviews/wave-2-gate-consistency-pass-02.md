@@ -55,9 +55,9 @@ Both entries confirmed well-formed in STATE.md. No action required.
 
 ---
 
-## 3. DEC-012 Verification
+## 3. D-012 Verification
 
-DEC-012 is present and well-formed at `STATE.md:94`. Content:
+D-012 is present and well-formed at `STATE.md:94`. Content:
 
 - Description: "BC-7.3.004 mis-anchor repair: Option A (4 new sub-BCs)"
 - References: `.factory/research/wave-2-gate-decisions-research.md`
@@ -66,7 +66,7 @@ DEC-012 is present and well-formed at `STATE.md:94`. Content:
 - Date: 2026-05-08
 - Author: "human (final say) + research-agent"
 
-The research document itself (`wave-2-gate-decisions-research.md`) exists on disk. DEC-012 is structurally complete.
+The research document itself (`wave-2-gate-decisions-research.md`) exists on disk. D-012 is structurally complete.
 
 ---
 
@@ -287,7 +287,7 @@ Assign to S-3.06 or next Wave 3 doc-cleanup.
 - WV2-CV-01: `STATE.md:154` — RESOLVED
 - WV2-CV-02: `STATE.md:155` — RESOLVED
 - WV2-CV-07: `STATE.md:156` — RESOLVED
-- DEC-012: `STATE.md:94` — well-formed with research doc reference
+- D-012: `STATE.md:94` — well-formed with research doc reference
 - PASS
 
 ### STORY-INDEX S-2.07 BC anchor update (WV2-CV-04)

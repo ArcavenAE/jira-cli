@@ -1,1 +1,1 @@
-{"status":"pass","timestamp":"2026-09-18T22:29:43Z","command":"echo \"=== build_authorize_url body ===\" && sed -n '2164,2210p' src/api/auth.rs && echo \"\" && echo \"=== run the 16-scope pin test (client-side verification) ===\" && cargo test --lib default_oauth_scopes_pins_the_full_set_with_offline_access 2>&1 | tail -25"}
+{"status":"pass","timestamp":"2026-09-19T17:06:52Z","command":"cd /Users/zious/Documents/GITHUB/jira-cli/.worktrees/dec-to-d-decision-ids && cargo test 2>&1 | grep -E \"test result:\" | grep -v \" 0 failed\" ; echo \"checked-for-failures-done\""}

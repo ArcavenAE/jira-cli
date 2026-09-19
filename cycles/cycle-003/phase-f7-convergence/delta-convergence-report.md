@@ -27,7 +27,7 @@ sub-artifacts (cited inline) per this agent's governance-and-traceability scope.
 |---|---|
 | **Feature** | `auth-profile-dx` (cycle-003) — per-profile credential ownership, `env` tagging, OAuth-default-at-creation |
 | **Baseline → HEAD** | `87f17aff` (v0.7.0-dev.3 tag) → `202414f2` (`develop` tip) |
-| **Driving decisions** | DEC-313 through DEC-331 (see `traceability-chain-delta.md` for the full DEC→BC map) |
+| **Driving decisions** | D-313 through D-331 (see `traceability-chain-delta.md` for the full DEC→BC map) |
 | **Stories implemented** | 7/7 — `S-cycle3-env-tag` (PR #752 @ `4d0ae2d5`), `S-cycle3-percred-storage` (PR #755 @ `d3ba2726`), `S-cycle3-credential-absence-guard` (PR #756 @ `5c568d0f`), `S-cycle3-remove-logout-semantics` (PR #757 @ `5e9dba8a`), `S-cycle3-adr0011-newtype` (PR #758 @ `b7e513f9`), `S-cycle3-oauth-default-creation` (PR #761 @ `b70dd6f4`), `S-cycle3-chosen-flow-reconcile` (PR #762 @ `1dfcd013`) — all merged to `develop` |
 | **F5 fix PRs (adversarial refinement)** | PR #763 (`aafa9f9f`, login-switch relogin-then-replace MED) + PR #764 (`202414f2`, F5-refinement bundle: 1 MED + 3 LOW) |
 | **Spec delta** | 24 BCs (14 new + 10 amended), 9 VP-AUTHDX-001..009, 0 new ASM/R (unchanged this cycle) |
@@ -50,7 +50,7 @@ sub-artifacts (cited inline) per this agent's governance-and-traceability scope.
 
 One black-box observation, non-blocking: **H-W2-REG-003** (score 0.7) — `--verbose` shows a
 legacy-`email` existence PROBE (`get_password` call) issued when namespaced credentials are
-absent. This is the by-design DEC-326 `legacy_flat_pair_exists()` existence-check (never a
+absent. This is the by-design D-326 `legacy_flat_pair_exists()` existence-check (never a
 credential read/copy/use) — consistent with the keyring-gated VP-AUTHDX-005 coverage boundary
 and the F5 MED-2 documented reconciliation. Flagged in the holdout report for source/keyring-gated
 confirmation but does **not** breach the Dimension-5 gate. Full detail:
@@ -89,7 +89,7 @@ the documentation/index layer — zero shipped-code defects.**
 | MEDIUM | MED-1 | "41 total VPs" project-wide figure has no automated cross-check / single source of truth | **OUTSTANDING** — non-blocking for cycle-003's own VPs (all 9 independently verified) |
 | MEDIUM | MED-2 | Stale 6-wave labels in 2 story files' prose (edges/schedule itself correct) | **FIXED** |
 | LOW | LOW-1 | `chosen_flow_for_profile` "removed entirely" overclaim (function still exists, simplified) | **FIXED** |
-| LOW | LOW-2 | Stale pre-DEC-315 comment in `logout.rs` | **OUTSTANDING** (doc nit) |
+| LOW | LOW-2 | Stale pre-D-315 comment in `logout.rs` | **OUTSTANDING** (doc nit) |
 | LOW | LOW-3 | CLAUDE.md omits `auth logout` stderr-notice detail | **OUTSTANDING** (doc nit) |
 | LOW | LOW-4 | BC-INDEX.md title paraphrase drift on BC-1.6.047 | **OUTSTANDING** (doc nit) |
 | LOW | LOW-5 | STORY-INDEX.md stale "Total rows: 133" headline (actual 168) | **FIXED** |

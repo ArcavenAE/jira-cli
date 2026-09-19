@@ -55,7 +55,7 @@ recommendation: READY-FOR-CLOSURE
 |---|---|---|---|
 | F5 criterion | STRICT | STRICT (human ruling 2026-07-23) | PASS |
 | Total F5 rounds | — | 14 | — |
-| Fix PRs (human-merged, DEC-173) | — | 8 (#644–#652 excl. #645) | — |
+| Fix PRs (human-merged, D-173) | — | 8 (#644–#652 excl. #645) | — |
 | Convergence window | CLEAN×3 | r12/r13/r14 CLEAN×3 | PASS |
 | Novel CRIT/HIGH findings at convergence | 0 | 0 | PASS |
 | Novel MEDIUM findings at convergence | 0 | 0 | PASS |
@@ -101,7 +101,7 @@ Lowest story kill rate: S-576-2 (download, 94%) and S-576-5 (JSM, 94%). Both abo
 | VPs discharged | 5/5 | VP-576-001 (proptest path-traversal, 4096 cases), VP-576-002 (delete confirm+cancel gate), VP-576-003 (DELETE-before-POST ordering), VP-576-004 (curated JSON cross-path, list+upload halves), VP-576-005 (JSM combined gate) — all GREEN | PASS |
 | Fuzz inputs (D2 hardening) | — | 49,152 inputs; 0 panics, 0 crashes, 0 timeouts | PASS |
 | cargo-audit | 0 vulns | 0 advisory vulnerabilities | PASS |
-| cargo-deny | all-ok | all-ok (DEC-185: sha1/cpufeatures skip authorized) | PASS |
+| cargo-deny | all-ok | all-ok (D-185: sha1/cpufeatures skip authorized) | PASS |
 | Regression baseline | 2,319 (pre-wave) | 2,341 passed / 0 failed | PASS |
 
 **VP allocation across stories:** VP-576-001 anchored in S-576-2 (proptest discharge) with S-576-1 as earliest-consumer; VP-576-002 in S-576-4; VP-576-003 in S-576-3 (DELETE-before-POST ordering, `test_vp_576_003_delete_before_post_ordering_invariant`, lines 1917–2014 of `tests/attachment_upload.rs`); VP-576-004 in S-576-1 (list half) + S-576-3 (upload-POST half) per R3.13 earliest-consumer; VP-576-005 in S-576-5 (combined `--replace-existing --public` single-prompt gate, `tests/attachment_jsm.rs`).
@@ -137,7 +137,7 @@ Lowest story kill rate: S-576-2 (download, 94%) and S-576-5 (JSM, 94%). Both abo
 **Delta:** +22 tests (5 new test suites + augmented e2e_live.rs)
 **Source:** F6 hardening summary D1 dimension (formal verification run); no regressions in any of the 8 F5 fix PR CI runs
 
-All 8 F5 fix PRs (FIX-F5-006 through FIX-F5-013) passed CI gate on `develop` before merge. Human merge authority (DEC-173) applied to all. No CI failures post-merge.
+All 8 F5 fix PRs (FIX-F5-006 through FIX-F5-013) passed CI gate on `develop` before merge. Human merge authority (D-173) applied to all. No CI failures post-merge.
 
 ---
 
@@ -145,7 +145,7 @@ All 8 F5 fix PRs (FIX-F5-006 through FIX-F5-013) passed CI gate on `develop` bef
 
 **Cost-tracker:** not instrumented (qualitative assessment follows)
 
-**F5 cost:** 14 adversarial rounds, 8 fix PRs, spec v1.3.99 → v1.3.106 (8 spec versions). All fix PRs human-merged (DEC-173). Step-7 secondary review added one cross-model unique finding.
+**F5 cost:** 14 adversarial rounds, 8 fix PRs, spec v1.3.99 → v1.3.106 (8 spec versions). All fix PRs human-merged (D-173). Step-7 secondary review added one cross-model unique finding.
 
 **F5 benefit:** The 14 rounds caught:
 - 1 HIGH (r3): `classify_write_error` call-site canonicalization that would have produced inconsistent error strings across download paths

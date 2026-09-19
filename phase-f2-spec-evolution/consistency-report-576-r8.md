@@ -103,7 +103,7 @@ Prior-round regressions: none detected. R6 findings R6-001..R6-004 remain resolv
 | spec-changelog.md [1.3.45] bc/holdout deltas | 651→657 / 88→95 | ✓ |
 | ADR-0017 status | Accepted 2026-07-15 | ✓ |
 | ARCH-INDEX.md ADR-0017 entry | present | ✓ |
-| adr-index.md ADR-0017 entry | "Accepted (2026-07-15; gate DEC-179 item 7)" | ✓ |
+| adr-index.md ADR-0017 entry | "Accepted (2026-07-15; gate D-179 item 7)" | ✓ |
 
 ---
 

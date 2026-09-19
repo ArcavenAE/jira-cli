@@ -21,7 +21,7 @@ trivial_scope: no
 
 ## 1. Background
 
-DEC-132 recorded that the `mutants` CI job for PR #553 (SEC-001 ADF recursion guard) was cancelled at exactly 1 hour — the GitHub Actions job timeout — after evaluating 36 mutants from `src/adf.rs`. The job is currently NON-REQUIRED (absent from `ci-gate.needs`). Kill rate was proven locally (100%) via per-site flip verification rather than via CI.
+D-132 recorded that the `mutants` CI job for PR #553 (SEC-001 ADF recursion guard) was cancelled at exactly 1 hour — the GitHub Actions job timeout — after evaluating 36 mutants from `src/adf.rs`. The job is currently NON-REQUIRED (absent from `ci-gate.needs`). Kill rate was proven locally (100%) via per-site flip verification rather than via CI.
 
 The problem manifests as: a correctness guarantee (mutation kill-rate ≥ 90%) cannot be enforced by branch protection because the job that enforces it is too slow to be required.
 
@@ -133,7 +133,7 @@ The concurrent research agent file `.factory/research/mutation-ci-perf-2026-06-2
 
 **What:** Keep the job advisory (non-required), rely on local kill-rate verification for critical PRs (as was done for SEC-001), and add a visible CI artifact (outcomes.json annotation or PR comment) so the kill rate is surfaced even when not required.
 
-**Trade-off:** The kill-rate guarantee is not enforceable by branch protection. A contributor PR that reduces kill rate below 90% on `adf.rs` mutations will not be blocked. This is the current state per DEC-132.
+**Trade-off:** The kill-rate guarantee is not enforceable by branch protection. A contributor PR that reduces kill rate below 90% on `adf.rs` mutations will not be blocked. This is the current state per D-132.
 
 **When this is the right choice:** If the human wants zero risk of flaky-required-job, this is safe. But it means the mutation gate is effectively advisory-only.
 
@@ -157,7 +157,7 @@ The concurrent research agent file `.factory/research/mutation-ci-perf-2026-06-2
 2. **`ci.yml` mutants job:** Raise `timeout-minutes` from `60` to `90`.
    - Worst-case budget with 120s cap and 4 jobs: 80 mutants / 4 × 120s = 2,400s = 40 minutes. 90 minute ceiling provides comfortable headroom for build overhead, cache misses, and any unusually large diffs.
 
-3. **`ci-gate.needs` wiring:** Add `mutants` to `ci-gate.needs` per DEC-096/097.
+3. **`ci-gate.needs` wiring:** Add `mutants` to `ci-gate.needs` per D-096/097.
    - The `mutants` job already has `if: github.event_name == 'pull_request'`. The `ci-gate` job has `if: ${{ always() }}`. When `mutants` is in `ci-gate.needs`, a skipped `mutants` job (push event, not PR) must not fail ci-gate. This requires adding a `skipped` result to the ci-gate pass condition. Current ci-gate only checks for `failure` or `cancelled` — a `skipped` result is treated as success, which is correct. **No ci-gate logic change required** — `contains(needs.*.result, 'failure') || contains(needs.*.result, 'cancelled')` already passes when `mutants` is `skipped` on push events.
 
 4. **`docs/specs/cargo-mutants-policy.md`:** Update to reflect the new timeout parameters, the rationale for 120s absolute cap, and the promotion to required check.
@@ -175,7 +175,7 @@ The concurrent research agent file `.factory/research/mutation-ci-perf-2026-06-2
 
 ## 5. Required-Check Wiring Plan
 
-Per CLAUDE.md and DEC-096/097: **new required jobs must be added to `ci-gate.needs`, never wired directly into branch protection.**
+Per CLAUDE.md and D-096/097: **new required jobs must be added to `ci-gate.needs`, never wired directly into branch protection.**
 
 Current `ci-gate.needs`:
 ```yaml
@@ -260,7 +260,7 @@ This analysis classifies the scope as **standard** (not trivial) because it requ
 
 | Artifact | Change | BC Anchor |
 |----------|--------|-----------|
-| `.github/workflows/ci.yml` | `ci-gate.needs` + timeout | No dedicated BC; DEC-096/097 governs wiring |
+| `.github/workflows/ci.yml` | `ci-gate.needs` + timeout | No dedicated BC; D-096/097 governs wiring |
 | `.cargo/mutants.toml` | Timeout parameters | `docs/specs/cargo-mutants-policy.md` §CI Integration |
 | `docs/specs/cargo-mutants-policy.md` | Policy amendment | Self-governing policy doc |
 | MUTATION-CI-TIMEOUT drift item (STATE.md) | Close on completion | STATE.md Drift Items table |

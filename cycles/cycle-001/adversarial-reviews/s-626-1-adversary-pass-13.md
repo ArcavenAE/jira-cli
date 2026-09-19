@@ -153,7 +153,7 @@ This pass performed independent re-derivation of prior findings from primary art
 
 - **Evidence:** `S-576-1.md`, `S-576-2.md`, `S-576-3.md`, `S-576-4.md` frontmatter `status: ready`; `STORY-INDEX.md` same stories recorded as `completed`; `S-576-5.md` `status: delivered`; `S-576-6.md` `status: completed`.
 - **Proposed Fix:** Route as `S-MAINT-576-HYG-1` (separate story per human ruling). Scope: (a) reconcile status across all 6 S-576 files; (b) settle delivered vs completed as a lifecycle convention; (c) verify subsystem assignments against ARCH-INDEX registry for the full family; (d) add STORY-INDEX↔story-file coherence guard.
-- **Status:** ROUTED — S-MAINT-576-HYG-1 created as draft story per human ruling DEC-208.
+- **Status:** ROUTED — S-MAINT-576-HYG-1 created as draft story per human ruling D-208.
 
 ---
 

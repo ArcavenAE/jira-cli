@@ -21,7 +21,7 @@ bundle: SOH-DX-1
 aperture: holdout-falsifiability + channel-correctness
 spec_version: v1.3.166
 date: 2026-07-29
-basis: DEC-190 substitute (consistency-validator, not adversary agent)
+basis: D-190 substitute (consistency-validator, not adversary agent)
 isolation: sibling reviews not read
 ---
 
@@ -29,7 +29,7 @@ isolation: sibling reviews not read
 
 ## Aperture
 
-Adversarial verification of Group 20 (H-NEW-PREFLIGHT-001..H-NEW-PREFLIGHT-006) at spec v1.3.166. Six MUST-PASS scenarios covering the BC-3.8.012 / BC-3.8.013 pre-flight guards introduced by #639 / DEC-188: `--field` and `--on-behalf-of` exit 64 before any HTTP when used without `--request-type` on the platform create path. Focus: (1) would each scenario FAIL against the CURRENT (pre-implementation) build, (2) can each scenario PASS against a CORRECT implementation, (3) channel-correctness with emit-site citations, (4) verification of the [1.3.166] CRITICAL correction to H-NEW-PREFLIGHT-004.
+Adversarial verification of Group 20 (H-NEW-PREFLIGHT-001..H-NEW-PREFLIGHT-006) at spec v1.3.166. Six MUST-PASS scenarios covering the BC-3.8.012 / BC-3.8.013 pre-flight guards introduced by #639 / D-188: `--field` and `--on-behalf-of` exit 64 before any HTTP when used without `--request-type` on the platform create path. Focus: (1) would each scenario FAIL against the CURRENT (pre-implementation) build, (2) can each scenario PASS against a CORRECT implementation, (3) channel-correctness with emit-site citations, (4) verification of the [1.3.166] CRITICAL correction to H-NEW-PREFLIGHT-004.
 
 ## Perimeter
 

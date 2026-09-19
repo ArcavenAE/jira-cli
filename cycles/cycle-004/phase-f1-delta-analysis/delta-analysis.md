@@ -30,7 +30,7 @@ inputs:
   - ".factory/specs/prd/bc-1-auth-identity.md"
   - ".factory/specs/prd/bc-6-config-cache.md"
   - ".factory/specs/prd/BC-INDEX.md"
-traces_to: ".factory/STATE.md#DEC-334"
+traces_to: ".factory/STATE.md#D-334"
 input-hash: "b99507c"
 ---
 
@@ -61,7 +61,7 @@ Feature Mode cycle bundling two GitHub issues discovered on the same Windows 11 
   "auto-discovered", true only for the OAuth flow; the API-token flow leaves it unset, which
   matters more because #759 forces Windows users onto the API-token workaround.
 
-**Locked strategy (DEC-334, human-decided — not re-litigated here):**
+**Locked strategy (D-334, human-decided — not re-litigated here):**
 - **#759:** keyring-first with a **user-scope DPAPI-encrypted file fallback** under
   `%LOCALAPPDATA%` for oversized OAuth secrets (both access *and* refresh, written
   atomically as a pair), plus an **honest-fail backstop**: match `keyring::Error::TooLong(_,
@@ -81,7 +81,7 @@ Feature Mode cycle bundling two GitHub issues discovered on the same Windows 11 
 | Issue | Signal | Intent | Route |
 |-------|--------|--------|-------|
 | #759 | "bug", deterministic reproducible failure, root cause identified in the report itself, "Expected result" section names the defect | `bug-fix` | Standard bug-fix route (F1→F2→F3→F4→F5→F6→F7 — see §13; NOT the skip-F2/F3 simple-bug-fix shortcut, and NOT the CRITICAL expedited flow) |
-| #760 | "docs(windows):" title, "Suggested fix" sections, offers to open a PR for README changes only | `enhancement` (docs) | Near-trivial, folds into the same cycle's F2 spec-evolution as a documentation-only delta; independently would qualify for quick-dev but is bundled with #759's non-trivial work under DEC-334 |
+| #760 | "docs(windows):" title, "Suggested fix" sections, offers to open a PR for README changes only | `enhancement` (docs) | Near-trivial, folds into the same cycle's F2 spec-evolution as a documentation-only delta; independently would qualify for quick-dev but is bundled with #759's non-trivial work under D-334 |
 
 Bundle-level intent for STATE.md/routing purposes: **mixed bug-fix + docs**, driven by #759's
 severity and non-trivial scope (below).
@@ -105,12 +105,12 @@ severity and non-trivial scope (below).
 corrections to already-existing, already-shipped behavior), no architecture change, no new
 dependency, LOW regression risk (prose only, no `src/` change). In isolation this would
 qualify for quick-dev routing. It does not travel alone here because it is bundled with #759
-under the same `windows-correctness` cycle (DEC-334) and because its "cloud_id caveat" note
+under the same `windows-correctness` cycle (D-334) and because its "cloud_id caveat" note
 depends on a scope decision that also touches #759's territory (§12).
 
 **Bundle verdict: standard route, NOT quick-dev.** #759's non-trivial classification governs
 the bundle; #760 rides through F2 as a documentation-only delta scoped inside the same cycle
-rather than a separate quick-dev PR, per DEC-334's framing of this as one Feature Mode cycle.
+rather than a separate quick-dev PR, per D-334's framing of this as one Feature Mode cycle.
 
 ---
 
@@ -119,13 +119,13 @@ rather than a separate quick-dev PR, per DEC-334's framing of this as one Featur
 | Criterion | Assessment |
 |-----------|------------|
 | CRITICAL (production down / data loss / security breach) | **NO.** No data is lost — the OAuth authorization attempt fails cleanly with nothing persisted (`cmdkey /list` shows no `jr` entries per the report); no security boundary is crossed; nothing is corrupted. A dangling *server-side* grant is left at Atlassian, which is a cleanup/hygiene issue, not a breach. |
-| HIGH (major functionality broken, no workaround) | **Functionality: YES, major** — OAuth 2.0, the recommended default auth mechanism as of cycle-003 (DEC-313, `auth-profile-dx`), is **100% broken on Windows** — not degraded, not intermittent, deterministic on every attempt with the default scope set. **Workaround: YES, EXISTS** — the API-token flow works (reporter verified `jr me`, `jr project list`, `jr issue list/view/comments/changelog/transitions`, `jr queue list`, `jr requesttype list`, `--jql`, `--output json` all functional via API token). |
+| HIGH (major functionality broken, no workaround) | **Functionality: YES, major** — OAuth 2.0, the recommended default auth mechanism as of cycle-003 (D-313, `auth-profile-dx`), is **100% broken on Windows** — not degraded, not intermittent, deterministic on every attempt with the default scope set. **Workaround: YES, EXISTS** — the API-token flow works (reporter verified `jr me`, `jr project list`, `jr issue list/view/comments/changelog/transitions`, `jr queue list`, `jr requesttype list`, `--jql`, `--output json` all functional via API token). |
 | MEDIUM (functionality impaired, workaround exists) | Partially matches on the "workaround exists" clause alone, but understates the impact: this is not a degraded feature, it is the **default** recommended mechanism failing 100% of the time on an entire supported platform (Windows is a first-class release target per ADR-0016). |
 | LOW (minor/cosmetic/edge case) | Does not apply — this is neither cosmetic nor an edge case; it fires on the very first OAuth attempt for every Windows user with the default scope set. |
 
 **Classification: HIGH**, not CRITICAL, on the strength of the workaround — but flagged as
 **HIGH-with-elevated-urgency** for two reasons specific to this codebase's recent history:
-1. **Cycle-003 (`auth-profile-dx`, DEC-313, released as v0.7.0-dev.4 @ `42e92b46`, the exact
+1. **Cycle-003 (`auth-profile-dx`, D-313, released as v0.7.0-dev.4 @ `42e92b46`, the exact
    commit this cycle starts from) made OAuth the *default* auth mechanism at profile
    creation.** Before that change, a Windows user choosing API-token by habit would never hit
    this bug; after it, the *default* path for a brand-new Windows user now dead-ends unless
@@ -183,8 +183,8 @@ product.
 | Component | Description |
 |-----------|-------------|
 | **Windows DPAPI-encrypted-file secret-store module** (new file, likely `src/api/auth_dpapi_store.rs` or a `windows_secret_store` submodule of `src/api/auth.rs`) | User-scope `CryptProtectData`/`CryptUnprotectData` (never `CRYPTPROTECT_LOCAL_MACHINE`) wrapping a versioned-envelope encrypted blob per profile, holding the OAuth access+refresh pair together. Location: under `cache_root()` (`src/cache.rs:87`, already resolves to `%LOCALAPPDATA%\jr` on Windows via `dirs::cache_dir()` and already honors the `JR_CACHE_DIR` debug-only test-isolation seam) — reusing this existing path-resolution seam rather than inventing a new one is the architecturally consistent choice and gives the new store the same test-isolation story for free. `#[cfg(windows)]`-gated; a stub/no-op (or simply "never selected") on macOS/Linux, where the size-threshold router (below) never routes to it. |
-| **Size-threshold router** (new logic inside `src/api/auth.rs`, e.g. `store_oauth_tokens_sized`/an internal helper) | Decides, per secret, whether `keyring::Entry::set_password` is attempted first (small values keep using Credential Manager unchanged on all platforms) or the write falls through to the DPAPI file store. Per DEC-334 this is **keyring-first**: attempt the OS keychain, and only spill to the DPAPI file on a `keyring::Error::TooLong` — not a pre-flight length pre-check against a hardcoded byte budget (avoids duplicating/hardcoding `CRED_MAX_CREDENTIAL_BLOB_SIZE` outside the `keyring` crate's own validation). |
-| **Atomic access+refresh pair write/rollback logic** | DEC-334 requires access AND refresh to be written atomically as a pair (temp-write + rename per the research doc's recommendation), addressing the pre-existing partial-write risk the research doc flags in the CURRENT code too (`store_oauth_tokens` writes access then refresh with no atomicity today — a partial-write is already possible, DPAPI or not). This is new logic regardless of backend; on the keyring path "atomic" means both `set_password` calls succeed or the caller sees a clearly-labeled partial state (today's partial-state messaging in `load_oauth_tokens` — lines 314-343 — already models the "partial pair" shape and should be the template for the new write-side atomicity contract). |
+| **Size-threshold router** (new logic inside `src/api/auth.rs`, e.g. `store_oauth_tokens_sized`/an internal helper) | Decides, per secret, whether `keyring::Entry::set_password` is attempted first (small values keep using Credential Manager unchanged on all platforms) or the write falls through to the DPAPI file store. Per D-334 this is **keyring-first**: attempt the OS keychain, and only spill to the DPAPI file on a `keyring::Error::TooLong` — not a pre-flight length pre-check against a hardcoded byte budget (avoids duplicating/hardcoding `CRED_MAX_CREDENTIAL_BLOB_SIZE` outside the `keyring` crate's own validation). |
+| **Atomic access+refresh pair write/rollback logic** | D-334 requires access AND refresh to be written atomically as a pair (temp-write + rename per the research doc's recommendation), addressing the pre-existing partial-write risk the research doc flags in the CURRENT code too (`store_oauth_tokens` writes access then refresh with no atomicity today — a partial-write is already possible, DPAPI or not). This is new logic regardless of backend; on the keyring path "atomic" means both `set_password` calls succeed or the caller sees a clearly-labeled partial state (today's partial-state messaging in `load_oauth_tokens` — lines 314-343 — already models the "partial pair" shape and should be the template for the new write-side atomicity contract). |
 
 ### 5.2 MODIFIED components
 
@@ -206,7 +206,7 @@ product.
 |-----------|---------------|----------------|
 | `refresh_with_single_flight` | `src/api/refresh_coordinator.rs:99` | Calls a `refresh_fn` closure that ultimately bottoms out in `refresh_oauth_token_with_url`'s `store_oauth_tokens` call (site 3 above) — its own logic (single-flight locking, cached-result short-circuit) is unaffected, but its error propagation surfaces whatever `store_oauth_tokens`/the router now returns. No code change expected here, but its test coverage is in the regression-risk zone (§10) because the underlying call it wraps is changing shape. |
 | `login_oauth` CLI handler | `src/cli/auth/login.rs` (`oauth_login` caller) | Presents the browser flow and reports `OAuthResult`/errors to the user; must not need its own changes if `oauth_login`'s error message is fixed at the source, but its interactive/`--no-input` output-channel tests are regression-risk. |
-| `refresh_credentials` CLI handler | `src/cli/auth/refresh.rs` (relogin-then-replace flow, DEC-321/BC-1.2.051) | Calls into the same storage functions; the "obtain-first, then unconditional overwrite" (relogin-then-replace) invariant this handler depends on must continue to hold once the storage layer gains a second backend — i.e., the new atomic-pair-write logic must preserve "never destroys the old credential until the new one's write has fully succeeded", which is the exact property `refresh_credentials` was redesigned around in cycle-003 (DEC-321, PR #762). |
+| `refresh_credentials` CLI handler | `src/cli/auth/refresh.rs` (relogin-then-replace flow, D-321/BC-1.2.051) | Calls into the same storage functions; the "obtain-first, then unconditional overwrite" (relogin-then-replace) invariant this handler depends on must continue to hold once the storage layer gains a second backend — i.e., the new atomic-pair-write logic must preserve "never destroys the old credential until the new one's write has fully succeeded", which is the exact property `refresh_credentials` was redesigned around in cycle-003 (D-321, PR #762). |
 | `handle_logout` / `handle_remove` | `src/cli/auth/logout.rs`, `src/cli/auth/remove.rs` | Depend on `clear_profile_oauth_pair`/`clear_profile_creds` correctly cleaning up whichever backend the credential actually landed in — no CLI-layer code change expected, but their existing tests assert on keyring-only state today and must be extended (not rewritten) to also assert DPAPI-file absence post-clear. |
 | `status()` | `src/cli/auth/status.rs:145` (`auth::load_oauth_tokens(&target_profile).is_ok()`) | Presence check only — depends on `load_oauth_tokens` correctly reporting "present" for a DPAPI-file-backed token, or `auth status` will falsely report "not authenticated" for exactly the users this fix is meant to help. |
 | `JiaClient::from_config` / `JiaClient::send` (401 reconcile path) | `src/api/client.rs:131, 816, 875` | Three call sites reading `load_oauth_tokens` for the auth header and for post-refresh reconciliation — all three must see a DPAPI-file-backed token identically to a keyring-backed one; no logic change expected here beyond the shared `load_oauth_tokens` fix propagating up. |
@@ -483,7 +483,7 @@ Justification for F3 (incremental stories) being necessary:
 2. **`honest-fail-message`** — replace the four "Unlock your keychain" sites' error handling
    per §5.2, matching `keyring::Error::TooLong` specifically and making the grant-revoke step
    explicit/required. Can be delivered independently of story 1 (it's a strict improvement
-   even before the DPAPI fallback exists, and DEC-334 explicitly treats it as its own
+   even before the DPAPI fallback exists, and D-334 explicitly treats it as its own
    backstop) — consider sequencing this FIRST as a smaller, faster, immediately-shippable
    safety net while story 1's larger surface goes through more scrutiny.
 3. **`windows-docs`** — #760's README changes (install steps, `Unblock-File` note,

@@ -60,7 +60,7 @@ re-verified in place — no regression.
   VP-COMPONENT-017 now name the same concrete exit-1 mechanism consistently (superseded text
   retained inline for audit trail per this repo's append-only convention).
 
-#### P14-LOW-2: Missing Error Taxonomy row for the `--component` + `--request-type` M11/DEC-188 guard
+#### P14-LOW-2: Missing Error Taxonomy row for the `--component` + `--request-type` M11/D-188 guard
 
 - **Severity:** LOW
 - **Category:** spec-delta completeness / taxonomy coverage
@@ -69,7 +69,7 @@ re-verified in place — no regression.
   EC-3.4.024-3 (~L2688-2704), VP-COMPONENT-025.
 - **Description:** The prd-delta Error Taxonomy table (the delta exit-code catalog, re-synced
   pass-7) enumerates every sibling `--component` exit-64 path (unresolvable/ambiguous name,
-  cross-project bulk, Gate B, label conflict) but omitted the M11/DEC-188 `issue create
+  cross-project bulk, Gate B, label conflict) but omitted the M11/D-188 `issue create
   --component` combined with `--request-type` guard — a distinct exit-64 path with its own
   message and its own VP coverage (VP-COMPONENT-025). A reviewer or F4 implementer enumerating
   exit-64 paths for coverage from this table alone would miss it.
@@ -93,7 +93,7 @@ re-verified in place — no regression.
   Postcondition 6, Invariant 1, VP-COMPONENT-012) was unambiguous, but the normative
   postcondition text itself was internally contradictory. An implementer reading Postcondition 3
   in isolation could build a single coalesced POST, silently dropping or malforming the REMOVE
-  action — the same defect class `BUG-LABEL-400`/`FIX-BULK-TRANSITION-001` (DEC-280) exists to
+  action — the same defect class `BUG-LABEL-400`/`FIX-BULK-TRANSITION-001` (D-280) exists to
   prevent.
 - **Proposed Fix:** Remove the "TWO coalesced entries in a single POST — mirroring ...
   coalescing convention" framing; state only the mirrored ADD-then-REMOVE ORDERING (not

@@ -10,7 +10,7 @@ status: pending-adjudication
 
 # Improvement Proposals: SOH-ATTACHMENTS-1 (issues #576 + #585)
 
-**72h review window opens 2026-07-25. Adjudication by human; routing to drbothen/vsdd-factory per DEC-164 precedent.**
+**72h review window opens 2026-07-25. Adjudication by human; routing to drbothen/vsdd-factory per D-164 precedent.**
 
 All proposals are classified as ENGINE (vsdd-factory prompt templates, skill checklists, agent configs), REPO (jira-cli product repo backlog), or LESSON (lessons.md codification already done; routing for awareness only). None of the ENGINE proposals require product source changes.
 
@@ -124,9 +124,9 @@ This is the same item as IP-577-05 (routed to vsdd-factory #649 on 2026-07-15). 
 
 **Category:** workflow
 **Priority:** LOW
-**Evidence:** RELEASING-MD-MISSING has been an open Drift Item since SOH-BUGS-1 closed on 2026-07-09 (DEC-167). Four subsequent releases (dev.8, dev.9, dev.10, dev.11) ran using an undocumented procedure reconstructed from DEC precedents each time. The release skill prompts interactively on every release precisely because no repo-level procedure document exists.
+**Evidence:** RELEASING-MD-MISSING has been an open Drift Item since SOH-BUGS-1 closed on 2026-07-09 (D-167). Four subsequent releases (dev.8, dev.9, dev.10, dev.11) ran using an undocumented procedure reconstructed from DEC precedents each time. The release skill prompts interactively on every release precisely because no repo-level procedure document exists.
 
-**Recommendation:** Write `RELEASING.md` at the jira-cli repo root. Content: synthesize the dev.8 through dev.11 precedent flows from DEC-162/163/167/176/186 into a canonical step-by-step procedure. Include: (1) bump branch naming convention, (2) Cargo.toml version update, (3) PR target branch, (4) tag format and push command, (5) CI workflow check, (6) GitHub release assets expected. Can be done as a docs-only story in the next maintenance sweep.
+**Recommendation:** Write `RELEASING.md` at the jira-cli repo root. Content: synthesize the dev.8 through dev.11 precedent flows from D-162/163/167/176/186 into a canonical step-by-step procedure. Include: (1) bump branch naming convention, (2) Cargo.toml version update, (3) PR target branch, (4) tag format and push command, (5) CI workflow check, (6) GitHub release assets expected. Can be done as a docs-only story in the next maintenance sweep.
 
 **Affected components:** `RELEASING.md` (new file, jira-cli repo root).
 

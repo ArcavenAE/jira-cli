@@ -94,9 +94,9 @@ These reference 651 and 650, which were the correct values before Round B (+6 BC
 ### FINDING-R7-004 — INFO
 **File:** `.factory/specs/prd/BC-INDEX.md`
 **Location:** Line 794 (Coverage Statistics body-note, SOH-COMMENT-CRUD-1 entry)
-**Description:** The body-note says "+11 SOH-COMMENT-CRUD-1 added **2026-07-11..14** via DEC-168 comment delete/edit/view issue #577". This date contradicts two authoritative sources:
-- BC-INDEX.md frontmatter (line 4): "+11 added **2026-07-09** (BC-3.5.002..BC-3.5.012, SOH-COMMENT-CRUD-1 F2 DEC-168 comment delete/edit/view issue #577)"
-- CANONICAL-COUNTS.md Grand total note: "+11 BC-3.5.002..BC-3.5.012 added **2026-07-09** via SOH-COMMENT-CRUD-1 F2 DEC-168 comment delete/edit/view + CLI subcommand group issue #577"
+**Description:** The body-note says "+11 SOH-COMMENT-CRUD-1 added **2026-07-11..14** via D-168 comment delete/edit/view issue #577". This date contradicts two authoritative sources:
+- BC-INDEX.md frontmatter (line 4): "+11 added **2026-07-09** (BC-3.5.002..BC-3.5.012, SOH-COMMENT-CRUD-1 F2 D-168 comment delete/edit/view issue #577)"
+- CANONICAL-COUNTS.md Grand total note: "+11 BC-3.5.002..BC-3.5.012 added **2026-07-09** via SOH-COMMENT-CRUD-1 F2 D-168 comment delete/edit/view + CLI subcommand group issue #577"
 
 The body-note entry was added in Round R5 (closing NEW-R5-001: missing SOH-COMMENT-CRUD-1 row in the body table) with the wrong date "2026-07-11..14" instead of the canonical "2026-07-09".
 
@@ -160,7 +160,7 @@ BC-2.7.011 (CWE-22 path-traversal sanitization) independently verified to contai
 | spec-changelog.md [1.3.45] bc/holdout deltas | 651→657 / 88→95 | ✓ |
 | ADR-0017 status | Accepted 2026-07-15 | ✓ |
 | ARCH-INDEX.md ADR-0017 entry | Present ✓ | ✓ |
-| adr-index.md ADR-0017 entry | Present (Accepted 2026-07-15; gate DEC-179 item 7) | ✓ |
+| adr-index.md ADR-0017 entry | Present (Accepted 2026-07-15; gate D-179 item 7) | ✓ |
 
 ---
 

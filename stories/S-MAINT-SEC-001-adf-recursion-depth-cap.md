@@ -41,7 +41,7 @@ version: "1.1"
 last_updated: "2026-06-25"
 changelog:
   - "1.0 (2026-06-19): Initial draft — originated from 2026-06-19 maintenance sweep SEC-001 / CWE-674 (drift item; spec-coherence.md §3.2 row 11)."
-  - "1.1 (2026-06-25): Promoted to done — BC-7.2.012 authored by PO and shipped in PR #553 (merged to develop @ 35e20c9). Corrected constant name ADF_MAX_DEPTH → MAX_ADF_DEPTH and value 64 → 256 to match shipped reality (threshold revised during implementation/dual review per DEC-132)."
+  - "1.1 (2026-06-25): Promoted to done — BC-7.2.012 authored by PO and shipped in PR #553 (merged to develop @ 35e20c9). Corrected constant name ADF_MAX_DEPTH → MAX_ADF_DEPTH and value 64 → 256 to match shipped reality (threshold revised during implementation/dual review per D-132)."
 breaking_change: false
 lineage:
   - S-492   # adf.rs block-HTML hardBreak fix — established normalize_panel_content and is_empty_block_container patterns
@@ -143,7 +143,7 @@ iterative alternatives.
 
 | Rule | Source | Constraint |
 |------|--------|-----------|
-| Depth cap value | SEC-001 finding | Shipped as compile-time constant `const MAX_ADF_DEPTH: usize = 256;` (original draft proposed 64; revised to 256 during dual review per DEC-132 — a threshold decision balancing defense-in-depth against realistic deep-nesting from Jira's own editor). Document the constant with a comment citing CWE-674 and the pulldown-cmark implicit bound. |
+| Depth cap value | SEC-001 finding | Shipped as compile-time constant `const MAX_ADF_DEPTH: usize = 256;` (original draft proposed 64; revised to 256 during dual review per D-132 — a threshold decision balancing defense-in-depth against realistic deep-nesting from Jira's own editor). Document the constant with a comment citing CWE-674 and the pulldown-cmark implicit bound. |
 | Graceful behavior at cap | SEC-001 finding | At depth > `MAX_ADF_DEPTH`, return the shallowest safe result (e.g., skip further nesting, return `None` for the walk function, or return the current accumulated output for `render_node`). Do NOT panic. |
 | Prefer iterative conversion for `render_node` | SEC-001 finding | `render_node` / `adf_to_text` is the highest-risk function (called on every `jr issue view`). Prefer converting it to an explicit stack rather than adding a depth counter. Other functions (normalize_*) may use a depth counter parameter. |
 | No behavioral change in depth ≤ 256 | SEC-001 finding | All existing ADF unit tests (130+ in `adf::tests`) MUST continue to pass. The depth cap MUST NOT affect any real-world or synthetic test input that fits within the cap. |
@@ -162,7 +162,7 @@ No new library or framework dependencies. Uses only the Rust standard library.
 
 | File | Create / Modify | Description |
 |------|----------------|-------------|
-| `src/adf.rs` | MODIFY | Added `const MAX_ADF_DEPTH: usize = 256;` (original draft proposed 64; revised to 256 during implementation/dual review per DEC-132). Added depth counter parameter to `normalize_panel_content`, `normalize_list_item_content`. Converted `assign_local_ids_walk` and `autolink_bare_urls` to use depth counter or iterative form. Converted `render_node` to iterative stack. |
+| `src/adf.rs` | MODIFY | Added `const MAX_ADF_DEPTH: usize = 256;` (original draft proposed 64; revised to 256 during implementation/dual review per D-132). Added depth counter parameter to `normalize_panel_content`, `normalize_list_item_content`. Converted `assign_local_ids_walk` and `autolink_bare_urls` to use depth counter or iterative form. Converted `render_node` to iterative stack. |
 | `tests/adf_depth.rs` | CREATE | New test file: (1) a deeply nested JSON ADF structure (depth > 64 levels) passed to `adf_to_text` does not panic; (2) a moderately nested structure (depth ≤ 32) produces correct output; (3) `assign_local_ids` on a deep tree does not panic. |
 
 **Files NOT to touch:** `src/api/`, `src/cli/`, `tests/` (existing tests), CLAUDE.md (unless a gotcha note is warranted), `.factory/specs/`.
@@ -234,7 +234,7 @@ cargo test --lib adf
 ### AC-005 (SEC-001) — `MAX_ADF_DEPTH` constant is documented with CWE-674 reference
 
 The constant `MAX_ADF_DEPTH` in `src/adf.rs` carries a doc comment citing CWE-674 and
-explaining the rationale (defense-in-depth; value 256 chosen per DEC-132 dual review).
+explaining the rationale (defense-in-depth; value 256 chosen per D-132 dual review).
 
 **Verifiable by:**
 ```bash
@@ -256,7 +256,7 @@ grep -A3 'MAX_ADF_DEPTH' src/adf.rs
 
 ### Item 2: Add `const MAX_ADF_DEPTH: usize = 256;`
 
-- [x] Added constant near the top of `src/adf.rs` with a CWE-674 rustdoc comment (note: original proposal was 64; revised to 256 during implementation/dual review per DEC-132)
+- [x] Added constant near the top of `src/adf.rs` with a CWE-674 rustdoc comment (note: original proposal was 64; revised to 256 during implementation/dual review per D-132)
 - [x] `cargo build` exits 0
 
 ### Item 3: Add depth counter to `normalize_panel_content` and `normalize_list_item_content`

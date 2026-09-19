@@ -60,7 +60,7 @@ metrics_577:
   # Gate quality
   f6_findings_requiring_fix_pr: 0        # Clean gate; mutation adjudicated 100% (no fix-PR required)
   f4_pr_reviewer_approve_cycle: 1        # All PRs approved cycle 1 (docs-only review exception RETIRED)
-  f2_mid_cycle_checkpoints: 1            # DEC-169 pass-38 (--yes no-op + feature shape; research-validated)
+  f2_mid_cycle_checkpoints: 1            # D-169 pass-38 (--yes no-op + feature shape; research-validated)
 
   # Behavioral verification
   f7_holdout_mean_satisfaction: 1.00     # 5 MUST-PASS scenarios (H-NEW-COMMENT-001..005)
@@ -86,11 +86,11 @@ metrics_577:
   f2_fix_rounds: 48                      # 1 fix round per pass under STRICT (round-49 mechanical, non-convergence)
   f3_fix_rounds: ~6                      # Reconstructed from F3 adversary trajectory
   f4_waves: 4
-  f4_deviations_ratified: 4             # DEC-172 D1/D2/D3, DEC-174 dialoguer, DEC-175 visibility restore
+  f4_deviations_ratified: 4             # D-172 D1/D2/D3, D-174 dialoguer, D-175 visibility restore
   stop_on_deviation_violations: 2        # PG-F4-1 (wave A) + PG-F4-11 (wave D)
   resolved_by_shipping_fix_sweeps: 6     # 4 wave-C + 1 wave-D + 1 wave-D BC Source; 3 PRs/commits
   state_manager_monolithic_stalls: "3+"  # Recurring; Bash-python workaround now standard
-  human_gate_decisions: 9               # DEC-168..176
+  human_gate_decisions: 9               # D-168..176
 
   # Meta
   cost_summary_available: false          # cost-summary.md still not initialized; see IP-571-01 (3rd cycle)
@@ -131,14 +131,14 @@ metrics_cycle003:
 
   # Session-level (resume → release)
   session_calendar_days: 1                  # 2026-09-02 resume → 2026-09-03 release SHIPPED
-  human_gate_decisions_this_session: 2       # DEC-332 (F7 approval), DEC-333 (release authorization)
+  human_gate_decisions_this_session: 2       # D-332 (F7 approval), D-333 (release authorization)
   prs_merged_this_session: 2                 # #766 (docs fix), #767 (version bump)
   release_attempts: 1                        # release.yml run 33769389700 SUCCESS, first attempt
   background_task_kills_during_verification: ">=2"  # sub-agent background jobs + 1 main-loop job @ ~1600s (NEW pattern)
   hook_false_positives_this_session: 2       # validate-factory-path-staging + verify-git-push (NEW pattern)
   pr_reviewer_hook_conflicts_this_session: 1 # report-only dispatch vs. posting-hook (4th occurrence of hook-vs-dispatch-exception lineage)
   api_infra_failures_this_session: 1         # 529 overload, formal-verifier mid-run, recovered via resume
-  state_manager_monolithic_write_stalls: 0   # NOT observed this session — positive signal, DEC-247 discipline holding
+  state_manager_monolithic_write_stalls: 0   # NOT observed this session — positive signal, D-247 discipline holding
 
   # Meta
   cost_summary_available: false             # cost-summary.md still not initialized; 6th consecutive cycle, see IP-CYCLE003-01

@@ -95,7 +95,7 @@ producer: state-manager
   - #516 — FIX-F6-001: proptest property suite (test-only)
 - 7 fix PRs total in the F5/F6 remediation phase.
 - Post-F5: zero doc/test-only findings remain outstanding at CRIT/HIGH/MEDIUM severity.
-- Residual LOWs accepted per ADR-0016 and DEC-098: WIN-RUNTIME-OAUTH-PROBE (scope: OAuth
+- Residual LOWs accepted per ADR-0016 and D-098: WIN-RUNTIME-OAUTH-PROBE (scope: OAuth
   runtime probe not ported to Windows; documented ADR-0016 Decision 5c amendment) and
   WIN-AC004-DIRECTIONAL (directional blind spot in subprocess env check; narrow, documented).
 

@@ -2,7 +2,7 @@
 document_type: story
 story_id: "S-cycle3-env-tag"
 epic_id: "AUTH-PROFILE-DX-1"
-title: "Add ProfileConfig.env tag + surface in auth list/auth status (DEC-314/DEC-324)"
+title: "Add ProfileConfig.env tag + surface in auth list/auth status (D-314/D-324)"
 wave: feature-followup
 status: ready
 intent: feature
@@ -59,8 +59,8 @@ breaking_change: true
 retroactive: false
 origin: >
   cycle-003 auth-profile-dx, Wave 1 (no deps, file-disjoint from S-cycle3-percred-storage).
-  Adds ProfileConfig.env: Option<String> (DEC-314), surfaces it as auth list's 5th table
-  column (DEC-324, deliberate breaking insta-snapshot change) and in auth list/status JSON
+  Adds ProfileConfig.env: Option<String> (D-314), surfaces it as auth list's 5th table
+  column (D-324, deliberate breaking insta-snapshot change) and in auth list/status JSON
   and auth status text output, with a channel split: JSON stays verbatim/lossless (issue
   #398 convention), human/table/text channels apply a shared control-char/ANSI-strip +
   length-cap sanitization transform.
@@ -87,7 +87,7 @@ functional edge.
 - `.factory/specs/prd/bc-1-auth-identity.md` §1.6, BC-1.6.046 (amended — `auth list` 5-column
   table), BC-1.6.047 (new — JSON/status surfacing, channel split)
 - `.factory/cycles/cycle-003/phase-f3-stories/decomposition-manifest.md` §2 Story 1
-- ADR-0020 § Decision 4 ("Additive `env`/role tag (DEC-314)")
+- ADR-0020 § Decision 4 ("Additive `env`/role tag (D-314)")
 
 ## Narrative
 
@@ -294,7 +294,7 @@ length-cap transform AC-006 exercises, with the same `-`/blank convention as AC-
 
 - `auth status --output json` (NFR-O-N, documented gap) — not implemented by this story.
 - Any credential-storage change (`src/api/auth.rs`) — that is `S-cycle3-percred-storage`.
-- Cache-root or keychain-namespace version bumps — explicitly out per ADR-0020 §3/DEC-325a
+- Cache-root or keychain-namespace version bumps — explicitly out per ADR-0020 §3/D-325a
   (dropped F1 candidate, not this story's concern).
 
 ## Dependency Analysis

@@ -355,7 +355,7 @@ pipeline-stages:
   convergence: achieved
 story-version: "2.0.0"
 supersedes: "S-3.03-v1.0.0 (investigation/decision-matrix)"
-pivot-decision: "DEC-013"
+pivot-decision: "D-013"
 wave: 3
 wave-progress: "10/10 (100%)"
 models-used:

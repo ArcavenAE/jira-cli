@@ -32,7 +32,7 @@ merged to `develop` @ `dd311e13`**:
   policy/source symbol-citation pairs).
 - CI now mutation-tests both files on every future change touching them —
   the drift class this closes matches the precedent already recorded in the
-  policy's changelog for `edit.rs`/`jsm_create.rs` (DEC-149) and
+  policy's changelog for `edit.rs`/`jsm_create.rs` (D-149) and
   `queue.rs`/`main.rs` (S-MUTANTS-SCOPE-1).
 
 ---

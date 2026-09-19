@@ -86,20 +86,20 @@ CLOSED ✓
 **Status: CLOSED**
 
 **Quote — BC-3.9.015 step-1 three-way branch body (bc-3-issue-write.md, ~line 3615):**
-> `**Three-way branch** (DEC-174/EC-3.5.003-3 alignment): (a) "y"/"yes" → proceed; (b) any other non-empty text, or empty-Enter (read_line returns Ok(n), n ≥ 1, buffer "\n") → cancel, exit 0 ("Deletion cancelled."); (c) EOF — read_line returns Ok(0) (zero bytes, Ctrl+D) — or any Err(_) (IO error) → JrError::Interrupted, exit 130 (NOT the cancel path). Ok(0) is distinguishable from empty-Enter (Ok(n), n ≥ 1) — the distinction is real and load-bearing.`
+> `**Three-way branch** (D-174/EC-3.5.003-3 alignment): (a) "y"/"yes" → proceed; (b) any other non-empty text, or empty-Enter (read_line returns Ok(n), n ≥ 1, buffer "\n") → cancel, exit 0 ("Deletion cancelled."); (c) EOF — read_line returns Ok(0) (zero bytes, Ctrl+D) — or any Err(_) (IO error) → JrError::Interrupted, exit 130 (NOT the cancel path). Ok(0) is distinguishable from empty-Enter (Ok(n), n ≥ 1) — the distinction is real and load-bearing.`
 
 **Quote — EC-3.9.015-5 with divergence note REMOVED (bc-3-issue-write.md):**
-> `**EC-3.9.015-5** (EOF / Ctrl+D on prompt read → JrError::Interrupted, exit 130): read_line returns Ok(0) (zero bytes, no newline) on EOF — distinguishable from empty-Enter (Ok(n), n ≥ 1, buffer "\n"). Both Ok(0) (EOF) and any Err(_) (IO error) MUST propagate as JrError::Interrupted; exit 130; NO cancel output on this path (exit 130 is an interruption, not a user cancel). This **mirrors BC-3.5.003/EC-3.5.003-3 and BC-3.5.008/EC-3.5.008-5** — the comment family (using the same eprint!+read_line DEC-174 mechanism) uses the same three-way branch. The prior "deliberate divergence from BC-3.5.003" note is **REMOVED** (P5-001 ruling: the divergence was based on a false premise — the Ok(0) vs Ok(n) distinction makes EOF distinguishable from empty-Enter; the original claim that read_line makes them indistinguishable was incorrect).`
+> `**EC-3.9.015-5** (EOF / Ctrl+D on prompt read → JrError::Interrupted, exit 130): read_line returns Ok(0) (zero bytes, no newline) on EOF — distinguishable from empty-Enter (Ok(n), n ≥ 1, buffer "\n"). Both Ok(0) (EOF) and any Err(_) (IO error) MUST propagate as JrError::Interrupted; exit 130; NO cancel output on this path (exit 130 is an interruption, not a user cancel). This **mirrors BC-3.5.003/EC-3.5.003-3 and BC-3.5.008/EC-3.5.008-5** — the comment family (using the same eprint!+read_line D-174 mechanism) uses the same three-way branch. The prior "deliberate divergence from BC-3.5.003" note is **REMOVED** (P5-001 ruling: the divergence was based on a false premise — the Ok(0) vs Ok(n) distinction makes EOF distinguishable from empty-Enter; the original claim that read_line makes them indistinguishable was incorrect).`
 
 The "deliberate divergence from BC-3.5.003" note is confirmed REMOVED. ✓
 
 **Quote — BC-3.9.014 EOF exception (bc-3-issue-write.md, ~line 3583):**
-> `**Exception — EOF and IO error** (DEC-174/EC-3.5.003-3 alignment): read_line returning Ok(0) (zero bytes, Ctrl+D EOF) or Err(_) MUST propagate as JrError::Interrupted, exit 130 — consistent with the comment-family precedent (BC-3.5.003, BC-3.5.008).`
+> `**Exception — EOF and IO error** (D-174/EC-3.5.003-3 alignment): read_line returning Ok(0) (zero bytes, Ctrl+D EOF) or Err(_) MUST propagate as JrError::Interrupted, exit 130 — consistent with the comment-family precedent (BC-3.5.003, BC-3.5.008).`
 
 Present ✓
 
 **Quote — BC-INDEX BC-3.9.015 row (BC-INDEX.md line 387):**
-> `| BC-3.9.015 | attachment delete <AID> interactive confirmation gate: eprint!+read_line (DEC-174); non-interactive exit 64 + --yes hint; --yes bypasses; cancel {"cancelled":true,"deleted":false} (no id key); metadata-fetch GET before prompt; three-way branch: 'y'/'yes' → delete; empty-Enter → cancel exit 0; EOF (Ok(0)) or IO-error → JrError::Interrupted exit 130; mirrors BC-3.5.003/EC-3.5.003-3 (divergence note removed — P5-001 ruling) | — (SOH-ATTACHMENTS-1 adversary pass-1 R2; P5-001 correction) | src/cli/issue/attachments.rs (pending S4) | HIGH |`
+> `| BC-3.9.015 | attachment delete <AID> interactive confirmation gate: eprint!+read_line (D-174); non-interactive exit 64 + --yes hint; --yes bypasses; cancel {"cancelled":true,"deleted":false} (no id key); metadata-fetch GET before prompt; three-way branch: 'y'/'yes' → delete; empty-Enter → cancel exit 0; EOF (Ok(0)) or IO-error → JrError::Interrupted exit 130; mirrors BC-3.5.003/EC-3.5.003-3 (divergence note removed — P5-001 ruling) | — (SOH-ATTACHMENTS-1 adversary pass-1 R2; P5-001 correction) | src/cli/issue/attachments.rs (pending S4) | HIGH |`
 
 Three-way branch noted ✓; divergence note removed ✓; P5-001 ruling cited ✓
 
@@ -166,7 +166,7 @@ No `.partial` references remain ✓
 > `|----------------------|----------------------------------|---------|`
 > `| BC-3.9.011 | **BC-3.9.003** | --public flag → servicedeskapi two-step routing + JSM-only gate |`
 > `| BC-3.9.012 | **BC-3.9.004** | --internal flag → servicedeskapi two-step; non-JSM = silent no-op (OQ-9) |`
-> `| BC-3.9.013 | **BC-3.9.014** | --public interactive confirmation gate mechanics (DEC-174) |`
+> `| BC-3.9.013 | **BC-3.9.014** | --public interactive confirmation gate mechanics (D-174) |`
 > `| BC-3.9.014 | **BC-3.9.011** | --public --output json shape — deferred-probe contract (P2-3c) |`
 
 Present and correct ✓
@@ -203,29 +203,29 @@ R3.11 uses BC-3.9.015 and BC-3.9.014 — both are authored IDs (matching bc-3-is
 
 | Gate | BC | Mechanism | Three-way branch | Exit codes (y/n/EOF) |
 |------|----|-----------|-----------------|---------------------|
-| comment delete | BC-3.5.003 (items 1-3) + EC-3.5.003-3 | DEC-174 read_line (delivery obligation) | Implicit: items 1/2/EC-3.5.003-3 | 0/0/130 |
-| comment edit --public | BC-3.5.008 + EC-3.5.008-5 | DEC-174 read_line (delivery obligation) | Implicit: items analogous to BC-3.5.003 | 0/0/130 |
-| attachment upload --public | BC-3.9.014 + "Exception" clause | DEC-174 read_line (body) | Implicit: EC-3.9.014-1/2 + Exception | 0/0/130 |
-| attachment delete | BC-3.9.015 step-1 + EC-3.9.015-5 | DEC-174 read_line (body) | Explicit three-way branch | 0/0/130 |
+| comment delete | BC-3.5.003 (items 1-3) + EC-3.5.003-3 | D-174 read_line (delivery obligation) | Implicit: items 1/2/EC-3.5.003-3 | 0/0/130 |
+| comment edit --public | BC-3.5.008 + EC-3.5.008-5 | D-174 read_line (delivery obligation) | Implicit: items analogous to BC-3.5.003 | 0/0/130 |
+| attachment upload --public | BC-3.9.014 + "Exception" clause | D-174 read_line (body) | Implicit: EC-3.9.014-1/2 + Exception | 0/0/130 |
+| attachment delete | BC-3.9.015 step-1 + EC-3.9.015-5 | D-174 read_line (body) | Explicit three-way branch | 0/0/130 |
 
 Behavioral outcome is **coherent** across all four gates: affirmative → proceed, empty-Enter → cancel exit 0, EOF/IO-error → exit 130.
 
-**Mechanism terminology asymmetry (→ GAP-R15-001):** EC-3.5.003-3 and EC-3.5.008-5 use "dialoguer::Error" while EC-3.9.015-5 uses "read_line Ok(0)/Err(_)". The authoritative mechanism (DEC-174 read_line) is present in the delivery obligations in the same BCs, but the EC clauses themselves were not updated when DEC-174 was applied at v1.3.41. See §6 for full analysis.
+**Mechanism terminology asymmetry (→ GAP-R15-001):** EC-3.5.003-3 and EC-3.5.008-5 use "dialoguer::Error" while EC-3.9.015-5 uses "read_line Ok(0)/Err(_)". The authoritative mechanism (D-174 read_line) is present in the delivery obligations in the same BCs, but the EC clauses themselves were not updated when D-174 was applied at v1.3.41. See §6 for full analysis.
 
 ---
 
 ## 6. New Finding (Round 15)
 
-### GAP-R15-001 — EC-3.5.003-3 and EC-3.5.008-5 mechanism language stale relative to DEC-174 (and relative to EC-3.9.015-5 which claims to mirror them)
+### GAP-R15-001 — EC-3.5.003-3 and EC-3.5.008-5 mechanism language stale relative to D-174 (and relative to EC-3.9.015-5 which claims to mirror them)
 
 **Severity:** LOW
 **Files:** `.factory/specs/prd/bc-3-issue-write.md` (EC-3.5.003-3 ~line 2199; EC-3.5.008-5 ~line 2425)
 
 **Finding:**
 
-EC-3.5.003-3 and EC-3.5.008-5 were added at adversary pass-35 using "dialoguer::Error" terminology — at that point the mechanism was still under design discussion. DEC-174 (v1.3.41, 2026-07-13) mandated the `eprint!+read_line` mechanism and explicitly stated "`dialoguer::interact_on` is UNUSABLE" on piped stderr. The DEC-174 correction updated the **delivery obligations** in BC-3.5.003 and BC-3.5.006 (and VP-577-030), but the **EC clause text** in EC-3.5.003-3 and EC-3.5.008-5 was not updated and still uses "dialoguer::Error" language.
+EC-3.5.003-3 and EC-3.5.008-5 were added at adversary pass-35 using "dialoguer::Error" terminology — at that point the mechanism was still under design discussion. D-174 (v1.3.41, 2026-07-13) mandated the `eprint!+read_line` mechanism and explicitly stated "`dialoguer::interact_on` is UNUSABLE" on piped stderr. The D-174 correction updated the **delivery obligations** in BC-3.5.003 and BC-3.5.006 (and VP-577-030), but the **EC clause text** in EC-3.5.003-3 and EC-3.5.008-5 was not updated and still uses "dialoguer::Error" language.
 
-P5-001 then wrote BC-3.9.015 step-1 and EC-3.9.015-5 using DEC-174-aligned `read_line Ok(0)/Err(_)` language, and explicitly stated EC-3.9.015-5 "mirrors BC-3.5.003/EC-3.5.003-3 and BC-3.5.008/EC-3.5.008-5". This creates a visible cross-gate terminology inconsistency between EC-3.5.003-3/EC-3.5.008-5 (dialoguer language) and EC-3.9.015-5 (read_line language).
+P5-001 then wrote BC-3.9.015 step-1 and EC-3.9.015-5 using D-174-aligned `read_line Ok(0)/Err(_)` language, and explicitly stated EC-3.9.015-5 "mirrors BC-3.5.003/EC-3.5.003-3 and BC-3.5.008/EC-3.5.008-5". This creates a visible cross-gate terminology inconsistency between EC-3.5.003-3/EC-3.5.008-5 (dialoguer language) and EC-3.9.015-5 (read_line language).
 
 **Quote — EC-3.5.003-3 current text (stale mechanism language):**
 > `**EC-3.5.003-3** (dialoguer Err → JrError::Interrupted exit 130 on delete prompt): When the comment delete confirmation prompt receives a dialoguer::Error (including EOF — Ctrl+D — or Ctrl+C interrupt mid-prompt), the handler MUST propagate it as JrError::Interrupted; exit 130. A dialoguer::Error MUST NOT be silently swallowed or mapped to the cancel path (exit 0).`
@@ -233,14 +233,14 @@ P5-001 then wrote BC-3.9.015 step-1 and EC-3.9.015-5 using DEC-174-aligned `read
 **Quote — EC-3.5.008-5 current text (stale mechanism language):**
 > `**EC-3.5.008-5** (dialoguer Err → JrError::Interrupted exit 130 on --public prompt): When the --public confirmation prompt receives a dialoguer::Error (including EOF — Ctrl+D — or Ctrl+C interrupt mid-prompt), the handler MUST propagate it as JrError::Interrupted; exit 130. This mirrors EC-3.5.003-3 (delete prompt), ensuring consistent Ctrl+C / EOF handling across all interactive confirmation prompts in the comment family. A dialoguer::Error MUST NOT be silently swallowed or mapped to the cancel path (exit 0).`
 
-**Quote — EC-3.9.015-5 (current, DEC-174 mechanism language):**
+**Quote — EC-3.9.015-5 (current, D-174 mechanism language):**
 > `EC-3.9.015-5 ... read_line returns Ok(0) (zero bytes, no newline) on EOF — distinguishable from empty-Enter (Ok(n), n ≥ 1, buffer "\n"). Both Ok(0) (EOF) and any Err(_) (IO error) MUST propagate as JrError::Interrupted; exit 130 ... This mirrors BC-3.5.003/EC-3.5.003-3 and BC-3.5.008/EC-3.5.008-5`
 
 **Behavioral impact:** NONE. The behavioral outcome (exit 130 on EOF/interrupt) is identical across all four gates. The authoritative mechanism language in the delivery obligations of BC-3.5.003 and BC-3.5.006 correctly mandates `eprint!+read_line`. An implementer reading the full BC body will implement correctly.
 
 **Implementer confusion risk:** LOW. A reader examining only EC-3.5.003-3 in isolation could believe dialoguer is the mechanism; the delivery obligation in the same BC corrects this. A reader comparing EC-3.5.003-3 with EC-3.9.015-5 sees a mechanism terminology mismatch despite the "mirrors" claim.
 
-**Fix scope:** Update EC-3.5.003-3 and EC-3.5.008-5 to use DEC-174 `read_line` terminology. Rename the EC headings from "dialoguer Err" to "EOF / IO error" (matching the EC-3.9.015-5 pattern). Behavioral semantics UNCHANGED — no new behavior; purely a terminology correction. No BC counts change.
+**Fix scope:** Update EC-3.5.003-3 and EC-3.5.008-5 to use D-174 `read_line` terminology. Rename the EC headings from "dialoguer Err" to "EOF / IO error" (matching the EC-3.9.015-5 pattern). Behavioral semantics UNCHANGED — no new behavior; purely a terminology correction. No BC counts change.
 
 ---
 
@@ -286,7 +286,7 @@ No un-annotated stale planned-ID citations anywhere in the package. R3.11 uses a
 | Security review verdict APPROVE | PASS | prd-delta CONS-576-005 "RESOLVED (security-review-576.md verdict: APPROVE, status: final)"; R14-006 closed |
 | P5-001 keystone (three-way branch) | PASS | BC-3.9.015 step-1 explicit; EC-3.9.015-5 complete; BC-INDEX row correct |
 | P5-001 — divergence note removed | PASS | "prior 'deliberate divergence from BC-3.5.003' note is **REMOVED**" confirmed present |
-| P5-001 — BC-3.9.014 EOF exception | PASS | "Exception — EOF and IO error (DEC-174/EC-3.5.003-3 alignment)" confirmed present |
+| P5-001 — BC-3.9.014 EOF exception | PASS | "Exception — EOF and IO error (D-174/EC-3.5.003-3 alignment)" confirmed present |
 | P5-002 — tmp_<random> in BC-2.7.007 | PASS | `tmp_<random>` with NO basename; explicit prohibition of `tmp_<random>_<basename>` |
 | P5-003 — H-NEW-ATTACHMENT-002 tmp_* | PASS | `tmp_*` (success + error paths); no `.partial` references |
 | Four-gate behavioral coherence | PASS | All gates: affirmative → proceed; empty-Enter → cancel exit 0; EOF/IO → exit 130 |
@@ -309,7 +309,7 @@ No un-annotated stale planned-ID citations anywhere in the package. R3.11 uses a
 
 All P5 keystone remediations (P5-001 through P5-010) are verifiably present. All R14 gaps are confirmed closed. The impact-boundary R2.3 drift annotation, three [PLANNED ID] markers, and R3.11 are all present and correct. The temp-file naming scheme (`tmp_<random>`, no basename) is coherent across BC-2.7.007 and H-NEW-ATTACHMENT-002. All four confirmation gates cohere behaviorally (same three-way branch, same exit codes).
 
-The one new finding (GAP-R15-001) is a terminology inconsistency: EC-3.5.003-3 and EC-3.5.008-5 (comment family, §3.5) still use "dialoguer::Error" terminology that predates DEC-174, while EC-3.9.015-5 (attachment delete, §3.9) — which claims to "mirror" them — uses the correct DEC-174 `read_line Ok(0)/Err(_)` language. Behavioral semantics are identical. The fix is purely terminological (update the two EC clause headings and bodies to DEC-174 language; no behavioral change, no BC count change).
+The one new finding (GAP-R15-001) is a terminology inconsistency: EC-3.5.003-3 and EC-3.5.008-5 (comment family, §3.5) still use "dialoguer::Error" terminology that predates D-174, while EC-3.9.015-5 (attachment delete, §3.9) — which claims to "mirror" them — uses the correct D-174 `read_line Ok(0)/Err(_)` language. Behavioral semantics are identical. The fix is purely terminological (update the two EC clause headings and bodies to D-174 language; no behavioral change, no BC count change).
 
 Recommendation: address GAP-R15-001 in a pre-S1 sweep alongside the remaining cosmetic fixes from prior rounds. This is the only gap blocking a clean CONSISTENT verdict.
 

@@ -5,7 +5,7 @@
   "passes_clean": 3,
   "last_classification": "NITPICK_ONLY",
   "converged": true,
-  "bar": "no CRIT/HIGH/MED (DEC-360 precedent)",
+  "bar": "no CRIT/HIGH/MED (D-360 precedent)",
   "branch": "feat/cycle12-jsm-adf-autoconvert",
   "head": "3dadb1ae",
   "timestamp": "2026-09-14T23:10:00Z"

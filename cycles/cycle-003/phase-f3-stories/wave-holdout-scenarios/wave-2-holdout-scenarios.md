@@ -88,9 +88,9 @@ untouched pre-upgrade state. Run any `jr` command that needs credentials
 `'default'` for the profile name), NOT a silent auto-migration/copy from the legacy flat
 pair. This is VP-AUTHDX-006 (no profile special-cased, including `"default"` —
 SAFETY INVARIANT) and is the direct regression check for the REJECTED original design
-(DEC-326): a "default"-only lazy copy-then-delete must NOT have crept back in.
+(D-326): a "default"-only lazy copy-then-delete must NOT have crept back in.
 
-**MUST-PASS. Regression-critical — this is the exact failure mode DEC-326 exists to
+**MUST-PASS. Regression-critical — this is the exact failure mode D-326 exists to
 prevent** (cross-environment credential-bleed into a freshly created or upgraded
 `"default"` profile).
 

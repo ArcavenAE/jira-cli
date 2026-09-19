@@ -108,7 +108,7 @@ new ADF surface (`src/adf.rs` unchanged).
 ### 4d-4. Confirmation prompt gate — CWE-1021 (SEC-577-001)
 
 Delete and `--public` edit guard the risky (data-exposing) direction only.
-Mechanism (DEC-174): `eprint!` prompt to **stderr** + `io::stdin().lock().read_line()`;
+Mechanism (D-174): `eprint!` prompt to **stderr** + `io::stdin().lock().read_line()`;
 EOF/error → `JrError::Interrupted` (exit 130). `--internal` (making a comment
 less visible) needs no gate; `--yes` bypasses the `--public` gate and is a
 no-op otherwise (VP-577-028). The non-interactive `--public` message uses
@@ -116,7 +116,7 @@ project-agnostic wording (`"visibility to public"`) per the SEC-577-001
 CWE-1021 fix (the prompt does not misrepresent a JSM-specific effect as
 universal). `--stdin` forces `no_input = true` at the gate (EC-3.5.008-3,
 TTY-agnostic) so a stdin already consumed for the body cannot be re-read for a
-prompt answer. Consistent with SEC-577-001 / DEC-169 as cited in
+prompt answer. Consistent with SEC-577-001 / D-169 as cited in
 `.factory/code-delivery/S-577-5/pr-review.md` §10.
 
 ### 4d-5. `sd.public.comment` properties injection

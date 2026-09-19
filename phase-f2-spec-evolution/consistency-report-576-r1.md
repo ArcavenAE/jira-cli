@@ -44,7 +44,7 @@ traces_to: ".factory/phase-f2-spec-evolution/prd-delta-576.md"
 | **Artifacts Scanned** | 10 |
 | **Spec Version** | v1.3.44 (post-security-fix state) |
 | **Feature** | SOH-ATTACHMENTS-1 (issues #576 + #585) |
-| **Gate** | DEC-179 F2 spec bundle |
+| **Gate** | D-179 F2 spec bundle |
 
 **Review scope**: Fresh-context cross-document consistency check across the post-security-fix
 spec bundle for SOH-ATTACHMENTS-1. Inputs reviewed: BC-2.7.001..012, BC-3.9.001..014,
@@ -54,7 +54,7 @@ Revision 2, ADR-0017, BC-INDEX.md, CANONICAL-COUNTS.md, spec-changelog.md.
 **Verdict: GAPS-FOUND** — 1 MEDIUM (implementer-visible algorithmic mismatch), 5 LOW
 (source citation drift and stale-status documents), 1 INFO (cosmetic). No CRITICAL or HIGH
 findings. The BC bodies themselves are internally consistent and correctly reflect all 7
-security fixes. All DEC-179 design rulings are correctly implemented in BC text.
+security fixes. All D-179 design rulings are correctly implemented in BC text.
 
 ## Summary
 
@@ -351,7 +351,7 @@ OQ-9 supersedes R2.2 for `--internal` on non-JSM. BC-3.9.004 correctly implement
 **Artifacts**: `spec-changelog.md` §[1.3.43] Impact Assessment vs `.factory/specs/architecture/decisions/ADR-0017-first-multipart-streaming-http-surface.md`.
 
 The [1.3.43] entry Impact Assessment table says:
-> `ADR reference | DEC-179 (F1 gate approval); ADR-0017 planned (attachment feature design decisions)`
+> `ADR reference | D-179 (F1 gate approval); ADR-0017 planned (attachment feature design decisions)`
 
 ADR-0017 exists on disk with `status: Accepted` and `date: 2026-07-15` — created in the same burst as the BC additions. The word "planned" is inaccurate; the ADR was created and accepted in the same burst. No functional consequence; cosmetic only.
 
@@ -363,7 +363,7 @@ The following were checked and found consistent:
 
 - **All 7 security fixes applied correctly in BC bodies**: SEC-576-001 caller note present in BC-2.7.011; SEC-576-002 two-step procedure present in BC-2.7.011; SEC-576-003 EC-2.7.007-3 present in BC-2.7.007; SEC-576-004 multipart encoding note present in BC-3.9.001; SEC-576-005 EC-3.9.001-5 present in BC-3.9.001 AND parallel note present in BC-3.9.003 Step 1; SEC-576-006 stale-ID self-healing clause (4-step procedure) present in BC-X.8.010; SEC-576-007 step 5.5 trailing-whitespace/dot strip present in BC-2.7.011.
 
-- **DEC-179 design rulings vs BC bodies**: All ratified rulings are correctly reflected. Platform-POST default (BC-3.9.001/BC-3.9.002). `--internal` non-JSM = silent no-op / OQ-9 (BC-3.9.004 EC-3.9.004-1). `--public` non-JSM = exit 64 (BC-3.9.005). DEC-174 eprint!+read_line confirmation gate, NOT dialoguer (BC-3.9.014). DEC-168 delete 404 = exit 64 (BC-3.9.008). JSDCLOUD-10841 platform endpoint for downloads (BC-2.7.007). JRACLOUD-97046 no `?redirect=false` (BC-2.7.007). P2-4a internal-by-default (BC-3.9.002). JRACLOUD-96384 match-by-id (BC-2.7.012).
+- **D-179 design rulings vs BC bodies**: All ratified rulings are correctly reflected. Platform-POST default (BC-3.9.001/BC-3.9.002). `--internal` non-JSM = silent no-op / OQ-9 (BC-3.9.004 EC-3.9.004-1). `--public` non-JSM = exit 64 (BC-3.9.005). D-174 eprint!+read_line confirmation gate, NOT dialoguer (BC-3.9.014). D-168 delete 404 = exit 64 (BC-3.9.008). JSDCLOUD-10841 platform endpoint for downloads (BC-2.7.007). JRACLOUD-97046 no `?redirect=false` (BC-2.7.007). P2-4a internal-by-default (BC-3.9.002). JRACLOUD-96384 match-by-id (BC-2.7.012).
 
 - **BC counts consistent**: CANONICAL-COUNTS.md sum (651) matches BC-INDEX.md `total_bcs` (651) matches sum of per-file frontmatter values (106+134+150+57+32+36+43+93 = 651). Per-file definitional_count values match CANONICAL-COUNTS table. Section 2.7 (12 BCs), Section 3.9 (14 BCs), BC-X.8.010 (1 BC) = 27 new individually-bodied BCs. 624 + 27 = 651.
 
@@ -400,7 +400,7 @@ No fixes applied in this report. All corrections delegated to the spec author (P
 | Metric | Value |
 |--------|-------|
 | **Total Checks** | 14 (4 standard N/A; 10 ops-specific) |
-| **Passed** | 7 (security fixes, counts, DEC-179 rulings, research facts) |
+| **Passed** | 7 (security fixes, counts, D-179 rulings, research facts) |
 | **Failed** | 0 |
 | **Gaps Found** | 7 |
 | **Warnings** | 0 |
@@ -409,7 +409,7 @@ No fixes applied in this report. All corrections delegated to the spec author (P
 7 gaps found across the 10 reviewed artifacts. The BC bodies are the authoritative specification
 and are correctly formed. Gaps are in summary/index documents (BC-INDEX) and stale status
 fields in process artifacts (security-review, impact boundary). The BC bodies themselves are
-spec-complete and correctly implement all DEC-179 rulings and SEC-576-001..007 security fixes.
+spec-complete and correctly implement all D-179 rulings and SEC-576-001..007 security fixes.
 
 Recommended resolution order: (1) CONS-576-001 (BC-INDEX row for BC-2.7.011) before story
 decomposition; (2) CONS-576-002/003/004 (source citations) before story file-list authoring;
@@ -421,7 +421,7 @@ This consistency report was produced by a fresh-context cross-document consisten
 pass with no prior context on the SOH-ATTACHMENTS-1 bundle. The validator read all 10 input
 artifacts in full and checked the following classes:
 
-- **(a) Contradiction between BC bodies and the ratified design**: each DEC-179 ruling was
+- **(a) Contradiction between BC bodies and the ratified design**: each D-179 ruling was
   cross-referenced against the relevant BC body text.
 - **(b) Security-fix drift**: each SEC-576-001..007 finding in security-review-576.md was
   verified as APPLIED by confirming the specific text change is present in the relevant BC body.

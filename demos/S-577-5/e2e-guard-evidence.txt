@@ -3,7 +3,7 @@ E2E Guard Evidence — S-577-5 Task 4 (BC-3.5.006 delivery obligation b)
 
 The gated e2e test `test_e2e_comment_edit_visibility_merge_semantics` (in
 `tests/e2e_live.rs`, line ~9968) requires `JR_RUN_E2E=1` + `JR_E2E_JSM_PROJECT`
-and runs exclusively in the nightly `e2e.yml` workflow (DEC-175 restored scenarios).
+and runs exclusively in the nightly `e2e.yml` workflow (D-175 restored scenarios).
 A live run is not executed here. Instead, three always-run offline guards confirm
 that the gating machinery and CLI surface are correctly wired.
 
@@ -66,7 +66,7 @@ are present in the surface guard table and verified against `jr --help`.
 SUMMARY
 -------
 All three always-run guards pass. The gated e2e test runs in the nightly e2e.yml
-workflow (DEC-175 restored scenarios). It exercises three scenarios:
+workflow (D-175 restored scenarios). It exercises three scenarios:
   Scenario 1: 5-step MERGE probe (sd.public.comment MERGE semantics stable on repeated --internal)
   Scenario 2: PRESERVED base — body-only PUT does not touch visibility restriction
   Scenario 3: compound cell — MERGE for properties + PRESERVED for visibility simultaneously

@@ -16,7 +16,7 @@ author: product-owner (planning pass)
 **Purpose:** Characterize already-shipped behaviors that have full test coverage and
 CLAUDE.md Gotchas entries but no dedicated behavioral contract body. These missing
 sub-clauses break the holdout/wiremock anchor chain (the D4 broken-anchor class
-identified in DEC-137 / MISSING-BC-SUBCLAUSE-PATTERN STATE.md drift item).
+identified in D-137 / MISSING-BC-SUBCLAUSE-PATTERN STATE.md drift item).
 
 **Scope:** 9 behaviors itemized in the drift item (6 ADF-wave, 1 cache, 2 read/error).
 

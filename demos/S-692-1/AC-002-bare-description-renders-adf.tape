@@ -15,7 +15,7 @@ Set Framerate 24
 Set TypingSpeed 30ms
 Set Shell "bash"
 
-# S-692-1 / issue #692 (DEC-274): the ADF preview isn't stdin-only — a bare
+# S-692-1 / issue #692 (D-274): the ADF preview isn't stdin-only — a bare
 # --description flag (no --description-stdin) also renders through the same
 # markdown_to_adf path and gets the same plannedChanges.descriptionAdf key.
 

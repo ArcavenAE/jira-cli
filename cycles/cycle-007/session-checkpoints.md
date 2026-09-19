@@ -17,7 +17,7 @@ traces_to: STATE.md
 
 **Status:** SUPERSEDED 2026-09-15 by the v4.40 CYCLE-013-F1-F2-APPROVED checkpoint (a new feature
 cycle, cycle-013 `msrv-1.88-bump`, was established this burst: Phase F1 delta-analysis APPROVED
-(DEC-363) and Phase F2 spec evolution APPROVED (DEC-364, ADR-0025 `proposed`); pipeline moved from
+(D-363) and Phase F2 spec evolution APPROVED (D-364, ADR-0025 `proposed`); pipeline moved from
 PAUSED/IDLE to ACTIVE). Archived verbatim from STATE.md v4.39 below.
 
 ### State
@@ -25,14 +25,14 @@ PAUSED/IDLE to ACTIVE). Archived verbatim from STATE.md v4.39 below.
 | Field | Value |
 |-------|-------|
 | **Date** | 2026-09-15 |
-| **Position** | cycle-007 (`auth-correctness-dx`) Phase **F7 HUMAN GATE APPROVED -- CLOSED + RELEASED as v0.7.0-dev.6.** Human ruled "Approve & close" and explicitly chose to cut a dev release. DEC-362 minted. Release executed via this repo's native release-metadata-PR precedent: PR #815 merged squash @ `7160a534` (mergedAt 2026-09-15T14:53:32Z, all CI green); annotated tag `v0.7.0-dev.6` pushed on `7160a534`; `release.yml` run `34984900326` BUILDING the 5-platform GitHub prerelease (Release page not yet published as of this write -- confirm in a later session). dev.6 rolls up cycle-005/006/012/007 + the 2026-09-10 maintenance sweep's previously-untagged `develop` changes -- the first tagged prerelease to capture cycle-005 and cycle-012. cycle-012 (`field-adf-autoconvert`) remains **CLOSED** (DEC-361, 2026-09-15) -- unaffected by this burst beyond now sharing the same release tag. **All nine tracked cycles (001-007, 012) are CLOSED.** |
+| **Position** | cycle-007 (`auth-correctness-dx`) Phase **F7 HUMAN GATE APPROVED -- CLOSED + RELEASED as v0.7.0-dev.6.** Human ruled "Approve & close" and explicitly chose to cut a dev release. D-362 minted. Release executed via this repo's native release-metadata-PR precedent: PR #815 merged squash @ `7160a534` (mergedAt 2026-09-15T14:53:32Z, all CI green); annotated tag `v0.7.0-dev.6` pushed on `7160a534`; `release.yml` run `34984900326` BUILDING the 5-platform GitHub prerelease (Release page not yet published as of this write -- confirm in a later session). dev.6 rolls up cycle-005/006/012/007 + the 2026-09-10 maintenance sweep's previously-untagged `develop` changes -- the first tagged prerelease to capture cycle-005 and cycle-012. cycle-012 (`field-adf-autoconvert`) remains **CLOSED** (D-361, 2026-09-15) -- unaffected by this burst beyond now sharing the same release tag. **All nine tracked cycles (001-007, 012) are CLOSED.** |
 | **Convergence counter** | No active convergence loop anywhere -- cycle-007's F6/F7 loops closed in the prior burst; this burst closed the F7 human gate itself. Pipeline fully idle. |
 | **In-flight work** | NONE. No open PRs (#803/#804/#805/#806/#807/#814/#815 all MERGED for cycle-007; #809/#810/#811/#812/#813 all MERGED for cycle-012). No story worktrees. `release.yml` run `34984900326` is the only in-flight process, external to the factory pipeline (5-platform build, not yet complete as of this write). |
 
 ### Resume Prompt
 
 ```
-**Date:** 2026-09-15. cycle-007 (`auth-correctness-dx`) Phase F7 HUMAN GATE APPROVED -- CLOSED + RELEASED as v0.7.0-dev.6. Human ruled "Approve & close" and explicitly chose to cut a dev release. DEC-362 minted. PR #815 merged squash @ `7160a534` (mergedAt 2026-09-15T14:53:32Z, all CI green); annotated tag `v0.7.0-dev.6` pushed on `7160a534`; `release.yml` run `34984900326` BUILDING the 5-platform GitHub prerelease. dev.6 rolls up cycle-005/006/012/007 + the 2026-09-10 maintenance sweep's untagged changes. cycle-012 remains CLOSED (DEC-361, 2026-09-15). All nine tracked cycles (001-007, 012) are CLOSED.
+**Date:** 2026-09-15. cycle-007 (`auth-correctness-dx`) Phase F7 HUMAN GATE APPROVED -- CLOSED + RELEASED as v0.7.0-dev.6. Human ruled "Approve & close" and explicitly chose to cut a dev release. D-362 minted. PR #815 merged squash @ `7160a534` (mergedAt 2026-09-15T14:53:32Z, all CI green); annotated tag `v0.7.0-dev.6` pushed on `7160a534`; `release.yml` run `34984900326` BUILDING the 5-platform GitHub prerelease. dev.6 rolls up cycle-005/006/012/007 + the 2026-09-10 maintenance sweep's untagged changes. cycle-012 remains CLOSED (D-361, 2026-09-15). All nine tracked cycles (001-007, 012) are CLOSED.
 
 **Pending human decisions / blockers:** NONE that block pipeline progress. A future session should confirm `release.yml` run `34984900326`'s completion and the GitHub Release page's publish status as a light follow-up. LOW standing items unchanged from the prior burst (all still DEFERRED, tracked, non-blocking): `CYCLE-007-CR-001-KEYCHAIN-ERROR-VS-ABSENCE`, `CYCLE-007-PROBE-ROUTING-NO-DEFAULT-CI-TEST`, `CYCLE-007-LEGACY-OAUTH-UNSET-METHOD-MISREPORT`, `CYCLE-007-OAUTH-ABSENCE-EXIT-CODE-ASYMMETRY`, `CANONICAL-COUNTS-BREAKDOWN-STALE`, `CYCLE-007-AUTH-LIST-LAZY-MIGRATION-WRITE`, `CYCLE-007-F5-DOC-NITPICKS`, `CYCLE-007-F6-R1-KEYRING-GATED-HUMAN-TEXT-COVERAGE`, `CYCLE-007-F6-R2-DERIVE-AUTH-STATE-NO-MUTATION-COVERAGE`. Also unchanged: `M-2`/`OBS-A`/`OBS-3` (cycle-012 F5 debt), pre-existing `SEC-001-EDITMETA-RECURSION-GUARD`, `E2E-COMPONENT-FILTER-SEARCH-INDEX-FLAKE`, F6 cycle-012 residuals L-1/L-2, `CYCLE-007-STORY-STATUS-DRAFT-POSTMERGE`, `NFR-O-N-CATALOG-RETIREMENT-EDIT`.
 
@@ -45,7 +45,7 @@ PAUSED/IDLE to ACTIVE). Archived verbatim from STATE.md v4.39 below.
 
 **Status:** SUPERSEDED 2026-09-15 by the v4.39 CYCLE-007-F7-APPROVED-CLOSED-RELEASED checkpoint (the
 cycle-007 F7 human gate closed this burst: human ruled "Approve & close" + chose to cut a dev release;
-released as v0.7.0-dev.6 via PR #815 @ `7160a534`; DEC-362 minted). Archived verbatim from STATE.md v4.38
+released as v0.7.0-dev.6 via PR #815 @ `7160a534`; D-362 minted). Archived verbatim from STATE.md v4.38
 below.
 
 ### State
@@ -53,18 +53,18 @@ below.
 | Field | Value |
 |-------|-------|
 | **Date** | 2026-09-15 |
-| **Position** | cycle-007 (`auth-correctness-dx`) Phase **F7 CONVERGED** -- fresh-context consistency-validator returned ALL 7 DIMENSIONS PASS this burst (spec<->code, code<->test, traceability, index-consistency, ADR alignment, citation-integrity, cross-references); Phase **F6 HARDENED_WITH_RESIDUALS** also recorded this burst (evidence already committed at `596ec950`, prior burst, but not yet reflected in STATE.md). Benign input-hash drift on 6 cycle-007 F3 artifacts resolved this burst (Job A). **NEXT = cycle-007 Phase F7 HUMAN GATE** (final close approval + release decision) -- awaiting human. cycle-012 (`field-adf-autoconvert`) remains **CLOSED** (DEC-361, F7 human gate APPROVED "Approve & close", 2026-09-15) -- unaffected by this burst. |
+| **Position** | cycle-007 (`auth-correctness-dx`) Phase **F7 CONVERGED** -- fresh-context consistency-validator returned ALL 7 DIMENSIONS PASS this burst (spec<->code, code<->test, traceability, index-consistency, ADR alignment, citation-integrity, cross-references); Phase **F6 HARDENED_WITH_RESIDUALS** also recorded this burst (evidence already committed at `596ec950`, prior burst, but not yet reflected in STATE.md). Benign input-hash drift on 6 cycle-007 F3 artifacts resolved this burst (Job A). **NEXT = cycle-007 Phase F7 HUMAN GATE** (final close approval + release decision) -- awaiting human. cycle-012 (`field-adf-autoconvert`) remains **CLOSED** (D-361, F7 human gate APPROVED "Approve & close", 2026-09-15) -- unaffected by this burst. |
 | **Convergence counter** | F6 hardening loop CLOSED (HARDENED_WITH_RESIDUALS, 3 LOW residuals accepted). F7 delta convergence loop CLOSED at ALL 7 DIMENSIONS PASS (single fresh-context pass, no re-run needed). Only the F7 human gate remains. |
 | **In-flight work** | NONE. No open PRs (#803/#804/#805/#806/#807/#814 all MERGED for cycle-007; #809/#810/#811/#812/#813 all MERGED for cycle-012). No story worktrees. |
 
 ### Resume Prompt
 
 ```
-**Date:** 2026-09-15. cycle-007 (`auth-correctness-dx`) Phase F7 CONVERGED -- fresh-context consistency-validator returned ALL 7 DIMENSIONS PASS this burst; Phase F6 HARDENED_WITH_RESIDUALS also recorded this burst. Benign input-hash drift on 6 cycle-007 F3 artifacts resolved (Job A). NEXT = cycle-007 Phase F7 HUMAN GATE (final close approval + release decision) -- awaiting human. cycle-012 (`field-adf-autoconvert`) remains CLOSED (DEC-361, "Approve & close", 2026-09-15).
+**Date:** 2026-09-15. cycle-007 (`auth-correctness-dx`) Phase F7 CONVERGED -- fresh-context consistency-validator returned ALL 7 DIMENSIONS PASS this burst; Phase F6 HARDENED_WITH_RESIDUALS also recorded this burst. Benign input-hash drift on 6 cycle-007 F3 artifacts resolved (Job A). NEXT = cycle-007 Phase F7 HUMAN GATE (final close approval + release decision) -- awaiting human. cycle-012 (`field-adf-autoconvert`) remains CLOSED (D-361, "Approve & close", 2026-09-15).
 
 **Pending human decisions / blockers:** The cycle-007 F7 human gate itself (final close approval + release decision) is now the single pending decision point. LOW standing items unchanged: `CYCLE-007-CR-001-KEYCHAIN-ERROR-VS-ABSENCE`, `CYCLE-007-PROBE-ROUTING-NO-DEFAULT-CI-TEST`, `CYCLE-007-LEGACY-OAUTH-UNSET-METHOD-MISREPORT`, `CYCLE-007-OAUTH-ABSENCE-EXIT-CODE-ASYMMETRY`, `CANONICAL-COUNTS-BREAKDOWN-STALE`, `CYCLE-007-AUTH-LIST-LAZY-MIGRATION-WRITE`, `CYCLE-007-F5-DOC-NITPICKS`. Also unchanged: `M-2`/`OBS-A`/`OBS-3` (cycle-012 F5 debt), pre-existing `SEC-001-EDITMETA-RECURSION-GUARD`, `E2E-COMPONENT-FILTER-SEARCH-INDEX-FLAKE`, F6 cycle-012 residuals L-1/L-2, `CYCLE-007-STORY-STATUS-DRAFT-POSTMERGE`, `NFR-O-N-CATALOG-RETIREMENT-EDIT`. cycle-007's own F6 residuals (R1/R2/R3) -- R3 is the same item as CR-001, not a new one.
 
-**Resume command (future session's choice):** Present the F7 convergence summary (ALL 7 DIMENSIONS PASS, F6 HARDENED_WITH_RESIDUALS) to the human for the cycle-007 F7 human gate ruling (close approval + release decision, mirroring cycle-012's DEC-361 precedent); or `/vsdd-factory:maintenance-sweep` to burn down the deferred LOW debt first if the gate is deferred.
+**Resume command (future session's choice):** Present the F7 convergence summary (ALL 7 DIMENSIONS PASS, F6 HARDENED_WITH_RESIDUALS) to the human for the cycle-007 F7 human gate ruling (close approval + release decision, mirroring cycle-012's D-361 precedent); or `/vsdd-factory:maintenance-sweep` to burn down the deferred LOW debt first if the gate is deferred.
 ```
 
 ---
@@ -85,7 +85,7 @@ NEXT = F7 human gate). Archived verbatim (condensed) from STATE.md v4.37 below.
 Phase **F5 CONVERGED** — adversary converged across 4 rounds to 3 consecutive CLEAN this burst;
 code-reviewer `APPROVE_WITH_NITS` (CR-002/CR-003 resolved, CR-001/CR-004 human-deferred); security-reviewer
 CLEAN. Findings resolved via fix PR #814 @ `11c95d5e` + commits `0b9fb1fc`/`878ebe67`. **F6/F7 REMAIN, not
-yet started** — pipeline PAUSED/resumable. cycle-012 (`field-adf-autoconvert`) remains **CLOSED** (DEC-361,
+yet started** — pipeline PAUSED/resumable. cycle-012 (`field-adf-autoconvert`) remains **CLOSED** (D-361,
 F7 human gate APPROVED "Approve & close", 2026-09-15) — unaffected.
 
 **Convergence counter:** F5 loop CLOSED at 3/3 consecutive CLEAN (4 rounds total). cycle-007's F6 targeted
@@ -113,7 +113,7 @@ total_stories 182 (unchanged).
 
 ## Session Resume Checkpoint (2026-09-12, STATE.md v4.20) — SESSION-WRAP-PAUSE: All 5 cycle-007 stories merged @ develop@30bb1a18; Wave-2 gate PENDING; pipeline PAUSED — Superseded 2026-09-12 (v4.21 cycle-012 formalized)
 
-**Status:** SUPERSEDED 2026-09-12 by the v4.21 CYCLE-012-FORMALIZE checkpoint (cycle-012 `field-adf-autoconvert` F1 APPROVED DEC-357; pipeline ACTIVE on cycle-012 while cycle-007 remains PAUSED). Archived verbatim (condensed) from STATE.md v4.20 below.
+**Status:** SUPERSEDED 2026-09-12 by the v4.21 CYCLE-012-FORMALIZE checkpoint (cycle-012 `field-adf-autoconvert` F1 APPROVED D-357; pipeline ACTIVE on cycle-012 while cycle-007 remains PAUSED). Archived verbatim (condensed) from STATE.md v4.20 below.
 
 **Date:** 2026-09-12. **Pipeline: PAUSED** (cycle-007 `auth-correctness-dx`, F4 IMPL COMPLETE). **Position:** All 5 cycle-007 stories merged to `develop@30bb1a18`: Story A PR #803 @ `08021685` (#784/#786 closed), Story C PR #805 @ `5b5b4432` (#790 closed), Story D PR #804 @ `24e6f5d1`, Story B1 PR #806 @ `33567e92` (#788 closed; BC-1.6.048/049), Story B2 PR #807 @ `30bb1a18` (#787 closed; BC-1.6.050, retires NFR-O-N). B2 demo skipped (human decision). Issue #783 also closed. Wave-2 integration gate PENDING (confirm develop@`30bb1a18` push-CI run green on resume). **NEXT (on resume)** = Wave-2 integration gate -> F4 COMPLETE -> F5 scoped adversarial -> F6 targeted hardening -> F7 delta convergence + human gate. Use `/vsdd-factory:rehydrate-wave` then `/vsdd-factory:next-step`.
 
@@ -210,7 +210,7 @@ Archived verbatim (condensed to State + Resume Prompt) from STATE.md v4.15 below
 |-------|-------|
 | **Date** | 2026-09-11 |
 | **Position** | cycle-007 is the sole OPEN cycle, at Phase F4 (delta implementation) IN PROGRESS. Baseline GREEN @ develop@`14e695ae` (5,267/5,091/0/176). Wave-1 worktrees created. Per-story delivery started, Story A first. All six prior cycles (001-006) CLOSED. |
-| **Convergence counter** | N/A -- F3 converged (DEC-356 approved); F4 code-review / F5 adversarial loop not yet started. trajectory-tail `->1->3->0->2` (unchanged -- no cycle-007 code merged to develop yet). |
+| **Convergence counter** | N/A -- F3 converged (D-356 approved); F4 code-review / F5 adversarial loop not yet started. trajectory-tail `->1->3->0->2` (unchanged -- no cycle-007 code merged to develop yet). |
 | **Next step (at supersession time)** | Continue Story A (`S-cycle7-credential-absence-fix`) red-green-refactor TDD cycle on `.worktrees/S-cycle7-credential-absence-fix` (`fix/cycle7-credential-absence`); then B1; C and D parallelizable in Wave 1; Wave 2 = B2 (`S-cycle7-auth-status-json`, depends on B1 merge). |
 
 ### Resume Prompt (at supersession time)
@@ -225,7 +225,7 @@ Archived verbatim (condensed to State + Resume Prompt) from STATE.md v4.15 below
 
 ---
 
-## Session Resume Checkpoint (2026-09-11, STATE.md v4.13) — SESSION-WRAP-PAUSE-2026-09-11: F3 APPROVED (DEC-356), F4 STARTED then PAUSED — Superseded 2026-09-11
+## Session Resume Checkpoint (2026-09-11, STATE.md v4.13) — SESSION-WRAP-PAUSE-2026-09-11: F3 APPROVED (D-356), F4 STARTED then PAUSED — Superseded 2026-09-11
 
 **Status:** SUPERSEDED 2026-09-11 by the v4.14 F4-BASELINE-GREEN-WAVE-1-STARTED checkpoint (F4 regression baseline re-run GREEN @ develop@`14e695ae`; Wave-1 worktrees created; Story A delivery started). Archived verbatim (condensed to State + Resume Prompt) from STATE.md v4.13 below.
 
@@ -235,24 +235,24 @@ Archived verbatim (condensed to State + Resume Prompt) from STATE.md v4.15 below
 |-------|-------|
 | **Date** | 2026-09-11 |
 | **Position** | cycle-007 is the sole OPEN cycle, at Phase F3 APPROVED / Phase F4 (delta implementation) STARTED then PAUSED at this session wrap. The F4 regression-baseline sub-agent was IN-FLIGHT and was cleanly ABANDONED (re-runnable read-only measurement, no committable state; no worktrees or code produced). All six prior tracked cycles (001-006) remain CLOSED. |
-| **Convergence counter** | N/A -- F3 converged and was approved (DEC-356); the F4 code-review/F5 adversarial loop has not started. trajectory-tail `→1→3→0→2` (unchanged -- no cycle-007 code exists yet). |
+| **Convergence counter** | N/A -- F3 converged and was approved (D-356); the F4 code-review/F5 adversarial loop has not started. trajectory-tail `→1→3→0→2` (unchanged -- no cycle-007 code exists yet). |
 | **Next step (at supersession time)** | re-run the F4 regression baseline (F4 Step 1), then create Wave-1 worktrees and begin per-story delivery -- Story A (`S-cycle7-credential-absence-fix`) first per the auth.rs merge-order note, then B1 (`S-cycle7-auth-state-derivation`); C (`oauth-help-text-fix`) + D (`readme-migration-note`) are parallelizable in Wave 1; Wave 2 = B2 (`S-cycle7-auth-status-json`, depends on B1). |
 
 ### Resume Prompt (at supersession time)
 
 ```
-**Date:** 2026-09-11. **Pipeline: PAUSED** (cycle-007 `auth-correctness-dx`, F1 APPROVED via DEC-354, F2 APPROVED via DEC-355, F3 HUMAN GATE APPROVED via DEC-356 this burst). **Position:** cycle-007 is the sole OPEN cycle, at Phase F3 APPROVED / Phase F4 (delta implementation) STARTED then PAUSED at this session wrap -- the F4 regression-baseline sub-agent was IN-FLIGHT and was cleanly ABANDONED (a re-runnable read-only measurement, no committable state; no worktrees or code were produced). All six prior tracked cycles (001-006) remain CLOSED. **NEXT** = resume F4: re-run the regression baseline (F4 Step 1), then create Wave-1 worktrees and begin per-story delivery -- Story A (`S-cycle7-credential-absence-fix`) first per the auth.rs merge-order note, then B1 (`S-cycle7-auth-state-derivation`); C (`oauth-help-text-fix`) + D (`readme-migration-note`) are parallelizable in Wave 1; Wave 2 = B2 (`S-cycle7-auth-status-json`, depends on B1).
+**Date:** 2026-09-11. **Pipeline: PAUSED** (cycle-007 `auth-correctness-dx`, F1 APPROVED via D-354, F2 APPROVED via D-355, F3 HUMAN GATE APPROVED via D-356 this burst). **Position:** cycle-007 is the sole OPEN cycle, at Phase F3 APPROVED / Phase F4 (delta implementation) STARTED then PAUSED at this session wrap -- the F4 regression-baseline sub-agent was IN-FLIGHT and was cleanly ABANDONED (a re-runnable read-only measurement, no committable state; no worktrees or code were produced). All six prior tracked cycles (001-006) remain CLOSED. **NEXT** = resume F4: re-run the regression baseline (F4 Step 1), then create Wave-1 worktrees and begin per-story delivery -- Story A (`S-cycle7-credential-absence-fix`) first per the auth.rs merge-order note, then B1 (`S-cycle7-auth-state-derivation`); C (`oauth-help-text-fix`) + D (`readme-migration-note`) are parallelizable in Wave 1; Wave 2 = B2 (`S-cycle7-auth-status-json`, depends on B1).
 
-**Pending human decisions / open follow-ups:** none blocking F4 (F3 approved via DEC-356). Standing, unchanged: `MUTANTS-NIGHTLY-VERIFY-FULL-RUN`, `VSDD-FACTORY-COMPACT-CLAUDE-MD-GAP`, `FIX-F6-A` / `F6-MUTATION-EXAMINE-GLOBS-EXPANSION`. New this burst: `E2E-EDIT-FIELD-ADF-HEURISTIC` (LOW, non-blocking). Four issue bundles PARKED: cycle-008 through cycle-011. Also new (CYCLE-007-F4-BASELINE-RERUN-PENDING): re-run the F4 regression baseline before creating any Wave-1 worktrees.
+**Pending human decisions / open follow-ups:** none blocking F4 (F3 approved via D-356). Standing, unchanged: `MUTANTS-NIGHTLY-VERIFY-FULL-RUN`, `VSDD-FACTORY-COMPACT-CLAUDE-MD-GAP`, `FIX-F6-A` / `F6-MUTATION-EXAMINE-GLOBS-EXPANSION`. New this burst: `E2E-EDIT-FIELD-ADF-HEURISTIC` (LOW, non-blocking). Four issue bundles PARKED: cycle-008 through cycle-011. Also new (CYCLE-007-F4-BASELINE-RERUN-PENDING): re-run the F4 regression baseline before creating any Wave-1 worktrees.
 
 **Resume command:** `/vsdd-factory:rehydrate-wave` then `/vsdd-factory:next-step`.
 ```
 
 ---
 
-## Session Resume Checkpoint (2026-09-11, STATE.md v4.11) — F2 APPROVED (DEC-355) + F3 CONVERGED, awaiting human gate — Superseded 2026-09-11
+## Session Resume Checkpoint (2026-09-11, STATE.md v4.11) — F2 APPROVED (D-355) + F3 CONVERGED, awaiting human gate — Superseded 2026-09-11
 
-**Status:** SUPERSEDED 2026-09-11 by the v4.12 SESSION-WRAP-PAUSE-2026-09-11 checkpoint (F3 subsequently HUMAN GATE APPROVED via DEC-356; pipeline PAUSED for session wrap immediately after). Archived verbatim (condensed to State + Resume Prompt) from STATE.md v4.11 below.
+**Status:** SUPERSEDED 2026-09-11 by the v4.12 SESSION-WRAP-PAUSE-2026-09-11 checkpoint (F3 subsequently HUMAN GATE APPROVED via D-356; pipeline PAUSED for session wrap immediately after). Archived verbatim (condensed to State + Resume Prompt) from STATE.md v4.11 below.
 
 ### State
 
@@ -266,7 +266,7 @@ Archived verbatim (condensed to State + Resume Prompt) from STATE.md v4.15 below
 ### Resume Prompt
 
 ```
-**Date:** 2026-09-11. **Pipeline: ACTIVE** (cycle-007 `auth-correctness-dx`, F1 APPROVED via DEC-354, F2 APPROVED via DEC-355, F3 CONVERGED this burst). **Position:** cycle-007 is the sole OPEN cycle, at Phase F3 (incremental story decomposition) -- CONVERGED (11 total adversary story-review passes, pass 11 zero-novelty), **awaiting the human scope gate (F3->F4)**. All six prior tracked cycles (001-006) remain CLOSED. **NEXT** = present the F3 story decomposition (`cycles/cycle-007/phase-f3-stories/`: 5 new stories, `dependency-graph-extended.md`, `wave-schedule.md`, `wave-holdout-scenarios.md`) to the human for the F3 scope-gate decision; do not begin F4 delta implementation before that approval lands.
+**Date:** 2026-09-11. **Pipeline: ACTIVE** (cycle-007 `auth-correctness-dx`, F1 APPROVED via D-354, F2 APPROVED via D-355, F3 CONVERGED this burst). **Position:** cycle-007 is the sole OPEN cycle, at Phase F3 (incremental story decomposition) -- CONVERGED (11 total adversary story-review passes, pass 11 zero-novelty), **awaiting the human scope gate (F3->F4)**. All six prior tracked cycles (001-006) remain CLOSED. **NEXT** = present the F3 story decomposition (`cycles/cycle-007/phase-f3-stories/`: 5 new stories, `dependency-graph-extended.md`, `wave-schedule.md`, `wave-holdout-scenarios.md`) to the human for the F3 scope-gate decision; do not begin F4 delta implementation before that approval lands.
 
 **Pending human decisions / open follow-ups:** cycle-007 F3 scope-gate approval (review the 5 new stories, dependency graph, and wave schedule and either approve to proceed to F4, or request adjustments). Also unchanged: MUTANTS-NIGHTLY-VERIFY-FULL-RUN, VSDD-FACTORY-COMPACT-CLAUDE-MD-GAP, FIX-F6-A / F6-MUTATION-EXAMINE-GLOBS-EXPANSION (deferred). Four issue bundles PARKED: cycle-008 (issue-io-quickwins), cycle-009 (bulk-by-jql), cycle-010 (read-index-lag), cycle-011 (filter-grammar).
 
@@ -284,14 +284,14 @@ Archived verbatim (condensed to State + Resume Prompt) from STATE.md v4.15 below
 | Field | Value |
 |-------|-------|
 | **Date** | 2026-09-15 |
-| **Position** | cycle-012 (`field-adf-autoconvert`) **CLOSED** at the Phase F7 human gate -- APPROVED ("Approve & close", DEC-361); release decision: ship on `develop`, NO TAG (cycle-005 precedent). **Pipeline idle/paused-ready** -- no active cycle. cycle-007 (`auth-correctness-dx`) remains **PAUSED** at F4 IMPL COMPLETE (Wave-2 gate PENDING, resumable). |
+| **Position** | cycle-012 (`field-adf-autoconvert`) **CLOSED** at the Phase F7 human gate -- APPROVED ("Approve & close", D-361); release decision: ship on `develop`, NO TAG (cycle-005 precedent). **Pipeline idle/paused-ready** -- no active cycle. cycle-007 (`auth-correctness-dx`) remains **PAUSED** at F4 IMPL COMPLETE (Wave-2 gate PENDING, resumable). |
 | **Convergence counter** | none active -- cycle-012's F1-F7 sequence is fully closed; no convergence track in flight. |
 | **In-flight work** | NONE. cycle-012 is CLOSED. No open PRs (#809/#810/#811/#812/#813 all MERGED). No story worktrees. |
 
 ### Resume Prompt
 
 ```
-**Date:** 2026-09-15. cycle-012 (`field-adf-autoconvert`) CLOSED at the Phase F7 human gate -- APPROVED ("Approve & close", DEC-361); release decision: ship on `develop`, NO TAG (cycle-005 precedent). Pipeline idle/paused-ready -- no active cycle. cycle-007 (`auth-correctness-dx`) remains PAUSED at F4 IMPL COMPLETE (Wave-2 gate PENDING, resumable).
+**Date:** 2026-09-15. cycle-012 (`field-adf-autoconvert`) CLOSED at the Phase F7 human gate -- APPROVED ("Approve & close", D-361); release decision: ship on `develop`, NO TAG (cycle-005 precedent). Pipeline idle/paused-ready -- no active cycle. cycle-007 (`auth-correctness-dx`) remains PAUSED at F4 IMPL COMPLETE (Wave-2 gate PENDING, resumable).
 
 **Pending human decisions / blockers:** NONE open. LOW standing items unchanged, deferred to a future maintenance sweep: M-2/OBS-A/OBS-3 (F5 debt), pre-existing SEC-001-EDITMETA-RECURSION-GUARD, E2E-COMPONENT-FILTER-SEARCH-INDEX-FLAKE (unrelated), F6 residuals L-1 (gated JSM live-E2E coverage) and L-2 (repo-wide unprovisioned Kani/fuzz). cycle-007 Wave-2 integration gate still PENDING (resumable any time).
 
@@ -311,14 +311,14 @@ CLEAN, fix PR #814 merged). Archived verbatim from STATE.md v4.36 below.
 | Field | Value |
 |-------|-------|
 | **Date** | 2026-09-15 |
-| **Position** | cycle-007 (`auth-correctness-dx`) Phase **F4 COMPLETE** -- Wave-2 integration gate PASSED this burst (regression GREEN + adversarial 3/3 CLEAN + security CLEAN + consistency PASS + holdout satisfied); all 5 stories merged, both wave gates PASSED. **F5/F6/F7 REMAIN, not yet started** -- pipeline PAUSED/resumable. cycle-012 (`field-adf-autoconvert`) remains **CLOSED** (DEC-361, F7 human gate APPROVED "Approve & close", 2026-09-15) -- unaffected by this burst. |
+| **Position** | cycle-007 (`auth-correctness-dx`) Phase **F4 COMPLETE** -- Wave-2 integration gate PASSED this burst (regression GREEN + adversarial 3/3 CLEAN + security CLEAN + consistency PASS + holdout satisfied); all 5 stories merged, both wave gates PASSED. **F5/F6/F7 REMAIN, not yet started** -- pipeline PAUSED/resumable. cycle-012 (`field-adf-autoconvert`) remains **CLOSED** (D-361, F7 human gate APPROVED "Approve & close", 2026-09-15) -- unaffected by this burst. |
 | **Convergence counter** | none active -- this burst was a gate-assessment bookkeeping recording, not a convergence loop. cycle-007's F5 scoped adversarial loop had not yet started. |
 | **In-flight work** | NONE. No open PRs (#803/#804/#805/#806/#807 all MERGED for cycle-007; #809/#810/#811/#812/#813 all MERGED for cycle-012). No story worktrees. |
 
 ### Resume Prompt
 
 ```
-**Date:** 2026-09-15. cycle-007 (`auth-correctness-dx`) Phase F4 COMPLETE -- Wave-2 integration gate PASSED (regression GREEN + adversarial 3/3 CLEAN + security CLEAN + consistency PASS + holdout satisfied); all 5 stories merged, both wave gates PASSED. F5/F6/F7 REMAIN, not yet started -- pipeline PAUSED/resumable. cycle-012 (`field-adf-autoconvert`) remains CLOSED (DEC-361, "Approve & close", 2026-09-15).
+**Date:** 2026-09-15. cycle-007 (`auth-correctness-dx`) Phase F4 COMPLETE -- Wave-2 integration gate PASSED (regression GREEN + adversarial 3/3 CLEAN + security CLEAN + consistency PASS + holdout satisfied); all 5 stories merged, both wave gates PASSED. F5/F6/F7 REMAIN, not yet started -- pipeline PAUSED/resumable. cycle-012 (`field-adf-autoconvert`) remains CLOSED (D-361, "Approve & close", 2026-09-15).
 
 **Pending human decisions / blockers:** NONE open. LOW standing items unchanged plus `CYCLE-007-STORY-STATUS-DRAFT-POSTMERGE` (OBS-C-01, LOW, process-gap -- cycle-007 story frontmatter still `draft` post-merge). `NFR-O-N-CATALOG-RETIREMENT-EDIT` confirmed present (commit `bb0e1a9d`), not duplicated. cycle-007's F5 scoped adversarial had not yet started.
 

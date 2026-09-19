@@ -145,7 +145,7 @@ Two-part structure confirmed:
 
 ### BC-2.7.008 Trace (bc-2 line 808) — Quote-Verified
 
-> `**Trace**: F2 spec evolution (SOH-ATTACHMENTS-1 2026-07-15; DEC-179 ratified design); P15-007 (EC-2.7.008-10 filtered-to-zero non-empty); P25-001 (EC-2.7.008-6 JSON-mode hint-vs-error policy; EC-2.7.008-7 human-mode summary scoping; Per-file download error policy point (3) scoped)`
+> `**Trace**: F2 spec evolution (SOH-ATTACHMENTS-1 2026-07-15; D-179 ratified design); P15-007 (EC-2.7.008-10 filtered-to-zero non-empty); P25-001 (EC-2.7.008-6 JSON-mode hint-vs-error policy; EC-2.7.008-7 human-mode summary scoping; Per-file download error policy point (3) scoped)`
 
 P25-001 citation present with description of all three changes. ✓
 

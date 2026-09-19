@@ -16,7 +16,7 @@ Set TypingSpeed 40ms
 Set Shell "bash"
 
 # S-579-1 AC-003 (BC-2.1.023 Edge Case EC-2.1.023-2 -- asymmetric
-# conflicts_with, human-locked DEC-298): `--updated-recent` + `--updated-after`
+# conflicts_with, human-locked D-298): `--updated-recent` + `--updated-after`
 # -> clap `conflicts_with` rejection, exit 2. This is a pure clap-derive
 # validation error -- it fires BEFORE any HTTP call, so no mock server is
 # needed for this recording (zero network I/O on this path).

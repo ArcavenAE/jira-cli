@@ -19,7 +19,7 @@ Captured: 2026-07-14
 | `e2e-guard-evidence.txt` | `test_every_ignored_test_has_gate_guard` + `test_no_test_function_exceeds_line_budget` + full surface guard (10 tests) | 12/12 green |
 
 The gated e2e test `test_e2e_comment_edit_visibility_merge_semantics` runs in the
-nightly `e2e.yml` workflow (DEC-175 restored scenarios). It exercises 3 scenarios
+nightly `e2e.yml` workflow (D-175 restored scenarios). It exercises 3 scenarios
 (5-step MERGE probe, PRESERVED base, compound cell). Live run not captured here;
 offline gate machinery confirmed passing by the three always-run guards above.
 
@@ -67,7 +67,7 @@ regression guards — they appear in the test suite unchanged and pass as expect
   absent on --yes. The test exercises "" (empty body) + --yes to reach the handler-level
   empty-body guard, which exits 64, not 2. If requires("public") were present, clap
   would reject with exit 2 before reaching the guard.
-- AC-012 EOFof from read_line → exit 130. DEC-174 mechanism (eprint! + read_line) is
+- AC-012 EOFof from read_line → exit 130. D-174 mechanism (eprint! + read_line) is
   unconditional; Ok(0) (EOF) MUST NOT map to cancel path (exit 0); must be Interrupted (130).
 - AC-011 (pre-satisfied) uses clap conflicts_with. "cannot be used with" in stderr is
   VP-577-010's discriminator that distinguishes a clap-level exit 2 from a handler exit 2.

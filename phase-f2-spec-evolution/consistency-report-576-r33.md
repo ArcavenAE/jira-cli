@@ -246,13 +246,13 @@ Dry-run non-suppression cross-ref added: "This guard fires even when `--dry-run`
 
 **BC-3.9.005 Trace** (bc-3 line 3387):
 
-> `**Trace**: F2 spec evolution (2026-07-15 SOH-ATTACHMENTS-1, DEC-179); OQ-9 ruling (--internal non-JSM = silent no-op; --public non-JSM = exit 64 — asymmetric by design); P23-002 (EC-3.9.005-3 extended: dry-run does not suppress this eligibility guard; cross-ref EC-3.9.020-8)`
+> `**Trace**: F2 spec evolution (2026-07-15 SOH-ATTACHMENTS-1, D-179); OQ-9 ruling (--internal non-JSM = silent no-op; --public non-JSM = exit 64 — asymmetric by design); P23-002 (EC-3.9.005-3 extended: dry-run does not suppress this eligibility guard; cross-ref EC-3.9.020-8)`
 
 P23-002 citation present in BC-3.9.005 Trace. ✓
 
 **BC-3.9.020 Trace** (bc-3 line 3894):
 
-> `**Trace**: F2 spec evolution (2026-07-15 SOH-ATTACHMENTS-1, DEC-179); impact-boundary-576.md R3.2 (--dry-run scope + output shape); BC-3.4.021 (\`issue edit --dry-run\` output precedent); adversary pass-1 human ruling R1 (2026-07-15); #526 JSON render invariant; P14-009 (--replace-existing --dry-run --public gate suppression + EC-3.9.020-7); P14-010 (BC-3.9.020 retitle to cover upload path c); P23-002 (EC-3.9.020-7 GATES vs ELIGIBILITY GUARDS distinction; EC-3.9.020-8 --dry-run non-suppression of eligibility guard)`
+> `**Trace**: F2 spec evolution (2026-07-15 SOH-ATTACHMENTS-1, D-179); impact-boundary-576.md R3.2 (--dry-run scope + output shape); BC-3.4.021 (\`issue edit --dry-run\` output precedent); adversary pass-1 human ruling R1 (2026-07-15); #526 JSON render invariant; P14-009 (--replace-existing --dry-run --public gate suppression + EC-3.9.020-7); P14-010 (BC-3.9.020 retitle to cover upload path c); P23-002 (EC-3.9.020-7 GATES vs ELIGIBILITY GUARDS distinction; EC-3.9.020-8 --dry-run non-suppression of eligibility guard)`
 
 P23-002 citation present in BC-3.9.020 Trace. ✓
 
@@ -686,7 +686,7 @@ No holdout for the collision-skip exit-0 path. Not introduced or worsened by P23
 
 `bc-2-issue-read.md` BC-2.7.012 body Trace field was missing P22-003 citation (r32 found: "Current Trace ends with P21-006"). **NOW RESOLVED**: BC-2.7.012 Trace at bc-2 line 949 **quote-verified** to contain:
 
-> `**Trace**: F2 spec evolution (SOH-ATTACHMENTS-1 2026-07-15; DEC-179 ratified design; research §6 JRACLOUD-96384/-78388 VERIFIED); P21-006 (KEY-404 batch-paths-only annotation — \`--id\` does not server-verify KEY per BC-2.7.007); P22-003 (body prose "Unknown issue key" sentence prepended with batch-only caveat: batch paths only — \`--all\`/\`--newest\`; \`--id\` does not server-verify KEY per BC-2.7.007)`
+> `**Trace**: F2 spec evolution (SOH-ATTACHMENTS-1 2026-07-15; D-179 ratified design; research §6 JRACLOUD-96384/-78388 VERIFIED); P21-006 (KEY-404 batch-paths-only annotation — \`--id\` does not server-verify KEY per BC-2.7.007); P22-003 (body prose "Unknown issue key" sentence prepended with batch-only caveat: batch paths only — \`--all\`/\`--newest\`; \`--id\` does not server-verify KEY per BC-2.7.007)`
 
 P22-003 citation now present in body Trace. The fix was applied as a micro-fix alongside P23 work (bc-2 not listed in spec-changelog [1.3.63] Changed Requirements — see INFO-NEW-2).
 

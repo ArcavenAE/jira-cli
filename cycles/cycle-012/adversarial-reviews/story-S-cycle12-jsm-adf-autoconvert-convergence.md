@@ -19,7 +19,7 @@ recorded: "2026-09-14"
 
 ## Convergence Verdict
 
-**CONVERGED.** Three consecutive CLEAN adversary passes (passes 1, 2, 3), zero CRITICAL/HIGH/MEDIUM findings across all three passes. Bar: no CRIT/HIGH/MED (DEC-360 precedent).
+**CONVERGED.** Three consecutive CLEAN adversary passes (passes 1, 2, 3), zero CRITICAL/HIGH/MEDIUM findings across all three passes. Bar: no CRIT/HIGH/MED (D-360 precedent).
 
 - **Final converged tree/head:** `3dadb1ae`
 - **Branch:** `feat/cycle12-jsm-adf-autoconvert` (base `67b3939a`)
@@ -58,7 +58,7 @@ Fresh-angle pass: E2E gating/self-close verified OK; wiremock coverage confirmed
 
 ## Resolution
 
-**OBS-P3-2 RESOLVED** — CHANGELOG extended at commit `3dadb1ae` (doc-only fix; no re-convergence pass required per DEC-360 precedent for doc-only post-convergence fixes). All other observations are LOW/NITPICK severity and accepted as non-blocking residuals.
+**OBS-P3-2 RESOLVED** — CHANGELOG extended at commit `3dadb1ae` (doc-only fix; no re-convergence pass required per D-360 precedent for doc-only post-convergence fixes). All other observations are LOW/NITPICK severity and accepted as non-blocking residuals.
 
 ## Residual Non-Blocking Items
 

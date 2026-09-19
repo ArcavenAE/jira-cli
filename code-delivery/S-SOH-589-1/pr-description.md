@@ -375,4 +375,4 @@ models-used:
 - [x] No new imports in editmeta.rs or field_resolve.rs
 - [x] Security review completed — APPROVE, no CRITICAL/HIGH findings; 1 LOW (pre-existing ANSI echo pattern)
 - [ ] PR reviewer approval
-- [ ] Human merge authorization (DEC-128)
+- [ ] Human merge authorization (D-128)

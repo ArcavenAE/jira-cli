@@ -67,7 +67,7 @@ EC-3.9.020-7 `--dry-run` annotation is only reachable when `--dry-run` AND `--re
 ### Positive Integration Confirmations
 
 - Three sanitization layers (CWE-116 `display_sanitize_filename`, CWE-22 `sanitize_attachment_filename`, CWE-93 CRLF filename guard) are correctly placed at their respective call sites. Zero cross-story confusion between the three.
-- DEC-168 delete-variant call-site audit confirmed correct: `delete_attachment_targeted` is invoked only on single-AID paths; `delete_attachment` (benign-skip semantics) is invoked at bulk/older-than/replace-existing loops. The `msg.contains("not found or already deleted")` check in the replace loop remains intact.
+- D-168 delete-variant call-site audit confirmed correct: `delete_attachment_targeted` is invoked only on single-AID paths; `delete_attachment` (benign-skip semantics) is invoked at bulk/older-than/replace-existing loops. The `msg.contains("not found or already deleted")` check in the replace loop remains intact.
 - FIX-576-DL `deserialize_string_or_int_as_string` visitor is correctly scoped to `AttachmentMetadata.id` only; `AttachmentObject.id` (list path, string-only) is unchanged.
 - Multi-profile cache boundary preserved: `invalidate_project_meta_cache` in the stale-heal path correctly takes `profile: &str` as its first argument.
 - JSON render invariant #526 holds across all new files: all `--output json` paths in `src/cli/issue/attachments.rs` route through `output::render_json` or `output::print_output`.
@@ -79,7 +79,7 @@ EC-3.9.020-7 `--dry-run` annotation is only reachable when `--dry-run` AND `--re
 | Finding | Disposition | Notes |
 |---------|-------------|-------|
 | AUDIT-576-003 | RESOLVED-BY-WAVE | Doc-only count-drift between story v1.45 prose "26 tests" and shipped test count 29 (+3 CI kill tests landed after story freeze). Process-gap class PG-576-1. |
-| AUDIT-576-004 | RESOLVED-BY-WAVE | deny.toml:282 `cpufeatures` skip — DEC-185 exception; rationale verified at gate. |
+| AUDIT-576-004 | RESOLVED-BY-WAVE | deny.toml:282 `cpufeatures` skip — D-185 exception; rationale verified at gate. |
 | P3-003 | STILL-OPEN-defer | Upload multipart path bypasses blanket-401 auto-refresh. Widened by WAVE-576-02 to also cover `post_request_attachment` JSON POST path. Target: dedicated story. |
 | P4-006 | STILL-OPEN-defer | Dry-run preview channel divergence confirmed by WAVE-576-01. Target: unify dry-run channel (upload stdout vs delete stderr). |
 | P8-001 | STILL-OPEN-defer | Step-2 429 no-carve-out (BC-3.9.006 spec-level note accepted). Low blast radius. |

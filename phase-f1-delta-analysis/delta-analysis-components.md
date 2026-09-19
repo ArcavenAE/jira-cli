@@ -77,7 +77,7 @@ correctly deferred.
 | `src/cache.rs` | MODIFIED | New components cache family, keyed-map-per-project pattern (`ProjectMeta`/`ObjectTypeAttrCache` precedent), model-b swallow+warn writer |
 | `src/cli/issue/helpers.rs` | MODIFIED | New `resolve_component(...)` -- structural clone of `resolve_team_field`, NOT a shared/generic implementation |
 | `src/cli/issue/edit.rs` | MODIFIED | **HIGH regression-risk file** -- see §5 |
-| `src/cli/issue/create.rs` | MODIFIED | LOW risk -- additive `--component` on platform create path only; JSM dispatch fork and DEC-188 pre-flight guard ordering must stay byte-for-byte unchanged on the non-`--component` path |
+| `src/cli/issue/create.rs` | MODIFIED | LOW risk -- additive `--component` on platform create path only; JSM dispatch fork and D-188 pre-flight guard ordering must stay byte-for-byte unchanged on the non-`--component` path |
 | `src/cli/issue/list.rs`, `src/jql.rs` | MODIFIED | **MEDIUM-HIGH regression-risk files** -- see §5 |
 | `src/api/jira/issues.rs` | MODIFIED | New `update_issue_components` (single-issue `update`-verb path) |
 | `src/types/jira/mod.rs`, `src/api/jira/mod.rs`, `src/types/jira/editmeta.rs`, `src/partial_match.rs` | DEPENDENT | Re-export wiring / read-only contract consumption, no logic change |
@@ -101,7 +101,7 @@ issues' BCs implicitly depend on.
 |---|---|---|
 | `src/cli/issue/edit.rs` | **HIGH** | Dense existing logic (`handle_edit_bulk_labels`, C-1 single-key-only guards, the `--field`+`--label` mutual-exclusion block, dry-run preview assembly). Components diverge from labels at the **wire layer**: single-issue native `update` verb wraps names as `{"add":{"name":X}}` objects (not labels' bare-string `{"add":"foo"}`) -- confirmed by research. The dry-run JSON preview must gain a `components` entry using the same "simplified preview, not wire-identical" convention documented at `edit.rs` (BC-3.4.021 precedent); `components` is also a real Jira system-field name reachable via the generic `--field` escape hatch, so `BC-3.4.017` Gate B's four-field mutual-exclusion list is a strong candidate for amendment to five. |
 | `src/cli/issue/list.rs` + `src/jql.rs` | **MEDIUM-HIGH** | `build_filter_clauses`/`FilterOptions` and `build_jql_base_parts` are exercised by ~15 existing unit tests asserting **exact clause order** (positional `Vec<String>` equality, not membership). Inserting a pre-composed `component_clause: Option<&str>` field in the wrong struct-literal position, or the wrong push-order, breaks passing tests even though the underlying JQL would still be correct. `jql.rs`'s `escape_value`/`build_asset_clause` quote-then-backslash escaping conventions must be followed exactly for free-text component names. |
-| `src/cli/mod.rs`, `src/cli/issue/create.rs`, `src/cache.rs`, `src/cli/issue/helpers.rs` | LOW-MEDIUM | Additive-only surfaces; Rust exhaustiveness checking is the safety net on `mod.rs`; `create.rs`'s DEC-188 pre-flight guard ordering must stay intact; `cache.rs`'s profile-scoping invariant (`profile: &str` first arg) is a hard convention per CLAUDE.md's "Multi-profile boundary" gotcha. |
+| `src/cli/mod.rs`, `src/cli/issue/create.rs`, `src/cache.rs`, `src/cli/issue/helpers.rs` | LOW-MEDIUM | Additive-only surfaces; Rust exhaustiveness checking is the safety net on `mod.rs`; `create.rs`'s D-188 pre-flight guard ordering must stay intact; `cache.rs`'s profile-scoping invariant (`profile: &str` first arg) is a hard convention per CLAUDE.md's "Multi-profile boundary" gotcha. |
 
 **Files explicitly NOT touched (regression baseline):** `src/api/client.rs`,
 `src/api/auth*.rs`, `src/api/pagination.rs`, `src/api/rate_limit.rs`,
@@ -116,7 +116,7 @@ Regression-risk **stories** flagged by the business-analyst as needing full re-r
 `S-396-issue-edit-field-flag.md`, `S-407-label-conflict-block-coverage-and-meta-test.md`
 (its `test_label_conflict_block_lists_every_relevant_flag` meta-test will fail if
 `--component` isn't slotted into the flag partition), `S-398-issue-edit-create-changed-
-fields-echo.md`, `S-639-1.md` (DEC-188 ordering), `S-692-1-dry-run-stdin-adf-preview.md`,
+fields-echo.md`, `S-639-1.md` (D-188 ordering), `S-692-1-dry-run-stdin-adf-preview.md`,
 `S-388-...` (400-classification style check), plus `build_filter_clauses`/`list.rs`
 coverage in `tests/issue_list_errors.rs`/`tests/issue_list_assets.rs`. Full test-file
 inventory: business-analyst input §4.

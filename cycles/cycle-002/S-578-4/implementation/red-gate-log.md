@@ -20,23 +20,23 @@ feature_branch: feature/S-578-4-create-field-support
 develop_base_sha: 41763ff0
 ---
 
-# Red Gate Log: S-578-4 (`issue create --field` platform-path createmeta resolution + DEC-188 reversal)
+# Red Gate Log: S-578-4 (`issue create --field` platform-path createmeta resolution + D-188 reversal)
 
 ## Summary
 
 | Story | Tests Written | All Fail (Red)? | Gate |
 |-------|----------------|------------------|------|
-| S-578-4 (`issue create --field` platform-path createmeta resolution + DEC-188 reversal (DEC-310), 13pts, 19 ACs) | New `tests/issue_create_field.rs` (2207 lines) + inverted `tests/issue_create_jsm.rs` (461 lines changed) | 23/23 FAIL in `issue_create_field.rs` + 10/10 FAIL in `issue_create_jsm.rs` on real assertion mismatches, 0 build errors, 0 panics; 30 legitimately PASS in `issue_create_field.rs` and 97 legitimately PASS in `issue_create_jsm.rs` | **VERIFIED** |
+| S-578-4 (`issue create --field` platform-path createmeta resolution + D-188 reversal (D-310), 13pts, 19 ACs) | New `tests/issue_create_field.rs` (2207 lines) + inverted `tests/issue_create_jsm.rs` (461 lines changed) | 23/23 FAIL in `issue_create_field.rs` + 10/10 FAIL in `issue_create_jsm.rs` on real assertion mismatches, 0 build errors, 0 panics; 30 legitimately PASS in `issue_create_field.rs` and 97 legitimately PASS in `issue_create_jsm.rs` | **VERIFIED** |
 
 ## Stubs Created
 
-### S-578-4: `issue create --field` platform-path createmeta resolution + DEC-188 reversal (DEC-310)
+### S-578-4: `issue create --field` platform-path createmeta resolution + D-188 reversal (D-310)
 
 Stub commit (`c479220a`): `cargo check --all-targets` CLEAN (zero errors).
 `detect_flag_field_overlap` and the `resolve_edit_fields::Create` arm were
-confirmed genuine `todo!()` stubs (no smuggled logic). The DEC-188
+confirmed genuine `todo!()` stubs (no smuggled logic). The D-188
 `--field`-without-`--request-type` pre-flight guard was removed per the
-DEC-310 reversal; the BC-3.8.013 `--on-behalf-of`-without-`--request-type`
+D-310 reversal; the BC-3.8.013 `--on-behalf-of`-without-`--request-type`
 guard was preserved unchanged.
 
 - `fn detect_flag_field_overlap(...) -> ...` -- `todo!()` stub (D2
@@ -45,8 +45,8 @@ guard was preserved unchanged.
 - `resolve_edit_fields` `Create` arm -- `todo!()` stub (createmeta-backed
   field resolution for the platform `issue create --field` path, mirroring
   the existing edit-path resolver)
-- DEC-188 `--field`-without-`--request-type` exit-64 guard -- **removed**
-  (DEC-310 reversal). BC-3.8.013 `--on-behalf-of`-without-`--request-type`
+- D-188 `--field`-without-`--request-type` exit-64 guard -- **removed**
+  (D-310 reversal). BC-3.8.013 `--on-behalf-of`-without-`--request-type`
   guard -- **preserved**, unchanged.
 
 **Compile verification:** `cargo check --all-targets` clean, zero errors.
@@ -58,8 +58,8 @@ guard was preserved unchanged.
 Test-writer commit (`8b379e68`) added `tests/issue_create_field.rs`
 (2207 lines, new file) covering the 19 originally-scoped acceptance
 criteria for platform-path `--field` createmeta resolution, and inverted
-the DEC-188-era assertions in `tests/issue_create_jsm.rs` (461 lines
-changed) to assert the post-reversal (DEC-310) behavior. Zero `src/`
+the D-188-era assertions in `tests/issue_create_jsm.rs` (461 lines
+changed) to assert the post-reversal (D-310) behavior. Zero `src/`
 changes in the test commit (`git diff --stat c479220a HEAD -- src/` is
 empty).
 
@@ -69,10 +69,10 @@ empty).
   expected exit 0; got Some(101)", because the `todo!()` D2
   collision-detection stub panics rather than resolving) / **30 pass**
   (4 legitimate pre-existing BC-3.8.013 `--on-behalf-of` guard regression
-  pins, unaffected by the DEC-188 reversal, + 26 unrelated `common::wf`
+  pins, unaffected by the D-188 reversal, + 26 unrelated `common::wf`
   tests pulled in via `mod common;`).
 - `tests/issue_create_jsm.rs`: **10 FAIL** (expected; the 10 tests
-  inverted from their DEC-188-era form now assert the DEC-310
+  inverted from their D-188-era form now assert the D-310
   post-reversal behavior, which the `todo!()` stub does not yet provide)
   / **97 pass** (pre-existing JSM dispatch-fork tests, including
   AC-2/6/16/20/21, unaffected by the platform-path change).
@@ -87,7 +87,7 @@ empty).
 |---------------|--------|
 | `tests/issue_create_field.rs` (new suite) at Red Gate | 23/23 red (expected) |
 | `tests/issue_create_field.rs` pre-existing-in-file baseline (BC-3.8.013 pins + `common::wf`) | 30/30 pass, 0 regressions |
-| `tests/issue_create_jsm.rs` inverted DEC-188-era tests | 10/10 red (expected) |
+| `tests/issue_create_jsm.rs` inverted D-188-era tests | 10/10 red (expected) |
 | `tests/issue_create_jsm.rs` pre-existing baseline | 97/97 pass, 0 regressions |
 | `cargo check --all-targets` | clean, 0 errors |
 

@@ -99,4 +99,4 @@ timestamp: "2026-07-21T00:00:00"
 | Security review | PASS — 0 CRITICAL/HIGH |
 | Demo evidence | 18/18 ACs covered |
 | Dependency S-576-1 (#630) | MERGED |
-| DEC-128 constraint | Human squash-merges; MERGE_READY posted at #5032384198 |
+| D-128 constraint | Human squash-merges; MERGE_READY posted at #5032384198 |

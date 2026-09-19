@@ -7,7 +7,7 @@ status: draft
 author: architect (vsdd-factory)
 traces_to: .factory/phase-f1-delta-analysis/cycle-006/delta-analysis.md
 governance: policy-doc-only (docs/specs/cargo-mutants-policy.md) — NO new PRD BC, per
-  DEC-348 and the precedent set by MUTATION-CI-TIMEOUT (2026-06-28).
+  D-348 and the precedent set by MUTATION-CI-TIMEOUT (2026-06-28).
 implements_for: .factory/phase-f2-spec-evolution/cycle-006/architecture-delta.md
 revision_note: "Round-9 adversarial fix (F2 fresh-context review, ninth
   pass / adversary pass 13) — a LOW loop-breaker (LOW-1) plus a
@@ -239,8 +239,8 @@ mutants-plan  (PR-only; computes DIFF_FILE once, uploads it as an artifact,
                               outcomes.json drives INV-AGG's summation.)
 ```
 
-`mutants-aggregate` replaces `mutants` as the `ci-gate.needs` member (DEC-096/
-DEC-097: new required jobs are wired via `ci-gate.needs`, never directly into
+`mutants-aggregate` replaces `mutants` as the `ci-gate.needs` member (D-096/
+D-097: new required jobs are wired via `ci-gate.needs`, never directly into
 branch protection). `mutants-plan` and `mutants` (the shard matrix) are never
 `ci-gate.needs` members — see `architecture-delta.md §Guardrail Lockstep Plan`
 for how each is instead admitted via `PINNED_GATE_EXCLUDED_JOBS`.

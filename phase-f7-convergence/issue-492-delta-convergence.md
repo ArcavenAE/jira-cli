@@ -25,7 +25,7 @@ traces_to: STATE.md, cycles/cycle-001/issue-492/
 ## Convergence Summary
 
 All five convergence dimensions reach PASS status. No open code defects. No blocking issues.
-PR #521 is HUMAN-AUTHORIZED for merge; execution pending CI-green confirmation (DEC-108).
+PR #521 is HUMAN-AUTHORIZED for merge; execution pending CI-green confirmation (D-108).
 
 ---
 
@@ -163,7 +163,7 @@ F6 targeted hardening mechanically surfaced a **pre-existing, out-of-scope defec
 
 ## Decision Reference
 
-**DEC-108** (2026-06-16): Issue #492 F6 hardening COMPLETE (proptest 5-invariant suite,
+**D-108** (2026-06-16): Issue #492 F6 hardening COMPLETE (proptest 5-invariant suite,
 150k cases; mutation 100% effective, 3 equivalent; audit/deny clean) + F7 DELTA_CONVERGED
 5/5 (consistency audit PASS-WITH-NOTES; input-drift PASS for perimeter). Human-authorized
 merge of PR #521 (pending CI green). F6 surfaced pre-existing OOS lone-CR defect

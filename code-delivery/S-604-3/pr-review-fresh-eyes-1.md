@@ -16,8 +16,8 @@ Order in `handle_delete`: source resolve → target resolve (`--move-to`) → se
 ### Wrong-target impossibility — CORRECT
 Snapshot JQL (`:981`) and DELETE (`:1035`) both key off `component_id` (source); `target_id` only ever populates `moveIssuesTo`. AC-017 asserts EXACT `component = 10001 ORDER BY key ASC` against a two-project same-name fixture (resolved numeric id, never the shared name). Numeric `--move-to` targets are project-validated against the source's project (`:902`); cross-project/404 target → `move_to_not_found_in_project` (zero DELETE, AC-007).
 
-### Disposition guard (DEC-188) — CORRECT
-Neither flag → application-level `JrError::UserError` exit 64 naming both `--move-to` and `--orphan`, no count (`disposition_guard_error`, `:690`). Both flags → clap `conflicts_with` exit 2. Correct DEC-188 split (not `ArgGroup::required`). Invariant-1 ordering: NAME source resolves before the guard (`:816` — not-found wins, AC-003); numeric source hits the guard first (`:824` — no HTTP reachable pre-disposition, AC-004).
+### Disposition guard (D-188) — CORRECT
+Neither flag → application-level `JrError::UserError` exit 64 naming both `--move-to` and `--orphan`, no count (`disposition_guard_error`, `:690`). Both flags → clap `conflicts_with` exit 2. Correct D-188 split (not `ArgGroup::required`). Invariant-1 ordering: NAME source resolves before the guard (`:816` — not-found wins, AC-003); numeric source hits the guard first (`:824` — no HTTP reachable pre-disposition, AC-004).
 
 ### Exit-code taxonomy — CORRECT
 `SnapshotIncomplete` → `exit_code()` `_ => 1`. Resolver 404 → `UserError` (64). DELETE-race 404 propagates via `client.delete → send_inner` as `JrError::ApiError{status:404}` → 1 (`client.rs:1051`). AC-021 pins the 64-vs-1 divergence in one test; AC-022 pins the `moveIssuesTo`-target race → 1.

@@ -97,7 +97,7 @@ changelog:
     legitimately edits it: deletion of the now-unused `reject_unsupported_hint_kinds` interim
     guard helper, since S-578-3 is its LAST caller after S-578-2 already removed the edit.rs
     call-site, and the platform `handle_create` never called it (rejects `--field` via the
-    DEC-188 preflight instead) — grep-confirmed zero dangling call sites, so removal introduces
+    D-188 preflight instead) — grep-confirmed zero dangling call sites, so removal introduces
     no silent hint-drop. `create.rs` moved from the MUST-NOT-change list to the File Structure
     Requirements table as a narrow, scoped MODIFY entry (delete the helper only; `parse_field_kv`
     and all other `create.rs` logic untouched); the rest of the MUST-NOT-change list
@@ -552,7 +552,7 @@ touching `build()`'s loop.
 | `src/api/jsm/requests.rs` | MODIFY | `JsmRequestBuilder.extra_fields` type change + kind-aware `build()` dispatch |
 | `src/cli/issue/jsm_create.rs` | MODIFY | `:asset` workspace-id resolution at the `--field` call site (line ~282) |
 | `tests/issue_create_jsm.rs` | MODIFY | All 10 new ACs; existing 59 tests untouched (regression baseline) |
-| `src/cli/issue/create.rs` | MODIFY (narrow) | Delete the now-unused `reject_unsupported_hint_kinds` helper — S-578-3 is its LAST caller (S-578-2 already removed its own call-site). The platform `handle_create` never called it and rejects `--field` via the DEC-188 preflight, so removal introduces no silent hint-drop. Do NOT change `parse_field_kv` or any other `create.rs` logic. |
+| `src/cli/issue/create.rs` | MODIFY (narrow) | Delete the now-unused `reject_unsupported_hint_kinds` helper — S-578-3 is its LAST caller (S-578-2 already removed its own call-site). The platform `handle_create` never called it and rejects `--field` via the D-188 preflight, so removal introduces no silent hint-drop. Do NOT change `parse_field_kv` or any other `create.rs` logic. |
 
 **Files that MUST NOT change:**
 - `src/cli/issue/edit.rs`, `src/cli/issue/field_resolve.rs` — S-578-2's scope

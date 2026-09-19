@@ -3,7 +3,7 @@
 ## VERDICT: APPROVE
 
 No blocking findings. The visibility pipeline is correct, the confirmation-gate
-mechanism matches the documented DEC-174 constraint exactly, and the test suite
+mechanism matches the documented D-174 constraint exactly, and the test suite
 genuinely exercises every claimed behavior at the wire and exit-code level. Two
 non-blocking suggestions below.
 
@@ -32,7 +32,7 @@ description, and test evidence only.
    2-key set and boolean types. Correct.
 5. **`--yes` lacks `requires("public")`** — destructure just binds `yes`; AC-010 (both
    variants) proves `--yes` alone is a silent no-op (exit 0) and that empty-body still
-   yields exit 64 (handler guard) not exit 2 (clap `requires`). Correct per DEC-169.
+   yields exit 64 (handler guard) not exit 2 (clap `requires`). Correct per D-169.
 6. **JSDCLOUD-6050 hint stderr-only** — `eprintln!`, fires after ADF success and before
    PUT, on both `--internal` and `--public`; not on cancel (returns earlier) or ADF
    failure. AC-005/006 confirm the substring on stderr even under `--output json`. Correct.
@@ -54,7 +54,7 @@ description, and test evidence only.
 10. **Security / write-path design** — sound. Confirmation gate guards only the risky
     direction (`--public`, making customer-visible); `--internal` needs none. `--yes`
     bypass is meaningful only with `--public`, no-op otherwise. MERGE avoids clobbering
-    unrelated properties. No new attack surface. Consistent with SEC-577-001 / DEC-169.
+    unrelated properties. No new attack surface. Consistent with SEC-577-001 / D-169.
 
 Diff size (1787 insertions) is dominated by tests (973) + e2e (637); source change is
 184 LOC. Appropriate for the feature; not a concern.
@@ -83,7 +83,7 @@ would confirm the no-op. Fix if convenient.
 ## Summary
 
 Clean, well-scoped implementation (184 LOC source, rest tests/e2e/docs). The `--public`
-confirmation gate faithfully implements the DEC-174 manual `eprint! + read_line`
+confirmation gate faithfully implements the D-174 manual `eprint! + read_line`
 mechanism, correctly gates on `no_input` alone, distinguishes cancel (exit 0, 2-key
 envelope) from interrupt (exit 130), and the JSDCLOUD-6050 hint is stderr-only. Tests
 inspect real wire bodies and exact JSON key-sets rather than proxies, and the e2e probe

@@ -50,11 +50,11 @@ input-hash: "4dc9f48"
 
 ### Dimension Notes
 
-**Spec Convergence:** F2 ran 19 adversarial passes (DEC-158: STRICT criterion — any delta-attributable LOW resets; VA-informational exempt). Trajectory 3→4→5→5→0→1→0→4→1→0→3→1→1→0→2→3→0→0→0. Clean window 17+18+19. BC-7.2.015 authored; BC-7.2.007 EC-2 amended to record closure; H-NEW-ADF-010 added to holdout-scenarios.md (Group 12, MUST-PASS); VP-571-001..005 added. Novelty score at convergence effectively 0.00.
+**Spec Convergence:** F2 ran 19 adversarial passes (D-158: STRICT criterion — any delta-attributable LOW resets; VA-informational exempt). Trajectory 3→4→5→5→0→1→0→4→1→0→3→1→1→0→2→3→0→0→0. Clean window 17+18+19. BC-7.2.015 authored; BC-7.2.007 EC-2 amended to record closure; H-NEW-ADF-010 added to holdout-scenarios.md (Group 12, MUST-PASS); VP-571-001..005 added. Novelty score at convergence effectively 0.00.
 
 **Test Convergence:** 1 in-scope mutant generated (`src/adf.rs:1282:9 replace push_code with ()`). Killed immediately (4.2 s) by the EC-1..EC-6 example-based tests + PANEL-ANCHOR test asserting `marks == [code]`; kill rate 100%. No vacuously true tests: every `tests/adf_code_mark_exclusivity.rs` integration test carries a `Mock::given(any()).expect(0)` catch-all enforcing zero extra HTTP calls plus assertion on the captured request body's `marks` array.
 
-**Implementation Convergence:** F3 story adversarial STRICT CONVERGED (10 passes / 6 fix rounds; window 8+9+10 CLEAN — DEC-160). F4 Step-4.5 adversarial STRICT CONVERGED (window F4-p2/F4-p3/F4-p4 — DEC-161). F5 ran 6 passes with STRICT criterion: p1 CLEAN (post-#593 merge), p2 CLEAN, p3 1 LOW MISSING-CHANGELOG-ENTRY (fixed via fix-PR #594 squash-merged @ d7875e6, DEC-128 honored), p4 CLEAN, p5 CLEAN (one informational observation: spec-changelog range-shift; verified NON-DEFECT per factory commit b5c0f6c), p6 CLEAN. Window p4/p5/p6 CLEAN×3 = STRICT CONVERGED (DEC-162). No [process-gap] findings any pass. Open CRIT/HIGH: 0/0/0/0/0/0.
+**Implementation Convergence:** F3 story adversarial STRICT CONVERGED (10 passes / 6 fix rounds; window 8+9+10 CLEAN — D-160). F4 Step-4.5 adversarial STRICT CONVERGED (window F4-p2/F4-p3/F4-p4 — D-161). F5 ran 6 passes with STRICT criterion: p1 CLEAN (post-#593 merge), p2 CLEAN, p3 1 LOW MISSING-CHANGELOG-ENTRY (fixed via fix-PR #594 squash-merged @ d7875e6, D-128 honored), p4 CLEAN, p5 CLEAN (one informational observation: spec-changelog range-shift; verified NON-DEFECT per factory commit b5c0f6c), p6 CLEAN. Window p4/p5/p6 CLEAN×3 = STRICT CONVERGED (D-162). No [process-gap] findings any pass. Open CRIT/HIGH: 0/0/0/0/0/0.
 
 **Verification Convergence:** VP-571-001 `prop_bc_7_2_015_no_code_marked_text_node_carries_typographic_marks` run at `PROPTEST_CASES=2000` (10× default; held as formal-verification substitute per `.factory/phase-f6-hardening/kani-results.md`) — PASS. Fuzz: justified-skip (no cargo-fuzz in project; proptest is the substitute; delta introduces no new panic/I/O surface). `cargo audit` exit 0, 347 crates, 0 vulnerabilities. `cargo deny` exit 0, 3 unused-allowance warnings (pre-existing baseline). `push_code` is pure-core; BC-7.2.015 SEC framing: restrictive-only allowlist, no untrusted-input execution, no `href` scheme validation change — no CRIT/HIGH security findings.
 
@@ -137,9 +137,9 @@ BC-7.2.015 (new) + BC-7.2.007 EC-2 (amended → closed)
   → src/adf.rs::tests (inline unit + proptest; EC-1..EC-6 + CONTROL + PANEL-ANCHOR + VP-571-004 read-tolerance)
   → tests/adf_code_mark_exclusivity.rs (H-NEW-ADF-010 Calls A–D, platform path)
   → tests/issue_create_jsm.rs (H-NEW-ADF-010 Call E, JSM path parity)
-  → F3: STRICT CONVERGED (10 passes / 6 fix rounds; window 8+9+10 — DEC-160)
-  → F4 Step-4.5: STRICT CONVERGED (window F4-p2/p3/p4 — DEC-161); PR #593 @ 7ba4cf4
-  → F5: STRICT CONVERGED (6 passes; window p4/p5/p6 — DEC-162); fix-PR #594 @ d7875e6
+  → F3: STRICT CONVERGED (10 passes / 6 fix rounds; window 8+9+10 — D-160)
+  → F4 Step-4.5: STRICT CONVERGED (window F4-p2/p3/p4 — D-161); PR #593 @ 7ba4cf4
+  → F5: STRICT CONVERGED (6 passes; window p4/p5/p6 — D-162); fix-PR #594 @ d7875e6
   → F6: TARGETED HARDENING COMPLETE (2026-07-08); proptest 2000 cases PASS; mutation 100% kill
   → Regression: 2007/0/93; clippy CLEAN; fmt CLEAN
   → Consistency audit: CONSISTENT (3 scripts exit 0; 312 citations)
@@ -162,9 +162,9 @@ No cost-tracker instrumentation in this project (PERF-COST-TRACKING drift item �
 | Phase | Passes | Trajectory | Quality |
 |-------|--------|-----------|---------|
 | F2 spec adversarial | 19 passes / 13 fix rounds | 3→4→5→5→0→1→0→4→1→0→3→1→1→0→2→3→0→0→0 | Clean window 17+18+19 |
-| F3 story adversarial | 10 passes / 6 fix rounds | 3→2→1→0→1→3→1→0→0→0 | STRICT CONVERGED (DEC-160) |
-| F4 Step-4.5 adversarial | 4 passes / 0 fix rounds | →1→0→0→0 | STRICT CONVERGED (DEC-161) |
-| F5 scoped adversarial | 6 passes / 1 fix-PR | →0→0→1→0→0→0 | STRICT CONVERGED (DEC-162) |
+| F3 story adversarial | 10 passes / 6 fix rounds | 3→2→1→0→1→3→1→0→0→0 | STRICT CONVERGED (D-160) |
+| F4 Step-4.5 adversarial | 4 passes / 0 fix rounds | →1→0→0→0 | STRICT CONVERGED (D-161) |
+| F5 scoped adversarial | 6 passes / 1 fix-PR | →0→0→1→0→0→0 | STRICT CONVERGED (D-162) |
 | F6 hardening | Automated gate | N/A | GO |
 | **Total** | **All phases converged cycle 1** | — | — |
 
@@ -202,10 +202,10 @@ Post-authorization disposition:
 
 | Phase | Result | Date |
 |-------|--------|------|
-| F1 Delta Analysis | PASSED (human-approved 2026-07-07; emit-site filter scope, STANDARD criterion, DEC-157) | 2026-07-07 |
-| F2 Spec Evolution | STRICT CONVERGED (19 passes / 13 fix rounds; window 17+18+19; BC-7.2.015 + H-NEW-ADF-010 + VP-571-001..005; DEC-158/DEC-159) | 2026-07-07 |
-| F3 Story Decomposition | STRICT CONVERGED (10 passes / 6 fix rounds; window 8+9+10; S-ADF-CODE-MARK-1 v1.7→v1.9; DEC-160) | 2026-07-08 |
-| F4 TDD Delivery | DELIVERED (PR #593 @ 7ba4cf4; Step 4.5 STRICT CONVERGED window F4-p2/p3/p4; 275 lib + 49 integration + 256-case proptest; mutation gate PASS 5m32s; issue #571 CLOSED; DEC-161) | 2026-07-08 |
-| F5 Scoped Adversarial | STRICT CONVERGED (6 passes; window p4/p5/p6; fix-PR #594 @ d7875e6; 2 approved deferrals F5-OBS-001/002; DEC-162) | 2026-07-08 |
+| F1 Delta Analysis | PASSED (human-approved 2026-07-07; emit-site filter scope, STANDARD criterion, D-157) | 2026-07-07 |
+| F2 Spec Evolution | STRICT CONVERGED (19 passes / 13 fix rounds; window 17+18+19; BC-7.2.015 + H-NEW-ADF-010 + VP-571-001..005; D-158/D-159) | 2026-07-07 |
+| F3 Story Decomposition | STRICT CONVERGED (10 passes / 6 fix rounds; window 8+9+10; S-ADF-CODE-MARK-1 v1.7→v1.9; D-160) | 2026-07-08 |
+| F4 TDD Delivery | DELIVERED (PR #593 @ 7ba4cf4; Step 4.5 STRICT CONVERGED window F4-p2/p3/p4; 275 lib + 49 integration + 256-case proptest; mutation gate PASS 5m32s; issue #571 CLOSED; D-161) | 2026-07-08 |
+| F5 Scoped Adversarial | STRICT CONVERGED (6 passes; window p4/p5/p6; fix-PR #594 @ d7875e6; 2 approved deferrals F5-OBS-001/002; D-162) | 2026-07-08 |
 | F6 Targeted Hardening | PASS (proptest VP-571-001 @ 2000 cases; fuzz justified-skip; mutation 100% 1/1; cargo deny+audit 0 vulns/347; regression 2007/0/93; clippy+fmt clean; zero FIX-F6) | 2026-07-08 |
 | **F7 Delta Convergence** | **AWAITING HUMAN AUTHORIZATION — 5/5 DIMENSIONS PASS** | **2026-07-08** |

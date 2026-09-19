@@ -60,7 +60,7 @@ documentation change exclusively.
 | `docs/specs/cargo-mutants-policy.md` §Scope | MODIFIED | Existing bulleted list, two entries appended; count/prose sync |
 | `src/cli/queue.rs` (production code) | DEPENDENT | Not touched by this story — it becomes a mutation-testing *target*, not an edited file. Its behavior is unchanged; only its CI verification coverage changes. |
 | `src/main.rs` (production code) | DEPENDENT | Same relationship — becomes a mutation target, code itself unchanged by this story. |
-| `scripts/check-cargo-mutants-policy-citations.sh` | DEPENDENT | Consumes the modified policy doc; no edit needed because it's built to be data-driven (Guard 2 was explicitly designed this way per DEC-150). |
+| `scripts/check-cargo-mutants-policy-citations.sh` | DEPENDENT | Consumes the modified policy doc; no edit needed because it's built to be data-driven (Guard 2 was explicitly designed this way per D-150). |
 | `tests/mutants_glob_existence.rs` | DEPENDENT | Consumes the modified `.cargo/mutants.toml`; no edit needed for the same reason (Guard 3). |
 | `.github/workflows/ci.yml` `mutants` job | DEPENDENT (unchanged) | Its invocation (`cargo mutants --in-diff … --jobs 4 --timeout 240`) is scope-agnostic — it reads whatever `examine_globs` says at run time. No CI YAML edit required. |
 
@@ -218,7 +218,7 @@ running the guards.
 
 Using the policy doc's own derivation model (`~140s avg per mutant / 4 jobs`) and the
 existing scoped-file mutant counts as calibration points (e.g. `edit.rs` ~99 mutants at
-~2,116 LOC post-split per DEC-149; `jsm_create.rs` ~9 mutants at a much smaller LOC —
+~2,116 LOC post-split per D-149; `jsm_create.rs` ~9 mutants at a much smaller LOC —
 these two data points alone show mutant density is **not** linear in raw LOC; it tracks
 branch/conditional/comparison density, which varies enormously by function shape):
 

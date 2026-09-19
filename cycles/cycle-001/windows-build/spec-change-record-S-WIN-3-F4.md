@@ -1,6 +1,6 @@
 ---
 document_type: spec-change-record
-governing_decision: DEC-082-followon
+governing_decision: D-082-followon
 research_source: ".factory/research/windows-build-f4-preflight-verification.md"
 date: 2026-06-13
 produced_by: spec-steward
@@ -14,22 +14,22 @@ findings:
   - F-WIN3-IMPL-102
   - F-WIN3-RA-101
   - F-WIN3-AR1
-adversarial_reconv: "3-clean (DEC-082/083 passes A/B/C) — already complete before F4"
+adversarial_reconv: "3-clean (D-082/083 passes A/B/C) — already complete before F4"
 re_gate_required: false
 ---
 
 # Spec Change Record — S-WIN-3 F4 Reconciliation
-## (DEC-082 Follow-On: F-WIN3-IMPL-102 Transitive-Deny-Scope + F-WIN3-RA-101 Count Correction + F-WIN3-AR1 Topology)
+## (D-082 Follow-On: F-WIN3-IMPL-102 Transitive-Deny-Scope + F-WIN3-RA-101 Count Correction + F-WIN3-AR1 Topology)
 
 ## Context and Rationale
 
 This record covers the implementation-driven doc-accuracy reconciliation that occurred
-during S-WIN-3 F4 delivery (2026-06-13), after the DEC-082 pre-F4 verification corrections
-had already been governed (spec v1.3.11, spec-change-record-DEC-082.md).
+during S-WIN-3 F4 delivery (2026-06-13), after the D-082 pre-F4 verification corrections
+had already been governed (spec v1.3.11, spec-change-record-D-082.md).
 
 **Why this is NOT a behavioral re-gate:**
 
-The DEC-082 corrections (spec v1.3.11) established that:
+The D-082 corrections (spec v1.3.11) established that:
 1. windows-sys 0.60 skip is REQUIRED (not conditional).
 2. `cargo deny check` must exit 0.
 
@@ -41,13 +41,13 @@ tier and a corresponding `windows_*` arch-crate tier. This is a documentation-ac
 gap, not a behavioral or architectural change.
 
 The DECISION (enable `windows-native`; make `cargo deny check` pass) is unchanged from
-DEC-082 and DEC-084 (F3 re-gate RE-AFFIRMED). Only the documented count of skip entries
+D-082 and D-084 (F3 re-gate RE-AFFIRMED). Only the documented count of skip entries
 required to achieve that outcome is corrected. No BC, NFR, or story acceptance criterion
 is changed in a behavioral sense — AC-002 previously said "add required skip entries and
 cargo deny check exits 0" and still says "add required skip entries (now documented as 17
 exact) and cargo deny check exits 0."
 
-The 3-clean adversarial re-convergence under DEC-082/083 (passes A: traceability/scope,
+The 3-clean adversarial re-convergence under D-082/083 (passes A: traceability/scope,
 B: mechanical-correctness, C: integration/cross-story) validated the deny requirement
 in principle. The scope correction is a quantitative refinement within that validated
 requirement, confirmed by implementation evidence (`cargo deny check EXIT 0` in the
@@ -64,7 +64,7 @@ human re-gate is required.
 
 ### F-WIN3-IMPL-102 — Transitive deny scope is 17 entries, not 1
 
-**Finding:** The DEC-082 correction documented "add a `[[bans.skip]]` entry for windows-sys
+**Finding:** The D-082 correction documented "add a `[[bans.skip]]` entry for windows-sys
 0.60." The S-WIN-3 implementation revealed that a new `windows-sys` minor (0.60) mechanically
 introduces a new `windows-targets` minor tier (0.53.x) and a corresponding set of `windows_*`
 arch crates at the 0.53.x tier. Combined with the pre-existing 0.42.x lineage (jni →
@@ -169,7 +169,7 @@ or convergence events, not on row annotation corrections within already-counted 
 
 | Field | Before | After | Change type |
 |-------|--------|-------|------------|
-| `date:` (frontmatter) | `2026-06-13` | `2026-06-13` | Already correct (DEC-082 set this; no further bump needed) |
+| `date:` (frontmatter) | `2026-06-13` | `2026-06-13` | Already correct (D-082 set this; no further bump needed) |
 | §5.3 body | "add [[bans.skip]] for windows-sys 0.60" (single-entry framing, with C-V2b correction strikethrough) | + implementation-confirmed scope: "exactly 17 entries; 7 arch crates per tier; 0.52.6 un-skipped canonical; windows_i686_gnullvm NOT skipped" | Content change by architect (pre-committed) |
 | §10 PG-WIN3-001 | (did not exist) | Process-gap codification: "budget a tier, not a single entry; verify against Cargo.lock; ~8–9 entries per new lineage" | Content change by architect (pre-committed) |
 | §10 WIN-DENY-FRAGILITY | (did not exist) | Tracked risk LOW (F-WIN3-RC-103): future 4th windows-sys minor would require deny.toml re-evaluation; cargo deny check catches it on every PR | Content change by architect (pre-committed) |
@@ -186,13 +186,13 @@ Date 2026-06-13 is correct and unchanged. Governance confirms no further date up
 
 | Field | Before | After | Change type |
 |-------|--------|-------|------------|
-| `date:` (frontmatter) | `2026-06-13` | `2026-06-13` | Already correct (DEC-082 set this) |
+| `date:` (frontmatter) | `2026-06-13` | `2026-06-13` | Already correct (D-082 set this) |
 | Decision 5b body | C-V2(b) amendment block: "windows-sys 0.60 skip REQUIRED" (single-entry framing) | + scope correction block: "not 1 — exactly 17 entries; windows_i686_gnullvm NOT skipped; 0.52.6 un-skipped canonical; §10 and PG-WIN3-001 cross-ref" | Content change by architect (pre-committed) |
 
 **Version convention for ADRs:** No semver version field per repo convention. Amendment chain
 tracked inline (strikethrough superseded text) and in adr-index.md. Governance confirms no
 further date update is needed — the amendment is within the same calendar day (2026-06-13) as
-the DEC-082 corrections.
+the D-082 corrections.
 
 ---
 
@@ -215,7 +215,7 @@ date header "2026-06-13" is correct and unchanged.
 
 | Field | Before | After | Change type |
 |-------|--------|-------|------------|
-| Latest version | `[1.3.11]` (2026-06-13, DEC-082) | `[1.3.12]` (2026-06-13, F4 reconciliation) | GOVERNANCE CHANGE — spec-steward added this entry |
+| Latest version | `[1.3.11]` (2026-06-13, D-082) | `[1.3.12]` (2026-06-13, F4 reconciliation) | GOVERNANCE CHANGE — spec-steward added this entry |
 
 **Version rationale:** PATCH increment (0.0.X). No BC or NFR body was modified (BC 597 /
 NFR 42 / ADR 16 / Stories 74 all unchanged). The correction is documentation-accuracy only:
@@ -266,13 +266,13 @@ spec-changelog v1.3.12 (spec-steward — this cycle)
 
 spec-change-record-S-WIN-3-F4.md (this file — spec-steward)
   → per-artifact change log with old→new metadata
-  → confirms 3-clean adversarial convergence pre-existed (DEC-082/083)
+  → confirms 3-clean adversarial convergence pre-existed (D-082/083)
   → confirms re-gate NOT required
 
-STATE.md (for orchestrator: DEC-082 follow-on not yet recorded as a separate DEC)
-  → DEC-082 row already documents the mandate: windows-sys 0.60 skip REQUIRED
+STATE.md (for orchestrator: D-082 follow-on not yet recorded as a separate DEC)
+  → D-082 row already documents the mandate: windows-sys 0.60 skip REQUIRED
   → This F4 reconciliation is within that mandate's implementation scope
-  → Orchestrator may record a DEC-086 for S-WIN-3 convergence if desired;
+  → Orchestrator may record a D-086 for S-WIN-3 convergence if desired;
     governance does not require a separate DEC for a doc-accuracy correction
 ```
 
@@ -282,18 +282,18 @@ STATE.md (for orchestrator: DEC-082 follow-on not yet recorded as a separate DEC
 
 | DEC | Date | Relevance |
 |-----|------|-----------|
-| DEC-079 | 2026-06-12 | Windows-build F1+F2 gate; ADR-0016 locked |
-| DEC-080 | 2026-06-13 | Windows-build F3 story decomposition CONVERGED (6 stories) |
-| DEC-081 | 2026-06-13 | S-WIN-2 F4 CONVERGED + PR #505 MERGED |
-| DEC-082 | 2026-06-13 | Pre-F4 verification: C-V2(b) windows-sys 0.60 REQUIRED; C-V3 Compress-Archive |
-| DEC-083 | 2026-06-13 | Full-VSDD closure DEC-082; 3-clean adversarial A/B/C CONVERGED |
-| DEC-084 | 2026-06-13 | F3 re-gate RE-AFFIRMED by human post-DEC-082/083 |
-| DEC-085 | 2026-06-13 | S-WIN-2 MERGED → develop @ 1b84feb |
-| (DEC-086) | 2026-06-13 | S-WIN-3 convergence — forthcoming (per-story standard DEC) |
+| D-079 | 2026-06-12 | Windows-build F1+F2 gate; ADR-0016 locked |
+| D-080 | 2026-06-13 | Windows-build F3 story decomposition CONVERGED (6 stories) |
+| D-081 | 2026-06-13 | S-WIN-2 F4 CONVERGED + PR #505 MERGED |
+| D-082 | 2026-06-13 | Pre-F4 verification: C-V2(b) windows-sys 0.60 REQUIRED; C-V3 Compress-Archive |
+| D-083 | 2026-06-13 | Full-VSDD closure D-082; 3-clean adversarial A/B/C CONVERGED |
+| D-084 | 2026-06-13 | F3 re-gate RE-AFFIRMED by human post-D-082/083 |
+| D-085 | 2026-06-13 | S-WIN-2 MERGED → develop @ 1b84feb |
+| (D-086) | 2026-06-13 | S-WIN-3 convergence — forthcoming (per-story standard DEC) |
 
 The F-WIN3-IMPL-102/RA-101/AR1 findings are the spec-side counterpart to the S-WIN-3
 implementation evidence. They do not require their own DEC; they are the implementation-
-confirmation event referenced in DEC-082's obligation: "S-WIN-3 implementer must add
+confirmation event referenced in D-082's obligation: "S-WIN-3 implementer must add
 [[bans.skip]] for windows-sys 0.60 in same commit as keyring windows-native." The full
 scope (17 entries) is the implementation's answer to that obligation.
 
@@ -323,14 +323,14 @@ This is an implementation-driven doc-accuracy reconciliation within an already-a
 Specific rationale:
 
 1. **No behavioral change:** The DECISION (enable `windows-native` + add required deny
-   skips + `cargo deny check EXIT 0`) is unchanged from DEC-082/084. Only the documented
+   skips + `cargo deny check EXIT 0`) is unchanged from D-082/084. Only the documented
    scope of the skip set is corrected from "1 entry" to "17 entries."
 
 2. **No BC or NFR change:** BC 597 / NFR 42 — both unchanged. No acceptance criterion
    changes its behavioral meaning; AC-002 still says "deny check passes with the required
    skip entries."
 
-3. **3-clean convergence already complete:** DEC-083 closed adversarial passes A/B/C on
+3. **3-clean convergence already complete:** D-083 closed adversarial passes A/B/C on
    S-WIN-3 (pass A: traceability/scope, pass B: mechanical-correctness, pass C:
    integration/cross-story). These passes validated the deny requirement in principle.
 
@@ -344,7 +344,7 @@ Specific rationale:
 
 The standard per-story F7 convergence (when S-WIN-3 PR is created and merged) remains the
 governance event for closing this story. That convergence is already 3-clean pre-F4. The
-forthcoming S-WIN-3 F7 convergence DEC (nominally DEC-086) will record the implementation
+forthcoming S-WIN-3 F7 convergence DEC (nominally D-086) will record the implementation
 outcome and confirm the standard 5-dimension consistency check.
 
 ---

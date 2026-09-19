@@ -3,7 +3,7 @@ document_type: story
 level: ops
 epic_id: "BUCKET1-DEFECTS"
 story_id: "S-692-1"
-title: "issue edit --dry-run reads stdin/renders ADF preview for --description and --description-stdin (closes #692, DEC-274)"
+title: "issue edit --dry-run reads stdin/renders ADF preview for --description and --description-stdin (closes #692, D-274)"
 wave: feature-followup
 status: done
 intent: enhancement
@@ -60,7 +60,7 @@ last_updated: "2026-08-13"
 breaking_change: true
 retroactive: false
 origin: >
-  BUCKET1-DEFECTS bundle, DEC-274 (RATIFIED at F2 gate, commit 60ac2ff7). Reverses
+  BUCKET1-DEFECTS bundle, D-274 (RATIFIED at F2 gate, commit 60ac2ff7). Reverses
   BC-3.4.021 Invariant 3 ("--dry-run does NOT read stdin ... correct behavior, not
   a bug") and, per F2 adversary pass-3 MEDIUM-1 (human-ratified same gate), extends
   the reversal's ADF-preview half to bare --description as well as --description-stdin.
@@ -99,7 +99,7 @@ a different value. See CHANGELOG.md `### Breaking Changes`.*
 ## Source of Truth
 
 - F2 spec evolution (authoritative): `.factory/specs/prd/bc-3-issue-write.md`
-  BC-3.4.021 (`STATUS: UPDATED (DEC-274 ...)`, ratified at the F2 gate,
+  BC-3.4.021 (`STATUS: UPDATED (D-274 ...)`, ratified at the F2 gate,
   commit `60ac2ff7`) — this BC's body is the SSOT for verbatim strings, guard
   placement, ordering, and the full Postconditions/Invariants/EC/VP set. The F2
   delta doc (`.factory/phase-f2-spec-evolution/prd-delta-bucket1-defects.md`) is
@@ -119,9 +119,9 @@ flag values only and returns BEFORE the live path's stdin read (`:~642`,
 `desc_text = if description_stdin { spawn_blocking(read_to_string) } else {
 description }`) and ADF conversion (`:~654`–`:~658`, `markdown_to_adf` if
 `--markdown` else `text_to_adf`). This was EXPLICIT, INTENTIONAL, spec-locked
-behavior (pre-DEC-274 BC-3.4.021 Invariant 3), not an oversight — but it meant a
+behavior (pre-D-274 BC-3.4.021 Invariant 3), not an oversight — but it meant a
 depth-guard `Err` or other ADF-rejection failure mode was invisible under
-`--dry-run`, defeating the entire point of a preview. DEC-274 reverses this.
+`--dry-run`, defeating the entire point of a preview. D-274 reverses this.
 
 **Note — no `--file` flag on `issue edit`:** only `--description`/
 `--description-stdin` exist as description inputs (Invariant 6). Do not add a
@@ -131,7 +131,7 @@ file-based path here.
 
 | BC ID | Title | Clause |
 |-------|-------|--------|
-| BC-3.4.021 | `issue edit --dry-run` `plannedChanges` preview, description/ADF reversal | `STATUS: UPDATED (DEC-274)`, Postconditions-Common item 6, Postconditions-json items 1–3, Postconditions-table items 1–3, Invariants 2/3/5/6, EC-3.4.021-6/-7/-13/-15..-19, VP-DRY-RUN-001, VP-692-001..004 |
+| BC-3.4.021 | `issue edit --dry-run` `plannedChanges` preview, description/ADF reversal | `STATUS: UPDATED (D-274)`, Postconditions-Common item 6, Postconditions-json items 1–3, Postconditions-table items 1–3, Invariants 2/3/5/6, EC-3.4.021-6/-7/-13/-15..-19, VP-DRY-RUN-001, VP-692-001..004 |
 
 ## Architecture Mapping
 
@@ -272,7 +272,7 @@ conversion selection the live path uses: `adf::markdown_to_adf(text)` if
 - `CHANGELOG.md` gains a `### Breaking Changes` (or equivalent `Breaking:`)
   entry describing the `plannedChanges.description`/`descriptionAdf` shape
   change for `issue edit --dry-run --description-stdin --output json`, citing
-  DEC-274 and issue #692, in the SAME PR/commit as the code change. This story
+  D-274 and issue #692, in the SAME PR/commit as the code change. This story
   is NOT considered complete without this entry — do not let it be implicit or
   deferred.
 - **Test:** manual/PR-review gate (not a `cargo test` assertion) — verified at
@@ -316,7 +316,7 @@ conversion selection the live path uses: `adf::markdown_to_adf(text)` if
 ## Tasks
 
 1. [ ] Read BC-3.4.021 in full (including "Previous version" blocks — do NOT
-   re-implement the pre-DEC-274 or pass-2-reverted behavior).
+   re-implement the pre-D-274 or pass-2-reverted behavior).
 2. [ ] Write failing tests for AC-1 through AC-13 (Red Gate).
 3. [ ] Implement the pre-step: stdin read (for `--description-stdin`) +
    `markdown_to_adf`/`text_to_adf` conversion, placed BEFORE `match
@@ -336,7 +336,7 @@ conversion selection the live path uses: `adf::markdown_to_adf(text)` if
 
 | Story | Key Decisions | Patterns Established | Gotchas Discovered |
 |-------|-----------------|-------------------------|------------------------|
-| S-639-1 | Pre-flight exit-64 guard pattern; breaking-change CHANGELOG discipline | `JrError::UserError` exit-64 over clap `requires` (wrong exit code); breaking_change frontmatter marker | Vacuous-negative test assertions must be replaced, not left as false-security after a behavior reversal — apply the same discipline to any pre-DEC-274 placeholder-string assertions in existing dry-run tests |
+| S-639-1 | Pre-flight exit-64 guard pattern; breaking-change CHANGELOG discipline | `JrError::UserError` exit-64 over clap `requires` (wrong exit code); breaking_change frontmatter marker | Vacuous-negative test assertions must be replaced, not left as false-security after a behavior reversal — apply the same discipline to any pre-D-274 placeholder-string assertions in existing dry-run tests |
 | S-668-1 | `--output json` additive-field pattern (`duedate`) preserving top-level key count | Nested additive fields inside an existing object, not new top-level keys | N/A |
 
 ## Architecture Compliance Rules
@@ -363,7 +363,7 @@ No new crate dependencies.
 | File | Action | Purpose |
 |------|--------|---------|
 | `src/cli/issue/edit.rs` | MODIFY | Add stdin-read+ADF-conversion pre-step inside the dry-run block; wire `descriptionAdf` into both output arms |
-| `tests/issue_edit.rs` | MODIFY | Add/extend dry-run tests for AC-1..AC-13; remove/replace any pre-DEC-274 placeholder-string assertions |
+| `tests/issue_edit.rs` | MODIFY | Add/extend dry-run tests for AC-1..AC-13; remove/replace any pre-D-274 placeholder-string assertions |
 | `CHANGELOG.md` | MODIFY | `### Breaking Changes` entry (AC-14) |
 
 **MUST NOT change**: `src/adf.rs` (conversion functions reused verbatim, unmodified); BC files in `.factory/specs/prd/` (F2 sealed — escalate discrepancies to orchestrator).
@@ -373,7 +373,7 @@ No new crate dependencies.
 - Bundle: `BUCKET1-DEFECTS`
 - Branch: `feat/692-dry-run-stdin-adf-preview`
 - Target: `develop`
-- Commit style: `feat(edit)!: --dry-run reads stdin and renders ADF preview (#692, DEC-274)` (breaking change `!`)
+- Commit style: `feat(edit)!: --dry-run reads stdin and renders ADF preview (#692, D-274)` (breaking change `!`)
 - PR closes #692
 - `CHANGELOG.md` `### Breaking Changes` entry in same commit (AC-14)
 
@@ -395,7 +395,7 @@ No new crate dependencies.
 - F7 delta convergence: **5/5 dimensions PASS** (D1 Spec, D2 Test, D3 Implementation,
   D4 Verification, D5 Holdout) — full report:
   `.factory/phase-f7-convergence/bucket1-defects-delta-convergence-report.md`.
-- PR #697 (`feat(edit)!: --dry-run reads stdin and renders ADF preview (#692, DEC-274)`)
+- PR #697 (`feat(edit)!: --dry-run reads stdin and renders ADF preview (#692, D-274)`)
   squash-merged into `develop` as `83b529d2` (2026-08-14T00:38:19Z), **closing #692**. All
   15 CI checks green including CI Gate.
 - 4 demo artifacts captured at `.factory/demos/S-692-1/` (AC-001..AC-004, GIF + WebM pairs
@@ -404,4 +404,4 @@ No new crate dependencies.
 - `CHANGELOG.md` `### Breaking Changes` entry present in the merged commit (AC-14 satisfied).
 
 Full detail: `STATE.md`, `cycles/cycle-001/burst-log.md` § BUCKET1-DEFECTS-COMPLETE,
-`cycles/cycle-001/decisions-archive.md` DEC-276.
+`cycles/cycle-001/decisions-archive.md` D-276.

@@ -2,7 +2,7 @@
 
 **Branch:** `ci/e2e-egress-cdn-allowlist` → `develop`
 **Scope:** CI-only. Single file (`.github/workflows/e2e.yml`), single job (`e2e:`). Commit `779bc3ab`, +21/-4.
-**Verdict:** PASS — no blocking findings. (No `gh pr review --approve` posted; DEC-173 prohibits agent approval — verdict returned to orchestrator for the merge decision.)
+**Verdict:** PASS — no blocking findings. (No `gh pr review --approve` posted; D-173 prohibits agent approval — verdict returned to orchestrator for the merge decision.)
 
 ## What changed
 

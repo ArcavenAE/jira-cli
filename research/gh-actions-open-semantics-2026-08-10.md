@@ -1,11 +1,11 @@
 ---
 document_type: research
 date: 2026-08-10
-decision_id: DEC-246-FOLLOWUP
+decision_id: D-246-FOLLOWUP
 story_id: S-626-1
 topic: >-
   Six GitHub Actions behavioural questions left INCONCLUSIVE or carried as inferred
-  premises by DEC-246, each underpinning a shipped `ci-gate` guard: zero-leg matrix
+  premises by D-246, each underpinning a shipped `ci-gate` guard: zero-leg matrix
   → `needs.<job>.result`; `matrix.exclude` reaching zero; re-run / attempt-≥2
   semantics; duplicate required-check-name resolution; flow-style `jobs:` mapping
   acceptance by the real workflow parser; `$GITHUB_PATH` binary resolution and
@@ -46,7 +46,7 @@ sources:
   - https://github.com/orgs/community/discussions/179993
 ---
 
-# GitHub Actions open semantics — six questions DEC-246 left unresolved
+# GitHub Actions open semantics — six questions D-246 left unresolved
 
 ## Provenance note — READ FIRST
 
@@ -56,12 +56,12 @@ to six questions that
 recorded as **INCONCLUSIVE** or carried as an **inferred premise** that a shipped
 guard then rested on.
 
-Read the DEC-246 artifact first. This document does not restate its confirmed
+Read the D-246 artifact first. This document does not restate its confirmed
 findings; it only advances the unresolved ones. Where a question is already
 answered there, this document says so and does not duplicate it.
 
 Every verdict here is labelled with a recovery label in the same vocabulary the
-DEC-246 artifact used:
+D-246 artifact used:
 
 - `RECORDED` — the finding pre-exists in a project artifact.
 - `NEWLY-RESEARCHED` — established on 2026-08-10 against a cited primary source.
@@ -145,7 +145,7 @@ No other question in this pass produced a REFUTE.
 
 ## Q-A — Zero-leg matrix: what does `needs.<job>.result` report?
 
-**Label:** `NEWLY-RESEARCHED`. Supersedes DEC-246 Q4's evidence discussion.
+**Label:** `NEWLY-RESEARCHED`. Supersedes D-246 Q4's evidence discussion.
 
 **Verdict: INCONCLUSIVE (undocumented) — with the recorded evidence
 characterization REFUTED and the question itself materially reframed.**
@@ -163,7 +163,7 @@ characterization REFUTED and the question itself materially reframed.**
   combinations are excluded, whether an empty matrix is permitted, any minimum
   job count, or how a matrix job's status is reported to `needs`.
 
-This re-verifies DEC-246 Q4's finding one day later against the same pages. The
+This re-verifies D-246 Q4's finding one day later against the same pages. The
 documentation gap is real and stable.
 
 ### The two mechanisms that actually exist — and neither is a zero-leg job
@@ -210,7 +210,7 @@ zero-leg case. It is not evidence for Q-A in either direction.
 The genuine complaint in #952/#9141 is a **different** and already-known
 fail-safe: a matrix job skipped at the top level never expands, its inner-matrix
 check names never arrive, and a PR requiring those names hangs on "Waiting for
-status to be reported" — DEC-246 Q3's never-triggered → Pending → blocks path.
+status to be reported" — D-246 Q3's never-triggered → Pending → blocks path.
 
 ### Reframing the question
 
@@ -227,7 +227,7 @@ That is decidable only empirically (§"Minimal empirical experiments", E1).
 
 ### Bearing on Guard B — is property (1) protecting against nothing?
 
-Reachability is unchanged from DEC-246: both `ci.yml` matrices are static literal
+Reachability is unchanged from D-246: both `ci.yml` matrices are static literal
 `os:` lists, and Guard B keeps them that way.
 
 **The honest answer to "is it protecting against nothing?" is: on current
@@ -320,9 +320,9 @@ not treat it as a safety property.
 
 ## Q-C — Re-run and attempt-≥2 semantics
 
-**Label:** `NEWLY-RESEARCHED` (re-verification) + `RECORDED` (DEC-246 Q8).
+**Label:** `NEWLY-RESEARCHED` (re-verification) + `RECORDED` (D-246 Q8).
 
-**Verdict: INCONCLUSIVE on primary sources — unchanged from DEC-246 Q8, and
+**Verdict: INCONCLUSIVE on primary sources — unchanged from D-246 Q8, and
 re-verified 2026-08-10 rather than carried forward on trust.** One genuinely new
 primary fact is added below.
 
@@ -336,7 +336,7 @@ re-reporting. **Neither page contains any of them.** The only reference to
 attempts anywhere on the page is UI navigation: "To the right of the run name,
 select the **Latest** dropdown menu and click a previous run attempt."
 
-The single substantive statement, carried from DEC-246 Q8:
+The single substantive statement, carried from D-246 Q8:
 
 > The workflow will also use the same `GITHUB_SHA` (commit SHA) and `GITHUB_REF`
 > (git ref) of the original event that triggered the workflow run.
@@ -395,7 +395,7 @@ load-bearing for Guard A.
 **Verdict: split.**
 
 - *Branch protection matches by check-run **name**, and the declaring workflow
-  file is not part of the identity:* **CONFIRM** (already established in DEC-246
+  file is not part of the identity:* **CONFIRM** (already established in D-246
   Q5; not re-litigated here). New corroboration below.
 - *What happens when two workflows each produce a check named `CI Gate` and that
   name is required — all / any / most-recent / nondeterministic:* **INCONCLUSIVE
@@ -404,7 +404,7 @@ load-bearing for Guard A.
   secondary source and one primary API affordance, and by no primary
   documentation statement.
 
-**The inferred premise, stated precisely.** DEC-246 carried, and Guard A rests
+**The inferred premise, stated precisely.** D-246 carried, and Guard A rests
 on, the claim that a duplicate `CI Gate` name yields a false green. **That claim
 is still INFERRED. This pass did not verify it — and did not refute it either.**
 What this pass adds is that the leading hypothesis now *supports* the premise's
@@ -419,7 +419,7 @@ supported by anything found.
    > sure that job names are unique across all workflows. Using the same job name
    > in multiple workflows can cause ambiguous status check results.
 
-   As DEC-246 Q5 noted, this is stronger than "undocumented": GitHub calls the
+   As D-246 Q5 noted, this is stronger than "undocumented": GitHub calls the
    result **ambiguous** and instructs you not to create it.
 
 2. "Troubleshooting required status checks" (URL above, accessed 2026-08-10),
@@ -430,7 +430,7 @@ supported by anything found.
 
    **Precision that must not be lost:** this sentence is about a *check run* vs a
    *commit status* — two different API objects. It is **not** a statement about
-   two check runs sharing a name. DEC-246 used it correctly; it must not be
+   two check runs sharing a name. D-246 used it correctly; it must not be
    re-used as evidence that two same-named check runs are both required.
 
 3. REST API, "Check Runs", https://docs.github.com/en/rest/checks/runs (accessed
@@ -501,7 +501,7 @@ repository side at zero cost and needs no live experiment.
 the guard is cheap, decidable, and prevents a state GitHub's own documentation
 tells maintainers not to create. What must change is the *record* — the premise
 should be labelled INFERRED with last-writer-wins as the leading hypothesis, not
-carried as an established fact. DEC-246's recommendation to treat the
+carried as an established fact. D-246's recommendation to treat the
 sibling-workflow frontier as **still open** is re-endorsed on this evidence.
 
 ---
@@ -792,7 +792,7 @@ E1/E2/E3/E4 need no branch protection and can share one scratch repository.
    No code change to either assertion.
 3. **Keep Guard A. Relabel its premise.** Record the duplicate-name false-green as
    INFERRED with last-writer-wins as the leading hypothesis and Ken Muse's blog +
-   the REST `filter=latest` affordance as the evidence. Re-endorse DEC-246's
+   the REST `filter=latest` affordance as the evidence. Re-endorse D-246's
    recommendation that the sibling-workflow frontier stays **open**.
 4. **Add `$GITHUB_PATH` beside `$GITHUB_ENV`** wherever the unpinned-`uses:`
    residual is recorded (`CLAUDE.md` round-13 IMPORTANT 2). Q-F(1) confirms it is
@@ -826,6 +826,6 @@ GitHub Actions infrastructure. Q-A, Q-B, Q-C and Q-E are marked INCONCLUSIVE or
 REQUIRES-EXECUTION for exactly that reason, and each has a specified experiment
 rather than an inferred answer.
 
-**Reading hazard carried forward from DEC-246:**
+**Reading hazard carried forward from D-246:**
 `.factory/cycles/cycle-001/burst-log.md` contains bytes that make plain `grep`
 treat it as binary and return **silent false negatives**. Always use `grep -a`.

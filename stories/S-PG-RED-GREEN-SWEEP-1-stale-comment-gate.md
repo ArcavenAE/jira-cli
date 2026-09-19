@@ -141,7 +141,7 @@ Well within a single agent's context budget. No split required.
 structural precedent this story follows: `scope: dark-factory-engine`, `[engine]` placeholder
 paths for files not yet located, no product BC surface, status remains `draft` pending both
 engine-source access and PO BC authorship. Key lesson from that story's re-assessment
-(2026-06-28, DEC-145): "good behavior this session is NOT proof of prompt codification" — a
+(2026-06-28, D-145): "good behavior this session is NOT proof of prompt codification" — a
 mechanical gate is required, not reliance on the implementer noticing. This directly motivates
 building a script/check rather than relying on Step-4.5 adversary passes to catch staleness by
 chance (which is exactly how all six prior instances of this defect class were actually found).

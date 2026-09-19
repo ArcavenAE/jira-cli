@@ -37,7 +37,7 @@ subsystems: ["SS-04"]
 depends_on: []
 blocks: []
 # Independent of every other cycle-008 story -- Workstream D (Teams) was
-# explicitly scoped OUT of this cycle's delivery set at the F1 gate (DEC-368:
+# explicitly scoped OUT of this cycle's delivery set at the F1 gate (D-368:
 # "DELIVER Workstreams A/B/C/E... Workstream D = SPIKE ONLY this cycle").
 # This spike does not gate S1-S5's delivery, and S1-S5 do not gate this
 # spike -- it may run in parallel with the whole Wave 1/Wave 2 delivery
@@ -81,7 +81,7 @@ origin: >
   (view:team:teams / view:membership:teams) pending live Developer Console
   verification, and a live open question (get_org_metadata / jr init
   exposure) the F1 pass itself surfaced and could not resolve from static
-  code + docs research alone. Human-approved at the F1 gate (DEC-368):
+  code + docs research alone. Human-approved at the F1 gate (D-368):
   Workstream D is SPIKE ONLY this cycle -- this story is that spike. ADR-0026
   Decision 4 records, without deciding, the exact open questions this spike
   must resolve.
@@ -260,7 +260,7 @@ findings) will treat THIS story's report as its own "Previous Story Intelligence
 
 | Rule | Source | Enforcement |
 |------|--------|--------------|
-| No `src/` code change may be made under this story, regardless of how confident a finding is | ADR-0026 Decision 4; F1 §6a (DEC-368: Workstream D = SPIKE ONLY this cycle) | Task 8's explicit "no PR, no develop merge, no src/ diff" close-out |
+| No `src/` code change may be made under this story, regardless of how confident a finding is | ADR-0026 Decision 4; F1 §6a (D-368: Workstream D = SPIKE ONLY this cycle) | Task 8's explicit "no PR, no develop merge, no src/ diff" close-out |
 | No finding may be presented as CONFIRMED without a live check or direct code-read citation | CLAUDE.md "Citation discipline for external-tracker IDs" (generalized to API-shape claims); `oauth-scope-matrix.md`'s own CONFIRMED/UNCERTAIN precedent | AC-005 |
 | `list_teams` and `get_org_metadata` are separate functions with potentially different in-scope status — do not conflate them as the original feature request's line attribution did | F1 §2.4 (line-attribution correction) | AC-003's explicit call-graph-based finding |
 | Teams scopes remain excluded from `DEFAULT_OAUTH_SCOPES` regardless of this spike's findings, until a future S7 is separately approved | ADR-0026 Decision 2 | This story makes no edit to `src/api/auth.rs`; the sibling `S-cycle8-agile-oauth-scope-gap` story's negative assertions are the enforcement mechanism, not this story |

@@ -1,6 +1,6 @@
 # Demo Evidence — S-cycle3-percred-storage
 
-**Story:** Per-profile API-token keychain storage: `store_api_token`/`load_api_token` (DEC-315)
+**Story:** Per-profile API-token keychain storage: `store_api_token`/`load_api_token` (D-315)
 **BCs:** BC-1.4.031 (new), BC-1.4.027 / BC-1.1.009 / BC-1.1.010 / BC-1.2.017 (amended)
 **VP:** VP-AUTHDX-004
 

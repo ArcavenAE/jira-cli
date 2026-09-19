@@ -3,7 +3,7 @@ document_type: story
 level: ops
 story_id: "S-578-4"
 epic_id: "none"
-title: "issue create --field platform (non-JSM) path — createmeta resolution + DEC-188 guard reversal + create-path collision guard (D2)"
+title: "issue create --field platform (non-JSM) path — createmeta resolution + D-188 guard reversal + create-path collision guard (D2)"
 wave: feature-followup
 status: ready
 intent: feature
@@ -58,8 +58,8 @@ origin: >
   Extends the platform (non-JSM) `issue create --field` path with a createmeta-driven
   resolution pipeline mirroring S-578-2's edit-path dispatch algorithm, sourced from
   get_createmeta_fields (S-580-1, REUSED VERBATIM — do not re-implement a second
-  createmeta-fields fetcher). Reverses the DEC-188 pre-flight exit-64 guard for --field
-  specifically (DEC-310, human-approved at the F2 gate) — S-639-1's own guard, deliberately,
+  createmeta-fields fetcher). Reverses the D-188 pre-flight exit-64 guard for --field
+  specifically (D-310, human-approved at the F2 gate) — S-639-1's own guard, deliberately,
   not accidentally. --on-behalf-of's guard (BC-3.8.013) is UNCHANGED. Adds the create-path
   ten-member collision guard (D2/D2-correction), distinct from and NOT identical to the
   edit-path five-member Gate B (BC-3.4.017).
@@ -70,19 +70,19 @@ changelog:
 > **tdd_mode:** strict — Red Gate required. Write all tests in `tests/issue_create_jsm.rs`
 > (platform-path inverse-flag section) and a NEW `tests/issue_create_field.rs` first — they
 > MUST fail because `handle_create` has no createmeta `--field` resolution and still carries
-> the DEC-188 exit-64 guard. Red Gate: new tests FAIL → all tests PASS. This story ALSO
-> DELETES existing DEC-188-era tests per BC-3.8.012's own "F3/F4 removal obligations" — the
+> the D-188 exit-64 guard. Red Gate: new tests FAIL → all tests PASS. This story ALSO
+> DELETES existing D-188-era tests per BC-3.8.012's own "F3/F4 removal obligations" — the
 > Red Gate protocol for those is test INVERSION (old exit-0/exit-64 assertions replaced), not
 > pure addition; see Task 5.
 
 > **Execute:** `/vsdd-factory:deliver-story S-578-4`
 
-# S-578-4: `issue create --field` Platform-Path Support — createmeta Resolution + DEC-188 Reversal
+# S-578-4: `issue create --field` Platform-Path Support — createmeta Resolution + D-188 Reversal
 
 **Bundle**: field-dx (issues #580, #578) — part 5 of 5
 **GitHub issue**: #578 (item 2)
 **BC anchors**: BC-3.3.010 (resolution algorithm), BC-3.3.011 (error taxonomy), BC-3.4.014
-(amended — create-path table echo), BC-3.8.012 (amended/reversed — DEC-310), BC-3.8.013
+(amended — create-path table echo), BC-3.8.012 (amended/reversed — D-310), BC-3.8.013
 (unchanged — re-verify only)
 **VPs**: VP-578-001, VP-578-002, VP-578-003, VP-578-004, VP-578-017, VP-578-018, VP-578-019,
 VP-578-020, VP-578-021, VP-578-022 (create call site — 3rd of 3 shared call sites)
@@ -96,7 +96,7 @@ supplies the HTTP method this story calls; S-578-2 supplies the dispatch algorit
 own `resolve_edit_fields` extension is layered on top of (they share the SAME function).
 
 **Subsystem anchor justification**: `subsystems: ["SS-02", "SS-04"]` — SS-02 (CLI Layer) owns
-`create.rs`'s new `--field` resolution call, the DEC-188 guard removal, and the D2 collision
+`create.rs`'s new `--field` resolution call, the D-188 guard removal, and the D2 collision
 guard. SS-04 (Jira API Resources) is touched only via the ALREADY-BUILT `get_createmeta_fields`
 (no new SS-04 code — this story is a pure consumer of S-580-1's method).
 
@@ -118,9 +118,9 @@ depends on S-578-4's own code.
   `createmeta` for `editmeta` because the issue does not exist yet at create time
 - **So that** I can set custom fields (including JSM Urgency/Impact-class select fields,
   Assets object references, and any field on the project's Create screen) at creation time,
-  without the DEC-188-era requirement to fake a `--request-type` or create-then-edit
+  without the D-188-era requirement to fake a `--request-type` or create-then-edit
 
-*This is a full reversal (DEC-310) of a deliberate breaking change (DEC-188, S-639-1) shipped
+*This is a full reversal (D-310) of a deliberate breaking change (D-188, S-639-1) shipped
 exactly one cycle prior. It is purely permission-widening — no previously-working invocation is
 broken; something that used to exit 64 now either succeeds or fails later with a more specific
 resolution error.*
@@ -134,7 +134,7 @@ resolution error.*
 | BC-3.3.010 | `issue create --field NAME=VALUE` (repeatable, non-JSM platform path) resolves via `createmeta` and merges into the create POST body | Resolution algorithm (6 steps), Preconditions (guard-ordering SSOT reference), Postconditions, Invariants 1–5, EC-3.3.010-1..6a |
 | BC-3.3.011 | Error taxonomy for `issue create --field` on the platform path (createmeta-sourced, parallels BC-3.4.015/016's editmeta-sourced taxonomy) | Error taxonomy table (10 rows), Postconditions |
 | BC-3.4.014 | (amended) `issue create` table-mode success echo gains `--field NAME[:kind]=VALUE` echo rules per hint kind | "Fields echoed" `--field` bullet (amended 2026-08-26 D2) |
-| BC-3.8.012 | (CURRENT BEHAVIOR — effective 2026-08-25, DEC-310) `--field` guard REMOVED; resolves via createmeta instead | "[CURRENT BEHAVIOR]" section, F3/F4 removal obligations, VP-578-017/018/019 |
+| BC-3.8.012 | (CURRENT BEHAVIOR — effective 2026-08-25, D-310) `--field` guard REMOVED; resolves via createmeta instead | "[CURRENT BEHAVIOR]" section, F3/F4 removal obligations, VP-578-017/018/019 |
 | BC-3.8.013 | (unchanged) `--on-behalf-of` on platform path without `--request-type` still exits 64 pre-flight | "[CURRENT BEHAVIOR — effective 2026-08-25]" (trigger-scope note only — guard itself unmodified) |
 
 **Platform-Path Guard Ordering SSOT** (`bc-3-issue-write.md` §"Platform-Path Guard Ordering —
@@ -165,12 +165,12 @@ error — neither step 2a's parse error nor step 2b's collision error is reached
 
 ---
 
-### AC-002: `--field` no longer exits 64 pre-flight — DEC-188 guard removed (VP-578-017)
+### AC-002: `--field` no longer exits 64 pre-flight — D-188 guard removed (VP-578-017)
 (traces to BC-3.8.012 "[CURRENT BEHAVIOR]" Behavior/Outputs, VP-578-017)
 
 `jr issue create --field a=b` (no `--request-type`, well-formed field) → exit 0, platform POST
 fires with the resolved field merged in; stderr does NOT contain `"--field is only valid
-with"`. The old DEC-188 verbatim error string is DEAD — removed from `src/cli/issue/create.rs`.
+with"`. The old D-188 verbatim error string is DEAD — removed from `src/cli/issue/create.rs`.
 
 **Test**: `test_bc_3_8_012_field_alone_no_longer_exits_64` (VP-578-017,
 `test_platform_create_field_flag_exits_64_without_request_type` from S-639-1's AC-1 is
@@ -192,11 +192,11 @@ supersedes S-639-1's AC-3) in `tests/issue_create_field.rs`.
 
 ---
 
-### AC-004: `--on-behalf-of` alone — unchanged, wire-for-wire from DEC-188-era behavior (VP-578-019)
+### AC-004: `--on-behalf-of` alone — unchanged, wire-for-wire from D-188-era behavior (VP-578-019)
 (traces to BC-3.8.013, VP-578-019 regression pin)
 
 `jr issue create --on-behalf-of X` alone (no `--field`, no `--request-type`) → exit 64 via
-BC-3.8.013, UNCHANGED wire-for-wire from DEC-188-era behavior — proves this reversal did not
+BC-3.8.013, UNCHANGED wire-for-wire from D-188-era behavior — proves this reversal did not
 accidentally weaken BC-3.8.013's own guard.
 
 **Test**: `test_vp_578_019_on_behalf_of_alone_unchanged_regression_pin` (VP-578-019) in
@@ -387,7 +387,7 @@ createmeta resolution requires all of steps 2/2a/2b/3 to have already passed.
 
 ---
 
-### AC-016: F3/F4 removal obligations — DEC-188 test inversion, help-text reversion
+### AC-016: F3/F4 removal obligations — D-188 test inversion, help-text reversion
 (traces to BC-3.8.012 "[CURRENT BEHAVIOR]" F3/F4 removal obligations)
 
 The `--field`-alone pre-flight check and its verbatim error string are DELETED from
@@ -420,7 +420,7 @@ rewrite of holdout scenario text is a doc-fallout deliverable of this story's PR
 
 ---
 
-### AC-018: `--markdown --field description=x` intersection with DEC-188 removal
+### AC-018: `--markdown --field description=x` intersection with D-188 removal
 (traces to EC-3.8.012-5, now stale post-reversal — regression check only)
 
 `--markdown --field description=x` WITHOUT `--request-type` no longer fires BC-3.8.012's
@@ -439,7 +439,7 @@ now-removed guard. The platform path (`handle_create`) still has NO `--markdown`
 
 `Config::load_with` and `JiraClient::from_config` run in `src/main.rs` BEFORE `handle_create` is
 invoked. Unauthenticated callers exit 2 and misconfigured callers exit 78 before `handle_create`
-is reached — this ordering fact is unaffected by the DEC-188 guard's removal (there is no guard
+is reached — this ordering fact is unaffected by the D-188 guard's removal (there is no guard
 left for auth/config failures to precede).
 
 **Test**: no new test required — this is a regression NON-change; assert via existing
@@ -451,7 +451,7 @@ auth/config test families, cite in the PR description rather than duplicating co
 
 | Component | File | Pure/Effectful | Notes |
 |-----------|------|-----------------|-------|
-| DEC-188 guard removal | `src/cli/issue/create.rs::handle_create` (MODIFIED) | Effectful shell | Delete the `--field`-alone check + verbatim string |
+| D-188 guard removal | `src/cli/issue/create.rs::handle_create` (MODIFIED) | Effectful shell | Delete the `--field`-alone check + verbatim string |
 | `parse_field_kv` hint-parse pass (step 2a) | `src/cli/issue/create.rs::handle_create` (MODIFIED) | Effectful shell (calls S-578-1's pure parser) | Malformed hint exits 64 here |
 | D2 create-path collision guard (step 2b) | `src/cli/issue/create.rs::handle_create` (MODIFIED) | Effectful shell (calls pure `detect_flag_field_overlap`) | Ten-member set — distinct call site from edit-path Gate B |
 | `--field` createmeta field resolution (step 4b) | `src/cli/issue/create.rs::handle_create` (MODIFIED) | Effectful shell | Calls S-580-1's `get_createmeta_fields` verbatim |
@@ -495,17 +495,17 @@ auth/config test families, cite in the PR description rather than duplicating co
 | Story spec (this file) | ~14 k |
 | BC-3.3.010/011 (full) | ~9 k |
 | BC-3.4.014 (amended `--field` bullet) | ~2 k |
-| BC-3.8.012 (full, incl. DEC-188 superseded block for audit context) | ~14 k |
+| BC-3.8.012 (full, incl. D-188 superseded block for audit context) | ~14 k |
 | BC-3.8.013 (full) | ~3 k |
 | Platform-Path Guard Ordering SSOT block | ~3 k |
 | `src/cli/issue/create.rs` (existing `handle_create`, 394 LOC) | ~3 k |
 | `src/cli/issue/field_resolve.rs` (post-S-578-2, ~914+ LOC — read the hinted dispatch this story extends) | ~10 k |
-| `S-639-1.md` (DEC-188 origin, read for reversal context) | ~6 k |
+| `S-639-1.md` (D-188 origin, read for reversal context) | ~6 k |
 | New/modified tests | ~10 k |
 | **Total** | **~74 k** |
 
 This is the largest, most context-dense story in the bundle (13 points, 19 ACs). If actual
-implementation context materially exceeds this estimate, consider splitting the DEC-188
+implementation context materially exceeds this estimate, consider splitting the D-188
 removal + D2 guard (steps 2/2a/2b) into a separate sub-PR from the createmeta resolution
 pipeline (step 4b) — flag to the orchestrator before expanding scope unilaterally.
 
@@ -515,18 +515,18 @@ pipeline (step 4b) — flag to the orchestrator before expanding scope unilatera
 
 **Red Gate protocol**: This story has TWO kinds of Red Gate work: (a) NEW tests for the
 createmeta resolution pipeline (pure addition, standard Red Gate); (b) INVERTED tests for the
-DEC-188 guard removal (existing `tests/issue_create_jsm.rs` platform-path-inverse-flag tests
+D-188 guard removal (existing `tests/issue_create_jsm.rs` platform-path-inverse-flag tests
 must be rewritten from exit-64 assertions to exit-0/createmeta-resolution assertions — mirror
-DEC-188's OWN test-inversion discipline the first time around, documented in BC-3.8.012's
-"[DEC-188 BEHAVIOR, superseded]" block's Removal postcondition text).
+D-188's OWN test-inversion discipline the first time around, documented in BC-3.8.012's
+"[D-188 BEHAVIOR, superseded]" block's Removal postcondition text).
 
 ### Task 0 — Read source context
 
 Read:
-- `.factory/stories/S-639-1.md` in full — the DEC-188 origin story this story deliberately,
+- `.factory/stories/S-639-1.md` in full — the D-188 origin story this story deliberately,
   not accidentally, reverses
 - BC-3.3.010, BC-3.3.011 in full (`bc-3-issue-write.md`)
-- BC-3.8.012 in full, INCLUDING the superseded `[DEC-188 BEHAVIOR]`/`[DEC-188 CONTRACT]` blocks
+- BC-3.8.012 in full, INCLUDING the superseded `[D-188 BEHAVIOR]`/`[D-188 CONTRACT]` blocks
   for audit-trail context AND the `[CURRENT BEHAVIOR — effective 2026-08-25]` section — the
   AC-1..21 list's superseded/unaffected split is critical: AC-1/3/5/7/9/10/11/13/17/18/19 are
   SUPERSEDED (do NOT author as exit-64), AC-2/16/20/6/21 are UNAFFECTED (author as-is)
@@ -544,14 +544,14 @@ Read:
 Write AC-005 through AC-015, AC-018, AC-019. Confirm they fail (no createmeta resolution
 exists in `handle_create` yet).
 
-### Task 2 — Invert the DEC-188-era platform-path tests in tests/issue_create_jsm.rs
+### Task 2 — Invert the D-188-era platform-path tests in tests/issue_create_jsm.rs
 
 Per BC-3.8.012's AC-1..21 superseded list: rewrite AC-1/3/5/7/9/10/11/13/17/18/19's test
 bodies to assert createmeta-resolution success/error paths (VP-578-017/018/019), NOT exit-64.
 AC-2/16/20 (unaffected `--on-behalf-of`-alone) and AC-6/21 (JSM non-mis-fire) remain
 authoritative as-is. AC-12's help-text pin changes `count() == 2` → `count() == 1`.
 
-### Task 3 — Remove the DEC-188 guard + verbatim strings
+### Task 3 — Remove the D-188 guard + verbatim strings
 
 Delete the `--field`-alone pre-flight check from `handle_create`. Narrow the combined check to
 `--on-behalf-of`-alone (BC-3.8.013's pre-existing guard, unmodified in behavior — only the
@@ -586,16 +586,16 @@ cargo clippy -- -D warnings
 ### Task 10 — PR creation
 
 Create PR to `develop`:
-- Title: `feat(issue): issue create --field platform-path createmeta resolution — reverses DEC-188 (#578 part 5)`
-- Reference #578; explicitly cite DEC-310 (registered 2026-08-26, human-approved at the F2
-  gate, reverses DEC-188); CHANGELOG entry under `### Changed` (NOT `### Breaking Changes` —
+- Title: `feat(issue): issue create --field platform-path createmeta resolution — reverses D-188 (#578 part 5)`
+- Reference #578; explicitly cite D-310 (registered 2026-08-26, human-approved at the F2
+  gate, reverses D-188); CHANGELOG entry under `### Changed` (NOT `### Breaking Changes` —
   this reversal does not break any previously-working invocation)
 
 ---
 
 ## Previous Story Intelligence
 
-**S-639-1** (`.factory/stories/S-639-1.md`) is the DEC-188 origin story — read it in full. This
+**S-639-1** (`.factory/stories/S-639-1.md`) is the D-188 origin story — read it in full. This
 story is a DELIBERATE, documented reversal of S-639-1's own guard, not an accidental
 regression of its own intent. S-639-1's AC-1..21 test-body precedent (verbatim error strings,
 FULL-STRING vs prefix pins, DISCRIMINATING/FALSIFIABLE-COARSE/HYGIENE negative-assertion
@@ -629,7 +629,7 @@ createmeta-source extension.
 3. **`labels` is governed on create but NOT on edit** — this is a deliberate, documented
    asymmetry (BUG-LABEL-400's endpoint fork on edit has no analog on create), never "fix" it
    into symmetry with Gate B.
-4. **The DEC-188 guard removal MUST NOT be a partial deletion.** Both the `--field`-alone check
+4. **The D-188 guard removal MUST NOT be a partial deletion.** Both the `--field`-alone check
    AND its verbatim error string, AND the combined-check's `--field` half, must be fully
    removed — a lingering dead code path that never fires is still a maintenance hazard and
    contradicts the "F3/F4 removal obligations" text.
@@ -656,7 +656,7 @@ createmeta-source extension.
 
 | File | Action | Notes |
 |------|--------|-------|
-| `src/cli/issue/create.rs` | MODIFY | `handle_create` — DEC-188 guard split/removal, step 2a/2b guards, step 4b createmeta field resolution, create-path echo |
+| `src/cli/issue/create.rs` | MODIFY | `handle_create` — D-188 guard split/removal, step 2a/2b guards, step 4b createmeta field resolution, create-path echo |
 | `src/cli/issue/field_resolve.rs` | MODIFY | Extend `resolve_edit_fields` with createmeta-vs-editmeta source param; extend `detect_flag_field_overlap` for the create-path ten-member set (distinct variant/table) |
 | `src/cli/mod.rs` | MODIFY | Revert `--field` help text's "requires --request-type" clause |
 | `tests/issue_create_field.rs` | CREATE | AC-005 through AC-015, AC-018, AC-019 |

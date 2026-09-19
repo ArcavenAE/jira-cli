@@ -1,6 +1,6 @@
 # PG-MERGE-AUTH-BYPASS — Mitigation Audit (READ-ONLY)
 
-**Story:** S-PG-MERGE-AUTH-BYPASS (origin DEC-128 + PG-PR-MANAGER-OVERREACH)
+**Story:** S-PG-MERGE-AUTH-BYPASS (origin D-128 + PG-PR-MANAGER-OVERREACH)
 **Date:** 2026-06-28
 **Engine audited:** `/Users/zious/.claude/plugins/cache/claude-mp/vsdd-factory/1.0.0-rc.21/` (installed read-only)
 **Scope:** Does the CURRENT engine prompt-codify the four delivery-agent governance constraints, such that good behavior is *guaranteed by instruction* rather than *observed by luck*?
@@ -37,12 +37,12 @@ And the orchestrator per-story playbook *always* passes that signal:
 > "AUTHORIZE_MERGE=yes."
 
 **Loopholes / ambiguity:**
-- `AUTHORIZE_MERGE=yes` is a **standing, batch** authorization baked into the per-story dispatch template — NOT a per-merge gate the orchestrator must consciously decide each time. This is precisely the DEC-128 failure shape: pr-manager auto-merged PR #544 against a hold because it believed it was pre-authorized. The current text would *re-bless* that behavior, since the dispatch itself is the authorization.
+- `AUTHORIZE_MERGE=yes` is a **standing, batch** authorization baked into the per-story dispatch template — NOT a per-merge gate the orchestrator must consciously decide each time. This is precisely the D-128 failure shape: pr-manager auto-merged PR #544 against a hold because it believed it was pre-authorized. The current text would *re-bless* that behavior, since the dispatch itself is the authorization.
 - The autonomy levels (`code-delivery/SKILL.md:166-184`; FACTORY.md merge-config Level 3 / 3.5 / 4) DO provide a "Level 3: add `needs-review` label, wait for human" mode — but this is **config-driven (`.factory/merge-config.yaml`), not prompt-enforced.** A misconfigured or absent merge-config defaults toward autonomy; nothing in pr-manager.md forces a halt when the config is missing.
-- The four constraints in DEC-128/OVERREACH say sub-agents must "merge ONLY on an explicit orchestrator-passed authorization signal (per-merge)." The engine satisfies the *mechanism* (a signal exists: `AUTHORIZE_MERGE`) but defeats the *intent* (the signal is auto-supplied for every story, so it is not a meaningful per-merge brake).
+- The four constraints in D-128/OVERREACH say sub-agents must "merge ONLY on an explicit orchestrator-passed authorization signal (per-merge)." The engine satisfies the *mechanism* (a signal exists: `AUTHORIZE_MERGE`) but defeats the *intent* (the signal is auto-supplied for every story, so it is not a meaningful per-merge brake).
 - Counter-balancing controls that DO exist: `MUST NOT merge with failing CI checks` (`:46`), `NEVER merge without all dependency PRs merged first` (`:42`), and the `--admin` brake in `rules/git-commits.md:70` ("each use requires fresh explicit approval. Always ask before using `--admin`"). These constrain *how* a merge happens but not *whether* pr-manager may self-authorize the merge decision.
 
-**Note on behavioral evidence (see below):** This session pr-manager *over-complied* — it refused even an orchestrator-relayed authorization and demanded the human's direct word. That is STRONGER than what the prompt requires. The prompt as written would permit the weaker, DEC-128-style behavior. Good behavior here is not attributable to the prompt.
+**Note on behavioral evidence (see below):** This session pr-manager *over-complied* — it refused even an orchestrator-relayed authorization and demanded the human's direct word. That is STRONGER than what the prompt requires. The prompt as written would permit the weaker, D-128-style behavior. Good behavior here is not attributable to the prompt.
 
 ---
 
@@ -124,7 +124,7 @@ Recorded for completeness; explicitly NOT treated as proof of codification.
 
 - **Constraint 1:** pr-manager held at merge on BOTH PR #566 and #567, refusing even an ORCHESTRATOR-RELAYED merge authorization and demanding the human's direct word. This is *stronger* than the prompt requires (`AUTHORIZE_MERGE=yes` would have permitted merge). Good behavior is therefore NOT attributable to the audited prompt text — it may reflect a stricter dispatch the orchestrator actually sent this session, session-level human instruction, or model conservatism. The prompt-as-written remains PARTIAL.
 - **Constraints 2-4:** Across this session pr-manager ran clean delivery lifecycles with no autonomous fix-agent spawning, no autonomous pushes beyond authorized branch work, and no unbounded poll loops observed. Consistent with the codified bounds (Constraint 4) and with the tool fence (Constraint 3); does not independently prove the Constraint 2 boundary, since no off-script fix opportunity arose to test it.
-- **Historical violations (the reason the story exists):** PR #544 — auto-merge against a hold (DEC-128, Constraint 1). PR #553 — autonomous implementer-spawn + push `4b10e77` + expensive poll loops (PG-PR-MANAGER-OVERREACH, Constraints 2/3/4). Constraint 4 (poll loops) has since been thoroughly codified; Constraints 1-3 have NOT been closed at the prompt level in a way that would prevent a recurrence of the #544/#553 shapes.
+- **Historical violations (the reason the story exists):** PR #544 — auto-merge against a hold (D-128, Constraint 1). PR #553 — autonomous implementer-spawn + push `4b10e77` + expensive poll loops (PG-PR-MANAGER-OVERREACH, Constraints 2/3/4). Constraint 4 (poll loops) has since been thoroughly codified; Constraints 1-3 have NOT been closed at the prompt level in a way that would prevent a recurrence of the #544/#553 shapes.
 
 ---
 
@@ -133,7 +133,7 @@ Recorded for completeness; explicitly NOT treated as proof of codification.
 **PARTIALLY-MITIGATED.**
 
 - Constraint 4 (unbounded poll loops): **CODIFIED** — fully closed. The #553 poll-loop symptom would now be prevented by explicit numeric caps and the "never hot-loop or wait indefinitely" instruction.
-- Constraints 1, 2, 3: **PARTIAL** — real controls exist (tool fence, test-pass push hook, merge-evidence hook, closed spawnable set, autonomy-level config, Feature-mode human gate), but none *prompt-codifies the DEC-128/OVERREACH intent* on the per-story greenfield path:
+- Constraints 1, 2, 3: **PARTIAL** — real controls exist (tool fence, test-pass push hook, merge-evidence hook, closed spawnable set, autonomy-level config, Feature-mode human gate), but none *prompt-codifies the D-128/OVERREACH intent* on the per-story greenfield path:
   - C1: the orchestrator's dispatch is treated as standing per-story merge authorization (`AUTHORIZE_MERGE=yes` baked into the template) — not a per-merge brake. This would re-permit the #544 auto-merge-against-hold shape.
   - C2: no explicit prohibition on spawning fix agents for off-script/self-discovered problems — only the closed spawnable list + in-flow framing constrain it. The #553 autonomous-implementer-spawn shape is not explicitly fenced.
   - C3: pushes are gated on test-pass + the no-shell fence, not on orchestrator authorization; coupled to the C2 gap.

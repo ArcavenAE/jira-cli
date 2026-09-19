@@ -15,7 +15,7 @@ traces_to: .factory/specs/architecture/ARCH-INDEX.md
 # Architecture Delta — Per-Profile Auth & Credential Ownership (`auth-profile-dx`)
 
 This document covers the concrete architectural shape for cycle-003's `auth-profile-dx`
-bundle (DEC-312..DEC-317; DEC-318/DEC-319 rejected/deferred and out of scope here). It is
+bundle (D-312..D-317; D-318/D-319 rejected/deferred and out of scope here). It is
 structured as a delta: only what changes from today's architecture is described. The
 decisions themselves — and their rationale, alternatives, and breaking-change
 acknowledgments — live in `ADR-0020-per-profile-credential-ownership-env-tagging-and-oauth-default-at-creation.md`
@@ -84,7 +84,7 @@ flowchart LR
         Profile["[profiles.&lt;name&gt;]\nauth_method (intrinsic, set once)\nenv: Option&lt;String&gt; (NEW, additive)\nurl, cloud_id, ..."]
     end
 
-    LoginCmd["jr auth login\nbare/interactive -> OAuth default (NEW)\n--no-input / non-TTY -> api_token\n(JR_EMAIL/JR_API_TOKEN are a credential SOURCE\nunder this trigger, never a trigger themselves -- DEC-327)\n--api-token (NEW flag) / --oauth (deprecated alias)"]
+    LoginCmd["jr auth login\nbare/interactive -> OAuth default (NEW)\n--no-input / non-TTY -> api_token\n(JR_EMAIL/JR_API_TOKEN are a credential SOURCE\nunder this trigger, never a trigger themselves -- D-327)\n--api-token (NEW flag) / --oauth (deprecated alias)"]
     LoginCmd -->|writes per-profile| PerProfileToken
     LoginCmd -->|writes per-profile| OAuthPair
     LoginCmd -->|sets auth_method once| Profile
@@ -112,7 +112,7 @@ Legend: solid arrows are unconditional data flow; dashed arrows are conditional/
 
 ## 2. Auth-Mechanism-Selection Flow: Creation-Time vs. Runtime
 
-Two genuinely different decision points exist, and DEC-313's "intrinsic property" framing
+Two genuinely different decision points exist, and D-313's "intrinsic property" framing
 depends on keeping them cleanly separated:
 
 ### 2.1 Creation-time selection (`jr auth login`, `jr init`)
@@ -125,7 +125,7 @@ sequenceDiagram
     participant Store as Keychain + config.toml
 
     User->>CLI: jr auth login [--profile X] [--oauth|--api-token] [--no-input]
-    alt non-interactive (--no-input or non-TTY only; JR_EMAIL/JR_API_TOKEN are a credential source here, never a trigger -- DEC-327)
+    alt non-interactive (--no-input or non-TTY only; JR_EMAIL/JR_API_TOKEN are a credential source here, never a trigger -- D-327)
         CLI->>CLI: select api_token (NEVER launches a browser)
         CLI->>Store: store_api_token(profile, email, token)
         CLI->>Store: set auth_method = "api_token"
@@ -146,7 +146,7 @@ sequenceDiagram
     else --api-token flag (NEW, explicit)
         CLI->>Store: same API-token path as above
     end
-    Note over Store: auth_method is now FIXED for this profile.<br/>No later command re-selects it (DEC-313).
+    Note over Store: auth_method is now FIXED for this profile.<br/>No later command re-selects it (D-313).
 ```
 
 ### 2.2 Runtime header selection (every HTTP call)
@@ -158,7 +158,7 @@ sequenceDiagram
     participant Store as Keychain
 
     Cmd->>Client: build client for active profile
-    Client->>Client: auth_method = profile.auth_method.unwrap_or("api_token")<br/>(UNCHANGED default -- DEC-313 pins this)
+    Client->>Client: auth_method = profile.auth_method.unwrap_or("api_token")<br/>(UNCHANGED default -- D-313 pins this)
     alt auth_method == "oauth"
         Client->>Store: load_oauth_tokens(profile) -- unchanged
         Store-->>Client: (access, refresh)
@@ -174,7 +174,7 @@ sequenceDiagram
 **Why these stay separate diagrams, not one:** creation-time selection is a one-time,
 interactive-or-flag-driven WRITE to `auth_method`; runtime selection is a READ of whatever
 `auth_method` already says, on every single HTTP-issuing command. Conflating them is exactly
-the bug class DEC-313 closes (`auth refresh --oauth` today writing a transient override
+the bug class D-313 closes (`auth refresh --oauth` today writing a transient override
 into the runtime decision instead of only ever reading the stored value).
 
 ### 2.3 Non-interactive OAuth guard (hardened, closes adversarial finding I-1)
@@ -190,7 +190,7 @@ flowchart TD
     Start(["auth login / auth refresh invoked"]) --> Check{"Non-interactive trigger?\n(--no-input, non-TTY stdin,\nor equivalent)"}
     Check -->|No -- interactive| Interactive["Proceed to §2.1 interactive picker\nor §2.2 runtime read, as applicable"]
     Check -->|Yes| WhichFlow{"Which mechanism would\nthis invocation select?"}
-    WhichFlow -->|"No flag, no stored\nauth_method yet (login only)"| DefaultSub["Silently substitute api_token\n(original DEC-313 behavior, unchanged)"]
+    WhichFlow -->|"No flag, no stored\nauth_method yet (login only)"| DefaultSub["Silently substitute api_token\n(original D-313 behavior, unchanged)"]
     WhichFlow -->|"Explicit --oauth flag\n(login or refresh)"| Guard1["FAIL FAST: exit 64\n'OAuth requires an interactive terminal;\nuse --api-token for non-interactive auth.'"]
     WhichFlow -->|"refresh on a profile whose\nstored auth_method == oauth\n(no flag needed)"| Guard2["FAIL FAST: exit 64\nsame message as Guard1"]
     Guard1 --> NeverReach["NEVER: bind port 53682,\nopen browser, start 3LO flow"]
@@ -262,7 +262,7 @@ copy-then-delete steps `load_oauth_tokens` still uses for OAuth tokens are repla
 by a no-copy detect-and-instruct error here, because unlike an OAuth token (cloudId-scoped,
 cannot authenticate against the wrong environment), a Basic-auth email/token pair carries no
 environment binding — copying it is the one migration action capable of silently defeating
-DEC-312's environment-locking goal. This is a HUMAN-DECIDED redesign, not merely an
+D-312's environment-locking goal. This is a HUMAN-DECIDED redesign, not merely an
 adversarial-review fix: the original "mirror `load_oauth_tokens` exactly" plan is REJECTED
 for this credential kind specifically (see ADR-0020 § Alternatives Considered).
 

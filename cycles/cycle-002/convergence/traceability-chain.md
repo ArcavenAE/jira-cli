@@ -28,14 +28,14 @@ Full 4-level chain (BC -> VP -> test -> src) for the 5 field-dx stories:
 
 **Fix-PRs (3):** FIX-F5-001 (#747 @ `4e4ae4f5`, createmeta-family pagination-termination
 bound), FIX-F6-001 (#749 @ `dd311e13`, mutants examine_globs config-scope fix), FIX-F7-001
-(#750 @ `2000c455`, CLAUDE.md size-deviation + DEC-310 documentation, no BC/test change).
+(#750 @ `2000c455`, CLAUDE.md size-deviation + D-310 documentation, no BC/test change).
 
 **Key BCs:** BC-3.4.026, BC-3.4.031 (S-578-1); BC-X.14.001..004 (S-580-1); BC-3.4.015,
 BC-3.4.016, BC-3.4.021, BC-3.4.027..030 (S-578-2); BC-3.8.008 (S-578-3); BC-3.3.010,
-BC-3.3.011, BC-3.4.014, BC-3.8.012 (REVERSED via DEC-310), BC-3.8.013 (S-578-4).
+BC-3.3.011, BC-3.4.014, BC-3.8.012 (REVERSED via D-310), BC-3.8.013 (S-578-4).
 
 **Key cross-references** (full detail in the bundle-prefixed file above):
-- DEC-310 reverses DEC-188 (BC-3.8.012 --field-alone guard removed; BC-3.8.013
+- D-310 reverses D-188 (BC-3.8.012 --field-alone guard removed; BC-3.8.013
   --on-behalf-of-alone guard unaffected).
 - S-578-4 depends_on [S-580-1, S-578-2] — reuses `get_createmeta_fields` (S-580-1) and the
   `field_resolve.rs` hint-kind dispatch engine (S-578-2).

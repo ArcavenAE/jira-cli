@@ -4,7 +4,7 @@ level: ops
 story_id: "S-MUTANTS-EXAMINE-GLOBS-1"
 epic_id: null
 # epic_id: null — no named epic or bundle exists for this standalone CI-infrastructure story. Added for template compliance 2026-08-04.
-title: "Restore mutation scope: add edit.rs + jsm_create.rs to examine_globs + fix policy-doc citations (DEC-149)"
+title: "Restore mutation scope: add edit.rs + jsm_create.rs to examine_globs + fix policy-doc citations (D-149)"
 wave: feature-followup
 status: draft
 intent: ci-hardening
@@ -69,7 +69,7 @@ last_updated: "2026-08-07"
 breaking_change: false
 retroactive: false
 origin: >
-  DEC-149 (CITATION-DEBT-PRODUCT-FILES cycle; surfaced by adversarial gate on PR #568,
+  D-149 (CITATION-DEBT-PRODUCT-FILES cycle; surfaced by adversarial gate on PR #568,
   2026-07-02). ADR-0012 Seam A/B module extraction (PR #558 Seam B / PR #556 Seam A)
   relocated handle_edit, handle_edit_bulk_labels, handle_edit_bulk_fields (→ edit.rs) and
   handle_jsm_create (→ jsm_create.rs) from create.rs, but .cargo/mutants.toml::examine_globs
@@ -86,7 +86,7 @@ changelog:
     match template. Migrated 6 stale ci.yml ~:259 line-number citations to anchor form
     ci.yml :: mutants / Run mutation tests on PR diff; changelog entry for v1.1 ci.yml:195
     annotated as historical (line number at v1.1 authoring time; file has since changed)."
-  - "1.0 (2026-07-02): Initial F3 story — MUTANTS-EXAMINE-GLOBS-STALE-AFTER-SEAM-B (DEC-149).
+  - "1.0 (2026-07-02): Initial F3 story — MUTANTS-EXAMINE-GLOBS-STALE-AFTER-SEAM-B (D-149).
     Option (a): add edit.rs (99 mutants) + jsm_create.rs (9 mutants) to examine_globs; fix
     policy-doc function-location citations (SWEEP-WHOLE-TOUCHED-FILE); fix cicd-setup.md
     false edit.rs coverage claim; CLAUDE.md verify (F1 confirms no change needed). 6 ACs.
@@ -122,7 +122,7 @@ files_modified:
 
 **Status:** DRAFT — F3 complete (2026-07-02); awaiting F4 dispatch.
 
-**Origin:** DEC-149 (CITATION-DEBT-PRODUCT-FILES cycle). Adversarial gate on PR #568 surfaced
+**Origin:** D-149 (CITATION-DEBT-PRODUCT-FILES cycle). Adversarial gate on PR #568 surfaced
 the drift item MUTANTS-EXAMINE-GLOBS-STALE-AFTER-SEAM-B. ADR-0012 Seam A/B module extraction
 (PRs #556/#558) relocated `handle_edit`, `handle_edit_bulk_labels`, `handle_edit_bulk_fields`
 (→ `src/cli/issue/edit.rs`) and `handle_jsm_create` (→ `src/cli/issue/jsm_create.rs`) from
@@ -140,12 +140,12 @@ endpoint fork, and JSM dispatch — have been outside mutation coverage since th
 **Policy-doc-only governance. No BC authored.** The governing artifact is
 `docs/specs/cargo-mutants-policy.md`. The `bcs: []` field is intentional. The Spec-First Gate
 (S-7.01) does not apply: no behavioral contract governs CI-configuration scope selection. This
-pattern follows S-MUTATION-CI-TIMEOUT-1 (DEC-144, PR #567) and S-TESTTOOL-1 (MAINT-MUTANTS-GLOBS-01,
+pattern follows S-MUTATION-CI-TIMEOUT-1 (D-144, PR #567) and S-TESTTOOL-1 (MAINT-MUTANTS-GLOBS-01,
 PR #533), both policy-doc-only CI-infrastructure stories with empty `bcs:`.
 
 **Scope classification:** CI-config + doc governance only. No production `src/` change. No test
 change. The mutation gate on the fix PR itself passes via the 0-mutant path (config/doc diff
-generates no code mutants — DEC-144 precedent). Worst-case CI cost increase: +58 min on a
+generates no code mutants — D-144 precedent). Worst-case CI cost increase: +58 min on a
 full-file `edit.rs` PR; +5 min on any `jsm_create.rs` PR — both within the 240-minute budget
 (corrected 2026-08-07 from "90-minute" — `ci.yml :: mutants` ships `timeout-minutes: 240`,
 landed on develop in `efa8b5d9`, 2026-07-20).
@@ -166,12 +166,12 @@ original S-346 intent, and governance documents accurately describe the actual m
 
 | Source | Link |
 |--------|------|
-| Drift item origin | DEC-149 (`MUTANTS-EXAMINE-GLOBS-STALE-AFTER-SEAM-B`) |
+| Drift item origin | D-149 (`MUTANTS-EXAMINE-GLOBS-STALE-AFTER-SEAM-B`) |
 | F1 delta analysis | `.factory/phase-f1-delta-analysis/mutants-examine-globs-2026-07-02-delta.md` |
 | Root cause | ADR-0012 Seam A/B split (PRs #556/#558) — behavior relocated, examine_globs not updated |
 | Governing policy doc | `docs/specs/cargo-mutants-policy.md §Scope` |
 | Preceding scope story | S-TESTTOOL-1 (MAINT-MUTANTS-GLOBS-01, PR #533, 2026-06-18) |
-| Preceding gate story | S-MUTATION-CI-TIMEOUT-1 (DEC-144, PR #567, 2026-06-28) |
+| Preceding gate story | S-MUTATION-CI-TIMEOUT-1 (D-144, PR #567, 2026-06-28) |
 | Original mutation gate | S-346 (PR #373, 2026-05-16) |
 
 ---
@@ -221,7 +221,7 @@ Well within 20% agent context window budget. No splitting required.
       `handle_edit_bulk_labels`, `handle_edit_bulk_fields`, or `handle_jsm_create` must be
       corrected. F1 analysis confirms none found beyond line 19 — re-verify.
    c. Add changelog entry: date 2026-07-02, scope widening (+edit.rs 99 mutants +jsm_create.rs
-      9 mutants), Seam A/B origin, DEC-149 cycle reference.
+      9 mutants), Seam A/B origin, D-149 cycle reference.
 3. (**DEFERRED — state-manager factory-artifacts commit post-PR-merge**) Read `.factory/cicd-setup.md`.
    Locate scope description near line 76. Remove false pre-existing claim that `src/cli/issue/edit.rs`
    is in scope (it was in prose but NOT in mutants.toml). After the mutants.toml change in Task 1,
@@ -242,7 +242,7 @@ Well within 20% agent context window budget. No splitting required.
 
 ## Previous Story Intelligence
 
-**S-MUTATION-CI-TIMEOUT-1 (DEC-144, PR #567, 2026-06-28):**
+**S-MUTATION-CI-TIMEOUT-1 (D-144, PR #567, 2026-06-28):**
 Established the HARD-REQUIRED mutation gate with absolute `--timeout 240` ceiling and 5 false-green
 guards. This story does NOT change the CI job, the timeout, or any gate guards — it extends
 `examine_globs` scope within the existing gate structure. The gate is already wired and working.
@@ -253,8 +253,8 @@ follows the same scope-extension pattern. Key difference: S-TESTTOOL-1 also incl
 change (keyring-gate annotation); this story makes NO test changes.
 
 **MUTANTS-FIRST-SCOPED-PR-CALIBRATION watch-item:**
-DEC-144 left a watch-item: first code-change PR touching an examine_globs file exercising the
-non-zero-mutant `--timeout 240` path. PR #568 (DEC-149) confirmed the 0-mutant path works
+D-144 left a watch-item: first code-change PR touching an examine_globs file exercising the
+non-zero-mutant `--timeout 240` path. PR #568 (D-149) confirmed the 0-mutant path works
 correctly (rustdoc-only diff → ~34s, PASS). After this story merges, the NEXT code-change PR
 modifying `edit.rs` becomes the first calibration of the non-zero-mutant code path. This
 watch-item is carried forward in AC-006.
@@ -265,10 +265,10 @@ watch-item is carried forward in AC-006.
 
 | Rule | Source | Constraint |
 |------|--------|-----------|
-| ci-gate.needs wiring unchanged | DEC-096/DEC-097 | No change to ci-gate composition. The `mutants` job is already in `ci-gate.needs` per S-MUTATION-CI-TIMEOUT-1. Only examine_globs scope changes. |
+| ci-gate.needs wiring unchanged | D-096/D-097 | No change to ci-gate composition. The `mutants` job is already in `ci-gate.needs` per S-MUTATION-CI-TIMEOUT-1. Only examine_globs scope changes. |
 | `--in-diff` + examine_globs double-gate | `docs/specs/cargo-mutants-policy.md §CI Integration` | The `--in-diff` flag restricts mutation to changed lines; examine_globs restricts the file set. Together they prevent the global 702-mutant scope from materializing on any individual PR. Zero cost on PRs that do not touch edit.rs or jsm_create.rs. |
 | `.github/workflows/ci.yml` change is comment-line only | `.cargo/mutants.toml` / F5 round-1 (F-1 MED, authorized 2026-07-02) | Timeout ceiling set via `cargo mutants --timeout 240` in `ci.yml` (unchanged). The one authorized ci.yml change is repointing the stale scope comment in ci.yml :: mutants / "Run mutation tests on PR diff" to `docs/specs/cargo-mutants-policy.md §Scope`. No job, step, matrix, or logic changes are permitted. |
-| SWEEP-WHOLE-TOUCHED-FILE-NOT-JUST-TARGET-LINE | DEC-149 (lesson codified) | When correcting citations in `docs/specs/cargo-mutants-policy.md`, scan the ENTIRE file for same-class stale function-location references, not only the identified line 19. F1 analysis found none beyond line 19, but implementer must re-verify at commit time. |
+| SWEEP-WHOLE-TOUCHED-FILE-NOT-JUST-TARGET-LINE | D-149 (lesson codified) | When correcting citations in `docs/specs/cargo-mutants-policy.md`, scan the ENTIRE file for same-class stale function-location references, not only the identified line 19. F1 analysis found none beyond line 19, but implementer must re-verify at commit time. |
 | `tests/ci_gate_completeness.rs` unchanged | S-MUTATION-CI-TIMEOUT-1 | The exact 8-job set in `test_ci_gate_needs_exactly_the_required_jobs` remains valid. examine_globs changes do not affect ci-gate composition or ci_gate_completeness.rs assertions. |
 
 ---
@@ -333,7 +333,7 @@ A SWEEP-WHOLE-TOUCHED-FILE pass confirms no other lines in `cargo-mutants-policy
 `handle_edit_bulk_labels`, `handle_edit_bulk_fields`, or `handle_jsm_create` to `create.rs`.
 
 A changelog entry is added to the policy doc recording: date 2026-07-02, scope widening
-(+edit.rs ~99 mutants, +jsm_create.rs ~9 mutants), Seam A/B root cause, DEC-149 cycle reference.
+(+edit.rs ~99 mutants, +jsm_create.rs ~9 mutants), Seam A/B root cause, D-149 cycle reference.
 
 ---
 
@@ -362,7 +362,7 @@ in cicd-setup.md must list all files currently in examine_globs in `.cargo/mutan
 ---
 
 ### AC-004 — CLAUDE.md checked; no stale mutation-scope citations found; no change made
-(traces to `docs/specs/cargo-mutants-policy.md §CI Integration` — governance consistency; DEC-149 citation-debt lesson)
+(traces to `docs/specs/cargo-mutants-policy.md §CI Integration` — governance consistency; D-149 citation-debt lesson)
 
 The mutation command in CLAUDE.md §Build & Test and any examine_globs references in CLAUDE.md
 are read and verified. Per the F1 delta analysis (§CLAUDE.md, 2026-07-02): CLAUDE.md already
@@ -375,7 +375,7 @@ during implementation, it must be corrected in the same commit as the other chan
 ---
 
 ### AC-005 — No production `src/` change; no test change; mutation gate on fix PR passes via 0-mutant path
-(traces to `docs/specs/cargo-mutants-policy.md §CI Integration` — config/doc diff generates no code mutants; DEC-144 precedent)
+(traces to `docs/specs/cargo-mutants-policy.md §CI Integration` — config/doc diff generates no code mutants; D-144 precedent)
 
 The delivering PR contains changes ONLY to:
 - `.cargo/mutants.toml` (config — examine_globs scope extension)
@@ -391,14 +391,14 @@ commit post-PR-merge (see AC-003).
 No `src/` Rust source file is modified. No `tests/` file is modified. No `Cargo.toml` is modified.
 The mutation gate on the fix PR passes via the 0-mutant path (config/doc diff generates no killable
 mutants; `--in-diff` scope produces an empty examine_globs intersection with changed lines). This
-matches DEC-144 precedent (PR #567: CI-config-only diff → 0-mutant path → PASS in ~32s).
+matches D-144 precedent (PR #567: CI-config-only diff → 0-mutant path → PASS in ~32s).
 
 ---
 
 ### AC-006 — MUTANTS-FIRST-SCOPED-PR-CALIBRATION watch-item carried; interaction with MUTANTS-SHARDING-PATH-B documented
 (traces to `docs/specs/cargo-mutants-policy.md §CI Integration` — calibration status; path-B interaction)
 
-The MUTANTS-FIRST-SCOPED-PR-CALIBRATION watch-item (from DEC-144; 0-mutant path CONFIRMED-GOOD
+The MUTANTS-FIRST-SCOPED-PR-CALIBRATION watch-item (from D-144; 0-mutant path CONFIRMED-GOOD
 on PR #568 at ~34s) is documented in this story and carried forward in the delivering PR description:
 - 0-mutant path: CONFIRMED-GOOD (PR #568, ~34s)
 - Code-mutant non-zero path: PENDING — will be exercised on the next code-change PR touching `edit.rs`
@@ -480,7 +480,7 @@ depends on this scope change.
 | EC-002 | F1 delta §3 | PR touches only `jsm_create.rs` (~9 mutants max) | Gate runs ≤~9 mutants; ~5 min worst case — well within budget | AC-001 |
 | EC-003 | F1 delta §3 | PR touches both `adf.rs` (~351 mutants) and `edit.rs` (~99 mutants) | Total ~450 mutants, ~263 min — exceeds 90-min budget; split-PR signal fires; contributor must split PR per policy doc §Absolute Timeout Ceiling | AC-001, AC-006 |
 | EC-004 | MUTANTS-FIRST-SCOPED-PR-CALIBRATION | First code-change PR touching `edit.rs` after this story merges | Non-zero mutant path exercised; --timeout 240 calibration event; if `timeout` outcomes appear, bump --timeout per policy doc | AC-006 |
-| EC-005 | DEC-149 origin | Surviving mutants discovered in edit.rs/jsm_create.rs on first code-change PR | Kill-rate gate may block merge if survivors > 10%; targeted tests or `#[mutants::skip]` with justification required per policy doc; out of scope for this story — see Out of Scope | AC-005 (documented only) |
+| EC-005 | D-149 origin | Surviving mutants discovered in edit.rs/jsm_create.rs on first code-change PR | Kill-rate gate may block merge if survivors > 10%; targeted tests or `#[mutants::skip]` with justification required per policy doc; out of scope for this story — see Out of Scope | AC-005 (documented only) |
 
 ---
 

@@ -1,6 +1,6 @@
 # PR #756 Review — S-cycle3-credential-absence-guard
 
-**Story:** No-copy detect-and-instruct guard for absent per-profile API-token credentials (DEC-326)
+**Story:** No-copy detect-and-instruct guard for absent per-profile API-token credentials (D-326)
 **Cycle:** cycle-003 (auth-profile-dx), Wave 2 — HIGH-risk (auth-header hot path; one-time breaking change for every pre-cycle-003 API-token profile)
 **Diff reviewed:** `d3ba2726...HEAD` (`src/api/auth.rs`, `CHANGELOG.md`, `docs/specs/multi-profile-auth.md`)
 

@@ -105,7 +105,7 @@ typed-struct serialization mechanism, reused unchanged).
 
 ## Behavior Summary (verbatim per BC — do not deviate)
 
-- **REPLACE, not UNION (BC-2.2.033/BC-2.3.041, human-locked DEC-298)**: when `--fields <CSV>`
+- **REPLACE, not UNION (BC-2.2.033/BC-2.3.041, human-locked D-298)**: when `--fields <CSV>`
   is present it FULLY REPLACES `BASE_ISSUE_FIELDS` plus any config-driven extras
   (`--points`'s `customfield_NNNNN`, `--assets`'s CMDB field ids, the team field id) in the
   `fields=` request parameter. It does not union with them.
@@ -276,7 +276,7 @@ call sites" discipline this story's AC-009/AC-010 mirror.
 
 | Rule | Source | Enforcement |
 |------|--------|--------------|
-| `--fields` REPLACES, never UNIONs, the requested field set | BC-2.2.033 Behavior, human-locked DEC-298 | AC-001, AC-006 |
+| `--fields` REPLACES, never UNIONs, the requested field set | BC-2.2.033 Behavior, human-locked D-298 | AC-001, AC-006 |
 | `--fields` requires `--output json`; table mode -> exit 64 pre-HTTP | BC-2.2.033 Precondition 2 | AC-004 |
 | New client methods are additive siblings — `get_issue`/`search_issues` signatures MUST NOT change | BC-2.6.052 Precondition 1/Postcondition 1 | AC-009, AC-010 |
 | Empty CSV segments are rejected, never silently dropped | BC-2.2.033 Edge Case EC-2.2.033-5 | AC-005 |

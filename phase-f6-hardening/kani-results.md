@@ -77,9 +77,9 @@ repo convention of tagging the malformed-hint / regression-pin catalog by **BC i
 | VP-578-012 | `:asset` composer safety (never malformed JSON body) + `:`-split no-panic | `tests/issue_field_hint_kinds.rs::prop_asset_composer_no_malformed_json_ever` (1150) + unit (885, 1134) | **PASS** |
 | VP-578-013 | malformed-hint catalog → exit 64, one error/invocation | `create.rs` `test_bc_3_4_031_ec1/ec5/ec2a` (765, 795, 906, 981) + `tests/issue_field_hint_kinds.rs` `test_bc_3_4_031_ec2a/b/c/d/ec3` (892, 940, 984, 1037, 1081) | **PASS** (BC-tagged) |
 | VP-578-014 | EC-6/EC-7 regression pins (colon-in-VALUE resolves; unknown-kind fires specific error) | `create.rs::test_bc_3_4_031_ec6_colon_in_value_resolves_normally` (819), `test_bc_3_4_031_ec7_multi_colon_name_fires_unknown_kind_not_other_error` (840); `tests/issue_field_hint_kinds.rs::test_ec6_ec7_ec8_ec9_regression_at_edit_call_site` (1776) | **PASS** (BC-tagged) |
-| VP-578-017 | DEC-310 reversal: `--field` alone → exit 0, platform POST | `tests/issue_create_field.rs` (378, 430) + `tests/issue_create_jsm.rs` (2570, 2909, 2994) | **PASS** |
-| VP-578-018 | DEC-310 reversal: `--field --on-behalf-of` → exit 64 via standalone guard | `tests/issue_create_field.rs` (445, 488) + `tests/issue_create_jsm.rs` (2794) | **PASS** |
-| VP-578-019 | DEC-310 reversal regression pin: `--on-behalf-of` alone → exit 64 | `tests/issue_create_field.rs` (506, 542) | **PASS** |
+| VP-578-017 | D-310 reversal: `--field` alone → exit 0, platform POST | `tests/issue_create_field.rs` (378, 430) + `tests/issue_create_jsm.rs` (2570, 2909, 2994) | **PASS** |
+| VP-578-018 | D-310 reversal: `--field --on-behalf-of` → exit 64 via standalone guard | `tests/issue_create_field.rs` (445, 488) + `tests/issue_create_jsm.rs` (2794) | **PASS** |
+| VP-578-019 | D-310 reversal regression pin: `--on-behalf-of` alone → exit 64 | `tests/issue_create_field.rs` (506, 542) | **PASS** |
 | VP-580-005 | graceful degrade: no enumerable options → exit 0, no panic | `src/cli/field.rs` (1120, 1183, 1210, 1236, 1268) + `tests/field_options.rs` degrade tests | **PASS** |
 
 ### 2.3 JSM-parity pair (`aligns_with_inline_vps`)

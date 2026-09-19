@@ -9,8 +9,8 @@ stories_recommended: 2
 wave_order: guards-2-3-first
 analyst: vsdd-factory:architect
 origin: >
-  Recurring Seam-extraction citation-drift class (DEC-147/148/149);
-  DEC-150 process-gap dispositions; open gaps #492-PG-TRACE-TESTS,
+  Recurring Seam-extraction citation-drift class (D-147/148/149);
+  D-150 process-gap dispositions; open gaps #492-PG-TRACE-TESTS,
   CITATION-FORM-DISCIPLINE
 ---
 
@@ -34,15 +34,15 @@ origin: >
 
 ## 2. Background and Motivation
 
-Three related CI gaps were identified as process-gap dispositions in DEC-150 and as
-open drift items from the ADR-0012 Seam A/B extraction cycles (DEC-147/148/149):
+Three related CI gaps were identified as process-gap dispositions in D-150 and as
+open drift items from the ADR-0012 Seam A/B extraction cycles (D-147/148/149):
 
 ### Guard 1 — BC-CITATION-CI-GUARD
 
 Root cause: BC bodies in `.factory/specs/prd/*.md` contain `Trace:` and `Source:`
 fields that cite `src/` product files and symbols (e.g.,
 `src/cli/issue/edit.rs::handle_edit`). When a Seam extraction moves a symbol to a
-different file, the BC citations silently become stale. DEC-147/148/149 spent ~30
+different file, the BC citations silently become stale. D-147/148/149 spent ~30
 adversarial passes hand-fixing this drift after ADR-0012 Seam A/B; the citation-debt
 cycle (2026-06-30) identified 14 relocation-stale citations in bc-2 and bc-3 alone.
 No CI guard existed. This guard closes the gap.
@@ -56,7 +56,7 @@ Root cause: `docs/specs/cargo-mutants-policy.md` §Scope has a function-location
 that claims which functions live in which files. After ADR-0012 Seam B, the table
 cited `handle_edit_bulk_labels`, `handle_edit_bulk_fields`, `handle_jsm_create` as
 living in `create.rs` when they had moved to `edit.rs`/`jsm_create.rs`. This was a
-false coverage claim in the governance document (discovered and fixed in DEC-149 /
+false coverage claim in the governance document (discovered and fixed in D-149 /
 `mutants-examine-globs-2026-07-02-delta.md`). No CI guard existed to catch it.
 
 ### Guard 3 — MUTANTS-GLOB-EXISTENCE-GUARD
@@ -118,7 +118,7 @@ existing `spec-guard` job design. The job simultaneously has develop's `src/` tr
 citations to check). Guard 1 MUST be a bash script added as a new step in the
 `spec-guard` job — immediately after the `git worktree add` step.
 
-**The DEAD-CITATION-CI precedent (DEC-129):** That cycle's F2 caught that a Rust
+**The DEAD-CITATION-CI precedent (D-129):** That cycle's F2 caught that a Rust
 test running in the `test` job would NOT have factory-artifacts access. The spec-guard
 job was already designed to mount both branches. Guard 1 must follow this pattern —
 a shell script, not a Rust integration test.
@@ -234,7 +234,7 @@ needs: [fmt, clippy, test, msrv, deny, spec-guard, check-signing-workflow-inject
 
 Guards 1 and 2 (added as steps to `spec-guard`) require NO change to `ci-gate.needs` —
 `spec-guard` is already in the list. Guard 3 (Rust test added to `tests/`) requires
-NO change — the `test` job is already in `ci-gate.needs`. **Per DEC-096/097: all three
+NO change — the `test` job is already in `ci-gate.needs`. **Per D-096/097: all three
 guards ride existing required jobs without any branch-protection modifications.**
 
 ### BC-INDEX.md and CANONICAL-COUNTS.md
@@ -269,7 +269,7 @@ prior art doc-fallout pattern; Guard 1's script will add a parallel line.
 | `.cargo/mutants.toml` | Guard 3 input: `examine_globs` list | 11 entries, all exact file paths |
 | `docs/specs/cargo-mutants-policy.md §Scope` | Guard 2 input: function-location table | 10 scoped files with named functions |
 | `.factory/phase-f1-delta-analysis/DEAD-CITATION-CI-delta-analysis.md` | Precedent: full F1-F7 for CLAUDE.md citation guard | Topology analysis in §4-6 is canonical |
-| `.factory/phase-f7-convergence/DEAD-CITATION-CI-session-review.md` | Topology lesson: DEC-129, CI-checkout flaw as a class defect | "Class" conclusion: guard accessing .factory/ must be in spec-guard job |
+| `.factory/phase-f7-convergence/DEAD-CITATION-CI-session-review.md` | Topology lesson: D-129, CI-checkout flaw as a class defect | "Class" conclusion: guard accessing .factory/ must be in spec-guard job |
 | `.factory/phase-f1-delta-analysis/citation-debt-filewide-2026-06-30-delta.md` | Motivation: 14 relocation-stale citations in bc-2/bc-3 after ADR-0012 | Establishes the drift class Guard 1 would prevent |
 
 ---
@@ -290,14 +290,14 @@ BC bodies follow the #408 citation convention. The citation forms that appear in
 **Honest scope for Guard 1 v1 (recommended):**
 
 Check **file existence only** for `src/` citations in `Trace:` and `Source:` lines.
-This catches the exact drift class from DEC-147/148/149: after Seam A/B, `handle_jsm_create`
+This catches the exact drift class from D-147/148/149: after Seam A/B, `handle_jsm_create`
 moved to `jsm_create.rs` — a guard would have caught the STALE CITATION TO `create.rs`
 at file-existence level (the function was no longer in `create.rs`, but the FILE still
 exists, so a file-existence check would NOT catch this specific case).
 
 **Correction to the above — re-analysis:** File-existence checking alone does NOT
 catch the "function moved to a different file" drift class. The SPECIFIC class from
-DEC-147/148/149 is:
+D-147/148/149 is:
 - Old citation: `src/cli/issue/create.rs::handle_jsm_create`
 - `create.rs` still exists → file-existence check PASSES
 - But `handle_jsm_create` is no longer in `create.rs` → SYMBOL check would FAIL
@@ -568,8 +568,8 @@ adversarial focus: false-positive surface for real CLAUDE.md-style citations in 
 - [x] Intent classified: `feature`
 - [x] Trivial scope assessed: standard (guards touch multiple files; Guard 1 has BCs)
 - [x] CI checkout topology verified against live `.github/workflows/ci.yml` (not assumed)
-- [x] DEAD-CITATION-CI precedent and DEC-129 lesson applied
-- [x] DEC-096/097 convention respected: no direct branch-protection changes needed
+- [x] DEAD-CITATION-CI precedent and D-129 lesson applied
+- [x] D-096/097 convention respected: no direct branch-protection changes needed
 - [x] Symbol-resolution feasibility assessed: file existence + symbol grep confirmed viable
 - [x] False-positive risk analyzed per citation form (`:~NN`, `§ "..."`, `::symbol`)
 - [x] Prior art inventoried (all scripts, claude_md_citations.rs, DEAD-CITATION-CI delta)

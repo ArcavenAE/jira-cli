@@ -44,7 +44,7 @@
 - 3 LOW findings — SEC-001/002 blocked by ENOENT in practice; SEC-003 IDs are always numeric
 - GHSA-9857-6MW7-FQ2M: confirmed correct behavior (reqwest strips auth on CDN redirect)
 - JRACLOUD-97046: no `?redirect=false` in URL construction
-- deny.toml cpufeatures 0.2 skip: HUMAN-AUTHORIZED (AUDIT-576-004/DEC-185)
+- deny.toml cpufeatures 0.2 skip: HUMAN-AUTHORIZED (AUDIT-576-004/D-185)
 
 ---
 
@@ -101,4 +101,4 @@ All gates passed:
 - CI Gate: PASS (run 29773933464)
 - Dependency S-576-1: MERGED
 
-DEC-128: human squash-merges. covered_sha: `6d6ea1a9d4390fcbeaa366c7e83978e6fd1d0b09`
+D-128: human squash-merges. covered_sha: `6d6ea1a9d4390fcbeaa366c7e83978e6fd1d0b09`

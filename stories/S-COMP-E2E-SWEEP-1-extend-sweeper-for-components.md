@@ -125,8 +125,8 @@ this story's sweep step must match: `{label}-lifecycle-{suffix}` (from
 `test_e2e_component_lifecycle_roundtrip`) and `{label}-rename-src-{suffix}` /
 `{label}-rename-dst-{suffix}` (from `test_e2e_component_rename_roundtrip`).
 
-**Hard safety constraint — read before touching the filter.** Per DEC-280/
-DEC-293 and CLAUDE.md, the ES E2E project (`JR_E2E_PROJECT`) now has a
+**Hard safety constraint — read before touching the filter.** Per D-280/
+D-293 and CLAUDE.md, the ES E2E project (`JR_E2E_PROJECT`) now has a
 **PERMANENT** component that a human added specifically to satisfy the AC-010
 live-smoke-test precondition (`jr issue edit --component` bulk round-trip
 needs >= 1 pre-existing component to discover via `jr component list`). This
@@ -346,7 +346,7 @@ Well within the 20-30% single-agent budget; no split required.
 |-------|-----------------|-------------------------|-----------------------|
 | S-E2E-FORK-1 | `e2e-sweeper.yml`'s original issue-sweep step shape: `|| true` acquisition guard, per-key `|| true` delete-loop isolation, `JR_E2E_ENABLED` repo-var gate mirrored from `e2e.yml` | This story's new component-sweep step reuses the identical best-effort/per-item-isolation idiom verbatim — do not invent a different error-handling shape | The sweeper shares `harden-runner`'s exact allowlist with `e2e.yml`; any new host contacted by a sweep step must be added there — but this story adds none |
 | S-COMP-E2E-1 | `ComponentDropGuard` (`Drop`-based, modeled on `AttachmentDropGuard`) is the primary teardown; fixture names are constructed as `{label}-lifecycle-{suffix}` / `{label}-rename-src-{suffix}` / `{label}-rename-dst-{suffix}` for per-attempt uniqueness | This story's sweeper filter keys directly off those three marker substrings — the naming convention IS the sweep predicate, so any future rename-pattern change in `tests/e2e_live.rs` must be mirrored here | `ComponentDropGuard`'s `Drop` already covers panic-unwind; the sweeper backstop is scoped ONLY to the SIGKILL/lost-runner/force-cancel class that `Drop` cannot observe |
-| DEC-280/DEC-293 (AC-010) | ES E2E project has a PERMANENT component a human added for the AC-010 live smoke test | This story's AC-003 exists specifically to guarantee that permanent component is never matched | Any looser filter (age, prefix-only, "contains e2e") risks catching the permanent component — rejected explicitly in AC-003 |
+| D-280/D-293 (AC-010) | ES E2E project has a PERMANENT component a human added for the AC-010 live smoke test | This story's AC-003 exists specifically to guarantee that permanent component is never matched | Any looser filter (age, prefix-only, "contains e2e") risks catching the permanent component — rejected explicitly in AC-003 |
 
 ## Architecture Compliance Rules
 

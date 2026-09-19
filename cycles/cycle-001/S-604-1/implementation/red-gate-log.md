@@ -85,4 +85,4 @@ Serde-schema tests (legitimately passing at Red Gate):
 - Stories ready for implementation: S-604-1
 - Implementation target: drive all 17 behavioral tests from FAIL to PASS
 - Implementation commit: `bc5b3201` — all 17 behavioral tests green; lib test count 1,124→1,127; `cargo clippy -- -D warnings` clean; `cargo fmt --all -- --check` clean
-- Step 4.5 adversarial convergence: CONVERGED at `4bc72b8c` (12 passes, 3 consecutive CLEAN: passes 10/11/12, DEC-245 strict bar)
+- Step 4.5 adversarial convergence: CONVERGED at `4bc72b8c` (12 passes, 3 consecutive CLEAN: passes 10/11/12, D-245 strict bar)

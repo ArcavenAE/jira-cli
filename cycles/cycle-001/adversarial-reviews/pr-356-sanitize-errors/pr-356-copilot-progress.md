@@ -81,9 +81,9 @@ comment (R17), R-number annotations (R15-C2). Substantive defenses unchanged sin
 Phase 8 prediction: R19 very likely 0-finding stop condition.
 
 **Process gaps noted:** R2 and R3 Perplexity-validation were SKIPPED on the rationalization
-that the claims were "empirically verifiable from code." Per DEC-018, this was incorrect — all
+that the claims were "empirically verifiable from code." Per D-018, this was incorrect — all
 Copilot review findings require Perplexity validation regardless of how obvious the claim looks.
-R5 and R6 restored and maintained correct DEC-018 compliance: all findings validated with
+R5 and R6 restored and maintained correct D-018 compliance: all findings validated with
 Perplexity before fixing. See Lesson codification below.
 
 **Process improvement (R5+):** Starting from R5, the state-manager is dispatched IN REAL TIME
@@ -101,7 +101,7 @@ consecutive in-cycle dispatches — the audit-trail discipline is consistent hab
 The doc comment claimed "single allocation" but the implementation used `format!()` per escaped
 character, which allocates once per escaped character rather than once total.
 
-**Validation (Perplexity per DEC-018):** Cited CWE-117 + OWASP guidance confirming
+**Validation (Perplexity per D-018):** Cited CWE-117 + OWASP guidance confirming
 that length capping is documented defense-in-depth (not strictly required by CWE-117 itself,
 but standard practice per OWASP's "Prevent Log Injection" guidance). Reference:
 https://cwe.mitre.org/data/definitions/117.html
@@ -150,10 +150,10 @@ output larger than the original input: `1024-byte prefix + ~30-byte marker = ~10
 This defeated the cap's flood-prevention purpose (output could exceed the original input for
 inputs in the range [MAX+1, MAX+30]).
 
-**Validation (Perplexity per DEC-018):** SKIPPED [process-gap] — the claim was empirically
-verifiable from the code (arithmetic: 1024 + 30 > 1025). Per DEC-018, should have validated
+**Validation (Perplexity per D-018):** SKIPPED [process-gap] — the claim was empirically
+verifiable from the code (arithmetic: 1024 + 30 > 1025). Per D-018, should have validated
 anyway. Skip rationalization: "obviously correct from code analysis." This is the failure mode
-DEC-018 was designed to prevent.
+D-018 was designed to prevent.
 
 **Fix:** Reserve marker budget when truncating: compute `marker` first, set
 `target_prefix_len = MAX_ERROR_ENTRY_LEN - marker.len()`, truncate prefix to that length.
@@ -177,9 +177,9 @@ composed entirely of control characters would produce up to 4096 sanitized bytes
 input → 4 bytes `\xNN` escape output). The per-entry pre-cap therefore left the total
 sanitized output size unbounded relative to the cap's stated intent.
 
-**Validation (Perplexity per DEC-018):** SKIPPED [process-gap] — both claims were
+**Validation (Perplexity per D-018):** SKIPPED [process-gap] — both claims were
 empirically verifiable from code analysis (1-byte control char → 4-byte `\xNN` escape
-is arithmetic). Per DEC-018, should have validated anyway.
+is arithmetic). Per D-018, should have validated anyway.
 
 **Fix:** Added `MAX_SANITIZED_OUTPUT_LEN = 4096` and restructured `sanitize_for_stderr` to
 use a byte-budget-aware char loop: compute needed bytes per char (4 for control,
@@ -210,7 +210,7 @@ Added 3 new tests: post-sanitization expansion, oversized clean input, under-cap
 would have fit fully within the cap. For example, a 4000-byte input with no control characters
 would be truncated to 4032 bytes (4096 - 64 marker budget) even though it fit cleanly.
 
-**Validation (Perplexity per DEC-018):** Validated the `Cow<str>` idiomatic Rust pattern
+**Validation (Perplexity per D-018):** Validated the `Cow<str>` idiomatic Rust pattern
 per Rust API Guidelines C-COST: `Cow::Borrowed` is zero-cost (no allocation), `Cow::Owned`
 matches a String allocation. Confirmed citation:
 https://doc.rust-lang.org/std/borrow/enum.Cow.html
@@ -248,7 +248,7 @@ Rewrote `errorMessages` join with a single `String::with_capacity` allocation in
 though `cap_entry` will truncate to 1 KiB downstream. A hostile server returning a 1 GB
 non-UTF8 body forces ~1 GB allocation before the cap kicks in.
 
-**Validation (Perplexity per DEC-018):** CONFIRMED — OWASP A06:2021 Resource Exhaustion
+**Validation (Perplexity per D-018):** CONFIRMED — OWASP A06:2021 Resource Exhaustion
 / AP11 Resource Exhaustion. Production codebases (kubernetes/client-go, docker/cli,
 tokio/hyper) all use `take(MAX_SIZE)` or pre-cap before parsing.
 `String::from_utf8_lossy` confirmed to allocate the FULL byte slice regardless of
@@ -264,7 +264,7 @@ Even with per-entry `cap_entry` + `Cow<str>` zero-copy, the NUMBER of entries is
 server-controlled. A hostile response with 1M entries × 1024 bytes forces ~1 GB allocation
 in the join before `sanitize_for_stderr` truncates.
 
-**Validation (Perplexity per DEC-018):** CONFIRMED — same OWASP A06/AP11 as Finding 1.
+**Validation (Perplexity per D-018):** CONFIRMED — same OWASP A06/AP11 as Finding 1.
 Streaming parse / bounded build is the standard mitigation (same pattern used in
 kubernetes/client-go, docker/cli, tokio/hyper).
 
@@ -302,7 +302,7 @@ The streaming errorMessages join appended `" [...truncated]"` (15 bytes) uncondi
 breaking out of the build loop. If `joined.len()` was close to `MAX_SANITIZED_OUTPUT_LEN` when
 the break fired, the final output after appending the marker could exceed the cap.
 
-**Validation (Perplexity per DEC-018):** CONFIRMED — "reserve marker.len() upfront in the build
+**Validation (Perplexity per D-018):** CONFIRMED — "reserve marker.len() upfront in the build
 loop" is the standard pattern. Cited Rust `std::fmt` buffer sizing + log-crate truncation
 conventions. Retroactive trim "fails correctness" per Perplexity guidance. Standard precedents:
 log-crate, tracing-subscriber all compute final-marker budget before starting the fill loop.
@@ -318,7 +318,7 @@ The truncation marker text `[...truncated at N sanitized bytes; original M bytes
 `out.len()` BEFORE the retroactive trim, over-reporting the actual number of bytes retained in
 the final output.
 
-**Validation (Perplexity per DEC-018):** CONFIRMED (same Perplexity query covered both findings).
+**Validation (Perplexity per D-018):** CONFIRMED (same Perplexity query covered both findings).
 Byte-count reporting must reflect FINAL emitted content length, not pre-trim values. Accurate
 reporting is required for operator diagnostics.
 
@@ -363,7 +363,7 @@ implementation escapes them as visible `\xNN` literals (non-destructive, reversi
 transformation preserving byte information). "Strip" implies irreversible deletion;
 "escape" is the correct term for `\xNN` substitution.
 
-**Validation (Perplexity per Lesson 1 / DEC-018):** CONFIRMED — OWASP/security-sanitization
+**Validation (Perplexity per Lesson 1 / D-018):** CONFIRMED — OWASP/security-sanitization
 terminology clearly distinguishes the two:
 - "strip" = irreversible deletion (e.g., removing `<script>` tags from HTML)
 - "escape" = reversible representation transformation (e.g., `&lt;` encoding, `\xNN` substitution)
@@ -425,7 +425,7 @@ The errors-map extraction path used `.iter().map(...).collect()` then sorted the
 same unbounded entry-count allocation pattern that R5 fixed for errorMessages. A hostile response
 with 1M keys would force ~100 MB allocation before the join output is consumed.
 
-**Validation (Perplexity per Lesson 1 / DEC-018):** RE-CITED OWASP A06/AP11 — Lesson 1 allows
+**Validation (Perplexity per Lesson 1 / D-018):** RE-CITED OWASP A06/AP11 — Lesson 1 allows
 re-citing prior validation for same-class findings. R5 confirmed this threat class (unbounded
 entry-count allocation) for errorMessages; the errors-map path uses an identical pattern. Same
 threat class, same mitigation category, prior validation stands.
@@ -480,7 +480,7 @@ MAX_ERROR_PAIRS=256, a hostile server could send 256 entries each with a 1 MB ke
 format! allocation reaches 256 MB before the final join truncates. The R8 entry-count cap was
 necessary but not sufficient; key size was a separate uncapped dimension.
 
-**Validation (Perplexity per DEC-018):** CONFIRMED — legitimate memory-amplification gap.
+**Validation (Perplexity per D-018):** CONFIRMED — legitimate memory-amplification gap.
 Keys are server-controlled and should be treated with the same cap discipline as values.
 
 **Fix:** Wrap key in `cap_entry(k)` before `format!`. Key is now bounded to MAX_ERROR_ENTRY_LEN
@@ -492,7 +492,7 @@ Keys are server-controlled and should be treated with the same cap discipline as
 subtree is materialized as a String before `cap_entry` truncates the result. A single deeply
 nested or large value (e.g., a 512 MB nested JSON array) forces a full allocation.
 
-**Validation (Perplexity per DEC-018):** CONFIRMED — legitimate memory-amplification gap.
+**Validation (Perplexity per D-018):** CONFIRMED — legitimate memory-amplification gap.
 `serde_json::to_string()` / `.to_string()` on Value always allocates the full output regardless
 of downstream truncation. The bounded-writer pattern prevents this.
 
@@ -548,7 +548,7 @@ off — a "looks valid but is actually malformed prefix" anti-pattern recognized
 tracing/slog/OpenTelemetry conventions. A JSON string value truncated mid-character would
 silently produce an invalid string literal with no error hint.
 
-**Validation (Perplexity per DEC-018):** CONFIRMED — Perplexity validated this as a legitimate
+**Validation (Perplexity per D-018):** CONFIRMED — Perplexity validated this as a legitimate
 UX correctness gap matching the silent-truncation anti-pattern documented in tracing/slog/
 OpenTelemetry best practices for bounded output. Standard fix: track overflow flag; reserve
 marker bytes upfront so prefix-plus-marker total fits within limit.
@@ -607,7 +607,7 @@ would force 200-300 MB of serde_json::Value DOM allocation before any extraction
 occurred. This is a distinct attack surface from the OUTPUT amplification vectors addressed
 in R5-R10: it operates entirely on the INPUT side and is invisible to all downstream caps.
 
-**Validation (Perplexity per DEC-018):** CONFIRMED — `serde_json::from_str` always materializes
+**Validation (Perplexity per D-018):** CONFIRMED — `serde_json::from_str` always materializes
 a complete DOM. Byte-level gate before parse is Perplexity-validated as superior to streaming/
 partial-parse approaches for this use case: zero allocation attack surface (the serde_json call
 is never reached for over-threshold bodies), whereas streaming parsers still allocate proportional
@@ -665,7 +665,7 @@ buffer were written." The prior implementation partially wrote bytes AND returne
 a protocol violation that could cause serde_json's streaming serializer to produce inconsistent
 output state.
 
-**Validation (Perplexity per DEC-018):** CONFIRMED — `std::io::Write` contract is unambiguous.
+**Validation (Perplexity per D-018):** CONFIRMED — `std::io::Write` contract is unambiguous.
 Partial write + error is a well-documented protocol violation. The correct behavior for bounded
 writers is: on remaining == 0, return Err(WriteZero) immediately (nothing written); on partial
 fit, append the prefix, set overflowed, return Ok(buf.len()) so the caller believes all bytes
@@ -684,7 +684,7 @@ marker reported the post-pre-cap lossy string length (max ~4096 bytes), NOT the 
 `[...truncated; original 4096 bytes]` silently under-reported the true size — operators saw
 no signal that the body was unusually large.
 
-**Validation (Perplexity per DEC-018):** CONFIRMED — accurate body-size reporting is required
+**Validation (Perplexity per D-018):** CONFIRMED — accurate body-size reporting is required
 for operator diagnostics; using the post-cap length hides true input size for hostile/flood
 inputs. Custom marker with `body.len()` is the correct approach.
 
@@ -740,7 +740,7 @@ input — which is exactly what R5–R11 defended against):
 - **CWE-770 (Allocation of Resources Without Limits or Throttling)** — the authoritative CWE
   mapping for this defect class
 
-**Validation (Perplexity per DEC-018):** CONFIRMED — OWASP API4:2023 is unambiguously the correct
+**Validation (Perplexity per D-018):** CONFIRMED — OWASP API4:2023 is unambiguously the correct
 category for unrestricted resource consumption; CWE-770 is the standard mapping. Both authoritative
 references cited in commit message bcc2db4. Historical note: R5's original Perplexity validation
 cited "OWASP A06/AP11" — those labels were accepted then but were incorrect. R13 correction
@@ -805,7 +805,7 @@ current exploitation vector in mainstream terminal environments. However, legacy
 (VT220, xterm in ISO mode), embedded systems, and non-UTF8 terminal emulators can interpret
 C1 sequences directly, enabling the same terminal injection threat class as C0.
 
-**Validation (Perplexity per DEC-018):** CONFIRMED — `char::is_control()` in Rust covers both
+**Validation (Perplexity per D-018):** CONFIRMED — `char::is_control()` in Rust covers both
 C0 and C1 ranges. The defense-in-depth rationale for escaping C1 controls is valid: the threat
 exists in legacy/embedded terminal contexts even if not exploitable in mainstream UTF-8 terminals.
 Rust's `char::is_control()` is the standard idiom for comprehensive control-character detection.
@@ -858,7 +858,7 @@ The `sanitize_for_stderr` strategy block described "Replace every ASCII control 
 in its bullet list but R14 expanded the detection to `char::is_control()` (covering both
 C0/DEL and C1 controls). The bullets described only the ASCII path, omitting the C1 branch.
 
-**Validation per DEC-018:** No external claims — purely internal documentation accuracy.
+**Validation per D-018:** No external claims — purely internal documentation accuracy.
 Perplexity skipped per Lesson 1 (no external-claim aspect).
 
 **Fix:** Rewrote strategy bullets to accurately list both escape branches:
@@ -880,7 +880,7 @@ as invalid UTF-8 continuation bytes." This is technically wrong:
 - Legacy terminals and terminals in ISO 8859-1 mode interpret C1 bytes (raw, not UTF-8 encoded)
   directly, which is where the terminal injection risk exists
 
-**Validation per DEC-018:** No external claims about library behavior — the finding is about
+**Validation per D-018:** No external claims about library behavior — the finding is about
 UTF-8 encoding correctness (well-defined by the Unicode standard) and terminal behavior
 documented in R14's own Perplexity validation. Perplexity skipped per Lesson 1.
 
@@ -898,7 +898,7 @@ The integration test comment in `tests/api_client.rs` stated "only ASCII control
 — this was accurate before R14 but became false when R14 expanded the escape set to include Unicode
 C1 controls U+0080..U+009F.
 
-**Validation per DEC-018:** No external claims. Perplexity skipped per Lesson 1.
+**Validation per D-018:** No external claims. Perplexity skipped per Lesson 1.
 
 **Fix:** Updated comment to: "only control characters (ASCII C0/DEL and Unicode C1) are escaped;
 printable Unicode passes through unchanged."
@@ -945,7 +945,7 @@ escape set to include Unicode C1 controls U+0080..U+009F, which are rendered as 
 (8-byte format) rather than `\xNN` (4-byte format). The comment continued to imply that only
 the `\xNN` escape form was used, omitting the C1 branch entirely.
 
-**Validation per DEC-018:** No external library or API behavior claims — purely internal
+**Validation per D-018:** No external library or API behavior claims — purely internal
 documentation accuracy. Perplexity skipped per Lesson 1 ("at least one external-claim aspect"
 required). Skip is per-spec, not a rationalization.
 
@@ -992,7 +992,7 @@ controls U+0080..U+009F, which are rendered as `\u{NNNN}` (8-byte format) rather
 omitted CSI (U+009B, the C1 control sequence introducer that ANSI terminals use to begin escape
 sequences), making the threat model appear narrower than the implementation.
 
-**Validation per DEC-018:** No external library or API behavior claims — purely internal
+**Validation per D-018:** No external library or API behavior claims — purely internal
 documentation accuracy. Perplexity skipped per Lesson 1 ("at least one external-claim aspect"
 required). Skip is per-spec, not a rationalization.
 
@@ -1158,7 +1158,7 @@ implementation to `chars().any(|c| c.is_control())`. A future reader could be co
 about why char-level iteration is used, or might "simplify" it back to byte-level without
 understanding the constraint.
 
-**Validation per DEC-018:** No external claims — the finding is entirely about internal
+**Validation per D-018:** No external claims — the finding is entirely about internal
 comment accuracy. Per Lesson 1 wording, Perplexity is not required when there is no
 external-claim aspect. Skip is per-spec.
 
@@ -1175,7 +1175,7 @@ annotation. This is the same annotation-hygiene class as R7 (which cleaned R2/R3
 from production comments and test files), and the stale annotation makes the comment harder to
 read without cycle history.
 
-**Validation per DEC-018:** No external claims — same rationale as Finding C1. Perplexity skipped per Lesson 1.
+**Validation per D-018:** No external claims — same rationale as Finding C1. Perplexity skipped per Lesson 1.
 
 **Fix:** Broader than the single flagged instance — systematic strip of ALL R-number annotations
 across `src/api/client.rs`: "(R10 finding)", "(R11 finding)", "(R12 finding)", "(R9 finding)",
@@ -1309,6 +1309,6 @@ through R15-R19.
 | Metric | Value |
 |--------|-------|
 | State-manager dispatches (Lesson 2) | 15 consecutive (RECORD for this project) |
-| Perplexity validations (Lesson 1 / DEC-018) | 12 |
+| Perplexity validations (Lesson 1 / D-018) | 12 |
 | R14 doc-fallout cluster | R15:2 → R16:3 → R17:1 → R18:1 → R19:0 (fully resolved) |
 | Rounds since last behavioral change (R14) | 5 (R15-R19 doc-only + stop) |

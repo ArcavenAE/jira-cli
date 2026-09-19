@@ -14,10 +14,10 @@ related: ["ADR-0006", "ADR-0007", "ADR-0011", "ADR-0013"]
 ## Status
 
 **Accepted** (2026-09-01). Gate: F2 spec evolution for the `auth-profile-dx` bundle (Feature
-Mode cycle-003; DEC-312 through DEC-316 in `.factory/STATE.md`'s Decisions Log). Combines
+Mode cycle-003; D-312 through D-316 in `.factory/STATE.md`'s Decisions Log). Combines
 three decisions the F1 delta analysis recommended treating as one ADR
 (`.factory/cycles/cycle-003/phase-f1-delta-analysis/delta-analysis.md` §1.3, Open Question 3)
-because they share one "config overhaul" window and are causally linked — DEC-317's un-defer
+because they share one "config overhaul" window and are causally linked — D-317's un-defer
 of ADR-0011 is explicitly justified by this ADR's credential normalization multiplying the
 cross-profile scoping surface.
 
@@ -68,7 +68,7 @@ mechanism.
 
 Profiles also carry no structured notion of "kind" beyond `auth_method` itself
 (current-state brief §B.5): no environment/role tag, no site-role grouping. Human-confirmed
-scope (DEC-314) asks for a lightweight, additive `env`/role tag (prod/sandbox/uat) — NOT a
+scope (D-314) asks for a lightweight, additive `env`/role tag (prod/sandbox/uat) — NOT a
 structural profile-kind system; per-profile `url` remains the actual environment lock
 (profile = environment + identity), and platform-vs-JSM dispatch stays per-command as today.
 
@@ -103,7 +103,7 @@ structural profile-kind system; per-profile `url` remains the actual environment
 
 We adopt the following, as one coherent change to the profile/credential model:
 
-### 1. Per-profile API-token credential storage (DEC-315)
+### 1. Per-profile API-token credential storage (D-315)
 
 New keychain functions in `src/api/auth.rs`, mirroring the existing OAuth-token functions
 byte-for-byte in shape:
@@ -139,7 +139,7 @@ succeed for the same underlying environmental reason (no keychain backend to wri
 distinction applies at every keychain read in § Decision 2 below, including the legacy-pair
 existence check.
 
-### 2. No-copy detect-and-instruct on credential absence (DEC-315, REDESIGNED at F2 gate — HUMAN DECISION, DEC-326)
+### 2. No-copy detect-and-instruct on credential absence (D-315, REDESIGNED at F2 gate — HUMAN DECISION, D-326)
 
 **The original F1/F2 design for this section — a lazy `"default"`-only copy-then-delete
 migration mirroring `load_oauth_tokens` exactly — is REJECTED and REMOVED.** The human
@@ -147,7 +147,7 @@ reviewer rejected copying the shared, flat `email`/`api-token` credential into a
 namespaced slot: doing so would silently plant whatever environment that shared credential
 happens to belong to (in practice, usually the account a user set up before multi-profile
 support existed — frequently production) behind a profile that may be tagged sandbox or uat.
-That is precisely the failure mode DEC-312 (environment-locked profiles) exists to close. A
+That is precisely the failure mode D-312 (environment-locked profiles) exists to close. A
 "helpful" auto-migration that populates a new profile with the wrong account's credential is
 strictly worse than requiring one explicit, clearly-explained re-login.
 
@@ -278,7 +278,7 @@ EXISTING, already-documented, disposable lever (`src/cache.rs::cache_dir`,
 `cache_root().join("v1").join(profile)` — BC-6.2.004/BC-6.2.016) and is orthogonal to this
 ADR's keychain decision.
 
-### 4. Additive `env`/role tag (DEC-314)
+### 4. Additive `env`/role tag (D-314)
 
 `src/config.rs::ProfileConfig` gains one new field:
 
@@ -296,7 +296,7 @@ pub struct ProfileConfig {
 `#[serde(default)]` behavior is already implicit for `Option<T>` fields in this struct's
 existing derive (every other `ProfileConfig` field is `Option`, and none carry an explicit
 `#[serde(default)]` attribute today — `serde` gives `Option<T>` a default-`None`-on-absence
-reader without one). No forced cache/keychain namespace bump for this field alone (DEC-314's
+reader without one). No forced cache/keychain namespace bump for this field alone (D-314's
 own wording) — purely additive, zero migration.
 
 **Surfacing:** `env` appears in `auth list --output json` and `auth status`'s JSON/text
@@ -309,12 +309,12 @@ an explicit, acknowledged **breaking change** to BC-1.6.046's pinned 4-column in
 the architecture level; the product-owner's BC authoring pass formalizes the exact column
 placement/header text and updates the snapshot.
 
-No enum/allowlist validation is imposed on `env`'s value — free text, matching DEC-314's
+No enum/allowlist validation is imposed on `env`'s value — free text, matching D-314's
 "prod/sandbox/uat" framing as examples, not an exhaustive set. If a future cycle wants
 enum-validated values, that is a separate, additive change to make later without touching
 this ADR's storage decision.
 
-### 5. `auth_method` as an intrinsic, creation-time-only profile property (DEC-313)
+### 5. `auth_method` as an intrinsic, creation-time-only profile property (D-313)
 
 - `jr auth login` (bare, interactive, no flags) presents the SAME `["OAuth 2.0
   (recommended)", "API Token"]` picker `jr init` already uses, defaulting to OAuth
@@ -323,8 +323,8 @@ this ADR's storage decision.
   picker is suppressed by this 2-member trigger set ONLY; `JR_EMAIL`/`JR_API_TOKEN`
   presence is a credential SOURCE under this trigger, never an independent trigger of
   its own — on an interactive TTY the picker always shows regardless of env vars, per
-  DEC-327) selects API-token and NEVER launches a browser — this is a byte-for-byte
-  regression-safety pin on DEC-313's explicit "CI stays token-first" guarantee, not a
+  D-327) selects API-token and NEVER launches a browser — this is a byte-for-byte
+  regression-safety pin on D-313's explicit "CI stays token-first" guarantee, not a
   new capability.
 - A new explicit `--api-token` flag is added to `LoginArgs`/`RefreshArgs`
   (`src/cli/mod.rs::AuthCommand::Login`/`Refresh`) as `--oauth`'s coequal, symmetric
@@ -342,18 +342,18 @@ this ADR's storage decision.
 - `JiraClient::from_config`'s `.unwrap_or("api_token")` runtime default for an unset
   `auth_method` (`src/api/client.rs`, `let auth_method = profile.and_then(|p|
   p.auth_method.as_deref()).unwrap_or("api_token")`) is **unchanged, byte-for-byte**. This
-  is the exact mechanism DEC-313 requires NOT to flip — an unset `auth_method` (hand-edited
+  is the exact mechanism D-313 requires NOT to flip — an unset `auth_method` (hand-edited
   config, or a future profile-creation path that omits it) continues to attempt api-token
   auth, never a silent OAuth attempt against absent tokens.
 - `Config::base_url`'s `profile.auth_method.as_deref() == Some("oauth")` branch is
-  unaffected — it already reads the intrinsic per-profile field; nothing about DEC-313
+  unaffected — it already reads the intrinsic per-profile field; nothing about D-313
   changes how the gateway URL is chosen once `auth_method` is set.
 
 ### 6. `auth refresh`'s `--oauth`/`--api-token` become pure deprecated aliases with no override power (resolves F1 Open Question 8)
 
 `chosen_flow_for_profile` (`src/cli/auth/mod.rs::chosen_flow_for_profile`) today lets a
 per-invocation `--oauth` flag override the target profile's stored `auth_method` for that
-one `refresh` call. DEC-313's "every invocation auto-selects the profile's mechanism… no
+one `refresh` call. D-313's "every invocation auto-selects the profile's mechanism… no
 per-command auth switch" language is read literally here: `refresh` always follows the
 profile's intrinsic `auth_method`, with **no override**, full stop — `--oauth`/
 `--api-token` on `refresh` become syntactically accepted (so existing scripts passing
@@ -389,9 +389,9 @@ codebase where a per-command flag outranks the profile's stored mechanism, makin
   profile emits an informational stderr notice (exit 0) explaining that api-token auth has no
   session to end, rather than producing no output at all.
 
-### 8. Non-interactive OAuth guard is airtight — covers every OAuth-selecting trigger, not just the no-flag default (DEC-313, hardened at F2 gate — closes adversarial finding I-1)
+### 8. Non-interactive OAuth guard is airtight — covers every OAuth-selecting trigger, not just the no-flag default (D-313, hardened at F2 gate — closes adversarial finding I-1)
 
-DEC-313's original framing ("non-interactive `auth login` selects API-token, never launches a
+D-313's original framing ("non-interactive `auth login` selects API-token, never launches a
 browser") was implemented, in the F1/F2 design, as a check that fires only on the *default*
 path — i.e., non-interactive mode silently substitutes `api_token` when no explicit
 auth-mechanism flag is given. That leaves a gap: `jr auth login --oauth` (the explicit,
@@ -422,13 +422,13 @@ for the product-owner" list at the end of this cycle's F2 pass.
 
 ## Rationale
 
-- **DEC-315's per-profile credential model is the direct architectural extension of
+- **D-315's per-profile credential model is the direct architectural extension of
   ADR-0007's precedent.** ADR-0007 established that per-profile data (`story_points_field_id`,
   `team_field_id`) must be read from `ProfileConfig` with NO shared-struct fallback, because a
   fallback silently serves the wrong data to a second profile. The identical failure mode
   applies to credentials: a shared `email`/`api-token` pair silently authenticates every
   profile as the SAME Jira account, defeating the entire premise of "environment-locked
-  profiles" (prod/sandbox/uat) DEC-312 names as this cycle's goal. A profile whose `url`
+  profiles" (prod/sandbox/uat) D-312 names as this cycle's goal. A profile whose `url`
   points at a sandbox site but whose credentials are silently shared with a prod-profile's
   login is not environment-locked at all.
 - **Migration discipline borrows the OAuth pattern's detection shape, but deliberately
@@ -439,7 +439,7 @@ for the product-owner" list at the end of this cycle's F2 pass.
   The API-token credential-absence handling (§ Decision 2) reuses only the FIRST step of that
   shape ("try namespaced keys first") and replaces everything after it with a no-copy
   detect-and-instruct error, because a Basic-auth email/token pair carries no environment
-  binding of its own — copying it is the one migration action capable of defeating DEC-312's
+  binding of its own — copying it is the one migration action capable of defeating D-312's
   environment-locking goal outright. This divergence is deliberate, not an oversight or a
   downgrade in engineering rigor: "reuse the OAuth pattern wholesale" was the ORIGINAL F1/F2
   plan and was explicitly rejected for the API-token case at the F2 gate, precisely because
@@ -464,24 +464,24 @@ for the product-owner" list at the end of this cycle's F2 pass.
   credential carries no environment binding, so copying it can silently hand a freshly
   sandbox/uat-tagged profile the SAME credential as whatever environment the legacy pair
   happened to belong to (in practice, usually production, since it predates multi-profile
-  support) — defeating DEC-312 outright. The OAuth-token migration keeps this exact pattern
+  support) — defeating D-312 outright. The OAuth-token migration keeps this exact pattern
   because OAuth tokens ARE environment-bound (cloudId-scoped) and cannot make this mistake;
   see § Decision 2's "Contrast with the OAuth-token migration" paragraph.
 - **Flat bag (status quo, do nothing):** keep `email`/`api-token` shared account-level.
-  Rejected — this is precisely the invariant DEC-312 (environment-locked profiles) requires
+  Rejected — this is precisely the invariant D-312 (environment-locked profiles) requires
   reversing; a shared credential pair cannot lock a profile to a distinct Jira account/site.
 - **Nested namespace** (`[profiles.<kind>.<name>]`, or a `[credentials.<profile>]` config
   table separate from `[profiles.<name>]`): rejected per the modern-CLI research brief
   (`.factory/cycles/cycle-003/investigation/modern-cli-auth-profile-research.md`) — this
-  would be a structural config-schema change beyond DEC-314's explicitly "lightweight,
+  would be a structural config-schema change beyond D-314's explicitly "lightweight,
   additive" framing, and duplicates information (`profile` identity) across two config
   locations for no benefit the flat `[profiles.<name>]` + namespaced-keychain-key model
   doesn't already provide more simply.
 - **`kubectl`-style three-table model** (separate `clusters`/`users`/`contexts` tables with
   a profile as a named combination of the three): rejected — this is the heaviest structural
-  option and was explicitly out of scope per DEC-314's rejection of a "structural profile-kind
+  option and was explicitly out of scope per D-314's rejection of a "structural profile-kind
   system" in favor of a single additive tag; it would also require a genuinely new migration
-  (splitting today's single `[profiles.<name>]` table into three) that DEC-315's scope
+  (splitting today's single `[profiles.<name>]` table into three) that D-315's scope
   (a keychain-layout change, not a config-schema restructuring) does not call for.
 - **Keychain version marker as part of this migration** (§3's rejected alternative): would
   solve a disambiguation problem that does not exist (credential kind is already
@@ -491,7 +491,7 @@ for the product-owner" list at the end of this cycle's F2 pass.
 ## Consequences
 
 ### Positive
-- Closes the shared-credential correctness gap DEC-312 names as this cycle's motivating
+- Closes the shared-credential correctness gap D-312 names as this cycle's motivating
   problem — profiles become genuinely environment-locked (`url` + now-owned credentials).
 - OAuth and API-token credential storage become symmetric (`<profile>:oauth-*` and
   `<profile>:email`/`<profile>:api-token` follow one naming convention), simplifying the
@@ -533,7 +533,7 @@ imply (F1 delta analysis §1.2 lists ~9-13 candidate new/amended BCs).
   legacy credential is never auto-copied into the profile's namespaced slot. This is framed
   as the SAFE choice, not a regrettable one: the rejected alternative (silently copying a
   possibly-production credential behind a possibly-sandbox-tagged profile) would defeat
-  DEC-312's environment-locking goal outright, while this break costs each affected user one
+  D-312's environment-locking goal outright, while this break costs each affected user one
   `jr auth login` invocation with a clear, actionable error message pointing directly at the
   fix. **F4 doc-fallout obligation:** the implementing story MUST add a CHANGELOG entry under
   "Breaking Changes" describing the one-time re-login requirement and its rationale, and
@@ -561,7 +561,7 @@ imply (F1 delta analysis §1.2 lists ~9-13 candidate new/amended BCs).
 - **`auth refresh --oauth` losing its override power** (Decision §6): behavior-changing for
   any script relying on `jr auth refresh --oauth` to force an OAuth relogin on a profile
   whose stored `auth_method` is `api_token`. This is a narrow, intentional behavior change
-  DEC-313's "no per-command auth switch" invariant requires; flagged explicitly here since
+  D-313's "no per-command auth switch" invariant requires; flagged explicitly here since
   it is easy to miss (the flag still parses and no error is raised — the behavior silently
   narrows rather than erroring).
 - **`auth remove`'s fourth delete step** (Decision §7): non-breaking additively — `remove`
@@ -595,7 +595,7 @@ story list §2):
   reversed), §B.5 (no structural profile-kind today).
 - `.factory/cycles/cycle-003/investigation/modern-cli-auth-profile-research.md` — modern-CLI
   research (39 sources) behind the rejected nested-namespace and three-table alternatives.
-- `.factory/STATE.md` Decisions Log, DEC-312 through DEC-316 — the confirmed scope this ADR
+- `.factory/STATE.md` Decisions Log, D-312 through D-316 — the confirmed scope this ADR
   designs against.
 - `.factory/cycles/cycle-003/phase-f1-delta-analysis/delta-analysis.md` — impact boundary,
   BC/ADR/module inventories, regression risk table, migration surface, and the eight Open

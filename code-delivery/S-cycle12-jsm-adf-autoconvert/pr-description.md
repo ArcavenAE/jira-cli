@@ -2,7 +2,7 @@
 
 **Epic:** FIELD-ADF-AUTOCONVERT — ADF auto-conversion for `--field` on rich-text fields
 **Mode:** feature (Feature Mode F4, Wave 2)
-**Convergence:** CONVERGED after 3 consecutive CLEAN adversarial passes (zero CRIT/HIGH/MED, DEC-360 bar)
+**Convergence:** CONVERGED after 3 consecutive CLEAN adversarial passes (zero CRIT/HIGH/MED, D-360 bar)
 
 ![Tests](https://img.shields.io/badge/tests-cargo_test---lib_jsm_31%2F0-brightgreen)
 ![Tests](https://img.shields.io/badge/tests-issue__create__jsm_113%2F0-brightgreen)
@@ -204,7 +204,7 @@ this note.
 | 2 | 2 (OBS-N1, OBS-N2, both LOW) | 0 | 0 | 0 | CLEAN |
 | 3 | 3 (OBS-P3-1..3, all LOW) | 0 | 0 | 0 | CLEAN |
 
-**Convergence:** 3 consecutive CLEAN passes (DEC-360 bar — no CRIT/HIGH/MED across 3
+**Convergence:** 3 consecutive CLEAN passes (D-360 bar — no CRIT/HIGH/MED across 3
 consecutive passes). Converged tree: `3dadb1ae`.
 
 <details>
@@ -224,7 +224,7 @@ consecutive passes). Converged tree: `3dadb1ae`.
 - **OBS-P3-2 (LOW) — RESOLVED in commit `3dadb1ae`:** CHANGELOG initially omitted the JSM
   assembly-order (`--description` wins) enumeration present on the platform paths.
   Fixed by extending the combined `[Unreleased] > Fixed` entry (doc-only, no
-  re-convergence required per DEC-360 precedent for doc-only post-convergence fixes).
+  re-convergence required per D-360 precedent for doc-only post-convergence fixes).
 - **OBS-P3-3 (LOW):** Tests mutate process-global env vars — pre-existing accepted idiom
   elsewhere in the suite.
 

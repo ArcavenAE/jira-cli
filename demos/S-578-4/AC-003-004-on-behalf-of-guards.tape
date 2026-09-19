@@ -1,6 +1,6 @@
 # S-578-4 — AC-003 + AC-004: BC-3.8.013's --on-behalf-of pre-flight guard is
 # UNCHANGED in mechanism (Architecture Compliance Rule 5) — only its trigger
-# scope widens now that the old combined --field+--on-behalf-of check (DEC-188)
+# scope widens now that the old combined --field+--on-behalf-of check (D-188)
 # is gone. Two invocations, same guard, same error string in both:
 #   1. --on-behalf-of alone (AC-004, wire-for-wire regression pin, VP-578-019)
 #   2. --field + --on-behalf-of together (AC-003, VP-578-018) -- the standalone

@@ -1,7 +1,7 @@
 ---
 document_type: research
 date: 2026-08-09
-decision_id: DEC-246
+decision_id: D-246
 story_id: S-626-1
 topic: >-
   GitHub Actions gating semantics the `ci-gate` required-check design rests on —
@@ -9,7 +9,7 @@ topic: >-
   false-green mechanism S-CIGATE-2 fixed, matrix jobs in `needs`, required-check name
   matching, merge queue / Required Workflows availability, and re-run semantics.
   Reconstruction and independent re-validation of the 2026-08-08 research pass
-  recorded as DEC-246, for which no artifact file was ever written.
+  recorded as D-246, for which no artifact file was ever written.
 status: partially_conclusive
 confidence: mixed
 verification_method: >-
@@ -43,7 +43,7 @@ sources:
   - https://github.com/orgs/community/discussions/179993
 ---
 
-# DEC-246 — GitHub Actions gating semantics for `ci-gate`
+# D-246 — GitHub Actions gating semantics for `ci-gate`
 
 ## Provenance note — READ FIRST
 
@@ -51,14 +51,14 @@ sources:
 pass.** The original pass ran on 2026-08-08, answered eight questions about GitHub
 Actions gating semantics against primary sources, returned CONFIRM on all eight,
 and surfaced the finding labelled **U1**, which became commit `9d34f354`. It was
-recorded as decision **DEC-246** and it drove a real code change. **No research
+recorded as decision **D-246** and it drove a real code change. **No research
 artifact file was ever written for it.** Nothing in `.factory/research/` postdates
 2026-07-30 and `RESEARCH-INDEX.md` was last touched 2026-07-24.
 
 The only surviving record of the original pass is narrative prose in
 `.factory/cycles/cycle-001/burst-log.md` (section `### Burst Summary:
 RESEARCH-VALIDATION+U1 (2026-08-08)`, approx. lines 8968–9002), corroborated by
-`.factory/STATE.md` (the DEC-246 Decisions Log row) and
+`.factory/STATE.md` (the D-246 Decisions Log row) and
 `.factory/cycles/cycle-001/session-checkpoints.md` (line ~2104). That prose
 itemizes **six** of the eight confirmations. **Two confirmations, and the specific
 reasoning that retired the planned "sibling-workflow exposure" inspection frontier,
@@ -118,7 +118,7 @@ being dropped.
 | `test` matrix | `os: [ubuntu-latest, macos-latest, windows-latest]` — **static literal** | `.github/workflows/ci.yml` |
 
 **Note on `9d34f354`:** the U1 fix is on branch `ci/fix-toolchain-sha-msrv` (PR #667,
-HELD per DEC-202) and is **not** on `develop`. `PINNED_GATE_EXCLUDED_JOBS` does not
+HELD per D-202) and is **not** on `develop`. `PINNED_GATE_EXCLUDED_JOBS` does not
 exist in the `develop` working tree; it was read via `git show
 9d34f354:tests/ci_gate_completeness.rs`. Any future reader checking `develop` and
 finding the constant absent is looking at the right thing in the wrong place.

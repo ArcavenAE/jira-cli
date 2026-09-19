@@ -167,10 +167,10 @@ Pin comment convention issue (pass-6 M-002 / pass-7 F-11) is already in S-641-1 
 
 ## Round-8 Dispositions (orchestrator, 2026-07-31)
 
-- **Routed to `.factory/` fix round:** F-1 (SS-11 → SS-02+SS-09 — 5 stories; human-confirmed MIS-ANCHOR per DEC-200); F-2 (BC/VP anchoring — S-626-1.md bcs: ["BC-5.3.001","BC-5.3.002"]); F-4 (AC-9 wording — "regression-detecting"); F-5 (STORY-INDEX S-641-1 row update to v0.5 after additional work).
-- **Routed to S-641-1:** F-3 (dependabot ignore — already in scope of S-641-1 AC-3); Obs-1 (positive-coverage gap routed per DEC-199 human ruling; S-641-1 AC-1/AC-2 scope confirmed).
+- **Routed to `.factory/` fix round:** F-1 (SS-11 → SS-02+SS-09 — 5 stories; human-confirmed MIS-ANCHOR per D-200); F-2 (BC/VP anchoring — S-626-1.md bcs: ["BC-5.3.001","BC-5.3.002"]); F-4 (AC-9 wording — "regression-detecting"); F-5 (STORY-INDEX S-641-1 row update to v0.5 after additional work).
+- **Routed to S-641-1:** F-3 (dependabot ignore — already in scope of S-641-1 AC-3); Obs-1 (positive-coverage gap routed per D-199 human ruling; S-641-1 AC-1/AC-2 scope confirmed).
 - **Confirmed observations:** Obs-2 through Obs-6 — all accepted non-blocking; no routing action.
-- **Convergence:** 0/3. Three passes post-fix-scope (passes 6/7/8), all NOT CLEAN. DEC-199 (GRIND to 3/3 CLEAN) in effect. All three passes agree on substantive findings. Fix round applied 2026-07-31; fresh convergence window required on amended state.
+- **Convergence:** 0/3. Three passes post-fix-scope (passes 6/7/8), all NOT CLEAN. D-199 (GRIND to 3/3 CLEAN) in effect. All three passes agree on substantive findings. Fix round applied 2026-07-31; fresh convergence window required on amended state.
 
 ---
 

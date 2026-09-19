@@ -99,7 +99,7 @@ against a misunderstanding of the existing logic, not a real defect to fix.
 **MUST-PASS. Regression-critical — this is a pin-correctness check, not a
 behavior-change check.**
 
-### H-W1-REG-004 — `refresh_credentials`'s relogin-then-replace invariant preserved (DEC-321)
+### H-W1-REG-004 — `refresh_credentials`'s relogin-then-replace invariant preserved (D-321)
 
 **Setup:** Trigger `jr auth refresh` on both an OAuth profile (exercising
 `S-cycle4-dpapi-storage-fix`'s routing indirectly, via `refresh_oauth_token_with_url`) and
@@ -108,12 +108,12 @@ on every refresh, per BC-1.2.052 Invariant 3) — for each, simulate a failure p
 through (network error mid-refresh for OAuth; `tenant_info` fetch failure for API-token).
 
 **Expectation:** In BOTH cases, the existing credential is NEVER destroyed before a
-replacement is confirmed (DEC-321) — a failed OAuth refresh leaves the OLD pair intact
+replacement is confirmed (D-321) — a failed OAuth refresh leaves the OLD pair intact
 (the new atomic dual-write in `S-cycle4-dpapi-storage-fix` reinforces, not weakens, this);
 a failed `tenant_info` fetch on an API-token refresh leaves the prior `cloud_id` untouched
 (BC-1.2.052 Postcondition 3), never a bare clear.
 
-**MUST-PASS. Regression-critical — this is the exact invariant DEC-321 exists to
+**MUST-PASS. Regression-critical — this is the exact invariant D-321 exists to
 protect, now exercised by two independent new code paths in the same wave.**
 
 ---
@@ -131,7 +131,7 @@ F7 manual Windows smoke test.
 Windows 11, with the token persisting via the DPAPI fallback and a subsequent
 `jr auth status`/API call succeeding.
 
-**DEFERRED to F4 spike / F7 manual gate — NOT a Wave-1 CI gate item**, per DEC-335.
+**DEFERRED to F4 spike / F7 manual gate — NOT a Wave-1 CI gate item**, per D-335.
 
 ---
 
@@ -144,7 +144,7 @@ Windows 11, with the token persisting via the DPAPI fallback and a subsequent
 | H-W1-REG-001 | regression (macOS/Linux byte-for-byte unchanged) | MUST-PASS, regression-critical |
 | H-W1-REG-002 | regression (cycle-003 per-profile storage untouched) | MUST-PASS, regression-critical |
 | H-W1-REG-003 | regression (base_url/assets_base_url pin correctness) | MUST-PASS, regression-critical |
-| H-W1-REG-004 | regression (DEC-321 relogin-then-replace) | MUST-PASS, regression-critical |
+| H-W1-REG-004 | regression (D-321 relogin-then-replace) | MUST-PASS, regression-critical |
 | H-W1-WIN-001 | Windows-only / manual | DEFERRED to F4/F7, not a Wave-1 CI gate |
 
 6 CI-gated scenarios + 1 deferred Windows-only scenario recorded for completeness.

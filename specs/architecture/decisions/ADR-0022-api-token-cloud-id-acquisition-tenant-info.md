@@ -329,7 +329,7 @@ correction, Context, and Consequences below).
   ancillary Assets-enablement lookup would regress every user who doesn't touch Assets/CMDB, for
   a lookup this ADR's own research flags as undocumented-as-a-versioned-API (LOW-to-MODERATE
   risk, not zero).
-- **Refresh-not-clear on mechanism switch** directly serves DEC-334's family of decisions in the
+- **Refresh-not-clear on mechanism switch** directly serves D-334's family of decisions in the
   companion ADR-0021: minimize collateral breakage from a fix, prefer "the previous value stays
   usable" over "guarantee a regression to force correctness," since the previous value is either
   already-inert (core Jira, confirmed) or no worse than the fresh value for Assets — whose actual

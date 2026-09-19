@@ -20,7 +20,7 @@ strip `Authorization`/`Cookie` per GHSA-9857-6MW7-FQ2M (correct CDN behavior —
 
 **Important notes for reviewers:**
 
-1. **`deny.toml [[bans.skip]] cpufeatures 0.2` — HUMAN-AUTHORIZED (AUDIT-576-004/DEC-185):** The
+1. **`deny.toml [[bans.skip]] cpufeatures 0.2` — HUMAN-AUTHORIZED (AUDIT-576-004/D-185):** The
    `sha1` crate (new direct dependency, RustCrypto, non-crypto use: filename prefix disambiguation)
    introduces a transitive duplicate of `cpufeatures 0.2` alongside `chacha20`. This skip entry
    was authorized by the project owner before merge.
@@ -292,7 +292,7 @@ P8-001/P9-001 and fixed. GHSA-9857-6MW7-FQ2M (credential redirect leak) — miti
 
 ### Dependency Audit
 - `sha1 ^0.10` (RustCrypto) — new direct dep; non-cryptographic use (filename prefix disambiguation)
-- `cpufeatures 0.2` — transitive via sha1; duplicate with chacha20 path; `deny.toml [[bans.skip]]` HUMAN-AUTHORIZED (AUDIT-576-004/DEC-185)
+- `cpufeatures 0.2` — transitive via sha1; duplicate with chacha20 path; `deny.toml [[bans.skip]]` HUMAN-AUTHORIZED (AUDIT-576-004/D-185)
 - `cargo audit` — clean on feature branch
 
 ### Formal Verification
@@ -432,9 +432,9 @@ generated-at: "2026-07-20T00:00:00Z"
 - [x] CWE-22 path traversal mitigated (BC-2.7.011 5-step algorithm + containment)
 - [x] CWE-116 display sanitization at all stderr call sites (P8-001/P9-001 regression pinned)
 - [x] GHSA-9857-6MW7-FQ2M credential stripping tested with distinct-host wiremock
-- [x] deny.toml cpufeatures skip HUMAN-AUTHORIZED (AUDIT-576-004/DEC-185)
+- [x] deny.toml cpufeatures skip HUMAN-AUTHORIZED (AUDIT-576-004/D-185)
 - [x] S-576-1 dependency PR #630 MERGED
 - [x] Demo evidence: 7 recordings, all 19 ACs covered
 - [x] Adversarial convergence STRICT achieved (window p10/p11/p12)
 - [x] Red Gate: 0/22 stubs verified RED before implementation
-- [ ] Human squash-merge (DEC-128: HUMAN executes merge)
+- [ ] Human squash-merge (D-128: HUMAN executes merge)

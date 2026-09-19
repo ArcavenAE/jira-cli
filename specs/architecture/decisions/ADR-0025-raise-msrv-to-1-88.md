@@ -19,11 +19,11 @@ input-hash: "1c24441"
 ## Status
 
 **Accepted** (proposed 2026-09-15; prose reconciled 2026-09-16 at the cycle-013 Wave-2 integration
-gate; **flipped to Accepted 2026-09-16 at the cycle-013 F7 human close/release gate** — DEC-367,
+gate; **flipped to Accepted 2026-09-16 at the cycle-013 F7 human close/release gate** — D-367,
 `.factory/STATE.md` Decisions Log, cycle-012/ADR-0024 lifecycle precedent).
 Gate: F2 spec evolution for cycle-013 `msrv-1.88-bump` (Feature Mode) was approved 2026-09-15
-(DEC-364). Since then, F3 story decomposition was approved 2026-09-15 (DEC-365) and F4 delta
-implementation has landed on `develop` in full: Wave 1 (S1+S2 combined, DEC-366) merged via PR
+(D-364). Since then, F3 story decomposition was approved 2026-09-15 (D-365) and F4 delta
+implementation has landed on `develop` in full: Wave 1 (S1+S2 combined, D-366) merged via PR
 #818 @ `29e2d362`, and Wave 2 (S3, docs-only) merged via PR #819 @ `cfe1dedc`. `Cargo.toml`'s
 `rust-version` is now `"1.88"`, `comfy-table` is re-pinned to `=7.2.2`, and
 `.github/workflows/ci.yml`'s `msrv` job runs `cargo check --all-targets --all-features --locked`
@@ -38,7 +38,7 @@ findings** (`.factory/cycles/cycle-013/phase-f7-convergence/convergence-audit.md
 `factory-artifacts @ 87cf1bbc` → this burst) — the human F7 gate then **APPROVED "Approve & close"**
 plus an explicit decision to **cut a dev release now** (v0.7.0-dev.7), closing cycle-013. Per VSDD
 convention (cycle-012/ADR-0024 lifecycle precedent), this document's top-level `status:` field
-therefore now correctly reads `accepted`, flipped in this same state-manager burst. DEC-367 is the
+therefore now correctly reads `accepted`, flipped in this same state-manager burst. D-367 is the
 decision record of the human F7 gate; no separate DEC is minted by this document itself.
 
 ## Context
@@ -201,8 +201,8 @@ record that F4's doc edit traces back to.
 "Proposed, pending the F2 human approval gate. No code, `Cargo.toml`, or `ci.yml` changes have
 been made under this ADR — F2 is spec-layer only." That is no longer current.
 
-**Current state (2026-09-16):** F2 human approval gate PASSED 2026-09-15 (DEC-364). F3 story
-decomposition PASSED 2026-09-15 (DEC-365). F4 delta implementation is now COMPLETE — both waves
+**Current state (2026-09-16):** F2 human approval gate PASSED 2026-09-15 (D-364). F3 story
+decomposition PASSED 2026-09-15 (D-365). F4 delta implementation is now COMPLETE — both waves
 merged to `develop`: Wave 1 (S1+S2 combined) via PR #818 @ `29e2d362`, Wave 2 (S3, docs-only) via
 PR #819 @ `cfe1dedc`. All three F1-preview stories have landed (Story A: mechanical version bump +
 CI-gate contract; Story B: let-chain retrofit + convention cleanup; Story C: doc/policy
@@ -222,7 +222,7 @@ confirmed all 7 convergence dimensions PASS cleanly with zero open findings
 (`.factory/cycles/cycle-013/phase-f7-convergence/convergence-audit.md`). The human F7 gate
 **APPROVED "Approve & close"** for cycle-013, with an explicit decision to cut a dev release now
 (v0.7.0-dev.7, executed separately via the native release-metadata-PR precedent). **This ADR's
-`status:` field is flipped from `proposed` to `accepted` in this same burst** (DEC-367). cycle-013
+`status:` field is flipped from `proposed` to `accepted` in this same burst** (D-367). cycle-013
 is CLOSED.
 
 ## Alternatives Considered

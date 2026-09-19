@@ -40,4 +40,4 @@ Strong and non-vacuous (spot-checked bodies, not just names). Tests assert exact
 No CRITICAL / HIGH / MEDIUM findings.
 
 ### CI
-All completed jobs green at review time: Clippy (ubuntu + windows), Format, MSRV (1.85.0), Test (ubuntu), Deny, Spec Guards, gitleaks, dependency-review, Signing Workflow Injection Guard. Test (macOS/windows) + Mutation + Coverage still running. Merge remains gated on human authorization per DEC-128.
+All completed jobs green at review time: Clippy (ubuntu + windows), Format, MSRV (1.85.0), Test (ubuntu), Deny, Spec Guards, gitleaks, dependency-review, Signing Workflow Injection Guard. Test (macOS/windows) + Mutation + Coverage still running. Merge remains gated on human authorization per D-128.

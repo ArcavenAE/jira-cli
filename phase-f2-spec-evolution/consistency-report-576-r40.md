@@ -369,7 +369,7 @@ None.
 | INFO-8 | STATE.md spec version stale | CONFIRMED — STATE.md still reflects spec v1.3.70 (P30-remediated state); v1.3.71 not yet recorded. |
 | INFO-11 | spec-changelog [1.3.57] and prd-delta P17-002 "three sites" vs four | NOTE: Fresh search finds no "three sites" discrepancy in current documents — spec-changelog [1.3.57] Changed Requirements (line 512) and prd-delta P17-002 (line 331) both say "All four sites." The discrepancy text is not locatable; this entry may be stale. Carry-forward pending explicit resolution or INFO closure. |
 | INFO-15 | impact-boundary-576.md BC-3.9.004 INCONCLUSIVE annotation | CONFIRMED — spec-changelog line 455 confirms annotation still present ("BC-3.9.004 row annotated: key order is illustrative; shape INCONCLUSIVE pending S5 live capture"). |
-| INFO-NEW-5 | BC-3.9.009 Trace field not updated with P24-001 citation | CONFIRMED — BC-3.9.009 Trace (bc-3 line 3489) reads "F2 spec evolution (2026-07-15 SOH-ATTACHMENTS-1, DEC-179); JSON render invariant #526" — no P24-001 citation present. The P24-001 body fix (download-exclusion narrowing) was not reflected in the Trace field. |
+| INFO-NEW-5 | BC-3.9.009 Trace field not updated with P24-001 citation | CONFIRMED — BC-3.9.009 Trace (bc-3 line 3489) reads "F2 spec evolution (2026-07-15 SOH-ATTACHMENTS-1, D-179); JSON render invariant #526" — no P24-001 citation present. The P24-001 body fix (download-exclusion narrowing) was not reflected in the Trace field. |
 
 ---
 

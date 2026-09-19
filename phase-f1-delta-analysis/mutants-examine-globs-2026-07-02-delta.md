@@ -3,7 +3,7 @@
 - **Drift item:** MUTANTS-EXAMINE-GLOBS-STALE-AFTER-SEAM-B
 - **Priority:** MEDIUM
 - **Status:** OPEN — needs-intent-decision
-- **Origin:** DEC-149 (CITATION-DEBT-PRODUCT-FILES cycle; surfaced by adversarial gate on PR #568)
+- **Origin:** D-149 (CITATION-DEBT-PRODUCT-FILES cycle; surfaced by adversarial gate on PR #568)
 - **Date:** 2026-07-02
 - **Analysis type:** F1 delta — no code or config changes made in this artifact
 

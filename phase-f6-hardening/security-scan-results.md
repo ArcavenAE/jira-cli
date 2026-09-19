@@ -39,7 +39,7 @@ vulnerability advisories. One warning: `chacha20 0.10.0` (transitive via
 `rand 0.10.2`) is marked **yanked** upstream — not a vulnerability advisory,
 and `deny.toml` already carries an authorized skip/reason for the sibling
 `cpufeatures` version-split this same `rand`/`chacha20` pairing causes
-(DEC-185). Pre-existing, not introduced by this delta.
+(D-185). Pre-existing, not introduced by this delta.
 
 **Confirmed no new dependency surface:** `git diff 91d04fe1..4e4ae4f5 --
 Cargo.toml Cargo.lock` is **empty** — the field-dx delta added zero new
@@ -108,7 +108,7 @@ static-analysis coverage on this delta is required before release.
   `render_rows_recursive`) — confirmed via grep that every recursive call
   site checks `depth >= MAX_FIELD_OPTION_DEPTH` before descending, with
   regression-pinning unit tests asserting truncation starts exactly at
-  depth 256 (inclusive boundary, matching the `adf.rs` DEC-132 lesson about
+  depth 256 (inclusive boundary, matching the `adf.rs` D-132 lesson about
   off-by-one `>` vs `>=` boundary bugs).
 - **createmeta pagination (`get_createmeta_fields` /
   `get_issue_types_for_project`, `src/api/jira/issues.rs`)** — both bounded

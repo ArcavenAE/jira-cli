@@ -21,7 +21,7 @@ Method: fresh-context, information-asymmetry walls, different-model-family adver
 
 - **Round 1 (pass 1, adversary, on `develop` @ `e5a18fe0`):** 0 CRIT/HIGH/MED; 3 LOW —
   - (LOW-1) `auth_method:None` pre-mark blind-spot's symmetric CLEAR side left orphaning a legacy-migrated profile's OAuth refresh token on a mechanism switch;
-  - (LOW-2) DEC-334 source-scan guard normalized only `///`, missing `//!`/`//` line-wraps;
+  - (LOW-2) D-334 source-scan guard normalized only `///`, missing `//!`/`//` line-wraps;
   - (LOW-3) `atomic_write` lacked parent-dir fsync vs its documented crash-safety.
 
   FIXED via PR #773 @ `f3863f07` (`probe_stored_credential_kind` + `reconcile_legacy_none_outgoing_credentials`; guard normalization; best-effort parent-dir fsync). All TDD RED→GREEN.

@@ -40,4 +40,4 @@ No blocking findings. No suggestions or nits worth churning. See "GitHub posting
 
 ## GitHub posting
 
-No `gh pr review` verdict was posted — **intentional**. The launching agent's task instruction explicitly stated "No `gh pr review --approve` — DEC-173 prohibits agent approval." The verdict is PASS, so `--request-changes` would also be a false verdict. This PASS must be actioned by the orchestrator/human. This is an F5 adversarial fresh-eyes review within phase-5 refinement, not a code-delivery posting flow.
+No `gh pr review` verdict was posted — **intentional**. The launching agent's task instruction explicitly stated "No `gh pr review --approve` — D-173 prohibits agent approval." The verdict is PASS, so `--request-changes` would also be a false verdict. This PASS must be actioned by the orchestrator/human. This is an F5 adversarial fresh-eyes review within phase-5 refinement, not a code-delivery posting flow.

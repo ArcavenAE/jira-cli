@@ -276,7 +276,7 @@ Spot-check of the seven baseline findings (v1.3.44, all verified resolved at v1.
 
 > **Earliest consumer: S2** (Story 2 — first surface to write server-supplied filenames to
 > human-readable output; S4 story-writers must allocate display-sanitization at confirmation
-> prompt call sites per DEC-184 R3.13).
+> prompt call sites per D-184 R3.13).
 
 BC-2.7.001 (`attachment list <KEY>` table output, Story S1) also echoes server-supplied
 `filename` values in a `comfy-table` rendered to stdout. comfy-table writes cell content

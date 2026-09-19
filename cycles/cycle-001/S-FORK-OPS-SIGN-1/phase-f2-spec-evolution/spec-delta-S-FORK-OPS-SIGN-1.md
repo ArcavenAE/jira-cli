@@ -30,7 +30,7 @@ convergence: 6 adversary passes
    (every job with secrets: write OR contents: write), not hardcoded-scope.
    Hardcoded scope was a F5 finding (see adversarial-reviews/).
 2. Signing enablement gate: INERT. SIGNING_ENABLED=true is a human decision
-   (DEC-104). This story UNBLOCKS but does not enable.
+   (D-104). This story UNBLOCKS but does not enable.
 3. Alpha-tag atomic protocol: `gh api git/refs` (create-or-fail atomic), NOT
    `gh release create --target <tag>` (which was the racy sequence).
 4. Temp files: `mktemp -t cs.XXXXXX` + `trap 'rm -f "$TMP"' EXIT`. No predictable

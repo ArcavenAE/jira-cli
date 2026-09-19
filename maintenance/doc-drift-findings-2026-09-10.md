@@ -90,7 +90,7 @@ CLAUDE.md's Key Decisions list still reads:
 > ADR-0011: Type-level Profile fence deferred — convention-based soft fence is
 > sufficient for current team size (v0.5.x)
 
-But `docs/adr/0011-type-level-profile-fence.md` was amended **2026-09-01** (DEC-317,
+But `docs/adr/0011-type-level-profile-fence.md` was amended **2026-09-01** (D-317,
 cycle-003 `auth-profile-dx`) to **Status: Accepted** — the deferred-trigger condition
 ("a related refactor creates a natural migration window") was met by the cycle-003
 credential restructuring. The hard fence has since actually landed: `src/profile.rs`
@@ -182,7 +182,7 @@ contains `test_bc_7_2_016_ec5_bold_wrapped_bracket_mention_carries_no_marks` and
 answer is "mention inherits no marks," confirming BC-7.2.016 point 5's original
 assumption (no spec-companion-edit was needed). Git history shows cycle-005's mentions
 feature reached full closure (`9cea3b61 factory(phase-7): cycle-005 adf-mentions F7
-CONVERGED + CLOSED (DEC-353), no release`), yet the F2-era "UNPROVEN"/"MECHANISM
+CONVERGED + CLOSED (D-353), no release`), yet the F2-era "UNPROVEN"/"MECHANISM
 DEFERRED" §11 register entry and the VP-674-005 status line were never updated to
 reflect the resolution. Classify **MANUAL** (touches a VSDD verification-delta
 artifact; wants a spec-steward pass to update the status line + §11 register + cite the

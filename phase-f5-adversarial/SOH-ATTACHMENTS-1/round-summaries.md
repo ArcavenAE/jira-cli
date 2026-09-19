@@ -24,4 +24,4 @@
 
 ---
 
-**Summary:** 14 rounds / 8 fix PRs (all human-merged per DEC-173). Window r12/r13/r14 CLEAN×3. Spec v1.3.99 → v1.3.106. BC-INDEX v6.38 → v6.44. BC count 657 unchanged. develop @ db207b81.
+**Summary:** 14 rounds / 8 fix PRs (all human-merged per D-173). Window r12/r13/r14 CLEAN×3. Spec v1.3.99 → v1.3.106. BC-INDEX v6.38 → v6.44. BC count 657 unchanged. develop @ db207b81.

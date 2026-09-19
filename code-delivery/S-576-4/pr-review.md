@@ -11,9 +11,9 @@ Fresh-eyes review of the diff, PR description, and demo evidence only.
 | # | Contract | Result | Evidence |
 |---|----------|--------|----------|
 | 1 | BC-3.9.015 AID `^[0-9]+$` before prompt/HTTP | PASS | Path A validates every AID (`aid.is_empty() \|\| !aid.chars().all(is_ascii_digit)`) at the top of the block, before dry-run, gate, and metadata GET |
-| 2 | DEC-168 targeted 404 prefix-then-body | PASS | `delete_attachment_targeted` maps 404 → `UserError("Attachment {id} not found or not accessible.\n{message}")` — canonical prefix first, raw Jira body second |
+| 2 | D-168 targeted 404 prefix-then-body | PASS | `delete_attachment_targeted` maps 404 → `UserError("Attachment {id} not found or not accessible.\n{message}")` — canonical prefix first, raw Jira body second |
 | 3 | BC-3.9.010 bulk 404 benign skip | PASS | Both bulk loops call `delete_attachment` (not `_targeted`); match `msg.contains("not found or already deleted")` → skip; non-404 → `return Err(e)` (abort) |
-| 4 | DEC-174 gate uses eprint!+read_line, not dialoguer | PASS | `attachment_delete_confirmation_gate`: `eprint!` + flush + `stdin().lock().read_line`; EOF/Err → `JrError::Interrupted` (exit 130) |
+| 4 | D-174 gate uses eprint!+read_line, not dialoguer | PASS | `attachment_delete_confirmation_gate`: `eprint!` + flush + `stdin().lock().read_line`; EOF/Err → `JrError::Interrupted` (exit 130) |
 | 5 | EC-3.9.020-3 single-AID dry-run: hint to stderr, validation fires, no DELETE | PASS | Validation precedes `if dry_run`; JSON→stdout / human→stderr hint; early return before any DELETE |
 | 6 | BC-3.9.016 bulk requires --yes; missing → exit 64 | PASS | Multi-AID and issue+age both guard `if !yes && !dry_run` → UserError; dry-run correctly exempted |
 | 7 | parse_age_duration private, d=24h, three overflow bands | PASS | Private fn; `"d" => n.checked_mul(24*3_600)`; L1 checked_mul, L2 try_seconds, L3 MAX_AGE_SECS clamp + checked_sub_signed belt-and-braces at call site |

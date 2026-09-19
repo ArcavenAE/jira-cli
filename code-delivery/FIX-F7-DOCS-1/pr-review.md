@@ -35,20 +35,20 @@ The core reconciliation is accurate and well-executed. Nearly every rewritten cl
 ### docs/specs/multi-profile-auth.md — CLI Surface (`jr auth` subcommands)
 - `auth login [--oauth] [--api-token]` — flags present, mutually exclusive (`src/cli/mod.rs:230–236`); `--oauth` deprecated-but-accepted with stderr deprecation notice (`login.rs:286`). ✓ (except W1, W2 above)
 - `auth switch <NAME>` positional-only, `--profile` rejected (exit 64) — consistent with S-663-1 / CLAUDE.md gotcha. ✓
-- `auth list` — 5-column `NAME|URL|ENV|AUTH|STATUS` (`list.rs:46`); ENV renders `-` when unset (`list.rs:14`); JSON keys `name/url/env/auth_method/status/active` (`list.rs:60–65`, status = `configured`/`unset`). `config.rs` `ProfileConfig.env: Option<String>` exists (config.rs:35). ✓ (DEC-324)
+- `auth list` — 5-column `NAME|URL|ENV|AUTH|STATUS` (`list.rs:46`); ENV renders `-` when unset (`list.rs:14`); JSON keys `name/url/env/auth_method/status/active` (`list.rs:60–65`, status = `configured`/`unset`). `config.rs` `ProfileConfig.env: Option<String>` exists (config.rs:35). ✓ (D-324)
 - `auth status` human text only, no `--output json` — consistent with NFR-O-N / status.rs. ✓
-- `auth logout` — non-destructive session-clear; DEC-322 api-token stderr notice + exit 0, api-token pair untouched, JSON shape unchanged, oauth profile clears only OAuth pair. Matches `logout.rs:80–117`. ✓
+- `auth logout` — non-destructive session-clear; D-322 api-token stderr notice + exit 0, api-token pair untouched, JSON shape unchanged, oauth profile clears only OAuth pair. Matches `logout.rs:80–117`. ✓
 - `auth remove` — deletes BOTH pairs for the profile + config entry + cache dir; only shared oauth_client_id/secret never touched. Matches `remove.rs` + `clear_profile_creds`. ✓
-- `auth refresh [--oauth] [--api-token]` — flags INERT on flow selection; flow always from target profile's `auth_method` (`chosen_flow_for_profile`); passing a flag only emits stderr human-mode-only notice (deprecation for `--oauth`, inert-on-refresh for `--api-token`); relogin-then-replace ordering (obtain-then-overwrite, no up-front clear); per-profile isolation. Matches `refresh.rs:95–212`, clap `mod.rs:281–289`. ✓ (DEC-321)
+- `auth refresh [--oauth] [--api-token]` — flags INERT on flow selection; flow always from target profile's `auth_method` (`chosen_flow_for_profile`); passing a flag only emits stderr human-mode-only notice (deprecation for `--oauth`, inert-on-refresh for `--api-token`); relogin-then-replace ordering (obtain-then-overwrite, no up-front clear); per-profile isolation. Matches `refresh.rs:95–212`, clap `mod.rs:281–289`. ✓ (D-321)
 
 ### docs/specs/multi-profile-auth.md — Migration / Config Schema
-- Not touched by the diff (hunks are Keyring Layout + CLI Surface only). Cross-references from the rewritten text resolve: Migration "(2)" OAuth lazy migration (line 320) and "(4) Keyring API-token credentials — no auto-migration, detect-and-instruct / DEC-326" (line 350) both exist. Config Schema (line 40) intact. ✓ — not regressed.
+- Not touched by the diff (hunks are Keyring Layout + CLI Surface only). Cross-references from the rewritten text resolve: Migration "(2)" OAuth lazy migration (line 320) and "(4) Keyring API-token credentials — no auto-migration, detect-and-instruct / D-326" (line 350) both exist. Config Schema (line 40) intact. ✓ — not regressed.
 
 ### src/cli/auth/logout.rs (LOW-2)
-- Comment-only change; corrects stale pre-DEC-315 wording ("shared API-token credential… keyed by host") to per-profile-namespaced (BC-1.4.031). Logic unchanged. ✓
+- Comment-only change; corrects stale pre-D-315 wording ("shared API-token credential… keyed by host") to per-profile-namespaced (BC-1.4.031). Logic unchanged. ✓
 
 ### CLAUDE.md (LOW-3)
-- Added DEC-322 sentence documenting the `auth logout` api-token stderr notice. Quoted string is byte-accurate against `logout.rs:93–96` — only difference is `<profile>` (doc placeholder) ↔ runtime `{target}`; em-dash `—`, semicolon, and backticks around `jr auth remove` all match. ✓
+- Added D-322 sentence documenting the `auth logout` api-token stderr notice. Quoted string is byte-accurate against `logout.rs:93–96` — only difference is `<profile>` (doc placeholder) ↔ runtime `{target}`; em-dash `—`, semicolon, and backticks around `jr auth remove` all match. ✓
 - Stderr-only / never-on-stdout / JSON-shape-unchanged claims match `logout.rs:108–117`. ✓
 - No NEW backtick file-path citation introduced (only commands like `jr auth remove <profile>` and the already-present `refresh.rs::refresh_credentials` symbol-form) — CLAUDE.md dead-citation CI guard (`tests/claude_md_citations.rs`) safe. ✓
 

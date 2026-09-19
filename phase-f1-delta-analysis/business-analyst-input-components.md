@@ -148,7 +148,7 @@ a coverage checklist, not a numbering commitment.
 | new BC-8.2.003 | `--orphan` DELETEs `/rest/api/3/component/{id}` with no `moveIssuesTo` param — issues on the deleted component lose that component tag (Jira-native behavior, not client-orchestrated) | — (new) |
 | new BC-8.2.004 | `--move-to` target resolution reuses 8.1's name/ID resolver; unknown/ambiguous target → exit 64 BEFORE the DELETE fires (no partial delete-then-fail) | `BC-2.1.012` (ambiguous asset → exit 64, no search fired — same "resolve before mutate" invariant) |
 | new BC-8.2.005 | `--move-to <SELF>` (target == component being deleted) → exit 64 pre-flight, no HTTP | — (new edge case; needs explicit BC per delete-safety framing) |
-| new BC-8.2.006 | Interactive confirmation gate for delete (TTY) vs `--yes`/`--no-input` non-interactive requirement, mirroring the attachment-delete and comment-delete confirmation pattern | `BC-3.5.*` comment-delete `--yes` gate family (DEC-168), `H-NEW-ATTACHMENT-005` |
+| new BC-8.2.006 | Interactive confirmation gate for delete (TTY) vs `--yes`/`--no-input` non-interactive requirement, mirroring the attachment-delete and comment-delete confirmation pattern | `BC-3.5.*` comment-delete `--yes` gate family (D-168), `H-NEW-ATTACHMENT-005` |
 | new BC-8.2.007 | `--output json` shape for delete: `{"deleted": "<id>", "movedIssuesTo": "<id>"\|null}` | `BC-2.7.008` downloaded[] JSON-shape precedent (structured success payload) |
 
 ### 8.3 Component Rename (NEW, bc-8-components.md) — issue #608
@@ -229,7 +229,7 @@ re-run full regression against, because they assert exact behavior in the same f
 - `S-398-issue-edit-create-changed-fields-echo.md` — the `changed_fields` JSON echo and
   table-mode stderr echo (`field → value` format, BC-3.4.012/013) must gain a `components`
   entry; this story owns the echo mechanism `--component` edits must route through.
-- `S-639-1.md` (DEC-188 pre-flight guards, `--field`/`--on-behalf-of` without
+- `S-639-1.md` (D-188 pre-flight guards, `--field`/`--on-behalf-of` without
   `--request-type`) — establishes the "exit-64 pre-flight BEFORE project-key resolution /
   interactive prompts / HTTP" ordering convention that a `--component` platform-vs-JSM
   dispatch fork (if JSM request creation also needs component support) would need to respect.

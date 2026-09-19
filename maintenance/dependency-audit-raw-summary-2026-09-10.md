@@ -55,7 +55,7 @@ warning[unmatched-skip]: skipped crate 'cpufeatures = ^0.2' was not encountered
     ┌─ /Users/zious/Documents/GITHUB/jira-cli/deny.toml:280:9
 280 │ name = "cpufeatures"
 281 │ version = "0.2"
-282 │ reason = "sha1 v0.10.7 (ADR-0017 S-576-2 dependency for BC-2.7.010 batch-download SHA-1 path prefix) requires cpufeatures 0.2.17; chacha20 v0.10.0 (via rand v0.10.1) requires cpufeatures 0.3.0. Unavoidable until sha1 0.11 or rand's chacha20 unify on the same cpufeatures major. Authorized DEC-185."
+282 │ reason = "sha1 v0.10.7 (ADR-0017 S-576-2 dependency for BC-2.7.010 batch-download SHA-1 path prefix) requires cpufeatures 0.2.17; chacha20 v0.10.0 (via rand v0.10.1) requires cpufeatures 0.3.0. Unavoidable until sha1 0.11 or rand's chacha20 unify on the same cpufeatures major. Authorized D-185."
 
 warning[yanked]: detected yanked crate (try `cargo update -p chacha20`)
    ┌─ /Users/zious/Documents/GITHUB/jira-cli/Cargo.lock:30:1

@@ -338,4 +338,4 @@ orchestrator).
 - `CHANGELOG.md` `### Breaking Changes` entry present in the merged commit (AC-9 satisfied).
 
 Full detail: `STATE.md`, `cycles/cycle-001/burst-log.md` § BUCKET1-DEFECTS-COMPLETE,
-`cycles/cycle-001/decisions-archive.md` DEC-276.
+`cycles/cycle-001/decisions-archive.md` D-276.

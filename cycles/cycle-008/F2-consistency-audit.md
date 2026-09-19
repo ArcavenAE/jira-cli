@@ -38,7 +38,7 @@ work that was never actually performed. This should be corrected (either perform
 claimed edits or remove the false claim) before the F2 human gate closes. A second
 finding (F-2) is a real, corroborated spec-hygiene gap in `bc-1-auth-identity.md`,
 consistent with the FUEL_EXHAUSTED concern, but it does not corrupt the BC's actual
-content. Everything else checked — ADR↔BC↔VP coherence, scope fidelity to DEC-368, count
+content. Everything else checked — ADR↔BC↔VP coherence, scope fidelity to D-368, count
 integrity, cross-reference immutability (BC-1.6.042-045, BC-3.8.015), and perimeter
 completeness — is CONSISTENT.
 
@@ -207,7 +207,7 @@ ADR's honesty toward a *different* artifact class, not its BC mapping). Decision
 (VP-OAUTH-GW-001 attached, 7-call-site table verbatim-matches between the two documents).
 Decision 2 → BC-1.3.023 (VP-OAUTH-GW-002 attached, 7-scope list verbatim-matches). Decision 3 →
 BC-X.15.001 (VP-OAUTH-GW-003 attached, three-class taxonomy verbatim-matches). Decision 4
-(Teams) correctly produces **no** BC/VP — deferred to spike S6, exactly per DEC-368. No ADR
+(Teams) correctly produces **no** BC/VP — deferred to spike S6, exactly per D-368. No ADR
 decision is left without a BC; no new BC (BC-X.15.001) is untraceable to the ADR/F1 scope.
 
 **2. VP ↔ BC attachment** — CONSISTENT. All three VP labels (`VP-OAUTH-GW-001/002/003`) are
@@ -217,7 +217,7 @@ dedicated Verification field for BC-4.2.001 only — see F-4). Each VP's own def
 explicit Teams-scope exclusion, same 3-class 401 taxonomy plus the BC-3.8.015 regression
 guard.
 
-**3. Scope fidelity to DEC-368** — CONSISTENT. No Teams re-platform contract was added
+**3. Scope fidelity to D-368** — CONSISTENT. No Teams re-platform contract was added
 anywhere in the delta: `BC-X.6.002/003/004` (`cross-cutting.md`) are confirmed byte-unchanged
 by `git diff` (zero touched lines in that section). Teams scopes (`view:team:teams`,
 `view:membership:teams`) are explicitly excluded, with a companion negative-assertion test
@@ -273,6 +273,6 @@ F2-architecture-delta.md's S6 section), not silent.
   addition mirroring the pattern already used in bc-4/bc-5/cross-cutting.
 - **Worth noting, non-blocking:** F-3 (F1-delta-analysis.md's volatile citations, outside
   guard scope) and F-4 (cosmetic Verification-field inconsistency).
-- Everything else — the ADR/BC/VP traceability chain, DEC-368 scope fidelity, count
+- Everything else — the ADR/BC/VP traceability chain, D-368 scope fidelity, count
   integrity across all 9 surfaces, and the immutability of BC-1.6.042-045/BC-3.8.015 — is
   confirmed CONSISTENT by independent, fresh-context re-derivation.

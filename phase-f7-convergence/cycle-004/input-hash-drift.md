@@ -75,7 +75,7 @@ and/or `src/api/auth.rs`, `src/api/client.rs`, `src/api/refresh_coordinator.rs`,
 `refresh_coordinator.rs`, unchanged) received commits from the cycle-004 F4
 implementation PRs (#768, #769, #771), the doc-consistency fix (#772), and
 the F5/F6 fix rounds (#773, #774, #775) — all already merged to `develop`
-per `STATE.md`'s own DEC-338/339/340/341 log. `.factory/STATE.md` itself is
+per `STATE.md`'s own D-338/339/340/341 log. `.factory/STATE.md` itself is
 also a declared input and has been rewritten every burst since (Bursts 1–19).
 
 The remaining 7 artifacts (`decomposition-manifest.md` through both

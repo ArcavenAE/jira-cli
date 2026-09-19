@@ -92,7 +92,7 @@ Process-gap findings from this bundle all have Drift Items entries with current 
 | Drift Item | Disposition |
 |------------|-------------|
 | STATE-MANAGER-MONOLITHIC-WRITE-STALL | OPEN — engine-side fix candidate |
-| PR-MANAGER-HOOK-VS-DEC-128-CONFLICT | OPEN — engine-side fix candidate |
+| PR-MANAGER-HOOK-VS-D-128-CONFLICT | OPEN — engine-side fix candidate |
 | CLAUDE-MD-CLIPPY-ALL-TARGETS-DRIFT | OPEN — pipeline doc fix candidate |
 | TD-031-FULL-CLEANUP | OPEN — follow-up story candidate |
 | BC-INDEX-TD031-EDIT-LOCKOUT | MITIGATED — counts synced; full cleanup open |
@@ -104,4 +104,4 @@ Process-gap findings from this bundle all have Drift Items entries with current 
 ## Release Routing
 
 Issues #589, #590, #582 close at next release (develop → main PR). No blocking items.
-Secondary candidates: dependabot PRs #595/#591 (DEC-133 soak check); standalone PRs #574/#573 (CHANGES_REQUESTED).
+Secondary candidates: dependabot PRs #595/#591 (D-133 soak check); standalone PRs #574/#573 (CHANGES_REQUESTED).

@@ -37,7 +37,7 @@ isolation: ELIGIBLE (one self-disclosed deviation — repo-root grep with exclus
 
 ## Provenance
 
-This artifact is a **DIRECT CAPTURE** of adversary reviewer output relayed by the orchestrator, recorded same-session. Pass-26 ran against feature HEAD `14416fd9` (the DEC-223 fresh STRICT window). This is the third pass in the fresh STRICT window (passes 24/25/26) mandated by DEC-223. **Pass-26 broke the window at 2/3.**
+This artifact is a **DIRECT CAPTURE** of adversary reviewer output relayed by the orchestrator, recorded same-session. Pass-26 ran against feature HEAD `14416fd9` (the D-223 fresh STRICT window). This is the third pass in the fresh STRICT window (passes 24/25/26) mandated by D-223. **Pass-26 broke the window at 2/3.**
 
 **Policy rubric:** `.factory/policies.yaml` does not exist. Baseline applied (POL-11 positive-coverage, S-7.01 partial-fix discipline, semantic-anchoring severity ladder, six mandated axes).
 
@@ -45,7 +45,7 @@ This artifact is a **DIRECT CAPTURE** of adversary reviewer output relayed by th
 
 ## RECORD PROMINENTLY — WINDOW BROKEN AT 2/3
 
-**Window 24/25/26 CLOSED — 2/3.** Passes 24 and 25 were CLEAN (the first CLEAN verdicts in the cycle). Pass-26 returned NOT CLEAN, breaking the window. Per DEC-199 and DEC-223, a strict 3/3 CLEAN window is required. The fresh STRICT window is **passes 27/28/29**.
+**Window 24/25/26 CLOSED — 2/3.** Passes 24 and 25 were CLEAN (the first CLEAN verdicts in the cycle). Pass-26 returned NOT CLEAN, breaking the window. Per D-199 and D-223, a strict 3/3 CLEAN window is required. The fresh STRICT window is **passes 27/28/29**.
 
 **Pass-26 forecast:** *"Expect the next pass to be clean."* The two substantive findings (F-01 and F-02) are both closed by fix round 11 (`e49230a7`). The pre-existing finding (F-04) is routed, not a blocker. F-03 and F-05 are INFO concurrences already closed by round 11.
 
@@ -64,7 +64,7 @@ Pass-26 is the sixth consecutive independent reviewer to audit all eight POL-11 
 
 **ELIGIBLE.** The reviewer disclosed one self-disclosure: a repo-root grep was issued with an exclusion pattern (`--exclude-dir=.factory` or equivalent). The grep returned **"No matches found"** — zero results, no content read. Zero banned content surfaced.
 
-Per the ISOLATION ELIGIBILITY PRINCIPLE (DEC-224): ELIGIBLE, as nothing surfaced. The deviation was self-disclosed unprompted and returned no output.
+Per the ISOLATION ELIGIBILITY PRINCIPLE (D-224): ELIGIBLE, as nothing surfaced. The deviation was self-disclosed unprompted and returned no output.
 
 ---
 
@@ -135,7 +135,7 @@ Pass-26 verified all findings from passes 24 and 25 (both CLEAN, both the preced
 
 - **Pre-existing:** These defects are on `develop` and outside the S-626-1 diff. They are not in scope for S-626-1 fix round 11.
 - **Proposed Fix:** ROUTE — add to WRONG-FILE-MIS-ANCHORS-IN-TESTS drift item; schedule for a citation-hygiene story.
-- **Status:** ROUTED (pre-existing, not in S-626-1 scope). DEC-224 isolation principle notes this as outside diff. Tracked as WRONG-FILE-MIS-ANCHORS-IN-TESTS drift item.
+- **Status:** ROUTED (pre-existing, not in S-626-1 scope). D-224 isolation principle notes this as outside diff. Tracked as WRONG-FILE-MIS-ANCHORS-IN-TESTS drift item.
 
 ---
 

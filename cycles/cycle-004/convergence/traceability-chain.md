@@ -34,7 +34,7 @@ Full 4-level chain (BC -> VP -> test -> src) for the 4 cycle-004 stories:
 **Key BCs:** BC-1.4.035, BC-1.4.036, BC-1.4.037, BC-1.4.038, BC-1.4.040, BC-1.4.028
 (re-verified) — `S-cycle4-dpapi-storage-fix`; BC-1.2.052, BC-1.2.053, BC-1.2.054
 (confirmed-unchanged) — `S-cycle4-cloud-id-correctness`; BC-1.4.039 (amended mid-story,
-DEC-334) — `S-cycle4-honest-fail-message`; none (docs-only) — `S-cycle4-windows-docs`.
+D-334) — `S-cycle4-honest-fail-message`; none (docs-only) — `S-cycle4-windows-docs`.
 
 **Key VPs:** VP-AUTHDX-010..016, VP-AUTHDX-018, VP-AUTHDX-022 (dpapi-storage-fix);
 VP-AUTHDX-019..021 (cloud-id-correctness); VP-AUTHDX-017 (honest-fail-message). Spec:

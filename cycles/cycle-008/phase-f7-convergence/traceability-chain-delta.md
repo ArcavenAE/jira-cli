@@ -21,7 +21,7 @@ does not replace or restate them.
 ## BC-4.2.001 — `assets search`/JSM/Teams: OAuth profiles MUST target the API gateway host
 
 **BC home:** `.factory/specs/prd/bc-4-assets-cmdb.md` (AMENDED in place, COUNT-NEUTRAL, F2 gate
-DEC-369). **VP:** `VP-OAUTH-GW-001` (`cycles/cycle-008/verification-delta.md`).
+D-369). **VP:** `VP-OAUTH-GW-001` (`cycles/cycle-008/verification-delta.md`).
 **ADR:** ADR-0026 Decision 1 (7-site gateway-routing invariant).
 
 | Call site | Test (verified present) | Code |
@@ -49,7 +49,7 @@ passes (`cycles/cycle-008/phase-f5-adversarial/convergence-summary.md`). **F6 ha
 
 ## BC-X.15.001 — OAuth Agile-command 401 error-mapping (scope-mismatch vs. expired-token vs. wrong-host)
 
-**BC home:** `.factory/specs/prd/cross-cutting.md` `## BC-X.15` (NEW, F2 gate DEC-369; wave-level
+**BC home:** `.factory/specs/prd/cross-cutting.md` `## BC-X.15` (NEW, F2 gate D-369; wave-level
 finding F-WG-1 EXPANDED call-site coverage 2026-09-17). **VP:** `VP-OAUTH-GW-003`.
 **ADR:** ADR-0026 Decision 3.
 
@@ -112,7 +112,7 @@ mutation-hardening pass.
 ## BC-1.3.023 — `DEFAULT_OAUTH_SCOPES` includes granular Jira-Software/Agile scopes + `manage:jira-project`
 
 **BC home:** `.factory/specs/prd/bc-1-auth-identity.md` (AMENDED in place, COUNT-NEUTRAL, F2 gate
-DEC-369, full-parity 16-scope decision). **VP:** `VP-OAUTH-GW-002`.
+D-369, full-parity 16-scope decision). **VP:** `VP-OAUTH-GW-002`.
 **ADR:** ADR-0026 Decision 2 + Decision 2a (`manage:jira-project` component-write gap).
 
 | AC | Test (verified present) | Code |

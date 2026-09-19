@@ -11,8 +11,8 @@ trace: |
   - cycle-005 `adf-mentions` F2 pass-4 INTEGRATE sub-burst (2026-09-06, issue #674, human-approved TIGHTENING decision at the F2 gate; mechanism finalized by the architect as Option (a), `filter_by_name_match`): +1 new scenario H-NEW-MENTION-012 added to Group 21 — a sole ACTIVE `@Name` search result whose display name does NOT case-insensitively-substring-match the query now HARD-ERRORS (exit 64, `"No user found matching"`, zero POST/PUT) instead of silently resolving via `disambiguate_user`'s `len()==1` short-circuit (BC-X.7.007 point 2, EC-X.7.007-5, BC-X.7.009). H-NEW-MENTION-002's fixture UPDATED IN PLACE: its original `query=jsmith` → sole result "John Smith" no longer name-matches under the tightened contract and would now hard-error, so the query token was changed to `smith` (which does substring-match "John Smith") to keep H-NEW-MENTION-002 a genuine unique-match happy path; the original fixture shape is preserved as the new H-NEW-MENTION-012. holdout count 117→118.
   - cycle-005 `adf-mentions` F2 pass-2 adversarial review INTEGRATE sub-burst (2026-09-06, issue #674, finding M-3): +2 new scenarios H-NEW-MENTION-010..H-NEW-MENTION-011 added to Group 21, closing a gap where `issue create`/`issue edit` platform-path mention wiring (BC-3.3.012/BC-3.4.032) had no AUTOMATED (wiremock-based) holdout coverage — only the LIVE-E2E round-trip (H-NEW-MENTION-009, human-required) and the JSM path (008) had dedicated scenarios. H-NEW-MENTION-010 (BC-3.3.012): `issue create --description --markdown` mixed resolvable/unresolvable mention candidates fail the WHOLE create, zero POST. H-NEW-MENTION-011 (BC-3.4.032 point 2): `issue edit --dry-run` mention-resolution failure exits 64 with stdout COMPLETELY EMPTY, mirroring the pre-existing EC-3.4.021-15/-19/VP-692-002/-004 no-leak invariant with a new error source. holdout count 115→117.
   - cycle-005 `adf-mentions` F2 spec evolution INTEGRATE sub-burst (2026-09-06, issue #674): Markdown `@Name`/`[~accountid:...]` → ADF `mention` node — 9 new scenarios H-NEW-MENTION-001..H-NEW-MENTION-009 (BC-7.2.016/017/018/019/004, BC-X.7.007/008/009/010, BC-3.3.012, BC-3.4.032, BC-3.5.013, BC-3.8.018; VP-674-001..017). Covers: bracket-form conversion + mandatory accountId preflight validation (001); `@Name` unique-match (002), ambiguous-match non-interactive exit-64 (003), zero-match HARD ERROR exit-64 (004) — the human-approved override of the architect's pass-through recommendation; `\@` escape renders literal text, not a mention (005, MECHANISM F4-VERIFY per VP-674-012); `--no-mentions` opt-out suppresses both forms and all resolution HTTP (006); reverse-path `mention`→`@<text>`/`@<id>`/`@?` rendering in `issue view` (007, closes issue #202/NFR-O-I for `mention` specifically); JSM `issue create --request-type` mention wiring + internal-visibility-orthogonality caveat (008); HUMAN-REQUIRED live-Jira E2E round-trip acceptance (009, `JR_RUN_E2E`-gated, controlled test account, self-cleaning per the `Drop`-guard/`jsm_self_close` conventions — NOT evaluated by the automated holdout-evaluator against a candidate binary; informational/manual-gate scenario). New Group 21. holdout count 106→115.
-  - issue #578 F2 adversary pass-2 fix, round 2 (2026-08-25, DEC-310 reversal of DEC-188; DEC-310 renumbered from the initially-proposed DEC-307, which was already cycle-001's): H-NEW-PREFLIGHT-006 REWRITTEN IN PLACE — the fourth (and last) surviving scenario that pinned the DEC-188 `--field` platform-path pre-flight exit-64 contract, which BC-3.8.012's 2026-08-25 reversal made FALSE. H-NEW-PREFLIGHT-006 covered the `--output json` mode variant (stderr JSON error envelope + empty stdout); it now pins the NEW contract in `--output json` mode: `--field` alone resolves via `createmeta` (BC-3.3.010) and succeeds (exit 0), with the created-issue JSON success envelope (top-level `"key"`) on stdout — the JSON-mode counterpart to H-NEW-PREFLIGHT-001's human-mode rewrite. Grep-verified no further scenario asserts the old `--field`-alone exit-64 contract. No scenario IDs added or removed; total_holdouts unchanged (106).
-  - issue #578 F2 adversary pass-2 fix (2026-08-25, DEC-310 reversal of DEC-188): H-NEW-PREFLIGHT-001 and H-NEW-PREFLIGHT-003 REWRITTEN IN PLACE — both formerly pinned the DEC-188 `--field` platform-path pre-flight exit-64 contract, which BC-3.8.012's 2026-08-25 reversal made FALSE (VP-578-017/018). H-NEW-PREFLIGHT-001 now pins the NEW contract: `--field` alone resolves via `createmeta` (BC-3.3.010) and succeeds (exit 0), POST fires with the field merged in. H-NEW-PREFLIGHT-003 now pins: with both `--field` and `--on-behalf-of` present, only BC-3.8.013's standalone guard fires (exit 64) — the combined guard is removed, and `--field`'s `createmeta` resolution is never reached. H-NEW-PREFLIGHT-002 (`--on-behalf-of` alone) is UNCHANGED — that guard survives the reversal. No scenario IDs added or removed; total_holdouts unchanged (106).
+  - issue #578 F2 adversary pass-2 fix, round 2 (2026-08-25, D-310 reversal of D-188; D-310 renumbered from the initially-proposed D-307, which was already cycle-001's): H-NEW-PREFLIGHT-006 REWRITTEN IN PLACE — the fourth (and last) surviving scenario that pinned the D-188 `--field` platform-path pre-flight exit-64 contract, which BC-3.8.012's 2026-08-25 reversal made FALSE. H-NEW-PREFLIGHT-006 covered the `--output json` mode variant (stderr JSON error envelope + empty stdout); it now pins the NEW contract in `--output json` mode: `--field` alone resolves via `createmeta` (BC-3.3.010) and succeeds (exit 0), with the created-issue JSON success envelope (top-level `"key"`) on stdout — the JSON-mode counterpart to H-NEW-PREFLIGHT-001's human-mode rewrite. Grep-verified no further scenario asserts the old `--field`-alone exit-64 contract. No scenario IDs added or removed; total_holdouts unchanged (106).
+  - issue #578 F2 adversary pass-2 fix (2026-08-25, D-310 reversal of D-188): H-NEW-PREFLIGHT-001 and H-NEW-PREFLIGHT-003 REWRITTEN IN PLACE — both formerly pinned the D-188 `--field` platform-path pre-flight exit-64 contract, which BC-3.8.012's 2026-08-25 reversal made FALSE (VP-578-017/018). H-NEW-PREFLIGHT-001 now pins the NEW contract: `--field` alone resolves via `createmeta` (BC-3.3.010) and succeeds (exit 0), POST fires with the field merged in. H-NEW-PREFLIGHT-003 now pins: with both `--field` and `--on-behalf-of` present, only BC-3.8.013's standalone guard fires (exit 64) — the combined guard is removed, and `--field`'s `createmeta` resolution is never reached. H-NEW-PREFLIGHT-002 (`--on-behalf-of` alone) is UNCHANGED — that guard survives the reversal. No scenario IDs added or removed; total_holdouts unchanged (106).
   - L2: .factory/specs/domain-spec/
   - Source broad P3: .factory/semport/jira-cli/jira-cli-pass-3-behavioral-contracts.md §4 (H-001..H-020)
   - Source R1: .factory/semport/jira-cli/jira-cli-pass-3-deep-r1.md §4 (H-021..H-029)
@@ -25,7 +25,7 @@ trace: |
   - F2 holdout authoring Burst 2 (2026-06-30): 3 deferred scenarios unblocked by converged BC-3.4.020/021/BC-5.1.005 — H-NEW-LABEL-FORK-001 (label routing fork: single-key PUT bare-string vs multi-key bulk POST `{"name":...}` objects), H-NEW-DRY-RUN-001 (`--dry-run --output json` plannedChanges shape; intentionally simplified preview), H-NEW-BOARD-VIEW-001 (scrum sprint dispatch vs kanban JQL search; truncation hint format); BC Trace IDs reconciled to H-NEW-* convention (H-LABEL-FORK-001/H-DRY-RUN-001/H-BOARD-VIEW-001 → H-NEW-*)
   - ADF-CODE-MARK-EXCLUSIVITY F2 (2026-07-07): code-mark exclusivity invariant — 1 new scenario H-NEW-ADF-010 (BC-7.2.015; code+strong/em/strike/subsup exclusivity at emission time, link co-existence, mixed-range surrounding-marks retention; issue #571)
   - SOH-ATTACHMENTS-1 F2 (2026-07-15, adversary pass-1 human ruling R3): attachment list/download/upload/delete — 8 new scenarios H-NEW-ATTACHMENT-001..008 (BC-2.7.001 zero/N-attach list + null-author, BC-2.7.007 write-to-temp+atomic-rename, BC-2.7.008/010/011 batch --all + SHA-1 collision + path-traversal, BC-3.9.001/017/018 upload+replace-existing ordering+zero-match, BC-3.9.015 delete confirmation gate confirm/cancel/non-interactive, BC-3.9.016/019/020 --older-than --dry-run two-phase, BC-2.7.011 SECURITY CWE-22 path-traversal, BC-3.9.005 --public non-JSM guard); extended to H-NEW-ATTACHMENT-009 (P14-001, EOF→exit-130); extended to H-NEW-ATTACHMENT-010 (P15-002/R3.12, non-interactive ≥1-match --replace-existing without --yes → exit 64; BC-3.9.017 EC-3.9.017-9); H-NEW-ATTACHMENT-004 Call B updated to --yes (P15-002 gate); H-NEW-ATTACHMENT-001/003 GET fixtures updated to ?fields=attachment canonical form (P15-INFO-1); extended to H-NEW-ATTACHMENT-011 (P20-001, --internal on non-JSM project → silent platform POST, exit 0, zero servicedeskapi calls; BC-3.9.004 EC-3.9.004-1 OQ-9 ruling; mirrors H-NEW-ATTACHMENT-008 assertion style); extended to H-NEW-ATTACHMENT-012 (P21-001, mid-batch bulk 404 → benign-skip-continue; count=2; ids exclude 404'd AID; exit 0; wiremock asserts 3 DELETE calls; BC-3.9.010 EC-3.9.010-4 / BC-3.9.013)
-  - SOH-COMMENT-CRUD-1 F2 (2026-07-09): comment delete/edit/view CRUD — 5 new scenarios H-NEW-COMMENT-001..H-NEW-COMMENT-005 (BC-3.5.005 body-only-PUT wire, BC-3.5.008 --public non-interactive gate, BC-3.5.004 delete-404 exit-64, BC-3.5.010 view roundtrip, BC-3.5.003 delete confirmation gate; issue #577 DEC-168; H-NEW-COMMENT-005 added adversary pass-18 F6)
+  - SOH-COMMENT-CRUD-1 F2 (2026-07-09): comment delete/edit/view CRUD — 5 new scenarios H-NEW-COMMENT-001..H-NEW-COMMENT-005 (BC-3.5.005 body-only-PUT wire, BC-3.5.008 --public non-interactive gate, BC-3.5.004 delete-404 exit-64, BC-3.5.010 view roundtrip, BC-3.5.003 delete confirmation gate; issue #577 D-168; H-NEW-COMMENT-005 added adversary pass-18 F6)
   - SOH-ATTACHMENTS-1 adversary pass-27 (2026-07-17, P27): H-NEW-ATTACHMENT-003 Call B2 `filename` corrected to RAW Jira name `ok.txt` (pre-sanitization, pre-SHA-1-prefix); discriminating `filename`-vs-`path` assertion added (P27-001); H-NEW-ATTACHMENT-007 overlong-name fixture description corrected (255 bytes = exceeds 214-byte sanitizer cap + 41-byte SHA-1 prefix; was "at the length-cap boundary"); missing length-cap assertion added (on-disk basename after SHA-1 prefix ≤ 214 bytes; P27-002); holdout count unchanged (100)
   - SOH-ATTACHMENTS-1 adversary pass-28 (2026-07-17, P28): H-NEW-ATTACHMENT-009 Expected bullet 4 narrowed — "zero requests to any /rest/servicedeskapi/..." replaced with POST-only assertion: zero requests to POST .../attachTemporaryFile and POST .../request/{key}/attachment; GET /rest/servicedeskapi/servicedesk meta-resolution IS expected to fire (mounted in setup step 3; asserted absent only are the upload POSTs); licensing BC added (BC-3.9.003 step 1 / BC-X.8.010 for the GET; BC-3.9.014 gate for the POST absence); Status updated with P28-002 citation; holdout count unchanged (100)
   - SOH-ATTACHMENTS-1 adversary pass-31 (2026-07-17, P31): H-NEW-ATTACHMENT-002 error-path Expected exit-code tightened — "Exit code != 0 (exit 1 or exit 64)" → "Exit code = 1 (EC-2.7.007-4 mid-stream error; BC-2.7.012 5xx row)" (P31-001); holdout count unchanged (100)
@@ -1240,14 +1240,14 @@ Call 2: captured POST body `fields.description.content[0]` is a `paragraph`. Wit
 - `POST /rest/api/3/issue` is NOT called — the depth guard fires BEFORE any HTTP call (the ADF conversion happens client-side, before the POST)
 - stdout is empty (no issue key emitted)
 
-**Boundary precision — inclusive boundary pins (kills `>` mutant, DEC-132)**:
+**Boundary precision — inclusive boundary pins (kills `>` mutant, D-132)**:
 - **255 prefixes** → deepest node at ADF depth 256 → MUST exit 64 (reject pin; `depth >= 256` fires)
 - **254 prefixes** → deepest node at ADF depth 255 → MUST exit 0 and POST fired once (accept pin; `255 < 256` passes)
 - These are the EXACT boundary pins verified by `test_markdown_to_adf_deepest_node_at_256_is_err_boundary_exact` (255 prefixes → Err) and `test_markdown_to_adf_depth_255_blockquote_is_ok` (254 prefixes → Ok) in `src/adf.rs`. The `>` mutant (`depth > 256`) would accept the 255-prefix case (deepest=256, `256 > 256 == false`) — asserting exit 64 for 255 prefixes kills that mutant. A 300-prefix "clearly-over" example may be added for clarity but cannot replace these tight boundary pins.
 
 **Why hidden**: The guard condition uses `>=` (inclusive). A future refactor that silently changes `depth >= MAX_ADF_DEPTH` to `depth > MAX_ADF_DEPTH` would accept 255-prefix inputs (deepest depth=256), allowing pathologically nested markdown to reach `adf_to_text` and potentially cause stack overflow (CWE-674) in rendering. The exit-64 boundary at exactly 255 prefixes is the observable signal. Without asserting on mock call count, a regression where the guard fires after the POST would be invisible.
 
-**Status**: MUST-PASS (security regression pin). Pins BC-7.2.012 forward path: `markdown_to_adf` post-passes (`normalize_*`, `assign_local_ids_walk`, `autolink_bare_urls`) reject depth ≥ 256 with `JrError::UserError` → exit 64 + "nesting too deep", ZERO HTTP calls. Off-by-one boundary: 255 prefixes rejects (depth 256), 254 prefixes accepts (depth 255) (DEC-132 inclusive-boundary correction).
+**Status**: MUST-PASS (security regression pin). Pins BC-7.2.012 forward path: `markdown_to_adf` post-passes (`normalize_*`, `assign_local_ids_walk`, `autolink_bare_urls`) reject depth ≥ 256 with `JrError::UserError` → exit 64 + "nesting too deep", ZERO HTTP calls. Off-by-one boundary: 255 prefixes rejects (depth 256), 254 prefixes accepts (depth 255) (D-132 inclusive-boundary correction).
 
 **BC refs**: BC-7.2.012 (primary, SEC-001)
 
@@ -1907,9 +1907,9 @@ Call B (kanban board 2 — JQL search path, sprint endpoint must not fire):
 
 ### H-NEW-COMMENT-001: `comment edit` default path sends body-only PUT — `"properties"` key absent from request body (MUST-PASS)
 
-**NFR source**: BC-3.5.005 (body-only PUT invariant, DEC-168 ruling 1)
+**NFR source**: BC-3.5.005 (body-only PUT invariant, D-168 ruling 1)
 **BC**: BC-3.5.005
-**Authored by**: SOH-COMMENT-CRUD-1 F2 (2026-07-09, DEC-168)
+**Authored by**: SOH-COMMENT-CRUD-1 F2 (2026-07-09, D-168)
 
 **Setup**:
 
@@ -1918,7 +1918,7 @@ Call B (kanban board 2 — JQL search path, sprint endpoint must not fire):
    ```json
    {"id": "10001", "author": {"displayName": "Alice"}, "body": {"version": 1, "type": "doc", "content": []}, "created": "2026-07-01T12:00:00.000+0000", "updated": "2026-07-01T12:00:00.000+0000", "properties": []}
    ```
-   Note: `GET` is NOT expected to be called on this path — the invocation passes no visibility flags (`--internal`/`--public` are absent). Per DEC-168, `GET` is never called on any edit path regardless of visibility flags; the `.expect(0)` mount asserts this invariant holds for this specific invocation.
+   Note: `GET` is NOT expected to be called on this path — the invocation passes no visibility flags (`--internal`/`--public` are absent). Per D-168, `GET` is never called on any edit path regardless of visibility flags; the `.expect(0)` mount asserts this invariant holds for this specific invocation.
 3. Wiremock mounts `PUT /rest/api/3/issue/FOO-1/comment/10001` with a request body capture matcher. Returns 200 with the updated comment JSON (same as above with an updated `body`).
 
 **Action**: `jr issue comment edit FOO-1 --id 10001 "Updated text" --no-input`
@@ -1943,9 +1943,9 @@ Call B (kanban board 2 — JQL search path, sprint endpoint must not fire):
 
 ### H-NEW-COMMENT-002: `comment edit --public` in non-interactive mode without `--yes` exits 64; no PUT sent (MUST-PASS)
 
-**NFR source**: BC-3.5.008 (--public confirmation gate, DEC-168 open design point Option a)
+**NFR source**: BC-3.5.008 (--public confirmation gate, D-168 open design point Option a)
 **BC**: BC-3.5.008
-**Authored by**: SOH-COMMENT-CRUD-1 F2 (2026-07-09, DEC-168)
+**Authored by**: SOH-COMMENT-CRUD-1 F2 (2026-07-09, D-168)
 
 **Setup**:
 
@@ -1958,7 +1958,7 @@ Call B (kanban board 2 — JQL search path, sprint endpoint must not fire):
 **Expected (MUST-PASS)**:
 - Exit code = 64.
 - `PUT /rest/api/3/issue/FOO-1/comment/10001` was NOT called (`.expect(0)` satisfied).
-- `GET /rest/api/3/issue/FOO-1/comment/10001` was NOT called (`.expect(0)` satisfied) — no GET roundtrip; DEC-168 option a requires no read of current state.
+- `GET /rest/api/3/issue/FOO-1/comment/10001` was NOT called (`.expect(0)` satisfied) — no GET roundtrip; D-168 option a requires no read of current state.
 - stderr contains `"--yes"` (hint to supply the flag).
 - stderr contains `"visibility to public"` (load-bearing SEC-577-001 CWE-1021 wording pin — confirms the non-interactive message uses project-agnostic phrasing).
 
@@ -1972,9 +1972,9 @@ Call B (kanban board 2 — JQL search path, sprint endpoint must not fire):
 
 ### H-NEW-COMMENT-003: `comment delete` 404 → exit 64; Jira error body is surfaced to stderr (MUST-PASS)
 
-**NFR source**: BC-3.5.004 (404 → exit 64; DEC-168 ruling 3 overrides F1 idempotent draft)
+**NFR source**: BC-3.5.004 (404 → exit 64; D-168 ruling 3 overrides F1 idempotent draft)
 **BC**: BC-3.5.004
-**Authored by**: SOH-COMMENT-CRUD-1 F2 (2026-07-09, DEC-168)
+**Authored by**: SOH-COMMENT-CRUD-1 F2 (2026-07-09, D-168)
 
 **Setup**:
 
@@ -2006,7 +2006,7 @@ Call B (kanban board 2 — JQL search path, sprint endpoint must not fire):
 
 **NFR source**: BC-3.5.010 (comment view GET+expand=properties, JSON output shape)
 **BC**: BC-3.5.010
-**Authored by**: SOH-COMMENT-CRUD-1 F2 (2026-07-09, DEC-168)
+**Authored by**: SOH-COMMENT-CRUD-1 F2 (2026-07-09, D-168)
 
 **Setup (two calls)**:
 
@@ -2580,9 +2580,9 @@ If instead the `GET ?fields=attachment` returned `[]` (zero matches), the flag `
 
 ### H-NEW-PREFLIGHT-001: `issue create --field` without `--request-type` → resolves via `createmeta`; exit 0; POST fires with the resolved field merged in (MUST-PASS)
 
-**NFR source**: BC-3.3.010/BC-3.3.011 (`--field` platform-create resolution via `createmeta`, issue #578); BC-3.8.012 [CURRENT BEHAVIOR — effective 2026-08-25] (pre-flight guard REMOVED for `--field` alone, DEC-310 reversal of DEC-188)
+**NFR source**: BC-3.3.010/BC-3.3.011 (`--field` platform-create resolution via `createmeta`, issue #578); BC-3.8.012 [CURRENT BEHAVIOR — effective 2026-08-25] (pre-flight guard REMOVED for `--field` alone, D-310 reversal of D-188)
 **BC**: BC-3.3.010, BC-3.3.011, BC-3.8.012
-**Authored by**: SOH-DX-1 F2 (2026-07-29, #639); REWRITTEN adversary pass-2 (2026-08-25, issue #578 DEC-310 reversal) — supersedes the pre-reversal exit-64 assertion this scenario originally pinned
+**Authored by**: SOH-DX-1 F2 (2026-07-29, #639); REWRITTEN adversary pass-2 (2026-08-25, issue #578 D-310 reversal) — supersedes the pre-reversal exit-64 assertion this scenario originally pinned
 
 **Setup**:
 
@@ -2597,11 +2597,11 @@ If instead the `GET ?fields=attachment` returned `[]` (zero matches), the flag `
 - Exit code = **0** (per BC-3.8.012's 2026-08-25 reversal: `--field` alone no longer exits 64 — it resolves via `createmeta` per BC-3.3.010).
 - `POST /rest/api/3/issue` WAS called exactly once, and its JSON request body's `fields` object contains `"customfield_10015": "value"` — the resolved field, merged in per BC-3.3.010 Postconditions.
 - `GET /rest/api/3/issue/createmeta/PROJ/issuetypes/10001` WAS called — proves createmeta resolution actually ran (the field was resolved, not silently dropped).
-- stderr does NOT contain `"--field is only valid with --request-type"` — the old DEC-188 pre-flight string is DEAD per BC-3.8.012 Errors ("that string is now DEAD — removed from `src/cli/issue/create.rs`").
+- stderr does NOT contain `"--field is only valid with --request-type"` — the old D-188 pre-flight string is DEAD per BC-3.8.012 Errors ("that string is now DEAD — removed from `src/cli/issue/create.rs`").
 
-**Why hidden**: This scenario formerly pinned the OPPOSITE contract (DEC-188 exit-64 pre-flight, superseded 2026-08-25 by DEC-310/issue #578). An implementation still carrying the old pre-flight guard would exit 64 with the now-dead error string and never call `POST /rest/api/3/issue` or the createmeta endpoints — both assertions above fail independently, catching a regression to the pre-reversal behavior. An implementation that silently drops `--field` instead of resolving it (a plausible incomplete-reversal bug) would call POST but WITHOUT the field merged into `fields` — also independently caught by the request-body assertion.
+**Why hidden**: This scenario formerly pinned the OPPOSITE contract (D-188 exit-64 pre-flight, superseded 2026-08-25 by D-310/issue #578). An implementation still carrying the old pre-flight guard would exit 64 with the now-dead error string and never call `POST /rest/api/3/issue` or the createmeta endpoints — both assertions above fail independently, catching a regression to the pre-reversal behavior. An implementation that silently drops `--field` instead of resolving it (a plausible incomplete-reversal bug) would call POST but WITHOUT the field merged into `fields` — also independently caught by the request-body assertion.
 
-**Status**: MUST-PASS. Pins BC-3.3.010 (createmeta resolution + merge into create POST body) and BC-3.8.012 [CURRENT BEHAVIOR] (guard removed; `--field` alone → exit 0). REWRITTEN adversary pass-2 (2026-08-25): the pre-reversal exit-64 assertion this scenario originally pinned (SOH-DX-1 F2, 2026-07-29) is now FALSE per DEC-310; rewritten in place rather than deleted to keep `total_holdouts` stable and preserve this scenario's ID/history. VP-578-017 companion.
+**Status**: MUST-PASS. Pins BC-3.3.010 (createmeta resolution + merge into create POST body) and BC-3.8.012 [CURRENT BEHAVIOR] (guard removed; `--field` alone → exit 0). REWRITTEN adversary pass-2 (2026-08-25): the pre-reversal exit-64 assertion this scenario originally pinned (SOH-DX-1 F2, 2026-07-29) is now FALSE per D-310; rewritten in place rather than deleted to keep `total_holdouts` stable and preserve this scenario's ID/history. VP-578-017 companion.
 
 **BC refs**: BC-3.3.010 (primary — createmeta resolution, merge, exit 0 success path), BC-3.3.011 (error taxonomy — not exercised by this MUST-PASS success scenario), BC-3.8.012 (guard-removal contract this scenario's exit-0 outcome depends on)
 
@@ -2609,7 +2609,7 @@ If instead the `GET ?fields=attachment` returned `[]` (zero matches), the flag `
 
 ### H-NEW-PREFLIGHT-002: `issue create --on-behalf-of` without `--request-type` → exit 64 pre-flight; verbatim error; zero HTTP (MUST-PASS)
 
-**NFR source**: BC-3.8.013 (--on-behalf-of pre-flight guard, DEC-188, #639)
+**NFR source**: BC-3.8.013 (--on-behalf-of pre-flight guard, D-188, #639)
 **BC**: BC-3.8.013
 **Authored by**: SOH-DX-1 F2 (2026-07-29, #639)
 
@@ -2623,23 +2623,23 @@ If instead the `GET ?fields=attachment` returned `[]` (zero matches), the flag `
 **Expected (MUST-PASS)**:
 - Exit code = 64.
 - stderr contains `"--on-behalf-of is only valid with --request-type (JSM service-desk requests). Add --request-type <NAME> to raise a request on behalf of another user, or drop --on-behalf-of to create a standard platform issue."` (verbatim error string; contains-check to tolerate the human-mode `"Error: "` renderer prefix).
-- stderr does NOT contain `"is ignored on the platform create path"` (proves old warn-and-proceed string is removed post-DEC-188).
+- stderr does NOT contain `"is ignored on the platform create path"` (proves old warn-and-proceed string is removed post-D-188).
 - stdout is empty (`stdout.trim().is_empty()`).
 - `POST /rest/api/3/issue` was NOT called (`.expect(0)` satisfied — zero HTTP).
 
-**Why hidden**: Symmetric to H-NEW-PREFLIGHT-001 but covering the `--on-behalf-of` flag independently. Before the pre-flight guard, this invocation would have emitted a warning and proceeded to create the issue (exit 0 + POST called). This scenario pins the BC-3.8.013 single-flag error string exclusively; the combined-flag path was removed by the DEC-310 reversal (see H-NEW-PREFLIGHT-003).
+**Why hidden**: Symmetric to H-NEW-PREFLIGHT-001 but covering the `--on-behalf-of` flag independently. Before the pre-flight guard, this invocation would have emitted a warning and proceeded to create the issue (exit 0 + POST called). This scenario pins the BC-3.8.013 single-flag error string exclusively; the combined-flag path was removed by the D-310 reversal (see H-NEW-PREFLIGHT-003).
 
 **Status**: MUST-PASS. Pins BC-3.8.013: `--on-behalf-of` on platform path without `--request-type` → exit 64 pre-flight; verbatim single-flag error string present; zero HTTP. SOH-DX-1 F2 2026-07-29; overrides F51-001 coverage-non-goal per F2 gate human ruling.
 
-**BC refs**: BC-3.8.013 (primary; pre-flight `JrError::UserError` single-flag case; DEC-188, #639)
+**BC refs**: BC-3.8.013 (primary; pre-flight `JrError::UserError` single-flag case; D-188, #639)
 
 ---
 
 ### H-NEW-PREFLIGHT-003: `issue create --field` AND `--on-behalf-of` together without `--request-type` → BC-3.8.013's STANDALONE `--on-behalf-of` guard fires (combined guard REMOVED); exit 64; `--field`'s `createmeta` resolution never reached; zero HTTP (MUST-PASS)
 
-**NFR source**: BC-3.8.012 [CURRENT BEHAVIOR — effective 2026-08-25] (combined guard REMOVED — `--field` alone is no longer an error condition, so the combined check has no remaining trigger, DEC-310 reversal of DEC-188); BC-3.8.013 (unmodified standalone `--on-behalf-of` guard, DEC-188, #639)
+**NFR source**: BC-3.8.012 [CURRENT BEHAVIOR — effective 2026-08-25] (combined guard REMOVED — `--field` alone is no longer an error condition, so the combined check has no remaining trigger, D-310 reversal of D-188); BC-3.8.013 (unmodified standalone `--on-behalf-of` guard, D-188, #639)
 **BC**: BC-3.8.012, BC-3.8.013
-**Authored by**: SOH-DX-1 F2 (2026-07-29, #639); REWRITTEN adversary pass-2 (2026-08-25, issue #578 DEC-310 reversal) — supersedes the pre-reversal combined-error assertion this scenario originally pinned
+**Authored by**: SOH-DX-1 F2 (2026-07-29, #639); REWRITTEN adversary pass-2 (2026-08-25, issue #578 D-310 reversal) — supersedes the pre-reversal combined-error assertion this scenario originally pinned
 
 **Setup**:
 
@@ -2657,9 +2657,9 @@ If instead the `GET ?fields=attachment` returned `[]` (zero matches), the flag `
 - stdout is empty (`stdout.trim().is_empty()`).
 - Neither `POST /rest/api/3/issue` nor `GET /rest/api/3/issue/createmeta/PROJ/issuetypes` was called (`.expect(0)` satisfied on both — `--field`'s `createmeta` resolution is never reached because BC-3.8.013's guard fires first, before project-key resolution).
 
-**Why hidden**: This scenario formerly pinned a COMBINED-error contract that no longer exists post-reversal (DEC-310/issue #578, 2026-08-25). An implementation that still emits the old combined string, or that emits BOTH the combined and the standalone string, is caught by the negative string assertions. An implementation that lets `--on-behalf-of`'s presence get masked by `--field`'s now-permissive path (i.e., silently proceeds to `createmeta` resolution or the POST because `--field` alone isn't an error) is caught by the two independent zero-HTTP `.expect(0)` assertions. This is exactly VP-578-018.
+**Why hidden**: This scenario formerly pinned a COMBINED-error contract that no longer exists post-reversal (D-310/issue #578, 2026-08-25). An implementation that still emits the old combined string, or that emits BOTH the combined and the standalone string, is caught by the negative string assertions. An implementation that lets `--on-behalf-of`'s presence get masked by `--field`'s now-permissive path (i.e., silently proceeds to `createmeta` resolution or the POST because `--field` alone isn't an error) is caught by the two independent zero-HTTP `.expect(0)` assertions. This is exactly VP-578-018.
 
-**Status**: MUST-PASS. Pins BC-3.8.013's standalone guard as the SOLE guard firing when both flags are present without `--request-type` (BC-3.8.012's combined check is REMOVED, not merely inactive — it has no remaining trigger). REWRITTEN adversary pass-2 (2026-08-25): the pre-reversal combined-error assertion this scenario originally pinned (SOH-DX-1 F2, 2026-07-29) is now FALSE per DEC-310; rewritten in place rather than deleted to keep `total_holdouts` stable and preserve this scenario's ID/history. VP-578-018 companion.
+**Status**: MUST-PASS. Pins BC-3.8.013's standalone guard as the SOLE guard firing when both flags are present without `--request-type` (BC-3.8.012's combined check is REMOVED, not merely inactive — it has no remaining trigger). REWRITTEN adversary pass-2 (2026-08-25): the pre-reversal combined-error assertion this scenario originally pinned (SOH-DX-1 F2, 2026-07-29) is now FALSE per D-310; rewritten in place rather than deleted to keep `total_holdouts` stable and preserve this scenario's ID/history. VP-578-018 companion.
 
 **BC refs**: BC-3.8.013 (primary — standalone `--on-behalf-of` guard, sole firing guard post-reversal), BC-3.8.012 (secondary — combined-check removal contract; `--field` alone no longer triggers anything, confirmed by the absent createmeta-GET assertion)
 
@@ -2695,7 +2695,7 @@ If instead the `GET ?fields=attachment` returned `[]` (zero matches), the flag `
 
 **Why hidden**: This scenario pins the breaking-change regression boundary: the platform-create path MUST remain byte-for-byte unchanged when neither `--field` nor `--on-behalf-of` is supplied. If the pre-flight guard were implemented unconditionally (firing regardless of whether those flags are present), this invocation would also exit 64 and the POST would not be called. The POST call being made (once) and exit code 0 are jointly the decisive signal: a guard that fires unconditionally fails both independently. *Emit-site grounding (for reviewers, not the holdout evaluator):* `jr issue create` Table mode emits the success key via `src/output.rs::print_success` (`eprintln!` → stderr, not stdout); BC-3.4.014 and `tests/issue_create_echo.rs` pin the four-site stdout-empty invariant.
 
-**Status**: MUST-PASS. Pins the clean-path invariant (BC-3.8.012 / BC-3.8.013): neither flag present → no guard fires; platform create proceeds normally; issue key returned; exit 0. This is the BREAKING-CHANGE REGRESSION PIN: the DEC-188 behavior change is CONDITIONAL on flag presence, NOT unconditional. SOH-DX-1 F2 2026-07-29.
+**Status**: MUST-PASS. Pins the clean-path invariant (BC-3.8.012 / BC-3.8.013): neither flag present → no guard fires; platform create proceeds normally; issue key returned; exit 0. This is the BREAKING-CHANGE REGRESSION PIN: the D-188 behavior change is CONDITIONAL on flag presence, NOT unconditional. SOH-DX-1 F2 2026-07-29.
 
 **BC refs**: BC-3.8.012 (clean path: flag-absent → guard does not fire), BC-3.8.013 (same clean-path invariant), BC-3.3.001 (platform issue create success path), BC-3.4.014 (Table mode stdout-empty invariant)
 
@@ -2743,9 +2743,9 @@ If instead the `GET ?fields=attachment` returned `[]` (zero matches), the flag `
 
 ### H-NEW-PREFLIGHT-006: `issue create --field` without `--request-type`, `--output json` → resolves via `createmeta`; exit 0; JSON success envelope on stdout (MUST-PASS)
 
-**NFR source**: BC-3.3.010/BC-3.3.011 (`--field` platform-create resolution via `createmeta`, issue #578); BC-3.8.012 [CURRENT BEHAVIOR — effective 2026-08-25] (pre-flight guard REMOVED for `--field` alone, DEC-310 reversal of DEC-188)
+**NFR source**: BC-3.3.010/BC-3.3.011 (`--field` platform-create resolution via `createmeta`, issue #578); BC-3.8.012 [CURRENT BEHAVIOR — effective 2026-08-25] (pre-flight guard REMOVED for `--field` alone, D-310 reversal of D-188)
 **BC**: BC-3.3.010, BC-3.3.011, BC-3.8.012
-**Authored by**: SOH-DX-1 F2 (2026-07-29, #639); REWRITTEN adversary pass-2 (2026-08-25, issue #578 DEC-310 reversal) — supersedes the pre-reversal `--output json` exit-64 error-envelope assertion this scenario originally pinned
+**Authored by**: SOH-DX-1 F2 (2026-07-29, #639); REWRITTEN adversary pass-2 (2026-08-25, issue #578 D-310 reversal) — supersedes the pre-reversal `--output json` exit-64 error-envelope assertion this scenario originally pinned
 
 **Setup**:
 
@@ -2763,11 +2763,11 @@ If instead the `GET ?fields=attachment` returned `[]` (zero matches), the flag `
 - `GET /rest/api/3/issue/createmeta/PROJ/issuetypes/10001` WAS called — proves createmeta resolution actually ran.
 - stdout, parsed as a JSON object, has a top-level `"key"` string field equal to `"PROJ-42"` (BC-3.3.001's `--output json` success shape: the follow-up-GET-fetched issue object). This is DISCRIMINATING: the old (pre-reversal) contract required stdout to be EMPTY on this exact invocation — a regression to the pre-reversal guard would leave stdout empty and fail this assertion.
 - stdout does NOT contain a top-level `"code"` field — this invocation must not produce the `{"error":...,"code":64}` JSON error-envelope shape.
-- stderr does NOT contain `"--field is only valid with --request-type"` — the old DEC-188 pre-flight string is DEAD per BC-3.8.012 Errors ("that string is now DEAD — removed from `src/cli/issue/create.rs`").
+- stderr does NOT contain `"--field is only valid with --request-type"` — the old D-188 pre-flight string is DEAD per BC-3.8.012 Errors ("that string is now DEAD — removed from `src/cli/issue/create.rs`").
 
-**Why hidden**: This scenario formerly pinned the OPPOSITE contract (DEC-188 `--output json` exit-64 error envelope on stderr with empty stdout, superseded 2026-08-25 by DEC-310/issue #578). An implementation still carrying the old pre-flight guard would exit 64, emit the now-dead error string in a JSON envelope on stderr, and leave stdout empty — both the exit-code and stdout-`"key"` assertions above fail independently, catching a regression to the pre-reversal behavior. An implementation that silently drops `--field` instead of resolving it (a plausible incomplete-reversal bug) would still exit 0 and populate stdout with a `"key"` field, but the POST body would be missing `customfield_10015` — independently caught by the request-body assertion.
+**Why hidden**: This scenario formerly pinned the OPPOSITE contract (D-188 `--output json` exit-64 error envelope on stderr with empty stdout, superseded 2026-08-25 by D-310/issue #578). An implementation still carrying the old pre-flight guard would exit 64, emit the now-dead error string in a JSON envelope on stderr, and leave stdout empty — both the exit-code and stdout-`"key"` assertions above fail independently, catching a regression to the pre-reversal behavior. An implementation that silently drops `--field` instead of resolving it (a plausible incomplete-reversal bug) would still exit 0 and populate stdout with a `"key"` field, but the POST body would be missing `customfield_10015` — independently caught by the request-body assertion.
 
-**Status**: MUST-PASS. Pins BC-3.3.010 (createmeta resolution + merge into create POST body) and BC-3.8.012 [CURRENT BEHAVIOR] (guard removed; `--field` alone → exit 0) in `--output json` mode specifically. REWRITTEN adversary pass-2 (2026-08-25): the pre-reversal `--output json` exit-64 error-envelope assertion this scenario originally pinned (SOH-DX-1 F2, 2026-07-29) is now FALSE per DEC-310; rewritten in place rather than deleted to keep `total_holdouts` stable and preserve this scenario's ID/history. VP-578-017 companion (JSON-mode variant of H-NEW-PREFLIGHT-001).
+**Status**: MUST-PASS. Pins BC-3.3.010 (createmeta resolution + merge into create POST body) and BC-3.8.012 [CURRENT BEHAVIOR] (guard removed; `--field` alone → exit 0) in `--output json` mode specifically. REWRITTEN adversary pass-2 (2026-08-25): the pre-reversal `--output json` exit-64 error-envelope assertion this scenario originally pinned (SOH-DX-1 F2, 2026-07-29) is now FALSE per D-310; rewritten in place rather than deleted to keep `total_holdouts` stable and preserve this scenario's ID/history. VP-578-017 companion (JSON-mode variant of H-NEW-PREFLIGHT-001).
 
 **BC refs**: BC-3.3.010 (primary — createmeta resolution, merge, exit 0 success path), BC-3.3.011 (error taxonomy — not exercised by this MUST-PASS success scenario; the `{"error":...,"code":64}` envelope this BC documents still applies to the "field not on Create screen" and other resolution-failure rows, just not to this invocation), BC-3.8.012 (guard-removal contract this scenario's exit-0 `--output json` outcome depends on)
 
@@ -3007,7 +3007,7 @@ Contact \@jsmith directly
 
 **NFR source**: BC-3.5.013 (PRIMARY E2E acceptance scenario per the human-approved scope — comment add is named first in scope item 9's example); VP-674-016
 **BC**: BC-3.5.013 (primary); BC-3.3.012/BC-3.4.032/BC-3.8.018 (companion round-trips, VP-674-014/015/017 — not independently enumerated as separate holdout scenarios; see Note below)
-**Authored by**: cycle-005 `adf-mentions` F2 INTEGRATE sub-burst (2026-09-06, issue #674), per DEC-344 (human-added live-Jira E2E acceptance requirement)
+**Authored by**: cycle-005 `adf-mentions` F2 INTEGRATE sub-burst (2026-09-06, issue #674), per D-344 (human-added live-Jira E2E acceptance requirement)
 
 **Why this scenario differs in kind from H-NEW-MENTION-001..008**: every other scenario in this group is a self-contained wiremock harness the automated holdout-evaluator can run against a candidate binary with zero external dependencies. This scenario requires a REAL, CONTROLLED Jira Cloud test account and issues a REAL notification — it cannot be safely or repeatably delegated to an automated evaluator running arbitrary/adversarial candidate code against a live tenant. It is registered here for traceability (BC/VP linkage, count discipline) and as a REQUIRED manual/CI gate, not as evaluator input.
 

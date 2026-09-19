@@ -2,7 +2,7 @@
 
 Story: BREAKING — `jr issue create` `--field`/`--on-behalf-of` on the platform path
 without `--request-type` now pre-flight exit 64 instead of warn-and-proceed
-(DEC-188, BC-3.8.012/013 [AMENDED]).
+(D-188, BC-3.8.012/013 [AMENDED]).
 
 Branch: `feat/issue-create-preflight-guards`
 Head: `4bfa0c21`

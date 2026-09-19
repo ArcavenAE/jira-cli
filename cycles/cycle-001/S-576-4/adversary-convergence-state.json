@@ -127,7 +127,7 @@
     "round5_post_p6_p8": "DateTime NaiveDate subtraction panic (MAX_AGE_SECS clamp + checked_sub_signed); empty-AID vacuous-truth sibling-parity guard"
   },
   "dispositions": {
-    "DEC-168": "raw-body passthrough + idempotency adjudicated",
+    "D-168": "raw-body passthrough + idempotency adjudicated",
     "AC-006": "Path-B all-404 wording authoritative ruling (AC-006 is authoritative per spec)",
     "dry_run_stderr": "dry-run output to stderr per spec; per-spec ruling",
     "bulk_metadata_error_collapse": "AC-009-mandated single error line on multi-AID metadata failure"

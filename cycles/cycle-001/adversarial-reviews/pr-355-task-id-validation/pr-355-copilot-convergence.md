@@ -56,7 +56,7 @@ following RFC 3986 §5.2.4 resolve dot-segments BEFORE transmission, so a `task_
 would rewrite the URL path `/rest/api/3/bulk/queue/..` to its parent endpoint `/rest/api/3/bulk/`
 — a real path-confusion attack class.
 
-**Validation (Perplexity per DEC-018):**
+**Validation (Perplexity per D-018):**
 
 Query: "RFC 3986 Section 5.2.4 'Remove Dot Segments': when a URL path ends with /. or /..,
 do common HTTP client libraries (reqwest, curl, hyper) and intermediate proxies apply
@@ -114,7 +114,7 @@ Specifically: if `timeout=0`, the deadline check fires first and emits the error
 containing the raw `task_id`. This reintroduces control-character/log/terminal injection for any
 caller that passes a malicious ID to `await_bulk_task` directly.
 
-**Validation (Perplexity per DEC-018):**
+**Validation (Perplexity per D-018):**
 
 Query: "Rust standard library: does the Debug formatter (`{:?}`) for `&str` escape ASCII control
 characters like \r, \n, \0, \t, and ANSI terminal escape sequences? Is using `{:?}` instead of
@@ -181,7 +181,7 @@ subtle entry-validation gap on the `timeout=0` code path.
 ## Notable Observations
 
 1. **R1 was a real security catch.** The `.` and `..` allowlist gap in the initial implementation
-   was a genuine path-confusion vulnerability. Perplexity validation (DEC-018) correctly confirmed
+   was a genuine path-confusion vulnerability. Perplexity validation (D-018) correctly confirmed
    RFC 3986 §5.2.4 behavior for reqwest/hyper/curl. No false-positive.
 
 2. **R2 was a real security catch.** The `await_bulk_task` entry-validation gap was subtle: the
@@ -192,9 +192,9 @@ subtle entry-validation gap on the `timeout=0` code path.
 3. **Perplexity calibration event (R2).** Perplexity hallucinated about Rust `{:?}` Debug escape
    behavior while citing correct documentation URLs. The tiered-validation backstop (local empirical
    verification) caught the hallucination before the wrong diagnosis was acted on. Net result:
-   DEC-018 still produced the correct final answer; the calibration is now codified in lessons.md.
+   D-018 still produced the correct final answer; the calibration is now codified in lessons.md.
 
-4. **DEC-018 earned its keep on R1** (Perplexity correctly confirmed §5.2.4) but caused calibration
+4. **D-018 earned its keep on R1** (Perplexity correctly confirmed §5.2.4) but caused calibration
    friction on R2 (Perplexity contradicted Rust empirical behavior). Net win: standing rule plus
    tiered-validation backstop produced the right answer in both cases.
 

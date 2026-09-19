@@ -15,7 +15,7 @@ traces_to: ".factory/stories/S-626-1.md"
 pass: "C"
 story: S-626-1
 aperture: story-implementation alignment
-basis: DEC-190 substitute (consistency-validator, not adversary agent)
+basis: D-190 substitute (consistency-validator, not adversary agent)
 isolation: sibling reviews not read
 previous_review: null
 ---

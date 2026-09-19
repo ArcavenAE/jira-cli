@@ -30,7 +30,7 @@ status: pending-human-authorization
 
   | Fix | Reason | PR | Squash SHA |
   |---|---|---|---|
-  | FIX-F5-LRE-1 | DEC-306 — remove `--updated-recent`-alone guard (ADV-LRE-F5-A-MED-001) | #733 | `28596274` |
+  | FIX-F5-LRE-1 | D-306 — remove `--updated-recent`-alone guard (ADV-LRE-F5-A-MED-001) | #733 | `28596274` |
   | FIX-F6-LRE-1 | `validate_duration` char-safe fix for multibyte panic (ADV-F6-VALIDATE-DURATION-PANIC) | #734 | `37850b26` |
 
 - **Diffstat, self-verified (`git diff --stat 67c5a6d0..37850b26`):** 16 files changed, 3,896
@@ -39,12 +39,12 @@ status: pending-human-authorization
   the FIX-F6-LRE-1 hardening), plus 1-line touches in `cli/issue/format.rs`, `cli/issue/helpers.rs`,
   `cli/sprint.rs`, `types/jira/issue.rs`; `tests/`: 5 files (`issue_commands.rs` +2,446,
   `issue_list_errors.rs` +215, `all_flag_behavior.rs` +106, `rate_limit_cap_tests.rs` +308,
-  `issue_view_errors.rs` +89 net); plus `.cargo/mutants.toml` (+29, DEC-301 exclusion) and
+  `issue_view_errors.rs` +89 net); plus `.cargo/mutants.toml` (+29, D-301 exclusion) and
   `docs/specs/cargo-mutants-policy.md` (+48). No new files were added — all changes are to
   pre-existing files (additive).
 - **Spec version:** `bc-2-issue-read.md` amended in-place to v1.5.1 (F2 additions for the four
-  new BCs, then a DEC-306 amendment on 2026-08-24 to BC-2.1.023/006/007 — verified via
-  `git -C .factory log --oneline -- specs/prd/bc-2-issue-read.md`, which shows the DEC-306
+  new BCs, then a D-306 amendment on 2026-08-24 to BC-2.1.023/006/007 — verified via
+  `git -C .factory log --oneline -- specs/prd/bc-2-issue-read.md`, which shows the D-306
   amendment commit `2b0acfb0` immediately following the F2 evolution commit `217d0f1d`).
 
 ---
@@ -58,14 +58,14 @@ status: pending-human-authorization
 | `--fields <CSV>` output-format gate (JSON-only, exit 64 in table mode) | `src/cli/issue/list.rs:195` — `if output_format != OutputFormat::Json { return Err(JrError::UserError("--fields requires --output json.".into()).into()); }` (verified by direct `grep`/read of the file) |
 | REPLACE-not-UNION semantics | `src/cli/issue/list.rs:550` comment block + `src/api/jira/issues.rs` new `*_with_fields` methods, additive to the 10 pre-existing `get_issue`/`search_issues` call sites (count corrected 11→10 during the F3-time consistency audit, commit `a0367dc1`, and re-verified against `develop@67c5a6d0` per that commit's own message) |
 | `--updated-recent` mirrors `--recent`, pinned stable-order position (after `recent`, before `asset`) | `src/cli/issue/list.rs:1167-1170` (`build_filter_clauses`) — confirmed present in the fifteen-source `NO_FILTERS_SPECIFIED_MSG` enumeration (`src/cli/mod.rs:66`) |
-| **DEC-306 amendment implemented, not just spec-documented** | The pre-DEC-306 dedicated `--updated-recent`-alone exit-64 guard is confirmed **removed** — `src/cli/issue/list.rs:238-255` now composes the `updated >= -{d}` clause unconditionally, with an explicit code comment citing FIX-F5-LRE-1/DEC-306; the sole remaining backstop is the terminal `all_parts.is_empty()` guard (BC-2.1.006), consistent with the spec's new Postcondition 4 (`bc-2-issue-read.md:865-906`) |
+| **D-306 amendment implemented, not just spec-documented** | The pre-D-306 dedicated `--updated-recent`-alone exit-64 guard is confirmed **removed** — `src/cli/issue/list.rs:238-255` now composes the `updated >= -{d}` clause unconditionally, with an explicit code comment citing FIX-F5-LRE-1/D-306; the sole remaining backstop is the terminal `all_parts.is_empty()` guard (BC-2.1.006), consistent with the spec's new Postcondition 4 (`bc-2-issue-read.md:865-906`) |
 | `--sort <field>:asc\|desc` overrides `order_by` in all 4 composition branches, appends `, key ASC` except when sorting by `key` | `src/cli/issue/list.rs:68-136` (`parse_sort`, `compose_order_by_with_sort`), `:517-525` (override hook wired into the single `order_by` binding used by all 4 branches) |
 | F6 graceful-Err hardening (`validate_duration` char-safe) | `src/jql.rs:16-44` — confirmed live: `s.chars().next_back()` + `&s[..s.len() - unit.len_utf8()]`, replacing the byte-offset `split_at` that panicked on `"7é"` |
-| Spec self-contradiction identified in F5 (ADV-LRE-F5-A-MED-001) was genuinely human-adjudicated, not silently patched | `bc-2-issue-read.md:206,840,865,885,906,914,922` all carry the `[AMENDED 2026-08-24, DEC-306 …]` marker with a link to `.factory/research/recent-vs-updated-recent-asymmetry-2026-08-24.md` |
+| Spec self-contradiction identified in F5 (ADV-LRE-F5-A-MED-001) was genuinely human-adjudicated, not silently patched | `bc-2-issue-read.md:206,840,865,885,906,914,922` all carry the `[AMENDED 2026-08-24, D-306 …]` marker with a link to `.factory/research/recent-vs-updated-recent-asymmetry-2026-08-24.md` |
 
 **Verdict:** PASS. Every reviewed behavioral clause in the spec has a directly traceable,
 directly-read implementation; the one spec self-contradiction found during F5 was resolved by
-an explicit human ruling (DEC-306) with the amendment applied symmetrically to spec text *and*
+an explicit human ruling (D-306) with the amendment applied symmetrically to spec text *and*
 code *and* tests (confirmed below), not patched around.
 
 ### Dimension 2 — Test Coverage & Quality — **PASS**
@@ -78,7 +78,7 @@ code *and* tests (confirmed below), not patched around.
 | Error paths covered | `tests/issue_list_errors.rs` / `tests/issue_view_errors.rs` cover: `--fields` in table mode (exit 64), empty/malformed CSV (exit 64 pre-HTTP), malformed `--sort` value (exit 64 pre-HTTP), unknown sort field (Jira 400 propagated) — confirmed by direct grep of `src/cli/issue/list.rs` test module (`test_bc_2_1_024_parse_sort_malformed_input_exits_64_pre_http`, etc.) |
 | FIX-F6-LRE-1 regression coverage | `validate_duration_multibyte_unit_returns_err_not_panic` (asserts message content, not just `is_err()`, across `["7é","é","€","7€","12ü","—"]`) + `proptest! { fn validate_duration_never_panics(s in ".*") }` — both confirmed live in `src/jql.rs` (lines 252, 416-424) |
 | Test-citation accuracy (post-cleanup) | The F7 pre-gate cleanup (uncommitted in the `.factory` worktree at report time, staged for the state-manager burst) corrects 6 stale `**Test:**` citations across S-575-1 (AC-004/005/006/011) and S-588-1 (AC-004/008) to name the actual bare-named functions in `tests/issue_list_errors.rs`/`tests/issue_view_errors.rs`/`tests/all_flag_behavior.rs`, and documents the accepted local-file bare-naming deviation (F5 C-LOW-001) inline — self-verified via `git -C .factory diff` |
-| Mutation kill rate on delta | **100% (8/8 viable mutants caught, 0 survivors, 0 timeout)** on the new `search_issues_with_fields`/`get_issue_with_fields` pagination code, per F6 targeted hardening (reported by the prior phase, recorded in `.factory/STATE.md`'s F6 burst entry; DEC-301's `issues.rs:374` exclusion confirmed correctly active). `src/cli/issue/list.rs` and `src/jql.rs` are intentionally outside `.cargo/mutants.toml examine_globs` (pre-existing scope decision, not a gap introduced by this cycle) — the multibyte panic in `validate_duration` was instead caught by F6's separate parser-robustness pass, not mutation testing, which is the correct tool for that class of defect. |
+| Mutation kill rate on delta | **100% (8/8 viable mutants caught, 0 survivors, 0 timeout)** on the new `search_issues_with_fields`/`get_issue_with_fields` pagination code, per F6 targeted hardening (reported by the prior phase, recorded in `.factory/STATE.md`'s F6 burst entry; D-301's `issues.rs:374` exclusion confirmed correctly active). `src/cli/issue/list.rs` and `src/jql.rs` are intentionally outside `.cargo/mutants.toml examine_globs` (pre-existing scope decision, not a gap introduced by this cycle) — the multibyte panic in `validate_duration` was instead caught by F6's separate parser-robustness pass, not mutation testing, which is the correct tool for that class of defect. |
 
 **Verdict:** PASS. Coverage is complete against every AC/BC/VP in scope, tests are demonstrably
 non-tautological (verified via two independent fresh-eyes PR reviews), the one mutation-testing
@@ -108,7 +108,7 @@ code paths found nothing outstanding beyond the already-fixed multibyte case.
 | `cargo deny check` | PASS, no advisories/denials — reported by F6, recorded in `.factory/STATE.md` |
 | Parser robustness | CLEAN on `parse_fields_csv`/`parse_sort`; found and closed 1 MEDIUM (`ADV-F6-VALIDATE-DURATION-PANIC`) via FIX-F6-LRE-1, independently APPROVE-reviewed (`.factory/code-delivery/FIX-F6-LRE-1/pr-review.md`) |
 | Adversarial convergence — per-story Step-4.5 | All 4 stories converged to 3 clean passes each per STORY-INDEX/session-checkpoint records (S-575-1/S-579-1/S-588-1 status `done`; S-584-1 explicitly documented as "Step-4.5 CONVERGED 6 passes/3 clean … no process-gaps") |
-| Adversarial convergence — cycle-level F5 | Round 1 (3 diverse-lens passes) found 1 MEDIUM (ADV-LRE-F5-A-MED-001), human-ruled DEC-306, fixed via FIX-F5-LRE-1 (APPROVE review). Round 2 (3 fresh diverse-lens passes over the reconciled delta at `28596274`) returned **3/3 CLEAN**, explicitly re-verifying the MED as genuinely resolved (not just patched) — recorded in `.factory/STATE.md`'s F5-Round-2 burst entry |
+| Adversarial convergence — cycle-level F5 | Round 1 (3 diverse-lens passes) found 1 MEDIUM (ADV-LRE-F5-A-MED-001), human-ruled D-306, fixed via FIX-F5-LRE-1 (APPROVE review). Round 2 (3 fresh diverse-lens passes over the reconciled delta at `28596274`) returned **3/3 CLEAN**, explicitly re-verifying the MED as genuinely resolved (not just patched) — recorded in `.factory/STATE.md`'s F5-Round-2 burst entry |
 | Security | No new external dependencies, no new I/O surfaces, no credential/secret handling in this delta; `cargo deny` clean is the applicable security check for a pure CLI-parsing/JQL-composition feature set |
 
 **Verdict:** PASS. All four hardening checks (mutation, `cargo deny`, parser robustness,
@@ -117,7 +117,7 @@ resolved through a fix PR that itself received an independent APPROVE review. I 
 to independently re-run the mutation-testing tool within this review (it requires the
 delta-scoped `cargo mutants --in-diff` invocation against the historical diff range, a
 multi-minute run); the 100%/8-of-8/0-survivors figure is reported by the prior F6 phase and
-corroborated by `.cargo/mutants.toml`'s DEC-301 exclusion being present in the merged diff
+corroborated by `.cargo/mutants.toml`'s D-301 exclusion being present in the merged diff
 exactly as described.
 
 ### Dimension 5 — Traceability — **PASS**
@@ -126,7 +126,7 @@ exactly as described.
 |---|---|
 | BC → story → AC → test → code chain resolvable | See `traceability-chain-delta.md` (companion file) — every BC cited above resolves to a story file, every story's ACs resolve to named test functions, every cited test function was grep-confirmed to exist in the named source/test file |
 | STORY-INDEX accuracy | Verified via `git -C .factory diff`: the F7 pre-gate cleanup pass has already corrected all 4 stories' STORY-INDEX rows from `ready`/`F3 COMPLETE` to `done — merged …, PR #NNN, squash …`, and added the missing `VP-UPDATED-RECENT-002` to S-579-1's VP column — staged as uncommitted `.factory` worktree changes at report time, pending the state-manager burst |
-| Input-hash drift | 3 cycle-specific story files (S-575-1, S-588-1, S-584-1) show a re-hash to `input-hash: "11b8082"` in the same uncommitted diff, consistent with the reported DEC-306-driven content re-verification and re-hash; S-579-1 was not part of this re-hash (its own BC amendments were already folded into the earlier F5 `2b0acfb0` commit) |
+| Input-hash drift | 3 cycle-specific story files (S-575-1, S-588-1, S-584-1) show a re-hash to `input-hash: "11b8082"` in the same uncommitted diff, consistent with the reported D-306-driven content re-verification and re-hash; S-579-1 was not part of this re-hash (its own BC amendments were already folded into the earlier F5 `2b0acfb0` commit) |
 | Individual story-file `status:` frontmatter field (minor, non-blocking) | **Observed discrepancy:** all 4 story files' own frontmatter still reads `status: ready` even though STORY-INDEX.md (the canonical index) correctly shows `done` for all 4. This is a pre-existing, repo-wide inconsistency, not a cycle-specific regression — spot-checking other merged stories shows the same convention drift (e.g. `S-576-1.md` still says `status: ready` post-merge, while `S-663-1.md` says `done` and `S-577-1.md` says `completed`). Not called out in the F7 pre-gate hygiene sweep and not one of the 3 items the human is being asked to ratify below; noted here for completeness since it touches traceability, but it does not block convergence — STORY-INDEX is the authoritative status source per the repo's existing convention. |
 
 **Verdict:** PASS. The chain is complete and independently re-derivable from BC IDs through to

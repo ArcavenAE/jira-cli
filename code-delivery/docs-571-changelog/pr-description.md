@@ -255,4 +255,4 @@ generated-at: "2026-07-08T00:00:00"
 - [x] Entry format matches #522/#492 precedent (bold-lead, BC citation, PR back-ref)
 - [x] BC-7.2.015 and #593 back-reference present in entry
 - [x] Single-commit branch — squash merge is clean
-- [x] MERGE AUTHORIZATION: NOT GRANTED — held for human merge (DEC-128)
+- [x] MERGE AUTHORIZATION: NOT GRANTED — held for human merge (D-128)

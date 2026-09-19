@@ -9,7 +9,7 @@
 ![Mutation](https://img.shields.io/badge/mutation-N%2FA-lightgrey)
 ![Holdout](https://img.shields.io/badge/holdout-N%2FA%20(test--only)-lightgrey)
 
-Closes the deferred residual from PR #565 (DEC-142). PR #565 shipped warm-hit / zero-HTTP
+Closes the deferred residual from PR #565 (D-142). PR #565 shipped warm-hit / zero-HTTP
 wiremock regression pins for three cache families (teams, resolutions, project_meta) but
 explicitly deferred two families — cmdb_fields and object_type_attrs — citing mock-setup
 complexity and a suspected subprocess env-var conflict. This PR resolves both concerns
@@ -320,7 +320,7 @@ BC-6.2.018 (Family 5/object_type_attrs) -> AC-002 -> test_object_type_attrs_warm
   -> expect(1) on GET /jsm/assets/workspace/.../objecttype/.../attributes
   -> ADV-F5-3-PASS (0 CRIT/HIGH/MED) -> CI-PASS
 
-Deferred residual origin: PR #565 (DEC-142) header explicitly deferred both families.
+Deferred residual origin: PR #565 (D-142) header explicitly deferred both families.
 F1 delta analysis (S-CMDB-OBJTYPE-WARM-HIT-COVERAGE-1-delta-analysis.md) resolved
 the "fragility" concern and provided concrete mock-setup sketches.
 ```
@@ -356,7 +356,7 @@ models-used:
   adversary: claude-sonnet-4-6 (F5 gate)
 generated-at: "2026-06-27"
 story-id: S-CMDB-OBJTYPE-WARM-HIT-COVERAGE-1
-origin-pr: "#565 (DEC-142 deferred residual)"
+origin-pr: "#565 (D-142 deferred residual)"
 ```
 
 </details>
@@ -370,7 +370,7 @@ origin-pr: "#565 (DEC-142 deferred residual)"
 - [x] No critical/high security findings unresolved (0 CRIT/HIGH across all F5 passes)
 - [x] Rollback procedure validated (simple `git revert` of 2 commits)
 - [x] No feature flags required (test-only change)
-- [ ] Human review completed (DEC-128 hold: orchestrator authorizes merge after human approval)
+- [ ] Human review completed (D-128 hold: orchestrator authorizes merge after human approval)
 - [x] No production code modified (test-only story constraint)
 - [x] No new dependencies added
 - [x] Story spec traceability complete (BC-6.2.018 -> AC-001/002/003 -> tests)

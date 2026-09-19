@@ -42,7 +42,7 @@ Plus two feature-level fix PRs:
 | Fix PR | Scope | Merge SHA |
 |---|---|---|
 | FIX-F5 (wave-1+2) | S-604-1/2/3 + S-606-1 delta, F5 scoped-adversarial | #709, `2d74b2b5` |
-| FIX-F5 (feature-level) | Full S-608-1/S-605-1/S-605-2 delta, cross-story F5 pass, DEC-294 | #715, `c266169a` |
+| FIX-F5 (feature-level) | Full S-608-1/S-605-1/S-605-2 delta, cross-story F5 pass, D-294 | #715, `c266169a` |
 
 **`develop` HEAD:** `c266169a`. **`activation_version`:** `v0.7.0-dev.1` (unchanged, verified against Cargo.toml).
 
@@ -156,7 +156,7 @@ speculatively created.
 in `.factory/` for this bundle) — qualitative assessment follows, stated explicitly rather than
 fabricating a dollar/token figure.
 
-**Observed cost:** 7 stories × Step-4.5 STRICT convergence (DEC-245) each requiring multiple
+**Observed cost:** 7 stories × Step-4.5 STRICT convergence (D-245) each requiring multiple
 rounds (9–11 rounds per story for the three most complex: S-605-1 9 rounds/27 passes, S-605-2
 11 rounds/33 passes, S-608-1 10 rounds/30 passes) + one feature-level F5 pass (3 passes, 1
 round) + one F7 synthesis pass (this report). Two fix PRs (#709, #715) carried the
@@ -177,7 +177,7 @@ staleness), none a correctness defect a user could hit.
 near-zero after a single round, and none of the 3 findings were CRIT/HIGH. Running a second
 feature-level F5 round would very likely find nothing further — the per-story passes have
 already exhausted the story-local defect space (9–11 rounds each, with the last 3 consecutive
-rounds clean in every case per DEC-245 strict), and the feature-level pass's own 3
+rounds clean in every case per D-245 strict), and the feature-level pass's own 3
 diverse-lens fresh-context reviewers converged immediately on the cross-story-only
 findings.
 

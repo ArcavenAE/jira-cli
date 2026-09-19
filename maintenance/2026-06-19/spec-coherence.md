@@ -179,7 +179,7 @@ All other HIGH risks (R-H1..R-H6) are confirmed RESOLVED in the register. No new
 |---------|-------------|--------|-------|
 | R-M0 | `--verbose` body PII | RESOLVED | `--verbose` is now header-only (SD-003 breaking change per CLAUDE.md); body requires `--verbose-bodies`. Register may not reflect this resolution. |
 | R-M1 | No PKCE in OAuth | STILL VALID (accepted) | ADR-0013 defers PKCE. No change. |
-| R-M2 | first-result-wins `accessible_resources` | STILL VALID | `src/api/auth.rs` still uses first-result-wins. Issue #429 open but deferred (DEC-029). |
+| R-M2 | first-result-wins `accessible_resources` | STILL VALID | `src/api/auth.rs` still uses first-result-wins. Issue #429 open but deferred (D-029). |
 | R-M4 | worklog 8h/day hardcode | RESOLVED in register | R-M4 resolved via S-2.06/PR #308. Confirmed in register. |
 | R-M5 | list.rs LOC past shard threshold | STILL VALID | list.rs = 1,256 LOC (CLAUDE.md documented). ADR-0012 shard rule applies to future additions. |
 | R-M6 | auth.rs LOC — largest file | STILL VALID but drift | auth.rs = 1,875 LOC (register claims 1,998; CANONICAL-COUNTS.md claims 1,397; CLAUDE.md omits). Actual LOC has grown vs register figure. |

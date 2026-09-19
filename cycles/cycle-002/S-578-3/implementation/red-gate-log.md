@@ -83,7 +83,7 @@ L2 resolver (`jsm_create.rs::resolve_asset_field_l2`) dropped the platform
 sibling's (`field_resolve.rs::compose_asset_hint`) 4-check value-shape
 validation -- a malformed `:asset` value (missing `:`, empty workspace
 segment, empty/non-numeric object-id segment) was not rejected before the
-workspace-discovery GET, diverging from DEC-188's pre-flight-guard
+workspace-discovery GET, diverging from D-188's pre-flight-guard
 convention. Test-writer commit added negative-path tests for all four
 malformed shapes, each asserting exit 64 + exact message + `.expect(0)` on
 both the workspace GET and the POST mock. All four RED (validation absent)

@@ -759,14 +759,14 @@ tests → src → F5/F6 evidence): `cycles/cycle-008/phase-f7-convergence/tracea
 **ADR-0026** `status:` flipped `proposed` → `accepted` (this burst), with a "Status as of
 2026-09-18 (F7 close)" section appended, mirroring the ADR-0025/cycle-013 close precedent.
 
-**Codifications:** `DEC-371` minted — cycle-008 Phase F7 delta convergence HUMAN GATE APPROVED +
+**Codifications:** `D-371` minted — cycle-008 Phase F7 delta convergence HUMAN GATE APPROVED +
 cycle CLOSED (full decision text in STATE.md's Decisions Log). No new BC/VP/lesson codified this
 burst — F7's convergence verdict and the human's close ruling are the only new pipeline facts;
 counts unchanged (`total_bcs` 770, VP 89, holdout 118, `total_stories` 191).
 
 **Closes:** Phase F7 (delta convergence) for cycle-008, in full — and with it, cycle-008
-(`oauth-surface-correctness`) itself, in full (F1 DEC-368, F2 DEC-369, F3 DEC-370, F4 both waves
-merged, F5 CONVERGED, F6 HARDENED_WITH_RESIDUALS, F7 CONVERGED+CLOSED DEC-371).
+(`oauth-surface-correctness`) itself, in full (F1 D-368, F2 D-369, F3 D-370, F4 both waves
+merged, F5 CONVERGED, F6 HARDENED_WITH_RESIDUALS, F7 CONVERGED+CLOSED D-371).
 
 **S-7.02 Cycle-Closing Checklist:** every cycle-008 process-gap/novel finding confirmed tracked as
 an OPEN-STANDING-ITEM or resolved-with-note — enumerated in full in
@@ -789,7 +789,7 @@ cycle).
 
 | Agent | Task | Output |
 |-------|------|--------|
-| state-manager (this agent) | Wrote F7 convergence report + traceability chain delta; flipped ADR-0026 to accepted + appended close status; minted DEC-371; resolved `CYCLE-008-F6-MUTANTS-EXAMINE-GLOBS-GAP` (6/7, archived to `RESOLVED-DRIFT-ITEMS.md`) + minted `CYCLE-008-INIT-MUTATION-COVERAGE-SEAM`; STATE.md ONE full-content Write marking cycle-008 CLOSED; drift reconciliation; commit + push `factory-artifacts` | `cycles/cycle-008/phase-f7-convergence/delta-convergence-report.md`; `cycles/cycle-008/phase-f7-convergence/traceability-chain-delta.md`; `specs/architecture/decisions/ADR-0026-...md`; `cycles/OPEN-STANDING-ITEMS.md`; `cycles/RESOLVED-DRIFT-ITEMS.md`; `cycles/cycle-008/burst-log.md` (this entry); `cycles/cycle-008/session-checkpoints.md`; `STATE.md` |
+| state-manager (this agent) | Wrote F7 convergence report + traceability chain delta; flipped ADR-0026 to accepted + appended close status; minted D-371; resolved `CYCLE-008-F6-MUTANTS-EXAMINE-GLOBS-GAP` (6/7, archived to `RESOLVED-DRIFT-ITEMS.md`) + minted `CYCLE-008-INIT-MUTATION-COVERAGE-SEAM`; STATE.md ONE full-content Write marking cycle-008 CLOSED; drift reconciliation; commit + push `factory-artifacts` | `cycles/cycle-008/phase-f7-convergence/delta-convergence-report.md`; `cycles/cycle-008/phase-f7-convergence/traceability-chain-delta.md`; `specs/architecture/decisions/ADR-0026-...md`; `cycles/OPEN-STANDING-ITEMS.md`; `cycles/RESOLVED-DRIFT-ITEMS.md`; `cycles/cycle-008/burst-log.md` (this entry); `cycles/cycle-008/session-checkpoints.md`; `STATE.md` |
 
 **Files touched (Dim-1): 9 unique files, this burst**
 
@@ -846,7 +846,7 @@ screen / login succeeds without `invalid_scope`.
 (same class as prior pure-bookkeeping bursts this cycle, e.g. the F7 pre-gate reconcile burst).
 
 **Codifications:** No new DEC minted — this is a standing-item disposition, not a pipeline ruling.
-References `DEC-371` (the cycle-008 F7 close, which left this item as the cycle's sole open
+References `D-371` (the cycle-008 F7 close, which left this item as the cycle's sole open
 pre-release blocker). No BC/VP/lesson codified. Counts unchanged (`total_bcs` 770, VP 89, holdout
 118, `total_stories` 191).
 

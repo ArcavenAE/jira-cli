@@ -83,7 +83,7 @@ is security-adjacent — lean toward a dedicated ADR).
 | `src/cli/auth/login.rs` | MODIFIED (optional) | #790 secondary (a): `emit_oauth_deprecation_notice` is called at L481, after `check_noninteractive_oauth_guard` at L473 — a guard-rejected invocation never reaches the notice. This is **already correct runtime behavior**; the defect is purely that the doc comment in `mod.rs` overclaims unconditional emission. No functional change needed here — only the doc string in `mod.rs` needs to stop overclaiming. |
 | `src/error.rs` | DEPENDENT, no change | `exit_code()`'s mapping (`NotAuthenticated`/`InsufficientScope`→2, `ConfigError`→78, `UserError`→64, L107-116) is already correct per the triage report's own finding (a); the defect is exclusively *which variant* `auth.rs`/`status.rs` construct, not this mapping. Confirmed by direct read — no change recommended to this file. |
 | `README.md` | MODIFIED | #783: add the upgrade/migration note + OAuth-vs-api-token asymmetry sentence near L425-431 (the existing migration section covers only the `[instance]`→`[profiles.default]` TOML reshape and OAuth lazy-migration — nothing about api-token re-login). Scoped addition, not a rewrite (primary README defect already fixed). |
-| `CHANGELOG.md` | MODIFIED | #786's exit-code change (64→2 for credential absence) is observably breaking for any script/CI wrapper that greps for exit 64 specifically — needs a breaking-change entry in the same style as the existing BC-1.2.051/DEC-321 precedent CLAUDE.md cites. |
+| `CHANGELOG.md` | MODIFIED | #786's exit-code change (64→2 for credential absence) is observably breaking for any script/CI wrapper that greps for exit 64 specifically — needs a breaking-change entry in the same style as the existing BC-1.2.051/D-321 precedent CLAUDE.md cites. |
 
 **Files explicitly NOT touched (regression baseline):** `src/api/auth_embedded.rs`,
 `src/api/refresh_coordinator.rs`, `src/api/auth_windows_store.rs` (DPAPI fallback, cycle-004),
@@ -343,7 +343,7 @@ unlike the `#607`/`#609` deferrals in the components-bundle precedent.
    catalog) — this repo's CLAUDE.md is itself a spec-adjacent artifact per its own conventions
    and will go stale the moment #787 ships if not updated in the same burst.
 8. CHANGELOG entry for #786's breaking exit-code change (64→2), styled after the existing
-   BC-1.2.051/DEC-321 precedent.
+   BC-1.2.051/D-321 precedent.
 9. `scripts/check-bc-cumulative-counts.sh` will need re-running once new BCs are added (same
    8-surface propagation discipline CLAUDE.md documents for every prior BC-count-changing cycle).
 

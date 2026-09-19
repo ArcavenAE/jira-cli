@@ -25,7 +25,7 @@ generated: "2026-07-20"
 | Review Convergence | APPROVE (cycle 4, SHA bc8ff260) | covered_sha FRESH ✅ |
 | CI Gate | BLOCKED (mutation timeout) | Runs 29735639851, 29736816386 |
 | Dependency: S-576-1 PR #630 | MERGED | 2026-07-20T01:26:57Z, e33624c1 |
-| Merge Constraint | DEC-128 | Human squash-merges |
+| Merge Constraint | D-128 | Human squash-merges |
 
 ---
 
@@ -86,7 +86,7 @@ All 19 ACs covered with recordings/screenshots.
 
 ---
 
-## Post-Merge Cleanup (DEC-128 — human merges)
+## Post-Merge Cleanup (D-128 — human merges)
 
 After human squash-merges PR #631:
 1. Remote branch `feat/S-576-2-attachment-download` deleted

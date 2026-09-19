@@ -25,7 +25,7 @@ bundle: SOH-DX-1
 aperture: delta-completeness + AC-falsifiability
 spec_version: v1.3.165
 date: 2026-07-29
-basis: DEC-190 substitute (consistency-validator, not adversary agent)
+basis: D-190 substitute (consistency-validator, not adversary agent)
 isolation: sibling reviews not read
 ---
 
@@ -33,7 +33,7 @@ isolation: sibling reviews not read
 
 **Aperture:** DELTA-COMPLETENESS + AC-FALSIFIABILITY
 **Spec version at evaluation:** v1.3.165 (H-NEW-PREFLIGHT-004 assertion tightened, stdout-only)
-**Reviewer basis:** DEC-190 substitute — consistency-validator role, not adversary agent; sibling reviewer files not read
+**Reviewer basis:** D-190 substitute — consistency-validator role, not adversary agent; sibling reviewer files not read
 
 ---
 
@@ -89,12 +89,12 @@ The delta-analysis.md covers three issues. All obligations enumerated below with
 | O-639-2 | `tests/issue_create_jsm.rs` — 5 tests invert to exit-64 (AC-1/2/3/5/7); AC-7 rename | §1 blast-radius table; Trace items (a)/(d) | **DEFERRED F3/F4** — DELETE mandates and KEPT clauses fully spec'd in AC bodies |
 | O-639-3 | AC-4 test body update: add three absence-of-new-error-string negatives | §1 second table; AC-4 body | **DEFERRED F3/F4** — F18-002 and F24-02 obligations recorded in spec |
 | O-639-4 | AC-6 test body update: re-point to exit 0 + absence assertions | §1 second table; AC-6 body | **DEFERRED F3/F4** — obligation recorded in AC-6 KEPT clauses |
-| O-639-5 | `Cargo.toml` — version bump to 0.7.0-dev.1 | §1 (DEC-188 clause d); Trace item (c) | **DEFERRED F3** — delivery item (c) |
+| O-639-5 | `Cargo.toml` — version bump to 0.7.0-dev.1 | §1 (D-188 clause d); Trace item (c) | **DEFERRED F3** — delivery item (c) |
 | O-639-6 | `CHANGELOG.md` — `### Breaking Changes` entry under v0.7.0 | §1 table; Trace item (c) | **DEFERRED F3** — delivery item (c) |
 | O-639-7 | `bc-3-issue-write.md` BC-3.8.012 body superseded to exit-64 semantics | §4 Item 1 | **DISCHARGED F2** — [CURRENT BEHAVIOR] block confirmed at v1.3.107 |
 | O-639-8 | `bc-3-issue-write.md` BC-3.8.013 body superseded (symmetric) | §4 Item 1 | **DISCHARGED F2** — confirmed |
-| O-639-9 | Amendment note at `bc-3-issue-write.md:~481` updated (emit-warn → exit-64) | §5b | **DISCHARGED F2** — "[AMENDED 2026-07-25 SOH-DX-1 DEC-188 #639] … pre-flight `JrError::UserError` exit 64" confirmed |
-| O-639-10 | `BC-INDEX.md` rows BC-3.8.012/013 updated to "exits 64 pre-flight" | §4 Item 1 | **DISCHARGED F2** — lines 361–362 confirmed; "[AMENDED DEC-188 2026-07-25]" annotation present |
+| O-639-9 | Amendment note at `bc-3-issue-write.md:~481` updated (emit-warn → exit-64) | §5b | **DISCHARGED F2** — "[AMENDED 2026-07-25 SOH-DX-1 D-188 #639] … pre-flight `JrError::UserError` exit 64" confirmed |
+| O-639-10 | `BC-INDEX.md` rows BC-3.8.012/013 updated to "exits 64 pre-flight" | §4 Item 1 | **DISCHARGED F2** — lines 361–362 confirmed; "[AMENDED D-188 2026-07-25]" annotation present |
 | O-639-11 | `CLAUDE.md` — dispatch-fork gotcha update (S-288-pr4 qualifier stale after guard) | §1 table; Trace item (b) | **DEFERRED F3/F4** — delivery item (b) |
 | O-639-12 | ADR-0014 amendment at 4 sites ("absent → platform path unchanged" claims stale) | §1 table + §4 Item 1; Trace item (a) | **DEFERRED F3/F4** — fourth site enumerated at v1.3.122 |
 | O-639-13 | E2E blast-radius scan (`tests/e2e_live.rs` for `--field`/`--on-behalf-of`) | §5e / §2; Trace item (g) | **DISCHARGED F2** — F64-001 recorded; item (g) marked "DISCHARGED at F2" |
@@ -104,7 +104,7 @@ The delta-analysis.md covers three issues. All obligations enumerated below with
 | O-639-17 | `jsm_create.rs:~171-172` and two `tests/issue_create_jsm.rs` comment sites corrected | Trace item (e) + F43/F45 | **DEFERRED F3/F4** — 3-site obligation in delivery item (e) |
 | O-639-18 | FAMILY-level banner rewrite in `tests/issue_create_jsm.rs:~2381-2391` | F45-002 | **DEFERRED F3/F4** — delivery item (e) extended at v1.3.143 |
 | O-639-19 | Holdout scenarios H-NEW-PREFLIGHT-001..006 (F51-001 non-goal overturned) | Holdout ruling | **DISCHARGED F2** — authored at v1.3.164; Note (coverage non-goal) at both BCs superseded |
-| O-639-20 | `error-taxonomy.md` Section 6 registration (three DEC-188 conditions) | F52-001 | **DISCHARGED F2** — confirmed at v1.3.150 |
+| O-639-20 | `error-taxonomy.md` Section 6 registration (three D-188 conditions) | F52-001 | **DISCHARGED F2** — confirmed at v1.3.150 |
 | O-639-21 | `docs/specs/issue-create-preflight-guards.md` feature spec | §4 Item 1 (F-4 ruling); Trace item (f) | **DEFERRED F3** — confirmed file does NOT yet exist (expected) |
 
 #### Issue #627 (S-627-1) — Script false-positive fix
@@ -257,8 +257,8 @@ Holdout `grep -c "^### H-"` = **106** (independent enumeration). All surfaces ag
 ## S-383 Staleness
 
 - `status: completed` ✓
-- `contract_superseded_by: "SOH-DX-1 (DEC-188) / S-639-1"` ✓
-- Banner at ~:64: CONTRACT SUPERSEDED 2026-07-25 DEC-188, with S-639-1 as successor ✓
+- `contract_superseded_by: "SOH-DX-1 (D-188) / S-639-1"` ✓
+- Banner at ~:64: CONTRACT SUPERSEDED 2026-07-25 D-188, with S-639-1 as successor ✓
 - Closing note: "historical record … do NOT implement from these ACs" ✓
 - Historical ACs retain old warning-string form — correct (historical record, not live spec)
 

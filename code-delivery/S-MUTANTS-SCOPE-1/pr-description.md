@@ -188,7 +188,7 @@ not run for scoped Feature Mode deltas.
 
 ## Adversarial Review (F5 — Phase F5 Scoped Adversarial)
 
-CONVERGED to the strict DEC-245 bar: 3 consecutive clean passes (passes 10/11/12), 0
+CONVERGED to the strict D-245 bar: 3 consecutive clean passes (passes 10/11/12), 0
 CRIT/HIGH findings sustained across all 12 passes total. The one HIGH finding (pass 1 — the
 new seam duplicated the interrupt branch) was fixed in `9f86cc90` and never recurred. Later
 passes (M-1 through pass-5 corrections) tightened verification-accounting precision in the
@@ -284,5 +284,5 @@ generated-at: "2026-08-14"
 - [ ] No critical/high security findings unresolved (pending security-reviewer dispatch)
 - [x] Rollback procedure validated (standard `git revert`, no flags/migrations)
 - [ ] pr-reviewer READY verdict with `covered_sha`
-- [x] Human review required before merge — **DEC-128: merge authority is the human's. This
+- [x] Human review required before merge — **D-128: merge authority is the human's. This
       PR must NOT be merged by any agent.**

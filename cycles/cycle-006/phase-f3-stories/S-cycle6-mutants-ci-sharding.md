@@ -41,7 +41,7 @@ depends_on: []
 blocks: []
 behavioral_contracts: []
 bcs: []
-# BC status: N/A by design — DEC-348 governance is policy-doc-only
+# BC status: N/A by design — D-348 governance is policy-doc-only
 # (docs/specs/cargo-mutants-policy.md), NO new PRD BC. See "Governance
 # Deviation Note" below for the explicit justification this constitutes
 # a documented, approved exception to the story-writer's normal
@@ -121,7 +121,7 @@ origin: >
   `mutants-sharding-invariants.md`/`ci-yml-design.md`/`verification-
   delta.md`) reached 16-pass adversarial convergence (9 fix rounds, 3
   consecutive clean passes) and was human-APPROVED as-is at the F2 gate
-  (DEC-349, 2026-09-07). Governance is policy-doc-only per DEC-348 — no
+  (D-349, 2026-09-07). Governance is policy-doc-only per D-348 — no
   PRD BC exists for this cycle, mirroring the MUTATION-CI-TIMEOUT
   precedent (2026-06-28).
 ---
@@ -142,7 +142,7 @@ origin: >
 ## Governance Deviation Note (read before ACs)
 
 This story's `behavioral_contracts:`/`bcs:` frontmatter is intentionally
-`[]`. Per DEC-348 (F1, human-approved) and DEC-349 (F2 gate, human-approved
+`[]`. Per D-348 (F1, human-approved) and D-349 (F2 gate, human-approved
 as-is), this cycle's governance is **policy-doc-only**: the spec of record
 is `docs/specs/cargo-mutants-policy.md`, not a new PRD BC family, mirroring
 the established `MUTATION-CI-TIMEOUT` (2026-06-28) precedent for the exact
@@ -276,7 +276,7 @@ implementer should not feel obligated to split it out.
   currently `38`, to grow to `65`).
 - `.factory/phase-f1-delta-analysis/cycle-006/{delta-analysis.md,
   affected-files.txt}` (F1 scope/sequencing/regression-risk grounding).
-- Decisions Log: DEC-348 (F1 approval), DEC-349 (F2 gate approval, full
+- Decisions Log: D-348 (F1 approval), D-349 (F2 gate approval, full
   design + spec surface + 5 F4 blocking preconditions accepted as-is).
 
 ## Narrative
@@ -303,7 +303,7 @@ exact mechanism.
 ## Behavioral Contracts
 
 **N/A by design — see "Governance Deviation Note" above.** No PRD BC
-exists or is created for this cycle (DEC-348/DEC-349, policy-doc-only
+exists or is created for this cycle (D-348/D-349, policy-doc-only
 governance). The table below lists the **named invariants** this story
 implements in place of BCs, each with its Statement source and the VPs
 that verify it — this table is the BC-array-propagation-policy analog
@@ -654,7 +654,7 @@ contradict, AC-016/Task 17/H-W1-REG-001, which already carve out
 `spec-guard`'s one new step as the sole permitted deviation. `mutants` and
 `mutants-plan` are admitted via
 `PINNED_GATE_EXCLUDED_JOBS`, never wired directly into branch protection
-(DEC-096/DEC-097). `PINNED_GATE_NEEDS_LINE` and
+(D-096/D-097). `PINNED_GATE_NEEDS_LINE` and
 `test_ci_gate_needs_exactly_the_required_jobs`'s expected-set literal are
 both updated in the SAME commit.
 (traces to architecture-delta §4; part of the guardrail lockstep, no
@@ -1522,7 +1522,7 @@ F2's table should not be misled into expecting a fifth AC for the
     non-change was verified this cycle, not merely carried forward
     unexamined.
 26. [ ] **LOW F4 doc-fix cleanup tasks (non-blocking, carried forward
-    from the F2 gate, DEC-349) — land in the SAME PR, not deferred:**
+    from the F2 gate, D-349) — land in the SAME PR, not deferred:**
     - [ ] §5A honest-bound rewrite: propagate the round-9 circular-
       reasoning-closure fix (the `MUTANT_COUNT`/`OVERALL_DIFF_LINES`/
       `PLAN_RESULT` byte-VALUE pins, AC-028/029/030) into `verification-
@@ -1616,7 +1616,7 @@ analogs of specific, named `ci-gate` protections, not novel designs.
 |---|---|---|
 | `mutants-aggregate` NEVER reports `skipped` to GitHub Actions — always resolves internally to success or failure | architecture-delta §2, §6.4 | AC-011 (skip-tolerant surface consistently empty), `if: always()` on the job |
 | Every new job's step-level `if: always()` is written BARE, never braced `${{ always() }}` | mutants-sharding-invariants.md, INV-ESCALATE Residual Risk 3 | Task 26's bare-vs-braced style note; AC-021's byte-VALUE pin literally asserts the bare plain-scalar form |
-| New required jobs are wired via `ci-gate.needs` only, never directly into branch protection | CLAUDE.md DEC-096/DEC-097 | AC-032; `mutants`/`mutants-plan` admitted only via `PINNED_GATE_EXCLUDED_JOBS` |
+| New required jobs are wired via `ci-gate.needs` only, never directly into branch protection | CLAUDE.md D-096/D-097 | AC-032; `mutants`/`mutants-plan` admitted only via `PINNED_GATE_EXCLUDED_JOBS` |
 | Exact-equality (not directional `>=`) on the `MUTANT_COUNT` reconciliation | mutants-sharding-invariants.md round-5 callout | AC-008, AC-022 |
 | `scripts/mutants-aggregate.sh`'s aggregation logic MUST be an invokable script with `--self-test`, never inline `ci.yml` `run:` text | architecture-delta §1 Extraction Precondition (BLOCKING) | Task 2; every INV-AGG/INV-COMPLETE guard test is a `#[cfg(unix)]` subprocess proof against the real file |
 | Both `check-ci-gate.sh` and `mutants-aggregate.sh` source ONE shared `scripts/lib/trusted-jq.sh`, never independently-maintained copies | architecture-delta §6.11 | AC-024; a future jq-trust fix landing in one script only would fail AC-024 |
@@ -1727,7 +1727,7 @@ scratch branch/diff, not committed to this story's own PR).
 - **F5 hand-off note (added Phase F3 round 9) — VP-MUTANTS-SHARD-006's
   bash-subprocess RED proof cannot catch a `.outcome`->`.conclusion`
   swap in the `mutants` shard job's sentinel-writing step (Task 9),
-  inherited F2/DEC-349 residual, not fixed here.** AC-006's RED proof
+  inherited F2/D-349 residual, not fixed here.** AC-006's RED proof
   (Task 10, VP-006) constructs its fixtures directly as bash-subprocess
   proofs against `scripts/mutants-aggregate.sh` — it exercises the
   AGGREGATOR's interpretation of a sentinel file's `run_outcome`/
@@ -1749,7 +1749,7 @@ scratch branch/diff, not committed to this story's own PR).
   expression either: Task 8's `tests/common/wf.rs`-based structural pins
   cover `steps_with_if` CARDINALITY (the 3-count `if: always()` inversion)
   but not the VALUE of the `${{ steps.run-mutants.outcome }}` expression
-  feeding the sentinel-write step's body. This is an inherited F2/DEC-349
+  feeding the sentinel-write step's body. This is an inherited F2/D-349
   residual — F2 did not add a dedicated structural pin for it, and this F3
   pass does not re-litigate that F2 scope decision — flagged here,
   alongside the existing INV-ESCALATE Residual Risk 2/5 hand-offs above,

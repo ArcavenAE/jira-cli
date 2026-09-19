@@ -30,7 +30,7 @@ isolation: N/A
 
 This stub record exists solely to prevent the numbering gap (15 → 18) from being later misread as missing or lost artifacts. Passes 16 and 17 are absent by design, not by accident.
 
-**Governing decision:** DEC-209 (ROUND 5 + PASSES 18/19/20 AUTHORIZED, 2026-08-03).
+**Governing decision:** D-209 (ROUND 5 + PASSES 18/19/20 AUTHORIZED, 2026-08-03).
 
 ---
 
@@ -68,7 +68,7 @@ N/A — pass not executed. **This record is NOT window-eligible and NOT counted 
 | LOW | N/A |
 | INFO | N/A |
 
-**Overall Assessment:** NOT RUN — pass deliberately skipped per DEC-209 (round-5 ruling). No findings. Not window-eligible.
+**Overall Assessment:** NOT RUN — pass deliberately skipped per D-209 (round-5 ruling). No findings. Not window-eligible.
 
 ---
 
@@ -76,11 +76,11 @@ N/A — pass not executed. **This record is NOT window-eligible and NOT counted 
 
 | Field | Value |
 |-------|-------|
-| **Pass** | 17 — NOT RUN (superseded by round-5 ruling; DEC-209) |
+| **Pass** | 17 — NOT RUN (superseded by round-5 ruling; D-209) |
 | **New findings** | N/A |
 | **Duplicate/variant findings** | N/A |
 | **Novelty score** | N/A |
 | **Median severity** | N/A |
 | **Code defects** | N/A |
 | **Trajectory** | N/A — pass not executed |
-| **Verdict** | FINDINGS_REMAIN — NOT RUN; pass deliberately skipped; superseded by round-5 ruling (DEC-209) |
+| **Verdict** | FINDINGS_REMAIN — NOT RUN; pass deliberately skipped; superseded by round-5 ruling (D-209) |

@@ -106,11 +106,11 @@ marks), with a simple allowlist filter on the marks assembled there.
    self.active_marks.clone()`). The mark filter operates on a different value (the
    marks array) after the text string is already finalized. There is no interaction.
 
-3. **DEC-148 citation guard is simpler.** The analyst flagged that BC-7.2.015's
+3. **D-148 citation guard is simpler.** The analyst flagged that BC-7.2.015's
    Trace/Source citations would reference a new function that does not exist until F4,
    requiring a provisional-citation dance. With the emit-site fix, the implementation
    modifies an existing function (`push_code`) — the citation in BC-7.2.015 can point
-   directly to `src/adf.rs::push_code`, which already passes the DEC-148 Guard 1
+   directly to `src/adf.rs::push_code`, which already passes the D-148 Guard 1
    `scripts/check-bc-citation-symbols.sh` check today. No provisional citation is
    needed.
 
@@ -141,7 +141,7 @@ BC-7.2.015 must be written at the **behavior level**, not the mechanism level:
 additionally carry `link` and/or `annotation` marks. All typographic marks (`strong`,
 `em`, `strike`, `subsup`, `underline`, `textColor`, `backgroundColor`) are stripped
 at emission time." Trace/Source cites `src/adf.rs::push_code` directly. No provisional
-citation is required; the symbol exists today and the DEC-148 guard already validates it.
+citation is required; the symbol exists today and the D-148 guard already validates it.
 
 ---
 
@@ -240,10 +240,10 @@ from the code node's mark set at emission time in `src/adf.rs::push_code`.
 - EC-6: `**a \`b\` c**` (mixed range) — code node `b` carries `[code]` only; surrounding plain-text nodes `a ` and ` c` carry `[strong]`.
 - EC-7 (inverse / read-tolerance): `adf_to_text` renders a text node with `[strong, code]` as `` **`x`** `` (code applied innermost regardless of array position). This is read-leniency for externally-produced or legacy ADF; it does not imply `markdown_to_adf` may emit this combination.
 
-**Trace / Source (DEC-148 guard-safe citations):**
+**Trace / Source (D-148 guard-safe citations):**
 
 Both cite `src/adf.rs::push_code` (existing symbol; no provisional-citation dance
-needed). The DEC-148 Guard 1 (`scripts/check-bc-citation-symbols.sh`) validates these
+needed). The D-148 Guard 1 (`scripts/check-bc-citation-symbols.sh`) validates these
 against develop's `src/` tree and will pass from F2 onward.
 
 **`check-bc-cumulative-counts.sh` (DRIFT-002):** Adding BC-7.2.015 increments the

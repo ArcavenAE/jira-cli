@@ -6,7 +6,7 @@ deferred: [607, 609]
 producer: product-owner
 timestamp: 2026-08-15
 status: complete
-decisions: [DEC-278, DEC-279, DEC-280]
+decisions: [D-278, D-279, D-280]
 ---
 
 # F2 PRD Delta — Component Management Bundle (issues #604/#605/#606/#608)
@@ -14,7 +14,7 @@ decisions: [DEC-278, DEC-279, DEC-280]
 `jr component` command family (#604), `issue create/edit --component` (#605), `issue list
 --component` filter (#606), `jr component rename` (#608). #607 (generalized multi-valued/
 negatable filter grammar retrofit) and #609 (cross-issue component impact scan) are explicitly
-OUT of scope for this cycle — deferred to subsystem-level follow-up per DEC-278 and the F1
+OUT of scope for this cycle — deferred to subsystem-level follow-up per D-278 and the F1
 delta analysis (`.factory/phase-f1-delta-analysis/delta-analysis-components.md`).
 
 This is a RECONCILIATION/COMPLETION record: the BC bodies below were authored in a prior burst
@@ -56,7 +56,7 @@ body content was rewritten — only count-propagation surfaces and this summary 
 | BC-8.1.007 | `jr component edit NAME\|ID [...]` PUTs `/rest/api/3/component/{id}`; only supplied fields sent |
 | BC-8.1.008 | Unknown `NAME\|ID` on edit/delete/rename → exit 64; numeric-bypass convention (mirrors `requesttype fields`) |
 
-### 8.2 Component Delete Safety (8) — DEC-279
+### 8.2 Component Delete Safety (8) — D-279
 | BC ID | One-line summary |
 |---|---|
 | BC-8.2.001 | `delete` refuses (exit 64) without EITHER `--move-to` OR `--orphan`; clap mutually exclusive |
@@ -216,14 +216,14 @@ introduced by this bundle.
 
 ---
 
-## DEC-279 / DEC-280 Linkage
+## D-279 / D-280 Linkage
 
-- **DEC-279 (delete-safety policy)**: layered guardrails — refuse `component delete` without
+- **D-279 (delete-safety policy)**: layered guardrails — refuse `component delete` without
   `--move-to`/`--orphan`; `--orphan` additionally requires `--yes`/interactive confirm;
   affected issue keys snapshotted via read-only JQL BEFORE the DELETE. Implemented across
   BC-8.2.001..008. Source: `.factory/research/component-delete-and-bulk-wire-2026-08-15.md`
   §Q1 (delete-safety facts CONFIRMED/INCONCLUSIVE per sub-question).
-- **DEC-280 (bulk wire shape)**: the multi-key `--component` bulk-edit wire shape
+- **D-280 (bulk wire shape)**: the multi-key `--component` bulk-edit wire shape
   (`multiselectComponents` object + integer `componentId`, ADD/REMOVE/REPLACE/REMOVE_ALL) is
   CONFIRMED via triple corroboration (Atlassian doc example + swagger OpenAPI + apidog
   mirror) but has NOT been validated against a live Jira run at spec-authoring time.
@@ -231,11 +231,11 @@ introduced by this bundle.
   smoke test (one ADD, one REMOVE against ≥2 issues in one project) before
   release, per the `FIX-BULK-TRANSITION-001`/#446 precedent — if the live run contradicts the
   documented shape, BC-3.4.023 must be corrected to the observed true shape, exactly as
-  `FIX-BULK-TRANSITION-001` did for bulk transitions. DEC-280 also governs BC-3.4.022's
+  `FIX-BULK-TRANSITION-001` did for bulk transitions. D-280 also governs BC-3.4.022's
   single-key native `update`-verb shape (object-form `add`/`remove`, distinct from the bulk
   integer-id form) and BC-3.4.024's create-path additive body composition (object-with-name
   form, matching the single-key convention).
-- **DEC-278**: cycle-open decision recording F1 approval, scope (#604/#605/#606/#608 in;
+- **D-278**: cycle-open decision recording F1 approval, scope (#604/#605/#606/#608 in;
   #607/#609 deferred), and the 4-wave sequence (W1 #604 foundation → W2 #605 → W3 #606
   parallelizable with W2 → W4 #608 last). Referenced for context; not itself a spec-content
   decision requiring BC-level linkage.

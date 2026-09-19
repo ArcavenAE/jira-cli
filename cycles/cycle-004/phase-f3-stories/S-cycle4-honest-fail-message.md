@@ -58,13 +58,13 @@ breaking_change: false
 retroactive: false
 origin: >
   cycle-004 windows-correctness, Wave 2 (depends on S-cycle4-dpapi-storage-fix for the
-  DpapiFallbackFailed/ProfilePathEscape marker types). Implements DEC-334/DEC-335's
+  DpapiFallbackFailed/ProfilePathEscape marker types). Implements D-334/D-335's
   honest-fail backstop for #759: two of the four existing "Unlock your keychain"
   message sites in src/api/auth.rs are revised to branch on the new typed markers,
   replacing the misdirecting message with accurate, scenario-specific text and making
   the dangling Atlassian grant revoke a required remediation step (login site only) --
   never for the refresh site, where the grant may still back other active sessions.
-  Per DEC-335, this story ships in the SAME RELEASE as S-cycle4-dpapi-storage-fix, not
+  Per D-335, this story ships in the SAME RELEASE as S-cycle4-dpapi-storage-fix, not
   as an independent, ahead-of-schedule fast-follow.
 ---
 
@@ -75,7 +75,7 @@ origin: >
 
 # S-cycle4-honest-fail-message — Honest-fail backstop for the two revised message sites
 
-> **Revision note (v1.3 → v1.4, DEC-334 correction, 2026-09-05):** AC-002 and AC-004
+> **Revision note (v1.3 → v1.4, D-334 correction, 2026-09-05):** AC-002 and AC-004
 > rewritten to apply the product-owner's amended BC-1.4.039, issued this session after an
 > adversarial review CONFIRMED the prior Site-1 guidance — "state the grant-revoke step
 > ... as a REQUIRED action" — was account-wide-harmful: Atlassian's
@@ -89,7 +89,7 @@ origin: >
 > stays byte-for-byte unchanged, but Site 1's legacy message is no longer asserted
 > unchanged — its final grant-revoke sentence is corrected to the same
 > scoped-default/optional-warned-revoke guidance AC-002 establishes. No other AC, the BC/VP
-> anchors (BC-1.4.039 / VP-AUTHDX-017), or the AC count (7) changed. See DEC-334 in
+> anchors (BC-1.4.039 / VP-AUTHDX-017), or the AC count (7) changed. See D-334 in
 > `.factory/cycles/cycle-004/` decision log for the full adversarial-finding record.
 >
 > **Revision note (v1.2 → v1.3, F3 round-3 re-review comprehensive fix pass, 2026-09-04):**
@@ -126,7 +126,7 @@ within that already-anchored file, adding no new module.
 `e.downcast_ref::<auth_windows_store::ProfilePathEscape>()` (BC-1.4.039 Postcondition 1)
 — neither type exists until `S-cycle4-dpapi-storage-fix` creates
 `src/api/auth_windows_store.rs`. This is a hard compile-time dependency, not merely a
-scheduling preference, and it is the mechanism that realizes DEC-335's "bundle 1+2 into
+scheduling preference, and it is the mechanism that realizes D-335's "bundle 1+2 into
 one release" instruction: this story cannot even build, let alone land, ahead of
 `S-cycle4-dpapi-storage-fix`.
 
@@ -201,7 +201,7 @@ default / optional-account-wide-warned-revoke guidance established in AC-002 (th
 `https://id.atlassian.com/manage-profile/apps` step); the rest of Site 1's legacy message
 text is otherwise unchanged. This replaces the prior framing where the `None` branch was
 asserted unchanged at BOTH sites — that framing is no longer accurate once Site 1's
-harmful final sentence is corrected, per DEC-334.
+harmful final sentence is corrected, per D-334.
 (traces to BC-1.4.039 postcondition 1 (`None` bullet); VP-AUTHDX-017)
 
 ### AC-005 — Site 3 proactive stale-pair clear
@@ -361,7 +361,7 @@ compile-time dependency on the marker types).
 
 **blocks:** `[]` — terminal node in cycle-004's dependency graph.
 
-**Release bundling (DEC-335):** this story and `S-cycle4-dpapi-storage-fix` ship in the
+**Release bundling (D-335):** this story and `S-cycle4-dpapi-storage-fix` ship in the
 SAME cycle-004 release. The `depends_on` edge (Wave 1 → Wave 2) is the mechanism that
 enforces this — honest-fail-message cannot be released ahead of, or independently from,
 the durable fix, closing F1 §12 item 6's open question in favor of "land together," not

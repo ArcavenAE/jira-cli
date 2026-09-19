@@ -54,12 +54,12 @@ last_updated: "2026-08-19"
 breaking_change: false
 retroactive: false
 origin: >
-  GitHub issue #605 (`issue create/edit --component`), multi-key bulk facet (DEC-280).
+  GitHub issue #605 (`issue create/edit --component`), multi-key bulk facet (D-280).
   Depends on S-605-1 because it shares the same resolver contract and add:/remove:
   CLI-surface parsing S-605-1 establishes for the single-key path, and reuses the SAME
   §8.4 resolution round-trip (component names → ids) before converting to the bulk
   endpoint's integer `componentId` shape. Carries a LIVE-JIRA smoke-test release gate
-  (BC-3.4.023's Delivery note, DEC-280 / FIX-BULK-TRANSITION-001 precedent) — this wire
+  (BC-3.4.023's Delivery note, D-280 / FIX-BULK-TRANSITION-001 precedent) — this wire
   shape is documented and triple-corroborated but not yet live-verified at spec-authoring
   time; the smoke test (one ADD, one REMOVE, ≥2 issues, one project) MUST pass before this
   path ships to release, mirroring how `FIX-BULK-TRANSITION-001` discovered a wrong
@@ -80,7 +80,7 @@ input-hash: "d4fba74"
 
 > **tdd_mode:** `strict`.
 >
-> **LIVE-JIRA GATE (DEC-280, BC-3.4.023 Delivery note):** this story's implementation MUST
+> **LIVE-JIRA GATE (D-280, BC-3.4.023 Delivery note):** this story's implementation MUST
 > NOT be marked done, and this path MUST NOT ship to a release, until a live smoke test
 > (one ADD, one REMOVE, against ≥2 issues in one real project) confirms the
 > `multiselectComponents` wire shape documented below. If the live run contradicts this
@@ -333,7 +333,7 @@ adversarial finding — error-taxonomy; BC-3.4.023 Invariant 2]:**
 | Parse-failure origin split: numeric-bypass oversized user digits → `JrError::UserError` exit 64 zero-POST; resolver-returned lookup parse failure → `JrError::Internal` (defensive test only) — do NOT collapse both into one internal-error outcome | BC-3.4.023 Invariant 2 clarification (2026-08-19, S-605-2 Step-4.5 adversarial finding) | AC-003 clarifying note; Edge Cases |
 | This bulk path is entirely SEPARATE from S-605-1's single-key `update`-verb path — routing is purely `keys.len()`, never mixed within one invocation | BC-3.4.023 Invariant 3 | AC-006 |
 | A chunk failure aborts the remaining sequence (no continue-on-error) — do NOT reuse `rename --all-projects`'s per-target fail-soft shape here | BC-3.4.023 Edge Case EC-3.4.023-4 | AC-009 |
-| This path MUST NOT ship to release until the live smoke test passes | BC-3.4.023 Delivery note, DEC-280 | AC-010 (release gate, not `cargo test`) |
+| This path MUST NOT ship to release until the live smoke test passes | BC-3.4.023 Delivery note, D-280 | AC-010 (release gate, not `cargo test`) |
 | Do NOT add `sendBulkNotification` to the bulk-component body — reuse `bulk_edit_fields` as-is (the #446-live-proven composition is source of truth, not the Atlassian doc example) | BC-3.4.023 Postcondition 2 clarification (2026-08-19) | code review; AC-001 wire-shape assertion asserts the exact body key set |
 
 ## Library & Framework Requirements (MANDATORY)

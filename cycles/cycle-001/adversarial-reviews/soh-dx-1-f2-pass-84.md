@@ -24,7 +24,7 @@ bundle: SOH-DX-1
 aperture: AC-falsification-against-build + delta-completeness
 spec_version: v1.3.166
 date: 2026-07-29
-basis: DEC-190 substitute (consistency-validator, not adversary agent)
+basis: D-190 substitute (consistency-validator, not adversary agent)
 isolation: sibling reviews not read
 ---
 
@@ -50,7 +50,7 @@ Two-dimensional audit:
 
 ## Current Binary State
 
-`src/cli/issue/create.rs` lines 78–90 contain the pre-DEC-188 warn-and-proceed behavior:
+`src/cli/issue/create.rs` lines 78–90 contain the pre-D-188 warn-and-proceed behavior:
 
 ```rust
 if !field_pairs.is_empty() {
@@ -112,18 +112,18 @@ All obligations from `delta-analysis.md` with disposition: DISCHARGED, DEFERRED,
 | 3 | `tests/issue_create_jsm.rs` AC-7 rename and body inversion | DEFERRED — F3 |
 | 4 | `tests/issue_create_jsm.rs` AC-4 body update (remove vacuous negatives; add new-error-string negatives) | DEFERRED — F3 |
 | 5 | `tests/issue_create_jsm.rs` AC-6 body update (remove old-warn negative; add three new-error-string negatives) | DEFERRED — F3 |
-| 6 | `Cargo.toml` version bump to 0.7.0-dev.1 (DEC-188 clause (d)) | DEFERRED — F4 |
-| 7 | `CHANGELOG.md` Breaking Changes entry for v0.7.0 citing DEC-188, BC-3.8.012/013 | DEFERRED — F4 |
+| 6 | `Cargo.toml` version bump to 0.7.0-dev.1 (D-188 clause (d)) | DEFERRED — F4 |
+| 7 | `CHANGELOG.md` Breaking Changes entry for v0.7.0 citing D-188, BC-3.8.012/013 | DEFERRED — F4 |
 | 8 | `CLAUDE.md:~248` dispatch-fork gotcha amendment (deliverable (b)) | DEFERRED — F4 |
 | 9 | `docs/adr/0014-jsm-request-type-dispatch.md` amendment at four sites (deliverable (a)) | DEFERRED — F4 |
-| 10 | `bc-3-issue-write.md` BC-3.8.012 body supersession | DISCHARGED — v1.3.107 2026-07-25; `[AMENDED 2026-07-25 SOH-DX-1 DEC-188 #639]` block confirmed |
+| 10 | `bc-3-issue-write.md` BC-3.8.012 body supersession | DISCHARGED — v1.3.107 2026-07-25; `[AMENDED 2026-07-25 SOH-DX-1 D-188 #639]` block confirmed |
 | 11 | `bc-3-issue-write.md` BC-3.8.013 body supersession | DISCHARGED — v1.3.107 2026-07-25 |
 | 12 | BC-3.3.001 amendment note updated to reflect exit-64 | DISCHARGED — BC-INDEX row 274 confirmed |
-| 13 | `BC-INDEX.md` rows BC-3.8.012 and BC-3.8.013 updated | DISCHARGED — BC-INDEX lines 361–362 with `[AMENDED DEC-188 2026-07-25]` confirmed |
+| 13 | `BC-INDEX.md` rows BC-3.8.012 and BC-3.8.013 updated | DISCHARGED — BC-INDEX lines 361–362 with `[AMENDED D-188 2026-07-25]` confirmed |
 | 14 | AC-5 idempotency: ONE error regardless of `--field` count | DISCHARGED — BC-3.8.012 `[CURRENT BEHAVIOR]` block explicit |
 | 15 | BC-3.3.001 amendment note wording drafted | DISCHARGED — BC-INDEX row 274 and bc-3 trace confirm |
 | 16 | E2E blast radius audit: zero `issue create --field` without `--request-type` in e2e_live.rs | DISCHARGED — §5 confirms zero blast radius; BC-3.8.012 Trace deliverable (g) reconfirms |
-| 17 | SEMVER: breaking change rides 0.6→0.7 bump (DEC-188 clause (d)) | DISCHARGED — §7 Q1 resolved; 0.7.0-dev.1 encoded in spec |
+| 17 | SEMVER: breaking change rides 0.6→0.7 bump (D-188 clause (d)) | DISCHARGED — §7 Q1 resolved; 0.7.0-dev.1 encoded in spec |
 | 18 | AC-3 combined-error semantics: ONE combined error when both flags present | DISCHARGED — BC-3.8.012 combined-error path specified; three distinct verbatim strings defined |
 
 ### Item 2 — S-627-1 (PG-365-1 guard regex)
@@ -183,7 +183,7 @@ All obligations from `delta-analysis.md` with disposition: DISCHARGED, DEFERRED,
 
 **Item 12 (range-terminus verification)**: Completed. AC-1..21 enumerated by grep = 21 exact. H-NEW-PREFLIGHT-001..006 confirmed at holdout-scenarios.md lines 2575–2756. H-018 legitimately absent. BC-3.8 range: 001..017 full enumeration, no gaps.
 
-**Item 13 (S-383 staleness)**: Completed. `contract_superseded_by: "SOH-DX-1 (DEC-188) / S-639-1"` correct. Banner names S-639-1 as implementing successor. SOUND.
+**Item 13 (S-383 staleness)**: Completed. `contract_superseded_by: "SOH-DX-1 (D-188) / S-639-1"` correct. Banner names S-639-1 as implementing successor. SOUND.
 
 ## Finding ID Convention
 

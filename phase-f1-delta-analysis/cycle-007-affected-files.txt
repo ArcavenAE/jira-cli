@@ -11,7 +11,7 @@ src/cli/mod.rs | MODIFIED | LOW | #790: reword --oauth doc string (~221-229) to 
 src/cli/auth/login.rs | MODIFIED | LOW | #790 secondary (a): doc-comment-only unless an EC is added to BC-1.2.049 documenting guard-rejection-suppresses-notice as a second suppression reason distinct from --output json gating (optional, non-blocking).
 src/error.rs | DEPENDENT | LOW | exit_code() mapping itself is already correct (NotAuthenticated/InsufficientScope->2, ConfigError->78, UserError->64) — no change; auth.rs call sites change which variant they construct, not this mapping.
 README.md | MODIFIED | LOW | #783: add upgrade/migration note (pre-0.7.0-dev.4 api-token profiles must re-login) + OAuth-vs-api-token lazy-migration asymmetry sentence, scoped addition only (primary claim already fixed). #790: optional --oauth precedence-note mirror if help text changes.
-CHANGELOG.md | MODIFIED | LOW | #786's exit-code reclassification (64->2 on credential absence) is a breaking change for scripts checking exit 64 specifically — needs an entry mirroring the BC-1.2.051/DEC-321 precedent style.
+CHANGELOG.md | MODIFIED | LOW | #786's exit-code reclassification (64->2 on credential absence) is a breaking change for scripts checking exit 64 specifically — needs an entry mirroring the BC-1.2.051/D-321 precedent style.
 
 # Tests (regression-risk zone / to extend)
 tests/auth_profiles.rs | MODIFIED | HIGH | Covers BC-1.1.003/004/005/006/007/008 (switch/status/logout/remove/precedence) — status.rs and list.rs changes touch this file's fixtures directly.

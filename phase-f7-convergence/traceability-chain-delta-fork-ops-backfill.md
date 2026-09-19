@@ -56,7 +56,7 @@ Backfilled releases lacked Windows binaries.
 | **Test — matrix parity guard** | `tests/backfill_matrix_parity.rs::test_backfill_matrix_parity_matches_release_yml` — set-equality of build targets vs `release.yml` |
 | **Test — Windows matrix entry** | `tests/backfill_matrix_parity.rs::test_backfill_build_matrix_contains_windows_target` |
 | **Test — zip in upload artifact** | `tests/backfill_matrix_parity.rs::test_backfill_upload_artifact_includes_zip` |
-| **Test — shell: bash on Build** | `tests/backfill_matrix_parity.rs::test_backfill_build_step_declares_shell_bash` (AC-005; added post DEC-124 local review) |
+| **Test — shell: bash on Build** | `tests/backfill_matrix_parity.rs::test_backfill_build_step_declares_shell_bash` (AC-005; added post D-124 local review) |
 | **Test — shell: bash on Unix Package** | `tests/backfill_matrix_parity.rs::test_backfill_unix_package_step_declares_shell_bash` (AC-005) |
 | **Adversarial verification** | F5 Pass 1: confirmed non-vacuous at basis; CWE-77 env-binding confirmed; F5 Pass 2: WIN-TARGET byte-faithful verified |
 | **Merged commit** | PR #539 → `2756050` (2026-06-18; develop) |

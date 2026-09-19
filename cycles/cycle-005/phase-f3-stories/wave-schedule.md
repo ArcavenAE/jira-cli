@@ -150,7 +150,7 @@ implementer appends its own line after Story A's has already merged.
   real resolver exists; against Story A alone, `.expect(0)` on
   `GET /user/search` passes trivially with no resolver in the picture). The
   live-Jira E2E acceptance (H-NEW-MENTION-009, VP-674-014..017) is a HUMAN
-  REQUIRED gate item per DEC-344 — it must run (via `.github/workflows/e2e.yml`
+  REQUIRED gate item per D-344 — it must run (via `.github/workflows/e2e.yml`
   or a manual `JR_RUN_E2E=1` invocation) and pass before this cycle's feature
   is considered live-Jira-acceptance-complete, though it is NOT a blocker for
   the standard automated wave-gate (which the wiremock-based ACs already

@@ -315,4 +315,4 @@ out-of-scope drift, escalate to orchestrator).
 - No BC body change (matches F2's original determination — docs-alignment only).
 
 Full detail: `STATE.md`, `cycles/cycle-001/burst-log.md` § BUCKET1-DEFECTS-COMPLETE,
-`cycles/cycle-001/decisions-archive.md` DEC-276.
+`cycles/cycle-001/decisions-archive.md` D-276.

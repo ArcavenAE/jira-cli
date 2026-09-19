@@ -14,8 +14,8 @@ related: ["ADR-0016", "ADR-0020"]
 ## Status
 
 **Accepted** (2026-09-03). Gate: F2 spec evolution for the `windows-correctness` bundle
-(Feature Mode cycle-004; issue #759, DEC-334 in `.factory/STATE.md`'s Decisions Log). Locked
-strategy per DEC-334 (human-decided, not re-litigated here): keyring-first with a user-scope
+(Feature Mode cycle-004; issue #759, D-334 in `.factory/STATE.md`'s Decisions Log). Locked
+strategy per D-334 (human-decided, not re-litigated here): keyring-first with a user-scope
 DPAPI-encrypted-file fallback for oversized OAuth secrets, plus an honest-fail backstop.
 Chunking across Credential Manager entries and scope-trimming were evaluated by research
 (`.factory/research/win-oauth-keychain-blob-limit-2026-09-03.md`) and REJECTED — no precedent
@@ -560,7 +560,7 @@ threshold is assumed to belong to another process's in-flight write and is left 
 temp file old enough to be evidence of a genuinely abandoned (crashed) prior attempt is removed.
 **Stated concurrency boundary:** this closes the common case (two racing `jr` invocations, normal
 disk/DPAPI latency) without adding new cross-process locking machinery, which would be new scope
-beyond DEC-334's mandate. The residual risk — a legitimate write that is itself slower than
+beyond D-334's mandate. The residual risk — a legitimate write that is itself slower than
 `STALE_TMP_THRESHOLD` (e.g. a hung DPAPI call or a pathologically slow disk) racing a second
 process's cleanup — is accepted and documented here, not engineered away; it is strictly narrower
 than today's zero-concurrency-awareness state (no cleanup at all) and requires two independently
@@ -804,8 +804,8 @@ for the jr error message").
     visit https://id.atlassian.com/manage-profile/apps — this is ACCOUNT-WIDE and will sign out
     every jr profile authenticated under the same Atlassian account, not just this one."` — the
     revoke step is now presented as optional and scoped-warned, per the correction above, and
-    supersedes both the retired wording and the DEC-334 reasoning it was originally justified
-    under (see the dated DEC-334 annotation below).
+    supersedes both the retired wording and the D-334 reasoning it was originally justified
+    under (see the dated D-334 annotation below).
 
     **Site 3 (refresh) is unaffected by, and already consistent with, this correction.** Per
     BC-1.4.039 Postcondition 1 (Pass-2 adversarial review Finding #3), Site 3's honest-fail
@@ -847,15 +847,15 @@ for the jr error message").
   **unchanged.** This guards the OAuth *app's* client_id/client_secret pair — always short
   strings, never `TooLong`-reachable. F4 must audit (not modify) this to confirm.
 
-**Correction to DEC-334's reasoning (dated annotation, 2026-09-05 — DEC-334's history in
-`.factory/STATE.md`'s Decisions Log is retained, not edited or deleted).** DEC-334 authorized, as
+**Correction to D-334's reasoning (dated annotation, 2026-09-05 — D-334's history in
+`.factory/STATE.md`'s Decisions Log is retained, not edited or deleted).** D-334 authorized, as
 part of the locked #759 fix strategy, an "honest-fail backstop" with "explicit grant-revoke." At
-the time DEC-334 was recorded, the grant-revoke was reasoned to be safe, required cleanup on the
+the time D-334 was recorded, the grant-revoke was reasoned to be safe, required cleanup on the
 "same failed attempt, no other consumer" premise this subsection now corrects (2026-09-05,
-research-validated, above). **DEC-334's underlying decision to ship an honest-fail backstop at
+research-validated, above). **D-334's underlying decision to ship an honest-fail backstop at
 all is UNCHANGED and remains correct** — only its specific premise that the grant-revoke step is
 safe and mandatory is superseded. This annotation does not retroactively rewrite the Decisions
-Log entry itself; it records, at the point in this ADR where DEC-334 was previously cited as sole
+Log entry itself; it records, at the point in this ADR where D-334 was previously cited as sole
 authority for the revoke-as-required wording, that the wording it authorized has since been
 corrected for the reason stated above, and cross-references BC-1.4.039 (also being amended in
 parallel) as the other artifact carrying the same now-corrected premise.

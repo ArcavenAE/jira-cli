@@ -188,7 +188,7 @@ All four F2 documents (spec-delta, architecture-delta, verification-delta, prd-d
 use the identical 2-story split: Story 1 = S-FORK-OPS-BACKFILL-1 (WIN-TARGET +
 DESTRUCTIVE in backfill-release.yml); Story 2 = S-FORK-OPS-GITLEAKS-DOC-1 (GITLEAKS-DOC
 in docs/specs/fork-friendly-release-ops.md + CLAUDE.md). No document implies a different
-grouping. This matches DEC-122 in STATE.md exactly.
+grouping. This matches D-122 in STATE.md exactly.
 
 ### Version Bump (PASS)
 - prd-delta frontmatter: `spec_version_old: "1.3.23"`, `spec_version_new: "1.3.24"`,
@@ -205,8 +205,8 @@ Performance/Platform, total_nfrs: 42). The prd-delta and spec-changelog correctl
 state that WIN-TARGET closes the implementation gap against the existing NFR-P-W1
 without creating a new NFR. NFR count remains 42.
 
-### DEC-122 Consistency (PASS)
-STATE.md DEC-122 names exactly the two stories (S-FORK-OPS-BACKFILL-1 +
+### D-122 Consistency (PASS)
+STATE.md D-122 names exactly the two stories (S-FORK-OPS-BACKFILL-1 +
 S-FORK-OPS-GITLEAKS-DOC-1) with the same grouping rationale (file-conflict
 avoidance) as the F1 delta analysis and the F2 spec-delta. All documents agree.
 
@@ -231,7 +231,7 @@ file (`S-FORK-OPS-SIGN-1-signing-workflow-hardening.md`) and is in STORY-INDEX
 
 ### Story-ID Forward Consistency (PASS)
 The story IDs `S-FORK-OPS-BACKFILL-1` and `S-FORK-OPS-GITLEAKS-DOC-1` are named
-identically across all four F2 documents and match STATE.md's DEC-122 and
+identically across all four F2 documents and match STATE.md's D-122 and
 RESUME PLAN. No document uses a variant form (e.g., `S-FORK-OPS-BACKFILL-2` or
 `S-FORK-OPS-GITLEAKS-1`). No collision with any existing story ID was found by
 scanning all 51 story file names and STORY-INDEX rows.

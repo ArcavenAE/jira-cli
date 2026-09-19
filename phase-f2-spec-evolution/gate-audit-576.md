@@ -28,7 +28,7 @@ Artifacts read: `prd-delta-576.md`, `STATE.md`, `research/issue-576-attachments-
 
 **Verdict: CLEAN**
 
-The ratified scope from DEC-179 (F1 approval) and DEC-180 (adversary-pass-1 scope expansion) comprises:
+The ratified scope from D-179 (F1 approval) and D-180 (adversary-pass-1 scope expansion) comprises:
 
 | Surface | Covering BCs | Status |
 |---------|-------------|--------|
@@ -43,7 +43,7 @@ The ratified scope from DEC-179 (F1 approval) and DEC-180 (adversary-pass-1 scop
 | Upload `--replace-existing` (list-first → gate → delete → upload, R3.12 ≥1-match gate) | BC-3.9.017..018 | ✓ |
 | Upload `--dry-run` (requires `--replace-existing`) | BC-3.9.020 | ✓ |
 | Upload errors (KEY-404/403, 413 too-large, auth) | BC-3.9.009, BC-3.9.012..014 | ✓ |
-| `attachment delete <AID>` single-file (confirmation gate, DEC-174 mechanism) | BC-3.9.008, BC-3.9.015 | ✓ |
+| `attachment delete <AID>` single-file (confirmation gate, D-174 mechanism) | BC-3.9.008, BC-3.9.015 | ✓ |
 | `attachment delete` multi-ID bulk (2+ positional → `--yes` required, R3.8a) | BC-3.9.013, BC-3.9.015 | ✓ |
 | `attachment delete --older-than <DURATION>` (chrono semantics, `--yes` required) | BC-3.9.016, BC-3.9.019 | ✓ |
 | Delete errors | BC-3.9.010 | ✓ |
@@ -76,20 +76,20 @@ The following obligations are recorded in impact-boundary §3.1 and §3.3/§3.4 
 
 | Obligation | Where recorded | BC-level EC? | #577 precedent |
 |-----------|---------------|-------------|----------------|
-| `docs/specs/json-output-shapes.md` — add attachment rows | impact-boundary §3.1 (line 194) | No | EC-3.5.012-5(h) added at DEC-170 gate closure |
+| `docs/specs/json-output-shapes.md` — add attachment rows | impact-boundary §3.1 (line 194) | No | EC-3.5.012-5(h) added at D-170 gate closure |
 | `README.md` command table — add `jr issue attachment` rows | impact-boundary §3.3 (implied by new subcommand tree) | No | EC-3.5.012-5(f) added at pass 35 |
 | `CHANGELOG.md` — `feat(issue): attachment list/download/upload/delete` entry | impact-boundary §3.1 (line 195) | No | Covered by EC-3.5.012-5 family |
 | `CLAUDE.md` — 4 gotcha items + src-tree + AI Agent Notes | impact-boundary §3.4 | No | EC-3.5.012-5(g) added at pass 35 |
 | `tests/e2e_cli_surface_guard.rs` — SURFACE entries for `attachment` subcommands | impact-boundary §3.3 | No | covered in surface guard BC |
 | `.cargo/mutants.toml` — globs for `src/cli/issue/attachments.rs` + `src/api/jira/attachments.rs` | impact-boundary §3.3 | No | — |
 
-For #577 (comment CRUD), these obligations were escalated to BC-level delivery tasks (EC-3.5.012-5(f)+(g)+(h)+(i)) at the DEC-170 F2 gate closure because the consistency audit caught the gap. For #576, the obligations exist only in the impact-boundary artifact.
+For #577 (comment CRUD), these obligations were escalated to BC-level delivery tasks (EC-3.5.012-5(f)+(g)+(h)+(i)) at the D-170 F2 gate closure because the consistency audit caught the gap. For #576, the obligations exist only in the impact-boundary artifact.
 
 **Risk**: F3 story writers reading the prd-delta scope table without consulting impact-boundary §3.1/§3.3/§3.4 may miss these product-side deliverables. The story template typically references the prd-delta scope table as the primary checklist.
 
-**Severity: LOW** — The obligations ARE documented (impact-boundary §3.1/§3.4 is a required F2 input per convention), the adversary passes converged without surfacing this as a finding, and the story writer protocol mandates reading the impact-boundary. However, the #577 precedent shows that BC-promotion was the correct mitigation for exactly this class of risk at the DEC-170 closure.
+**Severity: LOW** — The obligations ARE documented (impact-boundary §3.1/§3.4 is a required F2 input per convention), the adversary passes converged without surfacing this as a finding, and the story writer protocol mandates reading the impact-boundary. However, the #577 precedent shows that BC-promotion was the correct mitigation for exactly this class of risk at the D-170 closure.
 
-**Disposition for gate presentation**: Flag for human review. If the gate approver accepts the impact-boundary-level recording as sufficient, the gap is closed. Alternatively, the state-manager may add a delivery-obligation note to the prd-delta S1/S3/S5 scope rows at gate closure, mirroring the DEC-170 pattern.
+**Disposition for gate presentation**: Flag for human review. If the gate approver accepts the impact-boundary-level recording as sufficient, the gap is closed. Alternatively, the state-manager may add a delivery-obligation note to the prd-delta S1/S3/S5 scope rows at gate closure, mirroring the D-170 pattern.
 
 ---
 
@@ -127,13 +127,13 @@ The security review (`security-review-576.md`) was conducted at spec v1.3.44 (fi
 
 1. **P7-001: CWE-88 AID numeric validation** (v1.3.47, after review). `^[0-9]+$` guard added across all delete surfaces (BC-3.9.008/013/015/016/020). This STRENGTHENS the security posture — it closes AID injection by rejecting non-numeric IDs before any HTTP call. The security reviewer would likely have required this; it was not in scope of their review. This is a net-positive defensive addition.
 
-2. **BC-3.9.015..020 not reviewed** (added in round B, after review). The 6 new BCs cover: delete confirmation gate (BC-3.9.015, DEC-174 `eprint!+read_line`), multi-ID bulk `--yes` requirement (BC-3.9.016, R3.8a), `--replace-existing` ordering (BC-3.9.017, R3.8b gate-before-delete invariant), zero-match path (BC-3.9.018), `--older-than` duration semantics (BC-3.9.019), `--dry-run` (BC-3.9.020). None introduce new attack surfaces. The gate-before-delete ordering invariant (R3.8b) closes a data-loss race condition — a defensive change.
+2. **BC-3.9.015..020 not reviewed** (added in round B, after review). The 6 new BCs cover: delete confirmation gate (BC-3.9.015, D-174 `eprint!+read_line`), multi-ID bulk `--yes` requirement (BC-3.9.016, R3.8a), `--replace-existing` ordering (BC-3.9.017, R3.8b gate-before-delete invariant), zero-match path (BC-3.9.018), `--older-than` duration semantics (BC-3.9.019), `--dry-run` (BC-3.9.020). None introduce new attack surfaces. The gate-before-delete ordering invariant (R3.8b) closes a data-loss race condition — a defensive change.
 
 3. **P40-I2 closed at micro-round**: BC-3.9.008 AID validation CWE-88/CWE-22 dual-mapping note added. This is documentation clarity, not a security behavior change.
 
 **Assessment**: The delta since v1.3.44 is entirely defensive (validation added, confirmation gates added, ordering invariants enforced). No new attack surfaces were introduced. The security reviewer's APPROVE verdict is not undermined by the delta.
 
-**Recommendation**: The F2 gate is not blocked. Before F4 S4 delivery (the delete story, which implements BC-3.9.015..016/019/020 for the first time in production code), a lightweight scoped sign-off on BC-3.9.015..020 for AID injection handling and gate ordering is prudent. This aligns with DEC-168 precedent (security review required for new access-control surfaces).
+**Recommendation**: The F2 gate is not blocked. Before F4 S4 delivery (the delete story, which implements BC-3.9.015..016/019/020 for the first time in production code), a lightweight scoped sign-off on BC-3.9.015..020 for AID injection handling and gate ordering is prudent. This aligns with D-168 precedent (security review required for new access-control surfaces).
 
 ---
 
@@ -184,7 +184,7 @@ The closing-round cosmetics fold (prd-delta-576.md lines 709-728, rows 1-14) rec
 | 7 | P40-I3: dry-run path-b/c holdout coverage observation | DISPOSITION ONLY | No — path-b/c ECs fully specified in BC bodies; coverage observation only |
 | 8 | INFO-1: triple blank lines after EC-2.7.008-6 | FOLD | n/a — applied |
 | 9 | INFO-2: EC-2.7.008-5/EC-2.7.008-2 redundant pair | ACCEPTED-CARRIED | No — cosmetic; "merging risks renumbering downstream; carry to F3 cleanup" |
-| 10 | INFO-3: BC-2.7.012 download-scope multi-sentence comment | ACCEPTED-CARRIED | No — cosmetic; "folding to one sentence would lose DEC-168/read-vs-write divergence context" |
+| 10 | INFO-3: BC-2.7.012 download-scope multi-sentence comment | ACCEPTED-CARRIED | No — cosmetic; "folding to one sentence would lose D-168/read-vs-write divergence context" |
 | 11 | INFO-6: collision-skip exit-0 re-run holdout | ACCEPTED-CARRIED | No — "F3 test-matrix item; not a window cosmetic" |
 | 12 | INFO-8: STATE.md version trailing | N/A | No — "self-heals each burst; not a spec artifact" |
 | 13 | INFO-15: impact-boundary BC-3.9.004 INCONCLUSIVE annotation | ACCEPTED-CARRIED | No — "already correctly annotated per prior pass; no substantive change needed" |
@@ -200,7 +200,7 @@ All 4 accepted-carried items are cosmetic. None affects observable behavior, BC 
 
 | ID | Severity | Verdict | Description |
 |----|----------|---------|-------------|
-| GAP-AUDIT-576-001 | LOW | Gap | Product-side perimeter deliverables (`docs/specs/json-output-shapes.md`, `README.md`, `CHANGELOG.md`, `CLAUDE.md`, e2e surface guard, mutants.toml) recorded only in impact-boundary §3.1/§3.3/§3.4 — not BC-promoted as delivery-task ECs. Contrast: #577's EC-3.5.012-5(f)+(g)+(h)+(i) at DEC-170 gate closure. Risk: story writers may miss product-side deliverables if impact-boundary is not consulted. |
+| GAP-AUDIT-576-001 | LOW | Gap | Product-side perimeter deliverables (`docs/specs/json-output-shapes.md`, `README.md`, `CHANGELOG.md`, `CLAUDE.md`, e2e surface guard, mutants.toml) recorded only in impact-boundary §3.1/§3.3/§3.4 — not BC-promoted as delivery-task ECs. Contrast: #577's EC-3.5.012-5(f)+(g)+(h)+(i) at D-170 gate closure. Risk: story writers may miss product-side deliverables if impact-boundary is not consulted. |
 | GAP-AUDIT-576-002 | LOW | Gap | Security review (v1.3.44, APPROVE) predates CWE-88 AID validation (P7-001, v1.3.47) and BC-3.9.015..020. Delta is entirely defensive (no new attack surfaces). Recommend scoped spot-check before F4 S4 (delete story) delivery. Not blocking the F2 gate. |
 | INFO-AUDIT-576-001 | INFO | Note | STATE.md `current_step` still references "spec v1.3.77"; live spec is v1.3.78 after cosmetics fold. State-manager update needed at gate presentation. |
 
@@ -212,7 +212,7 @@ All 4 accepted-carried items are cosmetic. None affects observable behavior, BC 
 
 For the gate presenter to action before or at the human gate decision:
 
-1. **GAP-AUDIT-576-001**: Decide disposition — either (a) accept impact-boundary §3.1/§3.4 recording as sufficient and document the decision, or (b) add delivery-obligation notes to prd-delta scope rows S1/S3/S5 at gate closure mirroring the DEC-170 EC-3.5.012-5 pattern. Recommended: option (b) for parity with the #577 precedent.
+1. **GAP-AUDIT-576-001**: Decide disposition — either (a) accept impact-boundary §3.1/§3.4 recording as sufficient and document the decision, or (b) add delivery-obligation notes to prd-delta scope rows S1/S3/S5 at gate closure mirroring the D-170 EC-3.5.012-5 pattern. Recommended: option (b) for parity with the #577 precedent.
 
 2. **GAP-AUDIT-576-002**: Record a state-manager note in STATE.md that BC-3.9.015..020 + CWE-88 AID validation require a scoped security spot-check before F4 S4 delivery (delete story). No action required before the F2 gate itself.
 

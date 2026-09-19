@@ -1,11 +1,11 @@
-# [S-cycle3-credential-absence-guard] No-copy detect-and-instruct guard for absent per-profile API-token credentials (DEC-326)
+# [S-cycle3-credential-absence-guard] No-copy detect-and-instruct guard for absent per-profile API-token credentials (D-326)
 
 **Epic:** AUTH-PROFILE-DX-1 — cycle-003 `auth-profile-dx`
 **Mode:** feature
 **Wave:** Wave 2 (feature-followup), depends on `S-cycle3-percred-storage`
 **Risk:** **HIGH** — the single highest-scrutiny story in cycle-003 (F1 delta analysis §3); a genuinely new code path on the auth-header hot path, and the source of a one-time breaking change every pre-cycle-003 API-token profile will hit.
 
-This PR implements the F2-gate-**redesigned** (DEC-326, human decision) no-copy
+This PR implements the F2-gate-**redesigned** (D-326, human decision) no-copy
 detect-and-instruct contract for `load_api_token`'s absent-credential branch in
 `src/api/auth.rs`. The legacy shared flat `email`/`api-token` pair is **never**
 read as a credential, **never** copied into any profile's namespaced slot, and
@@ -21,7 +21,7 @@ A Basic-auth email/token pair carries no environment binding. Silently
 copying it into a freshly `sandbox`/`uat`-tagged profile could hand that
 profile the same credential as whatever environment the legacy pair actually
 belongs to (in practice, usually production) — a cross-environment credential
-leak. DEC-326 rejected copy-then-delete for this reason and mandated a
+leak. D-326 rejected copy-then-delete for this reason and mandated a
 **detect-and-instruct** guard instead: on absent per-profile credentials, `jr`
 exits 64 with an actionable message telling the user to run
 `jr auth login <profile>` once. The legacy pair is left completely untouched,
@@ -163,7 +163,7 @@ feature branch per repo convention — not committed into this PR's diff.)
 dispatch instructions — this section reports that completed review, it does
 not re-invoke the security-reviewer agent).
 
-- DEC-326 no-copy guarantee upheld at the code level: no code path in
+- D-326 no-copy guarantee upheld at the code level: no code path in
   `load_api_token` reads the legacy flat pair's values as a credential,
   writes them into a namespaced slot, or deletes them.
 - No credential leakage: the legacy-pair check is existence-only — the
@@ -239,7 +239,7 @@ above.)
 - [x] Regression baseline: `load_oauth_tokens` suite byte-for-byte unchanged, 4/4 green (AC-011, BC-1.4.025)
 - [x] CHANGELOG breaking-change entry present (AC-012)
 - [x] Doc-fallout note added to `docs/specs/multi-profile-auth.md`
-- [x] Security review: PASS (DEC-326 no-copy upheld, no leakage, backend faults propagate, no message oracle)
+- [x] Security review: PASS (D-326 no-copy upheld, no leakage, backend faults propagate, no message oracle)
 - [x] Demo evidence: all 12 ACs covered
 - [x] Tracked follow-up (Wave 1 MED finding on `auth list`/`auth status` disagreement) explicitly flagged above, not dropped
 - [ ] AI review (pr-reviewer) convergence

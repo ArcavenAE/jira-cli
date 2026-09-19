@@ -249,7 +249,7 @@ Step contents:
 - This pattern was first hit (caught post-merge) on PR #362 (issue #350) — see this entry.
 - Prior partial-fix-propagation pattern (DRIFT-001) is conceptually adjacent — both are propagation discipline.
 
-**Codification target:** Update the validated-feature-lifecycle skill (.claude/skills/validated-feature-lifecycle/SKILL.md if applicable, or the orchestrator's per-story-delivery.md reference) to add the doc-fallout sweep as Phase 8 step 6. Cross-reference DEC-018 (Perplexity-validate Copilot findings) and this entry.
+**Codification target:** Update the validated-feature-lifecycle skill (.claude/skills/validated-feature-lifecycle/SKILL.md if applicable, or the orchestrator's per-story-delivery.md reference) to add the doc-fallout sweep as Phase 8 step 6. Cross-reference D-018 (Perplexity-validate Copilot findings) and this entry.
 
 **Status:** Pattern identified; codification pending. Next PR (#361 or other) should exercise this sweep proactively as a forcing function.
 - Session ended at 2026-05-13T18:28:19Z (awaiting /session-review)
@@ -1533,7 +1533,7 @@ Step contents:
 
 ## 2026-07-16 — Echo-Breaker First Validation (adversary-pass-19)
 
-**Trigger:** Adversary pass 19 ran under the echo-breaker regime adopted in DEC-182 (pass-18 checkpoint). Zero findings in P18-authored text; instead, a latent 18-pass-old MEDIUM surfaced (BC-2.7.002 struct-order example vs shape-table "keys alphabetical" contradiction).
+**Trigger:** Adversary pass 19 ran under the echo-breaker regime adopted in D-182 (pass-18 checkpoint). Zero findings in P18-authored text; instead, a latent 18-pass-old MEDIUM surfaced (BC-2.7.002 struct-order example vs shape-table "keys alphabetical" contradiction).
 
 **Pattern:** When an adversary pass operates under the echo-breaker protocol, attention is structurally redirected away from recently-authored text (which the fix-round echo-breaker list licenses explicitly) and toward older residue that previous passes did not examine. P19 found a MEDIUM that had survived 18 passes undetected — not because 18 passes missed it, but because it wasn't in the adversary's scan perimeter until the echo-breaker redirected focus.
 
@@ -6306,3 +6306,22 @@ _Tagged: [process-gap] [prd-delta] [dispositions] [per-round-checklist] [cv-chan
 - Session ended at 2026-09-19T14:51:28Z (awaiting /session-review)
 - Session ended at 2026-09-19T15:34:10Z (awaiting /session-review)
 - Session ended at 2026-09-19T15:43:17Z (awaiting /session-review)
+- Session ended at 2026-09-19T15:56:32Z (awaiting /session-review)
+- Session ended at 2026-09-19T15:56:36Z (awaiting /session-review)
+- Session ended at 2026-09-19T16:02:57Z (awaiting /session-review)
+- Session ended at 2026-09-19T16:05:27Z (awaiting /session-review)
+- Session ended at 2026-09-19T16:05:39Z (awaiting /session-review)
+- Session ended at 2026-09-19T16:05:47Z (awaiting /session-review)
+- Session ended at 2026-09-19T16:05:49Z (awaiting /session-review)
+- Session ended at 2026-09-19T16:08:23Z (awaiting /session-review)
+- Session ended at 2026-09-19T16:08:26Z (awaiting /session-review)
+- Session ended at 2026-09-19T16:13:34Z (awaiting /session-review)
+- Session ended at 2026-09-19T16:14:46Z (awaiting /session-review)
+- Session ended at 2026-09-19T16:14:50Z (awaiting /session-review)
+- Session ended at 2026-09-19T16:35:56Z (awaiting /session-review)
+- Session ended at 2026-09-19T16:42:10Z (awaiting /session-review)
+- Session ended at 2026-09-19T16:56:40Z (awaiting /session-review)
+- Session ended at 2026-09-19T17:05:08Z (awaiting /session-review)
+- Session ended at 2026-09-19T17:08:35Z (awaiting /session-review)
+- Session ended at 2026-09-19T17:15:51Z (awaiting /session-review)
+- Session ended at 2026-09-19T17:17:17Z (awaiting /session-review)

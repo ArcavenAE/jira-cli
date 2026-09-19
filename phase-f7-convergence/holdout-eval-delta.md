@@ -19,7 +19,7 @@ Binary: target/debug/jr @ develop dd311e13 (built clean, 47s). Info-asymmetry: s
 ## Supplementary (no numbered holdout; surface + parser only)
 - `jr field options` present with M1/M2/M3 (`--issue`/`--type`/`--request-type`), `--value`, `--output`, ADR-0019 help. Mode-selector validation → exit 64.
 - Hint kinds: malformed `:kind` ("foo:boguskind=val") → exit 64 listing valid kinds "option, id, name, asset"; empty kind ("foo:=val") → exit 64. Valid kind proceeds to HTTP.
-- `--field` help text: "resolves against the project's Create screen (createmeta)" — no "requires --request-type" wording (old DEC-188 dead string absent).
+- `--field` help text: "resolves against the project's Create screen (createmeta)" — no "requires --request-type" wording (old D-188 dead string absent).
 
 ## Summary
 - Evaluated: 9 field-dx delta scenarios (all must_pass).

@@ -358,10 +358,10 @@ confirmation `Created component "<name>" (id <id>) in project <key>.`.
   400 surfaced verbatim (not pre-validated client-side — consistent with BC-8.3.007's
   rename-collision precedent; avoids a second round-trip for a case the server already
   validates authoritatively).
-- EC-8.1.005-2 **[CORRECTED 2026-08-15, H2 fix-burst — exit-code class fix, DEC-188]**:
+- EC-8.1.005-2 **[CORRECTED 2026-08-15, H2 fix-burst — exit-code class fix, D-188]**:
   `--assignee-type` supplied with a value outside the four-member enum → exit 2 pre-flight
   (clap `value_parser`/`ValueEnum` rejection, zero HTTP) — a clap enum-validation rejection is
-  ALWAYS exit 2, never the app's own exit 64 (DEC-188's exit-code class), the same way an
+  ALWAYS exit 2, never the app's own exit 64 (D-188's exit-code class), the same way an
   out-of-range `--output` value or any other clap `ValueEnum` flag in this codebase already
   behaves. **Previous version (superseded, retained for audit trail):** "exit 64 pre-flight
   (clap `value_parser` enum validation, zero HTTP)" — the MECHANISM (clap `value_parser`
@@ -410,7 +410,7 @@ numeric-source project-derivation mechanism (new, P5 fix-burst): the SAME confir
 this case. A supplied `--project KEY` that mismatches the derived project exits 64 pre-flight
 (BC-8.1.007 M1) BEFORE `--lead` resolution is attempted, so this resolver never runs against a
 stale or wrong project.
-**[CORRECTED 2026-08-15, H2 fix-burst — exit-code class fix, DEC-188]** `create --lead ""` is
+**[CORRECTED 2026-08-15, H2 fix-burst — exit-code class fix, D-188]** `create --lead ""` is
 rejected by an explicit APPLICATION-LEVEL guard (`JrError::UserError`, exit 64), evaluated
 immediately after clap parsing and before any HTTP: clap's `String`-typed `--lead` value
 parser does NOT reject an empty string on its own (an empty string is a perfectly ordinary,
@@ -813,7 +813,7 @@ identical resolver call and message shape for the NAME path)
 **Source**: `.factory/research/component-delete-and-bulk-wire-2026-08-15.md` §Q1.6
 (RECOMMENDATION, adopted verbatim); ADR-0015 (`--resolution`/`--no-resolution` proactive-guard
 shape, structural precedent); `src/cli/component.rs` (pending F4)
-**Subject**: Component Management — delete safety (DEC-279)
+**Subject**: Component Management — delete safety (D-279)
 **Output channel profile** **[NEW 2026-08-15, M6 fix-burst]**: 4 (Symmetric — stdout for
 `--output json` success data (BC-8.2.008), stderr for the interactive confirm prompt
 (BC-8.2.006), the table-mode confirmation echo, and any error; per CLAUDE.md's five
@@ -859,13 +859,13 @@ established the same "never guess a destructive disposition" precedent in this c
    never available here and the hedge is removed rather than resolved either way.
 2. `--move-to` and `--orphan` are clap-level mutually exclusive (supplying both → clap exit 2,
    before this guard's exit-64 logic is reached).
-3. **[NEW 2026-08-15, P4 fix-burst — propagates BC-8.3.005's explicit DEC-188 mechanism note to
+3. **[NEW 2026-08-15, P4 fix-burst — propagates BC-8.3.005's explicit D-188 mechanism note to
    this, its mechanically-identical sibling, per adversarial spec-delta review pass 4]** The
    NEITHER-flag exit-64 outcome (Postcondition 1) MUST be produced by an explicit
    APPLICATION-LEVEL guard (`JrError::UserError`, exit 64), evaluated immediately after clap
    parsing and before any HTTP — it MUST NOT be implemented as a clap `ArgGroup::required(true)`
    spanning `--move-to`/`--orphan`, because a required-group violation is ALWAYS a clap parse
-   error (exit 2), never the app's own exit-64 convention (DEC-188's exit-code class). This is
+   error (exit 2), never the app's own exit-64 convention (D-188's exit-code class). This is
    mechanically IDENTICAL to BC-8.3.005's `--project`/`--all-projects` split on `rename` — both
    BCs share the same two-guard shape: both-supplied → clap mutual exclusion (`conflicts_with`)
    → exit 2 (Postcondition 2 above); neither-supplied → app-level `JrError::UserError` check →
@@ -926,7 +926,7 @@ established the same "never guess a destructive disposition" precedent in this c
 **Verification Properties**:
 - VP-COMPONENT-003: Neither `--move-to` nor `--orphan` supplied → `DELETE /rest/api/3/
   component/{id}` is never called (`.expect(0)`), regardless of whether the target resolves.
-**Trace**: DEC-279; research §Q1.6; ADR-0015
+**Trace**: D-279; research §Q1.6; ADR-0015
 
 ---
 
@@ -935,7 +935,7 @@ established the same "never guess a destructive disposition" precedent in this c
 **Confidence**: HIGH
 **Source**: research §Q1.1 (CONFIRMED: `moveIssuesTo` reassigns affected issues, does not
 delete them, other components on those issues untouched); `src/cli/component.rs` (pending F4)
-**Subject**: Component Management — delete safety (DEC-279)
+**Subject**: Component Management — delete safety (D-279)
 **Behavior**: `--move-to <NAME|ID>` resolves the TARGET component via §8.4 (scoped to the
 SAME project as the component being deleted — see BC-8.2.003) BEFORE any `DELETE` call.
 **[NEW 2026-08-15, M2 fix-burst — specifies the cross-project-validation mechanism for a
@@ -968,7 +968,7 @@ affected-issue-key array both sourced from BC-8.2.007's snapshot **[CORRECTED
 behavior, NOT the snapshot itself; the snapshot mechanism is owned entirely by BC-8.2.007]**) —
 this BC does not restate the literal to avoid the two copies drifting (see BC-8.2.008's
 Idempotency section for the delete-is-not-idempotent taxonomy this shape's `affectedIssues`
-array exists to support, per DEC-279).
+array exists to support, per D-279).
 **[NEW 2026-08-15, M1 fix-burst — pass 3, closes a numeric-SOURCE project-validation gap found
 by adversarial spec-delta review pass 3; SCOPE BROADENED 2026-08-15, P4 fix-burst — closes a
 silent-orphan gap found by adversarial spec-delta review pass 4]** The `--move-to`-specific
@@ -1092,7 +1092,7 @@ source side)
 **Confidence**: HIGH
 **Source**: F1 delta analysis §6 Edge-Case Catalog Seed item 8 (flagged gap, closed here);
 `src/cli/component.rs` (pending F4)
-**Subject**: Component Management — delete safety (DEC-279)
+**Subject**: Component Management — delete safety (D-279)
 **Behavior**: Because components are project-scoped resources, `--move-to`'s target
 resolution (BC-8.2.002) is performed EXCLUSIVELY against the source component's own project's
 component list — it never searches other projects, even under a NAME collision. If the
@@ -1157,7 +1157,7 @@ mechanism); BC-8.1.008 (the general numeric-bypass convention this BC scopes an 
 
 **Confidence**: HIGH
 **Source**: §8.4 resolver contracts (BC-8.4.002/003); `src/cli/component.rs` (pending F4)
-**Subject**: Component Management — delete safety (DEC-279)
+**Subject**: Component Management — delete safety (D-279)
 **Behavior**: This BC is the delete-specific instantiation of the shared §8.4 resolver
 contracts, applied to the `--move-to` value: zero matches → exit 64 listing valid component
 names in the source project's scope (BC-8.4.002); 2+ matches → exit 64 listing the
@@ -1172,7 +1172,7 @@ resolver failure is reported and the command exits before any mutating HTTP.
 **Confidence**: HIGH
 **Source**: F1 delta analysis §2 (BA-flagged explicit edge case); `src/cli/component.rs`
 (pending F4)
-**Subject**: Component Management — delete safety (DEC-279)
+**Subject**: Component Management — delete safety (D-279)
 **Behavior**: After BOTH the source component and the `--move-to` target independently
 resolve to a component id (BC-8.1.008, BC-8.2.002 — for a numeric `--move-to` value, this
 includes BC-8.2.002's target-project-confirmation `GET`, per the M2 fix-burst mechanism, so
@@ -1211,7 +1211,7 @@ endpoint itself — `jr` must implement the guard client-side), §Q1.5 (CONFIRME
 `acli` prompt-by-default + `--yes` bypass), §Q1.6 recommendation (gate ONLY `--orphan`, not
 `--move-to`, behind confirmation — `--move-to` is not destructive to issue data); `src/cli/
 component.rs` (pending F4)
-**Subject**: Component Management — delete safety (DEC-279)
+**Subject**: Component Management — delete safety (D-279)
 **Description**: `--orphan` is the strictly MORE destructive of the two dispositions — issues
 simply lose the component tag with no replacement, and (per research §Q1.3) the
 delete-cascade's own changelog trail is not contractually guaranteed. `jr` therefore requires
@@ -1302,7 +1302,7 @@ resolve-before-mutate guards of BC-8.2.002..005 are considered sufficient safety
   → `.expect(0)` on the snapshot search AND `DELETE` both — a wiremock fixture asserts zero
   calls to either endpoint (EC-8.2.006-5).
 - VP-COMPONENT-007: Interactive decline → `DELETE` is never called (`.expect(0)`); exit 0.
-**Trace**: research §Q1.4, §Q1.5, §Q1.6; comment-delete `--yes` convention (DEC-168 family);
+**Trace**: research §Q1.4, §Q1.5, §Q1.6; comment-delete `--yes` convention (D-168 family);
 BC-8.2.002 M1 (shared numeric-source project-confirmation mechanism, scope broadened by the P4
 fix-burst to cover `--orphan`)
 
@@ -1314,7 +1314,7 @@ fix-burst to cover `--orphan`)
 **Source**: research §Q1.3 (INCONCLUSIVE changelog guarantee → client-side snapshot
 recommended as the reconstruction record) and §Q1.6 item 3; `src/cli/component.rs` (pending
 F4)
-**Subject**: Component Management — delete safety (DEC-279)
+**Subject**: Component Management — delete safety (D-279)
 **Behavior**: Immediately after the target component resolves (and, for `--move-to`, after
 the move-to target also resolves and BC-8.2.005's self-reference check passes) — i.e. once a
 disposition has been chosen and cleared every pre-flight guard, and BEFORE the `DELETE` call —
@@ -1393,7 +1393,7 @@ unconfirmed).
    composing `affectedIssueCount`/`affectedIssues` — a single-page fetch that silently
    truncates the result set would understate `affectedIssueCount` in BOTH BC-8.2.001's guard
    message and BC-8.2.006's confirmation prompt, and would produce an incomplete
-   `affectedIssues` reconstruction record in BC-8.2.008's JSON output, defeating DEC-279's
+   `affectedIssues` reconstruction record in BC-8.2.008's JSON output, defeating D-279's
    reconstruction guarantee. There is NO cap-with-warning fallback for this snapshot — unlike a
    read-only listing command where truncation is an acceptable UX tradeoff, an undercount here
    directly corrupts a safety-critical count the user relies on to decide whether to proceed
@@ -1477,7 +1477,7 @@ JRACLOUD-95368 family)
 **Source**: research §Q1.6 item 5 (JSON shape recommendation); research §Q1.6 item 4
 (idempotency note, with the "distinguish component-404 from replacement-404" caveat);
 `src/cli/component.rs` (pending F4)
-**Subject**: Component Management — delete safety (DEC-279)
+**Subject**: Component Management — delete safety (D-279)
 **Behavior**: On success, `--output json` returns `{"deleted": "<sourceId>", "movedIssuesTo":
 "<targetId>" (or `null` under `--orphan`), "affectedIssueCount": N, "affectedIssues":
 ["<KEY-1>", ...]}` per BC-8.2.007's snapshot. Table mode echoes a one-line confirmation
@@ -1841,17 +1841,17 @@ that fires before this BC's discovery loop, P7 fix-burst)
 
 **Confidence**: HIGH
 **Source**: Precedent BC-2.1.006 ("no default scope" philosophy); BC-8.2.001 (the
-`--move-to`/`--orphan` split this BC mirrors mechanically); DEC-188 (clap-mechanism exit-code
+`--move-to`/`--orphan` split this BC mirrors mechanically); D-188 (clap-mechanism exit-code
 class — a clap `ArgGroup`/mutual-exclusion rejection is always exit 2, never the app's own
 exit 64); `src/cli/component.rs` (pending F4)
 **Subject**: Component Management — rename (issue #608)
-**Behavior** **[CORRECTED 2026-08-15, H2 fix-burst — resolves a DEC-188 exit-code-class
+**Behavior** **[CORRECTED 2026-08-15, H2 fix-burst — resolves a D-188 exit-code-class
 violation found by adversarial spec-delta review pass 2]**: `--project` and `--all-projects`
 are clap `conflicts_with`-paired (mutually exclusive) — supplying BOTH is rejected by clap
 itself, exit 2, before any application code runs. Clap has no mechanism that turns a
 "neither supplied" state into the app's own exit-64 convention — a bare
 `ArgGroup::required(true)` also fails with clap's own exit 2 on the neither-case, which is
-exactly the DEC-188 anti-pattern this correction closes. Supplying NEITHER `--project` nor
+exactly the D-188 anti-pattern this correction closes. Supplying NEITHER `--project` nor
 `--all-projects` is therefore caught by an explicit APPLICATION-LEVEL guard, evaluated
 immediately after clap parsing and before any HTTP: `jr` checks `project.is_none() &&
 !all_projects` and, if true, returns `JrError::UserError` (exit 64), naming both flags. This
@@ -2199,7 +2199,7 @@ F5 adversarial review findings F5-A-M1/F5-C-001 (2026-08-17, human-adjudicated: 
 - Component CRUD/delete/rename are ALWAYS single-project-scoped operations except
   `component rename --all-projects` (BC-8.3.002), the ONE explicit, opt-in exception.
 - `component delete` NEVER runs without an explicit `--move-to` OR `--orphan` disposition
-  (DEC-279) — no silent default either way.
+  (D-279) — no silent default either way.
 - `--orphan` is the only disposition requiring `--yes`/interactive confirm; `--move-to` does
   not (BC-8.2.006 Invariant 1).
 - Component name resolution NEVER silently spans projects (BC-8.4.004) — this is the

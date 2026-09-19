@@ -27,7 +27,7 @@ BC-3.4.031 EC-2a..2d).
   still collides correctly.
 - **Dead-code check**: `reject_unsupported_hint_kinds` is no longer called from
   `edit.rs` but is still live at `jsm_create.rs:288`. Not dead. Platform
-  `issue create` has no gap either — DEC-188's pre-flight already exits 64 for
+  `issue create` has no gap either — D-188's pre-flight already exits 64 for
   `--field` without `--request-type`.
 - **`get_or_fetch_workspace_id`** (`src/api/assets/workspace.rs`, unmodified) —
   confirmed it writes the disk cache after a cold fetch, which is what makes

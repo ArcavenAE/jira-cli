@@ -28,7 +28,7 @@
 > `conflicts_with`; missing `search.expect(0)` on numeric self-move) were independently
 > reproduced by pass 2. The consolidated verdict takes the stricter of the two.
 >
-> **Human owns the merge decision (DEC-128).** This gate does not authorize merge; CI Gate must
+> **Human owns the merge decision (D-128).** This gate does not authorize merge; CI Gate must
 > be green independently.
 
 ## Independent verification (worktree `.worktrees/S-604-3` @ `d9141e9f`)
@@ -43,7 +43,7 @@
 
 | # | Property | Evidence |
 |---|---|---|
-| 1 | Disposition guard | `component.rs:676-687` application-level `UserError` (exit 64), not `ArgGroup`; both-flags via clap `conflicts_with` → exit 2 (correct DEC-188 split). |
+| 1 | Disposition guard | `component.rs:676-687` application-level `UserError` (exit 64), not `ArgGroup`; both-flags via clap `conflicts_with` → exit 2 (correct D-188 split). |
 | 2 | Name-vs-numeric ordering asymmetry | Name: resolve `:764-820` → guard `:822-824`. Numeric: guard `:829-831` **before** the confirming GET. Deliberate and correct. |
 | 3 | `--move-to` same-project only, numeric confirming GET, self-move | `:903-960` target scoped to source-derived `project_key`; `:895-901` `eq_ignore_ascii_case` with `unwrap_or_default()` → `""` → **fail-closed**. Self-move `:962-973` is **ID**-equality, before snapshot and DELETE. |
 | 4 | Numeric-source project confirmation, BOTH dispositions | `:834-891`. Empty `project` field returns `Err` in both the `--project`-supplied and absent branches — correctly replicates PR #704 Finding-C's fail-closed fix. |
@@ -61,7 +61,7 @@ Full detail, with file:line citations and suggested fixes, is in `pr-review-fres
 
 | ID | Severity | Location | Finding |
 |---|---|---|---|
-| MEDIUM-1 | MEDIUM | `src/cli/component.rs:1004-1024` | `--output json` + interactive decline emits **nothing** (empty stdout, exit 0). The code comment cites `handle_comment_delete`'s DEC-174 rationale, but that handler emits `{"cancelled": true, "deleted": false}` (`src/cli/issue/interactions.rs:181-192`). Contradicts the cited precedent and CLAUDE.md's JSON contract. **Only finding recommended as pre-merge.** |
+| MEDIUM-1 | MEDIUM | `src/cli/component.rs:1004-1024` | `--output json` + interactive decline emits **nothing** (empty stdout, exit 0). The code comment cites `handle_comment_delete`'s D-174 rationale, but that handler emits `{"cancelled": true, "deleted": false}` (`src/cli/issue/interactions.rs:181-192`). Contradicts the cited precedent and CLAUDE.md's JSON contract. **Only finding recommended as pre-merge.** |
 | MEDIUM-2 | MEDIUM | `component.rs:497-556` / `:764-820` / `:903-960` | Resolver block now exists in three near-verbatim copies (plus numeric block `:419-486` / `:834-891`) — the exact shape that produced PR #704's Finding C. `is_404_error` (`:680`) was not applied back to `handle_edit` (`:425-428`). |
 | LOW-1 | LOW | `component.rs:907` | Redundant second `GET /project/{key}/components` for name-source + name-target (source `Vec` consumed by `into_iter()` at `:812`). Neither call count is pinned. |
 | LOW-2 | LOW | `tests/component_commands.rs:3701` | Test name says `zero_http`; body expects one components GET (`.expect(1)`). CLAUDE.md: a name asserting a guarantee its body doesn't check is a defect. |

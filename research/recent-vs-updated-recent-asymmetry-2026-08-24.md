@@ -20,7 +20,7 @@ project/board, no other filter).
   `--updated-recent` as satisfying-filter-source #15 while EC-2.1.023-4 says it does *not*
   independently satisfy the "at least one filter" requirement.
 - **The guard was a deliberate implementer choice during S-579-1 Step-4.5, NOT a human-locked
-  decision.** DEC-298 (the human-locked F1 decision for this bundle) does not mention the
+  decision.** D-298 (the human-locked F1 decision for this bundle) does not mention the
   alone-behavior at all (see §C).
 - **Blast radius is asymmetric:** `--updated-recent` has NEVER shipped in any release (develop
   only; unreleased) → changing it is free. `--recent` has shipped since the earliest releases
@@ -194,10 +194,10 @@ deriving it from a UX/product principle, and framed the alternative (proceeding 
 query) as a bug to be prevented ("silently bypass that guard … an unbounded, cross-project
 query").
 
-**Human-locked — NO.** DEC-298 (STATE.md line 120), the human-adjudicated F1 decision lock for
+**Human-locked — NO.** D-298 (STATE.md line 120), the human-adjudicated F1 decision lock for
 the `list-read-ergonomics` bundle, addresses #579 only as: *"`--resolved-recent` DEFERRED …
 ship `--updated-recent` only,"* and locks *"mirror the existing `--recent`/`--created-before`
-`conflicts_with` asymmetry (not fixed in this bundle)."* **DEC-298 says nothing about the
+`conflicts_with` asymmetry (not fixed in this bundle)."* **D-298 says nothing about the
 no-filters / unbounded-query alone-behavior.** The only human-locked asymmetry is the
 `conflicts_with` one (clap-level, exit 2) — a different mechanism entirely from the
 no-filters guard (app-level, exit 64).
@@ -226,7 +226,7 @@ Source: `CHANGELOG.md`, STATE.md.
 
 | Flag | Release status | Blast radius of changing its alone-behavior |
 |------|----------------|---------------------------------------------|
-| `--updated-recent` | **Unreleased.** Merged to `develop` via PR #725 (`8291b471`) on 2026-08-21 (DEC-303). The latest tagged release is `0.7.0-dev.1` (2026-08-19) — TWO DAYS BEFORE the merge — and the CHANGELOG `[Unreleased]` section is empty (no `--updated-recent` entry). It has NEVER shipped in any release, not even a dev release. | **Effectively zero.** No real user can depend on either behavior. The flag can be changed freely before its first release. |
+| `--updated-recent` | **Unreleased.** Merged to `develop` via PR #725 (`8291b471`) on 2026-08-21 (D-303). The latest tagged release is `0.7.0-dev.1` (2026-08-19) — TWO DAYS BEFORE the merge — and the CHANGELOG `[Unreleased]` section is empty (no `--updated-recent` entry). It has NEVER shipped in any release, not even a dev release. | **Effectively zero.** No real user can depend on either behavior. The flag can be changed freely before its first release. |
 | `--recent` | **Long-shipped, stable.** Not present anywhere in `CHANGELOG.md` (earliest section `0.5.0-dev.10`, 2026-05-26) → predates the changelog; it is a Pass-3 BC (BC-2.1.008), part of the original v1 design (`docs/superpowers/specs/2026-03-21-jr-jira-cli-design.md`). Shipped in every release. | **High.** `jr issue list --recent 7d` (no project) is a valid exit-0 invocation today. Making it exit 64 would break existing scripts/aliases/muscle-memory — a breaking change requiring a CHANGELOG "Breaking Changes" entry and migration note. |
 
 Implication: options that change `--updated-recent` are cheap; options that change `--recent`
@@ -362,7 +362,7 @@ gap (`BC-2.1.023-BOARD-ID-CLARIFICATION-NEEDED`) can be closed alongside.
 ## Inconclusive / flagged items
 
 - **Whether the human ever intended `--updated-recent`-alone to differ from `--recent`-alone:**
-  INCONCLUSIVE. DEC-298 is silent on it; the guard's provenance is an implementer decision
+  INCONCLUSIVE. D-298 is silent on it; the guard's provenance is an implementer decision
   surfaced/refined during S-579-1 Step-4.5. No artifact was found in which the human ratified
   (or rejected) the divergence. This is exactly why F5 routed it to a human decision.
 - **Exact server-side page cap for `/rest/api/3/search/jql`:** Atlassian publishes NO stable
@@ -389,7 +389,7 @@ gap (`BC-2.1.023-BOARD-ID-CLARIFICATION-NEEDED`) can be closed alongside.
 | WebFetch | 0 | — |
 | WebSearch | 0 | — |
 | Read (codebase) | 6 | list.rs guards/build_filter_clauses; bc-2-issue-read.md BCs; S-579-1 story; STATE.md; CHANGELOG.md |
-| Grep/Glob (codebase) | 6 | locate guards, DEC-298, BC IDs, CHANGELOG version list, filter_parts flow |
+| Grep/Glob (codebase) | 6 | locate guards, D-298, BC IDs, CHANGELOG version list, filter_parts flow |
 | Training data | 1 area | General Rust/clap control-flow reading — flagged; all behavioral claims grounded in quoted code |
 
 **Total MCP tool calls:** 1 (`perplexity_research`, high-depth)

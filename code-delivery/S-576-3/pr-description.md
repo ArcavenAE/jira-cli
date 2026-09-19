@@ -426,7 +426,7 @@ residuals:
 - [x] No critical/high security findings unresolved (CWE-93 addressed via test; security-reviewer agent pending Step 4)
 - [x] Rollback procedure validated (git revert)
 - [x] No feature flag required (additive command)
-- [ ] Human review completed (DEC-128: human squash-merges; MERGE_READY returned after all gates pass)
+- [ ] Human review completed (D-128: human squash-merges; MERGE_READY returned after all gates pass)
 - [x] No production-impacting monitoring changes
 - [x] Adversarial convergence STRICT ×7 passes, 3-clean window
 - [x] Demo evidence: 7 recordings covering all 18 ACs

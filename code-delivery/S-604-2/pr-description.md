@@ -2,7 +2,7 @@
 
 **Epic:** component-mgmt — Jira Component Management CLI
 **Mode:** feature
-**Convergence:** CONVERGED after 11 adversarial passes (DEC-245 strict bar)
+**Convergence:** CONVERGED after 11 adversarial passes (D-245 strict bar)
 
 ![Tests](https://img.shields.io/badge/tests-65%2F65_component-brightgreen)
 ![Coverage](https://img.shields.io/badge/coverage-100%25_new_paths-brightgreen)
@@ -158,7 +158,7 @@ graph LR
 | `test_bc_8_1_005_component_create_all_optional_fields_present()` | AC-002 / VP-COMPONENT-022 | PASS |
 | `test_bc_8_1_005_component_create_omits_absent_optional_keys()` | AC-003 / BC-8.1.005 | PASS |
 | `test_bc_8_1_005_component_create_success_output_both_modes()` | AC-004 / BC-8.1.005 | PASS |
-| `test_bc_8_1_005_component_create_bad_assignee_type_exits_2()` | AC-005 / DEC-188 | PASS |
+| `test_bc_8_1_005_component_create_bad_assignee_type_exits_2()` | AC-005 / D-188 | PASS |
 | `test_bc_8_1_006_component_create_empty_lead_exits_64_zero_post()` | AC-006 / BC-8.1.006 | PASS |
 | `test_bc_8_1_006_component_create_lead_ambiguous_and_no_match_zero_post()` | AC-007 / VP-COMPONENT-002 | PASS |
 | `test_bc_8_1_007_component_edit_put_contains_only_supplied_fields()` | AC-008 / BC-8.1.007 | PASS |
@@ -198,7 +198,7 @@ graph LR
 | 6–8 | 0 | 0 | 0 | CLEAN (test label fix) |
 | 9–11 | 0 | 0 | 0 | CLEAN — CONVERGED |
 
-**Convergence:** CONVERGED 3/3 CLEAN under DEC-245 strict bar after 11 passes @ 4f48def5
+**Convergence:** CONVERGED 3/3 CLEAN under D-245 strict bar after 11 passes @ 4f48def5
 
 <details>
 <summary><strong>High-Severity Findings &amp; Resolutions</strong></summary>
@@ -313,7 +313,7 @@ git push origin develop
 | BC-8.1.005 | AC-002 | `test_bc_8_1_005_component_create_all_optional_fields_present` | VP-COMPONENT-022 | PASS |
 | BC-8.1.005 | AC-003 | `test_bc_8_1_005_component_create_omits_absent_optional_keys` | — | PASS |
 | BC-8.1.005 | AC-004 | `test_bc_8_1_005_component_create_success_output_both_modes` | — | PASS |
-| BC-8.1.005 / DEC-188 | AC-005 | `test_bc_8_1_005_component_create_bad_assignee_type_exits_2` | — | PASS |
+| BC-8.1.005 / D-188 | AC-005 | `test_bc_8_1_005_component_create_bad_assignee_type_exits_2` | — | PASS |
 | BC-8.1.006 | AC-006 | `test_bc_8_1_006_component_create_empty_lead_exits_64_zero_post` | — | PASS |
 | BC-8.1.006 | AC-007 | `test_bc_8_1_006_component_create_lead_ambiguous_and_no_match_zero_post` | VP-COMPONENT-002 | PASS |
 | BC-8.1.007 | AC-008 | `test_bc_8_1_007_component_edit_put_contains_only_supplied_fields` | — | PASS |
@@ -378,7 +378,7 @@ pipeline-stages:
   convergence: achieved
 convergence-metrics:
   adversarial-passes: 11
-  final-state: CONVERGED 3/3 CLEAN (DEC-245 strict bar)
+  final-state: CONVERGED 3/3 CLEAN (D-245 strict bar)
   converged-sha: 4f48def5
 models-used:
   builder: claude-sonnet-4-6

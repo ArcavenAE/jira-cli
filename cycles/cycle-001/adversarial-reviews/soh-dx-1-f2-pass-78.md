@@ -22,7 +22,7 @@ bundle: SOH-DX-1
 aperture: verification-adequacy
 spec_version: v1.3.163
 date: 2026-07-29
-basis: DEC-190 substitute (consistency-validator, not adversary agent)
+basis: D-190 substitute (consistency-validator, not adversary agent)
 isolation: sibling reviews not read
 ---
 
@@ -54,7 +54,7 @@ supporting the CLEAN verdict.
 - `/Users/zious/Documents/GITHUB/jira-cli/.factory/specs/prd/holdout-scenarios.md` — full
   holdout inventory (grepped for SOH-DX-1 / BC-3.8.012 / BC-3.8.013 / on-behalf-of)
 - `/Users/zious/Documents/GITHUB/jira-cli/.factory/specs/prd/nfr-catalog.md` — grepped for
-  SOH-DX-1, DEC-188, breaking-change, SEMVER NFR entries
+  SOH-DX-1, D-188, breaking-change, SEMVER NFR entries
 - `/Users/zious/Documents/GITHUB/jira-cli/.factory/specs/prd/error-taxonomy.md` — Section 6
   Issue Commands subsection (F52-001 registration, v1.3.150)
 - `/Users/zious/Documents/GITHUB/jira-cli/.factory/phase-f1-delta/SOH-DX-1/delta-analysis.md`
@@ -231,7 +231,7 @@ mandated.
 ### Item 6 — Holdout-Scenario Coverage
 
 Grepped `holdout-scenarios.md` for: `SOH-DX-1`, `BC-3.8.012`, `BC-3.8.013`,
-`on-behalf-of`, `pre-flight.*exit.64`, `DEC-188`. **Result: 0 matching holdout scenarios.**
+`on-behalf-of`, `pre-flight.*exit.64`, `D-188`. **Result: 0 matching holdout scenarios.**
 
 The spec explicitly declares: "Holdout-scenario and VP coverage are a deliberate non-goal
 for S-639-1. The 21 ACs (AC-1..21) fully cover every observable exit path for both
@@ -264,7 +264,7 @@ VERDICT: CLEAN. 0 holdout scenarios; deliberate non-goal with adequate justifica
 The `docs/specs/cargo-mutants-policy.md` §Scope confirms: "`src/cli/issue/create.rs` —
 `handle_create` (platform-path `issue create` logic) and `parse_field_kv`".
 
-**New guard code location:** The DEC-188 guards are in `handle_create`. At F4, they will
+**New guard code location:** The D-188 guards are in `handle_create`. At F4, they will
 be new/changed lines in the PR diff. The CI invocation uses `cargo mutants --in-diff
 $DIFF_FILE` which narrows mutations to CHANGED lines only. The new guard lines ARE in the
 diff, so mutations of:
@@ -274,8 +274,8 @@ diff, so mutations of:
 - `return Err(JrError::UserError(...))` → killed by any AC asserting exit 64
 
 **Kill rate:** For simple boolean guards that are fully AC-covered, expect near-100% kill
-rate. The existing `create.rs` mutations have an established test suite (the pre-DEC-188
-AC suite); post-DEC-188, the inverted tests provide strong guard coverage.
+rate. The existing `create.rs` mutations have an established test suite (the pre-D-188
+AC suite); post-D-188, the inverted tests provide strong guard coverage.
 
 VERDICT: CLEAN. Guard mutations will be caught by the AC suite.
 
@@ -283,7 +283,7 @@ VERDICT: CLEAN. Guard mutations will be caught by the AC suite.
 
 ### Item 8 — NFR / Error-Taxonomy Registration
 
-**Error taxonomy:** All three DEC-188 pre-flight conditions are registered in
+**Error taxonomy:** All three D-188 pre-flight conditions are registered in
 `error-taxonomy.md` Section 6 "Issue Commands" subsection (added v1.3.150, F52-001,
 2026-07-27):
 
@@ -298,7 +298,7 @@ Error strings are verbatim copies from the BC fenced blocks. This registration i
 (v1.3.150, dated 2026-07-27).
 
 **NFR catalog:** No NFR entries are required for this behavioral flag-validation change.
-SEMVER implications (0.7.0-dev.1 bump) are governed by DEC-188 (release policy), not an
+SEMVER implications (0.7.0-dev.1 bump) are governed by D-188 (release policy), not an
 NFR catalog entry. The breaking-change CHANGELOG entry is a delivery obligation in the BC
 Trace, not an NFR concern.
 

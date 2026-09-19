@@ -60,7 +60,7 @@ traces_to: ".factory/phase-f2-spec-evolution/prd-delta-576.md"
 | **Artifacts Scanned** | 14 (all surface-set items specified in task brief) |
 | **Spec Version** | v1.3.44 (post-security-fix, post-r1/r2/r3/r4-fix state) |
 | **Feature** | SOH-ATTACHMENTS-1 (issues #576 + #585) |
-| **Gate** | DEC-179 F2 spec bundle — round 5 after r4 GAPS-FOUND corrections |
+| **Gate** | D-179 F2 spec bundle — round 5 after r4 GAPS-FOUND corrections |
 
 **Review methodology**: Independent fresh-context read of all 14 surface-set artifacts BEFORE
 consulting `consistency-report-576-r1.md` through `consistency-report-576-r4.md`. Independent
@@ -209,7 +209,7 @@ applicable to this review pass.
 
 | Finding | Severity | Closure Status | Verification Method |
 |---------|----------|---------------|---------------------|
-| NEW-001 — BC-3.9.001 hard-coded "10 MB" contradicts INCONCLUSIVE | LOW | **RESOLVED** | BC-3.9.001 body: "instance-configured limit (INCONCLUSIVE — P2-3c research finding; limit not documented in live Jira API; defer to implementer live-capture on S3)". BC-3.9.012 EC-3.9.012-3: "message does NOT state a numeric size limit". ADR-0017 §Context: "instance-configured and site/plan-dependent; the research verdict is inconclusive across sources — do not hard-code a figure; DEC-179 ruling 4". |
+| NEW-001 — BC-3.9.001 hard-coded "10 MB" contradicts INCONCLUSIVE | LOW | **RESOLVED** | BC-3.9.001 body: "instance-configured limit (INCONCLUSIVE — P2-3c research finding; limit not documented in live Jira API; defer to implementer live-capture on S3)". BC-3.9.012 EC-3.9.012-3: "message does NOT state a numeric size limit". ADR-0017 §Context: "instance-configured and site/plan-dependent; the research verdict is inconclusive across sources — do not hard-code a figure; D-179 ruling 4". |
 | NEW-002 — ADR-0017 §Context wrong endpoint URL | LOW | **RESOLVED** | ADR-0017 §Context cites "`GET /rest/api/3/attachment/content/{id}` content endpoint" — correct. |
 | NEW-003 — BC-INDEX Section 3.9 rows cite `interactions.rs` | LOW | **RESOLVED** | All 14 Section 3.9 BC-INDEX rows cite `src/cli/issue/attachments.rs` or `src/api/jsm/attachments.rs`. |
 | NEW-004 — CANONICAL-COUNTS.md BC-X.4.009 note stale numbers | INFO | **RESOLVED** | Line 65: `total_bcs: 150`; line 65 note: "651 sum", "NOT add +1 beyond the 650". Retro-annotation present (line 66). |
@@ -228,7 +228,7 @@ applicable to this review pass.
 |---------|----------|---------------|---------------------|
 | NEW-R4-001 — bc-2-issue-read.md footer carries pre-F2 counts "52/94" | INFO | **RESOLVED** | bc-2-issue-read.md footer line 857: `## Total BCs in this file: 64 individually-bodied (cumulative 106 incl. range-collapsed; see BC-INDEX.md)`. Counts correct. |
 | NEW-R4-002 — CANONICAL-COUNTS.md §ADRs count says 16; adr-index has 17 rows | INFO | **EXPECTED-OPEN** (documented deferral) | CANONICAL-COUNTS.md §ADRs still reads "**Canonical ADR count: 16**". Per prd-delta-576.md ADR Reference note: "The convention for counting factory-side ADRs in CANONICAL-COUNTS.md is to be settled by the state-manager at burst close — CANONICAL-COUNTS ADR count is not bumped here pending that ruling." This is a formal deferral, not a missed gap. ARCH-INDEX.md and adr-index.md both correctly reflect ADR-0017 (Accepted). |
-| NEW-R4-003 — bc-3-issue-write.md footer history note stops at 2026-07-09 | INFO | **RESOLVED** | bc-3-issue-write.md footer line 3573: history note begins with "Last updated 2026-07-15 (SOH-ATTACHMENTS-1 F2, DEC-179, issues #576+#585): +14 BCs (BC-3.9.001..BC-3.9.014)…" and correctly prepends the 2026-07-15 entry. Prior entry correctly relabeled "Previous update 2026-07-09". |
+| NEW-R4-003 — bc-3-issue-write.md footer history note stops at 2026-07-09 | INFO | **RESOLVED** | bc-3-issue-write.md footer line 3573: history note begins with "Last updated 2026-07-15 (SOH-ATTACHMENTS-1 F2, D-179, issues #576+#585): +14 BCs (BC-3.9.001..BC-3.9.014)…" and correctly prepends the 2026-07-15 entry. Prior entry correctly relabeled "Previous update 2026-07-09". |
 
 **All 17 prior findings fully accounted for. 16 RESOLVED. 1 EXPECTED-OPEN (NEW-R4-002, documented
 deferral to state-manager at burst close). Zero residual.**
@@ -266,15 +266,15 @@ All 7 security findings independently verified in BC bodies:
 - **SEC-576-006**: BC-X.8.010 — stale-ID self-healing clause present (delete + single-retry on 404/403); "retry is a single-attempt guard — it does not loop" explicit. ✓
 - **SEC-576-007**: BC-2.7.011 — step 5.5 trailing-whitespace/dot strip present. ✓
 
-### DEC-179 Design Ruling Verification
+### D-179 Design Ruling Verification
 
-All DEC-179 rulings correctly reflected in BC bodies:
+All D-179 rulings correctly reflected in BC bodies:
 
 - Platform-POST default (BC-3.9.001/002): platform POST = internal on JSM by default (P2-4a) ✓
 - `--internal` non-JSM = OQ-9 silent no-op (BC-3.9.004 EC-3.9.004-1) ✓
 - `--public` non-JSM = exit 64 (BC-3.9.005) ✓
-- DEC-174 confirmation gate: `eprint!` (NOT `eprintln!`) + `read_line`, NOT `dialoguer::Confirm` (BC-3.9.014 line 3545) ✓
-- DEC-168 delete 404 = exit 64 + surface body (BC-3.9.008/013) ✓
+- D-174 confirmation gate: `eprint!` (NOT `eprintln!`) + `read_line`, NOT `dialoguer::Confirm` (BC-3.9.014 line 3545) ✓
+- D-168 delete 404 = exit 64 + surface body (BC-3.9.008/013) ✓
 - JSDCLOUD-10841 platform endpoint for downloads (BC-2.7.007, BC-3.9.007) ✓
 - JRACLOUD-97046 no `?redirect=false` (BC-2.7.007) ✓
 - P2-3c INCONCLUSIVE deferred to S5 (BC-3.9.007/011) ✓
@@ -335,10 +335,10 @@ None.
 **Finding**: The body-note enumeration in BC-INDEX.md Coverage Statistics ends at
 "+1 BC-X.1.011 added 2026-07-09 via S-SOH-589 jr api --method case-insensitivity)."
 It does not include:
-- "+11 BC-3.5.002..BC-3.5.012 added 2026-07-09 via SOH-COMMENT-CRUD-1 F2 DEC-168 comment
+- "+11 BC-3.5.002..BC-3.5.012 added 2026-07-09 via SOH-COMMENT-CRUD-1 F2 D-168 comment
   delete/edit/view issue #577"
 - "+27 BC-2.7.001..012 + BC-3.9.001..014 + BC-X.8.010 added 2026-07-15 via
-  SOH-ATTACHMENTS-1 F2 DEC-179 issues #576 #585"
+  SOH-ATTACHMENTS-1 F2 D-179 issues #576 #585"
 
 The stated grand total (651) in the note IS correct. The BC-INDEX frontmatter
 (`total_bcs: 651`) IS correct and does include both additions at the end of its comment
@@ -357,9 +357,9 @@ are correct on all 8 scripted surfaces. Risk is limited to a future reviewer usi
 note enumeration as an audit trail without checking the frontmatter or CANONICAL-COUNTS.
 
 **Action**: State-manager appends to the body-note enumeration at burst close:
-`; +11 BC-3.5.002..BC-3.5.012 added 2026-07-09 via SOH-COMMENT-CRUD-1 F2 DEC-168 comment
+`; +11 BC-3.5.002..BC-3.5.012 added 2026-07-09 via SOH-COMMENT-CRUD-1 F2 D-168 comment
 delete/edit/view issue #577; +27 BC-2.7.001..012 + BC-3.9.001..014 + BC-X.8.010 added
-2026-07-15 via SOH-ATTACHMENTS-1 F2 DEC-179 issues #576 #585).`
+2026-07-15 via SOH-ATTACHMENTS-1 F2 D-179 issues #576 #585).`
 
 **Priority**: Burst-close (same class as NEW-R4-003; cosmetic; no blocking impact).
 
@@ -416,7 +416,7 @@ state-manager at burst close.
 
 **Security fixes (SEC-576-001..007) — independently verified all 7 present and correct** ✓
 
-**DEC-179 rulings — all present in BC bodies** ✓
+**D-179 rulings — all present in BC bodies** ✓
 
 **BC counts on all 8 scripted surfaces — 651 consistent** ✓
 
@@ -456,7 +456,7 @@ were used only to verify closure of all known findings.
 
 **Checks performed:**
 
-**(a) Design/research contradictions**: All DEC-179 rulings cross-referenced against BC text.
+**(a) Design/research contradictions**: All D-179 rulings cross-referenced against BC text.
 Research INCONCLUSIVE verdicts verified not hard-coded in BC bodies or ADR-0017.
 Impact-boundary PHASE-DOC-RETRO-ANNOTATIONs verified present in §R2.2 and §R2.3. No
 contradictions found.

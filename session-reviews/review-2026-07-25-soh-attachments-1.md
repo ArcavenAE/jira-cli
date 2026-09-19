@@ -1,7 +1,7 @@
 ---
 document_type: session-review
 date: 2026-07-25
-run_id: SOH-ATTACHMENTS-1 — develop @ db207b81 — release v0.6.0-dev.11 authorized (DEC-186)
+run_id: SOH-ATTACHMENTS-1 — develop @ db207b81 — release v0.6.0-dev.11 authorized (D-186)
 path: 4
 path_name: feature
 product: jr (jira-cli)
@@ -18,7 +18,7 @@ proposals_outcome: pending — see improvement-proposals-soh-attachments-1.md
 **Cycle:** SOH-ATTACHMENTS-1 (issues #576 + #585)
 **Mode:** Feature Mode (F1–F7), brownfield, Rust
 **Dates:** 2026-07-23 (wave gate) → 2026-07-25 (F7 approved); full feature arc started 2026-07-15 (F1 gate)
-**Release:** v0.6.0-dev.11 — AUTHORIZED (DEC-186)
+**Release:** v0.6.0-dev.11 — AUTHORIZED (D-186)
 **Reviewer model:** claude-sonnet-4-6 (session-reviewer agent, adversary tier)
 **Prior review:** review-2026-07-15-issue-577.md (SOH-COMMENT-CRUD-1)
 
@@ -39,10 +39,10 @@ F5 ran 14 rounds under STRICT criterion, producing 8 fix PRs. The dominant quali
 | F5 fix PRs | 8 (#644–#652 excl. #645) | 1 (#594 #577) | ELEVATED |
 | Fix-authored HIGH findings | 1 (r3: BC-2.7.012 over-reach) | 0 | NEW PATTERN |
 | Secondary review tier | PASS (0C/0H/0M; 1 cross-model unique) | not run (#577) | NEW |
-| Process-gap Drift Items added | 3 (PG-576-1/2/3) + 2 confirmed (STATE-MANAGER-MONOLITHIC-WRITE-STALL 5th dp; hook-vs-DEC-173 3rd dp) | 13 (PG-F3/F4 family) | LOWER |
+| Process-gap Drift Items added | 3 (PG-576-1/2/3) + 2 confirmed (STATE-MANAGER-MONOLITHIC-WRITE-STALL 5th dp; hook-vs-D-173 3rd dp) | 13 (PG-F3/F4 family) | LOWER |
 | PRs merged (delivery + F5) | 15 | 12 | COMPARABLE |
 | Gate failures | 0 | 0 | PASS |
-| Human interventions | 3 decisions (DEC-184..186) | 9 decisions (#577) | LOWER |
+| Human interventions | 3 decisions (D-184..186) | 9 decisions (#577) | LOWER |
 | Holdout satisfaction | mean 1.00 (12/12 MUST-PASS) | 1.00 (5/5 MUST-PASS) | PASS |
 | Mutation kill rate (per-story CI) | 94–100% (all above 90% floor) | 100% adjudicated | PASS |
 | F6 fresh mutation confirmation | 27/27 viable (100%) | adjudicated (not fresh run) | PASS |
@@ -57,7 +57,7 @@ F5 ran 14 rounds under STRICT criterion, producing 8 fix PRs. The dominant quali
 
 No per-cycle cost tracking was initialized. Key cost drivers for the wave-gate → F7 arc:
 
-- F5 at 14 rounds (vs. 5 for #577) was the dominant cost driver. Eight fix PRs each required a human review + merge cycle (DEC-173 standing rule). The r3 HIGH caused by r1 over-reach added one full fix PR + one adversary round that would not have been needed with a per-caller BC audit at r1 fix time.
+- F5 at 14 rounds (vs. 5 for #577) was the dominant cost driver. Eight fix PRs each required a human review + merge cycle (D-173 standing rule). The r3 HIGH caused by r1 over-reach added one full fix PR + one adversary round that would not have been needed with a per-caller BC audit at r1 fix time.
 - Rounds 4–9 were predominantly doc-fallout of the loop's own fix commits (spec version range drift, trace inconsistencies). These rounds add cost with diminishing quality return. Early EC-codification of accepted behaviors is the lever that compresses this zone.
 - F6 added two environmental load-abort attempts on the mutation confirmation run. The second fresh run on 2026-07-25 completed successfully (27/27 viable). No cost impact, but the environmental caveat adds re-run overhead.
 - Step-7 secondary review added one adversary round cost; this was net-positive (cross-model unique HIGH-value finding found).
@@ -73,12 +73,12 @@ No per-cycle cost tracking was initialized. Key cost drivers for the wave-gate �
 | Phase | Duration | Notes |
 |-------|----------|-------|
 | Wave Gate (G1–G6) | ~4 hours (2026-07-23) | 6 gates; 3 residuals carried; PG-576-3 surfaced |
-| F5 Scoped Adversarial | ~1 day (2026-07-24) | 14 rounds; 8 fix PRs; human merge on each (DEC-173) |
+| F5 Scoped Adversarial | ~1 day (2026-07-24) | 14 rounds; 8 fix PRs; human merge on each (D-173) |
 | F5 Step-7 Secondary Review | ~2 hours (2026-07-24) | fresh context; 1 cross-model unique finding |
 | F6 Targeted Hardening | ~4 hours (2026-07-25 early) | D1–D4; 1 load-abort retry on D3; no source changes |
-| F7 Delta Convergence | ~2 hours (2026-07-25) | 5 dims; 2 doc drifts found; 1 backfilled (DEC-186) |
+| F7 Delta Convergence | ~2 hours (2026-07-25) | 5 dims; 2 doc drifts found; 1 backfilled (D-186) |
 
-**Bottleneck:** The human-merge-all-PRs standing rule (DEC-173) is the primary wall-clock constraint on F5. Eight PRs × human-review-and-merge latency is the irreducible minimum. For bundles with STRICT F5, the DEC-173 pattern should be expected to span a full calendar day for 6+ fix PRs.
+**Bottleneck:** The human-merge-all-PRs standing rule (D-173) is the primary wall-clock constraint on F5. Eight PRs × human-review-and-merge latency is the irreducible minimum. For bundles with STRICT F5, the D-173 pattern should be expected to span a full calendar day for 6+ fix PRs.
 
 **Positive:** F6 and F7 ran same-day once F5 converged, demonstrating that the verification and convergence phases are well-scoped for their task.
 
@@ -123,7 +123,7 @@ Novel-finding trajectory:
 
 **STATE-MANAGER-MONOLITHIC-WRITE-STALL (5th occurrence):** The timestamp-advancement hook forces monolithic STATE.md writes, causing repeated API stalls. The Bash-python workaround is now a de facto standard in this project. A 5th data point across two consecutive bundles (4–5 in SOH-COMMENT-CRUD-1, 1 additional here) escalates this to the highest-priority engine friction item.
 
-**Hook vs. DEC-173 conflict (3rd occurrence):** `validate-pr-review-posted` hook demanded AUTHORIZE\_MERGE on PRs #648 and #651, while DEC-173 specifies human-merges-all. The hook cannot distinguish DEC-173 self-authored-PRs from a review bypass. Third occurrence; still unresolved engine-side.
+**Hook vs. D-173 conflict (3rd occurrence):** `validate-pr-review-posted` hook demanded AUTHORIZE\_MERGE on PRs #648 and #651, while D-173 specifies human-merges-all. The hook cannot distinguish D-173 self-authored-PRs from a review bypass. Third occurrence; still unresolved engine-side.
 
 **F6 verifier (environmental load):** F6 ran under heavy concurrent load (avg ~5, 14+ active agents). Two wiremock/subprocess tests exceeded subprocess timeouts. Verifier correctly identified this as environmental (not code faults) and re-ran successfully on the second attempt. Clean STOP-and-report behavior; no forced conclusions.
 
@@ -152,9 +152,9 @@ G3 wave adversary uniquely caught the integration-level issues (dry-run channel 
 
 ## 6. Wall Integrity Analysis
 
-**DEC-128 (CRITICAL) — Sub-agents must not self-authorize merges.** All 8 F5 fix PRs merged by human (DEC-173 standing rule). No sub-agent attempted self-merge. DEC-128 wall intact.
+**D-128 (CRITICAL) — Sub-agents must not self-authorize merges.** All 8 F5 fix PRs merged by human (D-173 standing rule). No sub-agent attempted self-merge. D-128 wall intact.
 
-**DEC-173 (standing) — Human merges all PRs.** Enforced throughout F5 and delivery phases. 15 PRs total, all human-merged. The human-merge gate is the primary wall preventing a sub-agent fix-PR loop from running uncontrolled.
+**D-173 (standing) — Human merges all PRs.** Enforced throughout F5 and delivery phases. 15 PRs total, all human-merged. The human-merge gate is the primary wall preventing a sub-agent fix-PR loop from running uncontrolled.
 
 **No permission-laundering attempts observed.** Consistent with the positive control pattern from SOH-COMMENT-CRUD-1.
 

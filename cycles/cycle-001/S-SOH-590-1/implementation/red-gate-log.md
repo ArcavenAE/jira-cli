@@ -5,7 +5,7 @@
 **Route:** quick-dev (TRIVIAL)
 **Branch:** `fix/S-SOH-590-1-api-method-case` (deleted post-merge)
 **Base:** develop @ 159e1be (v0.6.0-dev.8)
-**F4 dispatch authorized by:** human, 2026-07-09 (DEC-165, quick-dev route)
+**F4 dispatch authorized by:** human, 2026-07-09 (D-165, quick-dev route)
 
 ## Summary
 

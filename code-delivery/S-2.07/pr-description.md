@@ -12,7 +12,7 @@
 
 This PR delivers `--output json` paths for four auth subcommands (`login`, `switch`, `logout`, `remove`) that previously emitted only human-readable output regardless of the `--output` flag, violating BC-7.3.004. It also documents the verb-aligned JSON field naming policy (BC-7.3.004 invariant) as a canonical spec, closes the S-2.02-DEFER drift item (`"transitioned"` vs `"changed"`), and establishes the `test_<verb>_<subject>_<expected_outcome>` naming convention for all new tests.
 
-> **v2.0.0 pivot note (prominent):** The v1.0.0 story design contained three concrete errors found via Perplexity source verification on 2026-05-08. The pivot is recorded as DEC-011 in STATE.md and detailed in `.factory/research/S-2.07-json-policy-and-conventions-research.md`:
+> **v2.0.0 pivot note (prominent):** The v1.0.0 story design contained three concrete errors found via Perplexity source verification on 2026-05-08. The pivot is recorded as D-011 in STATE.md and detailed in `.factory/research/S-2.07-json-policy-and-conventions-research.md`:
 > 1. **AC-002 rewritten** — v1.0.0 mocked a token-refresh endpoint (`POST https://auth.atlassian.com/oauth/token`). Source verification found `jr auth refresh` does NOT call that endpoint; it wipes credentials and re-runs the full OAuth 3LO login flow. The wiremock premise was structurally untestable. v2.0.0 replaces it with unit tests of the already-extracted `refresh_success_payload(AuthFlow)` helper (`src/cli/auth.rs:808-814`) as regression pins.
 > 2. **Auth JSON shape asymmetry preserved** — NFR-O-F v1.0.0 prescribed a uniform `{profile, action, ok}` shape for all five auth subcommands. Source verification found `refresh_success_payload` was already shipped with shape `{status, auth_method, next_step}`. v2.0.0 preserves the existing `refresh` shape and applies the new shape only to the four handlers that had NO json output.
 > 3. **AC-005 `changed` field confirmed** — v1.0.0 left `"transitioned"` vs `"changed"` ambiguous. Verified at `src/cli/issue/json_output.rs:4-10`: canonical field is `"changed"`. This closes S-2.02-DEFER permanently.
@@ -424,7 +424,7 @@ ai-generated: true
 pipeline-mode: feature (brownfield)
 factory-version: "1.0.0"
 story-version: "2.0.0"
-pivot-reason: "3 concrete errors found via Perplexity verification (DEC-011 in STATE.md)"
+pivot-reason: "3 concrete errors found via Perplexity verification (D-011 in STATE.md)"
 pipeline-stages:
   research-verification: completed (S-2.07-json-policy-and-conventions-research.md)
   story-decomposition: completed (v2.0.0 rewrite)

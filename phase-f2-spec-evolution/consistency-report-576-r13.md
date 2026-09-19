@@ -51,7 +51,7 @@ Each entry: (a) the R11 claim of what was wrong, (b) verbatim text from the curr
 
 **Closure evidence — BC-INDEX.md line 387**:
 
-> `attachment delete <AID>` interactive confirmation gate: `eprint!+read_line` (DEC-174); non-interactive exit 64 + --yes hint; --yes bypasses; cancel `{"cancelled":true,"deleted":false}` (no id key); metadata-fetch GET before prompt; EOF (`read_line` Ok(0)) → cancel, exit 0; **deliberate divergence from BC-3.5.003** (BC-3.5.003 uses dialoguer → exit 130 on EOF; this BC uses read_line → exit 0 on EOF)
+> `attachment delete <AID>` interactive confirmation gate: `eprint!+read_line` (D-174); non-interactive exit 64 + --yes hint; --yes bypasses; cancel `{"cancelled":true,"deleted":false}` (no id key); metadata-fetch GET before prompt; EOF (`read_line` Ok(0)) → cancel, exit 0; **deliberate divergence from BC-3.5.003** (BC-3.5.003 uses dialoguer → exit 130 on EOF; this BC uses read_line → exit 0 on EOF)
 
 **Status**: CLOSED ✓ — "EOF → exit 0" now correct; "deliberate divergence from BC-3.5.003" replaces the stale "mirrors" claim.
 
@@ -93,7 +93,7 @@ Index and body are now fully consistent. ✓
 
 **Closure evidence — BC-INDEX.md line 392**:
 
-> `attachment delete --dry-run`: multi-attachment paths list affected IDs without mutation; JSON `{"attachments":[{id,filename}],"dryRun":true,"ids":[...]}` (BTreeMap alphabetical: attachments < dryRun < ids) via `output::render_json`; single-ID --dry-run = human stderr hint + JSON `{"attachments":[{"id":"<AID>"}],"dryRun":true,"ids":["<AID>"]}` exit 0 (no gate); --yes with --dry-run = DEC-169 silent no-op
+> `attachment delete --dry-run`: multi-attachment paths list affected IDs without mutation; JSON `{"attachments":[{id,filename}],"dryRun":true,"ids":[...]}` (BTreeMap alphabetical: attachments < dryRun < ids) via `output::render_json`; single-ID --dry-run = human stderr hint + JSON `{"attachments":[{"id":"<AID>"}],"dryRun":true,"ids":["<AID>"]}` exit 0 (no gate); --yes with --dry-run = D-169 silent no-op
 
 **Status**: CLOSED ✓ — outer key order now `{"attachments",[...], "dryRun":true, "ids":[...]}` (a < d < i alphabetical), with explicit BTreeMap annotation.
 
@@ -154,7 +154,7 @@ All 20 BC-3.9.xxx index rows verified for attachment section. Eight sampled for 
 | BC-3.9.015 | EOF (Ok(0)) → cancel, exit 0; deliberate divergence from BC-3.5.003 | EC-3.9.015-5 body line 3626: confirmed | CONSISTENT ✓ |
 | BC-3.9.017 | same-filename lookup (case-sensitive); delete ALL matching entries serially (OQ-6 last-write-wins) | BC body line 3682-3706: confirmed | CONSISTENT ✓ |
 | BC-3.9.019 | dedicated parse_age_duration; d=24h; w=7×24h; src/duration.rs syntax-style precedent only; c<d<i JSON | BC body line 3742-3765: confirmed | CONSISTENT ✓ |
-| BC-3.9.020 | `{"attachments",[...],"dryRun":true,"ids":[...]}` (a<d<i); single-ID: stderr hint + JSON; DEC-169 | BC body line 3783-3804: confirmed | CONSISTENT ✓ |
+| BC-3.9.020 | `{"attachments",[...],"dryRun":true,"ids":[...]}` (a<d<i); single-ID: stderr hint + JSON; D-169 | BC body line 3783-3804: confirmed | CONSISTENT ✓ |
 
 Post-sweep BC-INDEX fidelity for Section 3.9 is airtight across all 8 sampled rows.
 

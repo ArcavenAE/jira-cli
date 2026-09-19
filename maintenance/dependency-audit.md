@@ -23,7 +23,7 @@
 - **Result: `advisories ok, bans ok, licenses ok, sources ok`.** Exit code: 0.
 - 4 non-fatal warnings, all config-drift hygiene (no findings against actual dependencies):
   - `license-not-encountered`: `BSD-2-Clause`, `OpenSSL`, `Unicode-DFS-2016` are allow-listed in `deny.toml` but no crate in the current graph currently uses them (stale allow-list entries).
-  - `unmatched-skip`: the `cpufeatures = ^0.2` skip entry (documented for the sha1/chacha20 cpufeatures-major split, DEC-185) was not encountered this run — the skip is currently unnecessary but harmless (kept for when the split reappears).
+  - `unmatched-skip`: the `cpufeatures = ^0.2` skip entry (documented for the sha1/chacha20 cpufeatures-major split, D-185) was not encountered this run — the skip is currently unnecessary but harmless (kept for when the split reappears).
 - No denied licenses, no banned crates triggered, no duplicate-version bans triggered against the **current, committed** `Cargo.lock`.
 
 **Severity: LOW** — cosmetic config drift only (unmatched license allowances / skip entry). Not a defect, no action required beyond optional config cleanup.

@@ -5,7 +5,7 @@
 **Route:** standard bug-fix (HIGH)
 **Branch:** `fix/S-SOH-589-1-allowedvalue-id-option` (deleted post-merge)
 **Base:** develop @ 4f3960e0 (S-SOH-590-1 delivered)
-**F4 dispatch authorized by:** human, 2026-07-09 (DEC-165, standard bug-fix route)
+**F4 dispatch authorized by:** human, 2026-07-09 (D-165, standard bug-fix route)
 
 ## Summary
 

@@ -111,7 +111,7 @@ let stdout = String::from_utf8_lossy(&output.stdout);
 // Assert text rendered by adf_to_text appears in output.
 // Use single-token content words from the original markdown — NOT ADF node names.
 // Single-token assertions are required to resist comfy-table ContentArrangement::Dynamic
-// cell-wrap (DEC-074, F3 refinement): multi-word strings can be split across wrapped
+// cell-wrap (D-074, F3 refinement): multi-word strings can be split across wrapped
 // lines in table output, causing spurious assertion failures.
 assert!(stdout.contains("Header"), "heading text must appear in view output");
 assert!(stdout.contains("link"), "link text must appear in view output");

@@ -2,7 +2,7 @@
 document_type: story
 story_id: "S-cycle3-chosen-flow-reconcile"
 epic_id: "AUTH-PROFILE-DX-1"
-title: "Remove chosen_flow_for_profile's per-command override; auth_method fully intrinsic (DEC-321)"
+title: "Remove chosen_flow_for_profile's per-command override; auth_method fully intrinsic (D-321)"
 wave: feature-followup
 status: ready
 intent: feature

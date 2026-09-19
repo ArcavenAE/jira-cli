@@ -179,7 +179,7 @@ Commit `20d533e4` added `--locked` to the msrv job's `cargo check` invocation. N
 ## Round-6 Dispositions (orchestrator, 2026-07-31)
 
 - **Routed to `.factory/` fix round:** H-001 (story BC/VP anchoring — S-626-1.md bcs: ["BC-5.3.001","BC-5.3.002"]); H-002 (SS-11 → SS-02+SS-09 across 5 story files); L-001 (AC-9 wording: "mutation-detecting" → "regression-detecting integration coverage"); L-002 (BC-5.3.00x Source/Trace → symbol-form).
-- **Routed to S-641-1:** H-003 (msrv positive-coverage assertion — matches S-641-1 AC-1/AC-2 scope per DEC-199..DEC-202 adjudication).
+- **Routed to S-641-1:** H-003 (msrv positive-coverage assertion — matches S-641-1 AC-1/AC-2 scope per D-199..D-202 adjudication).
 - **Noted / accepted:** M-001 (CLAUDE.md action-input claim — accepted as low-consequence inaccuracy; noted in Drift); M-002 (pin comment semantics — routed to S-641-1 LOW-004 already); M-003 (enforcement gap acknowledged per existing drift item); INFO-001 (cache dilution; accepted); INFO-002 (--locked undeclared; noted in S-641-1).
 - **Convergence: Step 4.5 window RESET.** Pass-6 has H-class findings and non-trivial spec-artifact gaps. Window 0/3 (counting from pass-6).
 
@@ -197,7 +197,7 @@ Commit `20d533e4` added `--locked` to the msrv job's `cargo check` invocation. N
 
 **Overall Assessment:** NOT CLEAN — 3 HIGH + 3 MEDIUM + 2 LOW + 2 INFO; zero code defects. Policy rubric ABSENT (`.factory/policies.yaml` does not exist) — baseline applied.
 
-**Convergence: 0/3.** Step 4.5 window reset. DEC-199 (human ruling 2026-07-31): GRIND TO A LITERAL 3/3 CLEAN WINDOW per DEC-191(b).
+**Convergence: 0/3.** Step 4.5 window reset. D-199 (human ruling 2026-07-31): GRIND TO A LITERAL 3/3 CLEAN WINDOW per D-191(b).
 
 ---
 

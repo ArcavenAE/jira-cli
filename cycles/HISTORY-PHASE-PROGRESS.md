@@ -21,7 +21,7 @@ See `cycles/cycle-005/burst-log.md` Bursts 11-12 for full narrative detail (thes
 
 | Phase | Status | Completed | Gate | Notes | Finding Progression |
 |-------|--------|-----------|------|-------|---------------------|
-| **F7-CONVERGED-CYCLE5-CLOSED-2026-09-09 (cycle-005, Burst 13)** | **COMPLETE / CLOSED, NO RELEASE** | 2026-09-09 | Delta convergence, human gate -- 5-dimensional PASS; human APPROVED CLOSE with NO release cut (DEC-353) | 5-dim PASS on the combined Wave 1+Wave 2 `adf-mentions` delta; merged to `develop @ cef4a021` (PR #778/#794/#795); F6 HARDENED 20/21 VPs; human approved closing cycle-005 with NO release -- feature ships on `develop`, tag deferred. **cycle-005 CLOSED; ALL SIX tracked cycles (001-006) now CLOSED.** Full text: `cycles/HISTORY-PHASE-PROGRESS.md`. | counts unchanged (754/76/118/175); DEC-353 minted |
+| **F7-CONVERGED-CYCLE5-CLOSED-2026-09-09 (cycle-005, Burst 13)** | **COMPLETE / CLOSED, NO RELEASE** | 2026-09-09 | Delta convergence, human gate -- 5-dimensional PASS; human APPROVED CLOSE with NO release cut (D-353) | 5-dim PASS on the combined Wave 1+Wave 2 `adf-mentions` delta; merged to `develop @ cef4a021` (PR #778/#794/#795); F6 HARDENED 20/21 VPs; human approved closing cycle-005 with NO release -- feature ships on `develop`, tag deferred. **cycle-005 CLOSED; ALL SIX tracked cycles (001-006) now CLOSED.** Full text: `cycles/HISTORY-PHASE-PROGRESS.md`. | counts unchanged (754/76/118/175); D-353 minted |
 
 ---
 
@@ -151,7 +151,7 @@ See `cycles/cycle-005/burst-log.md` Bursts 11-12 for full narrative detail (thes
 
 | Phase | Status | Completed | Gate | Notes | Finding Progression |
 |-------|--------|-----------|------|-------|---------------------|
-| **CYCLE-013-F7-CONVERGED-CLOSED-2026-09-16** | **COMPLETE / CONVERGED / CLOSED** | 2026-09-16 | F7 human close/release gate | Fresh-context re-verification CONVERGED, all 7 dimensions PASS. Human: APPROVE & CLOSE + cut a dev release now (`v0.7.0-dev.7`). **DEC-367 minted.** `ADR-0025` accepted. | 769 BCs / 86 VPs / 118 holdout / 185 stories; DEC-367 minted |
+| **CYCLE-013-F7-CONVERGED-CLOSED-2026-09-16** | **COMPLETE / CONVERGED / CLOSED** | 2026-09-16 | F7 human close/release gate | Fresh-context re-verification CONVERGED, all 7 dimensions PASS. Human: APPROVE & CLOSE + cut a dev release now (`v0.7.0-dev.7`). **D-367 minted.** `ADR-0025` accepted. | 769 BCs / 86 VPs / 118 holdout / 185 stories; D-367 minted |
 
 > Extracted from `.factory/STATE.md`'s `## Phase Progress` table during the
 > 2026-09-18 CYCLE-008-CONSOLE-GATE-RESOLVED standing-item disposition burst
@@ -161,7 +161,7 @@ See `cycles/cycle-005/burst-log.md` Bursts 11-12 for full narrative detail (thes
 
 | Phase | Status | Completed | Gate | Notes | Finding Progression |
 |-------|--------|-----------|------|-------|---------------------|
-| **CYCLE-008-F1-APPROVED-2026-09-17** | **COMPLETE** | 2026-09-17 | F1 human gate approval -- delta-analysis scope ruling | Human APPROVED. Scope locked: S1-S5 DELIVER, S6 SPIKE ONLY, S7 DEFERRED. **DEC-368 minted.** | 769 BCs / 86 VPs / 118 holdout / 185 stories; DEC-368 minted |
+| **CYCLE-008-F1-APPROVED-2026-09-17** | **COMPLETE** | 2026-09-17 | F1 human gate approval -- delta-analysis scope ruling | Human APPROVED. Scope locked: S1-S5 DELIVER, S6 SPIKE ONLY, S7 DEFERRED. **D-368 minted.** | 769 BCs / 86 VPs / 118 holdout / 185 stories; D-368 minted |
 
 > Extracted from `.factory/STATE.md`'s `## Phase Progress` table during the
 > 2026-09-18 SESSION-WRAP-PAUSE-2026-09-18 checkpoint burst (v4.65 -> v4.66,
@@ -171,7 +171,7 @@ See `cycles/cycle-005/burst-log.md` Bursts 11-12 for full narrative detail (thes
 
 | Phase | Status | Completed | Gate | Notes | Finding Progression |
 |-------|--------|-----------|------|-------|---------------------|
-| **CYCLE-008-F2-APPROVED-2026-09-17** | **COMPLETE** | 2026-09-17 | F2 human gate approval -- spec-evolution scope-set ruling | Human chose **FULL OAUTH PARITY** (16 scopes). `ADR-0026` Decisions 1-4 FINALIZED. BC delta: 769 -> 770. **DEC-369 minted.** | 770 BCs / 89 VPs / 118 holdout / 185 stories; DEC-369 minted |
+| **CYCLE-008-F2-APPROVED-2026-09-17** | **COMPLETE** | 2026-09-17 | F2 human gate approval -- spec-evolution scope-set ruling | Human chose **FULL OAUTH PARITY** (16 scopes). `ADR-0026` Decisions 1-4 FINALIZED. BC delta: 769 -> 770. **D-369 minted.** | 770 BCs / 89 VPs / 118 holdout / 185 stories; D-369 minted |
 
 > Extracted from `.factory/STATE.md`'s `## Phase Progress` table during the
 > 2026-09-18 OAUTH-16-SCOPE-SMOKE-TEST-PASS verification-outcome checkpoint
@@ -181,7 +181,7 @@ See `cycles/cycle-005/burst-log.md` Bursts 11-12 for full narrative detail (thes
 
 | Phase | Status | Completed | Gate | Notes | Finding Progression |
 |-------|--------|-----------|------|-------|---------------------|
-| **CYCLE-008-F3-APPROVED-2026-09-17** | **COMPLETE** | 2026-09-17 | F3 human gate approval -- incremental story decomposition ruling | Human APPROVED the package: 6 stories, **20 points total**. F3 consistency audit: **CONSISTENT.** `total_stories` 185 -> 191. **DEC-370 minted.** | 770 BCs / 89 VPs / 118 holdout / 191 stories; DEC-370 minted |
+| **CYCLE-008-F3-APPROVED-2026-09-17** | **COMPLETE** | 2026-09-17 | F3 human gate approval -- incremental story decomposition ruling | Human APPROVED the package: 6 stories, **20 points total**. F3 consistency audit: **CONSISTENT.** `total_stories` 185 -> 191. **D-370 minted.** | 770 BCs / 89 VPs / 118 holdout / 191 stories; D-370 minted |
 
 > Extracted from `.factory/STATE.md`'s `## Phase Progress` table during the
 > 2026-09-19 S6-TEAMS-SPIKE-COMPLETE-DEFER-INDEFINITELY spike-outcome
@@ -215,3 +215,13 @@ See `cycles/cycle-005/burst-log.md` Bursts 11-12 for full narrative detail (thes
 | Phase | Status | Completed | Gate | Notes | Finding Progression |
 |-------|--------|-----------|------|-------|---------------------|
 | **CYCLE-008-F4-WAVE1-GATE-CONVERGED-2026-09-17** | **COMPLETE** | 2026-09-17 | automated bookkeeping -- superseded | Wave 1 (S1-S4) MERGED to `develop` (tip `a32caef4`, admin-bypass). WAVE INTEGRATION GATE CONVERGED. Wave-gate fix PR `#836` CONVERGED. | 770 BCs / 89 VPs / 118 holdout / 191 stories; no DEC minted |
+
+> Extracted from `.factory/STATE.md`'s `## Phase Progress` table during the
+> 2026-09-19 DCHAIN-MIGRATION-DEC-TO-D-2026-09-19 burst (v4.70 -> v4.71), to
+> keep the live table at 12 rows after adding the new
+> `DCHAIN-MIGRATION-DEC-TO-D-2026-09-19` row. This was the oldest row at
+> that point; archived here verbatim, unedited.
+
+| Phase | Status | Completed | Gate | Notes | Finding Progression |
+|-------|--------|-----------|------|-------|---------------------|
+| **SESSION-WRAP-PAUSE-2026-09-18** | **COMPLETE** (superseded) | 2026-09-18 | session-wrap checkpoint | agent state-manager -- notes: "cycle-008 Wave-1 gate CLOSED; S5 worktree created, no work started" | 770 BCs / 89 VPs / 118 holdout / 191 stories; no DEC minted |

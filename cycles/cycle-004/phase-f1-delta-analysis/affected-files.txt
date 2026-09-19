@@ -12,7 +12,7 @@ MODIFIED	README.md	#760: Windows install steps + Unblock-File note, per-platform
 DEPENDENT	src/api/refresh_coordinator.rs	refresh_with_single_flight wraps a closure that bottoms out in the modified store_oauth_tokens path; no code change expected, test coverage in regression-risk zone.
 DEPENDENT	src/api/client.rs	load_oauth_tokens read call sites (from_config auth header; 401 auto-refresh reconcile path) — must transparently see DPAPI-file-backed tokens.
 DEPENDENT	src/cli/auth/login.rs	oauth_login caller; relies on the fixed error message propagating unchanged from src/api/auth.rs.
-DEPENDENT	src/cli/auth/refresh.rs	refresh_credentials (relogin-then-replace, DEC-321) depends on the new atomic dual-write invariant preserving its "obtain-first, then unconditional overwrite" contract.
+DEPENDENT	src/cli/auth/refresh.rs	refresh_credentials (relogin-then-replace, D-321) depends on the new atomic dual-write invariant preserving its "obtain-first, then unconditional overwrite" contract.
 DEPENDENT	src/cli/auth/logout.rs	handle_logout calls clear_profile_oauth_pair; depends on it also cleaning up the DPAPI file.
 DEPENDENT	src/cli/auth/remove.rs	handle_remove calls clear_profile_creds; same DPAPI-file cleanup dependency.
 DEPENDENT	src/cli/auth/status.rs	status() presence-checks via load_oauth_tokens(...).is_ok(); must report "authenticated" correctly for DPAPI-backed tokens.

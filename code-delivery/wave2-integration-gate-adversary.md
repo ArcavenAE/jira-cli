@@ -4,7 +4,7 @@ Diff scope: `c2074247..281ba272` (squash merges of #770 `S-cycle4-windows-docs` 
 Mode: emergent / cross-story defects only — NOT re-reviewing either converged story.
 
 ## Verdict
-CLEAN of emergent cross-story (#770 × #771) defects. The two stories are largely orthogonal (docs-only vs. error-message code). Their one genuinely shared surface (CHANGELOG.md `[Unreleased]`, and the CLAUDE.md credential-storage narrative) is internally consistent, and the chartered integration hazard — a doc still describing OAuth-grant revoke as safe per-profile cleanup, contradicting #771's DEC-334 correction — does NOT exist: no README/CLAUDE.md/`docs/` file mentions grant-revoke at all. Fresh-context re-derivation surfaced 1 MEDIUM + 2 LOW documentation-consistency defects in the combined tree (all prose, none a runtime regression, none CI-caught). None is a hard merge blocker.
+CLEAN of emergent cross-story (#770 × #771) defects. The two stories are largely orthogonal (docs-only vs. error-message code). Their one genuinely shared surface (CHANGELOG.md `[Unreleased]`, and the CLAUDE.md credential-storage narrative) is internally consistent, and the chartered integration hazard — a doc still describing OAuth-grant revoke as safe per-profile cleanup, contradicting #771's D-334 correction — does NOT exist: no README/CLAUDE.md/`docs/` file mentions grant-revoke at all. Fresh-context re-derivation surfaced 1 MEDIUM + 2 LOW documentation-consistency defects in the combined tree (all prose, none a runtime regression, none CI-caught). None is a hard merge blocker.
 
 ## Findings
 ### W2-INT-MED-001 — README states API-token creds are "stored once … shared by all `api_token` profiles"; current code stores them per-profile (HIGH confidence, MEDIUM severity)
@@ -18,7 +18,7 @@ CLEAN of emergent cross-story (#770 × #771) defects. The two stories are largel
 
 ## Verification notes
 - OAuth-revoke doc consistency: grep of `revoke|manage-profile/apps|DPAPI` across README/docs/CHANGELOG — README/docs contain zero grant-revoke prose; #771's source-scan guard forbids the harmful phrases in production `auth.rs`; message text presents revoke as OPTIONAL + ACCOUNT-WIDE. No doc contradicts this. CLEAN.
-- Shared-file interaction: CHANGELOG `[Unreleased]` #770 (Changed, doc-only) and #771 (Fixed) entries non-overlapping and internally consistent; both reference DEC-334 with corrected framing. CLAUDE.md SEC-WCM-DOC/DPAPI note does not contradict #771's failure-path messages.
+- Shared-file interaction: CHANGELOG `[Unreleased]` #770 (Changed, doc-only) and #771 (Fixed) entries non-overlapping and internally consistent; both reference D-334 with corrected framing. CLAUDE.md SEC-WCM-DOC/DPAPI note does not contradict #771's failure-path messages.
 - Site-3 refresh message omits revoke instruction; AC-005 proactive `clear_profile_oauth_pair` fires only on the Site-3 DpapiFallbackFailed arm, not Site-1. Consistent with CHANGELOG.
 - CI-coverage-beyond-build: the three findings are prose only; the green 15-check run does not cover them.
 

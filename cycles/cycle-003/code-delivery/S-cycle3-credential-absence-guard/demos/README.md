@@ -1,6 +1,6 @@
 # Demo Evidence — S-cycle3-credential-absence-guard
 
-**Story:** No-copy detect-and-instruct guard for absent per-profile API-token credentials (DEC-326)
+**Story:** No-copy detect-and-instruct guard for absent per-profile API-token credentials (D-326)
 **BCs:** BC-1.4.032 (new, redesigned), BC-1.4.033 (new, redesigned), BC-1.4.034 (new), BC-1.4.025 / BC-1.4.029 (amended)
 **VPs:** VP-AUTHDX-005, VP-AUTHDX-006, VP-AUTHDX-007, VP-AUTHDX-008
 

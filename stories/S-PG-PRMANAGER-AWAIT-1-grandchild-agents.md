@@ -203,7 +203,7 @@ PR-MANAGER-RETURNS-BLOCKED-WITHOUT-AWAITING-GRANDCHILDREN — pending BC authors
 | ID | Description | Expected Behavior |
 |----|-------------|--------------------|
 | EC-001 | A spawned reviewer subagent genuinely fails (crashes, errors) rather than merely being slow | pr-manager's fixed await logic must distinguish "genuinely failed" from "not yet responded" and report BLOCKED only for the former — this is the correctness bar the original bug violated (reporting BLOCKED for the latter). |
-| EC-002 | Both security-reviewer and pr-reviewer are spawned but only one has responded when a timeout/poll-check fires | The fix must not report a terminal status based on a partial response set unless there is an explicit, bounded timeout policy — if such a policy exists elsewhere in this engine (per the "never unbounded poll loops" convention already codified for pr-manager, see S-PG-MERGE-AUTH-BYPASS's DEC-145 re-assessment Constraint 4), reuse it rather than inventing a new one. |
+| EC-002 | Both security-reviewer and pr-reviewer are spawned but only one has responded when a timeout/poll-check fires | The fix must not report a terminal status based on a partial response set unless there is an explicit, bounded timeout policy — if such a policy exists elsewhere in this engine (per the "never unbounded poll loops" convention already codified for pr-manager, see S-PG-MERGE-AUTH-BYPASS's D-145 re-assessment Constraint 4), reuse it rather than inventing a new one. |
 | EC-003 | The orchestrator's workaround itself has side effects (e.g., different review-request formatting than pr-manager would have used) | Document any such divergence discovered during AC-001's investigation — it may be relevant to AC-004's disposition decision. |
 
 ## Dependency Analysis

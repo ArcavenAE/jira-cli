@@ -1,4 +1,4 @@
-## PR Review — S-SOH-590-1 (quick-dev route, DEC-165)
+## PR Review — S-SOH-590-1 (quick-dev route, D-165)
 
 **Verdict: APPROVE** — no blocking findings.
 
@@ -53,7 +53,7 @@ Entry placed under `[Unreleased] > Fixed` in the correct section, above the pre-
 - **Enum untouched:** `git diff origin/develop...HEAD -- src/cli/api.rs` produces zero output. `HttpMethod` is byte-for-byte unchanged.
 - **No new imports:** the `#[arg]` attribute expansion is entirely clap-derived; no `use` lines added.
 - **No forbidden changes:** no changes to auth, HTTP dispatch, error paths, or JSON output surfaces.
-- **Diff scope matches DEC-165 F1 TRIVIAL budget:** 3 files, +64/−1 lines total. Well within the "single attribute" envelope.
+- **Diff scope matches D-165 F1 TRIVIAL budget:** 3 files, +64/−1 lines total. Well within the "single attribute" envelope.
 
 **Architecture verdict:** PASS.
 
@@ -79,10 +79,10 @@ The `closes #590, closes #582` trailer on the fix commit will properly trigger G
 
 - The new tests' rustdoc comments still read `"MUST FAIL until ignore_case = true is added"`. These are stale post-fix but useful as Red-Gate provenance; VSDD practice preserves them.
 - Only `DELETE` is exercised. The PR body correctly notes the mechanism is identical across all five verbs (`GET`/`POST`/`PUT`/`PATCH`/`DELETE`); a single-verb slice is defensible for F1 TRIVIAL scope. If future paranoia demands, a `POST`-case dispatch test could be added, but not required now.
-- Waivers (demo evidence, adversarial review) are properly documented in the PR body per DEC-165.
+- Waivers (demo evidence, adversarial review) are properly documented in the PR body per D-165.
 
 ---
 
 ### Final verdict
 
-**APPROVE.** No blocking, major, or minor findings. Safe to merge after `ci-gate` is green. Human merge authorization required per DEC-128 (HELD-FOR-HUMAN-MERGE).
+**APPROVE.** No blocking, major, or minor findings. Safe to merge after `ci-gate` is green. Human merge authorization required per D-128 (HELD-FOR-HUMAN-MERGE).

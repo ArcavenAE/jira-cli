@@ -57,10 +57,10 @@ The 18 additional sites were jobs that had `contents: write` or `secrets: write`
 in their permissions blocks but were not enumerated in the hardcoded list.
 All 23 sites are now env-bound in the shipped sign-and-publish.yml.
 
-## Validates DEC-121
+## Validates D-121
 
 Full VSDD Feature Mode on a CI-workflow-only security fix. F5 caught a CRITICAL
 guard false-negative that a naive "looks good" review would have shipped.
-Structural-scope rewrite surfaced 23 injection sites vs 5. Reinforces DEC-120.
+Structural-scope rewrite surfaced 23 injection sites vs 5. Reinforces D-120.
 
 _Recorded: 2026-06-18_

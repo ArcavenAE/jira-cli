@@ -48,10 +48,10 @@ in `field_resolve.rs` exactly as CHANGELOG/CLAUDE.md describe.
    delta file. **Remediation:** one find-and-replace pass in `verification-delta-field-dx.md`
    swapping `tests/issue_create.rs` → `tests/issue_create_field.rs` at every citation site.
 
-3. **[MEDIUM] stale-narration — `docs/specs/issue-create-preflight-guards.md` not updated for DEC-310**
-   This spec doc's guard table and verbatim error-string sections still present the DEC-188
+3. **[MEDIUM] stale-narration — `docs/specs/issue-create-preflight-guards.md` not updated for D-310**
+   This spec doc's guard table and verbatim error-string sections still present the D-188
    contract (`--field` alone → exit 64, combined `--field`+`--on-behalf-of` → one combined
-   error) as unqualified current behavior, with zero mention of `#578`, DEC-310, or the
+   error) as unqualified current behavior, with zero mention of `#578`, D-310, or the
    reversal anywhere in the file. Confirmed against shipped code
    (`src/cli/issue/create.rs`): only the `--on-behalf-of`-alone guard (BC-3.8.013) remains; the
    `--field`-alone guard and the combined-guard string are both gone. A reader who opens this
@@ -61,7 +61,7 @@ in `field_resolve.rs` exactly as CHANGELOG/CLAUDE.md describe.
    project-instructions surface is accurate and self-correcting; this is a spec-hygiene gap in
    the secondary doc, not a live misinformation risk for anyone following CLAUDE.md.
    **Remediation:** add a short superseded-banner at the top of the file pointing to
-   BC-3.3.010/3.8.012 and DEC-310, consistent with how ADR-0014 itself was amended in place.
+   BC-3.3.010/3.8.012 and D-310, consistent with how ADR-0014 itself was amended in place.
 
 4. **[MEDIUM] coverage-gap — CHANGELOG.md under-documents 3 of 5 field-dx stories**
    `CHANGELOG.md`'s `[Unreleased]` section has dedicated entries for S-578-1 (parser, under
@@ -107,10 +107,10 @@ in `field_resolve.rs` exactly as CHANGELOG/CLAUDE.md describe.
   all exist and match story `traces_to`/`target_module` fields.
 - ADR-0019: registered in `ARCH-INDEX.md` with matching subsystems (SS-02/SS-04/SS-05); story
   subsystem tags are all subsets of that set — no anchor drift.
-- ADR-0014: correctly amended in place with a DEC-310 banner at the top and inline
-  "DEC-188 amendment" callouts scoped precisely to `--on-behalf-of`; consistent with shipped
+- ADR-0014: correctly amended in place with a D-310 banner at the top and inline
+  "D-188 amendment" callouts scoped precisely to `--on-behalf-of`; consistent with shipped
   code and with CLAUDE.md.
-- DEC-310: consistently recorded across BC-3.8.012 body, BC-INDEX changelog, ADR-0019,
+- D-310: consistently recorded across BC-3.8.012 body, BC-INDEX changelog, ADR-0019,
   ADR-0014, all 5 story files' STORY-INDEX narration, `holdout-scenarios.md`, and
   `CHANGELOG.md`'s Changed section.
 - Holdouts: H-NEW-PREFLIGHT-001/003/006 rewritten in place exactly as expected (verified body
@@ -132,6 +132,6 @@ findings are all citation/documentation hygiene items (a wrong test filename in 
 artifact, a companion doc not carrying its own supersession banner, and a CHANGELOG that lags
 behind two of the five stories' user-facing surface) — none represents a broken BC→VP→test
 chain, a count mismatch the guard scripts would have caught, or a functional gap. The field-dx
-delta's core traceability (BC ↔ VP ↔ story ↔ test ↔ ADR ↔ DEC-310 ↔ holdout) is internally
+delta's core traceability (BC ↔ VP ↔ story ↔ test ↔ ADR ↔ D-310 ↔ holdout) is internally
 coherent and ready for the human approval gate, contingent on triaging finding 1 (and ideally
 2-4) as fast-follow documentation fixes.

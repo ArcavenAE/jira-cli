@@ -940,7 +940,7 @@ their respective BC owners.
 
 ## Registration Surface Sweep
 
-Per the REGISTRATION-SURFACE-SWEEP discipline (DEC-155 pattern), this delta's
+Per the REGISTRATION-SURFACE-SWEEP discipline (D-155 pattern), this delta's
 registration surfaces are:
 
 | Surface | Action | File / Location |

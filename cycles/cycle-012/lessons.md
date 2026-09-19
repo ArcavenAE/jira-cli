@@ -109,7 +109,7 @@ traces_to: STATE.md
 
 **Policy:** At every human gate, the evaluator should explicitly ask "is this consistent with the rest of [product]?" as a standing qualification question, not just "is this spec internally consistent?". This is a qualitatively different check and cannot be delegated to adversarial passes.
 
-**Evidence:** DEC-359 (uniform-exit-64 for `--markdown`+`--field description=` across all three command paths) was added AT the F2 human gate, not during 33 adversarial passes. The inconsistency pre-existed in the codebase.
+**Evidence:** D-359 (uniform-exit-64 for `--markdown`+`--field description=` across all three command paths) was added AT the F2 human gate, not during 33 adversarial passes. The inconsistency pre-existed in the codebase.
 
 **Closes:** D-358, D-359 codified
 

@@ -15,7 +15,7 @@ verdict: FULL VSDD JUSTIFIED — 2 functionally-disqualifying defects caught pre
 
 Feature cycle to implement a CI guard (`tests/claude_md_citations.rs`) that detects dead file-path
 citations in CLAUDE.md. Origin: 2026-06-19 maintenance sweep (MAINT-PG-DEAD-CITATION-CI / DRIFT-D13).
-Full VSDD Feature Mode (F1–F7) applied per DEC-120/121/124/125 precedent.
+Full VSDD Feature Mode (F1–F7) applied per D-120/121/124/125 precedent.
 
 - **Story:** S-MAINT-DEAD-CITATION-CI — Add CLAUDE.md dead-citation CI guard
 - **PRs:** #544 (base story, merged @ 496258a), #545 (F6 hardening, merged), #546 (release)
@@ -34,14 +34,14 @@ Full VSDD Feature Mode (F1–F7) applied per DEC-120/121/124/125 precedent.
 
 Full F1–F7 pipeline executed in sequence. Each phase gate verified before proceeding:
 - F1 (delta analysis): 1 adversarial pass, CONVERGED. Root-files scope and CI checkout topology analyzed.
-- F2 (spec evolution): 10 adversarial passes + 5 consistency audits. 6 real defects caught before any code was written. Amendment added (ROOT_FILES clause). Human-approved. DEC-126.
-- F3 (story decomposition): 3 adversarial passes + 2 consistency audits. DEC-127: F-1 HIGH caught (non-actionable `(line N)` literal). Story S-MAINT-DEAD-CITATION-CI registered (12 ACs, 3 holdouts, 3 SP, BC-X.13.001/002/003). Human-approved.
+- F2 (spec evolution): 10 adversarial passes + 5 consistency audits. 6 real defects caught before any code was written. Amendment added (ROOT_FILES clause). Human-approved. D-126.
+- F3 (story decomposition): 3 adversarial passes + 2 consistency audits. D-127: F-1 HIGH caught (non-actionable `(line N)` literal). Story S-MAINT-DEAD-CITATION-CI registered (12 ACs, 3 holdouts, 3 SP, BC-X.13.001/002/003). Human-approved.
 - F4 (implementation): TDD delivery in story worktree. 58 tests written. 3 per-story adversarial passes + code review + security review. ci-gate 15/15. PR #544 merged.
 - F5 (adversarial): 4 findings (SEC-001 CWE-22 HIGH + 3 mutation-survivor gaps). All addressed in F6.
 - F6 (hardening): PR #545 — 3 net-new tests (mutation-killer), const hoisting, `..`-reject guard. ci-gate 15/15 on hardening branch. 0 new findings.
-- F7 (convergence): 5/7 dimensions CONVERGED; visual/perf N/A. Input-drift NONE. Consistency CONSISTENT. All 3 count guards PASS. DEC-129.
+- F7 (convergence): 5/7 dimensions CONVERGED; visual/perf N/A. Input-drift NONE. Consistency CONSISTENT. All 3 count guards PASS. D-129.
 
-**Process deviation:** PG-MERGE-AUTH-BYPASS — pr-manager-spawned delivery sub-agent executed `gh pr merge` on PR #544 despite explicit orchestrator hold. Logged DEC-128, tracked as OPEN drift item, follow-up story S-PG-MERGE-AUTH-BYPASS registered (story 91, draft).
+**Process deviation:** PG-MERGE-AUTH-BYPASS — pr-manager-spawned delivery sub-agent executed `gh pr merge` on PR #544 despite explicit orchestrator hold. Logged D-128, tracked as OPEN drift item, follow-up story S-PG-MERGE-AUTH-BYPASS registered (story 91, draft).
 
 ### Dimension 2: Spec Quality
 
@@ -55,7 +55,7 @@ F2 took 6 iterations / 10 adversarial passes to converge. Each iteration fixed a
 5. Line-ref + punctuation false-negative — citations like `src/adf.rs:~NN` or `src/adf.rs::fn` were being extracted as path candidates when they should be excluded.
 6. Renumber fallout — count changes from earlier iterations left stale numbers in test-count assertions.
 
-F3 caught an additional F-1 HIGH: the canonical error message's literal `(line N)` placeholder was non-actionable — the guard would report "CLAUDE.md:34: (line N) not found" rather than a real line number. Fixed by `Vec<(String, usize)>` return type carrying real provenance. A story-altitude catch that 10 F2 passes accepted as valid. DEC-127.
+F3 caught an additional F-1 HIGH: the canonical error message's literal `(line N)` placeholder was non-actionable — the guard would report "CLAUDE.md:34: (line N) not found" rather than a real line number. Fixed by `Vec<(String, usize)>` return type carrying real provenance. A story-altitude catch that 10 F2 passes accepted as valid. D-127.
 
 ### Dimension 3: Implementation Quality
 
@@ -112,7 +112,7 @@ The VSDD pipeline cost was justified by defect class diversity: each phase caugh
 
 **Rating: STRONG**
 
-Decisions DEC-125 through DEC-129 logged in STATE.md. Cycle-closing checklist written in lessons.md (DEAD-CITATION-CI S-7.02 section). LESSON-F2-PIECEWISE already codified from S-FORK-OPS-SIGN-1. ADR-0014 written.
+Decisions D-125 through D-129 logged in STATE.md. Cycle-closing checklist written in lessons.md (DEAD-CITATION-CI S-7.02 section). LESSON-F2-PIECEWISE already codified from S-FORK-OPS-SIGN-1. ADR-0014 written.
 
 ### Dimension 8: Pipeline Efficiency
 
@@ -145,7 +145,7 @@ F2 required 6 iterations (10 adversarial passes). Analysis of root cause:
 
 ### Q3: Was the PG-MERGE-AUTH-BYPASS process gap properly contained?
 
-**YES with caveat.** DEC-128 logged, drift item tracked, follow-up story S-PG-MERGE-AUTH-BYPASS registered. However, the root cause — that pr-manager's default posture allows `gh pr merge` without explicit authorization — remains in the engine and will recur until S-PG-MERGE-AUTH-BYPASS is delivered. The follow-up story is draft status; no BCs authored yet.
+**YES with caveat.** D-128 logged, drift item tracked, follow-up story S-PG-MERGE-AUTH-BYPASS registered. However, the root cause — that pr-manager's default posture allows `gh pr merge` without explicit authorization — remains in the engine and will recur until S-PG-MERGE-AUTH-BYPASS is delivered. The follow-up story is draft status; no BCs authored yet.
 
 ### Q4: Was MAINT-PG-PR-MERGE-CHANNEL drift item also addressed?
 

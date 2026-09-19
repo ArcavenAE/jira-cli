@@ -162,7 +162,7 @@ Following the append-only rule, the next free BC IDs at each section boundary ar
 | BC-3.9.005 | `attachment upload`: file not found or not readable → exit 64 before HTTP |
 | BC-3.9.006 | `attachment delete <AID> [--yes]` interactive confirmation; `--yes` bypasses |
 | BC-3.9.007 | `attachment delete --issue <KEY> --older-than <duration>` bulk date-filtered delete; `--dry-run` previews affected IDs |
-| BC-3.9.008 | `attachment delete` idempotency: 404 from DELETE endpoint → exit 0 (attachment already gone; same pattern as `issue assign` idempotency) — **PHASE-DOC-RETRO-ANNOTATION (P14-004, 2026-07-16):** superseded by DEC-168. The shipped BC-3.9.008 specifies exit 64 + surface Jira body on 404, not exit 0. This F1-delta row was written before DEC-168 was ratified. Do not revert BC-3.9.008 toward exit 0 based on this row. |
+| BC-3.9.008 | `attachment delete` idempotency: 404 from DELETE endpoint → exit 0 (attachment already gone; same pattern as `issue assign` idempotency) — **PHASE-DOC-RETRO-ANNOTATION (P14-004, 2026-07-16):** superseded by D-168. The shipped BC-3.9.008 specifies exit 64 + surface Jira body on 404, not exit 0. This F1-delta row was written before D-168 was ratified. Do not revert BC-3.9.008 toward exit 0 based on this row. |
 | BC-3.9.009 | `attachment delete --output json` shape: `{"deleted": true, "id": str}` (single) or `{"deleted": true, "count": N, "ids": [str]}` (bulk) |
 | BC-3.9.010 | `attachment delete --dry-run` output: table of IDs that would be deleted; no HTTP mutation; `--output json` shape: `{"dryRun": true, "ids": [str]}` |
 
@@ -178,7 +178,7 @@ Range-collapsed BCs (error shapes, filter combinations) will add to cumulative t
 | JSON render invariant (#526) | All `--output json` paths in attachments.rs MUST route through `output::render_json` or `output::print_output` |
 | `--no-input` | `attachment delete` interactive prompt must be suppressed; `--yes` is the non-interactive equivalent |
 | Exit codes | 64 = issue/attachment not found; 1 = network error; 2 = auth error; 130 = Ctrl+C |
-| Idempotency | `attachment delete` on a 404 → exit 0 (documented above as BC-3.9.008) — **PHASE-DOC-RETRO-ANNOTATION (P14-004, 2026-07-16):** superseded by DEC-168; shipped BC-3.9.008 is exit 64 + surface body. |
+| Idempotency | `attachment delete` on a 404 → exit 0 (documented above as BC-3.9.008) — **PHASE-DOC-RETRO-ANNOTATION (P14-004, 2026-07-16):** superseded by D-168; shipped BC-3.9.008 is exit 64 + surface body. |
 | Output channel profiles | See §1.1 classification; list = profile 2 (read-only); download = profile 3 (mixed); upload/delete = profile 4 (symmetric) |
 | `allow_hyphen_values` | Not needed — `--file <PATH>` is a path, not free text; paths starting with `-` are a deliberate edge case out of scope |
 
@@ -252,7 +252,7 @@ Attachments do not use ADF. No cache design for attachment metadata is planned (
 
 ## 5. Security-relevant design questions (F1 gate)
 
-These questions MUST be answered in the feature spec (`docs/specs/attachments.md`) before F2 story authoring. **Security reviewer is REQUIRED at F2** (precedent: DEC-168 required security review for comment CRUD because visibility flags touched access-control semantics; attachment operations carry higher inherent risk — filesystem write, SSRF-adjacent redirect behavior, multipart boundary injection, and CWE-22 path traversal all require explicit mitigation decisions).
+These questions MUST be answered in the feature spec (`docs/specs/attachments.md`) before F2 story authoring. **Security reviewer is REQUIRED at F2** (precedent: D-168 required security review for comment CRUD because visibility flags touched access-control semantics; attachment operations carry higher inherent risk — filesystem write, SSRF-adjacent redirect behavior, multipart boundary injection, and CWE-22 path traversal all require explicit mitigation decisions).
 
 ### SQ-1: Filename sanitization (CWE-22 / path traversal)
 
@@ -323,7 +323,7 @@ All four stories are independent enough to be reviewed and merged serially in on
 
 **Standard** (not quick-dev). Rationale:
 
-1. Security reviewer is REQUIRED at F2 (SQ-1 through SQ-6 above; precedent DEC-168)
+1. Security reviewer is REQUIRED at F2 (SQ-1 through SQ-6 above; precedent D-168)
 2. Cargo.toml feature addition (reqwest multipart) requires explicit sign-off
 3. New subcommand tree with 4 operations, cross-cutting BC coverage in two PRD sections, and e2e test additions — scope exceeds the quick-dev threshold
 4. CWE-22 mitigation (filename sanitization) requires formal behavioral contract (BC-2.7.011) and holdout scenario before implementation
@@ -340,7 +340,7 @@ All CI jobs in `.github/workflows/ci.yml` use a pinned SHA:
 actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0  # v7.0.0
 ```
 
-This SHA appears consistently across all 10 job definitions verified in the ci.yml scan. The `ci-gate` job (job name "CI Gate") is confirmed as the single aggregating required check — it uses `needs:` to gate on the matrix jobs, and branch protection references only `ci-gate`. No topology drift detected. New CI jobs added for this feature (if any) MUST be added to `ci-gate.needs` rather than wired directly into branch protection (DEC-096/DEC-097 rule).
+This SHA appears consistently across all 10 job definitions verified in the ci.yml scan. The `ci-gate` job (job name "CI Gate") is confirmed as the single aggregating required check — it uses `needs:` to gate on the matrix jobs, and branch protection references only `ci-gate`. No topology drift detected. New CI jobs added for this feature (if any) MUST be added to `ci-gate.needs` rather than wired directly into branch protection (D-096/D-097 rule).
 
 No separate CI jobs are anticipated for this feature — the existing `build`, `test`, `clippy`, `fmt`, `deny` jobs will cover the new code automatically.
 
@@ -379,7 +379,7 @@ The following questions require a human decision before the F2 spec can be writt
 ## Revision 2 — JSM upload visibility in scope + research findings incorporated
 
 - **Revision date:** 2026-07-15
-- **F1 gate status:** APPROVED 2026-07-15 (DEC-179) — zero open design questions; ready for F2 spec handoff
+- **F1 gate status:** APPROVED 2026-07-15 (D-179) — zero open design questions; ready for F2 spec handoff
 - **Research basis:** `.factory/research/issue-576-attachments-api-2026-07-15.md` Part 2 (JSM two-step upload deep-dive; P2-1 through P2-8)
 - **Human rulings baked in:** JSM upload visibility IN SCOPE this bundle; download overwrite = refuse existing + `--force`; upload size = no hard-coded cap, graceful 413 + `size` field; #585 absorbed into S1.
 
@@ -455,7 +455,7 @@ Platform `POST /rest/api/3/issue/{key}/attachments` on a JSM issue is **INTERNAL
 - `attachment upload <KEY> --file <PATH>` with no visibility flag → **platform POST** (works on both JSM and non-JSM; safe/internal result on JSM; no servicedeskapi call)
 - `attachment upload <KEY> --file <PATH> --public` → **servicedeskapi two-step** (attachTemporaryFile → request/{id}/attachment with `public: true`); requires JSM project; requires confirmation gate (see SQ-7)
 - `attachment upload <KEY> --file <PATH> --internal` → **servicedeskapi two-step** with `public: false`; requires JSM project; no confirmation gate (internal is the safe direction)
-- `--public` or `--internal` on a non-JSM issue → exit 64 with clear message: "`--public/--internal` requires a Jira Service Management project"; the raw servicedeskapi 404 MUST be intercepted and replaced with this user-visible message (P2-4b). **[PHASE-DOC-RETRO-ANNOTATION 2026-07-15 — CONS-576-006: The `--internal` on non-JSM case above is SUPERSEDED BY OQ-9 (later in this document, §Open Questions table). OQ-9 was RATIFIED 2026-07-15: `--internal` on non-JSM = silent no-op (not exit 64). Rationale: platform POST is already internal by default (P2-4a); asserting `--internal` on a non-JSM issue is coherent and harmless — DEC-169 leniency family. `--public` on non-JSM remains exit 64 (unchanged). BC-3.9.004 implements the OQ-9 ruling correctly. This annotation is informational; the original R2.2 text is preserved for audit trail.]**
+- `--public` or `--internal` on a non-JSM issue → exit 64 with clear message: "`--public/--internal` requires a Jira Service Management project"; the raw servicedeskapi 404 MUST be intercepted and replaced with this user-visible message (P2-4b). **[PHASE-DOC-RETRO-ANNOTATION 2026-07-15 — CONS-576-006: The `--internal` on non-JSM case above is SUPERSEDED BY OQ-9 (later in this document, §Open Questions table). OQ-9 was RATIFIED 2026-07-15: `--internal` on non-JSM = silent no-op (not exit 64). Rationale: platform POST is already internal by default (P2-4a); asserting `--internal` on a non-JSM issue is coherent and harmless — D-169 leniency family. `--public` on non-JSM remains exit 64 (unchanged). BC-3.9.004 implements the OQ-9 ruling correctly. This annotation is informational; the original R2.2 text is preserved for audit trail.]**
 
 The `--internal` flag on upload is symmetric with `comment edit --internal` even though it mirrors the default — it provides an explicit opt-in for scripts that want to assert internal visibility on JSM uploads without relying on the platform-default.
 
@@ -480,7 +480,7 @@ The `--internal` flag on upload is symmetric with `comment edit --internal` even
 > |----------------------|----------------------------------|---------|
 > | BC-3.9.011 | **BC-3.9.003** | `--public` flag → servicedeskapi two-step routing + JSM-only gate |
 > | BC-3.9.012 | **BC-3.9.004** | `--internal` flag → servicedeskapi two-step; non-JSM = silent no-op (OQ-9) |
-> | BC-3.9.013 | **BC-3.9.014** | `--public` interactive confirmation gate mechanics (DEC-174) |
+> | BC-3.9.013 | **BC-3.9.014** | `--public` interactive confirmation gate mechanics (D-174) |
 > | BC-3.9.014 | **BC-3.9.011** | `--public --output json` shape — deferred-probe contract (P2-3c) |
 >
 > The R3.5 planned BCs (BC-3.9.015–020) match authored IDs exactly and are NOT affected.
@@ -544,13 +544,13 @@ Original Rev 1 recommendation (compiled-in 10 MB default) is withdrawn. Research
 
 **Human ruling received 2026-07-15.** `attachment upload --public` REQUIRES the y/N confirmation gate. This is no longer an open question — it is a ratified design input. The exact house pattern is:
 
-- **Interactive TTY:** `eprint!` the prompt to stderr followed by `stdin read_line` (the DEC-174 ratified pattern — **NOT `dialoguer::Confirm`**, which is unusable when stderr is piped)
+- **Interactive TTY:** `eprint!` the prompt to stderr followed by `stdin read_line` (the D-174 ratified pattern — **NOT `dialoguer::Confirm`**, which is unusable when stderr is piped)
 - **Non-interactive** (`--no-input` or stdin not a TTY): exit 64 with a `--yes` hint on stderr
 - **`--yes` flag:** bypasses the gate (non-interactive equivalent)
-- **`--yes` without `--public`:** silent no-op (DEC-169 leniency convention — the flag is accepted and ignored when no visibility-gated operation is being performed)
+- **`--yes` without `--public`:** silent no-op (D-169 leniency convention — the flag is accepted and ignored when no visibility-gated operation is being performed)
 - **Cancel path:** returns the cancelled JSON shape consistent with `comment edit --public` cancel: `{"cancelled": true, "uploaded": false}` (no `id`/`key` in cancel shape)
 
-**Precedent BCs for F2 spec authors:** BC-3.5.007 (the `comment edit --public` always-confirm rule), DEC-169 (leniency convention for `--yes` without a gated flag), DEC-174 (ratified `eprint!+read_line` interactive pattern vs. `dialoguer::Confirm`). The F2 spec for BC-3.9.013 **[PLANNED ID — authored as BC-3.9.014; see R2.3 drift annotation]** MUST cite all three and mirror the exact implementation pattern from `src/cli/issue/interactions.rs::handle_comment_edit` (the `--public` branch).
+**Precedent BCs for F2 spec authors:** BC-3.5.007 (the `comment edit --public` always-confirm rule), D-169 (leniency convention for `--yes` without a gated flag), D-174 (ratified `eprint!+read_line` interactive pattern vs. `dialoguer::Confirm`). The F2 spec for BC-3.9.013 **[PLANNED ID — authored as BC-3.9.014; see R2.3 drift annotation]** MUST cite all three and mirror the exact implementation pattern from `src/cli/issue/interactions.rs::handle_comment_edit` (the `--public` branch).
 
 ---
 
@@ -604,8 +604,8 @@ These obligations are delivery gates for S5, not F1 blockers.
 | OQ-5 | Download `--output json` manifest | Pending; add as BC-2.7.013 if approved |
 | OQ-6 | `--replace-existing` on filename collision | Recommendation unchanged: delete all |
 | OQ-7 | `delete <AID>` without `--issue KEY` | Recommendation unchanged: ID-only correct |
-| OQ-8 | `--public` confirmation gate | **RATIFIED 2026-07-15** — gate required; `eprint!+read_line` pattern (DEC-174, NOT dialoguer::Confirm); non-interactive → exit 64 + `--yes` hint; `--yes` without `--public` = silent no-op (DEC-169); cancel shape `{"cancelled": true, "uploaded": false}`. F2 spec must cite BC-3.5.007 + DEC-169 + DEC-174 and mirror `handle_comment_edit` --public branch. |
-| OQ-9 | `--internal` flag on platform (non-JSM) issues | **RATIFIED 2026-07-15** — silent no-op; rationale: a non-JSM issue has no customer portal, so the attachment is already internal by nature; explicitly asserting `--internal` is coherent and harmless (DEC-169 / `--no-resolution` leniency family). Contrast: `--public` on non-JSM stays exit 64 (impossible intent — no portal to publish to). |
+| OQ-8 | `--public` confirmation gate | **RATIFIED 2026-07-15** — gate required; `eprint!+read_line` pattern (D-174, NOT dialoguer::Confirm); non-interactive → exit 64 + `--yes` hint; `--yes` without `--public` = silent no-op (D-169); cancel shape `{"cancelled": true, "uploaded": false}`. F2 spec must cite BC-3.5.007 + D-169 + D-174 and mirror `handle_comment_edit` --public branch. |
+| OQ-9 | `--internal` flag on platform (non-JSM) issues | **RATIFIED 2026-07-15** — silent no-op; rationale: a non-JSM issue has no customer portal, so the attachment is already internal by nature; explicitly asserting `--internal` is coherent and harmless (D-169 / `--no-resolution` leniency family). Contrast: `--public` on non-JSM stays exit 64 (impossible intent — no portal to publish to). |
 
 ---
 
@@ -641,14 +641,14 @@ The duration argument uses the existing `src/duration.rs` parser conventions (e.
 
 **Human ruling (2026-07-15):** `attachment delete` gains the house y/N + `--yes` confirmation gate, mirroring `comment delete` (BC-3.5.002 / BC-3.5.003 precedent), NOT the `--public` upload gate:
 
-- **Single-ID delete (interactive TTY):** `eprint!` the prompt ("Delete attachment <filename> (<id>)? [y/N]") + `stdin read_line`; same DEC-174 `eprint!+read_line` pattern
+- **Single-ID delete (interactive TTY):** `eprint!` the prompt ("Delete attachment <filename> (<id>)? [y/N]") + `stdin read_line`; same D-174 `eprint!+read_line` pattern
 - **Single-ID delete (non-interactive, `--no-input` or non-TTY):** exit 64 with a `--yes` hint
 - **`--yes` flag:** bypasses gate for single-ID delete
 - **Bulk delete (`--older-than`):** always requires `--yes` (no interactive prompt for bulk — the gate is mandatory-explicit, same rationale as OQ-4); missing `--yes` → exit 64 with "`--older-than` requires `--yes` to confirm bulk deletion"
-- **`--yes` without a gated operation:** silent no-op (DEC-169 leniency)
+- **`--yes` without a gated operation:** silent no-op (D-169 leniency)
 - **Cancel path JSON shape:** `{"cancelled": true, "deleted": false}` (consistent with comment delete cancel; no `id`/`key` in cancel shape)
 
-**Precedent for F2 spec authors:** BC-3.5.002 (delete endpoint + exit codes), BC-3.5.003 (confirmation gate mechanic), DEC-169 (leniency), DEC-174 (`eprint!+read_line`). Mirror `src/cli/issue/interactions.rs::handle_comment_delete`.
+**Precedent for F2 spec authors:** BC-3.5.002 (delete endpoint + exit codes), BC-3.5.003 (confirmation gate mechanic), D-169 (leniency), D-174 (`eprint!+read_line`). Mirror `src/cli/issue/interactions.rs::handle_comment_delete`.
 
 ### R3.4 Delete signature confirmed: ID-only (OQ-7 settled)
 
@@ -665,7 +665,7 @@ The following new BCs are required beyond the ~27 from Rev 2. They extend Sectio
 
 | New BC | Subject |
 |--------|---------|
-| BC-3.9.015 | `attachment delete <AID>` interactive confirmation gate: `eprint!+read_line` (DEC-174); non-interactive → exit 64 + `--yes` hint; `--yes` bypasses; cancel shape `{"cancelled": true, "deleted": false}` |
+| BC-3.9.015 | `attachment delete <AID>` interactive confirmation gate: `eprint!+read_line` (D-174); non-interactive → exit 64 + `--yes` hint; `--yes` bypasses; cancel shape `{"cancelled": true, "deleted": false}` |
 | BC-3.9.016 | `attachment delete --older-than` always requires `--yes` (no interactive prompt for bulk); missing `--yes` → exit 64; `--dry-run` previews without mutating |
 | BC-3.9.017 | `attachment upload --replace-existing` same-filename lookup: delete ALL entries with matching filename before uploading (OQ-6 ruling: last-write-wins); non-atomic race with concurrent uploads documented in spec (JRACLOUD-96384/-78388); BC MUST NOT assert atomicity |
 | BC-3.9.018 | `attachment upload --replace-existing` when no same-filename attachment exists: upload proceeds without error (idempotent flag) |
@@ -776,7 +776,7 @@ The single-file download flow (`attachment download <KEY> --id <AID>`) is pinned
 
 ### R3.11 EOF behavior reversal for confirmation gates (P5-001) — FLAG FOR HUMAN REVIEW AT F2
 
-**Ruling reversal (2026-07-15, pass-5):** The P2-era direction for `delete` and `--public` gates stated EOF=cancel-exit-0 by analogy with what was believed to be `dialoguer::Confirm` behavior. That premise was **FALSE**: `comment delete` uses `eprint!+read_line` (DEC-174), not `dialoguer`, and maps EOF → `Interrupted` exit 130 per EC-3.5.003-3 (pinned by VP-577-030).
+**Ruling reversal (2026-07-15, pass-5):** The P2-era direction for `delete` and `--public` gates stated EOF=cancel-exit-0 by analogy with what was believed to be `dialoguer::Confirm` behavior. That premise was **FALSE**: `comment delete` uses `eprint!+read_line` (D-174), not `dialoguer`, and maps EOF → `Interrupted` exit 130 per EC-3.5.003-3 (pinned by VP-577-030).
 
 **Settled ruling:** all attachment confirmation gates mirror the sibling (`handle_comment_delete`) exactly:
 
@@ -800,7 +800,7 @@ The distinction between empty-Enter (cancel, exit 0) and EOF (exit 130) is load-
 
 **Ruling**: This is a **pattern-extension** of R3.8b ("no destructive call before a pending confirmation gate") and R3.3 (delete confirmation gate precedent). The delete-then-upload sequence in BC-3.9.017 steps 3–4 is a destructive operation (irreversible DELETE), and the pre-P15 spec had an ungated path that could silently destroy existing attachments in non-interactive mode. The same principle that requires a gate for `attachment delete` (R3.3) and `--older-than` (R3.8a) applies to `--replace-existing` with a non-empty match list.
 
-**Gate mechanics** (follows BC-3.9.014 DEC-174 pattern):
+**Gate mechanics** (follows BC-3.9.014 D-174 pattern):
 - **Interactive, ≥1 match, no `--public`**: prompt listing would-delete entries (filename + AID); `[y/N]`; cancel → exit 0.
 - **Interactive, `--public` + ≥1 match**: ONE combined prompt covering both consequences (public visibility + would-delete list); single cancel → exit 0. NOT two separate gates ("one gate per invocation, ever").
 - **Non-interactive** (`--no-input` or stdin not a TTY), ≥1 match, no `--yes`: exit 64 before any DELETE; canonical message `"Use --yes to confirm deletion of existing same-filename attachments."`.
@@ -808,7 +808,7 @@ The distinction between empty-Enter (cancel, exit 0) and EOF (exit 130) is load-
 - **Zero matches**: gate is a no-op — `--replace-existing` with zero same-filename matches proceeds without prompting; always non-interactive-safe.
 - **`--dry-run`**: gate suppressed for all consumers (no destructive call will be issued; BC-3.9.020 EC-3.9.020-7 extended).
 
-**DEC-180 precedent basis**: (1) R3.8b invariant (no destructive call before any pending gate); (2) R3.3 (delete gate precedent: one-entry confirmation for interactive single-ID delete); (3) "one gate per invocation, ever" (OQ-8 / P7-002 ruling).
+**D-180 precedent basis**: (1) R3.8b invariant (no destructive call before any pending gate); (2) R3.3 (delete gate precedent: one-entry confirmation for interactive single-ID delete); (3) "one gate per invocation, ever" (OQ-8 / P7-002 ruling).
 
 **Spec impact**: BC-3.9.017 step 2 rewritten (P15-002); EC-3.9.017-9..12 added; BC-3.9.014 expanded to THREE consumers; EC-3.9.003-5 extended; EC-3.9.020-7 extended; BC-3.9.018 zero-match alignment noted; VP-576-003 `--yes` rationale updated; H-NEW-ATTACHMENT-010 added (holdouts 97→98).
 

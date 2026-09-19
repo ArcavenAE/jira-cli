@@ -57,7 +57,7 @@ registry: `src/cli/issue/edit.rs` and `src/adf.rs` are SS-02 (CLI Layer) / SS-08
 POSTs/PUTs to Jira on the live path) and is explicitly called out in CLAUDE.md's "Known
 Size Deviations" as a large, heavily-guarded module (2,067 LOC, ADR-0012 exception).
 I'd informally rate it **HIGH** (mutation surface, dry-run is the sole non-destructive
-preview path, DEC-188 pre-flight guards live here) but not CRIT — no secrets, no auth,
+preview path, D-188 pre-flight guards live here) but not CRIT — no secrets, no auth,
 no network trust boundary is touched by this specific fix; it only adds a stdin read +
 ADF render inside a code path that already returns before any HTTP call. Security
 review is not mandatory for this one; a careful code reviewer + the existing dry-run
@@ -119,7 +119,7 @@ Confirmed independently: `AuthCommand::Switch { name: String }` has no subcomman
 `hide`, aliasing, and leans away from relying on `conflicts_with` alone). A single
 runtime guard (`if cli.profile.is_some() { return Err(JrError::UserError(...)) }`) at an
 existing dispatch site. I agree with the brief's Option 3 and its rejection of Options
-1a/1b/2 — this repo already has the identical precedent (DEC-188 exit-64 pre-flight
+1a/1b/2 — this repo already has the identical precedent (D-188 exit-64 pre-flight
 guards in `issue create`, explicitly documented in CLAUDE.md as "MUST NOT be implemented
 via clap attributes — that yields exit 2, not the required exit-64 UserError"). This is
 the same pattern, same rationale, applied to a different command.

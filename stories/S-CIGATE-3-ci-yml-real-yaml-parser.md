@@ -193,7 +193,7 @@ tracked separately and is NOT opened by this change."* This story is that follow
 - `POSITIONAL-ASSUMPTION-AXIS` (HIGH, OPEN, window 57/58/59) — `extract_key_name_at_indent`'s
   hard-coded 4-space job-child indent is assumed, never checked; a legal 6-space (or 3- or
   8-space) sibling job body bypasses every key-set guard built on it while the full suite
-  stays green (`ADV-P57-HIGH-001`, live-verified against `ci-gate`'s DEC-246 duplicate-check-
+  stays green (`ADV-P57-HIGH-001`, live-verified against `ci-gate`'s D-246 duplicate-check-
   name guard). This is a SECOND, orthogonal axis of the same "lexer disagrees with a real
   parser" defect class as the node-properties/BOM/Unicode-line-break findings above — spelling
   (round 13/14/16 findings) and indent/position (this finding) vary independently, and a fix or
@@ -687,7 +687,7 @@ subsumed" requirement, and AC-009's full-suite regression check.
 ## Close-Out (2026-08-12, S-CIGATE-3-MERGED-CYCLE-CLOSED)
 
 Delivered and squash-merged to `develop` as **PR #680** (`3df77a54`, mergedAt
-2026-08-12T16:00:05Z, human owner/admin merge per DEC-268); post-implementation adversarial
+2026-08-12T16:00:05Z, human owner/admin merge per D-268); post-implementation adversarial
 finding `B-1` (pr-reviewer cycle 1, value-side YAML node-property coverage gap vs AC-004) was
 independently verified REAL-but-INERT and fixed pre-merge (`dc4909b2`, 6 new RED-proven
 `test_b1_*` tests); all 9 acceptance criteria satisfied. `status: done`.

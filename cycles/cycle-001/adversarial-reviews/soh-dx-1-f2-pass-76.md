@@ -37,7 +37,7 @@ bundle: SOH-DX-1
 aperture: reality-check
 spec_version: v1.3.163
 previous_review: null
-basis: DEC-190 substitute (consistency-validator, not adversary agent)
+basis: D-190 substitute (consistency-validator, not adversary agent)
 ---
 
 # Adversarial Review: SOH-DX-1 F2 (Pass 76)
@@ -165,7 +165,7 @@ _None._
 
 - **Dispatch fork at line 49**: `if request_type.is_some()` → `return handle_jsm_create(...)` — confirmed.
 - **Guard placement at ~:81**: `if !field_pairs.is_empty()` is at line 81 exactly; `if on_behalf_of.is_some()` is at line 86. These are BEFORE project-key resolution (which begins at the `let project_key = ...` block following line 93). Spec claims "step 2 before project-key resolution at step 3" — confirmed correct.
-- **Current guards are eprintln! not exit-64**: Confirmed — the current code still uses `eprintln!("warning: --field is ignored...")`. The spec correctly describes the CURRENT state as warn-and-proceed and mandates the DEC-188 flip to `return Err(JrError::UserError(...))` as a F4 delivery obligation.
+- **Current guards are eprintln! not exit-64**: Confirmed — the current code still uses `eprintln!("warning: --field is ignored...")`. The spec correctly describes the CURRENT state as warn-and-proceed and mandates the D-188 flip to `return Err(JrError::UserError(...))` as a F4 delivery obligation.
 - **`--markdown requires --description` guard is in jsm_create.rs ~:175, NOT create.rs**: Confirmed — `src/cli/issue/jsm_create.rs:175` has the guard; `src/cli/issue/create.rs` has no such guard. The stale citation in `tests/issue_create_jsm.rs ~:2373-2374` ("verify against create.rs lines 333-343") is correctly identified by the spec as a dead citation requiring F4 correction.
 - **ADR-0014 amendment sites exist**: `docs/adr/0014-jsm-request-type-dispatch.md` confirmed to contain "byte-for-byte the same code path" (line 60), "path POSTs to `/rest/api/3/issue` (unchanged)" (line 82), and "The platform path is byte-for-byte unchanged" (line 161) — three of the four amendment sites. Spec mandate to amend at F4 is grounded.
 

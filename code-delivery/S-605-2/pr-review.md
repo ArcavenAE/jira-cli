@@ -4,7 +4,7 @@
 
 `jr issue edit --component` multi-key/`--jql` bulk path (BC-3.4.023). Reviewed the diff, PR
 description, and test evidence as an independent final gate (non-redundant with Step-4.5 per
-DEC-284). No BLOCKING / HIGH / MEDIUM findings.
+D-284). No BLOCKING / HIGH / MEDIUM findings.
 
 ### Rationale
 

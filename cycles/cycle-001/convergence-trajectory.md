@@ -440,7 +440,7 @@ CONVERGED. 0 substantive findings. OBS-13-1 RESOLVED (JiaClient typo global swee
 
 2. **R2 produced a doc-fallout sub-cluster at R3 despite the lesson being codified.** The narration-style comments (Strategy:, Logic:) describing the old brace-matching behavior were ~15 lines above the changed closure — close enough to be in scope, far enough to be skipped without a deliberate grep. The sub-lesson ("grep narration-style comments before pushing behavior-expanding commits") was codified in lessons.md during Burst 60. PR #358 R3 is the second doc-fallout cluster in 2 days (first: PR #356 R14-R18; second: PR #358 R2→R3). Prevention cost for R3: one `grep -n "Strategy:\|Logic:" src/cli/issue/create.rs` before pushing c708211.
 
-3. **First trajectory with an explicit false-positive marker (1-FP).** The R4 false-positive produced a round with 0 code change and 0 trajectory regression. It is recorded as `1-FP` to distinguish it from a real finding of weight 1 — the count reflects Copilot's claimed findings, not validated real findings. The FP was caught by DEC-018 empirical-first discipline; without it, the "fix" (`../../mod.rs`) would have broken the working test.
+3. **First trajectory with an explicit false-positive marker (1-FP).** The R4 false-positive produced a round with 0 code change and 0 trajectory regression. It is recorded as `1-FP` to distinguish it from a real finding of weight 1 — the count reflects Copilot's claimed findings, not validated real findings. The FP was caught by D-018 empirical-first discipline; without it, the "fix" (`../../mod.rs`) would have broken the working test.
 
 4. **Counterfactual cost of missing the false-positive:** Changing `../mod.rs` to `../../mod.rs` from `src/cli/issue/create.rs` would resolve to `src/mod.rs` — a file that does not exist. The test would have failed to compile, requiring a revert commit, a new Copilot round, and likely CI investigation. Estimated cost: 2+ additional rounds. Actual cost of false-positive identification: 1 probe test + 1 Perplexity query + 1 reply comment.
 
@@ -452,7 +452,7 @@ CONVERGED. 0 substantive findings. OBS-13-1 RESOLVED (JiaClient typo global swee
 
 ### Phase 1d — Adversarial Spec Review
 
-**3/3 FULLY CONVERGED** at Pass 28 (2026-05-04). 28 passes total: 25 SUBSTANTIVE + 3 consecutive CLEAN-PASS (P26-P27-P28). 5 counter resets. ~80+ findings addressed. Final trajectory: 30→15→9→5→10→5→4→3→4→0→2→0→3→0→2→0→3→0→3→5→3→4→5→5→5→2→0→0→0. Spec corpus at convergence: 541 BCs, 41 NFRs, 48 holdouts, 26 risks, 13 ADRs, 3 SDs. Phase 1 → Phase 2 gate APPROVED (DEC-009, 2026-05-04). Full per-pass details in this file above.
+**3/3 FULLY CONVERGED** at Pass 28 (2026-05-04). 28 passes total: 25 SUBSTANTIVE + 3 consecutive CLEAN-PASS (P26-P27-P28). 5 counter resets. ~80+ findings addressed. Final trajectory: 30→15→9→5→10→5→4→3→4→0→2→0→3→0→2→0→3→0→3→5→3→4→5→5→5→2→0→0→0. Spec corpus at convergence: 541 BCs, 41 NFRs, 48 holdouts, 26 risks, 13 ADRs, 3 SDs. Phase 1 → Phase 2 gate APPROVED (D-009, 2026-05-04). Full per-pass details in this file above.
 
 ### Phase 2-adv — Adversarial Story Review
 
@@ -460,7 +460,7 @@ CONVERGED. 0 substantive findings. OBS-13-1 RESOLVED (JiaClient typo global swee
 
 ### Phase 3-adv — Wave Adversarial Reviews (per-story + wave)
 
-Wave gate: not started. Feature Mode #110-pr2: **F5 CONVERGED** 12→5→0→0→0 (Pass 5, 2026-05-10). F6: SECURITY PASS (→#334). F7: PASS-WITH-FOLLOWUPS (5/5; →#347). 10 Copilot rounds: 27/27 resolved. PR #348 MERGED 2026-05-11 @ e480ff2 (closes #110). **PR #351 MERGED 2026-05-11 @ 3216ec2** (closes #339+#344). **PR #352 MERGED 2026-05-11 @ 57cc0ae** (closes #337+#341+#347; R2 clean 3→0). **PR #353 MERGED 2026-05-11 @ 7fbf14d** (closes #338; 0 inline Round 1). **PR #354 MERGED 2026-05-11 @ 4e14849** (closes #342; docs-only; CONVERGED 1→1→0). **PR #355 MERGED 2026-05-11 @ 448c568** (closes #332; trajectory 3→1→0). **PR #356 MERGED 2026-05-12T01:37:46Z @ 9acf01d** (closes #334; CWE-117 sanitize_for_stderr; 19 rounds; trajectory 4→1→2→2→3→2→3→2→2→1→1→2→1→1→2→3→1→1→0; 36/36 threads resolved; CI 8/8 green). **PR #357 MERGED 2026-05-12T03:03:12Z @ d208a6d** (closes #335; chore(security): release-gate JR_BASE_URL; 2 rounds; trajectory 3→0; fastest convergence in cycle-001; doc-fallout lesson applied). **PR #358 MERGED 2026-05-12 @ 561217b** (squash: "chore(test): assert every IssueCommand::Edit field is categorized (#343) (#358)"; closes #343; 5 rounds; trajectory 1→1→2→1-FP→0; second fastest in cycle-001; first false-positive at R4 caught by DEC-018 empirical-first discipline). 6 audit-followups remain: #333, #336, #340, #345, #346, #350 (#331 sandbox-blocked deferred). Full records: `cycles/cycle-001/adversarial-reviews/issue-110-pr2/` + `cycles/cycle-001/adversarial-reviews/pr-352-docs-cleanup/` + `cycles/cycle-001/adversarial-reviews/pr-353-bulk-max-keys/` + `cycles/cycle-001/adversarial-reviews/pr-354-labels-shape-doc/` + `cycles/cycle-001/adversarial-reviews/pr-355-task-id-validation/` + `cycles/cycle-001/adversarial-reviews/pr-356-sanitize-errors/` + `cycles/cycle-001/adversarial-reviews/pr-357-release-gate-jr-base-url/` + `cycles/cycle-001/adversarial-reviews/pr-358-edit-field-categorization-test/`.
+Wave gate: not started. Feature Mode #110-pr2: **F5 CONVERGED** 12→5→0→0→0 (Pass 5, 2026-05-10). F6: SECURITY PASS (→#334). F7: PASS-WITH-FOLLOWUPS (5/5; →#347). 10 Copilot rounds: 27/27 resolved. PR #348 MERGED 2026-05-11 @ e480ff2 (closes #110). **PR #351 MERGED 2026-05-11 @ 3216ec2** (closes #339+#344). **PR #352 MERGED 2026-05-11 @ 57cc0ae** (closes #337+#341+#347; R2 clean 3→0). **PR #353 MERGED 2026-05-11 @ 7fbf14d** (closes #338; 0 inline Round 1). **PR #354 MERGED 2026-05-11 @ 4e14849** (closes #342; docs-only; CONVERGED 1→1→0). **PR #355 MERGED 2026-05-11 @ 448c568** (closes #332; trajectory 3→1→0). **PR #356 MERGED 2026-05-12T01:37:46Z @ 9acf01d** (closes #334; CWE-117 sanitize_for_stderr; 19 rounds; trajectory 4→1→2→2→3→2→3→2→2→1→1→2→1→1→2→3→1→1→0; 36/36 threads resolved; CI 8/8 green). **PR #357 MERGED 2026-05-12T03:03:12Z @ d208a6d** (closes #335; chore(security): release-gate JR_BASE_URL; 2 rounds; trajectory 3→0; fastest convergence in cycle-001; doc-fallout lesson applied). **PR #358 MERGED 2026-05-12 @ 561217b** (squash: "chore(test): assert every IssueCommand::Edit field is categorized (#343) (#358)"; closes #343; 5 rounds; trajectory 1→1→2→1-FP→0; second fastest in cycle-001; first false-positive at R4 caught by D-018 empirical-first discipline). 6 audit-followups remain: #333, #336, #340, #345, #346, #350 (#331 sandbox-blocked deferred). Full records: `cycles/cycle-001/adversarial-reviews/issue-110-pr2/` + `cycles/cycle-001/adversarial-reviews/pr-352-docs-cleanup/` + `cycles/cycle-001/adversarial-reviews/pr-353-bulk-max-keys/` + `cycles/cycle-001/adversarial-reviews/pr-354-labels-shape-doc/` + `cycles/cycle-001/adversarial-reviews/pr-355-task-id-validation/` + `cycles/cycle-001/adversarial-reviews/pr-356-sanitize-errors/` + `cycles/cycle-001/adversarial-reviews/pr-357-release-gate-jr-base-url/` + `cycles/cycle-001/adversarial-reviews/pr-358-edit-field-categorization-test/`.
 
 **Issue #350 (search_issue_keys) F5 CONVERGED 2026-05-13** — 11 substantive passes (longest cycle-001 convergence). Trajectory 4→0→5→5→3→5→2→1→0→0→0. 3 consecutive CLEAN at passes 09-10-11. **PR #362 MERGED 2026-05-13T17:51:09Z @ 8010445** (Copilot R3=0). Net delivery: BC-2.6.050 + 13 tests + 8 ACs + ~70 LOC impl. Full record at `.factory/cycles/cycle-001/adversarial-reviews/issue-350-search-issue-keys/CONVERGENCE.md`.
 
@@ -488,7 +488,7 @@ F1d adversarial: 8 passes total (passes 06/07/08 CLEAN, 3/3). F4 per-story adver
 
 ### Issue #384 — Full-Cycle Convergence CLOSED (2026-05-20)
 
-F2 adversarial spec review: 3 passes, 3/3 CLEAN. CRITICAL control-flow defect caught at pass 1: OAuth Bearer + generic-expiry 401 must route through the refresh coordinator (blanket-401 trigger per BC-X.3.002 + DEC-013), NOT the NotAuthenticated arm; corrected in bc-3-issue-write.md BC-3.8.014/015 scoping language + OAuth test paths pinned via scope-mismatch request bodies. Spec corpus at convergence: 573 BCs total (+4: BC-3.8.014, BC-3.8.015, BC-X.8.006, BC-X.8.007; modified: BC-3.8.001, BC-3.8.009, BC-X.3.002). H-NEW-JSM-RT-003 revised. Spec version 1.1.0. F4 per-story adversarial: 3 passes, 3/3 CLEAN. BC-3.8.014/015 + BC-X.8.006/007 verified. is_oauth_auth() predicate + API_TOKEN_EXPIRY_HINT contract verified. Copilot review: 3 cycles, converged to zero comments. PR #394 squash-merged @ b36b291 (2026-05-20). Issue #384 auto-closed. F7 traceability verified: 4 BCs (BC-3.8.014/015, BC-X.8.006/007) ↔ 5 named tests in tests/issue_create_jsm.rs + inline unit tests ↔ 4-file implementation (is_oauth_auth(), API_TOKEN_EXPIRY_HINT, handle_jsm_create, require_service_desk). All 3 spec guards exit 0. PG-384-1 (BC-INDEX Coverage Statistics table gap) + PG-384-2 (spec-guard incompleteness F2/F3) recorded as justified deferrals. Cycle CLOSED 2026-05-20.
+F2 adversarial spec review: 3 passes, 3/3 CLEAN. CRITICAL control-flow defect caught at pass 1: OAuth Bearer + generic-expiry 401 must route through the refresh coordinator (blanket-401 trigger per BC-X.3.002 + D-013), NOT the NotAuthenticated arm; corrected in bc-3-issue-write.md BC-3.8.014/015 scoping language + OAuth test paths pinned via scope-mismatch request bodies. Spec corpus at convergence: 573 BCs total (+4: BC-3.8.014, BC-3.8.015, BC-X.8.006, BC-X.8.007; modified: BC-3.8.001, BC-3.8.009, BC-X.3.002). H-NEW-JSM-RT-003 revised. Spec version 1.1.0. F4 per-story adversarial: 3 passes, 3/3 CLEAN. BC-3.8.014/015 + BC-X.8.006/007 verified. is_oauth_auth() predicate + API_TOKEN_EXPIRY_HINT contract verified. Copilot review: 3 cycles, converged to zero comments. PR #394 squash-merged @ b36b291 (2026-05-20). Issue #384 auto-closed. F7 traceability verified: 4 BCs (BC-3.8.014/015, BC-X.8.006/007) ↔ 5 named tests in tests/issue_create_jsm.rs + inline unit tests ↔ 4-file implementation (is_oauth_auth(), API_TOKEN_EXPIRY_HINT, handle_jsm_create, require_service_desk). All 3 spec guards exit 0. PG-384-1 (BC-INDEX Coverage Statistics table gap) + PG-384-2 (spec-guard incompleteness F2/F3) recorded as justified deferrals. Cycle CLOSED 2026-05-20.
 
 ### Issue #385 — Full-Cycle Convergence CLOSED (2026-05-20)
 
@@ -540,7 +540,7 @@ Full pass reports: `.factory/phase-f5-adversarial/issue-407/`.
 
 ### E2E Live-Jira Feature — F5 Scoped Adversarial Review CONVERGED (2026-05-29)
 
-7 passes total. Convergence at passes 5/6/7 (3 consecutive CLEAN). Full bar chosen by human over early-accept at 1 clean (DEC-033).
+7 passes total. Convergence at passes 5/6/7 (3 consecutive CLEAN). Full bar chosen by human over early-accept at 1 clean (D-033).
 
 | Pass | Date | CRIT | HIGH | MED | LOW | Counter | Verdict |
 |------|------|------|------|-----|-----|---------|---------|
@@ -615,12 +615,12 @@ Trajectory shorthand: `1M→CLEAN→CLEAN→CLEAN`
 | R4 | 1 | -1 | Doc nit; fixed |
 | R5 | 0 | -1 | Clean — **STOP CONDITION** |
 
-Decay pattern: bug-class findings → readability → doc-nit. Matched DEC-026 inflection point analysis exactly.
+Decay pattern: bug-class findings → readability → doc-nit. Matched D-026 inflection point analysis exactly.
 
 **Fix commits (fix/e2e-first-run):** c9ad027, ee5cbce, 2bce989, 5550b40, 1991fa9, 6954196, ce48952, a927a72
 
 **Fixes delivered:**
-- **FIX-A:** `write_flow` used hardcoded `"In Progress"` / `"Done"` transition names. Fixed: read `JR_E2E_STATUS_IN_PROGRESS` / `JR_E2E_STATUS_DONE` env vars (defaulting to those names for convenience, matching the existing DEC-032 design).
+- **FIX-A:** `write_flow` used hardcoded `"In Progress"` / `"Done"` transition names. Fixed: read `JR_E2E_STATUS_IN_PROGRESS` / `JR_E2E_STATUS_DONE` env vars (defaulting to those names for convenience, matching the existing D-032 design).
 - **FIX-B:** `sprint_list` and `sprint_current` would panic on the ES board (team-managed project = "simple board" response, not Scrum). Fixed: detect `"simple board"` board type in API response and emit a clean SKIP log message; test assertions relaxed to accept skip.
 - **FIX-C:** Gate test was self-contradictory — it asserted a condition and then immediately asserted its negation. Removed entirely (it was testing framework plumbing that was already covered elsewhere).
 
@@ -704,7 +704,7 @@ Trajectory shorthand: `1C(sibling-omission)→fix→1C(off-branch-spec)→fix→
 
 **Scope:** 7 files — .github/workflows/e2e.yml, .github/workflows/e2e-sweeper.yml, README.md, CLAUDE.md, CHANGELOG.md, docs/specs/e2e-fork-safe-ci-enablement.md (new), docs/specs/e2e-live-jira-testing.md. Zero src/, zero Rust tests.
 
-**Cycle CLOSED 2026-06-02.** PR #459 squash-merged → develop @ afa12570. DEC-063.
+**Cycle CLOSED 2026-06-02.** PR #459 squash-merged → develop @ afa12570. D-063.
 
 ---
 
@@ -722,7 +722,7 @@ Trajectory shorthand: `1C(sibling-omission)→fix→1C(off-branch-spec)→fix→
 2. **Correctness:** Full `cargo test` clean (all tests pass including gate-guard meta-test). `cargo deny` ok. `cargo clippy -- -D warnings` clean. `cargo fmt -- --check` clean.
 3. **Spec alignment:** F7 consistency audit CONSISTENT — counts agree across 8 surfaces (BC-INDEX frontmatter, BC-INDEX sections, BC-INDEX body, CANONICAL-COUNTS.md, prd.md, ARCH-INDEX, STORY-INDEX, CLAUDE.md). BC 594 / NFR 41 / Stories 68 all match. CLAUDE.md no change needed (test-only cycle).
 4. **Security:** security reviewer APPROVE (no security surface; test-only).
-5. **Process-gaps:** F-1b FIXED; O1-TABLE-ASSERT DEFERRED (justified); DEC-075 LESSON codified. Cycle-closing checklist SATISFIED.
+5. **Process-gaps:** F-1b FIXED; O1-TABLE-ASSERT DEFERRED (justified); D-075 LESSON codified. Cycle-closing checklist SATISFIED.
 
 **Input-drift check (S-7.02 defensive sweep):** 11 pre-existing files with stale content — all cycles/bookkeeping files from prior sessions, none #475-related. No propagation gap.
 
@@ -732,7 +732,7 @@ Trajectory shorthand: `1C(sibling-omission)→fix→1C(off-branch-spec)→fix→
 
 **Trajectory shorthand:** F4: `1H+1L(async-guard-false-green)→fix→CLEAN→CLEAN→CLEAN` / F5–F7: `5-dim-delta-CLEAN`
 
-**Cycle CLOSED 2026-06-11.** PR #499 squash-merged → develop @ 418a392e. DEC-076. DEFERRED-ADF-E2E: ALL sub-gaps DONE.
+**Cycle CLOSED 2026-06-11.** PR #499 squash-merged → develop @ 418a392e. D-076. DEFERRED-ADF-E2E: ALL sub-gaps DONE.
 
 ---
 
@@ -810,7 +810,7 @@ Trajectory shorthand: `1C(sibling-omission)→fix→1C(off-branch-spec)→fix→
 
 **Trajectory shorthand:** 15 passes; 6 fix rounds; final 3/3 CLEAN. Zero production-code defects — all findings were doc/spec precision.
 **Genuine catches:** doc/spec precision gaps only; Algorithm B proven correct ~12x across all lenses.
-**Code delta:** BC-7.2.011 v1.9.1→v1.9.2→v1.9.3→v1.9.4→v1.9.5→v1.9.6. PR #521 MERGED → develop @ 3ba8ea2. DEC-107.
+**Code delta:** BC-7.2.011 v1.9.1→v1.9.2→v1.9.3→v1.9.4→v1.9.5→v1.9.6. PR #521 MERGED → develop @ 3ba8ea2. D-107.
 
 ---
 
@@ -842,7 +842,7 @@ Trajectory shorthand: `1C(sibling-omission)→fix→1C(off-branch-spec)→fix→
 - LOW F-522-02 (R3): added deterministic 3-line + CRLF inline-HTML regression cases. FIXED @ c7103b7.
 - LOW F-OBS-1 (R3): AC-014 illustrative snippet form (cases 2048→1000, `prop_map` wrapper removed). FIXED @ c7103b7.
 - LOW OBS-1/OBS-2 (R1): spec split-mechanism note + whitespace-blank test. FIXED @ d3c35a4.
-**Code delta:** BC-7.2.011 v1.9.7→v1.9.8→v1.9.9→v1.10.0→v1.11.0 across F2/F4/F5. S-522 7→14→19 ACs, severity LOW→MED→HIGH→HIGH. 237→244→248 lib tests. DEC-110+111+112+113+114+115.
+**Code delta:** BC-7.2.011 v1.9.7→v1.9.8→v1.9.9→v1.10.0→v1.11.0 across F2/F4/F5. S-522 7→14→19 ACs, severity LOW→MED→HIGH→HIGH. 237→244→248 lib tests. D-110+111+112+113+114+115.
 **Process gap:** LESSON-F1-SIBLING-CASE codified — F1 boundary analysis must enumerate ALL control chars in same hazard class at a normalization chokepoint, not only the one that triggered the issue report. F5 3-lens fan-out caught the gap; repeated single-lens passes did not.
 
 ---
@@ -917,8 +917,8 @@ Trajectory shorthand: `1C(sibling-omission)→fix→1C(off-branch-spec)→fix→
 ## CITATION-GUARDS F3 — Story A Adversarial Convergence (ongoing, 2026-07-02..2026-07-03)
 
 **Story:** S-MUTANTS-SCOPE-GUARDS-1 #101 — cargo-mutants scope + citation guards
-**Phase:** F3 strict convergence loop (DEC-151: 3 consecutive CLEAN incl. verification-adequacy lens)
-**Baseline at DEC-151 (2026-07-02):** Story v1.17 CONSISTENT (~1850 lines); 22 passes / 16 fix rounds done; streak 0/3.
+**Phase:** F3 strict convergence loop (D-151: 3 consecutive CLEAN incl. verification-adequacy lens)
+**Baseline at D-151 (2026-07-02):** Story v1.17 CONSISTENT (~1850 lines); 22 passes / 16 fix rounds done; streak 0/3.
 
 ### Finding Progression (passes 23–35, all verification-adequacy lens)
 
@@ -967,24 +967,24 @@ Trajectory shorthand: `1C(sibling-omission)→fix→1C(off-branch-spec)→fix→
 | 63 | → | 1 | 0 | 0 | 0 | 1 | 0/3 | FINDINGS_REMAIN |
 | 64 | → | 0 | 0 | 0 | 0 | 0 | 1/3 | CLEAN-PASS |
 | 65 | → | 0 | 0 | 0 | 0 | 0 | 2/3 | CLEAN-PASS (verification-adequacy lens) |
-| 66 | v1.48 | 0 | 0 | 0 | 0 | 0 | 3/3 | **CLEAN-PASS — CONVERGED (window 14 closed; DEC-151 satisfied 2026-07-04)** |
+| 66 | v1.48 | 0 | 0 | 0 | 0 | 0 | 3/3 | **CLEAN-PASS — CONVERGED (window 14 closed; D-151 satisfied 2026-07-04)** |
 
-**Trajectory shorthand (p23–66):** `6→7→2→4→2→7→3→1→4→5→3→4→2→3→2→4→0→1→3→4→0→0→4→3→0→1→3→0→0→6→0→0→3→4→1→4→0→0→3→3→1→0→0→0` — 44 passes since DEC-151; 47 fix rounds; **CONVERGED (DEC-151 strict, 2026-07-04).** 13 CLEANs total. Story v1.48 status=ready.
+**Trajectory shorthand (p23–66):** `6→7→2→4→2→7→3→1→4→5→3→4→2→3→2→4→0→1→3→4→0→0→4→3→0→1→3→0→0→6→0→0→3→4→1→4→0→0→3→3→1→0→0→0` — 44 passes since D-151; 47 fix rounds; **CONVERGED (D-151 strict, 2026-07-04).** 13 CLEANs total. Story v1.48 status=ready.
 
 ### Key Observations (passes 23–66 — FINAL)
 
-- **Fix-round regression class (process note a):** Three fix rounds reintroduced previously-closed findings: a v1.13-class tautology recurred in round 20 (before DEC-151), and false RED-claim constructs appeared in rounds 26 and 29 (after DEC-151). The fresh-context gate and consistency-validator fidelity probes are load-bearing; same-author fix verification is not sufficient.
+- **Fix-round regression class (process note a):** Three fix rounds reintroduced previously-closed findings: a v1.13-class tautology recurred in round 20 (before D-151), and false RED-claim constructs appeared in rounds 26 and 29 (after D-151). The fresh-context gate and consistency-validator fidelity probes are load-bearing; same-author fix verification is not sufficient.
 - **Meta-lens behavior (process note b):** ADVERSARY-META-LENS-REGRESS remains OPEN as an engine item. The verification-adequacy lens generates inherently recursive meta-level findings on guard-spec stories; these manifest as concrete mutation windows in this context and are actionable. The strict loop was terminable — window 14 succeeded — but the draw variance cost ~44 passes.
 - **Story growth:** v1.17 ~1850 lines → v1.48 ~3000+ lines. Spec specifies: 12 fixtures A–L (multi-probe F/H/I/J), 9 Rust tests, 4 post-fixture self-assertions, byte-pinned regexes, ~13 documented accepted residuals.
 - **Severity pattern (p23–66):** CRIT/HIGH at p23 (1H), p24 (1H), p30 (1H). ~20 MED findings total. Last MED+ at p52 (3M+3L; Fixture H increment discipline — the one F4-breaking gap). Last 14 passes before window 14 were all LOW or CLEAN.
 - **CLEAN pass history (13 total):** p39 → p43+p44 (window-2) → p47 (window-3/4) → p50+p51 (window-6) → p53+p54 (window-7) → p59+p60 (window-11) → p64+p65+p66 (window 14 — CONVERGED).
-- **Window-14 strategy:** Coherence-lens lead (p64) cleared remaining LOW-severity residuals; verification-adequacy lens (p65) satisfied the mandatory DEC-151 requirement; correctness/ground-truth (p66) provided the third consecutive CLEAN confirming convergence.
+- **Window-14 strategy:** Coherence-lens lead (p64) cleared remaining LOW-severity residuals; verification-adequacy lens (p65) satisfied the mandatory D-151 requirement; correctness/ground-truth (p66) provided the third consecutive CLEAN confirming convergence.
 - **READY-for-F4 declarations:** Three independent adversary agents (p37, p45, p46) declared READY-for-F4 despite issuing findings — accurate assessment in hindsight; the remaining findings were all LOW and took ~20 more passes under strict criterion to exhaust.
-- **Draw-variance analysis:** Strict criterion (Option C, DEC-151) required 44 passes where Option B (one non-meta pass) would likely have converged ~p29. Cost: ~15 extra passes. Benefit: caught ADVERSARY-META-LENS-REGRESS dynamics empirically, produced a fully exhausted story with zero open findings.
+- **Draw-variance analysis:** Strict criterion (Option C, D-151) required 44 passes where Option B (one non-meta pass) would likely have converged ~p29. Cost: ~15 extra passes. Benefit: caught ADVERSARY-META-LENS-REGRESS dynamics empirically, produced a fully exhausted story with zero open findings.
 
-### Convergence Criterion (DEC-151)
+### Convergence Criterion (D-151)
 
-**SATISFIED 2026-07-04.** Window 14 (passes 64/65/66): three consecutive CLEAN passes including the verification-adequacy lens (p65). 44 adversary passes / 47 fix rounds total. Story S-MUTANTS-SCOPE-GUARDS-1 v1.48 status=ready. DEC-152 recorded. F4 dispatch pending human authorization.
+**SATISFIED 2026-07-04.** Window 14 (passes 64/65/66): three consecutive CLEAN passes including the verification-adequacy lens (p65). 44 adversary passes / 47 fix rounds total. Story S-MUTANTS-SCOPE-GUARDS-1 v1.48 status=ready. D-152 recorded. F4 dispatch pending human authorization.
 
 ---
 
@@ -992,7 +992,7 @@ Trajectory shorthand: `1C(sibling-omission)→fix→1C(off-branch-spec)→fix→
 
 **Story:** S-MUTANTS-SCOPE-GUARDS-1 #101 — cargo-mutants scope + citation guards
 **Phase:** F4 per-story adversarial convergence (BC-5.39.001)
-**Baseline:** Story v1.48 CONVERGED (F3 DEC-151 strict); implementation commit 376e2c8 (Guard 2 bash + Guard 3 Rust + ci.yml + policy-doc + CHANGELOG + CLAUDE.md + glob dev-dep). Red Gate PASSED @ 7e858f8.
+**Baseline:** Story v1.48 CONVERGED (F3 D-151 strict); implementation commit 376e2c8 (Guard 2 bash + Guard 3 Rust + ci.yml + policy-doc + CHANGELOG + CLAUDE.md + glob dev-dep). Red Gate PASSED @ 7e858f8.
 
 ### Finding Progression (passes 1–9)
 
@@ -1055,7 +1055,7 @@ Non-blocking observations tracked as Drift Items: F-P8-01 §Scope↔examine_glob
 **Findings:** 0 — CLEAN
 **Counter:** 3/3
 
-**CONVERGED 2026-07-04.** Story #101 v1.48 implementation MERGE-READY. PR #572 (https://github.com/Zious11/jira-cli/pull/572): security CLEAN (1 LOW intentional, 5 INFO), pr-reviewer APPROVE cycle 1, CI 15/15 SUCCESS, mergeStateStatus CLEAN. HELD per DEC-128 — awaiting human code-owner approval + merge authorization.
+**CONVERGED 2026-07-04.** Story #101 v1.48 implementation MERGE-READY. PR #572 (https://github.com/Zious11/jira-cli/pull/572): security CLEAN (1 LOW intentional, 5 INFO), pr-reviewer APPROVE cycle 1, CI 15/15 SUCCESS, mergeStateStatus CLEAN. HELD per D-128 — awaiting human code-owner approval + merge authorization.
 
 ### Demos
 
@@ -1074,8 +1074,8 @@ Non-blocking observations tracked as Drift Items: F-P8-01 §Scope↔examine_glob
 ## CITATION-GUARDS Story B F3 — Adversarial Convergence (2026-07-06)
 
 **Story:** S-BC-CITATION-GUARD-1 (story #102)
-**Criterion:** DEC-153 standard — 3 consecutive clean diverse-lens passes (verification-adequacy observations = LOW-informational, non-streak-resetting)
-**Outcome:** CONVERGED (DEC-155, 2026-07-06) — 15 passes / 9 fix rounds / clean window passes 13/14/15
+**Criterion:** D-153 standard — 3 consecutive clean diverse-lens passes (verification-adequacy observations = LOW-informational, non-streak-resetting)
+**Outcome:** CONVERGED (D-155, 2026-07-06) — 15 passes / 9 fix rounds / clean window passes 13/14/15
 
 ### Finding Progression
 
@@ -1109,8 +1109,8 @@ Non-blocking observations tracked as Drift Items: F-P8-01 §Scope↔examine_glob
 **Counter:** 0/3
 
 #### Pass 2
-**Findings:** 7 (2C/1H/4M/0L) — incl. F-B2-03 jointly-unsatisfiable ratified-design contradiction → DEC-154 grammar extension (Option A: 3 new branches added to 7-branch dispatch)
-**Fix:** v1.2→v1.3 — F-B2-01..09 + DEC-154 Option A: single-pass regex → two-pass extractor; Fixture E reworked; FLOOR 249→244; 3 new branches (b)(c)(e); fixtures I/J/K added (7→10)
+**Findings:** 7 (2C/1H/4M/0L) — incl. F-B2-03 jointly-unsatisfiable ratified-design contradiction → D-154 grammar extension (Option A: 3 new branches added to 7-branch dispatch)
+**Fix:** v1.2→v1.3 — F-B2-01..09 + D-154 Option A: single-pass regex → two-pass extractor; Fixture E reworked; FLOOR 249→244; 3 new branches (b)(c)(e); fixtures I/J/K added (7→10)
 **Counter:** 0/3
 
 #### Pass 3
@@ -1134,7 +1134,7 @@ Non-blocking observations tracked as Drift Items: F-P8-01 §Scope↔examine_glob
 **Counter:** 0/3
 
 #### Pass 7 (NITPICK_ONLY — CLEAN)
-**Findings:** 0 — CLEAN-PASS (NITPICK_ONLY observations; non-streak-resetting per DEC-153)
+**Findings:** 0 — CLEAN-PASS (NITPICK_ONLY observations; non-streak-resetting per D-153)
 **Counter:** 1/3
 
 #### Pass 8
@@ -1143,7 +1143,7 @@ Non-blocking observations tracked as Drift Items: F-P8-01 §Scope↔examine_glob
 **Counter:** 0/3 (reset from 1/3)
 
 #### Pass 9 (NITPICK_ONLY — CLEAN)
-**Findings:** 0 — CLEAN-PASS (NITPICK_ONLY observations; non-streak-resetting per DEC-153)
+**Findings:** 0 — CLEAN-PASS (NITPICK_ONLY observations; non-streak-resetting per D-153)
 **Counter:** 1/3
 
 #### Pass 10
@@ -1173,19 +1173,19 @@ Non-blocking observations tracked as Drift Items: F-P8-01 §Scope↔examine_glob
 **Findings:** 0 — CLEAN-PASS
 **Counter:** 3/3
 
-**CONVERGED 2026-07-06 (DEC-155).** Story #102 v1.10 status=ready. HELD at F4 dispatch gate pending human authorization.
+**CONVERGED 2026-07-06 (D-155).** Story #102 v1.10 status=ready. HELD at F4 dispatch gate pending human authorization.
 
 ### Notable Findings
 
-- **2 CRIT:** (1) class-15 two-pass token pipeline — single-pass regex silently dropped §-form and comma-space line-ref tokens; corrected to two-pass extractor (DEC-154 F-B2-02). (2) count-pin off-by-one — BC-CITE-001 pin=3 should be 4 (header comment + preamble grep + Step-1 echo + own assertion line).
-- **3 HIGH:** F-B1-01 FLOOR scope (local→script-scope, single recalibration touchpoint); F-B1-02 CI job name stale baseline; F-B2-02 single-pass → two-pass extractor (DEC-154).
-- **~12 MED:** incl. F-B2-03 jointly-unsatisfiable ratified-design contradiction (§-form strip + branch (e) CamelCase couldn't coexist under old grammar → DEC-154 Option A grammar extension resolved it); fixture kill-trace gaps; branch (d) anchor missing; strip-from-first-( subsumes bare (); registration-surface drift passes 10-12 (BC-INDEX/CANONICAL-COUNTS/STORY-INDEX count drift).
-- **DEC-154 (pass-2 mid-loop research adjudication):** F-B2-03 exposed a jointly-unsatisfiable constraint between two ratified design choices. Human adjudicated Option A: add 3 branches (b `::tests` mod-grep, c `::tests::testfn` composition, e standalone CamelCase type-def) to the 7-branch dispatch. No ratified choices removed.
+- **2 CRIT:** (1) class-15 two-pass token pipeline — single-pass regex silently dropped §-form and comma-space line-ref tokens; corrected to two-pass extractor (D-154 F-B2-02). (2) count-pin off-by-one — BC-CITE-001 pin=3 should be 4 (header comment + preamble grep + Step-1 echo + own assertion line).
+- **3 HIGH:** F-B1-01 FLOOR scope (local→script-scope, single recalibration touchpoint); F-B1-02 CI job name stale baseline; F-B2-02 single-pass → two-pass extractor (D-154).
+- **~12 MED:** incl. F-B2-03 jointly-unsatisfiable ratified-design contradiction (§-form strip + branch (e) CamelCase couldn't coexist under old grammar → D-154 Option A grammar extension resolved it); fixture kill-trace gaps; branch (d) anchor missing; strip-from-first-( subsumes bare (); registration-surface drift passes 10-12 (BC-INDEX/CANONICAL-COUNTS/STORY-INDEX count drift).
+- **D-154 (pass-2 mid-loop research adjudication):** F-B2-03 exposed a jointly-unsatisfiable constraint between two ratified design choices. Human adjudicated Option A: add 3 branches (b `::tests` mod-grep, c `::tests::testfn` composition, e standalone CamelCase type-def) to the 7-branch dispatch. No ratified choices removed.
 - **Dominant late-stage leak class (passes 10-12):** Registration-surface drift (BC-INDEX / CANONICAL-COUNTS / STORY-INDEX count fields not updated when story evolved). Reinforces SWEEP-WHOLE-TOUCHED-FILE + the BC-INDEX 9th-surface guard gap (pass-12 F-P12-01).
 
 ### Comparison vs Story A F3
 
-| Metric | Story A F3 (DEC-151 strict) | Story B F3 (DEC-153 standard) |
+| Metric | Story A F3 (D-151 strict) | Story B F3 (D-153 standard) |
 |--------|----------------------------|-------------------------------|
 | Total passes | 44 | 15 |
 | Fix rounds | 47 | 9 |
@@ -1198,7 +1198,7 @@ Supports ADVERSARY-META-LENS-REGRESS engine item: strict criterion (incl. recurs
 
 **Story:** S-BC-CITATION-GUARD-1 (story #102)
 **Phase:** F4 per-story adversarial convergence (BC-5.39.001)
-**Baseline:** Story v1.10 CONVERGED (F3 DEC-155 standard); Task 0 hygiene commit 2b09313 (12+ dead citations rewritten); Red Gate PASSED (stubs 0867823 + 10 fixtures + 5 self-assertions a440814; RED verified — self-test exit 1, canonical stub silent); Implementation f3fc670 (Guard 1 bash).
+**Baseline:** Story v1.10 CONVERGED (F3 D-155 standard); Task 0 hygiene commit 2b09313 (12+ dead citations rewritten); Red Gate PASSED (stubs 0867823 + 10 fixtures + 5 self-assertions a440814; RED verified — self-test exit 1, canonical stub silent); Implementation f3fc670 (Guard 1 bash).
 
 ### Finding Progression (passes 1–4)
 
@@ -1231,7 +1231,7 @@ Supports ADVERSARY-META-LENS-REGRESS engine item: strict criterion (incl. recurs
 **Findings:** 0 — CLEAN-PASS
 **Counter:** 3/3
 
-**CONVERGED 2026-07-06.** Story #102 v1.12. All 7 ACs PASS. Demos b52be90 (21 files, 7/7 ACs, VHS). PR #592 OPEN/CLEAN (CI 15/15 SUCCESS; security 2 LOW advisory: SEC-001-GUARD1-ERE-PREFLIGHT + SEC-002-GUARD1-BCDIR-DASH — follow-up candidates; pr-reviewer APPROVE cycle 1). HELD at DEC-128 merge gate.
+**CONVERGED 2026-07-06.** Story #102 v1.12. All 7 ACs PASS. Demos b52be90 (21 files, 7/7 ACs, VHS). PR #592 OPEN/CLEAN (CI 15/15 SUCCESS; security 2 LOW advisory: SEC-001-GUARD1-ERE-PREFLIGHT + SEC-002-GUARD1-BCDIR-DASH — follow-up candidates; pr-reviewer APPROVE cycle 1). HELD at D-128 merge gate.
 
 ### Notable Findings
 
@@ -1250,7 +1250,7 @@ Supports ADVERSARY-META-LENS-REGRESS engine item: strict criterion (incl. recurs
 | Total passes | 9 | 4 |
 | Fix rounds | 5 | 2 |
 | Clean window | 7/8/9 | 2/3/4 |
-| PR | #572 MERGED | #592 OPEN (HELD DEC-128) |
+| PR | #572 MERGED | #592 OPEN (HELD D-128) |
 
 ---
 
@@ -1278,7 +1278,7 @@ Supports ADVERSARY-META-LENS-REGRESS engine item: strict criterion (incl. recurs
 | 18 | 2026-07-07 | 0 | 0 | 0 | 0 | 0 | 2/3 | CLEAN-PASS |
 | 19 | 2026-07-07 | 0 | 0 | 0 | 0 | 0 | 3/3 | FULL CONVERGENCE |
 
-**Trajectory:** →3→4→5→5→0→1→0→4→1→0→3→1→1→0→2→3→0→0→0 — **STRICT CONVERGED** (19 passes / 13 fix rounds, DEC-158/DEC-159). Window: passes 17/18/19 CLEAN×3. Human-approved 2026-07-07.
+**Trajectory:** →3→4→5→5→0→1→0→4→1→0→3→1→1→0→2→3→0→0→0 — **STRICT CONVERGED** (19 passes / 13 fix rounds, D-158/D-159). Window: passes 17/18/19 CLEAN×3. Human-approved 2026-07-07.
 
 ### Pass 1 (2026-07-07) — Coherence / Registration Lens
 
@@ -1321,14 +1321,14 @@ MED-1: BC-INDEX.md Coverage Statistics row (9th surface) not updated to reflect 
 **Findings:** 0 — CLEAN-PASS
 **Convergence counter:** 1 of 3
 
-STREAK 1/3. One LOW-informational observation: VA-OBS-5-1 noted that the verification-delta does not include a performance/regression note for push_code hot-path (called on every inline code span); adjudicated as LOW-informational (not a spec defect — performance is addressed in CLAUDE.md gotcha noting no behavioral change to existing code paths). Non-resetting per DEC-153 (VA observations below MEDIUM are informational only). Pass 6 (spec-ecosystem coherence lens) dispatched.
+STREAK 1/3. One LOW-informational observation: VA-OBS-5-1 noted that the verification-delta does not include a performance/regression note for push_code hot-path (called on every inline code span); adjudicated as LOW-informational (not a spec defect — performance is addressed in CLAUDE.md gotcha noting no behavioral change to existing code paths). Non-resetting per D-153 (VA observations below MEDIUM are informational only). Pass 6 (spec-ecosystem coherence lens) dispatched.
 
 ---
 
 ### Pass 6 (2026-07-07) — Spec-Ecosystem Coherence Lens
 
 **Findings:** 1 (0C/0H/0M/1L)
-**Convergence counter:** 0 of 3 (STRICT reset from 1/3 — DEC-158; LOW resets under STRICT criterion)
+**Convergence counter:** 0 of 3 (STRICT reset from 1/3 — D-158; LOW resets under STRICT criterion)
 
 LOW: BC-INDEX-9TH-SURFACE RECURRENCE×3 — subsection-sum row in BC-INDEX.md Coverage Statistics not updated to reflect BC-7.2.015 addition (10th unguarded field; 9th was the Coverage Statistics column count from pass 4). Fixed. This is the third recurrence of the BC-INDEX-9TH-SURFACE drift item. Process gap TWIN-ARTIFACT-SWEEP flagged: fix for the subsection-sum field was not propagated to the sibling BC-INDEX holdout-total column.
 
@@ -1375,7 +1375,7 @@ All pass 9 fixes verified. TWIN-ARTIFACT-SWEEP propagation confirmed. No new fin
 **Findings:** 3 (0C/0H/3M/0L)
 **Convergence counter:** 0 of 3 (STRICT reset from 1/3)
 
-3 MED from story-writer lens: MED-1: PHASE-DOC-RETRO-ANNOTATION pattern — F1 impact-boundary-571.md does not carry a retro-annotation noting that DEC-157 scope decision on point (2) (no node-splitting) supersedes its original scope comment; note added. MED-2: F1 artifact-mapping-571.md story file list does not include CLAUDE.md gotcha update (contradicts prd-delta-571.md EC-5 which makes it in-scope); annotated. MED-3: verification-delta-571.md VP numbering in the VP-INDEX cross-reference table stale after p8 fix — updated. All fixed.
+3 MED from story-writer lens: MED-1: PHASE-DOC-RETRO-ANNOTATION pattern — F1 impact-boundary-571.md does not carry a retro-annotation noting that D-157 scope decision on point (2) (no node-splitting) supersedes its original scope comment; note added. MED-2: F1 artifact-mapping-571.md story file list does not include CLAUDE.md gotcha update (contradicts prd-delta-571.md EC-5 which makes it in-scope); annotated. MED-3: verification-delta-571.md VP numbering in the VP-INDEX cross-reference table stale after p8 fix — updated. All fixed.
 
 ---
 
@@ -1391,7 +1391,7 @@ MED: Security lens — BC-7.2.015 EC-1 guard description ("MUST filter active_ma
 ### Pass 13 (2026-07-07)
 
 **Findings:** 1 (0C/0H/0M/1L)
-**Convergence counter:** 0 of 3 (STRICT reset — LOW resets under STRICT criterion, DEC-158)
+**Convergence counter:** 0 of 3 (STRICT reset — LOW resets under STRICT criterion, D-158)
 
 LOW: Instruction-layer polish — prd-delta-571.md introductory sentence uses passive voice for the mechanism description ("marks are filtered") vs active ("push_code filters marks before appending"); wording harmonized to active voice consistent with the rest of the spec corpus. Non-substantive; no BC logic change.
 
@@ -1409,7 +1409,7 @@ All pass 13 fixes verified. Voice harmonization confirmed consistent. No new fin
 ### Pass 15 (2026-07-07)
 
 **Findings:** 2 (0C/0H/0M/2L)
-**Convergence counter:** 0 of 3 (STRICT reset — LOWs reset under STRICT criterion, DEC-158)
+**Convergence counter:** 0 of 3 (STRICT reset — LOWs reset under STRICT criterion, D-158)
 
 2 LOW instruction-layer polish: LOW-1: BC-7.2.015 EC-3 note on nested code marks (`\`\`x\`\``) says "not addressed" but passes 3 fixed this already — note now stale; removed. LOW-2: H-NEW-JSM-RT-001 holdout scenario body uses `projectKey` field in fixture JSON but the Atlassian API returns `projectId`; identified as pre-existing defect H-NEW-JSM-RT-001-FIXTURE-NONDESERIALIZABLE (same class as this cycle's Call E CRIT from pass 2); recorded as drift item, no spec change here.
 
@@ -1418,7 +1418,7 @@ All pass 13 fixes verified. Voice harmonization confirmed consistent. No new fin
 ### Pass 16 (2026-07-07)
 
 **Findings:** 3 (0C/0H/0M/3L)
-**Convergence counter:** 0 of 3 (STRICT reset — LOWs reset under STRICT criterion, DEC-158)
+**Convergence counter:** 0 of 3 (STRICT reset — LOWs reset under STRICT criterion, D-158)
 
 3 LOW instruction-layer polish: LOW-1: HOLDOUT-GROUP-8-DUPLICATE-HEADING — Group 8 in holdout-scenarios.md has a duplicate heading label (two scenarios share the same heading text); recorded as pre-existing drift item, no spec change. LOW-2: prd-delta-571.md title casing inconsistency (one heading uses title case, rest use sentence case); harmonized. LOW-3: BC-7.2.015 band-range comment "BC-7.2.016..058" in prd-delta is mathematically correct but lacks rationale for the upper bound; brief parenthetical added. All fixed. Pass 17 (verification-adequacy final) dispatched.
 
@@ -1447,7 +1447,7 @@ STREAK 2/3. 3 NITPICKs carried to F3 as story notes (non-resetting): (a) H-NEW-A
 **Findings:** 0 — FULL CONVERGENCE
 **Convergence counter:** 3 of 3 (STRICT)
 
-**STRICT CONVERGED. Window: passes 17/18/19 CLEAN×3.** 2 NITPICKs (non-resetting): (a) spec-changelog v1.3.25 trailing whitespace on one line — cosmetic; (b) BC-7.2.015 band-range comment upper bound 058 is conservative vs actual mark-type count — design-attested. Zero fix-shear: no new changes introduced by pass 19. F3-ready without invention: story-writer can proceed directly from prd-delta-571.md + verification-delta-571.md + H-NEW-ADF-010. DEC-159 recorded. F3 story decomposition dispatched.
+**STRICT CONVERGED. Window: passes 17/18/19 CLEAN×3.** 2 NITPICKs (non-resetting): (a) spec-changelog v1.3.25 trailing whitespace on one line — cosmetic; (b) BC-7.2.015 band-range comment upper bound 058 is conservative vs actual mark-type count — design-attested. Zero fix-shear: no new changes introduced by pass 19. F3-ready without invention: story-writer can proceed directly from prd-delta-571.md + verification-delta-571.md + H-NEW-ADF-010. D-159 recorded. F3 story decomposition dispatched.
 
 ---
 
@@ -1461,7 +1461,7 @@ STREAK 2/3. 3 NITPICKs carried to F3 as story notes (non-resetting): (a) H-NEW-A
 - **PHASE-DOC-RETRO-ANNOTATION (pass 11):** F1 artifacts need retro-annotation when F2 decisions supersede F1 scope; F2 skill template update candidate.
 - **Core contract finding-free since pass 12:** passes 13-16 residual tier = instruction-layer polish only (LOW, non-substantive).
 - **Pre-existing items surfaced (passes 15/16):** H-NEW-JSM-RT-001-FIXTURE-NONDESERIALIZABLE (projectKey vs projectId); HOLDOUT-GROUP-8-DUPLICATE-HEADING.
-- **STRICT CONVERGED at pass 19 (2026-07-07):** window 17/18/19 CLEAN×3; DEC-159; human-approved; F3 dispatched. Total: 19 passes / 13 fix rounds. Accepted residuals disclosed in-spec: EC-2/3/4 + Calls B/E pre-fix composition protocol-guarded; annotation-drop mutant; future-mark allowlist design-attested. Comparative: this STRICT F2 = 19 passes vs Story B STANDARD F3 = 15 passes vs Story A STRICT F3 = 44 passes (ADVERSARY-META-LENS-REGRESS data point).
+- **STRICT CONVERGED at pass 19 (2026-07-07):** window 17/18/19 CLEAN×3; D-159; human-approved; F3 dispatched. Total: 19 passes / 13 fix rounds. Accepted residuals disclosed in-spec: EC-2/3/4 + Calls B/E pre-fix composition protocol-guarded; annotation-drop mutant; future-mark allowlist design-attested. Comparative: this STRICT F2 = 19 passes vs Story B STANDARD F3 = 15 passes vs Story A STRICT F3 = 44 passes (ADVERSARY-META-LENS-REGRESS data point).
 
 ## F3 S-ADF-CODE-MARK-1 — Story Adversarial Review (ADF-CODE-MARK-EXCLUSIVITY)
 
@@ -1478,9 +1478,9 @@ STREAK 2/3. 3 NITPICKs carried to F3 as story notes (non-resetting): (a) H-NEW-A
 | 9 | 2026-07-08 | 0 | 0 | 0 | 0 | 0 | 2/3 | CLEAN-PASS |
 | 10 | 2026-07-08 | 0 | 0 | 0 | 0 | 0 | 3/3 | FULL CONVERGENCE |
 
-**Trajectory:** 3→2→1→0→1→3→1→0→0→0 — **STRICT CONVERGED** (Pass 10, 2026-07-08). Window 8/9/10 CLEAN×3. DEC-160.
+**Trajectory:** 3→2→1→0→1→3→1→0→0→0 — **STRICT CONVERGED** (Pass 10, 2026-07-08). Window 8/9/10 CLEAN×3. D-160.
 
-Note: STRICT criterion (DEC-159 ruling) — any delta-attributable LOW resets streak; VA-informational observations exempt per DEC-153/DEC-158. 2 preemptive orchestrator catches recorded (not adversary findings): rung-taxonomy collision (before pass 2) and template-required-fields block honored (pass 3 adjudication).
+Note: STRICT criterion (D-159 ruling) — any delta-attributable LOW resets streak; VA-informational observations exempt per D-153/D-158. 2 preemptive orchestrator catches recorded (not adversary findings): rung-taxonomy collision (before pass 2) and template-required-fields block honored (pass 3 adjudication).
 
 ### Pass 1 (2026-07-07)
 
@@ -1524,7 +1524,7 @@ STREAK 1/3. All pass 3 fixes verified. Story v1.4 clean on fresh-context pass. N
 
 ### Pass 5 (2026-07-07)
 
-**Findings:** 1 (0C/0H/0M/1L) + 3 VA-informational (exempt per DEC-153/DEC-158)
+**Findings:** 1 (0C/0H/0M/1L) + 3 VA-informational (exempt per D-153/D-158)
 **Convergence counter:** 0 of 3 (STRICT reset — LOW resets under STRICT criterion)
 
 LOW: AC-002 header mis-anchor — 'BC-7.2.007 EC-1' → 'BC-7.2.007 EC-2 pre-#571 write-strict clause' (AC-002 traces to EC-2, not EC-1). Fixed in story v1.5.
@@ -1574,7 +1574,7 @@ STREAK 2/3. Transcription totality: 40+ trace sites (AC→BC, AC→VP, Task→AC
 **Findings:** 0 — FULL CONVERGENCE
 **Convergence counter:** 3 of 3 (STRICT)
 
-**STRICT CONVERGED. Window: passes 8/9/10 CLEAN×3.** Full-spectrum final gate (novelty NONE): 8 diverse lenses all clean. No new findings introduced. Story v1.7 is implementation-ready pending human authorization. DEC-160 recorded. Criterion comparison: F3 STRICT = 10 passes vs F2 STRICT = 19 passes. Pipeline HELD at F3 human gate.
+**STRICT CONVERGED. Window: passes 8/9/10 CLEAN×3.** Full-spectrum final gate (novelty NONE): 8 diverse lenses all clean. No new findings introduced. Story v1.7 is implementation-ready pending human authorization. D-160 recorded. Criterion comparison: F3 STRICT = 10 passes vs F2 STRICT = 19 passes. Pipeline HELD at F3 human gate.
 
 ---
 
@@ -1588,7 +1588,7 @@ STREAK 2/3. Transcription totality: 40+ trace sites (AC→BC, AC→VP, Task→AC
 - **TWIN-ARTIFACT-SWEEP (4th+5th instances, F3):** Pass 7 (code-comment twins: AC-008 + Task 6 both needed sibling test enumerated). Story itself is the parallel-edit artifact from the F2 spec companion miss.
 - **3 AC-gaming vectors closed (pass 5):** VA-1/2/3 closed weight-uniformity gap, evidence-form gap, and scope-extension gap for EC-2/EC-3/EC-4 topology.
 - **Story-tightening-beyond-upstream precedent (pass 6):** Case cap (AC-009 + Task 8) was unconditionally 128 in story; VP-571-001 upstream says default ~256. Aligned to upstream (story MUST NOT over-constrain the implementation spec); story-tightening-beyond-upstream is valid per existing precedent.
-- **STRICT CONVERGED at pass 10 (2026-07-08):** Window 8/9/10 CLEAN×3; DEC-160; HELD at F3 human gate. Total: 10 passes / 6 fix rounds. Criterion comparison: F3 STRICT = 10 passes vs F2 STRICT = 19 passes.
+- **STRICT CONVERGED at pass 10 (2026-07-08):** Window 8/9/10 CLEAN×3; D-160; HELD at F3 human gate. Total: 10 passes / 6 fix rounds. Criterion comparison: F3 STRICT = 10 passes vs F2 STRICT = 19 passes.
 
 ---
 
@@ -1641,7 +1641,7 @@ STREAK 2/3. Perimeter-totality lens: all call sites of push_code verified agains
 **Findings:** 0 — FULL CONVERGENCE
 **Convergence counter:** 3 of 3 (STRICT)
 
-**STRICT CONVERGED. Window: F4-p2 / F4-p3 / F4-p4 CLEAN×3.** Final-gate + mutant-forecast lens: zero new findings. Mutation gate PASS 5m32s — FIRST real code-diff exercise of the mutants CI job; calibration validated; predicted survivors limited to 2 spec-accepted classes (allowlist-constant mutation, identity-case code+code mutation). All 992 lib + 49 integration + 256-case proptest green. pr-reviewer APPROVE cycle 1 zero findings. 12/12 AC demos captured (VHS). Story v1.9 status=delivered. DEC-161 recorded. Issue #571 CLOSED. F5 DISPATCHED.
+**STRICT CONVERGED. Window: F4-p2 / F4-p3 / F4-p4 CLEAN×3.** Final-gate + mutant-forecast lens: zero new findings. Mutation gate PASS 5m32s — FIRST real code-diff exercise of the mutants CI job; calibration validated; predicted survivors limited to 2 spec-accepted classes (allowlist-constant mutation, identity-case code+code mutation). All 992 lib + 49 integration + 256-case proptest green. pr-reviewer APPROVE cycle 1 zero findings. 12/12 AC demos captured (VHS). Story v1.9 status=delivered. D-161 recorded. Issue #571 CLOSED. F5 DISPATCHED.
 
 ---
 
@@ -1697,7 +1697,7 @@ STREAK 2/3. BC-coverage + CLAUDE.md completeness lens. VP-571-001..005 all satis
 **Findings:** 1 LOW — FINDINGS_REMAIN
 **Convergence counter:** 0 of 3 (STREAK RESET from 2/3)
 
-Changelog coverage lens. **1 LOW: MISSING-CHANGELOG-ENTRY** — PR #593 merged to develop without a CHANGELOG.md entry for the BC-7.2.015 code-mark exclusivity fix. Not a spec gap; a delivery completeness gap. Fix: fix-PR #594 (branch docs/571-changelog-code-mark-exclusivity) adding the CHANGELOG.md entry. Fix-PR #594 squash-merged by human @ d7875e6 (2026-07-08, DEC-128 honored). Worktree .worktrees/FIX-571-CHANGELOG removed; branches docs/571-changelog-code-mark-exclusivity + fix/571-adf-code-mark-exclusivity deleted local+remote.
+Changelog coverage lens. **1 LOW: MISSING-CHANGELOG-ENTRY** — PR #593 merged to develop without a CHANGELOG.md entry for the BC-7.2.015 code-mark exclusivity fix. Not a spec gap; a delivery completeness gap. Fix: fix-PR #594 (branch docs/571-changelog-code-mark-exclusivity) adding the CHANGELOG.md entry. Fix-PR #594 squash-merged by human @ d7875e6 (2026-07-08, D-128 honored). Worktree .worktrees/FIX-571-CHANGELOG removed; branches docs/571-changelog-code-mark-exclusivity + fix/571-adf-code-mark-exclusivity deleted local+remote.
 
 ---
 
@@ -1724,7 +1724,7 @@ STREAK 2/3. Spec-changelog arithmetic + BC-7.2.015 spec-coverage lens. **Informa
 **Findings:** 0 — FULL CONVERGENCE
 **Convergence counter:** 3 of 3 (STRICT)
 
-**STRICT CONVERGED. Window: p4 / p5 / p6 CLEAN×3.** Final-gate wide-spectrum lens: six attack emphases rotated across p1–p6 (post-merge integrity, BC-coverage, changelog, post-fix integrity, spec-arithmetic, final-gate wide). Zero actionable findings. Novelty: NONE. No [process-gap] findings in any pass — cycle-closing checklist step 2/3 satisfied vacuously. Two deferral items identified and human-approved: F5-OBS-001 (BC-7.2.015 lossiness not cross-listed in BC-7.2.011 five-case catalogue; documented elsewhere) and F5-OBS-002 (no runtime warning on typographic-mark strip in push_code; silent strip is correct product call). DEC-162 recorded. F6 DISPATCHED.
+**STRICT CONVERGED. Window: p4 / p5 / p6 CLEAN×3.** Final-gate wide-spectrum lens: six attack emphases rotated across p1–p6 (post-merge integrity, BC-coverage, changelog, post-fix integrity, spec-arithmetic, final-gate wide). Zero actionable findings. Novelty: NONE. No [process-gap] findings in any pass — cycle-closing checklist step 2/3 satisfied vacuously. Two deferral items identified and human-approved: F5-OBS-001 (BC-7.2.015 lossiness not cross-listed in BC-7.2.011 five-case catalogue; documented elsewhere) and F5-OBS-002 (no runtime warning on typographic-mark strip in push_code; silent strip is correct product call). D-162 recorded. F6 DISPATCHED.
 
 ---
 
@@ -1735,7 +1735,7 @@ STREAK 2/3. Spec-changelog arithmetic + BC-7.2.015 spec-coverage lens. **Informa
 - **No [process-gap] findings in any pass:** cycle-closing checklist step 2/3 satisfied vacuously across all 6 passes.
 - **Deferral F5-OBS-001 (LOW):** BC-7.2.015 lossiness not cross-listed in BC-7.2.011 five-case lossy round-trip catalogue. Already documented in BC-7.2.007 EC-2 + CLAUDE.md. Target: next spec-maintenance sweep.
 - **Deferral F5-OBS-002 (LOW):** No runtime stderr warning when push_code strips typographic marks. Silent strip is correct product call vs pre-fix HTTP 400. Target: v2 backlog as --verbose observability enhancement.
-- **STRICT CONVERGED at p6 (2026-07-08):** Window p4/p5/p6 CLEAN×3. Total: 6 passes / 1 fix round (fix-PR #594). DEC-162. F6 DISPATCHED.
+- **STRICT CONVERGED at p6 (2026-07-08):** Window p4/p5/p6 CLEAN×3. Total: 6 passes / 1 fix round (fix-PR #594). D-162. F6 DISPATCHED.
 
 ---
 
@@ -1757,7 +1757,7 @@ STREAK 2/3. Spec-changelog arithmetic + BC-7.2.015 spec-coverage lens. **Informa
 **Spec version at review:** v1.3.80 (post SEC-576 fix round)
 
 - **GAP-R43-001 (LOW):** Six stale BC-INDEX rows — BC-2.7.008, BC-2.7.010, BC-2.7.011, BC-3.9.015, BC-3.9.017 rows in BC-INDEX.md had not been updated to reflect the 4 security remediation edits applied in the fix round. Body content correct; index not synced.
-- **GAP-R43-002 (LOW):** Allocation sentence in the display-sanitization clause still read "S2 earliest consumer" — incorrect per DEC-184 R3.13 (S1 = list-table cells in BC-2.7.001; S3+S4 = confirmation prompts). Needed correction to S1 with scope clarification.
+- **GAP-R43-002 (LOW):** Allocation sentence in the display-sanitization clause still read "S2 earliest consumer" — incorrect per D-184 R3.13 (S1 = list-table cells in BC-2.7.001; S3+S4 = confirmation prompts). Needed correction to S1 with scope clarification.
 - **INFO-R43-001 (INFO):** Stale count line in prd-delta-576.md dispositions section — carried over from an earlier pass, no longer accurate. Removal indicated.
 - All 4 security remediations PASS verbatim: SEC-576-011/009/008/010 all present and correct in spec bodies.
 - Echo-breaker check: CLEAN. No echo of pre-fix wording.
@@ -1774,7 +1774,7 @@ Report: `phase-f2-spec-evolution/consistency-report-576-r43.md`.
 
 All r43 gaps CLOSED:
 - GAP-R43-001: BC-INDEX v6.33→v6.34 — 6 rows refreshed; all 4 security-remediation BC rows correctly reflected.
-- GAP-R43-002: Allocation sentence corrected to S1; DEC-184 R3.13 wording honored; NEW-576-V3-001 FOLDED.
+- GAP-R43-002: Allocation sentence corrected to S1; D-184 R3.13 wording honored; NEW-576-V3-001 FOLDED.
 - INFO-R43-001: Stale count line removed from prd-delta-576.md.
 No S2-earliest-consumer residue found. Version surfaces complete (spec v1.3.81, BC-INDEX v6.34 consistent across frontmatter and body). Guards exit 0.
 
@@ -2585,7 +2585,7 @@ Fifth F2 adversary pass (fresh context). HIGH findings: (1) AC-8 non-discriminat
 **Findings:** 4 (1H/3M)
 **Convergence counter:** 0 of 3 (STRICT) — grind active; PIECEWISE CLEAN after fix round 6
 
-Sixth F2 adversary pass (fresh context). HIGH findings: (1) AC-6 vacuity — same class as AC-4 (fixed in round 4); vacuous test missing would-otherwise-proceed setup; fix round 6: AC-6 re-specified with concrete invocation. MEDIUM findings: ADR-0014 second byte-for-byte site at :60 (dual-cite gap — first site :56 fixed in round 4 but second site :60 missed); AC-5 folding-permission ambiguity removed (wording sharpened to eliminate permissive interpretation); spec-changelog under-enumeration completed (missing entries for fix rounds 5 and 6 backfilled). DEC-189 STRICT criterion codified by human ruling: 3 consecutive CLEAN required; any delta-attributable finding resets the window. Piecewise consistency: CLEAN after fix round 6. All 3 guard scripts green.
+Sixth F2 adversary pass (fresh context). HIGH findings: (1) AC-6 vacuity — same class as AC-4 (fixed in round 4); vacuous test missing would-otherwise-proceed setup; fix round 6: AC-6 re-specified with concrete invocation. MEDIUM findings: ADR-0014 second byte-for-byte site at :60 (dual-cite gap — first site :56 fixed in round 4 but second site :60 missed); AC-5 folding-permission ambiguity removed (wording sharpened to eliminate permissive interpretation); spec-changelog under-enumeration completed (missing entries for fix rounds 5 and 6 backfilled). D-189 STRICT criterion codified by human ruling: 3 consecutive CLEAN required; any delta-attributable finding resets the window. Piecewise consistency: CLEAN after fix round 6. All 3 guard scripts green.
 
 **Trajectory so far:** p78(8)→p79(8)→p80(8)→p81(7)→p82(6)→p83(4). Delta: 0/0/-1/-1/-2. Finding class narrowing confirmed. NEXT: pass-7 (p84).
 
@@ -2706,7 +2706,7 @@ Sixteenth F2 adversary pass (fresh context). Count holds 5→5 (plateau); 2 HIGH
 **Findings:** 4 (0C/2H/2M/0L) + 2 LOW obs (not counted in trajectory)
 **Convergence counter:** 0 of 3 (STRICT) — CONVERGING (5→4); 2 HIGHs remain but fixed; novelty MED; grind active; PIECEWISE CLEAN after fix round 17
 
-Seventeenth F2 adversary pass (fresh context). Count down 5→4 (converging); 2 HIGH findings. HIGH findings: (1) MockServer isolation on AC-8/AC-11 — wiremock FIFO fixture-defeat: AC-8 and AC-11 test scaffolding used a shared MockServer instance without per-test reset; wiremock's FIFO ordering means a prior test's mocks can satisfy a later test's expectations, causing a fixture-defeat where the test passes for the wrong reason; fix: MockServer isolation enforced per test (each AC-8/AC-11 test uses a fresh MockServer); FIFO fixture-defeat class now closed for these ACs; (2) removal mandates completed AC-1..AC-5 — ACs 1 through 5 carried implicit removal mandates (prior spec versions' assertion forms must be deleted when the new form is installed) but the mandates were not stated explicitly in each AC body; fix: explicit removal mandates written into AC-1, AC-2, AC-3, AC-4, and AC-5 bodies. MEDIUM findings: (1) AC-1(ii) description corrected — the AC-1(ii) subclause description used a phrasing that did not precisely match the behavioral contract (the description was ambiguous between two different test predicates); fix: AC-1(ii) description rewritten to be unambiguous; (2) "Created issue" discriminating negative on 7 human-mode ACs — 7 human-mode ACs (AC-1, AC-2, AC-3, AC-5, AC-7, AC-10, AC-11) lacked a discriminating negative assertion on the "Created issue" string (verified verbatim at output::print_success→stderr); without the discriminating negative, a test that accidentally triggers the issue-create success path would pass when it should fail; fix: discriminating negative added to all 7 ACs. LOW observations (not counted in trajectory): (1) BC-INDEX subject lines — two BC-INDEX subject lines were updated with improved precision to reflect the current contract scope after fix rounds; (2) DEC-188-ratified date markers — two spec locations referenced DEC-188 without the ratified date marker (2026-07-25); fix: date markers added for traceability. Spec bumped v1.3.115 + changelog [1.3.115] entry added. Piecewise CLEAN after fix round 17. All 3 guard scripts green.
+Seventeenth F2 adversary pass (fresh context). Count down 5→4 (converging); 2 HIGH findings. HIGH findings: (1) MockServer isolation on AC-8/AC-11 — wiremock FIFO fixture-defeat: AC-8 and AC-11 test scaffolding used a shared MockServer instance without per-test reset; wiremock's FIFO ordering means a prior test's mocks can satisfy a later test's expectations, causing a fixture-defeat where the test passes for the wrong reason; fix: MockServer isolation enforced per test (each AC-8/AC-11 test uses a fresh MockServer); FIFO fixture-defeat class now closed for these ACs; (2) removal mandates completed AC-1..AC-5 — ACs 1 through 5 carried implicit removal mandates (prior spec versions' assertion forms must be deleted when the new form is installed) but the mandates were not stated explicitly in each AC body; fix: explicit removal mandates written into AC-1, AC-2, AC-3, AC-4, and AC-5 bodies. MEDIUM findings: (1) AC-1(ii) description corrected — the AC-1(ii) subclause description used a phrasing that did not precisely match the behavioral contract (the description was ambiguous between two different test predicates); fix: AC-1(ii) description rewritten to be unambiguous; (2) "Created issue" discriminating negative on 7 human-mode ACs — 7 human-mode ACs (AC-1, AC-2, AC-3, AC-5, AC-7, AC-10, AC-11) lacked a discriminating negative assertion on the "Created issue" string (verified verbatim at output::print_success→stderr); without the discriminating negative, a test that accidentally triggers the issue-create success path would pass when it should fail; fix: discriminating negative added to all 7 ACs. LOW observations (not counted in trajectory): (1) BC-INDEX subject lines — two BC-INDEX subject lines were updated with improved precision to reflect the current contract scope after fix rounds; (2) D-188-ratified date markers — two spec locations referenced D-188 without the ratified date marker (2026-07-25); fix: date markers added for traceability. Spec bumped v1.3.115 + changelog [1.3.115] entry added. Piecewise CLEAN after fix round 17. All 3 guard scripts green.
 
 **Trajectory so far:** p78(8)→p79(8)→p80(8)→p81(7)→p82(6)→p83(4)→p84(3)→p85(7)→p86(6)→p87(5)→p88(6)→p89(6)→p90(4)→p91(2)→p92(5)→p93(5)→p94(4). Delta: 0/0/-1/-1/-2/-1/+4/-1/-1/+1/0/-2/-2/+3/0/-1. Count converging (5→4); 2 HIGHs fixed; novelty MED. trajectory-tail →2→5→5→4. NEXT: pass-18 (p95).
 
@@ -2772,7 +2772,7 @@ Twenty-second F2 adversary pass (fresh context). Count down 4→2 (converging); 
 **Findings:** 3 (0C/1H/0M/2L) + 1 out-of-delta obs (not counted in trajectory)
 **Convergence counter:** 0 of 3 (STRICT) — REGRESSION (2→3); 1 HIGH finding; novelty LOW (first LOW-novelty pass); 9th process-gap ledgered; PIECEWISE CLEAN after fix round 23
 
-Twenty-third F2 adversary pass (fresh context). Count up 2→3 (slight regression); 1 HIGH finding; novelty LOW — first pass in the grind where the adversary characterized novelty as LOW. HIGH finding: BC-INDEX index_version field stale by 4 — the BC-INDEX `index_version` machine field was stale by 4 increments relative to the current prose version (v6.46 vs v6.50); root cause: our own bump convention applied version increments to prose labels but not to the machine-readable field; fix: index_version field healed to v6.50. LOW findings: (1) anchor refresh — several anchors in bc-3-issue-write.md were stale after prior fix rounds; fix: anchors refreshed; (2) pub fn directive stated — a specification directive for a public function lacked the `pub fn` qualifier in the stated mandate form; fix: pub fn stated. Out-of-delta observation (not counted in trajectory): prd/README 603-vs-657 count drift — prd/README.md carried a BC count of 603 (pre-existing drift from prior cycles, out-of-delta scope); fix: repaired opportunistically per DEC-158 precedent. Process-gap: SOH-DX-1-PG-009 — prd/README.md is an unguarded 9th count surface (no guard script enforces count consistency for prd/README.md; it can drift without CI detection — 9th ledgered process-gap). Spec bumped v1.3.121 + changelog [1.3.121] entry added. Piecewise CLEAN after fix round 23. All 3 guard scripts green.
+Twenty-third F2 adversary pass (fresh context). Count up 2→3 (slight regression); 1 HIGH finding; novelty LOW — first pass in the grind where the adversary characterized novelty as LOW. HIGH finding: BC-INDEX index_version field stale by 4 — the BC-INDEX `index_version` machine field was stale by 4 increments relative to the current prose version (v6.46 vs v6.50); root cause: our own bump convention applied version increments to prose labels but not to the machine-readable field; fix: index_version field healed to v6.50. LOW findings: (1) anchor refresh — several anchors in bc-3-issue-write.md were stale after prior fix rounds; fix: anchors refreshed; (2) pub fn directive stated — a specification directive for a public function lacked the `pub fn` qualifier in the stated mandate form; fix: pub fn stated. Out-of-delta observation (not counted in trajectory): prd/README 603-vs-657 count drift — prd/README.md carried a BC count of 603 (pre-existing drift from prior cycles, out-of-delta scope); fix: repaired opportunistically per D-158 precedent. Process-gap: SOH-DX-1-PG-009 — prd/README.md is an unguarded 9th count surface (no guard script enforces count consistency for prd/README.md; it can drift without CI detection — 9th ledgered process-gap). Spec bumped v1.3.121 + changelog [1.3.121] entry added. Piecewise CLEAN after fix round 23. All 3 guard scripts green.
 
 **Trajectory so far:** p78(8)→p79(8)→p80(8)→p81(7)→p82(6)→p83(4)→p84(3)→p85(7)→p86(6)→p87(5)→p88(6)→p89(6)→p90(4)→p91(2)→p92(5)→p93(5)→p94(4)→p95(3)→p96(3)→p97(5)→p98(4)→p99(2)→p100(3). Delta: 0/0/-1/-1/-2/-1/+4/-1/-1/+1/0/-2/-2/+3/0/-1/-1/0/+2/-1/-2/+1. Count regression (2→3); 1 HIGH; novelty LOW (first LOW-novelty pass; index_version machine-field drift class). trajectory-tail →5→4→2→3. NEXT: pass-24 (p101).
 
@@ -2814,7 +2814,7 @@ Twenty-sixth F2 adversary pass (fresh context). Count holds 6→6 (plateau); ZER
 **Findings:** 4 (0C/1H/2M/1L) + 1 [process-gap]
 **Convergence counter:** 0 of 3 (STRICT) — CONVERGING (6→4); 1 HIGH finding; novelty MEDIUM→LOW; 10th process-gap ledgered; PIECEWISE CLEAN after fix round 27
 
-Twenty-seventh F2 adversary pass (fresh context). Count down 6→4 (converging); 1 HIGH finding; novelty MEDIUM→LOW — HIGH finding was a labeling error in the existing taxonomy (AC-17 had been labeled DISCRIMINATING but the negative test checks an unreachable code path in the foreign handler, making it structurally HYGIENE; the real discriminating pair was missing). HIGH finding: AC-17 relabeled HYGIENE (foreign-handler string unreachable) + real discriminating pair added — AC-17 tested that `--on-behalf-of` on the platform path does NOT emit an error string specific to the JSM handler (foreign-handler negative); because this code path is unreachable in the platform handler, the test can never fail regardless of the implementation; the test is therefore HYGIENE, not DISCRIMINATING; fix: AC-17 relabeled HYGIENE and a new real discriminating test pair added that checks the correct behavior on the platform path in an actually-reachable scenario. MEDIUM findings: (1) AC-8 ResponseTemplate compile note — AC-8 referenced a Mock ResponseTemplate construction without a compile-time note that the ResponseTemplate::builder() call requires the `wiremock::ResponseTemplate` import; without this note, a test rewrite may fail to compile silently; fix: compile note added to AC-8; (2) helper-location disambiguation — two helper functions cited in the spec had ambiguous location descriptions (both present in helpers.rs and another file); fix: helper-location disambiguated with canonical module path. LOW finding: S-383 status coherence — S-383 story frontmatter carried only `status: completed` without `contract_superseded_by: SOH-DX-1 (DEC-188)` in the machine-readable field; the prose banner noted supersession but the machine field was absent; fix: `contract_superseded_by` field added to S-383 frontmatter so story-writer tooling can detect the superseded contract without parsing prose. Process-gap: SOH-DX-1-PG-010 — foreign-handler-negative heuristic: the taxonomy rule that HYGIENE ACs must not author discriminating negative tests for unreachable code paths (foreign-handler class) is codified only in prose (spec namespace note); no CI guard enforces it; an AC labeled HYGIENE could author a discriminating test without detection (10th ledgered process-gap). Spec bumped v1.3.125 + changelog [1.3.125] entry added. BC-INDEX v6.54. Piecewise CLEAN after fix round 27. All 3 guard scripts green.
+Twenty-seventh F2 adversary pass (fresh context). Count down 6→4 (converging); 1 HIGH finding; novelty MEDIUM→LOW — HIGH finding was a labeling error in the existing taxonomy (AC-17 had been labeled DISCRIMINATING but the negative test checks an unreachable code path in the foreign handler, making it structurally HYGIENE; the real discriminating pair was missing). HIGH finding: AC-17 relabeled HYGIENE (foreign-handler string unreachable) + real discriminating pair added — AC-17 tested that `--on-behalf-of` on the platform path does NOT emit an error string specific to the JSM handler (foreign-handler negative); because this code path is unreachable in the platform handler, the test can never fail regardless of the implementation; the test is therefore HYGIENE, not DISCRIMINATING; fix: AC-17 relabeled HYGIENE and a new real discriminating test pair added that checks the correct behavior on the platform path in an actually-reachable scenario. MEDIUM findings: (1) AC-8 ResponseTemplate compile note — AC-8 referenced a Mock ResponseTemplate construction without a compile-time note that the ResponseTemplate::builder() call requires the `wiremock::ResponseTemplate` import; without this note, a test rewrite may fail to compile silently; fix: compile note added to AC-8; (2) helper-location disambiguation — two helper functions cited in the spec had ambiguous location descriptions (both present in helpers.rs and another file); fix: helper-location disambiguated with canonical module path. LOW finding: S-383 status coherence — S-383 story frontmatter carried only `status: completed` without `contract_superseded_by: SOH-DX-1 (D-188)` in the machine-readable field; the prose banner noted supersession but the machine field was absent; fix: `contract_superseded_by` field added to S-383 frontmatter so story-writer tooling can detect the superseded contract without parsing prose. Process-gap: SOH-DX-1-PG-010 — foreign-handler-negative heuristic: the taxonomy rule that HYGIENE ACs must not author discriminating negative tests for unreachable code paths (foreign-handler class) is codified only in prose (spec namespace note); no CI guard enforces it; an AC labeled HYGIENE could author a discriminating test without detection (10th ledgered process-gap). Spec bumped v1.3.125 + changelog [1.3.125] entry added. BC-INDEX v6.54. Piecewise CLEAN after fix round 27. All 3 guard scripts green.
 
 **Trajectory so far:** p78(8)→p79(8)→p80(8)→p81(7)→p82(6)→p83(4)→p84(3)→p85(7)→p86(6)→p87(5)→p88(6)→p89(6)→p90(4)→p91(2)→p92(5)→p93(5)→p94(4)→p95(3)→p96(3)→p97(5)→p98(4)→p99(2)→p100(3)→p101(3)→p102(6)→p103(6)→p104(4). Delta: 0/0/-1/-1/-2/-1/+4/-1/-1/+1/0/-2/-2/+3/0/-1/-1/0/+2/-1/-2/+1/0/+3/0/-2. Count CONVERGING (6→4); 1 HIGH; novelty MEDIUM→LOW (taxonomy-labeling class); spec v1.3.125; BC-INDEX v6.54. trajectory-tail →3→6→6→4. NEXT: pass-28 (p105).
 
@@ -2968,7 +2968,7 @@ Fortieth F2 adversary pass (fresh context). Count 2M+1L→1H+1M (2 formal findin
 **Findings:** 2 (0C/0H/2M/0L) + 1 process-gap + 1 nit
 **Convergence counter:** 0 of 3 (STRICT) — 2M (from 1H+1M); ZERO CRITs; ZERO HIGHs; 2 MEDIUM; ZERO LOWs; 1 process-gap (SOH-DX-1-PG-011); 1 nit (informational); novelty LOW-MEDIUM; adversary recommends one more pass then converge (converge-adjacent signal); fixes: AC-13 would-otherwise-succeed invocation (zero-HTTP proof normative); AC-1 first-use subtype parenthetical + policy; config_home param rename; spec v1.3.139 [1.3.139]; BC-INDEX v6.68; PIECEWISE CLEAN after fix round 41
 
-Forty-first F2 adversary pass (fresh context). Count 1H+1M→2M (2 formal findings + 1 process-gap + 1 nit; HIGH count 1→0, MEDIUM count 1→2, LOW count 0→0); ZERO CRITICAL findings; ZERO HIGH findings; 2 MEDIUM findings; ZERO LOW findings; novelty LOW-MEDIUM; adversary recommends one more pass then converge (converge-adjacent signal). MEDIUM finding 1: AC-13 would-otherwise-succeed invocation — AC-13 introduced a zero-HTTP proof assertion (from round 38) but the assertion was authored as a would-otherwise-fail test (one that always passes due to zero calls) rather than as a would-otherwise-succeed invocation; the distinction matters because a would-otherwise-succeed test establishes that the normal code path executes successfully before the zero-HTTP constraint is applied, providing a richer proof of the invariant; fix: AC-13 zero-HTTP proof assertion revised to be a normative would-otherwise-succeed invocation that demonstrates the full code path succeeds without any HTTP calls. MEDIUM finding 2: AC-1 first-use subtype parenthetical — AC-1 introduced a subtype parenthetical clarifying a classification distinction but the parenthetical lacked an explicit policy statement governing when the subtype classification applies; without the policy, implementers could apply the subtype inconsistently across the AC surface; fix: AC-1 first-use subtype parenthetical revised to include the governing policy; the policy is now stated explicitly at the first-use site so subsequent references can defer to it. Process-gap SOH-DX-1-PG-011: Trace continuation-line guard blind spot — DEC-148 Guard 1 (check-bc-citation-symbols.sh) validates symbol citations in Trace/Source fields of bc-*.md files but does not check continuation lines (multi-line Trace/Source fields where the symbol citation appears on line 2 or beyond); approximately 20 citations across the spec surface are on continuation lines and are therefore unvalidated by the guard; all ~20 were hand-verified accurate this pass, but the structural gap remains — a future stale continuation-line citation would pass CI undetected; ledgered as SOH-DX-1-PG-011 (guard-extension candidate). Nit: config_home param rename — the config_home parameter in several AC preconditions was authored with a legacy naming convention that did not match the finalized parameter name in the implementation contract; the rename was applied as a consistency nit to align AC precondition parameter names with the implementation contract naming. Spec bumped v1.3.139 + changelog [1.3.139] entry added. BC-INDEX v6.68. Piecewise CLEAN after fix round 41. All 3 guard scripts green.
+Forty-first F2 adversary pass (fresh context). Count 1H+1M→2M (2 formal findings + 1 process-gap + 1 nit; HIGH count 1→0, MEDIUM count 1→2, LOW count 0→0); ZERO CRITICAL findings; ZERO HIGH findings; 2 MEDIUM findings; ZERO LOW findings; novelty LOW-MEDIUM; adversary recommends one more pass then converge (converge-adjacent signal). MEDIUM finding 1: AC-13 would-otherwise-succeed invocation — AC-13 introduced a zero-HTTP proof assertion (from round 38) but the assertion was authored as a would-otherwise-fail test (one that always passes due to zero calls) rather than as a would-otherwise-succeed invocation; the distinction matters because a would-otherwise-succeed test establishes that the normal code path executes successfully before the zero-HTTP constraint is applied, providing a richer proof of the invariant; fix: AC-13 zero-HTTP proof assertion revised to be a normative would-otherwise-succeed invocation that demonstrates the full code path succeeds without any HTTP calls. MEDIUM finding 2: AC-1 first-use subtype parenthetical — AC-1 introduced a subtype parenthetical clarifying a classification distinction but the parenthetical lacked an explicit policy statement governing when the subtype classification applies; without the policy, implementers could apply the subtype inconsistently across the AC surface; fix: AC-1 first-use subtype parenthetical revised to include the governing policy; the policy is now stated explicitly at the first-use site so subsequent references can defer to it. Process-gap SOH-DX-1-PG-011: Trace continuation-line guard blind spot — D-148 Guard 1 (check-bc-citation-symbols.sh) validates symbol citations in Trace/Source fields of bc-*.md files but does not check continuation lines (multi-line Trace/Source fields where the symbol citation appears on line 2 or beyond); approximately 20 citations across the spec surface are on continuation lines and are therefore unvalidated by the guard; all ~20 were hand-verified accurate this pass, but the structural gap remains — a future stale continuation-line citation would pass CI undetected; ledgered as SOH-DX-1-PG-011 (guard-extension candidate). Nit: config_home param rename — the config_home parameter in several AC preconditions was authored with a legacy naming convention that did not match the finalized parameter name in the implementation contract; the rename was applied as a consistency nit to align AC precondition parameter names with the implementation contract naming. Spec bumped v1.3.139 + changelog [1.3.139] entry added. BC-INDEX v6.68. Piecewise CLEAN after fix round 41. All 3 guard scripts green.
 
 **Trajectory so far:** p78(8)→p79(8)→p80(8)→p81(7)→p82(6)→p83(4)→p84(3)→p85(7)→p86(6)→p87(5)→p88(6)→p89(6)→p90(4)→p91(2)→p92(5)→p93(5)→p94(4)→p95(3)→p96(3)→p97(5)→p98(4)→p99(2)→p100(3)→p101(3)→p102(6)→p103(6)→p104(4)→p105(5)→p106(2)→p107(1)→p108(3)→p109(3)→p110(2)→p111(3L)→p112(1M+3L)→p113(2M+2L)→p114(2H+2L)→p115(4M+2L)→p116(2M+1L)→p117(1H+1M)→p118(2M). Delta: 0/0/-1/-1/-2/-1/+4/-1/-1/+1/0/-2/-2/+3/0/-1/-1/0/+2/-1/-2/+1/0/+3/0/-2/+1/-3/-1/+2/0/-1/+1/+1/+1/0/+2/-3/-1/+1. Count IMPROVEMENT (1H+1M→2M; total count 2; HIGH count 1→0, MED count 1→2); ZERO CRITs; ZERO HIGHs; 2 MEDs; novelty LOW-MEDIUM (AC-13-would-otherwise-succeed-invocation + AC-1-first-use-subtype-policy + PG-011-trace-continuation-line-guard-blind-spot class); spec v1.3.139; BC-INDEX v6.68. trajectory-tail →2M+1L→1H+1M→2M. NEXT: pass-42 (p119).
 
@@ -3025,7 +3025,7 @@ Forty-fifth F2 adversary pass (fresh context). Count 3M+2L→3M (3 formal findin
 
 Forty-sixth F2 adversary pass (fresh context). Count 3M→1M+2L (3 formal findings; MEDIUM count 3→1, LOW count 0→2); ZERO CRITICAL findings; ZERO HIGH findings; 1 MEDIUM finding; 2 LOW findings; novelty LOW; third consecutive adversary verdict "The spec has converged" — all findings are label-polish and documentation-fallout class, not behavioral/ordering/anchoring/falsifiability defects. MEDIUM finding (F46-001): AC-2 and AC-7 would-otherwise-succeed clause — AC-2 and AC-7 lacked the explicit would-otherwise-succeed clause present in all six sibling ACs (AC-1, AC-3, AC-5, AC-10, AC-18, AC-19); without the clause, the `stdout.trim().is_empty()` assertion in these two `--output json` mode tests was HYGIENE rather than DISCRIMINATING (a zero-output test is only genuinely discriminating when the mock is set up so the full platform POST would succeed if the guard were absent); fix: F46-001 adds the explicit would-otherwise-succeed clause to AC-2 and AC-7 including the `mount_platform_create_stubs` MUST call, matching the six siblings and closing the drop-the-stub incentive. LOW finding (F46-002): both body-range labels misreading — both `[CURRENT BEHAVIOR]` Behavior block body-range labels used the "excluded terminal case" phrasing, which could be read as "the guard is reachable from this block" (a misread: "excluded" meant "step 6 is not a reachable case from the guard exit", but "excluded terminal case" implies inclusion via exclusion logic); fix: F46-002 rewords both sites (replace_all, 2 sites) to "BEFORE all pre-POST helper HTTP (steps 3–5) and BEFORE the platform POST (step 6) — see Platform-Path Guard Ordering block above", eliminating the excluded=reachable misread. LOW finding (F46-003): promotion target path mismatch — all AC Test Notes cited `tests/common/fixtures.rs` as the target module for `assert_json_error_envelope` and `write_profile_config` promotion; the actual implementation convention places assertions helpers in `tests/common/assertions.rs` (a new module) while keeping `fixtures.rs` for pure-JSON test data; fix: F46-003 changes all promotion-target path references from `tests/common/fixtures.rs` to `tests/common/assertions.rs` (replace_all on all sites), adds convention note "assertions.rs convention" and the `pub mod assertions;` registration note in `tests/common/mod.rs` to both Test Notes. Spec bumped v1.3.144 + changelog [1.3.144] entry added. BC-INDEX v6.73. PIECEWISE CONSISTENCY CHECK NOT YET RUN — session was wrapped by human /wrap command before the piecewise-validation dispatch could occur. All 3 guard scripts green on the round-46 edits. PIPELINE PAUSED 2026-07-26.
 
-**NOTE — SESSION WRAP (2026-07-26):** Human-requested pipeline pause mid-F2 adversary grind. Round-46 fixes (F46-001/002/003) applied; all 3 guard scripts green; piecewise consistency check NOT yet run. FIRST resume action: dispatch consistency-validator piecewise check on round-46 edits (v1.3.144 vs baseline b3908288). If CLEAN, proceed to pass-47. Continue DEC-189 STRICT loop to 3 consecutive CLEAN; then F2 human gate.
+**NOTE — SESSION WRAP (2026-07-26):** Human-requested pipeline pause mid-F2 adversary grind. Round-46 fixes (F46-001/002/003) applied; all 3 guard scripts green; piecewise consistency check NOT yet run. FIRST resume action: dispatch consistency-validator piecewise check on round-46 edits (v1.3.144 vs baseline b3908288). If CLEAN, proceed to pass-47. Continue D-189 STRICT loop to 3 consecutive CLEAN; then F2 human gate.
 
 **Adversary dispatch prompt shape for pass-47 (reproduce verbatim):**
 
@@ -3038,7 +3038,7 @@ Artifacts to provide in pass-47 fresh-context dispatch:
 - `docs/specs/issue-create-preflight-guards.md` (deliverable (f) feature spec, added round 38)
 
 Ratified intent block (include verbatim in pass-47 dispatch):
-> SOH-DX-1 DEC-188 scope: BC-3.8.012 (--on-behalf-of pre-flight exit-64) and BC-3.8.013 (--field pre-flight exit-64) flip from deprecation warnings to hard exit-64 errors in jr issue create. Breaking change. Rides v0.7.0-dev.1. BC-3.8.012/013 supersede the prior BC-3.8.012/013 (which specified deprecation warnings). The spec delta is confined to the two BC bodies and their ACs/ECs, plus deliverables (a)-(f) in the story. Adversary: find any remaining defects in the AC surface — falsifiability, ordering, anchoring, behavioral gaps, or documentation-fallout. DEC-189 STRICT: any delta-attributable finding resets the 3-consecutive-CLEAN window.
+> SOH-DX-1 D-188 scope: BC-3.8.012 (--on-behalf-of pre-flight exit-64) and BC-3.8.013 (--field pre-flight exit-64) flip from deprecation warnings to hard exit-64 errors in jr issue create. Breaking change. Rides v0.7.0-dev.1. BC-3.8.012/013 supersede the prior BC-3.8.012/013 (which specified deprecation warnings). The spec delta is confined to the two BC bodies and their ACs/ECs, plus deliverables (a)-(f) in the story. Adversary: find any remaining defects in the AC surface — falsifiability, ordering, anchoring, behavioral gaps, or documentation-fallout. D-189 STRICT: any delta-attributable finding resets the 3-consecutive-CLEAN window.
 
 **Trajectory so far:** p78(8)→p79(8)→p80(8)→p81(7)→p82(6)→p83(4)→p84(3)→p85(7)→p86(6)→p87(5)→p88(6)→p89(6)→p90(4)→p91(2)→p92(5)→p93(5)→p94(4)→p95(3)→p96(3)→p97(5)→p98(4)→p99(2)→p100(3)→p101(3)→p102(6)→p103(6)→p104(4)→p105(5)→p106(2)→p107(1)→p108(3)→p109(3)→p110(2)→p111(3L)→p112(1M+3L)→p113(2M+2L)→p114(2H+2L)→p115(4M+2L)→p116(2M+1L)→p117(1H+1M)→p118(2M)→p119(1M+2L)→p120(2M)→p121(3M+2L)→p122(3M)→p123(1M+2L). Delta: 0/0/-1/-1/-2/-1/+4/-1/-1/+1/0/-2/-2/+3/0/-1/-1/0/+2/-1/-2/+1/0/+3/0/-2/+1/-3/-1/+2/0/-1/+1/+1/+1/0/+2/-3/-1/+1/+1/-1/+3/-2/-2. Count IMPROVEMENT (3M→1M+2L; total count 3→3; MED count 3→1, LOW count 0→2); ZERO CRITs; ZERO HIGHs; 1 MED; 2 LOWs; novelty LOW (would-otherwise-succeed-clause-AC-2-AC-7 + body-range-label-misreading + promotion-target-path class); third consecutive adversary "Spec has converged" verdict; spec v1.3.144; BC-INDEX v6.73. trajectory-tail →2M→3M+2L→3M→1M+2L. PIPELINE PAUSED 2026-07-26.
 
@@ -3051,7 +3051,7 @@ Ratified intent block (include verbatim in pass-47 dispatch):
 **Spec version:** v1.3.145
 **BC-INDEX version:** v6.73 (unchanged)
 **Findings:** 5 (all LOW) — collateral damage from F46-003 `replace_all` sweeping 9 sites when 5 were intended; 3 historical trail entries retroactively falsified
-**Convergence counter:** 0 of 3 STRICT (DEC-189) — UNCHANGED; pass-47 VOID ×2 (subagent delivery failure, ~32 min combined)
+**Convergence counter:** 0 of 3 STRICT (D-189) — UNCHANGED; pass-47 VOID ×2 (subagent delivery failure, ~32 min combined)
 
 **Fixes applied (all LOW):**
 - F1: v1.3.114 version-trail entry in bc-3-issue-write.md frontmatter — first clause restored to `tests/common/fixtures.rs` (was self-contradictory, naming two promotion targets in one sentence)
@@ -3064,7 +3064,7 @@ Ratified intent block (include verbatim in pass-47 dispatch):
 
 **Piecewise re-verification:** CLEAN, verified twice (consistency-validator + orchestrator direct mechanical check). All 3 guards green: spec-counts OK, cumulative BC counts OK (657 total), citation symbols OK (357 checked). BC-INDEX.md untouched at v6.73.
 
-**Pass-47 adversary — VOID ×2 (no convergence credit):** Two adversary dispatches both failed to deliver any retrievable output (~32 minutes combined). The first dispatch was additionally non-window-eligible because it read artifacts still carrying the unfixed F5 defect. Neither counts toward DEC-189. Convergence counter remains 0/3 STRICT. No p124 entry added.
+**Pass-47 adversary — VOID ×2 (no convergence credit):** Two adversary dispatches both failed to deliver any retrievable output (~32 minutes combined). The first dispatch was additionally non-window-eligible because it read artifacts still carrying the unfixed F5 defect. Neither counts toward D-189. Convergence counter remains 0/3 STRICT. No p124 entry added.
 
 **Trajectory so far:** p78(8)→p79(8)→p80(8)→p81(7)→p82(6)→p83(4)→p84(3)→p85(7)→p86(6)→p87(5)→p88(6)→p89(6)→p90(4)→p91(2)→p92(5)→p93(5)→p94(4)→p95(3)→p96(3)→p97(5)→p98(4)→p99(2)→p100(3)→p101(3)→p102(6)→p103(6)→p104(4)→p105(5)→p106(2)→p107(1)→p108(3)→p109(3)→p110(2)→p111(3L)→p112(1M+3L)→p113(2M+2L)→p114(2H+2L)→p115(4M+2L)→p116(2M+1L)→p117(1H+1M)→p118(2M)→p119(1M+2L)→p120(2M)→p121(3M+2L)→p122(3M)→p123(1M+2L). [Remediation burst 2026-07-27: F1-F5 all LOW; no adversary pass; convergence counter unchanged]. trajectory-tail →2M→3M+2L→3M→1M+2L. NEXT: pass-47 (p124) — dispatch with v1.3.145 artifacts.
 
@@ -3075,7 +3075,7 @@ Ratified intent block (include verbatim in pass-47 dispatch):
 **Type:** F2 fix burst (F47-001) + pass-47 adversary VOID ×5 (no convergence credit)
 **Spec version:** v1.3.146 + [1.3.146]
 **BC-INDEX version:** v6.73 (unchanged)
-**Convergence counter:** 0/3 STRICT (DEC-189) — UNCHANGED
+**Convergence counter:** 0/3 STRICT (D-189) — UNCHANGED
 
 **Round-47 fix (F47-001, LOW, delta-attributable):**
 `write_profile_config` destination corrected in both Test Note Config fixture contracts (BC-3.8.012 and BC-3.8.013) from `tests/common/assertions.rs` to `tests/common/fixtures.rs`; "same promotion target as `assert_json_error_envelope`" phrase replaced with DIFFERENT-destinations rationale (`write_profile_config` → `tests/common/fixtures.rs`, `assert_json_error_envelope` → `tests/common/assertions.rs`); footer v1.3.137 historical description corrected (4th F46-003 sweep site, missed by v1.3.145 which fixed frontmatter trail entries only); missing v1.3.145 footer entry backfilled (FOOTER-UPDATE-CONVENTION-MISS class). Source: direct review during pass-47 process window. Spec bumped v1.3.146 + changelog [1.3.146] entry added. BC-INDEX v6.73 unchanged. All 3 guards green.
@@ -3089,11 +3089,11 @@ Ratified intent block (include verbatim in pass-47 dispatch):
 ### Pass p124 (2026-07-27) — SUBSTITUTE (consistency-validator with adversarial checklist; NOT adversary agent)
 
 **Findings:** 1 (0C/0H/0M/1L)
-**Convergence counter:** 0 of 3 (STRICT) — NOT WINDOW-ELIGIBLE (substitute pass; DEC-189 ratification PENDING human ruling; SUBSTITUTE-ADVERSARY-RATIFICATION-PENDING)
+**Convergence counter:** 0 of 3 (STRICT) — NOT WINDOW-ELIGIBLE (substitute pass; D-189 ratification PENDING human ruling; SUBSTITUTE-ADVERSARY-RATIFICATION-PENDING)
 
 Forty-eighth F2 pass (substitute — consistency-validator dispatched with an adversarial verification checklist; NOT the adversary agent; fresh context; adversarial framing preserved; adversary agent's own system prompt and policy rubric absent). Count 1L (from trajectory tail). ZERO CRITICAL findings; ZERO HIGH findings; ZERO MEDIUM findings; 1 LOW finding; novelty LOW; verdict "AC surface has converged, YES" (apart from single LOW). LOW finding (F48-001): AC-7 missing `EC-3.8.012-3 as test —` linkage marker — AC-7 (`test_platform_create_malformed_field_without_request_type_exits_64`, the malformed-`--field` invocation `--field bareflagnoequals`) was the only testable EC among BC-3.8.012/013's EC surface lacking the uniform `"EC-<id> as test — "` prefix; all 8 sibling ACs carrying testable ECs had the prefix; coverage was real (AC-7 semantically covers EC-3.8.012-3: guard fires on `!field_pairs.is_empty()` before value parsing, so the malformed format does not affect guard activation); only traceability linkage was missing; fix: `EC-3.8.012-3 as test — ` marker inserted before the invocation backtick in AC-7 (after the `(renamed from …):` clause). Spec bumped v1.3.147 + changelog [1.3.147] entry added. BC-INDEX v6.73 unchanged. All 3 guards green.
 
-**NOTE — SUBSTITUTE PASS (non-window-eligible pending ruling):** This pass used consistency-validator with an adversarial verification checklist rather than the adversary agent. Fresh context and adversarial framing preserved; the adversary agent's own system prompt and policy rubric were not. Human ruling required on whether such passes can close a DEC-189 window (SUBSTITUTE-ADVERSARY-RATIFICATION-PENDING ledgered). Counter held at 0/3 STRICT pending that ruling. Do NOT retroactively count as convergence credit without explicit human authorization.
+**NOTE — SUBSTITUTE PASS (non-window-eligible pending ruling):** This pass used consistency-validator with an adversarial verification checklist rather than the adversary agent. Fresh context and adversarial framing preserved; the adversary agent's own system prompt and policy rubric were not. Human ruling required on whether such passes can close a D-189 window (SUBSTITUTE-ADVERSARY-RATIFICATION-PENDING ledgered). Counter held at 0/3 STRICT pending that ruling. Do NOT retroactively count as convergence credit without explicit human authorization.
 
 **Trajectory so far:** p78(8)→p79(8)→p80(8)→p81(7)→p82(6)→p83(4)→p84(3)→p85(7)→p86(6)→p87(5)→p88(6)→p89(6)→p90(4)→p91(2)→p92(5)→p93(5)→p94(4)→p95(3)→p96(3)→p97(5)→p98(4)→p99(2)→p100(3)→p101(3)→p102(6)→p103(6)→p104(4)→p105(5)→p106(2)→p107(1)→p108(3)→p109(3)→p110(2)→p111(3L)→p112(1M+3L)→p113(2M+2L)→p114(2H+2L)→p115(4M+2L)→p116(2M+1L)→p117(1H+1M)→p118(2M)→p119(1M+2L)→p120(2M)→p121(3M+2L)→p122(3M)→p123(1M+2L)→[remediation-burst: F1-F5 LOW]→[F47-001 LOW fix]→p124-sub(1L). Delta: +1 (1L). trajectory-tail →3M+2L→3M→1M+2L→1L (substitute, non-window-eligible). NEXT: pass-49 (p125 substitute).
 
@@ -3102,11 +3102,11 @@ Forty-eighth F2 pass (substitute — consistency-validator dispatched with an ad
 ### Pass p125 (2026-07-27) — SUBSTITUTE (consistency-validator with adversarial checklist; NOT adversary agent)
 
 **Findings:** 1 (0C/0H/0M/1L)
-**Convergence counter:** 0 of 3 (STRICT) — NOT WINDOW-ELIGIBLE (substitute pass; DEC-189 ratification PENDING human ruling; SUBSTITUTE-ADVERSARY-RATIFICATION-PENDING)
+**Convergence counter:** 0 of 3 (STRICT) — NOT WINDOW-ELIGIBLE (substitute pass; D-189 ratification PENDING human ruling; SUBSTITUTE-ADVERSARY-RATIFICATION-PENDING)
 
 Forty-ninth F2 pass (substitute — consistency-validator dispatched with an adversarial verification checklist; NOT the adversary agent; fresh context; adversarial framing preserved; adversary agent's own system prompt and policy rubric absent). Count 1L (from 1L). ZERO CRITICAL findings; ZERO HIGH findings; ZERO MEDIUM findings; 1 LOW finding; novelty LOW; verdict "AC surface has converged, YES" (apart from single LOW). LOW finding (F49-001): BC-3.8.013 doc-fallout deliverables parenthetical enumerated only 3 of 6 delivery obligations (a)–(f) from BC-3.8.012, omitting (d) the `src/cli/mod.rs` `--on-behalf-of` help-string update; load-bearing: AC-12 asserts `stdout.matches("requires --request-type").count() == 2` (after whitespace normalization) requiring BOTH the `--field` AND `--on-behalf-of` help lines to be updated; implementer treating the old parenthetical as complete would skip `--on-behalf-of` and fail AC-12 with count 1; fix: (1) obligation (d) added to parenthetical; (2) delegation marked NORMATIVE explicitly; (3) enumeration marked non-exhaustive; (4) BC-3.8.012 Trace (a)–(f) declared the authoritative binding enumeration, preventing the same omission class for future obligations. Spec bumped v1.3.148 + changelog [1.3.148] entry added. BC-INDEX v6.73 unchanged. All 3 guards green.
 
-**NOTE — SUBSTITUTE PASS (non-window-eligible pending ruling):** This pass used consistency-validator with an adversarial verification checklist rather than the adversary agent. Fresh context and adversarial framing preserved; the adversary agent's own system prompt and policy rubric were not. Human ruling required on whether such passes can close a DEC-189 window (SUBSTITUTE-ADVERSARY-RATIFICATION-PENDING). Counter held at 0/3 STRICT pending that ruling. Do NOT retroactively count as convergence credit without explicit human authorization.
+**NOTE — SUBSTITUTE PASS (non-window-eligible pending ruling):** This pass used consistency-validator with an adversarial verification checklist rather than the adversary agent. Fresh context and adversarial framing preserved; the adversary agent's own system prompt and policy rubric were not. Human ruling required on whether such passes can close a D-189 window (SUBSTITUTE-ADVERSARY-RATIFICATION-PENDING). Counter held at 0/3 STRICT pending that ruling. Do NOT retroactively count as convergence credit without explicit human authorization.
 
 **Trajectory so far:** p78(8)→p79(8)→p80(8)→p81(7)→p82(6)→p83(4)→p84(3)→p85(7)→p86(6)→p87(5)→p88(6)→p89(6)→p90(4)→p91(2)→p92(5)→p93(5)→p94(4)→p95(3)→p96(3)→p97(5)→p98(4)→p99(2)→p100(3)→p101(3)→p102(6)→p103(6)→p104(4)→p105(5)→p106(2)→p107(1)→p108(3)→p109(3)→p110(2)→p111(3L)→p112(1M+3L)→p113(2M+2L)→p114(2H+2L)→p115(4M+2L)→p116(2M+1L)→p117(1H+1M)→p118(2M)→p119(1M+2L)→p120(2M)→p121(3M+2L)→p122(3M)→p123(1M+2L)→[remediation-burst: F1-F5 LOW]→[F47-001 LOW fix]→p124-sub(1L)→p125-sub(1L). Delta: 0 (1L→1L). trajectory-tail →3M→1M+2L→1L→1L (passes p122, p123, p124-sub, p125-sub). PIPELINE PAUSED.
 
@@ -3115,11 +3115,11 @@ Forty-ninth F2 pass (substitute — consistency-validator dispatched with an adv
 ### Pass p126 (2026-07-27) — SUBSTITUTE (consistency-validator with adversarial checklist; NOT adversary agent)
 
 **Findings:** 1 (0C/0H/0M/1L)
-**Convergence counter:** 0 of 3 (STRICT) — NOT WINDOW-ELIGIBLE (substitute pass; DEC-189 ratification PENDING human ruling; SUBSTITUTE-ADVERSARY-RATIFICATION-PENDING)
+**Convergence counter:** 0 of 3 (STRICT) — NOT WINDOW-ELIGIBLE (substitute pass; D-189 ratification PENDING human ruling; SUBSTITUTE-ADVERSARY-RATIFICATION-PENDING)
 
-Fiftieth F2 pass (substitute — consistency-validator dispatched with an adversarial verification checklist via two split dispatches + 3 items verified directly by the orchestrator; NOT the adversary agent; fresh context; adversarial framing preserved). 8 items checked; 7 PASS, 1 LOW. ZERO CRITICAL findings; ZERO HIGH findings; ZERO MEDIUM findings; 1 LOW finding; novelty LOW; verdict "AC surface has converged, YES" (apart from single LOW). LOW finding (F50-001, story-side, delta-attributable): `stories/S-383-platform-inverse-warnings.md` `contract_superseded_by` field extended from `SOH-DX-1 (DEC-188)` to `"SOH-DX-1 (DEC-188) / S-639-1"`, naming the implementing successor story; banner gained an S-639-1 pointer with the "do NOT implement from these ACs" imperative intact; ACs byte-identical. `STORY-INDEX.md` v1.5.41 → v1.5.42 with S-383 manifest row updated. Notably clean on the reality-check aperture — every `create.rs` line anchor accurate; prior-behavior warning strings character-exact; all 8 cross-BC references accurate; BC-INDEX rows correct; test-name convention compliant. No spec bump (story-side fix only). BC-INDEX v6.73 unchanged. All 3 guards green.
+Fiftieth F2 pass (substitute — consistency-validator dispatched with an adversarial verification checklist via two split dispatches + 3 items verified directly by the orchestrator; NOT the adversary agent; fresh context; adversarial framing preserved). 8 items checked; 7 PASS, 1 LOW. ZERO CRITICAL findings; ZERO HIGH findings; ZERO MEDIUM findings; 1 LOW finding; novelty LOW; verdict "AC surface has converged, YES" (apart from single LOW). LOW finding (F50-001, story-side, delta-attributable): `stories/S-383-platform-inverse-warnings.md` `contract_superseded_by` field extended from `SOH-DX-1 (D-188)` to `"SOH-DX-1 (D-188) / S-639-1"`, naming the implementing successor story; banner gained an S-639-1 pointer with the "do NOT implement from these ACs" imperative intact; ACs byte-identical. `STORY-INDEX.md` v1.5.41 → v1.5.42 with S-383 manifest row updated. Notably clean on the reality-check aperture — every `create.rs` line anchor accurate; prior-behavior warning strings character-exact; all 8 cross-BC references accurate; BC-INDEX rows correct; test-name convention compliant. No spec bump (story-side fix only). BC-INDEX v6.73 unchanged. All 3 guards green.
 
-**NOTE — SUBSTITUTE PASS (non-window-eligible pending ruling):** This pass used consistency-validator with an adversarial verification checklist rather than the adversary agent. Fresh context and adversarial framing preserved; the adversary agent's own system prompt and policy rubric were not. Human ruling required on whether such passes can close a DEC-189 window (SUBSTITUTE-ADVERSARY-RATIFICATION-PENDING). Counter held at 0/3 STRICT pending that ruling. Do NOT retroactively count as convergence credit without explicit human authorization.
+**NOTE — SUBSTITUTE PASS (non-window-eligible pending ruling):** This pass used consistency-validator with an adversarial verification checklist rather than the adversary agent. Fresh context and adversarial framing preserved; the adversary agent's own system prompt and policy rubric were not. Human ruling required on whether such passes can close a D-189 window (SUBSTITUTE-ADVERSARY-RATIFICATION-PENDING). Counter held at 0/3 STRICT pending that ruling. Do NOT retroactively count as convergence credit without explicit human authorization.
 
 **Trajectory so far:** p78(8)→p79(8)→p80(8)→p81(7)→p82(6)→p83(4)→p84(3)→p85(7)→p86(6)→p87(5)→p88(6)→p89(6)→p90(4)→p91(2)→p92(5)→p93(5)→p94(4)→p95(3)→p96(3)→p97(5)→p98(4)→p99(2)→p100(3)→p101(3)→p102(6)→p103(6)→p104(4)→p105(5)→p106(2)→p107(1)→p108(3)→p109(3)→p110(2)→p111(3L)→p112(1M+3L)→p113(2M+2L)→p114(2H+2L)→p115(4M+2L)→p116(2M+1L)→p117(1H+1M)→p118(2M)→p119(1M+2L)→p120(2M)→p121(3M+2L)→p122(3M)→p123(1M+2L)→[remediation-burst: F1-F5 LOW]→[F47-001 LOW fix]→p124-sub(1L)→p125-sub(1L)→p126-sub(1L). Delta: 0 (1L→1L). trajectory-tail →1M+2L→1L→1L→1L (passes p123, p124-sub, p125-sub, p126-sub). PIPELINE PAUSED. NEXT: pass-51 (p127 substitute).
 
@@ -3128,13 +3128,13 @@ Fiftieth F2 pass (substitute — consistency-validator dispatched with an advers
 ### Pass p127 (2026-07-27) — SUBSTITUTE (consistency-validator with adversarial checklist; NOT adversary agent)
 
 **Findings:** 1 (0C/0H/0M/1L) + 1 STATE.md bookkeeping defect (F51-002, pre-existing, MEDIUM)
-**Convergence counter:** 0 of 3 (STRICT) — NOT WINDOW-ELIGIBLE (substitute pass; DEC-189 ratification PENDING human ruling; SUBSTITUTE-ADVERSARY-RATIFICATION-PENDING)
+**Convergence counter:** 0 of 3 (STRICT) — NOT WINDOW-ELIGIBLE (substitute pass; D-189 ratification PENDING human ruling; SUBSTITUTE-ADVERSARY-RATIFICATION-PENDING)
 
 Fifty-first F2 pass (substitute — consistency-validator dispatched with an adversarial verification checklist; NOT the adversary agent; fresh context; adversarial framing preserved). 3 items checked; 2 PASS, 1 LOW finding + 1 STATE.md defect. ZERO CRITICAL findings; ZERO HIGH findings; ZERO MEDIUM findings in spec; 1 LOW finding; novelty LOW; verdict effectively "AC surface has converged, YES" (apart from single LOW and external STATE.md defect). LOW finding (F51-001, LOW, delta-attributable): holdout-scenario and VP coverage documented as a deliberate non-goal via a terminal "Note (coverage non-goal)" in BOTH BC-3.8.012 and BC-3.8.013. Rationale recorded: the 21 ACs cover every observable exit path; both guards are pure pre-flight input validation with no network interaction, unlike BC-3.4.019 (VP-331-003) which needs a project-scoped API lookup. Verified: no new VP, holdout, or BC authored — all VP identifiers in the diff are pre-existing references; footer records "0 new BCs / 0 new VPs / 0 new holdouts". Spec bumped v1.3.149 + changelog [1.3.149] entry added. BC-INDEX v6.73 unchanged. All 3 guards green.
 
 STATE.md bookkeeping defect F51-002 (MEDIUM, pre-existing): STATE.md Convergence Status asserted `VP-INDEX v0.82` but VP-INDEX.md does not exist anywhere in `.factory/`. VPs are tracked inline in BC bodies and holdout scenarios. FIXED this burst: Convergence Status corrected to `VPs tracked inline in BC bodies (no index artifact)`. SOH-DX-1-PG-001 first CONFIRMED datapoint — escalated LOW → MEDIUM. New drift item VP-INDEX-ARTIFACT-ABSENT added (LOW, OPEN — human decision). STORY-INDEX version in same line also corrected v1.5.41 → v1.5.42 (stale after F50-001). F51-002 is a STATE.md bookkeeping defect, NOT a spec-delta defect, so it does NOT reset the convergence window.
 
-**NOTE — SUBSTITUTE PASS (non-window-eligible pending ruling):** This pass used consistency-validator with an adversarial verification checklist rather than the adversary agent. Fresh context and adversarial framing preserved; the adversary agent's own system prompt and policy rubric were not. Human ruling required on whether such passes can close a DEC-189 window (SUBSTITUTE-ADVERSARY-RATIFICATION-PENDING). Counter held at 0/3 STRICT pending that ruling. Do NOT retroactively count as convergence credit without explicit human authorization.
+**NOTE — SUBSTITUTE PASS (non-window-eligible pending ruling):** This pass used consistency-validator with an adversarial verification checklist rather than the adversary agent. Fresh context and adversarial framing preserved; the adversary agent's own system prompt and policy rubric were not. Human ruling required on whether such passes can close a D-189 window (SUBSTITUTE-ADVERSARY-RATIFICATION-PENDING). Counter held at 0/3 STRICT pending that ruling. Do NOT retroactively count as convergence credit without explicit human authorization.
 
 **Trajectory so far:** p78(8)→p79(8)→p80(8)→p81(7)→p82(6)→p83(4)→p84(3)→p85(7)→p86(6)→p87(5)→p88(6)→p89(6)→p90(4)→p91(2)→p92(5)→p93(5)→p94(4)→p95(3)→p96(3)→p97(5)→p98(4)→p99(2)→p100(3)→p101(3)→p102(6)→p103(6)→p104(4)→p105(5)→p106(2)→p107(1)→p108(3)→p109(3)→p110(2)→p111(3L)→p112(1M+3L)→p113(2M+2L)→p114(2H+2L)→p115(4M+2L)→p116(2M+1L)→p117(1H+1M)→p118(2M)→p119(1M+2L)→p120(2M)→p121(3M+2L)→p122(3M)→p123(1M+2L)→[remediation-burst: F1-F5 LOW]→[F47-001 LOW fix]→p124-sub(1L)→p125-sub(1L)→p126-sub(1L)→p127-sub(1L). Delta: 0 (1L→1L). trajectory-tail →1L→1L→1L→1L (passes p124-sub, p125-sub, p126-sub, p127-sub). PIPELINE PAUSED.
 
@@ -3145,75 +3145,75 @@ STATE.md bookkeeping defect F51-002 (MEDIUM, pre-existing): STATE.md Convergence
 ### Pass p128 (2026-07-27) — SUBSTITUTE (consistency-validator with adversarial checklist; NOT adversary agent)
 
 **Findings:** 1 (0C/0H/0M/1L)
-**Convergence counter:** 0 of 3 (STRICT) — NOT WINDOW-ELIGIBLE (substitute pass; DEC-189 ratification PENDING human ruling; SUBSTITUTE-ADVERSARY-RATIFICATION-PENDING)
+**Convergence counter:** 0 of 3 (STRICT) — NOT WINDOW-ELIGIBLE (substitute pass; D-189 ratification PENDING human ruling; SUBSTITUTE-ADVERSARY-RATIFICATION-PENDING)
 
-Fifty-second F2 pass (substitute — consistency-validator dispatched with an adversarial verification checklist; NOT the adversary agent; fresh context; adversarial framing preserved). 3 items checked; 2 PASS, 1 LOW finding. ZERO CRITICAL findings; ZERO HIGH findings; ZERO MEDIUM findings; 1 LOW finding; novelty LOW; verdict "AC surface has converged, YES" (apart from single LOW). LOW finding (F52-001, LOW, delta-attributable): `error-taxonomy.md` Section 6 (Domain-Specific Error Messages) lacked a subsection for the three DEC-188 pre-flight exit-64 error conditions introduced by BC-3.8.012 and BC-3.8.013; both most recent prior feature cycles (BC-3.5.x and BC-3.9.x) had registered their respective error conditions, making the omission a consistency gap. Fix: new `### Issue Commands` subsection added to Section 6 following the established table convention. All three verbatim error strings confirmed character-for-character identical to `bc-3-issue-write.md` fenced blocks. A preamble note records zero HTTP on each error path. Spec bumped v1.3.150 + changelog [1.3.150] entry added. BC-INDEX v6.73 unchanged. All 3 guards green. Zero stale content anywhere — zero "is ignored on the platform create path" and zero warn-and-proceed across all seven sibling PRD artifacts. `edge-case-catalog.md` absence is convention-consistent.
+Fifty-second F2 pass (substitute — consistency-validator dispatched with an adversarial verification checklist; NOT the adversary agent; fresh context; adversarial framing preserved). 3 items checked; 2 PASS, 1 LOW finding. ZERO CRITICAL findings; ZERO HIGH findings; ZERO MEDIUM findings; 1 LOW finding; novelty LOW; verdict "AC surface has converged, YES" (apart from single LOW). LOW finding (F52-001, LOW, delta-attributable): `error-taxonomy.md` Section 6 (Domain-Specific Error Messages) lacked a subsection for the three D-188 pre-flight exit-64 error conditions introduced by BC-3.8.012 and BC-3.8.013; both most recent prior feature cycles (BC-3.5.x and BC-3.9.x) had registered their respective error conditions, making the omission a consistency gap. Fix: new `### Issue Commands` subsection added to Section 6 following the established table convention. All three verbatim error strings confirmed character-for-character identical to `bc-3-issue-write.md` fenced blocks. A preamble note records zero HTTP on each error path. Spec bumped v1.3.150 + changelog [1.3.150] entry added. BC-INDEX v6.73 unchanged. All 3 guards green. Zero stale content anywhere — zero "is ignored on the platform create path" and zero warn-and-proceed across all seven sibling PRD artifacts. `edge-case-catalog.md` absence is convention-consistent.
 
-**NOTE — SUBSTITUTE PASS (non-window-eligible pending ruling):** This pass used consistency-validator with an adversarial verification checklist rather than the adversary agent. Fresh context and adversarial framing preserved; the adversary agent's own system prompt and policy rubric were not. Human ruling required on whether such passes can close a DEC-189 window (SUBSTITUTE-ADVERSARY-RATIFICATION-PENDING). Counter held at 0/3 STRICT pending that ruling. Do NOT retroactively count as convergence credit without explicit human authorization.
+**NOTE — SUBSTITUTE PASS (non-window-eligible pending ruling):** This pass used consistency-validator with an adversarial verification checklist rather than the adversary agent. Fresh context and adversarial framing preserved; the adversary agent's own system prompt and policy rubric were not. Human ruling required on whether such passes can close a D-189 window (SUBSTITUTE-ADVERSARY-RATIFICATION-PENDING). Counter held at 0/3 STRICT pending that ruling. Do NOT retroactively count as convergence credit without explicit human authorization.
 
 **Trajectory so far:** p78(8)→p79(8)→p80(8)→p81(7)→p82(6)→p83(4)→p84(3)→p85(7)→p86(6)→p87(5)→p88(6)→p89(6)→p90(4)→p91(2)→p92(5)→p93(5)→p94(4)→p95(3)→p96(3)→p97(5)→p98(4)→p99(2)→p100(3)→p101(3)→p102(6)→p103(6)→p104(4)→p105(5)→p106(2)→p107(1)→p108(3)→p109(3)→p110(2)→p111(3L)→p112(1M+3L)→p113(2M+2L)→p114(2H+2L)→p115(4M+2L)→p116(2M+1L)→p117(1H+1M)→p118(2M)→p119(1M+2L)→p120(2M)→p121(3M+2L)→p122(3M)→p123(1M+2L)→[remediation-burst: F1-F5 LOW]→[F47-001 LOW fix]→p124-sub(1L)→p125-sub(1L)→p126-sub(1L)→p127-sub(1L)→p128-sub(1L). Delta: 0 (1L→1L). trajectory-tail →1L→1L→1L→1L (passes p125-sub, p126-sub, p127-sub, p128-sub). PIPELINE PAUSED.
 
 ---
 
-### Pass p129 (2026-07-27) — SUBSTITUTE (consistency-validator with adversarial checklist; DEC-190 WINDOW-ELIGIBLE)
+### Pass p129 (2026-07-27) — SUBSTITUTE (consistency-validator with adversarial checklist; D-190 WINDOW-ELIGIBLE)
 
 **Findings:** 0 (0C/0H/0M/0L) — CLEAN
-**Convergence counter:** 1 of 3 (STRICT per DEC-190)
+**Convergence counter:** 1 of 3 (STRICT per D-190)
 
-Fifty-third F2 pass (substitute — consistency-validator dispatched with an adversarial verification checklist; NOT the adversary agent; fresh context; adversarial framing preserved; adversary agent's own system prompt and policy rubric absent). DEC-190 (2026-07-27): human instruction "keep grinding to 3 strict" ratifies substitute passes as DEC-189 window-eligible; this pass is WINDOW-ELIGIBLE per DEC-190. 4 items checked; all PASS. ZERO CRITICAL findings; ZERO HIGH findings; ZERO MEDIUM findings; ZERO LOW findings; verdict CLEAN. Items verified: (1) normative-MUST coverage — all 26 normative statements (N1–N15 BC-3.8.012, M1–M11 BC-3.8.013) map to a verifying AC; zero UNVERIFIED; (2) the spec's own clap-`requires` falsifier claim (AC-1/AC-2/AC-16) independently validated as correct, and its AC-15-is-insensitive caveat upheld; (3) version train correct (Cargo.toml 0.6.0-dev.11 → 0.7.0-dev.1 target; no duplicate CHANGELOG entry); (4) CLAUDE.md obligation-(b) single-site targeting correct (no `--on-behalf-of` mentions anywhere; all `--field` mentions are edit-side except line 248).
+Fifty-third F2 pass (substitute — consistency-validator dispatched with an adversarial verification checklist; NOT the adversary agent; fresh context; adversarial framing preserved; adversary agent's own system prompt and policy rubric absent). D-190 (2026-07-27): human instruction "keep grinding to 3 strict" ratifies substitute passes as D-189 window-eligible; this pass is WINDOW-ELIGIBLE per D-190. 4 items checked; all PASS. ZERO CRITICAL findings; ZERO HIGH findings; ZERO MEDIUM findings; ZERO LOW findings; verdict CLEAN. Items verified: (1) normative-MUST coverage — all 26 normative statements (N1–N15 BC-3.8.012, M1–M11 BC-3.8.013) map to a verifying AC; zero UNVERIFIED; (2) the spec's own clap-`requires` falsifier claim (AC-1/AC-2/AC-16) independently validated as correct, and its AC-15-is-insensitive caveat upheld; (3) version train correct (Cargo.toml 0.6.0-dev.11 → 0.7.0-dev.1 target; no duplicate CHANGELOG entry); (4) CLAUDE.md obligation-(b) single-site targeting correct (no `--on-behalf-of` mentions anywhere; all `--field` mentions are edit-side except line 248).
 
-**NOTE — SUBSTITUTE PASS (DEC-190 WINDOW-ELIGIBLE):** Human instruction "keep grinding to 3 strict" (2026-07-27) recorded as DEC-190, ratifying substitute adversarial passes (consistency-validator with adversarial verification checklist; fresh context; adversarial framing preserved; adversary agent's own system prompt and policy rubric absent) as DEC-189 window-eligible. This substitution MUST be disclosed in the F2 gate document and any downstream convergence report — do not let it read as a DEC-189-literal window.
+**NOTE — SUBSTITUTE PASS (D-190 WINDOW-ELIGIBLE):** Human instruction "keep grinding to 3 strict" (2026-07-27) recorded as D-190, ratifying substitute adversarial passes (consistency-validator with adversarial verification checklist; fresh context; adversarial framing preserved; adversary agent's own system prompt and policy rubric absent) as D-189 window-eligible. This substitution MUST be disclosed in the F2 gate document and any downstream convergence report — do not let it read as a D-189-literal window.
 
-**Convergence counter:** 1 of 3 STRICT (per DEC-190). NEXT: pass-54 (p130-sub).
+**Convergence counter:** 1 of 3 STRICT (per D-190). NEXT: pass-54 (p130-sub).
 
 **Trajectory so far:** p78(8)→p79(8)→p80(8)→p81(7)→p82(6)→p83(4)→p84(3)→p85(7)→p86(6)→p87(5)→p88(6)→p89(6)→p90(4)→p91(2)→p92(5)→p93(5)→p94(4)→p95(3)→p96(3)→p97(5)→p98(4)→p99(2)→p100(3)→p101(3)→p102(6)→p103(6)→p104(4)→p105(5)→p106(2)→p107(1)→p108(3)→p109(3)→p110(2)→p111(3L)→p112(1M+3L)→p113(2M+2L)→p114(2H+2L)→p115(4M+2L)→p116(2M+1L)→p117(1H+1M)→p118(2M)→p119(1M+2L)→p120(2M)→p121(3M+2L)→p122(3M)→p123(1M+2L)→[remediation-burst: F1-F5 LOW]→[F47-001 LOW fix]→p124-sub(1L)→p125-sub(1L)→p126-sub(1L)→p127-sub(1L)→p128-sub(1L)→p129-sub(0). Delta: -1L (1L→0). trajectory-tail →1L→1L→1L→0 (passes p126-sub, p127-sub, p128-sub, p129-sub). Convergence: 1/3 STRICT.
 
 ---
 
-### Pass p130 (2026-07-27) — SUBSTITUTE (consistency-validator with adversarial checklist; DEC-190 WINDOW-ELIGIBLE)
+### Pass p130 (2026-07-27) — SUBSTITUTE (consistency-validator with adversarial checklist; D-190 WINDOW-ELIGIBLE)
 
 **Findings:** 0 (0C/0H/0M/0L) — CLEAN
-**Convergence counter:** 2 of 3 (STRICT per DEC-190)
+**Convergence counter:** 2 of 3 (STRICT per D-190)
 
-Fifty-fourth F2 pass (substitute — consistency-validator dispatched with an adversarial verification checklist; NOT the adversary agent; fresh context; adversarial framing preserved; DEC-190 window-eligible). 4 items checked; all PASS. ZERO CRITICAL findings; ZERO HIGH findings; ZERO MEDIUM findings; ZERO LOW findings; verdict CLEAN. Audit of this session's own six edits (v1.3.145–150) for mutual coherence: (1) both Test Notes byte-identical with correct split destinations; (2) `mod.rs` instruction correctly names only `pub mod assertions;`; (3) all 21 ACs intact with AC-7 retaining all seven elements alongside its new EC marker; (4) both new Notes terminal and non-contradictory; all three error strings character-exact in error-taxonomy.md by mechanical equality check.
+Fifty-fourth F2 pass (substitute — consistency-validator dispatched with an adversarial verification checklist; NOT the adversary agent; fresh context; adversarial framing preserved; D-190 window-eligible). 4 items checked; all PASS. ZERO CRITICAL findings; ZERO HIGH findings; ZERO MEDIUM findings; ZERO LOW findings; verdict CLEAN. Audit of this session's own six edits (v1.3.145–150) for mutual coherence: (1) both Test Notes byte-identical with correct split destinations; (2) `mod.rs` instruction correctly names only `pub mod assertions;`; (3) all 21 ACs intact with AC-7 retaining all seven elements alongside its new EC marker; (4) both new Notes terminal and non-contradictory; all three error strings character-exact in error-taxonomy.md by mechanical equality check.
 
 **One reported finding REJECTED as false positive by orchestrator:** The validator flagged the v1.3.137 trail entry's "(same promotion target as `assert_json_error_envelope`)" as stale. It is accurate historical record — at v1.3.137 both helpers targeted `fixtures.rs` (verified via the v1.3.108 entry). Editing it would retroactively falsify the audit trail, which is exactly the SOH-DX-1-PG-012 defect v1.3.145 remediated. The immutability principle holds. This finding does NOT count against the clean verdict.
 
-**NOTE — SUBSTITUTE PASS (DEC-190 WINDOW-ELIGIBLE):** Human instruction "keep grinding to 3 strict" (2026-07-27) recorded as DEC-190, ratifying substitute adversarial passes (consistency-validator with adversarial verification checklist; fresh context; adversarial framing preserved; adversary agent's own system prompt and policy rubric absent) as DEC-189 window-eligible. This substitution MUST be disclosed in the F2 gate document and any downstream convergence report — do not let it read as a DEC-189-literal window.
+**NOTE — SUBSTITUTE PASS (D-190 WINDOW-ELIGIBLE):** Human instruction "keep grinding to 3 strict" (2026-07-27) recorded as D-190, ratifying substitute adversarial passes (consistency-validator with adversarial verification checklist; fresh context; adversarial framing preserved; adversary agent's own system prompt and policy rubric absent) as D-189 window-eligible. This substitution MUST be disclosed in the F2 gate document and any downstream convergence report — do not let it read as a D-189-literal window.
 
-**Convergence counter:** 2 of 3 STRICT (per DEC-190). NEXT: pass-55 (p131-sub).
+**Convergence counter:** 2 of 3 STRICT (per D-190). NEXT: pass-55 (p131-sub).
 
 **Trajectory so far:** p78(8)→p79(8)→p80(8)→p81(7)→p82(6)→p83(4)→p84(3)→p85(7)→p86(6)→p87(5)→p88(6)→p89(6)→p90(4)→p91(2)→p92(5)→p93(5)→p94(4)→p95(3)→p96(3)→p97(5)→p98(4)→p99(2)→p100(3)→p101(3)→p102(6)→p103(6)→p104(4)→p105(5)→p106(2)→p107(1)→p108(3)→p109(3)→p110(2)→p111(3L)→p112(1M+3L)→p113(2M+2L)→p114(2H+2L)→p115(4M+2L)→p116(2M+1L)→p117(1H+1M)→p118(2M)→p119(1M+2L)→p120(2M)→p121(3M+2L)→p122(3M)→p123(1M+2L)→[remediation-burst: F1-F5 LOW]→[F47-001 LOW fix]→p124-sub(1L)→p125-sub(1L)→p126-sub(1L)→p127-sub(1L)→p128-sub(1L)→p129-sub(0)→p130-sub(0). Delta: 0 (0→0). trajectory-tail →1L→1L→0→0 (passes p127-sub, p128-sub, p129-sub, p130-sub). Convergence: 2/3 STRICT.
 
 ---
 
-### Pass p131 (2026-07-27) — SUBSTITUTE (consistency-validator with adversarial checklist; DEC-190 WINDOW-ELIGIBLE) — 3/3 STRICT WINDOW CLOSES HERE
+### Pass p131 (2026-07-27) — SUBSTITUTE (consistency-validator with adversarial checklist; D-190 WINDOW-ELIGIBLE) — 3/3 STRICT WINDOW CLOSES HERE
 
 **Findings:** 0 (0C/0H/0M/0L) — CLEAN
-**Convergence counter:** 3 of 3 (STRICT per DEC-190) — **WINDOW CLOSED**
+**Convergence counter:** 3 of 3 (STRICT per D-190) — **WINDOW CLOSED**
 
-Fifty-fifth F2 pass (substitute — consistency-validator dispatched with an adversarial verification checklist; NOT the adversary agent; fresh context; adversarial framing preserved; DEC-190 window-eligible). 2 items checked; both PASS. ZERO CRITICAL findings; ZERO HIGH findings; ZERO MEDIUM findings; ZERO LOW findings; verdict CLEAN. Items verified: (1) all 26 DELETE-mandate line anchors in `tests/issue_create_jsm.rs` (4,063 lines) verified to point at the described constructs, maximum deviation 1–2 lines, well under the 15-line threshold; (2) the plain-`contains` (AC-1 ~:2470-2473) vs `.count()` (AC-5 ~:2732-2738, AC-7 ~:2860-2866) discrimination independently spot-verified correct by the orchestrator. Combinatorial coverage complete — no reachable, behaviorally-distinct, uncovered flag combination.
+Fifty-fifth F2 pass (substitute — consistency-validator dispatched with an adversarial verification checklist; NOT the adversary agent; fresh context; adversarial framing preserved; D-190 window-eligible). 2 items checked; both PASS. ZERO CRITICAL findings; ZERO HIGH findings; ZERO MEDIUM findings; ZERO LOW findings; verdict CLEAN. Items verified: (1) all 26 DELETE-mandate line anchors in `tests/issue_create_jsm.rs` (4,063 lines) verified to point at the described constructs, maximum deviation 1–2 lines, well under the 15-line threshold; (2) the plain-`contains` (AC-1 ~:2470-2473) vs `.count()` (AC-5 ~:2732-2738, AC-7 ~:2860-2866) discrimination independently spot-verified correct by the orchestrator. Combinatorial coverage complete — no reachable, behaviorally-distinct, uncovered flag combination.
 
-**NOTE — SUBSTITUTE PASS (DEC-190 WINDOW-ELIGIBLE):** Human instruction "keep grinding to 3 strict" (2026-07-27) recorded as DEC-190, ratifying substitute adversarial passes (consistency-validator with adversarial verification checklist; fresh context; adversarial framing preserved; adversary agent's own system prompt and policy rubric absent) as DEC-189 window-eligible. This substitution MUST be disclosed in the F2 gate document and any downstream convergence report — do not let it read as a DEC-189-literal window.
+**NOTE — SUBSTITUTE PASS (D-190 WINDOW-ELIGIBLE):** Human instruction "keep grinding to 3 strict" (2026-07-27) recorded as D-190, ratifying substitute adversarial passes (consistency-validator with adversarial verification checklist; fresh context; adversarial framing preserved; adversary agent's own system prompt and policy rubric absent) as D-189 window-eligible. This substitution MUST be disclosed in the F2 gate document and any downstream convergence report — do not let it read as a D-189-literal window.
 
-**Convergence counter: 3 of 3 STRICT WINDOW CLOSED (per DEC-190). All three closing passes (p129-sub, p130-sub, p131-sub) were substitute passes per DEC-190 ratification. F2 HUMAN GATE PENDING HUMAN APPROVAL.**
+**Convergence counter: 3 of 3 STRICT WINDOW CLOSED (per D-190). All three closing passes (p129-sub, p130-sub, p131-sub) were substitute passes per D-190 ratification. F2 HUMAN GATE PENDING HUMAN APPROVAL.**
 
-**Trajectory so far:** p78(8)→p79(8)→p80(8)→p81(7)→p82(6)→p83(4)→p84(3)→p85(7)→p86(6)→p87(5)→p88(6)→p89(6)→p90(4)→p91(2)→p92(5)→p93(5)→p94(4)→p95(3)→p96(3)→p97(5)→p98(4)→p99(2)→p100(3)→p101(3)→p102(6)→p103(6)→p104(4)→p105(5)→p106(2)→p107(1)→p108(3)→p109(3)→p110(2)→p111(3L)→p112(1M+3L)→p113(2M+2L)→p114(2H+2L)→p115(4M+2L)→p116(2M+1L)→p117(1H+1M)→p118(2M)→p119(1M+2L)→p120(2M)→p121(3M+2L)→p122(3M)→p123(1M+2L)→[remediation-burst: F1-F5 LOW]→[F47-001 LOW fix]→p124-sub(1L)→p125-sub(1L)→p126-sub(1L)→p127-sub(1L)→p128-sub(1L)→p129-sub(0)→p130-sub(0)→p131-sub(0). Delta: 0 (0→0). trajectory-tail →1L→0→0→0 (passes p128-sub, p129-sub, p130-sub, p131-sub). **CONVERGENCE: 3/3 STRICT WINDOW CLOSED (DEC-190, 2026-07-27). F2 HUMAN GATE PENDING HUMAN APPROVAL.**
+**Trajectory so far:** p78(8)→p79(8)→p80(8)→p81(7)→p82(6)→p83(4)→p84(3)→p85(7)→p86(6)→p87(5)→p88(6)→p89(6)→p90(4)→p91(2)→p92(5)→p93(5)→p94(4)→p95(3)→p96(3)→p97(5)→p98(4)→p99(2)→p100(3)→p101(3)→p102(6)→p103(6)→p104(4)→p105(5)→p106(2)→p107(1)→p108(3)→p109(3)→p110(2)→p111(3L)→p112(1M+3L)→p113(2M+2L)→p114(2H+2L)→p115(4M+2L)→p116(2M+1L)→p117(1H+1M)→p118(2M)→p119(1M+2L)→p120(2M)→p121(3M+2L)→p122(3M)→p123(1M+2L)→[remediation-burst: F1-F5 LOW]→[F47-001 LOW fix]→p124-sub(1L)→p125-sub(1L)→p126-sub(1L)→p127-sub(1L)→p128-sub(1L)→p129-sub(0)→p130-sub(0)→p131-sub(0). Delta: 0 (0→0). trajectory-tail →1L→0→0→0 (passes p128-sub, p129-sub, p130-sub, p131-sub). **CONVERGENCE: 3/3 STRICT WINDOW CLOSED (D-190, 2026-07-27). F2 HUMAN GATE PENDING HUMAN APPROVAL.**
 
 **Convergence counter:** 0 of 3 STRICT. NEXT: adversary pass (p129) with v1.3.150 artifacts — pending ADVERSARY-AGENT-NONFUNCTIONAL engine fix or SUBSTITUTE-ADVERSARY-RATIFICATION-PENDING human ruling.
 
 ---
 
-### Pass p134 (2026-07-27) — SUBSTITUTE (test-infrastructure aperture; DEC-190 WINDOW-ELIGIBLE)
+### Pass p134 (2026-07-27) — SUBSTITUTE (test-infrastructure aperture; D-190 WINDOW-ELIGIBLE)
 
 **Findings:** 0 (0C/0H/0M/0L) — CLEAN
-**Convergence counter:** 1 of 3 (STRICT per DEC-190) — CLEAN pass; window opens
+**Convergence counter:** 1 of 3 (STRICT per D-190) — CLEAN pass; window opens
 
-Fifty-eighth F2 pass (substitute — consistency-validator with adversarial verification checklist; NOT the adversary agent; fresh context; adversarial framing preserved; DEC-190 window-eligible). **APERTURE CLASS: REALITY-CHECK** (test-infrastructure claims). 6 claims verified. All VERIFIED. ZERO findings; verdict CLEAN.
+Fifty-eighth F2 pass (substitute — consistency-validator with adversarial verification checklist; NOT the adversary agent; fresh context; adversarial framing preserved; D-190 window-eligible). **APERTURE CLASS: REALITY-CHECK** (test-infrastructure claims). 6 claims verified. All VERIFIED. ZERO findings; verdict CLEAN.
 
 **Verified claims (6/6):** (1) `assert_cmd` 2.2.2 `pub fn timeout()` at `src/cmd.rs:108` confirmed — v1.3.151 fix premise sound; (2) AC-17 narrowed substring `"cannot be combined with \`--markdown\`"` confirmed unique to `jsm_create.rs:160` — no collision with `edit.rs`; (3) `JR_STDIN_IS_TTY` seam confirmed debug-only via `#[cfg(debug_assertions)]` at `src/main.rs`; (4) `Command::new` test harness confirmed compatible with current assertion chain pattern; (5) exit-64 route in `handle_jsm_create` confirmed at step-2 guard; (6) `jr_cmd_xdg` fixture confirmed scoping `JR_CACHE_DIR` correctly per test isolation contract.
 
-**NOTE — SUBSTITUTE PASS (DEC-190 WINDOW-ELIGIBLE):** CLEAN. Convergence window opens: 1/3 STRICT (per DEC-190 ratification, 2026-07-27).
+**NOTE — SUBSTITUTE PASS (D-190 WINDOW-ELIGIBLE):** CLEAN. Convergence window opens: 1/3 STRICT (per D-190 ratification, 2026-07-27).
 
 **Convergence counter:** 1 of 3 STRICT. NEXT: pass-59 (p135-sub).
 
@@ -3221,16 +3221,16 @@ Fifty-eighth F2 pass (substitute — consistency-validator with adversarial veri
 
 ---
 
-### Pass p135 (2026-07-27) — SUBSTITUTE (clap-declaration aperture; DEC-190 WINDOW-ELIGIBLE)
+### Pass p135 (2026-07-27) — SUBSTITUTE (clap-declaration aperture; D-190 WINDOW-ELIGIBLE)
 
 **Findings:** 0 (0C/0H/0M/0L) — CLEAN
-**Convergence counter:** 2 of 3 (STRICT per DEC-190) — CLEAN pass; window advances
+**Convergence counter:** 2 of 3 (STRICT per D-190) — CLEAN pass; window advances
 
-Fifty-ninth F2 pass (substitute — consistency-validator with adversarial verification checklist; NOT the adversary agent; fresh context; adversarial framing preserved; DEC-190 window-eligible). **APERTURE CLASS: REALITY-CHECK** (clap-declaration claims). 7 claims verified. All VERIFIED. ZERO findings; verdict CLEAN.
+Fifty-ninth F2 pass (substitute — consistency-validator with adversarial verification checklist; NOT the adversary agent; fresh context; adversarial framing preserved; D-190 window-eligible). **APERTURE CLASS: REALITY-CHECK** (clap-declaration claims). 7 claims verified. All VERIFIED. ZERO findings; verdict CLEAN.
 
 **Verified claims (7/7):** (1) `#[arg(long)]` declarations for `--markdown`, `--on-behalf-of`, `--request-type` confirmed in `src/cli/issue/create.rs`; (2) `allow_hyphen_values` NOT set on upload `file` positional confirmed (correct per CLAUDE.md gotcha); (3) `conflicts_with` annotation between `--description` and `--description-stdin` confirmed active; (4) `--request-type` absence → platform path gate confirmed byte-for-byte unchanged; (5) `--no-input` propagation through `handle_create` confirmed reaching `handle_jsm_create`; (6) `--output` enum variant `OutputFormat::Json` confirmed reaching all JSON render paths via `print_output`; (7) all AC group-6 (JSM create flag) clap annotations confirmed present and non-overlapping.
 
-**NOTE — SUBSTITUTE PASS (DEC-190 WINDOW-ELIGIBLE):** CLEAN. Convergence window advances: 2/3 STRICT (per DEC-190 ratification, 2026-07-27).
+**NOTE — SUBSTITUTE PASS (D-190 WINDOW-ELIGIBLE):** CLEAN. Convergence window advances: 2/3 STRICT (per D-190 ratification, 2026-07-27).
 
 **Convergence counter:** 2 of 3 STRICT. NEXT: pass-60 (p136-sub).
 
@@ -3238,18 +3238,18 @@ Fifty-ninth F2 pass (substitute — consistency-validator with adversarial verif
 
 ---
 
-### Pass p136 (2026-07-27) — SUBSTITUTE (prd-metric aperture; DEC-190 WINDOW-ELIGIBLE)
+### Pass p136 (2026-07-27) — SUBSTITUTE (prd-metric aperture; D-190 WINDOW-ELIGIBLE)
 
 **Findings:** 1 (0C/0H/0M/1L) — F60-001 LOW
-**Convergence counter:** 0 of 3 (STRICT per DEC-190) — delta-attributable finding; WINDOW RESET
+**Convergence counter:** 0 of 3 (STRICT per D-190) — delta-attributable finding; WINDOW RESET
 
-Sixtieth F2 pass (substitute — consistency-validator with adversarial verification checklist; NOT the adversary agent; fresh context; adversarial framing preserved; DEC-190 window-eligible). **APERTURE CLASS: REALITY-CHECK** (prd-metric consistency — README.md L3 BCs column vs frontmatter total_bcs). 5 claims verified. 4 VERIFIED, 1 LOW FINDING. ZERO CRITICAL findings; ZERO HIGH findings; ZERO MEDIUM findings; 1 LOW finding; verdict FINDING (not CLEAN).
+Sixtieth F2 pass (substitute — consistency-validator with adversarial verification checklist; NOT the adversary agent; fresh context; adversarial framing preserved; D-190 window-eligible). **APERTURE CLASS: REALITY-CHECK** (prd-metric consistency — README.md L3 BCs column vs frontmatter total_bcs). 5 claims verified. 4 VERIFIED, 1 LOW FINDING. ZERO CRITICAL findings; ZERO HIGH findings; ZERO MEDIUM findings; 1 LOW finding; verdict FINDING (not CLEAN).
 
 **Verified claims (4/5):** (1) bc-1-auth-identity.md `(57)` = `total_bcs: 57` (exact match — reference point); (2) bc-4-assets-cmdb.md `(32)` = `total_bcs: 32` (exact match — reference point); (3) bc-6-worklog-team.md column value matches `total_bcs`; (4) bc-3-issue-write.md `total_bcs: 140` and `definitional_count: 111` frontmatter are unchanged by v1.3.153.
 
 **F60-001 (LOW, delta-attributable):** `specs/prd/README.md` line 39 "L3 BCs" column for bc-3-issue-write.md showed `(111)` — this is `definitional_count` (count of BCs defined in bc-3's own namespace), not `total_bcs: 140` (cumulative count including range-collapsed BCs). Convention is `total_bcs` (verified against bc-1/bc-4 as reference points). Fix: column corrected to `(140)` in spec v1.3.153. Sibling drift also found (NOT fixed in this pass — scope was bc-3 only): bc-2 `(94)` vs `total_bcs: 106`; bc-5 `(35)` vs `36`; bc-7 `(90)` vs `93` — ledgered as README-SIBLING-COUNT-DRIFT-3 in STATE.md. BC count unchanged (140/111).
 
-**NOTE — SUBSTITUTE PASS (DEC-190 WINDOW-ELIGIBLE):** Window was at 2/3 after p134-sub+p135-sub. F60-001 is delta-attributable; WINDOW RESET to 0/3.
+**NOTE — SUBSTITUTE PASS (D-190 WINDOW-ELIGIBLE):** Window was at 2/3 after p134-sub+p135-sub. F60-001 is delta-attributable; WINDOW RESET to 0/3.
 
 **Convergence counter:** RESET to 0 of 3 STRICT. NEXT: pass-61 (p137-sub or adversary).
 
@@ -3257,12 +3257,12 @@ Sixtieth F2 pass (substitute — consistency-validator with adversarial verifica
 
 ---
 
-### Pass p132 (2026-07-27) — SUBSTITUTE (reality-check aperture; DEC-190 WINDOW-ELIGIBLE) — WINDOW RESET to 0/3
+### Pass p132 (2026-07-27) — SUBSTITUTE (reality-check aperture; D-190 WINDOW-ELIGIBLE) — WINDOW RESET to 0/3
 
 **Findings:** 1 (0C/0H/1M/0L) — F56-001 MEDIUM
-**Convergence counter:** RESET to 0 of 3 (STRICT per DEC-190) — delta-attributable finding; earlier 3/3 window (passes p129-sub/p130-sub/p131-sub, DEC-190, 2026-07-27) INVALIDATED
+**Convergence counter:** RESET to 0 of 3 (STRICT per D-190) — delta-attributable finding; earlier 3/3 window (passes p129-sub/p130-sub/p131-sub, D-190, 2026-07-27) INVALIDATED
 
-Fifty-sixth F2 pass (substitute — consistency-validator with adversarial verification checklist; NOT the adversary agent; fresh context; adversarial framing preserved; DEC-190 window-eligible). **APERTURE CLASS: REALITY-CHECK** — first use of this aperture class (are the spec's factual assertions about third-party crates and this project's code actually TRUE). 6 claims verified. 5 VERIFIED, 1 MEDIUM FINDING. ZERO CRITICAL findings; ZERO HIGH findings; 1 MEDIUM finding; ZERO LOW findings; verdict FINDING (not CLEAN).
+Fifty-sixth F2 pass (substitute — consistency-validator with adversarial verification checklist; NOT the adversary agent; fresh context; adversarial framing preserved; D-190 window-eligible). **APERTURE CLASS: REALITY-CHECK** — first use of this aperture class (are the spec's factual assertions about third-party crates and this project's code actually TRUE). 6 claims verified. 5 VERIFIED, 1 MEDIUM FINDING. ZERO CRITICAL findings; ZERO HIGH findings; 1 MEDIUM finding; ZERO LOW findings; verdict FINDING (not CLEAN).
 
 **Verified claims (5/6):** (1) config-migration stderr line at `config.rs:285` genuinely poisons strict JSON parse — Preconditions on AC-2/5/7/10 sound; (2) wiremock 0.6.5 FIFO with `mount_platform_create_stubs` confirmed registering free-fire mocks — isolation constraint on AC-8/AC-11 sound; (3) dialoguer 0.12.0 with `prompt_input` using `.interact_text()` confirmed; (4) serde_json without `preserve_order` — no `indexmap` dep, alphabetical ordering claim correct; (5) `JR_STDIN_IS_TTY` seam correct on all three sub-claims including release-gating via `#[cfg(not(debug_assertions))]`.
 
@@ -3270,26 +3270,26 @@ Fifty-sixth F2 pass (substitute — consistency-validator with adversarial verif
 
 **APERTURE-CLASS-LESSON (most important lesson of this session):** Passes 48–55 used INTERNAL-CONSISTENCY apertures (does the spec agree with itself; do its citations resolve) and yielded only documentation-traceability findings, which read as an asymptote. Passes 56–57 opened a REALITY-CHECK aperture class (are the spec's factual assertions about third-party crates and about this project's code actually TRUE) and immediately found two substantive defects. A spec can be maximally self-consistent while asserting false things about the world; internal-consistency review structurally cannot detect that. Reality-check apertures are where the yield is.
 
-**NOTE — SUBSTITUTE PASS (DEC-190 WINDOW-ELIGIBLE, WINDOW RESET):** This finding is delta-attributable. The earlier 3/3 window (passes p129-sub/p130-sub/p131-sub, DEC-190, 2026-07-27) is INVALIDATED. Convergence counter RESET to 0/3.
+**NOTE — SUBSTITUTE PASS (D-190 WINDOW-ELIGIBLE, WINDOW RESET):** This finding is delta-attributable. The earlier 3/3 window (passes p129-sub/p130-sub/p131-sub, D-190, 2026-07-27) is INVALIDATED. Convergence counter RESET to 0/3.
 
 **Convergence counter:** RESET to 0 of 3 STRICT. NEXT: pass-57 (p133-sub).
 
-**Trajectory so far:** p78(8)→p79(8)→p80(8)→p81(7)→p82(6)→p83(4)→p84(3)→p85(7)→p86(6)→p87(5)→p88(6)→p89(6)→p90(4)→p91(2)→p92(5)→p93(5)→p94(4)→p95(3)→p96(3)→p97(5)→p98(4)→p99(2)→p100(3)→p101(3)→p102(6)→p103(6)→p104(4)→p105(5)→p106(2)→p107(1)→p108(3)→p109(3)→p110(2)→p111(3L)→p112(1M+3L)→p113(2M+2L)→p114(2H+2L)→p115(4M+2L)→p116(2M+1L)→p117(1H+1M)→p118(2M)→p119(1M+2L)→p120(2M)→p121(3M+2L)→p122(3M)→p123(1M+2L)→[remediation-burst: F1-F5 LOW]→[F47-001 LOW fix]→p124-sub(1L)→p125-sub(1L)→p126-sub(1L)→p127-sub(1L)→p128-sub(1L)→p129-sub(0)→p130-sub(0)→p131-sub(0)→p132-sub(1M). Delta: +1M (0→1M). trajectory-tail →0→0→0→1M (passes p129-sub, p130-sub, p131-sub, p132-sub). **CONVERGENCE: RESET to 0/3 STRICT — earlier 3/3 window (DEC-190, 2026-07-27) INVALIDATED by F56-001.**
+**Trajectory so far:** p78(8)→p79(8)→p80(8)→p81(7)→p82(6)→p83(4)→p84(3)→p85(7)→p86(6)→p87(5)→p88(6)→p89(6)→p90(4)→p91(2)→p92(5)→p93(5)→p94(4)→p95(3)→p96(3)→p97(5)→p98(4)→p99(2)→p100(3)→p101(3)→p102(6)→p103(6)→p104(4)→p105(5)→p106(2)→p107(1)→p108(3)→p109(3)→p110(2)→p111(3L)→p112(1M+3L)→p113(2M+2L)→p114(2H+2L)→p115(4M+2L)→p116(2M+1L)→p117(1H+1M)→p118(2M)→p119(1M+2L)→p120(2M)→p121(3M+2L)→p122(3M)→p123(1M+2L)→[remediation-burst: F1-F5 LOW]→[F47-001 LOW fix]→p124-sub(1L)→p125-sub(1L)→p126-sub(1L)→p127-sub(1L)→p128-sub(1L)→p129-sub(0)→p130-sub(0)→p131-sub(0)→p132-sub(1M). Delta: +1M (0→1M). trajectory-tail →0→0→0→1M (passes p129-sub, p130-sub, p131-sub, p132-sub). **CONVERGENCE: RESET to 0/3 STRICT — earlier 3/3 window (D-190, 2026-07-27) INVALIDATED by F56-001.**
 
 ---
 
-### Pass p133 (2026-07-27) — SUBSTITUTE (reality-check aperture; DEC-190 WINDOW-ELIGIBLE)
+### Pass p133 (2026-07-27) — SUBSTITUTE (reality-check aperture; D-190 WINDOW-ELIGIBLE)
 
 **Findings:** 1 (0C/0H/0M/1L) — F57-001 LOW
-**Convergence counter:** 0 of 3 (STRICT per DEC-190) — delta-attributable finding; window already reset by F56-001 in p132-sub
+**Convergence counter:** 0 of 3 (STRICT per D-190) — delta-attributable finding; window already reset by F56-001 in p132-sub
 
-Fifty-seventh F2 pass (substitute — consistency-validator with adversarial verification checklist; NOT the adversary agent; fresh context; adversarial framing preserved; DEC-190 window-eligible). **APERTURE CLASS: REALITY-CHECK** (continued — code-behavior claims that ACs' discriminating power depends on). 8 claims verified. 7 VERIFIED, 1 LOW FINDING. ZERO CRITICAL findings; ZERO HIGH findings; ZERO MEDIUM findings; 1 LOW finding; verdict FINDING (not CLEAN).
+Fifty-seventh F2 pass (substitute — consistency-validator with adversarial verification checklist; NOT the adversary agent; fresh context; adversarial framing preserved; D-190 window-eligible). **APERTURE CLASS: REALITY-CHECK** (continued — code-behavior claims that ACs' discriminating power depends on). 8 claims verified. 7 VERIFIED, 1 LOW FINDING. ZERO CRITICAL findings; ZERO HIGH findings; ZERO MEDIUM findings; 1 LOW finding; verdict FINDING (not CLEAN).
 
 **Verified claims (7/8):** (1) success-path JSON goes to **stdout** via `println!` at `create.rs:249` — `stdout.trim().is_empty()` IS discriminating in JSON mode for AC-2/7/10; (2) `print_success` is `eprintln!` at `output.rs:45-47` so `"Created issue"` goes to **stderr** — `!stderr.contains("Created issue")` carries discriminating weight; (3) the `"Error: "` prefix is human-arm-only at `main.rs:133-144`; (4) JSM guard ordering fires project-key(124) → empty-RT(146) → summary(~244-255); (5) `"request type cannot be empty"` unique in `src/`; (6) `find_project_config` walk-up loop confirmed; (7) all five AC-8 endpoint symbols with the `team_field_id`-is-None conditional real.
 
 **F57-001 (LOW, delta-attributable):** AC-17 asserted `!stderr.contains("cannot be combined with")`. That bare substring is broader than BC-3.8.017's message and collides with an unrelated contract's message at `src/cli/issue/edit.rs:220` (`"--label cannot be combined with {} in the same call"`, the issue-#396 label/field mutual-exclusion guard). The spec's prose claim was CORRECT — BC-3.8.017's own string does live only in `jsm_create.rs:160` — so the orchestrator re-characterized the validator's finding, which would have had the true prose rewritten. No functional impact (zero `edit::` references in `create.rs`, so `edit.rs` is unreachable from `handle_create` and the HYGIENE label stands). Fix: assertion narrowed to `"cannot be combined with \`--markdown\`"` (option a) AND annotated with the `edit.rs` collision. Spec bumped v1.3.152. BC-INDEX v6.73 unchanged. All 3 guards green.
 
-**NOTE — SUBSTITUTE PASS (DEC-190 WINDOW-ELIGIBLE):** Window was already reset to 0/3 by F56-001 in p132-sub. F57-001 is also delta-attributable; counter remains 0/3.
+**NOTE — SUBSTITUTE PASS (D-190 WINDOW-ELIGIBLE):** Window was already reset to 0/3 by F56-001 in p132-sub. F57-001 is also delta-attributable; counter remains 0/3.
 
 **Convergence counter:** 0 of 3 STRICT. NEXT: pass-58 (p134-sub or adversary).
 
@@ -3297,12 +3297,12 @@ Fifty-seventh F2 pass (substitute — consistency-validator with adversarial ver
 
 ---
 
-### Pass p137 (2026-07-28) — SUBSTITUTE (record-keeping integrity audit; DEC-190 WINDOW-ELIGIBLE)
+### Pass p137 (2026-07-28) — SUBSTITUTE (record-keeping integrity audit; D-190 WINDOW-ELIGIBLE)
 
 **Findings:** 2 (0C/0H/1M/1L) — F62-001 MEDIUM + F62-002 LOW
-**Convergence counter:** RESET to 0 of 3 (STRICT per DEC-190) — delta-attributable findings; window reset
+**Convergence counter:** RESET to 0 of 3 (STRICT per D-190) — delta-attributable findings; window reset
 
-Sixty-second F2 pass (substitute — consistency-validator with adversarial verification checklist; NOT the adversary agent; fresh context; adversarial framing preserved; DEC-190 window-eligible). **APERTURE CLASS: RECORD-KEEPING INTEGRITY** (spec-changelog completeness, Type-field correctness, BC-INDEX rows, README Supplement Index). 4 items audited. 2 PASS, 2 FINDING. 1 MEDIUM finding; 1 LOW finding; verdict FINDING (not CLEAN).
+Sixty-second F2 pass (substitute — consistency-validator with adversarial verification checklist; NOT the adversary agent; fresh context; adversarial framing preserved; D-190 window-eligible). **APERTURE CLASS: RECORD-KEEPING INTEGRITY** (spec-changelog completeness, Type-field correctness, BC-INDEX rows, README Supplement Index). 4 items audited. 2 PASS, 2 FINDING. 1 MEDIUM finding; 1 LOW finding; verdict FINDING (not CLEAN).
 
 **Verified claims (PASS, 2/4):** (1) Changelog completeness — 47 entries 1.3.107–1.3.153 with no gaps or duplicates in scope; (2) Type-field correctness — all entries are PATCH, consistent with "0 new BCs"; (3) BC-INDEX §3.4 rows for BC-3.4.014–019 all present and semantically consistent with their bodies.
 
@@ -3310,7 +3310,7 @@ Sixty-second F2 pass (substitute — consistency-validator with adversarial veri
 
 **F62-002 (LOW, delta-attributable):** Two spec-changelog entries (`[1.3.113]` and `[1.3.114]`) were missing their `### BC Count` sections — present in all sibling entries as a convention, absent here. Fix: both entries gained their `### BC Count` sections (no BC count change; entries updated to record `0 new BCs / unchanged` in v1.3.154).
 
-**NOTE — SUBSTITUTE PASS (DEC-190 WINDOW-ELIGIBLE):** Window was at 0/3 after p136-sub (F60-001 reset). F62-001 and F62-002 are delta-attributable; window remains 0/3. Both fixes applied in spec v1.3.154.
+**NOTE — SUBSTITUTE PASS (D-190 WINDOW-ELIGIBLE):** Window was at 0/3 after p136-sub (F60-001 reset). F62-001 and F62-002 are delta-attributable; window remains 0/3. Both fixes applied in spec v1.3.154.
 
 **Convergence counter:** RESET to 0 of 3 STRICT. NEXT: pass-63 (p138-sub).
 
@@ -3318,12 +3318,12 @@ Sixty-second F2 pass (substitute — consistency-validator with adversarial veri
 
 ---
 
-### Pass p138 (2026-07-28) — SUBSTITUTE (unguarded-surface audit; DEC-190 WINDOW-ELIGIBLE) — CLEAN for delta
+### Pass p138 (2026-07-28) — SUBSTITUTE (unguarded-surface audit; D-190 WINDOW-ELIGIBLE) — CLEAN for delta
 
 **Findings:** 1 (0C/0H/0M/1L) — CANONICAL-COUNTS stale ADR locations (PRE-EXISTING, out of scope)
 **Convergence counter:** 1 of 3 STRICT — CLEAN for delta (pre-existing finding; window advances)
 
-Sixty-third F2 pass (substitute — consistency-validator with adversarial verification checklist; NOT the adversary agent; fresh context; adversarial framing preserved; DEC-190 window-eligible). **APERTURE CLASS: UNGUARDED-SURFACE AUDIT** (three surfaces with no guard coverage). 3 items audited. 2 VERIFIED, 1 PRE-EXISTING FINDING (out of scope). ZERO delta-attributable findings; verdict CLEAN for delta.
+Sixty-third F2 pass (substitute — consistency-validator with adversarial verification checklist; NOT the adversary agent; fresh context; adversarial framing preserved; D-190 window-eligible). **APERTURE CLASS: UNGUARDED-SURFACE AUDIT** (three surfaces with no guard coverage). 3 items audited. 2 VERIFIED, 1 PRE-EXISTING FINDING (out of scope). ZERO delta-attributable findings; verdict CLEAN for delta.
 
 **Verified claims (2/3):**
 - **Item 1 — BC-INDEX `## Coverage Statistics` (the "9th surface", first mechanical audit): VERIFIED ACCURATE.** All eight cumulative figures sum to 657 matching `total_bcs`; all eight bodied figures sum to 427 matching the Total row; the stated 230 difference is exact; every per-section bodied figure matches the real `#### BC-` heading count (46/64/111/22/18/33/49 across bc-1..bc-7, plus cross-cutting.md at 84 bodied / 150 cumulative). **Calibration note:** this surface has been flagged ten times as a drift risk and has now been mechanically audited for the first time — it is accurate. The recurrence count measured how often the risk was noticed, not how often it drifted. Recommend priority downgrade accordingly.
@@ -3333,7 +3333,7 @@ Sixty-third F2 pass (substitute — consistency-validator with adversarial verif
 
 **Orchestrator-error correction (F63-001 MEDIUM + F63-002 LOW) correcting v1.3.154:** Both README holdout rows introduced in v1.3.154 carried range terminus `H-NEW-JSM-RT-001..006`, but the actual maximum is `H-NEW-JSM-RT-001..007` (7 scenarios in that family). Line 48 had been wrong since v1.3.143; the orchestrator's v1.3.154 instruction propagated the wrong terminus to line 108. Fix: both rows corrected to `..007` in v1.3.155. Line 108 also gained the "informational; canonical count is `total_holdouts:` frontmatter" caveat (line 48 already had it). Additionally, `PHANTOM-ADR-0017` codified: ADR-0017 cited in six files but document does not exist; on-disk count is 16 (ADR-0001..0016).
 
-**NOTE — SUBSTITUTE PASS (DEC-190 WINDOW-ELIGIBLE, CLEAN for delta):** Window was at 0/3 after p137-sub. The sole finding is pre-existing and out-of-scope for the SOH-DX-1 delta — it does NOT reset the window. Window advances to 1/3 STRICT. Reasoning recorded explicitly per orchestrator instruction.
+**NOTE — SUBSTITUTE PASS (D-190 WINDOW-ELIGIBLE, CLEAN for delta):** Window was at 0/3 after p137-sub. The sole finding is pre-existing and out-of-scope for the SOH-DX-1 delta — it does NOT reset the window. Window advances to 1/3 STRICT. Reasoning recorded explicitly per orchestrator instruction.
 
 **Convergence counter:** 1 of 3 STRICT. NEXT: pass-64 (p139-sub or adversary).
 
@@ -3341,20 +3341,20 @@ Sixty-third F2 pass (substitute — consistency-validator with adversarial verif
 
 ---
 
-### Pass p139 (2026-07-28) — SUBSTITUTE (upstream-completeness audit; DEC-190 WINDOW-ELIGIBLE)
+### Pass p139 (2026-07-28) — SUBSTITUTE (upstream-completeness audit; D-190 WINDOW-ELIGIBLE)
 
 **Findings:** 1 (0C/0H/0M/1L) — F64-001 LOW
 **Convergence counter:** RESET to 0 of 3 STRICT — delta-attributable finding; window reset
 
-Sixty-fourth F2 pass (substitute — consistency-validator with adversarial verification checklist; NOT the adversary agent; fresh context; adversarial framing preserved; DEC-190 window-eligible). **APERTURE CLASS: UPSTREAM-COMPLETENESS** (F1→F2 upstream completeness audit: every F1 risk and open question mapped to an F2 treatment or explicit non-goal).
+Sixty-fourth F2 pass (substitute — consistency-validator with adversarial verification checklist; NOT the adversary agent; fresh context; adversarial framing preserved; D-190 window-eligible). **APERTURE CLASS: UPSTREAM-COMPLETENESS** (F1→F2 upstream completeness audit: every F1 risk and open question mapped to an F2 treatment or explicit non-goal).
 
 **F64-001 (LOW, delta-attributable):** F1's E2E scan obligation had no F2 treatment. F1 (`phase-f1-delta/SOH-DX-1/delta-analysis.md` § "2. Regression Risk Assessment", #639 row) required scanning `tests/e2e_live.rs` for `issue create` invocations carrying `--field`/`--on-behalf-of` without `--request-type`. Scan performed: ZERO found — all 8 `--field` occurrences are `issue edit --field` (live call site approximately line 5111), zero `--on-behalf-of`. Conclusion: no live-run scenario flips to exit-64; no E2E changes at F4. Fix: obligation DISCHARGED as delivery item (g) in spec v1.3.156.
 
 **F1 row 82 confirmed fully treated:** `tests/issue_create_jsm.rs` "5 tests invert… significant rewrite" row confirmed fully treated by the AC DELETE mandates and Removal postcondition. No other untreated F1 risks found.
 
-**Aperture insight — UPSTREAM-COMPLETENESS-APERTURE codified:** This class — completeness against the upstream authority — is undetectable by internal-consistency review, because the spec was perfectly coherent about DEC-188 while simply never mentioning a question F1 asked. Internal-consistency passes cannot catch it; only an explicit upstream-completeness dimension (every F1 risk/open question mapped to F2 treatment or explicit non-goal) can detect it. Companion to `APERTURE-CLASS-LESSON`.
+**Aperture insight — UPSTREAM-COMPLETENESS-APERTURE codified:** This class — completeness against the upstream authority — is undetectable by internal-consistency review, because the spec was perfectly coherent about D-188 while simply never mentioning a question F1 asked. Internal-consistency passes cannot catch it; only an explicit upstream-completeness dimension (every F1 risk/open question mapped to F2 treatment or explicit non-goal) can detect it. Companion to `APERTURE-CLASS-LESSON`.
 
-**NOTE — SUBSTITUTE PASS (DEC-190 WINDOW-ELIGIBLE):** Window was at 1/3 (from p138-sub). F64-001 is delta-attributable → window RESET to 0/3.
+**NOTE — SUBSTITUTE PASS (D-190 WINDOW-ELIGIBLE):** Window was at 1/3 (from p138-sub). F64-001 is delta-attributable → window RESET to 0/3.
 
 **Convergence counter:** RESET to 0 of 3 STRICT. NEXT: pass-65 (p140-sub or adversary).
 
@@ -3362,12 +3362,12 @@ Sixty-fourth F2 pass (substitute — consistency-validator with adversarial veri
 
 ---
 
-### Pass p140 (2026-07-28) — SUBSTITUTE (F2→F3 downstream readiness audit; DEC-190 WINDOW-ELIGIBLE)
+### Pass p140 (2026-07-28) — SUBSTITUTE (F2→F3 downstream readiness audit; D-190 WINDOW-ELIGIBLE)
 
 **Findings:** 2 accepted (0C/0H/1M/1L) + 2 rejected — F65-001 MEDIUM + F65-002 LOW accepted
 **Convergence counter:** RESET to 0 of 3 STRICT — both accepted findings delta-attributable
 
-Sixty-fifth F2 pass (substitute — consistency-validator with adversarial verification checklist; NOT the adversary agent; fresh context; adversarial framing preserved; DEC-190 window-eligible). **APERTURE CLASS: DOWNSTREAM READINESS** (F2→F3 readiness: does F2 supply what F3's story template requires for S-639-1 without improvising unratified behavioural scope?). 4 items raised; 2 accepted by orchestrator; 2 rejected with reasoning.
+Sixty-fifth F2 pass (substitute — consistency-validator with adversarial verification checklist; NOT the adversary agent; fresh context; adversarial framing preserved; D-190 window-eligible). **APERTURE CLASS: DOWNSTREAM READINESS** (F2→F3 readiness: does F2 supply what F3's story template requires for S-639-1 without improvising unratified behavioural scope?). 4 items raised; 2 accepted by orchestrator; 2 rejected with reasoning.
 
 **Overall verdict: F2 IS sufficient for F3 to author S-639-1 without improvising unratified behavioural scope** — all 21 ACs, three verbatim error strings, guard placement, clap-`requires` prohibition, SSOT ordering, helper promotion directives, breaking-change metadata, and obligations (a)–(g) all supplied.
 
@@ -3379,7 +3379,7 @@ Sixty-fifth F2 pass (substitute — consistency-validator with adversarial verif
 (i) "`src/cli/issue/create.rs` missing from obligations (a)–(g)" — FALSE POSITIVE. The block is explicitly "same PR as the code change" and enumerates accompanying work; `create.rs` appears in the Behavior clause, Trace, and Removal postcondition twice each.
 (ii) "`tests/common/mod.rs` registration missing from obligations" — ACCEPTED-AS-IS. It lives in the Test Note where test-infrastructure directives belong; not required in (a)–(g).
 
-**NOTE — SUBSTITUTE PASS (DEC-190 WINDOW-ELIGIBLE):** Window was at 0/3 (reset by F64-001 in p139-sub). F65-001 and F65-002 are delta-attributable; counter remains 0/3.
+**NOTE — SUBSTITUTE PASS (D-190 WINDOW-ELIGIBLE):** Window was at 0/3 (reset by F64-001 in p139-sub). F65-001 and F65-002 are delta-attributable; counter remains 0/3.
 
 **Convergence counter:** RESET to 0 of 3 STRICT. NEXT: pass-66 (p141-sub or adversary).
 
@@ -3387,18 +3387,18 @@ Sixty-fifth F2 pass (substitute — consistency-validator with adversarial verif
 
 ---
 
-### Pass p141 (2026-07-28) — SUBSTITUTE (broad unstructured re-tread; DEC-190 WINDOW-ELIGIBLE)
+### Pass p141 (2026-07-28) — SUBSTITUTE (broad unstructured re-tread; D-190 WINDOW-ELIGIBLE)
 
 **Findings:** 1 (0C/0H/0M/1L) — F66-001 LOW; verdict CONVERGED (broad sweep)
 **Convergence counter:** RESET to 0 of 3 STRICT — delta-attributable finding
 
-Sixty-sixth F2 pass (substitute — consistency-validator with adversarial verification checklist; NOT the adversary agent; fresh context; adversarial framing preserved; DEC-190 window-eligible). **APERTURE CLASS: BROAD UNSTRUCTURED RE-TREAD** (no prescribed checklist — free to examine anything, with Bash). Independently verified: v1.3.157 citation fix; ~20 line-number citations across `src/` and `tests/`; all four ADR-0014 amendment sites; `CLAUDE.md:248`; test infrastructure state; serde_json key-ordering reasoning; AC label assignments; AC-15 insensitivity claim; clap-`requires` prohibition; `print_success` is `eprintln!` making `!stderr.contains("Created issue")` genuinely DISCRIMINATING. Reached the same conclusions as prior targeted passes without being directed there.
+Sixty-sixth F2 pass (substitute — consistency-validator with adversarial verification checklist; NOT the adversary agent; fresh context; adversarial framing preserved; D-190 window-eligible). **APERTURE CLASS: BROAD UNSTRUCTURED RE-TREAD** (no prescribed checklist — free to examine anything, with Bash). Independently verified: v1.3.157 citation fix; ~20 line-number citations across `src/` and `tests/`; all four ADR-0014 amendment sites; `CLAUDE.md:248`; test infrastructure state; serde_json key-ordering reasoning; AC label assignments; AC-15 insensitivity claim; clap-`requires` prohibition; `print_success` is `eprintln!` making `!stderr.contains("Created issue")` genuinely DISCRIMINATING. Reached the same conclusions as prior targeted passes without being directed there.
 
 **F66-001 (LOW, delta-attributable):** Completes v1.3.142's partial propagation. The malformed-`--field` example literal `bare-name-no-equals` → `bareflagnoequals` was propagated to historical sites in v1.3.142 but NOT to the two LIVE sites: (a) Behavior block EC-3.8.012-3 example; (b) EC-3.8.012-3 "as test" citation body. Fix: both LIVE sites updated to `bareflagnoequals` in spec v1.3.158, aligning with AC-7 (which since v1.3.147 explicitly cites "EC-3.8.012-3 as test") and with `tests/issue_create_jsm.rs:2845`. Three historical sites (v1.3.142 trail, v1.3.131 trail, footer Previous-update chain) deliberately preserved. `TWIN-ARTIFACT-SWEEP` incremented to recurrence 19.
 
 **ORCHESTRATOR-ERROR-INJECTION-RATE aperture insight:** Two of four findings in rounds 63–66 were defects the orchestrator introduced via imprecise fix instructions: F63-001 (range terminus inferred from a confirmed member rather than enumerated) and F65-001 (bare filename where two files share the name). Both violated rules already in the ledger (RANGE-TERMINUS-INFERENCE and CITATION-FORM-DISCIPLINE). Signal: at this depth, the remediation process injects defects at a rate comparable to the review process finding pre-existing ones. `ORCHESTRATOR-ERROR-INJECTION-RATE` codified as new drift item.
 
-**NOTE — SUBSTITUTE PASS (DEC-190 WINDOW-ELIGIBLE):** Window was at 0/3 (reset by F65-001 in p140-sub). F66-001 is delta-attributable → counter remains 0/3.
+**NOTE — SUBSTITUTE PASS (D-190 WINDOW-ELIGIBLE):** Window was at 0/3 (reset by F65-001 in p140-sub). F66-001 is delta-attributable → counter remains 0/3.
 
 **Convergence counter:** RESET to 0 of 3 STRICT. NEXT: pass-67 (p142-sub or adversary).
 
@@ -3443,14 +3443,14 @@ NEXT: pass-68 (p143-sub or adversary) with v1.3.159 artifacts.
 
 ---
 
-### Pass p143 (2026-07-28) — SUBSTITUTE (broad unstructured re-tread; DEC-190 WINDOW-ELIGIBLE)
+### Pass p143 (2026-07-28) — SUBSTITUTE (broad unstructured re-tread; D-190 WINDOW-ELIGIBLE)
 
 **Findings:** 0 (0C/0H/0M/0L) — ZERO FINDINGS; verdict CONVERGED
 **Convergence counter:** 1 of 3 STRICT
 **Window before:** 0/3 STRICT
 **Window after:** 1/3 STRICT
 
-Sixty-eighth F2 pass (substitute — consistency-validator with adversarial verification checklist; NOT the adversary agent; fresh context; adversarial framing preserved; DEC-190 window-eligible). **APERTURE CLASS: BROAD UNSTRUCTURED RE-TREAD** (no prescribed checklist — free to examine anything with Bash). Named ~25 mechanical verifications, ALL correct. Verifications included: `assert_cmd` 2.2.2 `.timeout()` at `src/cmd.rs:108` (confirming the v1.3.151 correction); `assert_json_error_envelope` at `json_error_shape.rs:63` with `stdout.trim().is_empty()` at ~:76; `tests/common/assertions.rs` absent (F3 deliverable); `write_minimal_config` legacy `[instance]` shape at ~:165; `write_profile_config` absent; both old `eprintln!` warn strings at `create.rs` ~:81-89; dispatch fork at `create.rs:49`; NO `--markdown` guard on the platform path (validating EC-3.8.012-5); `edit.rs` ~:89 markdown guard; `jsm_create.rs` ~:160 BC-3.8.017 string and ~:145 empty-RT guard; the false platform-parity comment at `jsm_create.rs` ~:171-172; bidirectional `--to`/`--account-id` `conflicts_with` at `mod.rs` ~:388/391; helper HTTP ordering (`resolve_team_field` before `resolve_assignee_by_project`) underpinning AC-8; `find_team_field_id` at `fields.rs:26`; `get_myself` at `users.rs:19`; `main.rs` ~:143 "Error: " prefix and the no-prefix JSON arm; all four ADR-0014 byte-for-byte sites; `CLAUDE.md:248`; all six old test names; the family banner's three stale clauses at `issue_create_jsm.rs` ~:2380-2391; both dead-citation comments; AC-1's full five-item DELETE mandate; the config migration line at `config.rs:285`.
+Sixty-eighth F2 pass (substitute — consistency-validator with adversarial verification checklist; NOT the adversary agent; fresh context; adversarial framing preserved; D-190 window-eligible). **APERTURE CLASS: BROAD UNSTRUCTURED RE-TREAD** (no prescribed checklist — free to examine anything with Bash). Named ~25 mechanical verifications, ALL correct. Verifications included: `assert_cmd` 2.2.2 `.timeout()` at `src/cmd.rs:108` (confirming the v1.3.151 correction); `assert_json_error_envelope` at `json_error_shape.rs:63` with `stdout.trim().is_empty()` at ~:76; `tests/common/assertions.rs` absent (F3 deliverable); `write_minimal_config` legacy `[instance]` shape at ~:165; `write_profile_config` absent; both old `eprintln!` warn strings at `create.rs` ~:81-89; dispatch fork at `create.rs:49`; NO `--markdown` guard on the platform path (validating EC-3.8.012-5); `edit.rs` ~:89 markdown guard; `jsm_create.rs` ~:160 BC-3.8.017 string and ~:145 empty-RT guard; the false platform-parity comment at `jsm_create.rs` ~:171-172; bidirectional `--to`/`--account-id` `conflicts_with` at `mod.rs` ~:388/391; helper HTTP ordering (`resolve_team_field` before `resolve_assignee_by_project`) underpinning AC-8; `find_team_field_id` at `fields.rs:26`; `get_myself` at `users.rs:19`; `main.rs` ~:143 "Error: " prefix and the no-prefix JSON arm; all four ADR-0014 byte-for-byte sites; `CLAUDE.md:248`; all six old test names; the family banner's three stale clauses at `issue_create_jsm.rs` ~:2380-2391; both dead-citation comments; AC-1's full five-item DELETE mandate; the config migration line at `config.rs:285`.
 
 **ZERO findings.** All ~25 claims held.
 
@@ -3460,14 +3460,14 @@ Sixty-eighth F2 pass (substitute — consistency-validator with adversarial veri
 
 ---
 
-### Pass p144 (2026-07-28) — SUBSTITUTE (broad unstructured re-tread; DEC-190 WINDOW-ELIGIBLE)
+### Pass p144 (2026-07-28) — SUBSTITUTE (broad unstructured re-tread; D-190 WINDOW-ELIGIBLE)
 
 **Findings:** 0 (0C/0H/0M/0L) — ZERO FINDINGS; verdict CONVERGED
 **Convergence counter:** 2 of 3 STRICT
 **Window before:** 1/3 STRICT
 **Window after:** 2/3 STRICT
 
-Sixty-ninth F2 pass (substitute — consistency-validator with adversarial verification checklist; NOT the adversary agent; fresh context; adversarial framing preserved; DEC-190 window-eligible). **APERTURE CLASS: BROAD UNSTRUCTURED RE-TREAD** (no prescribed checklist — free to examine anything with Bash). Named ~30 mechanical verifications, all correct — substantially overlapping pass-68's set plus: `find_project_config` at `config.rs:362`; `JR_STDIN_IS_TTY` at `main.rs:107` with the flip gated on `if !cli.no_input` at ~:103; the pre-migrated profile-config template at `issue_create_jsm.rs` ~:1959-1966; `mount_platform_create_stubs` free-fire registration at ~:2395-2411; verbatim error-string non-overlap confirming AC-3's FALSIFIABLE-COARSE labels. Also independently confirmed the AC-16 Removal-postcondition omission is documented and intentional.
+Sixty-ninth F2 pass (substitute — consistency-validator with adversarial verification checklist; NOT the adversary agent; fresh context; adversarial framing preserved; D-190 window-eligible). **APERTURE CLASS: BROAD UNSTRUCTURED RE-TREAD** (no prescribed checklist — free to examine anything with Bash). Named ~30 mechanical verifications, all correct — substantially overlapping pass-68's set plus: `find_project_config` at `config.rs:362`; `JR_STDIN_IS_TTY` at `main.rs:107` with the flip gated on `if !cli.no_input` at ~:103; the pre-migrated profile-config template at `issue_create_jsm.rs` ~:1959-1966; `mount_platform_create_stubs` free-fire registration at ~:2395-2411; verbatim error-string non-overlap confirming AC-3's FALSIFIABLE-COARSE labels. Also independently confirmed the AC-16 Removal-postcondition omission is documented and intentional.
 
 **One UNVERIFIED item self-flagged:** whether wiremock 0.6.5's `received_requests()` records requests to UNREGISTERED paths — the basis for AC-8's and AC-13's normative zero-HTTP proof. **Orchestrator resolved this against the crate source: VERIFIED CORRECT.** In `wiremock-0.6.5/src/mock_server/bare_server.rs`, `handle_request` pushes every incoming request to `received_requests` UNCONDITIONALLY, before `self.mock_set.handle_request(request)` — so unmatched/unregistered-path requests ARE recorded. The spec's claim that it "catches ALL HTTP calls regardless of mock registration" holds; both zero-HTTP proofs are sound. Failure mode is also safe: with recording disabled the method returns `None` and the spec's `.unwrap()` panics loudly rather than silently passing.
 
@@ -3488,7 +3488,7 @@ Sixty-ninth F2 pass (substitute — consistency-validator with adversarial verif
 
 **VOID ×3.** Three consecutive dispatches (adv-70, adv-70b, adv-70c) produced zero retrievable output despite substantial runtime. Each was nudged once and did not deliver a final report. Attempt 3 (adv-70c) used a deliberately leaner prompt with a ~20-call budget, after observing the two failed dispatches had the longest prompts and runtimes while passes 68/69 (which delivered) were shorter. The orchestrator did NOT substitute its own review — not fresh-context after 20+ passes; a self-review cannot legitimately close a fresh-context window.
 
-**Cause: subagent delivery failure.** NOT a clean pass; NOT a failing pass. Window remains at 2/3 — VOID does not credit or reset the counter per task instructions. Running tally this session (AGENT-IDLE-NO-REPORT): 3 of the last 6 review dispatches produced nothing retrievable. VOID is now the binding constraint on closing the DEC-189 window, not spec quality.
+**Cause: subagent delivery failure.** NOT a clean pass; NOT a failing pass. Window remains at 2/3 — VOID does not credit or reset the counter per task instructions. Running tally this session (AGENT-IDLE-NO-REPORT): 3 of the last 6 review dispatches produced nothing retrievable. VOID is now the binding constraint on closing the D-189 window, not spec quality.
 
 **Convergence counter:** 2 of 3 STRICT (unchanged). NEXT: fresh dispatch with leaner prompt or human ruling on STRICT-WINDOW-NO-FIXED-POINT criterion.
 
@@ -3496,14 +3496,14 @@ Sixty-ninth F2 pass (substitute — consistency-validator with adversarial verif
 
 ---
 
-### Pass adv-71 (2026-07-28) — SUBSTITUTE (DEC-190 WINDOW-ELIGIBLE; aperture: upstream-completeness / downstream-readiness)
+### Pass adv-71 (2026-07-28) — SUBSTITUTE (D-190 WINDOW-ELIGIBLE; aperture: upstream-completeness / downstream-readiness)
 
 **Findings:** 3 (0C/0H/1M/2L)
-**Convergence counter:** WINDOW RESET 2/3 → 0/3 (ORCHESTRATOR READ; PENDING HUMAN RATIFICATION DEC-189)
+**Convergence counter:** WINDOW RESET 2/3 → 0/3 (ORCHESTRATOR READ; PENDING HUMAN RATIFICATION D-189)
 **Window before:** 2/3 STRICT
 **Window after:** 0/3 STRICT (orchestrator read; P71-001 delta-attributable; counter-argument: could be F3 input)
 
-Seventy-first F2 pass (DEC-190 substitute; aperture: upstream-completeness / downstream-readiness). CONFIRMED CLEAN per adv-71 on 17+ F1 obligations and DEC-188 clauses (a)-(d).
+Seventy-first F2 pass (D-190 substitute; aperture: upstream-completeness / downstream-readiness). CONFIRMED CLEAN per adv-71 on 17+ F1 obligations and D-188 clauses (a)-(d).
 
 **P71-001 (MEDIUM):** F1 `phase-f1-delta/SOH-DX-1/delta-analysis.md` lines 224-226 bind F2 verbatim — "F2 must include the verification step … Substituting an unverified SHA defeats the security purpose of pinning" — and F2 never discharged it; deferred to F4 via a session-checkpoint note (not a spec artifact, not an F3 input). Verified: `bc-3-issue-write.md` contains ZERO S-626/S-627 references; none of S-639-1/S-627-1/S-626-1 exist. DELTA-ATTRIBUTABLE per orchestrator read.
 - Partially discharged out-of-band: full SHA `fa04a1451ff1842e2626ccb99004d0195b455a88` confirmed real (2026-06-30, "Add 1.96.1 patch release"); ancestor of master CONFIRMED (behind_by: 0). Current pin `c93f4f9c67595668add93d3d6895795ce52d8c2d` is real (2026-03-27) but NOT master ancestor — dtolnay/rust-toolchain maintains dozens of version branches; NOT evidence of compromise. RESIDUAL for F3 S-626-1: (a) blocking pre-impl AC with VERIFIED full 40-char SHA; (b) P71-003's do-not-remove constraint naming `sign-and-publish.yml ~:64` + `backfill-release.yml ~:79`; (c) flag MSRV comment accuracy risk if repinning uniformly (ci.yml:70 comments `# 1.85.0` while fa04a145 is "Add 1.96.1 patch release").
@@ -3514,7 +3514,7 @@ Seventy-first F2 pass (DEC-190 substitute; aperture: upstream-completeness / dow
 
 **COUNTER-ARGUMENT:** adv-71 framed all three findings as concerning Items 2/3, which deliberately carry no F2 BC content — a human could classify P71-001 as an F3 input requirement rather than an F2 defect. If so, window remains 2/3 and pass-72 advances to 3/3 STRICT.
 
-**Convergence counter (orchestrator read):** RESET to 0/3 (P71-001 delta-attributable). PENDING HUMAN RATIFICATION DEC-189.
+**Convergence counter (orchestrator read):** RESET to 0/3 (P71-001 delta-attributable). PENDING HUMAN RATIFICATION D-189.
 
 **Trajectory so far:** p78(8)→...→p143-sub(0)→p144-sub(0)→pass-70(VOID×3)→adv-71(1M+2L). trajectory-tail →0→0→VOID×3→1M+2L. CONVERGENCE: 0/3 STRICT (orchestrator read; PENDING HUMAN RATIFICATION). PIPELINE PAUSED.
 
@@ -3522,14 +3522,14 @@ NEXT: pass-72 (adv-72).
 
 ---
 
-### Pass adv-72 (2026-07-28) — SUBSTITUTE (DEC-190 WINDOW-ELIGIBLE; aperture: reality-check on third-party claims + count surfaces)
+### Pass adv-72 (2026-07-28) — SUBSTITUTE (D-190 WINDOW-ELIGIBLE; aperture: reality-check on third-party claims + count surfaces)
 
 **Findings:** 1 (0C/1H/0M/0L) — P72-001 HIGH; PRE-EXISTING / out-of-delta; FIXED in v1.3.160
 **Convergence counter:** 0/3 → 1/3 (orchestrator read; P72-001 pre-existing / out-of-delta, does NOT reset window)
 **Window before:** 0/3 STRICT (orchestrator read; PENDING HUMAN RATIFICATION on pass-71)
 **Window after:** 1/3 STRICT (orchestrator read; P72-001 pre-existing; if P71-001 is F3 input, window is 3/3)
 
-Seventy-second F2 pass (DEC-190 substitute; aperture: reality-check on third-party API claims + count surfaces).
+Seventy-second F2 pass (D-190 substitute; aperture: reality-check on third-party API claims + count surfaces).
 
 **P72-001 (HIGH; PRE-EXISTING / out-of-delta — FIXED in spec v1.3.160):** `bc-3-issue-write.md` EC-3.4.015-4a contained a FALSE serde_json claim: directed implementers to `Number::from_f64(v)` for integer wire form, which emits `5.0` and would fail passing test `tests/issue_edit_field.rs` Test 26. PROVENANCE: introduced `e6a44c78` (2026-05-22, issue-396 cycle) — OUT OF DELTA for SOH-DX-1. FIXED in spec v1.3.160: corrected to `parsed_number_to_wire_value` integer branch (`Number::from(parsed as i64)` when `fract()==0.0` and within i64 bounds; else `json!(parsed)`); MUST NOT warning added; `5e3`→`5000` and `5.5`→`5.5` re-attributed; VP-396-010 pin retained. All four guard scripts GREEN after fix.
 
@@ -3539,9 +3539,9 @@ Seventy-second F2 pass (DEC-190 substitute; aperture: reality-check on third-par
 
 **Convergence counter (orchestrator read):** 0/3 → 1/3 (P72-001 pre-existing out-of-delta; does not reset per STRICT criterion). If P71-001 is classified as F3 input (counter-argument), window is 3/3 STRICT and F2 human gate is ready.
 
-**Trajectory so far:** p78(8)→...→p143-sub(0)→p144-sub(0)→adv-71(1M+2L)→adv-72(1H-pre). trajectory-tail →0→0→1M+2L→1H (passes p143-sub, p144-sub, adv-71, adv-72). CONVERGENCE: 1/3 STRICT (orchestrator read; P71-001 classification PENDING HUMAN RATIFICATION DEC-189). PIPELINE PAUSED.
+**Trajectory so far:** p78(8)→...→p143-sub(0)→p144-sub(0)→adv-71(1M+2L)→adv-72(1H-pre). trajectory-tail →0→0→1M+2L→1H (passes p143-sub, p144-sub, adv-71, adv-72). CONVERGENCE: 1/3 STRICT (orchestrator read; P71-001 classification PENDING HUMAN RATIFICATION D-189). PIPELINE PAUSED.
 
-NEXT: human ruling on DEC-189 P71-001 classification (delta-attributable → keep grinding; or F3 input → 3/3 → F2 human gate ready) OR pass-73 with fresh aperture.
+NEXT: human ruling on D-189 P71-001 classification (delta-attributable → keep grinding; or F3 input → 3/3 → F2 human gate ready) OR pass-73 with fresh aperture.
 
 ---
 
@@ -3572,32 +3572,32 @@ Aperture: six-axis review (AX01: crate API claims; AX02: count surfaces; AX03: t
 
 ---
 
-### Pass soh-dx-1-f2-pass-76 (2026-07-29) — SUBSTITUTE (DEC-190 WINDOW-ELIGIBLE; aperture: reality-check)
+### Pass soh-dx-1-f2-pass-76 (2026-07-29) — SUBSTITUTE (D-190 WINDOW-ELIGIBLE; aperture: reality-check)
 
 **Findings:** 1 (0C/0H/0M/1L) — ADV-P76-LOW-001 IN-DELTA REFINEMENT; 0 in-delta GAPs
-**Convergence counter:** 0/3 → 1/3 (CLEAN under DEC-191)
+**Convergence counter:** 0/3 → 1/3 (CLEAN under D-191)
 **Window before:** 0/3 (new window; prior claimed window unbacked per PHANTOM-CONVERGENCE-EVIDENCE)
-**Window after:** 1/3 STRICT under DEC-191
+**Window after:** 1/3 STRICT under D-191
 **Artifact:** `.factory/cycles/cycle-001/adversarial-reviews/soh-dx-1-f2-pass-76.md`
 
-Seventy-sixth F2 pass (DEC-190 substitute; aperture: reality-check — crate APIs, crate versions, existing `src/` behavior, CI/workflow claims, MSRV, SHA pin). First reality-check pass for spec v1.3.163. Independently verified 8 checklist dimensions.
+Seventy-sixth F2 pass (D-190 substitute; aperture: reality-check — crate APIs, crate versions, existing `src/` behavior, CI/workflow claims, MSRV, SHA pin). First reality-check pass for spec v1.3.163. Independently verified 8 checklist dimensions.
 
 **ADV-P76-LOW-001 (LOW; REFINEMENT; IN-DELTA):** `delta-analysis.md §5e` still reads "F2 must include the verification step…" but SHA `fa04a1451ff1842e2626ccb99004d0195b455a88` was confirmed out-of-band (session-checkpoints.md P71-001) and embedded as blocking AC in S-626-1. One-line fix recommended before F3 (leaving a live "F2 must verify" statement in a gated-complete F2 is the same phantom-obligation class as P71-001).
 
 Notable verifications: AX23-001 repair symbols confirmed present in `src/adf.rs` (lines ~3061, ~3090); all 7 AC test symbols verified in `tests/issue_create_jsm.rs`; all 6 workflow files confirmed using `c93f4f9c`; MSRV three-way disagreement confirmed as documented false-green.
 
-**Convergence counter:** 0/3 → 1/3. ADV-P76-LOW-001 is REFINEMENT/LOW; non-window-resetting under DEC-191(c).
+**Convergence counter:** 0/3 → 1/3. ADV-P76-LOW-001 is REFINEMENT/LOW; non-window-resetting under D-191(c).
 
 **Trajectory so far:** adv-72(1H-pre)→p75(6-reconstructed)→p76(1L). trajectory-tail →1H→6→1L. CONVERGENCE: 1/3. NEXT: pass-77.
 
 ---
 
-### Pass soh-dx-1-f2-pass-77 (2026-07-29) — SUBSTITUTE (DEC-190 WINDOW-ELIGIBLE; aperture: delta-completeness + AC-falsifiability)
+### Pass soh-dx-1-f2-pass-77 (2026-07-29) — SUBSTITUTE (D-190 WINDOW-ELIGIBLE; aperture: delta-completeness + AC-falsifiability)
 
 **Findings:** 1 (0C/0H/0M/1L) — P77-001 OUT-OF-DELTA REFINEMENT; 0 in-delta GAPs
-**Convergence counter:** 1/3 → 2/3 (CLEAN under DEC-191)
+**Convergence counter:** 1/3 → 2/3 (CLEAN under D-191)
 **Window before:** 1/3 STRICT
-**Window after:** 2/3 STRICT under DEC-191
+**Window after:** 2/3 STRICT under D-191
 **Artifact:** `.factory/cycles/cycle-001/adversarial-reviews/soh-dx-1-f2-pass-77.md`
 **INDEPENDENCE NOTE: COMPROMISED.** Pass-77 read pass-76's intermediate draft (shared adversarial-reviews directory; prompt-level read-ban not mechanically enforced). Finding ID `P76-001` cited in the artifact (pre-rename; canonical name is `ADV-P76-LOW-001`). Substantive work (32-row obligation table, 21-AC falsifiability audit) retained. Pass-77 does NOT count as independent corroboration. First datapoint for REVIEW-ISOLATION-NOT-MECHANICALLY-ENFORCED drift item.
 
@@ -3611,12 +3611,12 @@ Seventy-seventh F2 pass. Enumerated **32** F1 obligations: 14 DISCHARGED, 15 DEF
 
 ---
 
-### Pass soh-dx-1-f2-pass-78 (2026-07-29) — SUBSTITUTE (DEC-190 WINDOW-ELIGIBLE; aperture: verification-adequacy)
+### Pass soh-dx-1-f2-pass-78 (2026-07-29) — SUBSTITUTE (D-190 WINDOW-ELIGIBLE; aperture: verification-adequacy)
 
 **Findings:** 0 — all 9 checklist items CLEAN; ZERO in-delta GAPs; ZERO total findings
 **Convergence counter:** 2/3 → **3/3 — CONVERGENCE REACHED**
 **Window before:** 2/3 STRICT
-**Window after:** 3/3 STRICT under DEC-191 — **CONVERGED**
+**Window after:** 3/3 STRICT under D-191 — **CONVERGED**
 **Artifact:** `.factory/cycles/cycle-001/adversarial-reviews/soh-dx-1-f2-pass-78.md`
 **ISOLATION:** HARD-ISOLATED — read-ban on adversarial-reviews/, convergence-trajectory.md, and STATE.md enforced by dispatch constraint. Orchestrator-verified: grep for sibling artifact references returned 0. First fully isolated pass in this window.
 
@@ -3628,34 +3628,34 @@ Per VSDD-CONFORMANCE-GAP-4-ARTIFACTS, this verification-adequacy aperture had NE
 5. Regression Protection — AC-4 is non-vacuous (mount stubs + exit-0 + new-string absence); unconditional guard breaks AC-4.
 6. Holdout Coverage — 0 holdout scenarios; deliberate non-goal with adequate justification; pure pre-flight check duplicates ACs exactly.
 7. Mutation Scope — `src/cli/issue/create.rs` in `.cargo/mutants.toml` examine_globs; new guard lines in PR diff; expected near-100% kill rate.
-8. NFR/Error-Taxonomy Registration — all 3 DEC-188 conditions registered in error-taxonomy.md Section 6 (v1.3.150, F52-001). Exit codes correct.
+8. NFR/Error-Taxonomy Registration — all 3 D-188 conditions registered in error-taxonomy.md Section 6 (v1.3.150, F52-001). Exit codes correct.
 9. False-Green Sweep — AC-6/AC-20/AC-21 vacuity-to-non-vacuity mandated at F3; no unmarked vacuous assertions.
 
 **CAVEAT (VERIFICATION-NONGOAL-UNSCRUTINIZED):** Pass-78 accepted two "deliberate non-goal" rationales at face value — (i) no VPs, (ii) zero holdout scenarios for a user-visible BREAKING change. Both may be sound, but pass-78 was isolated from STATE.md and could not know these sit inside VSDD-CONFORMANCE-GAP-4-ARTIFACTS. Flagged for human attention at F2 gate.
 
 **GATE DISCLOSURES (must ride F2 gate document):**
-(a) All 78 passes were DEC-190 substitute (consistency-validator, not adversary agent).
+(a) All 78 passes were D-190 substitute (consistency-validator, not adversary agent).
 (b) Pass-77 independence compromised (read pass-76 intermediate draft).
 (c) AX23-001 out-of-delta ruling PENDING HUMAN RATIFICATION.
 (d) `.factory/policies.yaml` absent — no project policy rubric auto-loaded.
 
-**Convergence counter:** 3/3 STRICT under DEC-191. PIPELINE READY FOR F2 HUMAN GATE.
+**Convergence counter:** 3/3 STRICT under D-191. PIPELINE READY FOR F2 HUMAN GATE.
 
-**SOH-DX-1 F2 CONVERGED 3/3 under DEC-191, ARTIFACT-BACKED (2026-07-29).** Window = passes 76, 77, 78, all CLEAN, every pass with a findings artifact on disk. This is the material difference from the prior unbacked claim (passes 73/74/73b/74b).
+**SOH-DX-1 F2 CONVERGED 3/3 under D-191, ARTIFACT-BACKED (2026-07-29).** Window = passes 76, 77, 78, all CLEAN, every pass with a findings artifact on disk. This is the material difference from the prior unbacked claim (passes 73/74/73b/74b).
 
 **Trajectory:** adv-72(1H-pre)→p75(6-reconstructed)→p76(1L)→p77(1L)→p78(0). trajectory-tail →1H→6→1L→1L→0. CONVERGENCE: **3/3 STRICT**. F2 HUMAN GATE READY.
 
 ---
 
-## DEC-192 META-EVENT: F2 GATE REJECTED — WINDOW RESET 0/3 (2026-07-29)
+## D-192 META-EVENT: F2 GATE REJECTED — WINDOW RESET 0/3 (2026-07-29)
 
 **Event type:** Human gate rejection — NOT a new adversary pass.
 **Date:** 2026-07-29
-**Decision:** DEC-192
+**Decision:** D-192
 
 **Verdict:** Human REJECTED the F2 gate. The pass-78 "deliberate non-goal" rationale for zero holdout scenarios covering the #639 user-visible BREAKING CHANGE was overturned. Zero holdout scenarios for a user-visible breaking change is a structural absence (in-delta GAP), not a design decision.
 
-**Impact on convergence window:** Window RESET 0/3 under DEC-191(a). Passes 75-78 artifact records are intact and unmodified — the technical convergence (3/3 STRICT) was reached, but the gate was rejected before approval.
+**Impact on convergence window:** Window RESET 0/3 under D-191(a). Passes 75-78 artifact records are intact and unmodified — the technical convergence (3/3 STRICT) was reached, but the gate was rejected before approval.
 
 **Remediation:**
 - Six holdout scenarios authored: H-NEW-PREFLIGHT-001..006 (Group 20; 3 MUST-PASS)
@@ -3668,34 +3668,34 @@ Per VSDD-CONFORMANCE-GAP-4-ARTIFACTS, this verification-adequacy aperture had NE
 
 **Cross-reference:** VSDD-CONFORMANCE-GAP-4-ARTIFACTS — this event is a concrete datapoint that missing canonical verification artifacts (VP-INDEX.md, invariants.md, verification-architecture.md, verification-coverage-matrix.md) cause reviewers to misread absences as design decisions. Three independent reviewers across 78 passes accepted the absence as intentional; human domain knowledge caught it at the gate.
 
-**Next action:** F2 window REBUILD — dispatch fresh adversary passes against spec v1.3.165 + six new holdout scenarios (H-NEW-PREFLIGHT-001..006) as fresh review surface. FOUR GATE DISCLOSURES preserved for next gate presentation: (a) DEC-190 substitute basis; (b) pass-77 independence COMPROMISED; (c) AX23-001 PENDING RATIFICATION; (d) .factory/policies.yaml absent.
+**Next action:** F2 window REBUILD — dispatch fresh adversary passes against spec v1.3.165 + six new holdout scenarios (H-NEW-PREFLIGHT-001..006) as fresh review surface. FOUR GATE DISCLOSURES preserved for next gate presentation: (a) D-190 substitute basis; (b) pass-77 independence COMPROMISED; (c) AX23-001 PENDING RATIFICATION; (d) .factory/policies.yaml absent.
 
 ---
 
-## Pre-Window Passes (post-DEC-192 reset, spec v1.3.165)
+## Pre-Window Passes (post-D-192 reset, spec v1.3.165)
 
-Passes 79/80/81 ran after the DEC-192 window reset and before the current window (82/83/84). Their artifacts are on disk but are NOT part of the current 3/3 convergence window. Summaries:
+Passes 79/80/81 ran after the D-192 window reset and before the current window (82/83/84). Their artifacts are on disk but are NOT part of the current 3/3 convergence window. Summaries:
 
 - **Pass 79 (2026-07-29; aperture: holdout-scenario-quality; spec v1.3.165):** 1 CRITICAL — `ADV-C001-P79-CRITICAL-001`: H-NEW-PREFLIGHT-004 Expected bullet 3 incorrectly asserted "stdout contains PROJ-42" when `src/output.rs::print_success` is `eprintln!` (stderr). The v1.3.165 text was permanently unsatisfiable. Also: P79-003/P79-004 (LOW cosmetic edge-case nits). WINDOW NOT ELIGIBLE — CRITICAL resets window to 0/3. Fixed at v1.3.166.
-- **Pass 80 (2026-07-29; aperture: reality-check; spec v1.3.165):** 1 LOW — P80-001 (pre-existing README enumeration staleness); 1 LOW — P80-002 (BC cites F4 rename-target test names — correctly marked delivery obligations). 0 in-delta GAPs. CLEAN under DEC-191. window counter advanced to 1/3 on spec v1.3.165. NOTE: pass-80's aperture asked whether error strings match, NOT which stream they land on — channel correctness was outside aperture.
+- **Pass 80 (2026-07-29; aperture: reality-check; spec v1.3.165):** 1 LOW — P80-001 (pre-existing README enumeration staleness); 1 LOW — P80-002 (BC cites F4 rename-target test names — correctly marked delivery obligations). 0 in-delta GAPs. CLEAN under D-191. window counter advanced to 1/3 on spec v1.3.165. NOTE: pass-80's aperture asked whether error strings match, NOT which stream they land on — channel correctness was outside aperture.
 - **Pass 81 (2026-07-29; aperture: delta-completeness + AC-falsifiability; spec v1.3.165):** 0 new findings. VERDICT: CLEAN. HOWEVER: pass-81 artifact EXPLICITLY ENDORSED the pass-79 CRITICAL — it wrote "stdout or stderr contains PROJ-42 → stdout contains PROJ-42. Consistent with SYMMETRIC output-channel profile. ✓" — the exact opposite of the CRITICAL. The window was at 2/3 under spec v1.3.165 but the CRITICAL in H-NEW-PREFLIGHT-004 was still present and undetected. Pass-81 represents the detection-asymmetry failure that is the §3 CRITICAL lesson.
 
-Window state after pass-81: 2/3 on spec v1.3.165, but spec v1.3.165 contained a permanently unsatisfiable MUST-PASS assertion. Orchestrator reviewed artifacts cross-pass and identified the defect. Fixed at v1.3.166. Window RESET to 0/3 per DEC-191(a). New window starts at pass-82 on spec v1.3.166.
+Window state after pass-81: 2/3 on spec v1.3.165, but spec v1.3.165 contained a permanently unsatisfiable MUST-PASS assertion. Orchestrator reviewed artifacts cross-pass and identified the defect. Fixed at v1.3.166. Window RESET to 0/3 per D-191(a). New window starts at pass-82 on spec v1.3.166.
 
 **Trajectory note:** passes 79/80/81 are NOT window-eligible for the 3/3 convergence gate because pass-79 found a CRITICAL (spec was permanently unsatisfiable; window reset). trajectory-tail anchors at pass-79: →1(CRIT)→2(LOW)→4(2M+2L)→2(LOW) → shorthand →1→2→4→2.
 
 ---
 
-### Pass soh-dx-1-f2-pass-82 (2026-07-29) — SUBSTITUTE (DEC-190 WINDOW-ELIGIBLE; aperture: holdout-falsifiability + channel-correctness)
+### Pass soh-dx-1-f2-pass-82 (2026-07-29) — SUBSTITUTE (D-190 WINDOW-ELIGIBLE; aperture: holdout-falsifiability + channel-correctness)
 
 **Findings:** 2 (0C/0H/0M/2L) — ADV-P82-LOW-001 (IN-DELTA REFINEMENT), ADV-P82-LOW-002 (IN-DELTA REFINEMENT); 0 in-delta GAPs
-**Convergence counter:** 0/3 → 1/3 (CLEAN under DEC-191)
+**Convergence counter:** 0/3 → 1/3 (CLEAN under D-191)
 **Window before:** 0/3 (new window; spec v1.3.166 — H-NEW-PREFLIGHT-004 corrected)
-**Window after:** 1/3 STRICT under DEC-191
+**Window after:** 1/3 STRICT under D-191
 **Artifact:** `.factory/cycles/cycle-001/adversarial-reviews/soh-dx-1-f2-pass-82.md`
 **Isolation:** No sibling reviews read; independently verified.
 
-Pass 82 is the first adversarial pass on holdout-falsifiability + channel-correctness aperture for Group 20 (H-NEW-PREFLIGHT-001..006) at spec v1.3.166. Two-way falsifiability table verified for all six scenarios: 001/002/003/006 FAIL against the current warn-and-proceed build (correct — delta-testing); 004/005 do NOT fail (regression/non-mis-fire pins, non-vacuous). ALL six CAN pass against a correct implementation — the [1.3.166] fix resolved the unsatisfiable MUST-PASS. Channel-audit table: all 16 stream assertions verified at emit-site citations. Three DEC-188 error strings byte-identical across bc-3-issue-write.md / error-taxonomy.md / holdout-scenarios.md.
+Pass 82 is the first adversarial pass on holdout-falsifiability + channel-correctness aperture for Group 20 (H-NEW-PREFLIGHT-001..006) at spec v1.3.166. Two-way falsifiability table verified for all six scenarios: 001/002/003/006 FAIL against the current warn-and-proceed build (correct — delta-testing); 004/005 do NOT fail (regression/non-mis-fire pins, non-vacuous). ALL six CAN pass against a correct implementation — the [1.3.166] fix resolved the unsatisfiable MUST-PASS. Channel-audit table: all 16 stream assertions verified at emit-site citations. Three D-188 error strings byte-identical across bc-3-issue-write.md / error-taxonomy.md / holdout-scenarios.md.
 
 **ADV-P82-LOW-001 (LOW; REFINEMENT; IN-DELTA):** H-NEW-PREFLIGHT-004 Expected bullet 3 contains source-code citations (parenthetical `src/output.rs::print_success` etc.) inside the Expected (observable assertion) block — per aperture item 7, implementation detail in Expected is a defect. Behavioral assertion itself correct. Fix: relocate citations to "Why hidden" section.
 
@@ -3703,44 +3703,44 @@ Pass 82 is the first adversarial pass on holdout-falsifiability + channel-correc
 
 **FIXED at v1.3.167:** ADV-P82-LOW-001 (citation relocated to "Why hidden", BC-3.4.014 moved to BC-refs). ADV-P82-LOW-002 (both README.md sites updated to enumerate through H-NEW-PREFLIGHT-001..006).
 
-**Convergence counter:** 0/3 → 1/3. Both findings are REFINEMENT/LOW; non-window-resetting under DEC-191(c).
+**Convergence counter:** 0/3 → 1/3. Both findings are REFINEMENT/LOW; non-window-resetting under D-191(c).
 
 **Trajectory so far:** p79(1C-RESET)→p80(2L)→p81(0)→p82(2L). trajectory-tail →1→2→4→2 (tail represents last 4 passes: 79/82/83/84). CONVERGENCE: 1/3. NEXT: pass-83.
 
 ---
 
-### Pass soh-dx-1-f2-pass-83 (2026-07-29) — SUBSTITUTE (DEC-190 WINDOW-ELIGIBLE; aperture: emit-site / observable-contract)
+### Pass soh-dx-1-f2-pass-83 (2026-07-29) — SUBSTITUTE (D-190 WINDOW-ELIGIBLE; aperture: emit-site / observable-contract)
 
 **Findings:** 4 (0C/0H/2M/2L) — ADV-P83-MEDIUM-001 + ADV-P83-MEDIUM-002 + ADV-P83-LOW-001 + ADV-P83-LOW-002; 0 in-delta GAPs per VERDICT
-**Convergence counter:** 1/3 → 2/3 (CLEAN under DEC-191)
+**Convergence counter:** 1/3 → 2/3 (CLEAN under D-191)
 **Window before:** 1/3 STRICT
-**Window after:** 2/3 STRICT under DEC-191
+**Window after:** 2/3 STRICT under D-191
 **Artifact:** `.factory/cycles/cycle-001/adversarial-reviews/soh-dx-1-f2-pass-83.md`
 **Isolation:** No sibling reviews read; independently verified.
-**VERDICT NOTE:** Pass-83 declared `VERDICT: CLEAN (no in-delta GAPs)` while its own findings table listed two items (ADV-P83-MEDIUM-001, ADV-P83-LOW-001) with delta-attribution IN-DELTA and classification GAP. Reclassified per DEC-193: these are NOT F2 spec gaps but the pre-implementation state of a correctly-and-completely specified F4 deliverable. Human ruling "F4 is fine" — override RATIFIED. ADVERSARY-VERDICT-VS-CONTRACT-DISCREPANCY second datapoint.
+**VERDICT NOTE:** Pass-83 declared `VERDICT: CLEAN (no in-delta GAPs)` while its own findings table listed two items (ADV-P83-MEDIUM-001, ADV-P83-LOW-001) with delta-attribution IN-DELTA and classification GAP. Reclassified per D-193: these are NOT F2 spec gaps but the pre-implementation state of a correctly-and-completely specified F4 deliverable. Human ruling "F4 is fine" — override RATIFIED. ADVERSARY-VERDICT-VS-CONTRACT-DISCREPANCY second datapoint.
 
-Pass 83 is the first adversarial pass on emit-site / observable-contract aperture at spec v1.3.166. Observable contract table (15 rows) verified all stream assertions at emit sites. Three DEC-188 error strings byte-identical across all four spec surfaces. JSON envelope shape (`{"code":N,"error":"..."}` alphabetical via BTreeMap) confirmed. Guard ordering verified structurally correct: AFTER JSM fork (~:49), BEFORE project-key resolution (~:92), BEFORE HTTP. `ci-gate.needs` complete. Both `rustup target add` steps present.
+Pass 83 is the first adversarial pass on emit-site / observable-contract aperture at spec v1.3.166. Observable contract table (15 rows) verified all stream assertions at emit sites. Three D-188 error strings byte-identical across all four spec surfaces. JSON envelope shape (`{"code":N,"error":"..."}` alphabetical via BTreeMap) confirmed. Guard ordering verified structurally correct: AFTER JSM fork (~:49), BEFORE project-key resolution (~:92), BEFORE HTTP. `ci-gate.needs` complete. Both `rustup target add` steps present.
 
-**ADV-P83-MEDIUM-001 (MEDIUM; classified GAP by pass-83; reclassified by DEC-193 as pre-F4 state):** ci.yml MSRV job invokes `dtolnay/rust-toolchain` with no `with: toolchain:` input → installs stable, not 1.85.0. `# 1.85.0` comment misleading. False-green MSRV check. Root cause documented in delta-analysis.md; mandatory fix in S-626-1 (F3). → F4 S-626-1 per DEC-193.
+**ADV-P83-MEDIUM-001 (MEDIUM; classified GAP by pass-83; reclassified by D-193 as pre-F4 state):** ci.yml MSRV job invokes `dtolnay/rust-toolchain` with no `with: toolchain:` input → installs stable, not 1.85.0. `# 1.85.0` comment misleading. False-green MSRV check. Root cause documented in delta-analysis.md; mandatory fix in S-626-1 (F3). → F4 S-626-1 per D-193.
 
-**ADV-P83-MEDIUM-002 (MEDIUM; REFINEMENT; IN-DELTA):** CLAUDE.md output-channel profile 4 description is ambiguous — "stdout for `--output json`" omits the third path (human-mode success → stderr via `print_success`). Two independent reviewers produced wrong stream assertions from this description (one caused the v1.3.165 CRITICAL). Proposed corrected wording documented in artifact. Scheduled for correction under DEC-194.
+**ADV-P83-MEDIUM-002 (MEDIUM; REFINEMENT; IN-DELTA):** CLAUDE.md output-channel profile 4 description is ambiguous — "stdout for `--output json`" omits the third path (human-mode success → stderr via `print_success`). Two independent reviewers produced wrong stream assertions from this description (one caused the v1.3.165 CRITICAL). Proposed corrected wording documented in artifact. Scheduled for correction under D-194.
 
-**ADV-P83-LOW-001 (LOW; classified GAP by pass-83; reclassified by DEC-193 as pre-F4 state):** `dtolnay/rust-toolchain` SHA pin `c93f4f9c` stale across 4 workflow files; mandated SHA `fa04a1451ff1842e2626ccb99004d0195b455a88` (verified real, 2026-06-30 master ancestor). → F4 S-626-1 per DEC-193.
+**ADV-P83-LOW-001 (LOW; classified GAP by pass-83; reclassified by D-193 as pre-F4 state):** `dtolnay/rust-toolchain` SHA pin `c93f4f9c` stale across 4 workflow files; mandated SHA `fa04a1451ff1842e2626ccb99004d0195b455a88` (verified real, 2026-06-30 master ancestor). → F4 S-626-1 per D-193.
 
-**ADV-P83-LOW-002 (LOW; REFINEMENT; OUT-OF-DELTA):** CLAUDE.md descriptions of `scripts/check-spec-counts.sh` (missing exit-2 path) and `tests/claude_md_citations.rs` (missing CITATION_FLOOR = 74) stale after #661. Found independently by pass-80 (P80-001) and pass-83. Scheduled under DEC-194.
+**ADV-P83-LOW-002 (LOW; REFINEMENT; OUT-OF-DELTA):** CLAUDE.md descriptions of `scripts/check-spec-counts.sh` (missing exit-2 path) and `tests/claude_md_citations.rs` (missing CITATION_FLOOR = 74) stale after #661. Found independently by pass-80 (P80-001) and pass-83. Scheduled under D-194.
 
-**Convergence counter:** 1/3 → 2/3. ADV-P83-MEDIUM-002 is REFINEMENT/IN-DELTA (non-resetting). ADV-P83-LOW-002 is OUT-OF-DELTA (non-resetting). ADV-P83-MEDIUM-001 and ADV-P83-LOW-001 reclassified as pre-F4 state (non-resetting per DEC-193).
+**Convergence counter:** 1/3 → 2/3. ADV-P83-MEDIUM-002 is REFINEMENT/IN-DELTA (non-resetting). ADV-P83-LOW-002 is OUT-OF-DELTA (non-resetting). ADV-P83-MEDIUM-001 and ADV-P83-LOW-001 reclassified as pre-F4 state (non-resetting per D-193).
 
 **Trajectory: →1→2→4→2. CONVERGENCE: 2/3. NEXT: pass-84.**
 
 ---
 
-### Pass soh-dx-1-f2-pass-84 (2026-07-29) — SUBSTITUTE (DEC-190 WINDOW-ELIGIBLE; aperture: AC-falsification-against-build + delta-completeness)
+### Pass soh-dx-1-f2-pass-84 (2026-07-29) — SUBSTITUTE (D-190 WINDOW-ELIGIBLE; aperture: AC-falsification-against-build + delta-completeness)
 
 **Findings:** 2 (0C/0H/0M/2L) — ADV-P84-LOW-001 (IN-DELTA REFINEMENT), ADV-P84-LOW-002 (OUT-OF-DELTA REFINEMENT); 0 in-delta GAPs
 **Convergence counter:** 2/3 → **3/3 — CONVERGENCE REACHED**
 **Window before:** 2/3 STRICT
-**Window after:** 3/3 STRICT under DEC-191
+**Window after:** 3/3 STRICT under D-191
 **Artifact:** `.factory/cycles/cycle-001/adversarial-reviews/soh-dx-1-f2-pass-84.md`
 **Isolation:** No sibling reviews read; independently verified. Novelty block explicitly records `CONVERGENCE_REACHED — no GAPs found` (omitted literal `VERDICT:` line — minor template non-compliance; substance unambiguous).
 
@@ -3750,20 +3750,20 @@ Pass 84 is the first adversarial pass on AC-falsification-against-build + delta-
 
 **ADV-P84-LOW-002 (LOW; REFINEMENT; OUT-OF-DELTA):** README.md holdout enumeration description stale (third independent finding; same root cause as ADV-P82-LOW-002). **FIXED at v1.3.167** (both README.md sites updated).
 
-**Convergence counter:** 2/3 → 3/3 STRICT under DEC-191. PIPELINE READY FOR F2 HUMAN GATE.
+**Convergence counter:** 2/3 → 3/3 STRICT under D-191. PIPELINE READY FOR F2 HUMAN GATE.
 
-**BLOCKING OBJECTION:** DEC-193 reclassified ADV-P83-MEDIUM-001 and ADV-P83-LOW-001 as pre-F4 state. Human ruling "F4 is fine" — override RATIFIED. This clears the blocking objection.
+**BLOCKING OBJECTION:** D-193 reclassified ADV-P83-MEDIUM-001 and ADV-P83-LOW-001 as pre-F4 state. Human ruling "F4 is fine" — override RATIFIED. This clears the blocking objection.
 
 ---
 
 ## SOH-DX-1 F2 CONVERGENCE DETERMINATION (2026-07-29)
 
-**SOH-DX-1 F2 CONVERGED 3/3 under DEC-191 at spec v1.3.166.** Window = passes 82, 83, 84 — all three CLEAN (no in-delta GAPs), all three artifact-backed, all three independently verified (zero cross-pass references confirmed by orchestrator). DEC-193 ratified the blocking objection override. trajectory-tail →1→2→4→2.
+**SOH-DX-1 F2 CONVERGED 3/3 under D-191 at spec v1.3.166.** Window = passes 82, 83, 84 — all three CLEAN (no in-delta GAPs), all three artifact-backed, all three independently verified (zero cross-pass references confirmed by orchestrator). D-193 ratified the blocking objection override. trajectory-tail →1→2→4→2.
 
 **Gate status: AWAITING EXPLICIT HUMAN APPROVE/REJECT.** Not yet approved.
 
 **FOUR GATE DISCLOSURES (must accompany gate presentation):**
-(a) All passes in this window (82/83/84) were DEC-190 substitute (consistency-validator, not adversary agent).
+(a) All passes in this window (82/83/84) were D-190 substitute (consistency-validator, not adversary agent).
 (b) Pass-77 independence COMPROMISED (read sibling's draft in prior window).
 (c) AX23-001 out-of-delta ruling PENDING HUMAN RATIFICATION.
 (d) `.factory/policies.yaml` absent — no project policy rubric auto-loaded.
@@ -3783,7 +3783,7 @@ Pass-19 ran against head `9312f11f` (the orchestrator-shipped POL-11 guard commi
 
 **ADV-P19-HIGH-001 (HIGH; CI-integrity; [process-gap]):** Floor `> 0` is INERT — inline src/ tests (~1,112) keep the count above 0 even when all `tests/` binaries are orphaned. Guard cannot detect its own orphaning. **FIXED a247a343** (binary-count floor `-lt 90` + named canary `ci_gate_completeness`).
 
-**ADV-P19-HIGH-002 (HIGH; spec-fidelity; scope-breach):** `tests/ci_gate_completeness.rs` and `tests/cli_handler.rs` present in PR diff but absent from all four spec surfaces in S-626-1. ORCHESTRATOR-CAUSED. **FIXED fix round 7** (S-626-1 v1.13; DEC-214).
+**ADV-P19-HIGH-002 (HIGH; spec-fidelity; scope-breach):** `tests/ci_gate_completeness.rs` and `tests/cli_handler.rs` present in PR diff but absent from all four spec surfaces in S-626-1. ORCHESTRATOR-CAUSED. **FIXED fix round 7** (S-626-1 v1.13; D-214).
 
 **ADV-P19-MED-001 (MEDIUM; CI-integrity):** `FAIL (POL-11)` diagnostic unreachable under `set -o pipefail` + `set -e`. **FIXED a247a343.**
 
@@ -3795,15 +3795,15 @@ Pass-19 ran against head `9312f11f` (the orchestrator-shipped POL-11 guard commi
 
 **ADV-P19-MED-005 (MEDIUM; spec-fidelity):** STORY-INDEX S-641-1 row stale by TWO revisions (v0.6 in row; file at v0.7). **FIXED fix round 7** (STORY-INDEX v1.5.57; S-641-1 v0.8).
 
-**ADV-P19-MED-006 (MEDIUM; CI-integrity; [process-gap]; ROUTED):** `fmt` and `clippy` share identical orphaning exposure as `test` job. Routed per DEC-215. Tracked: FMT-CLIPPY-NO-POSITIVE-COVERAGE.
+**ADV-P19-MED-006 (MEDIUM; CI-integrity; [process-gap]; ROUTED):** `fmt` and `clippy` share identical orphaning exposure as `test` job. Routed per D-215. Tracked: FMT-CLIPPY-NO-POSITIVE-COVERAGE.
 
-**ADV-P19-LOW-001 (LOW; spec-fidelity):** S-640-1 cited RUSTUP_TOOLCHAIN 16 lines from actual location. **FIXED fix round 7** (S-640-1 v0.6; DEC-213 anchor form).
+**ADV-P19-LOW-001 (LOW; spec-fidelity):** S-640-1 cited RUSTUP_TOOLCHAIN 16 lines from actual location. **FIXED fix round 7** (S-640-1 v0.6; D-213 anchor form).
 
 **ADV-P19-INFO-001 (INFO):** Demo pack lacked negative-path proof at dispatch. **NOTED** — updated at a247a343.
 
 **Convergence counter:** window 0/2 of 18/19/20. Pass-20 pending (head a247a343).
 
-**Anchor migration (CLASS-ELIMINATING):** DEC-213 introduces `ci.yml :: <job-id>` notation. Three prior citation-ripple sweeps (+39, +54, +93 cumulative) will not recur for migrated surfaces.
+**Anchor migration (CLASS-ELIMINATING):** D-213 introduces `ci.yml :: <job-id>` notation. Three prior citation-ripple sweeps (+39, +54, +93 cumulative) will not recur for migrated surfaces.
 
 ---
 
@@ -3812,7 +3812,7 @@ Pass-19 ran against head `9312f11f` (the orchestrator-shipped POL-11 guard commi
 **Artifact:** `.factory/cycles/cycle-001/adversarial-reviews/s-626-1-adversary-pass-21.md`
 **Isolation:** CLEAN. No banned-path content accessed. Self-disclosed.
 
-Pass-21 ran against feature HEAD a247a343 (frozen head per DEC-216 window). Pass-20 was SUPERSEDED per DEC-216; DEC-219 opens fresh STRICT window passes 22/23/24. **Found ZERO HIGH findings.** All 7 findings are documentation/citation-accuracy class — the reviewer named the pattern: *"a correct change landed alongside a false claim about it."* `src/` remains 0-defect — **THIRTEENTH consecutive pass**.
+Pass-21 ran against feature HEAD a247a343 (frozen head per D-216 window). Pass-20 was SUPERSEDED per D-216; D-219 opens fresh STRICT window passes 22/23/24. **Found ZERO HIGH findings.** All 7 findings are documentation/citation-accuracy class — the reviewer named the pattern: *"a correct change landed alongside a false claim about it."* `src/` remains 0-defect — **THIRTEENTH consecutive pass**.
 
 **ADV-P21-MED-001 (MEDIUM; spec-accuracy / false-claim-in-prose):** `tests/ci_gate_completeness.rs` pin names wrong test (`test_ci_gate_named_canary_check` DNE; correct: `test_verify_test_job_has_zero_test_floor`) and wrong job count (9-job wrong; correct: 8-job). **FIXED 84ab32ac.**
 
@@ -3824,15 +3824,15 @@ Pass-21 ran against feature HEAD a247a343 (frozen head per DEC-216 window). Pass
 
 **ADV-P21-LOW-002 (LOW; spec-fidelity / count-mismatch):** S-626-1 AC-9 heading "adds 2 behavioral contracts"; footer traces 3 BCs. **FIXED 84ab32ac.**
 
-**ADV-P21-LOW-003 (LOW; ci-citation / template-drift):** S-BC-CITATION-GUARD-1.md contains raw `"live ci.yml line 111"` citations. **DEFERRED — DEC-217** (template drift blocks edits; placeholder/stub approach DECLINED per DEC-217).
+**ADV-P21-LOW-003 (LOW; ci-citation / template-drift):** S-BC-CITATION-GUARD-1.md contains raw `"live ci.yml line 111"` citations. **DEFERRED — D-217** (template drift blocks edits; placeholder/stub approach DECLINED per D-217).
 
-**ADV-P21-INFO-001 (INFO; spec-accuracy / bc-count-drift):** bc-02-issue-read.md `bc_count: 94` frontmatter and body "92 BCs" both wrong (correct: 106). **FIXED 84ab32ac**; class sweep (DEC-218) found bc-03-issue-write.md also drifted (120→140), fixed simultaneously.
+**ADV-P21-INFO-001 (INFO; spec-accuracy / bc-count-drift):** bc-02-issue-read.md `bc_count: 94` frontmatter and body "92 BCs" both wrong (correct: 106). **FIXED 84ab32ac**; class sweep (D-218) found bc-03-issue-write.md also drifted (120→140), fixed simultaneously.
 
 **CI FLOOR AUDITED SOUND (all four dimensions):** binary-count floor (`-lt 90`) reachable; named canary (`test_verify_test_job_has_zero_test_floor`) reachable; `CARGO_TERM_COLOR=never` present; pin asserts floor+canary+exit 1+positive-coverage. Verbatim ci.yml step body confirmed in demo pack.
 
-**Convergence counter:** window 0/1 of 21/22/23 (NOT CLEAN). Passes 22/23 of window NOT DISPATCHED (window moot after NOT CLEAN). DEC-219: fresh STRICT window = passes 22/23/24.
+**Convergence counter:** window 0/1 of 21/22/23 (NOT CLEAN). Passes 22/23 of window NOT DISPATCHED (window moot after NOT CLEAN). D-219: fresh STRICT window = passes 22/23/24.
 
-**Trajectory (S-626-1): →0→0→2→0. Window 0/1 of 21/22/23 CLOSED NOT CLEAN. Fresh STRICT window 22/23/24 (DEC-219). NEXT: dispatch passes 22/23/24 against head 84ab32ac.**
+**Trajectory (S-626-1): →0→0→2→0. Window 0/1 of 21/22/23 CLOSED NOT CLEAN. Fresh STRICT window 22/23/24 (D-219). NEXT: dispatch passes 22/23/24 against head 84ab32ac.**
 
 ---
 
@@ -3846,38 +3846,38 @@ Pass-21 ran against feature HEAD a247a343 (frozen head per DEC-216 window). Pass
      three most recent closed bursts, extracted out of STATE.md's live table to keep that file
      lean; STATE.md itself retains only the current burst's one-paragraph status. -->
 
-**S-626-1-MERGE+ADV-P60-P61+BURST-CLOSE (2026-08-10):** PR #667 squash-merged to `develop` as `a5e1d087` (48 commits, closes #626) -- human exercised merge authority (DEC-128), released the DEC-202 hold. `develop` CI on `a5e1d087` (run 31432422878): SUCCESS, 12 success + 2 legitimately-skipped (`Mutation testing` + `Secret Scan`, both `pull_request`-only) -- first production confirmation of the `ALLOWED_SKIPS` mechanism (S-CIGATE-2). Two targeted delta reviews (pass-60 / ADV-P60 Rust delta, pass-61 / ADV-P61 shell delta -- NOT counted toward Step 4.5's window arithmetic) covered `1381af17..5ca51bc2`, the 1,024 insertions no prior pass had seen, and found 9 actionable findings; 8 fixed via fix burst pre-merge and CI-green (3 HIGH + 1 MEDIUM + 4 LOW, `736fea28`/`23ace476`/`f656f873`); 1 LOW (`ADV-P61-LOW-004`) confirmed OPEN, not fixed. `ADV-P1-INDEX.md` v2.14→v2.16 (442→456 total findings, +14 new (corrected)). **DEC-262**: merge authorized on code grounds with Step 4.5 permanently at 0/3 after ten windows and 61 total adversary passes -- the 3/3-CLEAN convergence bar defined by DEC-199/DEC-245 was never met, and merging accepted that outcome. Full trajectory detail: cycles/cycle-001/adversarial-reviews/ADV-P1-INDEX.md.
+**S-626-1-MERGE+ADV-P60-P61+BURST-CLOSE (2026-08-10):** PR #667 squash-merged to `develop` as `a5e1d087` (48 commits, closes #626) -- human exercised merge authority (D-128), released the D-202 hold. `develop` CI on `a5e1d087` (run 31432422878): SUCCESS, 12 success + 2 legitimately-skipped (`Mutation testing` + `Secret Scan`, both `pull_request`-only) -- first production confirmation of the `ALLOWED_SKIPS` mechanism (S-CIGATE-2). Two targeted delta reviews (pass-60 / ADV-P60 Rust delta, pass-61 / ADV-P61 shell delta -- NOT counted toward Step 4.5's window arithmetic) covered `1381af17..5ca51bc2`, the 1,024 insertions no prior pass had seen, and found 9 actionable findings; 8 fixed via fix burst pre-merge and CI-green (3 HIGH + 1 MEDIUM + 4 LOW, `736fea28`/`23ace476`/`f656f873`); 1 LOW (`ADV-P61-LOW-004`) confirmed OPEN, not fixed. `ADV-P1-INDEX.md` v2.14→v2.16 (442→456 total findings, +14 new (corrected)). **D-262**: merge authorized on code grounds with Step 4.5 permanently at 0/3 after ten windows and 61 total adversary passes -- the 3/3-CLEAN convergence bar defined by D-199/D-245 was never met, and merging accepted that outcome. Full trajectory detail: cycles/cycle-001/adversarial-reviews/ADV-P1-INDEX.md.
 
-**SHELL-TRUST-ASSUMPTIONS research pass (2026-08-11):** external validation only, no adversary pass, does not move the trajectory-tail or Step 4.5's 0/3. DEC-263 recorded; zero REFUTE against the merged shell delta; two experiments (E1/E2) remain to fully close Q1b/Q3b.
+**SHELL-TRUST-ASSUMPTIONS research pass (2026-08-11):** external validation only, no adversary pass, does not move the trajectory-tail or Step 4.5's 0/3. D-263 recorded; zero REFUTE against the merged shell delta; two experiments (E1/E2) remain to fully close Q1b/Q3b.
 
-**PR675-MERGE+ADV-P675-CLOSE (2026-08-11):** PR #675 (`docs(ci-gate): correct trust-layer record to match code (S-626-1)`) squash-merged to `develop` as `d55bedf7` (2026-08-11T01:40:55Z) -- documentation-only, `CLAUDE.md` + `scripts/check-ci-gate.sh`, zero non-comment lines changed. `develop` CI on `d55bedf7` (run 31450052302): SUCCESS, 12 success + 2 legitimately-skipped; `CI Gate` correctly green; `Scorecard`/`E2E (Live Jira)` also passed. A targeted claim-accuracy review (ADV-P675, not a Step-4.5 window; not counted toward Step 4.5's 0/3) found 0H/2M/2L/1I, NOT CLEAN; all 4 actionable findings CLOSED pre-merge (`d2430a8a`). **DEC-264**: reviewing a documentation-only PR found two MEDIUMs, justifying the practice of applying the same claim-accuracy review discipline to record-correction PRs as to code PRs. `ADV-P1-INDEX.md` v2.16→v2.17 (456→461 total findings). This was the session-closing burst before the 2026-08-11 SESSION-WRAP-PAUSE and this COMPACT-STATE burst -- no open PR or review window remains.
+**PR675-MERGE+ADV-P675-CLOSE (2026-08-11):** PR #675 (`docs(ci-gate): correct trust-layer record to match code (S-626-1)`) squash-merged to `develop` as `d55bedf7` (2026-08-11T01:40:55Z) -- documentation-only, `CLAUDE.md` + `scripts/check-ci-gate.sh`, zero non-comment lines changed. `develop` CI on `d55bedf7` (run 31450052302): SUCCESS, 12 success + 2 legitimately-skipped; `CI Gate` correctly green; `Scorecard`/`E2E (Live Jira)` also passed. A targeted claim-accuracy review (ADV-P675, not a Step-4.5 window; not counted toward Step 4.5's 0/3) found 0H/2M/2L/1I, NOT CLEAN; all 4 actionable findings CLOSED pre-merge (`d2430a8a`). **D-264**: reviewing a documentation-only PR found two MEDIUMs, justifying the practice of applying the same claim-accuracy review discipline to record-correction PRs as to code PRs. `ADV-P1-INDEX.md` v2.16→v2.17 (456→461 total findings). This was the session-closing burst before the 2026-08-11 SESSION-WRAP-PAUSE and this COMPACT-STATE burst -- no open PR or review window remains.
 
-BC-INDEX v6.75 / STORY-INDEX v1.5.80 (127 stories) / ARCH-INDEX v0.16 (state as of these bursts). SOH-DX-1 F2 APPROVED (DEC-196, 2026-07-29). F3 APPROVED (DEC-197, 2026-07-29): spec v1.3.169; BC 658 (unchanged); holdouts 106. S-626-1 adversary: 61 Step-4.5-eligible passes (56 STRICT + pass-60/pass-61 targeted delta review) plus ADV-P675 (targeted claim-accuracy review, not Step-4.5-eligible); 461 total findings. **PR #667 MERGED** to `develop` as `a5e1d087`, closes #626 -- DEC-262; its trust-layer record correction **PR #675 also MERGED** as `d55bedf7` -- DEC-264. src/ 0-defect THIRTY-THIRD-plus consecutive as of these bursts.
+BC-INDEX v6.75 / STORY-INDEX v1.5.80 (127 stories) / ARCH-INDEX v0.16 (state as of these bursts). SOH-DX-1 F2 APPROVED (D-196, 2026-07-29). F3 APPROVED (D-197, 2026-07-29): spec v1.3.169; BC 658 (unchanged); holdouts 106. S-626-1 adversary: 61 Step-4.5-eligible passes (56 STRICT + pass-60/pass-61 targeted delta review) plus ADV-P675 (targeted claim-accuracy review, not Step-4.5-eligible); 461 total findings. **PR #667 MERGED** to `develop` as `a5e1d087`, closes #626 -- D-262; its trust-layer record correction **PR #675 also MERGED** as `d55bedf7` -- D-264. src/ 0-defect THIRTY-THIRD-plus consecutive as of these bursts.
 
 SOH-ATTACHMENTS-1 + prior cycles FULLY CLOSED (unchanged, see earlier entries in this file).
 
 **SESSION-WRAP-PAUSE (2026-08-11):** pure pause/checkpoint burst -- human requested a session wrap, no adversary pass run, does not move the trajectory-tail or Step 4.5's 0/3, no findings added or closed. `pipeline: ACTIVE`→`PAUSED`. This burst's only substantive act is durably recording that nothing was in flight when the session paused and restating the resume path for a cold start. *(Archived 2026-08-11 by the S-CIGATE-3-IMPLEMENTED burst — superseded in STATE.md's live Convergence Status by the COMPACT-STATE and S-CIGATE-3-IMPLEMENTED paragraphs.)*
 
-**S-CIGATE-3-IMPLEMENTED (2026-08-11):** story-scoped adversarial window, NOT a Step-4.5 window — does not move the SOH-DX-1 trajectory-tail or Step 4.5's 0/3 (that arithmetic remains closed permanently per DEC-262). S-CIGATE-3 (durable YAML-parser fix, DEC-259/DEC-260) implemented end-to-end on worktree `.worktrees/S-CIGATE-3`, branch `test/ci-gate-real-yaml-parser`, 17 commits `8af710f8`..`aeeebe01` (re-derived; NOT pushed, no PR — DEC-128). 6-pass story-scoped adversarial window (fresh context per pass), 27 findings (re-derived by summation; the dispatch instruction's claimed 29 did not match its own per-pass table) — 1 HIGH (pass 3) + 10 MEDIUM + 16 LOW, all fixed — window ends PERMANENTLY at 0/3, no CLEAN pass reached, same shape as DEC-262. Two human rulings this window: DEC-265a (fix two pre-existing bypasses — round-16 node-property residual, `POSITIONAL-ASSUMPTION-AXIS`/`RED-PROOF-NEEDS-SPELLING-VARIANTS` — inside this story's own scope rather than deferring again) and DEC-265b (keep running the window past pass-3's HIGH rather than pausing to re-scope). `ADV-P1-INDEX.md` v2.17→v2.18 (461→488 total findings, new S-CIGATE-3 section added). Merge decision (DEC-262-shape, window ended 0/3) is an open item for the human — not exercised by this bookkeeping burst. Full detail: `cycles/cycle-001/adversarial-reviews/ADV-P1-INDEX.md` § "Adversarial Review Index — S-CIGATE-3" + `cycles/cycle-001/decisions-archive.md` DEC-265.
+**S-CIGATE-3-IMPLEMENTED (2026-08-11):** story-scoped adversarial window, NOT a Step-4.5 window — does not move the SOH-DX-1 trajectory-tail or Step 4.5's 0/3 (that arithmetic remains closed permanently per D-262). S-CIGATE-3 (durable YAML-parser fix, D-259/D-260) implemented end-to-end on worktree `.worktrees/S-CIGATE-3`, branch `test/ci-gate-real-yaml-parser`, 17 commits `8af710f8`..`aeeebe01` (re-derived; NOT pushed, no PR — D-128). 6-pass story-scoped adversarial window (fresh context per pass), 27 findings (re-derived by summation; the dispatch instruction's claimed 29 did not match its own per-pass table) — 1 HIGH (pass 3) + 10 MEDIUM + 16 LOW, all fixed — window ends PERMANENTLY at 0/3, no CLEAN pass reached, same shape as D-262. Two human rulings this window: D-265a (fix two pre-existing bypasses — round-16 node-property residual, `POSITIONAL-ASSUMPTION-AXIS`/`RED-PROOF-NEEDS-SPELLING-VARIANTS` — inside this story's own scope rather than deferring again) and D-265b (keep running the window past pass-3's HIGH rather than pausing to re-scope). `ADV-P1-INDEX.md` v2.17→v2.18 (461→488 total findings, new S-CIGATE-3 section added). Merge decision (D-262-shape, window ended 0/3) is an open item for the human — not exercised by this bookkeeping burst. Full detail: `cycles/cycle-001/adversarial-reviews/ADV-P1-INDEX.md` § "Adversarial Review Index — S-CIGATE-3" + `cycles/cycle-001/decisions-archive.md` D-265.
 
-**S-CIGATE-3 PR #680 review + merge (2026-08-12, S-CIGATE-3-PR680-CONVERGED-AWAITING-MERGE / S-CIGATE-3-MERGED-CYCLE-CLOSED):** not a Step-4.5 window and not a reopening of S-CIGATE-3's own 6-pass window (still ended PERMANENTLY at 0/3, DEC-265). PR #680 opened; pr-reviewer cycle 1 REQUEST_CHANGES on `B-1` (value-side node-property gap, `VALUE-SIDE-ANCHOR-GAP-UNCLOSED`), TDD-fixed (`dc4909b2`, 6 new tests), cycle 2 APPROVE (COMMENT-state, reviewer==author). `ADV-P1-INDEX.md` combined total unchanged at 488 (the two PR-cycle reviews are review, not adversary, passes). Human squash-merged PR #680 into `develop` as `3df77a54` (DEC-268/DEC-269); post-merge cleanup complete; story flipped to `status: done`. **S-CIGATE-3 CYCLE CLOSED.**
+**S-CIGATE-3 PR #680 review + merge (2026-08-12, S-CIGATE-3-PR680-CONVERGED-AWAITING-MERGE / S-CIGATE-3-MERGED-CYCLE-CLOSED):** not a Step-4.5 window and not a reopening of S-CIGATE-3's own 6-pass window (still ended PERMANENTLY at 0/3, D-265). PR #680 opened; pr-reviewer cycle 1 REQUEST_CHANGES on `B-1` (value-side node-property gap, `VALUE-SIDE-ANCHOR-GAP-UNCLOSED`), TDD-fixed (`dc4909b2`, 6 new tests), cycle 2 APPROVE (COMMENT-state, reviewer==author). `ADV-P1-INDEX.md` combined total unchanged at 488 (the two PR-cycle reviews are review, not adversary, passes). Human squash-merged PR #680 into `develop` as `3df77a54` (D-268/D-269); post-merge cleanup complete; story flipped to `status: done`. **S-CIGATE-3 CYCLE CLOSED.**
 
-**S-639-1-F4-DELIVERED-PR681-CONVERGED-AWAITING-MERGE (2026-08-12):** story-scoped adversarial window, NOT a Step-4.5 window — does not move the SOH-DX-1 trajectory-tail (→1→3→0→2, unchanged) or Step 4.5's 0/3 (permanently closed per DEC-262). Human authorized "proceed" (DEC-270) to the next SOH-DX-1 priority, **S-639-1** (BREAKING pre-flight exit-64 guard for `--field`/`--on-behalf-of` on `jr issue create`'s platform path without `--request-type`, closes #639, DEC-188, BC-3.8.012/013 [AMENDED] + BC-3.3.001; ships v0.6.0-dev.12), implemented end-to-end on worktree `.worktrees/S-639-1`, branch `feat/issue-create-preflight-guards`, off `develop` @ `3df77a54`. TDD: Red Gate (`8a8f3917`) → green (`729e26c0`/`eff08a31`/`64e247bd`) → doc-numbering fix (`4b0fb2c7`) → AC-11 regression-pin restoration (`4bfa0c21`). **5-pass story-scoped adversarial window (fresh context per pass, baseline rubric — no `policies.yaml`):** pass 1 NOT-CLEAN (1 LOW, `ADV-S639-P6-LOW-001`, feature-spec-vs-BC-SSOT step numbering, fixed `4b0fb2c7`); pass 2 NOT-CLEAN (1 MEDIUM, `ADV-S639-P2-M01`, AC-11 dropped its BC-3.8.012 regression pin — a real BC↔story-body transcription contradiction, fixed in test `4bfa0c21` + story `a7314189` v1.2); passes 3/4/5 ALL CLEAN (0H/0M/0L) — **convergence achieved, 3 consecutive CLEAN passes.** `src/` 0-defect across all 5 passes. **Finding trajectory: 1→1→0→0→0.** Demo evidence recorded (`demos/S-639-1/`, 4 VHS clips: 3 exit-64 scenarios + 1 positive control). **PR #681 OPENED** — CI run `31625361114` all real jobs GREEN including `CI Gate`, both Windows legs, MSRV, Deny, Coverage, Mutation, Spec Guards, Signing, dependency-review; `Secret Scan (gitleaks)` FAILED on a transient binary-download error (not a code finding, not the required check — re-run in progress). pr-reviewer **APPROVE** at `4bfa0c21`, zero findings (COMMENT-state only, reviewer==author, same structural gap as PR #680). `ADV-P1-INDEX.md` combined total 488→493 (new `§ S-639-1` section, 5 passes, 2 actionable findings). **Merge NOT executed — human authority (DEC-128).** Status: **CONVERGED, AWAITING HUMAN MERGE** (pending only the gitleaks re-run). Two recurring LOW process-gap drift items observed again (`PR-MANAGER-RETURNS-BLOCKED-WITHOUT-AWAITING-GRANDCHILDREN`, `VALIDATE-PR-REVIEW-POSTED-ASSUMES-DISTINCT-REVIEWER`); one new LOW drift item recorded (`GITLEAKS-ACTION-FLAKY-BINARY-DOWNLOAD`). Full detail: `cycles/cycle-001/adversarial-reviews/ADV-P1-INDEX.md` § "Adversarial Review Index — S-639-1" + `cycles/cycle-001/decisions-archive.md` DEC-270.
+**S-639-1-F4-DELIVERED-PR681-CONVERGED-AWAITING-MERGE (2026-08-12):** story-scoped adversarial window, NOT a Step-4.5 window — does not move the SOH-DX-1 trajectory-tail (→1→3→0→2, unchanged) or Step 4.5's 0/3 (permanently closed per D-262). Human authorized "proceed" (D-270) to the next SOH-DX-1 priority, **S-639-1** (BREAKING pre-flight exit-64 guard for `--field`/`--on-behalf-of` on `jr issue create`'s platform path without `--request-type`, closes #639, D-188, BC-3.8.012/013 [AMENDED] + BC-3.3.001; ships v0.6.0-dev.12), implemented end-to-end on worktree `.worktrees/S-639-1`, branch `feat/issue-create-preflight-guards`, off `develop` @ `3df77a54`. TDD: Red Gate (`8a8f3917`) → green (`729e26c0`/`eff08a31`/`64e247bd`) → doc-numbering fix (`4b0fb2c7`) → AC-11 regression-pin restoration (`4bfa0c21`). **5-pass story-scoped adversarial window (fresh context per pass, baseline rubric — no `policies.yaml`):** pass 1 NOT-CLEAN (1 LOW, `ADV-S639-P6-LOW-001`, feature-spec-vs-BC-SSOT step numbering, fixed `4b0fb2c7`); pass 2 NOT-CLEAN (1 MEDIUM, `ADV-S639-P2-M01`, AC-11 dropped its BC-3.8.012 regression pin — a real BC↔story-body transcription contradiction, fixed in test `4bfa0c21` + story `a7314189` v1.2); passes 3/4/5 ALL CLEAN (0H/0M/0L) — **convergence achieved, 3 consecutive CLEAN passes.** `src/` 0-defect across all 5 passes. **Finding trajectory: 1→1→0→0→0.** Demo evidence recorded (`demos/S-639-1/`, 4 VHS clips: 3 exit-64 scenarios + 1 positive control). **PR #681 OPENED** — CI run `31625361114` all real jobs GREEN including `CI Gate`, both Windows legs, MSRV, Deny, Coverage, Mutation, Spec Guards, Signing, dependency-review; `Secret Scan (gitleaks)` FAILED on a transient binary-download error (not a code finding, not the required check — re-run in progress). pr-reviewer **APPROVE** at `4bfa0c21`, zero findings (COMMENT-state only, reviewer==author, same structural gap as PR #680). `ADV-P1-INDEX.md` combined total 488→493 (new `§ S-639-1` section, 5 passes, 2 actionable findings). **Merge NOT executed — human authority (D-128).** Status: **CONVERGED, AWAITING HUMAN MERGE** (pending only the gitleaks re-run). Two recurring LOW process-gap drift items observed again (`PR-MANAGER-RETURNS-BLOCKED-WITHOUT-AWAITING-GRANDCHILDREN`, `VALIDATE-PR-REVIEW-POSTED-ASSUMES-DISTINCT-REVIEWER`); one new LOW drift item recorded (`GITLEAKS-ACTION-FLAKY-BINARY-DOWNLOAD`). Full detail: `cycles/cycle-001/adversarial-reviews/ADV-P1-INDEX.md` § "Adversarial Review Index — S-639-1" + `cycles/cycle-001/decisions-archive.md` D-270.
 
-**S-639-1 PR #681 merge + cycle close (2026-08-12, S-639-1-MERGED-CYCLE-CLOSED):** not a Step-4.5 window and not a reopening of S-639-1's own 5-pass window (remains CONVERGED 3/3, passes 3/4/5 CLEAN, trajectory 1→1→0→0→0, DEC-245 criterion). Human executed the owner/admin squash-merge PR #681 anticipated (DEC-270): merged into `develop` as `facdcb46`, mergedAt 2026-08-12T18:34:36Z, closing #639; `origin/develop`/local `develop` fast-forwarded from `3df77a54`. Same structural gap as S-CIGATE-3 (reviewer == author, COMMENT-state APPROVE only) meant the merge was necessarily a human action, not a factory self-authorization. The transient `Secret Scan (gitleaks)` binary-download flake cleared on re-run; final CI state 15/15 GREEN incl. CI Gate before merge. Post-merge: worktree/branch cleanup complete; story `status`→`done` (v1.2→v1.3, Close-Out section appended); `STORY-INDEX.md` row updated (v1.5.82→v1.5.83); two recurring LOW process-observation drift items and the new LOW gitleaks-flake item reconfirmed with existing DEFERRED dispositions intact (no story auto-opened). **S-639-1 CYCLE CLOSED.** SOH-DX-1's Step 4.5 remains unchanged at PERMANENTLY 0/3 (DEC-262); trajectory-tail →1→3→0→2 unchanged. Full detail: `cycles/cycle-001/adversarial-reviews/ADV-P1-INDEX.md` § "S-639-1 Open Items (as resolved at cycle close)" + `cycles/cycle-001/decisions-archive.md` DEC-271.
+**S-639-1 PR #681 merge + cycle close (2026-08-12, S-639-1-MERGED-CYCLE-CLOSED):** not a Step-4.5 window and not a reopening of S-639-1's own 5-pass window (remains CONVERGED 3/3, passes 3/4/5 CLEAN, trajectory 1→1→0→0→0, D-245 criterion). Human executed the owner/admin squash-merge PR #681 anticipated (D-270): merged into `develop` as `facdcb46`, mergedAt 2026-08-12T18:34:36Z, closing #639; `origin/develop`/local `develop` fast-forwarded from `3df77a54`. Same structural gap as S-CIGATE-3 (reviewer == author, COMMENT-state APPROVE only) meant the merge was necessarily a human action, not a factory self-authorization. The transient `Secret Scan (gitleaks)` binary-download flake cleared on re-run; final CI state 15/15 GREEN incl. CI Gate before merge. Post-merge: worktree/branch cleanup complete; story `status`→`done` (v1.2→v1.3, Close-Out section appended); `STORY-INDEX.md` row updated (v1.5.82→v1.5.83); two recurring LOW process-observation drift items and the new LOW gitleaks-flake item reconfirmed with existing DEFERRED dispositions intact (no story auto-opened). **S-639-1 CYCLE CLOSED.** SOH-DX-1's Step 4.5 remains unchanged at PERMANENTLY 0/3 (D-262); trajectory-tail →1→3→0→2 unchanged. Full detail: `cycles/cycle-001/adversarial-reviews/ADV-P1-INDEX.md` § "S-639-1 Open Items (as resolved at cycle close)" + `cycles/cycle-001/decisions-archive.md` D-271.
 
-**S-627-1 Phase 1 delivery + PR #682 merge (2026-08-12, S-627-1-MERGED-BOTH-PHASES-CYCLE-CLOSED):** story-scoped adversarial window, NOT a Step-4.5 window — does not move the SOH-DX-1 trajectory-tail (→1→3→0→2, unchanged) or Step 4.5's 0/3 (permanently closed per DEC-262). S-627-1 (`check-bc-no-numeric-test-counts.sh` false-positive regex fix + `--self-test`/`--bc-dir` seam, closes #627), implemented on worktree `.worktrees/S-627-1`, branch `fix/bc-numeric-count-guard-regex`, commit `edfcefaa`. **4-pass story-scoped adversarial window (fresh context per pass, baseline rubric):** pass 1 NOT-CLEAN (1 MEDIUM `ADV-S627-P1-MED-001` — I/O-error false-green: pipefail masked the rightmost command's exit status, compounded by a `return` inside a `$(...)` subshell silently discarding it; 2 LOW — boundary character-class gap, EC-9 spec/impl contradiction), fixed via `fc2019a9` (script: split into two separate command substitutions removing the pipe, exit-2 propagation restored, `_` added to the left-boundary negative class, hardened discriminating negative fixtures) and `e6e6f23d` (story: EC-9 reconciled to fail-closed exit 2, Phase-2 3rd-marker-occurrence reconciliation note added). Passes 2/3/4 ALL CLEAN (0H/0M/0L) — **convergence achieved, 3 consecutive CLEAN passes.** `src/` not touched — script-only change, no product source in scope. **Finding trajectory: 1→0→0→0.** pr-reviewer **APPROVE** at `fc2019a9` (COMMENT-state, reviewer==author, same structural gap as PR #680/#681). CI 15/15 GREEN incl. CI Gate, Spec Guards (which runs this exact script), both Windows legs, gitleaks (no flake this run). Human executed the owner/admin squash-merge: PR #682 merged into `develop` as `c3edf216`, closing **#627**; `origin/develop`/local `develop` fast-forwarded from `facdcb46`. Post-merge cleanup complete (`.worktrees/S-627-1` removed; `fix/bc-numeric-count-guard-regex` deleted local+remote). **Phase 2 (factory-artifacts revert)** was already committed separately by product-owner as `27bf96aa` (`bc-3-issue-write.md` — reverted BC-3.9.001/BC-3.9.003 Trace-field hyphenation workarounds, removed both `[PENDING-REVERT-S-627-1]` inline markers, reconciled the 3rd historical-footer occurrence; `bc-2-issue-read.md` needed no change — zero markers present). Verification all green post-revert: `check-bc-no-numeric-test-counts.sh`/`check-spec-counts.sh`/`check-bc-cumulative-counts.sh` all exit 0 (658 BCs, 8 files unchanged); zero live `[PENDING-REVERT-S-627-1]` markers remain. Story `status`→`done` (v1.2→v1.3, Close-Out section appended); `STORY-INDEX.md` row updated (v1.5.83→v1.5.84). Two recurring LOW process-observation drift items reconfirmed (`PR-MANAGER-RETURNS-BLOCKED-WITHOUT-AWAITING-GRANDCHILDREN` — 3rd occurrence this session; `VALIDATE-PR-REVIEW-POSTED-ASSUMES-DISTINCT-REVIEWER` — recurred); one new LOW item recorded (`FACTORY-DISPATCHER-POSTTOOLUSE-HOOK-TIMEOUT`); `GITLEAKS-ACTION-FLAKY-BINARY-DOWNLOAD` did NOT recur on this PR. **S-627-1 CYCLE CLOSED — BOTH PHASES COMPLETE.** **This completes the SOH-DX-1 bundle:** S-626-1 (`a5e1d087`), S-639-1 (`facdcb46`), and S-627-1 (`c3edf216`) are now all DELIVERED AND MERGED. Full detail: `cycles/cycle-001/adversarial-reviews/ADV-P1-INDEX.md` § "S-627-1" + `cycles/cycle-001/decisions-archive.md` DEC-272.
-
----
-
-**S-668-1 (668-duedate, issue #668) — full delivery trajectory (2026-08-13):** Spec sealed at v1.3.179 after a same-day spec-scoped fix-round (1H+6M+2L found and fixed, F2). F3 story decomposition (16 ACs, 5 pts) COMPLETE, Spec-First Gate S-7.01 satisfied. F4 TDD implementation on worktree `.worktrees/S-668-1`, branch `feat/668-duedate`. Step 4.5 per-story adversarial: **CONVERGED 3/3 CLEAN** — 8 total fresh-context passes across 3 windows; severity decay MED→LOW→zero across the windows; every finding across all 8 passes was test-coverage completeness (missing edge-case assertions), never a production defect — `src/` was spec-faithful throughout. security-reviewer: PASS, no actionable findings. pr-reviewer: APPROVE. CI: 15/15 GREEN including CI Gate. 8 VHS demo recordings at `.factory/demos/S-668-1/` covering the 16 ACs. Human executed the owner/admin squash-merge: PR #691 merged into `develop` as `1a298e24`, closing **#668**; `develop` fast-forwarded from `9411e9a5`. Post-merge cleanup complete (`.worktrees/S-668-1` removed; `feat/668-duedate` deleted local+remote). Story `status`→`done` (v1.1→v1.2, Close-Out section appended); `STORY-INDEX.md` row updated (v1.5.85→v1.5.86). One process-gap finding (missing Step-4.5 dispatch identity-tuple) disposed as a JUSTIFIED DEFERRAL (LOW, new drift item `S668-STEP45-DISPATCH-MISSING-IDENTITY-TUPLE`) — engine-level `vsdd-factory` polish, not a `jira-cli` product defect. **S-668-1 CYCLE CLOSED.** This is a separate, concurrent cycle from SOH-DX-1 — SOH-DX-1's own paused position (S-TRAIL-DERIVATION-GUARD-1 next) is unaffected. Full detail: `cycles/cycle-001/decisions-archive.md` DEC-273, `cycles/cycle-001/burst-log.md` § S-668-1-MERGED-CYCLE-CLOSED.
+**S-627-1 Phase 1 delivery + PR #682 merge (2026-08-12, S-627-1-MERGED-BOTH-PHASES-CYCLE-CLOSED):** story-scoped adversarial window, NOT a Step-4.5 window — does not move the SOH-DX-1 trajectory-tail (→1→3→0→2, unchanged) or Step 4.5's 0/3 (permanently closed per D-262). S-627-1 (`check-bc-no-numeric-test-counts.sh` false-positive regex fix + `--self-test`/`--bc-dir` seam, closes #627), implemented on worktree `.worktrees/S-627-1`, branch `fix/bc-numeric-count-guard-regex`, commit `edfcefaa`. **4-pass story-scoped adversarial window (fresh context per pass, baseline rubric):** pass 1 NOT-CLEAN (1 MEDIUM `ADV-S627-P1-MED-001` — I/O-error false-green: pipefail masked the rightmost command's exit status, compounded by a `return` inside a `$(...)` subshell silently discarding it; 2 LOW — boundary character-class gap, EC-9 spec/impl contradiction), fixed via `fc2019a9` (script: split into two separate command substitutions removing the pipe, exit-2 propagation restored, `_` added to the left-boundary negative class, hardened discriminating negative fixtures) and `e6e6f23d` (story: EC-9 reconciled to fail-closed exit 2, Phase-2 3rd-marker-occurrence reconciliation note added). Passes 2/3/4 ALL CLEAN (0H/0M/0L) — **convergence achieved, 3 consecutive CLEAN passes.** `src/` not touched — script-only change, no product source in scope. **Finding trajectory: 1→0→0→0.** pr-reviewer **APPROVE** at `fc2019a9` (COMMENT-state, reviewer==author, same structural gap as PR #680/#681). CI 15/15 GREEN incl. CI Gate, Spec Guards (which runs this exact script), both Windows legs, gitleaks (no flake this run). Human executed the owner/admin squash-merge: PR #682 merged into `develop` as `c3edf216`, closing **#627**; `origin/develop`/local `develop` fast-forwarded from `facdcb46`. Post-merge cleanup complete (`.worktrees/S-627-1` removed; `fix/bc-numeric-count-guard-regex` deleted local+remote). **Phase 2 (factory-artifacts revert)** was already committed separately by product-owner as `27bf96aa` (`bc-3-issue-write.md` — reverted BC-3.9.001/BC-3.9.003 Trace-field hyphenation workarounds, removed both `[PENDING-REVERT-S-627-1]` inline markers, reconciled the 3rd historical-footer occurrence; `bc-2-issue-read.md` needed no change — zero markers present). Verification all green post-revert: `check-bc-no-numeric-test-counts.sh`/`check-spec-counts.sh`/`check-bc-cumulative-counts.sh` all exit 0 (658 BCs, 8 files unchanged); zero live `[PENDING-REVERT-S-627-1]` markers remain. Story `status`→`done` (v1.2→v1.3, Close-Out section appended); `STORY-INDEX.md` row updated (v1.5.83→v1.5.84). Two recurring LOW process-observation drift items reconfirmed (`PR-MANAGER-RETURNS-BLOCKED-WITHOUT-AWAITING-GRANDCHILDREN` — 3rd occurrence this session; `VALIDATE-PR-REVIEW-POSTED-ASSUMES-DISTINCT-REVIEWER` — recurred); one new LOW item recorded (`FACTORY-DISPATCHER-POSTTOOLUSE-HOOK-TIMEOUT`); `GITLEAKS-ACTION-FLAKY-BINARY-DOWNLOAD` did NOT recur on this PR. **S-627-1 CYCLE CLOSED — BOTH PHASES COMPLETE.** **This completes the SOH-DX-1 bundle:** S-626-1 (`a5e1d087`), S-639-1 (`facdcb46`), and S-627-1 (`c3edf216`) are now all DELIVERED AND MERGED. Full detail: `cycles/cycle-001/adversarial-reviews/ADV-P1-INDEX.md` § "S-627-1" + `cycles/cycle-001/decisions-archive.md` D-272.
 
 ---
 
-**bucket1-defects — F2 spec evolution adversarial convergence (2026-08-13):** Six fresh-context, spec-scoped adversarial passes ran against the F2 PRD delta (`bc-3-issue-write.md` BC-3.4.021, `bc-1-auth-identity.md` BC-1.2.018/BC-1.2.047, `cross-cutting.md` BC-X.8.009) before the human-approval gate, covering all four bundled issues (#692, #663, #693, #694). **Finding trajectory: p1 (0H/3M/3L) → p2 (2H/1M/3L) → p3 (1H/1M/1L) → p4 (0H/0M/2L) → p5 (0H/0M/1L) → p6 (0H/0M/1L).** All findings across all six passes fixed same-day, in-cycle. **CONVERGED** — the last 3 passes (p4/p5/p6) each landed at 0 HIGH / 0 MEDIUM, with every load-bearing claim source-verified against `src/` before being accepted into the spec text (not merely asserted). Notably NON-monotonic at p2 (2H/1M/3L, an increase over p1) — the trajectory decayed in aggregate severity across the full run, not on every single step, consistent with DEC-191(a)'s novelty-decay convergence criterion (a later pass finding MORE at a deeper inspection frontier is not itself a red flag; the decay signal is the multi-pass trend, not pass-over-pass monotonicity). Two same-bundle contradictions were caught and corrected mid-loop, both load-bearing lessons for `drift-items-open-detail.md`: (1) an orchestrator-introduced JSON-error-channel inversion — the orchestrator's own pass-2 fix instruction against BC-3.4.021 asserted the `--output json` error envelope for a `--dry-run` depth-guard failure is written to stdout; it is actually written to stderr (stdout empty, per the #526 JSON render invariant, `src/main.rs`'s error-exit handler, `tests/common/assertions.rs::assert_json_error_envelope`) — pass-2 applied the incorrect instruction (EC-3.4.021-15, the depth-guard Canonical Test Vector row, VP-692-002 all written with the wrong channel), and a fresh-context pass-3 caught and reverted it same-day, source-verifying rather than trusting the pass-2 finding (see `drift-items-open-detail.md`'s `ORCHESTRATOR-FIX-INSTRUCTION-CAUSED-REGRESSION` row, instance 2); (2) pass-3's own MEDIUM-1 finding (the ADF-preview scope gap on bare `--description`) was itself a genuine, human-ratified SCOPE EXPANSION beyond the original #692 report, surfaced explicitly for ratification rather than silently broadened (BC-3.4.021's STATUS note; DEC-274). Full spec-delta detail (all fixes, per-pass findings, citations): each touched BC file's own frontmatter `trace:`/body `**Trace**:` fields (`bc-3-issue-write.md` BC-3.4.021, `bc-1-auth-identity.md` BC-1.2.018/BC-1.2.047, `cross-cutting.md` BC-X.8.009); decision record: `cycles/cycle-001/decisions-archive.md` DEC-274 (RATIFIED); commit-burst record: `cycles/cycle-001/burst-log.md` § BUCKET1-DEFECTS-F2-COMPLETE. **This is F2-scope adversarial review (spec-text correctness), distinct from the Step-4.5-style per-story implementation adversarial tracking that begins at F5** once F3 (story decomposition) and F4 (delta implementation) are complete — `ADV-P1-INDEX.md`'s combined total (SOH-DX-1 scope only) is unaffected by this F2 spec-scoped run.
+**S-668-1 (668-duedate, issue #668) — full delivery trajectory (2026-08-13):** Spec sealed at v1.3.179 after a same-day spec-scoped fix-round (1H+6M+2L found and fixed, F2). F3 story decomposition (16 ACs, 5 pts) COMPLETE, Spec-First Gate S-7.01 satisfied. F4 TDD implementation on worktree `.worktrees/S-668-1`, branch `feat/668-duedate`. Step 4.5 per-story adversarial: **CONVERGED 3/3 CLEAN** — 8 total fresh-context passes across 3 windows; severity decay MED→LOW→zero across the windows; every finding across all 8 passes was test-coverage completeness (missing edge-case assertions), never a production defect — `src/` was spec-faithful throughout. security-reviewer: PASS, no actionable findings. pr-reviewer: APPROVE. CI: 15/15 GREEN including CI Gate. 8 VHS demo recordings at `.factory/demos/S-668-1/` covering the 16 ACs. Human executed the owner/admin squash-merge: PR #691 merged into `develop` as `1a298e24`, closing **#668**; `develop` fast-forwarded from `9411e9a5`. Post-merge cleanup complete (`.worktrees/S-668-1` removed; `feat/668-duedate` deleted local+remote). Story `status`→`done` (v1.1→v1.2, Close-Out section appended); `STORY-INDEX.md` row updated (v1.5.85→v1.5.86). One process-gap finding (missing Step-4.5 dispatch identity-tuple) disposed as a JUSTIFIED DEFERRAL (LOW, new drift item `S668-STEP45-DISPATCH-MISSING-IDENTITY-TUPLE`) — engine-level `vsdd-factory` polish, not a `jira-cli` product defect. **S-668-1 CYCLE CLOSED.** This is a separate, concurrent cycle from SOH-DX-1 — SOH-DX-1's own paused position (S-TRAIL-DERIVATION-GUARD-1 next) is unaffected. Full detail: `cycles/cycle-001/decisions-archive.md` D-273, `cycles/cycle-001/burst-log.md` § S-668-1-MERGED-CYCLE-CLOSED.
 
-**bucket1-defects — F3 story decomposition consistency audit (2026-08-13):** State-manager re-derived BC↔AC traceability directly from the 4 new story files (`S-692-1`, `S-663-1`, `S-693-1`, `S-694-1`) and their cited BC bodies (`bc-3-issue-write.md` BC-3.4.021, `bc-1-auth-identity.md` BC-1.2.047/BC-1.2.018, `cross-cutting.md` BC-X.8.009, `bc-2-issue-read.md` BC-2.7.010/BC-2.7.008/BC-2.7.009) — not trusted from story-writer's own claim. **Result: CLEAN, no blockers.** Full two-way traceability confirmed for all four stories: every AC cites its governing BC via a `*Traces to*:`-shaped reference, and every cited BC is covered by at least one AC. Breaking markers verified correct: S-692-1 and S-663-1 both carry `breaking_change: true` (matching the wave-schedule's Breaking? column and DEC-274's BREAKING ruling for #692); S-693-1 and S-694-1 both carry `breaking_change: false` (additive and docs-only respectively). Two DEFERRED cosmetic nits recorded, non-blocking, to be tidied when F4 touches the stories: (1) S-692-1's Behavioral Contracts summary table omits Invariant 1 from its clause enumeration, though AC-12 cites Invariant 1 correctly in the AC body itself — a summary-row-only presentation gap, not a traceability gap; (2) S-663-1's AC-3 doesn't name-check EC-1.2.047-2 by its ID, though the AC's test body exercises that exact example. Dependency-graph cycle detection (story-writer, re-confirmed here): Kahn's-algorithm topological sort over the four-story, zero-edge adjacency list `{S-692-1: [], S-663-1: [], S-693-1: [], S-694-1: []}` trivially succeeds — no restructuring required, single wave, 15 points, all four delivered in parallel worktrees. **This is F3-scope story-decomposition consistency review, distinct from the F2 spec-scoped adversarial review (six passes, prior burst) and from the Step-4.5-style per-story implementation adversarial tracking that begins at F5** once F4 (delta implementation) is complete. Decision record: `cycles/cycle-001/decisions-archive.md` DEC-275. Commit-burst record: `cycles/cycle-001/burst-log.md` § BUCKET1-DEFECTS-F3-COMPLETE.
+---
 
-**S-605-1 (component-mgmt, Wave 2 Track A position 1) — Step-4.5 per-story adversarial convergence (2026-08-18):** story-scoped Step-4.5 window (not the SOH-DX-1 trajectory-tail; component-mgmt is a separate Feature Mode cycle). `jr issue create`/`edit --component` single-key path, target `src/cli/issue/{create,edit}.rs`, depends_on:[S-604-1] (merged). **CONVERGED 3/3 CLEAN under DEC-245 strict: 9 rounds / 27 fresh-context diverse-lens passes (Lens A spec-fidelity, Lens B regression/security, Lens C convention/test-quality) / 8 fix bursts.** Finding trajectory decayed HIGH→MED→LOW→clean. Real defects caught+fixed: **R1** HIGH — dry-run path skipped component resolution entirely, exiting 0 on an unknown component name instead of failing (the exact bug class `--dry-run` exists to catch); R1 MED — echo/dry-run rendered ADD-before-REMOVE regardless of CLI input order. **R3** HIGH — numeric `--component` value wired as `{"name":"<digits>"}` instead of `{"id":...}`, silently creating-or-matching-nothing against Jira's id-typed field. **R4** MED — the R3 fix's RMW fallback path re-emitted retained components by NAME, causing a silent duplicate-name data-loss collision against distinctly-id'd components sharing a name. **R6** HIGH — a R5 refactor (collapsing name/id handling into a `ComponentRef` type) regressed name-based removal into a silent no-op against live, id-bearing components (the id-less test fixture masking this for 5 rounds is recorded separately in `lessons.md`); fixed definitively with a match-by-id-OR-name-against-the-embedded-Component semantics plus a full RMW combination-matrix test suite. **R7** MED — the two-sequential-PUT implementation had a partial-write + false-negative window (a later field-validation failure could leave an already-applied component change live while reporting failure); fixed via a research-confirmed single combined `update`+`fields` PUT (`edit_issue_combined`; research artifact `.factory/research/S-605-1-atomic-component-field-put.md`, CONFIRMED Jira Cloud v3 supports combining distinct-field `update`+`fields` in one request with up-front validation). **R8** LOW — a contradictory cross-identifier add/remove input (`remove:<id>` + `add:<name>` for the same underlying component) produces divergent native-vs-RMW-fallback outcomes; adjudicated ACCEPTED (contradictory input, no unrelated-data loss) and test-pinned rather than further "fixed." **R9: 3/3 CLEAN.** security-reviewer **APPROVE** (2 LOW/INFO); pr-reviewer **APPROVE** (1 LOW nit). CI 15/15 green incl. required CI Gate. Full regression suite: 4,297 passed, 0 failed; `cargo clippy --all-targets -- -D warnings` and `cargo fmt --all -- --check` both clean. 10 demo recordings at `.factory/demos/S-605-1/` (factory-artifacts `d51d7a23`, placeholder-only data). Three new LOW drift items recorded (numeric-id BC wording vs research-confirmed behavior; the R8 cross-identifier divergence, accepted; a cross-story `ExactMultiple` message-wording imprecision already present in shipped S-604 code, unrelated to this story) — all DEFERRED to the feature-level F5/F7 pass. Human squash-merged PR #712 as `f1ff9151fe129061d0d04e03b5c3ecee16a40300` (DEC-128, DEC-290) after the `gh pr merge` call was denied by the same-account tool-permission classifier — same mechanism as DEC-284/285/289. Issue #605 remains OPEN (S-605-2 still pending; PR used "relates to", not "closes"). Worktree removed, branch deleted local+remote. STORY-INDEX v1.5.99→v1.6.00. Full detail: `cycles/cycle-001/decisions-archive.md` DEC-290, `cycles/cycle-001/lessons.md` (3 new process-gap entries this story).
+**bucket1-defects — F2 spec evolution adversarial convergence (2026-08-13):** Six fresh-context, spec-scoped adversarial passes ran against the F2 PRD delta (`bc-3-issue-write.md` BC-3.4.021, `bc-1-auth-identity.md` BC-1.2.018/BC-1.2.047, `cross-cutting.md` BC-X.8.009) before the human-approval gate, covering all four bundled issues (#692, #663, #693, #694). **Finding trajectory: p1 (0H/3M/3L) → p2 (2H/1M/3L) → p3 (1H/1M/1L) → p4 (0H/0M/2L) → p5 (0H/0M/1L) → p6 (0H/0M/1L).** All findings across all six passes fixed same-day, in-cycle. **CONVERGED** — the last 3 passes (p4/p5/p6) each landed at 0 HIGH / 0 MEDIUM, with every load-bearing claim source-verified against `src/` before being accepted into the spec text (not merely asserted). Notably NON-monotonic at p2 (2H/1M/3L, an increase over p1) — the trajectory decayed in aggregate severity across the full run, not on every single step, consistent with D-191(a)'s novelty-decay convergence criterion (a later pass finding MORE at a deeper inspection frontier is not itself a red flag; the decay signal is the multi-pass trend, not pass-over-pass monotonicity). Two same-bundle contradictions were caught and corrected mid-loop, both load-bearing lessons for `drift-items-open-detail.md`: (1) an orchestrator-introduced JSON-error-channel inversion — the orchestrator's own pass-2 fix instruction against BC-3.4.021 asserted the `--output json` error envelope for a `--dry-run` depth-guard failure is written to stdout; it is actually written to stderr (stdout empty, per the #526 JSON render invariant, `src/main.rs`'s error-exit handler, `tests/common/assertions.rs::assert_json_error_envelope`) — pass-2 applied the incorrect instruction (EC-3.4.021-15, the depth-guard Canonical Test Vector row, VP-692-002 all written with the wrong channel), and a fresh-context pass-3 caught and reverted it same-day, source-verifying rather than trusting the pass-2 finding (see `drift-items-open-detail.md`'s `ORCHESTRATOR-FIX-INSTRUCTION-CAUSED-REGRESSION` row, instance 2); (2) pass-3's own MEDIUM-1 finding (the ADF-preview scope gap on bare `--description`) was itself a genuine, human-ratified SCOPE EXPANSION beyond the original #692 report, surfaced explicitly for ratification rather than silently broadened (BC-3.4.021's STATUS note; D-274). Full spec-delta detail (all fixes, per-pass findings, citations): each touched BC file's own frontmatter `trace:`/body `**Trace**:` fields (`bc-3-issue-write.md` BC-3.4.021, `bc-1-auth-identity.md` BC-1.2.018/BC-1.2.047, `cross-cutting.md` BC-X.8.009); decision record: `cycles/cycle-001/decisions-archive.md` D-274 (RATIFIED); commit-burst record: `cycles/cycle-001/burst-log.md` § BUCKET1-DEFECTS-F2-COMPLETE. **This is F2-scope adversarial review (spec-text correctness), distinct from the Step-4.5-style per-story implementation adversarial tracking that begins at F5** once F3 (story decomposition) and F4 (delta implementation) are complete — `ADV-P1-INDEX.md`'s combined total (SOH-DX-1 scope only) is unaffected by this F2 spec-scoped run.
 
-**bucket1-defects — F7 delta convergence (2026-08-14), produced by `f7-converge`, human-authorized CLOSE:** Five-dimensional convergence over the full F4-F7 delta (all 4 stories + the ancestry-reconnect and mutation-survivor follow-on PRs). **Result: 5/5 dimensions PASS.** D1 Spec PASS — all 4 changed `src/` files (`src/main.rs`, `src/cli/issue/edit.rs`, `src/cli/queue.rs`, `src/cli/mod.rs`) verified line-by-line against their governing BC bodies (BC-1.2.047/BC-1.2.018, BC-3.4.021, BC-X.8.009), zero drift found. D2 Test PASS with a scope caveat — `edit.rs` (in `.cargo/mutants.toml examine_globs`) CI-verified 4/4 mutants caught (100%, read from the CI job log, not the PR description); `queue.rs::collapse_and_truncate` (function-scoped local run, per PR #700's own body) 5/5 caught after fix (was 3/5); `queue.rs`/`main.rs` remain outside `examine_globs` entirely — a real, confirmed scope gap (not this bundle's defect), tracked as drift item `MUTANTS-SCOPE-GAP-QUEUE-MAIN`. D3 Implementation PASS — 0 CRIT/HIGH findings across all 6 PR reviews (#695-700), grepped explicitly for CRITICAL/HIGH/BLOCKING markers. D4 Verification PASS — Kani/fuzz N/A justified (no new algorithms/parsing/crypto surface; the one path reaching new-code-plus-parsing, `edit.rs`'s dry-run now reaching `markdown_to_adf`, reuses the pre-existing proptest-covered ADF conversion path and its `MAX_ADF_DEPTH` guard); `cargo deny check` clean (advisories/bans/licenses/sources all ok); CI gitleaks/deny/dependency-review/signing-guard green on all 6 PRs; no new `unsafe`, no new dependencies; purity boundaries intact. D5 Holdout PASS — all 7 wave holdouts (`H-BUCKET1-001`..`007`) from `bucket1-defects-wave-holdout-scenarios.md` mapped to concrete covering tests/behavior, none found uncovered. Regression validation (separate binary check): `cargo fmt --all -- --check` PASS (local), `cargo clippy --all-targets -- -D warnings` PASS (CI evidence — Clippy(ubuntu/windows-latest) green on PR #700, built on the fully-merged tree), `cargo test` PASS (81/82 local binaries 0 failures, interrupted not failed, on the 82nd; full CI matrix Test(ubuntu/macos/windows-latest) green on PR #700), `cargo deny check` PASS (local), CI Gate PASS 15/15 on all 6 PRs. **Method note:** this F7 pass explicitly did not accept the prior delivery summary at face value — it independently read all 4 changed `src/` files against their BCs, pulled and read full PR review bodies and CI job logs for all 6 PRs via `gh`, re-ran `cargo deny check`/`cargo fmt --all -- --check`/`cargo test --all-features` locally, and attempted (though did not complete within budget) a local `cargo mutants --in-diff` corroboration on `queue.rs`'s delta — relying instead on CI's direct log evidence and PR #700's reviewer's own hand-reproduced FAIL-before/PASS-after verification as the authoritative D2 evidence for that file. Full report: `.factory/phase-f7-convergence/bucket1-defects-delta-convergence-report.md` + `-traceability-chain-delta.md`. Decision record: `cycles/cycle-001/decisions-archive.md` DEC-276. Commit-burst record: `cycles/cycle-001/burst-log.md` § BUCKET1-DEFECTS-COMPLETE. **`bucket1-defects` CYCLE CLOSED** — all 4 issues (#692, #663, #693, #694) closed on merge; SOH-DX-1 and 668-duedate remain unaffected.
+**bucket1-defects — F3 story decomposition consistency audit (2026-08-13):** State-manager re-derived BC↔AC traceability directly from the 4 new story files (`S-692-1`, `S-663-1`, `S-693-1`, `S-694-1`) and their cited BC bodies (`bc-3-issue-write.md` BC-3.4.021, `bc-1-auth-identity.md` BC-1.2.047/BC-1.2.018, `cross-cutting.md` BC-X.8.009, `bc-2-issue-read.md` BC-2.7.010/BC-2.7.008/BC-2.7.009) — not trusted from story-writer's own claim. **Result: CLEAN, no blockers.** Full two-way traceability confirmed for all four stories: every AC cites its governing BC via a `*Traces to*:`-shaped reference, and every cited BC is covered by at least one AC. Breaking markers verified correct: S-692-1 and S-663-1 both carry `breaking_change: true` (matching the wave-schedule's Breaking? column and D-274's BREAKING ruling for #692); S-693-1 and S-694-1 both carry `breaking_change: false` (additive and docs-only respectively). Two DEFERRED cosmetic nits recorded, non-blocking, to be tidied when F4 touches the stories: (1) S-692-1's Behavioral Contracts summary table omits Invariant 1 from its clause enumeration, though AC-12 cites Invariant 1 correctly in the AC body itself — a summary-row-only presentation gap, not a traceability gap; (2) S-663-1's AC-3 doesn't name-check EC-1.2.047-2 by its ID, though the AC's test body exercises that exact example. Dependency-graph cycle detection (story-writer, re-confirmed here): Kahn's-algorithm topological sort over the four-story, zero-edge adjacency list `{S-692-1: [], S-663-1: [], S-693-1: [], S-694-1: []}` trivially succeeds — no restructuring required, single wave, 15 points, all four delivered in parallel worktrees. **This is F3-scope story-decomposition consistency review, distinct from the F2 spec-scoped adversarial review (six passes, prior burst) and from the Step-4.5-style per-story implementation adversarial tracking that begins at F5** once F4 (delta implementation) is complete. Decision record: `cycles/cycle-001/decisions-archive.md` D-275. Commit-burst record: `cycles/cycle-001/burst-log.md` § BUCKET1-DEFECTS-F3-COMPLETE.
+
+**S-605-1 (component-mgmt, Wave 2 Track A position 1) — Step-4.5 per-story adversarial convergence (2026-08-18):** story-scoped Step-4.5 window (not the SOH-DX-1 trajectory-tail; component-mgmt is a separate Feature Mode cycle). `jr issue create`/`edit --component` single-key path, target `src/cli/issue/{create,edit}.rs`, depends_on:[S-604-1] (merged). **CONVERGED 3/3 CLEAN under D-245 strict: 9 rounds / 27 fresh-context diverse-lens passes (Lens A spec-fidelity, Lens B regression/security, Lens C convention/test-quality) / 8 fix bursts.** Finding trajectory decayed HIGH→MED→LOW→clean. Real defects caught+fixed: **R1** HIGH — dry-run path skipped component resolution entirely, exiting 0 on an unknown component name instead of failing (the exact bug class `--dry-run` exists to catch); R1 MED — echo/dry-run rendered ADD-before-REMOVE regardless of CLI input order. **R3** HIGH — numeric `--component` value wired as `{"name":"<digits>"}` instead of `{"id":...}`, silently creating-or-matching-nothing against Jira's id-typed field. **R4** MED — the R3 fix's RMW fallback path re-emitted retained components by NAME, causing a silent duplicate-name data-loss collision against distinctly-id'd components sharing a name. **R6** HIGH — a R5 refactor (collapsing name/id handling into a `ComponentRef` type) regressed name-based removal into a silent no-op against live, id-bearing components (the id-less test fixture masking this for 5 rounds is recorded separately in `lessons.md`); fixed definitively with a match-by-id-OR-name-against-the-embedded-Component semantics plus a full RMW combination-matrix test suite. **R7** MED — the two-sequential-PUT implementation had a partial-write + false-negative window (a later field-validation failure could leave an already-applied component change live while reporting failure); fixed via a research-confirmed single combined `update`+`fields` PUT (`edit_issue_combined`; research artifact `.factory/research/S-605-1-atomic-component-field-put.md`, CONFIRMED Jira Cloud v3 supports combining distinct-field `update`+`fields` in one request with up-front validation). **R8** LOW — a contradictory cross-identifier add/remove input (`remove:<id>` + `add:<name>` for the same underlying component) produces divergent native-vs-RMW-fallback outcomes; adjudicated ACCEPTED (contradictory input, no unrelated-data loss) and test-pinned rather than further "fixed." **R9: 3/3 CLEAN.** security-reviewer **APPROVE** (2 LOW/INFO); pr-reviewer **APPROVE** (1 LOW nit). CI 15/15 green incl. required CI Gate. Full regression suite: 4,297 passed, 0 failed; `cargo clippy --all-targets -- -D warnings` and `cargo fmt --all -- --check` both clean. 10 demo recordings at `.factory/demos/S-605-1/` (factory-artifacts `d51d7a23`, placeholder-only data). Three new LOW drift items recorded (numeric-id BC wording vs research-confirmed behavior; the R8 cross-identifier divergence, accepted; a cross-story `ExactMultiple` message-wording imprecision already present in shipped S-604 code, unrelated to this story) — all DEFERRED to the feature-level F5/F7 pass. Human squash-merged PR #712 as `f1ff9151fe129061d0d04e03b5c3ecee16a40300` (D-128, D-290) after the `gh pr merge` call was denied by the same-account tool-permission classifier — same mechanism as D-284/285/289. Issue #605 remains OPEN (S-605-2 still pending; PR used "relates to", not "closes"). Worktree removed, branch deleted local+remote. STORY-INDEX v1.5.99→v1.6.00. Full detail: `cycles/cycle-001/decisions-archive.md` D-290, `cycles/cycle-001/lessons.md` (3 new process-gap entries this story).
+
+**bucket1-defects — F7 delta convergence (2026-08-14), produced by `f7-converge`, human-authorized CLOSE:** Five-dimensional convergence over the full F4-F7 delta (all 4 stories + the ancestry-reconnect and mutation-survivor follow-on PRs). **Result: 5/5 dimensions PASS.** D1 Spec PASS — all 4 changed `src/` files (`src/main.rs`, `src/cli/issue/edit.rs`, `src/cli/queue.rs`, `src/cli/mod.rs`) verified line-by-line against their governing BC bodies (BC-1.2.047/BC-1.2.018, BC-3.4.021, BC-X.8.009), zero drift found. D2 Test PASS with a scope caveat — `edit.rs` (in `.cargo/mutants.toml examine_globs`) CI-verified 4/4 mutants caught (100%, read from the CI job log, not the PR description); `queue.rs::collapse_and_truncate` (function-scoped local run, per PR #700's own body) 5/5 caught after fix (was 3/5); `queue.rs`/`main.rs` remain outside `examine_globs` entirely — a real, confirmed scope gap (not this bundle's defect), tracked as drift item `MUTANTS-SCOPE-GAP-QUEUE-MAIN`. D3 Implementation PASS — 0 CRIT/HIGH findings across all 6 PR reviews (#695-700), grepped explicitly for CRITICAL/HIGH/BLOCKING markers. D4 Verification PASS — Kani/fuzz N/A justified (no new algorithms/parsing/crypto surface; the one path reaching new-code-plus-parsing, `edit.rs`'s dry-run now reaching `markdown_to_adf`, reuses the pre-existing proptest-covered ADF conversion path and its `MAX_ADF_DEPTH` guard); `cargo deny check` clean (advisories/bans/licenses/sources all ok); CI gitleaks/deny/dependency-review/signing-guard green on all 6 PRs; no new `unsafe`, no new dependencies; purity boundaries intact. D5 Holdout PASS — all 7 wave holdouts (`H-BUCKET1-001`..`007`) from `bucket1-defects-wave-holdout-scenarios.md` mapped to concrete covering tests/behavior, none found uncovered. Regression validation (separate binary check): `cargo fmt --all -- --check` PASS (local), `cargo clippy --all-targets -- -D warnings` PASS (CI evidence — Clippy(ubuntu/windows-latest) green on PR #700, built on the fully-merged tree), `cargo test` PASS (81/82 local binaries 0 failures, interrupted not failed, on the 82nd; full CI matrix Test(ubuntu/macos/windows-latest) green on PR #700), `cargo deny check` PASS (local), CI Gate PASS 15/15 on all 6 PRs. **Method note:** this F7 pass explicitly did not accept the prior delivery summary at face value — it independently read all 4 changed `src/` files against their BCs, pulled and read full PR review bodies and CI job logs for all 6 PRs via `gh`, re-ran `cargo deny check`/`cargo fmt --all -- --check`/`cargo test --all-features` locally, and attempted (though did not complete within budget) a local `cargo mutants --in-diff` corroboration on `queue.rs`'s delta — relying instead on CI's direct log evidence and PR #700's reviewer's own hand-reproduced FAIL-before/PASS-after verification as the authoritative D2 evidence for that file. Full report: `.factory/phase-f7-convergence/bucket1-defects-delta-convergence-report.md` + `-traceability-chain-delta.md`. Decision record: `cycles/cycle-001/decisions-archive.md` D-276. Commit-burst record: `cycles/cycle-001/burst-log.md` § BUCKET1-DEFECTS-COMPLETE. **`bucket1-defects` CYCLE CLOSED** — all 4 issues (#692, #663, #693, #694) closed on merge; SOH-DX-1 and 668-duedate remain unaffected.

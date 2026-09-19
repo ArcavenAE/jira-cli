@@ -4,7 +4,7 @@
   "feature_mode_bundle": "component-mgmt",
   "perimeter": 1,
   "perimeter_label": "per-story Step 4.5 (BC-5.39.001)",
-  "convergence_bar": "DEC-245-strict",
+  "convergence_bar": "D-245-strict",
   "convergence_bar_description": "Zero HIGH + zero MEDIUM + zero LOW required for a CLEAN pass; INFO-only still counts as CLEAN; LOW findings reset the window regardless of classification",
 
   "superseded_prior_convergence": {
@@ -123,7 +123,7 @@
       }
     ],
     "passes_clean": 3,
-    "bar": "DEC-245-strict",
+    "bar": "D-245-strict",
     "converged": true,
     "final_converged_sha": "05743729",
     "feature_branch": "feature/S-604-2-component-create-edit",
@@ -158,7 +158,7 @@
     {
       "id": "OBS-1",
       "severity": "INFO",
-      "description": "len()-based --lead vs issue-assign exact-match-wins resolution; OBS rather than LOW per DEC-245 (INFO-only is CLEAN)"
+      "description": "len()-based --lead vs issue-assign exact-match-wins resolution; OBS rather than LOW per D-245 (INFO-only is CLEAN)"
     },
     {
       "id": "OBS-2",
@@ -182,6 +182,6 @@
     }
   ],
 
-  "convergence_summary": "S-604-2 (jr component create/edit, 8pts) RE-CONVERGED to the DEC-245 strict bar after 14 total passes. Original convergence (11 passes P1-P8 + A/B/C at SHA 4f48def5) was SUPERSEDED by PR #704 fresh-eyes review which found BLOCKING (--assignee-type ValueEnum kebab vs SCREAMING_SNAKE, masked by AC-002 test encoding wrong value -- all 11 Step-4.5 passes missed this) and HIGH (ExactMultiple fold in handle_edit, BC-X.10.003 fail-closed violated, prior adversary mis-adjudicated as BC-8.4.005). All issues fixed on-branch. Re-convergence: R1-R3 (BLOCKING + HIGH confirmed + error-stutter), RC1-RC3 (stale comments + global-project MEDIUM empirically refuted via test_bc_8_1_007_component_edit_honors_global_project_flag). Three consecutive CLEAN passes FA/FB/FC on byte-identical content at SHA 05743729. Residual INFO items are non-blocking per DEC-245.",
+  "convergence_summary": "S-604-2 (jr component create/edit, 8pts) RE-CONVERGED to the D-245 strict bar after 14 total passes. Original convergence (11 passes P1-P8 + A/B/C at SHA 4f48def5) was SUPERSEDED by PR #704 fresh-eyes review which found BLOCKING (--assignee-type ValueEnum kebab vs SCREAMING_SNAKE, masked by AC-002 test encoding wrong value -- all 11 Step-4.5 passes missed this) and HIGH (ExactMultiple fold in handle_edit, BC-X.10.003 fail-closed violated, prior adversary mis-adjudicated as BC-8.4.005). All issues fixed on-branch. Re-convergence: R1-R3 (BLOCKING + HIGH confirmed + error-stutter), RC1-RC3 (stale comments + global-project MEDIUM empirically refuted via test_bc_8_1_007_component_edit_honors_global_project_flag). Three consecutive CLEAN passes FA/FB/FC on byte-identical content at SHA 05743729. Residual INFO items are non-blocking per D-245.",
   "timestamp": "2026-08-17T04:00:00Z"
 }

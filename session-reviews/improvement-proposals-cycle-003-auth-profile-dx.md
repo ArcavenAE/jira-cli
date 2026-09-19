@@ -68,8 +68,8 @@ proposal not dispositioned auto-defers to `improvement-backlog.md`.
 
 - **Category:** agent / gate
 - **Priority:** MEDIUM
-- **Evidence:** A hook demanded the pr-reviewer agent post `pr-review.md` and/or run `gh pr review`, directly conflicting with the orchestrator's explicit "report-only, do not post/merge" dispatch instruction for that specific invocation. The agent spent approximately 3 turns refusing the hook's demand before the conflict resolved. This is structurally the same class of problem as the previously-tracked "pr-reviewer hook vs. DEC-173" conflict from SOH-ATTACHMENTS-1 (occurrences 1–3 in that lineage): a hook enforces a blanket rule with no visibility into an orchestrator-level, dispatch-scoped exception.
-- **Recommendation:** Either (a) have the orchestrator pre-authorize the `pr-review.md` artifact write up front whenever it issues a report-only dispatch, satisfying the hook's requirement without contradicting the "do not post to GitHub" intent, or (b) extend the posting-hook to recognize an explicit report-only dispatch flag and skip enforcement in that mode. Recommend merging this pattern-database entry with the existing hook-vs-DEC-173 lineage (now its 4th occurrence across cycles) rather than tracking as a fresh, unrelated pattern.
+- **Evidence:** A hook demanded the pr-reviewer agent post `pr-review.md` and/or run `gh pr review`, directly conflicting with the orchestrator's explicit "report-only, do not post/merge" dispatch instruction for that specific invocation. The agent spent approximately 3 turns refusing the hook's demand before the conflict resolved. This is structurally the same class of problem as the previously-tracked "pr-reviewer hook vs. D-173" conflict from SOH-ATTACHMENTS-1 (occurrences 1–3 in that lineage): a hook enforces a blanket rule with no visibility into an orchestrator-level, dispatch-scoped exception.
+- **Recommendation:** Either (a) have the orchestrator pre-authorize the `pr-review.md` artifact write up front whenever it issues a report-only dispatch, satisfying the hook's requirement without contradicting the "do not post to GitHub" intent, or (b) extend the posting-hook to recognize an explicit report-only dispatch flag and skip enforcement in that mode. Recommend merging this pattern-database entry with the existing hook-vs-D-173 lineage (now its 4th occurrence across cycles) rather than tracking as a fresh, unrelated pattern.
 - **Affected files:** posting-hook configuration (`.claude/hooks/`, engine-side); orchestrator pr-reviewer dispatch template/prompt.
 - **Risk:** LOW-MEDIUM. Option (b) requires the hook to trust a self-reported dispatch-mode flag, which is a small trust-boundary widening; option (a) avoids that by satisfying the hook's literal requirement rather than bypassing it, and is the lower-risk choice.
 
@@ -121,7 +121,7 @@ proposal not dispositioned auto-defers to `improvement-backlog.md`.
 | 2 | Long-running verification job pattern | workflow/infra | HIGH | pending | |
 | 3 | Keychain-injection-seam prioritization | quality/timing | MEDIUM | pending | Closes 2 tracked gaps at once |
 | 4 | Codify F7 pre-gate consistency audit | convergence/template | HIGH | pending | 2/2 hit rate on real findings |
-| 5 | Reconcile report-only dispatch vs. posting hook | agent/gate | MEDIUM | pending | Likely same lineage as hook-vs-DEC-173 |
+| 5 | Reconcile report-only dispatch vs. posting hook | agent/gate | MEDIUM | pending | Likely same lineage as hook-vs-D-173 |
 | 6 | Tighten git-hook scope detection | agent/infra | MEDIUM | pending | 2 false-positive instances this session |
 | 7 | Topological `--update` ordering | workflow | LOW | pending | Same class as TWIN-ARTIFACT-SWEEP |
 | 8 | Scope engine-dogfood citation check | template | LOW | pending | Advisory noise only, no defect caught |

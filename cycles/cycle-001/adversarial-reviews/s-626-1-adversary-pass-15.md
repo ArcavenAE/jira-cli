@@ -75,7 +75,7 @@ Finding IDs for this pass use the format `ADV-P15-[SEV]-NNN`. Consistent with pr
 | ADV-P14-LOW-001 | BC-5.3.001 Source board.rs confirmation | CONFIRMED — no action required | |
 | ADV-P14-LOW-002 | S-626-1 line citations stale | FIXED — citations updated | S-626-1 v1.10 updated ✓; but F-02 found new instance at blockquote range (4 remaining sites) |
 | ADV-P14-LOW-003 | BC-5.3.001/003 Source symbols partially absent | PARTIALLY FIXED — F-14 found | BC-table Title column carries enrichment absent from BC-INDEX row (new shape of same class) |
-| ADV-P14-LOW-004 | S-576 drift routing DEC-208 confirmed | CONFIRMED | S-MAINT-576-HYG-1 created; but F-10/11/12 found new issues in that new story |
+| ADV-P14-LOW-004 | S-576 drift routing D-208 confirmed | CONFIRMED | S-MAINT-576-HYG-1 created; but F-10/11/12 found new issues in that new story |
 | ADV-P14-LOW-005 | Cargo.lock phrasing ambiguity (ACCEPTED) | ACCEPTED — confirmed | |
 
 **Round-4 mechanical sweep re-verified:** Pass-15 byte-diffed all six `sed` transcripts, all four grep transcripts, and every cited line number from fix round 4. ZERO fidelity defects. Round 4 executed its mechanical mandate essentially perfectly but failed its class-sweep mandate for the fourth consecutive round: 8 of 15 new findings are attributable to newly-written prose in fix round 4.

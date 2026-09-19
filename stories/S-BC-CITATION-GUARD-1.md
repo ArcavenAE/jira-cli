@@ -1,7 +1,7 @@
 ---
 document_type: story
 story_id: "S-BC-CITATION-GUARD-1"
-title: "CITATION-GUARDS Story B: BC-body Trace/Source file::symbol citation guard (DEC-148)"
+title: "CITATION-GUARDS Story B: BC-body Trace/Source file::symbol citation guard (D-148)"
 wave: feature-followup
 status: delivered
 intent: ci-hardening
@@ -20,13 +20,13 @@ subsystems: []
 depends_on: ["S-MUTANTS-SCOPE-GUARDS-1"]
 blocks: []
 behavioral_contracts: ["BC-X.13.004", "BC-X.13.005", "BC-X.13.006"]
-# BC status: anchored F2 2026-07-05; DEC-154 Option A deltas committed 2026-07-06 (commit
+# BC status: anchored F2 2026-07-05; D-154 Option A deltas committed 2026-07-06 (commit
 # 125f081); F3 pass-3 BC fixes b85c4bb 2026-07-06 (N=331/FLOOR=248, strip-from-first-paren,
 # branch (d) ^[[:space:]]* anchor, EC-CITE-059); F-01 two-tier shape guard 7575e54 2026-07-06
 # (N=309/FLOOR=231, two-tier baseline 2b09313: 304 .rs + 5 .snap; pre-two-tier: N=331,
 # FLOOR=248; EC-CITE-060). BC-X.13.004: file-existence + SCOPE-EMPTY
 # guard + coverage floor = floor(0.75 × N) ≈ 231 in CANONICAL_MODE (N=309 two-tier baseline
-# 2b09313; pre-two-tier post-Task-0-hygiene census: N=331, FLOOR=248; pre-hygiene DEC-154:
+# 2b09313; pre-two-tier post-Task-0-hygiene census: N=331, FLOOR=248; pre-hygiene D-154:
 # N=326, FLOOR=244); collect-all semantics;
 # EC-CITE-058 hygiene dependency. BC-X.13.005: two-pass extraction (F-B2-02); 7-branch
 # symbol dispatch: (a) fn-grep primary; (b) ::tests mod-grep; (c) ::tests::testfn composition;
@@ -55,18 +55,18 @@ last_updated: "2026-07-07"
 breaking_change: false
 retroactive: false
 origin: >
-  DEC-148 citation-debt-filewide cycle (2026-06-30): 12 stale file::symbol citations in
+  D-148 citation-debt-filewide cycle (2026-06-30): 12 stale file::symbol citations in
   .factory/specs/prd/bc-3-issue-write.md — 9 citing handle_jsm_create in create.rs after
   it moved to jsm_create.rs (ADR-0012 Seam A/B), 2 citing edit.rs functions in create.rs,
   1 citing field_resolve.rs functions in helpers.rs. Consumed ~30 adversarial passes to
-  hand-fix (DEC-147/148/149). No CI guard existed to catch Trace/Source field staleness.
+  hand-fix (D-147/148/149). No CI guard existed to catch Trace/Source field staleness.
   F1 delta analysis citation-guards-2026-07-02-delta.md §2 (BC-CITATION-CI-GUARD / Guard 1).
   Stories recommended: 2 (wave_order: guards-2-3-first per F1 §7). This is Story B.
 changelog:
-  - "1.13 (2026-07-07): DELIVERED — PR #592 squash-merged by human to develop @ 0d8a8a5 (DEC-128 honored); post-merge guard verification PASS (self-test 10/10; canonical 309 checked). Recorded as DEC-156."
+  - "1.13 (2026-07-07): DELIVERED — PR #592 squash-merged by human to develop @ 0d8a8a5 (D-128 honored); post-merge guard verification PASS (self-test 10/10; canonical 309 checked). Recorded as D-156."
   - "1.12 (2026-07-07): pass-2 obs fixes — Step-2 two-variable pattern canonized (BC lockstep); --bc-dir CANONICAL_MODE note corrected."
   - "1.11 (2026-07-06): F-01 two-tier shape guard lockstep (BC 7575e54; EC-CITE-060; N=309/FLOOR=231; Fixture B .snap sub-probe)."
-  - "1.10 (2026-07-06): F3 CONVERGED under DEC-153 standard criterion — 15 fresh-context adversary passes, 9 fix rounds (v1.1→v1.9); clean window = passes 13/14/15 (CLEAN×3). Status → ready. Recorded as DEC-155."
+  - "1.10 (2026-07-06): F3 CONVERGED under D-153 standard criterion — 15 fresh-context adversary passes, 9 fix rounds (v1.1→v1.9); clean window = passes 13/14/15 (CLEAN×3). Status → ready. Recorded as D-155."
   - "1.9 (2026-07-06): F3 pass-8 fixes (bc-1-auth-identity.md filename drift ×4 sites; Task 0 rationale DEAD-vs-missed precision)."
   - "1.8 (2026-07-06): F3 pass-6 fixes (F-P6-01 Fixture D skeleton, F-P6-02 type_name derivation, 3 LOW clarity touches)."
   - "1.7 (2026-07-06): F3 pass-5 coherence fixes (F-P5-01..07). F-P5-01 (MED): RED-gate
@@ -83,7 +83,7 @@ changelog:
     BC_DIR= env path (tested path); CANONICAL_MODE=1 floor-active behavior for standalone
     --bc-dir invocation noted. F-P5-06 (LOW): AC-002 trace 'Fixture A→EC-CITE-039/dead-symbol'
     corrected to BC-X.13.005 fn-grep NO-MATCH/dead-symbol (no dedicated EC); EC-CITE-039
-    anchors to Fixture C (import-only DEC-148 class) only. F-P5-07 (LOW): RED-gate Fixture G
+    anchors to Fixture C (import-only D-148 class) only. F-P5-07 (LOW): RED-gate Fixture G
     bullet rewritten to remove self-contradiction ('passes rc assertion initially'); now uses
     consistent 'stub rc=0, assertion expects rc=1, fails → RED' model throughout."
   - "1.6 (2026-07-06): F3 pass-4 fixes (F-B4-CRIT-01 pin=4, F-B4-H-01 space-args sub-probe,
@@ -113,13 +113,13 @@ changelog:
     Count sweep: all N/FLOOR surfaces updated; EC-CITE-059 wired into BC table + AC traces +
     Edge Cases EC-002."
   - "1.4 (2026-07-06): consistency fix — Task 7 self-verify fixture count 7→10 (v1.3 sweep miss)."
-  - "1.3 (2026-07-06): F3 pass-2 fixes (F-B2-01..09) + DEC-154 Option A grammar extension.
+  - "1.3 (2026-07-06): F3 pass-2 fixes (F-B2-01..09) + D-154 Option A grammar extension.
     F-B2-01 (CRIT) Fixture F sub-probe path mismatch fixed: citation src/adf.rs::MAX_ADF_DEPTH
     → src/mock_f.rs::MAX_ADF_DEPTH (mock const written to mock file, not adf.rs). F-B2-02/07
     (HIGH/MED) single-pass regex → two-pass extractor everywhere (Pass 1: backtick-only stop;
     Pass 2: space-split + comma-lineref normalization); §-form rationale corrected (two-pass
     genuinely reduces, prior regex DROPPED space-containing tokens); Fixture E reworked to
-    assert '1 citations checked' (differential signal). DEC-154 grammar: 3 new branches added
+    assert '1 citations checked' (differential signal). D-154 grammar: 3 new branches added
     to Task 2 Step 4 in 7-branch BC dispatch order (a) fn-grep → (b) ::tests mod-grep →
     (c) ::tests::testfn composition → (d) UPPER_CASE → (e) standalone CamelCase type-def →
     (f) Type::method → DEAD; no-permissive-fallback enumeration updated; Out-of-Scope §6
@@ -169,7 +169,7 @@ changelog:
 lineage:
   - S-MUTANTS-SCOPE-GUARDS-1     # Story A (Guards 2+3), wave 1 of CITATION-GUARDS bundle; wave 2 is this story
   - S-MAINT-DEAD-CITATION-CI     # prior art: established BC-X.13 subsystem (tests/claude_md_citations.rs); Guard 1 extends to BC-X.13.004+
-  - S-408-stale-citation-anchors  # DEC-129 codified CI-checkout topology lesson applied here
+  - S-408-stale-citation-anchors  # D-129 codified CI-checkout topology lesson applied here
 drift_items:
   - BC-CITATION-CI-GUARD
   - "#492-PG-TRACE-TESTS"
@@ -187,16 +187,16 @@ files_modified:
   - .factory/specs/prd/bc-4-assets-cmdb.md      # MODIFY — citation hygiene: src/cli/assets.rs:303-321 → src/cli/assets/<mod|search|view|…>.rs:NN-MM (verify current file per refactored layout)
   - .factory/specs/prd/bc-3-issue-write.md      # MODIFY — continuation-line re-flow: L1434-1441 and L1555-1559 multi-line Trace fields → single-line (class 16 pre-fix, avoids multi-line stitching grammar work)
   # NOT in this F4 delivery (F2 artifacts authored separately; PO already committed):
-  #   .factory/specs/prd/cross-cutting.md    MODIFY — new BCs BC-X.13.004/005/006 + DEC-154 Option A (commit 125f081)
+  #   .factory/specs/prd/cross-cutting.md    MODIFY — new BCs BC-X.13.004/005/006 + D-154 Option A (commit 125f081)
   #   .factory/specs/prd/BC-INDEX.md         MODIFY — updated counts
   #   .factory/specs/prd/CANONICAL-COUNTS.md MODIFY — updated counts
 ---
 
 # S-BC-CITATION-GUARD-1 — CITATION-GUARDS Story B: BC-body Trace/Source file::symbol Citation Guard
 
-**Status:** DRAFT — F3 initial decomposition (2026-07-04); BCs anchored F2 2026-07-05 (BC-X.13.004..006); v1.2 F3 pass-1 fixes applied 2026-07-06 (F-B1-01..10); v1.3 F3 pass-2 fixes applied 2026-07-06 (F-B2-01..09, DEC-154 Option A grammar extension, FLOOR=244, 10 fixtures); v1.4 Task 7 self-verify fixture count 7→10 consistency fix; v1.5 F3 pass-3 fixes applied 2026-07-06 (F-B3-01..06: strip-from-first-paren, branch (d) anchor, N=331/FLOOR=248, Fixture J/F kill coverage, EC-CITE-059); v1.6 F3 pass-4 fixes applied 2026-07-06 (F-B4-CRIT-01: count pin 3→4, F-B4-H-01: space-args sub-probe, F-B4-M-01: pipefail guard, Task 0 worktree preface); v1.7 F3 pass-5 coherence fixes applied 2026-07-06 (F-P5-01..07); v1.8 F3 pass-6 fixes applied 2026-07-06 (F-P6-01 Fixture D skeleton, F-P6-02 type_name derivation, 3 LOW clarity touches); v1.9 F3 pass-8 fixes applied 2026-07-06 (F-B8-M-01: bc-1-auth-identity.md filename drift ×4 sites; F-B8-L-01: Task 0 rationale DEAD-vs-missed precision); v1.11 F-01 two-tier shape guard lockstep (BC 7575e54; EC-CITE-060; N=309/FLOOR=231; Fixture B .snap sub-probe); v1.12 pass-2 obs fixes — Step-2 two-variable pattern canonized (BC lockstep); --bc-dir CANONICAL_MODE note corrected.
+**Status:** DRAFT — F3 initial decomposition (2026-07-04); BCs anchored F2 2026-07-05 (BC-X.13.004..006); v1.2 F3 pass-1 fixes applied 2026-07-06 (F-B1-01..10); v1.3 F3 pass-2 fixes applied 2026-07-06 (F-B2-01..09, D-154 Option A grammar extension, FLOOR=244, 10 fixtures); v1.4 Task 7 self-verify fixture count 7→10 consistency fix; v1.5 F3 pass-3 fixes applied 2026-07-06 (F-B3-01..06: strip-from-first-paren, branch (d) anchor, N=331/FLOOR=248, Fixture J/F kill coverage, EC-CITE-059); v1.6 F3 pass-4 fixes applied 2026-07-06 (F-B4-CRIT-01: count pin 3→4, F-B4-H-01: space-args sub-probe, F-B4-M-01: pipefail guard, Task 0 worktree preface); v1.7 F3 pass-5 coherence fixes applied 2026-07-06 (F-P5-01..07); v1.8 F3 pass-6 fixes applied 2026-07-06 (F-P6-01 Fixture D skeleton, F-P6-02 type_name derivation, 3 LOW clarity touches); v1.9 F3 pass-8 fixes applied 2026-07-06 (F-B8-M-01: bc-1-auth-identity.md filename drift ×4 sites; F-B8-L-01: Task 0 rationale DEAD-vs-missed precision); v1.11 F-01 two-tier shape guard lockstep (BC 7575e54; EC-CITE-060; N=309/FLOOR=231; Fixture B .snap sub-probe); v1.12 pass-2 obs fixes — Step-2 two-variable pattern canonized (BC lockstep); --bc-dir CANONICAL_MODE note corrected.
 
-**Origin:** DEC-148 citation-debt-filewide cycle. After ADR-0012 Seam A/B extracted
+**Origin:** D-148 citation-debt-filewide cycle. After ADR-0012 Seam A/B extracted
 `handle_jsm_create` to `src/cli/issue/jsm_create.rs` and `handle_edit` to
 `src/cli/issue/edit.rs`, the `.factory/specs/prd/bc-3-issue-write.md` `**Trace**:`
 and `**Source**:` fields still cited the old file paths. 12 stale citations, ~30 adversarial
@@ -216,20 +216,20 @@ formal behavioral contracts because the citation-extraction grammar — handling
 `§ "..."`, `:~NN`, and bare file forms, plus the v1-pragmatic shape-split for non-function
 symbols — has enough combinatorial complexity that future regressions to the guard itself are
 plausible without machine-checkable contracts. This is the same reasoning that drove BCs for
-`tests/claude_md_citations.rs` in the DEAD-CITATION-CI cycle (DEC-129, BC-X.13.001/002/003).
+`tests/claude_md_citations.rs` in the DEAD-CITATION-CI cycle (D-129, BC-X.13.001/002/003).
 Subject-matter (citation-integrity guard extending the existing BC-X.13 PRD subsystem) is the
 load-bearing driver; implementation form (bash vs Rust) is not.
 
-Anchored BC IDs (authored and committed in F2 2026-07-05; DEC-154 Option A deltas committed
+Anchored BC IDs (authored and committed in F2 2026-07-05; D-154 Option A deltas committed
 2026-07-06, commit 125f081):
 - **BC-X.13.004:** Every `src/` file path in a `**Trace**:` or `**Source**:` line in any
   `bc-*.md` body resolves to a real on-disk file in the develop checkout; SCOPE-EMPTY guard;
   coverage floor = floor(0.75 × N) ≈ 231 in CANONICAL_MODE (N=309, two-tier baseline on
   2b09313: 304 .rs + 5 .snap; pre-two-tier post-Task-0-hygiene census: N=331, FLOOR=248;
-  pre-hygiene DEC-154 values: N=326, FLOOR=244; implementer remeasures at delivery);
+  pre-hygiene D-154 values: N=326, FLOOR=244; implementer remeasures at delivery);
   collect-all semantics; EC-CITE-058 hygiene dependency.
 - **BC-X.13.005:** Extraction grammar for Trace/Source `src/` citation tokens — two-pass
-  extractor (DEC-154 F-B2-02: Pass 1 backtick-only stop, Pass 2 space-split + comma-lineref
+  extractor (D-154 F-B2-02: Pass 1 backtick-only stop, Pass 2 space-split + comma-lineref
   normalization); `::symbol` form + 7-branch shape-split: (a) fn-grep primary; (b) `::tests`
   mod-grep; (c) `::tests::testfn` composition; (d) UPPER_CASE const/static; (e) standalone
   CamelCase type-def; (f) Type::method dual-check; (7) DEAD — no permissive fallback;
@@ -254,7 +254,7 @@ CLAUDE.md. The BCs in `cross-cutting.md` and related `BC-INDEX.md` /
 
 Guard 1's script runs as a step in this job — both the cited `src/` files AND the citing
 BC bodies are simultaneously on-disk. Options (b) (pre-commit only) and (c) (dual-checkout
-new job) are REJECTED. Option (a) matches the DEAD-CITATION-CI pattern (DEC-129 lesson).
+new job) are REJECTED. Option (a) matches the DEAD-CITATION-CI pattern (D-129 lesson).
 
 ---
 
@@ -272,7 +272,7 @@ stale citations in the behavioral contracts without immediate CI detection.
 
 | Source | Link |
 |--------|------|
-| Root-cause cycle | DEC-148 (CITATION-DEBT-FILEWIDE, 2026-06-30) — 12 stale citations in bc-3; ~30 adversarial passes to hand-fix |
+| Root-cause cycle | D-148 (CITATION-DEBT-FILEWIDE, 2026-06-30) — 12 stale citations in bc-3; ~30 adversarial passes to hand-fix |
 | Motivation quantification | `.factory/phase-f1-delta-analysis/citation-debt-filewide-2026-06-30-delta.md` — 14 relocation-stale citations in bc-2 and bc-3 alone |
 | F1 delta analysis (scope) | `.factory/phase-f1-delta-analysis/citation-guards-2026-07-02-delta.md §2` (BC-CITATION-CI-GUARD / Guard 1) |
 | CI topology analysis | F1 §3 — option (a) confirmed; spec-guard job already dual-mounts develop + factory-artifacts |
@@ -294,7 +294,7 @@ BCs anchored F2 2026-07-05. This story extends the BC-X.13 CI-guards subsystem i
 | BC ID | Contract topic | EC-CITE refs |
 |-------|---------------|-------------|
 | BC-X.13.004 | File-existence + SCOPE-EMPTY guard + coverage floor = floor(0.75 × N) ≈ 231 in CANONICAL_MODE (N=309, two-tier baseline on 2b09313: 304 .rs + 5 .snap; pre-two-tier post-Task-0-hygiene census: N=331, FLOOR=248; pre-hygiene: N=326, FLOOR=244); collect-all semantics; `DEAD:` offender accumulation; EC-CITE-058 hygiene dependency | EC-CITE-033, EC-CITE-034, EC-CITE-035, EC-CITE-036, EC-CITE-037, EC-CITE-058 |
-| BC-X.13.005 | Extraction grammar: two-pass extractor (DEC-154 F-B2-02); two-tier shape guard (F-01): any-extension `^src/[a-zA-Z0-9_/.-]+\.[a-zA-Z0-9]+$` — `.rs` → tier (i) full pipeline; non-`.rs` → tier (ii) file-existence-only (counted in N); `::symbol` 7-branch shape-split — (a) fn-grep primary; (b) `::tests` mod-grep; (c) `::tests::testfn` composition; (d) UPPER_CASE const/static with `^[[:space:]]*` anchor; (e) standalone CamelCase type-def; (f) Type::method dual-check; strip-from-first-`(` (subsumes bare `()` and `(args...)`); glob silent-skip; no permissive fallback | EC-CITE-038, EC-CITE-039, EC-CITE-040, EC-CITE-041, EC-CITE-042, EC-CITE-043, EC-CITE-044, EC-CITE-045, EC-CITE-051, EC-CITE-052, EC-CITE-053, EC-CITE-054, EC-CITE-055, EC-CITE-056, EC-CITE-057, EC-CITE-059, EC-CITE-060 |
+| BC-X.13.005 | Extraction grammar: two-pass extractor (D-154 F-B2-02); two-tier shape guard (F-01): any-extension `^src/[a-zA-Z0-9_/.-]+\.[a-zA-Z0-9]+$` — `.rs` → tier (i) full pipeline; non-`.rs` → tier (ii) file-existence-only (counted in N); `::symbol` 7-branch shape-split — (a) fn-grep primary; (b) `::tests` mod-grep; (c) `::tests::testfn` composition; (d) UPPER_CASE const/static with `^[[:space:]]*` anchor; (e) standalone CamelCase type-def; (f) Type::method dual-check; strip-from-first-`(` (subsumes bare `()` and `(args...)`); glob silent-skip; no permissive fallback | EC-CITE-038, EC-CITE-039, EC-CITE-040, EC-CITE-041, EC-CITE-042, EC-CITE-043, EC-CITE-044, EC-CITE-045, EC-CITE-051, EC-CITE-052, EC-CITE-053, EC-CITE-054, EC-CITE-055, EC-CITE-056, EC-CITE-057, EC-CITE-059, EC-CITE-060 |
 | BC-X.13.006 | Guard 1 scope (bc-*.md Trace/Source only; BC-INDEX structural exclusion — zero Trace/Source lines); CI topology (spec-guard dual-worktree); GREEN on develop HEAD; RED on stale citation; 10 fixtures (A–K); "All self-test fixtures passed (10/10)" | EC-CITE-046, EC-CITE-047, EC-CITE-048, EC-CITE-049, EC-CITE-050 |
 
 ---
@@ -383,7 +383,7 @@ observation. The no-output stub mandates all fixtures to be RED before implement
    - Forms: `file::symbol` (most common), `file § "comment"` (section ref),
      `file:~NN` (approximate line), `file` (bare file-existence),
      `file:NN-MM, NN-MM` (comma-space line-ref list — 10 instances in corpus).
-   - The two-pass extractor (DEC-154 F-B2-02 fix) extracts tokens including internal spaces:
+   - The two-pass extractor (D-154 F-B2-02 fix) extracts tokens including internal spaces:
      **Pass 1** (`grep -oE '`src/[^`]+`' | tr -d '`'`) extracts the full backtick-quoted
      token (backtick-only stop, no space stop). **Pass 2** (split on first space) reduces
      multi-word tokens: `` `src/file.rs § "text"` `` → Pass 1 extracts `src/file.rs § "text"`,
@@ -441,7 +441,7 @@ observation. The no-output stub mandates all fixtures to be RED before implement
    ```bash
    FLOOR=231  # floor(0.75 × N); N ≈ 309 (two-tier baseline on 2b09313: 304 .rs + 5 .snap; F-01).
               # Pre-two-tier post-Task-0-hygiene census (author census): N=331, FLOOR=248.
-              # Pre-hygiene DEC-154 census: N=326, FLOOR=244.
+              # Pre-hygiene D-154 census: N=326, FLOOR=244.
               # Script-scope (NOT local) — single recalibration touchpoint (BC-X.13.004 invariant).
               # Implementer MUST run canonical mode on develop HEAD, record N, set FLOOR=floor(0.75*N).
    ```
@@ -487,7 +487,7 @@ observation. The no-output stub mandates all fixtures to be RED before implement
    The `|| true` guard prevents `set -euo pipefail` abort when no Trace/Source lines exist.
 
    **Step 3: Extract backtick-quoted `src/` citation tokens from each line (two-pass extractor,
-   DEC-154 F-B2-02 fix):**
+   D-154 F-B2-02 fix):**
 
    **Pass 1** — extract every full backtick-quoted token beginning with `src/`, including
    internal spaces (backtick-only stop — `[^`]+`, NOT `[^` ]+`):
@@ -502,7 +502,7 @@ observation. The no-output stub mandates all fixtures to be RED before implement
    only at a backtick, recovering tokens that contain internal spaces (comma-space line-ref
    lists, §-form citations, fn-with-args tokens). **The prior single-pass form**
    `` `src/[^` ]+` `` stopped at the first space, silently DROPPING 11 such tokens — do NOT
-   revert to it (BC-X.13.005 invariant, DEC-154).
+   revert to it (BC-X.13.005 invariant, D-154).
 
    **Pass 2** — for each token extracted by Pass 1, split on the first space and keep only
    the pre-space portion (`token="${token%% *}"`). This correctly reduces:
@@ -562,20 +562,20 @@ observation. The no-output stub mandates all fixtures to be RED before implement
       before classification (`symbol="${symbol%%\(*}"` — subsumes bare `()` and `(args...)`,
       e.g., `cache_root()` → `cache_root`; `add_comment(internal: bool)` → `add_comment`;
       EC-CITE-042, EC-CITE-059). Then apply the
-      **7-branch shape-split** (BC-X.13.005 Step 5, DEC-154 Option A dispatch order — first
+      **7-branch shape-split** (BC-X.13.005 Step 5, D-154 Option A dispatch order — first
       match wins; "post-`::` symbol" means the component after `file::`, or after `file::tests::`
       for branch (c)):
 
       **(a) Function / method (primary — applies to all symbols first):** Definition-anchored
       grep (NOT plain `grep -q symbol` — that false-greens on import-only occurrences, the
-      exact DEC-148 class; EC-CITE-039):
+      exact D-148 class; EC-CITE-039):
       ```bash
       grep -Eq "^[[:space:]]*(pub(\([^)]*\))?[[:space:]]+)?((unsafe|const|async|extern[[:space:]]+\"[^\"]*\")[[:space:]]+)*fn[[:space:]]+${symbol}([^[:alnum:]_]|$)" \
           "$src_root/$file"
       ```
       If matches: ALIVE. If fails: proceed to (b).
 
-      **(b) `::tests` module-path [DEC-154 addition — on fn-grep failure]:** If `symbol` matches
+      **(b) `::tests` module-path [D-154 addition — on fn-grep failure]:** If `symbol` matches
       `^tests$` (exact — the `mod tests` module-path form, e.g., `src/adf.rs::tests`), run the
       module-definition anchored grep (verified against 5/5 cited files in adjudication §2.1):
       ```bash
@@ -586,7 +586,7 @@ observation. The no-output stub mandates all fixtures to be RED before implement
       false-matches on `mod testsuite` or `mod tests_helpers`. If matches: ALIVE. If fails: DEAD
       (no further fallback for the `::tests` shape).
 
-      **(c) `::tests::testfn` composition [DEC-154 addition — on fn-grep failure]:** If the full
+      **(c) `::tests::testfn` composition [D-154 addition — on fn-grep failure]:** If the full
       post-file component of the token (everything between `file::` and end of token) matches
       `^tests::[a-z_][a-z0-9_]*$` (i.e., `src/file.rs::tests::testfn`), apply defense-in-depth
       composition: (1) run the `mod tests` check from (b) on the file; (2) run the fn-grep from
@@ -614,7 +614,7 @@ observation. The no-output stub mandates all fixtures to be RED before implement
       CamelCase pattern `^[A-Z][A-Za-z0-9_]*$`; (d) takes priority so UPPER_CASE symbols are not
       mis-routed to the type-def grep. (EC-CITE-051; F-B3-02.) If matches: ALIVE. If fails: proceed to (e).
 
-      **(e) Standalone CamelCase type [DEC-154 addition — on fn-grep and UPPER_CASE failure]:**
+      **(e) Standalone CamelCase type [D-154 addition — on fn-grep and UPPER_CASE failure]:**
       If `symbol` matches `^[A-Z][A-Za-z0-9_]*$` (CamelCase — starts with uppercase, body may
       contain mixed-case letters, digits, underscores; no further `::` separators in the
       post-file component — e.g., `src/adf.rs::AdfBuilder`, `src/types/jira/bulk.rs::BulkTransitionRequest`),
@@ -644,7 +644,7 @@ observation. The no-output stub mandates all fixtures to be RED before implement
       (d) UPPER_CASE constant, (e) standalone CamelCase type, (f) Type::method, (7) otherwise
       DEAD — are classified DEAD. The draft's former "secondary `grep -q $symbol`" fallback is
       intentionally NOT implemented — it false-greens on import-only occurrences, exactly
-      reopening the DEC-148 class. Fixture C in `--self-test` proves import-only occurrences
+      reopening the D-148 class. Fixture C in `--self-test` proves import-only occurrences
       are correctly DEAD. v2 deferrals (macro citations, Type::method correlation, continuation-
       line stitching) — see Out of Scope §6.
 
@@ -660,7 +660,7 @@ observation. The no-output stub mandates all fixtures to be RED before implement
    `FLOOR` is set via the formula `floor(0.75 × N)` where N is the total `src/` citation count
    measured by running the script in canonical mode on develop HEAD at delivery time. Calibration
    at 2026-07-06 (two-tier baseline on 2b09313, F-01): N ≈ 309, FLOOR ≈ 231 (pre-two-tier
-   post-Task-0-hygiene census: N=331, FLOOR=248; pre-hygiene DEC-154 census: N=326, FLOOR=244;
+   post-Task-0-hygiene census: N=331, FLOOR=248; pre-hygiene D-154 census: N=326, FLOOR=244;
    implementer remeasures at delivery).
    The implementer MUST run the script in canonical mode on develop HEAD, record N, and set
    `FLOOR=floor(0.75 × N)` at script scope (NOT `local`
@@ -706,9 +706,9 @@ observation. The no-output stub mandates all fixtures to be RED before implement
    (one per fixture), assertions, kill-traces, and post-fixture self-assertions.
 
 4. **Modify `.github/workflows/ci.yml`:** Story A PR #572 added two steps to the `spec-guard`
-   job (the Guard 2 pair: `check-cargo-mutants-policy-citations self-test (Guard 2)` + `check-cargo-mutants-policy-citations (Guard 2, DEC-150)`). These are currently the LAST two steps in the
+   job (the Guard 2 pair: `check-cargo-mutants-policy-citations self-test (Guard 2)` + `check-cargo-mutants-policy-citations (Guard 2, D-150)`). These are currently the LAST two steps in the
    job's step list (verified against live ci.yml). Add Guard 1's two new steps AFTER the
-   existing `check-cargo-mutants-policy-citations (Guard 2, DEC-150)` step, preserving the
+   existing `check-cargo-mutants-policy-citations (Guard 2, D-150)` step, preserving the
    per-guard self-test-before-canonical ordering for the new guard:
    ```yaml
    - name: check-bc-citation-symbols self-test (BC-CITE-001)
@@ -722,16 +722,16 @@ observation. The no-output stub mandates all fixtures to be RED before implement
    `"Spec Guards (BC counts, numeric-count lint, mutants policy scope)"`.
    **Update to:** `"Spec Guards (BC counts, numeric-count lint, citation checks, mutants policy scope)"` —
    inserting `"citation checks"` before the existing `"mutants policy scope"` segment to
-   preserve all live name segments. No changes to `ci-gate.needs` (per DEC-096/097: `spec-guard`
+   preserve all live name segments. No changes to `ci-gate.needs` (per D-096/097: `spec-guard`
    is already a required job).
 
 5. **Modify `CHANGELOG.md`:** Under `## [Unreleased]`, add under `### Added`:
    ```
-   - **CI: BC-body Trace/Source citation guard (Guard 1) (DEC-148):** adds
+   - **CI: BC-body Trace/Source citation guard (Guard 1) (D-148):** adds
      `scripts/check-bc-citation-symbols.sh` (BC-CITE-001; validates `src/` file and symbol
      citations in `**Trace**:`/`**Source**:` fields of all `bc-*.md` bodies; definition-anchored
      symbol grep; self-test fixtures; coverage-floor guard) as a step in the `spec-guard` CI job.
-     Prevents the Seam-extraction citation-drift class (DEC-147/148/149).
+     Prevents the Seam-extraction citation-drift class (D-147/148/149).
    ```
 
 6. **Modify `CLAUDE.md`:** Add one doc-fallout bullet in "AI Agent Notes" (following the
@@ -740,7 +740,7 @@ observation. The no-output stub mandates all fixtures to be RED before implement
      and symbol citations in `**Trace**:`/`**Source**:` fields of `.factory/specs/prd/bc-*.md`
      bodies; exits 1 with `BC-CITE-001` offender list if any citation is stale. `--bc-dir`
      (designed-to-support) + `--src-root` (self-test only) + `--self-test` flags for offline verification.
-     (DEC-148 Guard 1)
+     (D-148 Guard 1)
 
 7. **Self-verify:** Read back all modified files. Confirm:
    - `scripts/check-bc-citation-symbols.sh --self-test` exits 0 (all 10 fixtures pass; preamble
@@ -752,7 +752,7 @@ observation. The no-output stub mandates all fixtures to be RED before implement
      run in canonical mode on develop HEAD; N ≥ FLOOR ≈ 231 at 2026-07-06 calibration, two-tier baseline F-01).
    - ci.yml spec-guard job `name:` updated; two new steps present in correct position.
    - CHANGELOG `### Added` entry contains `BC-CITE-001`, `Trace`, `Source`, `bc-*.md`,
-     `definition-anchored`, `DEC-148` keywords.
+     `definition-anchored`, `D-148` keywords.
    - CLAUDE.md notes reference `scripts/check-bc-citation-symbols.sh` with correct description.
    - Grep for `&& (echo|printf|:|true|\{)` in the script — must emit zero lines (Story A
      VP-1-P25 idiom applied here: no `&&`-style positive assertions).
@@ -774,11 +774,11 @@ specific EC-CITE-NNN clauses per the BC-X.13 subsystem in `cross-cutting.md §BC
 
 (traces to BC-X.13.006 postcondition: GREEN on develop HEAD; EC-CITE-047)
 
-**Sequencing note:** Guard 1 verifies citations that were already cleaned by DEC-148. Three
+**Sequencing note:** Guard 1 verifies citations that were already cleaned by D-148. Three
 truly-dead citation clusters (EC-CITE-058) survive in `factory-artifacts` from before Guard 1
 existed — these are correctly flagged by the guard. They MUST be resolved in the Task 0
 factory-artifacts commit (citation hygiene) BEFORE the canonical guard can reach GREEN. If any
-NEW stale citations have been introduced since the DEC-148 cleanup, the guard will report them
+NEW stale citations have been introduced since the D-148 cleanup, the guard will report them
 as additional findings — Task 7 self-verify step will catch this before the
 PR is opened.
 
@@ -810,7 +810,7 @@ must output zero lines.
 | J | `::tests` module-path negative DEAD (EC-CITE-053): `src/mock_j.rs::nonexistent_mod` — file has bare text `nonexistent_mod` (no `mod` keyword), symbol not a definition | `rc=1`; output contains `DEAD:` | (a) Add permissive `grep -q "$symbol"` fallback → bare text `nonexistent_mod` in file matches → `rc=0` → RED; proves no-permissive-fallback is enforced (requires non-empty mock — empty file would not trigger permissive fallback, failing to kill mutation). Branch (b) polarity swap is caught by Fixture I (symbol=tests, normally ALIVE → swap → DEAD → rc≠0 → RED) — J's symbol `nonexistent_mod` never enters branch (b) (fails the `^tests$` entry guard), so polarity-swap kill does not apply here. |
 | K | Standalone CamelCase type ALIVE (EC-CITE-054): `src/mock_k.rs::MockKStruct` — mock `mock_k.rs` defines `pub struct MockKStruct { }` | `rc=0`; output matches `^Check passed: [0-9]+ citations checked$` | (a) Omit type-def anchored grep → symbol `MockKStruct` falls through all branches → DEAD → `rc=1` → RED; proves branch (e) is required; (b) Polarity swap on branch (e): invert type-def return so a matching type definition returns DEAD → symbol `MockKStruct`, file has `pub struct MockKStruct { }` → normally ALIVE but swap → DEAD → `rc=1` → assertion `[ "$rc" -eq 0 ]` fails → RED |
 
-**Hermetic fixture setup skeletons (F-B1-04 + DEC-154 additions):**
+**Hermetic fixture setup skeletons (F-B1-04 + D-154 additions):**
 
 Each fixture creates an isolated temp directory, populates a bc-*.md stub, and (where needed)
 creates mock `src/` files. Set `BC_DIR` and `SRC_ROOT` env vars before invoking `run_check`.
@@ -940,13 +940,13 @@ set +e; BC_DIR="$tmp_G2" SRC_ROOT="$tmp_G2" output_g2=$(run_check 2>&1); rc_g2=$
 unset CANONICAL_MODE   # Story A Fixture H + F-B2-06: prevent leakage to subsequent fixtures
 fixtures_run=$((fixtures_run + 1))   # G (including second sub-probe) counts once
 
-# Fixture I — ::tests module-path ALIVE (EC-CITE-052, DEC-154 branch (b))
+# Fixture I — ::tests module-path ALIVE (EC-CITE-052, D-154 branch (b))
 mkdir -p "$tmp_I/src"
 printf '**Trace**: `src/mock_i.rs::tests`\n' > "$tmp_I/bc-mock.md"
 printf 'mod tests {\n}\n' > "$tmp_I/src/mock_i.rs"
 set +e; BC_DIR="$tmp_I" SRC_ROOT="$tmp_I" output=$(run_check 2>&1); rc=$?; set -e
 
-# Fixture J — ::tests module-path negative DEAD (EC-CITE-053, DEC-154 branch (b))
+# Fixture J — ::tests module-path negative DEAD (EC-CITE-053, D-154 branch (b))
 # File has bare text occurrence of "nonexistent_mod" (no `mod` keyword) so that a
 # permissive `grep -q "$symbol"` fallback mutation IS killed: bare text matches
 # permissive grep → rc=0 → assertion fails → caught. An empty file (touch) would
@@ -956,7 +956,7 @@ printf '**Trace**: `src/mock_j.rs::nonexistent_mod`\n' > "$tmp_J/bc-mock.md"
 printf 'nonexistent_mod\n' > "$tmp_J/src/mock_j.rs"   # bare text; no mod keyword → DEAD
 set +e; BC_DIR="$tmp_J" SRC_ROOT="$tmp_J" output=$(run_check 2>&1); rc=$?; set -e
 
-# Fixture K — standalone CamelCase type ALIVE (EC-CITE-054, DEC-154 branch (e))
+# Fixture K — standalone CamelCase type ALIVE (EC-CITE-054, D-154 branch (e))
 mkdir -p "$tmp_K/src"
 printf '**Trace**: `src/mock_k.rs::MockKStruct`\n' > "$tmp_K/bc-mock.md"
 printf 'pub struct MockKStruct {\n}\n' > "$tmp_K/src/mock_k.rs"
@@ -1061,7 +1061,7 @@ mode on develop HEAD, record N (the actual citation count), and set `FLOOR=floor
 script-scope assignment at script top (NOT `local` inside `run_check` — see Task 2 scope
 invariants). Calibration at 2026-07-06 (two-tier baseline on 2b09313, F-01)
 yields N ≈ 309, FLOOR ≈ 231 (pre-two-tier post-Task-0-hygiene census: N=331, FLOOR=248;
-pre-hygiene DEC-154 census: N=326, FLOOR=244; implementer remeasures at delivery). The formula
+pre-hygiene D-154 census: N=326, FLOOR=244; implementer remeasures at delivery). The formula
 gives ~25% headroom for legitimate BC edits while still catching catastrophic extraction dropout
 (EC-CITE-037).
 
@@ -1094,7 +1094,7 @@ BC-X.13.004 invariant: FLOOR and CANONICAL_MODE are script-scope; EC-CITE-037)
 ### AC-006 — CI wiring, job name, CLAUDE.md
 
 **(a) CI steps:** The `spec-guard` job in `.github/workflows/ci.yml` contains two new Guard 1
-steps (in this order), appended AFTER the existing `check-cargo-mutants-policy-citations (Guard 2, DEC-150)` step (which is the last step in Story A's delivery and remains the last step of
+steps (in this order), appended AFTER the existing `check-cargo-mutants-policy-citations (Guard 2, D-150)` step (which is the last step in Story A's delivery and remains the last step of
 the Guard 2 pair):
 1. `check-bc-citation-symbols self-test (BC-CITE-001)` — runs `--self-test` flag
 2. `check-bc-citation-symbols (BC-CITE-001)` — runs canonical guard
@@ -1103,7 +1103,7 @@ The four-step ordering for the two guards preserves per-guard self-test-before-c
 sequencing:
 ```
 check-cargo-mutants-policy-citations self-test (Guard 2)   ← Story A step 1
-check-cargo-mutants-policy-citations (Guard 2, DEC-150)    ← Story A step 2
+check-cargo-mutants-policy-citations (Guard 2, D-150)    ← Story A step 2
 check-bc-citation-symbols self-test (BC-CITE-001)          ← Story B step 1 (new)
 check-bc-citation-symbols (BC-CITE-001)                    ← Story B step 2 (new)
 ```
@@ -1115,12 +1115,12 @@ Updated from the current value `"Spec Guards (BC counts, numeric-count lint, mut
 inserted before `"mutants policy scope"` to preserve all existing live segments.
 
 **(c) `ci-gate.needs` unchanged:** `spec-guard` is already in `ci-gate.needs` (verified via
-F1 §5). No `ci-gate.needs` modification required. Per DEC-096/097: no direct branch-protection
+F1 §5). No `ci-gate.needs` modification required. Per D-096/097: no direct branch-protection
 changes for new guards.
 
 **(d) CLAUDE.md:** "AI Agent Notes" section contains one new bullet for
 `scripts/check-bc-citation-symbols.sh` with a description including `BC-CITE-001`,
-`**Trace**:`/`**Source**:`, `bc-*.md`, and `DEC-148 Guard 1`.
+`**Trace**:`/`**Source**:`, `bc-*.md`, and `D-148 Guard 1`.
 
 (traces to BC-X.13.006 postconditions: CI topology — spec-guard dual-worktree; self-test before canonical; EC-CITE-046, EC-CITE-048)
 
@@ -1130,13 +1130,13 @@ changes for new guards.
 
 `CHANGELOG.md` `## [Unreleased]` → `### Added` contains an entry with these keywords
 (exact line-wrapping may differ):
-- Topic prefix: `**CI: BC-body Trace/Source citation guard (Guard 1) (DEC-148):**`
+- Topic prefix: `**CI: BC-body Trace/Source citation guard (Guard 1) (D-148):**`
 - Script path: `scripts/check-bc-citation-symbols.sh`
 - Error code: `BC-CITE-001`
 - Field types: `**Trace**:`/`**Source**:`
 - Files targeted: `bc-*.md`
 - Capability keywords: `definition-anchored symbol grep`, `coverage-floor guard`
-- Origin: `DEC-148`
+- Origin: `D-148`
 
 (traces to CHANGELOG-per-PR hygiene convention)
 
@@ -1153,7 +1153,7 @@ Story A delivered Guards 2 and 3. Key lessons that apply to Guard 1:
    ```bash
    grep -Eq "^[[:space:]]*(pub(\([^)]*\))?[[:space:]]+)?((unsafe|const|async|extern[[:space:]]+\"[^\"]*\")[[:space:]]+)*fn[[:space:]]+${symbol}([^[:alnum:]_]|$)"
    ```
-   Plain `grep -q "$symbol"` false-greens on import-only occurrences — exactly the DEC-148
+   Plain `grep -q "$symbol"` false-greens on import-only occurrences — exactly the D-148
    class (Fixture C proves this). Story A Fixture B (import-only false-green proof) is the
    direct precedent.
 
@@ -1167,7 +1167,7 @@ Story A delivered Guards 2 and 3. Key lessons that apply to Guard 1:
    Story A because the floor value `11` is static and unlikely to change. Story B deliberately
    deviates: because FLOOR is calibrated from a large measured count (N ≈ 309 → FLOOR ≈ 231,
    two-tier baseline on 2b09313, F-01; pre-two-tier author census: N=331, FLOOR=248;
-   pre-hygiene DEC-154: N=326, FLOOR=244; implementer remeasures at delivery), hardcoding
+   pre-hygiene D-154: N=326, FLOOR=244; implementer remeasures at delivery), hardcoding
    the integer in the Fixture G assertion would require a two-site update every time FLOOR
    is recalibrated. Instead, Story B declares
    `FLOOR` as a script-scope variable (NOT `local` inside `run_check`) and writes Fixture G's
@@ -1180,7 +1180,7 @@ Story A delivered Guards 2 and 3. Key lessons that apply to Guard 1:
    interpolation (`expected >= ${FLOOR}`). (Supersedes Story A MED-1-P22 FIX for this story.)
 
 4. **Canonical extraction regex is a single source of truth.** From Story A (F-VA-33-3):
-   the Pass 1 extraction grep `` grep -oE '`src/[^`]+`' `` (backtick-only stop — DEC-154 F-B2-02
+   the Pass 1 extraction grep `` grep -oE '`src/[^`]+`' `` (backtick-only stop — D-154 F-B2-02
    form, NOT the superseded single-pass `` `src/[^` ]+` ``) must appear in the script exactly
    once as the authoritative pattern; Pass 2 space-split is shell parameter expansion, not a
    second grep -oE. The `grep -cF 'grep -oE'` count pin = 2 remains correct.
@@ -1199,9 +1199,9 @@ Story A delivered Guards 2 and 3. Key lessons that apply to Guard 1:
    stale). The symbol-boundary anchor `([^[:alnum:]_]|$)` in the grep prevents substring
    matches (e.g., `handle_foo` not falsely matched by `handle_foobar`). Guard the boundary.
 
-**DEAD-CITATION-CI cycle (DEC-125-130):**
+**DEAD-CITATION-CI cycle (D-125-130):**
 The DEAD-CITATION-CI cycle established `tests/claude_md_citations.rs` and the BC-X.13
-subsystem. Key lesson from DEC-129: a Rust test in the `test` job does NOT have
+subsystem. Key lesson from D-129: a Rust test in the `test` job does NOT have
 factory-artifacts access — which is why Guard 1 MUST be a bash script in the `spec-guard`
 job (not a Rust integration test). This is option (a) confirmed by F1 §3.
 
@@ -1211,13 +1211,13 @@ job (not a Rust integration test). This is option (a) confirmed by F1 §3.
 
 | Rule | Source | Constraint |
 |------|--------|-----------|
-| Guard 1 in spec-guard job ONLY | F1 §3 (CI topology, DEC-129 lesson) | `scripts/check-bc-citation-symbols.sh` runs as spec-guard steps. Do NOT add to `test` job (Rust). Do NOT create a new CI job. `spec-guard` already mounts factory-artifacts — dual-access is built-in. |
-| ci-gate.needs unchanged | DEC-096/097 | `spec-guard` is already in `ci-gate.needs`. No branch-protection changes. |
+| Guard 1 in spec-guard job ONLY | F1 §3 (CI topology, D-129 lesson) | `scripts/check-bc-citation-symbols.sh` runs as spec-guard steps. Do NOT add to `test` job (Rust). Do NOT create a new CI job. `spec-guard` already mounts factory-artifacts — dual-access is built-in. |
+| ci-gate.needs unchanged | D-096/097 | `spec-guard` is already in `ci-gate.needs`. No branch-protection changes. |
 | `--self-test` step BEFORE canonical step | MUTANTS-ARBITER-OFFLINE-SELFTEST precedent | The offline fixture run (`--self-test`) MUST be a separate CI step that executes BEFORE the canonical guard run. If the fixture suite regresses, it fails visibly rather than silently corrupting the canonical run. |
-| Definition-anchored grep REQUIRED | F1 §6, DEC-148 (root cause) | Plain `grep -q "$symbol"` false-greens on import-only occurrences. The definition-anchored regex from Story A is the canonical form. A PR using plain grep-q MUST NOT merge. |
+| Definition-anchored grep REQUIRED | F1 §6, D-148 (root cause) | Plain `grep -q "$symbol"` false-greens on import-only occurrences. The definition-anchored regex from Story A is the canonical form. A PR using plain grep-q MUST NOT merge. |
 | `src/` citations ONLY | F1 §6 (scope recommendation) | Extract only tokens starting with `src/`. The `tests/` citation class is OUT OF SCOPE (tracked as #492-PG-TRACE-TESTS). |
 | Zero `src/` changes | F1 §7 regression baseline | No production Rust source files are modified. Script + CI + docs changes only. |
-| Mutation gate passes via 0-mutant path | DEC-144 precedent | Guard script and CI config are not in `examine_globs`. No killable mutants in PR diff. Expected ~30-35s on `--in-diff` run. |
+| Mutation gate passes via 0-mutant path | D-144 precedent | Guard script and CI config are not in `examine_globs`. No killable mutants in PR diff. Expected ~30-35s on `--in-diff` run. |
 
 ---
 
@@ -1237,8 +1237,8 @@ job (not a Rust integration test). This is option (a) confirmed by F1 §3.
 
 | File | Create / Modify | Description |
 |------|-----------------|-------------|
-| `scripts/check-bc-citation-symbols.sh` | CREATE | Guard 1: scan `**Trace**:`/`**Source**:` lines in bc-*.md bodies; two-pass extractor (DEC-154 F-B2-02); two-tier shape guard (F-01): any-extension `^src/[a-zA-Z0-9_/.-]+\.[a-zA-Z0-9]+$`; `.rs` → tier (i) full pipeline; non-`.rs` → tier (ii) file-existence-only (counts toward N); strip-from-first-`(` (EC-CITE-059); 7-branch symbol dispatch with `^[[:space:]]*` anchor on branch (d) (F-B3-02); SCOPE-EMPTY guard; BC-CITE-COVERAGE-FLOOR guard (CANONICAL_MODE only, FLOOR=231); **ten self-test fixtures (A–K, Fixture B gains .snap sub-probes EC-CITE-060)** embedded in `--self-test` block; five post-fixture self-assertions; `BC-CITE-001` error class literal pinned in header comment. |
-| `.github/workflows/ci.yml` | MODIFY | spec-guard job: update `name:` to `"Spec Guards (BC counts, numeric-count lint, citation checks, mutants policy scope)"`; append `--self-test` step + canonical step for Guard 1 AFTER the existing `check-cargo-mutants-policy-citations (Guard 2, DEC-150)` step (currently last). No other job changes. No `ci-gate.needs` change. |
+| `scripts/check-bc-citation-symbols.sh` | CREATE | Guard 1: scan `**Trace**:`/`**Source**:` lines in bc-*.md bodies; two-pass extractor (D-154 F-B2-02); two-tier shape guard (F-01): any-extension `^src/[a-zA-Z0-9_/.-]+\.[a-zA-Z0-9]+$`; `.rs` → tier (i) full pipeline; non-`.rs` → tier (ii) file-existence-only (counts toward N); strip-from-first-`(` (EC-CITE-059); 7-branch symbol dispatch with `^[[:space:]]*` anchor on branch (d) (F-B3-02); SCOPE-EMPTY guard; BC-CITE-COVERAGE-FLOOR guard (CANONICAL_MODE only, FLOOR=231); **ten self-test fixtures (A–K, Fixture B gains .snap sub-probes EC-CITE-060)** embedded in `--self-test` block; five post-fixture self-assertions; `BC-CITE-001` error class literal pinned in header comment. |
+| `.github/workflows/ci.yml` | MODIFY | spec-guard job: update `name:` to `"Spec Guards (BC counts, numeric-count lint, citation checks, mutants policy scope)"`; append `--self-test` step + canonical step for Guard 1 AFTER the existing `check-cargo-mutants-policy-citations (Guard 2, D-150)` step (currently last). No other job changes. No `ci-gate.needs` change. |
 | `CHANGELOG.md` | MODIFY | Add `[Unreleased] → ### Added` entry per CHANGELOG-per-PR hygiene. |
 | `CLAUDE.md` | MODIFY | Add doc-fallout bullet in AI Agent Notes for `scripts/check-bc-citation-symbols.sh`. |
 | `.factory/specs/prd/bc-7-output-render.md` | MODIFY (Task 0) | Citation hygiene: `src/cli/auth.rs::*` → real `src/cli/auth/<file>.rs::fn` paths (EC-CITE-058). |
@@ -1248,7 +1248,7 @@ job (not a Rust integration test). This is option (a) confirmed by F1 §3.
 
 8-file delivery (4 product files + 4 factory hygiene files). Factory hygiene files ship as a
 separate factory-artifacts commit (Task 0) before the product PR. Cross-cutting.md / BC-INDEX.md
-/ CANONICAL-COUNTS.md are F2 artifacts (authored when PO anchors BC-X.13.004/005/006; DEC-154
+/ CANONICAL-COUNTS.md are F2 artifacts (authored when PO anchors BC-X.13.004/005/006; D-154
 deltas committed 125f081); NOT part of this F4 delivery.
 
 ---
@@ -1258,7 +1258,7 @@ deltas committed 125f081); NOT part of this F4 delivery.
 | ID | Description | Expected behavior |
 |----|-------------|-------------------|
 | EC-001 | Import-only occurrence: citation `src/file.rs::fn` where `fn` appears only in a `use`/`pub use` statement, not as a definition | DEAD: symbol not found in file (Fixture C) |
-| EC-002 | Symbol is a constant (UPPER_CASE), Type::method, standalone CamelCase type, `::tests` module-path, or `::tests::testfn`; fn with trailing `()` or `(args...)` stripped before classification | Strip-from-first-`(` applied first (`symbol="${symbol%%\(*}"` — subsumes bare `()` and `(args...)` forms; EC-CITE-042, EC-CITE-059). Then 7-branch dispatch: (a) fn-grep primary; (b) `^tests$` → mod-tests grep (EC-CITE-052); (c) `^tests::[a-z_]…` → mod-tests+fn-grep composition (EC-CITE-056); (d) UPPER_CASE `^[A-Z][A-Z0-9_]*$` → anchored const/static grep `^[[:space:]]*(pub(\([^)]*\))?[[:space:]]+)?` (anchor prevents mid-line false-greens; group captures `pub(crate)`; EC-CITE-041, EC-CITE-051); (e) CamelCase `^[A-Z][A-Za-z0-9_]*$` (no further `::`) → type-def grep with `struct|enum|type|trait|union` (EC-CITE-054); (f) Type::method (two+ `::`, CamelCase before last `::`) → fn-grep on method + type-presence check (EC-CITE-040). No permissive `grep -q "$symbol"` fallback — that reopens the DEC-148 import-only false-green class. Symbols not matching any branch → DEAD. |
+| EC-002 | Symbol is a constant (UPPER_CASE), Type::method, standalone CamelCase type, `::tests` module-path, or `::tests::testfn`; fn with trailing `()` or `(args...)` stripped before classification | Strip-from-first-`(` applied first (`symbol="${symbol%%\(*}"` — subsumes bare `()` and `(args...)` forms; EC-CITE-042, EC-CITE-059). Then 7-branch dispatch: (a) fn-grep primary; (b) `^tests$` → mod-tests grep (EC-CITE-052); (c) `^tests::[a-z_]…` → mod-tests+fn-grep composition (EC-CITE-056); (d) UPPER_CASE `^[A-Z][A-Z0-9_]*$` → anchored const/static grep `^[[:space:]]*(pub(\([^)]*\))?[[:space:]]+)?` (anchor prevents mid-line false-greens; group captures `pub(crate)`; EC-CITE-041, EC-CITE-051); (e) CamelCase `^[A-Z][A-Za-z0-9_]*$` (no further `::`) → type-def grep with `struct|enum|type|trait|union` (EC-CITE-054); (f) Type::method (two+ `::`, CamelCase before last `::`) → fn-grep on method + type-presence check (EC-CITE-040). No permissive `grep -q "$symbol"` fallback — that reopens the D-148 import-only false-green class. Symbols not matching any branch → DEAD. |
 | EC-003 | `§` form citation: `` `src/file.rs § "section"` `` — Pass 1 extracts full token; Pass 2 splits at space → bare path | Token reduced to `src/file.rs` (Pass 2 space-split); file-existence check only; no symbol check (census: 0 §-form tokens on Trace/Source lines in corpus; coverage via Fixture E) |
 | EC-004 | `:~NN` form citation: `` `src/file.rs:~120` `` | Token `src/file.rs:~120` extracted; `:~120` stripped → `src/file.rs`; file-existence check only |
 | EC-005 | Coverage floor: total `src/` citations < FLOOR (≈231, calibrated floor(0.75 × N), N≈309 two-tier baseline) in CANONICAL_MODE | Exit 1, `BC-CITE-COVERAGE-FLOOR: expected >= ${FLOOR}` (Fixture G; EC-CITE-037) |
@@ -1330,14 +1330,14 @@ for addressing them.
 
 ### 6. Remaining v2 deferrals (BC-X.13.005)
 
-Guard 1 v1 uses the full 7-branch shape-split (BC-X.13.005 Step 5, DEC-154 Option A):
+Guard 1 v1 uses the full 7-branch shape-split (BC-X.13.005 Step 5, D-154 Option A):
 (a) fn-grep; (b) `::tests` mod-grep; (c) `::tests::testfn` composition; (d) UPPER_CASE
 const/static; (e) standalone CamelCase type-def; (f) Type::method. These 7 branches cover
 all symbol classes found in the corpus. Symbols that fall through all 7 are classified DEAD.
 
-**v2 deferrals (explicitly out of scope per BC-X.13.005 v2-deferrals section, post-DEC-154)**:
-- ~~Standalone CamelCase type citations~~ — **NOW COVERED by branch (e)** (DEC-154 Option A).
-- ~~Module-path citations (`::tests`)~~ — **NOW COVERED by branches (b) and (c)** (DEC-154).
+**v2 deferrals (explicitly out of scope per BC-X.13.005 v2-deferrals section, post-D-154)**:
+- ~~Standalone CamelCase type citations~~ — **NOW COVERED by branch (e)** (D-154 Option A).
+- ~~Module-path citations (`::tests`)~~ — **NOW COVERED by branches (b) and (c)** (D-154).
 - **Macro citations** (`macro_rules! sym`): fall through to DEAD in v1 (no grep primitive
   added; `macro_rules!` definitions use different syntax than `fn` or `struct`). LOW impact:
   no macro citations found on Trace/Source lines in the current corpus.
@@ -1350,7 +1350,7 @@ all symbol classes found in the corpus. Symbols that fall through all 7 are clas
   without grammar work. Any new multi-line Trace/Source blocks added after delivery would
   be silently missed — convention: keep Trace/Source fields on a single line.
 
-These are VERY LOW residual risks after DEC-154. The macro and Type::method-correlation
+These are VERY LOW residual risks after D-154. The macro and Type::method-correlation
 deferrals have zero current corpus impact.
 
 **Symbol validation for non-`.rs` files (permanently out of scope — tier (ii) is existence-only,

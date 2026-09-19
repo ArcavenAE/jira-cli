@@ -312,7 +312,7 @@ component or issue call attributable to a permission/plan gate) emits
 `eprintln!("SKIP: ...")` and returns WITHOUT panicking or failing the test. Any OTHER failure
 (a non-403/404 non-zero exit on a call the AC asserts must succeed) is a genuine test failure
 — `panic!`/`assert!` fires with full stdout/stderr context, mirroring the existing bulk
-test's `DEC-280 RELEASE GATE FAILURE`-style panic messages.
+test's `D-280 RELEASE GATE FAILURE`-style panic messages.
 
 ### AC-015 (best-effort `Drop`-guard teardown — mirrors `AttachmentDropGuard`, S-576-6 precedent)
 A new `ComponentDropGuard` struct is added to `tests/e2e_live.rs`, holding

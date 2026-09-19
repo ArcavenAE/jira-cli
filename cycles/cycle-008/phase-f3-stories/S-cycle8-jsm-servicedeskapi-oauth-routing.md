@@ -84,7 +84,7 @@ origin: >
   why every existing wiremock test (built via JiraClient::new_for_test, which
   sets base_url == instance_url) was structurally blind to this defect class
   until live OAuth use surfaced it. Human-approved at the cycle-008 F1/F2
-  gates (DEC-368; F2 gate finalization 2026-09-17).
+  gates (D-368; F2 gate finalization 2026-09-17).
 ---
 
 > **tdd_mode:** `strict` — this is a real, security/correctness-relevant

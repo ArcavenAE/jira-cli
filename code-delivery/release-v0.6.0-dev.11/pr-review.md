@@ -3,7 +3,7 @@
 **Branch:** `release/v0.6.0-dev.11` → `develop`
 **Commit reviewed:** `ae25c669`
 **Review type:** Sanity check (dev-release, metadata-only diff)
-**Verdict:** PASS — no blocking findings. (Formal `--comment` review only; agent `--approve` withheld per DEC-173.)
+**Verdict:** PASS — no blocking findings. (Formal `--comment` review only; agent `--approve` withheld per D-173.)
 
 ## Scope
 

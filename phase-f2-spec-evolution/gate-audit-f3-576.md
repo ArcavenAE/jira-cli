@@ -174,7 +174,7 @@ ADR-0017 covers: reqwest `stream` feature (S2), reqwest `multipart` feature + `t
 
 ### 4.3 Dependency graph evolution
 
-Original DEC-184 plan (v1.3.81): "S3→S1, S5→S3".  
+Original D-184 plan (v1.3.81): "S3→S1, S5→S3".  
 Final actual deps: S2/S3/S4←S1, S5←{S3,S4}.
 
 Evolution documented:

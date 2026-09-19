@@ -30,8 +30,8 @@ BC-1.4.035..040 / BC-1.2.052..054 -> VP-AUTHDX-010..023 -> tests -> src -> PR#/c
 ```
 
 `F5-ADV-CONVERGED` = 3 fresh F5 scoped-adversarial passes + cross-model secondary, 0
-CRIT/HIGH/MED, converged via fix rounds PR #773 + PR #774 (DEC-340). `F6(...)` cites the
-mutation/security verdict from `.factory/phase-f6-hardening/cycle-004/summary.md` (DEC-341).
+CRIT/HIGH/MED, converged via fix rounds PR #773 + PR #774 (D-340). `F6(...)` cites the
+mutation/security verdict from `.factory/phase-f6-hardening/cycle-004/summary.md` (D-341).
 
 ## Cross-references
 
@@ -94,7 +94,7 @@ mutation/security verdict from `.factory/phase-f6-hardening/cycle-004/summary.md
 
 | Field | Value |
 |---|---|
-| BCs | BC-1.4.039 (NEW; amended mid-story per DEC-334 account-wide-revoke correction, spec-synced via commit `99443bfa`) |
+| BCs | BC-1.4.039 (NEW; amended mid-story per D-334 account-wide-revoke correction, spec-synced via commit `99443bfa`) |
 | VPs | VP-AUTHDX-017 |
 | test | `src/api/auth.rs` inline unit tests (Site 1 / Site 3 branch coverage, `ProfilePathEscape` vs `DpapiFallbackFailed` ordering, AC-005 isolation test) |
 | src | `src/api/auth.rs` (`oauth_login` Site 1, `refresh_oauth_token_with_url` Site 3 — distinct message text per site; Site 3 proactively clears stale stored pair) |

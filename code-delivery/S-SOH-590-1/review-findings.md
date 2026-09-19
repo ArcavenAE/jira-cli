@@ -21,7 +21,7 @@
 
 ## Security Review
 
-- **Method:** Quick-dev judgment (DEC-165; non-CRIT module)
+- **Method:** Quick-dev judgment (D-165; non-CRIT module)
 - **Critical:** 0 | **High:** 0 | **Medium:** 0 | **Low:** 0
 - **Assessment:** Parse-time clap attribute only; no auth/auth/I/O changes
 
@@ -32,4 +32,4 @@
 - [x] CI Gate: PASS (run 28991524388)
 - [x] Dependencies: none
 - [ ] GitHub approval stamp: requires human (two-party review)
-- [ ] Merge execution: HELD-FOR-HUMAN-MERGE (DEC-128)
+- [ ] Merge execution: HELD-FOR-HUMAN-MERGE (D-128)

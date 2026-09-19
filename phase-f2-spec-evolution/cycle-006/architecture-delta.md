@@ -339,7 +339,7 @@ revision_note: "Round-9 adversarial fix (F2 fresh-context review, ninth
   the new PINNED_ALWAYS_RUN_WITH_IF_EXCEPTIONS pin category), and
   MED-2-round-1 (no structural pin on the mutants-plan -> mutants-
   aggregate escalated-output wiring) — see §6.5 for that summary."
-governance: policy-doc-only (docs/specs/cargo-mutants-policy.md) — NO new PRD BC (DEC-348)
+governance: policy-doc-only (docs/specs/cargo-mutants-policy.md) — NO new PRD BC (D-348)
 purity_boundary: N/A — this delta is CI/CD infrastructure only (`.github/workflows/`,
   `scripts/`, `tests/ci_gate_completeness.rs`, `tests/common/wf.rs`,
   `docs/specs/cargo-mutants-policy.md`). No `src/` product code changes. There is no
@@ -438,7 +438,7 @@ another):**
 5. **Policy-doc drafting** (F2 consistency-audit closeout, MAJOR-1) —
    the SAME PR as the code/test changes above MUST ALSO land the
    corresponding update to `docs/specs/cargo-mutants-policy.md`, the
-   governance artifact of record for this cycle under DEC-348's
+   governance artifact of record for this cycle under D-348's
    policy-doc-only decision (no PRD BC exists as a backstop for this
    cycle's scope — see `docs/specs/cargo-mutants-policy.md`'s own
    Scope/Deferral-Policy framing). The PR MUST NOT merge with code/
@@ -471,7 +471,7 @@ another):**
    - add ONE new row to the doc's existing `## Changelog` Date/Cycle/
      Change table (the table row IS this doc's changelog mechanism —
      see MINOR-3 below; do not add a semver field).
-   This item exists because DEC-348 makes `cargo-mutants-policy.md`
+   This item exists because D-348 makes `cargo-mutants-policy.md`
    the spec of record for this cycle's mutation-CI design, and unlike
    every other artifact in this delta, no PRD behavioral contract
    exists to independently backstop drift between what `ci.yml` does
@@ -530,7 +530,7 @@ needs: [fmt, clippy, test, msrv, deny, spec-guard, check-signing-workflow-inject
 Only the LAST member changes (`mutants` → `mutants-aggregate`); everything
 else in `ci-gate`'s own job block — its `if: ${{ always() }}`, its own
 steps, its `Evaluate required job results` step — is byte-identical, no
-change. Per DEC-096/DEC-097 (CLAUDE.md), this is the only place a new
+change. Per D-096/D-097 (CLAUDE.md), this is the only place a new
 required job is wired in; `mutants`/`mutants-plan` are never wired directly
 into branch protection.
 

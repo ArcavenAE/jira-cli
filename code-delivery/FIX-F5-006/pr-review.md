@@ -27,7 +27,7 @@ verified empirically, not assumed.
 - **F5-R1-004 (metadata 404 body).** The `..` wildcard in
   `get_attachment_metadata` (`src/api/jira/attachments.rs`) genuinely discarded `message`;
   the fix captures and appends it after the canonical prefix, matching
-  `delete_attachment_targeted` (DEC-168). Confirmed `parse_error` populates `message` from
+  `delete_attachment_targeted` (D-168). Confirmed `parse_error` populates `message` from
   the Jira body via `extract_error_message`, so the "does not exist" assertion is real.
   Bulk benign-skip path untouched.
 - **F5-R1-006 (`"` guard).** Correct symmetric addition of `'"'` to the `matches!` scrub on

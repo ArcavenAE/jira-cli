@@ -71,7 +71,7 @@ No spec files were modified after PR #544 merged. No DEAD-CITATION-CI-scoped dri
 
 - F1: Delta analysis — 1 pass, CONVERGED
 - F2: 10 adversarial passes + 5 consistency audits — converged after 6 real defects caught (`.factory/` CI-checkout flaw, count drift, message contradiction, over-engineered-fix regression, line-ref+punct false-negative, renumber fallout)
-- F3: 3 adversarial passes + 2 consistency audits — DEC-127: F-1 HIGH caught (non-actionable literal `(line N)` placeholder); fixed by `Vec<(String, usize)>` return type
+- F3: 3 adversarial passes + 2 consistency audits — D-127: F-1 HIGH caught (non-actionable literal `(line N)` placeholder); fixed by `Vec<(String, usize)>` return type
 - F4 per-story: 3 adversarial passes (story review)
 - F5: 4 findings (SEC-001 CWE-22 + 3 mutation gaps); all addressed in F6
 - F6 convergence: 0 new findings after hardening — CONVERGED
@@ -351,6 +351,6 @@ The DEAD-CITATION-CI feature cycle has achieved convergence across all applicabl
 - Verification: VPs satisfied; cargo mutants N/A disposition documented and sound; SEC-001 CWE-22 defended
 - Documentation: CLAUDE.md note accurate and self-validating
 
-**Pending authorization: merge PR #545** (F6 hardening — `test/dead-citation-ci-hardening` → `develop`). CI gate is 15/15 PASS. This PR is purely additive (3 test functions, const hoisting, pop() safety). No human authorization bypass risk (PR #544 DEC-128 logged; this PR awaits explicit merge authorization).
+**Pending authorization: merge PR #545** (F6 hardening — `test/dead-citation-ci-hardening` → `develop`). CI gate is 15/15 PASS. This PR is purely additive (3 test functions, const hoisting, pop() safety). No human authorization bypass risk (PR #544 D-128 logged; this PR awaits explicit merge authorization).
 
 After PR #545 merges, the full DEAD-CITATION-CI cycle is complete. No release bump is required — this is a maintenance/infrastructure story (no user-facing behavior changes). The existing v0.6.0-dev.5 tag on the activation head is unaffected; the guard will ship with the next regular release.

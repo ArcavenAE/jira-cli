@@ -32,7 +32,7 @@ warning: 1 allowed warning found
 - The `chacha20` yank warning is **pre-existing, not introduced by cycle-004**: confirmed via
   `git show 42e92b46:Cargo.lock`, `rand 0.10.2`/`chacha20 0.10.0` were already present in the
   baseline before this cycle's commits. It is already an accepted `[[bans.skip]]` entry in
-  `deny.toml` (cpufeatures 0.2/0.3 split, DEC-185) and does not gate `cargo deny check`.
+  `deny.toml` (cpufeatures 0.2/0.3 split, D-185) and does not gate `cargo deny check`.
 
 ### `cargo deny check`
 ```
@@ -303,7 +303,7 @@ by this delta).
 
 ---
 
-## 4. DEC-334 revoke-advice correctness (task item 4)
+## 4. D-334 revoke-advice correctness (task item 4)
 
 **Confirmed non-harmful / account-wide-honest, and confirmed consistently applied.**
 
@@ -326,12 +326,12 @@ by this delta).
 - Verified by direct source read (`src/api/auth.rs` lines ~1503–1600) and confirmed by a
   passing regression test, `api::auth::tests::test_no_account_wide_harmful_revoke_framing_in_auth_source`
   (ran green in this session's `cargo test --lib auth::` run), which exists specifically to
-  prevent regression back to the pre-DEC-334 harmful framing (revoke as a *required* step
+  prevent regression back to the pre-D-334 harmful framing (revoke as a *required* step
   framed as *safe*/scoped, which Perplexity-validated research — cited in-code as
   `.factory/research/atlassian-3lo-revoke-granularity-2026-09-05.md` — established was
   false: `jr` uses one shared embedded OAuth app, so revoke is account-wide, not
   per-profile).
-- **No finding.** DEC-334 is correctly and consistently implemented across every call site
+- **No finding.** D-334 is correctly and consistently implemented across every call site
   that could recommend it, and correctly withheld from the one call site (refresh) where it
   would be actively harmful.
 
@@ -352,7 +352,7 @@ by this delta).
 | Credential over-deletion / wrong-profile clearing | None found — every clear operation is profile-scoped and kind-scoped |
 | TOCTOU/atomicity | None exploitable — fail-safe-direction gaps only (availability, not confidentiality/integrity), already documented in ADR-0021 |
 | Debug-seam release-gating | All 4 touched seams correctly `#[cfg(debug_assertions)]`-gated with passing dedicated release-gate tests |
-| DEC-334 revoke-advice | Confirmed non-harmful, account-wide-honest, consistently applied |
+| D-334 revoke-advice | Confirmed non-harmful, account-wide-honest, consistently applied |
 | Test suite (scoped) | 214/214 pass (`auth::`, `tenant::`, `auth_windows_store::`) |
 | Clippy (`-D warnings`) | Clean |
 

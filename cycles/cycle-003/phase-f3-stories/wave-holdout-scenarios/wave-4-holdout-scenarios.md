@@ -21,7 +21,7 @@ input-hash: "81a3f7a"
 Two-story wave sharing a wave boundary without a hard dependency edge between them (see
 `wave-schedule.md` §3 for why they're merged into one wave, with a recommended intra-wave
 delivery order: `adr0011-newtype` first, `oauth-default-creation` second). This is the
-cycle's highest-scrutiny wave for the **DEC-313 non-interactive CI token-first
+cycle's highest-scrutiny wave for the **D-313 non-interactive CI token-first
 contract** — the single most safety-critical regression surface in the entire cycle,
 since a defect here can hang a CI runner (an OAuth browser flow launched where none was
 expected).
@@ -77,13 +77,13 @@ scenario specifically because it's a MUST (not SHOULD) requirement per the manif
 
 ---
 
-## 2. Regression Scenarios — Existing Auth Behavior Preserved (DEC-313 focus)
+## 2. Regression Scenarios — Existing Auth Behavior Preserved (D-313 focus)
 
 ### H-W4-REG-001 — Non-interactive `auth login` with NO explicit mechanism flag defaults to api-token, NEVER launches OAuth (VP-AUTHDX-001 base case)
 
 **Setup:** `jr auth login ci-fresh --url ... --no-input` with NO `--oauth`/`--api-token`
 flag and no `--email`/`--token` supplied either (the exact "no explicit flag,
-non-interactive" cell DEC-313 requires to silently substitute `api_token`, per
+non-interactive" cell D-313 requires to silently substitute `api_token`, per
 ADR-0020 § Decision 5).
 
 **Expectation:** The command does NOT attempt to bind a callback listener or open a
@@ -99,7 +99,7 @@ ordering "the single most safety-critical requirement in this story."
 ### H-W4-REG-002 — Non-interactive `auth login --oauth` (explicit flag) is REJECTED before any network/listener/browser code (BC-1.1.016, closes I-1)
 
 **Setup:** `jr auth login explicit-oauth-ci --url ... --oauth --no-input` — the
-adversarially-hardened cell DEC-313 was extended to cover at F2 gate (previously the
+adversarially-hardened cell D-313 was extended to cover at F2 gate (previously the
 ORIGINAL framing only covered the no-flag default case, leaving this explicit-flag case
 able to hang a CI runner).
 
@@ -188,8 +188,8 @@ and correctly adapts to the new default.
 | H-W4-REG-006 | regression (S-384 JSM 401 hint gating still correct) | MUST-PASS |
 
 9 scenarios — the highest scenario count of any wave, reflecting both its 26-point size
-(the heaviest wave) and its DEC-313 CI-hang-prevention stakes. The three MANDATORY
+(the heaviest wave) and its D-313 CI-hang-prevention stakes. The three MANDATORY
 scenarios (H-W4-REG-001/002/003) MUST run in CI itself, not just locally — a CI runner
-that hangs on one of these is the exact failure mode DEC-313's hardening exists to
+that hangs on one of these is the exact failure mode D-313's hardening exists to
 prevent, so these scenarios should be exercised with a hard timeout wrapper in the actual
 CI job, not only asserted for correct exit code.

@@ -60,7 +60,7 @@ traces_to: ".factory/specs/prd/BC-INDEX.md"
 | P14-003a | BC-3.9.003 cancel channel: "Upload cancelled." on **stderr** (all 3 sites in BC body + EC-3.9.003-4) | pass |
 | P14-003b | EC-3.9.014-2: "non-EOF branch (b)"; "Upload cancelled." on **stderr** | pass |
 | P14-003c | BC-3.9.015 cancel-channel divergence note (P14-003) present and correctly worded | pass |
-| P14-004  | impact-boundary-576.md §2.2/§2.3 delete-404 rows retro-annotated (superseded by DEC-168) | pass |
+| P14-004  | impact-boundary-576.md §2.2/§2.3 delete-404 rows retro-annotated (superseded by D-168) | pass |
 | P14-005  | BC-3.9.012 error row trigger column: corrected to platform-path + issue-GET scope | pass |
 | P14-007a | VP-576-001 added in BC-2.7.011 (sanitize_attachment_filename property test) | pass |
 | P14-007b | VP-576-002 added in BC-3.9.015 (delete gate confirm+cancel wiremock) | pass |
@@ -185,13 +185,13 @@ Both guards exit 0. No count drift.
 
 **Quote-verified verbatim** (`impact-boundary-576.md` §2.2 BC-3.9.008 row, line 161):
 
-> | BC-3.9.008 | `attachment delete` idempotency: 404 from DELETE endpoint → exit 0 (attachment already gone; same pattern as `issue assign` idempotency) — **PHASE-DOC-RETRO-ANNOTATION (P14-004, 2026-07-16):** superseded by DEC-168. The shipped BC-3.9.008 specifies exit 64 + surface Jira body on 404, not exit 0.
+> | BC-3.9.008 | `attachment delete` idempotency: 404 from DELETE endpoint → exit 0 (attachment already gone; same pattern as `issue assign` idempotency) — **PHASE-DOC-RETRO-ANNOTATION (P14-004, 2026-07-16):** superseded by D-168. The shipped BC-3.9.008 specifies exit 64 + surface Jira body on 404, not exit 0.
 
 **Quote-verified verbatim** (`impact-boundary-576.md` §2.3 NFR Idempotency row, line 177):
 
-> | Idempotency | `attachment delete` on a 404 → exit 0 (documented above as BC-3.9.008) — **PHASE-DOC-RETRO-ANNOTATION (P14-004, 2026-07-16):** superseded by DEC-168; shipped BC-3.9.008 is exit 64 + surface body.
+> | Idempotency | `attachment delete` on a 404 → exit 0 (documented above as BC-3.9.008) — **PHASE-DOC-RETRO-ANNOTATION (P14-004, 2026-07-16):** superseded by D-168; shipped BC-3.9.008 is exit 64 + surface body.
 
-**Result**: Both the §2.2 BC-3.9.008 row and §2.3 NFR Idempotency row have the PHASE-DOC-RETRO-ANNOTATION. The old 404→exit-0 claim is bracketed as superseded-by-DEC-168. BOTH PRESENT ✓
+**Result**: Both the §2.2 BC-3.9.008 row and §2.3 NFR Idempotency row have the PHASE-DOC-RETRO-ANNOTATION. The old 404→exit-0 claim is bracketed as superseded-by-D-168. BOTH PRESENT ✓
 
 ---
 
@@ -294,7 +294,7 @@ Both guards exit 0. No count drift.
 
 Read output shows:
 - Line 3614: (blank)
-- Line 3615: `**Trace**: F2 spec evolution (2026-07-15 SOH-ATTACHMENTS-1, DEC-179); ...` (BC-3.9.014 Trace)
+- Line 3615: `**Trace**: F2 spec evolution (2026-07-15 SOH-ATTACHMENTS-1, D-179); ...` (BC-3.9.014 Trace)
 - Line 3616: (blank)
 - Line 3617: `---`
 - Line 3618: (blank)
@@ -379,7 +379,7 @@ BC-3.9.003 Interactive mode (line 3308, 3310) says: "See BC-3.9.014 for exact pr
 
 BC-3.9.014 body (line 3599) says:
 
-> **Accepted affirmative responses** (case-insensitive): `"y"`, `"yes"`. Any other text input including empty string (user pressed Enter) is treated as 'n' (cancel, exit 0). **Exception — EOF and IO error** (DEC-174/EC-3.5.003-3 alignment): `read_line` returning `Ok(0)` (zero bytes, Ctrl+D EOF) or `Err(_)` MUST propagate as `JrError::Interrupted`, exit 130 — consistent with the comment-family precedent (BC-3.5.003, BC-3.5.008).
+> **Accepted affirmative responses** (case-insensitive): `"y"`, `"yes"`. Any other text input including empty string (user pressed Enter) is treated as 'n' (cancel, exit 0). **Exception — EOF and IO error** (D-174/EC-3.5.003-3 alignment): `read_line` returning `Ok(0)` (zero bytes, Ctrl+D EOF) or `Err(_)` MUST propagate as `JrError::Interrupted`, exit 130 — consistent with the comment-family precedent (BC-3.5.003, BC-3.5.008).
 
 EC-3.9.014-1 (line 3609): 'y' → step 1 + step 2 proceed (branch a)
 EC-3.9.014-2 (line 3610): 'n' or empty — non-EOF branch (b) → exit 0, "Upload cancelled." on stderr
@@ -447,7 +447,7 @@ Search for "404.*exit 0" in bc-3-issue-write.md (active, non-annotated):
 
 All 404→exit-0 claims are either:
 1. In multi-delete paths where 404 is "already deleted" and SILENTLY SKIPPED (not exit-0 of the command — correct behavior)
-2. In PHASE-DOC-RETRO-ANNOTATION blocks in impact-boundary-576.md (superseded by DEC-168)
+2. In PHASE-DOC-RETRO-ANNOTATION blocks in impact-boundary-576.md (superseded by D-168)
 
 No active, non-annotated 404→exit-0 claim for single-ID delete or upload paths.
 

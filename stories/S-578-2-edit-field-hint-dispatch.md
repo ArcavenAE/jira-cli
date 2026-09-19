@@ -666,7 +666,7 @@ foundation this story's hinted-bypass branch is layered on top of — the hinted
 MUST NOT perturb ANY existing unhinted-input test in `tests/issue_edit_field.rs` (64 existing
 test functions — full regression run required, per AC-015).
 
-**S-639-1** (`.factory/stories/S-639-1.md`) is the DEC-188 origin story for the platform-create
+**S-639-1** (`.factory/stories/S-639-1.md`) is the D-188 origin story for the platform-create
 `--field` guard this bundle's S-578-4 partially reverses. Not directly relevant to this
 edit-path story's own scope, but read it for context on the SSOT Platform-Path Guard Ordering
 block's discipline before writing S-578-4 (a later story in this bundle).

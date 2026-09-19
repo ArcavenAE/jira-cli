@@ -1,7 +1,7 @@
 # Demo Evidence — S-578-4
 
-`issue create --field` platform (non-JSM) path — createmeta resolution + DEC-188
-guard reversal (DEC-310) + create-path collision guard (D2).
+`issue create --field` platform (non-JSM) path — createmeta resolution + D-188
+guard reversal (D-310) + create-path collision guard (D2).
 
 Product type: CLI (Rust, binary `jr`). Toolchain: VHS 0.11.0 (`.gif` + `.webm` per
 recording). All recordings run against the debug build (`cargo build --bin jr`)
@@ -56,7 +56,7 @@ S-331), `GET .../createmeta/DEMO/issuetypes/10001` (createmeta fields, S-580-1),
 `POST .../issue` (the actual create). Exits 0 with `Created issue DEMO-42` and
 the resolved field echoed (`customfield_10050 → VENDOR-REF-99`) interleaved
 alphabetically with `issue_type`/`summary` — this invocation shape used to exit
-64 under DEC-188 with `--field is only valid with --request-type`; that string
+64 under D-188 with `--field is only valid with --request-type`; that string
 does not appear anywhere in this output.
 
 ### AC-002-error-field-not-on-create-screen.{gif,webm}
@@ -64,7 +64,7 @@ Same shape, but `--field 'Vendor Portal ID=XYZ'` where the mock's global field
 list (`GET /rest/api/3/field`) knows the field by name but its createmeta
 response omits it from the Create screen. Result: `Error: Field 'Vendor Portal
 ID' (customfield_10099) is not on the Create screen for project 'DEMO' issue
-type 'Task'. ...` — exit 64. Confirms the DEC-188 reversal cuts both ways: a
+type 'Task'. ...` — exit 64. Confirms the D-188 reversal cuts both ways: a
 failing `--field` now fails with a specific, resolution-sourced error, never the
 old removed guard string.
 
@@ -91,7 +91,7 @@ Two invocations: (1) `--on-behalf-of 712020:abc123` alone → exit 64 with
 BC-3.8.013's verbatim guard string; (2) the same `--on-behalf-of` plus `--field
 customfield_10050=X` together → the IDENTICAL error string, exit 64 — proving
 `--field`'s presence no longer contributes to, alters, or pre-empts this error
-(the old DEC-188 combined-check that used to fire a different, combined error
+(the old D-188 combined-check that used to fire a different, combined error
 is gone; only BC-3.8.013's unchanged standalone guard remains, now firing in
 both shapes).
 

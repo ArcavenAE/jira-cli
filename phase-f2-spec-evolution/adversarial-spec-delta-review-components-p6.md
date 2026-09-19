@@ -14,7 +14,7 @@ INFO-1: numeric edit no-fields HTTP arity unspecified — EC-8.1.007-1 pins zero
 
 INFO-2: "already requires" revisionist wording in BC-8.1.007 M1 L393-399 / BC-8.3.001 M1 L1253-1255 (pre-P5 existence was via PUT/DELETE, not dedicated GET); BC-8.4.001 P5 L1633-1647 reconciles correctly; no behavioral impact.
 
-PASSED: ADR↔BC consistent (current w/ P4/P5, NOT stale); delete-safety (fail-closed+ORDER BY+anti-loop+numeric-id-JQL+pagination); DEC-188 exit-codes; bulk wire (multiselectComponents/integer/2*ceil chunking/VP-012 live); Component.id Option vs full String; output profiles; VP 001-026 gapless (only §3 staleness mars it). Novelty MEDIUM-HIGH — new contradictions on freshly-touched P4/P5 seams.
+PASSED: ADR↔BC consistent (current w/ P4/P5, NOT stale); delete-safety (fail-closed+ORDER BY+anti-loop+numeric-id-JQL+pagination); D-188 exit-codes; bulk wire (multiselectComponents/integer/2*ceil chunking/VP-012 live); Component.id Option vs full String; output profiles; VP 001-026 gapless (only §3 staleness mars it). Novelty MEDIUM-HIGH — new contradictions on freshly-touched P4/P5 seams.
 
 ---
 

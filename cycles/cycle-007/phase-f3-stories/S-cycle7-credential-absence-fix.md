@@ -319,7 +319,7 @@ In one test module, both AC-001/AC-002's credential-absence exit code (2, `NotAu
 **Test:** `test_bc_1_1_004_unknown_profile_json_envelope_is_standard_error_shape`. **Test method: DEFAULT CI** — same reasoning as AC-006: the unknown-profile check fires before any keychain probe in either output mode.
 
 ### AC-009 (traces to BC-1.4.034 cross-reference / F4 doc-fallout obligation)
-`CHANGELOG.md`'s `[Unreleased]` section gains a `Fixed` (or `Changed`, per this project's breaking-change convention) entry documenting: (a) the credential-absence remediation command now reads `jr auth login --profile=<profile>` (was a non-parsing positional form), and (b) the exit code for both `load_api_token` credential-absence branches changed from 64 to 2 — styled after the existing BC-1.2.051/DEC-321 CHANGELOG breaking-change precedent, and explicitly noting `src/cli/auth/status.rs`'s unrelated unknown-profile exit-64 site (BC-1.1.004) is UNAFFECTED.
+`CHANGELOG.md`'s `[Unreleased]` section gains a `Fixed` (or `Changed`, per this project's breaking-change convention) entry documenting: (a) the credential-absence remediation command now reads `jr auth login --profile=<profile>` (was a non-parsing positional form), and (b) the exit code for both `load_api_token` credential-absence branches changed from 64 to 2 — styled after the existing BC-1.2.051/D-321 CHANGELOG breaking-change precedent, and explicitly noting `src/cli/auth/status.rs`'s unrelated unknown-profile exit-64 site (BC-1.1.004) is UNAFFECTED.
 **Test:** N/A (doc artifact; verified by PR review / `scripts/check-*.sh` guards where applicable, not a `#[test]`)
 
 ### AC-010 (traces to BC-1.4.032 postcondition 2 hint-field clarification, F2 fix round 6, finding L-2)

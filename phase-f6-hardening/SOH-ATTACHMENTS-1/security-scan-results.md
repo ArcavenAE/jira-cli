@@ -39,7 +39,7 @@ present in `deny.toml` but not matched by any current dep):
 `BSD-2-Clause`, `OpenSSL`, `Unicode-DFS-2016`. Benign — over-broad allowlist,
 not a policy violation.
 
-### Documented sha1/cpufeatures exception (DEC-185)
+### Documented sha1/cpufeatures exception (D-185)
 
 Present in `deny.toml` as a `[[bans.skip]]` (around line 282), NOT surfaced as a
 finding:
@@ -48,7 +48,7 @@ finding:
 > dependency for BC-2.7.010 batch-download SHA-1 path prefix) requires
 > cpufeatures 0.2.17; chacha20 v0.10.0 (via rand v0.10.1) requires cpufeatures
 > 0.3.0. Unavoidable until sha1 0.11 or rand's chacha20 unify... Authorized
-> DEC-185."
+> D-185."
 
 This is the attachment-bundle's own dependency (sha1 for the batch-download
 SHA-1 path prefix). The duplicate-`cpufeatures` ban is explicitly authorized and

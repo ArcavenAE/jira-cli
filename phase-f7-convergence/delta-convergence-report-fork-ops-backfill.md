@@ -85,7 +85,7 @@ artifact, not artifact drift. Gate A: **PASS**.
 | AC-002 | No `gh release delete`; no `|| true` silencer; `gh release view` check present; `gh release upload` branch present; `jr-*.zip` in BOTH upload and create branches; isDraft detection present | `backfill-release.yml` check-then-upsert block; tests #4-#9 in `backfill_matrix_parity.rs` | YES |
 | AC-003 | `inputs.tag` env-bound as `RELEASE_TAG`; `${{ matrix.target }}` inline exemption applies; injection guard script passes | CWE-77 env bindings in all new `run:` blocks; `scripts/check-signing-workflow-injection.sh` passes | YES |
 | AC-004 | `tests/backfill_matrix_parity.rs::test_backfill_matrix_parity_matches_release_yml` present; set-equality of build targets vs `release.yml` | `test_backfill_matrix_parity_matches_release_yml` implemented | YES |
-| AC-005 | `shell: bash` on Build step AND Unix Package step | `test_backfill_build_step_declares_shell_bash` + `test_backfill_unix_package_step_declares_shell_bash`; caught by DEC-124 local review | YES |
+| AC-005 | `shell: bash` on Build step AND Unix Package step | `test_backfill_build_step_declares_shell_bash` + `test_backfill_unix_package_step_declares_shell_bash`; caught by D-124 local review | YES |
 
 **Story S-FORK-OPS-GITLEAKS-DOC-1 — 2 ACs:**
 
@@ -118,13 +118,13 @@ artifact, not artifact drift. Gate A: **PASS**.
 
 **Version PATCH consistent across prd-delta, STATE.md changelog, and F2 spec. PASS.**
 
-### DEC-122/123/124 Traceability
+### D-122/123/124 Traceability
 
 | Decision | Traces To | Status |
 |----------|-----------|--------|
-| DEC-122 | S-FORK-OPS-BACKFILL F1 grouping decision | Documented in STATE.md; borne out by parallel delivery of 2 stories |
-| DEC-123 | Consistency-validator value at F2 gate; 2 MAJOR caught+fixed | Documented; borne out by F2 adversarial-review pass history |
-| DEC-124 | Local pre-PR review caught `shell: bash` CRITICAL defect missed by 9 Red-Gate tests | Documented; borne out by AC-005 test addition and PR #539 content |
+| D-122 | S-FORK-OPS-BACKFILL F1 grouping decision | Documented in STATE.md; borne out by parallel delivery of 2 stories |
+| D-123 | Consistency-validator value at F2 gate; 2 MAJOR caught+fixed | Documented; borne out by F2 adversarial-review pass history |
+| D-124 | Local pre-PR review caught `shell: bash` CRITICAL defect missed by 9 Red-Gate tests | Documented; borne out by AC-005 test addition and PR #539 content |
 
 ### Cross-Reference Integrity
 
@@ -149,7 +149,7 @@ No broken cross-references detected.
 
 **Spec (D1):** F2 CONVERGED after 3 adversarial spec-delta passes (novelty 0.35→0.08→LOW).
 Consistency audit at F2 gate caught and fixed 2 MAJOR cross-document defects
-(DEC-123) that 3 adversarial passes missed. No new BCs, VPs, or NFRs required
+(D-123) that 3 adversarial passes missed. No new BCs, VPs, or NFRs required
 (infrastructure delta). Spec 1.3.23→1.3.24 PATCH. Changelog entry: `[1.3.24]` PATCH.
 
 **Test (D2):** 11 new tests in `tests/backfill_matrix_parity.rs`. All confirmed
@@ -207,7 +207,7 @@ Regression status: **PASS — zero regressions. 11 new tests all passing.**
 | Item | Assessment |
 |------|-----------|
 | **Convergence cycles** | 3 F5 passes + 1 fix PR (FIX-F5-001). 4 total cycles. |
-| **Value captured** | CRITICAL defect caught by local review (DEC-124: `shell: bash` on Build step — Windows CI would silently fail); M4 vacuous test caught and fixed; DEC-123 consistency audit value. Without full pipeline: Windows binary gap in backfilled releases would have shipped undetected. |
+| **Value captured** | CRITICAL defect caught by local review (D-124: `shell: bash` on Build step — Windows CI would silently fail); M4 vacuous test caught and fixed; D-123 consistency audit value. Without full pipeline: Windows binary gap in backfilled releases would have shipped undetected. |
 | **Maximum viable refinement** | NOT REACHED. 3 passes is well within the 10-cycle maximum. P(finding in next cycle) is LOW (Pass 3 independently verified zero MEDIUM+ findings). Expected value of an additional cycle is below cost. |
 | **MAXIMUM_VIABLE_REFINEMENT_REACHED** | NO |
 

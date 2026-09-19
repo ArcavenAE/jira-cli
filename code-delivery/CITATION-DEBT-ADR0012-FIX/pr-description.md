@@ -1,6 +1,6 @@
 # docs: fix ADR-0012 Seam A/B relocation citations (create.rs → edit.rs / jsm_create.rs)
 
-**Epic:** CITATION-DEBT-FILEWIDE — DEC-148 drift sweep  
+**Epic:** CITATION-DEBT-FILEWIDE — D-148 drift sweep  
 **Mode:** maintenance  
 **Convergence:** CONVERGED after 3 adversarial passes (whole-touched-file completeness lens)
 
@@ -55,12 +55,12 @@ Historical narrative lines in `2026-05-13-search-issue-keys.md` (lines 9, 22, 19
 
 ```mermaid
 graph LR
-    DEC148["DEC-148<br/>CITATION-DEBT-FILEWIDE sweep<br/>✅ merged"] --> thispr["CITATION-DEBT-ADR0012-FIX<br/>🟡 this PR"]
+    DEC148["D-148<br/>CITATION-DEBT-FILEWIDE sweep<br/>✅ merged"] --> thispr["CITATION-DEBT-ADR0012-FIX<br/>🟡 this PR"]
     ADR012["ADR-0012<br/>Module shard rule<br/>✅ merged"] --> thispr
     thispr --> clean["CI-CITE-001 guard<br/>passes after merge"]
 ```
 
-No upstream PRs pending. DEC-148 file-wide sweep is on `develop`; this PR forks off `develop` at `3b122a8`.
+No upstream PRs pending. D-148 file-wide sweep is on `develop`; this PR forks off `develop` at `3b122a8`.
 
 ---
 
@@ -68,7 +68,7 @@ No upstream PRs pending. DEC-148 file-wide sweep is on `develop`; this PR forks 
 
 ```mermaid
 flowchart LR
-    DEC147["DEC-147<br/>DEFERRAL-PERIMETER-SCOPING"] --> DEBT["CITATION-DEBT-PRODUCT-FILES<br/>2026-06-30 drift item"]
+    DEC147["D-147<br/>DEFERRAL-PERIMETER-SCOPING"] --> DEBT["CITATION-DEBT-PRODUCT-FILES<br/>2026-06-30 drift item"]
     DEBT --> FIX1["ADR-0014:176<br/>jsm_create.rs citation"]
     DEBT --> FIX2["jsm-e2e-coverage.md:49,178<br/>jsm_create.rs citations"]
     DEBT --> FIX3["search-issue-keys.md:94,129<br/>edit.rs citations"]
@@ -197,7 +197,7 @@ adversarial-passes: 3
 models-used:
   builder: claude-sonnet-4-6
   adversary: fresh-context adversarial gate
-origin: DEC-148 CITATION-DEBT-FILEWIDE sweep / DEC-147 DEFERRAL-PERIMETER-SCOPING
+origin: D-148 CITATION-DEBT-FILEWIDE sweep / D-147 DEFERRAL-PERIMETER-SCOPING
 generated-at: "2026-07-01"
 ```
 

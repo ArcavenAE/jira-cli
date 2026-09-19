@@ -61,7 +61,7 @@ parser would have triggered a `libfuzzer` target at `-max_total_time=300`; no su
 | Unviable | 0 |
 | **Kill rate** | **100% (28/28)** |
 
-**Per-file (all caught):** `src/output.rs` 25 (DEC-314 `env`-tag display sanitizer —
+**Per-file (all caught):** `src/output.rs` 25 (D-314 `env`-tag display sanitizer —
 `sanitize_env_display` / `strip_control_and_ansi`, the terminal-escape / control-char injection
 guard added this cycle), `src/cache.rs` 2 (per-profile path construction), `src/main.rs` 1
 (top-level dispatch return value).
@@ -84,18 +84,18 @@ VP-AUTHDX suite. Every mutant within the enforced scope (including the security-
   `87f17aff` baseline, NOT delta-introduced.** Routine `cargo update -p chacha20` recommended at
   next maintenance sweep; not a BLOCK.
 - **`cargo deny check` — PASS:** advisories / bans / licenses / sources all ok. Only benign
-  hygiene warnings (3x stale `license-not-encountered` allow-list entries, 1x DEC-185-authorized
+  hygiene warnings (3x stale `license-not-encountered` allow-list entries, 1x D-185-authorized
   `unmatched-skip` for `cpufeatures`, 1x the same yanked-crate notice).
 - **`gitleaks`:** CI-gated (`pull_request`, `vars.GITLEAKS_DISABLED != 'true'`), not run locally;
   no secrets observed in the delta during manual review.
 - **Manual auth-delta lens — 0 CRIT / 0 HIGH / 0 MED:** keychain namespacing secure
   (`<profile>:email` / `<profile>:api-token`, no flat pair ever written — cross-profile isolation
-  upheld); no-copy detect-and-instruct migration secure (DEC-326, existence-only check, byte-
+  upheld); no-copy detect-and-instruct migration secure (D-326, existence-only check, byte-
   identical actionable error, no `"default"` special-casing); partial-state safe (distinct
   "Incomplete credentials" error, no silent half-credential `Ok`); no plaintext-secret logging
   (CWE-532 clear — only profile NAMES and env-var NAMES appear in sinks); `JR_BASE_URL` /
   `JR_AUTH_HEADER` release gates intact at both read sites (CWE-522/CWE-200 token-leak-on-redirect
-  class); `refresh` relogin-then-replace with no data-loss window (DEC-321 / BC-1.2.051 I-6).
+  class); `refresh` relogin-then-replace with no data-loss window (D-321 / BC-1.2.051 I-6).
 
 ## 5. Regression (full tree) — CERTIFIED this session — PASS
 

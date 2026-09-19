@@ -33,7 +33,7 @@ red_gate_verified: true
 
 Two-commit Red Gate staged per TDD discipline:
 
-- **Commit 5f025e5e (stub-architect):** `feat(S-576-2): add module stubs` — `todo!()` stubs introduced for the download command handler and supporting functions. `cargo check` and `cargo check --tests` both clean. Adds `sha1` dep + `reqwest` stream support; `deny.toml` `cpufeatures` skip human-authorized per AUDIT-576-004/DEC-185.
+- **Commit 5f025e5e (stub-architect):** `feat(S-576-2): add module stubs` — `todo!()` stubs introduced for the download command handler and supporting functions. `cargo check` and `cargo check --tests` both clean. Adds `sha1` dep + `reqwest` stream support; `deny.toml` `cpufeatures` skip human-authorized per AUDIT-576-004/D-185.
 - **Commit 2d6254eb (test-writer):** `test(S-576-2): add failing tests for BC-2.7.007..012` — `tests/attachment_download.rs` with 22 wiremock subprocess tests covering all 6 BCs (1977 lines). Story v1.33, 19 ACs.
 
 Red Gate VERIFIED by orchestrator:
@@ -50,7 +50,7 @@ Files introduced / modified by stub-architect:
   streaming/integrity/path-sanitization helpers for `jr issue attachments download`
 - Dependency additions: `sha1` crate for file integrity verification; `reqwest` streaming
   support for large attachment transfers
-- `deny.toml` updated: `cpufeatures` crate skip rule human-authorized per AUDIT-576-004/DEC-185
+- `deny.toml` updated: `cpufeatures` crate skip rule human-authorized per AUDIT-576-004/D-185
 
 `cargo check` output: PASS (0 errors).
 `cargo check --tests` output: PASS (0 errors).

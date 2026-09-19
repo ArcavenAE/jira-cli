@@ -49,16 +49,16 @@ All surfaces in the mandated surface set were read independently (fresh context)
 The worklog R15 Micro-Fix (2026-07-16) entry confirms DONE. Direct quote-verification:
 
 **Quote — EC-3.5.003-3 current text (bc-3-issue-write.md ~line 2200):**
-> `**EC-3.5.003-3** [GAP-R15-001 terminology sync 2026-07-16 — DEC-174 mechanism; behavior unchanged] (EOF / IO-error on delete prompt → JrError::Interrupted, exit 130): When the comment delete confirmation prompt reads via io::stdin().lock().read_line(), the return value Ok(0) (zero bytes, EOF — Ctrl+D) or any Err(_) (IO error, Ctrl+C interrupt) MUST propagate as JrError::Interrupted; exit 130. These MUST NOT be silently swallowed or mapped to the cancel path (exit 0). Ok(0) (EOF) is distinguishable from empty-Enter (Ok(n), n ≥ 1, buffer "\n") — the distinction is real and load-bearing. This ensures consistent EOF / interrupt behavior across all interactive confirmation prompts in the comment family (mirrors EC-3.5.008-5 for the --public prompt; same three-way branch as EC-3.9.015-5).`
+> `**EC-3.5.003-3** [GAP-R15-001 terminology sync 2026-07-16 — D-174 mechanism; behavior unchanged] (EOF / IO-error on delete prompt → JrError::Interrupted, exit 130): When the comment delete confirmation prompt reads via io::stdin().lock().read_line(), the return value Ok(0) (zero bytes, EOF — Ctrl+D) or any Err(_) (IO error, Ctrl+C interrupt) MUST propagate as JrError::Interrupted; exit 130. These MUST NOT be silently swallowed or mapped to the cancel path (exit 0). Ok(0) (EOF) is distinguishable from empty-Enter (Ok(n), n ≥ 1, buffer "\n") — the distinction is real and load-bearing. This ensures consistent EOF / interrupt behavior across all interactive confirmation prompts in the comment family (mirrors EC-3.5.008-5 for the --public prompt; same three-way branch as EC-3.9.015-5).`
 
-"dialoguer::Error" language REMOVED ✓; DEC-174 `read_line Ok(0)/Err(_)` language PRESENT ✓; [GAP-R15-001 terminology sync] marker PRESENT ✓
+"dialoguer::Error" language REMOVED ✓; D-174 `read_line Ok(0)/Err(_)` language PRESENT ✓; [GAP-R15-001 terminology sync] marker PRESENT ✓
 
 **Quote — EC-3.5.008-5 current text (bc-3-issue-write.md ~line 2426):**
-> `**EC-3.5.008-5** [GAP-R15-001 terminology sync 2026-07-16 — DEC-174 mechanism; behavior unchanged] (EOF / IO-error on --public prompt → JrError::Interrupted, exit 130): When the comment edit --public confirmation prompt reads via io::stdin().lock().read_line(), the return value Ok(0) (zero bytes, EOF — Ctrl+D) or any Err(_) (IO error, Ctrl+C interrupt) MUST propagate as JrError::Interrupted; exit 130. These MUST NOT be silently swallowed or mapped to the cancel path (exit 0). Ok(0) (EOF) is distinguishable from empty-Enter (Ok(n), n ≥ 1, buffer "\n") — the distinction is real and load-bearing. This mirrors EC-3.5.003-3 (delete prompt), ensuring consistent EOF / interrupt handling across all interactive confirmation prompts in the comment family.`
+> `**EC-3.5.008-5** [GAP-R15-001 terminology sync 2026-07-16 — D-174 mechanism; behavior unchanged] (EOF / IO-error on --public prompt → JrError::Interrupted, exit 130): When the comment edit --public confirmation prompt reads via io::stdin().lock().read_line(), the return value Ok(0) (zero bytes, EOF — Ctrl+D) or any Err(_) (IO error, Ctrl+C interrupt) MUST propagate as JrError::Interrupted; exit 130. These MUST NOT be silently swallowed or mapped to the cancel path (exit 0). Ok(0) (EOF) is distinguishable from empty-Enter (Ok(n), n ≥ 1, buffer "\n") — the distinction is real and load-bearing. This mirrors EC-3.5.003-3 (delete prompt), ensuring consistent EOF / interrupt handling across all interactive confirmation prompts in the comment family.`
 
-"dialoguer::Error" language REMOVED ✓; DEC-174 `read_line Ok(0)/Err(_)` language PRESENT ✓; [GAP-R15-001 terminology sync] marker PRESENT ✓
+"dialoguer::Error" language REMOVED ✓; D-174 `read_line Ok(0)/Err(_)` language PRESENT ✓; [GAP-R15-001 terminology sync] marker PRESENT ✓
 
-**Four-gate mechanism coherence (post-R15 fix):** All four EC clauses (EC-3.5.003-3, EC-3.5.008-5, EC-3.9.014 "Exception" clause, EC-3.9.015-5) now use DEC-174 `io::stdin().lock().read_line()` mechanism language. The cross-gate terminology asymmetry that GAP-R15-001 identified is fully resolved. ✓
+**Four-gate mechanism coherence (post-R15 fix):** All four EC clauses (EC-3.5.003-3, EC-3.5.008-5, EC-3.9.014 "Exception" clause, EC-3.9.015-5) now use D-174 `io::stdin().lock().read_line()` mechanism language. The cross-gate terminology asymmetry that GAP-R15-001 identified is fully resolved. ✓
 
 ---
 
@@ -74,7 +74,7 @@ The worklog R15 Micro-Fix (2026-07-16) entry confirms DONE. Direct quote-verific
 `get_or_fetch_project_meta` PRESENT ✓; match is `projectId` (NOT `projectKey`) PRESENT ✓; P6-001 correction cited ✓
 
 **Quote — BC-INDEX BC-3.9.003 row (BC-INDEX.md ~line 375):**
-> `| BC-3.9.003 | --public → servicedeskapi two-step (attachTemporaryFile + request/{key}/attachment public:true); serviceDeskId resolved via existing get_or_fetch_project_meta / ProjectMeta cache (BC-X.8.010); match serviceDesk.projectId == project.id (NOT projectKey — P6-001 correction); DEC-174 confirmation gate (eprint!+read_line, NOT dialoguer); --yes bypass; non-interactive exit 64 with --yes hint; cancel → {"cancelled":true,"uploaded":false} | — (SOH-ATTACHMENTS-1 F2) | src/cli/issue/attachments.rs (pending S5) | HIGH |`
+> `| BC-3.9.003 | --public → servicedeskapi two-step (attachTemporaryFile + request/{key}/attachment public:true); serviceDeskId resolved via existing get_or_fetch_project_meta / ProjectMeta cache (BC-X.8.010); match serviceDesk.projectId == project.id (NOT projectKey — P6-001 correction); D-174 confirmation gate (eprint!+read_line, NOT dialoguer); --yes bypass; non-interactive exit 64 with --yes hint; cancel → {"cancelled":true,"uploaded":false} | — (SOH-ATTACHMENTS-1 F2) | src/cli/issue/attachments.rs (pending S5) | HIGH |`
 
 BC-INDEX row: `projectId` match and NOT-projectKey note PRESENT ✓; P6-001 correction cited ✓
 
@@ -196,7 +196,7 @@ The authoritative ruling (confirmed by cross-cutting.md BC-X.8.010 body, worklog
 **Finding:**
 
 The bc-3-issue-write.md trace section (line 88) contains:
-> `v1.3.46 — GAP-R15-001 terminology sync in EC-3.5.003-3 + EC-3.5.008-5 (dialoguer→read_line Ok(0)/Err language; DEC-174 mechanism); no behavioral change (2026-07-16, spec v1.3.46)`
+> `v1.3.46 — GAP-R15-001 terminology sync in EC-3.5.003-3 + EC-3.5.008-5 (dialoguer→read_line Ok(0)/Err language; D-174 mechanism); no behavioral change (2026-07-16, spec v1.3.46)`
 
 This confirms bc-3-issue-write.md was bumped to v1.3.46 by the R15 Micro-Fix. The bc-3 `last_updated` frontmatter reads `2026-07-16`.
 
@@ -212,7 +212,7 @@ This should reflect the final spec version after all fixes (including R15), whic
 
 **Impact:** LOW. The behavioral spec is correct at v1.3.46 in bc-3-issue-write.md. The spec-changelog and prd-delta frontmatter are metadata tracking documents; the missing entry does not affect any BC semantics. However, spec-changelog.md is the authoritative version history, and its highest entry (v1.3.45) does not match the bc-3 trace (v1.3.46). Any tooling that reads spec-changelog.md to determine current spec version will report v1.3.45, not v1.3.46.
 
-**Fix:** Add a `## [1.3.46] - 2026-07-16` entry to spec-changelog.md (Type: PATCH; Summary: GAP-R15-001 DEC-174 terminology correction in EC-3.5.003-3 and EC-3.5.008-5; no behavioral change, no BC count change). Update prd-delta-576.md frontmatter `spec_version_after: 1.3.45` → `1.3.46`.
+**Fix:** Add a `## [1.3.46] - 2026-07-16` entry to spec-changelog.md (Type: PATCH; Summary: GAP-R15-001 D-174 terminology correction in EC-3.5.003-3 and EC-3.5.008-5; no behavioral change, no BC count change). Update prd-delta-576.md frontmatter `spec_version_after: 1.3.45` → `1.3.46`.
 
 ---
 
@@ -253,9 +253,9 @@ All checks carried forward from R15 that remain applicable:
 | service_desk_id_<projectKey>.json in prd specs | PASS ✓ | cross-cutting.md line 743: historical note only; explicitly superseded |
 | write/read_service_desk_id_cache in prd specs | PASS ✓ | cross-cutting.md line 743: historical note; "no new read/write_service_desk_id_cache" |
 | BC-INDEX X.8 section count = 10 BCs | PASS ✓ | BC-INDEX line ~701: "10 BCs: BC-X.8.001..010" |
-| GAP-R15-001 closed (EC-3.5.003-3 + EC-3.5.008-5 terminology) | PASS ✓ | Both ECs confirmed updated with DEC-174 mechanism language; [GAP-R15-001] markers present |
+| GAP-R15-001 closed (EC-3.5.003-3 + EC-3.5.008-5 terminology) | PASS ✓ | Both ECs confirmed updated with D-174 mechanism language; [GAP-R15-001] markers present |
 | Four-gate behavioral coherence | PASS ✓ | Inherited from R15; all four gates: 0/0/130 exit codes |
-| Four-gate mechanism coherence | PASS ✓ | All four EC clauses now use DEC-174 `read_line Ok(0)/Err(_)` language (post-GAP-R15-001) |
+| Four-gate mechanism coherence | PASS ✓ | All four EC clauses now use D-174 `read_line Ok(0)/Err(_)` language (post-GAP-R15-001) |
 | BC heading counts match CANONICAL-COUNTS | PASS ✓ | cross-cutting: 84; bc-2: 64; bc-3: 111 — all match |
 | Temp-scheme coherence (tmp_<random>) | PASS ✓ | Inherited from R15 PASS; no regression signals in P6 or R15 Micro-Fix scope |
 | Impact-boundary planned→authored ID drift annotation | PASS ✓ | R2.3 mapping table present and correct |

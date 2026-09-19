@@ -48,7 +48,7 @@ CLAUDE.md for operators configuring forks.
 | Feature type | `infrastructure` (CI/CD workflows + documentation) |
 | Scope | `standard` (not trivial — requires careful WIN-TARGET integration mirroring S-WIN-4 packaging pattern and a behavioral change to the release-upsert logic in DESTRUCTIVE) |
 | Severity | MED (HIGH potential impact for DESTRUCTIVE if triggered on a curated-notes release; inert in canonical scheduled path) |
-| Trivial | No — per DEC-120/121, FULL F1–F7 recommended |
+| Trivial | No — per D-120/121, FULL F1–F7 recommended |
 | Expedited | No — no production `jr` binary risk; canonical `RELEASE_GAP_FILL_ENABLED` is unset |
 | Blocking | None |
 

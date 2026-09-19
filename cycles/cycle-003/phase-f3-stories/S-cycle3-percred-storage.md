@@ -2,7 +2,7 @@
 document_type: story
 story_id: "S-cycle3-percred-storage"
 epic_id: "AUTH-PROFILE-DX-1"
-title: "Per-profile API-token keychain storage: store_api_token/load_api_token (DEC-315)"
+title: "Per-profile API-token keychain storage: store_api_token/load_api_token (D-315)"
 wave: feature-followup
 status: ready
 intent: feature
@@ -119,7 +119,7 @@ This is the foundational per-profile credential-storage primitive.
 
 - `.factory/specs/prd/bc-1-auth-identity.md` §1.1 (BC-1.1.009/010), §1.2 (BC-1.2.017), §1.4
   (BC-1.4.027, BC-1.4.031)
-- ADR-0020 § Decision 1 ("Per-profile API-token credential storage (DEC-315)")
+- ADR-0020 § Decision 1 ("Per-profile API-token credential storage (D-315)")
 
 ## Narrative
 

@@ -141,7 +141,7 @@ not taken.
 
 ## Count Propagation (REGISTRATION-SURFACE-SWEEP)
 
-All 8 count surfaces updated atomically per DEC-155:
+All 8 count surfaces updated atomically per D-155:
 
 | Surface | Field | Before | After |
 |---------|-------|--------|-------|
@@ -270,7 +270,7 @@ All 8 count surfaces updated atomically per DEC-155:
 |---------|----------|------------|
 | R11-F-LOW-1: `spec-changelog.md` v1.3.25 omits `verification-delta-571.md` from Changed Requirements and Impact Assessment — R4 fixed prd-delta manifest but never propagated to changelog | LOW | Added `- .factory/phase-f2-spec-evolution/verification-delta-571.md (NEW): VP-571-001..005 verification properties for BC-7.2.015; consumed by F3 story.` to v1.3.25 Changed Requirements list; added matching `verification-delta-571.md \| NEW \| VP-571-001..005 verification properties for BC-7.2.015` row to Impact Assessment table. |
 | R11-F-N-1: CANONICAL-COUNTS.md stale literal "the 611." at line 65 — should read "the 612." after BC-7.2.015 addition | N | Changed "It does NOT add +1 beyond the 611." → "It does NOT add +1 beyond the 612." |
-| R11-F-N-2: `spec-changelog.md` Impact Assessment CANONICAL-COUNTS row says "All 8 count surfaces updated atomically (DEC-155)" — omits the 11 unguarded prose surfaces | N | Replaced with "All guarded count surfaces (8 per check-bc-cumulative-counts.sh) plus unguarded body/prose surfaces updated atomically (19 surface rows; see prd-delta-571.md Count Propagation table)". |
+| R11-F-N-2: `spec-changelog.md` Impact Assessment CANONICAL-COUNTS row says "All 8 count surfaces updated atomically (D-155)" — omits the 11 unguarded prose surfaces | N | Replaced with "All guarded count surfaces (8 per check-bc-cumulative-counts.sh) plus unguarded body/prose surfaces updated atomically (19 surface rows; see prd-delta-571.md Count Propagation table)". |
 | R11-PREEX-1: `domain-spec/bc-07-output-render.md` "1,826 LOC" citation appears twice (lines 15 and 127) — >6× stale (src/adf.rs is ~11,4xx lines) | PREEX | Line 15: replaced "The ADF renderer alone is 1,826 LOC and accounts for" → "The ADF renderer (`src/adf.rs`) is the largest single module in the crate and accounts for". Line 127: removed "1,826 LOC; " from the parenthetical, leaving "(see bc-7-output-render.md frontmatter for canonical BC count)". Accepted non-fix: CANONICAL-COUNTS:67 historical note is self-disclosing and makes no currency claim — no change. |
 
 ### F2 Fix Round 12 Changes (adversarial pass 12 — four items)

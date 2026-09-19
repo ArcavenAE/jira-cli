@@ -6,7 +6,7 @@
 
 ## Verdict: PASS (1 NIT)
 
-No `gh pr review --approve` posted: DEC-173 prohibits agent approval. No blocking findings, so `--request-changes` is not applicable either. This file records the verdict; the human retains the merge decision.
+No `gh pr review --approve` posted: D-173 prohibits agent approval. No blocking findings, so `--request-changes` is not applicable either. This file records the verdict; the human retains the merge decision.
 
 ## Checklist verification
 

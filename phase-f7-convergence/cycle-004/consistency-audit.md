@@ -118,7 +118,7 @@ ADR-0021 (DPAPI fallback) and ADR-0022 (cloud_id/tenant_info) both match the imp
 exactly for their core design (routing, envelope, seams, https-only precondition,
 `redirect::Policy::none()`), and both correctly list `status: Accepted`, dated 2026-09-03,
 with no stale "Proposed" status. ARCH-INDEX.md correctly lists both ADRs. See **Finding 2**
-for the one confirmed-resolved wording correction (DEC-334) and **Finding 6** for a minor
+for the one confirmed-resolved wording correction (D-334) and **Finding 6** for a minor
 audit-trail gap (Site 4 non-reachability confirmation not written up in Trace fields). No
 story references an undeclared architecture component.
 
@@ -275,14 +275,14 @@ cycle and were not re-scoped here).
 
 | Artifact | Spec Version | Implementation State | Drift Detected | Notes |
 |----------|-------------|---------------------|---------------|-------|
-| BC-1.4.039 (Postcondition 1, Site 1 message templates) | current (edited this cycle for DEC-334) | current (`src/api/auth.rs::site1_login_store_failure_message`) | **yes** | Missing PR #771 Finding B-1 "not your active profile" caveat — see Finding 1 |
-| BC-1.4.039 (DEC-334 revoke-advice framing) | current | current | no | Confirmed matching — see Finding 2 |
+| BC-1.4.039 (Postcondition 1, Site 1 message templates) | current (edited this cycle for D-334) | current (`src/api/auth.rs::site1_login_store_failure_message`) | **yes** | Missing PR #771 Finding B-1 "not your active profile" caveat — see Finding 1 |
+| BC-1.4.039 (D-334 revoke-advice framing) | current | current | no | Confirmed matching — see Finding 2 |
 | ADR-0021 (§1-§5 DPAPI routing/envelope/seams) | Accepted, 2026-09-03 | current | no | Matches `auth.rs`/`auth_windows_store.rs` |
-| ADR-0021 §6 (DEC-334) | Accepted, 2026-09-03 | current | no | Matches corrected revoke-advice wording |
+| ADR-0021 §6 (D-334) | Accepted, 2026-09-03 | current | no | Matches corrected revoke-advice wording |
 | ADR-0022 (tenant_info/cloud_id) | Accepted, 2026-09-03 | current | no | Matches `tenant.rs` exactly |
 | BC-1.2.052/053/054 | current | current | no | Matches `tenant.rs`/`login.rs`/`refresh.rs`/`config.rs` |
 | BC-1.4.028 (amended), BC-1.4.031/032, BC-1.4.035-038/040 | current | current | no | All matched — see Detail below |
-| CHANGELOG.md `[Unreleased]` | current | current | no | Matches code, including DEC-334 correction |
+| CHANGELOG.md `[Unreleased]` | current | current | no | Matches code, including D-334 correction |
 | CLAUDE.md (DPAPI/honest-fail/cloud_id Gotchas) | current | current | no (Minor doc-depth gap only, Finding 4) | — |
 
 ## Findings
@@ -312,7 +312,7 @@ flat "or ... remove" phrasing is inaccurate for that case. Both the `Some(_)`
 (`DpapiFallbackFailed`) arm and the legacy `None` arm of the Site-1 message are affected.
 Site 3's message is NOT affected (it never recommends `auth remove`).
 
-This drift predates and is orthogonal to the later DEC-334 revoke-advice correction (see
+This drift predates and is orthogonal to the later D-334 revoke-advice correction (see
 Finding 2 below) — that later pass corrected the *revoke-advice* wording in the BC and got
 it right, but never picked up this earlier, still-open B-1 caveat gap. The BC has been
 edited at least twice this cycle without staying in sync with `src/api/auth.rs`.
@@ -358,9 +358,9 @@ close the loop at the next spec touch.
 
 ### Observations (informational, non-blocking)
 
-**Finding 2 — DEC-334 revoke-advice wording: CONSISTENT, correction confirmed propagated.**
+**Finding 2 — D-334 revoke-advice wording: CONSISTENT, correction confirmed propagated.**
 
-ADR-0021 §6 (DEC-334, 2026-09-05), BC-1.4.039's ACCOUNT-WIDE warning framing,
+ADR-0021 §6 (D-334, 2026-09-05), BC-1.4.039's ACCOUNT-WIDE warning framing,
 `src/api/auth.rs`'s `site1_login_store_failure_message`, and `CHANGELOG.md`'s
 `[Unreleased]` prose all agree on the corrected (non-account-wide-harmful) revoke advice:
 scoped cleanup is the default recommendation, with an explicit ACCOUNT-WIDE warning
@@ -387,9 +387,9 @@ squash-merged equivalent (PR #771, commit `281ba272`). **This is not a defect an
 no action** — flagged only so the human gate reviewer has the paper trail if they
 independently notice the dangling SHA.
 
-**Finding 3 — DEC-335 Windows-11 manual smoke-test gate still PENDING.**
+**Finding 3 — D-335 Windows-11 manual smoke-test gate still PENDING.**
 
-`S-cycle4-dpapi-storage-fix`'s Windows Validation section (DEC-335) requires two gates
+`S-cycle4-dpapi-storage-fix`'s Windows Validation section (D-335) requires two gates
 before F7 closes: (1) an F4 CI spike, and (2) an F7 manual Windows-11 smoke test. The CI
 spike succeeded (VP-AUTHDX-010(b), CI-verified on `windows-latest`, recorded in
 `session-checkpoints.md`). The manual Windows-11 smoke test is correctly tracked in
@@ -398,7 +398,7 @@ pipeline state at this point (scheduled as the next step after this consistency 
 before the final human gate), not a drift. Flagged here only so the human gate reviewer
 sees this open item explicitly and does not sign off assuming Windows-real-hardware
 verification already happened — `src/api/auth_windows_store.rs`'s own module header
-already documents this as an unproven-on-every-PR fact (DEC-335).
+already documents this as an unproven-on-every-PR fact (D-335).
 
 **Finding 5 — VP total count (55) has no cross-checking index/script.**
 
@@ -439,7 +439,7 @@ stories (`S-cycle4-cloud-id-correctness`, `S-cycle4-dpapi-storage-fix`,
 `S-cycle4-honest-fail-message`, `S-cycle4-windows-docs`) are delivered exactly as
 specified, with every one of their 41 ACs traced to merged code and a passing, named test.
 All 14 delta VPs (VP-AUTHDX-010..023) trace to real tests. Both ADRs (0021, 0022) match
-the implementation, including the DEC-334 revoke-advice correction, which is fully and
+the implementation, including the D-334 revoke-advice correction, which is fully and
 correctly propagated across ADR, BC, code, and CHANGELOG. Both spec-count scripts pass
 with all expected totals (742 BCs / 106 holdouts / 172 stories) confirmed exactly, and the
 CLAUDE.md dead-citation guard passes 61/61. The one blocking issue is narrow and
@@ -449,7 +449,7 @@ caveat to the actual Site-1 honest-fail message in `src/api/auth.rs` — code, t
 CHANGELOG.md all agree with each other and disagree with the BC. Recommended action:
 a small in-place text correction to BC-1.4.039 (no code change), then the human gate can
 proceed. Four non-blocking observations are also recorded for awareness (a still-pending
-DEC-335 manual Windows-11 smoke test — correctly tracked elsewhere, not itself a drift; a
+D-335 manual Windows-11 smoke test — correctly tracked elsewhere, not itself a drift; a
 documentation-depth nit in CLAUDE.md; a structural VP-count tooling gap unrelated to this
 cycle; and an unwritten Site-4 audit-confirmation note).
 
@@ -463,7 +463,7 @@ sets), then cross-checked and synthesized by the consistency-validator:
    BC-1.4.031/032 in full against `src/api/auth.rs`, `src/api/auth_windows_store.rs`,
    `src/api/jira/tenant.rs`, `src/cli/auth/login.rs`, `src/cli/auth/refresh.rs`.
 2. **ADR-vs-code audit** — read ADR-0021 and ADR-0022 in full against the same code
-   surface plus ARCH-INDEX.md, with specific focus on ADR §6 DEC-334 revoke-advice wording
+   surface plus ARCH-INDEX.md, with specific focus on ADR §6 D-334 revoke-advice wording
    given recent corrective commits visible in git log.
 3. **Stories/VP-delta audit** — read all 4 cycle-004 story files, decomposition-manifest.md,
    wave-schedule.md, and vp-delta.md in full; cross-checked every AC and every VP against

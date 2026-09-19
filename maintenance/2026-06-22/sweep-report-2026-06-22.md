@@ -30,7 +30,7 @@
 | PERF-BASELINE | 5 Perf | No bench infra; first baseline established (7.1MB, jr --help p50=8ms) | LOW | LOW | PERF-BASELINE-ABSENT now has data. Rec LOW story: scripts/perf-check.sh + hyperfine. |
 | Holdout stale (H-NEW-MP-001, H-007, H-027) | 4 | --story-points rename, ADR-0015 mechanism, cap narrative | LOW | LOW | product-owner holdout refresh. |
 | Holdout coverage-gaps (6) | 4 | ADF wave #471-#522 ZERO holdout; issue edit --field/--type/--label/--dry-run; bulk nested schema; changelog; worklog add; link/queue | LOW | LOW | product-owner write new scenarios (backlog). |
-| S-PG-MERGE-AUTH-BYPASS | 8 TechDebt | merge-auth protocol (DEC-128) | MED | MED | Story 91 draft — highest-value process fix. |
+| S-PG-MERGE-AUTH-BYPASS | 8 TechDebt | merge-auth protocol (D-128) | MED | MED | Story 91 draft — highest-value process fix. |
 
 ---
 

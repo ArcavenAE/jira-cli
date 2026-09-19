@@ -14,12 +14,12 @@ author: architect
 
 ## 1. Context
 
-PR #565 (DEC-142) shipped warm-hit / zero-HTTP wiremock coverage for three cache families (teams, resolutions, project_meta) into `tests/cache_warm_hit.rs`. The PR header explicitly deferred two families, each with a distinct stated reason:
+PR #565 (D-142) shipped warm-hit / zero-HTTP wiremock coverage for three cache families (teams, resolutions, project_meta) into `tests/cache_warm_hit.rs`. The PR header explicitly deferred two families, each with a distinct stated reason:
 
 - **cmdb_fields (#5)** — "requires assets-enriched `issue list` with CMDB schema detection; needs workspace + CMDB field + AQL search mocks all active. Pre-populate approach: feasible but fragile without knowing which issue responses trigger cmdb-field reading."
 - **object_type_attrs (#7)** — "requires full `assets search` subprocess flow (workspace ID + AQL search + object-type-attrs); in-process vs subprocess env var conflict makes it fragile."
 
-This cycle resolves DEC-142 by determining whether clean `expect(1)` wiremock tests are actually achievable for each family, and writing the analysis.
+This cycle resolves D-142 by determining whether clean `expect(1)` wiremock tests are actually achievable for each family, and writing the analysis.
 
 ---
 
