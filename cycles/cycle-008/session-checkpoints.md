@@ -337,6 +337,31 @@ Archived 2026-09-19 during the `DCHAIN-MIGRATION-DEC-TO-D-2026-09-19` migration 
 **Counts:** `total_bcs` **770** (unchanged); VP count **89** (unchanged); holdout scenarios **118** (unchanged); `total_stories` **191** (unchanged). Prior checkpoint (STATE.md v4.69, maintenance-revisit-setup state) archived verbatim to `cycles/cycle-008/session-checkpoints.md`.
 ```
 
-**Superseded by:** a `DCHAIN-MIGRATION-DEC-TO-D-2026-09-19` migration burst (STATE.md v4.70->v4.71) that executed a human-approved (2x), one-time bulk rename of every `DEC-NNN` decision-ID token to `D-NNN` throughout `.factory/` (word-boundary-safe, ~7,215 occurrences / 532 files), resolving `ENGINE-VALIDATE-DISPATCH-ADVANCE-STALE-DCHAIN-CITE` in full (archived to `cycles/RESOLVED-DRIFT-ITEMS.md`) and minting `D-372` for the migration ruling itself. No `src/`/product-repo change (a separate agent handled that rename on `develop`). Current checkpoint (STATE.md v4.71, migration-complete state) is in `STATE.md` itself.
+**Superseded by:** a `DCHAIN-MIGRATION-DEC-TO-D-2026-09-19` migration burst (STATE.md v4.70->v4.71) that executed a human-approved (2x), one-time bulk rename of every `DEC-NNN` decision-ID token to `D-NNN` throughout `.factory/` (word-boundary-safe, ~7,215 occurrences / 532 files), resolving `ENGINE-VALIDATE-DISPATCH-ADVANCE-STALE-DCHAIN-CITE` in full (archived to `cycles/RESOLVED-DRIFT-ITEMS.md`) and minting `D-372` for the migration ruling itself. No `src/`/product-repo change (a separate agent handled that rename on `develop`). Current checkpoint (STATE.md v4.71, migration-complete state) archived below, superseded 2026-09-20.
+
+---
+
+## Archived checkpoint (STATE.md v4.71, migration-complete state)
+
+Archived 2026-09-20 during the `SESSION-WRAP-PAUSE-2026-09-20` durability burst
+(v4.71 -> v4.72), superseded by the current checkpoint now in `STATE.md` itself.
+
+```
+**Date & position:** 2026-09-19. cycle-008 (`oauth-surface-correctness`) CLOSED in full (F1-F7, `D-371`, `ADR-0026` accepted); release-VALIDATED; zero open pre-release blockers; zero open PRs. Its non-gating **S6 Teams-under-OAuth spike remains COMPLETE** -- go/no-go **DEFER-INDEFINITELY**, doubly confirmed. This burst executed a **human-approved (2x) decision-ID migration**: renamed every `DEC-NNN` decision-ID token to `D-NNN` throughout `.factory/` (word-boundary-safe, ~7,215 occurrences / 532 files), resolving `ENGINE-VALIDATE-DISPATCH-ADVANCE-STALE-DCHAIN-CITE` in full and minting `D-372`. **No cycle ACTIVE; pipeline PAUSED.** This is a lightweight DECISION-ID-MIGRATION checkpoint (`DCHAIN-MIGRATION-DEC-TO-DNNN-2026-09-19`) -- next = human direction.
+
+**Convergence counter:** N/A -- no active convergence/adversarial loop (cycle-008 CLOSED). trajectory-tail carried forward unchanged from F5 (`→4→0→0→0`).
+
+**In-flight work:** NONE. No stories mid-TDD; no open PRs; no sub-agents abandoned mid-step; no WIP branches; no active story worktrees. This burst's only action was the corpus-wide `DEC-NNN`->`D-NNN` rename across `.factory/` and the associated STATE.md/archive bookkeeping; no pipeline-dispatched task ran. The `.factory` worktree is clean of unrelated changes as of this commit (the pre-existing `sidecar-learning.md` session-log entries were included in this commit as ordinary accumulated bookkeeping, not swept in accidentally -- reviewed before staging).
+
+**Pending human decisions / blockers:** none blocking. cycle-008 carries ZERO open pre-release blockers and ZERO open PRs, is release-VALIDATED, and its S6 spike is DONE (DEFER-INDEFINITELY, doubly confirmed). Optional next actions (human-owned, none gating): cutting the dev release; a maintenance sweep (6 open Dependabot PRs `#837`-`#842` + the accumulated LOW standing-item debt in `cycles/OPEN-STANDING-ITEMS.md`, now including the S6 Teams recheck window); or opening cycle-009 (009-011 remain PARKED).
+
+**WIP branch list:** none.
+
+**Resume command:** `/vsdd-factory:rehydrate-wave` then `/vsdd-factory:next-step`.
+
+**Counts:** `total_bcs` **770** (unchanged); VP count **89** (unchanged); holdout scenarios **118** (unchanged); `total_stories` **191** (unchanged). Prior checkpoint (STATE.md v4.70, standing-item-log state) archived verbatim to `cycles/cycle-008/session-checkpoints.md`.
+```
+
+**Superseded by:** a `SESSION-WRAP-PAUSE-2026-09-20` durability checkpoint (STATE.md v4.71->v4.72) that persisted the 2026-09-19 maintenance sweep's 4 analysis files to `.factory/maintenance/2026-09-19/` (with a new `README.md` index) and committed routine already-uncommitted worktree churn (`sidecar-learning.md` session-end log entries, the `#847` PR's `code-delivery/refactor-dec-to-d-decision-ids/pr-description.md`). The `DEC-NNN`->`D-NNN` decision-ID migration is now COMPLETE on BOTH branches (`develop @ 9e939c69`, `factory-artifacts @ bdd92e57`). No `src/`/phase change, no new DEC. Current checkpoint (STATE.md v4.72, session-wrap-pause state) is in `STATE.md` itself.
 
 ---

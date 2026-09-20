@@ -225,3 +225,13 @@ See `cycles/cycle-005/burst-log.md` Bursts 11-12 for full narrative detail (thes
 | Phase | Status | Completed | Gate | Notes | Finding Progression |
 |-------|--------|-----------|------|-------|---------------------|
 | **SESSION-WRAP-PAUSE-2026-09-18** | **COMPLETE** (superseded) | 2026-09-18 | session-wrap checkpoint | agent state-manager -- notes: "cycle-008 Wave-1 gate CLOSED; S5 worktree created, no work started" | 770 BCs / 89 VPs / 118 holdout / 191 stories; no DEC minted |
+
+> Extracted from `.factory/STATE.md`'s `## Phase Progress` table during the
+> 2026-09-20 SESSION-WRAP-PAUSE-2026-09-20 durability burst (v4.71 -> v4.72),
+> to keep the live table at 12 rows after adding the new
+> `SESSION-WRAP-PAUSE-2026-09-20` row. This was the oldest row at that
+> point; archived here verbatim, unedited.
+
+| Phase | Status | Completed | Gate | Notes | Finding Progression |
+|-------|--------|-----------|------|-------|---------------------|
+| **CYCLE-008-F4-WAVE2-S5-MERGED-2026-09-18** | **COMPLETE** | 2026-09-18 | automated bookkeeping | S5 DELIVERED+CONVERGED and MERGED via PR `#843` @ `926fdb96`. **cycle-008 Phase F4 (both waves) FULLY COMPLETE.** | 770 BCs / 89 VPs / 118 holdout / 191 stories; no DEC minted |
