@@ -235,3 +235,14 @@ See `cycles/cycle-005/burst-log.md` Bursts 11-12 for full narrative detail (thes
 | Phase | Status | Completed | Gate | Notes | Finding Progression |
 |-------|--------|-----------|------|-------|---------------------|
 | **CYCLE-008-F4-WAVE2-S5-MERGED-2026-09-18** | **COMPLETE** | 2026-09-18 | automated bookkeeping | S5 DELIVERED+CONVERGED and MERGED via PR `#843` @ `926fdb96`. **cycle-008 Phase F4 (both waves) FULLY COMPLETE.** | 770 BCs / 89 VPs / 118 holdout / 191 stories; no DEC minted |
+
+---
+
+> Extracted from `.factory/STATE.md`'s `## Phase Progress` table during the
+> 2026-09-20 `RELEASE-v0.7.0-dev.8-2026-09-20` burst (v4.73 -> v4.74), to keep
+> the live table at 12 rows after adding the new `RELEASE-v0.7.0-dev.8-2026-09-20`
+> row. This was the oldest row at that point; archived here verbatim, unedited.
+
+| Phase | Status | Completed | Gate | Notes | Finding Progression |
+|-------|--------|-----------|------|-------|---------------------|
+| **CYCLE-008-F6-HARDENED-2026-09-18** | **COMPLETE / HARDENED_WITH_RESIDUALS** | 2026-09-18 | targeted hardening -- Kani/fuzz skip, mutation, security, regression checks; NO BLOCKING findings | Formal verification/fuzz JUSTIFIED SKIP. Mutation: delta config-scoped `examine_globs` 6/6 CAUGHT. Security: `cargo deny`+`cargo audit` PASS. Regression: `cargo test` PASS, 0 failures. 4 justified deferrals (S-7.02), incl. MEDIUM `CYCLE-008-F6-MUTANTS-EXAMINE-GLOBS-GAP` -- since RESOLVED 6/7 at F7 close. | 770 BCs / 89 VPs / 118 holdout / 191 stories; no DEC minted |
