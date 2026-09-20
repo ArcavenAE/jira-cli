@@ -1,1 +1,1 @@
-{"status":"pass","timestamp":"2026-09-19T17:06:52Z","command":"cd /Users/zious/Documents/GITHUB/jira-cli/.worktrees/dec-to-d-decision-ids && cargo test 2>&1 | grep -E \"test result:\" | grep -v \" 0 failed\" ; echo \"checked-for-failures-done\""}
+{"status":"pass","timestamp":"2026-09-20T16:36:59Z","command":"cd /Users/zious/Documents/GITHUB/jira-cli/.worktrees/MAINT-20260919-03 && cargo test --test requesttype_commands 2>&1 | tail -30"}

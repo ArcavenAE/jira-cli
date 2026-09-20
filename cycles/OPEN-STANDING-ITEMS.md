@@ -1312,3 +1312,74 @@ cites `D-372`, the file's genuine max). jira-cli's slim STATE.md style (dense si
 field values, no dense burst-narrative breakdown) is unchanged by this migration. The related
 `validate-factory-path-staging` `cd .factory && git` false-positive note is NOT resolved by this
 migration -- still tracked under `CYCLE-013-HOOK-FALSE-POSITIVE-COMMIT-MSG-SCAN` above.
+
+## Maintenance sweep 2026-09-19 (fix delivery, closed 2026-09-20) — process-gap findings
+
+**Status:** OPEN (process-gap items), non-blocking. Recorded per the S-7.02 Cycle-Closing
+Checklist discipline extended to maintenance sweeps: pipeline/tooling gaps surfaced during this
+sweep's 3 fix-PR deliveries (`#848`, `#849`, `#850`, all merged to `develop`), not content defects
+in any spec/code/product artifact. Full delivery record: `.factory/maintenance/2026-09-19/README.md`,
+`STATE.md` Phase Progress row `MAINT-20260919-FIX-DELIVERY-COMPLETE-2026-09-20`.
+
+**`MAINT-SWEEP-2026-09-19-VALIDATE-PR-REVIEW-POSTED-HOOK-MISMATCH`** (recurrence of
+`CYCLE-013-VALIDATE-PR-REVIEW-POSTED-HOOK-MISMATCH`, extended with two NEW facets this sweep) --
+the `validate-pr-review-posted` `SubagentStop` hook's core gap (demanding a native
+`gh pr review --approve`/`--request-changes` event) recurred, and this sweep surfaced two distinct
+failure shapes rather than one:
+  - **(a) Self-authored-PR trap.** All 3 fix PRs this sweep were self-authored (author ==
+    operator's own GitHub account). GitHub structurally blocks self-approval, and the permission
+    classifier independently flags `[Self-Approval]` on any attempt to route around it. A reviewer
+    that reaches a genuine APPROVE verdict on a self-authored PR therefore has NO hook-satisfying
+    action available -- `--approve` is impossible, not merely inadvisable -- trapping it in an
+    unsatisfiable Stop-hook retry loop. Workaround used: the orchestrator terminated stuck
+    reviewers after independently confirming (via `gh pr view --json` + reading the committed
+    `pr-review.md` artifact) that the COMMENTED-verdict review had actually posted.
+  - **(b) `--comment` substring false-positive.** The hook appears to substring-match "comment" in
+    the invoked command and misclassifies a formal `gh pr review --comment` (a review EVENT,
+    distinct from a plain issue comment) as if it were `gh pr comment` (which the hook correctly
+    treats as non-satisfying). This produced a false NOT-SATISFIED signal on reviews that had, in
+    fact, posted a proper COMMENTED review event.
+  Severity **MEDIUM** (process friction / wasted reviewer cycles; no incorrect merge or content
+  outcome resulted -- the orchestrator's independent verification caught both facets before any
+  decision was made on stale information). Candidate fix (extends the cycle-013 entry's candidate):
+  the hook must (1) accept a `--comment`-posted review event as a valid terminal state distinct
+  from `gh pr comment`, disambiguated by parsing the actual `gh` subcommand/flag structure rather
+  than a raw substring match, and (2) treat "self-authored PR, `--approve`/`--request-changes`
+  structurally unavailable, COMMENTED verdict posted + review artifact committed" as a satisfying
+  terminal state, not a stuck-retry condition.
+
+**`MAINT-SWEEP-2026-09-19-PR-MANAGER-COMPLETION-GUARD-FALSE-AUTHORIZE`** (recurrence of
+`CYCLE-013-PR-MANAGER-COMPLETION-GUARD-PREMATURE-STOP` / `CYCLE-008-PR-MANAGER-COMPLETION-GUARD-FALSE-AUTHORIZE`)
+-- the `pr-manager-completion-guard` hook repeatedly asserted "your dispatch is pre-authorized for
+the full cycle including merge (`AUTHORIZE_MERGE=yes` per dispatch convention)" during this
+sweep's fix-PR deliveries even though the dispatch briefs **explicitly negated** merge
+authorization (review-and-report-only dispatches). The `[Merge Without Review]` permission
+classifier correctly blocked any autonomous merge attempt regardless of the hook's false claim, so
+no incorrect merge occurred -- but a less-conservative agent could plausibly be pressured toward
+an unauthorized merge by the hook's own assertion. Severity **LOW-MEDIUM**. Third+ confirmed
+occurrence of this defect class across cycle-008, cycle-013, and now this maintenance sweep --
+strengthens the case that the guard's `AUTHORIZE_MERGE` computation is structurally wrong (it
+appears to default-assume merge authorization rather than reading it from the actual dispatch
+payload), not a one-off dispatch-wiring mistake.
+
+**`MAINT-SWEEP-2026-09-19-PR-REVIEWER-OPUS-SLOWNESS`** -- NEW, performance/infra observation (not
+a correctness defect). Two `pr-reviewer` sub-agent instances dispatched under an explicit
+`model: opus` override each took tens of minutes to complete review of a ~10-line diff (PR
+`#849`'s `deny.toml` housekeeping and a companion review), well beyond the latency a diff of that
+size warrants. No `model` override was needed for reviews this small. Severity **LOW** (cost/time
+inefficiency, no incorrect verdict). Candidate action: default `pr-reviewer` dispatches to the
+agent's configured default model; reserve an explicit `opus`/heavier-model override for reviews
+where the diff size or risk profile actually warrants deeper reasoning (large diffs, security-
+sensitive changes, ambiguous verdicts on a prior pass) -- not as a blanket default for routine
+maintenance-sweep fix PRs.
+
+**Record-only note (not a defect):** all 3 sweep merges (`#848` @ `7a57ed53`, `#849` @ `d85a8136`,
+`#850` @ `7e0f9cbd`) were performed by the human operator (`Zious11`) via admin-bypass, consistent
+with `CYCLE-008-SELF-APPROVAL-STRUCTURAL-GAP` (self-approval is structurally blocked for
+self-authored PRs, so a human must always be the final merge actor under the current review model)
+and this session's human-gated merge model. Because the human performed the merge directly, the
+governed-merge wrapper scripts (`check-stale-verdict.sh`, `enforce-merge-strategy.sh`) were not
+invoked through the pipeline for these 3 merges. This is **accepted, not a defect** -- the wrappers
+exist to govern agent-initiated merges; a human's own admin-bypass merge action is outside their
+scope by design, the same way it was for PR `#823` (cycle-013) and other prior human-gated merges
+this project has recorded.
