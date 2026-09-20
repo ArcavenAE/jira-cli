@@ -390,3 +390,28 @@ Archived 2026-09-20 during the `RELEASE-v0.7.0-dev.8-2026-09-20` burst
 **Superseded by:** a `RELEASE-v0.7.0-dev.8-2026-09-20` checkpoint (STATE.md v4.73->v4.74) recording the **v0.7.0-dev.8 release as CUT** -- PR `#851` (`chore/release-v0.7.0-dev.8` -> `develop`, release-metadata only) reviewed CLEAN (`pr-reviewer` COMMENTED verdict) and CI Gate SUCCESS (24/24), merged by the human operator (`Zious11`) squash @ `8b4c797a`; annotated tag `v0.7.0-dev.8` pushed on `8b4c797a` (tag object `3fd26ef8`); `release.yml` run `35531962462` triggered, building the 5-platform prerelease (IN PROGRESS at time of this archival, watched separately). `activation_head`/`activation_version` bumped `aa557050`/`v0.7.0-dev.7` -> `8b4c797a`/`v0.7.0-dev.8`. No new BC/decision minted. Current checkpoint (STATE.md v4.74, release-cut state) is in `STATE.md` itself.
 
 ---
+
+## Archived checkpoint (STATE.md v4.74, RELEASE-v0.7.0-dev.8-2026-09-20 state)
+
+Archived 2026-09-20 during the `RELEASE-v0.7.0-dev.8-BUILD-COMPLETE-2026-09-20` burst
+(v4.74 -> v4.75), superseded by the current checkpoint now in `STATE.md` itself.
+
+```
+**Date & position:** 2026-09-20. Pipeline PAUSED, no cycle ACTIVE. cycle-008 (`oauth-surface-correctness`) CLOSED + release-VALIDATED (16-scope OAuth smoke test PASSED). The 2026-09-19 maintenance sweep's **FIX DELIVERY is COMPLETE** -- `#848`/`#849`/`#850` merged to `develop`, and **`v0.7.0-dev.8` is now RELEASED (CUT)** -- PR `#851` merged squash @ `8b4c797a` (reviewed CLEAN, CI Gate SUCCESS 24/24), tag `v0.7.0-dev.8` pushed on `8b4c797a` (tag object `3fd26ef8`), `release.yml` run `35531962462` building the 5-platform prerelease -- **IN PROGRESS**, being watched separately. `activation_head`/`activation_version` bumped to `8b4c797a`/`v0.7.0-dev.8`. **NEXT = human direction** (watch the release build to completion, or open cycle-009). This is a lightweight `RELEASE-v0.7.0-dev.8-2026-09-20` checkpoint.
+
+**Convergence counter:** N/A -- no active convergence/adversarial loop.
+
+**In-flight work:** the v0.7.0-dev.8 prerelease build (`release.yml` run `35531962462`) is IN PROGRESS (human-owned; watched separately, not a pipeline-dispatched task). No sub-agent steps abandoned. Remaining pending: sweep report aggregation and the `STORY-INDEX.md` stale `file_path` fix (S-3.03/S-3.07). Dependabot `#842` (base64 0.23) is HELD OPEN (multiple-versions ban; awaiting `hyper-util`).
+
+**Pending human decisions / blockers:** (1) confirm the v0.7.0-dev.8 5-platform prerelease build (`release.yml` run `35531962462`) completes successfully and the GitHub prerelease is published; (2) plugin rebuild -- redeploy the fixed `validate-dispatch-advance` into the plugin cache (upstream `#837`) is the real fix for the D-chain hook. 4 engine hook bugs remain FILED UPSTREAM in `BOHICA-LABS/vsdd-factory` (`#837`-`#840`, see Constraints Carried Forward item (8) for the current tally). Also: S6 Teams-OAuth spike CLOSED = DEFER-INDEFINITELY; auth-refresh DX item `AUTH-REFRESH-TARGET-PROFILE-NOT-SHOWN` logged.
+
+**WIP branch list:** none (all fix-PR and release-PR branches merged and deleted).
+
+**Resume command:** `/vsdd-factory:rehydrate-wave` then `/vsdd-factory:next-step`.
+
+**Counts:** `total_bcs` **770** (unchanged); VP count **89** (unchanged); holdout scenarios **118** (unchanged); `total_stories` **191** (unchanged). Prior checkpoint (STATE.md v4.73, fix-delivery-complete state) archived verbatim to `cycles/cycle-008/session-checkpoints.md`.
+```
+
+**Superseded by:** a `RELEASE-v0.7.0-dev.8-BUILD-COMPLETE-2026-09-20` checkpoint (STATE.md v4.74->v4.75) confirming the **v0.7.0-dev.8 5-platform prerelease build COMPLETE and the GitHub prerelease PUBLISHED** -- `release.yml` run `35531962462` = COMPLETE, all 6 jobs green (5 platform builds + Create Release, only a non-blocking informational `ubuntu-latest` -> Ubuntu 26 migration annotation); GitHub prerelease `v0.7.0-dev.8` PUBLISHED 2026-09-20T19:26:47Z (created 19:19:51Z), 10 assets (5 platform archives + 5 paired `.sha256` checksums). Resolves the prior checkpoint's pending decision (1) (confirm build/publish) as RESOLVED/CONFIRMED. Also logged a record-only standing item (`UNTRACKED-EXTERNAL-PR-574-PROVENANCE-ATTESTATION`, LOW, needs-triage) for an untracked open external PR `#574` surfaced by `gh pr list` on pipeline resume. `activation_head`/`activation_version` unchanged at `8b4c797a`/`v0.7.0-dev.8`. No new BC/decision minted. Current checkpoint (STATE.md v4.75, build-complete/prerelease-published state) is in `STATE.md` itself.
+
+---

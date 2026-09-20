@@ -1383,3 +1383,29 @@ invoked through the pipeline for these 3 merges. This is **accepted, not a defec
 exist to govern agent-initiated merges; a human's own admin-bypass merge action is outside their
 scope by design, the same way it was for PR `#823` (cycle-013) and other prior human-gated merges
 this project has recorded.
+
+## Untracked external PR discovered on pipeline resume — UNTRACKED-EXTERNAL-PR-574-PROVENANCE-ATTESTATION (2026-09-20)
+
+**Status:** OPEN, record-only, **NOT triaged this session**. Severity **LOW**. Surfaced by
+`gh pr list` on pipeline resume during the `RELEASE-v0.7.0-dev.8-BUILD-COMPLETE-2026-09-20`
+burst while verifying the v0.7.0-dev.8 release build/publish outcome (read-only via `gh`) --
+an unrelated discovery, not itself part of that verification.
+
+**PR:** `#574` — "ci(release): attest build provenance for release artifacts", contributor
+`ArcavenAE`, branch `ArcavenAE:ci/attest-provenance` -> `develop` (fork PR). Open since
+2026-07-06 (~2.5 months as of this recording). Not previously tracked anywhere in `STATE.md`
+or this file.
+
+**Disposition:** untriaged. This item exists solely so the discovery is not lost before a
+human makes a review/merge/close decision. No content judgment has been made this session --
+neither on the correctness or security posture of the proposed provenance-attestation CI
+change, nor on its mergeability against the current `ci.yml`. Per the CI Gate review-scope
+discipline (`CLAUDE.md`'s "CI Gate — SCOPE SUMMARY"), any PR touching `.github/workflows/`
+warrants scoped review of that diff before merge; that review has not yet happened for `#574`.
+
+**Next step (human-owned):** review PR `#574` and decide review/merge/close. If merged, note
+that it most likely touches release-workflow CI (`.github/workflows/release.yml`), which is
+adjacent to but distinct from the six `ci-gate`-scoped files enumerated in `CLAUDE.md`.
+
+**Unrelated, unchanged:** Dependabot `#842` (base64 0.23) remains separately HELD OPEN
+(multiple-versions ban; awaiting `hyper-util`) — no change to it this burst.
