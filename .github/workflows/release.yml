@@ -35,7 +35,7 @@ jobs:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
 
       - name: Install Rust
-        uses: dtolnay/rust-toolchain@6c977a6ca4077a0ceb28ffbe03f59d46e9ac8772  # stable
+        uses: dtolnay/rust-toolchain@02cb101ec7c40f2c49e1d9714d64511d8e1b74de  # stable
         with:
           toolchain: stable
           targets: ${{ matrix.target }}
@@ -214,7 +214,26 @@ jobs:
 
   release:
     name: Create Release
-    needs: build
+    needs: [build, attest]
+    # Fail-closed gate on `attest` without breaking disabled-attestation
+    # releases: `attest` is skipped whenever ATTESTATIONS_ENABLED is unset
+    # (the default on every fork and on the canonical repo today) — a
+    # skipped `attest` must NOT block the release. A bare `needs: [build,
+    # attest]` would cascade-skip `release` whenever `attest` is skipped,
+    # since the implicit "all needs succeeded" gate treats `skipped` as a
+    # failure. The explicit `if:` below replaces that implicit gate, so it
+    # must re-assert build success itself. This is an ALLOW-LIST on
+    # `attest`'s result (`success` or `skipped`), not a deny-list on
+    # `failure` alone: GitHub Actions job results have exactly four
+    # possible values (success/failure/cancelled/skipped), and a deny-list
+    # form (`!= 'failure'`) would let a `cancelled` `attest` (e.g. its
+    # `timeout-minutes: 15` firing on a Sigstore Fulcio/Rekor hang) through
+    # silently — the top-level `!cancelled()` guard reflects only the
+    # overall workflow run's cancellation, not one dependency job's own
+    # timeout-driven cancellation (SEC-002). The allow-list blocks both
+    # `failure` and `cancelled` while still letting `success` and the
+    # fork-safe/attestations-disabled `skipped` default through.
+    if: ${{ !cancelled() && needs.build.result == 'success' && (needs.attest.result == 'success' || needs.attest.result == 'skipped') }}
     runs-on: ubuntu-latest
     timeout-minutes: 30
     steps:
@@ -250,14 +269,18 @@ jobs:
     # Cloud. Gating keeps the file byte-identical downstream while never
     # hard-failing a fork's release.
     if: vars.ATTESTATIONS_ENABLED == 'true'
-    # Runs in PARALLEL with `release` (both `needs: build`), not upstream
-    # of it. Both fan in from the same immutable `build` artifacts, so the
-    # attested bytes are identical to what `release` uploads verbatim
-    # (softprops copies them unchanged) — the attestation is created from
-    # the built bytes, not re-downloaded from the release page, so there is
-    # no publish-then-attest window (TOCTOU / CWE-362). It is deliberately
-    # NOT a `needs:` of `release`: with the fork gate above, a skipped
-    # `attest` would otherwise cascade and skip the fork's entire release.
+    # Both this job and `release` fan in from the same immutable `build`
+    # artifacts, so the attested bytes are identical to what `release`
+    # uploads verbatim (softprops copies them unchanged) — the attestation
+    # is created from the built bytes, not re-downloaded from the release
+    # page, so there is no publish-then-attest window (TOCTOU / CWE-362).
+    # `release` now declares `needs: [build, attest]` with a fail-closed
+    # `if:` (see that job): it waits for this job to complete, proceeds
+    # once this job succeeds OR is skipped (attestations disabled), and is
+    # blocked only when this job actually FAILS. This preserves the fork
+    # opt-in gate above — a skipped `attest` never blocks a fork's release
+    # — while ensuring an enabled-but-failing attestation blocks
+    # publication instead of racing ahead of it.
     permissions:
       # attest-build-provenance needs exactly these two; neither is
       # inherited. contents: read is NOT needed — the artifact download
@@ -289,7 +312,7 @@ jobs:
       # step in that workflow (after codesign/notarize, before upload),
       # gated on the same variable. Out of scope for this PR.
       - name: Attest build provenance
-        uses: actions/attest-build-provenance@0f67c3f4856b2e3261c31976d6725780e5e4c373 # v4.1.1
+        uses: actions/attest-build-provenance@4d101475d8b20a2381f78447822ac1eab6504dd8 # v4.2.2
         with:
           subject-path: |
             release-assets/*.tar.gz
