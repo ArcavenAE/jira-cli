@@ -469,6 +469,31 @@ pub(super) async fn handle_list(
                                 (parts, "updated DESC")
                             }
                             Err(e) => {
+                                // F-WG-1 (S-cycle8-agile-scope-mismatch-error-mapping,
+                                // AC-014): an OAuth granular-scope-mismatch 401 on this
+                                // `list_sprints` call gets the same grouped sprint-scope
+                                // hint as `board.rs::handle_view`'s scrum-branch fetch
+                                // (EC-X.15.001-4) and is surfaced standalone, as the
+                                // top-level error, so `main.rs`'s `Error: {e}` render
+                                // (which prints only the top Display, not the full
+                                // anyhow chain) shows the hint. A non-scope-mismatch
+                                // failure is untouched and keeps its existing
+                                // "Failed to list sprints..." context (AC-002).
+                                // FIX-F5-001 F3 (cycle-008 F5 Pass 1): scans
+                                // the whole anyhow chain, not only the
+                                // top-level error, so a future `.context()`
+                                // added to `list_sprints` doesn't silently
+                                // defeat this check.
+                                let is_scope_mismatch = client.is_oauth_auth()
+                                    && crate::cli::board::is_insufficient_scope_error(&e);
+                                if is_scope_mismatch {
+                                    return Err(crate::cli::board::rewrite_agile_scope_error(
+                                        e,
+                                        client,
+                                        "read:sprint:jira-software, read:issue-details:jira, \
+                                         and read:jql:jira",
+                                    ));
+                                }
                                 return Err(e.context(format!(
                                     "Failed to list sprints for board {}. \
                                      Use --jql to query directly.",
@@ -487,6 +512,29 @@ pub(super) async fn handle_list(
                     }
                 }
                 Err(e) => {
+                    // F-WG-1 (S-cycle8-agile-scope-mismatch-error-mapping, AC-013): an
+                    // OAuth granular-scope-mismatch 401 on this `get_board_config` call
+                    // gets the same combined admin+project-scope hint as
+                    // `board.rs::handle_view`'s unconditional config fetch, surfaced
+                    // standalone (top-level) so `main.rs`'s `Error: {e}` render shows
+                    // the hint rather than a wrapped "Failed to fetch config..."
+                    // message. Checked BEFORE the 404 branch so a scope-mismatch 401
+                    // is never misread as a not-found board. Non-scope-mismatch
+                    // failures (404, 500, Basic-auth, etc.) are untouched (AC-002,
+                    // AC-004).
+                    // FIX-F5-001 F3 (cycle-008 F5 Pass 1): scans the whole
+                    // anyhow chain, not only the top-level error, so a future
+                    // `.context()` added to `get_board_config` doesn't
+                    // silently defeat this check.
+                    let is_scope_mismatch = client.is_oauth_auth()
+                        && crate::cli::board::is_insufficient_scope_error(&e);
+                    if is_scope_mismatch {
+                        return Err(crate::cli::board::rewrite_agile_scope_error(
+                            e,
+                            client,
+                            "read:board-scope.admin:jira-software and read:project:jira",
+                        ));
+                    }
                     if let Some(JrError::ApiError { status: 404, .. }) = e.downcast_ref::<JrError>()
                     {
                         return Err(JrError::UserError(format!(
@@ -517,7 +565,7 @@ pub(super) async fn handle_list(
     // S-588-1 (BC-2.1.025): `--sort`, when present, OVERRIDES the `order_by`
     // value computed by every branch above -- `--jql`, scrum-active-sprint,
     // kanban, and default-project alike -- uniformly, including the
-    // board-driven `rank ASC` defaults (DEC-298 "always wins"). Absent
+    // board-driven `rank ASC` defaults (D-298 "always wins"). Absent
     // `--sort`, `order_by` is byte-for-byte unchanged from the branches
     // above (BC-2.1.002/003/004/005's pinned default literals).
     let order_by: String = match sort_spec {
@@ -546,7 +594,7 @@ pub(super) async fn handle_list(
     let where_clause = all_parts.join(" AND ");
     let effective_jql = format!("{where_clause} ORDER BY {order_by}");
 
-    // S-575-1 (BC-2.2.033 Postcondition 1/4, human-locked DEC-298): when
+    // S-575-1 (BC-2.2.033 Postcondition 1/4, human-locked D-298): when
     // `--fields` is present it REPLACES BASE_ISSUE_FIELDS entirely — no
     // union with `extra` (story points / team field ids), and `--points` /
     // `--assets` / `--duedate` become silent no-ops by never reaching any of

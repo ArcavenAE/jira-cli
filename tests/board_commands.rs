@@ -94,10 +94,12 @@ async fn test_bc_x_15_001_board_list_401_scope_mismatch_names_missing_scopes() {
 }
 
 /// AC-001 (BC-X.15.001 Behavior clause 1): `jr board view`'s config-fetch
-/// (`GET /rest/agile/1.0/board/{id}/configuration`, which requires
-/// `read:board-scope.admin:jira-software`) must get the same disambiguated
-/// rewrite. `--board <ID>` is used to bypass board auto-discovery so the
-/// mocked 401 is deterministically hit on the configuration call.
+/// (`GET /rest/agile/1.0/board/{id}/configuration`, which requires BOTH
+/// `read:board-scope.admin:jira-software` AND `read:project:jira` per
+/// oauth-scope-matrix.md #53) must get the same disambiguated rewrite,
+/// naming both scopes combined. `--board <ID>` is used to bypass board
+/// auto-discovery so the mocked 401 is deterministically hit on the
+/// configuration call.
 ///
 /// Note: the story text labels this command-family case "`jr board view
 /// --config`", but `BoardCommand::View` has no `--config` flag in the
@@ -140,9 +142,14 @@ async fn test_bc_x_15_001_board_view_401_scope_mismatch_names_admin_scope() {
         "Scope-mismatch 401 should exit 2, got: {:?}; stderr: {stderr}",
         output.status.code()
     );
+    // F-WAVE-4: `get_board_config` requires BOTH
+    // `read:board-scope.admin:jira-software` AND `read:project:jira`
+    // (per oauth-scope-matrix.md #53) — the hint must name both, not just
+    // the admin scope. RED until board.rs::handle_view's hint is widened.
     assert!(
-        stderr.contains("read:board-scope.admin:jira-software"),
-        "Expected 'read:board-scope.admin:jira-software' scope hint in stderr, got: {stderr}"
+        stderr.contains("read:board-scope.admin:jira-software and read:project:jira"),
+        "Expected combined 'read:board-scope.admin:jira-software and read:project:jira' \
+         scope hint in stderr (F-WAVE-4), got: {stderr}"
     );
     assert!(
         stderr.contains("jr auth login"),
