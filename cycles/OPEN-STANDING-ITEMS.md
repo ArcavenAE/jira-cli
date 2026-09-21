@@ -1384,33 +1384,80 @@ exist to govern agent-initiated merges; a human's own admin-bypass merge action 
 scope by design, the same way it was for PR `#823` (cycle-013) and other prior human-gated merges
 this project has recorded.
 
-## PR #574 provenance-attestation follow-up — PR574-PROVENANCE-ATTEST-FOLLOWUP-BUMP-AND-LINEARIZE (2026-09-21)
+## PR #574 provenance-attestation follow-up — PR574-PROVENANCE-ATTEST-FOLLOWUP-BUMP-AND-LINEARIZE — RESOLVED 2026-09-21
 
-**Status:** OPEN. Severity **LOW/MEDIUM**. Logged during the `PR574-TRIAGE-MERGE-BOOKKEEPING-2026-09-21`
-burst, immediately after `UNTRACKED-EXTERNAL-PR-574-PROVENANCE-ATTESTATION` was triaged
-(pr-reviewer merge-ready, security-reviewer SAFE-TO-MERGE, research-agent GA-confirmed) and
-merged as-is per human decision — squash-merge `c50a48605afae1577710ba6dbae216c7f981cb3c`,
-mergedAt 2026-09-21T14:38:28Z. Full resolution record: `cycles/RESOLVED-DRIFT-ITEMS.md`.
-
-**Scope:** on top of the now-merged `release.yml` provenance-attestation job:
-(a) bump the `actions/attest-build-provenance` pin `v4.1.1` -> `v4.2.2`
-(SHA `4d101475d8b20a2381f78447822ac1eab6504dd8`);
-(b) linearize the release DAG so `release: needs: attest` (fail-closed — no release ships
-without provenance). The merged version runs `attest` PARALLEL to `release`, so a
-Sigstore/Rekor outage could publish a release without provenance attached.
-
-**Disposition:** not yet actioned. Vehicle (full F1-F7 cycle vs. streamlined
-`fix-pr-delivery`) is a pending human decision — this follow-up is CI-workflow-only, no
-BC/behavioral-contract surface, so `fix-pr-delivery` is the more plausible fit, but the
-human has not yet chosen.
-
-**Note (record-only):** `ATTESTATIONS_ENABLED` repo variable remains UNSET on
-`Zious11/jira-cli`, so build-provenance attestation is NOT yet active on canonical releases
-even though `#574` is merged — activating it is a deliberate post-merge maintainer action,
-to be done after this follow-up plus one validated release.
-
-**Next step (human-owned):** choose delivery vehicle for (a)+(b), then decide when to flip
-`ATTESTATIONS_ENABLED` on.
+**Status:** **RESOLVED 2026-09-21.** Delivered via PR `#858` ("ci(release): gate release on
+attest job (fail-closed) and bump attest-build-provenance to v4.2.2"), squash-merged to
+`develop` @ `768eda79f96ac839dcf25512981f0055cd644665` (mergedAt 2026-09-21T16:44:53Z). Both
+scope items landed: the `actions/attest-build-provenance` pin bumped `v4.1.1` -> `v4.2.2`
+(SHA `4d101475d8b20a2381f78447822ac1eab6504dd8`) and the release DAG linearized
+(`release: needs: [build, attest]`, fail-closed `if:` gate). Full original item text +
+resolution facts archived verbatim to `cycles/RESOLVED-DRIFT-ITEMS.md`
+(§"PR #574 provenance-attestation follow-up delivered"). `ATTESTATIONS_ENABLED` repo variable
+remains UNSET on `Zious11/jira-cli` (record-only — activation is a separate deliberate
+maintainer step, not blocked by this resolution).
 
 **Unrelated, unchanged:** Dependabot `#842` (base64 0.23) remains separately HELD OPEN
-(multiple-versions ban; awaiting `hyper-util`) — no change to it this burst.
+(multiple-versions ban; awaiting `hyper-util` AND `wiremock` — see the new
+`MAINT-BASE64-023-DEDUPE-BLOCKED-ON-UPSTREAM` item below).
+
+## Dependency sweep 2026-09-21 — base64 0.22/0.23 dedupe blocked on two upstream crates — MAINT-BASE64-023-DEDUPE-BLOCKED-ON-UPSTREAM (2026-09-21)
+
+**Status:** OPEN. Severity **MEDIUM/LOW**. Logged during the 2026-09-21 dependency-focused
+maintenance sweep (human-requested; 7 Dependabot dependency PRs analyzed by `research-agent`
+for soak/compat/MSRV and `codebase-analyzer` for in-repo impact).
+
+**Issue:** Dependabot PRs `#842` (`base64` `0.22.1` -> `0.23.1`) and `#854` (`reqwest`
+`0.13.4` -> `0.13.5`) both fail `cargo deny check bans` on a `base64` `0.22`-vs-`0.23`
+duplicate-version violation. `reqwest` `0.13.5` itself has already moved to `base64` `0.23`,
+so merging either PR alone (or both together) leaves two `base64` major-line versions in the
+dependency tree simultaneously.
+
+**Root cause (empirically confirmed, coordinated-bump investigation):** `wiremock` `0.6.5`
+(latest release, `[dev-dependencies]`) hard-depends on `base64 ^0.22`, and `hyper-util`
+`0.1.20` (latest release, transitive) pulls `base64 ^0.22` via its client-proxy feature. No
+release of either `wiremock` or `hyper-util` exists yet on `base64 0.23` — a coordinated bump
+is currently **infeasible**, not merely undesirable.
+
+**Compiles-but-blocked distinction:** the dependency tree compiles fine with both `base64`
+major versions present simultaneously — this is purely a `cargo deny` duplicate-version
+**policy** violation (`bans` check), not a build break, not a security finding, and not a
+functional regression.
+
+**Human decision:** HOLD both `#842` and `#854` open, unmerged. Explicitly declined to add a
+`[[bans.skip]]` suppression entry for `base64` — the existing `deny.toml` skip-entry
+discipline (see Constraints Carried Forward, the `syn` 2/3 entry) is reserved for cases with
+no forward resolution path visible; here the path is "wait for upstream," so a skip would mask
+the drift rather than track it to closure.
+
+**Blocked on:** either `wiremock` releasing a `base64 0.23`-compatible version, or
+`hyper-util` doing the same (whichever comes first unblocks a coordinated re-attempt of both
+PRs together).
+
+**Candidate action:** re-check each maintenance sweep whether `wiremock` and/or `hyper-util`
+have shipped a `base64 0.23`-compatible release; when either has, retry `#842` + `#854` as a
+single coordinated bump (both must land together to avoid re-triggering the duplicate-version
+ban in the interim). Recurring recheck entry added to `.factory/maintenance-config.yaml`
+under `external_blocker_rechecks:`.
+
+## Dependency sweep 2026-09-21 — comfy-table 8.0.0 major-version migration deferred — COMFY-TABLE-8-MIGRATION-DEFERRED (2026-09-21)
+
+**Status:** OPEN. Severity **LOW**. Logged during the same 2026-09-21 dependency-focused
+maintenance sweep.
+
+**Issue:** Dependabot PR `#855` proposes `comfy-table` `7.2.2` -> `8.0.0` (MAJOR, breaking).
+`codebase-analyzer` confirmed the breaking surface touches `src/output.rs` directly:
+`load_preset` is removed (renamed/reshaped to `load_style`), and `UTF8_FULL_CONDENSED`'s type
+changes from `&str` to `TableStyle`. Adopting `8.0.0` requires an actual code migration in
+`src/output.rs`, not just a `Cargo.toml` version bump.
+
+**Disposition:** DEFERRED, not merged. `jr` stays on the deliberate exact pin `=7.2.2`
+(`ADR-0025`) for now. Related, distinct standing item: `CYCLE-013-COMFY-TABLE-ZERO-HEADROOM-MSRV`
+(above) tracks the zero-MSRV-headroom risk of the *current* `7.2.2` pin — this new item tracks
+the *separate* question of whether/when to take the `8.0.0` major migration; the two are not
+duplicates and both stay open independently.
+
+**Candidate action:** a future maintenance or feature cycle scopes the `load_preset` ->
+`load_style` migration (and the `UTF8_FULL_CONDENSED` type-change call sites) in
+`src/output.rs`, verifies table rendering output is byte-identical via existing snapshot
+tests, then re-attempts the bump. No urgency — `7.2.2` remains fully supported and CI-green.

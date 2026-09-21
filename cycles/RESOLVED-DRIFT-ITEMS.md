@@ -441,3 +441,38 @@ active on canonical releases despite `#574` being merged; activating it is a del
 post-merge maintainer action, deferred until after the follow-up item plus one validated
 release. No BC/decision minted for this triage+merge bookkeeping burst (mechanical recording
 of an already-human-decided merge, not a fresh pipeline ruling).
+
+## PR #574 provenance-attestation follow-up delivered — PR574-PROVENANCE-ATTEST-FOLLOWUP-BUMP-AND-LINEARIZE (2026-09-21)
+
+**RESOLVED / MERGED (2026-09-21).** PR `#858` — "ci(release): gate release on attest job
+(fail-closed) and bump attest-build-provenance to v4.2.2" — delivered the follow-up logged
+immediately above, in full.
+
+**Delivered:**
+- Bumped `actions/attest-build-provenance` pin `v4.1.1` -> `v4.2.2`
+  (SHA `4d101475d8b20a2381f78447822ac1eab6504dd8`, verified against upstream).
+- Linearized the release DAG: `release: needs: [build, attest]` with a fail-closed
+  `if: !cancelled() && needs.build.result == 'success' && (needs.attest.result == 'success'
+  || needs.attest.result == 'skipped')` — blocks `release` on a failed or cancelled `attest`,
+  while still allowing `skipped`/disabled (fork-safety, `ATTESTATIONS_ENABLED` unset case)
+  to proceed. `attest` now runs strictly before `release` (was PARALLEL pre-#858).
+
+**Review chain:** `code-reviewer` CLEAN; fresh-eyes `pr-reviewer` **APPROVE** (independently
+re-derived the DAG semantics from GitHub Actions expression-evaluation rules rather than
+trusting CI green — `release.yml` is tag-push-only, so none of the PR's own CI runs exercise
+the changed wiring; verified all 4 claimed states plus 2 unclaimed edge cases — `build`-failure
+propagation to `attest`'s implicit result, and `timeout-minutes` timeout resolving to
+`failure` not `cancelled` — all correct; 2 non-blocking documentation-accuracy suggestions
+left for a future pass, no blockers); earlier `security-reviewer` pass on the same change was
+also clean. Human code-owner approved; CI Gate green. Full review artifact:
+`.factory/code-delivery/PR-858/pr-review.md`.
+
+**Merge:** squash-merged to `develop` @ `768eda79f96ac839dcf25512981f0055cd644665`, mergedAt
+2026-09-21T16:44:53Z.
+
+**Record-only, still unresolved by this delivery:** the `ATTESTATIONS_ENABLED` repo variable
+remains UNSET on `Zious11/jira-cli` — build-provenance attestation is therefore still NOT
+active on canonical releases; activating it remains a separate, deliberate post-merge
+maintainer action (per the original item's disposition, deferred until after one validated
+release under the now-linearized gate). No BC/decision minted — this is a routine fix-PR
+delivery, not a fresh pipeline ruling.

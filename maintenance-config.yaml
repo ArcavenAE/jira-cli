@@ -67,3 +67,31 @@ external_blocker_rechecks:
       profiles regardless of this recheck's outcome -- this is an
       OAuth-3LO enhancement opportunity, not a fix for something broken
       for everyone.
+  - id: MAINT-BASE64-023-DEDUPE-BLOCKED-ON-UPSTREAM
+    summary: >
+      Whether wiremock (dev-dependency, currently 0.6.5, hard-deps
+      base64 ^0.22) and/or hyper-util (transitive, currently 0.1.20,
+      pulls base64 ^0.22 via its client-proxy feature) have released a
+      base64-0.23-compatible version. As of 2026-09-21, neither has --
+      Dependabot PRs #842 (base64 0.22.1->0.23.1) and #854 (reqwest
+      0.13.4->0.13.5, which itself already moved to base64 0.23) are
+      both HELD OPEN because merging either alone (or together) trips
+      `cargo deny check bans`'s duplicate-version policy on base64.
+      Confirmed compiles-but-blocked: this is a deny policy violation,
+      not a build break or security finding.
+    recheck_summary: >
+      Each maintenance sweep, check the latest published versions of
+      wiremock and hyper-util for a base64 0.23 (or later) dependency
+      requirement. Either one moving off base64 ^0.22 is sufficient ->
+      retry #842 + #854 as a SINGLE coordinated bump (both must land
+      together to avoid re-triggering the duplicate-version ban in the
+      interim window). No `[[bans.skip]]` suppression -- human declined
+      that route explicitly; this is a wait-for-upstream item, not a
+      permanent exception.
+    standing_item: .factory/cycles/OPEN-STANDING-ITEMS.md (search
+      MAINT-BASE64-023-DEDUPE-BLOCKED-ON-UPSTREAM)
+    fallback: >
+      No functional impact either way -- the dependency tree compiles
+      and runs correctly with the current base64 0.22-only tree; this
+      recheck exists purely to close a `cargo deny` policy gap, not to
+      fix something broken.
