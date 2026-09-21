@@ -398,3 +398,46 @@ CLEAN adversary passes (`cycles/cycle-013/phase-f5-adversarial/pass-01.md`, `pas
 LOW standing item recorded (`CYCLE-013-COMFY-TABLE-ZERO-HEADROOM-MSRV`). Lesson `L-001` codified in
 `cycles/cycle-013/lessons.md`. No DEC minted (automated review-gate outcome, cycle-012 F5
 precedent).
+
+## Untracked external PR #574 (provenance-attestation CI) triaged and merged — UNTRACKED-EXTERNAL-PR-574-PROVENANCE-ATTESTATION (2026-09-21)
+
+**RESOLVED / MERGED (2026-09-21).** External contributor PR `#574` — "ci(release): attest
+build provenance for release artifacts" (author `arcaven`, branch
+`ArcavenAE:ci/attest-provenance`), open since 2026-07-06 (~2.5 months) and previously logged
+record-only/untriaged during the `RELEASE-v0.7.0-dev.8-BUILD-COMPLETE-2026-09-20` burst, was
+triaged this session and merged into `develop` as-is per explicit human decision.
+
+**Triage findings (this session, all verified read-only):**
+- `pr-reviewer`: merge-ready.
+- `security-reviewer`: SAFE-TO-MERGE — no CRITICAL/HIGH/MEDIUM findings; the 3 action SHAs
+  pinned in the PR's diff were independently verified; the workflow trigger is tag-push-only;
+  permissions follow least-privilege; no `ci-gate`-governed file (per `CLAUDE.md`'s CI Gate
+  "SCOPE SUMMARY" six-file list) is touched by this diff.
+- `research-agent`: confirmed `actions/attest-build-provenance` is GA and the proposed usage
+  pattern is safe.
+
+**Merge mechanics:** the PR branch was reconciled to `develop`'s tip before merge (server-side
+update-branch, resulting head `18f81787`); a fresh full CI run went green on that head (all 24
+checks including CI Gate, run `35609884490`); human code-owner `Zious11` submitted an
+APPROVING review on head `18f81787` (2026-09-21T14:17:51Z); `mergeStateStatus` was `CLEAN` at
+merge time. Squash-merge commit `c50a48605afae1577710ba6dbae216c7f981cb3c`, mergedAt
+2026-09-21T14:38:28Z. `develop` tip moved `8b4c797a` -> `c50a48605afae1577710ba6dbae216c7f981cb3c`.
+
+**Release impact:** NONE this burst — `release.yml` is tag-push-only and did not trigger on
+this merge (confirmed: the latest `release.yml` run remains the v0.7.0-dev.8 tag run). No
+`activation_head`/`activation_version` change.
+
+**Follow-up logged (OPEN, not resolved by this merge):**
+`PR574-PROVENANCE-ATTEST-FOLLOWUP-BUMP-AND-LINEARIZE` (LOW/MEDIUM,
+`cycles/OPEN-STANDING-ITEMS.md`) — bump `actions/attest-build-provenance` `v4.1.1` ->
+`v4.2.2` (SHA `4d101475d8b20a2381f78447822ac1eab6504dd8`) and linearize the release DAG
+(`release: needs: attest`, fail-closed) so a Sigstore/Rekor outage cannot let a release ship
+without provenance — the merged version runs `attest` PARALLEL to `release`. Delivery vehicle
+(full F1-F7 cycle vs. streamlined `fix-pr-delivery`) is a pending human decision.
+
+**Note (record-only, unresolved by this merge):** the `ATTESTATIONS_ENABLED` repo variable
+remains UNSET on `Zious11/jira-cli` — build-provenance attestation is therefore NOT yet
+active on canonical releases despite `#574` being merged; activating it is a deliberate
+post-merge maintainer action, deferred until after the follow-up item plus one validated
+release. No BC/decision minted for this triage+merge bookkeeping burst (mechanical recording
+of an already-human-decided merge, not a fresh pipeline ruling).

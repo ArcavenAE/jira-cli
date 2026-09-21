@@ -1384,28 +1384,33 @@ exist to govern agent-initiated merges; a human's own admin-bypass merge action 
 scope by design, the same way it was for PR `#823` (cycle-013) and other prior human-gated merges
 this project has recorded.
 
-## Untracked external PR discovered on pipeline resume — UNTRACKED-EXTERNAL-PR-574-PROVENANCE-ATTESTATION (2026-09-20)
+## PR #574 provenance-attestation follow-up — PR574-PROVENANCE-ATTEST-FOLLOWUP-BUMP-AND-LINEARIZE (2026-09-21)
 
-**Status:** OPEN, record-only, **NOT triaged this session**. Severity **LOW**. Surfaced by
-`gh pr list` on pipeline resume during the `RELEASE-v0.7.0-dev.8-BUILD-COMPLETE-2026-09-20`
-burst while verifying the v0.7.0-dev.8 release build/publish outcome (read-only via `gh`) --
-an unrelated discovery, not itself part of that verification.
+**Status:** OPEN. Severity **LOW/MEDIUM**. Logged during the `PR574-TRIAGE-MERGE-BOOKKEEPING-2026-09-21`
+burst, immediately after `UNTRACKED-EXTERNAL-PR-574-PROVENANCE-ATTESTATION` was triaged
+(pr-reviewer merge-ready, security-reviewer SAFE-TO-MERGE, research-agent GA-confirmed) and
+merged as-is per human decision — squash-merge `c50a48605afae1577710ba6dbae216c7f981cb3c`,
+mergedAt 2026-09-21T14:38:28Z. Full resolution record: `cycles/RESOLVED-DRIFT-ITEMS.md`.
 
-**PR:** `#574` — "ci(release): attest build provenance for release artifacts", contributor
-`ArcavenAE`, branch `ArcavenAE:ci/attest-provenance` -> `develop` (fork PR). Open since
-2026-07-06 (~2.5 months as of this recording). Not previously tracked anywhere in `STATE.md`
-or this file.
+**Scope:** on top of the now-merged `release.yml` provenance-attestation job:
+(a) bump the `actions/attest-build-provenance` pin `v4.1.1` -> `v4.2.2`
+(SHA `4d101475d8b20a2381f78447822ac1eab6504dd8`);
+(b) linearize the release DAG so `release: needs: attest` (fail-closed — no release ships
+without provenance). The merged version runs `attest` PARALLEL to `release`, so a
+Sigstore/Rekor outage could publish a release without provenance attached.
 
-**Disposition:** untriaged. This item exists solely so the discovery is not lost before a
-human makes a review/merge/close decision. No content judgment has been made this session --
-neither on the correctness or security posture of the proposed provenance-attestation CI
-change, nor on its mergeability against the current `ci.yml`. Per the CI Gate review-scope
-discipline (`CLAUDE.md`'s "CI Gate — SCOPE SUMMARY"), any PR touching `.github/workflows/`
-warrants scoped review of that diff before merge; that review has not yet happened for `#574`.
+**Disposition:** not yet actioned. Vehicle (full F1-F7 cycle vs. streamlined
+`fix-pr-delivery`) is a pending human decision — this follow-up is CI-workflow-only, no
+BC/behavioral-contract surface, so `fix-pr-delivery` is the more plausible fit, but the
+human has not yet chosen.
 
-**Next step (human-owned):** review PR `#574` and decide review/merge/close. If merged, note
-that it most likely touches release-workflow CI (`.github/workflows/release.yml`), which is
-adjacent to but distinct from the six `ci-gate`-scoped files enumerated in `CLAUDE.md`.
+**Note (record-only):** `ATTESTATIONS_ENABLED` repo variable remains UNSET on
+`Zious11/jira-cli`, so build-provenance attestation is NOT yet active on canonical releases
+even though `#574` is merged — activating it is a deliberate post-merge maintainer action,
+to be done after this follow-up plus one validated release.
+
+**Next step (human-owned):** choose delivery vehicle for (a)+(b), then decide when to flip
+`ATTESTATIONS_ENABLED` on.
 
 **Unrelated, unchanged:** Dependabot `#842` (base64 0.23) remains separately HELD OPEN
 (multiple-versions ban; awaiting `hyper-util`) — no change to it this burst.

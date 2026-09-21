@@ -256,3 +256,13 @@ See `cycles/cycle-005/burst-log.md` Bursts 11-12 for full narrative detail (thes
 | Phase | Status | Completed | Gate | Notes | Finding Progression |
 |-------|--------|-----------|------|-------|---------------------|
 | **CYCLE-008-F7-PREGATE-RECONCILE-2026-09-18** | **COMPLETE / DOC-FIX (no phase advance)** | 2026-09-18 | automated bookkeeping (doc-accuracy fix; not a human-facing gate) | Corrected 2 MEDIUM documentation-drift findings from the F7 pre-gate consistency audit (ADR-0026 backlink status; examine_globs 7-file exclusion count) + 1 LOW record-only note. | 770 BCs / 89 VPs / 118 holdout / 191 stories; no DEC minted |
+
+> Extracted from `.factory/STATE.md`'s `## Phase Progress` table during the
+> 2026-09-21 `PR574-TRIAGE-MERGE-BOOKKEEPING-2026-09-21` burst (v4.75 -> v4.76),
+> to keep the live table at 12 rows after adding the new
+> `PR574-TRIAGE-MERGE-BOOKKEEPING-2026-09-21` row. This was the oldest row at
+> that point; archived here verbatim, unedited.
+
+| Phase | Status | Completed | Gate | Notes | Finding Progression |
+|-------|--------|-----------|------|-------|---------------------|
+| **CYCLE-008-F7-CONVERGED-CLOSED-2026-09-18** | **COMPLETE / CONVERGED + CLOSED** | 2026-09-18 | F7 human gate approval -- delta convergence + cycle close ruling | Human APPROVED on the satisfied precondition "fix examine_globs first (`FIX-F7-001`, PR `#845` @ `0834c9f0`), then close." All 5 convergence dimensions PASS (Spec/Test/Implementation/Verification/Holdout). `CYCLE-008-F6-MUTANTS-EXAMINE-GLOBS-GAP` RESOLVED 6/7 (7th file `src/cli/init.rs` -> new item `CYCLE-008-INIT-MUTATION-COVERAGE-SEAM`). `ADR-0026` `proposed`->`accepted`. Shipped on `develop @ 0834c9f0`, NO release cut at F7 close. Full report: `cycles/cycle-008/phase-f7-convergence/delta-convergence-report.md`. | 770 BCs / 89 VPs / 118 holdout / 191 stories; D-371 minted |

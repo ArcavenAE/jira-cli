@@ -415,3 +415,28 @@ Archived 2026-09-20 during the `RELEASE-v0.7.0-dev.8-BUILD-COMPLETE-2026-09-20` 
 **Superseded by:** a `RELEASE-v0.7.0-dev.8-BUILD-COMPLETE-2026-09-20` checkpoint (STATE.md v4.74->v4.75) confirming the **v0.7.0-dev.8 5-platform prerelease build COMPLETE and the GitHub prerelease PUBLISHED** -- `release.yml` run `35531962462` = COMPLETE, all 6 jobs green (5 platform builds + Create Release, only a non-blocking informational `ubuntu-latest` -> Ubuntu 26 migration annotation); GitHub prerelease `v0.7.0-dev.8` PUBLISHED 2026-09-20T19:26:47Z (created 19:19:51Z), 10 assets (5 platform archives + 5 paired `.sha256` checksums). Resolves the prior checkpoint's pending decision (1) (confirm build/publish) as RESOLVED/CONFIRMED. Also logged a record-only standing item (`UNTRACKED-EXTERNAL-PR-574-PROVENANCE-ATTESTATION`, LOW, needs-triage) for an untracked open external PR `#574` surfaced by `gh pr list` on pipeline resume. `activation_head`/`activation_version` unchanged at `8b4c797a`/`v0.7.0-dev.8`. No new BC/decision minted. Current checkpoint (STATE.md v4.75, build-complete/prerelease-published state) is in `STATE.md` itself.
 
 ---
+
+## Archived checkpoint (STATE.md v4.75, RELEASE-v0.7.0-dev.8-BUILD-COMPLETE-2026-09-20 state)
+
+Archived 2026-09-21 during the `PR574-TRIAGE-MERGE-BOOKKEEPING-2026-09-21` burst
+(v4.75 -> v4.76), superseded by the current checkpoint now in `STATE.md` itself.
+
+```
+**Date & position:** 2026-09-20. Pipeline PAUSED, no cycle ACTIVE. cycle-008 (`oauth-surface-correctness`) CLOSED + release-VALIDATED (16-scope OAuth smoke test PASSED). The 2026-09-19 maintenance sweep's **FIX DELIVERY is COMPLETE** -- `#848`/`#849`/`#850` merged to `develop`. **`v0.7.0-dev.8` is fully RELEASED**: PR `#851` merged squash @ `8b4c797a` (reviewed CLEAN, CI Gate SUCCESS 24/24), tag `v0.7.0-dev.8` pushed on `8b4c797a` (tag object `3fd26ef8`), and the **5-platform prerelease build is CONFIRMED COMPLETE** (`release.yml` run `35531962462` = COMPLETE, all 6 jobs green) with the **GitHub prerelease PUBLISHED** 2026-09-20T19:26:47Z (10 assets: 5 platform archives + 5 `.sha256` checksums) -- verified read-only via `gh` this session. `activation_head`/`activation_version` remain `8b4c797a`/`v0.7.0-dev.8` (unchanged this burst). **NEXT = human direction** (open cycle-009, or triage untracked external PR `#574`). This is a lightweight `RELEASE-v0.7.0-dev.8-BUILD-COMPLETE-2026-09-20` checkpoint.
+
+**Convergence counter:** N/A -- no active convergence/adversarial loop.
+
+**In-flight work:** NONE -- the v0.7.0-dev.8 release is fully complete (build + prerelease publish both confirmed). No sub-agent steps abandoned. Remaining pending: sweep report aggregation and the `STORY-INDEX.md` stale `file_path` fix (S-3.03/S-3.07). Dependabot `#842` (base64 0.23) is HELD OPEN (multiple-versions ban; awaiting `hyper-util`).
+
+**Pending human decisions / blockers:** (1) triage the newly-surfaced untracked external PR `#574` (`ci(release): attest build provenance for release artifacts`, ArcavenAE, open since 2026-07-06) -- review/merge/close decision, `UNTRACKED-EXTERNAL-PR-574-PROVENANCE-ATTESTATION`; (2) plugin rebuild -- redeploy the fixed `validate-dispatch-advance` into the plugin cache (upstream `#837`) is the real fix for the D-chain hook. 4 engine hook bugs remain FILED UPSTREAM in `BOHICA-LABS/vsdd-factory` (`#837`-`#840`, see Constraints Carried Forward item (8) for the current tally). Also: S6 Teams-OAuth spike CLOSED = DEFER-INDEFINITELY; auth-refresh DX item `AUTH-REFRESH-TARGET-PROFILE-NOT-SHOWN` logged.
+
+**WIP branch list:** none (all fix-PR and release-PR branches merged and deleted).
+
+**Resume command:** `/vsdd-factory:rehydrate-wave` then `/vsdd-factory:next-step`.
+
+**Counts:** `total_bcs` **770** (unchanged); VP count **89** (unchanged); holdout scenarios **118** (unchanged); `total_stories` **191** (unchanged). Prior checkpoint (STATE.md v4.74, release-cut state) archived verbatim to `cycles/cycle-008/session-checkpoints.md`.
+```
+
+**Superseded by:** a `PR574-TRIAGE-MERGE-BOOKKEEPING-2026-09-21` checkpoint (STATE.md v4.75->v4.76) recording the **triage + merge of external contributor PR `#574`** ("ci(release): attest build provenance for release artifacts", ArcavenAE) -- `pr-reviewer` found it merge-ready, `security-reviewer` found it SAFE-TO-MERGE (no CRIT/HIGH/MEDIUM, 3 action SHAs verified, tag-only trigger, least-privilege perms, no ci-gate-governed files touched), `research-agent` confirmed GA + safe; branch was reconciled to `develop`'s tip before merge (server-side update-branch, head `18f81787`), fresh full CI green (24/24 incl. CI Gate, run `35609884490`), human code-owner (`Zious11`) APPROVING review on head `18f81787`; squash-merged @ `c50a48605afae1577710ba6dbae216c7f981cb3c` (mergedAt 2026-09-21T14:38:28Z); `develop` tip moved `8b4c797a` -> `c50a48605afae1577710ba6dbae216c7f981cb3c`. `release.yml` did NOT trigger (tag-push-only). `UNTRACKED-EXTERNAL-PR-574-PROVENANCE-ATTESTATION` moved OPEN -> RESOLVED/MERGED (`cycles/RESOLVED-DRIFT-ITEMS.md`); new OPEN follow-up `PR574-PROVENANCE-ATTEST-FOLLOWUP-BUMP-AND-LINEARIZE` (LOW/MEDIUM: bump `actions/attest-build-provenance` v4.1.1->v4.2.2, linearize `release: needs: attest`) logged. `ATTESTATIONS_ENABLED` repo variable remains UNSET (record-only). `activation_head`/`activation_version` UNCHANGED at `8b4c797a`/`v0.7.0-dev.8` (release itself unchanged). No new BC/decision minted. Current checkpoint (STATE.md v4.76, PR-574-merged state) is in `STATE.md` itself.
+
+---
