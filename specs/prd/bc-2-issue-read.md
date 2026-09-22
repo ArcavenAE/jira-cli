@@ -3,9 +3,26 @@ context: bc-2
 title: "Issue Read (list/view/comments/changelog)"
 total_bcs: 122   # cumulative claim (incl. range-collapsed); definitional_count below is individually-bodied headings
 definitional_count: 80   # count of `#### BC-` headings in this file
-last_updated: 2026-08-24
+last_updated: 2026-09-22
 source_pass: 3
 trace: |
+  - v1.5.2 — F2 spec evolution, cycle-009 `jql-relative-date-units` (2026-09-22, issue
+    #859/PR #863, bug-fix route): amendment-in-place only, no BC added or removed —
+    BC-INDEX unaffected in count. `src/jql.rs::validate_duration`'s accepted relative-date
+    unit set narrows from `{y, M, w, d, h, m}` to `{w, d, h, m}` (Jira's raw JQL relative-date
+    offset grammar has never supported `y`/`M` — `M` collided case-insensitively with `m` and
+    was silently mis-parsed as minutes; `y` was rejected server-side with HTTP 400, per
+    JRACLOUD-82707, correcting issue #859's "empty result" framing). BC-2.1.008 Behavior
+    clause AMENDED (canonical error string updated to `"...w, d, h, or m (e.g., 7d, 4w, 12h).
+    For month or year ranges, use --created-after/--created-before or
+    --updated-after/--updated-before."`, previous version retained inline). BC-2.1.023
+    EC-2.1.023-1 AMENDED (same error-string update) and EC-2.1.023-5 ADDED (new edge case
+    documenting the M/y-rejection behavior and corrected rationale explicitly). VP-UPDATED-
+    RECENT-001 gains a clarifying note — no new VP-NNN introduced; existing
+    `validate_duration_never_panics` proptest plus F4's new CR-004 end-to-end integration test
+    provide sufficient coverage. spec v1.5.1→v1.5.2 (PATCH — edge-case addition + error-string
+    wording, no new/removed BCs). See `.factory/cycles/cycle-009/phase-f2-spec-evolution/
+    prd-delta.md`.
   - v1.5.1 — F5 scoped-adversarial reconciliation, list-read-ergonomics cycle (2026-08-24,
     D-306, F5 finding ADV-LRE-F5-A-MED-001, human-adjudicated): resolves a 3-layer spec
     self-contradiction discovered during cycle-level F5 review (research:
@@ -290,8 +307,8 @@ composition branches (BC-2.1.002/003/004/005). It has no position in this stable
 **Confidence**: HIGH
 **Source**: `src/cli/issue/list.rs:~90-92`; `src/jql.rs:~16-34`
 **Subject**: Issue read
-**Behavior**: `validate_duration("4w2d")` → Err. `--recent 4w2d` → `JrError::UserError("Invalid duration '4w2d'. Use a number followed by y, M, w, d, h, or m (e.g., 7d, 4w, 2M).")`. Pre-HTTP validation.
-**Trace**: Pass 3 BC-131 (R1)
+**Behavior** **[UPDATED 2026-09-22, cycle-009 `jql-relative-date-units`, issue #859/PR #863]**: `validate_duration("4w2d")` → Err. `--recent 4w2d` → `JrError::UserError("Invalid duration '4w2d'. Use a number followed by w, d, h, or m (e.g., 7d, 4w, 12h). For month or year ranges, use --created-after/--created-before or --updated-after/--updated-before.")`. Pre-HTTP validation. Accepted unit set is narrowed to `{w, d, h, m}` — `y` (year) and `M` (month) are now REJECTED; see BC-2.1.023 EC-2.1.023-5 for the M/y-rejection rationale (Jira's raw relative-date grammar has never supported `y`/`M` — only `{w,d,h,m}`, matched case-insensitively server-side; `M` previously silently mis-parsed as minutes, `y` was rejected server-side with HTTP 400). **Previous version (superseded 2026-09-22, retained for audit trail):** `validate_duration("4w2d")` → Err. `--recent 4w2d` → `JrError::UserError("Invalid duration '4w2d'. Use a number followed by y, M, w, d, h, or m (e.g., 7d, 4w, 2M).")`. Pre-HTTP validation.
+**Trace**: Pass 3 BC-131 (R1); cycle-009 `jql-relative-date-units` F1 delta analysis (issue #859/PR #863)
 
 ---
 
@@ -869,10 +886,14 @@ have `resolutiondate = null`) requiring its own design conversation.
    sources, proceeds to a query with no project/board restriction clause when used alone,
    exactly as `--recent` (BC-2.1.008) does. See EC-2.1.023-4.
 **Edge Cases**:
-- EC-2.1.023-1: `--updated-recent 4w2d` (combined units, rejected by `validate_duration`) →
-  `JrError::UserError("Invalid duration '4w2d'. Use a number followed by y, M, w, d, h, or m
-  (e.g., 7d, 4w, 2M).")`. Exit 64, pre-HTTP — the identical error shape BC-2.1.008 already
-  contracts for `--recent`.
+- EC-2.1.023-1 **[UPDATED 2026-09-22, cycle-009 `jql-relative-date-units`, issue #859/PR #863]**:
+  `--updated-recent 4w2d` (combined units, rejected by `validate_duration`) →
+  `JrError::UserError("Invalid duration '4w2d'. Use a number followed by w, d, h, or m
+  (e.g., 7d, 4w, 12h). For month or year ranges, use --created-after/--created-before or
+  --updated-after/--updated-before.")`. Exit 64, pre-HTTP — the identical error shape
+  BC-2.1.008 already contracts for `--recent`. **Previous version (superseded 2026-09-22,
+  retained for audit trail):** `JrError::UserError("Invalid duration '4w2d'. Use a number
+  followed by y, M, w, d, h, or m (e.g., 7d, 4w, 2M).")`.
 - EC-2.1.023-2: `--updated-recent 60d --updated-after 2026-01-01` → clap `conflicts_with`
   rejection (exit 2, clap-native). `--updated-recent`'s `conflicts_with` covers
   `--updated-after` ONLY — it does NOT conflict with `--updated-before` — deliberately
@@ -904,13 +925,37 @@ have `resolutiondate = null`) requiring its own design conversation.
   (plus its scrum-no-active-sprint backstop) was an implementer-level choice introduced during
   S-579-1 Step-4.5, never ratified by D-298, and is REMOVED by this reconciliation (code-side
   removal tracked as a separate implementer task under this same D-306).
+- EC-2.1.023-5 **[NEW 2026-09-22, cycle-009 `jql-relative-date-units`, issue #859/PR #863]**:
+  `--updated-recent 2M` and `--recent 2M` (month unit `M`) → REJECTED pre-HTTP with the
+  canonical error above (see BC-2.1.008 Behavior clause and EC-2.1.023-1), exit 64. Rationale
+  (corrected from issue #859's original framing, per this cycle's Perplexity-validated
+  research and JRACLOUD-82707): Jira's raw JQL relative-date offset grammar (`created >=
+  -{d}` / `updated >= -{d}`) supports ONLY `{w, d, h, m}`, matched case-insensitively
+  server-side — `M` and `m` collide, so pre-fix `--recent 2M` was silently reinterpreted by
+  Jira as **2 minutes**, not 2 months (a 30x-magnitude silent wrong-result footgun: exit 0,
+  plausible-looking but wrong result set, no warning). `--updated-recent 1y` / `--recent 1y`
+  (year unit `y`) → also REJECTED pre-HTTP with the same canonical error, exit 64 — pre-fix,
+  Jira rejected `-1y` server-side with **HTTP 400 "invalid date value"** (NOT a silent empty
+  result set, which was issue #859's original claim; this refutes that part of the issue's
+  narrative). Client-side rejection converts both pre-fix failure modes — the silent
+  30x-magnitude mis-parse for `M` and the loud-but-unhelpful 400 for `y` — into one clear,
+  actionable, pre-HTTP exit-64 error naming the verified alternative flags. `M`/`y` remain
+  valid ONLY inside JQL functions such as `startOfMonth()`/`startOfYear()`, which
+  `validate_duration` does not govern — those functions are out of scope for the raw-offset
+  `--recent`/`--updated-recent` flags and this fix.
 **Verification Properties**:
 - VP-UPDATED-RECENT-001: `build_filter_clauses` composes `updated >= -{d}` for
   `--updated-recent <duration>`, positioned immediately after the `--recent` clause slot and
   before `--asset` (`Vec<String>` positional equality, same discipline as VP-COMPONENT-015);
   combined-unit durations are rejected pre-HTTP with zero `POST /rest/api/3/search/jql` calls
   (`.expect(0)`), via the identical `jql::validate_duration` error shape BC-2.1.008 already
-  pins for `--recent`.
+  pins for `--recent`. **[Note, 2026-09-22, cycle-009 `jql-relative-date-units`]**: this VP's
+  "rejected pre-HTTP with zero HTTP calls" property extends unchanged to the narrowed `M`/`y`
+  rejection in EC-2.1.023-5 — no new VP-NNN introduced; existing `validate_duration_never_panics`
+  proptest (`src/jql.rs`) covers panic-safety across the narrowed unit set, and F4's new
+  end-to-end integration test (CR-004) covers the exit-64/zero-HTTP behavioral assertion. See
+  `.factory/cycles/cycle-009/phase-f2-spec-evolution/verification-delta.md` for the full
+  no-new-VP determination.
 - VP-UPDATED-RECENT-002 **[NEW 2026-08-24, D-306]**: `jr issue list --updated-recent 7d`
   invoked with no `--project`, no configured default `project`/`board_id`, and no other
   filter → exit 0, exactly ONE `POST /rest/api/3/search/jql` call fired, with the request body

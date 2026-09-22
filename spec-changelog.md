@@ -9,6 +9,68 @@ Track all spec version changes. Most recent version first.
 
 > **Type legend:** Type classifies the SPEC document delta: MINOR = new BCs/VPs/sections; PATCH = amendments to existing bodies/ACs/ECs. Product-semver impact is recorded in the Summary line, independent of Type.
 
+## [2.3.2] - 2026-09-22
+
+### Type: PATCH
+
+### Summary
+
+F2 spec evolution for cycle-009 `jql-relative-date-units` (Feature Mode, bug-fix route,
+adopting external PR #863, fixes issue #859). Amendment-in-place only — no BC added or
+removed; `BC-INDEX.md` `total_bcs` unaffected (stays 770).
+
+**Root cause (corrected from issue #859's original framing, per this cycle's
+Perplexity-validated research and JRACLOUD-82707):** `src/jql.rs::validate_duration`
+(governing `jr issue list --recent`/`--updated-recent`) previously accepted relative-date
+unit set `{y, M, w, d, h, m}`, but Jira's raw JQL relative-date offset grammar
+(`created >= -{d}` / `updated >= -{d}`) has never supported `y`/`M` — only `{w, d, h, m}`,
+matched case-insensitively server-side. Consequence: `M` collided with `m` and was
+**silently** reinterpreted by Jira as minutes, not months (a 30x-magnitude silent
+wrong-result footgun — exit 0, no warning); `y` was **rejected server-side with HTTP 400**
+("invalid date value") — NOT a silent empty result set, which was issue #859's original
+claim. The fix narrows `validate_duration`'s accepted unit set to `{w, d, h, m}`, converting
+both pre-fix failure modes into one clear, actionable, pre-HTTP exit-64 error.
+
+**BREAKING CLI BEHAVIOR CHANGE:** `jr issue list --recent <N>M` / `--recent <N>y` and the
+`--updated-recent` equivalents, previously accepted (and previously silently wrong for `M`,
+previously a confusing Jira 400 for `y`), now exit 64 with a clear pre-HTTP validation error
+instead of proceeding. **Migration:** for month/year date-range filtering, use the verified
+existing absolute-date flags `--created-after`/`--created-before` or
+`--updated-after`/`--updated-before` (`YYYY-MM-DD` format) in place of the rejected `M`/`y`
+relative-date units.
+
+**Canonical error string** (4 identical `format!` call sites in `src/jql.rs`, F4 must
+implement verbatim):
+```
+Invalid duration '{s}'. Use a number followed by w, d, h, or m (e.g., 7d, 4w, 12h). For month or year ranges, use --created-after/--created-before or --updated-after/--updated-before.
+```
+
+**`bc-2-issue-read.md` amended** (file-local trace v1.5.1 → v1.5.2, `last_updated`
+2026-08-24 → 2026-09-22, `total_bcs`/`definitional_count` unchanged at 122/80):
+- BC-2.1.008 Behavior clause AMENDED — canonical error string updated, accepted unit set
+  narrowed to `{w, d, h, m}` documented explicitly; previous version retained inline for
+  audit trail.
+- BC-2.1.023 EC-2.1.023-1 AMENDED — same canonical error-string update, previous version
+  retained inline.
+- BC-2.1.023 EC-2.1.023-5 ADDED — new edge case documenting the `M`/`y`-rejection behavior
+  explicitly, with the corrected `y`-rejection rationale (Jira HTTP 400, not silent empty
+  result).
+- BC-2.1.023 VP-UPDATED-RECENT-001 gains a clarifying note: no new VP-NNN introduced for
+  this delta — the existing `validate_duration_never_panics` proptest (panic-safety) plus
+  F4's new CR-004 end-to-end integration test (exit-64/zero-HTTP behavioral assertion)
+  provide sufficient coverage.
+
+COUNT-NEUTRAL: no BC added or removed. `total_bcs` stays 770 (`BC-INDEX.md`);
+`bc-2-issue-read.md`'s own `total_bcs`/`definitional_count` stay 122/80.
+`scripts/check-spec-counts.sh` and `scripts/check-bc-cumulative-counts.sh` both verified
+green after this delta.
+
+**Not in this delta (F4 scope, tracked in F1 delta analysis):** `src/jql.rs`,
+`src/cli/mod.rs` help-text, `tests/issue_commands.rs` code changes; the new CR-004
+end-to-end integration test; the `CHANGELOG.md` `[Unreleased]` breaking-change entry.
+This F2 delta is spec-only — see `.factory/cycles/cycle-009/phase-f2-spec-evolution/
+prd-delta.md` and `verification-delta.md`.
+
 ## [2.3.1] - 2026-09-11
 
 ### Type: PATCH
