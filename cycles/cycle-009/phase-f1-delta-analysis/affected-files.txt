@@ -1,0 +1,23 @@
+# Phase F1 Delta Analysis — affected-files.txt
+# cycle-009 / jql-relative-date-units (adopting PR #863, fixes issue #859)
+# Format: <path>\t<change-type>\t<risk>
+# change-type: MODIFIED-SRC | MODIFIED-TEST | MODIFIED-SPEC | MODIFIED-DOC | NEW-TEST | DEPENDENT | BASELINE
+
+src/jql.rs	MODIFIED-SRC	MEDIUM
+src/cli/mod.rs	MODIFIED-SRC	LOW
+tests/issue_commands.rs	MODIFIED-TEST	LOW
+.factory/specs/prd/bc-2-issue-read.md	MODIFIED-SPEC	HIGH-if-skipped
+CHANGELOG.md	MODIFIED-DOC	MEDIUM-if-skipped
+tests/issue_commands.rs	NEW-TEST	N/A
+src/cli/issue/list.rs	DEPENDENT	LOW
+docs/superpowers/plans/2026-03-25-common-filter-flags.md	MODIFIED-DOC-OPTIONAL	LOW
+docs/superpowers/specs/2026-03-24-common-filter-flags-design.md	MODIFIED-DOC-OPTIONAL	LOW
+
+# --- Files NOT changed (regression baseline) ---
+src/duration.rs	BASELINE	N/A
+src/jql.rs::validate_date	BASELINE	N/A
+src/jql.rs::validate_asset_key	BASELINE	N/A
+src/jql.rs::escape_value	BASELINE	N/A
+src/cli/issue/create.rs	BASELINE	N/A
+src/api/jira/issues.rs	BASELINE	N/A
+tests/cli_smoke.rs	BASELINE	N/A

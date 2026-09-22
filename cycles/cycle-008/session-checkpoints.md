@@ -515,3 +515,28 @@ Archived 2026-09-22 during the `SESSION-WRAP-PAUSE-2026-09-22` burst
 **Superseded by:** a `SESSION-WRAP-PAUSE-2026-09-22` checkpoint (STATE.md v4.78->v4.79) recording an end-of-session pause: no in-flight work remains -- all session PRs merged (`#574`, `#858`, `#852`, `#853`, `#856`, `#857`, `#864`), worktrees cleaned, no stories mid-TDD, no PRs awaiting review/CI. `develop` tip `bcec4c78`. `ATTESTATIONS_ENABLED` now recorded as set `true` (PR `#574`+`#858` provenance-attestation delivery). HELD: `#842` (base64), `#854` (reqwest) -- blocked on the upstream `wiremock`/`hyper-util` `base64` 0.22/0.23 duplicate ban. DEFERRED: `#855` (comfy-table `8.0.0`). Open items carried forward: `MUTANTS-NIGHTLY-SHARD-STATUS-SENTINEL-GAP` (MEDIUM), `CLIENT-RS-MUTATION-REFACTOR-CANDIDATES` (LOW), `COMFY-TABLE-8-MIGRATION-DEFERRED`, `MAINT-BASE64-023-DEDUPE-BLOCKED-ON-UPSTREAM`, a `PR574` provenance `.pkg`/`.dmg` coverage follow-up (not yet scoped), plus the clippy-scope-mirrors-CI process lesson. `activation_head`/`activation_version` UNCHANGED at `8b4c797a`/`v0.7.0-dev.8`. Counts unchanged (770/89/118/191); no new BC/decision minted. Current checkpoint (STATE.md v4.79, SESSION-WRAP-PAUSE-2026-09-22 state) is in `STATE.md` itself.
 
 ---
+
+## Archived checkpoint (STATE.md v4.79, SESSION-WRAP-PAUSE-2026-09-22 state)
+
+Archived 2026-09-22 during the `CYCLE-009-F1-APPROVED-2026-09-22` burst
+(v4.79 -> v4.80), superseded by the current checkpoint now in `STATE.md` itself.
+
+```
+**Date & position:** 2026-09-22. Pipeline PAUSED, no cycle ACTIVE, cycles 009-011 PARKED. cycle-008 (`oauth-surface-correctness`) CLOSED + release-VALIDATED (16-scope OAuth smoke test PASSED). `v0.7.0-dev.8` remains fully RELEASED (unchanged this burst). `develop` tip is `bcec4c785e509aef7d872cb0cf35860fa9e460f2`. **NEXT = human direction.** This is an end-of-session `SESSION-WRAP-PAUSE-2026-09-22` checkpoint.
+
+**Convergence counter:** N/A -- no active convergence/adversarial loop.
+
+**In-flight work:** NONE -- all session PRs merged (`#574`, `#858`, `#852`, `#853`, `#856`, `#857`, `#864`), worktrees cleaned, no stories mid-TDD, no PRs awaiting review/CI. HELD: `#842` (base64) + `#854` (reqwest) -- blocked on the upstream `wiremock`/`hyper-util` `base64` 0.22/0.23 duplicate ban. DEFERRED: `#855` (comfy-table `8.0.0`).
+
+**Pending human decisions / open items:** `MUTANTS-NIGHTLY-SHARD-STATUS-SENTINEL-GAP` (MEDIUM); `CLIENT-RS-MUTATION-REFACTOR-CANDIDATES` (LOW); `COMFY-TABLE-8-MIGRATION-DEFERRED`; `MAINT-BASE64-023-DEDUPE-BLOCKED-ON-UPSTREAM`; a `PR574` provenance `.pkg`/`.dmg` attestation-coverage follow-up (not yet scoped); plus the process lesson that local pre-push clippy review must mirror CI's exact invocation.
+
+**WIP branch list:** none.
+
+**Resume command:** `/vsdd-factory:rehydrate-wave` then `/vsdd-factory:next-step`.
+
+**Counts:** `total_bcs` **770** (unchanged); VP count **89** (unchanged); holdout scenarios **118** (unchanged); `total_stories` **191** (unchanged). Prior checkpoint (STATE.md v4.78, PR864-merged state) archived verbatim to `cycles/cycle-008/session-checkpoints.md`.
+```
+
+**Superseded by:** a `CYCLE-009-F1-APPROVED-2026-09-22` checkpoint (STATE.md v4.79->v4.80) recording the human's decision to open cycle-009 (`jql-relative-date-units`, Feature Mode, bug-fix, MEDIUM severity, standard scope, backend): architect ran Phase F1 delta analysis, and the human F1 gate convened and rendered an explicit APPROVED verdict, minting `D-373` -- scope F1→F2→F4→F5→F6→F7 (F3 skipped), CR-005 nit included, CR-002 historical-docs stragglers to be fixed this cycle, versioning rolls into the next dev prerelease with no immediate tag. Pipeline flips `PAUSED`->`ACTIVE`. `develop` tip unchanged at `bcec4c78`; `activation_head`/`activation_version` unchanged at `8b4c797a`/`v0.7.0-dev.8` (no release this burst). Counts unchanged (770/89/118/191); `D-373` minted. Current checkpoint (STATE.md v4.80, `CYCLE-009-F1-APPROVED-2026-09-22` state) is in `STATE.md` itself.
+
+---
