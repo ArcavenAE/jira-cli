@@ -10,13 +10,15 @@ pub fn escape_value(s: &str) -> String {
 /// Validate a JQL relative date duration string.
 ///
 /// JQL relative dates use the format `<digits><unit>` where unit is one of:
-/// `y` (years), `M` (months), `w` (weeks), `d` (days), `h` (hours), `m` (minutes).
-/// Units are case-sensitive — `M` is months, `m` is minutes.
+/// `w` (weeks), `d` (days), `h` (hours), `m` (minutes).
+/// Units are case-sensitive -- only lowercase w/d/h/m are accepted.
 /// Combined units like `4w2d` are not supported by Jira.
 pub fn validate_duration(s: &str) -> Result<(), String> {
     if s.len() < 2 {
         return Err(format!(
-            "Invalid duration '{s}'. Use a number followed by y, M, w, d, h, or m (e.g., 7d, 4w, 2M)."
+            "Invalid duration '{s}'. Use a number followed by w, d, h, or m (e.g., 7d, 4w, 12h). \
+             For month or year ranges, use --created-after/--created-before or \
+             --updated-after/--updated-before."
         ));
     }
     // `s.len()` is a BYTE count, so the unit must be extracted char-safely rather
@@ -26,18 +28,24 @@ pub fn validate_duration(s: &str) -> Result<(), String> {
     // lands on a valid char boundary.
     let Some(unit) = s.chars().next_back() else {
         return Err(format!(
-            "Invalid duration '{s}'. Use a number followed by y, M, w, d, h, or m (e.g., 7d, 4w, 2M)."
+            "Invalid duration '{s}'. Use a number followed by w, d, h, or m (e.g., 7d, 4w, 12h). \
+             For month or year ranges, use --created-after/--created-before or \
+             --updated-after/--updated-before."
         ));
     };
     let digits = &s[..s.len() - unit.len_utf8()];
     if digits.is_empty() || !digits.chars().all(|c| c.is_ascii_digit()) {
         return Err(format!(
-            "Invalid duration '{s}'. Use a number followed by y, M, w, d, h, or m (e.g., 7d, 4w, 2M)."
+            "Invalid duration '{s}'. Use a number followed by w, d, h, or m (e.g., 7d, 4w, 12h). \
+             For month or year ranges, use --created-after/--created-before or \
+             --updated-after/--updated-before."
         ));
     }
-    if !matches!(unit, 'y' | 'M' | 'w' | 'd' | 'h' | 'm') {
+    if !matches!(unit, 'w' | 'd' | 'h' | 'm') {
         return Err(format!(
-            "Invalid duration '{s}'. Use a number followed by y, M, w, d, h, or m (e.g., 7d, 4w, 2M)."
+            "Invalid duration '{s}'. Use a number followed by w, d, h, or m (e.g., 7d, 4w, 12h). \
+             For month or year ranges, use --created-after/--created-before or \
+             --updated-after/--updated-before."
         ));
     }
     Ok(())
@@ -198,14 +206,61 @@ mod tests {
         assert!(validate_duration("4w").is_ok());
     }
 
+    // cycle-009 (jql-relative-date-units), F2-approved spec: `M` (month) and
+    // `y` (year) relative-date units must be REJECTED -- only lowercase
+    // `{w,d,h,m}` are accepted. `validate_duration_valid_months_uppercase`
+    // and `validate_duration_valid_years` are ADJUSTED (per CLAUDE.md's
+    // "requirements have changed" carve-out) from `.is_ok()` to `.is_err()`
+    // to reflect the new contract; they must FAIL against the current
+    // (pre-fix) implementation, which still accepts `2M`/`1y`.
+
     #[test]
-    fn validate_duration_valid_months_uppercase() {
-        assert!(validate_duration("2M").is_ok());
+    fn validate_duration_rejects_month_uppercase() {
+        assert!(validate_duration("2M").is_err());
     }
 
     #[test]
-    fn validate_duration_valid_years() {
-        assert!(validate_duration("1y").is_ok());
+    fn validate_duration_rejects_year() {
+        assert!(validate_duration("1y").is_err());
+    }
+
+    /// F4 must implement the canonical F2-approved error string verbatim
+    /// (differs from external PR #863's diff by the trailing
+    /// "For month or year ranges..." hint -- a deliberate F2 decision).
+    #[test]
+    fn validate_duration_month_rejection_uses_canonical_error_string() {
+        let err = validate_duration("2M").unwrap_err();
+        assert_eq!(
+            err,
+            "Invalid duration '2M'. Use a number followed by w, d, h, or m (e.g., 7d, 4w, 12h). \
+             For month or year ranges, use --created-after/--created-before or \
+             --updated-after/--updated-before."
+        );
+    }
+
+    /// Companion to the month case above, pinning the same canonical string
+    /// for the year unit with '{s}' substituted for '1y'.
+    #[test]
+    fn validate_duration_year_rejection_uses_canonical_error_string() {
+        let err = validate_duration("1y").unwrap_err();
+        assert_eq!(
+            err,
+            "Invalid duration '1y'. Use a number followed by w, d, h, or m (e.g., 7d, 4w, 12h). \
+             For month or year ranges, use --created-after/--created-before or \
+             --updated-after/--updated-before."
+        );
+    }
+
+    /// Lowercase `{w,d,h,m}` must continue to be accepted -- only the
+    /// uppercase `M` (month) and `y` (year) units are newly rejected.
+    #[test]
+    fn validate_duration_accepts_lowercase_minutes() {
+        assert!(validate_duration("30m").is_ok());
+    }
+
+    #[test]
+    fn validate_duration_accepts_lowercase_weeks() {
+        assert!(validate_duration("4w").is_ok());
     }
 
     #[test]
@@ -261,7 +316,7 @@ mod tests {
             );
             let err = result.unwrap_err();
             assert!(
-                err.contains("Invalid duration") && err.contains("y, M, w, d, h, or m"),
+                err.contains("Invalid duration") && err.contains("w, d, h, or m"),
                 "unexpected error message for {input:?}: {err}"
             );
         }
