@@ -26,9 +26,9 @@ unit set `{y, M, w, d, h, m}`, matched CASE-SENSITIVELY at the client (an explic
 `matches!` char-literal arm set — the client has never matched case-insensitively). Jira's raw
 JQL relative-date offset grammar (`created >= -{d}` / `updated >= -{d}`) has never supported
 `y`/`M` — only `{w, d, h, m}` — and Jira's SERVER-side parser matches that grammar
-case-insensitively. Consequence: `M` collided with `m` server-side and pre-fix `--recent 2M`
-was **silently** reinterpreted by Jira as minutes, not months (a 30x-magnitude silent
-wrong-result footgun — exit 0, no warning); `y` was **rejected server-side with HTTP 400**
+case-insensitively (per Atlassian's DateUtils.getDuration Javadoc). Consequence: `M` collided with `m` server-side and pre-fix `--recent 2M`
+was **silently** reinterpreted by Jira as minutes, not months (a silently-wrong-result
+footgun: months requested, minutes applied — exit 0, no warning); `y` was **rejected server-side with HTTP 400**
 ("invalid date value") — NOT a silent empty result set, which was issue #859's original
 claim. The fix narrows `validate_duration`'s accepted unit set to `{w, d, h, m}` (removing
 only the `y` and `M` arms), converting both pre-fix failure modes into one clear, actionable,

@@ -931,14 +931,15 @@ have `resolutiondate = null`) requiring its own design conversation.
   (corrected from issue #859's original framing, per this cycle's Perplexity-validated
   research and JRACLOUD-82707): Jira's raw JQL relative-date offset grammar (`created >=
   -{d}` / `updated >= -{d}`) supports ONLY `{w, d, h, m}`, matched case-insensitively
-  server-side — `M` and `m` collide, so pre-fix `--recent 2M` was silently reinterpreted by
-  Jira as **2 minutes**, not 2 months (a 30x-magnitude silent wrong-result footgun: exit 0,
-  plausible-looking but wrong result set, no warning). `--updated-recent 1y` / `--recent 1y`
+  server-side (per Atlassian's DateUtils.getDuration Javadoc) — `M` and `m` collide, so
+  pre-fix `--recent 2M` was silently reinterpreted by
+  Jira as **2 minutes**, not 2 months (a silently-wrong-result footgun: months requested,
+  minutes applied; exit 0, plausible-looking but wrong result set, no warning). `--updated-recent 1y` / `--recent 1y`
   (year unit `y`) → also REJECTED pre-HTTP with the same canonical error, exit 64 — pre-fix,
   Jira rejected `-1y` server-side with **HTTP 400 "invalid date value"** (NOT a silent empty
   result set, which was issue #859's original claim; this refutes that part of the issue's
-  narrative). Client-side rejection converts both pre-fix failure modes — the silent
-  30x-magnitude mis-parse for `M` and the loud-but-unhelpful 400 for `y` — into one clear,
+  narrative). Client-side rejection converts both pre-fix failure modes — the
+  silently-wrong-result mis-parse for `M` and the loud-but-unhelpful 400 for `y` — into one clear,
   actionable, pre-HTTP exit-64 error naming the verified alternative flags. `M`/`y` remain
   valid ONLY inside JQL functions such as `startOfMonth()`/`startOfYear()`, which
   `validate_duration` does not govern — those functions are out of scope for the raw-offset
