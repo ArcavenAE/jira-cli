@@ -79,3 +79,62 @@ takes ~150s due to Gatekeeper first-launch validation of the newly-built debug b
 The full `cargo test` suite ran to completion with zero failures across 121 test binaries,
 5,091 passing tests, and 176 appropriately-ignored tests (keyring, OAuth integration,
 live-Jira E2E — all require environment not present in this run).
+
+---
+
+# Cycle-009 Phase F4 — Pre-Implementation Regression Baseline (F4 Step 1)
+
+## Context
+
+- **Cycle:** cycle-009-jql-relative-date-units
+- **Phase:** F4 Step 1 (regression baseline / worktree setup)
+- **Runner:** `cargo test` (full suite: lib + integration + doc-tests)
+- **Repo:** `jira-cli` (`jr`)
+- **Worktree:** `/Users/zious/Documents/GITHUB/jira-cli/.worktrees/cycle-009-jql-date-units`
+- **Branch:** `fix/jql-reject-month-year-units` (new branch, adopts + supersedes external PR #863 from a fork we cannot push to)
+- **Base:** `origin/develop`
+- **Commit SHA (full):** `bcec4c785e509aef7d872cb0cf35860fa9e460f2`
+- **Commit SHA (short):** `bcec4c78`
+- **Base commit subject:** `test(client): kill missed mutants in error-parsing/retry/sanitize helpers (#864)`
+- **Timestamp (UTC, run start):** 2026-09-22T20:36:36Z
+- **Timestamp (UTC, run end):** 2026-09-22T20:42:45Z
+
+## Worktree Setup
+
+```
+git fetch origin
+git worktree add /Users/zious/Documents/GITHUB/jira-cli/.worktrees/cycle-009-jql-date-units \
+  -b fix/jql-reject-month-year-units origin/develop
+```
+
+Worktree HEAD confirmed == `origin/develop` tip (`bcec4c78`) at creation time. Local
+`develop` in the primary worktree was stale (`c50a4860`) at the start of this cycle;
+`origin/develop` (`bcec4c78`) was used as the correct base per instruction.
+
+## Test Suite Results
+
+- **Invocation:** `cargo test` (no `--include-ignored` — live-Jira E2E suite inert)
+- **Overall result:** GREEN — all tests passed
+
+| Metric | Value |
+|---|---|
+| Total tests | 5,545 |
+| Passed | **5,357** |
+| Failed | **0** |
+| Ignored | 188 |
+| Test binaries executed | 129 (2 unittest binaries — lib.rs + main.rs — + 126 integration + 1 doc-test) |
+
+No test failures, no compile errors. Every `test result:` block reported `ok` (129/129).
+
+## CONTRACT
+
+> All **5,357** passing tests must still pass after cycle-009 F4 implementation;
+> zero regressions permitted.
+
+## Verdict
+
+**GREEN — safe to start cycle-009 F4 implementation on `fix/jql-reject-month-year-units`.**
+
+The full `cargo test` suite ran to completion with zero failures across 129 test binaries,
+5,357 passing tests, and 188 appropriately-ignored tests (keyring, OAuth integration,
+live-Jira E2E — all require environment not present in this run).
