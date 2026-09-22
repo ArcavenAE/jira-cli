@@ -94,4 +94,111 @@ triggered by this pure bookkeeping burst.
 
 ---
 
+## Burst: Burst 2 — Phase F2 spec evolution APPROVED (D-374) — canonical error string + EC-2.1.023-5 + no-new-VP + scoped adversary CONVERGED + grounding audit (2026-09-22)
+
+**Parent-commit:** No new `develop`-side commit this burst — pure spec-and-`.factory` bookkeeping,
+no `src/` change (F4 will implement the code). `develop` tip unchanged at `bcec4c78` (origin). The
+F2 spec-evolution work itself was already committed to `factory-artifacts` across 3 prior commits
+this session — `858b4f47` (F2 spec evolution: product-owner), `4e9d8a37` (adversary H1/M1
+resolution), `45b49928` (grounding-audit correction) — before this state-manager burst, whose own
+commit records the STATE.md/burst-log/cycle-manifest bookkeeping on top of that tip.
+
+**Adversary verdict:** Scoped adversary (fresh context, read-only) ran against the F2 delta
+artifacts (`prd-delta.md`, `verification-delta.md`, amended `bc-2-issue-read.md`,
+`spec-changelog.md`) — **ITERATE**: 1 HIGH (`F2-ADV-H1`, case-sensitivity mischaracterization in
+`prd-delta.md`'s Root Cause section), 1 MEDIUM (`F2-ADV-M1`, unenforced no-new-VP reliance), 1 LOW
+(`F2-ADV-L1`, docs-straggler process gap). H1+M1 RESOLVED in the same burst by the orchestrator
+(see full adjudication in `phase-f2-spec-evolution/adversarial-spec-delta-review.md`); L1 DEFERRED
+to F4 per the F1-gate's prior CR-002 decision. 7 clean-confirmation axes additionally verified
+clean (string-drift, flag-name reality, rationale consistency, combined-units orthogonality,
+no-new-VP soundness, semver correctness, count-neutrality). **CONVERGED — zero findings above
+cosmetic remain.**
+
+**Trigger:** cycle-009 Phase F1 (`D-373`) approved the scope F1→F2→F4→F5→F6→F7; this burst runs
+Phase F2 (spec evolution) and records its human-gate approval.
+
+**Actions taken:**
+1. product-owner amended `.factory/specs/prd/bc-2-issue-read.md` in place (file-local trace
+   v1.5.1→v1.5.2; `total_bcs`/`definitional_count` unchanged 122/80, no new BC heading):
+   `BC-2.1.008`'s Behavior clause and `BC-2.1.023`'s `EC-2.1.023-1` both replaced with the
+   canonical error string (narrowed `{w,d,h,m}` accepted set, includes the CR-005 hint pointing
+   month/year users at `--created-after`/`--created-before`/`--updated-after`/`--updated-before`),
+   pinned byte-identical across 4 sites (`prd-delta.md`, `BC-2.1.008`, `EC-2.1.023-1`,
+   `spec-changelog.md` 2.3.2 entry); new `EC-2.1.023-5` added documenting M/y rejection with the
+   corrected rationale (`M` silently mis-parsed as minutes server-side per Atlassian's
+   DateUtils.getDuration Javadoc; `y` HTTP 400, not issue `#859`'s original "empty result" claim)
+   plus a full client case-sensitivity boundary disposition table.
+2. `.factory/spec-changelog.md` PATCH-bumped 2.3.1→2.3.2, breaking-change flagged.
+3. `verification-delta.md` (new file) ruled NO new VP-NNN warranted (amended
+   `VP-UPDATED-RECENT-001` in place with a dated clarifying note instead) and defined an explicit
+   "F7 Delta-Convergence Acceptance Gate" — 5 required CR-004 assertions (2×2 rejection matrix
+   `{2M,1y}×{--recent,--updated-recent}` + 1 case-boundary assertion) — making that no-new-VP
+   reliance mechanically enforceable at F7.
+4. Scoped adversary ran ITERATE (see verdict above); orchestrator resolved H1+M1 the same burst
+   (H1: reworded Root Cause + added case-sensitivity rule sub-section, ground-truthed directly
+   against `src/jql.rs`'s case-sensitive `matches!(unit, 'y'|'M'|'w'|'d'|'h'|'m')` arm, confirmed
+   by the function's own doc comment; M1: added the F7 gate section to `verification-delta.md`).
+   L1 deferred to F4.
+5. research-agent ran a grounding audit confirming every JQL factual claim in the F2 delta traces
+   to a first-party Atlassian source; one ungrounded "30x" magnitude figure (unsupported
+   extrapolation) was dropped and replaced with a direct citation to Atlassian's
+   DateUtils.getDuration Javadoc — `spec-changelog.md` and `bc-2-issue-read.md` corrected to
+   match.
+6. Both `scripts/check-spec-counts.sh` and `scripts/check-bc-cumulative-counts.sh` verified exit
+   0 — count-neutral, 0 new BC/VP, `total_bcs` 770 unchanged.
+7. Human F2 gate convened this session and rendered an explicit APPROVED verdict, minting decision
+   **D-374**. Noted one small pending F4 to-do: tidy `BC-2.1.008`'s Behavior clause to add the
+   same "(per Atlassian's DateUtils.getDuration Javadoc)" citation `EC-2.1.023-5`/
+   `spec-changelog.md` now carry (cosmetic citation-consistency, human-approved for F4, not a
+   blocker for F2 approval).
+8. state-manager (this agent) recorded the F2 human-gate approval in `STATE.md` (ONE full-content
+   Write), updated `cycles/cycle-009/cycle-manifest.md` (Delivered/Spec Changes/Notes sections),
+   appended this Burst 2 entry, and archived the oldest Phase Progress row
+   (`OAUTH-16-SCOPE-SMOKE-TEST-PASS-2026-09-18`) to `cycles/HISTORY-PHASE-PROGRESS.md`.
+
+**Codifications:** `D-374` minted — cycle-009 Phase F2 spec evolution APPROVED at the human gate
+(see Decisions Log in `STATE.md`). Counts unchanged: 770 BCs / 89 VPs / 118 holdouts / 191
+stories — count-neutral, both guard scripts verified exit 0.
+
+**Closes:** Nothing yet — GitHub issue `#859` stays open until the fix lands and merges (F4).
+
+**Outcome:** cycle-009 Phase F2 APPROVED (`D-374`); F1 (`D-373`) approved prior burst. `develop`
+unchanged at `bcec4c78`. `activation_head`/`activation_version` unchanged at
+`8b4c797a`/`v0.7.0-dev.8` (no release this burst). **NEXT:** Phase F4 (delta implementation, F3
+skipped per `D-373`) — adopt PR `#863`'s code against the amended BCs, implement the canonical
+error string verbatim (4 sites, WITH the CR-005 hint), update help text, add the CR-004
+integration test satisfying the F7 gate, add a `CHANGELOG.md` `[Unreleased]` entry, fix the CR-002
+straggler docs, and the `BC-2.1.008` citation tidy.
+
+### Details
+
+| Agent | Task | Output |
+|-------|------|--------|
+| product-owner | Phase F2 spec evolution: amend BC-2.1.008/BC-2.1.023, add EC-2.1.023-5, PATCH spec bump | `specs/prd/bc-2-issue-read.md`, `spec-changelog.md`, `cycles/cycle-009/phase-f2-spec-evolution/prd-delta.md`, commits `858b4f47`/`4e9d8a37`/`45b49928` |
+| adversary | Scoped adversarial spec-delta review | `cycles/cycle-009/phase-f2-spec-evolution/adversarial-spec-delta-review.md` |
+| research-agent | Grounding audit of JQL factual claims | corrections folded into `prd-delta.md`/`spec-changelog.md`/`bc-2-issue-read.md` via commit `45b49928` |
+| state-manager (this agent) | Recorded F2 human-gate approval, minted D-374, updated cycle-manifest.md, appended this Burst 2 entry, archived oldest Phase Progress row, STATE.md ONE full-content Write, commit + push `factory-artifacts` | This entry; `STATE.md`; `cycles/cycle-009/cycle-manifest.md`; `cycles/HISTORY-PHASE-PROGRESS.md` |
+
+**Files touched (Dim-1): 4 unique files, this burst**
+
+- `STATE.md`
+- `cycles/cycle-009/burst-log.md` (this entry, new)
+- `cycles/cycle-009/cycle-manifest.md` (updated)
+- `cycles/HISTORY-PHASE-PROGRESS.md` (oldest Phase Progress row archived)
+
+**Dim-2 Attestation:** `scripts/check-spec-counts.sh` / `scripts/check-bc-cumulative-counts.sh` —
+both verified exit 0 by product-owner during the F2 spec-evolution commits (`858b4f47` onward);
+no `total_bcs`/`total_vps`/`total_stories` numeric change this burst or the prior F2 commits.
+
+**Dim-5 Attestation:** N/A — no binary/WASM artifact produced by this burst.
+
+**Dim-6 Attestation:** N/A on `factory-artifacts` — no `src/` code change this burst; `develop`
+tip remains `bcec4c78`.
+
+**Dim-7 Attestation:** N/A — no `src/` change this burst; full regression suite last verified
+PASS at cycle-008's F6 close (1498 lib tests + 49 integration binaries, 0 failures); no new run
+triggered by this spec-only burst.
+
+---
+
 <!-- Repeat for each burst. Maintain chronological order. -->

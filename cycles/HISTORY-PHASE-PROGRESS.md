@@ -276,3 +276,13 @@ See `cycles/cycle-005/burst-log.md` Bursts 11-12 for full narrative detail (thes
 | Phase | Status | Completed | Gate | Notes | Finding Progression |
 |-------|--------|-----------|------|-------|---------------------|
 | **PR574-TRIAGE-MERGE-BOOKKEEPING-2026-09-21** | **COMPLETE / RECORD-ONLY (no phase advance)** | 2026-09-21 | none (PR `#574`'s own merge went through its own human-owned gate this session -- `pr-reviewer`/`security-reviewer`/`research-agent` triage, fresh-CI-green human APPROVING review, human merge decision -- this row is post-hoc bookkeeping, not a fresh pipeline gate) | Triaged and merged external contributor PR `#574` ("ci(release): attest build provenance for release artifacts", ArcavenAE) into `develop`. `pr-reviewer` = merge-ready; `security-reviewer` = SAFE-TO-MERGE (no CRIT/HIGH/MEDIUM, 3 action SHAs verified, tag-only trigger, least-privilege perms, no `ci-gate`-governed files touched); `research-agent` confirmed GA + safe. Branch reconciled to `develop`'s tip before merge (head `18f81787`), fresh CI green (24/24 incl. CI Gate, run `35609884490`), human APPROVING review, `mergeStateStatus` CLEAN. Squash-merged @ `c50a48605afae1577710ba6dbae216c7f981cb3c` (mergedAt 2026-09-21T14:38:28Z); `develop` tip `8b4c797a` -> `c50a48605afae1577710ba6dbae216c7f981cb3c`. `release.yml` did NOT trigger (tag-push-only). `UNTRACKED-EXTERNAL-PR-574-PROVENANCE-ATTESTATION` moved OPEN -> RESOLVED/MERGED; new OPEN follow-up `PR574-PROVENANCE-ATTEST-FOLLOWUP-BUMP-AND-LINEARIZE` (LOW/MEDIUM) logged (subsequently RESOLVED 2026-09-21 via PR `#858`). `activation_head`/`activation_version` UNCHANGED at `8b4c797a`/`v0.7.0-dev.8`. | 770 BCs / 89 VPs / 118 holdout / 191 stories; no DEC minted |
+
+> Extracted from `.factory/STATE.md`'s `## Phase Progress` table during the
+> 2026-09-22 `CYCLE-009-F2-APPROVED-2026-09-22` burst (v4.80 -> v4.81), to keep
+> the live table at 12 rows after adding the new
+> `CYCLE-009-F2-APPROVED-2026-09-22` row. This was the oldest row at that
+> point; archived here verbatim, unedited.
+
+| Phase | Status | Completed | Gate | Notes | Finding Progression |
+|-------|--------|-----------|------|-------|---------------------|
+| **OAUTH-16-SCOPE-SMOKE-TEST-PASS-2026-09-18** | **COMPLETE / VERIFICATION-PASS (no phase advance)** | 2026-09-18 | none (operator-run verification, not a pipeline gate) | operator ran develop embedded-creds `jr auth login`, OAuth completed -> all 16 scopes accepted. cycle-008 now release-VALIDATED. | 770 BCs / 89 VPs / 118 holdout / 191 stories; no DEC minted |
