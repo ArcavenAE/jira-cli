@@ -201,4 +201,115 @@ triggered by this spec-only burst.
 
 ---
 
+## Burst: Burst 3 — cycle-009 Phase F4 delta implementation COMPLETE — PR #868 merged (2026-09-22)
+
+**Parent-commit:** `develop` tip moves `bcec4c78` -> `1847ce38` this burst (squash-merge of PR
+`#868`). This is the `factory-artifacts` atomic commit produced by this burst (state-manager
+commit recording F4 COMPLETE — SHA in the commit message below).
+
+**Phase F4 (delta implementation): COMPLETE.** F4 is an automated quality gate (Red Gate / Green
+Gate / regression / lint / review convergence) with no dedicated human phase-gate ruling — but
+the delivery mechanism this burst was a human-approved squash-merge of PR `#868` (the human
+explicitly approved merging), not an unreviewed auto-merge.
+
+**Adversary verdict:** N/A — this is an F4 delta-implementation burst (TDD Red/Green Gate +
+code-review/security-review/pr-review convergence on PR `#868`), not a dedicated adversarial-review
+pass. `code-reviewer` APPROVE (2 nits fixed), `security-reviewer` CLEAN, fresh-eyes `pr-reviewer`
+APPROVE (1 LOW won't-fix-by-design) — see Quality evidence below. Phase F5 (the first
+implementation-level adversarial pass for cycle-009) is next.
+
+**Delivery:** external contributor PR `#863`'s fix was ADOPTED + COMPLETED (differs from the raw
+`#863` diff by including the F2-mandated canonical error string with the CR-005
+`--created-after`/`--created-before`/`--updated-after`/`--updated-before` hint) and merged as PR
+`#868` — squash commit `1847ce38` on `develop` (`develop` `bcec4c78` -> `1847ce38`). `#868` credits
+external contributor `@DeepanshuPal` via a preserved `Co-authored-by` trailer in the squash commit.
+GitHub issue `#859` **CLOSED**. Courtesy-close of the superseded `#863` in progress (separate agent
+thread `close-pr863`, not owned by this burst).
+
+**What shipped:**
+- `src/jql.rs::validate_duration` now rejects `M` (month) and `y` (year) — accepts only
+  case-sensitive lowercase `{w,d,h,m}`.
+- Canonical error string (F2's `EC-2.1.023-1`, byte-identical to the spec) landed at all 4 call
+  sites, including the CR-005 hint pointing month/year users at `--created-after`/
+  `--created-before`/`--updated-after`/`--updated-before`.
+- `--recent`/`--updated-recent` `--help` text updated to match the narrowed accepted-unit set.
+- `CHANGELOG.md` `[Unreleased]` breaking-change entry added.
+- CR-002 historical-docs stragglers corrected: `docs/superpowers/plans/2026-03-25-common-filter-flags.md`
+  and `docs/superpowers/specs/2026-03-24-common-filter-flags-design.md`.
+- The pending `BC-2.1.008` citation tidy (Atlassian DateUtils.getDuration Javadoc) — folded into
+  this same delivery per the F2 gate's human-approved to-do.
+
+**Quality evidence:**
+- Red Gate satisfied — all new tests confirmed to FAIL against pre-fix `validate_duration`
+  (full detail: `cycles/cycle-009/jql-date-units/implementation/red-gate-log.md`).
+- Green Gate — all new tests PASS post-fix.
+- Full regression: **5,367 passed / 0 failed / 188 ignored** (baseline `5,357` passed, recorded at
+  `phase-f4-implementation/regression-baseline.md` cycle-009 section — worktree
+  `/Users/zious/Documents/GITHUB/jira-cli/.worktrees/cycle-009-jql-date-units`, branch
+  `fix/jql-reject-month-year-units`, base `bcec4c78`). **+10 tests, zero regressions.**
+- `cargo fmt --all -- --check` clean.
+- `cargo clippy --all --all-features --tests -- -D warnings` — zero warnings.
+- Reviews: clean local code-review APPROVE (2 nits fixed); `security-reviewer` CLEAN; fresh-eyes
+  `pr-reviewer` APPROVE (1 LOW won't-fix-by-design).
+- CI: all 24 checks green including the required CI Gate (run `35791400606`); `mergeStateStatus`
+  CLEAN.
+- Demo SKIPPED — human decision, error-path change, cycle-012 Wave 2 precedent.
+
+**Process observations logged (not blockers, carried forward as `[process-gap]` LOW standing
+items in `cycles/OPEN-STANDING-ITEMS.md`):**
+1. `factory-dispatcher` `FUEL_EXHAUSTED` hook fired spuriously on `src/jql.rs` + BC-file edits
+   this burst (edits landed fine, verified) — hook-health item.
+2. `validate-dispatch-advance` hook false-flags the substring `"JRACLOUD-82707"` as a phantom
+   decision-ID `D-82707` — worked around this burst by writing `"JRACLOUD 82707"` with a space in
+   `.factory` files — hook false-positive item.
+
+**Codifications:** No new `D-NNN` minted this burst — F4 is an automated gate; the human action
+this burst was a merge-approval decision on PR `#868`, not a fresh pipeline-phase ruling (same
+class as the `PR864-...-BOOKKEEPING` precedent). Counts unchanged: 770 BCs / 89 VPs / 118 holdouts
+/ 191 stories — F4 added tests, not BCs/VPs, count-neutral.
+
+**Closes:** GitHub issue `#859` CLOSED via PR `#868`'s merge. `#863` courtesy-close in progress
+(separate thread).
+
+**Outcome:** cycle-009 Phase F4 COMPLETE. `develop` tip `bcec4c78` -> `1847ce38`.
+`activation_head`/`activation_version` UNCHANGED at `8b4c797a`/`v0.7.0-dev.8` (no release cut this
+burst — rolls into the next dev prerelease per `D-373` decision 4). **NEXT:** Phase F5 (scoped
+adversarial refinement on the merged delta, diff `bcec4c78..1847ce38`); then F6 (light targeted
+hardening); F7 (delta convergence + human close gate).
+
+### Details
+
+| Agent | Task | Output |
+|-------|------|--------|
+| implementer | F4 Red Gate + Green Gate TDD implementation of `validate_duration` fix, help text, CHANGELOG, CR-002 docs fixes, BC-2.1.008 citation tidy | `src/jql.rs`, `tests/issue_commands.rs`, `CHANGELOG.md`, docs stragglers, worktree `fix/jql-reject-month-year-units` |
+| code-reviewer | Clean local review | APPROVE (2 nits fixed) |
+| security-reviewer | Security review | CLEAN |
+| pr-reviewer | Fresh-eyes PR review of `#868` | APPROVE (1 LOW won't-fix-by-design) |
+| pr-manager / github-ops | PR `#868` creation, CI wait, human-approved squash-merge | PR `#868` @ `1847ce38`; issue `#859` closed |
+| state-manager (this agent) | Recorded F4 COMPLETE, updated `STATE.md` (ONE full-content Write), `cycle-manifest.md`, this Burst 3 entry, archived oldest Phase Progress row, appended 2 process-gap standing items, commit + push `factory-artifacts` | This entry; `STATE.md`; `cycles/cycle-009/cycle-manifest.md`; `cycles/HISTORY-PHASE-PROGRESS.md`; `cycles/OPEN-STANDING-ITEMS.md` |
+
+**Files touched (Dim-1): 5 unique files, this burst**
+
+- `STATE.md`
+- `cycles/cycle-009/burst-log.md` (this entry, new)
+- `cycles/cycle-009/cycle-manifest.md` (updated)
+- `cycles/HISTORY-PHASE-PROGRESS.md` (oldest Phase Progress row archived)
+- `cycles/OPEN-STANDING-ITEMS.md` (2 new process-gap items appended)
+
+**Dim-2 Attestation:** `scripts/check-spec-counts.sh` / `scripts/check-bc-cumulative-counts.sh` —
+both count-neutral this burst (no BC/VP change); F4 added tests only.
+
+**Dim-5 Attestation:** N/A — no binary/WASM artifact produced directly by this burst (release
+build unaffected, no tag cut).
+
+**Dim-6 Attestation:** `develop` tip moved `bcec4c78` -> `1847ce38` this burst via PR `#868`'s
+squash-merge — the one `src/`-affecting commit of this burst.
+
+**Dim-7 Attestation:** Full regression suite re-run on the `fix/jql-reject-month-year-units`
+worktree before merge: **5,367 passed / 0 failed / 188 ignored** (vs. baseline 5,357 passed —
++10 tests, zero regressions). `cargo fmt --all -- --check` clean;
+`cargo clippy --all --all-features --tests -- -D warnings` zero warnings.
+
+---
+
 <!-- Repeat for each burst. Maintain chronological order. -->

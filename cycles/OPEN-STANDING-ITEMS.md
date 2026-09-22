@@ -1515,3 +1515,25 @@ guidance for the `code-reviewer`/`fix-pr-delivery` flow going forward: any local
 clippy pass MUST run the CI-equivalent invocation (`cargo clippy --all --all-features --tests
 -- -D warnings`), never a narrower `--lib`-only pass, whenever the diff touches test code —
 which is every PR whose only changes are new/modified `#[test]` functions, as this one was.
+
+## cycle-009 F4 delta implementation — 2 process-gap items — NEW, OPEN (2026-09-22)
+
+**`[process-gap]` `CYCLE-009-F4-FUEL-EXHAUSTED-SPURIOUS-FIRE`** — NEW, OPEN. Severity **LOW**.
+During cycle-009's F4 delta implementation burst, the `factory-dispatcher` `FUEL_EXHAUSTED` hook
+fired spuriously on edits to `src/jql.rs` and BC spec files — the edits themselves landed
+correctly and were independently verified to be present and correct after the spurious fire.
+No data loss, no incorrect content written; purely a hook-health/false-alarm concern. Candidate
+action: a `devops-engineer`/engine-maintainer investigation into why `FUEL_EXHAUSTED` triggered
+on ordinary-sized edits to these two file classes, to rule out a fuel-accounting miscalibration
+before it causes a genuine mid-burst abort on a larger future edit.
+
+**`[process-gap]` `CYCLE-009-F4-DCHAIN-FALSE-POSITIVE-JRACLOUD-82707`** — NEW, OPEN. Severity
+**LOW**. The `validate-dispatch-advance` hook's decision-ID pattern match false-flags the literal
+substring `"JRACLOUD-82707"` (an Atlassian ticket citation, not a factory decision reference) as
+a phantom decision-ID `D-82707`, because the hook's matcher does not distinguish a `JRACLOUD-`
+prefix from a bare `D-`-style decision-ID token embedded later in a longer identifier. Worked
+around this burst by writing the citation with a space (`"JRACLOUD 82707"`) instead of a hyphen
+in `.factory` files, which is a content deviation from the ticket's canonical hyphenated form.
+Candidate action: tighten the hook's decision-ID regex to require a `D-` (or configured) prefix
+anchored at a token boundary, not embedded inside an unrelated alphanumeric-hyphenated identifier
+like `JRACLOUD-NNNNN`, so future citations don't need the space workaround.

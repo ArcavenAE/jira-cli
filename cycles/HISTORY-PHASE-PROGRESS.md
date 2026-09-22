@@ -286,3 +286,13 @@ See `cycles/cycle-005/burst-log.md` Bursts 11-12 for full narrative detail (thes
 | Phase | Status | Completed | Gate | Notes | Finding Progression |
 |-------|--------|-----------|------|-------|---------------------|
 | **OAUTH-16-SCOPE-SMOKE-TEST-PASS-2026-09-18** | **COMPLETE / VERIFICATION-PASS (no phase advance)** | 2026-09-18 | none (operator-run verification, not a pipeline gate) | operator ran develop embedded-creds `jr auth login`, OAuth completed -> all 16 scopes accepted. cycle-008 now release-VALIDATED. | 770 BCs / 89 VPs / 118 holdout / 191 stories; no DEC minted |
+
+> Extracted from `.factory/STATE.md`'s `## Phase Progress` table during the
+> 2026-09-22 `CYCLE-009-F4-COMPLETE-2026-09-22` burst (v4.81 -> v4.82), to keep
+> the live table at 12 rows after adding the new
+> `CYCLE-009-F4-COMPLETE-2026-09-22` row. This was the oldest row at that
+> point; archived here verbatim, unedited.
+
+| Phase | Status | Completed | Gate | Notes | Finding Progression |
+|-------|--------|-----------|------|-------|---------------------|
+| **S6-TEAMS-SPIKE-COMPLETE-DEFER-INDEFINITELY-2026-09-19** | **COMPLETE / SPIKE OUTCOME (no phase advance)** | 2026-09-19 | none (spike-outcome checkpoint, not a pipeline gate) | S6 Teams-under-OAuth spike COMPLETE. Go/no-go DEFER-INDEFINITELY. `jr team list` stays API-token-only, documented, not a regression. | 770 BCs / 89 VPs / 118 holdout / 191 stories; no DEC minted |

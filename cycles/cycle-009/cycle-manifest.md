@@ -15,14 +15,15 @@ producer: orchestrator
 
 | Metric | Value |
 |--------|-------|
-| Stories delivered | TBD -- F3 skipped for this scope (F1 gate approved F1→F2→F4→F5→F6→F7); F4 delta implementation is scoped directly off the F2 spec delta, not a story package |
-| BCs created | 0 new; 2 amended (BC-2.1.008, BC-2.1.023 incl. EC-2.1.023-1), 1 new edge case ADDED (EC-2.1.023-5) -- F2 COMPLETE, human-approved (D-374) |
+| Stories delivered | N/A -- F3 skipped for this scope (F1 gate approved F1→F2→F4→F5→F6→F7); F4 delta implementation was scoped directly off the F2 spec delta, not a story package. Delivered as PR `#868` (adopts + completes external contributor PR `#863`), squash-merged @ `1847ce38` |
+| BCs created | 0 new; 2 amended (BC-2.1.008, BC-2.1.023 incl. EC-2.1.023-1), 1 new edge case ADDED (EC-2.1.023-5) -- F2 COMPLETE, human-approved (D-374). F4 added tests only, count-neutral |
 | VPs created | 0 new -- verification-delta.md ruled NO new VP-NNN warranted; VP-UPDATED-RECENT-001 amended in place instead |
-| Holdout scenarios | TBD (F2/F4) |
+| Holdout scenarios | 0 new this cycle |
 | Total cost | TBD |
-| Adversarial passes | 0 so far (F5 not yet reached) |
+| Adversarial passes | 0 so far (F5 not yet reached -- next phase) |
 | Final holdout satisfaction | N/A yet |
 | Release version | rolls into next dev prerelease at close (no immediate tag) |
+| Regression suite (post-F4) | 5,367 passed / 0 failed / 188 ignored (baseline 5,357; +10 tests, 0 regressions) |
 
 ## Spec Changes
 
@@ -72,4 +73,38 @@ Committed to `factory-artifacts` across 3 commits: `858b4f47` (F2 spec evolution
 
 F2 artifacts: `phase-f2-spec-evolution/prd-delta.md`, `phase-f2-spec-evolution/verification-delta.md`, `phase-f2-spec-evolution/adversarial-spec-delta-review.md`.
 
-Next: F4 delta implementation (F3 skipped per D-373).
+**Phase F4 (delta implementation): COMPLETE** -- 2026-09-22, this session. F4 is an automated
+quality gate (no dedicated human phase-gate ruling), but the human explicitly approved
+squash-merging PR `#868` this session. Delivery: external contributor PR `#863`'s fix was ADOPTED
++ COMPLETED and merged as PR `#868` (squash commit `1847ce38` on `develop`; `develop` `bcec4c78` ->
+`1847ce38`), crediting `@DeepanshuPal` via a preserved `Co-authored-by` trailer. GitHub issue `#859`
+CLOSED; `#863` courtesy-close in progress.
+
+What shipped: `src/jql.rs::validate_duration` now rejects `M`/`y` (accepts only `{w,d,h,m}`);
+canonical error string (with the CR-005 hint) at all 4 sites; help text updated;
+`CHANGELOG.md` `[Unreleased]` breaking-change entry; CR-002 straggler docs corrected
+(`docs/superpowers/plans/2026-03-25-common-filter-flags.md`,
+`docs/superpowers/specs/2026-03-24-common-filter-flags-design.md`); the pending `BC-2.1.008`
+citation tidy folded in.
+
+Quality evidence: Red Gate satisfied (tests failed first, `cycles/cycle-009/jql-date-units/implementation/red-gate-log.md`);
+Green Gate all pass; full regression 5,367 passed / 0 failed / 188 ignored (baseline 5,357; +10
+tests, 0 regressions, `phase-f4-implementation/regression-baseline.md` cycle-009 section);
+`cargo fmt` clean; `cargo clippy --all --all-features --tests -- -D warnings` zero warnings.
+Reviews: clean local code-review APPROVE (2 nits fixed), `security-reviewer` CLEAN, fresh-eyes
+`pr-reviewer` APPROVE (1 LOW won't-fix-by-design). CI: all 24 checks green incl. required CI Gate
+(run `35791400606`), `mergeStateStatus` CLEAN. Demo SKIPPED (human decision, error-path change,
+cycle-012 Wave 2 precedent).
+
+Two process observations logged to `cycles/OPEN-STANDING-ITEMS.md` as `[process-gap]` LOW: (1)
+`factory-dispatcher` `FUEL_EXHAUSTED` hook fired spuriously on `src/jql.rs` + BC-file edits
+(edits landed fine, verified); (2) `validate-dispatch-advance` hook false-flags the substring
+`"JRACLOUD-82707"` as a phantom decision-ID `D-82707` (worked around with a space:
+`"JRACLOUD 82707"`).
+
+`activation_head`/`activation_version` UNCHANGED (`8b4c797a`/`v0.7.0-dev.8`) -- no release cut
+(rolls into next dev prerelease per `D-373` decision 4). Counts unchanged 770/89/118/191 (F4
+added tests, not BCs).
+
+Next: F5 (scoped adversarial refinement on the merged delta, diff `bcec4c78..1847ce38`); then F6
+(light targeted hardening); F7 (delta convergence + human close gate).
