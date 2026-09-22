@@ -22,14 +22,19 @@ removed; `BC-INDEX.md` `total_bcs` unaffected (stays 770).
 **Root cause (corrected from issue #859's original framing, per this cycle's
 Perplexity-validated research and JRACLOUD-82707):** `src/jql.rs::validate_duration`
 (governing `jr issue list --recent`/`--updated-recent`) previously accepted relative-date
-unit set `{y, M, w, d, h, m}`, but Jira's raw JQL relative-date offset grammar
-(`created >= -{d}` / `updated >= -{d}`) has never supported `y`/`M` — only `{w, d, h, m}`,
-matched case-insensitively server-side. Consequence: `M` collided with `m` and was
-**silently** reinterpreted by Jira as minutes, not months (a 30x-magnitude silent
+unit set `{y, M, w, d, h, m}`, matched CASE-SENSITIVELY at the client (an explicit Rust
+`matches!` char-literal arm set — the client has never matched case-insensitively). Jira's raw
+JQL relative-date offset grammar (`created >= -{d}` / `updated >= -{d}`) has never supported
+`y`/`M` — only `{w, d, h, m}` — and Jira's SERVER-side parser matches that grammar
+case-insensitively. Consequence: `M` collided with `m` server-side and pre-fix `--recent 2M`
+was **silently** reinterpreted by Jira as minutes, not months (a 30x-magnitude silent
 wrong-result footgun — exit 0, no warning); `y` was **rejected server-side with HTTP 400**
 ("invalid date value") — NOT a silent empty result set, which was issue #859's original
-claim. The fix narrows `validate_duration`'s accepted unit set to `{w, d, h, m}`, converting
-both pre-fix failure modes into one clear, actionable, pre-HTTP exit-64 error.
+claim. The fix narrows `validate_duration`'s accepted unit set to `{w, d, h, m}` (removing
+only the `y` and `M` arms), converting both pre-fix failure modes into one clear, actionable,
+pre-HTTP exit-64 error. Uppercase `W`/`D`/`H`/`Y` were already rejected pre-fix (case-sensitive
+client matching predates this delta and never included them) — this delta introduces no
+regression for those four inputs; only `1y` and `2M` newly move from accepted to rejected.
 
 **BREAKING CLI BEHAVIOR CHANGE:** `jr issue list --recent <N>M` / `--recent <N>y` and the
 `--updated-recent` equivalents, previously accepted (and previously silently wrong for `M`,

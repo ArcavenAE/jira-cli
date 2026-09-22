@@ -21,13 +21,23 @@ status: draft
 ## Root Cause (as confirmed at F1, restated here for traceability)
 
 `src/jql.rs::validate_duration` (governing `jr issue list --recent`/`--updated-recent`)
-previously accepted relative-date unit set `{y, M, w, d, h, m}`, matched case-insensitively.
+previously accepted relative-date unit set `{y, M, w, d, h, m}`, matched via an explicit Rust
+`matches!(unit, 'y' | 'M' | 'w' | 'd' | 'h' | 'm')` char-literal arm set — i.e. CASE-SENSITIVE
+at the client (confirmed by reading `src/jql.rs`; the module's own doc comment states "Units
+are case-sensitive — `M` is months, `m` is minutes"). Uppercase `W`/`D`/`H`/`Y` were NEVER in
+the accepted arm set and were already rejected before this delta — narrowing removes only the
+`y` and `M` arms, so `1y` and `2M` are the only newly-rejected inputs; there is no separate
+uppercase-`W`/`D`/`H` regression introduced by this delta.
 Jira's raw JQL relative-date offset grammar (`created >= -{d}` / `updated >= -{d}`) supports
 ONLY `{w, d, h, m}`. Confirmed via this session's Perplexity research against first-party
 Atlassian sources and JRACLOUD-82707:
 
-- `2M` was silently reinterpreted by Jira as **2 minutes**, not 2 months — `M`/`m` collide
-  case-insensitively server-side too. Silent, exit 0, no warning, 30x-magnitude wrong result.
+- `2M` was silently reinterpreted by Jira as **2 minutes**, not 2 months. This is a
+  SERVER-side property — Jira's parser matches `M`/`m` case-insensitively. Combined with the
+  client's case-sensitive `M`-as-months arm (pre-delta), `2M` passed client validation as "2
+  months" and was then reinterpreted server-side as "2 minutes" — a client/server
+  case-handling MISMATCH, not case-insensitivity on the client itself. Silent, exit 0, no
+  warning, 30x-magnitude wrong result.
 - `1y` was **rejected by Jira with HTTP 400** ("invalid date value") — NOT a silent empty
   result set as issue #859's original framing claimed. This F2 delta corrects that framing
   wherever the old spec text implicitly repeated it.
@@ -54,7 +64,9 @@ substitution). It replaces the old string:
 Invalid duration '{s}'. Use a number followed by y, M, w, d, h, or m (e.g., 7d, 4w, 2M).
 ```
 
-Accepted unit set narrows from `{y, M, w, d, h, m}` to `{w, d, h, m}`.
+Accepted unit set narrows from `{y, M, w, d, h, m}` to `{w, d, h, m}`. The client's matching
+discipline itself does NOT change — it remains case-sensitive char-literal matching before and
+after this delta; only the arm-set membership (which characters are matched) narrows.
 
 ## BCs Amended (no new BC-S.SS.NNN — amendment-in-place only)
 
@@ -81,6 +93,17 @@ existing EC-2.1.023-4): documents `--recent 2M`/`--updated-recent 2M` and `--rec
 mis-parse-as-minutes footgun (not documented anywhere before this delta) and `y` HTTP 400
 (corrected from issue #859's "empty result" framing). Notes that `M`/`y` remain valid inside
 JQL functions, out of scope for this BC.
+
+**UPDATED (2026-09-22, F2-ADV-H1 clarification)** EC-2.1.023-5 gains an explicit
+"Client case-sensitivity rule" sub-section spelling out that the client (`validate_duration`)
+matches case-sensitively — never case-insensitively — both before and after this delta, plus
+a full boundary-disposition list for an F4 implementer writing the narrowed `matches!` arm
+set: `2m` ACCEPTED, `1M`/`1y`/`2M` REJECTED (all three newly rejected by this delta), and
+uppercase `1W`/`1D`/`1H`/`1Y` REJECTED-and-UNCHANGED (no regression — those were never in the
+accepted arm set, pre- or post-delta). This closes the scoped-adversary finding F2-ADV-H1,
+which flagged that this file's Root Cause section (above) had mischaracterized the pre-delta
+CLIENT matching as case-insensitive — the client was always case-sensitive; case-insensitivity
+is a SERVER-side Jira-parser property, distinct and now stated as such throughout this file.
 
 **Verification Properties section**: VP-UPDATED-RECENT-001 gains a dated clarifying note
 that its "rejected pre-HTTP with zero HTTP calls" property extends unchanged to the

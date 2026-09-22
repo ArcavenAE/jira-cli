@@ -943,6 +943,27 @@ have `resolutiondate = null`) requiring its own design conversation.
   valid ONLY inside JQL functions such as `startOfMonth()`/`startOfYear()`, which
   `validate_duration` does not govern — those functions are out of scope for the raw-offset
   `--recent`/`--updated-recent` flags and this fix.
+
+  **Client case-sensitivity rule [ADDED 2026-09-22, F2-ADV-H1 clarification]:** the CLIENT
+  validator (`src/jql.rs::validate_duration`) matches the unit character via an explicit Rust
+  `matches!` arm set over case-sensitive char literals — it has never performed
+  case-insensitive matching at the client (confirmed by reading `src/jql.rs`; its own doc
+  comment states "Units are case-sensitive — `M` is months, `m` is minutes"). Case-insensitive
+  matching is a SERVER-side Jira-parser property only (see above: `M`/`m` collide server-side,
+  producing the `2M` footgun) — it is not, and was never, a client-side behavior. Before this
+  delta the client's accepted arm set was `{y, M, w, d, h, m}` (lowercase `y`/`w`/`d`/`h`/`m`
+  plus uppercase `M`, each a distinct arm); after this delta it is `{w, d, h, m}`, all four
+  remaining members lowercase. Full boundary disposition, so an F4 implementer has zero
+  ambiguity writing the narrowed `matches!` arm set:
+  - `2m` (lowercase minutes) → ACCEPTED — unaffected by this delta.
+  - `1M` (uppercase months) → REJECTED by this delta (was ACCEPTED pre-delta).
+  - `1y` (lowercase years) → REJECTED by this delta (was ACCEPTED pre-delta).
+  - `2M` (uppercase months, the footgun case above) → REJECTED by this delta (was ACCEPTED
+    pre-delta, then silently server-side-mis-parsed as 2 minutes — see above).
+  - Uppercase `1W`/`1D`/`1H`/`1Y` → REJECTED, and this is UNCHANGED by this delta — none of
+    `W`/`D`/`H`/`Y` was ever in the client's accepted arm set (case-sensitive matching predates
+    this delta), so there is NO new uppercase-`W`/`D`/`H` regression here; this delta removes
+    only the `y` and `M` arms.
 **Verification Properties**:
 - VP-UPDATED-RECENT-001: `build_filter_clauses` composes `updated >= -{d}` for
   `--updated-recent <duration>`, positioned immediately after the `--recent` clause slot and

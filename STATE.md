@@ -4,7 +4,7 @@ level: ops
 version: "4.80"
 status: active
 producer: state-manager
-timestamp: 2026-09-22T19:48:41Z
+timestamp: 2026-09-22T19:59:27Z
 phase: "ACTIVE 2026-09-22. cycle-009 (jql-relative-date-units) OPENED, Phase F1 delta analysis APPROVED at the human gate (D-373). Feature Mode, brownfield, bug-fix intent, MEDIUM severity, standard scope, backend. Adopts + completes external contributor PR #863 (fixes issue #859). Scope: F1->F2->F4->F5->F6->F7 (F3 skipped). cycle-008 remains CLOSED+RELEASED (v0.7.0-dev.8). develop tip unchanged at bcec4c78; activation_head/activation_version unchanged at 8b4c797a/v0.7.0-dev.8 (no release this burst)."
 pipeline: ACTIVE
 inputs: []
