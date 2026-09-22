@@ -4,7 +4,7 @@ level: ops
 version: "4.82"
 status: active
 producer: state-manager
-timestamp: 2026-09-22T23:01:28Z
+timestamp: 2026-09-22T23:17:04Z
 phase: "ACTIVE 2026-09-22. cycle-009 (jql-relative-date-units) Phase F4 delta implementation COMPLETE. F4 is an automated quality gate (no human phase-gate ruling), but the human explicitly approved squash-merging PR #868 this session. Delivery: external contributor PR #863's fix ADOPTED + COMPLETED, merged as PR #868 (squash commit 1847ce38 on develop; develop bcec4c78 -> 1847ce38, credits @DeepanshuPal). GitHub issue #859 CLOSED; #863 courtesy-close in progress. Feature Mode, brownfield, bug-fix intent, MEDIUM severity, standard scope, backend. Scope F1->F2->F4->F5->F6->F7 (F3 skipped). Full regression 5,367 passed/0 failed/188 ignored (baseline 5,357; +10 tests, 0 regressions); fmt/clippy clean; CI 24/24 green incl. required CI Gate. NEXT = Phase F5 (scoped adversarial refinement on diff bcec4c78..1847ce38). cycle-008 remains CLOSED+RELEASED (v0.7.0-dev.8). activation_head/activation_version unchanged at 8b4c797a/v0.7.0-dev.8 (no release this burst)."
 pipeline: ACTIVE
 inputs: []

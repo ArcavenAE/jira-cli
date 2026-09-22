@@ -949,7 +949,7 @@ have `resolutiondate = null`) requiring its own design conversation.
   validator (`src/jql.rs::validate_duration`) matches the unit character via an explicit Rust
   `matches!` arm set over case-sensitive char literals — it has never performed
   case-insensitive matching at the client (confirmed by reading `src/jql.rs`; its own doc
-  comment states "Units are case-sensitive — `M` is months, `m` is minutes"). Case-insensitive
+  comment states "Units are case-sensitive -- only lowercase w/d/h/m are accepted."). Case-insensitive
   matching is a SERVER-side Jira-parser property only (see above: `M`/`m` collide server-side,
   producing the `2M` footgun) — it is not, and was never, a client-side behavior. Before this
   delta the client's accepted arm set was `{y, M, w, d, h, m}` (lowercase `y`/`w`/`d`/`h`/`m`
