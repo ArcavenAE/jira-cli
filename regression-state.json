@@ -1,1 +1,1 @@
-{"status":"pass","timestamp":"2026-09-20T16:36:59Z","command":"cd /Users/zious/Documents/GITHUB/jira-cli/.worktrees/MAINT-20260919-03 && cargo test --test requesttype_commands 2>&1 | tail -30"}
+{"status":"pass","timestamp":"2026-09-22T15:51:19Z","command":"cd /Users/zious/Documents/GITHUB/jira-cli/.worktrees/test-client-mutation-coverage && cargo test --lib api::client 2>&1 | tail -60"}

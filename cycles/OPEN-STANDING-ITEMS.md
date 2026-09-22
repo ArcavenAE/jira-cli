@@ -1461,3 +1461,57 @@ duplicates and both stay open independently.
 `load_style` migration (and the `UTF8_FULL_CONDENSED` type-change call sites) in
 `src/output.rs`, verifies table rendering output is byte-identical via existing snapshot
 tests, then re-attempts the bump. No urgency — `7.2.2` remains fully supported and CI-green.
+
+## PR #864 client.rs mutation-coverage burst — new follow-ups + lesson (2026-09-22)
+
+**Status:** context for all three items below. PR `#864` ("test(client): kill missed mutants
+in error-parsing/retry/sanitize helpers") merged squash to `develop` @
+`bcec4c785e509aef7d872cb0cf35860fa9e460f2` (mergedAt 2026-09-22T16:04:00Z, by `Zious11`;
+`develop` `0b3a71bc` -> `bcec4c78`). Test-only change: 23 inline unit tests added to
+`src/api/client.rs`, zero production logic touched. Killed 33 of the 54 mutants that survived
+the last successful mutation-nightly run (run `35512012884`, 2026-09-20). Review chain:
+`code-reviewer` CLEAN; a fresh-eyes `pr-reviewer` pass flagged 2 survivors the branch had
+mischaracterized as "equivalent" — a follow-up round closed 3 real gaps
+(`extract_error_message_raw`'s join-budget lines `1813:64` + `1896:59`, and
+`sanitize_for_stderr`'s fast-path at `1427`) and reconfirmed `1732:62` as genuinely equivalent
+via a rigorous bound proof. Full delivery record: `code-delivery/PR-864/` (if present) and this
+burst's `STATE.md` Phase Progress row `PR864-CLIENT-RS-MUTATION-COVERAGE-BOOKKEEPING-2026-09-22`.
+
+**`CLIENT-RS-MUTATION-REFACTOR-CANDIDATES`** — NEW, OPEN. Severity **LOW**. The
+`clamp_retry_sleep` and `cap_entry` helpers in `src/api/client.rs` remain testability-limited
+as written — extracting `Duration`/limit-parameterized pure inner functions could close roughly
+6 more of the mutation survivors documented below (the 3 `clamp_retry_sleep` sub-millisecond-
+timing survivors plus some overlap with the dead/unreachable-branch group). Deferred per an
+explicit human decision this burst: not worth production-code churn right now against a purely
+advisory (non-gating) mutation signal. Candidate action: scope the extraction as a small,
+test-only-motivated refactor in a future maintenance sweep, re-run `cargo mutants` scoped to
+`src/api/client.rs`, and confirm the survivor count drops before merging.
+
+**`MUTANTS-NIGHTLY-SHARD-STATUS-SENTINEL-GAP`** — NEW, OPEN. Severity **MEDIUM**,
+process/record-only (does not affect this burst's PR `#864` delivery or any release gate — the
+mutation-nightly job is advisory and never gates `ci-gate`). The nightly mutation-testing
+aggregator's `mutants-nightly-shard-status-*` completion-sentinel artifacts are not being
+produced/matched: run `35512012884` found 0 of the expected 24 shard-status sentinels, so the
+aggregator labeled the pooled kill-rate result "PARTIAL RUN (0/24)" and the 90%-target
+comparison silently no-oped — it never actually compared the pooled rate to the target, even
+though (per the same run's raw pooled numbers) all 24 shards appear to have succeeded. That
+run's pooled kill rate was 85% (1,772 caught / 267 missed / 35 timeout / 179 unviable, 2,253
+total mutants), but this number was never checked against the 90% target because the sentinel
+match failed first. Surfaced during this burst's investigation into the run `35512012884`
+survivor list that fed PR `#864`; not yet fixed. Candidate action: a `devops-engineer`/CI
+investigation into why the shard-status-sentinel artifact name/path the aggregator expects
+doesn't match what the sharded `mutants` jobs actually upload — see
+`docs/specs/cargo-mutants-policy.md`'s sharded-gate section and `scripts/mutants-aggregate.sh`
+for the current matching logic.
+
+**Lesson (process-gap, not a standing item to close) — local clippy scope must mirror CI:**
+this burst's first push of PR `#864` failed `ci-gate` on a `clippy::manual_repeat_n` warning
+(`repeat` -> `repeat_n`, 4 call sites) that the local pre-push code review had NOT caught,
+because that local review ran `cargo clippy --lib` — which skips test-target lints entirely —
+while `ci.yml` runs `cargo clippy --all --all-features --tests -- -D warnings`. Since the
+23 new tests landed in `src/api/client.rs`'s own `#[cfg(test)]` module (a test target), the
+lint only fired under `--tests`. Fixed via a small follow-up commit (`79e6b6e7`). Codified as
+guidance for the `code-reviewer`/`fix-pr-delivery` flow going forward: any local pre-push
+clippy pass MUST run the CI-equivalent invocation (`cargo clippy --all --all-features --tests
+-- -D warnings`), never a narrower `--lib`-only pass, whenever the diff touches test code —
+which is every PR whose only changes are new/modified `#[test]` functions, as this one was.
