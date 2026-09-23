@@ -1,1 +1,1 @@
-{"status":"pass","timestamp":"2026-09-22T22:22:56Z","command":"cd /private/tmp/claude-501/-Users-zious-Documents-GITHUB-jira-cli/87b81121-6908-47bc-99e0-29a7b9dfe64b/scratchpad/pr868 && cargo test --test issue_commands 2>&1 | grep -E \"recent_month|recent_year|updated_recent_month|updated_recent_year|uppercase_month|lowercase_minutes|json_envelope|rejects_combined|test result\" | tail -30"}
+{"status":"pass","timestamp":"2026-09-23T01:48:46Z","command":"cd /Users/zious/Documents/GITHUB/jira-cli/.worktrees/cycle-009-jql-hygiene && cargo test --lib jql:: 2>&1 | tail -60"}

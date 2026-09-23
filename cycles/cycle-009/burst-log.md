@@ -312,4 +312,92 @@ worktree before merge: **5,367 passed / 0 failed / 188 ignored** (vs. baseline 5
 
 ---
 
+## Burst 4 — Phase F5 (scoped adversarial refinement) CONVERGED — 2026-09-22
+
+**Outcome:** cycle-009 Phase F5 **CONVERGED**. 3 fresh-context adversary passes on the merged
+delta (diff `bcec4c78..1847ce38`) — correctness/edge-cases, test-quality/coverage, and
+spec-doc-changelog drift — all returned **CLEAN**, zero CRITICAL/HIGH/MEDIUM findings, novelty
+decayed to LOW. Full detail (per-pass narrative, trajectory shorthand `0→0→0`): 
+`cycles/cycle-009/convergence-trajectory.md`.
+
+F5 also cleared two rounds of LOW-severity doc/hygiene findings via follow-up fix PRs before the
+3 clean passes ran, both human-approved, CI-green, squash-merged to `develop`:
+
+1. **PR `#869`** (docs-only, finding `F-A-001`): completed the CR-002 supersession markers on
+   the superseded design doc's y/M reference tables + appendix + inline comment. Merged
+   `74abc573`. Plus finding `F-A-002` (spec-quote alignment) committed to `factory-artifacts`
+   (`40e9945a`).
+2. **PR `#870`** (F5 LOW test-hygiene, behavior-preserving): DRY'd the `validate_duration`
+   canonical error string into a single helper (all 4 call sites, byte-identical, new
+   non-M/y exact-pin test), fixed a stale test-rename comment, added uppercase-unit
+   (`W`/`D`/`H`/`1Y`) rejection test coverage. Clean local review APPROVE; full regression
+   5,370 passed / 0 failed / 188 ignored; `cargo fmt` + `cargo clippy --all --all-features
+   --tests -- -D warnings` clean; CI Gate green. Merged `805ca0e0` (`develop`
+   `74abc573..805ca0e0`). **Squash-merged directly by the orchestrator** (human-authorized)
+   after the `github-ops` merge relay repeatedly failed to execute the merge — see
+   `CYCLE-009-GITHUB-OPS-MERGE-RELAY-LAG` in `cycles/OPEN-STANDING-ITEMS.md`.
+
+`develop` tip this burst: `1847ce38` -> `74abc573` (PR `#869`) -> `805ca0e0` (PR `#870`).
+`activation_head`/`activation_version` UNCHANGED at `8b4c797a`/`v0.7.0-dev.8` (no release cut —
+rolls into the next dev prerelease per `D-373` decision 4). Counts unchanged: 770 BCs / 89 VPs /
+118 holdouts / 191 stories.
+
+**Process observations logged as new `[process-gap]` standing items in
+`cycles/OPEN-STANDING-ITEMS.md`:**
+1. `CYCLE-009-F5-STALE-CHECKOUT-BEFORE-ADVERSARY` (MEDIUM) — an adversary pass was dispatched
+   against a merged SHA the local checkout hadn't fast-forwarded to, wasting a pass.
+2. `CYCLE-009-GITHUB-OPS-MERGE-RELAY-LAG` (MEDIUM) — `pr-manager` -> `github-ops` merge/close/
+   PR-create dispatches repeatedly lagged/failed to report this session; PR `#870`'s merge was
+   executed directly by the orchestrator after two failed delegated attempts.
+3. `CYCLE-009-FACTORY-DISPATCHER-FUEL-EXHAUSTED-AND-HOOK-FALSE-POSITIVES` (LOW) — consolidates
+   the 2 `CYCLE-009-F4-*` hook items with a 3rd F5 instance (`validate-factory-path-staging`
+   misfiring on a product-worktree `git add -A`).
+
+**Codifications:** No new `D-NNN` minted this burst — F5 converges via the automated
+3-consecutive-clean-pass criterion (feature-mode convention, same as the cycle-005/cycle-008 F5
+precedent); the PR `#869`/`#870` merges were ordinary human-approved fix-PR merges, not
+phase-gate rulings.
+
+**Outcome (state):** cycle-009 Phase F5 COMPLETE/CONVERGED. `develop` tip `1847ce38` -> `805ca0e0`.
+**NEXT:** Phase F6 (light targeted hardening — `cargo mutants --in-diff` on PR scope; existing
+panic proptest + security posture suffice per F1/F2 scope). Then F7 (delta convergence + human
+close gate).
+
+### Details
+
+| Agent | Task | Output |
+|-------|------|--------|
+| adversary (fresh context, ×3) | Scoped adversarial refinement on the merged delta, 3 dimensions | `cycles/cycle-009/convergence-trajectory.md` — all 3 passes CLEAN |
+| various (docs fix) | PR `#869` — CR-002 supersession markers + spec-quote alignment | PR `#869` @ `74abc573`; factory-artifacts `40e9945a` |
+| test-writer / implementer | PR `#870` — F5 LOW test-hygiene (DRY error string, stale-comment fix, uppercase-unit test coverage) | PR `#870` @ `805ca0e0` |
+| pr-manager / github-ops | PR `#869` creation/CI-wait/merge | PR `#869` merged `74abc573` |
+| orchestrator (direct, human-authorized) | PR `#870` squash-merge after 2 failed `github-ops` delegated attempts | PR `#870` merged `805ca0e0` |
+| state-manager (this agent) | Recorded F5 CONVERGED, updated `STATE.md` (ONE full-content Write), `cycle-manifest.md`, this Burst 4 entry, new `convergence-trajectory.md`, archived Session Resume Checkpoint to `session-checkpoints.md`, archived oldest Phase Progress row, appended 3 process-gap standing items, commit + push `factory-artifacts` | This entry; `STATE.md`; `cycles/cycle-009/cycle-manifest.md`; `cycles/cycle-009/convergence-trajectory.md`; `cycles/cycle-009/session-checkpoints.md`; `cycles/HISTORY-PHASE-PROGRESS.md`; `cycles/OPEN-STANDING-ITEMS.md` |
+
+**Files touched (Dim-1): 7 unique files, this burst**
+
+- `STATE.md`
+- `cycles/cycle-009/burst-log.md` (this entry, new)
+- `cycles/cycle-009/cycle-manifest.md` (updated)
+- `cycles/cycle-009/convergence-trajectory.md` (new)
+- `cycles/cycle-009/session-checkpoints.md` (new — archived prior checkpoint)
+- `cycles/HISTORY-PHASE-PROGRESS.md` (oldest Phase Progress row archived)
+- `cycles/OPEN-STANDING-ITEMS.md` (3 new process-gap items appended)
+
+**Dim-2 Attestation:** `scripts/check-spec-counts.sh` / `scripts/check-bc-cumulative-counts.sh` —
+both count-neutral this burst (no BC/VP change); F5 added no new BCs/VPs.
+
+**Dim-5 Attestation:** N/A — no binary/WASM artifact produced directly by this burst (release
+build unaffected, no tag cut).
+
+**Dim-6 Attestation:** `develop` tip moved `1847ce38` -> `74abc573` -> `805ca0e0` this burst via
+PR `#869` and PR `#870`'s squash-merges.
+
+**Dim-7 Attestation:** Full regression re-run on PR `#870`'s branch before merge: **5,370
+passed / 0 failed / 188 ignored** (vs. the 5,367-passed post-F4 baseline — +3 tests, zero
+regressions). `cargo fmt --all -- --check` clean; `cargo clippy --all --all-features --tests
+-- -D warnings` zero warnings.
+
+---
+
 <!-- Repeat for each burst. Maintain chronological order. -->

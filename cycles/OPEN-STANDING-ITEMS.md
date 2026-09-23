@@ -1537,3 +1537,41 @@ in `.factory` files, which is a content deviation from the ticket's canonical hy
 Candidate action: tighten the hook's decision-ID regex to require a `D-` (or configured) prefix
 anchored at a token boundary, not embedded inside an unrelated alphanumeric-hyphenated identifier
 like `JRACLOUD-NNNNN`, so future citations don't need the space workaround.
+
+## cycle-009 F5 scoped adversarial refinement — 3 process-gap items — NEW, OPEN (2026-09-22)
+
+**`[process-gap]` `CYCLE-009-F5-STALE-CHECKOUT-BEFORE-ADVERSARY`** — NEW, OPEN. Severity
+**MEDIUM**. During cycle-009's F5 burst, the orchestrator dispatched an adversary pass against a
+merged SHA that the local checkout had not yet fast-forwarded to (a stale `develop` checkout at
+dispatch time) — the pass ran against out-of-date tree content and had to be discarded/re-run,
+wasting one full adversary pass. Lesson: fast-forward the local checkout to the target SHA
+*before* dispatching any tree-reading agent (adversary, code-reviewer, security-reviewer, etc.),
+not after. Candidate action: add a pre-dispatch checklist step (or a hook) that verifies
+`git rev-parse HEAD` on the product worktree matches the intended target SHA before any
+tree-reading subagent is spawned.
+
+**`[process-gap]` `CYCLE-009-GITHUB-OPS-MERGE-RELAY-LAG`** — NEW, OPEN. Severity **MEDIUM**.
+Across this session, `pr-manager` -> `github-ops` merge/close/PR-create dispatches repeatedly
+lagged or failed to report back. Concretely: PR `#870`'s merge had to be executed directly by
+the orchestrator (human-authorized) after two delegated `github-ops` merge attempts failed to
+complete/report. No incorrect merge occurred — the orchestrator's direct merge used the same
+squash-merge parameters a delegated merge would have — but the relay pattern added latency and
+required a human-authorized escalation outside the normal delegation path. Candidate action: a
+`devops-engineer`/engine-maintainer investigation into `github-ops`'s dispatch reliability for
+merge/close/create operations this session (timeouts? tool-call retries? queue starvation?)
+before relying on it unattended for a larger cycle's PR volume.
+
+**`[process-gap]` `CYCLE-009-FACTORY-DISPATCHER-FUEL-EXHAUSTED-AND-HOOK-FALSE-POSITIVES`** —
+NEW, OPEN. Severity **LOW**. Consolidates and extends the two `CYCLE-009-F4-*` hook items logged
+above with a third instance surfaced during F5: (1) `factory-dispatcher` `FUEL_EXHAUSTED` fired
+spuriously again during F5 on `src`/spec edits (edits landed fine, verified — same false-alarm
+class as `CYCLE-009-F4-FUEL-EXHAUSTED-SPURIOUS-FIRE`); (2) `validate-factory-path-staging`
+misfired on an ordinary `git add -A` inside a product worktree (not `.factory/`), flagging a
+staging operation that was in fact scoped correctly; (3) `validate-dispatch-advance` continues to
+false-flag the literal substring `"JRACLOUD-82707"` as a phantom decision-ID (same defect as
+`CYCLE-009-F4-DCHAIN-FALSE-POSITIVE-JRACLOUD-82707`, recurring in F5's own artifacts). No data
+loss or incorrect content in any instance — purely hook-health/false-positive noise. Candidate
+action: batch all three (plus the two F4-burst items) into a single engine-maintainer
+investigation ticket covering `factory-dispatcher` fuel accounting, `validate-factory-path-
+staging`'s worktree-scope detection, and `validate-dispatch-advance`'s decision-ID regex, rather
+than filing three more one-off items next cycle.

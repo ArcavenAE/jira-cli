@@ -15,15 +15,16 @@ producer: orchestrator
 
 | Metric | Value |
 |--------|-------|
-| Stories delivered | N/A -- F3 skipped for this scope (F1 gate approved F1→F2→F4→F5→F6→F7); F4 delta implementation was scoped directly off the F2 spec delta, not a story package. Delivered as PR `#868` (adopts + completes external contributor PR `#863`), squash-merged @ `1847ce38` |
-| BCs created | 0 new; 2 amended (BC-2.1.008, BC-2.1.023 incl. EC-2.1.023-1), 1 new edge case ADDED (EC-2.1.023-5) -- F2 COMPLETE, human-approved (D-374). F4 added tests only, count-neutral |
+| Stories delivered | N/A -- F3 skipped for this scope (F1 gate approved F1→F2→F4→F5→F6→F7); F4 delta implementation was scoped directly off the F2 spec delta, not a story package. Delivered as PR `#868` (adopts + completes external contributor PR `#863`), squash-merged @ `1847ce38`; F5 hygiene follow-ups delivered as PR `#869` (`74abc573`) + PR `#870` (`805ca0e0`) |
+| BCs created | 0 new; 2 amended (BC-2.1.008, BC-2.1.023 incl. EC-2.1.023-1), 1 new edge case ADDED (EC-2.1.023-5) -- F2 COMPLETE, human-approved (D-374). F4/F5 added tests + docs only, count-neutral |
 | VPs created | 0 new -- verification-delta.md ruled NO new VP-NNN warranted; VP-UPDATED-RECENT-001 amended in place instead |
 | Holdout scenarios | 0 new this cycle |
 | Total cost | TBD |
-| Adversarial passes | 0 so far (F5 not yet reached -- next phase) |
+| Adversarial passes | 3 -- F5 CONVERGED 2026-09-22 (3/3 clean, trajectory `0→0→0`; see `convergence-trajectory.md`) |
 | Final holdout satisfaction | N/A yet |
 | Release version | rolls into next dev prerelease at close (no immediate tag) |
 | Regression suite (post-F4) | 5,367 passed / 0 failed / 188 ignored (baseline 5,357; +10 tests, 0 regressions) |
+| Regression suite (post-F5, PR #870) | 5,370 passed / 0 failed / 188 ignored (vs. post-F4 5,367; +3 tests, 0 regressions) |
 
 ## Spec Changes
 
@@ -108,3 +109,36 @@ added tests, not BCs).
 
 Next: F5 (scoped adversarial refinement on the merged delta, diff `bcec4c78..1847ce38`); then F6
 (light targeted hardening); F7 (delta convergence + human close gate).
+
+**Phase F5 (scoped adversarial refinement): CONVERGED** -- 2026-09-22, this session. 3
+fresh-context adversary passes on the merged delta (diff `bcec4c78..1847ce38`) --
+correctness/edge-cases, test-quality/coverage, and spec-doc-changelog drift -- all CLEAN, zero
+CRITICAL/HIGH/MEDIUM findings, novelty decayed to LOW. Trajectory shorthand `0→0→0`. Full detail:
+`convergence-trajectory.md`.
+
+F5 also cleared two rounds of LOW-severity doc/hygiene findings via follow-up PRs (both
+human-approved, CI-green, squash-merged) before the 3 clean passes ran:
+
+1. **PR `#869`** (docs-only, `F-A-001`): completed the CR-002 supersession markers on the
+   superseded design doc's y/M reference tables + appendix + inline comment. Merged `74abc573`.
+   Plus `F-A-002` (spec-quote alignment) committed to `factory-artifacts` (`40e9945a`).
+2. **PR `#870`** (F5 LOW test-hygiene, behavior-preserving): DRY'd the `validate_duration`
+   canonical error string into a single helper (all 4 sites, byte-identical, new non-M/y
+   exact-pin test); fixed a stale test-rename comment; added uppercase-unit (`W`/`D`/`H`/`1Y`)
+   rejection test coverage. Clean local review APPROVE; full regression 5,370 passed / 0 failed
+   / 188 ignored; fmt + clippy `--all --all-features --tests -- -D warnings` clean; CI Gate
+   green. Merged `805ca0e0` -- squash-merged directly by the orchestrator (human-authorized)
+   after the `github-ops` merge relay repeatedly failed to execute the merge.
+
+`develop` tip this phase: `1847ce38` -> `74abc573` (PR `#869`) -> `805ca0e0` (PR `#870`).
+`activation_head`/`activation_version` UNCHANGED (`8b4c797a`/`v0.7.0-dev.8`). Counts unchanged
+770/89/118/191.
+
+Three new `[process-gap]` standing items logged to `cycles/OPEN-STANDING-ITEMS.md`:
+`CYCLE-009-F5-STALE-CHECKOUT-BEFORE-ADVERSARY` (MEDIUM), `CYCLE-009-GITHUB-OPS-MERGE-RELAY-LAG`
+(MEDIUM), `CYCLE-009-FACTORY-DISPATCHER-FUEL-EXHAUSTED-AND-HOOK-FALSE-POSITIVES` (LOW,
+consolidates the 2 F4-burst hook items with a 3rd F5 instance).
+
+Next: F6 (light targeted hardening -- `cargo mutants --in-diff` on PR scope; existing panic
+proptest + security posture suffice per F1/F2 scope); then F7 (delta convergence + human close
+gate).
