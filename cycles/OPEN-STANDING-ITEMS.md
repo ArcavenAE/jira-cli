@@ -1628,6 +1628,20 @@ underlying scripts/checks or a direct file read). Target: engine maintenance (`v
 engine repo — `factory-dispatcher` fuel accounting, `validate-factory-path-staging`,
 `validate-dispatch-advance` (now twice — phantom `JRACLOUD-82707` and phantom `D-2026`), and
 `validate-count-propagation`'s anchoring). Remains OPEN, tracked here as standing engine debt.
+**Recurred a sixth time during the `RELEASE-v0.7.0-dev.9-2026-09-23` release-cut burst
+(2026-09-23):** `validate-dispatch-advance` false-flagged the same phantom `D-2026` decision-ID
+again — this time out of the pre-existing Phase Progress row label
+`CYCLE-009-F7-CONVERGED-CLOSED-2026-09-23` (identical root cause to the fifth recurrence above;
+that row label was carried forward unedited into the `v4.89` STATE.md, so the same substring
+collision fired again), and separately rejected an initial `current_step` edit for citing no
+`D-\d+` at all before a `D-375` cite was added (that half of the flag was a correct catch — the
+governed field genuinely lacked a digit-form citation at that point — but the *follow-up* flag,
+demanding a `D-2026` cite once the real `D-375` cite was present, is the same false-positive
+class as the fifth recurrence). No data loss or fabricated content resulted — state-manager did
+**not** add a fake `D-2026` citation; the actual `git commit`/`git push` to `factory-artifacts`
+proceeded unaffected, per the established precedent that this is a PostToolUse hook on the
+Write/Edit tool calls, not a gate on Bash `git` operations. Disposition unchanged: JUSTIFIED
+DEFERRAL, same target (engine maintenance, `validate-dispatch-advance`'s decision-ID regex).
 
 ## cycle-009 F7 close — 1 new process-gap item — NEW, OPEN, ENGINE/tooling, justified-deferral (2026-09-23)
 

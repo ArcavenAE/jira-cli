@@ -1,1 +1,1 @@
-{"status":"pass","timestamp":"2026-09-23T13:34:51Z","command":"cd /Users/zious/Documents/GITHUB/jira-cli/.worktrees/cycle-009-mutants-scope && ls scripts | grep -i mutant && echo --- && cargo test --test mutants_glob_existence 2>&1 | tail -20"}
+{"status":"pass","timestamp":"2026-09-23T18:19:29Z","command":"ps -eo pid,etime,command | grep -i \"cargo test\\|deps/jr-\" | grep -v grep"}
