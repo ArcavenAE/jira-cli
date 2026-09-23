@@ -306,3 +306,13 @@ See `cycles/cycle-005/burst-log.md` Bursts 11-12 for full narrative detail (thes
 | Phase | Status | Completed | Gate | Notes | Finding Progression |
 |-------|--------|-----------|------|-------|---------------------|
 | **ENGINE-STANDING-ITEM-LOG-DCHAIN-CITE-2026-09-19** | **COMPLETE / RECORD-ONLY (no phase advance)** | 2026-09-19 | none (backlog-capture burst, not a pipeline gate) | Logged `ENGINE-VALIDATE-DISPATCH-ADVANCE-STALE-DCHAIN-CITE` (MEDIUM, human-reported). **RESOLVED 2026-09-19** by the `D-372` migration burst. | 770 BCs / 89 VPs / 118 holdout / 191 stories; no DEC minted |
+
+> Extracted from `.factory/STATE.md`'s `## Phase Progress` table during the
+> 2026-09-22 `CYCLE-009-F6-HARDENED-2026-09-22` burst (v4.83 -> v4.84), to keep
+> the live table at 12 rows after adding the new
+> `CYCLE-009-F6-HARDENED-2026-09-22` row. This was the oldest row at that
+> point; archived here verbatim, unedited.
+
+| Phase | Status | Completed | Gate | Notes | Finding Progression |
+|-------|--------|-----------|------|-------|---------------------|
+| **DCHAIN-MIGRATION-DEC-TO-DNNN-2026-09-19** | **COMPLETE / DECISION-ID MIGRATION (no phase advance)** | 2026-09-19 | none (human-approved 2x, one-time bulk rename; not a pipeline gate) | Human-approved (2x, explicit) one-time bulk rename of every `DEC-NNN` decision-ID token to `D-NNN` throughout `.factory/` (~7,215 occurrences / 532 tracked files). Resolves `ENGINE-VALIDATE-DISPATCH-ADVANCE-STALE-DCHAIN-CITE` in full. `current_step` now carries a genuine `D-chain cite` marker. | 770 BCs / 89 VPs / 118 holdout / 191 stories; D-372 minted |

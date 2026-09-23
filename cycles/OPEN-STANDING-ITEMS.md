@@ -1575,3 +1575,25 @@ action: batch all three (plus the two F4-burst items) into a single engine-maint
 investigation ticket covering `factory-dispatcher` fuel accounting, `validate-factory-path-
 staging`'s worktree-scope detection, and `validate-dispatch-advance`'s decision-ID regex, rather
 than filing three more one-off items next cycle.
+
+## cycle-009 F6 light targeted hardening — 1 residual — NEW, OPEN (2026-09-22)
+
+**`[tooling-gap]` `CYCLE-009-F6-MUTANTS-EXAMINE-GLOBS-GAP`** — NEW, OPEN. Severity **MEDIUM**.
+`.cargo/mutants.toml`'s `examine_globs` does not include `src/jql.rs` (nor `src/cli/mod.rs`), so
+the standing CI `cargo mutants --in-diff` gate generates **zero mutants** for cycle-009's own
+code delta (`bcec4c78`..`805ca0e0`) — confirmed empirically this burst: `git diff bcec4c78..
+805ca0e0 -- src/ | cargo mutants --in-diff - --jobs 4 --timeout 240` → `No mutants to filter`,
+exit 0. This is a false green on the standing mutation gate for this delta. Delta kill coverage
+was instead confirmed **100% (9/9 mutants caught, 0 missed)** only via an out-of-band temporary
+`examine_globs` override scoped to `src/jql.rs` (not committed to `.cargo/mutants.toml`) — see
+`cycles/cycle-009/phase-f6-hardening/hardening-record.md`. Same defect class as the closed
+`CYCLE-008-F6-MUTANTS-EXAMINE-GLOBS-GAP` (resolved via `FIX-F7-001`, PR `#845`). Recommendation
+(per the `FIX-F6-MUTANTS-SCOPE`/cycle-008 precedent): add `src/jql.rs` to `examine_globs`,
+updating `docs/specs/cargo-mutants-policy.md` §Scope and keeping
+`scripts/check-cargo-mutants-policy-citations.sh` + `tests/mutants_glob_existence.rs` green in
+the same change. `src/jql.rs` is a pure, security-adjacent module (JQL escaping/injection-
+relevant validation), fully default-CI-testable (no keyring/network/Windows gating), and the F6
+out-of-band run showed 100% kill with no un-actionable survivor flooding — low-risk to add.
+**DEFERRED, not enacted in F6** (LIGHT-scope F6 does not modify `src/`): flagged for a decision
+at the cycle-009 F7 human gate — fix-now-then-close vs. track-and-defer — since adding a file to
+`examine_globs` is a repo-wide mutation-policy change, not a cycle-009-scoped one.
