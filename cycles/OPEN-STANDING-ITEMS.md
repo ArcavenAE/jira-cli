@@ -1642,6 +1642,22 @@ class as the fifth recurrence). No data loss or fabricated content resulted — 
 proceeded unaffected, per the established precedent that this is a PostToolUse hook on the
 Write/Edit tool calls, not a gate on Bash `git` operations. Disposition unchanged: JUSTIFIED
 DEFERRAL, same target (engine maintenance, `validate-dispatch-advance`'s decision-ID regex).
+**Recurred a seventh time during the `RELEASE-v0.7.0-dev.9-BUILD-COMPLETE-2026-09-23` burst
+(2026-09-23):** `validate-dispatch-advance` false-flagged yet another phantom decision-ID —
+this time `D-82707` extracted as a substring of this very standing item's own prior-recurrence
+prose, `JRACLOUD-82707` (the characters `...JRACLOUD-`**`82707`**`...` parse as digits following
+a `D-`-shaped token boundary under the hook's regex once a `D-375` cite was already present in
+`current_step`, i.e. citing the correct, real decision ID did not satisfy the hook — it kept
+scanning the rest of the document body for a "higher" phantom match). Same defect class as
+recurrences (1)-(6): an over-broad decision-ID regex that scans arbitrary prose substrings
+instead of anchoring on backtick-wrapped `` `D-NNN` `` tokens or the Decisions Log table's own ID
+column — this instance additionally shows the regex is not even anchored to a literal `D-`
+prefix in the source text (`JRACLOUD-82707`'s hyphen-plus-digits tail was enough). No data loss
+or fabricated content resulted — state-manager did **not** add a fake `D-82707` citation; the
+actual `git commit`/`git push` to `factory-artifacts` proceeded unaffected. Disposition
+unchanged: JUSTIFIED DEFERRAL, same target (engine maintenance,
+`validate-dispatch-advance`'s decision-ID regex) — seven recurrences now on this defect class
+alone.
 
 ## cycle-009 F7 close — 1 new process-gap item — NEW, OPEN, ENGINE/tooling, justified-deferral (2026-09-23)
 
