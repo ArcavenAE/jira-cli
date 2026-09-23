@@ -1602,12 +1602,32 @@ count class being edited. Both real guard scripts (`scripts/check-bc-cumulative-
 hook's flag was a false positive, not a real drift. Same defect *class* as items (1)-(3) above
 (an engine hook over-broad-match false-positive) — folded into the same consolidated
 investigation ticket rather than filed separately.
-**Disposition (S-7.02, confirmed at cycle-009 F7 close, 2026-09-23):** JUSTIFIED DEFERRAL. All
-four instances are engine-hook false-positive noise with zero product-data-correctness impact
-(every flagged edit was independently verified correct via the real underlying scripts/checks).
-Target: engine maintenance (`vsdd-factory` engine repo — `factory-dispatcher` fuel accounting,
-`validate-factory-path-staging`, `validate-dispatch-advance`, and now `validate-count-
-propagation`'s anchoring). Remains OPEN, tracked here as standing engine debt.
+**Recurred a fifth time during the 2026-09-23 Dependabot maintenance sweep
+(`MAINT-SWEEP-2026-09-23-TRIAGE`):** `validate-dispatch-advance` false-flagged a phantom
+decision-ID again — this time by substring-matching the literal token `D-2026` out of the
+pre-existing Phase Progress row label `CYCLE-009-F7-CONVERGED-CLOSED-2026-09-23` (the characters
+`...CLOSE`**`D-2026`**`...` inside that label parse as `D-2026` under the hook's regex), then
+demanding `current_step` cite `D-2026` as the "latest" decision even though no such decision
+exists — this project's real decisions run only through `D-375`. Same defect *class* as items
+(1)-(4) above and the earlier phantom `JRACLOUD-82707` match: an over-broad decision-ID regex
+that scans arbitrary prose substrings instead of anchoring on backtick-wrapped `` `D-NNN` ``
+tokens or the Decisions Log table's own ID column. No data loss or fabricated content resulted —
+state-manager verified the actual written STATE.md content was correct via a direct file read
+and did **not** add a fake `D-2026` citation to satisfy the hook; the `git commit`/`git push`
+itself was unaffected since this is a PostToolUse hook on the Write/Edit tool calls, not a gate
+on Bash `git` operations. **Suggested fix direction for the engine-maintainer investigation:**
+constrain the decision-ID extraction regex to require either (a) a markdown code span
+(`` `D-\d+` ``) or (b) a table-row context matching the Decisions Log's `| D-\d+ |` column shape
+— never a bare substring match against arbitrary running prose, which will keep colliding with
+any future `CLOSED-YYYY-MM-DD`-style phase-name token (a naming convention already used
+throughout this project's Phase Progress rows and unlikely to be renamed just to dodge the hook).
+**Disposition (S-7.02, confirmed 2026-09-23, MAINT-SWEEP-2026-09-23-TRIAGE):** JUSTIFIED
+DEFERRAL. All five instances are engine-hook false-positive noise with zero product-data-
+correctness impact (every flagged edit was independently verified correct via the real
+underlying scripts/checks or a direct file read). Target: engine maintenance (`vsdd-factory`
+engine repo — `factory-dispatcher` fuel accounting, `validate-factory-path-staging`,
+`validate-dispatch-advance` (now twice — phantom `JRACLOUD-82707` and phantom `D-2026`), and
+`validate-count-propagation`'s anchoring). Remains OPEN, tracked here as standing engine debt.
 
 ## cycle-009 F7 close — 1 new process-gap item — NEW, OPEN, ENGINE/tooling, justified-deferral (2026-09-23)
 

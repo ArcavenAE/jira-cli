@@ -96,3 +96,28 @@ product-tree path was modified by this sweep — only `.factory/` bookkeeping (t
    future sweep once `cargo tree -i reqwest` / `cargo tree -i base64` show convergence.
 4. `#855` remains DEFERRED pending a dedicated `comfy-table` 8.0 migration effort (own cycle
    or maintenance burst with code changes, not a Dependabot-triage sweep).
+
+## Delivery — COMPLETE (2026-09-23)
+
+The human code-owner reviewed and merged all 4 APPLY-ready PRs from this sweep's triage. All
+merges verified on `origin/develop`, a clean linear stack:
+
+| # | Dependency | Merge type | Squash SHA |
+|---|---|---|---|
+| `#872` | `codecov/codecov-action` 7.1.0 → 7.1.1 | squash | `6100af0b` |
+| `#867` | `taiki-e/install-action` 2.87.12 → 2.87.13 | squash | `751a2a96` |
+| `#866` | `clap` 4.6.6 → 4.6.7 | squash | `34693f19` |
+| `#865` | `clap_complete` 4.6.9 → 4.6.10 | squash | `22c7f79f` |
+
+`#865` stacked cleanly on top of `#866` per the delivery-ordering guidance above — `Cargo.lock`
+coherent, no re-resolution conflicts.
+
+**`develop` tip advanced: `7c5e9309` → `22c7f79f`** (4 commits).
+
+HELD (`#854` reqwest, `#842` base64) and DEFERRED (`#855` comfy-table) remain **OPEN, untouched**
+— no change to their triage disposition. `cargo deny check`'s duplicate-version ban on `#854`/
+`#842` is unaffected by this delivery (neither PR merged).
+
+No release was cut for this delivery — `activation_head`/`activation_version` remain
+`8b4c797a`/`v0.7.0-dev.8` unchanged; these 4 dependency bumps roll into whatever future release
+next tags `develop`. Counts unchanged: 770 BCs / 89 VPs / 118 holdout / 191 stories.
