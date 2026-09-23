@@ -316,3 +316,13 @@ See `cycles/cycle-005/burst-log.md` Bursts 11-12 for full narrative detail (thes
 | Phase | Status | Completed | Gate | Notes | Finding Progression |
 |-------|--------|-----------|------|-------|---------------------|
 | **DCHAIN-MIGRATION-DEC-TO-DNNN-2026-09-19** | **COMPLETE / DECISION-ID MIGRATION (no phase advance)** | 2026-09-19 | none (human-approved 2x, one-time bulk rename; not a pipeline gate) | Human-approved (2x, explicit) one-time bulk rename of every `DEC-NNN` decision-ID token to `D-NNN` throughout `.factory/` (~7,215 occurrences / 532 tracked files). Resolves `ENGINE-VALIDATE-DISPATCH-ADVANCE-STALE-DCHAIN-CITE` in full. `current_step` now carries a genuine `D-chain cite` marker. | 770 BCs / 89 VPs / 118 holdout / 191 stories; D-372 minted |
+
+> Extracted from `.factory/STATE.md`'s `## Phase Progress` table during the
+> 2026-09-23 `CYCLE-009-F7-CONVERGED-CLOSED-2026-09-23` burst (v4.84 -> v4.85),
+> to keep the live table at 12 rows after adding the new
+> `CYCLE-009-F7-CONVERGED-CLOSED-2026-09-23` row. This was the oldest row at
+> that point; archived here verbatim, unedited.
+
+| Phase | Status | Completed | Gate | Notes | Finding Progression |
+|-------|--------|-----------|------|-------|---------------------|
+| **SESSION-WRAP-PAUSE-2026-09-20** | **COMPLETE** | 2026-09-20 | session-wrap checkpoint | agent state-manager -- persisted the 2026-09-19 maintenance sweep's 4 analysis files to `.factory/maintenance/2026-09-19/`; committed routine already-uncommitted worktree churn; noted the `DEC-NNN`->`D-NNN` migration is COMPLETE on both branches. No phase advance, no `src/` change, no new DEC. | 770 BCs / 89 VPs / 118 holdout / 191 stories; no DEC minted |

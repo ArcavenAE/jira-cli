@@ -2,10 +2,10 @@
 document_type: cycle-manifest
 cycle_id: cycle-009-jql-relative-date-units
 cycle_type: bugfix
-version: TBD (rolls into next dev prerelease at close -- no immediate tag, per F1-gate decision 4)
-status: in-progress
+version: rolls into next dev prerelease at close -- no immediate tag, per F1-gate decision 4 (D-373)
+status: complete
 started: 2026-09-22T19:28:28Z
-completed: ""
+completed: 2026-09-23T14:20:08Z
 producer: orchestrator
 ---
 
@@ -15,16 +15,18 @@ producer: orchestrator
 
 | Metric | Value |
 |--------|-------|
-| Stories delivered | N/A -- F3 skipped for this scope (F1 gate approved F1→F2→F4→F5→F6→F7); F4 delta implementation was scoped directly off the F2 spec delta, not a story package. Delivered as PR `#868` (adopts + completes external contributor PR `#863`), squash-merged @ `1847ce38`; F5 hygiene follow-ups delivered as PR `#869` (`74abc573`) + PR `#870` (`805ca0e0`) |
-| BCs created | 0 new; 2 amended (BC-2.1.008, BC-2.1.023 incl. EC-2.1.023-1), 1 new edge case ADDED (EC-2.1.023-5) -- F2 COMPLETE, human-approved (D-374). F4/F5 added tests + docs only, count-neutral |
+| Stories delivered | N/A -- F3 skipped for this scope (F1 gate approved F1→F2→F4→F5→F6→F7); F4 delta implementation was scoped directly off the F2 spec delta, not a story package. Delivered as PR `#868` (adopts + completes external contributor PR `#863`), squash-merged @ `1847ce38`; F5 hygiene follow-ups delivered as PR `#869` (`74abc573`) + PR `#870` (`805ca0e0`); F7 ① fix delivered as PR `#871` (`7c5e9309`) |
+| BCs created | 0 new; 2 amended (BC-2.1.008, BC-2.1.023 incl. EC-2.1.023-1), 1 new edge case ADDED (EC-2.1.023-5) -- F2 COMPLETE, human-approved (D-374). F4/F5/F7 added tests + docs only, count-neutral (770/89/118/191 unchanged throughout) |
 | VPs created | 0 new -- verification-delta.md ruled NO new VP-NNN warranted; VP-UPDATED-RECENT-001 amended in place instead |
 | Holdout scenarios | 0 new this cycle |
 | Total cost | TBD |
 | Adversarial passes | 3 -- F5 CONVERGED 2026-09-22 (3/3 clean, trajectory `0→0→0`; see `convergence-trajectory.md`) |
-| Final holdout satisfaction | N/A yet |
-| Release version | rolls into next dev prerelease at close (no immediate tag) |
+| Final holdout satisfaction | full regression suite CI-green on all 4 merged PRs; `dtu_required: false` |
+| Release version | rolls into next dev prerelease at close (no immediate tag, D-373 precedent) |
 | Regression suite (post-F4) | 5,367 passed / 0 failed / 188 ignored (baseline 5,357; +10 tests, 0 regressions) |
 | Regression suite (post-F5, PR #870) | 5,370 passed / 0 failed / 188 ignored (vs. post-F4 5,367; +3 tests, 0 regressions) |
+| Regression suite (post-F7, PR #871) | unaffected -- PR #871 is `.cargo/mutants.toml`-only (no `src/`/test change); governing figure remains 5,370 passed / 0 failed / 188 ignored |
+| Cycle status | **CLOSED 2026-09-23 (D-375, F7 human gate APPROVED "Approve & close")** |
 
 ## Spec Changes
 
@@ -139,6 +141,46 @@ Three new `[process-gap]` standing items logged to `cycles/OPEN-STANDING-ITEMS.m
 (MEDIUM), `CYCLE-009-FACTORY-DISPATCHER-FUEL-EXHAUSTED-AND-HOOK-FALSE-POSITIVES` (LOW,
 consolidates the 2 F4-burst hook items with a 3rd F5 instance).
 
-Next: F6 (light targeted hardening -- `cargo mutants --in-diff` on PR scope; existing panic
-proptest + security posture suffice per F1/F2 scope); then F7 (delta convergence + human close
-gate).
+**Phase F6 (light targeted hardening): HARDENED_WITH_RESIDUALS** -- 2026-09-22. Scope: the
+cycle-009 code delta `bcec4c78..805ca0e0` (`src/jql.rs` unit-set narrowing + new
+`invalid_duration_error` helper; `src/cli/mod.rs` help-text update). Delta mutation testing via
+an out-of-band `examine_globs` override scoped to `src/jql.rs`, `--in-diff` on the same delta =
+**9 generated / 9 caught / 0 missed = 100% kill**, including the line-44 unit-set-narrowing
+guard mutant (the cycle-009 core change). The standing CI-prescribed `--in-diff` run against the
+THEN-current `examine_globs` generated 0 mutants (false green -- neither changed file was in
+scope). Security: `cargo deny check` + `cargo audit` both PASS (0 vulnerabilities / 360 deps),
+zero new dependencies. Kani/`cargo-fuzz` JUSTIFIED SKIP (0-GAP -- pure/total function class,
+existing proptest covers panic-safety, strictly input-narrowing change). Purity boundary intact.
+No `src/` modification, no PR opened this phase. One residual logged:
+`CYCLE-009-F6-MUTANTS-EXAMINE-GLOBS-GAP` (MEDIUM, `[tooling-gap]`) -- DEFERRED to the F7 human
+gate for a fix-now-vs-track decision. Full detail:
+`cycles/cycle-009/phase-f6-hardening/hardening-record.md`, `cycles/cycle-009/burst-log.md`
+Burst 5.
+
+**Phase F7 (delta convergence + human close gate): CONVERGED -- cycle-009 CLOSED** --
+2026-09-23. ALL 7 convergence dimensions PASS (spec, test, implementation, verification,
+holdout/regression, consistency, input-hash). F7 human close gate **APPROVED** (`D-375`):
+① fixed `examine_globs` (PR `#871`, squash-merged `develop` @ `7c5e9309`, superseding the prior
+`MAINT-MUTANTS-GLOBS-01` EXCLUDE); ② fixed the stale `BC-2.1.023` `(pending F4)` Source-column
+marker in `BC-INDEX.md`; ③ approved & closed. Ships on `develop` @ `7c5e9309`, rolls into the
+*next* dev prerelease, **NO immediate tag** (`D-373` precedent, same as cycle-005/006/012).
+`activation_head`/`activation_version` UNCHANGED (`8b4c797a`/`v0.7.0-dev.8`). Counts UNCHANGED
+770/89/118/191 -- cycle-009 was count-neutral throughout.
+
+S-7.02 Cycle-Closing Checklist satisfied: `CYCLE-009-F6-MUTANTS-EXAMINE-GLOBS-GAP` RESOLVED
+(archived to `cycles/RESOLVED-DRIFT-ITEMS.md`, closed by PR `#871`). The 3 remaining OPEN
+process-gap items (`CYCLE-009-F5-STALE-CHECKOUT-BEFORE-ADVERSARY`,
+`CYCLE-009-GITHUB-OPS-MERGE-RELAY-LAG`, `CYCLE-009-FACTORY-DISPATCHER-FUEL-EXHAUSTED-AND-HOOK-
+FALSE-POSITIVES`) each received an explicit justified-deferral disposition (target: engine
+maintenance, `vsdd-factory` engine repo, not product). One NEW item logged and dispositioned
+the same way: `CYCLE-009-PR-MANAGER-COMPLETION-GUARD-FORCES-MERGE` (MEDIUM). Every process-gap
+item logged this cycle now has a follow-up disposition.
+
+GitHub issue `#859` remains CLOSED (closed at F4); `#863`'s courtesy-credit comment remains
+posted (formal close of `#863` itself is an accepted minor loose end). `SCORECARD_ENABLED`
+GitHub repository variable set to `true` this session (OpenSSF Scorecard workflow enabled,
+separate from `ci-gate`).
+
+Full detail: `cycles/cycle-009/burst-log.md` Burst 6, `STATE.md` Decisions Log `D-375`.
+
+**cycle-009 CLOSED.**

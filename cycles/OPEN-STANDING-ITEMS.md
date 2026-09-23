@@ -1538,9 +1538,9 @@ Candidate action: tighten the hook's decision-ID regex to require a `D-` (or con
 anchored at a token boundary, not embedded inside an unrelated alphanumeric-hyphenated identifier
 like `JRACLOUD-NNNNN`, so future citations don't need the space workaround.
 
-## cycle-009 F5 scoped adversarial refinement — 3 process-gap items — NEW, OPEN (2026-09-22)
+## cycle-009 F5 scoped adversarial refinement — 3 process-gap items — OPEN, ENGINE/tooling, justified-deferral (2026-09-22, dispositioned at F7 close 2026-09-23)
 
-**`[process-gap]` `CYCLE-009-F5-STALE-CHECKOUT-BEFORE-ADVERSARY`** — NEW, OPEN. Severity
+**`[process-gap]` `CYCLE-009-F5-STALE-CHECKOUT-BEFORE-ADVERSARY`** — OPEN. Severity
 **MEDIUM**. During cycle-009's F5 burst, the orchestrator dispatched an adversary pass against a
 merged SHA that the local checkout had not yet fast-forwarded to (a stale `develop` checkout at
 dispatch time) — the pass ran against out-of-date tree content and had to be discarded/re-run,
@@ -1549,8 +1549,14 @@ wasting one full adversary pass. Lesson: fast-forward the local checkout to the 
 not after. Candidate action: add a pre-dispatch checklist step (or a hook) that verifies
 `git rev-parse HEAD` on the product worktree matches the intended target SHA before any
 tree-reading subagent is spawned.
+**Disposition (S-7.02, confirmed at cycle-009 F7 close, 2026-09-23):** JUSTIFIED DEFERRAL. This
+is an orchestrator-process lesson about dispatch sequencing, not a product defect — no `src/`
+code or spec is affected, and it self-corrected within the same burst (discard + re-run) with no
+persisted incorrect artifact. Target: engine maintenance (orchestrator dispatch-sequencing
+convention/hook, `vsdd-factory` engine repo), not this cycle's product scope. Remains OPEN,
+tracked here as standing engine debt.
 
-**`[process-gap]` `CYCLE-009-GITHUB-OPS-MERGE-RELAY-LAG`** — NEW, OPEN. Severity **MEDIUM**.
+**`[process-gap]` `CYCLE-009-GITHUB-OPS-MERGE-RELAY-LAG`** — OPEN. Severity **MEDIUM**.
 Across this session, `pr-manager` -> `github-ops` merge/close/PR-create dispatches repeatedly
 lagged or failed to report back. Concretely: PR `#870`'s merge had to be executed directly by
 the orchestrator (human-authorized) after two delegated `github-ops` merge attempts failed to
@@ -1560,9 +1566,20 @@ required a human-authorized escalation outside the normal delegation path. Candi
 `devops-engineer`/engine-maintainer investigation into `github-ops`'s dispatch reliability for
 merge/close/create operations this session (timeouts? tool-call retries? queue starvation?)
 before relying on it unattended for a larger cycle's PR volume.
+**Recurred at F7 close (2026-09-23):** PR `#871` (the `examine_globs` fix) *also* had to be
+merged directly by the human in the GitHub UI rather than via a completed `github-ops` delegated
+merge — a second, independent instance of the same defect class this cycle, strengthening the
+case for the engine-side investigation rather than resolving it.
+**Disposition (S-7.02, confirmed at cycle-009 F7 close, 2026-09-23):** JUSTIFIED DEFERRAL.
+`github-ops` is an engine-side (`vsdd-factory`) delegation/relay component, not product code —
+every affected merge landed correctly with the intended parameters via the human-authorized
+fallback path, so there is no unresolved product risk, only a repeated engine-reliability
+symptom. Target: engine maintenance (`vsdd-factory` `github-ops` dispatch reliability
+investigation). Remains OPEN, tracked here as standing engine debt; severity unchanged at
+MEDIUM given the second recurrence.
 
 **`[process-gap]` `CYCLE-009-FACTORY-DISPATCHER-FUEL-EXHAUSTED-AND-HOOK-FALSE-POSITIVES`** —
-NEW, OPEN. Severity **LOW**. Consolidates and extends the two `CYCLE-009-F4-*` hook items logged
+OPEN. Severity **LOW**. Consolidates and extends the two `CYCLE-009-F4-*` hook items logged
 above with a third instance surfaced during F5: (1) `factory-dispatcher` `FUEL_EXHAUSTED` fired
 spuriously again during F5 on `src`/spec edits (edits landed fine, verified — same false-alarm
 class as `CYCLE-009-F4-FUEL-EXHAUSTED-SPURIOUS-FIRE`); (2) `validate-factory-path-staging`
@@ -1575,25 +1592,40 @@ action: batch all three (plus the two F4-burst items) into a single engine-maint
 investigation ticket covering `factory-dispatcher` fuel accounting, `validate-factory-path-
 staging`'s worktree-scope detection, and `validate-dispatch-advance`'s decision-ID regex, rather
 than filing three more one-off items next cycle.
+**Recurred a fourth time at F7 close (2026-09-23):** the `validate-count-propagation` hook
+false-flagged the BC-INDEX.md Source-column prose fix (dropping a stale `(pending F4)` marker
+from `BC-2.1.023`, a zero-count-change edit) as a "count drift" — its heuristic matched Section
+1's unrelated per-file subsection count ("83 BCs cumulative" in `bc-1-auth-identity.md`'s index
+row) against the file-wide `total_bcs: 770` grand total, rather than anchoring on the specific
+count class being edited. Both real guard scripts (`scripts/check-bc-cumulative-counts.sh`,
+`scripts/check-spec-counts.sh`) confirmed exit 0 / count-neutral immediately after, proving the
+hook's flag was a false positive, not a real drift. Same defect *class* as items (1)-(3) above
+(an engine hook over-broad-match false-positive) — folded into the same consolidated
+investigation ticket rather than filed separately.
+**Disposition (S-7.02, confirmed at cycle-009 F7 close, 2026-09-23):** JUSTIFIED DEFERRAL. All
+four instances are engine-hook false-positive noise with zero product-data-correctness impact
+(every flagged edit was independently verified correct via the real underlying scripts/checks).
+Target: engine maintenance (`vsdd-factory` engine repo — `factory-dispatcher` fuel accounting,
+`validate-factory-path-staging`, `validate-dispatch-advance`, and now `validate-count-
+propagation`'s anchoring). Remains OPEN, tracked here as standing engine debt.
 
-## cycle-009 F6 light targeted hardening — 1 residual — NEW, OPEN (2026-09-22)
+## cycle-009 F7 close — 1 new process-gap item — NEW, OPEN, ENGINE/tooling, justified-deferral (2026-09-23)
 
-**`[tooling-gap]` `CYCLE-009-F6-MUTANTS-EXAMINE-GLOBS-GAP`** — NEW, OPEN. Severity **MEDIUM**.
-`.cargo/mutants.toml`'s `examine_globs` does not include `src/jql.rs` (nor `src/cli/mod.rs`), so
-the standing CI `cargo mutants --in-diff` gate generates **zero mutants** for cycle-009's own
-code delta (`bcec4c78`..`805ca0e0`) — confirmed empirically this burst: `git diff bcec4c78..
-805ca0e0 -- src/ | cargo mutants --in-diff - --jobs 4 --timeout 240` → `No mutants to filter`,
-exit 0. This is a false green on the standing mutation gate for this delta. Delta kill coverage
-was instead confirmed **100% (9/9 mutants caught, 0 missed)** only via an out-of-band temporary
-`examine_globs` override scoped to `src/jql.rs` (not committed to `.cargo/mutants.toml`) — see
-`cycles/cycle-009/phase-f6-hardening/hardening-record.md`. Same defect class as the closed
-`CYCLE-008-F6-MUTANTS-EXAMINE-GLOBS-GAP` (resolved via `FIX-F7-001`, PR `#845`). Recommendation
-(per the `FIX-F6-MUTANTS-SCOPE`/cycle-008 precedent): add `src/jql.rs` to `examine_globs`,
-updating `docs/specs/cargo-mutants-policy.md` §Scope and keeping
-`scripts/check-cargo-mutants-policy-citations.sh` + `tests/mutants_glob_existence.rs` green in
-the same change. `src/jql.rs` is a pure, security-adjacent module (JQL escaping/injection-
-relevant validation), fully default-CI-testable (no keyring/network/Windows gating), and the F6
-out-of-band run showed 100% kill with no un-actionable survivor flooding — low-risk to add.
-**DEFERRED, not enacted in F6** (LIGHT-scope F6 does not modify `src/`): flagged for a decision
-at the cycle-009 F7 human gate — fix-now-then-close vs. track-and-defer — since adding a file to
-`examine_globs` is a repo-wide mutation-policy change, not a cycle-009-scoped one.
+**`[process-gap]` `CYCLE-009-PR-MANAGER-COMPLETION-GUARD-FORCES-MERGE`** — NEW, OPEN. Severity
+**MEDIUM**. During cycle-009, the `pr-manager-completion-guard` hook repeatedly pushed narrow,
+scoped dispatches (intended only as "push the branch + open/update the PR", not a full merge
+lifecycle) toward an unauthorized full merge — reportedly citing "`AUTHORIZE_MERGE=yes` per
+dispatch convention" — even when the dispatching agent's task was explicitly scoped to stop
+short of merging. The dispatched agents correctly resisted the guard's push and did not merge
+without explicit human/orchestrator authorization; no unauthorized merge occurred. The guard's
+current behavior effectively assumes every PR-touching dispatch wants to reach a merge, which is
+false for scoped push/PR-only dispatches. Candidate action: the guard should recognize a
+narrower dispatch-scope signal (e.g. an explicit "stop after PR creation/update" instruction in
+the dispatch) and exempt that dispatch class from its "authorize and push toward merge"
+behavior, rather than defaulting to full-lifecycle completion pressure on every PR dispatch.
+**Disposition (S-7.02, confirmed at cycle-009 F7 close, 2026-09-23):** JUSTIFIED DEFERRAL. This
+is an engine-side (`vsdd-factory`) hook-behavior gap, not a product defect — the guard's pressure
+was successfully resisted every time by the dispatched agents, so no incorrect merge landed and
+no product risk was realized. Target: engine maintenance (`vsdd-factory`
+`pr-manager-completion-guard` hook — add a scoped-dispatch exemption). Remains OPEN, tracked here
+as standing engine debt.

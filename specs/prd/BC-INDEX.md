@@ -183,7 +183,7 @@ R1/R4 prefix = deepening round that introduced it.
 | BC-2.1.020 | `--component none` (reserved keyword) → `component is EMPTY`, zero resolver HTTP calls; rejects combination with other `--component` values | — (issue #606 F2) | src/cli/issue/list.rs (pending F4) | HIGH |
 | BC-2.1.021 | `--component all:<N1>,<N2>` → AND-combined `component = id1 AND component = id2`; at most one `all:` occurrence, not mixed with bare/`not:`/`none` | — (issue #606 F2) | src/cli/issue/list.rs (pending F4) | HIGH |
 | BC-2.1.022 | Unresolvable/ambiguous `--component` name → exit 64 BEFORE any JQL search fires, listing valid names/candidates for the resolved project scope | — (issue #606 F2) | src/cli/issue/list.rs (pending F4); bc-8-components.md §8.4 | HIGH |
-| BC-2.1.023 | `--updated-recent <duration>` → `updated >= -{d}` clause, validated via `jql::validate_duration` (same validator as `--recent`), positioned immediately after `--recent`'s slot | — (issue #579 F2) | src/cli/issue/list.rs (pending F4) | HIGH |
+| BC-2.1.023 | `--updated-recent <duration>` → `updated >= -{d}` clause, validated via `jql::validate_duration` (same validator as `--recent`), positioned immediately after `--recent`'s slot | — (issue #579 F2) | src/cli/issue/list.rs | HIGH |
 | BC-2.1.024 | `--sort <field>:asc\|desc` syntax parse/validate: case-insensitive direction, exit 64 on malformed input, pre-HTTP, no field-name allowlist | — (issue #588 F2) | src/cli/issue/list.rs (pending F4) | HIGH |
 | BC-2.1.025 | `--sort` overrides `order_by` uniformly in all 4 composition branches (including board `rank ASC` branches); appends `, key ASC` secondary sort unless field is `key`; field name passed through to Jira unvalidated | — (issue #588 F2) | src/cli/issue/list.rs (pending F4) | HIGH |
 

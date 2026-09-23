@@ -476,3 +476,46 @@ active on canonical releases; activating it remains a separate, deliberate post-
 maintainer action (per the original item's disposition, deferred until after one validated
 release under the now-linearized gate). No BC/decision minted — this is a routine fix-PR
 delivery, not a fresh pipeline ruling.
+
+## CYCLE-009-F6-MUTANTS-EXAMINE-GLOBS-GAP resolved — src/jql.rs scoped into examine_globs, prior EXCLUDE superseded (2026-09-23)
+
+**RESOLVED / MERGED (2026-09-23).** PR `#871` — "chore(mutants): scope src/jql.rs into
+examine_globs, supersede prior EXCLUDE (cycle-009 F7)" — closes the residual logged at
+cycle-009 F6 (`CYCLE-009-F6-MUTANTS-EXAMINE-GLOBS-GAP`, MEDIUM, `[tooling-gap]`), archived
+here from `cycles/OPEN-STANDING-ITEMS.md`.
+
+**Original finding (verbatim disposition, F6 2026-09-22):** `.cargo/mutants.toml`'s
+`examine_globs` did not include `src/jql.rs` (nor `src/cli/mod.rs`), so the standing CI
+`cargo mutants --in-diff` gate generated **zero mutants** for cycle-009's own code delta
+(`bcec4c78..805ca0e0`) — a false green on the standing mutation gate. Delta kill coverage was
+confirmed 100% (9/9 mutants caught, 0 missed) only via an out-of-band temporary `examine_globs`
+override, not committed. Same defect class as the previously-closed
+`CYCLE-008-F6-MUTANTS-EXAMINE-GLOBS-GAP` (`FIX-F7-001`, PR `#845`). DEFERRED at F6 to the F7
+human gate for a fix-now-vs-track decision (repo-wide mutation-policy change, out of
+LIGHT-scope F6).
+
+**F7 human-gate decision (`D-375`):** fix-now — the operator approved fixing `examine_globs`
+before closing cycle-009 (same "fix first, then close" precedent as cycle-008's `D-371`).
+
+**Delivered:** `src/jql.rs` added to `.cargo/mutants.toml`'s `examine_globs`, with an inline
+comment explicitly **superseding** the prior `MAINT-MUTANTS-GLOBS-01` EXCLUDE rationale
+("already property-tested inline with proptest") — the F6 hardening pass empirically found
+that the surviving-mutant class is VALUE-ACCEPTANCE semantics (the
+`matches!(unit, 'w'|'d'|'h'|'m')` unit set and the error-string branches), killed by
+DEDICATED unit tests, not by the `validate_duration_never_panics` proptest (which only covers
+panic-safety) — so the original EXCLUDE rationale no longer holds and the file now enters the
+standing gate. Small file, low incremental CI runtime.
+
+**Review chain:** merged by the human directly in the GitHub UI (this cycle's second instance
+of the `CYCLE-009-GITHUB-OPS-MERGE-RELAY-LAG` pattern — the `github-ops` delegated merge relay
+did not complete for this PR either).
+
+**Merge:** squash-merged to `develop` @ `7c5e93095ff7793b6ee517eac5199959f768113d`
+(`7c5e9309`), mergedAt 2026-09-23T14:20:08Z. `develop` tip `bcec4c78..805ca0e0..7c5e9309`.
+
+**Verification (this burst, cycle-009 F7):** `git show develop:.cargo/mutants.toml` confirms
+`"src/jql.rs"` present in `examine_globs` with the supersession comment intact. The standing CI
+`cargo mutants --in-diff` gate will now generate mutants for any future `src/jql.rs` delta
+instead of false-greening. No BC/decision minted for the mechanical scope-addition itself
+(`D-375` covers the F7 human-gate disposition that authorized it, recorded in `STATE.md`
+Decisions Log).

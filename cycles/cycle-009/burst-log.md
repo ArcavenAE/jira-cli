@@ -400,4 +400,176 @@ regressions). `cargo fmt --all -- --check` clean; `cargo clippy --all --all-feat
 
 ---
 
+## Burst 5 — Phase F6 (light targeted hardening) HARDENED_WITH_RESIDUALS — 2026-09-22 (retroactively recorded 2026-09-23, see note below)
+
+**Note on this entry:** the 2026-09-22 F6 burst committed `STATE.md`,
+`cycles/HISTORY-PHASE-PROGRESS.md`, `cycles/OPEN-STANDING-ITEMS.md`, and
+`cycles/cycle-009/session-checkpoints.md` (commit `09bcd029`), and had already written
+`cycles/cycle-009/phase-f6-hardening/hardening-record.md` in the immediately preceding commit
+(`ccd41d51`) — but its own commit message and `STATE.md` narrative claimed "Appended Burst 5 to
+`cycles/cycle-009/burst-log.md`" and "updated `cycle-manifest.md`", neither of which actually
+happened (`git show 09bcd029 --stat` touches neither file; `cycle-manifest.md` has no F6
+section). This is a documented defensive-sweep gap, corrected here during the F7 close burst —
+the content below reconstructs Burst 5 from `hardening-record.md` and `STATE.md`'s v4.84
+narrative, both of which ARE accurate and were genuinely written 2026-09-22.
+
+**Parent-commit:** `develop` tip stays `805ca0e0` this burst (F6 is a read/verify-only hardening
+pass; no `src/` change, no PR opened). `factory-artifacts` commits for this burst: `ccd41d51`
+(hardening record) and `09bcd029` (STATE.md + standing-items bookkeeping).
+
+**Phase F6 (light targeted hardening): HARDENED_WITH_RESIDUALS.** Scope: cycle-009 code delta
+`bcec4c78..805ca0e0` (`src/jql.rs::validate_duration` unit-set narrowing + new
+`invalid_duration_error` helper; `src/cli/mod.rs` help-text `2M` -> `12h`).
+
+**Mutation testing:** the standing CI-prescribed `cargo mutants --in-diff` run against the
+CURRENT (then-unmodified) `.cargo/mutants.toml` `examine_globs` generated **0 mutants** for this
+delta — neither `src/jql.rs` nor `src/cli/mod.rs` was in scope, a false green. A separate
+out-of-band run using a temporary (uncommitted) `examine_globs` override scoped to `src/jql.rs`,
+`--in-diff` on the same delta diff, found **9 mutants and caught all 9** (0 missed, 0 timeout, 0
+unviable) — **100% kill**, including the line-44 `if !matches!(unit, 'w'|'d'|'h'|'m')`
+unit-set-narrowing guard mutant (the cycle-009 core change).
+
+**Security:** `cargo deny check` PASS (advisories/bans/licenses/sources ok) + `cargo audit` PASS
+(0 vulnerabilities / 360 deps / 1264 advisories loaded); no new dependencies added this cycle.
+
+**Formal verification / fuzzing:** Kani and `cargo-fuzz` JUSTIFIED SKIP, 0-GAP —
+`validate_duration`/`invalid_duration_error` are pure, total, side-effect-free functions; the
+existing `validate_duration_never_panics` proptest covers panic-safety; the change strictly
+narrows accepted input, introducing no new attack surface — same justified-skip class as the
+cycle-002/003/004/005/012 F6 precedent.
+
+**Purity boundary:** PASS, intact — no I/O, no global state, no `unsafe`.
+
+**Residual logged:** `CYCLE-009-F6-MUTANTS-EXAMINE-GLOBS-GAP` (MEDIUM, `[tooling-gap]`) —
+`src/jql.rs` (and `src/cli/mod.rs`) absent from `examine_globs`, so the standing CI mutation gate
+false-greens this delta on every future PR until fixed. DEFERRED to the F7 human gate for a
+fix-now-vs-track decision (repo-wide mutation-policy change, out of LIGHT-scope F6).
+
+Full detail: `cycles/cycle-009/phase-f6-hardening/hardening-record.md`.
+
+### Details
+
+| Agent | Task | Output |
+|-------|------|--------|
+| formal-verifier | Delta mutation testing (out-of-band `examine_globs` override), `cargo deny`/`cargo audit` security scans, Kani/fuzz justified-skip determination, purity-boundary check | `cycles/cycle-009/phase-f6-hardening/hardening-record.md` |
+| state-manager (this agent) | Recorded F6 HARDENED_WITH_RESIDUALS, updated `STATE.md` (v4.83->v4.84), archived F5 checkpoint, archived oldest Phase Progress row, appended 1 tooling-gap standing item, commit + push `factory-artifacts` | `STATE.md`; `cycles/HISTORY-PHASE-PROGRESS.md`; `cycles/OPEN-STANDING-ITEMS.md`; `cycles/cycle-009/session-checkpoints.md` |
+
+**Files touched (Dim-1): 5 unique files, this burst** — `cycles/cycle-009/phase-f6-hardening/hardening-record.md` (new), `STATE.md`, `cycles/HISTORY-PHASE-PROGRESS.md`, `cycles/OPEN-STANDING-ITEMS.md`, `cycles/cycle-009/session-checkpoints.md`. (`cycles/cycle-009/burst-log.md` and `cycles/cycle-009/cycle-manifest.md` were NOT actually touched this burst despite the original commit message/STATE.md narrative claiming so — corrected retroactively in Burst 6 below.)
+
+**Dim-2 Attestation:** `scripts/check-spec-counts.sh` / `scripts/check-bc-cumulative-counts.sh` — both count-neutral this burst (no BC/VP change); F6 added no new BCs/VPs.
+
+**Dim-5 Attestation:** N/A — no binary/WASM artifact produced (no release cut this burst).
+
+**Dim-6 Attestation:** `develop` tip unchanged (`805ca0e0`) — F6 opened no PR, made no `src/` change.
+
+**Dim-7 Attestation:** N/A — F6 is a hardening/verification pass, not a code-delivery burst; see the mutation/security/formal-verification results above in place of a fresh regression run (the last regression run remains F5's PR `#870`: 5,370 passed / 0 failed / 188 ignored).
+
+---
+
+## Burst 6 — Phase F7 (delta convergence) CONVERGED — cycle-009 CLOSED — human gate APPROVED (`D-375`) — 2026-09-23
+
+**Parent-commit:** `develop` tip moves `805ca0e0` -> `7c5e9309` this burst (PR `#871` squash-merge,
+the F7 ② fix). This is the `factory-artifacts` atomic commit produced by this burst (state-manager
+commit recording F7 CONVERGED + cycle CLOSE — SHA in the commit message below).
+
+**Phase F7 (delta convergence + human close gate): CONVERGED. cycle-009 CLOSED.**
+
+**Convergence dimensions — ALL PASS:**
+- **Spec:** F2 adversary CONVERGED, research-grounded, count-neutral (770/89/118/191 unchanged).
+- **Test:** F7 gate fully covered by the F2 Delta-Convergence Acceptance Gate's 5 CR-004
+  assertions; F6 delta mutation 9/9 = 100% kill.
+- **Implementation:** F5 3 clean adversary passes (trajectory `→0→0→0→0`) + clean local reviews
+  (code-review, security-review, fresh-eyes pr-review) + security CLEAN (`cargo deny`/`cargo
+  audit` both PASS, 0 vulnerabilities).
+- **Verification:** `cargo deny`/`cargo audit` PASS 0 vulns; purity boundary intact; Kani/fuzz
+  JUSTIFIED-SKIP (0-GAP, pure/total function class).
+- **Holdout/Regression:** full suite CI-green on all 4 merged commits (`#868`/`#869`/`#870`/
+  `#871`); `dtu_required: false`.
+- **Consistency:** fresh-context consistency-validator audit — CONSISTENT (spec<->code,
+  code<->test, traceability, index-consistency, ADR-alignment, citation-integrity,
+  cross-references).
+- **Input-hash:** no cycle-009-caused drift.
+
+**F7 human close gate — decision `D-375` (continues the `D`-chain after `D-374`):** "F7 human
+close gate APPROVED — 'Approve & close'; ① fix `examine_globs` + supersede EXCLUDE (done, PR
+`#871`), ② fix BC-INDEX stale '(pending F4)' marker (done, this burst), ③ approve & close. Ships
+on `develop`, rolls into next dev prerelease, NO immediate tag (`D-373` precedent)."
+
+**① `examine_globs` fix — delivered as PR `#871`:** "chore(mutants): scope `src/jql.rs` into
+`examine_globs`, supersede prior EXCLUDE (cycle-009 F7)". Squash-merged `develop` @ `7c5e9309`,
+mergedAt 2026-09-23T14:20:08Z — merged directly by the human in the GitHub UI after the
+`github-ops` relay again failed to complete the merge (second instance this cycle of
+`CYCLE-009-GITHUB-OPS-MERGE-RELAY-LAG`). Closes `CYCLE-009-F6-MUTANTS-EXAMINE-GLOBS-GAP`,
+archived to `cycles/RESOLVED-DRIFT-ITEMS.md`.
+
+**② BC-INDEX fix — delivered this burst:** `.factory/specs/prd/BC-INDEX.md` `BC-2.1.023`'s
+Source column read `src/cli/issue/list.rs (pending F4)`, stale since `--updated-recent` shipped
+via S-579-1 long before this cycle. Dropped the `(pending F4)` marker to match sibling-row
+format (now reads just `src/cli/issue/list.rs`). Verified count-neutral: `scripts/
+check-bc-cumulative-counts.sh` (770 total, all 9 files) and `scripts/check-spec-counts.sh` (8 BC
+files validated) both exit 0 immediately after the edit — a Source-column prose fix, no count
+change. (One engine-hook false positive observed and logged during this edit — see the 4th
+instance appended to `CYCLE-009-FACTORY-DISPATCHER-FUEL-EXHAUSTED-AND-HOOK-FALSE-POSITIVES` in
+`cycles/OPEN-STANDING-ITEMS.md`.)
+
+**③ Approve & close:** GitHub issue `#859` remains CLOSED (closed at F4). `#863`'s
+courtesy-credit comment remains posted (formal close of `#863` itself is an accepted minor loose
+end, unchanged this burst). `develop` tip: `bcec4c78` -> `7c5e9309` across the cycle's 4 merged
+PRs (`#868`/`#869`/`#870`/`#871`), all human-approved, all CI-green.
+
+**S-7.02 Cycle-Closing Checklist — satisfied this burst:** `CYCLE-009-F6-MUTANTS-EXAMINE-GLOBS-GAP`
+moved to RESOLVED (`cycles/RESOLVED-DRIFT-ITEMS.md`, closed by PR `#871`). The 3 remaining OPEN
+`CYCLE-009-F5-*`/`CYCLE-009-FACTORY-DISPATCHER-*` process-gap items (2 MEDIUM, 1 LOW) each
+received an explicit justified-deferral disposition (target: engine maintenance,
+`vsdd-factory` engine repo, not product) in `cycles/OPEN-STANDING-ITEMS.md`. One NEW item
+logged and dispositioned the same way: `CYCLE-009-PR-MANAGER-COMPLETION-GUARD-FORCES-MERGE`
+(MEDIUM) — the `pr-manager-completion-guard` hook repeatedly pushed scoped push/PR-only
+dispatches toward an unauthorized full merge citing "`AUTHORIZE_MERGE=yes` per dispatch
+convention"; dispatched agents correctly resisted every time, no unauthorized merge occurred.
+Every process-gap item logged this cycle now has a follow-up disposition — none left uncovered.
+
+**Also recorded this burst:** the `SCORECARD_ENABLED` GitHub repository variable was set to
+`true` this session (enables the OpenSSF Scorecard workflow on push-to-`develop` + weekly —
+separate from the `ci-gate` required check).
+
+`develop` tip: `7c5e9309`. `activation_head`/`activation_version` UNCHANGED at
+`8b4c797a`/`v0.7.0-dev.8` — no release cut at close (rolls into the next dev prerelease per
+`D-373` decision 4, same precedent as cycle-005/006/012). Counts UNCHANGED: 770 BCs / 89 VPs /
+118 holdout / 191 stories — cycle-009 was count-neutral throughout (amended BCs + 1 new EC, no
+new BC/VP).
+
+### Details
+
+| Agent | Task | Output |
+|-------|------|--------|
+| github-ops / human (direct GitHub UI) | PR `#871` merge (`examine_globs` fix) | PR `#871` merged `7c5e9309` |
+| state-manager (this agent) | ① confirmed PR `#871` merged, archived `CYCLE-009-F6-MUTANTS-EXAMINE-GLOBS-GAP` to `cycles/RESOLVED-DRIFT-ITEMS.md`; ② applied the BC-INDEX ② fix, verified count guards green; ③ recorded F7 CONVERGED + cycle-009 CLOSED, minted `D-375`, satisfied the S-7.02 checklist (3 existing + 1 new process-gap item dispositioned), retroactively reconstructed the missing Burst 5 (F6) entry above and this Burst 6 entry, updated `cycle-manifest.md` (status `complete`), committed + pushed `factory-artifacts` (ONE full-content `STATE.md` Write) | This entry; Burst 5 entry above; `STATE.md`; `.factory/specs/prd/BC-INDEX.md`; `cycles/cycle-009/cycle-manifest.md`; `cycles/OPEN-STANDING-ITEMS.md`; `cycles/RESOLVED-DRIFT-ITEMS.md` |
+
+**Files touched (Dim-1): 6 unique files, this burst**
+
+- `STATE.md`
+- `.factory/specs/prd/BC-INDEX.md` (BC-2.1.023 Source column, ② fix)
+- `cycles/cycle-009/burst-log.md` (this entry + retroactive Burst 5, new)
+- `cycles/cycle-009/cycle-manifest.md` (updated — status `complete`, F6/F7 sections added)
+- `cycles/OPEN-STANDING-ITEMS.md` (F6 residual removed; 3 items dispositioned; 1 new item appended)
+- `cycles/RESOLVED-DRIFT-ITEMS.md` (F6 residual archived RESOLVED)
+
+**Dim-2 Attestation:** `scripts/check-spec-counts.sh` (8 BC files validated, exit 0) and
+`scripts/check-bc-cumulative-counts.sh` (770 total across 9 files, exit 0) both re-run and
+confirmed green after the BC-INDEX ② fix this burst — count-neutral (Source-column prose only).
+
+**Dim-5 Attestation:** N/A — no binary/WASM artifact produced by this burst (no release/tag cut
+at close, per the F7-gate versioning decision).
+
+**Dim-6 Attestation:** `develop` tip moved `805ca0e0` -> `7c5e9309` this burst via PR `#871`'s
+squash-merge (the only code-adjacent change closing this burst — a `.cargo/mutants.toml`
+config-only change, no `src/` behavior change).
+
+**Dim-7 Attestation:** Full regression suite is unaffected by this burst (no `src/` change); the
+governing regression figure remains F5's PR `#870` run: 5,370 passed / 0 failed / 188 ignored.
+PR `#871` itself is `.cargo/mutants.toml`-only (no test-suite-affecting change) and passed CI
+Gate green before merge.
+
+---
+
 <!-- Repeat for each burst. Maintain chronological order. -->
