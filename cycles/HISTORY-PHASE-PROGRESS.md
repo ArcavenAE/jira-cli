@@ -326,3 +326,13 @@ See `cycles/cycle-005/burst-log.md` Bursts 11-12 for full narrative detail (thes
 | Phase | Status | Completed | Gate | Notes | Finding Progression |
 |-------|--------|-----------|------|-------|---------------------|
 | **SESSION-WRAP-PAUSE-2026-09-20** | **COMPLETE** | 2026-09-20 | session-wrap checkpoint | agent state-manager -- persisted the 2026-09-19 maintenance sweep's 4 analysis files to `.factory/maintenance/2026-09-19/`; committed routine already-uncommitted worktree churn; noted the `DEC-NNN`->`D-NNN` migration is COMPLETE on both branches. No phase advance, no `src/` change, no new DEC. | 770 BCs / 89 VPs / 118 holdout / 191 stories; no DEC minted |
+
+> Extracted from `.factory/STATE.md`'s `## Phase Progress` table during the
+> 2026-09-23 `SESSION-WRAP-PAUSE-2026-09-23` burst (v4.85 -> v4.86), to keep
+> the live table at 12 rows after adding the new
+> `SESSION-WRAP-PAUSE-2026-09-23` row. This was the oldest row at that
+> point; archived here verbatim, unedited.
+
+| Phase | Status | Completed | Gate | Notes | Finding Progression |
+|-------|--------|-----------|------|-------|---------------------|
+| **MAINT-20260919-FIX-DELIVERY-COMPLETE-2026-09-20** | **COMPLETE** | 2026-09-20 | none (fix-PR merges were individually human-gated; this row is post-hoc bookkeeping, not a fresh pipeline gate) | agent state-manager -- recorded the 2026-09-19 maintenance sweep's FIX DELIVERY as COMPLETE: 3 fix PRs merged to `develop` (`#848` @ `7a57ed53`, `#849` @ `d85a8136`, `#850` @ `7e0f9cbd`), each via isolated worktree -> clean local review -> fresh-eyes `pr-reviewer` -> CI Gate SUCCESS -> human admin-merge. | 770 BCs / 89 VPs / 118 holdout / 191 stories; no DEC minted |

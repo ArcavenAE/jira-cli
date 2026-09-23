@@ -4,7 +4,7 @@ level: ops
 version: "1.0"
 status: archive
 producer: state-manager
-timestamp: 2026-09-23T02:27:03Z
+timestamp: 2026-09-23T15:05:17Z
 cycle: "cycle-009-jql-relative-date-units"
 inputs: [STATE.md]
 input-hash: "[live-state]"
@@ -86,6 +86,32 @@ traces_to: STATE.md
 | **Position** | Pipeline ACTIVE — cycle-009 (`jql-relative-date-units`) Phase F6 HARDENED_WITH_RESIDUALS — delta mutation testing 9/9 caught (100%, out-of-band `examine_globs` override); `cargo deny`/`cargo audit` PASS; Kani/fuzz JUSTIFIED SKIP; purity intact; one MEDIUM residual (`CYCLE-009-F6-MUTANTS-EXAMINE-GLOBS-GAP`) deferred to F7. Phase F5 CONVERGED (PRs `#869`/`#870` merged), F4 COMPLETE, F2 (`D-374`) + F1 (`D-373`) approved prior bursts. cycle-008 CLOSED + release-VALIDATED, unaffected. `v0.7.0-dev.8` remains fully RELEASED. `develop` tip stays `805ca0e0` (F6 opened no PR). |
 | **Convergence counter** | cycle-009's F5 scoped adversarial refinement CONVERGED at 3/3 clean passes (trajectory `→0→0→0→0`, unchanged through F6). F6 hardening verdict: HARDENED_WITH_RESIDUALS (1 MEDIUM residual, deferred). |
 | **Next step** | Phase F7 (delta convergence + human close gate) for cycle-009. |
+
+### Resume Prompt
+
+```
+/vsdd-factory:rehydrate-wave then /vsdd-factory:next-step
+```
+
+---
+
+## Session Resume Checkpoint (2026-09-23) — CYCLE-009-F7-CONVERGED-CLOSED-2026-09-23
+
+### Spec Versions
+
+| Artifact | Version |
+|----------|---------|
+| `spec-changelog.md` | 2.3.2 |
+| `STATE.md` | v4.85 |
+
+### State
+
+| Field | Value |
+|-------|-------|
+| **Date** | 2026-09-23 |
+| **Position** | Pipeline ACTIVE, idle between cycles — cycle-009 (`jql-relative-date-units`) Phase F7 CONVERGED, cycle CLOSED (`D-375`, "Approve & close"). ALL 7 convergence dimensions PASS. F6 HARDENED_WITH_RESIDUALS + F5 CONVERGED (PRs `#869`/`#870` merged), F4 COMPLETE, F2 (`D-374`) + F1 (`D-373`) approved prior bursts. `examine_globs` fixed via PR `#871`; BC-INDEX `BC-2.1.023` stale marker fixed. cycle-008 CLOSED + release-VALIDATED, unaffected. `v0.7.0-dev.8` remains fully RELEASED. `develop` tip `805ca0e0` -> `7c5e9309` (PR `#871`). |
+| **Convergence counter** | cycle-009's F5 scoped adversarial refinement CONVERGED at 3/3 clean passes (trajectory `→0→0→0→0`, unchanged through F6/F7). F7 verdict: CONVERGED, cycle CLOSED — ALL 7 dimensions PASS. |
+| **Next step** | Awaiting next work item — open cycle-010/011 (both PARKED), start a fresh Feature Mode cycle, or cut the next dev prerelease rolling up cycle-009's changes. |
 
 ### Resume Prompt
 
