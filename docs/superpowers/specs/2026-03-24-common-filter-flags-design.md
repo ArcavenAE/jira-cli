@@ -21,7 +21,7 @@ Three new flags on `jr issue list` that generate JQL clauses under the hood. All
 ```
 --assignee <name|me>   Filter by assignee. "me" resolves to currentUser()
 --reporter <name|me>   Filter by reporter. "me" resolves to currentUser()
---recent <duration>    Show issues created within duration (e.g., 7d, 4w, 2M)
+--recent <duration>    Show issues created within duration (e.g., 7d, 4w, 12h)
 ```
 
 ### Flag Definitions
@@ -37,7 +37,7 @@ assignee: Option<String>,
 #[arg(long)]
 reporter: Option<String>,
 
-/// Show issues created within duration (e.g., 7d, 4w, 2M)
+/// Show issues created within duration (e.g., 7d, 4w, 12h)
 #[arg(long)]
 recent: Option<String>,
 ```
@@ -55,14 +55,18 @@ JQL relative dates use the format `(+/-)nn(unit)` where units are case-sensitive
 
 | Unit | Meaning |
 |------|---------|
-| `y` | years |
-| `M` | months (uppercase) |
+| ~~`y`~~ | ~~years~~ — superseded, see §4 |
+| ~~`M`~~ | ~~months (uppercase)~~ — superseded, see §4 |
 | `w` | weeks |
 | `d` | days |
 | `h` | hours |
 | `m` | minutes (lowercase) |
 
-Combined units like `4w2d` are not supported by Jira. Client-side validation regex: `^\d+[yMwdhm]$`.
+> **Superseded 2026-09-22 — see §4 / BC-2.1.008 (cycle-009):** `y` and `M` above are
+> historical; they are REJECTED at runtime today. See the §4 banner for the full
+> explanation and the current accepted unit set (`{w,d,h,m}`).
+
+Combined units like `4w2d` are not supported by Jira. Client-side validation regex: `^\d+[yMwdhm]$` (historical; see §4 for the current regex).
 
 ---
 
@@ -139,12 +143,19 @@ All paths use a unified JQL assembly flow:
 
 ## 4. Duration Validation
 
+> **Superseded 2026-09-22 — see BC-2.1.008 / spec-changelog 2.3.2 (cycle-009):** `y`
+> (years) and `M` (months) shown as accepted below are REJECTED as of cycle-009 — Jira's
+> API mis-parsed/errored on them (`-2M` was read as 2 *minutes*, `-1y` errored outright).
+> Only `{w,d,h,m}` are accepted today; the error message now also hints at
+> `--created-after`/`--created-before`/`--updated-after`/`--updated-before` for month/year
+> ranges. This section is left as historical record of the original design.
+
 Client-side validation gives better errors than Jira's generic 400:
 
 ```rust
 pub fn validate_duration(s: &str) -> Result<(), String> {
     let re = regex or manual check: digits followed by one of [yMwdhm]
-    // Valid: "7d", "30d", "4w", "2M", "1y", "5h", "10m"
+    // Valid (historical design; "2M" and "1y" superseded, see §4): "7d", "30d", "4w", "2M", "1y", "5h", "10m"
     // Invalid: "7x", "d7", "", "4w2d"
 }
 ```
@@ -153,7 +164,8 @@ No regex crate needed — a simple manual check (all chars except last are digit
 
 **Why `jql.rs` and not `duration.rs`:** The existing `src/duration.rs` handles worklog durations (`1h30m`, `2d`) which support combined units and a different format. JQL relative date durations (`7d`, `2M`) are a distinct format — single unit only, case-sensitive `M` for months. They belong in `jql.rs` alongside other JQL utilities (`escape_value`, `strip_order_by`).
 
-Error message: `"Invalid duration '7x'. Use a number followed by y, M, w, d, h, or m (e.g., 7d, 4w, 2M)."`
+Error message (original design; superseded, see note above): `"Invalid duration '7x'. Use a number followed by y, M, w, d, h, or m (e.g., 7d, 4w, 2M)."`
+Current error message (cycle-009): `"Invalid duration '7x'. Use a number followed by w, d, h, or m (e.g., 7d, 4w, 12h). For month or year ranges, use --created-after/--created-before or --updated-after/--updated-before."`
 
 ---
 
@@ -164,7 +176,7 @@ Error message: `"Invalid duration '7x'. Use a number followed by y, M, w, d, h, 
 | `--assignee "nonexistent"` → 0 matches | Error: `"No user found matching 'nonexistent'. Check the name and try again."` |
 | `--assignee "J"` → multiple, interactive | Prompt to pick (same UX as `--team` disambiguation) |
 | `--assignee "J"` → multiple, `--no-input` | Error: `"Multiple users match 'J': Jane Doe, John Smith. Use a more specific name."` |
-| `--recent "7x"` → invalid duration | Error: `"Invalid duration '7x'. Use a number followed by y, M, w, d, h, or m (e.g., 7d, 4w, 2M)."` |
+| `--recent "7x"` → invalid duration | Error (cycle-009, superseded original design above): `"Invalid duration '7x'. Use a number followed by w, d, h, or m (e.g., 7d, 4w, 12h). For month or year ranges, use --created-after/--created-before or --updated-after/--updated-before."` |
 | User search API returns empty (no permission) | Same as "no matches" — `"No user found matching 'X'."` |
 | User search API fails (network/500) | Propagate error with context |
 
@@ -194,7 +206,7 @@ Error message: `"Invalid duration '7x'. Use a number followed by y, M, w, d, h, 
 
 ### Unit Tests
 
-- `validate_duration()` — valid formats (`7d`, `30d`, `4w`, `2M`, `1y`, `5h`, `10m`, `0d`), invalid formats (`7x`, `d7`, ``, `4w2d`)
+- `validate_duration()` — valid formats (`7d`, `30d`, `4w`, `5h`, `10m`, `0d`), invalid formats (`7x`, `d7`, ``, `4w2d`, and, as of cycle-009, `2M`/`1y` — see §4 note)
 - `resolve_user()` with `me`/`Me`/`ME` → returns `"currentUser()"` without API call
 - JQL composition — all flag combinations produce correct JQL strings
 - JQL composition with `--jql` base + filter flags
@@ -225,7 +237,7 @@ Error message: `"Invalid duration '7x'. Use a number followed by y, M, w, d, h, 
 | `gh issue list` composes `--search` with shorthand flags additively | Perplexity (GitHub CLI docs) |
 | `assignee = currentUser()` and `reporter = currentUser()` are valid JQL | Perplexity (JQL reference) |
 | `created >= -7d` is valid JQL for relative dates | Perplexity (Atlassian JQL docs) |
-| Duration units: `y`, `M` (months), `w`, `d`, `h`, `m` (minutes) — case-sensitive | Perplexity (Atlassian JQL functions reference) |
+| Duration units: ~~`y`~~, ~~`M`~~ (months) superseded — see §4 / BC-2.1.008 (cycle-009); `w`, `d`, `h`, `m` (minutes) remain accepted — case-sensitive | Perplexity (Atlassian JQL functions reference) |
 | Combined units like `4w2d` are not supported | Perplexity |
 | Display names don't work directly in JQL assignee/reporter fields | Perplexity (Atlassian community) |
 | `~` (CONTAINS) operator doesn't work on assignee/reporter fields | Perplexity (Atlassian JQL operators) |
