@@ -1,6 +1,9 @@
 use crate::api::client::JiraClient;
 use crate::api::pagination::{CursorPage, OffsetPage};
-use crate::types::jira::{Comment, CreateIssueResponse, EditMeta, Issue, TransitionsResponse};
+use crate::types::jira::{
+    AllowedValue, Comment, CreateIssueResponse, EditMeta, EditMetaFieldSchema, Issue,
+    TransitionsResponse,
+};
 use anyhow::Result;
 use serde::Deserialize;
 use serde_json::Value;
@@ -21,6 +24,7 @@ const BASE_ISSUE_FIELDS: &[&str] = &[
     "description",
     "created",
     "updated",
+    "duedate",
     "resolution",
     "components",
     "fixVersions",
@@ -28,6 +32,59 @@ const BASE_ISSUE_FIELDS: &[&str] = &[
     "parent",
     "issuelinks",
 ];
+
+/// Hard cap on the number of pages [`JiraClient::get_createmeta_fields`] and
+/// [`JiraClient::get_issue_types_for_project`] (FIX-F5-001, mirroring the
+/// original S-580-1 guard onto its sibling) will fetch (S-580-1, SEC-001,
+/// CWE-400/770 — "no hard iteration cap").
+///
+/// At `page_size = 200` this comfortably exceeds any realistic Jira
+/// project's create-screen field count (`500 * 200 = 100,000` fields) or
+/// issue-type count, so it never fires in real usage or in the existing
+/// test suite — it exists purely as a fail-loud backstop against an
+/// unbounded loop, the same TRUNCATE-vs-cap tradeoff class as
+/// [`crate::cli::field::MAX_FIELD_OPTION_DEPTH`], except here the response
+/// is a loud `Err` rather than a silent truncation, since a runaway
+/// pagination loop (unlike option-tree depth) has no sensible "leaf" to
+/// stop at.
+const MAX_CREATEMETA_PAGES: u32 = 500;
+
+/// A resolved `--component` add/remove target's WIRE identity (Step-4.5
+/// Round 3, F1 fix; BC-3.4.022/BC-3.4.024, BC-8.4.001, BC-8.1.008).
+///
+/// BC-8.4.001's numeric bypass means all-ASCII-digit `--component` input is
+/// ALWAYS a component id, never a name — identical to the
+/// `component edit`/`delete`/`rename` command family convention
+/// (BC-8.1.008). This determines whether a wire entry is `{"id":...}` or
+/// `{"name":...}`. Constructed by callers (`cli::issue::edit`,
+/// `cli::issue::create`) from their own name/id resolution — this module
+/// only renders the wire shape from an already-decided `ComponentRef`.
+///
+/// Deliberately NOT confirmed against `GET /component/{id}` before use on
+/// the issue-write path — Jira validates the id on the create/edit write
+/// itself (an invalid id → Jira 4xx → exit 1, same treatment as an unknown
+/// name today). This intentionally differs from `component edit`/`delete`,
+/// which DO confirm the id first; that extra confirmation is unnecessary
+/// here because the write call itself is the validation.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub enum ComponentRef {
+    /// Wired as `{"name": <value>}`.
+    Name(String),
+    /// Wired as `{"id": <value>}`.
+    Id(String),
+}
+
+impl ComponentRef {
+    /// Render this target as the JSON object nested under the `add`/`remove`
+    /// wire-verb key (or, for the read-modify-write fallback's `adds` side,
+    /// directly as a `fields.components[]` array element).
+    pub(crate) fn to_wire_object(&self) -> Value {
+        match self {
+            ComponentRef::Name(name) => serde_json::json!({"name": name}),
+            ComponentRef::Id(id) => serde_json::json!({"id": id}),
+        }
+    }
+}
 
 /// Result of a paginated issue search, including a flag indicating whether
 /// the result set may be incomplete (caller-limit truncation OR
@@ -224,12 +281,12 @@ impl JiraClient {
                 }
             }
 
-            if let Some(max) = limit {
-                if all_issues.len() >= max as usize {
-                    more_available = all_issues.len() > max as usize || page_has_more;
-                    all_issues.truncate(max as usize);
-                    break;
-                }
+            if let Some(max) = limit
+                && all_issues.len() >= max as usize
+            {
+                more_available = all_issues.len() > max as usize || page_has_more;
+                all_issues.truncate(max as usize);
+                break;
             }
 
             if !page_has_more {
@@ -260,6 +317,95 @@ impl JiraClient {
                 // all_issues is already deduplicated (keyed on issue.key) by
                 // the incremental seen_keys HashSet maintained outside the loop.
                 // No additional dedupe call is needed here.
+                more_available = true;
+                break;
+            }
+
+            prev_cursor = next_cursor.clone();
+            next_page_token = next_cursor;
+        }
+
+        Ok(SearchResult {
+            issues: all_issues,
+            has_more: more_available,
+        })
+    }
+
+    /// Search issues using JQL with an explicit, caller-supplied field list —
+    /// REPLACES [`BASE_ISSUE_FIELDS`] entirely rather than unioning with it
+    /// (BC-2.2.033, BC-2.6.052, human-locked D-298). Additive sibling to
+    /// [`Self::search_issues`] — that method's signature and behavior are
+    /// unchanged.
+    ///
+    /// Thin, unvalidated pass-through: an empty `fields` slice is NOT
+    /// rejected here. CLI-layer pre-HTTP validation (BC-2.2.033
+    /// Precondition 3) is the sole enforcement point for a non-empty field
+    /// list (EC-2.6.052-1).
+    ///
+    /// Mirrors [`Self::search_issues`]'s cursor-pagination, dedupe, and
+    /// anti-loop-guard behavior, but sends the caller's `fields` verbatim
+    /// on each page request instead of [`BASE_ISSUE_FIELDS`]. Traces to
+    /// BC-2.2.033 / BC-2.6.052.
+    pub async fn search_issues_with_fields(
+        &self,
+        jql: &str,
+        limit: Option<u32>,
+        fields: &[&str],
+    ) -> Result<SearchResult> {
+        let max_per_page = limit.unwrap_or(50).min(100);
+        let mut all_issues: Vec<Issue> = Vec::new();
+        let mut next_page_token: Option<String> = None;
+
+        let mut more_available = false;
+        let mut seen_keys: HashSet<String> = HashSet::new();
+        let mut prev_cursor: Option<String> = None;
+
+        loop {
+            let mut body = serde_json::json!({
+                "jql": jql,
+                "maxResults": max_per_page,
+                "fields": fields
+            });
+
+            if let Some(ref token) = next_page_token {
+                body["nextPageToken"] = serde_json::json!(token);
+            }
+
+            let page: CursorPage<Issue> = self.post("/rest/api/3/search/jql", &body).await?;
+
+            let page_has_more = page.has_more();
+            let next_cursor = page.next_page_token.clone();
+
+            for issue in page.issues {
+                if seen_keys.insert(issue.key.clone()) {
+                    all_issues.push(issue);
+                }
+            }
+
+            if let Some(max) = limit
+                && all_issues.len() >= max as usize
+            {
+                more_available = all_issues.len() > max as usize || page_has_more;
+                all_issues.truncate(max as usize);
+                break;
+            }
+
+            if !page_has_more {
+                break;
+            }
+
+            // Anti-loop guard: same rationale as `search_issues` — see that
+            // method's rustdoc for the full JRACLOUD-95368 explanation.
+            if next_cursor.is_some() && next_cursor == prev_cursor {
+                eprintln!(
+                    "[jr] WARNING: Atlassian /rest/api/3/search/jql returned the same \
+                     nextPageToken twice — aborting pagination to prevent an infinite \
+                     loop. Some results may be missing. Likely cause: live data \
+                     mutation between page fetches (snapshot-instability, \
+                     JRACLOUD-95368). Mitigation: end your JQL with `key ASC` in the \
+                     ORDER BY (append `, key ASC` to an existing sort, or use \
+                     `ORDER BY key ASC` if none)."
+                );
                 more_available = true;
                 break;
             }
@@ -358,20 +504,20 @@ impl JiraClient {
                 }
             }
 
-            if let Some(max) = limit {
-                if all_keys.len() >= max as usize {
-                    // `all_keys.len() > max` handles the Apr 2025 regression
-                    // (community.developer.atlassian.com thread 88287; see Validated
-                    // API Facts §7 in docs/specs/2026-05-13-search-issue-keys.md)
-                    // where the server overshoots maxResults AND sets isLast:true —
-                    // the overshoot proves more data existed.
-                    // `page_has_more` handles the normal "server said more pages" case.
-                    // Do NOT simplify to `page_has_more` alone — that would miss the
-                    // regression scenario.
-                    more_available = all_keys.len() > max as usize || page_has_more;
-                    all_keys.truncate(max as usize);
-                    break;
-                }
+            if let Some(max) = limit
+                && all_keys.len() >= max as usize
+            {
+                // `all_keys.len() > max` handles the Apr 2025 regression
+                // (community.developer.atlassian.com thread 88287; see Validated
+                // API Facts §7 in docs/specs/2026-05-13-search-issue-keys.md)
+                // where the server overshoots maxResults AND sets isLast:true —
+                // the overshoot proves more data existed.
+                // `page_has_more` handles the normal "server said more pages" case.
+                // Do NOT simplify to `page_has_more` alone — that would miss the
+                // regression scenario.
+                more_available = all_keys.len() > max as usize || page_has_more;
+                all_keys.truncate(max as usize);
+                break;
             }
 
             if !page_has_more {
@@ -434,6 +580,42 @@ impl JiraClient {
         self.get(&path).await
     }
 
+    /// Get a single issue by key with an explicit, caller-supplied field
+    /// list — REPLACES [`BASE_ISSUE_FIELDS`] entirely rather than unioning
+    /// with it (BC-2.3.041, BC-2.6.052, human-locked D-298). Additive
+    /// sibling to [`Self::get_issue`] — that method's signature and
+    /// behavior are unchanged.
+    ///
+    /// Thin, unvalidated pass-through: an empty `fields` slice is NOT
+    /// rejected here. CLI-layer pre-HTTP validation (BC-2.3.041
+    /// Precondition 3) is the sole enforcement point for a non-empty field
+    /// list (EC-2.6.052-1).
+    ///
+    /// Each field name is percent-encoded individually via
+    /// `urlencoding::encode` before being joined with a literal `,` (F1,
+    /// adversary review S-575-1). A user-supplied field name can contain
+    /// URL-significant characters (e.g. `&`, `#`, a space) — without
+    /// per-segment encoding, such a character would corrupt the query
+    /// string and silently break REPLACE fidelity by truncating or
+    /// misrouting the `fields` param. This restores parity with the
+    /// list/POST path (which sends `fields` as a JSON array body and is
+    /// therefore already safe): Jira receives each field name verbatim and
+    /// 400s on a genuinely-unknown field, exactly as before. The `,`
+    /// separator itself is intentionally NOT encoded — it is the field-list
+    /// delimiter Jira's `fields` query param expects.
+    pub async fn get_issue_with_fields(&self, key: &str, fields: &[&str]) -> Result<Issue> {
+        let encoded_fields: Vec<String> = fields
+            .iter()
+            .map(|f| urlencoding::encode(f).into_owned())
+            .collect();
+        let path = format!(
+            "/rest/api/3/issue/{}?fields={}",
+            urlencoding::encode(key),
+            encoded_fields.join(",")
+        );
+        self.get(&path).await
+    }
+
     /// Get the project key for an issue (P1-004, BC-3.9.003).
     ///
     /// Calls `GET /rest/api/3/issue/{key}?fields=project` and extracts
@@ -492,6 +674,56 @@ impl JiraClient {
         let path = format!("/rest/api/3/issue/{}", urlencoding::encode(key));
         let body = serde_json::json!({ "fields": fields });
         self.put(&path, &body).await
+    }
+
+    /// PUT `/rest/api/3/issue/{key}` with an optional native `update` object
+    /// combined with a `fields` object in ONE request (Step-4.5 Round 7,
+    /// MEDIUM-1 fix). Jira officially supports both `update` and `fields` in
+    /// one PUT as long as no single field appears in both — see
+    /// `.factory/research/S-605-1-atomic-component-field-put.md` Q1/Q3. This
+    /// codebase's only user of `update` (issue components, via
+    /// `cli::issue::edit::edit_issue_components`'s native add/remove path)
+    /// never also appears under `fields` in the same invocation — the RMW
+    /// fallback path puts `components` under `fields` INSTEAD of `update`;
+    /// the two paths are mutually exclusive per invocation (one editmeta
+    /// gate selects exactly one), so `components` never lands in both.
+    ///
+    /// This is a SINGLE request — Jira validates all fields up front, so a
+    /// field-validation error (e.g. an invalid priority) rejects the WHOLE
+    /// edit, including any component change carried in `update` or folded
+    /// into `fields` — closing the two-PUT partial-write window a prior
+    /// design had, where a separate, earlier component-only PUT could land
+    /// before a later field-only PUT failed. Atlassian publishes no broader
+    /// atomic/transactional/rollback guarantee beyond this documented
+    /// validate-then-apply behavior for validation errors (research Q2,
+    /// INCONCLUSIVE for non-validation failure modes) — do not describe this
+    /// method as providing blanket atomicity.
+    ///
+    /// `update` is included only when `Some` (a `None` omits the `"update"`
+    /// key entirely); `fields` is included only when non-empty (an empty
+    /// object is omitted, not sent as `{}`) — both to keep the wire body
+    /// byte-for-byte minimal. A `--component`-only edit therefore still
+    /// sends exactly `{"update":{"components":[...]}}` (native) or
+    /// `{"fields":{"components":[...]}}` (fallback) with no extra top-level
+    /// key, matching the single-PUT shape AC-001/004/005 assert.
+    ///
+    /// Returns `Ok(())` on HTTP 204 No Content. Any other status propagates
+    /// as an error.
+    pub async fn edit_issue_combined(
+        &self,
+        key: &str,
+        fields: Value,
+        update: Option<Value>,
+    ) -> Result<()> {
+        let mut body = serde_json::Map::new();
+        if let Some(update_val) = update {
+            body.insert("update".into(), update_val);
+        }
+        if !fields.as_object().is_some_and(|m| m.is_empty()) {
+            body.insert("fields".into(), fields);
+        }
+        let path = format!("/rest/api/3/issue/{}", urlencoding::encode(key));
+        self.put(&path, &Value::Object(body)).await
     }
 
     /// Update a single issue's labels using the `update` verb (PUT issue).
@@ -782,11 +1014,11 @@ impl JiraClient {
             let next = page.next_start();
             all.append(&mut page.comments.unwrap_or_default());
 
-            if let Some(cap) = limit {
-                if all.len() >= cap as usize {
-                    all.truncate(cap as usize);
-                    break;
-                }
+            if let Some(cap) = limit
+                && all.len() >= cap as usize
+            {
+                all.truncate(cap as usize);
+                break;
             }
             if !has_more {
                 break;
@@ -810,14 +1042,26 @@ impl JiraClient {
     /// Resolve the available issue types for a project via the createmeta issuetypes endpoint.
     ///
     /// Calls `GET /rest/api/3/issue/createmeta/{projectKey}/issuetypes` and paginates by
-    /// offset until `startAt + page_len >= total` (or an empty page), returning all
-    /// `IssueTypeEntry` values (id + name).
+    /// offset, returning all `IssueTypeEntry` values (id + name).
     ///
     /// `PageOfCreateMetaIssueTypes` uses OFFSET pagination (`startAt`/`maxResults`/`total`).
     /// There is NO `isLast` field — that belongs to the generic `PageBean<T>` family, not
     /// the specialized `PageOf...` types. Verified against the Atlassian OpenAPI-derived
     /// `jira.js` client (issue #331; see
     /// `.factory/research/issue-331-createmeta-response-schema.md`).
+    ///
+    /// Termination heuristic and hard page bound are IDENTICAL to this
+    /// function's twin, [`get_createmeta_fields`] (FIX-F5-001, mirroring
+    /// S-580-1/C-LOW-2): when `total` is present (`> 0`) the loop stops once
+    /// `start_at + page_len >= total` (or an empty page); when `total` is
+    /// absent/zero (`CreatemetaIssueTypesResponse.total` is
+    /// `#[serde(default)]`, so a MISSING `total` deserializes to 0 —
+    /// indistinguishable from a genuinely empty result set), the loop
+    /// instead stops only once a page comes back short of `page_size` (or
+    /// empty) — a missing `total` on a FULL page must not silently truncate
+    /// to page 1. [`MAX_CREATEMETA_PAGES`] bounds the loop as a fail-loud
+    /// backstop against an unbounded loop (CWE-400/770), checked at the top
+    /// of every pass independent of the termination heuristic above.
     ///
     /// # Usage
     /// - No cache — one or more HTTP calls per `--type` bulk invocation.
@@ -829,13 +1073,26 @@ impl JiraClient {
         &self,
         project_key: &str,
     ) -> Result<Vec<IssueTypeEntry>> {
+        use crate::error::JrError;
+
         // Reuse IssueTypeMetadata from projects.rs is not possible here — that struct
         // lacks an `id` field (it has name/description/subtask only). We define a
         // separate IssueTypeEntry with id + name for createmeta resolution.
         let page_size: u32 = 200;
         let mut all: Vec<IssueTypeEntry> = Vec::new();
         let mut start_at: u32 = 0;
+        let mut pages_fetched: u32 = 0;
         loop {
+            if pages_fetched >= MAX_CREATEMETA_PAGES {
+                return Err(anyhow::anyhow!(JrError::Internal(format!(
+                    "Internal error: createmeta issue-type pagination for project \
+                     '{project_key}' exceeded {MAX_CREATEMETA_PAGES} pages without \
+                     completing — aborting to avoid an unbounded loop. This should \
+                     not happen against a well-behaved Jira instance; if it does, please \
+                     report it as a bug."
+                ))));
+            }
+            pages_fetched += 1;
             let response: CreatemetaIssueTypesResponse = self
                 .get(&format!(
                     "/rest/api/3/issue/createmeta/{}/issuetypes?startAt={}&maxResults={}",
@@ -847,15 +1104,162 @@ impl JiraClient {
             let total = response.total;
             let page_len = response.issue_types.len() as u32;
             all.extend(response.issue_types);
-            // Offset termination: stop on empty page or once we've consumed `total`.
-            // (`PageOfCreateMetaIssueTypes` has no `isLast`; total drives the loop.)
-            if page_len == 0 || start_at + page_len >= total {
+            // `total` is `#[serde(default)]`, so a MISSING `total` in the wire
+            // response deserializes to 0 — indistinguishable from a genuinely
+            // empty result set at the type level. When `total` is present
+            // (`> 0`), trust it: a page can legitimately be shorter than
+            // `page_size` while more pages remain. When `total` is
+            // absent/zero, fall back to the full-page heuristic: only stop
+            // once a page comes back short of `page_size` (or empty) — a
+            // MISSING `total` on a FULL page must not silently truncate to
+            // page 1 (FIX-F5-001, mirrors `get_createmeta_fields`'s
+            // identical C-LOW-2 guard above).
+            let done = if total > 0 {
+                page_len == 0 || start_at + page_len >= total
+            } else {
+                page_len == 0 || page_len < page_size
+            };
+            if done {
                 break;
             }
             start_at += page_len;
         }
         Ok(all)
     }
+
+    /// Enumerate a custom field's allowed options via project+issue-type
+    /// createmeta (M2, `jr field options --type <T>`, ADR-0019 §1).
+    ///
+    /// Calls `GET /rest/api/3/issue/createmeta/{projectIdOrKey}/issuetypes/{issueTypeId}`
+    /// — the current, non-deprecated createmeta-fields-by-issue-type form
+    /// (CHANGE-1304 deprecated the old `createmeta?expand=` shape). This is
+    /// a DIFFERENT endpoint from [`get_issue_types_for_project`], which
+    /// resolves the issue-type NAME to an id BEFORE this call — the two are
+    /// distinct, independently offset-paginated calls (Architecture
+    /// Compliance Rule 7).
+    ///
+    /// Offset-paginated internally (`startAt`/`maxResults`/`total`), same
+    /// pagination family as [`get_issue_types_for_project`]'s sibling call —
+    /// one or more `GET`s until all field pages are collected, so a target
+    /// field on page ≥2 still resolves (AC-008). Not cached — this is a
+    /// read-only, per-invocation enumeration.
+    ///
+    /// Bounded by [`MAX_CREATEMETA_PAGES`] (S-580-1, SEC-001, CWE-400/770):
+    /// the `done` computation below combines two independently-derived
+    /// signals (`total`-driven vs `page_size`-driven) and is therefore not
+    /// the sole termination guarantee — a mutated/degenerate `done`
+    /// expression, or a malicious/misbehaving server that never reports a
+    /// short or empty page, would otherwise loop forever, repeating the
+    /// identical GET. The iteration count is checked at the TOP of every
+    /// loop pass, independent of `done`, so it terminates the loop even if
+    /// `done`'s logic is defeated entirely.
+    pub(crate) async fn get_createmeta_fields(
+        &self,
+        project_key: &str,
+        issue_type_id: &str,
+    ) -> Result<Vec<CreateMetaField>> {
+        use crate::error::JrError;
+
+        let page_size: u32 = 200;
+        let mut all: Vec<CreateMetaField> = Vec::new();
+        let mut start_at: u32 = 0;
+        let mut pages_fetched: u32 = 0;
+        loop {
+            if pages_fetched >= MAX_CREATEMETA_PAGES {
+                return Err(anyhow::anyhow!(JrError::Internal(format!(
+                    "Internal error: createmeta field pagination for project '{project_key}' \
+                     issue type '{issue_type_id}' exceeded {MAX_CREATEMETA_PAGES} pages \
+                     without completing — aborting to avoid an unbounded loop. This should \
+                     not happen against a well-behaved Jira instance; if it does, please \
+                     report it as a bug."
+                ))));
+            }
+            pages_fetched += 1;
+            let response: CreateMetaFieldsResponse = self
+                .get(&format!(
+                    "/rest/api/3/issue/createmeta/{}/issuetypes/{}?startAt={}&maxResults={}",
+                    urlencoding::encode(project_key),
+                    urlencoding::encode(issue_type_id),
+                    start_at,
+                    page_size,
+                ))
+                .await?;
+            let total = response.total;
+            let page_len = response.fields.len() as u32;
+            all.extend(response.fields);
+            // `total` is `#[serde(default)]`, so a MISSING `total` in the
+            // wire response deserializes to 0 — indistinguishable from a
+            // genuinely-empty result set at the type level. When `total` is
+            // present (`> 0`), trust it: a page can legitimately be shorter
+            // than `page_size` while more pages remain (see the existing
+            // 2-page fixture, which returns 1-field pages against a
+            // `total: 2`). When `total` is absent/zero, fall back to the
+            // full-page heuristic: only stop once a page comes back short
+            // of `page_size` (or empty) — a MISSING `total` on a FULL page
+            // must not silently truncate to page 1 (C-LOW-2).
+            //
+            // `page_len == 0` is checked in BOTH branches (S-580-1, CWE-835):
+            // an empty page while `start_at < total` is reachable via
+            // permission-filtered short/empty pages (the JRACLOUD-71293/95368
+            // class — see `get_issue_types_for_project`'s identical guard
+            // above) and previously left `done` false in the `total > 0`
+            // branch, so `start_at += page_len` added 0 and the identical GET
+            // repeated forever.
+            let done = if total > 0 {
+                page_len == 0 || start_at + page_len >= total
+            } else {
+                page_len == 0 || page_len < page_size
+            };
+            if done {
+                break;
+            }
+            start_at += page_len;
+        }
+        Ok(all)
+    }
+}
+
+/// A single field descriptor returned by
+/// `GET /rest/api/3/issue/createmeta/{projectIdOrKey}/issuetypes/{issueTypeId}`
+/// (M2 enumeration, ADR-0019 §1, `jr field options --type <T>`).
+///
+/// Reuses [`AllowedValue`]/[`EditMetaFieldSchema`] from
+/// `types::jira::editmeta` rather than redefining a second, structurally
+/// identical pair — both createmeta and editmeta's `allowedValues[].id`
+/// shape are the same "observed-not-typed" structure per Jira's v3 OpenAPI
+/// (ADR-0019 §1 "Type reuse" note). Kept inline in `issues.rs`, following
+/// the exact precedent [`IssueTypeEntry`]/[`CreatemetaIssueTypesResponse`]
+/// already established for the sibling createmeta-issuetypes call.
+#[derive(Debug, Deserialize)]
+pub(crate) struct CreateMetaField {
+    #[serde(rename = "fieldId")]
+    pub field_id: String,
+    pub name: String,
+    pub schema: EditMetaFieldSchema,
+    #[serde(rename = "allowedValues")]
+    pub allowed_values: Option<Vec<AllowedValue>>,
+    /// See [`EditMetaField::auto_complete_url`] — same wire shape, same
+    /// BC-X.14.004 graceful-degrade consumer (`jr field options --type`).
+    #[serde(rename = "autoCompleteUrl", default)]
+    pub auto_complete_url: Option<String>,
+}
+
+/// Response wrapper for
+/// `GET /rest/api/3/issue/createmeta/{projectIdOrKey}/issuetypes/{issueTypeId}`.
+///
+/// Offset-paginated (`startAt`/`maxResults`/`total`); prefers the `fields`
+/// key, tolerates the OpenAPI-synonymous `results` key (AC-008) — no
+/// `values`, no `nextPageToken`, same pagination family as the sibling
+/// [`CreatemetaIssueTypesResponse`].
+///
+/// Wire shape: `{"fields": [...], "startAt": 0, "maxResults": N, "total": N}`.
+/// Each element is a `FieldCreateMetadata` object (`fieldId`, `name`, `schema`, …).
+#[derive(Debug, Deserialize)]
+struct CreateMetaFieldsResponse {
+    #[serde(alias = "results", default)]
+    pub fields: Vec<CreateMetaField>,
+    #[serde(default)]
+    pub total: u32,
 }
 
 /// Issue type entry returned by `GET /rest/api/3/issue/createmeta/{projectKey}/issuetypes`.

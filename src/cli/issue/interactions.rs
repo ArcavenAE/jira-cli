@@ -7,7 +7,7 @@
 //! pattern at `src/cli/issue/mod.rs`.
 //!
 //! S-577-5 extends `handle_comment_edit` with `--internal`/`--public` visibility
-//! flags, the `--public` confirmation gate (DEC-174 mechanism), and the
+//! flags, the `--public` confirmation gate (D-174 mechanism), and the
 //! JSDCLOUD-6050 hint (BC-3.5.006/007/008).
 
 use anyhow::{Result, bail};
@@ -17,6 +17,8 @@ use crate::api::client::JiraClient;
 use crate::cli::{CommentSubcommand, OutputFormat};
 use crate::error::JrError;
 use crate::output;
+
+use super::mentions;
 
 // ── Comment Add ──────────────────────────────────────────────────────────
 
@@ -32,8 +34,9 @@ pub(super) async fn handle_comment_add(
     sub: CommentSubcommand,
     output_format: &OutputFormat,
     client: &JiraClient,
+    no_input: bool,
 ) -> Result<()> {
-    let (key, message, markdown, file, stdin, internal) = match sub {
+    let (key, message, markdown, file, stdin, internal, no_mentions) = match sub {
         CommentSubcommand::Add {
             key,
             message,
@@ -41,7 +44,8 @@ pub(super) async fn handle_comment_add(
             file,
             stdin,
             internal,
-        } => (key, message, markdown, file, stdin, internal),
+            no_mentions,
+        } => (key, message, markdown, file, stdin, internal, no_mentions),
         _ => unreachable!("handle_comment_add called with non-Add variant"),
     };
 
@@ -68,7 +72,12 @@ pub(super) async fn handle_comment_add(
     }
 
     let adf_body = if markdown {
-        adf::markdown_to_adf(&text)?
+        if no_mentions {
+            adf::markdown_to_adf_no_mentions(&text)?
+        } else {
+            let resolutions = mentions::resolve_mentions(client, &text, no_input).await?;
+            adf::markdown_to_adf_with_mentions(&text, &resolutions)?
+        }
     } else {
         adf::text_to_adf(&text)
     };
@@ -126,7 +135,7 @@ fn validate_comment_id(id: &str) -> Result<()> {
 ///    - `no_input && !yes` → exit 64 with pinned refusal wording
 ///    - else → interactive `y/N`: `eprint!` prompt to stderr + `io::stdin().lock().read_line()`.
 ///      Do NOT switch to `dialoguer::interact_on` — console's `is_term()` gate returns
-///      `NotConnected` on piped stderr (DEC-174; empirically proven).
+///      `NotConnected` on piped stderr (D-174; empirically proven).
 /// 3. HTTP DELETE — 204 → success; 404/403 → exit 64 + two-line body surface (BC-3.5.004)
 ///
 /// `no_input` is the final parameter (confirmation-gate contract, mirrors
@@ -218,7 +227,7 @@ pub(super) async fn handle_comment_delete(
             Ok(())
         }
         Err(e) => {
-            // 404/403 → exit 64 + two-line body surface (BC-3.5.004, DEC-168 ruling 3).
+            // 404/403 → exit 64 + two-line body surface (BC-3.5.004, D-168 ruling 3).
             // 404 is NOT idempotent; re-wrap as UserError so main.rs emits exit 64.
             let user_err_msg = {
                 match e.downcast_ref::<JrError>() {
@@ -321,7 +330,7 @@ fn format_jsm_internal_field(properties: Option<&serde_json::Value>) -> &'static
 /// EC-3.5.008-3: if `--stdin` flag set → mutate `no_input = true` (TTY-agnostic).
 /// `no_input && !yes` → exit 64 + targeted hint.
 /// `yes` → bypass prompt.
-/// Interactive: eprint! + read_line (DEC-174); Ok(0)/Err → exit 130.
+/// Interactive: eprint! + read_line (D-174); Ok(0)/Err → exit 130.
 /// Cancel (non-y) → `{"cancelled":true,"updated":false}` JSON envelope.
 ///
 /// Step 4: ADF conversion: trim then `text_to_adf` or `markdown_to_adf`; raw pre-trim
@@ -357,6 +366,7 @@ pub(super) async fn handle_comment_edit(
         internal,
         public,
         yes,
+        no_mentions,
     } = sub
     else {
         unreachable!("handle_comment_edit called with non-Edit variant")
@@ -432,7 +442,7 @@ pub(super) async fn handle_comment_edit(
                 .into());
             }
         } else if !yes {
-            // Interactive path (DEC-174 mechanism: eprint! + read_line).
+            // Interactive path (D-174 mechanism: eprint! + read_line).
             //
             // Do NOT use `dialoguer::Confirm::interact_on(&Term::stderr())` — console
             // crate's `_interact_on` checks `term.is_term()` upfront and returns
@@ -481,7 +491,12 @@ pub(super) async fn handle_comment_edit(
     let raw = body; // body moved into raw; raw is the original untrimmed content
     let trimmed = raw.trim().to_string();
     let adf_body = if markdown {
-        adf::markdown_to_adf(&trimmed)?
+        if no_mentions {
+            adf::markdown_to_adf_no_mentions(&trimmed)?
+        } else {
+            let resolutions = mentions::resolve_mentions(client, &trimmed, no_input).await?;
+            adf::markdown_to_adf_with_mentions(&trimmed, &resolutions)?
+        }
     } else {
         adf::text_to_adf(&trimmed)
     };

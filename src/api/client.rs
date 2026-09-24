@@ -1,6 +1,7 @@
 use crate::api::rate_limit::{MAX_RETRY_AFTER_SECS, RateLimitInfo};
 use crate::config::Config;
 use crate::error::JrError;
+use crate::profile::Profile;
 use base64::Engine;
 use reqwest::{Client, Method, RequestBuilder, Response, StatusCode};
 use serde::Serialize;
@@ -26,7 +27,7 @@ pub struct JiraClient {
     /// Active profile name, plumbed through so per-profile cache calls can
     /// scope their reads/writes correctly without the call sites needing
     /// access to `&Config`.
-    profile_name: String,
+    profile_name: Profile,
 }
 
 impl JiraClient {
@@ -121,15 +122,19 @@ impl JiraClient {
     ///
     /// Shared by the `#[cfg(debug_assertions)]` and `#[cfg(not(debug_assertions))]` branches
     /// of `from_config` to avoid duplicating the `oauth`/`api_token` match arms.
-    fn load_auth_from_keychain(auth_method: &str, profile_name: &str) -> anyhow::Result<String> {
+    fn load_auth_from_keychain(
+        auth_method: &str,
+        profile_name: &Profile,
+    ) -> anyhow::Result<String> {
         match auth_method {
             "oauth" => {
                 let (access, _refresh) = crate::api::auth::load_oauth_tokens(profile_name)?;
                 Ok(format!("Bearer {access}"))
             }
             _ => {
-                // api_token (default)
-                let (email, token) = crate::api::auth::load_api_token()?;
+                // api_token (default) — namespaced per-profile read
+                // (S-cycle3-percred-storage, BC-1.4.031 postcondition 3).
+                let (email, token) = crate::api::auth::load_api_token(profile_name)?;
                 let encoded =
                     base64::engine::general_purpose::STANDARD.encode(format!("{email}:{token}"));
                 Ok(format!("Basic {encoded}"))
@@ -149,7 +154,7 @@ impl JiraClient {
             verbose: false,
             verbose_bodies: false,
             assets_base_url,
-            profile_name: "default".to_string(),
+            profile_name: Profile::from("default"),
         }
     }
 
@@ -172,7 +177,7 @@ impl JiraClient {
             verbose: false,
             verbose_bodies: false,
             assets_base_url,
-            profile_name: profile.to_string(),
+            profile_name: Profile::from(profile),
         }
     }
 
@@ -199,14 +204,14 @@ impl JiraClient {
             verbose: false,
             verbose_bodies: false,
             assets_base_url,
-            profile_name: "default".to_string(),
+            profile_name: Profile::from("default"),
         }
     }
 
     /// Active profile name this client is bound to. Used by per-profile
     /// cache call sites (CMDB fields, workspace ID, project meta, resolutions,
     /// object-type attrs) that have a `&JiraClient` but not `&Config`.
-    pub fn profile_name(&self) -> &str {
+    pub fn profile_name(&self) -> &Profile {
         &self.profile_name
     }
 
@@ -341,6 +346,22 @@ impl JiraClient {
         let request = self.client.put(&url).json(body);
         self.send(request).await?;
         Ok(())
+    }
+
+    /// Perform a PUT request with a JSON body and deserialize the response body.
+    ///
+    /// Used for PUT endpoints that return a resource on success (e.g.
+    /// `PUT /rest/api/3/component/{id}` — BC-8.1.007).
+    pub async fn put_json<T: DeserializeOwned, B: Serialize>(
+        &self,
+        path: &str,
+        body: &B,
+    ) -> anyhow::Result<T> {
+        let url = format!("{}{}", self.base_url, path);
+        let request = self.client.put(&url).json(body);
+        let response = self.send(request).await?;
+        let bytes = self.collect_response_body(response).await?;
+        Ok(serde_json::from_slice(&bytes)?)
     }
 
     /// Perform a POST request that returns 204 No Content on success.
@@ -535,20 +556,19 @@ impl JiraClient {
         //   - bug-symmetry: the clamp inside the loop already enforces "no
         //     sleep on expired", so this just extends that invariant to
         //     "no request on expired" — one consistent semantic.
-        if let Some(d) = deadline {
-            if let ClampResult::Expired { remaining_ms } =
+        if let Some(d) = deadline
+            && let ClampResult::Expired { remaining_ms } =
                 clamp_retry_sleep(Duration::ZERO, Some(d))
-            {
-                return Err(JrError::DeadlineExceeded {
-                    remaining_ms,
-                    message: format!(
-                        "[deadline:send-entry] Caller-supplied deadline already \
+        {
+            return Err(JrError::DeadlineExceeded {
+                remaining_ms,
+                message: format!(
+                    "[deadline:send-entry] Caller-supplied deadline already \
                          expired at send entry (remaining budget {remaining_ms}ms). \
                          The request was not issued. Rerun with a larger timeout."
-                    ),
-                }
-                .into());
+                ),
             }
+            .into());
         }
 
         // We need to be able to retry, so we clone the request builder.
@@ -577,28 +597,28 @@ impl JiraClient {
 
                 let req = req.header("Authorization", &self.auth_header);
 
-                if self.verbose || self.verbose_bodies {
-                    if let Some(ref r) = req.try_clone().and_then(|r| r.build().ok()) {
-                        if self.verbose {
-                            // AC-003: log request method+URL to stderr under --verbose.
-                            // The [verbose] prefix is retained because cli_handler tests
-                            // (SD-003 contract guards) assert on stderr.contains("[verbose] GET/PUT/...")
-                            // and the verbose_bodies.rs tests assert on the same prefix.
-                            // Tracing handles rate-limit and other diagnostic events.
-                            // Method and URL are extracted to variables before the print call
-                            // so no single source line contains both the eprintln and method().
-                            let method_str = r.method().as_str();
-                            let url_str = r.url().as_str();
-                            eprintln!("[verbose] {method_str} {url_str}");
-                        }
-                        if let Some(bytes) = r.body().and_then(|b| b.as_bytes()) {
-                            if self.verbose_bodies {
-                                eprintln!("[verbose] body: {}", String::from_utf8_lossy(bytes));
-                            } else {
-                                eprintln!(
-                                    "[verbose] body suppressed (use --verbose-bodies to inspect, will print PII)"
-                                );
-                            }
+                if (self.verbose || self.verbose_bodies)
+                    && let Some(ref r) = req.try_clone().and_then(|r| r.build().ok())
+                {
+                    if self.verbose {
+                        // AC-003: log request method+URL to stderr under --verbose.
+                        // The [verbose] prefix is retained because cli_handler tests
+                        // (SD-003 contract guards) assert on stderr.contains("[verbose] GET/PUT/...")
+                        // and the verbose_bodies.rs tests assert on the same prefix.
+                        // Tracing handles rate-limit and other diagnostic events.
+                        // Method and URL are extracted to variables before the print call
+                        // so no single source line contains both the eprintln and method().
+                        let method_str = r.method().as_str();
+                        let url_str = r.url().as_str();
+                        eprintln!("[verbose] {method_str} {url_str}");
+                    }
+                    if let Some(bytes) = r.body().and_then(|b| b.as_bytes()) {
+                        if self.verbose_bodies {
+                            eprintln!("[verbose] body: {}", String::from_utf8_lossy(bytes));
+                        } else {
+                            eprintln!(
+                                "[verbose] body suppressed (use --verbose-bodies to inspect, will print PII)"
+                            );
                         }
                     }
                 }
@@ -746,15 +766,10 @@ impl JiraClient {
         // request with a new token. So consuming the body here is safe.
         let first_401_body = first_response.bytes().await.unwrap_or_default();
         let first_401_message = extract_error_message(&first_401_body);
-        if first_401_message
-            .to_ascii_lowercase()
-            .contains("scope does not match")
-        {
-            return Err(JrError::InsufficientScope {
-                message: first_401_message,
-                required_scope: None,
-            }
-            .into());
+        let first_401_classified =
+            classify_401_body(&first_401_message, "Run \"jr auth login\" to connect.");
+        if matches!(first_401_classified, JrError::InsufficientScope { .. }) {
+            return Err(first_401_classified.into());
         }
 
         // -------------------------------------------------------------------
@@ -778,15 +793,17 @@ impl JiraClient {
         let profile = self.profile_name.clone();
 
         let refresh_result = crate::api::refresh_coordinator::refresh_with_single_flight(
-            &profile,
+            profile.as_ref(),
             &token_url_snapshot,
             || {
                 let profile = profile.clone();
                 let token_url = token_url_snapshot.clone();
                 async move {
-                    let new_access =
-                        crate::api::auth::refresh_oauth_token_with_url(&profile, &token_url)
-                            .await?;
+                    let new_access = crate::api::auth::refresh_oauth_token_with_url(
+                        profile.as_ref(),
+                        &token_url,
+                    )
+                    .await?;
                     // refresh_oauth_token_with_url stores tokens in keychain (persist-before-publish).
                     // We return (access, refresh) — refresh is re-read from keychain to provide
                     // the coordinator with the new refresh token for AC-010 reconcile.
@@ -828,9 +845,20 @@ impl JiraClient {
                 {
                     if retry_response.status() == StatusCode::UNAUTHORIZED {
                         // Retry also returned 401 — no second refresh (one-attempt cap).
-                        return Err(JrError::NotAuthenticated {
-                            hint: "run 'jr auth refresh' to re-authenticate".to_string(),
-                        }
+                        //
+                        // F-WAVE-1 BUG FIX: read the retry 401's body and classify it,
+                        // rather than unconditionally assuming a plain auth failure. A
+                        // refresh can succeed and still yield an under-scoped token
+                        // ("double fault") — that 401 body contains "scope does not
+                        // match" and must surface as InsufficientScope, not
+                        // NotAuthenticated (re-running `jr auth refresh` cannot add
+                        // scopes, so that hint would be actively misleading here).
+                        let retry_401_body = retry_response.bytes().await.unwrap_or_default();
+                        let retry_401_message = extract_error_message(&retry_401_body);
+                        return Err(classify_401_body(
+                            &retry_401_message,
+                            "run 'jr auth refresh' to re-authenticate",
+                        )
                         .into());
                     }
                     return Err(Self::parse_error(retry_response).await);
@@ -885,9 +913,14 @@ impl JiraClient {
                         || retry_response.status().is_server_error()
                     {
                         if retry_response.status() == StatusCode::UNAUTHORIZED {
-                            return Err(JrError::NotAuthenticated {
-                                hint: "run 'jr auth refresh' to re-authenticate".to_string(),
-                            }
+                            // F-WAVE-1: same double-fault classification fix as the
+                            // primary post-refresh 401 handler above — see its comment.
+                            let retry_401_body = retry_response.bytes().await.unwrap_or_default();
+                            let retry_401_message = extract_error_message(&retry_401_body);
+                            return Err(classify_401_body(
+                                &retry_401_message,
+                                "run 'jr auth refresh' to re-authenticate",
+                            )
                             .into());
                         }
                         return Err(Self::parse_error(retry_response).await);
@@ -1016,20 +1049,7 @@ impl JiraClient {
         };
 
         if status == 401 {
-            if message
-                .to_ascii_lowercase()
-                .contains("scope does not match")
-            {
-                return JrError::InsufficientScope {
-                    message,
-                    required_scope: None,
-                }
-                .into();
-            }
-            return JrError::NotAuthenticated {
-                hint: "Run \"jr auth login\" to connect.".to_string(),
-            }
-            .into();
+            return classify_401_body(&message, "Run \"jr auth login\" to connect.").into();
         }
 
         JrError::ApiError { status, message }.into()
@@ -1499,6 +1519,163 @@ fn sanitize_for_stderr(input: String) -> String {
     out
 }
 
+/// Classify a 401 response body's message into the correct `JrError` variant.
+///
+/// Pure, sync, no I/O — the single shared decision point for every call site
+/// that must turn a 401 response body into either `JrError::InsufficientScope`
+/// or `JrError::NotAuthenticated`. If `message` contains `"scope does not
+/// match"` (case-insensitive, ASCII), the 401 is a scope-mismatch — a token
+/// refresh cannot fix it — and `InsufficientScope` is returned. Otherwise the
+/// 401 is treated as a plain authentication failure (expired/revoked/missing
+/// token) and `NotAuthenticated` is returned, using the caller-supplied
+/// `not_authenticated_hint` so each call site can keep its own existing hint
+/// text (e.g. "Run \"jr auth login\" to connect." pre-refresh/`parse_error`
+/// vs "run 'jr auth refresh' to re-authenticate" post-refresh).
+///
+/// F-WAVE-1 (cycle-008 wave-gate fix): extracted so the post-refresh 401
+/// handler in `send_inner` can share this classification instead of
+/// hardcoding `NotAuthenticated` without reading the retry response's body —
+/// see `BC-X.15.*`/`docs/specs/` history around the "double fault" scenario
+/// (expired token that refreshes into a still-under-scoped token).
+fn classify_401_body(message: &str, not_authenticated_hint: &str) -> JrError {
+    if message
+        .to_ascii_lowercase()
+        .contains("scope does not match")
+    {
+        JrError::InsufficientScope {
+            message: message.to_string(),
+            required_scope: None,
+        }
+    } else {
+        JrError::NotAuthenticated {
+            hint: not_authenticated_hint.to_string(),
+        }
+    }
+}
+
+/// Pure, sync, no-I/O, no-keyring unit tests for `classify_401_body` — the
+/// F-WAVE-1 (cycle-008) extraction that is the core of the double-fault fix.
+/// Co-located with the helper because it is module-private (not `pub`).
+///
+/// Every test here runs under plain `cargo test` (no `#[ignore]`, no keyring
+/// gate, no async runtime) — this closes the mutation-coverage gap the
+/// implementation-only commit (db240dbc) left open.
+#[cfg(test)]
+mod classify_401_body_tests {
+    use super::classify_401_body;
+    use crate::error::JrError;
+
+    const LOGIN_HINT: &str = "Run \"jr auth login\" to connect.";
+    const REFRESH_HINT: &str = "run 'jr auth refresh' to re-authenticate";
+
+    /// Mutation coverage: kills a mutant that flips `.contains(...)` to
+    /// `!.contains(...)` (or otherwise inverts the branch condition) — an
+    /// exact-match message on the scope-mismatch substring must classify as
+    /// `InsufficientScope`, not `NotAuthenticated`.
+    #[test]
+    fn test_classify_401_body_returns_insufficient_scope_for_scope_mismatch_message() {
+        let err = classify_401_body("scope does not match", LOGIN_HINT);
+        match err {
+            JrError::InsufficientScope {
+                message,
+                required_scope,
+            } => {
+                assert_eq!(message, "scope does not match");
+                assert_eq!(required_scope, None);
+            }
+            other => panic!("expected InsufficientScope, got {other:?}"),
+        }
+    }
+
+    /// The real Atlassian gateway wire message embeds the substring inside a
+    /// larger sentence — proves `contains`, not an exact-equality check, is
+    /// used. Kills a mutant that replaces `.contains(...)` with `== `.
+    #[test]
+    fn test_classify_401_body_returns_insufficient_scope_for_real_wire_message() {
+        let err = classify_401_body("Unauthorized; scope does not match", LOGIN_HINT);
+        assert!(
+            matches!(err, JrError::InsufficientScope { .. }),
+            "expected InsufficientScope for the real Atlassian wire message"
+        );
+    }
+
+    /// Mutation coverage: kills a mutant that drops `.to_ascii_lowercase()`
+    /// (or narrows it to only lowercase input) — the match must be
+    /// case-insensitive in both directions (title case and all-caps).
+    #[test]
+    fn test_classify_401_body_scope_mismatch_match_is_case_insensitive() {
+        for message in [
+            "Scope Does Not Match",
+            "SCOPE DOES NOT MATCH",
+            "ScOpE dOeS nOt MaTcH",
+        ] {
+            let err = classify_401_body(message, LOGIN_HINT);
+            assert!(
+                matches!(err, JrError::InsufficientScope { .. }),
+                "expected InsufficientScope for case-varied message {message:?}, got {err:?}"
+            );
+        }
+    }
+
+    /// Kills a mutant that hardcodes the pre-refresh hint text inside
+    /// `classify_401_body` instead of using the caller-supplied
+    /// `not_authenticated_hint` parameter — this parameterization is exactly
+    /// what the double-fault fix relies on (`send_inner`'s post-refresh 401
+    /// handler passes the *refresh* hint, not the *login* hint).
+    #[test]
+    fn test_classify_401_body_not_authenticated_carries_login_hint_verbatim() {
+        let err = classify_401_body("token expired", LOGIN_HINT);
+        match err {
+            JrError::NotAuthenticated { hint } => assert_eq!(hint, LOGIN_HINT),
+            other => panic!("expected NotAuthenticated, got {other:?}"),
+        }
+    }
+
+    /// Same as above but with the second real call-site hint value, proving
+    /// the parameter — not a hardcoded literal — determines the output for
+    /// either of the two hints actually used in production.
+    #[test]
+    fn test_classify_401_body_not_authenticated_carries_refresh_hint_verbatim() {
+        let err = classify_401_body("token expired", REFRESH_HINT);
+        match err {
+            JrError::NotAuthenticated { hint } => assert_eq!(hint, REFRESH_HINT),
+            other => panic!("expected NotAuthenticated, got {other:?}"),
+        }
+    }
+
+    /// Mutation-hardening: an empty message must not accidentally satisfy a
+    /// loosened/empty-substring match (e.g. a mutant that replaces the
+    /// literal with `""`, which `.contains("")` always matches).
+    #[test]
+    fn test_classify_401_body_returns_not_authenticated_for_empty_message() {
+        let err = classify_401_body("", LOGIN_HINT);
+        match err {
+            JrError::NotAuthenticated { hint } => assert_eq!(hint, LOGIN_HINT),
+            other => panic!("expected NotAuthenticated for empty message, got {other:?}"),
+        }
+    }
+
+    /// Mutation-hardening: near-miss substrings that share words with, but do
+    /// not equal, "scope does not match" must NOT trip the scope-mismatch
+    /// branch. Guards against a loosened match (e.g. a mutant that checks
+    /// only "scope" or only "does not match" in isolation).
+    #[test]
+    fn test_classify_401_body_returns_not_authenticated_for_near_miss_substrings() {
+        for message in [
+            "scope does not",
+            "does not match",
+            "scope mismatch",
+            "the requested scope was not granted",
+        ] {
+            let err = classify_401_body(message, LOGIN_HINT);
+            assert!(
+                matches!(err, JrError::NotAuthenticated { .. }),
+                "expected NotAuthenticated for near-miss message {message:?}, got {err:?}"
+            );
+        }
+    }
+}
+
 /// Extract a human-readable error message from a Jira error response body.
 ///
 /// All return paths run through `sanitize_for_stderr` (CWE-117 defense:
@@ -1653,85 +1830,84 @@ fn extract_error_message_raw(body: &[u8]) -> String {
                 return joined;
             }
         }
-        if let Some(errors) = json.get("errors").and_then(|v| v.as_object()) {
-            if !errors.is_empty() {
-                // Memory-amplification defense (OWASP API4:2023 (Unrestricted Resource Consumption) / CWE-770 (Allocation of Resources Without Limits or Throttling), same threat
-                // class as the errorMessages streaming join earlier). Three
-                // server-controlled vectors are bounded here:
-                //
-                // 1. Entry count — `take(MAX_ERROR_PAIRS)` before collect/sort
-                //    so a hostile response with 1M keys cannot force a 1M-entry
-                //    intermediate Vec.
-                //
-                // 2. Key length — each key passes through `cap_entry` BEFORE
-                //    format!. Without this cap, a hostile response with a
-                //    small number of pathologically large keys (e.g., 1 MB
-                //    key name) would amplify intermediate allocations in the
-                //    formatted pair string even with the entry-count cap.
-                //
-                // 3. Non-string value size/depth — `serialize_value_bounded`
-                //    serializes via a byte-limited writer instead of
-                //    `Value::to_string()`. A hostile response with deeply
-                //    nested or huge non-string values cannot force a full
-                //    serialization allocation before cap_entry truncates.
-                //
-                // MAX_ERROR_PAIRS = 256 is generous (legitimate Jira responses
-                // have 1-10 field-level errors). Per-pair memory is bounded
-                // by 2 × MAX_ERROR_ENTRY_LEN (capped key + capped value) plus
-                // ~4 bytes of format overhead, so the intermediate Vec is
-                // bounded at roughly 256 × 2 × 1024 ≈ 512 KiB worst case.
-                // The downstream streaming join further bounds OUTPUT to
-                // MAX_SANITIZED_OUTPUT_LEN.
-                const MAX_ERROR_PAIRS: usize = 256;
-                let total_keys = errors.len();
-                let mut pairs: Vec<String> = errors
-                    .iter()
-                    .take(MAX_ERROR_PAIRS)
-                    .map(|(k, v)| {
-                        // Cap server-controlled key length BEFORE format!
-                        // (see comment block above).
-                        let k_capped = cap_entry(k);
-                        if let Some(s) = v.as_str() {
-                            // String value: borrow via Cow when no truncation.
-                            format!("{}: {}", k_capped, cap_entry(s))
-                        } else {
-                            // Non-string value: bounded serialization avoids
-                            // full Value::to_string() allocation against
-                            // hostile deeply-nested / huge values.
-                            let serialized = serialize_value_bounded(v, MAX_ERROR_ENTRY_LEN);
-                            format!("{}: {}", k_capped, cap_entry(&serialized))
-                        }
-                    })
-                    .collect();
-                pairs.sort();
-                let pairs_truncated = total_keys > MAX_ERROR_PAIRS;
+        if let Some(errors) = json.get("errors").and_then(|v| v.as_object())
+            && !errors.is_empty()
+        {
+            // Memory-amplification defense (OWASP API4:2023 (Unrestricted Resource Consumption) / CWE-770 (Allocation of Resources Without Limits or Throttling), same threat
+            // class as the errorMessages streaming join earlier). Three
+            // server-controlled vectors are bounded here:
+            //
+            // 1. Entry count — `take(MAX_ERROR_PAIRS)` before collect/sort
+            //    so a hostile response with 1M keys cannot force a 1M-entry
+            //    intermediate Vec.
+            //
+            // 2. Key length — each key passes through `cap_entry` BEFORE
+            //    format!. Without this cap, a hostile response with a
+            //    small number of pathologically large keys (e.g., 1 MB
+            //    key name) would amplify intermediate allocations in the
+            //    formatted pair string even with the entry-count cap.
+            //
+            // 3. Non-string value size/depth — `serialize_value_bounded`
+            //    serializes via a byte-limited writer instead of
+            //    `Value::to_string()`. A hostile response with deeply
+            //    nested or huge non-string values cannot force a full
+            //    serialization allocation before cap_entry truncates.
+            //
+            // MAX_ERROR_PAIRS = 256 is generous (legitimate Jira responses
+            // have 1-10 field-level errors). Per-pair memory is bounded
+            // by 2 × MAX_ERROR_ENTRY_LEN (capped key + capped value) plus
+            // ~4 bytes of format overhead, so the intermediate Vec is
+            // bounded at roughly 256 × 2 × 1024 ≈ 512 KiB worst case.
+            // The downstream streaming join further bounds OUTPUT to
+            // MAX_SANITIZED_OUTPUT_LEN.
+            const MAX_ERROR_PAIRS: usize = 256;
+            let total_keys = errors.len();
+            let mut pairs: Vec<String> = errors
+                .iter()
+                .take(MAX_ERROR_PAIRS)
+                .map(|(k, v)| {
+                    // Cap server-controlled key length BEFORE format!
+                    // (see comment block above).
+                    let k_capped = cap_entry(k);
+                    if let Some(s) = v.as_str() {
+                        // String value: borrow via Cow when no truncation.
+                        format!("{}: {}", k_capped, cap_entry(s))
+                    } else {
+                        // Non-string value: bounded serialization avoids
+                        // full Value::to_string() allocation against
+                        // hostile deeply-nested / huge values.
+                        let serialized = serialize_value_bounded(v, MAX_ERROR_ENTRY_LEN);
+                        format!("{}: {}", k_capped, cap_entry(&serialized))
+                    }
+                })
+                .collect();
+            pairs.sort();
+            let pairs_truncated = total_keys > MAX_ERROR_PAIRS;
 
-                // Streaming join with upfront marker reservation (same pattern
-                // as the errorMessages path above).
-                const JOIN_MARKER: &str = " [...truncated]";
-                let content_budget_join =
-                    MAX_SANITIZED_OUTPUT_LEN.saturating_sub(JOIN_MARKER.len());
-                let mut joined = String::with_capacity(MAX_SANITIZED_OUTPUT_LEN);
-                let mut first = true;
-                let mut join_truncated = false;
-                for p in &pairs {
-                    let separator_len = if first { 0 } else { 2 };
-                    if joined.len() + separator_len + p.len() > content_budget_join {
-                        join_truncated = true;
-                        break;
-                    }
-                    if !first {
-                        joined.push_str("; ");
-                    }
-                    joined.push_str(p);
-                    first = false;
+            // Streaming join with upfront marker reservation (same pattern
+            // as the errorMessages path above).
+            const JOIN_MARKER: &str = " [...truncated]";
+            let content_budget_join = MAX_SANITIZED_OUTPUT_LEN.saturating_sub(JOIN_MARKER.len());
+            let mut joined = String::with_capacity(MAX_SANITIZED_OUTPUT_LEN);
+            let mut first = true;
+            let mut join_truncated = false;
+            for p in &pairs {
+                let separator_len = if first { 0 } else { 2 };
+                if joined.len() + separator_len + p.len() > content_budget_join {
+                    join_truncated = true;
+                    break;
                 }
-                if join_truncated || pairs_truncated {
-                    joined.push_str(JOIN_MARKER);
+                if !first {
+                    joined.push_str("; ");
                 }
-                debug_assert!(joined.len() <= MAX_SANITIZED_OUTPUT_LEN);
-                return joined;
+                joined.push_str(p);
+                first = false;
             }
+            if join_truncated || pairs_truncated {
+                joined.push_str(JOIN_MARKER);
+            }
+            debug_assert!(joined.len() <= MAX_SANITIZED_OUTPUT_LEN);
+            return joined;
         }
         if let Some(msg) = json.get("message").and_then(|v| v.as_str()) {
             return cap_entry(msg).into_owned();
@@ -2307,6 +2483,746 @@ mod sanitize_tests {
         // No "non-UTF8 body" string (custom marker not used).
         assert!(!out.contains("non-UTF8 body"));
     }
+
+    // -----------------------------------------------------------------------
+    // Mutation-coverage additions (nightly run 35512012884) — targeted kills
+    // for mutants that survived the tests above. Each test's doc comment
+    // names the specific mutant(s) it kills.
+    // -----------------------------------------------------------------------
+
+    #[test]
+    fn test_cap_entry_truncated_output_is_exactly_max_len_for_ascii_input() {
+        // Kills `MAX_ERROR_ENTRY_LEN - marker.len()` -> `MAX_ERROR_ENTRY_LEN
+        // / marker.len()` (target_prefix_len computation). For pure-ASCII
+        // oversized input (no char-boundary adjustment needed), the
+        // truncated output must be EXACTLY MAX_ERROR_ENTRY_LEN bytes -- a
+        // `/` mutant would produce a far shorter, wrong-sized output
+        // (MAX_ERROR_ENTRY_LEN / marker.len() is a small number, e.g. ~30).
+        let s = "a".repeat(MAX_ERROR_ENTRY_LEN + 500);
+        let capped = cap_entry(&s);
+        assert_eq!(
+            capped.len(),
+            MAX_ERROR_ENTRY_LEN,
+            "ASCII truncation must fill the cap exactly (prefix + marker == cap)"
+        );
+    }
+
+    #[test]
+    fn test_cap_entry_boundary_loop_walks_back_across_multibyte_char() {
+        // Kills the reachable `while !s.is_char_boundary(end) { end -= 1; }`
+        // loop's `delete !` and `-=`->`+=`/`/=` mutants. Unlike
+        // `test_cap_entry_respects_utf8_char_boundary` above -- where the
+        // initial truncation candidate happens to land on an ASCII byte and
+        // the loop body never executes, giving zero mutation coverage for
+        // the decrement itself -- this test carefully places a multi-byte
+        // character so the initial candidate (`target_prefix_len`) lands on
+        // one of its continuation bytes, forcing a real decrement.
+        let ch = "日"; // 3-byte UTF-8 character
+        let marker_fixed_len = " [...truncated, ".len() + " bytes total]".len();
+        // Assume a 4-digit s.len() (any length in 1000..=9999 keeps the
+        // marker length stable at marker_fixed_len + 4); verified below.
+        let assumed_marker_len = marker_fixed_len + 4;
+        let target_prefix_len = MAX_ERROR_ENTRY_LEN - assumed_marker_len;
+        // Place `ch` so its SECOND byte sits at target_prefix_len: head
+        // occupies [0, head_len), ch occupies [head_len, head_len+3).
+        let head_len = target_prefix_len - 1;
+        let head = "a".repeat(head_len);
+        let tail = "a".repeat(64); // pad well past the cap so truncation triggers
+        let s = format!("{head}{ch}{tail}");
+
+        // Self-consistency guards: fail loudly (rather than silently not
+        // exercising the loop) if the digit-count assumption drifts.
+        let marker = format!(" [...truncated, {} bytes total]", s.len());
+        assert_eq!(
+            marker.len(),
+            assumed_marker_len,
+            "test setup assumption about marker length drifted; recompute head_len"
+        );
+        assert!(
+            !s.is_char_boundary(target_prefix_len),
+            "test setup must land target_prefix_len on a continuation byte"
+        );
+
+        let capped = cap_entry(&s);
+        // Correct behavior walks backward to `head_len`, the true boundary.
+        let expected = format!("{head}{marker}");
+        assert_eq!(capped.as_ref(), expected);
+        assert!(capped.len() <= MAX_ERROR_ENTRY_LEN);
+    }
+
+    #[test]
+    fn test_serialize_value_bounded_retroactive_trim_removes_only_a_few_bytes() {
+        // Kills `end > 0 && !s.is_char_boundary(end)` -> `end > 0 ||
+        // !s.is_char_boundary(end)` in the retroactive-trim loop. The
+        // existing `test_serialize_value_bounded_produces_valid_utf8` above
+        // only asserts the loop doesn't panic and the output is bounded --
+        // it says nothing about HOW MUCH gets trimmed. A `&&`->`||` mutant
+        // makes the loop condition true for every `end > 0` regardless of
+        // boundary status, so it walks all the way back to index 0,
+        // discarding almost the entire string instead of trimming a
+        // handful of trailing bytes.
+        let big_utf8 = "日本語のエラー".repeat(500);
+        let v = serde_json::json!({"k": big_utf8});
+        let out = serialize_value_bounded(&v, MAX_ERROR_ENTRY_LEN);
+        assert!(out.len() <= MAX_ERROR_ENTRY_LEN);
+        assert!(
+            out.len() > MAX_ERROR_ENTRY_LEN / 2,
+            "retroactive UTF-8 boundary trim discarded far more than \
+             expected: output length {} is less than half of the {} byte \
+             limit -- looks like the trim loop walked back to index 0 \
+             instead of trimming a handful of trailing bytes",
+            out.len(),
+            MAX_ERROR_ENTRY_LEN
+        );
+        assert!(out.starts_with("{\"k\":\"日本語のエラー"));
+    }
+
+    #[test]
+    fn test_sanitize_for_stderr_boundary_exact_fit_no_truncation() {
+        // Kills `out.len() + needed > MAX_SANITIZED_OUTPUT_LEN` ->
+        // `== `/`>=`. An input whose sanitized size lands EXACTLY at the
+        // cap must NOT be truncated -- the check is "would this char push
+        // us OVER the cap", not "would this char reach or exceed the cap".
+        // An `==`/`>=` mutant would drop the final character and append a
+        // spurious marker even though everything fit exactly.
+        let input = format!("\t{}", "a".repeat(MAX_SANITIZED_OUTPUT_LEN - 4));
+        assert_eq!(4 + (MAX_SANITIZED_OUTPUT_LEN - 4), MAX_SANITIZED_OUTPUT_LEN);
+
+        let result = sanitize_for_stderr(input);
+        assert_eq!(result.len(), MAX_SANITIZED_OUTPUT_LEN);
+        assert!(
+            !result.contains("[...truncated"),
+            "input that fits exactly at the cap must not be marked truncated: {result:?}"
+        );
+        assert!(result.starts_with("\\x09"));
+        assert!(result.ends_with('a'));
+    }
+
+    #[test]
+    fn test_sanitize_for_stderr_clean_input_at_exact_cap_reuses_same_allocation() {
+        // Kills `input.len() > MAX_SANITIZED_OUTPUT_LEN` -> `>=` at the
+        // `needs_truncation` gate itself (distinct from the per-char budget
+        // check at line 1468 killed by the test above). At len==CAP exactly
+        // with NO control chars, the correct (`>`) and mutant (`>=`) code
+        // paths produce the SAME final STRING VALUE -- the slow path's char
+        // loop processes every character without ever breaking, so a naive
+        // value-equality assertion can't distinguish them (this was
+        // originally miscategorized as an equivalent mutant for exactly
+        // that reason). But `!needs_sanitization && !needs_truncation`
+        // gates a documented, pinned performance optimization
+        // (`test_sanitize_for_stderr_clean_input_returns_same_string`
+        // above): the fast path returns the ORIGINAL `String` allocation
+        // unchanged, while the slow path always builds a FRESH `String` via
+        // `String::with_capacity` + `push`. A `>=` mutant forces the slow
+        // path at this exact boundary, so the returned buffer's pointer
+        // differs from the input's -- an observable, real difference.
+        let input = "a".repeat(MAX_SANITIZED_OUTPUT_LEN);
+        let original_ptr = input.as_ptr();
+        let result = sanitize_for_stderr(input);
+        assert_eq!(result.len(), MAX_SANITIZED_OUTPUT_LEN);
+        assert_eq!(
+            result.as_ptr(),
+            original_ptr,
+            "a clean (no control chars) input of exactly MAX_SANITIZED_OUTPUT_LEN \
+             bytes must take the fast path and reuse the same allocation -- \
+             got a different pointer, meaning the slow path was taken \
+             unnecessarily at the exact boundary"
+        );
+    }
+
+    #[test]
+    fn test_sanitize_for_stderr_control_char_budget_check_uses_addition_not_multiplication() {
+        // Kills `out.len() + needed > MAX_SANITIZED_OUTPUT_LEN` -> `out.len()
+        // * needed > MAX_SANITIZED_OUTPUT_LEN`. Each escaped '\n' costs 4
+        // bytes; a `*` mutant would make the product exceed the cap once
+        // out.len() > cap/4, truncating after roughly a quarter of the
+        // buffer instead of filling it.
+        let input = "\n".repeat(2000);
+        let result = sanitize_for_stderr(input);
+        assert!(result.len() <= MAX_SANITIZED_OUTPUT_LEN);
+        assert!(
+            result.len() > MAX_SANITIZED_OUTPUT_LEN / 2,
+            "control-char budget check appears to be using multiplication, \
+             not addition: output length {} is far short of the {} byte cap",
+            result.len(),
+            MAX_SANITIZED_OUTPUT_LEN
+        );
+    }
+
+    #[test]
+    fn test_sanitize_for_stderr_retroactive_trim_walks_back_across_multibyte_char() {
+        // Kills `MAX_SANITIZED_OUTPUT_LEN - marker.len()` -> `... / ...`
+        // (target computation) and the retroactive-trim loop's `-=`->`+=`/
+        // `/=` mutants. 2000 repetitions of the 3-byte "日" character
+        // overflow the 4 KiB cap and, per this input's marker length, the
+        // initial `target` position lands one byte INTO a "日" character --
+        // forcing exactly one real decrement to walk back to the true
+        // character boundary.
+        let input = "日".repeat(2000);
+        let original_len = input.len();
+        let result = sanitize_for_stderr(input);
+
+        assert!(result.len() <= MAX_SANITIZED_OUTPUT_LEN);
+        assert!(result.contains("[...truncated"));
+        let marker = format!(" [...truncated; original {} bytes]", original_len);
+        assert!(
+            result.ends_with(&marker),
+            "expected marker suffix, got: {result:?}"
+        );
+        let content = &result[..result.len() - marker.len()];
+        assert!(
+            content.chars().all(|c| c == '日'),
+            "retained content must consist only of whole '日' characters (no \
+             partial multi-byte fragment survived the boundary walk): {content:?}"
+        );
+        // Pin the exact expected content length derived from the boundary
+        // math above -- a `-=`->`+=`/`/=` mutant on the loop's decrement,
+        // or a swapped subtraction on `target`, produces a different length.
+        assert_eq!(content.len(), 4059);
+    }
+
+    #[test]
+    fn test_extract_error_message_non_utf8_pre_cap_division_shrinks_visible_content() {
+        // Kills `MAX_ERROR_ENTRY_LEN * 4` -> `MAX_ERROR_ENTRY_LEN / 4` in
+        // `PRE_CAP_BYTES`. The body's first 256 bytes are 'a' and the rest
+        // are 'b'; with the correct PRE_CAP_BYTES (4096), the pre-capped
+        // window comfortably includes some 'b's. A `/` mutant shrinks
+        // PRE_CAP_BYTES to 256, so the pre-capped window contains ONLY the
+        // leading 'a's -- the visible output would then contain no 'b' at
+        // all.
+        let mut body = vec![b'a'; 256];
+        body.extend(vec![b'b'; 4743]);
+        body.push(0xffu8); // forces the non-UTF8 fallback branch
+        assert_eq!(body.len(), 5000);
+
+        let out = extract_error_message(&body);
+        assert!(
+            out.contains('b'),
+            "expected the pre-cap window to extend well past the first 256 \
+             leading 'a' bytes and include some 'b' content: {out:?}"
+        );
+    }
+
+    #[test]
+    fn test_extract_error_message_non_utf8_short_body_with_heavy_expansion_still_truncates() {
+        // Kills `lossy.len() <= MAX_ERROR_ENTRY_LEN && original_len <=
+        // MAX_ERROR_ENTRY_LEN` -> `... || ...` (the non-UTF8 fast-path
+        // gate). A short (500-byte) body consisting entirely of invalid
+        // bytes lossy-decodes to 1500 bytes (each invalid byte -> one
+        // 3-byte U+FFFD) -- so `original_len <= cap` is true but `lossy.len()
+        // <= cap` is false. Correctly, `&&` means the fast path does NOT
+        // fire (output must stay bounded). An `||` mutant would take the
+        // fast path anyway (since original_len <= cap alone satisfies OR),
+        // returning the full, uncapped 1500-byte lossy string.
+        let body = vec![0xffu8; 500];
+        let out = extract_error_message(&body);
+        assert!(
+            out.len() <= MAX_ERROR_ENTRY_LEN,
+            "short-but-heavily-expanding non-UTF8 body must still be bounded \
+             to MAX_ERROR_ENTRY_LEN, got {} bytes",
+            out.len()
+        );
+    }
+
+    #[test]
+    fn test_extract_error_message_non_utf8_boundary_loop_walks_back_across_replacement_char() {
+        // Kills the reachable (non-degenerate) `while end > 0 &&
+        // !lossy.is_char_boundary(end) { end -= 1; }` loop's `==`/`<`
+        // comparison mutants and the `-=`->`+=` decrement mutant. 2000
+        // invalid bytes lossy-decode to 2000 repeated 3-byte U+FFFD
+        // characters; per this input's marker length, `target_prefix_len`
+        // lands one byte into a U+FFFD character, forcing a real decrement.
+        let body = vec![0xffu8; 2000];
+        let out = extract_error_message(&body);
+        let marker = " [...truncated, 2000 bytes total, non-UTF8 body]";
+        assert!(
+            out.ends_with(marker),
+            "expected non-UTF8 marker suffix, got: {out:?}"
+        );
+        let content = &out[..out.len() - marker.len()];
+        assert!(
+            content.chars().all(|c| c == '\u{FFFD}'),
+            "retained content must consist only of whole U+FFFD characters: {content:?}"
+        );
+        assert_eq!(content.len(), 975);
+    }
+
+    #[test]
+    fn test_extract_error_message_size_gate_boundary_exact_length_still_parses() {
+        // Kills `body_str.len() > MAX_PARSE_BODY_LEN` -> `>=`. A body of
+        // EXACTLY MAX_PARSE_BODY_LEN bytes must still go through the
+        // JSON-parse path -- the gate exists to skip bodies STRICTLY LARGER
+        // than the threshold, not bodies exactly at it.
+        let prefix = "{\"errorMessages\":[\"";
+        let suffix = "\"]}";
+        let padding_len = MAX_PARSE_BODY_LEN - prefix.len() - suffix.len();
+        let body = format!("{prefix}{}{suffix}", "x".repeat(padding_len));
+        assert_eq!(
+            body.len(),
+            MAX_PARSE_BODY_LEN,
+            "test setup arithmetic drifted"
+        );
+
+        let out = extract_error_message(body.as_bytes());
+        assert!(
+            !out.starts_with('{'),
+            "a body of exactly MAX_PARSE_BODY_LEN bytes must still be \
+             JSON-parsed (extracting the errorMessages content), not \
+             treated as oversized raw fallback: {out:?}"
+        );
+    }
+
+    #[test]
+    fn test_extract_error_message_error_messages_array_joins_with_semicolon_separator_exact() {
+        // Kills the `if !first { joined.push_str("; "); }` `delete !`
+        // mutant in the errorMessages streaming join: with the `!`
+        // deleted, the separator would be pushed BEFORE the first entry
+        // and OMITTED between the rest, garbling the output.
+        let body = r#"{"errorMessages":["first","second","third"]}"#;
+        let out = extract_error_message(body.as_bytes());
+        assert_eq!(out, "first; second; third");
+    }
+
+    #[test]
+    fn test_extract_error_message_error_messages_array_streams_join_with_exact_budget() {
+        // Kills the errorMessages streaming join's byte-budget check
+        // (`joined.len() + separator_len + capped.len() > content_budget_join`)
+        // arithmetic/comparison mutants (`+`->`-`/`*`, `>`->`==`/`<`/`>=`).
+        // 2000 three-character entries force the streaming join to hit its
+        // budget and truncate partway; the exact retained length is
+        // reproduced independently below via the same greedy formula the
+        // implementation uses, so any operator swap shifts the boundary and
+        // fails the length pin. Entry length is deliberately 3 (not 1): with
+        // a 1-byte entry, `(joined.len() + separator_len) * capped.len()`
+        // degenerates to `joined.len() + separator_len` (multiplying by 1 is
+        // a no-op), making the second `+`->`*` mutant unobservable -- a real
+        // gap found by running cargo-mutants against an earlier 1-byte-entry
+        // version of this test.
+        let entry_count = 2000;
+        let entries: Vec<&str> = std::iter::repeat_n("\"abc\"", entry_count).collect();
+        let body = format!("{{\"errorMessages\":[{}]}}", entries.join(","));
+        assert!(
+            body.len() <= MAX_PARSE_BODY_LEN,
+            "test setup must stay under the parse-size gate"
+        );
+
+        let out = extract_error_message(body.as_bytes());
+        let marker = " [...truncated]";
+        assert!(
+            out.ends_with(marker),
+            "expected join truncation marker: {out:?}"
+        );
+
+        let join_marker_len = " [...truncated]".len();
+        let content_budget_join = MAX_SANITIZED_OUTPUT_LEN - join_marker_len;
+        // Greedy reproduction of the implementation's own accounting: first
+        // entry costs 3 bytes (no separator), every subsequent entry costs
+        // "; " (2 bytes) + 3 bytes.
+        const ENTRY_LEN: usize = 3;
+        let mut acc = 0usize;
+        let mut first = true;
+        for _ in 0..entry_count {
+            let separator_len = if first { 0 } else { 2 };
+            if acc + separator_len + ENTRY_LEN > content_budget_join {
+                break;
+            }
+            acc += separator_len + ENTRY_LEN;
+            first = false;
+        }
+
+        let content_len = out.len() - marker.len();
+        assert_eq!(
+            content_len, acc,
+            "errorMessages streaming join budget arithmetic drifted from \
+             the expected +/- accounting"
+        );
+    }
+
+    #[test]
+    fn test_extract_error_message_error_messages_array_join_budget_second_addend_not_multiplied() {
+        // Kills `joined.len() + separator_len + capped.len()` -> `joined.len()
+        // + separator_len * capped.len()` (mutating the SECOND `+`). Due to
+        // operator precedence this mutant is `joined.len() + (separator_len *
+        // capped.len())`, NOT `(joined.len() + separator_len) *
+        // capped.len()` -- a distinction that matters: with entry_len=3 (the
+        // test above), the resulting per-check drift happened to never shift
+        // which entry trips the truncation boundary, so that mutant survived
+        // despite the exact-length pin. entry_len=5 was verified (by
+        // simulating both the correct and mutated greedy accounting) to
+        // reliably shift the boundary.
+        let entry_count = 1000;
+        let entries: Vec<&str> = std::iter::repeat_n("\"abcde\"", entry_count).collect();
+        let body = format!("{{\"errorMessages\":[{}]}}", entries.join(","));
+        assert!(
+            body.len() <= MAX_PARSE_BODY_LEN,
+            "test setup must stay under the parse-size gate"
+        );
+
+        let out = extract_error_message(body.as_bytes());
+        let marker = " [...truncated]";
+        assert!(
+            out.ends_with(marker),
+            "expected join truncation marker: {out:?}"
+        );
+
+        let join_marker_len = " [...truncated]".len();
+        let content_budget_join = MAX_SANITIZED_OUTPUT_LEN - join_marker_len;
+        const ENTRY_LEN: usize = 5;
+        let mut acc = 0usize;
+        let mut first = true;
+        for _ in 0..entry_count {
+            let separator_len = if first { 0 } else { 2 };
+            if acc + separator_len + ENTRY_LEN > content_budget_join {
+                break;
+            }
+            acc += separator_len + ENTRY_LEN;
+            first = false;
+        }
+
+        let content_len = out.len() - marker.len();
+        assert_eq!(
+            content_len, acc,
+            "errorMessages streaming join budget arithmetic drifted from \
+             the expected +/- accounting (second-addend multiplication check)"
+        );
+    }
+
+    #[test]
+    fn test_extract_error_message_error_messages_array_join_exact_boundary_accepts_entry() {
+        // Kills `joined.len() + separator_len + capped.len() > content_budget_join`
+        // -> `>=` at the TOP-LEVEL comparison (distinct from the two
+        // arithmetic-operand tests above, which target the `+`s). This is
+        // NOT the same equivalence class as the retroactive-trim `>`->`>=`
+        // mutants elsewhere in this file (e.g. line 1359/1427/1757/1896),
+        // where landing exactly on the boundary makes the guarded action a
+        // provable no-op (`str::is_char_boundary(len())` is always true, so
+        // truncating to the current length changes nothing). HERE, landing
+        // exactly on `content_budget_join` decides whether one MORE entry is
+        // accepted into the join -- under `>`, an exact fit is accepted
+        // (correct: filling the budget exactly is not an overflow); under
+        // `>=`, an exact fit is rejected and truncation fires one entry
+        // early. That is a real, observable content difference.
+        //
+        // Construction: 1359 single-byte "x" entries land the running sum at
+        // 4075 (content_budget_join - 6), then one more crafted 4-byte entry
+        // ("wxyz") brings the sum to EXACTLY content_budget_join (4081).
+        // Filler entries afterward guarantee truncation fires under BOTH the
+        // correct code and the mutant, so the marker is present either way
+        // -- only the exact retained-content length differs.
+        let join_marker_len = " [...truncated]".len();
+        let content_budget_join = MAX_SANITIZED_OUTPUT_LEN - join_marker_len;
+
+        let mut entries: Vec<String> = std::iter::repeat_n("\"x\"".to_string(), 1359).collect();
+        entries.push("\"wxyz\"".to_string());
+        // Filler so truncation is guaranteed to fire under the CORRECT code
+        // too (otherwise "no marker" would trivially differ from the mutant
+        // for the wrong reason).
+        entries.extend(std::iter::repeat_n("\"x\"".to_string(), 50));
+        let body = format!("{{\"errorMessages\":[{}]}}", entries.join(","));
+        assert!(
+            body.len() <= MAX_PARSE_BODY_LEN,
+            "test setup must stay under the parse-size gate"
+        );
+
+        // Self-consistency: verify the hand-picked entry lengths actually
+        // land the running sum exactly on content_budget_join right after
+        // the "wxyz" entry, using the same greedy accounting the
+        // implementation uses.
+        let mut acc = 0usize;
+        let mut first = true;
+        let mut landed_exactly = false;
+        for (i, e) in entries.iter().enumerate() {
+            let content_len = e.len() - 2; // strip the JSON quotes
+            let separator_len = if first { 0 } else { 2 };
+            acc += separator_len + content_len;
+            first = false;
+            if i == 1359 {
+                assert_eq!(
+                    acc, content_budget_join,
+                    "test setup arithmetic drifted: expected the 1360th \
+                     entry to land exactly on content_budget_join"
+                );
+                landed_exactly = true;
+                break;
+            }
+        }
+        assert!(landed_exactly);
+
+        let out = extract_error_message(body.as_bytes());
+        let marker = " [...truncated]";
+        assert!(
+            out.ends_with(marker),
+            "expected join truncation marker (filler entries must still \
+             overflow the budget under correct code): {out:?}"
+        );
+        let content_len = out.len() - marker.len();
+
+        // Correct (`>`): the exact-fit "wxyz" entry IS accepted, so content
+        // reaches exactly content_budget_join (4081) before the next entry
+        // overflows and truncation fires.
+        assert_eq!(
+            content_len, content_budget_join,
+            "an entry that lands EXACTLY on content_budget_join must be \
+             accepted (`>`, not `>=`) -- got content_len={content_len}, \
+             expected the full budget {content_budget_join} to be used. \
+             A `>`->`>=` mutant on the join's top-level comparison rejects \
+             the exact-fit entry and truncates one entry early."
+        );
+        // And the accepted content must literally include the "wxyz" entry
+        // -- under the `>=` mutant it would be excluded.
+        assert!(
+            out.contains("wxyz"),
+            "the exact-fit entry must be present in the output: {out:?}"
+        );
+    }
+
+    #[test]
+    fn test_extract_error_message_errors_object_joins_multiple_pairs_with_semicolon_exact() {
+        // Kills the errors-object join's `if !first { joined.push_str("; ");
+        // }` `delete !` mutant (mirrors the errorMessages array test above,
+        // for the sibling code path).
+        let body = r#"{"errors":{"a":"1","b":"2","c":"3"}}"#;
+        let out = extract_error_message(body.as_bytes());
+        assert_eq!(out, "a: 1; b: 2; c: 3");
+    }
+
+    #[test]
+    fn test_extract_error_message_errors_object_pairs_truncated_boundary() {
+        // Kills `total_keys > MAX_ERROR_PAIRS` -> `==`/`>=`. Two cases:
+        // exactly MAX_ERROR_PAIRS (256) keys must NOT be marked truncated
+        // (`==`/`>=` would incorrectly trigger at the exact boundary), and
+        // MAX_ERROR_PAIRS + 1 keys MUST be marked truncated (`==` would
+        // miss every count strictly greater than 256).
+        const MAX_ERROR_PAIRS: usize = 256;
+
+        let make_body = |n: usize| {
+            let pairs: Vec<String> = (0..n).map(|i| format!("\"k{i:04}\":\"v\"")).collect();
+            format!("{{\"errors\":{{{}}}}}", pairs.join(","))
+        };
+
+        let body_exact = make_body(MAX_ERROR_PAIRS);
+        let out_exact = extract_error_message(body_exact.as_bytes());
+        assert!(
+            !out_exact.contains("[...truncated]"),
+            "exactly MAX_ERROR_PAIRS keys must not be marked truncated: {out_exact:?}"
+        );
+
+        let body_over = make_body(MAX_ERROR_PAIRS + 1);
+        let out_over = extract_error_message(body_over.as_bytes());
+        assert!(
+            out_over.contains("[...truncated]"),
+            "MAX_ERROR_PAIRS + 1 keys must be marked truncated: {out_over:?}"
+        );
+    }
+
+    #[test]
+    fn test_extract_error_message_errors_object_marker_fires_from_count_alone() {
+        // Kills `join_truncated || pairs_truncated` -> `&&`. 300 small
+        // pairs exceed MAX_ERROR_PAIRS (256) by count, but their total
+        // joined size stays comfortably under the join byte budget, so
+        // `join_truncated` is false while `pairs_truncated` is true. The
+        // marker must still appear (`||`); an `&&` mutant would suppress it
+        // since one operand is false.
+        let pairs: Vec<String> = (0..300).map(|i| format!("\"k{i:04}\":\"v\"")).collect();
+        let body = format!("{{\"errors\":{{{}}}}}", pairs.join(","));
+        let out = extract_error_message(body.as_bytes());
+        assert!(
+            out.contains("[...truncated]"),
+            "count-only truncation (pairs_truncated) must still produce a \
+             marker even when the join itself never overflowed: {out:?}"
+        );
+    }
+
+    #[test]
+    fn test_extract_error_message_errors_object_streams_join_with_exact_budget() {
+        // Kills the errors-object streaming join's byte-budget check
+        // (`joined.len() + separator_len + p.len() > content_budget_join`)
+        // arithmetic/comparison mutants -- the sibling of the errorMessages
+        // array join-budget test above, for the errors-object code path.
+        //
+        // n is capped at exactly MAX_ERROR_PAIRS (256, mirrored as a local
+        // const below since the real constant is private to the enclosing
+        // function) so `pairs_truncated` stays false and this test isolates
+        // the join-budget arithmetic from the pairs-COUNT guard tested
+        // separately above -- an earlier version of this test used n=600,
+        // but `.take(MAX_ERROR_PAIRS)` silently discards everything past
+        // the 256th pair before the join loop ever runs, so the join itself
+        // never actually overflowed and every operator mutant went
+        // unnoticed.
+        //
+        // pair_len is 17 (not e.g. 196): large enough that 256 pairs
+        // comfortably overflow the ~4 KiB budget, but small enough that a
+        // `+`->`-` mutant on the first `+` (swinging the per-entry cost by
+        // 2*separator_len == 4 bytes) is a large enough fraction of the
+        // per-entry cost to visibly shift the truncation boundary -- a real
+        // gap found by running cargo-mutants against an earlier
+        // long-value (196-byte) version of this test, where a 4-byte swing
+        // was lost in the noise of a ~202-byte per-entry cost.
+        const MAX_ERROR_PAIRS: usize = 256;
+        let value = "xxxxxxxxxxx"; // 11 chars: "k000: xxxxxxxxxxx" == 17 bytes
+        let n = MAX_ERROR_PAIRS;
+        let pairs: Vec<String> = (0..n).map(|i| format!("\"k{i:03}\":\"{value}\"")).collect();
+        let body = format!("{{\"errors\":{{{}}}}}", pairs.join(","));
+        assert!(
+            body.len() <= MAX_PARSE_BODY_LEN,
+            "test setup must stay under the parse-size gate"
+        );
+
+        let out = extract_error_message(body.as_bytes());
+        let marker = " [...truncated]";
+        assert!(
+            out.ends_with(marker),
+            "expected join truncation marker: {out:?}"
+        );
+
+        let pair_len = format!("k000: {value}").len();
+        let join_marker_len = " [...truncated]".len();
+        let content_budget_join = MAX_SANITIZED_OUTPUT_LEN - join_marker_len;
+        let mut acc = 0usize;
+        let mut first = true;
+        for _ in 0..n {
+            let separator_len = if first { 0 } else { 2 };
+            if acc + separator_len + pair_len > content_budget_join {
+                break;
+            }
+            acc += separator_len + pair_len;
+            first = false;
+        }
+
+        let content_len = out.len() - marker.len();
+        assert_eq!(
+            content_len, acc,
+            "errors-object streaming join budget arithmetic drifted from \
+             the expected +/- accounting"
+        );
+    }
+
+    #[test]
+    fn test_extract_error_message_errors_object_join_budget_second_addend_not_multiplied() {
+        // Kills `joined.len() + separator_len + p.len()` -> `joined.len() +
+        // separator_len * p.len()` (mutating the SECOND `+`, the sibling of
+        // the errorMessages array test above for the errors-object code
+        // path). Due to operator precedence this mutant is `joined.len() +
+        // (separator_len * p.len())`; pair_len=17 (the test above) never
+        // shifted the truncation boundary for this specific mutant, so a
+        // second pair_len (14, verified by simulating both the correct and
+        // mutated greedy accounting) is used here to reliably catch it.
+        const MAX_ERROR_PAIRS: usize = 256;
+        let value = "xxxxxxxx"; // 8 chars: "k000: xxxxxxxx" == 14 bytes
+        let n = MAX_ERROR_PAIRS;
+        let pairs: Vec<String> = (0..n).map(|i| format!("\"k{i:03}\":\"{value}\"")).collect();
+        let body = format!("{{\"errors\":{{{}}}}}", pairs.join(","));
+        assert!(
+            body.len() <= MAX_PARSE_BODY_LEN,
+            "test setup must stay under the parse-size gate"
+        );
+
+        let out = extract_error_message(body.as_bytes());
+        let marker = " [...truncated]";
+        assert!(
+            out.ends_with(marker),
+            "expected join truncation marker: {out:?}"
+        );
+
+        let pair_len = format!("k000: {value}").len();
+        let join_marker_len = " [...truncated]".len();
+        let content_budget_join = MAX_SANITIZED_OUTPUT_LEN - join_marker_len;
+        let mut acc = 0usize;
+        let mut first = true;
+        for _ in 0..n {
+            let separator_len = if first { 0 } else { 2 };
+            if acc + separator_len + pair_len > content_budget_join {
+                break;
+            }
+            acc += separator_len + pair_len;
+            first = false;
+        }
+
+        let content_len = out.len() - marker.len();
+        assert_eq!(
+            content_len, acc,
+            "errors-object streaming join budget arithmetic drifted from \
+             the expected +/- accounting (second-addend multiplication check)"
+        );
+    }
+
+    #[test]
+    fn test_extract_error_message_errors_object_join_exact_boundary_accepts_entry() {
+        // Kills `joined.len() + separator_len + p.len() > content_budget_join`
+        // -> `>=` at the TOP-LEVEL comparison in the errors-object join --
+        // the sibling of the errorMessages array exact-boundary test above.
+        // See that test's doc comment for why this is a REAL gap and not
+        // the same equivalence class as the retroactive-trim `>`->`>=`
+        // mutants elsewhere in this file.
+        //
+        // Construction: 226 uniform 16-byte pairs ("kNNN: vvvvvvvvvv") land
+        // the running sum at 4066 (content_budget_join - 15), then one more
+        // crafted 13-byte pair brings the sum to EXACTLY content_budget_join
+        // (4081). 20 filler pairs afterward guarantee truncation fires under
+        // BOTH the correct code and the mutant (total 247 pairs, safely
+        // under MAX_ERROR_PAIRS=256 so `pairs_truncated` never confounds
+        // this test) -- only the exact retained-content length differs.
+        const MAX_ERROR_PAIRS: usize = 256;
+        let join_marker_len = " [...truncated]".len();
+        let content_budget_join = MAX_SANITIZED_OUTPUT_LEN - join_marker_len;
+
+        let mut pairs: Vec<String> = (0..226)
+            .map(|i| format!("\"k{i:03}\":\"vvvvvvvvvv\"")) // pair_len 16: "kNNN: vvvvvvvvvv"
+            .collect();
+        pairs.push("\"k226\":\"vvvvvvv\"".to_string()); // pair_len 13: "k226: vvvvvvv"
+        pairs.extend((227..247).map(|i| format!("\"k{i:03}\":\"v\""))); // filler
+        assert!(pairs.len() <= MAX_ERROR_PAIRS);
+        let body = format!("{{\"errors\":{{{}}}}}", pairs.join(","));
+        assert!(
+            body.len() <= MAX_PARSE_BODY_LEN,
+            "test setup must stay under the parse-size gate"
+        );
+
+        // Self-consistency: verify the hand-picked pair lengths actually
+        // land the running sum exactly on content_budget_join right after
+        // the 227th (crafted) pair. `errors` values sort by the formatted
+        // "key: value" string, which for zero-padded keys matches insertion
+        // order for the first 227 entries.
+        let mut acc = 0usize;
+        let mut first = true;
+        for i in 0..227 {
+            let pair_len = if i < 226 { 16 } else { 13 };
+            let separator_len = if first { 0 } else { 2 };
+            acc += separator_len + pair_len;
+            first = false;
+        }
+        assert_eq!(
+            acc, content_budget_join,
+            "test setup arithmetic drifted: expected the 227th pair to land \
+             exactly on content_budget_join"
+        );
+
+        let out = extract_error_message(body.as_bytes());
+        let marker = " [...truncated]";
+        assert!(
+            out.ends_with(marker),
+            "expected join truncation marker (filler pairs must still \
+             overflow the budget under correct code): {out:?}"
+        );
+        let content_len = out.len() - marker.len();
+
+        // Correct (`>`): the exact-fit pair IS accepted, so content reaches
+        // exactly content_budget_join (4081) before the next pair overflows
+        // and truncation fires.
+        assert_eq!(
+            content_len, content_budget_join,
+            "a pair that lands EXACTLY on content_budget_join must be \
+             accepted (`>`, not `>=`) -- got content_len={content_len}, \
+             expected the full budget {content_budget_join} to be used. \
+             A `>`->`>=` mutant on the join's top-level comparison rejects \
+             the exact-fit pair and truncates one pair early."
+        );
+        // And the accepted content must literally include the crafted pair.
+        assert!(
+            out.contains("k226: vvvvvvv"),
+            "the exact-fit pair must be present in the output: {out:?}"
+        );
+    }
 }
 
 /// Unit tests for the deadline-clamp helper (S-333 / BC-bulk.poll.deadline-bounded).
@@ -2554,6 +3470,47 @@ mod clamp_tests {
     }
 }
 
+/// Unit tests for the multipart-upload accessors (ADR-0017): mutation
+/// coverage for `authorization_header` and `reqwest_client`, neither of
+/// which had a dedicated test (nightly run 35512012884).
+#[cfg(test)]
+mod client_accessor_tests {
+    use super::JiraClient;
+
+    /// Kills `authorization_header -> &str` mutants that replace the body
+    /// with `""` or `"xyzzy"`: the accessor must return the EXACT configured
+    /// auth header value, verbatim.
+    #[test]
+    fn test_authorization_header_returns_exact_configured_value() {
+        let client = JiraClient::new_for_test(
+            "http://localhost:1234".to_string(),
+            "Basic dGVzdDp0b2tlbg==".to_string(),
+        );
+        assert_eq!(client.authorization_header(), "Basic dGVzdDp0b2tlbg==");
+    }
+
+    /// Kills `reqwest_client -> &reqwest::Client` -> `Box::leak(Box::new(
+    /// Default::default()))`: the accessor must return a reference to the
+    /// SAME client instance (`&self.client`) on every call. A `Box::leak`
+    /// mutant would instead freshly construct-and-leak a new `Client` on
+    /// each call, producing a different address every time.
+    #[test]
+    fn test_reqwest_client_returns_stable_reference_across_calls() {
+        let client = JiraClient::new_for_test(
+            "http://localhost:1234".to_string(),
+            "Bearer token".to_string(),
+        );
+        let ptr1 = client.reqwest_client() as *const reqwest::Client;
+        let ptr2 = client.reqwest_client() as *const reqwest::Client;
+        assert_eq!(
+            ptr1, ptr2,
+            "reqwest_client() must return a reference to the SAME client \
+             instance on every call (&self.client), not freshly construct \
+             one each time"
+        );
+    }
+}
+
 #[cfg(test)]
 mod is_oauth_auth_tests {
     use super::JiraClient;
@@ -2602,5 +3559,123 @@ mod is_oauth_auth_tests {
             !client.is_oauth_auth(),
             "is_oauth_auth() is case-sensitive: lowercase 'bearer' must return false"
         );
+    }
+}
+
+/// S-cycle4-cloud-id-correctness — Two-Step Red Gate TEST (step 2 of 2) for
+/// AC-009 (BC-1.2.054 Postcondition 2, Invariant 1/2; VP-AUTHDX-021):
+/// `JiraClient::from_config`'s `assets_base_url` computation derives the
+/// Assets/CMDB gateway URL from `profile.cloud_id` ALONE, deliberately
+/// UN-GATED by `auth_method` — for the full cross product of `auth_method`
+/// in {oauth, api_token, unset/None} x `cloud_id` in {present, absent}.
+///
+/// This is a REGRESSION PIN on already-correct, PRE-EXISTING behavior
+/// (ADR-0022 §4) — no `src/api/client.rs` code change is made by this
+/// story. It must FAIL LOUD if a future change adds an `auth_method` gate
+/// to `assets_base_url`.
+///
+/// `assets_base_url` is a private field with no public accessor (and this
+/// story's File Structure Requirements mark `src/api/client.rs` READ-ONLY —
+/// confirm, do not modify), so this property is verified from INSIDE this
+/// module (a private-field-visible descendant of `client.rs`), never via a
+/// `tests/*.rs` integration test.
+///
+/// Uses the `JR_AUTH_HEADER` debug-only seam (bypasses the real keychain
+/// read) while deliberately NOT setting `JR_BASE_URL`, so `from_config`
+/// consults the REAL profile's `url`/`auth_method`/`cloud_id` for this
+/// computation instead of short-circuiting into test-override mode (which
+/// would compute `assets_base_url` from the override URL, not from
+/// `cloud_id` at all — the opposite of what this property needs to
+/// observe). `from_config` itself performs no network I/O, so this is a
+/// pure, offline, in-process test.
+///
+/// This test currently PASSES against `from_config`'s existing,
+/// unmodified implementation (confirmed:
+/// `cargo test prop_assets_base_url_is_cloud_id_only_never_gated_by_auth_method`
+/// is green today) — a regression pin on already-correct code, not a Red
+/// Gate test for new production code. Included from this story's first
+/// commit per Task 12 / AC-009's "no code change to either function"
+/// contract.
+#[cfg(test)]
+mod proptests_ac_009_assets_base_url_gating {
+    use super::JiraClient;
+    use crate::config::{Config, GlobalConfig, ProfileConfig, ProjectConfig};
+    use proptest::prelude::*;
+    use std::sync::Mutex;
+
+    /// Guards the `JR_AUTH_HEADER`/`JR_BASE_URL` process-global env vars for
+    /// this module's tests only (mirrors `src/config.rs`'s `ENV_MUTEX`
+    /// pattern).
+    static ENV_MUTEX: Mutex<()> = Mutex::new(());
+
+    proptest! {
+        #![proptest_config(ProptestConfig::with_cases(256))]
+
+        #[test]
+        fn prop_assets_base_url_is_cloud_id_only_never_gated_by_auth_method(
+            auth_method in prop_oneof![
+                Just(Some("oauth".to_string())),
+                Just(Some("api_token".to_string())),
+                Just(None::<String>),
+            ],
+            cloud_id_present in any::<bool>(),
+            cloud_id in "[a-f0-9-]{8,36}",
+        ) {
+            let _guard = ENV_MUTEX.lock().unwrap_or_else(|e| e.into_inner());
+            // SAFETY: ENV_MUTEX held for this whole property test body.
+            unsafe {
+                std::env::remove_var("JR_BASE_URL");
+                std::env::set_var("JR_AUTH_HEADER", "Basic dGVzdDp0ZXN0");
+            }
+
+            let mut profiles = std::collections::BTreeMap::new();
+            profiles.insert(
+                "sandbox".to_string(),
+                ProfileConfig {
+                    url: Some("https://sandbox.atlassian.net".into()),
+                    auth_method: auth_method.clone(),
+                    cloud_id: if cloud_id_present { Some(cloud_id.clone()) } else { None },
+                    ..ProfileConfig::default()
+                },
+            );
+            let config = Config {
+                global: GlobalConfig {
+                    default_profile: Some("sandbox".into()),
+                    profiles,
+                    ..GlobalConfig::default()
+                },
+                project: ProjectConfig::default(),
+                active_profile_name: "sandbox".into(),
+            };
+
+            let client = JiraClient::from_config(&config, false, false)
+                .expect("from_config must succeed: JR_AUTH_HEADER bypasses the keychain read, and url is set");
+
+            unsafe {
+                std::env::remove_var("JR_AUTH_HEADER");
+            }
+
+            if cloud_id_present {
+                let expected = format!(
+                    "https://api.atlassian.com/ex/jira/{}/jsm/assets",
+                    urlencoding::encode(&cloud_id)
+                );
+                prop_assert_eq!(
+                    client.assets_base_url.as_deref(),
+                    Some(expected.as_str()),
+                    "assets_base_url must derive from cloud_id ALONE, regardless of \
+                     auth_method ({:?})",
+                    auth_method
+                );
+            } else {
+                prop_assert_eq!(
+                    client.assets_base_url.as_deref(),
+                    None,
+                    "assets_base_url must be None when cloud_id is absent, \
+                     regardless of auth_method ({:?})",
+                    auth_method
+                );
+            }
+        }
     }
 }

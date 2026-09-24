@@ -38,13 +38,19 @@
 //! | `JR_E2E_STATUS_DONE`        | no       | Status name for "closed"; default `"Done"`                    |
 //! | `JR_E2E_STATUS_IN_PROGRESS` | no       | Status name for "in progress"; default `"In Progress"`        |
 //! | `JR_E2E_ISSUE_TYPE`         | no       | Issue type for test-created issues; default `"Task"` (F-12)   |
-//! | `JR_E2E_POLL_MAX_ATTEMPTS`  | no       | Max poll iterations for `poll_jql`/`poll_view` (default 5);  |
+//! | `JR_E2E_POLL_MAX_ATTEMPTS`  | no       | Max poll iterations for `poll_jql`/`poll_view` (default 5)   |
+//! |                             |          | and `poll_component_filter` (default 7, run 32384091667);    |
 //! |                             |          | read by test code only — no `#[cfg(debug_assertions)]` needed |
-//! | `JR_E2E_POLL_INITIAL_MS`    | no       | Initial backoff milliseconds for `poll_jql` (default 250);   |
+//! | `JR_E2E_POLL_INITIAL_MS`    | no       | Initial backoff milliseconds for `poll_jql` (default 250)    |
+//! |                             |          | and `poll_component_filter` (default 500, run 32384091667);  |
 //! |                             |          | read by test code only — no `#[cfg(debug_assertions)]` needed |
-//! | `JR_E2E_PARENT_KEY`         | no       | Existing parent/epic key; enables `create --parent` test (E2E-HV-2) |
-//! | `JR_E2E_CHILD_TYPE`         | no       | Child issue type valid under the parent (e.g. `Sub-task`); paired with `JR_E2E_PARENT_KEY` |
-//! | `JR_E2E_EDIT_FIELD`         | no       | `NAME=VALUE` custom field on the Edit screen; enables `edit --field` test (E2E-HV-2) |
+//! | `JR_E2E_PARENT_KEY`         | no       | OPTIONAL OVERRIDE for `create --parent` test (E2E-HV-2); default: a fresh |
+//! |                             |          | parent is seeded dynamically and self-closed on teardown                 |
+//! | `JR_E2E_CHILD_TYPE`         | no       | OPTIONAL OVERRIDE for `create --parent` test's child type; default: the  |
+//! |                             |          | project's sub-task type is discovered dynamically via `jr api`           |
+//! | `JR_E2E_EDIT_FIELD`         | no       | OPTIONAL OVERRIDE (`NAME=VALUE`) for `edit --field` test (E2E-HV-2);     |
+//! |                             |          | default: a safe string field (e.g. `Environment`) is discovered          |
+//! |                             |          | dynamically via `jr api .../editmeta`                                    |
 //! |                             |          | The story-points field id is auto-discovered via `jr api`; no env var needed |
 
 use assert_cmd::Command;
@@ -192,6 +198,39 @@ fn run_label() -> String {
             format!("e2e-{ms}")
         }
     }
+}
+
+/// Returns a per-invocation-unique suffix for a component fixture NAME
+/// (distinct from `run_label()` itself, which stays a stable per-run/per-
+/// project marker used elsewhere for label-based sweeper cleanup).
+///
+/// **MED-2 (S-COMP-E2E-1 adversarial review):** in CI, `run_label()` is
+/// `e2e-{GITHUB_RUN_ID}` -- constant across "re-run failed jobs" (only
+/// `GITHUB_RUN_ATTEMPT` increments, `GITHUB_RUN_ID` does not). If a run is
+/// cancelled or killed before `ComponentDropGuard`'s best-effort `Drop`
+/// teardown fires, the component it created leaks under a name derived
+/// solely from `run_label()`; the re-run's `component create` call for that
+/// same fixture then collides on the still-live name and fails with a real
+/// (non-permission) HTTP 400 -- which under the OLD panic-on-any-non-403/404
+/// discipline would incorrectly read as a genuine regression rather than a
+/// leaked-fixture collision.
+///
+/// Deliberately scoped to component fixture NAMES only (`{label}-lifecycle`,
+/// `{label}-rename-src`/`-dst`) rather than changing `run_label()` itself,
+/// which many other tests in this suite depend on for label-based JQL
+/// filtering and sweeper-driven cleanup -- widening its shape is out of scope
+/// for this fix. Incorporates `GITHUB_RUN_ATTEMPT` (increments on every
+/// GitHub Actions re-run; absent locally) plus a nanosecond timestamp
+/// (guarantees uniqueness for local runs, which have no `GITHUB_RUN_ATTEMPT`
+/// at all, and adds defense-in-depth even in CI) so a leaked fixture from an
+/// earlier attempt can never collide with the current one's create call.
+fn component_fixture_suffix() -> String {
+    let attempt = env::var("GITHUB_RUN_ATTEMPT").unwrap_or_else(|_| "0".to_string());
+    let nanos = SystemTime::now()
+        .duration_since(UNIX_EPOCH)
+        .unwrap_or(Duration::from_secs(0))
+        .as_nanos();
+    format!("{attempt}-{nanos}")
 }
 
 /// Returns the E2E project key from the `JR_E2E_PROJECT` env var.
@@ -771,54 +810,54 @@ fn poll_jql(
 
         if output.status.success() {
             let stdout = String::from_utf8_lossy(&output.stdout);
-            if let Ok(v) = serde_json::from_str::<Value>(stdout.trim()) {
-                if let Some(arr) = v.as_array() {
-                    last_count = arr.len();
-                    let predicate_met = last_count > 0 && predicate(&v);
-                    let budget_exhausted = attempt == max_attempts;
-                    let decision = poll_outcome(last_count, predicate_met, budget_exhausted, mode);
+            if let Ok(v) = serde_json::from_str::<Value>(stdout.trim())
+                && let Some(arr) = v.as_array()
+            {
+                last_count = arr.len();
+                let predicate_met = last_count > 0 && predicate(&v);
+                let budget_exhausted = attempt == max_attempts;
+                let decision = poll_outcome(last_count, predicate_met, budget_exhausted, mode);
 
-                    match decision {
-                        PollDecision::Return => {
-                            let elapsed = start.elapsed().as_millis();
-                            if predicate_met {
-                                eprintln!(
-                                    "poll_jql: predicate satisfied after {attempt} attempt(s) \
-                                     ({elapsed} ms elapsed)"
-                                );
-                            } else {
-                                eprintln!(
-                                    "poll_jql: non-zero result ({last_count}) but predicate not \
-                                     satisfied after {attempt} attempt(s) ({elapsed} ms elapsed)"
-                                );
-                            }
-                            return Some(v);
-                        }
-                        PollDecision::Retry => {
-                            last_value = Some(v);
-                            // Fall through to sleep/retry below.
-                        }
-                        PollDecision::SkipNone => {
-                            let elapsed = start.elapsed().as_millis();
+                match decision {
+                    PollDecision::Return => {
+                        let elapsed = start.elapsed().as_millis();
+                        if predicate_met {
                             eprintln!(
-                                "poll_jql: budget exhausted after {max_attempts} attempt(s) \
-                                 ({elapsed} ms); 0 results — treating as index lag, clean-skip"
+                                "poll_jql: predicate satisfied after {attempt} attempt(s) \
+                                     ({elapsed} ms elapsed)"
                             );
-                            return None;
+                        } else {
+                            eprintln!(
+                                "poll_jql: non-zero result ({last_count}) but predicate not \
+                                     satisfied after {attempt} attempt(s) ({elapsed} ms elapsed)"
+                            );
                         }
-                        PollDecision::FailPanic => {
-                            let elapsed = start.elapsed().as_millis();
-                            let min = match mode {
-                                PollJqlMode::FailOnShort(m) => m,
-                                PollJqlMode::SkipOnEmpty => unreachable!(),
-                            };
-                            panic!(
-                                "REGRESSION: poll_jql expected at least {min} results after \
+                        return Some(v);
+                    }
+                    PollDecision::Retry => {
+                        last_value = Some(v);
+                        // Fall through to sleep/retry below.
+                    }
+                    PollDecision::SkipNone => {
+                        let elapsed = start.elapsed().as_millis();
+                        eprintln!(
+                            "poll_jql: budget exhausted after {max_attempts} attempt(s) \
+                                 ({elapsed} ms); 0 results — treating as index lag, clean-skip"
+                        );
+                        return None;
+                    }
+                    PollDecision::FailPanic => {
+                        let elapsed = start.elapsed().as_millis();
+                        let min = match mode {
+                            PollJqlMode::FailOnShort(m) => m,
+                            PollJqlMode::SkipOnEmpty => unreachable!(),
+                        };
+                        panic!(
+                            "REGRESSION: poll_jql expected at least {min} results after \
                                  full poll budget ({max_attempts} attempts, {elapsed} ms), \
                                  but got {last_count}. \
                                  This is a persistent short count, not index lag."
-                            );
-                        }
+                        );
                     }
                 }
             }
@@ -1240,13 +1279,13 @@ fn test_every_ignored_test_has_gate_guard() {
                 // Check 2: guard appears BEFORE the first live-call token.
                 let guard_pos = body.find("e2e_enabled()").unwrap();
                 for token in LIVE_CALL_TOKENS {
-                    if let Some(call_pos) = body.find(token) {
-                        if call_pos < guard_pos {
-                            violations.push(format!(
-                                "{fn_name}: live-call token `{token}` appears at byte {call_pos} \
+                    if let Some(call_pos) = body.find(token)
+                        && call_pos < guard_pos
+                    {
+                        violations.push(format!(
+                            "{fn_name}: live-call token `{token}` appears at byte {call_pos} \
                                  before `e2e_enabled()` at byte {guard_pos}"
-                            ));
-                        }
+                        ));
                     }
                 }
 
@@ -2889,11 +2928,11 @@ fn test_e2e_jsm_create_request_roundtrip() {
             .args(["issue", "view", &key, "--output", "json"])
             .output()
             .expect("failed to spawn jr for view poll");
-        if out.status.success() {
-            if let Ok(v) = serde_json::from_slice::<Value>(out.stdout.as_slice()) {
-                view_result = Some(v);
-                break;
-            }
+        if out.status.success()
+            && let Ok(v) = serde_json::from_slice::<Value>(out.stdout.as_slice())
+        {
+            view_result = Some(v);
+            break;
         }
         if attempt < MAX_VIEW_ATTEMPTS {
             std::thread::sleep(Duration::from_millis(
@@ -2937,6 +2976,200 @@ fn test_e2e_jsm_create_request_roundtrip() {
             );
         }
     }
+}
+
+/// E2E: `jr issue create --request-type ... --field description=VALUE`
+/// (bare form, NOT `--description`) sends ADF for the `description` extra
+/// field and reads back as an ADF object via `jr issue view --output json`
+/// (S-cycle12-jsm-adf-autoconvert AC-016, BC-3.8.019 postcondition).
+///
+/// Distinct from `test_e2e_jsm_create_request_roundtrip` (Scenario 6, which
+/// supplies no `--field` at all): this test specifically exercises the bare
+/// `--field description=` ADF-autoconvert resolution-layer path added by
+/// cycle-012 (`jsm_create.rs::resolve_jsm_adf_extra_fields` +
+/// `field_resolve::is_adf_field_value`).
+///
+/// Gated on `JR_RUN_E2E=1` + `JR_E2E_JSM_PROJECT`; clean-skips when either
+/// is unset, when the request-type list is empty, or on a 403 at any HTTP
+/// step (permission-scoped test credential). Self-closes the created
+/// request via `jsm_self_close` before any assertion that could panic
+/// (F-2b close-always-runs pattern, mirroring Scenario 6 above).
+#[test]
+#[ignore = "set JR_RUN_E2E=1 and JR_E2E_JSM_PROJECT and use --include-ignored to run"]
+fn test_e2e_jsm_create_adf_field_description_roundtrip() {
+    if !e2e_enabled() {
+        return;
+    }
+    let jsm_project = match env::var("JR_E2E_JSM_PROJECT") {
+        Ok(p) if !p.trim().is_empty() => p.trim().to_string(),
+        _ => {
+            eprintln!("[SKIP] JR_E2E_JSM_PROJECT not set — skipping JSM ADF --field test");
+            return;
+        }
+    };
+    let h = e2e_harness();
+    let run_id = run_label();
+
+    // Step 1: list request types to discover the fixture dynamically
+    // (mirrors Scenario 6).
+    let list_out = h
+        .cmd()
+        .args([
+            "requesttype",
+            "list",
+            "--project",
+            &jsm_project,
+            "--output",
+            "json",
+        ])
+        .output()
+        .expect("failed to spawn jr");
+
+    if !list_out.status.success() {
+        let stderr = String::from_utf8_lossy(&list_out.stderr);
+        if stderr.contains("403") {
+            eprintln!("[SKIP] requesttype list returned 403 — skipping ADF --field test");
+            return;
+        }
+        panic!(
+            "requesttype list failed:\nstdout: {}\nstderr: {stderr}",
+            String::from_utf8_lossy(&list_out.stdout)
+        );
+    }
+
+    let rts: Vec<Value> =
+        serde_json::from_slice(&list_out.stdout).expect("requesttype list must be a JSON array");
+
+    if rts.is_empty() {
+        eprintln!("[SKIP] No request types found on {jsm_project} — skipping ADF --field test");
+        return;
+    }
+
+    let first_rt_id = {
+        let id_val = &rts[0]["id"];
+        if let Some(s) = id_val.as_str() {
+            s.to_string()
+        } else if let Some(n) = id_val.as_i64() {
+            n.to_string()
+        } else {
+            eprintln!("[SKIP] rts[0].id is not a usable type — skipping");
+            return;
+        }
+    };
+    if !first_rt_id.chars().all(|c| c.is_ascii_digit()) {
+        eprintln!("[SKIP] rts[0].id={first_rt_id} is not all-ASCII-digit — skipping");
+        return;
+    }
+
+    // Step 2: create via the BARE `--field description=VALUE` path (NOT
+    // `--description`) — this is the AC-016 code path under test.
+    let summary = format!("[e2e-jsm {run_id}] adf field description round-trip");
+    let desc_value = format!("ADF autoconvert round-trip {run_id}");
+    let create_out = h
+        .cmd()
+        .args([
+            "issue",
+            "create",
+            "--project",
+            &jsm_project,
+            "--request-type",
+            &first_rt_id,
+            "--summary",
+            &summary,
+            "--field",
+            &format!("description={desc_value}"),
+            "--output",
+            "json",
+        ])
+        .output()
+        .expect("failed to spawn jr");
+
+    let create_stderr = String::from_utf8_lossy(&create_out.stderr).to_string();
+    if !create_out.status.success() {
+        if create_stderr.contains("403") {
+            eprintln!("[SKIP] issue create returned 403 — skipping ADF --field test");
+            return;
+        }
+        eprintln!(
+            "[SKIP] issue create failed (non-fatal skip) — cannot test ADF --field \
+             round-trip\nstdout: {}\nstderr: {create_stderr}",
+            String::from_utf8_lossy(&create_out.stdout)
+        );
+        return;
+    }
+
+    let create_v: Value = serde_json::from_slice(&create_out.stdout)
+        .expect("issue create --output json must be valid JSON");
+    let key = create_v
+        .get("key")
+        .and_then(Value::as_str)
+        .expect("issue create JSON must contain 'key' field")
+        .to_string();
+    assert!(
+        !key.is_empty(),
+        "issue create --field description=: 'key' field must be non-empty; got: {create_v}"
+    );
+
+    // Step 3: non-fatal bounded poll for GET-by-key consistency (mirrors
+    // Scenario 6's F-2b pattern) — poll_view() would panic after
+    // MAX_ATTEMPTS, orphaning the EJ issue; a local loop with a bounded
+    // return keeps the unconditional self-close at step 4 reachable.
+    const MAX_VIEW_ATTEMPTS: u32 = 5;
+    const VIEW_BACKOFF_MS: [u64; 4] = [250, 500, 1_000, 2_000];
+    let mut view_result: Option<Value> = None;
+    for attempt in 1..=MAX_VIEW_ATTEMPTS {
+        let out = h
+            .cmd()
+            .args(["issue", "view", &key, "--output", "json"])
+            .output()
+            .expect("failed to spawn jr for view poll");
+        if out.status.success()
+            && let Ok(v) = serde_json::from_slice::<Value>(out.stdout.as_slice())
+        {
+            view_result = Some(v);
+            break;
+        }
+        if attempt < MAX_VIEW_ATTEMPTS {
+            std::thread::sleep(Duration::from_millis(
+                VIEW_BACKOFF_MS[(attempt - 1) as usize],
+            ));
+        }
+    }
+
+    // Step 4: self-close BEFORE any remaining assertions (F-2b: close-always-
+    // runs) — guarantees poll exhaustion or an assertion panic below cannot
+    // leave the EJ issue open.
+    jsm_self_close(&key, &h);
+
+    // Step 5: assert the read-back `description` is an ADF object (Jira
+    // Cloud v3 `fields.description`), not a plain string (BC-3.8.019
+    // postcondition — the bare --field path must have sent ADF, not a
+    // string, or the API would have rejected the create with a 400 in the
+    // first place; this assertion confirms the read-back shape matches).
+    let view_v = match view_result {
+        Some(v) => v,
+        None => {
+            eprintln!(
+                "[WARN] issue view({key}) did not resolve after {MAX_VIEW_ATTEMPTS} attempts \
+                 — cannot assert ADF read-back shape (issue already self-closed)"
+            );
+            return;
+        }
+    };
+    let description = view_v.get("fields").and_then(|f| f.get("description"));
+    assert!(
+        description.map(Value::is_object).unwrap_or(false),
+        "AC-016/BC-3.8.019: 'description' set via bare --field description=VALUE on the \
+         JSM create path must read back as an ADF object (type: \"doc\"), not a plain \
+         string; got: {description:?}"
+    );
+    assert_eq!(
+        description
+            .and_then(|d| d.get("type"))
+            .and_then(Value::as_str),
+        Some("doc"),
+        "AC-016: ADF root type must be \"doc\"; got: {description:?}"
+    );
 }
 
 /// E2E: `jr queue list --project <non-JSM>` exits 64 and stderr contains
@@ -3330,20 +3563,20 @@ fn test_e2e_jsm_resolution_enforcement() {
             .args(["issue", "view", &key_a, "--output", "json"])
             .output()
             .expect("failed to spawn jr issue view (ticket A)");
-        if vout.status.success() {
-            if let Ok(v) = serde_json::from_slice::<serde_json::Value>(&vout.stdout) {
-                // Predicate: fields.resolution.name is present and non-empty.
-                let has_resolution = v
-                    .get("fields")
-                    .and_then(|f| f.get("resolution"))
-                    .and_then(|r| r.get("name"))
-                    .and_then(serde_json::Value::as_str)
-                    .map(|s| !s.is_empty())
-                    .unwrap_or(false);
-                if has_resolution {
-                    view_a = Some(v);
-                    break;
-                }
+        if vout.status.success()
+            && let Ok(v) = serde_json::from_slice::<serde_json::Value>(&vout.stdout)
+        {
+            // Predicate: fields.resolution.name is present and non-empty.
+            let has_resolution = v
+                .get("fields")
+                .and_then(|f| f.get("resolution"))
+                .and_then(|r| r.get("name"))
+                .and_then(serde_json::Value::as_str)
+                .map(|s| !s.is_empty())
+                .unwrap_or(false);
+            if has_resolution {
+                view_a = Some(v);
+                break;
             }
         }
         if attempt < MAX_VIEW_ATTEMPTS {
@@ -4701,19 +4934,18 @@ fn adf_has_linked_url(node: &Value, url: &str) -> bool {
     let target = norm(url);
     if node.get("type").and_then(Value::as_str) == Some("text")
         && node.get("text").and_then(Value::as_str).map(&norm) == Some(target.clone())
+        && let Some(marks) = node.get("marks").and_then(Value::as_array)
     {
-        if let Some(marks) = node.get("marks").and_then(Value::as_array) {
-            let hit = marks.iter().any(|m| {
-                m.get("type").and_then(Value::as_str) == Some("link")
-                    && m.get("attrs")
-                        .and_then(|a| a.get("href"))
-                        .and_then(Value::as_str)
-                        .map(&norm)
-                        == Some(target.clone())
-            });
-            if hit {
-                return true;
-            }
+        let hit = marks.iter().any(|m| {
+            m.get("type").and_then(Value::as_str) == Some("link")
+                && m.get("attrs")
+                    .and_then(|a| a.get("href"))
+                    .and_then(Value::as_str)
+                    .map(&norm)
+                    == Some(target.clone())
+        });
+        if hit {
+            return true;
         }
     }
     match node {
@@ -5005,15 +5237,77 @@ fn test_e2e_issue_points_roundtrip() {
     best_effort_close(&h, &key);
 }
 
+/// Discover the E2E project's sub-task issue type via
+/// `GET /rest/api/3/project/<key>` (`jr api`, S-E2E-DYNAMIC).
+///
+/// Returns the `name` of the first issue type in the project's `issueTypes`
+/// array whose `subtask == true` (the stable Jira field marking a type as a
+/// child-only issue type, e.g. `"Sub-task"`). Returns `None` when the project
+/// has no sub-task type or the lookup fails — the clean-skip signal for
+/// `test_e2e_issue_parent_roundtrip` when no `JR_E2E_CHILD_TYPE` override is
+/// set.
+fn discover_subtask_type(h: &E2eHarness, proj: &str) -> Option<String> {
+    let v = fetch_raw(h, &format!("/rest/api/3/project/{proj}"))?;
+    v.get("issueTypes")?.as_array()?.iter().find_map(|it| {
+        if it.get("subtask").and_then(Value::as_bool) == Some(true) {
+            it.get("name").and_then(Value::as_str).map(str::to_string)
+        } else {
+            None
+        }
+    })
+}
+
+/// Best-effort `Drop`-guard for `test_e2e_issue_parent_roundtrip` — mirrors
+/// `MentionCommentDropGuard`'s convention (populate fields immediately after
+/// each creation call succeeds; `drop()` never panics; a fresh
+/// `E2eHarness::new()` is used since the outer harness borrow would not
+/// survive a panic-unwind).
+///
+/// `seeded_parent` is populated ONLY when this test seeded the parent itself
+/// (no `JR_E2E_PARENT_KEY` override) — a caller-supplied parent via the
+/// override is presumed permanent and caller-owned, and is deliberately left
+/// untouched by teardown.
+struct ParentChildDropGuard {
+    child: Option<String>,
+    seeded_parent: Option<String>,
+}
+
+impl ParentChildDropGuard {
+    fn new() -> Self {
+        Self {
+            child: None,
+            seeded_parent: None,
+        }
+    }
+}
+
+impl Drop for ParentChildDropGuard {
+    fn drop(&mut self) {
+        if let Some(ref key) = self.child {
+            let h = E2eHarness::new();
+            best_effort_close(&h, key);
+        }
+        if let Some(ref key) = self.seeded_parent {
+            let h = E2eHarness::new();
+            best_effort_close(&h, key);
+        }
+    }
+}
+
 /// E2E: `issue create --parent <KEY>` parents a new issue under an existing one.
 ///
-/// Instance-gated: requires `JR_E2E_PARENT_KEY` (an existing parent/epic issue)
-/// and `JR_E2E_CHILD_TYPE` (an issue type valid as that parent's child, e.g.
-/// `Sub-task` or `Story`). Clean-skips when either is unset, since the valid
-/// parent/child hierarchy is entirely project-config dependent.
+/// Self-configuring (S-E2E-DYNAMIC, no static vars required):
+/// - **Child issue type:** `JR_E2E_CHILD_TYPE` when set/non-empty (explicit
+///   override), else the project's sub-task type discovered dynamically via
+///   `discover_subtask_type`. Clean-skips if the project has no sub-task type.
+/// - **Parent issue:** `JR_E2E_PARENT_KEY` when set/non-empty (explicit
+///   override, presumed permanent/caller-owned — never closed by teardown),
+///   else a fresh parent issue seeded by this test via `seed_issue` (default
+///   issue type) and self-closed on teardown.
 ///
-/// On the happy path: creates a child with `--parent` and asserts the
-/// follow-up-GET JSON reports `fields.parent.key == <parent>`.
+/// On the happy path: creates a child with `--parent` and asserts a FRESH
+/// `GET` on the child (via `fetch_raw`, not the create response) reports
+/// `fields.parent.key == <parent>`.
 ///
 /// Traces to: E2E-HV-2, NFR-T-E2E-1.
 #[test]
@@ -5022,17 +5316,39 @@ fn test_e2e_issue_parent_roundtrip() {
     if !e2e_enabled() {
         return;
     }
-    let parent = match env::var("JR_E2E_PARENT_KEY") {
-        Ok(p) if !p.trim().is_empty() => p.trim().to_string(),
-        _ => return, // clean skip: no parent issue configured
-    };
-    let child_type = match env::var("JR_E2E_CHILD_TYPE") {
-        Ok(t) if !t.trim().is_empty() => t.trim().to_string(),
-        _ => return, // clean skip: no child issue type configured
-    };
     let label = run_label();
     let proj = project();
     let h = e2e_harness();
+
+    let child_type = match env::var("JR_E2E_CHILD_TYPE") {
+        Ok(t) if !t.trim().is_empty() => t.trim().to_string(),
+        _ => match discover_subtask_type(&h, &proj) {
+            Some(t) => t,
+            None => {
+                eprintln!(
+                    "[SKIP] no JR_E2E_CHILD_TYPE override and project {proj} has no sub-task \
+                     issue type — skipping dynamic parent/child round-trip \
+                     (test_e2e_issue_parent_roundtrip)"
+                );
+                return;
+            }
+        },
+    };
+
+    let mut guard = ParentChildDropGuard::new();
+
+    let parent = match env::var("JR_E2E_PARENT_KEY") {
+        Ok(p) if !p.trim().is_empty() => p.trim().to_string(),
+        _ => {
+            let seeded = seed_issue(
+                &h,
+                &label,
+                &format!("[e2e {label}] dynamic parent for child round-trip"),
+            );
+            guard.seeded_parent = Some(seeded.clone());
+            seeded
+        }
+    };
 
     let create = h
         .cmd()
@@ -5044,7 +5360,7 @@ fn test_e2e_issue_parent_roundtrip() {
             "--type",
             &child_type,
             "--summary",
-            &format!("[e2e {label}] child of {parent}"),
+            &format!("[e2e {label}] dynamic child of {parent}"),
             "--parent",
             &parent,
             "--label",
@@ -5060,36 +5376,152 @@ fn test_e2e_issue_parent_roundtrip() {
         String::from_utf8_lossy(&create.stdout),
         String::from_utf8_lossy(&create.stderr)
     );
-    let json: Value =
+    let created: Value =
         serde_json::from_slice(&create.stdout).expect("create output must be valid JSON");
-    let key = json
+    let key = created
         .get("key")
         .and_then(Value::as_str)
         .expect("create JSON must contain a 'key'")
         .to_string();
+    guard.child = Some(key.clone());
+
+    let fetched = fetch_raw(&h, &format!("/rest/api/3/issue/{key}"))
+        .expect("fresh GET on the created child must succeed");
     assert_eq!(
-        json.get("fields")
+        fetched
+            .get("fields")
             .and_then(|f| f.get("parent"))
             .and_then(|p| p.get("key"))
             .and_then(Value::as_str),
         Some(parent.as_str()),
-        "create --parent must set fields.parent.key to {parent}; got: {json}"
+        "create --parent must set fields.parent.key to {parent}; got: {fetched}"
     );
-
-    best_effort_close(&h, &key);
 }
 
-/// E2E: `issue edit --field NAME=VALUE` sets an arbitrary custom field.
+/// Walk an ADF content node depth-first, appending the `"text"` value of
+/// every `{"type":"text",…}` node to `out`.  Used by `extract_field_text`.
+fn extract_adf_text_walk(node: &Value, out: &mut String) {
+    if node.get("type").and_then(Value::as_str) == Some("text")
+        && let Some(text) = node.get("text").and_then(Value::as_str)
+    {
+        out.push_str(text);
+    }
+    if let Some(content) = node.get("content").and_then(Value::as_array) {
+        for child in content {
+            extract_adf_text_walk(child, out);
+        }
+    }
+}
+
+/// Extract the effective text from a field value returned by the Jira API.
 ///
-/// Instance-gated: requires `JR_E2E_EDIT_FIELD` in `NAME=VALUE` form, where
-/// `NAME` is a custom field present on the issue's Edit screen (validated via
-/// `GET .../editmeta`). Clean-skips when unset, since no custom field is
-/// guaranteed to exist on an arbitrary site.
+/// The value may be either:
+/// - A plain JSON string — returned as-is.
+/// - An ADF document object (`{"type":"doc","content":[…]}`) — the text of
+///   every `text`-typed node is concatenated via a depth-first walk.
+///
+/// This makes read-back assertions in `test_e2e_issue_edit_custom_field`
+/// correct for both plain-string fields and ADF-backed fields (e.g.
+/// `environment`) that now correctly persist as ADF documents
+/// (E2E-EDIT-FIELD-ADF-HEURISTIC).
+fn extract_field_text(v: &Value) -> String {
+    if let Some(s) = v.as_str() {
+        return s.to_string();
+    }
+    let mut out = String::new();
+    extract_adf_text_walk(v, &mut out);
+    out
+}
+
+/// Discover a safe, benign string field on `key`'s Edit screen via
+/// `GET /rest/api/3/issue/<key>/editmeta` (`jr api`, S-E2E-DYNAMIC), for use
+/// by `test_e2e_issue_edit_custom_field` when no `JR_E2E_EDIT_FIELD` override
+/// is set.
+///
+/// Returns `(cli_field_ref, wire_key, is_adf_backed)`:
+/// - `cli_field_ref` is what to pass as the NAME half of `--field NAME=VALUE`
+///   — the standard `"Environment"` display name (resolves via `issue edit
+///   --field`'s cache-first name lookup) for the preferred field, or the bare
+///   `customfield_NNNNN` id (the documented literal-bypass form, BC-3.4.015
+///   Step 1) for a discovered custom field, avoiding any display-name
+///   ambiguity risk.
+/// - `wire_key` is the JSON key to read back from a fresh `GET
+///   .../issue/<key>` to verify the write (e.g. `"environment"` or
+///   `"customfield_10063"`).
+/// - `is_adf_backed` is `true` when the chosen field stores its value as an
+///   ADF document object on Jira Cloud REST v3 (i.e. the field is
+///   `schema.system == "environment"` / `"description"`, or a custom field
+///   whose `schema.custom` ends with `":textarea"`). `false` for plain-string
+///   fields (`:textfield` and similar). The caller gates the ADF doc-shape
+///   assertion on this flag to avoid false-failing on non-ADF fallback fields
+///   (E2E-EDIT-FIELD-ADF-HEURISTIC).
+///
+/// Preference order: the standard `"Environment"` field (`editmeta` id
+/// `"environment"`) if present with `schema.type == "string"`, else the first
+/// other editable field (excluding `summary`/`description`) with
+/// `schema.type == "string"`. Returns `None` when no such field exists — the
+/// clean-skip signal.
+fn discover_safe_edit_field(h: &E2eHarness, key: &str) -> Option<(String, String, bool)> {
+    let v = fetch_raw(h, &format!("/rest/api/3/issue/{key}/editmeta"))?;
+    let fields = v.get("fields")?.as_object()?;
+
+    let is_string_field = |meta: &Value| {
+        meta.get("schema")
+            .and_then(|s| s.get("type"))
+            .and_then(Value::as_str)
+            == Some("string")
+    };
+
+    // Detect ADF-backed string fields: system "environment"/"description", or
+    // a custom textarea (schema.custom ends with ":textarea").  This mirrors
+    // the product's own allowlist for ADF auto-conversion on write paths.
+    let field_is_adf_backed = |meta: &Value| -> bool {
+        let schema = meta.get("schema");
+        let system = schema
+            .and_then(|s| s.get("system"))
+            .and_then(Value::as_str)
+            .unwrap_or("");
+        let custom = schema
+            .and_then(|s| s.get("custom"))
+            .and_then(Value::as_str)
+            .unwrap_or("");
+        system == "environment" || system == "description" || custom.ends_with(":textarea")
+    };
+
+    if let Some(env_meta) = fields.get("environment")
+        && is_string_field(env_meta)
+    {
+        // `environment` is always ADF-backed on Jira Cloud REST v3.
+        return Some(("Environment".to_string(), "environment".to_string(), true));
+    }
+
+    fields.iter().find_map(|(id, meta)| {
+        if id == "summary" || id == "description" || !is_string_field(meta) {
+            return None;
+        }
+        let cli_ref = if id.starts_with("customfield_") {
+            id.clone()
+        } else {
+            meta.get("name").and_then(Value::as_str)?.to_string()
+        };
+        let is_adf = field_is_adf_backed(meta);
+        Some((cli_ref, id.clone(), is_adf))
+    })
+}
+
+/// E2E: `issue edit --field NAME=VALUE` sets an arbitrary field.
+///
+/// Self-configuring (S-E2E-DYNAMIC, no static vars required): `JR_E2E_EDIT_FIELD`
+/// (`NAME=VALUE` form) when set/non-empty is an explicit override; otherwise a
+/// safe string field is discovered dynamically via `discover_safe_edit_field`
+/// and a benign generated value is written. Clean-skips when neither an
+/// override nor a discoverable safe field is available.
 ///
 /// On the happy path: seeds an issue, applies `--field NAME=VALUE`, and asserts
 /// the edit succeeded (`updated == true`) and recorded a non-empty
-/// `changed_fields` map (the resolved field keys are instance-specific, so the
-/// assertion checks for presence rather than an exact key).
+/// `changed_fields` map. When the field was dynamically discovered (not an
+/// explicit override), additionally asserts a FRESH `GET` on the issue (via
+/// `fetch_raw`) shows the written value under the field's `wire_key`.
 ///
 /// Traces to: E2E-HV-2, NFR-T-E2E-1.
 #[test]
@@ -5098,22 +5530,45 @@ fn test_e2e_issue_edit_custom_field() {
     if !e2e_enabled() {
         return;
     }
-    let field = match env::var("JR_E2E_EDIT_FIELD") {
-        Ok(f) if f.contains('=') && !f.trim().is_empty() => f,
-        _ => return, // clean skip: no custom field configured
-    };
     let label = run_label();
     let h = e2e_harness();
     let key = seed_issue(&h, &label, &format!("[e2e {label}] custom field edit"));
 
+    // (--field NAME=VALUE argument, wire key to verify via a fresh GET, ADF-ness
+    // flag). The wire key and ADF flag are only known for the dynamic-discovery
+    // path below — an explicit `JR_E2E_EDIT_FIELD` override supplies an
+    // arbitrary display name whose resolved wire key and ADF-ness this test
+    // cannot determine (defaults to non-ADF lenient check).
+    let (field_arg, wire_key, is_adf_backed): (String, Option<String>, bool) =
+        match env::var("JR_E2E_EDIT_FIELD") {
+            Ok(f) if f.contains('=') && !f.trim().is_empty() => (f, None, false),
+            _ => match discover_safe_edit_field(&h, &key) {
+                Some((cli_ref, wire_key, is_adf)) => {
+                    let value = format!("e2e dynamic edit {label}");
+                    (format!("{cli_ref}={value}"), Some(wire_key), is_adf)
+                }
+                None => {
+                    eprintln!(
+                        "[SKIP] no JR_E2E_EDIT_FIELD override and no safe editable string field \
+                         found on {key}'s Edit screen — skipping dynamic edit --field round-trip \
+                         (test_e2e_issue_edit_custom_field)"
+                    );
+                    best_effort_close(&h, &key);
+                    return;
+                }
+            },
+        };
+
     let edit = h
         .cmd()
-        .args(["issue", "edit", &key, "--field", &field, "--output", "json"])
+        .args([
+            "issue", "edit", &key, "--field", &field_arg, "--output", "json",
+        ])
         .output()
         .expect("failed to spawn jr for edit --field");
     assert!(
         edit.status.success(),
-        "edit --field {field:?} failed for {key}:\nstdout: {}\nstderr: {}",
+        "edit --field {field_arg:?} failed for {key}:\nstdout: {}\nstderr: {}",
         String::from_utf8_lossy(&edit.stdout),
         String::from_utf8_lossy(&edit.stderr)
     );
@@ -5129,6 +5584,43 @@ fn test_e2e_issue_edit_custom_field() {
             .is_some_and(|m| !m.is_empty()),
         "edit --field must record a non-empty changed_fields map; got: {json}"
     );
+
+    if let Some(wire_key) = wire_key {
+        let fetched = fetch_raw(&h, &format!("/rest/api/3/issue/{key}"))
+            .expect("fresh GET on the edited issue must succeed");
+        let field_val = fetched.get("fields").and_then(|f| f.get(&wire_key));
+
+        if is_adf_backed {
+            // ADF-backed field (e.g. `environment`, `:textarea` custom field):
+            // Jira Cloud REST v3 always persists these as an ADF doc object
+            // with `{"type":"doc","version":1,"content":[…]}`.
+            // Asserting the shape here is the core of E2E-EDIT-FIELD-ADF-HEURISTIC.
+            assert!(
+                field_val.is_some_and(|v| !v.is_null()),
+                "edit --field {wire_key}: expected a persisted ADF doc, got null/absent; fetched: {fetched}"
+            );
+            assert!(
+                field_val.is_some_and(|v| v.get("type").and_then(Value::as_str) == Some("doc")),
+                "ADF-backed field {wire_key} must persist as an ADF doc (type==\"doc\"); got: {fetched}"
+            );
+            let got_text = field_val.map(extract_field_text);
+            assert!(
+                got_text
+                    .as_deref()
+                    .is_some_and(|v| v.contains(label.as_str())),
+                "edit --field must persist the written value under fields.{wire_key}; got: {fetched}"
+            );
+        } else {
+            // Non-ADF plain-string field: the persisted value is a JSON string.
+            let got_text = field_val.map(extract_field_text);
+            assert!(
+                got_text
+                    .as_deref()
+                    .is_some_and(|v| v.contains(label.as_str())),
+                "edit --field must persist the written value under fields.{wire_key}; got: {fetched}"
+            );
+        }
+    }
 
     best_effort_close(&h, &key);
 }
@@ -8917,6 +9409,1424 @@ fn test_e2e_issue_edit_issuetype_multikey_bulk_roundtrip() {
     }
 }
 
+/// E2E: multi-key `jr issue edit K1 K2 --component add:<X>` / `--component
+/// remove:<X>` bulk round-trip using the `multiselectComponents` wire shape
+/// (BC-3.4.023, S-605-2).
+///
+/// **D-280 LIVE-JIRA RELEASE GATE (BC-3.4.023 Delivery note):** this test
+/// is the mandated live smoke test — one ADD POST and one REMOVE POST,
+/// against >= 2 real issues in one project — that MUST pass before the bulk
+/// `--component` path ships to release. The `multiselectComponents` wire
+/// shape (`src/api/jira/bulk.rs::build_component_edited_fields`) is
+/// documented and triple-corroborated (Atlassian doc example + swagger
+/// OpenAPI + apidog mirror) but was NOT live-verified at spec-authoring
+/// time. If this test observes a non-403/404 failure (e.g. a live 400),
+/// that is evidence the documented shape is wrong -- BC-3.4.023 must be
+/// corrected to the observed true shape before this story can be marked
+/// done, mirroring how `FIX-BULK-TRANSITION-001` (#446) was discovered via
+/// exactly this kind of live failure, not by static review.
+///
+/// **Precondition (BC-3.4.023 Delivery note, added 2026-08-19):** the
+/// target project MUST already have >= 1 component defined -- Jira's
+/// `GET /rest/api/3/bulk/issues/fields` field-discovery response only lists
+/// `components` in the bulk-edit allowlist when the selected issues'
+/// project actually has components configured; a componentless project
+/// surfaces `components` with an `unavailableMessage` instead, which would
+/// false-negative this test for a reason unrelated to wire-shape
+/// correctness. This precondition is checked by discovering an existing
+/// component via `jr component list --project <proj> --output json` and
+/// clean-skipping if the project has none -- no new `JR_E2E_*` env var is
+/// introduced for this, since the component name is read directly off the
+/// live project rather than configured.
+///
+/// Mirrors `test_e2e_issue_edit_label_multikey_bulk_roundtrip`'s structure
+/// (seed two issues, ADD then assert-present, REMOVE then assert-absent,
+/// clean-skip on 403/404 = "Make bulk changes" permission/plan gate) but
+/// against `fields.components[].name` instead of `fields.labels[]`.
+///
+/// Traces to: AC-010, VP-COMPONENT-012, D-280.
+#[test]
+#[ignore = "set JR_RUN_E2E=1 and use --include-ignored to run against a live Jira site"]
+fn test_e2e_issue_edit_component_multikey_bulk_roundtrip() {
+    if !e2e_enabled() {
+        return;
+    }
+    let label = run_label();
+    let proj = project();
+    let itype = issue_type();
+    let h = e2e_harness();
+
+    // Precondition: the project must have >= 1 component already defined.
+    // Clean-skip (not a failure) if it has none -- see the D-280
+    // precondition note in this test's doc comment above.
+    let list_out = h
+        .cmd()
+        .args(["component", "list", "--project", &proj, "--output", "json"])
+        .output()
+        .expect("failed to spawn jr for component list");
+    if !list_out.status.success() {
+        eprintln!(
+            "SKIP: `jr component list --project {proj}` failed -- cannot verify \
+             the >= 1 component precondition; skipping bulk --component \
+             round-trip test.\nstderr: {}",
+            String::from_utf8_lossy(&list_out.stderr)
+        );
+        return;
+    }
+    let components: Value =
+        serde_json::from_slice(&list_out.stdout).expect("component list output must be valid JSON");
+    let component_name = match components.as_array().and_then(|arr| arr.first()) {
+        Some(c) => c
+            .get("name")
+            .and_then(Value::as_str)
+            .expect("component list entry must have a 'name' field")
+            .to_string(),
+        None => {
+            eprintln!(
+                "SKIP: project {proj} has zero components defined -- BC-3.4.023's \
+                 Delivery note precondition requires >= 1; skipping bulk \
+                 --component round-trip test. Configure a component on this \
+                 project to enable this release-gate test."
+            );
+            return;
+        }
+    };
+
+    // Seed two throwaway issues, both tagged with run_label() for sweeper
+    // teardown, and WITHOUT the target component (so ADD is a genuine change).
+    let make_issue = |suffix: &str| -> String {
+        let summary = format!("[e2e {label}] multikey-component-{suffix}");
+        let create_out = h
+            .cmd()
+            .args([
+                "issue",
+                "create",
+                "--project",
+                &proj,
+                "--type",
+                &itype,
+                "--summary",
+                &summary,
+                "--label",
+                &label,
+                "--output",
+                "json",
+            ])
+            .output()
+            .expect("failed to spawn jr for issue create (multikey component seed)");
+        assert!(
+            create_out.status.success(),
+            "issue create ({suffix}) failed:\nstdout: {}\nstderr: {}",
+            String::from_utf8_lossy(&create_out.stdout),
+            String::from_utf8_lossy(&create_out.stderr)
+        );
+        serde_json::from_slice::<Value>(&create_out.stdout)
+            .expect("issue create output must be valid JSON")
+            .get("key")
+            .and_then(Value::as_str)
+            .expect("issue create JSON must contain a 'key' field")
+            .to_string()
+    };
+
+    let key1 = make_issue("a");
+    let key2 = make_issue("b");
+
+    let component_names = |v: &Value| -> Vec<String> {
+        v.get("fields")
+            .and_then(|f| f.get("components"))
+            .and_then(Value::as_array)
+            .map(|arr| {
+                arr.iter()
+                    .filter_map(|c| c.get("name").and_then(Value::as_str))
+                    .map(str::to_string)
+                    .collect()
+            })
+            .unwrap_or_default()
+    };
+
+    // Assert the component is ABSENT on both issues before adding (freshly
+    // created issues carry no components).
+    for key in [&key1, &key2] {
+        let before = poll_view(key, &h);
+        assert!(
+            !component_names(&before).contains(&component_name),
+            "component '{component_name}' must be ABSENT on {key} before add; \
+             got: {:?}",
+            component_names(&before)
+        );
+    }
+
+    // ADD the component to BOTH keys in one bulk call -- BC-3.4.023
+    // Postcondition 1/2 wire shape (multiselectComponents ADD).
+    let add_out = h
+        .cmd()
+        .args([
+            "issue",
+            "edit",
+            &key1,
+            &key2,
+            "--component",
+            &format!("add:{component_name}"),
+        ])
+        .output()
+        .expect("failed to spawn jr for multi-key issue edit --component add");
+
+    if !add_out.status.success() {
+        let stderr = String::from_utf8_lossy(&add_out.stderr);
+        // Skip only on 403 (permission denied) or 404 (endpoint unavailable) --
+        // any OTHER failure (e.g. a 400) is exactly the D-280 release-gate
+        // signal that the documented wire shape is wrong and must NOT be
+        // silently skipped.
+        if add_out.status.code() == Some(1) && (stderr.contains("403") || stderr.contains("404")) {
+            eprintln!(
+                "SKIP: bulk-edit {code} -- 'Make bulk changes' permission not \
+                 available on this site; skipping bulk --component round-trip \
+                 test.\nstderr: {stderr}",
+                code = if stderr.contains("403") { "403" } else { "404" }
+            );
+            return;
+        }
+        panic!(
+            "D-280 RELEASE GATE FAILURE: multi-key issue edit --component add \
+             failed (non-403/404 -- not a permission skip). This is evidence the \
+             multiselectComponents wire shape documented in BC-3.4.023 does NOT \
+             match live Jira -- correct the BC to the observed true shape before \
+             proceeding (FIX-BULK-TRANSITION-001/#446 precedent), then re-run \
+             test-writer/implementer against the corrected shape.\n\
+             exit: {:?}\nstdout: {}\nstderr: {}",
+            add_out.status.code(),
+            String::from_utf8_lossy(&add_out.stdout),
+            stderr,
+        );
+    }
+
+    // Assert the component IS PRESENT on both issues after add.
+    for key in [&key1, &key2] {
+        let after_add = poll_view(key, &h);
+        assert!(
+            component_names(&after_add).contains(&component_name),
+            "component '{component_name}' must be PRESENT on {key} after add; \
+             got: {:?}",
+            component_names(&after_add)
+        );
+    }
+
+    // REMOVE the component from BOTH keys in one bulk call -- BC-3.4.023
+    // Postcondition 3 (a SEPARATE sequential POST, not coalesced with the
+    // ADD above; here issued as its own `jr` invocation, which exercises
+    // the same REMOVE wire shape as the mixed add:/remove: single-invocation
+    // case would for its second POST).
+    let remove_out = h
+        .cmd()
+        .args([
+            "issue",
+            "edit",
+            &key1,
+            &key2,
+            "--component",
+            &format!("remove:{component_name}"),
+        ])
+        .output()
+        .expect("failed to spawn jr for multi-key issue edit --component remove");
+
+    if !remove_out.status.success() {
+        let stderr = String::from_utf8_lossy(&remove_out.stderr);
+        if remove_out.status.code() == Some(1) && (stderr.contains("403") || stderr.contains("404"))
+        {
+            eprintln!(
+                "SKIP: bulk-edit {code} on remove -- skipping.\nstderr: {stderr}",
+                code = if stderr.contains("403") { "403" } else { "404" }
+            );
+            return;
+        }
+        panic!(
+            "D-280 RELEASE GATE FAILURE: multi-key issue edit --component \
+             remove failed (non-403/404 -- not a permission skip). This is \
+             evidence the multiselectComponents REMOVE wire shape documented in \
+             BC-3.4.023 does NOT match live Jira -- correct the BC before \
+             proceeding.\nexit: {:?}\nstdout: {}\nstderr: {}",
+            remove_out.status.code(),
+            String::from_utf8_lossy(&remove_out.stdout),
+            stderr,
+        );
+    }
+
+    // Assert the component is ABSENT on both issues after remove.
+    for key in [&key1, &key2] {
+        let after_remove = poll_view(key, &h);
+        assert!(
+            !component_names(&after_remove).contains(&component_name),
+            "component '{component_name}' must be ABSENT on {key} after remove; \
+             got: {:?}",
+            component_names(&after_remove)
+        );
+    }
+}
+
+// ────────────────────────────────────────────────────────────────────────────
+// S-COMP-E2E-1: live E2E coverage for the component command family
+//
+// Every other command in the family — `component create`/`list`/`edit`/
+// `delete`/`rename`, `issue create --component` (single-key), `issue edit
+// --component` (single-key native `update`-verb path, distinct from the bulk
+// `multiselectComponents` path already covered above), and `issue list
+// --component` (bare/`not:`/`none` JQL-composition grammar) — had ZERO
+// live-Jira verification before this story. This section closes that gap
+// with pure test-hardening: no new product behavior, no new BCs.
+//
+// Traces to: S-COMP-E2E-1, BC-8.1.001/002/005/007, BC-8.2.001/006/008,
+// BC-8.3.001, BC-3.4.022/024/025, BC-2.1.018/019/020.
+// ────────────────────────────────────────────────────────────────────────────
+
+/// Returns `true` (and emits a `SKIP:` message) when `out` failed with a 403
+/// -- or, when `allow_404` is `true`, also a 404 -- the shared clean-skip
+/// predicate for this story's component-family E2E tests (EC-COMP-E2E-3,
+/// AC-014). Any OTHER non-zero exit is NOT a skip signal; callers must treat
+/// it as a genuine test failure and `panic!` with full stdout/stderr context,
+/// mirroring `test_e2e_issue_edit_component_multikey_bulk_roundtrip`'s
+/// release-gate discipline above.
+///
+/// **MED-1 finding 1 (S-COMP-E2E-1 adversarial review):** the match is
+/// anchored to the exact rendered status-code token -- `"API error (403)"` /
+/// `"API error (404)"`, per `src/error.rs`'s `JrError::ApiError` Display impl
+/// (`"API error ({status}): {message}"`) and `main.rs`'s `eprintln!("Error:
+/// {e}")` / `--output json` error envelope, both of which route through that
+/// same Display -- rather than a bare `contains("403")` / `contains("404")`
+/// substring search. The bare form collided with digits appearing ANYWHERE
+/// in the error body (a component id like `10403`/`10404`, or a run-label
+/// fixture name echoed back by Jira), misclassifying a genuine 500/400
+/// failure as a permission skip.
+///
+/// **MED-1 finding 2:** `allow_404` distinguishes precondition probes -- where
+/// a 404 is a legitimate "feature/permission absent" signal (e.g.
+/// `discover_component`, or a `… create` call that has not yet created
+/// anything this test depends on existing) -- from post-create mutations
+/// (edit, delete, rename, or an issue-edit acting on a key this SAME test
+/// already created), where a 404 means the resource vanished mid-test: a real
+/// bug, never a permission gate. Post-create-mutation call sites MUST pass
+/// `allow_404: false`.
+fn skip_on_403_404(out: &std::process::Output, context: &str, allow_404: bool) -> bool {
+    if out.status.success() {
+        return false;
+    }
+    let stderr = String::from_utf8_lossy(&out.stderr);
+    let is_403 = stderr.contains("API error (403)");
+    let is_404 = allow_404 && stderr.contains("API error (404)");
+    if out.status.code() == Some(1) && (is_403 || is_404) {
+        eprintln!(
+            "SKIP: {context} returned {code} -- permission/plan gate; skipping.\nstderr: {stderr}",
+            code = if is_403 { "403" } else { "404" }
+        );
+        true
+    } else {
+        false
+    }
+}
+
+/// Discover the first component defined on `proj` via `jr component list
+/// --project <proj> --output json`.
+///
+/// Clean-skip (returns `None` + `eprintln!("SKIP: ...")`) when the project has
+/// zero components or the discovery call fails with a 403/404 permission/plan
+/// gate. Any OTHER non-zero exit is a genuine test failure (panics) — mirrors
+/// `test_e2e_issue_edit_component_multikey_bulk_roundtrip`'s precondition-check
+/// discipline, reused here for AC-009/AC-010/AC-011 (S-COMP-E2E-1).
+fn discover_component(h: &E2eHarness, proj: &str, context: &str) -> Option<String> {
+    let out = h
+        .cmd()
+        .args(["component", "list", "--project", proj, "--output", "json"])
+        .output()
+        .expect("failed to spawn jr for component list (discovery)");
+    if !out.status.success() {
+        if skip_on_403_404(&out, context, /* allow_404 */ true) {
+            return None;
+        }
+        panic!(
+            "{context}: component list failed (non-403/404 -- not a permission skip):\n\
+             stdout: {}\nstderr: {}",
+            String::from_utf8_lossy(&out.stdout),
+            String::from_utf8_lossy(&out.stderr)
+        );
+    }
+    let components: Value =
+        serde_json::from_slice(&out.stdout).expect("component list output must be valid JSON");
+    match components.as_array().and_then(|arr| arr.first()) {
+        Some(c) => Some(
+            c.get("name")
+                .and_then(Value::as_str)
+                .expect("component list entry must have a 'name' field")
+                .to_string(),
+        ),
+        None => {
+            eprintln!("SKIP: {context} -- project {proj} has zero components defined");
+            None
+        }
+    }
+}
+
+/// Bounded-backoff poll for `jr issue list --project <proj> --component <comp>
+/// --output json`, returning `true` once `key` appears in the results.
+///
+/// Reuses `poll_schedule`'s exponential-backoff SCHEDULE (EC-COMP-E2E-5), and
+/// drives the `--project`/`--component` flag form rather than `--jql`, since
+/// AC-011..AC-013 test the flag-composition grammar directly, not JQL string
+/// composition.
+///
+/// # Budget (widened post-run-32384091667, see below)
+///
+/// Honors the same `JR_E2E_POLL_MAX_ATTEMPTS` / `JR_E2E_POLL_INITIAL_MS` env
+/// seams as `poll_jql` (identical parse-with-fallback pattern), so a caller
+/// can widen or narrow the budget uniformly across both pollers. When unset,
+/// defaults to `max_attempts=7, initial_ms=500` -> `poll_schedule(7, 500)` =
+/// `[500, 1000, 2000, 4000, 8000, 16000]`, a ~31.5s worst-case ceiling.
+///
+/// **Root cause for the wider default:** live e2e run 32384091667 on
+/// `develop` `d467f95a` failed `test_e2e_issue_list_component_filter_grammar`
+/// at the AC-011 positive poll — the old hardcoded `poll_schedule(5, 250)`
+/// budget (~3.75s total) was not enough for a just-created issue's component
+/// association to become JQL-SEARCH-indexed on live Jira Cloud, even though
+/// the component write itself had already landed (the other 4 component
+/// tests, which verify via GET-by-key `poll_view`, passed in the same run).
+/// This was a false-RED from search-index propagation lag, not a product
+/// bug. Because this loop still returns as soon as `key` appears, the happy
+/// path (indexed within a couple of seconds) is unaffected — only genuine
+/// index lag pays into the longer tail of the schedule.
+///
+/// **LOW-2 (S-COMP-E2E-1 adversarial review) — this does NOT mirror
+/// `poll_jql`'s CALLER-FACING behavior**, only its backoff schedule.
+/// `poll_jql` offers a `PollJqlMode::SkipOnEmpty` / `FailOnShort` distinction
+/// so a caller can choose "clean-skip on empty" vs. "panic if results stay
+/// short of a minimum". This function has no such mode parameter: on budget
+/// exhaustion (empty OR non-matching results through all attempts) it simply
+/// returns `false`, and its sole caller treats that as a hard `assert!`
+/// failure (AC-011), never a clean skip. That is intentional here — AC-014
+/// documents this suite as a release gate, not a best-effort probe — but it
+/// means the two functions are NOT interchangeable and a caller expecting
+/// `poll_jql`-style skip semantics from this function will get a panic
+/// instead. Widening the budget does not change this: a truly-absent key
+/// still fails the test once the (now longer) budget is exhausted.
+fn poll_component_filter(h: &E2eHarness, proj: &str, comp: &str, key: &str) -> bool {
+    let max_attempts: usize = match std::env::var("JR_E2E_POLL_MAX_ATTEMPTS") {
+        Ok(v) if !v.trim().is_empty() => v.trim().parse().unwrap_or(7).max(1),
+        _ => 7,
+    };
+    let initial_ms: u64 = match std::env::var("JR_E2E_POLL_INITIAL_MS") {
+        Ok(v) if !v.trim().is_empty() => v.trim().parse().unwrap_or(500),
+        _ => 500,
+    };
+    let schedule = poll_schedule(max_attempts, initial_ms);
+    for attempt in 1..=max_attempts {
+        let out = h
+            .cmd()
+            .args([
+                "issue",
+                "list",
+                "--project",
+                proj,
+                "--component",
+                comp,
+                "--output",
+                "json",
+            ])
+            .output()
+            .expect("failed to spawn jr for issue list --component (poll)");
+        if out.status.success()
+            && let Ok(v) = serde_json::from_slice::<Value>(&out.stdout)
+            && let Some(arr) = v.as_array()
+            && arr
+                .iter()
+                .any(|i| i.get("key").and_then(Value::as_str) == Some(key))
+        {
+            return true;
+        }
+        if attempt < max_attempts {
+            std::thread::sleep(Duration::from_millis(schedule[attempt - 1]));
+        }
+    }
+    false
+}
+
+/// Best-effort `Drop`-guard teardown for a throwaway component created during
+/// this story's E2E tests (AC-015).
+///
+/// Modeled verbatim on `AttachmentDropGuard` (S-576-6): a fresh
+/// `E2eHarness::new()` is spawned inside `drop()` rather than borrowing the
+/// test's own harness across a potential panic-unwind, and every failure path
+/// emits `eprintln!("[WARN] ...")` and returns — `drop()` must never panic.
+///
+/// `component_id` defaults to `None` (no cleanup performed) and must be
+/// populated IMMEDIATELY after the corresponding `component create` call
+/// succeeds — never before, and never skipped even on an early return (an
+/// unpopulated guard performs no cleanup by design). `project` must be
+/// populated alongside `component_id`; if `component_id` is `Some` while
+/// `project` is `None`, `drop()` warns and skips instead of attempting a
+/// malformed delete.
+struct ComponentDropGuard {
+    project: Option<String>,
+    component_id: Option<String>,
+}
+
+impl ComponentDropGuard {
+    fn new() -> Self {
+        Self {
+            project: None,
+            component_id: None,
+        }
+    }
+}
+
+impl Drop for ComponentDropGuard {
+    fn drop(&mut self) {
+        let Some(ref id) = self.component_id else {
+            return;
+        };
+        let Some(ref proj) = self.project else {
+            eprintln!(
+                "[WARN] ComponentDropGuard Drop: component_id {id} set but project is None -- \
+                 cannot delete; this is a test bug, not a live-Jira condition."
+            );
+            return;
+        };
+        let h = E2eHarness::new();
+        match h
+            .cmd()
+            .args([
+                "component",
+                "delete",
+                id,
+                "--project",
+                proj,
+                "--orphan",
+                "--yes",
+            ])
+            .output()
+        {
+            Ok(o) if o.status.success() => {}
+            Ok(o) => eprintln!(
+                "[WARN] ComponentDropGuard Drop: delete {id} failed (exit {:?}): {}",
+                o.status.code(),
+                String::from_utf8_lossy(&o.stderr)
+            ),
+            Err(e) => eprintln!("[WARN] ComponentDropGuard Drop: delete spawn error: {e}"),
+        }
+    }
+}
+
+/// E2E: `jr component create` → `list` → `edit` → `list` → `delete` → `list`
+/// full lifecycle round-trip against a live Jira Cloud project.
+///
+/// Traces to: AC-001..AC-006, BC-8.1.001, BC-8.1.002, BC-8.1.005, BC-8.1.007,
+/// BC-8.2.001, BC-8.2.006, BC-8.2.008.
+#[test]
+#[ignore = "set JR_RUN_E2E=1 and use --include-ignored to run against a live Jira site"]
+fn test_e2e_component_lifecycle_roundtrip() {
+    if !e2e_enabled() {
+        return;
+    }
+    let h = e2e_harness();
+    let proj = project();
+    let label = run_label();
+    // MED-2: unique per invocation so a leaked fixture from a killed/cancelled
+    // prior CI attempt can never collide with this run's create call.
+    let name = format!("{label}-lifecycle-{}", component_fixture_suffix());
+    let mut guard = ComponentDropGuard::new();
+
+    // AC-001: create.
+    let create_out = h
+        .cmd()
+        .args([
+            "component",
+            "create",
+            "--project",
+            &proj,
+            &name,
+            "--description",
+            "S-COMP-E2E-1 lifecycle fixture",
+            "--output",
+            "json",
+        ])
+        .output()
+        .expect("failed to spawn jr for component create");
+    if !create_out.status.success() {
+        if skip_on_403_404(&create_out, "component create", /* allow_404 */ true) {
+            return;
+        }
+        panic!(
+            "component create failed (non-403/404 -- not a permission skip):\n\
+             stdout: {}\nstderr: {}",
+            String::from_utf8_lossy(&create_out.stdout),
+            String::from_utf8_lossy(&create_out.stderr)
+        );
+    }
+    let created: Value = serde_json::from_slice(&create_out.stdout)
+        .expect("component create output must be valid JSON");
+    let id = created
+        .get("id")
+        .and_then(Value::as_str)
+        .expect("component create JSON must contain an 'id' field")
+        .to_string();
+
+    // Arm the guard IMMEDIATELY after create succeeds, before any further assertion --
+    // a panic in the shape/name/project assertions below must still trigger cleanup.
+    guard.project = Some(proj.clone());
+    guard.component_id = Some(id.clone());
+
+    assert_eq!(
+        created.as_object().map(|o| o.len()),
+        Some(3),
+        "component create JSON must have exactly 3 keys (id, name, project); got: {created}"
+    );
+    assert_eq!(
+        created.get("name").and_then(Value::as_str),
+        Some(name.as_str())
+    );
+    assert_eq!(
+        created.get("project").and_then(Value::as_str),
+        Some(proj.as_str())
+    );
+
+    // AC-002: list reflects the created component.
+    let list_out_1 = h
+        .cmd()
+        .args(["component", "list", "--project", &proj, "--output", "json"])
+        .output()
+        .expect("failed to spawn jr for component list (AC-002)");
+    assert!(
+        list_out_1.status.success(),
+        "component list (AC-002) failed:\nstdout: {}\nstderr: {}",
+        String::from_utf8_lossy(&list_out_1.stdout),
+        String::from_utf8_lossy(&list_out_1.stderr)
+    );
+    let list1: Value = serde_json::from_slice(&list_out_1.stdout)
+        .expect("component list (AC-002) output must be valid JSON");
+    let arr1 = list1
+        .as_array()
+        .expect("component list (AC-002) must be a JSON array");
+    assert!(
+        arr1.iter()
+            .any(|c| c.get("id").and_then(Value::as_str) == Some(id.as_str())
+                && c.get("name").and_then(Value::as_str) == Some(name.as_str())),
+        "component list (AC-002) must contain id={id} name={name}; got: {list1}"
+    );
+
+    // AC-003: edit (only-supplied-fields; JSON result shape).
+    //
+    // LOW-3 (S-COMP-E2E-1 adversarial review): this is a BLACK-BOX assertion —
+    // it verifies the edit's observable result shape (id/name/project keys)
+    // and that `name` was actually updated, but it supplies BOTH `--name` and
+    // `--description` on this call, so it cannot distinguish "only supplied
+    // fields were sent on the wire" from "all fields were sent and happened
+    // to match". BC-8.1.007's "only-supplied-fields" wire-contract guarantee
+    // (e.g. that editing just `--name` does NOT also re-send `description`)
+    // is covered by wiremock/unit tests elsewhere, not by this live E2E test.
+    let new_name = format!("{name}-renamed");
+    let edit_out = h
+        .cmd()
+        .args([
+            "component",
+            "edit",
+            &id,
+            "--project",
+            &proj,
+            "--name",
+            &new_name,
+            "--description",
+            "S-COMP-E2E-1 lifecycle fixture (edited)",
+            "--output",
+            "json",
+        ])
+        .output()
+        .expect("failed to spawn jr for component edit");
+    if !edit_out.status.success() {
+        if skip_on_403_404(&edit_out, "component edit", /* allow_404 */ false) {
+            return;
+        }
+        panic!(
+            "component edit failed (non-403/404 -- not a permission skip):\n\
+             stdout: {}\nstderr: {}",
+            String::from_utf8_lossy(&edit_out.stdout),
+            String::from_utf8_lossy(&edit_out.stderr)
+        );
+    }
+    let edited: Value =
+        serde_json::from_slice(&edit_out.stdout).expect("component edit output must be valid JSON");
+    assert_eq!(
+        edited.as_object().map(|o| o.len()),
+        Some(3),
+        "component edit JSON must have exactly 3 keys (id, name, project); got: {edited}"
+    );
+    assert_eq!(edited.get("id").and_then(Value::as_str), Some(id.as_str()));
+    assert_eq!(
+        edited.get("name").and_then(Value::as_str),
+        Some(new_name.as_str())
+    );
+
+    // AC-004: list reflects the edit.
+    let list_out_2 = h
+        .cmd()
+        .args(["component", "list", "--project", &proj, "--output", "json"])
+        .output()
+        .expect("failed to spawn jr for component list (AC-004)");
+    assert!(
+        list_out_2.status.success(),
+        "component list (AC-004) failed:\nstdout: {}\nstderr: {}",
+        String::from_utf8_lossy(&list_out_2.stdout),
+        String::from_utf8_lossy(&list_out_2.stderr)
+    );
+    let list2: Value = serde_json::from_slice(&list_out_2.stdout)
+        .expect("component list (AC-004) output must be valid JSON");
+    let arr2 = list2
+        .as_array()
+        .expect("component list (AC-004) must be a JSON array");
+    assert!(
+        arr2.iter()
+            .any(|c| c.get("id").and_then(Value::as_str) == Some(id.as_str())
+                && c.get("name").and_then(Value::as_str) == Some(new_name.as_str())),
+        "component list (AC-004) must contain id={id} name={new_name}; got: {list2}"
+    );
+    assert!(
+        !arr2
+            .iter()
+            .any(|c| c.get("name").and_then(Value::as_str) == Some(name.as_str())),
+        "component list (AC-004) must NOT contain the original name {name}; got: {list2}"
+    );
+
+    // AC-005: delete (--orphan --yes; JSON result shape).
+    let delete_out = h
+        .cmd()
+        .args([
+            "component",
+            "delete",
+            &id,
+            "--project",
+            &proj,
+            "--orphan",
+            "--yes",
+            "--output",
+            "json",
+        ])
+        .output()
+        .expect("failed to spawn jr for component delete");
+    if !delete_out.status.success() {
+        if skip_on_403_404(&delete_out, "component delete", /* allow_404 */ false) {
+            return;
+        }
+        panic!(
+            "component delete failed (non-403/404 -- not a permission skip):\n\
+             stdout: {}\nstderr: {}",
+            String::from_utf8_lossy(&delete_out.stdout),
+            String::from_utf8_lossy(&delete_out.stderr)
+        );
+    }
+    let deleted: Value = serde_json::from_slice(&delete_out.stdout)
+        .expect("component delete output must be valid JSON");
+    let mut delete_keys: Vec<&str> = deleted
+        .as_object()
+        .map(|o| o.keys().map(String::as_str).collect())
+        .unwrap_or_default();
+    delete_keys.sort_unstable();
+    assert_eq!(
+        delete_keys,
+        vec![
+            "affectedIssueCount",
+            "affectedIssues",
+            "deleted",
+            "movedIssuesTo"
+        ],
+        "component delete JSON must have exactly these 4 keys; got: {deleted}"
+    );
+    assert_eq!(
+        deleted.get("deleted").and_then(Value::as_str),
+        Some(id.as_str())
+    );
+    assert!(
+        deleted
+            .get("movedIssuesTo")
+            .map(Value::is_null)
+            .unwrap_or(false),
+        "movedIssuesTo must be JSON null under --orphan; got: {deleted}"
+    );
+
+    // Disarm the guard -- the delete above already succeeded (AC-005).
+    guard.component_id = None;
+
+    // AC-006: list reflects the deletion.
+    let list_out_3 = h
+        .cmd()
+        .args(["component", "list", "--project", &proj, "--output", "json"])
+        .output()
+        .expect("failed to spawn jr for component list (AC-006)");
+    assert!(
+        list_out_3.status.success(),
+        "component list (AC-006) failed:\nstdout: {}\nstderr: {}",
+        String::from_utf8_lossy(&list_out_3.stdout),
+        String::from_utf8_lossy(&list_out_3.stderr)
+    );
+    let list3: Value = serde_json::from_slice(&list_out_3.stdout)
+        .expect("component list (AC-006) output must be valid JSON");
+    let arr3 = list3
+        .as_array()
+        .expect("component list (AC-006) must be a JSON array");
+    assert!(
+        !arr3
+            .iter()
+            .any(|c| c.get("id").and_then(Value::as_str) == Some(id.as_str())),
+        "component list (AC-006) must NOT contain id={id} after delete; got: {list3}"
+    );
+}
+
+/// E2E: `jr component rename OLD NEW --project <proj>` round-trip against a
+/// live Jira Cloud project — id-preservation + PUT wire shape (BC-8.3.001).
+///
+/// Traces to: AC-007, AC-008, BC-8.3.001.
+#[test]
+#[ignore = "set JR_RUN_E2E=1 and use --include-ignored to run against a live Jira site"]
+fn test_e2e_component_rename_roundtrip() {
+    if !e2e_enabled() {
+        return;
+    }
+    let h = e2e_harness();
+    let proj = project();
+    let label = run_label();
+    // MED-2: unique per invocation (shared suffix across src/dst so the pair
+    // reads as one fixture) so a leaked fixture from a killed/cancelled prior
+    // CI attempt can never collide with this run's create call.
+    let suffix = component_fixture_suffix();
+    let old_name = format!("{label}-rename-src-{suffix}");
+    let new_name = format!("{label}-rename-dst-{suffix}");
+    let mut guard = ComponentDropGuard::new();
+
+    // Fresh throwaway component fixture (own guard instance, tracked by
+    // numeric id so cleanup survives the rename below).
+    let create_out = h
+        .cmd()
+        .args([
+            "component",
+            "create",
+            "--project",
+            &proj,
+            &old_name,
+            "--output",
+            "json",
+        ])
+        .output()
+        .expect("failed to spawn jr for component create (rename fixture)");
+    if !create_out.status.success() {
+        if skip_on_403_404(
+            &create_out,
+            "component create (rename fixture)",
+            /* allow_404 */ true,
+        ) {
+            return;
+        }
+        panic!(
+            "component create (rename fixture) failed (non-403/404 -- not a permission skip):\n\
+             stdout: {}\nstderr: {}",
+            String::from_utf8_lossy(&create_out.stdout),
+            String::from_utf8_lossy(&create_out.stderr)
+        );
+    }
+    let created: Value = serde_json::from_slice(&create_out.stdout)
+        .expect("component create (rename fixture) output must be valid JSON");
+    let id = created
+        .get("id")
+        .and_then(Value::as_str)
+        .expect("component create (rename fixture) JSON must contain an 'id' field")
+        .to_string();
+    guard.project = Some(proj.clone());
+    guard.component_id = Some(id.clone());
+
+    // AC-007: rename.
+    let rename_out = h
+        .cmd()
+        .args([
+            "component",
+            "rename",
+            &old_name,
+            &new_name,
+            "--project",
+            &proj,
+            "--output",
+            "json",
+        ])
+        .output()
+        .expect("failed to spawn jr for component rename");
+    if !rename_out.status.success() {
+        if skip_on_403_404(&rename_out, "component rename", /* allow_404 */ false) {
+            return;
+        }
+        panic!(
+            "component rename failed (non-403/404 -- not a permission skip):\n\
+             stdout: {}\nstderr: {}",
+            String::from_utf8_lossy(&rename_out.stdout),
+            String::from_utf8_lossy(&rename_out.stderr)
+        );
+    }
+    let renamed_out: Value = serde_json::from_slice(&rename_out.stdout)
+        .expect("component rename output must be valid JSON");
+    let renamed = renamed_out
+        .get("renamed")
+        .expect("component rename JSON must contain a top-level 'renamed' key");
+    assert_eq!(
+        renamed.get("id").and_then(Value::as_str),
+        Some(id.as_str()),
+        "renamed.id must equal the id captured at creation (BC-8.3.001 id-preservation); got: {renamed_out}"
+    );
+    assert_eq!(
+        renamed.get("from").and_then(Value::as_str),
+        Some(old_name.as_str())
+    );
+    assert_eq!(
+        renamed.get("to").and_then(Value::as_str),
+        Some(new_name.as_str())
+    );
+    assert_eq!(
+        renamed.get("project").and_then(Value::as_str),
+        Some(proj.as_str())
+    );
+
+    // AC-008: list reflects the rename.
+    let list_out = h
+        .cmd()
+        .args(["component", "list", "--project", &proj, "--output", "json"])
+        .output()
+        .expect("failed to spawn jr for component list (AC-008)");
+    assert!(
+        list_out.status.success(),
+        "component list (AC-008) failed:\nstdout: {}\nstderr: {}",
+        String::from_utf8_lossy(&list_out.stdout),
+        String::from_utf8_lossy(&list_out.stderr)
+    );
+    let list: Value = serde_json::from_slice(&list_out.stdout)
+        .expect("component list (AC-008) output must be valid JSON");
+    let arr = list
+        .as_array()
+        .expect("component list (AC-008) must be a JSON array");
+    assert!(
+        arr.iter()
+            .any(|c| c.get("id").and_then(Value::as_str) == Some(id.as_str())
+                && c.get("name").and_then(Value::as_str) == Some(new_name.as_str())),
+        "component list (AC-008) must contain id={id} name={new_name}; got: {list}"
+    );
+    assert!(
+        !arr.iter()
+            .any(|c| c.get("name").and_then(Value::as_str) == Some(old_name.as_str())),
+        "component list (AC-008) must NOT contain the original name {old_name}; got: {list}"
+    );
+
+    // Teardown handled by `guard`'s Drop impl (component delete --orphan --yes,
+    // by the stable numeric id — survives the rename above per AC-015).
+}
+
+/// E2E: `jr issue create --project <proj> --component <comp>` sets the
+/// initial `components` array on a live Jira Cloud issue (BC-3.4.024).
+///
+/// Component discovery mirrors
+/// `test_e2e_issue_edit_component_multikey_bulk_roundtrip`'s precondition
+/// check — clean-skip if the project has zero components. No throwaway
+/// component is created by this test (independent of the lifecycle fixtures
+/// above).
+///
+/// Traces to: AC-009, BC-3.4.024, BC-3.4.025.
+#[test]
+#[ignore = "set JR_RUN_E2E=1 and use --include-ignored to run against a live Jira site"]
+fn test_e2e_issue_create_component_single_key_roundtrip() {
+    if !e2e_enabled() {
+        return;
+    }
+    let h = e2e_harness();
+    let proj = project();
+    let itype = issue_type();
+    let label = run_label();
+
+    let comp = match discover_component(&h, &proj, "issue create --component discovery") {
+        Some(c) => c,
+        None => return,
+    };
+
+    let summary = format!("[e2e {label}] create --component single-key");
+    let create_out = h
+        .cmd()
+        .args([
+            "issue",
+            "create",
+            "--project",
+            &proj,
+            "--type",
+            &itype,
+            "--summary",
+            &summary,
+            "--label",
+            &label,
+            "--component",
+            &comp,
+            "--output",
+            "json",
+        ])
+        .output()
+        .expect("failed to spawn jr for issue create --component");
+    if !create_out.status.success() {
+        if skip_on_403_404(
+            &create_out,
+            "issue create --component",
+            /* allow_404 */ true,
+        ) {
+            return;
+        }
+        panic!(
+            "issue create --component failed (non-403/404 -- not a permission skip):\n\
+             stdout: {}\nstderr: {}",
+            String::from_utf8_lossy(&create_out.stdout),
+            String::from_utf8_lossy(&create_out.stderr)
+        );
+    }
+    let created: Value = serde_json::from_slice(&create_out.stdout)
+        .expect("issue create --component output must be valid JSON");
+    let key = created
+        .get("key")
+        .and_then(Value::as_str)
+        .expect("issue create --component JSON must contain a 'key' field")
+        .to_string();
+
+    let view = poll_view(&key, &h);
+    let names: Vec<String> = view
+        .get("fields")
+        .and_then(|f| f.get("components"))
+        .and_then(Value::as_array)
+        .map(|arr| {
+            arr.iter()
+                .filter_map(|c| c.get("name").and_then(Value::as_str))
+                .map(str::to_string)
+                .collect()
+        })
+        .unwrap_or_default();
+    assert!(
+        names.contains(&comp),
+        "fields.components[].name must contain '{comp}' on {key}; got: {names:?}"
+    );
+
+    best_effort_close(&h, &key);
+}
+
+/// E2E: `jr issue edit <key> --component add:<comp>` / `remove:<comp>` on
+/// EXACTLY ONE key — the single-key native `update`-verb wire shape
+/// (BC-3.4.022), distinct from
+/// `test_e2e_issue_edit_component_multikey_bulk_roundtrip` above, which
+/// always supplies 2+ keys and therefore only ever exercises BC-3.4.023's
+/// `multiselectComponents` bulk shape.
+///
+/// Architecture Compliance Rule 3: this test MUST supply exactly ONE key on
+/// the `issue edit --component` command line — using 2+ keys would silently
+/// re-exercise the bulk path instead of the single-key native path this test
+/// targets.
+///
+/// Traces to: AC-010, BC-3.4.022.
+#[test]
+#[ignore = "set JR_RUN_E2E=1 and use --include-ignored to run against a live Jira site"]
+fn test_e2e_issue_edit_component_single_key_roundtrip() {
+    if !e2e_enabled() {
+        return;
+    }
+    let h = e2e_harness();
+    let proj = project();
+    let label = run_label();
+
+    let comp = match discover_component(&h, &proj, "issue edit --component single-key discovery") {
+        Some(c) => c,
+        None => return,
+    };
+
+    // Fresh, comp-free issue (--component NOT supplied at create time).
+    let summary = format!("[e2e {label}] edit --component single-key");
+    let key = seed_issue(&h, &label, &summary);
+
+    let component_names = |v: &Value| -> Vec<String> {
+        v.get("fields")
+            .and_then(|f| f.get("components"))
+            .and_then(Value::as_array)
+            .map(|arr| {
+                arr.iter()
+                    .filter_map(|c| c.get("name").and_then(Value::as_str))
+                    .map(str::to_string)
+                    .collect()
+            })
+            .unwrap_or_default()
+    };
+
+    let before = poll_view(&key, &h);
+    assert!(
+        !component_names(&before).contains(&comp),
+        "component '{comp}' must be ABSENT on {key} before add; got: {:?}",
+        component_names(&before)
+    );
+
+    // Single-key add (exactly ONE key on the command line -- BC-3.4.022, not
+    // BC-3.4.023's bulk multiselectComponents shape).
+    let add_out = h
+        .cmd()
+        .args(["issue", "edit", &key, "--component", &format!("add:{comp}")])
+        .output()
+        .expect("failed to spawn jr for single-key issue edit --component add");
+    if !add_out.status.success() {
+        if skip_on_403_404(
+            &add_out,
+            "single-key issue edit --component add",
+            /* allow_404 */ false,
+        ) {
+            best_effort_close(&h, &key);
+            return;
+        }
+        panic!(
+            "single-key issue edit --component add failed (non-403/404 -- not a permission \
+             skip):\nstdout: {}\nstderr: {}",
+            String::from_utf8_lossy(&add_out.stdout),
+            String::from_utf8_lossy(&add_out.stderr)
+        );
+    }
+    let after_add = poll_view(&key, &h);
+    assert!(
+        component_names(&after_add).contains(&comp),
+        "component '{comp}' must be PRESENT on {key} after add; got: {:?}",
+        component_names(&after_add)
+    );
+
+    // Single-key remove.
+    let remove_out = h
+        .cmd()
+        .args([
+            "issue",
+            "edit",
+            &key,
+            "--component",
+            &format!("remove:{comp}"),
+        ])
+        .output()
+        .expect("failed to spawn jr for single-key issue edit --component remove");
+    if !remove_out.status.success() {
+        if skip_on_403_404(
+            &remove_out,
+            "single-key issue edit --component remove",
+            /* allow_404 */ false,
+        ) {
+            best_effort_close(&h, &key);
+            return;
+        }
+        panic!(
+            "single-key issue edit --component remove failed (non-403/404 -- not a permission \
+             skip):\nstdout: {}\nstderr: {}",
+            String::from_utf8_lossy(&remove_out.stdout),
+            String::from_utf8_lossy(&remove_out.stderr)
+        );
+    }
+    let after_remove = poll_view(&key, &h);
+    assert!(
+        !component_names(&after_remove).contains(&comp),
+        "component '{comp}' must be ABSENT on {key} after remove; got: {:?}",
+        component_names(&after_remove)
+    );
+
+    best_effort_close(&h, &key);
+}
+
+/// E2E: `jr issue list --project <proj> --component <comp>` bare/`not:`/`none`
+/// filter grammar composition against a live JQL search (BC-2.1.018/019/020).
+///
+/// Component discovery mirrors AC-009/AC-010 (independent call, clean-skip on
+/// empty). A fresh issue is created WITH `--component <comp>` at create time,
+/// then polled via a bounded backoff loop (`poll_component_filter`, mirrors
+/// the suite's `poll_jql` convention) before the filter assertions, to absorb
+/// JQL search indexing lag (EC-COMP-E2E-5).
+///
+/// Traces to: AC-011, AC-012, AC-013, BC-2.1.018, BC-2.1.019, BC-2.1.020.
+#[test]
+#[ignore = "set JR_RUN_E2E=1 and use --include-ignored to run against a live Jira site"]
+fn test_e2e_issue_list_component_filter_grammar() {
+    if !e2e_enabled() {
+        return;
+    }
+    let h = e2e_harness();
+    let proj = project();
+    let itype = issue_type();
+    let label = run_label();
+
+    let comp = match discover_component(&h, &proj, "issue list --component filter discovery") {
+        Some(c) => c,
+        None => return,
+    };
+
+    let summary = format!("[e2e {label}] list --component filter grammar");
+    let create_out = h
+        .cmd()
+        .args([
+            "issue",
+            "create",
+            "--project",
+            &proj,
+            "--type",
+            &itype,
+            "--summary",
+            &summary,
+            "--label",
+            &label,
+            "--component",
+            &comp,
+            "--output",
+            "json",
+        ])
+        .output()
+        .expect("failed to spawn jr for issue create --component (filter fixture)");
+    if !create_out.status.success() {
+        if skip_on_403_404(
+            &create_out,
+            "issue create --component (filter fixture)",
+            /* allow_404 */ true,
+        ) {
+            return;
+        }
+        panic!(
+            "issue create --component (filter fixture) failed (non-403/404 -- not a permission \
+             skip):\nstdout: {}\nstderr: {}",
+            String::from_utf8_lossy(&create_out.stdout),
+            String::from_utf8_lossy(&create_out.stderr)
+        );
+    }
+    let created: Value = serde_json::from_slice(&create_out.stdout)
+        .expect("issue create --component (filter fixture) output must be valid JSON");
+    let key = created
+        .get("key")
+        .and_then(Value::as_str)
+        .expect("issue create --component (filter fixture) JSON must contain a 'key' field")
+        .to_string();
+    let _ = poll_view(&key, &h);
+
+    // LOW-A / flaky-risk fix (S-COMP-E2E-1 adversarial review, round 2): seed
+    // a SECOND, throwaway CONTROL issue that carries NO component. Without
+    // it, the bare-filter assertion below is positive-only (a regression
+    // that dropped the component constraint on the bare path would still
+    // contain `key`), and the `not:`/`none` non-empty assertions further
+    // down are only ever satisfied by externally-accumulated component-less
+    // issues in the project rather than anything this test controls. The
+    // control issue makes all three self-sufficient from this test's own
+    // fixtures.
+    let control_summary =
+        format!("[e2e {label}] list --component filter grammar (control, no component)");
+    let control_create_out = h
+        .cmd()
+        .args([
+            "issue",
+            "create",
+            "--project",
+            &proj,
+            "--type",
+            &itype,
+            "--summary",
+            &control_summary,
+            "--label",
+            &label,
+            "--output",
+            "json",
+        ])
+        .output()
+        .expect("failed to spawn jr for issue create (filter fixture control, no component)");
+    if !control_create_out.status.success() {
+        if skip_on_403_404(
+            &control_create_out,
+            "issue create (filter fixture control, no component)",
+            /* allow_404 */ true,
+        ) {
+            best_effort_close(&h, &key);
+            return;
+        }
+        panic!(
+            "issue create (filter fixture control, no component) failed (non-403/404 -- not a \
+             permission skip):\nstdout: {}\nstderr: {}",
+            String::from_utf8_lossy(&control_create_out.stdout),
+            String::from_utf8_lossy(&control_create_out.stderr)
+        );
+    }
+    let control_created: Value = serde_json::from_slice(&control_create_out.stdout)
+        .expect("issue create (filter fixture control, no component) output must be valid JSON");
+    let control_key = control_created
+        .get("key")
+        .and_then(Value::as_str)
+        .expect(
+            "issue create (filter fixture control, no component) JSON must contain a 'key' field",
+        )
+        .to_string();
+    let _ = poll_view(&control_key, &h);
+
+    let key_in_results = |v: &Value, target: &str| -> bool {
+        v.as_array()
+            .map(|arr| {
+                arr.iter()
+                    .any(|i| i.get("key").and_then(Value::as_str) == Some(target))
+            })
+            .unwrap_or(false)
+    };
+
+    // AC-011: bare --component finds the tagged key. Bounded poll to absorb
+    // JQL search indexing lag (EC-COMP-E2E-5).
+    let found = poll_component_filter(&h, &proj, &comp, &key);
+    assert!(
+        found,
+        "issue list --component {comp} must contain {key} (AC-011); \
+         search indexing may not have caught up"
+    );
+    // LOW-A (S-COMP-E2E-1 adversarial review): the assertion above is
+    // positive-only -- it never proves the bare filter EXCLUDES a
+    // component-less issue. A regression that dropped the component
+    // constraint on the bare path (returning all project issues unfiltered)
+    // would still contain `key` and pass the assertion above. Re-query the
+    // same bare filter and assert the component-less CONTROL key is absent.
+    //
+    // MEDIUM fix (S-COMP-E2E-1 follow-up review): the poll above proves
+    // GET-by-key consistency for `key` via `poll_view` (issue view), NOT
+    // JQL-search-index consistency for `control_key` (issue list). Without
+    // an independent proof that `control_key` is actually JQL-searchable,
+    // the absence assertion below is vacuous: if a bare-filter regression
+    // dropped the component constraint AND `control_key` simply hasn't hit
+    // the search index yet, the assertion would pass for the wrong reason
+    // (not indexed, not "correctly excluded"). Prove indexing first, via a
+    // filter `control_key` MUST satisfy (`not:{comp}` -- it has no
+    // component) -- mirrors the discipline already used at AC-012/AC-013
+    // below. This poll doubles as AC-012's own control-indexing proof, so
+    // its result is reused there instead of polling a second time.
+    let control_found_not = poll_component_filter(&h, &proj, &format!("not:{comp}"), &control_key);
+    assert!(
+        control_found_not,
+        "issue list --component not:{comp} must contain the component-less control key \
+         {control_key} (AC-011/AC-012 indexing proof); search indexing may not have caught up"
+    );
+    let bare_out = h
+        .cmd()
+        .args([
+            "issue",
+            "list",
+            "--project",
+            &proj,
+            "--component",
+            &comp,
+            "--output",
+            "json",
+        ])
+        .output()
+        .expect("failed to spawn jr for issue list --component (AC-011 control check)");
+    assert!(
+        bare_out.status.success(),
+        "issue list --component {comp} (AC-011 control check) failed:\nstdout: {}\nstderr: {}",
+        String::from_utf8_lossy(&bare_out.stdout),
+        String::from_utf8_lossy(&bare_out.stderr)
+    );
+    let bare_v: Value = serde_json::from_slice(&bare_out.stdout)
+        .expect("issue list --component (AC-011 control check) output must be valid JSON");
+    assert!(
+        !key_in_results(&bare_v, &control_key),
+        "issue list --component {comp} must NOT contain the component-less control key \
+         {control_key} (AC-011); got: {bare_v}"
+    );
+
+    // AC-012: not:<comp> excludes the tagged key (issue HAS the component)
+    // and includes the control key (issue has NO component). `control_found_not`
+    // was already proven true above (hoisted as the AC-011 indexing proof) --
+    // it absorbs indexing lag for the control issue AND doubles as the
+    // "provably non-empty, self-controlled" evidence the LOW-1 non-empty
+    // check below used to lack. Reused here rather than polling a second
+    // time for the identical filter/key pair.
+    let not_out = h
+        .cmd()
+        .args([
+            "issue",
+            "list",
+            "--project",
+            &proj,
+            "--component",
+            &format!("not:{comp}"),
+            "--output",
+            "json",
+        ])
+        .output()
+        .expect("failed to spawn jr for issue list --component not: (AC-012)");
+    assert!(
+        not_out.status.success(),
+        "issue list --component not:{comp} failed:\nstdout: {}\nstderr: {}",
+        String::from_utf8_lossy(&not_out.stdout),
+        String::from_utf8_lossy(&not_out.stderr)
+    );
+    let not_v: Value = serde_json::from_slice(&not_out.stdout)
+        .expect("issue list --component not: output must be valid JSON");
+    assert!(
+        !key_in_results(&not_v, &key),
+        "issue list --component not:{comp} must NOT contain {key} (AC-012); got: {not_v}"
+    );
+    // LOW-1 (S-COMP-E2E-1 adversarial review): the assertion above is
+    // vacuously true if the filter returns an EMPTY result set — that would
+    // also be a real regression (the filter over-excluding, or JQL
+    // composition breaking outright), not evidence the exclusion worked. The
+    // control_found_not poll above already proves this test's OWN
+    // control fixture composes real, non-empty `not:` results; this
+    // assertion remains as a second, independent signal (and stays correct
+    // even in projects that also accumulate external component-less
+    // issues).
+    assert!(
+        not_v.as_array().is_some_and(|arr| !arr.is_empty()),
+        "issue list --component not:{comp} must return a NON-EMPTY result set (AC-012); \
+         an empty set would vacuously satisfy the exclusion check above without \
+         proving the not: filter is composing real results; got: {not_v}"
+    );
+
+    // AC-013: none excludes the tagged key (issue HAS a component) and
+    // includes the control key (issue has NO component). Same poll-first
+    // rationale as AC-012 above.
+    let control_found_none = poll_component_filter(&h, &proj, "none", &control_key);
+    assert!(
+        control_found_none,
+        "issue list --component none must contain the component-less control key \
+         {control_key} (AC-013); search indexing may not have caught up"
+    );
+    let none_out = h
+        .cmd()
+        .args([
+            "issue",
+            "list",
+            "--project",
+            &proj,
+            "--component",
+            "none",
+            "--output",
+            "json",
+        ])
+        .output()
+        .expect("failed to spawn jr for issue list --component none (AC-013)");
+    assert!(
+        none_out.status.success(),
+        "issue list --component none failed:\nstdout: {}\nstderr: {}",
+        String::from_utf8_lossy(&none_out.stdout),
+        String::from_utf8_lossy(&none_out.stderr)
+    );
+    let none_v: Value = serde_json::from_slice(&none_out.stdout)
+        .expect("issue list --component none output must be valid JSON");
+    assert!(
+        !key_in_results(&none_v, &key),
+        "issue list --component none must NOT contain {key} (AC-013); got: {none_v}"
+    );
+    // LOW-1 (S-COMP-E2E-1 adversarial review): same vacuous-empty-set concern
+    // as the AC-012 assertion above — `none` returning zero results would
+    // also (incorrectly) satisfy "target key absent" without proving the
+    // filter did any real exclusion. The control_found_none poll above
+    // already proves this test's OWN control fixture composes real,
+    // non-empty `none` results; this assertion remains as a second,
+    // independent signal.
+    assert!(
+        none_v.as_array().is_some_and(|arr| !arr.is_empty()),
+        "issue list --component none must return a NON-EMPTY result set (AC-013); \
+         an empty set would vacuously satisfy the exclusion check above without \
+         proving the none filter is composing real results; got: {none_v}"
+    );
+
+    best_effort_close(&h, &key);
+    best_effort_close(&h, &control_key);
+}
+
 // ────────────────────────────────────────────────────────────────────────────
 // ADF markdown round-trip tests (#475)
 //
@@ -8962,12 +10872,11 @@ fn adf_has_task_item(node: &Value, text: &str, state: &str) -> bool {
 /// Returns `true` if any descendant `text` node in `node` contains `needle`
 /// as a substring.
 fn adf_contains_text(node: &Value, needle: &str) -> bool {
-    if node.get("type").and_then(Value::as_str) == Some("text") {
-        if let Some(t) = node.get("text").and_then(Value::as_str) {
-            if t.contains(needle) {
-                return true;
-            }
-        }
+    if node.get("type").and_then(Value::as_str) == Some("text")
+        && let Some(t) = node.get("text").and_then(Value::as_str)
+        && t.contains(needle)
+    {
+        return true;
     }
     match node {
         Value::Array(items) => items.iter().any(|v| adf_contains_text(v, needle)),
@@ -9019,18 +10928,18 @@ fn adf_has_panel(node: &Value, panel_type: &str) -> bool {
 /// `subsup` mark whose `attrs.type` equals `mark_type` (e.g. `"sub"` or
 /// `"sup"`).
 fn adf_has_subsup_mark(node: &Value, mark_type: &str) -> bool {
-    if node.get("type").and_then(Value::as_str) == Some("text") {
-        if let Some(marks) = node.get("marks").and_then(Value::as_array) {
-            let hit = marks.iter().any(|m| {
-                m.get("type").and_then(Value::as_str) == Some("subsup")
-                    && m.get("attrs")
-                        .and_then(|a| a.get("type"))
-                        .and_then(Value::as_str)
-                        == Some(mark_type)
-            });
-            if hit {
-                return true;
-            }
+    if node.get("type").and_then(Value::as_str) == Some("text")
+        && let Some(marks) = node.get("marks").and_then(Value::as_array)
+    {
+        let hit = marks.iter().any(|m| {
+            m.get("type").and_then(Value::as_str) == Some("subsup")
+                && m.get("attrs")
+                    .and_then(|a| a.get("type"))
+                    .and_then(Value::as_str)
+                    == Some(mark_type)
+        });
+        if hit {
+            return true;
         }
     }
     match node {
@@ -9499,15 +11408,13 @@ fn test_e2e_markdown_block_html_preserved() {
 /// `type` only. Recursion is unbounded by depth, safe because the only input
 /// is the small, self-created issue description read back via `poll_view`.
 fn adf_has_blockquote_in_list_item(node: &Value) -> bool {
-    if node.get("type").and_then(Value::as_str) == Some("listItem") {
-        if let Some(content) = node.get("content").and_then(Value::as_array) {
-            if content
-                .iter()
-                .any(|child| child.get("type").and_then(Value::as_str) == Some("blockquote"))
-            {
-                return true;
-            }
-        }
+    if node.get("type").and_then(Value::as_str) == Some("listItem")
+        && let Some(content) = node.get("content").and_then(Value::as_array)
+        && content
+            .iter()
+            .any(|child| child.get("type").and_then(Value::as_str) == Some("blockquote"))
+    {
+        return true;
     }
     match node {
         Value::Array(items) => items.iter().any(adf_has_blockquote_in_list_item),
@@ -9870,7 +11777,7 @@ fn poll_comment_until(
 /// Calls `jr api GET /rest/api/3/project/{project_key}/role`, which returns a JSON
 /// object mapping role names to their URL. Prefers `"Service Desk Team"` (the
 /// canonical, stable agent role on JSM company-managed projects; Atlassian explicitly
-/// refused to rename it — JSDCLOUD-1376 Won't Fix; DEC-175 Q3). Falls back to the
+/// refused to rename it — JSDCLOUD-1376 Won't Fix; D-175 Q3). Falls back to the
 /// first key in the response object. Returns `None` when the API call fails, the
 /// response is not a JSON object, or the object has no keys.
 fn discover_project_role(h: &E2eHarness, project_key: &str) -> Option<String> {
@@ -9943,10 +11850,10 @@ fn post_probe_comment(h: &E2eHarness, key: &str, body: &str, scenario: &str) -> 
 ///   `sd.public.comment={internal:true}` via `jr api POST`, edits it twice with
 ///   `--internal`, and asserts the property is preserved after each edit.
 /// - **Scenario 2 (PRESERVED-visibility baseline):** Discovers a JSM project role via
-///   `GET /rest/api/3/project/{proj}/role` (prefers "Service Desk Team"; DEC-175 Q3).
+///   `GET /rest/api/3/project/{proj}/role` (prefers "Service Desk Team"; D-175 Q3).
 ///   Creates a comment with a Jira `visibility` restriction
 ///   (`{"type":"role","value":"<role>"}`), asserts the restriction is present on
-///   GET read-back immediately after create (anti-vacuous-pass guard per DEC-175 Q2:
+///   GET read-back immediately after create (anti-vacuous-pass guard per D-175 Q2:
 ///   an invalid role name may be silently dropped by the API, so assert on round-trip
 ///   not on 2xx alone), performs a body-only edit (no flag), and asserts the
 ///   `visibility` restriction is still present unchanged (PRESERVED: a body-only PUT
@@ -9957,7 +11864,7 @@ fn post_probe_comment(h: &E2eHarness, key: &str, body: &str, scenario: &str) -> 
 ///   both present on read-back, edits with `--public --yes`, and asserts (a)
 ///   `sd.public.comment` is updated to `internal=false` (MERGE) and (b) the
 ///   `visibility` restriction is still present (PRESERVED — properties-MERGE PUT
-///   does not include a `"visibility"` key; two axes are orthogonal per DEC-175 Q5).
+///   does not include a `"visibility"` key; two axes are orthogonal per D-175 Q5).
 ///
 /// Each scenario deletes its own probe comment immediately after assertions.
 /// The parent EJ issue is NOT closed.
@@ -9993,7 +11900,7 @@ fn test_e2e_comment_edit_visibility_merge_semantics() {
 
     // Discover a project role for PRESERVED-visibility probes (Scenarios 2/3).
     // Prefers "Service Desk Team" (canonical JSM company-managed agent role;
-    // Atlassian Won't-Fix JSDCLOUD-1376; DEC-175 Q3). Scenarios 2/3 are
+    // Atlassian Won't-Fix JSDCLOUD-1376; D-175 Q3). Scenarios 2/3 are
     // individually clean-skipped when discovery fails — see labeled blocks below.
     let vis_role_opt = discover_project_role(&h, &jsm_project);
 
@@ -10137,14 +12044,14 @@ fn test_e2e_comment_edit_visibility_merge_semantics() {
         delete_comment_probe(&h, &key, &cid);
     }
 
-    // ── Scenario 2 (PRESERVED-visibility baseline — 5-step, DEC-175) ───────────
+    // ── Scenario 2 (PRESERVED-visibility baseline — 5-step, D-175) ───────────
     // Verifies that a body-only PUT leaves an existing Jira `visibility` restriction
     // UNCHANGED (PRESERVED). Uses the platform `visibility` field, NOT
-    // `sd.public.comment` properties — these are orthogonal dimensions (DEC-175 Q5).
+    // `sd.public.comment` properties — these are orthogonal dimensions (D-175 Q5).
     //
     // (1) Clean-skip if role discovery yielded nothing.
     // (2) Create probe comment WITH visibility={"type":"role","value":"<role>"}.
-    // (3) GET; assert visibility.value == <role> (anti-vacuous-pass per DEC-175 Q2:
+    // (3) GET; assert visibility.value == <role> (anti-vacuous-pass per D-175 Q2:
     //     an invalid role name may be silently dropped; assert round-trip, not 2xx).
     // (4) Body-only edit (no --internal/--public flag).
     // (5) GET; assert visibility still present with same type/value (PRESERVED:
@@ -10156,7 +12063,7 @@ fn test_e2e_comment_edit_visibility_merge_semantics() {
             None => {
                 eprintln!(
                     "[SKIP] S2: no usable project role discovered for {jsm_project} \
-                     — skipping PRESERVED-visibility baseline (DEC-175)"
+                     — skipping PRESERVED-visibility baseline (D-175)"
                 );
                 break 'scenario2;
             }
@@ -10173,7 +12080,7 @@ fn test_e2e_comment_edit_visibility_merge_semantics() {
             None => break 'scenario2,
         };
 
-        // (3) Anti-vacuous-pass guard (DEC-175 Q2): assert visibility is present on
+        // (3) Anti-vacuous-pass guard (D-175 Q2): assert visibility is present on
         // GET read-back immediately after create. An invalid role name may be silently
         // dropped by Jira (unconfirmed behavior), making assertions vacuous. Asserting
         // on the round-trip ensures we test a real restriction, not a ghost.
@@ -10191,7 +12098,7 @@ fn test_e2e_comment_edit_visibility_merge_semantics() {
                 eprintln!(
                     "[WARN] S2: visibility.value != '{role_name}' after create \
                      — role may be invalid on {jsm_project} or API lag; \
-                     skipping Scenario 2 to avoid vacuous assertion (DEC-175 Q2)"
+                     skipping Scenario 2 to avoid vacuous assertion (D-175 Q2)"
                 );
                 delete_comment_probe(&h, &key, &cid);
                 break 'scenario2;
@@ -10226,7 +12133,7 @@ fn test_e2e_comment_edit_visibility_merge_semantics() {
 
         // (5) Assert visibility restriction is PRESERVED after body-only edit.
         // A body-only PUT sends only {"body":<adf>} — no "visibility" key — so the
-        // existing restriction must be untouched (BC-3.5.006, DEC-175 Q6).
+        // existing restriction must be untouched (BC-3.5.006, D-175 Q6).
         {
             let role = role_name.as_str();
             match poll_comment_until(
@@ -10249,7 +12156,7 @@ fn test_e2e_comment_edit_visibility_merge_semantics() {
                         comment_visibility_value(&c) == Some(role),
                         "S2: Jira visibility restriction must be PRESERVED after a body-only \
                          edit — body-only PUT sends no 'visibility' key and must not clear \
-                         the existing restriction (BC-3.5.006, DEC-175 Q6); got: {c}"
+                         the existing restriction (BC-3.5.006, D-175 Q6); got: {c}"
                     );
                 }
             }
@@ -10258,9 +12165,9 @@ fn test_e2e_comment_edit_visibility_merge_semantics() {
         delete_comment_probe(&h, &key, &cid);
     }
 
-    // ── Scenario 3 (compound cell — orthogonal axes, DEC-175) ───────────────
+    // ── Scenario 3 (compound cell — orthogonal axes, D-175) ───────────────
     // Verifies that visibility (Jira platform restriction) and sd.public.comment
-    // (JSM portal visibility property) are orthogonal (DEC-175 Q5): a
+    // (JSM portal visibility property) are orthogonal (D-175 Q5): a
     // properties-MERGE edit (--public --yes) updates sd.public.comment but does NOT
     // disturb a pre-existing Jira visibility restriction (PRESERVED because the PUT
     // body does not include a "visibility" key).
@@ -10275,7 +12182,7 @@ fn test_e2e_comment_edit_visibility_merge_semantics() {
     // (5) GET; assert BOTH:
     //     (a) sd.public.comment is now internal=false (MERGE: property updated), AND
     //     (b) visibility restriction still present with same value (PRESERVED:
-    //         orthogonal axis untouched — DEC-175 Q5, BC-3.5.006).
+    //         orthogonal axis untouched — D-175 Q5, BC-3.5.006).
     // Teardown: jr issue comment delete KEY --id CID --yes
     'scenario3: {
         let role_name = match vis_role_opt.as_deref() {
@@ -10283,7 +12190,7 @@ fn test_e2e_comment_edit_visibility_merge_semantics() {
             None => {
                 eprintln!(
                     "[SKIP] S3: no usable project role discovered for {jsm_project} \
-                     — skipping compound-cell orthogonal-axes probe (DEC-175)"
+                     — skipping compound-cell orthogonal-axes probe (D-175)"
                 );
                 break 'scenario3;
             }
@@ -10302,7 +12209,7 @@ fn test_e2e_comment_edit_visibility_merge_semantics() {
         };
 
         // (3) Assert BOTH visibility and sd.public.comment present on read-back.
-        // Anti-vacuous-pass guard for both dimensions (DEC-175 Q2 for visibility).
+        // Anti-vacuous-pass guard for both dimensions (D-175 Q2 for visibility).
         {
             let role = role_name.as_str();
             let both_present = |c: &Value| {
@@ -10375,7 +12282,7 @@ fn test_e2e_comment_edit_visibility_merge_semantics() {
                         "S3: Jira visibility restriction must be PRESERVED after --public \
                          --yes edit — properties-MERGE PUT does not include a 'visibility' \
                          key and must not disturb the existing restriction \
-                         (orthogonal axes — DEC-175 Q5, BC-3.5.006); got: {c}"
+                         (orthogonal axes — D-175 Q5, BC-3.5.006); got: {c}"
                     );
                 }
             }
@@ -10640,12 +12547,11 @@ fn test_e2e_jsm_attachment_upload_public() {
     // GET /rest/api/3/issue/{key}?fields=attachment returns the raw Jira attachment
     // objects before jr curates them — the platform wire format evidence for BC-3.9.007.
     let raw_path = format!("/rest/api/3/issue/{key}?fields=attachment");
-    if let Ok(raw_out) = h.cmd().args(["api", &raw_path]).output() {
-        if raw_out.status.success() {
-            if let Ok(raw_v) = serde_json::from_slice::<Value>(&raw_out.stdout) {
-                p2_3c_print("RAW-PLATFORM-attachment-public", &raw_v);
-            }
-        }
+    if let Ok(raw_out) = h.cmd().args(["api", &raw_path]).output()
+        && raw_out.status.success()
+        && let Ok(raw_v) = serde_json::from_slice::<Value>(&raw_out.stdout)
+    {
+        p2_3c_print("RAW-PLATFORM-attachment-public", &raw_v);
     }
 
     // Step 8: minimal shape check (BC-3.9.007 curated keys).
@@ -10870,12 +12776,11 @@ fn test_e2e_jsm_attachment_upload_internal() {
 
     // P2-3c schema probe B: raw platform attachment JSON (BC-3.9.007 wire source).
     let raw_path = format!("/rest/api/3/issue/{key}?fields=attachment");
-    if let Ok(raw_out) = h.cmd().args(["api", &raw_path]).output() {
-        if raw_out.status.success() {
-            if let Ok(raw_v) = serde_json::from_slice::<Value>(&raw_out.stdout) {
-                p2_3c_print("RAW-PLATFORM-attachment-internal", &raw_v);
-            }
-        }
+    if let Ok(raw_out) = h.cmd().args(["api", &raw_path]).output()
+        && raw_out.status.success()
+        && let Ok(raw_v) = serde_json::from_slice::<Value>(&raw_out.stdout)
+    {
+        p2_3c_print("RAW-PLATFORM-attachment-internal", &raw_v);
     }
 
     // Step 8: minimal shape check (BC-3.9.007 curated keys).
@@ -11904,5 +13809,640 @@ fn test_e2e_jsm_attachment_upload_no_flag() {
             .iter()
             .any(|item| item.get("id").and_then(Value::as_str) == Some(the_aid.as_str())),
         "AC-004: list must contain uploaded AID={the_aid} (BC-3.9.002); got: {list_stdout}"
+    );
+}
+
+// ===========================================================================
+// Mention resolution round-trip E2E (S-cycle5-mention-resolution-wiring, #674)
+// ===========================================================================
+//
+// Four `JR_RUN_E2E`-gated round-trip scenarios (VP-674-014/015/016/017,
+// H-NEW-MENTION-009): comment add (PRIMARY per the human-approved scope),
+// issue create (platform), issue edit, and JSM `issue create --request-type`.
+// Each posts a bracket-form `[~accountid:<id>]` mention against a real Jira
+// user, fetches the object back via the raw REST API (`jr api`, bypassing
+// any `jr`-side rendering), and asserts the fetched ADF contains a `mention`
+// node whose `attrs.id` equals the controlled test account's REAL accountId
+// — proving the full round trip end-to-end against live Jira, not a
+// wiremock fixture (no wiremock fixture can prove Jira's real `mention` node
+// schema accepts the emitted shape).
+//
+// The mention target DEFAULTS to the authenticated account's own accountId,
+// discovered at runtime via `GET /rest/api/3/myself` — a self-mention. This
+// sidesteps the @Name display-name ambiguity these tests would otherwise
+// face against a shared, live, multi-user Jira org entirely, since
+// bracket-form mentions (`[~accountid:<id>]`) take an accountId directly and
+// carry no ExactMultiple/Ambiguous resolution risk. Self-mentioning a
+// controlled test account (the CI service account itself) still fully
+// validates the round trip end-to-end: real Jira accepting and persisting
+// the `mention` node with that accountId is exactly what these tests exist
+// to prove — the round trip does not depend on the mention target being a
+// distinct account.
+//
+// `JR_E2E_MENTION_ACCOUNT_ID` remains available as an OPTIONAL OVERRIDE, for
+// mentioning a different controlled account when that's useful (never a
+// real third party). This lets the four `test_e2e_mention_*` round-trip
+// scenarios run in CI without any separately-configured seam. Documented in
+// `docs/specs/e2e-live-jira-testing.md` §8 in this same commit.
+
+/// Returns the mention-target accountId to use in the round-trip tests
+/// below: `JR_E2E_MENTION_ACCOUNT_ID` when set and non-empty (explicit
+/// override), otherwise the authenticated account's own accountId via
+/// `GET /rest/api/3/myself` (self-mention default). Returns `None` only when
+/// the env var is unset AND the `/myself` lookup fails or carries no
+/// `accountId` — a genuine "cannot determine a mention target" condition,
+/// the clean-skip signal for all four mention round-trip tests below.
+fn mention_account_id(h: &E2eHarness) -> Option<String> {
+    match env::var("JR_E2E_MENTION_ACCOUNT_ID") {
+        Ok(v) if !v.trim().is_empty() => return Some(v.trim().to_string()),
+        _ => {}
+    }
+    fetch_raw(h, "/rest/api/3/myself").and_then(|v| {
+        v.get("accountId")
+            .and_then(Value::as_str)
+            .map(str::to_string)
+    })
+}
+
+/// Fetch a JSON value via `jr api <path>` — a raw REST passthrough used to
+/// inspect the real, stored ADF shape without going through any `jr`-side
+/// rendering (`issue view`/`comment view` render to human text and would
+/// lose the `mention` node's structure).
+///
+/// Returns `None` on any spawn/exit/parse failure — callers should `expect`
+/// with a descriptive message, since a `None` here means the round-trip
+/// itself could not be verified (a real failure, not a clean-skip — the
+/// env-gate clean-skip already happened before this is called).
+fn fetch_raw(h: &E2eHarness, path: &str) -> Option<Value> {
+    let out = h.cmd().args(["api", path]).output().ok()?;
+    if !out.status.success() {
+        eprintln!(
+            "[WARN] fetch_raw: `jr api {path}` exited non-zero (exit {:?}): {}",
+            out.status.code(),
+            String::from_utf8_lossy(&out.stderr)
+        );
+        return None;
+    }
+    serde_json::from_slice(&out.stdout).ok()
+}
+
+/// Recursively search an ADF value for a `mention` node whose `attrs.id`
+/// equals `id`. Mirrors `tests/mention_resolution.rs::has_mention_with_id`,
+/// duplicated here (not shared) since `e2e_live.rs` and
+/// `mention_resolution.rs` are independent integration-test binaries with
+/// no shared non-`common` module.
+fn adf_contains_mention_id(v: &Value, id: &str) -> bool {
+    if v.get("type").and_then(Value::as_str) == Some("mention")
+        && v["attrs"]["id"].as_str() == Some(id)
+    {
+        return true;
+    }
+    if let Some(children) = v.get("content").and_then(Value::as_array) {
+        return children.iter().any(|c| adf_contains_mention_id(c, id));
+    }
+    false
+}
+
+/// Best-effort `Drop`-guard for the comment-add mention round-trip test
+/// (VP-674-016, PRIMARY scenario) — mirrors `AttachmentDropGuard`/
+/// `ComponentDropGuard`'s convention (populate fields immediately after
+/// each creation call succeeds; `drop()` never panics; a fresh
+/// `E2eHarness::new()` is used since the outer harness borrow would not
+/// survive a panic-unwind).
+struct MentionCommentDropGuard {
+    key: Option<String>,
+    comment_id: Option<String>,
+}
+
+impl MentionCommentDropGuard {
+    fn new() -> Self {
+        Self {
+            key: None,
+            comment_id: None,
+        }
+    }
+}
+
+impl Drop for MentionCommentDropGuard {
+    fn drop(&mut self) {
+        if let (Some(key), Some(id)) = (&self.key, &self.comment_id) {
+            let h = E2eHarness::new();
+            match h
+                .cmd()
+                .args(["issue", "comment", "delete", key, "--id", id, "--yes"])
+                .output()
+            {
+                Ok(o) if o.status.success() => {}
+                Ok(o) => eprintln!(
+                    "[WARN] MentionCommentDropGuard Drop: delete comment {id} on {key} failed \
+                     (exit {:?}): {}",
+                    o.status.code(),
+                    String::from_utf8_lossy(&o.stderr)
+                ),
+                Err(e) => {
+                    eprintln!("[WARN] MentionCommentDropGuard Drop: delete spawn error: {e}")
+                }
+            }
+        }
+        if let Some(ref key) = self.key {
+            let h = E2eHarness::new();
+            best_effort_close(&h, key);
+        }
+    }
+}
+
+/// VP-674-016 (PRIMARY E2E acceptance scenario, per the human-approved scope
+/// naming comment add first in scope item 9's example). Pins BC-3.5.013.
+///
+/// `jr issue comment add <key> "cc [~accountid:<id>]" --markdown` →
+/// `GET /rest/api/3/issue/{key}/comment/{id}` (via `jr api`) → assert a
+/// `mention` node with the resolved accountId in the comment's ADF body.
+#[test]
+#[ignore = "set JR_RUN_E2E=1 and use --include-ignored to run"]
+fn test_e2e_mention_comment_add_roundtrip() {
+    if !e2e_enabled() {
+        return;
+    }
+    let h = e2e_harness();
+    let Some(account_id) = mention_account_id(&h) else {
+        eprintln!(
+            "[SKIP] could not determine a mention target (no JR_E2E_MENTION_ACCOUNT_ID and \
+             GET /rest/api/3/myself returned no accountId) — skipping mention comment-add \
+             round-trip (VP-674-016)"
+        );
+        return;
+    };
+    let run_id = run_label();
+    let mut guard = MentionCommentDropGuard::new();
+
+    let key = seed_issue(
+        &h,
+        &format!("e2e-{run_id}"),
+        &format!("[e2e-mention {run_id}] comment add round-trip"),
+    );
+    guard.key = Some(key.clone());
+
+    let text = format!("cc [~accountid:{account_id}] please review");
+    let out = h
+        .cmd()
+        .args([
+            "issue",
+            "comment",
+            "add",
+            &key,
+            &text,
+            "--markdown",
+            "--output",
+            "json",
+        ])
+        .output()
+        .expect("failed to spawn jr for mention comment add");
+    assert!(
+        out.status.success(),
+        "VP-674-016: comment add with a mention must exit 0; stdout: {}\nstderr: {}",
+        String::from_utf8_lossy(&out.stdout),
+        String::from_utf8_lossy(&out.stderr)
+    );
+
+    let created: Value = serde_json::from_slice(&out.stdout)
+        .expect("VP-674-016: comment add --output json must be valid JSON");
+    let comment_id = created
+        .get("id")
+        .and_then(Value::as_str)
+        .expect("VP-674-016: created comment JSON must carry an 'id' field")
+        .to_string();
+    guard.comment_id = Some(comment_id.clone());
+
+    let fetched = fetch_raw(&h, &format!("/rest/api/3/issue/{key}/comment/{comment_id}"))
+        .expect("VP-674-016: failed to fetch the created comment back via `jr api`");
+    let body = fetched.get("body").cloned().unwrap_or(Value::Null);
+    assert!(
+        adf_contains_mention_id(&body, &account_id),
+        "VP-674-016: fetched comment ADF must contain a mention node with \
+         attrs.id == {account_id}; body={body}"
+    );
+}
+
+/// VP-674-014. Pins BC-3.3.012 (platform `issue create` mention wiring).
+///
+/// `jr issue create --description "cc [~accountid:<id>]" --markdown` →
+/// `GET /rest/api/3/issue/{key}` (via `jr api`) → assert a `mention` node
+/// with `attrs.id == <id>` in the description ADF.
+#[test]
+#[ignore = "set JR_RUN_E2E=1 and use --include-ignored to run"]
+fn test_e2e_mention_issue_create_roundtrip() {
+    if !e2e_enabled() {
+        return;
+    }
+    let h = e2e_harness();
+    let Some(account_id) = mention_account_id(&h) else {
+        eprintln!(
+            "[SKIP] could not determine a mention target (no JR_E2E_MENTION_ACCOUNT_ID and \
+             GET /rest/api/3/myself returned no accountId) — skipping mention issue-create \
+             round-trip (VP-674-014)"
+        );
+        return;
+    };
+    let run_id = run_label();
+    let itype = issue_type();
+    let text = format!("cc [~accountid:{account_id}]");
+
+    let out = h
+        .cmd()
+        .args([
+            "issue",
+            "create",
+            "--project",
+            &project(),
+            "--type",
+            &itype,
+            "--summary",
+            &format!("[e2e-mention {run_id}] create round-trip"),
+            "--label",
+            &format!("e2e-{run_id}"),
+            "--description",
+            &text,
+            "--markdown",
+            "--output",
+            "json",
+        ])
+        .output()
+        .expect("failed to spawn jr for mention issue create");
+    assert!(
+        out.status.success(),
+        "VP-674-014: issue create with a mention description must exit 0; stdout: {}\nstderr: {}",
+        String::from_utf8_lossy(&out.stdout),
+        String::from_utf8_lossy(&out.stderr)
+    );
+
+    let created: Value = serde_json::from_slice(&out.stdout)
+        .expect("VP-674-014: issue create --output json must be valid JSON");
+    let key = created
+        .get("key")
+        .and_then(Value::as_str)
+        .expect("VP-674-014: created issue JSON must carry a 'key' field")
+        .to_string();
+    let _ = poll_view(&key, &h);
+
+    let fetched = fetch_raw(&h, &format!("/rest/api/3/issue/{key}?fields=description"))
+        .expect("VP-674-014: failed to fetch the created issue back via `jr api`");
+    let desc = fetched
+        .get("fields")
+        .and_then(|f| f.get("description"))
+        .cloned()
+        .unwrap_or(Value::Null);
+    assert!(
+        adf_contains_mention_id(&desc, &account_id),
+        "VP-674-014: fetched issue description ADF must contain a mention node \
+         with attrs.id == {account_id}; desc={desc}"
+    );
+
+    best_effort_close(&h, &key);
+}
+
+/// VP-674-015. Pins BC-3.4.032 (`issue edit` mention wiring, live path).
+///
+/// `jr issue edit <key> --description "cc [~accountid:<id>]" --markdown` on
+/// a throwaway issue → fetch back via `jr api` → assert the resolved
+/// mention node.
+#[test]
+#[ignore = "set JR_RUN_E2E=1 and use --include-ignored to run"]
+fn test_e2e_mention_issue_edit_roundtrip() {
+    if !e2e_enabled() {
+        return;
+    }
+    let h = e2e_harness();
+    let Some(account_id) = mention_account_id(&h) else {
+        eprintln!(
+            "[SKIP] could not determine a mention target (no JR_E2E_MENTION_ACCOUNT_ID and \
+             GET /rest/api/3/myself returned no accountId) — skipping mention issue-edit \
+             round-trip (VP-674-015)"
+        );
+        return;
+    };
+    let run_id = run_label();
+
+    let key = seed_issue(
+        &h,
+        &format!("e2e-{run_id}"),
+        &format!("[e2e-mention {run_id}] edit round-trip"),
+    );
+
+    let text = format!("cc [~accountid:{account_id}]");
+    let out = h
+        .cmd()
+        .args(["issue", "edit", &key, "--description", &text, "--markdown"])
+        .output()
+        .expect("failed to spawn jr for mention issue edit");
+    let edit_ok = out.status.success();
+    if edit_ok {
+        let fetched = fetch_raw(&h, &format!("/rest/api/3/issue/{key}?fields=description"))
+            .expect("VP-674-015: failed to fetch the edited issue back via `jr api`");
+        let desc = fetched
+            .get("fields")
+            .and_then(|f| f.get("description"))
+            .cloned()
+            .unwrap_or(Value::Null);
+        best_effort_close(&h, &key);
+        assert!(
+            adf_contains_mention_id(&desc, &account_id),
+            "VP-674-015: fetched issue description ADF must contain a mention node \
+             with attrs.id == {account_id}; desc={desc}"
+        );
+    } else {
+        best_effort_close(&h, &key);
+        panic!(
+            "VP-674-015: issue edit with a mention description must exit 0; stdout: {}\nstderr: {}",
+            String::from_utf8_lossy(&out.stdout),
+            String::from_utf8_lossy(&out.stderr)
+        );
+    }
+}
+
+/// VP-674-017. Pins BC-3.8.018 (JSM `issue create --request-type` mention
+/// wiring). Gated additionally on `JR_E2E_JSM_PROJECT`.
+///
+/// `jr issue create --request-type <RT> --description "cc
+/// [~accountid:<id>]" --markdown` against a JSM project → fetch the
+/// resulting issue back via `jr api` → assert a mention node in the
+/// description ADF (the platform `description` field IS
+/// `requestFieldValues.description`'s storage — same underlying issue,
+/// same ADF document). Self-closes via `jsm_self_close` (S-JSM-E2E-2/3
+/// convention — EJ's JSM workflow has no "Done"-named transition).
+#[test]
+#[ignore = "set JR_RUN_E2E=1 and use --include-ignored to run"]
+fn test_e2e_mention_jsm_create_roundtrip() {
+    if !e2e_enabled() {
+        return;
+    }
+    let h = e2e_harness();
+    let Some(account_id) = mention_account_id(&h) else {
+        eprintln!(
+            "[SKIP] could not determine a mention target (no JR_E2E_MENTION_ACCOUNT_ID and \
+             GET /rest/api/3/myself returned no accountId) — skipping mention JSM-create \
+             round-trip (VP-674-017)"
+        );
+        return;
+    };
+    let jsm_project = match env::var("JR_E2E_JSM_PROJECT") {
+        Ok(p) if !p.trim().is_empty() => p.trim().to_string(),
+        _ => {
+            eprintln!("[SKIP] JR_E2E_JSM_PROJECT not set — skipping mention JSM-create round-trip");
+            return;
+        }
+    };
+    let run_id = run_label();
+
+    let list_out = h
+        .cmd()
+        .args([
+            "requesttype",
+            "list",
+            "--project",
+            &jsm_project,
+            "--output",
+            "json",
+        ])
+        .output()
+        .expect("failed to spawn jr for requesttype list");
+    if !list_out.status.success() {
+        let stderr = String::from_utf8_lossy(&list_out.stderr);
+        eprintln!("[SKIP] requesttype list failed ({stderr}) — skipping mention JSM round-trip");
+        return;
+    }
+    let rts: Vec<Value> = match serde_json::from_slice(&list_out.stdout) {
+        Ok(v) => v,
+        Err(_) => {
+            eprintln!("[SKIP] requesttype list did not parse — skipping mention JSM round-trip");
+            return;
+        }
+    };
+    if rts.is_empty() {
+        eprintln!("[SKIP] No request types on {jsm_project} — skipping mention JSM round-trip");
+        return;
+    }
+    let first_rt_id = match rts[0]["id"]
+        .as_str()
+        .map(str::to_string)
+        .or_else(|| rts[0]["id"].as_i64().map(|n| n.to_string()))
+    {
+        Some(s) if s.chars().all(|c| c.is_ascii_digit()) => s,
+        _ => {
+            eprintln!("[SKIP] rts[0].id is not a usable numeric id — skipping");
+            return;
+        }
+    };
+
+    let text = format!("cc [~accountid:{account_id}]");
+    let out = h
+        .cmd()
+        .args([
+            "issue",
+            "create",
+            "--project",
+            &jsm_project,
+            "--request-type",
+            &first_rt_id,
+            "--summary",
+            &format!("[e2e-mention {run_id}] jsm create round-trip"),
+            "--description",
+            &text,
+            "--markdown",
+            "--output",
+            "json",
+        ])
+        .output()
+        .expect("failed to spawn jr for mention JSM create");
+
+    if !out.status.success() {
+        let stderr = String::from_utf8_lossy(&out.stderr);
+        if stderr.contains("403") {
+            eprintln!("[SKIP] JSM create returned 403 — skipping mention JSM round-trip");
+            return;
+        }
+        panic!(
+            "VP-674-017: JSM issue create with a mention description must exit 0; \
+             stdout: {}\nstderr: {stderr}",
+            String::from_utf8_lossy(&out.stdout)
+        );
+    }
+
+    let created: Value = serde_json::from_slice(&out.stdout)
+        .expect("VP-674-017: JSM create --output json must be valid JSON");
+    let key = created
+        .get("key")
+        .and_then(Value::as_str)
+        .expect("VP-674-017: created JSM request JSON must carry a 'key' field")
+        .to_string();
+
+    let fetched = fetch_raw(&h, &format!("/rest/api/3/issue/{key}?fields=description"))
+        .expect("VP-674-017: failed to fetch the created JSM issue back via `jr api`");
+    let desc = fetched
+        .get("fields")
+        .and_then(|f| f.get("description"))
+        .cloned()
+        .unwrap_or(Value::Null);
+
+    jsm_self_close(&key, &h);
+
+    assert!(
+        adf_contains_mention_id(&desc, &account_id),
+        "VP-674-017: fetched JSM request description ADF must contain a mention \
+         node with attrs.id == {account_id}; desc={desc}"
+    );
+}
+
+// ---------------------------------------------------------------------------
+// AC-014 / BC-3.3.013: E2E `:textarea` create-path smoke
+// (S-cycle12-platform-adf-autoconvert)
+//
+// Gated: JR_RUN_E2E=1 + --include-ignored.
+// Clean-skips if no `:textarea` field is discoverable on the E2E instance.
+// ---------------------------------------------------------------------------
+
+/// AC-014: create a Jira issue via `jr issue create --field TEXTAREA=VALUE`
+/// on a live instance; confirm the fetched issue's ADF field contains content
+/// (i.e. the wire value was accepted as a valid ADF doc, not rejected as a 400).
+///
+/// Clean-skips when no `:textarea` field is available in the E2E project's
+/// createmeta (per BC-3.3.013 §M1 residual — not every test org has a
+/// custom textarea field on their Task screen).
+#[ignore = "set JR_RUN_E2E=1 and use --include-ignored to run against a live Jira site"]
+#[tokio::test(flavor = "multi_thread", worker_threads = 2)]
+async fn test_e2e_adf_textarea_create_path_smoke() {
+    if !e2e_enabled() {
+        return;
+    }
+    let h = E2eHarness::new();
+    let proj = project();
+    let itype = issue_type();
+
+    // Discover whether a `:textarea` field is available on the create screen.
+    // We use `jr api` to fetch the createmeta and look for a textarea field.
+    let cm_out = h
+        .cmd()
+        .args([
+            "api",
+            &format!(
+                "/rest/api/3/issue/createmeta?projectKeys={proj}&issuetypeNames={itype}&expand=projects.issuetypes.fields"
+            ),
+            "--output",
+            "json",
+        ])
+        .output()
+        .unwrap();
+
+    if !cm_out.status.success() {
+        // Cannot discover createmeta — skip rather than fail.
+        eprintln!(
+            "[SKIP] test_e2e_adf_textarea_create_path_smoke: createmeta fetch failed; \
+             stderr: {}",
+            String::from_utf8_lossy(&cm_out.stderr)
+        );
+        return;
+    }
+
+    let cm_json: serde_json::Value = serde_json::from_slice(&cm_out.stdout).unwrap_or_default();
+
+    // Walk the createmeta fields looking for a textarea custom field.
+    let textarea_field = cm_json["projects"]
+        .as_array()
+        .and_then(|projects| projects.first())
+        .and_then(|p| p["issuetypes"].as_array())
+        .and_then(|its| its.first())
+        .and_then(|it| it["fields"].as_object())
+        .and_then(|fields| {
+            fields.iter().find(|(_, v)| {
+                v["schema"]["custom"]
+                    .as_str()
+                    .map(|c| c.ends_with(":textarea"))
+                    .unwrap_or(false)
+            })
+        })
+        .map(|(id, v)| (id.clone(), v["name"].as_str().unwrap_or("").to_string()));
+
+    let (field_id, field_name) = match textarea_field {
+        Some(pair) => pair,
+        None => {
+            eprintln!(
+                "[SKIP] test_e2e_adf_textarea_create_path_smoke: no :textarea field found \
+                 in createmeta for project={proj} type={itype}"
+            );
+            return;
+        }
+    };
+
+    let nonce = SystemTime::now()
+        .duration_since(UNIX_EPOCH)
+        .unwrap()
+        .as_secs();
+    let test_value =
+        "ADF autoconvert smoke test — created by test_e2e_adf_textarea_create_path_smoke";
+    let summary = format!("[jr-test-adf] textarea create smoke {nonce}");
+
+    // Create the issue with the textarea field set.
+    let create_out = h
+        .cmd()
+        .args([
+            "issue",
+            "create",
+            "--project",
+            &proj,
+            "--type",
+            &itype,
+            "--summary",
+            &summary,
+            "--field",
+            &format!("{field_name}={test_value}"),
+            "--output",
+            "json",
+            "--no-input",
+        ])
+        .output()
+        .unwrap();
+
+    assert!(
+        create_out.status.success(),
+        "AC-014: create must succeed; stderr: {}",
+        String::from_utf8_lossy(&create_out.stderr)
+    );
+
+    let created: serde_json::Value = serde_json::from_slice(&create_out.stdout)
+        .expect("AC-014: create --output json must be valid JSON");
+    let key = created["key"]
+        .as_str()
+        .expect("AC-014: created issue JSON must have 'key' field")
+        .to_string();
+
+    // Fetch the issue back and assert the textarea field is an ADF doc (not a plain string).
+    let fetch_out = h
+        .cmd()
+        .args([
+            "api",
+            &format!("/rest/api/3/issue/{key}?fields={field_id}"),
+            "--output",
+            "json",
+        ])
+        .output()
+        .unwrap();
+
+    // Best-effort teardown before assertions so the issue is closed even on failure.
+    best_effort_close(&h, &key);
+
+    assert!(
+        fetch_out.status.success(),
+        "AC-014: issue fetch must succeed; stderr: {}",
+        String::from_utf8_lossy(&fetch_out.stderr)
+    );
+
+    let issue: serde_json::Value =
+        serde_json::from_slice(&fetch_out.stdout).expect("AC-014: issue fetch must be valid JSON");
+
+    let field_value = &issue["fields"][&field_id];
+    assert!(
+        field_value.is_object() && field_value["type"].as_str() == Some("doc"),
+        "AC-014: fetched {field_id} must be an ADF doc object (type=doc); \
+         the wire value was accepted by Jira (exit 0) but must be ADF-structured; \
+         got: {field_value}"
     );
 }

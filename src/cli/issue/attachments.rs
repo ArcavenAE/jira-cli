@@ -12,7 +12,7 @@
 //! `src/cli/mod.rs`, NOT here (per P24-001 / P30-001 corrections).
 //!
 //! `display_sanitize_filename` is the earliest consumer of the CWE-116
-//! display-sanitization helper (SEC-576-011, DEC-184 R3.13). Stories S3 and S4
+//! display-sanitization helper (SEC-576-011, D-184 R3.13). Stories S3 and S4
 //! import it from here — do NOT duplicate.
 
 use anyhow::Result;
@@ -169,15 +169,15 @@ fn format_author(author: &Option<serde_json::Value>) -> String {
     let Some(obj) = author else {
         return "(anonymous)".to_string();
     };
-    if let Some(dn) = obj.get("displayName").and_then(|v| v.as_str()) {
-        if !dn.is_empty() {
-            return dn.to_string();
-        }
+    if let Some(dn) = obj.get("displayName").and_then(|v| v.as_str())
+        && !dn.is_empty()
+    {
+        return dn.to_string();
     }
-    if let Some(aid) = obj.get("accountId").and_then(|v| v.as_str()) {
-        if !aid.is_empty() {
-            return aid.to_string();
-        }
+    if let Some(aid) = obj.get("accountId").and_then(|v| v.as_str())
+        && !aid.is_empty()
+    {
+        return aid.to_string();
     }
     "(anonymous)".to_string()
 }
@@ -813,13 +813,11 @@ async fn handle_single_download(
     // BC-2.7.012 body-surfacing asymmetry (F5-R3-001): download emits canonical-only;
     // get_attachment_metadata passes 404 through as ApiError so callers choose the format.
     let metadata = client.get_attachment_metadata(id_str).await.map_err(|e| {
-        if let Some(JrError::ApiError { status, .. }) = e.downcast_ref::<JrError>() {
-            if *status == 404 {
-                return JrError::UserError(format!(
-                    "Attachment {id_str} not found or not accessible."
-                ))
+        if let Some(JrError::ApiError { status, .. }) = e.downcast_ref::<JrError>()
+            && *status == 404
+        {
+            return JrError::UserError(format!("Attachment {id_str} not found or not accessible."))
                 .into();
-            }
         }
         e
     })?;
@@ -1179,12 +1177,10 @@ pub async fn handle_attachment_download(
     let out_dir = out_dir.as_deref();
 
     // Handler-level --newest N > 0 guard (clap accepts any i64; EC-2.7.009-1).
-    if let Some(n) = newest {
-        if n <= 0 {
-            return Err(
-                JrError::UserError("--newest requires a positive integer.".to_string()).into(),
-            );
-        }
+    if let Some(n) = newest
+        && n <= 0
+    {
+        return Err(JrError::UserError("--newest requires a positive integer.".to_string()).into());
     }
 
     if let Some(id_str) = id {
@@ -1396,7 +1392,7 @@ async fn replace_existing_attachments(
     // EC-3.9.017-4: a 404 on DELETE = attachment already deleted by a concurrent actor →
     // benign silent skip; continue to the next DELETE and then to the POST.
     // `delete_attachment` maps HTTP-404 → JrError::UserError("…not found or already deleted.").
-    // We detect via downcast_ref rather than modifying delete_attachment (DEC-168: its
+    // We detect via downcast_ref rather than modifying delete_attachment (D-168: its
     // 404→UserError mapping is correct for the standalone delete command).
     for att in &would_delete {
         match client.delete_attachment(&att.id).await {
@@ -1927,7 +1923,7 @@ async fn handle_attachment_upload_jsm(
 ///   (2) Multi-AID bulk: AID validation → `--yes` required (BC-3.9.016) → sequential DELETEs.
 ///   (3) Issue+age: fetch list → `parse_age_duration` → filter → `--yes` required → DELETEs.
 ///
-/// **DEC-168 (targeted single-AID 404):** exit 64; stderr MUST BEGIN with the canonical
+/// **D-168 (targeted single-AID 404):** exit 64; stderr MUST BEGIN with the canonical
 /// prefix `"Attachment <AID> not found or not accessible."` then the Jira error body.
 /// **BC-3.9.010 (bulk 404):** BENIGN SKIP — asymmetry from targeted single-AID 404.
 /// **EC-3.9.020-3:** single-AID `--dry-run` — guards active, gate suppressed, no DELETE.
@@ -1991,22 +1987,21 @@ pub async fn handle_attachment_delete(
                 .into());
             }
 
-            // Confirmation gate (BC-3.9.015; VP-576-002; DEC-174)
+            // Confirmation gate (BC-3.9.015; VP-576-002; D-174)
             if !yes {
                 // Fetch metadata to get the filename for the gate prompt.
-                // DEC-168 / BC-2.7.012 body-surfacing asymmetry (F5-R3-001): on 404
+                // D-168 / BC-2.7.012 body-surfacing asymmetry (F5-R3-001): on 404
                 // the interactive delete path shows canonical prefix + Jira error body
                 // (actionable detail). get_attachment_metadata returns ApiError { 404 }
                 // with body intact; we format it here as canonical + "\n{body}".
                 let meta = client.get_attachment_metadata(aid).await.map_err(|e| {
                     if let Some(JrError::ApiError { status, message }) = e.downcast_ref::<JrError>()
+                        && *status == 404
                     {
-                        if *status == 404 {
-                            return JrError::UserError(format!(
-                                "Attachment {aid} not found or not accessible.\n{message}"
-                            ))
-                            .into();
-                        }
+                        return JrError::UserError(format!(
+                            "Attachment {aid} not found or not accessible.\n{message}"
+                        ))
+                        .into();
                     }
                     e
                 })?;
@@ -2028,7 +2023,7 @@ pub async fn handle_attachment_delete(
                 }
             }
 
-            // Issue the targeted DELETE (DEC-168 on 404)
+            // Issue the targeted DELETE (D-168 on 404)
             client.delete_attachment_targeted(aid).await?;
 
             if is_json {
@@ -2295,7 +2290,7 @@ pub async fn handle_attachment_delete(
     Ok(())
 }
 
-/// Single-AID confirmation gate (BC-3.9.015 step 2; VP-576-002; DEC-174).
+/// Single-AID confirmation gate (BC-3.9.015 step 2; VP-576-002; D-174).
 ///
 /// Uses `eprint!` (NOT `eprintln!`, NOT `dialoguer`) + `io::stdin().read_line`.
 ///
