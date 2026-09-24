@@ -336,3 +336,13 @@ See `cycles/cycle-005/burst-log.md` Bursts 11-12 for full narrative detail (thes
 | Phase | Status | Completed | Gate | Notes | Finding Progression |
 |-------|--------|-----------|------|-------|---------------------|
 | **MAINT-20260919-FIX-DELIVERY-COMPLETE-2026-09-20** | **COMPLETE** | 2026-09-20 | none (fix-PR merges were individually human-gated; this row is post-hoc bookkeeping, not a fresh pipeline gate) | agent state-manager -- recorded the 2026-09-19 maintenance sweep's FIX DELIVERY as COMPLETE: 3 fix PRs merged to `develop` (`#848` @ `7a57ed53`, `#849` @ `d85a8136`, `#850` @ `7e0f9cbd`), each via isolated worktree -> clean local review -> fresh-eyes `pr-reviewer` -> CI Gate SUCCESS -> human admin-merge. | 770 BCs / 89 VPs / 118 holdout / 191 stories; no DEC minted |
+
+> Extracted from `.factory/STATE.md`'s `## Phase Progress` table during the
+> 2026-09-24 `RELEASE-v0.7.0-GA-2026-09-24` burst (v4.90 -> v4.91), to keep
+> the live table at 12 rows after adding the new
+> `RELEASE-v0.7.0-GA-2026-09-24` row. This was the oldest row at that
+> point; archived here verbatim, unedited.
+
+| Phase | Status | Completed | Gate | Notes | Finding Progression |
+|-------|--------|-----------|------|-------|---------------------|
+| **PR864-CLIENT-RS-MUTATION-COVERAGE-BOOKKEEPING-2026-09-22** | **COMPLETE / RECORD-ONLY** | 2026-09-22 | none (post-hoc bookkeeping) | PR `#864` added 23 inline unit tests to `src/api/client.rs` (test-only), killing 33 of 54 surviving mutants. Squash-merged @ `bcec4c78`; `develop` tip `0b3a71bc` -> `bcec4c78`. | 770 BCs / 89 VPs / 118 holdout / 191 stories; no DEC minted |

@@ -1659,6 +1659,24 @@ unchanged: JUSTIFIED DEFERRAL, same target (engine maintenance,
 `validate-dispatch-advance`'s decision-ID regex) — seven recurrences now on this defect class
 alone.
 
+**Recurred an eighth time during the `RELEASE-v0.7.0-GA-2026-09-24` burst (2026-09-24):**
+`validate-dispatch-advance` false-flagged yet another phantom decision-ID, `D-2026`, out of the
+Phase Progress row label `CYCLE-009-F7-CONVERGED-CLOSED-2026-09-23` — the exact same root-cause
+substring (`...CONVERGED`**`-2026-09-23`**`...`, the word "CONVERGED" ending in `D` immediately
+followed by a hyphen-digit run) as the fifth/sixth recurrences above, fired again because that
+row label is carried forward verbatim in every STATE.md revision (it names a real, permanent
+historical Phase Progress row and will not be renamed to dodge the hook). This occurred
+immediately after a real, correctly-caught `validate-state-structure` finding on the same Write
+(the SIZE BUDGET banner was initially missing its required `N lines (wc-l)` + dual-margin lines
+— fixed in a follow-up Edit) — i.e. one genuine catch and one phantom catch landed back-to-back
+in the same burst. No data loss or fabricated content resulted — state-manager did **not** add a
+fake `D-2026` citation (the real, genuine `D-376` mint for this burst is correctly cited
+throughout); the actual `git commit`/`git push` to `factory-artifacts` proceeded unaffected per
+the established PostToolUse-hook-not-a-Bash-git-gate precedent. Disposition unchanged: JUSTIFIED
+DEFERRAL, same target (engine maintenance, `validate-dispatch-advance`'s decision-ID regex) —
+eight recurrences now on this defect class alone, all traceable to the identical
+`CYCLE-009-F7-CONVERGED-CLOSED-2026-09-23` row-label substring.
+
 ## cycle-009 F7 close — 1 new process-gap item — NEW, OPEN, ENGINE/tooling, justified-deferral (2026-09-23)
 
 **`[process-gap]` `CYCLE-009-PR-MANAGER-COMPLETION-GUARD-FORCES-MERGE`** — NEW, OPEN. Severity
@@ -1679,3 +1697,37 @@ was successfully resisted every time by the dispatched agents, so no incorrect m
 no product risk was realized. Target: engine maintenance (`vsdd-factory`
 `pr-manager-completion-guard` hook — add a scoped-dispatch exemption). Remains OPEN, tracked here
 as standing engine debt.
+
+## v0.7.0 GA release (main promotion) — squash-vs-merge-commit process correction — NEW, OPEN, engine + product-doc, justified-deferral (2026-09-24)
+
+**ID:** `V0.7.0-GA-MAIN-MERGE-COMMIT-CONVENTION`. Severity **LOW** (process-correction lesson,
+not a defect in shipped product code — `main`'s final content is correct; only the merge
+mechanics needed a mid-flight fix). During the `v0.7.0` GA release (first stable of the 0.7.0
+line, promoting `develop` -> `main`), the orchestrator initially followed the `v0.6.0` precedent
+and **squash-merged** GA release PR `#875` (`release/v0.7.0` -> `main`) @ `c208787b`. The human
+then required a **TRUE MERGE COMMIT** for `main` releases instead, explicitly superseding the
+`v0.6.0` squash precedent. `main` was force-corrected: reset to `v0.6.0` (`93d422fd`) +
+`git merge --no-ff release/v0.7.0` -> merge commit `86c3ac1f` (2 parents: `93d422fd` v0.6.0 +
+`effa52ac` `release/v0.7.0` tip; tree identical to the squash, `Cargo.toml` still `0.7.0`). The
+orphaned squash `c208787b` was replaced via admin-bypass force-push (`allow_force_pushes`
+temporarily bypassed for the correction). The annotated tag `v0.7.0` (tag object `4875f780`) was
+moved onto the merge commit `86c3ac1f`. **Two follow-ups, both deferred:**
+
+(a) **Engine lesson (target: `vsdd-factory` release automation / `vsdd-factory:release` skill,
+`code-delivery` skill):** future GA release-PR automation targeting `main` should default to a
+`--no-ff` merge commit, not a squash-merge — do not silently reuse the `v0.6.0` squash precedent
+for `main` without re-confirming the merge strategy per release. This was a live human
+force-correction this session, not a documented rule the automation already knew.
+
+(b) **Product-doc lesson (target: this repo's `CLAUDE.md` / release docs, a small standalone
+follow-up PR, explicitly NOT done this burst):** `CLAUDE.md`'s Conventions section documents
+branch naming and Conventional Commits but says nothing about `main`'s merge strategy. Add a line
+codifying "`main` releases use a `--no-ff` merge commit, never squash" (see decision `D-376`)
+so this doesn't recur on the next GA cut. Flagged here as a small follow-up doc PR — not actioned
+in this burst (state-tracking only, no `src/`/doc file touched by this state-manager burst).
+
+**Disposition (2026-09-24):** JUSTIFIED DEFERRAL for both (a) and (b) — this state-manager burst
+is bookkeeping-only (STATE.md history + this standing-items file); neither the engine release
+skill nor this repo's `CLAUDE.md` is modified here. Remains OPEN, tracked as standing debt until
+a future engine-maintenance/product-doc burst picks it up. See decision `D-376` (STATE.md
+Decisions Log) for the convention itself.
