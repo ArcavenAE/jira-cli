@@ -4,6 +4,119 @@ All notable changes to jr will be documented here.
 
 ## [Unreleased]
 
+## [0.7.0] - 2026-09-23
+
+First stable release of the 0.7.0 line, consolidating the `0.7.0-dev.1`
+through `0.7.0-dev.9` pre-releases. Highlights below; see the per-dev
+sections for full detail.
+
+### Breaking Changes
+
+- **`jr issue list --recent`/`--updated-recent` now reject month (`M`) and year (`y`)
+  relative-date units instead of silently mis-sending them to Jira** (issue #859).
+  `-2M`/`-1y` previously reached Jira mis-parsed (as minutes) or erroring outright.
+  Only `w`/`d`/`h`/`m` are accepted now; exits 64 with a migration hint. Migrate to
+  `--created-after`/`--created-before` or `--updated-after`/`--updated-before` for
+  month/year ranges.
+- **API-token credentials are now stored per-profile in the OS keychain**
+  (`<profile>:email` / `<profile>:api-token`), mirroring the existing per-profile
+  OAuth layout (S-cycle3-percred-storage, BC-1.4.031). **Action required on
+  upgrade:** every profile that authenticates with an API token — including every
+  single-profile `"default"` user — must re-run `jr auth login [--profile <NAME>]`
+  once; there is no legacy-key fallback. Until then, the profile fails with a
+  detect-and-instruct exit-64 error naming the fix.
+- **`jr auth refresh --oauth`/`--api-token` no longer override a profile's stored
+  auth mechanism** (D-321, BC-1.2.048/051) — `refresh` always follows the
+  profile's own `auth_method` now; the only way to change mechanism is
+  `jr auth login` re-declaration.
+- **`jr auth switch --profile <X> <NAME>` now exits 64** (S-663-1, BC-1.2.047) —
+  `--profile` had no effect on the switch target; drop it and use the positional
+  `jr auth switch <NAME>`.
+- **`load_api_token`'s credential-absence errors now exit 2, not 64** (BC-1.4.032/033,
+  issues #784/#786), matching the existing `NotAuthenticated` taxonomy, and the
+  suggested remediation now reads the real flag form (`jr auth login --profile=<profile>`).
+- **`jr auth list` (table mode) gains a new `ENV` column** between `URL` and `AUTH`
+  (BC-1.6.046/047) — breaking for any script parsing the table by column position;
+  `--output json` is additive-only and unaffected.
+- **`jr issue edit --dry-run` now performs a blocking stdin read for
+  `--description-stdin`** and renders a real ADF preview instead of a fixed
+  placeholder (S-692-1) — pipe input or redirect from `/dev/null`.
+- **`--field` gains opt-in `NAME:kind=VALUE` hint syntax** (S-578-1) — a field name
+  containing a colon immediately followed by a non-whitespace token may now parse
+  as a hinted pair rather than literal text; names with `: ` (colon-space) are
+  unaffected.
+
+### Added
+
+- **OAuth-first `jr auth login`** (S-cycle3-oauth-default-creation, BC-1.1.013):
+  interactive sessions now default to an OAuth-vs-API-token picker (OAuth
+  pre-selected); a new symmetric `--api-token` flag and an airtight
+  non-interactive OAuth guard (exits 64 before any network call) ship alongside.
+  `--oauth` is deprecated in favor of the picker/`--api-token`.
+- **`jr auth status --output json`** (BC-1.6.050) and corrected, keychain-probed
+  `jr auth list` STATUS values (BC-1.6.048/049) for real auth-state visibility.
+- **Mention resolution in Markdown bodies:** `@Name`/`[~accountid:X]` mentions in
+  `--markdown` bodies now resolve against real Jira users before any write
+  (`issue create`/`edit`, `comment add`/`edit`, JSM create), hard-failing the
+  whole write on an unresolvable target; `--no-mentions` opts out. (issue #674,
+  ADR-0023)
+- **ADF auto-conversion for `--field`** on rich-text fields across
+  `issue edit`/`issue create`/JSM create — plain text is auto-converted to ADF
+  when the target field's schema calls for it (ADR-0024).
+- **`--field` kind-hint dispatch** (`:option`/`:id`/`:name`/`:asset`) on
+  `issue edit`/`issue create`/JSM create, plus the new **`jr field options <field>`**
+  command for discovering a field's allowed values (S-578 series, #578).
+- **`jr issue create --field`** on the platform (non-JSM) path now resolves against
+  the project's Create screen instead of exiting 64 (D-310) — purely
+  permission-widening.
+- **Component management:** `jr component list/create/edit/delete/rename`, plus
+  `jr issue list/create/edit --component` filtering (S-604/S-605/S-606/S-608 series,
+  #604–#608).
+- **Read ergonomics:** `--fields <CSV>` opt-in field selection, `--updated-recent`,
+  and `--sort field:asc|desc` on `jr issue list`/`view` (#724–#726).
+- **`jr queue view`** surfaces queue-configured custom fields in JSON; `jr issue view`
+  and `list --duedate` gain due-date visibility.
+- **CI: build provenance attestations** for release archives (opt-in via
+  `ATTESTATIONS_ENABLED`, verifiable with `gh attestation verify`).
+
+### Changed
+
+- **MSRV raised to 1.88** (ADR-0025) — the `msrv` CI job now genuinely validates
+  `--all-targets`, 73 let-chain call sites were retrofitted, and `comfy-table` is
+  re-pinned to `=7.2.2`. Source-builders now need Rust ≥1.88; binary/Homebrew users
+  are unaffected.
+- **`DEFAULT_OAUTH_SCOPES` grows from 8 to 16 scopes**, closing Agile
+  (`jr board`/`jr sprint`) and `jr component` write gaps under OAuth (ADR-0026).
+  Existing OAuth users see a one-time re-consent prompt on next login/refresh.
+- **CI: sharded mutation-testing gate** replaces the single long-running `mutants`
+  job with an 8-shard pipeline plus a nightly full-scope advisory run
+  (internal only; no `jr` binary behavior change).
+- Auth lifecycle semantics hardened throughout: `jr auth remove` now deletes both
+  credential kinds and aborts (rather than warns) on a genuine keychain error;
+  `jr auth logout` on an API-token profile prints an informational notice instead
+  of a silent no-op.
+
+### Fixed
+
+- **JSM and Assets commands now work under OAuth (3LO) profiles**
+  (ADR-0026, issue #831): `jr queue`, `jr requesttype`, `jr issue create
+  --request-type`, `jr assets search/view/schemas/tickets`, and `--field :asset`
+  all previously 401'd under OAuth because seven call sites addressed the site
+  host instead of the OAuth gateway.
+- **OAuth "double-fault" 401s (expired *and* under-scoped) now surface the
+  correct scope-mismatch error** instead of a misleading "run `jr auth refresh`"
+  hint; `jr board`/`jr sprint` 401s now name the specific missing granular scope.
+- **Windows:** OAuth tokens too large for Credential Manager now fall back to a
+  DPAPI-encrypted file instead of failing login outright, with accurate,
+  non-misleading error messages when that fallback itself fails (ADR-0021, #759).
+- **API-token profiles now acquire a `cloud_id`** at login/init/refresh time, fixing
+  "Cloud ID not configured" on Assets/CMDB commands (ADR-0022).
+- **Security:** rustls bumped to 0.23.45 (RUSTSEC-2026-0285, TLS 1.3 handshake
+  vulnerability).
+- `validate_duration` no longer panics on multibyte input; several component
+  command-family adversarial-hardening fixes (numeric-ID resolution, `--project`
+  as a global flag, URL-encoding, case-only duplicate component names).
+
 ## [0.7.0-dev.9] - 2026-09-23
 
 ### Fixed
