@@ -1,0 +1,72 @@
+# Phase F1 Delta Analysis — affected-files.txt
+# cycle-010 / big-function-extraction (TD-01 edit.rs::handle_edit, TD-02 list.rs::handle_list)
+# Format: <path>\t<change-type>\t<risk>
+# change-type: MODIFIED-SRC | NEW-SRC-PROPOSED | NEW-TEST-PROPOSED | DEPENDENT | BASELINE
+
+src/cli/issue/edit.rs	MODIFIED-SRC	HIGH
+src/cli/issue/list.rs	MODIFIED-SRC	HIGH
+src/cli/issue/edit/	NEW-SRC-PROPOSED	N/A-pending-F1-gate-decision-on-submodule-split
+src/cli/issue/list/	NEW-SRC-PROPOSED	N/A-pending-F1-gate-decision-on-submodule-split
+tests/issue_list_table_characterization.rs	NEW-TEST-PROPOSED	N/A-recommended-first-F4-step
+tests/issue_edit_characterization.rs	NEW-TEST-PROPOSED	N/A-recommended-first-F4-step
+src/cli/issue/mod.rs	DEPENDENT	LOW
+CLAUDE.md	DEPENDENT	LOW-if-LOC-citations-need-refresh
+.factory/specs/architecture/module-decomposition.md	DEPENDENT	LOW-only-if-submodule-split-chosen
+
+# --- Files NOT changed (regression baseline) ---
+src/cli/issue/create.rs	BASELINE	N/A
+src/cli/issue/jsm_create.rs	BASELINE	N/A
+src/cli/issue/workflow.rs	BASELINE	N/A
+src/cli/issue/interactions.rs	BASELINE	N/A
+src/cli/issue/links.rs	BASELINE	N/A
+src/cli/issue/helpers.rs	BASELINE	N/A
+src/cli/issue/assets.rs	BASELINE	N/A
+src/cli/issue/changelog.rs	BASELINE	N/A
+src/cli/issue/field_resolve.rs	BASELINE	N/A
+src/cli/issue/attachments.rs	BASELINE	N/A
+src/cli/issue/mentions.rs	BASELINE	N/A
+src/cli/issue/json_output.rs	BASELINE	N/A
+src/cli/issue/format.rs	BASELINE	N/A
+src/cli/issue/view.rs	BASELINE	N/A
+src/cli/issue/comments.rs	BASELINE	N/A
+src/cli/issue/edit.rs::edit_issue_components	BASELINE	N/A
+src/cli/issue/edit.rs::handle_edit_bulk_labels	BASELINE	N/A
+src/cli/issue/edit.rs::handle_edit_bulk_components	BASELINE	N/A
+src/cli/issue/edit.rs::handle_edit_bulk_fields	BASELINE	N/A
+src/cli/issue/list.rs::build_jql_base_parts	BASELINE	N/A
+src/cli/issue/list.rs::resolve_component_clauses	BASELINE	N/A
+src/cli/issue/list.rs::build_filter_clauses	BASELINE	N/A
+src/api/	BASELINE	N/A
+src/adf.rs	BASELINE	N/A
+src/jql.rs	BASELINE	N/A
+src/duration.rs	BASELINE	N/A
+src/partial_match.rs	BASELINE	N/A
+src/cache.rs	BASELINE	N/A
+src/config.rs	BASELINE	N/A
+src/output.rs	BASELINE	N/A
+src/error.rs	BASELINE	N/A
+src/cli/board.rs	BASELINE	N/A
+src/cli/sprint.rs	BASELINE	N/A
+src/cli/worklog.rs	BASELINE	N/A
+src/cli/team.rs	BASELINE	N/A
+src/cli/user.rs	BASELINE	N/A
+src/cli/project.rs	BASELINE	N/A
+src/cli/component.rs	BASELINE	N/A
+src/cli/queue.rs	BASELINE	N/A
+src/cli/requesttype.rs	BASELINE	N/A
+src/cli/field.rs	BASELINE	N/A
+src/cli/assets/	BASELINE	N/A
+src/cli/auth/	BASELINE	N/A
+tests/issue_edit.rs	BASELINE-must-stay-green	N/A
+tests/issue_edit_echo.rs	BASELINE-must-stay-green	N/A
+tests/issue_edit_field.rs	BASELINE-must-stay-green	N/A
+tests/issue_edit_field_adf.rs	BASELINE-must-stay-green	N/A
+tests/issue_edit_labels.rs	BASELINE-must-stay-green	N/A
+tests/issue_edit_no_parent.rs	BASELINE-must-stay-green	N/A
+tests/issue_edit_type_errors.rs	BASELINE-must-stay-green	N/A
+tests/issue_list_assets.rs	BASELINE-must-stay-green	N/A
+tests/issue_list_errors.rs	BASELINE-must-stay-green	N/A
+tests/issue_list_oauth_scope.rs	BASELINE-must-stay-green	N/A
+tests/issue_commands.rs	BASELINE-must-stay-green	N/A
+tests/cli_smoke.rs	BASELINE-must-stay-green	N/A
+src/cli/issue/snapshots/jr__cli__issue__json_output__tests__edit.snap	BASELINE-must-stay-green	N/A
