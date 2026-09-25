@@ -1,0 +1,55 @@
+# cycle-014 issue-triage-quickfixes — F1 affected-files list
+# Format: <change-type>\t<path>\t<item(s)>
+# change-type: MODIFIED | NEW | DEPENDENT-UNCHANGED (reference-only, not itself edited)
+#
+# F1 GATE OUTCOME (2026-09-24, D-378): "Approve, as corrected." Scope =
+# #862 (full) + #861 READ-SIDE ONLY + #583 (full). The #861 WRITE-SIDE
+# item (src/cli/issue/field_resolve.rs) is REMOVED from scope — a
+# fresh-context audit REFUTED its reachability (dispatch_field_value only
+# routes to option-matching for schema.field_type "option"; real Jira
+# system fields report priority/resolution/issuetype/securitylevel and
+# fail earlier via unsupported_field_type_error). field_resolve.rs is now
+# DEPENDENT-UNCHANGED, not MODIFIED, for this cycle. The resulting
+# capability gap is tracked separately as follow-up item
+# FIELD-SYSTEM-TYPES-UNSUPPORTED (LOW), out of scope for cycle-014.
+# .cargo/mutants.toml is added as MODIFIED (audit finding folded in:
+# src/cli/api.rs + src/cli/user.rs added to examine_globs, in scope for F6).
+
+# --- Item #862: jr user list ignores --project ---
+MODIFIED	src/cli/mod.rs	#862 (UserCommand::List.project: String -> Option<String>)
+MODIFIED	src/main.rs	#862 (Command::User dispatch arm — pass cli.project.as_deref())
+MODIFIED	src/cli/user.rs	#862 (handle + handle_list — accept project_override, merge via config.project_key)
+MODIFIED	.factory/specs/prd/cross-cutting.md	#862 (BC-X.7.002 additive amendment)
+DEPENDENT-UNCHANGED	src/config.rs	#862 (Config::project_key — consumed, not modified)
+DEPENDENT-UNCHANGED	src/cli/component.rs	#862 (precedent reference only, F5-A-L2 merge pattern)
+DEPENDENT-UNCHANGED	src/cli/queue.rs	#862 (precedent reference only, config.project_key usage)
+DEPENDENT-UNCHANGED	src/cli/requesttype.rs	#862 (precedent reference only, config.project_key usage)
+
+# --- Item #861: jr field options renders system-field options as (unnamed) — READ-SIDE ONLY (D-378) ---
+MODIFIED	src/cli/field.rs	#861 (normalize_from_allowed_values_at_depth — label falls back to AllowedValue.name)
+MODIFIED	src/types/jira/editmeta.rs	#861 (AllowedValue.name doc comment correction)
+MODIFIED	.factory/specs/prd/cross-cutting.md	#861 (BC-X.14.001 + BC-X.14.003 text amendment, read-side only)
+DEPENDENT-UNCHANGED	src/cli/issue/edit.rs	#861 (Gate B 5-member set referenced, not modified)
+DEPENDENT-UNCHANGED	src/cli/issue/field_resolve.rs	#861 (REMOVED from MODIFIED at F1 gate, D-378 — write-side find_option_match/resolve_option_value name-fallback reachability REFUTED by fresh-context audit; dispatch_field_value only routes to option-matching for schema.field_type "option", real system fields fail earlier via unsupported_field_type_error; referenced read-only as the audit's proof point)
+
+# --- Item #583: jr api --query-param NAME=VALUE ---
+MODIFIED	src/cli/mod.rs	#583 (Command::Api — new repeatable --query-param/-q arg)
+MODIFIED	src/cli/api.rs	#583 (query-param parsing, percent-encoding, merge-with-existing-? assembly); ALSO added to .cargo/mutants.toml examine_globs (audit finding, D-378)
+MODIFIED	.factory/specs/prd/cross-cutting.md	#583 (new BC subsection, numbering TBD at F2)
+DEPENDENT-UNCHANGED	Cargo.toml	#583 (url/urlencoding already present; confirmed no new dependency needed)
+
+# --- Audit finding folded in at the F1 gate (D-378, 2026-09-24): .cargo/mutants.toml examine_globs additions ---
+MODIFIED	.cargo/mutants.toml	audit-finding (add src/cli/api.rs and src/cli/user.rs to examine_globs; in scope for F6 targeted cargo mutants --in-diff hardening)
+
+# --- Test files (regression risk zone; survival verified by this F1 pass, no edits required; new cases added at F4) ---
+DEPENDENT-UNCHANGED	tests/user_commands.rs	#862 (user_list_requires_project_flag survives; user_list_by_project_returns_users unaffected)
+DEPENDENT-UNCHANGED	tests/field_options.rs	#861 (test_bc_x_14_003_degenerate_entry_table_glyphs + ..._json_emits_null_not_glyph survive — fixtures omit name too; the only #861 risk-zone test file in scope for this cycle, read-side only per D-378)
+DEPENDENT-UNCHANGED	tests/cli_handler.rs	#583 (existing jr api invocations, no query-param coverage — gap confirmed, no existing test changes)
+DEPENDENT-UNCHANGED	src/cli/api.rs	#583 (inline mod tests — path/header/body parsing, unaffected by additive flag)
+
+# --- Test files REMOVED from #861 risk zone at the F1 gate (D-378): write-side item's reachability was REFUTED, so these are no longer touched by this cycle. Listed for completeness only, as the audit's proof point. ---
+DEPENDENT-UNCHANGED	src/cli/issue/field_resolve.rs	NOT #861 (inline mod tests, 18 fns — write-side fix removed from scope; test_bc_3_4_017_field_priority_without_flag_does_not_trigger_gate_b is the audit's corroborating pin, in tests/issue_edit_field.rs)
+DEPENDENT-UNCHANGED	tests/issue_edit_field_adf.rs	NOT #861 (option-field matching family — out of scope, write-side removed)
+DEPENDENT-UNCHANGED	tests/issue_field_hint_kinds.rs	NOT #861 (option-field matching family — out of scope, write-side removed)
+DEPENDENT-UNCHANGED	tests/issue_create_field.rs	NOT #861 (option-field matching family — out of scope, write-side removed)
+DEPENDENT-UNCHANGED	tests/issue_create_field_adf.rs	NOT #861 (option-field matching family — out of scope, write-side removed)

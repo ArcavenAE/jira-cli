@@ -1731,3 +1731,26 @@ is bookkeeping-only (STATE.md history + this standing-items file); neither the e
 skill nor this repo's `CLAUDE.md` is modified here. Remains OPEN, tracked as standing debt until
 a future engine-maintenance/product-doc burst picks it up. See decision `D-376` (STATE.md
 Decisions Log) for the convention itself.
+
+## `--field` cannot set system-typed fields — NEW, OPEN, product capability gap, human-deferred (2026-09-24)
+
+**ID:** `FIELD-SYSTEM-TYPES-UNSUPPORTED`. Severity **LOW** (capability gap, not a defect —
+dedicated flags already cover the common system-field cases: `--priority`, `--resolution` (via
+`jr issue move --resolution`), `--type`, `jr project fields` for discovery). Surfaced during the
+cycle-014 (`issue-triage-quickfixes`) F1 human gate's fresh-context audit of GitHub issue #861's
+originally-proposed write-side fix. `--field NAME=VALUE` cannot set a field whose Jira
+`schema.type` is `priority`, `resolution`, `issuetype`, or `securitylevel` — resolution hits
+`field_resolve.rs::dispatch_field_value`'s `unsupported_field_type_error` before any
+option-matching logic runs, for every one of these four system schema types. This is a distinct
+concern from #861 (a read-side display-label defect where `field options` renders a system
+field's option label as `(unnamed)` instead of falling back to `AllowedValue.name` — that item
+IS in cycle-014's scope, read-side only, per decision `D-378`). The write-side name-fallback fix
+originally proposed for #861 was REMOVED from cycle-014's scope after the audit confirmed these
+system schema types never reach `find_option_match`/`resolve_option_value` at all, so patching
+the name-fallback there would not close this gap.
+
+**Disposition (human-deferred 2026-09-24, recorded at cycle-014's F1 gate, decision `D-379`):**
+Target a future cycle. No GitHub issue filed for this item — it surfaced internally during F1
+audit, not from an external report. Remains OPEN, tracked as standing product-capability debt.
+Full context: `cycles/cycle-014/phase-f1-delta-analysis/delta-analysis.md` and
+`cycles/cycle-014/phase-f1-delta-analysis/affected-files.txt` (§"Deferred / Follow-up").
