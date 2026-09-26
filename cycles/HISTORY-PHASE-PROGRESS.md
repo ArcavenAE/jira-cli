@@ -346,3 +346,30 @@ See `cycles/cycle-005/burst-log.md` Bursts 11-12 for full narrative detail (thes
 | Phase | Status | Completed | Gate | Notes | Finding Progression |
 |-------|--------|-----------|------|-------|---------------------|
 | **PR864-CLIENT-RS-MUTATION-COVERAGE-BOOKKEEPING-2026-09-22** | **COMPLETE / RECORD-ONLY** | 2026-09-22 | none (post-hoc bookkeeping) | PR `#864` added 23 inline unit tests to `src/api/client.rs` (test-only), killing 33 of 54 surviving mutants. Squash-merged @ `bcec4c78`; `develop` tip `0b3a71bc` -> `bcec4c78`. | 770 BCs / 89 VPs / 118 holdout / 191 stories; no DEC minted |
+
+---
+
+> RECOVERY, not a routine archival. This row (`CYCLE-009-F1-APPROVED-2026-09-22`)
+> was removed from `.factory/STATE.md`'s live `## Phase Progress` table by the
+> `CYCLE-014-F2-READY-FOR-GATE` burst (v4.95 -> v4.96, commit `eb61272d`) to
+> make room for that burst's new row, but was never appended here -- a
+> state-manager archival oversight. Recovered verbatim from
+> `git -C .factory show ca8d495d:STATE.md` (the last commit where this row
+> was still live in STATE.md) by the `CYCLE-014-F2-APPROVED-2026-09-26` burst
+> (v4.96 -> v4.97).
+
+| Phase | Status | Completed | Gate | Notes | Finding Progression |
+|-------|--------|-----------|------|-------|---------------------|
+| **CYCLE-009-F1-APPROVED-2026-09-22** | **APPROVED** | 2026-09-22 | human gate (F1 delta analysis) | cycle-009 OPENED, adopts PR `#863`. Human APPROVED (`D-373`). | 770 BCs / 89 VPs / 118 holdout / 191 stories; `D-373` minted |
+
+---
+
+> Extracted from `.factory/STATE.md`'s `## Phase Progress` table during the
+> 2026-09-26 `CYCLE-014-F2-APPROVED-2026-09-26` burst (v4.96 -> v4.97), to
+> keep the live table at 12 rows after adding the new
+> `CYCLE-014-F2-APPROVED-2026-09-26` row. This was the oldest row at that
+> point; archived here verbatim, unedited.
+
+| Phase | Status | Completed | Gate | Notes | Finding Progression |
+|-------|--------|-----------|------|-------|---------------------|
+| **CYCLE-009-F2-APPROVED-2026-09-22** | **APPROVED** | 2026-09-22 | human gate (F2 spec evolution) | Amended `BC-2.1.008`+`BC-2.1.023`. Human APPROVED (`D-374`). | 770 BCs / 89 VPs / 118 holdout / 191 stories; `D-374` minted |
