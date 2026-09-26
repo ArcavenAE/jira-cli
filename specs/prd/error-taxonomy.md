@@ -254,7 +254,7 @@ credentials all resolve successfully — `src/main.rs`'s `run` function's
 failures all preempt this row; some of these also exit 64 — never the reverse. Hermetic
 regression tests for this row must clear every ambient `JR_`-prefixed variable EXCEPT the
 hermetic seams the test sets (`JR_CONFIG_DIR`, `JR_CACHE_DIR`, `JR_BASE_URL`, `JR_AUTH_HEADER`),
-per `verification-delta.md` §2 — `Config::load_inner` (`src/config.rs`) both overlays
+per `.factory/cycles/cycle-014/phase-f2-spec-evolution/verification-delta.md` §2 — `Config::load_inner` (`src/config.rs`) both overlays
 `GlobalConfig` fields via `Env::prefixed("JR_")` and separately reads `JR_PROFILE` to resolve the
 active profile, either of which can silently resolve the configured-default step and mask this
 row's exit-64 in an unclean environment.

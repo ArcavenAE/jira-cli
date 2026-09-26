@@ -7,7 +7,7 @@ producer: state-manager
 timestamp: 2026-09-26T00:01:34Z
 cycle: "cycle-014-issue-triage-quickfixes"
 inputs: [STATE.md]
-input-hash: "553c03a"
+input-hash: "15d9bce"
 traces_to: STATE.md
 ---
 
@@ -81,8 +81,59 @@ dispositioned — dispositioning happens at cycle close per S-7.02).
    as standing guidance for any future task touching these files, and
    consider whether the files themselves are due for a size-reduction pass.
 
+10. **The `validate-dispatch-advance` hook's `D-\d+` regex lacks a left word
+    boundary** — it misreads phase-row names like
+    `...-APPROVED-2026-09-24` as decision `D-2026` (the digits immediately
+    following the literal `D` at the end of "APPROVED", "PARKED",
+    "CLOSED", "CONVERGED", etc.), then flags `STATE.md`'s `current_step`
+    D-chain cite as stale because the file's real max decision (`D-383`)
+    is smaller than the spurious `D-2026` match. Observed live during this
+    burst on both the `validate-state-structure`-triggered rewrite and a
+    follow-up `Edit`. Candidate: anchor the regex with a left word
+    boundary (e.g. `(?<![A-Za-z0-9])D-\d+`) so it only matches a genuine
+    `D-NNN` decision-ID token, not a dated phase-row-name suffix.
+
+11. **The `validate-factory-path-staging` hook resolves the branch from the
+    outer checkout, not the command cwd** — `cd .factory && git add` is
+    blocked while `git -C .factory add` works for the identical operation,
+    because the hook inspects the shell's outer working directory (the
+    target-project checkout on `develop`) rather than the branch actually
+    active inside `.factory/` when `-C` is used. This is why every
+    state-manager burst protocol mandates `git -C .factory <cmd>` forms.
+    Candidate: have the hook resolve the branch via the effective `git`
+    invocation's target directory (honoring `-C`), not the process cwd.
+
+12. **Input-hash on delivered/historical artifacts whose `inputs:` include
+    living specs is structurally always stale after any later cycle** — a
+    scan at the cycle-014 F2 gate found 265 of 298 tracked artifacts STALE,
+    because their `inputs:` frontmatter cites files like
+    `cross-cutting.md`/`STATE.md` that keep evolving after the artifact
+    itself was delivered and closed. Refreshing all of them on every burst
+    is neither meaningful (the artifact's own content isn't wrong) nor
+    scalable. Candidate: either freeze historical hashes once an artifact's
+    owning cycle/phase closes, or exclude closed-cycle/delivered artifacts
+    from drift scans entirely, refreshing only artifacts still under active
+    review (as this burst did for the 3 cycle-014 F2 artifacts still in
+    play).
+
+13. **The "3 consecutive clean adversarial passes" convergence rule did not
+    converge in practice on this cycle's large spec delta.** Fresh-context
+    passes kept finding new LOW/COSMETIC items even on text two prior
+    fresh-context passes had already cleared (`PASS-34`/`PASS-35` CLEAN,
+    then `PASS-36` re-reviewing the same unchanged text found 2 LOW + 2
+    COSMETIC) — this reads as reviewer variance rather than a genuine
+    residual defect, but it means the literal rule never actually fires at
+    this delta's scale. Human decision `D-383` accepted convergence on a
+    substantive basis (36 total passes, zero CRITICAL/HIGH in the last 17)
+    as a one-time exception for cycle-014 F2 only. Candidate: adjust the
+    rule itself — e.g. a severity-trend-based convergence criterion (no
+    CRITICAL/HIGH/MEDIUM in N passes, LOW/COSMETIC-only tolerated), or a
+    narrower adversarial perimeter for summary/index surfaces that are
+    especially prone to this kind of low-severity churn.
+
 ## Disposition
 
-Not yet dispositioned. This is a checkpoint record (F2 IN PROGRESS, not
-approved) — the S-7.02 cycle-closing checklist dispositions each item when
-cycle-014 closes.
+Not yet dispositioned. F2 is CONVERGED per human decision `D-383` and
+AWAITING the F2 human approval gate — the S-7.02 cycle-closing checklist
+dispositions each of these 13 items when cycle-014 itself closes, not
+before.

@@ -38,7 +38,7 @@ updated_vps: []   # VP-580-008 (BC-X.14.003 JSON/table shape) deliberately NOT m
 kani_proofs_new: []
 fuzz_targets_new: []
 related_bcs: [BC-X.7.002, BC-X.14.001, BC-X.14.003, BC-X.16.001, BC-X.16.002]
-input-hash: "c8f58d7"
+input-hash: "99d177c"
 ---
 
 # Verification Delta: issue-triage-quickfixes (cycle-014)
@@ -56,7 +56,7 @@ fuzz targets.**
 |----|----|----------------|----------|
 | VP-USER-LIST-PROJECT-001 | BC-X.7.002 | Project resolution over the 2^3 presence space of {local `--project`, global `--project`, configured default}: local > global > configured default (`.jr.toml` > profile) > `None` → exit 64 with zero HTTP (Postconditions 1-5, EC-X.7.002-1..6). Local-vs-global is decided by clap global-value propagation; the config fallback by the pure resolver; `--project ""` passes through as `Some("")` and skips the configured default; the handler uses the already-loaded `&Config`; every `--all` page carries `projectKeys`. | (a) inline `Cli::try_parse_from` pin on all four flag cells, the two empty-string cells, and two local `-p` short-alias cells (`user list -p L` and `--project G user list -p L` → `Some("L")`; the global `--project` has no short form); (b) `proptest!` on `resolve_user_list_project` over `cli_project` × {neither, `.jr.toml`-only, profile-only, both}; (c) wiremock integration, hermetic per §2, for EC-X.7.002-1..6, EC-X.7.002-3 split three ways, plus two `--all` pagination tests (global flag, configured default); (d) a `--help` integration cell: `jr user list --help` exits 0 and its whitespace-collapsed stdout contains `Project key (overrides the configured default project). Required when no project is configured in` and `or the active profile` (BC-X.7.002 Fix step 1; the pin skips the backticked `.jr.toml` token and clap's stripped trailing period). |
 | VP-580-013 | BC-X.14.001 (+ BC-X.14.003 shape) | M1/M2 (`normalize_from_allowed_values` via `_at_depth`): every node's `label == value.or(name)` at every depth; presence-based (`value: Some("")` wins over `name`; explicit JSON `"value": null` is `None` and falls through to `name`, EC-X.14.001-12); `id` and tree shape preserved; JSON key set `{"id","label","children"}` unchanged; M3 unaffected (no `name` fallback); `--value` now matches system-field names via the fallback label (EC-X.14.001-13). | (1) example matrix {value-only, name-only, both, neither} at top level and one child level (EC-X.14.001-8..11), plus JSON-deserialized `"value": ""` and `"value": null` cells (EC-X.14.001-12); (2) `proptest!` over a recursive `AllowedValue` tree (depth ≤ 3); (3) serde key-set property; (4) M3 regression against a hand-written expected output (`{value,name}` → `label: None`; `{value,label,name}` → `label: Some("L")`; plus an ordinary `{value,label}` entry); (5) `priority`-shaped fixture through `src/cli/field.rs::filter_options` (delegating to `src/cli/field.rs::filter_one`) (EC-X.14.001-13). All pure. |
-| VP-API-QP-001 | BC-X.16.001 | Separator oracle: `out == pre + s + pairs + frag`, `pairs := new_pairs.map(|(n,v)| enc(n) + "=" + enc(v)).join("&")` with `enc` = `urlencoding::encode`, `s` = `?` (no `?` in pre-`#` part), `""` (query empty or ends in `&`), `&` otherwise, including a query ending in a literal `?` (EC-X.16.001-9, so `?&` may legitimately appear). No blanket substring ban. A same-NAME pre-existing pair is kept verbatim (EC-X.16.001-12). | `proptest!` over paths with/without query, `?` in values and fragments, `&`-terminated queries, an empty query followed by a fragment, NAMEs colliding with the existing query; pinned EC-X.16.001-4/5/8/9/12 and `/s?#f` + `k=v` → `/s?k=v#f` (kills `find('?')` over the whole path). |
+| VP-API-QP-001 | BC-X.16.001 | Separator oracle: `out == pre + s + pairs + frag`, `pairs := new_pairs.map(|(n,v)| enc(n) + "=" + enc(v)).join("&")` with `enc` = `urlencoding::encode`, `s` decided with `?`-presence checked first: `?` (no `?` in pre-`#` part, even if it ends in `&`, EC-X.16.001-14), else `""` (query empty or ends in `&`), else `&`, including a query ending in a literal `?` (EC-X.16.001-9, so `?&` may legitimately appear). No blanket substring ban. A same-NAME pre-existing pair is kept verbatim (EC-X.16.001-12). | `proptest!` over paths with/without query, `?` in values and fragments, `&`-terminated queries, an empty query followed by a fragment, query-less paths ending in `&` (with and without a fragment), NAMEs colliding with the existing query; pinned EC-X.16.001-4/5/8/9/12, `/s?#f` + `k=v` → `/s?k=v#f` (kills `find('?')` over the whole path), and `/x&` + `k=v` → `/x&?k=v` (EC-X.16.001-14). |
 | VP-API-QP-002 | BC-X.16.001 | Repeated names: `parse(out_query) == existing ++ new_pairs`, where `existing := url::form_urlencoded::parse(in_query).collect()` (same length, flag order, no dedup); pre-existing pairs come first and are never overridden or deduplicated by a same-NAME `-q` (EC-X.16.001-12); a comma in VALUE never splits a `-q` occurrence (EC-X.16.001-13). | `proptest!` with a small NAME alphabet shared by the existing query and the new pairs (forced repeats and collisions); existing query built from already-encoded, `+`-free, `#`-free segments with no empty segments; separator placement left to VP-API-QP-001; pinned `/s?fields=summary` + `fields=status`; argv cell `jr api /x -q fields=summary,status` → exactly one pair `fields=summary%2Cstatus` on the wire (hermetic wiremock, kills `value_delimiter`); repeated-flags argv cell `jr api /x -q fields=summary -q fields=status` → raw query exactly `fields=summary&fields=status` via `received_requests()`, plus `jr api '/x?a=1' -q b=2 -q b=3` → `a=1&b=2&b=3` (hermetic wiremock, catch-all `.expect(0)`; kills a handler that forwards only the first/last pair or dedups). |
 | VP-API-QP-003 | BC-X.16.001 | Encoding exactly once: (a) round-trip `decode(encode(v)) == v`, where `encode(v)` is the NAME/VALUE segment extracted from `append_query_params`'s output (not a direct `urlencoding::encode` call); (b) alphabet is RFC 3986 unreserved or uppercase `%HH`, space → `%20`, never `+`; (c) encoder identity with `urlencoding::encode` (`*` → `%2A`, space → `%20`, both failed by `byte_serialize`); (d) no trimming; (e) `jr api --help` contains `do not pre-encode` (Behavior 3). | Biased `proptest!` over UTF-8 (`%`, `&`, `=`, `#`, `+`, space, `?`, CR/LF, pre-encoded look-alikes) + pinned examples (`%` → `%25`, `+` → `%2B`, `é` → `%C3%A9`, `%25` → `%2525`) + a `--help` integration cell matched on whitespace-collapsed stdout. |
 | VP-API-QP-004 | BC-X.16.001 | Method orthogonality (query identical for GET/POST/PUT/PATCH/DELETE, with and without `-d`; body never moved into the query or vice versa) and zero-flag identity: the path handed to the request is byte-identical to `normalize_path`'s output, and `append_query_params(p, &[]) == p`. | Structural (no method/body parameter) + table-driven wiremock (hermetic per §2) + `proptest!` identity + no-`-q` wiremock examples asserting the received path/query; existing `jr api` tests unmodified. |
@@ -162,7 +162,8 @@ obligation). The same F4 obligation also has STORY-B correct the matching stale 
 the `jr field options --help` doc comment on `src/cli/mod.rs::FieldCommand::Options.field`;
 the "custom field" about-text (`src/cli/mod.rs` ~L128 and ~L1224); the Step 2 comment in
 `src/cli/field.rs::handle`; the `tests/field_options.rs` comments (~L1436, ~L2050); the `src/cli/field.rs` module doc (line 1,
-"enumerate a custom field's allowed options"); the `README.md` command-table row (~L346); and the
+"enumerate a custom field's allowed options"); the `src/api/jira/issues.rs::get_createmeta_fields` doc comment (~L1130, "Enumerate a custom
+field's allowed options…"); the `README.md` command-table row (~L346); and the
 `CLAUDE.md` architecture-tree entry for `field.rs` (~L61). No VP asserts the help wording or these
 doc sites. This is a doc-accuracy obligation, not a verification cell.
 The empty-name guard already has coverage in
@@ -172,7 +173,7 @@ EC-X.16.002-11 (a non-UTF-8 `-q` argv value, rejected by clap's `String` value p
 exit 2 before `parse_query_param` runs) is likewise informational. It is inherited clap
 behavior, shared with `-H`, and gets no VP cell.
 
-### `.cargo/mutants.toml` examine_globs (approved, D-379; per story at F4)
+### `.cargo/mutants.toml` examine_globs (additions approved D-378/D-379; per-story F4 timing (D-382))
 
 | File | In examine_globs today? | Action | Added by |
 |---|---|---|---|
@@ -183,8 +184,9 @@ behavior, shared with `-H`, and gets no VP cell.
 | `src/cli/mod.rs` (clap derive) | No | not needed: declarative; covered via (a) and integration tests | — |
 | `src/types/jira/editmeta.rs` (doc comment) | No | not needed | — |
 
-Each glob lands in the same PR that defines its file's functions, not in a batched F6 PR. F6
-verifies both additions; it does not introduce them. `tests/mutants_glob_existence.rs` passes
+Per D-382, each glob lands in the same PR that defines its file's functions,
+not in a batched F6 PR (F1 placed the additions at F6, superseded by D-382). F6 verifies both additions;
+it does not introduce them. `tests/mutants_glob_existence.rs` passes
 automatically since both files already exist.
 
 ### `docs/specs/cargo-mutants-policy.md` §Scope bullets (per story, same PR as the glob)
@@ -259,7 +261,9 @@ them if an implementer writes them):**
   EC-X.14.001-8 name-only cell; `name` preferred over `value`; emptiness-based fallback; explicit JSON `null` treated as
   present; fallback at top level only; fallback leaking into M3.
 - #583 assembly: `?`/`&` swapped; `ends_with('&')` → `ends_with('?')`; `find('?')` over the
-  whole path instead of pre-`#`; fragment dropped or misplaced; dedup/last-wins/reorder; zero
+  whole path instead of pre-`#`; `&`-terminated test applied to the whole pre-fragment part
+  before the `?`-presence check (yields `/x&k=v`; killed by the pinned `/x&` + `k=v` →
+  `/x&?k=v` example); fragment dropped or misplaced; dedup/last-wins/reorder; zero
   or double encoding; `byte_serialize` substituted; `=` joiner encoded; NAME/VALUE trimmed; a
   same-NAME `-q` overriding or deduplicating a pre-existing query pair; a `?` or `&` appended on
   zero pairs; query gated on method; `-d` merged into query; `handle_api` forwarding only the
@@ -376,6 +380,10 @@ throughout):
 - **PASS-26**: CLEAN, 1 cosmetic (P26-001): cross-cutting.md VP-USER-LIST-PROJECT-001 bullet now says "Four layers:" and labels the `--help` cell "(d) **Help-text pin.**", matching this file's §1 labeling.
 - **PASS-28**: P28-001: the §2 `examine_globs` and §Scope hand-offs are now per story at F4: STORY-A (#862) adds `src/cli/user.rs` and its `resolve_user_list_project` bullet, STORY-C (#583) adds `src/cli/api.rs` and its `append_query_params`/`parse_query_param` bullet. Each PR bumps the count by 1 in merge order (32 → 33 → 34) with its own change-log row, because the citation guard fails on a cited function not yet defined; parallel PRs conflict, so the second rebases. P28-003 (cosmetic): cross-cutting.md's BC-X.16.001 VP lead-in now names both VP-API-QP-002 argv targets.
 - **PASS-29**: Human decision 2026-09-25: serial delivery A → C → B. §2 hand-off now fixes STORY-A at examine_globs count 32 → 33 and STORY-C at 33 → 34; the parallel rebase/recount paragraph (P29-002) is removed as moot; the unchecked count line is noted as a process-gap follow-up.
+- **PASS-30**: P30-004: VP-API-QP-001 now evaluates `?`-presence before the empty/`&`-terminated query test, pins EC-X.16.001-14 (`/x&` + `k=v` → `/x&?k=v`), and generates query-less paths ending in `&` with and without a fragment; §2 list B gained the matching `&`-before-`?` ordering fault model.
+- **PASS-31**: P31-003: §2 examine_globs heading and hand-off no longer present the per-story F4 timing as settled; D-378/D-379 approved the additions (F1 placed them at F6), and the F4 timing is marked pending F2-gate confirmation.
+- **PASS-32**: Human decision D-382 (2026-09-25) confirms the per-story F4 timing (STORY-A 32 → 33, STORY-C 33 → 34; F6 verifies), superseding F1's F6 placement; §2 "pending F2-gate confirmation" qualifiers replaced with "(D-382)".
+- **PASS-33**: P33-002: §2 STORY-B stale-wording list gained the `src/api/jira/issues.rs::get_createmeta_fields` doc comment (~L1130); doc-accuracy obligation, no VP. No "`resolve_edit_fields`'s Step 1 … `search_field`" wording was present in §1/§2, so none needed correcting.
 
 ## 5. Decisions Confirmed During F2 Review
 

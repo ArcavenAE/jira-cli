@@ -201,13 +201,12 @@ delta-analysis report are RESOLVED as follows:
 
 **Audit finding folded in (item 4 of the human gate decision, 2026-09-24):**
 `src/cli/api.rs` and `src/cli/user.rs` are added to this cycle's planned
-`.cargo/mutants.toml` `examine_globs` additions, added at F4 by the story that
-introduces each file (STORY-A: `user.rs`, STORY-C: `api.rs`); F6 verifies.
-`.cargo/mutants.toml` is now listed as a modified file (see
+`.cargo/mutants.toml` `examine_globs` additions, in scope for F6 targeted
+hardening. `.cargo/mutants.toml` is now listed as a modified file (see
 `phase-f1-delta-analysis/delta-analysis.md` Files Changed and
 `phase-f1-delta-analysis/affected-files.txt`).
-**(amended at F2, PASS-28: timing clarified F6→F4 per-story; human to confirm
-at F2 gate)**
+**(amended at F2: per-story F4 timing adopted by human decision D-382,
+2026-09-25; supersedes the F1 F6 placement)**
 
 **(amended at F2, 2026-09-25, human decision, F2 review; D-381): delivery order changed from the single
 parallel wave accepted at the F1 gate (item 7 above, Open Question 7) to
@@ -222,13 +221,14 @@ manifest and in `prd-delta.md`.)**
 **Phase sequence:** F1 (APPROVED) → **F2 (next — spec evolution:
 BC-X.7.002 amendment, BC-X.14.001/003 amendment read-side only, new `jr
 api` BC cross-cutting subsection)** → F3 (3 incremental stories,
-dependency-free, delivered SERIALLY A → C → B, each rebased on the
-previous, per the amendment above) → F4 (delta
-implementation, including the
-per-story `src/cli/api.rs` / `src/cli/user.rs` `examine_globs` additions) →
-F5 (scoped adversarial on the diff) → F6 (targeted `cargo mutants --in-diff`
-hardening on the diff scope, verifying those additions) → F7 (delta
-convergence + human close gate).
+dependency-free, single wave) → F4 (delta implementation) → F5 (scoped
+adversarial on the diff) → F6 (targeted `cargo mutants --in-diff`
+hardening on the diff scope, including the `src/cli/api.rs` /
+`src/cli/user.rs` `examine_globs` additions) → F7 (delta convergence +
+human close gate). **(amended at F2, 2026-09-25; D-381/D-382 — see the
+amendment note above, which supersedes this paragraph's original
+"dependency-free, single wave" / F6 `examine_globs` placement with the
+serial STORY-A→STORY-C→STORY-B ordering and per-story F4 timing.)**
 
 Next: F2 (spec evolution). D-379 to be minted by state-manager recording
 this F1 gate outcome.

@@ -23,7 +23,7 @@ inputs:
   - ".factory/specs/architecture/decisions/ADR-0019-field-dx-context-hint-shape-delimiter.md"
   - ".factory/phase-f2-spec-evolution/architecture-delta-field-dx.md"
   - ".factory/phase-f2-spec-evolution/verification-delta-field-dx.md"
-input-hash: "5699eaa"
+input-hash: "d924906"
 traces_to: "src/cli/field.rs"
 cycle: field-dx
 bundle: field-dx
@@ -67,6 +67,19 @@ origin: >
 changelog:
   - "1.0 (2026-08-26): Initial story authored; F2 gate convergence; bundle field-dx (issues #580/#578), wave 1."
 ---
+
+> **Post-delivery spec note (2026-09-25, cycle-014, spec 2.4.0):** BC-X.14.001 was corrected
+> to match the code as delivered: field-name resolution is `src/cli/field.rs::search_field_list`
+> (unique case-insensitive exact match, then unique case-insensitive substring match; multiple matches at either step exit 64), not `partial_match`/BC-X.10.001,
+> and it is a mirrored copy of `resolve_edit_fields`'s Step 1 (customfield bypass) and Step 2
+> (cache-first load plus its nested `search_field`), not a shared function. References below
+> to `partial_match` for `<field>` name resolution, and to a 'shared function', reflect the
+> spec text at delivery time; M3's `--request-type` name lookup does use `partial_match`
+> (BC-X.12.006) and those references remain accurate. The field-name-resolution code was always as now specified.
+> Separately, cycle-014
+> STORY-B (#861, pending F4) will add a `value`-else-`name` M1/M2 label fallback, which changes
+> this command's `label` output for system fields (previously `null`/`(unnamed)`). The current
+> contract is BC-X.14.001 in `.factory/specs/prd/cross-cutting.md`.
 
 > **tdd_mode:** strict — Red Gate required. Write all tests in `tests/field_options.rs`
 > (new) first — they MUST fail because `src/cli/field.rs` does not exist yet. Then scaffold

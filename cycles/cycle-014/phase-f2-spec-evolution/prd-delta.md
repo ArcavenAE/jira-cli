@@ -175,14 +175,16 @@ auto-resolves; multiple substring → exit 64). This is a pre-existing spec/code
 introduced by #861, surfaced by EC-X.14.001-14 (PASS-5). Corrected in place, marked "(corrected
 cycle-014: aligns with existing code and tests; no behavior change)" — no BC/VP count change.
 Invariant 3 corrected: `src/cli/field.rs`'s customfield bypass and cache-first name resolution is
-a mirrored copy of `src/cli/issue/field_resolve.rs::resolve_edit_fields`'s Step 1 / nested
-`search_field`, not a shared function — they share only
+a mirrored copy of `src/cli/issue/field_resolve.rs::resolve_edit_fields`'s Step 1 (customfield
+bypass) and Step 2 (cache-first load/fetch plus its nested `search_field`), not a shared function
+— they share only
 `read_fields_cache`/`write_fields_cache`/`list_fields`, and a change to one must be mirrored in
 the other. Aligns spec with existing code; no behavior change.
 
-**Label convention:** pre-existing body prose that was incomplete/inaccurate is tagged "corrected
-cycle-014"; entries newly added this cycle (EC-X.14.001-15, the BC-X.14.004 row) are tagged
-"added cycle-014".
+**Label convention:** cycle-014 BC-X.14.001 changes are marked "(cycle-014, #861)" for
+#861-driven additions and amendments, "(corrected cycle-014: …)" for spec-accuracy corrections
+of pre-existing prose, and "(added cycle-014; …)" for newly added documentation-only entries
+(EC-X.14.001-14/15, the BC-X.14.004 row).
 
 **Subsection-intro rewording (PASS-15, orchestrator decision):** the `## BC-X.14: Field Option
 Discovery` subsection intro in `cross-cutting.md` — "enumerates a custom select field's allowed
@@ -353,8 +355,10 @@ phase. Three S stories are planned per the cycle manifest, delivered SERIALLY in
 A → C → B — STORY-A (#862) first, then STORY-C (#583) rebased on STORY-A, then STORY-B (#861,
 read-side only) rebased on STORY-C (human decision, 2026-09-25 F2 review, superseding the
 parallel-wave-eligible framing accepted at the F1 gate — see the dated amendment note in
-`cycle-manifest.md`). No BC array re-anchoring or story-body propagation is needed from this F2
-burst (no existing story references any of these BCs).
+`cycle-manifest.md`). S-580-1 (delivered) anchors BC-X.14.001..004; its AC-011/architecture/EC
+text predates cycle-014's BC-X.14.001 corrections (search_field_list, mirrored-not-shared). As a
+delivered historical story it is not rewritten; a dated pointer note is added directing readers
+to the corrected BC-X.14.001. No BC-array change, so no AC re-anchoring is needed.
 
 **F4 obligation (PASS-8, P8-002):** as part of STORY-B, F4 must rename
 `tests/field_options.rs::test_bc_x_14_001_field_name_human_name_resolves_via_partial_match`
@@ -371,7 +375,9 @@ also correct: the user-facing clap doc comment on
 options") and `~L1224` ("Enumerate a custom field's allowed options") — reword away from "custom
 field" (e.g. "a field's allowed options"), since after #861 the command also serves system
 fields, not custom fields only; the module doc comment at `src/cli/field.rs:1` ("enumerate a
-custom field's allowed options"); README.md's `jr field options <NAME>` command-reference row
+custom field's allowed options"); `src/api/jira/issues.rs::get_createmeta_fields`'s doc comment
+(`~L1130`, "Enumerate a custom field's allowed options…") → "a field's allowed options";
+README.md's `jr field options <NAME>` command-reference row
 (`~L346`, "Enumerate a custom field's allowed options…"); CLAUDE.md's `field.rs` file-tree line
 (`~L61`, "enumerate a custom field's allowed options"); the `src/cli/field.rs::handle` Step 2
 comment (`~L134`, "resolved via the per-profile fields cache / `list_fields()` + `partial_match`");
@@ -394,8 +400,8 @@ corrected here but is registered as drift item `README-JR-API-BODY-FLAG` (LOW) f
 
 **F4 obligation (PASS-28, P28-001):** the `.cargo/mutants.toml` `examine_globs` additions and
 their `docs/specs/cargo-mutants-policy.md` §Scope bullets are added per-story, at F4, in the PR
-that introduces each file's functions — not deferred to F6, correcting the cycle manifest's
-earlier framing. As part of STORY-A (#862), F4 adds `src/cli/user.rs`
+that introduces each file's functions — not deferred to F6, superseding the F1 F6 placement
+(D-382). As part of STORY-A (#862), F4 adds `src/cli/user.rs`
 (`resolve_user_list_project`). As part of STORY-C (#583), F4 adds `src/cli/api.rs`
 (`append_query_params`, `parse_query_param`). Delivery is serial (A → C → B): STORY-A bumps the
 policy's hard-coded "Current `examine_globs` count" line 32 → 33 and STORY-C bumps it 33 → 34,
@@ -450,8 +456,8 @@ pending:
 
 ## F2 revision history
 
-Cycle-014's F2 spec-writing pass went through an initial authoring burst followed by twenty-nine
-adversarial-review passes, PASS-1 through PASS-29 (PASS-11, PASS-12, PASS-22 and PASS-26 CLEAN)
+Cycle-014's F2 spec-writing pass went through an initial authoring burst followed by thirty-six
+adversarial-review passes, PASS-1 through PASS-36 (PASS-11, 12, 22, 26, 34 and 35 CLEAN)
 (all BC-side; VP text and
 `verification-delta.md` are owned by formal-verifier and were out of scope except where noted).
 Every finding below was independently re-verified against `src/` before being applied — nothing
@@ -460,6 +466,10 @@ and why; the individual pass-by-pass finding tables that used to live in this fi
 folded into this narrative, since `cross-cutting.md`, `BC-INDEX.md`, `CANONICAL-COUNTS.md`,
 `edge-case-catalog.md`, `error-taxonomy.md` and `spec-changelog.md`'s `[2.4.0]` entry now all
 reflect the final, converged state described above.
+
+PASS-35 CLEAN (2 COSMETIC). PASS-36 re-reviewed the unchanged text and found 2 LOW + 2 COSMETIC,
+fixed. Per human decision at the F2 gate, convergence was accepted on the basis of consecutive
+clean passes 34-35 plus the pass-36 fixes.
 
 **Root-cause and precedent framing (issue #862).** The first review round caught that
 `src/main.rs`'s `Command::User` arm not passing `cli.project` through had been mis-framed as the
@@ -703,8 +713,8 @@ per the orchestrator's decision to document rather than widen cycle-014's scope.
 It added a one-sentence F1-gate rationale to BC-X.7.002's Source and Invariants for the existing
 "no rename" annotation on `tests/user_commands.rs::user_list_requires_project_flag`: the human
 accepted keeping the name at the F1 gate (cycle-manifest Open Question 8), because — unlike the
-now-renamed `partial_match`-named field-options test, which named a mechanism the code no longer
-uses — this test's own assertion (stderr mentions `--project`) makes no mechanism claim, so it
+to-be-renamed (STORY-B F4 obligation) `partial_match`-named field-options test, which named a
+mechanism the code no longer uses — this test's own assertion (stderr mentions `--project`) makes no mechanism claim, so it
 continues to accurately describe what it checks under the required hermetic setup.
 
 It added EC-X.16.002-9 to BC-X.16.002: an empty raw value from any of `-q ""`, `-q=`, or
@@ -1031,6 +1041,67 @@ pre-existing behavior)", matching the "added" vs. "corrected" label convention (
 the entry is a newly-added Edge Case documenting pre-existing, unmodified behavior, not a
 correction of prior-cycle text. EC-X.14.001-15 is unchanged. No BC or VP count changed.
 
+**PASS-30** (LOW/COSMETIC) targeted six remaining drift items: `spec-changelog.md`'s
+cargo-mutants-policy.md Impact row and README.md row wording, `cycle-manifest.md`'s and
+`prd-delta.md`'s Stories dependency framing ("ordered: STORY-C depends on STORY-A, STORY-B on
+STORY-C", not "dependency-free", D-381), a new BC-X.16.001 edge case (EC-X.16.001-14, the
+query-less `&`-terminated path case) with its Behavior 1 ordering statement made explicit,
+BC-X.14.001's/EC-X.14.001-15's pinned-substring wording aligned with
+`tests/field_options.rs`'s actual assertions, and this Open Questions section naming the one
+item still pending human confirmation at the F2 gate. No BC or VP count changed.
+
+**PASS-31** (LOW/COSMETIC) targeted four drift items. P31-001 corrected this file's Stories
+section, which had claimed no existing story references cycle-014's BCs: S-580-1 (delivered)
+anchors BC-X.14.001..004, and `spec-changelog.md`'s `[2.4.0]` Affected-stories note now names it
+(pointer-note only, not rewritten) alongside the three new cycle-014 stories to be created at F3.
+P31-002 corrected `cross-cutting.md`'s BC-X.14.001 Trace, which still read "reused" for the
+field-name resolution algorithm shared with BC-3.4.015 — inconsistent with Invariant 3's
+"mirrored, not shared" finding (PASS-23/25/27/29) — reworded to name the shared cache functions
+(`read_fields_cache`/`write_fields_cache`/`list_fields`) while pointing to Invariant 3 for the
+mirrored (not shared) resolution algorithm; a follow-up grep confirmed no other affirmative
+"shared"/"reused" claim about the resolution function remains between BC-X.14.001 and
+BC-X.14.002. P31-003 corrected `spec-changelog.md`'s `[2.4.0]` `.cargo/mutants.toml` Impact row,
+which cited "(D-379)" alone for the split-per-story `examine_globs` additions without noting the
+per-story F4 timing is still pending F2-gate confirmation. P31-004 (COSMETIC) corrected this
+file's PASS-10 history paragraph, which had prematurely called the `partial_match`-named
+field-options test "now-renamed" — the rename is a STORY-B F4 obligation, not yet performed. No
+BC or VP count changed.
+
+**PASS-32** (LOW/MEDIUM/COSMETIC) resolved the one item left open at PASS-31: per-story F4 timing
+for the `examine_globs`/§Scope additions is now settled by human decision D-382 (2026-09-25, F2
+review) — STORY-A adds `src/cli/user.rs` (count 32→33) and STORY-C adds `src/cli/api.rs`
+(33→34), each in the PR that introduces its functions; F6 verifies. This supersedes the F1 plan,
+which placed the additions at F6. P32-001 restored `cycle-manifest.md`'s F1-gate paragraph to its
+original F1 wording and confined the timing change to a dated F2 amendment note citing D-382;
+P32-002 replaced the remaining "pending F2-gate confirmation"/"pending human confirmation"
+markers about this item in `spec-changelog.md` and this file with D-382 citations, and resolved
+the Open Questions section to "None"; P32-004 (COSMETIC) added "e.g." and EC-X.14.001-8..14 to
+this file's label-convention line; P32-005 (COSMETIC) corrected `cross-cutting.md`
+EC-X.14.001-14's field-resolution wording to "case-insensitive exact match". No BC or VP count
+changed.
+
+**PASS-33** (LOW/COSMETIC) resolved five items. P33-001 (LOW) sharpened BC-X.14.001 Invariant 3's
+mirrored-algorithm citation across `cross-cutting.md` (body Invariant 3 and the frontmatter
+cycle-014 trace), `BC-INDEX.md`'s Source cell, `spec-changelog.md`'s `[2.4.0]` row, and this
+file's Item 2 to name both steps mirrored from `resolve_edit_fields` — Step 1 (customfield
+bypass) and Step 2 (cache-first load/fetch plus its nested `search_field`) — rather than citing
+Step 1 alone, since the mirrored `field.rs` implementation actually duplicates both steps. P33-002
+(LOW) added `src/api/jira/issues.rs::get_createmeta_fields`'s doc comment ("Enumerate a custom
+field's allowed options…" → "a field's allowed options") to this file's STORY-B stale-wording F4
+obligation list (PASS-9, P9-002), which had missed this additional site of the same
+"custom field" wording drift. P33-003 (COSMETIC) rewrote this file's label-convention line to
+describe the tags actually in use in `cross-cutting.md` rather than a stale two-tag summary.
+P33-004 (COSMETIC) re-dated `cycle-manifest.md`'s Phase-sequence paragraph: restored its original
+F1 wording (dependency-free/single-wave framing, unamended F4/F6 clause) and pointed to the
+existing dated amendment note above it (D-381/D-382) rather than leaving the D-381/D-382 detail
+inlined undated inside the F1-gate sentence itself. P33-005 (COSMETIC) added "(D-381)" to
+`spec-changelog.md`'s Summary serial-delivery sentence and reworded its Affected-tests
+`.cargo/mutants.toml` sentence to attribute each file to its owning story
+(`src/cli/user.rs`/STORY-A, `src/cli/api.rs`/STORY-C) with the D-378/D-379/D-382 citations. No BC
+or VP count changed.
+
+**PASS-34** was CLEAN (4 COSMETIC, fixed).
+
 **Net effect.** No BC or VP count changed across this remediation work: `cross-cutting.md` stays
 at `definitional_count: 96` / `total_bcs: 162` cumulative, and guard scripts (above) confirm 772
 total across all files. All changes were prose corrections, precision additions, and
@@ -1044,9 +1115,4 @@ this remediation work itself.
 
 ## Open Questions
 
-None — all F1 Open Questions were RESOLVED at the human gate (see
-`.factory/cycles/cycle-014/phase-f1-delta-analysis/delta-analysis.md` §Open Questions and
-§F1 Gate Outcome). The three items carried forward from F2 — the NAME/VALUE trimming
-default, the `--project ""` pass-through default, and the `-q` NAME collision no-override/dedup
-default — are recorded under "Decisions confirmed during F2 review" above, now settled
-(human-confirmed 2026-09-25, D-380), not Open Questions in the F1 sense.
+None — all resolved; D-380/D-381/D-382 settled.
