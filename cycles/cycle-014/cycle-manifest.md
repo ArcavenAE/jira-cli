@@ -35,7 +35,13 @@ grounding) and the prior `.factory/phase-f1-delta-analysis/issue-triage-enhancem
 triage pass (which independently flagged #583 as a clean, low-risk S item).
 
 Three independent, isolated defects/gaps, bundled into one cycle because
-each is small (S-sized) and none touches the others' files:
+each is small (S-sized) **[CORRECTED 2026-09-25, F2 human review: the
+original "none touches the others' files" framing here was inaccurate —
+STORY-A (#862) and STORY-C (#583) both touch `src/main.rs`,
+`.cargo/mutants.toml`, and `docs/specs/cargo-mutants-policy.md`, and all
+three stories touch `src/cli/mod.rs` and `README.md`. This is the reason
+delivery was changed to serial A → C → B — see the dated amendment note in
+the Notes section below]**:
 
 1. **#862 — `jr user list` ignores global `--project`.** `UserCommand::List`
    (`src/cli/mod.rs`) declares a REQUIRED local `project: String`, and
@@ -44,7 +50,16 @@ each is small (S-sized) and none touches the others' files:
    `--project` field, which is passed the global value and merges it).
    Root cause confirmed; reproduced (`jr --no-input --project FOO user
    list` exits 2 with clap's own missing-required-arg message, not a
-   `jr`-level "no project configured" error).
+   `jr`-level "no project configured" error). **[CORRECTED 2026-09-25, F2
+   human review: the actual root cause is that `UserCommand::List.project`
+   was typed as a clap-REQUIRED `String` — clap's own required-argument
+   validation runs BEFORE its global-value propagation step
+   (`fill_in_global_values`), so that typing alone explains the reported
+   bug; `handle_list`'s missing `Config`-default fallback is the other
+   half. `src/main.rs`'s `User` dispatch arm not passing `cli.project`
+   through is a separate, pre-existing gap relative to every other
+   project-bearing dispatch arm — it is NOT the root cause of the reported
+   bug.]**
 2. **#861 — `jr field options` renders system-field options as
    `(unnamed)`. READ-SIDE ONLY (D-378 human gate, 2026-09-24).**
    `normalize_from_allowed_values_at_depth` (`src/cli/field.rs`) reads only
@@ -68,9 +83,11 @@ each is small (S-sized) and none touches the others' files:
    which mocks priority as a custom `"string"` field. `field_resolve.rs`
    is therefore removed from this item's modified-files list (retained
    only as a dependent/unchanged reference file). The resulting capability
-   gap — `--field` cannot set system-typed fields at all — is a separate
-   concern, tracked as a follow-up (see Deferred / Follow-up section
-   below), not folded into #861.
+   gap — the bare, un-hinted `--field NAME=VALUE` form cannot set
+   system-typed fields; the `:id`/`:name` hinted-bypass composers
+   (BC-3.4.028/029) already can — is a separate concern, tracked as a
+   follow-up (see Deferred / Follow-up section below), not folded into
+   #861.
 3. **#583 — `jr api --query-param NAME=VALUE`.** No BC exists for `jr api`
    today. `normalize_path` (`src/cli/api.rs`) passes the path through
    verbatim; there is no query-string assembly or encoding layer. `url`
@@ -176,24 +193,42 @@ delta-analysis report are RESOLVED as follows:
    exactly once, method-orthogonal).
 7. **Story split — RESOLVED: confirmed 3 stories (A/B/C),
    parallel-wave-eligible**, per item 1 above (B is now read-side only).
+   **[SUPERSEDED 2026-09-25, F2 human review: parallel-wave eligibility was
+   revisited and replaced with serial delivery A → C → B — see the dated
+   amendment note in the Notes section below.]**
 8. **`user_list_requires_project_flag` test name — RESOLVED: no rename.**
    Acknowledged, name stays as-is.
 
 **Audit finding folded in (item 4 of the human gate decision, 2026-09-24):**
 `src/cli/api.rs` and `src/cli/user.rs` are added to this cycle's planned
-`.cargo/mutants.toml` `examine_globs` additions, in scope for F6 targeted
-hardening. `.cargo/mutants.toml` is now listed as a modified file (see
+`.cargo/mutants.toml` `examine_globs` additions, added at F4 by the story that
+introduces each file (STORY-A: `user.rs`, STORY-C: `api.rs`); F6 verifies.
+`.cargo/mutants.toml` is now listed as a modified file (see
 `phase-f1-delta-analysis/delta-analysis.md` Files Changed and
 `phase-f1-delta-analysis/affected-files.txt`).
+**(amended at F2, PASS-28: timing clarified F6→F4 per-story; human to confirm
+at F2 gate)**
+
+**(amended at F2, 2026-09-25, human decision, F2 review; D-381): delivery order changed from the single
+parallel wave accepted at the F1 gate (item 7 above, Open Question 7) to
+SERIAL delivery, A → C → B — STORY-A (#862) first, then STORY-C (#583)
+rebased on STORY-A, then STORY-B (#861) rebased on STORY-C. Reason: all
+three stories touch `src/cli/mod.rs` and `README.md`; STORY-A and STORY-C
+additionally both touch `src/main.rs`, `.cargo/mutants.toml`, and
+`docs/specs/cargo-mutants-policy.md`. This supersedes every
+"parallel-wave-eligible" / "single wave" framing elsewhere in this
+manifest and in `prd-delta.md`.)**
 
 **Phase sequence:** F1 (APPROVED) → **F2 (next — spec evolution:
 BC-X.7.002 amendment, BC-X.14.001/003 amendment read-side only, new `jr
 api` BC cross-cutting subsection)** → F3 (3 incremental stories,
-dependency-free, single wave) → F4 (delta implementation) → F5 (scoped
-adversarial on the diff) → F6 (targeted `cargo mutants --in-diff`
-hardening on the diff scope, including the `src/cli/api.rs` /
-`src/cli/user.rs` `examine_globs` additions) → F7 (delta convergence +
-human close gate).
+dependency-free, delivered SERIALLY A → C → B, each rebased on the
+previous, per the amendment above) → F4 (delta
+implementation, including the
+per-story `src/cli/api.rs` / `src/cli/user.rs` `examine_globs` additions) →
+F5 (scoped adversarial on the diff) → F6 (targeted `cargo mutants --in-diff`
+hardening on the diff scope, verifying those additions) → F7 (delta
+convergence + human close gate).
 
 Next: F2 (spec evolution). D-379 to be minted by state-manager recording
 this F1 gate outcome.

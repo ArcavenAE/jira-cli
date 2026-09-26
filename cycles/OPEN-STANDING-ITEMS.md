@@ -1754,3 +1754,57 @@ Target a future cycle. No GitHub issue filed for this item — it surfaced inter
 audit, not from an external report. Remains OPEN, tracked as standing product-capability debt.
 Full context: `cycles/cycle-014/phase-f1-delta-analysis/delta-analysis.md` and
 `cycles/cycle-014/phase-f1-delta-analysis/affected-files.txt` (§"Deferred / Follow-up").
+
+## `jr field options` not-found hint names a command that lists no field names — NEW, OPEN, product UX gap, human-deferred (2026-09-25)
+
+**ID:** `FIELD-OPTIONS-NOTFOUND-HINT`. Severity **LOW**. Surfaced during cycle-014
+(`issue-triage-quickfixes`) F2 spec evolution (pass-30 adversarial review of the spec delta).
+`jr field options <NAME>`'s not-found error hint tells the user to run `jr project fields` to
+discover valid field names, but `jr project fields` lists issue types/priorities/statuses/CMDB
+fields — it does not enumerate field *names* usable with `field options`. The hint is misleading,
+not incorrect in kind (it does point at a real command), just at the wrong one.
+
+**Disposition (human-deferred 2026-09-25, F2 review):** LOW severity, no GitHub issue filed.
+Target a future cycle's hint-text pass.
+
+## `jr field options` field-name resolution can fire a `GET /field` call before the incomplete-M2 error — NEW, OPEN, product behavior gap, human-deferred (2026-09-25)
+
+**ID:** `FIELD-OPTIONS-RESOLUTION-ORDER`. Severity **LOW**. Surfaced during cycle-014 F2 spec
+evolution (pass-30). `field.rs`'s field-name resolution can issue a `GET /field` HTTP round-trip
+to resolve `<NAME>` to a `customfield_NNNNN` id before the M2 (createmeta) incomplete-metadata
+error path is reached, when a cleaner ordering would fail fast on the M2 completeness check
+first and avoid the extra call on that error path.
+
+**Disposition (human-deferred 2026-09-25, F2 review):** LOW severity, no GitHub issue filed.
+Target a future cycle's `field.rs` cleanup pass.
+
+## `jr field options --request-type` (M3) project-not-found error text drifts from its BC — NEW, OPEN, spec/code text drift, human-deferred (2026-09-25)
+
+**ID:** `FIELD-OPTIONS-M3-PROJECT-ERROR-TEXT`. Severity **LOW**. Surfaced during cycle-014 F2
+spec evolution (pass-30). The BC text describing the M3 (JSM requesttype-fields) mode's
+project-not-found error diverges from the actual message emitted by `field.rs` (~L207-213) —
+wording drift only, not a behavioral defect; the error still fires on the correct condition.
+
+**Disposition (human-deferred 2026-09-25, F2 review):** LOW severity, no GitHub issue filed.
+Target a future cycle's BC-text reconciliation pass.
+
+## `BC-INDEX.md` titles for `BC-X.14.002`/`BC-X.14.004` drift from their own section H1s — NEW, OPEN, spec-internal drift, human-deferred (2026-09-25)
+
+**ID:** `BC-INDEX-X14-TITLE-DRIFT`. Severity **LOW**. Surfaced during cycle-014 F2 spec evolution
+(pass-30). `BC-INDEX.md`'s index-row titles for `BC-X.14.002` and `BC-X.14.004` no longer match
+the H1 headings of their own BC sections in `cross-cutting.md` — cosmetic index/body title drift,
+not a behavioral or count defect (guarded counts remain correct).
+
+**Disposition (human-deferred 2026-09-25, F2 review):** LOW severity, no GitHub issue filed.
+Target a future cycle's index-title reconciliation pass.
+
+## `README.md` documents `jr api --body`; the actual flag is `-d`/`--data` — NEW, OPEN, doc drift, human-deferred (2026-09-25)
+
+**ID:** `README-JR-API-BODY-FLAG`. Severity **LOW**. Surfaced during cycle-014 F2 spec evolution
+(pass-30). `README.md`'s `jr api` usage example refers to a `--body` flag; the CLI's actual flag
+(per `src/cli/mod.rs::Command::Api`) is `-d`/`--data`. Doc-only drift — no code or spec behavior
+is affected.
+
+**Disposition (human-deferred 2026-09-25, F2 review):** LOW severity, no GitHub issue filed.
+Target a future cycle's README correction pass (candidate to bundle with cycle-014's own
+README doc-delta obligations if any land — see cycle-014 process-gap #7).

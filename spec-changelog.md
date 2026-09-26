@@ -9,6 +9,129 @@ Track all spec version changes. Most recent version first.
 
 > **Type legend:** Type classifies the SPEC document delta: MINOR = new BCs/VPs/sections; PATCH = amendments to existing bodies/ACs/ECs. Product-semver impact is recorded in the Summary line, independent of Type.
 
+## [2.4.0] - 2026-09-25
+
+### Type: MINOR
+
+### Summary
+
+F2 spec evolution for cycle-014 `issue-triage-quickfixes`, bundling three independent fixes
+under Feature Mode's bug-fix route (human-approved F1 gate, D-378/D-379): #862 (`jr user list`
+`--project` resolution order), #861 (`jr field options` M1/M2 system-field label fallback,
+read-side only per D-378), and #583 (new `jr api --query-param NAME=VALUE`). Per a human decision
+at F2 review (2026-09-25, superseding the F1 gate's single parallel wave), the three stories are
+delivered SERIALLY, A → C → B (STORY-A #862, then STORY-C #583, then STORY-B #861, each rebased
+on the previous) — see `cycle-manifest.md`'s dated amendment note. The entry is MINOR
+because #583 adds a new BC family (`## BC-X.16: API Query Parameters`, 2 BCs) and 6 of the
+delta's 8 new VPs (VP-API-QP-001..006; the other two, VP-USER-LIST-PROJECT-001 and VP-580-013,
+belong to #862 and #861 respectively); under this changelog's Type legend, new BCs/VPs classify
+as MINOR even though #862 and #861 are individually PATCH-shaped amendments — the strictest
+change in a bundle sets the Type.
+
+### New Requirements
+
+| ID | Description |
+|----|-------------|
+| BC-X.16.001 | `cross-cutting.md` (new `## BC-X.16: API Query Parameters`): `jr api <path> --query-param NAME=VALUE` (repeatable, `-q`) builds a percent-encoded query string and merges it with any `?` already present in `<path>`. Detection scans only the pre-`#` part of `<path>`; the query component is the text after the first `?` — an empty or `&`-terminated component gets no separator, any other component (including one that itself ends in a literal `?`) gets an `&`-joined append. NAME and VALUE are percent-encoded exactly once via `urlencoding::encode` (RFC 3986 unreserved bytes, space → `%20`, never `+`, an encoder-agnostic choice since `%20` decodes back to a space under both RFC 3986 and form-urlencoded semantics); `url::form_urlencoded::parse` is used only as a test-oracle decoder, and `url::form_urlencoded::byte_serialize` is explicitly forbidden in production. Repeated same-name params are all sent in flag order (no dedup). Assembly is method-orthogonal (GET/POST/PUT/PATCH/DELETE) and independent of `-d`/`--data`, and has zero effect when the flag is absent. NAME/VALUE are used exactly as typed, not trimmed — settled behavior, human-confirmed 2026-09-25 (D-380). No new dependency — `url` and `urlencoding` are already direct dependencies. |
+| BC-X.16.002 | Error taxonomy for malformed `--query-param` values, evaluated pre-flight by a new `parse_query_param` function before `resolve_body`'s blocking stdin read and before `-H`/`--header` parsing: a value with no `=` exits 64 with `"--query-param must be in NAME=VALUE format (got: {raw})"`; a value with an empty NAME exits 64 with `"--query-param NAME cannot be empty (got: {raw}) — use NAME=VALUE, e.g. -q maxResults=50"`. An empty VALUE (`k=`) is explicitly allowed, not an error. A multi-flag invocation fails as a whole on the first malformed value in flag order, before any HTTP call. `cross-cutting.md` goes from 94→96 individually-bodied and 160→162 cumulative BCs. |
+
+### Modified Requirements
+
+| ID | Previous | Updated | Rationale |
+|----|----------|---------|-----------|
+| BC-X.7.002 | `user list --project P` calls `/rest/api/3/user/assignable/multiProjectSearch?projectKeys=P`; the local flag was the only source (clap-required, exit 2 when absent). | H1 and body extended with a resolution order: local `--project` flag, then global `--project` flag (via clap's own `fill_in_global_values` propagation — no app-level merge code), then the configured `.jr.toml`/profile default (`Config::project_key`), then exit 64 `JrError::UserError` naming `--project`, all before any HTTP call. `cli::user::handle`/`handle_list` gain a `&Config` parameter threaded from `src/main.rs`'s already-loaded `config` binding (the handler must not reload config, or `--profile`/`JR_PROFILE` selection would be silently ignored); a new pure resolver, `resolve_user_list_project`, wraps `Config::project_key` for the config-fallback half only, since clap already resolves local-vs-global before the handler runs. The precedent for local-over-global is `src/cli/component.rs::handle`'s List/Create arms (explicit `project.as_deref().or(project_flag)` code) and its Edit/Delete arms (clap propagation only) — not BC-8.1.004, which covers only the no-project-configured exit-64 condition. New Edge Cases — see BC-X.7.002 Edge Cases in `cross-cutting.md` for the full enumeration — including a non-default `--profile`'s own configured default (with a caveat that an ancestor `.jr.toml` project still wins ahead of it) and an explicit `--project ""` empty-string pass-through that resolves to the empty string without consulting the configured default (EC-X.7.002-6). Postcondition 5 states every request carries `projectKeys=<resolved-key>` — one request on the default path, one-or-more offset pages with `--all`. COUNT-NEUTRAL. | Issue #862. Root cause, verified directly against `src/cli/mod.rs`/`src/cli/user.rs` and the `clap_builder` source: `UserCommand::List.project` was the only subcommand-local `--project` field in the CLI typed `String` (clap-required) rather than `Option<String>`, so clap's required-argument validation rejected the invocation before its global-value propagation step ever ran; `handle_list` also had no `Config`-default fallback. `src/main.rs`'s `Command::User` arm not threading `&Config` through was a separate, pre-existing gap relative to every other project-bearing dispatch arm, fixed alongside it. |
+| BC-X.14.001 / BC-X.14.003 | The M1/M2 (createmeta/editmeta) display label came from `value` only, so system-typed fields (`priority`, `resolution` (when present on the Create/Edit screen), `versions`/`fixVersions`, `components`, `security`, `issuetype`) rendered `(unnamed)`/`null`. | Label resolves as `value` when present, else `name`, else `None` (`(unnamed)`/`null`) — a presence-based rule, so `value: Some("")` still wins over a populated `name`. M3 (JSM requesttype-fields) is documented as unchanged and already correct. New Edge Cases — see BC-X.14.001 Edge Cases in `cross-cutting.md` for the full enumeration — including EC-X.14.001-13 (BC-X.14.002's existing `--value` filter now also matching system-field option names via the fallback label, BC-X.14.002's own contract unchanged) — and new VP-580-013 (an example matrix at the top level and one cascading-child level, including explicit-null and empty-string cells, a recursive proptest, and an M3 regression against a hand-written expected value). BC-X.14.003's rendering contract (`NULL_GLYPH`/`"(unnamed)"`/`null` for `None`) is unchanged — only the upstream normalizer now produces fewer `None` labels for system fields; COUNT-NEUTRAL for both BCs. The BC-INDEX.md title row mirrors BC-X.14.001's H1 verbatim. Both `src/types/jira/editmeta.rs::AllowedValue`'s struct-level and `.name` field-level doc comments are flagged stale, to be corrected at F4 alongside the normalizer itself. Separately, BC-X.14.001's field-name resolution text corrected from `partial_match`/BC-X.10.001 to `search_field_list` (aligns spec with existing code/tests; no behavior change). Invariant 3 corrected: `src/cli/field.rs`'s customfield bypass and cache-first name resolution is a mirrored copy of `src/cli/issue/field_resolve.rs::resolve_edit_fields`'s Step 1 / nested `search_field`, not a shared function — they share only `read_fields_cache`/`write_fields_cache`/`list_fields`, and a change to one must be mirrored in the other (aligns spec with existing code; no behavior change). | Issue #861, read-side only (D-378). The originally-proposed write-side companion (`find_option_match`/`resolve_option_value` falling back to `av.name`, in `src/cli/issue/field_resolve.rs`) was removed from scope after a fresh-context audit found it unreachable for system-typed fields: `dispatch_field_value` only reaches option-matching logic when `schema.field_type` is `"option"`/`"option-with-child"`, and real Jira system fields report `schema.type` values (`priority`, `resolution`, `issuetype`, `securitylevel`) that never match, so `--field Priority=High` fails earlier via `unsupported_field_type_error`. Tracked separately as drift item `FIELD-SYSTEM-TYPES-UNSUPPORTED` (LOW). |
+| BC-X.14.004 | Error-taxonomy table had no row cross-referencing the pre-existing empty-`<field>` guard already enforced by `src/cli/field.rs::resolve_field_id`. | Gains one cross-reference row: `<field>` is the empty string → Exit 64, `Field '' not found. The field name must not be empty.` — zero cache/HTTP, citing BC-X.14.001's EC-X.14.001-15 rather than minting a new EC-X.14.004 entry. Documentation-only — the pre-existing guard behavior and BC-X.14.004's own contract are both unchanged; COUNT-NEUTRAL. | Cross-reference completeness: the empty-`<field>` guard was already implemented and covered by BC-X.14.001 EC-X.14.001-15, but BC-X.14.004's own error-taxonomy table lacked the corresponding row. |
+
+### Removed Requirements
+
+| ID | Description | Rationale |
+|----|-------------|-----------|
+| — | None | No BC or VP was removed or retired this delta. |
+
+### New Verification Properties
+
+| ID | Description | Proof Strategy |
+|----|-------------|---------------|
+| VP-USER-LIST-PROJECT-001 | BC-X.7.002: project-resolution precedence over the 2^3 presence space of {local `--project`, global `--project`, configured default}, plus the zero-HTTP guarantee on the exit-64 path. The local-vs-global half is pinned as clap's own global-value propagation, not `jr`-level merge logic; the config-fallback half is the pure `resolve_user_list_project` resolver. | clap `try_parse_from` unit pin + proptest (config-fallback resolver) + hermetic wiremock integration + `jr user list --help` integration cell |
+| VP-580-013 | BC-X.14.001: the M1/M2 label fallback is total, with `label == value.or(name)` at every tree node, presence-based (`Some("")` wins over a populated `name`). The JSON key set `{id,label,children}` is unchanged, and M3 is unmodified. | proptest (recursive `AllowedValue` strategy) + example matrix (top level + child level, including explicit-null and empty-string cells) + M3 regression against a hand-written expected value |
+| VP-API-QP-001 | BC-X.16.001: the separator a merge adds is `?` (no pre-`#` query), none (query component empty or `&`-terminated), or `&` (otherwise, including when the component itself ends in a literal `?`). Prefix and `#fragment` are preserved. | proptest (separator oracle) + pinned unit examples |
+| VP-API-QP-002 | BC-X.16.001: repeated same-name params are all sent, in flag order, with no dedup. | proptest (`url::form_urlencoded::parse` oracle) + hermetic wiremock argv cell (EC-X.16.001-13) + repeated-flags argv cells (handler wiring) + EC-X.16.001-12 no-override guarantee |
+| VP-API-QP-003 | BC-X.16.001: percent-encoding happens exactly once — `decode(encode(v)) == v` for arbitrary UTF-8 including `%&=#+` and space; output bytes are only RFC 3986 unreserved characters or `%HH`; encoder identity is `urlencoding::encode`; NAME/VALUE are not trimmed (settled behavior, human-confirmed 2026-09-25, D-380). | proptest + pinned examples + `jr api --help` integration cell |
+| VP-API-QP-004 | BC-X.16.001: behavior is independent of the HTTP method, and zero flags leave the path unchanged. | structural (signature) + table-driven wiremock + proptest identity + zero-flag wiremock examples |
+| VP-API-QP-005 | BC-X.16.002: `parse_query_param` (not `append_query_params`) splits each value on the first `=` only; a missing `=` and an empty NAME are distinct exit-64 errors with zero HTTP, each asserted against its pinned M1/M2 message verbatim and distinguished by a unique substring; the `--output json` envelope is asserted on the exit-64 cells. The EC-X.16.002-10 trailing-`-q` cell asserts clap's own exit-2 `a value is required for` error (clap exits before jr's JSON envelope is written). | proptest (parser partition) + wiremock integration (`.expect(0)`, JSON envelope) + argv cells (EC-X.16.002-5..10), with the trailing-`-q` cell (EC-X.16.002-10) asserting clap's own exit-2 error rather than jr's JSON envelope |
+| VP-API-QP-006 | BC-X.16.002: (i) all-or-nothing — any malformed flag aborts the whole invocation before any request is sent; (ii) the first malformed flag in flag order is the one reported; (iii) `-q` parsing fires before `resolve_body`'s blocking stdin read (held-open stdin + timeout); (iv) a `-q` error is reported ahead of a `-H` error when both are malformed. | wiremock integration (`.expect(0)`, held-open stdin + timeout) |
+
+VP count goes from 89 to 97, with no Kani proofs and no fuzz targets. Rationale is in
+`.factory/cycles/cycle-014/phase-f2-spec-evolution/verification-delta.md`.
+
+### Architecture Changes
+
+- None. F1 found no structural change: no module-boundary change, no new file, no
+  purity-boundary crossing. `.factory/specs/architecture/*` is not touched.
+
+### Impact Assessment
+
+| Artifact | Change Type | Notes |
+|----------|-------------|-------|
+| `cross-cutting.md` | NEW BCs + AMENDED | +2 BCs (BC-X.16.001..002). BC-X.7.002 and BC-X.14.001/003 are amended in place, COUNT-NEUTRAL. BC-X.14.004 gains one cross-reference row in its error-taxonomy table (documentation-only, COUNT-NEUTRAL). |
+| `BC-INDEX.md` | UPDATED | Section X header, frontmatter `sections:`/`total_bcs:`, a new `### X.16` subsection, and title rows mirroring each amended/new BC's H1 verbatim |
+| `CANONICAL-COUNTS.md` | UPDATED | Per-file counts, Sum row and grand-total prose: 770→772 |
+| `edge-case-catalog.md` | NEW section | `## EC-CYCLE014: Cross-References` (EC-CYCLE014-001..003) |
+| `error-taxonomy.md` | NEW subsections | "User Commands" and "API Commands" under Section 6 |
+| `README.md` | UPDATED (F4) | `jr user list --project FOO` row shows `--project` as optional with its configured-default fallback (STORY-A); `jr api <PATH>` row gains `-q`/`--query-param NAME=VALUE` (STORY-C); `jr field options <NAME>` row (~L346) gains two edits: the wording "Enumerate a custom field's allowed options" is corrected to "Enumerate a field's allowed options" (system-typed fields are covered too, not just custom fields), and the row notes that system-field labels (priority/components/versions) now resolve instead of `(unnamed)` (STORY-B) |
+| `CLAUDE.md` | UPDATED (F4) | `src/cli/` architecture tree's `field.rs` line (~L61: "enumerate a custom field's allowed options via createmeta/JSM requesttype-fields/editmeta") corrected to also cover system fields, since M1/M2 label resolution now applies to both (STORY-B) |
+| `docs/specs/cargo-mutants-policy.md` | UPDATED (F4, split per story) | §Scope gains one bullet per story, each added in the PR that introduces its functions, per this doc's own convention: STORY-A adds `` `src/cli/user.rs` — `resolve_user_list_project` ``; STORY-C adds `` `src/cli/api.rs` — `append_query_params`, `parse_query_param` ``. Delivery is serial (A → C → B): STORY-A bumps the policy's hard-coded "Current `examine_globs` count" line 32 → 33 and STORY-C bumps it 33 → 34 and adds its own newest-first row to the policy's `## Changelog` table |
+| `.cargo/mutants.toml` | UPDATED (F4, split per story) | `examine_globs` gains `src/cli/user.rs` (STORY-A) and `src/cli/api.rs` (STORY-C), each added in the PR that introduces its functions (D-379) |
+| `.factory/specs/architecture/*` | UNCHANGED | F1 found no structural change, so these files are not touched this delta |
+
+- **Affected stories:** None yet. F3 (incremental story decomposition) is the next phase for
+  this cycle; no story files exist yet for STORY-A/B/C.
+- **Affected tests:** F4 adds tests for the new VPs in `src/cli/api.rs`, `src/cli/user.rs` and
+  `src/cli/field.rs` (inline unit tests and proptests), plus `tests/` integration tests for
+  `jr api` and `jr user list`. `tests/user_commands.rs::user_list_requires_project_flag` needs
+  modification, not a rename: once `Config::project_key`'s fallback is consulted, the test
+  becomes config-sensitive, so F4 must set `JR_CONFIG_DIR`/`JR_CACHE_DIR` to a fresh `TempDir`,
+  run from a `cwd` with no ancestor `.jr.toml`, and clear every ambient `JR_`-prefixed variable
+  EXCEPT the hermetic seams the test sets (`JR_CONFIG_DIR`, `JR_CACHE_DIR`, `JR_BASE_URL`,
+  `JR_AUTH_HEADER`), per `verification-delta.md` §2 (`Config::load_inner`'s two `JR_`-reading
+  sites — `Env::prefixed("JR_")` and the separate `JR_PROFILE` read — `src/config.rs`) so no
+  ambient profile/config value can silently resolve the configured-default step and mask the exit-64
+  assertion, and must update its stale `// No server
+  needed — clap should fail before any HTTP call.` comment — after this fix lands, the failure
+  it pins is a `jr`-level `JrError::UserError`, not clap's. `.cargo/mutants.toml` gains
+  `src/cli/api.rs` and `src/cli/user.rs` (D-379). As part of STORY-A, `UserCommand::List.project`'s
+  help text (~L1146) is updated to state the fallback resolution order — this is BC-X.7.002 Fix
+  step 1, pinned by VP-USER-LIST-PROJECT-001(d). STORY-B also renames
+  tests/field_options.rs::test_bc_x_14_001_field_name_human_name_resolves_via_partial_match and
+  fixes stale comments (~L1436, ~L2050), and updates src/cli/mod.rs help/about text (~L128,
+  ~L1224, ~L1231-1232) — see prd-delta.md F4 obligations.
+- **Migration needed:** Partial — three `jr user list` behavior changes are user-visible and
+  should be reflected in the product CHANGELOG at release, even though none requires action
+  from a well-formed invocation: (1) `jr user list` with no resolvable project (no local/global
+  `--project` flag and no configured `.jr.toml`/profile default) now exits 64
+  (`JrError::UserError`) instead of clap's exit 2 for the missing-required-argument case; (2)
+  `jr user list` invoked with no `--project` flag at all now SUCCEEDS when a `.jr.toml`/profile
+  default project is configured, resolving that default instead of clap rejecting the
+  invocation outright; (3) the headline additive fix (issue #862's reported symptom):
+  `jr --project FOO user list` (global `--project` flag, no local flag) previously exited 2
+  before global-value propagation ever ran, and now resolves `FOO` and succeeds. Everything else
+  in this delta (#861's read-side label fallback, #583's new `--query-param` flag) is additive.
+  See `.factory/cycles/cycle-014/phase-f1-delta-analysis/delta-analysis.md` §Risk Assessment.
+- **Migration notes:** No config or flag changes required. Scripts that previously relied on
+  `jr user list` always requiring an explicit `--project` (exit 2 otherwise) should note that a
+  configured default project now makes the flag optional, that the global `--project` flag now
+  works on `user list` the same as it does on every other project-scoped subcommand, and that
+  the failure exit code for an unresolvable project is now 64, not 2.
+
+### Feature Request Link
+
+- GitHub issues #862, #861 and #583 (Zious11/jira-cli). F1:
+  `.factory/cycles/cycle-014/phase-f1-delta-analysis/delta-analysis.md`. F2 revision history:
+  `.factory/cycles/cycle-014/phase-f2-spec-evolution/prd-delta.md`.
+
+---
+
 ## [2.3.2] - 2026-09-22
 
 ### Type: PATCH

@@ -1,9 +1,33 @@
 ---
 context: edge-case-catalog
 title: "Edge Case Catalog"
-last_updated: 2026-09-11
+last_updated: 2026-09-25
 source_pass: 3
 trace: |
+  - cycle-014 (2026-09-24/25, `issue-triage-quickfixes`, human-approved F1 gate D-378/D-379,
+    issues #862/#861/#583): added EC-CYCLE014-001..003 cross-reference entries pointing to the
+    authoritative inline edge-case catalogs in `cross-cutting.md`. See BC-X.7.002 Edge Cases in
+    `cross-cutting.md` (`jr user list` `--project` resolution order, issue #862, including the
+    non-default-profile case, its `.jr.toml`-precedence caveat, and the `--project ""`
+    empty-string pass-through, EC-X.7.002-6); see BC-X.14.001 Edge Cases in `cross-cutting.md`
+    (M1/M2 label-resolution `value`/`name` fallback, issue #861, READ-SIDE ONLY, including the
+    presence-vs-emptiness distinction and BC-X.14.002's `--value` filter now also matching
+    system-field option names via the fallback label, EC-X.14.001-13); and see BC-X.16.001/
+    BC-X.16.002 Edge Cases in `cross-cutting.md` (`jr api --query-param` composition + error
+    taxonomy, issue #583, including the trailing-`?`/`&` no-separator case, the
+    literal-trailing-`?` query-content `&`-join case, the whitespace/no-trim cases, and a
+    `--query-param` NAME colliding with an existing query-string NAME being neither deduplicated
+    nor overridden, EC-X.16.001-12). Full ID ranges are deliberately not repeated here — an
+    enumerated range in a summary surface goes stale after every F2 remediation pass; the BC
+    bodies in `cross-cutting.md` are the single current enumeration. The query-param merge rule
+    is stated precisely: no separator is added after an empty or `&`-terminated query component;
+    a non-empty, non-`&`-terminated component gets a `&` join, including when the component
+    itself ends in a literal `?` (query CONTENT, not a delimiter) — so a `?&` substring MAY
+    legitimately appear in the final output in that one case. NAME/VALUE
+    non-trimming is settled behavior, human-confirmed 2026-09-25.
+    Superseded intra-F2 pass-by-pass drafts (PASS-1/PASS-2 findings P1-003/P1-004/P1-006/P2-001/
+    P2-007 and the F2 Step 4 PO back-fill) never shipped as final text; full history:
+    `.factory/cycles/cycle-014/phase-f2-spec-evolution/prd-delta.md`.
   - cycle-007 per-story convergence, Story A pass 3 (2026-09-11, ADV-cycle007-P3-MED-01): added EC-AUTH-013 (leading-hyphen profile names require equals-form remediation command `jr auth login --profile=<profile>`). Cross-references BC-1.4.032 EC-1.4.032-6.
   - F2 spec evolution, cycle-007 `auth-correctness-dx` (2026-09-10, human-approved F1 gate, issues #784/#786/#787/#788): added EC-AUTH-010 (credential-absence remediation command must parse, #784), EC-AUTH-011 (credential-absence exit code is NotAuthenticated/2 narrowly, not the unrelated unknown-profile UserError/64 site, #786), EC-AUTH-012 (`auth list`/`auth status` truthful-status vocabulary parity, #787+#788). Cross-references BC-1.4.032/033 (AMENDED), BC-1.1.004 (unamended), BC-1.6.048/049/050 (NEW).
   - F2 spec evolution (2026-08-14, S-MUTANTS-SCOPE-1): EC-HTTP-005 citation corrected — was mis-cited as "Covered by BC-X.1.009" (the unrelated 429-exhausted-warning BC); corrected to BC-X.3.006 (the actual Ctrl+C/SIGINT BC, amended in the same change to a full BC with exact stderr/exit-code contract and Verification Properties). Confidence label MEDIUM→HIGH.
@@ -331,3 +355,86 @@ These are invariants from Pass 3 §3.5 (INV-10..25) that have no integration tes
 | G-EO1 | `observability.rs` is 39 LOC with one function at 2 sites; no tracing crate integration; tracing crate not present in Cargo.toml | MEDIUM — Phase 3 |
 | G-EO2 | CLAUDE.md missing `cli/issue/view.rs`, `cli/issue/comments.rs`, `observability.rs`, `api/assets/schemas.rs` | MEDIUM — Phase 3 doc |
 | G-EO3 | User pagination fixed-advance by `USER_PAGE_SIZE` not returned-count (JRACLOUD-71293 workaround) — undocumented | LOW — add source comment |
+
+---
+
+## EC-CYCLE014: Cross-References (cycle-014 `issue-triage-quickfixes`, 2026-09-25)
+
+The detailed, testable edge cases for this cycle's three items live inline in their owning BC
+bodies in `.factory/specs/prd/cross-cutting.md` (this repo's established convention for BC-owned
+edge cases — see EC-X.14.001-N, EC-X.7.007-N, etc. elsewhere in that file). The entries below are
+pointer/summary rows only, added here per this cycle's F2 task instructions so this catalog is
+not silently skipped for a cycle that touched cross-cutting concerns.
+
+### EC-CYCLE014-001: `jr user list` `--project` resolution order (issue #862)
+**Boundary**: Local `--project`, global `--project`, and a configured `.jr.toml`/profile-default
+project may each independently be present or absent; the active profile may be the default
+profile or a `--profile`/`JR_PROFILE`-selected non-default profile.
+**Expected**: Local wins over global; global wins over the configured default; none present →
+exit 64 naming `--project`, zero HTTP. A non-default `--profile`-selected profile's own
+configured default resolves correctly (never silently falling back to the `"default"` profile's
+default), since `cli::user::handle` receives the already-loaded, profile-scoped `&Config` and
+must not reload it — but ONLY when no `.jr.toml` project exists in cwd or an ancestor directory;
+a `.jr.toml` project wins ahead of any profile default, per `Config::project_key`'s own
+fallback order. An empty-string `--project ""`, local or global, is passed through as-is and
+resolves the project key to the empty string without consulting the configured default
+(EC-X.7.002-6) — the same pass-through `jr queue`/`jr requesttype` already exhibit. See
+BC-X.7.002 Edge Cases in `cross-cutting.md` for the full enumeration.
+**Status**: Covered by BC-X.7.002 (AMENDED 2026-09-25); no holdout yet — pending F3 story
+decomposition.
+
+### EC-CYCLE014-002: `jr field options` M1/M2 label-resolution fallback (issue #861, READ-SIDE ONLY)
+**Boundary**: An `allowedValues` entry (top-level or a cascading child) may carry `value` only,
+`name` only, both, or neither; when both are present, `value` may be a non-empty string or an
+explicit empty string.
+**Expected**: `value` wins when present (presence-based, not emptiness-based — an explicit
+`value: ""` still wins over a populated `name`); `name` is the fallback only when `value` is
+entirely absent; neither present → unchanged degenerate `None`/`(unnamed)`/`null` rendering.
+Applies identically to cascading-child entries. WRITE-side `--field` value-matching is explicitly
+OUT OF SCOPE (see `FIELD-SYSTEM-TYPES-UNSUPPORTED` drift item). As a downstream consequence,
+BC-X.14.002's existing `--value` filter now also matches system-field option names via the
+fallback `label` (EC-X.14.001-13; BC-X.14.002's own contract is unchanged). See BC-X.14.001
+Edge Cases in `cross-cutting.md` for the full enumeration.
+**Status**: Covered by BC-X.14.001/BC-X.14.003 (AMENDED 2026-09-25, READ-SIDE ONLY); no holdout
+yet — pending F3 story decomposition.
+
+### EC-CYCLE014-003: `jr api --query-param NAME=VALUE` composition and error taxonomy (issue #583)
+**Boundary**: Missing `=`, empty NAME, whitespace-only NAME, empty VALUE, VALUE with leading/
+trailing whitespace, VALUE containing `=`, non-ASCII VALUE, pre-existing `?` query string, a
+`<path>` already ending in a bare `?` or in `&` after an existing query, a query component that
+itself ends in a literal `?` (not a delimiter), repeated NAME, a `#` fragment, multiple
+`--query-param` flags where one is malformed, every stdin state on a `-d @-` invocation (a TTY,
+inherited, closed, or a pipe held open by a slow/never-closing producer — the held-open pipe is
+the discriminating case), and every `-X`/`--method` value.
+**Expected**: Missing `=` and empty NAME (the literal empty string before the first `=`) both
+exit 64 (pre-HTTP, zero requests); empty VALUE is ALLOWED; VALUE splits on the FIRST `=` only;
+percent-encoding uses `urlencoding::encode` and happens exactly once (`%` → `%25`, space →
+`%20`, never `+`); repeated names are all sent in order; merges with an existing `?` via `&`,
+where query detection looks only at the part of `<path>` before the first `#` and the query
+component is everything after the FIRST `?` in that part; no `?` in that pre-`#` part adds a
+fresh leading `?`; a query component that is EMPTY (the pre-fragment part ends at the first `?`
+— e.g. `/rest/api/3/search?`, or `/s?#f`, where the `?` is immediately followed by a fragment)
+or that ENDS IN
+`&` gets the new pairs with NO separator added (EC-X.16.001-8); otherwise the new pairs are
+joined with `&`, including when the query component itself ends in a literal `?` (query CONTENT,
+not a delimiter — EC-X.16.001-9, e.g. `/s?jql=why?` + `k=v` → `/s?jql=why?&k=v`); the assembly
+never ADDS a second `?`; the precise rule is: no separator is added after an empty or
+`&`-terminated query component, while a non-empty, non-`&`-terminated component gets a `&` join
+— so a `?&` substring MAY legitimately appear in the final output when the query component
+itself ends in a literal `?` (query CONTENT, not a delimiter), per EC-X.16.001-9; a `#`
+fragment sits after the assembled query string; behavior is identical across all five HTTP
+methods; a malformed `--query-param` among several well-formed ones fails the whole invocation
+before any HTTP call, reporting the FIRST malformed value in flag order. A `--query-param` NAME
+that collides with a NAME already present in `<path>`'s existing query string is NOT
+deduplicated against, and does NOT override, the pre-existing pair — both are sent, the
+pre-existing pair(s) first, followed by the new pair(s) in flag order (EC-X.16.001-12); which
+value, if either, "wins" is a server-side decision, outside this BC's scope. **Settled behavior,
+human-confirmed 2026-09-25**: NAME and VALUE are used exactly as typed, NEVER
+trimmed (a whitespace-only NAME is therefore non-empty and allowed, not the empty-NAME error).
+A malformed `--query-param` combined with a `-d @-` body invocation exits 64 on the
+`--query-param` error BEFORE the body is ever read from stdin, with NO blocking — `-q` validation
+runs strictly before `resolve_body`'s stdin read regardless of whether stdin is a TTY, piped,
+inherited, or closed (EC-X.16.002-4). See BC-X.16.001/BC-X.16.002 Edge Cases in `cross-cutting.md` for the
+full enumeration.
+**Status**: Covered by BC-X.16.001/BC-X.16.002 (NEW 2026-09-25); no holdout yet — pending F3
+story decomposition.

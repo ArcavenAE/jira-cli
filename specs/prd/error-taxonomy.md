@@ -1,9 +1,28 @@
 ---
 context: error-taxonomy
 title: "Error Taxonomy"
-last_updated: 2026-09-10
+last_updated: 2026-09-25
 source_pass: 4
 trace: |
+  - cycle-014 (2026-09-24/25, `issue-triage-quickfixes`, issues #862/#583/#861, human-approved F1
+    gate D-378/D-379): Section 6 — "User Commands" subsection registers `jr user list`'s
+    no-resolvable-project condition (BC-X.7.002, AMENDED — root cause is
+    `UserCommand::List.project: String` being clap-REQUIRED, so clap's own required-argument
+    validation rejects the invocation before global-value propagation or any config-default
+    fallback can run; fixed by making the field `Option<String>` plus a `Config`-backed
+    fallback), reusing the EXACT `"No project configured. Run \"jr init\" or pass --project. Run
+    \"jr project list\" to see available projects."` wording `queue`/`requesttype` already emit;
+    `config::validate_profile_name`, `Config::load_with` (e.g. unknown profile, malformed config)
+    and `JiraClient::from_config` failures all preempt this row's exit-64; some of these also exit
+    64. "API Commands" subsection registers `jr api --query-param`'s two malformed-value conditions
+    (BC-X.16.002, NEW — missing `=` and empty NAME both exit 64 pre-HTTP, before `resolve_body`
+    and `-H`/`--header` parsing; an empty VALUE `k=` is explicitly NOT an error), with the two
+    error strings pinned verbatim and NAME/VALUE non-trimming settled behavior, human-confirmed
+    2026-09-25. Issue #861's fix (BC-X.14.001/BC-X.14.003 label-resolution
+    fallback) introduces no new error condition — it is a display-label fix on an existing
+    success path, not a new taxonomy row. Intra-F2 adversarial pass-by-pass notes (PASS-1/PASS-2
+    findings P1-002/P1-006/P1-010/P2-004/P2-006) are superseded by this consolidated entry; full
+    history: `.factory/cycles/cycle-014/phase-f2-spec-evolution/prd-delta.md`.
   - F2 amendment (2026-09-10, cycle-007 `auth-correctness-dx`, issues #784/#786, human-approved F1 gate): Section 6 — Auth Commands subsection gains two new registered conditions for `load_api_token`'s credential-absence sites (BC-1.4.032/BC-1.4.033, AMENDED — reclassified from `JrError::UserError`/exit 64 to `JrError::NotAuthenticated`/exit 2, and remediation command corrected `jr auth login {profile}` → `jr auth login --profile={profile}`) plus the pre-existing `auth status --profile <unknown>` condition (BC-1.1.004, UNCHANGED, exit 64), with a new disambiguation note distinguishing the two AUTHENTICATION-failure sites (profile exists, no credentials) from the one USAGE-error site (profile doesn't exist) — narrowing decided at the cycle-007 F1 human gate, `cycle-007-auth-delta-analysis.md` §5.1. No new JrError variant; `NotAuthenticated`'s existing Section 1 "no token in keychain" description already covers this case.
   - L2: .factory/specs/domain-spec/
   - Source broad: .factory/semport/jira-cli/jira-cli-pass-3-behavioral-contracts.md §2.X error sections
@@ -210,6 +229,74 @@ Pre-flight `JrError::UserError` conditions for `jr issue create` (D-188, BC-3.8.
 | `issue create --field` without `--request-type` (BC-3.8.012) | `"--field is only valid with --request-type (JSM service-desk requests). Add --request-type <NAME> to submit a JSM request with custom fields, or drop --field to create a standard platform issue."` | 64 |
 | `issue create --on-behalf-of` without `--request-type` (BC-3.8.013) | `"--on-behalf-of is only valid with --request-type (JSM service-desk requests). Add --request-type <NAME> to raise a request on behalf of another user, or drop --on-behalf-of to create a standard platform issue."` | 64 |
 | `issue create --field` AND `--on-behalf-of` without `--request-type` combined — BC-3.8.012 governs; ONE error fires, not two | `"--field and --on-behalf-of are only valid with --request-type (JSM service-desk requests). Add --request-type <NAME> to use these flags, or drop them to create a standard platform issue."` | 64 |
+
+### User Commands
+
+`jr user list` project resolution (issue #862, BC-X.7.002, AMENDED 2026-09-25 cycle-014
+`issue-triage-quickfixes`). Resolution order: local `--project` → global `--project` →
+configured `.jr.toml`/profile-default project → this error, BEFORE any HTTP call.
+
+| Condition | Error | Exit Code |
+|---|---|---|
+| `jr user list` with no local `--project`, no global `--project`, and no configured project default | `"No project configured. Run \"jr init\" or pass --project. Run \"jr project list\" to see available projects."` | 64 |
+
+Note: this is the SAME message `src/cli/queue.rs`/`src/cli/requesttype.rs` already emit on the
+identical condition, verbatim — reused wording, not a new string. Before this amendment, the
+absent-project case on `user list` surfaced as a clap missing-required-argument error (exit 2),
+not this row, because `UserCommand::List.project` was clap-REQUIRED rather than optional-with-
+fallback. This exit-64 row is reached only when profile validation, config loading, and
+credentials all resolve successfully — `src/main.rs`'s `run` function's
+`config::validate_profile_name` (a supplied `--profile` name) runs before dispatch, and the
+`Command::User` arm's `Config::load_with` (e.g. unknown profile, malformed config) then
+`JiraClient::from_config` (which can fail with `JrError::ConfigError` for a missing/unknown active profile or a missing profile URL or
+`JrError::NotAuthenticated` for missing/invalid credentials) run BEFORE dispatching to `cli::user::handle`: `config::validate_profile_name`,
+`Config::load_with` (e.g. unknown profile, malformed config) and `JiraClient::from_config`
+failures all preempt this row; some of these also exit 64 — never the reverse. Hermetic
+regression tests for this row must clear every ambient `JR_`-prefixed variable EXCEPT the
+hermetic seams the test sets (`JR_CONFIG_DIR`, `JR_CACHE_DIR`, `JR_BASE_URL`, `JR_AUTH_HEADER`),
+per `verification-delta.md` §2 — `Config::load_inner` (`src/config.rs`) both overlays
+`GlobalConfig` fields via `Env::prefixed("JR_")` and separately reads `JR_PROFILE` to resolve the
+active profile, either of which can silently resolve the configured-default step and mask this
+row's exit-64 in an unclean environment.
+
+### API Commands
+
+`jr api --query-param NAME=VALUE` malformed-value taxonomy (issue #583, BC-X.16.002, NEW
+2026-09-25 cycle-014 `issue-triage-quickfixes`). Both conditions are pre-HTTP, zero-request
+validation failures, mirroring `parse_header`'s existing `-H`/`--header` `Key: Value` pre-flight
+contract. `-q` validation runs only AFTER `Config::load_with` and `JiraClient::from_config` both
+succeed in `src/main.rs`'s `Command::Api` dispatch arm — both calls precede `cli::api::handle_api`
+(where `parse_query_param` lives). `config::validate_profile_name`, `Config::load_with` (e.g.
+unknown profile, malformed config) and `JiraClient::from_config` failures all preempt this row's
+exit-64; some of these also exit 64 — and `src/cli/api.rs::normalize_path`'s own path errors
+(empty path, absolute URL), which run first in `handle_api`, preempt it too.
+
+| Condition | Error | Exit Code |
+|---|---|---|
+| `--query-param` value has no `=` (e.g. `--query-param foo`) | `JrError::UserError`: `"--query-param must be in NAME=VALUE format (got: {raw})"` | 64 |
+| `--query-param` value's NAME (before the first `=`) is empty (e.g. `--query-param =v`) | `JrError::UserError`: `"--query-param NAME cannot be empty (got: {raw}) — use NAME=VALUE, e.g. -q maxResults=50"` | 64 |
+
+Both strings are pinned VERBATIM here and in BC-X.16.002's "Pinned error messages" block, modeled on
+`parse_header`'s existing `"Header must be in 'Key: Value' format (got: {raw})"` /
+`"Header key cannot be empty"` pair (`src/cli/api.rs::parse_header`), each additionally naming a
+concrete next step per this repo's error-message convention. Each string contains a substring
+the other does not (`"must be in NAME=VALUE format"` vs. `"NAME cannot be empty"`), so a
+caller/test can distinguish them by substring match alone (VP-API-QP-005 (distinguishing-substring assertion)).
+
+Note: an empty VALUE (`--query-param k=`) is explicitly NOT an error under this taxonomy — it
+sends the literal `k=` (BC-X.16.001 EC-X.16.001-1). **Settled behavior, human-confirmed
+2026-09-25**: NAME and VALUE are used exactly as typed, NEITHER is trimmed of
+leading/trailing whitespace (matching `gh api -f`'s raw-bytes-as-typed behavior; this
+intentionally differs from `parse_header`'s `-H`/`--header` parsing, which does trim) — so a
+whitespace-only NAME (e.g. `--query-param " =v"`) is likewise NOT the empty-NAME error; only a
+NAME that is the literal empty string before the first `=` is rejected (BC-X.16.001
+EC-X.16.001-10). A single invocation with multiple `--query-param` flags where any one is
+malformed fails the whole invocation before any HTTP call (all-or-nothing, same posture as
+`-H`/`--header`'s existing `.collect::<Result<Vec<_>>>()` pattern in `handle_api`) — the FIRST
+malformed value in flag order is the one reported (BC-X.16.002 Invariants). `--query-param`
+parsing runs BEFORE `resolve_body` and `-H`/`--header` parsing in `handle_api`'s pipeline,
+immediately after path normalization (see BC-X.16.002 Postcondition 1 for the exact insertion
+point).
 
 ### Component Commands
 

@@ -1,11 +1,29 @@
 ---
 context: bc-x
-title: "Cross-cutting (HTTP client, Runtime, Users, Teams, Worklogs, Projects, Queues, JQL, Partial-match, JSM Request Types, CI Guards)"
-total_bcs: 160   # cumulative claim (incl. range-collapsed); definitional_count below is individually-bodied headings; +1 added 2026-09-17 (BC-X.15.001, cycle-008 `oauth-surface-correctness` F2 spec evolution, ADR-0026 Decision 3, VP-OAUTH-GW-003 — new `## BC-X.15: OAuth Agile-Command Error-Mapping` subsection: `jr board`/`jr sprint` 401 auth-scheme-conditional call-site rewrite disambiguating scope-mismatch vs. expired-token vs. (regression-guard) wrong-host, modeled on `require_service_desk`/BC-X.8.006..007); was 159 before this addition; prior: +4 added 2026-09-06 (BC-X.7.007..010, cycle-005 `adf-mentions` F2 spec evolution, issue #674 — `@Name` mention resolution: unique-match (007), ambiguous-match disambiguation (008), zero-match HARD ERROR exit 64 (009, human-approved override of the architect's pass-through recommendation); bracket-form accountId mandatory preflight validation (010)); was 155 before that addition
-definitional_count: 94   # count of `#### BC-` headings in this file
-last_updated: 2026-09-17
+title: "Cross-cutting (HTTP client, Runtime, Users, Teams, Worklogs, Projects, Queues, JQL, Partial-match, JSM Request Types, CI Guards, Field Option Discovery, API Query Parameters)"
+total_bcs: 162   # cumulative claim (incl. range-collapsed); definitional_count below is individually-bodied headings; +2 added 2026-09-25 (BC-X.16.001..002, cycle-014 `issue-triage-quickfixes` F2 spec evolution, issue #583 — new `## BC-X.16: API Query Parameters` subsection: `jr api --query-param NAME=VALUE` percent-encoded query-string composition + malformed-value error taxonomy; same-burst amendments to BC-X.7.002 (issue #862, project-resolution order) and BC-X.14.001/003 (issue #861, M1/M2 label-resolution fallback, READ-SIDE ONLY per D-378) are COUNT-NEUTRAL); was 160 before this addition; prior: +1 added 2026-09-17 (BC-X.15.001, cycle-008 `oauth-surface-correctness` F2 spec evolution, ADR-0026 Decision 3, VP-OAUTH-GW-003 — new `## BC-X.15: OAuth Agile-Command Error-Mapping` subsection: `jr board`/`jr sprint` 401 auth-scheme-conditional call-site rewrite disambiguating scope-mismatch vs. expired-token vs. (regression-guard) wrong-host, modeled on `require_service_desk`/BC-X.8.006..007); was 159 before this addition; prior: +4 added 2026-09-06 (BC-X.7.007..010, cycle-005 `adf-mentions` F2 spec evolution, issue #674 — `@Name` mention resolution: unique-match (007), ambiguous-match disambiguation (008), zero-match HARD ERROR exit 64 (009, human-approved override of the architect's pass-through recommendation); bracket-form accountId mandatory preflight validation (010)); was 155 before that addition
+definitional_count: 96   # count of `#### BC-` headings in this file
+last_updated: 2026-09-25
 source_pass: 3
 trace: |
+  - cycle-014 `issue-triage-quickfixes` F2 (spec 2.4.0, 2026-09-25): amended BC-X.7.002 (#862
+    `user list --project` resolution: `List.project` becomes `Option<String>`; clap global
+    propagation plus `Config::project_key` fallback; `&Config` threaded from `main.rs`; pure
+    `resolve_user_list_project`), amended BC-X.14.001/003 (#861 M1/M2 label value→name fallback,
+    read-side only; BC-X.14.001's field-name resolution text corrected from `partial_match`/
+    BC-X.10.001 to `search_field_list` — aligns spec with existing code/tests; no behavior
+    change; Invariant 3 corrected: `src/cli/field.rs`'s customfield bypass and cache-first name
+    resolution is a mirrored copy of `src/cli/issue/field_resolve.rs::resolve_edit_fields`'s
+    Step 1 / nested `search_field`, not a shared function — they share only
+    `read_fields_cache`/`write_fields_cache`/`list_fields`, and a change to one must be mirrored
+    in the other; aligns spec with existing code; no behavior change), new BC-X.16 subsection
+    BC-X.16.001/002 (#583 `jr api --query-param`). BC-X.14.004
+    gains one cross-reference row in its error-taxonomy table (the pre-existing empty-`<field>`
+    guard, citing BC-X.14.001 EC-X.14.001-15) — documentation-only, contract unchanged,
+    COUNT-NEUTRAL. §BC-X.14 intro also reworded — broadened from "a custom select field's" to
+    "a field's" allowed options (custom select fields and system fields) and a duplicated
+    trailing "(cycle-014, #861)" citation dropped — wording-only, COUNT-NEUTRAL.
+    Revision history: `.factory/cycles/cycle-014/phase-f2-spec-evolution/prd-delta.md`.
   - cycle-008 `oauth-surface-correctness` wave-level finding F-WG-1 (human-approved scope amendment,
     ruling = EXPAND, 2026-09-17, product-owner burst): BC-X.15.001 Behavior clause 1's call-site →
     hint mapping WIDENED beyond the original ADR-0026 Decision 3 `jr board`/`jr sprint` boundary
@@ -246,14 +264,19 @@ trace: |
 
 # BC-X — Cross-cutting
 
-160 behavioral contracts covering: HTTP client (X.1), Pagination (X.2), Error handling (X.3),
+162 behavioral contracts covering: HTTP client (X.1), Pagination (X.2), Error handling (X.3),
 Rate limiting (X.4), Worklogs & duration (X.5), Teams (X.6), Users (X.7), Projects & Queues (X.8),
 JQL utilities (X.9), Partial-match (X.10), Build-time (X.11), JSM Request Types (X.12),
-CI Guards (X.13), Field Option Discovery (X.14), OAuth Agile-Command Error-Mapping (X.15). (+1
-BC-X.15.001 added 2026-09-17 cycle-008 `oauth-surface-correctness` ADR-0026 Decision 3 — `jr
-board`/`jr sprint` OAuth 401 error-mapping call-site rewrite; +4 BC-X.7.007..010 added 2026-09-06
-by issue #674 markdown mentions — `@Name` resolution (unique/ambiguous/zero-match) + bracket-form
-accountId preflight validation.)
+CI Guards (X.13), Field Option Discovery (X.14), OAuth Agile-Command Error-Mapping (X.15), API
+Query Parameters (X.16). (+2 BC-X.16.001..002 added 2026-09-25 cycle-014
+`issue-triage-quickfixes` issue #583 — `jr api --query-param NAME=VALUE`; BC-X.7.002 amended in
+place for issue #862 (project-resolution order) and BC-X.14.001/003 amended in place for issue
+#861 (M1/M2 label-resolution fallback, READ-SIDE ONLY), no separate count for either amendment;
+BC-X.14.004 gains one documentation-only cross-reference row (empty `<field>`), COUNT-NEUTRAL;
+the §BC-X.14 intro is reworded (count-neutral); +1 BC-X.15.001 added 2026-09-17 cycle-008
+`oauth-surface-correctness` ADR-0026 Decision 3 — `jr board`/`jr sprint` OAuth 401 error-mapping
+call-site rewrite; +4 BC-X.7.007..010 added 2026-09-06 by issue #674 markdown mentions — `@Name`
+resolution (unique/ambiguous/zero-match) + bracket-form accountId preflight validation.)
 
 ---
 
@@ -719,11 +742,180 @@ If `main_task` completes first, its `Result` is returned normally (existing per-
 
 ---
 
-#### BC-X.7.002: `user list --project P` calls `/rest/api/3/user/assignable/multiProjectSearch?projectKeys=P`
+#### BC-X.7.002: `jr user list` resolves `--project` via local flag → global flag → configured project default (`Config::project_key`) → exit 64; once resolved, calls `/rest/api/3/user/assignable/multiProjectSearch?projectKeys=<resolved project key>`
+
+> **Previous version (pre-cycle-014, spec 2.3.2):** H1 was `user list --project P` calls `/rest/api/3/user/assignable/multiProjectSearch?projectKeys=P` — accurate for the pre-fix shape, where `UserCommand::List.project` was a clap-required `String`, the sole source of `P`: no global-flag fallback, no config default, no `jr`-level exit-64 (an absent flag was rejected by clap itself, exit 2). Source/Trace at that time: `tests/all_flag_behavior.rs:~260-`; Pass 3 BC-704.
 
 **Confidence**: HIGH
-**Source**: `tests/all_flag_behavior.rs:~260-`
-**Trace**: Pass 3 BC-704
+**Source**: `tests/all_flag_behavior.rs:~260-`; `tests/user_commands.rs::user_list_requires_project_flag` (isolation to be added, no rename — human-accepted at the F1 gate, cycle-manifest Open Question 8: under the required hermetic setup its assertion, that stderr mentions `--project`, still accurately describes what the test checks); `src/cli/mod.rs::UserCommand::List.project` (type change `String` → `Option<String>`, to be modified cycle-014); `src/cli/user.rs::{handle,handle_list,resolve_user_list_project}` (`&Config` threading + new pure resolver, to be implemented cycle-014); `src/main.rs`'s `Command::User` dispatch arm (`&Config` threading only, to be modified cycle-014); `src/config.rs::Config::project_key` (reused, unmodified).
+**Subject**: Users — `user list` project resolution (issue #862)
+**Behavior**: `jr user list` needs a resolved project key before it can call
+`/rest/api/3/user/assignable/multiProjectSearch?projectKeys=P`.
+
+Root cause (verified directly against `src/cli/mod.rs::UserCommand::List.project`, `src/cli/user.rs::handle_list`, and the `clap_builder` parser source — not a hypothesis): `UserCommand::List.project` is typed `String`, clap-REQUIRED — the only subcommand-local `--project` field in the entire CLI surface with this typing. clap 4.6.7's parse sequence (`_do_parse`: `get_matches_with` runs required-argument validation, THEN `propagate_globals` copies a global-position value into same-ID local fields) validates required arguments BEFORE propagating global values, so `jr --project FOO user list` exits 2 before propagation ever gets a chance to fill the local field. `handle_list` (`src/cli/user.rs`) also has no `Config`-backed fallback for a missing project — there is no config default path today at all.
+
+Fix:
+1. `UserCommand::List.project` becomes `Option<String>` (`src/cli/mod.rs`) — only the type
+   changes; the field keeps its existing `#[arg(long, short = 'p')]` attribute, including
+   `short = 'p'`, unmodified (`src/cli/mod.rs` ~L1147). The field's help text (doc comment on
+   `src/cli/mod.rs::UserCommand::List.project`, `~L1146`, currently "Project key (e.g., FOO)") is
+   also updated to state the fallback order, modeled on `ComponentSubcommand::List`'s own wording
+   verbatim (`src/cli/mod.rs` ~L1287-1288: "Project key (overrides the configured default
+   project). Required when no project is configured in `.jr.toml`."). `user list`'s new help
+   text cannot reuse that string byte-for-byte, though: `ComponentSubcommand::List`'s help text
+   names only `.jr.toml`, understating its own behavior — `handle_list` (`src/cli/component.rs`
+   ~L188) calls `Config::project_key` (`src/config.rs` ~L423-428), which also falls back to the
+   active profile's configured `project` default, so `component list` behaves the same way;
+   only its help text understates that. `user list`'s new help text names both sources
+   explicitly. Pinned exact new string:
+   "Project key (overrides the configured default project). Required when no project is
+   configured in `.jr.toml` or the active profile." — asserted by VP-USER-LIST-PROJECT-001's
+   `--help` cell.
+2. Once required-argument validation no longer blocks it, clap's existing global-value propagation (`fill_in_global_values`) fills the local field automatically whenever only the global `--project` is given; when both local and global are given, the local (child) value wins and that value propagates back up to the shared global-position arg. Both behaviors are clap's own mechanism — no `jr`-level local-vs-global merge code is written for this half of the resolution.
+3. `cli::user::handle` gains a `&Config` parameter, threaded through to `handle_list` for the config-default fallback step. `src/main.rs`'s `Command::User` arm passes the `config` binding it already constructs (`Config::load_with(cli.profile.as_deref())`) through unchanged. `handle`/`handle_list` MUST NOT call `Config::load`/`Config::load_with` themselves — reloading would ignore the `--profile`/`JR_PROFILE` selection already resolved into that binding.
+4. A pure resolver is extracted in `src/cli/user.rs`, matching `src/cli/field.rs::resolve_m2_project`'s signature style:
+   `pub(crate) fn resolve_user_list_project(cli_project: Option<&str>, config: &Config) -> Option<String>` = `config.project_key(cli_project)`.
+   `handle_list` calls this resolver with the post-clap local field value (which already reflects local-vs-global precedence) and exits 64 on `None`.
+5. Passing `cli.project` from `main.rs` through to the handler as a separate fallback parameter (the pattern every other project-bearing dispatch arm uses — verified directly against `src/main.rs`: `Project`, `Issue`, `Board`, `Sprint`, `Queue`, `RequestType`, `Field`, and `Component`, each passing `cli.project.as_deref()` as an explicit parameter alongside `command`/`config`/`client`; `Worklog`, `Team`, `User`, `Api`, `Assets`, `Me`, among others, do not) is unnecessary: by the time any handler runs, clap has already resolved `project` to local-or-global on the `UserCommand::List` variant itself.
+
+Resolution order, evaluated entirely in-process before any HTTP call:
+1. **Local `--project`** — supplied after `user list` on the command line; fills `UserCommand::List.project` directly.
+2. **Global `--project`** — supplied before the subcommand; fills the local field via clap's propagation whenever (1) is absent.
+3. **Configured project default** — `Config::project_key`'s existing fallback chain (per `src/config.rs`: the per-project `.jr.toml` `project` key first, then the active profile's configured `project` default); consulted only when (1) and (2) are both absent.
+4. **Exit 64** — `JrError::UserError`, when none of (1)-(3) resolve a project, before any HTTP call. `config::validate_profile_name`, `Config::load_with` (e.g. unknown profile, malformed config) and `JiraClient::from_config` failures all preempt this step; some of these also exit 64.
+
+This is the same config-default-fallback shape `jr component list`/`jr component edit`/`jr component delete` already use (`src/cli/component.rs::handle`'s `List` arm: `project.as_deref().or(project_flag)`, then `handle_list`'s `config.project_key(project)` — `handle_list`'s own `project` parameter is
+already `Option<&str>`, so no `.as_deref()` call appears at this call site. `handle_edit`/
+`handle_delete` instead receive an owned `project: Option<String>` (the `Edit`/`Delete` arms in
+`handle` perform no local/global merge at all — see below) and call
+`config.project_key(project.as_deref())` internally, where the `.as_deref()` converts that owned
+field to the `Option<&str>` the shared `project_key` signature expects), and the same one `jr field options --type` (BC-X.14.001's M2 project resolution step), `jr queue`, and `jr requesttype` already use for their own config-default fallback. BC-8.1.004 covers ONLY the no-project-configured exit-64 condition — it does not itself specify local-over-global precedence. The actual local-over-global precedent for `component list`/`create` lives in the code (`src/cli/component.rs::handle`'s `List` arm — `project.as_deref().or(project_flag)` — and `Create` arm — `project.or_else(|| project_flag.map(str::to_string))`, local checked first, global consulted only as a fallback), not in a shared BC-level contract. `component edit`/`delete` rely on the same clap global-value-propagation mechanism `user list` now will (no explicit `.or()`/`or_else()` merge call in those arms). Local wins over global when both are supplied (`jr --project GLOBAL user list --project LOCAL` resolves `LOCAL`) — via clap's propagation, producing the same observable result as `component create`'s explicit local-over-global code.
+
+**Preconditions**:
+- `jr user list` invoked with any combination of: local `--project`, global `--project`, a configured `.jr.toml`/profile-default project, or none of the three.
+- `tests/user_commands.rs::user_list_requires_project_flag` and the new EC-X.7.002-4 regression test are CONFIG-SENSITIVE once this BC lands, because `Config::project_key` reads both the active profile's configured default and any `.jr.toml` found by `find_project_config`'s cwd-and-ancestors walk (`src/config.rs`). Both tests MUST set `JR_CONFIG_DIR`/`JR_CACHE_DIR` to a fresh `TempDir` and run from a `cwd` with no `.jr.toml` in any ancestor directory, in addition to supplying auth (`JR_AUTH_HEADER`/`JR_BASE_URL`, as `user_list_requires_project_flag` already does) — otherwise a real developer/CI environment with a configured default project would silently resolve step 3 and the exit-64 assertion would spuriously fail. Both tests MUST also clear every ambient `JR_`-prefixed variable EXCEPT the hermetic seams the test sets (`JR_CONFIG_DIR`, `JR_CACHE_DIR`, `JR_BASE_URL`, `JR_AUTH_HEADER`), per `verification-delta.md` §2, since `Config::load_inner`'s (`src/config.rs`) two env-reading sites — `Figment::new()...merge(Env::prefixed("JR_"))`, which lets any stray `JR_`-prefixed variable in the ambient shell silently override a `GlobalConfig` field, and the separate `std::env::var("JR_PROFILE")` read that resolves the active profile name — would otherwise leak an ambient value in. An ambient `JR_PROFILE` pointing at a profile with its own configured project default would silently resolve step 3 the same way an ambient `.jr.toml`/config default would, spuriously masking EC-X.7.002-4's exit-64 assertion. `user_list_requires_project_flag` specifically may keep its existing unreachable `JR_BASE_URL=http://127.0.0.1:1` (no mock server): since a stray request would fail with a connection error rather than a mock response, and its assertion only inspects stderr for `--project`/`required`, an unreachable base URL cannot mask the exit-64 assertion.
+- In `src/main.rs`'s `run` function, `config::validate_profile_name` (validating a supplied `--profile` name) runs before command dispatch, and in the `Command::User` arm, `Config::load_with` (e.g. unknown profile, malformed config) then `api::client::JiraClient::from_config(&config, ...)` run and can each fail (`JrError::UserError` for an invalid/unknown profile name, `JrError::ConfigError` for a missing/unknown active profile or a missing profile URL, or `JrError::NotAuthenticated` via keychain/`JR_AUTH_HEADER` credential loading) BEFORE `cli::user::handle`/`handle_list` is ever invoked: `config::validate_profile_name`, `Config::load_with` (e.g. unknown profile, malformed config) and `JiraClient::from_config` failures all preempt this step; some of these also exit 64 — never the reverse. A hermetically-isolated EC-X.7.002-4 test MUST supply valid auth and a valid, known profile precisely so it reaches this BC's own exit-64 path instead of failing earlier on one of these preemption points.
+
+**Postconditions**:
+1. Local `--project` present → that value is used, regardless of whether a global `--project` or a configured default is also present (local wins unconditionally).
+2. Local `--project` absent, global `--project` present → the global value is used (via clap propagation), regardless of whether a configured default is also present.
+3. Both flags absent, a configured default (`.jr.toml` project or profile default) is present → the configured default is used. "Present" here means `Config::project_key`'s underlying `Option` is `Some(_)`, including `Some("")` — an empty-string configured default (`.jr.toml` `project = ""` or profile `project = ""`) counts as present and is used as-is (see EC-X.7.002-7); it is not treated as absent.
+4. None of the three present → exit 64 `JrError::UserError`, message naming `--project` (byte-identical to `queue.rs`/`requesttype.rs`'s existing wording: `"No project configured. Run \"jr init\" or pass --project. Run \"jr project list\" to see available projects."`), before any HTTP call (zero requests to `/rest/api/3/user/assignable/multiProjectSearch`).
+5. Once resolved (by any of 1-3), every request issued to enumerate users carries `projectKeys=<resolved-key>` — the original H1 wire-call contract, unchanged, but not necessarily "exactly one" request: the default (non-`--all`) path fires exactly one `GET /rest/api/3/user/assignable/multiProjectSearch?projectKeys=<resolved-key>` (BC-X.7.003's single-call legacy contract), while `--all` paginates through one-or-more offset pages of the same endpoint via `src/api/jira/users.rs::search_assignable_users_by_project_all` — every page still carries the same `projectKeys=<resolved-key>` value.
+
+**Invariants**:
+- This is a config-merge, pre-HTTP resolution step — no new `Config`/`ProfileConfig` accessor, no new cache file; reuses `Config::project_key` exactly as `component`/`field`/`queue`/`requesttype` already do.
+- The failure MECHANISM changes (clap exit 2 → `jr`-level exit 64 on the true no-project case), but the failure FACT does not: an invocation with no project resolvable anywhere still fails, in both the pre-fix and post-fix shape.
+- `tests/user_commands.rs::user_list_requires_project_flag` passes once hermetically isolated (no rename — its assertion, stderr contains `"--project"` or `"required"`, matches both the old clap message and the new `JrError::UserError` message) but only with config/cache isolation and auth supplied as described in Preconditions above. Human-accepted at the F1 gate (cycle-manifest Open Question 8): unlike a test whose NAME asserts a mechanism the code doesn't use, this test's name makes no mechanism claim, so its assertion continues to accurately describe what it checks after this fix lands. After this fix lands, the failure it pins is never clap's; its stale `// No server needed — clap should fail before any HTTP call.` comment must be updated accordingly.
+
+**Edge Cases**:
+- EC-X.7.002-1: Both local AND global `--project` supplied (`jr --project GLOBAL user list --project LOCAL`) → LOCAL wins, via clap's own global-value propagation (the child/local value wins and propagates back up to the shared global-position arg), not a hand-written `jr`-level precedence check — the same mechanism `component edit`/`delete` rely on (clap propagation only, no explicit `.or()`/`or_else()` merge call in those arms). This produces the same observable result as `component list`/`create`'s explicit local-over-global merge code (`src/cli/component.rs::handle`'s `List` arm — `project.as_deref().or(project_flag)` — and `Create` arm — `project.or_else(|| project_flag.map(str::to_string))`), even though `user list` reaches that result via clap propagation rather than an explicit merge call.
+- EC-X.7.002-2: Global `--project` only (`jr --project FOO user list`, no local flag, no configured default) → FOO resolves; this is the exact invocation issue #862 reported as broken (previously exit 2 via clap's own missing-required-argument message).
+- EC-X.7.002-3: Configured default only (`.jr.toml` `project = "FOO"` or profile default, no local flag, no global flag) → FOO resolves via `Config::project_key`'s fallback chain.
+- EC-X.7.002-4: None of the three present → exit 64 `JrError::UserError` naming `--project`, zero HTTP calls (regression pin for `tests/user_commands.rs::user_list_requires_project_flag`). Must run with `JR_CONFIG_DIR`/`JR_CACHE_DIR` isolated to a fresh `TempDir`, a `cwd` with no ancestor `.jr.toml`, and valid supplied auth — see Preconditions above.
+- EC-X.7.002-5: No local flag, no global flag, and `--profile <NAME>` selects a non-default profile that has its own configured project default → the configured default resolved is THAT profile's default, not the `"default"` profile's, ONLY when no `.jr.toml` project exists in cwd or an ancestor (a `.jr.toml` project would win at step 3 ahead of any profile default, per `Config::project_key`'s own fallback order). This holds because `main.rs` loads `config` once via `Config::load_with(cli.profile.as_deref())` before calling `cli::user::handle`, and `handle`/`handle_list` never reload config — the `&Config` passed through already reflects the `--profile`/`JR_PROFILE` selection.
+- EC-X.7.002-6: `--project ""` (empty
+  string), whether supplied as the local flag or the global flag → passed through as-is and
+  resolves the project key to the empty string: `Config::project_key`'s
+  `cli_override.map(String::from)` treats `Some("")` as present and returns `Some(String::new())`
+  immediately, without consulting the configured default. This is the same pass-through
+  `jr queue`/`jr requesttype` already exhibit for an empty `--project` today — there is no
+  special-casing of the empty string anywhere in this resolution chain. The resulting
+  `projectKeys=` (empty) request is sent as-is; Jira's response, not `jr`, decides whether that
+  is an error. This pass-through choice (rather than treating `--project ""` as absent, or
+  rejecting it) is settled behavior, human-confirmed 2026-09-25 (D-380) — see "Decisions confirmed
+  during F2 review" in `prd-delta.md`.
+- EC-X.7.002-7 (informational, no VP cell): a configured empty project (`.jr.toml` `project = ""`
+  or profile `project = ""`), with no local or global `--project` flag, resolves at step 3 to
+  `Some("")` through `Config::project_key`'s presence-based `Option` chain — no exit 64 fires, and
+  the request carries `projectKeys=` (empty). A `.jr.toml` `project = ""` shadows a populated
+  profile default, per the normal `.jr.toml`-before-profile fallback order. This is inherited
+  `Config::project_key` behavior, shared with `queue`/`requesttype`/`component list` and not
+  special-cased for `user list`; treated the same way as EC-X.14.001-14 (informational, no VP
+  cell).
+
+**Verification Properties**:
+- VP-USER-LIST-PROJECT-001: project-resolution precedence over the 2^3 presence space of
+  {local `--project`, global `--project`, configured default} (Postconditions 1-5,
+  EC-X.7.002-1..6), plus the zero-HTTP guarantee on the exit-64 path. The local-vs-global half is
+  decided by clap's global-value propagation, not by `jr` code; the config-fallback half is the
+  pure resolver. Four layers:
+  (a) **Clap propagation pin.** An inline `Cli::try_parse_from` unit test in `src/cli/` asserts
+  the parsed `UserCommand::List.project` field for all four flag cells:
+  `["jr","user","list"]` → `None` (parses successfully, no exit 2);
+  `["jr","user","list","--project","L"]` → `Some("L")` (local only);
+  `["jr","--project","G","user","list"]` → `Some("G")` (global only fills the local field);
+  `["jr","--project","G","user","list","--project","L"]` → `Some("L")` (both given → local
+  wins). EC-X.7.002-6 cells: `["jr","user","list","--project",""]` and
+  `["jr","--project","","user","list"]` → `Some("")` (empty string passes through, not
+  collapsed to `None`). Short-alias cells for the retained local `short = 'p'`:
+  `["jr","user","list","-p","L"]` → `Some("L")`; `["jr","--project","G","user","list","-p","L"]`
+  → `Some("L")` (local short form wins over the global long form). The global `--project`
+  (`src/cli/mod.rs::Cli.project`, `#[arg(long, global = true)]`) has no short form, so there is
+  no global `-p` cell. A clap upgrade that changes propagation, or dropping the local `-p`
+  alias, fails this test.
+  (b) **Pure resolver proptest.** A `proptest!` on
+  `pub(crate) fn resolve_user_list_project(cli_project: Option<&str>, config: &Config) ->
+  Option<String>` (`src/cli/user.rs`), with distinct arbitrary non-empty keys `C`, `J` (`.jr.toml`
+  project, `config.project.project`) and `P` (active profile's `project`), over the presence
+  cells of `cli_project` × {neither, `.jr.toml`-only, profile-only, both} configured sources:
+  `cli_project = Some(C)` → `Some(C)` in every configured cell; `cli_project = None` →
+  `.jr.toml`-only → `Some(J)`, profile-only → `Some(P)`, both → `Some(J)` (`.jr.toml` wins over the
+  profile default, EC-X.7.002-5's caveat), neither → `None` — the only result that maps to exit
+  64. EC-X.7.002-6 cell: `cli_project = Some("")` → `Some(String::new())` in every configured
+  cell (the configured default is not consulted). Together with (a), this covers the full 2^3
+  presence space.
+  (c) **Wiring layer (wiremock integration).** Every test here is hermetic per cycle-014
+  `verification-delta.md` §2 (a case that needs a `.jr.toml` writes it into its own temp `cwd`),
+  so it reaches this BC's own exit-64 path rather than failing earlier on auth. Cases:
+  EC-X.7.002-1 (both flags → one request with `projectKeys=LOCAL`); EC-X.7.002-2 (global only →
+  `projectKeys=FOO`); EC-X.7.002-3 split three ways: `.jr.toml`-only (temp `cwd` containing
+  `.jr.toml` `project = "JRT"`, profile has no `project` → `projectKeys=JRT`), profile-only (temp
+  `config.toml` profile `project = "FOO"`, no `.jr.toml` → `projectKeys=FOO`), and both
+  (`.jr.toml` `project = "JRT"` plus profile `project = "FOO"` → exactly one request with
+  `projectKeys=JRT`, `.expect(0)` on a `projectKeys=FOO` mock); EC-X.7.002-4 (none → exit 64,
+  stderr contains the pinned message `No project configured. Run "jr init" or pass --project.
+  Run "jr project list" to see available projects.`, `.expect(0)` on `multiProjectSearch`;
+  `tests/user_commands.rs::user_list_requires_project_flag` is made hermetic the same way);
+  EC-X.7.002-5 (temp `config.toml` with profile `default` → `project = "DEF"` and profile `alt`
+  → `project = "ALT"`, both URLs at the mock server, no `.jr.toml`, `jr --profile alt user list`
+  with no `--project` → exactly one request with `projectKeys=ALT`, `.expect(0)` on a
+  `projectKeys=DEF` mock); EC-X.7.002-6 (profile `project = "FOO"` configured, `jr user list
+  --project ""` → exactly one request whose `projectKeys` value is the empty string,
+  `.expect(0)` on a `projectKeys=FOO` mock). `--all` pagination
+  (Postcondition 5): two tests on the three-page pattern of
+  `tests/user_pagination.rs::user_list_all_cli_paginates` (`startAt=0` → 100 users,
+  `startAt=100` → a short non-empty page, `startAt=200` → empty; each mock matched on
+  `query_param("projectKeys", "FOO")` with `.expect(1)`), one with the global flag
+  (`jr --project FOO user list --all`) and one with the configured default (`jr user list
+  --all`). Each also mounts a `query_param_is_missing("projectKeys")` catch-all with
+  `.expect(0)` and asserts every received request carries exactly one `projectKeys=FOO` pair.
+  The non-`--all` path keeps BC-X.7.003's single-request contract.
+  (d) **Help-text pin.** `--help` cell (Fix step 1's pinned help text): `jr user list --help` exits 0, and its stdout,
+  with every whitespace run collapsed to one space, contains both `Project key (overrides the
+  configured default project). Required when no project is configured in` and `or the active
+  profile`. The pin deliberately excludes the `.jr.toml` token between those two substrings (clap
+  renders doc-comment backticks literally, but the pin stays independent of that) and the
+  trailing period (clap_derive strips the trailing period of a single-paragraph doc comment, as
+  `jr component list --help` shows). Help-text drift fails this cell.
+  **Fault model (killed by example/proptest):** (1) the resolver body replaced (`-> None`,
+  `-> Some(String::new())`, a constant key) — killed by (b)'s cells expecting the exact key;
+  (2) `handle_list` bypassing the resolver (reading only the post-clap field, never consulting
+  `Config`) — killed by the EC-X.7.002-3 and configured-default `--all` tests; (3) the handler
+  reloading config instead of using the passed `&Config` — killed by the EC-X.7.002-5 test,
+  since a reload resolves `"default"` and sends `projectKeys=DEF`; (4) the resolved key applied
+  to page 1 only — killed by the `--all` tests; (5) an empty-string special case (`Some("")`
+  treated as absent) — killed by (a)/(b)'s EC-X.7.002-6 cells and the EC-X.7.002-6 wiring test.
+
+**Trace**: issue #862; `.factory/cycles/cycle-014/phase-f1-delta-analysis/delta-analysis.md`
+§Item #862; `src/cli/component.rs::handle` List/Create arms (the actual local-over-global
+precedent — explicit code: `project.as_deref().or(project_flag)` (List) /
+`project.or_else(|| project_flag.map(str::to_string))` (Create), local checked first, global
+consulted only as a fallback) and Edit/Delete arms (clap global-value propagation only, no
+explicit merge call — the same mechanism `user list` now relies on); BC-8.1.004 (covers ONLY the
+no-project-configured exit-64 condition — it does NOT itself specify local-over-global
+precedence); BC-X.14.001 "M2 project resolution step" (companion-flag-or-default precedent);
+Pass 3 BC-704
 
 ---
 
@@ -2334,8 +2526,9 @@ CITATION-GUARDS Story B (Guard 1).
 ## BC-X.14: Field Option Discovery
 
 4 behavioral contracts covering `jr field options <field>` — a new top-level command family
-(issue #580) that enumerates a custom select field's allowed options with their machine
-option ids, so a caller can look up an id (e.g., for `--field NAME:id=<id>`, BC-3.4.028)
+(issue #580) that enumerates a field's allowed options (custom select fields and system fields
+such as priority/components/versions, whose labels resolve correctly since cycle-014 #861) with
+their machine option ids, so a caller can look up an id (e.g., for `--field NAME:id=<id>`, BC-3.4.028)
 BEFORE creating or editing a ticket, without an admin-gated API call. Sized and filed as a
 Cross-Cutting subsection per the `jr requesttype` (BC-X.12) precedent, not a new numbered
 section file — see `.factory/phase-f1-delta-analysis/field-dx-bc-mapping.md` §1.3 sizing
@@ -2427,12 +2620,34 @@ rationale and the enumerated arity error cases.
 
 **Confidence**: HIGH
 **Subject**: Field option discovery (issue #580)
-**Behavior**: `<field>` accepts EITHER a `customfield_NNNNN` literal (bypasses name lookup,
+**Behavior**: After the mode-selector arity check (Invariant 1), and before any cache read or
+HTTP call — this ordering is a code-level fact, verified by inspection of
+`resolve_field_id` (the guard at ~L442-447 precedes the cache read at ~L451) — an empty-string
+`<field>` (`""`) is rejected:
+`src/cli/field.rs::resolve_field_id`'s `query.is_empty()` guard exits 64 with `Field ''
+not found. The field name must not be empty.` (`test_bc_x_14_001_empty_field_name_exits_64_zero_http`
+pins exit 64, this message, and zero HTTP calls on a cold cache — it does not itself pin the
+before-any-cache-read ordering) **[CORRECTED cycle-014: aligns with
+existing code and tests; no behavior change]**. Otherwise, `<field>` accepts EITHER a
+`customfield_NNNNN` literal (bypasses name lookup,
 same regex/case-sensitivity convention as BC-3.4.015 Step 1) OR a human field name, resolved
 via `GET /rest/api/3/field` (`list_fields()`, same cache-first `fields.json` contract as
-BC-3.4.015 Step 2/2b — shared cache, shared function, no new cache family) followed by
-`partial_match` (BC-X.10.001) for case-insensitive exact→substring disambiguation (implements
-#580's "resolve by human name" nice-to-have, e.g. `jr field options "SOC Client"`). Exactly ONE
+BC-3.4.015 Step 2/2b — shared cache and shared `list_fields`/`read_fields_cache`/
+`write_fields_cache`, no new cache family; the resolution logic itself is mirrored, not shared
+(Invariant 3)) followed by
+`src/cli/field.rs::search_field_list` for case-insensitive disambiguation **[CORRECTED
+cycle-014: aligns with existing code and tests; no behavior change]** — a single case-insensitive
+EXACT name match resolves; two or more exact matches exit 64 (ambiguous, naming the candidates);
+otherwise, a single case-insensitive SUBSTRING match resolves; two or more substring matches
+exit 64 (ambiguous); zero matches of either kind return "not found". `list_fields()` is
+re-fetched on a cache miss OR when `<field>` is absent from the cached list (`Ok(None)` from
+`search_field_list`); an ambiguity found IN the cached list (`Err`) exits 64 immediately,
+WITHOUT a refresh — the cache is never re-fetched merely to re-check an ambiguous match
+(`src/cli/field.rs::resolve_field_id` ~L451-462). This is a distinct
+algorithm from `partial_match`/BC-X.10.001 (which never auto-resolves a single substring match) —
+`jr field options <field>`'s own field-name resolution auto-resolves on a single substring match,
+by design (implements #580's "resolve by human name" nice-to-have, e.g. `jr field options "SOC
+Client"`). Exactly ONE
 of three MODE-SELECTOR flags — `--type`, `--request-type`, `--issue` — selects the enumeration
 mode; `--project` is a companion flag, never itself a mode selector (see §BC-X.14
 context-mechanism decision above, and ADR-0019 §1).
@@ -2450,7 +2665,12 @@ the issue-type name→id resolution below (which needs a resolved project) and B
 `get_createmeta_fields`, and stays inside the existing "arity guard evaluated before any HTTP
 call" contract — it reads only already-loaded in-process `Config` state, no HTTP. It is a
 distinct, sibling pure function to the arity check (both are pure core, same class as
-`config::validate_profile_name`), not a widened arity check.
+`config::validate_profile_name`), not a widened arity check. Known ordering drift (tracked as
+drift item `FIELD-OPTIONS-RESOLUTION-ORDER`, out of scope for cycle-014): `src/cli/field.rs::handle`
+resolves `<field>` (Step 2, `resolve_field_id`) BEFORE this M2 project-resolution step runs, so a
+human-name `<field>` on a cold cache issues one `GET /rest/api/3/field` before the incomplete-M2
+project error can fire — in tension with Invariant 1's "before any HTTP call" framing for that
+specific error, though not for the mode-selector arity check itself.
 
 **M2 (`--type <T> [--project <P>]`) issue-type name→id resolution step [BRACKETED 2026-08-26, F2 adversary-convergence round-5, LOW-1 — was unbracketed, stale relative to the H1/D1-corrected `[--project <P>]` form]**: `get_createmeta_fields`
 (the shared M2 enumeration function, ADR-0019 §1) needs a NUMERIC `issueTypeId`, but `--type`
@@ -2486,9 +2706,16 @@ scoping above).
 The three sources return option entries under two different key spellings — `M1`/`M2`
 (createmeta/editmeta) use `allowedValues[].id`; `M3` (JSM requesttype fields) uses
 `validValues[].value` as the option id, with `.label` as display text (`.value` for M1/M2's
-display text is the field named `value`, NOT `id` — the naming collision between JSM's
-id-bearing `value` key and M1/M2's label-bearing `value` key is deliberate Atlassian API
-inconsistency, not a `jr` bug). `jr` normalizes BOTH shapes into one internal model:
+display text is the field named `value` when present, falling back to `name` when `value` is
+absent **(cycle-014, #861)** — see the "M1/M2 label-resolution fallback" paragraph immediately
+below the `FieldOption` contract for the full rule and rationale; the naming collision between
+JSM's id-bearing `value` key and M1/M2's label-bearing `value` key is deliberate Atlassian API
+inconsistency, not a `jr` bug).
+
+> Previous version (pre-cycle-014, spec 2.3.2): "`.value` for M1/M2's display text is the field
+> named `value`, NOT `id`"
+
+`jr` normalizes BOTH shapes into one internal model:
 ```rust
 struct FieldOption {
     id: Option<String>,
@@ -2496,7 +2723,61 @@ struct FieldOption {
     children: Vec<FieldOption>,   // cascading-select children; empty for non-cascading
 }
 ```
-**[CONTRACT AMENDED 2026-08-26, ADR-0019 § Amendment F-B, propagated by product-owner F2 adversary-convergence round-3]** `id` and `label` changed from `String` to `Option<String>` — a faithful pass-through of the already-optional input shape (`types::jira::editmeta::AllowedValue.id`/`.value` are already `Option<String>` one layer below `FieldOption`), NOT a new sentinel invented at this layer. A source `allowedValues`/`validValues` entry with a genuinely missing `id` and/or `label`/`value` (e.g. a GDPR-restricted user-picker option, or a config-broken option) degrades that entry's own field(s) to `None` rather than being coerced to an empty string or dropped. See EC-X.14.001-7 (never-drop invariant) and BC-X.14.003 (rendering) below. `children` is UNCHANGED — always present, never `Option`, per EC-X.14.001-4's existing "always present, never `null`/absent" contract; F-B extends the same *presence* discipline to a different per-field *value* state, it does not alter `children`'s own shape.
+**[CONTRACT AMENDED 2026-08-26, ADR-0019 § Amendment F-B, propagated by product-owner F2 adversary-convergence round-3]** `id` and `label` changed from `String` to `Option<String>` — a faithful pass-through of the already-optional input shape (`types::jira::editmeta::AllowedValue.id`/`.value` are already `Option<String>` one layer below `FieldOption`), NOT a new sentinel invented at this layer. A source `allowedValues`/`validValues` entry with a genuinely missing `id` and/or missing label-source field(s) (e.g. a GDPR-restricted user-picker option, or a config-broken option) degrades that entry's own field(s) to `None` rather than being coerced to an empty string or dropped. (cycle-014, #861) "Missing label-source field(s)" means, precisely: missing BOTH `value` AND `name` for the M1/M2 sources (M1/M2's `label` is the `value`-else-`name` fallback described below — "missing `label`" is not itself a wire-level condition for these two sources), and missing `label` for the M3 (JSM requesttype-fields) source (M3 has no fallback — its `label` field is read directly from the wire `.label` key). See EC-X.14.001-7 (never-drop invariant) and BC-X.14.003 (rendering) below. `children` is UNCHANGED — always present, never `Option`, per EC-X.14.001-4's existing "always present, never `null`/absent" contract; F-B extends the same *presence* discipline to a different per-field *value* state, it does not alter `children`'s own shape.
+
+**M1/M2 label-resolution fallback: `value`, else `name`, else `None`**: the M1/M2
+normalizer's label mapping is `label: v.value.clone().or_else(|| v.name.clone())`, NOT
+`label: v.value.clone()` alone. System-typed fields — `priority`, `resolution` (when present on
+the Create/Edit screen; resolution usually is not — see EC-X.14.001-5),
+`versions`/`fixVersions`, `components`, `security`, `issuetype` (externally grounded against
+first-party Atlassian API docs, `.factory/research/github-issues-triage-grounding-2026-09-24.md`
+§#861, HIGH confidence) — return `allowedValues[]` entries carrying `name`, not `value`, as
+their display label; a normalizer reading `value` alone therefore rendered EVERY system-field
+option's label as BC-X.14.003's degenerate-entry placeholder (`"(unnamed)"` table / `null` JSON)
+even though the entry was fully well-formed on the wire — a display-label defect, not a
+missing-data one. No prior BC text narrowed M1/M2's label to `value`-only as a deliberate
+contract choice — the earlier characterization (quoted above, "the field named `value`") rested
+on `.factory/research/field-dx-context-mechanism-2026-08-25.md`, which sampled only CUSTOM
+select/radio/checkbox/multiselect fields (which do carry `value`) and never sampled a system
+field's `allowedValues` shape; this correction closes that research gap, it does not reverse a
+considered design decision.
+
+F4 corrects two stale doc comments on `src/types/jira/editmeta.rs::AllowedValue` — no `src/`
+edit is made by this F2 spec-only delta:
+1. The `AllowedValue` struct-level doc comment (`src/types/jira/editmeta.rs:~64-77`), which
+   states "`name` is parsed but unused in v1 — retained for future cascade-select matching."
+2. The `name` field's own doc comment (`src/types/jira/editmeta.rs:~83-85`), which states
+   "Secondary label present on some Jira option types (e.g. cascade-select children). Parsed
+   from the API response; unused in v1 resolution logic. Future: v2 cascade-select name
+   matching."
+Both were verified against the current file content and both still read "unused in v1" —
+`AllowedValue.name` is now a genuine v1 resolution input for the M1/M2 label fallback above, so
+both comments misstate the current behavior, not merely an aspirational future one.
+
+**Scope boundary — READ-SIDE ONLY, WRITE-side explicitly out of scope [D-378]**: this amendment
+governs ONLY the M1/M2 enumeration normalizer (`normalize_from_allowed_values`, this BC). The
+WRITE-side `--field` value-matching path
+(`src/cli/issue/field_resolve.rs::find_option_match`/`resolve_option_value`) is explicitly OUT
+OF SCOPE — a fresh-context audit REFUTED that path's reachability for system-typed fields:
+`dispatch_field_value` routes to option-matching logic only when
+`meta_field.schema.field_type` is `"option"` (or `"option-with-child"` for the hinted `:option`
+composer's EC-3.4.027-1 entry gate), and real Jira system fields report `schema.type`
+`priority`/`resolution`/`issuetype`/`securitylevel` — none of which is `"option"` — so `jr issue
+edit ISSUE-1 --field Priority=High` fails earlier via `unsupported_field_type_error` and never
+reaches `find_option_match` at all (corroborated by
+`tests/issue_edit_field.rs::test_bc_3_4_017_field_priority_without_flag_does_not_trigger_gate_b`,
+which mocks priority as a custom `"string"` field specifically because a genuine
+`"priority"`-typed field never reaches that code path). The distinct, genuine capability gap
+this audit surfaced — the bare, un-hinted `--field NAME=VALUE` form cannot set system-typed
+fields; the `:id`/`:name` hinted-bypass composers (BC-3.4.028/029) already can — is tracked
+separately as drift item `FIELD-SYSTEM-TYPES-UNSUPPORTED` (LOW priority), NOT folded into this BC.
+
+**M3 (JSM requesttype-fields) is UNCHANGED and was ALREADY CORRECT — stated explicitly, not
+merely implied**: `normalize_from_valid_values` reads `.value` for the option id and `.label`
+for the display text — two DIFFERENT wire keys, no fallback needed, no naming collision with
+this amendment's M1/M2 `value`/`name` fallback. This amendment does not touch M3's normalizer,
+its wire-shape contract, or any M3-specific edge case at all.
+
 Cascading fields (`option-with-child` / JSM `children[]`) are enumerable — child options are
 nested under their parent's `children` array in the normalized model, recursively (both M1/M2's
 `allowedValues[].children[]` and M3's `validValues[].children` are read into the same shape).
@@ -2521,13 +2802,23 @@ CONFIRMed read shape here does not imply a verified write shape there.
   a stray `--project` alongside `--issue` is harmlessly ignored, not rejected; this is a
   "not consulted" statement, not a prohibition).
 - `<field>` resolves to exactly one field (via `customfield_NNNNN` bypass or unambiguous
-  `partial_match`).
+  `search_field_list` name resolution — `src/cli/field.rs::search_field_list`, NOT
+  `partial_match`/BC-X.10.001; see Invariant 4).
 
 **Postconditions**:
 - On success: a `Vec<FieldOption>` is produced, normalized regardless of source mechanism.
-- `GET /rest/api/3/field` is NOT called when `<field>` is a `customfield_NNNNN` literal, and
-  NOT called when a warm `fields.json` cache exists for the active profile (same cache
-  contract as BC-3.4.015 invariants 6-8).
+- `GET /rest/api/3/field` is NOT called when `<field>` is empty (`""` — the `query.is_empty()`
+  guard exits 64 before any cache read — a code-level ordering verified by inspection, per the
+  Behavior paragraph above; the empty-field test itself pins zero HTTP calls on a cold cache,
+  not this ordering **[CORRECTED
+  cycle-014: aligns with existing code and tests; no behavior change]**), NOT called when
+  `<field>` is a `customfield_NNNNN` literal, and
+  NOT called when a warm `fields.json` cache exists for the active profile AND `<field>`
+  resolves (exactly or unambiguously by substring) within that cached list (same cache
+  contract as BC-3.4.015 invariants 6-8). A warm cache that does not contain `<field>` still
+  triggers exactly one fresh `GET /rest/api/3/field` fetch (cache miss OR name absent from the
+  cached list); an ambiguity found WITHIN the warm cache exits 64 immediately, without any
+  refetch (`src/cli/field.rs::resolve_field_id` ~L451-462).
 - **[CORRECTED, adversary pass-28 F-1; M3 claim corrected, F2 adversary-convergence pass, B-F1]**
   Exactly one of the three enumeration MECHANISMS (createmeta / requesttype-fields / editmeta)
   fires, per the selected mode selector — "one mechanism" means one logical enumeration, NOT
@@ -2593,16 +2884,32 @@ CONFIRMed read shape here does not imply a verified write shape there.
    `--project` is VALID (M3 with an explicit service-desk project) — NOT a pairing error. See
    BC-X.14.004 for the full error taxonomy and precedence rules.
 2. This command is READ-ONLY — zero mutating HTTP calls under any invocation.
-3. The `customfield_NNNNN` bypass and `fields.json` cache-first contract are REUSED, not
-   reimplemented — same function, same cache file, same profile-scoped isolation as BC-3.4.015.
-4. `partial_match` disambiguation reuses BC-X.10.001's contract unchanged (single-substring →
-   `Ambiguous`, never auto-resolves; `ExactMultiple` → exit 64 naming candidates).
+3. The `customfield_NNNNN` bypass and `fields.json` cache-first contract use the SAME algorithm
+   and the SAME cache file/functions (`read_fields_cache`/`write_fields_cache`/`list_fields`),
+   implemented in `src/cli/field.rs` as a mirrored copy of
+   `src/cli/issue/field_resolve.rs::resolve_edit_fields`'s Step 1 and its nested `search_field` —
+   not a shared function; a change to one must be mirrored in the other (corrected cycle-014:
+   aligns with existing code; no behavior change),
+   same profile-scoped isolation as BC-3.4.015.
+4. Field-NAME resolution uses `search_field_list` (`src/cli/field.rs`), NOT `partial_match`/
+   BC-X.10.001 — a distinct algorithm, pinned by `test_bc_x_14_001_search_field_list_*`: an
+   empty `<field>` (`""`) exits 64 after the mode-selector arity check (Invariant 1) and before
+   `search_field_list` or any cache/HTTP access — this ordering is a code-level fact, verified
+   by inspection
+   (`query.is_empty()` guard); `test_bc_x_14_001_empty_field_name_exits_64_zero_http` pins exit
+   64, the message, and zero HTTP calls on a cold cache, not the ordering itself
+   **[CORRECTED cycle-014: aligns with existing code and tests; no behavior change]**; otherwise
+   a single
+   case-insensitive EXACT match auto-resolves; multiple exact matches exit 64 naming candidates;
+   otherwise a single case-insensitive SUBSTRING match auto-resolves (unlike `partial_match`'s
+   `Ambiguous`, which never auto-resolves a single substring); multiple substring matches exit 64
+   naming candidates.
 
 **Edge Cases**:
-- EC-X.14.001-1: `customfield_10084` literal → bypasses `list_fields()`/`partial_match`
+- EC-X.14.001-1: `customfield_10084` literal → bypasses `list_fields()`/`search_field_list`
   entirely, same as BC-3.4.015 Step 1.
 - EC-X.14.001-2: `"SOC Client"` human name, unambiguous exact match → resolves via
-  `list_fields()` (cache-first) + `partial_match`, then proceeds to enumeration.
+  `list_fields()` (cache-first) + `search_field_list`, then proceeds to enumeration.
 - EC-X.14.001-3: Human name resolves to MULTIPLE candidates (ambiguous) → exit 64 naming the
   candidates and their `customfield_NNNNN` ids (mirrors EC-3.4.015-2), before any enumeration
   HTTP call.
@@ -2622,7 +2929,7 @@ CONFIRMed read shape here does not imply a verified write shape there.
   EC-X.14.001-5]**: on the M3 (`--request-type`) path specifically, a field IS enumerable in the
   resolved request type's `validValues` (i.e. present in the selected context's field set) but is
   NOT surfaced by the global `GET /rest/api/3/field` list under any human-readable name reachable
-  via `list_fields()`/`partial_match` — some JSM-specific request-type field configurations are
+  via `list_fields()`/`search_field_list` — some JSM-specific request-type field configurations are
   not mirrored 1:1 into the global field catalog. In this narrow case, `<field>` is resolvable
   ONLY via its literal `customfield_NNNNN` id (the bypass path, BC-3.4.015 Step 1) — a human-name
   lookup for such a field fails with the ordinary zero-matches error (EC-3.4.015-1 parallel), even
@@ -2633,19 +2940,104 @@ CONFIRMed read shape here does not imply a verified write shape there.
 - EC-X.14.001-7 **[ADDED 2026-08-26, ADR-0019 § Amendment F-B, propagated by product-owner F2
   adversary-convergence round-3 — sibling to EC-X.14.001-4's `children` "always present, never
   absent" contract]**: a source `allowedValues`/`validValues` entry that is missing `id` and/or
-  `label`/`value` (the GDPR-restricted or config-broken option case) is NEVER dropped from the
-  normalizer's output. Both normalizers (M1/M2's `normalize_from_allowed_values`, M3's
-  `normalize_from_valid_values`) MUST emit exactly one `FieldOption` per source item, regardless of
-  which fields that item carries — a missing `id`/`label` degrades that entry's OWN `id`/`label`
-  field to `None`, it MUST NEVER cause the entry to be omitted from the returned
-  `Vec<FieldOption>`. This is the never-drop invariant: discoverability (#580's whole reason for
-  existing) requires every enumerable option to be shown, even one `jr` cannot fully identify —
-  silently dropping it is strictly worse than showing a visibly degenerate entry the caller can
-  follow up on (e.g. cross-referencing `jr field options --output json` against the resolved
-  request-type/issue-type screen directly in the Jira UI). A source item missing BOTH `id` and
-  `label` still produces exactly one `FieldOption { id: None, label: None, children: [] }` entry
-  in the array — it is never silently absent from the result. See BC-X.14.001's `FieldOption`
-  contract amendment above and BC-X.14.003 for the corresponding table/JSON rendering rules.
+  its label-source field(s) (the GDPR-restricted or config-broken option case) is NEVER dropped
+  from the normalizer's output. **(cycle-014, #861)** "Missing label-source field(s)" means
+  missing `value` AND `name` (M1/M2) / `label` (M3) — see the FieldOption contract note above for
+  the same precision applied there. Both normalizers (M1/M2's `normalize_from_allowed_values`,
+  M3's `normalize_from_valid_values`) MUST emit exactly one `FieldOption` per source item,
+  regardless of which fields that item carries — an entry missing `id` and/or its label source(s)
+  degrades that entry's OWN `id`/`label` field to `None`, it MUST NEVER cause the entry to be
+  omitted from the returned `Vec<FieldOption>`. This is the never-drop invariant: discoverability
+  (#580's whole reason for existing) requires every enumerable option to be shown, even one `jr`
+  cannot fully identify — silently dropping it is strictly worse than showing a visibly degenerate
+  entry the caller can follow up on (e.g. cross-referencing `jr field options --output json`
+  against the resolved request-type/issue-type screen directly in the Jira UI). A source item
+  missing BOTH `id` and its label source(s) still produces exactly one `FieldOption { id: None,
+  label: None, children: [] }` entry in the array — it is never silently absent from the result.
+  See BC-X.14.001's `FieldOption` contract amendment above and BC-X.14.003 for the corresponding
+  table/JSON rendering rules.
+
+  **EC-X.14.001-8 through EC-X.14.001-13 below are new Edge Cases added this cycle (#861).**
+- EC-X.14.001-8: a system field's `allowedValues` entry carrying `{id: "1", name: "Highest"}`
+  with NO `value` (the real-world `priority` shape) → the M1/M2 label-resolution fallback
+  resolves `label` to `"Highest"` via the `name` fallback, NOT the pre-fix `(unnamed)`/`null`
+  degenerate rendering — this is the exact defect #861 reported, now closed for the read-side
+  enumeration path.
+- EC-X.14.001-9: an `allowedValues` entry carrying BOTH `value` and `name` populated → `value`
+  WINS (the fallback activates only on `value`'s absence, per the `.or_else` semantics) — this is
+  never a `name`-preference or a "prefer the more complete field" rule; it is a strict
+  first-match-wins order, `value` then `name`.
+- EC-X.14.001-10: an `allowedValues` entry carrying NEITHER `value` NOR `name` → unchanged
+  degenerate behavior — `label: None`, rendered per BC-X.14.003's existing `"(unnamed)"` (table)
+  / `null` (JSON) placeholder, per EC-X.14.001-7's never-drop invariant above. This does not add a
+  third fallback source or otherwise touch the already-established neither-present case.
+- EC-X.14.001-11: a cascading parent's CHILD entry carrying `name` but no `value` (e.g. a
+  cascading `priority`-like field, if one existed, or any cascading child whose wire shape omits
+  `value`) → the same `value`-else-`name` fallback applies recursively, since
+  `normalize_from_allowed_values_at_depth` applies its per-item mapping identically at every
+  recursion depth — cascading children are not exempt from the fallback.
+- EC-X.14.001-12: the fallback is presence-based, not emptiness-based — an `allowedValues` entry
+  carrying `value: ""` (an explicit empty string) still takes the `value` branch and produces
+  `label: Some("")`, rendered as a blank cell (table) / `""` (JSON), never `"(unnamed)"`/`null`.
+  `name` is consulted only when `value` is entirely absent from the source item, not when it is
+  present-but-empty. An explicit wire `"value": null` deserializes to `None` (`AllowedValue.value`
+  is a plain `Option<String>`, no custom deserializer), which is ABSENCE, not presence-but-empty —
+  `name` IS consulted in that case, exactly as when the `value` key is missing entirely. Only
+  `Some("")` (the string present but empty) wins over `name`; `None`, whether from a missing key
+  or an explicit JSON `null`, never does.
+- EC-X.14.001-13: a consequence of the label-resolution fallback above, not a change to
+  BC-X.14.002's own contract — BC-X.14.002's `--value <substring>` client-side filter
+  (`src/cli/field.rs::filter_options`/`src/cli/field.rs::filter_one`, matching against `label` or
+  `id`) now also matches system-field
+  option names via the fallback `label` (e.g. `jr field options priority --issue KEY --value
+  high` matches the `priority` option whose `label` resolves to `"High"` through the `name`
+  fallback, where it previously would not have matched because `label` was `None`; on a fixture
+  carrying both `Highest` and `High` options, `--value high` matches BOTH, since
+  `src/cli/field.rs::filter_one`'s
+  substring match against `label` is case-insensitive and not anchored — this is ordinary
+  substring-filter behavior, not new to this fix). This is a
+  read-side-only effect of #861's normalizer fix propagating downstream into an existing,
+  unmodified filter — BC-X.14.002's text is unchanged.
+- EC-X.14.001-14 (added cycle-014; documents pre-existing behavior): `<field>`
+  RESOLUTION itself (the step before the M1/M2/M3 label fallback above ever runs) is unaffected
+  by #861 — it still goes through `src/cli/field.rs::resolve_field_id`/`search_field_list`
+  (exact match, then case-insensitive substring match; the only bypass is a literal
+  `customfield_NNNNN`). Resolution is by DISPLAY NAME, and display names are TENANT/LOCALE
+  DEPENDENT — this file does not pin an exact display-name string as a portable constant.
+  Three verified consequences for system fields: (a) `jr field options
+  priority` resolves, because the `Priority` system field's id (`priority`) and its display name
+  (`Priority`) happen to be case-insensitive-equal — the match is still on NAME via
+  `search_field_list`'s exact-match branch, not a hidden id-match path; (b) `jr field options
+  fixVersions` typically does NOT resolve, because the field's real display name is punctuated
+  (e.g. `Fix Version/s` or `Fix versions`, depending on site/locale — verified against
+  `GET /rest/api/3/field` on the sampled tenant, not asserted as a universal constant), and
+  `fixVersions` (the camelCase field id) matches neither exactly (differs in spacing/punctuation/
+  casing) nor as a case-insensitive substring — the camelCase id lacks the space (and, where
+  present, the slash) that the display name contains, which breaks contiguity — it exits 64
+  with `Field 'fixVersions' not found...`; the caller
+  must pass the exact display name shown by `jr api /rest/api/3/field` (verified: this raw
+  passthrough lists every field's `id`/`name` pair — `jr project fields --output json` does NOT
+  list generic field names, only issue types/priorities/statuses/CMDB asset fields, so it is NOT
+  the right discovery command for this purpose) instead; (c) on a tenant whose Version fields are
+  named with a `/` (e.g. `Affects Version/s` and `Fix Version/s`), the genuinely ambiguous case is
+  the SINGULAR substring `jr field options version` (the plural `versions` does NOT match either
+  display name for the same slash-contiguity reason as (b), and also exits 64 not-found) —
+  `version` IS a case-insensitive substring of both names on such a tenant (the slash falls after
+  `version`, not inside it), so `search_field_list`'s substring branch returns 2 candidates and
+  exits 64 as ambiguous, naming both. This is pre-existing `resolve_field_id`/`search_field_list`
+  behavior, unmodified by this cycle's read-side label-fallback fix; it does not change this
+  cycle's scope. Known inconsistency: BC-X.14.004's zero-match hint and `resolve_field_id`'s
+  shipped error message (`src/cli/field.rs::resolve_field_id`) both name `jr project fields
+  --output json`, which does not list field names; tracked as drift item
+  FIELD-OPTIONS-NOTFOUND-HINT (out of scope for cycle-014).
+- EC-X.14.001-15 (added cycle-014; documents pre-existing behavior, no behavior change):
+  `<field>` is the empty string (`""`) → exit 64 with `Field '' not found. The field name must
+  not be empty.`, zero HTTP calls — pinned on a cold cache by
+  `tests/field_options.rs::test_bc_x_14_001_empty_field_name_exits_64_zero_http` (which pins
+  exit 64, this message, and zero HTTP, not the guard's ordering) — and zero cache reads, a
+  code-level fact verified by inspection: the guard
+  (`src/cli/field.rs::resolve_field_id`'s `query.is_empty()`, ~L442-447) precedes the cache read
+  at ~L451.
 
 **Verification Properties**:
 - VP-580-001: `customfield_NNNNN` literal bypass skips `list_fields()` entirely (zero HTTP for
@@ -2694,6 +3086,48 @@ CONFIRMed read shape here does not imply a verified write shape there.
   companion rule for `--project` (M2/`--type`: `has_project` REQUIRED, else `Err`...)" — this
   described `has_project` as a (non-counted) PARAMETER of the SAME arity function, which is no
   longer accurate: D1 removes it from that function's signature entirely.
+- VP-580-013 (cycle-014, issue #861, READ-SIDE ONLY): the M1/M2 label-resolution fallback
+  (EC-X.14.001-8..13). **What it proves:** for M1/M2 (`normalize_from_allowed_values`, via
+  `normalize_from_allowed_values_at_depth`), every emitted node's `label` equals
+  `value.or(name)` of its source item, at every depth — `value` when present, else `name`, else
+  `None`. The rule is presence-based: `value: Some("")` wins over a populated `name` and yields
+  `label: Some("")`, while `value: None` — whether the key is missing or the wire carries an
+  explicit JSON `"value": null` — falls through to `name` (EC-X.14.001-12). **Strategy:** (1) an
+  example matrix at the top level and at one cascading-child level, asserting the exact resolved
+  `label` in each cell: value-only; name-only; both (`value` wins); neither (`None`)
+  (EC-X.14.001-8..11); `{"value": "", "name": "N"}` → `Some("")` (value wins);
+  `{"value": null, "name": "N"}` deserialized from JSON → `Some("N")` (explicit null is absence,
+  falls through to `name`) (EC-X.14.001-12). The two EC-X.14.001-12 cells are built by
+  deserializing JSON fixtures into `AllowedValue`, not by constructing the struct directly, so the
+  explicit-null case exercises the real deserializer; (2) a `proptest!` over a recursive
+  `AllowedValue` strategy (`Option<String>` for each of `id`/`value`/`name`, `children` nested to
+  depth ≤ 3) asserting `label == value.clone().or(name.clone())` at every node, `id` carried
+  through unchanged, and the emitted tree the same shape (node count, child order) as the input
+  up to the existing `MAX_FIELD_OPTION_DEPTH` cap; (3) a companion property serializing the
+  output with `serde_json::to_value` and asserting every node's key set is exactly
+  `{"id","label","children"}`, with `label` a JSON string or `null` — the `--output json` shape
+  is unchanged (VP-580-008(b) is not modified); (4) M3 regression guard: a JSON fixture of
+  `validValues` entries run through `normalize_from_valid_values` is compared against a
+  hand-written expected `Vec<FieldOption>` (not a golden file captured from the implementation).
+  M3 reads untyped `serde_json::Value` entries, taking `id` from `value` and `label` from
+  `label` only; an unknown `name` key is ignored, never rejected. The fixture includes the
+  entries that would expose a fallback leak into M3:
+  `{"value":"10","name":"N"}` (no `label`) → `{id: Some("10"), label: None, children: []}`;
+  `{"value":"11","label":"L","name":"N"}` → `{id: Some("11"), label: Some("L"), children: []}`;
+  and an ordinary `{"value":"12","label":"Twelve"}` → `{id: Some("12"), label:
+  Some("Twelve"), children: []}`. A `name` fallback leaking into M3 turns the first entry's
+  `label` into `Some("N")` and fails the comparison; (5) EC-X.14.001-13 downstream example: a `priority`-shaped fixture
+  (`[{"id":"1","name":"Highest"},{"id":"2","name":"High"},{"id":"3","name":"Low"}]`, no
+  `value`) normalized via `normalize_from_allowed_values` and then passed to
+  `src/cli/field.rs::filter_options(&opts, Some("high"))` (which delegates to `src/cli/field.rs::filter_one`, matching
+  `label` or `id` case-insensitively) returns exactly the `Highest` and `High` entries, matched
+  through their fallback `label`s; `Some("3")` returns the `Low` entry through its `id`. All five
+  are pure (no HTTP, no config). **Fault models (killed by example/proptest):** the fallback
+  removed entirely (pre-fix code: `label: v.value.clone()`), killed by the EC-X.14.001-8
+  name-only cell; `name` preferred
+  over `value`; an emptiness-based fallback (`Some("")` falling through to `name`); explicit
+  `null` treated as present (never falling through to `name`); the fallback applied only at the
+  top level; the fallback leaking into the M3 normalizer.
 
 **Trace**: issue #580; `.factory/research/field-dx-context-mechanism-2026-08-25.md` (M1/M2/M3
 ranked recommendation, per-mechanism verdict table); `.factory/research/field-dx-feasibility-2026-08-25.md`
@@ -2702,8 +3136,9 @@ adversary pass-20 M1); ADR-0019 § Amendment (2026-08-26) D1 (M2 default-project
 parity — narrows the pure arity function to 3 booleans, adds the sibling `resolve_m2_project`
 post-arity step); BC-3.4.015 (shared field-name resolution + cache contract, reused);
 BC-X.12.003/005 (JSM requesttype-fields call + cache + `--project` companion resolution via
-`require_service_desk`/`get_or_fetch_project_meta`, reused); BC-X.10.001 (`partial_match`,
-reused); BC-3.3.010 Step 3 (M2 `--type` name→issueTypeId resolution pattern, mirrored);
+`require_service_desk`/`get_or_fetch_project_meta`, reused); `src/cli/field.rs::search_field_list`
+(field-name resolution — NOT BC-X.10.001/`partial_match`, see Invariant 4); BC-3.3.010 Step 3
+(M2 `--type` name→issueTypeId resolution pattern, mirrored);
 `src/cli/field.rs` (new); `src/api/jira/issues.rs::get_createmeta_fields` (new
 createmeta-with-`allowedValues` enumeration method, M2, per ADR-0019 §1);
 `src/api/jira/issues.rs::get_issue_types_for_project` (REUSED, S-331 — M2 `--type` name→id
@@ -2711,7 +3146,14 @@ resolution, at most once per invocation, fires before `get_createmeta_fields`);
 `src/api/jira/fields.rs::list_fields` (REUSED for field-name resolution only, not a new
 enumeration function — see BC-3.4.015); `src/api/jsm/request_types.rs` (M3, reused);
 `src/api/jsm/servicedesks.rs::{require_service_desk,get_or_fetch_project_meta}` (M3 companion
-`--project`/ambient-default resolution, reused)
+`--project`/ambient-default resolution, reused). **(cycle-014, #861)** issue #861 (M1/M2
+label-resolution fallback, READ-SIDE ONLY, D-378); `.factory/research/github-issues-triage-grounding-2026-09-24.md`
+§#861 (`allowedValues` shapes by field type, first-party Atlassian API doc citations);
+`.factory/cycles/cycle-014/phase-f1-delta-analysis/delta-analysis.md` §Item #861 (write-side
+reachability audit and refutation); `src/cli/field.rs::normalize_from_allowed_values_at_depth`
+(to be modified, cycle-014); `src/types/jira/editmeta.rs::AllowedValue` struct-level doc comment AND
+`AllowedValue.name` field-level doc comment (both to be corrected at F4, cycle-014 — no behavior
+change to the struct itself)
 
 [NEW 2026-08-25 issue #580 F2]
 
@@ -2796,6 +3238,15 @@ BC-X.12.002 (empty-result-is-not-an-error precedent); BC-X.14.004 (graceful-degr
 ---
 
 #### BC-X.14.003: Table output columns (ID, Label) with cascading indentation; `--output json` returns the normalized `{id, label, children}` array
+
+> **(cycle-014, #861)** This BC's rendering contract is unchanged: `Option<String>::None` still
+> renders `NULL_GLYPH` (`"—"`)/`"(unnamed)"` in table mode and `null` in JSON mode, per the
+> "Degenerate-entry rendering" section below. What changed is upstream, in BC-X.14.001's
+> normalizer: system-typed fields (`priority`, `resolution` (when present on the Create/Edit
+> screen), `versions`, `fixVersions`, `components`, `security`, `issuetype`) now resolve to a
+> real `Some(name)` label via the
+> `value`-else-`name` fallback instead of falling through to `label: None`, so fewer rows reach
+> this BC's degenerate case. No change to this BC's rendering code or VP-580-008.
 
 **Confidence**: HIGH
 **Subject**: Field option discovery — output shape (issue #580)
@@ -2892,6 +3343,7 @@ fields with no enumerable option set (per `.factory/research/field-dx-context-me
 | Two or more mode selectors (`--type`/`--request-type`/`--issue`) supplied simultaneously | Exit 64, same message as the zero-mode-selector row, listing the conflicting flags | BC-X.14.001 Invariant 1 / ADR-0019 §1 |
 | `--request-type` present with NO resolvable ambient project (no `--project` companion, no profile/config default) | Exit 64 via `require_service_desk`'s "project required" error, unchanged from `jr requesttype fields`'s own behavior on the same condition | BC-X.12.003 parallel / ADR-0019 §1 |
 | `<field>` resolves to zero matches | Exit 64, hint naming `jr project fields` | EC-3.4.015-1 parallel |
+| `<field>` is the empty string | Exit 64, `Field '' not found. The field name must not be empty.` — zero cache/HTTP (see BC-X.14.001 EC-X.14.001-15; added cycle-014 as a cross-reference; documents pre-existing behavior) | `src/cli/field.rs::resolve_field_id` |
 | `<field>` resolves to multiple matches (ambiguous) | Exit 64 naming candidates + ids | EC-3.4.015-2 parallel |
 | Resolved project (whether from an explicit `--project` companion or profile/config default) is non-JSM, supplied to the `--request-type` path | Exit 64 via `require_service_desk`, call-site-specific message (BC-X.8.004) | BC-X.12.003 parallel |
 | Unknown/ambiguous `--request-type` value | Exit 64 via `partial_match` (BC-X.12.006) | BC-X.12.006 |
@@ -3307,6 +3759,622 @@ implementer at Task 1 of the amended story); `oauth-scope-matrix.md` #52/#53/#55
 authoritative hint-mapping source for all 3.
 
 [NEW 2026-09-17 cycle-008 ADR-0026 Decision 3; WIDENED 2026-09-17 wave-level finding F-WG-1]
+
+---
+
+## BC-X.16: API Query Parameters
+
+No `jr api` BC family existed for query-string composition before cycle-014 (issue #583).
+`src/cli/api.rs::normalize_path` trims the raw path and, if it does not already start with `/`,
+prepends one — it performs no query-assembly or percent-encoding of its own; the rest of the
+path (including any `?query` the caller already typed) passes through verbatim. Filed as a
+Cross-Cutting subsection per the BC-X.12/BC-X.14/BC-X.15 sizing precedent (a small,
+self-contained new command-surface addition that does not warrant a new numbered domain-spec
+section file). `url = "2"` and `urlencoding = "2"` are already direct dependencies
+(`Cargo.toml`) — no new dependency is introduced by either BC below.
+
+---
+
+#### BC-X.16.001: `jr api <path> --query-param NAME=VALUE` (repeatable, `-q`) builds a percent-encoded query string and merges it with any `?` already present in `<path>`'s pre-fragment part; method-orthogonal, ordering-preserving for repeated names
+
+**Confidence**: HIGH
+**Subject**: `jr api` — query-parameter composition (issue #583)
+**Source**: `src/cli/api.rs::append_query_params` (new pure function, to be implemented,
+cycle-014); `src/cli/api.rs::handle_api` (to be modified, cycle-014); `src/cli/mod.rs::
+Command::Api` (new `-q`/`--query-param` field, to be modified, cycle-014); `src/main.rs`'s
+`Command::Api` dispatch arm (to be modified, cycle-014); `src/cli/api.rs::normalize_path`
+(existing, unmodified — runs before this step). `urlencoding::encode` (existing dependency,
+production encoder for this BC's assembly — no new dependency); `url::form_urlencoded::parse`
+(existing dependency, test-oracle decoder only, VP-API-QP-002/003); `url::form_urlencoded::
+byte_serialize` (existing dependency, explicitly forbidden for this BC's assembly — see
+Invariants); `.factory/research/github-issues-triage-grounding-2026-09-24.md` §#583 (gh
+api/HTTPie/curl prior art)
+**Behavior**: `--query-param`/`-q NAME=VALUE` is a repeatable clap flag on `Command::Api`
+(`src/cli/mod.rs`), declared the same way as that struct's existing `-H`/`--header` field: a
+plain `Vec<String>` with `ArgAction::Append` (clap derive's default accumulation for a `Vec<T>`
+field) and NO `value_delimiter` and NO `allow_hyphen_values` — each `-q`/`--query-param`
+occurrence contributes exactly one `NAME=VALUE` pair to the vector, and a comma inside VALUE
+(e.g. `fields=summary,status`) is never split into multiple pairs. After `normalize_path`
+produces the normalized path and BEFORE
+`client.request(...)` builds the outgoing request, a new pure function assembles every
+`--query-param` pair into a percent-encoded query string and merges it onto the path:
+1. **Query-string detection and merge** — detection considers ONLY the part of `<path>` BEFORE
+   its first `#` (a `#` starts the fragment, EC-X.16.001-5, and is never scanned for `?`).
+   Within that pre-fragment part:
+   - **No `?` present** → a fresh leading `?` introduces the assembled query string.
+   - **A `?` is present** → the QUERY COMPONENT is everything AFTER the FIRST `?` in the
+     pre-fragment part (only the first `?` demarcates the query's start; any later `?`
+     character is ordinary query content, not a second delimiter).
+     - Query component is EMPTY (the pre-fragment part ends at the first `?` — e.g.
+       `/rest/api/3/search?`, or `/s?` immediately followed by a `#fragment` as in `/s?#f`) or
+       already ends with `&` → the new pairs are appended DIRECTLY (no separator is added —
+       EC-X.16.001-8).
+     - Otherwise — including when the non-empty query component happens to END with a literal
+       `?` character that is part of existing query content, not a delimiter (e.g.
+       `/s?jql=why?`) — the new pairs are appended with a `&` join: `/s?jql=why?` + `k=v` →
+       `/s?jql=why?&k=v`, never `/s?jql=why?k=v` (EC-X.16.001-9).
+   The pre-existing query text is passed through verbatim, never re-encoded, in every case; a
+   `#fragment`, if present, is re-appended unchanged after the assembled query (EC-X.16.001-5).
+2. **Repeated same-name params are ALL sent, in the given order** — `--query-param fields=summary
+   --query-param fields=status` produces `fields=summary&fields=status`; no deduplication, no
+   last-wins/first-wins collapsing.
+3. **NAME and VALUE are percent-encoded EXACTLY ONCE, using `urlencoding::encode` specifically**
+   (NOT `url::form_urlencoded::byte_serialize` — a different encoder with different semantics,
+   see Invariants below), applied separately to NAME and to VALUE; the `=` joining them is
+   literal, never itself encoded. Every byte of the encoded NAME/VALUE is either an RFC 3986
+   UNRESERVED byte (`A`-`Z`, `a`-`z`, `0`-`9`, `-`, `.`, `_`, `~` — verified against
+   `urlencoding` 2.1.3's `encode_into`, which percent-encodes every byte except exactly this
+   set) or a `%HH` triplet (uppercase hex); a space byte encodes to `%20`, NEVER `+` (verified:
+   `urlencoding` has no space special-case — space is simply outside the unreserved set, unlike
+   `url::form_urlencoded`'s `application/x-www-form-urlencoded` serialization, which deliberately
+   maps space to `+`). Rationale, encoder-agnostic: `%20` decodes back to a space byte under
+   both RFC 3986 and form-urlencoded semantics, while `+` does not. A raw `%` byte in
+   user-supplied input is encoded to `%25`, never passed through unescaped and never
+   double-decoded (mirrors the universal client-side-encodes-raw-values convention confirmed
+   across `gh api -f/-F`, HTTPie `name==value`, and `curl -G --data-urlencode` in the external
+   grounding). **Settled behavior, human-confirmed 2026-09-25 (D-380)** (see "Decisions confirmed during
+   F2 review" in `prd-delta.md`): NAME and VALUE are
+   used EXACTLY as typed — NEITHER is trimmed of leading/trailing whitespace, matching `gh api
+   -f`'s raw-bytes-as-typed behavior; this intentionally DIFFERS from `parse_header`'s existing
+   `-H`/`--header` parsing, which DOES trim. See EC-X.16.001-10/11. Since encoding happens
+   downstream of the CLI parse (this BC's assembly step, not clap itself), the clap help text
+   for `--query-param`/`-q` (`src/cli/mod.rs::Command::Api`) states plainly that values are
+   passed raw and must not be pre-encoded by the caller — pre-encoding a value (e.g. passing
+   `%20` intending a space) would itself be percent-encoded again by this step (`%20` →
+   `%2520`), which is correct behavior for this BC but a caller footgun the help text exists to
+   prevent. **Pinned substring:** the help text MUST contain the literal substring "do not
+   pre-encode" (case-sensitive); this is the exact string VP-API-QP-003(e) asserts against
+   `jr api --help` output.
+4. **Method-orthogonal** — the same assembly runs identically regardless of `-X`/`--method`
+   (`jr api` supports GET/POST/PUT/PATCH/DELETE, per `src/cli/api.rs::HttpMethod`; BC-X.1.011's
+   method-case-insensitivity precedent); query-param content is NEVER merged into, or sourced
+   from, `-d`/`--data`'s request body (`resolve_body`) — the two are fully independent inputs to
+   the same request.
+5. **Zero effect when the flag is absent** — an invocation with no `--query-param` flags at all
+   produces a path handed to `client.request` that is byte-identical to `normalize_path`'s own
+   output, exactly as before this cycle. Calling `append_query_params` with an empty pair list is
+   permitted and must be the identity function on its path argument (`append_query_params(p, &[])
+   == p` for any `p`) — whether or not that call happens to be skipped is an implementation
+   detail, not part of this contract.
+
+Existing `jr api` behavior for BC-X.1.007 (raw-passthrough of the response) and BC-X.1.011
+(`-X`/`--method` case-insensitivity) is unaffected by this BC.
+
+**Preconditions**:
+- `<path>` is already `normalize_path`-normalized: a leading slash is present, and it is not an
+  absolute `http(s)://` URL (`src/cli/api.rs::normalize_path` trims the raw input and prepends a
+  `/` when one is not already present).
+- Every `--query-param` value is well-formed `NAME=VALUE` with a non-empty NAME (malformed
+  values are BC-X.16.002's error taxonomy, evaluated BEFORE this BC's assembly step runs).
+
+**Postconditions**:
+1. Zero `--query-param` flags → the path handed to `client.request` is byte-identical to
+   `normalize_path`'s own output. `append_query_params` called with an empty pair list is
+   permitted and must be the identity on its path argument (regression guard against
+   BC-X.1.007/BC-X.1.011).
+2. One or more well-formed `--query-param` flags → exactly one percent-encoded query string is
+   appended, determined entirely by the PRE-FRAGMENT part of `<path>` (any `#fragment` plays no
+   role in this decision — EC-X.16.001-5): (a) no `?` in the pre-fragment part → a fresh leading
+   `?` introduces it; (b) a `?` is present and the QUERY COMPONENT (the text after the FIRST `?`)
+   is empty or ends in `&` → the new pairs are appended with NO separator (EC-X.16.001-8); (c) a
+   `?` is present and the query component is non-empty and does not end in `&` → the new pairs
+   are appended with a leading `&`, even when the query component itself ends in a literal `?`
+   character (EC-X.16.001-9) — a trailing `?` in the query CONTENT is never mistaken for the
+   EC-X.16.001-8 empty-query-component case.
+3. NAME/VALUE percent-encoding happens EXACTLY ONCE per pair, via `urlencoding::encode` — never
+   zero times (unescaped passthrough) and never twice (double-encoding a literal `%` to
+   `%2525`). Every encoded byte is an RFC 3986 unreserved byte (`A-Za-z0-9-._~`) or a `%HH`
+   triplet; space encodes to `%20`, never `+`.
+4. Repeated `--query-param NAME=...` occurrences are ALL present in the final query string, in
+   flag order.
+5. The assembled query string is independent of `-X`/`--method` and of `-d`/`--data` — the same
+   assembly logic runs for every method value, and no request-body content is read or written by
+   this step.
+
+**Invariants**:
+- `append_query_params` is a pure, side-effect-free string function — no I/O, callable and
+  testable without a `JiraClient` or wiremock, same class as `normalize_path`/`parse_header`.
+- Runs strictly BEFORE the `RequestBuilder` is built — query composition never depends on, and
+  never mutates, the request body or headers.
+- The intended encoder is `urlencoding::encode` (already a direct dependency, `Cargo.toml`) —
+  `url::form_urlencoded::byte_serialize` MUST NOT be used for this assembly: it targets
+  `application/x-www-form-urlencoded` semantics (space → `+`), not RFC 3986 query-string
+  percent-encoding (space → `%20`); using it would silently change VP-API-QP-003's pinned
+  `space → %20` example to `space → +`.
+- The guarantee is about what the assembly ADDS: it never adds a second `?`, and it never adds
+  `&` immediately after an empty or `&`-terminated query component. There is no blanket claim
+  that the final output never contains `?&` or `??` as substrings — EC-X.16.001-9 legitimately
+  produces `?&` when the existing query component itself ends in a literal `?`.
+
+**Edge Cases**:
+- EC-X.16.001-1: `--query-param k=` (empty VALUE, NAME non-empty) → ALLOWED, sends the literal
+  `k=` as-is; RFC 3986 places no constraint on it; contrast
+  EC-X.16.002-2 (empty NAME), which is REJECTED.
+- EC-X.16.001-2: `--query-param jql=status=Done` (VALUE containing `=`) → splits on the FIRST
+  `=` only: NAME `jql`, VALUE `status=Done` (the remainder of the string, `=` characters
+  included, is not re-split).
+- EC-X.16.001-3: Non-ASCII/Unicode VALUE (e.g. `--query-param summary=café`) → UTF-8 bytes are
+  percent-encoded (e.g. `é` → `%C3%A9`) via the SAME `urlencoding::encode` call used for the
+  ASCII case (the sole production encoder for this BC); no separate Unicode-handling branch.
+  `url::form_urlencoded::parse` plays no role in production encoding — it is used ONLY as a
+  test-oracle decoder in VP-API-QP-002/003's proptests (round-tripping the assembled query back
+  to verify NAME/VALUE pairs); `url::form_urlencoded::byte_serialize` remains forbidden for this
+  BC's assembly (see Invariants above).
+- EC-X.16.001-4: `<path>` already ends in `?existing=1` → new pairs are appended with `&`:
+  `...?existing=1&new=2`; the pre-existing `existing=1` text is never re-encoded or reordered.
+- EC-X.16.001-5: `<path>` contains a `#fragment` → per RFC 3986 component ordering
+  (`path?query#fragment`), the assembled query string is inserted BETWEEN the path and the `#`;
+  the fragment text itself is passed through verbatim. Query-string detection (Behavior 1/
+  Postcondition 2) considers ONLY the part of `<path>` BEFORE the first `#` — any `?` appearing
+  AFTER the `#`, inside the fragment text itself, is never treated as a query delimiter and is
+  passed through as opaque fragment content. Per HTTP request-target semantics (RFC 9112 §3.2 — a
+  fragment is a client-side-only construct, never part of the wire request-line), the fragment
+  is not transmitted to the server regardless of `jr`'s own choices here — this is standard
+  HTTP-client behavior, not a `jr`-specific encoding decision, documented for completeness since
+  `normalize_path` performs no fragment-aware handling today.
+- EC-X.16.001-6: `--query-param` combined with `-X POST`/`-X PUT`/`-X DELETE`/`-X PATCH` → the
+  query string is appended identically regardless of method (BC-X.1.011 precedent); `-d`/
+  `--data` body content is unaffected and never inspected for query-mergeable content.
+- EC-X.16.001-7: `--query-param` entirely absent → the path handed to the request is
+  byte-identical to `normalize_path`'s output, and `append_query_params(p, &[]) == p` holds for
+  the identity call — BC-X.1.007's raw-passthrough contract and BC-X.1.011's
+  method-case-insensitivity contract are BOTH unaffected.
+- EC-X.16.001-8: `<path>` already ends in a bare `?` with no query pairs yet (e.g.
+  `/rest/api/3/search?`), or already ends in `&` immediately after an existing query (e.g.
+  `/rest/api/3/search?a=1&`) → the new pairs are appended DIRECTLY, with NO separator inserted:
+  `/rest/api/3/search?` + `new=2` → `/rest/api/3/search?new=2` (never `?&` or `??`);
+  `/rest/api/3/search?a=1&` + `new=2` → `/rest/api/3/search?a=1&new=2` (never `&&`). The
+  governing rule is the QUERY COMPONENT test from Behavior 1/Postcondition 2 — the text after
+  the FIRST `?` in the pre-`#` part of `<path>` — never a purely-syntactic "path's last
+  character is `?` or `&`" check, which would wrongly fire on EC-X.16.001-9's
+  `/rest/api/3/search?jql=why?`. Here the query component (the empty string and `a=1&`
+  respectively) independently satisfies the empty-or-`&`-terminated test.
+- EC-X.16.001-9: `<path>`'s pre-fragment part has a QUERY COMPONENT (the text after the first
+  `?`) that is NON-EMPTY and happens to END with a literal `?` character that is part of
+  existing query CONTENT, not a delimiter (e.g. `/rest/api/3/search?jql=why?` — the first `?`
+  introduces the query, and `jql=why?`, whose own last character happens to be `?`, is the query
+  component) → the new pairs are STILL appended with a `&` join, exactly as any other non-empty,
+  non-`&`-terminated query component: `/rest/api/3/search?jql=why?` + `k=v` →
+  `/rest/api/3/search?jql=why?&k=v` (never `/rest/api/3/search?jql=why?k=v`). Never confused with
+  the EC-X.16.001-8 no-separator case — that case applies ONLY when the query component itself
+  is empty or ends in `&`, not merely when its last character happens to be `?`.
+- EC-X.16.001-10: `--query-param " =v"` (NAME is a single space, or any other non-empty
+  whitespace-only string) → NAME is not trimmed and is therefore not empty, so this is ALLOWED,
+  not BC-X.16.002's empty-NAME error — the space byte is percent-encoded to `%20`, producing
+  `%20=v` in the assembled query string. Contrast a literal empty string before the first `=`
+  (`--query-param =v`), which IS the empty-NAME error (EC-X.16.002-2).
+- EC-X.16.001-11: `--query-param "k= v "` (VALUE with leading and/or trailing whitespace) → the
+  whitespace is not trimmed; it is part of the raw VALUE bytes and is percent-encoded like any
+  other byte (each space → `%20`), sent to the server exactly as typed. This intentionally
+  differs from `parse_header`'s `-H`/`--header` parsing, which trims.
+- EC-X.16.001-12: `<path>` already carries a
+  query pair whose NAME matches a `--query-param` NAME (e.g. `/s?fields=summary` +
+  `--query-param fields=status`) → the new pair is NOT deduplicated against, and does NOT
+  override, the pre-existing one — both are sent, the pre-existing pair(s) first (unmodified,
+  per Behavior 1's verbatim-passthrough rule for pre-existing query text) followed by the new
+  pair(s) in flag order: `/s?fields=summary&fields=status`. This assembler performs no
+  NAME-collision detection at all, whether the collision is against pre-existing query text or
+  against another `--query-param` occurrence (Behavior 2); which value, if either, "wins" is
+  entirely a server-side decision, outside this BC's scope. This no-override/no-dedup choice
+  (rather than overriding the pre-existing pair, or deduplicating to one) is settled behavior,
+  human-confirmed 2026-09-25 (D-380) — see "Decisions confirmed during F2 review" in `prd-delta.md`.
+- EC-X.16.001-13: `-q fields=summary,status` (a comma inside VALUE) → the clap field's plain
+  `Vec<String>` declaration (no `value_delimiter`) means this is ONE occurrence producing ONE
+  pair — NAME `fields`, VALUE `summary,status` — never two occurrences (`fields=summary` and a
+  bare `status`, the latter missing its `=` and failing BC-X.16.002's M1 taxonomy). The comma is
+  ordinary VALUE content, percent-encoded once like any other byte: `summary,status` →
+  `summary%2Cstatus`, producing `fields=summary%2Cstatus` — never split on `,`.
+
+**Verification Properties**:
+All four VPs' proptests target `append_query_params`; VP-API-QP-002's argv cells target the
+clap field declaration and handle_api's parsed-Vec hand-off to append_query_params, and VP-API-QP-003(e) the `--help` text. `src/cli/api.rs::append_query_params`
+is a pure string function (Invariants), so the proptests need no `JiraClient`, network or config. `url::form_urlencoded::parse` is used
+ONLY as a test-oracle decoder, never in production.
+- VP-API-QP-001: separator oracle (Behavior 1, Postcondition 2, EC-X.16.001-4/5/8/9). Let `pre`
+  be the part of `<path>` before the first `#`, `frag` the rest (`#...` or empty), and `q` the
+  text after the first `?` in `pre`, if any. For a non-empty pair list, the output equals
+  `pre + s + pairs + frag`, where `pairs := new_pairs.map(|(n,v)| enc(n) + "=" + enc(v)).join("&")`
+  with `enc` = `urlencoding::encode`, and `s` is `?` if `pre` has no `?`; `""` if `q` is empty or ends
+  in `&`; and `&` otherwise — including when `q` ends in a literal `?` (EC-X.16.001-9:
+  `/s?jql=why?` + `k=v` → `/s?jql=why?&k=v`, so `?&` legitimately appears in the output; the
+  VP makes no blanket substring ban). **Strategy:** a `proptest!` asserts this equation over
+  generated paths with or without an existing query, query values containing literal `?`
+  (including as the last character of `q`), queries ending in `&`, and fragments containing
+  `?`, `&` and `#` (e.g. `/x#a?b` → `?` is added before `#`, since `pre` has no `?`), an
+  EMPTY query component directly followed by a fragment (`pre` ends in `?`, `frag` non-empty,
+  e.g. `/s?#f`), and existing queries whose NAMEs collide with the new pairs' NAMEs
+  (EC-X.16.001-12 — `pre` is kept verbatim, so a colliding pre-existing pair
+  is neither removed nor rewritten). Pinned examples: EC-X.16.001-4, -5, -8 (both forms), -9,
+  the empty-query-plus-fragment case `/s?#f` + `k=v` → `/s?k=v#f` (`q` is empty, so no separator
+  is added, and the pair lands before `#`), and -12 (`/s?fields=summary` +
+  `fields=status` → `/s?fields=summary&fields=status`). **Fault models (killed by
+  example/proptest):** `?`/`&` swapped; `ends_with('&')` replaced by `ends_with('?')` or widened
+  with `||`; `find('?')` over the whole path instead of `pre` (killed by `/s?#f`: a whole-path
+  query component is `#f`, non-empty, so the fault emits `/s?&k=v#f`); the fragment dropped or
+  placed before the query.
+- VP-API-QP-002: repeated names (Behavior 2, Postcondition 4). A `proptest!` over pair lists
+  whose NAMEs come from a small alphabet (forcing repeats). **Oracle.** Let `in_query` be the
+  text after the first `?` in the input path's pre-`#` part (empty if there is no `?`), and
+  `out_query` the same for the output. Define `existing :=
+  url::form_urlencoded::parse(in_query.as_bytes()).collect::<Vec<(String, String)>>()` (owned).
+  The property is `parse(out_query.as_bytes()).collect() == existing ++ new_pairs`, where
+  `new_pairs` is the input `(NAME, VALUE)` list: same length, flag order, no dedup, every
+  pre-existing pair first. The same `parse` is applied to both sides, and `parse` splits on
+  `&` before decoding each segment, so the equality needs only a `#`-free `in_query`; exact
+  separator placement (which `parse` cannot see, since it skips empty segments) is
+  VP-API-QP-001's oracle, not this one. **Generator constraint.** The existing query is built
+  from already-encoded `NAME=VALUE` segments (NAME from the SAME small alphabet as the new
+  pairs, VALUE `urlencoding::encode`d), `+`-free, with no empty segments and no `#`; for these
+  inputs a second assertion `existing == generated_existing_pairs` also holds, so the generator
+  cannot silently collapse to an empty `existing`. Because the NAMEs are shared
+  (EC-X.16.001-12), the equality means no pre-existing pair is dropped or overridden by a
+  same-NAME `--query-param`, and no new pair is dropped as a duplicate of a pre-existing one.
+  Pinned example: `/s?fields=summary` + `fields=status` decodes
+  to `[("fields","summary"), ("fields","status")]`. **Argv cell (EC-X.16.001-13):** a
+  wiremock integration test, hermetic per cycle-014 `verification-delta.md` §2, runs `jr api /x -q
+  fields=summary,status` as real argv through clap and asserts that the received request's
+  query is exactly ONE pair, `fields=summary%2Cstatus` (query matcher on the raw query string,
+  plus a decoded-pair count of 1); a catch-all mock with `.expect(0)` catches any other query.
+  **Argv cell (repeated flags, handler wiring):** a second wiremock integration test, hermetic
+  per the same §2, runs `jr api /x -q fields=summary -q fields=status` as real argv and reads
+  the single received request via `received_requests()`, asserting its raw query string is
+  exactly `fields=summary&fields=status` (both pairs, flag order); a catch-all mock with
+  `.expect(0)` catches any other query. A mixed case, `jr api '/x?a=1' -q b=2 -q b=3`, asserts
+  the raw query is exactly `a=1&b=2&b=3`. These cells exercise `handle_api`'s hand-off from the
+  parsed `-q` `Vec` to `append_query_params`, which the proptests (targeting
+  `append_query_params` directly) cannot see.
+  **Fault models (killed by proptest/example):** dedup into a map, last-wins/first-wins
+  collapsing (within the new pairs or against the existing query), a same-NAME override of the
+  pre-existing pair, reordering, and `value_delimiter = ','` on the `-q` clap field (it splits
+  the value into `fields=summary` and a bare `status`, which fails the argv cell). **Fault
+  model (killed by the repeated-flags argv cell):** `handle_api` forwarding only the first or
+  last parsed pair to `append_query_params`, or deduplicating the parsed `Vec` before the
+  call.
+- VP-API-QP-003: encoding exactly once (Behavior 3, Postcondition 3, EC-X.16.001-3/10/11). A
+  `proptest!` over arbitrary UTF-8 NAME/VALUE, with a biased strategy over-sampling `%`, `&`,
+  `=`, `#`, `+`, space, `?`, CR/LF and pre-encoded look-alikes (`%25`, `%2B`, `%20`), asserts:
+  (a) **round-trip** — `decode(encode(v)) == v` for NAME and VALUE, where `encode(v)` is the
+  NAME or VALUE segment extracted from `append_query_params`'s output (not a direct call to
+  `urlencoding::encode`), so the round-trip exercises the function under test; this rules out
+  both zero encoding and double encoding; (b) **alphabet** — every byte of each encoded NAME/VALUE is RFC
+  3986 unreserved (`A-Za-z0-9-._~`) or an uppercase `%HH` triplet, space → `%20`, never `+`;
+  (c) **encoder identity** — each appended pair equals
+  `format!("{}={}", urlencoding::encode(name), urlencoding::encode(value))` byte-for-byte, with
+  pinned examples `*` → `%2A` and space → `%20` (both of which
+  `url::form_urlencoded::byte_serialize` fails); (d) **no trimming** — whitespace-only and
+  leading/trailing-whitespace NAME/VALUE are encoded, not trimmed: `" =v"` → `%20=v`,
+  `"k= v "` → `k=%20v%20`; these examples also run through `parse_query_param` (VP-API-QP-005)
+  so a whitespace-only NAME is accepted; (e) **help-text pin** (Behavior 3) — an integration
+  test runs `jr api --help` (exit 0) and asserts its stdout, with every whitespace run collapsed
+  to one space so clap's line wrapping cannot split the phrase, contains the case-sensitive
+  substring `do not pre-encode`. Further pinned
+  examples: `%` → `%25`, `+` → `%2B`, `é` → `%C3%A9`, literal `%25` → `%2525` (a correct single
+  encoding of literal input). **Fault models (killed by example/proptest):** no encoding,
+  double encoding, `byte_serialize` substituted for `urlencoding::encode`, the `=` joiner
+  encoded, NAME or VALUE trimmed, the "do not pre-encode" help phrase dropped or reworded.
+- VP-API-QP-004: method orthogonality and zero-flag identity (Behavior 4/5, Postconditions 1
+  and 5, EC-X.16.001-6/7). Structural: `append_query_params` takes no method or body
+  parameter, so its output cannot depend on either. A table-driven wiremock test (hermetic per cycle-014
+  `verification-delta.md` §2) over GET/POST/PUT/PATCH/DELETE (`src/cli/api.rs::HttpMethod`), each with and
+  without `-d`, asserts the same received query pairs for every method and a request body equal
+  to the `-d` input — the body is never moved into the query and the query never into the
+  body. **Zero flags.** The observable property is that the path handed to the request is
+  byte-identical to `normalize_path`'s output. Two layers: (1) a `proptest!` asserts
+  `append_query_params(p, &[]) == p` for arbitrary `p` — including paths with an existing query,
+  a trailing `?` or `&`, and a `#fragment` — i.e. the assembler with zero pairs is the identity;
+  (2) wiremock examples with no `-q` flag, for each HTTP method, assert the received request's
+  path and query equal `normalize_path`'s output: `jr api rest/api/3/myself` → path
+  `/rest/api/3/myself` with no query string at all (no bare `?`); `jr api
+  "/rest/api/3/search?jql=a&"` → received query exactly `jql=a&`. The existing `jr api`
+  integration tests stay unmodified. **Fault models (killed by example/proptest):** a `?` (or
+  `&`) appended on zero pairs; the path re-encoded or the fragment dropped on zero pairs; query
+  assembly gated on the method; `-d` content merged into the query.
+
+**Trace**: issue #583; `.factory/research/github-issues-triage-grounding-2026-09-24.md` §#583
+(gh api `-f`/`-F`, HTTPie `name==value`, curl `-G --data-urlencode` prior art — HIGH confidence
+for flag semantics, MEDIUM for exact encoding rules);
+`.factory/cycles/cycle-014/phase-f1-delta-analysis/delta-analysis.md` §Item #583; BC-X.1.007
+(`send_raw` raw-passthrough, unaffected by this BC); BC-X.1.011 (`-X`/`--method`
+case-insensitivity, method-orthogonality precedent); D-378; D-379. Production encoder:
+`urlencoding::encode` (existing dependency, reused). Test-oracle decoder only:
+`url::form_urlencoded::parse` (existing dependency, reused). Explicitly forbidden for this BC's
+assembly: `url::form_urlencoded::byte_serialize` (existing dependency).
+
+---
+
+#### BC-X.16.002: `jr api --query-param` malformed-value error taxonomy: missing `=` and empty NAME both exit 64 before any HTTP call
+
+**Confidence**: HIGH
+**Subject**: `jr api` — query-parameter error taxonomy (issue #583)
+**Source**: `src/cli/api.rs::parse_query_param` (new pure parser function, to be implemented,
+cycle-014 — the pre-flight `NAME=VALUE` validator that produces this BC's two error rows;
+DISTINCT from `src/cli/api.rs::append_query_params`, which is BC-X.16.001's query-assembly
+function, not this BC's); `src/cli/api.rs::handle_api` (to be modified, cycle-014, to call
+`parse_query_param` at the pre-flight point described in Postcondition 1).
+**Behavior**: `parse_query_param` splits each raw `--query-param` value on the FIRST `=`
+only — VALUE may itself contain `=` characters, which are preserved verbatim in the split-off
+remainder. Two client-side, pre-HTTP failures result, both `JrError::UserError`/exit 64, zero
+HTTP calls: no `=` present at all → error M1; an empty NAME (literally nothing before the first
+`=`, e.g. `=v`) → error M2. An empty VALUE (`k=`) is NOT an error — see BC-X.16.001
+EC-X.16.001-1. NAME is not trimmed of whitespace before this check, matching BC-X.16.001
+Behavior 3's no-trim design default — a whitespace-only NAME (e.g. `" =v"`) is therefore NOT
+empty and does not trip M2. Structurally mirrors `parse_header`'s existing `Key: Value`
+pre-flight validator for `-H`/`--header` (`src/cli/api.rs::parse_header`, which likewise rejects
+a malformed value via `.split_once(':')` before any request is built).
+
+| Condition | Behavior |
+|---|---|
+| `--query-param` value contains no `=` at all (e.g. `--query-param foo`) | Exit 64, `JrError::UserError`, message naming the offending value and the required `NAME=VALUE` form |
+| `--query-param` value's NAME (the portion before the first `=`) is empty (e.g. `--query-param =v`) | Exit 64, `JrError::UserError`, a DISTINCT message — an empty parameter NAME is never valid, even though an empty VALUE is (EC-X.16.001-1) |
+
+**Pinned error messages**: both messages are pinned VERBATIM below, `format!`-style, modeled on
+`parse_header`'s own two messages
+(`src/cli/api.rs::parse_header`: `"Header must be in 'Key: Value' format (got: {raw})"` and
+`"Header key cannot be empty"`) but each additionally suggests a concrete next step, per this
+repo's "Errors: Always suggest what to do next" convention (`CLAUDE.md` § Conventions):
+
+- Missing `=` (raw value has no `=` at all): `"--query-param must be in NAME=VALUE format (got:
+  {raw})"`
+- Empty NAME (raw value's portion before the first `=` is the literal empty string): `"--query-param
+  NAME cannot be empty (got: {raw}) — use NAME=VALUE, e.g. -q maxResults=50"`
+
+Each message contains a substring absent from the other (`"must be in NAME=VALUE format"` vs.
+`"NAME cannot be empty"`), so the two are distinguishable by substring match alone — required by
+the Invariants below and asserted by VP-API-QP-005 (distinguishing-substring assertion). `{raw}`
+is the value CLAP DELIVERS to `parse_query_param` after clap's OWN attached-value parsing —
+not necessarily byte-identical to what the user typed on the command line. `parse_query_param`
+performs no re-splitting or normalization of its own before echoing `{raw}` into the message, but
+clap's own parsing (verified against `clap_builder` 4.6.7's `src/parser/parser.rs`, the
+short-flag attached-value branch around line 980, and `clap_lex` 1.1.0's `to_long`) already
+strips exactly one leading `=` from an attached value before `parse_query_param` ever sees it —
+see EC-X.16.002-5..8 below for the concrete attached-form cases this produces.
+
+**Preconditions**: One or more `--query-param` flags supplied (zero flags → no parsing occurs at
+all, nothing to validate — BC-X.16.001 Postcondition 1). `-q` validation runs only AFTER
+`Config::load_with` and `JiraClient::from_config` both succeed in `src/main.rs`'s `Command::Api`
+dispatch arm — both calls precede `cli::api::handle_api`, where `parse_query_param` lives.
+`config::validate_profile_name`, `Config::load_with` (e.g. unknown profile, malformed config) and
+`JiraClient::from_config` failures all preempt this BC's exit-64; some of these also exit 64,
+before `handle_api` is ever invoked — and `src/cli/api.rs::normalize_path`'s own path errors
+(empty path, absolute URL), which run first in `handle_api`, preempt it too.
+
+**Postconditions**:
+1. Every malformed `--query-param` value is caught by `parse_query_param` BEFORE
+   `append_query_params` touches `normalize_path`'s output, BEFORE any query string is
+   assembled, and — per D-188's pre-flight-before-blocking-read convention — BEFORE
+   `resolve_body` runs (`resolve_body` may block reading stdin for `-d @-`) and BEFORE
+   `-H`/`--header` parsing (`parse_header`). Concretely, in `handle_api` (`src/cli/api.rs`),
+   `--query-param` parsing is inserted immediately after the existing `normalize_path(&path)?`
+   call (line ~130) and BEFORE the existing `resolve_body(data.as_deref(),
+   std::io::stdin().lock())` call (line ~133) — i.e. `-q` parsing is the SECOND pre-flight step,
+   right after path normalization and strictly ahead of both the body read and the
+   `-H`/`--header` → `parse_header` mapping (lines ~135-138). Zero HTTP calls, symmetric with
+   `parse_header`'s existing pre-flight validation.
+2. `--output json` mode: the same `{"error": "...", "code": 64}` envelope as every other `jr`
+   pre-flight error (repo-wide convention, #526-adjacent). Per `src/main.rs`'s top-level error
+   handler (~lines 132-140), this envelope is written via `eprintln!` — it goes to STDERR, not
+   stdout; stdout stays empty on this path (no data is ever written to stdout before a pre-flight
+   exit-64). This is the same channel every other `jr` pre-flight/runtime error uses in
+   `--output json` mode, not a taxonomy-specific choice.
+3. A single invocation with multiple `--query-param` flags where ANY ONE is malformed fails the
+   WHOLE invocation before any HTTP call — no partial assembly, consistent with `parse_header`'s
+   existing `.collect::<Result<Vec<_>>>()` all-or-nothing pattern already used for `-H`/
+   `--header` in `handle_api`.
+
+**Invariants**:
+- Missing-`=` and empty-NAME are DISTINCT conditions with DISTINCT messages, even though both
+  exit 64 — a caller fixing one deterministically encounters the other only if a second,
+  independently-malformed `--query-param` value is also present (no silent flip between the two
+  messages for the SAME malformed value).
+- An empty VALUE (`k=`) is NEVER classified as an error by this taxonomy — see BC-X.16.001
+  EC-X.16.001-1; only a missing `=` or an empty NAME are rejected here.
+- `--query-param` values are validated via a `.collect::<Result<Vec<_>>>()`-style
+  short-circuiting iteration in FLAG ORDER — the FIRST malformed value encountered in that
+  order is the one reported. This mirrors the collect-based all-or-nothing pattern already used
+  for `-H`/`--header`, applied at an EARLIER point in `handle_api`'s pipeline (before
+  `resolve_body`, not after).
+
+**Edge Cases**:
+- EC-X.16.002-1: `--query-param foo` (no `=` present) → exit 64, M1 (missing-`=`) message
+  naming `foo`.
+- EC-X.16.002-2: `--query-param =v` (empty NAME, non-empty VALUE) → exit 64, M2 (empty-NAME)
+  message — contrast EC-X.16.001-1 (`k=`, empty VALUE), which is ALLOWED, not an error.
+- EC-X.16.002-3: Two `--query-param` flags, the second malformed (`--query-param a=1
+  --query-param bad`) → the malformed second value fails the WHOLE invocation before any HTTP
+  call; the first, well-formed value is never sent, and the FIRST malformed value in flag order
+  is the one reported (Postcondition 3, Invariants).
+- EC-X.16.002-4: `jr api /x -X POST -d @- -q bad` exits 64 immediately on the M1 malformed-value
+  error regardless of stdin's state — a TTY, inherited, closed, OR a pipe held open by a slow
+  or never-closing producer (i.e. `Stdio::piped()` with the write end never written to and never
+  dropped). `resolve_body`'s blocking `@-` stdin read never runs, since `-q` validation
+  (Postcondition 1) executes strictly before it in every one of these cases. The held-open-pipe
+  case is the discriminating one — it is the only state under which a buggy ordering (reading
+  stdin before validating `-q`) would actually hang instead of merely returning early — and is
+  the one exercised by VP-API-QP-006(iii).
+- EC-X.16.002-5: `-q=v` (short-flag attached form, one
+  `=`) → clap's own short-flag attached-value parsing (`clap_builder` 4.6.7
+  `src/parser/parser.rs` ~line 980) treats the token immediately following `-q` as the
+  attached value and strips exactly ONE leading `=` from it before `parse_query_param` ever
+  runs — clap delivers `raw = "v"`, not `"=v"` and not the literal `"-q=v"` the user typed.
+  Since `"v"` itself contains no `=`, `parse_query_param` classifies this as M1 (missing `=`)
+  with `(got: v)`, NOT M2 — a caller who intended NAME `v` (or who mistyped `-q v` as `-q=v`)
+  sees the missing-`=` message rather than an empty-NAME message.
+- EC-X.16.002-6: `-q==v` (short-flag attached form, two
+  `=`) → the same clap strip-one-leading-`=` step consumes only the FIRST `=`, delivering
+  `raw = "=v"` (the second `=` is preserved as part of the attached value). `parse_query_param`
+  then splits `"=v"` on its own first `=`: NAME is the empty string, VALUE is `"v"` → M2
+  (empty-NAME) with `(got: =v)`.
+- EC-X.16.002-7: `--query-param==v` (long-flag attached
+  form, two `=`) → verified against `clap_lex` 1.1.0's `to_long` (`remainder.split_once("=")`,
+  which splits on the FIRST `=` only and has no additional strip step of its own): the flag name
+  is `query-param` and the delivered value is everything after that first `=`, i.e. `raw = "=v"`
+  — BYTE-IDENTICAL to EC-X.16.002-6's short-form result, even though the long form's parser has
+  no separate "strip one leading `=`" step (the single `split_once` already produces the same
+  outcome as the short form's split-then-strip). `parse_query_param` therefore also reports M2
+  (empty-NAME) with `(got: =v)` for `--query-param==v`, exactly as it does for `-q==v`.
+- EC-X.16.002-8: `-q -x=1` (a hyphen-leading token as the
+  space-separated value for `-q`) — the `--query-param`/`-q` flag is NOT declared with
+  `allow_hyphen_values` (there is no `src/cli/mod.rs` flag definition to cite yet, since no code
+  has landed for this spec-only delta; the design intent is to leave it unset). Without
+  `allow_hyphen_values`, clap treats a token starting with `-` as a new flag rather than as `-q`'s
+  value, so `jr api /x -q -x=1` fails clap's own argument parsing (unrecognized `-x` flag)
+  with exit 2, BEFORE `parse_query_param` ever runs — this is a
+  clap-level failure, not one of this BC's M1/M2 rows. This is ACCEPTABLE and consistent with
+  this file's existing `-H`/`--header` precedent: `header: Vec<String>` (`src/cli/mod.rs`,
+  `Command::Api`) likewise has no `allow_hyphen_values`, so a hyphen-leading header value (e.g.
+  `-H -x: 1`) fails identically at the clap level today. A raw `NAME=VALUE` argument that itself
+  starts with `-` (i.e. a NAME beginning with `-`) must use an attached form — `-q=-x=1`,
+  `-q-x=1`, or `--query-param=-x=1` all work, delivering `raw = "-x=1"` to `parse_query_param`
+  (verified
+  against `clap_builder` 4.6.7's short-flag trailing-concatenated-value handling, `~L969-984`:
+  the value following `-q` is taken as-is, stripping at most one leading `=`, so both the
+  `=`-prefixed and bare-concatenated short forms converge on the same delivered value; the
+  long-form `split_once("=")` in `clap_lex` 1.1.0's `to_long` produces the identical result) —
+  there is no quoting workaround, since the shell strips quotes
+  before clap ever sees the argument, so clap still receives a bare `-x=1` token
+  indistinguishable from a new flag in the space-separated form. By contrast, a hyphen-leading
+  VALUE such as `-q startAt=-1` or `-q jql=-x` works as-is, with no attached form needed, because
+  the argv token itself starts with the NAME, not `-` — clap only misreads a space-separated
+  value as a new flag when the token's own first character is `-`.
+- EC-X.16.002-9: An empty raw value — `-q ""` (space-separated empty-string token), `-q=`
+  (short-flag attached, nothing after the `=`), or `--query-param=` (long-flag attached, nothing
+  after the `=`) — all three reach `parse_query_param` as `raw = ""`, not as a missing value:
+  verified against `clap_builder` 4.6.7's short-flag attached-value path (`~L969-984`, an
+  attached value of exactly `"="` strips to `Some("")`, which is still `Some`, so it is treated
+  as a provided (empty) value rather than falling through to "look for a separate next-token
+  value") and its long-flag counterpart (`clap_lex` 1.1.0's `to_long`, `~L332`,
+  `remainder.split_once("=")`, which likewise
+  yields `long_value = Some("")` for a trailing bare `=`); a bare next-token empty string
+  (`-q ""`) is accepted the same way, since an empty string does not start with `-` and so is
+  never mistaken for a new flag. Because `""` contains no `=` at all, `parse_query_param`'s
+  split-on-first-`=` finds nothing to split on, and this classifies as M1 (missing `=`) with
+  `(got: )`, exit 64, zero HTTP — NOT M2 (empty NAME): the empty-NAME check is only reachable
+  once a `=` has been found to split on, so the missing-`=` check must be evaluated first (or,
+  equivalently, the parser must be structured so that finding no `=` short-circuits before any
+  NAME-emptiness check can run).
+- EC-X.16.002-10: `jr api /x -q` with no following token at all (`-q` is the LAST argv token) is
+  a genuinely MISSING value, not an empty one — contrast with EC-X.16.002-9's provided-but-empty
+  cases above. clap itself rejects this before `parse_query_param` ever runs: verified against
+  `clap_builder` 4.6.7's `ErrorKind::InvalidValue` rendering (`src/error/format.rs` ~L206-219),
+  an empty `ContextValue::String` for the invalid value renders
+  `"a value is required for '{invalid_arg}' but none was supplied"`; exit 2 (clap argument
+  error), NOT 64 — `parse_query_param` and its M1/M2 taxonomy are unreachable for this case.
+- EC-X.16.002-11: A non-UTF-8 `-q` argv value is rejected by clap (the field's `String` value
+  parser) with exit 2 before `parse_query_param` ever runs — the same mechanism and outcome as a
+  non-UTF-8 `-H` value today. Verified against `clap_builder` 4.6.7's `src/builder/value_parser.rs`
+  (~L914-935): the `String`-typed `ValueParser` rejects an `OsString` that fails `into_string()`,
+  producing a clap `ErrorKind::InvalidUtf8` argument error before the arg ever reaches
+  `parse_query_param`'s M1/M2 taxonomy. Informational — inherited clap behavior, no VP cell (same
+  treatment as EC-X.14.001-14).
+
+**Verification Properties**:
+- VP-API-QP-005: the malformed-value taxonomy (Behavior, Postcondition 2, EC-X.16.002-1/2/5..10).
+  Function under test:
+  `src/cli/api.rs::parse_query_param` (the pure parser; NOT `append_query_params`, which is
+  BC-X.16.001's assembler). It splits on the FIRST `=` only. The two pinned messages, copied
+  exactly from this BC's "Pinned error messages" block (`{raw}` = the raw, untrimmed argument;
+  the second contains an em dash, U+2014):
+  - M1 (missing `=`): `--query-param must be in NAME=VALUE format (got: {raw})`
+  - M2 (empty NAME): `--query-param NAME cannot be empty (got: {raw}) — use NAME=VALUE, e.g. -q maxResults=50`
+  Distinguishing substrings: D1 = `must be in NAME=VALUE format`, D2 = `NAME cannot be empty`.
+  **Strategy.** (1) Partition `proptest!` on `parse_query_param`: any string with no `=`,
+  including the empty string (the generator must be able to produce `""`) →
+  `Err` whose message equals M1 rendered with `raw` byte-for-byte; plus the pinned example
+  cell `parse_query_param("")` → `Err` equal to M1 rendered as `(got: )`, containing D1 and
+  not D2 (EC-X.16.002-9); `"=" + any` (including a
+  bare `=`) → `Err` equal to M2 rendered with `raw`; a non-empty `=`-free NAME (including a
+  whitespace-only NAME such as `" "`, EC-X.16.001-10) + `"=" + any` → `Ok((NAME, rest))`, where
+  `rest` keeps every later `=` (EC-X.16.001-2) and may be empty (EC-X.16.001-1). Each `Err`
+  case asserts its own distinguishing substring is present and the other is absent (the absence
+  check filtered with `prop_assume!` to `raw` values that do not themselves contain D1 or D2).
+  (2) Wiremock integration (hermetic per cycle-014 `verification-delta.md` §2) for `-q foo` and `-q =v`: exit 64,
+  `.expect(0)` on every mock, stderr contains the full rendered message and its own
+  distinguishing substring, and not the other one. The `--output json` variant (Postcondition
+  2) parses the `{"error", "code"}` envelope from STDERR, asserts its `"error"` string equals the
+  rendered message exactly and `"code"` is 64, and asserts stdout is empty.
+  (3) **Attached-form example cells** (EC-X.16.002-5..8), hermetic per cycle-014 `verification-delta.md`
+  §2, every
+  mock `.expect(0)`, run as real argv through clap so `{raw}` is the value clap delivers:
+  - `jr api /x -q=v` (EC-X.16.002-5) → exit 64, stderr contains M1 rendered as
+    `(got: v)`, D2 absent;
+  - `jr api /x -q==v` (EC-X.16.002-6) → exit 64, stderr contains M2 rendered as
+    `(got: =v)`, D1 absent;
+  - `jr api /x --query-param==v` (EC-X.16.002-7) → exit 64, stderr contains M2 rendered as
+    `(got: =v)`, byte-identical to the `-q==v` cell's stderr;
+  - `jr api /x -q -x=1` (EC-X.16.002-8) → exit 2 (clap argument error), NOT 64; stderr
+    contains `unexpected argument` (clap_builder 4.6.7's `ErrorKind::UnknownArgument` text,
+    `src/error/format.rs`: `unexpected argument '<arg>' found`; observed output is
+    `error: unexpected argument '-x' found`, and the substring is outside clap's styled spans),
+    does NOT contain `Not authenticated` (`JrError::NotAuthenticated` also exits 2,
+    `src/error.rs`, so exit 2 alone cannot tell the two apart), and contains neither D1 nor D2
+    (`parse_query_param` never ran);
+  - `jr api /x -q=`, `jr api /x --query-param=` and `jr api /x -q ""` (EC-X.16.002-9) → each
+    exit 64, zero HTTP, stderr contains M1 rendered as `(got: )` and D1, and does not contain
+    D2;
+  - `jr api /x -q` with `-q` as the last argv token (EC-X.16.002-10) → exit 2 (clap argument
+    error), NOT 64; zero HTTP; stderr contains `a value is required for` (clap_builder 4.6.7's
+    `ErrorKind::InvalidValue` text for an empty invalid value, `src/error/format.rs`:
+    `a value is required for '<arg>' but none was supplied`; the substring is outside clap's
+    styled spans), does NOT contain `Not authenticated`, and contains neither D1 nor D2
+    (`parse_query_param` never ran).
+  **Fault models (killed by example/proptest):** swapped M1/M2, one shared generic message,
+  `{raw}` replaced by a trimmed or re-split value, split on the last `=` instead of the first,
+  NAME trimmed before the empty check, an empty-NAME check evaluated before the missing-`=`
+  check (e.g. `raw.is_empty() || raw.starts_with('=')` → M2, killed by the `""` cells), the JSON envelope written to stdout instead of stderr,
+  and `allow_hyphen_values` set on `-q` (the `-q -x=1` cell then accepts `-x=1` as a value,
+  sends a request that trips `.expect(0)`, and never exits 2).
+- VP-API-QP-006: pre-flight ordering and all-or-nothing (Postconditions 1 and 3, Invariants,
+  EC-X.16.002-3/4). Wiremock integration, hermetic per cycle-014 `verification-delta.md` §2, every mock
+  `.expect(0)`:
+  (i) **All-or-nothing** — `-q a=1 -q bad` and `-q bad -q a=1` both exit 64 with no request
+  sent; the well-formed pair is never transmitted.
+  (ii) **First malformed flag in flag order is reported** — `-q foo -q =v` reports M1 naming
+  `foo` (D2 absent); `-q =v -q foo` reports M2 naming `=v` (D1 absent).
+  (iii) **Before `resolve_body`** (EC-X.16.002-4) — spawned directly with
+  `std::process::Command` on the debug binary (`env!("CARGO_BIN_EXE_jr")`, or assert_cmd's
+  `cargo_bin` resolver for the path only), args `api /x -X POST -d @- -q bad`, the same
+  hermetic environment (`JR_BASE_URL` at a wiremock server whose mocks are all `.expect(0)`), and
+  `.stdin(Stdio::piped())`, `.stdout(Stdio::piped())`, `.stderr(Stdio::piped())`. The test
+  keeps the `ChildStdin` handle alive for the whole wait (never writes to it, never drops it)
+  and polls `try_wait()` in a loop against a deadline of about 5 s. Pass: the child exits on
+  its own before the deadline with exit code 64 and stderr containing D1 (M1's distinguishing
+  substring). On the deadline the test kills the child and fails. Prompt exit plus the M1
+  message is the discriminator: an implementation that read the body first would block on the
+  open pipe until killed. assert_cmd's `output()`/timeout path cannot be used here: it closes
+  the child's stdin before waiting (assert_cmd 2.2.2 `wait_with_input_output` → wait-timeout
+  0.2.1 `drop(self.stdin.take())`; the untimed path uses `Child::wait`, which also drops
+  stdin), so the pipe would hit EOF and prove nothing. Likewise an inherited `/dev/null` or a
+  closed pipe returns EOF at once.
+  (iv) **Before `-H` parsing** — `-q bad -H "malformed-no-colon"` reports the `-q` error (M1),
+  not `parse_header`'s `Header must be in 'Key: Value' format` error.
+  **Fault models (killed by example):** `-q` parsing moved after `resolve_body` or after
+  `parse_header`; per-flag filtering that drops bad values instead of failing; reporting the
+  last malformed value instead of the first.
+
+**Trace**: issue #583; D-378/D-379 (F1 human gate approving this scope); the D-188
+pre-flight-before-blocking-read convention; `src/cli/api.rs::parse_query_param` (new pure
+parser); `src/cli/api.rs::parse_header` (existing sibling pre-flight validator, structurally
+mirrored); BC-X.16.001 (companion behavior BC).
 
 ---
 
