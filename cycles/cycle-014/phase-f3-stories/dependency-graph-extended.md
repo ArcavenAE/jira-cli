@@ -13,7 +13,7 @@ inputs:
   - ".factory/stories/STORY-INDEX.md"
   - ".factory/cycles/cycle-014/cycle-manifest.md"
 traces_to: ".factory/cycles/cycle-014/cycle-manifest.md, D-381"
-input-hash: "db16d3c"
+input-hash: "5d36a2a"
 ---
 
 # F3 Extended Dependency Graph -- `issue-triage-quickfixes` (cycle-014)
@@ -134,19 +134,22 @@ mostly-parallel Wave 1 shape and is not a story-writer error.
 
 | Story | Primary file(s) touched |
 |-------|-----------------------------|
-| A (`user-list-project-resolution`) | `src/cli/mod.rs` (`UserCommand::List.project`), `src/main.rs` (`Command::User` arm), `src/cli/user.rs`, `tests/user_commands.rs`, `tests/user_pagination.rs`, `README.md` (~L335), `.cargo/mutants.toml`, `docs/specs/cargo-mutants-policy.md`, `CHANGELOG.md` |
-| C (`api-query-param`) | `src/cli/mod.rs` (`Command::Api`), `src/main.rs` (`Command::Api` arm), `src/cli/api.rs`, `README.md` (~L332), `.cargo/mutants.toml`, `docs/specs/cargo-mutants-policy.md`, `CHANGELOG.md` |
-| B (`field-options-name-label`) | `src/cli/field.rs`, `src/cli/mod.rs` (`Command::Field`/`FieldCommand::Options`), `src/types/jira/editmeta.rs`, `src/api/jira/issues.rs`, `tests/field_options.rs`, `README.md` (~L346), `CLAUDE.md` (~L61), `CHANGELOG.md` |
+| A (`user-list-project-resolution`) | `src/cli/mod.rs` (`UserCommand::List.project`), `src/main.rs` (`Command::User` arm), `src/cli/user.rs`, `tests/user_commands.rs` (modify), `tests/user_list_project_resolution.rs` (new), `tests/user_pagination.rs` (modify), `tests/all_flag_behavior.rs` (modify, conditional -- only if Task 2's grep finds a stale assertion), `README.md` (~L335), `.cargo/mutants.toml`, `docs/specs/cargo-mutants-policy.md`, `CHANGELOG.md` |
+| C (`api-query-param`) | `src/cli/mod.rs` (`Command::Api`), `src/main.rs` (`Command::Api` arm), `src/cli/api.rs`, `tests/api_query_param.rs` (new), `README.md` (~L332), `.cargo/mutants.toml`, `docs/specs/cargo-mutants-policy.md`, `CHANGELOG.md` |
+| B (`field-options-name-label`) | `src/cli/field.rs`, `src/cli/mod.rs` (`Command::Field`/`FieldCommand::Options`), `src/types/jira/editmeta.rs`, `src/api/jira/issues.rs`, `tests/field_options.rs` (modify -- rename (AC-007) + comment corrections (AC-006) only; no new test file), `README.md` (~L346), `CLAUDE.md` (~L61), `CHANGELOG.md` |
 
 **Overlap summary:** `src/cli/mod.rs`, `README.md`, and `CHANGELOG.md` are touched by all three
 stories, but each touches a DIFFERENT clap subcommand/enum variant (`UserCommand::List` /
 `Command::Api` / `FieldCommand::Options`) and a DIFFERENT README row (~L335 / ~L332 / ~L346) --
 disjoint line ranges within shared files. `.cargo/mutants.toml` and
 `docs/specs/cargo-mutants-policy.md` are shared by A and C only, with the genuine sequential
-numeric dependency described in §4. `src/main.rs` is shared by A and C only (different dispatch
-arms, `Command::User` vs. `Command::Api`). No two stories touch the same function in the same
-file. The serial delivery order (§4) exists specifically to avoid requiring three-way conflict
-resolution on the shared files, even though the touched regions are disjoint.
+numeric dependency described in §4. `src/main.rs` is shared by A and C only: both touch different
+arms of the same `match` statement (`src/main.rs::run`'s dispatch match, ~L212 -- `Command::User`
+at ~L434-439 for A, `Command::Api` at ~L493-503 for C), not the same match arm or helper function --
+a same-file, different-arm overlap, which the serial delivery order (§4, D-381) resolves the same
+way it resolves the `src/cli/mod.rs`/`README.md` overlap. No two stories touch the same match arm
+or the same helper function. The serial delivery order (§4) exists specifically to avoid requiring
+three-way conflict resolution on the shared files, even though the touched regions are disjoint.
 
 ---
 
@@ -165,13 +168,15 @@ Checked per the orchestrator's instruction: `.worktrees/` and `sprint-state.yaml
 Grep of `STORY-INDEX.md`'s Story Manifest table for the file paths this cycle's stories touch
 (`src/cli/mod.rs`, `src/main.rs`, `src/cli/user.rs`, `src/cli/api.rs`, `src/cli/field.rs`,
 `src/types/jira/editmeta.rs`, `src/api/jira/issues.rs`, `tests/user_commands.rs`,
-`tests/user_pagination.rs`, `tests/field_options.rs`, `README.md`, `CLAUDE.md`,
+`tests/user_list_project_resolution.rs`, `tests/user_pagination.rs`, `tests/all_flag_behavior.rs`,
+`tests/api_query_param.rs`, `tests/field_options.rs`, `README.md`, `CLAUDE.md`,
 `.cargo/mutants.toml`, `docs/specs/cargo-mutants-policy.md`), cross-referenced against every
 `**draft**`/`**in-progress**`/`**ready**` (undelivered) row:
 
 - **No existing undelivered story touches** `src/cli/user.rs`, `src/cli/api.rs`,
   `src/cli/field.rs`, `src/types/jira/editmeta.rs`, `src/api/jira/issues.rs`,
-  `tests/user_commands.rs`, `tests/user_pagination.rs`, `tests/field_options.rs`,
+  `tests/user_commands.rs`, `tests/user_list_project_resolution.rs`, `tests/user_pagination.rs`,
+  `tests/all_flag_behavior.rs`, `tests/api_query_param.rs`, `tests/field_options.rs`,
   `.cargo/mutants.toml`, or `docs/specs/cargo-mutants-policy.md`.
 - **`src/cli/mod.rs` and `README.md` ARE touched by one existing `**draft**` story**,
   `S-cycle7-oauth-help-text-fix` (cycle-007 `auth-correctness-dx` bundle, F3-registered

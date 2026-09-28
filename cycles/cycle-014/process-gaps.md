@@ -7,7 +7,7 @@ producer: state-manager
 timestamp: 2026-09-26T00:01:34Z
 cycle: "cycle-014-issue-triage-quickfixes"
 inputs: [STATE.md]
-input-hash: "15d9bce"
+input-hash: "f13fa79"
 traces_to: STATE.md
 ---
 
@@ -131,9 +131,41 @@ dispositioned — dispositioning happens at cycle close per S-7.02).
     narrower adversarial perimeter for summary/index surfaces that are
     especially prone to this kind of low-severity churn.
 
+14. **Stories invent their own Red Gate density exclusion rules instead of
+    mapping cells to `per-story-delivery.md`'s categories** — F3 adversarial
+    review passes 4 and 5 found stories using ad hoc phrasing like "exclude
+    from numerator" and applying `GREEN-BY-DESIGN` to what is actually
+    `PRE-EXISTING-BEHAVIOR` (a rationale label only, non-exempt, per
+    `per-story-delivery.md`'s categories: `GREEN-BY-DESIGN`/`WIRING-EXEMPT`
+    are exempt; `PRE-EXISTING-BEHAVIOR` is not). Candidate: the story-writer
+    prompt/template should require an explicit per-test RED/exempt/
+    denominator enumeration and tally, rather than free-text density
+    exclusion prose. Source: `ADV-C14-F3-P4-001`/`002`,
+    `ADV-C14-F3-P5-001`/`002`. Engine-side (vsdd-factory) follow-up.
+
+15. **`per-story-delivery.md` L35 (also `deliver-story` `SKILL.md` L78,
+    `step-c-failing-tests.md` L25) requires Step-3 failure messages to be
+    "not 'not yet implemented'"** — this conflicts with strict-mode
+    `todo!()` stubs (`BC-5.38.001`) for direct-call tests, and risks a
+    test-writer re-dispatch loop when a story's stub-generated failure
+    message legitimately reads that way. Engine-side reconciliation is
+    needed; in the meantime, cycle-014's stories carry explicit
+    no-redispatch notes to avoid the loop. Source: `ADV-C14-F3-P5-004`.
+    Engine-side (vsdd-factory) follow-up.
+
+16. **The story template has no VP-cell ownership matrix and no stub-task
+    guidance** — flagged from pass 2 onward. Holdout scenarios repeatedly
+    omitted prerequisite HTTP mock chains and hermetic preconditions
+    (fixed ad hoc in passes 4/5, see the mock-chain enumerations added to
+    `wave-holdout-scenarios.md` this burst), because the template gives no
+    structured place to declare which VP cell each test/scenario owns, nor
+    what stub scaffolding a story's implementation tasks need before
+    TDD starts. Source: `ADV-C14-F3-P2-002`, `P4-008`, `P5-003`.
+    Engine-side (vsdd-factory) follow-up.
+
 ## Disposition
 
 Not yet dispositioned. F2 is CONVERGED per human decision `D-383` and
 AWAITING the F2 human approval gate — the S-7.02 cycle-closing checklist
-dispositions each of these 13 items when cycle-014 itself closes, not
+dispositions each of these 16 items when cycle-014 itself closes, not
 before.

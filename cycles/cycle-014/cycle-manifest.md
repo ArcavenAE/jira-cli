@@ -232,3 +232,12 @@ serial STORY-A→STORY-C→STORY-B ordering and per-story F4 timing.)**
 
 Next: F2 (spec evolution). D-379 to be minted by state-manager recording
 this F1 gate outcome.
+
+**(progress note, 2026-09-28, state-manager checkpoint burst):** F3 adversarial
+story review passes 3, 4, and 5 completed, all NOT CLEAN (pass 3: 1H/1M/3L/2C;
+pass 4: 1M/8L/2C; pass 5: 4L); fixes applied to the 3 story files plus
+`dependency-graph-extended.md`/`wave-schedule.md`/`wave-holdout-scenarios.md`;
+clean-pass counter reset to 0/3, pass 6 in progress; 3 new process-gap
+candidates recorded (#14-16, now 16 total in `process-gaps.md`). See
+`STATE.md` v4.99 (`CYCLE-014-F3-ADV-REVIEW-CHECKPOINT-2026-09-28`) for full
+detail.

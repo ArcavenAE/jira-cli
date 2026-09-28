@@ -12,7 +12,7 @@ timestamp: "2026-09-26T00:00:00"
 inputs:
   - ".factory/cycles/cycle-014/phase-f3-stories/dependency-graph-extended.md"
 traces_to: "dependency-graph-extended.md §3, cycle-manifest.md D-381"
-input-hash: "f82c340"
+input-hash: "9c89efd"
 ---
 
 # F3 Wave Schedule -- `issue-triage-quickfixes` (cycle-014)
@@ -75,9 +75,9 @@ exactly.
 
 | Story | Primary file(s) touched |
 |-------|-----------------------------|
-| A (Wave 1) | `src/cli/mod.rs`, `src/main.rs`, `src/cli/user.rs`, `tests/user_commands.rs`, `tests/user_pagination.rs`, `README.md`, `.cargo/mutants.toml`, `docs/specs/cargo-mutants-policy.md`, `CHANGELOG.md` |
-| C (Wave 2) | `src/cli/mod.rs`, `src/main.rs`, `src/cli/api.rs`, `README.md`, `.cargo/mutants.toml`, `docs/specs/cargo-mutants-policy.md`, `CHANGELOG.md` |
-| B (Wave 3) | `src/cli/field.rs`, `src/cli/mod.rs`, `src/types/jira/editmeta.rs`, `src/api/jira/issues.rs`, `tests/field_options.rs`, `README.md`, `CLAUDE.md`, `CHANGELOG.md` |
+| A (Wave 1) | `src/cli/mod.rs`, `src/main.rs`, `src/cli/user.rs`, `tests/user_commands.rs` (modify), `tests/user_list_project_resolution.rs` (new), `tests/user_pagination.rs` (modify), `tests/all_flag_behavior.rs` (modify, conditional), `README.md`, `.cargo/mutants.toml`, `docs/specs/cargo-mutants-policy.md`, `CHANGELOG.md` |
+| C (Wave 2) | `src/cli/mod.rs`, `src/main.rs`, `src/cli/api.rs`, `tests/api_query_param.rs` (new), `README.md`, `.cargo/mutants.toml`, `docs/specs/cargo-mutants-policy.md`, `CHANGELOG.md` |
+| B (Wave 3) | `src/cli/field.rs`, `src/cli/mod.rs`, `src/types/jira/editmeta.rs`, `src/api/jira/issues.rs`, `tests/field_options.rs` (modify -- rename + comments only, no new test file), `README.md`, `CLAUDE.md`, `CHANGELOG.md` |
 
 **Overlap is expected and intentional, not a defect:** `src/cli/mod.rs`/`README.md`/`CHANGELOG.md`
 are touched by all three stories in different regions; `.cargo/mutants.toml`/
@@ -100,18 +100,24 @@ construction, only one story's diff is ever open against `develop` at a time.
 
 ---
 
-## 3. Pipeline Overlap Plan
+## 3. Pipeline Serialization Plan
 
-Because delivery is strictly serial (D-381), there is deliberately LESS pipeline overlap than a
-parallel-wave cycle would allow -- this is the direct cost of the human's file-overlap-avoidance
-decision, accepted at the F2 gate:
+Because delivery is strictly serial (D-381), there is no pipeline overlap between waves at all --
+each story's worktree is cut from `develop` only after its predecessor's PR has merged, and no
+story's test-writing or implementation may begin before that merge, even where the two stories'
+own functions have no type dependency on one another:
 
-| Parallel Activity | When |
+| Activity | When |
 |------------------|------|
-| Wave 2 (C) test-writing | May start once Wave 1 (A)'s stubs/types are known, even before A merges -- C's own pure functions (`append_query_params`, `parse_query_param`) have no type dependency on A's `resolve_user_list_project` |
+| Wave 2 (C) test-writing | MUST NOT start until Wave 1 (A) has merged to `develop` -- C's worktree is cut from `develop` only after A's merge, so no `develop` state exists yet for C's test-writing to build on even though C's own pure functions (`append_query_params`, `parse_query_param`) have no type dependency on A's `resolve_user_list_project` |
 | Wave 2 (C) implementation | MUST NOT start until Wave 1 (A) has merged to `develop` -- C's PR must rebase onto A's landed `.cargo/mutants.toml`/`docs/specs/cargo-mutants-policy.md` count (32->33) before bumping it to 34 |
-| Wave 3 (B) test-writing | May start once Wave 2 (C)'s stubs/types are known, even before C merges -- B's own fix (`normalize_from_allowed_values_at_depth`) has no type dependency on C's new functions |
+| Wave 3 (B) test-writing | MUST NOT start until Wave 2 (C) has merged to `develop` -- B's worktree is cut from `develop` only after C's merge, so no `develop` state exists yet for B's test-writing to build on even though B's own fix (`normalize_from_allowed_values_at_depth`) has no type dependency on C's new functions |
 | Wave 3 (B) implementation | MUST NOT start until Wave 2 (C) has merged to `develop` -- B's PR must rebase onto C's landed `src/cli/mod.rs`/`README.md` state before editing its own disjoint regions of those files |
+
+No row above permits overlap: each wave's test-writing and implementation are both gated on the
+prior wave's merge, matching the `depends_on:` edges in `dependency-graph-extended.md` §4 (D-381)
+and the `deliver-story` prerequisite that every `depends_on` story be complete -- stubs before
+tests before implementation -- before the next story's worktree is even cut.
 
 ## Critical Path
 
