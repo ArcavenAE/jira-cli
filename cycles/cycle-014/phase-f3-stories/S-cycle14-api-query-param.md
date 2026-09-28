@@ -23,7 +23,9 @@ inputs:
   - "src/main.rs"
   - "src/cli/api.rs"
   - "README.md"
-input-hash: "76973f9"
+  - "tests/cli_handler.rs"
+  - "tests/rate_limit_holdouts.rs"
+input-hash: "f4899fa"
 traces_to: "BC-X.16.001, BC-X.16.002"
 cycle: cycle-014-issue-triage-quickfixes
 estimated_effort: large
@@ -89,7 +91,7 @@ acceptance_criteria_count: 11
 assumption_validations: []
 risk_mitigations: []
 created: "2026-09-26"
-version: "4.3"
+version: "4.4"
 last_updated: "2026-09-28"
 breaking_change: false
 retroactive: false
@@ -124,7 +126,7 @@ restructure -- ownership is recorded solely via CC-tag citations inside each `##
 checked against the Coverage Scope section below) are both in force. Current Red Gate tally (Task
 10(e), P11-005-corrected): `TOTAL_NEW_TESTS = 44`, `RED_TESTS = 40`, non-exempt GREEN
 (`PRE-EXISTING-BEHAVIOR`) `= 3`, `EXEMPT_TESTS = 1` (`WIRING-EXEMPT` only), `RED_RATIO = 40 / 43
-~= 0.930 >= 0.5`. Story version 4.3.
+~= 0.930 >= 0.5`. Story version 4.4.
 
 ## Coverage Scope (D-387)
 
@@ -332,13 +334,22 @@ inherited -- no AC-001 cell can verify it, since it is a caller obligation on th
 postcondition of `append_query_params` itself; enforced structurally by `handle_api`'s existing,
 unmodified `normalize_path(&path)?` call site preceding all `-q` handling, and by PR code
 review; no dedicated test cell exists for it, and none is added) -- and Invariants 1
-`[CC:L3903-3904]` (purity) and 4
+`[CC:L3903-3904]` (purity -- informational: demonstrated by the signature stated above, a
+synchronous fn with no `Result`/I/O-typed params, and structurally confirmed by every AC-001 cell
+calling it directly with no `JiraClient`/wiremock; no dedicated assertion, and none is added) and 4
 `[CC:L3912-3915]` (guarantee scope: never a second `?`, never `&` after an empty/`&`-terminated
-query component), and owns Edge Cases EC-X.16.001-4 `[CC:L3931-3932]`, -5 `[CC:L3933-3942]`, -8
+query component -- the "no blanket `?&`/`??` ban" half is demonstrated by the EC-9 pinned example
+below, whose output legitimately contains `?&`), and owns Edge Cases EC-X.16.001-4 `[CC:L3931-3932]`, -5 `[CC:L3933-3942]`
+(the closing RFC 9112 §3.2 sentence -- fragments are never transmitted to the server -- is
+informational: standard HTTP-client behavior outside `append_query_params`'s string-only scope, not
+independently tested; confirmed at PR code review), -8
 `[CC:L3950-3959]`, -9 `[CC:L3960-3968]`, -12 `[CC:L3978-3988]`, and -14 `[CC:L3995-4000]` -- see
 those clauses for the separator algorithm; this AC does not restate them and does not narrow them.
 **Test (D-386 bind-by-reference):** Implements the VP-API-QP-001..004 shared preamble
-`[CC:L4003-4006]` (purity statement; `url::form_urlencoded::parse` test-oracle-only note),
+`[CC:L4003-4006]` (purity statement -- same mechanism as Invariant 1 above; `url::form_urlencoded::parse`
+test-oracle-only note -- informational: enforced by which module each test calls it from
+(`#[cfg(test)] mod tests` vs. production code), confirmed at PR code review, no dedicated
+assertion),
 VP-API-QP-001's equation and strategy `[CC:L4007-4023]` (pinned examples EC-X.16.001-4, -5, the
 empty-query-plus-fragment case, and -8 (both forms) and -9), and VP-API-QP-001's pinned-examples
 tail and fault-models `[CC:L4024-4031]` (pinned examples -14 and -12). Everything the cited
@@ -379,7 +390,11 @@ stub.
 ### AC-003 (traces to BC-X.16.001 Behavior 3, Postcondition 3, EC-X.16.001-3/10/11)
 `src/cli/api.rs::append_query_params` implements BC-X.16.001 Behavior 3 `[CC:L3826-3852]` and
 Postcondition 3 `[CC:L3892-3895]` in full, including the pinned `--help` substring requirement
-`[CC:L3845-3852]`; it also depends on Invariant 3 `[CC:L3907-3911]` (`urlencoding::encode` is the
+`[CC:L3845-3852]` (Behavior 3's "Rationale, encoder-agnostic" sentence and its comparisons to
+`gh api -f` and to `parse_header`'s trimming behavior are informational -- rationale/comparison
+prose, not independently testable claims; the actual encoded-output behavior they explain is
+covered by the `%20` pinned example and the no-trim pinned examples below; no dedicated cell
+exists for the comparisons themselves, and none is added); it also depends on Invariant 3 `[CC:L3907-3911]` (`urlencoding::encode` is the
 intended encoder; `byte_serialize` forbidden), and owns Edge Cases EC-X.16.001-3
 `[CC:L3924-3930]`, -10 `[CC:L3969-3973]`, and -11 `[CC:L3974-3977]` -- see those clauses for the
 encoding/no-trim/help-text rules; this AC does not restate them and does not narrow them.
@@ -407,17 +422,29 @@ no wiremock, so it stays a plain sync `#[test]`). All
 Behavior 5 `[CC:L3858-3863]`, and Postconditions 1 `[CC:L3876-3879]` and 5 `[CC:L3898-3900]` in
 full; it also depends on Precondition 2 `[CC:L3872-3873]` (systemic-sweep: informational,
 inherited -- no AC-004 cell verifies this precondition directly; its well-formed-value half is a
-test-fixture-construction assumption (AC-004's own cells supply only well-formed pairs), and its
-"evaluated BEFORE this BC's assembly step runs" ordering half is verified by AC-008's tests
-(BC-X.16.002 Postcondition 1 -- malformed values are caught before `append_query_params` ever
-touches `normalize_path`'s output); no dedicated AC-004 test cell exists for it, and none is
-added) and Invariant 2 `[CC:L3905-3906]` (runs
+test-fixture-construction assumption (AC-004's own cells supply only well-formed pairs). **(P17-001
+correction:** its "evaluated BEFORE this BC's assembly step runs" ordering half is informational/
+structural, NOT verified by AC-008's tests -- AC-008's VP-API-QP-006(iii)/(iv) cells observe
+ordering only relative to `resolve_body`/`-H` parsing, not relative to `append_query_params`
+internally, so they cannot observe this half. The actual mechanism: `append_query_params`'s own
+signature (`pairs: &[(String, String)]`, already-parsed pairs, no `raw: &str` input of its own)
+forces `parse_query_param`'s `.collect::<Result<Vec<_>>>()?` over every `-q` flag to finish first
+and short-circuit on the first error before `append_query_params` is ever called (Task 11/13
+design) -- a signature/type-flow fact, confirmed at PR code review; reinforced by AC-007's
+all-or-nothing cells, which prove no request is ever sent when any value is malformed, though
+those cells likewise do not observe internal call ordering directly. No dedicated AC-004 test
+cell exists for this ordering half, and none is added.) and Invariant 2 `[CC:L3905-3906]` (runs
 strictly before the `RequestBuilder` is built) -- **(P16-003 classification:** (a) the
 table-driven method-orthogonality wiremock test (this AC's own **Test:** cell) verifies that the
 assembled query is independent of the request body and that the body itself is left unmutated by
 query assembly; (b) the "before the `RequestBuilder`/headers are built" ordering half is enforced
 by structural placement (Task 13's call-site ordering, immediately after `normalize_path` and
-before `resolve_body`/`-H` parsing) plus PR code review, not by a dedicated runtime assertion**),
+before `resolve_body`/`-H` parsing) plus PR code review, not by a dedicated runtime assertion;
+(c) **(P17-001)** the "never mutates ... headers" half has its own mechanism, distinct from (a)'s
+body check: `append_query_params`'s signature takes no header parameter at all (only `path: &str`
+and `pairs: &[(String, String)]`), so it structurally cannot touch headers -- confirmed at PR code
+review, and reinforced by holdout `H-CYCLE14-W2-INT-001` (`wave-holdout-scenarios.md`), which does
+assert the received request retains its `X-Custom: 1` header unaffected by `-q`**),
 and owns Edge Cases EC-X.16.001-6
 `[CC:L3943-3945]` and -7 `[CC:L3946-3949]` -- see those clauses for the method-orthogonality and
 zero-flag-identity rules; this AC does not restate them and does not narrow them. This AC also
@@ -457,7 +484,11 @@ RED/GREEN classification: the table-driven test and the identity `proptest!` are
 `src/cli/api.rs::parse_query_param(raw: &str) -> Result<(String, String)>` (new pure function,
 distinct from `append_query_params`) implements BC-X.16.002's Behavior `[CC:L4131-4140]` and its
 Condition/Behavior table's M1 row `[CC:L4142-4145]` in full, including the pinned M1 error message
-`[CC:L4147-4154]`, and owns Edge Cases EC-X.16.002-1
+`[CC:L4147-4154]` (Behavior's closing "structurally mirrors `parse_header`'s existing `Key: Value`
+pre-flight validator" sentence is informational -- a design-precedent comparison, not an
+independently testable claim; `parse_header`'s own behavior is pre-existing and unmodified by this
+story, and is not re-verified by any AC-005 cell; confirmed at PR code review, no dedicated cell
+exists for it, and none is added), and owns Edge Cases EC-X.16.002-1
 `[CC:L4215-4216]`, EC-X.16.001-1 `[CC:L3918-3920]`, and EC-X.16.001-2 `[CC:L3921-3923]` -- see
 those clauses for the split-on-first-`=` / M1 rules; this AC does not restate them and does not
 narrow them. Postcondition 1 (pre-flight ordering) is NOT this AC's -- it is owned solely by
@@ -479,7 +510,14 @@ does not restate or narrow any of it. The partition `proptest!` plus the pinned
 ### AC-006 (traces to BC-X.16.002 Behavior, Postcondition 2, EC-X.16.002-2)
 `src/cli/api.rs::parse_query_param` implements BC-X.16.002's Behavior paragraph (M2 empty-NAME
 case) `[CC:L4131-4140]` and its Condition/Behavior table's M2 row `[CC:L4142-4145]`, the pinned
-M2 error message `[CC:L4155-4157]`, and Postcondition 2 `[CC:L4190-4195]` in full, and owns Edge Case
+M2 error message `[CC:L4155-4157]`, and Postcondition 2 `[CC:L4190-4195]` in full (Postcondition 2's
+"Per `src/main.rs`'s top-level error handler (~lines 132-140), this envelope is written via
+`eprintln!`" sentence is an implementation-location citation, not independently tested -- the
+observable stdout-empty/stderr-JSON split IS what this AC's envelope cell asserts; and its closing
+"same channel every other `jr` pre-flight/runtime error uses... not a taxonomy-specific choice"
+sentence is a repo-wide-convention citation outside this story's own test scope -- both are
+informational, confirmed at PR code review, no dedicated cell exists for either, and none is
+added), and owns Edge Case
 EC-X.16.002-2 `[CC:L4217-4218]` -- see those clauses for the pinned M2 message and
 `--output json` envelope rules; this AC does not restate them and does not narrow them. This AC
 also owns BC-X.16.002 Invariant 1 (distinct M1/M2 messages) `[CC:L4202-4205]` (P11-003) -- see
@@ -496,10 +534,17 @@ the M1 and M2 envelope shapes, per the pass-5 fix), are `#[tokio::test]` functio
 `tests/api_query_param.rs`. Both are RED at the Task 1 stub.
 
 ### AC-007 (traces to BC-X.16.002 Postcondition 3, Invariant 3, EC-X.16.002-3)
-`handle_api`'s `-q` validation implements BC-X.16.002 Postcondition 3 `[CC:L4196-4199]` and its
+`handle_api`'s `-q` validation implements BC-X.16.002 Postcondition 3 `[CC:L4196-4199]` (its
+closing "consistent with `parse_header`'s existing `.collect::<Result<Vec<_>>>()` all-or-nothing
+pattern" sentence is informational -- a design-precedent comparison, not independently tested by
+this AC's cells; `parse_header`'s own pattern is pre-existing and unmodified) and its
 Invariant 3 (flag-order short-circuiting) `[CC:L4208-4212]` (P11-003: narrowed from the prior
 merged L4201-4212 range -- Invariants 1 and 2 are verified by AC-005's/AC-006's tests,
-not this AC's) in full, and owns Edge Case EC-X.16.002-3 `[CC:L4219-4222]` -- see those clauses
+not this AC's; Invariant 3's own closing "applied at an EARLIER point in `handle_api`'s pipeline
+(before `resolve_body`, not after)" sentence is an informational cross-reference to BC-X.16.002
+Postcondition 1's `resolve_body`-ordering half, which is verified by AC-008's
+VP-API-QP-006(iii) held-open-stdin cell, not by this AC's own all-or-nothing/first-malformed-reported
+cells) in full, and owns Edge Case EC-X.16.002-3 `[CC:L4219-4222]` -- see those clauses
 for the all-or-nothing / first-malformed-reported rules; this AC does not restate them and does
 not narrow them.
 **Test (D-386 bind-by-reference):** Implements VP-API-QP-006(i) `[CC:L4366-4367]`,
@@ -516,7 +561,19 @@ functions in `tests/api_query_param.rs`. All 4 are RED at the Task 1 stub.
 `handle_api` (`src/cli/api.rs`) implements BC-X.16.002 Preconditions `[CC:L4169-4176]` and
 Postcondition 1 `[CC:L4178-4189]` in full, and owns Edge Case EC-X.16.002-4 `[CC:L4223-4230]` --
 see those clauses for the exact pre-flight insertion point and ordering; this AC does not restate
-them and does not narrow them. (P13-004: the Preconditions clause's first sentence -- that zero
+them and does not narrow them. **(P17-001: Postcondition 1's own lead sub-clause -- that a
+malformed value is caught by `parse_query_param` BEFORE `append_query_params` touches
+`normalize_path`'s output, BEFORE any query string is assembled -- is informational/structural,
+NOT verified by this AC's own VP-API-QP-006(iii)/(iv) cells, which observe ordering only relative
+to `resolve_body`/`-H` parsing (the clause's own "AND -- per D-188's convention -- BEFORE
+`resolve_body` ... and BEFORE `-H`/`--header` parsing" half, which those two cells DO verify), not
+relative to `append_query_params` internally. The actual mechanism for the
+`append_query_params`-ordering half: `append_query_params`'s signature takes already-parsed
+`pairs: &[(String, String)]`, so `parse_query_param`'s `.collect::<Result<Vec<_>>>()?` over every
+`-q` flag (Task 11/13 design) must finish, error-free, before `append_query_params` can be called
+at all -- a signature/type-flow fact, confirmed at PR code review; reinforced by AC-007's
+all-or-nothing cells proving no request is ever sent when any value is malformed. No dedicated
+AC-008 test cell exists for this sub-clause, and none is added.)** (P13-004: the Preconditions clause's first sentence -- that zero
 `-q` flags means no parsing occurs at all, nothing to validate -- is verified by AC-004's
 VP-API-QP-004(2) zero-flag wiremock examples, not by an AC-008 cell; that sentence itself cites
 BC-X.16.001 Postcondition 1, which AC-004 owns. No dedicated AC-008 test cell exists for it, and
@@ -551,7 +608,13 @@ Clap's own attached-form and missing-value parsing governs EC-X.16.002-5..10: EC
 `[CC:L4231-4238]`, EC-6 `[CC:L4239-4243]`, EC-7 `[CC:L4244-4251]`, and EC-9 `[CC:L4276-4291]` are
 fed through to `parse_query_param`, while EC-8 `[CC:L4252-4275]` and EC-10 `[CC:L4292-4298]` are
 rejected by clap itself before `parse_query_param` ever runs -- this AC does not restate those
-outcomes and does not narrow them. This AC also owns the distinguishing-substring invariant and
+outcomes and does not narrow them. (EC-8's own text also describes three hyphen-leading-NAME
+workaround forms -- `-q=-x=1`, `-q-x=1`, `--query-param=-x=1` -- and a contrasting
+hyphen-leading-VALUE case, `-q startAt=-1`/`-q jql=-x`, that "works as-is": neither is exercised by
+a dedicated cell -- this AC's own EC-8 cell tests only the failing `-q -x=1` form. Both are
+informational -- a structural consequence of the same clap attached-value mechanics EC-5/EC-6/EC-7's
+cells already exercise, confirmed at PR code review; no dedicated cell exists for either, and none
+is added.) This AC also owns the distinguishing-substring invariant and
 clap attached-value delivery mechanics `[CC:L4158-4168]` (the `{raw}` value clap delivers to
 `parse_query_param`). The `-q`/`--query-param` flag is NOT declared with `allow_hyphen_values`.
 EC-X.16.002-11 `[CC:L4299-4305]` is informational only, inherited clap behavior with no owning VP

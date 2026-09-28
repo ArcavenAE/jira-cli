@@ -7,7 +7,7 @@ producer: state-manager
 timestamp: 2026-09-26T00:01:34Z
 cycle: "cycle-014-issue-triage-quickfixes"
 inputs: [STATE.md]
-input-hash: "1103087"
+input-hash: "648c7d0"
 traces_to: STATE.md
 ---
 
@@ -163,14 +163,31 @@ dispositioned — dispositioning happens at cycle close per S-7.02).
     TDD starts. Source: `ADV-C14-F3-P2-002`, `P4-008`, `P5-003`.
     Engine-side (vsdd-factory) follow-up.
 
-17. **(candidate) The `validate-trajectory-tail-cell-completeness` PostToolUse
-    hook repeatedly reported the STATE.md "Last Updated" cell as missing the
-    `trajectory_tail` arrow sequence even when the sequence was present** —
-    observed in the `b1379cc` burst. Suspected false positive rather than a
-    genuine omission; the cell in question did carry the `→0→0→0→0` sequence
-    at the time the hook fired. Candidate: engine-side follow-up to verify
-    the hook's cell-match logic against a "Last Updated" cell that embeds the
-    sequence inside a longer sentence (as opposed to as a standalone token).
+17. **(candidate, RECLASSIFIED 2026-09-28) The `validate-trajectory-tail-cell-completeness`
+    PostToolUse hook's apparent "false positive" on the STATE.md "Last Updated"
+    cell was a FORMAT mismatch, not a hook defect** — originally recorded
+    (observed in the `b1379cc` burst) as a suspected false positive: the hook
+    flagged the cell as missing the trajectory-tail arrow sequence even though
+    a value was present. **Correction note (2026-09-28):** root-caused this
+    burst — the hook requires the literal, unquoted, hyphenated
+    `trajectory-tail →N→N→N→N` substring to appear directly in the cell text.
+    A `trajectory_tail` (underscore) label, or the value separated from the
+    label by table-cell/markdown punctuation (e.g. `` **trajectory-tail** | `→0→0→0→0` ``
+    or `` trajectory-tail: `→0→0→0→0` ``), does NOT satisfy the check. The
+    flagged cell was written in one of the non-matching forms; the hook
+    behaved correctly. The original entry's premise ("suspected false
+    positive rather than a genuine omission") is superseded and WRONG — this
+    is reclassified from "suspected hook defect" to a documentation/format-
+    discoverability gap: the required literal form is not documented anywhere
+    state-manager reads before writing STATE.md (not in the state-manager
+    agent definition, not in `state-template.md`, not in the
+    `hooks-registry.toml` entry's comment). Candidate: document the exact
+    required literal form (hyphenated, unquoted, `trajectory-tail →N→N→N→N`
+    immediately adjacent to the arrow sequence, no intervening backticks/pipe)
+    in the state-manager agent definition and/or `state-template.md`, and add
+    a pre-write self-check for the 5 prescribed STATE.md cells (frontmatter
+    `current_step`, "Last Updated", Phase Progress Notes, Concurrent Cycles
+    Notes, Session Resume Checkpoint body).
 
 18. **Story-writing paraphrased VP clauses into AC Test lines and
     self-attested completeness checklists, and the paraphrases repeatedly

@@ -25,8 +25,12 @@ inputs:
   - "src/config.rs"
   - "tests/user_commands.rs"
   - "tests/all_flag_behavior.rs"
+  - "tests/user_pagination.rs"
   - "README.md"
-input-hash: "eb5b8a1"
+  - ".cargo/mutants.toml"
+  - "docs/specs/cargo-mutants-policy.md"
+  - "CHANGELOG.md"
+input-hash: "acffa6a"
 traces_to: "BC-X.7.002"
 cycle: cycle-014-issue-triage-quickfixes
 estimated_effort: small
@@ -76,7 +80,7 @@ acceptance_criteria_count: 11
 assumption_validations: []
 risk_mitigations: []
 created: "2026-09-26"
-version: "4.3"
+version: "4.4"
 last_updated: "2026-09-28"
 breaking_change: true
 retroactive: false
@@ -118,7 +122,8 @@ story. **D-387** (2026-09-28) replaced the hand-written Clause Coverage Map with
 the `[SCOPE:...]`/`[EXCLUDE:...]` lines there, are verified mechanically rather than
 hand-audited. Current Red Gate density tally (Task 7): `RED_TESTS=9`, `EXEMPT_TESTS=3`,
 `GREEN-nonexempt=2`, `TOTAL_NEW_TESTS=14`, denominator=11, `RED_RATIO=9/11≈0.82` (clears the
-BC-8.29.001 `>= 0.5` threshold; unchanged by the pass-14 cosmetic fixes below). Story version: 4.3.
+BC-8.29.001 `>= 0.5` threshold; unchanged by the pass-14 cosmetic fixes recorded in
+`S-cycle14-user-list-project-resolution.revision-history.md`). Story version: 4.4.
 
 ## Narrative
 
@@ -142,13 +147,18 @@ BC-8.29.001 `>= 0.5` threshold; unchanged by the pass-14 cosmetic fixes below). 
 -- describes the VP's overall structure; not itself an independently-tested clause) and (a)
 Clap propagation pin [CC:L844-857]: three base cells (the fourth, "both given", is shared
 with AC-005) plus two `-p` short-alias cells, and the "no global `-p` cell" note. Also carries
-BC-X.7.002 Fix step 2
-[CC:L775] (clap's own global-value propagation, no `jr`-level merge code) and Postcondition 2
-[CC:L802] (global fills local when absent) as secondary citations -- this AC's cells include
-the global-only argv cell that demonstrates both at the parse level, alongside AC-002's
-wiring-level test of the same postcondition -- and Resolution order step 4 [CC:L786]
+BC-X.7.002 Fix step 2 [CC:L775]: the global-fills-local half is demonstrated by this AC's
+global-only argv cell at the parse level, alongside AC-002's wiring-level test of the same
+postcondition; the "no `jr`-level merge code" half is (informational -- enforced by
+Architecture Compliance Rules row 2 via code review). Also carries Postcondition 2
+[CC:L802] (global fills local when absent) as a secondary citation, and Resolution order step 4 [CC:L786]
 (informational, inherited -- every hermetic test in this story inherits `main.rs`'s earlier
-preemption ordering by virtue of supplying valid auth and a known profile). This AC's header
+preemption ordering by virtue of supplying valid auth and a known profile). Fix step 1
+[CC:L759-774]'s design-rationale sentences (the new help text is "modeled on
+`ComponentSubcommand::List`'s wording"; why it cannot reuse that string byte-for-byte, since
+`component list`'s own help text understates its `Config::project_key` fallback) are
+(informational, inherited -- rationale for the pinned string AC-008 asserts, not independently
+tested by this AC or AC-008). This AC's header
 also cites BC-X.7.002 Postcondition 1 (line 801; local wins unconditionally) -- as plain prose,
 not a CC tag, since AC-005 already carries that citation below; the argv cell
 that demonstrates it -- the "both given" cell described below -- is physically part of this
@@ -215,8 +225,14 @@ for that premise on the no-project case, where the call never happens at all), P
 in this AC's own body above -- this is a BC postcondition text, not a VP-cell paraphrase, per
 the D-386 carve-out), BC-X.7.002's Preconditions [CC:L796-798] (the
 config-isolation and valid-auth/valid-profile requirements this AC's hermetic tests satisfy),
-BC-X.7.002's Invariants [CC:L808-810] (config-merge-only resolution, no new accessor/cache; the
-failure-MECHANISM-vs-FACT distinction this AC's exit-64 path preserves), Resolution order
+BC-X.7.002's Invariants [CC:L808-810]: the L808 "config-merge-only resolution, no new
+accessor/cache" clause is (informational -- enforced by Architecture Compliance Rules row 5 via
+code review, mirroring AC-009); the L809 failure-MECHANISM-vs-FACT distinction is what this
+AC's exit-64 path actually preserves and tests; the L810 sentence
+(`user_list_requires_project_flag` passes once hermetically isolated, no rename) is tested by
+this AC's own Task 6 test update described below, except its "stale comment must be updated"
+clause, which is (informational -- enforced by PR code review, not by any test assertion).
+Resolution order
 step 4 [CC:L786] (informational, inherited -- this AC's hermetic tests are what actually
 exercise the "before any HTTP call" ordering, since `main.rs`'s own preemption points run
 first and this AC's tests must clear them to reach BC-X.7.002's own exit-64 path), and
@@ -262,7 +278,10 @@ WIRING-EXEMPT and stays in the Red Gate denominator.
 [CC:L850-851], VP-USER-LIST-PROJECT-001(b)'s EC-X.7.002-6 cell
 [CC:L866-867], and VP-USER-LIST-PROJECT-001(c)'s EC-X.7.002-6 cell
 [CC:L884-886]. Also implements the VP fault model [CC:L902-909] fault (5) (an empty-string
-special case treating `Some("")` as absent). Everything the cited clause(s) specify is binding in its
+special case treating `Some("")` as absent). EC-X.7.002-6's own comparison to `jr queue`/`jr
+requesttype`'s existing empty-string pass-through, and its "Jira's response, not `jr`, decides
+whether that is an error" clause, are (informational, inherited -- precedent/rationale for the
+pass-through choice; not independently tested by this story). Everything the cited clause(s) specify is binding in its
 entirety and must be implemented exactly as written there; this story does not restate or
 narrow any of it. Story-specific: the
 two argv cells are part of AC-001's single inline `#[test]` function (no separate test); the

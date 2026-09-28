@@ -662,3 +662,52 @@ untouched):
   omission is actually checked. Added a note naming code review as the enforcement mechanism,
   pointing at the dispatch arm in the entry-point file where such a parameter would (and does
   not) appear.
+
+## 2026-09-28 — F3 adversarial pass-17 fixes (P17-002, P17-005, P17-006) plus a sentence-level sweep
+
+Version bumped 4.3 to 4.4; input-hash left untouched.
+
+- P17-002 (low): two acceptance criteria cited a spec clause as something their own tests
+  implement, when part of that clause is not actually observable by any test. The fourth
+  acceptance criterion cited the invariants clause about reusing the existing config-merge
+  resolution with no new accessor or cache, but its exit-64 tests cannot observe that structural
+  fact; it is now marked informational, enforced by architecture compliance rule row 5 and code
+  review, matching how the ninth acceptance criterion already treats the same clause. The first
+  acceptance criterion cited the fix step about clap's own global-value propagation, including
+  its "no jr-level merge code" half; that half is not something a test can observe either, so it
+  is now marked informational, enforced by architecture compliance rule row 2 and code review
+  (confirmed that rule's wording says exactly this) — the "global fills local" half stays a
+  tested clause, unchanged.
+- P17-005 (cosmetic): the revision history summary said the Red Gate density tally was
+  "unchanged by the pass-14 cosmetic fixes below," but those fixes no longer live below that
+  paragraph — they were moved into this sibling revision-history file in a later pass. Reworded
+  to point at this file by name instead of "below."
+- P17-006 (cosmetic): the frontmatter inputs list was missing `tests/user_pagination.rs`, which
+  the fifth acceptance criterion's task explicitly modifies. Checked the rest of the File
+  Structure Requirements table against the inputs list and found three more files the story
+  modifies that were also missing: `.cargo/mutants.toml`, `docs/specs/cargo-mutants-policy.md`,
+  and `CHANGELOG.md`. Added all four.
+- Sentence-level sweep: went through every acceptance criterion's cited clause tags and checked
+  each sentence or clause within them against the story's tests, following the same pattern the
+  two P17-002 fixes above illustrate — a clause that is only partly testable needs its untestable
+  half explicitly labeled, not left implied by the testable half's citation. Two more gaps of the
+  same shape turned up and were fixed the same way:
+  - The first acceptance criterion's citation of the help-text fix step covered the whole fix
+    step, including two sentences that are pure design rationale (that the new help text is
+    modeled on the component-list command's wording, and why it cannot reuse that wording
+    byte-for-byte). Neither sentence is independently tested by this story or by the eighth
+    acceptance criterion, which owns the pinned string itself. Labeled both sentences
+    informational, as rationale for the pinned string.
+  - The fourth acceptance criterion's citation of the invariants clause also covered a third
+    sentence, about the existing regression test passing once hermetically isolated. That
+    sentence's behavior is tested by the fourth acceptance criterion's own test update, but one
+    piece of it — that a stale code comment must be updated — is not something any test asserts.
+    Labeled that piece informational, enforced by PR code review.
+  - The sixth acceptance criterion's citation of the empty-string edge case covered two more
+    rationale sentences that are not independently tested by this story: the comparison to how
+    two other commands already handle an empty `--project` value, and the point that Jira's own
+    response, not `jr`, decides whether an empty project key is an error. Labeled both
+    informational, as precedent/rationale for the pass-through choice.
+  Everywhere else, the existing citations and their labels already held up under this sweep: no
+  `[CC:]` range was removed, and no acceptance criterion lost coverage of any clause it already
+  owned.

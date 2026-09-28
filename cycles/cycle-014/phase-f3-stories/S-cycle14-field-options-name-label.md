@@ -24,9 +24,11 @@ inputs:
   - "src/types/jira/editmeta.rs"
   - "src/api/jira/issues.rs"
   - "tests/field_options.rs"
+  - "tests/issue_edit_field.rs"
   - "README.md"
   - "CLAUDE.md"
-input-hash: "1b0b27d"
+  - "CHANGELOG.md"
+input-hash: "7779bb3"
 traces_to: "BC-X.14.001, BC-X.14.003, BC-X.14.004"
 cycle: cycle-014-issue-triage-quickfixes
 estimated_effort: medium
@@ -88,7 +90,7 @@ acceptance_criteria_count: 9
 assumption_validations: []
 risk_mitigations: []
 created: "2026-09-26"
-version: "4.3"
+version: "4.4"
 last_updated: "2026-09-28"
 breaking_change: false
 retroactive: false
@@ -132,8 +134,12 @@ mechanically-checked `[CC:...]`/`[SCOPE:...]`/`[EXCLUDE:...]` citation system in
 enforcement mechanism (code citation + PR diff review) for the empty-`<field>`
 guard-before-cache-read ordering and the Invariant 3 mirror obligation, corrected
 `estimated_effort` to match STORY-INDEX/wave-schedule, and removed a stale exact-line-count claim
-from the Token Budget section -- see the revision-history file for the dated entry. This is
-version 4.3 of the story.
+from the Token Budget section. Pass-17 then fixed a pattern of ACs citing `[CC:...]` clauses
+without the binding sentence (AC-006/007/008/009), explicitly classified all four of AC-007's
+`[CC:...]` citations instead of leaving two unclassified under a "both" label, and ran a full
+sentence-level sweep of every `[CC:...]` tag in every AC, adding terse informational labels where
+a cited sentence was not already covered by a named test this AC owns -- see the revision-history
+file for the dated entry. This is version 4.4 of the story.
 
 ## Coverage Scope (D-387)
 
@@ -273,10 +279,19 @@ minus EXCLUDE is inside some AC's `[CC:...]` range) is verified mechanically per
 **Test:** Implements VP-580-013's "What it proves" statement [CC:L3093-3099] and sub-clauses (1)
 (top-level and cascading-child-level example matrices) [CC:L3099-3105], (2) (recursive
 `proptest!`) [CC:L3106-3110], and (3) (serde key-set property) [CC:L3110-3113], plus the fault
-models this AC's tests kill [CC:L3129-3134]. Also implements BC-X.14.001's M1/M2-vs-M3
-key-spelling paragraph's `.value`-falls-back-to-`name` parenthetical (the first #861 amendment
-named in prd-delta.md Item 2) [CC:L2708-2715], the `FieldOption` contract
-amendment [CC:L2728] and `value`-else-`name` fallback paragraph [CC:L2730-2745] and Edge Cases
+models this AC's tests kill [CC:L3129-3134]. The presence-based `Some("")`-wins and
+explicit-null-falls-through sentences embedded in [CC:L3093-3099], and the two EC-X.14.001-12
+cells embedded in [CC:L3099-3105] (the `{"value": ""}` and `{"value": null}` fixtures), are
+AC-002's function 1c, not this AC's own cells -- see AC-002's Test line. Also implements
+BC-X.14.001's M1/M2-vs-M3 key-spelling paragraph's `.value`-falls-back-to-`name` parenthetical
+(the first #861 amendment named in prd-delta.md Item 2) [CC:L2708-2715] (this range's
+id-vs-label key-spelling facts for M1/M2 vs. M3, and its JSM-value-key-naming-collision rationale
+sentence, are informational -- structural/design-rationale, not independently tested beyond the
+fallback rule itself, which functions 1a/1b/2 cover), the `FieldOption` contract
+amendment [CC:L2728] and `value`-else-`name` fallback paragraph [CC:L2730-2745] (this range's
+system-typed-field examples, pre-fix-defect history, and research-gap rationale sentences are
+informational -- background/rationale, not distinct test obligations beyond the value-else-name
+rule already covered by functions 1a/1b/2) and Edge Cases
 EC-X.14.001-7 [CC:L2943-2961], EC-X.14.001-8 [CC:L2964-2968], EC-X.14.001-9 [CC:L2969-2972],
 EC-X.14.001-10 [CC:L2973-2976], and EC-X.14.001-11 [CC:L2977-2981]. Everything each cited range
 specifies is binding in its entirety and must be implemented exactly as written there; this story
@@ -305,7 +320,10 @@ function 2 (RED); clause (3) is function 3
 A wire `"value": ""` (present-but-empty string) wins over a populated `name` -- `label: Some(String::new())`, never falling through to `name` merely because the value string is empty. A wire `"value": null` deserializes to `AllowedValue.value: None`, which DOES fall through to `name`.
 **Test:** Implements VP-580-013 sub-clause (1)'s EC-X.14.001-12 fixtures [CC:L3099-3105] (the two
 `{"value": ...}` cells embedded in clause (1)'s text), BC-X.14.001's EC-X.14.001-12 edge case
-[CC:L2982-2990], and the fault models this AC's tests kill [CC:L3129-3134]. Everything each cited
+[CC:L2982-2990] (this range's "rendered as a blank cell (table) / `""` (JSON)" sentence is
+informational -- `Some("")` renders via ordinary string/JSON serialization with no special-case
+code path, unlike the `None` substitution BC-X.14.003/AC-005 covers, so no dedicated test is
+needed for it), and the fault models this AC's tests kill [CC:L3129-3134]. Everything each cited
 range specifies is binding in its entirety and must be implemented exactly as written there;
 this story does not restate or narrow any of it. Story-specific mapping: lands in
 `src/cli/field.rs`'s `#[cfg(test)]
@@ -334,7 +352,10 @@ PRE-EXISTING-BEHAVIOR`, non-exempt). Also implements BC-X.14.001's "M3 is UNCHAN
 ALREADY CORRECT" paragraph [CC:L2777-2781] via that same function 4, and the "Scope boundary --
 READ-SIDE ONLY, WRITE-side explicitly out of scope [D-378]" paragraph [CC:L2759-2775] via a
 reviewable check, not a runtime test: at PR review, `git diff`
-shows zero changes to `src/cli/issue/field_resolve.rs`.
+shows zero changes to `src/cli/issue/field_resolve.rs`. That paragraph's own reachability
+refutation is separately corroborated by the pre-existing, unmodified regression test
+`tests/issue_edit_field.rs::test_bc_3_4_017_field_priority_without_flag_does_not_trigger_gate_b`
+(verified present), which this story's diff does not touch.
 
 ### AC-005 (traces to BC-X.14.003 UPDATED blockquote, COUNT-NEUTRAL)
 The rendering contract for a `None` label (`"(unnamed)"` in table output, `null` in `--output json`) is byte-for-byte UNCHANGED by this story -- only the upstream normalizer (AC-001) now produces fewer `None` labels for system fields.
@@ -359,14 +380,24 @@ The following stale "custom field" / "`partial_match`" wording is corrected in t
 - `tests/field_options.rs`'s comments (~L1436 section banner, ~L2050)
 - `README.md`'s `jr field options <NAME>` row (~L346)
 - `CLAUDE.md`'s `field.rs` file-tree line (~L61)
-**Test:** N/A (doc-accuracy); presence checked at PR review. This changes `jr field options --help` output text -- cosmetic, not a behavior change.
+**Test:** N/A (doc-accuracy); presence checked at PR review. This changes `jr field options --help` output text -- cosmetic, not a behavior change. Everything the cited clause(s) specify is binding in its entirety and must be implemented exactly as written there; this story does not restate or narrow any of it.
 
 ### AC-007 (traces to prd-delta.md F4 obligation PASS-8, P8-002)
 `tests/field_options.rs::test_bc_x_14_001_field_name_human_name_resolves_via_partial_match` is renamed to a name reflecting `search_field_list` (the actual resolution algorithm -- single exact match auto-resolves; multiple exact -> exit 64; else single substring auto-resolves; multiple substring -> exit 64), and its doc comment is corrected to match.
 **Test:** the renamed test itself, run green. Also implements BC-X.14.001's Behavior paragraph's
-`search_field_list` exact-then-substring algorithm description [CC:L2634-2652], the Preconditions
-bullet's matching `search_field_list`-NOT-`partial_match` correction [CC:L2807-2808], and the same
-correction as it appears in Edge Cases EC-X.14.001-2 [CC:L2915-2915] and EC-X.14.001-6
+`search_field_list` exact-then-substring algorithm description [CC:L2634-2652] (the
+single-exact-match branch is owned by the renamed test itself, per Task 9; the multiple-exact,
+single-substring, and multiple-substring branches are informational -- doc-only correction, no
+behavior change -- pinned by the six `search_field_list` unit tests named below, plus, for the
+multiple-exact/ambiguous branch specifically, the integration-level regression
+`tests/field_options.rs::test_bc_x_14_001_field_name_ambiguous_exits_64` (verified present); this
+range's trailing "Exactly ONE of three MODE-SELECTOR flags... selects the enumeration" fragment is
+pre-existing Invariant-1 mode-selector-arity text, not part of the `search_field_list` algorithm
+description this AC traces to -- out of this AC's scope, covered instead by VP-580-006 elsewhere
+in the spec), the Preconditions bullet's matching `search_field_list`-NOT-`partial_match`
+correction [CC:L2807-2808] (informational -- doc-only correction, no behavior change; existing
+behavior pinned by the same six `search_field_list` unit tests), and the same correction as it
+appears in Edge Cases EC-X.14.001-2 [CC:L2915-2915] and EC-X.14.001-6
 [CC:L2935-2935] (both informational --
 doc-only correction, no behavior change; existing behavior pinned by
 `src/cli/field.rs::test_bc_x_14_001_search_field_list_exact_single_match`, `_case_insensitive`,
@@ -381,7 +412,9 @@ none of the above tests exercise -- a warm cache lacking `<field>` triggers exac
 and a warm-cache ambiguity exits 64 without a refetch (no repository test covers either branch
 directly) -- these two sub-clauses are enforced by the unchanged
 `src/cli/field.rs::resolve_field_id` (~L451-462, verified against current code) plus PR diff
-review (no change to `resolve_field_id` in this story's diff).
+review (no change to `resolve_field_id` in this story's diff). Everything the cited clause(s)
+specify is binding in its entirety and must be implemented exactly as written there; this story
+does not restate or narrow any of it.
 
 ### AC-008 (traces to BC-X.14.001 EC-X.14.001-14 [CC:L3004-3035], informational -- documented for completeness, no dedicated VP cell)
 System-typed field NAME resolution (the step upstream of the label fallback, e.g. resolving the string `"Priority"` to a field id) is pre-existing `search_field_list`/`resolve_field_id` behavior, unaffected by this story's label-resolution fix. No new test is added for this AC; existing `search_field_list` unit tests already cover it as a regression guard.
@@ -389,18 +422,26 @@ System-typed field NAME resolution (the step upstream of the label fallback, e.g
 passing unmodified. Also implements BC-X.14.001 Invariant 3's `customfield_NNNNN` bypass /
 `fields.json` cache-first "mirrored, not shared" description [CC:L2889-2896] and Invariant 4's
 `search_field_list`-vs-`partial_match` description (including the empty-`<field>` exit-64
-ordering recap) [CC:L2897-2909]. Invariant 4's own field-resolution-algorithm claim is
-informational (doc-only correction, no behavior change; existing behavior pinned by
+ordering recap) [CC:L2897-2909]. Invariant 4's field-resolution-algorithm claim
+(exact/substring/multiple-match) is informational (doc-only correction, no behavior change;
+existing behavior pinned by
 `src/cli/field.rs::test_bc_x_14_001_search_field_list_exact_single_match`, `_case_insensitive`,
 `_substring_single_match`, `_zero_match_returns_none`, `_exact_multiple_is_err`,
 `_substring_multiple_is_err`, and
-`tests/field_options.rs::test_bc_x_14_001_customfield_bypass_skips_list_fields`). Invariant 3's
+`tests/field_options.rs::test_bc_x_14_001_customfield_bypass_skips_list_fields`); the
+empty-`<field>` exit-64 ordering recap embedded in the same range is a SEPARATE sub-clause those
+six tests do not exercise -- it is enforced by code citation plus PR diff review, the same
+mechanism AC-009 uses for this identical clause: `src/cli/field.rs::resolve_field_id`'s
+`query.is_empty()` guard precedes its only cache read (verified against current code), and PR
+diff review confirms `resolve_field_id` is unchanged by this story's diff. Invariant 3's
 "mirrored, not shared" relationship to `src/cli/issue/field_resolve.rs::resolve_edit_fields` is a
 cross-file property those unit tests cannot enforce on their own (they only exercise this file's
 own cache-first/bypass behavior, not the other file's). It is enforced the same way AC-004
 already establishes for the adjacent Scope-boundary paragraph: at PR review, `git diff` shows
 zero changes to `src/cli/issue/field_resolve.rs` (which necessarily includes its
-`resolve_edit_fields` fn) -- see AC-004's Test line for that check.
+`resolve_edit_fields` fn) -- see AC-004's Test line for that check. Everything the cited
+clause(s) specify is binding in its entirety and must be implemented exactly as written there;
+this story does not restate or narrow any of it.
 
 ### AC-009 (traces to BC-X.14.001 EC-X.14.001-15 [CC:L3036-3044] and BC-X.14.004's empty-`<field>` error-taxonomy row [CC:L3351], informational -- documented for completeness, no dedicated VP cell)
 The empty-`<field>` guard (`jr field options ""` exits 64 with `Field '' not found. The field name must not be empty.`, zero HTTP calls, zero cache reads) is pre-existing `src/cli/field.rs::resolve_field_id` behavior, unaffected by this story's label-resolution fix. See BC-X.14.004's cross-reference row for the same condition. No new test is added for this AC.
@@ -430,7 +471,9 @@ binds two warm-cache branches that none of the above tests exercise -- a warm ca
 `<field>` triggers exactly one refetch, and a warm-cache ambiguity exits 64 without a refetch (no
 repository test covers either branch directly) -- these two sub-clauses are enforced by the
 unchanged `src/cli/field.rs::resolve_field_id` (~L451-462, verified against current code) plus PR
-diff review (no change to `resolve_field_id` in this story's diff).
+diff review (no change to `resolve_field_id` in this story's diff). Everything the cited
+clause(s) specify is binding in its entirety and must be implemented exactly as written there;
+this story does not restate or narrow any of it.
 
 ## Architecture Mapping
 

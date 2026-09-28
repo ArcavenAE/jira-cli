@@ -38,3 +38,15 @@
 | Step | Skipped? | Justification |
 |------|----------|----------------|
 | Human gate at CYCLE-014-F3-D386-CHECKPOINT-2026-09-28 burst | yes (deliberate, not a gate) | Records F3 adversarial review passes 6 and 7, both NOT CLEAN, plus human decision `D-386` (later superseded in mechanism by `D-387`); clean counter 0/3, gate not concluded. |
+
+---
+
+> Extracted from `.factory/STATE.md`'s `## Skip Log` table during the
+> 2026-09-28 `CYCLE-014-F3-PASS17-CHECKPOINT-2026-09-28` burst (v5.03 ->
+> v5.04), to keep the live table at 4 rows after adding the new
+> `CYCLE-014-F3-PASS17-CHECKPOINT-2026-09-28` row. This was the oldest of
+> the inline rows at that point; archived here verbatim, unedited.
+
+| Step | Skipped? | Justification |
+|------|----------|----------------|
+| Human gate at CYCLE-014-F2-APPROVED-2026-09-26 burst | no | The F2 approval gate genuinely convened and the human rendered an explicit APPROVE ruling ("Approve -> F3", `D-384`). |

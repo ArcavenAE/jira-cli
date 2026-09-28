@@ -624,3 +624,64 @@ Findings fixed directly in the story body (version bumped 4.2 -> 4.3; input-hash
 - P16-009 (cosmetic): one acceptance criterion's closing citation implied a spec line contained a
   particular phrase describing an ordering guarantee as a code-level fact, when that phrase
   actually lives in a different clause the same line only cross-references. Reworded to say so.
+
+## 2026-09-28 -- F3 adversarial pass-17 fixes (P17-003, P17-004, P17-006) plus a sentence-level sweep
+
+Version bumped 4.3 -> 4.4; input-hash left untouched per explicit instruction (see the drift note
+below).
+
+- P17-003 (low): four acceptance criteria (AC-006, AC-007, AC-008, AC-009) cited spec clauses with
+  `[CC:...]` tags but were missing the closing sentence every other cited AC already carries,
+  stating that the whole cited clause is binding and this story does not restate or narrow it.
+  Added that same sentence, verbatim, to all four.
+- P17-004 (low): AC-007's test line listed four spec citations and then said "both informational"
+  right after only the last two, leaving the first two unclassified. Classified all four
+  explicitly: the single-exact-match branch of the first citation is owned by the renamed test
+  itself; the rest of that citation and the other three are informational, doc-only corrections
+  pinned by the six pre-existing `search_field_list` unit tests plus, for the ambiguous-match
+  branch specifically, the pre-existing integration test
+  `tests/field_options.rs::test_bc_x_14_001_field_name_ambiguous_exits_64` -- confirmed both that
+  test and the six unit tests exist before citing them.
+- P17-006 (cosmetic): STORY-C's `inputs:` frontmatter was missing two files it names as regression
+  guards (fixed in that story's own file, not here). Checked STORY-B's `inputs:` the same way,
+  against its own File Structure table and named tests, and found two gaps: `CHANGELOG.md` (listed
+  in the File Structure table) and `tests/issue_edit_field.rs` (named below as a corroborating
+  test). Added both.
+- Sentence-level sweep: read every spec line each `[CC:...]` tag in every acceptance criterion
+  points at, split it into individual sentences, and checked each one lands on a named test this
+  AC owns or an explicit informational label naming the mechanism that covers it instead. Found
+  and labeled six real gaps, all of them sentences embedded inside an already-cited range that
+  quietly assumed coverage they didn't actually have:
+  - AC-001 cited two ranges whose text includes the `Some("")`-wins and explicit-null-falls-through
+    cells -- those cells belong to AC-002's own test function, not AC-001's; labeled the boundary
+    instead of leaving it implied.
+  - AC-001's key-spelling citation also carries a sentence about the M1/M2-vs-M3 id/label key
+    naming and a sentence explaining the JSM naming collision is deliberate, not a bug -- neither
+    is a testable claim beyond the fallback rule itself; labeled both informational.
+  - AC-001's fallback-paragraph citation carries the system-typed-field examples, the pre-fix
+    defect history, and the research-gap explanation -- background and rationale, not separate
+    test obligations; labeled informational.
+  - AC-002's edge-case citation includes a sentence that `Some("")` renders as a blank table cell
+    / empty JSON string -- nothing tests this directly, and nothing needs to: it's ordinary string
+    rendering with no special-case code, unlike the `None` substitution AC-005 already covers.
+    Labeled it that way rather than leaving it silently unproven.
+  - AC-004's scope-boundary citation names a specific pre-existing test in cross-cutting.md's own
+    text as corroborating the write-side-unreachable finding, but AC-004's test line didn't repeat
+    that citation. Added it, and confirmed the test exists.
+  - AC-008 attributed its Invariant-4 citation's empty-field guard-ordering claim to the same six
+    `search_field_list` tests that cover the rest of that citation, but those six tests don't
+    exercise the empty-string path at all -- re-attributed that one sub-clause to the same
+    code-citation-plus-PR-diff-review mechanism AC-009 already uses for the identical text.
+  - AC-007's `search_field_list`-algorithm citation runs a few words into a trailing sentence about
+    mode-selector-flag arity, which is unrelated pre-existing text, not part of the algorithm
+    description this AC traces to. Carved it out explicitly as out of scope.
+  Everything else checked -- AC-001's remaining Edge Case citations, all of AC-002 and AC-003's
+  other citations, AC-004's M3-regression and M3-unchanged citations, AC-005 in full, AC-006's
+  citation, AC-007's `customfield_NNNNN`/warm-cache citations (already labeled from earlier
+  passes), and AC-009 in full -- already had every sentence covered by a named test or an existing
+  informational label; no further gaps found.
+- Drift note: adding `CHANGELOG.md` and `tests/issue_edit_field.rs` to `inputs:` changes what the
+  stored `input-hash` should hash to. Per this pass's explicit instruction not to touch
+  `input-hash`, it was left as-is; the resulting drift (`compute-input-hash` will report a
+  mismatch) is expected and is for state-manager/orchestrator to reconcile, not something this
+  pass tried to paper over.

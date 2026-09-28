@@ -869,3 +869,31 @@ Findings fixed directly in the story body (version bumped 4.2 -> 4.3; input-hash
 - P16-008 (cosmetic): one clause citation's line range included the section's heading line by
   mistake; narrowed it to the actual clause text below the heading.
 
+## 2026-09-28 -- F3 adversarial pass-17 fix (P17-001) plus a full sentence-level sweep
+
+Finding fixed directly in the story body (version bumped 4.3 -> 4.4; input-hash left untouched):
+
+- P17-001 (low): AC-004's claim that AC-008's tests verify the "malformed values are caught
+  before assembly runs" half of a precondition turned out not to hold up -- AC-008's own cells
+  only observe ordering relative to reading the request body and parsing headers, not relative to
+  the query-assembly function itself, so they can't actually see that ordering. Same gap existed
+  on AC-008's side of the same claim. Reworded both to say plainly that this half is a
+  design/structural fact instead of something a test observes, and named the real reason it holds:
+  the assembly function only accepts already-parsed pairs, so the parsing step has to finish
+  first by construction, backed up by code review and by the fact that the all-or-nothing tests
+  prove no request goes out when a value is bad. Also added a named reason for a header-related
+  claim in AC-004 that had none before -- the assembly function's own signature has no place to
+  put a header, and a holdout scenario already checks the header comes through untouched.
+
+  After that fix, did a full pass reading every cited spec line range behind every acceptance
+  criterion in this story, sentence by sentence, to check each one is either tied to a test that
+  can actually see it or explicitly marked as a design fact instead. Found several more sentences
+  that were rationale, external-tool comparisons, or documentation asides with no test tied to
+  them -- a purity claim with nothing pointing at how it's shown true, a note comparing this
+  behavior to another command's flag that isn't re-tested here, a couple of sentences about which
+  file writes an error message rather than what a caller can observe, and a description of some
+  command-line variants that aren't exercised by any test. Added a short, plain-language note next
+  to each one explaining why it doesn't need its own test -- most come down to the code's own
+  shape, or to a test elsewhere in the story that already covers the same ground. Nothing was
+  removed: every line range that was already tied to an acceptance criterion still is.
+

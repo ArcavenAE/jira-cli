@@ -13,7 +13,7 @@ inputs:
   - ".factory/stories/STORY-INDEX.md"
   - ".factory/cycles/cycle-014/cycle-manifest.md"
 traces_to: ".factory/cycles/cycle-014/cycle-manifest.md, D-381"
-input-hash: "75ac276"
+input-hash: "0526478"
 ---
 
 # F3 Extended Dependency Graph -- `issue-triage-quickfixes` (cycle-014)
