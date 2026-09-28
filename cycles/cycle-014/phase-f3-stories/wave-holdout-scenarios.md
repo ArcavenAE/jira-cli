@@ -12,7 +12,7 @@ inputs:
   - ".factory/cycles/cycle-014/phase-f3-stories/S-cycle14-field-options-name-label.md"
   - ".factory/cycles/cycle-014/phase-f3-stories/wave-schedule.md"
 traces_to: "BC-X.7.002; BC-X.16.001/002; BC-X.14.001/003; VP-USER-LIST-PROJECT-001; VP-API-QP-001..006; VP-580-013"
-input-hash: "0b49394"
+input-hash: "11b6743"
 ---
 
 # Wave Holdout Scenarios -- `issue-triage-quickfixes` (cycle-014)
@@ -246,7 +246,8 @@ three mocks, in call order:
    `#[serde(alias = "results")]`, but this literal uses the primary key).
 
 No fourth mock is needed for project resolution itself: `--project FOO` is passed explicitly, so
-`resolve_m2_project` returns it directly without calling `Config::project_key` and issues zero HTTP.
+`resolve_m2_project` calls `config.project_key(Some("FOO"))`, which returns the flag override;
+zero HTTP.
 
 **Expectation:** The JSON output's `label` field for each matching entry is the real name string
 (e.g. `"High"`, `"Highest"`), not `null` -- and `--value high` matches BOTH `"High"` and
@@ -392,8 +393,15 @@ accessor.
 
 **Setup:** Run the existing (pre-cycle-014, unmodified) `jr field options` test suite for a
 CUSTOM select field whose `allowedValues` entries carry `value` only (not `name`) -- the original
-S-580-1 use case, covered by `tests/field_options.rs::createmeta_field_10084` (both entries carry
-`"value"` alongside an explicit `"name": null`) -- and the "neither field present" case, covered
+S-580-1 use case, covered by the tests that consume the `tests/field_options.rs::createmeta_field_10084`
+fixture builder (both entries carry `"value"` alongside an explicit `"name": null`):
+`test_bc_x_14_001_m2_resolves_via_profile_default_project`,
+`test_bc_x_14_001_m2_type_resolution_reused_from_s331`,
+`test_bc_x_14_001_get_createmeta_fields_paginates_all_pages`,
+`test_bc_x_14_001_get_createmeta_fields_continues_pagination_when_total_absent`, and
+`test_bc_x_14_001_get_createmeta_fields_empty_page_terminates_not_infinite_loop` (all in
+`tests/field_options.rs`; `createmeta_field_10084` itself is a fixture builder, not a test) --
+and the "neither field present" case, covered
 by `src/cli/field.rs::test_bc_x_14_001_normalizer_never_drops_degenerate_entries`'s fourth fixture
 entry (`id: None, value: None, name: None`).
 
@@ -426,7 +434,10 @@ every mode-selector and field-name-resolution guard.
 
 **Setup:** `tests/field_options.rs::test_bc_x_14_001_field_name_human_name_resolves_via_partial_match`
 (currently at ~L1534, pre-cycle-014, unmodified) is the OLD name AC-007 renames FROM, not a
-preview of the new name -- AC-007 (`S-cycle14-field-options-name-label.md` ~L401-402) specifies
+preview of the new name -- AC-007 (`S-cycle14-field-options-name-label.md`, § "AC-007") specifies
+**[CORRECTED pass-9, ADV-C14-F3-P9-010: cited by `~L401-402`, which pointed at the Narrative, not
+AC-007 -- story files change often and are cited by heading, never by line, per the standing
+convention]**
 only that the corrected name must reflect `search_field_list` (the actual resolution algorithm),
 not a literal target string. After the AC-007 rename lands, run the renamed test (under whichever
 new name the implementer chooses per that description).

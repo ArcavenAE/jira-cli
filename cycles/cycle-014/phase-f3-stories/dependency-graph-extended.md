@@ -13,7 +13,7 @@ inputs:
   - ".factory/stories/STORY-INDEX.md"
   - ".factory/cycles/cycle-014/cycle-manifest.md"
 traces_to: ".factory/cycles/cycle-014/cycle-manifest.md, D-381"
-input-hash: "4e37518"
+input-hash: "8f9346d"
 ---
 
 # F3 Extended Dependency Graph -- `issue-triage-quickfixes` (cycle-014)
@@ -124,7 +124,7 @@ recommendation as a `depends_on:` edge (see cycle-008's own §4, "S2 -> S4"), cy
   §4, where NO human decision fixed a serial order and the story-writer was free to classify S2->S4
   as editorial-only).
 
-**Conclusion:** all three cycle-014 stories are correctly WAVE-SEPARATED (Wave 1: A: Wave 2: C;
+**Conclusion:** all three cycle-014 stories are correctly WAVE-SEPARATED (Wave 1: A; Wave 2: C;
 Wave 3: B), one story per wave, per D-381. This is a deliberate divergence from cycle-008's
 mostly-parallel Wave 1 shape and is not a story-writer error.
 

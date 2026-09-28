@@ -12,7 +12,7 @@ timestamp: "2026-09-26T00:00:00"
 inputs:
   - ".factory/cycles/cycle-014/phase-f3-stories/dependency-graph-extended.md"
 traces_to: "dependency-graph-extended.md §3, cycle-manifest.md D-381"
-input-hash: "d53687b"
+input-hash: "f749c2d"
 ---
 
 # F3 Wave Schedule -- `issue-triage-quickfixes` (cycle-014)
@@ -30,7 +30,7 @@ SERIAL by human decision (D-381, 2026-09-25 F2 review) -- one story per wave, th
 | Max parallelism (stories in one wave) | 1 |
 | Total story points | 16 (A: 3, C: 8, B: 5) |
 | Critical path (= the entire cycle, since delivery is serial) | A -> C -> B (3 + 8 + 5 = 16 points) |
-| Estimated agent spawns | 3 (one implementer dispatch per story) |
+| Estimated agent spawns (rough per-story estimate, not a hard count) | ~8-10 per story: stub-architect (A and C only -- B has no stub) + test-writer + implementer + the Step 4.5 adversary (at least 3 passes) + demo-recorder + pr-manager + others per `orchestrator-per-story-delivery`; roughly 24-30 total across all three waves |
 
 ---
 
@@ -100,14 +100,14 @@ construction, only one story's diff is ever open against `develop` at a time.
 
 ---
 
-## 3. Pipeline Serialization Plan
+## Pipeline Overlap Plan
 
-Because delivery is strictly serial (D-381), there is no pipeline overlap between waves at all --
-each story's worktree is cut from `develop` only after its predecessor's PR has merged, and no
-story's test-writing or implementation may begin before that merge, even where the two stories'
-own functions have no type dependency on one another:
+There is NO overlap between waves: delivery is strictly serial per D-381, and each story's
+worktree is cut from `develop` only after its predecessor's PR has merged -- no story's
+test-writing or implementation may begin before that merge, even where the two stories' own
+functions have no type dependency on one another:
 
-| Activity | When |
+| Parallel Activity | When |
 |------------------|------|
 | Wave 2 (C) test-writing | MUST NOT start until Wave 1 (A) has merged to `develop` -- C's worktree is cut from `develop` only after A's merge, so no `develop` state exists yet for C's test-writing to build on even though C's own pure functions (`append_query_params`, `parse_query_param`) have no type dependency on A's `resolve_user_list_project` |
 | Wave 2 (C) implementation | MUST NOT start until Wave 1 (A) has merged to `develop` -- C's PR must rebase onto A's landed `.cargo/mutants.toml`/`docs/specs/cargo-mutants-policy.md` count (32->33) before bumping it to 34 |

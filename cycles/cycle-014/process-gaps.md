@@ -7,7 +7,7 @@ producer: state-manager
 timestamp: 2026-09-26T00:01:34Z
 cycle: "cycle-014-issue-triage-quickfixes"
 inputs: [STATE.md]
-input-hash: "4a6659d"
+input-hash: "d028836"
 traces_to: STATE.md
 ---
 
@@ -188,9 +188,23 @@ dispositioned — dispositioning happens at cycle close per S-7.02).
     a per-cycle remediation. Source: `ADV-C14-F3-P3-003`, `P4-003`,
     `P6-003`/`004`, `P7-001`..`004`. Engine-side (vsdd-factory) follow-up.
 
+19. **Story-to-spec coverage was hand-verified.** Manual clause maps
+    drifted, and adversary passes kept finding uncovered or mis-owned
+    clauses (passes 8-10). Engine-side fix: adopt the `D-387` pattern as a
+    standard story-template section plus a bundled coverage-check tool
+    (based on citation tags and the git-diff changed-line set) run before
+    each story adversarial pass. Source: `ADV-C14-F3-P8-004`,
+    `P9-003`/`004`/`007`/`008`, `P10-001`..`007`. Engine-side (vsdd-factory)
+    follow-up.
+
+20. **The story template's Library & Framework Requirements and Previous
+    Story Intelligence sections are MANDATORY tables, but story-writers
+    wrote prose** (`P8-008`, `P9-013`). Add a template-compliance check for
+    the table shape. Engine-side (vsdd-factory) follow-up.
+
 ## Disposition
 
 Not yet dispositioned. F2 is CONVERGED per human decision `D-383` and
 APPROVED at the F2 human gate (`D-384`) — the S-7.02 cycle-closing checklist
-dispositions each of these 18 items when cycle-014 itself closes, not
+dispositions each of these 20 items when cycle-014 itself closes, not
 before.

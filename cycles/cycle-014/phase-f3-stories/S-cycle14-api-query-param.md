@@ -80,7 +80,7 @@ acceptance_criteria_count: 11
 assumption_validations: []
 risk_mitigations: []
 created: "2026-09-26"
-version: "2.0"
+version: "3.0"
 last_updated: "2026-09-28"
 breaking_change: false
 retroactive: false
@@ -351,10 +351,10 @@ origin: >
   The human decided stories must BIND to VP clauses by reference instead of copying them. Effective
   this revision: every AC's **Test:** line (1) names the exact VP clause(s) it implements
   (`VP-API-QP-NNN(x)`, with a `cross-cutting.md` `~line` range), (2) carries the normative sentence
-  "Every cell, setup, argv, expected value/wire value, stderr substring (present AND absent),
-  counter-mock (`.expect(0)`/zero-HTTP), oracle/generator constraint and anti-vacuity assertion in
-  the cited clause(s) is binding and must be implemented exactly as written there; this story does
-  not restate them, and nothing here narrows them.", and (3) retains ONLY story-specific
+  "Everything the cited clause(s) specify is binding in its entirety and must be implemented exactly
+  as written there; this story does not restate or narrow any of it." (category-free wording,
+  pass-9 P9-001 -- supersedes the pass-8 category-enumerated wording; see the P8-006 bullet below,
+  now marked SUPERSEDED), and (3) retains ONLY story-specific
   information: the test file/module each cell lives in, how cells group into `#[test]`/
   `proptest!` functions (the counting unit), and each function's RED/GREEN-at-stub classification.
   The old pin->AC->row checklist is replaced below by a CLAUSE-level map (VP clause id -> owning
@@ -408,103 +408,519 @@ direct-call, in-process tests):** `TOTAL_NEW_TESTS = 44`, `RED_TESTS = 40`, non-
 AC-003 9, AC-004 1, AC-005 2); subprocess cells stay at 22. See Task 10(d)/(e)/(f) below for the
 full recomputation.
 
-## Clause-Level Map (D-386 bind-by-reference; supersedes the old pin -> AC -> row checklist)
+## Revision Note (F3 adversarial pass-8 fixes, LOW/COSMETIC)
 
-This map replaces the pinned-value checklist. It is the single source of "what is covered
-where" -- ACs and Tasks below bind to these clause ids and MUST NOT restate the clause
-content. Built by walking every VP-API-QP-001..006 sub-clause, every BC-X.16.001/002
-postcondition, and every EC-X.16.001-*/EC-X.16.002-* in `.factory/specs/prd/cross-cutting.md`
-exactly once (71 rows total: 38 VP-clause + 8 BC-postcondition + 25 Edge-Case).
+- **P8-003 (LOW):** AC-003's Test line and the Clause-Level Map disagreed on which
+  VP-API-QP-003 clauses the biased `proptest!` carries: AC-003's Test line already said
+  (a)/(b)/(c)/(d), but the Task 10(d) row label said only "(intro)+(a)+(b)", and the map's
+  VP-API-QP-003(c)/(d) rows credited only the pinned-example rows, omitting the `proptest!`
+  itself. Per VP-API-QP-003 (`cross-cutting.md` ~L4070-4091), the (c) encoder-identity and (d)
+  no-trim assertions are both proptest-level assertions the biased `proptest!` itself makes
+  (in addition to each having its own pinned examples) -- confirmed by rereading the clause.
+  Fixed: (1) relabeled the Task 10(d) row to
+  "VP-API-QP-003(intro)+(a)+(b)+(c)+(d) (one biased `proptest!`)"; (2) added
+  "encoding `proptest!` (general assertion)" to the Clause-Level Map's VP-API-QP-003(c) and
+  VP-API-QP-003(d) rows, alongside their existing pinned-example rows.
+- **P8-004 (LOW):** The Edge Case -> Owning AC map assigned EC-X.16.001-1 (`k=`, empty VALUE)
+  to AC-006, but AC-006's Test line cites only VP-API-QP-005(intro)/(2), neither of which has a
+  `k=` cell. The owning clause is VP-API-QP-005(1)'s `Ok` case, whose `rest` "may be empty
+  (EC-X.16.001-1)" (`cross-cutting.md` ~L4324), and VP-API-QP-005(1) is owned by AC-005 per the
+  Clause-Level Map. Fixed: moved EC-X.16.001-1's Owning AC to AC-005 in the Edge Case map, and
+  added `EC-X.16.001-1` to AC-005's trace header (now "traces to BC-X.16.002 Behavior,
+  Postcondition 1, EC-X.16.002-1, EC-X.16.001-1, EC-X.16.001-2"). AC-006's own body note --
+  "An empty VALUE (`k=`) remains ALLOWED per BC-X.16.001 EC-X.16.001-1, never M2" -- is
+  unchanged and remains correct as a cross-reference, not a Test-line ownership claim.
+- **P8-006 (COSMETIC):** The Clause-Level Map's closing sentence claimed every VP clause, BC
+  postcondition, and Edge Case "is owned by exactly one AC," which is false -- several rows
+  (e.g. VP-API-QP-005(intro), VP-API-QP-005(2), VP-API-QP-005(fault-models),
+  VP-API-QP-006(fault-models)) list 2-3 owning ACs. Fixed the sentence to "owned by at least one
+  owning AC." Also recounted every "(killed collectively by the N rows above)" tally in the VP
+  Clause table against the actual row counts: VP-API-QP-001(fault-models) said "7 rows above"
+  but 8 rows (equation, EC-4, EC-5, empty-query-frag, EC-8, EC-9, EC-12, EC-14) precede it --
+  fixed to 8. VP-API-QP-003(fault-models) said "8 rows above" but 7 rows (intro, (a), (b), (c),
+  (d), (e), further-pinned) precede it -- fixed to 7 (row count unchanged by the P8-003 edits
+  above, which only changed cell text, not row count). While recounting, also found
+  VP-API-QP-002(fault-models) said "5 rows above" but 6 rows (oracle, generator-constraint,
+  pinned-decode-example, argv-EC-13, argv-repeated-flags, argv-mixed) precede it -- fixed to 6
+  (not separately reported by pass-8 adversarial review, but the same class of error, caught by
+  the recount pass this finding required).
+- **Consistency sweep (pass-8):** Cross-checked every AC header's/Test line's VP-clause and EC
+  citations against the Clause-Level Map and Edge Case -> Owning AC map (both directions) --
+  no further mismatches found beyond P8-004's EC-X.16.001-1 case. Diffed all 9 AC **Test:**
+  binding sentences (`grep`-style, whitespace-normalized) against each other: all 9 were
+  textually identical except AC-009's (which correctly uses singular "clause" rather than
+  "clause(s)," since AC-009 cites exactly one VP clause -- not a narrowing, a grammatical
+  accommodation) -- **but all 9, plus the D-386 definition sentence that introduced the
+  wording, omitted "exit code" from the category list, even though `handle_api`'s pre-flight
+  exit-64-vs-exit-2 distinction is load-bearing throughout VP-API-QP-005/006 (e.g.
+  EC-X.16.002-8/-10's exit 2 vs. EC-X.16.002-5/6/7/9's exit 64).** Fixed by inserting
+  "exit code," into the canonical sentence (after "expected value/wire value," and before
+  "stderr substring") at all 10 occurrences: the D-386 definition (Revision Note above) and
+  all 9 AC Test lines (AC-001..AC-009) -- the sentence now reads "...expected value/wire value,
+  exit code, stderr substring (present AND absent)...", and none of the 10 occurrences narrows
+  by omitting any category. **SUPERSEDED by pass-9 (P9-001):** the category-enumerated sentence
+  this bullet fixed and quotes above (both its pre-fix and post-fix forms) was itself replaced
+  story-wide by a category-free binding sentence -- see the D-386 Revision Note above and every
+  AC's current **Test:** line for the wording now in force. This bullet remains as a historical
+  record of the pass-8 fix; its quoted sentence text is no longer the story's current wording.
+- **P8-004 follow-up (LOW):** P8-004's own fix (above) carried forward a pre-existing
+  "Postcondition 1" citation in AC-005's trace header/body that the BC Postcondition -> Owning AC
+  map has always assigned solely to AC-008 (pre-flight ordering) -- AC-005's actual content is
+  `parse_query_param`'s M1/M2 taxonomy, which is BC-X.16.002's Behavior clause, not a
+  Postcondition. AC-006's trace header carried the identical spurious "Postcondition 1" citation
+  (its body never claimed Postcondition 1 -- only Behavior's M2 row and Postcondition 2, matching
+  the map). Fixed: removed "Postcondition 1" from AC-005's header and its body's clause list/line
+  range (now cites only Behavior, ~L4131-4140, "see that clause"/"does not narrow it," singular),
+  with an explicit body note that Postcondition 1 belongs to AC-008; removed "Postcondition 1"
+  from AC-006's header (its body was already correct and unchanged). The BC Postcondition ->
+  Owning AC table required no change -- it never listed AC-005 or AC-006 against Postcondition 1,
+  so this fix makes the AC headers/bodies consistent with it rather than the reverse. Reswept
+  every other AC's BC-postcondition citations against the table (AC-001 Postcondition 2,
+  AC-002 Postcondition 4, AC-003 Postcondition 3, AC-004 Postconditions 1/5, AC-007
+  Postcondition 3, AC-008 Postcondition 1) -- all match their sole table owner; no further
+  mismatches found.
 
-### VP Clause -> Owning AC -> Owning Task 10(d) function(s)
+## Revision Note (F3 adversarial pass-9 fixes, LOW/MEDIUM/COSMETIC)
 
-| VP Clause | cross-cutting.md ~line | Owning AC | Owning Task 10(d) function(s) |
-|---|---|---|---|
-| VP-API-QP-001(equation) | ~L4007-4015 | AC-001 | Task 2 / AC-001, separator-oracle `proptest!` |
-| VP-API-QP-001(EC-4) | ~L4023 | AC-001 | Task 2 / AC-001, EC-4 row |
-| VP-API-QP-001(EC-5) | ~L4018-4019, 4023 | AC-001 | Task 2 / AC-001, EC-5 row |
-| VP-API-QP-001(empty-query-frag) | ~L4020, 4024-4025 | AC-001 | Task 2 / AC-001, empty-query-plus-fragment row |
-| VP-API-QP-001(EC-8) | ~L4023 | AC-001 | Task 2 / AC-001, EC-8 row (both forms, one test) |
-| VP-API-QP-001(EC-9) | ~L4013-4014, 4023 | AC-001 | Task 2 / AC-001, EC-9 row |
-| VP-API-QP-001(EC-12) | ~L4021-4022, 4025 | AC-001 | Task 2 / AC-001, EC-12 row |
-| VP-API-QP-001(EC-14) | ~L4012, 4025 | AC-001 | Task 2 / AC-001, EC-14 row |
-| VP-API-QP-001(fault-models) | ~L4026-4031 | AC-001 | Task 2 / AC-001 (killed collectively by the 7 rows above) |
-| VP-API-QP-002(oracle) | ~L4032-4041 | AC-002 | Task 3 / AC-002, repeated-names `proptest!` |
-| VP-API-QP-002(generator-constraint) | ~L4042-4048 | AC-002 | Task 3 / AC-002, repeated-names `proptest!` (second, anti-vacuity assertion, same fn) |
-| VP-API-QP-002(pinned-decode-example) | ~L4049-4050 | AC-002 | Task 3 / AC-002, decode-example row |
-| VP-API-QP-002(argv-EC-13) | ~L4050-4054 | AC-002 | Task 3 / AC-002, EC-13 row |
-| VP-API-QP-002(argv-repeated-flags) | ~L4055-4059 | AC-002 | Task 3 / AC-002, repeated-flags row |
-| VP-API-QP-002(argv-mixed) | ~L4059-4062 | AC-002 | Task 3 / AC-002, mixed row |
-| VP-API-QP-002(fault-models) | ~L4063-4069 | AC-002 | Task 3 / AC-002 (killed collectively by the 5 rows above) |
-| VP-API-QP-003(intro) | ~L4070-4072 | AC-003 | Task 4 / AC-003, encoding `proptest!` |
-| VP-API-QP-003(a) | ~L4073-4075 | AC-003 | Task 4 / AC-003, encoding `proptest!` (round-trip assertion) |
-| VP-API-QP-003(b) | ~L4076-4077 | AC-003 | Task 4 / AC-003, encoding `proptest!` (alphabet assertion) |
-| VP-API-QP-003(c) | ~L4078-4080 | AC-003 | Task 4 / AC-003, `*`->`%2A` row + space->`%20` row |
-| VP-API-QP-003(d) | ~L4081-4083 | AC-003 | Task 4 / AC-003, no-trim rows (2) |
-| VP-API-QP-003(e) | ~L4084-4087 | AC-003 | Task 4 / AC-003, `--help` row (`tests/api_query_param.rs`) |
-| VP-API-QP-003(further-pinned) | ~L4087-4089 | AC-003 | Task 4 / AC-003, `%`/`+`/`é`/literal-`%25` rows (4) |
-| VP-API-QP-003(fault-models) | ~L4089-4091 | AC-003 | Task 4 / AC-003 (killed collectively by the 8 rows above) |
-| VP-API-QP-004(structural) | ~L4092-4094 | AC-004 | Task 5 / AC-004, table-driven method-orthogonality row |
-| VP-API-QP-004(1) | ~L4098-4101 | AC-004 | Task 5 / AC-004, zero-flag identity `proptest!` |
-| VP-API-QP-004(2) | ~L4101-4106 | AC-004 | Task 5 / AC-004, zero-flag wiremock examples (2 rows) |
-| VP-API-QP-004(fault-models) | ~L4106-4108 | AC-004 | Task 5 / AC-004 (killed collectively by the 3 rows above) |
-| VP-API-QP-005(intro) | ~L4307-4316 | AC-005 / AC-006 | Task 6 (pinned M1/M2 messages, D1/D2 substrings apply to both ACs) |
-| VP-API-QP-005(1) | ~L4317-4326 | AC-005 | Task 6 / AC-005, partition `proptest!` + pinned `parse_query_param("")` example |
-| VP-API-QP-005(2) | ~L4327-4331 | AC-005 / AC-006 | Task 6 / AC-005 wiremock `-q foo` row; AC-006 wiremock `-q =v` row + json-envelope row |
-| VP-API-QP-005(3) | ~L4332-4356 | AC-009 | Task 9 / AC-009, EC-5..10 rows |
-| VP-API-QP-005(fault-models) | ~L4357-4362 | AC-005 / AC-006 / AC-009 | Task 6 + Task 9 (killed collectively by the rows above) |
-| VP-API-QP-006(i) | ~L4366-4367 | AC-007 | Task 7 / AC-007, all-or-nothing rows (2) |
-| VP-API-QP-006(ii) | ~L4368-4369 | AC-007 | Task 7 / AC-007, first-malformed rows (2) |
-| VP-API-QP-006(iii) | ~L4370-4384 | AC-008 | Task 8 / AC-008, held-open-stdin row |
-| VP-API-QP-006(iv) | ~L4385-4386 | AC-008 | Task 8 / AC-008, before-`-H` row |
-| VP-API-QP-006(fault-models) | ~L4387-4389 | AC-007 / AC-008 | Task 7 + Task 8 (killed collectively by the rows above) |
+- **P9-001 (category-free binding sentence, MEDIUM):** The pass-8 canonical binding sentence
+  enumerated a fixed category list ("cell, setup, argv, expected value/wire value, exit code,
+  stderr substring (present AND absent), counter-mock (`.expect(0)`/zero-HTTP), oracle/generator
+  constraint and anti-vacuity assertion") that, across passes 3-8, repeatedly proved incomplete --
+  each pass found the enumeration silently omitting a category the cited clauses actually bind
+  (most recently "exit code" at pass-8), and P9-001 itself was opened because "stdout" (the
+  `--output json` empty-stdout requirement) was ALSO missing from the list. Rather than continue
+  patching the enumeration one omission at a time, the category list is retired entirely. Fixed by
+  replacing the canonical sentence, at all 10 occurrences (the D-386 definition and all 9 AC
+  **Test:** lines, AC-001..AC-009), with the category-free wording: "Everything the cited
+  clause(s) specify is binding in its entirety and must be implemented exactly as written there;
+  this story does not restate or narrow any of it." This closes the whole defect class -- there is
+  no longer a list for a future pass to find an omission in. The pass-8 P8-006 bullet (above),
+  which quotes the now-superseded category-enumerated sentence as the record of its own fix, is
+  marked SUPERSEDED in place rather than edited, preserving the historical record of what that fix
+  actually changed at the time.
+- **P9-003 (VP-API-QP-004(structural) ownership conflict, MEDIUM):** AC-004's **Test:** line
+  assigned VP-API-QP-004(structural) to "ONE `proptest!` function" (bundled with the (1) zero-flag
+  identity property), while the Clause-Level Map and Task 10(d)'s per-cell enumeration both
+  already assigned it to the table-driven method-orthogonality wiremock test -- a real,
+  cross-referenced disagreement about which test function is responsible for the structural
+  clause. Rereading VP-API-QP-004 (`cross-cutting.md` ~L4092-4098): "Structural" is a signature
+  fact (`append_query_params` takes no method/body parameter) immediately followed, in the same
+  clause, by the table-driven wiremock test that is its only runtime check (including the
+  request-body assertion). The table-driven test is therefore the correct sole owner -- matching
+  the Map and Task 10(d), not AC-004's prior wording. Fixed by rewriting AC-004's **Test:** line to
+  assign VP-API-QP-004(structural) to the table-driven wiremock test and VP-API-QP-004(1)
+  (zero-flag identity) to its own separate `proptest!` function, agreeing with the Map and Task
+  10(d) (which required no change to their own row assignments, only to AC-004). Also widened the
+  Map's VP-API-QP-004(structural) row from `~L4092-4094` to `~L4092-4098` so its cited range
+  actually covers the method x `-d` matrix and the request-body assertion sentence, not just the
+  one-sentence structural fact. Walked all of VP-API-QP-004 (`~L4092-4108`) against the Map's four
+  rows (structural `~L4092-4098`, (1) `~L4098-4101`, (2) `~L4101-4106`, fault-models
+  `~L4106-4108`) -- the union covers the full clause with no gap.
+- **P9-004 (VP-API-QP-005(intro) undercited, LOW):** VP-API-QP-005(intro) (`cross-cutting.md`
+  ~L4307-4316) is where the M1/M2 pinned messages and their D1/D2 distinguishing substrings are
+  DEFINED. AC-007's cited VP-API-QP-006(ii) reports outcomes as "M1 naming `foo`" / "M2 naming
+  `=v`" (D2/D1 absent); AC-008's cited VP-API-QP-006(iii)/(iv) assert on D1 and report M1; AC-009's
+  cited VP-API-QP-005(3) is built entirely out of M1/M2/D1/D2 cells -- all three ACs used these
+  terms without citing the clause that defines them, so the D-386 bind-by-reference discipline
+  (nothing is binding unless its defining clause is cited) left the definitions themselves
+  technically uncited for those ACs. Fixed by adding VP-API-QP-005(intro) to AC-007's, AC-008's,
+  and AC-009's **Test:** line citations (each with a one-line rationale naming which term each AC
+  consumes), and by listing AC-007/008/009 as consumers in the Map's VP-API-QP-005(intro) row
+  (previously AC-005/AC-006 only). AC-009 now cites two clauses, so its **Test:** line switches
+  from the pass-8 singular-clause grammatical accommodation to the ordinary plural "clause(s)"
+  form used by every other AC. **General check performed:** swept every other AC's cited clauses
+  for a term defined elsewhere (an intro/definitions block) without that defining clause also
+  being cited -- VP-API-QP-001/002/003/004 are each self-contained (no M1/M2/D1/D2 or other
+  cross-clause terms), so no further citations were needed.
+- **P9-006b + restatement sweep (LOW/COSMETIC):** Task 10(a2)'s AC-004 zero-flag-exemption bullet
+  restated VP-API-QP-004(2)'s pinned argv (`jr api rest/api/3/myself`, `jr api
+  "/rest/api/3/search?jql=a&"`) and, in doing so, dropped the clause's own "for each HTTP method"
+  qualifier -- a restatement that had already gone stale relative to its source. Fixed by
+  replacing the restated argv with a citation to VP-API-QP-004(2). A sweep of the rest of the
+  Tasks section, the Clause-Level Map, and Task 10(d)'s per-cell enumeration table for the same
+  defect class (inline restatement of VP/BC argv, expected values, mock setups, or oracle
+  descriptions) found and fixed five more spots: Task 9's EC-9 attached-empty-variant argv list
+  and its EC-7/EC-6 byte-identical-stderr argv, both replaced with clause citations; the Map rows
+  for VP-API-QP-003(c) (`*`->`%2A`/space->`%20`), VP-API-QP-003(further-pinned)
+  (`%`/`+`/`é`/literal-`%25`), and VP-API-QP-005(2) (`-q foo`/`-q =v`), all reworded to cite the
+  clause instead of quoting the pinned characters/argv; and Task 10(d)'s own VP-API-QP-003(c) and
+  VP-API-QP-003(further-pinned) rows, which quoted the same pinned characters and are now
+  numbered ("pinned example 1 of 2", etc.) without restating them, plus its VP-API-QP-005(2)
+  wiremock-cell rows, reworded from `-q foo`/`-q =v` to "M1 cell"/"M2 cell" (terms
+  VP-API-QP-005(intro) defines, not a restatement of argv). Two exceptions were preserved, per
+  instruction: (1) the BC-pinned help-text substring `"do not pre-encode"` in Task 1 (a literal
+  the stub-architect needs verbatim to know what NOT to write, not a restatement of test content);
+  (2) the three explicit P7-004 proptest constraints in Tasks 3/4/6 (VP-API-QP-002
+  (generator-constraint), VP-API-QP-003(a) round-trip, VP-API-QP-005(1) `prop_assume!` filter),
+  each of which already cited its clause and now additionally ends "(stated for emphasis; the
+  clause governs)" to mark it as reinforcement, not an independent restatement. No test cell,
+  count, or tally changed -- this is a labels-and-citations-only sweep, symmetric with the
+  D-386 restructure's own scope note.
+- **P9-011 (Task 1 cross-reference, LOW):** Task 1's stub constraint for the `--help` cell's
+  pinned substring cited "(Task 10(a))" as the section proving that cell is RED at stub -- but
+  Task 10(a) is the denominator-exempt (WIRING-EXEMPT) section, and the `--help` cell is not
+  exempt; it is RED-at-stub, classified in Task 10(b) ("every other new test cell... fails") and
+  enumerated in Task 10(d)'s per-cell table. Fixed by changing the cross-reference to "(Task
+  10(b)/(d))". AC-009's own, unrelated reference to "Task 10(a)" (for its genuinely WIRING-EXEMPT
+  EC-8/EC-10 cells) was left unchanged -- that one is correct as written.
+- **P9-013 (Library & Framework Requirements table format, COSMETIC):** The "Library & Framework
+  Requirements" section was prose, not the `| Tool | Version | Purpose |` table the story template
+  (`templates/story-template.md`) requires. Fixed by converting it to that table (one row for
+  `urlencoding`, one row for `url`), retaining the "no new dependency" and
+  `url::form_urlencoded::byte_serialize`-forbidden notes as trailing prose.
+- **Tallies re-verified unchanged (post-sweep):** `TOTAL_NEW_TESTS = 44`, `RED_TESTS = 40`,
+  `GREEN-nonexempt = 2`, `EXEMPT_TESTS = 2` (Task 10(e)); direct-call cells `22`, subprocess cells
+  `22` (the "Recomputed after the sweep" note above and Task 10(f)); every Clause-Level Map
+  "killed collectively by the N rows above" count re-checked against its row group: VP-API-QP-001
+  8 rows, VP-API-QP-002 6 rows, VP-API-QP-003 7 rows, VP-API-QP-004 3 rows -- all unchanged, since
+  this pass only edited row TEXT (line ranges, ownership, citation wording), never added, removed,
+  or reclassified a row or a test cell.
 
-### BC Postcondition -> Owning AC
+## Revision Note (D-387 mechanical-coverage restructure + pass-10 fixes, MEDIUM/LOW/COSMETIC)
 
-| BC Postcondition | cross-cutting.md ~line | Owning AC |
-|---|---|---|
-| BC-X.16.001 Postcondition 1 (zero-flag identity) | ~L3876-3879 | AC-004 |
-| BC-X.16.001 Postcondition 2 (separator algorithm) | ~L3880-3891 | AC-001 |
-| BC-X.16.001 Postcondition 3 (encode exactly once) | ~L3892-3895 | AC-003 |
-| BC-X.16.001 Postcondition 4 (repeated params, flag order) | ~L3896-3897 | AC-002 |
-| BC-X.16.001 Postcondition 5 (method/body independence) | ~L3898-3900 | AC-004 |
-| BC-X.16.002 Postcondition 1 (pre-flight ordering) | ~L4178-4189 | AC-008 |
-| BC-X.16.002 Postcondition 2 (`--output json` envelope) | ~L4190-4195 | AC-006 |
-| BC-X.16.002 Postcondition 3 (all-or-nothing) | ~L4196-4199 | AC-007 |
+- **D-387 (human decision, mechanical-coverage restructure):** The D-386 restructure above (pass-7)
+  replaced the pinned-value checklist with a hand-written "Clause-Level Map" (VP Clause -> Owning AC
+  -> Owning Task 10(d) function(s), plus a BC Postcondition -> Owning AC table and an Edge Case ->
+  Owning AC table), closing with the claim that "every VP clause, BC postcondition, and Edge Case
+  above appears in exactly one map row... and is owned by at least one owning AC" (formerly ~L673 in
+  this document's pre-D-387 line numbering). That map itself then repeatedly drifted from the AC
+  **Test:** lines it was meant to summarize across passes 8 and 9 (see P8-003, P8-004, P8-006,
+  P9-003, P9-004, and P9-006b above) -- the same self-attested-completeness problem the D-386
+  restructure was originally meant to solve for the pre-D-386 pinned-value checklist. The human
+  decided the map itself must be deleted, not merely re-corrected again: **SUPERSEDED BY D-387** --
+  the "Clause-Level Map" section (VP Clause -> Owning AC -> Owning Task 10(d) table, BC Postcondition
+  -> Owning AC table, Edge Case -> Owning AC table) and its closing "exactly one map row... owned by
+  at least one owning AC" claim no longer exist in this document and must not be relied upon; every
+  reference to "the Clause-Level Map" in the pass-3 through pass-9 Revision Notes above is a
+  historical record of a fix made to a section that has since been deleted, not a live pointer. AC
+  citations are now the SOLE source of ownership, recorded inline as CC tags (each citing a
+  `cross-cutting.md` line range) on every `cross-cutting.md` citation inside every `### AC-NNN`
+  section; coverage (every line of the BC-X.16.001/BC-X.16.002/VP-API-QP-001..006 region minus
+  non-normative headings/blanks/metadata is inside some AC's CC-tag range) is intended to be
+  verified mechanically against those tags, per the new "Coverage Scope (D-387)" section below
+  (which enumerates the region as SCOPE/EXCLUDE spans) -- replacing the hand-maintained map with a
+  format a script can check.
+  This restructure changes LABELS and CITATION FORMAT only -- no test cell is added, removed, or
+  reclassified, and the density tally (`TOTAL_NEW_TESTS = 44`, `RED_TESTS = 40`,
+  `GREEN-nonexempt = 2`, `EXEMPT_TESTS = 2`, `RED_RATIO = 40 / 42 ~= 0.952`) and the direct-call/
+  subprocess split (22/22) are unchanged from the pass-9 recomputation above; re-verified below.
+- **P10-002/P10-007/P10-008 (ownership gaps, MEDIUM):** The pre-D-387 map covered only VP clauses,
+  BC postconditions, and Edge Cases -- it never assigned an owning AC to BC-X.16.001's Preconditions
+  (~L3868-3873) or Invariants (~L3902-3915), to BC-X.16.002's Preconditions (~L4169-4176), or to the
+  VP-API-QP-001..004 shared preamble (~L4002-4006) / VP-API-QP-005(intro) (~L4308-4316) /
+  VP-API-QP-006 intro (~L4363-4365), leaving these clauses uncited by any AC despite being binding
+  BC/VP content. Fixed by adding CC-tag citations for all of these to the owning AC bodies/Test
+  lines below: BC-X.16.001 Precondition 1 (normalize_path assumption) and Invariants 1 (purity) and
+  4 (guarantee scope: "strictly before the RequestBuilder" is Invariant 2, owned by AC-004; "never a
+  second `?`, never `&` after empty/&-terminated" is Invariant 4, owned by AC-001) -> AC-001;
+  BC-X.16.001 Precondition 2 (well-formed values deferred) and Invariant 2 (before RequestBuilder)
+  -> AC-004; BC-X.16.001 Invariant 3 (encoder identity, `byte_serialize` forbidden) -> AC-003 (best
+  content fit; the encoding-forbidden invariant is AC-003's domain, not AC-001's/AC-004's);
+  BC-X.16.002 Preconditions -> AC-008; the shared VP preamble (~L4002-4006) -> AC-001; the
+  VP-API-QP-006 intro (~L4363-4365) -> AC-007 and AC-008 (both already reference it informally; now
+  tagged).
+- **VP-API-QP-001 strategy-range fix (part of the D-387 restructure):** the pre-D-387 map cited
+  AC-001's separator-oracle clauses as a fragmented set of discontinuous line references (e.g.
+  `~L4018-4019, 4023` for EC-5, `~L4013-4014, 4023` for EC-9), one of the drift sources P8-006's
+  recount caught. AC-001's citation range for the equation-plus-strategy paragraph is now ONE
+  contiguous span, line 4007-4023 (equation through the start of the pinned-examples list),
+  paired with a second contiguous span, line 4024-4031 (the rest of the pinned examples plus
+  fault-models) -- together spanning the clause with no gap, replacing the fragmented per-EC ranges.
+- **P10-003 (MEDIUM):** AC-004's Ownership (P9-003) paragraph said VP-API-QP-004(structural)'s "only
+  runtime check is the request-body assertion (the `-d` input equals the received body, never moved
+  into the query)" -- this narrows the clause, which ALSO asserts identical received query pairs for
+  every method (not just the body-vs-query independence). Fixed by deleting that restating clause;
+  AC-004 now cites VP-API-QP-004(structural) by CC-tag reference only and says "see that clause
+  for its full runtime-check requirements... this AC does not restate or narrow any of them," and
+  the redundant restatement in AC-004's **Test:** line intro (which repeated the same request-body
+  clause fragment) is removed for the same reason.
+- **P10-009 (verified, no change):** AC-002 traces EC-X.16.001-12 in its header
+  (`EC-X.16.001-12/13`) alongside AC-001 (`EC-X.16.001-4/5/8/9/12/14`). Both header citations are
+  deliberate, not a duplicate-ownership bug: EC-12 (NAME collision, no dedup/override) is relevant
+  both to AC-001's separator algorithm (the pre-existing pair is kept verbatim) and to AC-002's
+  repeated-names semantics (the new pair is neither deduped nor overridden). Line 3978-3988's
+  ownership for coverage purposes stays with AC-001 (matching the pre-D-387 map's assignment);
+  AC-002's header mention remains a cross-reference, not a second ownership claim -- the same
+  pattern P8-004 already established for EC-X.16.001-1's AC-006 cross-reference vs. AC-005 ownership.
+- **P10-014 (COSMETIC):**
+  - AC-003 attributed the `--help` pin to "(D-380, settled 2026-09-25)"; fixed to cite BC-X.16.001
+    Behavior 3's own pinned-substring sentence, line 3845-3852, instead.
+  - AC-002's "Behavior 1 intro, ~L3797-3802" is corrected to "Behavior intro" citing line
+    3797-3805 -- the flag-declaration paragraph is the shared intro before Behavior 1-5, not part
+    of Behavior 1 itself, and its full extent runs through L3805, not L3802.
+  - AC-009 said clap "feeds `parse_query_param` per EC-X.16.002-5..10" -- but EC-8 and EC-10 are
+    clap-level exit-2 rejections that never reach `parse_query_param`. Reworded to say EC-5/6/7/9
+    are fed through to `parse_query_param` while EC-8/EC-10 are rejected by clap itself first.
+- **P10-016 (COSMETIC):** Every wiremock-backed and held-open-stdin-with-hermetic-mocks cell in
+  `tests/api_query_param.rs` was labeled `#[test]`; per this repo's convention (verified against
+  `tests/rate_limit_holdouts.rs`, `tests/attachment_download.rs`, `tests/api_client.rs`, etc.), any
+  test function that calls `MockServer::start().await` (wiremock) must be an async `#[tokio::test]`,
+  not a sync `#[test]` -- plain `#[test]` is reserved for cells with no async runtime need (e.g.
+  AC-003's `--help` cell, which needs no wiremock, and AC-005's/AC-006's direct-call
+  `parse_query_param` unit tests in `src/cli/api.rs`, which are pure function calls). Fixed by
+  relabeling every wiremock/hermetic-mock cell across AC-002 (3 argv cells), AC-004 (table-driven
+  method-orthogonality test + 2 zero-flag wiremock examples), AC-005 (`-q foo` wiremock cell), AC-006
+  (`-q =v` wiremock cell + `--output json` envelope cell), AC-007 (4 cells), AC-008 (held-open-stdin
+  cell + before-`-H` cell, both of which run inside the same hermetic wiremock environment per
+  VP-API-QP-006(iii)/(iv)'s own text), and AC-009 (6 cells, per VP-API-QP-005(3)'s "every mock
+  `.expect(0)`" requirement) to `#[tokio::test]`. This is a label-only fix -- no cell, count, RED/
+  GREEN classification, or density tally changes; Task 10(d)/(e)/(f) and the Tasks section (which
+  already say "wiremock test"/"wiremock cell" in prose without committing to a specific attribute)
+  are unaffected. **CORRECTED by P10-017 below:** this "unaffected" claim was itself wrong -- Task
+  9's prose and one Task 10(d) table row DID commit to the `#[test]` attribute for AC-009 and
+  AC-006 wiremock cells respectively; see P10-017.
+- **P10-010 (token budget, MEDIUM):** The Token Budget Estimate table's "This story spec" row said
+  `~3,600`, understating this file's actual size by more than an order of magnitude -- the file is
+  ~1,170 lines and measures at ~45,200 tokens via the project's own file-read tooling. Fixed by
+  recomputing the table honestly: `~45,200` for the story spec, `~50,700` total, `~25%` of a 200K
+  context window -- still within this agent's own 20-30% ceiling for a single story, but no longer a
+  roughly 5x understatement of it. See the Token Budget Estimate section below.
+- **Tallies re-verified unchanged (post-D-387):** `TOTAL_NEW_TESTS = 44`, `RED_TESTS = 40`,
+  `GREEN-nonexempt = 2`, `EXEMPT_TESTS = 2` (Task 10(e)); direct-call cells `22`, subprocess cells
+  `22` (Task 10(f)) -- none of the D-387/pass-10 fixes above (map deletion, CC-tag citation
+  format, ownership-gap fixes, `#[tokio::test]` relabeling, token-budget recompute) add, remove, or
+  reclassify a test cell; Task 10(d)/(e)/(f) are unchanged from the pass-9 recomputation.
+- **P10-017 (independent coverage-check follow-through, MEDIUM/LOW/COSMETIC):** an independent
+  coverage check of this D-387 restructure found four residual defects, all fixed below, in the
+  same label-only/citation-only spirit as the rest of this pass -- no test cell, count, RED/GREEN
+  classification, or density tally changes anywhere in this bullet:
+  1. **Misplaced CC tags (LOW):** the CC-tag bracket-colon citation syntax is reserved for real,
+     mechanically-checkable citations inside `### AC-NNN` sections (and, symmetrically, the SCOPE/
+     EXCLUDE bracket-colon syntax is reserved for the real per-clause line-range entries in the
+     Coverage Scope section below); several bullets in this Revision Note and the Coverage Scope
+     section's own intro paragraph used that same bracket-colon syntax as descriptive/placeholder
+     prose instead, which a mechanical scanner could misread as additional (bogus) citations or
+     SCOPE/EXCLUDE entries. Reworded every such placeholder occurrence in this Revision Note and in
+     the Coverage Scope intro/closing prose to plain "CC tags" / "line NNN-MMM" / "SCOPE"/"EXCLUDE"
+     wording with no brackets; the real, mechanically-checked CC-tag citations inside the
+     `### AC-NNN` sections below and the real SCOPE/EXCLUDE line-range entries in the Coverage
+     Scope per-clause lists are untouched.
+  2. **Two suspect EXCLUDE entries were actually normative SCOPE content (MEDIUM):** the EXCLUDE
+     entries for line 3865-3866 (the BC-X.1.007/BC-X.1.011 no-regression cross-reference) and line
+     4142-4145 (the BC-X.16.002 M1/M2 Condition/Behavior table) both stated binding requirements,
+     not non-normative provenance/heading/blank-line filler -- the EXCLUDE reason given for each
+     ("describes pre-existing behavior, not a new clause" / "non-normative restatement, not new
+     content") does not meet the EXCLUDE bar. Both are reclassified to SCOPE in the Coverage Scope
+     section below and each now carries an owning AC citation: line 3865-3866 is cited by AC-004
+     (the AC whose table-driven method-orthogonality test is this story's existing verification
+     vehicle for that no-regression guarantee), and line 4142-4145 is cited by both AC-005 and
+     AC-006 (the two ACs that already own BC-X.16.002's M1 and M2 rows respectively).
+  3. **"35 exclusions" recount (LOW):** a naive whole-file search for the EXCLUDE-tag pattern
+     returned 35, but 2 of those 35 hits were the placeholder-prose occurrences fixed in fix 1
+     above, not real per-clause EXCLUDE entries -- the Coverage Scope section's real per-clause
+     EXCLUDE-entry count was already 33, not 35, before this pass. Fix 2 above then reclassifies 2
+     of those 33 real entries to SCOPE, so 31 is the correct, re-verified count of real EXCLUDE
+     entries in the Coverage Scope section after this pass.
+  4. **P10-016 label follow-through was incomplete (MEDIUM):** P10-016 above relabeled every
+     wiremock/hermetic-mock cell's **AC Test:** line to `#[tokio::test]` and claimed "Task 10(d)/(e)/(f)
+     and the Tasks section ... are unaffected" -- that claim was wrong for two spots that DO commit
+     to a specific attribute rather than generic "wiremock test"/"wiremock cell" prose: Task 9's
+     counting-unit pin said EC-X.16.002-10 "is its OWN `#[test]` function" and said the EC-X.16.002-7
+     cell "does not change its status as ONE `#[test]`" -- both are AC-009 cells, part of P10-016's
+     already-relabeled 6-cell set, so both are corrected to `#[tokio::test]`. The Task 10(d)
+     per-cell table's `VP-API-QP-005(2)` `--output json` envelope row (Task 6 / AC-006) likewise
+     said "ONE `#[test]`" where AC-006's own **Test:** line (P10-016) says `#[tokio::test]`; that
+     table cell is corrected to `#[tokio::test]` too. All three are label-only corrections; the RED
+     tag on each row and the Task 10(e) tally are unchanged.
+- **P10-018 (LOW, review pass):** Two more label/citation-only fixes found in a follow-up review
+  of this restructure. First, the declared region below (lines 3783-4394) left the new subsection
+  intro paragraph directly above it (lines 3772-3779, added in the same cycle-014 edit) unaccounted
+  for; a sentence was added noting that this paragraph is deliberately left out of the declared
+  region because it is shared context for both BCs, not a testable clause of either, and the
+  dependency fact it states is restated where it matters -- in BC-X.16.001's Source field, and,
+  bindingly, in Invariant 3, which AC-003 already cites. Second, AC-006 described its citation to
+  the BC-X.16.002 Behavior paragraph as "the M2 (empty-NAME) row," but that wording actually
+  describes the Condition/Behavior table, which AC-006 already cites separately right after it; the
+  Behavior-paragraph citation is reworded to describe the paragraph itself (its M2 empty-NAME
+  case), removing the duplicated "row" wording. Neither fix changes any test cell, count, or line
+  range this story cites -- both are wording corrections only. A follow-up sweep re-confirmed that
+  every cycle-014-added line in the BC-X.16.001/BC-X.16.002/VP-API-QP-001..006 region is still
+  either listed or excluded below, and that every listed line remains cited by at least one AC,
+  unchanged by these two fixes.
+- **P10-019 (COSMETIC, review pass):** the P10-018 unlisted-paragraph note named only the
+  L3772-3779 intro paragraph, leaving the structural lines around it (the `## BC-X.16: API Query
+  Parameters` subsection heading and the `---` separators/blank lines bracketing it) unaccounted
+  for, even though none of them fall inside the declared L3783-4394 region either. Fixed by
+  naming them explicitly, alongside the existing L3772-3779 note, as intentionally unlisted
+  structural lines: L3770 (the subsection heading), L3781 and L4396 (the bracketing `---`
+  separators), and the blank lines around them (L3771, L3780, L3782, L4395, L4397) -- heading/
+  separator/blank-line structure, no testable clause content, no test cell, count, or line-range
+  change.
 
-### Edge Case -> Owning AC
+## Coverage Scope (D-387)
 
-| EC id | cross-cutting.md ~line | Owning AC |
-|---|---|---|
-| EC-X.16.001-1 | ~L3918-3920 | AC-006 |
-| EC-X.16.001-2 | ~L3921-3923 | AC-005 |
-| EC-X.16.001-3 | ~L3924-3930 | AC-003 |
-| EC-X.16.001-4 | ~L3931-3932 | AC-001 |
-| EC-X.16.001-5 | ~L3933-3942 | AC-001 |
-| EC-X.16.001-6 | ~L3943-3945 | AC-004 |
-| EC-X.16.001-7 | ~L3946-3949 | AC-004 |
-| EC-X.16.001-8 | ~L3950-3959 | AC-001 |
-| EC-X.16.001-9 | ~L3960-3968 | AC-001 |
-| EC-X.16.001-10 | ~L3969-3973 | AC-003 |
-| EC-X.16.001-11 | ~L3974-3977 | AC-003 |
-| EC-X.16.001-12 | ~L3978-3988 | AC-001 |
-| EC-X.16.001-13 | ~L3989-3994 | AC-002 |
-| EC-X.16.001-14 | ~L3995-4000 | AC-001 |
-| EC-X.16.002-1 | ~L4215-4216 | AC-005 |
-| EC-X.16.002-2 | ~L4217-4218 | AC-006 |
-| EC-X.16.002-3 | ~L4219-4222 | AC-007 |
-| EC-X.16.002-4 | ~L4223-4230 | AC-008 |
-| EC-X.16.002-5 | ~L4231-4238 | AC-009 |
-| EC-X.16.002-6 | ~L4239-4243 | AC-009 |
-| EC-X.16.002-7 | ~L4244-4251 | AC-009 |
-| EC-X.16.002-8 | ~L4252-4275 | AC-009 (WIRING-EXEMPT) |
-| EC-X.16.002-9 | ~L4276-4291 | AC-009 |
-| EC-X.16.002-10 | ~L4292-4298 | AC-009 (WIRING-EXEMPT) |
-| EC-X.16.002-11 | ~L4299-4305 | AC-009 (informational, no VP cell) |
+D-387 (human decision): the hand-written clause maps above (deleted by this revision) kept
+drifting from the AC CC-tag citations they were meant to summarize, so they are deleted. AC
+citations become the single source of ownership. This section enumerates the entire
+BC-X.16.001/BC-X.16.002/VP-API-QP-001..006 region of `.factory/specs/prd/cross-cutting.md`
+(L3783-4394) as either in scope, needing at least one owning AC CC-tag citation (recorded below as
+a `SCOPE` entry giving the clause's line range and name), or excluded, needing none because it is
+heading, blank-line, or non-normative provenance/bibliographic prose (recorded below as an
+`EXCLUDE` entry giving the line range and reason). Ownership is recorded solely by the CC-tag
+citations in each AC; coverage (every SCOPE line minus EXCLUDE is inside some AC's CC-tag range)
+is verified mechanically per D-387.
 
-Every VP clause, BC postcondition, and Edge Case above appears in exactly one map row and is
-owned by exactly one AC. The **Test:** lines below cite these clause ids by reference (D-386) --
-they do not restate clause content.
+One further span, L3772-3779 (the `## BC-X.16: API Query Parameters` subsection intro
+paragraph -- new in the same cycle-014 hunk as the L3783-4394 region above), is intentionally
+left unlisted: it is subsection context for both BCs below, not a testable clause of either, and
+its "no new dependency" statement is restated in BC-X.16.001's Source field and, as a binding
+requirement, in Invariant 3, which is in scope and cited (by AC-003). This mirrors how STORY-B
+(`S-cycle14-field-options-name-label`) names its own `## BC-X.14` subsection intro as
+intentionally unlisted.
+
+Alongside that intro paragraph, the structural lines immediately around it are also intentionally
+left unlisted, for the same non-normative reason: L3770 (the `## BC-X.16: API Query Parameters`
+subsection heading itself), L3781 and L4396 (the `---` section separators bracketing the
+subsection), and the blank lines surrounding them (L3771, L3780, L3782, L4395, L4397) -- heading,
+separator, and blank-line structure, not testable clause content, matching this section's own
+EXCLUDE treatment of comparable heading/blank/separator lines within the SCOPE/EXCLUDE lists
+below.
+
+### BC-X.16.001
+
+- `[EXCLUDE:L3783]` heading line ("#### BC-X.16.001: ..."), no normative content
+- `[EXCLUDE:L3784]` blank line
+- `[EXCLUDE:L3785-3796]` Confidence/Subject/Source provenance metadata, not testable clause content
+- `[SCOPE:L3797-3805]` Behavior intro (the `-q`/`--query-param` clap flag declaration: plain
+  `Vec<String>`, no `value_delimiter`, no `allow_hyphen_values`)
+- `[SCOPE:L3806-3822]` Behavior 1 (query-string detection and merge / separator algorithm)
+- `[SCOPE:L3823-3825]` Behavior 2 (repeated same-name params all sent, in order)
+- `[SCOPE:L3826-3852]` Behavior 3 (encode NAME/VALUE exactly once; no-trim design default;
+  `--help` pinned substring)
+- `[SCOPE:L3853-3857]` Behavior 4 (method-orthogonal)
+- `[SCOPE:L3858-3863]` Behavior 5 (zero effect when the flag is absent)
+- `[EXCLUDE:L3864]` blank line
+- `[SCOPE:L3865-3866]` no-regression guarantee: existing `jr api` behavior for BC-X.1.007
+  (raw-passthrough of the response) and BC-X.1.011 (`-X`/`--method` case-insensitivity) is
+  unaffected by this BC -- normative, owned by AC-004
+- `[EXCLUDE:L3867]` blank line
+- `[EXCLUDE:L3868]` "**Preconditions**:" heading line
+- `[SCOPE:L3869-3871]` Precondition 1 (`<path>` already `normalize_path`-normalized)
+- `[SCOPE:L3872-3873]` Precondition 2 (every `--query-param` value well-formed `NAME=VALUE`,
+  malformed values deferred to BC-X.16.002)
+- `[EXCLUDE:L3874]` blank line
+- `[EXCLUDE:L3875]` "**Postconditions**:" heading line
+- `[SCOPE:L3876-3879]` Postcondition 1 (zero-flag identity)
+- `[SCOPE:L3880-3891]` Postcondition 2 (separator algorithm; `?`-presence evaluated before
+  `&`-termination)
+- `[SCOPE:L3892-3895]` Postcondition 3 (encode exactly once)
+- `[SCOPE:L3896-3897]` Postcondition 4 (repeated params, flag order)
+- `[SCOPE:L3898-3900]` Postcondition 5 (method/body independence)
+- `[EXCLUDE:L3901]` blank line
+- `[EXCLUDE:L3902]` "**Invariants**:" heading line
+- `[SCOPE:L3903-3904]` Invariant 1 (`append_query_params` is pure, side-effect-free)
+- `[SCOPE:L3905-3906]` Invariant 2 (runs strictly before the `RequestBuilder` is built)
+- `[SCOPE:L3907-3911]` Invariant 3 (`urlencoding::encode` is the intended encoder; `byte_serialize`
+  forbidden)
+- `[SCOPE:L3912-3915]` Invariant 4 (guarantee scope: never a second `?`, never `&` after an
+  empty/`&`-terminated query component; no blanket `?&`/`??` substring ban)
+- `[EXCLUDE:L3916]` blank line
+- `[EXCLUDE:L3917]` "**Edge Cases**:" heading line
+- `[SCOPE:L3918-3920]` EC-X.16.001-1 (`k=`, empty VALUE, allowed)
+- `[SCOPE:L3921-3923]` EC-X.16.001-2 (VALUE contains `=`, splits on first only)
+- `[SCOPE:L3924-3930]` EC-X.16.001-3 (non-ASCII VALUE, UTF-8 percent-encoded)
+- `[SCOPE:L3931-3932]` EC-X.16.001-4 (path already ends `?existing=1`)
+- `[SCOPE:L3933-3942]` EC-X.16.001-5 (path contains `#fragment`)
+- `[SCOPE:L3943-3945]` EC-X.16.001-6 (combined with `-X` method flags)
+- `[SCOPE:L3946-3949]` EC-X.16.001-7 (`--query-param` entirely absent)
+- `[SCOPE:L3950-3959]` EC-X.16.001-8 (path ends in bare `?` or `&`)
+- `[SCOPE:L3960-3968]` EC-X.16.001-9 (query component ends in literal `?`)
+- `[SCOPE:L3969-3973]` EC-X.16.001-10 (NAME is whitespace-only)
+- `[SCOPE:L3974-3977]` EC-X.16.001-11 (VALUE has leading/trailing whitespace)
+- `[SCOPE:L3978-3988]` EC-X.16.001-12 (NAME collides with existing query NAME, no dedup/override)
+- `[SCOPE:L3989-3994]` EC-X.16.001-13 (comma inside VALUE)
+- `[SCOPE:L3995-4000]` EC-X.16.001-14 (no query, pre-fragment part ends in `&`)
+- `[EXCLUDE:L4001]` blank line
+- `[SCOPE:L4002-4006]` VP-API-QP-001..004 shared preamble (purity statement;
+  `url::form_urlencoded::parse` test-oracle-only note)
+- `[SCOPE:L4007-4023]` VP-API-QP-001 equation + strategy (pinned examples: EC-4, EC-5, the
+  empty-query-plus-fragment case, EC-8 (both forms), EC-9)
+- `[SCOPE:L4024-4031]` VP-API-QP-001 pinned-examples tail (EC-14, EC-12) + fault-models
+- `[SCOPE:L4032-4041]` VP-API-QP-002 oracle
+- `[SCOPE:L4042-4048]` VP-API-QP-002 generator-constraint
+- `[SCOPE:L4049-4050]` VP-API-QP-002 pinned-decode-example
+- `[SCOPE:L4050-4054]` VP-API-QP-002 argv cell (EC-X.16.001-13)
+- `[SCOPE:L4055-4059]` VP-API-QP-002 argv cell (repeated flags)
+- `[SCOPE:L4059-4062]` VP-API-QP-002 argv cell (mixed)
+- `[SCOPE:L4063-4069]` VP-API-QP-002 fault-models
+- `[SCOPE:L4070-4072]` VP-API-QP-003 intro
+- `[SCOPE:L4073-4075]` VP-API-QP-003(a) round-trip
+- `[SCOPE:L4076-4077]` VP-API-QP-003(b) alphabet
+- `[SCOPE:L4078-4080]` VP-API-QP-003(c) encoder identity
+- `[SCOPE:L4081-4083]` VP-API-QP-003(d) no trimming
+- `[SCOPE:L4084-4087]` VP-API-QP-003(e) help-text pin
+- `[SCOPE:L4087-4089]` VP-API-QP-003 further-pinned examples
+- `[SCOPE:L4089-4091]` VP-API-QP-003 fault-models
+- `[SCOPE:L4092-4098]` VP-API-QP-004 structural
+- `[SCOPE:L4098-4101]` VP-API-QP-004(1) zero-flag identity
+- `[SCOPE:L4101-4106]` VP-API-QP-004(2) zero-flag wiremock examples
+- `[SCOPE:L4106-4108]` VP-API-QP-004 fault-models
+- `[EXCLUDE:L4109]` blank line
+- `[EXCLUDE:L4110-4118]` Trace section: bibliographic references, not itself a testable clause
+- `[EXCLUDE:L4119]` blank line
+
+### Separator
+
+- `[EXCLUDE:L4120]` "---" section separator
+- `[EXCLUDE:L4121]` blank line
+
+### BC-X.16.002
+
+- `[EXCLUDE:L4122]` heading line ("#### BC-X.16.002: ..."), no normative content
+- `[EXCLUDE:L4123]` blank line
+- `[EXCLUDE:L4124-4130]` Confidence/Subject/Source provenance metadata
+- `[SCOPE:L4131-4140]` Behavior (split on first `=`; M1/M2 defined; EC-X.16.001-1 contrast)
+- `[EXCLUDE:L4141]` blank line
+- `[SCOPE:L4142-4145]` Condition/Behavior table: exit 64, `JrError::UserError` for both M1 (no `=`
+  at all) and M2 (empty NAME), with M2's message required to be DISTINCT from M1's -- normative,
+  owned by AC-005 (M1 row) and AC-006 (M2 row)
+- `[EXCLUDE:L4146]` blank line
+- `[SCOPE:L4147-4154]` pinned error messages: intro + M1 ("must be in NAME=VALUE format")
+- `[SCOPE:L4155-4157]` pinned error messages: M2 ("NAME cannot be empty")
+- `[SCOPE:L4158-4168]` distinguishing-substring invariant + clap attached-value delivery mechanics
+  (the `{raw}` clap delivers to `parse_query_param`)
+- `[SCOPE:L4169-4176]` Preconditions (one or more `-q` flags supplied; runs after
+  `Config::load_with`/`JiraClient::from_config`; after `normalize_path`'s own errors)
+- `[EXCLUDE:L4177]` blank line
+- `[SCOPE:L4178-4189]` Postcondition 1 (pre-flight ordering)
+- `[SCOPE:L4190-4195]` Postcondition 2 (`--output json` envelope, stderr-only)
+- `[SCOPE:L4196-4199]` Postcondition 3 (all-or-nothing)
+- `[EXCLUDE:L4200]` blank line
+- `[SCOPE:L4201-4212]` Invariants (distinct M1/M2 messages; empty VALUE never an error; flag-order
+  short-circuiting)
+- `[EXCLUDE:L4213]` blank line
+- `[EXCLUDE:L4214]` "**Edge Cases**:" heading line
+- `[SCOPE:L4215-4216]` EC-X.16.002-1 (`--query-param foo`, M1)
+- `[SCOPE:L4217-4218]` EC-X.16.002-2 (`--query-param =v`, M2)
+- `[SCOPE:L4219-4222]` EC-X.16.002-3 (second of two flags malformed)
+- `[SCOPE:L4223-4230]` EC-X.16.002-4 (`-d @-` with `-q bad`, held-open stdin)
+- `[SCOPE:L4231-4238]` EC-X.16.002-5 (`-q=v`)
+- `[SCOPE:L4239-4243]` EC-X.16.002-6 (`-q==v`)
+- `[SCOPE:L4244-4251]` EC-X.16.002-7 (`--query-param==v`)
+- `[SCOPE:L4252-4275]` EC-X.16.002-8 (`-q -x=1`, clap exit 2)
+- `[SCOPE:L4276-4291]` EC-X.16.002-9 (empty raw value, three forms)
+- `[SCOPE:L4292-4298]` EC-X.16.002-10 (`-q` as last argv token, clap exit 2)
+- `[SCOPE:L4299-4305]` EC-X.16.002-11 (non-UTF-8 `-q` value, clap exit 2, informational)
+- `[EXCLUDE:L4306]` blank line
+- `[EXCLUDE:L4307]` "**Verification Properties**:" heading line, shared by VP-API-QP-005/006; the
+  intro that immediately follows (VP-API-QP-005(intro)) begins the next line and is in scope
+- `[SCOPE:L4308-4316]` VP-API-QP-005(intro) (M1/M2 pinned messages, D1/D2 distinguishing substrings)
+- `[SCOPE:L4317-4326]` VP-API-QP-005(1) (partition `proptest!`)
+- `[SCOPE:L4327-4331]` VP-API-QP-005(2) (wiremock `-q foo`/`-q =v` cells + `--output json` envelope)
+- `[SCOPE:L4332-4356]` VP-API-QP-005(3) (attached-form example cells, EC-5..10)
+- `[SCOPE:L4357-4362]` VP-API-QP-005 fault-models
+- `[SCOPE:L4363-4365]` VP-API-QP-006 intro (pre-flight ordering and all-or-nothing; "every mock
+  `.expect(0)`")
+- `[SCOPE:L4366-4367]` VP-API-QP-006(i) all-or-nothing
+- `[SCOPE:L4368-4369]` VP-API-QP-006(ii) first-malformed-reported
+- `[SCOPE:L4370-4384]` VP-API-QP-006(iii) before `resolve_body`
+- `[SCOPE:L4385-4386]` VP-API-QP-006(iv) before `-H` parsing
+- `[SCOPE:L4387-4389]` VP-API-QP-006 fault-models
+- `[EXCLUDE:L4390]` blank line
+- `[EXCLUDE:L4391-4394]` Trace section: bibliographic references, not itself a testable clause
+
+Ownership is recorded solely by the CC-tag citations in each AC; coverage (every SCOPE line minus
+EXCLUDE is inside some AC's CC-tag range) is verified mechanically per D-387.
 
 ## Narrative
 
@@ -525,161 +941,186 @@ they do not restate clause content.
 
 ### AC-001 (traces to BC-X.16.001 Behavior 1, Postcondition 2, EC-X.16.001-4/5/8/9/12/14)
 `src/cli/api.rs::append_query_params(path: &str, pairs: &[(String, String)]) -> String` (new pure
-function) implements BC-X.16.001 Behavior 1 (`cross-cutting.md` ~L3806-3822) and Postcondition 2
-(~L3880-3891) in full -- see those clauses (and the VP-API-QP-001 clause map rows below) for the
-separator algorithm; this AC does not restate it and does not narrow it.
-**Test (D-386 bind-by-reference):** Implements VP-API-QP-001(equation), VP-API-QP-001(EC-4),
-VP-API-QP-001(EC-5), VP-API-QP-001(empty-query-frag), VP-API-QP-001(EC-8),
-VP-API-QP-001(EC-9), VP-API-QP-001(EC-12), VP-API-QP-001(EC-14), and VP-API-QP-001(fault-models)
-(see the Clause-Level Map above for each clause's exact `cross-cutting.md` line range). Every
-cell, setup, argv, expected value/wire value, stderr substring (present AND absent), counter-mock
-(`.expect(0)`/zero-HTTP), oracle/generator constraint and anti-vacuity assertion in the cited
-clause(s) is binding and must be implemented exactly as written there; this story does not
-restate them, and nothing here narrows them. All cells live in `src/cli/api.rs`'s `#[cfg(test)]
+function) implements BC-X.16.001 Behavior 1 `[CC:L3806-3822]` and Postcondition 2
+`[CC:L3880-3891]` in full; it also depends on Precondition 1 `[CC:L3869-3871]` (`<path>` is
+already `normalize_path`-normalized) and Invariants 1 `[CC:L3903-3904]` (purity) and 4
+`[CC:L3912-3915]` (guarantee scope: never a second `?`, never `&` after an empty/`&`-terminated
+query component), and owns Edge Cases EC-X.16.001-4 `[CC:L3931-3932]`, -5 `[CC:L3933-3942]`, -8
+`[CC:L3950-3959]`, -9 `[CC:L3960-3968]`, -12 `[CC:L3978-3988]`, and -14 `[CC:L3995-4000]` -- see
+those clauses for the separator algorithm; this AC does not restate them and does not narrow them.
+**Test (D-386 bind-by-reference):** Implements the VP-API-QP-001..004 shared preamble
+`[CC:L4002-4006]` (purity statement; `url::form_urlencoded::parse` test-oracle-only note),
+VP-API-QP-001's equation and strategy `[CC:L4007-4023]` (pinned examples EC-X.16.001-4, -5, the
+empty-query-plus-fragment case, and -8 (both forms) and -9), and VP-API-QP-001's pinned-examples
+tail and fault-models `[CC:L4024-4031]` (pinned examples -14 and -12). Everything the cited
+clause(s) specify is binding in its entirety and must be implemented exactly as written there;
+this story does not restate or narrow any of it. All cells live in `src/cli/api.rs`'s `#[cfg(test)]
 mod tests`, grouped into ONE `proptest!` function (the separator oracle) plus 7 separate
 `#[test]` functions -- one per pinned example, per Task 9's counting-unit rule (EC-4, EC-5,
 empty-query-plus-fragment (no EC id of its own), EC-8 as ONE test covering both pinned forms,
 EC-9, EC-12, EC-14). All 8 functions are RED at the Task 1 stub (`todo!()` panic).
 
 ### AC-002 (traces to BC-X.16.001 Behavior 2, Postcondition 4, EC-X.16.001-12/13)
-The `-q`/`--query-param` clap field is a plain `Vec<String>` with NO `value_delimiter` (Behavior 1
-intro, ~L3797-3802). This AC implements BC-X.16.001 Behavior 2 and Postcondition 4
-(~L3823-3825, ~L3896-3897) in full -- see those clauses (and the VP-API-QP-002 clause map rows
-below) for the repeated-names semantics; this AC does not restate them and does not narrow them.
-**Test (D-386 bind-by-reference):** Implements VP-API-QP-002(oracle), including its
-`existing == generated_existing_pairs` anti-vacuity generator constraint,
-VP-API-QP-002(generator-constraint), VP-API-QP-002(pinned-decode-example),
-VP-API-QP-002(argv-EC-13), VP-API-QP-002(argv-repeated-flags), VP-API-QP-002(argv-mixed), and
-VP-API-QP-002(fault-models) (see the Clause-Level Map above for line ranges). Every cell, setup,
-argv, expected value/wire value, stderr substring (present AND absent), counter-mock
-(`.expect(0)`/zero-HTTP), oracle/generator constraint and anti-vacuity assertion in the cited
-clause(s) is binding and must be implemented exactly as written there; this story does not
-restate them, and nothing here narrows them. The `proptest!` oracle (including its
-generator-constraint/anti-vacuity assertion) and the pinned decode example are ONE `proptest!`
-plus ONE `#[test]` in `src/cli/api.rs`'s `#[cfg(test)] mod tests`; the three argv cells (EC-13,
-repeated-flags, mixed) are three separate `#[test]` functions in `tests/api_query_param.rs`. All
-5 functions are RED at the Task 1 stub.
+The `-q`/`--query-param` clap field is a plain `Vec<String>` with NO `value_delimiter` (Behavior
+intro `[CC:L3797-3805]`). This AC implements BC-X.16.001 Behavior 2 `[CC:L3823-3825]` and
+Postcondition 4 `[CC:L3896-3897]` in full, and owns Edge Case EC-X.16.001-13 `[CC:L3989-3994]` --
+see those clauses for the repeated-names semantics; this AC does not restate them and does not
+narrow them.
+**Test (D-386 bind-by-reference):** Implements VP-API-QP-002's oracle `[CC:L4032-4041]`,
+including its `existing == generated_existing_pairs` anti-vacuity generator constraint
+`[CC:L4042-4048]`, its pinned decode example `[CC:L4049-4050]`, its argv cells for EC-X.16.001-13
+`[CC:L4050-4054]`, repeated flags `[CC:L4055-4059]`, and mixed `[CC:L4059-4062]`, and its
+fault-models `[CC:L4063-4069]`. Everything the cited clause(s) specify is binding in its entirety
+and must be implemented exactly as written there; this story does not restate or narrow any of
+it. The `proptest!` oracle (including its generator-constraint/anti-vacuity assertion) and the
+pinned decode example are ONE `proptest!` plus ONE `#[test]` in `src/cli/api.rs`'s
+`#[cfg(test)] mod tests`; the three argv cells (EC-13, repeated-flags, mixed) are three separate
+`#[tokio::test]` functions in `tests/api_query_param.rs`. All 5 functions are RED at the Task 1
+stub.
 
 ### AC-003 (traces to BC-X.16.001 Behavior 3, Postcondition 3, EC-X.16.001-3/10/11)
-`src/cli/api.rs::append_query_params` implements BC-X.16.001 Behavior 3 and Postcondition 3
-(~L3826-3852, ~L3892-3895) in full, including the pinned `--help` substring requirement (D-380,
-settled 2026-09-25) -- see those clauses (and the VP-API-QP-003 clause map rows below) for the
+`src/cli/api.rs::append_query_params` implements BC-X.16.001 Behavior 3 `[CC:L3826-3852]` and
+Postcondition 3 `[CC:L3892-3895]` in full, including the pinned `--help` substring requirement
+`[CC:L3845-3852]`; it also depends on Invariant 3 `[CC:L3907-3911]` (`urlencoding::encode` is the
+intended encoder; `byte_serialize` forbidden), and owns Edge Cases EC-X.16.001-3
+`[CC:L3924-3930]`, -10 `[CC:L3969-3973]`, and -11 `[CC:L3974-3977]` -- see those clauses for the
 encoding/no-trim/help-text rules; this AC does not restate them and does not narrow them.
-**Test (D-386 bind-by-reference):** Implements VP-API-QP-003(intro), VP-API-QP-003(a) -- whose
-round-trip assertion requires `encode(v)` to be the NAME/VALUE segment extracted from
-`append_query_params`'s own output, NOT a direct `urlencoding::encode` call (a direct call would
-be tautological and GREEN at the Task 1 stub) -- VP-API-QP-003(b), VP-API-QP-003(c),
-VP-API-QP-003(d) (whose no-trim examples also run through `parse_query_param`, VP-API-QP-005),
-VP-API-QP-003(e), VP-API-QP-003(further-pinned), and VP-API-QP-003(fault-models) (see the
-Clause-Level Map above for line ranges). Every cell, setup, argv, expected value/wire value,
-stderr substring (present AND absent), counter-mock (`.expect(0)`/zero-HTTP), oracle/generator
-constraint and anti-vacuity assertion in the cited clause(s) is binding and must be implemented
-exactly as written there; this story does not restate them, and nothing here narrows them. The
+**Test (D-386 bind-by-reference):** Implements VP-API-QP-003(intro) `[CC:L4070-4072]`,
+VP-API-QP-003(a) `[CC:L4073-4075]` -- whose round-trip assertion requires `encode(v)` to be the
+NAME/VALUE segment extracted from `append_query_params`'s own output, NOT a direct
+`urlencoding::encode` call (a direct call would be tautological and GREEN at the Task 1 stub) --
+VP-API-QP-003(b) `[CC:L4076-4077]`, VP-API-QP-003(c) `[CC:L4078-4080]`, VP-API-QP-003(d)
+`[CC:L4081-4083]` (whose no-trim examples also run through `parse_query_param`, VP-API-QP-005),
+VP-API-QP-003(e) `[CC:L4084-4087]`, VP-API-QP-003(further-pinned) `[CC:L4087-4089]`, and
+VP-API-QP-003(fault-models) `[CC:L4089-4091]`. Everything the cited clause(s) specify is binding
+in its entirety and must be implemented exactly as written there; this story does not restate or
+narrow any of it. The
 biased `proptest!` ((a)/(b)/(c)/(d)) plus one `#[test]` per further-pinned/(c)/(d) example, per
 Task 9's counting-unit rule ((c)'s `*`->`%2A` and space->`%20`; (d)'s two no-trim examples;
 further-pinned `%`->`%25`, `+`->`%2B`, `é`->`%C3%A9`, literal `%25`->`%2525` -- 8 pinned-example
 `#[test]`s total), live in `src/cli/api.rs`'s `#[cfg(test)] mod tests`; the (e) `--help` cell is
-a separate `#[test]` in `tests/api_query_param.rs`. All 9 direct-call functions plus the 1
-subprocess function are RED at the Task 1 stub.
+a separate `#[test]` in `tests/api_query_param.rs` (no wiremock needed -- see P10-016 below). All
+9 direct-call functions plus the 1 subprocess function are RED at the Task 1 stub.
 
 ### AC-004 (traces to BC-X.16.001 Behavior 4/5, Postconditions 1/5, EC-X.16.001-6/7)
-`src/cli/api.rs::append_query_params` implements BC-X.16.001 Behavior 4/5 and Postconditions 1/5
-(~L3853-3863, ~L3876-3879, ~L3898-3900) in full -- see those clauses (and the VP-API-QP-004
-clause map rows below) for the method-orthogonality and zero-flag-identity rules; this AC does
-not restate them and does not narrow them.
-**Test (D-386 bind-by-reference):** Implements VP-API-QP-004(structural) -- including its
-request-body assertion (the `-d` input equals the received body, never moved into the query) --
-VP-API-QP-004(1), VP-API-QP-004(2), and VP-API-QP-004(fault-models) (see the Clause-Level Map
-above for line ranges). Every cell, setup, argv, expected value/wire value, stderr substring
-(present AND absent), counter-mock (`.expect(0)`/zero-HTTP), oracle/generator constraint and
-anti-vacuity assertion in the cited clause(s) is binding and must be implemented exactly as
-written there; this story does not restate them, and nothing here narrows them. The structural
-check plus the (1) zero-flag identity `proptest!` is ONE `proptest!` function in `src/cli/api.rs`'s
-`#[cfg(test)] mod tests`; the table-driven method-orthogonality wiremock test (one `#[test]`
-parameterized internally over all 5 methods x with/without `-d`, per Task 9's one-function-
-per-scenario rule) and the two (2) zero-flag wiremock examples are `#[test]` functions in
-`tests/api_query_param.rs`. RED/GREEN classification: table-driven test and the identity
-`proptest!` are RED at the Task 1 stub; the 2 zero-flag wiremock examples are GREEN-nonexempt
-(`PRE-EXISTING-BEHAVIOR`, Task 10(a2)).
+`src/cli/api.rs::append_query_params` implements BC-X.16.001 Behavior 4 `[CC:L3853-3857]` and
+Behavior 5 `[CC:L3858-3863]`, and Postconditions 1 `[CC:L3876-3879]` and 5 `[CC:L3898-3900]` in
+full; it also depends on Precondition 2 `[CC:L3872-3873]` and Invariant 2 `[CC:L3905-3906]` (runs
+strictly before the `RequestBuilder` is built), and owns Edge Cases EC-X.16.001-6
+`[CC:L3943-3945]` and -7 `[CC:L3946-3949]` -- see those clauses for the method-orthogonality and
+zero-flag-identity rules; this AC does not restate them and does not narrow them. This AC also
+owns the no-regression guarantee that existing `jr api` behavior for BC-X.1.007 (raw-passthrough
+of the response) and BC-X.1.011 (`-X`/`--method` case-insensitivity) is unaffected by this BC
+`[CC:L3865-3866]` -- the table-driven method-orthogonality wiremock test below (over all 5 HTTP
+methods) is this AC's existing verification vehicle for that guarantee; this AC does not restate
+BC-X.1.007/BC-X.1.011 themselves, only cites that they remain unaffected.
+**Test (D-386 bind-by-reference):** Implements VP-API-QP-004(structural) `[CC:L4092-4098]`,
+VP-API-QP-004(1) `[CC:L4098-4101]`, VP-API-QP-004(2) `[CC:L4101-4106]`, and
+VP-API-QP-004(fault-models) `[CC:L4106-4108]`. Everything the cited clause(s) specify is binding
+in its entirety and must be implemented exactly as written there; this story does not restate or
+narrow any of it.
+**Ownership (P9-003; P10-003 -- clause cited by reference only, not restated):**
+VP-API-QP-004(structural) `[CC:L4092-4098]` -- a signature fact (`append_query_params` takes no
+method/body parameter) -- is owned by the table-driven method-orthogonality wiremock test (one
+`#[tokio::test]` parameterized internally over all 5 methods x with/without `-d`, per Task 9's
+one-function-per-scenario rule), a `#[tokio::test]` function in `tests/api_query_param.rs`; see
+that clause for its full runtime-check requirements (the request-body assertion, the
+identical-received-query-pairs-per-method assertion, and the query-never-in-body assertion) --
+this AC does not restate or narrow any of them. VP-API-QP-004(1) (zero-flag identity) is a
+SEPARATE `proptest!` function in `src/cli/api.rs`'s `#[cfg(test)] mod tests`; VP-API-QP-004(2)
+(the two zero-flag wiremock examples) are `#[tokio::test]` functions in `tests/api_query_param.rs`.
+RED/GREEN classification: the table-driven test and the identity `proptest!` are RED at the Task
+1 stub; the 2 zero-flag wiremock examples are GREEN-nonexempt (`PRE-EXISTING-BEHAVIOR`, Task
+10(a2)).
 
-### AC-005 (traces to BC-X.16.002 Behavior, Postcondition 1, EC-X.16.002-1, EC-X.16.001-2)
+### AC-005 (traces to BC-X.16.002 Behavior, EC-X.16.002-1, EC-X.16.001-1, EC-X.16.001-2)
 `src/cli/api.rs::parse_query_param(raw: &str) -> Result<(String, String)>` (new pure function,
-distinct from `append_query_params`) implements BC-X.16.002's Behavior and Postcondition 1
-(~L4131-4140, ~L4178-4189) in full -- see those clauses (and the VP-API-QP-005 clause map rows
-below) for the split-on-first-`=` / M1 rules; this AC does not restate them and does not narrow
-them.
-**Test (D-386 bind-by-reference):** Implements VP-API-QP-005(intro), VP-API-QP-005(1) -- whose
-`Err`-case "other substring absent" assertion is filtered with `prop_assume!` to `raw` values
-that do not themselves contain D1 or D2 -- and, for its `-q foo` wiremock cell, VP-API-QP-005(2)
-(see the Clause-Level Map above for line ranges). Every cell, setup, argv, expected value/wire
-value, stderr substring (present AND absent), counter-mock (`.expect(0)`/zero-HTTP),
-oracle/generator constraint and anti-vacuity assertion in the cited clause(s) is binding and must
-be implemented exactly as written there; this story does not restate them, and nothing here
-narrows them. The partition `proptest!` plus the pinned `parse_query_param("")` example are
-direct-call functions (one `proptest!` + one `#[test]`) in `src/cli/api.rs`'s `#[cfg(test)] mod
-tests`; the `-q foo` wiremock cell is a separate `#[test]` in `tests/api_query_param.rs`. All
-three are RED at the Task 1 stub.
+distinct from `append_query_params`) implements BC-X.16.002's Behavior `[CC:L4131-4140]` and its
+Condition/Behavior table's M1 row `[CC:L4142-4145]` in full, including the pinned M1 error message
+`[CC:L4147-4154]`, and owns Edge Cases EC-X.16.002-1
+`[CC:L4215-4216]`, EC-X.16.001-1 `[CC:L3918-3920]`, and EC-X.16.001-2 `[CC:L3921-3923]` -- see
+those clauses for the split-on-first-`=` / M1 rules; this AC does not restate them and does not
+narrow them. Postcondition 1 (pre-flight ordering) is NOT this AC's -- it is owned solely by
+AC-008 `[CC:L4178-4189]` (see AC-008's citations below); this AC's concern is the taxonomy
+`parse_query_param` produces, not when it runs.
+**Test (D-386 bind-by-reference):** Implements VP-API-QP-005(intro) `[CC:L4308-4316]`,
+VP-API-QP-005(1) `[CC:L4317-4326]` -- whose `Err`-case "other substring absent" assertion is
+filtered with `prop_assume!` to `raw` values that do not themselves contain D1 or D2 -- and, for
+its `-q foo` wiremock cell, VP-API-QP-005(2) `[CC:L4327-4331]`. Everything the cited clause(s)
+specify is binding in its entirety and must be implemented exactly as written there; this story
+does not restate or narrow any of it. The partition `proptest!` plus the pinned
+`parse_query_param("")` example are direct-call functions (one `proptest!` + one `#[test]`) in
+`src/cli/api.rs`'s `#[cfg(test)] mod tests`; the `-q foo` wiremock cell is a separate
+`#[tokio::test]` in `tests/api_query_param.rs`. All three are RED at the Task 1 stub.
 
-### AC-006 (traces to BC-X.16.002 Behavior, Postcondition 1, Postcondition 2, EC-X.16.002-2)
-`src/cli/api.rs::parse_query_param` implements BC-X.16.002's M2 (empty-NAME) row and
-Postcondition 2 (~L4142-4167, ~L4190-4195) in full -- see those clauses (and the VP-API-QP-005
-clause map rows below) for the pinned M2 message and `--output json` envelope rules; this AC
-does not restate them and does not narrow them. An empty VALUE (`k=`) remains ALLOWED per
-BC-X.16.001 EC-X.16.001-1, never M2.
-**Test (D-386 bind-by-reference):** Implements VP-API-QP-005(intro) and VP-API-QP-005(2) (see
-the Clause-Level Map above for line ranges). Every cell, setup, argv, expected value/wire value,
-stderr substring (present AND absent), counter-mock (`.expect(0)`/zero-HTTP), oracle/generator
-constraint and anti-vacuity assertion in the cited clause(s) is binding and must be implemented
-exactly as written there; this story does not restate them, and nothing here narrows them. The
-wiremock `-q =v` cell, and the `--output json` envelope cell (ONE `#[test]` asserting both the M1
-and M2 envelope shapes, per the pass-5 fix), are `#[test]` functions in `tests/api_query_param.rs`.
-Both are RED at the Task 1 stub.
+### AC-006 (traces to BC-X.16.002 Behavior, Postcondition 2, EC-X.16.002-2)
+`src/cli/api.rs::parse_query_param` implements BC-X.16.002's Behavior paragraph (M2 empty-NAME
+case) `[CC:L4131-4140]` and its Condition/Behavior table's M2 row `[CC:L4142-4145]`, the pinned
+M2 error message `[CC:L4155-4157]`, and Postcondition 2 `[CC:L4190-4195]` in full, and owns Edge Case
+EC-X.16.002-2 `[CC:L4217-4218]` -- see those clauses for the pinned M2 message and
+`--output json` envelope rules; this AC does not restate them and does not narrow them. An empty
+VALUE (`k=`) remains ALLOWED per BC-X.16.001 EC-X.16.001-1 `[CC:L3918-3920]`, never M2.
+**Test (D-386 bind-by-reference):** Implements VP-API-QP-005(intro) `[CC:L4308-4316]` and
+VP-API-QP-005(2) `[CC:L4327-4331]`. Everything the cited clause(s) specify is binding in its
+entirety and must be implemented exactly as written there; this story does not restate or narrow
+any of it. The
+wiremock `-q =v` cell, and the `--output json` envelope cell (ONE `#[tokio::test]` asserting both
+the M1 and M2 envelope shapes, per the pass-5 fix), are `#[tokio::test]` functions in
+`tests/api_query_param.rs`. Both are RED at the Task 1 stub.
 
 ### AC-007 (traces to BC-X.16.002 Postcondition 3, Invariants, EC-X.16.002-3)
-`handle_api`'s `-q` validation implements BC-X.16.002 Postcondition 3 and its Invariants
-(~L4196-4199, ~L4201-4212) in full -- see those clauses (and the VP-API-QP-006(i)/(ii) clause map
-rows below) for the all-or-nothing / first-malformed-reported rules; this AC does not restate
+`handle_api`'s `-q` validation implements BC-X.16.002 Postcondition 3 `[CC:L4196-4199]` and its
+Invariants `[CC:L4201-4212]` in full, and owns Edge Case EC-X.16.002-3 `[CC:L4219-4222]` -- see
+those clauses for the all-or-nothing / first-malformed-reported rules; this AC does not restate
 them and does not narrow them.
-**Test (D-386 bind-by-reference):** Implements VP-API-QP-006(i), VP-API-QP-006(ii), and
-VP-API-QP-006(fault-models) (see the Clause-Level Map above for line ranges, including the
-clause's own "every mock `.expect(0)`" intro at ~L4363-4365). Every cell, setup, argv, expected
-value/wire value, stderr substring (present AND absent), counter-mock (`.expect(0)`/zero-HTTP),
-oracle/generator constraint and anti-vacuity assertion in the cited clause(s) is binding and must
-be implemented exactly as written there; this story does not restate them, and nothing here
-narrows them. All 4 cells (2 all-or-nothing, 2 first-malformed-reported) are separate `#[test]`
+**Test (D-386 bind-by-reference):** Implements VP-API-QP-006(i) `[CC:L4366-4367]`,
+VP-API-QP-006(ii) `[CC:L4368-4369]`, VP-API-QP-006(fault-models) `[CC:L4387-4389]`, the
+VP-API-QP-006 intro `[CC:L4363-4365]` (its own "every mock `.expect(0)`" requirement), and
+VP-API-QP-005(intro) `[CC:L4308-4316]` (P9-004: VP-API-QP-006(ii) reports outcomes in terms of
+M1/M2 and D1/D2, which VP-API-QP-005(intro) defines; cited here so that definition is binding for
+this AC too). Everything the cited clause(s) specify is binding in its entirety and must be
+implemented exactly as written there; this story does not restate or narrow any of it. All 4
+cells (2 all-or-nothing, 2 first-malformed-reported) are separate `#[tokio::test]`
 functions in `tests/api_query_param.rs`. All 4 are RED at the Task 1 stub.
 
 ### AC-008 (traces to BC-X.16.002 Postcondition 1, D-188 pre-flight convention, EC-X.16.002-4)
-`handle_api` (`src/cli/api.rs`) implements BC-X.16.002 Postcondition 1 (~L4178-4189) in full --
-see that clause (and the VP-API-QP-006(iii)/(iv) clause map rows below) for the exact pre-flight
-insertion point and ordering; this AC does not restate it and does not narrow it.
-**Test (D-386 bind-by-reference):** Implements VP-API-QP-006(iii) and VP-API-QP-006(iv) (see the
-Clause-Level Map above for line ranges, including the clause's own "every mock `.expect(0)`"
-intro at ~L4363-4365). Every cell, setup, argv, expected value/wire value, stderr substring
-(present AND absent), counter-mock (`.expect(0)`/zero-HTTP), oracle/generator constraint and
-anti-vacuity assertion in the cited clause(s) is binding and must be implemented exactly as
-written there; this story does not restate them, and nothing here narrows them. The (iii)
-held-open-stdin cell is a `#[test]` in `tests/api_query_param.rs` spawned via
+`handle_api` (`src/cli/api.rs`) implements BC-X.16.002 Preconditions `[CC:L4169-4176]` and
+Postcondition 1 `[CC:L4178-4189]` in full, and owns Edge Case EC-X.16.002-4 `[CC:L4223-4230]` --
+see those clauses for the exact pre-flight insertion point and ordering; this AC does not restate
+them and does not narrow them.
+**Test (D-386 bind-by-reference):** Implements VP-API-QP-006(iii) `[CC:L4370-4384]`,
+VP-API-QP-006(iv) `[CC:L4385-4386]`, VP-API-QP-006(fault-models) `[CC:L4387-4389]`, the
+VP-API-QP-006 intro `[CC:L4363-4365]` (its own "every mock `.expect(0)`" requirement), and
+VP-API-QP-005(intro) `[CC:L4308-4316]` (P9-004: VP-API-QP-006(iii) asserts on D1, and (iv) reports
+M1 -- both terms VP-API-QP-005(intro) defines; cited here so that definition is binding for this
+AC too). Everything the cited clause(s) specify is binding in its entirety and must be
+implemented exactly as written there; this story does not restate or narrow any of it. The (iii)
+held-open-stdin cell is a `#[tokio::test]` in `tests/api_query_param.rs` spawned via
 `std::process::Command` (not `assert_cmd`, per the clause's own rationale for why that library
 cannot be used here) with a held-open `ChildStdin` handle, polling `try_wait()` against the
-clause's own deadline; the (iv) before-`-H` cell is a separate `#[test]` in the same file. Both
-are RED at the Task 1 stub.
+clause's own deadline; the (iv) before-`-H` cell is a separate `#[tokio::test]` in the same file.
+Both are RED at the Task 1 stub.
 
 ### AC-009 (traces to BC-X.16.002 Edge Cases EC-X.16.002-5..10; EC-X.16.002-11 informational, no VP cell)
-Clap's own attached-form and missing-value parsing feeds `parse_query_param` per
-EC-X.16.002-5..10 (`cross-cutting.md` ~L4231-4298; see the Edge Case -> Owning AC map above for
-each one's exact line range) -- this AC does not restate those outcomes and does not narrow
-them. The `-q`/`--query-param` flag is NOT declared with `allow_hyphen_values`. EC-X.16.002-11
-(~L4299-4305) is informational only, inherited clap behavior with no owning VP cell (same
-treatment as EC-X.14.001-14) -- recorded for traceability, no test obligation.
-**Test (D-386 bind-by-reference):** Implements VP-API-QP-005(3) (see the Clause-Level Map above
-for line range). Every cell, setup, argv, expected value/wire value, stderr substring (present
-AND absent), counter-mock (`.expect(0)`/zero-HTTP), oracle/generator constraint and anti-vacuity
-assertion in the cited clause is binding and must be implemented exactly as written there; this
-story does not restate them, and nothing here narrows them. All 6 cells (EC-5, EC-6, EC-7, EC-8,
-EC-9, EC-10) are separate `#[test]` functions in `tests/api_query_param.rs` (one per EC id, per
-Task 9's counting rule; EC-9's three attached-empty variants count as ONE cell/test). RED/GREEN
-classification: EC-5, EC-6, EC-7, EC-9 are RED at the Task 1 stub; EC-8 and EC-10 are
+Clap's own attached-form and missing-value parsing governs EC-X.16.002-5..10: EC-5
+`[CC:L4231-4238]`, EC-6 `[CC:L4239-4243]`, EC-7 `[CC:L4244-4251]`, and EC-9 `[CC:L4276-4291]` are
+fed through to `parse_query_param`, while EC-8 `[CC:L4252-4275]` and EC-10 `[CC:L4292-4298]` are
+rejected by clap itself before `parse_query_param` ever runs -- this AC does not restate those
+outcomes and does not narrow them. This AC also owns the distinguishing-substring invariant and
+clap attached-value delivery mechanics `[CC:L4158-4168]` (the `{raw}` value clap delivers to
+`parse_query_param`). The `-q`/`--query-param` flag is NOT declared with `allow_hyphen_values`.
+EC-X.16.002-11 `[CC:L4299-4305]` is informational only, inherited clap behavior with no owning VP
+cell (same treatment as EC-X.14.001-14) -- recorded for traceability, no test obligation.
+**Test (D-386 bind-by-reference):** Implements VP-API-QP-005(3) `[CC:L4332-4356]`,
+VP-API-QP-005(fault-models) `[CC:L4357-4362]`, and VP-API-QP-005(intro) `[CC:L4308-4316]` (P9-004:
+VP-API-QP-005(3)'s cells assert on M1/M2 and D1/D2, which VP-API-QP-005(intro) defines; cited
+here so that definition is binding for this AC too -- AC-009 now cites three clauses, so the
+plural "clause(s)" form below applies, not the pass-8 singular-clause grammatical accommodation).
+Everything the cited clause(s) specify is binding in its entirety and must be implemented exactly
+as written there; this story does not restate or narrow any of it. All 6 cells (EC-5, EC-6, EC-7,
+EC-8, EC-9, EC-10) are separate `#[tokio::test]` functions in `tests/api_query_param.rs` (one per
+EC id, per Task 9's counting rule; EC-9's three attached-empty variants count as ONE cell/test).
+RED/GREEN classification: EC-5, EC-6, EC-7, EC-9 are RED at the Task 1 stub; EC-8 and EC-10 are
 WIRING-EXEMPT (clap-level rejection, GREEN at stub -- Task 10(a)). The EC-7 function additionally
 runs the EC-6 invocation, per the clause's own byte-identical-stderr bullet.
 
@@ -760,25 +1201,35 @@ Reference: `architecture/module-decomposition.md`, `architecture/dependency-grap
 
 | Context Source | Estimated Tokens |
 |-----------------|-------------------|
-| This story spec | ~3,600 |
+| This story spec (P10-010: recomputed honestly -- measured via the project's file-read tooling against the actual ~1,170-line file, not estimated) | ~45,200 |
 | Referenced code (`src/cli/api.rs` full file including `normalize_path`/`parse_header`/`resolve_body` precedent, `src/cli/mod.rs::Command::Api`, `src/main.rs`'s `Command::Api` arm) | ~2,800 |
 | Test files (existing `jr api` integration tests, grep-scoped) | ~1,500 |
 | Tool output overhead | ~1,200 |
-| **Total** | **~9,100** |
+| **Total** | **~50,700** |
 | Agent context window | 200K (Sonnet) |
-| **Budget usage** | **~5%** |
+| **Budget usage** | **~25%** |
 
 ## Tasks
 
-1. [ ] **STUB:** add `pub(crate) fn append_query_params(path: &str, pairs: &[(String, String)]) -> String` and `pub(crate) fn parse_query_param(raw: &str) -> Result<(String, String)>` to `src/cli/api.rs` with `todo!()` bodies (signatures per AC-001/AC-005); add the `-q`/`--query-param: Vec<String>` field to `Command::Api` (`src/cli/mod.rs`, no `value_delimiter`, no `allow_hyphen_values`) and wire the pre-flight call site into `handle_api` and `src/main.rs`'s `Command::Api` dispatch arm -- the `handle_api` wiring MUST short-circuit around both stubs when zero `-q` flags are supplied (use the pre-existing `normalize_path` output unchanged), so the crate compiles end-to-end and the zero-flag path never touches a `todo!()`. **Short-circuit is STUB-STAGE ONLY (P6-006):** this short-circuit is a temporary stub-stage measure, present only so the Red Gate can run before either function is implemented -- Task 13 REMOVES it and calls both functions unconditionally, since `append_query_params(p, &[]) == p` is an identity (BC-X.16.001 Postcondition 5) that makes the short-circuit and its removal behaviorally indistinguishable once implemented, and leaving it in place would leave an equivalent `delete !` mutant unkillable under the `--in-diff` mutants gate once `src/cli/api.rs` enters `examine_globs` (AC-011). **No pinned help text at stub:** the `-q`/`--query-param` field's doc comment / clap `help`/`long_help` string MUST NOT contain the BC-X.16.001 Behavior 3 pinned substring `"do not pre-encode"` at this stage -- Task 12 (clap field finalization) is what adds it; this keeps AC-003's `--help` test cell genuinely RED at the Task 1 stub (Task 10(a)) rather than accidentally GREEN from a premature-but-correct doc comment -- `stub-architect`
+1. [ ] **STUB:** add `pub(crate) fn append_query_params(path: &str, pairs: &[(String, String)]) -> String` and `pub(crate) fn parse_query_param(raw: &str) -> Result<(String, String)>` to `src/cli/api.rs` with `todo!()` bodies (signatures per AC-001/AC-005); add the `-q`/`--query-param: Vec<String>` field to `Command::Api` (`src/cli/mod.rs`, no `value_delimiter`, no `allow_hyphen_values`) and wire the pre-flight call site into `handle_api` and `src/main.rs`'s `Command::Api` dispatch arm -- the `handle_api` wiring MUST short-circuit around both stubs when zero `-q` flags are supplied (use the pre-existing `normalize_path` output unchanged), so the crate compiles end-to-end and the zero-flag path never touches a `todo!()`. **Short-circuit is STUB-STAGE ONLY (P6-006):** this short-circuit is a temporary stub-stage measure, present only so the Red Gate can run before either function is implemented -- Task 13 REMOVES it and calls both functions unconditionally, since `append_query_params(p, &[]) == p` is an identity (BC-X.16.001 Postcondition 5) that makes the short-circuit and its removal behaviorally indistinguishable once implemented, and leaving it in place would leave an equivalent `delete !` mutant unkillable under the `--in-diff` mutants gate once `src/cli/api.rs` enters `examine_globs` (AC-011). **No pinned help text at stub:** the `-q`/`--query-param` field's doc comment / clap `help`/`long_help` string MUST NOT contain the BC-X.16.001 Behavior 3 pinned substring `"do not pre-encode"` at this stage -- Task 12 (clap field finalization) is what adds it; this keeps AC-003's `--help` test cell genuinely RED at the Task 1 stub (Task 10(b)/(d)) rather than accidentally GREEN from a premature-but-correct doc comment -- `stub-architect`
 2. [ ] Write the `proptest!` separator oracle for `append_query_params` + pinned examples (AC-001's cited VP-API-QP-001 clauses) (AC-001) in `src/cli/api.rs`'s `#[cfg(test)] mod tests`. **The test-writer MUST read the cited VP clause(s) in `cross-cutting.md` in full before writing; the VP text, not this story, is the source of truth for cell contents.** -- `test-writer`
-3. [ ] Write the repeated-names `proptest!` oracle (AC-002's cited VP-API-QP-002 clauses) in `src/cli/api.rs`'s `#[cfg(test)] mod tests`, plus the three argv cells in `tests/api_query_param.rs` (AC-002). **The `proptest!` oracle MUST assert the generator-constraint/anti-vacuity check `existing == generated_existing_pairs` (VP-API-QP-002(generator-constraint)) as a second assertion alongside the main oracle equality -- omitting it lets the generator silently collapse to an empty `existing` and pass vacuously.** **The test-writer MUST read the cited VP clause(s) in `cross-cutting.md` in full before writing; the VP text, not this story, is the source of truth for cell contents.** -- `test-writer`
-4. [ ] Write the encoding-exactly-once biased `proptest!` + pinned examples (AC-003's cited VP-API-QP-003 clauses) in `src/cli/api.rs`'s `#[cfg(test)] mod tests`, plus the `--help` cell in `tests/api_query_param.rs` (AC-003). **The round-trip assertion (VP-API-QP-003(a)) MUST extract `encode(v)` from `append_query_params`'s own output, NOT call `urlencoding::encode` directly -- a direct call would be tautological and GREEN at the Task 1 stub, defeating the Red Gate.** **The test-writer MUST read the cited VP clause(s) in `cross-cutting.md` in full before writing; the VP text, not this story, is the source of truth for cell contents.** -- `test-writer`
+3. [ ] Write the repeated-names `proptest!` oracle (AC-002's cited VP-API-QP-002 clauses) in `src/cli/api.rs`'s `#[cfg(test)] mod tests`, plus the three argv cells in `tests/api_query_param.rs` (AC-002). **The `proptest!` oracle MUST assert the generator-constraint/anti-vacuity check `existing == generated_existing_pairs` (VP-API-QP-002(generator-constraint)) as a second assertion alongside the main oracle equality -- omitting it lets the generator silently collapse to an empty `existing` and pass vacuously (stated for emphasis; the clause governs).** **The test-writer MUST read the cited VP clause(s) in `cross-cutting.md` in full before writing; the VP text, not this story, is the source of truth for cell contents.** -- `test-writer`
+4. [ ] Write the encoding-exactly-once biased `proptest!` + pinned examples (AC-003's cited VP-API-QP-003 clauses) in `src/cli/api.rs`'s `#[cfg(test)] mod tests`, plus the `--help` cell in `tests/api_query_param.rs` (AC-003). **The round-trip assertion (VP-API-QP-003(a)) MUST extract `encode(v)` from `append_query_params`'s own output, NOT call `urlencoding::encode` directly -- a direct call would be tautological and GREEN at the Task 1 stub, defeating the Red Gate (stated for emphasis; the clause governs).** **The test-writer MUST read the cited VP clause(s) in `cross-cutting.md` in full before writing; the VP text, not this story, is the source of truth for cell contents.** -- `test-writer`
 5. [ ] Write the method-orthogonality table-driven wiremock test + zero-flag wiremock examples in `tests/api_query_param.rs`, and the zero-flag identity `proptest!` in `src/cli/api.rs`'s `#[cfg(test)] mod tests` (AC-004's cited VP-API-QP-004 clauses). **The test-writer MUST read the cited VP clause(s) in `cross-cutting.md` in full before writing; the VP text, not this story, is the source of truth for cell contents.** -- `test-writer`
-6. [ ] Write the `parse_query_param` partition `proptest!` + pinned example (AC-005's cited VP-API-QP-005 clauses) in `src/cli/api.rs`'s `#[cfg(test)] mod tests`, plus the wiremock/JSON-envelope cells in `tests/api_query_param.rs` (AC-005, AC-006). **Each `Err`-case's "other distinguishing substring absent" assertion (VP-API-QP-005(1)) MUST be filtered with `prop_assume!` to `raw` values that do not themselves contain D1 or D2 -- omitting the filter lets the property vacuously fail to exercise the absence check.** **The test-writer MUST read the cited VP clause(s) in `cross-cutting.md` in full before writing; the VP text, not this story, is the source of truth for cell contents.** -- `test-writer`
+6. [ ] Write the `parse_query_param` partition `proptest!` + pinned example (AC-005's cited VP-API-QP-005 clauses) in `src/cli/api.rs`'s `#[cfg(test)] mod tests`, plus the wiremock/JSON-envelope cells in `tests/api_query_param.rs` (AC-005, AC-006). **Each `Err`-case's "other distinguishing substring absent" assertion (VP-API-QP-005(1)) MUST be filtered with `prop_assume!` to `raw` values that do not themselves contain D1 or D2 -- omitting the filter lets the property vacuously fail to exercise the absence check (stated for emphasis; the clause governs).** **The test-writer MUST read the cited VP clause(s) in `cross-cutting.md` in full before writing; the VP text, not this story, is the source of truth for cell contents.** -- `test-writer`
 7. [ ] Write the four VP-API-QP-006(i)/(ii) cells (AC-007's cited clauses) in `tests/api_query_param.rs`. **The test-writer MUST read the cited VP clause(s) in `cross-cutting.md` in full before writing; the VP text, not this story, is the source of truth for cell contents.** -- `test-writer`
 8. [ ] Write the held-open-stdin `std::process::Command` test + the before-`-H`-parsing cell (AC-008's cited VP-API-QP-006(iii)/(iv) clauses) in `tests/api_query_param.rs`. **The test-writer MUST read the cited VP clause(s) in `cross-cutting.md` in full before writing; the VP text, not this story, is the source of truth for cell contents.** -- `test-writer`
-9. [ ] Write the attached-form argv cells (AC-009's cited VP-API-QP-005(3) clause) in `tests/api_query_param.rs` -- `test-writer`. **The test-writer MUST read the cited VP clause (VP-API-QP-005(3)) in `cross-cutting.md` in full before writing; the VP text, not this story, is the source of truth for cell contents.** **Counting-unit pin (feeds Task 10's density tally):** each of EC-X.16.002-5, -6, -7, -8, -9 (its three attached-empty variants `-q=`/`--query-param=`/`-q ""` count as ONE cell/test), and -10 is its OWN `#[test]` function (one function per EC id, not one function spanning multiple EC ids) -- this is the unit Task 10's `RED_TESTS`/`TOTAL_NEW_TESTS` counts are computed against, so EC-X.16.002-8 and EC-X.16.002-10's GREEN-at-stub status can be excluded/included per-test rather than ambiguously bundled with the RED EC-X.16.002-5/6/7/9 cells. The EC-X.16.002-7 test additionally runs the EC-X.16.002-6 invocation (`-q==v`) to assert byte-identical stderr between the two (P6-003(d)) -- this does not change its status as ONE `#[test]`
+9. [ ] Write the attached-form argv cells (AC-009's cited VP-API-QP-005(3) clause) in `tests/api_query_param.rs` -- `test-writer`. **The test-writer MUST read the cited VP clause (VP-API-QP-005(3)) in `cross-cutting.md` in full before writing; the VP text, not this story, is the source of truth for cell contents.** **Counting-unit pin (feeds Task 10's density tally):** each of EC-X.16.002-5, -6, -7, -8, -9
+(EC-9's several attached-empty argv variants per VP-API-QP-005(3) -- see that clause for the
+exact forms, not restated here -- count as ONE cell/test), and -10 is its OWN `#[tokio::test]`
+function (one function per EC id, not one function spanning multiple EC ids) -- this is the unit
+Task 10's `RED_TESTS`/`TOTAL_NEW_TESTS` counts are computed against, so EC-X.16.002-8 and
+EC-X.16.002-10's GREEN-at-stub status can be excluded/included per-test rather than ambiguously
+bundled with the RED EC-X.16.002-5/6/7/9 cells. The EC-X.16.002-7 test additionally runs the
+EC-X.16.002-6 invocation (per VP-API-QP-005(3) -- see that clause for the exact argv, not
+restated here) to assert byte-identical stderr between the two (P6-003(d)) -- this does not
+change its status as ONE `#[tokio::test]` (P10-017: both cells are part of AC-009's already
+wiremock-backed set, per that AC's **Test:** line)
 10. [ ] Confirm Red Gate against the Task 1 stub, applying the per-story-delivery.md density
     formula (`RED_RATIO = RED_TESTS / (TOTAL_NEW_TESTS - EXEMPT_TESTS)`, `EXEMPT_TESTS =
     GREEN-BY-DESIGN_count + WIRING-EXEMPT_count`, ~L45-60) using the Task 9 counting unit, applied
@@ -802,8 +1253,8 @@ Reference: `architecture/module-decomposition.md`, `architecture/dependency-grap
       as GREEN-BY-DESIGN, are reclassified in (a2) below and no longer reduce the denominator).
     (a2) **Non-exempt GREEN-at-stub cells (stay in `TOTAL_NEW_TESTS - EXEMPT_TESTS`; GREEN but
     NOT `RED_TESTS` and NOT `EXEMPT_TESTS`) -- new per ADV-C14-F3-P5-001:**
-      - AC-004's zero-flag WIREMOCK EXAMPLES (Task 5, VP-API-QP-004 layer (2): `jr api
-        rest/api/3/myself` and `jr api "/rest/api/3/search?jql=a&"`, no `-q` flag at all) are
+      - AC-004's zero-flag WIREMOCK EXAMPLES (Task 5, VP-API-QP-004(2) -- see that clause for the
+        exact argv, expected path/query values, and the per-method scope; not restated here) are
         GREEN at the Task 1 stub -- Task 1's required short-circuit routes the zero-`-q` path
         around both `todo!()` bodies entirely, onto the pre-existing, unmodified `normalize_path`
         output. `rationale_category: PRE-EXISTING-BEHAVIOR` in the red-gate-log table. This is
@@ -834,9 +1285,10 @@ Reference: `architecture/module-decomposition.md`, `architecture/dependency-grap
     EC id / scenario each AC's Test line requires, tagged RED / GREEN-nonexempt / EXEMPT, so the
     (e) tally below is checkable against this list rather than asserted):
 
-    Row labels below (D-386) are `<VP clause> <EC id>` (or the Clause-Level Map's descriptive tag
-    where no EC id exists) -- see the Clause-Level Map above for what each cited clause binds; no
-    pinned value is restated here.
+    Row labels below (D-386) are `<VP clause> <EC id>` (or a descriptive tag where no EC id
+    exists) -- these labels are test bookkeeping, not ownership citations (D-387: they may keep
+    their clause IDs but do not carry CC tags); see the matching AC's **Test:** line above
+    for what each cited clause binds. No pinned value is restated here.
 
     | Task / AC | Row label | Tag |
     |---|---|---|
@@ -853,13 +1305,13 @@ Reference: `architecture/module-decomposition.md`, `architecture/dependency-grap
     | Task 3 / AC-002 | VP-API-QP-002(argv-EC-13) EC-X.16.001-13 | RED |
     | Task 3 / AC-002 | VP-API-QP-002(argv-repeated-flags) | RED |
     | Task 3 / AC-002 | VP-API-QP-002(argv-mixed) | RED |
-    | Task 4 / AC-003 | VP-API-QP-003(intro)+(a)+(b) (one biased `proptest!`) | RED |
-    | Task 4 / AC-003 | VP-API-QP-003(c) pinned example 1 (`*`) | RED |
-    | Task 4 / AC-003 | VP-API-QP-003(c) pinned example 2 (space) | RED |
-    | Task 4 / AC-003 | VP-API-QP-003(further-pinned) pinned example (`%`) | RED |
-    | Task 4 / AC-003 | VP-API-QP-003(further-pinned) pinned example (`+`) | RED |
-    | Task 4 / AC-003 | VP-API-QP-003(further-pinned) pinned example (`é`) | RED |
-    | Task 4 / AC-003 | VP-API-QP-003(further-pinned) pinned example (literal `%25`) | RED |
+    | Task 4 / AC-003 | VP-API-QP-003(intro)+(a)+(b)+(c)+(d) (one biased `proptest!`) | RED |
+    | Task 4 / AC-003 | VP-API-QP-003(c) pinned example 1 of 2 (per that clause, not restated here) | RED |
+    | Task 4 / AC-003 | VP-API-QP-003(c) pinned example 2 of 2 (per that clause, not restated here) | RED |
+    | Task 4 / AC-003 | VP-API-QP-003(further-pinned) pinned example 1 of 4 (per that clause, not restated here) | RED |
+    | Task 4 / AC-003 | VP-API-QP-003(further-pinned) pinned example 2 of 4 (per that clause, not restated here) | RED |
+    | Task 4 / AC-003 | VP-API-QP-003(further-pinned) pinned example 3 of 4 (per that clause, not restated here) | RED |
+    | Task 4 / AC-003 | VP-API-QP-003(further-pinned) pinned example 4 of 4 (per that clause, not restated here) | RED |
     | Task 4 / AC-003 | VP-API-QP-003(d) no-trim pinned example 1 (also runs through `parse_query_param`) | RED |
     | Task 4 / AC-003 | VP-API-QP-003(d) no-trim pinned example 2 (also runs through `parse_query_param`) | RED |
     | Task 4 / AC-003 | VP-API-QP-003(e) `--help` cell | RED |
@@ -869,9 +1321,9 @@ Reference: `architecture/module-decomposition.md`, `architecture/dependency-grap
     | Task 5 / AC-004 | VP-API-QP-004(2) zero-flag wiremock example 2 | GREEN-nonexempt (PRE-EXISTING-BEHAVIOR) |
     | Task 6 / AC-005 | VP-API-QP-005(1) partition `proptest!` | RED |
     | Task 6 / AC-005 | VP-API-QP-005(1) pinned `parse_query_param("")` example | RED |
-    | Task 6 / AC-005 | VP-API-QP-005(2) wiremock cell (`-q foo` -> M1) | RED |
-    | Task 6 / AC-006 | VP-API-QP-005(2) wiremock cell (`-q =v` -> M2) | RED |
-    | Task 6 / AC-006 | VP-API-QP-005(2) `--output json` envelope cell -- ONE `#[test]` asserting BOTH the M1 and M2 envelope shapes (not split into 2) | RED |
+    | Task 6 / AC-005 | VP-API-QP-005(2) wiremock cell (M1 cell, per that clause) | RED |
+    | Task 6 / AC-006 | VP-API-QP-005(2) wiremock cell (M2 cell, per that clause) | RED |
+    | Task 6 / AC-006 | VP-API-QP-005(2) `--output json` envelope cell -- ONE `#[tokio::test]` asserting BOTH the M1 and M2 envelope shapes (not split into 2) | RED |
     | Task 9 / AC-009 | VP-API-QP-005(3) EC-X.16.002-5 | RED |
     | Task 9 / AC-009 | VP-API-QP-005(3) EC-X.16.002-6 | RED |
     | Task 9 / AC-009 | VP-API-QP-005(3) EC-X.16.002-7 (additionally runs the EC-6 invocation and asserts byte-identical stderr) | RED |
@@ -956,7 +1408,12 @@ Reference: `architecture/module-decomposition.md`, `architecture/dependency-grap
 
 ## Library & Framework Requirements
 
-No new dependency is added. `urlencoding = "2"` (existing pin, `Cargo.toml`; verified 2.1.3 behavior against source) is the PRODUCTION encoder. `url = "2"` (existing pin) provides `url::form_urlencoded::parse`, used ONLY as a test-oracle decoder in VP-API-QP-002/003's proptests -- never in production code. `url::form_urlencoded::byte_serialize` is explicitly forbidden for this story's production code.
+| Tool | Version | Purpose |
+|------|---------|---------|
+| `urlencoding` | `"2"` (existing pin, `Cargo.toml`; verified 2.1.3 behavior against source) | PRODUCTION encoder for `append_query_params` (no new dependency) |
+| `url` | `"2"` (existing pin, `Cargo.toml`) | Provides `url::form_urlencoded::parse`, used ONLY as a test-oracle decoder in VP-API-QP-002/003's proptests -- never in production code |
+
+No new dependency is added. `url::form_urlencoded::byte_serialize` is explicitly forbidden for this story's production code.
 
 ## File Structure Requirements
 
