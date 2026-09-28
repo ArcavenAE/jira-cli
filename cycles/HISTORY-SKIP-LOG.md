@@ -94,3 +94,13 @@
 | Step | Skipped? | Justification |
 |------|----------|----------------|
 | Human gate at CYCLE-014-F3-PASS17-CHECKPOINT-2026-09-28 burst | yes (deliberate, not a gate) | Records F3 adversarial review pass 17, NOT CLEAN (4L/2C), plus the sentence-level completeness sweep and the process-gap `#17` correction; clean counter 0/3, gate not concluded. |
+
+> Extracted from `.factory/STATE.md`'s `## Skip Log` table during the
+> 2026-09-28 `CYCLE-014-F3-PASS28-CHECKPOINT-2026-09-28` burst (v5.08 ->
+> v5.09), to keep the live table at 4 rows after adding the new
+> `CYCLE-014-F3-PASS28-CHECKPOINT-2026-09-28` row. This was the oldest of
+> the inline rows at that point; archived here verbatim, unedited.
+
+| Step | Skipped? | Justification |
+|------|----------|----------------|
+| Human gate at CYCLE-014-F3-PASS19-CHECKPOINT-2026-09-28 burst | yes (deliberate, not a gate) | Records F3 adversarial review pass 18 (4L/2C) and pass 19 (5L/1C), both NOT CLEAN, plus the Task-8 pinned-`--help`-string fix; clean counter 0/3, gate not concluded. |

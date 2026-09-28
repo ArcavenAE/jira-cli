@@ -1258,3 +1258,118 @@ Drift note: this pass's edits change what the stored `input-hash` should hash to
 explicit instruction not to touch `input-hash`, it was left as-is -- the resulting drift is
 expected, matching this story's own and the sibling stories' prior-pass convention on this point,
 and is for state-manager/orchestrator to reconcile, not something this pass tried to paper over.
+
+## 2026-09-28 -- F3 pass-27 fixes (P27-001 low, P27-002 low, P27-003 low, P27-004 cosmetic)
+
+- P27-001 (LOW): AC-004's fault-models sentence said a `?`/`&` appended on zero pairs, a
+  re-encoded path on zero pairs, and a dropped fragment on zero pairs were all killed jointly by
+  the zero-flag identity property test (function 1 in this AC's bucket) and the two zero-flag
+  wiremock examples (function 2). That grouping was wrong for the fragment claim specifically:
+  neither wiremock example carries a fragment at all -- one is `jr api rest/api/3/myself` and the
+  other is `jr api "/rest/api/3/search?jql=a&"` -- so neither could ever observe a dropped
+  fragment, wiremock or not. The property test, on the other hand, is written against an
+  arbitrary generated path that is explicitly required to include paths with a `#fragment`
+  component, so it alone can and does exercise this fault. Split the sentence in two: the `?`/`&`
+  and re-encoding claims stay jointly attributed to both cells; the dropped-fragment claim is now
+  attributed to the property test only, with the reasoning spelled out inline (the two wiremock
+  examples' own text quoted, and the property-test's generator requirement's own line citation in
+  the same spec range, checked against the spec file directly).
+- P27-002 (LOW): Task 10(c) called its own bullet list "the ONLY regression guards required GREEN
+  both before and after this story." That's an overclaim -- the list never mentioned
+  `tests/e2e_cli_surface_guard.rs`'s always-run, offline guard test, which does exercise this
+  story's surface area (its fixture table has a row for the bare `api` subcommand, so it runs
+  `jr api --help` and would catch a broken clap tree), and it never mentioned the gated
+  `tests/e2e_live.rs` `jr api` callers either. Verified both by reading the actual test files.
+  Reworded the list's own lead-in to drop "the ONLY" and say plainly that the list is not
+  exhaustive and the full `cargo test` suite must also stay green, then added the surface-guard
+  test to the list (with the verification spelled out inline) and noted the gated `e2e_live.rs`
+  callers as relevant-but-out-of-Red-Gate-scope.
+- P27-003 (LOW): Two separate spots in AC-004, plus Task 10(c), cited `wave-holdout-scenarios.md`
+  (by holdout ID) as part of why a given behavior is enforced or why a given test suite must stay
+  green. That file is not one of this story's own `inputs:` -- and it can't be added, because the
+  holdout file itself lists this story as one of ITS inputs, so citing it back would be a cycle.
+  Reworded all three spots so the holdout citation reads as a "see also" cross-reference only,
+  never as part of the actual enforcement mechanism: AC-004's headers-untouched claim now rests
+  solely on the function's own signature plus PR code review (already named there); AC-004's
+  no-regression-for-`tests/cli_handler.rs` claim now rests solely on this story's own Task
+  10(c)/Task 14; and Task 10(c)'s inclusion of the pre-existing `src/cli/api.rs` unit-test suite
+  now stands on its own footing -- it belongs on the list because it is a pre-existing test suite
+  of the very file this story modifies, not because the holdout file says so.
+- P27-004 (COSMETIC): the Coverage Scope section and AC-001's Test line both filed "the
+  empty-query-plus-fragment case" pinned example under the citation range covering the equation
+  and strategy paragraph. Checked the actual spec file: that pinned example's own sentence sits
+  inside the immediately-following "pinned-examples tail" range, not the equation/strategy range.
+  Moved the citation in both places, with the corrected line numbers noted inline.
+
+**Sweep** (per the pass-27 dispatch instruction, run across all three cycle-014 stories for each
+finding's pattern):
+- P27-001 sweep: read every fault-model attribution across all three stories that names a
+  wiremock or subprocess cell (as opposed to a direct-call unit test or a property test running
+  against an in-process function) and checked, against the actual argv/fixture the cell uses,
+  whether that fixture could exhibit the claimed fault. This story's own remaining wiremock/
+  subprocess attributions all checked out: the method-orthogonality table test's fixture (five
+  methods, each with and without `-d`) can observe both a method-gated query and a body/query
+  merge; the M1/M2 wiremock cells' fixtures (`-q foo`, `-q =v`) carry the exact distinguishing
+  substrings needed to detect a swapped-message or shared-generic-message fault; the
+  all-or-nothing and first-malformed-reported cells' two-flag fixtures can observe a per-flag-
+  filtering fault and a last-vs-first-reporting fault respectively; the held-open-stdin and
+  before-`-H` cells' fixtures are the exact ones the spec itself calls out as the discriminating
+  cases for an ordering fault. STORY-A's and STORY-B's own fault attributions were re-checked the
+  same way and no further defect of this shape was found in either (STORY-A's wiremock cells for
+  EC-X.7.002-1/5/6 and its `--all` pagination cells all fix the input state the claimed fault would
+  disturb, and their `.expect(0)`/query-pair assertions can observe the disturbance; STORY-B has no
+  wiremock or subprocess cells at all in its fault-model attributions -- every one of its cells is
+  a direct in-process call or a `#[test]`/`proptest!` against a pure function, so this sweep
+  pattern does not apply to it beyond the check already made).
+- P27-002 sweep: searched all three stories for "ONLY", "the complete list", "all of", "every",
+  and "exactly these" used as a completeness claim about an external artifact (a test suite, a
+  regression-guard list) rather than as ordinary prose or a claim this story itself checks
+  mechanically. Found only the one instance, in this story's own Task 10(c); STORY-A and STORY-B
+  have no comparable completeness claim anywhere in their bodies (STORY-A's closing pass-26 note
+  already draws the same distinction this finding draws, calling out that its own "Excluded
+  entirely" list is Red-Gate-tally bookkeeping, not a global regression-guard completeness claim).
+- P27-003 sweep: searched STORY-A and STORY-B for any body text relying on `wave-holdout-
+  scenarios.md` as an enforcement or justification mechanism. Neither story's body mentions that
+  file at all -- both only carry `holdout_anchors:` frontmatter listing their own holdout IDs,
+  which is a plain cross-reference field, not a claim that the holdout file enforces anything
+  inside the AC/Task text. No fix needed in either sibling story.
+
+No new test cell was added or removed by any pass-27 fix in this story; the fixes are attribution,
+citation, and wording corrections only. The Task 10(e) tally (`TOTAL_NEW_TESTS = 45`,
+`RED_TESTS = 41`, `RED_RATIO = 41/44 ~= 0.932`) is unchanged.
+
+Drift note: this pass's edits change what the stored `input-hash` should hash to. Per this pass's
+explicit instruction not to touch `input-hash`, it was left as-is, matching every prior pass's
+convention on this point.
+
+## 2026-09-28 -- F3 pass-28 sweep (no content defect found in this story) and mechanical inputs sweep (P28-003)
+
+No pass-28 finding named this story directly. Two checks were run against it anyway:
+
+- Sweep (per the P28-001 dispatch instruction to check every place a named EXISTING test is said
+  to test, assert, pin, or verify something -- STORY-A's pass-28 review found that
+  tests/user_commands.rs::user_list_requires_project_flag had been overclaimed as directly testing
+  an exit-64-before-any-HTTP-call behavior it does not itself assert): re-read the actual bodies of
+  this story's own named pre-existing-test citations -- tests/cli_handler.rs's
+  test_handler_api_stdout_byte_exact and its three
+  test_parse_api_method_(uppercase|lowercase|mixedcase)_delete_dispatches_http_delete siblings,
+  tests/rate_limit_holdouts.rs::test_s_1_07_h_013_send_raw_gave_up_warning_in_stderr (~L134), and
+  tests/e2e_cli_surface_guard.rs::test_e2e_cli_surface_all_paths_and_flags_exist -- against their
+  actual assertions and line numbers. Every citation checked out exactly as this story describes
+  it. No overclaim of this shape was found in this story.
+- P28-003 (mechanical inputs sweep): grepped this story's body for every cited repository file
+  path, excluding files this story creates (tests/api_query_param.rs, and the sibling story and
+  holdout-scenario files), and compared the result against the frontmatter inputs list. Six cited
+  paths were missing and are added, each verified present on disk with ls:
+  tests/e2e_cli_surface_guard.rs, tests/e2e_live.rs, and tests/mutants_glob_existence.rs (all three
+  cited in Task 10(c)'s regression-guard list); CLAUDE.md (cited for the fix/feat-prefix
+  branch-naming convention); src/jql.rs (cited as the anchor bullet this story's own
+  docs/specs/cargo-mutants-policy.md Scope entry is inserted directly after); and src/cli/user.rs
+  (cited as the location of STORY-A's own already-landed Scope bullet, immediately preceding this
+  story's own insertion point in the same file). No other cited path was found missing.
+
+Story version bumped 5.4 -> 5.5 to record this pass.
+
+Drift note: this pass's edits (including the six added inputs entries) change what the stored
+`input-hash` should hash to. Per this pass's explicit instruction not to touch `input-hash`, it
+was left as-is, matching every prior pass's convention on this point.

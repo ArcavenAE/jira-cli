@@ -22,15 +22,21 @@ inputs:
   - "src/cli/mod.rs"
   - "src/main.rs"
   - "src/cli/api.rs"
+  - "src/cli/user.rs"
+  - "src/jql.rs"
   - "README.md"
+  - "CLAUDE.md"
   - "tests/cli_handler.rs"
   - "tests/rate_limit_holdouts.rs"
+  - "tests/e2e_cli_surface_guard.rs"
+  - "tests/e2e_live.rs"
+  - "tests/mutants_glob_existence.rs"
   - ".cargo/mutants.toml"
   - "docs/specs/cargo-mutants-policy.md"
   - "CHANGELOG.md"
   - "Cargo.toml"
   - "scripts/check-cargo-mutants-policy-citations.sh"
-input-hash: "306dd06"
+input-hash: "f9314d6"
 traces_to: "BC-X.16.001, BC-X.16.002"
 cycle: cycle-014-issue-triage-quickfixes
 estimated_effort: large
@@ -96,7 +102,7 @@ acceptance_criteria_count: 11
 assumption_validations: []
 risk_mitigations: []
 created: "2026-09-26"
-version: "5.3"
+version: "5.5"
 last_updated: "2026-09-28"
 breaking_change: false
 retroactive: false
@@ -142,7 +148,38 @@ H-CYCLE14-W2-REG-001 requires and the list previously omitted; and corrected two
 misstatements, in AC-009 (the "no EC-5..10 argv value contains a second `=`" claim, corrected to
 describe the clap-delivered `raw` values instead) and in AC-003 (a false claim about this repo's
 `#[tokio::test]`-vs-`#[test]` convention) -- see the revision-history file for the dated entry.
-Story version 5.3.
+Pass-27 then split AC-004's zero-flag fault-model attribution so the fragment-dropped-on-zero-pairs
+fault is credited to the zero-flag `proptest!` alone rather than jointly with the zero-flag
+wiremock examples, after verifying that neither of the two wiremock examples carries a `#fragment`
+and that the `proptest!`'s own generator is pinned to include `#fragment` paths; changed the two
+`wave-holdout-scenarios.md` citations in AC-004 and the one in Task 10(c) from enforcement/
+justification to "see also" provenance, since that file is not one of this story's `inputs:` and
+relying on it there would create an input-hash cycle (the holdout file itself lists this story in
+its own inputs); dropped Task 10(c)'s "the ONLY regression guards" claim in favor of an explicitly
+non-exhaustive list, adding `tests/e2e_cli_surface_guard.rs::test_e2e_cli_surface_all_paths_and_flags_exist`
+(verified: its `SURFACE` table runs `jr api --help`) and the gated `tests/e2e_live.rs` `jr api`
+callers; and moved the empty-query-plus-fragment pinned example's citation from `L4007-4023` to
+`L4024-4031` in both the Coverage Scope section and AC-001 (verified against `cross-cutting.md`:
+the example's own text is at L4024-4025, not inside L4007-4023) -- see the revision-history file
+for the dated entry.
+Pass-28 (2026-09-28) found no content defect specific to this story: the same-pattern sweep
+dispatched by STORY-A's P28-001 finding (a named EXISTING test said to "test"/"assert"/"pin"/
+"verify" something it does not itself assert) was re-run against this story's own named
+pre-existing-test citations -- `tests/cli_handler.rs::test_handler_api_stdout_byte_exact` and its
+three `test_parse_api_method_*_delete_dispatches_http_delete` siblings,
+`tests/rate_limit_holdouts.rs::test_s_1_07_h_013_send_raw_gave_up_warning_in_stderr` (~L134), and
+`tests/e2e_cli_surface_guard.rs::test_e2e_cli_surface_all_paths_and_flags_exist` -- against their
+actual bodies, and every citation checked out. This pass did run the mechanical `inputs:` sweep
+(P28-003): grepped this story's body for every cited repository file path, excluding files this
+story creates (`tests/api_query_param.rs`, and the sibling story and holdout-scenario files), and
+compared the result against the frontmatter inputs list. Six cited paths were missing and are
+added, each verified present on disk with `ls`: `tests/e2e_cli_surface_guard.rs`,
+`tests/e2e_live.rs`, and `tests/mutants_glob_existence.rs` (all three cited in Task 10(c)'s
+regression-guard list); `CLAUDE.md` (cited for the `fix/`/`feat/`-prefix branch-naming
+convention); `src/jql.rs` (cited as the anchor bullet this story's own `docs/specs/cargo-mutants-
+policy.md` §Scope entry is inserted directly after); and `src/cli/user.rs` (cited as the location
+of STORY-A's own already-landed §Scope bullet, immediately preceding this story's own insertion
+point in the same file). No other cited path was found missing. Story version 5.5.
 
 ## Coverage Scope (D-387)
 
@@ -232,9 +269,10 @@ below.
 - `[EXCLUDE:L4002]` "**Verification Properties**:" heading line, shared by VP-API-QP-001..004
 - `[SCOPE:L4003-4006]` VP-API-QP-001..004 shared preamble (purity statement;
   `url::form_urlencoded::parse` test-oracle-only note)
-- `[SCOPE:L4007-4023]` VP-API-QP-001 equation + strategy (pinned examples: EC-4, EC-5, the
-  empty-query-plus-fragment case, EC-8 (both forms), EC-9)
-- `[SCOPE:L4024-4031]` VP-API-QP-001 pinned-examples tail (EC-14, EC-12) + fault-models
+- `[SCOPE:L4007-4023]` VP-API-QP-001 equation + strategy (pinned examples: EC-4, EC-5, EC-8 (both
+  forms), EC-9)
+- `[SCOPE:L4024-4031]` VP-API-QP-001 pinned-examples tail (the empty-query-plus-fragment case
+  (verified: `cross-cutting.md` L4024-4025), EC-14, EC-12) + fault-models
 - `[SCOPE:L4032-4041]` VP-API-QP-002 oracle
 - `[SCOPE:L4042-4048]` VP-API-QP-002 generator-constraint
 - `[SCOPE:L4049-4050]` VP-API-QP-002 pinned-decode-example
@@ -372,9 +410,10 @@ cell; `url::form_urlencoded::parse`
 test-oracle-only note -- informational: enforced by which module each test calls it from
 (`#[cfg(test)] mod tests` vs. production code), confirmed at PR code review, no dedicated
 assertion),
-VP-API-QP-001's equation and strategy `[CC:L4007-4023]` (pinned examples EC-X.16.001-4, -5, the
-empty-query-plus-fragment case, and -8 (both forms) and -9), and VP-API-QP-001's pinned-examples
-tail and fault-models `[CC:L4024-4031]` (pinned examples -14 and -12; the fault models this AC's
+VP-API-QP-001's equation and strategy `[CC:L4007-4023]` (pinned examples EC-X.16.001-4, -5, and
+-8 (both forms) and -9), and VP-API-QP-001's pinned-examples
+tail and fault-models `[CC:L4024-4031]` (pinned examples the empty-query-plus-fragment case
+(verified: `cross-cutting.md` L4024-4025), -14, and -12; the fault models this AC's
 own tests kill: the separator oracle `proptest!` kills the general `?`/`&`-swapped and
 `ends_with`-boundary faults over its whole generated space, while the `/s?#f`
 empty-query-plus-fragment pinned example specifically kills `find('?')` evaluated over the whole
@@ -507,8 +546,11 @@ before `resolve_body`/`-H` parsing) plus PR code review, not by a dedicated runt
 (c) **(P17-001)** the "never mutates ... headers" half has its own mechanism, distinct from (a)'s
 body check: `append_query_params`'s signature takes no header parameter at all (only `path: &str`
 and `pairs: &[(String, String)]`), so it structurally cannot touch headers -- confirmed at PR code
-review, and reinforced by holdout `H-CYCLE14-W2-INT-001` (`wave-holdout-scenarios.md`), which does
-assert the received request retains its `X-Custom: 1` header unaffected by `-q`),
+review, which is this AC's own enforcement mechanism for this sub-clause (see also holdout
+`H-CYCLE14-W2-INT-001` in `wave-holdout-scenarios.md`, which independently asserts the received
+request retains its `X-Custom: 1` header unaffected by `-q` -- provenance only, cited for
+cross-reference; `wave-holdout-scenarios.md` is not one of this story's `inputs:` and this AC does
+not rely on it),
 and owns Edge Cases EC-X.16.001-6
 `[CC:L3943-3945]` and -7 `[CC:L3946-3949]` -- see those clauses for the method-orthogonality and
 zero-flag-identity rules; this AC does not restate them and does not narrow them. This AC also
@@ -517,8 +559,10 @@ of the response) and BC-X.1.011 (`-X`/`--method` case-insensitivity) is unaffect
 `[CC:L3865-3866]` -- **(P11-002 correction: the table-driven method-orthogonality wiremock test
 below is NOT this guarantee's verification vehicle -- it exercises only canonical-case methods and
 never asserts stdout.)** The actual verification vehicle is the unmodified, pre-existing
-`tests/cli_handler.rs` suite this story's Task 10(c)/Task 14 and holdout anchor
-`H-CYCLE14-W2-REG-001` already require to stay green both before and after this story:
+`tests/cli_handler.rs` suite this story's Task 10(c)/Task 14 already require to stay green both
+before and after this story (see also holdout anchor `H-CYCLE14-W2-REG-001`, which independently
+names the same suite as MUST-PASS in `wave-holdout-scenarios.md` -- provenance only; that file is
+not one of this story's `inputs:` and this AC does not rely on it):
 `test_handler_api_stdout_byte_exact` (byte-exact raw-passthrough, BC-X.1.007) and
 `test_parse_api_method_uppercase_delete_dispatches_http_delete`,
 `test_parse_api_method_lowercase_delete_dispatches_http_delete`, and
@@ -528,9 +572,17 @@ remain unaffected, and adds no new test cell for this guarantee.
 **Test (D-386 bind-by-reference):** Implements VP-API-QP-004(structural) `[CC:L4092-4098]`,
 VP-API-QP-004(1) `[CC:L4098-4101]`, VP-API-QP-004(2) `[CC:L4101-4106]`, and
 VP-API-QP-004(fault-models) `[CC:L4106-4108]` (the fault models this AC's own tests kill: a `?`
-(or `&`) appended on zero pairs, and the path re-encoded or the fragment dropped on zero pairs --
-both killed jointly by the zero-flag identity `proptest!` (1) and the zero-flag wiremock examples
-(2); query assembly gated on the method, and `-d` content merged into the query -- both killed by
+(or `&`) appended on zero pairs, and the path re-encoded on zero pairs -- all three killed jointly
+by the zero-flag identity `proptest!` (1) and the zero-flag wiremock examples (2); the fragment
+dropped on zero pairs -- killed by (1) ONLY, not jointly: (1)'s own generator is pinned
+(`[CC:L4099-4101]`) to include paths carrying a `#fragment` ("including paths with an existing
+query, a trailing `?` or `&`, and a `#fragment`"), so it can and does exercise this fault; (2)'s
+two zero-flag wiremock examples (`[CC:L4102-4106]`, `jr api rest/api/3/myself` and `jr api
+"/rest/api/3/search?jql=a&"`) carry no `#fragment` at all -- verified against `cross-cutting.md`
+L4103-4105 -- so neither could observe a dropped fragment even if the fault were present; a
+fragment is in any case never transmitted to the server (RFC 9112 §3.2), so this is not a gap in
+(2)'s coverage, merely a fixture that cannot exercise this particular fault; query assembly gated
+on the method, and `-d` content merged into the query -- both killed by
 the table-driven method-orthogonality wiremock test's per-method query-pair and request-body
 assertions; AC-004 is the sole owner of VP-API-QP-004, so no cross-AC split applies here).
 Everything the cited clause(s) specify is binding
@@ -959,20 +1011,33 @@ wiremock-backed set, per that AC's **Test:** line)
     `todo!()` body -- this is RED, it calls the stub directly and is NOT the same cell as the
     non-exempt GREEN wiremock examples in (a2)) and the `-q` method-orthogonality wiremock table's
     `-q`-bearing cells (RED for the same reason);
-    (c) the ONLY regression guards required GREEN both before and after this story: the AC-004
+    (c) regression guards specifically relevant to this story include (this list is NOT
+    exhaustive -- the full `cargo test` suite must also stay GREEN both before and after this
+    story): the AC-004
     zero-flag WIREMOCK EXAMPLES from (a2), EC-X.16.002-8 from (a2) (part of AC-009's test cells --
     P12-005: already GREEN pre-story per P11-005's verification, so it too is a regression guard,
     not merely a RED-at-stub cell), every pre-existing `jr api` test in
     `tests/cli_handler.rs` (unmodified, pre-existing behavior -- must never regress), the
     pre-existing, unmodified `src/cli/api.rs` `#[cfg(test)] mod tests` unit-test suite (~L185-354:
     the `normalize_path` trimming/slash/URL-rejection cells, `parse_header` cells, and
-    `resolve_body` `@file`/`@-`/inline-JSON cells) -- H-CYCLE14-W2-REG-001's own Setup section names
-    this suite by line range as MUST-PASS alongside `tests/cli_handler.rs`, and P26-004 corrects
-    this list's prior omission of it, AND
+    `resolve_body` `@file`/`@-`/inline-JSON cells) -- included here in its own right, as
+    pre-existing tests of the same file this story modifies, which must never regress (P26-004
+    corrects this list's prior omission of it; see also `H-CYCLE14-W2-REG-001`'s own Setup
+    section in `wave-holdout-scenarios.md`, which independently names this same suite as
+    MUST-PASS -- provenance only; that file is not one of this story's `inputs:` and this list's
+    own justification for including the suite does not rely on it), AND
     `tests/rate_limit_holdouts.rs::test_s_1_07_h_013_send_raw_gave_up_warning_in_stderr` (~L134,
     BC-X.1.005/BC-X.1.009 -- drives `jr api /rest/api/3/myself` with zero `-q` flags as a real
     subprocess and asserts on stderr; must remain byte-for-byte unaffected by this story's
-    pre-flight `-q` step).
+    pre-flight `-q` step), AND
+    `tests/e2e_cli_surface_guard.rs::test_e2e_cli_surface_all_paths_and_flags_exist` (verified;
+    always-run, offline, no `JR_RUN_E2E` needed -- its `SURFACE` table carries the entry `(&["api"],
+    &["--output"])`, so it runs `jr api --help` and would fail if this story's clap wiring broke
+    the `api` subcommand's flag surface). The gated `#[ignore]` `jr api` callers in
+    `tests/e2e_live.rs` (e.g. `discover_story_points_field`, ~L147-159, which spawns `jr api
+    /rest/api/3/field`) are likewise relevant regression surface for this story's change, but are
+    out of scope for the Red Gate tally below since they require `JR_RUN_E2E=1` and live network
+    access and are not part of the offline `cargo test` run this tally covers.
     (d) **Full per-cell enumeration** (ADV-C14-F3-P5-002(b); reproduces every pinned example /
     EC id / scenario each AC's Test line requires, tagged RED / GREEN-nonexempt / EXEMPT, so the
     (e) tally below is checkable against this list rather than asserted):

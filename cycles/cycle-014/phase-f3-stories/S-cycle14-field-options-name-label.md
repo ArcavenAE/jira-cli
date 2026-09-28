@@ -30,7 +30,10 @@ inputs:
   - "README.md"
   - "CLAUDE.md"
   - "CHANGELOG.md"
-input-hash: "3f6149b"
+  - ".cargo/mutants.toml"
+  - "docs/specs/cargo-mutants-policy.md"
+  - "Cargo.toml"
+input-hash: "f8c217d"
 traces_to: "BC-X.14.001, BC-X.14.003, BC-X.14.004"
 cycle: cycle-014-issue-triage-quickfixes
 estimated_effort: medium
@@ -92,7 +95,7 @@ acceptance_criteria_count: 9
 assumption_validations: []
 risk_mitigations: []
 created: "2026-09-26"
-version: "5.3"
+version: "5.5"
 last_updated: "2026-09-28"
 breaking_change: false
 retroactive: false
@@ -179,7 +182,37 @@ dated entry. Pass-26 then rewrote AC-003's fault-model attribution for function 
 non-exclusive positive claim (it does kill fault (1), jointly with AC-001's EC-8 cell, rather than
 killing none of the six faults), and pinned, in Task 1a/1b, the `neither` cell's output-length
 assertion that AC-001 already claimed those cells make -- see the revision-history file for the
-dated entry. This is version 5.3 of the story.
+dated entry. Pass-27 (cross-story sweep, triggered by STORY-C's pass-27 findings) re-checked this
+story for STORY-C's four pass-27 defect patterns and found none: this story has no wiremock or
+subprocess cells in any fault-model attribution at all (every cell is a direct in-process call or
+a `#[test]`/`proptest!` against a pure function, `normalize_from_allowed_values_at_depth`/
+`normalize_from_valid_values`), so the fragment/fixture-mismatch pattern does not apply; this story
+makes no "ONLY"/completeness claim about an external test suite; and this story's body never cites
+`wave-holdout-scenarios.md` as an enforcement mechanism -- only its `holdout_anchors:` frontmatter
+names its own holdout IDs. See the revision-history file for the dated entry.
+Pass-28 (2026-09-28) fixed one cosmetic finding (P28-004) and ran the mechanical `inputs:` sweep
+(P28-003), plus the same-pattern sweep dispatched by STORY-A's P28-001 finding. P28-004: the
+Coverage Scope intro said "Six cycle-014-marked spans are intentionally left unlisted", but the
+six bullets that follow enumerate eight spans in total (one bullet, the Trace-field-edits bullet,
+covers three separate line ranges). The intro now reads "Six groups (eight spans)". P28-001
+sweep: re-read the actual bodies of every named pre-existing test this story cites (the
+`search_field_list`/`normalize_from_allowed_values_at_depth`/`normalize_from_valid_values`
+unit tests in `src/cli/field.rs`, and the integration tests in `tests/field_options.rs` and
+`tests/issue_edit_field.rs`) against their claimed line numbers and assertions; every citation
+checked out (e.g. `test_bc_x_14_001_is_customfield_literal_accepts_and_rejects` at line 897,
+`test_bc_x_14_001_normalizer_never_drops_degenerate_entries` at line 1135, and
+`test_bc_x_14_001_normalizer_from_valid_values_never_drops_degenerate_entries` at line 1195,
+matching this story's own pinned line numbers exactly) -- no overclaim of this shape was found in
+this story. P28-003 (mechanical inputs sweep): grepped this story's body for every cited
+repository file path, excluding files this story creates (including the future
+`red-gate-log.md` implementation artifact Task 6 records into, and the sibling story and
+holdout-scenario files), and compared the result against the frontmatter inputs list. Three cited
+paths were missing and are added, each verified present on disk with ls: `.cargo/mutants.toml`
+and `docs/specs/cargo-mutants-policy.md` (both cited in the STORY-C-dependency-rationale table's
+negative claim that this story does NOT touch either file, which was itself verified against
+`.cargo/mutants.toml`'s existing `src/cli/field.rs` entry), and `Cargo.toml` (cited for the pinned,
+unchanged `serde`/`serde_json`/`proptest` dependency versions). No other cited path was found
+missing. Story version bumped 5.4 -> 5.5 to record this pass.
 
 ## Coverage Scope (D-387)
 
@@ -197,7 +230,8 @@ hand-maintained table that can drift from the citations it is supposed to summar
 amended or added in cycle-014 (per `prd-delta.md`) is in SCOPE and cited from an AC below --
 including doc-only corrections (e.g. the `[CORRECTED cycle-014: ...]`-marked spans), not only the
 #861 behavior-changing amendments. Pre-existing text this story does not touch is NOT listed. Six
-cycle-014-marked spans are intentionally left unlisted, for the reasons given:
+groups (eight spans) of cycle-014-marked text are intentionally left unlisted, for the reasons
+given:
 - L2717-2718 (the "Previous version (pre-cycle-014, spec 2.3.2)" blockquote) -- a historical
   metadata note recording the PRIOR wording, not itself binding spec text this story implements.
 - L2670-2675 (the M2 project-resolution paragraph's "Known ordering drift" sentence, new this

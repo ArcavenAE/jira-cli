@@ -998,3 +998,90 @@ Drift note: this pass's edits change what the stored `input-hash` should hash to
 explicit instruction not to touch `input-hash`, it was left as-is -- the resulting drift is
 expected, matching this story's own and the sibling stories' prior-pass convention on this point,
 and is for state-manager/orchestrator to reconcile, not something this pass tried to paper over.
+
+## 2026-09-28 -- F3 pass-27 sweep (no content defect found in this story)
+
+STORY-C's pass-27 review raised four findings against that story (a fault-model attribution that
+grouped a fragment-dropped claim with a wiremock example that carries no fragment; an "ONLY
+regression guards" completeness claim missing a real guard; two enforcement citations to
+`wave-holdout-scenarios.md`, a file not in that story's own inputs; and a pinned-example citation
+filed under the wrong line range) and dispatched a cross-story sweep for each pattern. Checked
+this story against all four:
+
+- Fault-model attributions naming a wiremock or subprocess cell (P27-001 pattern): this story's
+  wiremock cells for EC-X.7.002-1/2/3/5/6 and its two `--all` pagination cells each fix the exact
+  input state (which of local/global/configured-default is present, and at what value) that the
+  fault they are claimed to kill would disturb, and each cell's own assertion (an `.expect(0)`/
+  `.expect(1)` on a specific mock, or the received `projectKeys` query parameter) can actually
+  observe that disturbance. No cell was found attributing a fault it structurally cannot detect.
+- "ONLY"/completeness claims about an external artifact (P27-002 pattern): searched this story's
+  body for "ONLY", "the complete list", "all of", "every", and "exactly these" used as a
+  completeness claim about a test suite or regression-guard list. None found -- this story's own
+  Task 7 "Excluded entirely (not new tests)" list is Red-Gate-tally bookkeeping (which pre-existing
+  tests never enter `TOTAL_NEW_TESTS`), the same distinction already drawn in this file's own
+  pass-26 entry, not a global "these are the only guards" claim the way STORY-C's Task 10(c) was.
+- Body text relying on `wave-holdout-scenarios.md` as enforcement (P27-003 pattern): this story's
+  body does not mention that file anywhere -- only its `holdout_anchors:` frontmatter
+  (`H-CYCLE14-W1-INT-001`, `H-CYCLE14-W1-REG-001`, `H-CYCLE14-W1-REG-002`) names its own holdout
+  IDs, which is a plain cross-reference field, not a claim inside any AC/Task that the holdout
+  file enforces something. No fix needed.
+- Pinned-example / clause citations filed under the wrong line range (P27-004 pattern): this
+  story's own CC citations were spot-checked against the same style of error (a named
+  pinned example or sub-clause filed one range over from where its actual text sits in
+  `cross-cutting.md`); none was found. This story's Coverage Scope section and AC citations were
+  already re-verified line-by-line during earlier passes (pass-9's Gap 1/Gap 2, pass-22's P22-004/
+  P22-005), and no new instance turned up on this re-check.
+
+No content edit was made to this story's body beyond bumping its Revision History pointer and
+version to 5.4 to record this sweep; no new test cell was added and the Task 7 density tally
+(`RED_TESTS = 9`, `EXEMPT_TESTS = 3`, `RED_RATIO = 9/11 ~= 0.82`) is unchanged.
+
+Drift note: this pass's edits change what the stored `input-hash` should hash to. Per this pass's
+explicit instruction not to touch `input-hash`, it was left as-is, matching every prior pass's
+convention on this point.
+
+## 2026-09-28 -- F3 pass-28 fixes (P28-001, P28-002) and mechanical inputs sweep (P28-003)
+
+Two findings were raised against this story and both are fixed, plus a mechanical sweep of the
+`inputs:` frontmatter list:
+
+- P28-001 (LOW): AC-004 had claimed that the pre-existing
+  `tests/user_commands.rs::user_list_requires_project_flag` "directly tests" the
+  exit-64-before-any-HTTP-call behavior. Re-reading that test's actual body (~L122-139) shows its
+  only assertions are `!output.status.success()` and a stderr substring match on `--project` or
+  `required` -- it does not itself observe exit code 64 or the before-any-HTTP-call ordering. Fix:
+  AC-004 now names the new EC-X.7.002-4 cell (Task 6) as the sole owner of that clause, and
+  describes the pre-existing test only as corroborating non-success, the pinned substring, and the
+  absence of a successful HTTP call (via its unreachable `JR_BASE_URL=http://127.0.0.1:1`), per
+  verification-delta.md §2. The test itself was NOT changed and no exit-64 assertion was added to
+  it -- cross-cutting.md's own Invariant (line 810) pins that loose assertion as the intended,
+  settled form; tightening the test would contradict the spec it is pinned against.
+- P28-002 (LOW): AC-003's citation of BC-X.7.002 Fix step 4's second sentence (cross-cutting.md
+  line 779) previously left its two halves unattributed. Fix: added plain-prose labels -- the
+  "exits 64 on `None`" half is observed by AC-004's EC-X.7.002-4 cell; the "`handle_list` calls
+  this resolver with the post-clap value" half (the unconditional call) is informational and
+  structural, enforced by Task 9's removal of the stub short-circuit plus PR review, and is not
+  independently observable at runtime because `config.project_key(Some(p)) == Some(p)`.
+- Sweep (per the P28-001 dispatch instruction to check every place a named EXISTING test is said
+  to test, assert, pin, or verify something): re-read the actual bodies of this story's other
+  named pre-existing-test citations -- `tests/user_commands.rs::user_list_by_project_returns_users`,
+  `tests/user_pagination.rs::user_list_all_cli_paginates` and its cap-hitting sibling, and
+  `tests/all_flag_behavior.rs::user_list_default_caps_at_thirty` -- against `tests/user_commands.rs`,
+  `tests/user_pagination.rs`, and `tests/all_flag_behavior.rs`. Each supplies `--project`
+  explicitly and is described only as bypassing the resolver at stub or after; that description
+  matches each test's actual body. No further overclaim was found.
+- P28-003 (mechanical inputs sweep): grepped this story's body for every cited repository file
+  path (src, tests, scripts, docs, dot-cargo, and root-level files), excluding files this story
+  creates and the sibling story and holdout-scenario files, and compared the result against the
+  frontmatter inputs list. Three cited paths were missing and are added, each verified present on
+  disk with ls: CLAUDE.md (cited for the cargo mutants in-diff command and the fix-prefix
+  branch-naming convention), src/jql.rs (cited as the anchor bullet the new
+  docs/specs/cargo-mutants-policy.md Scope entry is inserted directly after), and
+  tests/mutants_glob_existence.rs (cited in AC-011's Test line). No other cited path was found
+  missing.
+
+Story version bumped 5.4 -> 5.5 to record this pass.
+
+Drift note: this pass's edits (including the three added inputs entries) change what the stored
+`input-hash` should hash to. Per this pass's explicit instruction not to touch `input-hash`, it
+was left as-is, matching every prior pass's convention on this point.

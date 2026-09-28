@@ -27,16 +27,19 @@ inputs:
   - "src/cli/field.rs"
   - "src/cli/queue.rs"
   - "src/cli/requesttype.rs"
+  - "src/jql.rs"
   - "tests/user_commands.rs"
   - "tests/all_flag_behavior.rs"
   - "tests/user_pagination.rs"
+  - "tests/mutants_glob_existence.rs"
   - "README.md"
+  - "CLAUDE.md"
   - ".cargo/mutants.toml"
   - "docs/specs/cargo-mutants-policy.md"
   - "scripts/check-cargo-mutants-policy-citations.sh"
   - "Cargo.toml"
   - "CHANGELOG.md"
-input-hash: "576c1fd"
+input-hash: "836f870"
 traces_to: "BC-X.7.002"
 cycle: cycle-014-issue-triage-quickfixes
 estimated_effort: small
@@ -86,7 +89,7 @@ acceptance_criteria_count: 11
 assumption_validations: []
 risk_mitigations: []
 created: "2026-09-26"
-version: "5.3"
+version: "5.5"
 last_updated: "2026-09-28"
 breaking_change: true
 retroactive: false
@@ -142,7 +145,43 @@ new tests)" list is scoped to Red Gate density-tally bookkeeping (which pre-exis
 enter `TOTAL_NEW_TESTS`), not a global "ONLY regression guards required GREEN" completeness claim
 the way STORY-C's Task 10(c) is, so it is not analogous to that gap (P26-004) -- see the
 revision-history file for the dated entry. No content defect was found; no fix was required.
-Story version: 5.3.
+Pass-27 (cross-story sweep, triggered by STORY-C's pass-27 findings) re-checked this story for
+STORY-C's four pass-27 defect patterns and again found none: this story's wiremock fault-model
+attributions all fix an input state whose disturbance their own assertions can actually observe;
+this story makes no "ONLY"/completeness claim about an external test suite anywhere in its body;
+and this story's body never cites `wave-holdout-scenarios.md` as an enforcement mechanism -- only
+its `holdout_anchors:` frontmatter names its own holdout IDs, a plain cross-reference, not a body
+claim relying on that file. See the revision-history file for the dated entry. No content defect
+was found; no fix was required.
+Pass-28 (2026-09-28) fixed two findings against this story (P28-001, P28-002) and ran the
+mechanical `inputs:` sweep (P28-003). P28-001: AC-004 had claimed
+`tests/user_commands.rs::user_list_requires_project_flag` "directly tests" the
+exit-64-before-any-HTTP-call behavior; re-reading that test's actual body (~L122-139) shows its
+only assertions are `!output.status.success()` and a stderr substring match on `--project`/
+`required` -- it does not itself observe exit code 64 or the before-any-HTTP-call ordering. AC-004
+now credits the EC-X.7.002-4 cell as the sole owner of that clause and describes the pre-existing
+test only as corroborating non-success, the pinned substring, and the absence of a successful HTTP
+call (via its unreachable `JR_BASE_URL`), per verification-delta.md §2; the test itself was left
+unchanged, since cross-cutting.md's own Invariant (line 810) pins that loose assertion as the
+intended, settled form. A same-pattern sweep of this story's other named pre-existing-test
+citations (`user_list_by_project_returns_users` in tests/user_commands.rs;
+`user_list_all_cli_paginates` and its cap-hitting sibling in tests/user_pagination.rs;
+`user_list_default_caps_at_thirty` in tests/all_flag_behavior.rs) against their actual bodies found
+no further overclaim -- each supplies `--project` explicitly and is described only as bypassing the
+resolver, which their bodies confirm. P28-002: AC-003's citation of Fix step 4's second sentence
+(cross-cutting.md line 779) previously left its two halves unattributed; it now labels the
+"exits 64 on `None`" half as observed by AC-004's EC-X.7.002-4 cell, and the "`handle_list` calls
+this resolver with the post-clap value" (unconditional-call) half as informational/structural,
+enforced by Task 9's removal of the stub short-circuit plus PR review, and not independently
+observable at runtime because `config.project_key(Some(p)) == Some(p)`. P28-003 (mechanical
+`inputs:` sweep): grepped this story's body for every cited repository path, excluding this
+story's own new files and the sibling story/holdout files, and compared the result against the
+frontmatter `inputs:` list. Three cited paths were missing and are added, each verified present on
+disk with `ls`: `CLAUDE.md` (cited for the `cargo mutants --in-diff` command and the `fix/`-prefix
+branch-naming convention), `src/jql.rs` (cited as the anchor bullet the new
+`docs/specs/cargo-mutants-policy.md` §Scope entry is inserted directly after), and
+`tests/mutants_glob_existence.rs` (cited in AC-011's Test line). No other cited path was found
+missing. Story version: 5.5.
 
 ## Narrative
 
@@ -225,7 +264,12 @@ resolver.
 
 ### AC-003 (traces to BC-X.7.002 Postcondition 3 [CC:L803], EC-X.7.002-3 [CC:L815], EC-X.7.002-5 [CC:L817], EC-X.7.002-7 [CC:L829-836])
 When both local and global `--project` are absent, `resolve_user_list_project(cli_project: Option<&str>, config: &Config) -> Option<String>` (new `pub(crate)` function in `src/cli/user.rs`) falls back to `Config::project_key`'s existing chain: `.jr.toml` project first, then the active profile's configured `project` default (including a non-default `--profile`'s own default, and including an empty-string configured default, EC-X.7.002-7). `handle_list` calls this resolver with the post-clap field value.
-**Test:** Implements BC-X.7.002 Fix step 4 [CC:L777-779] (the pure resolver itself) and
+**Test:** Implements BC-X.7.002 Fix step 4 [CC:L777-779] (the pure resolver itself, L777-778),
+with L779's two halves given their own plain-prose labels: "exits 64 on `None`" is not observed
+by this AC's own cells -- it is observed by AC-004's EC-X.7.002-4 cell; "`handle_list` calls this
+resolver with the post-clap value" (the unconditional call) is informational/structural, enforced
+by Task 9's removal of the stub short-circuit plus PR review, and is not independently observable
+at runtime because `project_key(Some(p)) == Some(p)`. Also implements
 Resolution order step 3 [CC:L785] (configured default consulted only when local and global are
 both absent). Implements VP-USER-LIST-PROJECT-001(b) in full [CC:L858-868],
 VP-USER-LIST-PROJECT-001(c)'s EC-X.7.002-3 three sub-cells [CC:L873-877], and
@@ -267,9 +311,15 @@ this AC's own Task 6 test update described below, except its "stale comment must
 clause, which is (informational -- enforced by PR code review, not by any test assertion).
 Resolution order step 4 [CC:L786], split into its two sentences: (a) its first sentence
 ("Exit 64 -- `JrError::UserError`, when none of (1)-(3) resolve a project, before any HTTP
-call.") is exactly what this AC's own EC-X.7.002-4 cell asserts -- owned by that cell and by
-`user_list_requires_project_flag`, both of which directly test the exit-64-before-any-HTTP-call
-behavior; (b) its second sentence (the `config::validate_profile_name`/`Config::load_with`/
+call.") is exactly what this AC's own EC-X.7.002-4 cell asserts, and that cell is its sole
+owner. `tests/user_commands.rs::user_list_requires_project_flag` (~L122-139) does not itself
+assert this clause -- its own assertions are `!output.status.success()` plus a stderr substring
+match on `--project` or `required`; per verification-delta.md §2, this loose assertion is the
+spec-pinned form and is not being tightened here. That test only corroborates non-success, the
+pinned substring, and the absence of a successful HTTP call (via its unreachable
+`JR_BASE_URL=http://127.0.0.1:1`) -- it does not independently observe exit code 64 or the
+before-any-HTTP-call ordering, both of which are owned exclusively by the EC-X.7.002-4 cell; (b)
+its second sentence (the `config::validate_profile_name`/`Config::load_with`/
 `JiraClient::from_config` preemption clause) is informational, inherited -- this AC's hermetic
 tests must clear those preemption points (by supplying valid auth and a known profile, per
 Preconditions above) to reach BC-X.7.002's own exit-64 path, but do not themselves test the

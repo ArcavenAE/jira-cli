@@ -28,7 +28,7 @@ inputs:
   - "src/types/jsm/request_type.rs"
   - "src/types/jsm/servicedesk.rs"
 traces_to: "BC-X.7.002; BC-X.16.001/002; BC-X.14.001/003/004; VP-USER-LIST-PROJECT-001; VP-API-QP-001..006; VP-580-013"
-input-hash: "1bd261d"
+input-hash: "8754bb3"
 ---
 
 # Wave Holdout Scenarios -- `issue-triage-quickfixes` (cycle-014)

@@ -1050,3 +1050,81 @@ Drift note: this pass's edits change what the stored `input-hash` should hash to
 explicit instruction not to touch `input-hash`, it was left as-is -- the resulting drift is
 expected, matching this story's own and the sibling stories' prior-pass convention on this point,
 and is for state-manager/orchestrator to reconcile, not something this pass tried to paper over.
+
+## 2026-09-28 -- F3 pass-27 sweep (no content defect found in this story)
+
+STORY-C's pass-27 review raised four findings against that story (a fault-model attribution that
+grouped a fragment-dropped claim with a wiremock example that carries no fragment; an "ONLY
+regression guards" completeness claim missing a real guard; two enforcement citations to
+`wave-holdout-scenarios.md`, a file not in that story's own inputs; and a pinned-example citation
+filed under the wrong line range) and dispatched a cross-story sweep for each pattern. Checked
+this story against all four:
+
+- Fault-model attributions naming a wiremock or subprocess cell (P27-001 pattern): this story has
+  none at all. Every one of this story's fault-model attributions (AC-001's functions 1a/1b/2,
+  AC-002's function 1c, AC-003's function 5, AC-004's function 4) is a direct in-process call or a
+  `#[test]`/`proptest!` against `normalize_from_allowed_values_at_depth` or
+  `normalize_from_valid_values` in `src/cli/field.rs`'s own `#[cfg(test)] mod tests` -- there is no
+  wiremock server and no subprocess anywhere in this story's test surface, so a fixture that
+  cannot carry a particular fault-triggering shape (a fragment, a specific character) is not a
+  risk this story's own attributions run.
+- "ONLY"/completeness claims about an external artifact (P27-002 pattern): searched this story's
+  body for "ONLY", "the complete list", "all of", "every", and "exactly these" used as a
+  completeness claim about a test suite or regression-guard list. None found.
+- Body text relying on `wave-holdout-scenarios.md` as enforcement (P27-003 pattern): this story's
+  body does not mention that file anywhere -- only its `holdout_anchors:` frontmatter
+  (`H-CYCLE14-W3-INT-001..003`, `H-CYCLE14-W3-REG-001..003`) names its own holdout IDs, a plain
+  cross-reference field, not a claim inside any AC/Task that the holdout file enforces something.
+  No fix needed.
+- Pinned-example / clause citations filed under the wrong line range (P27-004 pattern): spot-
+  checked this story's own CC citations for the same style of error (a named pinned
+  example or sub-clause filed one range over from where its actual text sits in
+  `cross-cutting.md`). None was found on this re-check.
+
+No content edit was made to this story's body beyond bumping its Revision History pointer and
+version to 5.4 to record this sweep; no new test cell was added and the Task 6 tally
+(`TOTAL_NEW_TESTS = 7`, `RED_TESTS = 5`, `RED_RATIO = 5/7 ~= 0.71`) is unchanged.
+
+Drift note: this pass's edits change what the stored `input-hash` should hash to. Per this pass's
+explicit instruction not to touch `input-hash`, it was left as-is, matching every prior pass's
+convention on this point.
+
+## 2026-09-28 -- F3 pass-28 fix (P28-004) and mechanical inputs sweep (P28-003)
+
+One cosmetic finding was raised against this story, plus the same-pattern sweep dispatched by
+STORY-A's P28-001 finding and a mechanical sweep of the `inputs:` frontmatter list:
+
+- P28-004 (COSMETIC): the Coverage Scope section's intro sentence said "Six cycle-014-marked
+  spans are intentionally left unlisted", but the six bullets that immediately follow enumerate
+  eight spans in total, since one bullet (the Trace-field-edits bullet, covering
+  L3141-3142/L3144-3146/L3154-3161) names three separate line ranges, not one. Fix: reworded the
+  intro to "Six groups (eight spans) of cycle-014-marked text are intentionally left unlisted".
+- Sweep (per the P28-001 dispatch instruction to check every place a named EXISTING test is said
+  to test, assert, pin, or verify something): re-read the actual bodies and line numbers of every
+  named pre-existing test this story cites -- the search_field_list and normalizer unit tests in
+  src/cli/field.rs, and the integration tests in tests/field_options.rs and
+  tests/issue_edit_field.rs -- against this story's own pinned line numbers and assertion claims.
+  Every citation checked out exactly: for example
+  test_bc_x_14_001_is_customfield_literal_accepts_and_rejects at line 897,
+  test_bc_x_14_001_normalizer_never_drops_degenerate_entries at line 1135, and
+  test_bc_x_14_001_normalizer_from_valid_values_never_drops_degenerate_entries at line 1195 in
+  src/cli/field.rs, plus test_bc_x_14_001_customfield_bypass_skips_list_fields at line 1442 and
+  test_bc_x_14_001_field_name_zero_match_exits_64 at line 1591 in tests/field_options.rs -- all
+  matching this story's own pinned line numbers. No overclaim of this shape was found in this
+  story.
+- P28-003 (mechanical inputs sweep): grepped this story's body for every cited repository file
+  path, excluding files this story creates (including the future red-gate-log.md implementation
+  artifact Task 6 records into, and the sibling story and holdout-scenario files), and compared
+  the result against the frontmatter inputs list. Three cited paths were missing and are added,
+  each verified present on disk with ls: dot-cargo mutants.toml and
+  docs/specs/cargo-mutants-policy.md (both cited in the STORY-C-dependency-rationale table's
+  negative claim that this story does NOT touch either file -- a claim independently verified
+  against dot-cargo mutants.toml's existing src/cli/field.rs entry), and Cargo.toml (cited for the
+  pinned, unchanged serde/serde_json/proptest dependency versions). No other cited path was found
+  missing.
+
+Story version bumped 5.4 -> 5.5 to record this pass.
+
+Drift note: this pass's edits (including the three added inputs entries) change what the stored
+`input-hash` should hash to. Per this pass's explicit instruction not to touch `input-hash`, it
+was left as-is, matching every prior pass's convention on this point.
