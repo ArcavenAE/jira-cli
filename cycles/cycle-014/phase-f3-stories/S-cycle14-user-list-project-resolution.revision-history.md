@@ -921,3 +921,80 @@ Drift note: this pass's edits change what the stored `input-hash` should hash to
 explicit instruction not to touch `input-hash`, it was left as-is -- the resulting drift is
 expected, matching this story's own and the sibling stories' prior-pass convention on this point,
 and is for state-manager/orchestrator to reconcile, not something this pass tried to paper over.
+
+## 2026-09-28 -- F3 pass-24 fix (P24-003) plus cycle-wide exclusive-attribution sweep
+
+Finding fixed directly in the story body (version bumped 5.0 -> 5.1; input-hash left untouched):
+
+- P24-003 (cosmetic): AC-005's citation of the exactly-one-request assertions covering
+  Resolution order step 1's "evaluated entirely in-process before any HTTP call" lead-in sentence
+  named the four owning edge cases in the terse slash-separated form "EC-X.7.002-1/3/5/6," which
+  did not match how AC-007's own citation of the same four-owner group spells them out. Reworded
+  AC-005's phrasing to the same enumerated form AC-007 already uses -- "EC-X.7.002-1, EC-X.7.002-3
+  'both', EC-X.7.002-5 and EC-X.7.002-6" -- so the two citations of this shared four-cell group
+  read identically across both ACs. No change to which AC owns which cell; the "owned respectively
+  by AC-005 (this AC, its own EC-1 cell)/AC-003/AC-009/AC-006" attribution that follows is
+  unchanged.
+
+Cycle-wide sweep (requested alongside a sibling-story finding, P24-001, that two exclusive
+fault-model attribution statements in S-cycle14-api-query-param were factually wrong): grepped this
+story for every "fault model" citation and every "not by this AC"/"solely"/"only by" phrase. This
+story's own fault-model citations (in AC-003, AC-006, AC-007, and AC-009, all citing
+cross-cutting.md's VP-USER-LIST-PROJECT-001 fault-model sentence) were already phrased as
+non-exclusive positive statements from the pass-23 sweep recorded above (e.g. AC-003's "fault (1)
+... and, jointly with AC-007, fault (2) ..."; AC-007's "fault (4) ... and, jointly with AC-003,
+fault (2) ... -- this AC's configured-default `--all` cell is one of the tests that kills it") --
+none of them made a bare negative/exclusive claim of the kind the sibling-story finding flagged, so
+no rewrite was needed here. The remaining "not by this AC"/"not by an AC" instances in this story
+(AC-001's, AC-002's, and AC-009's precondition/invariant cross-references) are a different class:
+each is a structural claim about which single mechanism verifies a given BC clause (already
+labeled informational, and already stating inline which other AC's cell or code-review mechanism
+does the verifying), not a probabilistic claim about which mutation a set of cells happens to
+kill -- so they were left as-is. Also swept for stray unmatched double-asterisk bold markers and
+unbalanced backticks story-wide: none found (double-asterisk and backtick counts are both even,
+and every long bold span was verified to open and close within the same parenthetical).
+
+Drift note: this pass's edits change what the stored `input-hash` should hash to. Per this pass's
+explicit instruction not to touch `input-hash`, it was left as-is -- the resulting drift is
+expected, matching this story's own and the sibling stories' prior-pass convention on this point,
+and is for state-manager/orchestrator to reconcile, not something this pass tried to paper over.
+
+## 2026-09-28 -- F3 pass-26 sweep (no content defect found in this story)
+
+STORY-C's pass-26 review found three defect patterns in the sibling stories (STORY-C itself and
+STORY-B): an unpinned proptest generator property backing a fault-kill claim, a fault-model label
+that contradicted the story's own RED classification, and an AC assertion claim with no backing
+Task requirement. This story was swept for the same three patterns plus the pass-26 cosmetic
+convention check, and none were found:
+
+- Generator-property pin (P26-001 pattern): this story's own pure-resolver `proptest!`
+  (VP-USER-LIST-PROJECT-001(b)) generates "distinct arbitrary non-empty keys `C`, `J`, `P`" -- that
+  constraint is already pinned directly in the binding VP text (`cross-cutting.md` L858-860, "with
+  distinct arbitrary non-empty keys `C`, `J`"), not merely asserted informally in this story's own
+  prose, so no Task-level pin is missing the way STORY-C's Task 6 was missing one for AC-005.
+- Fault-model label vs. RED classification (P26-002 pattern): checked every "informational"/"does
+  not kill" fault-model phrase in this story (e.g. AC-005's and AC-006's citations of EC-X.7.002-1
+  Postcondition 1's "regardless of a configured default" half, AC-004's Invariants citation) against
+  this story's own RED/GREEN classification (Task 7). None labels a cell as not killing a fault
+  that the cell's own RED status, per Task 7's tally, contradicts.
+- Unbacked "asserts X" claim (P26-003 pattern): checked every AC claim in this story that a cell
+  "asserts"/"assertion" covers a given behavior. Every instance traces either to a cited binding
+  BC/VP clause (e.g. the exactly-one-request assertions each EC's wiremock cell makes, per
+  VP-USER-LIST-PROJECT-001(c)'s own clause text) or to an explicit Task-level requirement (e.g.
+  Task 3's inline multi-cell test, Task 4's `proptest!`). No claim of a test behavior with no Task
+  or VP backing was found, unlike STORY-B's AC-001 `neither`-cell entry-count claim.
+- `#[tokio::test]`-vs-`#[test]` convention (P26-006 pattern): this story's own AC-008
+  Story-specific mapping already states the accurate, narrower rationale ("this cell spawns `jr
+  user list --help` as a plain subprocess and asserts on its stdout; it makes no wiremock server
+  call and needs no async runtime") -- confirmed correct against `tests/user_commands.rs`'s and
+  `tests/user_list_project_resolution.rs`'s actual test attributes; no false "convention reserves
+  `#[tokio::test]` for ..." claim exists in this story, unlike STORY-C's AC-003.
+
+No content edit was made to this story's body beyond bumping its Revision History pointer and
+version to 5.3 to record this sweep; no new test cell was added and the Task 7 density tally
+(`RED_TESTS = 9`, `EXEMPT_TESTS = 3`, `RED_RATIO = 9/11 ~= 0.82`) is unchanged.
+
+Drift note: this pass's edits change what the stored `input-hash` should hash to. Per this pass's
+explicit instruction not to touch `input-hash`, it was left as-is -- the resulting drift is
+expected, matching this story's own and the sibling stories' prior-pass convention on this point,
+and is for state-manager/orchestrator to reconcile, not something this pass tried to paper over.

@@ -1109,8 +1109,8 @@ story (VP-API-QP-001 through -006); all 6 are now scoped (2 were already scoped 
 P22-001 fix; 4 needed the same-AC scoping fix above; the VP-API-QP-006 pair needed the cross-AC
 scoping fix in P23-002 above).
 
-Pattern sweep (b), multi-sided clauses, applied across this whole story: checked every `[CC:...]`
-citation against its cited cross-cutting.md text for "regardless of"/"and"/"both"/"before ... and
+Pattern sweep (b), multi-sided clauses, applied across this whole story: checked every CC citation
+against its cited cross-cutting.md text for "regardless of"/"and"/"both"/"before ... and
 after"/"either ... or"/lists of conditions. Specifically re-verified: BC-X.16.001 Postcondition 2's
 `?`-presence-evaluated-before-`&`-termination ordering (AC-001's "in full" citation is accurate --
 the separator-oracle `proptest!` asserts the whole case-split, ordering included); BC-X.16.001
@@ -1136,3 +1136,125 @@ was needed for sweep (b) beyond confirming coverage.
 
 Whenever this entry refers to the citation mechanism, it uses the plain phrase "CC tag" with no
 bracket syntax, per this file's own established convention.
+
+## 2026-09-28 -- F3 pass-24 fixes (P24-001, P24-002) plus cycle-wide exclusive-attribution and stray-marker sweep
+
+Findings fixed directly in the story body (version bumped 5.0 -> 5.1; input-hash left untouched):
+
+- P24-001 (low): two of this story's fault-model CC citations made an exclusive attribution claim
+  that turned out to be factually wrong once checked against the cell design each AC actually owns.
+  AC-006's citation said "the other seven faults in this clause are not killed by this AC's own
+  tests" -- but AC-006 also owns the `-q =v` (M2) wiremock cell, and that cell's exact-message/
+  distinguishing-substring assertion fails under both the swapped-M1/M2 fault and the
+  one-shared-generic-message fault, exactly as AC-005's own M1 cell and partition proptest do.
+  Reworded AC-006's citation to credit the M2 cell for also killing those two faults, while keeping
+  AC-005's cells as the primary owners, and kept a narrowed negative claim -- with the verification
+  stated inline -- for the remaining five faults that AC-006's cells genuinely cannot observe (no
+  `--output json` invocation on the M2 cell, so the stdout/stderr-envelope fault stays with AC-006
+  itself; the other four remain AC-005's). AC-009's citation said the remaining faults, including
+  "an empty-NAME check evaluated before the missing-`=` check," were "owned by AC-005 and AC-006,
+  not by this AC's own cells." Checked cross-cutting.md's own fault-model sentence (~L4360): it
+  attributes that fault to "the `""` cells," plural, and AC-009's own EC-9 cell is one of the `""`
+  cells (its three argv variants all feed an empty raw value), alongside AC-005's pinned
+  `parse_query_param("")` example. Also checked whether AC-009's EC-5/EC-6/EC-7 cells kill the
+  swapped-M1/M2 and one-shared-generic-message faults claimed exclusive to AC-005/AC-006: each of
+  those three cells asserts its own distinguishing substring present and the other absent, which
+  fails under either fault, so they do kill both, non-exclusively. Reworded AC-009's citation to
+  credit its own EC-5/EC-6/EC-7 and EC-9 cells for these three faults while keeping AC-005's
+  proptest and AC-006's envelope cell as the primary owners, and kept a narrowed negative claim --
+  with the verification stated inline -- for the two faults AC-009's own attached-form cells
+  genuinely cannot observe (none of its EC-5..10 argv values carries a second `=` character or a
+  non-empty whitespace-only NAME, so the split-on-last-`=` and NAME-trimmed-before-empty-check
+  faults stay with AC-005's proptest).
+- P24-002 (cosmetic): two stray, unmatched double-asterisk bold markers -- one after "...unaffected
+  by `-q`" in AC-004's P17-001 correction, one after "...does not yet exist as a recognized option"
+  in AC-009's Task 9 red/green classification -- were removed. Both were leftover closing markers
+  with no matching opener; the short, self-contained bold labels around them ("(P16-003
+  classification:", "(P17-001)", "(P11-005 correction:") were already correctly self-closed.
+
+Cycle-wide sweep (this story was the origin of the P24-001 finding): grepped this story for every
+"fault model"/"not killed by"/"only by"/"owned by ... not"/"solely" phrase. Beyond the two fixes
+above, found two further kept negative claims (AC-005's citation of the two faults AC-006/AC-009
+own, and AC-007's/AC-008's citations of each other's ordering/reporting faults) that were already
+accurate but lacked an inline verification sentence explaining why this AC's own cells cannot
+observe the fault in question; added one to each (e.g. AC-005's cells never invoke `--output json`
+and never supply a hyphen-leading argv token; AC-007's four cells never hold stdin open or supply a
+`-H` flag; AC-008's two cells each supply exactly one malformed value, never two). No exclusive
+claim in this story was found to be both false and left unfixed after this sweep. Also swept for
+stray unmatched double-asterisk bold markers and unbalanced backticks story-wide beyond the two
+P24-002 instances: none found (double-asterisk and backtick counts are both even after the P24-002
+fix, and the one remaining long bold span -- the P17-001 Postcondition-1-ordering correction --
+was verified to open and close within the same parenthetical).
+
+Drift note: this pass's edits change what the stored `input-hash` should hash to. Per this pass's
+explicit instruction not to touch `input-hash`, it was left as-is -- the resulting drift is
+expected, matching this story's own and the sibling stories' prior-pass convention on this point,
+and is for state-manager/orchestrator to reconcile, not something this pass tried to paper over.
+
+## 2026-09-28 -- F3 pass-26 fixes (P26-001 medium, P26-004 low, P26-005 cosmetic, P26-006 cosmetic)
+
+- P26-001 (MEDIUM): AC-005's fault-models paragraph claimed two of its own tests' fault kills --
+  "split on the last `=` instead of the first" and "`{raw}` replaced by a trimmed or re-split
+  value" -- without Task 6 ever pinning the generator properties those claims depend on: the
+  VALUE/`rest` strategy's ability to produce a string containing one or more `=` characters, and
+  the M1/M2 `raw` strategy's ability to produce leading/trailing whitespace. Without those pins, a
+  compliant generator could omit both shapes entirely and the proptest would never exercise either
+  fault. Fixed by adding both requirements to Task 6 (mirroring STORY-B's own Task 2 pinning
+  style, which pins an empty-string requirement on its `value`/`name` strategies for the same
+  reason), and by rewording AC-005's fault-models sentence so each claim states it relies on its
+  matching Task 6 requirement.
+- P26-004 (LOW): Task 10(c)'s "ONLY regression guards required GREEN both before and after this
+  story" list omitted the pre-existing `src/cli/api.rs` `#[cfg(test)] mod tests` unit-test suite
+  (the `normalize_path` trimming/slash/URL-rejection cells, `parse_header` cells, `resolve_body`
+  cells), which `wave-holdout-scenarios.md`'s H-CYCLE14-W2-REG-001 explicitly names by line range
+  as MUST-PASS alongside `tests/cli_handler.rs`. Verified against the actual file: the `mod tests`
+  block in `src/cli/api.rs` starts at line 182 and ends at line 354, matching the holdout's own
+  `~L185-354` citation. Fixed by adding this suite to Task 10(c)'s list.
+- P26-005 (COSMETIC): AC-009 claimed "none of this AC's own EC-5..10 argv values contain a second
+  `=` or a non-empty whitespace-only NAME," to explain why its own cells cannot kill two faults
+  AC-005's proptest owns -- but the EC-6/EC-7 argv tokens themselves (`-q==v`,
+  `--query-param==v`) do contain a second `=`; it is the `raw` value clap actually delivers to
+  `parse_query_param` (`v`, `=v`, or the empty string) that never does. Reworded to describe the
+  clap-delivered `raw` values instead of the argv tokens.
+- P26-006 (COSMETIC): AC-003 claimed "this repo's convention reserves `#[tokio::test]` for cells
+  that call `MockServer::start().await`." Verified against `tests/user_commands.rs`:
+  `user_list_requires_project_flag` (STORY-A) is `#[tokio::test]` and calls no `MockServer` at
+  all, so the claimed convention is false. Reworded to the accurate, narrower rationale already
+  used elsewhere in this cycle's stories: a `--help` cell needs no async runtime (no wiremock), so
+  it is a plain `#[test]`.
+
+**Sweep** (per the pass-26 dispatch instruction, run across all three cycle-014 stories for each
+finding's pattern):
+- P26-001 sweep: checked every proptest fault-kill claim in all three stories for a matching
+  generator-property pin. STORY-A's pure-resolver proptest's "distinct arbitrary non-empty keys
+  `C`, `J`, `P`" constraint is already pinned directly in the binding VP text
+  (`cross-cutting.md` L858-860), needing no story-level Task pin. STORY-B's own recursive
+  `AllowedValue` proptest already has its empty-string generator requirement pinned in Task 2
+  (added pass-25). This story's own VP-API-QP-001/002/003 proptests' generator properties (the
+  separator oracle's path-shape coverage, VP-002's own "generator constraint" anti-vacuity
+  assertion, VP-003's biased-alphabet strategy) are all pinned directly in their binding VP text in
+  `cross-cutting.md`, with Task 3/4 already restating the load-bearing assertion requirements (the
+  anti-vacuity assertion, the output-extraction requirement for the round-trip check). Only
+  VP-API-QP-005's two faults named in P26-001 were unpinned; fixed above. No other gap found.
+- P26-002-pattern sweep: checked every "informational"/"does not kill" fault-model label in all
+  three stories against the story's own RED classification. Found no instance of that pattern in
+  this story (the defect this sweep pattern targets was in STORY-B's AC-003, fixed there).
+- P26-003-pattern sweep: checked every AC claim that a test "asserts X" in this story against its
+  corresponding Task/VP requirement. Every such claim in this story traces to a cited binding VP
+  clause or an existing Task-level pin (e.g. Task 3's generator-constraint assertion, Task 4's
+  round-trip-extraction requirement, Task 6's `prop_assume!` filter requirement, Task 9's
+  byte-identical-stderr requirement at EC-7). No unbacked claim found in this story (the one found
+  cycle-wide was STORY-B's AC-001, fixed there).
+- P26-006-pattern sweep: checked every `#[tokio::test]`-vs-`#[test]` convention claim in all three
+  stories. STORY-A's own AC-008 Story-specific mapping already uses the correct, narrower phrasing
+  ("it makes no wiremock server call and needs no async runtime"). This story's AC-003 was the
+  only incorrect instance, fixed above.
+
+No new test cell was added by any pass-26 fix in this story: both fixes pin generator properties
+and regression-list membership on already-counted cells/functions. The Task 10(e) tally
+(`TOTAL_NEW_TESTS = 45`, `RED_TESTS = 41`, `RED_RATIO = 41/44 ~= 0.932`) is unchanged.
+
+Drift note: this pass's edits change what the stored `input-hash` should hash to. Per this pass's
+explicit instruction not to touch `input-hash`, it was left as-is -- the resulting drift is
+expected, matching this story's own and the sibling stories' prior-pass convention on this point,
+and is for state-manager/orchestrator to reconcile, not something this pass tried to paper over.

@@ -86,7 +86,7 @@ acceptance_criteria_count: 11
 assumption_validations: []
 risk_mitigations: []
 created: "2026-09-26"
-version: "5.0"
+version: "5.3"
 last_updated: "2026-09-28"
 breaking_change: true
 retroactive: false
@@ -129,9 +129,20 @@ the `[SCOPE:...]`/`[EXCLUDE:...]` lines there, are verified mechanically rather 
 hand-audited. Current Red Gate density tally (Task 7): `RED_TESTS=9`, `EXEMPT_TESTS=3`,
 `GREEN-nonexempt=2`, `TOTAL_NEW_TESTS=14`, denominator=11, `RED_RATIO=9/11≈0.82` (clears the
 BC-8.29.001 `>= 0.5` threshold; unchanged by the pass-14 cosmetic fixes, the pass-22 citation
-fixes (P22-004, P22-005), or the pass-23 fix (P23-003) and fault-model/multi-sided-clause sweep
-recorded in
-`S-cycle14-user-list-project-resolution.revision-history.md`). Story version: 5.0.
+fixes (P22-004, P22-005), the pass-23 fix (P23-003) and fault-model/multi-sided-clause sweep, or
+the pass-26 sweep below, recorded in
+`S-cycle14-user-list-project-resolution.revision-history.md`). Pass-26 (F3 cross-story sweep,
+triggered by STORY-C's pass-26 findings) checked this story for the same three defect patterns
+found in its siblings and found none: VP-USER-LIST-PROJECT-001(b)'s "distinct arbitrary non-empty
+keys `C`, `J`, `P`" generator constraint is already pinned directly in the binding VP text
+(`cross-cutting.md` L858-860), so no Task-level pin is needed to back AC-003's/AC-006's
+fault-kill claims (unlike STORY-C's AC-005, P26-001); no AC in this story makes an unbacked
+"asserts X" claim the way STORY-B's AC-001 did (P26-003); and Task 7's "Excluded entirely (not
+new tests)" list is scoped to Red Gate density-tally bookkeeping (which pre-existing tests never
+enter `TOTAL_NEW_TESTS`), not a global "ONLY regression guards required GREEN" completeness claim
+the way STORY-C's Task 10(c) is, so it is not analogous to that gap (P26-004) -- see the
+revision-history file for the dated entry. No content defect was found; no fix was required.
+Story version: 5.3.
 
 ## Narrative
 
@@ -287,8 +298,8 @@ EC-X.7.002-6 wiring cell (`jr user list --project ""` against a configured profi
 Resolution order step 1 [CC:L782-783] (local `--project` fills the field directly; L782's own
 lead-in sentence -- "evaluated entirely in-process before any HTTP call" -- is (P22-004,
 informational, inherited) observed by AC-004's EC-X.7.002-4 `.expect(0)` (zero HTTP calls on the
-no-project exit-64 path) and by the exactly-one-request assertions of the EC-X.7.002-1/3/5/6
-wiring cells, owned respectively by AC-005 (this AC, its own EC-1 cell)/AC-003/AC-009/AC-006; no
+no-project exit-64 path) and by the exactly-one-request assertions of the EC-X.7.002-1, EC-X.7.002-3
+"both", EC-X.7.002-5 and EC-X.7.002-6 wiring cells, owned respectively by AC-005 (this AC, its own EC-1 cell)/AC-003/AC-009/AC-006; no
 dedicated AC-005 cell verifies this lead-in on its own, and none is added), and the
 precedent paragraph [CC:L788-793] (informational, inherited -- states that local-wins-over-global
 produces the same observable result as `component create`'s explicit local-over-global merge

@@ -92,7 +92,7 @@ acceptance_criteria_count: 9
 assumption_validations: []
 risk_mitigations: []
 created: "2026-09-26"
-version: "5.0"
+version: "5.3"
 last_updated: "2026-09-28"
 breaking_change: false
 retroactive: false
@@ -167,8 +167,19 @@ the revision-history file for the dated entry. Pass-23 then fixed the Token Budg
 figures, attached the CLI-level "zero matches ... return 'not found'" sentence in AC-007 to its
 actual pinning tests, and rescoped all four VP-580-013 fault-model citations (AC-001/002/003/004)
 to name which fault(s) each AC's own tests kill -- see the revision-history file for the dated
-entry. This is version
-5.0 of the story.
+entry. Pass-24 then fixed a fault-model exclusive-attribution defect in AC-001/AC-002/AC-004
+(a non-exclusive-positive rewrite; see the revision-history file for the dated entry). Pass-25 then
+widened Task 1c so each EC-X.14.001-12 fixture is asserted at both the top level and a
+cascading-child level, rewrote AC-002's fault-(5) sentence to credit 1c's own child-level assertions
+jointly with 1b instead of claiming 1c runs at a single tree level, pinned an empty-string
+requirement on Task 2's `value`/`name` proptest strategies and softened AC-001's fault-(3) sentence
+to rely on it, and replaced a near-verbatim quote in AC-009 with a paraphrase after one of its four
+cited ranges turned out to use slightly different wording -- see the revision-history file for the
+dated entry. Pass-26 then rewrote AC-003's fault-model attribution for function 5 as a
+non-exclusive positive claim (it does kill fault (1), jointly with AC-001's EC-8 cell, rather than
+killing none of the six faults), and pinned, in Task 1a/1b, the `neither` cell's output-length
+assertion that AC-001 already claimed those cells make -- see the revision-history file for the
+dated entry. This is version 5.3 of the story.
 
 ## Coverage Scope (D-387)
 
@@ -312,9 +323,20 @@ models this AC's own tests kill [CC:L3129-3134]: fault (1) (the fallback removed
 pre-fix code `label: v.value.clone()` -- killed by the EC-X.14.001-8 name-only cell in function
 1a), fault (2) (`name` preferred over `value` -- killed by the "both" cell, EC-X.14.001-9, in
 function 1a), and fault (5) (the fallback applied only at the top level -- killed by function 1b,
-the cascading-child-level matrix); faults (3) and (4) (an emptiness-based fallback, and explicit
-`null` treated as present) are killed by AC-002's own cells, not this AC's, and fault (6) (the
-fallback leaking into the M3 normalizer) is killed by AC-004's own cell, not this AC's. The
+the cascading-child-level matrix). Fault (3) (an emptiness-based fallback, `Some("")` falling
+through to `name`) is also, non-exclusively, killed by this AC's own function 2, the recursive
+`proptest!` over `Option<String>` [CC:L3106-3110]: relying on Task 2's requirement that the
+`value`/`name` string strategies be able to produce the empty string, its generator constructs
+`value`/`name` directly as `Option<String>` and will generate `value: Some("")` alongside a
+populated `name` often enough to fail the `label == value.clone().or(name.clone())` assertion under
+that fault -- AC-002's own `{"value": ""}` cell remains the primary, deterministic
+(non-probabilistic) owner of this fault. Fault (4)
+(explicit `null` treated as present) is primarily killed by AC-002's own `{"value": null}` cell
+(verified: function 2's proptest constructs `AllowedValue` directly in Rust, never through
+`serde_json` deserialization, so it cannot observe a deserializer-level null-handling defect).
+Fault (6) (the fallback leaking into the M3 normalizer) is primarily killed by AC-004's own
+function 4 cell (verified: neither of this AC's own functions calls
+`normalize_from_valid_values`, so they cannot observe an M3-only regression). The
 presence-based `Some("")`-wins and
 explicit-null-falls-through sentences embedded in [CC:L3093-3099], and the two EC-X.14.001-12
 cells embedded in [CC:L3099-3105] (the `{"value": ""}` and `{"value": null}` fixtures), are
@@ -362,12 +384,28 @@ code path, unlike the `None` substitution BC-X.14.003/AC-005 covers, so no dedic
 needed for it), and the fault models this AC's own tests kill [CC:L3129-3134]: fault (3) (an
 emptiness-based fallback, `Some("")` falling through to `name` -- killed by the `{"value": ""}`
 cell) and fault (4) (explicit `null` treated as present, never falling through to `name` --
-killed by the `{"value": null}` cell); faults (1), (2), and (5) are killed by AC-001's own cells,
-and fault (6) is killed by AC-004's own cell, not this AC's. Everything each cited
+killed by the `{"value": null}` cell). This AC's own cells also kill fault (1) (the fallback
+removed entirely): the `{"value": null}` cell expects `Some("N")`, but a `label: v.value.clone()`
+implementation with no `.or(name)` fallback would return `None` for that cell's `value: None`
+case. They also kill fault (2) (`name` preferred over `value`): the `{"value": ""}` cell expects
+`Some("")`, but a `name.clone().or(value.clone())` implementation would return `Some("N")` for
+that cell's populated `name`. AC-001's own function 1a/1b cells remain the primary owners of
+faults (1) and (2) (they exercise both combinations at every EC-8..11 cell, not just these two
+EC-12 fixtures). Fault (5) (the fallback applied only at the top level) is killed jointly by this
+AC's own function 1c and AC-001's own function 1b: 1c's two EC-12 cells are each now asserted at
+BOTH the top level and at least one cascading-child level (see Task 1c), so 1c's own child-level
+assertions directly observe child-level behavior for the `Some("")`-wins and
+explicit-null-falls-through cases specifically, while 1b's cascading-child-level matrix covers the
+remaining EC-8..11 combinations (value-only, name-only, both, neither) at a cascading-child level --
+together the two functions exercise every combination this story's fallback rule defines, at both
+tree levels. Fault (6) (the fallback leaking into
+the M3 normalizer) is primarily killed by AC-004's own function 4 cell (verified: neither of this
+AC's cells calls `normalize_from_valid_values`, so they cannot observe an M3-only regression).
+Everything each cited
 range specifies is binding in its entirety and must be implemented exactly as written there;
 this story does not restate or narrow any of it. Story-specific mapping: lands in
 `src/cli/field.rs`'s `#[cfg(test)]
-mod tests` as function 1c, bundled with its GREEN sibling cell so the Red Gate density check
+mod tests` as function 1c, bundled with its GREEN sibling cells so the Red Gate density check
 (Task 6) counts RED/GREEN at the function level, not per-cell (ADV-C14-F3-P4-001, corrected
 pass-6 ADV-C14-F3-P6-007; full history in
 `S-cycle14-field-options-name-label.revision-history.md`) -- RED.
@@ -375,13 +413,15 @@ pass-6 ADV-C14-F3-P6-007; full history in
 ### AC-003 (traces to BC-X.14.001 EC-X.14.001-13)
 `jr field options --value <substring>` (BC-X.14.002, its own contract unchanged) now also matches system-field option names via the fallback label, as a downstream consequence of AC-001 -- not a new filter rule.
 **Test:** Implements VP-580-013 sub-clause (5) [CC:L3123-3128], BC-X.14.001's EC-X.14.001-13 edge
-case [CC:L2991-3003], and the fault models VP-580-013 lists [CC:L3129-3134] (informational for
-this AC specifically -- this AC's own EC-13 downstream `--value`-filter cell exercises a
-CONSEQUENCE of the fallback rule, not the rule itself, so it does not independently kill any of
-the six named faults on its own; it would incidentally also fail if fault (1), the fallback
-removed entirely, were present, but AC-001's own EC-8 cell is the primary/owning kill vehicle for
-that fault -- see AC-001's, AC-002's, and AC-004's Test lines for the owning cells of all six
-faults).
+case [CC:L2991-3003], and the fault models VP-580-013 lists [CC:L3129-3134]: function 5 also
+kills fault (1) (the fallback removed entirely, pre-fix code `label: v.value.clone()` -- RED
+against that pre-fix code per Task 6), non-exclusively with AC-001's own EC-8 cell, which remains
+the primary/owning kill vehicle for that fault; it cannot observe faults (2)-(6) (value-free flat
+fixture, M1/M2 only -- its `priority`-shaped fixture carries no `value` key at all, so the
+value-vs-name preference (2), emptiness-vs-presence (3), explicit-null (4), and top-level-only (5)
+faults are all indistinguishable from correct behavior on this fixture, and it never calls
+`normalize_from_valid_values` (M3), so it cannot observe fault (6) either) -- see AC-001's,
+AC-002's, and AC-004's Test lines for the owning cells of faults (2)-(6).
 Everything each cited range specifies is binding in its entirety and must be implemented exactly
 as written there; this story does not restate or narrow any of it. Story-specific mapping: lands in
 `src/cli/field.rs`'s `#[cfg(test)] mod tests` as function 5 (`filter_one` is a private fn,
@@ -391,9 +431,11 @@ unreachable from the external `tests/field_options.rs` integration binary) -- RE
 `src/cli/field.rs::normalize_from_valid_values` (M3, JSM requesttype-fields) is NOT modified by this story and does NOT acquire a `name`-fallback of its own -- it already reads `.value` for id and `.label` for display, which was already correct before this story. Separately, per BC-X.14.001's "Scope boundary -- READ-SIDE ONLY, WRITE-side explicitly out of scope [D-378]" paragraph, the WRITE-side `--field` value-matching path (`src/cli/issue/field_resolve.rs::find_option_match`/`resolve_option_value`) MUST NOT be touched by this story.
 **Test:** Implements VP-580-013 sub-clause (4) [CC:L3113-3123] and the fault models this AC's own
 tests kill [CC:L3129-3134]: fault (6) (the fallback leaking into the M3 normalizer -- killed by
-function 4's M3 regression-guard comparison against a hand-written expected output); faults (1),
-(2), and (5) are killed by AC-001's own cells, and faults (3) and (4) are killed by AC-002's own
-cells, not this AC's. Everything each cited range specifies is binding in its entirety and
+function 4's M3 regression-guard comparison against a hand-written expected output). Faults (1),
+(2), and (5) are primarily killed by AC-001's own cells, and faults (3) and (4) are primarily
+killed by AC-002's own cells (verified: function 4 exercises only `normalize_from_valid_values`
+(M3) and never calls the M1/M2 normalizer these five faults live in, so it structurally cannot
+observe any of them). Everything each cited range specifies is binding in its entirety and
 must be implemented exactly as written there; this story does not restate or narrow any of it.
 Story-specific mapping: lands in
 `src/cli/field.rs`'s `#[cfg(test)] mod tests` as function 4 -- GREEN (`rationale_category:
@@ -548,7 +590,9 @@ cache; it does not pin the guard-before-cache-read ordering or "zero cache reads
 cited spec text says the same thing about its own claim: [CC:L2624-2633]'s Behavior paragraph,
 [CC:L2812-2816]'s Postconditions bullet, [CC:L2897-2904]'s Invariant 4, and [CC:L3041-3044]'s
 EC-X.14.001-15 all describe the before-any-cache-read
-ordering and zero-cache-reads outcome as "a code-level fact, verified by inspection" rather than
+ordering and zero-cache-reads outcome as a code-level fact/ordering verified by inspection (the
+exact wording varies slightly by range -- e.g. ~L2813 says "a code-level ordering verified by
+inspection" rather than "a code-level fact"), rather than
 something the named test enforces (P16-009: [CC:L3351]'s error-taxonomy row does not itself
 contain that phrase -- it cross-references EC-X.14.001-15, which is where that statement actually
 appears). That ordering/zero-cache-reads sub-clause is instead enforced
@@ -648,10 +692,10 @@ context, but nothing in this story's own Tasks or ACs requires reading it.
 > this story.
 
 1. [ ] Write the example-matrix tests for `normalize_from_allowed_values_at_depth` (AC-001, AC-002) as THREE separate pure unit tests (not one) in `src/cli/field.rs`'s `#[cfg(test)] mod tests`, so the Red Gate density check (Task 6) counts RED/GREEN at the `#[test]` function level, not per-cell (ADV-C14-F3-P4-001; full history in `S-cycle14-field-options-name-label.revision-history.md`) -- each function bundles its RED cell with its GREEN sibling combinations so the whole function is RED pre-fix -- `test-writer`:
-   - 1a. [ ] top-level matrix: value-only, name-only, both, neither (EC-X.14.001-8..11), all four cells asserted in ONE `#[test]` fn
-   - 1b. [ ] cascading-child-level matrix: the same four combinations at depth >= 1, in a SECOND, separate `#[test]` fn
-   - 1c. [ ] the two cells from VP-580-013(1)'s EC-X.14.001-12 fixtures (cross-cutting.md ~L3099-3105, binding -- see AC-002's Test line) asserted in a THIRD `#[test]` fn, per that clause's own deserialization requirement (each cell built by deserializing the JSON fixture into `AllowedValue`, not by constructing the struct directly)
-2. [ ] Write the test function for VP-580-013(2) (cross-cutting.md ~L3106-3110, binding -- recursive `AllowedValue` proptest strategy; see AC-001's Test line), in `src/cli/field.rs`'s `#[cfg(test)] mod tests` (alongside its existing `proptest!` blocks) -- `test-writer`
+   - 1a. [ ] top-level matrix: value-only, name-only, both, neither (EC-X.14.001-8..11), all four cells asserted in ONE `#[test]` fn; the `neither` cell MUST additionally assert the output `Vec`'s entry count equals the input entry count (never-drop invariant, EC-X.14.001-7)
+   - 1b. [ ] cascading-child-level matrix: the same four combinations at depth >= 1, in a SECOND, separate `#[test]` fn; the `neither` cell MUST additionally assert the output `Vec`'s entry count equals the input entry count, same as 1a's requirement, at the cascading-child level
+   - 1c. [ ] the two cells from VP-580-013(1)'s EC-X.14.001-12 fixtures (cross-cutting.md ~L3099-3105, binding -- see AC-002's Test line), each asserted at BOTH the top level AND at least one cascading-child level (four assertions total), in a THIRD `#[test]` fn, per that clause's own deserialization requirement (every cell built by deserializing a JSON fixture into `AllowedValue`, not by constructing the struct directly): the top-level assertions deserialize the fixture directly (e.g. `{"id":"1","value":"","name":"N"}` / `{"id":"1","value":null,"name":"N"}`); the child-level assertions deserialize a parent `AllowedValue` whose `children` array contains the fixture (e.g. `{"id":"P","value":"P","children":[{"id":"1","value":"","name":"N"}]}` / the `value: null` equivalent -- `AllowedValue.children: Vec<AllowedValue>` with `#[serde(default)]`, `src/types/jira/editmeta.rs`, accepts this shape), then assert the fallback rule against the normalized child entry
+2. [ ] Write the test function for VP-580-013(2) (cross-cutting.md ~L3106-3110, binding -- recursive `AllowedValue` proptest strategy; see AC-001's Test line), in `src/cli/field.rs`'s `#[cfg(test)] mod tests` (alongside its existing `proptest!` blocks) -- `test-writer`. The `value`/`name` `Option<String>` strategies MUST be able to produce the empty string `""` (e.g. `prop_oneof![Just(String::new()), <the rest of the string strategy>]`, or a regex/`prop::string` pattern that allows a zero-length match) -- AC-001's Test line relies on this requirement to keep its non-exclusive fault-(3) claim (that this proptest will sometimes generate `value: Some("")` alongside a populated `name`) true; AC-002's deterministic `{"value": ""}` cell remains the primary, non-probabilistic owner of that fault
 3. [ ] Write the test function for VP-580-013(3) (cross-cutting.md ~L3110-3113, binding -- companion serde key-set property; see AC-001's Test line), in `src/cli/field.rs`'s `#[cfg(test)] mod tests` -- `test-writer`
 4. [ ] Write the M3 regression against a hand-written expected output (AC-004), in `src/cli/field.rs`'s `#[cfg(test)] mod tests` -- `test-writer`
 5. [ ] Write the `--value` filter system-field cell (AC-003), in `src/cli/field.rs`'s `#[cfg(test)] mod tests` (`filter_one` is a private fn, unreachable from the external `tests/field_options.rs` integration binary) -- `test-writer`

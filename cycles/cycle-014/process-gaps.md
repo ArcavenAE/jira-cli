@@ -7,7 +7,7 @@ producer: state-manager
 timestamp: 2026-09-26T00:01:34Z
 cycle: "cycle-014-issue-triage-quickfixes"
 inputs: [STATE.md]
-input-hash: "648c7d0"
+input-hash: "2440238"
 traces_to: STATE.md
 ---
 
@@ -250,9 +250,21 @@ dispositioned — dispositioning happens at cycle close per S-7.02).
     it in-body. Source: F3 pass 11-13 review findings plus the orchestrator
     revision-history-split decision. Engine-side (vsdd-factory) follow-up.
 
+23. **Fixes were applied only to the story where a finding was reported,
+    not swept across sibling stories, so the same defect class resurfaced
+    in a sibling one pass later.** Example: pass-25 pinned the proptest
+    generator property in STORY-B only, and pass-26 found the same gap in
+    STORY-C. This also recurred for fault-model scoping, where `P22-001`
+    was fixed and the `P23-002` sibling was then found. Remediation
+    already adopted from pass 26: every fix burst sweeps each finding's
+    pattern across all sibling stories. Engine-side fix: the fix-burst
+    checklist or the story-writer prompt should require a sibling sweep
+    as standard practice, not a per-finding remediation. Source:
+    `ADV-C14-F3-P23-002`, `P26-001`. Engine-side (vsdd-factory) follow-up.
+
 ## Disposition
 
 Not yet dispositioned. F2 is CONVERGED per human decision `D-383` and
 APPROVED at the F2 human gate (`D-384`) — the S-7.02 cycle-closing checklist
-dispositions each of these 22 items when cycle-014 itself closes, not
+dispositions each of these 23 items when cycle-014 itself closes, not
 before.

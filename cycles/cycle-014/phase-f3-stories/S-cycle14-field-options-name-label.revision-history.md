@@ -879,3 +879,174 @@ Drift note: this pass's edits change what the stored `input-hash` should hash to
 explicit instruction not to touch `input-hash`, it was left as-is -- the resulting drift is
 expected, matching this story's own and the sibling stories' prior-pass convention on this point,
 and is for state-manager/orchestrator to reconcile, not something this pass tried to paper over.
+
+## 2026-09-28 -- F3 pass-24 fix plus cycle-wide exclusive-attribution sweep
+
+Finding fixed directly in the story body (version bumped 5.0 -> 5.1; input-hash left untouched):
+
+- AC-001's fault-model CC citation said fault (3), an emptiness-based fallback, was "killed by
+  AC-002's own cells, not this AC's" -- an exclusive claim. Checked cross-cutting.md's VP-580-013
+  sub-clause (2): AC-001's own function 2 (the recursive proptest) constructs `value`/`name`
+  directly as `Option<String>`, so it will generate `value: Some("")` alongside a populated `name`
+  often enough to fail the `label == value.clone().or(name.clone())` assertion under that fault --
+  it kills fault (3) too, non-exclusively; AC-002's deterministic `{"value": ""}` cell remains the
+  primary owner. Reworded AC-001's citation accordingly, and, while checking the neighboring
+  faults, verified that AC-001's own cells cannot observe fault (4) (explicit null treated as
+  present) at all -- function 2 never goes through `serde_json` deserialization, so it cannot
+  observe a deserializer-level defect -- kept as a negative claim with that verification stated
+  inline. AC-002's own citation had the mirror-image gap: it claimed faults (1), (2), and (5) were
+  killed by AC-001's own cells "not this AC's." Worked through AC-002's two EC-12 fixtures against
+  each fault definition: the `{"value": null}` cell expects `Some("N")`, but a
+  `label: v.value.clone()` implementation with no `.or(name)` fallback would return `None` for
+  that cell's `value: None` case, so it kills fault (1) too; the `{"value": ""}` cell expects
+  `Some("")`, but a `name.clone().or(value.clone())` implementation would return `Some("N")` for
+  that cell's populated `name`, so it kills fault (2) too. Reworded AC-002's citation to credit
+  both, while keeping AC-001's function 1a/1b as the primary owners (they exercise both
+  combinations at every one of the EC-8..11 cells, not just these two EC-12 fixtures) and keeping
+  fault (5) as a genuine negative claim, verified inline: AC-002's two EC-12 cells each run at a
+  single tree level, so neither can compare top-level vs. cascading-child behavior. AC-004's
+  citation of the same five faults as "killed by AC-001's/AC-002's own cells, not this AC's" was
+  checked last and found to be a legitimate, structurally-certain negative claim as written --
+  AC-004's function 4 exercises only `normalize_from_valid_values` (M3) and never calls the M1/M2
+  normalizer these five faults live in -- so it was kept, with that same structural reasoning added
+  inline rather than left as a bare assertion.
+
+Cycle-wide sweep (requested alongside a sibling-story finding, P24-001, that two exclusive
+fault-model attribution statements in S-cycle14-api-query-param were factually wrong): grepped
+this story for every remaining "fault model"/"not killed by"/"only by"/"owned by ... not"/"solely"
+phrase. AC-003's existing fault-model citation was already phrased non-exclusively ("it would
+incidentally also fail if fault (1) ... were present, but AC-001's own EC-8 cell is the
+primary/owning kill vehicle") and needed no change. No other fault-model citation exists in this
+story. The remaining "not this AC" instances (AC-004's, AC-008's, and AC-009's BC-clause/Invariant
+cross-references) are a different class: each is a structural claim about which single mechanism
+verifies a given BC clause or Invariant sub-clause (already labeled informational, and already
+naming the actual enforcement mechanism -- another AC's named test, or code citation plus PR diff
+review), not a probabilistic claim about which mutation a set of cells happens to kill -- so those
+were left as-is. Also swept for stray unmatched double-asterisk bold markers and unbalanced
+backticks story-wide: none found (double-asterisk and backtick counts are both even).
+
+Drift note: this pass's edits change what the stored `input-hash` should hash to. Per this pass's
+explicit instruction not to touch `input-hash`, it was left as-is -- the resulting drift is
+expected, matching this story's own and the sibling stories' prior-pass convention on this point,
+and is for state-manager/orchestrator to reconcile, not something this pass tried to paper over.
+
+## 2026-09-28 -- F3 pass-25 fixes (P25-001 medium, P25-002 low, P25-003 cosmetic)
+
+Three findings fixed directly in the story body (version bumped 5.1 -> 5.2; input-hash left
+untouched, same convention as every prior pass on this point):
+
+- P25-001 (medium, narrowing): VP-580-013(1) requires its example matrix -- including the two
+  EC-X.14.001-12 cells (the `"value": ""` and `"value": null` fixtures) -- to be asserted both at
+  the top level and at one cascading-child level. Task 1c and AC-002 had only ever asserted those
+  two EC-12 cells at a single level, while AC-002's own text claimed this was already "verified."
+  Checked `AllowedValue.children` (`src/types/jira/editmeta.rs`): it is `Vec<AllowedValue>` with
+  `#[serde(default)]`, so a parent entry whose `children` array contains an EC-12 fixture
+  deserializes cleanly -- nothing blocks nesting the fixture one level down. Fixed by widening Task
+  1c so each EC-12 fixture is asserted at BOTH the top level (deserializing the fixture directly)
+  AND as a cascading child (deserializing a parent `AllowedValue` whose `children` contains the
+  fixture, then asserting the fallback rule against the normalized child), for four assertions
+  total inside the same, single `#[test]` fn -- the function count and the Task 6 tally
+  (`TOTAL_NEW_TESTS = 7`, `EXEMPT_TESTS = 0`, `RED_TESTS = 5`, `RED_RATIO = 5/7 ~= 0.71 >= 0.5`) are
+  unchanged, since 1c was already counted as one RED function and remains one RED function.
+  Re-verified against the current stub (`src/cli/field.rs::normalize_from_allowed_values_at_depth`,
+  `label: v.value.clone()`, applied uniformly at every depth): the `value: null` cell's expected
+  `Some("N")` fails against the stub's `None` at BOTH the top level and the child level (the stub
+  never inspects `name`, regardless of depth), so 1c remains RED at both levels; the `value: ""`
+  cell already passes at both levels pre-fix (`v.value.clone()` returns `Some("")` regardless of
+  depth), unchanged. Rewrote AC-002's fault-(5) sentence, which had asserted "this AC's two EC-12
+  cells each run at a single tree level, so neither can compare top-level vs. cascading-child
+  behavior" -- no longer true once 1c asserts both levels. The sentence now credits fault (5) to 1c
+  and 1b jointly: 1c's own child-level assertions directly observe child-level behavior for the two
+  EC-12 cases specifically, while 1b's cascading-child-level matrix covers the remaining
+  EC-8..11 combinations (value-only, name-only, both, neither) at a cascading-child level -- between
+  the two functions, every combination the fallback rule defines is exercised at both tree levels.
+  Grepped the story for any other text describing 1c's cells as top-level-only (`grep -n "single
+  tree level\|single level\|top level\|top-level"`): the only such claim was the one sentence in
+  AC-002 just fixed; AC-001's own reference to "the two EC-X.14.001-12 cells" (naming AC-002's
+  function 1c as their owner) describes the two source fixtures from the VP text, not a claim about
+  which tree level(s) they run at, so it needed no change. Also updated a downstream wording
+  mismatch this widening exposed: AC-002's Story-specific mapping sentence described function 1c as
+  "bundled with its GREEN sibling cell" (singular) -- corrected to "cells" (plural), since the
+  `""`-fixture is now GREEN at two levels instead of one.
+- P25-002 (low): AC-001 claimed function 2's proptest "will generate `value: Some("")` ... often
+  enough" to (non-exclusively) kill fault (3), but neither Task 2 nor AC-001 pinned any requirement
+  that the proptest's `value`/`name` string strategies can actually produce the empty string -- a
+  strategy restricted to non-empty strings would make the claim false. Fixed by adding an explicit
+  requirement to Task 2: the `value`/`name` `Option<String>` strategies MUST be able to produce
+  `""` (e.g. via `prop_oneof![Just(String::new()), ...]` or a regex/`prop::string` pattern that
+  allows a zero-length match). Softened AC-001's fault-(3) sentence to state plainly that it relies
+  on this Task 2 requirement, and to reaffirm AC-002's deterministic `{"value": ""}` cell as the
+  primary, non-probabilistic owner of that fault -- consistent with how AC-001's own text already
+  treated fault (4) (primarily owned by AC-002, informational for AC-001).
+- P25-003 (cosmetic): AC-009 quoted all four of its cited `cross-cutting.md` ranges as using the
+  identical phrase "a code-level fact, verified by inspection," but checked against the actual
+  source text, `~L2813` (inside the Postconditions-bullet range AC-009 cites via its CC tag for
+  L2812-2816) reads "a code-level ordering verified by inspection" -- close but not the same
+  wording as the other three ranges (`~L2625`, `~L2900`, `~L3042`, all "a code-level fact, verified
+  by inspection"). Fixed by
+  replacing the verbatim quote with a paraphrase ("describe the ... outcome as a code-level
+  fact/ordering verified by inspection") plus an inline note naming the one range whose exact
+  wording differs, rather than attributing a single exact phrase to all four.
+
+Drift note: this pass's edits change what the stored `input-hash` should hash to. Per this pass's
+explicit instruction not to touch `input-hash`, it was left as-is -- the resulting drift is
+expected, matching this story's own and the sibling stories' prior-pass convention on this point,
+and is for state-manager/orchestrator to reconcile, not something this pass tried to paper over.
+
+## 2026-09-28 -- F3 pass-26 fixes (P26-002 low, P26-003 low)
+
+- P26-002 (LOW): AC-003's Test line labeled the VP-580-013 fault models "informational for this AC
+  specifically" and said function 5 "does not independently kill any of the six named faults on
+  its own" -- but function 5 is RED against the current, pre-fix `label: v.value.clone()` code
+  (per Task 6's own tally), and that pre-fix code IS fault (1), so function 5 does kill fault (1).
+  The prior text had already half-noticed this ("it would incidentally also fail if fault (1) ...
+  were present"), which directly contradicted its own "does not independently kill any" opening
+  claim. Rewritten non-exclusively: function 5 also kills fault (1) (RED against the pre-fix code
+  per Task 6), jointly with AC-001's own EC-8 cell, which remains the primary/owning kill vehicle;
+  it cannot observe faults (2)-(6), verified against its own fixture and the fault-models CC tag
+  citation: the fixture is a `priority`-shaped, value-free, flat entry set (no `value` key present
+  at all, and no cascading children), so the value-vs-name preference (2), emptiness-vs-presence
+  (3), explicit-null (4), and top-level-only (5) faults are all indistinguishable from correct
+  behavior on it, and it never calls `normalize_from_valid_values` (M3), so it cannot observe fault
+  (6) either.
+- P26-003 (LOW): AC-001 claimed "functions 1a and 1b's `neither` cell additionally assert the
+  output vector's entry count is unchanged for that cell," but neither Task 1a nor Task 1b actually
+  required that assertion -- it was a claim about test-cell behavior invented in the AC body with
+  no backing Task requirement, unlike every other assertion this story's ACs cite (which trace to
+  either a binding VP clause or an explicit Task-level pin). Fixed by adding the requirement to
+  both Task 1a and Task 1b directly: the `neither` cell in each of those two `#[test]` functions
+  MUST additionally assert the output `Vec`'s entry count equals the input entry count (the
+  never-drop invariant, EC-X.14.001-7), at the top level for 1a and at the cascading-child level
+  for 1b.
+
+**Sweep** (per the pass-26 dispatch instruction, run across all three cycle-014 stories for each
+finding's pattern):
+- P26-001-pattern sweep: checked this story's own function 2 recursive `proptest!` (VP-580-013(2))
+  for a pinned generator property backing AC-001's non-exclusive fault-(3) claim. Already fixed at
+  pass-25: Task 2 pins the requirement that the `value`/`name` `Option<String>` strategies be able
+  to produce the empty string `""`, which is exactly what AC-001's fault-(3) sentence relies on.
+  No further gap found in this story; this story's own Task 2 pinning style is what STORY-C's
+  Task 6 fix (P26-001) was told to mirror.
+- P26-002 sweep: checked every "informational"/"does not kill" fault-model label in all three
+  stories against the story's own RED classification. AC-003 (fixed above) was the only instance
+  found where a cell labeled as not killing a fault is RED against a pre-fix code shape that IS
+  that fault.
+- P26-003 sweep: checked every AC claim that a test "asserts X" in all three stories against the
+  corresponding Task/VP requirement. AC-001's `neither`-cell entry-count claim (fixed above) was
+  the only unbacked instance found; every other "asserts"/"assertion" claim in this story (e.g.
+  Task 1c's deserialization requirement, Task 2's `proptest!` assertions, Task 3's serde key-set
+  property) already traces to an explicit Task-level requirement or a cited binding VP clause.
+- P26-006-pattern sweep: checked every `#[tokio::test]`-vs-`#[test]` convention claim in this
+  story. None found -- this story's VP-580-013 cells are all pure unit/proptest functions in
+  `src/cli/field.rs`'s own `#[cfg(test)] mod tests`, with no wiremock/subprocess cells and no
+  convention claim of the kind STORY-C's AC-003 made.
+
+No new test cell was added by either pass-26 fix in this story: P26-002 only rewords an existing
+attribution, and P26-003 adds an assertion inside two already-counted functions (1a, 1b) rather
+than a new function. The Task 6 tally (`TOTAL_NEW_TESTS = 7`, `RED_TESTS = 5`,
+`RED_RATIO = 5/7 ~= 0.71`) is unchanged.
+
+Drift note: this pass's edits change what the stored `input-hash` should hash to. Per this pass's
+explicit instruction not to touch `input-hash`, it was left as-is -- the resulting drift is
+expected, matching this story's own and the sibling stories' prior-pass convention on this point,
+and is for state-manager/orchestrator to reconcile, not something this pass tried to paper over.
