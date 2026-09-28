@@ -7,7 +7,7 @@ producer: state-manager
 timestamp: 2026-09-26T00:01:34Z
 cycle: "cycle-014-issue-triage-quickfixes"
 inputs: [STATE.md]
-input-hash: "d028836"
+input-hash: "1103087"
 traces_to: STATE.md
 ---
 
@@ -202,9 +202,40 @@ dispositioned — dispositioning happens at cycle close per S-7.02).
     wrote prose** (`P8-008`, `P9-013`). Add a template-compliance check for
     the table shape. Engine-side (vsdd-factory) follow-up.
 
+21. **ACs claimed a VP/spec clause was covered "in full" when none of the
+    AC's own owned cells actually verified it** — recurring across F3
+    passes 11-13: an AC's `[CC:L<s>-<e>]` citation pointed at a clause
+    span, but the Test line's enumerated cells left part of that span
+    unverified (verbatim restatement of the citation was treated as proof
+    of coverage, the same underlying failure class as `#18`/`#19` one
+    layer down — this time inside a single AC rather than across the whole
+    story). Engine-side fix: the story template needs a per-citation
+    verifiability rule — every `[CC:]` citation must be either (a)
+    verified by an AC's own owned cell, or (b) explicitly labelled
+    informational and paired with a named enforcement mechanism (a test,
+    a script, a compiler guarantee) instead of an owned cell. Source: F3
+    passes 11-13 citation-verifiability sweep findings. Engine-side
+    (vsdd-factory) follow-up.
+
+22. **In-body Revision Note sections accumulate over successive
+    adversarial passes and eventually contradict the current story body**
+    — each pass's fix left a dated `## Revision Note` paragraph in place,
+    and by pass 13 these historical notes were long enough, and stale
+    enough relative to later rewrites, to themselves become a source of
+    adversarial findings (a reviewer citing an old Revision Note's
+    now-superseded wording as if it were current). Resolved for cycle-014
+    this burst by an orchestrator structural decision: every Revision Note
+    section is moved verbatim out of the story body into a non-normative
+    sibling `*.revision-history.md` file per story (stories bumped to
+    v4.0: A 704 lines, C 907, B 539; token budget ~11-20% of context).
+    Engine-side fix: the story template should keep revision history in a
+    sibling non-normative file from the start, rather than accumulating
+    it in-body. Source: F3 pass 11-13 review findings plus the orchestrator
+    revision-history-split decision. Engine-side (vsdd-factory) follow-up.
+
 ## Disposition
 
 Not yet dispositioned. F2 is CONVERGED per human decision `D-383` and
 APPROVED at the F2 human gate (`D-384`) — the S-7.02 cycle-closing checklist
-dispositions each of these 20 items when cycle-014 itself closes, not
+dispositions each of these 22 items when cycle-014 itself closes, not
 before.

@@ -421,3 +421,15 @@ See `cycles/cycle-005/burst-log.md` Bursts 11-12 for full narrative detail (thes
 | Phase | Status | Completed | Gate | Notes | Finding Progression |
 |-------|--------|-----------|------|-------|---------------------|
 | **CYCLE-009-F7-CONVERGED-CLOSED-2026-09-23** | **CONVERGED / CLOSED** | 2026-09-23 | human gate (F7 delta convergence + close) | cycle-009 (`jql-relative-date-units`) F7 CONVERGED, ALL 7 dimensions PASS. F7 close gate APPROVED (`D-375`). GitHub `#859` CLOSED. | 770 BCs / 89 VPs / 118 holdout / 191 stories; trajectory `→0→0→0→0`; `D-375` minted |
+
+---
+
+> Extracted from `.factory/STATE.md`'s `## Phase Progress` table during the
+> 2026-09-28 `CYCLE-014-F3-REVHIST-CHECKPOINT-2026-09-28` burst (v5.01 ->
+> v5.02), to keep the live table at 12 rows after adding the new
+> `CYCLE-014-F3-REVHIST-CHECKPOINT-2026-09-28` row. This was the oldest row
+> at that point; archived here verbatim, unedited.
+
+| Phase | Status | Completed | Gate | Notes | Finding Progression |
+|-------|--------|-----------|------|-------|---------------------|
+| **MAINT-SWEEP-2026-09-23-TRIAGE** | **COMPLETE** | 2026-09-23 | none (dependency-triage sweep) | 7 open PRs reviewed. APPLY (4, MERGED): `#872`/`#867`/`#866`/`#865`. HELD (2): `#854`/`#842`. DEFERRED (1): `#855`. | 770 BCs / 89 VPs / 118 holdout / 191 stories; no DEC minted |

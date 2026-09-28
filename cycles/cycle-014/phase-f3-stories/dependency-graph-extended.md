@@ -13,7 +13,7 @@ inputs:
   - ".factory/stories/STORY-INDEX.md"
   - ".factory/cycles/cycle-014/cycle-manifest.md"
 traces_to: ".factory/cycles/cycle-014/cycle-manifest.md, D-381"
-input-hash: "8f9346d"
+input-hash: "73ba0e4"
 ---
 
 # F3 Extended Dependency Graph -- `issue-triage-quickfixes` (cycle-014)
@@ -208,7 +208,7 @@ of the three new cycle-014 stories.
 |----|-------|----|
 | BC-X.7.002 | A (`user-list-project-resolution`) | VP-USER-LIST-PROJECT-001 |
 | BC-X.16.001, BC-X.16.002 | C (`api-query-param`) | VP-API-QP-001..006 |
-| BC-X.14.001, BC-X.14.003 (cross-ref) | B (`field-options-name-label`) | VP-580-013 |
+| BC-X.14.001, BC-X.14.003, BC-X.14.004 (cross-ref) | B (`field-options-name-label`) | VP-580-013 |
 
 All 8 new VPs minted at cycle-014 F2 (`verification-delta.md`, 89 -> 97) are anchored to exactly
 one of the three new stories, per `verification-delta.md` §5's own hand-off: "F3 anchors STORY-A
