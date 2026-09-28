@@ -29,23 +29,33 @@ inputs:
 input-hash: "1b0b27d"
 traces_to: "BC-X.14.001, BC-X.14.003, BC-X.14.004"
 cycle: cycle-014-issue-triage-quickfixes
-estimated_effort: small
+estimated_effort: medium
 estimated_days: 2
 target_module: "src/cli/field.rs"
 subsystems: ["SS-02"]
 # SS-02 (CLI Layer, src/cli/) owns this story's scope because its sole
 # behavior-changing edit (normalize_from_allowed_values_at_depth) lives in
 # src/cli/field.rs per ARCH-INDEX's Subsystem Registry (SS-02 row: "CLI
-# Layer | src/cli/"). The src/types/jira/editmeta.rs doc-comment fix and the
-# src/api/jira/issues.rs doc-comment fix are documentation-only companion
-# edits in the same subsystem's data-model and API layers, not a second
-# subsystem's functional concern.
+# Layer | src/cli/"). The src/types/jira/editmeta.rs doc-comment fix (owned
+# by SS-07, Type Layer, per ARCH-INDEX's Subsystem Registry: "src/types/")
+# and the src/api/jira/issues.rs doc-comment fix (owned by SS-04, Jira API
+# Resources, per ARCH-INDEX's Subsystem Registry: "src/api/jira/") are both
+# doc-comment-only edits with zero functional/behavioral change (see AC-006)
+# -- they are NOT the same subsystem as SS-02, but are deliberately not
+# added to `subsystems:` because neither edit functionally touches its
+# owning subsystem, only corrects stale prose in it. Neither ARCH-INDEX nor
+# `story-template.md`'s `subsystems:` frontmatter comment ("which
+# subsystems this story touches") mandates listing every file a story
+# merely touches with a doc-only edit, so rewording this justification is
+# applied here rather than widening `subsystems:` to `["SS-02", "SS-04",
+# "SS-07"]`.
 depends_on: ["S-cycle14-api-query-param"]
 blocks: []
 # Depends on S-cycle14-api-query-param because all three cycle-014 stories
 # touch src/cli/mod.rs and README.md (this story's own touches: the
-# FieldCommand::Options about-text/help-text at ~L128/~L1224/~L1231-1232,
-# and the README.md field-options row at ~L346 -- different lines from
+# `Command::Field` about-text (~L128) / `FieldCommand::Options` about-text
+# and field doc comment (~L1224, ~L1231-1232), and the README.md
+# field-options row at ~L346 -- different lines from
 # STORY-A's and STORY-C's own edits to those same two files, but the human
 # decision at F2 review (D-381, cycle-manifest.md) fixed the delivery order
 # to the single chain A -> C -> B specifically because of this three-way
@@ -78,7 +88,7 @@ acceptance_criteria_count: 9
 assumption_validations: []
 risk_mitigations: []
 created: "2026-09-26"
-version: "4.0"
+version: "4.3"
 last_updated: "2026-09-28"
 breaking_change: false
 retroactive: false
@@ -118,7 +128,12 @@ the two hand-maintained clause-map tables those citations fed, replacing them wi
 mechanically-checked `[CC:...]`/`[SCOPE:...]`/`[EXCLUDE:...]` citation system in "Coverage Scope
 (D-387)" below. The Red Gate density tally was corrected once, from an original (pre-fix)
 `EXEMPT_TESTS = 1` / `RED_RATIO = 5/6 ~= 0.833` to the current, honest `EXEMPT_TESTS = 0` /
-`RED_RATIO = 5/7 ~= 0.71 >= 0.5`. This is version 4.0 of the story.
+`RED_RATIO = 5/7 ~= 0.71 >= 0.5`. Pass-14 then made three small fixes: it named the actual
+enforcement mechanism (code citation + PR diff review) for the empty-`<field>`
+guard-before-cache-read ordering and the Invariant 3 mirror obligation, corrected
+`estimated_effort` to match STORY-INDEX/wave-schedule, and removed a stale exact-line-count claim
+from the Token Budget section -- see the revision-history file for the dated entry. This is
+version 4.3 of the story.
 
 ## Coverage Scope (D-387)
 
@@ -245,7 +260,7 @@ minus EXCLUDE is inside some AC's `[CC:...]` range) is verified mechanically per
 
 | BC | Role | Clauses this story implements |
 |----|------|-------------------------------|
-| BC-X.14.001 | PRIMARY (amended, cycle-014 F2) | The `value`-else-`name` presence-based label-resolution fallback (Behavior), the "Scope boundary -- READ-SIDE ONLY" paragraph, the "M3 is UNCHANGED and ALREADY CORRECT" paragraph, Edge Cases EC-X.14.001-7..15 **[widened pass-9, ADV-C14-F3-P9-007b -- was "EC-X.14.001-8..13", which undercounted what this story actually owns]** |
+| BC-X.14.001 | PRIMARY (amended, cycle-014 F2) | Owned clauses: see `## Coverage Scope (D-387)`; the AC `[CC:...]` tags are authoritative |
 | BC-X.14.003 | CROSS-REF (amended, cycle-014 F2, COUNT-NEUTRAL) | The UPDATED blockquote clarifying the rendering contract (`(unnamed)`/`null` for `None`) is unchanged -- only the upstream normalizer produces fewer `None` labels |
 | BC-X.14.004 | CROSS-REF (amended, cycle-014, COUNT-NEUTRAL) **[ADDED pass-10, P10-006]** | The empty-`<field>` error-taxonomy row, which cross-references BC-X.14.001 EC-X.14.001-15 (same pre-existing condition, no new behavior) |
 
@@ -336,9 +351,9 @@ mirrored at the integration level by
 verified present, none touched by this story).
 
 ### AC-006 (traces to prd-delta.md F4 stale-wording obligation, PASS-9/13/33, P9-002/P13-002/P33-002; BC-X.14.001 F4 editmeta doc-comment paragraph [CC:L2747-2757])
-The following stale "custom field" / "`partial_match`" wording is corrected in the SAME commit as AC-001, since after this fix the command also serves system fields, not custom fields only, and field-name resolution has never actually gone through `partial_match` (a pre-existing, unrelated spec/code drift already corrected at cycle-014 F2 in `cross-cutting.md`, not re-litigated here):
+The following stale "custom field" / "`partial_match`" wording is corrected in the same PR as AC-001, since after this fix the command also serves system fields, not custom fields only, and field-name resolution has never actually gone through `partial_match` (a pre-existing, unrelated spec/code drift already corrected at cycle-014 F2 in `cross-cutting.md`, not re-litigated here):
 - `src/cli/mod.rs`: the `Command::Field` about-text (~L128, "Discover custom-field allowed options"), the `FieldCommand::Options` about-text (~L1224, "Enumerate a custom field's allowed options"), and the `field` doc comment (~L1231-1232, "resolved via `list_fields()` + `partial_match`")
-- `src/cli/field.rs`: the module doc comment (L1, "enumerate a custom field's allowed options") and the `handle` Step 2 comment (~L132, "resolved via the per-profile fields cache / `list_fields()` + `partial_match`")
+- `src/cli/field.rs`: the module doc comment (L1, "enumerate a custom field's allowed options") and the `handle` Step 2 comment (~L134, "resolved via the per-profile fields cache / `list_fields()` + `partial_match`")
 - `src/api/jira/issues.rs::get_createmeta_fields`'s doc comment (~L1130, "Enumerate a custom field's allowed options...")
 - `src/types/jira/editmeta.rs`'s `AllowedValue` struct-level doc comment (~L64-77) and its `name` field-level doc comment (~L83-85), both of which currently describe `name` as "unused in v1 resolution logic" / "Future: v2 cascade-select name matching" -- stale as of this story, since `jr field options`'s M1/M2 label-resolution fallback (AC-001) is now a real, shipped read-side consumer of `name`
 - `tests/field_options.rs`'s comments (~L1436 section banner, ~L2050)
@@ -351,12 +366,17 @@ The following stale "custom field" / "`partial_match`" wording is corrected in t
 **Test:** the renamed test itself, run green. Also implements BC-X.14.001's Behavior paragraph's
 `search_field_list` exact-then-substring algorithm description [CC:L2634-2652], the Preconditions
 bullet's matching `search_field_list`-NOT-`partial_match` correction [CC:L2807-2808], and the same
-correction as it appears in Edge Cases EC-X.14.001-1 [CC:L2912-2912], EC-X.14.001-2 [CC:L2915-2915],
-and EC-X.14.001-6 [CC:L2935-2935] (all informational --
+correction as it appears in Edge Cases EC-X.14.001-2 [CC:L2915-2915] and EC-X.14.001-6
+[CC:L2935-2935] (both informational --
 doc-only correction, no behavior change; existing behavior pinned by
 `src/cli/field.rs::test_bc_x_14_001_search_field_list_exact_single_match`, `_case_insensitive`,
 `_substring_single_match`, `_zero_match_returns_none`, `_exact_multiple_is_err`, and
-`_substring_multiple_is_err`). [CC:L2634-2652] additionally binds two warm-cache branches that
+`_substring_multiple_is_err`). EC-X.14.001-1 [CC:L2912-2912] (informational -- doc-only
+correction, no behavior change) is cited separately (P16-004): it describes the
+`customfield_NNNNN` literal BYPASSING `list_fields()`/`search_field_list` entirely, so the six
+`search_field_list` unit tests above cannot observe it -- existing behavior for this edge case is
+instead pinned by `tests/field_options.rs::test_bc_x_14_001_customfield_bypass_skips_list_fields`
+(~L1442, verified present). [CC:L2634-2652] additionally binds two warm-cache branches that
 none of the above tests exercise -- a warm cache lacking `<field>` triggers exactly one refetch,
 and a warm-cache ambiguity exits 64 without a refetch (no repository test covers either branch
 directly) -- these two sub-clauses are enforced by the unchanged
@@ -369,16 +389,36 @@ System-typed field NAME resolution (the step upstream of the label fallback, e.g
 passing unmodified. Also implements BC-X.14.001 Invariant 3's `customfield_NNNNN` bypass /
 `fields.json` cache-first "mirrored, not shared" description [CC:L2889-2896] and Invariant 4's
 `search_field_list`-vs-`partial_match` description (including the empty-`<field>` exit-64
-ordering recap) [CC:L2897-2909] (informational -- doc-only correction, no behavior change;
-existing behavior pinned by
+ordering recap) [CC:L2897-2909]. Invariant 4's own field-resolution-algorithm claim is
+informational (doc-only correction, no behavior change; existing behavior pinned by
 `src/cli/field.rs::test_bc_x_14_001_search_field_list_exact_single_match`, `_case_insensitive`,
 `_substring_single_match`, `_zero_match_returns_none`, `_exact_multiple_is_err`,
 `_substring_multiple_is_err`, and
-`tests/field_options.rs::test_bc_x_14_001_customfield_bypass_skips_list_fields`).
+`tests/field_options.rs::test_bc_x_14_001_customfield_bypass_skips_list_fields`). Invariant 3's
+"mirrored, not shared" relationship to `src/cli/issue/field_resolve.rs::resolve_edit_fields` is a
+cross-file property those unit tests cannot enforce on their own (they only exercise this file's
+own cache-first/bypass behavior, not the other file's). It is enforced the same way AC-004
+already establishes for the adjacent Scope-boundary paragraph: at PR review, `git diff` shows
+zero changes to `src/cli/issue/field_resolve.rs` (which necessarily includes its
+`resolve_edit_fields` fn) -- see AC-004's Test line for that check.
 
 ### AC-009 (traces to BC-X.14.001 EC-X.14.001-15 [CC:L3036-3044] and BC-X.14.004's empty-`<field>` error-taxonomy row [CC:L3351], informational -- documented for completeness, no dedicated VP cell)
 The empty-`<field>` guard (`jr field options ""` exits 64 with `Field '' not found. The field name must not be empty.`, zero HTTP calls, zero cache reads) is pre-existing `src/cli/field.rs::resolve_field_id` behavior, unaffected by this story's label-resolution fix. See BC-X.14.004's cross-reference row for the same condition. No new test is added for this AC.
-**Test:** N/A (informational); existing `tests/field_options.rs::test_bc_x_14_001_empty_field_name_exits_64_zero_http` continues passing unmodified. Also implements BC-X.14.001's
+**Test:** N/A (informational); existing `tests/field_options.rs::test_bc_x_14_001_empty_field_name_exits_64_zero_http` continues passing unmodified -- but that test itself only pins exit 64, the
+`Field '' not found` / `must not be empty` message substrings, and zero HTTP calls on a cold
+cache; it does not pin the guard-before-cache-read ordering or "zero cache reads" claim. The
+cited spec text says the same thing about its own claim: [CC:L2624-2633]'s Behavior paragraph,
+[CC:L2812-2816]'s Postconditions bullet, [CC:L2897-2904]'s Invariant 4, and [CC:L3041-3044]'s
+EC-X.14.001-15 all describe the before-any-cache-read
+ordering and zero-cache-reads outcome as "a code-level fact, verified by inspection" rather than
+something the named test enforces (P16-009: [CC:L3351]'s error-taxonomy row does not itself
+contain that phrase -- it cross-references EC-X.14.001-15, which is where that statement actually
+appears). That ordering/zero-cache-reads sub-clause is instead enforced
+by code citation plus PR diff review, the same mechanism this AC already uses for the two
+warm-cache branches below: `src/cli/field.rs::resolve_field_id`'s `query.is_empty()` guard
+(~L442-447) precedes its only cache read (`cache::read_fields_cache`, ~L451) -- verified against
+current code -- and PR diff review confirms `resolve_field_id` is unchanged by this story's diff.
+Also implements BC-X.14.001's
 Behavior paragraph's empty-`<field>` guard-ordering description [CC:L2624-2633] and the
 Postconditions bullet describing when `GET /rest/api/3/field` is NOT called (empty `<field>`, a
 `customfield_NNNNN` literal, or a warm-cache hit) [CC:L2812-2823] (informational -- doc-only
@@ -415,7 +455,7 @@ Reference: `architecture/module-decomposition.md`, `architecture/dependency-grap
 | EC-X.14.001-12 | `{value: Some(""), name: Some(n)}` (presence, not emptiness) | `label: Some("")`, never `Some(n)`; a wire `"value": null` still falls through to `name` |
 | EC-X.14.001-13 | `--value` filter against a system field | Matches via the fallback label as a downstream consequence, not a new filter rule |
 | EC-X.14.001-14 | System-field NAME resolution (informational) | Pre-existing `search_field_list` behavior, unaffected |
-| EC-X.14.001-15 | `<field>` is the empty string (informational, pre-existing, no behavior change) | Exit 64 `Field '' not found. The field name must not be empty.`, zero HTTP/cache reads; see BC-X.14.004's cross-reference row; pinned by `tests/field_options.rs::test_bc_x_14_001_empty_field_name_exits_64_zero_http` |
+| EC-X.14.001-15 | `<field>` is the empty string (informational, pre-existing, no behavior change) | Exit 64 `Field '' not found. The field name must not be empty.`, pinned (exit 64, message, zero HTTP on a cold cache) by `tests/field_options.rs::test_bc_x_14_001_empty_field_name_exits_64_zero_http`; zero cache reads / guard-before-cache-read ordering is a code-level fact (see AC-009); see BC-X.14.004's cross-reference row |
 
 ## Purity Classification
 
@@ -429,21 +469,21 @@ Reference: `architecture/module-decomposition.md`, `architecture/dependency-grap
 
 **[RECOMPUTED -- history split]** supersedes the pass-11 (P11-006) "~35,500" figure for "This
 story spec". The nine Revision Note sections (pass-3 through pass-11 plus the later proactive
-sweep, ~536 of the pre-split file's 1034 lines) have been moved to
+sweep) have been moved to
 `S-cycle14-field-options-name-label.revision-history.md` -- a separate, non-normative file an
 implementing agent does not need to read to satisfy this story's own Tasks/ACs. Re-measured with
-the Read tool: this file (531 lines, 45,472 characters) now returns in full in a single Read call
-with no truncation, confirming its token count is under the tool's 25,000-token single-read cap
-(the pre-split file, by contrast, truncated at 586 of 1034 lines / 37,478 tokens on the same
-call). The point estimate below extrapolates from the pre-split file's own pass-11 Read-tool
-measurement (~35,500 tokens / 1034 lines, ~34 tokens/line average) applied to the 498 lines kept
-in this file (frontmatter/notes, Revision History pointer, Coverage Scope (D-387), Narrative, BC
-table, and nine ACs -- all of which an implementing agent must still read in full to follow the
-citation trail back to `cross-cutting.md`) and to the 536 lines moved to the revision-history file.
+the Read tool: this file now returns in full in a single Read call with no truncation, confirming
+its token count is under the tool's 25,000-token single-read cap (the pre-split file, by
+contrast, truncated on the same call). The point estimate below extrapolates from the pre-split
+file's own pass-11 Read-tool measurement (~35,500 tokens, ~34 tokens/line average) applied to the
+portion kept in this file (frontmatter/notes, Revision History pointer, Coverage Scope (D-387),
+Narrative, BC table, and nine ACs -- all of which an implementing agent must still read in full to
+follow the citation trail back to `cross-cutting.md`) and to the portion moved to the
+revision-history file.
 
 | Context Source | Estimated Tokens |
 |-----------------|-------------------|
-| This story spec (full file: Revision History pointer + Coverage Scope + Narrative + BCs + ACs + Tasks etc.; confirmed <25,000 by an untruncated full Read, point estimate ~34 tokens/line x 498 lines) | ~17,000 |
+| This story spec (full file: Revision History pointer + Coverage Scope + Narrative + BCs + ACs + Tasks etc.; confirmed <25,000 tokens by an untruncated full Read) | ~17,000 |
 | Referenced code (`src/cli/field.rs` normalizer region + `handle`'s Step 2, `src/types/jira/editmeta.rs::AllowedValue`, `src/api/jira/issues.rs::get_createmeta_fields` doc comment) | ~2,200 |
 | Test files (`tests/field_options.rs` -- grep-scoped to the renamed test + the new VP-580-013 cells) | ~1,800 |
 | Tool output overhead | ~1,000 |

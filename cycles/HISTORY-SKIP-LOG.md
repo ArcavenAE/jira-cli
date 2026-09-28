@@ -26,3 +26,15 @@
 | F6 cargo-fuzz (cycle-004) | yes | Not set up in repo; proptest arbitrary-input substitution justified -- 0 uncovered input surface. |
 | F6 DTU adversarial testing / accessibility re-check (cycle-004) | yes | `dtu_required: false`; `tenant_info` is a real endpoint, not a cloned DTU; `feature_type: backend`, no UI surface. |
 | REQUIRED manual Windows-11 physical smoke test (cycle-004, Burst 21) | superseded, not skipped | Human explicitly authorized the `windows-latest` CI runner (PR #776) as the verification path instead of a physical machine -- see D-342. |
+
+---
+
+> Extracted from `.factory/STATE.md`'s `## Skip Log` table during the
+> 2026-09-28 `CYCLE-014-F3-D388-CHECKPOINT-2026-09-28` burst (v5.02 ->
+> v5.03), to keep the live table at 4 rows after adding the new
+> `CYCLE-014-F3-D388-CHECKPOINT-2026-09-28` row. This was the oldest of the
+> checkpoint rows at that point; archived here verbatim, unedited.
+
+| Step | Skipped? | Justification |
+|------|----------|----------------|
+| Human gate at CYCLE-014-F3-D386-CHECKPOINT-2026-09-28 burst | yes (deliberate, not a gate) | Records F3 adversarial review passes 6 and 7, both NOT CLEAN, plus human decision `D-386` (later superseded in mechanism by `D-387`); clean counter 0/3, gate not concluded. |

@@ -10,6 +10,49 @@ status: historical — not normative
 Historical record of F3 review-driven revisions. Not normative: where anything here differs from
 the story body, the story body governs.
 
+## Pass-15 fixes (2026-09-28, LOW/COSMETIC)
+
+- Task 10(a2)'s first bullet justified the AC-004 zero-flag wiremock examples' PRE-EXISTING-
+  BEHAVIOR classification by saying the pair was GREEN "because of a stub wiring/design choice" --
+  that is the reasoning for a different classification (WIRING-EXEMPT), not this one. Reworded to
+  the correct PRE-EXISTING reasoning: verified GREEN against the pre-story binary, since no `-q`
+  field exists yet and the zero-flag invocation is unchanged pre-existing `jr api` behavior -- the
+  Task 1 short-circuit merely preserves that behavior at the stub. Swept the rest of the story for
+  the same pattern; no other PRE-EXISTING-BEHAVIOR cell used that reasoning.
+- The Coverage Scope section listed the bare "Verification Properties" heading line above
+  VP-API-QP-001..004 as in scope together with the paragraph beneath it, but the analogous heading
+  above VP-API-QP-005/006 is correctly excluded on its own elsewhere in the same section. Split it
+  the same way: the heading line is now excluded on its own, and the paragraph beneath it keeps its
+  own scope entry. AC-001's existing coverage citation already spans both lines, so coverage is
+  unaffected.
+- dependency-graph-extended.md's file-overlap section pointed at `run`'s dispatch match at around
+  line 212, but line 212 is actually where the `run` function itself starts -- the dispatch match
+  is a little further down, at line 233. Reworded to cite both lines separately.
+- Story version bumped to 4.2 to reflect this pass's fixes.
+
+## Pass-14 fixes (2026-09-28, LOW/COSMETIC)
+
+- AC-006 mentioned that an empty VALUE stays allowed, pointing at the same line range in
+  cross-cutting.md that AC-005 already claims ownership of. Since AC-005 already owns that range,
+  AC-006's mention is now written as plain prose (a line reference, no ownership tag) and labeled
+  as an informational cross-reference to AC-005's own test coverage for that rule, instead of
+  looking like AC-006 was claiming ownership too.
+- AC-005 said Postcondition 1 (the pre-flight ordering rule) belongs solely to AC-008, but wrote
+  it with the same kind of ownership tag AC-008 itself already uses for that same line range.
+  Confirmed AC-008 does own it, so AC-005's mention is now plain prose (a line reference) rather
+  than a second ownership tag for a clause AC-005 doesn't own.
+- Swept every AC section for similar cases -- an AC referencing a clause "owned by" a different AC
+  while still tagging it as if it owned that clause itself. No other cases were found; the two
+  above were the only ones.
+- The Token Budget section quoted exact line counts for the story file and for the history that
+  was split out (912 lines, 797 lines, ~1,446 lines pre-split). Those counts were already stale,
+  so they've been dropped -- the row now just gives the token estimate, which is what the budget
+  section is actually for.
+- The Coverage Scope intro used to say the old hand-written clause maps were "deleted by this
+  revision." Reworded to point readers to this revision-history file instead, since that's where
+  the old maps and the reasoning for removing them actually live now.
+- Story version bumped to 4.1 to reflect this pass's fixes.
+
 ## Revision Note (F3 adversarial pass-3 fixes, LOW/MEDIUM)
 
 - **ADV-C14-F3-P3-002 (MEDIUM):** Task 10's Red Gate description previously listed EC-X.16.002-8
@@ -806,4 +849,23 @@ below for the current recomputation.
   test cell, or -- for BC-X.16.002 Invariant 1 (message distinctness), jointly owned by AC-005 and
   AC-006 -- to the combination of both ACs' own pinned-message tests, which together demonstrate
   the two messages are distinct. No further citations required a fix.
+
+## 2026-09-28 -- F3 adversarial pass-16 fixes (P16-001, P16-003, P16-008)
+
+Findings fixed directly in the story body (version bumped 4.2 -> 4.3; input-hash left untouched):
+
+- P16-001 (medium): same subsystem-anchoring gap as the sibling user-list-project-resolution
+  story -- this story also makes a real, functional edit to the entry-point/runtime file's
+  dispatch arm (wiring the new query-param flag through to its handler). Added that subsystem to
+  the subsystems list, added the entry-point file to the target-module list to match its
+  story-index row and its sibling story, and rewrote the frontmatter comment so it no longer
+  claims every modified file lives under the CLI layer's own directory.
+- P16-003 (low): two acceptance criteria cited an ordering guarantee (query assembly running
+  after path normalization and before the request is built) without saying which half of that
+  ordering each is actually verified by -- a runtime test versus call-site placement plus code
+  review. Split both citations to say so explicitly, naming the table-driven test's actual
+  assertions for the "before the request is built" half and the placement/review mechanism for
+  the structural half.
+- P16-008 (cosmetic): one clause citation's line range included the section's heading line by
+  mistake; narrowed it to the actual clause text below the heading.
 

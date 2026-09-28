@@ -26,15 +26,24 @@ inputs:
 input-hash: "76973f9"
 traces_to: "BC-X.16.001, BC-X.16.002"
 cycle: cycle-014-issue-triage-quickfixes
-estimated_effort: medium
+estimated_effort: large
 estimated_days: 2
-target_module: "src/cli/api.rs, src/cli/mod.rs"
-subsystems: ["SS-02"]
-# SS-02 (CLI Layer, src/cli/) owns this story's scope because every modified
-# file (src/cli/api.rs, src/cli/mod.rs) lives under src/cli/ per ARCH-INDEX's
-# Subsystem Registry (SS-02 row: "CLI Layer | src/cli/"). No HTTP-client-core
-# (SS-03) file is touched -- append_query_params/parse_query_param run
-# strictly before client.request is built (BC-X.16.001 Invariants).
+target_module: "src/cli/api.rs, src/cli/mod.rs, src/main.rs"
+subsystems: ["SS-01", "SS-02"]
+# SS-02 (CLI Layer, src/cli/) owns this story's core scope because most
+# modified files (src/cli/api.rs, src/cli/mod.rs) live under src/cli/ per
+# ARCH-INDEX's Subsystem Registry (SS-02 row: "CLI Layer | src/cli/"). SS-01
+# (Entry Point & Runtime) is also listed because this story modifies
+# src/main.rs's `Command::Api` dispatch arm to wire the new `-q` field
+# through to `handle_api` (Task 1/Task 13) -- src/main.rs is owned by SS-01
+# per ARCH-INDEX's Subsystem Registry (SS-01 row: "Entry Point & Runtime |
+# src/main.rs"), not SS-02; it does not "live under src/cli/". This is a
+# real, functional edit to main.rs's dispatch wiring (not a doc-only touch),
+# so it is anchored, following the S-MUTANTS-SCOPE-1 precedent of listing
+# SS-01 whenever src/main.rs is functionally modified (STORY-INDEX ~L588:
+# `subsystems:["SS-01","SS-08"]`). No HTTP-client-core (SS-03) file is
+# touched -- append_query_params/parse_query_param run strictly before
+# client.request is built (BC-X.16.001 Invariants).
 depends_on: ["S-cycle14-user-list-project-resolution"]
 blocks: ["S-cycle14-field-options-name-label"]
 # Depends on S-cycle14-user-list-project-resolution because both stories edit
@@ -80,7 +89,7 @@ acceptance_criteria_count: 11
 assumption_validations: []
 risk_mitigations: []
 created: "2026-09-26"
-version: "4.0"
+version: "4.3"
 last_updated: "2026-09-28"
 breaking_change: false
 retroactive: false
@@ -115,12 +124,13 @@ restructure -- ownership is recorded solely via CC-tag citations inside each `##
 checked against the Coverage Scope section below) are both in force. Current Red Gate tally (Task
 10(e), P11-005-corrected): `TOTAL_NEW_TESTS = 44`, `RED_TESTS = 40`, non-exempt GREEN
 (`PRE-EXISTING-BEHAVIOR`) `= 3`, `EXEMPT_TESTS = 1` (`WIRING-EXEMPT` only), `RED_RATIO = 40 / 43
-~= 0.930 >= 0.5`. Story version 4.0.
+~= 0.930 >= 0.5`. Story version 4.3.
 
 ## Coverage Scope (D-387)
 
-D-387 (human decision): the hand-written clause maps above (deleted by this revision) kept
-drifting from the AC CC-tag citations they were meant to summarize, so they are deleted. AC
+D-387 (human decision): the former hand-written clause maps (see
+`S-cycle14-api-query-param.revision-history.md`) kept drifting from the AC CC-tag citations they
+were meant to summarize, so they are deleted. AC
 citations become the single source of ownership. This section enumerates the entire
 BC-X.16.001/BC-X.16.002/VP-API-QP-001..006 region of `.factory/specs/prd/cross-cutting.md`
 (L3783-4394) as either in scope, needing at least one owning AC CC-tag citation (recorded below as
@@ -201,7 +211,8 @@ below.
 - `[SCOPE:L3989-3994]` EC-X.16.001-13 (comma inside VALUE)
 - `[SCOPE:L3995-4000]` EC-X.16.001-14 (no query, pre-fragment part ends in `&`)
 - `[EXCLUDE:L4001]` blank line
-- `[SCOPE:L4002-4006]` VP-API-QP-001..004 shared preamble (purity statement;
+- `[EXCLUDE:L4002]` "**Verification Properties**:" heading line, shared by VP-API-QP-001..004
+- `[SCOPE:L4003-4006]` VP-API-QP-001..004 shared preamble (purity statement;
   `url::form_urlencoded::parse` test-oracle-only note)
 - `[SCOPE:L4007-4023]` VP-API-QP-001 equation + strategy (pinned examples: EC-4, EC-5, the
   empty-query-plus-fragment case, EC-8 (both forms), EC-9)
@@ -327,7 +338,7 @@ query component), and owns Edge Cases EC-X.16.001-4 `[CC:L3931-3932]`, -5 `[CC:L
 `[CC:L3950-3959]`, -9 `[CC:L3960-3968]`, -12 `[CC:L3978-3988]`, and -14 `[CC:L3995-4000]` -- see
 those clauses for the separator algorithm; this AC does not restate them and does not narrow them.
 **Test (D-386 bind-by-reference):** Implements the VP-API-QP-001..004 shared preamble
-`[CC:L4002-4006]` (purity statement; `url::form_urlencoded::parse` test-oracle-only note),
+`[CC:L4003-4006]` (purity statement; `url::form_urlencoded::parse` test-oracle-only note),
 VP-API-QP-001's equation and strategy `[CC:L4007-4023]` (pinned examples EC-X.16.001-4, -5, the
 empty-query-plus-fragment case, and -8 (both forms) and -9), and VP-API-QP-001's pinned-examples
 tail and fault-models `[CC:L4024-4031]` (pinned examples -14 and -12). Everything the cited
@@ -344,8 +355,10 @@ The `-q`/`--query-param` clap field is a plain `Vec<String>` with `ArgAction::Ap
 (below) is the runtime verification that each occurrence accumulates via `ArgAction::Append`
 rather than overwriting. The same Behavior-intro clause also binds NO `allow_hyphen_values`
 (P13-004: verified by AC-009's EC-X.16.002-8 cell, not by this AC) and the ordering requirement
-that assembly runs after `normalize_path` and before `client.request(...)` (P13-004: verified by
-AC-004's citation to BC-X.16.001 Invariant 2, not by this AC) -- both are labeled here as
+that assembly runs after `normalize_path` (P16-003: covered by AC-001's Precondition 1 mechanism
+-- the `normalize_path` call site preceding all `-q` handling -- plus Task 13's placement, not by
+this AC) and before `client.request(...)` (P13-004/P16-003: covered by AC-004's citation to
+BC-X.16.001 Invariant 2, not by this AC) -- all three are labeled here as
 informational cross-references to their actual owning cells, not restated or narrowed by this AC.
 This AC implements BC-X.16.001 Behavior 2 `[CC:L3823-3825]` and
 Postcondition 4 `[CC:L3896-3897]` in full, and owns Edge Case EC-X.16.001-13 `[CC:L3989-3994]` --
@@ -399,7 +412,13 @@ test-fixture-construction assumption (AC-004's own cells supply only well-formed
 (BC-X.16.002 Postcondition 1 -- malformed values are caught before `append_query_params` ever
 touches `normalize_path`'s output); no dedicated AC-004 test cell exists for it, and none is
 added) and Invariant 2 `[CC:L3905-3906]` (runs
-strictly before the `RequestBuilder` is built), and owns Edge Cases EC-X.16.001-6
+strictly before the `RequestBuilder` is built) -- **(P16-003 classification:** (a) the
+table-driven method-orthogonality wiremock test (this AC's own **Test:** cell) verifies that the
+assembled query is independent of the request body and that the body itself is left unmutated by
+query assembly; (b) the "before the `RequestBuilder`/headers are built" ordering half is enforced
+by structural placement (Task 13's call-site ordering, immediately after `normalize_path` and
+before `resolve_body`/`-H` parsing) plus PR code review, not by a dedicated runtime assertion**),
+and owns Edge Cases EC-X.16.001-6
 `[CC:L3943-3945]` and -7 `[CC:L3946-3949]` -- see those clauses for the method-orthogonality and
 zero-flag-identity rules; this AC does not restate them and does not narrow them. This AC also
 owns the no-regression guarantee that existing `jr api` behavior for BC-X.1.007 (raw-passthrough
@@ -442,7 +461,7 @@ Condition/Behavior table's M1 row `[CC:L4142-4145]` in full, including the pinne
 `[CC:L4215-4216]`, EC-X.16.001-1 `[CC:L3918-3920]`, and EC-X.16.001-2 `[CC:L3921-3923]` -- see
 those clauses for the split-on-first-`=` / M1 rules; this AC does not restate them and does not
 narrow them. Postcondition 1 (pre-flight ordering) is NOT this AC's -- it is owned solely by
-AC-008 `[CC:L4178-4189]` (see AC-008's citations below); this AC's concern is the taxonomy
+AC-008 (lines 4178-4189) (see AC-008's citations below); this AC's concern is the taxonomy
 `parse_query_param` produces, not when it runs. This AC also owns BC-X.16.002 Invariant 1
 (distinct M1/M2 messages) `[CC:L4202-4205]` and Invariant 2 (empty VALUE never an error)
 `[CC:L4206-4207]` (P11-003) -- see those clauses for the exact message-distinctness and
@@ -465,7 +484,9 @@ EC-X.16.002-2 `[CC:L4217-4218]` -- see those clauses for the pinned M2 message a
 `--output json` envelope rules; this AC does not restate them and does not narrow them. This AC
 also owns BC-X.16.002 Invariant 1 (distinct M1/M2 messages) `[CC:L4202-4205]` (P11-003) -- see
 that clause for the exact message-distinctness rule; this AC does not restate or narrow it. An
-empty VALUE (`k=`) remains ALLOWED per BC-X.16.001 EC-X.16.001-1 `[CC:L3918-3920]`, never M2.
+empty VALUE (`k=`) remains ALLOWED per BC-X.16.001 EC-X.16.001-1 (lines 3918-3920), never M2 --
+(informational cross-reference -- verified by AC-005's VP-API-QP-005(1) `Ok((NAME, rest))`
+partition where rest may be empty).
 **Test (D-386 bind-by-reference):** Implements VP-API-QP-005(intro) `[CC:L4308-4316]` and
 VP-API-QP-005(2) `[CC:L4327-4331]`. Everything the cited clause(s) specify is binding in its
 entirety and must be implemented exactly as written there; this story does not restate or narrow
@@ -632,7 +653,7 @@ Reference: `architecture/module-decomposition.md`, `architecture/dependency-grap
 
 | Context Source | Estimated Tokens |
 |-----------------|-------------------|
-| This story spec (recomputed via Read-tool token count against the actual 912-line file after the history-split -- the pass-3 through pass-12 Revision Note history, 797 lines, moved out to `S-cycle14-api-query-param.revision-history.md`; the P11-006 figure of ~55,000, measured against the pre-split ~1,446-line file, is now stale) | ~35,000 |
+| This story spec (recomputed via Read-tool token count after the history-split -- the pass-3 through pass-12 Revision Note history moved out to `S-cycle14-api-query-param.revision-history.md`; the P11-006 figure of ~55,000, measured against the pre-split file, is now stale) | ~35,000 |
 | Referenced code (`src/cli/api.rs` full file including `normalize_path`/`parse_header`/`resolve_body` precedent, `src/cli/mod.rs::Command::Api`, `src/main.rs`'s `Command::Api` arm) | ~2,800 |
 | Test files (existing `jr api` integration tests, grep-scoped) | ~1,500 |
 | Tool output overhead | ~1,200 |
@@ -707,10 +728,12 @@ wiremock-backed set, per that AC's **Test:** line)
         exact argv, expected path/query values, and the per-method scope; not restated here) are
         GREEN at the Task 1 stub -- Task 1's required short-circuit routes the zero-`-q` path
         around both `todo!()` bodies entirely, onto the pre-existing, unmodified `normalize_path`
-        output. `rationale_category: PRE-EXISTING-BEHAVIOR` in the red-gate-log table. This is
-        NOT `GREEN-BY-DESIGN`: per-story-delivery.md (~L56) limits `GREEN-BY-DESIGN` to behavior
-        "deterministic from the type system alone," and this pair is GREEN because of a stub
-        wiring/design choice (the required short-circuit), not a type-system fact.
+        output. `rationale_category: PRE-EXISTING-BEHAVIOR` in the red-gate-log table: verified
+        GREEN against the pre-story binary (no `-q` field exists; the zero-flag invocation is
+        unchanged pre-existing `jr api` behavior); the Task 1 short-circuit merely preserves that
+        behavior at the stub. This is NOT `GREEN-BY-DESIGN`: per-story-delivery.md (~L56) limits
+        `GREEN-BY-DESIGN` to behavior "deterministic from the type system alone," and this pair's
+        GREEN status reflects unchanged pre-existing behavior, not a type-system fact.
         PRE-EXISTING-BEHAVIOR is a `rationale_category` label for the log table, not one of the
         two categories (`GREEN-BY-DESIGN`, `WIRING-EXEMPT`) that reduce `EXEMPT_TESTS` -- these
         two cells therefore remain in the denominator, matching sibling STORY-B's treatment of

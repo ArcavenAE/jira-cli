@@ -32,12 +32,19 @@ cycle: cycle-014-issue-triage-quickfixes
 estimated_effort: small
 estimated_days: 1
 target_module: "src/cli/user.rs, src/cli/mod.rs, src/main.rs"
-subsystems: ["SS-02"]
-# SS-02 (CLI Layer, src/cli/) owns this story's scope because every file this
-# story modifies (src/cli/mod.rs, src/cli/user.rs) lives under src/cli/ per
-# ARCH-INDEX's Subsystem Registry (SS-02 row: "CLI Layer | src/cli/"). The
-# src/main.rs dispatch-arm edit is a thin threading change into the same
-# SS-02-owned handler, not a second subsystem's concern.
+subsystems: ["SS-01", "SS-02"]
+# SS-02 (CLI Layer, src/cli/) owns this story's core scope because most
+# files this story modifies (src/cli/mod.rs, src/cli/user.rs) live under
+# src/cli/ per ARCH-INDEX's Subsystem Registry (SS-02 row: "CLI Layer |
+# src/cli/"). SS-01 (Entry Point & Runtime) is also listed because this
+# story modifies src/main.rs's `Command::User` dispatch arm to thread the
+# already-loaded `config` binding through (Task 9) -- src/main.rs is owned
+# by SS-01 per ARCH-INDEX's Subsystem Registry (SS-01 row: "Entry Point &
+# Runtime | src/main.rs"), not SS-02; it does not "live under src/cli/".
+# This is a real, functional edit to main.rs's dispatch wiring (not a
+# doc-only touch), so it is anchored, following the S-MUTANTS-SCOPE-1
+# precedent of listing SS-01 whenever src/main.rs is functionally modified
+# (STORY-INDEX ~L588: `subsystems:["SS-01","SS-08"]`).
 depends_on: []
 blocks: ["S-cycle14-api-query-param"]
 # S-cycle14-api-query-param depends on this story because both stories edit
@@ -69,7 +76,7 @@ acceptance_criteria_count: 11
 assumption_validations: []
 risk_mitigations: []
 created: "2026-09-26"
-version: "4.0"
+version: "4.3"
 last_updated: "2026-09-28"
 breaking_change: true
 retroactive: false
@@ -111,7 +118,7 @@ story. **D-387** (2026-09-28) replaced the hand-written Clause Coverage Map with
 the `[SCOPE:...]`/`[EXCLUDE:...]` lines there, are verified mechanically rather than
 hand-audited. Current Red Gate density tally (Task 7): `RED_TESTS=9`, `EXEMPT_TESTS=3`,
 `GREEN-nonexempt=2`, `TOTAL_NEW_TESTS=14`, denominator=11, `RED_RATIO=9/11≈0.82` (clears the
-BC-8.29.001 `>= 0.5` threshold). Story version: 4.0.
+BC-8.29.001 `>= 0.5` threshold; unchanged by the pass-14 cosmetic fixes below). Story version: 4.3.
 
 ## Narrative
 
@@ -129,25 +136,27 @@ BC-8.29.001 `>= 0.5` threshold). Story version: 4.0.
 
 ## Acceptance Criteria
 
-### AC-001 (traces to BC-X.7.002 Fix step 1 [CC:L759-774] / Postcondition 1 [CC:L801])
+### AC-001 (traces to BC-X.7.002 Fix step 1 [CC:L759-774] / Postcondition 1 (line 801, cross-reference; owned by AC-005))
 `src/cli/mod.rs::UserCommand::List.project` (~L1148) changes from clap-REQUIRED `String` to `Option<String>`. The `#[arg(long, short = 'p')]` attribute, including `short = 'p'`, is unchanged. When a local `--project` is supplied, `Cli::try_parse_from` resolves it to `Some(value)` regardless of whether a global `--project` or a configured default is also present (local wins unconditionally).
 **Test:** Implements VP-USER-LIST-PROJECT-001 preamble [CC:L839-843] (informational, inherited
 -- describes the VP's overall structure; not itself an independently-tested clause) and (a)
-Clap propagation pin [CC:L844-857] in full: its four base flag-presence cells and its two
-`-p` short-alias cells, and the "no global `-p` cell" note. Also carries BC-X.7.002 Fix step 2
+Clap propagation pin [CC:L844-857]: three base cells (the fourth, "both given", is shared
+with AC-005) plus two `-p` short-alias cells, and the "no global `-p` cell" note. Also carries
+BC-X.7.002 Fix step 2
 [CC:L775] (clap's own global-value propagation, no `jr`-level merge code) and Postcondition 2
 [CC:L802] (global fills local when absent) as secondary citations -- this AC's cells include
 the global-only argv cell that demonstrates both at the parse level, alongside AC-002's
 wiring-level test of the same postcondition -- and Resolution order step 4 [CC:L786]
 (informational, inherited -- every hermetic test in this story inherits `main.rs`'s earlier
 preemption ordering by virtue of supplying valid auth and a known profile). This AC's header
-also cites BC-X.7.002 Postcondition 1 [CC:L801] (local wins unconditionally); the argv cell
+also cites BC-X.7.002 Postcondition 1 (line 801; local wins unconditionally) -- as plain prose,
+not a CC tag, since AC-005 already carries that citation below; the argv cell
 that demonstrates it -- the "both given" cell described below -- is physically part of this
 AC's inline test function but is owned by AC-005 (see AC-005's own citation of Postcondition 1
 and its EC-X.7.002-1 cell) -- verified there, not by a separate AC-001 assertion. Everything the
 cited clause(s) specify is binding in its entirety and must be implemented exactly as written
 there; this story does not restate or narrow any of it.
-Story-specific: these six cells live in ONE inline `#[test]` function in
+Story-specific: these five cells live in ONE inline `#[test]` function in
 `src/cli/mod.rs`'s existing `#[cfg(test)] mod tests` block (Task 3) -- VP(a) is a single
 inline test asserting multiple argv vectors in its body, not one test per cell (the
 EC-X.7.002-6 empty-string cells and the EC-X.7.002-1 "both given" cell live in the same
@@ -272,9 +281,10 @@ unconditional-`todo!()` proptest block -- unaffected by this correction.
 ### AC-007 (traces to BC-X.7.002 Postcondition 5 [CC:L805])
 Once resolved (by any of steps 1-3), every request carries `projectKeys=<resolved-key>`: exactly one `GET /rest/api/3/user/assignable/multiProjectSearch` on the default (non-`--all`) path (BC-X.7.003's unchanged single-call contract); `--all` paginates one-or-more offset pages of the same endpoint, every page carrying the same `projectKeys` value.
 **Test:** Implements VP-USER-LIST-PROJECT-001(c)'s `--all` pagination cells
-[CC:L886-894]. Its non-`--all` contract sentence [CC:L894] ("The non-`--all` path keeps
-BC-X.7.003's single-request contract") is NOT verified by this AC's own tests, which are both
-`--all` cells -- it is verified by the VP(c) EC-X.7.002-1, EC-X.7.002-3 "both", EC-X.7.002-5,
+[CC:L886-894]. Its non-`--all` contract sentence [CC:L894] is informational here -- kept as a
+CC tag only because no other AC cites L894, not because this AC's own tests verify it:
+"The non-`--all` path keeps BC-X.7.003's single-request contract" is NOT verified by this AC's
+own tests, which are both `--all` cells -- it is verified by the VP(c) EC-X.7.002-1, EC-X.7.002-3 "both", EC-X.7.002-5,
 and EC-X.7.002-6 cells' "exactly one request" assertions, owned respectively by AC-005, AC-003,
 AC-009, and AC-006 (each of those cells' own non-`--all` invocation is what demonstrates the
 exactly-one-request property this citation states). Also implements the VP fault model
@@ -312,7 +322,10 @@ requirement) jointly with Fix step 4 [CC:L777-779] (shared ownership with AC-003
 resolver this AC's `&Config` threading feeds) and Fix step 5 [CC:L780] (informational,
 inherited -- explains why no separate `cli.project` fallback parameter is added, since clap has
 already resolved local-or-global onto `UserCommand::List.project` by the time this AC's handler
-runs). Implements VP-USER-LIST-PROJECT-001(c)'s EC-X.7.002-5 cell [CC:L881-884] (shared ownership
+runs; enforced by code review -- no `cli.project` parameter is added to the `Command::User` arm
+in `src/main.rs`, unlike the `Project`/`Issue`/`Board`/`Sprint`/`Queue`/`RequestType`/`Field`/
+`Component` arms Fix step 5 itself names as the pattern this story deliberately does not
+replicate). Implements VP-USER-LIST-PROJECT-001(c)'s EC-X.7.002-5 cell [CC:L881-884] (shared ownership
 with AC-003 above -- one physical test satisfies both ACs) -- this same cell is what verifies
 Fix step 3's no-reload requirement, via the fault (3) kill described next. Also implements the
 VP fault model [CC:L902-909] fault (3) (the handler reloading config instead of using the
@@ -425,15 +438,16 @@ Reference: `architecture/module-decomposition.md`, `architecture/dependency-grap
 
 ## Token Budget Estimate
 
-**Re-measured after the F3 revision-history split (2026-09-28):** the pre-split file was 1,272
-lines; a full Read-tool call on it required paging (truncated at line 620 of 1,273, reporting
-43,589 tokens for the whole file). Moving the ten historical Revision Note sections out to
-`S-cycle14-user-list-project-resolution.revision-history.md` cut the story to 700 lines / 56,764
-characters; a full Read-tool call on the split file now returns all 700 lines in a single call
-with no truncation notice, confirming the file is under the tool's 25,000-token cap. Applying
-the pre-split file's own measured chars-per-token ratio (43,589 tokens / 103,695 chars ≈ 2.38
-chars/token) to the post-split character count gives ~24,000 tokens for this row. The other
-three rows are unchanged from the prior estimate.
+**Re-measured after the F3 revision-history split (2026-09-28):** the pre-split file required
+paging on a full Read-tool call, reporting ~43,589 tokens for the whole file. Moving the ten
+historical Revision Note sections out to
+`S-cycle14-user-list-project-resolution.revision-history.md` brought the story back under the
+Read tool's 25,000-token cap -- a full Read-tool call on the split file now returns the whole
+file in a single call with no truncation notice. Applying the pre-split file's own measured
+chars-per-token ratio to the post-split file gives ~24,000 tokens for this row. The other three
+rows are unchanged from the prior estimate. (Exact line/character counts are intentionally
+omitted here -- they drift with every edit; only the token estimates are load-bearing for the
+budget-usage row below.)
 
 | Context Source | Estimated Tokens |
 |-----------------|-------------------|

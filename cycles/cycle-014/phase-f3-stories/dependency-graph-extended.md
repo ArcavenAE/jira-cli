@@ -13,7 +13,7 @@ inputs:
   - ".factory/stories/STORY-INDEX.md"
   - ".factory/cycles/cycle-014/cycle-manifest.md"
 traces_to: ".factory/cycles/cycle-014/cycle-manifest.md, D-381"
-input-hash: "73ba0e4"
+input-hash: "75ac276"
 ---
 
 # F3 Extended Dependency Graph -- `issue-triage-quickfixes` (cycle-014)
@@ -112,9 +112,7 @@ recommendation as a `depends_on:` edge (see cycle-008's own §4, "S2 -> S4"), cy
   numeric dependency between A and C specifically:** per `verification-delta.md` §2's
   `examine_globs` table and D-382, A bumps the policy's "Current `examine_globs` count" line
   32 -> 33 and C bumps it 33 -> 34 -- C's edit textually depends on starting from A's
-  already-landed 33, and `scripts/check-cargo-mutants-policy-citations.sh` would fail on either
-  story's §Scope bullet if its own new function were not yet defined in the tree. This is a real
-  edge, not merely a recommendation.
+  already-landed 33. This is a real edge, not merely a recommendation.
 - **The `C -> B` edge has no equivalent numeric dependency** (B adds no new `examine_globs` entry
   -- `src/cli/field.rs` is already in scope via FIX-F6-MUTANTS-SCOPE), but the human decision at
   D-381 fixed the whole chain to A -> C -> B as a single ordering, not just the A -> C pair, to
@@ -144,7 +142,7 @@ stories, but each touches a DIFFERENT clap subcommand/enum variant (`UserCommand
 disjoint line ranges within shared files. `.cargo/mutants.toml` and
 `docs/specs/cargo-mutants-policy.md` are shared by A and C only, with the genuine sequential
 numeric dependency described in §4. `src/main.rs` is shared by A and C only: both touch different
-arms of the same `match` statement (`src/main.rs::run`'s dispatch match, ~L212 -- `Command::User`
+arms of the same `match` statement (`run` at ~L212, dispatch match ~L233 -- `Command::User`
 at ~L434-439 for A, `Command::Api` at ~L493-503 for C), not the same match arm or helper function --
 a same-file, different-arm overlap, which the serial delivery order (§4, D-381) resolves the same
 way it resolves the `src/cli/mod.rs`/`README.md` overlap. No two stories touch the same match arm

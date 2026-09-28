@@ -433,3 +433,15 @@ See `cycles/cycle-005/burst-log.md` Bursts 11-12 for full narrative detail (thes
 | Phase | Status | Completed | Gate | Notes | Finding Progression |
 |-------|--------|-----------|------|-------|---------------------|
 | **MAINT-SWEEP-2026-09-23-TRIAGE** | **COMPLETE** | 2026-09-23 | none (dependency-triage sweep) | 7 open PRs reviewed. APPLY (4, MERGED): `#872`/`#867`/`#866`/`#865`. HELD (2): `#854`/`#842`. DEFERRED (1): `#855`. | 770 BCs / 89 VPs / 118 holdout / 191 stories; no DEC minted |
+
+---
+
+> Extracted from `.factory/STATE.md`'s `## Phase Progress` table during the
+> 2026-09-28 `CYCLE-014-F3-D388-CHECKPOINT-2026-09-28` burst (v5.02 ->
+> v5.03), to keep the live table at 12 rows after adding the new
+> `CYCLE-014-F3-D388-CHECKPOINT-2026-09-28` row. This was the oldest row at
+> that point; archived here verbatim, unedited.
+
+| Phase | Status | Completed | Gate | Notes | Finding Progression |
+|-------|--------|-----------|------|-------|---------------------|
+| **RELEASE-v0.7.0-GA-2026-09-24** | **RELEASED / PUBLISHED (STABLE)** | 2026-09-24 | release-metadata PR gate + human admin-merge | `v0.7.0` FIRST STABLE (GA) release, `develop`->`main`. Process correction `D-376`: TRUE MERGE COMMIT (`86c3ac1f`). `release.yml` run `35953608796` SUCCESS. Published 2026-09-24T04:04:45Z. | 770 BCs / 89 VPs / 118 holdout / 191 stories; `D-376` minted |

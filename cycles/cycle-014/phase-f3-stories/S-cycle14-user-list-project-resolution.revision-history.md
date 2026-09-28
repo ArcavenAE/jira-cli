@@ -601,3 +601,64 @@ test-file citations.
   this story's edit: `Check passed: 29 bullets parsed, 98 (file, fn) pairs validated`).
 - **ADV-C14-F3-P3-006b (COSMETIC):** Task 6's quote of `tests/user_commands.rs`'s stale
   comment is corrected from a double-hyphen to the file's actual em dash (`--` -> `—`).
+
+## 2026-09-28 -- F3 adversarial pass-14 fixes (cosmetic)
+
+Two cosmetic findings fixed directly in the story body (version bumped 4.0 -> 4.1; input-hash
+left untouched):
+
+- P14-006: AC-001's Test paragraph claimed to implement VP-USER-LIST-PROJECT-001(a) "in full,"
+  describing four base flag-presence cells as though AC-001 owned all of them, while the same
+  paragraph already said the "both given" base cell is owned by AC-005. Reworded to say three
+  base cells plus the two `-p` short-alias cells, noting the fourth base cell is shared with
+  AC-005 rather than exclusively owned here. The same sweep caught two more instances of a
+  citation tag sitting next to an "owned by AC-NNN" note: AC-001's second reference to
+  Postcondition 1 (line 801) was changed from a bracketed citation tag to plain prose, since
+  AC-005 already carries that tag in its own Test body; and AC-007's reference to the
+  non-`--all` contract sentence (line 894) was relabeled informational, since no other AC cites
+  that line and the tag needs to stay in place for coverage. No tally, cell count, or
+  test-function grouping changed in any of these edits.
+- P14-004: the Token Budget Estimate section cited an exact line count (700 lines) that was
+  already stale relative to the file's actual length. Removed the exact line and character
+  counts from that section's narrative and kept only the token estimates, since those are the
+  only figures the budget-usage row actually depends on.
+
+## 2026-09-28 -- F3 adversarial pass-15 fixes (cosmetic)
+
+Two coverage-check leftovers and one cosmetic finding fixed directly in the story body (version
+bumped 4.1 -> 4.2; input-hash left untouched):
+
+- Coverage-check leftover: AC-001's heading still carried a real citation tag pointing at
+  Postcondition 1 (line 801), even though the body already explains that citation is plain
+  prose because AC-005 owns it. Confirmed AC-005 still carries the tag for that clause, then
+  changed the AC-001 heading to spell out the same "cross-reference, owned by AC-005" wording
+  instead of using a citation tag.
+- Coverage-check leftover: two prose sentences referred to a citation tag by writing out its
+  literal bracket form in backticks, which the coverage-checking script was reading as a
+  malformed empty tag. Both were reworded to say "CC tag" in plain words instead of showing the
+  bracket syntax: the sentence in AC-001 explaining why Postcondition 1 is plain prose, and the
+  sentence in AC-007 explaining why the non-`--all` contract citation is kept only because no
+  other AC cites that line. A story-wide check for the same pattern found no further
+  occurrences in either this story or the field-options-name-label story.
+- P15-002 (cosmetic): AC-001's closing paragraph said "these six cells" describing the cells in
+  its single inline test function, but the count of cells actually described just above it
+  (three base cells plus two `-p` short-alias cells) is five, not six. Corrected the wording to
+  "these five cells" to match.
+
+## 2026-09-28 -- F3 adversarial pass-16 fixes (P16-001, P16-010)
+
+Two findings fixed directly in the story body (version bumped 4.2 -> 4.3; input-hash left
+untouched):
+
+- P16-001 (medium): the subsystems list named only the CLI layer subsystem, even though this
+  story also makes a real, functional edit to the entry-point/runtime file's dispatch arm
+  (threading the already-loaded config through), which belongs to a different subsystem per the
+  architecture index. Added that subsystem to the subsystems list and rewrote the frontmatter
+  comment so it no longer claims every modified file lives under the CLI layer's own directory,
+  following the precedent an earlier mutants-scope story set for listing that subsystem whenever
+  the entry-point file is genuinely, functionally touched.
+- P16-010 (cosmetic): the acceptance criterion for the config-threading requirement cited a spec
+  clause explaining why no separate project fallback parameter is added, but didn't say how that
+  omission is actually checked. Added a note naming code review as the enforcement mechanism,
+  pointing at the dispatch arm in the entry-point file where such a parameter would (and does
+  not) appear.

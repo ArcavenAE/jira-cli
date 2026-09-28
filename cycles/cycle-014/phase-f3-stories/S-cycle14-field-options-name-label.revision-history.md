@@ -544,3 +544,83 @@ full per-part verification.
 This pass changes no scope, no test count, and no RED/GREEN classification -- it only tightens two
 citations' wording and adds no new obligations. `input-hash` is left untouched, since no input
 file changed.
+
+## Revision Note (F3 adversarial pass-14 fix, P14-001/P14-003/P14-004, LOW/LOW/COSMETIC, 2026-09-28)
+
+Three small fixes, none changing scope, test count, or RED/GREEN classification. `input-hash` is
+left untouched, since no input file changed.
+
+- **P14-001 (naming a real enforcement mechanism for two ordering claims):** two acceptance
+  criteria pointed at named tests for claims those tests do not actually pin. AC-009 named the
+  empty-cache-read test for the "guard runs before any cache read, so zero cache reads happen"
+  claim, but that test only proves exit 64, the error message, and zero HTTP calls on a cold
+  cache -- it says nothing about ordering relative to the cache read, and the underlying spec text
+  says the same about itself in several places. AC-009 now says this plainly and instead points to
+  the actual proof: reading `src/cli/field.rs::resolve_field_id`, the empty-field guard sits ahead
+  of the only cache read in the function, confirmed by inspection of the current code, backed up by
+  a PR-review check that the function isn't touched by this story's diff. Similarly, AC-008 cited
+  the spec's "mirrored, not shared" relationship between this file's field-lookup logic and the
+  equivalent logic in `src/cli/issue/field_resolve.rs`, but the tests it named only exercise this
+  file, not the other one, so they can't prove two files stayed in sync. AC-008 now says so and
+  points to the same PR-review diff check AC-004 already uses for the neighboring scope-boundary
+  claim: the other file has zero changes in this story's diff, so the mirrored behavior is
+  necessarily still intact.
+- **P14-003 (effort label didn't match the index):** this story's frontmatter said
+  `estimated_effort: small` while the story index and the wave schedule both size it at 5 story
+  points and label it medium. The frontmatter field is corrected to `medium` to match the point
+  estimate everyone else already agreed on. (The sibling query-param story had the same kind of
+  mismatch the other direction -- its frontmatter said `medium` where the index/schedule say 8
+  points/large -- and was corrected separately in its own frontmatter, not in this file.)
+  Story version bumped 4.0 -> 4.1 for this pass.
+  This is not a fresh estimate; it is a correction to match the value the story index and wave
+  schedule already carried.
+- **P14-004 (stale exact counts in the Token Budget section):** the Token Budget section quoted
+  precise line and character counts for this file (from when the revision history was split out
+  into its own file) that had already drifted out of date by the time of this pass. Those exact
+  counts are removed; the section now describes the same split and the same token estimates in
+  words, without claiming a precise line count that will only go stale again on the next edit.
+
+## 2026-09-28 -- F3 adversarial pass-15 fix (cosmetic, P15-004)
+
+One cosmetic finding fixed directly in the story body (version bumped 4.1 -> 4.2; input-hash
+left untouched):
+
+- P15-004: AC-006's second bullet described the stale `handle` Step 2 comment in
+  `src/cli/field.rs` as living at approximately line 132, but checked against the current file
+  the comment is at approximately line 134. Corrected the line reference to match.
+
+## 2026-09-28 -- F3 adversarial pass-16 fixes (P16-001, P16-002, P16-004, P16-005, P16-006, P16-007, P16-009)
+
+Findings fixed directly in the story body (version bumped 4.2 -> 4.3; input-hash left untouched):
+
+- P16-001 (medium): kept the subsystems list at just the CLI layer, since this story's other two
+  touched files are doc-comment-only edits with no behavior change, but rewrote the frontmatter
+  comment so it no longer describes those two files as being in "the same subsystem" as the CLI
+  layer -- they belong to two different subsystems per the architecture index, and the comment
+  now says so and explains why they're still not added to the subsystems list (a doc-only
+  correction doesn't count as functionally touching a subsystem, and neither the architecture
+  index nor the story template requires listing every file a story merely touches).
+- P16-002 (medium): the empty-field-name edge-case row in the Edge Cases table claimed the named
+  test pins "zero HTTP/cache reads," but the acceptance criterion right above it already explains
+  the test only pins zero HTTP calls on a cold cache, not cache reads, which is instead a
+  code-level fact checked by inspection. Reworded the table row to match what the test actually
+  pins and point to the acceptance criterion for the rest. A sweep of all three stories' Edge
+  Cases tables, architecture-compliance rules, and tasks for the same pattern found no other
+  instance.
+- P16-004 (low): one acceptance criterion attributed the customfield-bypass edge case to six
+  field-name-resolution unit tests that can't actually observe it, since the bypass skips the
+  function those tests exercise entirely. Re-attributed that one edge case to the integration
+  test that does exercise the bypass, after confirming it exists in the test file.
+- P16-005 (low): one acceptance criterion required a doc-wording fix to land in the exact same
+  commit as the behavior-changing fix, which doesn't match how the task list actually sequences
+  the two changes across separate steps. Loosened the requirement to "same PR."
+- P16-006 (low): the primary behavioral-contract table row listed a hand-enumerated set of
+  clauses this story owns, which under-listed what the acceptance criteria actually cite.
+  Replaced the list with a pointer to the coverage-scope section, which is the mechanically
+  checked source of truth.
+- P16-007 (cosmetic): a frontmatter comment attributed three line citations to one clap
+  subcommand variant, when the first citation actually belongs to a different (parent) variant.
+  Split the citation to name each variant correctly.
+- P16-009 (cosmetic): one acceptance criterion's closing citation implied a spec line contained a
+  particular phrase describing an ordering guarantee as a code-level fact, when that phrase
+  actually lives in a different clause the same line only cross-references. Reworded to say so.
