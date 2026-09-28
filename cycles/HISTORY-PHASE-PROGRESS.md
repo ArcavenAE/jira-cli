@@ -373,3 +373,15 @@ See `cycles/cycle-005/burst-log.md` Bursts 11-12 for full narrative detail (thes
 | Phase | Status | Completed | Gate | Notes | Finding Progression |
 |-------|--------|-----------|------|-------|---------------------|
 | **CYCLE-009-F2-APPROVED-2026-09-22** | **APPROVED** | 2026-09-22 | human gate (F2 spec evolution) | Amended `BC-2.1.008`+`BC-2.1.023`. Human APPROVED (`D-374`). | 770 BCs / 89 VPs / 118 holdout / 191 stories; `D-374` minted |
+
+---
+
+> Extracted from `.factory/STATE.md`'s `## Phase Progress` table during the
+> 2026-09-26 `CYCLE-014-F3-DRAFTED-2026-09-26` burst (v4.97 -> v4.98), to
+> keep the live table at 12 rows after adding the new
+> `CYCLE-014-F3-DRAFTED-2026-09-26` row. This was the oldest row at that
+> point; archived here verbatim, unedited.
+
+| Phase | Status | Completed | Gate | Notes | Finding Progression |
+|-------|--------|-----------|------|-------|---------------------|
+| **CYCLE-009-F4-COMPLETE-2026-09-22** | **COMPLETE** | 2026-09-22 | automated quality gate | PR `#868` merged. GitHub `#859` CLOSED. Full regression 5,367 passed/0 failed. No new `D-NNN`. | 770 BCs / 89 VPs / 118 holdout / 191 stories; no DEC minted |

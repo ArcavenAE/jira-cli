@@ -3,7 +3,7 @@ document_type: cycle-manifest
 cycle_id: cycle-014-issue-triage-quickfixes
 cycle_type: bug-fix
 version: TBD — proposed roll into next dev prerelease as three PATCH-shaped fixes (no breaking change); confirm at F1 gate
-status: f1-approved
+status: f2-approved-f3-drafted
 started: 2026-09-24
 completed: null
 producer: architect (F1 delta analysis)
