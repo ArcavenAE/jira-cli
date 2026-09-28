@@ -984,7 +984,7 @@ Findings fixed directly in the story body (version bumped 4.7 -> 4.8; input-hash
   (this one, the sibling `S-cycle14-user-list-project-resolution.md`, and
   `S-cycle14-field-options-name-label.md`) for any CC tag with a real, concrete spec line range
   outside a `### AC-NNN` section; the Task 12 citation above was the only offender found across
-  all three files. The other `[CC:...]`/`[CC:L<start>-<end>]` mentions outside AC sections in all
+  all three files. The other generic CC tag mentions outside AC sections in all
   three stories are generic descriptions of the citation mechanism itself (no concrete line
   numbers), not real misplaced citations, so none needed changing.
 - P21-003 (low): the File Structure Requirements row for `src/cli/mod.rs` listed AC-001 in its
@@ -1008,3 +1008,131 @@ purely positional -- they name where the sibling story's already-landed
 `docs/specs/cargo-mutants-policy.md` bullet sits, or where this story's own new bullet must be
 inserted relative to a pre-existing bullet group -- neither is a file this story actually reads
 for its own AC/Architecture content, so neither was added.
+
+## 2026-09-28 -- F3 adversarial pass-22 fixes (P22-001, P22-002)
+
+Findings fixed directly in the story body (version bumped 4.8 -> 4.9; input-hash left untouched):
+
+- P22-002 (low, a real test gap): EC-X.16.001-1 (the `k=` empty-VALUE-allowed edge case, spec
+  region cited via a CC tag on lines 3918-3920) says an empty VALUE is sent as-is. No cell owned
+  by this story previously checked that claim's wire result directly -- AC-005 cited the same
+  edge case, but only for `parse_query_param`'s parse half (that an empty VALUE is `Ok`, not an
+  error); nothing exercised `append_query_params`'s assembly of it. Added one new direct-call
+  pinned example to AC-001 -- `append_query_params("/x", &[("k".into(), "".into())]) == "/x?k="`
+  -- verified against Behavior 1's separator algorithm (path `/x` has no `?`, so a fresh leading
+  `?` is introduced) and Postcondition 3/Behavior 3's exactly-once-encoding rule (NAME and VALUE
+  are each encoded once and joined by a literal `=`, even when VALUE encodes to the empty
+  string -- the `=` is never dropped for an empty VALUE). Added the same CC tag citation to
+  AC-001 for the wire half, alongside AC-005's existing citation for the parse half, and labeled
+  each half explicitly in both ACs so a reader can tell which function each AC's cells actually
+  exercise. Updated every tally occurrence this addition touches: Task 10(d)'s full per-cell
+  enumeration table (new row), Task 10(e)'s recomputed tally (`TOTAL_NEW_TESTS` 44 -> 45,
+  `RED_TESTS` 40 -> 41, GREEN-nonexempt unchanged at 3, EXEMPT unchanged at 1, denominator 43 ->
+  44, `RED_RATIO` 40/43 -> 41/44), Task 10(f)'s direct-call/subprocess split (22/22 -> 23/22),
+  the AC-001 per-AC row in the (e) tally table (8 -> 9 new tests), and the Revision History
+  summary's Current Red Gate tally paragraph. Grepped the story body for every other occurrence of
+  the stale counts ("40 / 43", "44", "22 direct") and confirmed each remaining occurrence found
+  was either already updated or belonged to an unrelated count (the `.cargo/mutants.toml`
+  `examine_globs` 33 -> 34 bump in AC-011, which uses different numbers entirely and was not
+  touched).
+- P22-001 (low): VP-API-QP-005's fault-models CC tag (spec lines 4357-4362) was cited only by
+  AC-009, as if AC-009's own attached-form cells (EC-X.16.002-5..10) killed all eight faults that
+  clause lists. Verified against the actual cell design that three of those faults are instead
+  killed by other ACs' tests: the JSON-envelope-on-stdout-instead-of-stderr fault is killed by
+  AC-006's `--output json` envelope cell, not by anything AC-009 owns; the split-on-the-last-`=`
+  fault and the NAME-trimmed-before-the-empty-check fault are both killed by AC-005's partition
+  `proptest!` (its EC-X.16.001-2 and EC-X.16.001-10 cells respectively), not by AC-009's
+  attached-form cells. Added the same CC tag to AC-005 and AC-006, each scoped with an explicit
+  "the fault models this AC's tests kill: ..." label naming exactly which faults its own cells
+  kill (AC-005: swapped M1/M2, one shared generic message, `{raw}` replaced by a trimmed/re-split
+  value, split-on-the-last-`=`, NAME-trimmed-before-empty-check, and an empty-NAME-check-before-
+  missing-`=`-check fault; AC-006: the stdout/stderr envelope fault only), and narrowed AC-009's
+  own citation to state it owns only the `allow_hyphen_values` fault (via its EC-X.16.002-8 cell)
+  and, jointly with AC-005, the `{raw}`-replaced-by-a-trimmed-or-re-split-value fault (via its
+  real-argv attached-value cells) -- explicitly disclaiming ownership of the other five faults,
+  which are AC-005's/AC-006's.
+
+Reworded this file's own generic bracketed-format-mention (originally
+~L987, now shifted by the P21-003 entry's growth) to plain "CC tag" wording with no bracket
+syntax, per the same convention this dated entry itself uses throughout.
+
+## 2026-09-28 -- F3 adversarial pass-23 fixes (P23-002, P23-005) plus fault-model citation sweep
+
+Findings fixed directly in the story body (version bumped 4.9 -> 5.0; input-hash left untouched):
+
+- P23-002 (low): AC-007 and AC-008 each cited VP-API-QP-006's fault-models CC tag (spec lines
+  4387-4389, listing three faults: the ordering fault -- `-q` parsing moved after `resolve_body`
+  or after `parse_header` -- per-flag filtering that drops bad values instead of failing, and
+  reporting the last malformed value instead of the first) without scoping which of the three
+  faults each AC's own tests actually kill. Verified against each AC's owned cells before writing
+  anything: AC-007 owns the all-or-nothing cells (assert zero requests sent when any `-q` value is
+  malformed) and the first-malformed-reported cells (assert the FIRST malformed value in flag
+  order is reported); AC-008 owns the (iii) held-open-stdin cell (`-d @- -q bad`, asserts the
+  child exits 64 before ever touching stdin) and the (iv) before-`-H` cell (`-q bad -H
+  "malformed-no-colon"`, asserts the `-q` error is reported, not `parse_header`'s). Added a scoped
+  parenthetical to each AC's fault-models citation: AC-007 now states its tests kill per-flag
+  filtering (via the all-or-nothing cells' zero-request assertion) and last-vs-first reporting
+  (via the first-malformed-reported cells' flag-order assertion), cross-referencing the remaining
+  ordering fault to AC-008. AC-008 now states its tests kill the ordering fault (jointly, via
+  (iii) and (iv)) and ALSO per-flag filtering -- reasoned out explicitly: EC-4's single malformed
+  `-q bad` value, if silently filtered instead of failing, would let control flow reach
+  `resolve_body`'s blocking stdin read instead of exiting promptly, so the (iii) cell
+  independently kills that fault too -- cross-referencing the remaining last-vs-first-reporting
+  fault to AC-007.
+
+Pattern sweep (a), fault-model citations, applied across this whole story: beyond VP-API-QP-005
+(already scoped by the pass-22 P22-001 fix) and VP-API-QP-006 (fixed above), four more
+fault-model CC tags were bare, unscoped range citations with no "(the fault models this AC's own
+tests kill: ...)" framing -- AC-001's citation of VP-API-QP-001's fault-models (spec lines
+4024-4031, part of the pinned-examples-tail CC tag), AC-002's citation of VP-API-QP-002's
+fault-models (lines 4063-4069), AC-003's citation of VP-API-QP-003's fault-models (lines
+4089-4091), and AC-004's citation of VP-API-QP-004's fault-models (lines 4106-4108). Each of these
+four VPs is owned by a single AC (no cross-AC split needed, unlike VP-API-QP-005/006), so each fix
+was a same-AC scoping addition naming which of that AC's own cells kills which named fault, verified
+against the actual fault list read directly from cross-cutting.md before writing: AC-001 (5 faults:
+`?`/`&` swapped, `ends_with` boundary faults, `find('?')` over the whole path, the
+`&`-terminated-test-on-whole-`pre` fault, and the fragment dropped/misplaced -- killed by the
+separator-oracle `proptest!` plus the `/s?#f` and `/x&`+`k=v` pinned examples specifically for the
+two named-boundary faults); AC-002 (5 faults: dedup/last-wins/first-wins collapsing, a same-NAME
+override, reordering -- all killed by the repeated-names proptest oracle; `value_delimiter=','` --
+killed by the EC-X.16.001-13 argv cell; `handle_api` forwarding only first/last or deduplicating
+before the call -- killed by the repeated-flags argv cell, per the clause's own attribution);
+AC-003 (6 faults: no encoding/double encoding -- killed by the (a) round-trip assertion;
+`byte_serialize` substituted -- killed by the (c) encoder-identity assertion and its pinned
+examples; the `=` joiner encoded -- killed by the same (c) assertion; NAME/VALUE trimmed -- killed
+by the (d) no-trim pinned examples; the help phrase dropped/reworded -- killed by the (e) `--help`
+cell); AC-004 (4 faults: a `?`/`&` appended on zero pairs and the path re-encoded/fragment dropped
+on zero pairs -- killed jointly by the zero-flag identity `proptest!` and the zero-flag wiremock
+examples; query assembly gated on the method and `-d` content merged into the query -- killed by
+the table-driven method-orthogonality wiremock test). Total: 6 fault-model CC tags exist in this
+story (VP-API-QP-001 through -006); all 6 are now scoped (2 were already scoped from the pass-22
+P22-001 fix; 4 needed the same-AC scoping fix above; the VP-API-QP-006 pair needed the cross-AC
+scoping fix in P23-002 above).
+
+Pattern sweep (b), multi-sided clauses, applied across this whole story: checked every `[CC:...]`
+citation against its cited cross-cutting.md text for "regardless of"/"and"/"both"/"before ... and
+after"/"either ... or"/lists of conditions. Specifically re-verified: BC-X.16.001 Postcondition 2's
+`?`-presence-evaluated-before-`&`-termination ordering (AC-001's "in full" citation is accurate --
+the separator-oracle `proptest!` asserts the whole case-split, ordering included); BC-X.16.001
+Invariant 4's two guarantees plus its explicit "no blanket ban" non-guarantee (already labeled,
+AC-001); BC-X.16.002's Condition/Behavior table's M1-and-M2-both-exit-64 plus the
+message-distinctness requirement (already split across AC-005's M1-row citation and AC-006's
+M2-row citation, per the Coverage Scope section's own note); BC-X.16.002 Postcondition 1's
+chained before-`append_query_params`/before-`resolve_body`/before-`-H`-parsing ordering (already
+extensively labeled under the P17-001 correction, with the `resolve_body`/`-H` halves attributed to
+AC-008's (iii)/(iv) cells); and EC-X.16.002-8's failing form plus its three hyphen-leading-NAME
+workaround forms plus its contrasting hyphen-leading-VALUE case (already labeled informational,
+AC-009). All five checked clauses were already correctly scoped from prior passes; no further edit
+was needed for sweep (b) beyond confirming coverage.
+
+- P23-005 (cosmetic): the "## Previous Story Intelligence" table's `S-cycle14-user-list-project-resolution`
+  row claimed, in its "Patterns Established" cell, that STORY-A "Established the exact §Scope
+  bullet form (`` `file` — `symbol` ``, not `file::symbol`) required by
+  `scripts/check-cargo-mutants-policy-citations.sh`" -- but that bullet form was not STORY-A's own
+  invention; it was already specified by `verification-delta.md` §2, which STORY-A (and this
+  story) both simply followed. Reworded the cell to "Reuses the policy's pre-existing
+  `` `file` — `symbol` `` bullet form (verification-delta §2), not `file::symbol`, required by
+  `scripts/check-cargo-mutants-policy-citations.sh`" so the credit is placed correctly.
+
+Whenever this entry refers to the citation mechanism, it uses the plain phrase "CC tag" with no
+bracket syntax, per this file's own established convention.

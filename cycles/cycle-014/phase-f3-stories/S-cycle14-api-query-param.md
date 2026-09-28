@@ -96,7 +96,7 @@ acceptance_criteria_count: 11
 assumption_validations: []
 risk_mitigations: []
 created: "2026-09-26"
-version: "4.8"
+version: "5.0"
 last_updated: "2026-09-28"
 breaking_change: false
 retroactive: false
@@ -129,9 +129,10 @@ Current state: **D-386** (bind-by-reference restructure -- every AC **Test:** li
 VP-API-QP-NNN clauses by reference instead of restating them) and **D-387** (mechanical-coverage
 restructure -- ownership is recorded solely via CC-tag citations inside each `### AC-NNN` section,
 checked against the Coverage Scope section below) are both in force. Current Red Gate tally (Task
-10(e), P11-005-corrected): `TOTAL_NEW_TESTS = 44`, `RED_TESTS = 40`, non-exempt GREEN
-(`PRE-EXISTING-BEHAVIOR`) `= 3`, `EXEMPT_TESTS = 1` (`WIRING-EXEMPT` only), `RED_RATIO = 40 / 43
-~= 0.930 >= 0.5`. Story version 4.8.
+10(e), updated pass-22, P22-002): `TOTAL_NEW_TESTS = 45`, `RED_TESTS = 41`, non-exempt GREEN
+(`PRE-EXISTING-BEHAVIOR`) `= 3`, `EXEMPT_TESTS = 1` (`WIRING-EXEMPT` only), `RED_RATIO = 41 / 44
+~= 0.932 >= 0.5` (unaffected by the pass-23 fault-model-scoping fixes, P23-002, recorded in
+`S-cycle14-api-query-param.revision-history.md`). Story version 5.0.
 
 ## Coverage Scope (D-387)
 
@@ -330,7 +331,7 @@ EXCLUDE is inside some AC's CC-tag range) is verified mechanically per D-387.
 
 ## Acceptance Criteria
 
-### AC-001 (traces to BC-X.16.001 Behavior 1, Postcondition 2, EC-X.16.001-4/5/8/9/12/14)
+### AC-001 (traces to BC-X.16.001 Behavior 1, Postcondition 2, EC-X.16.001-1/4/5/8/9/12/14)
 `src/cli/api.rs::append_query_params(path: &str, pairs: &[(String, String)]) -> String` (new pure
 function) implements BC-X.16.001 Behavior 1 `[CC:L3806-3822]` and Postcondition 2
 `[CC:L3880-3891]` in full; it also depends on Precondition 1 `[CC:L3869-3871]` (`<path>` is
@@ -344,7 +345,9 @@ synchronous fn with no `Result`/I/O-typed params, and structurally confirmed by 
 calling it directly with no `JiraClient`/wiremock; no dedicated assertion, and none is added) and 4
 `[CC:L3912-3915]` (guarantee scope: never a second `?`, never `&` after an empty/`&`-terminated
 query component -- the "no blanket `?&`/`??` ban" half is demonstrated by the EC-9 pinned example
-below, whose output legitimately contains `?&`), and owns Edge Cases EC-X.16.001-4 `[CC:L3931-3932]`, -5 `[CC:L3933-3942]`
+below, whose output legitimately contains `?&`), and owns Edge Cases EC-X.16.001-1 `[CC:L3918-3920]`
+(the wire half -- `append_query_params`'s own assembly of an empty VALUE; AC-005 owns the parse
+half, via `parse_query_param`, see AC-005's own citation of this same clause), -4 `[CC:L3931-3932]`, -5 `[CC:L3933-3942]`
 (the closing RFC 9112 §3.2 sentence -- fragments are never transmitted to the server -- is
 informational: standard HTTP-client behavior outside `append_query_params`'s string-only scope, not
 independently tested; confirmed at PR code review), -8
@@ -361,13 +364,34 @@ test-oracle-only note -- informational: enforced by which module each test calls
 assertion),
 VP-API-QP-001's equation and strategy `[CC:L4007-4023]` (pinned examples EC-X.16.001-4, -5, the
 empty-query-plus-fragment case, and -8 (both forms) and -9), and VP-API-QP-001's pinned-examples
-tail and fault-models `[CC:L4024-4031]` (pinned examples -14 and -12). Everything the cited
+tail and fault-models `[CC:L4024-4031]` (pinned examples -14 and -12; the fault models this AC's
+own tests kill: the separator oracle `proptest!` kills the general `?`/`&`-swapped and
+`ends_with`-boundary faults over its whole generated space, while the `/s?#f`
+empty-query-plus-fragment pinned example specifically kills `find('?')` evaluated over the whole
+path instead of `pre`, and the `/x&` + `k=v` (EC-X.16.001-14) pinned example specifically kills
+the `&`-terminated test applied to the whole `pre` before the `?`-presence check; the fragment-
+dropped-or-misplaced fault is killed by every pinned example carrying a `#fragment`, e.g. EC-5 and
+the empty-query-plus-fragment case -- AC-001 is the sole owner of VP-API-QP-001, so no cross-AC
+split applies here). Everything the cited
 clause(s) specify is binding in its entirety and must be implemented exactly as written there;
-this story does not restate or narrow any of it. All cells live in `src/cli/api.rs`'s `#[cfg(test)]
-mod tests`, grouped into ONE `proptest!` function (the separator oracle) plus 7 separate
-`#[test]` functions -- one per pinned example, per Task 9's counting-unit rule (EC-4, EC-5,
+this story does not restate or narrow any of it. **New direct-call pinned example (P22-002, closes
+a real test gap):** `append_query_params("/x", &[("k".into(), "".into())]) == "/x?k="` -- the wire
+half of Edge Case EC-X.16.001-1 `[CC:L3918-3920]` (`k=`, empty VALUE, allowed), computed directly
+against Behavior 1's separator algorithm (path `/x` has no `?` in its pre-fragment part, so a
+fresh leading `?` introduces the assembled query, per Postcondition 2(a)) and Postcondition
+3/Behavior 3's exactly-once encoding (NAME and VALUE are each `urlencoding::encode`d once and
+joined by a literal `=`, even when VALUE encodes to the empty string -- the `=` is never omitted
+for an empty VALUE). This example is NOT one of VP-API-QP-001's own pinned examples (see
+`[CC:L4007-4031]` above, which does not include EC-X.16.001-1) -- it is a new cell this AC adds
+directly against `append_query_params`, since no other owned cell in this story previously checked
+EC-X.16.001-1's wire-assembly result (AC-005's own EC-X.16.001-1 citation covers only
+`parse_query_param`'s parse half, not the wire output). All cells live in `src/cli/api.rs`'s
+`#[cfg(test)]
+mod tests`, grouped into ONE `proptest!` function (the separator oracle) plus 8 separate
+`#[test]` functions -- one per pinned example, per Task 9's counting-unit rule (EC-1 (P22-002, new),
+EC-4, EC-5,
 empty-query-plus-fragment (no EC id of its own), EC-8 as ONE test covering both pinned forms,
-EC-9, EC-12, EC-14). All 8 functions are RED at the Task 1 stub (`todo!()` panic).
+EC-9, EC-12, EC-14). All 9 functions are RED at the Task 1 stub (`todo!()` panic).
 
 ### AC-002 (traces to BC-X.16.001 Behavior 2, Postcondition 4, EC-X.16.001-12/13)
 The `-q`/`--query-param` clap field is a plain `Vec<String>` with `ArgAction::Append` and NO
@@ -388,7 +412,15 @@ narrow them.
 including its `existing == generated_existing_pairs` anti-vacuity generator constraint
 `[CC:L4042-4048]`, its pinned decode example `[CC:L4049-4050]`, its argv cells for EC-X.16.001-13
 `[CC:L4050-4054]`, repeated flags `[CC:L4055-4059]`, and mixed `[CC:L4059-4062]`, and its
-fault-models `[CC:L4063-4069]`. Everything the cited clause(s) specify is binding in its entirety
+fault-models `[CC:L4063-4069]` (the fault models this AC's own tests kill: dedup-into-a-map and
+last-wins/first-wins collapsing, a same-NAME override of the pre-existing pair, and reordering --
+all killed by the repeated-names `proptest!` oracle's exact-equality assertion over its generated
+space; `value_delimiter = ','` on the `-q` clap field -- killed by the EC-X.16.001-13 argv cell,
+since that delimiter would split `fields=summary,status` into two args and fail the cell's
+one-pair assertion; and `handle_api` forwarding only the first or last parsed pair, or
+deduplicating the parsed `Vec` before the call -- killed by the repeated-flags argv cell, per the
+clause's own attribution; AC-002 is the sole owner of VP-API-QP-002, so no cross-AC split applies
+here). Everything the cited clause(s) specify is binding in its entirety
 and must be implemented exactly as written there; this story does not restate or narrow any of
 it. The `proptest!` oracle (including its generator-constraint/anti-vacuity assertion) and the
 pinned decode example are ONE `proptest!` plus ONE `#[test]` in `src/cli/api.rs`'s
@@ -420,7 +452,15 @@ NAME/VALUE segment extracted from `append_query_params`'s own output, NOT a dire
 VP-API-QP-003(b) `[CC:L4076-4077]`, VP-API-QP-003(c) `[CC:L4078-4080]`, VP-API-QP-003(d)
 `[CC:L4081-4083]` (whose no-trim examples also run through `parse_query_param`, VP-API-QP-005),
 VP-API-QP-003(e) `[CC:L4084-4087]`, VP-API-QP-003(further-pinned) `[CC:L4087-4089]`, and
-VP-API-QP-003(fault-models) `[CC:L4089-4091]`. Everything the cited clause(s) specify is binding
+VP-API-QP-003(fault-models) `[CC:L4089-4091]` (the fault models this AC's own tests kill: no
+encoding and double encoding -- both killed by the (a) round-trip assertion (and no encoding also
+by the (b) alphabet assertion); `byte_serialize` substituted for `urlencoding::encode` -- killed
+by the (c) encoder-identity assertion and its `*`->`%2A`/space->`%20` pinned examples (both of
+which `byte_serialize` gets wrong); the `=` joiner itself encoded -- killed by the same (c)
+encoder-identity assertion, whose `format!("{}={}", ...)` shape pins a literal, unencoded `=`; NAME
+or VALUE trimmed -- killed by the (d) no-trim pinned examples; and the "do not pre-encode" help
+phrase dropped or reworded -- killed by the (e) `--help` cell; AC-003 is the sole owner of
+VP-API-QP-003, so no cross-AC split applies here). Everything the cited clause(s) specify is binding
 in its entirety and must be implemented exactly as written there; this story does not restate or
 narrow any of it. The
 biased `proptest!` ((a)/(b)/(c)/(d)) plus one `#[test]` per further-pinned/(c)/(d) example, per
@@ -478,7 +518,13 @@ BC-X.1.011). This AC does not restate BC-X.1.007/BC-X.1.011 themselves, only cit
 remain unaffected, and adds no new test cell for this guarantee.
 **Test (D-386 bind-by-reference):** Implements VP-API-QP-004(structural) `[CC:L4092-4098]`,
 VP-API-QP-004(1) `[CC:L4098-4101]`, VP-API-QP-004(2) `[CC:L4101-4106]`, and
-VP-API-QP-004(fault-models) `[CC:L4106-4108]`. Everything the cited clause(s) specify is binding
+VP-API-QP-004(fault-models) `[CC:L4106-4108]` (the fault models this AC's own tests kill: a `?`
+(or `&`) appended on zero pairs, and the path re-encoded or the fragment dropped on zero pairs --
+both killed jointly by the zero-flag identity `proptest!` (1) and the zero-flag wiremock examples
+(2); query assembly gated on the method, and `-d` content merged into the query -- both killed by
+the table-driven method-orthogonality wiremock test's per-method query-pair and request-body
+assertions; AC-004 is the sole owner of VP-API-QP-004, so no cross-AC split applies here).
+Everything the cited clause(s) specify is binding
 in its entirety and must be implemented exactly as written there; this story does not restate or
 narrow any of it.
 **Ownership (P9-003; P10-003 -- clause cited by reference only, not restated):**
@@ -515,7 +561,18 @@ empty-VALUE rules; this AC does not restate them and does not narrow them.
 **Test (D-386 bind-by-reference):** Implements VP-API-QP-005(intro) `[CC:L4308-4316]`,
 VP-API-QP-005(1) `[CC:L4317-4326]` -- whose `Err`-case "other substring absent" assertion is
 filtered with `prop_assume!` to `raw` values that do not themselves contain D1 or D2 -- and, for
-its `-q foo` wiremock cell, VP-API-QP-005(2) `[CC:L4327-4331]`. Everything the cited clause(s)
+its `-q foo` wiremock cell, VP-API-QP-005(2) `[CC:L4327-4331]`. Also implements VP-API-QP-005(fault-models)
+`[CC:L4357-4362]` (P22-001: the fault models this AC's own tests kill: swapped M1/M2 and the
+one-shared-generic-message fault -- both killed by the partition `proptest!`'s per-case
+exact-message/distinguishing-substring assertions, corroborated by this AC's own `-q foo`
+wiremock cell; `{raw}` replaced by a trimmed or re-split value -- killed by the proptest's
+byte-for-byte `raw` assertion; split on the last `=` instead of the first -- killed by the
+proptest's `=`-containing-VALUE cell (EC-X.16.001-2), whose `rest` keeps every later `=`; NAME
+trimmed before the empty check -- killed by the proptest's whitespace-only-NAME cell
+(EC-X.16.001-10); and an empty-NAME check evaluated before the missing-`=` check -- killed by the
+pinned `parse_query_param("")` example. The remaining two faults in this clause -- the JSON
+envelope written to stdout instead of stderr, and `allow_hyphen_values` set on `-q` -- are NOT
+killed by this AC's own tests; see AC-006 and AC-009 respectively). Everything the cited clause(s)
 specify is binding in its entirety and must be implemented exactly as written there; this story
 does not restate or narrow any of it. The partition `proptest!` plus the pinned
 `parse_query_param("")` example are direct-call functions (one `proptest!` + one `#[test]`) in
@@ -541,7 +598,11 @@ empty VALUE (`k=`) remains ALLOWED per BC-X.16.001 EC-X.16.001-1 (lines 3918-392
 (informational cross-reference -- verified by AC-005's VP-API-QP-005(1) `Ok((NAME, rest))`
 partition where rest may be empty).
 **Test (D-386 bind-by-reference):** Implements VP-API-QP-005(intro) `[CC:L4308-4316]` and
-VP-API-QP-005(2) `[CC:L4327-4331]`. Everything the cited clause(s) specify is binding in its
+VP-API-QP-005(2) `[CC:L4327-4331]`. Also implements VP-API-QP-005(fault-models) `[CC:L4357-4362]`
+(P22-001: the fault models this AC's own tests kill: the JSON envelope written to stdout instead
+of stderr -- killed by this AC's `--output json` envelope cell, which asserts the
+`{"error","code"}` payload appears on stderr and stdout is empty. The other seven faults in this
+clause are not killed by this AC's own tests; see AC-005 and AC-009). Everything the cited clause(s) specify is binding in its
 entirety and must be implemented exactly as written there; this story does not restate or narrow
 any of it. The
 wiremock `-q =v` cell, and the `--output json` envelope cell (ONE `#[tokio::test]` asserting both
@@ -563,7 +624,12 @@ cells) in full, and owns Edge Case EC-X.16.002-3 `[CC:L4219-4222]` -- see those 
 for the all-or-nothing / first-malformed-reported rules; this AC does not restate them and does
 not narrow them.
 **Test (D-386 bind-by-reference):** Implements VP-API-QP-006(i) `[CC:L4366-4367]`,
-VP-API-QP-006(ii) `[CC:L4368-4369]`, VP-API-QP-006(fault-models) `[CC:L4387-4389]`, the
+VP-API-QP-006(ii) `[CC:L4368-4369]`, VP-API-QP-006(fault-models) `[CC:L4387-4389]` (P23-002: the
+fault models this AC's tests kill: per-flag filtering that drops bad values instead of failing --
+killed by the all-or-nothing cells' zero-request assertion, and last-vs-first reporting -- killed
+by the first-malformed-reported cells' flag-order assertion; the remaining ordering fault, `-q`
+parsing moved after `resolve_body` or after `parse_header`, is killed by AC-008's tests, not this
+AC's own), the
 VP-API-QP-006 intro `[CC:L4363-4365]` (its own "every mock `.expect(0)`" requirement), and
 VP-API-QP-005(intro) `[CC:L4308-4316]` (P9-004: VP-API-QP-006(ii) reports outcomes in terms of
 M1/M2 and D1/D2, which VP-API-QP-005(intro) defines; cited here so that definition is binding for
@@ -606,7 +672,13 @@ calls before `handle_api`; PR code review), verified against `src/main.rs` ~L499
 `cli::api::handle_api(...)` call on the next line; no AC-008 cell can verify this, since every
 AC-008 cell supplies valid auth, so no dedicated test cell exists for it, and none is added.)
 **Test (D-386 bind-by-reference):** Implements VP-API-QP-006(iii) `[CC:L4370-4384]`,
-VP-API-QP-006(iv) `[CC:L4385-4386]`, VP-API-QP-006(fault-models) `[CC:L4387-4389]`, the
+VP-API-QP-006(iv) `[CC:L4385-4386]`, VP-API-QP-006(fault-models) `[CC:L4387-4389]` (P23-002: the
+fault models this AC's tests kill: the ordering fault -- `-q` parsing moved after `resolve_body`
+or after `parse_header` -- killed jointly by the (iii) held-open-stdin cell and the (iv)
+before-`-H` cell, and per-flag filtering that drops bad values instead of failing -- also killed
+by the (iii) cell, since a single malformed `-q bad` value silently filtered rather than failing
+would let control flow reach `resolve_body`'s blocking stdin read instead of exiting promptly; the
+remaining last-vs-first-reporting fault is killed by AC-007's tests, not this AC's own), the
 VP-API-QP-006 intro `[CC:L4363-4365]` (its own "every mock `.expect(0)`" requirement), and
 VP-API-QP-005(intro) `[CC:L4308-4316]` (P9-004: VP-API-QP-006(iii) asserts on D1, and (iv) reports
 M1 -- both terms VP-API-QP-005(intro) defines; cited here so that definition is binding for this
@@ -639,7 +711,17 @@ clap attached-value delivery mechanics `[CC:L4158-4168]` (the `{raw}` value clap
 EC-X.16.002-11 `[CC:L4299-4305]` is informational only, inherited clap behavior with no owning VP
 cell (same treatment as EC-X.14.001-14) -- recorded for traceability, no test obligation.
 **Test (D-386 bind-by-reference):** Implements VP-API-QP-005(3) `[CC:L4332-4356]`,
-VP-API-QP-005(fault-models) `[CC:L4357-4362]`, and VP-API-QP-005(intro) `[CC:L4308-4316]` (P9-004:
+VP-API-QP-005(fault-models) `[CC:L4357-4362]` (P22-001, narrowed: the fault models THIS AC's own
+attached-form cells kill are `allow_hyphen_values` set on `-q` -- killed by the EC-X.16.002-8 cell
+(`-q -x=1`), whose pass requires clap to reject the hyphen-leading value rather than accept it as
+`-q`'s VALUE -- and, jointly with AC-005's proptest, `{raw}` replaced by a trimmed or re-split
+value -- these cells feed `{raw}` through real argv (e.g. `-q=v` -> raw `v`, `-q==v` -> raw `=v`),
+corroborating the proptest's byte-for-byte assertion with the attached-value forms clap actually
+produces. The remaining faults in this clause -- swapped M1/M2, one shared generic message, split
+on the last `=` instead of the first, NAME trimmed before the empty check, an empty-NAME check
+evaluated before the missing-`=` check, and the stdout/stderr envelope fault -- are owned by
+AC-005 and AC-006, not by this AC's own cells; see their Test lines), and VP-API-QP-005(intro)
+`[CC:L4308-4316]` (P9-004:
 VP-API-QP-005(3)'s cells assert on M1/M2 and D1/D2, which VP-API-QP-005(intro) defines; cited
 here so that definition is binding for this AC too -- AC-009 now cites three clauses, so the
 plural "clause(s)" form below applies, not the pass-8 singular-clause grammatical accommodation).
@@ -859,6 +941,7 @@ wiremock-backed set, per that AC's **Test:** line)
 
     | Task / AC | Row label | Tag |
     |---|---|---|
+    | Task 2 / AC-001 | AC-001(EC-1, wire half, P22-002 new direct-call example) EC-X.16.001-1 | RED |
     | Task 2 / AC-001 | VP-API-QP-001(equation) | RED |
     | Task 2 / AC-001 | VP-API-QP-001(EC-4) EC-X.16.001-4 | RED |
     | Task 2 / AC-001 | VP-API-QP-001(EC-5) EC-X.16.001-5 | RED |
@@ -911,31 +994,34 @@ wiremock-backed set, per that AC's **Test:** line)
 
     | AC / VP | New tests | RED | GREEN-nonexempt (category) | EXEMPT (category) |
     |---|---|---|---|---|
-    | AC-001 (VP-API-QP-001) | 8 (separator oracle `proptest!` + 7 pinned examples) | 8 | 0 | 0 |
+    | AC-001 (VP-API-QP-001) | 9 (separator oracle `proptest!` + 8 pinned examples, including the P22-002 new EC-X.16.001-1 wire-half cell) | 9 | 0 | 0 |
     | AC-002 (VP-API-QP-002) | 5 (repeated-names `proptest!` + pinned decode example + 3 argv cells: EC-X.16.001-13, repeated-flags, mixed) | 5 | 0 | 0 |
     | AC-003 (VP-API-QP-003) | 10 (encoding `proptest!` + 6 encode pinned examples + 2 no-trim pinned examples + `--help` cell) | 10 | 0 | 0 |
     | AC-004 (VP-API-QP-004) | 4 (table-driven method-orthogonality wiremock test + zero-flag identity `proptest!` + 2 zero-flag wiremock examples) | 2 | 2 (PRE-EXISTING-BEHAVIOR) | 0 |
     | AC-005/006/009 (VP-API-QP-005) | 11 (partition `proptest!` + pinned `parse_query_param("")` example + 2 wiremock cells + 1 `--output json` envelope cell + 6 attached-form cells) | 9 | 1 (PRE-EXISTING-BEHAVIOR -- EC-X.16.002-8, P11-005) | 1 (WIRING-EXEMPT / FRAMEWORK-WIRING -- EC-X.16.002-10) |
     | AC-007/008 (VP-API-QP-006) | 6 (2 all-or-nothing cells + 2 first-malformed-reported cells + held-open-stdin cell + before-`-H` cell) | 6 | 0 | 0 |
-    | **Total** | **44** | **40** | **3** | **1** |
+    | **Total** | **45** | **41** | **3** | **1** |
 
-    `TOTAL_NEW_TESTS = 44`, `EXEMPT_TESTS = 1` (0 GREEN-BY-DESIGN + 1 WIRING-EXEMPT -- P11-005
+    `TOTAL_NEW_TESTS = 45`, `EXEMPT_TESTS = 1` (0 GREEN-BY-DESIGN + 1 WIRING-EXEMPT -- P11-005
     reclassified EC-X.16.002-8 out of `EXEMPT_TESTS` and into non-exempt GREEN, leaving only
-    EC-X.16.002-10 exempt), so the denominator is `44 - 1 = 43`; `RED_TESTS = 40` (the 3
-    non-exempt GREEN cells stay in the denominator but are not RED); `RED_RATIO = 40 / 43 ≈ 0.930
+    EC-X.16.002-10 exempt), so the denominator is `45 - 1 = 44`; `RED_TESTS = 41` (the 3
+    non-exempt GREEN cells stay in the denominator but are not RED; the P22-002 addition to AC-001
+    is RED); `RED_RATIO = 41 / 44 ≈ 0.932
     >= 0.5` -- comfortably clears the BC-8.29.001 gate under this counting unit, with no
     full-exception path (denominator > 0) and no UNJUSTIFIED GREEN cells. Record this tally, and
     the actual counts observed after Step 3 dispatch, in `red-gate-log.md`.
     (f) **`todo!()`-panic vs. subprocess-assertion failure mode** (ADV-C14-F3-P5-004, recomputed
-    at P6): the 22 direct-call cells in (d) that invoke `append_query_params`/`parse_query_param`
-    in-process (all of AC-001's 8 cells; AC-002's `proptest!` and pinned decode example, not its
+    at P6, recomputed pass-22 P22-002): the 23 direct-call cells in (d) that invoke
+    `append_query_params`/`parse_query_param`
+    in-process (all of AC-001's 9 cells, including the P22-002 EC-X.16.001-1 wire-half example;
+    AC-002's `proptest!` and pinned decode example, not its
     3 argv cells; AC-003's `proptest!` + 6 encode pinned (including the space -> `%20` pin) + 2
     no-trim pinned, not its `--help` cell; AC-004's zero-flag identity `proptest!` only, not its
     wiremock cells; AC-005's `proptest!` + pinned `""` example) can only fail with a raw
     `todo!()` panic (message containing "not yet implemented"), never a
     produced-and-asserted-wrong-value diff -- **this is the EXPECTED Red signal for this story's
     strict-`tdd_mode` stub** (Task 1 is a stub-architect `todo!()` stub per BC-5.38.001); the
-    orchestrator must NOT re-dispatch the test-writer for these 22 cells on the basis of
+    orchestrator must NOT re-dispatch the test-writer for these 23 cells on the basis of
     panic-vs-assertion-error alone. The remaining 22 cells in (d) are subprocess-level, all in
     `tests/api_query_param.rs` (spawned via `std::process::Command`/the CLI binary), and fail (or
     pass) via their own exit-code/stderr `assert_eq!`/`assert!` checks in the test function
@@ -966,7 +1052,7 @@ wiremock-backed set, per that AC's **Test:** line)
 
 | Story | Key Decisions | Patterns Established | Gotchas Discovered |
 |-------|-----------------|--------------------------|------------------------|
-| S-cycle14-user-list-project-resolution (Wave 1, predecessor in the serial chain) | `.cargo/mutants.toml` `examine_globs` bumped 32->33; `docs/specs/cargo-mutants-policy.md`'s count line and §Scope table follow the same per-story pattern this story reuses (33->34) | Established the exact §Scope bullet form (`` `file` — `symbol` ``, not `file::symbol`) required by `scripts/check-cargo-mutants-policy-citations.sh` | The policy's hard-coded count line has no CI check comparing it against the real `.cargo/mutants.toml` count -- re-count the actual array entries before writing 34, don't trust the prior story's stated number blindly |
+| S-cycle14-user-list-project-resolution (Wave 1, predecessor in the serial chain) | `.cargo/mutants.toml` `examine_globs` bumped 32->33; `docs/specs/cargo-mutants-policy.md`'s count line and §Scope table follow the same per-story pattern this story reuses (33->34) | Reuses the policy's pre-existing `` `file` — `symbol` `` bullet form (verification-delta §2), not `file::symbol`, required by `scripts/check-cargo-mutants-policy-citations.sh` | The policy's hard-coded count line has no CI check comparing it against the real `.cargo/mutants.toml` count -- re-count the actual array entries before writing 34, don't trust the prior story's stated number blindly |
 
 ## Architecture Compliance Rules
 

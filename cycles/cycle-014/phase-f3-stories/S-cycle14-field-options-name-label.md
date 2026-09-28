@@ -24,12 +24,13 @@ inputs:
   - "src/types/jira/editmeta.rs"
   - "src/api/jira/issues.rs"
   - "src/cache.rs"
+  - "src/cli/issue/field_resolve.rs"
   - "tests/field_options.rs"
   - "tests/issue_edit_field.rs"
   - "README.md"
   - "CLAUDE.md"
   - "CHANGELOG.md"
-input-hash: "f4360cd"
+input-hash: "3f6149b"
 traces_to: "BC-X.14.001, BC-X.14.003, BC-X.14.004"
 cycle: cycle-014-issue-triage-quickfixes
 estimated_effort: medium
@@ -91,7 +92,7 @@ acceptance_criteria_count: 9
 assumption_validations: []
 risk_mitigations: []
 created: "2026-09-26"
-version: "4.8"
+version: "5.0"
 last_updated: "2026-09-28"
 breaking_change: false
 retroactive: false
@@ -153,8 +154,21 @@ cache-file/functions sentence and the profile-scoped-isolation cross-reference) 
 enforcement mechanisms -- see the revision-history file for the dated entry. Pass-21 then labeled
 AC-008's and AC-009's Invariant 4 citations' after-arity half (the ordering between `handle`'s
 Step 1 mode-selector arity check and Step 2 `resolve_field_id` call) with its own enforcement
-mechanism -- see the revision-history file for the dated entry. This is version
-4.8 of the story.
+mechanism -- see the revision-history file for the dated entry. Pass-22 then fixed a mis-scoped
+test-attachment in AC-007 (the customfield-bypass label had claimed the integration-level test
+`test_bc_x_14_001_customfield_bypass_skips_list_fields` pins the "same regex/case-sensitivity
+convention as BC-3.4.015 Step 1" clause -- an integration test asserting `list_fields()` is
+skipped cannot pin a regex/case-sensitivity rule; the regex half is now separately cited to the
+unit test `src/cli/field.rs::test_bc_x_14_001_is_customfield_literal_accepts_and_rejects`, and the
+case-sensitivity half is labeled informational, enforced by the unchanged
+`is_customfield_literal`'s case-sensitive `starts_with` plus PR diff review) and a grammar fix in
+AC-008/AC-009 ("the after-arity half enforced by" -> "the after-arity half is enforced by") -- see
+the revision-history file for the dated entry. Pass-23 then fixed the Token Budget's stale
+figures, attached the CLI-level "zero matches ... return 'not found'" sentence in AC-007 to its
+actual pinning tests, and rescoped all four VP-580-013 fault-model citations (AC-001/002/003/004)
+to name which fault(s) each AC's own tests kill -- see the revision-history file for the dated
+entry. This is version
+5.0 of the story.
 
 ## Coverage Scope (D-387)
 
@@ -294,7 +308,14 @@ minus EXCLUDE is inside some AC's `[CC:...]` range) is verified mechanically per
 **Test:** Implements VP-580-013's "What it proves" statement [CC:L3093-3099] and sub-clauses (1)
 (top-level and cascading-child-level example matrices) [CC:L3099-3105], (2) (recursive
 `proptest!`) [CC:L3106-3110], and (3) (serde key-set property) [CC:L3110-3113], plus the fault
-models this AC's tests kill [CC:L3129-3134]. The presence-based `Some("")`-wins and
+models this AC's own tests kill [CC:L3129-3134]: fault (1) (the fallback removed entirely,
+pre-fix code `label: v.value.clone()` -- killed by the EC-X.14.001-8 name-only cell in function
+1a), fault (2) (`name` preferred over `value` -- killed by the "both" cell, EC-X.14.001-9, in
+function 1a), and fault (5) (the fallback applied only at the top level -- killed by function 1b,
+the cascading-child-level matrix); faults (3) and (4) (an emptiness-based fallback, and explicit
+`null` treated as present) are killed by AC-002's own cells, not this AC's, and fault (6) (the
+fallback leaking into the M3 normalizer) is killed by AC-004's own cell, not this AC's. The
+presence-based `Some("")`-wins and
 explicit-null-falls-through sentences embedded in [CC:L3093-3099], and the two EC-X.14.001-12
 cells embedded in [CC:L3099-3105] (the `{"value": ""}` and `{"value": null}` fixtures), are
 AC-002's function 1c, not this AC's own cells -- see AC-002's Test line. Also implements
@@ -338,7 +359,11 @@ A wire `"value": ""` (present-but-empty string) wins over a populated `name` -- 
 [CC:L2982-2990] (this range's "rendered as a blank cell (table) / `""` (JSON)" sentence is
 informational -- `Some("")` renders via ordinary string/JSON serialization with no special-case
 code path, unlike the `None` substitution BC-X.14.003/AC-005 covers, so no dedicated test is
-needed for it), and the fault models this AC's tests kill [CC:L3129-3134]. Everything each cited
+needed for it), and the fault models this AC's own tests kill [CC:L3129-3134]: fault (3) (an
+emptiness-based fallback, `Some("")` falling through to `name` -- killed by the `{"value": ""}`
+cell) and fault (4) (explicit `null` treated as present, never falling through to `name` --
+killed by the `{"value": null}` cell); faults (1), (2), and (5) are killed by AC-001's own cells,
+and fault (6) is killed by AC-004's own cell, not this AC's. Everything each cited
 range specifies is binding in its entirety and must be implemented exactly as written there;
 this story does not restate or narrow any of it. Story-specific mapping: lands in
 `src/cli/field.rs`'s `#[cfg(test)]
@@ -350,7 +375,13 @@ pass-6 ADV-C14-F3-P6-007; full history in
 ### AC-003 (traces to BC-X.14.001 EC-X.14.001-13)
 `jr field options --value <substring>` (BC-X.14.002, its own contract unchanged) now also matches system-field option names via the fallback label, as a downstream consequence of AC-001 -- not a new filter rule.
 **Test:** Implements VP-580-013 sub-clause (5) [CC:L3123-3128], BC-X.14.001's EC-X.14.001-13 edge
-case [CC:L2991-3003], and the fault models this AC's tests kill [CC:L3129-3134].
+case [CC:L2991-3003], and the fault models VP-580-013 lists [CC:L3129-3134] (informational for
+this AC specifically -- this AC's own EC-13 downstream `--value`-filter cell exercises a
+CONSEQUENCE of the fallback rule, not the rule itself, so it does not independently kill any of
+the six named faults on its own; it would incidentally also fail if fault (1), the fallback
+removed entirely, were present, but AC-001's own EC-8 cell is the primary/owning kill vehicle for
+that fault -- see AC-001's, AC-002's, and AC-004's Test lines for the owning cells of all six
+faults).
 Everything each cited range specifies is binding in its entirety and must be implemented exactly
 as written there; this story does not restate or narrow any of it. Story-specific mapping: lands in
 `src/cli/field.rs`'s `#[cfg(test)] mod tests` as function 5 (`filter_one` is a private fn,
@@ -358,8 +389,11 @@ unreachable from the external `tests/field_options.rs` integration binary) -- RE
 
 ### AC-004 (traces to BC-X.14.001 "M3 is UNCHANGED and ALREADY CORRECT" paragraph AND the "Scope boundary -- READ-SIDE ONLY" paragraph [D-378] **[widened pass-9, ADV-C14-F3-P9-007a]**)
 `src/cli/field.rs::normalize_from_valid_values` (M3, JSM requesttype-fields) is NOT modified by this story and does NOT acquire a `name`-fallback of its own -- it already reads `.value` for id and `.label` for display, which was already correct before this story. Separately, per BC-X.14.001's "Scope boundary -- READ-SIDE ONLY, WRITE-side explicitly out of scope [D-378]" paragraph, the WRITE-side `--field` value-matching path (`src/cli/issue/field_resolve.rs::find_option_match`/`resolve_option_value`) MUST NOT be touched by this story.
-**Test:** Implements VP-580-013 sub-clause (4) [CC:L3113-3123] and the fault models this AC's
-tests kill [CC:L3129-3134]. Everything each cited range specifies is binding in its entirety and
+**Test:** Implements VP-580-013 sub-clause (4) [CC:L3113-3123] and the fault models this AC's own
+tests kill [CC:L3129-3134]: fault (6) (the fallback leaking into the M3 normalizer -- killed by
+function 4's M3 regression-guard comparison against a hand-written expected output); faults (1),
+(2), and (5) are killed by AC-001's own cells, and faults (3) and (4) are killed by AC-002's own
+cells, not this AC's. Everything each cited range specifies is binding in its entirety and
 must be implemented exactly as written there; this story does not restate or narrow any of it.
 Story-specific mapping: lands in
 `src/cli/field.rs`'s `#[cfg(test)] mod tests` as function 4 -- GREEN (`rationale_category:
@@ -402,8 +436,16 @@ The following stale "custom field" / "`partial_match`" wording is corrected in t
 **Test:** the renamed test itself, run green. Also implements BC-X.14.001's Behavior paragraph's
 `search_field_list` exact-then-substring algorithm description [CC:L2634-2652]. This range opens
 with three lead-in sentences ahead of that algorithm, each now carrying its own label: the
-`customfield_NNNNN` literal bypass sentence, pinned by
-`tests/field_options.rs::test_bc_x_14_001_customfield_bypass_skips_list_fields`; the same
+`customfield_NNNNN` literal bypass sentence -- split into its two independently-tested halves
+(P22-003): the BYPASS half (a `customfield_NNNNN` literal skips `list_fields()` entirely) is
+pinned by `tests/field_options.rs::test_bc_x_14_001_customfield_bypass_skips_list_fields`; the
+REGEX half (which strings count as a `customfield_NNNNN` literal at all) is a separate claim that
+integration test cannot pin -- it is pinned instead by the unit test
+`src/cli/field.rs::test_bc_x_14_001_is_customfield_literal_accepts_and_rejects` (verified present,
+~L897); the CASE-SENSITIVITY half ("same ... convention as BC-3.4.015 Step 1") is (informational
+-- enforced by the unchanged `is_customfield_literal` (case-sensitive `starts_with`, verified
+present, ~L474-479) plus PR diff review; mirrored from `field_resolve.rs` per Invariant 3, not
+independently re-tested here); the same
 cache-first `fields.json` contract sentence (shared `list_fields`/`read_fields_cache`/
 `write_fields_cache`), pinned by
 `tests/field_options.rs::test_bc_x_14_001_warm_cache_resolves_without_list_fields_call`, with its
@@ -423,7 +465,14 @@ single-substring and multiple-substring branches are informational -- doc-only c
 behavior change -- pinned by the six `search_field_list` unit tests named below, plus, for the
 multiple-substring/ambiguous branch specifically, the integration-level regression
 `tests/field_options.rs::test_bc_x_14_001_field_name_ambiguous_exits_64` (verified present, and
-now correctly re-attached to the branch it actually exercises); this
+now correctly re-attached to the branch it actually exercises); the same range's closing "zero
+matches of either kind return \"not found\"" sentence (cross-cutting.md ~L2643-2644) is a
+separate, CLI-level claim the six `search_field_list` unit tests do not pin on their own -- it is
+pinned by `tests/field_options.rs::test_bc_x_14_001_field_name_zero_match_exits_64` (~L1591,
+verified present -- the integration-level exit-64 "not found" assertion) together with
+`src/cli/field.rs::test_bc_x_14_001_search_field_list_zero_match_returns_none` (~L957, verified
+present -- the pure resolver's `None` return for zero matches), both informational/pre-existing
+regression pins (doc-only correction, no behavior change); this
 range's trailing "Exactly ONE of three MODE-SELECTOR flags... selects the enumeration" fragment is
 pre-existing Invariant-1 mode-selector-arity text, not part of the `search_field_list` algorithm
 description this AC traces to -- out of this AC's scope, covered instead by VP-580-006 elsewhere
@@ -467,7 +516,7 @@ six tests do not exercise -- it is enforced by code citation plus PR diff review
 mechanism AC-009 uses for this identical clause: `src/cli/field.rs::resolve_field_id`'s
 `query.is_empty()` guard precedes its only cache read (verified against current code), and PR
 diff review confirms `resolve_field_id` is unchanged by this story's diff. That covers only the
-before-cache-read half; the after-arity half enforced by `src/cli/field.rs::handle`'s Step 1
+before-cache-read half; the after-arity half is enforced by `src/cli/field.rs::handle`'s Step 1
 (`resolve_field_context`, ~L125) preceding Step 2 (`resolve_field_id`, ~L136), unchanged by this
 diff (AC-006 edits only the ~L134 comment) + PR diff review. Invariant 3's own
 opening sentence -- that the `customfield_NNNNN` bypass and `fields.json` cache-first contract use
@@ -507,7 +556,7 @@ by code citation plus PR diff review, the same mechanism this AC already uses fo
 warm-cache branches below: `src/cli/field.rs::resolve_field_id`'s `query.is_empty()` guard
 (~L442-447) precedes its only cache read (`cache::read_fields_cache`, ~L451) -- verified against
 current code -- and PR diff review confirms `resolve_field_id` is unchanged by this story's diff.
-That covers only the before-cache-read half; the after-arity half enforced by
+That covers only the before-cache-read half; the after-arity half is enforced by
 `src/cli/field.rs::handle`'s Step 1 (`resolve_field_context`, ~L125) preceding Step 2
 (`resolve_field_id`, ~L136), unchanged by this diff (AC-006 edits only the ~L134 comment) + PR
 diff review.
@@ -576,15 +625,15 @@ here is a precise, tool-measured count.
 
 | Context Source | Estimated Tokens |
 |-----------------|-------------------|
-| This story spec (full file: Revision History pointer + Coverage Scope + Narrative + BCs + ACs + Tasks etc.) | ~15,000 |
+| This story spec (full file: Revision History pointer + Coverage Scope + Narrative + BCs + ACs + Tasks etc.) | ~25,000 |
 | Referenced code (`src/cli/field.rs` normalizer region + `handle`'s Step 2, `src/types/jira/editmeta.rs::AllowedValue`, `src/api/jira/issues.rs::get_createmeta_fields` doc comment) | ~2,200 |
 | Test files (`tests/field_options.rs` -- grep-scoped to the renamed test + the new VP-580-013 cells) | ~1,800 |
 | Tool output overhead | ~1,000 |
-| **Total** | **~20,000** |
+| **Total** | **~30,000** |
 | Agent context window | 200K (Sonnet) |
-| **Budget usage** | **~10%** |
+| **Budget usage** | **~15%** |
 
-~10% stays well within the 20-30% per-story ceiling (story-writer Rules), so no split is required.
+~15% stays well within the 20-30% per-story ceiling (story-writer Rules), so no split is required.
 `S-cycle14-field-options-name-label.revision-history.md` (approximate, non-normative -- also
 drifts with edits) is available if an implementing agent wants the adversarial-review history for
 context, but nothing in this story's own Tasks or ACs requires reading it.

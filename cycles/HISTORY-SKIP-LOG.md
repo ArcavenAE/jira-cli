@@ -74,3 +74,13 @@
 | Step | Skipped? | Justification |
 |------|----------|----------------|
 | Human gate at CYCLE-014-F3-REVHIST-CHECKPOINT-2026-09-28 burst | yes (deliberate, not a gate) | Records F3 adversarial review passes 11, 12, and 13, all NOT CLEAN, plus the orchestrator's revision-history structural split (no new `D-NNN`); clean counter 0/3, gate not concluded. |
+
+> Extracted from `.factory/STATE.md`'s `## Skip Log` table during the
+> 2026-09-28 `CYCLE-014-F3-PASS23-CHECKPOINT-2026-09-28` burst (v5.06 ->
+> v5.07), to keep the live table at 4 rows after adding the new
+> `CYCLE-014-F3-PASS23-CHECKPOINT-2026-09-28` row. This was the oldest of
+> the inline rows at that point; archived here verbatim, unedited.
+
+| Step | Skipped? | Justification |
+|------|----------|----------------|
+| Human gate at CYCLE-014-F3-D388-CHECKPOINT-2026-09-28 burst | yes (deliberate, not a gate) | Records F3 adversarial review passes 14, 15, and 16, all NOT CLEAN, plus human decision `D-388` (declined an accept-after-1-clean-pass exception, reaffirmed `D-385`); the STANDARD 3-consecutive-clean-pass rule has not been satisfied (clean counter 0/3), so neither the review nor the F3 human approval gate has concluded. |

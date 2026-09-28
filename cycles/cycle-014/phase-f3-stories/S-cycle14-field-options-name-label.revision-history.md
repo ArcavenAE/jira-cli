@@ -774,3 +774,108 @@ to. Per this pass's explicit instruction not to touch `input-hash`, it was left 
 resulting drift is expected, the same as this story's own and the sibling stories' prior passes'
 notes on this point, and is for state-manager/orchestrator to reconcile, not something this pass
 tried to paper over.
+
+## 2026-09-28 -- F3 adversarial pass-22 fixes (P22-003, P22-006 (part), P22-007)
+
+Findings fixed directly in the story body (version bumped 4.8 -> 4.9; input-hash left untouched):
+
+- P22-003 (low): AC-007's customfield-bypass label claimed that the integration test
+  `tests/field_options.rs::test_bc_x_14_001_customfield_bypass_skips_list_fields` pins the "same
+  regex/case-sensitivity convention as BC-3.4.015 Step 1" clause (cross-cutting.md, ~L2633-2635).
+  Verified this can't be right: that integration test asserts only that a `customfield_NNNNN`
+  literal skips `list_fields()` entirely (the BYPASS half) -- it makes no assertion about which
+  strings the regex accepts or about case-sensitivity. Split the citation into its three
+  independently-tested/labeled halves: the BYPASS half stays pinned by the existing integration
+  test; the REGEX half (which strings count as a `customfield_NNNNN` literal) is now cited to the
+  unit test `src/cli/field.rs::test_bc_x_14_001_is_customfield_literal_accepts_and_rejects`,
+  verified present at ~L897; the CASE-SENSITIVITY half is labeled informational -- enforced by the
+  unchanged `is_customfield_literal` function (verified present at ~L474-479, using Rust's
+  case-sensitive `str::starts_with`) plus PR diff review, mirrored from `field_resolve.rs` per
+  Invariant 3, not independently re-tested by this story.
+- P22-006 (part): added `src/cli/issue/field_resolve.rs` to the frontmatter `inputs:` list. This
+  file is already cited extensively in the story body -- the Architecture Compliance Rules table's
+  READ-SIDE-ONLY rule, AC-004's and AC-008's Scope-boundary citations, and AC-008's/AC-009's
+  Invariant-3 "mirrored, not shared" citations all reference `find_option_match`/
+  `resolve_option_value`/`resolve_edit_fields` in this file, and the enforcement mechanism for
+  several of those citations is literally "`git diff` shows zero changes to
+  `src/cli/issue/field_resolve.rs`" -- a claim the story cannot make credibly about a file that
+  was never listed as an input this story reads. (The sibling additions of `src/cli/queue.rs` and
+  `src/cli/requesttype.rs` to STORY-A's `inputs:` were made directly on that story, not here.)
+- P22-007 (cosmetic): fixed a grammar slip repeated in both AC-008 and AC-009 -- "the after-arity
+  half enforced by `src/cli/field.rs::handle`'s Step 1 ..." lacked the verb "is". Changed both
+  occurrences to "the after-arity half is enforced by ...".
+
+Drift note: adding `src/cli/issue/field_resolve.rs` to `inputs:` changes what the stored
+`input-hash` should hash to. Per this pass's explicit instruction not to touch `input-hash`, it
+was left as-is -- the resulting drift is expected, the same as this story's own and the sibling
+stories' prior passes' notes on this point, and is for state-manager/orchestrator to reconcile,
+not something this pass tried to paper over.
+
+Plain-wording note (this pass, all three sibling revision-history files): this entry, and the
+matching pass-22 entries appended to `S-cycle14-api-query-param.revision-history.md` and
+`S-cycle14-user-list-project-resolution.revision-history.md`, use the plain phrase "CC tag"
+throughout rather than any bracketed citation syntax -- this file
+had no pre-existing bracketed format-mention needing a reword (only the sibling api-query-param
+and user-list-project-resolution files did, per this pass's own instruction), but this entry
+follows the same no-bracket convention for consistency.
+
+## 2026-09-28 -- F3 adversarial pass-23 fixes (P23-001, P23-004) plus fault-model sweep
+
+Findings fixed directly in the story body (version bumped 4.9 -> 5.0; input-hash left untouched):
+
+- P23-001 (low): the Token Budget Estimate table's "This story spec" row said ~15,000 tokens, but
+  a fresh measurement of the current file puts it at about 25,000 tokens (the file has grown
+  across many adversarial-review passes since the ~15,000 figure was written). Changed that row
+  to ~25,000, recomputed the Total row from the four component rows (25,000 + 2,200 + 1,800 +
+  1,000 = ~30,000), and recomputed Budget usage (30,000 / 200,000 ~= 15%). Updated the sentence
+  below the table that referenced the old ~10% figure to ~15%, and confirmed the "stays well
+  within the 20-30% per-story ceiling" conclusion still holds at 15%. Kept the existing
+  "approximate; drifts with edits" framing throughout -- these are still rounded, non-precise
+  figures, not exact counts.
+- P23-004 (low): AC-007's citation of BC-X.14.001's `search_field_list` algorithm description (CC
+  tag spanning cross-cutting.md lines 2634-2652) attributed the closing "zero matches of either
+  kind return 'not found'" sentence (~L2643-2644) to the same six `search_field_list` unit tests
+  that pin the exact/substring/ambiguous branches -- but none of those six tests actually assert
+  the CLI-level "not found" exit behavior; only `_zero_match_returns_none` pins the pure
+  resolver's `None` return, which is a different (lower) layer. Verified both actual pinning
+  tests exist before writing: `tests/field_options.rs::test_bc_x_14_001_field_name_zero_match_exits_64`
+  (present at ~L1591 -- the CLI-level exit-64 "not found" assertion) and
+  `src/cli/field.rs::test_bc_x_14_001_search_field_list_zero_match_returns_none` (present at
+  ~L957 -- the pure resolver's `None` return). Added an explicit attribution sentence naming both
+  tests together as the informational, pre-existing regression pins for that specific sentence,
+  alongside (not replacing) the existing six-test citation for the exact/substring/ambiguous
+  branches it still correctly covers.
+
+Fault-model sweep (pattern (a)): VP-580-013's "Fault models" sentence (cross-cutting.md lines
+3129-3134) lists six faults, and all four ACs that cite it (AC-001, AC-002, AC-003, AC-004) used
+the identical unscoped phrase "the fault models this AC's tests kill [CC tag]" without actually
+naming which of the six faults each AC's own cells kill. Verified against each AC's own
+Story-specific test mapping which fault(s) it actually exercises: AC-001's functions 1a/1b kill
+faults (1) (fallback removed entirely, via the EC-8 name-only cell), (2) (`name` preferred over
+`value`, via the "both" cell), and (5) (fallback applied only at the top level, via function 1b's
+cascading-child matrix); AC-002's function 1c kills faults (3) (emptiness-based fallback) and (4)
+(explicit `null` treated as present), via its two `{"value": ...}` cells; AC-004's function 4 (the
+M3 regression guard) kills fault (6) (fallback leaking into M3). AC-003's own test (the EC-13
+downstream `--value`-filter example) does not independently kill any of the six named faults on
+its own -- it exercises a consequence of the fallback rule, not the rule itself -- so its citation
+was relabeled informational, with a note that it would incidentally also fail under fault (1) but
+is not that fault's owning/primary kill vehicle. Reworded all four citations to name the specific
+fault(s) each AC's own tests kill, with explicit cross-references to the AC(s) that own the
+remaining faults, so that across the four citing ACs together, all six faults are attributed to at
+least one AC's own tests.
+
+Multi-sided-clause sweep (pattern (b)): grepped this story for "regardless of", "both", "and",
+"before ... and after", and "either ... or" outside already-labeled citations. No unlabeled
+multi-sided clause was found beyond the fault-model gap above -- Invariant 3's three sub-clauses
+(pass-19), Invariant 4's before-cache-read/after-arity halves (pass-21), and BC-X.14.004's
+cross-reference-not-restatement distinction (pass-16) were all re-checked against the current
+AC-008/AC-009 text and remain accurate; no further edit was needed for those.
+
+P23-005 (cosmetic, wording of the Previous Story Intelligence "Established the exact §Scope
+bullet form" cell) belongs to the sibling `S-cycle14-api-query-param.md` story, not this one --
+confirmed this file has no such sentence, so no action was taken here.
+
+Drift note: this pass's edits change what the stored `input-hash` should hash to. Per this pass's
+explicit instruction not to touch `input-hash`, it was left as-is -- the resulting drift is
+expected, matching this story's own and the sibling stories' prior-pass convention on this point,
+and is for state-manager/orchestrator to reconcile, not something this pass tried to paper over.

@@ -821,7 +821,7 @@ Finding fixed directly in the story body (version bumped 4.7 -> 4.8; input-hash 
 
 Coverage-check sweep: grepped this story for any CC tag citation with a real spec line range
 outside a `### AC-NNN` section; none were found -- every genuine CC tag citation in this story
-already lives inside an AC's header or Test body. The handful of `[CC:...]`/`[CC:L<start>-<end>]`
+already lives inside an AC's header or Test body. The handful of generic CC tag
 mentions outside AC sections (in the Revision History summary and the Coverage Scope (D-387)
 intro paragraph) are generic references to the citation mechanism itself, not real citations with
 concrete line numbers, so none needed changing.
@@ -829,3 +829,95 @@ concrete line numbers, so none needed changing.
 Inputs sweep: grepped this story's body for every `src/`-prefixed file citation and confirmed each
 one (`src/cli/mod.rs`, `src/cli/user.rs`, `src/main.rs`, `src/config.rs`, `src/cli/component.rs`,
 `src/cli/field.rs`) already appears in the frontmatter `inputs:` list. No additions were needed.
+
+## 2026-09-28 -- F3 adversarial pass-22 fixes (P22-004, P22-005, P22-006 (part))
+
+Findings fixed directly in the story body (version bumped 4.8 -> 4.9; input-hash left untouched):
+
+- P22-004 (low): AC-005 cites BC-X.7.002's Resolution order step 1 via a CC tag on lines
+  782-783, but line 782 is itself a lead-in sentence ("Resolution order, evaluated entirely
+  in-process before any HTTP call:") that sits ahead of the four numbered steps and was not
+  accounted for by any AC's tests. Added a sentence to AC-005's Test line stating that this
+  lead-in is observed by AC-004's EC-X.7.002-4 `.expect(0)` (zero HTTP calls on the no-project
+  exit-64 path) and by the exactly-one-request assertions of the EC-X.7.002-1/3/5/6 wiring
+  cells, owned respectively by AC-005 (its own EC-1 cell)/AC-003/AC-009/AC-006 -- informational,
+  no dedicated AC-005 cell verifies it on its own.
+- P22-005 (low): Architecture Compliance Rules row 2 ("Local-vs-global precedence is clap's own
+  `fill_in_global_values` propagation...") cited its Source as "BC-X.7.002 Behavior, Fix step 2".
+  Verified against cross-cutting.md that the general Behavior statement (line 753-754) is a
+  single sentence about needing a resolved project key before the HTTP call -- it does not itself
+  name the local-vs-global clap-propagation mechanism this row describes. That mechanism is
+  actually stated at line 775 (Fix step 2), restated at lines 788-793 (the precedent paragraph
+  comparing this to `component create`'s explicit merge code), and demonstrated by
+  EC-X.7.002-1 at line 813. Changed the row's Source cell from "BC-X.7.002 Behavior, Fix step 2"
+  to "BC-X.7.002 Fix step 2, precedent paragraph, EC-X.7.002-1", with an inline note recording the
+  verified line numbers.
+- P22-006 (part): added `src/cli/queue.rs` and `src/cli/requesttype.rs` to the frontmatter
+  `inputs:` list. Both files are already cited in the story body: BC-X.7.002's own precedent text
+  (quoted in AC-005's citation of the precedent paragraph) names `jr queue`/`jr requesttype` as
+  using the same config-default-fallback shape this story implements, EC-X.7.002-6's own citation
+  compares this story's `--project ""` pass-through to `jr queue`'s/`jr requesttype`'s existing
+  empty-string pass-through, and Architecture Compliance Rules row 3 requires the canonical
+  no-project exit-64 message to be byte-identical to `queue.rs`'s/`requesttype.rs`'s existing
+  wording -- neither file was previously in the frontmatter `inputs:` list despite being read for
+  that byte-identical-message comparison. (The sibling addition of
+  `src/cli/issue/field_resolve.rs` to STORY-B's `inputs:` was made directly on that story, not
+  here.)
+
+## 2026-09-28 -- F3 adversarial pass-23 fixes (P23-003) plus fault-model/multi-sided-clause sweep
+
+Finding fixed directly in the story body (version bumped 4.9 -> 5.0; input-hash left untouched):
+
+- P23-003 (low): Postcondition 1 (cross-cutting.md line 801) and Postcondition 2 (line 802) each
+  end in a "regardless of whether a configured default is also present" half that no citing AC's
+  own cells demonstrated on their own -- AC-005's EC-1 cell fixes the configured-default state at
+  "neither," AC-002's global-only cell fixes it at "absent," and AC-001's secondary citation of
+  Postcondition 2 carried the same gap. Verified the actual cell that DOES vary the
+  configured-default state directly against cross-cutting.md: VP(b)'s proptest (line 858-868)
+  states "`cli_project = Some(C)` -> `Some(C)` in every configured cell" -- meaning AC-003's own
+  proptest cells (owned per AC-003's Test line) hold `cli_project` fixed at a present value while
+  varying the configured-default cell across {neither, `.jr.toml`-only, profile-only, both}, and
+  the result stays `Some(C)` throughout -- exactly the "regardless of configured default" property
+  both postconditions assert. Added a plain-prose cross-reference (not a new CC tag) to AC-005's,
+  AC-002's, and AC-001's Test lines pointing at AC-003's VP(b) `Some(C)` cells for this half. For
+  AC-005 specifically, also cross-referenced AC-006's EC-X.7.002-6 wiring cell (`jr user list
+  --project ""` run against a configured profile default, with `.expect(0)` on the
+  configured-default mock) as the cell that demonstrates the same "regardless" property for the
+  local, empty-string case.
+
+Sweep (a) -- fault-model CC tag citations, scoped to this story: grepped for every citation of
+VP-USER-LIST-PROJECT-001's fault model (cross-cutting.md lines 902-909); found 5, in AC-003,
+AC-006, AC-007, and AC-009 (plus the Coverage Scope SCOPE entry, which is not an AC citation).
+Verified against cross-cutting.md that the fault model lists exactly 5 faults, and confirmed each
+was already attributed to a specific owning AC (with joint ownership cross-referenced by AC number
+where two ACs' tests together kill one fault) -- no gap: fault (1) AC-003, fault (2) jointly
+AC-003/AC-007, fault (3) AC-009, fault (4) AC-007, fault (5) AC-006. Reworded all four citations
+from "Also implements the VP fault model CC tag fault (N) (...)" to the canonical "Also implements
+the fault models this AC's tests kill CC tag: fault (N) (...)" phrasing, matching the convention
+used elsewhere in this cycle's sibling stories, while preserving every existing
+joint-ownership cross-reference and parenthetical detail verbatim.
+
+Sweep (b) -- multi-sided clauses, scoped to this story: read every CC tag citation in every
+AC-001 through AC-011 section and checked the cited cross-cutting.md text for "regardless of",
+"and", "both", "before ... and after", "either ... or", and enumerated-condition/outcome lists.
+Beyond Postconditions 1/2 (P23-003, above), confirmed the following were already correctly split
+or cross-referenced from prior passes and needed no further change: Resolution order step 4's two
+sentences (AC-004 already splits the exit-64 condition, which it owns, from the preemption clause,
+which it labels informational); the precedent paragraph's `component list/create` vs.
+`component edit/delete` comparison (AC-005 already labels the whole paragraph informational
+rationale); Preconditions' three bullets (AC-004 already treats them as a shared hermetic-setup
+requirement satisfied by its own tests); Postcondition 5's default-path-vs-`--all` contrast
+(AC-007 already labels its non-`--all` sentence informational, cross-referenced to the
+exactly-one-request cells AC-005/AC-003/AC-009/AC-006 each own); and the Invariants'
+failure-MECHANISM-vs-FACT distinction (AC-004 already covers both sides with its own exit-64
+cell). One gap found and fixed: Fix step 5's list of which `main.rs` dispatch arms DO pass
+`cli.project` through (named explicitly by AC-009's existing citation) vs. the sibling list of arms
+that DON'T (named in the spec text but not previously cross-referenced by any AC) -- added a
+parenthetical to AC-009's citation noting that the "don't pass it" group (`Worklog`, `Team`,
+`User`, `Api`, `Assets`, `Me`) already includes `User`, confirming this story's own design choice
+matches the group `Command::User` already belongs to rather than introducing a new deviation.
+
+Drift note: this pass's edits change what the stored `input-hash` should hash to. Per this pass's
+explicit instruction not to touch `input-hash`, it was left as-is -- the resulting drift is
+expected, matching this story's own and the sibling stories' prior-pass convention on this point,
+and is for state-manager/orchestrator to reconcile, not something this pass tried to paper over.
