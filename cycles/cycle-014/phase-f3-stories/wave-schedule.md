@@ -12,7 +12,7 @@ timestamp: "2026-09-26T00:00:00"
 inputs:
   - ".factory/cycles/cycle-014/phase-f3-stories/dependency-graph-extended.md"
 traces_to: "dependency-graph-extended.md §3, cycle-manifest.md D-381"
-input-hash: "9c89efd"
+input-hash: "d53687b"
 ---
 
 # F3 Wave Schedule -- `issue-triage-quickfixes` (cycle-014)

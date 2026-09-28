@@ -69,8 +69,8 @@ acceptance_criteria_count: 11
 assumption_validations: []
 risk_mitigations: []
 created: "2026-09-26"
-version: "1.3"
-last_updated: "2026-09-27"
+version: "2.0"
+last_updated: "2026-09-28"
 breaking_change: true
 retroactive: false
 origin: >
@@ -94,6 +94,139 @@ origin: >
 > **Execute:** `/vsdd-factory:deliver-story S-cycle14-user-list-project-resolution`
 
 # S-cycle14-user-list-project-resolution -- `jr user list --project` resolution order (#862)
+
+## Revision Note (D-386 bind-by-reference restructure + pass-7 fix)
+
+**Human decision D-386 -- "bind by reference," not "copy by value" (2026-09-27/28):** across four
+adversarial passes (pass-3 through pass-6, below), every recurrence of the same defect class --
+an AC's `**Test:**` line paraphrasing a VP-USER-LIST-PROJECT-001 cell instead of quoting it
+verbatim, a paraphrase silently dropping a sub-cell, and a self-attested "all other cells were
+re-verified, no further gaps found" claim in one pass turning out to be wrong in the next -- was
+fixed by adding the missing verbatim text back into the story. The human's diagnosis: copying
+pinned VP content INTO the story is the root cause, not a fixable side effect of it -- every copy
+is a fresh place for the next pass to find a paraphrase, a drop, or a transcription error, and a
+self-attested "verbatim sweep complete" checklist has no mechanism to prove its own completeness
+against the source. The fix applied this pass is structural, not another sweep:
+
+1. **Every AC's `**Test:**` line now BINDS to its VP cell(s) by reference** -- it names the exact
+   VP-USER-LIST-PROJECT-001 sub-clause(s) ((a)/(b)/(c)/(d)) and cell(s) it implements, with the
+   `cross-cutting.md` ~line, and carries this normative sentence verbatim: *"Every cell, setup,
+   argv, expected value, request-count assertion, counter-mock (`.expect(0)`), and stderr/help
+   substring in the cited clause(s) is binding and must be implemented exactly as written there;
+   this story does not restate them, and nothing here narrows them."* The Test line then carries
+   ONLY story-specific information the VP text cannot know: which test file/module the cell lives
+   in, how cells group into `#[test]`/`proptest!` functions (the counting unit Task 7 uses), and
+   each function's RED-at-stub / GREEN-at-stub / WIRING-EXEMPT classification. No argv vector, no
+   expected-value mapping, no pinned setup, and no counter-mock assertion is copied into an AC
+   body or Test line anymore -- there is nothing left in this story for a future pass to find
+   out-of-sync with `cross-cutting.md`, because nothing here restates it. The one exception,
+   per the human's own carve-out: an AC body may still state a BC-X.7.002 postcondition's pinned
+   string (AC-004's exit-64 message, AC-008's help text) because those are the BC's own
+   postcondition text, not a VP-cell paraphrase -- each such AC's title already cites the
+   postcondition number it states, per the human's "prefer referencing the postcondition number"
+   instruction.
+2. **The old "Pin -> AC -> Task-7-row checklist" (pass-6 note, below) is retired**, replaced by
+   the `## Clause Coverage Map (D-386)` section (after Acceptance Criteria, below) -- a table
+   built by walking VP-USER-LIST-PROJECT-001's own cells in `cross-cutting.md` top to bottom so
+   each appears exactly once, plus a second table mapping every BC-X.7.002 postcondition, Fix
+   step, and EC-X.7.002-1..7 to its owning AC. Unlike the retired checklist (a self-attested
+   "V=verbatim-in-AC-Test-line" claim per row, disprovable only by re-deriving the whole sweep by
+   hand, which is exactly what happened four times), the new map's correctness is checkable
+   mechanically: for each AC, does its Test line cite the clause/cell this row claims it owns?
+   The pass-6 note is left in place as historical record of why D-386 was made, but its checklist
+   table is replaced with a pointer to the new section rather than carried forward stale.
+3. **Task 3/4/5/6 (the test-writing tasks) gain an explicit instruction:** the test-writer MUST
+   read the cited VP clause(s) in `cross-cutting.md` in full before writing a single cell --
+   the VP text, not this story, is the source of truth for cell contents. This closes the
+   mechanism by which a paraphrase could enter the codebase in the first place: a test-writer
+   working from this story's Test lines alone now has no pinned values to (mis)transcribe from
+   this story at all, only a pointer telling it where the binding text lives.
+4. Task 7's Red Gate density tally (`RED_TESTS=9`, `EXEMPT_TESTS=5`, `TOTAL_NEW_TESTS=14`,
+   denominator=9, `RED_RATIO=9/9=1.0`) is unchanged by this restructure -- no test was added,
+   removed, or reclassified; only how each AC POINTS AT its owning test function changed. Every
+   classification in Task 7(a)/(b) was re-checked against the new Clause Coverage Map's per-cell
+   AC ownership and still holds (see the map's own "Task-7 function" column, which reproduces
+   Task 7's classification per cell rather than a second, independently-derived one).
+
+**P7-008 (COSMETIC, pass-7):** Task 7(a)'s four pre-existing/unmodified regression-guard tests
+were cited by approximate `.args`-line location (`tests/user_pagination.rs` `~L385`/`~L506`,
+`tests/all_flag_behavior.rs` `~L288`, plus `tests/user_commands.rs` `~L142`) -- a citation form
+CLAUDE.md's own "Citation form in spec/CLAUDE.md" convention deprecates in favor of symbol form,
+since line numbers drift on refactor and a bare `<file>:NN-MM` citation is disallowed for new
+citations. Verified against the current tree (`grep -n 'fn user_list_all_cli_paginates\|fn
+user_list_all_cli_emits_safety_cap_warning\|fn user_list_default_caps_at_thirty\|fn
+user_list_by_project_returns_users' tests/*.rs`) and switched to symbol form: `tests/user_commands.rs::user_list_by_project_returns_users`,
+`tests/user_pagination.rs::user_list_all_cli_paginates`,
+`tests/user_pagination.rs::user_list_all_cli_emits_safety_cap_warning` (the "sibling cap-hitting
+test"), and `tests/all_flag_behavior.rs::user_list_default_caps_at_thirty`. The same fix is
+applied to every other line-number citation of a test-file location in this story: Task 2/3's
+`src/cli/mod.rs` `~L1435` insertion-point citations become `src/cli/mod.rs`'s existing
+`#[cfg(test)] mod tests` block (symbol form, no line number -- the block is already named), and
+Task 5/AC-007's `tests/user_pagination.rs` `~L19-25` citation of its non-hermetic helper becomes
+`tests/user_pagination.rs::jr_cmd_json` (verified: `grep -n 'fn jr_cmd_json' tests/user_pagination.rs`
+-> line 19). Citations of `cross-cutting.md`/`docs/specs/cargo-mutants-policy.md`/`README.md`/
+`CHANGELOG.md`/`workflows/phases/per-story-delivery.md` line ranges are unaffected by this fix --
+those are pins into non-test spec/doc/policy artifacts this story is required to cite by line
+(the source-of-truth binding this whole restructure is built on, for `cross-cutting.md`), not
+test-file citations.
+
+## Revision Note (F3 adversarial pass-6 fixes)
+
+- **ADV-C14-F3-P6-004 (LOW, spec-fidelity):** AC-003's Test line was missing
+  VP-USER-LIST-PROJECT-001(c)'s pinned setup/expectation for two of EC-X.7.002-3's three
+  sub-cells -- it named them (`".jr.toml`-only, profile-only, both") but only carried the
+  "both" sub-cell's pin verbatim (landed in pass-3, ADV-C14-F3-P3-003). Fixed by adding the
+  two missing sub-cells' pins verbatim from `cross-cutting.md` ~L873-877: the `.jr.toml`-only
+  cell (temp `cwd` containing `.jr.toml` `project = "JRT"`, profile has NO `project` ->
+  exactly one request with `projectKeys=JRT`) and the profile-only cell (temp `config.toml`
+  profile `project = "FOO"`, no `.jr.toml` -> exactly one request with `projectKeys=FOO`).
+  Neither of these two sub-cells carries a VP-pinned counter-mock (only the "both" sub-cell
+  does) -- none was added, per the source text.
+
+  **Root cause of the 4-pass recurrence:** ADV-C14-F3-P3-003 (pass-3) and ADV-C14-F3-P4-003
+  (pass-4, below) each asserted this class of gap was fully closed for AC-003 without
+  re-deriving the sub-cell-by-sub-cell pin list from `cross-cutting.md` -- both are corrected
+  below (marked SUPERSEDED at their own bullets) rather than trusted as authoritative.
+
+  **Mechanical exhaustive pin sweep performed this pass** (every cell, pinned setup, expected
+  value, counter-mock, request-count assertion, and argv vector in VP-USER-LIST-PROJECT-001
+  (a)-(d), `cross-cutting.md` ~L838-909), against every AC Test line and the Task 7 tally.
+  Three further gaps of the *same* defect class (a VP-pinned sub-assertion narrated but not
+  quoted verbatim in an AC Test line) were found and fixed in this pass:
+  - AC-001's Test line named "all four flag-presence cells" without quoting their argv
+    vectors -- fixed by adding VP(a)'s four base cells verbatim (`cross-cutting.md`
+    ~L844-849): `["jr","user","list"]` -> `None`; `["jr","user","list","--project","L"]` ->
+    `Some("L")`; `["jr","--project","G","user","list"]` -> `Some("G")`;
+    `["jr","--project","G","user","list","--project","L"]` -> `Some("L")`.
+  - AC-006's Test line named "two `Cli::try_parse_from` cells" without quoting their argv
+    vectors -- fixed by adding VP(a)'s EC-X.7.002-6 argv pair verbatim (`cross-cutting.md`
+    ~L850-851): `["jr","user","list","--project",""]` -> `Some("")` and
+    `["jr","--project","","user","list"]` -> `Some("")`.
+  - AC-003's Test line named "the 2x4 presence-space" for the `proptest!` without quoting
+    VP(b)'s expected-value mapping -- fixed by adding it verbatim (`cross-cutting.md`
+    ~L858-868): `cli_project = Some(C)` -> `Some(C)` in every configured cell; `cli_project =
+    None` -> `Some(J)` (`.jr.toml`-only), `Some(P)` (profile-only), `Some(J)` (both --
+    `.jr.toml` wins over the profile default, EC-X.7.002-5's caveat), `None` (neither, the
+    only result mapping to exit 64).
+
+  All other VP(a)/(b)/(c)/(d) cells and the fault-model's five kill-claims were re-verified
+  cell-by-cell against the current AC Test lines and were already carried verbatim (pass-3/
+  pass-4 landings) -- no further gaps found. Task 7's density tally is UNCHANGED by this pass
+  (no test was added or removed, only Test-line prose was made verbatim): `RED_TESTS=9`,
+  `EXEMPT_TESTS=5`, `TOTAL_NEW_TESTS=14`, denominator=9, `RED_RATIO=9/9=1.0` -- re-confirmed
+  correct, matches every prior pass's tally.
+
+  **SUPERSEDED by D-386 (pass-7):** the checklist that previously appeared here (a
+  "V=verbatim-in-AC-Test-line" self-attestation per VP cell) is retired -- it was the mechanism
+  that let this same defect class recur across four passes, since each pass's "V=OK" claim was
+  only as good as that pass's own re-derivation and was never itself checked against
+  `cross-cutting.md`. It is replaced by the `## Clause Coverage Map (D-386)` section below
+  (after Acceptance Criteria), which every AC's `**Test:**` line now binds to BY REFERENCE
+  instead of by copied/paraphrased value -- see the "Revision Note (D-386 bind-by-reference
+  restructure + pass-7 fix)" note above for the full rationale. The pass-6 sweep results
+  narrated above this checklist (the three additional gaps found and fixed, and the
+  cell-by-cell re-verification of every other VP(a)/(b)/(c)/(d) cell) remain accurate as a
+  historical record of pass-6's own findings; only the checklist table itself is superseded.
 
 ## Revision Note (F3 adversarial pass-5 fixes)
 
@@ -148,6 +281,10 @@ origin: >
   other VP(c) cell (AC-002, AC-003's three subcells, AC-004, AC-005, AC-006, AC-007) -- each
   already carries its VP(c) pin verbatim from the pass-3 fix (ADV-C14-F3-P3-003); no further
   changes needed there.
+  **SUPERSEDED by pass-6 (ADV-C14-F3-P6-004):** the "AC-003's three subcells ... already
+  carries its VP(c) pin verbatim" claim above was WRONG -- only the "both" subcell did;
+  the `.jr.toml`-only and profile-only subcells' pins were still narrated, not quoted. See
+  the pass-6 note above for the corrected sweep and fix.
 - **ADV-C14-F3-P4-005 (LOW):** AC-001's Test line's vague "both local/global `-p` short-alias
   cells" is replaced with the exact argv vectors from `cross-cutting.md` ~L852-856:
   `["jr","user","list","-p","L"]` -> `Some("L")` and
@@ -180,6 +317,10 @@ origin: >
   cite VP-USER-LIST-PROJECT-001(c) by name and to carry its pinned discriminating
   sub-assertions (exact request counts and `.expect(0)` counter-mocks) verbatim from
   `.factory/specs/prd/cross-cutting.md`.
+  **SUPERSEDED in part by pass-6 (ADV-C14-F3-P6-004):** for AC-003, this landed the pin for
+  the EC-X.7.002-3 "both" subcell only -- the `.jr.toml`-only and profile-only subcells were
+  named but not carried verbatim, and remained a gap through passes 4 and 5. See the pass-6
+  note above for the corrected sweep and fix.
 - **ADV-C14-F3-P3-005 (LOW):** AC-011/Task 13 now pin the exact insertion point for the new
   `src/cli/user.rs` §Scope bullet in `docs/specs/cargo-mutants-policy.md` (verified directly
   against the file: the `src/jql.rs` bullet ends at line 89, followed by a blank line 90 and
@@ -209,39 +350,138 @@ origin: >
 
 ### AC-001 (traces to BC-X.7.002 Fix step 1 / Postcondition 1)
 `src/cli/mod.rs::UserCommand::List.project` (~L1148) changes from clap-REQUIRED `String` to `Option<String>`. The `#[arg(long, short = 'p')]` attribute, including `short = 'p'`, is unchanged. When a local `--project` is supplied, `Cli::try_parse_from` resolves it to `Some(value)` regardless of whether a global `--project` or a configured default is also present (local wins unconditionally).
-**Test:** inline `Cli::try_parse_from` unit test (one `#[test]` function, VP-USER-LIST-PROJECT-001(a)) asserting all four flag-presence cells plus the retained local `-p` short-alias, using the exact argv vectors from `cross-cutting.md` ~L852-856: `["jr","user","list","-p","L"]` -> `Some("L")`, and `["jr","--project","G","user","list","-p","L"]` -> `Some("L")` (local `-p` wins over the global long form). There is no global `-p` cell -- the global `--project` (`src/cli/mod.rs::Cli.project`, `#[arg(long, global = true)]`) has no short form.
+**Test:** Implements VP-USER-LIST-PROJECT-001(a)'s four base flag-presence cells and its two
+`-p` short-alias cells, and the "no global `-p` cell" note (`cross-cutting.md` ~L844-849,
+~L852-857). Every cell, setup, argv, expected value, request-count assertion, counter-mock
+(`.expect(0)`), and stderr/help substring in the cited clause(s) is binding and must be
+implemented exactly as written there; this story does not restate them, and nothing here
+narrows them. Story-specific: these six cells live in ONE inline `#[test]` function in
+`src/cli/mod.rs`'s existing `#[cfg(test)] mod tests` block (Task 3) -- VP(a) is a single
+inline test asserting multiple argv vectors in its body, not one test per cell (the
+EC-X.7.002-6 empty-string cells and the EC-X.7.002-1 "both given" cell live in the same
+physical function but are owned by AC-006 and AC-005 respectively, below). Classification:
+WIRING-EXEMPT / GREEN-at-stub (Task 7(a)) -- parser-only, never calls
+`resolve_user_list_project`.
 
 ### AC-002 (traces to BC-X.7.002 Postcondition 2, EC-X.7.002-2)
 `jr --project FOO user list` (global only, no local flag, no configured default) resolves the local field to `Some("FOO")` via clap's own `fill_in_global_values` propagation -- no `jr`-level local-vs-global merge code is written. This is the exact invocation issue #862 reported as broken (previously clap exit 2).
-**Test:** `test_bc_x_7_002_...global_project_only...` wiremock cell, hermetic per `verification-delta.md` §2, asserting exactly one request with `projectKeys=FOO`.
+**Test:** Implements VP-USER-LIST-PROJECT-001(c)'s EC-X.7.002-2 cell (`cross-cutting.md`
+~L872, "global only -> `projectKeys=FOO`"). Every cell, setup, argv, expected value,
+request-count assertion, counter-mock (`.expect(0)`), and stderr/help substring in the cited
+clause is binding and must be implemented exactly as written there; this story does not
+restate them, and nothing here narrows them. Story-specific: one hermetic wiremock
+`#[tokio::test]` function (`test_bc_x_7_002_...global_project_only...`) in the new
+`tests/user_list_project_resolution.rs` (Task 5), built per `verification-delta.md` §2's
+hermetic setup. Classification: WIRING-EXEMPT / GREEN-at-stub (Task 7(a)) -- resolves to
+`Some(...)` via clap propagation alone and short-circuits straight to HTTP; this is the #862
+bug fix itself, delivered by Task 1's `String` -> `Option<String>` type change, not by the
+resolver.
 
 ### AC-003 (traces to BC-X.7.002 Postcondition 3, EC-X.7.002-3, EC-X.7.002-5, EC-X.7.002-7)
 When both local and global `--project` are absent, `resolve_user_list_project(cli_project: Option<&str>, config: &Config) -> Option<String>` (new `pub(crate)` function in `src/cli/user.rs`) falls back to `Config::project_key`'s existing chain: `.jr.toml` project first, then the active profile's configured `project` default (including a non-default `--profile`'s own default, and including an empty-string configured default, EC-X.7.002-7). `handle_list` calls this resolver with the post-clap field value.
-**Test:** `proptest!` over the 2x4 presence-space (VP-USER-LIST-PROJECT-001(b)) + three wiremock cells (`.jr.toml`-only, profile-only, both) + the `--profile alt` cell (EC-X.7.002-5). Per VP-USER-LIST-PROJECT-001(c), the "both" cell configures `.jr.toml` `project = "JRT"` plus profile `project = "FOO"`, asserts exactly one request carrying `projectKeys=JRT`, and mounts a `.expect(0)` counter-mock on `projectKeys=FOO`. The `--profile alt` cell carries VP-USER-LIST-PROJECT-001(c)'s EC-X.7.002-5 pin verbatim (`cross-cutting.md` ~L881-884): temp `config.toml` with profile `default` -> `project = "DEF"` and profile `alt` -> `project = "ALT"`, both URLs at the mock server, no `.jr.toml`; `jr --profile alt user list` with no `--project` -> exactly one request with `projectKeys=ALT`, `.expect(0)` on a `projectKeys=DEF` mock.
+**Test:** Implements VP-USER-LIST-PROJECT-001(b) in full (`cross-cutting.md` ~L858-868: the
+`cli_project`x{neither/`.jr.toml`-only/profile-only/both} presence-space and its
+EC-X.7.002-5 `.jr.toml`-wins-over-profile caveat), VP-USER-LIST-PROJECT-001(c)'s
+EC-X.7.002-3 three sub-cells (`cross-cutting.md` ~L873-877), and VP-USER-LIST-PROJECT-001(c)'s
+EC-X.7.002-5 cell (`cross-cutting.md` ~L881-884, shared ownership with AC-009 below -- one
+physical test satisfies both ACs). Every cell, setup, argv, expected value, request-count
+assertion, counter-mock (`.expect(0)`), and stderr/help substring in the cited clauses is
+binding and must be implemented exactly as written there; this story does not restate them,
+and nothing here narrows them. Story-specific: the VP(b) presence-space lives in ONE
+`proptest!` block in `src/cli/user.rs`'s `#[cfg(test)]` module (Task 4) -- classification
+RED-at-stub (fails via a direct in-process `todo!()` panic, Task 7(b)). The three
+EC-X.7.002-3 sub-cells and the EC-X.7.002-5 cell are four separate hermetic wiremock
+`#[tokio::test]` functions in the new `tests/user_list_project_resolution.rs` (Task 5) --
+classification RED-at-stub for all four (each hits the `None` arm and fails via the child
+`jr` subprocess's `todo!()` panic/exit 101, Task 7(b)).
 
 ### AC-004 (traces to BC-X.7.002 Postcondition 4, EC-X.7.002-4)
 When none of {local `--project`, global `--project`, configured default} resolve, `handle_list` exits 64 (`JrError::UserError`) with the byte-identical message `"No project configured. Run \"jr init\" or pass --project. Run \"jr project list\" to see available projects."`, before any HTTP call.
-**Test:** `tests/user_commands.rs::user_list_requires_project_flag` (no rename, per F1-gate Open Question 8; made hermetic per `verification-delta.md` §2, keeping its existing unreachable `JR_BASE_URL=http://127.0.0.1:1`) + a new hermetic EC-X.7.002-4 wiremock cell with `.expect(0)` on `multiProjectSearch`.
+**Test:** Implements BC-X.7.002 Postcondition 4 (the pinned exit-64 message, stated verbatim
+in this AC's own body above -- this is a BC postcondition text, not a VP-cell paraphrase, per
+the D-386 carve-out) and VP-USER-LIST-PROJECT-001(c)'s EC-X.7.002-4 cell (`cross-cutting.md`
+~L877-880). Every cell, setup, argv, expected value, request-count assertion, counter-mock
+(`.expect(0)`), and stderr substring in the cited clause is binding and must be implemented
+exactly as written there; this story does not restate them, and nothing here narrows them.
+Story-specific: `tests/user_commands.rs::user_list_requires_project_flag` (no rename, per
+F1-gate Open Question 8; made hermetic per `verification-delta.md` §2, keeping its existing
+unreachable `JR_BASE_URL=http://127.0.0.1:1`, Task 6) plus a new, separate hermetic
+`#[tokio::test]` function in the same file (Task 6). Classification: both RED-at-stub (each
+hits the `None` arm and fails via the child `jr` subprocess's `todo!()` panic/exit 101, Task
+7(b)) -- `user_list_requires_project_flag` is substantively modified by Task 6, not an
+unmodified regression guard.
 
 ### AC-005 (traces to BC-X.7.002 EC-X.7.002-1)
 `jr --project GLOBAL user list --project LOCAL` resolves to `LOCAL` (local wins over global when both are supplied), via clap propagation, producing the same observable result as `component create`'s explicit local-over-global merge code.
-**Test:** `Cli::try_parse_from` cell (part of AC-001's test) + a wiremock cell asserting `projectKeys=LOCAL`. Per VP-USER-LIST-PROJECT-001(c), EC-X.7.002-1's cell asserts exactly one request (with `projectKeys=LOCAL`).
+**Test:** Implements VP-USER-LIST-PROJECT-001(a)'s "both given -> local wins" argv cell
+(`cross-cutting.md` ~L849, shared ownership with AC-001's inline test -- it is one of the four
+base cells asserted there) and VP-USER-LIST-PROJECT-001(c)'s EC-X.7.002-1 cell
+(`cross-cutting.md` ~L872-873). Every argv, expected value, and request-count assertion in the
+cited clauses is binding and must be implemented exactly as written there; this story does not
+restate them, and nothing here narrows them. Story-specific: the argv cell is part of AC-001's
+single inline `#[test]` function (no separate test); the EC-1 wiremock cell is its own
+hermetic `#[tokio::test]` function in `tests/user_list_project_resolution.rs` (Task 5).
+Classification: both WIRING-EXEMPT / GREEN-at-stub (Task 7(a)) -- resolves to `Some(...)` via
+clap propagation alone.
 
 ### AC-006 (traces to BC-X.7.002 EC-X.7.002-6, D-380)
 `--project ""` (empty string), whether local or global, passes through as `Some(String::new())` and resolves the project key to the empty string without consulting the configured default -- settled behavior, human-confirmed 2026-09-25 (D-380), matching `jr queue`/`jr requesttype`'s existing empty-string pass-through.
-**Test:** two `Cli::try_parse_from` cells + a `proptest!` cell (`cli_project = Some("")` -> `Some(String::new())` in every configured cell) + a wiremock cell. Per VP-USER-LIST-PROJECT-001(c), the wiremock cell configures profile `project = "FOO"`, runs `jr user list --project ""`, asserts exactly one request whose `projectKeys` value is the empty string, and mounts a `.expect(0)` counter-mock on `projectKeys=FOO`.
+**Test:** Implements VP-USER-LIST-PROJECT-001(a)'s two EC-X.7.002-6 argv cells
+(`cross-cutting.md` ~L850-851), VP-USER-LIST-PROJECT-001(b)'s EC-X.7.002-6 cell
+(`cross-cutting.md` ~L866-867), and VP-USER-LIST-PROJECT-001(c)'s EC-X.7.002-6 cell
+(`cross-cutting.md` ~L884-886). Every cell, setup, argv, expected value, and counter-mock
+(`.expect(0)`) in the cited clauses is binding and must be implemented exactly as written
+there; this story does not restate them, and nothing here narrows them. Story-specific: the
+two argv cells are part of AC-001's single inline `#[test]` function (no separate test); the
+VP(b) cell is part of AC-003's `proptest!` block (no separate test); the VP(c) cell is its own
+hermetic `#[tokio::test]` function in `tests/user_list_project_resolution.rs` (Task 5).
+Classification: the argv cells and the VP(c) wiremock cell are WIRING-EXEMPT /
+GREEN-at-stub (Task 7(a)) -- resolve via clap propagation alone and short-circuit straight to
+HTTP; the VP(b) proptest cell shares AC-003's RED-at-stub classification (Task 7(b)) since it
+is part of the same unconditional-`todo!()` proptest block.
 
 ### AC-007 (traces to BC-X.7.002 Postcondition 5)
 Once resolved (by any of steps 1-3), every request carries `projectKeys=<resolved-key>`: exactly one `GET /rest/api/3/user/assignable/multiProjectSearch` on the default (non-`--all`) path (BC-X.7.003's unchanged single-call contract); `--all` paginates one-or-more offset pages of the same endpoint, every page carrying the same `projectKeys` value.
-**Test:** two `--all` pagination wiremock tests in `tests/user_pagination.rs`, modeled on `user_list_all_cli_paginates`'s three-page pattern (one with the global flag, one with the configured default), each with a `query_param_is_missing("projectKeys")` catch-all `.expect(0)`. Both cells build their own `Command` using `verification-delta.md` §2's hermetic setup (per-test `JR_CONFIG_DIR`/`JR_CACHE_DIR` `TempDir`, a `.jr.toml`-free `cwd`, `JR_BASE_URL`/`JR_AUTH_HEADER`, and every other ambient `JR_`-prefixed var cleared) -- NOT the file's existing non-hermetic `jr_cmd_json` helper (~L19-25), which sets only `JR_BASE_URL`/`JR_AUTH_HEADER` with no config/cache isolation. Per VP-USER-LIST-PROJECT-001(c), each page's mock is matched on `query_param("projectKeys", "FOO")` with `.expect(1)`, and each test additionally asserts every received request carries exactly one `projectKeys=FOO` pair.
+**Test:** Implements VP-USER-LIST-PROJECT-001(c)'s `--all` pagination cells
+(`cross-cutting.md` ~L886-894: the three-page pattern, per-page `query_param`/`.expect(1)`
+matching, the `query_param_is_missing` catch-all `.expect(0)`, and the non-`--all`
+single-request contract stated in this AC's own body above). Every setup, per-page mock
+assertion, and catch-all counter-mock in the cited clause is binding and must be implemented
+exactly as written there; this story does not restate them, and nothing here narrows them.
+Story-specific: two `--all` pagination `#[tokio::test]` functions in `tests/user_pagination.rs`
+(Task 5), modeled on the file's existing `tests/user_pagination.rs::user_list_all_cli_paginates`
+three-page pattern -- one with the global flag, one with the configured default. Both build
+their own `Command` using `verification-delta.md` §2's hermetic setup (per-test
+`JR_CONFIG_DIR`/`JR_CACHE_DIR` `TempDir`, a `.jr.toml`-free `cwd`, `JR_BASE_URL`/
+`JR_AUTH_HEADER`, and every other ambient `JR_`-prefixed var cleared) -- NOT the file's
+existing non-hermetic `tests/user_pagination.rs::jr_cmd_json` helper, which sets only
+`JR_BASE_URL`/`JR_AUTH_HEADER` with no config/cache isolation. Classification: the
+global-flag variant is WIRING-EXEMPT / GREEN-at-stub (resolves via clap propagation alone);
+the configured-default variant is RED-at-stub (hits the `None` arm, Task 7(b)).
 
 ### AC-008 (traces to BC-X.7.002 Fix step 1, VP-USER-LIST-PROJECT-001(d))
 `jr user list --help` exits 0 and its stdout (whitespace-collapsed) contains the pinned help string: `"Project key (overrides the configured default project). Required when no project is configured in"` and `"or the active profile"`.
-**Test:** `--help` integration cell.
+**Test:** Implements VP-USER-LIST-PROJECT-001(d) in full (`cross-cutting.md` ~L895-901: the
+exit-0 assertion, the whitespace-collapse rule, both pinned substrings -- stated verbatim in
+this AC's own body above, which states BC-X.7.002 Fix step 1's pinned help text, not a
+VP-cell paraphrase, per the D-386 carve-out -- and the deliberate exclusions of the
+`.jr.toml` token and the trailing period). Every substring and exclusion in the cited clause
+is binding and must be implemented exactly as written there; this story does not restate
+them, and nothing here narrows them. Story-specific: one `--help` `#[tokio::test]` function in
+`tests/user_list_project_resolution.rs` (Task 5). Classification: RED-at-stub (Task 7(b)) --
+the only bucket-(b) cell that never reaches the `None` arm or any `todo!()`; it is RED only
+because the pinned help wording isn't added until Task 8.
 
 ### AC-009 (traces to BC-X.7.002 Fix step 3, Invariants, EC-X.7.002-5)
 `cli::user::handle` gains a `&Config` parameter, threaded from `src/main.rs`'s already-loaded `config` binding (`Config::load_with(cli.profile.as_deref())`) -- `handle`/`handle_list` MUST NOT call `Config::load`/`Config::load_with` themselves, or `--profile`/`JR_PROFILE` selection would be silently ignored.
-**Test:** the EC-X.7.002-5 wiremock cell, carrying VP-USER-LIST-PROJECT-001(c)'s pinned sub-assertions verbatim (`cross-cutting.md` ~L881-884): temp `config.toml` with profile `default` -> `project = "DEF"` and profile `alt` -> `project = "ALT"`, both URLs at the mock server, no `.jr.toml`; `jr --profile alt user list` with no `--project` asserts exactly one request with `projectKeys=ALT` and mounts a `.expect(0)` counter-mock on a `projectKeys=DEF` mock -- this cell fails if the handler reloads config instead of using the passed value.
+**Test:** Implements VP-USER-LIST-PROJECT-001(c)'s EC-X.7.002-5 cell (`cross-cutting.md`
+~L881-884, shared ownership with AC-003 above -- one physical test satisfies both ACs). Every
+setup, argv, expected value, and counter-mock (`.expect(0)`) in the cited clause is binding
+and must be implemented exactly as written there; this story does not restate them, and
+nothing here narrows them. Story-specific: this is the same hermetic `#[tokio::test]` function
+AC-003 cites for its EC-X.7.002-5 cell, in `tests/user_list_project_resolution.rs` (Task 5) --
+this cell fails if the handler reloads config instead of using the passed `&Config`.
+Classification: RED-at-stub (Task 7(b)).
 
 ### AC-010 (traces to BC-X.7.002 Trace, prd-delta.md F4 doc-delta obligation PASS-13/P13-003)
 `README.md`'s `jr user list --project FOO` row (~L335) is reworded to show `--project` as optional, reflecting the new fallback to the configured default project rather than implying the flag is required.
@@ -252,6 +492,69 @@ Once resolved (by any of steps 1-3), every request carries `projectKeys=<resolve
 `` - `src/cli/user.rs` — `resolve_user_list_project` (configured-default fallback for user list's post-clap project value via Config::project_key; local-vs-global precedence is clap global-value propagation) (added cycle-014) ``,
 inserted directly after the existing `src/jql.rs` bullet (verified: that bullet ends at line 89, immediately followed by a blank line at line 90 and the `**FIX-F7-001 deferred, not added:**` paragraph at line 91 -- both still inside `## Scope`, which runs through line 149; `### Sibling Candidates Considered and Deferred` starts at line 150). The new bullet MUST land before that blank line/paragraph and therefore before line 150 -- `scripts/check-cargo-mutants-policy-citations.sh`'s §Scope extraction (`awk` range `/^## Scope$/` through the first `^## ` or `^### Sibling Candidates`, ~L37-46) stops parsing at line 150 and would silently false-green a bullet placed at or after it. Its "Current `examine_globs` count" line (line 113) changes 32 -> 33, and a new newest-first row is added to the `## Changelog` table (`## Changelog` header at line 1583, top data row at line 1587). Per `scripts/check-cargo-mutants-policy-citations.sh` (~L137-153), the bullet's parenthetical description must not backtick any other lowercase identifier -- e.g. do not write `` (wraps `Config::project_key`) `` -- because every backtick token matching `^[a-z_][a-z0-9_]*$` is treated as a function-name citation requiring its own definition line in the cited file. Running `scripts/check-cargo-mutants-policy-citations.sh` before this story's edit reports `Check passed: 29 bullets parsed, 98 (file, fn) pairs validated` (verified); after the edit it must report exactly 30 bullets parsed (one more, not two, and not zero) -- a bullet count that doesn't move by exactly +1 means the insertion landed in the wrong place or was malformed. Because inserting the new §Scope bullet shifts every subsequent line in the file down by one, verify the current line numbers for the count line (nominally 113) and the `## Changelog` header/top data row (nominally 1583/1587) immediately before each of those edits -- in file order (bullet insert first, then the count-line edit, then the Changelog row) -- rather than relying on this story's pinned numbers once an earlier edit in this same sequence has already landed.
 **Test:** N/A (config/doc); `tests/mutants_glob_existence.rs` passes automatically since the file already exists; `scripts/check-cargo-mutants-policy-citations.sh` passes since `resolve_user_list_project` is defined in the same PR, AND its "N bullets parsed" success line reads 30 (was 29 pre-edit).
+
+## Clause Coverage Map (D-386)
+
+Per D-386, this section is the single place this story binds VP-USER-LIST-PROJECT-001's cells
+and BC-X.7.002's postconditions/Fix-steps/edge cases to owning ACs and Task-7 test functions --
+built by walking each source top to bottom in `cross-cutting.md` so every cell/clause appears
+exactly once. No AC's `**Test:**` line above restates this mapping; this is the sole map.
+
+### VP-USER-LIST-PROJECT-001 cell map
+
+| Cell | VP clause | `cross-cutting.md` ~line | Owning AC | Task-7 function (classification) |
+|------|-----------|---------------------------|-----------|-----------------------------------|
+| `["jr","user","list"]` -> `None` | (a) | ~L846 | AC-001 | `Cli::try_parse_from` inline test (WIRING-EXEMPT) |
+| `["jr","user","list","--project","L"]` -> `Some("L")` | (a) | ~L847 | AC-001 | same (WIRING-EXEMPT) |
+| `["jr","--project","G","user","list"]` -> `Some("G")` | (a) | ~L848 | AC-001 | same (WIRING-EXEMPT) |
+| `["jr","--project","G","user","list","--project","L"]` -> `Some("L")` | (a) | ~L849 | AC-001, AC-005 (EC-1) | same (WIRING-EXEMPT) |
+| `["jr","user","list","--project",""]` -> `Some("")` | (a)/EC-6 | ~L850 | AC-006 | same (WIRING-EXEMPT) |
+| `["jr","--project","","user","list"]` -> `Some("")` | (a)/EC-6 | ~L851 | AC-006 | same (WIRING-EXEMPT) |
+| `["jr","user","list","-p","L"]` -> `Some("L")` | (a) | ~L853 | AC-001 | same (WIRING-EXEMPT) |
+| `["jr","--project","G","user","list","-p","L"]` -> `Some("L")` | (a) | ~L853-854 | AC-001 | same (WIRING-EXEMPT) |
+| No global `-p` cell exists (informational) | (a) | ~L855-857 | AC-001 | n/a |
+| `cli_project=Some(C)` -> `Some(C)`, every configured cell | (b) | ~L863 | AC-003 | `resolve_user_list_project` proptest (RED) |
+| `cli_project=None`, `.jr.toml`-only -> `Some(J)` | (b) | ~L864 | AC-003 | same (RED) |
+| `cli_project=None`, profile-only -> `Some(P)` | (b) | ~L864 | AC-003 | same (RED) |
+| `cli_project=None`, both -> `Some(J)` (`.jr.toml` wins) | (b) | ~L864-865 | AC-003 | same (RED) |
+| `cli_project=None`, neither -> `None` (exit-64 mapping) | (b) | ~L865 | AC-003 | same (RED) |
+| `cli_project=Some("")` -> `Some(String::new())`, every configured cell | (b)/EC-6 | ~L866-867 | AC-006 | same (RED, part of AC-003's proptest block) |
+| EC-1: both flags -> one request `projectKeys=LOCAL` | (c) | ~L872-873 | AC-005 | `user_list_project_resolution.rs` EC-1 cell (WIRING-EXEMPT) |
+| EC-2: global only -> one request `projectKeys=FOO` | (c) | ~L872 | AC-002 | `user_list_project_resolution.rs` EC-2 cell (WIRING-EXEMPT) |
+| EC-3 `.jr.toml`-only: `.jr.toml` `project="JRT"`, no profile default -> `projectKeys=JRT` | (c) | ~L873-874 | AC-003 | `user_list_project_resolution.rs` EC-3 subcell 1 (RED) |
+| EC-3 profile-only: `config.toml` profile `project="FOO"`, no `.jr.toml` -> `projectKeys=FOO` | (c) | ~L874-875 | AC-003 | `user_list_project_resolution.rs` EC-3 subcell 2 (RED) |
+| EC-3 both: `.jr.toml="JRT"` + profile `="FOO"` -> `projectKeys=JRT`, `.expect(0)` on `FOO` | (c) | ~L875-877 | AC-003 | `user_list_project_resolution.rs` EC-3 subcell 3 (RED) |
+| EC-4: none present -> exit 64, pinned stderr, `.expect(0)` `multiProjectSearch` | (c) | ~L877-880 | AC-004 | `user_commands.rs` new EC-4 cell (RED) + `user_list_requires_project_flag` reclassified (RED) |
+| EC-5: profile `alt`->`ALT`, no `.jr.toml` -> `projectKeys=ALT`, `.expect(0)` on `DEF` | (c) | ~L880-884 | AC-003, AC-009 | `user_list_project_resolution.rs` EC-5 cell (RED) |
+| EC-6: profile `project="FOO"`, `--project ""` -> `projectKeys=` (empty), `.expect(0)` on `FOO` | (c) | ~L884-886 | AC-006 | `user_list_project_resolution.rs` EC-6 cell (WIRING-EXEMPT) |
+| `--all` global-flag: 3-page pattern, per-page `.expect(1)`, catch-all `.expect(0)` | (c) | ~L886-893 | AC-007 | `user_pagination.rs` global-flag `--all` cell (WIRING-EXEMPT) |
+| `--all` configured-default: 3-page pattern, per-page `.expect(1)`, catch-all `.expect(0)` | (c) | ~L886-893 | AC-007 | `user_pagination.rs` configured-default `--all` cell (RED) |
+| Non-`--all` path keeps BC-X.7.003's single-request contract | (c) | ~L894 | AC-007 | n/a (stated in AC-007's own body) |
+| `--help` exits 0; whitespace-collapsed stdout contains both pinned substrings, excludes `.jr.toml` token and trailing period | (d) | ~L895-901 | AC-008 | `user_list_project_resolution.rs` `--help` cell (RED) |
+| Fault model (5 kill-claims) | (a)/(b)/(c) | ~L902-909 | AC-001/003/004/005/006/007/009 (per cell above) | satisfied by the cells above; no separate test |
+
+### BC-X.7.002 postcondition / Fix-step / edge-case map
+
+| Clause | `cross-cutting.md` ~line | Owning AC |
+|--------|---------------------------|-----------|
+| Fix step 1 (type change + pinned help text) | ~L759-774 | AC-001, AC-008 |
+| Fix step 2 (clap global-value propagation, no `jr`-level merge) | ~L775 | AC-001, AC-002, AC-005 |
+| Fix step 3 (`&Config` threading, no reload) | ~L776 | AC-009 |
+| Fix step 4 (pure resolver `resolve_user_list_project`) | ~L777-779 | AC-003, AC-009 |
+| Fix step 5 (no separate `cli.project` fallback param needed) | ~L780 | n/a -- implementation note only (Task 1/9), no dedicated AC |
+| Postcondition 1 (local wins unconditionally) | ~L801 | AC-001, AC-005 |
+| Postcondition 2 (global fills when local absent) | ~L802 | AC-001, AC-002 |
+| Postcondition 3 (configured default used when both absent, incl. `Some("")`) | ~L803 | AC-003 |
+| Postcondition 4 (none present -> exit 64, pinned message, zero HTTP) | ~L804 | AC-004 |
+| Postcondition 5 (every request carries `projectKeys=<resolved>`; default vs. `--all`) | ~L805 | AC-007 |
+| Invariants (config-merge only, no new accessor/cache; failure mechanism vs. fact) | ~L807-810 | AC-004, AC-009 |
+| EC-X.7.002-1 (both flags, local wins) | ~L813 | AC-005 |
+| EC-X.7.002-2 (global only) | ~L814 | AC-002 |
+| EC-X.7.002-3 (configured default only) | ~L815 | AC-003 |
+| EC-X.7.002-4 (none present) | ~L816 | AC-004 |
+| EC-X.7.002-5 (non-default `--profile`'s own default) | ~L817 | AC-003, AC-009 |
+| EC-X.7.002-6 (empty-string pass-through, D-380) | ~L818-828 | AC-006 |
+| EC-X.7.002-7 (configured empty default, informational, no VP cell) | ~L829-836 | AC-003 (Postcondition 3's `Some("")` clause covers it; stated in AC-003's own body) |
 
 ## Architecture Mapping
 
@@ -314,17 +617,24 @@ Reference: `architecture/module-decomposition.md`, `architecture/dependency-grap
    pinned help text, exit-64 message, or real resolution logic yet -- the only bar is
    `cargo build` succeeding -- `stub-architect`
 2. [ ] Grep `tests/` for any literal assertion tied to `UserCommand::List.project`'s clap-required behavior beyond `tests/user_commands.rs::user_list_requires_project_flag` -- `test-writer`
+
+   **D-386 binding instruction (applies to Tasks 3-6):** before writing any cell, the
+   test-writer MUST read VP-USER-LIST-PROJECT-001's cited clause(s) (`.factory/specs/prd/cross-cutting.md`
+   ~L838-909) in full, per the AC each task implements (see the `## Clause Coverage Map (D-386)`
+   section for the exact clause/cell each AC owns). The VP text in `cross-cutting.md`, not this
+   story, is the source of truth for cell contents -- this story's AC Test lines bind to that
+   text by reference and do not restate it.
 3. [ ] Write the inline `Cli::try_parse_from` unit test in `src/cli/mod.rs`'s existing
-   `#[cfg(test)] mod tests` block (~L1435) (AC-001, AC-005, AC-006) -- `test-writer`
+   `#[cfg(test)] mod tests` block (AC-001, AC-005, AC-006) -- `test-writer`
 4. [ ] Write the `proptest!` on `resolve_user_list_project` in `src/cli/user.rs`'s
    `#[cfg(test)]` module (AC-003, AC-006) -- `test-writer`
 5. [ ] Write the hermetic wiremock integration cells in a new file,
    `tests/user_list_project_resolution.rs`: EC-X.7.002-1/2/3 (x3 sub-cells)/5/6, and the
    `--help` cell (AC-002, AC-003, AC-005, AC-006, AC-008); write the two `--all` pagination
    cells (AC-007) in `tests/user_pagination.rs`, modeled on (not reusing) the existing
-   `user_list_all_cli_paginates` three-page pattern, each built with its own
-   `verification-delta.md` §2 hermetic setup rather than the file's non-hermetic
-   `jr_cmd_json` helper (~L19-25) -- `test-writer`
+   `tests/user_pagination.rs::user_list_all_cli_paginates` three-page pattern, each built with
+   its own `verification-delta.md` §2 hermetic setup rather than the file's non-hermetic
+   `tests/user_pagination.rs::jr_cmd_json` helper -- `test-writer`
 6. [ ] Make `tests/user_commands.rs::user_list_requires_project_flag` hermetic per
    `verification-delta.md` §2 (no rename); update its stale
    `// No server needed — clap should fail before any HTTP call.` comment (note: the file uses
@@ -364,11 +674,12 @@ Reference: `architecture/module-decomposition.md`, `architecture/dependency-grap
    - AC-007's global-flag `--all` pagination cell (`jr --project FOO user list --all`) ->
      same short-circuit reasoning (**1 test**);
    - the pre-existing tests that always pass `--project` explicitly and therefore never reach
-     the resolver, at stub or after: `tests/user_commands.rs::user_list_by_project_returns_users`
-     (~L142), `tests/user_pagination.rs::user_list_all_cli_paginates` (~L385) and its sibling
-     cap-hitting test (~L506), and `tests/all_flag_behavior.rs::user_list_default_caps_at_thirty`
-     (~L288) -> these are the file's genuine, UNMODIFIED before/after regression guards, GREEN
-     unconditionally throughout. **These are NOT counted at all**, in either bucket and not as
+     the resolver, at stub or after: `tests/user_commands.rs::user_list_by_project_returns_users`,
+     `tests/user_pagination.rs::user_list_all_cli_paginates` and its sibling cap-hitting test
+     `tests/user_pagination.rs::user_list_all_cli_emits_safety_cap_warning`, and
+     `tests/all_flag_behavior.rs::user_list_default_caps_at_thirty` -> these are the file's
+     genuine, UNMODIFIED before/after regression guards, GREEN unconditionally throughout.
+     **These are NOT counted at all**, in either bucket and not as
      `EXEMPT_TESTS` either: per the formula's own definition, `TOTAL_NEW_TESTS` is "the count of
      all tests introduced in this story's delivery" -- these four were never introduced by this
      story, so they never enter `TOTAL_NEW_TESTS` in the first place. This is a distinct
@@ -494,7 +805,7 @@ No new dependency is added. `clap = { version = "4", features = ["derive"] }` (e
 
 | File | Action | Purpose |
 |------|--------|---------|
-| `src/cli/mod.rs` | modify | `UserCommand::List.project: String -> Option<String>`; help text update (AC-001, AC-008); inline `Cli::try_parse_from` unit test added to the existing `#[cfg(test)] mod tests` block (~L1435) |
+| `src/cli/mod.rs` | modify | `UserCommand::List.project: String -> Option<String>`; help text update (AC-001, AC-008); inline `Cli::try_parse_from` unit test added to the existing `#[cfg(test)] mod tests` block |
 | `src/main.rs` | modify | `Command::User` dispatch arm threads the already-loaded `config` binding through (AC-009) |
 | `src/cli/user.rs` | modify | `handle`/`handle_list` gain `&Config`; new `resolve_user_list_project`; exit-64 message (AC-003, AC-004, AC-009); `proptest!` on `resolve_user_list_project` added to its `#[cfg(test)]` module |
 | `tests/user_commands.rs` | modify | Hermetic isolation for `user_list_requires_project_flag` (no rename); new EC-X.7.002-4 regression cell; stale comment fix (AC-004) |

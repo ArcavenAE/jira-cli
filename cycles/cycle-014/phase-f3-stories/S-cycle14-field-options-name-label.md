@@ -76,8 +76,8 @@ acceptance_criteria_count: 9
 assumption_validations: []
 risk_mitigations: []
 created: "2026-09-26"
-version: "1.2"
-last_updated: "2026-09-27"
+version: "2.0"
+last_updated: "2026-09-28"
 breaking_change: false
 retroactive: false
 origin: >
@@ -116,6 +116,16 @@ kind was found.
 
 ## Revision Note (F3 adversarial pass-4 fix, ADV-C14-F3-P4-001, MEDIUM; ADV-C14-F3-P4-009, LOW)
 
+> **SUPERSEDED IN PART (pass-6, ADV-C14-F3-P6-007):** this section originally classified test 3
+> (the serde key-set property) as `rationale_category: FRAMEWORK-WIRING` -> `WIRING-EXEMPT` and
+> tallied `EXEMPT_TESTS = 1` / denominator `6` / `RED_RATIO = 5/6 ~= 0.833`. That classification
+> contradicted the playbook's own `WIRING-EXEMPT` definition (a test passing "as soon as the
+> correct type signature exists in the stub") -- this story has no stub. The classification and
+> tally are corrected below (test 3 is now `PRE-EXISTING-BEHAVIOR`, non-exempt, `EXEMPT_TESTS = 0`
+> / denominator `7` / `RED_RATIO = 5/7 ~= 0.71`) -- see the pass-6 Revision Note following this
+> section for the fix rationale. The table and tally text immediately below reflect the corrected
+> values, not the original pass-4 claim.
+
 **ADV-C14-F3-P4-001 (Red Gate density below the 0.5 floor):** as originally enumerated in Tasks
 1-5, this story's five new VP-580-013 test items split into 5 RED cells (name-only x2 levels,
 `value: null`, the proptest, the `--value high` filter) against 9 pre-existing-behavior GREEN
@@ -146,17 +156,19 @@ Log Format table):
 | 1b | cascading-child-level matrix (AC-001) | RED | -- | counts in denominator, counts as RED |
 | 1c | EC-X.14.001-12 both cells (AC-002) | RED | -- | counts in denominator, counts as RED |
 | 2 | recursive `AllowedValue` proptest (AC-001) | RED | -- | counts in denominator, counts as RED |
-| 3 | serde key-set property (AC-001 cell 3) | GREEN | `FRAMEWORK-WIRING` -- asserts the FIXED `{"id","label","children"}` wire shape from `FieldOption`'s `#[derive(Serialize)]`, unchanged by this story's fallback logic; verifies type/wire structure, not the business rule under test | **WIRING-EXEMPT** -- excluded from `EXEMPT_TESTS` denominator subtraction |
+| 3 | serde key-set property (AC-001 cell 3) | GREEN | `PRE-EXISTING-BEHAVIOR` -- asserts the ALREADY-CORRECT `{"id","label","children"}` wire shape from `FieldOption`'s `#[derive(Serialize)]`, which predates this story and is unchanged by the fallback fix; this fn proves the wire shape does not regress as a side effect of the fallback fix, which is a real (if unchanged) behavioral assertion, not a pure type-level tautology (reclassified pass-6, ADV-C14-F3-P6-007; was previously misclassified `FRAMEWORK-WIRING` -- see the superseded marker and pass-6 Revision Note below) | justified, non-blocking, but **NOT exempt** -- remains in the denominator as a non-RED test |
 | 4 | M3 regression fixture (AC-004) | GREEN | `PRE-EXISTING-BEHAVIOR` -- `normalize_from_valid_values` is untouched by this story (Architecture Compliance Rules row 2); this fn proves the fallback does NOT leak into it, which is a real (if unchanged) behavioral assertion, not a type-level tautology | justified, non-blocking, but **NOT exempt** -- remains in the denominator as a non-RED test |
 | 5 | `--value` filter system-field cell (AC-003) | RED | -- | counts in denominator, counts as RED |
 
-**Explicit tally:** `TOTAL_NEW_TESTS = 7`. `EXEMPT_TESTS = 1` (test 3, `FRAMEWORK-WIRING` ->
-WIRING-EXEMPT). Denominator = `7 - 1 = 6`. `RED_TESTS = 5` (1a, 1b, 1c, 2, 5). `RED_RATIO = 5 / 6
-~= 0.833 >= 0.5` -- integer-precise check `RED_TESTS * 2 >= (TOTAL_NEW_TESTS - EXEMPT_TESTS)` ->
-`10 >= 6` TRUE. **The Red Gate Density Check PASSES honestly on this restructured tally.** Test 4
-(M3 regression) is the only non-exempt GREEN in the denominator, and it is a single, individually
-justified `PRE-EXISTING-BEHAVIOR` entry (not `UNJUSTIFIED`), so it does not block Step 4 dispatch
-on its own even before the ratio arithmetic above is applied.
+**Explicit tally (corrected pass-6, ADV-C14-F3-P6-007 -- see below):** `TOTAL_NEW_TESTS = 7`.
+`EXEMPT_TESTS = 0` (test 3 is reclassified `PRE-EXISTING-BEHAVIOR`, non-exempt -- it is NOT
+`WIRING-EXEMPT`, since this story has no stub for `WIRING-EXEMPT` to apply to). Denominator =
+`7 - 0 = 7`. `RED_TESTS = 5` (1a, 1b, 1c, 2, 5). `RED_RATIO = 5 / 7 ~= 0.71 >= 0.5` -- integer-precise
+check `RED_TESTS * 2 >= (TOTAL_NEW_TESTS - EXEMPT_TESTS)` -> `10 >= 7` TRUE. **The Red Gate Density
+Check PASSES honestly on this corrected tally.** Tests 3 and 4 are the only non-exempt GREENs in
+the denominator, and each is a single, individually justified `PRE-EXISTING-BEHAVIOR` entry (not
+`UNJUSTIFIED`), so neither blocks Step 4 dispatch on its own even before the ratio arithmetic above
+is applied.
 
 **Route taken:** neither Option A nor Option B. The formula reaches >= 0.5 honestly once the
 counting unit is pinned at the function level per Tasks 1a/1b/1c above, so no stub rollback and no
@@ -175,6 +187,140 @@ opposed to the Wave-1/Wave-2/`H-CYCLE14-REG-FULL` scenarios, which are out of sc
 story). Fixed by setting `holdout_anchors` to the complete six-ID Wave-3 set in frontmatter above.
 This is an anchor-list correction only; no scenario body was edited (per the concurrent-edit note
 on `H-CYCLE14-W3-INT-003`, its body is untouched here).
+
+## Revision Note (F3 adversarial pass-6 fix, ADV-C14-F3-P6-007, LOW; mechanical pin sweep)
+
+**ADV-C14-F3-P6-007 (LOW, test-3 misclassification):** the pass-4 Red Gate tally (above)
+classified test 3 (the serde key-set property, VP-580-013(3)) as `rationale_category:
+FRAMEWORK-WIRING` -> `WIRING-EXEMPT`, excluded from the `EXEMPT_TESTS` denominator subtraction.
+Per per-story-delivery.md's own definition of `WIRING-EXEMPT`
+(`~/.claude/plugins/cache/claude-mp/vsdd-factory/1.0.0-rc.25/workflows/phases/per-story-delivery.md`
+~L58), that category applies to a test passing "as soon as the correct type signature exists in
+the stub." This story has **no stub** -- Task 6 already notes "No stub needed" because
+`normalize_from_allowed_values_at_depth` and its siblings already exist -- so there is no stub
+type signature for test 3 to be exempted against, and test 3 asserts pre-existing `FieldOption`
+serde behavior, not a stub's shape. The table's own Formula-treatment cell for test 3 ("excluded
+from `EXEMPT_TESTS` denominator subtraction") directly contradicted the surrounding tally's
+`EXEMPT_TESTS = 1`, since nothing in this story is stub-shaped for `WIRING-EXEMPT` to apply to.
+
+**Fix:** test 3 is reclassified as non-exempt GREEN with `rationale_category:
+PRE-EXISTING-BEHAVIOR` -- consistent with test 4's own classification (both assert pre-existing,
+unchanged behavior as a regression guard against this story's fallback fix) and with STORY-C's
+rule for this same taxonomy. Test 3 therefore stays in the denominator, exactly like test 4.
+
+**Recomputed tally:** `TOTAL_NEW_TESTS = 7` (unchanged). `EXEMPT_TESTS = 0` (was `1` -- test 3 is
+no longer exempt). Denominator = `7 - 0 = 7` (was `6`). `RED_TESTS = 5` (1a, 1b, 1c, 2, 5;
+unchanged). `RED_RATIO = 5 / 7 ~= 0.71 >= 0.5` -- integer-precise check `RED_TESTS * 2 >=
+(TOTAL_NEW_TESTS - EXEMPT_TESTS)` -> `10 >= 7` TRUE. **The Red Gate Density Check still PASSES
+honestly on this corrected tally.** The conclusion is unchanged from pass-4 (neither Option A nor
+Option B is invoked), reached on a corrected denominator.
+
+**Propagation:** the pass-4 Revision Note's table (test 3's row), "Explicit tally" paragraph, and
+Task 6 below have all been corrected in place to this recomputed tally, with a superseded marker
+inserted at the top of the pass-4 section recording the original (now-superseded) claim
+(`EXEMPT_TESTS = 1`, `RED_RATIO = 5/6 ~= 0.833`) for audit purposes. AC-001/AC-002's Test lines are
+unaffected by this reclassification (they name test functions, not `EXEMPT_TESTS` accounting).
+
+**Mechanical pin sweep (VP-580-013(1)-(5) and BC-X.14.001 EC-8..15 / BC-X.14.003 / BC-X.14.004
+empty-field-row text against `.factory/specs/prd/cross-cutting.md`):** every pinned example,
+fixture, and expected value from those sources was enumerated and checked against this story's AC
+Test lines and enumerated test functions. Two gaps were found and fixed:
+
+- **Gap 1 (AC-002 / Task 1c):** VP-580-013(1)'s two EC-X.14.001-12 fixtures --
+  `{"value": "", "name": "N"}` -> `Some("")` (value wins) and `{"value": null, "name": "N"}` ->
+  `Some("N")` (falls through to `name`) -- were paraphrased in AC-002's body (`Some(String::new())`
+  instead of the literal fixture) and not named at all in its Test line, and the VP's explicit
+  methodological requirement ("built by deserializing JSON fixtures into `AllowedValue`, not by
+  constructing the struct directly, so the explicit-null case exercises the real deserializer") was
+  missing entirely. Fixed: AC-002's Test line now carries both fixtures verbatim plus the
+  deserialization requirement; Task 1c is updated to match.
+- **Gap 2 (AC-003):** VP-580-013(5)'s fixture and expected results were already verbatim in
+  AC-003's Test line, but the mechanism detail "`filter_one`, matching `label` or `id`
+  case-insensitively" was dropped, even though the fixture's own `Some("high")` -> `Highest`+`High`
+  match depends on that case-insensitivity. Fixed: appended to AC-003's Test line.
+
+All other pins were already carried verbatim and owned by an enumerated test function; see the
+checklist below.
+
+> **SUPERSEDED (D-386 bind-by-reference restructure, see the Revision Note below):** this
+> self-attested "Pin -> AC -> Test checklist" table is superseded by the CLAUSE-level map in the
+> "Revision Note (D-386 bind-by-reference restructure)" section following the Narrative below.
+> Retained here only as an audit record of the pass-6 gap-fix described above; it is NOT the
+> source of truth for AC/test coverage going forward, and AC-001 through AC-005's `**Test:**`
+> lines no longer restate the fixture/value content this table paraphrases -- they bind to
+> VP-580-013's sub-clauses in `cross-cutting.md` by reference instead.
+
+**Pin -> AC -> Test checklist (historical, pass-6; superseded per D-386 above):**
+
+| Pin (source) | AC | Owning test fn | Status |
+|---|---|---|---|
+| VP-580-013(1) top-level matrix: value-only/name-only/both/neither (EC-X.14.001-8..11) | AC-001 | 1a | verbatim, no gap |
+| VP-580-013(1) cascading-child-level matrix: same 4 combos at depth >= 1 (EC-X.14.001-11) | AC-001 | 1b | verbatim, no gap |
+| VP-580-013(1) EC-X.14.001-12: `{"value":"","name":"N"}` -> `Some("")`; `{"value":null,"name":"N"}` -> `Some("N")`; built via JSON deserialization, not direct struct construction | AC-002 | 1c | **gap fixed** (literal fixtures + deserialization note added) |
+| VP-580-013(2): recursive `proptest!`, `label == value.or(name)`, `id` unchanged, tree shape unchanged, depth <= 3, `MAX_FIELD_OPTION_DEPTH` cap | AC-001 | 2 | verbatim, no gap |
+| VP-580-013(3): serialized key set exactly `{"id","label","children"}`, `label` a JSON string or `null` | AC-001 | 3 | verbatim, no gap (pass-3 fix) |
+| VP-580-013(4) / M3 fixture: `{"value":"10","name":"N"}` -> `{id:Some("10"),label:None,children:[]}`; `{"value":"11","label":"L","name":"N"}` -> `{id:Some("11"),label:Some("L"),children:[]}`; `{"value":"12","label":"Twelve"}` -> `{id:Some("12"),label:Some("Twelve"),children:[]}` | AC-004 | 4 | verbatim, no gap |
+| VP-580-013(5) / EC-X.14.001-13 fixture: `[{"id":"1","name":"Highest"},{"id":"2","name":"High"},{"id":"3","name":"Low"}]`; `filter_options(Some("high"))` -> `Highest`+`High`; `filter_options(Some("3"))` -> `Low`; matched case-insensitively via `filter_one` | AC-003 | 5 | **gap fixed** (case-insensitivity mechanism note added) |
+| BC-X.14.004 empty-`<field>` row / EC-X.14.001-15: exit 64 `Field '' not found. The field name must not be empty.`, zero HTTP/cache | AC-009 | existing `test_bc_x_14_001_empty_field_name_exits_64_zero_http` | verbatim, regression-only, no new test needed |
+| EC-X.14.001-14 (informational, field-NAME resolution unaffected) | AC-008 | existing `search_field_list` unit tests | verbatim, informational, no new test needed |
+| BC-X.14.003 rendering contract unchanged (`"(unnamed)"` table / `null` JSON) | AC-005 | existing BC-X.14.003 rendering tests | verbatim, regression-only, no new test needed |
+
+## Revision Note (D-386 bind-by-reference restructure)
+
+**Human decision D-386 ("bind by reference"):** across four adversarial passes (pass-3, pass-4,
+pass-6, and the mechanical pin sweep folded into pass-6, all above), this story's `**Test:**`
+lines repeatedly paraphrased VP-580-013's sub-clauses from `.factory/specs/prd/cross-cutting.md`,
+dropped clauses on at least two occasions (the pass-6 "Gap 1"/"Gap 2" fixes above), and the story
+carried a self-attested "Pin -> AC -> Test checklist" claiming completeness rather than deriving
+coverage mechanically by walking the VP text itself. The human decided stories must BIND to VP
+clauses BY REFERENCE instead of copying them.
+
+**Fix applied:** AC-001 through AC-005's `**Test:**` lines (below, under Acceptance Criteria) are
+rewritten so that each one (a) names the exact VP-580-013 sub-clause(s) it implements, with the
+EC cells and the `cross-cutting.md` `~line` range; (b) carries the normative binding sentence,
+verbatim: "Every fixture, cell, expected value, deserialization requirement, property and filter
+assertion in the cited clause(s) is binding and must be implemented exactly as written there;
+this story does not restate them, and nothing here narrows them."; (c) keeps ONLY story-specific
+information -- which test module each cell lives in (`src/cli/field.rs`'s `#[cfg(test)] mod
+tests`), how cells group into the 7 test functions (1a/1b/1c/2/3/4/5, the counting unit fixed at
+pass-4/pass-6), and each function's RED/GREEN classification. Paraphrased copies of pinned
+fixtures and values are removed from the Test lines. A preamble note added directly above Task 1
+in the Tasks section below applies this same binding instruction to all five test-writing tasks
+(1-5). Task 6's Red Gate density tally (7 new test functions, 0 exempt,
+`RED_TESTS = 5`, `RED_RATIO = 5/7 ~= 0.71 >= 0.5`) and every function's RED/GREEN classification
+are UNCHANGED by this restructure -- re-checked below and still hold; this is a citation/binding
+discipline fix, not a scope, test-count, or classification change.
+
+### VP-580-013 Clause Map (cross-cutting.md ~L3093-3134)
+
+Built by walking VP-580-013's five numbered sub-clauses in `cross-cutting.md` in order, so each
+appears exactly once:
+
+| VP-580-013 clause | cross-cutting.md ~lines | EC cells embedded in this clause | Owning AC(s) | Owning test fn(s) |
+|---|---|---|---|---|
+| (1) example matrix -- top-level and cascading-child-level combinations, plus the two EC-X.14.001-12 fixtures, all in one clause of VP text | ~L3099-3105 | EC-X.14.001-8, -9, -10, -11 (the four-combination matrices); -12 (the two fixtures) | AC-001 (the matrices), AC-002 (the EC-12 fixtures) | 1a, 1b, 1c |
+| (2) recursive `proptest!` over a depth<=3 `AllowedValue` strategy | ~L3106-3110 | generalizes EC-X.14.001-11's recursion claim across all depths | AC-001 | 2 |
+| (3) companion serde key-set property (`{"id","label","children"}`, `label` a JSON string or `null`) | ~L3110-3113 | -- | AC-001 | 3 |
+| (4) M3 regression guard against a hand-written expected `Vec<FieldOption>` | ~L3113-3123 | -- | AC-004 | 4 |
+| (5) EC-X.14.001-13 downstream `--value`-filter example | ~L3123-3128 | EC-X.14.001-13 | AC-003 | 5 |
+
+### BC-X.14.001/003/004 Edge-Case and Cross-Reference Map
+
+| Source | ID | cross-cutting.md ~line(s) | Owning AC | Coverage mechanism |
+|---|---|---|---|---|
+| BC-X.14.001 | EC-X.14.001-8 | ~L2964-2968 | AC-001 | via VP-580-013(1), test fn 1a |
+| BC-X.14.001 | EC-X.14.001-9 | ~L2969-2972 | AC-001 | via VP-580-013(1), test fn 1a |
+| BC-X.14.001 | EC-X.14.001-10 | ~L2973-2976 | AC-001 | via VP-580-013(1), test fn 1a |
+| BC-X.14.001 | EC-X.14.001-11 | ~L2977-2981 | AC-001 | via VP-580-013(1) and (2), test fns 1b, 2 |
+| BC-X.14.001 | EC-X.14.001-12 | ~L2982-2990 | AC-002 | via VP-580-013(1), test fn 1c |
+| BC-X.14.001 | EC-X.14.001-13 | ~L2991-3003 | AC-003 | via VP-580-013(5), test fn 5 |
+| BC-X.14.001 | EC-X.14.001-14 | ~L3004-3035 | AC-008 | informational, no dedicated VP cell; regression-only via existing `search_field_list` unit tests |
+| BC-X.14.001 | EC-X.14.001-15 | ~L3036-3039 | AC-009 | informational, no dedicated VP cell; regression-only via existing `test_bc_x_14_001_empty_field_name_exits_64_zero_http` |
+| BC-X.14.003 | UPDATED rendering-contract blockquote | ~L3247-3254 | AC-005 | regression-only via existing BC-X.14.003 rendering tests |
+| BC-X.14.004 | empty-`<field>` cross-reference row | ~L3351 | AC-009 | regression-only via the same `test_bc_x_14_001_empty_field_name_exits_64_zero_http` as EC-X.14.001-15 (same underlying condition) |
+
+Ten rows; every BC-X.14.001 EC-8..15 id, BC-X.14.003, and the BC-X.14.004 empty-field row each
+appear exactly once, each owned by exactly one AC.
 
 ## Narrative
 
@@ -195,23 +341,51 @@ on `H-CYCLE14-W3-INT-003`, its body is untouched here).
 
 ### AC-001 (traces to BC-X.14.001 Behavior -- M1/M2 label-resolution fallback, EC-X.14.001-8..11)
 `src/cli/field.rs::normalize_from_allowed_values_at_depth` sets `label = v.value.clone().or_else(|| v.name.clone())` (presence-based, not emptiness-based) at every depth of the cascading-option tree, for the four combinations {value-only, name-only, both, neither} at both the top level and at least one cascading child level.
-**Test:** VP-580-013's top-level example-matrix test (Task 1a: value-only, name-only, both, neither, all four cells in ONE `#[test]` fn) (1a); VP-580-013's cascading-child-level example-matrix test (Task 1b: the same four combinations at depth >= 1, in a second, separate `#[test]` fn) (1b); VP-580-013's recursive `proptest!` over a depth-<=3 `AllowedValue` strategy asserting `label == value.clone().or(name.clone())` at every node, `id` carried through unchanged, and the emitted tree the same shape (node count, child order) as the input up to the existing `MAX_FIELD_OPTION_DEPTH` cap (2); VP-580-013's companion serde key-set property asserting every emitted node's JSON key set is exactly `{"id","label","children"}`, with `label` a JSON string or `null` (3) -- see the Revision Note's Red Gate density tally (ADV-C14-F3-P4-001) for why (1) is split into 1a/1b as two functions rather than one.
+**Test:** Implements VP-580-013 sub-clauses (1) (top-level and cascading-child-level example
+matrices; cross-cutting.md ~L3099-3105), (2) (recursive `proptest!`; ~L3106-3110), and (3)
+(serde key-set property; ~L3110-3113). Every fixture, cell, expected value, deserialization
+requirement, property and filter assertion in the cited clause(s) is binding and must be
+implemented exactly as written there; this story does not restate them, and nothing here
+narrows them. Story-specific mapping: all three clauses land in `src/cli/field.rs`'s
+`#[cfg(test)] mod tests`; clause (1)'s top-level matrix is function 1a (RED) and its
+cascading-child-level matrix is function 1b (RED) -- split per the Revision Note's Red Gate
+density tally (ADV-C14-F3-P4-001); clause (2) is function 2 (RED); clause (3) is function 3
+(GREEN, `rationale_category: PRE-EXISTING-BEHAVIOR`, non-exempt -- pass-6, ADV-C14-F3-P6-007).
 
 ### AC-002 (traces to BC-X.14.001 EC-X.14.001-12)
 A wire `"value": ""` (present-but-empty string) wins over a populated `name` -- `label: Some(String::new())`, never falling through to `name` merely because the value string is empty. A wire `"value": null` deserializes to `AllowedValue.value: None`, which DOES fall through to `name`.
-**Test:** VP-580-013's Task 1c function -- both the JSON-deserialized `"value": ""` and `"value": null` cells asserted in ONE `#[test]` fn (1c) -- see the Revision Note's Red Gate density tally (ADV-C14-F3-P4-001).
+**Test:** Implements VP-580-013 sub-clause (1)'s EC-X.14.001-12 fixtures (cross-cutting.md
+~L3099-3105, the two `{"value": ...}` cells embedded in clause (1)'s text). Every fixture, cell,
+expected value, deserialization requirement, property and filter assertion in the cited clause is
+binding and must be implemented exactly as written there; this story does not restate them, and
+nothing here narrows them. Story-specific mapping: lands in `src/cli/field.rs`'s `#[cfg(test)]
+mod tests` as function 1c, bundled with its GREEN sibling cell per the Revision Note's Red Gate
+density tally (ADV-C14-F3-P4-001, corrected pass-6 ADV-C14-F3-P6-007) -- RED.
 
 ### AC-003 (traces to BC-X.14.001 EC-X.14.001-13)
 `jr field options --value <substring>` (BC-X.14.002, its own contract unchanged) now also matches system-field option names via the fallback label, as a downstream consequence of AC-001 -- not a new filter rule.
-**Test:** VP-580-013(5), a `priority`-shaped fixture (`[{"id":"1","name":"Highest"},{"id":"2","name":"High"},{"id":"3","name":"Low"}]`, no `value`) normalized via `normalize_from_allowed_values` then run through `src/cli/field.rs::filter_options`: `filter_options(&opts, Some("high"))` returns exactly the `Highest` and `High` entries (matched through their fallback `label`s); `filter_options(&opts, Some("3"))` returns exactly the `Low` entry (matched through its `id`).
+**Test:** Implements VP-580-013 sub-clause (5) (cross-cutting.md ~L3123-3128; EC-X.14.001-13).
+Every fixture, cell, expected value, deserialization requirement, property and filter assertion
+in the cited clause is binding and must be implemented exactly as written there; this story does
+not restate them, and nothing here narrows them. Story-specific mapping: lands in
+`src/cli/field.rs`'s `#[cfg(test)] mod tests` as function 5 (`filter_one` is a private fn,
+unreachable from the external `tests/field_options.rs` integration binary) -- RED.
 
 ### AC-004 (traces to BC-X.14.001 "M3 is UNCHANGED and ALREADY CORRECT" paragraph)
 `src/cli/field.rs::normalize_from_valid_values` (M3, JSM requesttype-fields) is NOT modified by this story and does NOT acquire a `name`-fallback of its own -- it already reads `.value` for id and `.label` for display, which was already correct before this story.
-**Test:** VP-580-013(4), an M3 regression against a hand-written expected output over three fixture entries: `{"value":"10","name":"N"}` (no `label`) -> `{id: Some("10"), label: None, children: []}` (proves the fallback does not leak into M3 -- a leak would turn this `label` into `Some("N")`); `{"value":"11","label":"L","name":"N"}` -> `{id: Some("11"), label: Some("L"), children: []}`; `{"value":"12","label":"Twelve"}` -> `{id: Some("12"), label: Some("Twelve"), children: []}`.
+**Test:** Implements VP-580-013 sub-clause (4) (cross-cutting.md ~L3113-3123). Every fixture,
+cell, expected value, deserialization requirement, property and filter assertion in the cited
+clause is binding and must be implemented exactly as written there; this story does not restate
+them, and nothing here narrows them. Story-specific mapping: lands in `src/cli/field.rs`'s
+`#[cfg(test)] mod tests` as function 4 -- GREEN (`rationale_category: PRE-EXISTING-BEHAVIOR`,
+non-exempt).
 
 ### AC-005 (traces to BC-X.14.003 UPDATED blockquote, COUNT-NEUTRAL)
 The rendering contract for a `None` label (`"(unnamed)"` in table output, `null` in `--output json`) is byte-for-byte UNCHANGED by this story -- only the upstream normalizer (AC-001) now produces fewer `None` labels for system fields.
-**Test:** existing BC-X.14.003 rendering tests pass unmodified (regression guard, no new test needed).
+**Test:** Implements BC-X.14.003's UPDATED rendering-contract blockquote (cross-cutting.md
+~L3247-3254). The cited blockquote is binding; this story does not restate its wording, and
+nothing here narrows it. Story-specific mapping: regression guard only, no new test needed --
+existing BC-X.14.003 rendering tests continue proving it, unmodified.
 
 ### AC-006 (traces to prd-delta.md F4 stale-wording obligation, PASS-9/13/33, P9-002/P13-002/P33-002)
 The following stale "custom field" / "`partial_match`" wording is corrected in the SAME commit as AC-001, since after this fix the command also serves system fields, not custom fields only, and field-name resolution has never actually gone through `partial_match` (a pre-existing, unrelated spec/code drift already corrected at cycle-014 F2 in `cross-cutting.md`, not re-litigated here):
@@ -282,15 +456,22 @@ Reference: `architecture/module-decomposition.md`, `architecture/dependency-grap
 
 ## Tasks
 
+> **D-386 binding instruction for all test-writing tasks below (1-5):** The test-writer MUST read
+> the cited VP clause(s) in `cross-cutting.md` in full before writing; the VP text, not this
+> story, is the source of truth for cell contents. AC-001 through AC-005's `**Test:**` lines above
+> name the exact VP-580-013 sub-clause(s) and `cross-cutting.md` line range each task implements --
+> follow those citations to the source text rather than relying on any fixture/value summary in
+> this story.
+
 1. [ ] Write the example-matrix tests for `normalize_from_allowed_values_at_depth` (AC-001, AC-002) as THREE separate pure unit tests (not one) in `src/cli/field.rs`'s `#[cfg(test)] mod tests`, per the Revision Note's Red Gate density fix (ADV-C14-F3-P4-001) -- each function bundles its RED cell with its GREEN sibling combinations so the whole function is RED pre-fix -- `test-writer`:
    - 1a. [ ] top-level matrix: value-only, name-only, both, neither (EC-X.14.001-8..11), all four cells asserted in ONE `#[test]` fn
    - 1b. [ ] cascading-child-level matrix: the same four combinations at depth >= 1, in a SECOND, separate `#[test]` fn
-   - 1c. [ ] both EC-X.14.001-12 cells (`"value": ""` wins over `name`; `"value": null` falls through to `name`) asserted in a THIRD `#[test]` fn
+   - 1c. [ ] both EC-X.14.001-12 cells (`{"value": "", "name": "N"}` -> `Some("")`, value wins over `name`; `{"value": null, "name": "N"}` -> `Some("N")`, falls through to `name`) asserted in a THIRD `#[test]` fn, each cell built by deserializing the JSON fixture into `AllowedValue` (not by constructing the struct directly), so the null cell exercises the real deserializer
 2. [ ] Write the recursive `AllowedValue` `proptest!` strategy (depth <= 3), in `src/cli/field.rs`'s `#[cfg(test)] mod tests` (alongside its existing `proptest!` blocks) -- `test-writer`
 3. [ ] Write the serde key-set property test (`{"id","label","children"}` unchanged), in `src/cli/field.rs`'s `#[cfg(test)] mod tests` -- `test-writer`
 4. [ ] Write the M3 regression against a hand-written expected output (AC-004), in `src/cli/field.rs`'s `#[cfg(test)] mod tests` -- `test-writer`
 5. [ ] Write the `--value` filter system-field cell (AC-003), in `src/cli/field.rs`'s `#[cfg(test)] mod tests` (`filter_one` is a private fn, unreachable from the external `tests/field_options.rs` integration binary) -- `test-writer`
-6. [ ] Confirm Red Gate density per the Revision Note's tally (ADV-C14-F3-P4-001): 7 new test functions total (1a, 1b, 1c, 2-proptest, 3-key-set, 4-M3-regression, 5-`--value`-filter). RED = {1a, 1b, 1c, 2, 5} = 5 functions FAIL against current code (each contains at least one behavior-changing cell: name-only top-level, name-only cascading child, the `value: null` cell, the proptest's general case, `--value` system-field name match). GREEN = {3, 4} = 2 functions PASS unchanged before and after: test 3 (serde key-set property) is `FRAMEWORK-WIRING` -> WIRING-EXEMPT, excluded from the denominator; test 4 (M3 regression fixture) is `PRE-EXISTING-BEHAVIOR`, justified but NOT exempt, remains in the denominator as a non-RED test. `TOTAL_NEW_TESTS = 7`, `EXEMPT_TESTS = 1`, denominator `= 6`, `RED_TESTS = 5`, `RED_RATIO = 5/6 ~= 0.833 >= 0.5` -- PASSES honestly; neither Option A (stub rollback) nor Option B (`mutation_testing_required: true` + PR disclosure) is invoked. Record this exact tally in `.factory/cycles/cycle-014/S-cycle14-field-options-name-label/implementation/red-gate-log.md` per per-story-delivery.md's Red Gate Log Format, with test 3's row tagged `rationale_category: FRAMEWORK-WIRING` and test 4's row tagged `rationale_category: PRE-EXISTING-BEHAVIOR`. No stub needed: `normalize_from_allowed_values_at_depth`, `normalize_from_allowed_values`, `normalize_from_valid_values`, `filter_options`, and `filter_one` all already exist in `src/cli/field.rs` -- this story modifies existing logic in place, so no new symbol requires a `todo!()` scaffold.
+6. [ ] Confirm Red Gate density per the Revision Note's tally (ADV-C14-F3-P4-001, corrected pass-6 ADV-C14-F3-P6-007): 7 new test functions total (1a, 1b, 1c, 2-proptest, 3-key-set, 4-M3-regression, 5-`--value`-filter). RED = {1a, 1b, 1c, 2, 5} = 5 functions FAIL against current code (each contains at least one behavior-changing cell: name-only top-level, name-only cascading child, the `value: null` cell, the proptest's general case, `--value` system-field name match). GREEN = {3, 4} = 2 functions PASS unchanged before and after: test 3 (serde key-set property) and test 4 (M3 regression fixture) are BOTH `PRE-EXISTING-BEHAVIOR` -- justified but NOT exempt, both remain in the denominator as non-RED tests (test 3 was misclassified `FRAMEWORK-WIRING`/`WIRING-EXEMPT` at pass-4; corrected pass-6, ADV-C14-F3-P6-007, since this story has no stub for `WIRING-EXEMPT` to apply to). `TOTAL_NEW_TESTS = 7`, `EXEMPT_TESTS = 0`, denominator `= 7`, `RED_TESTS = 5`, `RED_RATIO = 5/7 ~= 0.71 >= 0.5` -- PASSES honestly; neither Option A (stub rollback) nor Option B (`mutation_testing_required: true` + PR disclosure) is invoked. Record this exact tally in `.factory/cycles/cycle-014/S-cycle14-field-options-name-label/implementation/red-gate-log.md` per per-story-delivery.md's Red Gate Log Format, with BOTH test 3's and test 4's rows tagged `rationale_category: PRE-EXISTING-BEHAVIOR`. No stub needed: `normalize_from_allowed_values_at_depth`, `normalize_from_allowed_values`, `normalize_from_valid_values`, `filter_options`, and `filter_one` all already exist in `src/cli/field.rs` -- this story modifies existing logic in place, so no new symbol requires a `todo!()` scaffold.
 7. [ ] Change `label: v.value.clone()` to the presence-based `value.or(name)` fallback in `normalize_from_allowed_values_at_depth` (AC-001, AC-002) -- `implementer`
 8. [ ] Confirm Green Gate: all tests pass
 9. [ ] Rename `tests/field_options.rs::test_bc_x_14_001_field_name_human_name_resolves_via_partial_match` and correct its doc comment (AC-007)

@@ -12,7 +12,7 @@ inputs:
   - ".factory/cycles/cycle-014/phase-f3-stories/S-cycle14-field-options-name-label.md"
   - ".factory/cycles/cycle-014/phase-f3-stories/wave-schedule.md"
 traces_to: "BC-X.7.002; BC-X.16.001/002; BC-X.14.001/003; VP-USER-LIST-PROJECT-001; VP-API-QP-001..006; VP-580-013"
-input-hash: "3dd1c1e"
+input-hash: "0b49394"
 ---
 
 # Wave Holdout Scenarios -- `issue-triage-quickfixes` (cycle-014)
@@ -33,14 +33,41 @@ shared `Config::project_key` resolution pattern for W3-INT-003).
 
 ### H-CYCLE14-W1-INT-001 -- `--project` resolution composes correctly with `--profile` and `--all`
 
-**Setup:** A profile `alt` configured with its own default `project = "ALT"`, no `.jr.toml` in
-cwd or any ancestor, and no local/global `--project` flag. Run `jr --profile alt user list --all`.
+**Setup:** Hermetic per verification-delta.md §2 (`JR_CONFIG_DIR`/`JR_CACHE_DIR` pointed at a
+fresh `TempDir`; `JR_BASE_URL` pointed at the wiremock server; `JR_AUTH_HEADER` supplies auth;
+ambient `JR_*` cleared except those four seams) -- clean cwd with no `.jr.toml` in it or any
+ancestor. Two profiles configured (in the `JR_CONFIG_DIR`-rooted config file, mirroring
+VP-USER-LIST-PROJECT-001(c)'s EC-X.7.002-5 setup, `.factory/specs/prd/cross-cutting.md`
+~L881-884): `default` with its own default `project = "DEF"`, and `alt` with its own default
+`project = "ALT"`. No local/global `--project` flag. Run `jr --profile alt user list --all`
+against `GET /rest/api/3/user/assignable/multiProjectSearch`
+(`search_assignable_users_by_project_all`, `src/api/jira/users.rs` ~L202-227; page size fixed at
+`USER_PAGE_SIZE = 100`), matched on the query params below:
+1. `startAt=0&maxResults=100&projectKeys=ALT` (plus `query=`, empty, since `handle_list` passes
+   `""`) -- `.expect(1)` -- returns one user, a SHORT but non-empty page: `[{"accountId": "acc-1",
+   "displayName": "Alice"}]` (`accountId`/`displayName` are `User`'s only non-`Option` members,
+   `src/types/jira/user.rs`). Per JRACLOUD-71293 (CLAUDE.md Gotchas), a short non-empty page is NOT
+   end-of-data, so a second page must still be requested.
+2. `startAt=100&maxResults=100&projectKeys=ALT` -- `.expect(1)` -- returns an empty array `[]`,
+   the only reliable end-of-data signal, terminating the loop at iteration 2 (well inside the
+   15-iteration `USER_PAGINATION_SAFETY_CAP`).
+3. A counter-mock on the same path matching `projectKeys=DEF` (the `default` profile's own
+   configured project) -- `.expect(0)` -- proving no request is ever sent for the `default`
+   profile's project. A second, catch-all counter-mock matching any OTHER `projectKeys` value (or
+   the param omitted entirely) -- `.expect(0)` -- covers an unresolved-project fallback.
 
-**Expectation:** Every page of the resulting `--all` pagination carries `projectKeys=ALT` (not
-the `"default"` profile's own configured project, if any) -- proving `resolve_user_list_project`'s
-configured-default fallback (Postcondition 3) and the `--all` pagination path (Postcondition 5)
-compose correctly, and that `handle`/`handle_list` genuinely use the passed `&Config` rather than
-reloading it (which would silently resolve `"default"` instead of `alt`).
+**Expectation:** Every page of the resulting `--all` pagination carries `projectKeys=ALT` (never
+`projectKeys=DEF`, the `default` profile's own configured project) -- proving
+`resolve_user_list_project`'s configured-default fallback (Postcondition 3) and the `--all`
+pagination path (Postcondition 5) compose correctly, and that `handle`/`handle_list` genuinely use
+the passed `&Config` rather than reloading it. Note this is NOT a "silent fallback to `default`"
+proof: `Config::load_with`'s strict-mode profile-existence check (`src/config.rs` ~L354-364)
+returns `JrError::UserError: unknown profile: ...` for any active-profile name absent from
+`[profiles]`, so with only `alt` configured a reload bug would fail loudly, not silently resolve
+`"default"`. Configuring a real `default` profile (with its own distinct project `DEF`) alongside
+`alt`, as above, is what makes this scenario a genuine proof of `&Config` reuse: a reload bug
+would now silently succeed against `default`'s `DEF` project instead of erroring out, and the
+`projectKeys=DEF` counter-mock's `.expect(0)` is what catches that.
 
 **MUST-PASS.**
 
@@ -62,11 +89,19 @@ field and are structurally untouched.
 ### H-CYCLE14-W1-REG-002 -- `jr user list`'s non-`--project` flags (`--limit`, `--all`) are unaffected
 
 **Setup:** Run the existing `--limit`/`--all` local-cap and pagination tests for `jr user list`
-against the post-cycle-014 binary, with a valid `--project` resolvable by any of the three paths.
+against the post-cycle-014 binary. These existing tests
+(`tests/user_pagination.rs::user_list_all_cli_paginates`,
+`tests/user_pagination.rs::user_list_all_cli_emits_safety_cap_warning`,
+`tests/all_flag_behavior.rs::user_list_default_caps_at_thirty`) all pass `--project` explicitly on
+the command line -- none of them resolves the project via `.jr.toml` or the configured-profile
+default. The configured-default `--all` path is a NEW cell, not a pre-existing one: it is covered
+by STORY-A's new AC-007 (`S-cycle14-user-list-project-resolution.md`), whose Task 5 adds a second
+`--all` pagination test in `tests/user_pagination.rs` specifically for the configured-default
+variant (RED-at-stub).
 
 **Expectation:** `--limit` capping and `--all` pagination behavior (result count, page-advance
-logic per BC-X.2.005) are unchanged -- only the project-resolution step upstream of the HTTP call
-changes.
+logic per BC-X.2.005) are unchanged for the explicit-`--project` invocations these existing tests
+exercise -- only the project-resolution step upstream of the HTTP call changes.
 
 **MUST-PASS. Regression-critical.**
 
@@ -76,8 +111,13 @@ changes.
 
 ### H-CYCLE14-W2-INT-001 -- `-q` composes correctly with `-H`/`--header` and `-d`/`--data`
 
-**Setup:** `jr api /rest/api/3/search -X POST -d '{"jql":"project=FOO"}' -H "X-Custom: 1" -q
-maxResults=50 -q fields=summary,status`.
+**Setup:** Hermetic per verification-delta.md §2 (`JR_CONFIG_DIR`/`JR_CACHE_DIR` pointed at a
+fresh `TempDir`, ambient `JR_*` cleared except the seams) -- clean cwd with no `.jr.toml` in it or
+any ancestor. Run `jr api /rest/api/3/search -X POST -d '{"jql":"project=FOO"}' -H "X-Custom: 1"
+-q maxResults=50 -q fields=summary,status` against a `jr api` passthrough mock on `POST
+/rest/api/3/search` returning any 200 JSON body (e.g. `{}`) -- `jr api` writes the raw response
+bytes straight through and this scenario asserts only the OUTGOING request, so the response body
+carries no structural requirement.
 
 **Expectation:** The received request has: the POST method; body exactly `{"jql":"project=FOO"}`
 (unaffected by `-q`); the `X-Custom: 1` header (unaffected by `-q`); and a query string of exactly
@@ -90,9 +130,17 @@ existing body/header assembly it now runs ahead of.
 
 ### H-CYCLE14-W2-INT-002 -- After Wave 2, the global `--project` flag stays correctly scoped: it does not leak into `jr api`, and Story A's `user list` still resolves it
 
-**Setup:** After Wave 2 (Story C) lands on top of Wave 1 (Story A), against a profile with no
+**Setup:** Hermetic per verification-delta.md §2 (`JR_CONFIG_DIR`/`JR_CACHE_DIR` pointed at a
+fresh `TempDir`, ambient `JR_*` cleared except the seams) -- clean cwd with no `.jr.toml` in it or
+any ancestor. After Wave 2 (Story C) lands on top of Wave 1 (Story A), against a profile with no
 configured default project, run two read-only commands: (1) `jr --project FOO api
-/rest/api/3/myself -q x=1`, against a mocked read-only endpoint; (2) `jr --project FOO user list`.
+/rest/api/3/myself -q x=1`, against a `jr api` passthrough mock on `GET /rest/api/3/myself`
+returning any 200 JSON body (e.g. `{}`); (2) `jr --project FOO user list`, against a mock on `GET
+/rest/api/3/user/assignable/multiProjectSearch` matched on query params `query=` (empty) and
+`projectKeys=FOO` -- `user list` with no `--all` calls `search_assignable_users_by_project`
+(`src/api/jira/users.rs` ~L144-165), the single-page variant, which sends no `startAt`/`maxResults`
+params at all -- returning `[{"accountId": "acc-2", "displayName": "Bob"}]` (`accountId`/
+`displayName` are `User`'s only non-`Option` members, `src/types/jira/user.rs`).
 
 **Expectation:** For (1), the received request's query string is exactly `x=1` and the command
 exits 0 -- the global `--project FOO` value is NOT appended to, injected into, or otherwise
@@ -139,8 +187,11 @@ case-insensitivity) is altered by this story's additions.
 
 ### H-CYCLE14-W2-REG-002 -- `jr api` with `-q` plus `--output json`: success-path output unchanged
 
-**Setup:** `jr api /rest/api/3/myself -q expand=groups --output json`, against a mock returning a
-normal 200 JSON body.
+**Setup:** Hermetic per verification-delta.md §2 (`JR_CONFIG_DIR`/`JR_CACHE_DIR` pointed at a
+fresh `TempDir`, ambient `JR_*` cleared except the seams) -- clean cwd with no `.jr.toml` in it or
+any ancestor. Run `jr api /rest/api/3/myself -q expand=groups --output json` against a `jr api`
+passthrough mock on `GET /rest/api/3/myself` returning a normal 200 JSON body (e.g. `{"accountId":
+"acc-1"}` -- any JSON is acceptable, since this is a `jr api` passthrough mock).
 
 **Expectation:** `jr api` writes the raw response bytes straight to stdout via `std::io::stdout()
 .write_all(&body_bytes)` (`src/cli/api.rs` ~L162) on every success-path response -- it never routes
@@ -168,16 +219,31 @@ cold. Run `jr field options Priority --type Task --project FOO --value high --ou
 three mocks, in call order:
 1. `GET /rest/api/3/field` (`resolve_field_id`'s cache-miss fallback to `list_fields()`,
    `src/cli/field.rs` ~L136) -- `Priority` is not a `customfield_NNNNN` literal, so this call fires
-   unconditionally on the cold cache; the mock's array must contain an entry shaped `{"id":
-   "priority", "name": "Priority"}` (`id`/`name` are `Field`'s only non-`Option` members per
-   `src/api/jira/fields.rs::Field` -- `custom`/`schema` may be omitted).
+   unconditionally on the cold cache. Concrete mock body (a bare array -- `list_fields()`
+   deserializes `Vec<Field>` directly, no envelope): `[{"id": "priority", "name": "Priority"}]`.
+   `id`/`name` are `Field`'s only non-`Option` members (`src/api/jira/fields.rs::Field` ~L7-12 --
+   `custom`/`schema` are both `Option`, omitted here).
 2. `GET /rest/api/3/issue/createmeta/FOO/issuetypes` (`get_issue_types_for_project`,
    `src/api/jira/issues.rs` ~L1072) -- the mock's `issueTypes` array must contain an entry named
    `Task` (case-insensitive match) with its own `id`, which the next call's URL then uses.
-3. `GET /rest/api/3/issue/createmeta/FOO/issuetypes/<Task-issue-type-id>` (`get_createmeta_fields`,
+   Concrete mock body: `{"issueTypes": [{"id": "10001", "name": "Task"}]}`. `IssueTypeEntry`
+   requires `id` and `name` (`src/api/jira/issues.rs` ~L1273-1277, both non-`Option`);
+   `CreatemetaIssueTypesResponse.total` is `#[serde(default)]` (`src/api/jira/issues.rs`
+   ~L1288-1296), so it is safely omitted. `10001` is the `<Task-issue-type-id>` the next mock's
+   URL uses.
+3. `GET /rest/api/3/issue/createmeta/FOO/issuetypes/10001` (`get_createmeta_fields`,
    `src/api/jira/issues.rs` ~L1156) -- returning a `fields` array containing the `priority` field
-   (`fieldId: "priority"`) whose `allowedValues` entries carry `name` (e.g. `"High"`, `"Highest"`)
-   but no `value`, per the original scenario.
+   whose `allowedValues` entries carry `name` (e.g. `"High"`, `"Highest"`) but no `value`, per the
+   original scenario. Concrete mock body: `{"fields": [{"fieldId": "priority", "name": "Priority",
+   "schema": {"type": "priority"}, "allowedValues": [{"name": "High"}, {"name": "Highest"}]}]}`.
+   `CreateMetaField` requires `fieldId`, `name`, and `schema` (`src/api/jira/issues.rs`
+   ~L1234-1245); `schema` is `EditMetaFieldSchema`, whose only non-`Option` member is `type`
+   (`src/types/jira/editmeta.rs` ~L54-62 -- `system`/`custom` are both `Option`, omitted here).
+   `allowedValues` entries have no required fields at all (`AllowedValue`, `src/types/jira/
+   editmeta.rs` ~L79-96 -- `id`/`value`/`name` are all `Option`, `children` defaults to `[]`).
+   `CreateMetaFieldsResponse.total` is likewise `#[serde(default)]` (`src/api/jira/issues.rs`
+   ~L1257-1263) and safely omitted; the top-level key is `fields` (`results` is also accepted via
+   `#[serde(alias = "results")]`, but this literal uses the primary key).
 
 No fourth mock is needed for project resolution itself: `--project FOO` is passed explicitly, so
 `resolve_m2_project` returns it directly without calling `Config::project_key` and issues zero HTTP.
@@ -199,31 +265,48 @@ the `get_or_fetch_project_meta` project-meta cache both start cold. Run `jr fiel
 --request-type "Get IT Help" --project FOO --output json` against five mocks, in call order:
 1. `GET /rest/api/3/field` (`resolve_field_id`'s cache-miss fallback to `list_fields()`,
    `src/cli/field.rs` ~L136) -- `Urgency` is not a `customfield_NNNNN` literal, so this call fires
-   unconditionally on the cold cache; the mock's array must contain an entry whose `id` matches the
-   `fieldId` used in mock 5's `validValues`-bearing field descriptor (e.g. `{"id":
-   "customfield_10050", "name": "Urgency"}`).
+   unconditionally on the cold cache. Concrete mock body (bare array, `list_fields()`
+   deserializes `Vec<Field>` directly): `[{"id": "customfield_10050", "name": "Urgency"}]` --
+   `id`/`name` are `Field`'s only non-`Option` members (`src/api/jira/fields.rs::Field` ~L7-12);
+   `id` matches the `fieldId` used in mock 5's `validValues`-bearing field descriptor below.
 2. `GET /rest/api/3/project/FOO` (`get_or_fetch_project_meta`'s cache-miss fetch, called from
-   `servicedesks::require_service_desk`, `src/api/jsm/servicedesks.rs` ~L41-52) -- returning
-   `{"projectTypeKey": "service_desk", "id": "<project-id>", ...}`; a `projectTypeKey` other than
-   `"service_desk"` short-circuits `require_service_desk` with an exit-64 UserError before any
-   further mock is consulted, so this value is load-bearing.
+   `servicedesks::require_service_desk`, `src/api/jsm/servicedesks.rs` ~L41-52) -- this call
+   deserializes to a raw `serde_json::Value`, not a typed struct, so no field is structurally
+   required by serde; a `projectTypeKey` other than `"service_desk"` short-circuits
+   `require_service_desk` with an exit-64 UserError before any further mock is consulted, so its
+   VALUE is load-bearing even though its PRESENCE isn't type-enforced. Concrete mock body:
+   `{"projectTypeKey": "service_desk", "id": "1000"}`.
 3. `GET /rest/servicedeskapi/servicedesk` (`list_service_desks`, called because step 2's
-   `project_type == "service_desk"`, `src/api/jsm/servicedesks.rs` ~L12-32) -- returning a service
-   desk entry `{"id": "<sd-id>", "projectId": "<project-id>", "projectName": "FOO"}` whose
-   `projectId` matches mock 2's `id`, so `get_or_fetch_project_meta` resolves `service_desk_id ==
-   "<sd-id>"`.
-4. `GET /rest/servicedeskapi/servicedesk/<sd-id>/requesttype` (`resolve_request_type_id` ->
+   `project_type == "service_desk"`, `src/api/jsm/servicedesks.rs` ~L12-32) -- deserializes to
+   `ServiceDeskPage<ServiceDesk>` (`src/api/pagination.rs::ServiceDeskPage` ~L88-98), which
+   requires `size`, `start`, `limit`, and `isLastPage` (`values` defaults to `[]`); `ServiceDesk`
+   (`src/types/jsm/servicedesk.rs` ~L4-9) requires `id`, `projectId`, `projectName` -- all
+   non-`Option`. Concrete mock body: `{"size": 1, "start": 0, "limit": 50, "isLastPage": true,
+   "values": [{"id": "2000", "projectId": "1000", "projectName": "FOO"}]}`. `projectId` (`1000`)
+   matches mock 2's `id`, so `get_or_fetch_project_meta` resolves `service_desk_id == "2000"`.
+4. `GET /rest/servicedeskapi/servicedesk/2000/requesttype` (`resolve_request_type_id` ->
    `list_request_types`, `src/cli/field.rs` ~L540; fires because `"Get IT Help"` is not
-   all-ASCII-digit and so is not treated as a numeric request-type id) -- returning a request type
-   entry `{"id": "<rt-id>", "name": "Get IT Help"}` that `partial_match::partial_match` resolves
-   exactly.
-5. `GET /rest/servicedeskapi/servicedesk/<sd-id>/requesttype/<rt-id>/field`
-   (`get_request_type_fields`) -- the JSM requesttype-fields response whose `requestTypeFields`
-   array contains the `Urgency` field descriptor (`fieldId` matching mock 1's `id`) with a
-   `validValues` array carrying exactly two entries: `{"id": "1", "value": "high", "label": "High",
-   "name": "High Priority"}` (a `label`-bearing entry that ALSO happens to carry a `name`, and an
-   `id` distinct from its `value`) and `{"id": "2", "value": "medium", "name": "Medium Priority"}`
-   (a `{value, name}`-only entry with NO `label` key at all).
+   all-ASCII-digit and so is not treated as a numeric request-type id) -- also a
+   `ServiceDeskPage<T>` envelope, this time of `RequestType` (`src/types/jsm/request_type.rs`
+   ~L22-29), which requires `id` and `name` (`description`/`helpText`/`issueTypeId` are `Option`,
+   `groupIds` defaults to `[]`). Concrete mock body: `{"size": 1, "start": 0, "limit": 50,
+   "isLastPage": true, "values": [{"id": "3000", "name": "Get IT Help"}]}` -- `"Get IT Help"` is
+   what `partial_match::partial_match` resolves exactly.
+5. `GET /rest/servicedeskapi/servicedesk/2000/requesttype/3000/field`
+   (`get_request_type_fields`) -- deserializes to `RequestTypeFieldsResponse`
+   (`src/types/jsm/request_type.rs` ~L59-63), which requires `canRaiseOnBehalfOf` and
+   `canAddRequestParticipants` (both plain `bool`, no default) plus `requestTypeFields` (a `Vec`
+   with no `#[serde(default)]`, so the key itself is required); each `RequestTypeField`
+   (`src/types/jsm/request_type.rs` ~L35-54) requires `fieldId`, `name`, `required` (bool), and
+   `jiraSchema` (`visible` defaults to `false`; `description`/`defaultValues`/`validValues`/
+   `autoCompleteUrl` are all `Option`). Concrete mock body: `{"canRaiseOnBehalfOf": false,
+   "canAddRequestParticipants": false, "requestTypeFields": [{"fieldId": "customfield_10050",
+   "name": "Urgency", "required": false, "jiraSchema": {"type": "option"}, "validValues":
+   [{"id": "1", "value": "high", "label": "High", "name": "High Priority"}, {"id": "2", "value":
+   "medium", "name": "Medium Priority"}]}]}` -- the `validValues` array carries exactly two
+   entries: the first (a `label`-bearing entry that ALSO happens to carry a `name`, and an `id`
+   distinct from its `value`) and the second (a `{value, name}`-only entry with NO `label` key at
+   all).
 
 **Expectation:** The JSON output is exactly:
 ```json
@@ -256,17 +339,24 @@ own default `project = "ALT"`, no `.jr.toml` in cwd or any ancestor, and no loca
 --output json` against three mocks, in call order:
 1. `GET /rest/api/3/field` (`resolve_field_id`'s cache-miss fallback to `list_fields()`,
    `src/cli/field.rs` ~L136) -- `Priority` is not a `customfield_NNNNN` literal, so this call fires
-   unconditionally on the cold cache; the mock's array must contain an entry shaped `{"id":
-   "priority", "name": "Priority"}`.
+   unconditionally on the cold cache. Concrete mock body (bare array): `[{"id": "priority", "name":
+   "Priority"}]` -- `id`/`name` are `Field`'s only non-`Option` members (`src/api/jira/
+   fields.rs::Field` ~L7-12).
 2. `GET /rest/api/3/issue/createmeta/ALT/issuetypes` (`get_issue_types_for_project`,
    `src/api/jira/issues.rs` ~L1072) -- the mock's `issueTypes` array must contain an entry named
-   `Task` (case-insensitive match) with its own id (`<Task-issue-type-id>`), which the next call's
-   URL then uses.
-3. `GET /rest/api/3/issue/createmeta/ALT/issuetypes/<Task-issue-type-id>` (`get_createmeta_fields`,
+   `Task` (case-insensitive match) with its own id, which the next call's URL then uses. Concrete
+   mock body: `{"issueTypes": [{"id": "10002", "name": "Task"}]}` -- `IssueTypeEntry` requires
+   `id` and `name` (`src/api/jira/issues.rs` ~L1273-1277); `10002` is the `<Task-issue-type-id>`
+   the next mock's URL uses.
+3. `GET /rest/api/3/issue/createmeta/ALT/issuetypes/10002` (`get_createmeta_fields`,
    `src/api/jira/issues.rs` ~L1156) -- the resolution-target createmeta response, whose `priority`
-   field's `allowedValues` entries carry `name` only -- e.g. `[{"id": "1", "name": "Highest"},
-   {"id": "2", "name": "High"}]`, no `value` key at all (the real-world `priority` shape,
-   EC-X.14.001-8, that Story B's fix targets).
+   field's `allowedValues` entries carry `name` only, no `value` key at all (the real-world
+   `priority` shape, EC-X.14.001-8, that Story B's fix targets). Concrete mock body: `{"fields":
+   [{"fieldId": "priority", "name": "Priority", "schema": {"type": "priority"}, "allowedValues":
+   [{"id": "1", "name": "Highest"}, {"id": "2", "name": "High"}]}]}` -- `CreateMetaField` requires
+   `fieldId`, `name`, and `schema` (`src/api/jira/issues.rs` ~L1234-1245); `schema` is
+   `EditMetaFieldSchema`, whose only non-`Option` member is `type` (`src/types/jira/editmeta.rs`
+   ~L54-62).
 
 **Expectation:** M2's `resolve_m2_project(cli_project, config)` (`src/cli/field.rs` ~L617-619,
 `pub(crate) fn resolve_m2_project(cli_project: Option<&str>, config: &Config) -> Option<String> {
@@ -275,7 +365,7 @@ Some("ALT")` -- the SAME `Config::project_key` per-profile-default fallback Stor
 `resolve_user_list_project` wraps for `user list`. This resolution is a pure config read with zero
 HTTP; the project key `ALT` it produces is what mocks 2 and 3 above (`get_issue_types_for_project`
 and `get_createmeta_fields`) are addressed to. The command therefore issues its
-`GET …/rest/api/3/issue/createmeta/ALT/issuetypes/<Task-issue-type-id>` createmeta request with
+`GET …/rest/api/3/issue/createmeta/ALT/issuetypes/10002` createmeta request with
 project key `ALT`, and the JSON output's `label` field for each entry is the real `name` string
 (`"Highest"`, `"High"`), not `null` -- proving Story B's `normalize_from_allowed_values_at_depth`
 fallback (`value.or(name)`) fires correctly on a request whose project came entirely from Story
@@ -302,15 +392,22 @@ accessor.
 
 **Setup:** Run the existing (pre-cycle-014, unmodified) `jr field options` test suite for a
 CUSTOM select field whose `allowedValues` entries carry `value` only (not `name`) -- the original
-S-580-1 use case -- plus an entry carrying BOTH `value` and `name` populated (EC-X.14.001-9).
+S-580-1 use case, covered by `tests/field_options.rs::createmeta_field_10084` (both entries carry
+`"value"` alongside an explicit `"name": null`) -- and the "neither field present" case, covered
+by `src/cli/field.rs::test_bc_x_14_001_normalizer_never_drops_degenerate_entries`'s fourth fixture
+entry (`id: None, value: None, name: None`).
 
-**Expectation:** Every existing test passes unmodified -- in both cases `label` resolves to
-`value` exactly as before: the value-only entry because that is the pre-existing base contract,
-and the both-present entry because `value` wins over `name` per the strict first-match-wins
-`.or_else` order (EC-X.14.001-9, unchanged). An entry carrying neither field (EC-X.14.001-10) is
-likewise unchanged (`label: None`). This story only changes the behavior for the `name`-only, no
-`value` case (EC-X.14.001-8 -- the real-world `priority` shape), which did not previously exist as
-a passing custom-field scenario (it degraded to `null`/`"(unnamed)"` pre-fix).
+**Expectation:** Every existing test passes unmodified -- `label` resolves to `value` for the
+value-only entries exactly as before (the pre-existing base contract), and to `None` for the
+neither-field entry (EC-X.14.001-10, unchanged). This story only changes the behavior for the
+`name`-only, no-`value` case (EC-X.14.001-8 -- the real-world `priority` shape), which did not
+previously exist as a passing custom-field scenario (it degraded to `null`/`"(unnamed)"`
+pre-fix). The `value`-and-`name`-BOTH-populated case (EC-X.14.001-9 -- proving `value` wins over
+`name` per the strict first-match-wins `.or_else` order) is NOT exercised by this pre-existing
+suite: no fixture in `src/cli/field.rs` or `tests/field_options.rs` ever populates `name` at all
+pre-cycle-014 -- `AllowedValue.name` was parsed but "unused in v1 resolution logic"
+(`src/types/jira/editmeta.rs` ~L83-86). EC-X.14.001-9 is owned by VP-580-013(1) / STORY-B test
+1a's value-only/name-only/both/neither matrix, not by this regression scenario.
 
 **MUST-PASS. Regression-critical.**
 
@@ -325,14 +422,21 @@ every mode-selector and field-name-resolution guard.
 
 **MUST-PASS. Regression-critical.**
 
-### H-CYCLE14-W3-REG-003 -- The renamed test (`test_bc_x_14_001_field_name_human_name_resolves_via_partial_match`) still exercises the same behavior under its new name
+### H-CYCLE14-W3-REG-003 -- The test being renamed by AC-007 still exercises the same behavior under its new name
 
-**Setup:** After the AC-007 rename, run the renamed test.
+**Setup:** `tests/field_options.rs::test_bc_x_14_001_field_name_human_name_resolves_via_partial_match`
+(currently at ~L1534, pre-cycle-014, unmodified) is the OLD name AC-007 renames FROM, not a
+preview of the new name -- AC-007 (`S-cycle14-field-options-name-label.md` ~L401-402) specifies
+only that the corrected name must reflect `search_field_list` (the actual resolution algorithm),
+not a literal target string. After the AC-007 rename lands, run the renamed test (under whichever
+new name the implementer chooses per that description).
 
 **Expectation:** The test's ASSERTIONS are unchanged (only its name and doc comment are
 corrected) -- it still proves a human-name `<field>` resolves via `search_field_list`'s
 exact-then-substring algorithm. A diff review confirms zero assertion-line changes, name/comment
-lines only.
+lines only, and that the OLD name
+(`test_bc_x_14_001_field_name_human_name_resolves_via_partial_match`) no longer appears in
+`tests/field_options.rs` after the rename.
 
 **SHOULD-PASS** (a process-discipline check on the rename's scope, not a new runtime behavioral
 proof in its own right).

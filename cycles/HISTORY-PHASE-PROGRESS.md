@@ -397,3 +397,15 @@ See `cycles/cycle-005/burst-log.md` Bursts 11-12 for full narrative detail (thes
 | Phase | Status | Completed | Gate | Notes | Finding Progression |
 |-------|--------|-----------|------|-------|---------------------|
 | **CYCLE-009-F5-CONVERGED-2026-09-22** | **CONVERGED** | 2026-09-22 | automated quality gate (3-clean-pass) | 3 fresh-context adversary passes CLEAN, trajectory `→0→0→0→0`. No new `D-NNN`. | 770 BCs / 89 VPs / 118 holdout / 191 stories; trajectory `→0→0→0→0`; no DEC minted |
+
+---
+
+> Extracted from `.factory/STATE.md`'s `## Phase Progress` table during the
+> 2026-09-28 `CYCLE-014-F3-D386-CHECKPOINT-2026-09-28` burst (v4.99 ->
+> v5.00), to keep the live table at 12 rows after adding the new
+> `CYCLE-014-F3-D386-CHECKPOINT-2026-09-28` row. This was the oldest row at
+> that point; archived here verbatim, unedited.
+
+| Phase | Status | Completed | Gate | Notes | Finding Progression |
+|-------|--------|-----------|------|-------|---------------------|
+| **CYCLE-009-F6-HARDENED-2026-09-22** | **HARDENED_WITH_RESIDUALS** | 2026-09-22 | automated hardening gate | Delta mutation 9/9 caught = 100%. One residual (RESOLVED at F7). No new `D-NNN`. | 770 BCs / 89 VPs / 118 holdout / 191 stories; trajectory `→0→0→0→0`; no DEC minted |

@@ -7,7 +7,7 @@ producer: state-manager
 timestamp: 2026-09-26T00:01:34Z
 cycle: "cycle-014-issue-triage-quickfixes"
 inputs: [STATE.md]
-input-hash: "f13fa79"
+input-hash: "4a6659d"
 traces_to: STATE.md
 ---
 
@@ -163,9 +163,34 @@ dispositioned — dispositioning happens at cycle close per S-7.02).
     TDD starts. Source: `ADV-C14-F3-P2-002`, `P4-008`, `P5-003`.
     Engine-side (vsdd-factory) follow-up.
 
+17. **(candidate) The `validate-trajectory-tail-cell-completeness` PostToolUse
+    hook repeatedly reported the STATE.md "Last Updated" cell as missing the
+    `trajectory_tail` arrow sequence even when the sequence was present** —
+    observed in the `b1379cc` burst. Suspected false positive rather than a
+    genuine omission; the cell in question did carry the `→0→0→0→0` sequence
+    at the time the hook fired. Candidate: engine-side follow-up to verify
+    the hook's cell-match logic against a "Last Updated" cell that embeds the
+    sequence inside a longer sentence (as opposed to as a standalone token).
+
+18. **Story-writing paraphrased VP clauses into AC Test lines and
+    self-attested completeness checklists, and the paraphrases repeatedly
+    dropped clauses** — recurring across F3 passes 3 through 7 (7 total
+    passes, 0/3 clean streak reached), the dominant defect class was a story
+    restating a VP sub-clause in its own words rather than citing it, and the
+    restatement silently narrowing or omitting part of the clause. Resolved
+    for cycle-014 by human decision `D-386` (2026-09-28): stories now BIND to
+    VP clauses by reference — AC Test lines cite exact VP sub-clauses plus a
+    normative "cited clause is binding, not narrowed" sentence, pin
+    checklists are replaced by clause-level maps, and the story keeps only
+    test placement, function grouping, and RED/GREEN classification in its
+    own prose. Engine-side fix: the story template/story-writer prompt should
+    require bind-by-reference (the `D-386` pattern) as standard practice, not
+    a per-cycle remediation. Source: `ADV-C14-F3-P3-003`, `P4-003`,
+    `P6-003`/`004`, `P7-001`..`004`. Engine-side (vsdd-factory) follow-up.
+
 ## Disposition
 
 Not yet dispositioned. F2 is CONVERGED per human decision `D-383` and
-AWAITING the F2 human approval gate — the S-7.02 cycle-closing checklist
-dispositions each of these 16 items when cycle-014 itself closes, not
+APPROVED at the F2 human gate (`D-384`) — the S-7.02 cycle-closing checklist
+dispositions each of these 18 items when cycle-014 itself closes, not
 before.

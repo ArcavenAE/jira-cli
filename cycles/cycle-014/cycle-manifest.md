@@ -241,3 +241,5 @@ clean-pass counter reset to 0/3, pass 6 in progress; 3 new process-gap
 candidates recorded (#14-16, now 16 total in `process-gaps.md`). See
 `STATE.md` v4.99 (`CYCLE-014-F3-ADV-REVIEW-CHECKPOINT-2026-09-28`) for full
 detail.
+
+**(progress note, 2026-09-28, state-manager checkpoint burst D-386):** F3 adversarial story review passes 6 and 7 completed, both NOT CLEAN (pass 6: 2M/6L/1C; pass 7: 7L/1C); fixes applied. Human decision `D-386` (2026-09-28): non-convergence over 7 passes (0/3 clean, recurring VP-pin carry-through defect class) resolved by switching stories to bind VP clauses by reference — AC Test lines cite exact VP sub-clauses plus a normative binding-not-narrowing sentence, pin checklists replaced by clause-level maps; all 3 F3 stories bumped to v2.0 under this pattern. `D-385`'s STANDARD 3-consecutive-clean rule continues to apply. Clean-pass counter remains 0/3; pass 8 in progress. 2 new process-gap items recorded (#17-18, now 18 total in `process-gaps.md`). See `STATE.md` v5.00 (`CYCLE-014-F3-D386-CHECKPOINT-2026-09-28`) for full detail.
