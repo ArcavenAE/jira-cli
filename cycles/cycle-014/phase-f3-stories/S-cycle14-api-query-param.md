@@ -25,7 +25,12 @@ inputs:
   - "README.md"
   - "tests/cli_handler.rs"
   - "tests/rate_limit_holdouts.rs"
-input-hash: "f4899fa"
+  - ".cargo/mutants.toml"
+  - "docs/specs/cargo-mutants-policy.md"
+  - "CHANGELOG.md"
+  - "Cargo.toml"
+  - "scripts/check-cargo-mutants-policy-citations.sh"
+input-hash: "306dd06"
 traces_to: "BC-X.16.001, BC-X.16.002"
 cycle: cycle-014-issue-triage-quickfixes
 estimated_effort: large
@@ -91,7 +96,7 @@ acceptance_criteria_count: 11
 assumption_validations: []
 risk_mitigations: []
 created: "2026-09-26"
-version: "4.4"
+version: "4.6"
 last_updated: "2026-09-28"
 breaking_change: false
 retroactive: false
@@ -126,7 +131,7 @@ restructure -- ownership is recorded solely via CC-tag citations inside each `##
 checked against the Coverage Scope section below) are both in force. Current Red Gate tally (Task
 10(e), P11-005-corrected): `TOTAL_NEW_TESTS = 44`, `RED_TESTS = 40`, non-exempt GREEN
 (`PRE-EXISTING-BEHAVIOR`) `= 3`, `EXEMPT_TESTS = 1` (`WIRING-EXEMPT` only), `RED_RATIO = 40 / 43
-~= 0.930 >= 0.5`. Story version 4.4.
+~= 0.930 >= 0.5`. Story version 4.6.
 
 ## Coverage Scope (D-387)
 
@@ -346,7 +351,11 @@ independently tested; confirmed at PR code review), -8
 `[CC:L3950-3959]`, -9 `[CC:L3960-3968]`, -12 `[CC:L3978-3988]`, and -14 `[CC:L3995-4000]` -- see
 those clauses for the separator algorithm; this AC does not restate them and does not narrow them.
 **Test (D-386 bind-by-reference):** Implements the VP-API-QP-001..004 shared preamble
-`[CC:L4003-4006]` (purity statement -- same mechanism as Invariant 1 above; `url::form_urlencoded::parse`
+`[CC:L4003-4006]` (purity statement -- same mechanism as Invariant 1 above; the middle sentence
+naming VP-API-QP-002's argv cells as targeting the clap field declaration and `handle_api`'s
+parsed-Vec hand-off to `append_query_params`, and VP-API-QP-003(e) as targeting the `--help`
+text -- informational -- cross-reference; realized by AC-002's argv cells and AC-003's `--help`
+cell; `url::form_urlencoded::parse`
 test-oracle-only note -- informational: enforced by which module each test calls it from
 (`#[cfg(test)] mod tests` vs. production code), confirmed at PR code review, no dedicated
 assertion),
@@ -396,7 +405,10 @@ prose, not independently testable claims; the actual encoded-output behavior the
 covered by the `%20` pinned example and the no-trim pinned examples below; no dedicated cell
 exists for the comparisons themselves, and none is added); it also depends on Invariant 3 `[CC:L3907-3911]` (`urlencoding::encode` is the
 intended encoder; `byte_serialize` forbidden), and owns Edge Cases EC-X.16.001-3
-`[CC:L3924-3930]`, -10 `[CC:L3969-3973]`, and -11 `[CC:L3974-3977]` -- see those clauses for the
+`[CC:L3924-3930]` (this range's closing sentence -- `url::form_urlencoded::parse` plays no role in
+production encoding, used ONLY as a test-oracle decoder -- is informational -- enforced by
+test-module placement + PR code review, same mechanism as AC-001's preamble label), -10
+`[CC:L3969-3973]`, and -11 `[CC:L3974-3977]` -- see those clauses for the
 encoding/no-trim/help-text rules; this AC does not restate them and does not narrow them.
 **Test (D-386 bind-by-reference):** Implements VP-API-QP-003(intro) `[CC:L4070-4072]`,
 VP-API-QP-003(a) `[CC:L4073-4075]` -- whose round-trip assertion requires `encode(v)` to be the
@@ -627,7 +639,8 @@ plural "clause(s)" form below applies, not the pass-8 singular-clause grammatica
 Everything the cited clause(s) specify is binding in its entirety and must be implemented exactly
 as written there; this story does not restate or narrow any of it. All 6 cells (EC-5, EC-6, EC-7,
 EC-8, EC-9, EC-10) are separate `#[tokio::test]` functions in `tests/api_query_param.rs` (one per
-EC id, per Task 9's counting rule; EC-9's three attached-empty variants count as ONE cell/test).
+EC id, per Task 9's counting rule; EC-X.16.002-9's three empty-raw-value variants (per that
+clause) count as ONE cell/test).
 RED/GREEN classification: EC-5, EC-6, EC-7, EC-9 are RED at the Task 1 stub; EC-10 is
 WIRING-EXEMPT (clap-level rejection, GREEN at stub -- Task 10(a)); EC-8 is GREEN-nonexempt
 (`rationale_category: PRE-EXISTING-BEHAVIOR`, Task 10(a2)) -- **(P11-005 correction:** EC-8
@@ -716,17 +729,17 @@ Reference: `architecture/module-decomposition.md`, `architecture/dependency-grap
 
 | Context Source | Estimated Tokens |
 |-----------------|-------------------|
-| This story spec (recomputed via Read-tool token count after the history-split -- the pass-3 through pass-12 Revision Note history moved out to `S-cycle14-api-query-param.revision-history.md`; the P11-006 figure of ~55,000, measured against the pre-split file, is now stale) | ~35,000 |
+| This story spec (recomputed via Read-tool token count after the history-split -- the pass-3 through pass-12 Revision Note history moved out to `S-cycle14-api-query-param.revision-history.md`; the P11-006 figure of ~55,000, measured against the pre-split file, is now stale) | ~40,000 (approximate; drifts with edits) |
 | Referenced code (`src/cli/api.rs` full file including `normalize_path`/`parse_header`/`resolve_body` precedent, `src/cli/mod.rs::Command::Api`, `src/main.rs`'s `Command::Api` arm) | ~2,800 |
 | Test files (existing `jr api` integration tests, grep-scoped) | ~1,500 |
 | Tool output overhead | ~1,200 |
-| **Total** | **~40,500** |
+| **Total** | **~45,500** |
 | Agent context window | 200K (Sonnet) |
-| **Budget usage** | **~20%** |
+| **Budget usage** | **~23%** |
 
 **(History-split note):** the history split (moving the pass-3 through pass-12 Revision Note
 history to a separate, non-normative file) brought this story's own budget usage down from the
-prior ~30% ceiling to ~20%, comfortably inside the 20-30% target -- the size driver identified at
+prior ~30% ceiling to ~23%, still inside the 20-30% target -- the size driver identified at
 P11-006 (this document's own accumulated audit trail, not the underlying implementation scope) is
 now largely outside the story spec the implementer reads. The implementer needs only Tasks 1-18 and
 the Acceptance Criteria (both retained in full); the Revision Note history remains available in the
@@ -875,7 +888,7 @@ wiremock-backed set, per that AC's **Test:** line)
     | Task 9 / AC-009 | VP-API-QP-005(3) EC-X.16.002-6 | RED |
     | Task 9 / AC-009 | VP-API-QP-005(3) EC-X.16.002-7 (additionally runs the EC-6 invocation and asserts byte-identical stderr) | RED |
     | Task 9 / AC-009 | VP-API-QP-005(3) EC-X.16.002-8 | GREEN-nonexempt (PRE-EXISTING-BEHAVIOR) (P11-005) |
-    | Task 9 / AC-009 | VP-API-QP-005(3) EC-X.16.002-9 (three attached-empty variants merged into ONE test) | RED |
+    | Task 9 / AC-009 | VP-API-QP-005(3) EC-X.16.002-9 (its three empty-raw-value variants, per that clause, merged into ONE test) | RED |
     | Task 9 / AC-009 | VP-API-QP-005(3) EC-X.16.002-10 | EXEMPT (WIRING-EXEMPT / FRAMEWORK-WIRING) |
     | Task 7 / AC-007 | VP-API-QP-006(i) cell 1 | RED |
     | Task 7 / AC-007 | VP-API-QP-006(i) cell 2 | RED |

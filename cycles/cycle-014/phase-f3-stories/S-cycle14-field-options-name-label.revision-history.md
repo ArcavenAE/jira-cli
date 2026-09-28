@@ -631,7 +631,7 @@ Version bumped 4.3 -> 4.4; input-hash left untouched per explicit instruction (s
 below).
 
 - P17-003 (low): four acceptance criteria (AC-006, AC-007, AC-008, AC-009) cited spec clauses with
-  `[CC:...]` tags but were missing the closing sentence every other cited AC already carries,
+  CC tags but were missing the closing sentence every other cited AC already carries,
   stating that the whole cited clause is binding and this story does not restate or narrow it.
   Added that same sentence, verbatim, to all four.
 - P17-004 (low): AC-007's test line listed four spec citations and then said "both informational"
@@ -647,7 +647,7 @@ below).
   against its own File Structure table and named tests, and found two gaps: `CHANGELOG.md` (listed
   in the File Structure table) and `tests/issue_edit_field.rs` (named below as a corroborating
   test). Added both.
-- Sentence-level sweep: read every spec line each `[CC:...]` tag in every acceptance criterion
+- Sentence-level sweep: read every spec line each CC tag in every acceptance criterion
   points at, split it into individual sentences, and checked each one lands on a named test this
   AC owns or an explicit informational label naming the mechanism that covers it instead. Found
   and labeled six real gaps, all of them sentences embedded inside an already-cited range that
@@ -685,3 +685,64 @@ below).
   `input-hash`, it was left as-is; the resulting drift (`compute-input-hash` will report a
   mismatch) is expected and is for state-manager/orchestrator to reconcile, not something this
   pass tried to paper over.
+
+## 2026-09-28 -- F3 adversarial pass-18 fixes (P18-001, P18-002, P18-005)
+
+Version bumped 4.4 -> 4.5; input-hash left untouched, since no input file changed.
+
+- P18-001 (low): AC-007's Test line credited
+  `tests/field_options.rs::test_bc_x_14_001_field_name_ambiguous_exits_64` with pinning the
+  multiple-EXACT branch of the `search_field_list` algorithm. Checked the test's own fixture
+  (`tests/field_options.rs` ~L1487-1525) against `search_field_list`'s actual matching logic
+  (`src/cli/field.rs` ~L490-521): the fixture's two field names, "SOC Client A" and "SOC Client
+  B", are each compared against the query "SOC Client" for an EXACT (whole-string,
+  case-insensitive) match first -- neither name equals the query exactly, so the exact-match
+  count is zero and both candidates fall through to the SUBSTRING check instead, where both
+  match and the ambiguity fires. The test was crediting the wrong branch. Re-attached it to the
+  multiple-substring branch it actually exercises, and gave the multiple-exact branch its own,
+  correct citation: it is pinned only by the unit test
+  `src/cli/field.rs::test_bc_x_14_001_search_field_list_exact_multiple_is_err`, confirmed present
+  in the same file.
+- P18-002 (low): the sentence-level sweep behind AC-007's CC tag spanning L2634-2652 had a gap.
+  Three lead-in sentences ahead of the search_field_list algorithm description were not
+  individually labeled: the sentence stating that `<field>` accepts a `customfield_NNNNN` literal
+  and bypasses name lookup; the sentence stating the same cache-first fields.json contract is
+  used, with shared list_fields/read_fields_cache/write_fields_cache and no new cache family; and
+  the sentence stating the resolution logic itself is mirrored, not shared, between this file and
+  `field_resolve.rs` (Invariant 3). Added inline labels for all three: the bypass sentence is
+  pinned by `tests/field_options.rs::test_bc_x_14_001_customfield_bypass_skips_list_fields`; the
+  shared-cache-contract sentence is pinned by
+  `tests/field_options.rs::test_bc_x_14_001_warm_cache_resolves_without_list_fields_call`, with
+  its "no new cache family" half enforced by PR review; and the "mirrored, not shared" sentence
+  is informational, enforced by a zero-diff PR-review check against
+  `src/cli/issue/field_resolve.rs`, the same mechanism AC-008 already uses for the identical text
+  elsewhere in the spec. Re-read every sentence of AC-007's full cited range once more afterward
+  and confirmed each one now carries exactly one label or cell.
+- P18-005 (cosmetic): AC-005's Test line described BC-X.14.003's rendering-contract blockquote as
+  naming "two named cases". Checked the blockquote itself (cross-cutting.md ~L3247-3248): it
+  actually names three renderings -- `NULL_GLYPH` (`"—"`) for a missing id in table mode,
+  `"(unnamed)"` for a missing label in table mode, and `null` in JSON mode. Corrected the wording
+  to "three named renderings (`NULL_GLYPH`/`"(unnamed)"` table, `null` JSON)".
+- Token Budget: reworked to stop the recurring drift seen across passes 10, 11, and 14 -- rounded
+  the story-spec row to the nearest 5,000 tokens, added an explicit "approximate; drifts with
+  edits" framing, and removed the Read-tool truncation claim and the per-line extrapolation's
+  precise-sounding figures (both were a form of exact-count claim this section had already been
+  corrected away from once, at P14-004, and had drifted back toward).
+
+## 2026-09-28 -- F3 adversarial pass-19 fix (P19-003)
+
+Finding fixed directly in the story body (version bumped 4.5 -> 4.6; input-hash left untouched):
+
+- P19-003 (low): AC-008 cites Invariant 3 in full, but only named an enforcement mechanism for
+  the "mirrored, not shared" part of it -- the sentence about the SAME cache file and functions
+  (`read_fields_cache`/`write_fields_cache`/`list_fields`) and the closing "same profile-scoped
+  isolation as BC-3.4.015" clause were both left without one. Added labels for both: the
+  shared-cache-file/functions sentence is enforced by the unchanged
+  `src/cli/field.rs::resolve_field_id` (`read_fields_cache` ~L451, `list_fields` ~L458,
+  `write_fields_cache` ~L460 -- verified against current code) plus PR diff review, plus
+  `tests/field_options.rs::test_bc_x_14_001_warm_cache_resolves_without_list_fields_call`
+  (verified present); the profile-scoped-isolation clause is informational and inherited, since
+  `resolve_field_id` threads its `profile: &Profile` parameter directly into both
+  `read_fields_cache`/`write_fields_cache` (verified against both fns' signatures in
+  `src/cache.rs`). Re-read every sentence of AC-008's cited ranges once more afterward; every
+  sentence now carries exactly one cell or one label.

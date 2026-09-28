@@ -29,8 +29,10 @@ inputs:
   - "README.md"
   - ".cargo/mutants.toml"
   - "docs/specs/cargo-mutants-policy.md"
+  - "scripts/check-cargo-mutants-policy-citations.sh"
+  - "Cargo.toml"
   - "CHANGELOG.md"
-input-hash: "acffa6a"
+input-hash: "972d7fd"
 traces_to: "BC-X.7.002"
 cycle: cycle-014-issue-triage-quickfixes
 estimated_effort: small
@@ -80,7 +82,7 @@ acceptance_criteria_count: 11
 assumption_validations: []
 risk_mitigations: []
 created: "2026-09-26"
-version: "4.4"
+version: "4.6"
 last_updated: "2026-09-28"
 breaking_change: true
 retroactive: false
@@ -123,7 +125,7 @@ the `[SCOPE:...]`/`[EXCLUDE:...]` lines there, are verified mechanically rather 
 hand-audited. Current Red Gate density tally (Task 7): `RED_TESTS=9`, `EXEMPT_TESTS=3`,
 `GREEN-nonexempt=2`, `TOTAL_NEW_TESTS=14`, denominator=11, `RED_RATIO=9/11≈0.82` (clears the
 BC-8.29.001 `>= 0.5` threshold; unchanged by the pass-14 cosmetic fixes recorded in
-`S-cycle14-user-list-project-resolution.revision-history.md`). Story version: 4.4.
+`S-cycle14-user-list-project-resolution.revision-history.md`). Story version: 4.6.
 
 ## Narrative
 
@@ -149,7 +151,11 @@ Clap propagation pin [CC:L844-857]: three base cells (the fourth, "both given", 
 with AC-005) plus two `-p` short-alias cells, and the "no global `-p` cell" note. Also carries
 BC-X.7.002 Fix step 2 [CC:L775]: the global-fills-local half is demonstrated by this AC's
 global-only argv cell at the parse level, alongside AC-002's wiring-level test of the same
-postcondition; the "no `jr`-level merge code" half is (informational -- enforced by
+postcondition; the local-wins half (when both local and global are given, the local value wins)
+is verified by AC-005's "both given" cell; that same value's propagation back up to the shared
+global-position arg is (informational, inherited -- clap `fill_in_global_values` mechanism, not
+observable by handle_list; enforced by clap's own behavior and ACR row 2 code review); and the
+"no `jr`-level merge code" half is (informational -- enforced by
 Architecture Compliance Rules row 2 via code review). Also carries Postcondition 2
 [CC:L802] (global fills local when absent) as a secondary citation, and Resolution order step 4 [CC:L786]
 (informational, inherited -- every hermetic test in this story inherits `main.rs`'s earlier
@@ -157,8 +163,8 @@ preemption ordering by virtue of supplying valid auth and a known profile). Fix 
 [CC:L759-774]'s design-rationale sentences (the new help text is "modeled on
 `ComponentSubcommand::List`'s wording"; why it cannot reuse that string byte-for-byte, since
 `component list`'s own help text understates its `Config::project_key` fallback) are
-(informational, inherited -- rationale for the pinned string AC-008 asserts, not independently
-tested by this AC or AC-008). This AC's header
+(informational, inherited -- rationale for the VP(d) test substrings AC-008 asserts, not
+independently tested by this AC or AC-008). This AC's header
 also cites BC-X.7.002 Postcondition 1 (line 801; local wins unconditionally) -- as plain prose,
 not a CC tag, since AC-005 already carries that citation below; the argv cell
 that demonstrates it -- the "both given" cell described below -- is physically part of this
@@ -232,10 +238,15 @@ AC's exit-64 path actually preserves and tests; the L810 sentence
 (`user_list_requires_project_flag` passes once hermetically isolated, no rename) is tested by
 this AC's own Task 6 test update described below, except its "stale comment must be updated"
 clause, which is (informational -- enforced by PR code review, not by any test assertion).
-Resolution order
-step 4 [CC:L786] (informational, inherited -- this AC's hermetic tests are what actually
-exercise the "before any HTTP call" ordering, since `main.rs`'s own preemption points run
-first and this AC's tests must clear them to reach BC-X.7.002's own exit-64 path), and
+Resolution order step 4 [CC:L786], split into its two sentences: (a) its first sentence
+("Exit 64 -- `JrError::UserError`, when none of (1)-(3) resolve a project, before any HTTP
+call.") is exactly what this AC's own EC-X.7.002-4 cell asserts -- owned by that cell and by
+`user_list_requires_project_flag`, both of which directly test the exit-64-before-any-HTTP-call
+behavior; (b) its second sentence (the `config::validate_profile_name`/`Config::load_with`/
+`JiraClient::from_config` preemption clause) is informational, inherited -- this AC's hermetic
+tests must clear those preemption points (by supplying valid auth and a known profile, per
+Preconditions above) to reach BC-X.7.002's own exit-64 path, but do not themselves test the
+preemption behavior. Also carries
 VP-USER-LIST-PROJECT-001(c)'s EC-X.7.002-4 cell [CC:L877-880]. Everything
 the cited clause(s) specify is binding in its entirety and must be implemented exactly as
 written there; this story does not restate or narrow any of it.
@@ -322,7 +333,7 @@ global-flag variant is WIRING-EXEMPT / GREEN-at-stub (resolves via clap propagat
 the configured-default variant is RED-at-stub (hits the `None` arm, Task 7(b)).
 
 ### AC-008 (traces to BC-X.7.002 Fix step 1 [CC:L759-774] (pinned help text portion), VP-USER-LIST-PROJECT-001(d) [CC:L895-901])
-`jr user list --help` exits 0 and its stdout (whitespace-collapsed) contains the pinned help string: `"Project key (overrides the configured default project). Required when no project is configured in"` and `"or the active profile"`.
+`jr user list --help` exits 0 and its stdout (whitespace-collapsed) contains the VP(d) test substrings: `"Project key (overrides the configured default project). Required when no project is configured in"` and `"or the active profile"`. These two substrings are the test's own pin, not the full pinned wording -- the exact full-string match (BC-X.7.002 Fix step 1's pinned exact string, `cross-cutting.md` ~L772-773) is enforced at PR review, not by this AC's automated test.
 **Test:** Implements VP-USER-LIST-PROJECT-001(d) in full [CC:L895-901]; this
 AC's own body above states BC-X.7.002 Fix step 1's pinned help text, not a VP-cell paraphrase,
 per the D-386 carve-out. Everything the cited clause(s) specify is binding in its entirety and
@@ -460,23 +471,22 @@ Reference: `architecture/module-decomposition.md`, `architecture/dependency-grap
 **Re-measured after the F3 revision-history split (2026-09-28):** the pre-split file required
 paging on a full Read-tool call, reporting ~43,589 tokens for the whole file. Moving the ten
 historical Revision Note sections out to
-`S-cycle14-user-list-project-resolution.revision-history.md` brought the story back under the
-Read tool's 25,000-token cap -- a full Read-tool call on the split file now returns the whole
-file in a single call with no truncation notice. Applying the pre-split file's own measured
-chars-per-token ratio to the post-split file gives ~24,000 tokens for this row. The other three
-rows are unchanged from the prior estimate. (Exact line/character counts are intentionally
+`S-cycle14-user-list-project-resolution.revision-history.md` reduced the story spec's size
+substantially. Applying the pre-split file's own measured chars-per-token ratio to the
+post-split file gives ~25,000 tokens for this row (approximate; drifts with edits). The other
+three rows are unchanged from the prior estimate. (Exact line/character counts are intentionally
 omitted here -- they drift with every edit; only the token estimates are load-bearing for the
 budget-usage row below.)
 
 | Context Source | Estimated Tokens |
 |-----------------|-------------------|
-| This story spec | ~24,000 |
+| This story spec | ~25,000 (approximate; drifts with edits) |
 | Referenced code (`src/cli/mod.rs` `UserCommand::List` region, `src/cli/user.rs` full file, `src/main.rs`'s `Command::User` arm, `src/config.rs::project_key`, `src/cli/component.rs::handle` List/Create arms as precedent, `src/cli/field.rs::resolve_m2_project` as signature precedent) | ~3,000 |
 | Test files (`tests/user_commands.rs`, `tests/all_flag_behavior.rs:~260-`, `tests/user_pagination.rs` -- grep-scoped) | ~2,000 |
 | Tool output overhead | ~1,000 |
-| **Total** | **~30,000** |
+| **Total** | **~31,000** |
 | Agent context window | 200K (Sonnet) |
-| **Budget usage** | **~15%** |
+| **Budget usage** | **~16%** |
 
 ## Tasks
 
@@ -647,8 +657,10 @@ budget-usage row below.)
 
    Denominator is nonzero (11), so this is not the Full-Exception Path, and RED_RATIO clears the
    threshold without invoking either Remediation Option A or B.
-8. [ ] Finalize `UserCommand::List.project`'s help text to the pinned AC-008 wording (the
-   `String` -> `Option<String>` type change already landed in Task 1) (AC-008) -- `implementer`
+8. [ ] Finalize the `help` text to BC-X.7.002 Fix step 1's pinned exact string
+   (cross-cutting.md ~L772-773), byte-for-byte; AC-008's two substrings are the test pin, not
+   the full wording (the `String` -> `Option<String>` type change already landed in Task 1)
+   (AC-008) -- `implementer`
 9. [ ] Replace `resolve_user_list_project`'s `todo!()` with its real body
    (`config.project_key(cli_project)`). Remove Task 1's stub-stage `Some(p)` short-circuit in
    `handle_list`: per BC-X.7.002 Fix step 4, `handle_list` now calls

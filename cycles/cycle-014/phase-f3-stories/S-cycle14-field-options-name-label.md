@@ -90,7 +90,7 @@ acceptance_criteria_count: 9
 assumption_validations: []
 risk_mitigations: []
 created: "2026-09-26"
-version: "4.4"
+version: "4.6"
 last_updated: "2026-09-28"
 breaking_change: false
 retroactive: false
@@ -139,7 +139,18 @@ without the binding sentence (AC-006/007/008/009), explicitly classified all fou
 `[CC:...]` citations instead of leaving two unclassified under a "both" label, and ran a full
 sentence-level sweep of every `[CC:...]` tag in every AC, adding terse informational labels where
 a cited sentence was not already covered by a named test this AC owns -- see the revision-history
-file for the dated entry. This is version 4.4 of the story.
+file for the dated entry. Pass-18 then fixed a test mis-attachment in AC-007 (the ambiguous-name
+regression test actually exercises the multiple-substring branch, not multiple-exact, so it was
+re-attached and the multiple-exact branch was given its own, correct citation), filled a gap in
+AC-007's coverage of the CC tag spanning L2634-2652 (three lead-in sentences -- the
+`customfield_NNNNN` bypass, the shared cache-first contract, and the "mirrored, not shared"
+relationship -- now each carry an inline label), corrected AC-005's description of BC-X.14.003's
+rendering blockquote from two named cases to the three it actually names, and reworked the Token
+Budget section to give a rounded, approximate estimate instead of exact counts. Pass-19 then
+labeled AC-008's Invariant 3 citation's two remaining unlabelled sub-clauses (the shared
+cache-file/functions sentence and the profile-scoped-isolation cross-reference) with their own
+enforcement mechanisms -- see the revision-history file for the dated entry. This is version
+4.6 of the story.
 
 ## Coverage Scope (D-387)
 
@@ -362,8 +373,8 @@ The rendering contract for a `None` label (`"(unnamed)"` in table output, `null`
 **Test:** Implements BC-X.14.003's UPDATED rendering-contract blockquote [CC:L3247-3254].
 Everything the cited blockquote specifies is binding in its entirety and must be
 implemented exactly as written there; this story does not restate or narrow any of it.
-Story-specific mapping: regression guard only, no new test needed -- the blockquote's two named
-cases (table `"(unnamed)"` / JSON `null`) are already proven, unmodified, by the existing tests
+Story-specific mapping: regression guard only, no new test needed -- the blockquote's three named
+renderings (`NULL_GLYPH`/`"(unnamed)"` table, `null` JSON) are already proven, unmodified, by the existing tests
 `src/cli/field.rs::test_bc_x_14_003_render_option_rows_degenerate_glyphs` (table) and
 `src/cli/field.rs::test_bc_x_14_003_field_option_json_serializes_none_as_null_not_omitted` (JSON),
 mirrored at the integration level by
@@ -385,12 +396,30 @@ The following stale "custom field" / "`partial_match`" wording is corrected in t
 ### AC-007 (traces to prd-delta.md F4 obligation PASS-8, P8-002)
 `tests/field_options.rs::test_bc_x_14_001_field_name_human_name_resolves_via_partial_match` is renamed to a name reflecting `search_field_list` (the actual resolution algorithm -- single exact match auto-resolves; multiple exact -> exit 64; else single substring auto-resolves; multiple substring -> exit 64), and its doc comment is corrected to match.
 **Test:** the renamed test itself, run green. Also implements BC-X.14.001's Behavior paragraph's
-`search_field_list` exact-then-substring algorithm description [CC:L2634-2652] (the
-single-exact-match branch is owned by the renamed test itself, per Task 9; the multiple-exact,
-single-substring, and multiple-substring branches are informational -- doc-only correction, no
+`search_field_list` exact-then-substring algorithm description [CC:L2634-2652]. This range opens
+with three lead-in sentences ahead of that algorithm, each now carrying its own label: the
+`customfield_NNNNN` literal bypass sentence, pinned by
+`tests/field_options.rs::test_bc_x_14_001_customfield_bypass_skips_list_fields`; the same
+cache-first `fields.json` contract sentence (shared `list_fields`/`read_fields_cache`/
+`write_fields_cache`), pinned by
+`tests/field_options.rs::test_bc_x_14_001_warm_cache_resolves_without_list_fields_call`, with its
+"no new cache family" clause enforced by PR review (no new cache-family module or file is added by
+this story's diff); and the "the resolution logic itself is mirrored, not shared (Invariant 3)"
+sentence, informational, enforced the same way AC-008 uses for this identical text -- at PR
+review, `git diff` shows zero changes to `src/cli/issue/field_resolve.rs`. For the
+exact-then-substring algorithm itself (the single-exact-match branch is owned by the renamed test
+itself, per Task 9; the multiple-exact branch is pinned only by the unit test
+`src/cli/field.rs::test_bc_x_14_001_search_field_list_exact_multiple_is_err` -- corrected here
+(P18-001) after verification against both `search_field_list` (`src/cli/field.rs` ~L490-521) and
+the test body (`tests/field_options.rs` ~L1487-1525) showed the integration-level regression cited
+below was previously mis-attached to this branch: that test's fixture (`"SOC Client A"`/`"SOC
+Client B"` against query `"SOC Client"`) has neither candidate name equal to the query exactly, so
+`exact.len() == 0` and both candidates fall through to the substring check instead; the
+single-substring and multiple-substring branches are informational -- doc-only correction, no
 behavior change -- pinned by the six `search_field_list` unit tests named below, plus, for the
-multiple-exact/ambiguous branch specifically, the integration-level regression
-`tests/field_options.rs::test_bc_x_14_001_field_name_ambiguous_exits_64` (verified present); this
+multiple-substring/ambiguous branch specifically, the integration-level regression
+`tests/field_options.rs::test_bc_x_14_001_field_name_ambiguous_exits_64` (verified present, and
+now correctly re-attached to the branch it actually exercises); this
 range's trailing "Exactly ONE of three MODE-SELECTOR flags... selects the enumeration" fragment is
 pre-existing Invariant-1 mode-selector-arity text, not part of the `search_field_list` algorithm
 description this AC traces to -- out of this AC's scope, covered instead by VP-580-006 elsewhere
@@ -433,7 +462,19 @@ empty-`<field>` exit-64 ordering recap embedded in the same range is a SEPARATE 
 six tests do not exercise -- it is enforced by code citation plus PR diff review, the same
 mechanism AC-009 uses for this identical clause: `src/cli/field.rs::resolve_field_id`'s
 `query.is_empty()` guard precedes its only cache read (verified against current code), and PR
-diff review confirms `resolve_field_id` is unchanged by this story's diff. Invariant 3's
+diff review confirms `resolve_field_id` is unchanged by this story's diff. Invariant 3's own
+opening sentence -- that the `customfield_NNNNN` bypass and `fields.json` cache-first contract use
+the SAME algorithm and the SAME cache file/functions (`read_fields_cache`/`write_fields_cache`/
+`list_fields`) -- is enforced by the unchanged `src/cli/field.rs::resolve_field_id`
+(`read_fields_cache` ~L451, `list_fields` ~L458, `write_fields_cache` ~L460; verified against
+current code) plus PR diff review, plus
+`tests/field_options.rs::test_bc_x_14_001_warm_cache_resolves_without_list_fields_call` (verified
+present). Invariant 3's closing clause -- "same profile-scoped isolation as BC-3.4.015" -- is
+informational and inherited: `resolve_field_id`'s `profile: &Profile` parameter is threaded
+directly into both `cache::read_fields_cache(profile)` and `cache::write_fields_cache(profile,
+&fresh)` (verified against both fns' signatures in `src/cache.rs`), so the profile-scoped
+isolation is a structural consequence of that call, not a distinct behavior this story tests; no
+dedicated cell exists for it, and none is added. Invariant 3's
 "mirrored, not shared" relationship to `src/cli/issue/field_resolve.rs::resolve_edit_fields` is a
 cross-file property those unit tests cannot enforce on their own (they only exercise this file's
 own cache-first/bypass behavior, not the other file's). It is enforced the same way AC-004
@@ -510,34 +551,32 @@ Reference: `architecture/module-decomposition.md`, `architecture/dependency-grap
 
 ## Token Budget Estimate
 
-**[RECOMPUTED -- history split]** supersedes the pass-11 (P11-006) "~35,500" figure for "This
-story spec". The nine Revision Note sections (pass-3 through pass-11 plus the later proactive
-sweep) have been moved to
+**[APPROXIMATE -- rounded to the nearest 5,000 tokens; drifts with edits]** supersedes the
+pass-11 (P11-006) figure for "This story spec". The nine Revision Note sections (pass-3 through
+pass-11 plus the later proactive sweep) have been moved to
 `S-cycle14-field-options-name-label.revision-history.md` -- a separate, non-normative file an
-implementing agent does not need to read to satisfy this story's own Tasks/ACs. Re-measured with
-the Read tool: this file now returns in full in a single Read call with no truncation, confirming
-its token count is under the tool's 25,000-token single-read cap (the pre-split file, by
-contrast, truncated on the same call). The point estimate below extrapolates from the pre-split
-file's own pass-11 Read-tool measurement (~35,500 tokens, ~34 tokens/line average) applied to the
-portion kept in this file (frontmatter/notes, Revision History pointer, Coverage Scope (D-387),
-Narrative, BC table, and nine ACs -- all of which an implementing agent must still read in full to
-follow the citation trail back to `cross-cutting.md`) and to the portion moved to the
-revision-history file.
+implementing agent does not need to read to satisfy this story's own Tasks/ACs. The estimate below
+is a rough budget-fit figure, not a precise count: it covers the portion kept in this file
+(frontmatter/notes, Revision History pointer, Coverage Scope (D-387), Narrative, BC table, and
+nine ACs -- all of which an implementing agent must still read in full to follow the citation
+trail back to `cross-cutting.md`). It is intentionally rounded, and will drift out of date again
+the next time this story's body is edited, as it has repeatedly across prior passes -- no claim
+here is a precise, tool-measured count.
 
 | Context Source | Estimated Tokens |
 |-----------------|-------------------|
-| This story spec (full file: Revision History pointer + Coverage Scope + Narrative + BCs + ACs + Tasks etc.; confirmed <25,000 tokens by an untruncated full Read) | ~17,000 |
+| This story spec (full file: Revision History pointer + Coverage Scope + Narrative + BCs + ACs + Tasks etc.) | ~15,000 |
 | Referenced code (`src/cli/field.rs` normalizer region + `handle`'s Step 2, `src/types/jira/editmeta.rs::AllowedValue`, `src/api/jira/issues.rs::get_createmeta_fields` doc comment) | ~2,200 |
 | Test files (`tests/field_options.rs` -- grep-scoped to the renamed test + the new VP-580-013 cells) | ~1,800 |
 | Tool output overhead | ~1,000 |
-| **Total** | **~22,000** |
+| **Total** | **~20,000** |
 | Agent context window | 200K (Sonnet) |
-| **Budget usage** | **~11%** |
+| **Budget usage** | **~10%** |
 
-~11% stays well within the 20-30% per-story ceiling (story-writer Rules), so no split is required.
-`S-cycle14-field-options-name-label.revision-history.md` (~18,500 tokens by the same per-line
-extrapolation, non-normative) is available if an implementing agent wants the adversarial-review
-history for context, but nothing in this story's own Tasks or ACs requires reading it.
+~10% stays well within the 20-30% per-story ceiling (story-writer Rules), so no split is required.
+`S-cycle14-field-options-name-label.revision-history.md` (approximate, non-normative -- also
+drifts with edits) is available if an implementing agent wants the adversarial-review history for
+context, but nothing in this story's own Tasks or ACs requires reading it.
 
 ## Tasks
 

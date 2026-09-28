@@ -709,5 +709,64 @@ Version bumped 4.3 to 4.4; input-hash left untouched.
     response, not `jr`, decides whether an empty project key is an error. Labeled both
     informational, as precedent/rationale for the pass-through choice.
   Everywhere else, the existing citations and their labels already held up under this sweep: no
-  `[CC:]` range was removed, and no acceptance criterion lost coverage of any clause it already
+  CC tag was removed, and no acceptance criterion lost coverage of any clause it already
   owned.
+
+## 2026-09-28 -- F3 adversarial pass-18 fixes (P18-003, P18-004)
+
+Two findings fixed directly in the story body (version bumped 4.4 -> 4.5; input-hash left
+untouched):
+
+- P18-003 (low): the fix step describing clap's own global-value propagation makes three
+  points -- global fills local when only global is given, local wins and that value propagates
+  back up to the shared global-position argument when both are given, and no jr-level merge code
+  is written for any of it. The first acceptance criterion's citation of that fix step only
+  covered the first and third points; the local-wins-and-propagates-back-up point was missing
+  entirely. Added it as two labeled halves: the local-wins half is verified by the fifth
+  acceptance criterion's "both given" cell (confirmed that cell still exists there), and the
+  propagation back up to the shared global-position argument is labeled informational and
+  inherited -- it is clap's own `fill_in_global_values` mechanism, not something `handle_list`
+  can observe, enforced by clap's own behavior and by architecture compliance rule row 2's code
+  review. No new test cell was added; the tally is unchanged.
+- P18-004 (low): the Token Budget section claimed a full Read-tool call on the split file
+  returns the whole file in one call with no truncation notice, and estimated the story-spec row
+  at ~24,000 tokens. Both claims were wrong -- the actual count is closer to 25,200 tokens and
+  the read does truncate. Removed the truncation claim entirely rather than restating it either
+  way, rounded the story-spec row to the nearest 5,000 (~25,000), marked it approximate and
+  noted it drifts with edits, and recomputed the total and budget-usage percentage against the
+  new figure (~31,000 total, ~16% of the agent's context window).
+
+## 2026-09-28 -- F3 adversarial pass-19 fixes (P19-001, P19-004, P19-005)
+
+Three findings fixed directly in the story body (version bumped 4.5 -> 4.6; input-hash left
+untouched):
+
+- P19-001 (low): the fourth acceptance criterion labeled its citation of Resolution order step 4
+  as informational and inherited across the board, even though that spec line is really two
+  sentences doing two different jobs. The first sentence -- the exit-64-before-any-HTTP-call rule
+  itself -- is exactly what that acceptance criterion's own edge-case test and the existing
+  `user_list_requires_project_flag` test check directly, so it isn't informational at all. Split
+  the citation in two: the first sentence is now credited to those two tests as the thing they
+  actually verify, and only the second sentence (about earlier failures in profile validation,
+  config loading, and client construction preempting this path) stays labeled informational and
+  inherited, since the acceptance criterion's tests only need to get past those earlier checks
+  rather than test them.
+- P19-004 (low): the eighth acceptance criterion's body and its task both called the two quoted
+  substrings "the pinned help string" / "the pinned AC-008 wording," which blurs the line between
+  what the automated test actually checks (two substrings) and the full exact sentence the
+  underlying contract pins. Reworded the acceptance criterion body to call them "the VP(d) test
+  substrings" and added a sentence stating that the full exact string is enforced at PR review,
+  since the automated test only pins the two substrings. Reworded the task to point at the
+  underlying contract's own pinned exact string by its source location instead of calling it "the
+  pinned AC-008 wording." Grepped the rest of the story for the same pattern: one more instance,
+  in the first acceptance criterion's discussion of the help-text rationale, referred to "the
+  pinned string AC-008 asserts" -- reworded it the same way, to "the VP(d) test substrings AC-008
+  asserts," for consistency. The remaining mentions of "pinned help wording" elsewhere in the
+  story (Task 7's density-tally discussion) refer to the real help text not yet existing in the
+  code until the finalize task runs, not to what the test checks, so those were left as they were.
+- P19-005 (low, partial): added the mutation-testing policy citation guard script and the
+  project's `Cargo.toml` to the frontmatter's list of input files. Both were already cited in the
+  story body -- the guard script is cited in the eleventh acceptance criterion, its task, and the
+  Definition of Done, and `Cargo.toml` is cited as the source of the pinned clap version in the
+  Library and Framework Requirements table -- so this only makes the frontmatter list match what
+  the story already depends on and cites by line number and pinned value.

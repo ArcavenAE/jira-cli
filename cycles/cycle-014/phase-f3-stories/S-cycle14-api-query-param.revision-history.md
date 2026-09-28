@@ -897,3 +897,40 @@ Finding fixed directly in the story body (version bumped 4.3 -> 4.4; input-hash 
   shape, or to a test elsewhere in the story that already covers the same ground. Nothing was
   removed: every line range that was already tied to an acceptance criterion still is.
 
+## 2026-09-28 -- F3 adversarial pass-18 fix (P18-006)
+
+Finding fixed directly in the story body (version bumped 4.4 -> 4.5; input-hash left untouched):
+
+- P18-006 (cosmetic): the Token Budget section's story-spec row estimated ~35,000 tokens, which
+  understated the actual count of roughly 38,000. Rounded the estimate to the nearest 5,000
+  (~40,000), marked it approximate and noted it drifts with edits, and recomputed the total and
+  budget-usage percentage against the new figure (~45,500 total, ~23% of the agent's context
+  window). No exact-count or truncation claim was present beyond the stale ~35,000 figure itself.
+
+
+## 2026-09-28 -- F3 adversarial pass-19 fixes (P19-002, P19-005, P19-006)
+
+Findings fixed directly in the story body (version bumped 4.5 -> 4.6; input-hash left untouched):
+
+- P19-002 (low): two CC tag citations each had one sentence inside their cited range that carried
+  no label. AC-001's shared-preamble CC tag left its middle sentence unlabelled -- the one naming
+  where the query-string repeated-flags argv cells and the `--help`-text cell actually live.
+  Labeled it as an informational cross-reference, pointing at AC-002's argv cells and AC-003's
+  `--help` cell. AC-003's non-ASCII edge-case CC tag left its closing sentence unlabelled -- the
+  one saying the test-oracle decoder plays no role in production encoding. Labeled it the same way
+  AC-001's own preamble sentence already is: informational, enforced by test-module placement plus
+  PR code review. Re-read every sentence in both cited ranges afterward; each now carries exactly
+  one cell or one label.
+- P19-005 (low): added the five files this story actually edits or pins -- the mutants config, the
+  mutants policy doc, the changelog, `Cargo.toml`, and the citation-check script -- to the
+  frontmatter inputs list. All five were already cited in the story body (AC-011, Task 17, the
+  Library table, and the File Structure table); this only closes the gap between what the story
+  touches and what its inputs list declares.
+- P19-006 (cosmetic): "three attached-empty variants" was vague about which edge case it referred
+  to. Reworded it, in both the AC-009 body sentence and the Task 10(d) tally-table row, to name the
+  edge case explicitly and point back at its own clause for the details.
+
+Drift note: adding the five files above to `inputs:` changes what the stored `input-hash` should
+hash to. Per this pass's explicit instruction not to touch `input-hash`, it was left as-is -- the
+resulting drift is expected, the same as the sibling story's own pass-17 note on this point, and is
+for state-manager/orchestrator to reconcile, not something this pass tried to paper over.
