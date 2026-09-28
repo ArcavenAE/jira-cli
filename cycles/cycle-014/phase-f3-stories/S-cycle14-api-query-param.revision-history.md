@@ -934,3 +934,77 @@ Drift note: adding the five files above to `inputs:` changes what the stored `in
 hash to. Per this pass's explicit instruction not to touch `input-hash`, it was left as-is -- the
 resulting drift is expected, the same as the sibling story's own pass-17 note on this point, and is
 for state-manager/orchestrator to reconcile, not something this pass tried to paper over.
+
+## 2026-09-28 -- F3 adversarial pass-20 fixes (P20-001, P20-002)
+
+Findings fixed directly in the story body (version bumped 4.6 -> 4.7; input-hash left untouched):
+
+- P20-001 (low): AC-003's citation of Behavior 3's pinned `--help` substring requirement labeled
+  the encoder rationale/comparison sentences informational, but said nothing about the separate
+  requirement, also inside Behavior 3, that the help text state that values are passed raw --
+  VP-API-QP-003(e) only pins the `do not pre-encode` substring, not the "passed raw" half.
+  Verified the underlying text (cross-cutting.md's Behavior 3, ~L3845-3850) before quoting it: it
+  requires the clap help text to state plainly that values are passed raw and must not be
+  pre-encoded, and separately pins only the `do not pre-encode` substring as what the automated
+  test asserts. Added a sentence to AC-003's citation labeling the "passed raw" half informational
+  too, enforced at PR review, and pointing at `verification-delta.md` §2's own wording (verified
+  at its ~L106: `Help text for --query-param: "pass raw values; do not pre-encode"`) as the
+  concrete target. Added the same requirement to Task 12, which previously just said "with the
+  pinned help text" with no distinction between the test's substring pin and the spec's fuller
+  requirement -- it now names both explicitly, citing the same BC-X.16.001 Behavior 3 range. Then
+  checked every other task in both stories that finalizes user-facing text or a pinned value:
+  this story's Task 12 was the only offender; STORY-A's Task 8 (help text) already points at
+  BC-X.7.002 Fix step 1's pinned exact string by source location, and its Task 10 (exit-64
+  message) implements AC-004, whose own body already states the full pinned message verbatim, not
+  a VP-cell paraphrase -- neither needed a change.
+- P20-002 (low): AC-009's citation of EC-X.16.002-8 left two of that edge case's sentences
+  unlabelled -- the one comparing to the existing `-H`/`--header` flag's own missing
+  `allow_hyphen_values` (cross-cutting.md ~L4259-4262), and the closing one explaining there is no
+  quoting workaround because the shell strips quotes before clap ever sees the argument
+  (~L4270-4272). Verified `src/cli/mod.rs`: the `header` field (`Command::Api`, lines 147-148) is
+  declared `#[arg(short = 'H', long = "header")]` / `header: Vec<String>` with no
+  `allow_hyphen_values`, confirming the spec's precedent claim. Re-read the entire EC-X.16.002-8
+  cited range (L4252-4275) once more afterward. Extended AC-009's existing informational
+  parenthetical to also cover both sentences -- labeling them informational, pre-existing `-H`
+  declaration plus shell semantics, confirmed at PR code review -- rather than adding a second,
+  separate parenthetical. Each sentence in the cited range now carries exactly one label.
+
+## 2026-09-28 -- F3 adversarial pass-21 fixes (P21-003, coverage-check finding)
+
+Findings fixed directly in the story body (version bumped 4.7 -> 4.8; input-hash left untouched):
+
+- Coverage-check finding: Task 12 (~story line 948) contained a real CC tag citation with a
+  concrete spec line range, sitting inside the Tasks section rather than inside any AC's header
+  or Test body. The mechanical coverage script only recognizes CC tag citations inside
+  `### AC-NNN` sections, so this misplaced citation was invisible to it -- a coverage gap by
+  omission, not a wrong line range. Rewrote it as plain text, replacing the bracketed citation
+  with the wording "spec L3826-3852" (matching this story's own established convention of citing
+  spec line ranges as plain prose outside AC sections, as already used throughout the Coverage
+  Scope (D-387) section and the Revision History). Then grepped all three cycle-014 stories
+  (this one, the sibling `S-cycle14-user-list-project-resolution.md`, and
+  `S-cycle14-field-options-name-label.md`) for any CC tag with a real, concrete spec line range
+  outside a `### AC-NNN` section; the Task 12 citation above was the only offender found across
+  all three files. The other `[CC:...]`/`[CC:L<start>-<end>]` mentions outside AC sections in all
+  three stories are generic descriptions of the citation mechanism itself (no concrete line
+  numbers), not real misplaced citations, so none needed changing.
+- P21-003 (low): the File Structure Requirements row for `src/cli/mod.rs` listed AC-001 in its
+  trace list, but AC-001 is entirely about `src/cli/api.rs::append_query_params` -- its own Test
+  line places every one of its cells in `src/cli/api.rs`'s `#[cfg(test)] mod tests`, none in
+  `src/cli/mod.rs` or `tests/api_query_param.rs`. Removed AC-001 from that row's trace list,
+  leaving AC-002 (the clap field's `Vec<String>`/no-`value_delimiter` declaration), AC-003 (the
+  pinned `--help` substring, finalized on this same clap field per Task 12), and AC-009 (the
+  no-`allow_hyphen_values` requirement, per the Architecture Compliance Rules table's matching
+  row) -- all three do trace to `src/cli/mod.rs`. Then re-verified every other row in the File
+  Structure Requirements table against what its cited ACs' Test lines and bodies actually say:
+  the `src/cli/api.rs` row's AC-001..AC-008 list, the `tests/api_query_param.rs` row's
+  AC-002..AC-009 list, the `README.md` row's AC-010, and the `.cargo/mutants.toml`/
+  `docs/specs/cargo-mutants-policy.md` rows' AC-011 all check out against the ACs' own Test lines
+  and bodies -- no further changes were needed.
+
+Inputs sweep: grepped this story's body for every `src/`-prefixed file citation. All of them
+(`src/cli/api.rs`, `src/cli/mod.rs`, `src/main.rs`) already appear in the frontmatter `inputs:`
+list. The body's other two `src/`-prefixed mentions (`src/cli/user.rs`, `src/jql.rs`) are both
+purely positional -- they name where the sibling story's already-landed
+`docs/specs/cargo-mutants-policy.md` bullet sits, or where this story's own new bullet must be
+inserted relative to a pre-existing bullet group -- neither is a file this story actually reads
+for its own AC/Architecture content, so neither was added.

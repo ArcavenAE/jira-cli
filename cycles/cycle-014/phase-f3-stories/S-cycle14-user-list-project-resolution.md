@@ -23,6 +23,8 @@ inputs:
   - "src/main.rs"
   - "src/cli/user.rs"
   - "src/config.rs"
+  - "src/cli/component.rs"
+  - "src/cli/field.rs"
   - "tests/user_commands.rs"
   - "tests/all_flag_behavior.rs"
   - "tests/user_pagination.rs"
@@ -32,7 +34,7 @@ inputs:
   - "scripts/check-cargo-mutants-policy-citations.sh"
   - "Cargo.toml"
   - "CHANGELOG.md"
-input-hash: "972d7fd"
+input-hash: "bd1c9f0"
 traces_to: "BC-X.7.002"
 cycle: cycle-014-issue-triage-quickfixes
 estimated_effort: small
@@ -82,7 +84,7 @@ acceptance_criteria_count: 11
 assumption_validations: []
 risk_mitigations: []
 created: "2026-09-26"
-version: "4.6"
+version: "4.8"
 last_updated: "2026-09-28"
 breaking_change: true
 retroactive: false
@@ -125,7 +127,7 @@ the `[SCOPE:...]`/`[EXCLUDE:...]` lines there, are verified mechanically rather 
 hand-audited. Current Red Gate density tally (Task 7): `RED_TESTS=9`, `EXEMPT_TESTS=3`,
 `GREEN-nonexempt=2`, `TOTAL_NEW_TESTS=14`, denominator=11, `RED_RATIO=9/11≈0.82` (clears the
 BC-8.29.001 `>= 0.5` threshold; unchanged by the pass-14 cosmetic fixes recorded in
-`S-cycle14-user-list-project-resolution.revision-history.md`). Story version: 4.6.
+`S-cycle14-user-list-project-resolution.revision-history.md`). Story version: 4.8.
 
 ## Narrative
 
@@ -685,11 +687,12 @@ budget-usage row below.)
 14. [ ] Add a CHANGELOG entry under `[Unreleased] > Fixed` describing the shipped behavior,
     before creating the PR. Per precedent (CHANGELOG.md ~L125's `--recent`/`--updated-recent`
     entry and ~L543's `load_api_token` entry), flag the failure-mode change inline as a
-    breaking change: a global-only or config-default-only `jr user list` invocation that
-    previously failed via clap's exit-2 "required argument" error now fails (only when no
-    project resolves at all) via `jr`'s own exit-64 `JrError::UserError`, e.g. `` **Breaking:
-    `jr user list` with no project resolvable now exits 64, not clap's exit 2** (issue #862)
-    ``, followed by the four-step resolution order and the pinned exit-64 message
+    breaking change: an invocation with no local/global `--project` and no configured default --
+    previously a clap exit-2 "required argument" error -- now fails with `jr`'s exit-64
+    `JrError::UserError`; global-only and configured-default invocations (previously exit 2) now
+    succeed. E.g. `` **Breaking: `jr user list` with no project resolvable now exits 64, not
+    clap's exit 2** (issue #862) ``, followed by the four-step resolution order and the pinned
+    exit-64 message
 15. [ ] Run `cargo fmt --all -- --check`, `cargo clippy -- -D warnings`, `cargo test`, and the scoped `cargo mutants --in-diff`
 
 ## Previous Story Intelligence
@@ -705,7 +708,7 @@ predecessor exists yet. Cross-cycle precedent is captured in the table below.
 
 | Rule | Source | Enforcement |
 |------|--------|--------------|
-| `handle`/`handle_list` MUST NOT call `Config::load`/`Config::load_with` -- only the `&Config` passed from `main.rs` may be consulted | BC-X.7.002 Fix step 3, Invariants | AC-009's EC-X.7.002-5 test fails if the handler reloads config |
+| `handle`/`handle_list` MUST NOT call `Config::load`/`Config::load_with` -- only the `&Config` passed from `main.rs` may be consulted | BC-X.7.002 Fix step 3, EC-X.7.002-5 | AC-009's EC-X.7.002-5 test fails if the handler reloads config |
 | Local-vs-global precedence is clap's own `fill_in_global_values` propagation -- no hand-written `jr`-level merge/`.or()` call is added for this half of the resolution | BC-X.7.002 Behavior, Fix step 2 | Code review; AC-001/AC-005 tests pass without any merge code in `handle_list` |
 | The canonical no-project exit-64 message MUST be byte-identical to `queue.rs`/`requesttype.rs`'s existing wording | BC-X.7.002 Postcondition 4 | AC-004 |
 | `--project ""` MUST NOT be special-cased to `None` (treated as absent) | BC-X.7.002 EC-X.7.002-6, D-380 | AC-006 |

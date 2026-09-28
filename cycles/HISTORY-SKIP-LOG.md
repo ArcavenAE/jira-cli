@@ -62,3 +62,15 @@
 | Step | Skipped? | Justification |
 |------|----------|----------------|
 | Human gate at CYCLE-014-F3-D387-CHECKPOINT-2026-09-28 burst | yes (deliberate, not a gate) | Records F3 adversarial review passes 8, 9, and 10, all NOT CLEAN, plus human decision `D-387` adopting the mechanical Coverage Scope verification pattern; clean counter 0/3, gate not concluded. |
+
+---
+
+> Extracted from `.factory/STATE.md`'s `## Skip Log` table during the
+> 2026-09-28 `CYCLE-014-F3-PASS21-CHECKPOINT-2026-09-28` burst (v5.05 ->
+> v5.06), to keep the live table at 4 rows after adding the new
+> `CYCLE-014-F3-PASS21-CHECKPOINT-2026-09-28` row. This was the oldest of
+> the inline rows at that point; archived here verbatim, unedited.
+
+| Step | Skipped? | Justification |
+|------|----------|----------------|
+| Human gate at CYCLE-014-F3-REVHIST-CHECKPOINT-2026-09-28 burst | yes (deliberate, not a gate) | Records F3 adversarial review passes 11, 12, and 13, all NOT CLEAN, plus the orchestrator's revision-history structural split (no new `D-NNN`); clean counter 0/3, gate not concluded. |

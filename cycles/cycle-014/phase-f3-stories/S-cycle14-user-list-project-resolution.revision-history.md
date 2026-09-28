@@ -770,3 +770,62 @@ untouched):
   Definition of Done, and `Cargo.toml` is cited as the source of the pinned clap version in the
   Library and Framework Requirements table -- so this only makes the frontmatter list match what
   the story already depends on and cites by line number and pinned value.
+
+## 2026-09-28 -- F3 adversarial pass-20 fixes (P20-003, P20-004)
+
+Findings fixed directly in the story body (version bumped 4.6 -> 4.7; input-hash left untouched):
+
+- P20-003 (low): the CHANGELOG task's description of the failure-mode change had the direction
+  backwards. It said a global-only or config-default-only `jr user list` invocation "previously
+  failed via clap's exit-2 ... now fails ... via exit-64" -- but those two invocations are exactly
+  the ones the #862 fix makes succeed; only an invocation with no local flag, no global flag, AND
+  no configured default now fails, and it fails with `jr`'s own exit-64 `JrError::UserError`
+  rather than clap's exit-2 "required argument" error. Reworded the task to state the correct
+  direction plainly: no-project-resolvable invocations now fail via exit-64 (previously clap
+  exit-2), while global-only and configured-default invocations (previously exit-2) now succeed.
+  Kept the existing "Breaking: `jr user list` with no project resolvable now exits 64, not clap's
+  exit 2" example string unchanged, since it was already correct and needed no fix. Grepped both
+  stories for every other sentence describing this behavior change afterward -- the narrative's
+  "So that" line, AC-002's "reported as broken (previously clap exit 2)" sentence, the Definition
+  of Done's CHANGELOG bullet (which already scopes itself to "no-project-resolvable failure
+  mode"), and the `user_list_requires_project_flag` discussion in the Red Gate section -- all
+  already describe the correct direction, so none needed changing.
+- P20-004 (low): added `src/cli/component.rs` and `src/cli/field.rs` to the frontmatter inputs
+  list. Both were already cited in the story body -- `src/cli/component.rs::handle`'s `List`/
+  `Create` arms and `src/cli/field.rs::resolve_m2_project` are both named as precedent in the
+  Token Budget Estimate's "Referenced code" row and again in the Previous Story Intelligence
+  table -- so this only makes the frontmatter inputs list match what the story already depends on
+  and cites.
+
+Drift note: adding these two files to `inputs:` changes what the stored `input-hash` should hash
+to. Per this pass's explicit instruction not to touch `input-hash`, it was left as-is -- the
+resulting drift is expected, the same as this story's own pass-19 note on this point, and is for
+state-manager/orchestrator to reconcile, not something this pass tried to paper over.
+
+## 2026-09-28 -- F3 adversarial pass-21 fix (P21-002)
+
+Finding fixed directly in the story body (version bumped 4.7 -> 4.8; input-hash left untouched):
+
+- P21-002 (low): the Architecture Compliance Rules table's first row named the "no reload
+  config" rule's Source as "BC-X.7.002 Fix step 3, Invariants" -- but the rule's actual
+  enforcement mechanism (AC-009's EC-X.7.002-5 test failing on a reload) is the same clause the
+  spec itself cross-references for exactly this ordering, not the general Invariants section.
+  Verified directly against cross-cutting.md before changing anything: line 776 is Fix step 3
+  itself (the sentence "handle/handle_list MUST NOT call Config::load/Config::load_with
+  themselves -- reloading would ignore the --profile/JR_PROFILE selection already resolved into
+  that binding"), and line 817 is EC-X.7.002-5, whose own closing sentence restates and is the
+  spec's chosen test vehicle for that identical no-reload requirement ("handle/handle_list never
+  reload config -- the &Config passed through already reflects the --profile/JR_PROFILE
+  selection"). Changed the row's Source cell from "BC-X.7.002 Fix step 3, Invariants" to
+  "BC-X.7.002 Fix step 3, EC-X.7.002-5" to match. No other change was made to the row.
+
+Coverage-check sweep: grepped this story for any CC tag citation with a real spec line range
+outside a `### AC-NNN` section; none were found -- every genuine CC tag citation in this story
+already lives inside an AC's header or Test body. The handful of `[CC:...]`/`[CC:L<start>-<end>]`
+mentions outside AC sections (in the Revision History summary and the Coverage Scope (D-387)
+intro paragraph) are generic references to the citation mechanism itself, not real citations with
+concrete line numbers, so none needed changing.
+
+Inputs sweep: grepped this story's body for every `src/`-prefixed file citation and confirmed each
+one (`src/cli/mod.rs`, `src/cli/user.rs`, `src/main.rs`, `src/config.rs`, `src/cli/component.rs`,
+`src/cli/field.rs`) already appears in the frontmatter `inputs:` list. No additions were needed.

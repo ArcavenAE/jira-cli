@@ -23,12 +23,13 @@ inputs:
   - "src/cli/mod.rs"
   - "src/types/jira/editmeta.rs"
   - "src/api/jira/issues.rs"
+  - "src/cache.rs"
   - "tests/field_options.rs"
   - "tests/issue_edit_field.rs"
   - "README.md"
   - "CLAUDE.md"
   - "CHANGELOG.md"
-input-hash: "7779bb3"
+input-hash: "f4360cd"
 traces_to: "BC-X.14.001, BC-X.14.003, BC-X.14.004"
 cycle: cycle-014-issue-triage-quickfixes
 estimated_effort: medium
@@ -90,7 +91,7 @@ acceptance_criteria_count: 9
 assumption_validations: []
 risk_mitigations: []
 created: "2026-09-26"
-version: "4.6"
+version: "4.8"
 last_updated: "2026-09-28"
 breaking_change: false
 retroactive: false
@@ -149,8 +150,11 @@ rendering blockquote from two named cases to the three it actually names, and re
 Budget section to give a rounded, approximate estimate instead of exact counts. Pass-19 then
 labeled AC-008's Invariant 3 citation's two remaining unlabelled sub-clauses (the shared
 cache-file/functions sentence and the profile-scoped-isolation cross-reference) with their own
-enforcement mechanisms -- see the revision-history file for the dated entry. This is version
-4.6 of the story.
+enforcement mechanisms -- see the revision-history file for the dated entry. Pass-21 then labeled
+AC-008's and AC-009's Invariant 4 citations' after-arity half (the ordering between `handle`'s
+Step 1 mode-selector arity check and Step 2 `resolve_field_id` call) with its own enforcement
+mechanism -- see the revision-history file for the dated entry. This is version
+4.8 of the story.
 
 ## Coverage Scope (D-387)
 
@@ -462,7 +466,10 @@ empty-`<field>` exit-64 ordering recap embedded in the same range is a SEPARATE 
 six tests do not exercise -- it is enforced by code citation plus PR diff review, the same
 mechanism AC-009 uses for this identical clause: `src/cli/field.rs::resolve_field_id`'s
 `query.is_empty()` guard precedes its only cache read (verified against current code), and PR
-diff review confirms `resolve_field_id` is unchanged by this story's diff. Invariant 3's own
+diff review confirms `resolve_field_id` is unchanged by this story's diff. That covers only the
+before-cache-read half; the after-arity half enforced by `src/cli/field.rs::handle`'s Step 1
+(`resolve_field_context`, ~L125) preceding Step 2 (`resolve_field_id`, ~L136), unchanged by this
+diff (AC-006 edits only the ~L134 comment) + PR diff review. Invariant 3's own
 opening sentence -- that the `customfield_NNNNN` bypass and `fields.json` cache-first contract use
 the SAME algorithm and the SAME cache file/functions (`read_fields_cache`/`write_fields_cache`/
 `list_fields`) -- is enforced by the unchanged `src/cli/field.rs::resolve_field_id`
@@ -500,6 +507,10 @@ by code citation plus PR diff review, the same mechanism this AC already uses fo
 warm-cache branches below: `src/cli/field.rs::resolve_field_id`'s `query.is_empty()` guard
 (~L442-447) precedes its only cache read (`cache::read_fields_cache`, ~L451) -- verified against
 current code -- and PR diff review confirms `resolve_field_id` is unchanged by this story's diff.
+That covers only the before-cache-read half; the after-arity half enforced by
+`src/cli/field.rs::handle`'s Step 1 (`resolve_field_context`, ~L125) preceding Step 2
+(`resolve_field_id`, ~L136), unchanged by this diff (AC-006 edits only the ~L134 comment) + PR
+diff review.
 Also implements BC-X.14.001's
 Behavior paragraph's empty-`<field>` guard-ordering description [CC:L2624-2633] and the
 Postconditions bullet describing when `GET /rest/api/3/field` is NOT called (empty `<field>`, a

@@ -96,7 +96,7 @@ acceptance_criteria_count: 11
 assumption_validations: []
 risk_mitigations: []
 created: "2026-09-26"
-version: "4.6"
+version: "4.8"
 last_updated: "2026-09-28"
 breaking_change: false
 retroactive: false
@@ -131,7 +131,7 @@ restructure -- ownership is recorded solely via CC-tag citations inside each `##
 checked against the Coverage Scope section below) are both in force. Current Red Gate tally (Task
 10(e), P11-005-corrected): `TOTAL_NEW_TESTS = 44`, `RED_TESTS = 40`, non-exempt GREEN
 (`PRE-EXISTING-BEHAVIOR`) `= 3`, `EXEMPT_TESTS = 1` (`WIRING-EXEMPT` only), `RED_RATIO = 40 / 43
-~= 0.930 >= 0.5`. Story version 4.6.
+~= 0.930 >= 0.5`. Story version 4.8.
 
 ## Coverage Scope (D-387)
 
@@ -403,7 +403,10 @@ Postcondition 3 `[CC:L3892-3895]` in full, including the pinned `--help` substri
 `gh api -f` and to `parse_header`'s trimming behavior are informational -- rationale/comparison
 prose, not independently testable claims; the actual encoded-output behavior they explain is
 covered by the `%20` pinned example and the no-trim pinned examples below; no dedicated cell
-exists for the comparisons themselves, and none is added); it also depends on Invariant 3 `[CC:L3907-3911]` (`urlencoding::encode` is the
+exists for the comparisons themselves, and none is added) (informational -- enforced at PR
+review: the help text must also state that values are passed raw, e.g. verification-delta.md
+§2's suggested "pass raw values; do not pre-encode" wording; the VP(e) cell pins only the
+`do not pre-encode` substring); it also depends on Invariant 3 `[CC:L3907-3911]` (`urlencoding::encode` is the
 intended encoder; `byte_serialize` forbidden), and owns Edge Cases EC-X.16.001-3
 `[CC:L3924-3930]` (this range's closing sentence -- `url::form_urlencoded::parse` plays no role in
 production encoding, used ONLY as a test-oracle decoder -- is informational -- enforced by
@@ -626,7 +629,11 @@ hyphen-leading-VALUE case, `-q startAt=-1`/`-q jql=-x`, that "works as-is": neit
 a dedicated cell -- this AC's own EC-8 cell tests only the failing `-q -x=1` form. Both are
 informational -- a structural consequence of the same clap attached-value mechanics EC-5/EC-6/EC-7's
 cells already exercise, confirmed at PR code review; no dedicated cell exists for either, and none
-is added.) This AC also owns the distinguishing-substring invariant and
+is added. The same EC-8 range's `-H`/`--header` precedent sentence (~L4259-4262) and its closing
+"no quoting workaround, shell strips quotes" sentence (~L4270-4272) are likewise informational --
+pre-existing `-H` declaration (`src/cli/mod.rs`'s `header` field, `#[arg(short = 'H', long =
+"header")]` / `header: Vec<String>` at lines 147-148, verified to have no `allow_hyphen_values`)
+plus shell semantics, confirmed at PR code review; no dedicated cell exists or is added.) This AC also owns the distinguishing-substring invariant and
 clap attached-value delivery mechanics `[CC:L4158-4168]` (the `{raw}` value clap delivers to
 `parse_query_param`). The `-q`/`--query-param` flag is NOT declared with `allow_hyphen_values`.
 EC-X.16.002-11 `[CC:L4299-4305]` is informational only, inherited clap behavior with no owning VP
@@ -936,7 +943,12 @@ wiremock-backed set, per that AC's **Test:** line)
     code / panic text on stderr, but the top-level test function fails via a normal assertion,
     satisfying Step 3's Red Gate requirement (~L35) literally.
 11. [ ] Implement `append_query_params` and `parse_query_param` in `src/cli/api.rs` (AC-001..AC-007) -- `implementer`
-12. [ ] Finalize the `-q`/`--query-param` clap field on `Command::Api` (`src/cli/mod.rs`) with the pinned help text (AC-003, AC-009) -- `implementer`
+12. [ ] Finalize the `-q`/`--query-param` clap field on `Command::Api` (`src/cli/mod.rs`) with
+    the pinned help text -- the literal substring `"do not pre-encode"` is the automated test
+    pin (VP-API-QP-003(e)), but the full BC-X.16.001 Behavior 3 requirement (spec L3826-3852) /
+    verification-delta.md §2 wording is that the text must also state values are passed raw
+    (informational -- enforced at PR review, same as AC-003's own citation above) (AC-003,
+    AC-009) -- `implementer`
 13. [ ] Wire `handle_api` to call `-q` parsing immediately after `normalize_path` and before `resolve_body`/`-H` parsing (AC-008); REMOVE Task 1's zero-flag short-circuit and call `parse_query_param`/`append_query_params` unconditionally on every invocation, including zero `-q` flags -- `append_query_params(p, &[]) == p` is an identity (BC-X.16.001 Postcondition 5), so this is behavior-preserving and closes the equivalent-mutant risk noted in Task 1 (P6-006, mirrors STORY-A Task 9). **(P11-004: this exact placement -- immediately after `normalize_path` -- is also the sole enforcement mechanism for BC-X.16.002 Preconditions' requirement that `normalize_path`'s own path errors run BEFORE `-q` validation (AC-008); that requirement is informational and has no dedicated test cell, so getting this placement right here, and confirming it at PR code review, is what satisfies it.)** -- `implementer`
 14. [ ] Confirm Green Gate: all tests pass, including the unchanged `tests/cli_handler.rs` suite
 15. [ ] Update `README.md`'s `jr api <PATH>` row (~L332) (AC-010)
@@ -980,7 +992,7 @@ No new dependency is added. `url::form_urlencoded::byte_serialize` is explicitly
 
 | File | Action | Purpose |
 |------|--------|---------|
-| `src/cli/mod.rs` | modify | New `-q`/`--query-param: Vec<String>` field on `Command::Api`, pinned help text (traces to AC-001, AC-002 -- no `value_delimiter`, AC-003, and AC-009 -- no `allow_hyphen_values`) |
+| `src/cli/mod.rs` | modify | New `-q`/`--query-param: Vec<String>` field on `Command::Api`, pinned help text (traces to AC-002 -- no `value_delimiter`, AC-003, and AC-009 -- no `allow_hyphen_values`) |
 | `src/main.rs` | modify | `Command::Api` dispatch arm passes the new field through to `handle_api` |
 | `src/cli/api.rs` | modify | New `append_query_params`, `parse_query_param`; `handle_api` pre-flight wiring; new pure-unit and `proptest!` cases (separator oracle, repeated-names oracle, encoding proptest, zero-flag identity, `parse_query_param` partition) added to the existing `#[cfg(test)] mod tests` block (AC-001..AC-008 -- P12-006: corrected from "AC-001..003, AC-005..007," which omitted AC-004's zero-flag identity `proptest!` (also in this file's test module) and AC-008's `handle_api` pre-flight-wiring implementation (also in this file, though AC-008's own test cells live in `tests/api_query_param.rs`)) |
 | `tests/api_query_param.rs` | create | New dedicated integration-test file for all wiremock/argv/clap-driven cells: VP-API-QP-002's argv+mixed cells, VP-API-QP-003's `--help` cell, VP-API-QP-004's method-orthogonality table + zero-flag wiremock examples, VP-API-QP-005's wiremock/JSON-envelope/attached-form cells, VP-API-QP-006's all-or-nothing/ordering/held-open-stdin/before-`-H` cells (AC-002..009). Kept separate from the existing `tests/cli_handler.rs` (already ~2,200 LOC) rather than extending it. |

@@ -746,3 +746,31 @@ Finding fixed directly in the story body (version bumped 4.5 -> 4.6; input-hash 
   `read_fields_cache`/`write_fields_cache` (verified against both fns' signatures in
   `src/cache.rs`). Re-read every sentence of AC-008's cited ranges once more afterward; every
   sentence now carries exactly one cell or one label.
+
+## 2026-09-28 -- F3 adversarial pass-21 fixes (P21-001, P21-004)
+
+Findings fixed directly in the story body (version bumped 4.6 -> 4.8; input-hash left untouched):
+
+- P21-001 (low): AC-008's citation of Invariant 4's "recap" (the CC tag spanning cross-cutting.md
+  lines 2897-2909) and AC-009's citation of the same recap only labeled the before-cache-read half
+  of the empty-`<field>` ordering guarantee -- the half enforced by `resolve_field_id`'s own
+  `query.is_empty()` guard preceding its only cache read. Neither AC labeled the other half: that
+  the mode-selector arity check (`handle`'s Step 1) runs, and completes, before `resolve_field_id`
+  is ever called at all (`handle`'s Step 2). Verified the two call sites directly against
+  `src/cli/field.rs` before writing anything: Step 1's `resolve_field_context` call sits at line
+  125, and Step 2's `resolve_field_id` call sits at line 136, with the former unconditionally
+  preceding and gating the latter via its own `?` on a `Result`. Added the same informational
+  label to both AC-008 and AC-009, immediately following each AC's existing before-cache-read
+  label: the after-arity half is enforced by `src/cli/field.rs::handle`'s Step 1
+  (`resolve_field_context`, line 125) preceding Step 2 (`resolve_field_id`, line 136), unchanged
+  by this story's diff (AC-006 edits only the Step 2 comment at line 134) plus PR diff review.
+- P21-004 (low): added `src/cache.rs` to the frontmatter `inputs:` list. It was already cited in
+  the story body -- AC-008's citation of Invariant 3 verifies `read_fields_cache`'s and
+  `write_fields_cache`'s signatures directly against `src/cache.rs` -- so this only makes the
+  frontmatter inputs list match what the story already depends on and cites.
+
+Drift note: adding `src/cache.rs` to `inputs:` changes what the stored `input-hash` should hash
+to. Per this pass's explicit instruction not to touch `input-hash`, it was left as-is -- the
+resulting drift is expected, the same as this story's own and the sibling stories' prior passes'
+notes on this point, and is for state-manager/orchestrator to reconcile, not something this pass
+tried to paper over.
