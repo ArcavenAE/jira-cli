@@ -1431,3 +1431,286 @@ even though a sub-sentence is independently observed by a named test cell -- thi
 distinguishes a plain informational label from an informational cross-reference throughout, and
 every citation checked kept to that distinction correctly. Zero labels were changed in this story.
 Story version bumped 5.6 to 5.7 to record this pass.
+
+## 2026-09-28 -- pass-26 through pass-30 condensed recap (moved verbatim from the story body by pass-31)
+
+The story body's own "Revision History" section had accumulated the following condensed prose
+recap of pass-26 through pass-30 directly inline, alongside (and duplicating, in shorter form) the
+fuller dated pass-26 through pass-30 sections already recorded above in this same file. Pass-31
+(D-386/D-387 successor pass, three-way O/N/U label restructure) collapsed the story's own section
+to a short pointer and moved this recap here verbatim, per its own instruction that every per-pass
+paragraph in that section must be preserved, not discarded. One bracket-form citation inside the
+recap (a quoted description of a superseded piece of prose) has been reworded to plain words, per
+the same instruction; no other change was made to the text below.
+
+Pass-26 then pinned two generator-property requirements on Task 6's `parse_query_param` proptest
+(the `rest` strategy's ability to produce a string containing `=`, and the M1/M2 `raw` strategy's
+ability to produce leading/trailing whitespace) that two of AC-005's own fault-kill claims relied
+on without stating, mirroring STORY-B's Task 2 pinning style; added the pre-existing
+`src/cli/api.rs` `#[cfg(test)] mod tests` unit-test suite (~L185-354) to Task 10(c)'s
+regression-guard list, which H-CYCLE14-W2-REG-001 requires and the list previously omitted; and
+corrected two cosmetic misstatements, in AC-009 (the "no EC-5..10 argv value contains a second `=`"
+claim, corrected to describe the clap-delivered `raw` values instead) and in AC-003 (a false claim
+about this repo's `#[tokio::test]`-vs-`#[test]` convention) -- see this file's own dated pass-26
+entry above for the full detail.
+Pass-27 then split AC-004's zero-flag fault-model attribution so the fragment-dropped-on-zero-pairs
+fault is credited to the zero-flag `proptest!` alone rather than jointly with the zero-flag
+wiremock examples, after verifying that neither of the two wiremock examples carries a `#fragment`
+and that the `proptest!`'s own generator is pinned to include `#fragment` paths; changed the two
+`wave-holdout-scenarios.md` citations in AC-004 and the one in Task 10(c) from enforcement/
+justification to "see also" provenance, since that file is not one of this story's `inputs:` and
+relying on it there would create an input-hash cycle (the holdout file itself lists this story in
+its own inputs); dropped Task 10(c)'s "the ONLY regression guards" claim in favor of an explicitly
+non-exhaustive list, adding `tests/e2e_cli_surface_guard.rs::test_e2e_cli_surface_all_paths_and_flags_exist`
+(verified: its `SURFACE` table runs `jr api --help`) and the gated `tests/e2e_live.rs` `jr api`
+callers; and moved the empty-query-plus-fragment pinned example's citation from `L4007-4023` to
+`L4024-4031` in both the Coverage Scope section and AC-001 (verified against `cross-cutting.md`:
+the example's own text is at L4024-4025, not inside L4007-4023) -- see this file's own dated
+pass-27 entry above for the full detail.
+Pass-28 (2026-09-28) found no content defect specific to this story: the same-pattern sweep
+dispatched by STORY-A's P28-001 finding (a named EXISTING test said to "test"/"assert"/"pin"/
+"verify" something it does not itself assert) was re-run against this story's own named
+pre-existing-test citations -- `tests/cli_handler.rs::test_handler_api_stdout_byte_exact` and its
+three `test_parse_api_method_*_delete_dispatches_http_delete` siblings,
+`tests/rate_limit_holdouts.rs::test_s_1_07_h_013_send_raw_gave_up_warning_in_stderr` (~L134), and
+`tests/e2e_cli_surface_guard.rs::test_e2e_cli_surface_all_paths_and_flags_exist` -- against their
+actual bodies, and every citation checked out. This pass did run the mechanical `inputs:` sweep
+(P28-003): grepped this story's body for every cited repository file path, excluding files this
+story creates (`tests/api_query_param.rs`, and the sibling story and holdout-scenario files), and
+compared the result against the frontmatter inputs list. Six cited paths were missing and are
+added, each verified present on disk with `ls`: `tests/e2e_cli_surface_guard.rs`,
+`tests/e2e_live.rs`, and `tests/mutants_glob_existence.rs` (all three cited in Task 10(c)'s
+regression-guard list); `CLAUDE.md` (cited for the `fix/`/`feat/`-prefix branch-naming
+convention); `src/jql.rs` (cited as the anchor bullet this story's own `docs/specs/cargo-mutants-
+policy.md` §Scope entry is inserted directly after); and `src/cli/user.rs` (cited as the location
+of STORY-A's own already-landed §Scope bullet, immediately preceding this story's own insertion
+point in the same file). No other cited path was found missing. Story version 5.5.
+Pass-29 (2026-09-28) fixed two confirmed mis-citations and ran two sweeps. P29-001: Task 1
+(the STUB task) and Task 13 both cited the zero-pair identity `append_query_params(p, &[]) == p`
+as "BC-X.16.001 Postcondition 5" -- wrong, since Postcondition 5 is the method/body-independence
+clause (`cross-cutting.md` L3898-3900); the identity is actually Postcondition 1 (zero-flag
+identity, L3876-3879) and Behavior 5 (zero effect when the flag is absent, L3858-3863), matching
+this story's own Coverage Scope section. Both occurrences were corrected to "BC-X.16.001
+Postcondition 1 / Behavior 5". A full sweep of every other prose reference to a numbered BC clause
+(Postcondition/Behavior/Precondition/Invariant/EC/VP citations, including but not limited to those
+paired with a CC tag) checked roughly 45 citations against the actual BC-X.16.001/
+BC-X.16.002 text in `cross-cutting.md`; no further mismatch was found. P29-002: the Architecture
+Mapping section's "Reference:" line cited `architecture/module-decomposition.md` and
+`architecture/dependency-graph.md`, neither of which exists anywhere under this repo's `.factory/`
+tree. It was replaced with a citation to `.factory/specs/architecture/ARCH-INDEX.md`'s Subsystem
+Registry section, which does exist and does have that exact heading. A sweep of every other
+`.factory/...`, `architecture/...`, `specs/...`, or other non-`src/` path cited in this story's
+body checked 15 such paths (excluding `tests/api_query_param.rs`, which this story itself creates);
+all 15 resolve to real files on disk, so only the two `architecture/...` paths above needed fixing.
+Story version bumped 5.5 -> 5.6 to record this pass.
+Pass-30 (2026-09-28) fixed P30-002: Task 10(c) cited `discover_story_points_field` at
+`~L147-159`; the function actually starts at `tests/e2e_live.rs` L155 (verified) -- an off-by-more-
+than-3 drift. Per CLAUDE.md's citation-discipline convention (symbol-form over line numbers, which
+drift on refactor), the citation is now the symbol form only, with no line numbers. Also reworded
+this file's own inline Revision History placeholder at ~L191 ("paired with a bracketed CC tag") to
+"paired with a CC tag", dropping the bracket-tag form per this pass's own no-bracket-tag-forms
+instruction for prose references to the citation mechanism. A companion sweep of every other
+line-number citation into a `tests/` file that also names a symbol in this story (the two
+`tests/rate_limit_holdouts.rs::test_s_1_07_h_013_send_raw_gave_up_warning_in_stderr` citations at
+`~L134`) found both accurate against the current file -- no further fix needed. A same-pattern
+sweep of every "informational"/"inherited" label in this story (triggered by STORY-B's P30-001
+finding, a blanket-labeled multi-sentence citation with a testable sub-clause) checked roughly 30
+such labels across AC-001 through AC-009, Task 12, and Task 13, and found none of that shape --
+this story already distinguishes "informational" (genuinely non-testable rationale/structural/
+code-review facts) from "informational cross-reference" (content observed by a named cell in
+another AC) throughout, a distinction the sibling STORY-A lacked before this same pass. Zero
+labels changed in this story. Story version bumped 5.6 -> 5.7 to record this pass.
+
+## 2026-09-28, pass-31: three-way O, N, U label scheme; revision history collapse; inputs sweep; token budget re-measurement
+
+This pass was an orchestrator-directed structural relabel, not an adversarial-review finding. It
+made four changes, described here in plain wording with no bracket-tag forms.
+
+First, it ended the recurring ambiguity between a plain informational label and an informational
+cross-reference label by replacing both, everywhere they appeared inside an acceptance criterion,
+with one of three explicit tags attached to the specific sentence they cover: O for a clause that
+some named test observes at runtime, whether that is the acceptance criterion's own cell, a cell
+named in a different acceptance criterion, or a pre-existing test named as unmodified; N for a
+clause that is not observable at runtime at all and is instead enforced by rationale, a structural
+or type-signature fact, code placement, a pull-request-review-only "no change" fact, or a
+shell or command-line-parser-internal fact that no test can see; and U for a clause that is in
+principle observable at runtime but deliberately has no test cell, with the reason for that design
+choice stated inline. Every sentence inside every acceptance criterion's cited clause range that
+previously carried the word informational, in either of its two old forms, now carries one of
+these three tags instead, with the existing fault-model scoping and non-exclusive wording left
+untouched. As part of this same pass, the two back-to-back parenthetical notes attached to
+acceptance criterion three's help-text citation were merged into one, and the requirement that the
+help text state values are passed raw was pulled out and attached specifically to its own sentence
+in the underlying spec text (the sentence just before the sentence that pins the literal
+do-not-pre-encode substring), and tagged U rather than N, because that requirement is in fact
+visible by running the command's own help output, even though no cell currently checks it
+directly -- only the shorter pinned substring is checked, by acceptance criterion three's own
+help-text cell.
+
+Second, this pass collapsed the story's own revision history section down to a short pointer and
+current-state summary: the two governing decisions, the new three-way label scheme, the current
+red-gate tally, the story's new version number, and a pointer to this sibling file. Every
+paragraph that used to sit in that section describing pass twenty-six through pass thirty was
+moved into this file word for word, in a new dated entry placed just above this one, with its one
+bracket-form citation reworded to plain words as instructed. That moved section duplicates, in
+shorter form, the fuller dated pass-twenty-six through pass-thirty entries already recorded earlier
+in this same file; nothing in either version was changed beyond removing the bracket form. Nothing
+elsewhere in the moved text used a bracket form, so no other rewording was needed there. After the
+collapse, the story's own bracket-tag citations are confined to two places only: the acceptance
+criteria section, and the coverage-scope section that lists which lines of the underlying spec each
+acceptance criterion covers.
+
+Third, this pass added the architecture index file to the story's own list of input files, since it
+is now cited by the architecture-mapping section's reference line and does exist on disk, and it
+re-ran a full sweep of every file path mentioned anywhere in the story's body and in its frontmatter
+comments. That sweep found one more real gap: the extended dependency-graph file this story's own
+frontmatter already names as its spec source was itself missing from the input list, even though it
+exists on disk, so it was added too. Every other path mentioned in the body either already appears
+in the input list, does not exist on disk (the module-criticality file, which the story's own
+frontmatter already says does not exist), belongs to a workflow document outside this repository
+that this story only names informally (the per-story-delivery workflow reference, and the bare
+story-index reference, both of which the sibling story handles the same way, by not listing them),
+or is explicitly excluded on purpose (the wave-holdout-scenarios file, which the story's own body
+already explains cannot be added without creating a circular input reference).
+
+Fourth, this pass re-measured the story spec's own size honestly, using the same file-reading tool's
+own token count rather than a rough guess, read in two pieces and summed exactly: about forty-five
+thousand tokens for the first roughly half of the file and about twenty-seven thousand for the rest,
+for a measured total of about seventy-two thousand tokens, rounded down to the nearest five thousand
+for the table. Recomputing the total and the percentage of a two-hundred-thousand-token context
+window against that new figure puts this story at roughly thirty-eight percent, over this agent's
+own twenty-to-thirty-percent ceiling. No split was made: the size increase is entirely label and
+citation bookkeeping added by the first change above, spread across nine acceptance criteria that
+all trace back to the same two functions and the same one behavioral-contract family, with no
+natural line to split along, and no acceptance criterion, task, or test cell was added, removed, or
+reclassified by this pass. This is noted here for visibility, following the same story's own
+earlier precedent of writing down a budget overage plainly rather than papering over it, when the
+driver is the specification document's own accumulated bookkeeping rather than a growth in the
+underlying implementation.
+
+Story version bumped 5.7 to 6.0 to record this pass.
+
+Drift note: this pass's edits, including the two newly added input paths, change what the stored
+input hash should hash to. Per this pass's own explicit instruction not to touch the input hash, it
+was left as it was, matching every prior pass's convention on this point; this is expected drift for
+the state manager or orchestrator to reconcile, not something this pass tried to hide.
+
+## 2026-09-28, pass-32: token budget correction, one mislabeled clause, two informational-label residues, and one half-labeled sentence
+
+This pass fixed four small findings from a fresh review pass, described here in plain wording only,
+with no CC tag bracket forms of any kind and no other bracket-tag forms either, not even inside
+backticks; where the acceptance criteria refer to a spec line range using their own bracketed CC
+tag citation, this entry instead spells that same citation mechanism out by its name, CC tag,
+written as two ordinary words.
+
+First, the token budget table's first row had counted the story spec's own size twice over. The
+file-reading tool's truncation header reports the whole file's token count in one number; the
+previous pass had instead added together two separate chunk headers from two separate reads of the
+same file, one for roughly the first half and one for the rest, which double-counts the overlap
+between the tool's own accounting and produces a number far larger than the file actually is. The
+correct rule, stated in the table now, is to read the whole-file header the tool reports and use
+that number as-is, never summing per-chunk headers. Under that corrected rule the file measures
+about forty-five thousand tokens, not roughly seventy-two thousand. The table's total row was
+recomputed to about fifty thousand five hundred tokens and the budget-usage row to about twenty-five
+percent of a two-hundred-thousand-token context window, comfortably inside this agent's own
+twenty-to-thirty-percent ceiling. The paragraph underneath the table that had flagged the old,
+mistaken seventy-two-thousand figure as an over-ceiling condition needing no split no longer applies
+now that the true figure is back inside the ceiling, so that paragraph was removed rather than
+corrected in place.
+
+Second, acceptance criterion nine's edge-case-eight discussion carried a sentence, borrowed by
+analogy from the header flag's own precedent, saying that a hyphen-leading value passed to the
+header flag fails identically at the command-line parser's level today. That sentence had been
+tagged N, meaning not observable at runtime at all, on the reasoning that it is enforced only by the
+header field's existing declaration and by pull-request review. That reasoning does not hold up: the
+behavior the sentence describes is exactly the kind of thing a subprocess test could observe
+directly, as an exit code two from the command-line parser, the same class of outcome this same
+acceptance criterion's own edge-case-eight cell already observes for the query-parameter flag
+instead of the header flag. A search of the test suite confirms no test anywhere exercises a
+hyphen-leading header value, so the sentence is retagged U, meaning it is observable in principle but
+deliberately has no test cell, with the reason -- no test in this story or the pre-existing suite
+exercises it -- now stated inline. The separate, following sentence about there being no quoting
+workaround because the shell strips quotes before the parser ever sees the argument was left tagged
+N, since that fact describes shell-level behavior a subprocess-spawned test cannot distinguish from
+the already-tested unquoted form, and its enforcement reasoning is unchanged.
+
+Third, two task-level notes still used the old, retired informational wording that the immediately
+preceding pass was supposed to have replaced everywhere inside the acceptance criteria, but these two
+had been overlooked because they live in the tasks section rather than inside an acceptance
+criterion's own text. The task that finalizes the command-line flag's help text said the requirement
+that the help text also state that values are passed raw was informational and enforced only at
+pull-request review; that is now reworded to say the requirement is tagged U, pointing back to
+acceptance criterion three's own text for the underlying reason, since that same requirement was
+already correctly tagged U there in the immediately preceding pass. The task that wires the
+query-parameter validation into the request-handling function said the requirement that the path
+function's own errors run before query-parameter validation was informational and had no dedicated
+test cell; checking acceptance criterion eight's own text for that same requirement found it was
+still tagged N there, with the same now-outdated reasoning -- but the same observability argument
+that applies to the header-flag sentence above applies here too: which error message reaches the
+error stream when both a bad path and a bad query-parameter value are supplied together is something
+a test could observe directly, and no test in this story constructs that combined case. Acceptance
+criterion eight's own text was therefore also retagged U, with the same reason stated inline, and the
+task note was reworded to match, pointing back to acceptance criterion eight.
+
+Fourth, acceptance criterion one's discussion of the fourth invariant -- the guarantee that assembly
+never adds a second question mark and never adds an ampersand after an already-empty or already-
+ampersand-terminated query piece -- had only its second half labeled, the half carving out those two
+promises apart from the store's own admission that nothing bans an already-legitimate combination of
+punctuation from appearing in the output. The first half, the two promises themselves, carried no
+tag at all. It is now tagged O, observed by the separator-oracle randomized-input test and by the
+edge-case-eight pinned examples, both of which already exercise exactly these two promises across
+their existing assertions.
+
+A full re-check of the word informational across the whole story file found no further live use of
+that retired word outside of quoted historical description of the label scheme itself; the two
+scope-listing lines and one edge-case-table row that still used the plain word were updated to the
+tag scheme too, for consistency with the acceptance criteria that already describe the same edge
+case.
+
+Story version bumped 6.0 to 6.1 to record this pass.
+
+Drift note: as with every prior pass, this pass's edits change what the stored input hash should hash
+to. Per this pass's own explicit instruction not to touch the input hash, it was left as it was; this
+is expected drift for the state manager or orchestrator to reconcile, not something this pass tried
+to hide.
+
+## 2026-09-28, same-day follow-up to pass-32: every citation to the underlying spec now carries its own explicit observed-or-not label
+
+A coordinator raised a further point about the same pass-32 work above: pointing to each
+acceptance criterion's own test paragraph, which names which verification-property clause a group
+of cells implements, is not itself a label on any one citation to the underlying spec. Each
+individual citation still needs its own explicit tag saying whether it is observed at runtime, not
+observable at runtime, or observable in principle but deliberately left untested, naming the test
+or the mechanism either way. Before this follow-up, most citations to the underlying spec across
+acceptance criteria one through nine relied on that surrounding test paragraph alone, or on a
+fault-kill discussion further down, without themselves carrying the explicit tag.
+
+This follow-up went through acceptance criteria one through nine one clause at a time and added the
+missing tag to every citation that lacked one, right next to the citation itself or inside its own
+parenthetical, naming the specific randomized-input test, pinned example, wiremock cell, or
+subprocess cell that observes it, drawn from the same task that enumerates every test this story
+adds. Wherever a single citation covers more than one sentence and those sentences are not all
+observed the same way, the citation was split so each sentence gets its own correct tag instead of
+one tag standing in for all of them; a small number of citations that were already split this way
+before this follow-up were left as they were. A handful of citations repeat a clause already
+labeled once earlier in the same acceptance criterion; those repeats now point back to the earlier
+label rather than restating it, since restating would risk drifting from it later. One counting
+pass across the whole citation set, before and after, found one hundred and seven citations to the
+underlying spec inside acceptance criteria one through nine, all one hundred and seven now carrying
+an explicit label, up from roughly ten that already had one going into this follow-up.
+
+Because this follow-up added a short label to each of roughly a hundred citations, the story spec's
+own measured size grew again, from about forty-five thousand tokens to about forty-nine thousand,
+rounded up to fifty thousand for the table -- comfortably inside this agent's own budget ceiling
+still, so the token budget table's first row and total were updated to match, using the exact same
+whole-file measurement rule the prior pass in this same day already established (the file-reading
+tool's own single whole-file count, never summed across separate reads of the same file).
+
+Story version stays at 6.1, per instruction, since this follow-up landed the same day as the pass it
+extends and made no acceptance-criterion, task, or test-cell change of its own -- only added labels
+already implied by the acceptance criteria's own existing test paragraphs and task enumeration.
+
+Drift note: as with every prior pass, this follow-up's edits change what the stored input hash
+should hash to. Per this pass's own explicit instruction not to touch the input hash, it was left
+as it was; this is expected drift for the state manager or orchestrator to reconcile, not something
+this pass tried to hide.

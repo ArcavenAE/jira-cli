@@ -114,3 +114,13 @@
 | Step | Skipped? | Justification |
 |------|----------|----------------|
 | Human gate at CYCLE-014-F3-PASS21-CHECKPOINT-2026-09-28 burst | yes (deliberate, not a gate) | Records F3 adversarial review pass 20 (4L) and pass 21 (4L), both NOT CLEAN, plus the Task-14 CHANGELOG-direction fix (STORY-A); clean counter 0/3, gate not concluded. |
+
+> Extracted from `.factory/STATE.md`'s `## Skip Log` table during the
+> 2026-09-28 `CYCLE-014-F3-PASS32-CHECKPOINT-2026-09-28` burst (v5.10 ->
+> v5.11), to keep the live table at 4 rows after adding the new
+> `CYCLE-014-F3-PASS32-CHECKPOINT-2026-09-28` row. This was the oldest of
+> the inline rows at that point; archived here verbatim, unedited.
+
+| Step | Skipped? | Justification |
+|------|----------|----------------|
+| Human gate at CYCLE-014-F3-PASS23-CHECKPOINT-2026-09-28 burst | yes (deliberate, not a gate) | Records F3 adversarial review pass 22 (6L/1C) and pass 23 (4L/1C), both NOT CLEAN, plus the pass-22 test-gap fix (untested `-q k=` wire output) and the pass-23 cross-story pattern sweeps; clean counter 0/3, gate not concluded. |

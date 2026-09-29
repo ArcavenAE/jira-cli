@@ -1186,3 +1186,304 @@ condition the spec itself already marks informational. Zero further labels were 
 companion sweep checked every line-number citation into a tests file that also names a symbol (four
 found, all in tests/field_options.rs) against the current file; all four were accurate to within
 one line, so none needed correction. Story version bumped 5.6 to 5.7 to record this pass.
+
+## 2026-09-28 -- In-body condensed summary (formerly the story body's own "Current state, in brief" paragraph, pass-3 through pass-30), moved here per pass-31
+
+The story body's own `## Revision History` section used to carry, directly in the story file, a
+running condensed summary of each adversarial pass (pass-3 through pass-30) alongside the pointer
+to this sibling file. Pass-31 collapsed that section to a short pointer plus a five-line
+current-state summary, and moved the condensed paragraph itself here, verbatim, as this section --
+replacing its two bracketed citation-syntax mentions (the CC/SCOPE/EXCLUDE tags)
+with the plain words "CC/SCOPE/EXCLUDE citation system" / "CC-tagged clauses" / "CC-tag
+citations" / "CC tag" / "the citation of line 2728", since bracket forms are now reserved, in the
+story body, to the `## Coverage Scope (D-387)` section and the Acceptance Criteria section only.
+No other wording was changed.
+
+Current state, in brief: D-386 replaced paraphrased VP-580-013/BC-X.14.001 fixture copies in each
+AC's `**Test:**` line with clause-reference citations ("bind by reference"). D-387 then deleted
+the two hand-maintained clause-map tables those citations fed, replacing them with the
+mechanically-checked CC/SCOPE/EXCLUDE citation system in "Coverage Scope
+(D-387)" below. The Red Gate density tally was corrected once, from an original (pre-fix)
+`EXEMPT_TESTS = 1` / `RED_RATIO = 5/6 ~= 0.833` to the current, honest `EXEMPT_TESTS = 0` /
+`RED_RATIO = 5/7 ~= 0.71 >= 0.5`. Pass-14 then made three small fixes: it named the actual
+enforcement mechanism (code citation + PR diff review) for the empty-`<field>`
+guard-before-cache-read ordering and the Invariant 3 mirror obligation, corrected
+`estimated_effort` to match STORY-INDEX/wave-schedule, and removed a stale exact-line-count claim
+from the Token Budget section. Pass-17 then fixed a pattern of ACs citing CC-tagged clauses
+without the binding sentence (AC-006/007/008/009), explicitly classified all four of AC-007's
+CC-tag citations instead of leaving two unclassified under a "both" label, and ran a full
+sentence-level sweep of every CC tag in every AC, adding terse informational labels where
+a cited sentence was not already covered by a named test this AC owns -- see the revision-history
+file for the dated entry. Pass-18 then fixed a test mis-attachment in AC-007 (the ambiguous-name
+regression test actually exercises the multiple-substring branch, not multiple-exact, so it was
+re-attached and the multiple-exact branch was given its own, correct citation), filled a gap in
+AC-007's coverage of the CC tag spanning L2634-2652 (three lead-in sentences -- the
+`customfield_NNNNN` bypass, the shared cache-first contract, and the "mirrored, not shared"
+relationship -- now each carry an inline label), corrected AC-005's description of BC-X.14.003's
+rendering blockquote from two named cases to the three it actually names, and reworked the Token
+Budget section to give a rounded, approximate estimate instead of exact counts. Pass-19 then
+labeled AC-008's Invariant 3 citation's two remaining unlabelled sub-clauses (the shared
+cache-file/functions sentence and the profile-scoped-isolation cross-reference) with their own
+enforcement mechanisms -- see the revision-history file for the dated entry. Pass-21 then labeled
+AC-008's and AC-009's Invariant 4 citations' after-arity half (the ordering between `handle`'s
+Step 1 mode-selector arity check and Step 2 `resolve_field_id` call) with its own enforcement
+mechanism -- see the revision-history file for the dated entry. Pass-22 then fixed a mis-scoped
+test-attachment in AC-007 (the customfield-bypass label had claimed the integration-level test
+`test_bc_x_14_001_customfield_bypass_skips_list_fields` pins the "same regex/case-sensitivity
+convention as BC-3.4.015 Step 1" clause -- an integration test asserting `list_fields()` is
+skipped cannot pin a regex/case-sensitivity rule; the regex half is now separately cited to the
+unit test `src/cli/field.rs::test_bc_x_14_001_is_customfield_literal_accepts_and_rejects`, and the
+case-sensitivity half is labeled informational, enforced by the unchanged
+`is_customfield_literal`'s case-sensitive `starts_with` plus PR diff review) and a grammar fix in
+AC-008/AC-009 ("the after-arity half enforced by" -> "the after-arity half is enforced by") -- see
+the revision-history file for the dated entry. Pass-23 then fixed the Token Budget's stale
+figures, attached the CLI-level "zero matches ... return 'not found'" sentence in AC-007 to its
+actual pinning tests, and rescoped all four VP-580-013 fault-model citations (AC-001/002/003/004)
+to name which fault(s) each AC's own tests kill -- see the revision-history file for the dated
+entry. Pass-24 then fixed a fault-model exclusive-attribution defect in AC-001/AC-002/AC-004
+(a non-exclusive-positive rewrite; see the revision-history file for the dated entry). Pass-25 then
+widened Task 1c so each EC-X.14.001-12 fixture is asserted at both the top level and a
+cascading-child level, rewrote AC-002's fault-(5) sentence to credit 1c's own child-level assertions
+jointly with 1b instead of claiming 1c runs at a single tree level, pinned an empty-string
+requirement on Task 2's `value`/`name` proptest strategies and softened AC-001's fault-(3) sentence
+to rely on it, and replaced a near-verbatim quote in AC-009 with a paraphrase after one of its four
+cited ranges turned out to use slightly different wording -- see the revision-history file for the
+dated entry. Pass-26 then rewrote AC-003's fault-model attribution for function 5 as a
+non-exclusive positive claim (it does kill fault (1), jointly with AC-001's EC-8 cell, rather than
+killing none of the six faults), and pinned, in Task 1a/1b, the `neither` cell's output-length
+assertion that AC-001 already claimed those cells make -- see the revision-history file for the
+dated entry. Pass-27 (cross-story sweep, triggered by STORY-C's pass-27 findings) re-checked this
+story for STORY-C's four pass-27 defect patterns and found none: this story has no wiremock or
+subprocess cells in any fault-model attribution at all (every cell is a direct in-process call or
+a `#[test]`/`proptest!` against a pure function, `normalize_from_allowed_values_at_depth`/
+`normalize_from_valid_values`), so the fragment/fixture-mismatch pattern does not apply; this story
+makes no "ONLY"/completeness claim about an external test suite; and this story's body never cites
+`wave-holdout-scenarios.md` as an enforcement mechanism -- only its `holdout_anchors:` frontmatter
+names its own holdout IDs. See the revision-history file for the dated entry.
+Pass-28 (2026-09-28) fixed one cosmetic finding (P28-004) and ran the mechanical `inputs:` sweep
+(P28-003), plus the same-pattern sweep dispatched by STORY-A's P28-001 finding. P28-004: the
+Coverage Scope intro said "Six cycle-014-marked spans are intentionally left unlisted", but the
+six bullets that follow enumerate eight spans in total (one bullet, the Trace-field-edits bullet,
+covers three separate line ranges). The intro now reads "Six groups (eight spans)". P28-001
+sweep: re-read the actual bodies of every named pre-existing test this story cites (the
+`search_field_list`/`normalize_from_allowed_values_at_depth`/`normalize_from_valid_values`
+unit tests in `src/cli/field.rs`, and the integration tests in `tests/field_options.rs` and
+`tests/issue_edit_field.rs`) against their claimed line numbers and assertions; every citation
+checked out (e.g. `test_bc_x_14_001_is_customfield_literal_accepts_and_rejects` at line 897,
+`test_bc_x_14_001_normalizer_never_drops_degenerate_entries` at line 1135, and
+`test_bc_x_14_001_normalizer_from_valid_values_never_drops_degenerate_entries` at line 1195,
+matching this story's own pinned line numbers exactly) -- no overclaim of this shape was found in
+this story. P28-003 (mechanical inputs sweep): grepped this story's body for every cited
+repository file path, excluding files this story creates (including the future
+`red-gate-log.md` implementation artifact Task 6 records into, and the sibling story and
+holdout-scenario files), and compared the result against the frontmatter inputs list. Three cited
+paths were missing and are added, each verified present on disk with ls: `.cargo/mutants.toml`
+and `docs/specs/cargo-mutants-policy.md` (both cited in the STORY-C-dependency-rationale table's
+negative claim that this story does NOT touch either file, which was itself verified against
+`.cargo/mutants.toml`'s existing `src/cli/field.rs` entry), and `Cargo.toml` (cited for the pinned,
+unchanged `serde`/`serde_json`/`proptest` dependency versions). No other cited path was found
+missing. Story version bumped 5.4 -> 5.5 to record this pass.
+Pass-29 (2026-09-28) fixed the Architecture Mapping section's "Reference:" line, which cited
+`architecture/module-decomposition.md` and `architecture/dependency-graph.md` -- neither file
+exists anywhere in this repository. The line now points at the real architecture index,
+`.factory/specs/architecture/ARCH-INDEX.md`, and its Subsystem Registry section, which does exist
+and does carry that exact heading. A follow-on sweep of every other `.factory/...`, `architecture/...`,
+`specs/...`, and other non-`src/` file path cited anywhere in this story's body (15 distinct
+citations, excluding the future `red-gate-log.md` implementation artifact Task 6 records into,
+which this story creates rather than cites as pre-existing) found no other broken path -- all 15
+resolve on disk, whether as full paths or as this story's established bare-filename shorthands
+(`cross-cutting.md`, `prd-delta.md`, `wave-holdout-scenarios.md`, `story-template.md`). A second
+sweep re-checked every PROSE reference to a numbered BC clause in this story's body -- every
+"Invariant N" (Invariant 3, Invariant 4) and every "EC-X.14.001-N" and "VP-580-013(N)"/"sub-clause
+(N)"/"clause (N)" citation (85 total instances) -- against the actual BC-X.14.001/003/004 text in
+`cross-cutting.md`; this story cites no numbered "Postcondition N", "Precondition N", or "Fix step
+N" clause at all (BC-X.14's own Postconditions/Preconditions are unnumbered bullets), and every
+Invariant/EC/VP-sub-clause number checked matched the content it was attributed to. No mismatch was
+found in this story. Story version bumped 5.5 -> 5.6 to record this pass.
+Pass-30 (2026-09-28) fixed P30-001: AC-001's citation of line 2728 had blanket-labeled the whole
+`FieldOption` contract-amendment paragraph "informational/inherited... SURVIVAL only", but that
+paragraph contains testable sentences beyond the survival half. Re-read in full and relabeled
+sentence by sentence: the type-change/degrade-to-`None` sentences keep the SURVIVAL label; the
+"missing label-source field(s)" definition's M1/M2 half is now credited to this AC's own functions
+1a/1b (name-only and neither cells); its M3 half is now a plain-prose cross-reference to AC-004's
+function 4 (VP-580-013(4), cross-cutting.md ~L3113-3123); and the `children`
+always-present-never-`Option` sentence is now credited to this AC's own function 3 key-set
+assertion (VP-580-013(3)). A same-pattern sweep of every other "informational"/"inherited" label in
+this story (23 labels checked across AC-001 through AC-009 and the Edge Cases table) found no
+further defect of this shape -- every other multi-sentence citation in this story already carries
+its own per-sentence attribution from earlier passes (P16 through P29), and every remaining
+single-sentence "informational" label describes rationale, a structural/code-review fact, or
+content the spec itself already marks informational (e.g. EC-X.7.002-style "no VP cell" rows) --
+0 further labels changed. A companion sweep of every line-number citation into a `tests/` file
+that also carries a symbol name (4 citations: `tests/field_options.rs` `~L1436`/`~L2050`
+comments, `~L1487-1525` for `test_bc_x_14_001_field_name_ambiguous_exits_64`, and `~L1591` for
+`test_bc_x_14_001_field_name_zero_match_exits_64`) verified each against the current file; all
+four are accurate to within 1 line -- no fix required. Story version bumped 5.6 -> 5.7 to record
+this pass.
+
+## 2026-09-28 -- F3 adversarial pass-31 fixes (P31-001, P31-002, P31-004, P31-006, P31-007, P31-008) plus the Revision History collapse
+
+Version bumped 5.7 -> 6.0. Six findings were fixed directly in the story body, plus the
+orchestrator-directed Revision History collapse and mechanical inputs sweep described below.
+`input-hash` is left untouched per this pass's explicit instruction, matching every prior pass's
+convention on this point -- the drift this produces (three new `inputs:` entries: ARCH-INDEX.md
+and cycle-manifest.md, per P31-006, is expected and is for state-manager/orchestrator to
+reconcile.
+
+**Three-way label scheme (orchestrator decision, ends the recurring "informational" ambiguity):**
+every sentence of every cited clause in every acceptance criterion now carries exactly one of
+three explicit labels instead of the ad hoc word "informational": (O) observed by a named test
+(a new cell in this story, a cell owned by another AC, or a pre-existing test named by its exact
+symbol), (N) not runtime-observable (rationale/design prose, a structural or type fact, code
+placement, a "no change to X in this diff" PR-review check, or a naming convention), or (U)
+runtime-observable but deliberately left uncovered by design, with the reason stated inline. The
+word "informational" was removed from every AC label in the story body; it remains only inside
+the (now-historical, non-normative) Revision History content moved to this file, since the human
+instruction scoped the removal to "AC labels," not to historical prose describing what earlier
+passes did. A full sentence-level sweep of every CC-tagged citation in every acceptance criterion
+was performed while applying the four specific findings below, and additional explicit (O)/(N)
+tags were added to AC-003, AC-004, and AC-006's Test lines (which had a real, already-named
+mechanism but no explicit letter) for consistency, even though they carried no literal
+"informational" word to remove.
+
+- **P31-001 (MEDIUM, AC-001's key-spelling citation):** AC-001's citation of BC-X.14.001's
+  M1/M2-vs-M3 key-spelling paragraph (cross-cutting.md lines 2708-2715) had blanket-labeled its
+  id-vs-label key-spelling facts and its JSM naming-collision rationale as one "informational"
+  blob. Split into three: the M3 id-from-value/label-from-label sentence is now (O), observed by
+  AC-004's own function 4 (the M3 regression fixture that reads id from value and label from
+  label only, per VP-580-013 sub-clause 4); the M1/M2 id-from-id sentence is now (O), observed by
+  this AC's own function 2 (the proptest's "id carried through unchanged" assertion, per
+  VP-580-013 sub-clause 2), corroborated by functions 1a and 1b's per-cell id equality
+  assertions; only the JSM value-key naming-collision rationale sentence stays (N), since it is
+  deliberate API-inconsistency rationale with no independent test of its own.
+- **P31-002 (MEDIUM, several AC-007/AC-002 citations):** AC-007's citations of the Preconditions
+  bullet (line 2807-2808), Edge Cases EC-X.14.001-2 (line 2915) and EC-X.14.001-6 (line 2935),
+  EC-X.14.001-1 (line 2912), and the substring/zero-match branches of the search_field_list
+  algorithm description (lines 2634-2652) all already named a real pre-existing pinning test but
+  were labeled "informational" -- relabeled all five to (O), each still naming the same
+  pre-existing test(s) it already cited. Separately, AC-002's citation of the "rendered as a
+  blank cell / empty JSON string" sentence (line 2982-2990) was checked against the actual test
+  files -- grepped `src/cli/field.rs` and `tests/field_options.rs` for any existing render of
+  `Some(String::new())` and found none -- so it is relabeled (U), not (O): runtime-observable in
+  principle, but this story adds no cell for it by design, since VP-580-013 pins no rendering
+  cell and the rendering is ordinary, uncustomized string/JSON serialization.
+- **P31-004 (LOW, AC-001's children-invariant sentence):** AC-001's closing citation of the
+  `FieldOption` contract amendment's children-invariant sentence ("always present, never
+  `Option`") had credited both halves to the same test as one "informational" claim. Verified
+  `FieldOption.children`'s declared type directly against `src/cli/field.rs` (~L96): it is
+  `Vec<FieldOption>`, never `Option<Vec<FieldOption>>`. Split the sentence: the "present" half is
+  now (O), credited to this AC's own function 3 (the serde key-set assertion, VP-580-013 sub-
+  clause 3, which checks `children` is present at every depth); the "never `Option`" half is now
+  (N), credited to the Rust type itself, which makes an absent/nulled `children` unrepresentable
+  at compile time -- not a condition any test could fail to observe.
+- **P31-007 (LOW, AC-005's rendering blockquote):** AC-005's citation of BC-X.14.003's UPDATED
+  rendering-contract blockquote (lines 3247-3254) had no per-sentence breakdown at all. Read the
+  blockquote's three sentences individually: sentence 1 (the rendering contract itself is
+  unchanged) is (O), observed by the four existing tests AC-005 already names in its
+  Story-specific mapping; sentence 2 (system-typed fields now resolve to a real `Some(name)`
+  label, so fewer rows reach the degenerate case) is (O), observed by AC-001's own functions
+  1a/1b and AC-003's own function 5, which exercise that upstream fallback directly; sentence 3
+  ("No change to this BC's rendering code or VP-580-008") is (N), a PR-review diff check that
+  `render_option_rows` is unchanged by this story's diff.
+
+**Revision History collapse:** the story body's own `## Revision History` section, which
+previously carried a full pointer plus a long, cumulative "Current state, in brief" paragraph
+summarizing pass-3 through pass-30, was collapsed to a five-line pointer-plus-summary (see the
+story body). The condensed paragraph itself was moved here, verbatim, as its own dated section
+above (2026-09-28 -- In-body condensed summary...), with its bracketed citation-syntax mentions
+(the CC/SCOPE/EXCLUDE tags) reworded to plain words, since after this pass the
+story body reserves bracket-tag syntax to the "Coverage Scope (D-387)" section and the
+Acceptance Criteria section only.
+
+**P31-006 (LOW, inputs sweep):** verified both `.factory/specs/architecture/ARCH-INDEX.md` and
+`.factory/cycles/cycle-014/cycle-manifest.md` exist on disk, then added both to frontmatter
+`inputs:` (the Architecture Mapping section already cites ARCH-INDEX.md's Subsystem Registry
+since pass-29; cycle-manifest.md is the cycle-wide manifest this story belongs to). Re-ran the
+mechanical inputs sweep: grepped this story's body for every cited repository file path,
+excluding files this story creates (the future `red-gate-log.md` implementation artifact and the
+sibling story/holdout-scenario files), and compared against the frontmatter `inputs:` list.
+Beyond the two additions above, every other cited path was already present (confirmed against
+the pass-28/pass-21/pass-22 sweeps' own additions: `.cargo/mutants.toml`,
+`docs/specs/cargo-mutants-policy.md`, `Cargo.toml`, `src/cache.rs`,
+`src/cli/issue/field_resolve.rs`, `CHANGELOG.md`, `tests/issue_edit_field.rs`) -- no further gap
+found.
+
+**P31-008 (COSMETIC, Token Budget re-measurement):** re-measured the story file after the
+Revision History collapse (which removed roughly 11,500 characters of pass-history prose from the
+file) and rounded the "This story spec" row to the nearest 5,000 tokens. Recomputed the Total row
+and the Budget usage percentage against the new figure; see the corrected table in the story
+body's Token Budget Estimate section. The conclusion (well within the 20-30% per-story ceiling,
+no split required) is unchanged.
+
+Drift note: this pass's edits (the three-way relabeling, the Revision History collapse, and the
+three added `inputs:` entries) change what the stored `input-hash` should hash to. Per this
+pass's explicit instruction not to touch `input-hash`, it was left as-is, matching every prior
+pass's convention on this point.
+
+## 2026-09-28 -- Pass-32: tightened the not-runtime-observable label to name a mechanism, and
+fixed the F3 pass-32 findings
+
+Pass-32 tightened the rule for the "not runtime-observable" label: it is now reserved strictly
+for statements with no observable program behavior at all -- rationale, code structure, types,
+placement, "no change in this diff," and test-construction obligations -- and every such label
+must name its own mechanism. Anything that can be expressed as observable input/output behavior
+is the "observed by a named test" label when a named test actually observes it, and otherwise the
+"runtime-observable but not covered by a cell" label, with a stated reason; nothing is left
+unlabeled, and nothing is implicitly "observed."
+
+Applying that rule found and fixed two adversarial-review findings (finding P32-002 and finding
+P32-003) plus several further instances the same sweep turned up:
+
+- The two warm-cache sub-clauses -- a warm cache lacking the field triggers exactly one refetch,
+  and a warm-cache ambiguity exits 64 without a refetch -- were unlabeled in AC-007 and
+  mislabeled "not runtime-observable" in AC-009. Both are genuinely observable (a wiremock-backed
+  test with a pre-populated fields.json, like the existing warm-cache-resolves-without-a-refetch
+  test, could observe either branch), so both are now labeled "runtime-observable, not covered by
+  a cell" in both ACs, with the same wording in each: no cell exists by design, since this is
+  pre-existing behavior and the field-id resolver is unchanged by this diff.
+- AC-006's blanket "not runtime-observable" label for all nine stale-wording correction sites was
+  self-contradictory -- it also said the change alters `jr field options --help` output text.
+  Split into per-site labels: the three `src/cli/mod.rs` about-text/help-text edits are
+  runtime-observable via `--help` output (no test pins the exact wording today, so they are not
+  "observed"); the remaining six sites (the two `src/cli/field.rs` source comments, the
+  `src/api/jira/issues.rs` doc comment, the two `src/types/jira/editmeta.rs` doc comments, the two
+  `tests/field_options.rs` comments, and the README/CLAUDE.md prose) stay "not runtime-observable,"
+  each now naming its own reason instead of sharing one blanket rationale.
+- AC-007's customfield-literal case-sensitivity claim was labeled "not runtime-observable," but it
+  is directly observable by calling the literal-detector function with an uppercase input and
+  checking it returns false; the existing unit test near the literal-detector's own test function
+  has no uppercase case, so the claim is relabeled "runtime-observable, not covered by a cell,"
+  naming that exact check and that gap.
+- AC-008's "same profile-scoped isolation as the custom-field cache contract" claim was labeled
+  "not runtime-observable," but it is directly observable with a warm cache populated under one
+  profile and a different profile active at invocation; relabeled "runtime-observable, not
+  covered by a cell" accordingly.
+- The sweep also caught a fourth, previously unflagged instance of the same error, present
+  identically in both AC-008 and AC-009: the empty-field-name ordering recap bundles two distinct
+  half-claims -- an arity-check-comes-first half and a guard-before-cache-read half. The
+  cache-read half stays "not runtime-observable" (a cache read is a side-effect-free file read
+  with no observable trace). The arity-check-first half is genuinely observable -- a test
+  combining an empty field name with a mode-selector-arity violation would show which error
+  message and exit code wins -- and no existing test combines both conditions, so that half is
+  now "runtime-observable, not covered by a cell" in both ACs.
+- The sweep also found several sentences in AC-007 that named a test but carried no explicit
+  label at all, contrary to the "nothing is implicitly observed" rule: the customfield-literal
+  bypass half, its companion regex half, the single-exact-match and multiple-exact-match search
+  branches, and the shared cache-first contract sentence. All five are now explicitly labeled
+  "observed by a named test," naming the test in each case. The adjacent "no new cache family"
+  clause, which the same sentence had bundled in without its own label, is now separately labeled
+  "not runtime-observable," enforced by PR review rather than by any test.
+
+None of these were behavior changes -- every fix is a label correction or a missing-label
+addition on already-accurate prose; no acceptance criterion's substantive claim, test mapping, or
+BC-to-story coverage changed. The story's coverage-scope citations, its two frontmatter
+behavioral-contract lists, and its nine acceptance criteria remain exactly as before in every
+respect other than these labels. The Token Budget Estimate section was re-measured the same way
+pass-11 and pass-31 measured it: a single, full-file read of the story, using the whole-file token
+count that read's own header reports, never a sum across separate chunked reads of the same file
+(which would double-count each chunk's own tool overhead) -- rounded to the nearest 5,000 tokens,
+per that section's stated rule. The story's version was bumped 6.0 to 6.1 to record this pass.
+
+Drift note: this pass's edits change what the stored `input-hash` should hash to, same as every
+prior pass that touched this story's body. Per this pass's explicit instruction not to touch
+`input-hash`, it was left as-is.

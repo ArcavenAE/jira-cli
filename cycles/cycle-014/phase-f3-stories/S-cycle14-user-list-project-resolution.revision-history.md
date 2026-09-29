@@ -10,6 +10,237 @@ status: "historical — not normative"
 Historical record of F3 review-driven revisions. Not normative: where anything here differs
 from the story body, the story body governs.
 
+## Revision Note (F3 adversarial pass-32 fixes)
+
+Pass-32 (2026-09-28) fixed two findings against this story, P32-003 and P32-005 (both LOW), and
+swept every acceptance criterion's observed, not-runtime-observable, and no-cell-by-design labels
+against the tightened labeling rules.
+
+P32-003 corrected AC-008's citation of the full pinned help-text string. The story had labeled
+that citation not runtime-observable, on the reasoning that only two substrings are pinned by the
+automated test. That reasoning was wrong: running jr user list --help does render the full string
+to stdout, so the full string is observable behavior, even though no automated cell happens to
+assert on it byte for byte. The citation is now labeled runtime-observable via --help, with no
+full-string cell by design, because the verification property pins only two substrings and the
+exact full string is checked at PR review instead. This matches the form already used by the
+sibling api-query-param story's AC-003 for the same substrings-versus-full-string situation.
+
+P32-005 (LOW) addressed five citations that were labeled not runtime-observable with the
+justification "enforced by nothing" or an equivalent phrase that named no mechanism at all. Per
+the tightened rule, every such label must name a concrete mechanism, and "enforced by nothing"
+never qualifies. Fixed:
+
+- The verification property preamble citation in AC-001 was a single blanket not-observable label
+  covering two different claims. It is now split: the zero-HTTP guarantee on the exit-64 path is
+  its own observed citation, credited to AC-004's zero-request assertion on that path; the
+  remaining framing sentence, which only names the presence space and the four-layer structure
+  the verification property is organized into, stays not runtime-observable, now described as a
+  descriptive preamble whose sub-clauses are each labeled separately elsewhere in the story,
+  rather than "enforced by nothing".
+- The Fix step 1 design-rationale sentences cited in AC-001 (explaining why the new help text
+  cannot reuse component list's wording byte for byte) are now labeled as design-rationale prose
+  enforced by PR review of the doc comment on the project field, rather than "enforced by nothing
+  beyond being rationale prose".
+- The wiring-layer intro citation in AC-002 is relabeled from a bare descriptive-text claim to a
+  test-construction obligation, enforced by the hermetic setup the test-writer must follow for
+  every wiring-layer cell, plus PR review confirming that setup was actually used.
+- The Behavior-statement citation in AC-004 (the general premise that a resolved project key is
+  needed before the endpoint can be called) is now attributed to AC-004's own no-project cell,
+  which is the concrete enforcement path for that premise, rather than "enforced by nothing
+  beyond being the general premise statement".
+- The precedent-paragraph citation in AC-005 (comparing this story's local-over-global result to
+  component create's explicit merge code) is now enforced by PR review comparing the two code
+  paths, rather than "enforced by nothing beyond being rationale prose".
+- The precedent citation in AC-006 (comparing the empty-string pass-through to queue and
+  requesttype's existing behavior) is now enforced by PR review against the human-confirmed
+  decision record for that pass-through choice, rather than "enforced by nothing beyond being
+  precedent or rationale".
+
+A full sweep of every remaining label across all eleven acceptance criteria found no further
+violation of the tightened rules: every other not-runtime-observable label already named a
+concrete enforcement mechanism (an architecture compliance rule plus code review, a specific
+hermetic test's construction, or PR review of a specific artifact), and every observed label
+already named the specific test that observes it. Acceptance criteria ten and eleven carry no
+such labels, by the same design already recorded for earlier passes, since they trace to
+documentation and tooling obligations rather than BC or VP clauses.
+
+The token budget estimate was re-measured using the whole-file token count reported directly by a
+single read of the complete file, rather than by summing token counts across separate partial
+reads of the same file, since partial reads can overlap at page boundaries and over-count. That
+whole-file count rounds to the nearest five thousand for the story-spec row. The story version was
+bumped from 6.0 to 6.1 to record this pass; no test was added, removed, or reclassified between
+the red, exempt, and green-nonexempt buckets, so the red gate density tally is unchanged.
+
+This same pass also reworded a sentence elsewhere in this file (originally part of the D-387
+restructuring note) that described removing citation-tag ranges from the story body, replacing
+its literal tag-syntax phrasing with a plain description, so that this sibling revision-history
+file stays free of bracket-tag syntax throughout.
+
+## Revision Note (F3 adversarial pass-31 fixes)
+
+Orchestrator decision (2026-09-28): replaced the "informational"/"informational, inherited"
+label used throughout every AC's clause citations with a three-way scheme, applied sentence by
+sentence to every citation tag in AC-001 through AC-009 (AC-010/AC-011 carry no such citations
+and were left unchanged): (O) "observed by <test name(s)>" for any sentence a named test
+actually exercises at runtime (this AC's own cell, another AC's cell named by cross-reference,
+or a pre-existing test); (N) "not runtime-observable -- enforced by <mechanism>" for rationale,
+structural/type facts, code placement, and PR-review "no change" facts that no test can
+observe; (U) "runtime-observable; no cell by design -- <reason>" for content that could in
+principle be observed but deliberately has no dedicated cell.
+
+- **P31-003(1) (AC-001, Fix step 2's "propagates back up to the shared global-position arg"
+  sentence):** previously labeled informational/not-observable ("not observable by
+  handle_list"). Verified empirically before deciding the label: built a standalone clap 4.6.7
+  repro crate (the exact version pinned in this repo's `Cargo.lock`) replicating `Cli.project`
+  (`#[arg(long, global = true)]`) plus a subcommand-local `project: Option<String>` field named
+  identically, and parsed `["jr","--project","G","user","list","--project","L"]`. Result:
+  `cli.project` (the root struct field) came back `Some("L")`, not `Some("G")` -- confirming
+  clap's global-value propagation resolves the shared `project` arg id to the child's matched
+  value even when the parent's own position also matched a value. This matches
+  `src/cli/component.rs`'s own inline comment on `ComponentSubcommand::Rename` (`~L119-130`),
+  which documents the same downward-fill direction empirically for a different argv shape.
+  Resolved to (O): AC-001's Test line now describes adding an assertion
+  `cli.project == Some("L")` to its own existing inline `Cli::try_parse_from` test function for
+  this same argv vector (same function, so the Red Gate tally is unchanged).
+- **P31-003(2) (AC-003, Postcondition 3's `Some("")`-counts-as-present sub-clause, cross-cutting.md
+  line 803):** relabeled (U) runtime-observable; no cell by design -- VP(b)'s proptest
+  generator keys are all non-empty per cross-cutting.md line 860, so no proptest cell exercises
+  `Some("")` as a *configured default*; EC-7 (cross-cutting.md line 829) has no VP cell by the
+  spec's own design. AC-003's citation of EC-X.7.002-7 was given the same (U) treatment for the
+  same reason.
+- **P31-005 (LOW, Task 7(a)):** the sentence describing four pre-existing tests as tests that
+  "never reach the resolver, at stub or after" was imprecise -- after Task 9 lands, these tests
+  (which always supply `--project` explicitly) DO call the real resolver, just with `Some(p)`,
+  which returns `Some(p)` unchanged. Reworded to: "never reach the resolver's `todo!()` at stub;
+  after Task 9 they call it with `Some(p)`, so behavior is unchanged."
+- **P31-006 (LOW, inputs):** added `.factory/specs/architecture/ARCH-INDEX.md`,
+  `.factory/cycles/cycle-014/cycle-manifest.md`, and
+  `.factory/cycles/cycle-014/phase-f1-delta-analysis/delta-analysis.md` to the frontmatter
+  `inputs:` list, after verifying all three exist on disk. All three were already cited in the
+  story body (the Architecture Mapping "Reference:" line, a `subsystems:` frontmatter comment,
+  and the `origin:` frontmatter comment respectively) but missing from `inputs:`. A full
+  mechanical sweep of every other cited repository path found no further gap; a citation of
+  `workflows/phases/per-story-delivery.md` (Task 7's Red Gate formula reference) was left out of
+  `inputs:` deliberately -- that file lives in the separate vsdd-factory engine repo, not
+  anywhere under this project's own tree, so it is not a jira-cli repository artifact.
+- **P31-008 (COSMETIC):** re-measured the Token Budget Estimate after all of the above edits. A
+  direct Read-tool call against the full story file reported 28,144 tokens (807 lines, 66,846
+  chars); rounded to the nearest 5k, the "This story spec" row becomes ~30,000 (was ~25,000).
+  Total recomputed to ~36,000 (was ~31,000); Budget usage recomputed to ~18% (was ~16%).
+- **D-387 restructuring, applied:** this same pass collapsed the story's `## Revision History`
+  section (previously ten paragraphs including this file's own pointer plus inline pass-26
+  through pass-30 notes) to a 5-line pointer-plus-summary, and moved the pass-26 through
+  pass-30 paragraphs verbatim into this sibling file as the dated entries immediately below,
+  each with any inline citation-tag bracket forms rewritten as plain parenthetical prose (three
+  such tags were found, all inside the former pass-30 paragraph, at the story's then-current
+  lines ~201/206/207) -- this closes the coverage-check finding that a story body may contain a
+  citation tag only inside an `### AC-` section. No CC-tag range was removed anywhere in this
+  story; only label wording and location changed. Story version bumped 5.7 -> 6.0 to record
+  this pass.
+
+## Revision Note (F3 cross-story sweep, pass-30 fixes)
+
+Pass-30 (2026-09-28) ran the cross-story sweep triggered by STORY-B's P30-001 finding (a
+multi-sentence CC citation blanket-labeled "informational" when a sub-sentence is actually
+observed by a named test cell). Checked every "informational"/"inherited" label in this story
+(18 checked across AC-001 through AC-009 and the Edge Cases table) and found three instances of
+this pattern: (1) AC-001's citation of Resolution order step 4 (cross-cutting.md line 786) blanket-labeled the whole
+clause informational, without noting that its first sentence (exit 64 when none of (1)-(3)
+resolve) is independently owned and tested by AC-004's EC-X.7.002-4 cell -- split the same way
+AC-004 already splits this same citation, crediting that sentence to AC-004 by cross-reference and
+keeping only the genuinely-untested preemption-clause sentence as informational. (2) AC-005's
+citation of Resolution order step 1's lead-in sentence (cross-cutting.md lines 782-783) and (3) AC-007's citation of
+the non-`--all` contract sentence (cross-cutting.md line 894) had both been labeled "informational" despite the
+label's own text naming the specific cells (in other ACs) that actually observe each sentence --
+relabeled both as plain cross-references, dropping the "informational" word, since the sweep's own
+rule reserves that label for content that is genuinely not runtime-observable. No other label in
+this story showed the pattern -- every other multi-line citation already carries a per-sentence
+split from earlier passes, and every remaining single-sentence label describes rationale, a
+structural/code-review fact, or content the spec itself already marks informational (e.g.
+EC-X.7.002-7's own "informational, no VP cell" row). A companion sweep checked the one
+line-number-into-a-tests-file citation with a symbol name in this story
+(`tests/user_commands.rs::user_list_requires_project_flag`, `~L122-139`) against the current file;
+it is accurate to within 1 line -- no fix required. Story version bumped 5.6 -> 5.7 to record this
+pass.
+
+
+
+## Revision Note (F3 adversarial pass-29 fixes)
+
+Pass-29 (2026-09-28) fixed P29-002 against this story: the `## Architecture Mapping` "Reference:"
+line cited `architecture/module-decomposition.md` and `architecture/dependency-graph.md`, but
+neither file exists anywhere in this repo. It now reads "Reference:
+`.factory/specs/architecture/ARCH-INDEX.md` Subsystem Registry (no module-boundary change; F1
+confirmed no architecture delta)". The P29-002 sweep of every other `.factory/...`/`architecture/
+...`/`specs/...` (and other non-`src/`) path cited in this story's body checked 19 such citations
+and found no further broken path -- the two `architecture/...` citations above were the only
+fix. The P29-001 sweep re-read every prose reference to a numbered BC-X.7.002/VP-USER-LIST-
+PROJECT-001 clause (Fix step N, Resolution order step N, Postcondition N, Precondition,
+Invariant, EC-X.7.002-N, VP-USER-LIST-PROJECT-001(x)) against cross-cutting.md's actual BC-X.7.002
+text and found every citation's number already correct -- no fix was required. Story version
+bumped 5.5 -> 5.6 to record this pass.
+
+
+## Revision Note (F3 adversarial pass-28 fixes)
+
+Pass-28 (2026-09-28) fixed two findings against this story (P28-001, P28-002) and ran the
+mechanical `inputs:` sweep (P28-003). P28-001: AC-004 had claimed
+`tests/user_commands.rs::user_list_requires_project_flag` "directly tests" the
+exit-64-before-any-HTTP-call behavior; re-reading that test's actual body (~L122-139) shows its
+only assertions are `!output.status.success()` and a stderr substring match on `--project`/
+`required` -- it does not itself observe exit code 64 or the before-any-HTTP-call ordering. AC-004
+now credits the EC-X.7.002-4 cell as the sole owner of that clause and describes the pre-existing
+test only as corroborating non-success, the pinned substring, and the absence of a successful HTTP
+call (via its unreachable `JR_BASE_URL`), per verification-delta.md §2; the test itself was left
+unchanged, since cross-cutting.md's own Invariant (line 810) pins that loose assertion as the
+intended, settled form. A same-pattern sweep of this story's other named pre-existing-test
+citations (`user_list_by_project_returns_users` in tests/user_commands.rs;
+`user_list_all_cli_paginates` and its cap-hitting sibling in tests/user_pagination.rs;
+`user_list_default_caps_at_thirty` in tests/all_flag_behavior.rs) against their actual bodies found
+no further overclaim -- each supplies `--project` explicitly and is described only as bypassing the
+resolver, which their bodies confirm. P28-002: AC-003's citation of Fix step 4's second sentence
+(cross-cutting.md line 779) previously left its two halves unattributed; it now labels the
+"exits 64 on `None`" half as observed by AC-004's EC-X.7.002-4 cell, and the "`handle_list` calls
+this resolver with the post-clap value" (unconditional-call) half as informational/structural,
+enforced by Task 9's removal of the stub short-circuit plus PR review, and not independently
+observable at runtime because `config.project_key(Some(p)) == Some(p)`. P28-003 (mechanical
+`inputs:` sweep): grepped this story's body for every cited repository path, excluding this
+story's own new files and the sibling story/holdout files, and compared the result against the
+frontmatter `inputs:` list. Three cited paths were missing and are added, each verified present on
+disk with `ls`: `CLAUDE.md` (cited for the `cargo mutants --in-diff` command and the `fix/`-prefix
+branch-naming convention), `src/jql.rs` (cited as the anchor bullet the new
+`docs/specs/cargo-mutants-policy.md` §Scope entry is inserted directly after), and
+`tests/mutants_glob_existence.rs` (cited in AC-011's Test line). No other cited path was found
+missing.
+
+
+## Revision Note (F3 cross-story sweep, pass-27 -- no fix required)
+
+Pass-27 (cross-story sweep, triggered by STORY-C's pass-27 findings) re-checked this story for
+STORY-C's four pass-27 defect patterns and again found none: this story's wiremock fault-model
+attributions all fix an input state whose disturbance their own assertions can actually observe;
+this story makes no "ONLY"/completeness claim about an external test suite anywhere in its body;
+and this story's body never cites `wave-holdout-scenarios.md` as an enforcement mechanism -- only
+its `holdout_anchors:` frontmatter names its own holdout IDs, a plain cross-reference, not a body
+claim relying on that file. See the revision-history file for the dated entry. No content defect
+was found; no fix was required.
+
+
+## Revision Note (F3 cross-story sweep, pass-26 -- no fix required)
+
+Pass-26 (F3 cross-story sweep,
+triggered by STORY-C's pass-26 findings) checked this story for the same three defect patterns
+found in its siblings and found none: VP-USER-LIST-PROJECT-001(b)'s "distinct arbitrary non-empty
+keys `C`, `J`, `P`" generator constraint is already pinned directly in the binding VP text
+(`cross-cutting.md` L858-860), so no Task-level pin is needed to back AC-003's/AC-006's
+fault-kill claims (unlike STORY-C's AC-005, P26-001); no AC in this story makes an unbacked
+"asserts X" claim the way STORY-B's AC-001 did (P26-003); and Task 7's "Excluded entirely (not
+new tests)" list is scoped to Red Gate density-tally bookkeeping (which pre-existing tests never
+enter `TOTAL_NEW_TESTS`), not a global "ONLY regression guards required GREEN" completeness claim
+the way STORY-C's Task 10(c) is, so it is not analogous to that gap (P26-004) -- see the
+revision-history file for the dated entry. No content defect was found; no fix was required.
+
+
 ## Revision Note (F3 adversarial pass-12 fixes)
 
 - **P12-001 (LOW):** AC-003's header cited Postcondition 3 (cross-cutting.md line 803) and

@@ -7,7 +7,7 @@ producer: state-manager
 timestamp: 2026-09-26T00:01:34Z
 cycle: "cycle-014-issue-triage-quickfixes"
 inputs: [STATE.md]
-input-hash: "2440238"
+input-hash: "e0d9d05"
 traces_to: STATE.md
 ---
 
@@ -261,6 +261,22 @@ dispositioned — dispositioning happens at cycle close per S-7.02).
     checklist or the story-writer prompt should require a sibling sweep
     as standard practice, not a per-finding remediation. Source:
     `ADV-C14-F3-P23-002`, `P26-001`. Engine-side (vsdd-factory) follow-up.
+
+24. **The "informational" label was ambiguous.** Fixers used it both for
+    non-observable facts and for sentences already observed by named tests,
+    and applied it differently across stories. Findings recurred over passes
+    30-32. Resolved by the three-way scheme (**O** observed by named test /
+    **N** not runtime-observable with a named mechanism / **U** observable,
+    no cell by design) plus tightened N-vs-U rules and a ban on implicit O.
+    Engine-side: the story template should define this scheme. Source:
+    `ADV-C14-F3-P31-002`, `P32-003`, `P32-006`. Engine-side (vsdd-factory)
+    follow-up.
+
+25. **Token-budget measurement was unreliable.** Chunked Read-tool header
+    counts were summed, which double-counts. Rule adopted: use the
+    whole-file header count and round to 5k. Engine-side: document the
+    measurement method in the template. Source: `ADV-C14-F3-P32-001`.
+    Engine-side (vsdd-factory) follow-up.
 
 ## Disposition
 

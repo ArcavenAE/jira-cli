@@ -457,3 +457,15 @@ See `cycles/cycle-005/burst-log.md` Bursts 11-12 for full narrative detail (thes
 | Phase | Status | Completed | Gate | Notes | Finding Progression |
 |-------|--------|-----------|------|-------|---------------------|
 | **POST-GA-FOLLOWUPS-COMPLETE-2026-09-24** | **COMPLETE** | 2026-09-24 | PR merge gate (CI green + human merge) | PR `#876` MERGED @ `09bb2803`: `develop` `0.8.0-dev.1`. Helper-branch cleanup DONE. `activation_head`/`activation_version` UNCHANGED. | 770 BCs / 89 VPs / 118 holdout / 191 stories; no DEC minted |
+
+---
+
+> Extracted from `.factory/STATE.md`'s `## Phase Progress` table during the
+> 2026-09-28 `CYCLE-014-F3-PASS32-CHECKPOINT-2026-09-28` burst (v5.10 ->
+> v5.11), to keep the live table at 12 rows after adding the new
+> `CYCLE-014-F3-PASS32-CHECKPOINT-2026-09-28` row. This was the oldest row
+> at that point; archived here verbatim, unedited.
+
+| Phase | Status | Completed | Gate | Notes | Finding Progression |
+|-------|--------|-----------|------|-------|---------------------|
+| **TECH-DEBT-ASSESSMENT+CYCLE-010-PARKED-2026-09-24** | **PARKED / DEFERRED-AT-F1** | 2026-09-24 | human gate (F1 postponement decision) | Tech-debt assessment: 17 findings. HIGH: `TD-01` `edit.rs::handle_edit`, `TD-02` `list.rs::handle_list`. cycle-010 OPENED, F1 COMPLETE (regression risk HIGH). **Human decision, minted `D-377`: POSTPONE.** | 770 BCs / 89 VPs / 118 holdout / 191 stories; `D-377` minted |
