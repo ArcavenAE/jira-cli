@@ -7,7 +7,7 @@ producer: state-manager
 timestamp: 2026-09-26T00:01:34Z
 cycle: "cycle-014-issue-triage-quickfixes"
 inputs: [STATE.md]
-input-hash: "e0d9d05"
+input-hash: "9f8fe79"
 traces_to: STATE.md
 ---
 
@@ -278,9 +278,99 @@ dispositioned — dispositioning happens at cycle close per S-7.02).
     measurement method in the template. Source: `ADV-C14-F3-P32-001`.
     Engine-side (vsdd-factory) follow-up.
 
+26. **[process-gap] [engine]** The F3 review-loop definition conflicts
+    across three places. The Feature Mode skill requires human approval
+    only for the F3 gate. `workflows/feature.lobster` runs `spec-reviewer`
+    with `max_iterations: 10` and `exit_condition: "spec_reviewer.verdict
+    == 'APPROVED' OR spec_reviewer.findings.critical == 0"` (L587-588,
+    L667-668). `agents/orchestrator/feature-sequence.md`'s "Story review
+    loop (max 10 passes)" instead runs the `adversary` agent with fresh
+    context each pass (L96-101). Three different mechanisms (human
+    approval / spec-reviewer critical-count / adversary pass-count) are
+    each independently documented as authoritative for the same gate,
+    with no reconciling cross-reference between them. Needs follow-up
+    story or deferral before cycle close (S-7.02 checklist).
+
+27. **[process-gap] [engine]** "Clean" is undefined for story/spec review.
+    `agents/adversary.md` L205 and `skills/adversarial-review/SKILL.md`
+    L188 both say "minimum 3 clean passes" without defining a clean pass
+    as anything other than "not NOT CLEAN." Separately, the adversary's
+    own prompt instructs it that "you make genuinely novel findings
+    through pass 9+" (`agents/adversary.md` L361) and that "zero findings
+    [...] is a prompt bug, not convergence" (`skills/adversarial-review/
+    SKILL.md` L37) — language that actively discourages reporting a clean
+    pass, and conflicts with `VSDD.md` L242's convergence signal ("nitpicks
+    about wording, not missing behavior or verification gaps") and this
+    cycle's own reading of "not nitpicks" as the clean bar. An adversary
+    primed to always find something and a "clean means nitpicks-only" bar
+    are in direct tension. Needs follow-up story or deferral before cycle
+    close (S-7.02 checklist).
+
+28. **[process-gap] [engine]** The adversary's fresh-context mandate
+    conflicts with accumulate-invariants guidance. `agents/adversary.md`'s
+    Information Asymmetry section and its L361 "fresh context lets you see
+    patterns that prior passes [...] cannot; do not assume prior passes
+    were thorough" instruct each pass to re-derive understanding from
+    scratch, explicitly not inheriting prior conclusions. This is in
+    tension with the general VSDD guidance (elsewhere in the pipeline) to
+    accumulate invariants/decisions across passes so fixed defect classes
+    stay fixed. Applied literally, "no memory of prior passes" is exactly
+    the condition that let this cycle's O/N/U ambiguity (`#24`) and the
+    sibling-sweep gap (`#23`) each resurface across multiple passes before
+    being caught. Needs follow-up story or deferral before cycle close
+    (S-7.02 checklist).
+
+29. **[process-gap] [engine]** Model-family mismatch. `VSDD.md` and the
+    `adversary` agent's own description ("Uses different model for genuine
+    perspective diversity") call for the adversarial reviewer to run on a
+    different model family than the builder/story-writer, for genuine
+    cognitive diversity. `agents/adversary.md`'s frontmatter pins `model:
+    opus` — the same model family used elsewhere in this pipeline's
+    story-writer/fix bursts. The stated rationale for perspective
+    diversity is not actually being satisfied by the configured agent.
+    Needs follow-up story or deferral before cycle close (S-7.02
+    checklist).
+
+30. **[process-gap] [engine]** The 10-pass cap was not enforced this
+    cycle. `agents/adversary.md` L205 and `skills/adversarial-review/
+    SKILL.md` L188 both say "maximum 10 before escalating to human," but
+    F3's story review ran 33 passes (this cycle's own pass counter) with
+    no automatic escalation to the human at pass 10, 20, or 30 — the human
+    only intervened voluntarily (`D-386`, `D-387`, `D-388`) and ultimately
+    directed the research that produced `D-389`. Nothing in the orchestrator
+    or a hook actually counts passes against the documented cap. Recommend
+    a hook or an orchestrator-side pass counter that fires a mandatory
+    human checkpoint at pass 10 (and every 10 thereafter) rather than
+    relying on the human to notice unprompted. Needs follow-up story or
+    deferral before cycle close (S-7.02 checklist).
+
+31. **[process-gap] [engine]** Cycle-invented review requirements
+    (sentence-level O/N/U labels, `[CC:L<s>-<e>]` line-span citations —
+    neither required by `story-template.md` L60-71's "every AC must trace
+    to a specific behavioral contract clause," which is AC-level, not
+    sentence-level) combined with an LLM reviewer's non-zero per-pass
+    false-positive/false-finding rate make a strict 3-consecutive-clean
+    rule practically non-convergent once the review surface is large
+    enough. For `p` = per-pass probability of at least one (possibly
+    spurious) finding, and passes independent, the number of Bernoulli(1-p)
+    "clean" trials needed to observe 3 consecutive successes has expectation
+    `E[N] = (1 - p^3) / ((1 - p) * p^3)` passes: **~49 passes at p=0.7**
+    and **~1,110 passes at p=0.9**. This cycle observed 33 not-clean passes
+    in a row (informal per-pass finding rate well above 0.7) before the
+    human intervened with `D-389`. Recommend the factory codify a clean
+    bar matching its own documented convergence signal (VSDD.md L242 /
+    phase-2-story-decomposition.lobster L127 "cosmetic only") rather than
+    leaving each cycle free to invent a stricter, non-convergent bar.
+    Needs follow-up story or deferral before cycle close (S-7.02
+    checklist).
+
 ## Disposition
 
 Not yet dispositioned. F2 is CONVERGED per human decision `D-383` and
 APPROVED at the F2 human gate (`D-384`) — the S-7.02 cycle-closing checklist
-dispositions each of these 23 items when cycle-014 itself closes, not
-before.
+dispositions each of these 31 items when cycle-014 itself closes, not
+before. **Human decision `D-389` (2026-09-29)** closed F3 adversarial
+convergence directly (bypassing further dispositioning of `#1`-`#25` as a
+precondition) and directed that items `#26`-`#31` above be recorded now,
+each flagged as needing a follow-up story or an explicit deferral decision
+before cycle-014 closes.

@@ -42,7 +42,7 @@ inputs:
   - "scripts/check-cargo-mutants-policy-citations.sh"
   - "Cargo.toml"
   - "CHANGELOG.md"
-input-hash: "82c03b2"
+input-hash: "59c0216"
 traces_to: "BC-X.7.002"
 cycle: cycle-014-issue-triage-quickfixes
 estimated_effort: small
@@ -92,8 +92,8 @@ acceptance_criteria_count: 11
 assumption_validations: []
 risk_mitigations: []
 created: "2026-09-26"
-version: "6.1"
-last_updated: "2026-09-28"
+version: "6.2"
+last_updated: "2026-09-29"
 breaking_change: true
 retroactive: false
 origin: >
@@ -120,12 +120,13 @@ origin: >
 
 ## Revision History
 
-Full F3 adversarial-review history (passes 3-32) lives in `S-cycle14-user-list-project-resolution.revision-history.md`, alongside this file -- historical and non-normative; this body governs on any conflict.
+Full F3 adversarial-review history (passes 3-33) lives in `S-cycle14-user-list-project-resolution.revision-history.md`, alongside this file -- historical and non-normative; this body governs on any conflict.
 **D-386** (2026-09-27/28) requires every AC's `**Test:**` line to bind to its BC-X.7.002/VP-USER-LIST-PROJECT-001 clause(s) by reference rather than restating pinned values in this story.
 **D-387** (2026-09-28) replaced the hand-written Clause Coverage Map with the `## Coverage Scope (D-387)` section's inline citation/scope/exclude tags, verified mechanically rather than hand-audited.
 **Pass-31** (2026-09-28) replaced the word "informational" on every AC's clause citation with a three-way label scheme: (O) observed by a named test, (N) not runtime-observable (enforced by a stated mechanism), or (U) runtime-observable with no cell by design.
 **Pass-32** (2026-09-28) fixed P32-003 (AC-008's full pinned-help-string citation was mislabeled (N) even though `jr user list --help` makes it runtime-observable; relabeled (U) -- runtime-observable via `--help`, no full-string cell by design, exact full string enforced at PR review) and P32-005 (split the VP preamble's zero-HTTP-guarantee clause out as its own (O) citation, observed by AC-004's EC-X.7.002-4 cell, and named a concrete enforcement mechanism for every remaining "enforced by nothing"-style (N) label -- the Fix step 1 design-rationale sentences, the VP(c) intro, the AC-004 Behavior premise, the AC-005 precedent paragraph, and the AC-006 precedent -- none of which were runtime-observable to begin with). No test was added, removed, or reclassified between RED/EXEMPT/GREEN-nonexempt buckets, so the Red Gate density tally is unchanged.
-Current Red Gate density tally (Task 7, unchanged by pass-31 or pass-32): `TOTAL_NEW_TESTS=14` (`RED_TESTS=9` / `EXEMPT_TESTS=3` / `GREEN-nonexempt=2`), `RED_RATIO=9/11≈0.82`. Story version: 6.1.
+**Pass-33 / D-389** (2026-09-29) amended Task 3 to explicitly require the story-added `cli.project == Some("L")` propagation assertion (and to enumerate every other cell the same inline test bundles) since that check is not itself part of VP-USER-LIST-PROJECT-001(a)'s pinned text; and relabeled the config/profile-preemption sentences in AC-001 (Resolution order step 4's second sentence) and AC-004 (the Preconditions preemption bullet, split out from a blanket citation, and the same Resolution order step 4 second sentence) from (N) to (U) -- observable via error message/exit code, no cell by design, structurally forced by `src/main.rs`'s `Command::User` arm loading config before the handler. Per D-389, the Coverage Scope intro now states that these O/N/U labels are non-blocking documentation.
+Current Red Gate density tally (Task 7, unchanged by pass-31 through pass-33): `TOTAL_NEW_TESTS=14` (`RED_TESTS=9` / `EXEMPT_TESTS=3` / `GREEN-nonexempt=2`), `RED_RATIO=9/11≈0.82`. Story version: 6.2.
 
 ## Narrative
 
@@ -174,9 +175,8 @@ cells -- `cli_project = Some(C)` -> `Some(C)` in every configured cell, cross-cu
 none of (1)-(3) resolve, before any HTTP call) is (O) observed by AC-004's Test line for the
 owning EC-X.7.002-4 cell, not by any AC-001 cell; its second sentence (the
 `config::validate_profile_name`/`Config::load_with`/`JiraClient::from_config` preemption clause)
-is (N) not runtime-observable as a dedicated assertion -- enforced by every hermetic test in
-this story inheriting `main.rs`'s earlier preemption ordering by virtue of supplying valid auth
-and a known profile. Fix step 1
+is (U) observable via error message/exit code; no cell by design -- structurally forced by
+`src/main.rs`'s `Command::User` arm loading config before the handler. Fix step 1
 [CC:L759-774]'s design-rationale sentences (the new help text is "modeled on
 `ComponentSubcommand::List`'s wording"; why it cannot reuse that string byte-for-byte, since
 `component list`'s own help text understates its `Config::project_key` fallback) are (N)
@@ -261,9 +261,13 @@ resolved project key before it can call
 demonstrates the call never happens at all when no key resolves. Postcondition 4 (the pinned exit-64 message, stated verbatim
 in this AC's own body above -- this is a BC postcondition text, not a VP-cell paraphrase, per
 the D-386 carve-out) is (O) observed by this AC's own EC-X.7.002-4 cell. BC-X.7.002's
-Preconditions [CC:L796-798] are (N) not runtime-observable as their own dedicated assertion --
-enforced by this AC's hermetic test setup satisfying them by construction (config isolation,
-valid auth/profile supplied, per the Preconditions text). BC-X.7.002's Invariants [CC:L808-810]:
+Preconditions [CC:L796-798]: the first two bullets (the invocation-combination premise and the
+CONFIG-SENSITIVE hermetic-isolation requirement) are (N) not runtime-observable as their own
+dedicated assertion -- enforced by this AC's hermetic test setup satisfying them by construction
+(config isolation, valid auth/profile supplied, per the Preconditions text); the third bullet
+(the `config::validate_profile_name`/`Config::load_with`/`JiraClient::from_config` preemption
+clause) is (U) observable via error message/exit code; no cell by design -- structurally forced
+by `src/main.rs`'s `Command::User` arm loading config before the handler. BC-X.7.002's Invariants [CC:L808-810]:
 the L808 "config-merge-only resolution, no new accessor/cache" clause is (N) not
 runtime-observable -- enforced by Architecture Compliance Rules row 5 via code review,
 mirroring AC-009; the L809 failure-MECHANISM-vs-FACT distinction is (O) observed -- this AC's
@@ -283,10 +287,9 @@ pinned substring, and the absence of a successful HTTP call (via its unreachable
 `JR_BASE_URL=http://127.0.0.1:1`) -- it does not independently observe exit code 64 or the
 before-any-HTTP-call ordering, both of which are owned exclusively by the EC-X.7.002-4 cell; (b)
 its second sentence (the `config::validate_profile_name`/`Config::load_with`/
-`JiraClient::from_config` preemption clause) is (N) not runtime-observable -- enforced by this
-AC's hermetic tests clearing those preemption points (by supplying valid auth and a known
-profile, per Preconditions above) to reach BC-X.7.002's own exit-64 path; they do not themselves
-test the preemption behavior. Also carries
+`JiraClient::from_config` preemption clause) is (U) observable via error message/exit code; no
+cell by design -- structurally forced by `src/main.rs`'s `Command::User` arm loading config
+before the handler. Also carries
 VP-USER-LIST-PROJECT-001(c)'s EC-X.7.002-4 cell [CC:L877-880] (O) observed by this AC's own new
 hermetic cell. Everything
 the cited clause(s) specify is binding in its entirety and must be implemented exactly as
@@ -453,7 +456,9 @@ now the single source of truth (see the story's `## Revision History` section an
 instead declares which spans of
 `.factory/specs/prd/cross-cutting.md` are in scope for this story, and which lines within those
 spans are excluded from requiring an owning AC. Ownership itself is recorded only in each
-`### AC-NNN` section's `[CC:L<start>-<end>]` tags, not here.
+`### AC-NNN` section's `[CC:L<start>-<end>]` tags, not here. Per D-389 the (O)/(N)/(U)
+annotations on citations are non-blocking documentation; convergence is judged on clause-level
+traceability and behavior/test-affecting findings.
 
 [SCOPE:L753-754] BC-X.7.002 Behavior statement
 [SCOPE:L759-780] BC-X.7.002 Fix steps 1-5
@@ -580,7 +585,21 @@ token estimates are load-bearing for the budget-usage row below.)
    `cross-cutting.md`, not this story, is the source of truth for cell contents -- this story's
    AC Test lines bind to that text by reference and do not restate it.
 3. [ ] Write the inline `Cli::try_parse_from` unit test in `src/cli/mod.rs`'s existing
-   `#[cfg(test)] mod tests` block (AC-001, AC-005, AC-006) -- `test-writer`
+   `#[cfg(test)] mod tests` block (AC-001, AC-005, AC-006), asserting every cell this one
+   function must bundle: the four base VP-USER-LIST-PROJECT-001(a) argv cells
+   (`["jr","user","list"]` -> `None`; `["jr","user","list","--project","L"]` -> `Some("L")`;
+   `["jr","--project","G","user","list"]` -> `Some("G")`;
+   `["jr","--project","G","user","list","--project","L"]` -> `Some("L")`, the "both given" cell
+   AC-005 owns), the two `-p` short-alias cells (`["jr","user","list","-p","L"]` -> `Some("L")`;
+   `["jr","--project","G","user","list","-p","L"]` -> `Some("L")`), and the two EC-X.7.002-6
+   empty-string cells AC-006 owns (`["jr","user","list","--project",""]` -> `Some("")`;
+   `["jr","--project","","user","list"]` -> `Some("")`). On top of VP(a)'s own pinned
+   `UserCommand::List.project` field assertions, on the "both given" cell ALSO assert
+   `cli.project == Some("L")` on the root `Cli` struct's shared global-position field -- this
+   check is NOT itself part of VP(a)'s text; it is the story-added assertion AC-001's Test line
+   describes (P31-003(1)), verifying that clap's global-value propagation resolves the shared
+   `project` arg id to the child (subcommand-local) match rather than leaving the parent's own
+   matched value in place -- `test-writer`
 4. [ ] Write the `proptest!` on `resolve_user_list_project` in `src/cli/user.rs`'s
    `#[cfg(test)]` module (AC-003, AC-006) -- `test-writer`
 5. [ ] Write the hermetic wiremock integration cells in a new file,

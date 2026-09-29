@@ -10,6 +10,49 @@ status: "historical — not normative"
 Historical record of F3 review-driven revisions. Not normative: where anything here differs
 from the story body, the story body governs.
 
+## Revision Note (F3 human decision D-389 fixes, 2026-09-29)
+
+Human decision D-389, dated 2026-09-29, returned the factory's convergence bar to per-clause
+traceability, defined clean as no findings that affect behavior or tests, set a ten-pass cap, and
+made the observed, not-runtime-observable, and no-cell-by-design labels non-blocking
+documentation rather than a gating concern. Two fixes were made against this story under that
+decision, plus the required coverage-scope sentence.
+
+The real fix concerned Task 3. AC-001's Test line already described a story-added assertion,
+checking that the root Cli struct's project field equals Some of the string L, against the
+both-given argv vector jr, dash-dash-project, G, user, list, dash-dash-project, L. That check was
+added at pass 31 to empirically confirm clap's global-value propagation resolves the shared
+project argument id to the child match rather than leaving the parent's own matched value in
+place. The check is not itself part of VP-USER-LIST-PROJECT-001 sub-clause a's pinned text, and
+Task 3, the task that actually writes the inline Cli::try_parse_from test this assertion lives
+in, never named it, nor did it enumerate any of the other cells the same function bundles
+together: the four base argv cells from sub-clause a, the two dash-p short-alias cells, and the
+two empty-string cells owned by AC-006. Since the D-386 and D-387 binding instruction tells the
+test-writer to follow the cited verification-property text as the source of truth for cell
+contents, a test-writer working from Task 3 alone would have had no instruction anywhere telling
+it to add the root-level project-field check, because that check lives outside the
+verification-property text this story binds to. Fixed by rewriting Task 3 to enumerate every
+cell the function must contain, including that root-level assertion on the both-given cell,
+named explicitly as a story-added check that goes beyond sub-clause a's own pin.
+
+The cheap relabel concerned two citations of the config and profile preemption content: the
+second sentence of Resolution order step 4 in AC-001, and the preemption bullet of the
+Preconditions clause in AC-004, split out from that acceptance criterion's previous blanket
+Preconditions citation. Both were labeled not runtime-observable. That was inaccurate: a caller
+can observe the preemption behavior directly, through the error message and exit code an invalid
+profile or a malformed config produces before the handler ever runs. Both citations are now
+labeled observable but deliberately uncovered by a dedicated cell in this story, worded as
+observable via error message and exit code, no cell by design, structurally forced by
+src/main.rs's Command::User arm loading config before the handler. AC-004's own citation of the
+same Resolution order step 4 second sentence received the identical relabel.
+
+Also added, per D-389: a sentence to the Coverage Scope section's intro stating that the
+observed, not-runtime-observable, and no-cell-by-design labels on citations are now non-blocking
+documentation, and that convergence is judged on clause-level traceability and on findings that
+actually affect behavior or tests. No SCOPE or EXCLUDE line was touched, no coverage was removed,
+and no test, classification, or scope changed. Story version bumped from 6.1 to 6.2 to record
+this pass. The input-hash field is left untouched, per instruction.
+
 ## Revision Note (F3 adversarial pass-32 fixes)
 
 Pass-32 (2026-09-28) fixed two findings against this story, P32-003 and P32-005 (both LOW), and

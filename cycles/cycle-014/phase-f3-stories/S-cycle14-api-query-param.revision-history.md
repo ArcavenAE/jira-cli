@@ -1714,3 +1714,84 @@ Drift note: as with every prior pass, this follow-up's edits change what the sto
 should hash to. Per this pass's own explicit instruction not to touch the input hash, it was left
 as it was; this is expected drift for the state manager or orchestrator to reconcile, not something
 this pass tried to hide.
+
+## 2026-09-29, pass-33: final F3 fixes per human decision D-389
+
+This pass closed out five findings raised for this story under a human decision returning the
+factory to its own convergence bar: traceability judged clause by clause, a clean pass meaning no
+finding that changes behavior or a test, and a ten-pass cap. That same decision downgrades the
+observed, not-observable, and observable-but-untested-by-design labels introduced by earlier passes
+from a blocking requirement to non-blocking documentation.
+
+First, a genuine test-coverage gap. The task that asks the test-writer to build acceptance
+criterion one's separator-oracle randomized test and its pinned examples told the test-writer that
+the underlying verification-property text is the sole source of truth for what each test cell
+should contain. But acceptance criterion one's own body also pins one further example that is not
+itself drawn from that verification-property text at all: calling the path-and-query assembly
+function with a bare path and one pair whose value is empty, asserting the result keeps a trailing
+equals sign with nothing after it. This example closes a real gap -- it is the only cell in the
+whole story that checks the assembly function's own handling of an empty value, as opposed to the
+parsing function's handling of the same case, which a different acceptance criterion already
+covers. The task-level tally that counts every test this story adds already counts this example, so
+leaving it unnamed in the task's own instructions created a real risk that a test-writer following
+only the "read the verification-property text" instruction, without also reading acceptance
+criterion one's own body closely, could skip it. The task is now amended to name this example
+explicitly, spell out its exact call and expected result, and state plainly that it is a required
+deliverable of that task standing alongside the verification-property-sourced cells, not a nice-to-
+have. A sweep of every other task in this story for a similar story-added example not itself
+sourced from the cited verification-property text found none; this one pinned example is the only
+instance of the pattern anywhere in this story.
+
+Second, a genuine circular reference in this story's own declared inputs. This story's input list
+had named the wave's extended dependency-graph document as one of its own inputs. That same graph
+document, however, itself lists this story as one of ITS inputs -- so keeping the graph in this
+story's own input list would make the two documents each other's inputs, a cycle no reader could
+resolve to a stable reading order. The graph entry is removed from this story's input list, and a
+short comment is left in its place explaining why, so a future reader does not simply re-add it by
+habit. The story's own spec-source field already points at the same graph document for provenance,
+so the removal loses no traceability -- only the circular copy in the input list is gone.
+
+Third, two accuracy-only relabelings, changing nothing about behavior or tests, only the label
+attached to a citation that was already correctly describing a real mechanism. Acceptance criterion
+eight's discussion of its precondition includes a sentence explaining that configuration loading and
+client construction, and the profile-name check that runs alongside them, all happen before this
+flag's own validation step and so necessarily preempt this flag's own exit code. That sentence had
+been tagged not-observable-at-runtime, reasoned as enforced only by where the code lives and by
+pull-request review. That reasoning undersells it: which failure a user actually sees -- a
+configuration or authentication failure versus this flag's own malformed-value message -- and which
+exit code accompanies it, is something an ordinary invocation already shows on the command line, so
+the sentence is retagged observable-in-principle-but-deliberately-untested, with the reason stated
+plainly: no cell exists for it by design, because the ordering is instead structurally forced by the
+top-level command dispatch arm building configuration and the client before ever calling into this
+flag's own handler. Acceptance criterion one's discussion of a path containing a fragment likewise
+closes with a sentence, borrowed from the relevant network standard, that a fragment is never sent
+to the server at all. That sentence had also been tagged not-observable, reasoned as enforced by
+standard client behavior outside this story's own string-only function. Here too, the reasoning was
+too narrow: whether a fragment reaches the server is something a real request could show, and it is
+inherited, unmodified behavior from the underlying HTTP client library that this story's own
+string-only function has no ability to affect one way or the other. Both sentences are retagged
+accordingly, with their now-corrected reasons spelled out inline, and neither relabeling adds,
+removes, or changes any test cell.
+
+Fourth, two malformed uses of the bracket-tag citation form itself, found inside this story's own
+running revision-history summary rather than inside any acceptance criterion. That summary,
+describing an earlier pass's citation-labeling sweep, twice referred to the bracket-tag citation
+mechanism by writing out a bare, empty instance of the bracket form itself, with no line numbers
+inside it -- a malformed use of a syntax meant only ever to carry a real line range. Both instances
+are reworded to name the mechanism in plain words, "CC citation," instead of writing out any
+bracket form at all, matching this sibling document's own long-standing house style of describing
+citation forms by name rather than reproducing their syntax.
+
+Fifth, one sentence added to this story's own coverage-scope introduction, stating plainly, in the
+same place a reader first encounters the observed/not-observable/untested-by-design labeling
+scheme, that under this same human decision those labels are non-blocking documentation and that
+convergence for this story, like every other, is judged on whether each clause traces to a covering
+acceptance criterion and on findings that actually change behavior or a test, not on label
+completeness for its own sake.
+
+Story version bumped 6.1 to 6.2 to record this pass.
+
+Drift note: this pass's edits, including removing the circular input-list entry, change what the
+stored input hash should hash to. Per this pass's own explicit instruction not to touch the input
+hash, it was left as it was, matching every prior pass's convention on this point; this is expected
+drift for the state manager or orchestrator to reconcile, not something this pass tried to hide.

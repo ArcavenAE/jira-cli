@@ -20,7 +20,10 @@ inputs:
   - ".factory/cycles/cycle-014/phase-f2-spec-evolution/verification-delta.md"
   - ".factory/specs/prd/cross-cutting.md"
   - ".factory/specs/architecture/ARCH-INDEX.md"
-  - ".factory/cycles/cycle-014/phase-f3-stories/dependency-graph-extended.md"
+  # dependency-graph-extended.md intentionally excluded here (D-389, F3 fix): that graph
+  # lists this story as one of ITS OWN inputs, so listing it back here would create a
+  # circular input reference. `spec_source:` below preserves the provenance link without
+  # creating the cycle.
   - "src/cli/mod.rs"
   - "src/main.rs"
   - "src/cli/api.rs"
@@ -38,7 +41,7 @@ inputs:
   - "CHANGELOG.md"
   - "Cargo.toml"
   - "scripts/check-cargo-mutants-policy-citations.sh"
-input-hash: "9df52bb"
+input-hash: "43194e9"
 traces_to: "BC-X.16.001, BC-X.16.002"
 cycle: cycle-014-issue-triage-quickfixes
 estimated_effort: large
@@ -104,8 +107,8 @@ acceptance_criteria_count: 11
 assumption_validations: []
 risk_mitigations: []
 created: "2026-09-26"
-version: "6.1"
-last_updated: "2026-09-28"
+version: "6.2"
+last_updated: "2026-09-29"
 breaking_change: false
 retroactive: false
 origin: >
@@ -141,11 +144,18 @@ Pass-32 (2026-09-28) fixed a Token Budget row-1 double-count (the Read tool's tr
 reports the whole-file token count, not a per-chunk count to be summed), a mislabeled AC-009
 clause, two Task-level "informational"-label residues (Task 12, Task 13), and an unlabeled half of
 AC-001's Invariant 4 first sentence, then followed up in the same pass on a coordinator finding
-that "each AC's Test paragraph names VP clauses" is not itself an explicit label: every `[CC:]`
-citation in AC-001 through AC-009 that lacked an inline (O)/(N)/(U) tag naming its own observing
-test/mechanism now carries one (107 of 107 `[CC:]` citations in that range are labeled), split per
-sentence wherever a clause's sentences are not uniformly observed. Story version
-**6.1**. Full pass-3 through pass-32 history:
+that "each AC's Test paragraph names VP clauses" is not itself an explicit label: every CC citation
+in AC-001 through AC-009 that lacked an inline (O)/(N)/(U) tag naming its own observing
+test/mechanism now carries one (107 of 107 CC citations in that range are labeled), split per
+sentence wherever a clause's sentences are not uniformly observed. Pass-33 (2026-09-29, D-389
+final F3 fixes) named the AC-001/Task 2 story-added P22-002 pinned example as a required Task 2
+deliverable, removed `dependency-graph-extended.md` from this story's own `inputs:` (circular --
+that graph lists this story as one of its own inputs), relabeled two (N) citations to (U)
+(AC-008's config/client-construction-preemption sentence and AC-001's RFC 9112 fragment sentence),
+reworded this paragraph's own two malformed literal CC-tag bracket occurrences to plain "CC
+citation" wording, and added a Coverage Scope note that per D-389 the (O)/(N)/(U) labels are
+non-blocking documentation. Story version
+**6.2**. Full pass-3 through pass-33 history:
 `S-cycle14-api-query-param.revision-history.md` -- historical and non-normative; where anything
 there differs from this body, this body governs.
 
@@ -161,7 +171,9 @@ a `SCOPE` entry giving the clause's line range and name), or excluded, needing n
 heading, blank-line, or non-normative provenance/bibliographic prose (recorded below as an
 `EXCLUDE` entry giving the line range and reason). Ownership is recorded solely by the CC-tag
 citations in each AC; coverage (every SCOPE line minus EXCLUDE is inside some AC's CC-tag range)
-is verified mechanically per D-387.
+is verified mechanically per D-387. Per D-389 the (O)/(N)/(U) annotations on citations are
+non-blocking documentation; convergence is judged on clause-level traceability and
+behavior/test-affecting findings.
 
 One further span, L3772-3779 (the `## BC-X.16: API Query Parameters` subsection intro
 paragraph -- new in the same cycle-014 hunk as the L3783-4394 region above), is intentionally
@@ -376,9 +388,9 @@ half, via `parse_query_param`, see AC-005's own citation of this same clause), -
 -- (O) the main sentence (query inserted before `#`, fragment reattached verbatim) is observed by
 the VP-API-QP-001(EC-5) pinned example --
 (the closing RFC 9112 §3.2 sentence -- fragments are never transmitted to the server -- is
-(N) not runtime-observable -- enforced by standard HTTP-client behavior outside
-`append_query_params`'s string-only scope, confirmed at PR code review; not independently
-tested), -8
+(U) runtime-observable; no cell by design -- inherited reqwest/http request-target behavior; this
+story's string-only function does not affect transmission; confirmed at PR code review; not
+independently tested), -8
 `[CC:L3950-3959]` -- (O) observed by the VP-API-QP-001(EC-8) pinned example (one test, both pinned
 forms) --, -9 `[CC:L3960-3968]` -- (O) observed by the VP-API-QP-001(EC-9) pinned example --, -12
 `[CC:L3978-3988]` -- (O) observed by the VP-API-QP-001(EC-12) pinned example --, and -14
@@ -820,15 +832,16 @@ message reaches stderr (the pre-existing path error vs. an M1/M2 taxonomy messag
 malformed path and a malformed `-q` value are supplied together; no test in this story constructs
 that combined input, so no dedicated test cell exists for it, and none is added; the correct
 ordering is instead achieved by Task 13's placement of the `-q` pre-flight step immediately after
-`normalize_path`, confirmed at PR code review.) (P12-003: the Preconditions clause's middle sentence -- that
+`normalize_path`, confirmed at PR code review.) (P12-003, relabeled D-389: the Preconditions clause's middle sentence -- that
 `-q` validation runs only after `Config::load_with` and `JiraClient::from_config` succeed in
 `src/main.rs`'s `Command::Api` dispatch arm, and that those two calls plus
-`config::validate_profile_name` all preempt this BC's exit-64 -- is (N) not runtime-observable --
-enforced structurally: `main.rs`'s `Command::Api` arm runs both
-calls before `handle_api`; PR code review; verified against `src/main.rs` ~L499-501, where
+`config::validate_profile_name` all preempt this BC's exit-64 -- is (U) runtime-observable; no
+cell by design -- structurally forced by `src/main.rs`'s `Command::Api` arm running config/client
+construction before `handle_api`; verified against `src/main.rs` ~L499-501, where
 `Config::load_with` and `JiraClient::from_config` both execute before the
-`cli::api::handle_api(...)` call on the next line; no AC-008 cell can verify this, since every
-AC-008 cell supplies valid auth, so no dedicated test cell exists for it, and none is added.)
+`cli::api::handle_api(...)` call on the next line; no AC-008 cell verifies this directly, since
+every AC-008 cell supplies valid auth and never exercises a config/client-construction failure
+path, so no dedicated test cell exists for it, and none is added.)
 **Test (D-386 bind-by-reference):** Implements VP-API-QP-006(iii) `[CC:L4370-4384]` -- (O) observed
 by the (iii) held-open-stdin cell itself, below --,
 VP-API-QP-006(iv) `[CC:L4385-4386]` -- (O) observed by the (iv) before-`-H` cell below --,
@@ -1023,7 +1036,7 @@ Reference: `.factory/specs/architecture/ARCH-INDEX.md` Subsystem Registry (no mo
 ## Tasks
 
 1. [ ] **STUB:** add `pub(crate) fn append_query_params(path: &str, pairs: &[(String, String)]) -> String` and `pub(crate) fn parse_query_param(raw: &str) -> Result<(String, String)>` to `src/cli/api.rs` with `todo!()` bodies (signatures per AC-001/AC-005); add the `-q`/`--query-param: Vec<String>` field to `Command::Api` (`src/cli/mod.rs`, no `value_delimiter`, no `allow_hyphen_values`) and wire the pre-flight call site into `handle_api` and `src/main.rs`'s `Command::Api` dispatch arm -- the `handle_api` wiring MUST short-circuit around both stubs when zero `-q` flags are supplied (use the pre-existing `normalize_path` output unchanged), so the crate compiles end-to-end and the zero-flag path never touches a `todo!()`. **Short-circuit is STUB-STAGE ONLY (P6-006):** this short-circuit is a temporary stub-stage measure, present only so the Red Gate can run before either function is implemented -- Task 13 REMOVES it and calls both functions unconditionally, since `append_query_params(p, &[]) == p` is an identity (BC-X.16.001 Postcondition 1 / Behavior 5) that makes the short-circuit and its removal behaviorally indistinguishable once implemented, and leaving it in place would leave an equivalent `delete !` mutant unkillable under the `--in-diff` mutants gate once `src/cli/api.rs` enters `examine_globs` (AC-011). **No pinned help text at stub:** the `-q`/`--query-param` field's doc comment / clap `help`/`long_help` string MUST NOT contain the BC-X.16.001 Behavior 3 pinned substring `"do not pre-encode"` at this stage -- Task 12 (clap field finalization) is what adds it; this keeps AC-003's `--help` test cell genuinely RED at the Task 1 stub (Task 10(b)/(d)) rather than accidentally GREEN from a premature-but-correct doc comment -- `stub-architect`
-2. [ ] Write the `proptest!` separator oracle for `append_query_params` + pinned examples (AC-001's cited VP-API-QP-001 clauses) (AC-001) in `src/cli/api.rs`'s `#[cfg(test)] mod tests`. **The test-writer MUST read the cited VP clause(s) in `cross-cutting.md` in full before writing; the VP text, not this story, is the source of truth for cell contents.** -- `test-writer`
+2. [ ] Write the `proptest!` separator oracle for `append_query_params` + pinned examples (AC-001's cited VP-API-QP-001 clauses) (AC-001) in `src/cli/api.rs`'s `#[cfg(test)] mod tests`. **The test-writer MUST read the cited VP clause(s) in `cross-cutting.md` in full before writing; the VP text, not this story, is the source of truth for cell contents.** **This task ALSO requires ONE story-added pinned example that is NOT itself one of VP-API-QP-001's own pinned examples: `append_query_params("/x", &[("k".into(), "".into())]) == "/x?k="` (P22-002, the wire half of EC-X.16.001-1) -- see AC-001's own citation of this example for its full rationale. This cell is a required deliverable of this task alongside the VP-sourced cells above and MUST NOT be omitted merely because it does not appear in the cited VP text.** -- `test-writer`
 3. [ ] Write the repeated-names `proptest!` oracle (AC-002's cited VP-API-QP-002 clauses) in `src/cli/api.rs`'s `#[cfg(test)] mod tests`, plus the three argv cells in `tests/api_query_param.rs` (AC-002). **The `proptest!` oracle MUST assert the generator-constraint/anti-vacuity check `existing == generated_existing_pairs` (VP-API-QP-002(generator-constraint)) as a second assertion alongside the main oracle equality -- omitting it lets the generator silently collapse to an empty `existing` and pass vacuously (stated for emphasis; the clause governs).** **The test-writer MUST read the cited VP clause(s) in `cross-cutting.md` in full before writing; the VP text, not this story, is the source of truth for cell contents.** -- `test-writer`
 4. [ ] Write the encoding-exactly-once biased `proptest!` + pinned examples (AC-003's cited VP-API-QP-003 clauses) in `src/cli/api.rs`'s `#[cfg(test)] mod tests`, plus the `--help` cell in `tests/api_query_param.rs` (AC-003). **The round-trip assertion (VP-API-QP-003(a)) MUST extract `encode(v)` from `append_query_params`'s own output, NOT call `urlencoding::encode` directly -- a direct call would be tautological and GREEN at the Task 1 stub, defeating the Red Gate (stated for emphasis; the clause governs).** **The test-writer MUST read the cited VP clause(s) in `cross-cutting.md` in full before writing; the VP text, not this story, is the source of truth for cell contents.** -- `test-writer`
 5. [ ] Write the method-orthogonality table-driven wiremock test + zero-flag wiremock examples in `tests/api_query_param.rs`, and the zero-flag identity `proptest!` in `src/cli/api.rs`'s `#[cfg(test)] mod tests` (AC-004's cited VP-API-QP-004 clauses). **The test-writer MUST read the cited VP clause(s) in `cross-cutting.md` in full before writing; the VP text, not this story, is the source of truth for cell contents.** -- `test-writer`

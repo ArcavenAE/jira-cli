@@ -35,7 +35,7 @@ inputs:
   - "Cargo.toml"
   - ".factory/specs/architecture/ARCH-INDEX.md"
   - ".factory/cycles/cycle-014/cycle-manifest.md"
-input-hash: "63ca78f"
+input-hash: "d2006b0"
 traces_to: "BC-X.14.001, BC-X.14.003, BC-X.14.004"
 cycle: cycle-014-issue-triage-quickfixes
 estimated_effort: medium
@@ -97,8 +97,8 @@ acceptance_criteria_count: 9
 assumption_validations: []
 risk_mitigations: []
 created: "2026-09-26"
-version: "6.1"
-last_updated: "2026-09-28"
+version: "6.2"
+last_updated: "2026-09-29"
 breaking_change: false
 retroactive: false
 origin: >
@@ -126,7 +126,7 @@ origin: >
 
 ## Revision History
 
-Full pass-by-pass record (pass-3 through pass-32, including the condensed summary paragraph
+Full pass-by-pass record (pass-3 through pass-33, including the condensed summary paragraph
 formerly kept in this section) moved to
 [`S-cycle14-field-options-name-label.revision-history.md`](./S-cycle14-field-options-name-label.revision-history.md)
 -- historical and non-normative; where anything there differs from this story body, this body
@@ -144,8 +144,20 @@ own mechanism); every other runtime-observable statement lacking a named test is
 This relabeled AC-007's and AC-009's warm-cache sub-clauses, AC-006's three `--help`-visible
 about-text edits, AC-007's `customfield_NNNNN` case-sensitivity claim, AC-008's
 profile-scoped-isolation claim, and the after-arity half of the empty-`<field>` ordering recap in
-AC-008 and AC-009, from (N) to (U). Red Gate tally unchanged: 5 RED of 7 total (0 exempt),
-`RED_RATIO = 5/7 ~= 0.71 >= 0.5`. Version 6.1.
+AC-008 and AC-009, from (N) to (U).
+
+Pass-33 / D-389 (2026-09-29) relabeled the guard-before-cache-read sub-clause in AC-008, AC-009,
+and the Edge Cases EC-X.14.001-15 row from (N) to (U): `src/cache.rs::read_cache` (which
+`read_fields_cache` calls) does warn on stderr for malformed cache JSON and does propagate other
+I/O errors reading the file, so the claim that a cache read leaves no observable trace was false.
+Also split AC-008's blanket (O) for EC-X.14.001-14 into four per-sentence labels: (O) for the
+matching-logic algorithm via the `search_field_list_*` unit tests; (O) for the zero-match exit 64
+via `tests/field_options.rs::test_bc_x_14_001_field_name_zero_match_exits_64`; (U) for the `jr
+api`/`jr project fields` discovery claims, the `fixVersions`-specific message, and the hint text;
+and (N) for the tenant/locale rationale. Per D-389, the Coverage Scope intro now states that
+these labels are non-blocking documentation, and both AC-008's and AC-009's header parentheticals
+were updated from an O/N to an O/N/U label scheme. Red Gate tally unchanged: 5 RED of 7 total (0
+exempt), `RED_RATIO = 5/7 ~= 0.71 >= 0.5`. Version 6.2.
 
 ## Coverage Scope (D-387)
 
@@ -247,9 +259,9 @@ cache-first contract "mirrored, not shared" with `field_resolve.rs::resolve_edit
 
 [SCOPE:L2991-3003] BC-X.14.001 EC-X.14.001-13 (`--value` filter downstream consequence)
 
-[SCOPE:L3004-3035] BC-X.14.001 EC-X.14.001-14 (field-NAME resolution unaffected; see AC-008 for per-sentence O/N labels)
+[SCOPE:L3004-3035] BC-X.14.001 EC-X.14.001-14 (field-NAME resolution unaffected; see AC-008 for per-sentence O/N/U labels)
 
-[SCOPE:L3036-3044] BC-X.14.001 EC-X.14.001-15 (empty `<field>` string; see AC-009 for per-sentence O/N labels)
+[SCOPE:L3036-3044] BC-X.14.001 EC-X.14.001-15 (empty `<field>` string; see AC-009 for per-sentence O/N/U labels)
 
 [SCOPE:L3093-3134] VP-580-013 (cycle-014, issue #861, READ-SIDE ONLY) -- the whole clause: "What
 it proves" (L3093-3099), the five-part Strategy ((1)-(5), L3099-3128), and the Fault models
@@ -261,7 +273,9 @@ sentence (L3129-3134)
 EC-X.14.001-15)
 
 Ownership is recorded solely by the CC-tag citations in each AC; coverage (every SCOPE line
-minus EXCLUDE is inside some AC's CC-tag range) is verified mechanically per D-387.
+minus EXCLUDE is inside some AC's CC-tag range) is verified mechanically per D-387. Per D-389 the
+(O)/(N)/(U) annotations on citations are non-blocking documentation; convergence is judged on
+clause-level traceability and behavior/test-affecting findings.
 
 ## Narrative
 
@@ -554,10 +568,24 @@ by design -- pre-existing behavior, `resolve_field_id` unchanged in this diff. E
 cited clause(s) specify is binding in its entirety and must be implemented exactly as written
 there; this story does not restate or narrow any of it.
 
-### AC-008 (traces to BC-X.14.001 EC-X.14.001-14 [CC:L3004-3035] -- documented for completeness, no dedicated VP cell; see per-sentence O/N labels below)
+### AC-008 (traces to BC-X.14.001 EC-X.14.001-14 [CC:L3004-3035] -- documented for completeness, no dedicated VP cell; see per-sentence O/N/U labels below)
 System-typed field NAME resolution (the step upstream of the label fallback, e.g. resolving the string `"Priority"` to a field id) is pre-existing `search_field_list`/`resolve_field_id` behavior, unaffected by this story's label-resolution fix. No new test is added for this AC; existing `search_field_list` unit tests already cover it as a regression guard.
-**Test:** (O) observed by the existing `test_bc_x_14_001_search_field_list_*` unit tests, which continue
-passing unmodified. Also implements BC-X.14.001 Invariant 3's `customfield_NNNNN` bypass /
+**Test:** Implements BC-X.14.001 EC-X.14.001-14 [CC:L3004-3035], split per-sentence rather than as
+one blanket (O): the `<field>` resolution algorithm itself (case-insensitive exact-then-substring
+match via `search_field_list`, the `customfield_NNNNN` bypass) is (O) observed by the existing
+`test_bc_x_14_001_search_field_list_*` unit tests, which continue passing unmodified; the
+zero-match "not found" outcome (exit 64) is separately (O) observed by
+`tests/field_options.rs::test_bc_x_14_001_field_name_zero_match_exits_64`; the discovery-hint
+claims -- that `jr api /rest/api/3/field` lists every field's `id`/`name` pair while `jr project
+fields --output json` does not, the `fixVersions`-specific worked example (its display name's
+punctuation defeating substring match on a sampled tenant), and the resulting error-message hint
+text -- are (U) runtime-observable (e.g. a test invoking `jr field options fixVersions` against a
+tenant carrying that exact display-name shape could assert the hint text) but no cell exists in
+this story by design, since this content documents pre-existing, tenant/locale-dependent behavior
+this story's diff does not change; the tenant/locale-dependence rationale itself (why no exact
+display-name string is pinned as a portable constant, and the Version-field slash-contiguity
+explanation) is (N) not runtime-observable -- rationale prose explaining WHY the behavior is
+tenant-dependent, not a claim any single test run could confirm or refute. Also implements BC-X.14.001 Invariant 3's `customfield_NNNNN` bypass /
 `fields.json` cache-first "mirrored, not shared" description [CC:L2889-2896] and Invariant 4's
 `search_field_list`-vs-`partial_match` description (including the empty-`<field>` exit-64
 ordering recap) [CC:L2897-2909]. Invariant 4's field-resolution-algorithm claim
@@ -568,10 +596,9 @@ existing behavior pinned by
 `_substring_multiple_is_err`, and
 `tests/field_options.rs::test_bc_x_14_001_customfield_bypass_skips_list_fields`); the
 empty-`<field>` exit-64 ordering recap embedded in the same range is a SEPARATE sub-clause those
-six tests do not exercise. Its before-cache-read half is (N) not runtime-observable -- a cache
-read is a side-effect-free file read with no observable trace, so it cannot be expressed as
-observable I/O; enforced instead by code citation plus PR diff review, the same mechanism AC-009
-uses for this identical clause: `src/cli/field.rs::resolve_field_id`'s
+six tests do not exercise. Its before-cache-read half is (U) observable via stderr warning/IO
+error with a corrupt `fields.json`; no cell by design -- `resolve_field_id` unchanged in this
+diff (the same labeling AC-009 uses for this identical clause): `src/cli/field.rs::resolve_field_id`'s
 `query.is_empty()` guard precedes its only cache read (verified against current code), and PR
 diff review confirms `resolve_field_id` is unchanged by this story's diff. Its after-arity half is
 instead (U) runtime-observable -- a test combining an empty `<field>` with a mode-selector-arity
@@ -605,7 +632,7 @@ zero changes to `src/cli/issue/field_resolve.rs` (which necessarily includes its
 clause(s) specify is binding in its entirety and must be implemented exactly as written there;
 this story does not restate or narrow any of it.
 
-### AC-009 (traces to BC-X.14.001 EC-X.14.001-15 [CC:L3036-3044] and BC-X.14.004's empty-`<field>` error-taxonomy row [CC:L3351] -- documented for completeness, no dedicated VP cell; see per-sentence O/N labels below)
+### AC-009 (traces to BC-X.14.001 EC-X.14.001-15 [CC:L3036-3044] and BC-X.14.004's empty-`<field>` error-taxonomy row [CC:L3351] -- documented for completeness, no dedicated VP cell; see per-sentence O/N/U labels below)
 The empty-`<field>` guard (`jr field options ""` exits 64 with `Field '' not found. The field name must not be empty.`, zero HTTP calls, zero cache reads) is pre-existing `src/cli/field.rs::resolve_field_id` behavior, unaffected by this story's label-resolution fix. See BC-X.14.004's cross-reference row for the same condition. No new test is added for this AC.
 **Test:** (O) observed by the existing
 `tests/field_options.rs::test_bc_x_14_001_empty_field_name_exits_64_zero_http`, which continues
@@ -620,10 +647,9 @@ exact wording varies slightly by range -- e.g. ~L2813 says "a code-level orderin
 inspection" rather than "a code-level fact"), rather than
 something the named test enforces (P16-009: [CC:L3351]'s error-taxonomy row does not itself
 contain that phrase -- it cross-references EC-X.14.001-15, which is where that statement actually
-appears). That before-cache-read ordering/zero-cache-reads sub-clause is (N) not
-runtime-observable -- a cache read is a side-effect-free file read with no observable trace, so it
-cannot be expressed as observable I/O; enforced instead
-by code citation plus PR diff review: `src/cli/field.rs::resolve_field_id`'s `query.is_empty()` guard
+appears). That before-cache-read ordering/zero-cache-reads sub-clause is (U) observable via
+stderr warning/IO error with a corrupt `fields.json`; no cell by design -- `resolve_field_id`
+unchanged in this diff: `src/cli/field.rs::resolve_field_id`'s `query.is_empty()` guard
 (~L442-447) precedes its only cache read (`cache::read_fields_cache`, ~L451) -- verified against
 current code -- and PR diff review confirms `resolve_field_id` is unchanged by this story's diff.
 That covers only the before-cache-read half; the after-arity half is instead (U)
@@ -672,8 +698,8 @@ Reference: `.factory/specs/architecture/ARCH-INDEX.md` Subsystem Registry (no mo
 | EC-X.14.001-11 | A cascading parent's CHILD entry carrying `name` but no `value` | The same `value`-else-`name` fallback applies recursively -- cascading children are not exempt |
 | EC-X.14.001-12 | `{value: Some(""), name: Some(n)}` (presence, not emptiness) | `label: Some("")`, never `Some(n)`; a wire `"value": null` still falls through to `name` |
 | EC-X.14.001-13 | `--value` filter against a system field | Matches via the fallback label as a downstream consequence, not a new filter rule |
-| EC-X.14.001-14 | System-field NAME resolution (see AC-008 for per-sentence O/N labels) | Pre-existing `search_field_list` behavior, unaffected |
-| EC-X.14.001-15 | `<field>` is the empty string (pre-existing, no behavior change; see AC-009 for per-sentence O/N labels) | Exit 64 `Field '' not found. The field name must not be empty.`, pinned (exit 64, message, zero HTTP on a cold cache) by `tests/field_options.rs::test_bc_x_14_001_empty_field_name_exits_64_zero_http`; zero cache reads / guard-before-cache-read ordering is a code-level fact, (N) not runtime-observable (see AC-009); see BC-X.14.004's cross-reference row |
+| EC-X.14.001-14 | System-field NAME resolution (see AC-008 for per-sentence O/N/U labels) | Pre-existing `search_field_list` behavior, unaffected |
+| EC-X.14.001-15 | `<field>` is the empty string (pre-existing, no behavior change; see AC-009 for per-sentence O/N/U labels) | Exit 64 `Field '' not found. The field name must not be empty.`, pinned (exit 64, message, zero HTTP on a cold cache) by `tests/field_options.rs::test_bc_x_14_001_empty_field_name_exits_64_zero_http`; zero cache reads / guard-before-cache-read ordering is (U) observable via stderr warning/IO error with a corrupt `fields.json`, no cell by design (see AC-009); see BC-X.14.004's cross-reference row |
 
 ## Purity Classification
 

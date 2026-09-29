@@ -9,6 +9,49 @@ status: historical — not normative
 
 Historical record of F3 review-driven revisions. Not normative: where anything here differs from the story body, the story body governs.
 
+## 2026-09-29 -- F3 human decision D-389 fixes
+
+Human decision D-389, dated 2026-09-29, returned the factory's convergence bar to per-clause
+traceability, defined clean as no findings that affect behavior or tests, set a ten-pass cap, and
+made the observed, not-runtime-observable, and no-cell-by-design labels non-blocking
+documentation rather than a gating concern. Three relabeling fixes were made against this story
+under that decision, plus the required coverage-scope sentence; no test, scope, or classification
+changed.
+
+AC-008, AC-009, and the Edge Cases table's EC-X.14.001-15 row all described the guard-before-
+cache-read ordering as not runtime-observable, reasoning that a cache read is a side-effect-free
+file read with no observable trace. That reasoning does not hold up against the actual code: the
+generic read_cache function in src/cache.rs, which read_fields_cache calls, both warns on stderr
+when the cache file's JSON is malformed and propagates any other I/O error it hits while reading
+the file, so a corrupt fields.json does produce an observable trace. All three citations are now
+labeled observable but deliberately uncovered by a dedicated cell in this story, worded as
+observable via stderr warning or an I/O error with a corrupt fields.json, no cell by design,
+since resolve_field_id is unchanged in this diff.
+
+AC-008's opening line also gave a single blanket observed label to the whole EC-X.14.001-14
+citation, covering not just the field-resolution algorithm the named unit tests actually
+exercise, but also the zero-match exit-64 outcome, the jr api and jr project fields discovery
+claims, the fixVersions-specific worked example, the resulting hint text, and the tenant and
+locale rationale explaining why none of that wording is pinned as a portable constant. None of
+the last five is provable by the six search_field_list unit tests the blanket label pointed at.
+The citation is now split four ways: the matching logic itself stays observed, by those same six
+unit tests; the zero-match exit-64 outcome is separately observed, by
+tests/field_options.rs::test_bc_x_14_001_field_name_zero_match_exits_64, confirmed present before
+citing it; the discovery-hint claims, meaning the jr api versus jr project fields comparison, the
+fixVersions worked example, and the resulting hint text, are labeled observable in principle but
+deliberately uncovered by a cell in this story; and the tenant and locale dependence rationale
+itself is labeled not runtime-observable, since it explains why the behavior varies by tenant
+rather than asserting anything a single test run could confirm or refute. Both AC-008's and
+AC-009's header parentheticals, and the Edge Cases table's cross-references to them, were updated
+from naming an observed-and-not-observable label scheme to naming the three-way scheme that now
+includes the deliberately-uncovered label, to match.
+
+Per D-389, a sentence was also added to the Coverage Scope section's intro stating that these
+labels are now non-blocking documentation and that convergence is judged on clause-level
+traceability and on findings that actually affect behavior or tests. No SCOPE or EXCLUDE line was
+touched, no coverage was removed, and the Red Gate tally is unchanged. Story version bumped from
+6.1 to 6.2 to record this pass. The input-hash field is left untouched, per instruction.
+
 ## Revision Note (F3 adversarial pass-3 fix, ADV-C14-F3-P3-004b, LOW)
 
 VP-580-013(3) requires that the emitted node's key set be exactly `{"id","label","children"}`
