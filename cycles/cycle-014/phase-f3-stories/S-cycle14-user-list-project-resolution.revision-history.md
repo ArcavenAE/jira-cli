@@ -1085,3 +1085,65 @@ Story version bumped 5.4 -> 5.5 to record this pass.
 Drift note: this pass's edits (including the three added inputs entries) change what the stored
 `input-hash` should hash to. Per this pass's explicit instruction not to touch `input-hash`, it
 was left as-is, matching every prior pass's convention on this point.
+
+## 2026-09-28 -- F3 pass-29 fix (P29-002) and citation sweeps (P29-001, P29-002)
+
+One finding was raised against this story, plus the two general sweeps the pass-29 dispatch asked
+every cycle-014 story to run:
+
+- P29-002 (LOW): the Architecture Mapping section's Reference line cited two files,
+  architecture/module-decomposition.md and architecture/dependency-graph.md, neither of which
+  exists anywhere in this repository. Checked with find under the whole .factory tree. Fix: the
+  line now points at the Subsystem Registry section of
+  .factory/specs/architecture/ARCH-INDEX.md instead, which does exist and does carry a section
+  literally headed Subsystem Registry, and notes that F1 found no architecture delta for this
+  story.
+- P29-002 sweep: went through the whole story body and listed every citation of a dot-factory
+  path, an architecture path, a specs path, or any other file path outside src, then checked each
+  one against the real filesystem with ls or find. Nineteen such citations were checked (the
+  cargo mutants config, the cross-cutting spec, Cargo.toml, CHANGELOG.md, CLAUDE.md, the cargo
+  mutants policy doc, README.md, the sibling revision-history file, the cargo-mutants-policy
+  citation checker script, four existing test files under tests, the F2 verification-delta file,
+  the F3 wave-holdout-scenarios file, and the orchestrator's per-story-delivery workflow file,
+  which lives in the vsdd-factory engine rather than this repo but does exist there). Every one of
+  them resolved except the two architecture paths already fixed above; no further fix was needed.
+  The one new test file this story creates, tests/user_list_project_resolution.rs, was excluded
+  from the check since it does not exist yet by design.
+- P29-001 sweep: went back through every acceptance criterion, the Coverage Scope section, the
+  Architecture Compliance Rules table, and the Tasks section, and for every prose reference to a
+  numbered clause of BC-X.7.002 or VP-USER-LIST-PROJECT-001 -- every Fix step number, every
+  Resolution order step number, every Postcondition number, the Preconditions and Invariants
+  sections, every EC-X.7.002 edge case number, and every VP-USER-LIST-PROJECT-001 sub-clause
+  letter -- reread the actual BC-X.7.002 text in cross-cutting.md and confirmed the cited number
+  matches the content the sentence attributes to it. Every citation checked out; none needed
+  correcting. This story had already been through three prior citation-focused passes (22, 26,
+  27, 28), so the clean result here is consistent with that history rather than a surprise.
+
+Story version bumped 5.5 -> 5.6 to record this pass.
+
+Drift note: this pass's edit (the Architecture Mapping Reference line) changes what the stored
+`input-hash` should hash to. Per this pass's explicit instruction not to touch `input-hash`, it
+was left as-is, matching every prior pass's convention on this point.
+
+2026-09-28, pass-30: ran the cross-story sweep triggered by the sibling field-options story's
+pass-30 finding, which flagged a pattern where a multi-sentence spec citation gets blanket-labeled
+informational even though one of its sentences is actually observed by a named test cell. Checked
+every informational or inherited label in this story, eighteen in total across the nine acceptance
+criteria and the edge cases table, and found three instances of that same pattern. The first
+acceptance criterion's citation of resolution order step four had labeled the whole clause
+informational without noting that its first sentence, the exit sixty four condition when none of
+the three sources resolve, is independently owned and tested by the fourth acceptance criterion's
+own cell; this was split the same way the fourth acceptance criterion already splits that same
+citation, crediting that sentence there by cross-reference and keeping only the genuinely-untested
+preemption sentence as informational. The fifth acceptance criterion's citation of resolution
+order step one's lead-in sentence, and the seventh acceptance criterion's citation of the
+non-paginated contract sentence, had both been labeled informational even though each label's own
+text went on to name the specific cells, owned by other acceptance criteria, that actually observe
+the sentence. Both were relabeled as plain cross-references, dropping the informational word,
+since that label is meant only for content that is genuinely not observable at runtime. No other
+label in this story showed the pattern -- every other multi-line citation already carries a
+per-sentence split from earlier passes, and every remaining single-sentence label describes
+rationale, a structural or code-review fact, or a condition the spec itself already marks
+informational. A companion sweep checked the one line-number citation into a tests file that also
+names a symbol in this story against the current file; it was accurate to within one line, so no
+fix was needed. Story version bumped 5.6 to 5.7 to record this pass.

@@ -445,3 +445,15 @@ See `cycles/cycle-005/burst-log.md` Bursts 11-12 for full narrative detail (thes
 | Phase | Status | Completed | Gate | Notes | Finding Progression |
 |-------|--------|-----------|------|-------|---------------------|
 | **RELEASE-v0.7.0-GA-2026-09-24** | **RELEASED / PUBLISHED (STABLE)** | 2026-09-24 | release-metadata PR gate + human admin-merge | `v0.7.0` FIRST STABLE (GA) release, `develop`->`main`. Process correction `D-376`: TRUE MERGE COMMIT (`86c3ac1f`). `release.yml` run `35953608796` SUCCESS. Published 2026-09-24T04:04:45Z. | 770 BCs / 89 VPs / 118 holdout / 191 stories; `D-376` minted |
+
+---
+
+> Extracted from `.factory/STATE.md`'s `## Phase Progress` table during the
+> 2026-09-28 `CYCLE-014-F3-PASS30-CHECKPOINT-2026-09-28` burst (v5.09 ->
+> v5.10), to keep the live table at 12 rows after adding the new
+> `CYCLE-014-F3-PASS30-CHECKPOINT-2026-09-28` row. This was the oldest row
+> at that point; archived here verbatim, unedited.
+
+| Phase | Status | Completed | Gate | Notes | Finding Progression |
+|-------|--------|-----------|------|-------|---------------------|
+| **POST-GA-FOLLOWUPS-COMPLETE-2026-09-24** | **COMPLETE** | 2026-09-24 | PR merge gate (CI green + human merge) | PR `#876` MERGED @ `09bb2803`: `develop` `0.8.0-dev.1`. Helper-branch cleanup DONE. `activation_head`/`activation_version` UNCHANGED. | 770 BCs / 89 VPs / 118 holdout / 191 stories; no DEC minted |

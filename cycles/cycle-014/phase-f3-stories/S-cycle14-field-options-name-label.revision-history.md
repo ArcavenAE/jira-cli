@@ -1128,3 +1128,61 @@ Story version bumped 5.4 -> 5.5 to record this pass.
 Drift note: this pass's edits (including the three added inputs entries) change what the stored
 `input-hash` should hash to. Per this pass's explicit instruction not to touch `input-hash`, it
 was left as-is, matching every prior pass's convention on this point.
+
+## 2026-09-28 -- F3 pass-29 fixes (P29-001 sweep, P29-002)
+
+Two checks were dispatched against this story:
+
+- P29-002 (Architecture Mapping Reference line): the Architecture Mapping section's Reference
+  line cited architecture/module-decomposition.md and architecture/dependency-graph.md. Neither
+  file exists anywhere in this repository (verified with find). Fixed: the line now reads
+  "Reference: .factory/specs/architecture/ARCH-INDEX.md Subsystem Registry (no module-boundary
+  change; F1 confirmed no architecture delta)". ARCH-INDEX.md was confirmed to exist and to carry
+  a section literally headed "## Subsystem Registry" before making this change.
+- P29-002 sweep (all non-src file-path citations): swept this story's entire body for every
+  .factory/..., architecture/..., specs/..., and other non-src file path citation, 15 distinct
+  paths checked (excluding the future red-gate-log.md implementation artifact this story creates,
+  which is not a pre-existing-file citation). All 15 resolve on disk with ls or find, including
+  this story's established bare-filename shorthands (cross-cutting.md, prd-delta.md,
+  wave-holdout-scenarios.md, story-template.md -- the last of these resolving to the vsdd-factory
+  engine's own templates directory, outside this repository, which is the expected location for
+  a shared pipeline template, not a broken in-repo citation). Only the architecture/ pair above was
+  broken; no other fix was needed.
+- P29-001 sweep (numbered BC clause prose citations): re-read BC-X.14.001, BC-X.14.003, and
+  BC-X.14.004 in full from cross-cutting.md, then checked every PROSE reference in this story's
+  body to a numbered clause -- Invariant N, EC-X.14.001-N, and VP-580-013(N)/sub-clause
+  (N)/clause (N) -- against that text. 85 total citation instances were checked. This story cites
+  no numbered "Postcondition N", "Precondition N", or "Fix step N" clause at all, because
+  BC-X.14.001/004's own Preconditions/Postconditions are unnumbered bullets in cross-cutting.md,
+  not numbered clauses -- there was nothing of that shape to mismatch. Every Invariant 3/4 and
+  every EC-X.14.001-1/2/6/7/8/9/10/11/12/13/14/15 and VP-580-013 sub-clause (1)-(5) citation
+  checked out against the actual clause content. No mismatch was found in this story.
+
+Story version bumped 5.5 -> 5.6 to record this pass.
+
+Drift note: this pass's edits (the Architecture Mapping Reference rewrite) change what the stored
+`input-hash` should hash to. Per this pass's explicit instruction not to touch `input-hash`, it
+was left as-is, matching every prior pass's convention on this point.
+
+2026-09-28, pass-30: fixed finding P30-001 against AC-001. The FieldOption contract-amendment
+citation (cross-cutting.md line 2728) had been labeled as a single blanket "informational,
+inherited, SURVIVAL only" citation, but that paragraph actually contains several distinct
+sentences, and two of them are directly observable by named test cells rather than being
+genuinely non-testable. The paragraph was re-read in full and relabeled sentence by sentence: the
+type-change and degrade-to-None sentences keep the survival label, since they describe a
+degenerate entry surviving in the output rather than a resolved value; the "missing label-source
+fields means precisely" sentence's M1/M2 half (missing both value and name) is now credited to
+AC-001's own name-only and neither test cells, since those cells sit exactly on the boundary that
+definition draws; that same sentence's M3 half (no fallback, label read directly from the wire
+label key) is now a plain cross-reference to AC-004's fourth test function and the matching
+VP-580-013 sub-clause 4 fixture, since AC-001's own cells cannot observe M3 behavior; and the
+closing children-always-present sentence is now credited to AC-001's own third test function, the
+serde key-set assertion for VP-580-013 sub-clause 3. A full sweep of every remaining
+informational/inherited label in this story (23 checked across AC-001 through AC-009 and the Edge
+Cases table) found no further instance of this pattern -- every other multi-sentence citation
+already carries its own per-sentence attribution from earlier passes, and every remaining
+single-sentence informational label describes rationale, a structural or code-review fact, or a
+condition the spec itself already marks informational. Zero further labels were changed. A
+companion sweep checked every line-number citation into a tests file that also names a symbol (four
+found, all in tests/field_options.rs) against the current file; all four were accurate to within
+one line, so none needed correction. Story version bumped 5.6 to 5.7 to record this pass.

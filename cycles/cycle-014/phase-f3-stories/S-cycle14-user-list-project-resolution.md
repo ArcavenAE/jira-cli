@@ -89,7 +89,7 @@ acceptance_criteria_count: 11
 assumption_validations: []
 risk_mitigations: []
 created: "2026-09-26"
-version: "5.5"
+version: "5.7"
 last_updated: "2026-09-28"
 breaking_change: true
 retroactive: false
@@ -181,7 +181,41 @@ disk with `ls`: `CLAUDE.md` (cited for the `cargo mutants --in-diff` command and
 branch-naming convention), `src/jql.rs` (cited as the anchor bullet the new
 `docs/specs/cargo-mutants-policy.md` §Scope entry is inserted directly after), and
 `tests/mutants_glob_existence.rs` (cited in AC-011's Test line). No other cited path was found
-missing. Story version: 5.5.
+missing.
+Pass-29 (2026-09-28) fixed P29-002 against this story: the `## Architecture Mapping` "Reference:"
+line cited `architecture/module-decomposition.md` and `architecture/dependency-graph.md`, but
+neither file exists anywhere in this repo. It now reads "Reference:
+`.factory/specs/architecture/ARCH-INDEX.md` Subsystem Registry (no module-boundary change; F1
+confirmed no architecture delta)". The P29-002 sweep of every other `.factory/...`/`architecture/
+...`/`specs/...` (and other non-`src/`) path cited in this story's body checked 19 such citations
+and found no further broken path -- the two `architecture/...` citations above were the only
+fix. The P29-001 sweep re-read every prose reference to a numbered BC-X.7.002/VP-USER-LIST-
+PROJECT-001 clause (Fix step N, Resolution order step N, Postcondition N, Precondition,
+Invariant, EC-X.7.002-N, VP-USER-LIST-PROJECT-001(x)) against cross-cutting.md's actual BC-X.7.002
+text and found every citation's number already correct -- no fix was required. Story version
+bumped 5.5 -> 5.6 to record this pass.
+Pass-30 (2026-09-28) ran the cross-story sweep triggered by STORY-B's P30-001 finding (a
+multi-sentence CC citation blanket-labeled "informational" when a sub-sentence is actually
+observed by a named test cell). Checked every "informational"/"inherited" label in this story
+(18 checked across AC-001 through AC-009 and the Edge Cases table) and found three instances of
+this pattern: (1) AC-001's citation of Resolution order step 4 [CC:L786] blanket-labeled the whole
+clause informational, without noting that its first sentence (exit 64 when none of (1)-(3)
+resolve) is independently owned and tested by AC-004's EC-X.7.002-4 cell -- split the same way
+AC-004 already splits this same citation, crediting that sentence to AC-004 by cross-reference and
+keeping only the genuinely-untested preemption-clause sentence as informational. (2) AC-005's
+citation of Resolution order step 1's lead-in sentence [CC:L782-783] and (3) AC-007's citation of
+the non-`--all` contract sentence [CC:L894] had both been labeled "informational" despite the
+label's own text naming the specific cells (in other ACs) that actually observe each sentence --
+relabeled both as plain cross-references, dropping the "informational" word, since the sweep's own
+rule reserves that label for content that is genuinely not runtime-observable. No other label in
+this story showed the pattern -- every other multi-line citation already carries a per-sentence
+split from earlier passes, and every remaining single-sentence label describes rationale, a
+structural/code-review fact, or content the spec itself already marks informational (e.g.
+EC-X.7.002-7's own "informational, no VP cell" row). A companion sweep checked the one
+line-number-into-a-tests-file citation with a symbol name in this story
+(`tests/user_commands.rs::user_list_requires_project_flag`, `~L122-139`) against the current file;
+it is accurate to within 1 line -- no fix required. Story version bumped 5.6 -> 5.7 to record this
+pass.
 
 ## Narrative
 
@@ -216,9 +250,13 @@ Architecture Compliance Rules row 2 via code review). Also carries Postcondition
 [CC:L802] (global fills local when absent; its own "regardless of whether a configured default
 is also present" half is observed by AC-003's VP(b) `Some(C)` cells -- `cli_project = Some(C)`
 -> `Some(C)` in every configured cell, cross-cutting.md line 863 -- not by this AC's own cells)
-as a secondary citation, and Resolution order step 4 [CC:L786]
-(informational, inherited -- every hermetic test in this story inherits `main.rs`'s earlier
-preemption ordering by virtue of supplying valid auth and a known profile). Fix step 1
+as a secondary citation, and Resolution order step 4 [CC:L786], split the same way AC-004 splits
+it (P30-SWEEP): its first sentence (exit 64 when none of (1)-(3) resolve, before any HTTP call)
+is not observed by any AC-001 cell -- see AC-004's Test line for the owning EC-X.7.002-4 cell; its
+second sentence (the `config::validate_profile_name`/`Config::load_with`/`JiraClient::from_config`
+preemption clause) is informational, inherited -- every hermetic test in this story inherits
+`main.rs`'s earlier preemption ordering by virtue of supplying valid auth and a known profile.
+Fix step 1
 [CC:L759-774]'s design-rationale sentences (the new help text is "modeled on
 `ComponentSubcommand::List`'s wording"; why it cannot reuse that string byte-for-byte, since
 `component list`'s own help text understates its `Config::project_key` fallback) are
@@ -346,11 +384,13 @@ the local, empty-string case of this same "regardless" property is also observed
 EC-X.7.002-6 wiring cell (`jr user list --project ""` against a configured profile default,
 `.expect(0)` on the configured-default mock, per VP(c)'s EC-X.7.002-6 cell)),
 Resolution order step 1 [CC:L782-783] (local `--project` fills the field directly; L782's own
-lead-in sentence -- "evaluated entirely in-process before any HTTP call" -- is (P22-004,
-informational, inherited) observed by AC-004's EC-X.7.002-4 `.expect(0)` (zero HTTP calls on the
-no-project exit-64 path) and by the exactly-one-request assertions of the EC-X.7.002-1, EC-X.7.002-3
-"both", EC-X.7.002-5 and EC-X.7.002-6 wiring cells, owned respectively by AC-005 (this AC, its own EC-1 cell)/AC-003/AC-009/AC-006; no
-dedicated AC-005 cell verifies this lead-in on its own, and none is added), and the
+lead-in sentence -- "evaluated entirely in-process before any HTTP call" -- is (P22-004; P30-SWEEP:
+relabeled from "informational" -- the sentence IS runtime-observed, just not by a dedicated AC-005
+cell, so it is a plain cross-reference, not an informational label) observed by AC-004's
+EC-X.7.002-4 `.expect(0)` (zero HTTP calls on the no-project exit-64 path) and by the
+exactly-one-request assertions of the EC-X.7.002-1, EC-X.7.002-3 "both", EC-X.7.002-5 and
+EC-X.7.002-6 wiring cells, owned respectively by AC-005 (this AC, its own EC-1 cell)/AC-003/
+AC-009/AC-006; no dedicated AC-005 cell verifies this lead-in on its own, and none is added), and the
 precedent paragraph [CC:L788-793] (informational, inherited -- states that local-wins-over-global
 produces the same observable result as `component create`'s explicit local-over-global merge
 code, and that BC-8.1.004 covers only the no-project-configured exit-64 condition, not
@@ -400,13 +440,15 @@ unconditional-`todo!()` proptest block -- unaffected by this correction.
 ### AC-007 (traces to BC-X.7.002 Postcondition 5 [CC:L805])
 Once resolved (by any of steps 1-3), every request carries `projectKeys=<resolved-key>`: exactly one `GET /rest/api/3/user/assignable/multiProjectSearch` on the default (non-`--all`) path (BC-X.7.003's unchanged single-call contract); `--all` paginates one-or-more offset pages of the same endpoint, every page carrying the same `projectKeys` value.
 **Test:** Implements VP-USER-LIST-PROJECT-001(c)'s `--all` pagination cells
-[CC:L886-894]. Its non-`--all` contract sentence [CC:L894] is informational here -- kept as a
-CC tag only because no other AC cites L894, not because this AC's own tests verify it:
-"The non-`--all` path keeps BC-X.7.003's single-request contract" is NOT verified by this AC's
-own tests, which are both `--all` cells -- it is verified by the VP(c) EC-X.7.002-1, EC-X.7.002-3 "both", EC-X.7.002-5,
-and EC-X.7.002-6 cells' "exactly one request" assertions, owned respectively by AC-005, AC-003,
-AC-009, and AC-006 (each of those cells' own non-`--all` invocation is what demonstrates the
-exactly-one-request property this citation states). Also implements the fault models this AC's
+[CC:L886-894]. Its non-`--all` contract sentence [CC:L894] is kept as a CC tag here only because
+no other AC cites L894 -- not because this AC's own tests verify it (P30-SWEEP: relabeled from
+"informational" -- the sentence IS runtime-observed, by cells owned by other ACs, so it is a plain
+cross-reference, not an informational label): "The non-`--all` path keeps BC-X.7.003's
+single-request contract" is NOT verified by this AC's own tests, which are both `--all` cells --
+it is verified by the VP(c) EC-X.7.002-1, EC-X.7.002-3 "both", EC-X.7.002-5, and EC-X.7.002-6
+cells' "exactly one request" assertions, owned respectively by AC-005, AC-003, AC-009, and AC-006
+(each of those cells' own non-`--all` invocation is what demonstrates the exactly-one-request
+property this citation states). Also implements the fault models this AC's
 tests kill [CC:L902-909]: fault (4) (the resolved key applied to page 1 only) and, jointly with
 AC-003, fault (2) (`handle_list` bypassing the resolver -- this AC's configured-default `--all`
 cell is one of the tests that kills it). Everything the cited clause(s) specify is binding in its
@@ -535,7 +577,7 @@ verified mechanically per D-387.
 | `handle` / `handle_list` `&Config` threading | `src/cli/user.rs` | Effectful-shell (HTTP call site; the resolver itself is pure) |
 | `Command::User` dispatch arm | `src/main.rs` | Effectful-shell (wiring only, no new logic) |
 
-Reference: `architecture/module-decomposition.md`, `architecture/dependency-graph.md` (no module-boundary change; F1 confirmed no architecture delta for this cycle).
+Reference: `.factory/specs/architecture/ARCH-INDEX.md` Subsystem Registry (no module-boundary change; F1 confirmed no architecture delta)
 
 ## Edge Cases
 

@@ -95,7 +95,7 @@ acceptance_criteria_count: 9
 assumption_validations: []
 risk_mitigations: []
 created: "2026-09-26"
-version: "5.5"
+version: "5.7"
 last_updated: "2026-09-28"
 breaking_change: false
 retroactive: false
@@ -213,6 +213,43 @@ negative claim that this story does NOT touch either file, which was itself veri
 `.cargo/mutants.toml`'s existing `src/cli/field.rs` entry), and `Cargo.toml` (cited for the pinned,
 unchanged `serde`/`serde_json`/`proptest` dependency versions). No other cited path was found
 missing. Story version bumped 5.4 -> 5.5 to record this pass.
+Pass-29 (2026-09-28) fixed the Architecture Mapping section's "Reference:" line, which cited
+`architecture/module-decomposition.md` and `architecture/dependency-graph.md` -- neither file
+exists anywhere in this repository. The line now points at the real architecture index,
+`.factory/specs/architecture/ARCH-INDEX.md`, and its Subsystem Registry section, which does exist
+and does carry that exact heading. A follow-on sweep of every other `.factory/...`, `architecture/...`,
+`specs/...`, and other non-`src/` file path cited anywhere in this story's body (15 distinct
+citations, excluding the future `red-gate-log.md` implementation artifact Task 6 records into,
+which this story creates rather than cites as pre-existing) found no other broken path -- all 15
+resolve on disk, whether as full paths or as this story's established bare-filename shorthands
+(`cross-cutting.md`, `prd-delta.md`, `wave-holdout-scenarios.md`, `story-template.md`). A second
+sweep re-checked every PROSE reference to a numbered BC clause in this story's body -- every
+"Invariant N" (Invariant 3, Invariant 4) and every "EC-X.14.001-N" and "VP-580-013(N)"/"sub-clause
+(N)"/"clause (N)" citation (85 total instances) -- against the actual BC-X.14.001/003/004 text in
+`cross-cutting.md`; this story cites no numbered "Postcondition N", "Precondition N", or "Fix step
+N" clause at all (BC-X.14's own Postconditions/Preconditions are unnumbered bullets), and every
+Invariant/EC/VP-sub-clause number checked matched the content it was attributed to. No mismatch was
+found in this story. Story version bumped 5.5 -> 5.6 to record this pass.
+Pass-30 (2026-09-28) fixed P30-001: AC-001's [CC:L2728] citation had blanket-labeled the whole
+`FieldOption` contract-amendment paragraph "informational/inherited... SURVIVAL only", but that
+paragraph contains testable sentences beyond the survival half. Re-read in full and relabeled
+sentence by sentence: the type-change/degrade-to-`None` sentences keep the SURVIVAL label; the
+"missing label-source field(s)" definition's M1/M2 half is now credited to this AC's own functions
+1a/1b (name-only and neither cells); its M3 half is now a plain-prose cross-reference to AC-004's
+function 4 (VP-580-013(4), cross-cutting.md ~L3113-3123); and the `children`
+always-present-never-`Option` sentence is now credited to this AC's own function 3 key-set
+assertion (VP-580-013(3)). A same-pattern sweep of every other "informational"/"inherited" label in
+this story (23 labels checked across AC-001 through AC-009 and the Edge Cases table) found no
+further defect of this shape -- every other multi-sentence citation in this story already carries
+its own per-sentence attribution from earlier passes (P16 through P29), and every remaining
+single-sentence "informational" label describes rationale, a structural/code-review fact, or
+content the spec itself already marks informational (e.g. EC-X.7.002-style "no VP cell" rows) --
+0 further labels changed. A companion sweep of every line-number citation into a `tests/` file
+that also carries a symbol name (4 citations: `tests/field_options.rs` `~L1436`/`~L2050`
+comments, `~L1487-1525` for `test_bc_x_14_001_field_name_ambiguous_exits_64`, and `~L1591` for
+`test_bc_x_14_001_field_name_zero_match_exits_64`) verified each against the current file; all
+four are accurate to within 1 line -- no fix required. Story version bumped 5.6 -> 5.7 to record
+this pass.
 
 ## Coverage Scope (D-387)
 
@@ -387,19 +424,38 @@ rule already covered by functions 1a/1b/2) and Edge Cases
 EC-X.14.001-7 [CC:L2943-2961], EC-X.14.001-8 [CC:L2964-2968], EC-X.14.001-9 [CC:L2969-2972],
 EC-X.14.001-10 [CC:L2973-2976], and EC-X.14.001-11 [CC:L2977-2981]. Everything each cited range
 specifies is binding in its entirety and must be implemented exactly as written there; this story
-does not restate or narrow any of it. Of these citations, the `FieldOption` contract amendment
-[CC:L2728] and EC-X.14.001-7 [CC:L2943-2961] are informational/inherited for THIS AC's own test
-cells specifically: unlike clauses (1)-(3) and EC-8..11, which assert the resolved label VALUE,
-these two describe a degenerate entry's SURVIVAL in the output array (never dropped, `id`/`label`
-degrading to `None` instead) -- functions 1a and 1b's `neither` cell additionally assert the
-output vector's entry count is unchanged for that cell, and the existing, unmodified regression
-test `src/cli/field.rs::test_bc_x_14_001_normalizer_never_drops_degenerate_entries` (present at
-`src/cli/field.rs` L1135) already proves the never-drop invariant for entries missing both `id`
-and their label source(s) for M1/M2's `normalize_from_allowed_values`; since EC-X.14.001-7 binds
-BOTH normalizers, not just M1/M2, the sibling M3 regression test
+does not restate or narrow any of it. Of these citations, EC-X.14.001-7 [CC:L2943-2961] is informational/inherited for THIS AC's own
+test cells specifically: unlike clauses (1)-(3) and EC-8..11, which assert the resolved label
+VALUE, this edge case describes a degenerate entry's SURVIVAL in the output array (never dropped,
+`id`/`label` degrading to `None` instead) -- functions 1a and 1b's `neither` cell additionally
+assert the output vector's entry count is unchanged for that cell, and the existing, unmodified
+regression test `src/cli/field.rs::test_bc_x_14_001_normalizer_never_drops_degenerate_entries`
+(present at `src/cli/field.rs` L1135) already proves the never-drop invariant for entries missing
+both `id` and their label source(s) for M1/M2's `normalize_from_allowed_values`; since
+EC-X.14.001-7 binds BOTH normalizers, not just M1/M2, the sibling M3 regression test
 `src/cli/field.rs::test_bc_x_14_001_normalizer_from_valid_values_never_drops_degenerate_entries`
 (present at `src/cli/field.rs` L1195) proves the same never-drop invariant for M3's
-`normalize_from_valid_values`. Story-specific mapping: all three VP clauses land in
+`normalize_from_valid_values`.
+**[P30-001] [CC:L2728]'s own sentences are treated individually here rather than as one blanket
+"informational/SURVIVAL only" citation, since L2728 contains testable sentences beyond the
+survival half:** its type-change-and-degrade-to-`None` sentences (`id`/`label` changed from
+`String` to `Option<String>`, and a genuinely-missing source field degrading to `None` rather than
+being coerced to an empty string or dropped) remain the SURVIVAL half and keep the label above --
+informational, for the same reason as EC-X.14.001-7: they describe survival, not the resolved
+label VALUE, and are proven by the same two never-drop regression tests just cited, corroborated by
+functions 1a/1b's `neither`-cell entry-count assertion. Its "'Missing label-source field(s)' means,
+precisely" sentence carries two independently-owned halves, not one informational blob: the M1/M2
+half (missing BOTH `value` AND `name`) is directly observed by THIS AC's own functions 1a and 1b --
+the name-only cell (exactly one of the two present) and the `neither` cell (both absent), at both
+tree levels, are exactly the boundary this definition draws -- so this half is NOT informational,
+it is this AC's own tested content. The M3 half of that same sentence (no fallback -- M3's `label`
+is read directly from the wire `.label` key) is NOT observed by any cell of this AC -- it is a
+plain-prose cross-reference to AC-004's function 4, whose first fixture entry exercises M3's
+direct-`.label`-read behavior (cross-reference: VP-580-013(4), cross-cutting.md ~L3113-3123). Its
+closing `children`-invariant sentence ("always present, never `Option`") is likewise directly
+observed by THIS AC's own function 3, not informational: the serde key-set assertion
+(VP-580-013(3)) checks that `children` is present at every depth, never omitted or nulled.
+Story-specific mapping: all three VP clauses land in
 `src/cli/field.rs`'s `#[cfg(test)] mod tests`; clause (1)'s top-level matrix is function 1a (RED)
 and its cascading-child-level matrix is function 1b (RED) -- split into separate functions so the
 Red Gate density check (Task 6) counts RED/GREEN at the function level, not per-cell (tally: 7 new
@@ -663,7 +719,7 @@ this story does not restate or narrow any of it.
 | `filter_options` / `filter_one` | `src/cli/field.rs` | Pure (unchanged contract, new downstream matches) |
 | `AllowedValue` doc comments | `src/types/jira/editmeta.rs` | N/A (documentation only) |
 
-Reference: `architecture/module-decomposition.md`, `architecture/dependency-graph.md` (no module-boundary change; F1 confirmed no architecture delta; this story is entirely within `src/cli/field.rs`'s existing pure-core normalizer).
+Reference: `.factory/specs/architecture/ARCH-INDEX.md` Subsystem Registry (no module-boundary change; F1 confirmed no architecture delta)
 
 ## Edge Cases
 

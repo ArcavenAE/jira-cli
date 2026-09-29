@@ -1373,3 +1373,61 @@ Story version bumped 5.4 -> 5.5 to record this pass.
 Drift note: this pass's edits (including the six added inputs entries) change what the stored
 `input-hash` should hash to. Per this pass's explicit instruction not to touch `input-hash`, it
 was left as-is, matching every prior pass's convention on this point.
+
+## 2026-09-28 -- F3 pass-29 fixes (P29-001, P29-002)
+
+Two confirmed findings were raised against this story, plus the two sweeps their fix instructions
+required:
+
+- P29-001 (LOW): Task 1 (the STUB task) and Task 13 both cited the zero-pair identity
+  `append_query_params(p, &[]) == p` as BC-X.16.001 Postcondition 5. That citation is wrong.
+  Postcondition 5 is the method/body-independence clause in cross-cutting.md (around lines
+  3898-3900). The zero-pair identity is actually covered by Postcondition 1 (the zero-flag
+  identity clause, around lines 3876-3879) and by Behavior 5 (zero effect when the flag is absent,
+  around lines 3858-3863) -- this story's own Coverage Scope section already maps Postcondition 1
+  and Postcondition 5 correctly, so the two Task citations were the only place carrying the wrong
+  number. Both occurrences were corrected to read BC-X.16.001 Postcondition 1 / Behavior 5. A
+  follow-up sweep then checked every other prose mention of a numbered BC clause (Postcondition,
+  Behavior, Precondition, Invariant, edge-case, and verification-property citations) across the
+  rest of the story body against the actual BC-X.16.001 and BC-X.16.002 text in cross-cutting.md.
+  Roughly forty-five such citations were checked in total, including the two fixed above, and no
+  further mismatch was found -- every other citation's number matched what the referenced
+  cross-cutting.md text actually says.
+- P29-002 (LOW): the Architecture Mapping section's Reference line cited
+  architecture/module-decomposition.md and architecture/dependency-graph.md. Neither file exists
+  anywhere in this repository's .factory tree. The line was replaced with a citation to
+  .factory/specs/architecture/ARCH-INDEX.md's Subsystem Registry section, which does exist and
+  carries that exact heading. A follow-up sweep then checked every other .factory, architecture,
+  specs, or other non-source file path cited anywhere in this story's body, excluding
+  tests/api_query_param.rs (a file this story itself creates). Fifteen such paths were checked and
+  all fifteen resolve to real files on disk, so the two architecture paths above were the only
+  broken citations found.
+
+Story version bumped 5.5 -> 5.6 to record this pass.
+
+Drift note: this pass's edits change what the stored `input-hash` should hash to. Per this pass's
+explicit instruction not to touch `input-hash`, it was left as-is, matching every prior pass's
+convention on this point.
+
+
+2026-09-28, pass-30: fixed finding P30-002, a cosmetic citation drift. Task ten part c cited the
+discover story points field helper at approximately lines one hundred forty seven through one
+hundred fifty nine of the end to end live test file; the function actually starts at line one
+hundred fifty five, verified directly against the file, which is more than the small tolerance this
+kind of citation is allowed to drift by. Following this project's own citation-discipline
+convention of preferring a symbol name over a line number, since line numbers drift on refactor and
+symbol names do not, the citation now names only the function and carries no line numbers at all.
+Also reworded this story's own inline revision history placeholder, which described prose
+references as being paired with a bracketed citation tag, to instead describe them as paired with
+a citation tag, dropping the bracket form from that piece of prose per this pass's own instruction
+to avoid bracket-tag forms in that sentence. A companion sweep checked every other line-number
+citation into a tests file that also names a symbol in this story, which turned out to be the two
+citations of the rate limit warning regression test; both were accurate against the current file,
+so neither needed correcting. A same-pattern sweep of every informational or inherited label in
+this story, roughly thirty checked across all nine acceptance criteria and the two implementer
+tasks that carry their own labels, found none of the pattern flagged in the sibling field-options
+story's own pass thirty finding, where a multi-sentence citation gets blanket-labeled informational
+even though a sub-sentence is independently observed by a named test cell -- this story already
+distinguishes a plain informational label from an informational cross-reference throughout, and
+every citation checked kept to that distinction correctly. Zero labels were changed in this story.
+Story version bumped 5.6 to 5.7 to record this pass.

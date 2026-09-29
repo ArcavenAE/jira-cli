@@ -102,7 +102,7 @@ acceptance_criteria_count: 11
 assumption_validations: []
 risk_mitigations: []
 created: "2026-09-26"
-version: "5.5"
+version: "5.7"
 last_updated: "2026-09-28"
 breaking_change: false
 retroactive: false
@@ -180,6 +180,41 @@ convention); `src/jql.rs` (cited as the anchor bullet this story's own `docs/spe
 policy.md` §Scope entry is inserted directly after); and `src/cli/user.rs` (cited as the location
 of STORY-A's own already-landed §Scope bullet, immediately preceding this story's own insertion
 point in the same file). No other cited path was found missing. Story version 5.5.
+Pass-29 (2026-09-28) fixed two confirmed mis-citations and ran two sweeps. P29-001: Task 1
+(the STUB task) and Task 13 both cited the zero-pair identity `append_query_params(p, &[]) == p`
+as "BC-X.16.001 Postcondition 5" -- wrong, since Postcondition 5 is the method/body-independence
+clause (`cross-cutting.md` L3898-3900); the identity is actually Postcondition 1 (zero-flag
+identity, L3876-3879) and Behavior 5 (zero effect when the flag is absent, L3858-3863), matching
+this story's own Coverage Scope section. Both occurrences were corrected to "BC-X.16.001
+Postcondition 1 / Behavior 5". A full sweep of every other prose reference to a numbered BC clause
+(Postcondition/Behavior/Precondition/Invariant/EC/VP citations, including but not limited to those
+paired with a CC tag) checked roughly 45 citations against the actual BC-X.16.001/
+BC-X.16.002 text in `cross-cutting.md`; no further mismatch was found. P29-002: the Architecture
+Mapping section's "Reference:" line cited `architecture/module-decomposition.md` and
+`architecture/dependency-graph.md`, neither of which exists anywhere under this repo's `.factory/`
+tree. It was replaced with a citation to `.factory/specs/architecture/ARCH-INDEX.md`'s Subsystem
+Registry section, which does exist and does have that exact heading. A sweep of every other
+`.factory/...`, `architecture/...`, `specs/...`, or other non-`src/` path cited in this story's
+body checked 15 such paths (excluding `tests/api_query_param.rs`, which this story itself creates);
+all 15 resolve to real files on disk, so only the two `architecture/...` paths above needed fixing.
+Story version bumped 5.5 -> 5.6 to record this pass.
+Pass-30 (2026-09-28) fixed P30-002: Task 10(c) cited `discover_story_points_field` at
+`~L147-159`; the function actually starts at `tests/e2e_live.rs` L155 (verified) -- an off-by-more-
+than-3 drift. Per CLAUDE.md's citation-discipline convention (symbol-form over line numbers, which
+drift on refactor), the citation is now the symbol form only, with no line numbers. Also reworded
+this file's own inline Revision History placeholder at ~L191 ("paired with a `[CC:...]` tag") to
+"paired with a CC tag", dropping the bracket-tag form per this pass's own no-bracket-tag-forms
+instruction for prose references to the citation mechanism. A companion sweep of every other
+line-number citation into a `tests/` file that also names a symbol in this story (the two
+`tests/rate_limit_holdouts.rs::test_s_1_07_h_013_send_raw_gave_up_warning_in_stderr` citations at
+`~L134`) found both accurate against the current file -- no further fix needed. A same-pattern
+sweep of every "informational"/"inherited" label in this story (triggered by STORY-B's P30-001
+finding, a blanket-labeled multi-sentence citation with a testable sub-clause) checked roughly 30
+such labels across AC-001 through AC-009, Task 12, and Task 13, and found none of that shape --
+this story already distinguishes "informational" (genuinely non-testable rationale/structural/
+code-review facts) from "informational cross-reference" (content observed by a named cell in
+another AC) throughout, a distinction the sibling STORY-A lacked before this same pass. Zero
+labels changed in this story. Story version bumped 5.6 -> 5.7 to record this pass.
 
 ## Coverage Scope (D-387)
 
@@ -865,7 +900,7 @@ by exactly one relative to its pre-edit (STORY-A-landed) count.
 | `Command::Api`'s `-q`/`--query-param` field | `src/cli/mod.rs` | Pure (clap derive declaration) |
 | `handle_api`'s pre-flight wiring | `src/cli/api.rs` | Effectful-shell (calls the pure functions before building the request) |
 
-Reference: `architecture/module-decomposition.md`, `architecture/dependency-graph.md` (no module-boundary change; F1 confirmed no architecture delta).
+Reference: `.factory/specs/architecture/ARCH-INDEX.md` Subsystem Registry (no module-boundary change; F1 confirmed no architecture delta)
 
 ## Edge Cases
 
@@ -926,7 +961,7 @@ sibling file as provenance, not implementation guidance, and is not counted agai
 
 ## Tasks
 
-1. [ ] **STUB:** add `pub(crate) fn append_query_params(path: &str, pairs: &[(String, String)]) -> String` and `pub(crate) fn parse_query_param(raw: &str) -> Result<(String, String)>` to `src/cli/api.rs` with `todo!()` bodies (signatures per AC-001/AC-005); add the `-q`/`--query-param: Vec<String>` field to `Command::Api` (`src/cli/mod.rs`, no `value_delimiter`, no `allow_hyphen_values`) and wire the pre-flight call site into `handle_api` and `src/main.rs`'s `Command::Api` dispatch arm -- the `handle_api` wiring MUST short-circuit around both stubs when zero `-q` flags are supplied (use the pre-existing `normalize_path` output unchanged), so the crate compiles end-to-end and the zero-flag path never touches a `todo!()`. **Short-circuit is STUB-STAGE ONLY (P6-006):** this short-circuit is a temporary stub-stage measure, present only so the Red Gate can run before either function is implemented -- Task 13 REMOVES it and calls both functions unconditionally, since `append_query_params(p, &[]) == p` is an identity (BC-X.16.001 Postcondition 5) that makes the short-circuit and its removal behaviorally indistinguishable once implemented, and leaving it in place would leave an equivalent `delete !` mutant unkillable under the `--in-diff` mutants gate once `src/cli/api.rs` enters `examine_globs` (AC-011). **No pinned help text at stub:** the `-q`/`--query-param` field's doc comment / clap `help`/`long_help` string MUST NOT contain the BC-X.16.001 Behavior 3 pinned substring `"do not pre-encode"` at this stage -- Task 12 (clap field finalization) is what adds it; this keeps AC-003's `--help` test cell genuinely RED at the Task 1 stub (Task 10(b)/(d)) rather than accidentally GREEN from a premature-but-correct doc comment -- `stub-architect`
+1. [ ] **STUB:** add `pub(crate) fn append_query_params(path: &str, pairs: &[(String, String)]) -> String` and `pub(crate) fn parse_query_param(raw: &str) -> Result<(String, String)>` to `src/cli/api.rs` with `todo!()` bodies (signatures per AC-001/AC-005); add the `-q`/`--query-param: Vec<String>` field to `Command::Api` (`src/cli/mod.rs`, no `value_delimiter`, no `allow_hyphen_values`) and wire the pre-flight call site into `handle_api` and `src/main.rs`'s `Command::Api` dispatch arm -- the `handle_api` wiring MUST short-circuit around both stubs when zero `-q` flags are supplied (use the pre-existing `normalize_path` output unchanged), so the crate compiles end-to-end and the zero-flag path never touches a `todo!()`. **Short-circuit is STUB-STAGE ONLY (P6-006):** this short-circuit is a temporary stub-stage measure, present only so the Red Gate can run before either function is implemented -- Task 13 REMOVES it and calls both functions unconditionally, since `append_query_params(p, &[]) == p` is an identity (BC-X.16.001 Postcondition 1 / Behavior 5) that makes the short-circuit and its removal behaviorally indistinguishable once implemented, and leaving it in place would leave an equivalent `delete !` mutant unkillable under the `--in-diff` mutants gate once `src/cli/api.rs` enters `examine_globs` (AC-011). **No pinned help text at stub:** the `-q`/`--query-param` field's doc comment / clap `help`/`long_help` string MUST NOT contain the BC-X.16.001 Behavior 3 pinned substring `"do not pre-encode"` at this stage -- Task 12 (clap field finalization) is what adds it; this keeps AC-003's `--help` test cell genuinely RED at the Task 1 stub (Task 10(b)/(d)) rather than accidentally GREEN from a premature-but-correct doc comment -- `stub-architect`
 2. [ ] Write the `proptest!` separator oracle for `append_query_params` + pinned examples (AC-001's cited VP-API-QP-001 clauses) (AC-001) in `src/cli/api.rs`'s `#[cfg(test)] mod tests`. **The test-writer MUST read the cited VP clause(s) in `cross-cutting.md` in full before writing; the VP text, not this story, is the source of truth for cell contents.** -- `test-writer`
 3. [ ] Write the repeated-names `proptest!` oracle (AC-002's cited VP-API-QP-002 clauses) in `src/cli/api.rs`'s `#[cfg(test)] mod tests`, plus the three argv cells in `tests/api_query_param.rs` (AC-002). **The `proptest!` oracle MUST assert the generator-constraint/anti-vacuity check `existing == generated_existing_pairs` (VP-API-QP-002(generator-constraint)) as a second assertion alongside the main oracle equality -- omitting it lets the generator silently collapse to an empty `existing` and pass vacuously (stated for emphasis; the clause governs).** **The test-writer MUST read the cited VP clause(s) in `cross-cutting.md` in full before writing; the VP text, not this story, is the source of truth for cell contents.** -- `test-writer`
 4. [ ] Write the encoding-exactly-once biased `proptest!` + pinned examples (AC-003's cited VP-API-QP-003 clauses) in `src/cli/api.rs`'s `#[cfg(test)] mod tests`, plus the `--help` cell in `tests/api_query_param.rs` (AC-003). **The round-trip assertion (VP-API-QP-003(a)) MUST extract `encode(v)` from `append_query_params`'s own output, NOT call `urlencoding::encode` directly -- a direct call would be tautological and GREEN at the Task 1 stub, defeating the Red Gate (stated for emphasis; the clause governs).** **The test-writer MUST read the cited VP clause(s) in `cross-cutting.md` in full before writing; the VP text, not this story, is the source of truth for cell contents.** -- `test-writer`
@@ -1034,7 +1069,7 @@ wiremock-backed set, per that AC's **Test:** line)
     always-run, offline, no `JR_RUN_E2E` needed -- its `SURFACE` table carries the entry `(&["api"],
     &["--output"])`, so it runs `jr api --help` and would fail if this story's clap wiring broke
     the `api` subcommand's flag surface). The gated `#[ignore]` `jr api` callers in
-    `tests/e2e_live.rs` (e.g. `discover_story_points_field`, ~L147-159, which spawns `jr api
+    `tests/e2e_live.rs` (e.g. `discover_story_points_field`, which spawns `jr api
     /rest/api/3/field`) are likewise relevant regression surface for this story's change, but are
     out of scope for the Red Gate tally below since they require `JR_RUN_E2E=1` and live network
     access and are not part of the offline `cargo test` run this tally covers.
@@ -1143,7 +1178,7 @@ wiremock-backed set, per that AC's **Test:** line)
     verification-delta.md §2 wording is that the text must also state values are passed raw
     (informational -- enforced at PR review, same as AC-003's own citation above) (AC-003,
     AC-009) -- `implementer`
-13. [ ] Wire `handle_api` to call `-q` parsing immediately after `normalize_path` and before `resolve_body`/`-H` parsing (AC-008); REMOVE Task 1's zero-flag short-circuit and call `parse_query_param`/`append_query_params` unconditionally on every invocation, including zero `-q` flags -- `append_query_params(p, &[]) == p` is an identity (BC-X.16.001 Postcondition 5), so this is behavior-preserving and closes the equivalent-mutant risk noted in Task 1 (P6-006, mirrors STORY-A Task 9). **(P11-004: this exact placement -- immediately after `normalize_path` -- is also the sole enforcement mechanism for BC-X.16.002 Preconditions' requirement that `normalize_path`'s own path errors run BEFORE `-q` validation (AC-008); that requirement is informational and has no dedicated test cell, so getting this placement right here, and confirming it at PR code review, is what satisfies it.)** -- `implementer`
+13. [ ] Wire `handle_api` to call `-q` parsing immediately after `normalize_path` and before `resolve_body`/`-H` parsing (AC-008); REMOVE Task 1's zero-flag short-circuit and call `parse_query_param`/`append_query_params` unconditionally on every invocation, including zero `-q` flags -- `append_query_params(p, &[]) == p` is an identity (BC-X.16.001 Postcondition 1 / Behavior 5), so this is behavior-preserving and closes the equivalent-mutant risk noted in Task 1 (P6-006, mirrors STORY-A Task 9). **(P11-004: this exact placement -- immediately after `normalize_path` -- is also the sole enforcement mechanism for BC-X.16.002 Preconditions' requirement that `normalize_path`'s own path errors run BEFORE `-q` validation (AC-008); that requirement is informational and has no dedicated test cell, so getting this placement right here, and confirming it at PR code review, is what satisfies it.)** -- `implementer`
 14. [ ] Confirm Green Gate: all tests pass, including the unchanged `tests/cli_handler.rs` suite
 15. [ ] Update `README.md`'s `jr api <PATH>` row (~L332) (AC-010)
 16. [ ] Add `src/cli/api.rs` to `.cargo/mutants.toml` `examine_globs`; add the §Scope bullet

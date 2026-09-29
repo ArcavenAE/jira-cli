@@ -1808,3 +1808,27 @@ is affected.
 **Disposition (human-deferred 2026-09-25, F2 review):** LOW severity, no GitHub issue filed.
 Target a future cycle's README correction pass (candidate to bundle with cycle-014's own
 README doc-delta obligations if any land — see cycle-014 process-gap #7).
+
+## 18 legacy stories cite non-existent `architecture/module-decomposition.md`/`architecture/dependency-graph.md` — NEW, OPEN, spec-internal drift, target next maintenance sweep (2026-09-28)
+
+**ID:** `LEGACY-STORIES-STALE-ARCH-DOC-CITE`. Severity **LOW** (dead-reference drift, not a
+behavioral defect). Surfaced during cycle-014 F3 adversarial story review pass 29 (the pass-29
+dead-architecture-doc-reference fix that replaced this same stale citation with `ARCH-INDEX` in
+all 3 in-scope cycle-014 stories). While fixing the 3 cycle-014 stories, the pass also flagged
+that **18 legacy stories outside cycle-014's scope** — pre-existing story files from earlier
+cycles, not touched by this cycle's F3 work — still cite `architecture/module-decomposition.md`
+and `architecture/dependency-graph.md`, neither of which exists in the current
+`.factory/specs/architecture/` tree (both paths were superseded by `ARCH-INDEX.md` at some prior
+point without a corresponding sweep of existing story citations). These 18 stories were
+deliberately left untouched this burst — cycle-014's F3 review is scoped to its own 3 stories
+only, and editing 18 unrelated legacy story files is out of scope for an incremental-story-
+decomposition checkpoint.
+
+**Disposition (recorded 2026-09-28, state-manager checkpoint bookkeeping, cycle-014 F3
+pass-29/30 burst):** LOW severity, no GitHub issue filed — an internal spec-hygiene item, not a
+user-facing defect. **Target: next maintenance sweep** (`/vsdd-factory:maintenance-sweep`), which
+should identify the full list of 18 affected legacy story files (grep
+`architecture/module-decomposition.md\|architecture/dependency-graph.md` across
+`.factory/stories/`) and repoint each citation to `ARCH-INDEX.md`, mirroring the fix already
+applied to cycle-014's 3 stories at pass 29. Remains OPEN, tracked as standing spec-hygiene debt
+until a future maintenance-sweep burst picks it up.
