@@ -481,3 +481,15 @@ See `cycles/cycle-005/burst-log.md` Bursts 11-12 for full narrative detail (thes
 | Phase | Status | Completed | Gate | Notes | Finding Progression |
 |-------|--------|-----------|------|-------|---------------------|
 | **GITHUB-ISSUE-TRIAGE+CYCLE-014-OPENED-F1-APPROVED-2026-09-24** | **F1 APPROVED / ACTIVE (cycle-014 OPENED)** | 2026-09-24 | human gate (F1 delta analysis, "Approve, as corrected") | Read-only triage of all 13 open GitHub issues. Outcome: `#862`/`#861` CONFIRMED defects; `#583` taken into cycle-014. **Minted `D-378`** (scope) **and `D-379`** (F1 gate APPROVED). cycle-014 OPENED, set **ACTIVE**. | 770 BCs / 89 VPs / 118 holdout / 191 stories; `D-378`+`D-379` minted (count-neutral at F1) |
+
+---
+
+> Extracted from `.factory/STATE.md`'s `## Phase Progress` table during the
+> 2026-09-29 `CYCLE-014-F3-D390-APPROVED-2026-09-29` burst (v5.12 ->
+> v5.13), to keep the live table at 12 rows after adding the new
+> `CYCLE-014-F3-D390-APPROVED-2026-09-29` row. This was the oldest row
+> at that point; archived here verbatim, unedited.
+
+| Phase | Status | Completed | Gate | Notes | Finding Progression |
+|-------|--------|-----------|------|-------|---------------------|
+| **CYCLE-014-F2-CHECKPOINT** | **F2 IN PROGRESS / NOT APPROVED (checkpoint, superseded)** | 2026-09-25/26 | none (mid-review checkpoint, not a phase gate) | Checkpointed cycle-014's F2 review at `PASS-30` (streak 0). Minted `D-380` (three settled behavior defaults) and `D-381` (serial delivery `A -> C -> B`). | 770 BCs / 89 VPs / 118 holdout / 191 stories LOCKED; cycle-014 DRAFT 770/97; `D-380`+`D-381` minted |

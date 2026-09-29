@@ -2,8 +2,8 @@
 document_type: cycle-manifest
 cycle_id: cycle-014-issue-triage-quickfixes
 cycle_type: bug-fix
-version: TBD — proposed roll into next dev prerelease as three PATCH-shaped fixes (no breaking change); confirm at F1 gate
-status: f2-approved-f3-drafted
+version: TBD — human decision D-390 (2026-09-29, F3 gate) confirms STORY-A (#862) ships as a BREAKING CHANGE; STORY-C (#583) and STORY-B (#861) remain non-breaking. This makes the release bump shape MINOR-or-breaking-flagged rather than three PATCH-shaped fixes as originally proposed at F1. Final version-bump decision stays at release.
+status: f3-approved
 started: 2026-09-24
 completed: null
 producer: architect (F1 delta analysis)
@@ -97,8 +97,15 @@ the Notes section below]**:
 Bug-fix intent (items 1–2 are confirmed defects against documented/expected
 behavior; item 3 is a capability gap with an existing precedent-backed
 design, filed here as a bug-fix-adjacent quickfix per the human's bundling
-decision, not a net-new feature). Non-breaking scope for all three. Feature
-type: backend (all three are CLI/API-layer, no UX/visual surface). Severity:
+decision, not a net-new feature). **[CORRECTED 2026-09-29, F3 human gate,
+D-390: this "non-breaking scope for all three" framing is INACCURATE and
+superseded.** STORY-A (#862) ships as a BREAKING CHANGE, human-confirmed at
+the F3 gate — today the no-project case is rejected by clap with exit 2;
+after the fix, jr's own path exits 64. Invocations that give the project
+only through the global flag or a configured default currently error; after
+the fix they succeed. STORY-A's CHANGELOG entry uses a `**Breaking:**`
+prefix. STORY-C (#583) and STORY-B (#861) remain non-breaking.**
+Feature type: backend (all three are CLI/API-layer, no UX/visual surface). Severity:
 LOW-MEDIUM (all have workarounds — `--project` can be set via `.jr.toml`
 per-invocation as a stopgap for #862, `jr api` GET on the `/option`
 enumeration endpoint or reading `id` directly works around #861, and
@@ -282,3 +289,43 @@ Decision: return to the factory rules. Sentence-level O/N/U labels and D-387 lin
 Proceed directly to the F3 human gate. This supersedes `D-385` and `D-388` (strict 3-consecutive-clean) for F3.
 
 Human decision **D-389** (2026-09-29) is recorded in full in `STATE.md`'s Decisions Log. All 3 F3 stories bumped to **v6.2** with the fixes listed above; the circular `inputs:` reference observed at the prior checkpoint is now broken and all 6 F3 files' input-hashes are confirmed STABLE (2 update passes, `--check` clean on all 6). Six new process-gap items recorded (`#26`-`#31` — now 31 total in `process-gaps.md`), each flagged as needing a follow-up story or an explicit deferral decision before cycle-014 closes (S-7.02 checklist), covering: the F3 review-loop definition's three-way conflict across the Feature Mode skill / `feature.lobster` / `feature-sequence.md`; "clean" being undefined against the adversary's own "novel findings through pass 9+"/"zero findings is a prompt bug" language; the fresh-context mandate conflicting with accumulate-invariants guidance; the adversary agent's `model: opus` pin not actually delivering the documented cross-model-family diversity; the unenforced 10-pass cap (33 passes ran with no automatic escalation); and the mathematical non-convergence of a strict 3-consecutive-clean rule under cycle-invented review requirements combined with LLM reviewer false-positive rates (`E[N] ≈ 49` passes at `p=0.7`, `≈1,110` at `p=0.9`). F3 adversarial story review is now CLOSED per `D-389`; **NEXT: the F3 human approval gate** (3 stories, dependency graph, conflicts, 16-pts serial `A→C→B` estimate, structured review questions), then F4 serial delivery `A→C→B` per `per-story-delivery.md`. **Known blocker ahead of F4 PRs:** the GitHub MCP server fails auth ("Authorization header is badly formatted") — the user should re-authenticate it, or `pr-manager`/`github-ops` should fall back to the `gh` CLI. See `STATE.md` v5.12 (`CYCLE-014-F3-D389-CHECKPOINT-2026-09-29`) for full detail.
+
+**(2026-09-29, F3 human gate, D-390 — APPROVED):** Human decision **D-390**
+("Approve, A breaking") APPROVES the cycle-014 3-story package, delivered
+SERIALLY `A -> C -> B`, 16 pts total: `S-cycle14-user-list-project-resolution`
+(STORY-A, `#862`, 3 pts, 11 ACs), `S-cycle14-api-query-param` (STORY-C, `#583`,
+8 pts, 11 ACs), `S-cycle14-field-options-name-label` (STORY-B, `#861`, 5 pts,
+9 ACs). **The human explicitly confirmed STORY-A ships as a BREAKING CHANGE:**
+today the no-project case is rejected by clap with exit 2; after the fix,
+`jr`'s own path exits 64. Invocations that give the project only through the
+global flag or a configured default currently error; after the fix they
+succeed. STORY-A's CHANGELOG entry uses a `**Breaking:**` prefix. STORY-C and
+STORY-B remain non-breaking. This corrects the "no breaking change" /
+"Non-breaking scope for all three" framing at the version-header note and in
+the Summary section above (both marked `[CORRECTED 2026-09-29, F3 human gate,
+D-390]`) — the release bump shape is now MINOR-or-breaking-flagged rather
+than three PATCH-shaped fixes; the final version-bump decision stays at
+release.
+
+**Pre-gate evidence recorded:** a fresh-context consistency audit (2026-09-29)
+returned PASS-WITH-FINDINGS — one MAJOR (this manifest's stale
+non-breaking framing at L5/L100, now fixed by this burst) and one MINOR
+(stale frontmatter `status:`, now fixed to `f3-approved`); the 3 story files
+themselves were clean (clause-level BC traceability, 8/8 VPs mapped 1:1,
+`A -> C -> B` ordering consistent across all artifacts, points/AC counts
+consistent, all `src/` symbols verified). An input-drift check (2026-09-29)
+was CLEAN — all 8 hash-governed cycle-014 files MATCH. An out-of-scope
+repo-wide input-hash scan observation (`TOTAL=304 MATCH=20 STALE=262
+NOINPUT=22`, entirely in cycles 001-013 / the flat `.factory/stories/`
+directory / root-level `phase-f1`/`f2`/`f7` dirs, none touching cycle-014)
+is recorded as a new drift item in `cycles/OPEN-STANDING-ITEMS.md`, targeted
+for the next maintenance sweep.
+
+Status frontmatter updated `f2-approved-f3-drafted` -> `f3-approved`. All 3
+F3 story files' `status:` frontmatter moved `draft` -> `ready`; the 3
+corresponding `STORY-INDEX.md` rows (Story Manifest + Feature Followup
+tables) moved `draft` -> `ready` in the same burst (`STORY-INDEX.md`
+v1.6.29 -> v1.6.30, `total_stories` unchanged at 194). **NEXT: F4 serial
+delivery `A -> C -> B`** per `per-story-delivery.md`, starting with STORY-A
+(`S-cycle14-user-list-project-resolution`). See `STATE.md` v5.13
+(`CYCLE-014-F3-D390-APPROVED-2026-09-29`) for full detail.

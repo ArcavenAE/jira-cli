@@ -1832,3 +1832,23 @@ should identify the full list of 18 affected legacy story files (grep
 `.factory/stories/`) and repoint each citation to `ARCH-INDEX.md`, mirroring the fix already
 applied to cycle-014's 3 stories at pass 29. Remains OPEN, tracked as standing spec-hygiene debt
 until a future maintenance-sweep burst picks it up.
+
+## Repo-wide input-hash scan shows widespread pre-cycle-014 drift (TOTAL=304 MATCH=20 STALE=262 NOINPUT=22) — NEW, OPEN, spec-internal drift, target next maintenance sweep (2026-09-29)
+
+**ID:** `REPO-WIDE-INPUT-HASH-DRIFT`. Severity **LOW** (bookkeeping/traceability drift, not a
+behavioral defect). Surfaced as an out-of-scope observation during the cycle-014 F3 human-gate
+input-drift check (2026-09-29, D-390 burst): the 8 hash-governed cycle-014 files themselves are
+CLEAN (all MATCH), but a repo-wide `compute-input-hash --scan` pass found `TOTAL=304 MATCH=20
+STALE=262 NOINPUT=22` across `.factory/`. All of the drift is in cycles 001-013, the flat
+`.factory/stories/` directory (pre-cycle-014 story files whose `input-hash` was never refreshed
+after later spec amendments), and root-level `phase-f1`/`phase-f2`/`phase-f7` directories that
+predate the current per-cycle directory convention. None of it touches cycle-014's own artifacts.
+
+**Disposition (recorded 2026-09-29, state-manager D-390 burst):** LOW severity, no GitHub issue
+filed — an internal spec-hygiene/traceability item, not a user-facing defect, and not a blocker
+for cycle-014's F3 gate or F4 delivery. **Target: next maintenance sweep**
+(`/vsdd-factory:maintenance-sweep`), which should run `compute-input-hash --scan .factory --update`
+(or a scoped per-cycle equivalent) to refresh the 262 STALE hashes, and separately triage the 22
+NOINPUT files (artifacts whose `inputs:` frontmatter references paths that no longer resolve) to
+either repoint or remove the dangling references. Remains OPEN, tracked as standing spec-hygiene
+debt until a future maintenance-sweep burst picks it up.

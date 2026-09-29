@@ -5,7 +5,7 @@ story_id: "S-cycle14-user-list-project-resolution"
 epic_id: "ISSUE-TRIAGE-QUICKFIXES-1"
 title: "jr user list --project resolution order: local > global > configured default > exit 64"
 wave: 1
-status: draft
+status: ready
 intent: bug-fix
 feature_type: correctness
 mode: feature
@@ -42,7 +42,7 @@ inputs:
   - "scripts/check-cargo-mutants-policy-citations.sh"
   - "Cargo.toml"
   - "CHANGELOG.md"
-input-hash: "59c0216"
+input-hash: "27ed2f0"
 traces_to: "BC-X.7.002"
 cycle: cycle-014-issue-triage-quickfixes
 estimated_effort: small

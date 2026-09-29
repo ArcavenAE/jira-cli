@@ -5,7 +5,7 @@ story_id: "S-cycle14-field-options-name-label"
 epic_id: "ISSUE-TRIAGE-QUICKFIXES-1"
 title: "jr field options: system-field label resolution falls back to name (read-side only)"
 wave: 3
-status: draft
+status: ready
 intent: bug-fix
 feature_type: correctness
 mode: feature
@@ -35,7 +35,7 @@ inputs:
   - "Cargo.toml"
   - ".factory/specs/architecture/ARCH-INDEX.md"
   - ".factory/cycles/cycle-014/cycle-manifest.md"
-input-hash: "d2006b0"
+input-hash: "9dae4a3"
 traces_to: "BC-X.14.001, BC-X.14.003, BC-X.14.004"
 cycle: cycle-014-issue-triage-quickfixes
 estimated_effort: medium

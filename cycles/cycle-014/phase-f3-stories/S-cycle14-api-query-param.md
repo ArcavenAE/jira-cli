@@ -5,7 +5,7 @@ story_id: "S-cycle14-api-query-param"
 epic_id: "ISSUE-TRIAGE-QUICKFIXES-1"
 title: "jr api --query-param/-q NAME=VALUE: percent-encoded query-string assembly and its error taxonomy"
 wave: 2
-status: draft
+status: ready
 intent: bug-fix
 feature_type: enhancement
 mode: feature
