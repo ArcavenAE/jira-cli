@@ -13,10 +13,12 @@ producer: architect (F1 delta analysis)
 
 ## Delivered
 
-Not yet started. This manifest is created alongside the F1 delta-analysis
-report to hold the cycle's slot and record the pre-approval framing; it will
-be updated with real delivery data once the human approves scope at the F1
-gate and F4 implementation begins.
+**STORY-A** (`S-cycle14-user-list-project-resolution`, #862, 3 pts, 11 ACs,
+**BREAKING**) — MERGED 2026-09-29, PR #886 @ `2d8467c4` (squash, `develop`,
+mergedAt 2026-09-29T18:49:19Z). 1 of 3 cycle-014 stories delivered. STORY-C
+(`S-cycle14-api-query-param`, #583, 8 pts) and STORY-B
+(`S-cycle14-field-options-name-label`, #861, 5 pts) remain queued, serial
+order `A -> C -> B` per `D-381`.
 
 ## Summary
 
@@ -329,3 +331,50 @@ v1.6.29 -> v1.6.30, `total_stories` unchanged at 194). **NEXT: F4 serial
 delivery `A -> C -> B`** per `per-story-delivery.md`, starting with STORY-A
 (`S-cycle14-user-list-project-resolution`). See `STATE.md` v5.13
 (`CYCLE-014-F3-D390-APPROVED-2026-09-29`) for full detail.
+
+**(2026-09-29, F4 STORY-A delivered, D-391):** **STORY-A**
+(`S-cycle14-user-list-project-resolution`, `#862`, 3 pts, 11 ACs,
+**BREAKING**) is DELIVERED — squash-merged to `develop` as **PR #886**
+("fix(user)!: resolve user list --project from configured default, exit 64
+when none (#862) (#886)"), merge commit `2d8467c4d7627ae186b02617520c864a55d09296`,
+mergedAt 2026-09-29T18:49:19Z. `develop` moved `204b1fb5 -> 2d8467c4`; the
+remote and local `fix/user-list-project-resolution` branches and the story
+worktree are deleted. pr-manager's 9-step flow: security review 0 findings;
+`pr-reviewer` 1 cycle / 2 independent fresh-eyes reviews, both APPROVE with
+0 blocking findings (7 non-blocking observations accepted or deferred); CI
+24/24 green including CI Gate.
+
+**Merge-gate gap observed:** the merge landed with **NO approving review**
+(`reviewDecision` empty; the only review was a COMMENTED review by
+`Zious11`, since GitHub rejects self-approval) — root cause: `develop`'s
+branch protection sets `require_code_owner_reviews=true` but
+`required_approving_review_count=0`, so the code-owner requirement was not
+actually enforced at merge time. No `--admin` flag or other bypass was
+used; the orchestrator had intended pr-manager to stop at merge-ready for
+human sign-off, and it did not.
+
+**Human decision D-391** (2026-09-29): **ACCEPT the PR #886 merge as-is.**
+Branch protection stays UNCHANGED (not flipped to
+`required_approving_review_count=1` or similar). Standing policy for this
+pipeline going forward: **pr-manager MAY merge autonomously once ALL of
+these hold** — (1) the story has passed its Step 4.5 adversarial
+convergence; (2) the PR review convergence is APPROVE with 0 blocking
+findings; (3) the security review is clean; (4) `ci-gate` is green. Human
+words: "Merging it is fine once it's passed all the Adversarial reviews."
+Any PR that has not met all four conditions must still stop at
+merge-ready for the human. Full text recorded in `STATE.md`'s Decisions
+Log (`D-391`).
+
+Process-gap `#34` recorded in `process-gaps.md`: pr-manager's merge-gate
+logic relies on GitHub branch protection to actually block unapproved
+merges, and does not detect when protection is configured so that it
+enforces nothing — resolved for this project by `D-391`'s explicit
+autonomous-merge policy; engine follow-up flagged for `vsdd-factory`.
+
+Cycle-014 progress: **1 of 3 stories delivered** (STORY-A). STORY-C
+(`S-cycle14-api-query-param`, `#583`, 8 pts) and STORY-B
+(`S-cycle14-field-options-name-label`, `#861`, 5 pts) remain queued, serial
+`A -> C -> B` per `D-381`. **NEXT:** begin STORY-C — worktree
+`.worktrees/S-cycle14-api-query-param`, branch `feat/api-query-param`, at
+`2d8467c4`, no upstream yet; Red Gate stubs in progress. See `STATE.md`
+v5.15 (`CYCLE-014-STORY-A-MERGED-D391-2026-09-29`) for full detail.

@@ -5,7 +5,7 @@ story_id: "S-cycle14-user-list-project-resolution"
 epic_id: "ISSUE-TRIAGE-QUICKFIXES-1"
 title: "jr user list --project resolution order: local > global > configured default > exit 64"
 wave: 1
-status: ready
+status: done
 intent: bug-fix
 feature_type: correctness
 mode: feature
@@ -42,7 +42,7 @@ inputs:
   - "scripts/check-cargo-mutants-policy-citations.sh"
   - "Cargo.toml"
   - "CHANGELOG.md"
-input-hash: "27ed2f0"
+input-hash: "2334c00"
 traces_to: "BC-X.7.002"
 cycle: cycle-014-issue-triage-quickfixes
 estimated_effort: small
@@ -834,3 +834,25 @@ predecessor exists yet. Cross-cycle precedent is captured in the table below.
 ## Suggested Branch Name
 
 `fix/user-list-project-resolution` (Conventional Commits, per CLAUDE.md's `type/short-description` convention; this is a bug fix, so `fix/`).
+
+## Close-Out (2026-09-29, CYCLE-014-STORY-A-MERGED-D391)
+
+Delivered and squash-merged to `develop` as **PR #886** ("fix(user)!: resolve
+user list --project from configured default, exit 64 when none (#862)
+(#886)"), merge commit `2d8467c4d7627ae186b02617520c864a55d09296`, mergedAt
+2026-09-29T18:49:19Z, closing **#862**. `develop` moved
+`204b1fb5 -> 2d8467c4`. pr-manager's 9-step flow: security review 0
+findings; pr-reviewer 1 cycle / 2 independent fresh-eyes reviews, both
+APPROVE with 0 blocking findings (7 non-blocking observations accepted or
+deferred); CI 24/24 green including CI Gate. **Merge occurred with NO
+approving review** (`reviewDecision` empty; the sole review was a COMMENTED
+review by `Zious11`, since GitHub rejects self-approval) -- root cause:
+`develop`'s branch protection has `require_code_owner_reviews=true` but
+`required_approving_review_count=0`, so the code-owner requirement was not
+actually enforced at merge time. No `--admin` flag or other bypass was
+used. Human decision **D-391** (2026-09-29) accepts this merge as-is and
+does not change branch protection; it additionally establishes a standing
+autonomous-merge policy for this pipeline (see `STATE.md` Decisions Log for
+full text). Feature branch `fix/user-list-project-resolution` and its
+worktree `.worktrees/S-cycle14-user-list-project-resolution` are deleted
+(remote + local). `status: done`.

@@ -507,3 +507,17 @@ See `cycles/cycle-005/burst-log.md` Bursts 11-12 for full narrative detail (thes
 See `cycles/cycle-014/cycle-manifest.md` for full narrative detail (this row summarizes the same events).
 
 ---
+
+> Extracted from `.factory/STATE.md`'s `## Phase Progress` table during the
+> 2026-09-29 `CYCLE-014-STORY-A-MERGED-D391` burst (v5.14 -> v5.15), to keep
+> the live table at 12 rows after adding the new
+> `CYCLE-014-STORY-A-MERGED-D391-2026-09-29` row. This was the oldest row
+> at that point; archived here verbatim, unedited.
+
+| Phase | Status | Completed | Gate | Notes | Finding Progression |
+|-------|--------|-----------|------|-------|---------------------|
+| **CYCLE-014-F2-APPROVED-2026-09-26** | **APPROVED** | 2026-09-26 | human gate (F2 spec evolution) | Human APPROVED cycle-014's F2 gate ("Approve -> F3", `D-384`): spec `2.4.0` approved; `BC-X.7.002`/`BC-X.14.001`/`BC-X.14.003`/`BC-X.14.004` amendments approved; new `BC-X.16.001`/`002` approved. BCs `770->772` and VPs `89->97` are now the official LOCKED counts. | 772 BCs / 97 VPs / 118 holdout / 191 stories LOCKED; `D-384` minted |
+
+See `cycles/cycle-014/cycle-manifest.md` for full narrative detail (this row summarizes the same events).
+
+---

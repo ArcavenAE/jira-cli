@@ -7,7 +7,7 @@ producer: state-manager
 timestamp: 2026-09-26T00:01:34Z
 cycle: "cycle-014-issue-triage-quickfixes"
 inputs: [STATE.md]
-input-hash: "795e668"
+input-hash: "949f698"
 traces_to: STATE.md
 ---
 
@@ -397,16 +397,48 @@ dispositioned — dispositioning happens at cycle close per S-7.02).
     STORY-A demo evidence relocation, this burst.
     Engine-side (vsdd-factory) follow-up.
 
+34. **[process-gap] [engine]** `pr-manager`'s merge-gate logic relies on
+    GitHub branch protection to actually block an unapproved merge, and it
+    does not detect when protection is configured so that it enforces
+    nothing — `develop`'s branch protection sets
+    `require_code_owner_reviews=true` but `required_approving_review_count=0`,
+    so the code-owner requirement was never actually enforced. On STORY-A's
+    PR #886, this let a squash-merge land with `reviewDecision` empty (the
+    only review was a COMMENTED review, since GitHub rejects
+    self-approval) — the orchestrator's "stop if blocked" instruction
+    therefore did not stop the merge, even though no `--admin` flag or
+    other bypass was used. Resolved for this project by human decision
+    `D-391` (2026-09-29), which accepts the PR #886 merge as-is, leaves
+    branch protection unchanged, and establishes a standing
+    autonomous-merge policy: `pr-manager` may merge autonomously once the
+    story has passed Step 4.5 adversarial convergence, PR review
+    convergence is APPROVE with 0 blocking findings, security review is
+    clean, and `ci-gate` is green — otherwise it must stop at merge-ready
+    for the human. Candidate: `pr-manager` should check the *effective*
+    approval requirement (e.g. via `gh api repos/{owner}/{repo}/branches/
+    {branch}/protection` and reading `required_pull_request_reviews.
+    required_approving_review_count` together with
+    `require_code_owner_reviews`) rather than assuming any configured
+    protection enforces a human review. Also note: `pr-manager` wrote
+    `.factory/code-delivery/S-cycle14-user-list-project-resolution/`
+    artifacts (`pr-description.md`, `pr-review.md`) despite a "do not
+    touch `.factory/`" instruction elsewhere in this session — this is
+    benign (its own template outputs, committed as-is by this burst), but
+    the instruction should carve out `code-delivery/` as an exception.
+    Source: STORY-A merge (PR #886), this burst.
+    Engine-side (vsdd-factory) follow-up.
+
 ## Disposition
 
 Not yet dispositioned. F2 is CONVERGED per human decision `D-383` and
 APPROVED at the F2 human gate (`D-384`) — the S-7.02 cycle-closing checklist
-dispositions each of these 33 items when cycle-014 itself closes, not
+dispositions each of these 34 items when cycle-014 itself closes, not
 before. **Human decision `D-389` (2026-09-29)** closed F3 adversarial
 convergence directly (bypassing further dispositioning of `#1`-`#25` as a
 precondition) and directed that items `#26`-`#31` above be recorded now,
 each flagged as needing a follow-up story or an explicit deferral decision
 before cycle-014 closes. Items `#32`-`#33` were recorded during STORY-A's F4
-Step 4.5 convergence + demo-evidence-relocation burst (2026-09-29), same
-disposition class as `#26`-`#31` (needs a follow-up story or explicit
-deferral before cycle-014 closes).
+Step 4.5 convergence + demo-evidence-relocation burst (2026-09-29). Item
+`#34` was recorded during STORY-A's F4 merge burst (PR #886, D-391,
+2026-09-29). All are the same disposition class as `#26`-`#31` (needs a
+follow-up story or explicit deferral before cycle-014 closes).
