@@ -1,1 +1,1 @@
-{"status":"pass","timestamp":"2026-09-29T20:43:05Z","command":"cd /Users/zious/Documents/GITHUB/jira-cli/.worktrees/S-cycle14-api-query-param && git status --porcelain && git log --oneline origin/develop..HEAD && git diff --stat origin/develop && cargo clippy --all-targets -- -D warnings 2>&1 | tail -1 && cargo fmt --all -- --check && echo FMT-OK && cargo test -q --test cli_handler 2>&1 | grep 'test result'"}
+{"status":"pass","timestamp":"2026-09-29T21:33:48Z","command":"cargo test -q --test api_query_param --test claude_md_citations 2>&1 | tail -50"}

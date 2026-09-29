@@ -7,7 +7,7 @@ producer: state-manager
 timestamp: 2026-09-26T00:01:34Z
 cycle: "cycle-014-issue-triage-quickfixes"
 inputs: [STATE.md]
-input-hash: "949f698"
+input-hash: "af95740"
 traces_to: STATE.md
 ---
 
@@ -428,11 +428,28 @@ dispositioned — dispositioning happens at cycle close per S-7.02).
     Source: STORY-A merge (PR #886), this burst.
     Engine-side (vsdd-factory) follow-up.
 
+35. **[process-gap] [engine]** The fault-model attribution in the BC/story
+    (e.g. "NAME or VALUE trimmed — killed by (d) no-trim pinned examples")
+    is never checked against the layer the cited test exercises. On
+    STORY-C's (`S-cycle14-api-query-param`) BC-X.16.001, the pinned
+    "no-trim" examples called `append_query_params` with pre-split tuples
+    and bypassed `parse_query_param` — the function that actually owns the
+    trim/no-trim fault — so a `.trim()` regression introduced in
+    `parse_query_param` would have passed the suite untouched. This claim
+    survived 33 F3 spec passes before Step 4.5's adversarial review caught
+    it at implementation-review time (pass 1, F-001, fixed in `fb23a500`).
+    Candidate: the story-writer and spec-adversary prompts need a step
+    that confirms each claimed fault-kill cell in a BC's example table
+    exercises the code path that owns the fault it claims to kill, not
+    merely a downstream caller of that path. Source: STORY-C Step 4.5
+    convergence record, `cycles/cycle-014/S-cycle14-api-query-param/adversary-convergence-state.json`.
+    Engine-side (vsdd-factory) follow-up.
+
 ## Disposition
 
 Not yet dispositioned. F2 is CONVERGED per human decision `D-383` and
 APPROVED at the F2 human gate (`D-384`) — the S-7.02 cycle-closing checklist
-dispositions each of these 34 items when cycle-014 itself closes, not
+dispositions each of these 35 items when cycle-014 itself closes, not
 before. **Human decision `D-389` (2026-09-29)** closed F3 adversarial
 convergence directly (bypassing further dispositioning of `#1`-`#25` as a
 precondition) and directed that items `#26`-`#31` above be recorded now,
@@ -440,5 +457,7 @@ each flagged as needing a follow-up story or an explicit deferral decision
 before cycle-014 closes. Items `#32`-`#33` were recorded during STORY-A's F4
 Step 4.5 convergence + demo-evidence-relocation burst (2026-09-29). Item
 `#34` was recorded during STORY-A's F4 merge burst (PR #886, D-391,
-2026-09-29). All are the same disposition class as `#26`-`#31` (needs a
-follow-up story or explicit deferral before cycle-014 closes).
+2026-09-29). Item `#35` was recorded during STORY-C's F4 Step 4.5
+convergence + demo-evidence-relocation burst (2026-09-29). All are the same
+disposition class as `#26`-`#31` (needs a follow-up story or explicit
+deferral before cycle-014 closes).

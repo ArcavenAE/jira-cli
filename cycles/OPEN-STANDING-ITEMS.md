@@ -1884,3 +1884,21 @@ severity, no GitHub issue filed. **Target: next maintenance sweep** — set `JR_
 an equivalent isolation seam) for this test, or gate it behind the same keyring-test opt-in
 (`JR_RUN_KEYRING_TESTS=1`) convention used elsewhere in the auth test suite, so it no longer
 blocks an ordinary local `cargo test` run on macOS.
+
+## BC-X.16.002's M1 pinned message contradicts its own "always suggests a next step" claim — NEW, OPEN, spec drift, target cycle-014 F7 or next spec pass (2026-09-29)
+
+**ID:** `BC-X16-002-M1-NEXT-STEP-INCONSISTENCY`. Severity **LOW** (internal spec-consistency
+drift; the implementation is correct and matches the pin — this is a documentation-accuracy gap,
+not a behavioral defect). Surfaced during cycle-014 STORY-C (`S-cycle14-api-query-param`) Step 4.5
+adversarial convergence: BC-X.16.002 (`~L4150` of `specs/prd/cross-cutting.md`) states that both
+pinned error messages "additionally suggest a concrete next step," but the pinned M1 message
+(`--query-param must be in NAME=VALUE format (got: …)`) carries no such suggestion. `jr`'s
+implementation matches the M1 pin exactly (no next-step suggestion appended) — the defect is in
+the BC's own prose claim, not in the code.
+
+**Disposition (recorded 2026-09-29, state-manager STORY-C convergence burst):** LOW severity, no
+GitHub issue filed — internal spec-hygiene item, not user-facing. **Target: cycle-014 F7 or the
+next spec pass**, whichever comes first — either fix the BC-X.16.002 prose (drop or qualify the
+"both messages suggest a next step" claim) or amend the M1 pin itself to add a next-step
+suggestion, via product-owner. Remains OPEN, tracked as standing spec-hygiene debt until picked
+up.
