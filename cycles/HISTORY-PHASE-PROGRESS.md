@@ -493,3 +493,17 @@ See `cycles/cycle-005/burst-log.md` Bursts 11-12 for full narrative detail (thes
 | Phase | Status | Completed | Gate | Notes | Finding Progression |
 |-------|--------|-----------|------|-------|---------------------|
 | **CYCLE-014-F2-CHECKPOINT** | **F2 IN PROGRESS / NOT APPROVED (checkpoint, superseded)** | 2026-09-25/26 | none (mid-review checkpoint, not a phase gate) | Checkpointed cycle-014's F2 review at `PASS-30` (streak 0). Minted `D-380` (three settled behavior defaults) and `D-381` (serial delivery `A -> C -> B`). | 770 BCs / 89 VPs / 118 holdout / 191 stories LOCKED; cycle-014 DRAFT 770/97; `D-380`+`D-381` minted |
+
+> Extracted from `.factory/STATE.md`'s `## Phase Progress` table during the
+> 2026-09-29 `CYCLE-014-STORY-A-STEP45-CONVERGED` burst (v5.13 -> v5.14), to
+> keep the live table at 12 rows after adding the new
+> `CYCLE-014-STORY-A-STEP45-CONVERGED-2026-09-29` row. This was the oldest
+> row at that point; archived here verbatim, unedited.
+
+| Phase | Status | Completed | Gate | Notes | Finding Progression |
+|-------|--------|-----------|------|-------|---------------------|
+| **CYCLE-014-F2-READY-FOR-GATE** | **F2 CONVERGED (`D-383`) / AWAITING HUMAN GATE, NOT YET APPROVED (superseded)** | 2026-09-25/26 | none (superseded) | 36-pass F2 adversarial spec-delta review. Human decision **`D-383`** accepts F2 convergence, overriding the standing 3-consecutive-clean rule for cycle-014 F2 only. Full detail: `cycles/HISTORY-PHASE-PROGRESS.md`. | 770 BCs / 89 VPs / 118 holdout / 191 stories LOCKED; `D-382`+`D-383` minted |
+
+See `cycles/cycle-014/cycle-manifest.md` for full narrative detail (this row summarizes the same events).
+
+---

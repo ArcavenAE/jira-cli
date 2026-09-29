@@ -1852,3 +1852,35 @@ for cycle-014's F3 gate or F4 delivery. **Target: next maintenance sweep**
 NOINPUT files (artifacts whose `inputs:` frontmatter references paths that no longer resolve) to
 either repoint or remove the dangling references. Remains OPEN, tracked as standing spec-hygiene
 debt until a future maintenance-sweep burst picks it up.
+
+## `tests/auth_profiles.rs` has the same ineffective fixed-name JR_ env scrub fixed in cycle-014 STORY-A — NEW, OPEN, test-infrastructure drift, target next maintenance sweep (2026-09-29)
+
+**ID:** `AUTH-PROFILES-TEST-ENV-SCRUB`. Severity **LOW** (test-hermeticity, not a product
+defect). Surfaced during cycle-014 STORY-A (`S-cycle14-user-list-project-resolution`) Step 4.5
+adversarial convergence pass 1 (finding F-002): the pre-existing ambient-`JR_*`-variable scrub
+used by several test suites only unset a fixed, hardcoded list of variable names, so an ambient
+`JR_*` variable outside that list could leak into a test run instead of being scrubbed.
+STORY-A's own tests fixed this (case-insensitive `vars_os` scrub, commit `8b69d66c`) and moved
+its version to `tests/common/hermetic.rs`, but `tests/auth_profiles.rs` (`~L21-38`) still carries
+the original, narrower fixed-name scrub — it was not swept as part of STORY-A's fix because it
+lives outside STORY-A's own test files.
+
+**Disposition (recorded 2026-09-29, state-manager cycle-014 STORY-A convergence burst):** LOW
+severity, no GitHub issue filed — test-infrastructure hygiene only, no product behavior at risk.
+**Target: next maintenance sweep**, once STORY-A merges — migrate `tests/auth_profiles.rs`'s
+inline scrub to call `tests/common/hermetic.rs::scrub_ambient_jr_env` instead of duplicating the
+now-superseded fixed-name list.
+
+## `tests/oauth_flow_holdouts.rs::test_s_1_06_h_003_profile_precedence_chain` hangs locally on macOS — NEW, OPEN, test-infrastructure drift, target next maintenance sweep (2026-09-29)
+
+**ID:** `OAUTH-HOLDOUT-KEYCHAIN-HANG`. Severity **LOW** (local dev-host ergonomics; CI-safe).
+Surfaced during cycle-014 STORY-A delivery (2026-09-29): this test runs `jr auth list`, which
+probes the real OS keychain without `JR_SERVICE_NAME` isolation. On macOS this can prompt for
+keychain access and hang for 4+ minutes locally. It passes cleanly in Linux CI (no interactive
+keychain prompt on that platform), so this is not a correctness defect and not a CI blocker.
+
+**Disposition (recorded 2026-09-29, state-manager cycle-014 STORY-A convergence burst):** LOW
+severity, no GitHub issue filed. **Target: next maintenance sweep** — set `JR_SERVICE_NAME` (or
+an equivalent isolation seam) for this test, or gate it behind the same keyring-test opt-in
+(`JR_RUN_KEYRING_TESTS=1`) convention used elsewhere in the auth test suite, so it no longer
+blocks an ordinary local `cargo test` run on macOS.
