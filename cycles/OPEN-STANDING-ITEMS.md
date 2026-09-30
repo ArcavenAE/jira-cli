@@ -1964,16 +1964,23 @@ STORY-B (`#888`) slightly widens exposure by rendering more system-field
 `name` values through this path (previously many of those cells rendered
 `null`/were absent).
 
-**Disposition (recorded 2026-09-30, state-manager cycle-014 F4-completion
-combined wave-gate burst):** MEDIUM severity, no GitHub issue filed yet —
-tracked as standing security debt. **Target: next maintenance sweep or a
-future cycle.** Recommended fix: apply the existing `sanitize_env_display`
-pattern (already used elsewhere in the codebase for a similar class of
-untrusted-string display) inside `output::render_table` itself, so every
-table-mode caller is covered by one fix rather than sweeping call sites
-individually. **Pending human decision:** whether this is fixed within
-cycle-014 (before or during F5) or deferred to a dedicated security-hardening
-story.
+**Status: IN PROGRESS as FIX-P5-001 (D-392)** (updated 2026-09-30, state-manager
+cycle-014 F5-start burst). Human decision **D-392** (2026-09-30) elected to FIX
+this within cycle-014 during F5 rather than defer it. Tracked as fix task
+**FIX-P5-001**, delivered via `fix-pr-delivery` — F5's first routed finding.
+Design settled by security-reviewer triage
+(`cycles/cycle-014/phase-f5-adversarial/SEC-001-triage.md`): sanitize inside
+`output::render_table` (the single comfy_table chokepoint, 9 call sites) via a
+new `output::sanitize_table_cell`; `jr user list`/`jr user view`'s Active ✓/✗
+coloring moves from ANSI-in-`String` to structural `comfy_table::Cell` styling.
+Spec delta landed: new `BC-7.1.006` + inline `VP-SEC-001-001` in
+`specs/prd/bc-7-output-render.md`, spec `2.4.0`→`2.5.0`, BCs `772`→`773`.
+Implementation not yet started; worktree `.worktrees/FIX-P5-001` on branch
+`fix/FIX-P5-001` already exists (clean, no commits). **Original disposition
+(recorded 2026-09-30, state-manager cycle-014 F4-completion combined wave-gate
+burst), superseded by the above:** MEDIUM severity, no GitHub issue filed —
+tracked as standing security debt, target next maintenance sweep or a future
+cycle, pending human decision whether fixed within cycle-014 or deferred.
 
 ## `-q`/`--query-param` values are visible under plain `--verbose`, not just `--verbose-bodies` — NEW, OPEN, security (LOW), doc gap, target next maintenance sweep (2026-09-30)
 
@@ -2037,3 +2044,81 @@ tested and shipped). **Target: next maintenance sweep or a future cycle** —
 add a `tests/field_options.rs` wiremock case with a fixture system field
 that has `name` but no `value`, asserting the rendered label matches `name`
 in both table and `--output json` modes.
+
+## Non-table server-text sinks share SEC-001's CWE class but have no shared chokepoint — NEW, OPEN, security (LOW/MEDIUM class, unscored individually), target next maintenance sweep (2026-09-30)
+
+**ID:** `NONTABLE-SERVER-TEXT-SANITIZE`. Surfaced during the cycle-014 F5
+security-reviewer triage of `SEC-001-RENDER-TABLE-ANSI-SANITIZE`
+(`cycles/cycle-014/phase-f5-adversarial/SEC-001-triage.md` §3), explicitly
+carved OUT of `FIX-P5-001`'s scope (and out of new `BC-7.1.006`'s scope)
+because none of these sinks route through `output::render_table` — there is
+no single chokepoint to fix them all in one pass, unlike SEC-001's table-mode
+case.
+
+**Sinks (same CWE-150/CWE-116 class as SEC-001, each a separate untrusted
+server-string display path):**
+- `src/cli/project.rs` project name lists (printed outside the table-render path)
+- `src/cli/issue/workflow.rs` transition-name interactive prompts (`dialoguer::Select` option labels)
+- `src/cli/sprint.rs`'s summary hint line
+- `src/cli/component.rs`'s delete-confirmation description echo
+- `src/cli/field.rs::normalize_or_degrade`'s graceful-degrade hint (BC-X.14.004)
+- `JrError` bodies that echo raw server text into stderr error messages
+
+**Disposition:** OPEN, no GitHub issue filed. **Target: next maintenance
+sweep or a future security-hardening cycle** — likely one fix per sink (or a
+small shared helper reusing `sanitize_table_cell`'s/`sanitize_env_display`'s
+existing character-policy logic), since no common rendering function unifies
+them the way `render_table` does for table-mode output.
+
+## `sanitize_env_display`'s C1-control gap — NEW, OPEN, security (LOW), target next maintenance sweep (2026-09-30)
+
+**ID:** `SANITIZE-ENV-DISPLAY-C1-GAP`. Surfaced during the cycle-014 F5
+security-reviewer triage of `SEC-001-RENDER-TABLE-ANSI-SANITIZE`
+(`cycles/cycle-014/phase-f5-adversarial/SEC-001-triage.md` §3). The existing
+`src/output.rs::strip_control_and_ansi` (used by `sanitize_env_display`, the
+`auth status`/`auth list` profile `env`-tag display) strips ANSI CSI/OSC
+sequences and the bidi-override/line-separator code-point class, but has no
+C1-control (`U+0080`-`U+009F`) handling at all — the same gap the new
+`output::sanitize_table_cell` (`FIX-P5-001`, `BC-7.1.006`) closes for
+table-mode cells. `sanitize_env_display` is a narrower-audience function (a
+single profile `env` tag, not general table content) and was deliberately
+left unmodified by `FIX-P5-001`.
+
+**Disposition:** OPEN, no GitHub issue filed, LOW severity (narrow
+single-field audience, profile-name-adjacent display only). **Target: next
+maintenance sweep** — extend `strip_control_and_ansi` (or a sibling helper)
+to also strip the C1 control range, consistent with `sanitize_table_cell`'s
+policy, then confirm `sanitize_env_display`'s own tests still pass unchanged
+for non-C1 inputs.
+
+## `CANONICAL-COUNTS.md`'s L2 bc_count alignment row for bc-7 is stale — NEW, OPEN, doc-accuracy, target next maintenance sweep (2026-09-30)
+
+**ID:** `CANONICAL-COUNTS-L2-BC7-ALIGNMENT-STALE`. Surfaced by product-owner
+during the cycle-014 F5 `FIX-P5-001` spec-delta burst while updating
+`CANONICAL-COUNTS.md`'s BC-count surfaces for the new `BC-7.1.006`.
+`specs/prd/CANONICAL-COUNTS.md`'s "### L2 domain-spec bc_count vs L3
+total_bcs alignment (ADV-P17-003)" table (~L271) still reads:
+
+```
+| bc-07-output-render.md | 93 | bc-7-output-render.md | 93 | YES (bumped 2026-07-07; +1 BC-7.2.015 added issue #571 ADF code-mark exclusivity) |
+```
+
+This row was **already stale before this delta** — bc-7's L3 `total_bcs` has
+been 97 (not 93) since the 2026-09-06 cycle-005 `adf-mentions` F2 pass
+(BC-7.2.016..019), and is now 98 after this burst's `BC-7.1.006` addition.
+The row's own "YES" verdict and its 2026-07-07 citation are both stale. This
+surface is **not covered by `scripts/check-bc-cumulative-counts.sh`**, which
+validates Surfaces A-H (the per-file/grand-total tables) only, not this
+free-text L2-alignment narrative table — the same unenforced-surface pattern
+already recorded for cycle-007's `CANONICAL-COUNTS-BREAKDOWN-STALE` item
+above (this file, cycle-007 Phase F5 follow-ups section).
+
+**Disposition:** OPEN, LOW, doc-accuracy nit, no GitHub issue filed. **Target:
+next maintenance sweep** — correct the bc-7 row's L2 `bc_count` (58 would be
+needed for true YES alignment, no L2 `bc-07-output-render.md` file currently
+exists per row's own "not created" precedent on bc-8) and its L3 `total_bcs`
+figure to 98, and reclassify the verdict as PENDING (same posture as the
+other rows in that table) rather than a stale YES. Consider extending
+`check-bc-cumulative-counts.sh` (or a new guard) to cover this surface so it
+cannot silently drift again, following the same rationale already recorded
+for the cycle-007 Breakdown-narrative item.

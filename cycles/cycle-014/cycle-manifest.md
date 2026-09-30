@@ -3,7 +3,7 @@ document_type: cycle-manifest
 cycle_id: cycle-014-issue-triage-quickfixes
 cycle_type: bug-fix
 version: TBD — human decision D-390 (2026-09-29, F3 gate) confirms STORY-A (#862) ships as a BREAKING CHANGE; STORY-C (#583) and STORY-B (#861) remain non-breaking. This makes the release bump shape MINOR-or-breaking-flagged rather than three PATCH-shaped fixes as originally proposed at F1. Final version-bump decision stays at release.
-status: f4-complete
+status: f5-in-progress
 started: 2026-09-24
 completed: null
 producer: architect (F1 delta analysis)
@@ -491,3 +491,48 @@ clean passes, 10-pass cap). Pending human decision before or during F5:
 whether SEC-001 (pre-existing, codebase-wide ANSI/control-char
 table-rendering gap) is fixed in this cycle or deferred. See `STATE.md`
 v5.19 (`CYCLE-014-F4-COMPLETE-2026-09-30`) for full detail.
+
+**(2026-09-30, F5 STARTED, human decision D-392):** At the start of F5, the
+human chose to **FIX SEC-001 inside cycle-014** rather than defer it (human
+words: "Fix in cycle-014"), and to "Continue into F5". SEC-001 becomes fix
+task **FIX-P5-001**, delivered via `fix-pr-delivery` — F5's first routed
+finding. security-reviewer (read-only) ran a design triage settling on:
+sanitize inside `src/output.rs::render_table` (the single comfy_table
+chokepoint, 9 call sites) via a new `output::sanitize_table_cell`
+(`\n` preserved, `\r` stripped, `\t`→space, other C0/C1 controls and
+bidi/line-separator overrides stripped, ANSI CSI/OSC consumed fail-closed,
+no length cap, never applied to JSON); `jr user list`/`jr user view`'s
+Active ✓/✗ coloring moves from ANSI-in-`String` to structural `comfy_table`
+`Cell` styling so it survives sanitization. Full triage:
+`cycles/cycle-014/phase-f5-adversarial/SEC-001-triage.md`. product-owner
+then wrote the spec delta: new `BC-7.1.006` in
+`specs/prd/bc-7-output-render.md` (inline `VP-SEC-001-001`), spec `2.4.0`
+→ `2.5.0` (`spec-changelog.md` `[2.5.0]` entry), BCs `772` → `773` (bc-7
+`97`→`98` cumulative / `53`→`54` individually-bodied), `BC-INDEX.md` and
+`CANONICAL-COUNTS.md` updated to match. All four count-guard scripts
+(`check-spec-counts.sh`, `check-bc-cumulative-counts.sh`,
+`check-bc-citation-symbols.sh`, `check-bc-no-numeric-test-counts.sh`) PASS.
+product-owner separately flagged pre-existing, unrelated drift:
+`CANONICAL-COUNTS.md`'s "L2 domain-spec bc_count alignment" table row for
+bc-7 (~L271) was already stale (read `93`, should already have read `97`,
+now further stale at `98`) — not fixed by this burst, recorded as a new
+standing item (`CANONICAL-COUNTS-L2-BC7-ALIGNMENT-STALE`). 3 more new
+standing items recorded in `cycles/OPEN-STANDING-ITEMS.md`:
+`NONTABLE-SERVER-TEXT-SANITIZE` (the 6 non-table server-text sinks, same
+CWE class, no shared chokepoint), `SANITIZE-ENV-DISPLAY-C1-GAP`
+(`strip_control_and_ansi` misses the same C1 range in the `auth` env
+display), and the alignment-row item above. `SEC-001-RENDER-TABLE-ANSI-SANITIZE`'s
+existing standing-item entry updated to "IN PROGRESS as FIX-P5-001
+(D-392)". A fix worktree already exists at `.worktrees/FIX-P5-001` on
+branch `fix/FIX-P5-001` (checked out at `develop`'s current tip
+`2ee422e0`, clean, no commits yet). **Spec-only burst — no `src/` changes
+this burst.** **F5 status: IN PROGRESS, FIX-P5-001 spec done, implementation
+not started.** **NEXT:** implement `FIX-P5-001` in the existing worktree
+(failing tests first: proptest + EC-1..EC-12 pins + `format_active`
+`Cell`-styling test + end-to-end wiremock check, per
+`SEC-001-triage.md` §5/§6) → implementation → PR review + security review
++ demo + PR to merge-ready → human merge (per `fix-pr-delivery`); after
+merge, resume the F5 delta adversarial loop over
+`204b1fb5..<new develop>` (adversary + code-reviewer + security-reviewer,
+3 consecutive clean passes, 10-pass cap). See `STATE.md` v5.20
+(`CYCLE-014-F5-D392-FIX-P5-001-SPEC-2026-09-30`) for full detail.

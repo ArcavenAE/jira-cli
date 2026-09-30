@@ -9,6 +9,95 @@ Track all spec version changes. Most recent version first.
 
 > **Type legend:** Type classifies the SPEC document delta: MINOR = new BCs/VPs/sections; PATCH = amendments to existing bodies/ACs/ECs. Product-semver impact is recorded in the Summary line, independent of Type.
 
+## [2.5.0] - 2026-09-30
+
+### Type: MINOR
+
+### Summary
+
+Cycle-014 F5 scoped adversarial fix, `FIX-P5-001`, closing the standing security-review finding
+`SEC-001-RENDER-TABLE-ANSI-SANITIZE` (MEDIUM, CWE-150/CWE-116) surfaced at cycle-014's F4-completion
+combined wave integration gate (`cycles/cycle-014/wave-integration-gate.md` step (d);
+`cycles/OPEN-STANDING-ITEMS.md`). Human decision D-392 (2026-09-30) elected to fix this within
+cycle-014 during F5 rather than deferring it to a future maintenance sweep or cycle. One new
+behavioral contract, `BC-7.1.006`, specifies `output::render_table`'s new chokepoint-level ANSI
+and control-character sanitizer (a proposed new function, `output::sanitize_table_cell`, not yet
+implemented — this delta specifies its contract ahead of F6 implementation) for every table-mode
+cell and header, the `--output json` never-sanitized invariant, and the relocation of
+`src/cli/user.rs::format_active`'s Active-column glyph styling from ANSI-bytes-in-cell-text to
+structural `comfy_table::Cell` attributes. The entry is MINOR under this changelog's Type legend
+because it adds one new BC and one new VP, even though the change is a narrowly-scoped security
+fix rather than a new product-facing feature.
+
+### New Requirements
+
+| ID | Description |
+|----|-------------|
+| BC-7.1.006 | `bc-7-output-render.md` §7.1 (new, BC-7.1.001..006): `output::render_table` — the single table-mode rendering chokepoint (`output::print_output`'s `OutputFormat::Table` arm) — sanitizes every header and cell string via a new `output::sanitize_table_cell` before either reaches `comfy_table`. Per-character policy: `\n` preserved verbatim (multi-line cells); `\r` stripped outright; `\t` replaced with a single space (deliberately differs from outright stripping, to avoid word-merging across the tab boundary); all other C0 controls (`0x00`-`0x08`, `0x0B`-`0x1F`, `0x7F`) stripped; ANSI CSI/OSC sequences consumed and stripped wholesale, reusing `strip_control_and_ansi`'s existing state machine, with the same fail-closed unterminated-sequence behavior (consumed through EOF); C1 controls `U+0080`-`U+009F` stripped as a class (new relative to `strip_control_and_ansi`, which has no C1 handling — a documented, out-of-scope gap on that function); bidi overrides `U+202A`-`U+202E`/`U+2066`-`U+2069` and `U+2028`/`U+2029`/`U+0085` stripped; no length cap or truncation. `--output json` is never sanitized — the same lossless-machine-channel precedent as `sanitize_env_display` and issue #398's description-echo asymmetry. `src/cli/user.rs::format_active`'s Active-column `"✓"`/`"✗"` coloring must move from ANSI-bytes-embedded-in-`String` to structural `Cell` attributes (`.fg(Color::Green)`/`.fg(Color::Red)`), since a server-supplied string can now never itself produce a colored cell. Explicitly out of scope: `project.rs` name lists, `workflow.rs` transition prompts, `sprint.rs`'s summary hint, `component.rs`'s delete-confirmation echo, `field.rs::normalize_or_degrade`'s degrade hint, and `JrError` bodies that echo server text — none of these route through `render_table`. `bc-7-output-render.md` goes from 53→54 individually-bodied and 97→98 cumulative BCs; `### 7.1` header from 5→6 BCs. |
+
+### Modified Requirements
+
+| ID | Previous | Updated | Rationale |
+|----|----------|---------|-----------|
+| — | None | No existing BC body was modified this delta. | BC-7.1.006 is a wholly new contract; no sibling BC required amendment. |
+
+### Removed Requirements
+
+| ID | Description | Rationale |
+|----|-------------|-----------|
+| — | None | No BC or VP was removed or retired this delta. |
+
+### New Verification Properties
+
+| ID | Description | Proof Strategy |
+|----|-------------|---------------|
+| VP-SEC-001-001 | BC-7.1.006: (a) property-based whole-string invariant — `sanitize_table_cell`'s output contains no C0 control other than `\n`, no C1 control, no raw `ESC`, no `\r`, no `\t`, and none of the bidi-override/line-and-paragraph-separator code points; every `\n` in the input survives in order; the function is the identity on printable-plus-`\n` input. (b) example-based pins for each of the BC's 12 edge cases (EC-1..EC-12), including the unterminated-CSI fail-closed case and the C1-introducer-survivor-bytes case. (c) end-to-end check — `jr field options` and `jr issue list` against hostile wiremock fixtures, asserting no raw `ESC`/C1 bytes reach stdout under `--output table` while the identical raw payload reaches stdout under `--output json`. | proptest (whole-string invariant) + pinned example tests (one per EC) + integration-level end-to-end wiremock check across both output modes |
+
+VP count goes from 97 to 98, with no Kani proofs and no fuzz targets. Rationale is in
+`.factory/cycles/cycle-014/phase-f5-adversarial/FIX-P5-001-spec-delta.md`.
+
+### Architecture Changes
+
+- None. This is a spec-level fix to an existing pure-function chokepoint (`output.rs`); no
+  module-boundary change, no new file beyond the new function itself, no purity-boundary
+  crossing. `.factory/specs/architecture/*` is not touched.
+
+### Impact Assessment
+
+| Artifact | Change Type | Notes |
+|----------|-------------|-------|
+| `bc-7-output-render.md` | NEW BC | +1 BC (BC-7.1.006). `total_bcs` 97→98, `definitional_count` 53→54. |
+| `BC-INDEX.md` | UPDATED | `## Section 7` header, frontmatter `sections:`/`total_bcs:`, `### 7.1` subsection header, new BC-7.1.006 table row |
+| `CANONICAL-COUNTS.md` | UPDATED | Per-file counts, Sum row and grand-total prose: 772→773; breakdown individually-bodied count 542→543 |
+| `.factory/cycles/cycle-014/phase-f5-adversarial/FIX-P5-001-spec-delta.md` | NEW | F5 spec-delta note recording this BC/VP addition ahead of F6 implementation |
+| `.factory/specs/architecture/*` | UNCHANGED | No structural change — pure function addition to an existing module |
+
+- **Affected stories:** None yet — this is a spec-ahead-of-implementation delta produced during
+  cycle-014 F5. Implementation (the `sanitize_table_cell` function itself and the `format_active`
+  refactor) is an F6/F7 obligation of the same cycle, tracked via `FIX-P5-001`.
+- **Affected tests:** F6 implementation adds `src/output.rs::tests` unit/property tests for
+  `sanitize_table_cell` and an integration-level end-to-end check exercising `jr field options`
+  and `jr issue list` under both `--output table` and `--output json`; `src/cli/user.rs::format_active`
+  and its callers require a corresponding refactor to structural `Cell` styling with matching
+  test updates.
+- **Migration needed:** None — this closes a pre-existing gap (server-supplied strings were never
+  sanitized before this fix); no previously-correct behavior changes for any well-formed input.
+  A table-mode cell containing raw ANSI/control bytes will render differently (sanitized) after
+  the F6 implementation lands; this is the intended fix, not a breaking change to any documented
+  contract.
+- **Migration notes:** None — no config or flag changes. Should be noted in the product CHANGELOG
+  as a security fix once F6 implementation lands.
+
+### Feature Request Link
+
+- Not a GitHub issue — surfaced internally during cycle-014's F4-completion combined wave
+  integration gate security review and tracked as `SEC-001-RENDER-TABLE-ANSI-SANITIZE` in
+  `cycles/OPEN-STANDING-ITEMS.md`. Human decision D-392 (2026-09-30) authorized the fix within
+  cycle-014 F5, tracked as `FIX-P5-001`. Spec delta:
+  `.factory/cycles/cycle-014/phase-f5-adversarial/FIX-P5-001-spec-delta.md`.
+
+---
+
 ## [2.4.0] - 2026-09-25
 
 ### Type: MINOR
