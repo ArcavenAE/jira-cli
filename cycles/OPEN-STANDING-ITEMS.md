@@ -1949,3 +1949,91 @@ specifically as `customfield_NNNNN`-shaped.
 documented behavior (EC-X.14.001-14), not a defect; noted here only as a possible future
 enhancement (a system-field-id literal bypass symmetric with the `customfield_NNNNN` one) should
 it come up again.
+
+## `output::render_table` does not sanitize ANSI/control chars in server-supplied strings — NEW, OPEN, security (MEDIUM), target next maintenance sweep or a future cycle (2026-09-30)
+
+**ID:** `SEC-001-RENDER-TABLE-ANSI-SANITIZE`. Severity **MEDIUM** (CWE-150 /
+CWE-116). Surfaced during cycle-014's combined wave integration gate
+security review (`cycles/cycle-014/wave-integration-gate.md`, step d).
+Table-rendered server strings passed through `output::render_table` are not
+ANSI-escape/control-character sanitized before being written to the
+terminal. This is **pre-existing and codebase-wide** — every table-mode
+command that renders server-supplied text (`field options` labels, issue
+summaries, comment bodies, etc.) shares the same unsanitized path. Cycle-014
+STORY-B (`#888`) slightly widens exposure by rendering more system-field
+`name` values through this path (previously many of those cells rendered
+`null`/were absent).
+
+**Disposition (recorded 2026-09-30, state-manager cycle-014 F4-completion
+combined wave-gate burst):** MEDIUM severity, no GitHub issue filed yet —
+tracked as standing security debt. **Target: next maintenance sweep or a
+future cycle.** Recommended fix: apply the existing `sanitize_env_display`
+pattern (already used elsewhere in the codebase for a similar class of
+untrusted-string display) inside `output::render_table` itself, so every
+table-mode caller is covered by one fix rather than sweeping call sites
+individually. **Pending human decision:** whether this is fixed within
+cycle-014 (before or during F5) or deferred to a dedicated security-hardening
+story.
+
+## `-q`/`--query-param` values are visible under plain `--verbose`, not just `--verbose-bodies` — NEW, OPEN, security (LOW), doc gap, target next maintenance sweep (2026-09-30)
+
+**ID:** `SEC-002-QUERY-PARAM-VERBOSE-DOC`. Severity **LOW** (CWE-532).
+Surfaced during cycle-014's combined wave integration gate security review
+(`cycles/cycle-014/wave-integration-gate.md`, step d). `jr api`'s `-q
+NAME=VALUE` query-param values appear under plain `--verbose` (not gated
+behind the stricter `--verbose-bodies` PII flag) because they are part of
+the logged request URL, not the request/response body. This is expected
+behavior given `--verbose`'s documented "method + URL only" scope (SD-003),
+but is not currently called out anywhere near the existing
+`--verbose-bodies` PII warning in `CLAUDE.md`, so a user scanning that
+warning alone could reasonably assume `-q` values are protected by the same
+gate they are not.
+
+**Disposition (recorded 2026-09-30, state-manager cycle-014 F4-completion
+combined wave-gate burst):** LOW severity, no GitHub issue filed —
+documentation-note-only fix. **Target: next maintenance sweep** — add a
+one-line note alongside `CLAUDE.md`'s existing `--verbose-bodies` PII
+warning clarifying that `-q` query-param values are visible under plain
+`--verbose` (URL-level), not just `--verbose-bodies`.
+
+## `jr_cmd`/`write_default_profile_config` test-helper duplication across `tests/user_list_project_resolution.rs` and `tests/user_pagination.rs` — NEW, OPEN, test-hygiene, target next maintenance sweep (2026-09-30)
+
+**ID:** `TEST-HARNESS-JR-CMD-DEDUP`. Severity **LOW**. Surfaced during
+cycle-014's combined wave integration gate code review
+(`cycles/cycle-014/wave-integration-gate.md`, step c, SHOULD-FIX finding).
+The `jr_cmd` and `write_default_profile_config` test helpers are duplicated
+verbatim between `tests/user_list_project_resolution.rs` (STORY-A) and
+`tests/user_pagination.rs` (pre-existing). Recommended fix: move both into
+`tests/common/hermetic.rs` and have both test files import the shared
+versions. Related, same-file nits from the same review pass: (1)
+`tests/common/hermetic.rs`'s module doc still describes the file as
+user-list-only, stale now that it hosts (or should host) helpers shared
+across multiple test files; (2) `tests/common/hermetic.rs`'s own unit tests
+currently run in every test binary rather than being scoped — a minor
+build/test-time hygiene item, not a correctness defect.
+
+**Disposition (recorded 2026-09-30, state-manager cycle-014 F4-completion
+combined wave-gate burst):** LOW severity, no GitHub issue filed —
+test-infrastructure hygiene. **Target: next maintenance sweep.**
+
+## `jr field options` has no wiremock end-to-end test of a name-only system field's rendered label — NEW, OPEN, test-coverage gap, target next maintenance sweep or a future cycle (2026-09-30)
+
+**ID:** `FIELD-OPTIONS-E2E-RENDER-TEST`. Severity **LOW**. Surfaced during
+STORY-B's PR #888 review (`pr-reviewer`, 1 non-blocking finding) and
+reconfirmed at the cycle-014 combined wave integration gate. The `#861` fix
+(`normalize_from_allowed_values_at_depth`'s presence-based `value.or(name)`
+label fallback) is covered by unit/proptest cells in `src/cli/field.rs`'s
+own `#[cfg(test)] mod tests` (VP-580-013), but there is no wiremock-level
+end-to-end test asserting the actual rendered table/JSON output of `jr
+field options <NAME>` for a real name-only system field (one whose
+`AllowedValue` carries `name` with no `value`) — the unit-level coverage
+verifies the label-resolution function in isolation, not the full
+command-to-render path.
+
+**Disposition (recorded 2026-09-30, state-manager cycle-014 F4-completion
+combined wave-gate burst):** LOW severity, no GitHub issue filed — test-
+coverage gap, not a correctness defect (the underlying fix is already unit-
+tested and shipped). **Target: next maintenance sweep or a future cycle** —
+add a `tests/field_options.rs` wiremock case with a fixture system field
+that has `name` but no `value`, asserting the rendered label matches `name`
+in both table and `--output json` modes.

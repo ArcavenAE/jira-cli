@@ -5,7 +5,7 @@ story_id: "S-cycle14-field-options-name-label"
 epic_id: "ISSUE-TRIAGE-QUICKFIXES-1"
 title: "jr field options: system-field label resolution falls back to name (read-side only)"
 wave: 3
-status: ready
+status: done
 intent: bug-fix
 feature_type: correctness
 mode: feature
@@ -35,7 +35,7 @@ inputs:
   - "Cargo.toml"
   - ".factory/specs/architecture/ARCH-INDEX.md"
   - ".factory/cycles/cycle-014/cycle-manifest.md"
-input-hash: "3fc6411"
+input-hash: "12cc87e"
 traces_to: "BC-X.14.001, BC-X.14.003, BC-X.14.004"
 cycle: cycle-014-issue-triage-quickfixes
 estimated_effort: medium
@@ -821,3 +821,35 @@ No new dependency is added. No version pins change.
 ## Suggested Branch Name
 
 `fix/field-options-system-label-fallback` (Conventional Commits, per CLAUDE.md's `type/short-description` convention; this is a bug fix, so `fix/`).
+
+## Close-Out (2026-09-30, CYCLE-014-STORY-B-MERGED)
+
+Delivered and squash-merged to `develop` as **PR #888** ("fix(field): show
+system-field option labels via name fallback in `jr field options` (#861)
+(#888)"), merge commit `2ee422e0cf15ac5ab94d1077649a64f7dad1169a`, mergedAt
+2026-09-30T12:48:06Z, closing **#861**. `develop` moved
+`e54be670 -> 2ee422e0`. Implementation landed on branch
+`fix/field-options-name-label` (not the suggested
+`fix/field-options-system-label-fallback` name above — the branch was
+already created and in flight before the Suggested Branch Name section was
+finalized; no functional effect). pr-manager's gates: security review
+APPROVE (0 CRITICAL/HIGH/MEDIUM, 0 findings); `pr-reviewer` 1 cycle, APPROVE
+with 0 blocking findings (1 non-blocking finding — no wiremock-level
+end-to-end test of the rendered `#861` output, tracked as
+`FIELD-OPTIONS-E2E-RENDER-TEST` — plus 2 nits); CI 24/24 green. All four
+`D-391` autonomous-merge conditions HELD.
+
+**Merge was performed manually by the human (`Zious11`), not by
+`pr-manager`.** As with STORY-A's and STORY-C's PRs, `pr-manager`'s
+dispatch of the merge action was DENIED by the Claude Code auto-mode
+permission classifier — a harness-level permission gate, separate from and
+unrelated to `D-391`'s content-based autonomous-merge policy. `pr-manager`
+correctly stopped at merge-ready without attempting to work around the
+denial, and the human merged by hand.
+
+The worktree, the local branch, and the remote branch are all removed.
+`develop` is now at `2ee422e0` (`main` checkout fast-forwarded). This is
+the **third and final** cycle-014 story to merge — all 3 of 3 stories
+(STORY-A `#886`@`2d8467c4`, STORY-C `#887`@`e54be670`, STORY-B
+`#888`@`2ee422e0`) are now delivered, serial order `A -> C -> B` per
+`D-381` complete. `status: done`.

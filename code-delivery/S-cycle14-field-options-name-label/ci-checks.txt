@@ -1,0 +1,24 @@
+CI Gate	pass	16s	https://github.com/Zious11/jira-cli/actions/runs/36671854229/job/109750180006	
+Clippy (ubuntu-latest)	pass	48s	https://github.com/Zious11/jira-cli/actions/runs/36671854229/job/109748354300	
+Clippy (windows-latest)	pass	2m39s	https://github.com/Zious11/jira-cli/actions/runs/36671854229/job/109748354131	
+Coverage	pass	4m7s	https://github.com/Zious11/jira-cli/actions/runs/36671854229/job/109748354082	
+Deny (licenses + vulnerabilities)	pass	54s	https://github.com/Zious11/jira-cli/actions/runs/36671854229/job/109748354142	
+Format	pass	23s	https://github.com/Zious11/jira-cli/actions/runs/36671854229/job/109748354077	
+MSRV (1.88.0)	pass	57s	https://github.com/Zious11/jira-cli/actions/runs/36671854229/job/109748353858	
+Mutation Test Plan	pass	36s	https://github.com/Zious11/jira-cli/actions/runs/36671854229/job/109748354261	
+Mutation Testing (Aggregate)	pass	15s	https://github.com/Zious11/jira-cli/actions/runs/36671854229/job/109749726829	
+Mutation Testing (Shard) (0)	pass	5m7s	https://github.com/Zious11/jira-cli/actions/runs/36671854229/job/109748511742	
+Mutation Testing (Shard) (1)	pass	3m30s	https://github.com/Zious11/jira-cli/actions/runs/36671854229/job/109748511680	
+Mutation Testing (Shard) (2)	pass	1m36s	https://github.com/Zious11/jira-cli/actions/runs/36671854229/job/109748511716	
+Mutation Testing (Shard) (3)	pass	33s	https://github.com/Zious11/jira-cli/actions/runs/36671854229/job/109748511857	
+Mutation Testing (Shard) (4)	pass	33s	https://github.com/Zious11/jira-cli/actions/runs/36671854229/job/109748511805	
+Mutation Testing (Shard) (5)	pass	30s	https://github.com/Zious11/jira-cli/actions/runs/36671854229/job/109748511729	
+Mutation Testing (Shard) (6)	pass	29s	https://github.com/Zious11/jira-cli/actions/runs/36671854229/job/109748511754	
+Mutation Testing (Shard) (7)	pass	53s	https://github.com/Zious11/jira-cli/actions/runs/36671854229/job/109748511696	
+Secret Scan (gitleaks)	pass	19s	https://github.com/Zious11/jira-cli/actions/runs/36671854229/job/109748354230	
+Signing Workflow Injection Guard	pass	17s	https://github.com/Zious11/jira-cli/actions/runs/36671854229/job/109748354283	
+Spec Guards (BC counts, numeric-count lint, citation checks, mutants policy scope)	pass	31s	https://github.com/Zious11/jira-cli/actions/runs/36671854229/job/109748354220	
+Test (macos-latest)	pass	5m18s	https://github.com/Zious11/jira-cli/actions/runs/36671854229/job/109748354169	
+Test (ubuntu-latest)	pass	4m44s	https://github.com/Zious11/jira-cli/actions/runs/36671854229/job/109748354118	
+Test (windows-latest)	pass	7m44s	https://github.com/Zious11/jira-cli/actions/runs/36671854229/job/109748354159	
+dependency-review	pass	14s	https://github.com/Zious11/jira-cli/actions/runs/36671854165/job/109748353343	

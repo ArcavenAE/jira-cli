@@ -7,7 +7,7 @@ producer: state-manager
 timestamp: 2026-09-26T00:01:34Z
 cycle: "cycle-014-issue-triage-quickfixes"
 inputs: [STATE.md]
-input-hash: "4f8ca58"
+input-hash: "17299f5"
 traces_to: STATE.md
 ---
 
@@ -468,11 +468,31 @@ dispositioned — dispositioning happens at cycle close per S-7.02).
     finding above. Source: STORY-C merge (PR #887), this burst.
     Engine-side (vsdd-factory) follow-up.
 
+37. **[process-gap] [engine]** Per-wave integration gates after Wave 1
+    (STORY-A) and Wave 2 (STORY-C) were skipped. For a serial
+    one-story-per-wave schedule (`A -> C -> B` per `D-381`), the
+    orchestrator treated delivery as a continuous chain and moved straight
+    to the next story's worktree each time, rather than inserting a gate
+    checkpoint between waves. One combined gate over all 3 waves
+    (`204b1fb5..2ee422e0`) was run at F4 completion to compensate — see
+    `cycles/cycle-014/wave-integration-gate.md`. Candidate:
+    `per-story-delivery.md`'s wave gate needs an explicit "run the gate
+    before starting the next wave's worktree" checkpoint, or explicit
+    guidance that single-story waves may batch into one combined gate at
+    the end of a serial chain (making the batching a deliberate, documented
+    choice rather than an accidental omission). **Also flag (efficiency
+    lesson):** concurrent full `cargo test` runs by two agents in the same
+    checkout contended on the `target/` directory during this cycle's
+    delivery, so a full suite run took ~2h. Gate steps that each need a
+    full-suite run should share one run rather than each triggering their
+    own. Source: cycle-014 F4 completion / combined wave gate, this burst,
+    2026-09-30. Engine-side (`vsdd-factory`) follow-up.
+
 ## Disposition
 
 Not yet dispositioned. F2 is CONVERGED per human decision `D-383` and
 APPROVED at the F2 human gate (`D-384`) — the S-7.02 cycle-closing checklist
-dispositions each of these 36 items when cycle-014 itself closes, not
+dispositions each of these 37 items when cycle-014 itself closes, not
 before. **Human decision `D-389` (2026-09-29)** closed F3 adversarial
 convergence directly (bypassing further dispositioning of `#1`-`#25` as a
 precondition) and directed that items `#26`-`#31` above be recorded now,
@@ -483,5 +503,7 @@ Step 4.5 convergence + demo-evidence-relocation burst (2026-09-29). Item
 2026-09-29). Item `#35` was recorded during STORY-C's F4 Step 4.5
 convergence + demo-evidence-relocation burst (2026-09-29). Item `#36` was
 recorded during STORY-C's F4 merge burst (PR #887, this burst, 2026-09-30).
-All are the same disposition class as `#26`-`#31` (needs a follow-up story
-or explicit deferral before cycle-014 closes).
+Item `#37` was recorded during cycle-014's F4-completion combined wave
+integration gate (this burst, 2026-09-30). All are the same disposition
+class as `#26`-`#31` (needs a follow-up story or explicit deferral before
+cycle-014 closes).

@@ -3,7 +3,7 @@ document_type: cycle-manifest
 cycle_id: cycle-014-issue-triage-quickfixes
 cycle_type: bug-fix
 version: TBD — human decision D-390 (2026-09-29, F3 gate) confirms STORY-A (#862) ships as a BREAKING CHANGE; STORY-C (#583) and STORY-B (#861) remain non-breaking. This makes the release bump shape MINOR-or-breaking-flagged rather than three PATCH-shaped fixes as originally proposed at F1. Final version-bump decision stays at release.
-status: f3-approved
+status: f4-complete
 started: 2026-09-24
 completed: null
 producer: architect (F1 delta analysis)
@@ -21,9 +21,16 @@ mergedAt 2026-09-29T18:49:19Z).
 — MERGED 2026-09-30, PR #887 @ `e54be670` (squash, `develop`, mergedAt
 2026-09-30T03:57:04Z; merged manually by the human, see dated note below).
 
-2 of 3 cycle-014 stories delivered. STORY-B
-(`S-cycle14-field-options-name-label`, #861, 5 pts) remains queued, serial
-order `A -> C -> B` per `D-381`.
+**STORY-B** (`S-cycle14-field-options-name-label`, #861, 5 pts, 9 ACs,
+non-breaking) — MERGED 2026-09-30, PR #888 @ `2ee422e0` (squash, `develop`,
+mergedAt 2026-09-30T12:48:06Z; merged manually by the human, see dated note
+below).
+
+**3 of 3 cycle-014 stories delivered.** Serial order `A -> C -> B` per
+`D-381` COMPLETE. Phase F4 (delta implementation) is **COMPLETE**.
+Combined wave integration gate over the 3-story delta (`204b1fb5..2ee422e0`):
+**PASSED**. Full gate report:
+`cycles/cycle-014/wave-integration-gate.md`.
 
 ## Summary
 
@@ -427,3 +434,60 @@ queued. **NEXT:** begin STORY-B — worktree
 `fix/field-options-name-label`, at `e54be670`, no upstream yet; Red Gate
 stubs in progress. See `STATE.md` v5.17
 (`CYCLE-014-STORY-C-MERGED-2026-09-30`) for full detail.
+
+**(2026-09-30, F4 STORY-B delivered + F4 COMPLETE):** **STORY-B**
+(`S-cycle14-field-options-name-label`, `#861`, 5 pts, 9 ACs, non-breaking)
+is DELIVERED — squash-merged to `develop` as **PR #888** ("fix(field): show
+system-field option labels via name fallback in `jr field options` (#861)
+(#888)"), merge commit `2ee422e0cf15ac5ab94d1077649a64f7dad1169a`, mergedAt
+2026-09-30T12:48:06Z. `develop` moved `e54be670 -> 2ee422e0`; the worktree,
+local branch, and remote branch are all removed. pr-manager's gates:
+security review APPROVE (0 CRITICAL/HIGH/MEDIUM, 0 findings); `pr-reviewer`
+1 cycle, APPROVE with 0 blocking findings (1 non-blocking finding — no
+wiremock-level end-to-end test of the rendered `#861` output, tracked as
+`FIELD-OPTIONS-E2E-RENDER-TEST` — plus 2 nits); CI 24/24 green. All four
+`D-391` autonomous-merge conditions HELD.
+
+**Why the merge was manual, not autonomous:** identical to STORY-A's and
+STORY-C's precedent — pr-manager's dispatch of the merge action was
+**DENIED by the Claude Code auto-mode permission classifier**, a
+harness-level permission gate unrelated to `D-391`'s content-based policy.
+pr-manager stopped at merge-ready without working around the denial, and
+the human (`Zious11`) merged PR #888 by hand.
+
+**Cycle-014 Phase F4 (delta implementation) is now COMPLETE — 3 of 3
+stories delivered:** STORY-A (`#886`@`2d8467c4`), STORY-C
+(`#887`@`e54be670`), STORY-B (`#888`@`2ee422e0`), serial order `A -> C -> B`
+per `D-381` complete.
+
+**Combined wave integration gate** (per-story-delivery.md steps a-f) run
+over the full 3-story delta `204b1fb5..2ee422e0` (19 files): **PASSED**.
+Full verification (fmt/clippy clean, lib 1562 passed, full suite 5789
+passed/0 failed/188 ignored across 131 binaries, release build OK, `cargo
+deny` OK, all 4 guard scripts OK; local mutants run skipped — CI's sharded
+mutation gate already passed on each PR diff). Adversary on the combined
+diff: CLEAN_NITPICK_ONLY (2 nits in `tests/common/hermetic.rs`, no
+cross-story defects). Code-reviewer: APPROVE, 0 blocking (1 SHOULD-FIX —
+`jr_cmd`/`write_default_profile_config` test-helper duplication across two
+test files — plus nits). Security review: 0 CRITICAL/HIGH (SEC-001 MEDIUM
+pre-existing codebase-wide ANSI/control-char table-rendering gap, slightly
+widened by `#888`; SEC-002 LOW query-param-under-`--verbose` doc gap).
+Consistency-validator: PASS-WITH-FINDINGS (traceability/counts/evidence all
+clean; 0 of 37 process-gaps dispositioned, deferred to the S-7.02
+cycle-closing checklist; input-hash refreshed this burst). Holdout
+evaluation: PASS, all 14 scenarios at 1.0, mean 1.00. Full gate report:
+`cycles/cycle-014/wave-integration-gate.md`.
+
+**Process deviation recorded** (process-gap `#37`): per-wave integration
+gates after Wave 1 (STORY-A) and Wave 2 (STORY-C) were NOT run — the
+orchestrator moved straight to the next story each time, given the serial
+one-story-per-wave schedule. One combined gate over all 3 waves was run
+this burst to compensate; see `process-gaps.md` for the full finding and
+recommended `per-story-delivery.md` fix.
+
+**NEXT:** Phase **F5 scoped adversarial review** of the delta
+`204b1fb5..2ee422e0` (adversary + code-reviewer + security-reviewer loop, 3
+clean passes, 10-pass cap). Pending human decision before or during F5:
+whether SEC-001 (pre-existing, codebase-wide ANSI/control-char
+table-rendering gap) is fixed in this cycle or deferred. See `STATE.md`
+v5.19 (`CYCLE-014-F4-COMPLETE-2026-09-30`) for full detail.
