@@ -1433,7 +1433,7 @@ async fn test_bc_x_14_001_get_createmeta_fields_hard_cap_prevents_infinite_loop(
 }
 
 // ═══════════════════════════════════════════════════════════════════════════
-// AC-011 — <field> resolution (customfield_NNNNN bypass / list_fields + partial_match)
+// AC-011 — <field> resolution (customfield_NNNNN bypass / list_fields + search_field_list)
 // ═══════════════════════════════════════════════════════════════════════════
 
 /// AC-011: `customfield_10084` literal bypasses `list_fields()` entirely
@@ -1527,11 +1527,13 @@ async fn test_bc_x_14_001_field_name_ambiguous_exits_64() {
 
 /// AC-011: a human field name resolving to a SINGLE unambiguous match
 /// succeeds end-to-end — the field-name-resolution happy path via
-/// `list_fields()` + `partial_match`. All pre-existing tests use either the
+/// `list_fields()` + `search_field_list`'s single-exact-match branch (the
+/// fixture's query `"Story Points"` matches exactly one of the two
+/// candidate names). All pre-existing tests use either the
 /// `customfield_NNNNN` bypass or the ambiguous-name error path; this is the
 /// first to exercise a successful human-name resolution.
 #[tokio::test]
-async fn test_bc_x_14_001_field_name_human_name_resolves_via_partial_match() {
+async fn test_bc_x_14_001_field_name_single_exact_match_resolves_via_search_field_list() {
     let h = Harness::new().await;
     mount_list_fields(
         &h.server,
@@ -2047,7 +2049,7 @@ async fn test_bc_x_14_004_graceful_degrade_array_typed_cmdb_field() {
 async fn test_bc_x_14_004_graceful_degrade_labels_field() {
     let h = Harness::new().await;
     // "labels" is a human/system field name, not a `customfield_NNNNN`
-    // literal, so it resolves via `list_fields()` + `partial_match` first.
+    // literal, so it resolves via `list_fields()` + `search_field_list` first.
     mount_list_fields(
         &h.server,
         vec![json!({"id": "labels", "name": "Labels", "custom": false, "schema": null})],
