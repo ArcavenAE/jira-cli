@@ -15,9 +15,14 @@ producer: architect (F1 delta analysis)
 
 **STORY-A** (`S-cycle14-user-list-project-resolution`, #862, 3 pts, 11 ACs,
 **BREAKING**) — MERGED 2026-09-29, PR #886 @ `2d8467c4` (squash, `develop`,
-mergedAt 2026-09-29T18:49:19Z). 1 of 3 cycle-014 stories delivered. STORY-C
-(`S-cycle14-api-query-param`, #583, 8 pts) and STORY-B
-(`S-cycle14-field-options-name-label`, #861, 5 pts) remain queued, serial
+mergedAt 2026-09-29T18:49:19Z).
+
+**STORY-C** (`S-cycle14-api-query-param`, #583, 8 pts, 11 ACs, non-breaking)
+— MERGED 2026-09-30, PR #887 @ `e54be670` (squash, `develop`, mergedAt
+2026-09-30T03:57:04Z; merged manually by the human, see dated note below).
+
+2 of 3 cycle-014 stories delivered. STORY-B
+(`S-cycle14-field-options-name-label`, #861, 5 pts) remains queued, serial
 order `A -> C -> B` per `D-381`.
 
 ## Summary
@@ -378,3 +383,47 @@ Cycle-014 progress: **1 of 3 stories delivered** (STORY-A). STORY-C
 `.worktrees/S-cycle14-api-query-param`, branch `feat/api-query-param`, at
 `2d8467c4`, no upstream yet; Red Gate stubs in progress. See `STATE.md`
 v5.15 (`CYCLE-014-STORY-A-MERGED-D391-2026-09-29`) for full detail.
+
+**(2026-09-30, F4 STORY-C delivered):** **STORY-C**
+(`S-cycle14-api-query-param`, `#583`, 8 pts, 11 ACs, non-breaking) is
+DELIVERED — squash-merged to `develop` as **PR #887** ("feat(api): add
+repeatable -q/--query-param NAME=VALUE to jr api (#583) (#887)"), merge
+commit `e54be670cf77cb9220e1aad7e3826c66de908923`, mergedAt
+2026-09-30T03:57:04Z. `develop` moved `2d8467c4 -> e54be670`; the remote and
+local `feat/api-query-param` branches and the story worktree are deleted.
+pr-manager's gates: security review APPROVE (0 CRITICAL/HIGH/MEDIUM, 2 LOW
+informational notes — unbounded `-q` count/length is local-arg-only,
+repeated-NAME non-dedup is by design); `pr-reviewer` 1 cycle, APPROVE with 0
+blocking findings (2 suggestions + 3 nits, non-blocking); CI 24/24 green
+including Windows (the known 5s held-stdin flake did not trigger). All four
+`D-391` autonomous-merge conditions HELD.
+
+**Why the merge was manual, not autonomous:** pr-manager's dispatch of the
+merge action was **DENIED by the Claude Code auto-mode permission
+classifier** — a harness-level permission gate, distinct from and
+unrelated to `D-391`'s content-based autonomous-merge policy (which
+concerns WHEN a merge is authorized, not the mechanics of executing one).
+pr-manager correctly stopped without attempting to work around the denial,
+and the human (`Zious11`) merged PR #887 by hand. **Operating note for the
+rest of this pipeline** (recorded in `STATE.md`): until the human adds a
+permission rule authorizing the merge action, `pr-manager` must STOP at
+merge-ready (all four `D-391` gates green) and hand off to the human for
+the merge click — it must not attempt the merge action itself. This is a
+first-class terminal state for `pr-manager`'s playbook, not an error
+condition.
+
+Process-gap `#36` recorded in `process-gaps.md`: the harness auto-mode
+classifier blocks agent-initiated PR merges even when a human decision
+(`D-391`) authorizes autonomous merge; also flags that, before its merge
+attempt, `pr-manager` accumulated self-inflicted status-check filler tasks
+and routed messages to "team-lead", causing wall-clock delays in both PR
+runs (STORY-A's and STORY-C's) — engine follow-up flagged for
+`vsdd-factory`.
+
+Cycle-014 progress: **2 of 3 stories delivered** (STORY-A, STORY-C).
+STORY-B (`S-cycle14-field-options-name-label`, `#861`, 5 pts) remains
+queued. **NEXT:** begin STORY-B — worktree
+`.worktrees/S-cycle14-field-options-name-label`, branch
+`fix/field-options-name-label`, at `e54be670`, no upstream yet; Red Gate
+stubs in progress. See `STATE.md` v5.17
+(`CYCLE-014-STORY-C-MERGED-2026-09-30`) for full detail.

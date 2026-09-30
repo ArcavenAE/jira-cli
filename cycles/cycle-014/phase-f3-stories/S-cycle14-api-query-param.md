@@ -5,7 +5,7 @@ story_id: "S-cycle14-api-query-param"
 epic_id: "ISSUE-TRIAGE-QUICKFIXES-1"
 title: "jr api --query-param/-q NAME=VALUE: percent-encoded query-string assembly and its error taxonomy"
 wave: 2
-status: ready
+status: done
 intent: bug-fix
 feature_type: enhancement
 mode: feature
@@ -1319,3 +1319,34 @@ No new dependency is added. `url::form_urlencoded::byte_serialize` is explicitly
 ## Suggested Branch Name
 
 `feat/api-query-param` (Conventional Commits, per CLAUDE.md's `type/short-description` convention; this adds a new capability, so `feat/`).
+
+## Close-Out (2026-09-30, CYCLE-014-STORY-C-MERGED)
+
+Delivered and squash-merged to `develop` as **PR #887** ("feat(api): add
+repeatable -q/--query-param NAME=VALUE to jr api (#583) (#887)"), merge
+commit `e54be670cf77cb9220e1aad7e3826c66de908923`, mergedAt
+2026-09-30T03:57:04Z, closing **#583**. `develop` moved
+`2d8467c4 -> e54be670`. pr-manager's gates: security review APPROVE (0
+CRITICAL/HIGH/MEDIUM, 2 LOW informational notes — unbounded `-q` count/length
+is local-arg-only, repeated-NAME non-dedup is by design); `pr-reviewer` 1
+cycle, APPROVE with 0 blocking findings (2 suggestions + 3 nits — secret-in-
+query-value guidance, a `--help` workaround mention for `-q=-x=1`, README
+`--body`/`-d` wording drift, tracked as the pre-existing `README-JR-API-BODY-
+FLAG` item); CI 24/24 green including Windows (the known 5s held-stdin flake
+did not trigger). All four `D-391` autonomous-merge conditions HELD.
+
+**Merge was performed manually by the human (`Zious11`), not by
+`pr-manager`.** pr-manager's dispatch of the merge action was DENIED by the
+Claude Code auto-mode permission classifier — a harness-level permission
+gate, separate from and unrelated to `D-391`'s content-based
+autonomous-merge policy. pr-manager correctly stopped at merge-ready without
+attempting to work around the denial, and the human merged by hand.
+Operating note recorded in `STATE.md`: until the human adds a permission
+rule for the merge action, `pr-manager` must STOP at merge-ready (all four
+`D-391` gates green) and hand off to the human for the merge click, rather
+than attempt the merge action itself.
+
+Feature branch `feat/api-query-param` and its worktree
+`.worktrees/S-cycle14-api-query-param` are deleted (remote + local).
+`blocks:[S-cycle14-field-options-name-label]` **UNBLOCKED** — STORY-B may
+now be rebased on `develop`'s new tip `e54be670`. `status: done`.

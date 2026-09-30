@@ -7,7 +7,7 @@ producer: state-manager
 timestamp: 2026-09-26T00:01:34Z
 cycle: "cycle-014-issue-triage-quickfixes"
 inputs: [STATE.md]
-input-hash: "af95740"
+input-hash: "4f8ca58"
 traces_to: STATE.md
 ---
 
@@ -445,11 +445,34 @@ dispositioned — dispositioning happens at cycle close per S-7.02).
     convergence record, `cycles/cycle-014/S-cycle14-api-query-param/adversary-convergence-state.json`.
     Engine-side (vsdd-factory) follow-up.
 
+36. **[process-gap] [engine]** The harness auto-mode classifier blocks
+    agent-initiated PR merges even when a human decision (`D-391`)
+    authorizes autonomous merge. On STORY-C's PR #887, `pr-manager`'s
+    dispatch of the merge action was DENIED by the Claude Code auto-mode
+    permission classifier — a harness-level permission gate, distinct
+    from and unrelated to `D-391`'s content-based policy for WHEN a merge
+    is authorized. `pr-manager` correctly stopped without working around
+    the denial and the human merged PR #887 by hand. This is the same
+    class of stop-then-hand-off outcome the orchestrator had originally
+    intended for STORY-A's PR #886 (process-gap `#34`), but this time
+    caused by a harness permission gate rather than a branch-protection
+    configuration gap — a second, distinct root cause landing on the same
+    "merge did not happen autonomously" symptom. Candidate:
+    `pr-manager`'s playbook should detect this specific denial signature
+    and treat "merge-ready handoff to human" as a first-class terminal
+    state, not an error to retry or route around. **Also flag:** before
+    its merge attempt, `pr-manager` accumulated self-inflicted
+    status-check filler tasks and routed messages to "team-lead", which
+    caused wall-clock delays in both PR runs (STORY-A's and STORY-C's) —
+    a process-efficiency defect independent of the permission-denial
+    finding above. Source: STORY-C merge (PR #887), this burst.
+    Engine-side (vsdd-factory) follow-up.
+
 ## Disposition
 
 Not yet dispositioned. F2 is CONVERGED per human decision `D-383` and
 APPROVED at the F2 human gate (`D-384`) — the S-7.02 cycle-closing checklist
-dispositions each of these 35 items when cycle-014 itself closes, not
+dispositions each of these 36 items when cycle-014 itself closes, not
 before. **Human decision `D-389` (2026-09-29)** closed F3 adversarial
 convergence directly (bypassing further dispositioning of `#1`-`#25` as a
 precondition) and directed that items `#26`-`#31` above be recorded now,
@@ -458,6 +481,7 @@ before cycle-014 closes. Items `#32`-`#33` were recorded during STORY-A's F4
 Step 4.5 convergence + demo-evidence-relocation burst (2026-09-29). Item
 `#34` was recorded during STORY-A's F4 merge burst (PR #886, D-391,
 2026-09-29). Item `#35` was recorded during STORY-C's F4 Step 4.5
-convergence + demo-evidence-relocation burst (2026-09-29). All are the same
-disposition class as `#26`-`#31` (needs a follow-up story or explicit
-deferral before cycle-014 closes).
+convergence + demo-evidence-relocation burst (2026-09-29). Item `#36` was
+recorded during STORY-C's F4 merge burst (PR #887, this burst, 2026-09-30).
+All are the same disposition class as `#26`-`#31` (needs a follow-up story
+or explicit deferral before cycle-014 closes).

@@ -521,3 +521,17 @@ See `cycles/cycle-014/cycle-manifest.md` for full narrative detail (this row sum
 See `cycles/cycle-014/cycle-manifest.md` for full narrative detail (this row summarizes the same events).
 
 ---
+
+> Extracted from `.factory/STATE.md`'s `## Phase Progress` table during the
+> 2026-09-30 `CYCLE-014-STORY-C-MERGED` burst (v5.16 -> v5.17), to keep
+> the live table at 12 rows after adding the new
+> `CYCLE-014-STORY-C-MERGED-2026-09-30` row. This was the oldest row
+> at that point; archived here verbatim, unedited.
+
+| Phase | Status | Completed | Gate | Notes | Finding Progression |
+|-------|--------|-----------|------|-------|---------------------|
+| **CYCLE-014-F3-PASS17-CHECKPOINT-2026-09-28** | **IN PROGRESS / NOT CLEAN (checkpoint, superseded)** | 2026-09-28 | none (superseded) | F3 adversarial story review pass 17, NOT CLEAN. Stories bumped to v4.4 plus a sentence-level completeness sweep. Full detail: `cycles/HISTORY-PHASE-PROGRESS.md`. | 772 BCs / 97 VPs / 118 holdout / 191 stories LOCKED; clean counter 0/3; no new `D-NNN` |
+
+See `cycles/cycle-014/cycle-manifest.md` for full narrative detail (this row summarizes the same events).
+
+---
