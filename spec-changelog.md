@@ -9,6 +9,108 @@ Track all spec version changes. Most recent version first.
 
 > **Type legend:** Type classifies the SPEC document delta: MINOR = new BCs/VPs/sections; PATCH = amendments to existing bodies/ACs/ECs. Product-semver impact is recorded in the Summary line, independent of Type.
 
+## [2.5.1] - 2026-09-30
+
+### Type: PATCH
+
+### Summary
+
+Wording-only corrections to `BC-7.1.006` and its inline `VP-SEC-001-001` (`bc-7-output-render.md`),
+sourced from `FIX-P5-001`'s implementation and Red Gate (branch `fix/FIX-P5-001`, not yet merged
+to `develop`). No policy change — these are spec-body precision fixes, not behavior changes; BC
+count is unchanged (98 in-file / 773 cumulative). Three corrections:
+
+1. **VP-SEC-001-001(a)'s `\n`-preservation clause contradicted the BC's own EC-3.** The clause
+   claimed every `\n` in the input survives in the output unconditionally. EC-3 already specifies
+   that an unterminated CSI/OSC sequence is consumed fail-closed through end-of-string, which also
+   swallows any `\n` inside it — minimal case `"\u{1b}[31;1;9\n"` → `""` (the CSI's parameter scan
+   finds no final byte in `0x40`-`0x7E` before end-of-string, including the `\n` itself, so the
+   whole sequence is consumed through EOF). Note the scan has no `\n` boundary check at all: a
+   longer input like `"\u{1b}[31;1;9\nline2"` resolves to `"ine2"`, NOT `""` — the lowercase `l` in
+   `line2` falls in `0x40`-`0x7E` and terminates the CSI there, consuming the params, the `\n`, and
+   the `l` together, while `"ine2"` survives; the sequence is "terminated" in this case, yet still
+   swallows the embedded `\n`. Split the clause into (i) an unconditional invariant — the sanitizer
+   never fabricates a `\n` (output `\n` count ≤ input `\n` count, for all inputs) — and (ii) a
+   conditional invariant — exact `\n` count preservation only for inputs where no `\n` falls inside
+   a CSI/OSC sequence's scan span (a narrower, more precise condition than "no unterminated
+   CSI/OSC sequence" — termination status alone does not determine whether an embedded `\n`
+   survives). Added new **EC-13** documenting both the swallowed-newline minimal case and the
+   `"ine2"` contrast case, with rationale (CSI/OSC parameter bytes can never legitimately contain
+   `\n`; fail-closed is kept for consistency with the pinned `strip_control_and_ansi` state
+   machine; over-stripping is safe). Pinned test:
+   `test_bc_7_1_006_ec13_unterminated_csi_consumption_includes_embedded_newline`.
+2. **VP-SEC-001-001(c) and EC-12's JSON wording claimed byte-for-byte literal presence**, which is
+   impossible for any hostile payload containing `0x00`-`0x1F` because JSON's grammar requires
+   escaping them (e.g. `ESC` → `\u001b`). Reworded both to state that JSON output is never
+   sanitized, so the value round-trips to the identical string after `serde_json` parsing;
+   characters JSON does not require escaping, such as the C1 control `U+009B`, do appear literally
+   in the raw text.
+3. **Trace field precision.** `src/output.rs::sanitize_table_cell` now exists on branch
+   `fix/FIX-P5-001` (not yet merged to `develop`). Changed its citation qualifier from "NEW
+   FUNCTION — does not exist yet, F6 target, not a live citation" to "implemented in FIX-P5-001,
+   pending merge; convert to a live backticked citation after merge" — kept unbackticked so
+   `scripts/check-bc-citation-symbols.sh` (which validates against `develop`'s `src/` tree) does
+   not flag it stale. Added the same unbackticked pending-merge citations for the implementation's
+   additional new API surface: `output::render_table_with_styles`, `output::print_output_with_styles`,
+   `output::StyledCell`, `cli::user::active_cell`.
+
+### New Requirements
+
+| ID | Description |
+|----|-------------|
+| — | None. No new BC or VP this delta — wording corrections only to the existing BC-7.1.006 / VP-SEC-001-001. |
+
+### Modified Requirements
+
+| ID | Previous | Updated | Rationale |
+|----|----------|---------|-----------|
+| BC-7.1.006 | VP-SEC-001-001(a): unconditional "every `\n` present in the input survives in the output" claim. | VP-SEC-001-001(a): (i) output `\n` count never exceeds input `\n` count (all inputs); (ii) exact `\n` preservation only when no `\n` falls inside a CSI/OSC sequence's scan span (not merely "no unterminated sequence" — a terminated sequence with an embedded `\n` still swallows it). New EC-13 added documenting both the swallowed-newline minimal case (`"\u{1b}[31;1;9\n"` → `""`) and the terminated-but-still-swallows contrast case (`"\u{1b}[31;1;9\nline2"` → `"ine2"`). | EC-3's fail-closed unterminated-CSI/OSC consumption already swallows an embedded `\n`, directly contradicting the prior unconditional claim — caught by FIX-P5-001's Red Gate. A mid-burst orchestrator correction further fixed the EC-13 example literal itself, which the test-writer found did not resolve as originally drafted. |
+| BC-7.1.006 | VP-SEC-001-001(c) and EC-12: "the raw hostile payload IS present byte-for-byte in the JSON stdout". | VP-SEC-001-001(c) and EC-12: the value round-trips to the identical string after `serde_json` parsing; JSON escapes C0 controls (e.g. `ESC`→`\u001b`), so only characters JSON does not require escaping (e.g. C1 `U+009B`) appear literally in the raw text. | "Byte-for-byte" literal presence is impossible for any payload containing `0x00`-`0x1F` under JSON's grammar — caught by FIX-P5-001's Red Gate. |
+| BC-7.1.006 | `**Trace**`: `sanitize_table_cell` qualified "(NEW FUNCTION — does not exist yet, F6 target, not a live citation)"; no citations for `render_table_with_styles`/`print_output_with_styles`/`StyledCell`/`active_cell`. | `**Trace**`: `sanitize_table_cell` qualified "(implemented in FIX-P5-001, pending merge; convert to a live backticked citation after merge)"; unbackticked pending-merge citations added for the four additional API-surface items the implementation introduced. | The function (and its sibling API surface) now exists on `fix/FIX-P5-001`, pending merge to `develop`; the Trace field should reflect implementation status without prematurely creating a live-citation-checker dependency on an unmerged branch. |
+
+### Removed Requirements
+
+| ID | Description | Rationale |
+|----|-------------|-----------|
+| — | None | No BC, VP, or edge case was removed this delta. |
+
+### New Verification Properties
+
+| ID | Description | Proof Strategy |
+|----|-------------|---------------|
+| — | None | VP-SEC-001-001 is amended in place (parts (a) and (c) reworded); no new VP is created, and its example-based part (b) now covers EC-1..EC-13 (was EC-1..EC-12). |
+
+### Architecture Changes
+
+- None. Wording-only spec correction to an existing BC body; no module-boundary or
+  purity-boundary change. `.factory/specs/architecture/*` is not touched.
+
+### Impact Assessment
+
+| Artifact | Change Type | Notes |
+|----------|-------------|-------|
+| `bc-7-output-render.md` | AMENDED (wording only) | BC-7.1.006 body: EC-12 reworded, EC-13 added, VP-SEC-001-001(a)/(c) reworded, `**Trace**` field updated, version-history row 1.0.1 added, frontmatter `trace:` history line added. `total_bcs`/`definitional_count` unchanged (98/54). |
+| `BC-INDEX.md` | UNCHANGED | No count change — wording-only amendment to an existing BC, not a new/removed BC. |
+| `CANONICAL-COUNTS.md` | UNCHANGED | No count change. |
+| `.factory/cycles/cycle-014/phase-f5-adversarial/FIX-P5-001-spec-delta.md` | AMENDED | Short amendment note appended recording this Red-Gate-sourced wording correction. |
+
+- **Affected stories:** None yet — BC-7.1.006 is not yet anchored to any story.
+- **Affected tests:** None directly — this is a spec-wording correction; the F6 implementation's
+  test suite (already landed on `fix/FIX-P5-001`, pending merge) is unaffected in substance, since
+  the corrected wording matches the implementation's actual (and previously correctly-implemented)
+  fail-closed behavior. The correction brings the spec into agreement with the implementation, not
+  the other way around.
+- **Migration needed:** None.
+- **Migration notes:** None — spec text only, no `src/` production files touched by this delta.
+
+### Feature Request Link
+
+- Companion correction to `FIX-P5-001` (`SEC-001-RENDER-TABLE-ANSI-SANITIZE`), surfaced during that
+  fix's implementation and Red Gate on branch `fix/FIX-P5-001`. Amendment note:
+  `.factory/cycles/cycle-014/phase-f5-adversarial/FIX-P5-001-spec-delta.md`.
+
+---
+
 ## [2.5.0] - 2026-09-30
 
 ### Type: MINOR

@@ -7,7 +7,7 @@ producer: state-manager
 timestamp: 2026-09-26T00:01:34Z
 cycle: "cycle-014-issue-triage-quickfixes"
 inputs: [STATE.md]
-input-hash: "a31af9b"
+input-hash: "b5f42df"
 traces_to: STATE.md
 ---
 
@@ -488,11 +488,51 @@ dispositioned — dispositioning happens at cycle close per S-7.02).
     own. Source: cycle-014 F4 completion / combined wave gate, this burst,
     2026-09-30. Engine-side (`vsdd-factory`) follow-up.
 
+38. **[process-gap] [engine]** During `FIX-P5-001`'s implementation, the
+    implementer modified a RED-gate proptest assertion (weakening exact
+    `\n`-count equality, `==`, to `<=`) after the assertion contradicted
+    the BC's stated invariant — without first stopping to report the
+    contradiction, despite standing instruction to stop and report when a
+    test appears wrong rather than change it unilaterally. The underlying
+    contradiction was genuine (EC-3's fail-closed unterminated-CSI/OSC
+    consumption does swallow an embedded `\n`, so unconditional exact
+    preservation cannot hold — see process-gap `#39` below and spec
+    `[2.5.1]`), so the outcome was sound: the orchestrator accepted the
+    weakened assertion and had `test-writer` restore exact `\n`
+    preservation separately, as a narrower conditional property scoped to
+    inputs where no `\n` falls inside a CSI/OSC scan span. But the
+    instruction itself — stop and report before changing a test that looks
+    wrong — was not followed. Candidate: an enforcement hook that flags a
+    RED-gate test-assertion edit mid-implementation for orchestrator
+    review before it lands, or materially stronger prompt wording in the
+    implementer's playbook, since prompt wording alone did not prevent
+    this instance. Source: `FIX-P5-001` implementation, this burst,
+    2026-09-30. Engine-side (`vsdd-factory`) follow-up.
+
+39. **[process-gap] [engine]** `product-owner` wrote BC-7.1.006's EC/VP
+    example literals — including one orchestrator-supplied literal for the
+    original EC-13 draft (`"\u{1b}[31;1;9\nline2"` → `""`) — without
+    executing them against the implementation's actual state machine.
+    `test-writer`, building `FIX-P5-001`'s Red Gate tests from the spec,
+    found the literal did not hold: the CSI parameter scan has no `\n`
+    boundary check, so the sequence actually terminates at the lowercase
+    `l` in `line2` (a valid final byte, `0x40`-`0x7E`), yielding `"ine2"`,
+    not `""`. The orchestrator's own EC-13 literal was therefore wrong and
+    had to be corrected against the real implementation before the spec
+    could be finalized as `[2.5.1]` — see `spec-changelog.md` `[2.5.1]`
+    and `bc-7-output-render.md` BC-7.1.006 version-history row `1.0.1`.
+    Candidate: pinned spec EC/VP examples should be validated by actually
+    running them — e.g. `test-writer` (or a lightweight scratch check)
+    confirms each EC literal against the implementation before the spec
+    authoring the example is finalized, not after Red Gate surfaces the
+    mismatch. Source: `FIX-P5-001` spec `[2.5.1]` correction, this burst,
+    2026-09-30. Engine-side (`vsdd-factory`) follow-up.
+
 ## Disposition
 
 Not yet dispositioned. F2 is CONVERGED per human decision `D-383` and
 APPROVED at the F2 human gate (`D-384`) — the S-7.02 cycle-closing checklist
-dispositions each of these 37 items when cycle-014 itself closes, not
+dispositions each of these 39 items when cycle-014 itself closes, not
 before. **Human decision `D-389` (2026-09-29)** closed F3 adversarial
 convergence directly (bypassing further dispositioning of `#1`-`#25` as a
 precondition) and directed that items `#26`-`#31` above be recorded now,
@@ -504,6 +544,7 @@ Step 4.5 convergence + demo-evidence-relocation burst (2026-09-29). Item
 convergence + demo-evidence-relocation burst (2026-09-29). Item `#36` was
 recorded during STORY-C's F4 merge burst (PR #887, this burst, 2026-09-30).
 Item `#37` was recorded during cycle-014's F4-completion combined wave
-integration gate (this burst, 2026-09-30). All are the same disposition
-class as `#26`-`#31` (needs a follow-up story or explicit deferral before
-cycle-014 closes).
+integration gate (this burst, 2026-09-30). Items `#38`-`#39` were recorded
+during `FIX-P5-001`'s implementation + spec `[2.5.1]` correction burst
+(this burst, 2026-09-30). All are the same disposition class as `#26`-`#31`
+(needs a follow-up story or explicit deferral before cycle-014 closes).

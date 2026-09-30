@@ -159,3 +159,41 @@ commits `.factory/` changes).
 - **No VP-INDEX/architecture propagation needed** — this project has no separate VP-INDEX or
   verification-architecture document (VPs live inline in BC bodies); `verification-coverage-matrix.md`
   does not exist in this repo either.
+
+## 7. Amendment (2026-09-30, post-implementation, spec v2.5.1 PATCH)
+
+FIX-P5-001's implementation and Red Gate (branch `fix/FIX-P5-001`) surfaced three wording defects
+in BC-7.1.006 / VP-SEC-001-001 that this delta's original text got wrong, corrected in place —
+no policy change, BC count unchanged (98/54, cumulative 773):
+
+1. VP-SEC-001-001(a)'s `\n`-preservation clause was unconditional, contradicting the BC's own
+   EC-3 (unterminated CSI/OSC consumed fail-closed through EOF, which also swallows an embedded
+   `\n` — e.g. `"\u{1b}[31;1;9\n"` → `""`, since the CSI scan finds no final byte in `0x40`-`0x7E`
+   before end-of-string, including the `\n` itself). The CSI scan has no `\n` boundary check at
+   all: `"\u{1b}[31;1;9\nline2"` resolves to `"ine2"`, not `""` — the lowercase `l` in `line2`
+   falls in `0x40`-`0x7E` and terminates the CSI there, consuming the params, the `\n`, and the
+   `l` together. (This literal was corrected mid-burst: the orchestrator's first draft used
+   `"\u{1b}[31;1;9\nline2"` → `""`, which the test-writer found does not hold against the
+   implemented state machine — pinned test
+   `test_bc_7_1_006_ec13_unterminated_csi_consumption_includes_embedded_newline`.) Split the
+   clause into an unconditional "never fabricates a `\n`" invariant plus a conditional "exact
+   preservation when no `\n` falls inside a CSI/OSC sequence's scan span" invariant — narrower
+   and more precise than "absent an unterminated CSI/OSC", since a *terminated* sequence with an
+   embedded `\n` still swallows it. New **EC-13** added pinning both the swallowed-newline
+   minimal case and the terminated-but-still-swallows contrast case.
+2. VP-SEC-001-001(c) and EC-12 claimed the hostile payload is present "byte-for-byte" in JSON
+   stdout — impossible for payloads containing `0x00`-`0x1F` under JSON's escaping grammar.
+   Reworded to a `serde_json`-parse round-trip claim, noting non-escaped characters (e.g. C1
+   `U+009B`) do appear literally in the raw text.
+3. The `**Trace**` field's `sanitize_table_cell` qualifier was updated from "does not exist yet"
+   to "implemented in FIX-P5-001, pending merge" (still unbackticked, per the house convention in
+   decision row 3 above, so `check-bc-citation-symbols.sh` — which validates against `develop`'s
+   `src/` — doesn't flag it stale pre-merge). The same unbackticked pending-merge form was added
+   for the implementation's additional API surface: `output::render_table_with_styles`,
+   `output::print_output_with_styles`, `output::StyledCell`, `cli::user::active_cell`.
+
+Full text: `.factory/specs/prd/bc-7-output-render.md` BC-7.1.006 (EC-12/EC-13, VP-SEC-001-001,
+`**Trace**`, version-history row 1.0.1). Changelog: `.factory/spec-changelog.md` `[2.5.1]`.
+Re-verified `scripts/check-spec-counts.sh`, `scripts/check-bc-cumulative-counts.sh`,
+`scripts/check-bc-citation-symbols.sh --bc-dir .factory/specs/prd`, and
+`scripts/check-bc-no-numeric-test-counts.sh` all exit 0 after this amendment.

@@ -536,3 +536,49 @@ merge, resume the F5 delta adversarial loop over
 `204b1fb5..<new develop>` (adversary + code-reviewer + security-reviewer,
 3 consecutive clean passes, 10-pass cap). See `STATE.md` v5.20
 (`CYCLE-014-F5-D392-FIX-P5-001-SPEC-2026-09-30`) for full detail.
+
+**2026-09-30 (later, `FIX-P5-001` implementation burst):** `FIX-P5-001`
+is now implemented on branch `fix/FIX-P5-001` in worktree
+`.worktrees/FIX-P5-001`, HEAD `7d289d75` (pushed in parallel with this
+burst), 6 commits on top of `develop` `2ee422e0` — stub (`79fea6e9`),
+failing RED-gate tests (`0af5f7bb`, 19 RED), `sanitize_table_cell` plus a
+shared `sanitize_control_and_ansi_core` wired into `render_table`, plus
+`StyledCell`/`render_table_with_styles`/`print_output_with_styles`
+(`49a3d8a0`), `format_active` returning the bare glyph with the `user`
+Active column recolored via structural `Cell::fg` gated on
+`colored::control::SHOULD_COLORIZE` (`af388800`), CHANGELOG `### Security`
++ CLAUDE.md gotcha/Known-Size-Deviations entry for `src/output.rs`
+(~1,004 LOC, ~417 prod) (`67aa863d`), and an exact-`\n`-preservation
+proptest plus the EC-13 pin (`7d289d75`). Verified: `cargo test --lib`
+1,586 passed; full suite 5,845 passed; `clippy`/`fmt` clean; the `auth
+list` insta snapshot unchanged. `cargo-mutants` scope unaffected —
+`output.rs`/`user.rs` were already in `examine_globs`. Process note
+(recorded as process-gap `#38`): the implementer weakened one RED-gate
+proptest assertion (`\n` count `==` → `<=`) without stopping first to
+report the contradiction; the contradiction was genuine (EC-3 fail-closed
+unterminated-CSI/OSC consumption swallows an embedded `\n`), so the
+orchestrator accepted it and had `test-writer` restore exact `\n`
+preservation as a separate, narrower conditional property. Orchestrator
+error recorded honestly (process-gap `#39`): the orchestrator supplied
+`product-owner` a wrong EC-13 example literal; `test-writer` caught it
+against the real state machine and the orchestrator corrected it.
+`product-owner` landed spec `[2.5.1]` (PATCH, uncommitted-then-committed
+in this same burst) correcting BC-7.1.006/VP-SEC-001-001 wording to match:
+the `\n`-preservation clause split into (i) never-fabricates-`\n` and
+(ii) exact-preservation-absent-a-`\n`-inside-a-CSI/OSC-scan-span; new
+EC-13 (`"\u{1b}[31;1;9\n"` → `""`, contrasted with
+`"\u{1b}[31;1;9\nline2"` → `"ine2"`); EC-12/VP(c) JSON wording changed to
+round-trip equality (not byte-for-byte, since JSON escapes C0 controls);
+`**Trace**` updated to "implemented in FIX-P5-001, pending merge" plus
+the new API-surface citations. BC count unchanged at 773; all 4
+count-guard scripts re-verified PASS. 19 demo-evidence files (GIF/WebM/
+tape pairs for 5 ACs plus `evidence-report.md`, `mock_server.py`,
+`setup.sh`, `fixtures/`) copied from
+`.worktrees/FIX-P5-001/docs/demo-evidence/FIX-P5-001/` to
+`.factory/demos/FIX-P5-001/`, counts verified matching (19/19). **F5
+status: IN PROGRESS.** **NEXT:** `pr-manager` takes the PR to
+merge-ready (`pr-reviewer` + security review) → human merges → worktree
+cleanup → convert the BC-7.1.006 `**Trace**` citations to live backticked
+form → resume the F5 delta adversarial loop over
+`204b1fb5..<new develop>` (adversary + code-reviewer + security-reviewer,
+3 clean passes, 10-pass cap). See `STATE.md` v5.21 for full detail.

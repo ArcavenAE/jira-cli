@@ -1,0 +1,6 @@
+default_profile = "default"
+
+[profiles.default]
+url = "https://example.atlassian.net"
+auth_method = "api_token"
+project = "FOO"
