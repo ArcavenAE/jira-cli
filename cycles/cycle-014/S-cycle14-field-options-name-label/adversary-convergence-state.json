@@ -1,0 +1,87 @@
+{
+  "story": "S-cycle14-field-options-name-label",
+  "cycle": "cycle-014",
+  "feature_mode_bundle": "issue-triage-quickfixes",
+  "perimeter": 1,
+  "perimeter_label": "per-story Step 4.5 (BC-5.39.001)",
+  "convergence_bar": "3-consecutive-clean",
+
+  "passes": [
+    {
+      "id": "P1",
+      "classification": "FINDINGS_PRESENT",
+      "findings": [
+        {"id": "F-001", "severity": "LOW", "category": "documentation", "description": "the CHANGELOG overstated scope to include JSM validValues (M3 is unchanged)"}
+      ],
+      "nitpicks": [
+        {"id": "N-1", "description": "date nit, fixed"},
+        {"id": "N-2", "description": "story-relative test-doc narrative nit, fixed"},
+        {"id": "N-3", "description": "editmeta write-side note missing the numeric id bypass, fixed"},
+        {"id": "N-4", "description": "accepted -- renamed test name vs branch discrimination"},
+        {"id": "N-5", "description": "accepted -- no end-to-end binary test of a name-only system field, by design"}
+      ],
+      "window_eligible": false,
+      "notes": "Pass 1 FINDINGS_PRESENT: 1 LOW (F-001 the CHANGELOG overstated scope to include JSM validValues, M3 is unchanged) + 5 nitpicks. F-001 and N-1/N-2/N-3 fixed in 02bf041f8e4e88756bd6612e1748b4ce7a3c12d8. N-4 (renamed test name vs branch discrimination) and N-5 (no end-to-end binary test of a name-only system field, by design) accepted without a fix."
+    },
+    {
+      "id": "P2",
+      "classification": "CLEAN",
+      "findings": [],
+      "nitpicks": [],
+      "window_eligible": true,
+      "window_position": "1/3",
+      "notes": "Pass 2 CLEAN. Accepted, non-blocking: the editmeta summary line; clap doc names search_field_list. Window starts (1/3)."
+    },
+    {
+      "id": "P3",
+      "classification": "CLEAN",
+      "findings": [],
+      "nitpicks": [
+        {"id": "N1", "description": "pre-existing -- resolve_field_id rustdoc says customfield-shaped, deferred"},
+        {"id": "N2", "description": "pre-existing -- the ambiguity hint suggests customfield_NNNNN, which is useless for system fields; recorded as a drift item"}
+      ],
+      "window_eligible": true,
+      "window_position": "2/3",
+      "notes": "Pass 3 CLEAN. Verified real Jira wire shapes: system fields carry name with no value, custom fields carry value with no name, so no conflict. No snapshot or fixture drift. N1 (pre-existing) resolve_field_id rustdoc says customfield-shaped -- deferred. N2 (pre-existing) the ambiguity hint suggests customfield_NNNNN, useless for system fields -- recorded as a drift item (FIELD-OPTIONS-AMBIGUITY-HINT-SYSTEM-FIELDS). Window continues (2/3)."
+    },
+    {
+      "id": "P4",
+      "classification": "CLEAN",
+      "findings": [],
+      "nitpicks": [
+        {"id": "NITPICK-1", "description": "CHANGELOG examples used code-formatted field ids instead of display names -- fixed post-convergence in 7e5d0dc6"},
+        {"id": "NITPICK-2", "description": "accepted -- the proptest oracle mirrors the implementation expression"}
+      ],
+      "window_eligible": true,
+      "window_position": "3/3",
+      "notes": "Pass 4 CLEAN. The only real mutant (fn body -> vec![]) is killed, and 6 hand-traced mutations are killed. NITPICK-1 (CHANGELOG examples used code-formatted field ids priority/components/versions/issuetype instead of display names, since jr field options resolves fields by display name) fixed post-convergence in 7e5d0dc6. NITPICK-2 (the proptest oracle mirrors the implementation expression) accepted. Window COMPLETE (3/3) against final HEAD 02bf041f8e4e88756bd6612e1748b4ce7a3c12d8. CONVERGED (passes_clean >= 3, last_classification NITPICK_ONLY)."
+    }
+  ],
+
+  "total_passes": 4,
+  "convergence_window_passes": ["P2", "P3", "P4"],
+  "passes_clean": 3,
+  "converged": true,
+  "converged_strict": false,
+  "last_classification": "NITPICK_ONLY",
+  "feature_branch": "fix/field-options-name-label",
+  "develop_base_sha": "e54be670",
+  "converged_sha": "02bf041f8e4e88756bd6612e1748b4ce7a3c12d8",
+
+  "fix_commits": {
+    "F-001/N-1/N-2/N-3": "02bf041f8e4e88756bd6612e1748b4ce7a3c12d8"
+  },
+  "implementation_commits": ["82ad8e68", "5f667cb7", "6192e3ee", "6d8cb26d", "dc65f9d6", "02bf041f"],
+  "test_commits": ["82ad8e68", "5f667cb7", "6192e3ee"],
+
+  "accepted_deferrals": [
+    {"id": "N-4", "severity": "NITPICK", "description": "renamed test name vs branch discrimination -- informational only", "target": "none -- accepted", "blocking": false},
+    {"id": "N-5", "severity": "NITPICK", "description": "no end-to-end binary test of a name-only system field, by design", "target": "none -- accepted", "blocking": false},
+    {"id": "N1", "severity": "NITPICK", "description": "resolve_field_id rustdoc says customfield-shaped (pre-existing)", "target": "FIELD-OPTIONS-RESOLVE-DOC-CUSTOMFIELD -- deferred", "blocking": false},
+    {"id": "N2", "severity": "NITPICK", "description": "the ambiguity hint suggests customfield_NNNNN, useless for system fields (pre-existing)", "target": "FIELD-OPTIONS-AMBIGUITY-HINT-SYSTEM-FIELDS -- deferred", "blocking": false},
+    {"id": "NITPICK-2", "severity": "NITPICK", "description": "the proptest oracle mirrors the implementation expression -- informational only", "target": "none -- accepted", "blocking": false}
+  ],
+
+  "convergence_summary": "S-cycle14-field-options-name-label (STORY-B, jr field options system-field label fallback, #861, 5 pts, 9 ACs) reached per-story Step-4.5 adversarial CONVERGENCE after 4 passes on branch fix/field-options-name-label (base develop @ e54be670, final HEAD 02bf041f8e4e88756bd6612e1748b4ce7a3c12d8). Trajectory: P1 FINDINGS_PRESENT (1 LOW: F-001 the CHANGELOG overstated scope to include JSM validValues, M3 is unchanged; plus nitpicks N-1 date, N-2 story-relative test-doc narrative, N-3 editmeta write-side note missing the numeric id bypass) -> F-001/N-1/N-2/N-3 fixed in 02bf041f; N-4 (renamed test name vs branch discrimination) and N-5 (no end-to-end binary test of a name-only system field, by design) accepted without a fix; P2 CLEAN (accepted: editmeta summary line, clap doc names search_field_list) -- window starts 1/3; P3 CLEAN (verified real Jira wire shapes: system fields carry name with no value, custom fields carry value with no name, no conflict; no snapshot/fixture drift; N1 pre-existing resolve_field_id rustdoc says customfield-shaped, deferred; N2 pre-existing ambiguity hint suggests customfield_NNNNN, useless for system fields, recorded as a drift item) -- window continues 2/3; P4 CLEAN (the only real mutant, fn body -> vec![], is killed, plus 6 hand-traced mutations killed; NITPICK-1 CHANGELOG examples, NITPICK-2 proptest oracle mirrors implementation, accepted) -- window COMPLETE 3/3. Convergence criterion (passes_clean >= 3, last_classification NITPICK_ONLY) MET. Post-convergence change: commit 7e5d0dc6 is a CHANGELOG.md-only, single-line wording fix acting on pass-4 NITPICK-1 -- the examples changed from code-formatted field ids (priority/components/versions/issuetype) to display names, because jr field options resolves fields by display name; code and tests are unchanged; the PR's pr-reviewer covers it. Code is complete on the feature branch; demo evidence relocated to .factory/demos/S-cycle14-field-options-name-label/. Two drift follow-ups recorded separately in OPEN-STANDING-ITEMS.md: FIELD-OPTIONS-AMBIGUITY-HINT-SYSTEM-FIELDS (the ambiguity error's 'use the field ID directly' hint is useless for system fields) and FIELD-OPTIONS-RESOLVE-DOC-CUSTOMFIELD (resolve_field_id rustdoc still says customfield_NNNNN-shaped). NEXT: push fix/field-options-name-label, then pr-manager up to merge-ready, then human merge (harness blocks agent merges), then worktree cleanup, then the cycle-014 wave/F4-completion gate, then F5 scoped adversarial.",
+  "timestamp": "2026-09-29T00:00:00Z"
+}

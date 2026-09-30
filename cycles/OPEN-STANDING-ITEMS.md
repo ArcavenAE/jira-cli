@@ -1764,6 +1764,10 @@ discover valid field names, but `jr project fields` lists issue types/priorities
 fields — it does not enumerate field *names* usable with `field options`. The hint is misleading,
 not incorrect in kind (it does point at a real command), just at the wrong one.
 
+**Sibling item:** `FIELD-OPTIONS-AMBIGUITY-HINT-SYSTEM-FIELDS` (below, recorded 2026-09-29) is
+the same class of misleading-hint gap on the *ambiguous-match* error path rather than this
+*not-found* path.
+
 **Disposition (human-deferred 2026-09-25, F2 review):** LOW severity, no GitHub issue filed.
 Target a future cycle's hint-text pass.
 
@@ -1902,3 +1906,46 @@ next spec pass**, whichever comes first — either fix the BC-X.16.002 prose (dr
 "both messages suggest a next step" claim) or amend the M1 pin itself to add a next-step
 suggestion, via product-owner. Remains OPEN, tracked as standing spec-hygiene debt until picked
 up.
+
+## `jr field options`'s ambiguity hint suggests `customfield_NNNNN`, which fails for system fields — NEW, OPEN, product UX gap, target next maintenance sweep or a future cycle (2026-09-29)
+
+**ID:** `FIELD-OPTIONS-AMBIGUITY-HINT-SYSTEM-FIELDS`. Severity **LOW**. Surfaced during
+cycle-014 STORY-B (`S-cycle14-field-options-name-label`, `#861`) Step 4.5 adversarial convergence,
+pass 3 (pre-existing, not introduced by STORY-B). `src/cli/field.rs` ~L501-503 and ~L518-520: both
+ambiguity error branches tell the user to "Use the field ID directly (e.g. `customfield_NNNNN`)",
+but only `customfield_*` literals bypass name resolution (per `resolve_field_id`'s
+`customfield_NNNNN` literal-bypass predicate) — so the advice fails for system fields, which have
+no `customfield_NNNNN` form. Example: `jr field options version` is ambiguous between
+Affects/Fix versions, and following the hint with `fixVersions` then fails not-found. This became
+more reachable now that `#861` advertises system-field support (system fields now render usable
+labels via the `value.or(name)` fallback, so users are more likely to look them up by ambiguous
+partial name). Sibling of `FIELD-OPTIONS-NOTFOUND-HINT` above (same file, same class of
+misleading-hint gap on a different error path) — cross-referenced here.
+
+**Disposition (recorded 2026-09-29, state-manager cycle-014 STORY-B convergence burst):** LOW
+severity, no GitHub issue filed — product UX gap, not a correctness defect. **Target: next
+maintenance sweep or a future cycle**, whichever comes first — rewrite both hints to something
+resolution-agnostic (e.g. "use a more specific name") rather than the `customfield_NNNNN`-specific
+suggestion, or detect whether any candidate is a system field and vary the hint accordingly.
+
+## `resolve_field_id` rustdoc still says "customfield_NNNNN-shaped" — NEW, OPEN, doc-accuracy nit, target next maintenance sweep (2026-09-29)
+
+**ID:** `FIELD-OPTIONS-RESOLVE-DOC-CUSTOMFIELD`. Severity **LOW**. Surfaced during cycle-014
+STORY-B (`S-cycle14-field-options-name-label`, `#861`) Step 4.5 adversarial convergence, pass 3
+(pre-existing, not introduced by STORY-B). `src/cli/field.rs` ~L428's `resolve_field_id` rustdoc
+reads "Resolve `<field>` to a `customfield_NNNNN`-shaped field id (AC-011)", but the function
+resolves system-field ids (e.g. `priority`, `fixVersions`) just as validly as custom-field ids —
+the doc comment's "customfield_NNNNN-shaped" phrasing overstates the function's scope to one
+subset of its actual return values. Doc touch-up only; no behavioral defect.
+
+**Disposition (recorded 2026-09-29, state-manager cycle-014 STORY-B convergence burst):** LOW
+severity, no GitHub issue filed — doc-accuracy nit. **Target: next maintenance sweep** — reword
+the rustdoc to describe the return value generically (e.g. "a Jira field id") rather than
+specifically as `customfield_NNNNN`-shaped.
+
+**Related, informational (not filed as a separate item):** system field ids (e.g. `issuetype`,
+`fixVersions`) cannot be passed as literals to `jr field options` — only display names or the
+`customfield_*` literal-bypass form work, per `resolve_field_id`'s design. This is pre-existing,
+documented behavior (EC-X.14.001-14), not a defect; noted here only as a possible future
+enhancement (a system-field-id literal bypass symmetric with the `customfield_NNNNN` one) should
+it come up again.
