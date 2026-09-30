@@ -1,1 +1,1 @@
-{"status":"pass","timestamp":"2026-09-30T04:35:37Z","command":"cargo test -q --test claude_md_citations 2>&1"}
+{"status":"pass","timestamp":"2026-09-30T13:45:51Z","command":"SP=/private/tmp/claude-501/-Users-zious-Documents-GITHUB-jira-cli/f6ec5b34-521e-434c-a4df-6b2d915fe360/scratchpad\necho \"=== log size/lines ===\"\nwc -l \"$SP/test-full.log\" 2>&1\necho \"=== tail ===\"\ntail -40 \"$SP/test-full.log\" 2>&1\necho \"=== is cargo test still running? ===\"\nps aux | grep -E \"cargo test|deps/.*-[0-9a-f]{16}\" | grep -v grep | head -20"}
