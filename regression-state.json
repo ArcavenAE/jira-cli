@@ -1,1 +1,1 @@
-{"status":"pass","timestamp":"2026-09-30T04:11:30Z","command":"cargo test --test field_options 2>&1 | tail -15"}
+{"status":"pass","timestamp":"2026-09-30T04:35:37Z","command":"cargo test -q --test claude_md_citations 2>&1"}
