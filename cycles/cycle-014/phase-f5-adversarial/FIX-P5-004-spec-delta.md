@@ -82,3 +82,23 @@ policy list and `output.rs` LOC note. Run the four spec guards after any spec ed
 
 Stories affected by BC changes: none (no `bcs:` array changes). VP citations changed in: BC-7.1.006
 (new VP-SEC-001-002; architect should add it to VP-INDEX if VP-SEC-001-001 is indexed there).
+
+## 7. Post-merge conversion (spec v2.6.1, BC-7.1.006 v1.5.1)
+
+PR #896 merged to `develop` as `6cece14b`. Sections 1-6 above are retained as the pre-merge
+hand-off (dated history). As of the merge, the implementation is live:
+
+- `src/output.rs::classify_default_char` implements the D-398 invisible-format strip.
+- All six VP-SEC-001-002 / EC-18..EC-20 tests exist at `6cece14b` in `src/output.rs`:
+  `prop_bc_7_1_006_sanitizers_strip_invisible_format_characters`,
+  `test_bc_7_1_006_sanitize_strips_zero_width_and_directional_marks`,
+  `test_bc_7_1_006_sanitize_invisible_format_range_boundaries_kept`,
+  `test_bc_7_1_006_sanitize_strips_unicode_tag_block`,
+  `test_bc_7_1_006_sanitize_zwj_emoji_sequence_loses_joiner`,
+  `test_bc_7_1_006_sanitize_terminal_line_invisible_chars_identity_collapse`.
+- The "NOT YET IMPLEMENTED" qualifiers in BC-7.1.006 (H1, policy bullet, EC-18/19/20,
+  VP-SEC-001-002) and the BC-INDEX row are converted to present tense. Row 1.5.0 stays as history.
+- Renamed test: `test_bc_7_1_006_print_output_with_styles_does_not_error_on_hostile_cells` is now
+  `..._returns_ok_on_hostile_cells`; no spec text cites either name (only the historical
+  `.factory/code-delivery/FIX-P5-001/pr-review.md` mentions the old name; left as history).
+

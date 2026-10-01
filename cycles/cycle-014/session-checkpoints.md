@@ -146,3 +146,21 @@ F5-pass-1 checkpoint.
 
 **(f) Resume command:** in a new session in this project, run `/vsdd-factory:rehydrate-wave`, then `/vsdd-factory:next-step`. This repo has no `wave-state.yaml` -- this Session Resume Checkpoint is the authoritative resume source. Reference `cycles/cycle-014/phase-f5-adversarial/pass-2.md`, `cycles/cycle-014/session-checkpoints.md` (prior checkpoints), `cycles/OPEN-STANDING-ITEMS.md`.
 
+
+## Archived checkpoint: STATE v5.26 (2026-10-01, superseded by v5.27)
+
+**Date & position:** 2026-10-01. Pipeline **ACTIVE** -- cycle-014 (`issue-triage-quickfixes`), Phase **F4 COMPLETE** (3/3 stories merged), Phase **F5 (scoped adversarial review) IN PROGRESS**. Delivered PRs this cycle: STORY-A **#886** (`2d8467c4`), STORY-C **#887** (`e54be670`), STORY-B **#888** (`2ee422e0`), `FIX-P5-001` **#891** (`769365ab`), `FIX-P5-002` **#894** (`cc19c2f9`), `FIX-P5-003` **#895** (`8e843385`, merged 2026-10-01T20:53:49Z by the human). `develop` @ `8e843385`.
+
+**(a) Position and next steps.** cycle-014 F5 IN PROGRESS; Pass 3 recorded NOT CLEAN; `FIX-P5-004` scope DECIDED (`D-398`) and in delivery. NEXT on resume: (1) `FIX-P5-004` PR to merge-ready via `fix-pr-delivery` (worktree `/Users/zious/Documents/GITHUB/jira-cli/.worktrees/FIX-P5-004`, branch `fix/fix-p5-004-pass3-findings`, base `8e843385`, implementer dispatched -- check its status first); (2) human merge (`gh pr merge <n> --squash --delete-branch`; the harness blocks agent-initiated merges); (3) post-merge spec conversion (`BC-7.1.006` `EC-18`/`EC-19`/`EC-20` from NOT-YET-IMPLEMENTED targets to live citations); (4) F5 **Pass 4** with a fresh adversary, code-reviewer, and security-reviewer over `204b1fb5..<new develop>`.
+
+**(b) Convergence.** F5 clean-pass counter **0/3**, 10-pass cap (3 used).
+- Pass 1 (`204b1fb5..769365ab`): NOT CLEAN -- `pass-1.md`. Pass 2 (`204b1fb5..cc19c2f9`): NOT CLEAN -- `pass-2.md`. Pass 3 (`204b1fb5..8e843385`): NOT CLEAN -- adversary FINDINGS_PRESENT, code-reviewer APPROVE, security APPROVE -- `pass-3.md`.
+- `FIX-P5-004` items (`D-398`): `P3-001` (CHANGELOG dangling `CLICOLOR_FORCE` ref), `P3-003` (README `jr api` row), `P3-004` (color-hermetic stderr tests), `P3-005` (re-anchor `mutants.toml` `exclude_re`), `P3-006` (core rustdoc re bare ESC), `P3-007` (hostile-cell test asserts only `Ok`), `SEC3-001`/`CR3-003` (strip invisible format chars incl. ZWJ), `CR3-004` (hermetic.rs inline tests), `CR3-005` (acknowledged). `CR3-002` = KNOWN LIMITATION (`EC-X.7.002-6`, no change). `P3-002`/`CR3-001` = FALSE POSITIVE.
+
+**(c) In-flight work.** `FIX-P5-004` implementer dispatched in the worktree above (not yet reported back at record time). The spec delta (`BC-7.1.006` v1.5.0, spec `2.6.0`, `FIX-P5-004-spec-delta.md`) is committed on factory-artifacts.
+
+**(d) Pending human decisions and blockers.** None pending for scope (decided, `D-398`). Operational: the harness blocks agent-initiated merges, so the human merges manually. **Lesson (this burst):** factory commits must use standalone `git -C /abs/.factory <subcmd>` per Bash call -- the shell cwd resets to the product root before every call and the staging hook checks the pre-command cwd branch, so `cd .factory && git add` trips it (process-gap `#48`; also in `sidecar-learning.md`). `ci.yml` has no `concurrency:` group, CI clippy is unpinned. `CLAUDE_AUTOCOMPACT_PCT_OVERRIDE` is missing from settings (advisory).
+
+**(e) WIP branches:** `fix/fix-p5-004-pass3-findings` (product repo, worktree `.worktrees/FIX-P5-004`). Only untracked `.claude/` files otherwise.
+
+**(f) Resume command:** in a new session in this project, run `/vsdd-factory:rehydrate-wave`, then `/vsdd-factory:next-step`. This repo has no `wave-state.yaml` -- this Session Resume Checkpoint is the authoritative resume source. Reference `cycles/cycle-014/phase-f5-adversarial/pass-3.md`, `cycles/cycle-014/session-checkpoints.md` (prior checkpoints), `cycles/OPEN-STANDING-ITEMS.md`.

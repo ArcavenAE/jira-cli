@@ -7251,3 +7251,14 @@ _Tagged: [process-gap] [prd-delta] [dispositions] [per-round-checklist] [cv-chan
 - Session ended at 2026-10-01T21:06:29Z (awaiting /session-review)
 
 - [process-gap] [factory-commit] 2026-10-01: factory commits must use standalone `git -C /abs/.factory <subcmd>` (one git command per Bash call, no `cd .factory && ...` prefix). The shell cwd resets to the product root (branch develop) before every Bash call, and the validate-factory-path-staging hook checks the pre-command cwd branch, so `cd .factory && git add` trips it. Recorded in the STATE v5.26 checkpoint; see process-gap #48.
+- Session ended at 2026-10-01T21:13:05Z (awaiting /session-review)
+- Session ended at 2026-10-01T21:15:33Z (awaiting /session-review)
+- Session ended at 2026-10-01T21:16:01Z (awaiting /session-review)
+- Session ended at 2026-10-01T21:30:13Z (awaiting /session-review)
+- Session ended at 2026-10-01T21:30:51Z (awaiting /session-review)
+- Session ended at 2026-10-01T21:31:34Z (awaiting /session-review)
+- Session ended at 2026-10-01T21:42:16Z (awaiting /session-review)
+- Session ended at 2026-10-01T21:43:40Z (awaiting /session-review)
+- Session ended at 2026-10-01T21:44:01Z (awaiting /session-review)
+- Session ended at 2026-10-01T21:45:29Z (awaiting /session-review)
+- Session ended at 2026-10-01T21:46:58Z (awaiting /session-review)

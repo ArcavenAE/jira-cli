@@ -9,6 +9,22 @@ Track all spec version changes. Most recent version first.
 
 > **Type legend:** Type classifies the SPEC document delta: MINOR = new BCs/VPs/sections; PATCH = amendments to existing bodies/ACs/ECs. Product-semver impact is recorded in the Summary line, independent of Type.
 
+## [2.6.1] - 2026-10-01
+
+### Type: PATCH
+
+### Summary
+
+Post-merge citation conversion for FIX-P5-004 (PR #896 merged to `develop` as `6cece14b`). No human
+decision required (mechanical post-merge maintenance); no policy change; BC count unchanged (98
+in-file / 54 individually-bodied, 773 cumulative); VP count unchanged.
+
+1. **BC-7.1.006 v1.5.1.** The H1 qualifier, the v1.5.0 policy bullet, EC-18/EC-19/EC-20, and
+   VP-SEC-001-002 are converted from "NOT YET IMPLEMENTED / target for FIX-P5-004" to present-tense
+   live citations (`src/output.rs::classify_default_char`; six tests live in `src/output.rs`).
+2. **BC-INDEX.md.** The BC-7.1.006 row's "(not yet implemented)" is now "(IMPLEMENTED, PR #896, `6cece14b`)".
+3. Row 1.5.0 and changelog entry `[2.6.0]` are left as dated history.
+
 ## [2.6.0] - 2026-10-01
 
 ### Type: MINOR
