@@ -257,8 +257,9 @@ pub(crate) fn sanitize_env_display(value: &str) -> String {
 /// A CSI sequence (`ESC [ … <final byte 0x40-0x7E>`) is consumed through
 /// its final byte; an OSC sequence (`ESC ] … <BEL or ST>`) is consumed
 /// through its BEL (`0x07`) or `ESC \` string terminator. A bare ESC not
-/// starting a recognized CSI/OSC sequence is dropped as an ordinary control
-/// character (it falls in `0x00-0x1F`).
+/// starting a recognized CSI/OSC sequence is dropped unconditionally by the
+/// shared `sanitize_control_and_ansi_core` before any per-character policy
+/// runs (it never reaches this function's policy closure).
 ///
 /// **Unterminated CSI/OSC (fail-closed):** if a CSI or OSC sequence's
 /// final byte / string terminator never appears before end-of-string, the
@@ -311,8 +312,8 @@ enum CharDisposition {
 /// An ANSI CSI sequence (`ESC [ … <final byte 0x40-0x7E>`) is consumed
 /// through its final byte; an OSC sequence (`ESC ] … <BEL 0x07 or ST
 /// ESC \>`) is consumed through its BEL or `ESC \` string terminator. A
-/// bare ESC not starting a recognized CSI/OSC sequence falls through to
-/// `policy` like any other character. If a CSI/OSC sequence's terminator
+/// bare ESC not starting a recognized CSI/OSC sequence is dropped
+/// unconditionally (it never reaches `policy`). If a CSI/OSC sequence's terminator
 /// never appears before end-of-string, the sequence (and everything after
 /// it) is consumed through EOF — fail-closed, no raw ESC byte ever
 /// survives — regardless of what `policy` would have done with the bytes
@@ -531,6 +532,12 @@ fn sanitize_control_and_ansi_core(
 ///   `U+0085` (NEL) are STRIPPED — the same Unicode terminal-injection
 ///   code-point set `strip_control_and_ansi` already strips for
 ///   `sanitize_env_display`.
+/// - Invisible format characters are STRIPPED (FIX-P5-004, D-398, CWE-451):
+///   `U+200B`-`U+200F` (ZWSP, ZWNJ, ZWJ, LRM, RLM), `U+061C` (ALM),
+///   `U+2060`-`U+2064` (word joiner, function application, invisible
+///   times/separator/plus), `U+FEFF` (BOM), and the Unicode tag block
+///   `U+E0000`-`U+E007F`. Accepted trade-off (EC-20): ZWJ emoji sequences
+///   lose their joiner in table/human output.
 /// - No length cap and no truncation are applied (unlike
 ///   `sanitize_env_display`'s capped-and-marked behavior). Ordinary
 ///   printable text — including non-ASCII such as `"é"`, CJK characters,
@@ -588,7 +595,12 @@ pub(crate) fn sanitize_terminal_text(value: &str) -> String {
 /// [`sanitize_terminal_line`] (FIX-P5-003, CR2-1): every character other than
 /// the three whitespace controls (`\n`, `\r`, `\t`, which each function
 /// classifies itself) is DROPPED if it is a C0 control, DEL, a C1 control,
-/// a bidi override, or a Unicode line/paragraph separator/NEL; otherwise KEPT.
+/// a bidi override, a Unicode line/paragraph separator/NEL, or an invisible
+/// format character (FIX-P5-004, D-398, CWE-451: `U+200B..=U+200F` ZWSP/ZWNJ/
+/// ZWJ/LRM/RLM, `U+061C` ALM, `U+2060..=U+2064` word joiner and invisible
+/// operators, `U+FEFF` BOM, `U+E0000..=U+E007F` Unicode tag block); otherwise
+/// KEPT. ZWJ is stripped deliberately (EC-20): ZWJ emoji sequences lose the
+/// joiner in human output; `--output json` is never sanitized.
 fn classify_default_char(c: char) -> CharDisposition {
     let code = c as u32;
     if code <= 0x1F
@@ -599,6 +611,11 @@ fn classify_default_char(c: char) -> CharDisposition {
         || code == 0x2028
         || code == 0x2029
         || code == 0x0085
+        || (0x200B..=0x200F).contains(&code)
+        || code == 0x061C
+        || (0x2060..=0x2064).contains(&code)
+        || code == 0xFEFF
+        || (0xE0000..=0xE007F).contains(&code)
     {
         CharDisposition::Drop
     } else {
@@ -1487,20 +1504,18 @@ mod tests {
         );
     }
 
-    /// `print_output_with_styles`'s `OutputFormat::Table` arm must still
-    /// dispatch to the sanitizing `render_table_with_styles` rather than
-    /// bypassing it — asserted by calling `print_output_with_styles`
-    /// itself (not just its callee) so a regression at the dispatch site
-    /// (e.g. a future refactor that formats `c.text` directly instead of
-    /// calling `render_table_with_styles`) is caught here too. stdout
-    /// itself isn't captured by this in-process unit test (the real CLI
-    /// process boundary is covered end-to-end by
-    /// `tests/table_output_sanitization.rs`'s `jr user list` case); this
-    /// test instead pins that the call succeeds for both a hostile plain
-    /// and a hostile colored cell, and that JSON mode stays a pure
-    /// `render_json` passthrough completely unaffected by cell styling.
+    /// Smoke test for `print_output_with_styles` with a hostile styled cell.
+    ///
+    /// Asserts only that the call returns `Ok(())` in both modes: `Table`
+    /// mode with a hostile colored cell, and `Json` mode with the same
+    /// styled rows (which JSON mode never consults).
+    ///
+    /// It does NOT capture stdout, so it cannot detect a `Table` arm that
+    /// bypasses `render_table_with_styles`, and it does not check that
+    /// anything was sanitized. The end-to-end sanitization guarantee is
+    /// owned by `tests/table_output_sanitization.rs`'s `jr user list` case.
     #[test]
-    fn test_bc_7_1_006_print_output_with_styles_does_not_error_on_hostile_cells() {
+    fn test_bc_7_1_006_print_output_with_styles_returns_ok_on_hostile_cells() {
         let headers = &["Name"];
         let hostile = "\u{1b}[31mFAKE\u{1b}[0m\u{9b}pwned";
         let rows = vec![vec![StyledCell::colored(hostile, Color::Red)]];
@@ -1643,6 +1658,129 @@ mod tests {
         ) {
             prop_assert_eq!(sanitize_terminal_line(&input), sanitize_table_cell(&input));
         }
+    }
+
+    // ── invisible format characters (BC-7.1.006 EC-18/19/20, VP-SEC-001-002,
+    // FIX-P5-004, D-398, CWE-451) ────────────────────────────────────────
+
+    /// Every code point the invisible-format policy must DROP.
+    fn invisible_format_chars() -> Vec<char> {
+        let mut v: Vec<char> = Vec::new();
+        for r in [
+            0x200B..=0x200F,
+            0x061C..=0x061C,
+            0x2060..=0x2064,
+            0xFEFF..=0xFEFF,
+            0xE0000..=0xE007F,
+        ] {
+            v.extend(r.map(|u| char::from_u32(u).expect("valid scalar")));
+        }
+        v
+    }
+
+    proptest! {
+        #![proptest_config(ProptestConfig::with_cases(1000))]
+
+        /// VP-SEC-001-002 (a): all three wrappers strip every invisible
+        /// format character, wherever it is injected into clean text.
+        #[test]
+        fn prop_bc_7_1_006_sanitizers_strip_invisible_format_characters(
+            idx in 0usize..invisible_format_chars().len(),
+            prefix in "[a-z]{0,6}",
+            suffix in "[a-z]{0,6}",
+            endpoint in prop::bool::ANY,
+        ) {
+            let chars = invisible_format_chars();
+            // Bias to range endpoints half the time.
+            let c = if endpoint {
+                [0x200B, 0x200F, 0x061C, 0x2060, 0x2064, 0xFEFF, 0xE0000, 0xE007F]
+                    [idx % 8]
+            } else {
+                chars[idx] as u32
+            };
+            let c = char::from_u32(c).unwrap();
+            let input = format!("{prefix}{c}{suffix}");
+            let expected = format!("{prefix}{suffix}");
+            prop_assert_eq!(sanitize_table_cell(&input), expected.clone());
+            prop_assert_eq!(sanitize_terminal_text(&input), expected.clone());
+            prop_assert_eq!(sanitize_terminal_line(&input), expected);
+        }
+    }
+
+    #[test]
+    fn test_bc_7_1_006_sanitize_strips_zero_width_and_directional_marks() {
+        for (name, c) in [
+            ("ZWSP", '\u{200B}'),
+            ("ZWNJ", '\u{200C}'),
+            ("ZWJ", '\u{200D}'),
+            ("LRM", '\u{200E}'),
+            ("RLM", '\u{200F}'),
+            ("ALM", '\u{061C}'),
+            ("WORD JOINER", '\u{2060}'),
+            ("FUNCTION APPLICATION", '\u{2061}'),
+            ("INVISIBLE TIMES", '\u{2062}'),
+            ("INVISIBLE SEPARATOR", '\u{2063}'),
+            ("INVISIBLE PLUS", '\u{2064}'),
+            ("BOM", '\u{FEFF}'),
+        ] {
+            let input = format!("a{c}b");
+            assert_eq!(sanitize_table_cell(&input), "ab", "{name}");
+            assert_eq!(sanitize_terminal_text(&input), "ab", "{name}");
+            assert_eq!(sanitize_terminal_line(&input), "ab", "{name}");
+        }
+    }
+
+    #[test]
+    fn test_bc_7_1_006_sanitize_invisible_format_range_boundaries_kept() {
+        for c in [
+            '\u{200A}',
+            '\u{2010}',
+            '\u{205F}',
+            '\u{2065}',
+            '\u{FEFE}',
+            '\u{FF00}',
+            '\u{E0080}',
+            '\u{1F600}',
+        ] {
+            let input = format!("a{c}b");
+            assert_eq!(sanitize_table_cell(&input), input, "U+{:04X}", c as u32);
+            assert_eq!(sanitize_terminal_text(&input), input, "U+{:04X}", c as u32);
+            assert_eq!(sanitize_terminal_line(&input), input, "U+{:04X}", c as u32);
+        }
+    }
+
+    #[test]
+    fn test_bc_7_1_006_sanitize_strips_unicode_tag_block() {
+        let all: String = (0xE0000u32..=0xE007F)
+            .map(|u| char::from_u32(u).unwrap())
+            .collect();
+        let input = format!("x{all}y");
+        assert_eq!(sanitize_table_cell(&input), "xy");
+        assert_eq!(sanitize_terminal_text(&input), "xy");
+        assert_eq!(sanitize_terminal_line(&input), "xy");
+        // Both endpoints individually.
+        assert_eq!(sanitize_table_cell("a\u{E0000}b"), "ab");
+        assert_eq!(sanitize_table_cell("a\u{E007F}b"), "ab");
+    }
+
+    /// EC-20: accepted trade-off, ZWJ is stripped so emoji sequences split.
+    #[test]
+    fn test_bc_7_1_006_sanitize_zwj_emoji_sequence_loses_joiner() {
+        let input = "\u{1F469}\u{200D}\u{1F4BB}";
+        let expected = "\u{1F469}\u{1F4BB}";
+        assert_eq!(sanitize_table_cell(input), expected);
+        assert_eq!(sanitize_terminal_text(input), expected);
+        assert_eq!(sanitize_terminal_line(input), expected);
+    }
+
+    /// Identity collapse: a spoofed name with invisible characters becomes
+    /// byte-identical to the genuine one after sanitizing.
+    #[test]
+    fn test_bc_7_1_006_sanitize_terminal_line_invisible_chars_identity_collapse() {
+        let genuine = "Alice Admin";
+        let spoof = "Ali\u{200B}ce\u{FEFF} \u{2060}Ad\u{200D}min\u{E0041}";
+        assert_ne!(genuine, spoof);
+        assert_eq!(sanitize_terminal_line(spoof), genuine);
     }
 
     // ── render_table_with_styles structural color gating (BC-7.1.006,
