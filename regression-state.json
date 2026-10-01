@@ -1,1 +1,1 @@
-{"status":"pass","timestamp":"2026-10-01T14:28:14Z","command":"cargo test -- --skip test_s_1_06_h_003_profile_precedence_chain 2>&1 | grep -E \"test result|FAILED|error\\[\" "}
+{"status":"pass","timestamp":"2026-10-01T18:29:14Z","command":"timeout 115 cargo test --lib color 2>&1 | tail -50"}

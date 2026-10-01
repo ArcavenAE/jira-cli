@@ -591,3 +591,17 @@ See `cycles/cycle-014/cycle-manifest.md` for full narrative detail (this row sum
 See `cycles/cycle-014/cycle-manifest.md` for full narrative detail (this row summarizes the same events).
 
 ---
+
+> Extracted from `.factory/STATE.md`'s `## Phase Progress` table during the
+> 2026-10-01 `SESSION-WRAP-PAUSE-2026-10-01` burst
+> (v5.23 -> v5.24), to keep the live table at 12 rows after adding the new
+> session-wrap-pause row. This was the oldest row at that point; archived
+> here verbatim, unedited.
+
+| Phase | Status | Completed | Gate | Notes | Finding Progression |
+|-------|--------|-----------|------|-------|---------------------|
+| **CYCLE-014-F3-PASS30-CHECKPOINT-2026-09-28** | **IN PROGRESS / NOT CLEAN (checkpoint, superseded)** | 2026-09-28 | none | F3 passes 29-30, both NOT CLEAN. | 772/97/118/191 LOCKED; clean 0/3 |
+
+See `cycles/cycle-014/cycle-manifest.md` for full narrative detail (this row summarizes the same events).
+
+---

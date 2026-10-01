@@ -2226,3 +2226,41 @@ unchanged (OPEN, LOW, target next maintenance sweep)** for the other
 item covers; only the "doesn't touch cycle-014" framing is corrected here,
 not the underlying scan numbers (TOTAL=304 MATCH=20 STALE=262 NOINPUT=22),
 which this burst did not re-run.
+
+## `ci.yml` lacks a `concurrency:` cancel-in-progress group — NEW, OPEN, CI-infra (2026-10-01)
+
+**ID:** `CI-CONCURRENCY-GROUP`. Severity **LOW**, CI-infra. Observed during the
+2026-10-01 session wrap: `.github/workflows/ci.yml` has no `concurrency:` group, so
+superseded CI runs (e.g. a PR pushed twice in quick succession) pile up rather than
+being cancelled, wasting runner minutes and occasionally confusing status checks.
+
+**Disposition:** OPEN, no GitHub issue filed, LOW. **Target: next maintenance sweep**
+— add a `concurrency: {group: "${{ github.workflow }}-${{ github.ref }}",
+cancel-in-progress: true}` block (or equivalent) scoped so it does not interfere with
+the `ci-gate` required-check semantics (CI Gate scope summary, `CLAUDE.md`).
+
+## CI clippy is unpinned, causing toolchain-drift breakage on unchanged code — NEW, OPEN, CI-infra (2026-10-01)
+
+**ID:** `CI-CLIPPY-TOOLCHAIN-PIN`. Severity **LOW-MEDIUM**, CI-infra. Observed during
+the 2026-10-01 session wrap: the CI clippy job runs under whatever `stable` toolchain
+GitHub Actions resolves that day, with no pin. This already broke CI once on
+completely unchanged code and was fixed ad hoc inside `FIX-P5-002`/PR #894's cycle
+(an `tests/e2e_live.rs` `needless_borrows_for_generic_args` lint that a newer stable
+clippy started flagging).
+
+**Disposition:** OPEN, no GitHub issue filed, LOW-MEDIUM (recurs on any clippy-ruleset
+change in a new stable release). **Target: next maintenance sweep** — pin the clippy
+job's toolchain the same way the `msrv` job is pinned (`rust-toolchain.toml` +
+`RUSTUP_TOOLCHAIN` override, per the `CLAUDE.md` Gotchas entry on MSRV precedence), or
+accept the drift risk explicitly and document it.
+
+## `CLAUDE_AUTOCOMPACT_PCT_OVERRIDE` missing from settings — NEW, OPEN, advisory (2026-10-01)
+
+**ID:** `AUTOCOMPACT-SETTING-MISSING`. Severity **ADVISORY**, non-blocking. Observed
+during the 2026-10-01 session wrap: `CLAUDE_AUTOCOMPACT_PCT_OVERRIDE` is not set in
+this project's Claude Code settings, so autocompact uses its default threshold rather
+than a project-tuned value.
+
+**Disposition:** OPEN, no GitHub issue filed, advisory only. **Target: human
+discretion** — not a correctness or CI issue; set only if the human wants to tune
+autocompact behavior for this repo's long-running VSDD sessions.
