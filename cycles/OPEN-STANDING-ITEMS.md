@@ -2109,6 +2109,13 @@ character stripping `FIX-P5-004` added to the table/terminal sanitizers (see
 the new policy keeps). Fold both gaps into the same fix when this item is
 picked up. Severity and target unchanged (LOW, next maintenance sweep).
 
+**Update 2026-10-01 (F5 Pass 4, `SEC4-002`):** the env-display sanitizer
+(`strip_control_and_ansi`/`sanitize_env_display`) lacks the invisible-char
+stripping that `FIX-P5-005` (`D-399`) generalizes to all Unicode 17.0.0 `Cf`
+characters (plus U+034F and the Hangul fillers) in the table/terminal
+sanitizers. Fold that policy into this item's fix too. Not changed by
+`FIX-P5-005`; severity and target unchanged.
+
 ## `CANONICAL-COUNTS.md`'s L2 bc_count alignment row for bc-7 is stale — NEW, OPEN, doc-accuracy, target next maintenance sweep (2026-09-30)
 
 **ID:** `CANONICAL-COUNTS-L2-BC7-ALIGNMENT-STALE`. Surfaced by product-owner
@@ -2314,6 +2321,17 @@ do not fix in cycle-014. **Target: next maintenance sweep or a future
 security-hardening cycle**, via a BC-7.1.006 policy amendment first, then the
 `classify_default_char` change. Related: `SANITIZE-ENV-DISPLAY-C1-GAP` (same
 gap class in `strip_control_and_ansi`).
+
+**Status update 2026-10-01 (`D-399`, F5 Pass 4): BEING RESOLVED by `FIX-P5-005`.**
+The human replaced the per-pass patching with a principled policy (`BC-7.1.006`
+v1.6.0, `EC-21`/`EC-22`/`EC-23`): strip ALL Unicode 17.0.0
+`General_Category=Cf`, plus U+034F and the Hangul fillers
+U+115F/U+1160/U+3164/U+FFA0 (soft hyphen U+00AD, U+180E, interlinear annotation,
+musical format controls, and U+2065/U+206A..=206F are all covered by the `Cf`
+rule or the explicit additions). **The variation-selector part STAYS OPEN as an
+ACCEPTED residual (`EC-23`):** U+FE00..=FE0F and U+E0100..=E01EF remain KEPT,
+styled like `EC-20`. The item closes except for that accepted residual once
+`FIX-P5-005` merges and the post-merge spec conversion lands.
 
 ## `tests/common/wf.rs` inline tests re-run in every integration crate that includes `mod common;` — NEW, OPEN, test-hygiene (NIT), target next maintenance sweep (2026-10-01)
 

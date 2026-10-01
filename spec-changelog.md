@@ -9,6 +9,38 @@ Track all spec version changes. Most recent version first.
 
 > **Type legend:** Type classifies the SPEC document delta: MINOR = new BCs/VPs/sections; PATCH = amendments to existing bodies/ACs/ECs. Product-semver impact is recorded in the Summary line, independent of Type.
 
+## [2.7.0] - 2026-10-01
+
+### Type: MINOR
+
+### Summary
+
+FIX-P5-005 (human decision D-399, cycle-014 F5 pass-4). Spec-only; the implementation is NOT YET
+IMPLEMENTED and every new EC/VP/test name below is a TARGET for FIX-P5-005. BC count unchanged
+(98 in-file / 54 individually-bodied in bc-7; 162 / 96 in cross-cutting; 773 cumulative); one new
+VP ID in BC-7.1.006 (`VP-SEC-001-003`) and one in BC-X.14.001 (`VP-580-014`).
+
+1. **BC-7.1.006 v1.6.0 — invisible-character policy rewrite.** The shared default policy
+   `src/output.rs::classify_default_char` becomes a principled category rule: STRIP every code point
+   with Unicode General_Category `Cf` for the pinned Unicode version 17.0.0 (matches Rust std
+   `char::UNICODE_VERSION`, rustc 1.98.1; 170 code points in 21 ranges, derived from UCD 17.0.0
+   `UnicodeData.txt` and cross-checked against `extracted/DerivedGeneralCategory.txt`), PLUS `U+034F`
+   (CGJ), PLUS the Hangul fillers `U+115F`/`U+1160`/`U+3164`/`U+FFA0`. Variation selectors
+   `U+FE00..=U+FE0F` / `U+E0100..=U+E01EF` are KEPT (accepted risk). Existing C0/DEL/C1/bidi/
+   `U+2028`/`U+2029`/`U+0085` sets unchanged; the tag block stays stripped as a whole block (superset
+   over pure `Cf`). New EC-21 (all-`Cf` strip with range-edge neighbor KEEP pins), EC-22 (CGJ +
+   fillers), EC-23 (variation-selector accepted risk); EC-18 annotated; accepted trade-off for
+   visible-ish prepended `Cf` marks (`U+0600..=U+0605`, `U+06DD`, `U+110BD`, ...) recorded. New
+   VP-SEC-001-003 (spec-table conformance property test, sorted/non-overlapping table test,
+   Unicode-version drift guard). Version row 1.6.0.
+2. **BC-X.14.001 / BC-X.14.004 amended — `jr field options <NAME>` accepts system field IDs
+   (#861 / CR4-002).** An exact case-insensitive field-ID match against the cached/fetched
+   `(id, name)` list is tried BEFORE name matching; ID wins an ID/name collision; ID matching is
+   exact (no substring); cache/refetch contract unchanged. Ambiguity hints must contain
+   `the field ID (e.g. customfield_NNNNN or a system id like issuetype)`. New EC-X.14.001-16..20,
+   EC-X.14.004-8, VP-580-014; EC-X.14.001-14 annotated as superseded in part.
+3. **Hand-off:** `.factory/cycles/cycle-014/phase-f5-adversarial/FIX-P5-005-spec-delta.md`.
+
 ## [2.6.1] - 2026-10-01
 
 ### Type: PATCH

@@ -164,3 +164,7 @@ F5-pass-1 checkpoint.
 **(e) WIP branches:** `fix/fix-p5-004-pass3-findings` (product repo, worktree `.worktrees/FIX-P5-004`). Only untracked `.claude/` files otherwise.
 
 **(f) Resume command:** in a new session in this project, run `/vsdd-factory:rehydrate-wave`, then `/vsdd-factory:next-step`. This repo has no `wave-state.yaml` -- this Session Resume Checkpoint is the authoritative resume source. Reference `cycles/cycle-014/phase-f5-adversarial/pass-3.md`, `cycles/cycle-014/session-checkpoints.md` (prior checkpoints), `cycles/OPEN-STANDING-ITEMS.md`.
+
+## Archived checkpoint: STATE v5.27 (2026-10-01, superseded by v5.28)
+
+**Position:** cycle-014 F5 IN PROGRESS; `FIX-P5-004` (#896 @ `6cece14b`) merged, spec converted (`BC-7.1.006` v1.5.1, spec `2.6.1`). F5 Pass 4 DISPATCHED over `204b1fb5..6cece14b`, results pending; counter 0/3, 4th of 10. NEXT was: await Pass 4 verdicts. No fix worktrees. Phase Progress held 13 rows (archive of `CYCLE-014-F3-D390-APPROVED-2026-09-29` pending). Resume: `/vsdd-factory:rehydrate-wave`, then `/vsdd-factory:next-step`.

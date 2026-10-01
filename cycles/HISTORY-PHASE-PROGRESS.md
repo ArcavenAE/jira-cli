@@ -606,3 +606,5 @@ See `cycles/cycle-014/cycle-manifest.md` for full narrative detail (this row sum
 
 ---
 | **CYCLE-014-F3-D389-CHECKPOINT-2026-09-29** | **F3 adversarial convergence CLOSED (checkpoint)** | 2026-09-29 | none (superseded) | `D-389`: at pass 33, F3 adversarial convergence CLOSED. | 772 BCs / 97 VPs / 118 holdout / 191 stories LOCKED; `D-389` minted |
+| **CYCLE-014-F3-D390-APPROVED-2026-09-29** | **F3 APPROVED (human gate)** | 2026-09-29 | human gate | `D-390` APPROVES the 3-story package, SERIAL `A->C->B`, 16 pts. | 772 BCs / 97 VPs / 118 holdout / 194 stories (194 ready); `D-390` minted |
+| **CYCLE-014-STORY-A-MERGED-D391-2026-09-29** | **F4 (STORY-A MERGED, 1 of 3)** | 2026-09-29 | none (merge decision `D-391`) | STORY-A squash-merged PR #886, `2d8467c4`, closing `#862`. `D-391` sets the standing autonomous-merge policy. | 772 BCs / 97 VPs / 118 holdout / 194 stories LOCKED; `D-391` minted |

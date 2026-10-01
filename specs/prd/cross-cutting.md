@@ -3,9 +3,10 @@ context: bc-x
 title: "Cross-cutting (HTTP client, Runtime, Users, Teams, Worklogs, Projects, Queues, JQL, Partial-match, JSM Request Types, CI Guards, Field Option Discovery, API Query Parameters)"
 total_bcs: 162   # cumulative claim (incl. range-collapsed); definitional_count below is individually-bodied headings; +2 added 2026-09-25 (BC-X.16.001..002, cycle-014 `issue-triage-quickfixes` F2 spec evolution, issue #583 — new `## BC-X.16: API Query Parameters` subsection: `jr api --query-param NAME=VALUE` percent-encoded query-string composition + malformed-value error taxonomy; same-burst amendments to BC-X.7.002 (issue #862, project-resolution order) and BC-X.14.001/003 (issue #861, M1/M2 label-resolution fallback, READ-SIDE ONLY per D-378) are COUNT-NEUTRAL; BC-X.14.004 gains one documentation-only cross-reference row (empty `<field>`), COUNT-NEUTRAL; the §BC-X.14 intro is reworded (count-neutral)); was 160 before this addition; prior: +1 added 2026-09-17 (BC-X.15.001, cycle-008 `oauth-surface-correctness` F2 spec evolution, ADR-0026 Decision 3, VP-OAUTH-GW-003 — new `## BC-X.15: OAuth Agile-Command Error-Mapping` subsection: `jr board`/`jr sprint` 401 auth-scheme-conditional call-site rewrite disambiguating scope-mismatch vs. expired-token vs. (regression-guard) wrong-host, modeled on `require_service_desk`/BC-X.8.006..007); was 159 before this addition; prior: +4 added 2026-09-06 (BC-X.7.007..010, cycle-005 `adf-mentions` F2 spec evolution, issue #674 — `@Name` mention resolution: unique-match (007), ambiguous-match disambiguation (008), zero-match HARD ERROR exit 64 (009, human-approved override of the architect's pass-through recommendation); bracket-form accountId mandatory preflight validation (010)); was 155 before that addition
 definitional_count: 96   # count of `#### BC-` headings in this file
-last_updated: 2026-09-25
+last_updated: 2026-10-01
 source_pass: 3
 trace: |
+  - FIX-P5-005 (2026-10-01, spec v2.7.0, human decision D-399, cycle-014 F5 pass-4, issue #861 / CR4-002; spec-only, NOT YET IMPLEMENTED): amended BC-X.14.001 (field-ID match step before name matching for `jr field options <NAME>`: system ids such as `issuetype` resolve; ID wins name/ID collisions; EC-X.14.001-16..20, VP-580-014) and BC-X.14.004 (ambiguity hint wording, EC-X.14.004-8). COUNT-NEUTRAL (no new BC).
   - cycle-014 `issue-triage-quickfixes` F2 (spec 2.4.0, 2026-09-25): amended BC-X.7.002 (#862
     `user list --project` resolution: `List.project` becomes `Option<String>`; clap global
     propagation plus `Config::project_key` fallback; `&Config` threaded from `main.rs`; pure
@@ -2664,6 +2665,8 @@ of three MODE-SELECTOR flags — `--type`, `--request-type`, `--issue` — selec
 mode; `--project` is a companion flag, never itself a mode selector (see §BC-X.14
 context-mechanism decision above, and ADR-0019 §1).
 
+**`<field>` resolution — field-ID match step [AMENDED 2026-10-01, D-399, FIX-P5-005, issue #861 / CR4-002 — NOT YET IMPLEMENTED; target for FIX-P5-005]**: the command's help text and README advertise "custom or system fields", but today only a `customfield_NNNNN` literal bypasses name resolution and `src/cli/field.rs::search_field_list` matches DISPLAY NAMES only, so a system field's id such as `issuetype` fails with "not found" (EC-X.14.001-14(b) records the same for `fixVersions`). The resolution algorithm is amended to the following ordered steps; steps 1-2 are unchanged: (1) the `customfield_NNNNN` literal bypass (case-sensitive, zero HTTP) still short-circuits first; (2) the empty-string guard still exits 64 first; (3) over the cache-first `(id, name)` list (same `fields.json` cache, same `list_fields()` fallback, NO new cache family and NO new HTTP call), an EXACT CASE-INSENSITIVE match of `<field>` against each entry's field ID is tried BEFORE any name matching — exactly one ID match resolves immediately to THAT entry's canonical id (the list's own casing, so `IssueType` resolves to `issuetype`); (4) only when no ID matches does the existing name algorithm run unchanged (case-insensitive exact name match, then case-insensitive substring match, ambiguity exits 64). The ID match is EXACT only — there is no substring matching against IDs (`issue` does NOT ID-match `issuetype`; it falls through to name matching). **Collision rule (decided):** when `<field>` equals one field's ID AND equals a DIFFERENT field's display name (e.g. a custom field whose display name is `priority`), the ID match WINS deterministically and silently — field IDs are unique and machine-stable whereas display names are tenant/locale-dependent (EC-X.14.001-14), so the ID reading is the only one that is never ambiguous; the shadowed custom field remains reachable by its `customfield_NNNNN` id. In the defensive case that two list entries share the same ID up to ASCII case (not expected from Jira), the result is an ambiguity exit 64 naming the candidates. The refresh contract is unchanged and applies to the ID step too: a `<field>` that matches neither an ID nor a name in a WARM cached list triggers exactly one fresh `GET /rest/api/3/field` followed by one re-search (ID step then name step); a match (or an ambiguity) found WITHIN the warm cache never refetches. Resolution only locates the field ID: whether the resolved field is then enumerable in the selected M1/M2/M3 context (or degrades gracefully) is governed unchanged by this BC and BC-X.14.004. **Ambiguity hint wording (BC-X.14.004):** both ambiguity errors (multiple exact-name matches; multiple substring matches) must no longer suggest only `customfield_NNNNN` — each must contain the literal substring `the field ID (e.g. customfield_NNNNN or a system id like issuetype)`.
+
 **M2 (`--type <T>`) project resolution step [ADDED 2026-08-26, ADR-0019 § Amendment D1]**: the
 mode-selector arity check (Invariant 1) is a pure function over `(has_type, has_request_type,
 has_issue)` ONLY — `--project`'s presence plays no role in mode arity at all. Once M2 is
@@ -2813,7 +2816,7 @@ CONFIRMed read shape here does not imply a verified write shape there.
   companion), or `--issue <KEY>` (`--project` not consulted — **[REWORDED 2026-08-26, A-LOW-2]**
   a stray `--project` alongside `--issue` is harmlessly ignored, not rejected; this is a
   "not consulted" statement, not a prohibition).
-- `<field>` resolves to exactly one field (via `customfield_NNNNN` bypass or unambiguous
+- `<field>` resolves to exactly one field (via `customfield_NNNNN` bypass, **[AMENDED D-399, FIX-P5-005, NOT YET IMPLEMENTED]** an exact case-insensitive field-ID match against the cached/fetched `(id, name)` list tried BEFORE name matching, or unambiguous
   `search_field_list` name resolution — `src/cli/field.rs::search_field_list`, NOT
   `partial_match`/BC-X.10.001; see Invariant 4).
 
@@ -3043,6 +3046,13 @@ CONFIRMed read shape here does not imply a verified write shape there.
   shipped error message (`src/cli/field.rs::resolve_field_id`) both name `jr project fields
   --output json`, which does not list field names; tracked as drift item
   FIELD-OPTIONS-NOTFOUND-HINT (out of scope for cycle-014).
+  **[SUPERSEDED IN PART, D-399, FIX-P5-005, NOT YET IMPLEMENTED]** Once FIX-P5-005 lands, the
+  statement "the only bypass is a literal `customfield_NNNNN`" and consequences (a) and (b) above
+  are superseded: `priority` and `fixVersions` (and any other system field id present in the field
+  list) resolve via the new field-ID match step (EC-X.14.001-16), not via name matching; (c) is
+  unchanged (the singular substring `version` is still a name-substring ambiguity, now with the
+  amended hint, EC-X.14.001-20). The display-name-locale-dependence statement stays true for NAME
+  resolution.
 - EC-X.14.001-15 (added cycle-014; documents pre-existing behavior, no behavior change):
   `<field>` is the empty string (`""`) → exit 64 with `Field '' not found. The field name must
   not be empty.`, zero HTTP calls — pinned on a cold cache by
@@ -3052,6 +3062,12 @@ CONFIRMed read shape here does not imply a verified write shape there.
   code-level fact verified by inspection: the guard
   (`src/cli/field.rs::resolve_field_id`'s `query.is_empty()`, ~L442-447) precedes the cache read
   at ~L451.
+
+- EC-X.14.001-16 (D-399, FIX-P5-005, issue #861 / CR4-002 — NOT YET IMPLEMENTED; target for FIX-P5-005): a SYSTEM field ID resolves via the field-ID match step. `jr field options issuetype --type Bug --project P` (and `priority`, `fixVersions`, `components`) resolves `<field>` to that id from the field list, where today it exits 64 `Field 'issuetype' not found`. Case-insensitive: `IssueType`/`ISSUETYPE` resolve to the canonical `issuetype`. The resolved id (list casing) is what flows into M1/M2/M3 enumeration. Zero extra HTTP versus the name path: ID matching uses the same warm `fields.json` (no request) or the same single `list_fields()` fetch on a cold cache.
+- EC-X.14.001-17 (D-399, FIX-P5-005, NOT YET IMPLEMENTED): ID/name collision — field list contains `("priority", "Priority")` and `("customfield_10050", "priority")`; `<field>` = `priority` → the ID match wins: resolves to `priority` (the system field), silently, even though `priority` is also an exact (case-insensitive) display name of `customfield_10050`; no ambiguity error. The shadowed custom field is reached via its `customfield_10050` literal (EC-X.14.001-1). Pinned so the precedence is a deliberate spec decision.
+- EC-X.14.001-18 (D-399, FIX-P5-005, NOT YET IMPLEMENTED): ID matching is exact, never substring. With the list containing `issuetype`/`Issue Type`, `<field>` = `issue` does NOT ID-match `issuetype`; it falls through to name matching (substring `issue` → `Issue Type`, plus any other containing field, so possibly ambiguous per the unchanged name algorithm). A `<field>` that is a substring of an id but equals no id and no name is not-found.
+- EC-X.14.001-19 (D-399, FIX-P5-005, NOT YET IMPLEMENTED): cache semantics of the ID step. `<field>` = `issuetype` with a warm cache containing it → resolves with ZERO HTTP; `<field>` absent from the warm cache as both id and name → exactly one `GET /rest/api/3/field`, cache rewritten, one re-search (ID step first) — mirroring the existing name-absent contract; a `CustomField_10084`-style wrong-case spelling is NOT the literal bypass (case-sensitive) but, if present in the list, resolves via the case-insensitive ID match (to the canonical `customfield_10084`), costing the cache read / one fetch that the exact-case literal bypass avoids. The `customfield_NNNNN` literal bypass remains zero-HTTP and unchanged (VP-580-001).
+- EC-X.14.001-20 (D-399, FIX-P5-005, NOT YET IMPLEMENTED): ambiguity hints. Multiple exact-name matches → exit 64 `Field name '<q>' matches multiple fields: <name> (<id>), … Use the field ID (e.g. customfield_NNNNN or a system id like issuetype) to disambiguate.`; multiple substring matches → exit 64 `Field name '<q>' is ambiguous — matches: <name> (<id>), … Use a more specific name or the field ID (e.g. customfield_NNNNN or a system id like issuetype).` Both messages contain the literal `the field ID (e.g. customfield_NNNNN or a system id like issuetype)`; neither recommends only `customfield_NNNNN`. Candidate formatting `<name> (<id>)` is unchanged. The zero-match hint (`jr project fields`, drift FIELD-OPTIONS-NOTFOUND-HINT) is OUT of scope for D-399 and unchanged.
 
 **Verification Properties**:
 - VP-580-001: `customfield_NNNNN` literal bypass skips `list_fields()` entirely (zero HTTP for
@@ -3142,6 +3158,8 @@ CONFIRMed read shape here does not imply a verified write shape there.
   over `value`; an emptiness-based fallback (`Some("")` falling through to `name`); explicit
   `null` treated as present (never falling through to `name`); the fallback applied only at the
   top level; the fallback leaking into the M3 normalizer.
+
+- VP-580-014 (D-399, FIX-P5-005, issue #861 / CR4-002 — NOT YET IMPLEMENTED; target for FIX-P5-005): field-ID resolution (EC-X.14.001-16..20). Target tests: unit/property `src/cli/field.rs::prop_bc_x_14_001_search_field_list_id_match_precedes_name_match` (over generated `(id, name)` lists and a query: if any entry's id equals the query ASCII-case-insensitively, the result is that entry's id regardless of any name matches — the collision rule — and otherwise the result equals the pre-amendment name-only algorithm's result, i.e. no regression for name resolution; ID matching never substring-matches); integration `tests/field_options.rs::test_bc_x_14_001_system_field_id_issuetype_resolves_via_id_match` (EC-16: `jr field options issuetype --type <T> --project <P>` no longer exits 64 not-found), `…::test_bc_x_14_001_system_field_id_match_is_case_insensitive_and_returns_canonical_id` (EC-16), `…::test_bc_x_14_001_field_id_match_wins_over_name_collision` (EC-17), `…::test_bc_x_14_001_field_id_match_is_exact_not_substring` (EC-18), `…::test_bc_x_14_001_field_id_match_warm_cache_zero_http` and `…::test_bc_x_14_001_field_id_absent_from_cache_refetches_once` (EC-19), `…::test_bc_x_14_004_ambiguous_field_name_hint_names_system_id_form` (EC-20, both the exact-name and substring ambiguity branches assert the literal `the field ID (e.g. customfield_NNNNN or a system id like issuetype)`). The existing VP-580-001 (literal bypass zero HTTP) must still pass unchanged.
 
 **Trace**: issue #580; `.factory/research/field-dx-context-mechanism-2026-08-25.md` (M1/M2/M3
 ranked recommendation, per-mechanism verdict table); `.factory/research/field-dx-feasibility-2026-08-25.md`
@@ -3359,7 +3377,7 @@ fields with no enumerable option set (per `.factory/research/field-dx-context-me
 | `--request-type` present with NO resolvable ambient project (no `--project` companion, no profile/config default) | Exit 64 via `require_service_desk`'s "project required" error, unchanged from `jr requesttype fields`'s own behavior on the same condition | BC-X.12.003 parallel / ADR-0019 §1 |
 | `<field>` resolves to zero matches | Exit 64, hint naming `jr project fields` | EC-3.4.015-1 parallel |
 | `<field>` is the empty string | Exit 64, `Field '' not found. The field name must not be empty.` — zero cache/HTTP (see BC-X.14.001 EC-X.14.001-15; added cycle-014 as a cross-reference; documents pre-existing behavior) | `src/cli/field.rs::resolve_field_id` |
-| `<field>` resolves to multiple matches (ambiguous) | Exit 64 naming candidates + ids | EC-3.4.015-2 parallel |
+| `<field>` resolves to multiple matches (ambiguous) | Exit 64 naming candidates + ids **[AMENDED D-399, FIX-P5-005, NOT YET IMPLEMENTED]** — the hint must contain the literal `the field ID (e.g. customfield_NNNNN or a system id like issuetype)` (BC-X.14.001 EC-X.14.001-20), not only `customfield_NNNNN`. Note an exact field-ID match is resolved BEFORE name matching and is therefore never itself ambiguous (BC-X.14.001 EC-X.14.001-17) | EC-3.4.015-2 parallel |
 | Resolved project (whether from an explicit `--project` companion or profile/config default) is non-JSM, supplied to the `--request-type` path | Exit 64 via `require_service_desk`, call-site-specific message (BC-X.8.004) | BC-X.12.003 parallel |
 | Unknown/ambiguous `--request-type` value | Exit 64 via `partial_match` (BC-X.12.006) | BC-X.12.006 |
 | M2 path (`--type <T> [--project <P>]`) **[BRACKETED 2026-08-26, F2 adversary-convergence round-5, LOW-1]**: `--type` value does not resolve to exactly one issue type for the resolved project (unknown name, or ambiguous case-insensitive match) | Exit 64 listing the project's valid issue type names, BEFORE `get_createmeta_fields` is called | BC-3.3.010 Step 3 / S-331 parallel |
@@ -3485,6 +3503,8 @@ reported via any taxonomy-table error row.
   earlier lookups already succeeded against the same identifiers, so the failure is a genuine
   server-side rejection propagated as a standard `JrError` (exit 1), not a `jr`-produced
   exit-64.
+
+- EC-X.14.004-8 (D-399, FIX-P5-005, NOT YET IMPLEMENTED; target for FIX-P5-005): ambiguity-hint wording for the system-field-ID amendment. Both ambiguity messages (exact-name and substring) carry `the field ID (e.g. customfield_NNNNN or a system id like issuetype)`; exit code 64 and the candidate list format are unchanged; verified by `tests/field_options.rs::test_bc_x_14_004_ambiguous_field_name_hint_names_system_id_form` (BC-X.14.001 VP-580-014).
 
 **Verification Properties**:
 - VP-580-004: Each row of the error taxonomy table is independently exercised, asserting exit
