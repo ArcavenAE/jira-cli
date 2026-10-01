@@ -9,6 +9,90 @@ Track all spec version changes. Most recent version first.
 
 > **Type legend:** Type classifies the SPEC document delta: MINOR = new BCs/VPs/sections; PATCH = amendments to existing bodies/ACs/ECs. Product-semver impact is recorded in the Summary line, independent of Type.
 
+## [2.5.6] - 2026-10-01
+
+### Type: PATCH
+
+### Summary
+
+FIX-P5-002 (human decision D-396, cycle-014 F5 pass-1 adversarial findings on `BC-7.1.006` /
+`VP-SEC-001-001`, `bc-7-output-render.md`) — a distinct fix task from PR #891's now-frozen
+security-review scope (D-393/D-394/D-395), not a further amendment to it. Every claim below was
+re-verified against `develop`'s actual code (`769365ab`) before being pinned. No new BC, no new
+VP ID.
+
+1. **CR-1 — new single-line sanitizer `output::sanitize_terminal_line` (NOT YET
+   IMPLEMENTED).** `sanitize_table_cell`/`sanitize_terminal_text` preserve `\n`, which is correct
+   for genuinely multi-line sinks but let a hostile value with an embedded `\n` fabricate an
+   extra line, labeled field, or `dialoguer::Select` picker item (CWE-116) in a sink that is
+   supposed to render exactly one line. `sanitize_terminal_line` is identical to
+   `sanitize_table_cell` except `\n`→single space (mirrors the existing `\t` substitution;
+   consecutive `\n` → consecutive spaces, no collapsing). Re-routes `handle_comment_view`'s six
+   labeled fields, `handle_assign`'s two messages, and `disambiguate_user`'s non-interactive
+   messages/interactive picker labels. `render_table`/`render_table_with_styles` cells and
+   `handle_comment_view`'s ADF body block are UNCHANGED (genuinely multi-line,
+   `sanitize_table_cell`/`sanitize_terminal_text`). A full sink→function mapping table was added
+   to the BC body. New **(EC-17)**, two parts, with a before/after contrast against the pre-D-396
+   behavior.
+2. **F-001 — caller-list correction.** D-395's text named a nonexistent `jr issue edit
+   --assignee` flag (`IssueCommand::Edit` has no assignee-setting flag of any kind — verified
+   against `src/cli/mod.rs`) and omitted `jr issue list --reporter` (`resolve_user` is called
+   from BOTH `--assignee` and `--reporter` — verified against `src/cli/issue/list.rs`).
+   `resolve_assignee_by_project` has exactly one call site, `jr issue create --to`. Corrected
+   across the H1, the `disambiguate_user` Behavior subsection, the Out-of-scope lead, the
+   `**Trace**` field, and VP-SEC-001-001(c). The four underlying callers are unchanged from
+   D-395 — only the flags naming them were wrong.
+3. **CR-2 — color-gating REQUIRED BEHAVIOR CHANGE (human decision D-396: "move the
+   `--no-color` check into the styled-table API"), NOT YET IMPLEMENTED.** This is a behavior
+   change the human approved, not a documentation fix about today's code — an earlier draft of
+   this amendment mis-framed it as the latter and has been corrected. Verified against
+   `src/output.rs`/`src/cli/user.rs` that TODAY (before this amendment's implementation lands),
+   `render_table_with_styles` does NOT itself check `colored::control::SHOULD_COLORIZE` — it
+   applies a `StyledCell`'s `fg` unconditionally, and `active_cell` (the only current `StyledCell`
+   caller) is the only place `--no-color`/`NO_COLOR` is honored. **Required going forward:**
+   `output::render_table_with_styles` MUST apply a `StyledCell`'s `fg` only when
+   `colored::control::SHOULD_COLORIZE.should_colorize()` is true, making `--no-color`/`NO_COLOR`
+   suppression structural for every `StyledCell` caller, present and future. `active_cell` KEEPS
+   its own existing check unchanged — redundant but harmless; `render_table_with_styles`'s gate is
+   now the authoritative one. `comfy_table`'s own TTY-based `Table::should_style()` gate is
+   UNCHANGED and still applies on top (ANDed). Two new test targets:
+   `test_bc_7_1_006_render_table_with_styles_suppresses_fg_when_colorize_disabled` and its
+   colorize-on companion, `test_bc_7_1_006_render_table_with_styles_applies_fg_when_colorize_enabled`.
+   The prior draft's Out-of-scope residual item is RETRACTED — the gap it described is now a
+   required fix (pending implementation), not a residual left unfixed.
+4. **F-006 — precise Active-column color-behavior wording (unchanged by the CR-2 revision
+   above — the end-user-visible result is identical either way for `active_cell`, the only
+   caller today).** Color requires a TTY (comfy_table's gate, structural); it is additionally
+   suppressed by `--no-color`/`NO_COLOR` (structurally, via `render_table_with_styles`'s new
+   gate, point 3 above); `CLICOLOR_FORCE` with piped stdout still does not color it — a genuine,
+   minor, documented behavior change from pre-#891 (verified by crossing `colored` 3.1.1's
+   `ShouldColorize::resolve_clicolor_force`, which lets `CLICOLOR_FORCE` bypass any TTY check,
+   against `comfy-table` 7.2.2's `Table::should_style()`/`is_tty()`, which has no `CLICOLOR_FORCE`
+   awareness at all).
+5. **F-004 — `jr api` passthrough is a documented exception, not a residual.** `handle_api`
+   writes the raw response body via `std::io::stdout().write_all`, by design, `gh api`-parity;
+   never sanitized, never will be.
+6. **F-005 — EC-16a's email-distinguishing claim retracted.** Verified against
+   `disambiguate_user`'s `MatchResult::Ambiguous` arm: it carries `display_name` ONLY, never
+   `email_address`/`account_id`. Two accounts whose display names sanitize to the same string are
+   genuinely indistinguishable in this branch's output. Recorded as a known limitation with a
+   tracked follow-up (add email/accountId to `Ambiguous` labels) — new Out-of-scope residual.
+7. **F-002 — VP(c)/EC-16 alignment with FIX-P5-002's intended test suite.** Five new test targets
+   named (verified none exist yet): (a) `issue list --assignee` `Ambiguous` via `resolve_user`,
+   (b) `@Name` mention `Ambiguous` via `resolve_at_name_candidate`, (c) `Ambiguous` `--output
+   json` error-envelope case, (d) `ExactMultiple` with a hostile DISPLAY NAME (distinct from the
+   existing hostile-email-only test), (e) EC-17b's `disambiguation_labels` fixture. The "one
+   shared assertion helper" claim is REMOVED — verified no such helper exists in
+   `tests/table_output_sanitization.rs`; each test is independent.
+8. **F-003 — new tracked residual.** `src/cli/issue/create.rs::handle_create`'s field-echo loop
+   (~L448) echoes the raw, unsanitized `create_echo` assignee `display_name` and
+   `resolved_team_name` — same exposure class as the now-covered `handle_assign` sink. NOT fixed
+   by this BC.
+
+BC count unchanged (98/54 in-file, 773 cumulative); VP count unchanged (VP-SEC-001-001 amended in
+place, no new VP ID). Version history table row 1.4.0 added. See
+`.factory/cycles/cycle-014/phase-f5-adversarial/FIX-P5-002-spec-delta.md`.
+
 ## [2.5.5] - 2026-09-30
 
 ### Type: PATCH

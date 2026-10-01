@@ -7,7 +7,7 @@ producer: state-manager
 timestamp: 2026-09-26T00:01:34Z
 cycle: "cycle-014-issue-triage-quickfixes"
 inputs: [STATE.md]
-input-hash: "d5bd486"
+input-hash: "50cff29"
 traces_to: STATE.md
 ---
 
@@ -617,11 +617,77 @@ dispositioned — dispositioning happens at cycle close per S-7.02).
     Source: PR #891 review dispatches, this burst, 2026-10-01.
     Engine-side (`vsdd-factory`) follow-up.
 
+46. **[process-gap] [engine]** `FIX-P5-001` expanded scope three times
+    (`D-393`/`D-394`/`D-395`) with no per-story Step-4.5-style adversary
+    convergence record of its own — unlike a regular story, a fix PR's
+    review rounds were tracked only as PR-review/security-review verdicts,
+    not as a dedicated convergence artifact. That gap is why the doc/test
+    drift later found as `F-001` (nonexistent `jr issue edit --assignee`
+    flag cited, `jr issue list --reporter` omitted from the caller list)
+    and `F-002` (overstated VP(c)/EC-16 test-coverage claims) escaped
+    detection until the cycle-014 F5 pass-1 adversarial review, rather than
+    being caught during `FIX-P5-001`'s own delivery. Candidate: apply the
+    same Step-4.5-style adversary convergence gate (BC-5.39.001) to fix PRs
+    delivered via `fix-pr-delivery`, not just stories delivered via
+    `per-story-delivery`. Source: cycle-014 F5 pass 1
+    (`cycles/cycle-014/phase-f5-adversarial/pass-1.md`), this burst,
+    2026-10-01. Engine-side (`vsdd-factory`) follow-up.
+
+47. **[process-gap] [engine]** During the `FIX-P5-002` spec-delta burst,
+    product-owner's first draft treated `CR-2` — a REQUIRED BEHAVIOR CHANGE
+    the human approved via `D-396` ("move the `--no-color` check into the
+    styled-table API") — as if it were merely a premise to correct about
+    today's code, and wrote the BC body as a description of current
+    behavior rather than the new required behavior. The orchestrator caught
+    and corrected this mid-burst (see
+    `cycles/cycle-014/phase-f5-adversarial/FIX-P5-002-spec-delta.md`'s own
+    "Correction to this delta's own first draft" note). Candidate:
+    orchestrator dispatch instructions for any human-approved finding
+    disposition should explicitly label it `REQUIRED CHANGE` (vs. `SPEC
+    CORRECTION`/`DOCUMENTED EXCEPTION`) so the receiving agent cannot
+    mis-read an approved behavior change as a passive documentation fix.
+    Source: `D-396`/`FIX-P5-002` spec-delta burst, this burst, 2026-10-01.
+    Engine-side (`vsdd-factory`) follow-up.
+
+48. **[process-gap] [engine]** The `validate-factory-path-staging` hook
+    false-positives on the ordinary `cd .factory && git add -A` sequence
+    that state-manager's own documented git-operations protocol specifies,
+    apparently misreading the `cd` as an attempt to stage factory paths
+    from outside the worktree. The standing workaround — using
+    `git -C .factory add -A` / `git -C .factory commit` instead of `cd
+    .factory && git add -A` — avoids the false-positive and is the form
+    actually used by this and prior bursts. Candidate: fix the hook's
+    detection to recognize `cd .factory && git <cmd>` as the equivalent of
+    `git -C .factory <cmd>` rather than require the workaround at every
+    call site. Source: this burst's own git operations, 2026-10-01.
+    Engine-side (`vsdd-factory`) follow-up.
+
+49. **[process-gap] [engine]** Input-hash self-reference risk: an artifact
+    whose `inputs:` frontmatter lists a file that is itself being rewritten
+    in the same burst (e.g. `wave-integration-gate.md` listing `STATE.md`
+    as an input) must never have that input's literal computed hash value
+    quoted inside the dependent artifact's own prose — doing so creates a
+    self-referential drift loop, because quoting the value freezes a
+    snapshot that the next STATE.md rewrite immediately invalidates, and
+    the quoted citation itself then has to be hunted down and corrected on
+    every subsequent burst. The correct pattern (already followed by this
+    and the `CYCLE-014-F5-FIX-P5-001-MERGED` burst before it) is to let
+    each file's own `input-hash:` frontmatter field be the sole source of
+    truth, update the DEPENDENT file's hash via `compute-input-hash
+    --update` only AFTER the file it depends on has been finalized, and
+    never restate the literal hash value in narrative text. Candidate:
+    encode this rule directly in the `state-burst`/`compute-input-hash`
+    skill documentation so future bursts don't have to rediscover it ad
+    hoc. Source: this burst's hash-refresh step (`S-cycle14-user-list-
+    project-resolution.md`, `dependency-graph-extended.md`,
+    `S-cycle14-field-options-name-label.md`, `wave-integration-gate.md`),
+    2026-10-01. Engine-side (`vsdd-factory`) follow-up.
+
 ## Disposition
 
 Not yet dispositioned. F2 is CONVERGED per human decision `D-383` and
 APPROVED at the F2 human gate (`D-384`) — the S-7.02 cycle-closing checklist
-dispositions each of these 45 items when cycle-014 itself closes, not
+dispositions each of these 49 items when cycle-014 itself closes, not
 before. **Human decision `D-389` (2026-09-29)** closed F3 adversarial
 convergence directly (bypassing further dispositioning of `#1`-`#25` as a
 precondition) and directed that items `#26`-`#31` above be recorded now,
@@ -642,4 +708,12 @@ narrow initial sink inventory, the hung security-reviewer dispatch, the
 nonexistent `pr-manager` merge wrapper scripts, the `FUEL_EXHAUSTED`
 hook-vs-persisted-write inconsistency, and the read-only-dispatch-vs-
 posting-hook conflict. All are the same disposition class as `#26`-`#31`
+(needs a follow-up story or explicit deferral before cycle-014 closes).
+Items `#46`-`#49` were recorded during cycle-014 F5 pass 1 (adversary +
+code-reviewer + security-reviewer, `D-396`, `FIX-P5-002` spec-delta
+v2.5.6) and this state-burst recording (this burst, 2026-10-01): fix PRs
+lacking their own adversary-convergence record; an approved behavior
+change mis-read as a documentation premise; the `validate-factory-path-
+staging` hook's `cd .factory && git add` false-positive; and the
+input-hash self-reference hazard. Same disposition class as `#26`-`#45`
 (needs a follow-up story or explicit deferral before cycle-014 closes).

@@ -634,3 +634,31 @@ FIX-P5-001 delivered.** **NEXT:** the F5 delta adversarial loop over
 fresh context, 3 consecutive clean passes required, 10-pass cap);
 newly found residuals are tracked, not fixed, unless a human decides
 otherwise. See `STATE.md` v5.22 for full detail.
+
+**2026-10-01 (later, F5 pass-1 + `FIX-P5-002` burst):** the F5 delta
+adversarial loop resumed over `204b1fb5..769365ab` with fresh-context
+adversary + code-reviewer + security-reviewer dispatches. **Pass 1 is NOT
+CLEAN** — adversary FINDINGS_PRESENT (6 findings `F-001`-`F-006` +
+1 process-gap observation); code-reviewer APPROVE with 8 items
+(`CR-1`-`CR-8`, 2 SHOULD-FIX + 6 NIT); security-reviewer APPROVE with 0 new
+findings. Full record: `cycles/cycle-014/phase-f5-adversarial/pass-1.md`.
+Clean-pass counter stays **0/3**. Human decision **`D-396`** scopes a new
+fix task, **`FIX-P5-002`**, to `F-001`/`F-002`/`F-004`/`F-005`/`F-006`/
+`CR-1`/`CR-2`; `F-003` and `CR-3`-`CR-8` are tracked as follow-ups
+(`CREATE-TO-ECHO-SANITIZE`, `AMBIGUOUS-PICKER-ACCOUNT-LABELS`,
+`OUTPUT-SANITIZER-CLEANUP-NITS` in `cycles/OPEN-STANDING-ITEMS.md`).
+product-owner landed `BC-7.1.006`/`VP-SEC-001-001` spec `v2.5.5 -> v2.5.6`
+(PATCH, BC/VP counts unchanged); full delta:
+`cycles/cycle-014/phase-f5-adversarial/FIX-P5-002-spec-delta.md`. All 4
+spec-guard scripts re-run and PASS. `FIX-P5-002` implemented + pushed on
+`fix/FIX-P5-002`, HEAD `3ef98c15` (4 commits: refactor/RED/fix/docs):
+`output::sanitize_terminal_line` (new, `CR-1`) and a structural
+`colored::control::SHOULD_COLORIZE` gate inside
+`output::render_table_with_styles` (`CR-2`/`D-396`). Verified: lib 1,604
+passed, full suite green, clippy/fmt clean. 16 demo-evidence files copied
+to `.factory/demos/FIX-P5-002/`, counts matching. **F5 status: IN
+PROGRESS, pass 1 NOT CLEAN, fix implemented but not yet merged.** **NEXT:**
+`pr-manager` takes `FIX-P5-002`'s PR to merge-ready (`pr-reviewer` +
+security review) -> human merges -> worktree cleanup -> F5 **Pass 2**
+(fresh adversary + code-reviewer + security-reviewer) over
+`204b1fb5..<new develop HEAD>`. See `STATE.md` v5.23 for full detail.

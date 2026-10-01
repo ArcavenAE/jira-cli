@@ -1,1 +1,1 @@
-{"status":"pass","timestamp":"2026-09-30T22:31:46Z","command":"cd /Users/zious/Documents/GITHUB/jira-cli/.worktrees/FIX-P5-001 && cargo test --test table_output_sanitization --test claude_md_citations 2>&1 | tail -80"}
+{"status":"pass","timestamp":"2026-10-01T14:28:14Z","command":"cargo test -- --skip test_s_1_06_h_003_profile_precedence_chain 2>&1 | grep -E \"test result|FAILED|error\\[\" "}

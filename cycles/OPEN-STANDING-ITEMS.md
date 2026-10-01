@@ -2133,3 +2133,96 @@ other rows in that table) rather than a stale YES. Consider extending
 `check-bc-cumulative-counts.sh` (or a new guard) to cover this surface so it
 cannot silently drift again, following the same rationale already recorded
 for the cycle-007 Breakdown-narrative item.
+
+## `jr issue create`'s `--to` success echo is unsanitized — NEW, OPEN, security (LOW), target next maintenance sweep or a future security-hardening cycle (2026-10-01)
+
+**ID:** `CREATE-TO-ECHO-SANITIZE`. Severity **LOW** (same CWE-150/CWE-116
+class as the now-RESOLVED `SEC-001-RENDER-TABLE-ANSI-SANITIZE` and the
+`NONTABLE-SERVER-TEXT-SANITIZE` list above). Surfaced as `F-003` during
+cycle-014 F5 pass 1 (`cycles/cycle-014/phase-f5-adversarial/pass-1.md`),
+human decision `D-396`, and recorded as a new Out-of-scope residual in
+`specs/prd/bc-7-output-render.md` BC-7.1.006 (spec `v2.5.6`,
+`FIX-P5-002-spec-delta.md` §1 row `F-003`). `src/cli/issue/create.rs::
+handle_create`'s field-echo loop (~L448, `eprintln!("  {} → {}", field,
+value)`) echoes the raw, unsanitized `create_echo` assignee `display_name`
+(~L353) and `resolved_team_name` (~L328) — same exposure class as the
+now-covered `handle_assign` sink (`NONTABLE-SERVER-TEXT-SANITIZE`'s
+`resolve_asset` entry is the nearest sibling). NOT fixed by `FIX-P5-002`
+— `D-396` scoped `FIX-P5-002` to `F-001`/`F-002`/`F-004`/`F-005`/`F-006`/
+`CR-1`/`CR-2` only.
+
+**Disposition:** OPEN, no GitHub issue filed. **Target: next maintenance
+sweep or a future security-hardening cycle** — likely routed through the
+same `output::sanitize_terminal_line` function `FIX-P5-002` introduces for
+single-line sinks (the `--to` echo is single-line), once that function is
+implemented.
+
+## `disambiguate_user`'s `Ambiguous` picker/error labels cannot distinguish same-named accounts — NEW, OPEN, product UX/security gap (LOW), target next maintenance sweep (2026-10-01)
+
+**ID:** `AMBIGUOUS-PICKER-ACCOUNT-LABELS`. Severity **LOW**. Surfaced as
+`F-005` during cycle-014 F5 pass 1
+(`cycles/cycle-014/phase-f5-adversarial/pass-1.md`), human decision
+`D-396`. `specs/prd/bc-7-output-render.md` BC-7.1.006's prior EC-16a claim
+that the picker/message "still distinguishes the two accounts by their
+email/account-id fields" even when display names collide was **retracted
+as FALSE** for the `disambiguate_user` `MatchResult::Ambiguous` arm
+(`src/cli/issue/helpers.rs`): that arm carries `display_name` ONLY, never
+`email_address`/`account_id` (only the separate `ExactMultiple` arm carries
+those). Two accounts whose display names sanitize to the same string are
+genuinely indistinguishable in the `Ambiguous` branch's non-interactive
+error message and its interactive `dialoguer::Select` picker labels alike.
+
+**Disposition:** OPEN, no GitHub issue filed, LOW (narrow — requires two
+real Jira accounts with colliding display names on one site). **Target:
+next maintenance sweep** — add `email_address`/`account_id` (or a
+truncated/hashed disambiguator) to the `Ambiguous` arm's labels, mirroring
+what `ExactMultiple` already does, then add a regression test with two
+same-named fixture accounts.
+
+## `FIX-P5-002`'s remaining code-review nits (`CR-3`..`CR-8`) — NEW, OPEN, code-quality (nit), target next maintenance sweep (2026-10-01)
+
+**ID:** `OUTPUT-SANITIZER-CLEANUP-NITS`. Severity **NIT/LOW**, bundled as
+one item. Surfaced during the `FIX-P5-001`/PR #891 code-reviewer pass
+(APPROVE, with items `CR-1`..`CR-8`) ahead of cycle-014 F5 pass 1
+(`cycles/cycle-014/phase-f5-adversarial/pass-1.md`). Human decision
+`D-396` scoped `FIX-P5-002` to `CR-1` (new `output::sanitize_terminal_line`
+single-line sanitizer) and `CR-2` (structural `SHOULD_COLORIZE` color gate
+in `render_table_with_styles`) only — `CR-3` through `CR-8` (code-reviewer
+nits: naming/doc-comment/test-organization-level suggestions on the
+`sanitize_table_cell`/`sanitize_terminal_text`/`disambiguate_user` cluster,
+none behavior-affecting) were explicitly NOT folded into `FIX-P5-002` and
+are tracked here instead.
+
+**Disposition:** OPEN, no GitHub issue filed, nit-tier. **Target: next
+maintenance sweep** — fold into whatever PR eventually implements
+`FIX-P5-002`'s own `CR-1`/`CR-2` work (same files, same area of the
+codebase), or a dedicated cleanup pass if that PR has already merged by
+then. See `code-delivery/FIX-P5-001/review-summary.md` for the original
+`CR-1`..`CR-8` list in full.
+
+## `REPO-WIDE-INPUT-HASH-DRIFT`'s "none of it touches cycle-014" claim is now stale — UPDATE 2026-10-01
+
+Amendment to the `REPO-WIDE-INPUT-HASH-DRIFT` item above (recorded
+2026-09-29). That item's original text states the repo-wide
+`compute-input-hash --scan` drift "None of it touches cycle-014's own
+artifacts" — true at the time it was written, but a prior burst
+(`CYCLE-014-F5-FIX-P5-001-MERGED`, 2026-10-01) itself left 4 cycle-014
+files with stale `input-hash` values after a STATE.md rewrite:
+`cycles/cycle-014/phase-f3-stories/S-cycle14-user-list-project-resolution.md`,
+`cycles/cycle-014/phase-f3-stories/dependency-graph-extended.md`,
+`cycles/cycle-014/phase-f3-stories/S-cycle14-field-options-name-label.md`,
+and `cycles/cycle-014/wave-integration-gate.md` (the last of which depends
+on `STATE.md` itself and goes stale on every STATE.md rewrite unless
+refreshed in the same burst). **This burst (cycle-014 F5 pass-1 recording,
+2026-10-01) refreshed all 4** via `compute-input-hash --update`, iterating
+until each was stable against the FINAL content of this burst (including
+the final `STATE.md` v5.23, for `wave-integration-gate.md`'s own
+dependency). The corrected claim going forward: cycle-014 CAN and does
+drift like any other cycle whenever a dependency it cites (especially
+`STATE.md`) is rewritten in the same or a later burst without a
+same-burst hash refresh — it is not specially immune. **Disposition
+unchanged (OPEN, LOW, target next maintenance sweep)** for the other
+261 pre-existing cycles 001-013 + flat-`stories/` STALE files the original
+item covers; only the "doesn't touch cycle-014" framing is corrected here,
+not the underlying scan numbers (TOTAL=304 MATCH=20 STALE=262 NOINPUT=22),
+which this burst did not re-run.
