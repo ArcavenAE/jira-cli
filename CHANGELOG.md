@@ -80,6 +80,89 @@ All notable changes to jr will be documented here.
   (`issue edit`/`issue create`) is unaffected; this fix is read-side only
   (`jr field options`), per D-378.
 
+### Security
+
+- **Table-mode output now strips terminal control/escape sequences from
+  server-supplied text (FIX-P5-001, BC-7.1.006, SEC-001-RENDER-TABLE-ANSI-SANITIZE,
+  CWE-150/CWE-116):** `output::render_table` -- the table-mode rendering
+  chokepoint behind most of `jr`'s default (non-`--output json`) output --
+  previously wrote a server-supplied string (an issue summary, a field option
+  label, a comment body fragment, a display name, ...) verbatim into a terminal
+  that interprets it, letting a malicious or compromised Jira project (or a
+  response tampered with before TLS termination) redraw the terminal, rewrite
+  the window title, or otherwise manipulate terminal state via a rendered cell.
+  A new `output::sanitize_table_cell` now sanitizes every header and every cell
+  before either reaches `comfy_table`: `\n` is preserved (the only way a
+  multi-line cell renders); `\r` is stripped outright; `\t` becomes a single
+  space (not dropped outright -- dropping it could merge flanking words into a
+  different, and potentially dangerous-looking, string); all other C0 controls
+  and DEL are stripped; C1 controls (`U+0080`-`U+009F`) are stripped; ANSI
+  CSI/OSC escape sequences are consumed and stripped wholesale, failing closed
+  (consumed through end-of-string) on an unterminated sequence; bidi-override
+  and line/paragraph-separator code points are stripped; there is no length
+  cap. **`--output json` is unaffected -- it remains raw and lossless**,
+  mirroring the existing `sanitize_env_display`/issue #398 description-echo
+  asymmetry: the human channel optimizes for terminal safety, the machine
+  channel stays lossless for programmatic consumers. `jr user list`/`jr user
+  view`'s Active column (`✓`/`✗`) coloring moved from ANSI bytes embedded in
+  the cell string to a structural `comfy_table::Cell` foreground-color
+  attribute (via a new `output::StyledCell`/`render_table_with_styles` API),
+  since a server-supplied string can no longer carry its own ANSI styling
+  through the sanitizer -- `--no-color`/`NO_COLOR` continue to suppress that
+  coloring exactly as before.
+- **`jr issue comment view`'s human output now gets the same sanitization
+  (SEC-003, extension of FIX-P5-001 under D-393, BC-7.1.006):** this handler
+  prints its six labeled fields (`id`, `author`, `created`, `updated`, the
+  JSM-internal marker, and the restricted-visibility value) and its
+  ADF-derived body directly via `print!`/`println!` -- it never routed
+  through `render_table`, so it was not covered by the fix above. Every
+  server-derived value it prints (`id`, `author`, `created`, `updated`, the
+  visibility echo, and the body text) now passes through a new
+  `output::sanitize_terminal_text` alias for `sanitize_table_cell` (same
+  policy, same single implementation) before printing. `--output json`
+  stays untouched and lossless, as before. Known non-table human-output call
+  sites that still print server-supplied text unsanitized are tracked as
+  the NONTABLE-SERVER-TEXT-SANITIZE residual -- a known, non-exhaustive
+  inventory (see `output::sanitize_table_cell`'s rustdoc for the current,
+  verified-against-the-code list) -- and are out of scope for this fix.
+- **`jr issue assign`'s human-output success messages now get the same
+  sanitization (D-394, extension of FIX-P5-001, BC-7.1.006):**
+  `handle_assign` echoes the server-derived assignee `displayName` into two
+  `output::print_success` messages -- the idempotent already-assigned path
+  (`"{key} is already assigned to {name}"`) and the newly-assigned/
+  self-assign path (`"Assigned {key} to {name}"`) -- both of which
+  previously printed the raw, unsanitized display name. Both sites now pass
+  the display name through `output::sanitize_terminal_text` before
+  formatting. `--output json`'s `assignee` key is unaffected and stays raw
+  and lossless, per the same human/machine-channel asymmetry as the fixes
+  above. `handle_assign` is now a covered non-table sink, alongside `jr
+  issue comment view` above.
+- **User-disambiguation output now gets the same sanitization (D-395,
+  extension of FIX-P5-001, BC-7.1.006, PR #891's final scope-expansion
+  amendment):** `disambiguate_user` (`src/cli/issue/helpers.rs`) — the
+  shared chokepoint reached by `jr issue assign --to`, `jr issue create`/
+  `jr issue edit --assignee`, `jr issue list --assignee`, and `@Name`
+  mention resolution — echoed server-supplied, user-editable
+  `displayName`/`emailAddress`/`accountId` values unsanitized in its
+  non-interactive `ExactMultiple`/`Ambiguous`/`None`-branch
+  `JrError::UserError` messages and its interactive `dialoguer::Select`
+  picker labels. Every such value is now sanitized via
+  `output::sanitize_terminal_text` at its point of embedding inside
+  `disambiguate_user` itself, covering all four callers uniformly with no
+  caller-side change; the `ExactMultiple` interactive picker labels are
+  built via a new, independently unit-testable `disambiguation_labels`
+  helper. **Unlike the two fixes above, this sink's `--output json` error
+  envelope is NOT a separate lossless channel**: `src/main.rs`'s single
+  error-formatting site builds both the human-text and the JSON `"error"`
+  field from the same `JrError::UserError` `Display` string, so
+  sanitizing the message once at construction time sanitizes both
+  channels identically — there is no raw, machine-readable counterpart to
+  preserve for this sink, unlike `render_table`'s table/JSON success-data
+  asymmetry or `handle_assign`'s separate `assignee` JSON field. This is
+  PR #891's final scope-expansion amendment; further residual
+  non-table/non-JSON sinks remain tracked as NONTABLE-SERVER-TEXT-SANITIZE
+  (see `output::sanitize_table_cell`'s rustdoc).
+
 ## [0.7.0] - 2026-09-23
 
 First stable release of the 0.7.0 line, consolidating the `0.7.0-dev.1`

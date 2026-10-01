@@ -259,6 +259,45 @@ pub(super) fn is_me_keyword(input: &str) -> bool {
 
 // ── Shared user disambiguation ──────────────────────────────────────
 
+/// Builds the `dialoguer::Select` item labels for `disambiguate_user`'s
+/// `MatchResult::ExactMultiple` interactive branch — the duplicate-name
+/// picker shown when two or more users share the exact display name the
+/// caller searched for (D-395, FIX-P5-001).
+///
+/// Matches the EXISTING inline label format exactly, unchanged by D-395:
+/// - `"{display_name} ({email})"` when the user has an `email_address`
+/// - `"{display_name} ({account_id})"` otherwise
+///
+/// `display_name`, `email_address`, and `account_id` are all
+/// server-supplied, user-editable Jira profile fields — each is routed
+/// through [`crate::output::sanitize_terminal_text`] before being
+/// interpolated into the label, so a hostile value (an embedded ANSI
+/// escape/control sequence, e.g. a terminal-title OSC or a bare C1 byte)
+/// can never reach `dialoguer::Select`'s rendered item text.
+///
+/// `disambiguate_user`'s `MatchResult::ExactMultiple` interactive branch
+/// calls this in place of an inline closure, so the picker-label
+/// construction is independently unit-testable without
+/// `dialoguer::Select::interact()`'s blocking TTY call (D-395).
+pub(crate) fn disambiguation_labels(duplicates: &[&User]) -> Vec<String> {
+    duplicates
+        .iter()
+        .map(|u| {
+            let display_name = crate::output::sanitize_terminal_text(&u.display_name);
+            match &u.email_address {
+                Some(email) => {
+                    let email = crate::output::sanitize_terminal_text(email);
+                    format!("{display_name} ({email})")
+                }
+                None => {
+                    let account_id = crate::output::sanitize_terminal_text(&u.account_id);
+                    format!("{display_name} ({account_id})")
+                }
+            }
+        })
+        .collect()
+}
+
 /// Disambiguate a list of users by display name using partial matching.
 ///
 /// Handles: empty list, single result, exact match, duplicate display names,
@@ -270,9 +309,16 @@ pub(super) fn is_me_keyword(input: &str) -> bool {
 /// Bumped from `fn` to `pub(super) fn` for S-cycle5-mention-resolution-wiring
 /// (AC-002) so `mentions::resolve_mentions` (a sibling module under
 /// `cli::issue`) can reuse it verbatim for `@Name` mention disambiguation —
-/// visibility change only, zero behavior change; the three existing callers
-/// below (`resolve_user`/`resolve_assignee`/`resolve_assignee_by_project`)
-/// are untouched.
+/// a visibility change only, with no behavior change to the four callers'
+/// pre-D-395 output; the three existing callers below
+/// (`resolve_user`/`resolve_assignee`/`resolve_assignee_by_project`) are
+/// untouched by the visibility bump itself. Every server-echoed field this
+/// function surfaces — `display_name`, `email_address`, and `account_id`,
+/// in its `ExactMultiple`/`Ambiguous` non-interactive error messages, its
+/// interactive picker labels, and the `None` branch's candidate list — is
+/// routed through [`crate::output::sanitize_terminal_text`] before
+/// reaching the user (BC-7.1.006, D-395), so "zero behavior change" above
+/// describes only the visibility bump, not this function's current output.
 pub(super) fn disambiguate_user(
     users: &[User],
     name: &str,
@@ -310,13 +356,15 @@ pub(super) fn disambiguate_user(
             if no_input {
                 let lines: Vec<String> = duplicates
                     .iter()
-                    .map(|u| match &u.email_address {
-                        Some(email) => format!(
-                            "  {} ({}, account: {})",
-                            u.display_name, email, u.account_id
-                        ),
-                        None => {
-                            format!("  {} (account: {})", u.display_name, u.account_id)
+                    .map(|u| {
+                        let display_name = crate::output::sanitize_terminal_text(&u.display_name);
+                        let account_id = crate::output::sanitize_terminal_text(&u.account_id);
+                        match &u.email_address {
+                            Some(email) => {
+                                let email = crate::output::sanitize_terminal_text(email);
+                                format!("  {display_name} ({email}, account: {account_id})")
+                            }
+                            None => format!("  {display_name} (account: {account_id})"),
                         }
                     })
                     .collect();
@@ -328,13 +376,7 @@ pub(super) fn disambiguate_user(
                 .into());
             }
 
-            let labels: Vec<String> = duplicates
-                .iter()
-                .map(|u| match &u.email_address {
-                    Some(email) => format!("{} ({})", u.display_name, email),
-                    None => format!("{} ({})", u.display_name, u.account_id),
-                })
-                .collect();
+            let labels: Vec<String> = disambiguation_labels(&duplicates);
             let selection = dialoguer::Select::new()
                 .with_prompt(format!("Multiple users named \"{}\"", name))
                 .items(&labels)
@@ -346,17 +388,21 @@ pub(super) fn disambiguate_user(
             ))
         }
         crate::partial_match::MatchResult::Ambiguous(matches) => {
+            let sanitized_matches: Vec<String> = matches
+                .iter()
+                .map(|m| crate::output::sanitize_terminal_text(m))
+                .collect();
             if no_input {
                 return Err(JrError::UserError(format!(
                     "Multiple users match \"{}\": {}. Use a more specific name.",
                     name,
-                    matches.join(", ")
+                    sanitized_matches.join(", ")
                 ))
                 .into());
             }
             let selection = dialoguer::Select::new()
                 .with_prompt(format!("Multiple users match \"{name}\""))
-                .items(&matches)
+                .items(&sanitized_matches)
                 .interact()
                 .context("failed to prompt for user selection")?;
             let selected_name = &matches[selection];
@@ -370,7 +416,11 @@ pub(super) fn disambiguate_user(
             ))
         }
         crate::partial_match::MatchResult::None(all_names) => {
-            Err(JrError::UserError(none_msg_fn(&all_names)).into())
+            let sanitized_names: Vec<String> = all_names
+                .iter()
+                .map(|n| crate::output::sanitize_terminal_text(n))
+                .collect();
+            Err(JrError::UserError(none_msg_fn(&sanitized_names)).into())
         }
     }
 }
@@ -854,6 +904,61 @@ mod tests {
         assert!(msg.contains("No match. Found:"));
         assert!(msg.contains("Alice"));
         assert!(msg.contains("Bob"));
+    }
+
+    // ── disambiguation_labels tests (D-395, FIX-P5-001) ───────────────
+    //
+    // Pins production behavior: `disambiguate_user`'s `ExactMultiple`
+    // interactive branch builds its `labels` by calling
+    // `disambiguation_labels`, which sanitizes each server-supplied
+    // `display_name`/`email_address`/`account_id` via
+    // `output::sanitize_terminal_text` before formatting the existing
+    // label shape. These tests pin that sanitized behavior directly on
+    // the function, independent of `dialoguer::Select::interact()`'s
+    // blocking TTY call.
+
+    /// Hostile `display_name` (CSI-wrapped) + hostile `email_address`
+    /// (also CSI-wrapped) must both sanitize to their CSI-stripped survivor
+    /// text, assembled into the existing `"{name} ({email})"` label format.
+    #[test]
+    fn test_disambiguation_labels_sanitizes_hostile_display_name_and_email() {
+        let u = make_user_with_email(
+            "acc-1",
+            "\u{1b}[31mAlice\u{1b}[0m",
+            "\u{1b}[35mevil\u{1b}[0m@example.invalid",
+        );
+        let labels = disambiguation_labels(&[&u]);
+        assert_eq!(labels, vec!["Alice (evil@example.invalid)".to_string()]);
+    }
+
+    /// No `email_address` → the label falls back to `account_id`. Hostile
+    /// `display_name` (C1-byte + OSC mix) and hostile `account_id`
+    /// (trailing C1 byte) must both sanitize, assembled into the existing
+    /// `"{name} ({account_id})"` label format.
+    #[test]
+    fn test_disambiguation_labels_sanitizes_hostile_display_name_and_account_id_without_email() {
+        let u = make_user("acc-1\u{9b}Z", "Al\u{9b}ice\u{1b}]0;x\u{7}");
+        let labels = disambiguation_labels(&[&u]);
+        assert_eq!(labels, vec!["Alice (acc-1Z)".to_string()]);
+    }
+
+    /// Regression guard: clean (ASCII, no control/escape bytes) input must
+    /// produce byte-identical labels in the existing format — for BOTH the
+    /// email-present and no-email cases, and preserving input order across
+    /// multiple duplicates — so wiring sanitization into this function
+    /// cannot itself change output for non-hostile data.
+    #[test]
+    fn test_disambiguation_labels_preserves_clean_input_format() {
+        let u1 = make_user_with_email("acc-1", "Jane Doe", "jane1@example.com");
+        let u2 = make_user("acc-2", "Jane Doe");
+        let labels = disambiguation_labels(&[&u1, &u2]);
+        assert_eq!(
+            labels,
+            vec![
+                "Jane Doe (jane1@example.com)".to_string(),
+                "Jane Doe (acc-2)".to_string(),
+            ]
+        );
     }
 
     // ── compose_extra_fields tests ────────────────────────────────────
