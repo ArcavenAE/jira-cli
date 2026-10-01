@@ -126,3 +126,23 @@ F5-pass-1 checkpoint.
 **(e) WIP branches:** none. No uncommitted product-repo changes; only untracked `.claude/` files.
 
 **(f) Resume command:** in a new session in this project, run `/vsdd-factory:rehydrate-wave`, then `/vsdd-factory:next-step`. This repo has no `wave-state.yaml` -- this Session Resume Checkpoint is the authoritative resume source. Reference `cycles/cycle-014/phase-f5-adversarial/pass-2.md`, `cycles/cycle-014/session-checkpoints.md` (prior checkpoint), `cycles/OPEN-STANDING-ITEMS.md`.
+
+## Archived checkpoint: STATE v5.25 (2026-10-01, superseded by v5.26)
+
+**Date & position:** 2026-10-01. Pipeline **ACTIVE** (resumed from session-wrap pause) -- cycle-014 (`issue-triage-quickfixes`), Phase **F4 COMPLETE** (3/3 stories merged), Phase **F5 (scoped adversarial review) IN PROGRESS**. Delivered PRs this cycle: STORY-A **#886** (`2d8467c4`), STORY-C **#887** (`e54be670`), STORY-B **#888** (`2ee422e0`), `FIX-P5-001` **#891** (`769365ab`), `FIX-P5-002` **#894** (`cc19c2f9`, merged 2026-10-01T18:19:44Z by the human). `develop` @ `cc19c2f9`.
+
+**(a) Position and next steps.** cycle-014 F5 IN PROGRESS. The post-#894 spec conversion is **COMPLETE** and `FIX-P5-003`'s scope is **DECIDED** (`D-397`, FULL). NEXT on resume: (1) `FIX-P5-003` delivery via `fix-pr-delivery` (worktree, implement, `pr-reviewer` + security review, PR to merge-ready); (2) human merge (`gh pr merge <n> --squash --delete-branch`; the harness blocks agent-initiated merges); (3) F5 **Pass 3** with a fresh adversary, code-reviewer, and security-reviewer over `204b1fb5..<new develop>`.
+
+**(b) Convergence.** F5 clean-pass counter **0/3**, 10-pass cap.
+- Pass 1 (`204b1fb5..769365ab`): adversary FINDINGS (`F-001`-`F-006`) / code-review APPROVE (`CR-1`-`CR-8`) / security APPROVE. Record: `cycles/cycle-014/phase-f5-adversarial/pass-1.md`.
+- Pass 2 (`204b1fb5..cc19c2f9`): adversary FINDINGS_PRESENT; code-reviewer APPROVE, 0 blocking; security APPROVE, 0 new. **NOT CLEAN on the adversary verdict alone.** Record: `cycles/cycle-014/phase-f5-adversarial/pass-2.md` (full findings table + the DECIDED `FIX-P5-003` scope).
+- `FIX-P5-003` code-fix items (`D-397`): `P2-001` HIGH doc-only (stale rustdoc/test-comment residuals in `src/output.rs` ~L376-472 and `tests/table_output_sanitization.rs`); `P2-002`/`CR2-2` (one item: unify `TERMINAL_COLOR_OVERRIDE_LOCK` and `COLOR_OVERRIDE_LOCK` into one shared `pub(crate)` `cfg(test)` guard); `P2-004` (`StyledCell::colored`/`render_table_with_styles` rustdoc vs the `CR-2` gate); `P2-005` (TTY-assumption in `test_bc_7_1_006_render_table_with_styles_strips_hostile_colored_cell`); CLAUDE.md `output.rs` LOC NIT; `CR2-1` (extract shared `classify_default_char`); `CR2-N1` (`active_cell` rustdoc); `CR2-N2` (overstated "exactly one sanitization implementation"). `P2-003` is CLOSED (spec).
+
+**(c) In-flight work.** None open. The `BC-7.1.006` spec conversion finished and committed this burst: `bc-7-output-render.md` v1.4.1, `BC-INDEX.md`, spec-changelog `[2.5.7]`, `FIX-P5-002-spec-delta.md` section 7 + 7.1 (the out-of-scope `tests/e2e_live.rs` clippy fix hand-off, cross-ref `CI-CLIPPY-TOOLCHAIN-PIN`); all 4 spec guard scripts exit 0. No story or fix worktrees exist; `FIX-P5-003`'s worktree is not yet created.
+
+**(d) Pending human decisions and blockers.** None pending for scope (decided, `D-397`). Operational: the harness blocks agent-initiated merges, so the human merges manually. `ci.yml` has no `concurrency:` group, and CI clippy is unpinned (toolchain drift). `CLAUDE_AUTOCOMPACT_PCT_OVERRIDE` is missing from settings (advisory).
+
+**(e) WIP branches:** none. No uncommitted product-repo changes; only untracked `.claude/` files.
+
+**(f) Resume command:** in a new session in this project, run `/vsdd-factory:rehydrate-wave`, then `/vsdd-factory:next-step`. This repo has no `wave-state.yaml` -- this Session Resume Checkpoint is the authoritative resume source. Reference `cycles/cycle-014/phase-f5-adversarial/pass-2.md`, `cycles/cycle-014/session-checkpoints.md` (prior checkpoints), `cycles/OPEN-STANDING-ITEMS.md`.
+

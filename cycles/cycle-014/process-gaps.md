@@ -683,11 +683,23 @@ dispositioned — dispositioning happens at cycle close per S-7.02).
     `S-cycle14-field-options-name-label.md`, `wave-integration-gate.md`),
     2026-10-01. Engine-side (`vsdd-factory`) follow-up.
 
+50. **[process-gap] [tooling]** No guard verifies `.cargo/mutants.toml`
+    `exclude_re` anchors. An `exclude_re` entry of the form `file:line:col: ...
+    in <fn>` silently stops matching when the target function moves (here
+    `issues.rs:374:16` had drifted to line 393, a drift that pre-dates
+    cycle-014), so an exclusion silently stops applying with no failing
+    signal. Candidate: a guard script or test that fails when an `exclude_re`
+    anchor no longer points at its named function. Source: F5 Pass 3 finding
+    `P3-005`. The anchor was re-anchored in `FIX-P5-004` (`D-398`); the GUARD
+    was DEFERRED by human choice. Tracked as
+    `MUTANTS-EXCLUDE-RE-ANCHOR-GUARD` in `cycles/OPEN-STANDING-ITEMS.md`
+    (target: next maintenance sweep). Recorded 2026-10-01.
+
 ## Disposition
 
 Not yet dispositioned. F2 is CONVERGED per human decision `D-383` and
 APPROVED at the F2 human gate (`D-384`) — the S-7.02 cycle-closing checklist
-dispositions each of these 49 items when cycle-014 itself closes, not
+dispositions each of these 50 items when cycle-014 itself closes, not
 before. **Human decision `D-389` (2026-09-29)** closed F3 adversarial
 convergence directly (bypassing further dispositioning of `#1`-`#25` as a
 precondition) and directed that items `#26`-`#31` above be recorded now,
@@ -717,3 +729,6 @@ change mis-read as a documentation premise; the `validate-factory-path-
 staging` hook's `cd .factory && git add` false-positive; and the
 input-hash self-reference hazard. Same disposition class as `#26`-`#45`
 (needs a follow-up story or explicit deferral before cycle-014 closes).
+Item `#50` was recorded during cycle-014 F5 pass 3 (`P3-005`, `D-398`,
+2026-10-01): no guard for `.cargo/mutants.toml` `exclude_re` anchors. Same
+disposition class as `#26`-`#49`.

@@ -826,6 +826,16 @@ field to the `Option<&str>` the shared `project_key` signature expects), and the
   is an error. This pass-through choice (rather than treating `--project ""` as absent, or
   rejecting it) is settled behavior, human-confirmed 2026-09-25 (D-380) — see "Decisions confirmed
   during F2 review" in `prd-delta.md`.
+  **KNOWN LIMITATION (deliberate, recorded 2026-10-01, FIX-P5-004, cycle-014 F5 pass-3 finding
+  CR3-002 — wording clarification only, NO behavior change, human decision: scope is LOW/NIT
+  findings and CR3-002 is explicitly NOT a behavior change):** an explicit empty-string
+  `jr user list --project ""` is a user-supplied value that passes through to the API unvalidated,
+  so the request goes out with an empty `projectKeys=`; `jr` neither rejects it nor falls back to a
+  configured default. A user who expected `--project ""` to mean "use my default" or to fail fast
+  with an exit-64 `UserError` will instead get whatever Jira returns for an empty project key. This
+  is accepted and consistent with `jr queue`/`jr requesttype`; any future change (reject with
+  exit 64, or treat as absent) requires a new human decision and a new BC amendment, not a bug fix
+  against this EC.
 - EC-X.7.002-7 (informational, no VP cell): a configured empty project (`.jr.toml` `project = ""`
   or profile `project = ""`), with no local or global `--project` flag, resolves at step 3 to
   `Some("")` through `Config::project_key`'s presence-based `Option` chain — no exit 64 fires, and

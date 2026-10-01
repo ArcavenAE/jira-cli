@@ -2264,3 +2264,21 @@ than a project-tuned value.
 **Disposition:** OPEN, no GitHub issue filed, advisory only. **Target: human
 discretion** — not a correctness or CI issue; set only if the human wants to tune
 autocompact behavior for this repo's long-running VSDD sessions.
+
+## `.cargo/mutants.toml` `exclude_re` anchors have no drift guard — NEW, OPEN, tooling process-gap (2026-10-01)
+
+**ID:** `MUTANTS-EXCLUDE-RE-ANCHOR-GUARD`. Severity **LOW**, tooling. Source: F5 Pass 3
+finding `P3-005` (cycle-014), process-gap `#50` in `cycles/cycle-014/process-gaps.md`.
+An `exclude_re` entry anchored as `file:line:col: … in <fn>` silently stops matching when
+the named function moves (the `issues.rs:374:16` anchor had drifted to line 393; the drift
+pre-dates cycle-014). No script or test verifies that each anchor still points at its
+named function.
+
+**Disposition:** OPEN, no GitHub issue filed, LOW. The existing anchor is re-anchored by
+`FIX-P5-004` (`D-398`); the GUARD itself is DEFERRED by human choice. **Target: next
+maintenance sweep** — add a guard script or test (modeled on
+`scripts/check-cargo-mutants-policy-citations.sh` / `tests/mutants_glob_existence.rs`)
+that fails when an `exclude_re` `file:line:col: … in <fn>` anchor no longer resolves to
+that function. If it grows to a story, open it under the `SELF-IMPROVEMENT` epic
+(precedent: `S-PG-MERGE-AUTH-BYPASS`). A full story was not drafted now, to avoid
+perturbing the locked story counts (194) for a deferred LOW item.

@@ -9,6 +9,42 @@ Track all spec version changes. Most recent version first.
 
 > **Type legend:** Type classifies the SPEC document delta: MINOR = new BCs/VPs/sections; PATCH = amendments to existing bodies/ACs/ECs. Product-semver impact is recorded in the Summary line, independent of Type.
 
+## [2.6.0] - 2026-10-01
+
+### Type: MINOR
+
+### Summary
+
+FIX-P5-004 (human decision D-398, cycle-014 F5 pass-3 adversarial findings; scope: all LOW and NIT
+findings, no CR3-002 behavior change). MINOR because the BC-7.1.006 sanitization policy EXPANDS
+(no new BC ID, BC count unchanged 98 in-file / 54 individually-bodied, 773 cumulative; one new VP
+ID, `VP-SEC-001-002`). Spec-only: the implementation (FIX-P5-004) is NOT YET IMPLEMENTED; all new
+test/VP targets are targets, to be converted to live citations post-merge.
+
+1. **BC-7.1.006 policy expansion (SEC3-001/CR3-003, CWE-451).** The shared default per-character
+   policy `src/output.rs::classify_default_char` (used by `sanitize_table_cell`,
+   `sanitize_terminal_text`, `sanitize_terminal_line`) additionally strips invisible format/spoofing
+   characters: `U+200B`..`U+200F`, `U+061C`, `U+2060`..`U+2064`, `U+FEFF`, `U+E0000`..`U+E007F`.
+   **ZWJ (`U+200D`) is stripped** (threat-model consistency; trade-off: ZWJ emoji sequences render as
+   adjacent component emoji in table/human output; `--output json` stays raw). H1 enriched; BC-INDEX
+   row updated. BC-7.1.006 version row `1.5.0`.
+2. **Out of scope, drift item stays open.** `strip_control_and_ansi`/`sanitize_env_display`
+   (`SANITIZE-ENV-DISPLAY-C1-GAP`) is not modified and does not gain these characters.
+3. **New edge cases / VP.** EC-18 (zero-width/directional marks + boundary pins), EC-19 (tag block),
+   EC-20 (ZWJ emoji trade-off pin); `VP-SEC-001-002` with six test targets
+   (`prop_bc_7_1_006_sanitizers_strip_invisible_format_characters`,
+   `test_bc_7_1_006_sanitize_strips_zero_width_and_directional_marks`,
+   `test_bc_7_1_006_sanitize_invisible_format_range_boundaries_kept`,
+   `test_bc_7_1_006_sanitize_strips_unicode_tag_block`,
+   `test_bc_7_1_006_sanitize_zwj_emoji_sequence_loses_joiner`,
+   `test_bc_7_1_006_sanitize_terminal_line_invisible_chars_identity_collapse`).
+4. **CR3-002 recorded as a KNOWN LIMITATION (wording only).** `EC-X.7.002-6` (`cross-cutting.md`,
+   BC-X.7.002) and its `edge-case-catalog.md` mention now state that `jr user list --project ""`
+   passing through to the API is deliberate and unchanged.
+
+Decision ID: D-398 (reserved; the state-manager records it). Handoff:
+`.factory/cycles/cycle-014/phase-f5-adversarial/FIX-P5-004-spec-delta.md`.
+
 ## [2.5.7] - 2026-10-01
 
 ### Type: PATCH

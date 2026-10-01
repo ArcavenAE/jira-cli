@@ -1,1 +1,1 @@
-{"status":"pass","timestamp":"2026-10-01T18:29:14Z","command":"timeout 115 cargo test --lib color 2>&1 | tail -50"}
+{"status":"pass","timestamp":"2026-10-01T21:09:07Z","command":"cd /Users/zious/Documents/GITHUB/jira-cli/.worktrees/FIX-P5-004 && cargo test --test hermetic_helper 2>&1 | grep -E \"^test |result\"; git diff --stat"}

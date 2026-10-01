@@ -605,3 +605,4 @@ See `cycles/cycle-014/cycle-manifest.md` for full narrative detail (this row sum
 See `cycles/cycle-014/cycle-manifest.md` for full narrative detail (this row summarizes the same events).
 
 ---
+| **CYCLE-014-F3-D389-CHECKPOINT-2026-09-29** | **F3 adversarial convergence CLOSED (checkpoint)** | 2026-09-29 | none (superseded) | `D-389`: at pass 33, F3 adversarial convergence CLOSED. | 772 BCs / 97 VPs / 118 holdout / 191 stories LOCKED; `D-389` minted |

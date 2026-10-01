@@ -378,7 +378,9 @@ must not reload it — but ONLY when no `.jr.toml` project exists in cwd or an a
 a `.jr.toml` project wins ahead of any profile default, per `Config::project_key`'s own
 fallback order. An empty-string `--project ""`, local or global, is passed through as-is and
 resolves the project key to the empty string without consulting the configured default
-(EC-X.7.002-6) — the same pass-through `jr queue`/`jr requesttype` already exhibit. See
+(EC-X.7.002-6) — the same pass-through `jr queue`/`jr requesttype` already exhibit; this is a
+deliberate KNOWN LIMITATION (FIX-P5-004, CR3-002: behavior unchanged, wording clarified in
+`cross-cutting.md`). See
 BC-X.7.002 Edge Cases in `cross-cutting.md` for the full enumeration.
 **Status**: Covered by BC-X.7.002 (AMENDED 2026-09-25); no holdout yet — pending F3 story
 decomposition.
