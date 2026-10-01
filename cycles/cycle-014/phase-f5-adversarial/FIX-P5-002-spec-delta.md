@@ -156,3 +156,36 @@ responsibility), and no git commit was created.
 - **Does not reopen or extend PR #891's frozen scope.** D-396 is a new, separate fix task; the
   `sanitize_terminal_line` implementation should land as a NEW PR (or a new commit on a NEW
   branch), not a reopening of the merged PR #891.
+
+## 7. Post-merge amendment (2026-10-01, spec v2.5.7, PATCH)
+
+FIX-P5-002 (PR #894) merged to `develop` as `cc19c2f9`. Sections 1-6 above are the dated
+pre-implementation record and are left as written (their "NOT YET IMPLEMENTED"/"pending" wording
+described the state at that burst). Current state:
+
+- `output::sanitize_terminal_line` is implemented (`src/output.rs::sanitize_terminal_line`) and
+  wired at the CR-1 sinks.
+- The CR-2 gate is implemented in `src/output.rs::render_table_with_styles_inner`; its two test
+  targets exist as `src/output.rs::test_bc_7_1_006_render_table_with_styles_suppresses_fg_when_colorize_disabled`
+  and `src/output.rs::test_bc_7_1_006_render_table_with_styles_applies_fg_when_colorize_enabled`.
+- `BC-7.1.006` (frontmatter `trace:`, VP-SEC-001-001(c), version row `1.4.1`) and BC-INDEX were
+  converted to present tense with live citations (closes pass-2 finding `P2-003`).
+
+### 7.1 Out-of-scope code change shipped in PR #894 (hand-off note, no spec behavior impact)
+
+PR #894 also carried one change unrelated to BC-7.1.006: a clippy fix in `tests/e2e_live.rs`
+(commit "fix(ci): remove needless borrow in tests/e2e_live.rs (unrelated clippy toolchain-drift
+fix, blocks PR #894's CI gate)").
+
+- **Lint:** `clippy::needless_borrows_for_generic_args`, flagged by a newer `stable` clippy on
+  code unchanged by this fix: `.map(&norm)` became `.map(norm)` at two call sites (the
+  `node.get("text").and_then(Value::as_str).map(...)` comparison and a second `.map(...)` chain).
+- **Cause:** toolchain drift. CI clippy runs under whatever `stable` GitHub Actions resolves that
+  day (`rust-toolchain.toml` `channel = "stable"`, no pin); a newer release added/expanded the lint.
+  Not caused by any FIX-P5-002 logic.
+- **Why in this PR:** it blocked PR #894's `ci-gate`; fixed ad hoc rather than splitting a one-line
+  unrelated PR.
+- **Spec impact:** none. No BC/VP covers `tests/e2e_live.rs` borrow style; test behavior unchanged.
+- **Follow-up:** the root cause (unpinned clippy toolchain) is tracked as standing item
+  `CI-CLIPPY-TOOLCHAIN-PIN` in `.factory/cycles/OPEN-STANDING-ITEMS.md`. This note is the
+  cross-reference; the fix itself (pinning) is not done here.

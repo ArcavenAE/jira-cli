@@ -9,6 +9,38 @@ Track all spec version changes. Most recent version first.
 
 > **Type legend:** Type classifies the SPEC document delta: MINOR = new BCs/VPs/sections; PATCH = amendments to existing bodies/ACs/ECs. Product-semver impact is recorded in the Summary line, independent of Type.
 
+## [2.5.7] - 2026-10-01
+
+### Type: PATCH
+
+### Summary
+
+Post-merge citation conversion for `BC-7.1.006` / `VP-SEC-001-001` (`bc-7-output-render.md`),
+closing cycle-014 F5 pass-2 adversary finding `P2-003` ("the spec still says NOT YET IMPLEMENTED
+post-merge"). FIX-P5-002 (PR #894) merged to `develop` as `cc19c2f9`. Mechanical maintenance, no
+human decision required; no policy change; no new BC, no new VP ID; BC count unchanged (98 in-file /
+54 individually-bodied, 773 cumulative).
+
+1. **CR-2 test targets cited live.** The `VP-SEC-001-001(c)` sentence "Both targets are NOT YET
+   IMPLEMENTED..." is replaced with live citations to
+   `src/output.rs::test_bc_7_1_006_render_table_with_styles_suppresses_fg_when_colorize_disabled`
+   and `src/output.rs::test_bc_7_1_006_render_table_with_styles_applies_fg_when_colorize_enabled`.
+2. **Future-tense sweep.** BC-7.1.006's frontmatter `trace:` FIX-P5-002 bullet and version-history
+   row `1.4.0` had "NOT YET IMPLEMENTED"/"pending"/"none yet exist" wording about
+   `output::sanitize_terminal_line` and the CR-2 `SHOULD_COLORIZE` gate; converted to present tense
+   with live citations (`src/output.rs::sanitize_terminal_line`,
+   `src/output.rs::render_table_with_styles_inner`). Rows `1.1.0`-`1.3.0` are dated PR #891-era
+   history, left unchanged (superseded by `1.3.1`).
+3. **BC-INDEX.md** row for BC-7.1.006: "NOT YET IMPLEMENTED" / "proposed ... not yet implemented"
+   qualifiers in the title and Source columns converted to implemented/live citations.
+4. **Version history:** `BC-7.1.006` row `1.4.1` added.
+5. **Hand-off note:** `FIX-P5-002-spec-delta.md` §7 records the out-of-scope
+   `tests/e2e_live.rs` clippy fix (`needless_borrows_for_generic_args`, toolchain drift) shipped
+   in PR #894; cross-references standing item `CI-CLIPPY-TOOLCHAIN-PIN`.
+
+The dated `[2.5.6]` entry below is left as written (historical record of the pre-implementation
+spec burst).
+
 ## [2.5.6] - 2026-10-01
 
 ### Type: PATCH

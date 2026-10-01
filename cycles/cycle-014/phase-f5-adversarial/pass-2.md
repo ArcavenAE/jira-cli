@@ -50,17 +50,25 @@ task, **`FIX-P5-003`**, is proposed below, pending a human decision.
 | `CR2-N1` | NIT | The `active_cell` rustdoc (`src/cli/user.rs` ~L203-215) still calls its `SHOULD_COLORIZE` check "necessary, not redundant", which contradicts `CR-2` and the CHANGELOG. | Doc drift from the `CR-2`/`FIX-P5-002` behavior change. |
 | `CR2-N2` | NIT | `src/output.rs` ~L568 says there is "exactly one sanitization implementation", which overstates it — only the CSI/OSC engine is shared. | Imprecise claim, same class as `CR2-N1`. |
 
-## Proposed `FIX-P5-003` Scope (pending human decision)
+## `FIX-P5-003` Scope (DECIDED 2026-10-01, `D-397`)
 
-Not yet decided. Proposed candidate scope, for the human to accept, trim, or expand:
-`P2-001`, `P2-002`, `P2-003`, `P2-004`, `P2-005`, the CLAUDE.md LOC NIT, `CR2-1`, `CR2-2`,
-`CR2-N1`, `CR2-N2`. `P2-002` and `CR2-2` describe the identical underlying defect (dual test-lock
-mutexes) and would be closed by one change item, not two.
+Decided by the human on 2026-10-01 (`D-397`): **FULL scope** -- `P2-001`, `P2-002`, `P2-003`
+(now **CLOSED** by the separate spec burst, see below), `P2-004`, `P2-005`, the CLAUDE.md
+`output.rs` LOC NIT, `CR2-1`, `CR2-2`, `CR2-N1`, `CR2-N2`. `P2-002` and `CR2-2` are the
+identical defect (dual test-lock mutexes) and are ONE change item. The human also decided the
+`BC-7.1.006` spec conversion is finished separately, BEFORE the code fix: that is done --
+spec `bc-7-output-render.md` version row 1.4.1, `BC-INDEX.md` row converted, spec-changelog
+`[2.5.7]`, all four spec guard scripts exit 0, and `FIX-P5-002-spec-delta.md` section 7
+(post-merge state + the section 7.1 `tests/e2e_live.rs` clippy hand-off, cross-referencing
+`CI-CLIPPY-TOOLCHAIN-PIN`) appended. Remaining code-fix change items for `FIX-P5-003`:
+`P2-001`, `P2-002`/`CR2-2` (one), `P2-004`, `P2-005`, CLAUDE.md LOC NIT, `CR2-1`, `CR2-N1`,
+`CR2-N2`. Delivery: `fix-pr-delivery`, then human merge, then F5 Pass 3.
 
 ## Status at Wrap
 
 All three pass-2 reviewers returned verdicts this burst — adversary FINDINGS_PRESENT,
 code-reviewer APPROVE (0 blocking), security-reviewer APPROVE (0 new). No reviewer dispatch for
 pass 2 remains outstanding. Pass 2 is **NOT CLEAN** solely on the adversary's verdict. Clean-pass
-counter stays **0/3** (10-pass cap, F5 scoped-adversarial convergence rule). Pipeline is **PAUSED**
-pending the human's `FIX-P5-003` scope decision; resume by dispatching the fix once scoped.
+counter stays **0/3** (10-pass cap, F5 scoped-adversarial convergence rule). Pipeline was **PAUSED** at
+wrap; **resumed (ACTIVE) 2026-10-01** after `D-397` decided the `FIX-P5-003` full scope. `P2-003`
+is CLOSED by the spec burst; counter stays 0/3 until Pass 3.
