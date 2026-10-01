@@ -7,7 +7,7 @@ producer: state-manager
 timestamp: 2026-09-26T00:01:34Z
 cycle: "cycle-014-issue-triage-quickfixes"
 inputs: [STATE.md]
-input-hash: "b5f42df"
+input-hash: "1f438d2"
 traces_to: STATE.md
 ---
 
@@ -528,11 +528,100 @@ dispositioned — dispositioning happens at cycle close per S-7.02).
     mismatch. Source: `FIX-P5-001` spec `[2.5.1]` correction, this burst,
     2026-09-30. Engine-side (`vsdd-factory`) follow-up.
 
+40. **[process-gap] [engine]** PR #891 (`FIX-P5-001`) grew in scope three
+    times during review — `D-393` (security review 1, SEC-003 HIGH,
+    `jr issue comment view`), `D-394` (security re-review, `jr issue
+    assign`), and `D-395` (final security re-review, SEC-891-2 MEDIUM,
+    `disambiguate_user`) — before a human froze its scope at `D-395`. Each
+    re-review found a new sibling sink sharing the exact same CWE-150/
+    CWE-116 exposure class as the original finding. Lesson: at triage
+    time, a security fix's scope should be defined by a complete sink
+    inventory up front — including non-table sinks and shared helpers,
+    not just the sink the triage happened to start from — with an
+    explicit scope-freeze policy stated before implementation begins,
+    rather than discovered re-review by re-review. Source: PR #891 full
+    review history, this burst, 2026-10-01. Engine-side (`vsdd-factory`)
+    follow-up.
+
+41. **[process-gap] [engine]** The initial `SEC-001` triage's sink
+    inventory (`cycles/cycle-014/phase-f5-adversarial/SEC-001-triage.md`)
+    missed `jr issue comment view` and the other non-table sinks later
+    recorded as `NONTABLE-SERVER-TEXT-SANITIZE`. The inventory grep that
+    produced the original triage was scoped too narrowly — it searched
+    for `comfy_table`/`render_table` call sites only, not every
+    `print!`/`println!`/`eprintln!`/`JrError`/`dialoguer::Select` site
+    that echoes server-supplied text. Candidate: a sink-inventory step
+    for this CWE class should grep for the OUTPUT primitives
+    (`print!`/`println!`/`eprintln!`/`format!` feeding `JrError`/
+    `dialoguer::Select`), not just the one rendering chokepoint already
+    known to exist. Source: PR #891 SEC-003/SEC-891-2 findings, this
+    burst, 2026-10-01. Engine-side (`vsdd-factory`) follow-up.
+
+42. **[process-gap] [engine]** A security-reviewer agent dispatched
+    against PR #891 hung indefinitely and never returned a verdict;
+    `pr-manager` had no mechanism to stop or time out the stuck
+    dispatch, because only the orchestrating session can cancel an
+    agent. The orchestrator worked around it by dispatching a fresh
+    security-reviewer agent, which is the one that found SEC-003 — so
+    the outcome was sound, but the review cycle lost real wall-clock
+    time to a hang with no automatic detection. Candidate: bounded
+    reviewer runtimes (a wall-clock timeout on any dispatched review
+    agent) plus an explicit escalation path back to the orchestrator
+    when a dispatch exceeds it, rather than relying on a human or the
+    orchestrator noticing the hang by inspection. Source: PR #891
+    security review dispatch, this burst, 2026-10-01. Engine-side
+    (`vsdd-factory`) follow-up.
+
+43. **[process-gap] [engine]** `pr-manager` recommended a merge command
+    referencing wrapper scripts
+    (`plugins/vsdd-factory/bin/check-stale-verdict.sh`,
+    `plugins/vsdd-factory/bin/enforce-merge-strategy.sh`) that do not
+    exist anywhere in this repo — its template assumes tooling that was
+    never installed here. The orchestrator caught this before it was
+    run and substituted the correct, working command
+    (`gh pr merge 891 --squash --delete-branch`). Candidate:
+    `pr-manager`'s merge-command output must be validated against the
+    actual repo (e.g. a file-existence check on any script path it
+    names) before being surfaced as an instruction, rather than trusting
+    the template verbatim. Source: PR #891 merge-readiness hand-off,
+    this burst, 2026-10-01. Engine-side (`vsdd-factory`) follow-up.
+
+44. **[process-gap] [engine]** The factory-dispatcher `PostToolUse` hook
+    repeatedly reported a fail-closed `FUEL_EXHAUSTED` result on large
+    edits to `spec-changelog.md` during this cycle's spec-delta bursts
+    (`[2.5.2]`-`[2.5.5]`). The edits themselves persisted on disk, but
+    the hook's own validators did not complete, creating two distinct
+    risks: (1) whatever validation that hook run was supposed to perform
+    silently never ran, and (2) the hook's reported "block" semantics
+    were inconsistent with what actually happened (content landed
+    despite a fail-closed report), which could mislead anyone reading
+    the hook's own log as evidence the write was rejected. Candidate:
+    investigate the hook's fuel cap — either raise it for large
+    append-only files like `spec-changelog.md`, or chunk large edits so
+    a single `PostToolUse` invocation stays under the cap, and align the
+    reported outcome with the actual on-disk result so "FUEL_EXHAUSTED"
+    cannot coexist with a successful write. Source: `FIX-P5-001` spec
+    `[2.5.2]`-`[2.5.5]` delta bursts, this burst, 2026-10-01. Engine-side
+    (`vsdd-factory`) follow-up.
+
+45. **[process-gap] [engine]** When `pr-reviewer`/security-reviewer
+    agents are dispatched in explicitly read-only mode, they trip the
+    `validate-pr-review-posted` `Stop` hook, which expects every
+    dispatched review to end by posting its verdict as a PR comment.
+    The orchestrator's read-only instruction (used when it wants the
+    review content back in its own context without a posted artifact)
+    directly conflicts with that hook's enforcement. Candidate:
+    reconcile the two — either the read-only dispatch path should set a
+    flag the hook recognizes and skips, or the hook's enforcement should
+    be narrowed to only the review modes that are expected to post.
+    Source: PR #891 review dispatches, this burst, 2026-10-01.
+    Engine-side (`vsdd-factory`) follow-up.
+
 ## Disposition
 
 Not yet dispositioned. F2 is CONVERGED per human decision `D-383` and
 APPROVED at the F2 human gate (`D-384`) — the S-7.02 cycle-closing checklist
-dispositions each of these 39 items when cycle-014 itself closes, not
+dispositions each of these 45 items when cycle-014 itself closes, not
 before. **Human decision `D-389` (2026-09-29)** closed F3 adversarial
 convergence directly (bypassing further dispositioning of `#1`-`#25` as a
 precondition) and directed that items `#26`-`#31` above be recorded now,
@@ -546,5 +635,11 @@ recorded during STORY-C's F4 merge burst (PR #887, this burst, 2026-09-30).
 Item `#37` was recorded during cycle-014's F4-completion combined wave
 integration gate (this burst, 2026-09-30). Items `#38`-`#39` were recorded
 during `FIX-P5-001`'s implementation + spec `[2.5.1]` correction burst
-(this burst, 2026-09-30). All are the same disposition class as `#26`-`#31`
+(2026-09-30). Items `#40`-`#45` were recorded during `FIX-P5-001`'s PR
+review, merge, and state-burst recording (PR #891 @ `769365ab`, this burst,
+2026-10-01): the scope-creep loop across `D-393`/`D-394`/`D-395`, the
+narrow initial sink inventory, the hung security-reviewer dispatch, the
+nonexistent `pr-manager` merge wrapper scripts, the `FUEL_EXHAUSTED`
+hook-vs-persisted-write inconsistency, and the read-only-dispatch-vs-
+posting-hook conflict. All are the same disposition class as `#26`-`#31`
 (needs a follow-up story or explicit deferral before cycle-014 closes).

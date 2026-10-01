@@ -32,6 +32,15 @@ Combined wave integration gate over the 3-story delta (`204b1fb5..2ee422e0`):
 **PASSED**. Full gate report:
 `cycles/cycle-014/wave-integration-gate.md`.
 
+**FIX-P5-001** (`SEC-001-RENDER-TABLE-ANSI-SANITIZE`, F5's first routed finding, `D-392`) —
+MERGED 2026-10-01T03:48:52Z, PR #891 @ `769365ab99be60c92a3494d630c423b962a0509d` (squash,
+`develop`; merged manually by the human). Scope grew three times during review (`D-393`
+comment view / SEC-003, `D-394` `jr issue assign` / re-review residual, `D-395` shared
+`disambiguate_user` resolver / SEC-891-2, which also froze the PR's scope) — full round-by-round
+review narrative: `code-delivery/FIX-P5-001/review-summary.md`. Final CI head `2973ef65`:
+24/24 checks green. Spec `bc-7-output-render.md` `v2.5.1` -> `v2.5.5`; BC count unchanged 773,
+VP count unchanged 98.
+
 ## Summary
 
 **F1 GATE OUTCOME (2026-09-24): "Approve, as corrected."** Scope minted as
@@ -582,3 +591,46 @@ cleanup → convert the BC-7.1.006 `**Trace**` citations to live backticked
 form → resume the F5 delta adversarial loop over
 `204b1fb5..<new develop>` (adversary + code-reviewer + security-reviewer,
 3 clean passes, 10-pass cap). See `STATE.md` v5.21 for full detail.
+
+**2026-10-01 (later, `FIX-P5-001` merged burst):** `FIX-P5-001` is now
+**MERGED** — PR #891 squash-merged to `develop` by the human at
+2026-10-01T03:48:52Z, merge commit `769365ab99be60c92a3494d630c423b962a0509d`;
+`develop` moves `2ee422e0 -> 769365ab`; the worktree and local/remote
+`fix/FIX-P5-001` branches are removed; `main`'s checkout fast-forwards.
+Final CI head `2973ef65`: 24/24 checks green. The PR's scope grew three
+times during review, each a human decision: **D-393** (security review 1,
+fresh reviewer, SEC-003 HIGH) extended the fix to `jr issue comment
+view`'s human output via the `output::sanitize_terminal_text` alias;
+**D-394** (security re-review) extended it to `jr issue assign`'s two
+`print_success` human-output sites; **D-395** (final security re-review,
+SEC-891-2 MEDIUM) extended it to the shared resolver
+`helpers.rs::disambiguate_user` (reached from `assign --to`,
+`create`/`edit --assignee`, `list --assignee`, and `@mentions`) via a new
+`disambiguation_labels` helper, and **froze** the PR's scope going
+forward — `--output json`'s error envelope is sanitized too as a
+documented spec decision, since it shares the same `JrError::UserError`
+message string. Spec `bc-7-output-render.md` progressed
+`v2.5.1 -> v2.5.2` (D-393, EC-14) `-> v2.5.3` (D-394, EC-15)
+`-> v2.5.4` (D-395, EC-16, JSON decision) `-> v2.5.5` (post-merge:
+`**Trace**` citations made live, EC-15/EC-16 pinned-test names
+corrected, new `resolve_asset` Out-of-scope residual added). BC count
+unchanged 773; VP count unchanged 98 throughout. Full round-by-round
+review narrative: `code-delivery/FIX-P5-001/review-summary.md`. The
+original security-reviewer dispatch for this PR hung indefinitely and
+never returned; the orchestrator dispatched a fresh one, which is the
+reviewer that found SEC-003. `pr-manager` also recommended a merge
+command referencing wrapper scripts
+(`plugins/vsdd-factory/bin/check-stale-verdict.sh`,
+`enforce-merge-strategy.sh`) that do not exist in this repo — the
+orchestrator corrected it to `gh pr merge 891 --squash --delete-branch`.
+Both findings recorded as new process-gap items (`#42`-`#43` below).
+`OPEN-STANDING-ITEMS.md`'s `SEC-001-RENDER-TABLE-ANSI-SANITIZE` item is
+now marked **RESOLVED** (full text archived to
+`cycles/RESOLVED-DRIFT-ITEMS.md`); `NONTABLE-SERVER-TEXT-SANITIZE` is
+updated to its final known, non-exhaustive list, including the new
+`resolve_asset` (MEDIUM, priority) entry. **F5 status: IN PROGRESS —
+FIX-P5-001 delivered.** **NEXT:** the F5 delta adversarial loop over
+`204b1fb5..769365ab` (adversary + code-reviewer + security-reviewer,
+fresh context, 3 consecutive clean passes required, 10-pass cap);
+newly found residuals are tracked, not fixed, unless a human decides
+otherwise. See `STATE.md` v5.22 for full detail.

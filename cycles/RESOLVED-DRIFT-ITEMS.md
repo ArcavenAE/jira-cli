@@ -519,3 +519,62 @@ did not complete for this PR either).
 instead of false-greening. No BC/decision minted for the mechanical scope-addition itself
 (`D-375` covers the F7 human-gate disposition that authorized it, recorded in `STATE.md`
 Decisions Log).
+
+## RESOLVED — SEC-001-RENDER-TABLE-ANSI-SANITIZE (2026-10-01, FIX-P5-001 merged -- archived from `cycles/OPEN-STANDING-ITEMS.md`, cycle-014 F5 FIX-P5-001-merged burst)
+
+**Original item (recorded 2026-09-30, verbatim):**
+
+`output::render_table` does not sanitize ANSI/control chars in server-supplied strings — NEW,
+OPEN, security (MEDIUM), target next maintenance sweep or a future cycle (2026-09-30)
+
+**ID:** `SEC-001-RENDER-TABLE-ANSI-SANITIZE`. Severity **MEDIUM** (CWE-150 /
+CWE-116). Surfaced during cycle-014's combined wave integration gate
+security review (`cycles/cycle-014/wave-integration-gate.md`, step d).
+Table-rendered server strings passed through `output::render_table` are not
+ANSI-escape/control-character sanitized before being written to the
+terminal. This is **pre-existing and codebase-wide** — every table-mode
+command that renders server-supplied text (`field options` labels, issue
+summaries, comment bodies, etc.) shares the same unsanitized path. Cycle-014
+STORY-B (`#888`) slightly widens exposure by rendering more system-field
+`name` values through this path (previously many of those cells rendered
+`null`/were absent).
+
+**Status: IN PROGRESS as FIX-P5-001 (D-392)** (updated 2026-09-30, state-manager
+cycle-014 F5-start burst). Human decision **D-392** (2026-09-30) elected to FIX
+this within cycle-014 during F5 rather than defer it. Tracked as fix task
+**FIX-P5-001**, delivered via `fix-pr-delivery` — F5's first routed finding.
+Design settled by security-reviewer triage
+(`cycles/cycle-014/phase-f5-adversarial/SEC-001-triage.md`): sanitize inside
+`output::render_table` (the single comfy_table chokepoint, 9 call sites) via a
+new `output::sanitize_table_cell`; `jr user list`/`jr user view`'s Active ✓/✗
+coloring moves from ANSI-in-`String` to structural `comfy_table::Cell` styling.
+Spec delta landed: new `BC-7.1.006` + inline `VP-SEC-001-001` in
+`specs/prd/bc-7-output-render.md`, spec `2.4.0`→`2.5.0`, BCs `772`→`773`.
+Implementation not yet started; worktree `.worktrees/FIX-P5-001` on branch
+`fix/FIX-P5-001` already exists (clean, no commits). **Original disposition
+(recorded 2026-09-30, state-manager cycle-014 F4-completion combined wave-gate
+burst), superseded by the above:** MEDIUM severity, no GitHub issue filed —
+tracked as standing security debt, target next maintenance sweep or a future
+cycle, pending human decision whether fixed within cycle-014 or deferred.
+
+**Resolution facts (2026-10-01):** `FIX-P5-001` implemented, reviewed, and
+merged as **PR #891**, "fix(FIX-P5-001): sanitize table output against
+terminal escape injection (SEC-001, CWE-150)" — squash-merged to `develop`
+by the human at 2026-10-01T03:48:52Z, merge commit
+`769365ab99be60c92a3494d630c423b962a0509d`; `develop` moved
+`2ee422e0 -> 769365ab`; final CI head `2973ef65`, 24/24 checks green. The
+fix's scope grew three times during review, each its own human decision:
+**D-393** (`jr issue comment view`, SEC-003 HIGH), **D-394** (`jr issue
+assign`), and **D-395** (shared resolver `disambiguate_user`, SEC-891-2
+MEDIUM, which also froze the PR's scope going forward). Final security
+review and final PR review both returned APPROVE. Spec
+`bc-7-output-render.md` BC-7.1.006/VP-SEC-001-001 progressed
+`v2.5.1 -> v2.5.5`; BC count unchanged 773; VP count unchanged 98
+throughout. Full round-by-round review narrative:
+`code-delivery/FIX-P5-001/review-summary.md`. One MEDIUM residual
+(`src/cli/issue/helpers.rs::resolve_asset`, same exposure class, found
+after the D-395 scope freeze) was NOT fixed under this PR and is now
+tracked as a `NONTABLE-SERVER-TEXT-SANITIZE` entry instead — see the
+current (updated) version of that item in
+`cycles/OPEN-STANDING-ITEMS.md`. Also updated in `.factory/STATE.md`'s
+Decisions Log (`D-393`/`D-394`/`D-395`) and Phase Progress table.

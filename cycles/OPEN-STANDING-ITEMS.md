@@ -1950,37 +1950,29 @@ documented behavior (EC-X.14.001-14), not a defect; noted here only as a possibl
 enhancement (a system-field-id literal bypass symmetric with the `customfield_NNNNN` one) should
 it come up again.
 
-## `output::render_table` does not sanitize ANSI/control chars in server-supplied strings — NEW, OPEN, security (MEDIUM), target next maintenance sweep or a future cycle (2026-09-30)
+## `output::render_table` ANSI/control-char sanitization — RESOLVED 2026-10-01
 
-**ID:** `SEC-001-RENDER-TABLE-ANSI-SANITIZE`. Severity **MEDIUM** (CWE-150 /
-CWE-116). Surfaced during cycle-014's combined wave integration gate
-security review (`cycles/cycle-014/wave-integration-gate.md`, step d).
-Table-rendered server strings passed through `output::render_table` are not
-ANSI-escape/control-character sanitized before being written to the
-terminal. This is **pre-existing and codebase-wide** — every table-mode
-command that renders server-supplied text (`field options` labels, issue
-summaries, comment bodies, etc.) shares the same unsanitized path. Cycle-014
-STORY-B (`#888`) slightly widens exposure by rendering more system-field
-`name` values through this path (previously many of those cells rendered
-`null`/were absent).
+**ID:** `SEC-001-RENDER-TABLE-ANSI-SANITIZE`. **Status: RESOLVED 2026-10-01.**
+Full original item text + resolution facts archived verbatim to
+`cycles/RESOLVED-DRIFT-ITEMS.md` (§"RESOLVED — SEC-001-RENDER-TABLE-ANSI-SANITIZE").
 
-**Status: IN PROGRESS as FIX-P5-001 (D-392)** (updated 2026-09-30, state-manager
-cycle-014 F5-start burst). Human decision **D-392** (2026-09-30) elected to FIX
-this within cycle-014 during F5 rather than defer it. Tracked as fix task
-**FIX-P5-001**, delivered via `fix-pr-delivery` — F5's first routed finding.
-Design settled by security-reviewer triage
-(`cycles/cycle-014/phase-f5-adversarial/SEC-001-triage.md`): sanitize inside
-`output::render_table` (the single comfy_table chokepoint, 9 call sites) via a
-new `output::sanitize_table_cell`; `jr user list`/`jr user view`'s Active ✓/✗
-coloring moves from ANSI-in-`String` to structural `comfy_table::Cell` styling.
-Spec delta landed: new `BC-7.1.006` + inline `VP-SEC-001-001` in
-`specs/prd/bc-7-output-render.md`, spec `2.4.0`→`2.5.0`, BCs `772`→`773`.
-Implementation not yet started; worktree `.worktrees/FIX-P5-001` on branch
-`fix/FIX-P5-001` already exists (clean, no commits). **Original disposition
-(recorded 2026-09-30, state-manager cycle-014 F4-completion combined wave-gate
-burst), superseded by the above:** MEDIUM severity, no GitHub issue filed —
-tracked as standing security debt, target next maintenance sweep or a future
-cycle, pending human decision whether fixed within cycle-014 or deferred.
+**Summary of resolution:** fixed as **FIX-P5-001**, delivered via **PR #891**
+("fix(FIX-P5-001): sanitize table output against terminal escape injection
+(SEC-001, CWE-150)"), squash-merged to `develop` by the human at
+2026-10-01T03:48:52Z, merge commit `769365ab99be60c92a3494d630c423b962a0509d`.
+Final CI head `2973ef65`: 24/24 checks green; final security review and
+final PR review both APPROVE. The fix's scope grew three times during
+review — `D-393` (`jr issue comment view`, SEC-003 HIGH), `D-394` (`jr
+issue assign`), `D-395` (shared resolver `disambiguate_user`, SEC-891-2
+MEDIUM, which also froze the PR's scope) — each its own human decision.
+Spec `bc-7-output-render.md` BC-7.1.006/VP-SEC-001-001 progressed
+`v2.5.1 -> v2.5.5`; BC count unchanged 773; VP count unchanged 98. Full
+round-by-round review narrative: `code-delivery/FIX-P5-001/review-summary.md`.
+One MEDIUM residual found after the D-395 scope freeze
+(`src/cli/issue/helpers.rs::resolve_asset`) was NOT fixed under this PR —
+see the updated `NONTABLE-SERVER-TEXT-SANITIZE` item below, which now also
+notes that `jr issue comment view`, `jr issue assign`, and
+`disambiguate_user` are covered sinks as of this resolution.
 
 ## `-q`/`--query-param` values are visible under plain `--verbose`, not just `--verbose-bodies` — NEW, OPEN, security (LOW), doc gap, target next maintenance sweep (2026-09-30)
 
@@ -2045,24 +2037,43 @@ add a `tests/field_options.rs` wiremock case with a fixture system field
 that has `name` but no `value`, asserting the rendered label matches `name`
 in both table and `--output json` modes.
 
-## Non-table server-text sinks share SEC-001's CWE class but have no shared chokepoint — NEW, OPEN, security (LOW/MEDIUM class, unscored individually), target next maintenance sweep (2026-09-30)
+## Non-table server-text sinks share SEC-001's CWE class but have no shared chokepoint — OPEN, security (LOW/MEDIUM class, unscored individually), target next maintenance sweep (updated 2026-10-01)
 
 **ID:** `NONTABLE-SERVER-TEXT-SANITIZE`. Surfaced during the cycle-014 F5
 security-reviewer triage of `SEC-001-RENDER-TABLE-ANSI-SANITIZE`
 (`cycles/cycle-014/phase-f5-adversarial/SEC-001-triage.md` §3), explicitly
-carved OUT of `FIX-P5-001`'s scope (and out of new `BC-7.1.006`'s scope)
-because none of these sinks route through `output::render_table` — there is
-no single chokepoint to fix them all in one pass, unlike SEC-001's table-mode
-case.
+carved OUT of `FIX-P5-001`'s original scope because none of these sinks
+route through `output::render_table` — there is no single chokepoint to fix
+them all in one pass, unlike SEC-001's table-mode case.
 
-**Sinks (same CWE-150/CWE-116 class as SEC-001, each a separate untrusted
-server-string display path):**
+**Now covered, as of `FIX-P5-001`/PR #891 (2026-10-01) — no longer residual:**
+`jr issue comment view`'s human output (`handle_comment_view`, D-393,
+SEC-003); `jr issue assign`'s changed/idempotent human-output success
+messages (`handle_assign`, D-394); and the shared resolver
+`src/cli/issue/helpers.rs::disambiguate_user`'s non-interactive error
+messages and interactive picker labels, reached from `jr issue assign --to`,
+`jr issue create`/`jr issue edit --assignee`, `jr issue list --assignee`,
+and `@Name` mention resolution (D-395 — PR #891's final scope-expansion
+amendment, which also froze the PR's scope going forward). All three now
+route through `output::sanitize_table_cell`/`sanitize_terminal_text` — see
+`specs/prd/bc-7-output-render.md` BC-7.1.006 (`v2.5.5`) and
+`cycles/RESOLVED-DRIFT-ITEMS.md`'s SEC-001 resolution record.
+
+**Final known, non-exhaustive sink list (same CWE-150/CWE-116 class as
+SEC-001, each a separate untrusted server-string display path, updated
+2026-10-01 per `specs/prd/bc-7-output-render.md` BC-7.1.006's own Out-of-
+scope paragraph — the authoritative live inventory):**
 - `src/cli/project.rs` project name lists (printed outside the table-render path)
-- `src/cli/issue/workflow.rs` transition-name interactive prompts (`dialoguer::Select` option labels)
+- `src/cli/issue/workflow.rs` transition-name interactive prompts (`dialoguer::Select` option labels) in `jr issue transitions`/`jr issue move`
+- `src/cli/issue/workflow.rs` status names echoed by `jr issue move`, and its bulk-move error text (distinct call sites from the transition-name prompts above, and from the now-covered `handle_assign` messages)
+- `src/cli/issue/links.rs` link-type names
 - `src/cli/sprint.rs`'s summary hint line
-- `src/cli/component.rs`'s delete-confirmation description echo
+- `src/cli/component.rs`'s rename/create/edit/list-warning/delete-confirmation name echoes
+- `src/cli/board.rs`'s board auto-discovery name
+- `src/cli/init.rs`'s interactive board-select prompt items
 - `src/cli/field.rs::normalize_or_degrade`'s graceful-degrade hint (BC-X.14.004)
-- `JrError` bodies that echo raw server text into stderr error messages
+- `JrError` bodies that echo raw server text into stderr error messages (EXCLUDING `disambiguate_user`'s now-covered messages above — OTHER `JrError` bodies throughout the codebase remain residual)
+- **`src/cli/issue/helpers.rs::resolve_asset`** (the Assets `--asset` disambiguation flow) — **MEDIUM, priority.** Echoes raw server-supplied `label`/`object_key` values unsanitized, both in its `JrError` messages and in its `dialoguer::Select` interactive picker items. Identical exposure class as `disambiguate_user`'s now-covered sink. Found by the final PR #891 security review, but AFTER D-395's scope freeze — not fixed by `FIX-P5-001`; new as of 2026-10-01.
 
 **Disposition:** OPEN, no GitHub issue filed. **Target: next maintenance
 sweep or a future security-hardening cycle** — likely one fix per sink (or a

@@ -9,6 +9,466 @@ Track all spec version changes. Most recent version first.
 
 > **Type legend:** Type classifies the SPEC document delta: MINOR = new BCs/VPs/sections; PATCH = amendments to existing bodies/ACs/ECs. Product-semver impact is recorded in the Summary line, independent of Type.
 
+## [2.5.5] - 2026-09-30
+
+### Type: PATCH
+
+### Summary
+
+Post-merge citation conversion for `BC-7.1.006` / `VP-SEC-001-001` (`bc-7-output-render.md`),
+triggered by PR #891 (`FIX-P5-001`) merging to `develop` as `769365ab`. This is mechanical
+maintenance, not a new human decision: no sink is promoted into or out of scope, and the BC's
+Behavior/Out-of-scope substance is unchanged except for one new residual item (below). Three
+things changed:
+
+1. **Every "pending merge"/"does NOT exist yet" `**Trace**` qualifier converted to a live,
+   backticked citation**, now that FIX-P5-001 is merged and every cited symbol was verified to
+   exist verbatim on `develop` at `769365ab`: `src/output.rs::sanitize_table_cell`,
+   `src/output.rs::render_table_with_styles`, `src/output.rs::print_output_with_styles`,
+   `src/output.rs::StyledCell`, `src/cli/user.rs::active_cell`, and
+   `src/cli/issue/helpers.rs::disambiguation_labels`. The `handle_comment_view` (D-393),
+   `handle_assign` (D-394), and `disambiguate_user` (D-395) wiring-status notes — previously
+   "pending merge" or "does NOT exist yet as of this amendment" — are updated to "implemented in
+   FIX-P5-001, merged to `develop` at `769365ab`." EC-14's and EC-15's `branch fix/FIX-P5-001`
+   references are updated to the merge commit.
+2. **EC-15's and EC-16's placeholder "Pinned test (target name)" citations corrected.** Neither
+   `test_bc_7_1_006_ec15_assign_hostile_display_name_sanitized` nor
+   `test_bc_7_1_006_ec16_disambiguate_user_hostile_names_and_emails_sanitized` exists verbatim in
+   the merged test suite — flagged by the final PR #891 security review. Replaced with the actual
+   pinned test names verified against `769365ab`:
+   - EC-15 (`jr issue assign`, `tests/table_output_sanitization.rs`):
+     `test_bc_7_1_006_issue_assign_human_output_strips_hostile_display_name`,
+     `test_bc_7_1_006_issue_assign_human_output_strips_hostile_display_name_idempotent`,
+     `test_bc_7_1_006_issue_assign_human_output_strips_hostile_display_name_self_assign`,
+     `test_bc_7_1_006_issue_assign_json_output_preserves_hostile_display_name_raw`.
+   - EC-16 (`disambiguate_user`): `test_bc_7_1_006_issue_assign_exact_multiple_human_output_strips_hostile_fields`
+     and `test_bc_7_1_006_issue_assign_exact_multiple_json_error_envelope_carries_sanitized_text`
+     (both `tests/table_output_sanitization.rs`, 16b); `test_disambiguation_labels_sanitizes_hostile_display_name_and_email`
+     and `test_disambiguation_labels_sanitizes_hostile_display_name_and_account_id_without_email`
+     (both `src/cli/issue/helpers.rs`, 16b/16a respectively).
+3. **New Out-of-scope residual item.** The final PR #891 security review additionally flagged
+   `src/cli/issue/helpers.rs::resolve_asset` (the Assets `--asset` disambiguation flow) as a MEDIUM
+   residual (CWE-150/CWE-116) with the identical exposure class as `disambiguate_user`'s now-covered
+   sink — it echoes raw server-supplied `label`/`object_key` values unsanitized in both its
+   `JrError` messages and its `dialoguer::Select` interactive picker items. This finding was raised
+   AFTER D-395's scope freeze, so per that freeze's own stated handling it is recorded in the
+   known, non-exhaustive Out-of-scope residual list rather than triggering a further PR #891
+   amendment — it is NOT fixed by this BC.
+
+No new BC or VP ID is minted; VP-SEC-001-001 is unchanged in substance (only its EC-15/EC-16
+pinned-test citations move from placeholder to real names). BC count unchanged (98 in-file / 773
+cumulative).
+
+### New Requirements
+
+| ID | Description |
+|----|-------------|
+| — | None. Citation/test-name correction only — no new BC or VP. |
+
+### Modified Requirements
+
+| ID | Previous | Updated | Rationale |
+|----|----------|---------|-----------|
+| BC-7.1.006 | `**Trace**`: `sanitize_table_cell`, `render_table_with_styles`, `print_output_with_styles`, `StyledCell`, `active_cell` cited unbackticked as "pending merge"; `handle_comment_view`/`handle_assign`/`disambiguate_user` wiring notes say "pending merge"/"does NOT exist yet." | `**Trace**`: all six symbols (plus `disambiguation_labels`) are live, backticked citations; the three wiring notes say "implemented, merged to `develop` at `769365ab`." | PR #891 (`FIX-P5-001`) merged to `develop` as `769365ab` — the pending-merge posture no longer applies. |
+| BC-7.1.006 | EC-15: "Pinned test (target name): `test_bc_7_1_006_ec15_assign_hostile_display_name_sanitized`" (does not exist). | EC-15: cites the four actual pinned tests in `tests/table_output_sanitization.rs` (`strips_hostile_display_name`, `_idempotent`, `_self_assign`, `json_output_preserves_hostile_display_name_raw`). | Final PR #891 security review: the placeholder name was never implemented verbatim; the real coverage lives under different test names. |
+| BC-7.1.006 | EC-16: "Pinned test (target name): `test_bc_7_1_006_ec16_disambiguate_user_hostile_names_and_emails_sanitized`" (does not exist). | EC-16: cites the four actual pinned tests (`test_bc_7_1_006_issue_assign_exact_multiple_human_output_strips_hostile_fields`, `test_bc_7_1_006_issue_assign_exact_multiple_json_error_envelope_carries_sanitized_text`, `test_disambiguation_labels_sanitizes_hostile_display_name_and_email`, `test_disambiguation_labels_sanitizes_hostile_display_name_and_account_id_without_email`). | Final PR #891 security review: same class of mismatch as EC-15. |
+| BC-7.1.006 | Out-of-scope residual list: `disambiguate_user` promoted into scope by D-395; no mention of `resolve_asset`. | Out-of-scope residual list: new bullet for `src/cli/issue/helpers.rs::resolve_asset` (Assets `--asset` disambiguation flow), MEDIUM, found after the D-395 freeze, not fixed under that freeze. | Final PR #891 security review surfaced this residual after D-395's scope freeze; recorded per the freeze's own stated handling rather than triggering a further PR #891 amendment. |
+| BC-7.1.006 | Version history: rows 1.0.0 .. 1.3.0. | Version history: new row 1.3.1 recording the post-merge citation conversion, EC-15/EC-16 corrections, and the new `resolve_asset` residual. | Traceability requirement — every amendment gets a version-history row. |
+
+### Removed Requirements
+
+| ID | Description | Rationale |
+|----|-------------|-----------|
+| — | None | No BC, VP, or edge case removed — only citation text and two EC pinned-test-name corrections, plus one new Out-of-scope bullet. |
+
+### New Verification Properties
+
+| ID | Description | Proof Strategy |
+|----|-------------|---------------|
+| — | None | VP-SEC-001-001 unchanged in substance; only EC-15/EC-16's pinned-test citations corrected. |
+
+### Architecture Changes
+
+- None. Citation-accuracy and test-name-correction spec amendment to an existing BC body; no
+  module-boundary or purity-boundary change. `.factory/specs/architecture/*` is not touched.
+
+### Impact Assessment
+
+| Artifact | Change Type | Notes |
+|----------|-------------|-------|
+| `bc-7-output-render.md` | AMENDED | BC-7.1.006 body: `**Trace**` field's pending-merge/not-yet-implemented qualifiers converted to live backticked citations; EC-14/EC-15 branch references updated to the merge commit `769365ab`; EC-15's and EC-16's placeholder pinned-test names replaced with the actual merged test names; new Out-of-scope residual bullet for `resolve_asset`; version-history row 1.3.1 added; frontmatter `trace:` history line added. `total_bcs`/`definitional_count` unchanged (98/54). |
+| `BC-INDEX.md` | UNCHANGED | H1/title unchanged this delta — no title-column sync needed. |
+| `CANONICAL-COUNTS.md` | UNCHANGED | No count change. |
+
+- **Affected stories:** None yet — BC-7.1.006 is not yet anchored to any story.
+- **Affected tests:** None — this delta only corrects spec citations to match tests that already
+  exist on `develop` at `769365ab`; no test or production code is added or changed.
+- **Migration needed:** None (spec-only delta).
+- **Migration notes:** None — spec text only, no `src/` or `tests/` files touched by this delta.
+
+### Feature Request Link
+
+- Post-merge maintenance delta to `FIX-P5-001` (`SEC-001-RENDER-TABLE-ANSI-SANITIZE`), following
+  PR #891's merge to `develop` as `769365ab`. No new human decision — mechanical citation/test-name
+  correction plus recording one new residual flagged by the final PR #891 security review.
+
+---
+
+## [2.5.4] - 2026-09-30
+
+### Type: PATCH
+
+### Summary
+
+Third scope expansion of `BC-7.1.006` and its inline `VP-SEC-001-001` (`bc-7-output-render.md`),
+human decision D-395 (2026-09-30), triggered by PR #891's (`FIX-P5-001`) final security re-review:
+the re-review **approved** [2.5.3]'s `jr issue assign` (D-394) fix, and in the same pass identified
+a third, final residual with the identical exposure class — finding SEC-891-2 (MEDIUM,
+CWE-150/CWE-116) — `disambiguate_user` (`src/cli/issue/helpers.rs`), the shared user-disambiguation
+chokepoint reached by `resolve_assignee` (`jr issue assign --to`), `resolve_assignee_by_project`
+(`jr issue create`/`jr issue edit --assignee`), `resolve_user` (`jr issue list --assignee`), and
+`mentions::resolve_at_name_candidate` (`@Name` mention resolution shared by `jr issue create`/
+`edit`/`comment add`/`comment edit` and JSM `create --request-type`), echoes server-supplied,
+user-editable `displayName`/`emailAddress`/`accountId` unsanitized in its non-interactive
+`ExactMultiple`/`Ambiguous`/`None`-branch `JrError::UserError` messages and its interactive
+`dialoguer::Select` picker labels, bypassing `output::sanitize_table_cell`/`sanitize_terminal_text`
+entirely because `disambiguate_user` is not a `render_table` call site. This is a third scope
+expansion of an EXISTING BC/VP — no new BC or VP ID is minted, so this is classified PATCH under
+this changelog's Type legend, not MINOR. BC count is unchanged (98 in-file / 773 cumulative); VP
+count is unchanged (VP-SEC-001-001 amended in place, part (c) extended again). **D-395 also FREEZES
+PR #891's scope**: this is the final scope-expansion amendment PR #891 receives from security
+review — any further residual is tracked in the known, non-exhaustive Out-of-scope list rather
+than triggering another PR #891 amendment.
+
+1. **H1 enriched** to name `disambiguate_user`'s shared user-resolution disambiguation output as an
+   additional, explicit non-`render_table` covered sink.
+2. **New Behavior subsection for `disambiguate_user`.** Names the four callers/commands and the
+   three echoing branches — `MatchResult::ExactMultiple` (message + picker labels, includes email/
+   account id), `MatchResult::Ambiguous` (message + picker items, display name only), and the wider
+   `MatchResult::None`-branch `all_names` echo (found during this amendment's own code trace, not
+   explicitly named in the originating finding — `resolve_assignee`'s and
+   `resolve_assignee_by_project`'s `none_msg_fn` closures join EVERY candidate on the issue/project,
+   not only matched ones). Specifies sanitization happens once, inside `disambiguate_user` itself,
+   at each `display_name`/`email_address` value's point of embedding (including before the `None`
+   branch hands `all_names` to `none_msg_fn`), covering all four callers uniformly with no
+   caller-side change required. Output FORMAT unchanged.
+3. **New dedicated paragraph deciding the `--output json` question.** Unlike `render_table`'s own
+   table/JSON success-data asymmetry (where JSON carries a separate, deliberately lossless raw
+   payload), `disambiguate_user`'s error message has only ONE underlying string:
+   `src/main.rs`'s single error-formatting site builds both the human-text stderr output and the
+   `--output json` error envelope's `"error"` field from the same `JrError::UserError` `Display`
+   string. Sanitizing at construction time therefore sanitizes both channels identically, with no
+   asymmetry to preserve — a script surfacing `--output json`'s `"error"` text to a terminal is
+   exactly as exposed as the human-mode path, and no structured-data consumer depends on receiving
+   this prose message unsanitized.
+4. **Out-of-scope lead sentence and the generic "`JrError` bodies" residual bullet narrowed** to
+   exclude `disambiguate_user`'s now-covered messages; other `JrError` bodies remain residual.
+5. **New EC-16**, in two parts: **16a** (`Ambiguous` branch) — two independently-hostile display
+   names (`"\u{1b}[31mAlice\u{1b}[0m"` CSI-wrapped; `"Al\u{9b}ice\u{1b}]0;x\u{7}"`
+   C1-introducer-plus-OSC) that both sanitize to the identical clean string `"Alice"`, traced
+   character-by-character against the implemented `sanitize_control_and_ansi_core` state machine
+   (`src/output.rs`); **16b** (`ExactMultiple` branch) — a raw-identical-display-name fixture with
+   two hostile emails (`"alice\u{1b}]0;pwned\u{7}@example.com"`, `"bob\u{9b}@example.com"`), proving
+   email/account-id sanitization in both the non-interactive message and the picker labels.
+6. **VP-SEC-001-001(c) extended**, not replaced, with (a) the non-interactive end-to-end check
+   across all four `disambiguate_user` callers using EC-16a, (b) a `MatchResult::None`-branch
+   `all_names` check, and (c) a new UNIT-level check of a factored-out label-building helper against
+   EC-16b — `dialoguer::Select::interact()` requires a real TTY and is not subprocess-testable, so
+   interactive-label coverage is verified at the pure-function level instead.
+7. **New live `**Trace**` citation.** `src/cli/issue/helpers.rs::disambiguate_user` is added as a
+   live (not pending-merge) citation — the function already exists on `develop` today. The citation
+   notes the sanitizer wiring into this function does NOT exist yet as of this amendment, and names
+   the four unmodified call sites.
+8. **Version history.** New row `1.3.0` added to `BC-7.1.006`'s version-history table recording the
+   D-395 provenance, the EC-16/VP/Trace changes, and the PR #891 scope freeze.
+
+### New Requirements
+
+| ID | Description |
+|----|-------------|
+| — | None. No new BC or VP this delta — `disambiguate_user` is folded into the existing BC-7.1.006 / VP-SEC-001-001 as a third scope expansion. |
+
+### Modified Requirements
+
+| ID | Previous | Updated | Rationale |
+|----|----------|---------|-----------|
+| BC-7.1.006 | H1 + Behavior opening sentence: covers `render_table`, `jr issue comment view` (D-393), and `jr issue assign` (D-394). | H1 + Behavior opening sentence enriched to also name `disambiguate_user`'s shared disambiguation output as a covered non-`render_table` sink, and to state this is PR #891's final scope-expansion amendment. | PR #891 final security re-review (SEC-891-2): `disambiguate_user`'s non-interactive messages and interactive picker labels echo server-editable `displayName`/`emailAddress`/`accountId` directly, bypassing `render_table` and therefore bypassing `sanitize_table_cell` entirely. |
+| BC-7.1.006 | Out-of-scope residual list: seven entries (post-D-394), the generic "`JrError` bodies" bullet unqualified. | Out-of-scope residual list: lead sentence names `disambiguate_user` as the third promoted-into-scope sink and states PR #891's scope is now frozen; the "`JrError` bodies" bullet narrowed to exclude `disambiguate_user`'s now-covered messages. | Human decision D-395 promotes `disambiguate_user` into scope and freezes PR #891's scope going forward. |
+| BC-7.1.006 | Edge cases: EC-1..EC-15. | Edge cases: EC-1..EC-16. New EC-16 (two parts, 16a/16b) covers `disambiguate_user`'s display-name and email sanitization with independently-verified hostile fixtures. | Closes the `disambiguate_user` residual with concrete, verified pinned examples covering both the `Ambiguous` and `ExactMultiple` branches. |
+| BC-7.1.006 | VP-SEC-001-001(c): end-to-end checks against `jr field options`, `jr issue list`, `jr issue comment view`, and `jr issue assign`. | VP-SEC-001-001(c): extended with the non-interactive end-to-end check across `disambiguate_user`'s four callers, a `None`-branch check, and a new unit-level picker-label check via a factored-out helper. | Proves the `disambiguate_user` non-table sink shares the identical sanitizer and the identical (lack of) table/JSON asymmetry as the other covered paths, and closes the interactive-label coverage gap that a subprocess TTY test cannot reach directly. |
+| BC-7.1.006 | `**Trace**`: no citation for `disambiguate_user`. | `**Trace**`: live citation added for `src/cli/issue/helpers.rs::disambiguate_user`, naming its four unmodified callers. | The `disambiguate_user` function exists on `develop` today, ahead of its sanitizer wiring — same spec-precedes-code posture as `handle_assign`'s D-394 citation. |
+| BC-7.1.006 | Version history: rows 1.0.0, 1.0.1, 1.1.0, 1.2.0. | Version history: new row 1.3.0 recording D-395 provenance and the PR #891 scope freeze. | Traceability requirement — every amendment gets a version-history row. |
+
+### Removed Requirements
+
+| ID | Description | Rationale |
+|----|-------------|-----------|
+| — | None | No BC, VP, or edge case was removed this delta — only the Out-of-scope residual list's wording and membership changed as `disambiguate_user` moved INTO scope. |
+
+### New Verification Properties
+
+| ID | Description | Proof Strategy |
+|----|-------------|---------------|
+| — | None | VP-SEC-001-001 is amended in place (part (c) extended with a fifth/sixth end-to-end fixture and a new unit-level check); no new VP is created. |
+
+### Architecture Changes
+
+- None. Scope-expansion spec amendment to an existing BC body; no module-boundary or
+  purity-boundary change. `.factory/specs/architecture/*` is not touched.
+
+### Impact Assessment
+
+| Artifact | Change Type | Notes |
+|----------|-------------|-------|
+| `bc-7-output-render.md` | AMENDED | BC-7.1.006 body: H1 enriched, Behavior coverage sentence extended, new `disambiguate_user` Behavior subsection added (plus a dedicated `--output json` asymmetry-decision paragraph), Out-of-scope list narrowed to exclude the now-covered sink and states the PR #891 scope freeze, EC-16 added (16a/16b), VP-SEC-001-001(c) extended, `**Trace**` gains a live `disambiguate_user` citation, version-history row 1.3.0 added, frontmatter `trace:` history line added. `total_bcs`/`definitional_count` unchanged (98/54). |
+| `BC-INDEX.md` | AMENDED (title-column sync only) | BC-7.1.006's title-column row updated to match the enriched H1 (BC H1 Title Authority policy) and cites `disambiguate_user`; no count change. |
+| `CANONICAL-COUNTS.md` | UNCHANGED | No count change. |
+| `.factory/cycles/cycle-014/phase-f5-adversarial/FIX-P5-001-spec-delta.md` | AMENDED | New `§10 D-395 amendment` section appended recording this third, final security-re-review-sourced scope expansion and the PR #891 scope freeze. |
+
+- **Affected stories:** None yet — BC-7.1.006 is not yet anchored to any story.
+- **Affected tests:** F6/PR #891 follow-up implementation must add `disambiguate_user` sanitizer
+  wiring (all three echoing branches, including the `None`-branch `all_names` pre-sanitization)
+  plus EC-16's pinned test, the VP-SEC-001-001(c) end-to-end checks across all four callers, and the
+  new unit-level factored-out label-building helper test; none of this exists in `src/`/`tests/` yet
+  as of this spec amendment.
+- **Migration needed:** None (spec-only delta).
+- **Migration notes:** None — spec text only, no `src/` production files touched by this delta.
+
+### Feature Request Link
+
+- Third and final scope-expansion delta to `FIX-P5-001` (`SEC-001-RENDER-TABLE-ANSI-SANITIZE`),
+  triggered by PR #891's final security re-review, human decision D-395. Amendment note:
+  `.factory/cycles/cycle-014/phase-f5-adversarial/FIX-P5-001-spec-delta.md` §10.
+
+---
+
+## [2.5.3] - 2026-09-30
+
+### Type: PATCH
+
+### Summary
+
+Second scope expansion of `BC-7.1.006` and its inline `VP-SEC-001-001` (`bc-7-output-render.md`),
+human decision D-394 (2026-09-30), triggered by the PR #891 (`FIX-P5-001`) security re-review:
+the re-review **approved** [2.5.2]'s `jr issue comment view` (SEC-003) fix, and in the same pass
+identified an unlisted residual with the identical exposure class — `jr issue assign`
+(`src/cli/issue/workflow.rs::handle_assign`) echoes the assignee's server-side, user-editable Jira
+`displayName` in its human-output changed message (`"Assigned <key> to <name>"`, ~L1104) and
+idempotent message (`"<key> is already assigned to <name>"`, ~L1084) via `output::print_success`,
+bypassing `output::sanitize_table_cell`/`sanitize_terminal_text` entirely, because `handle_assign`
+is not a `render_table` call site. This is a second scope expansion of an EXISTING BC/VP — no new
+BC or VP ID is minted, so this is classified PATCH under this changelog's Type legend, not MINOR.
+BC count is unchanged (98 in-file / 773 cumulative); VP count is unchanged (VP-SEC-001-001 amended
+in place, part (c) extended again).
+
+1. **H1 enriched** to name `jr issue assign`'s echoed assignee display name as an additional,
+   explicit non-`render_table` covered sink.
+2. **New Behavior subsection for `jr issue assign`.** Specifies that both `display_name`-echoing
+   messages must route through `output::sanitize_terminal_text` (the `sanitize_table_cell` alias)
+   before being formatted into `output::print_success`; the `--unassign` path's key-only messages
+   are explicitly excluded (no server-derived text). Output FORMAT unchanged; `--output json`
+   (`assign_changed_response`/`assign_unchanged_response`) unaffected.
+3. **Out-of-scope wording changed from an implied-complete enumeration to explicit
+   "known, non-exhaustive."** The same re-review that found the `handle_assign` gap also named a
+   further, non-exhaustive set of same-class residuals not yet fixed: `workflow.rs`'s
+   `move`-echoed status names and bulk-move error text, `links.rs`'s link-type names, a broadened
+   `component.rs` rename/create/edit/list-warning/delete-confirmation surface, `board.rs`'s
+   board auto-discovery name, and `init.rs`'s interactive board-select items. These are folded
+   into the residual list without claiming the list is now complete.
+4. **New EC-15.** Hostile display name `"\u{1b}]0;pwned\u{7}Mallory\u{1b}[2J"`, traced
+   character-by-character against the implemented `sanitize_control_and_ansi_core` state machine
+   (`src/output.rs`, branch `fix/FIX-P5-001`) and independently cross-checked by a second trace
+   before being pinned: both messages render the display name as `Mallory`, with no raw `ESC` byte
+   or C1 code point surviving; `--output json`'s `assignee` field round-trips unchanged.
+5. **VP-SEC-001-001(c) extended**, not replaced, with the same EC-15 fixture exercised against
+   `jr issue assign` under both output modes, in addition to the existing `jr field options` /
+   `jr issue list` / `jr issue comment view` checks.
+6. **New live `**Trace**` citation.** `src/cli/issue/workflow.rs::handle_assign` is added as a
+   live (not pending-merge) citation — the function already exists on `develop` today. The
+   citation notes the sanitizer wiring into this function does NOT exist yet as of this amendment.
+7. **Two stale items corrected**, both flagged by the PR #891 re-review: (a) the [2.5.2]/D-393
+   `**Trace**` note claiming `handle_comment_view`'s sanitizer wiring "does NOT exist yet" is
+   updated to "implemented in FIX-P5-001 (PR #891), pending merge" — the re-review approved that
+   fix, so the prior claim was stale; (b) the BC's 1.1.0 version-history row said the Out-of-scope
+   residual list was "narrowed … to five entries" while the same sentence went on to name six
+   (`project.rs`, `workflow.rs`, `sprint.rs`, `component.rs`, `field.rs`, `JrError`) — corrected in
+   place to say "six," cross-referenced to the new 1.2.0 row.
+8. **Version history.** New row `1.2.0` added to `BC-7.1.006`'s version-history table recording
+   the D-394 provenance, the EC-15/VP/Trace changes, and the two stale-item corrections.
+
+### New Requirements
+
+| ID | Description |
+|----|-------------|
+| — | None. No new BC or VP this delta — `jr issue assign` is folded into the existing BC-7.1.006 / VP-SEC-001-001 as a second scope expansion. |
+
+### Modified Requirements
+
+| ID | Previous | Updated | Rationale |
+|----|----------|---------|-----------|
+| BC-7.1.006 | H1 + Behavior opening sentence: covers `render_table` and, as of D-393, `jr issue comment view`. | H1 + Behavior opening sentence enriched to also name `jr issue assign`'s human-output messages as a covered non-`render_table` sink. | PR #891 security re-review: `handle_assign`'s changed/idempotent messages print an assignee display name directly via `output::print_success`, bypassing `render_table` and therefore bypassing `sanitize_table_cell` entirely. |
+| BC-7.1.006 | Out-of-scope residual list: six entries (post-D-393), worded to read as a complete enumeration. | Out-of-scope residual list: `jr issue assign` removed (now covered); remaining entries reworded as an explicit "known, non-exhaustive" list; new residual items named (`workflow.rs` status/bulk-move text, `links.rs`, broadened `component.rs`, `board.rs`, `init.rs`). | Human decision D-394 promotes `jr issue assign` into scope; the re-review's own act of finding an unlisted residual proved the prior "complete-reading" list wording was misleading, independent of the miscount fixed below. |
+| BC-7.1.006 | Edge cases: EC-1..EC-14. | Edge cases: EC-1..EC-15. New EC-15 covers `jr issue assign`'s display-name sanitization with a hostile fixture. | Closes the `handle_assign` residual with a concrete, verified pinned example. |
+| BC-7.1.006 | VP-SEC-001-001(c): end-to-end checks against `jr field options`, `jr issue list`, and `jr issue comment view`. | VP-SEC-001-001(c): extended with the same end-to-end check against `jr issue assign` using the EC-15 fixture. | Proves the `handle_assign` non-table sink shares the identical sanitizer and table/JSON asymmetry as the other covered paths, not a separately-specified parallel behavior. |
+| BC-7.1.006 | `**Trace**`: no citation for `handle_assign`; `handle_comment_view`'s citation states its wiring "does NOT exist yet." | `**Trace**`: live citation added for `src/cli/issue/workflow.rs::handle_assign`; `handle_comment_view`'s citation corrected to "implemented in FIX-P5-001 (PR #891), pending merge." | The `handle_assign` function exists on `develop` today, ahead of its sanitizer wiring. The `handle_comment_view` wiring is now implemented (re-review approved it) — the prior "does NOT exist yet" wording was stale. |
+| BC-7.1.006 | Version history: rows 1.0.0, 1.0.1, 1.1.0 (1.1.0's prose miscounted a six-item list as five). | Version history: new row 1.2.0 recording D-394 provenance; 1.1.0's miscount corrected in place. | Traceability requirement — every amendment gets a version-history row; a reviewer-flagged miscount is corrected at the source, not merely noted in a later row. |
+
+### Removed Requirements
+
+| ID | Description | Rationale |
+|----|-------------|-----------|
+| — | None | No BC, VP, or edge case was removed this delta — only the Out-of-scope residual list's wording and membership changed as `jr issue assign` moved INTO scope and new residual items were named. |
+
+### New Verification Properties
+
+| ID | Description | Proof Strategy |
+|----|-------------|---------------|
+| — | None | VP-SEC-001-001 is amended in place (part (c) extended with a fourth end-to-end fixture); no new VP is created. |
+
+### Architecture Changes
+
+- None. Scope-expansion spec amendment to an existing BC body; no module-boundary or
+  purity-boundary change. `.factory/specs/architecture/*` is not touched.
+
+### Impact Assessment
+
+| Artifact | Change Type | Notes |
+|----------|-------------|-------|
+| `bc-7-output-render.md` | AMENDED | BC-7.1.006 body: H1 enriched, Behavior coverage sentence extended, new `jr issue assign` Behavior subsection added, Out-of-scope list reworded to "known, non-exhaustive" with new residual items, EC-15 added, VP-SEC-001-001(c) extended, `**Trace**` gains a live `handle_assign` citation and a stale-wording correction for `handle_comment_view`, version-history row 1.2.0 added (and 1.1.0's miscount corrected in place), frontmatter `trace:` history line added. `total_bcs`/`definitional_count` unchanged (98/54). |
+| `BC-INDEX.md` | AMENDED (title-column sync only) | BC-7.1.006's title-column row updated to match the enriched H1 (BC H1 Title Authority policy) and cites `handle_assign`; no count change. |
+| `CANONICAL-COUNTS.md` | UNCHANGED | No count change. |
+| `.factory/cycles/cycle-014/phase-f5-adversarial/FIX-P5-001-spec-delta.md` | AMENDED | New `§9 D-394 amendment` section appended recording this second security-re-review-sourced scope expansion. |
+
+- **Affected stories:** None yet — BC-7.1.006 is not yet anchored to any story.
+- **Affected tests:** F6/PR #891 follow-up implementation must add `handle_assign` sanitizer wiring
+  (both `print_success` call sites) plus EC-15's pinned test and the VP-SEC-001-001(c) end-to-end
+  `jr issue assign` check; none of this exists in `src/`/`tests/` yet as of this spec amendment.
+- **Migration needed:** None (spec-only delta).
+- **Migration notes:** None — spec text only, no `src/` production files touched by this delta.
+
+### Feature Request Link
+
+- Second scope-expansion delta to `FIX-P5-001` (`SEC-001-RENDER-TABLE-ANSI-SANITIZE`), triggered by
+  the PR #891 security re-review, human decision D-394. Amendment note:
+  `.factory/cycles/cycle-014/phase-f5-adversarial/FIX-P5-001-spec-delta.md` §9.
+
+---
+
+## [2.5.2] - 2026-09-30
+
+### Type: PATCH
+
+### Summary
+
+Scope expansion of `BC-7.1.006` and its inline `VP-SEC-001-001` (`bc-7-output-render.md`), human
+decision D-393 (2026-09-30), triggered by PR #891's (`FIX-P5-001`) security review returning
+REQUEST_CHANGES with finding SEC-003 (HIGH, CWE-150/CWE-116): `jr issue comment view`'s default
+human (non-JSON) output bypasses `output::sanitize_table_cell` entirely, because `handle_comment_view`
+(`src/cli/issue/interactions.rs`) is not a `render_table`/`render_table_with_styles` call site — it
+prints its six labeled fields and its ADF-derived comment body via `print!`/`println!` directly.
+Comment bodies and author display names are both writable by anyone with comment permission on the
+issue, so this was a second, independent instance of the same sink class BC-7.1.006 already closes
+for table-mode rendering. This is a scope expansion of an EXISTING BC/VP — no new BC or VP ID is
+minted, so this is classified PATCH under this changelog's Type legend ("amendments to existing
+bodies/ACs/ECs"), not MINOR. BC count is unchanged (98 in-file / 773 cumulative); VP count is
+unchanged (VP-SEC-001-001 amended in place, part (c) extended).
+
+1. **Coverage-claim correction.** The Behavior section's opening sentence previously claimed
+   "every table-mode command … renders through [`render_table`]" without qualification. That
+   claim was accurate for `render_table`'s own call sites but did not account for non-table
+   human-output sinks such as `handle_comment_view`. Reworded to state coverage precisely: every
+   output rendered through `output::render_table`/`output::render_table_with_styles`, plus — as of
+   this amendment — `jr issue comment view`'s human-output mode specifically, called out as an
+   explicit non-`render_table` addition.
+2. **New Behavior subsection for `jr issue comment view`.** Names `handle_comment_view`'s six
+   labeled fields (`ID`, `Author`, `Created`, `Updated`, `JSM internal`, `Restricted`) and its
+   unlabeled ADF-derived body block as required to pass through `output::sanitize_table_cell`'s
+   identical per-character policy (`\n` preserved, `\r` stripped, `\t`→single space, C0/C1
+   controls and bidi/line-separator overrides stripped, ANSI CSI/OSC consumed fail-closed) before
+   being written via `print!`/`println!`. The displayed output FORMAT is unchanged — same labels,
+   same line layout, same fallback tokens. `--output json` is explicitly unaffected — it continues
+   to pass `response` unmodified to `output::render_json`, per the existing table/JSON asymmetry.
+3. **Out-of-scope residual list narrowed.** The six-entry non-table residual list is reduced to
+   five (comment view is promoted out of it) and the remainder is collectively tagged
+   `NONTABLE-SERVER-TEXT-SANITIZE` for future disposition: `project.rs` name lists, `workflow.rs`
+   transition prompts, `sprint.rs`'s hint line, `component.rs`'s delete echo, `field.rs`'s degrade
+   hint, and `JrError` server-text echoes.
+4. **New EC-14.** Hostile comment body `"pwned\u{1b}]0;evil\u{7}\r\nline2"` and hostile author
+   display name `"\u{1b}[31mMallory\u{1b}[0m"`, traced character-by-character against the
+   implemented `sanitize_control_and_ansi_core` state machine (`src/output.rs`, branch
+   `fix/FIX-P5-001`) and independently verified by simulation before being pinned: human output
+   renders `Author: Mallory` and a two-line body of `pwned`/`line2`, with no raw `ESC` byte or C1
+   code point surviving in either field; `--output json` round-trips both values unchanged.
+5. **VP-SEC-001-001(c) extended**, not replaced, with the same EC-14 fixture exercised against
+   `jr issue comment view` under both output modes, in addition to the existing `jr field options`
+   / `jr issue list` checks.
+6. **New live `**Trace**` citation.** `src/cli/issue/interactions.rs::handle_comment_view` is
+   added as a live (not pending-merge) citation — the function already exists on `develop` today,
+   unlike `sanitize_table_cell` and its sibling API surface, which remain pending-merge citations
+   from `fix/FIX-P5-001`. The citation notes that the sanitizer wiring into this function does NOT
+   exist yet as of this amendment — the spec precedes the code, same posture as `sanitize_table_cell`
+   itself was specified under ahead of F6.
+7. **Version history.** New row `1.1.0` added to `BC-7.1.006`'s version-history table recording the
+   SEC-003 security-review provenance and this amendment's changes.
+
+### New Requirements
+
+| ID | Description |
+|----|-------------|
+| — | None. No new BC or VP this delta — `jr issue comment view` is folded into the existing BC-7.1.006 / VP-SEC-001-001 as a scope expansion. |
+
+### Modified Requirements
+
+| ID | Previous | Updated | Rationale |
+|----|----------|---------|-----------|
+| BC-7.1.006 | H1 + Behavior opening sentence: covers `render_table`'s table-mode cells/headers only, with an unqualified "every table-mode command" coverage claim. | H1 + Behavior opening sentence enriched to name `jr issue comment view`'s human-output mode as an additional, explicitly covered non-`render_table` sink; coverage claim corrected to state precisely what is and isn't covered. | PR #891 security review finding SEC-003 (HIGH): `handle_comment_view`'s table-mode arm prints server-supplied text directly via `print!`/`println!`, bypassing `render_table` and therefore bypassing `sanitize_table_cell` entirely. |
+| BC-7.1.006 | Out-of-scope residual list: six entries, unlabeled as a group. | Out-of-scope residual list: five entries (comment view removed), collectively tagged `NONTABLE-SERVER-TEXT-SANITIZE`; new Behavior subsection added specifying comment view's required sanitization. | Human decision D-393 promotes `jr issue comment view` into scope as the sole HIGH-severity residual; the remaining five stay deliberately deferred and now carry a named tracking tag. |
+| BC-7.1.006 | Edge cases: EC-1..EC-13. | Edge cases: EC-1..EC-14. New EC-14 covers `jr issue comment view`'s labeled-field + body sanitization with a hostile fixture. | Closes SEC-003 with a concrete, verified pinned example. |
+| BC-7.1.006 | VP-SEC-001-001(c): end-to-end check against `jr field options` and `jr issue list` only. | VP-SEC-001-001(c): extended with the same end-to-end check against `jr issue comment view` using the EC-14 fixture. | Proves the `handle_comment_view` non-table sink shares the identical sanitizer and table/JSON asymmetry as the `render_table` path, not a separately-specified parallel behavior. |
+| BC-7.1.006 | `**Trace**`: no citation for `handle_comment_view`. | `**Trace**`: live citation added for `src/cli/issue/interactions.rs::handle_comment_view`, noting the sanitizer wiring is a pending implementation obligation. | The function exists on `develop` today; the spec is written ahead of the wiring that will route its labeled fields/body through `sanitize_table_cell`. |
+| BC-7.1.006 | Version history: rows 1.0.0, 1.0.1. | Version history: new row 1.1.0 recording SEC-003 provenance and this amendment. | Traceability requirement — every amendment gets a version-history row. |
+
+### Removed Requirements
+
+| ID | Description | Rationale |
+|----|-------------|-----------|
+| — | None | No BC, VP, or edge case was removed this delta — only the Out-of-scope residual list shrank from six to five entries as `jr issue comment view` moved INTO scope. |
+
+### New Verification Properties
+
+| ID | Description | Proof Strategy |
+|----|-------------|---------------|
+| — | None | VP-SEC-001-001 is amended in place (part (c) extended with a third end-to-end fixture); no new VP is created. |
+
+### Architecture Changes
+
+- None. Scope-expansion spec amendment to an existing BC body; no module-boundary or
+  purity-boundary change. `.factory/specs/architecture/*` is not touched.
+
+### Impact Assessment
+
+| Artifact | Change Type | Notes |
+|----------|-------------|-------|
+| `bc-7-output-render.md` | AMENDED | BC-7.1.006 body: H1 enriched, Behavior coverage claim corrected, new comment-view Behavior subsection added, Out-of-scope list narrowed to five + tagged `NONTABLE-SERVER-TEXT-SANITIZE`, EC-14 added, VP-SEC-001-001(c) extended, `**Trace**` gains a live `handle_comment_view` citation, version-history row 1.1.0 added, frontmatter `trace:` history line added. `total_bcs`/`definitional_count` unchanged (98/54). |
+| `BC-INDEX.md` | AMENDED (title-column sync only) | BC-7.1.006's title-column row updated to match the enriched H1 (BC H1 Title Authority policy) and cites `handle_comment_view`; no count change. |
+| `CANONICAL-COUNTS.md` | UNCHANGED | No count change. |
+| `.factory/cycles/cycle-014/phase-f5-adversarial/FIX-P5-001-spec-delta.md` | AMENDED | New `§8 D-393 amendment` section appended recording this security-review-sourced scope expansion. |
+
+- **Affected stories:** None yet — BC-7.1.006 is not yet anchored to any story.
+- **Affected tests:** F6/PR #891 follow-up implementation must add `handle_comment_view` sanitizer
+  wiring plus EC-14's pinned test and the VP-SEC-001-001(c) end-to-end comment-view check; none of
+  this exists in `src/`/`tests/` yet as of this spec amendment.
+- **Migration needed:** None (spec-only delta).
+- **Migration notes:** None — spec text only, no `src/` production files touched by this delta.
+
+### Feature Request Link
+
+- Scope-expansion delta to `FIX-P5-001` (`SEC-001-RENDER-TABLE-ANSI-SANITIZE`), triggered by PR #891
+  security review finding SEC-003, human decision D-393. Amendment note:
+  `.factory/cycles/cycle-014/phase-f5-adversarial/FIX-P5-001-spec-delta.md` §8.
+
+---
+
 ## [2.5.1] - 2026-09-30
 
 ### Type: PATCH
