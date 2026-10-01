@@ -73,7 +73,32 @@ impl StyledCell {
 /// `comfy_table::Cell` — never as ANSI bytes embedded in the sanitized
 /// string.
 pub fn render_table_with_styles(headers: &[&str], rows: &[Vec<StyledCell>]) -> String {
+    render_table_with_styles_inner(headers, rows, false)
+}
+
+/// Test-only seam behind [`render_table_with_styles`] (BC-7.1.006, CR-2,
+/// D-396/FIX-P5-002): identical logic, with one additional parameter,
+/// `force_styling`. When `true`, `comfy_table`'s own
+/// `Table::force_no_tty().enforce_styling()` is applied before rendering,
+/// so a test can deterministically observe whether a `StyledCell`'s `fg`
+/// reaches the rendered ANSI output regardless of the ambient (non-TTY
+/// under `cargo test`, where `comfy_table`'s own ANSI-styling gate would
+/// otherwise always suppress color — see
+/// `src/cli/user.rs::test_bc_7_1_006_structural_cell_styling_technique_survives_rendering`
+/// for the same technique applied directly against `comfy_table`) terminal
+/// state. `render_table_with_styles` itself always calls this with
+/// `force_styling = false`, so production behavior/output is byte-for-byte
+/// unchanged by this refactor — this is a pure test-observability seam, not
+/// a behavior change.
+fn render_table_with_styles_inner(
+    headers: &[&str],
+    rows: &[Vec<StyledCell>],
+    force_styling: bool,
+) -> String {
     let mut table = Table::new();
+    if force_styling {
+        table.force_no_tty().enforce_styling();
+    }
     table
         .load_preset(UTF8_FULL_CONDENSED)
         .set_content_arrangement(ContentArrangement::Dynamic)
@@ -84,14 +109,15 @@ pub fn render_table_with_styles(headers: &[&str], rows: &[Vec<StyledCell>]) -> S
                 .collect::<Vec<_>>(),
         );
 
+    let should_colorize = colored::control::SHOULD_COLORIZE.should_colorize();
     for row in rows {
         let cells: Vec<Cell> = row
             .iter()
             .map(|c| {
                 let cell = Cell::new(sanitize_table_cell(&c.text));
                 match c.fg {
-                    Some(color) => cell.fg(color),
-                    None => cell,
+                    Some(color) if should_colorize => cell.fg(color),
+                    _ => cell,
                 }
             })
             .collect();
@@ -520,22 +546,90 @@ pub(crate) fn sanitize_table_cell(value: &str) -> String {
 
 /// Alias for [`sanitize_table_cell`] applying the exact same BC-7.1.006
 /// character policy — see that function's rustdoc for the full per-character
-/// contract. This name is for call sites that print a single server-supplied
-/// string directly to a terminal via `print!`/`println!`/`eprintln!`, embed
-/// it into a `JrError` message, or interpolate it into a `dialoguer::Select`
-/// label, rather than going through `render_table`/`render_table_with_styles`,
-/// so `..._table_cell` would read misleadingly at the call site (there is no
-/// table involved).
-/// `jr issue comment view`'s human output
-/// (`src/cli/issue/interactions.rs::handle_comment_view`, SEC-003) was the
-/// first caller; `jr issue assign`'s human-output success messages
-/// (`src/cli/issue/workflow.rs::handle_assign`, D-394) are the second;
-/// `disambiguate_user`'s shared user-resolution disambiguation output
-/// (`src/cli/issue/helpers.rs::disambiguate_user`, D-395) is the third. There
-/// is exactly one sanitization implementation behind all these names — this
-/// function does not duplicate or fork the policy.
+/// contract. This name is for a non-`render_table`/`render_table_with_styles`
+/// call site that prints a GENUINELY MULTI-LINE server-supplied string
+/// directly to a terminal, so `..._table_cell` would read misleadingly at
+/// the call site (there is no table involved) while the `\n`-preserving
+/// policy is still exactly what's needed.
+///
+/// **As of D-396/FIX-P5-002, this function has exactly ONE caller left:**
+/// `jr issue comment view`'s ADF-derived body block
+/// (`src/cli/issue/interactions.rs::handle_comment_view`, SEC-003) — the
+/// unlabeled, free-form comment-prose field that is the one genuinely
+/// multi-line non-table sink this BC covers. Every other sink that used to
+/// route through this alias (`handle_comment_view`'s six labeled fields,
+/// `handle_assign`'s two success messages, and `disambiguate_user`'s
+/// non-interactive messages/interactive picker labels — all of which render
+/// exactly ONE line of text) was rewired to the single-line sibling
+/// [`sanitize_terminal_line`] by D-396/FIX-P5-002, which neutralizes an
+/// embedded `\n` instead of preserving it (CR-1, EC-17) — preserving `\n`
+/// in a single-line sink let a hostile value fabricate what looks like an
+/// extra labeled field or picker item (CWE-116). There is exactly one
+/// sanitization implementation (`sanitize_control_and_ansi_core`) behind
+/// both names — this function does not duplicate or fork the policy.
 pub(crate) fn sanitize_terminal_text(value: &str) -> String {
     sanitize_table_cell(value)
+}
+
+/// Single-line sibling of [`sanitize_table_cell`] (BC-7.1.006, CR-1,
+/// D-396/FIX-P5-002). Applies the IDENTICAL per-character policy, with
+/// exactly one difference: an embedded `\n` (U+000A) is REPLACED with a
+/// single space instead of preserved — the same substitution
+/// `sanitize_table_cell` already applies to `\t`. Consecutive `\n`
+/// characters become the same number of consecutive spaces (the simplest
+/// option; no further collapsing to a single space).
+///
+/// **Why this function exists, and when to use it instead of
+/// [`sanitize_table_cell`]/[`sanitize_terminal_text`]:** those two
+/// functions deliberately PRESERVE `\n`, which is correct for a
+/// genuinely multi-line sink (`render_table`/`render_table_with_styles`
+/// cells, `handle_comment_view`'s ADF-derived body block) — it's the only
+/// mechanism by which a multi-line cell renders at all. But a sink that is
+/// supposed to render EXACTLY ONE line of text has no such excuse: a
+/// hostile value with an embedded `\n` routed through the `\n`-preserving
+/// sanitizer can fabricate what LOOKS like an extra labeled field or picker
+/// item on its own line — a CWE-116 line-fabrication/field-spoofing hazard.
+/// `sanitize_terminal_line` is the fix for exactly that class of sink:
+/// - `disambiguate_user`'s non-interactive `JrError::UserError` messages and
+///   interactive `dialoguer::Select` picker labels/items
+///   (`src/cli/issue/helpers.rs`, including the `disambiguation_labels`
+///   helper).
+/// - `handle_comment_view`'s six labeled fields (`ID`/`Author`/`Created`/
+///   `Updated`/`JSM internal`/`Restricted`) (`src/cli/issue/interactions.rs`)
+///   — but NOT its ADF-derived body block, which stays on
+///   `sanitize_terminal_text` (genuinely multi-line).
+/// - `handle_assign`'s two human-output success messages
+///   (`src/cli/issue/workflow.rs`).
+///
+/// All three sink groups above are wired to this function (FIX-P5-002) —
+/// see BC-7.1.006's EC-17 for the verified-hostile fixture and the contrast
+/// case against the `\n`-preserving `sanitize_terminal_text` this function
+/// closes.
+///
+/// See `.factory/specs/prd/bc-7-output-render.md` BC-7.1.006 (EC-17) and its
+/// inline `VP-SEC-001-001` for the full contract.
+pub(crate) fn sanitize_terminal_line(value: &str) -> String {
+    sanitize_control_and_ansi_core(value, |c| match c {
+        '\n' => CharDisposition::Replace(' '),
+        '\r' => CharDisposition::Drop,
+        '\t' => CharDisposition::Replace(' '),
+        _ => {
+            let code = c as u32;
+            if code <= 0x1F
+                || code == 0x7F
+                || (0x80..=0x9F).contains(&code)
+                || (0x202A..=0x202E).contains(&code)
+                || (0x2066..=0x2069).contains(&code)
+                || code == 0x2028
+                || code == 0x2029
+                || code == 0x0085
+            {
+                CharDisposition::Drop
+            } else {
+                CharDisposition::Keep
+            }
+        }
+    })
 }
 
 #[cfg(test)]
@@ -1347,5 +1441,231 @@ mod tests {
             "json-mode print must not error and must never consult the styled \
              rows at all"
         );
+    }
+
+    // ── sanitize_terminal_line (BC-7.1.006, CR-1, D-396/FIX-P5-002) ─────
+    //
+    // `sanitize_terminal_line` is implemented and wired into its call
+    // sites (`handle_comment_view`, `handle_assign`, `disambiguate_user`).
+    // These tests pin its behavior (identical to `sanitize_table_cell`,
+    // except `\n` maps to a single space) and are expected to pass.
+
+    /// EC-17a: the exact `handle_comment_view` `Author`-field fixture from
+    /// BC-7.1.006's spec. A hostile value with an embedded `\n` and no
+    /// ANSI/control bytes must collapse to a SINGLE space at the `\n`
+    /// boundary — not fabricate a second line. Traced: `E`,`v`,`e` Keep;
+    /// `\n` is not preceded by `ESC` and is not inside any CSI/OSC scan
+    /// span, so it reaches the per-character policy directly and is
+    /// replaced with a single space; the rest (`Restricted: None`) is
+    /// ordinary printable ASCII and passes through Keep unchanged.
+    #[test]
+    fn test_sanitize_terminal_line_ec17a_newline_replaced_with_space() {
+        assert_eq!(
+            sanitize_terminal_line("Eve\nRestricted: None"),
+            "Eve Restricted: None"
+        );
+    }
+
+    /// Consecutive `\n` characters become the SAME NUMBER of consecutive
+    /// spaces — no further collapsing to a single space (BC-7.1.006's
+    /// stated "simplest option" choice, mirrored from the existing `\t`
+    /// substitution policy).
+    #[test]
+    fn test_sanitize_terminal_line_consecutive_newlines_become_consecutive_spaces() {
+        assert_eq!(sanitize_terminal_line("a\n\nb"), "a  b");
+        assert_eq!(
+            sanitize_terminal_line("a\n\n\nb"),
+            "a   b",
+            "three consecutive \\n must become three consecutive spaces, \
+             not one"
+        );
+    }
+
+    /// `\r\n` collapses to a SINGLE space, not two: `\r` is stripped
+    /// outright (identical to `sanitize_table_cell`'s policy — nothing
+    /// substituted), then the bare `\n` that follows is replaced with one
+    /// space. Traced character-by-character: `a` Keep; `\r` Drop (no
+    /// output); `\n` Replace(' '); `b` Keep → `"a" + "" + " " + "b"` =
+    /// `"a b"`.
+    #[test]
+    fn test_sanitize_terminal_line_crlf_collapses_to_single_space() {
+        assert_eq!(sanitize_terminal_line("a\r\nb"), "a b");
+    }
+
+    /// A bare `\r` with no following `\n` still disappears with no trace
+    /// (identical to `sanitize_table_cell`'s `\r`-strip policy) — this
+    /// function changes `\n` handling only, not `\r` handling.
+    #[test]
+    fn test_sanitize_terminal_line_bare_cr_stripped_like_table_cell() {
+        assert_eq!(sanitize_terminal_line("a\rb"), "ab");
+    }
+
+    /// Every OTHER character policy (CSI/OSC consumption, C1 strip, `\t`→
+    /// space, `\r` strip, bidi/line-separator strip) must behave
+    /// IDENTICALLY to `sanitize_table_cell` — `sanitize_terminal_line`
+    /// diverges ONLY on `\n`. Reuses the same hostile fixture already
+    /// pinned against `sanitize_table_cell` elsewhere in this module
+    /// (`HOSTILE` payloads in `tests/table_output_sanitization.rs`), with
+    /// no `\n` present so the two functions' outputs must match exactly.
+    #[test]
+    fn test_sanitize_terminal_line_matches_sanitize_table_cell_policy_except_newline() {
+        let hostile = "\u{1b}[31mFAKE\u{1b}[0m\u{9b}pwned\t\u{7f}end\r";
+        assert_eq!(
+            sanitize_terminal_line(hostile),
+            sanitize_table_cell(hostile),
+            "with no \\n present in the input, sanitize_terminal_line must \
+             match sanitize_table_cell byte-for-byte: {hostile:?}"
+        );
+    }
+
+    /// An unterminated CSI sequence containing an embedded `\n` still
+    /// consumes the `\n` as part of the fail-closed sequence scan (EC-13's
+    /// mechanics, shared verbatim via `sanitize_control_and_ansi_core` — the
+    /// CSI-scan loop consumes every character up to and including its
+    /// terminator unconditionally, NEVER invoking the per-character
+    /// `policy` closure for them) — this function's `\n`→space
+    /// substitution only ever applies to a `\n` that reaches the
+    /// per-character policy closure directly, never to one swallowed
+    /// inside a CSI/OSC scan span. Mirrors the pinned
+    /// `sanitize_table_cell("\u{1b}[31;1;9\n")` == `""` case (EC-13) —
+    /// identical input, identical output, since nothing after the `\n`
+    /// ever terminates the sequence, so it (and the embedded `\n`) is
+    /// consumed through end-of-string.
+    #[test]
+    fn test_sanitize_terminal_line_newline_inside_unterminated_csi_is_consumed_not_replaced() {
+        assert_eq!(sanitize_terminal_line("\u{1b}[31;1;9\n"), "");
+        assert_eq!(
+            sanitize_table_cell("\u{1b}[31;1;9\n"),
+            sanitize_terminal_line("\u{1b}[31;1;9\n"),
+            "both sanitizers must agree on this fail-closed case"
+        );
+    }
+
+    proptest! {
+        #![proptest_config(ProptestConfig::with_cases(1000))]
+
+        /// The output of `sanitize_terminal_line` must NEVER contain a raw
+        /// `\n` — this is the entire point of the function's existence
+        /// (BC-7.1.006 CR-1): a single-line sink must never have a `\n`
+        /// reach it.
+        #[test]
+        fn prop_sanitize_terminal_line_never_contains_newline(
+            input in hostile_table_cell_strategy()
+        ) {
+            let output = sanitize_terminal_line(&input);
+            prop_assert!(
+                !output.contains('\n'),
+                "sanitize_terminal_line must never emit a raw \\n: {output:?}"
+            );
+        }
+
+        /// On an input containing no `\n` at all, `sanitize_terminal_line`
+        /// must produce the IDENTICAL output to `sanitize_table_cell` — the
+        /// two functions differ ONLY in how they handle `\n`.
+        #[test]
+        fn prop_sanitize_terminal_line_matches_table_cell_when_no_newline(
+            input in hostile_no_unterminated_escape_strategy()
+                .prop_filter("no newline", |s| !s.contains('\n'))
+        ) {
+            prop_assert_eq!(sanitize_terminal_line(&input), sanitize_table_cell(&input));
+        }
+    }
+
+    // ── render_table_with_styles structural color gating (BC-7.1.006,
+    // CR-2, D-396/FIX-P5-002) ────────────────────────────────────────────
+    //
+    // `colored`'s global override (`colored::control::set_override`) is a
+    // single process-wide `AtomicBool` shared by every thread in this test
+    // binary (see `src/cli/user.rs`'s `ForcedColorOverride`/
+    // `COLOR_OVERRIDE_LOCK` for the identical rationale, mirrored here as
+    // its own serialized guard since `user.rs`'s is private to its own
+    // `mod tests`).
+    static TERMINAL_COLOR_OVERRIDE_LOCK: std::sync::Mutex<()> = std::sync::Mutex::new(());
+
+    /// RAII guard forcing `colored`'s global override for its lifetime,
+    /// serialized against `TERMINAL_COLOR_OVERRIDE_LOCK`. Always restores
+    /// via `colored::control::unset_override()` on drop (including on
+    /// panic/unwind).
+    struct TerminalColorOverride {
+        _guard: std::sync::MutexGuard<'static, ()>,
+    }
+
+    impl TerminalColorOverride {
+        fn new(enabled: bool) -> Self {
+            let guard = TERMINAL_COLOR_OVERRIDE_LOCK
+                .lock()
+                .unwrap_or_else(std::sync::PoisonError::into_inner);
+            colored::control::set_override(enabled);
+            Self { _guard: guard }
+        }
+    }
+
+    impl Drop for TerminalColorOverride {
+        fn drop(&mut self) {
+            colored::control::unset_override();
+        }
+    }
+
+    /// CR-2 (D-396): `render_table_with_styles` must apply a `StyledCell`'s
+    /// `fg` ONLY when `colored::control::SHOULD_COLORIZE.should_colorize()`
+    /// is true — before this fix it applied `fg` UNCONDITIONALLY whenever
+    /// `fg` was `Some`, performing no `SHOULD_COLORIZE` check of its own
+    /// (that check lived only in `src/cli/user.rs::active_cell`, the sole
+    /// `StyledCell`-constructing caller). As of this fix,
+    /// `render_table_with_styles_inner` gates `fg` on this check itself.
+    /// This test calls
+    /// `render_table_with_styles` directly (not `active_cell`), so it is
+    /// unaffected by `active_cell`'s own gating and isolates
+    /// `render_table_with_styles`'s OWN behavior.
+    ///
+    /// Styling is forced ON via the `force_styling` test seam
+    /// (`render_table_with_styles_inner`) so the assertion is meaningful
+    /// under `cargo test`'s captured (non-TTY) stdout — without it,
+    /// `comfy_table`'s own TTY gate would suppress ANSI regardless of `fg`,
+    /// making "no ANSI present" trivially true for the WRONG reason.
+    ///
+    /// `render_table_with_styles_inner` now gates `fg` application on
+    /// `colored::control::SHOULD_COLORIZE.should_colorize()` (D-396/CR-2,
+    /// FIX-P5-002) — with styling forced on and colorize forced OFF, the
+    /// `Color::Green` `fg` is never applied to the `comfy_table::Cell`, so
+    /// no ANSI bytes appear in the output.
+    #[test]
+    fn test_bc_7_1_006_render_table_with_styles_suppresses_fg_when_colorize_disabled() {
+        let _color = TerminalColorOverride::new(false);
+
+        let headers = &["Name"];
+        let rows = vec![vec![StyledCell::colored("ok", Color::Green)]];
+        let output = render_table_with_styles_inner(headers, &rows, true);
+
+        assert!(
+            !output.contains('\u{1b}'),
+            "render_table_with_styles must suppress a StyledCell's fg when \
+             SHOULD_COLORIZE.should_colorize() is false, regardless of \
+             comfy_table's own TTY-styling gate: {output:?}"
+        );
+        assert!(output.contains("ok"));
+    }
+
+    /// Companion to the suppression test above: with colorize forced ON
+    /// (and styling forced on via the same test seam), the `StyledCell`'s
+    /// `fg` IS applied — `render_table_with_styles` must not suppress
+    /// unconditionally. Expected GREEN: with
+    /// `SHOULD_COLORIZE.should_colorize()` true, `render_table_with_styles_inner`'s
+    /// gate (CR-2) lets `fg` through, satisfying the "colorize ON → color
+    /// present" half of CR-2.
+    #[test]
+    fn test_bc_7_1_006_render_table_with_styles_applies_fg_when_colorize_enabled() {
+        let _color = TerminalColorOverride::new(true);
+
+        let headers = &["Name"];
+        let rows = vec![vec![StyledCell::colored("ok", Color::Green)]];
+        let output = render_table_with_styles_inner(headers, &rows, true);
+
+        assert!(
+            output.contains('\u{1b}'),
+            "expected ANSI styling bytes when colorize is enabled and \
+             styling is forced on: {output:?}"
+        );
+        assert!(output.contains("ok"));
     }
 }
