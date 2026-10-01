@@ -2102,6 +2102,13 @@ to also strip the C1 control range, consistent with `sanitize_table_cell`'s
 policy, then confirm `sanitize_env_display`'s own tests still pass unchanged
 for non-C1 inputs.
 
+**Update 2026-10-01 (PR #896 / `FIX-P5-004`, security-reviewer `SEC-002`):**
+`strip_control_and_ansi`/`sanitize_env_display` ALSO lack the invisible/format-
+character stripping `FIX-P5-004` added to the table/terminal sanitizers (see
+`OUTPUT-INVISIBLE-FORMAT-CHARS-RESIDUAL` below for the residual set that even
+the new policy keeps). Fold both gaps into the same fix when this item is
+picked up. Severity and target unchanged (LOW, next maintenance sweep).
+
 ## `CANONICAL-COUNTS.md`'s L2 bc_count alignment row for bc-7 is stale — NEW, OPEN, doc-accuracy, target next maintenance sweep (2026-09-30)
 
 **ID:** `CANONICAL-COUNTS-L2-BC7-ALIGNMENT-STALE`. Surfaced by product-owner
@@ -2178,6 +2185,13 @@ next maintenance sweep** — add `email_address`/`account_id` (or a
 truncated/hashed disambiguator) to the `Ambiguous` arm's labels, mirroring
 what `ExactMultiple` already does, then add a regression test with two
 same-named fixture accounts.
+
+**Update 2026-10-01 (PR #896 / `FIX-P5-004`, security-reviewer `SEC-003`):**
+since `FIX-P5-004`, display names that differ ONLY by invisible characters now
+collapse to identical strings in `disambiguate_user`'s `Ambiguous` branch,
+making this limitation slightly more reachable than when first recorded.
+Severity stays LOW; the fix above (add `email_address`/`account_id` to the
+`Ambiguous` arm) covers this case too. Cross-reference only, no separate item.
 
 ## `FIX-P5-002`'s remaining code-review nits (`CR-3`..`CR-8`) — NEW, OPEN, code-quality (nit), target next maintenance sweep (2026-10-01)
 
@@ -2282,3 +2296,48 @@ that fails when an `exclude_re` `file:line:col: … in <fn>` anchor no longer re
 that function. If it grows to a story, open it under the `SELF-IMPROVEMENT` epic
 (precedent: `S-PG-MERGE-AUTH-BYPASS`). A full story was not drafted now, to avoid
 perturbing the locked story counts (194) for a deferred LOW item.
+
+## Residual invisible/format characters kept by `output::classify_default_char` — NEW, OPEN, security (LOW, CWE-451), needs BC-7.1.006 policy change (2026-10-01)
+
+**ID:** `OUTPUT-INVISIBLE-FORMAT-CHARS-RESIDUAL`. Severity **LOW**, CWE-451
+(UI misrepresentation of critical information). Source: PR #896 (`FIX-P5-004`)
+security-reviewer `SEC-001`. After `FIX-P5-004`, `output::classify_default_char`
+still KEEPS these invisible/format characters: U+00AD (soft hyphen), U+034F
+(combining grapheme joiner), U+180E (Mongolian vowel separator), the Hangul
+fillers U+115F/U+1160/U+3164/U+FFA0, variation selectors (U+FE00..=FE0F and
+U+E0100..=E01EF — the most plausible spoofing vector), U+FFF9..=FFFB (interlinear
+annotation), and U+1D173..=1D17A (musical format controls). Stripping them is a
+BC-7.1.006 policy change (not a bug fix against the current contract).
+
+**Disposition:** OPEN, no GitHub issue filed. Human decision 2026-10-01: TRACK,
+do not fix in cycle-014. **Target: next maintenance sweep or a future
+security-hardening cycle**, via a BC-7.1.006 policy amendment first, then the
+`classify_default_char` change. Related: `SANITIZE-ENV-DISPLAY-C1-GAP` (same
+gap class in `strip_control_and_ansi`).
+
+## `tests/common/wf.rs` inline tests re-run in every integration crate that includes `mod common;` — NEW, OPEN, test-hygiene (NIT), target next maintenance sweep (2026-10-01)
+
+**ID:** `WF-RS-INLINE-TESTS-RERUN`. Severity **NIT**. Source: PR #896
+(`FIX-P5-004`) pr-reviewer. The inline `#[cfg(test)] mod tests` in
+`tests/common/wf.rs` is compiled and re-run in every integration-test crate
+that declares `mod common;` — the same class as `CR3-004`, which fixed only
+`hermetic.rs`.
+
+**Disposition:** OPEN, no GitHub issue filed, nit-tier. Human decision
+2026-10-01: TRACK, not fixed in cycle-014. **Target: next maintenance sweep** —
+move those tests to a dedicated test target (or gate them so they run once),
+mirroring the `hermetic.rs` fix.
+
+## `table_output_sanitization.rs` Harness forces `NO_COLOR=1`, so integration tests no longer catch jr's own ANSI leaking into piped output — NEW, OPEN, test-coverage advisory (LOW), target next maintenance sweep (2026-10-01)
+
+**ID:** `TABLE-SANITIZATION-HARNESS-NO-COLOR`. Severity **LOW**, advisory.
+Source: PR #896 (`FIX-P5-004`) pr-reviewer, finding `P3-004`.
+`tests/table_output_sanitization.rs`'s Harness now forces `NO_COLOR=1`, so
+those integration tests can no longer detect jr's own styling leaking ANSI
+bytes into piped output. In-process color-gate tests cover that behavior, so
+residual risk is LOW.
+
+**Disposition:** OPEN, no GitHub issue filed, advisory. Human decision
+2026-10-01: TRACK, not fixed. **Target: next maintenance sweep** — optionally
+add one integration cell that runs WITHOUT `NO_COLOR` against piped stdout and
+asserts no ESC byte, to restore end-to-end coverage.
