@@ -792,7 +792,7 @@ sibling function).
 
 **Current exclusions:**
 
-- **`src/api/jira/issues.rs:374:16: delete ! in JiraClient::search_issues_with_fields`**
+- **`src/api/jira/issues.rs:393:16: delete ! in JiraClient::search_issues_with_fields`**
   (S-575-1). This is the `if !page_has_more { break; }` terminal-page guard in
   `search_issues_with_fields`'s cursor-pagination loop. Deleting the `!` makes the loop
   fail to break on a terminal page; since a terminal page always has
@@ -809,7 +809,7 @@ sibling function).
   `src/api/jira/issues.rs`, and the pagination-termination tests in
   `tests/rate_limit_cap_tests.rs`), which assert the loop DOES terminate — exactly the
   property this mutant would violate. The sibling `JiraClient::search_issues`
-  (`issues.rs:273`) has the identical `if !page_has_more { break; }` construct and is
+  (`issues.rs:292`) has the identical `if !page_has_more { break; }` construct and is
   deliberately **not** excluded — only this one, precisely-anchored mutant is.
 
 - **`src/cli/auth/list.rs` — `probe_matching_kind_credential` (two regexes)**
@@ -1586,6 +1586,7 @@ landed:
 
 | Date | Cycle | Change |
 |------|-------|--------|
+| 2026-10-01 | FIX-P5-004 (P3-005) | Re-anchored the S-575-1 `exclude_re` entry from `src/api/jira/issues.rs:374:16` to `:393:16` (the `if !page_has_more` terminal-page guard in `JiraClient::search_issues_with_fields` had drifted 19 lines, so the stale anchor excluded nothing) and refreshed the sibling `search_issues` reference from `issues.rs:273` to `issues.rs:292`. Verified with `cargo mutants --list --file src/api/jira/issues.rs`. |
 | 2026-09-29 | S-cycle14-api-query-param | Scope-gap fix: added `src/cli/api.rs` (`append_query_params`/`parse_query_param`, BC-X.16.001/BC-X.16.002's `jr api --query-param`/`-q` assembly and parse functions, issue #583) to `examine_globs` (33 → 34 entries). Added at file-creation-of-scope time per the P22-001/D-149/S-MUTANTS-SCOPE-1 convention. |
 | 2026-09-29 | S-cycle14-user-list-project-resolution | Scope-gap fix: added `src/cli/user.rs` (`resolve_user_list_project`, BC-X.7.002's configured-default fallback resolver for `jr user list`'s post-clap `--project` value, issue #862) to `examine_globs` (32 → 33 entries). Added at file-creation-of-scope time per the P22-001/D-149/S-MUTANTS-SCOPE-1 convention. |
 | 2026-09-10 | ci/mutants-nightly-rebalance | **Nightly full-scope workflow rebalanced for reliability + honest reporting.** Investigated run 34478602590 `cancelled`: only 4/16 shards finished inside the old `timeout-minutes: 240` cap before the other 12 were killed mid-run, and `mutants-nightly-report` pooled the partial outcomes into an ordinary below-90% warning indistinguishable from a full run. Fix: `.github/workflows/mutants-nightly.yml`'s matrix widened N=16 → N=24 (`--shard <k>/24`), shard `timeout-minutes` raised 240 → 300 (under GitHub's 360-minute job max), and a completeness guard added — each shard now writes a `mutants-nightly-shard-status-<k>` completion sentinel only on a genuine `cargo mutants` exit 0 (a cancelled or failed shard produces none), and `mutants-nightly-report` counts sentinels, reports "N/24 shards completed," and — when N < 24 — annotates the summary PARTIAL and suppresses the below-90% `::warning::` in favor of an explicit advisory-incomplete note. The report job remains advisory-only and still never exits non-zero. Internal CI/CD only — no `src/` change, no new PRD BC. |

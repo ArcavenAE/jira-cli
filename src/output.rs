@@ -55,10 +55,12 @@ impl StyledCell {
         }
     }
 
-    /// A cell styled with a structural foreground color. The caller is
-    /// responsible for deciding WHETHER to colorize (e.g. honoring
-    /// `--no-color`/`NO_COLOR` via `colored::control::SHOULD_COLORIZE`) —
-    /// this constructor unconditionally applies `fg` when used.
+    /// A cell styled with a structural foreground color. This constructor
+    /// only RECORDS `fg`; since CR-2 (D-396/FIX-P5-002),
+    /// [`render_table_with_styles`] applies it structurally ONLY when
+    /// `colored::control::SHOULD_COLORIZE.should_colorize()` is true (so
+    /// `--no-color`/`NO_COLOR` suppress it for every caller), ANDed with
+    /// `comfy_table`'s own TTY gate. A caller need not check it itself.
     pub fn colored(text: impl Into<String>, fg: Color) -> Self {
         Self {
             text: text.into(),
@@ -72,6 +74,12 @@ impl StyledCell {
 /// each cell's optional structural foreground color to the resulting
 /// `comfy_table::Cell` — never as ANSI bytes embedded in the sanitized
 /// string.
+///
+/// **Structural color gate (CR-2, D-396/FIX-P5-002):** a cell's `fg` is
+/// applied only when `colored::control::SHOULD_COLORIZE.should_colorize()`
+/// is true (false under `--no-color`/`NO_COLOR`), and the resulting styling
+/// is additionally subject to `comfy_table`'s own TTY gate — color needs
+/// BOTH. Callers therefore need not gate their own `StyledCell::colored`.
 pub fn render_table_with_styles(headers: &[&str], rows: &[Vec<StyledCell>]) -> String {
     render_table_with_styles_inner(headers, rows, false)
 }
@@ -81,9 +89,10 @@ pub fn render_table_with_styles(headers: &[&str], rows: &[Vec<StyledCell>]) -> S
 /// `force_styling`. When `true`, `comfy_table`'s own
 /// `Table::force_no_tty().enforce_styling()` is applied before rendering,
 /// so a test can deterministically observe whether a `StyledCell`'s `fg`
-/// reaches the rendered ANSI output regardless of the ambient (non-TTY
-/// under `cargo test`, where `comfy_table`'s own ANSI-styling gate would
-/// otherwise always suppress color — see
+/// reaches the rendered ANSI output regardless of the ambient (whether
+/// stdout is a TTY depends on how the test runner was launched, since
+/// libtest's capture does not redirect fd 1, and `comfy_table`'s own
+/// ANSI-styling gate would otherwise suppress color when it is not — see
 /// `src/cli/user.rs::test_bc_7_1_006_structural_cell_styling_technique_survives_rendering`
 /// for the same technique applied directly against `comfy_table`) terminal
 /// state. `render_table_with_styles` itself always calls this with
@@ -249,8 +258,9 @@ pub(crate) fn sanitize_env_display(value: &str) -> String {
 /// A CSI sequence (`ESC [ … <final byte 0x40-0x7E>`) is consumed through
 /// its final byte; an OSC sequence (`ESC ] … <BEL or ST>`) is consumed
 /// through its BEL (`0x07`) or `ESC \` string terminator. A bare ESC not
-/// starting a recognized CSI/OSC sequence is dropped as an ordinary control
-/// character (it falls in `0x00-0x1F`).
+/// starting a recognized CSI/OSC sequence is dropped unconditionally by the
+/// shared `sanitize_control_and_ansi_core` before any per-character policy
+/// runs (it never reaches this function's policy closure).
 ///
 /// **Unterminated CSI/OSC (fail-closed):** if a CSI or OSC sequence's
 /// final byte / string terminator never appears before end-of-string, the
@@ -291,9 +301,10 @@ enum CharDisposition {
     Replace(char),
 }
 
-/// Shared CSI/OSC-consuming state machine backing both
-/// [`strip_control_and_ansi`] (`sanitize_env_display`) and
-/// [`sanitize_table_cell`] (BC-7.1.006) — the two sibling sanitizers differ
+/// Shared CSI/OSC-consuming state machine backing every sanitizer here:
+/// [`strip_control_and_ansi`] (`sanitize_env_display`),
+/// [`sanitize_table_cell`] (BC-7.1.006, also reached through its alias
+/// [`sanitize_terminal_text`]), and [`sanitize_terminal_line`] — they differ
 /// only in what they do with an ordinary (non-ESC) character, which this
 /// function delegates to the caller-supplied `policy` closure via
 /// [`CharDisposition`]. The ANSI CSI/OSC recognition and fail-closed
@@ -303,8 +314,8 @@ enum CharDisposition {
 /// An ANSI CSI sequence (`ESC [ … <final byte 0x40-0x7E>`) is consumed
 /// through its final byte; an OSC sequence (`ESC ] … <BEL 0x07 or ST
 /// ESC \>`) is consumed through its BEL or `ESC \` string terminator. A
-/// bare ESC not starting a recognized CSI/OSC sequence falls through to
-/// `policy` like any other character. If a CSI/OSC sequence's terminator
+/// bare ESC not starting a recognized CSI/OSC sequence is dropped
+/// unconditionally (it never reaches `policy`). If a CSI/OSC sequence's terminator
 /// never appears before end-of-string, the sequence (and everything after
 /// it) is consumed through EOF — fail-closed, no raw ESC byte ever
 /// survives — regardless of what `policy` would have done with the bytes
@@ -373,36 +384,44 @@ fn sanitize_control_and_ansi_core(
 /// or `render_table_with_styles` is required to sanitize its own inputs
 /// before passing them in.
 ///
-/// **Coverage claim, precisely stated (SEC-003/D-394/D-395, FIX-P5-001):**
-/// this function's callers are all of `render_table`/`render_table_with_styles`
-/// output, PLUS three non-table human (non-JSON) print/error-message sites
-/// that call this function (via the [`sanitize_terminal_text`] alias)
-/// directly at their own construction sites instead of going through either
-/// table chokepoint:
+/// **Coverage claim, precisely stated (SEC-003/D-394/D-395/D-396, FIX-P5-001,
+/// FIX-P5-002):** this sanitization family covers all of `render_table`/
+/// `render_table_with_styles` output, PLUS three non-table human (non-JSON)
+/// print/error-message sites that sanitize server-supplied text directly at
+/// their own construction sites instead of going through either table
+/// chokepoint. Which sibling each uses matters (CR-1, D-396): a sink that
+/// renders EXACTLY ONE line uses [`sanitize_terminal_line`] (embedded `\n`
+/// becomes a space, so a hostile value cannot fabricate an extra line or
+/// field); only genuinely multi-line content uses [`sanitize_terminal_text`]
+/// (this function's `\n`-preserving alias):
 /// - `jr issue comment view`'s human output
 ///   (`src/cli/issue/interactions.rs::handle_comment_view`), which prints
-///   its six labeled fields and ADF-derived body directly via `print!`/
-///   `println!`.
+///   its fields and ADF-derived body directly via `print!`/`println!`. Its
+///   six labeled fields (`ID`/`Author`/`Created`/`Updated`/`JSM internal`/
+///   `Restricted`) use [`sanitize_terminal_line`]; ONLY its ADF-derived
+///   body block uses [`sanitize_terminal_text`].
 /// - `jr issue assign`'s human-output success messages
 ///   (`src/cli/issue/workflow.rs::handle_assign`), which echo the
 ///   server-derived assignee `display_name` at both the idempotent
 ///   already-assigned site (`"{key} is already assigned to {name}"`) and
 ///   the newly-assigned/self-assign site (`"Assigned {key} to {name}"`),
-///   via `output::print_success`.
+///   via `output::print_success` and [`sanitize_terminal_line`].
 /// - `disambiguate_user`'s shared user-resolution disambiguation output
 ///   (`src/cli/issue/helpers.rs::disambiguate_user`), reached by
 ///   `resolve_assignee` (`jr issue assign --to`), `resolve_assignee_by_project`
-///   (`jr issue create`/`jr issue edit --assignee`), `resolve_user`
-///   (`jr issue list --assignee`), and `mentions::resolve_at_name_candidate`
-///   (`@Name` mention resolution): its `MatchResult::ExactMultiple` and
-///   `MatchResult::Ambiguous` non-interactive `JrError::UserError` messages,
-///   its interactive `dialoguer::Select` labels/items (the `ExactMultiple`
-///   labels via the factored-out `disambiguation_labels` helper,
+///   (`jr issue create --to`, its only call site; `issue edit` has no
+///   assignee flag), `resolve_user`
+///   (`jr issue list --assignee`/`--reporter`), and
+///   `mentions::resolve_at_name_candidate` (`@Name` mention resolution): its
+///   `MatchResult::ExactMultiple` and `MatchResult::Ambiguous`
+///   non-interactive `JrError::UserError` messages, its interactive
+///   `dialoguer::Select` labels/items (the `ExactMultiple` labels via the
+///   factored-out `disambiguation_labels` helper,
 ///   `src/cli/issue/helpers.rs`), and the `MatchResult::None` branch's
-///   `all_names` candidate list — sanitized once, before it is handed to
-///   the caller-supplied `none_msg_fn` closure, covering all four callers
-///   uniformly. Unlike the two sinks above, `disambiguate_user`'s
-///   `--output json` error envelope
+///   `all_names` candidate list — all via [`sanitize_terminal_line`],
+///   sanitized once, before it is handed to the caller-supplied
+///   `none_msg_fn` closure, covering all four callers uniformly. Unlike the
+///   two sinks above, `disambiguate_user`'s `--output json` error envelope
 ///   is NOT a separate lossless channel: `src/main.rs`'s single
 ///   error-formatting site builds both the human-text and JSON `"error"`
 ///   field from the same already-sanitized `JrError::UserError` `Display`
@@ -430,6 +449,13 @@ fn sanitize_control_and_ansi_core(
 ///     `BulkActionError::summary()` — raw Jira bulk-API error text.
 ///   - (`handle_assign` is NOT in this residual list — see above, it is a
 ///     covered non-table sink as of D-394.)
+/// - `src/cli/issue/create.rs::handle_create` — the table-mode field-echo
+///   loop (`create_echo`), which prints the raw, unsanitized `--to`-resolved
+///   assignee `displayName` and resolved team name (same exposure class as
+///   the now-covered `handle_assign` sink; found during D-396).
+/// - `src/cli/issue/helpers.rs::resolve_asset` — the Assets `--asset`
+///   disambiguation flow, which puts raw `label`/`object_key` into both its
+///   `JrError` messages and its interactive picker items.
 /// - `src/cli/issue/links.rs` — `handle_link`'s link-creation confirmation
 ///   echo of the server-resolved link-type name (`resolved_name`, drawn
 ///   from `list_link_types()`'s response via `partial_match`;
@@ -469,7 +495,10 @@ fn sanitize_control_and_ansi_core(
 /// messages, and D-395's scope is `disambiguate_user`'s shared
 /// disambiguation output, all covered above. A future fix closing any
 /// NONTABLE-SERVER-TEXT-SANITIZE site should route it through
-/// [`sanitize_terminal_text`] and remove it from this list.
+/// [`sanitize_terminal_line`] if the sink renders exactly one line (the
+/// common case), or [`sanitize_terminal_text`] only for genuinely multi-line
+/// content, and remove it from this list. Using [`sanitize_terminal_text`] for
+/// a single-line sink would reopen CR-1.
 ///
 /// Per-character policy, applied left to right over the whole string
 /// (BC-7.1.006):
@@ -505,6 +534,16 @@ fn sanitize_control_and_ansi_core(
 ///   `U+0085` (NEL) are STRIPPED — the same Unicode terminal-injection
 ///   code-point set `strip_control_and_ansi` already strips for
 ///   `sanitize_env_display`.
+/// - Every Unicode 17.0.0 `General_Category=Cf` format character is
+///   STRIPPED (FIX-P5-004 D-398 introduced the first set; FIX-P5-005 D-399
+///   generalized it to the full category rule, CWE-451), plus the combining
+///   grapheme joiner `U+034F`, the Hangul fillers (`U+115F`, `U+1160`,
+///   `U+3164`, `U+FFA0`) and the whole tag block `U+E0000`-`U+E007F`.
+///   See `classify_default_char` for the table and rationale. Variation
+///   selectors (`U+FE00`-`U+FE0F`, `U+E0100`-`U+E01EF`) are deliberately
+///   KEPT (EC-23). Accepted trade-offs: ZWJ emoji sequences lose their
+///   joiner (EC-20); prepended Cf marks such as `U+0600`-`U+0605` and
+///   `U+00AD` (soft hyphen) are stripped (EC-21).
 /// - No length cap and no truncation are applied (unlike
 ///   `sanitize_env_display`'s capped-and-marked behavior). Ordinary
 ///   printable text — including non-ASCII such as `"é"`, CJK characters,
@@ -525,22 +564,7 @@ pub(crate) fn sanitize_table_cell(value: &str) -> String {
         '\n' => CharDisposition::Keep,
         '\r' => CharDisposition::Drop,
         '\t' => CharDisposition::Replace(' '),
-        _ => {
-            let code = c as u32;
-            if code <= 0x1F
-                || code == 0x7F
-                || (0x80..=0x9F).contains(&code)
-                || (0x202A..=0x202E).contains(&code)
-                || (0x2066..=0x2069).contains(&code)
-                || code == 0x2028
-                || code == 0x2029
-                || code == 0x0085
-            {
-                CharDisposition::Drop
-            } else {
-                CharDisposition::Keep
-            }
-        }
+        _ => classify_default_char(c),
     })
 }
 
@@ -564,11 +588,104 @@ pub(crate) fn sanitize_table_cell(value: &str) -> String {
 /// [`sanitize_terminal_line`] by D-396/FIX-P5-002, which neutralizes an
 /// embedded `\n` instead of preserving it (CR-1, EC-17) — preserving `\n`
 /// in a single-line sink let a hostile value fabricate what looks like an
-/// extra labeled field or picker item (CWE-116). There is exactly one
-/// sanitization implementation (`sanitize_control_and_ansi_core`) behind
-/// both names — this function does not duplicate or fork the policy.
+/// extra labeled field or picker item (CWE-116). Only the CSI/OSC
+/// state-machine engine (`sanitize_control_and_ansi_core`) and the default
+/// per-character policy (`classify_default_char`) are shared with
+/// [`sanitize_terminal_line`]; this function is a pure alias of
+/// [`sanitize_table_cell`] and does not fork the policy.
 pub(crate) fn sanitize_terminal_text(value: &str) -> String {
     sanitize_table_cell(value)
+}
+
+/// Unicode 17.0.0 `General_Category=Cf` (format characters), inclusive
+/// ranges, sorted and non-overlapping (FIX-P5-005, D-399, CWE-451).
+/// Source: `ucd/UnicodeData.txt` 17.0.0 cross-checked against
+/// `DerivedGeneralCategory.txt`; 170 code points in 21 ranges. Kept pure-Cf
+/// so the conformance tests can compare it to the spec verbatim; the
+/// tag block as a whole is added separately in [`classify_default_char`].
+const CF_RANGES: &[(u32, u32)] = &[
+    (0x00AD, 0x00AD),
+    (0x0600, 0x0605),
+    (0x061C, 0x061C),
+    (0x06DD, 0x06DD),
+    (0x070F, 0x070F),
+    (0x0890, 0x0891),
+    (0x08E2, 0x08E2),
+    (0x180E, 0x180E),
+    (0x200B, 0x200F),
+    (0x202A, 0x202E),
+    (0x2060, 0x2064),
+    (0x2066, 0x206F),
+    (0xFEFF, 0xFEFF),
+    (0xFFF9, 0xFFFB),
+    (0x110BD, 0x110BD),
+    (0x110CD, 0x110CD),
+    (0x13430, 0x1343F),
+    (0x1BCA0, 0x1BCA3),
+    (0x1D173, 0x1D17A),
+    (0xE0001, 0xE0001),
+    (0xE0020, 0xE007F),
+];
+
+/// `true` if `code` lies in [`CF_RANGES`] (binary search over the sorted,
+/// non-overlapping table).
+fn is_cf(code: u32) -> bool {
+    CF_RANGES
+        .binary_search_by(|&(start, end)| {
+            if code < start {
+                std::cmp::Ordering::Greater
+            } else if code > end {
+                std::cmp::Ordering::Less
+            } else {
+                std::cmp::Ordering::Equal
+            }
+        })
+        .is_ok()
+}
+
+/// Shared default per-character policy for [`sanitize_table_cell`] and
+/// [`sanitize_terminal_line`] (FIX-P5-003, CR2-1; category rule FIX-P5-005,
+/// D-399, CWE-451). Every character other than the three whitespace
+/// controls (`\n`, `\r`, `\t`, which each function classifies itself) is
+/// DROPPED if it is:
+/// - a C0 control, DEL, a C1 control, a bidi override/isolate, a Unicode
+///   line/paragraph separator, or NEL; or
+/// - any Unicode 17.0.0 `General_Category=Cf` format character
+///   ([`CF_RANGES`]: soft hyphen, Arabic prepended marks, ZWSP/ZWNJ/ZWJ/
+///   LRM/RLM, word joiner and invisible operators, all bidi controls
+///   `U+2066..=U+206F`, BOM, interlinear annotation, Egyptian/Kaithi/
+///   musical format controls, `U+E0001`, `U+E0020..=U+E007F`); or
+/// - the combining grapheme joiner `U+034F` or a blank-rendering Hangul
+///   filler (`U+115F`, `U+1160`, `U+3164`, `U+FFA0`); or
+/// - anywhere in the Unicode tag block `U+E0000..=U+E007F` (deliberate
+///   superset of the Cf subset: `U+E0000` and `U+E0002..=U+E001F` are
+///   unassigned).
+///
+/// Otherwise KEPT. **Deliberately KEPT:** variation selectors
+/// `U+FE00..=U+FE0F` and `U+E0100..=U+E01EF` (emoji VS16 must survive;
+/// smuggling residual accepted, EC-23), and with them the Mongolian free
+/// variation selectors `U+180B..=U+180D`/`U+180F`.
+///
+/// Accepted trade-offs: ZWJ emoji sequences lose their joiner (EC-20);
+/// visible-ish prepended Cf marks (`U+0600..=U+0605`, `U+06DD`,
+/// `U+0890..=U+0891`, `U+08E2`, `U+110BD`, `U+110CD`) and `U+00AD` are
+/// stripped. `--output json` is never sanitized. The table is pinned to
+/// Unicode 17.0.0; a future Unicode revision requires a deliberate update.
+fn classify_default_char(c: char) -> CharDisposition {
+    let code = c as u32;
+    if code <= 0x1F
+        || code == 0x7F
+        || (0x80..=0x9F).contains(&code)
+        || code == 0x2028
+        || code == 0x2029
+        || is_cf(code)
+        || matches!(code, 0x034F | 0x115F | 0x1160 | 0x3164 | 0xFFA0)
+        || (0xE0000..=0xE007F).contains(&code)
+    {
+        CharDisposition::Drop
+    } else {
+        CharDisposition::Keep
+    }
 }
 
 /// Single-line sibling of [`sanitize_table_cell`] (BC-7.1.006, CR-1,
@@ -613,23 +730,41 @@ pub(crate) fn sanitize_terminal_line(value: &str) -> String {
         '\n' => CharDisposition::Replace(' '),
         '\r' => CharDisposition::Drop,
         '\t' => CharDisposition::Replace(' '),
-        _ => {
-            let code = c as u32;
-            if code <= 0x1F
-                || code == 0x7F
-                || (0x80..=0x9F).contains(&code)
-                || (0x202A..=0x202E).contains(&code)
-                || (0x2066..=0x2069).contains(&code)
-                || code == 0x2028
-                || code == 0x2029
-                || code == 0x0085
-            {
-                CharDisposition::Drop
-            } else {
-                CharDisposition::Keep
-            }
-        }
+        _ => classify_default_char(c),
     })
+}
+
+/// Shared test-only serialization for `colored`'s process-global override
+/// (FIX-P5-003, P2-002/CR2-2). `colored::control::set_override` mutates one
+/// process-wide `AtomicBool`, so EVERY test in this crate that sets it must
+/// hold this ONE lock; separate per-module locks cannot exclude each other.
+#[cfg(test)]
+pub(crate) mod color_test_lock {
+    static COLOR_OVERRIDE_LOCK: std::sync::Mutex<()> = std::sync::Mutex::new(());
+
+    /// RAII guard forcing `colored`'s global override for its lifetime while
+    /// holding the shared lock. Restores via `unset_override()` on drop
+    /// (including on panic/unwind); a poisoned lock is recovered so one
+    /// failing test cannot cascade.
+    pub(crate) struct ColorOverride {
+        _guard: std::sync::MutexGuard<'static, ()>,
+    }
+
+    impl ColorOverride {
+        pub(crate) fn new(enabled: bool) -> Self {
+            let guard = COLOR_OVERRIDE_LOCK
+                .lock()
+                .unwrap_or_else(std::sync::PoisonError::into_inner);
+            colored::control::set_override(enabled);
+            Self { _guard: guard }
+        }
+    }
+
+    impl Drop for ColorOverride {
+        fn drop(&mut self) {
+            colored::control::unset_override();
+        }
+    }
 }
 
 #[cfg(test)]
@@ -1377,19 +1512,40 @@ mod tests {
             StyledCell::colored(hostile, Color::Green),
         ]];
 
-        let output = render_table_with_styles(headers, &rows);
+        // Deterministic regardless of ambient TTY: force color ON and
+        // styling ON via the CR-2 seam, so the `fg` really is applied (a
+        // legitimate structural SGR may therefore appear in the output);
+        // assert only on the hostile payload itself.
+        let _color = TerminalColorOverride::new(true);
+        let output = render_table_with_styles_inner(headers, &rows, true);
 
         assert!(
-            !output.contains('\u{1b}'),
-            "raw ESC byte must not survive in a colored styled table cell: {output:?}"
+            !output.contains("[31m"),
+            "the hostile CSI sequence must not survive in a colored styled table cell: {output:?}"
         );
         assert!(
             !output.chars().any(|c| (0x80..=0x9F).contains(&(c as u32))),
             "raw C1 byte must not survive in a colored styled table cell: {output:?}"
         );
         assert!(
-            output.contains("pwned"),
+            output.contains("FAKEpwned"),
             "the sanitized survivor text must still reach the rendered table: {output:?}"
+        );
+
+        // Load-bearing equality: the hostile cell (which carries a raw ESC
+        // and a C1 CSI) must render byte-identically to a clean reference
+        // cell holding only the survivor text with the same structural
+        // color. A regression that stripped CSI parameters but left a lone
+        // ESC would diverge here.
+        assert!(hostile.contains('\u{1b}'), "hostile input must carry ESC");
+        let clean_rows = vec![vec![
+            StyledCell::plain("FOO-1"),
+            StyledCell::colored("FAKEpwned", Color::Green),
+        ]];
+        let clean = render_table_with_styles_inner(headers, &clean_rows, true);
+        assert_eq!(
+            output, clean,
+            "hostile bytes must contribute nothing beyond the survivor text"
         );
     }
 
@@ -1413,20 +1569,18 @@ mod tests {
         );
     }
 
-    /// `print_output_with_styles`'s `OutputFormat::Table` arm must still
-    /// dispatch to the sanitizing `render_table_with_styles` rather than
-    /// bypassing it — asserted by calling `print_output_with_styles`
-    /// itself (not just its callee) so a regression at the dispatch site
-    /// (e.g. a future refactor that formats `c.text` directly instead of
-    /// calling `render_table_with_styles`) is caught here too. stdout
-    /// itself isn't captured by this in-process unit test (the real CLI
-    /// process boundary is covered end-to-end by
-    /// `tests/table_output_sanitization.rs`'s `jr user list` case); this
-    /// test instead pins that the call succeeds for both a hostile plain
-    /// and a hostile colored cell, and that JSON mode stays a pure
-    /// `render_json` passthrough completely unaffected by cell styling.
+    /// Smoke test for `print_output_with_styles` with a hostile styled cell.
+    ///
+    /// Asserts only that the call returns `Ok(())` in both modes: `Table`
+    /// mode with a hostile colored cell, and `Json` mode with the same
+    /// styled rows (which JSON mode never consults).
+    ///
+    /// It does NOT capture stdout, so it cannot detect a `Table` arm that
+    /// bypasses `render_table_with_styles`, and it does not check that
+    /// anything was sanitized. The end-to-end sanitization guarantee is
+    /// owned by `tests/table_output_sanitization.rs`'s `jr user list` case.
     #[test]
-    fn test_bc_7_1_006_print_output_with_styles_does_not_error_on_hostile_cells() {
+    fn test_bc_7_1_006_print_output_with_styles_returns_ok_on_hostile_cells() {
         let headers = &["Name"];
         let hostile = "\u{1b}[31mFAKE\u{1b}[0m\u{9b}pwned";
         let rows = vec![vec![StyledCell::colored(hostile, Color::Red)]];
@@ -1571,40 +1725,294 @@ mod tests {
         }
     }
 
+    // ── invisible format characters (BC-7.1.006 EC-18/19/20, VP-SEC-001-002,
+    // FIX-P5-004, D-398, CWE-451) ────────────────────────────────────────
+
+    /// Every code point the invisible-format policy must DROP.
+    fn invisible_format_chars() -> Vec<char> {
+        let mut v: Vec<char> = Vec::new();
+        for r in [
+            0x200B..=0x200F,
+            0x061C..=0x061C,
+            0x2060..=0x2064,
+            0xFEFF..=0xFEFF,
+            0xE0000..=0xE007F,
+        ] {
+            v.extend(r.map(|u| char::from_u32(u).expect("valid scalar")));
+        }
+        v
+    }
+
+    proptest! {
+        #![proptest_config(ProptestConfig::with_cases(1000))]
+
+        /// VP-SEC-001-002 (a): all three wrappers strip every invisible
+        /// format character, wherever it is injected into clean text.
+        #[test]
+        fn prop_bc_7_1_006_sanitizers_strip_invisible_format_characters(
+            idx in 0usize..invisible_format_chars().len(),
+            prefix in "[a-z]{0,6}",
+            suffix in "[a-z]{0,6}",
+            endpoint in prop::bool::ANY,
+        ) {
+            let chars = invisible_format_chars();
+            // Bias to range endpoints half the time.
+            let c = if endpoint {
+                [0x200B, 0x200F, 0x061C, 0x2060, 0x2064, 0xFEFF, 0xE0000, 0xE007F]
+                    [idx % 8]
+            } else {
+                chars[idx] as u32
+            };
+            let c = char::from_u32(c).unwrap();
+            let input = format!("{prefix}{c}{suffix}");
+            let expected = format!("{prefix}{suffix}");
+            prop_assert_eq!(sanitize_table_cell(&input), expected.clone());
+            prop_assert_eq!(sanitize_terminal_text(&input), expected.clone());
+            prop_assert_eq!(sanitize_terminal_line(&input), expected);
+        }
+    }
+
+    #[test]
+    fn test_bc_7_1_006_sanitize_strips_zero_width_and_directional_marks() {
+        for (name, c) in [
+            ("ZWSP", '\u{200B}'),
+            ("ZWNJ", '\u{200C}'),
+            ("ZWJ", '\u{200D}'),
+            ("LRM", '\u{200E}'),
+            ("RLM", '\u{200F}'),
+            ("ALM", '\u{061C}'),
+            ("WORD JOINER", '\u{2060}'),
+            ("FUNCTION APPLICATION", '\u{2061}'),
+            ("INVISIBLE TIMES", '\u{2062}'),
+            ("INVISIBLE SEPARATOR", '\u{2063}'),
+            ("INVISIBLE PLUS", '\u{2064}'),
+            ("BOM", '\u{FEFF}'),
+        ] {
+            let input = format!("a{c}b");
+            assert_eq!(sanitize_table_cell(&input), "ab", "{name}");
+            assert_eq!(sanitize_terminal_text(&input), "ab", "{name}");
+            assert_eq!(sanitize_terminal_line(&input), "ab", "{name}");
+        }
+    }
+
+    #[test]
+    fn test_bc_7_1_006_sanitize_invisible_format_range_boundaries_kept() {
+        for c in [
+            '\u{200A}',
+            '\u{2010}',
+            '\u{205F}',
+            '\u{2065}',
+            '\u{FEFE}',
+            '\u{FF00}',
+            '\u{E0080}',
+            '\u{1F600}',
+        ] {
+            let input = format!("a{c}b");
+            assert_eq!(sanitize_table_cell(&input), input, "U+{:04X}", c as u32);
+            assert_eq!(sanitize_terminal_text(&input), input, "U+{:04X}", c as u32);
+            assert_eq!(sanitize_terminal_line(&input), input, "U+{:04X}", c as u32);
+        }
+    }
+
+    #[test]
+    fn test_bc_7_1_006_sanitize_strips_unicode_tag_block() {
+        let all: String = (0xE0000u32..=0xE007F)
+            .map(|u| char::from_u32(u).unwrap())
+            .collect();
+        let input = format!("x{all}y");
+        assert_eq!(sanitize_table_cell(&input), "xy");
+        assert_eq!(sanitize_terminal_text(&input), "xy");
+        assert_eq!(sanitize_terminal_line(&input), "xy");
+        // Both endpoints individually.
+        assert_eq!(sanitize_table_cell("a\u{E0000}b"), "ab");
+        assert_eq!(sanitize_table_cell("a\u{E007F}b"), "ab");
+    }
+
+    /// EC-20: accepted trade-off, ZWJ is stripped so emoji sequences split.
+    #[test]
+    fn test_bc_7_1_006_sanitize_zwj_emoji_sequence_loses_joiner() {
+        let input = "\u{1F469}\u{200D}\u{1F4BB}";
+        let expected = "\u{1F469}\u{1F4BB}";
+        assert_eq!(sanitize_table_cell(input), expected);
+        assert_eq!(sanitize_terminal_text(input), expected);
+        assert_eq!(sanitize_terminal_line(input), expected);
+    }
+
+    /// Identity collapse: a spoofed name with invisible characters becomes
+    /// byte-identical to the genuine one after sanitizing.
+    #[test]
+    fn test_bc_7_1_006_sanitize_terminal_line_invisible_chars_identity_collapse() {
+        let genuine = "Alice Admin";
+        let spoof = "Ali\u{200B}ce\u{FEFF} \u{2060}Ad\u{200D}min\u{E0041}";
+        assert_ne!(genuine, spoof);
+        assert_eq!(sanitize_terminal_line(spoof), genuine);
+    }
+
+    // ── Unicode 17.0.0 General_Category=Cf policy (FIX-P5-005, D-399,
+    // P4-003/CR4-001/SEC4-001; BC-7.1.006 EC-21/22/23, VP-SEC-001-003) ───
+
+    /// Independent oracle copy of the spec's Cf table (Unicode 17.0.0).
+    const SPEC_CF_RANGES: &[(u32, u32)] = &[
+        (0x00AD, 0x00AD),
+        (0x0600, 0x0605),
+        (0x061C, 0x061C),
+        (0x06DD, 0x06DD),
+        (0x070F, 0x070F),
+        (0x0890, 0x0891),
+        (0x08E2, 0x08E2),
+        (0x180E, 0x180E),
+        (0x200B, 0x200F),
+        (0x202A, 0x202E),
+        (0x2060, 0x2064),
+        (0x2066, 0x206F),
+        (0xFEFF, 0xFEFF),
+        (0xFFF9, 0xFFFB),
+        (0x110BD, 0x110BD),
+        (0x110CD, 0x110CD),
+        (0x13430, 0x1343F),
+        (0x1BCA0, 0x1BCA3),
+        (0x1D173, 0x1D17A),
+        (0xE0001, 0xE0001),
+        (0xE0020, 0xE007F),
+    ];
+
+    fn spec_drops(code: u32) -> bool {
+        code <= 0x1F
+            || code == 0x7F
+            || (0x80..=0x9F).contains(&code)
+            || (0x202A..=0x202E).contains(&code)
+            || (0x2066..=0x2069).contains(&code)
+            || code == 0x2028
+            || code == 0x2029
+            || code == 0x0085
+            || SPEC_CF_RANGES.iter().any(|&(a, b)| (a..=b).contains(&code))
+            || matches!(code, 0x034F | 0x115F | 0x1160 | 0x3164 | 0xFFA0)
+            || (0xE0000..=0xE007F).contains(&code)
+    }
+
+    proptest! {
+        #![proptest_config(ProptestConfig::with_cases(2000))]
+
+        /// VP-SEC-001-003: `classify_default_char` drops iff the code point is
+        /// in the spec's Cf table, the explicit sets, the extras, or the tag
+        /// block. Sampled across the whole scalar range, biased near ranges.
+        #[test]
+        fn prop_bc_7_1_006_classify_default_char_matches_spec_cf_table(
+            raw in prop_oneof![
+                0u32..0x3200,
+                0xF000u32..0x10000,
+                0x110B0u32..0x110E0,
+                0x13420u32..0x13450,
+                0x1BC90u32..0x1BCB0,
+                0x1D160u32..0x1D190,
+                0xDFFF0u32..0xE0200,
+                0u32..0x110000,
+            ],
+        ) {
+            if let Some(c) = char::from_u32(raw) {
+                let got = classify_default_char(c);
+                let expected = spec_drops(raw);
+                prop_assert_eq!(
+                    matches!(got, CharDisposition::Drop),
+                    expected,
+                    "U+{:04X}", raw
+                );
+            }
+        }
+    }
+
+    #[test]
+    fn test_bc_7_1_006_cf_range_table_is_sorted_and_non_overlapping() {
+        assert!(!CF_RANGES.is_empty());
+        let mut prev_end: Option<u32> = None;
+        for &(start, end) in CF_RANGES {
+            assert!(start <= end, "start > end: {start:X}..{end:X}");
+            assert!(end <= 0x10FFFF, "out of range: {end:X}");
+            assert!(
+                char::from_u32(start).is_some() && char::from_u32(end).is_some(),
+                "surrogate endpoint {start:X}..{end:X}"
+            );
+            if let Some(p) = prev_end {
+                assert!(start > p + 1, "touching/overlapping/unsorted at {start:X}");
+            }
+            prev_end = Some(end);
+        }
+        assert_eq!(CF_RANGES, SPEC_CF_RANGES);
+    }
+
+    #[test]
+    fn test_bc_7_1_006_sanitize_strips_all_cf_format_characters() {
+        for &(start, end) in SPEC_CF_RANGES {
+            for u in start..=end {
+                let c = char::from_u32(u).unwrap();
+                let input = format!("a{c}b");
+                assert_eq!(sanitize_table_cell(&input), "ab", "U+{u:04X}");
+                assert_eq!(sanitize_terminal_text(&input), "ab", "U+{u:04X}");
+                assert_eq!(sanitize_terminal_line(&input), "ab", "U+{u:04X}");
+            }
+        }
+    }
+
+    #[test]
+    fn test_bc_7_1_006_sanitize_cf_range_neighbors_kept() {
+        let kept: &[u32] = &[
+            0x00AC, 0x00AE, 0x05FF, 0x0606, 0x061B, 0x061D, 0x06DC, 0x06DE, 0x070E, 0x0710, 0x088F,
+            0x0892, 0x08E1, 0x08E3, 0x180D, 0x180F, 0x200A, 0x2010, 0x202F, 0x205F, 0x2065, 0x2070,
+            0xFEFE, 0xFF00, 0xFFF8, 0xFFFC, 0x110BC, 0x110BE, 0x110CC, 0x110CE, 0x1342F, 0x13440,
+            0x1BC9F, 0x1BCA4, 0x1D172, 0x1D17B, 0xE0080, 0x1F600,
+            // filler / CGJ neighbors
+            0x034E, 0x0350, 0x115E, 0x1161, 0x3163, 0x3165, 0xFF9F, 0xFFA1,
+            // FE10 / FDFF
+            0xFE10, 0xFDFF,
+        ];
+        for &u in kept {
+            let c = char::from_u32(u).unwrap();
+            let input = format!("a{c}b");
+            assert_eq!(sanitize_table_cell(&input), input, "U+{u:04X}");
+            assert_eq!(sanitize_terminal_text(&input), input, "U+{u:04X}");
+            assert_eq!(sanitize_terminal_line(&input), input, "U+{u:04X}");
+        }
+    }
+
+    /// EC-22.
+    #[test]
+    fn test_bc_7_1_006_sanitize_strips_cgj_and_hangul_fillers() {
+        for u in [0x034Fu32, 0x115F, 0x1160, 0x3164, 0xFFA0] {
+            let c = char::from_u32(u).unwrap();
+            let input = format!("a{c}b");
+            assert_eq!(sanitize_table_cell(&input), "ab", "U+{u:04X}");
+            assert_eq!(sanitize_terminal_text(&input), "ab", "U+{u:04X}");
+            assert_eq!(sanitize_terminal_line(&input), "ab", "U+{u:04X}");
+        }
+    }
+
+    /// EC-23: variation selectors are deliberately KEPT.
+    #[test]
+    fn test_bc_7_1_006_sanitize_keeps_variation_selectors() {
+        for u in [0xFE00u32, 0xFE0F, 0xE0100, 0xE01EF, 0x180B, 0x180C, 0x180D] {
+            let c = char::from_u32(u).unwrap();
+            let input = format!("a{c}b");
+            assert_eq!(sanitize_table_cell(&input), input, "U+{u:04X}");
+            assert_eq!(sanitize_terminal_text(&input), input, "U+{u:04X}");
+            assert_eq!(sanitize_terminal_line(&input), input, "U+{u:04X}");
+        }
+    }
+
+    #[test]
+    fn test_bc_7_1_006_sanitize_terminal_line_cf_identity_collapse() {
+        let genuine = "Bob Admin";
+        let spoof = "B\u{00AD}ob\u{0600} A\u{180E}d\u{FFF9}m\u{110BD}i\u{1D173}n\u{034F}\u{3164}";
+        assert_ne!(genuine, spoof);
+        assert_eq!(sanitize_terminal_line(spoof), genuine);
+    }
+
     // ── render_table_with_styles structural color gating (BC-7.1.006,
     // CR-2, D-396/FIX-P5-002) ────────────────────────────────────────────
     //
-    // `colored`'s global override (`colored::control::set_override`) is a
-    // single process-wide `AtomicBool` shared by every thread in this test
-    // binary (see `src/cli/user.rs`'s `ForcedColorOverride`/
-    // `COLOR_OVERRIDE_LOCK` for the identical rationale, mirrored here as
-    // its own serialized guard since `user.rs`'s is private to its own
-    // `mod tests`).
-    static TERMINAL_COLOR_OVERRIDE_LOCK: std::sync::Mutex<()> = std::sync::Mutex::new(());
-
-    /// RAII guard forcing `colored`'s global override for its lifetime,
-    /// serialized against `TERMINAL_COLOR_OVERRIDE_LOCK`. Always restores
-    /// via `colored::control::unset_override()` on drop (including on
-    /// panic/unwind).
-    struct TerminalColorOverride {
-        _guard: std::sync::MutexGuard<'static, ()>,
-    }
-
-    impl TerminalColorOverride {
-        fn new(enabled: bool) -> Self {
-            let guard = TERMINAL_COLOR_OVERRIDE_LOCK
-                .lock()
-                .unwrap_or_else(std::sync::PoisonError::into_inner);
-            colored::control::set_override(enabled);
-            Self { _guard: guard }
-        }
-    }
-
-    impl Drop for TerminalColorOverride {
-        fn drop(&mut self) {
-            colored::control::unset_override();
-        }
-    }
+    // Color-override tests use the single shared `color_test_lock::ColorOverride`
+    // guard (one process-wide mutex for every test in the crate that touches
+    // `colored::control`'s global override — FIX-P5-003, P2-002/CR2-2).
+    use super::color_test_lock::ColorOverride as TerminalColorOverride;
 
     /// CR-2 (D-396): `render_table_with_styles` must apply a `StyledCell`'s
     /// `fg` ONLY when `colored::control::SHOULD_COLORIZE.should_colorize()`
