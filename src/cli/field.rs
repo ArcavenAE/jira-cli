@@ -425,13 +425,21 @@ fn degrade_hint_for_schema(display_name: &str, schema: DegradeSchemaInfo<'_>) ->
     )
 }
 
-/// Resolve `<field>` to a `customfield_NNNNN`-shaped field id (AC-011).
+/// Resolve `<field>` to a field id — a custom id (`customfield_NNNNN`) or a
+/// system id such as `issuetype` (AC-011).
 ///
-/// `customfield_NNNNN` literals bypass `list_fields()` entirely (zero HTTP).
-/// Otherwise resolves via the per-profile fields cache (`cache::
-/// read_fields_cache`), falling back to `list_fields()` on a cache miss or
-/// a field absent from the cached list, writing the fresh list back
-/// (best-effort) before re-searching exactly once.
+/// Resolution order:
+/// 1. `customfield_NNNNN` literals bypass `list_fields()` entirely (zero HTTP).
+/// 2. An empty query is rejected with a `UserError`.
+/// 3. Exact ASCII-case-insensitive field-ID match (the list's canonical id
+///    casing is returned).
+/// 4. Exact case-insensitive name match.
+/// 5. Case-insensitive substring match on names.
+///
+/// Steps 3-5 run via [`search_field_list`] against the per-profile fields
+/// cache (`cache::read_fields_cache`), falling back to `list_fields()` on a
+/// cache miss or a field absent from the cached list, writing the fresh list
+/// back (best-effort) before re-searching exactly once.
 async fn resolve_field_id(
     client: &JiraClient,
     profile: &crate::profile::Profile,
@@ -479,8 +487,14 @@ fn is_customfield_literal(query: &str) -> bool {
         && query[PREFIX.len()..].chars().all(|c| c.is_ascii_digit())
 }
 
-/// Search a resolved `(id, name)` field list for `query` — exact match
-/// first, then case-insensitive substring. `Ok(None)` means "not found in
+/// Shared ambiguity-hint fragment (BC-X.14.004): names both the custom and
+/// the system field-ID forms.
+const FIELD_ID_HINT: &str = "the field ID (e.g. customfield_NNNNN or a system id like issuetype)";
+
+/// Search a resolved `(id, name)` field list for `query` — exact
+/// case-insensitive field-ID match first (system ids such as `issuetype`;
+/// wins on collision; exact only), then exact case-insensitive name match,
+/// then case-insensitive substring on names. `Ok(None)` means "not found in
 /// THIS list" (caller may still fall back to a fresh fetch); `Err` means a
 /// definitive ambiguity the caller must surface immediately.
 fn search_field_list(
@@ -488,6 +502,25 @@ fn search_field_list(
     query_lower: &str,
     query: &str,
 ) -> Result<Option<String>> {
+    // Step 3a (FIX-P5-005, CR4-002): exact ASCII-case-insensitive FIELD ID
+    // match wins over any name match (system ids like `issuetype`). Exact
+    // only — never a substring match on IDs. Returns the list's canonical id.
+    let by_id: Vec<&(String, String)> = list
+        .iter()
+        .filter(|(id, _)| id.eq_ignore_ascii_case(query))
+        .collect();
+    if by_id.len() == 1 {
+        return Ok(Some(by_id[0].0.clone()));
+    }
+    if by_id.len() > 1 {
+        let candidates: Vec<String> = by_id.iter().map(|(id, n)| format!("{n} ({id})")).collect();
+        return Err(JrError::UserError(format!(
+            "Field ID '{query}' matches multiple fields: {}. Use {FIELD_ID_HINT} to disambiguate.",
+            candidates.join(", ")
+        ))
+        .into());
+    }
+
     let exact: Vec<&(String, String)> = list
         .iter()
         .filter(|(_, n)| n.to_lowercase() == query_lower)
@@ -498,8 +531,8 @@ fn search_field_list(
     if exact.len() > 1 {
         let candidates: Vec<String> = exact.iter().map(|(id, n)| format!("{n} ({id})")).collect();
         return Err(JrError::UserError(format!(
-            "Field name '{query}' matches multiple fields: {}. Use the field ID directly \
-             (e.g. customfield_NNNNN) to disambiguate.",
+            "Field name '{query}' matches multiple fields: {}. Use {FIELD_ID_HINT} to \
+             disambiguate.",
             candidates.join(", ")
         ))
         .into());
@@ -516,7 +549,7 @@ fn search_field_list(
         let candidates: Vec<String> = sub.iter().map(|(id, n)| format!("{n} ({id})")).collect();
         return Err(JrError::UserError(format!(
             "Field name '{query}' is ambiguous — matches: {}. Use a more specific name or \
-             the field ID directly (e.g. customfield_NNNNN).",
+             {FIELD_ID_HINT}.",
             candidates.join(", ")
         ))
         .into());
@@ -985,6 +1018,83 @@ mod tests {
         let err = search_field_list(&list, "soc client", "soc client").unwrap_err();
         let msg = format!("{err}");
         assert!(msg.contains("customfield_10084") && msg.contains("customfield_10085"));
+    }
+
+    proptest! {
+        /// FIX-P5-005 (CR4-002, VP-580-014): over any `(id, name)` list, an
+        /// ASCII-case-insensitive exact ID match always wins over a name
+        /// match, and returns the list's canonical id casing.
+        #[test]
+        fn prop_bc_x_14_001_search_field_list_id_match_precedes_name_match(
+            sys_id in "[a-z]{3,10}",
+            upper in proptest::bool::ANY,
+            n_other in 0usize..4,
+            collide in proptest::bool::ANY,
+        ) {
+            let mut list: Vec<(String, String)> = Vec::new();
+            for i in 0..n_other {
+                list.push((format!("customfield_{}", 20000 + i), format!("Other {i}")));
+            }
+            if collide {
+                // A custom field whose NAME equals the system id.
+                list.push(("customfield_10050".to_string(), sys_id.clone()));
+            }
+            list.push((sys_id.clone(), "Display Name Unrelated".to_string()));
+            let query = if upper { sys_id.to_uppercase() } else { sys_id.clone() };
+            let found = search_field_list(&list, &query.to_lowercase(), &query)
+                .unwrap();
+            prop_assert_eq!(found, Some(sys_id));
+        }
+    }
+
+    #[test]
+    fn test_bc_x_14_001_search_field_list_id_match_is_exact_not_substring() {
+        let list = vec![("issuetype".to_string(), "Issue Type".to_string())];
+        // "issue" is a substring of the id and of the name; the NAME
+        // substring rule applies (there is no ID substring rule).
+        let r = search_field_list(&list, "issue", "issue").unwrap();
+        assert_eq!(r, Some("issuetype".to_string()), "via NAME substring");
+        let list2 = vec![("issuetype".to_string(), "Kind".to_string())];
+        assert_eq!(search_field_list(&list2, "issuet", "issuet").unwrap(), None);
+    }
+
+    #[test]
+    fn test_bc_x_14_004_ambiguity_hints_name_system_id_form() {
+        const HINT: &str = "the field ID (e.g. customfield_NNNNN or a system id like issuetype)";
+        let exact = vec![
+            ("customfield_1".to_string(), "Dup".to_string()),
+            ("customfield_2".to_string(), "dup".to_string()),
+        ];
+        let msg = format!("{}", search_field_list(&exact, "dup", "dup").unwrap_err());
+        assert!(msg.contains(HINT), "{msg}");
+        let sub = vec![
+            ("customfield_1".to_string(), "Dup A".to_string()),
+            ("customfield_2".to_string(), "Dup B".to_string()),
+        ];
+        let msg = format!("{}", search_field_list(&sub, "dup", "dup").unwrap_err());
+        assert!(msg.contains(HINT), "{msg}");
+    }
+
+    #[test]
+    fn test_bc_x_14_001_search_field_list_duplicate_case_insensitive_ids_is_ambiguous() {
+        const HINT: &str = "the field ID (e.g. customfield_NNNNN or a system id like issuetype)";
+        let list = vec![
+            ("issuetype".to_string(), "Issue Type".to_string()),
+            ("IssueType".to_string(), "Issue Type Legacy".to_string()),
+        ];
+        let err = search_field_list(&list, "issuetype", "issuetype").unwrap_err();
+        let msg = format!("{err}");
+        assert!(
+            msg.contains("Field ID 'issuetype' matches multiple fields"),
+            "{msg}"
+        );
+        assert!(msg.contains("Issue Type (issuetype)"), "{msg}");
+        assert!(msg.contains("Issue Type Legacy (IssueType)"), "{msg}");
+        assert!(msg.contains(HINT), "{msg}");
+        match err.downcast_ref::<JrError>() {
+            Some(JrError::UserError(_)) => {}
+            other => panic!("expected JrError::UserError (exit 64), got {other:?}"),
+        }
     }
 
     /// `resolve_request_type_id`'s `MatchResult::ExactMultiple` arm
