@@ -151,3 +151,30 @@ Target tests (none exist yet): `src/cli/field.rs::prop_bc_x_14_001_search_field_
 `test_bc_x_14_001_field_id_match_wins_over_name_collision`, `test_bc_x_14_001_field_id_match_is_exact_not_substring`,
 `test_bc_x_14_001_field_id_match_warm_cache_zero_http`, `test_bc_x_14_001_field_id_absent_from_cache_refetches_once`,
 `test_bc_x_14_004_ambiguous_field_name_hint_names_system_id_form`. Existing VP-580-001 (literal bypass, zero HTTP) must still pass.
+
+---
+
+## Post-merge (spec v2.7.1, 2026-10-01) — PR #897 merged to `develop` as `0a4dc062`
+
+Mechanical citation conversion; no human decision required except where noted.
+
+- **BC-7.1.006 v1.6.1:** all "NOT YET IMPLEMENTED / target" qualifiers converted to live citations
+  (`src/output.rs::CF_RANGES`, `::classify_default_char`, `::is_cf`; tests for EC-21/22/23 and
+  VP-SEC-001-003 verified present at `0a4dc062`). EC-17's stale FIX-P5-002 "targets, not yet present"
+  wording converted too (merged `cc19c2f9`).
+- **Target removed:** `test_bc_7_1_006_cf_table_pinned_unicode_version_is_17` (Part 1 target-test list,
+  item (e)) was deliberately NOT implemented (orchestrator decision, D-399(c)) — it would assert
+  `char::UNICODE_VERSION` against the unpinned stable toolchain and fail CI on every Rust Unicode bump.
+  Replaced by a written upgrade policy in BC-7.1.006: `CF_RANGES` is pinned to Unicode 17.0.0 and is
+  re-derived deliberately when the project chooses to bump; drift is not auto-detected (known,
+  accepted gap; see `.factory/cycles/OPEN-STANDING-ITEMS.md`).
+- **Shipped-vs-spec deltas recorded in the BC:** the identity-collapse test uses `"Bob Admin"` (not
+  `"Alice"`); the sorted-table test additionally asserts `CF_RANGES == SPEC_CF_RANGES`.
+- **BC-X.14.001/004:** EC-X.14.001-16..20, EC-X.14.004-8, VP-580-014 converted to live citations in
+  `src/cli/field.rs` / `tests/field_options.rs`. Added **EC-X.14.001-21** for the
+  duplicate-case-insensitive-field-ID ambiguity branch
+  (`src/cli/field.rs::test_bc_x_14_001_search_field_list_duplicate_case_insensitive_ids_is_ambiguous`,
+  added in PR #897's review round). Fixture note: the unit exact-not-substring test probes `issue`
+  (resolves via NAME substring) and `issuet` (not found); the integration test uses `issuet`.
+- Counts unchanged (98/54 bc-7; 162/96 cross-cutting; 773 cumulative).
+

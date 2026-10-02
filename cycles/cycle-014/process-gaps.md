@@ -7,7 +7,7 @@ producer: state-manager
 timestamp: 2026-09-26T00:01:34Z
 cycle: "cycle-014-issue-triage-quickfixes"
 inputs: [STATE.md]
-input-hash: "50cff29"
+input-hash: "48a41fb"
 traces_to: STATE.md
 ---
 
@@ -732,3 +732,11 @@ input-hash self-reference hazard. Same disposition class as `#26`-`#45`
 Item `#50` was recorded during cycle-014 F5 pass 3 (`P3-005`, `D-398`,
 2026-10-01): no guard for `.cargo/mutants.toml` `exclude_re` anchors. Same
 disposition class as `#26`-`#49`.
+Item `#51` was recorded at the `FIX-P5-005` (#897) merge (2026-10-02): the
+`validate-factory-path-staging` hook false-positived on the implementer's
+`git add -A` inside the fix worktree (`.worktrees/FIX-P5-005`) because it
+judges the branch of the pre-command cwd rather than the worktree the
+command targets (same hook as `#48`, different trigger). Workaround used:
+`git commit -a`; the orchestrator verified no untracked files were omitted
+and no `.factory` paths were committed. Later dispatches instruct explicit
+`git -C <worktree> add <paths>`. Same disposition class as `#26`-`#50`.

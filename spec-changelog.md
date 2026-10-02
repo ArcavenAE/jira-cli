@@ -9,6 +9,42 @@ Track all spec version changes. Most recent version first.
 
 > **Type legend:** Type classifies the SPEC document delta: MINOR = new BCs/VPs/sections; PATCH = amendments to existing bodies/ACs/ECs. Product-semver impact is recorded in the Summary line, independent of Type.
 
+## [2.7.1] - 2026-10-01
+
+### Type: PATCH
+
+### Summary
+
+Post-merge citation conversion for FIX-P5-005 (PR #897 merged to `develop` as `0a4dc062`). No human
+decision required (mechanical post-merge maintenance; the removal in item 2 records orchestrator
+decision D-399(c)); no policy change; BC count unchanged (98 in-file / 54 individually-bodied in
+bc-7; 162 / 96 in cross-cutting; 773 cumulative); VP count unchanged.
+
+1. **BC-7.1.006 v1.6.1.** The v1.6.0 `Cf` policy bullet, EC-21/EC-22/EC-23, VP-SEC-001-003, the
+   `**Trace**` line and the EC-18 annotation are converted from "NOT YET IMPLEMENTED / target for
+   FIX-P5-005" to present-tense live citations (`src/output.rs::CF_RANGES`,
+   `src/output.rs::classify_default_char`, `src/output.rs::is_cf`; the tests named in EC-21/22/23 and
+   VP-SEC-001-003, each verified present in `src/output.rs` at `0a4dc062`). EC-17's stale
+   "targets for FIX-P5-002, not yet present" wording is also converted (both tests verified live at
+   `0a4dc062`; FIX-P5-002 merged as `cc19c2f9`).
+2. **Removed target test.** `test_bc_7_1_006_cf_table_pinned_unicode_version_is_17` is removed from
+   the spec (deliberately never implemented, D-399(c): it asserts `char::UNICODE_VERSION` against the
+   unpinned stable toolchain and would fail CI on every Rust Unicode bump). Replaced by a written
+   pinned-version upgrade policy: `CF_RANGES` is pinned to Unicode 17.0.0 and re-derived deliberately
+   when the project chooses to bump; drift is NOT auto-detected (known, accepted gap; cross-referenced
+   to `.factory/cycles/OPEN-STANDING-ITEMS.md`, no new item created). VP-SEC-001-003 corrected to
+   the shipped tests (oracle `SPEC_CF_RANGES`; identity-collapse fixture is `"Bob Admin"`; the
+   sorted-table test also asserts `CF_RANGES == SPEC_CF_RANGES`).
+3. **BC-X.14.001 / BC-X.14.004.** EC-X.14.001-16..20, EC-X.14.004-8, VP-580-014 and the three
+   `[AMENDED/SUPERSEDED ... NOT YET IMPLEMENTED]` annotations are converted to live citations in
+   `src/cli/field.rs` and `tests/field_options.rs`. New **EC-X.14.001-21** (duplicate
+   case-insensitive field-ID ambiguity, `test_bc_x_14_001_search_field_list_duplicate_case_insensitive_ids_is_ambiguous`).
+   EC-X.14.001-18 text aligned to the tests (unit probe `issue` resolves via NAME substring; not-found
+   probes use `issuet`). BC-X.14 carries no per-BC version table; the cross-cutting frontmatter
+   trace bullet is its version record.
+4. Row 1.6.0 and changelog entry `[2.7.0]` are left as dated history. Hand-off:
+   `.factory/cycles/cycle-014/phase-f5-adversarial/FIX-P5-005-spec-delta.md` (post-merge section).
+
 ## [2.7.0] - 2026-10-01
 
 ### Type: MINOR
