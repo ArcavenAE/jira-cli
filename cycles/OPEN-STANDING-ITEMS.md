@@ -2046,12 +2046,16 @@ carved OUT of `FIX-P5-001`'s original scope because none of these sinks
 route through `output::render_table` — there is no single chokepoint to fix
 them all in one pass, unlike SEC-001's table-mode case.
 
-**Note 2026-10-02 (`D-400`, F5 Pass 5 `SEC5-002`, INFO, CWE-116):**
-`src/cli/field.rs::search_field_list` ambiguity errors echo raw server-supplied
-field name/id into a `UserError` (stderr and the JSON `"error"` field). This
-sink is being FIXED by `FIX-P5-006` (candidates sanitized via
-`output::sanitize_terminal_line`); remove it from the residual inventory once
-that PR merges.
+**Note 2026-10-02 (`D-400`, F5 Pass 5 `SEC5-002`, INFO, CWE-116) -- FIXED:**
+`src/cli/field.rs::search_field_list` ambiguity errors (raw server field
+name/id and echoed query in a `UserError`) are now sanitized via
+`output::sanitize_terminal_line` -- FIXED by `FIX-P5-006` (PR #898, merged
+2026-10-02 as `ce6be7ad`). This sink is REMOVED from the residual inventory.
+Three `src/cli/field.rs` residuals remain (verified at `ce6be7ad`; see
+`specs/prd/bc-7-output-render.md` BC-7.1.006 v1.6.3): (a)
+`resolve_request_type_id`'s `ExactMultiple`/`Ambiguous` `UserError` arms (raw
+server request-type names); (b) the "Issue type not found" valid-type list;
+(c) `degrade_hint_for_schema` (graceful-degrade hint text).
 
 **Now covered, as of `FIX-P5-001`/PR #891 (2026-10-01) — no longer residual:**
 `jr issue comment view`'s human output (`handle_comment_view`, D-393,
@@ -2078,7 +2082,7 @@ scope paragraph — the authoritative live inventory):**
 - `src/cli/component.rs`'s rename/create/edit/list-warning/delete-confirmation name echoes
 - `src/cli/board.rs`'s board auto-discovery name
 - `src/cli/init.rs`'s interactive board-select prompt items
-- `src/cli/field.rs::normalize_or_degrade`'s graceful-degrade hint (BC-X.14.004)
+- `src/cli/field.rs::normalize_or_degrade`'s graceful-degrade hint (BC-X.14.004; `degrade_hint_for_schema`), plus `resolve_request_type_id`'s `ExactMultiple`/`Ambiguous` errors and the "Issue type not found" valid-type list (`search_field_list` itself FIXED by #898)
 - `JrError` bodies that echo raw server text into stderr error messages (EXCLUDING `disambiguate_user`'s now-covered messages above — OTHER `JrError` bodies throughout the codebase remain residual)
 - **`src/cli/issue/helpers.rs::resolve_asset`** (the Assets `--asset` disambiguation flow) — **MEDIUM, priority.** Echoes raw server-supplied `label`/`object_key` values unsanitized, both in its `JrError` messages and in its `dialoguer::Select` interactive picker items. Identical exposure class as `disambiguate_user`'s now-covered sink. Found by the final PR #891 security review, but AFTER D-395's scope freeze — not fixed by `FIX-P5-001`; new as of 2026-10-01.
 

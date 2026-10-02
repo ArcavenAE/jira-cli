@@ -9,6 +9,29 @@ Track all spec version changes. Most recent version first.
 
 > **Type legend:** Type classifies the SPEC document delta: MINOR = new BCs/VPs/sections; PATCH = amendments to existing bodies/ACs/ECs. Product-semver impact is recorded in the Summary line, independent of Type.
 
+## [2.7.3] - 2026-10-02
+
+### Type: PATCH
+
+### Summary
+
+FIX-P5-006 post-merge citation conversion (PR #898 merged to `develop` as `ce6be7ad`). Mechanical;
+no human decision required. No policy change; BC count unchanged (98 in-file / 54 individually-bodied
+in bc-7; 162 / 96 in cross-cutting; 773 cumulative); VP count unchanged.
+
+1. **BC-7.1.006 v1.6.3.** EC-24's KEEP pin `src/output.rs::test_bc_7_1_006_sanitize_keeps_blank_rendering_non_cf_characters`
+   converted to a live citation; the `search_field_list` residual-list note converted to present
+   tense (IMPLEMENTED). Residual inventory now names the three remaining `src/cli/field.rs`
+   residuals (NOT fixed): `resolve_request_type_id` `ExactMultiple`/`Ambiguous` errors, the
+   `"Issue type '...' not found"` valid-types list, `degrade_hint_for_schema`'s stderr hint.
+2. **BC-X.14.004 EC-X.14.004-9.** Converted to live citations (unit + integration tests verified at
+   `ce6be7ad`); records the implemented behavior that the echoed user query is also sanitized via
+   `output::sanitize_terminal_line`.
+3. **BC-X.14.001 EC-X.14.001-22.** Converted to a live citation
+   (`tests/field_options.rs::test_bc_x_14_001_field_options_help_mentions_system_field_ids`).
+4. Row 1.6.2 and entry `[2.7.2]` left as dated history. Hand-off:
+   `.factory/cycles/cycle-014/phase-f5-adversarial/FIX-P5-006-spec-delta.md` (post-merge section).
+
 ## [2.7.2] - 2026-10-01
 
 ### Type: PATCH

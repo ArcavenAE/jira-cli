@@ -27,3 +27,14 @@ EC-X.14.001-15's `~L442-447`/`~L451` refs replaced with symbol-form `src/cli/fie
 
 ## Files
 specs/prd/bc-7-output-render.md, specs/prd/cross-cutting.md, spec-changelog.md ([2.7.2]).
+
+## Post-merge (spec v2.7.3, 2026-10-02) — PR #898 merged as `ce6be7ad`
+All "NOT YET IMPLEMENTED" qualifiers above are now live. Verified present at `ce6be7ad`:
+- `src/output.rs::test_bc_7_1_006_sanitize_keeps_blank_rendering_non_cf_characters` (BC-7.1.006 EC-24 KEEP pin)
+- `src/cli/field.rs::test_bc_x_14_004_ambiguity_candidates_are_sanitized` and
+  `tests/field_options.rs::test_bc_x_14_004_ambiguity_candidates_are_sanitized_in_stderr_and_json` (EC-X.14.004-9)
+- `tests/field_options.rs::test_bc_x_14_001_field_options_help_mentions_system_field_ids` (EC-X.14.001-22)
+Beyond-spec details recorded: (a) `search_field_list` also sanitizes the echoed user query; (b) BC-7.1.006's
+NONTABLE-SERVER-TEXT-SANITIZE inventory now lists the three remaining `src/cli/field.rs` residuals (NOT fixed):
+`resolve_request_type_id` ExactMultiple/Ambiguous errors, the "Issue type '...' not found" valid-types list,
+`degrade_hint_for_schema`'s stderr hint. BC-7.1.006 version row 1.6.3; spec-changelog `[2.7.3]`; BC-X.14 trace bullet in cross-cutting.md.

@@ -7281,3 +7281,20 @@ _Tagged: [process-gap] [prd-delta] [dispositions] [per-round-checklist] [cv-chan
 - Session ended at 2026-10-02T01:03:11Z (awaiting /session-review)
 - Session ended at 2026-10-02T01:03:38Z (awaiting /session-review)
 - Session ended at 2026-10-02T01:05:02Z (awaiting /session-review)
+- Session ended at 2026-10-02T01:09:48Z (awaiting /session-review)
+- Session ended at 2026-10-02T01:13:39Z (awaiting /session-review)
+- Session ended at 2026-10-02T01:26:11Z (awaiting /session-review)
+- Session ended at 2026-10-02T01:27:07Z (awaiting /session-review)
+- Session ended at 2026-10-02T01:38:05Z (awaiting /session-review)
+- Session ended at 2026-10-02T05:05:19Z (awaiting /session-review)
+- Session ended at 2026-10-02T05:05:37Z (awaiting /session-review)
+- Session ended at 2026-10-02T05:07:40Z (awaiting /session-review)
+
+## 2026-10-02 -- Equivalent mutants from `== 1` early return + `> 1` guard (FIX-P5-006 / PR #898)
+
+- [mutation-testing] [pattern-to-avoid] The CI mutation gate failed on 3 equivalent mutants (`> 1` -> `>= 1`) in `search_field_list`: an earlier `== 1` early return makes a later `> 1` guard indistinguishable from `>= 1`, so the mutants are unkillable.
+- Fix applied (commit 6e19f7db): rewrote the guard as the behavior-identical `!x.is_empty()`; NO suppression/exclusion added; next CI mutation run green.
+- Avoid: writing a count-comparison guard (`> 1`) after an `== 1` early return on the same collection. Prefer `is_empty()`/pattern-match forms that carry no boundary operator to mutate.
+- Non-blocking review note left unfixed: wiremock `expect(0)` suggestion for `user_list_requires_project_flag`.
+
+- Session ended at 2026-10-02T05:09:40Z (awaiting /session-review)
