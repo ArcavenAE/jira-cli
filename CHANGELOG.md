@@ -95,6 +95,17 @@ All notable changes to jr will be documented here.
 
 ### Security
 
+- **`jr field options` now sanitizes the echoed field ID and field-name query
+  in its "not available"/"not found" errors (FIX-P5-007, BC-X.14.004
+  EC-X.14.004-10, SEC6-002/CR6-002, D-401, CWE-150/CWE-116):** the M1 "not on
+  the Edit screen", M2 "not available for issue type" and M3 "not available on
+  request type" messages route the resolved field ID, and the "Field '...' not
+  found" message routes the echoed query, through
+  `output::sanitize_terminal_line`, so a hostile server-supplied field ID can no
+  longer inject ANSI/OSC sequences, C1 controls, or a fabricated extra line into
+  stderr or the `--output json` `"error"` field. Message templates, exit code 64
+  and the JSON envelope are unchanged.
+
 - **`jr field options` field-ambiguity errors now sanitize server-supplied
   candidate names and IDs (FIX-P5-006, BC-X.14.004 EC-X.14.004-9, SEC5-002,
   D-400, CWE-150/CWE-116):** all three `search_field_list` ambiguity
@@ -150,8 +161,9 @@ All notable changes to jr will be documented here.
   stays untouched and lossless, as before. Known non-table human-output call
   sites that still print server-supplied text unsanitized are tracked as
   the NONTABLE-SERVER-TEXT-SANITIZE residual -- a known, non-exhaustive
-  inventory (see `output::sanitize_table_cell`'s rustdoc for the current,
-  verified-against-the-code list) -- and are out of scope for this fix.
+  inventory (for example project issue-type/priority/status name lists,
+  transition-name prompts, and component-name echoes) -- and are out of
+  scope for this fix.
 - **`jr issue assign`'s human-output success messages now get the same
   sanitization (D-394, extension of FIX-P5-001, BC-7.1.006):**
   `handle_assign` echoes the server-derived assignee `displayName` into two
@@ -191,7 +203,8 @@ All notable changes to jr will be documented here.
   asymmetry or `handle_assign`'s separate `assignee` JSON field. This is
   PR #891's final scope-expansion amendment; further residual
   non-table/non-JSON sinks remain tracked as NONTABLE-SERVER-TEXT-SANITIZE
-  (see `output::sanitize_table_cell`'s rustdoc).
+  (for example project field-name lists, transition-name prompts, and
+  component-name echoes).
 - **Single-line sinks now neutralize an embedded `\n` instead of
   fabricating an extra line/field/picker item, and a `StyledCell`'s color
   is now structurally gated on `--no-color`/`NO_COLOR` inside the

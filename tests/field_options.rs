@@ -19,6 +19,9 @@
 //! Traces: BC-X.14.001..004, ADR-0019, VP-580-001..012,
 //! `.factory/stories/S-580-1-field-options-command.md` AC-001..014.
 
+#[allow(dead_code)]
+mod common;
+
 use assert_cmd::Command;
 use serde_json::{Value, json};
 use wiremock::matchers::{method, path, query_param};
@@ -72,6 +75,16 @@ struct Harness {
     server: MockServer,
     cache_dir: tempfile::TempDir,
     config_dir: tempfile::TempDir,
+    /// Subprocess cwd: a fresh temp dir verified to have no ancestor
+    /// `.jr.toml` (P6-004), so a developer checkout's project config can
+    /// never leak into a resolution test.
+    cwd: tempfile::TempDir,
+}
+
+fn hermetic_cwd() -> tempfile::TempDir {
+    let cwd = tempfile::tempdir().unwrap();
+    common::hermetic::assert_no_ancestor_jr_toml(cwd.path());
+    cwd
 }
 
 impl Harness {
@@ -84,6 +97,7 @@ impl Harness {
             server,
             cache_dir,
             config_dir,
+            cwd: hermetic_cwd(),
         }
     }
 
@@ -96,20 +110,32 @@ impl Harness {
             server,
             cache_dir,
             config_dir,
+            cwd: hermetic_cwd(),
         }
     }
 
     fn cmd(&self, args: &[&str]) -> assert_cmd::assert::Assert {
-        Command::cargo_bin("jr")
-            .unwrap()
+        let mut cmd = Command::cargo_bin("jr").unwrap();
+        // Scrub ambient JR_* (figment merges Env::prefixed("JR_")); keep only
+        // the seams this harness sets itself below (P6-004).
+        common::hermetic::scrub_ambient_jr_env(
+            &mut cmd,
+            &[
+                "JR_BASE_URL",
+                "JR_AUTH_HEADER",
+                "JR_CACHE_DIR",
+                "JR_CONFIG_DIR",
+            ],
+        );
+        cmd.current_dir(self.cwd.path())
             .env("JR_BASE_URL", self.server.uri())
             .env("JR_AUTH_HEADER", "Basic dGVzdDp0ZXN0")
             .env("XDG_CACHE_HOME", self.cache_dir.path())
             .env("JR_CACHE_DIR", self.cache_dir.path().join("jr"))
             .env("XDG_CONFIG_HOME", self.config_dir.path())
             .env("JR_CONFIG_DIR", self.config_dir.path().join("jr"))
-            .args(args)
-            .assert()
+            .args(args);
+        cmd.assert()
     }
 }
 
@@ -1176,6 +1202,61 @@ async fn test_bc_x_14_001_m1_stray_project_harmlessly_ignored() {
         "a stray --project alongside --issue must be harmlessly ignored; got {:?}. stderr: {stderr}",
         output.status.code()
     );
+}
+
+/// SEC6-002 / EC-X.14.004-10: a hostile server-supplied field id (resolved
+/// via name lookup) echoed in the M1 "not on the Edit screen" error is
+/// sanitized on both stderr and the JSON `"error"` field.
+#[tokio::test]
+async fn test_bc_x_14_004_not_available_field_id_echo_is_sanitized_in_stderr_and_json() {
+    let h = Harness::new().await;
+    mount_list_fields(
+        &h.server,
+        vec![json!({
+            "id": "customfield_1\u{1b}[31m\nFAKE\u{7}",
+            "name": "Hostile Field",
+            "custom": true,
+            "schema": {"type": "option"}
+        })],
+    )
+    .await;
+    mount_editmeta(&h.server, "FOO-1", json!({})).await;
+
+    for json_mode in [false, true] {
+        let mut args = vec!["field", "options", "Hostile Field", "--issue", "FOO-1"];
+        if json_mode {
+            args.extend(["--output", "json"]);
+        }
+        args.push("--no-input");
+        let assert = h.cmd(&args);
+        let output = assert.get_output();
+        let stderr = String::from_utf8_lossy(&output.stderr).to_string();
+        let stdout = String::from_utf8_lossy(&output.stdout).to_string();
+        assert_eq!(output.status.code(), Some(64), "stderr: {stderr}");
+        let text = if json_mode {
+            let v: Value = serde_json::from_str(stderr.trim())
+                .or_else(|_| serde_json::from_str(stdout.trim()))
+                .unwrap_or_else(|e| {
+                    panic!("no JSON error ({e}); stderr={stderr:?} stdout={stdout:?}")
+                });
+            v["error"].as_str().expect("error string").to_string()
+        } else {
+            // Drop the one-time config-migration notice line; keep the error.
+            let at = stderr.find("Error:").expect("Error: line on stderr");
+            stderr[at..].to_string()
+        };
+        assert!(text.contains("is not on the Edit screen"), "{text:?}");
+        assert!(text.contains("Field 'customfield_1 FAKE'"), "{text:?}");
+        assert!(
+            !text.contains('\u{1b}') && !text.contains('\u{7}'),
+            "{text:?}"
+        );
+        assert_eq!(text.trim_end().lines().count(), 1, "multi-line: {text:?}");
+        assert!(
+            !stderr.contains('\u{1b}') && !stderr.contains('\u{7}'),
+            "{stderr:?}"
+        );
+    }
 }
 
 /// AC-007 / EC-3.4.015-7 parallel: `--issue <KEY>` not found (404) -> exit
