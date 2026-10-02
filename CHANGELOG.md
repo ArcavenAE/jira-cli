@@ -72,9 +72,10 @@ All notable changes to jr will be documented here.
   BC-X.14.001/004, CR4-002): after the `customfield_NNNNN` literal bypass,
   `<FIELD>` is first matched as an exact, ASCII-case-insensitive field id
   against the same cached `(id, name)` list (e.g. `issuetype`, `priority`,
-  returning the list's canonical id; no extra HTTP), and only then by name.
+  returning the list's canonical id; no HTTP call beyond any the name
+  lookup already makes), and only then by name.
   An ID match wins over a name collision; there is no substring matching on
-  IDs. Both ambiguity hints now read "the field ID (e.g. customfield_NNNNN
+  IDs. All three ambiguity messages now read "the field ID (e.g. customfield_NNNNN
   or a system id like issuetype)".
 - **`jr field options <FIELD>` now resolves a real label for system-typed
   fields, not just custom select fields** (issue #861, BC-X.14.001,
@@ -94,6 +95,17 @@ All notable changes to jr will be documented here.
   (`jr field options`), per D-378.
 
 ### Security
+
+- **`disambiguate_user` now sanitizes the echoed `name` argument (FIX-P5-009,
+  BC-7.1.006 EC-25, D-403, CWE-150/CWE-116):** on the `@Name` mention path
+  `name` can be a raw server-derived display name. The `Multiple users
+  named "..."`/`Multiple users match "..."` non-interactive messages and the
+  matching interactive picker prompts previously echoed it unsanitized; they
+  now echo a copy passed through `output::sanitize_terminal_line`. Matching
+  (`partial_match`, the exact-duplicate filter) still uses the raw `name`, so
+  classification is unchanged. Caller-built `empty_msg`/`none_msg_fn` text is
+  not touched by this change. Covered by
+  `helpers::tests::test_disambiguate_user_sanitizes_echoed_name`.
 
 - **`jr field options` now sanitizes the echoed field ID and field-name query
   in its "not available"/"not found" errors (FIX-P5-007, BC-X.14.004
@@ -144,7 +156,7 @@ All notable changes to jr will be documented here.
   since a server-supplied string can no longer carry its own ANSI styling
   through the sanitizer -- `--no-color`/`NO_COLOR` continue to suppress that
   coloring (originally via `active_cell`'s own `SHOULD_COLORIZE` check only;
-  as of FIX-P5-002 below, `render_table_with_styles` itself also enforces
+  as of FIX-P5-002 below, `render_table_with_styles` (via its inner helper) also enforces
   this, structurally, for every `StyledCell` caller).
 - **`jr issue comment view`'s human output now gets the same sanitization
   (SEC-003, extension of FIX-P5-001 under D-393, BC-7.1.006):** this handler
@@ -235,6 +247,7 @@ All notable changes to jr will be documented here.
     (`resolve_assignee`/`resolve_assignee_by_project`/`resolve_user`/
     `mentions::resolve_at_name_candidate`) are unchanged.
   - **CR-2 — structural color gate.** `output::render_table_with_styles`
+    (the gate lives in its inner helper `render_table_with_styles_inner`)
     now applies a `StyledCell`'s `fg` only when
     `colored::control::SHOULD_COLORIZE.should_colorize()` is `true` —
     making `--no-color`/`NO_COLOR` suppression a structural guarantee the
@@ -282,8 +295,8 @@ All notable changes to jr will be documented here.
     known limitation and a follow-up enhancement (add `email`/`accountId`
     to the `Ambiguous` branch's labels/message, mirroring
     `ExactMultiple`), not fixed by this change.
-- **Table/human output now strips every Unicode format (Cf) character plus
-  blank-rendering fillers (FIX-P5-004, expanded by FIX-P5-005/D-399,
+- **The table/human sanitizer policy now strips every Unicode format (Cf)
+  character plus blank-rendering fillers (FIX-P5-004, expanded by FIX-P5-005/D-399,
   BC-7.1.006 EC-18..EC-23, CWE-451):** the shared per-character policy
   behind `sanitize_table_cell`, `sanitize_terminal_text` and
   `sanitize_terminal_line` (`classify_default_char`) now drops the full
@@ -300,8 +313,11 @@ All notable changes to jr will be documented here.
   sequences (and legitimate LRM/RLM/ZWNJ in RTL names) lose those
   characters in table/human output, and visible-ish prepended marks
   (`U+0600`-`U+0605`, `U+06DD`, `U+0890`-`U+0891`, `U+08E2`, `U+110BD`,
-  `U+110CD`) and soft hyphen are stripped. `--output json` is never
-  sanitized and is unaffected.
+  `U+110CD`) and soft hyphen are stripped. The policy applies to the
+  covered sinks (`render_table`/`render_table_with_styles` and the sinks
+  listed in BC-7.1.006's Canonical Sink Inventory); sinks not yet covered
+  there remain unsanitized. `--output json` is never sanitized and is
+  unaffected.
 
 ## [0.7.0] - 2026-09-23
 

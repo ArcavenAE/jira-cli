@@ -261,8 +261,8 @@ pub(super) fn is_me_keyword(input: &str) -> bool {
 
 /// Builds the `dialoguer::Select` item labels for `disambiguate_user`'s
 /// `MatchResult::ExactMultiple` interactive branch — the duplicate-name
-/// picker shown when two or more users share the exact display name the
-/// caller searched for (D-395, FIX-P5-001).
+/// picker shown when two or more users share the same display name
+/// (case-insensitively) the caller searched for (D-395, FIX-P5-001).
 ///
 /// Matches the EXISTING inline label format exactly, unchanged by D-395:
 /// - `"{display_name} ({email})"` when the user has an `email_address`
@@ -328,6 +328,14 @@ pub(crate) fn disambiguation_labels(duplicates: &[&User]) -> Vec<String> {
 /// [`crate::output::sanitize_terminal_text`] — the latter preserves an
 /// embedded `\n`, which would otherwise let a hostile value fabricate an
 /// extra line/item (EC-17, CWE-116).
+///
+/// The `name` argument is also sanitized (once, at the top) wherever this
+/// function echoes it — the `ExactMultiple`/`Ambiguous` messages and their
+/// picker prompts — because on the `@Name` mention path it can carry a
+/// server-derived display name (FIX-P5-009). Matching still uses the raw
+/// `name`. The `empty_msg` and `none_msg_fn` strings are built by the
+/// callers; this function sanitizes only the candidate names it passes to
+/// `none_msg_fn`, not anything the caller itself interpolates.
 pub(super) fn disambiguate_user(
     users: &[User],
     name: &str,
@@ -343,6 +351,9 @@ pub(super) fn disambiguate_user(
         return Ok((users[0].account_id.clone(), users[0].display_name.clone()));
     }
 
+    // `name` may be server-derived on the `@Name` mention path, so every echo
+    // of it below uses `name_echo`; matching keeps using the raw `name`.
+    let name_echo = crate::output::sanitize_terminal_line(name);
     let display_names: Vec<String> = users.iter().map(|u| u.display_name.clone()).collect();
     match crate::partial_match::partial_match(name, &display_names) {
         crate::partial_match::MatchResult::Exact(matched_name) => {
@@ -379,7 +390,7 @@ pub(super) fn disambiguate_user(
                     .collect();
                 return Err(JrError::UserError(format!(
                     "Multiple users named \"{}\" found:\n{}\nSpecify the accountId directly or use a more specific name.",
-                    name,
+                    name_echo,
                     lines.join("\n")
                 ))
                 .into());
@@ -387,7 +398,7 @@ pub(super) fn disambiguate_user(
 
             let labels: Vec<String> = disambiguation_labels(&duplicates);
             let selection = dialoguer::Select::new()
-                .with_prompt(format!("Multiple users named \"{}\"", name))
+                .with_prompt(format!("Multiple users named \"{name_echo}\""))
                 .items(&labels)
                 .interact()
                 .context("failed to prompt for user selection")?;
@@ -404,13 +415,13 @@ pub(super) fn disambiguate_user(
             if no_input {
                 return Err(JrError::UserError(format!(
                     "Multiple users match \"{}\": {}. Use a more specific name.",
-                    name,
+                    name_echo,
                     sanitized_matches.join(", ")
                 ))
                 .into());
             }
             let selection = dialoguer::Select::new()
-                .with_prompt(format!("Multiple users match \"{name}\""))
+                .with_prompt(format!("Multiple users match \"{name_echo}\""))
                 .items(&sanitized_matches)
                 .interact()
                 .context("failed to prompt for user selection")?;
@@ -913,6 +924,73 @@ mod tests {
         assert!(msg.contains("No match. Found:"));
         assert!(msg.contains("Alice"));
         assert!(msg.contains("Bob"));
+    }
+
+    // ── disambiguate_user `name` echo sanitization (FIX-P5-009) ────────
+    //
+    // On the `@Name` mention path `name` can be a server-derived display name
+    // (`mentions::resolve_at_name_candidate`), so every echo of it in the
+    // non-interactive messages must be single-line sanitized. Matching still
+    // uses the raw `name`.
+
+    /// Hostile name (EC-25 fixture): ESC/CSI, a C1 control (`U+009B`) and an
+    /// embedded newline between visible fragments; sanitizes to
+    /// "Mallory Eve". Candidate display names equal this RAW string, so a
+    /// regression that sanitized `name` BEFORE matching would not reach
+    /// `ExactMultiple` and would fail the `Multiple users named "Mallory Eve" found:` assertion.
+    const HOSTILE_NAME: &str = "Mal\u{1b}[31mlory\u{9b}\nEve";
+
+    fn assert_no_control_bytes(msg: &str) {
+        assert!(!msg.contains('\u{1b}'), "ESC survived: {msg:?}");
+        assert!(
+            !msg.chars().any(|c| ('\u{80}'..='\u{9f}').contains(&c)),
+            "C1 survived: {msg:?}"
+        );
+    }
+
+    #[test]
+    fn test_disambiguate_user_sanitizes_echoed_name() {
+        // ExactMultiple: two users whose display name equals the hostile name.
+        let users = vec![
+            make_user_with_email("acc-1", HOSTILE_NAME, "a@example.com"),
+            make_user("acc-2", HOSTILE_NAME),
+        ];
+        let msg = disambiguate_user(&users, HOSTILE_NAME, true, "empty", dummy_none_msg)
+            .unwrap_err()
+            .to_string();
+        assert_no_control_bytes(&msg);
+        assert!(
+            msg.contains("Multiple users named \"Mallory Eve\" found:"),
+            "{msg:?}"
+        );
+        // header + 2 candidate lines + trailer: the name echo adds no line.
+        assert_eq!(msg.lines().count(), 4, "{msg:?}");
+
+        // Ambiguous: the hostile name is a substring of two distinct names.
+        let hostile_one = format!("{HOSTILE_NAME} One");
+        let hostile_two = format!("{HOSTILE_NAME} Two");
+        let users = vec![
+            make_user("acc-1", &hostile_one),
+            make_user("acc-2", &hostile_two),
+        ];
+        let msg = disambiguate_user(&users, HOSTILE_NAME, true, "empty", dummy_none_msg)
+            .unwrap_err()
+            .to_string();
+        assert_no_control_bytes(&msg);
+        assert!(
+            msg.contains("Multiple users match \"Mallory Eve\":"),
+            "{msg:?}"
+        );
+        assert_eq!(msg.lines().count(), 1, "{msg:?}");
+
+        // None: this function does not itself echo `name` here (the caller's
+        // `none_msg_fn` does); pin that the branch output stays clean.
+        let users = vec![make_user("acc-1", "Alice"), make_user("acc-2", "Bob")];
+        let msg = disambiguate_user(&users, HOSTILE_NAME, true, "empty", dummy_none_msg)
+            .unwrap_err()
+            .to_string();
+        assert_no_control_bytes(&msg);
+        assert!(msg.contains("Alice") && msg.contains("Bob"), "{msg:?}");
     }
 
     // ── disambiguation_labels tests (D-395, FIX-P5-001) ───────────────
