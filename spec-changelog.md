@@ -9,6 +9,29 @@ Track all spec version changes. Most recent version first.
 
 > **Type legend:** Type classifies the SPEC document delta: MINOR = new BCs/VPs/sections; PATCH = amendments to existing bodies/ACs/ECs. Product-semver impact is recorded in the Summary line, independent of Type.
 
+## [2.8.2] - 2026-10-02
+
+### Type: PATCH
+
+### Summary
+
+FIX-P5-008 (human decision D-402, cycle-014 F5 pass-7). Spec-only prose corrections; no policy
+change; BC count unchanged (98 in-file / 54 individually-bodied in bc-7; 162 / 96 in cross-cutting;
+773 cumulative); VP count unchanged.
+
+1. **BC-X.7.002 (P7-001).** Source, Preconditions and Invariants prose describing
+   `tests/user_commands.rs::user_list_requires_project_flag` corrected to its actual assertions at
+   `ecbc5cda` (FIX-P5-006-strengthened): exit code 64, stderr contains `--project`, no
+   `127.0.0.1:1`/`connection` text (pre-HTTP proxy); it fails against clap's old exit-2 message.
+2. **BC-7.1.006 v1.7.2 (P7-002).** "No C1 handling" / "strips no C1 controls" claims about
+   `strip_control_and_ansi`/`sanitize_env_display` corrected: only NEL (`U+0085`) is handled among
+   C1 controls.
+3. **Test-description accuracy sweep.** VP-SEC-001-002 identity-collapse description, EC-X.14.004-9
+   and EC-X.14.004-10 test-fixture descriptions corrected to match the live tests at `ecbc5cda`.
+4. **Canonical Sink Inventory (SEC7 INFO).** Residual item (b)11 adds
+   `src/cli/field.rs::field_not_on_edit_screen_msg`'s user-typed `issue_key` echo; EC-X.14.004-10's
+   residual list updated to match.
+
 ## [2.8.1] - 2026-10-02
 
 ### Type: PATCH

@@ -7,7 +7,7 @@ producer: state-manager
 timestamp: 2026-09-26T00:01:34Z
 cycle: "cycle-014-issue-triage-quickfixes"
 inputs: [STATE.md]
-input-hash: "48a41fb"
+input-hash: "7392247"
 traces_to: STATE.md
 ---
 
@@ -694,6 +694,20 @@ dispositioned — dispositioning happens at cycle close per S-7.02).
     was DEFERRED by human choice. Tracked as
     `MUTANTS-EXCLUDE-RE-ANCHOR-GUARD` in `cycles/OPEN-STANDING-ITEMS.md`
     (target: next maintenance sweep). Recorded 2026-10-01.
+
+52. **[process-gap] [spec-propagation]** A strengthened test is not propagated
+    back to the BC prose that describes it. `FIX-P5-006` strengthened
+    `user_list_requires_project_flag`, but `BC-X.7.002` still described the old
+    loose assertion. Adjacent class: spec test-assertion descriptions
+    drifting from test bodies (the product-owner's `FIX-P5-008` audit found 7
+    mismatches: the three `user_list_requires_project_flag` descriptions, the
+    `EC-X.14.004-9`/`-10` fixture descriptions, and `VP-SEC-001-002`'s
+    identity-collapse test description). Candidate: when a fix strengthens or
+    renames a test, grep the spec corpus for that test name and update every
+    describing surface in the same fix; or a guard that flags spec prose naming
+    a test whose body no longer matches. Source: F5 Pass 7 finding `P7-001`
+    (LOW). Handled by `FIX-P5-008` (`D-402`). Recorded 2026-10-02. (Item `#51`
+    is recorded in the Disposition notes below.)
 
 ## Disposition
 

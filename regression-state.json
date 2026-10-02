@@ -1,1 +1,1 @@
-{"status":"pass","timestamp":"2026-10-02T06:05:38Z","command":"cd /Users/zious/Documents/GITHUB/jira-cli/.worktrees/FIX-P5-007 && cargo fmt --all -- --check && echo FMT_OK; cargo test --test claude_md_citations 2>&1 | grep -E \"test result|FAILED\"; cargo test --doc 2>&1 | grep -E \"test result|FAILED\""}
+{"status":"pass","timestamp":"2026-10-02T14:48:31Z","command":"cd /Users/zious/Documents/GITHUB/jira-cli/.worktrees/FIX-P5-008 && cargo fmt --all && cargo test --lib 2>&1 | tail -8"}
