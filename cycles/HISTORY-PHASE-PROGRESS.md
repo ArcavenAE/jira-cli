@@ -611,3 +611,14 @@ See `cycles/cycle-014/cycle-manifest.md` for full narrative detail (this row sum
 | **CYCLE-014-STORY-C-MERGED-2026-09-30** | **F4 (STORY-C MERGED, 2 of 3)** | 2026-09-30 | none (merge via D-391 policy) | STORY-C squash-merged PR #887, `e54be670`, closing `#583`. (Archived verbatim in the v5.28->v5.29 burst, 2026-10-02.) | 772 BCs / 97 VPs / 118 holdout / 194 stories LOCKED; no new `D-NNN` |
 | **CYCLE-014-STORY-B-STEP45-CONVERGED-2026-09-29** | **F4 (STORY-B Step 4.5 CONVERGED, then merged)** | 2026-09-29 | per-story Step 4.5 gate (BC-5.39.001) -- CONVERGED | STORY-B Step 4.5 CONVERGED (4 passes, 3 consecutive clean) at `02bf041f`. (Archived in the v5.29->v5.30 burst, 2026-10-02.) | 772 BCs / 98 VPs / 118 holdout / 194 stories LOCKED; no new `D-NNN` |
 | **CYCLE-014-F4-COMPLETE-2026-09-30** | **F4 COMPLETE -- combined wave integration gate PASSED** | 2026-09-30 | combined wave integration gate -- PASSED | STORY-B MERGED as **PR #888** @ `2ee422e0`, closing `#861`. Serial `A -> C -> B` (`D-381`) COMPLETE. Combined wave gate over `204b1fb5..2ee422e0`: all 6 checks PASSED. Report: `cycles/cycle-014/wave-integration-gate.md`. (Archived verbatim in the v5.30->v5.31 burst, 2026-10-02.) | 772 BCs / 97 VPs / 118 holdout / 194 stories LOCKED; no new `D-NNN` |
+
+---
+
+> Extracted from `.factory/STATE.md`'s `## Phase Progress` table during the
+> 2026-10-02 Pass 6 / `D-401` burst (v5.31 -> v5.32), to keep the live table at 12
+> rows after adding the new Pass 6 row. This was the oldest row at that point;
+> archived verbatim, unedited.
+
+| Phase | Status | Completed | Gate | Notes | Finding Progression |
+|-------|--------|-----------|------|-------|---------------------|
+| **CYCLE-014-F5-D392-FIX-P5-001-SPEC-2026-09-30** | **F5 STARTED -- FIX-P5-001 spec landed** | 2026-09-30 | none (human decision `D-392`) | `D-392`: fix `SEC-001-RENDER-TABLE-ANSI-SANITIZE` in-cycle as **FIX-P5-001**; `BC-7.1.006`/`VP-SEC-001-001` landed, spec `2.4.0->2.5.0`, BCs `772->773`. | 773 BCs / 98 VPs / 118 holdout / 194 stories LOCKED; `D-392` minted |

@@ -9,6 +9,37 @@ Track all spec version changes. Most recent version first.
 
 > **Type legend:** Type classifies the SPEC document delta: MINOR = new BCs/VPs/sections; PATCH = amendments to existing bodies/ACs/ECs. Product-semver impact is recorded in the Summary line, independent of Type.
 
+## [2.8.0] - 2026-10-02
+
+### Type: MINOR
+
+### Summary
+
+FIX-P5-007 (human decision D-401, cycle-014 F5 pass-6; spec-only at authoring, NOT YET IMPLEMENTED).
+Fixes the pass-6 findings and removes the doc-drift sources our own fixes kept reintroducing
+(exact LOC counts; covered/residual sink inventories duplicated across rustdoc, CLAUDE.md and the
+spec). BC count unchanged (98 in-file / 54 individually-bodied in bc-7; 162 / 96 in cross-cutting;
+773 cumulative); VP count unchanged.
+
+1. **BC-7.1.006 v1.7.0.** Inventory restructure: ONE headed "Canonical Sink Inventory" with a covered
+   list and a residual list (NONTABLE-SERVER-TEXT-SANITIZE), re-verified against `src/` at `ce6be7ad`
+   and cited by symbol, not line number. States that rustdoc and CLAUDE.md must point to it rather
+   than duplicate it. Adds new residuals (`resolve_request_type_id` ExactMultiple/Ambiguous, "Issue
+   type not found" list, `degrade_hint_for_schema`, `map_project_not_found`/`type_name`/`rt_query`
+   echoes, `disambiguate_user`'s echoed `name`). Records SEC6-003 (single `main.rs` error-formatter
+   chokepoint) as the deferred follow-up. EC-24 extended with U+2065 (`Cn`, category-based policy,
+   SEC6-001).
+2. **BC-X.14.004 EC-X.14.004-10 (SEC6-002/CR6-002).** Requires `output::sanitize_terminal_line` on the
+   resolved `field_id` in the three M1/M2/M3 "not available"/"not on the Edit screen" UserErrors and
+   on `resolve_field_id`'s not-found `{query}` echo. Test targets named; marked NOT YET IMPLEMENTED.
+3. **P6-001.** BC-X.14.004 error table and BC-X.14.001 collision-rule text no longer claim an ID match
+   is "never ambiguous": it is never ambiguous with a name match (EC-X.14.001-17), but a
+   case-insensitive duplicate field ID is its own exit-64 ambiguity (EC-X.14.001-21).
+4. **P6-004.** BC-X.14.004 gains a Preconditions paragraph: M2/M3 no-resolvable-project exit-64 tests
+   must run hermetically; `tests/field_options.rs` `Harness` to be routed through
+   `tests/common/hermetic.rs`.
+5. Hand-off: `.factory/cycles/cycle-014/phase-f5-adversarial/FIX-P5-007-spec-delta.md`.
+
 ## [2.7.3] - 2026-10-02
 
 ### Type: PATCH

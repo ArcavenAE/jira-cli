@@ -2046,6 +2046,15 @@ carved OUT of `FIX-P5-001`'s original scope because none of these sinks
 route through `output::render_table` — there is no single chokepoint to fix
 them all in one pass, unlike SEC-001's table-mode case.
 
+**Note 2026-10-02 (`D-401`, F5 Pass 6) -- AUTHORITATIVE LIST MOVED:** the
+authoritative covered + residual sink list is now the single "Canonical Sink
+Inventory" in `specs/prd/bc-7-output-render.md` BC-7.1.006 (v1.7.0). The
+bulleted lists below are a historical snapshot and are NOT maintained in
+lockstep -- consult the BC. `FIX-P5-007` (`D-401(a)`) also covers `SEC6-002`
+(server `field_id` echoes in `field.rs`) and `CR6-002` (`resolve_field_id`
+not-found echo). The broader `JrError`-body residual class is now tracked by
+`ERROR-FORMATTER-SANITIZE-CHOKEPOINT` (`SEC6-003`, deferred, below).
+
 **Note 2026-10-02 (`D-400`, F5 Pass 5 `SEC5-002`, INFO, CWE-116) -- FIXED:**
 `src/cli/field.rs::search_field_list` ambiguity errors (raw server field
 name/id and echoed query in a `UserError`) are now sanitized via
@@ -2091,6 +2100,27 @@ sweep or a future security-hardening cycle** — likely one fix per sink (or a
 small shared helper reusing `sanitize_table_cell`'s/`sanitize_env_display`'s
 existing character-policy logic), since no common rendering function unifies
 them the way `render_table` does for table-mode output.
+
+## Single error-formatter sanitization chokepoint in `main.rs` — NEW, OPEN, security (LOW), DEFERRED, target next security-hardening cycle (2026-10-02)
+
+**ID:** `ERROR-FORMATTER-SANITIZE-CHOKEPOINT`. Surfaced as `SEC6-003` (LOW) in
+F5 Pass 6 (`cycles/cycle-014/phase-f5-adversarial/pass-6.md`): config/input-
+sourced values (`project_key`, `type_name`/`rt_query`, `disambiguate_user`
+name) are echoed raw into `JrError` messages. The security-reviewer suggested
+one chokepoint instead of per-sink fixes.
+
+**Proposal:** sanitize once in `src/main.rs`'s error formatter, covering both
+the human stderr text and the JSON `"error"` field, preserving `\n` (as
+`sanitize_terminal_text` does). This would retire most `JrError`-body
+residuals in `NONTABLE-SERVER-TEXT-SANITIZE` in one change.
+
+**Disposition:** OPEN, DEFERRED by human decision `D-401(b)` (2026-10-02) --
+it changes all error rendering and is out of scope for this quick-fix cycle at
+a tight F5 pass budget. Recorded here (not as a STORY-INDEX draft: story
+counts are LOCKED at 194 and the SELF-IMPROVEMENT epic holds engine/process-
+gap stories, not product security hardening). **Target: next security-
+hardening cycle / first maintenance sweep after cycle-014 closes** (draft a
+story at that cycle's F1).
 
 ## `sanitize_env_display`'s C1-control gap — NEW, OPEN, security (LOW), target next maintenance sweep (2026-09-30)
 
