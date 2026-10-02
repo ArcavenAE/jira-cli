@@ -14,6 +14,7 @@ trace: |
   - FIX-P5-007 post-merge (2026-10-02, spec v2.8.1, PATCH, mechanical): BC-X.14.004 EC-X.14.004-10, its error-table cross-reference, and the Preconditions hermetic-harness note converted from "NOT YET IMPLEMENTED / target" to live citations (PR #899, `ecbc5cda`): `src/cli/field.rs::field_not_available_for_type_msg`, `src/cli/field.rs::field_not_available_on_request_type_msg`, `src/cli/field.rs::field_not_on_edit_screen_msg`, `src/cli/field.rs::field_not_found_msg`; tests `src/cli/field.rs::test_bc_x_14_004_field_id_echo_is_sanitized_in_not_available_errors`, `src/cli/field.rs::test_bc_x_14_004_not_found_query_echo_is_sanitized`, `tests/field_options.rs::test_bc_x_14_004_not_available_field_id_echo_is_sanitized_in_stderr_and_json`; the `tests/field_options.rs` `Harness` now routes through `tests/common/hermetic.rs`. Anti-drift pass: exact `~L` line-number citations in BC-X.14.001 (`resolve_field_id` guard/cache-read and warm-cache-ambiguity cites, `editmeta.rs` `AllowedValue` doc-comment cites) converted to symbol form. Each cited symbol was verified present at `ecbc5cda`. BC-X.14.* carry no per-BC version table; this bullet and the `.factory/spec-changelog.md` `[2.8.1]` entry are the version record. COUNT-NEUTRAL.
   - FIX-P5-008 (2026-10-02, spec v2.8.2, PATCH, human decision D-402, cycle-014 F5 pass-7, P7-001/SEC7 INFO; spec-only prose corrections, COUNT-NEUTRAL, no new BC/VP): BC-X.7.002 Source/Preconditions/Invariants prose describing `tests/user_commands.rs::user_list_requires_project_flag`'s assertions corrected to its actual (FIX-P5-006-strengthened) assertions at `ecbc5cda` (exit 64; stderr contains `--project`; no `127.0.0.1:1`/`connection` text as a pre-HTTP proxy; fails against clap's exit-2 message); EC-X.14.004-9/-10 test-fixture descriptions corrected to match the live tests; EC-X.14.004-10's residual list adds `field_not_on_edit_screen_msg`'s user-typed `issue_key` echo. Version record: this bullet and the `.factory/spec-changelog.md` [2.8.2] entry.
   - FIX-P5-008 post-merge (2026-10-02, spec v2.8.3, PATCH, mechanical; merged in PR #901, `b9ae0862`): BC-X.14.004 EC-X.14.004-9 corrected to the merged `src/cli/field.rs::search_field_list(list, query)` shape (two parameters, `query_lower` derived internally, echoed query sanitized lazily at the three error sites instead of once up front). COUNT-NEUTRAL, no new BC/VP. Version record: this bullet and the `.factory/spec-changelog.md` [2.8.3] entry.
+  - FIX-P5-009 (2026-10-02, spec v2.8.4, PATCH, human decision D-403, cycle-014 F5 pass-8, P8-001 + complete spec audit; spec-only, COUNT-NEUTRAL, no new BC/VP): BC-X.7.002 and BC-X.16.001/002 Source/Trace/BC-INDEX "to be implemented/modified" converted to IMPLEMENTED with PR citations (#886 `2d8467c4`, #887 `e54be670`), Postcondition-1 line anchors replaced by symbol form, dependency-source line anchors converted, VP test-description claims corrected; BC-X.14.001-004 audit corrections (M3 no-project error is `field.rs::handle`'s own, not `require_service_desk`'s; no `--type` ambiguity branch; resolution order; per-context error wording; project-404 mapping only on `get_issue_types_for_project`; VP-580-014/EC-X.14.001-17 fixtures; M3 uncached; degrade-hint wording); `edge-case-catalog.md` statuses and the `error-taxonomy.md`/BC-X.7.002 ConfigError/UserError attribution corrected. Version record: this bullet and `.factory/spec-changelog.md` [2.8.4].
   - cycle-014 `issue-triage-quickfixes` F2 (spec 2.4.0, 2026-09-25): amended BC-X.7.002 (#862
     `user list --project` resolution: `List.project` becomes `Option<String>`; clap global
     propagation plus `Config::project_key` fallback; `&Config` threaded from `main.rs`; pure
@@ -756,7 +757,7 @@ If `main_task` completes first, its `Result` is returned normally (existing per-
 > **Previous version (pre-cycle-014, spec 2.3.2):** H1 was `user list --project P` calls `/rest/api/3/user/assignable/multiProjectSearch?projectKeys=P` — accurate for the pre-fix shape, where `UserCommand::List.project` was a clap-required `String`, the sole source of `P`: no global-flag fallback, no config default, no `jr`-level exit-64 (an absent flag was rejected by clap itself, exit 2). Source/Trace at that time: `tests/all_flag_behavior.rs:~260-`; Pass 3 BC-704.
 
 **Confidence**: HIGH
-**Source**: `tests/all_flag_behavior.rs::user_list_default_caps_at_thirty`; `tests/user_commands.rs::user_list_requires_project_flag` (isolation to be added, no rename — human-accepted at the F1 gate, cycle-manifest Open Question 8: under the required hermetic setup the name still accurately describes the test; as strengthened in FIX-P5-006 (P5-005) and verified against the body at `ecbc5cda`, it asserts (1) exit code 64 — jr's own `JrError::UserError`, NOT clap's exit 2, (2) stderr contains `--project`, and (3) stderr contains neither `127.0.0.1:1` nor `connection` (case-insensitive) — a pre-HTTP PROXY for "the guard fired before any request", not strict proof of zero requests (that is the sibling wiremock `.expect(0)` test's job)); `src/cli/mod.rs::UserCommand::List.project` (type change `String` → `Option<String>`, to be modified cycle-014); `src/cli/user.rs::{handle,handle_list,resolve_user_list_project}` (`&Config` threading + new pure resolver, to be implemented cycle-014); `src/main.rs`'s `Command::User` dispatch arm (`&Config` threading only, to be modified cycle-014); `src/config.rs::Config::project_key` (reused, unmodified).
+**Source**: `tests/all_flag_behavior.rs::user_list_default_caps_at_thirty`; `tests/user_commands.rs::user_list_requires_project_flag` (hermetic isolation IMPLEMENTED, no rename — human-accepted at the F1 gate, cycle-manifest Open Question 8: under the required hermetic setup the name still accurately describes the test; as strengthened in FIX-P5-006 (P5-005) and verified against the body at `ecbc5cda`, it asserts (1) exit code 64 — jr's own `JrError::UserError`, NOT clap's exit 2, (2) stderr contains `--project`, and (3) stderr contains neither `127.0.0.1:1` nor `connection` (case-insensitive) — a pre-HTTP PROXY for "the guard fired before any request", not strict proof of zero requests (that is the sibling wiremock `.expect(0)` test's job)); `src/cli/mod.rs::UserCommand::List.project` (type is `Option<String>`; was clap-required `String` pre-fix); `src/cli/user.rs::{handle,handle_list,resolve_user_list_project}` (`&Config` threading + `pub(crate)` pure resolver delegating to `Config::project_key`); `src/main.rs`'s `Command::User` dispatch arm (`&Config` threading only); `src/config.rs::Config::project_key` (reused, unmodified). IMPLEMENTED in cycle-014, issue #862, PR #886 merged as `2d8467c4`.
 **Subject**: Users — `user list` project resolution (issue #862)
 **Behavior**: `jr user list` needs a resolved project key before it can call
 `/rest/api/3/user/assignable/multiProjectSearch?projectKeys=P`.
@@ -767,8 +768,8 @@ Fix:
 1. `UserCommand::List.project` becomes `Option<String>` (`src/cli/mod.rs`) — only the type
    changes; the field keeps its existing `#[arg(long, short = 'p')]` attribute, including
    `short = 'p'`, unmodified (`src/cli/mod.rs::UserCommand::List.project`). The field's help text (doc comment on
-   `src/cli/mod.rs::UserCommand::List.project`, currently "Project key (e.g., FOO)") is
-   also updated to state the fallback order, modeled on `ComponentSubcommand::List`'s wording
+   `src/cli/mod.rs::UserCommand::List.project`, formerly "Project key (e.g., FOO)") now
+   states the fallback order, modeled on `ComponentSubcommand::List`'s wording
    (quoted verbatim below) (`src/cli/mod.rs::ComponentSubcommand::List.project`: "Project key (overrides the configured default
    project). Required when no project is configured in `.jr.toml`."). `user list`'s new help
    text cannot reuse that string byte-for-byte, though: `ComponentSubcommand::List`'s help text
@@ -798,12 +799,12 @@ already `Option<&str>`, so no `.as_deref()` call appears at this call site. `han
 `handle_delete` instead receive an owned `project: Option<String>` (the `Edit`/`Delete` arms in
 `handle` perform no local/global merge at all — see below) and call
 `config.project_key(project.as_deref())` internally, where the `.as_deref()` converts that owned
-field to the `Option<&str>` the shared `project_key` signature expects), and the same one `jr field options --type` (BC-X.14.001's M2 project resolution step), `jr queue`, and `jr requesttype` already use for their own config-default fallback. BC-8.1.004 covers ONLY the no-project-configured exit-64 condition — it does not itself specify local-over-global precedence. The actual local-over-global precedent for `component list`/`create` lives in the code (`src/cli/component.rs::handle`'s `List` arm — `project.as_deref().or(project_flag)` — and `Create` arm — `project.or_else(|| project_flag.map(str::to_string))`, local checked first, global consulted only as a fallback), not in a shared BC-level contract. `component edit`/`delete` rely on the same clap global-value-propagation mechanism `user list` now will (no explicit `.or()`/`or_else()` merge call in those arms). Local wins over global when both are supplied (`jr --project GLOBAL user list --project LOCAL` resolves `LOCAL`) — via clap's propagation, producing the same observable result as `component create`'s explicit local-over-global code.
+field to the `Option<&str>` the shared `project_key` signature expects), and the same one `jr field options --type` (BC-X.14.001's M2 project resolution step), `jr queue`, and `jr requesttype` already use for their own config-default fallback. BC-8.1.004 covers ONLY the no-project-configured exit-64 condition — it does not itself specify local-over-global precedence. The actual local-over-global precedent for `component list`/`create` lives in the code (`src/cli/component.rs::handle`'s `List` arm — `project.as_deref().or(project_flag)` — and `Create` arm — `project.or_else(|| project_flag.map(str::to_string))`, local checked first, global consulted only as a fallback), not in a shared BC-level contract. `component edit`/`delete` rely on the same clap global-value-propagation mechanism `user list` relies on (no explicit `.or()`/`or_else()` merge call in those arms). Local wins over global when both are supplied (`jr --project GLOBAL user list --project LOCAL` resolves `LOCAL`) — via clap's propagation, producing the same observable result as `component create`'s explicit local-over-global code.
 
 **Preconditions**:
 - `jr user list` invoked with any combination of: local `--project`, global `--project`, a configured `.jr.toml`/profile-default project, or none of the three.
-- `tests/user_commands.rs::user_list_requires_project_flag` and the new EC-X.7.002-4 regression test are CONFIG-SENSITIVE once this BC lands, because `Config::project_key` reads both the active profile's configured default and any `.jr.toml` found by `find_project_config`'s cwd-and-ancestors walk (`src/config.rs`). Both tests MUST set `JR_CONFIG_DIR`/`JR_CACHE_DIR` to a fresh `TempDir` and run from a `cwd` with no `.jr.toml` in any ancestor directory, in addition to supplying auth (`JR_AUTH_HEADER`/`JR_BASE_URL`, as `user_list_requires_project_flag` already does) — otherwise a real developer/CI environment with a configured default project would silently resolve step 3 and the exit-64 assertion would spuriously fail. Both tests MUST also clear every ambient `JR_`-prefixed variable EXCEPT the hermetic seams the test sets (`JR_CONFIG_DIR`, `JR_CACHE_DIR`, `JR_BASE_URL`, `JR_AUTH_HEADER`), per `.factory/cycles/cycle-014/phase-f2-spec-evolution/verification-delta.md` §2, since `Config::load_inner`'s (`src/config.rs`) two env-reading sites — `Figment::new()...merge(Env::prefixed("JR_"))`, which lets any stray `JR_`-prefixed variable in the ambient shell silently override a `GlobalConfig` field, and the separate `std::env::var("JR_PROFILE")` read that resolves the active profile name — would otherwise leak an ambient value in. An ambient `JR_PROFILE` pointing at a profile with its own configured project default would silently resolve step 3 the same way an ambient `.jr.toml`/config default would, spuriously masking EC-X.7.002-4's exit-64 assertion. `user_list_requires_project_flag` specifically may keep its existing unreachable `JR_BASE_URL=http://127.0.0.1:1` (no mock server): since a stray request would fail with a connection error rather than a mock response, and the test asserts exit code 64, stderr containing `--project`, and stderr containing no connection-error text (`127.0.0.1:1` / `connection`, case-insensitive — a pre-HTTP proxy), an unreachable base URL cannot mask the exit-64 assertion (a stray request would surface connection-error text and fail the third assertion).
-- In `src/main.rs`'s `run` function, `config::validate_profile_name` (validating a supplied `--profile` name) runs before command dispatch, and in the `Command::User` arm, `Config::load_with` (e.g. unknown profile, malformed config) then `api::client::JiraClient::from_config(&config, ...)` run and can each fail (`JrError::UserError` for an invalid/unknown profile name, `JrError::ConfigError` for a missing/unknown active profile or a missing profile URL, or `JrError::NotAuthenticated` via keychain/`JR_AUTH_HEADER` credential loading) BEFORE `cli::user::handle`/`handle_list` is ever invoked: `config::validate_profile_name`, `Config::load_with` (e.g. unknown profile, malformed config) and `JiraClient::from_config` failures all preempt this step; some of these also exit 64 — never the reverse. A hermetically-isolated EC-X.7.002-4 test MUST supply valid auth and a valid, known profile precisely so it reaches this BC's own exit-64 path instead of failing earlier on one of these preemption points.
+- `tests/user_commands.rs::user_list_requires_project_flag` and the EC-X.7.002-4 regression test (`tests/user_commands.rs::test_user_list_without_resolvable_project_exits_64_with_zero_http`) are CONFIG-SENSITIVE, because `Config::project_key` reads both the active profile's configured default and any `.jr.toml` found by `find_project_config`'s cwd-and-ancestors walk (`src/config.rs`). Both tests MUST set `JR_CONFIG_DIR`/`JR_CACHE_DIR` to a fresh `TempDir` and run from a `cwd` with no `.jr.toml` in any ancestor directory, in addition to supplying auth (`JR_AUTH_HEADER`/`JR_BASE_URL`, as `user_list_requires_project_flag` already does) — otherwise a real developer/CI environment with a configured default project would silently resolve step 3 and the exit-64 assertion would spuriously fail. Both tests MUST also clear every ambient `JR_`-prefixed variable EXCEPT the hermetic seams the test sets (`JR_CONFIG_DIR`, `JR_CACHE_DIR`, `JR_BASE_URL`, `JR_AUTH_HEADER`), per `.factory/cycles/cycle-014/phase-f2-spec-evolution/verification-delta.md` §2, since `Config::load_inner`'s (`src/config.rs`) two env-reading sites — `Figment::new()...merge(Env::prefixed("JR_"))`, which lets any stray `JR_`-prefixed variable in the ambient shell silently override a `GlobalConfig` field, and the separate `std::env::var("JR_PROFILE")` read that resolves the active profile name — would otherwise leak an ambient value in. An ambient `JR_PROFILE` pointing at a profile with its own configured project default would silently resolve step 3 the same way an ambient `.jr.toml`/config default would, spuriously masking EC-X.7.002-4's exit-64 assertion. `user_list_requires_project_flag` specifically may keep its existing unreachable `JR_BASE_URL=http://127.0.0.1:1` (no mock server): since a stray request would fail with a connection error rather than a mock response, and the test asserts exit code 64, stderr containing `--project`, and stderr containing no connection-error text (`127.0.0.1:1` / `connection`, case-insensitive — a pre-HTTP proxy), an unreachable base URL cannot mask the exit-64 assertion (a stray request would surface connection-error text and fail the third assertion).
+- In `src/main.rs`'s `run` function, `config::validate_profile_name` (validating a supplied `--profile` name) runs before command dispatch, and in the `Command::User` arm, `Config::load_with` (e.g. unknown profile, malformed config) then `api::client::JiraClient::from_config(&config, ...)` run and can each fail (`JrError::UserError` for an invalid or unknown profile name (`validate_profile_name`/`Config::load_with`), `JrError::ConfigError` for a profile with no configured URL (`JiraClient::from_config`), or `JrError::NotAuthenticated` via keychain/`JR_AUTH_HEADER` credential loading) BEFORE `cli::user::handle`/`handle_list` is ever invoked: `config::validate_profile_name`, `Config::load_with` (e.g. unknown profile, malformed config) and `JiraClient::from_config` failures all preempt this step; some of these also exit 64 — never the reverse. A hermetically-isolated EC-X.7.002-4 test MUST supply valid auth and a valid, known profile precisely so it reaches this BC's own exit-64 path instead of failing earlier on one of these preemption points.
 
 **Postconditions**:
 1. Local `--project` present → that value is used, regardless of whether a global `--project` or a configured default is also present (local wins unconditionally).
@@ -931,7 +932,7 @@ field to the `Option<&str>` the shared `project_key` signature expects), and the
 precedent — explicit code: `project.as_deref().or(project_flag)` (List) /
 `project.or_else(|| project_flag.map(str::to_string))` (Create), local checked first, global
 consulted only as a fallback) and Edit/Delete arms (clap global-value propagation only, no
-explicit merge call — the same mechanism `user list` now relies on); BC-8.1.004 (covers ONLY the
+explicit merge call — the same mechanism `user list` relies on); BC-8.1.004 (covers ONLY the
 no-project-configured exit-64 condition — it does NOT itself specify local-over-global
 precedence); BC-X.14.001 "M2 project resolution step" (companion-flag-or-default precedent);
 Pass 3 BC-704
@@ -2597,14 +2598,16 @@ being a distinct, later function from the pure arity check. Both `resolve_field_
 1) and `resolve_m2_project` (Step 2) are pure core — same purity class as
 `config::validate_profile_name` — they are two sibling pure functions, not one widened function.
 See BC-X.14.001 Invariant 1 / VP-580-006 below for the propagated text.
-- **PRIMARY, JSM request-type fields**: `--request-type <NAME|ID>` (`--project <P>` is an
-  OPTIONAL companion) → reuses `jr`'s existing
-  `GET /rest/servicedeskapi/servicedesk/{sd}/requesttype/{rt}/field` call and 7-day cache (M3,
-  same mechanism as `jr requesttype fields`, BC-X.12.005). `--project --request-type` together
+- **PRIMARY, JSM request-type fields**: `--request-type <NAME|ID>` (`--project <P>` is a
+  companion flag, omittable only when a profile/config default supplies the project) → reuses
+  `jr`'s existing `GET /rest/servicedeskapi/servicedesk/{sd}/requesttype/{rt}/field` call
+  (`get_request_type_fields`; uncached on this path — only the `project_meta.json`
+  project/service-desk lookup is 7-day-cached) (M3, same call as `jr requesttype fields`,
+  BC-X.12.005). `--project --request-type` together
   is VALID (M3 with an explicit service-desk project) — NOT a pairing error; when `--project`
-  is absent, the ambient profile/config-default project supplies it, resolved via
-  `require_service_desk`/`get_or_fetch_project_meta` exactly as `jr requesttype fields` already
-  does.
+  is absent, the ambient profile/config-default project supplies it (via
+  `src/cli/field.rs::resolve_m2_project`, shared by M2 and M3), and the resolved key is handed to
+  `require_service_desk`/`get_or_fetch_project_meta` as `jr requesttype fields` already does.
 - **FALLBACK / convenience**: `--issue <KEY>` (no `--project` companion — the issue key alone
   supplies project context) → reuses the existing `GET /issue/{key}/editmeta` call `jr` already
   owns (M1, same mechanism as `issue edit --field`, BC-3.4.015). Useful when the caller has a
@@ -2689,9 +2692,10 @@ call" contract — it reads only already-loaded in-process `Config` state, no HT
 distinct, sibling pure function to the arity check (both are pure core, same class as
 `config::validate_profile_name`), not a widened arity check. Known ordering drift (tracked as
 drift item `FIELD-OPTIONS-RESOLUTION-ORDER`, out of scope for cycle-014): `src/cli/field.rs::handle`
-resolves `<field>` (Step 2, `resolve_field_id`) BEFORE this M2 project-resolution step runs, so a
+resolves `<field>` (Step 2, `resolve_field_id`) BEFORE this M2 project-resolution step runs (and
+before the M3 `--request-type needs a resolvable project` error, which has the same ordering), so a
 human-name `<field>` on a cold cache issues one `GET /rest/api/3/field` before the incomplete-M2
-project error can fire — in tension with Invariant 1's "before any HTTP call" framing for that
+(or incomplete-M3) project error can fire — in tension with Invariant 1's "before any HTTP call" framing for that
 specific error, though not for the mode-selector arity check itself.
 
 **M2 (`--type <T> [--project <P>]`) issue-type name→id resolution step [BRACKETED 2026-08-26, F2 adversary-convergence round-5, LOW-1 — was unbracketed, stale relative to the H1/D1-corrected `[--project <P>]` form]**: `get_createmeta_fields`
@@ -2703,8 +2707,10 @@ Step 3 exactly: the SAME project-scoped, case-insensitive `get_issue_types_for_p
 --field`'s createmeta path. This resolution call fires AT MOST ONCE per invocation, and ONLY on
 the M2 path (M1/`--issue` and M3/`--request-type` never call it — M1 resolves an issue KEY, not
 a project+type pair; M3 resolves a request-type name via its own `partial_match` mechanism,
-BC-X.12.006). An unknown or ambiguous `--type` name → exit 64 listing valid issue types for the
-resolved project, BEFORE `get_createmeta_fields` is called — see BC-X.14.004's error taxonomy
+BC-X.12.006). A `--type` name matching no issue type of the resolved project (case-insensitive exact
+match, first match wins — no ambiguity branch, since Jira enforces unique issue-type names per
+project) → exit 64 listing valid issue types for the resolved project, BEFORE
+`get_createmeta_fields` is called — see BC-X.14.004's error taxonomy
 for the exact row.
 
 **M3 (`--request-type <RT> [--project <P>]`) service-desk resolution step**: `--project` is an
@@ -2717,9 +2723,11 @@ EXACTLY as `jr requesttype fields <NAME|ID> --project <KEY>` (BC-X.12.005) alrea
 functions, same 7-day `project_meta.json` cache, no new resolution path. A resolved project
 that is non-JSM (software) → exit 64 via `require_service_desk`'s call-site-specific message
 (BC-X.8.004), same as BC-X.12.003. No resolvable ambient project at all (no `--project`, no
-profile/config default) → the existing `require_service_desk` "project required" error,
-unchanged from `jr requesttype fields`'s own behavior on the same condition — see BC-X.14.004's
-error taxonomy for the exact row. This resolution call fires AT MOST ONCE per invocation and
+profile/config default) → `src/cli/field.rs::handle`'s own exit-64 error (`--request-type needs
+a resolvable project — pass --project <P> or configure a default.`, via `resolve_m2_project`),
+raised BEFORE `require_service_desk` is called (`require_service_desk` takes a concrete
+`project_key: &str` and has no "project required" error) — see BC-X.14.004's error taxonomy
+for the exact row. This resolution call fires AT MOST ONCE per invocation and
 ONLY on the M3 path (mirroring the M2 `--type` resolution call's at-most-once/single-path
 scoping above).
 
@@ -2764,17 +2772,18 @@ select/radio/checkbox/multiselect fields (which do carry `value`) and never samp
 field's `allowedValues` shape; this correction closes that research gap, it does not reverse a
 considered design decision.
 
-F4 corrects two stale doc comments on `src/types/jira/editmeta.rs::AllowedValue` — no `src/`
-edit is made by this F2 spec-only delta:
+F4 corrected two stale doc comments on `src/types/jira/editmeta.rs::AllowedValue` (IMPLEMENTED,
+PR #888 `2ee422e0`; the pre-fix text is quoted below as history):
 1. The `AllowedValue` struct-level doc comment (`src/types/jira/editmeta.rs::AllowedValue`), which
    states "`name` is parsed but unused in v1 — retained for future cascade-select matching."
 2. The `name` field's own doc comment (`src/types/jira/editmeta.rs::AllowedValue`'s `name` field), which states
    "Secondary label present on some Jira option types (e.g. cascade-select children). Parsed
    from the API response; unused in v1 resolution logic. Future: v2 cascade-select name
    matching."
-Both were verified against the current file content and both still read "unused in v1" —
-`AllowedValue.name` is now a genuine v1 resolution input for the M1/M2 label fallback above, so
-both comments misstate the current behavior, not merely an aspirational future one.
+At F2 authoring both still read "unused in v1" — but `AllowedValue.name` is a genuine v1
+resolution input for the M1/M2 label fallback above, so both comments misstated the behavior.
+The merged struct-level and `name`-field doc comments now describe the read-side `name`
+fallback and the write-side scope boundary.
 
 **Scope boundary — READ-SIDE ONLY, WRITE-side explicitly out of scope [D-378]**: this amendment
 governs ONLY the M1/M2 enumeration normalizer (`normalize_from_allowed_values`, this BC). The
@@ -2892,7 +2901,8 @@ CONFIRMed read shape here does not imply a verified write shape there.
    MODE-SELECTOR flags — `--type`, `--request-type`, `--issue` — must be present; `--project` is
    NEVER counted as a mode selector. Zero mode selectors → exit 64 ("specify exactly one of
    --type, --request-type, --issue"). Two OR more mode selectors specified simultaneously (e.g.,
-   `--issue KEY --request-type RT`) → exit 64, same message, listing the conflicting flags.
+   `--issue KEY --request-type RT`) → exit 64, same message as the zero-mode-selector case (it names all three mode-selector
+   flags generically, not the specific conflicting ones).
    `--type` present with NO resolvable project — neither an explicit `--project` flag NOR a
    profile/config default — → exit 64, the incomplete-M2 error. **[CORRECTED 2026-08-26,
    ADR-0019 § Amendment D1]**: the pure mode-selector arity check itself (`resolve_field_context`)
@@ -3049,8 +3059,8 @@ CONFIRMed read shape here does not imply a verified write shape there.
   `version`, not inside it), so `search_field_list`'s substring branch returns 2 candidates and
   exits 64 as ambiguous, naming both. This is pre-existing `resolve_field_id`/`search_field_list`
   behavior, unmodified by this cycle's read-side label-fallback fix; it does not change this
-  cycle's scope. Known inconsistency: BC-X.14.004's zero-match hint and `resolve_field_id`'s
-  shipped error message (`src/cli/field.rs::resolve_field_id`) both name `jr project fields
+  cycle's scope. Known inconsistency: BC-X.14.004's zero-match hint and the shipped
+  not-found message built by `src/cli/field.rs::field_not_found_msg` (raised in `resolve_field_id`) both name `jr project fields
   --output json`, which does not list field names; tracked as drift item
   FIELD-OPTIONS-NOTFOUND-HINT (out of scope for cycle-014).
   **[SUPERSEDED IN PART, D-399, FIX-P5-005, IMPLEMENTED in FIX-P5-005, merged in PR #897, `0a4dc062`]** As of FIX-P5-005, the
@@ -3074,7 +3084,7 @@ CONFIRMed read shape here does not imply a verified write shape there.
 
 - EC-X.14.001-16 (D-399, FIX-P5-005, issue #861 / CR4-002 — IMPLEMENTED in FIX-P5-005, merged in PR #897, `0a4dc062`; pinned by `tests/field_options.rs::test_bc_x_14_001_system_field_id_issuetype_resolves_via_id_match` and `tests/field_options.rs::test_bc_x_14_001_system_field_id_match_is_case_insensitive_and_returns_canonical_id`): a SYSTEM field ID resolves via the field-ID match step. `jr field options issuetype --type Bug --project P` (and `priority`, `fixVersions`, `components`) resolves `<field>` to that id from the field list, where before FIX-P5-005 it exited 64 `Field 'issuetype' not found`. Case-insensitive: `IssueType`/`ISSUETYPE` resolve to the canonical `issuetype`. The resolved id (list casing) is what flows into M1/M2/M3 enumeration. Zero extra HTTP versus the name path: ID matching uses the same warm `fields.json` (no request) or the same single `list_fields()` fetch on a cold cache.
 - EC-X.14.001-22 (D-400, FIX-P5-006, P5-001 — IMPLEMENTED, merged in PR #898, `ce6be7ad`): help-text requirement. No existing BC pinned the `jr field options` help wording; it is pinned here. The `<FIELD>` argument's help/doc text (`src/cli/mod.rs`, the `field options` positional's doc comment, rendered by `jr field options --help`) MUST state that the argument accepts a `customfield_NNNNN` literal, a field ID such as `issuetype`/`priority` (exact, case-insensitive), or a field name. Exact required wording (substring-pinned): `a customfield_NNNNN literal, a field ID such as issuetype or priority (exact, case-insensitive), or a field name`. The help MUST NOT imply that only display names or only custom fields are accepted. Live test (help pin, verified present at `ce6be7ad`): `tests/field_options.rs::test_bc_x_14_001_field_options_help_mentions_system_field_ids` — runs `jr field options --help`, asserts exit 0 and stdout contains the three tokens `customfield_NNNNN`, `issuetype` and `case-insensitive` (and the full required substring above). Zero HTTP.
-- EC-X.14.001-17 (D-399, FIX-P5-005, IMPLEMENTED in FIX-P5-005, merged in PR #897, `0a4dc062`; pinned by `tests/field_options.rs::test_bc_x_14_001_field_id_match_wins_over_name_collision` and the property `src/cli/field.rs::prop_bc_x_14_001_search_field_list_id_match_precedes_name_match`'s collide arm): ID/name collision — field list contains `("priority", "Priority")` and `("customfield_10050", "priority")`; `<field>` = `priority` → the ID match wins: resolves to `priority` (the system field), silently, even though `priority` is also an exact (case-insensitive) display name of `customfield_10050`; no ambiguity error. The shadowed custom field is reached via its `customfield_10050` literal (EC-X.14.001-1). Pinned so the precedence is a deliberate spec decision.
+- EC-X.14.001-17 (D-399, FIX-P5-005, IMPLEMENTED in FIX-P5-005, merged in PR #897, `0a4dc062`; pinned by `tests/field_options.rs::test_bc_x_14_001_field_id_match_wins_over_name_collision` and the property `src/cli/field.rs::prop_bc_x_14_001_search_field_list_id_match_precedes_name_match`'s collide arm): ID/name collision — field list contains `("issuetype", "Issue Type")` and `("customfield_10050", "issuetype")` (the shape of `test_bc_x_14_001_field_id_match_wins_over_name_collision`; the property's collide arm uses a generated id with a colliding `customfield_10050` named identically); `<field>` = `issuetype` → the ID match wins: resolves to `issuetype` (the system field), silently, even though `issuetype` is also an exact (case-insensitive) display name of `customfield_10050`; no ambiguity error. The shadowed custom field is reached via its `customfield_10050` literal (EC-X.14.001-1). Pinned so the precedence is a deliberate spec decision.
 - EC-X.14.001-18 (D-399, FIX-P5-005, IMPLEMENTED in FIX-P5-005, merged in PR #897, `0a4dc062`): ID matching is exact, never substring. With the list containing `issuetype`/`Issue Type`, `<field>` = `issue` does NOT ID-match `issuetype`; it falls through to name matching (substring `issue` → `Issue Type`, plus any other containing field, so possibly ambiguous per the unchanged name algorithm) — pinned at unit level by `src/cli/field.rs::test_bc_x_14_001_search_field_list_id_match_is_exact_not_substring`, whose first assertion uses query `issue` against `(issuetype, Issue Type)` and resolves `issuetype` VIA THE NAME-SUBSTRING rule (single match), proving there is no ID-substring step. A `<field>` that is a substring of an id but equals no id and no name is not-found: the same unit test's second assertion (query `issuet` against `(issuetype, Kind)` → `None`) and the integration test `tests/field_options.rs::test_bc_x_14_001_field_id_match_is_exact_not_substring` (same fixture shape, query `issuet`, exit 64 `not found`, zero editmeta calls). (Fixture note: the not-found probes use query `issuet`; the name-fall-through probe uses `issue`.)
 - EC-X.14.001-19 (D-399, FIX-P5-005, IMPLEMENTED in FIX-P5-005, merged in PR #897, `0a4dc062`; pinned by `tests/field_options.rs::test_bc_x_14_001_field_id_match_warm_cache_zero_http` and `tests/field_options.rs::test_bc_x_14_001_field_id_absent_from_cache_refetches_once`): cache semantics of the ID step. `<field>` = `issuetype` with a warm cache containing it → resolves with ZERO HTTP; `<field>` absent from the warm cache as both id and name → exactly one `GET /rest/api/3/field`, cache rewritten, one re-search (ID step first) — mirroring the existing name-absent contract; a `CustomField_10084`-style wrong-case spelling is NOT the literal bypass (case-sensitive) but, if present in the list, resolves via the case-insensitive ID match (to the canonical `customfield_10084`), costing the cache read / one fetch that the exact-case literal bypass avoids. The `customfield_NNNNN` literal bypass remains zero-HTTP and unchanged (VP-580-001).
 - EC-X.14.001-20 (D-399, FIX-P5-005, IMPLEMENTED in FIX-P5-005, merged in PR #897, `0a4dc062`; the shared literal is `src/cli/field.rs::FIELD_ID_HINT`; pinned by `tests/field_options.rs::test_bc_x_14_004_ambiguous_field_name_hint_names_system_id_form` and `src/cli/field.rs::test_bc_x_14_004_ambiguity_hints_name_system_id_form`): ambiguity hints. Multiple exact-name matches → exit 64 `Field name '<q>' matches multiple fields: <name> (<id>), … Use the field ID (e.g. customfield_NNNNN or a system id like issuetype) to disambiguate.`; multiple substring matches → exit 64 `Field name '<q>' is ambiguous — matches: <name> (<id>), … Use a more specific name or the field ID (e.g. customfield_NNNNN or a system id like issuetype).` Both messages contain the literal `the field ID (e.g. customfield_NNNNN or a system id like issuetype)`; neither recommends only `customfield_NNNNN`. Candidate formatting `<name> (<id>)` is unchanged. The zero-match hint (`jr project fields`, drift FIELD-OPTIONS-NOTFOUND-HINT) is OUT of scope for D-399 and unchanged.
@@ -3170,7 +3180,7 @@ CONFIRMed read shape here does not imply a verified write shape there.
   `null` treated as present (never falling through to `name`); the fallback applied only at the
   top level; the fallback leaking into the M3 normalizer.
 
-- VP-580-014 (D-399, FIX-P5-005, issue #861 / CR4-002 — IMPLEMENTED in FIX-P5-005, merged in PR #897, `0a4dc062`; all tests below are live): field-ID resolution (EC-X.14.001-16..21). Tests: unit/property `src/cli/field.rs::prop_bc_x_14_001_search_field_list_id_match_precedes_name_match` (over generated `(id, name)` lists and a query: if any entry's id equals the query ASCII-case-insensitively, the result is that entry's id regardless of any name matches — the collision rule — and otherwise the result equals the pre-amendment name-only algorithm's result, i.e. no regression for name resolution; ID matching never substring-matches); unit `src/cli/field.rs::test_bc_x_14_001_search_field_list_id_match_is_exact_not_substring` (EC-18, queries `issue`/`issuet`), `src/cli/field.rs::test_bc_x_14_004_ambiguity_hints_name_system_id_form` (EC-20, both branches), `src/cli/field.rs::test_bc_x_14_001_search_field_list_duplicate_case_insensitive_ids_is_ambiguous` (EC-21); integration `tests/field_options.rs::test_bc_x_14_001_system_field_id_issuetype_resolves_via_id_match` (EC-16: `jr field options issuetype --type <T> --project <P>` no longer exits 64 not-found), `…::test_bc_x_14_001_system_field_id_match_is_case_insensitive_and_returns_canonical_id` (EC-16), `…::test_bc_x_14_001_field_id_match_wins_over_name_collision` (EC-17), `…::test_bc_x_14_001_field_id_match_is_exact_not_substring` (EC-18, query `issuet` → exit 64 not found), `…::test_bc_x_14_001_field_id_match_warm_cache_zero_http` and `…::test_bc_x_14_001_field_id_absent_from_cache_refetches_once` (EC-19), `…::test_bc_x_14_004_ambiguous_field_name_hint_names_system_id_form` (EC-20, both the exact-name and substring ambiguity branches assert the literal `the field ID (e.g. customfield_NNNNN or a system id like issuetype)`). The existing VP-580-001 (literal bypass zero HTTP) must still pass unchanged.
+- VP-580-014 (D-399, FIX-P5-005, issue #861 / CR4-002 — IMPLEMENTED in FIX-P5-005, merged in PR #897, `0a4dc062`; all tests below are live): field-ID resolution (EC-X.14.001-16..21). Tests: unit/property `src/cli/field.rs::prop_bc_x_14_001_search_field_list_id_match_precedes_name_match` (over generated `(id, name)` lists and a query: every generated list contains an entry whose id equals the query ASCII-case-insensitively, and the single assertion is that the result is that entry's id regardless of any colliding name match — the collision rule; the property has no no-ID-match arm, so name-only no-regression is covered by the example tests `src/cli/field.rs::test_bc_x_14_001_search_field_list_exact_single_match`/`…_substring_single_match` and the like, and ID-not-substring by the EC-18 unit test); unit `src/cli/field.rs::test_bc_x_14_001_search_field_list_id_match_is_exact_not_substring` (EC-18, queries `issue`/`issuet`), `src/cli/field.rs::test_bc_x_14_004_ambiguity_hints_name_system_id_form` (EC-20, both branches), `src/cli/field.rs::test_bc_x_14_001_search_field_list_duplicate_case_insensitive_ids_is_ambiguous` (EC-21); integration `tests/field_options.rs::test_bc_x_14_001_system_field_id_issuetype_resolves_via_id_match` (EC-16: `jr field options issuetype --type <T> --project <P>` no longer exits 64 not-found), `…::test_bc_x_14_001_system_field_id_match_is_case_insensitive_and_returns_canonical_id` (EC-16), `…::test_bc_x_14_001_field_id_match_wins_over_name_collision` (EC-17), `…::test_bc_x_14_001_field_id_match_is_exact_not_substring` (EC-18, query `issuet` → exit 64 not found), `…::test_bc_x_14_001_field_id_match_warm_cache_zero_http` and `…::test_bc_x_14_001_field_id_absent_from_cache_refetches_once` (EC-19), `…::test_bc_x_14_004_ambiguous_field_name_hint_names_system_id_form` (EC-20, both the exact-name and substring ambiguity branches assert the literal `the field ID (e.g. customfield_NNNNN or a system id like issuetype)`). The existing VP-580-001 (literal bypass zero HTTP) must still pass unchanged.
 
 **Trace**: issue #580; `.factory/research/field-dx-context-mechanism-2026-08-25.md` (M1/M2/M3
 ranked recommendation, per-mechanism verdict table); `.factory/research/field-dx-feasibility-2026-08-25.md`
@@ -3183,8 +3193,8 @@ BC-X.12.003/005 (JSM requesttype-fields call + cache + `--project` companion res
 `require_service_desk`/`get_or_fetch_project_meta`, reused); `src/cli/field.rs::search_field_list`
 (field-name resolution — NOT BC-X.10.001/`partial_match`, see Invariant 4); BC-3.3.010 Step 3
 (M2 `--type` name→issueTypeId resolution pattern, mirrored);
-`src/cli/field.rs` (new); `src/api/jira/issues.rs::get_createmeta_fields` (new
-createmeta-with-`allowedValues` enumeration method, M2, per ADR-0019 §1);
+`src/cli/field.rs` (IMPLEMENTED, S-580-1); `src/api/jira/issues.rs::get_createmeta_fields`
+(createmeta-with-`allowedValues` enumeration method, M2, per ADR-0019 §1);
 `src/api/jira/issues.rs::get_issue_types_for_project` (REUSED, S-331 — M2 `--type` name→id
 resolution, at most once per invocation, fires before `get_createmeta_fields`);
 `src/api/jira/fields.rs::list_fields` (REUSED for field-name resolution only, not a new
@@ -3195,8 +3205,8 @@ label-resolution fallback, READ-SIDE ONLY, D-378); `.factory/research/github-iss
 §#861 (`allowedValues` shapes by field type, first-party Atlassian API doc citations);
 `.factory/cycles/cycle-014/phase-f1-delta-analysis/delta-analysis.md` §Item #861 (write-side
 reachability audit and refutation); `src/cli/field.rs::normalize_from_allowed_values_at_depth`
-(to be modified, cycle-014); `src/types/jira/editmeta.rs::AllowedValue` struct-level doc comment AND
-`AllowedValue.name` field-level doc comment (both to be corrected at F4, cycle-014 — no behavior
+(IMPLEMENTED, cycle-014, #861, PR #888 merged as `2ee422e0`); `src/types/jira/editmeta.rs::AllowedValue` struct-level doc comment AND
+`AllowedValue.name` field-level doc comment (both corrected in the same PR — no behavior
 change to the struct itself)
 
 [NEW 2026-08-25 issue #580 F2]
@@ -3386,19 +3396,19 @@ fields with no enumerable option set (per `.factory/research/field-dx-context-me
 |---|---|---|
 | Zero mode selectors (`--type`/`--request-type`/`--issue` all absent) — this row also covers a BARE `--project` supplied with no mode selector at all (`--project` is never itself a mode selector, so that invocation still has zero of the three present) | Exit 64: "specify exactly one of --type, --request-type, --issue" | BC-X.14.001 Invariant 1 / ADR-0019 §1 |
 | `--type` present with no resolvable project — neither an explicit `--project` flag nor a profile/config default (**[CORRECTED 2026-08-26, ADR-0019 § Amendment D1]** trigger widened from "no flag" to "no flag AND no default") | Exit 64, the incomplete-M2 error **[MESSAGE WIDENED 2026-08-26, F2 adversary-convergence round-3, F-LOW-1 — "--type requires --project" contradicted D1's own "no flag AND no default" trigger by naming only the flag as the fix]**: `"--type needs a resolvable project — pass --project <P> or configure a default"` | BC-X.14.001 Invariant 1 / ADR-0019 § Amendment (2026-08-26) D1 |
-| Two or more mode selectors (`--type`/`--request-type`/`--issue`) supplied simultaneously | Exit 64, same message as the zero-mode-selector row, listing the conflicting flags | BC-X.14.001 Invariant 1 / ADR-0019 §1 |
-| `--request-type` present with NO resolvable ambient project (no `--project` companion, no profile/config default) | Exit 64 via `require_service_desk`'s "project required" error, unchanged from `jr requesttype fields`'s own behavior on the same condition | BC-X.12.003 parallel / ADR-0019 §1 |
+| Two or more mode selectors (`--type`/`--request-type`/`--issue`) supplied simultaneously | Exit 64, same message as the zero-mode-selector row (names all three mode-selector flags generically, not the specific conflicting ones) | BC-X.14.001 Invariant 1 / ADR-0019 §1 |
+| `--request-type` present with NO resolvable ambient project (no `--project` companion, no profile/config default) | Exit 64, `--request-type needs a resolvable project — pass --project <P> or configure a default.`, raised in `src/cli/field.rs::handle` via `resolve_m2_project` BEFORE `require_service_desk` is called; zero HTTP once `<field>` is a `customfield_NNNNN` literal (a human-name `<field>` on a cold cache first issues one `GET /field`, see the ordering-drift note in BC-X.14.001) | BC-X.12.003 parallel / ADR-0019 §1 |
 | `<field>` resolves to zero matches | Exit 64, hint naming `jr project fields` | EC-3.4.015-1 parallel |
 | `<field>` is the empty string | Exit 64, `Field '' not found. The field name must not be empty.` — zero cache/HTTP (see BC-X.14.001 EC-X.14.001-15; added cycle-014 as a cross-reference; documents pre-existing behavior) | `src/cli/field.rs::resolve_field_id` |
 | `<field>` resolves to multiple matches (ambiguous) | Exit 64 naming candidates + ids **[AMENDED D-399, FIX-P5-005, IMPLEMENTED in FIX-P5-005, merged in PR #897, `0a4dc062`]** — the hint must contain the literal `the field ID (e.g. customfield_NNNNN or a system id like issuetype)` (BC-X.14.001 EC-X.14.001-20), not only `customfield_NNNNN`. Note an exact field-ID match is resolved BEFORE name matching and is therefore never ambiguous with a name match (EC-X.14.001-17); a case-insensitive duplicate field ID is its own exit-64 ambiguity (EC-X.14.001-21) | EC-3.4.015-2 parallel |
 | Resolved project (whether from an explicit `--project` companion or profile/config default) is non-JSM, supplied to the `--request-type` path | Exit 64 via `require_service_desk`, call-site-specific message (BC-X.8.004) | BC-X.12.003 parallel |
 | Unknown/ambiguous `--request-type` value | Exit 64 via `partial_match` (BC-X.12.006) | BC-X.12.006 |
-| M2 path (`--type <T> [--project <P>]`) **[BRACKETED 2026-08-26, F2 adversary-convergence round-5, LOW-1]**: `--type` value does not resolve to exactly one issue type for the resolved project (unknown name, or ambiguous case-insensitive match) | Exit 64 listing the project's valid issue type names, BEFORE `get_createmeta_fields` is called | BC-3.3.010 Step 3 / S-331 parallel |
-| **[ADDED 2026-08-26, F2 adversary-convergence round-2, Pass2-F2]** `--project <P>` supplied but the project does NOT exist / is not accessible (404, not 401) — on M2 this surfaces from EITHER of the two createmeta-family calls `jr field options` reuses (`get_issue_types_for_project`'s own `GET .../createmeta/{project}/issuetypes` list call, or `get_createmeta_fields`'s per-issue-type fields call, whichever runs first and 404s/400s on the bad project key); on M3 this surfaces from `get_or_fetch_project_meta`'s own `GET /rest/api/3/project/{key}` call (the SAME project-existence GET already documented elsewhere for its 401 behavior — see BC-X.8.006/007 — this row covers its 404 outcome instead) | Exit 64, "project not found or not accessible" (actionable, names the supplied project key) | New — no direct predecessor; `jr field options` performs no client-side project-existence pre-check on either path, so this is a genuine, previously-undocumented HTTP-failure row, distinct from the "no resolvable project" (companion-absent) and "non-JSM project" (resolves, wrong type) rows above |
+| M2 path (`--type <T> [--project <P>]`) **[BRACKETED 2026-08-26, F2 adversary-convergence round-5, LOW-1]**: `--type` value matches no issue type of the resolved project (case-insensitive exact match; first match wins, no ambiguity branch) | Exit 64 `Issue type '<T>' not found for project <P>. Valid types: ….`, BEFORE `get_createmeta_fields` is called | BC-3.3.010 Step 3 / S-331 parallel |
+| **[ADDED 2026-08-26, F2 adversary-convergence round-2, Pass2-F2]** `--project <P>` supplied but the project does NOT exist / is not accessible (404, not 401) — on M2 this surfaces from `get_issue_types_for_project`'s own `GET .../createmeta/{project}/issuetypes` list call (mapped to exit 64 by `src/cli/field.rs::map_project_not_found`); the later `get_createmeta_fields` call is deliberately NOT wrapped, so its 404/400/5xx propagates as `JrError::ApiError` (exit 1, EC-X.14.004-7); on M3 this surfaces from `get_or_fetch_project_meta`'s own `GET /rest/api/3/project/{key}` call (the SAME project-existence GET already documented elsewhere for its 401 behavior — see BC-X.8.006/007 — this row covers its 404 outcome instead) | Exit 64, "project not found or not accessible" (actionable, names the supplied project key) | New — no direct predecessor; `jr field options` performs no client-side project-existence pre-check on either path, so this is a genuine, previously-undocumented HTTP-failure row, distinct from the "no resolvable project" (companion-absent) and "non-JSM project" (resolves, wrong type) rows above |
 | `--issue <KEY>` not found (404) | Exit 64, "issue not found or not accessible" | EC-3.4.015-7 parallel |
 | createmeta/editmeta/requesttype-fields HTTP failure (401/403/5xx) | Propagated via standard `JrError` auth/API hint | EC-3.4.015-6 parallel |
 | **[ADDED 2026-08-26, F2 adversary-convergence round-3, O-3]** M2 path createmeta/enumeration-family HTTP 400 — distinct from the {401,403,5xx} row above AND the project-404 row above: the resolved project and `--type` name both resolved successfully (a valid `issueTypeId` was obtained), but the SAME `issueTypeId` is then rejected by a LATER createmeta-family call in the same invocation — e.g. the issue type is deleted/removed from the project's issue-type scheme in the window between `get_issue_types_for_project`'s name→id resolution and `get_createmeta_fields`'s own `GET .../createmeta/{project}/issuetypes/{issueTypeId}` call, or the resolved `issueTypeId` is otherwise malformed/rejected by that second call | Propagated via standard `JrError` API-error mapping (exit 1, NOT exit 64 — this is a genuine server-side 400 on an already-resolved identifier, not a `jr`-side pre-flight validation failure; contrast the 404 project-not-found row above, which IS a `jr`-produced exit-64 with actionable wording) | New — no direct predecessor; distinguishes a mid-invocation TOCTOU-style resource removal from both the up-front project-404 case and the generic HTTP-failure row, since this row's precondition is that TWO EARLIER calls in the SAME invocation already succeeded against the SAME identifiers |
-| `<field>` resolves in the global `GET /field` list (or via `customfield_NNNNN` bypass) but is ABSENT from the selected context's field set | Exit 64, "field not available in this context" — per-context wording: "is not on the Create screen" (M2/createmeta), "is not on the Edit screen" (M1/editmeta), "is not a field on this request type" (M3/requesttype-fields) | BC-3.3.010 EC-3.3.010-2 parallel; see EC-X.14.001-5 **[FIX-P5-007, D-401, SEC6-002/CR6-002 — IMPLEMENTED, merged in PR #899, `ecbc5cda`]** — the resolved `field_id` echoed in all three per-context messages (M1/M2/M3, built by `src/cli/field.rs::field_not_available_for_type_msg`, `src/cli/field.rs::field_not_available_on_request_type_msg` and `src/cli/field.rs::field_not_on_edit_screen_msg`) passes through `output::sanitize_terminal_line` (EC-X.14.004-10) |
+| `<field>` resolves in the global `GET /field` list (or via `customfield_NNNNN` bypass) but is ABSENT from the selected context's field set | Exit 64, "field not available in this context" — per-context wording: `Field '<id>' is not available for issue type '<type>' in project '<project>'.` (M2/createmeta), `Field '<id>' is not on the Edit screen for issue <key> (or is not available).` (M1/editmeta), `Field '<id>' is not available on request type '<rt>'.` (M3/requesttype-fields) | BC-3.3.010 EC-3.3.010-2 parallel; see EC-X.14.001-5 **[FIX-P5-007, D-401, SEC6-002/CR6-002 — IMPLEMENTED, merged in PR #899, `ecbc5cda`]** — the resolved `field_id` echoed in all three per-context messages (M1/M2/M3, built by `src/cli/field.rs::field_not_available_for_type_msg`, `src/cli/field.rs::field_not_available_on_request_type_msg` and `src/cli/field.rs::field_not_on_edit_screen_msg`) passes through `output::sanitize_terminal_line` (EC-X.14.004-10) |
 
 **Precedence when an invocation matches more than one taxonomy-table condition**: mode-selector
 arity (zero, or two-or-more, of `{--type, --request-type, --issue}`) is evaluated FIRST, before
@@ -3427,14 +3437,20 @@ reported via any taxonomy-table error row.
 **Graceful degradation (NOT an error — exit 0)**: when the resolved field's `allowedValues`
 (M1/M2) or `validValues` (M3) is absent or empty, `jr field options` does NOT error. It inspects
 `schema.custom` (M1/M2) or `jiraSchema` (M3) and prints:
-- For Assets/CMDB object fields (`schema.custom` = `com.atlassian.jira.plugins.cmdb:cmdb-object-cftype`)
-  or Affected-services fields: a "no enumerable options — this field uses Assets" hint pointing
-  to `jr assets search` (consistent with BC-3.4.030's Assets-field posture on the write side).
-- For user-picker/multi-user-picker/Approvers/labels/other suggestion-backed fields: a "no
-  enumerable options (dynamic/lookup field)" hint plus the field's `autoCompleteUrl` if present
-  in the response.
-- For free-text/number/date/datetime and any other field with no finite option set: a "no
-  enumerable options (this field type has no fixed value set)" hint, no `autoCompleteUrl`.
+- For Assets/CMDB object fields (`schema.custom` contains `cmdb`, case-insensitive — e.g.
+  `com.atlassian.jira.plugins.cmdb:cmdb-object-cftype`; `src/cli/field.rs::degrade_hint_for_schema`'s
+  `is_cmdb`, regardless of `schema.type`; there is no separate Affected-services check): the hint
+  `no enumerable options for '<name>' — this field uses Assets (CMDB). Search assets separately via
+  `jr assets search`.` (consistent with BC-3.4.030's Assets-field posture on the write side).
+- For user-picker/multi-user-picker/Approvers/labels fields and ANY field carrying an
+  `autoCompleteUrl` (`is_dynamic`; pinned for a group picker by
+  `test_bc_x_14_004_graceful_degrade_group_picker_classified_by_autocompleteurl`): the hint
+  `no enumerable options for '<name>' (dynamic/lookup field) — values are resolved live and cannot
+  be enumerated by this command.`, with ` autoCompleteUrl: <url>` appended when present in the
+  response.
+- For free-text/number/date/datetime and any other field with no finite option set: the hint
+  `no enumerable options for '<name>' — this field type has no fixed value set.`, no
+  `autoCompleteUrl`.
 - **M3-specific note**: JSM Assets/Affected-services fields return `validValues: []`
   unconditionally (JSDCLOUD-15551, an Atlassian-side gap, not a `jr` limitation) — `jr` treats
   this identically to the Assets-field degrade case above, not as a "field has zero configured
@@ -3459,8 +3475,8 @@ reported via any taxonomy-table error row.
 **Edge Cases**:
 - EC-X.14.004-1: Assets/CMDB field via the M3 (`--request-type`) path → `validValues: []`
   (JSDCLOUD-15551) → graceful-degrade Assets hint, NOT the generic "no fixed value set" hint —
-  `jr` distinguishes by inspecting `jiraSchema.custom`/`jiraSchema.system` for the CMDB type
-  string even though `validValues` is empty either way.
+  `jr` distinguishes by inspecting `jiraSchema.custom` for the CMDB type
+  string (`system` is consulted only for the `labels` dynamic classification) even though `validValues` is empty either way.
 - EC-X.14.004-2: `--output json` mode graceful-degrade → returns `[]` (empty array), with the
   hint text emitted to STDERR (not stdout, per the Pure/Read-only channel distinction — JSON
   stdout stays parseable; the hint is a stderr convenience for human operators redirecting
@@ -3475,20 +3491,21 @@ reported via any taxonomy-table error row.
   fixing this exit-64 error by re-running against a different `--project`/`--type`, `--issue`, or
   `--request-type` context where the field IS configured may then encounter the graceful-degrade
   exit-0 path instead, for a field type with no fixed value set.
-- EC-X.14.004-4: M2 path (`--type <T> [--project <P>]`) **[BRACKETED 2026-08-26, F2 adversary-convergence round-5, LOW-1]**, `--type` names an unknown or ambiguous
-  issue type for the resolved project → `get_issue_types_for_project` resolution fails BEFORE
-  `<field>` resolution and BEFORE `get_createmeta_fields` — exit 64 listing valid issue types
+- EC-X.14.004-4: M2 path (`--type <T> [--project <P>]`) **[BRACKETED 2026-08-26, F2 adversary-convergence round-5, LOW-1]**, `--type` names an issue type that matches none
+  of the resolved project's issue types (case-insensitive exact match; no ambiguity branch) → `get_issue_types_for_project` resolution fails AFTER
+  `<field>` resolution (Step 2) and BEFORE `get_createmeta_fields` — exit 64 listing valid issue types
   (see taxonomy table row above). This is a DISTINCT, EARLIER failure than EC-X.14.001-5
   (field-absent-from-context) — that edge case presumes `--type` already resolved successfully
-  and the createmeta call already ran; this one fires before either happens.
+  and the createmeta call already ran; this one fires before the createmeta call happens.
 - EC-X.14.004-5: `jr field options <field> --request-type <RT>` with NO resolvable ambient
-  project (no `--project` companion flag, no profile/config default project) → the existing
-  `require_service_desk` "project required" error (exit 64), unchanged from `jr requesttype
-  fields`'s own behavior on the same condition (BC-X.12.003 parallel). This is a companion-
+  project (no `--project` companion flag, no profile/config default project) → exit 64 with
+  `--request-type needs a resolvable project — pass --project <P> or configure a default.`, raised
+  by `src/cli/field.rs::handle` (`resolve_m2_project`) before `require_service_desk` is called
+  (BC-X.12.003 parallel). This is a companion-
   resolution failure, distinct from both the mode-selector arity errors (zero/two-or-more mode
   selectors, or EC-X.14.004-4's M2 `--type`/`--project` case) and the non-JSM-project taxonomy
   row (which fires when a project DOES resolve but is the wrong project type) — here no project
-  resolves at all, so `require_service_desk` is never reached with a candidate project key.
+  resolves at all, so `require_service_desk` is never reached.
 - EC-X.14.004-6 **[ADDED 2026-08-26, F2 adversary-convergence round-2, Pass2-F2]**: `--project
   NONEXISTENT --type <T>` (M2) or `--project NONEXISTENT --request-type <RT>` (M3), where
   `NONEXISTENT` names a project key that does not exist / is not accessible to the caller → exit
@@ -3510,7 +3527,7 @@ reported via any taxonomy-table error row.
   `get_issue_types_for_project` name→id call succeeds), but the SUBSEQUENT
   `get_createmeta_fields` call against that same `issueTypeId` returns HTTP 400 — e.g. the issue
   type was removed from the project's issue-type scheme between the two calls, or the resolved id
-  is otherwise rejected. Distinct from EC-X.14.004-4 (unknown/ambiguous `--type` NAME, caught by
+  is otherwise rejected. Distinct from EC-X.14.004-4 (unknown `--type` NAME, caught by
   the FIRST call, before any `issueTypeId` exists to pass to the second) and from EC-X.14.004-6
   (the PROJECT itself 404s, not the issue type) — this edge case's precondition is that BOTH
   earlier lookups already succeeded against the same identifiers, so the failure is a genuine
@@ -3534,20 +3551,18 @@ reported via any taxonomy-table error row.
   (canonicalized as the zero-mode-selector case, consistent with `resolve_field_context`'s
   3-boolean arity signature — VP-580-006, per ADR-0019 § Amendment D1 — which does not take
   `has_project` as a parameter at all). This includes the M2 `--type`
-  name→id resolution row (EC-X.14.004-4): unknown/ambiguous `--type` for the resolved project
+  name→id resolution row (EC-X.14.004-4): unknown `--type` for the resolved project
   exits 64 listing valid issue types, with `get_createmeta_fields` never called; and the M3
   no-resolvable-project row (EC-X.14.004-5): `--request-type` with no `--project` and no
-  profile/config default exits 64 via `require_service_desk`, exercised through `jr field
-  options`'s own dispatch (not merely inherited from `jr requesttype fields`'s existing
-  coverage) — asserting the M3 mode reaches the same companion-resolution code path.
+  profile/config default exits 64 with the `--request-type needs a resolvable project` error
+  raised in `src/cli/field.rs::handle` (pinned by `tests/field_options.rs::test_bc_x_14_004_m3_no_resolvable_project_exits_64`, zero HTTP).
 - VP-580-005: Each graceful-degrade sub-case (Assets, user-picker, free-text) exits 0 with the
   correct hint variant and an empty (not error) options list.
 - VP-580-009: `--project --request-type` together resolves as a VALID M3 invocation (explicit
   service-desk project, zero errors attributable to the flag pairing) — a regression guard
   against re-introducing the superseded "pairing error" behavior (adversary pass-20 M1,
   ADR-0019 §1).
-- VP-580-012: `--project` not found (404) on the M2 (`get_issue_types_for_project`/
-  `get_createmeta_fields`) and M3 (`get_or_fetch_project_meta`) enumeration paths exits 64 with
+- VP-580-012: `--project` not found (404) on the M2 (`get_issue_types_for_project` only; `get_createmeta_fields` is unwrapped and exits 1) and M3 (`get_or_fetch_project_meta`) enumeration paths exits 64 with
   zero mutating HTTP and the message "project not found or not accessible"; pairs with the new
   EC-X.14.004-6 taxonomy row.
 
@@ -3831,13 +3846,14 @@ section file). `url = "2"` and `urlencoding = "2"` are already direct dependenci
 
 **Confidence**: HIGH
 **Subject**: `jr api` — query-parameter composition (issue #583)
-**Source**: `src/cli/api.rs::append_query_params` (new pure function, to be implemented,
-cycle-014); `src/cli/api.rs::handle_api` (to be modified, cycle-014); `src/cli/mod.rs::
-Command::Api` (new `-q`/`--query-param` field, to be modified, cycle-014); `src/main.rs`'s
-`Command::Api` dispatch arm (to be modified, cycle-014); `src/cli/api.rs::normalize_path`
-(existing, unmodified — runs before this step). `urlencoding::encode` (existing dependency,
+**Source**: IMPLEMENTED (cycle-014, issue #583, PR #887 merged as `e54be670`):
+`src/cli/api.rs::append_query_params` (pure function); `src/cli/api.rs::handle_api`
+(`query_param: Vec<String>` parameter; § "`-q` parse after `normalize_path`, before
+`resolve_body` and `-H`"); `src/cli/mod.rs::Command::Api` (`-q`/`--query-param` field);
+`src/main.rs`'s `Command::Api` dispatch arm (threads `query_param` into `handle_api`);
+`src/cli/api.rs::normalize_path` (pre-existing, unmodified — runs before this step). `urlencoding::encode` (existing dependency,
 production encoder for this BC's assembly — no new dependency); `url::form_urlencoded::parse`
-(existing dependency, test-oracle decoder only, VP-API-QP-002/003); `url::form_urlencoded::
+(existing dependency, test-oracle decoder only, VP-API-QP-002); `url::form_urlencoded::
 byte_serialize` (existing dependency, explicitly forbidden for this BC's assembly — see
 Invariants); `.factory/research/github-issues-triage-grounding-2026-09-24.md` §#583 (gh
 api/HTTPie/curl prior art)
@@ -3848,7 +3864,7 @@ field) and NO `value_delimiter` and NO `allow_hyphen_values` — each `-q`/`--qu
 occurrence contributes exactly one `NAME=VALUE` pair to the vector, and a comma inside VALUE
 (e.g. `fields=summary,status`) is never split into multiple pairs. After `normalize_path`
 produces the normalized path and BEFORE
-`client.request(...)` builds the outgoing request, a new pure function assembles every
+`client.request(...)` builds the outgoing request, `src/cli/api.rs::append_query_params` (a pure function) assembles every
 `--query-param` pair into a percent-encoded query string and merges it onto the path:
 1. **Query-string detection and merge** — detection considers ONLY the part of `<path>` BEFORE
    its first `#` (a `#` starts the fragment, EC-X.16.001-5, and is never scanned for `?`).
@@ -3906,8 +3922,8 @@ produces the normalized path and BEFORE
    produces a path handed to `client.request` that is byte-identical to `normalize_path`'s own
    output, exactly as before this cycle. Calling `append_query_params` with an empty pair list is
    permitted and must be the identity function on its path argument (`append_query_params(p, &[])
-   == p` for any `p`) — whether or not that call happens to be skipped is an implementation
-   detail, not part of this contract.
+   == p` for any `p`) — `handle_api` calls it unconditionally (identity on an empty list),
+   which is an implementation detail, not part of this contract.
 
 Existing `jr api` behavior for BC-X.1.007 (raw-passthrough of the response) and BC-X.1.011
 (`-X`/`--method` case-insensitivity) is unaffected by this BC.
@@ -3951,7 +3967,7 @@ Existing `jr api` behavior for BC-X.1.007 (raw-passthrough of the response) and 
   testable without a `JiraClient` or wiremock, same class as `normalize_path`/`parse_header`.
 - Runs strictly BEFORE the `RequestBuilder` is built — query composition never depends on, and
   never mutates, the request body or headers.
-- The intended encoder is `urlencoding::encode` (already a direct dependency, `Cargo.toml`) —
+- The encoder is `urlencoding::encode` (already a direct dependency, `Cargo.toml`) —
   `url::form_urlencoded::byte_serialize` MUST NOT be used for this assembly: it targets
   `application/x-www-form-urlencoded` semantics (space → `+`), not RFC 3986 query-string
   percent-encoding (space → `%20`); using it would silently change VP-API-QP-003's pinned
@@ -3972,8 +3988,8 @@ Existing `jr api` behavior for BC-X.1.007 (raw-passthrough of the response) and 
   percent-encoded (e.g. `é` → `%C3%A9`) via the SAME `urlencoding::encode` call used for the
   ASCII case (the sole production encoder for this BC); no separate Unicode-handling branch.
   `url::form_urlencoded::parse` plays no role in production encoding — it is used ONLY as a
-  test-oracle decoder in VP-API-QP-002/003's proptests (round-tripping the assembled query back
-  to verify NAME/VALUE pairs); `url::form_urlencoded::byte_serialize` remains forbidden for this
+  test-oracle decoder in VP-API-QP-002's tests (round-tripping the assembled query back
+  to verify NAME/VALUE pairs; VP-API-QP-003's proptest round-trips with `urlencoding::decode` instead); `url::form_urlencoded::byte_serialize` remains forbidden for this
   BC's assembly (see Invariants above).
 - EC-X.16.001-4: `<path>` already ends in `?existing=1` → new pairs are appended with `&`:
   `...?existing=1&new=2`; the pre-existing `existing=1` text is never re-encoded or reordered.
@@ -4098,12 +4114,11 @@ ONLY as a test-oracle decoder, never in production.
   wiremock integration test, hermetic per cycle-014 `verification-delta.md` §2, runs `jr api /x -q
   fields=summary,status` as real argv through clap and asserts that the received request's
   query is exactly ONE pair, `fields=summary%2Cstatus` (query matcher on the raw query string,
-  plus a decoded-pair count of 1); a catch-all mock with `.expect(0)` catches any other query.
+  plus a decoded-pair count of 1): it mounts one `GET /x` mock (`.expect(1)`), asserts exactly one received request, and asserts both the raw `req.url.query()` and the decoded `query_pairs()` (count and values).
   **Argv cell (repeated flags, handler wiring):** a second wiremock integration test, hermetic
   per the same §2, runs `jr api /x -q fields=summary -q fields=status` as real argv and reads
   the single received request via `received_requests()`, asserting its raw query string is
-  exactly `fields=summary&fields=status` (both pairs, flag order); a catch-all mock with
-  `.expect(0)` catches any other query. A mixed case, `jr api '/x?a=1' -q b=2 -q b=3`, asserts
+  exactly `fields=summary&fields=status` (both pairs, flag order), with one `GET /x` mock (`.expect(1)`) and the decoded pairs asserted. A mixed case, `jr api '/x?a=1' -q b=2 -q b=3`, asserts
   the raw query is exactly `a=1&b=2&b=3`. These cells exercise `handle_api`'s hand-off from the
   parsed `-q` `Vec` to `append_query_params`, which the proptests (targeting
   `append_query_params` directly) cannot see.
@@ -4170,11 +4185,12 @@ assembly: `url::form_urlencoded::byte_serialize` (existing dependency).
 
 **Confidence**: HIGH
 **Subject**: `jr api` — query-parameter error taxonomy (issue #583)
-**Source**: `src/cli/api.rs::parse_query_param` (new pure parser function, to be implemented,
-cycle-014 — the pre-flight `NAME=VALUE` validator that produces this BC's two error rows;
-DISTINCT from `src/cli/api.rs::append_query_params`, which is BC-X.16.001's query-assembly
-function, not this BC's); `src/cli/api.rs::handle_api` (to be modified, cycle-014, to call
-`parse_query_param` at the pre-flight point described in Postcondition 1).
+**Source**: IMPLEMENTED (cycle-014, issue #583, PR #887 merged as `e54be670`):
+`src/cli/api.rs::parse_query_param` (pure parser function — the pre-flight `NAME=VALUE`
+validator that produces this BC's two error rows; DISTINCT from
+`src/cli/api.rs::append_query_params`, which is BC-X.16.001's query-assembly function, not
+this BC's); `src/cli/api.rs::handle_api` (calls `parse_query_param` at the pre-flight point
+described in Postcondition 1).
 **Behavior**: `parse_query_param` splits each raw `--query-param` value on the FIRST `=`
 only — VALUE may itself contain `=` characters, which are preserved verbatim in the split-off
 remainder. Two client-side, pre-HTTP failures result, both `JrError::UserError`/exit 64, zero
@@ -4228,11 +4244,12 @@ before `handle_api` is ever invoked — and `src/cli/api.rs::normalize_path`'s o
    assembled, and — per D-188's pre-flight-before-blocking-read convention — BEFORE
    `resolve_body` runs (`resolve_body` may block reading stdin for `-d @-`) and BEFORE
    `-H`/`--header` parsing (`parse_header`). Concretely, in `handle_api` (`src/cli/api.rs`),
-   `--query-param` parsing is inserted immediately after the existing `normalize_path(&path)?`
-   call (line ~130) and BEFORE the existing `resolve_body(data.as_deref(),
-   std::io::stdin().lock())` call (line ~133) — i.e. `-q` parsing is the SECOND pre-flight step,
-   right after path normalization and strictly ahead of both the body read and the
-   `-H`/`--header` → `parse_header` mapping (lines ~135-138). Zero HTTP calls, symmetric with
+   `--query-param` parsing runs immediately after the `normalize_path(&path)?` call and BEFORE
+   the `resolve_body(data.as_deref(), std::io::stdin().lock())` call (symbol-form anchor:
+   `src/cli/api.rs::handle_api` § "`-q` parse after `normalize_path`, before `resolve_body`
+   and `-H`") — i.e. `-q` parsing is the SECOND pre-flight step, right after path
+   normalization and strictly ahead of both the body read and the `-H`/`--header` →
+   `parse_header` mapping. Zero HTTP calls, symmetric with
    `parse_header`'s existing pre-flight validation.
 2. `--output json` mode: the same `{"error": "...", "code": 64}` envelope as every other `jr`
    pre-flight error (repo-wide convention, #526-adjacent). Per `src/main.rs::main`'s top-level error
@@ -4298,8 +4315,9 @@ before `handle_api` is ever invoked — and `src/cli/api.rs::normalize_path`'s o
   (empty-NAME) with `(got: =v)` for `--query-param==v`, exactly as it does for `-q==v`.
 - EC-X.16.002-8: `-q -x=1` (a hyphen-leading token as the
   space-separated value for `-q`) — the `--query-param`/`-q` flag is NOT declared with
-  `allow_hyphen_values` (there is no `src/cli/mod.rs` flag definition to cite yet, since no code
-  has landed for this spec-only delta; the design intent is to leave it unset). Without
+  `allow_hyphen_values` (`src/cli/mod.rs::Command::Api`'s `query_param: Vec<String>` is declared
+  `#[arg(short = 'q', long = "query-param")]` with no `allow_hyphen_values`; pinned by
+  `tests/api_query_param.rs::test_bc_x_16_002_ec8_hyphen_leading_value_fails_at_clap_level_exit_2`). Without
   `allow_hyphen_values`, clap treats a token starting with `-` as a new flag rather than as `-q`'s
   value, so `jr api /x -q -x=1` fails clap's own argument parsing (unrecognized `-x` flag)
   with exit 2, BEFORE `parse_query_param` ever runs — this is a
@@ -4310,7 +4328,7 @@ before `handle_api` is ever invoked — and `src/cli/api.rs::normalize_path`'s o
   starts with `-` (i.e. a NAME beginning with `-`) must use an attached form — `-q=-x=1`,
   `-q-x=1`, or `--query-param=-x=1` all work, delivering `raw = "-x=1"` to `parse_query_param`
   (verified
-  against `clap_builder` 4.6.7's short-flag trailing-concatenated-value handling, `~L969-984`:
+  against `clap_builder` 4.6.7's short-flag trailing-concatenated-value handling (`src/parser/parser.rs::Parser::parse_short_arg`, trailing-concatenated-value branch):
   the value following `-q` is taken as-is, stripping at most one leading `=`, so both the
   `=`-prefixed and bare-concatenated short forms converge on the same delivered value; the
   long-form `split_once("=")` in `clap_lex` 1.1.0's `to_long` produces the identical result) —
@@ -4323,10 +4341,10 @@ before `handle_api` is ever invoked — and `src/cli/api.rs::normalize_path`'s o
 - EC-X.16.002-9: An empty raw value — `-q ""` (space-separated empty-string token), `-q=`
   (short-flag attached, nothing after the `=`), or `--query-param=` (long-flag attached, nothing
   after the `=`) — all three reach `parse_query_param` as `raw = ""`, not as a missing value:
-  verified against `clap_builder` 4.6.7's short-flag attached-value path (`~L969-984`, an
+  verified against `clap_builder` 4.6.7's short-flag attached-value path (`src/parser/parser.rs::Parser::parse_short_arg`, an
   attached value of exactly `"="` strips to `Some("")`, which is still `Some`, so it is treated
   as a provided (empty) value rather than falling through to "look for a separate next-token
-  value") and its long-flag counterpart (`clap_lex` 1.1.0's `to_long`, `~L332`,
+  value") and its long-flag counterpart (`clap_lex` 1.1.0's `ParsedArg::to_long`, `src/lib.rs`,
   `remainder.split_once("=")`, which likewise
   yields `long_value = Some("")` for a trailing bare `=`); a bare next-token empty string
   (`-q ""`) is accepted the same way, since an empty string does not start with `-` and so is
@@ -4339,14 +4357,14 @@ before `handle_api` is ever invoked — and `src/cli/api.rs::normalize_path`'s o
 - EC-X.16.002-10: `jr api /x -q` with no following token at all (`-q` is the LAST argv token) is
   a genuinely MISSING value, not an empty one — contrast with EC-X.16.002-9's provided-but-empty
   cases above. clap itself rejects this before `parse_query_param` ever runs: verified against
-  `clap_builder` 4.6.7's `ErrorKind::InvalidValue` rendering (`src/error/format.rs` ~L206-219),
+  `clap_builder` 4.6.7's `ErrorKind::InvalidValue` rendering (`src/error/format.rs`, the `ErrorKind::InvalidValue` arm),
   an empty `ContextValue::String` for the invalid value renders
   `"a value is required for '{invalid_arg}' but none was supplied"`; exit 2 (clap argument
   error), NOT 64 — `parse_query_param` and its M1/M2 taxonomy are unreachable for this case.
 - EC-X.16.002-11: A non-UTF-8 `-q` argv value is rejected by clap (the field's `String` value
   parser) with exit 2 before `parse_query_param` ever runs — the same mechanism and outcome as a
   non-UTF-8 `-H` value today. Verified against `clap_builder` 4.6.7's `src/builder/value_parser.rs`
-  (~L914-935): the `String`-typed `ValueParser` rejects an `OsString` that fails `into_string()`,
+  (`StringValueParser::parse_ref`): the `String`-typed `ValueParser` rejects an `OsString` that fails `into_string()`,
   producing a clap `ErrorKind::InvalidUtf8` argument error before the arg ever reaches
   `parse_query_param`'s M1/M2 taxonomy. Informational — inherited clap behavior, no VP cell (same
   treatment as EC-X.14.001-14).
@@ -4372,8 +4390,8 @@ before `handle_api` is ever invoked — and `src/cli/api.rs::normalize_path`'s o
   case asserts its own distinguishing substring is present and the other is absent (the absence
   check filtered with `prop_assume!` to `raw` values that do not themselves contain D1 or D2).
   (2) Wiremock integration (hermetic per cycle-014 `verification-delta.md` §2) for `-q foo` and `-q =v`: exit 64,
-  `.expect(0)` on every mock, stderr contains the full rendered message and its own
-  distinguishing substring, and not the other one. The `--output json` variant (Postcondition
+  zero HTTP (`expect_zero_http`), stderr contains the full rendered message (the other message's
+  distinguishing substring is asserted absent in the attached-form and first-malformed-flag cells below, not in these two base cells). The `--output json` variant (Postcondition
   2) parses the `{"error", "code"}` envelope from STDERR, asserts its `"error"` string equals the
   rendered message exactly and `"code"` is 64, and asserts stdout is empty.
   (3) **Attached-form example cells** (EC-X.16.002-5..8), hermetic per cycle-014 `verification-delta.md`
@@ -4436,8 +4454,8 @@ before `handle_api` is ever invoked — and `src/cli/api.rs::normalize_path`'s o
   last malformed value instead of the first.
 
 **Trace**: issue #583; D-378/D-379 (F1 human gate approving this scope); the D-188
-pre-flight-before-blocking-read convention; `src/cli/api.rs::parse_query_param` (new pure
-parser); `src/cli/api.rs::parse_header` (existing sibling pre-flight validator, structurally
+pre-flight-before-blocking-read convention; `src/cli/api.rs::parse_query_param` (pure
+parser, IMPLEMENTED, PR #887 `e54be670`); `src/cli/api.rs::parse_header` (existing sibling pre-flight validator, structurally
 mirrored); BC-X.16.001 (companion behavior BC).
 
 ---

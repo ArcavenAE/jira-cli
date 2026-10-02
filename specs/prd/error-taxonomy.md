@@ -248,7 +248,7 @@ fallback. This exit-64 row is reached only when profile validation, config loadi
 credentials all resolve successfully — `src/main.rs`'s `run` function's
 `config::validate_profile_name` (a supplied `--profile` name) runs before dispatch, and the
 `Command::User` arm's `Config::load_with` (e.g. unknown profile, malformed config) then
-`JiraClient::from_config` (which can fail with `JrError::ConfigError` for a missing/unknown active profile or a missing profile URL or
+`JiraClient::from_config` (which can fail with `JrError::ConfigError` for a profile with no configured URL (`JiraClient::from_config`) or
 `JrError::NotAuthenticated` for missing/invalid credentials) run BEFORE dispatching to `cli::user::handle`: `config::validate_profile_name`,
 `Config::load_with` (e.g. unknown profile, malformed config) and `JiraClient::from_config`
 failures all preempt this row; some of these also exit 64 — never the reverse. Hermetic

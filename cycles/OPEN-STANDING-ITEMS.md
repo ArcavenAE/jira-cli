@@ -2416,3 +2416,32 @@ residual risk is LOW.
 2026-10-01: TRACK, not fixed. **Target: next maintenance sweep** — optionally
 add one integration cell that runs WITHOUT `NO_COLOR` against piped stdout and
 asserts no ESC byte, to restore end-to-end coverage.
+
+## `user.rs` Active column identified by header-string match — NEW, OPEN, code-quality NIT (CR8-001), deferred (2026-10-02)
+
+**ID:** `USER-ACTIVE-COLUMN-HEADER-MATCH`. Severity **NIT**. Source: F5 Pass 8
+code-reviewer `CR8-001`. The `user.rs` Active column is identified by a header-string
+match; a named const column index would be sturdier.
+
+**Disposition:** DEFERRED (human decision `D-403` flow, 2026-10-02): does not affect the
+strict clean-pass verdict and new code churn adds review surface. **Target: next
+maintenance sweep.**
+
+## `print_output_with_styles` duplicates `print_output` dispatch; `force_styling` test-only param in production signature — NEW, OPEN, code-quality NIT (CR8-002), deferred (2026-10-02)
+
+**ID:** `PRINT-OUTPUT-WITH-STYLES-DUPLICATION`. Severity **NIT**. Source: F5 Pass 8
+code-reviewer `CR8-002`. `print_output_with_styles` duplicates `print_output`'s format
+dispatch, and `force_styling` is a test-only parameter exposed in a production signature.
+
+**Disposition:** DEFERRED (2026-10-02): same rationale as above. **Target: next
+maintenance sweep.**
+
+## `CF_RANGES`/`SPEC_CF_RANGES` are not an independent oracle — NEW, OPEN, test-quality NIT (CR8-003), deferred (2026-10-02)
+
+**ID:** `CF-RANGES-NOT-INDEPENDENT-ORACLE`. Severity **NIT**. Source: F5 Pass 8
+code-reviewer `CR8-003`. The two range tables are hand-maintained and not an independent
+oracle; suggests a dev-dependency-generated fixture. (Related: `D-399(c)` accepted the
+hand-maintained `CF_RANGES` with no drift signal.)
+
+**Disposition:** DEFERRED (2026-10-02): same rationale as above. **Target: next
+maintenance sweep.**

@@ -634,3 +634,7 @@ See `cycles/cycle-014/cycle-manifest.md` for full narrative detail (this row sum
 > Archived from `STATE.md` Phase Progress by the 2026-10-02 #901 merge / Pass 8 dispatch burst (v5.34 -> v5.35), to keep the live table at 12 rows. Oldest row at that point; archived verbatim.
 
 | **CYCLE-014-F5-PASS1-NOTCLEAN-FIX-P5-002-IMPL-2026-10-01** | **F5 Pass 1 NOT CLEAN; `FIX-P5-002` implemented (now MERGED #894)** | 2026-10-01 | F5 delta adversarial pass 1 -- NOT CLEAN | adversary `F-001`/`F-002` MEDIUM, `F-003`-`F-005` LOW, `F-006` NIT; code-reviewer APPROVE (`CR-1`/`CR-2` SHOULD-FIX); security APPROVE. `D-396` scopes `FIX-P5-002`. Spec `2.5.5->2.5.6`. Record: `pass-1.md`. | 773 BCs / 98 VPs / 118 holdout / 194 stories LOCKED; `D-396` minted |
+
+> Archived from `STATE.md` Phase Progress by the 2026-10-02 Pass 8 NOT CLEAN / `D-403` burst (v5.35 -> v5.36), to keep the live table at 12 rows. Oldest row at that point; archived verbatim.
+
+| **SESSION-WRAP-PAUSE-2026-10-01** | **COMPLETE -- (superseded)** | 2026-10-01 | none (session-wrap checkpoint) | Pass-2 results recorded; checkpoint written; partial spec conversion committed as-is. | 773 BCs / 98 VPs / 118 holdout / 194 stories LOCKED; no new `D-NNN` |

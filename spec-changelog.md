@@ -9,6 +9,20 @@ Track all spec version changes. Most recent version first.
 
 > **Type legend:** Type classifies the SPEC document delta: MINOR = new BCs/VPs/sections; PATCH = amendments to existing bodies/ACs/ECs. Product-semver impact is recorded in the Summary line, independent of Type.
 
+## [2.8.4] - 2026-10-02
+
+### Type: PATCH
+
+### Summary
+
+FIX-P5-009 (human decision D-403, cycle-014 F5 pass-8; F5 pass cap raised to 15, strict three-consecutive-clean rule kept). Spec-only prose/accuracy corrections from a complete audit of every BC touched this cycle; no policy change; BC count unchanged (98 in-file / 54 individually-bodied in bc-7; 162 / 96 in cross-cutting; 773 cumulative); VP count unchanged.
+
+1. **BC-X.16.001/002, BC-X.7.002, BC-INDEX (P8-001).** "new pure function, to be implemented / to be modified, cycle-014" converted to IMPLEMENTED with merged-PR citations (#887 `e54be670` for #583; #886 `2d8467c4` for #862); BC-X.16.002 Postcondition 1 line anchors (`~130/~133/~135-138`) replaced by the symbol-form anchor `src/cli/api.rs::handle_api` § "`-q` parse after `normalize_path`, before `resolve_body` and `-H`"; dependency-source line anchors converted to symbol form; stale "spec-only/design intent" EC-X.16.002-8 text replaced with the shipped declaration; VP-API-QP-002/003 oracle, catch-all-mock and base-cell assertion claims narrowed to what the tests do.
+2. **BC-7.1.006 v1.7.4 (P8-002/SEC8-001).** Canonical Sink Inventory made complete for cycle-014's changed src files (new residuals (b)17-24; (b)11 gains `map_issue_not_found`, `field_not_available_for_type_msg`'s `project_key` and the M2 issue-type-not-found `project_key`, with `.jr.toml`/profile provenance; (b)12 notes the raw server `display_name` on the `@Name` path). Present-tense fixes: no separate bidi arm in `classify_default_char`; `format_active` bare glyph; EC-24/VP-SEC-001-002/003 test wording.
+3. **BC-X.14.001-004 audit.** M3 no-project error attributed to `field.rs::handle` (not `require_service_desk`); no `--type` ambiguity branch; `--type` resolution happens after `<field>` resolution; per-context "not available" wording; project-404 mapped only on `get_issue_types_for_project` (createmeta-fields errors exit 1); VP-580-014 property scope and EC-X.14.001-17 fixture; M3 request-type-fields call is uncached; degrade-hint literals and `is_cmdb`/`is_dynamic` classification; "(new)"/"to be corrected" markers removed (spec and BC-INDEX); `--project` companion wording.
+5. **BC-7.1.006 v1.7.4 follow-up (folded in, no new version).** (a) EC-19/EC-21/EC-22/EC-23 reworded: each now states the policy separately from what its cited test pins (explicit "Pin scope" notes; the multi-character fixture strings are marked illustrative, not verbatim-asserted; EC-19's `"Bob"`/`"Smith"` string, EC-22's `"Alice"` collapse pair and filler-only name, EC-23's heart/keycap strings are policy-only). (b) The three never-existing test names (`..._cf_table_pinned_unicode_version_is_17`, `..._ec15_assign_hostile_display_name_sanitized`, `..._ec16_disambiguate_user_hostile_names_and_emails_sanitized`) re-verified at `b9ae0862`: each is cited only in prose stating it was removed/never existed; all other cited names resolve. (c) Pre-staged for FIX-P5-009's code change: `disambiguate_user`'s echoed `name` moved from residual (b)12 to covered (a)4, marked NOT YET IMPLEMENTED, with the constraint that matching keeps the raw `name`; (b)20/(b)21 clarified (caller-built `empty_msg`/`none_msg_fn` strings stay residual); SEC6-003 scope list adjusted; new EC-25 with test target `test_disambiguate_user_sanitizes_echoed_name`. COUNT-NEUTRAL.
+4. **Siblings.** `edge-case-catalog.md` statuses (IMPLEMENTED, PRs #886/#887/#888); BC-X.7.002 and `error-taxonomy.md` ConfigError/UserError attribution (`from_config`'s `ConfigError` is for a missing profile URL; unknown profile names are `UserError`).
+
 ## [2.8.3] - 2026-10-02
 
 ### Type: PATCH

@@ -382,8 +382,7 @@ resolves the project key to the empty string without consulting the configured d
 deliberate KNOWN LIMITATION (FIX-P5-004, CR3-002: behavior unchanged, wording clarified in
 `cross-cutting.md`). See
 BC-X.7.002 Edge Cases in `cross-cutting.md` for the full enumeration.
-**Status**: Covered by BC-X.7.002 (AMENDED 2026-09-25); no holdout yet — pending F3 story
-decomposition.
+**Status**: Covered by BC-X.7.002 (AMENDED 2026-09-25); IMPLEMENTED cycle-014, PR #886 `2d8467c4`; no holdout scenario.
 
 ### EC-CYCLE014-002: `jr field options` M1/M2 label-resolution fallback (issue #861, READ-SIDE ONLY)
 **Boundary**: An `allowedValues` entry (top-level or a cascading child) may carry `value` only,
@@ -397,8 +396,7 @@ OUT OF SCOPE (see `FIELD-SYSTEM-TYPES-UNSUPPORTED` drift item). As a downstream 
 BC-X.14.002's existing `--value` filter now also matches system-field option names via the
 fallback `label` (EC-X.14.001-13; BC-X.14.002's own contract is unchanged). See BC-X.14.001
 Edge Cases in `cross-cutting.md` for the full enumeration.
-**Status**: Covered by BC-X.14.001/BC-X.14.003 (AMENDED 2026-09-25, READ-SIDE ONLY); no holdout
-yet — pending F3 story decomposition.
+**Status**: Covered by BC-X.14.001/BC-X.14.003 (AMENDED 2026-09-25, READ-SIDE ONLY); IMPLEMENTED cycle-014, #861, PR #888 `2ee422e0`; no holdout scenario.
 
 ### EC-CYCLE014-003: `jr api --query-param NAME=VALUE` composition and error taxonomy (issue #583)
 **Boundary**: Missing `=`, empty NAME, whitespace-only NAME, empty VALUE, VALUE with leading/
@@ -438,5 +436,4 @@ A malformed `--query-param` combined with a `-d @-` body invocation exits 64 on 
 runs strictly before `resolve_body`'s stdin read regardless of whether stdin is a TTY, piped,
 inherited, or closed (EC-X.16.002-4). See BC-X.16.001/BC-X.16.002 Edge Cases in `cross-cutting.md` for the
 full enumeration.
-**Status**: Covered by BC-X.16.001/BC-X.16.002 (NEW 2026-09-25); no holdout yet — pending F3
-story decomposition.
+**Status**: Covered by BC-X.16.001/BC-X.16.002 (NEW 2026-09-25); IMPLEMENTED cycle-014, #583, PR #887 `e54be670`; no holdout scenario.
