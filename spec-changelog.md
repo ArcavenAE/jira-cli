@@ -9,6 +9,19 @@ Track all spec version changes. Most recent version first.
 
 > **Type legend:** Type classifies the SPEC document delta: MINOR = new BCs/VPs/sections; PATCH = amendments to existing bodies/ACs/ECs. Product-semver impact is recorded in the Summary line, independent of Type.
 
+## [2.8.6] - 2026-10-02
+
+### Type: PATCH
+
+### Summary
+
+FIX-P5-010 (human decision D-404, cycle-014 F5 pass-9, P9-001 MEDIUM; spec-only). Splits BC-7.1.006's Canonical Sink Inventory completeness claim; no behavior change; BC count unchanged (98 in-file / 54 individually-bodied in bc-7; 773 cumulative); VP count unchanged.
+
+1. **BC-7.1.006 v1.7.6 — split completeness claim.** (i) SERVER- and CONFIG-supplied echoes: the inventory is COMPLETE for cycle-014's changed src files (`src/api/jira/issues.rs`, `src/cli/{api,field,user,mod}.rs`, `src/cli/issue/{helpers,interactions,workflow}.rs`, `src/main.rs`, `src/output.rs`, `src/types/jira/editmeta.rs`), verified by a mechanical whole-file sweep at `f72255cd` rather than by reading diffs. (ii) USER-typed echoes (self-injection): explicitly NON-EXHAUSTIVE with examples; SEC6-003's `main.rs` error-formatter chokepoint remains the systematic fix. Existing user-only residual items ((b)11(ii)-(iv), (b)18, (b)19, (b)22) stay as examples.
+2. **New residual items (b)25-(b)32** (append-only), all found by the sweep and missed by the D-403 diff-driven audit: (b)25 `handle_move` resolution-name picker items; (b)26 `resolve_resolution_by_name` and "not allowed on transition" errors; (b)27 transition/status-name text in non-prompt `handle_move`/`finish_transition`/`handle_move_bulk` errors; (b)28 `handle_comment_add`'s server `comment.id`; (b)29 comment 404/403 server-message echoes; (b)30 `resolve_story_points_field_id`'s profile name (CONFIG); (b)31 `issues.rs` createmeta-cap `project_key`/`issue_type_id`; (b)32 `handle_open --url-only`'s config instance URL.
+3. **Anti-claim check.** `grep` for completeness wording near sink/echo across BC-7.1.006, BC-X.14.*, BC-X.7.002, BC-X.16.* and BC-INDEX found no other sentence claiming completeness for user-typed echoes (remaining hits are dated version-history rows, left untouched).
+4. **Implementer items (no spec change, code/rustdoc only):** P9-002 `src/cli/user.rs` test rustdoc reword; CR9-002 `src/output.rs::render_table_with_styles_inner` `force_styling` test-only note. See `.factory/cycles/cycle-014/phase-f5-adversarial/FIX-P5-010-spec-delta.md`.
+
 ## [2.8.5] - 2026-10-02
 
 ### Type: PATCH

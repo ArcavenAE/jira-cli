@@ -7349,3 +7349,16 @@ _Tagged: [process-gap] [prd-delta] [dispositions] [per-round-checklist] [cv-chan
 - Session ended at 2026-10-02T21:15:09Z (awaiting /session-review)
 - Session ended at 2026-10-02T21:16:30Z (awaiting /session-review)
 - Session ended at 2026-10-02T21:17:27Z (awaiting /session-review)
+- Session ended at 2026-10-02T22:02:49Z (awaiting /session-review)
+- Session ended at 2026-10-02T22:03:19Z (awaiting /session-review)
+- Session ended at 2026-10-02T22:06:59Z (awaiting /session-review)
+
+## 2026-10-02 -- Completeness claims must be mechanically verified before they are made (F5 Pass 9 / P9-001, D-404)
+
+- [process-gap] [completeness-claim] FIX-P5-009 asserted that BC-7.1.006's Canonical Sink Inventory was "complete for all delta src files". The audit behind it was diff-driven (read the changed hunks), so it could not support a claim about whole files. Pass 9's adversary read each file end to end and found unlisted echo sites (a MEDIUM, `P9-001`), including SERVER text (resolution-name picker items, `comment.id` in `print_success`).
+- Rule: any "complete" / "only" / "every" / "no other" claim in a spec or doc MUST be backed by a mechanical sweep (whole-file grep for the sink patterns, a table of every hit with its source class and sanitization status) run BEFORE the claim is written, with the method recorded next to the claim. If a sweep is impractical, scope the claim down (e.g. split it by source class) instead of asserting completeness.
+- Resolution (D-404, FIX-P5-010): the claim was split. SERVER/CONFIG echoes: complete for the 11 changed src files, proven by a 306-hit -> 97-site sweep (table in `cycles/cycle-014/phase-f5-adversarial/FIX-P5-010-spec-delta.md`). USER-typed echoes: explicitly non-exhaustive (self-injection), with SEC6-003 as the systematic fix.
+- Related earlier lesson: process-gap `#52` (when a fix changes a test, update every spec surface that describes it) is the same family: drift appears one hop from wherever the last audit stopped.
+- Session ended at 2026-10-02T22:08:28Z (awaiting /session-review)
+- Session ended at 2026-10-02T22:10:24Z (awaiting /session-review)
+- Session ended at 2026-10-02T22:11:19Z (awaiting /session-review)

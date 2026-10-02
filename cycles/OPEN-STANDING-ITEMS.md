@@ -2466,3 +2466,15 @@ prefixes (cited as a family), which a name-exact check cannot resolve.
 
 **Disposition:** DEFERRED (2026-10-02): no effect on the F5 strict verdict; **Target: next
 maintenance sweep** (enumerate the full 8, then fix the citation or restore the test).
+
+## Sanitizers drop U+2028/U+2029 instead of mapping them to a space — NEW, OPEN, consistency LOW (SEC9-001), optional (2026-10-02)
+
+**ID:** `LINE-SEPARATOR-DROP-VS-SPACE`. Severity **LOW** (optional). Source: F5 Pass 9
+security-reviewer `SEC9-001`. The output sanitizers drop U+2028/U+2029 outright, which can
+merge flanking words into a different string; tabs are mapped to a single space for exactly
+that reason. This is a consistency suggestion against a documented, deliberate choice, not a
+vulnerability.
+
+**Disposition:** RECORDED, not scheduled (2026-10-02): no effect on the F5 strict verdict.
+**Target: next maintenance sweep** (decide whether to map line/paragraph separators to a
+space like `\t`, updating `BC-7.1.006`'s per-character policy and tests together).
