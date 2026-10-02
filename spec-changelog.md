@@ -9,6 +9,29 @@ Track all spec version changes. Most recent version first.
 
 > **Type legend:** Type classifies the SPEC document delta: MINOR = new BCs/VPs/sections; PATCH = amendments to existing bodies/ACs/ECs. Product-semver impact is recorded in the Summary line, independent of Type.
 
+## [2.7.2] - 2026-10-01
+
+### Type: PATCH
+
+### Summary
+
+FIX-P5-006 spec deltas (cycle-014 F5 pass-5), human decision D-400 (recorded by state-manager).
+Spec-only; no product code changed (develop `0a4dc062`); BC count unchanged (98 in-file / 54
+individually-bodied in bc-7; 162 / 96 in cross-cutting; 773 cumulative); VP count unchanged.
+
+1. **BC-7.1.006 v1.6.2 (SEC5-001).** New EC-24: blank-rendering characters outside the `Cf`/extras
+   policy (`U+2800`, `U+17B4`/`U+17B5`, `U+FFFC`, `Zs` spaces `U+00A0`/`U+1680`/`U+2000..=U+200A`/
+   `U+202F`/`U+205F`/`U+3000`) are KEPT: accepted residual, behavior unchanged, list no longer
+   extended per pass. Optional KEEP pin marked NOT YET IMPLEMENTED. Residual-list note added.
+2. **BC-X.14.004 (SEC5-002).** New EC-X.14.004-9: `search_field_list` ambiguity errors (duplicate-ID
+   branch + both name-ambiguity branches) sanitize every server-supplied candidate `name`/`id` via
+   `output::sanitize_terminal_line`; NOT YET IMPLEMENTED.
+3. **BC-X.14.001 (P5-001, P5-004).** New EC-X.14.001-22 pins the `jr field options <FIELD>` help
+   wording (customfield_NNNNN literal, field ID such as issuetype/priority exact case-insensitive,
+   or field name); NOT YET IMPLEMENTED. EC-X.14.001-15's drifted `~L442-447`/`~L451` refs converted
+   to symbol-form citations.
+4. Hand-off: `.factory/cycles/cycle-014/phase-f5-adversarial/FIX-P5-006-spec-delta.md`.
+
 ## [2.7.1] - 2026-10-01
 
 ### Type: PATCH

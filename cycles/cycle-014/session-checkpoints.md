@@ -172,3 +172,7 @@ F5-pass-1 checkpoint.
 ## Archived checkpoint: STATE v5.28 (2026-10-01, superseded by v5.29)
 
 **Position:** cycle-014 F5 IN PROGRESS; Pass 4 over `204b1fb5..6cece14b` NOT CLEAN (`pass-4.md`); `D-399` decided; `FIX-P5-005` in delivery (worktree `.worktrees/FIX-P5-005`, branch `fix/fix-p5-005-pass4-findings`, base `6cece14b`); spec `2.7.0` (`BC-7.1.006` v1.6.0) committed. Counter 0/3, 4 of 10 used. NEXT was: `FIX-P5-005` PR -> human merge -> post-merge spec conversion -> Pass 5. Resume: `/vsdd-factory:rehydrate-wave`, then `/vsdd-factory:next-step`.
+
+## Archived checkpoint: STATE v5.29 (2026-10-02, superseded by v5.30)
+
+**Position:** cycle-014 F5 IN PROGRESS; `FIX-P5-005` (#897) merged @ `0a4dc062`, post-merge spec conversion done (`BC-7.1.006` v1.6.1, spec `2.7.1`). Pass 5 over `204b1fb5..0a4dc062` DISPATCHED, results pending; counter 0/3, 5th of 10. NEXT was: await Pass 5 verdicts. No fix worktrees. Resume: `/vsdd-factory:rehydrate-wave`, then `/vsdd-factory:next-step`.

@@ -2046,6 +2046,13 @@ carved OUT of `FIX-P5-001`'s original scope because none of these sinks
 route through `output::render_table` — there is no single chokepoint to fix
 them all in one pass, unlike SEC-001's table-mode case.
 
+**Note 2026-10-02 (`D-400`, F5 Pass 5 `SEC5-002`, INFO, CWE-116):**
+`src/cli/field.rs::search_field_list` ambiguity errors echo raw server-supplied
+field name/id into a `UserError` (stderr and the JSON `"error"` field). This
+sink is being FIXED by `FIX-P5-006` (candidates sanitized via
+`output::sanitize_terminal_line`); remove it from the residual inventory once
+that PR merges.
+
 **Now covered, as of `FIX-P5-001`/PR #891 (2026-10-01) — no longer residual:**
 `jr issue comment view`'s human output (`handle_comment_view`, D-393,
 SEC-003); `jr issue assign`'s changed/idempotent human-output success
@@ -2332,6 +2339,16 @@ rule or the explicit additions). **The variation-selector part STAYS OPEN as an
 ACCEPTED residual (`EC-23`):** U+FE00..=FE0F and U+E0100..=E01EF remain KEPT,
 styled like `EC-20`. The item closes except for that accepted residual once
 `FIX-P5-005` merges and the post-merge spec conversion lands.
+
+**Status update 2026-10-02 (`D-400`, F5 Pass 5): ACCEPTED-RESIDUAL CLOSURE for
+blank-rendering non-`Cf` characters (`BC-7.1.006` `EC-24`).** `FIX-P5-005` merged
+(#897). Pass 5 `SEC5-001` (LOW, CWE-451) then noted further blank-rendering
+characters outside `Cf` that stay KEPT (U+2800 Braille blank, U+17B4/U+17B5 Khmer
+inherent vowels, U+FFFC object replacement, `Zs` spaces). The human decided
+(`D-400`) the policy stays category-based (`Cf` + the named extras) and that the
+character list is NOT extended per pass. These are recorded as an ACCEPTED
+RESIDUAL (`EC-24`), alongside the variation-selector residual (`EC-23`). No fix
+planned; revisit only via a deliberate future `BC-7.1.006` policy amendment.
 
 ## `tests/common/wf.rs` inline tests re-run in every integration crate that includes `mod common;` — NEW, OPEN, test-hygiene (NIT), target next maintenance sweep (2026-10-01)
 
