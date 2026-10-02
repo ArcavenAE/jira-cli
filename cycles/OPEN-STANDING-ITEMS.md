@@ -2445,3 +2445,24 @@ hand-maintained `CF_RANGES` with no drift signal.)
 
 **Disposition:** DEFERRED (2026-10-02): same rationale as above. **Target: next
 maintenance sweep.**
+
+## BC prose cites test names that do not resolve in the product repo (ADF / CI-gate / E2E BCs) — NEW, OPEN, doc-accuracy (LOW, pre-existing), deferred (2026-10-02)
+
+**ID:** `BC-CITATION-PREFIX-TEST-NAMES`. Severity **LOW**, pre-existing (not introduced by
+cycle-014). Source: FIX-P5-009 post-merge spec sync (spec 2.8.5): of 195 cited test names
+checked at `f72255cd`, 183 resolve; 12 do not. Of those, 3 are documented as non-existent
+(prose says so), 1 was a rename (fixed in 2.8.5), and 8 are outside cycle-014 scope, in
+ADF / CI-gate / E2E BCs. They are tracked here, not fixed.
+
+Re-verification by the state-manager over `bc-7-output-render.md` + `cross-cutting.md`
+(`git grep -w` at `f72255cd`) surfaced these unresolved tokens that fall in the
+out-of-scope class: `test_bare_` (prefix form), `test_complex` (prefix form),
+`test_bc_x_14_001_search_field_list_` (prefix form),
+`test_bc_7_2_015_ec_6_strong_retained_on_sibling_text_nodes_of_code_span`,
+`test_e2e_issue_markdown_description_roundtrip`. The caller's count of 8 spans additional
+BC files (ADF / CI-gate / E2E) not re-swept here; the product-owner's full list is the
+authority and should be attached when this item is picked up. Several are truncated
+prefixes (cited as a family), which a name-exact check cannot resolve.
+
+**Disposition:** DEFERRED (2026-10-02): no effect on the F5 strict verdict; **Target: next
+maintenance sweep** (enumerate the full 8, then fix the citation or restore the test).

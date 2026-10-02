@@ -638,3 +638,7 @@ See `cycles/cycle-014/cycle-manifest.md` for full narrative detail (this row sum
 > Archived from `STATE.md` Phase Progress by the 2026-10-02 Pass 8 NOT CLEAN / `D-403` burst (v5.35 -> v5.36), to keep the live table at 12 rows. Oldest row at that point; archived verbatim.
 
 | **SESSION-WRAP-PAUSE-2026-10-01** | **COMPLETE -- (superseded)** | 2026-10-01 | none (session-wrap checkpoint) | Pass-2 results recorded; checkpoint written; partial spec conversion committed as-is. | 773 BCs / 98 VPs / 118 holdout / 194 stories LOCKED; no new `D-NNN` |
+
+> Archived from `STATE.md` Phase Progress by the 2026-10-02 #902 merge / Pass 9 dispatch burst (v5.36 -> v5.37), to keep the live table at 12 rows. Oldest row at that point; archived verbatim.
+
+| **CYCLE-014-F5-D397-FIX-P5-003-SCOPED-2026-10-01** | **FIX-P5-003 FULL scope decided; spec conversion complete (now MERGED)** | 2026-10-01 | none (human decision `D-397`) | `D-397`: `FIX-P5-003` FULL scope (`P2-001`, `P2-002`/`CR2-2`, `P2-004`, `P2-005`, CLAUDE.md LOC NIT, `CR2-1`, `CR2-N1`, `CR2-N2`); `P2-003` closed by the `BC-7.1.006` spec conversion (spec `2.5.7`). | 773 BCs / 98 VPs / 118 holdout / 194 stories LOCKED; `D-397` minted |

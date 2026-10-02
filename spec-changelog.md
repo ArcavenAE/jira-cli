@@ -9,6 +9,21 @@ Track all spec version changes. Most recent version first.
 
 > **Type legend:** Type classifies the SPEC document delta: MINOR = new BCs/VPs/sections; PATCH = amendments to existing bodies/ACs/ECs. Product-semver impact is recorded in the Summary line, independent of Type.
 
+## [2.8.5] - 2026-10-02
+
+### Type: PATCH
+
+### Summary
+
+FIX-P5-009 post-merge (PR #902 merged to `develop` as `f72255cd`; no human decision required, mechanical post-merge maintenance). Converts the FIX-P5-009 pre-staged spec items to live citations and corrects spec text the merged code overtook; no policy change; BC count unchanged (98 in-file / 54 individually-bodied in bc-7; 162 / 96 in cross-cutting; 773 cumulative); VP count unchanged.
+
+1. **BC-7.1.006 v1.7.5.** Canonical Sink Inventory (a)4, the retired (b)12 slot and EC-25: "NOT YET IMPLEMENTED (FIX-P5-009)" markers removed; live citation `src/cli/issue/helpers.rs::disambiguate_user` (`name_echo` = `sanitize_terminal_line(name)`, computed once before `partial_match`, used in both `Multiple users named/match` messages and both picker prompts; matching keeps the raw `name`, case-insensitive) and unit test `src/cli/issue/helpers.rs::tests::test_disambiguate_user_sanitizes_echoed_name` (verified present at `f72255cd`). Spec states precisely that the test covers the non-interactive messages (`ExactMultiple`, `Ambiguous`, `None` clean-output pin) and that the picker prompts are verified by code inspection only (`dialoguer` needs a TTY).
+2. **EC-16b / VP-SEC-001-001 (d).** The `Multiple users named "<name>"` header's echoed name is now sanitized; EC-16b's rendered header corrected to `"Alice"`, and the three `tests/table_output_sanitization.rs` tests `test_bc_7_1_006_issue_assign_exact_multiple_human_output_strips_hostile_display_name_newline`, `..._strips_hostile_display_name_field`, `..._strips_ec16b_fixture` (expecting `"Mallory Eve"`, `"Mallory"`, `"Alice"` headers respectively) are cited as the integration pins. The prior claim that the echoed name is raw user-typed text is retracted. The `..._strips_ec16b_fixture` test is newly cited in EC-16b.
+3. **Trace.** The `SHOULD_COLORIZE` color gate's home is `src/output.rs::render_table_with_styles_inner`, the production implementation behind `render_table_with_styles` (only its `force_styling` parameter is test-only); the "private test seam" wording is removed.
+4. **BC-X.14.004 EC-X.14.004-10.** Integration-test citation updated: `tests/field_options.rs::test_bc_x_14_004_not_available_field_id_echo_is_sanitized_in_stderr_and_json` no longer exists; replaced by the independent `..._in_stderr` and `..._in_json` tests (each builds its own harness, no dependency on the one-time legacy-config migration notice). The old name remains only in historical changelog/delta records.
+5. **BC-X.14.001 step (3) / EC-X.14.001-19.** HTTP wording made precise: the field-ID step adds no HTTP call beyond the `list_fields()` fetch the name lookup already makes on a cache miss/stale cache, and issues zero `GET /rest/api/3/field` calls on a cache hit (the test mounts that route with `.expect(0)`; the mode call, e.g. editmeta, is separate). BC-X.7.008's `disambiguate_user` message-template note records the sanitized `name` echo; BC-INDEX BC-7.1.006 row gains D-403/FIX-P5-009.
+6. **Test-name verification at `f72255cd`.** Every `test_*` name cited in `prd/bc-7-output-render.md` and `prd/cross-cutting.md` was resolved against `git grep` at `f72255cd`; the only absent cycle-relevant names were the renamed `..._in_stderr_and_json` test (fixed, item 4) and the three documented never-existing/removed names (`..._cf_table_pinned_unicode_version_is_17`, `..._ec15_assign_hostile_display_name_sanitized`, `..._ec16_disambiguate_user_hostile_names_and_emails_sanitized`), cited only in prose saying so.
+
 ## [2.8.4] - 2026-10-02
 
 ### Type: PATCH
