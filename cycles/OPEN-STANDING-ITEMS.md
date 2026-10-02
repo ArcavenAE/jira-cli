@@ -2301,6 +2301,12 @@ being cancelled, wasting runner minutes and occasionally confusing status checks
 cancel-in-progress: true}` block (or equivalent) scoped so it does not interfere with
 the `ci-gate` required-check semantics (CI Gate scope summary, `CLAUDE.md`).
 
+**Evidence note (2026-10-02, `FIX-P5-008` / PR #901):** this PR's mutation shards 0-4
+queued ~2h behind superseded, still-in-progress runs on the same branch (earlier
+pushes of the same PR), because `ci.yml` has no `concurrency:` group. Concrete,
+observed delivery-latency cost of this item, not just wasted runner minutes; supports
+raising its priority at the next maintenance sweep.
+
 ## CI clippy is unpinned, causing toolchain-drift breakage on unchanged code — NEW, OPEN, CI-infra (2026-10-01)
 
 **ID:** `CI-CLIPPY-TOOLCHAIN-PIN`. Severity **LOW-MEDIUM**, CI-infra. Observed during

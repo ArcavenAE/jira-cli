@@ -29,3 +29,17 @@ Base: develop `ecbc5cda`. Items below are for the implementer (product repo).
    lazily at the error sites; watch for equivalent-mutant patterns (cargo-mutants).
 7. **CR7-004** — `src/cli/user.rs::test_bc_7_1_006_structural_cell_styling_technique_survives_rendering`:
    make its doc state precisely that it pins third-party `comfy_table` behavior jr relies on; keep the test.
+
+## Post-merge (PR #901 merged as `b9ae0862`, spec v2.8.3)
+
+Verified against `git show b9ae0862:<path>`.
+
+- Changed: BC-X.14.004 EC-X.14.004-9 said `search_field_list` sanitizes the echoed query "once up
+  front"; merged code (CR7-003) takes `(list, query)`, derives `query_lower` internally and
+  sanitizes lazily via an `echo` closure at the three error sites. Corrected.
+- Added: BC-7.1.006 version row 1.7.3, cross-cutting/bc-7 trace bullets, spec-changelog [2.8.3].
+- Verified, no change needed: CR7-002 (`USER_LIST_HEADERS`, `format_user_row_styled`, new alignment
+  test) is not described in the PRD; test/rustdoc wording changes (table_output_sanitization.rs,
+  field_options.rs, hermetic.rs, api_query_param.rs, unit tests) contradict no spec text. All 43
+  test names cited in BC-7.1.006 and BC-X.14.* exist at `b9ae0862`. No FIX-P5-008 pending qualifier remained.
+

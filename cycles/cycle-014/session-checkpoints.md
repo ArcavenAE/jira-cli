@@ -192,3 +192,7 @@ F5-pass-1 checkpoint.
 ## Archived checkpoint: STATE v5.33 (2026-10-02, superseded by v5.34)
 
 **Position:** cycle-014 F5 IN PROGRESS; `FIX-P5-007` (#899) merged @ `ecbc5cda`, post-merge spec conversion done (`BC-7.1.006` v1.7.1, spec `2.8.1`). F5 Pass 7 over `204b1fb5..ecbc5cda` DISPATCHED, results pending; counter 0/3, Pass 7 = 7th of 10. NEXT was: await Pass 7 verdicts. No open PRs, no fix worktrees. Resume: `/vsdd-factory:rehydrate-wave`, then `/vsdd-factory:next-step`.
+
+## Archived checkpoint: STATE v5.34 (2026-10-02, superseded by v5.35)
+
+**Position:** cycle-014 F5 IN PROGRESS; Pass 7 over `204b1fb5..ecbc5cda` NOT CLEAN (`pass-7.md`); `D-402` decided (`FIX-P5-008` = all Pass 7 items + full claim audit; strict, ZERO SLACK); spec `2.8.2` delta committed. `FIX-P5-008` in delivery (`.worktrees/FIX-P5-008`, branch `fix/fix-p5-008-pass7-findings`, base `ecbc5cda`). Counter 0/3, 7 of 10 used. NEXT was: `FIX-P5-008` PR -> human merge -> post-merge spec conversion -> Pass 8 (must be clean, else escalate). Resume: `/vsdd-factory:rehydrate-wave`, then `/vsdd-factory:next-step`.

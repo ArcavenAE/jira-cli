@@ -9,6 +9,24 @@ Track all spec version changes. Most recent version first.
 
 > **Type legend:** Type classifies the SPEC document delta: MINOR = new BCs/VPs/sections; PATCH = amendments to existing bodies/ACs/ECs. Product-semver impact is recorded in the Summary line, independent of Type.
 
+## [2.8.3] - 2026-10-02
+
+### Type: PATCH
+
+### Summary
+
+FIX-P5-008 post-merge sync (PR #901 merged to `develop` as `b9ae0862`; mechanical, no human
+decision). BC count unchanged (98 / 54 bc-7; 162 / 96 cross-cutting; 773 cumulative); VP count
+unchanged.
+
+1. **BC-X.14.004 EC-X.14.004-9.** "sanitizes it once up front" corrected to the merged shape:
+   `src/cli/field.rs::search_field_list(list, query)` derives `query_lower` internally (CR7-003)
+   and sanitizes the echoed query lazily via an `echo` closure at the three error sites.
+2. **BC-7.1.006 v1.7.3.** Re-verified at `b9ae0862`: every cited test/symbol resolves; no other
+   claim changed. CR7-002 (`USER_LIST_HEADERS`, `format_user_row_styled` Active index derived from
+   it, new test `test_format_user_row_styled_stays_aligned_with_headers_and_plain_row`) and the
+   test/rustdoc wording changes are not described in the PRD specs, so no further edits.
+
 ## [2.8.2] - 2026-10-02
 
 ### Type: PATCH
