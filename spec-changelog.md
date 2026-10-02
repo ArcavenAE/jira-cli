@@ -9,6 +9,38 @@ Track all spec version changes. Most recent version first.
 
 > **Type legend:** Type classifies the SPEC document delta: MINOR = new BCs/VPs/sections; PATCH = amendments to existing bodies/ACs/ECs. Product-semver impact is recorded in the Summary line, independent of Type.
 
+## [2.8.1] - 2026-10-02
+
+### Type: PATCH
+
+### Summary
+
+FIX-P5-007 post-merge citation conversion (PR #899 merged to `develop` as `ecbc5cda`). Mechanical;
+no human decision required. No policy change; BC count unchanged (98 in-file / 54 individually-bodied
+in bc-7; 162 / 96 in cross-cutting; 773 cumulative); VP count unchanged.
+
+1. **BC-7.1.006 v1.7.1.** Canonical Sink Inventory item (a)6 converted to present tense with live
+   citations to `src/cli/field.rs::field_not_available_for_type_msg`,
+   `src/cli/field.rs::field_not_available_on_request_type_msg`,
+   `src/cli/field.rs::field_not_on_edit_screen_msg`, `src/cli/field.rs::field_not_found_msg`.
+2. **BC-X.14.004.** EC-X.14.004-10 (with tests `src/cli/field.rs::test_bc_x_14_004_field_id_echo_is_sanitized_in_not_available_errors`,
+   `src/cli/field.rs::test_bc_x_14_004_not_found_query_echo_is_sanitized`,
+   `tests/field_options.rs::test_bc_x_14_004_not_available_field_id_echo_is_sanitized_in_stderr_and_json`),
+   the error-table cross-reference, and the Preconditions hermetic-harness note converted to live
+   (`tests/field_options.rs` `Harness` routed through `tests/common/hermetic.rs`).
+3. **Anti-drift.** Five exact `~L` / `:~N-M` line-number citations in BC-X.14.001 converted to symbol
+   form (`resolve_field_id` guard/cache-read and warm-cache-ambiguity cites; `editmeta.rs`
+   `AllowedValue` doc-comment cites). No non-history sink-membership prose outside the Canonical
+   Sink Inventory found in BC-7.1.006 or BC-X.14.*.
+4. **BC-7.1.006 H1 + BC-INDEX row.** H1 shortened to the stable title "Server-supplied text is sanitized
+   before terminal rendering (table and non-table sinks; per-character policy; JSON lossless)"; the dated
+   D-393..D-396 per-sink clauses are removed (duplicated the D-401-authoritative Canonical Sink Inventory).
+   BC-INDEX row title matches the H1 verbatim. No other file quotes the old H1 (stories, PRD index, VPs checked).
+5. **Anti-drift (cross-cutting.md).** Remaining approximate line refs in BC-X.7.002 converted to symbol
+   form; scan of BC-X.7.002 / BC-X.14.* / BC-X.16.001-002 found no others in src/tests.
+6. Row 1.7.0 and entry `[2.8.0]` left as dated history. Hand-off:
+   `.factory/cycles/cycle-014/phase-f5-adversarial/FIX-P5-007-spec-delta.md` (post-merge section).
+
 ## [2.8.0] - 2026-10-02
 
 ### Type: MINOR

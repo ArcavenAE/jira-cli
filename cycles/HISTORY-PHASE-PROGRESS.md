@@ -622,3 +622,7 @@ See `cycles/cycle-014/cycle-manifest.md` for full narrative detail (this row sum
 | Phase | Status | Completed | Gate | Notes | Finding Progression |
 |-------|--------|-----------|------|-------|---------------------|
 | **CYCLE-014-F5-D392-FIX-P5-001-SPEC-2026-09-30** | **F5 STARTED -- FIX-P5-001 spec landed** | 2026-09-30 | none (human decision `D-392`) | `D-392`: fix `SEC-001-RENDER-TABLE-ANSI-SANITIZE` in-cycle as **FIX-P5-001**; `BC-7.1.006`/`VP-SEC-001-001` landed, spec `2.4.0->2.5.0`, BCs `772->773`. | 773 BCs / 98 VPs / 118 holdout / 194 stories LOCKED; `D-392` minted |
+
+> Archived from `STATE.md` Phase Progress by the 2026-10-02 #899 merge / Pass 7 dispatch burst (v5.32 -> v5.33), to keep the live table at 12 rows. Oldest row at that point; archived verbatim.
+
+| **CYCLE-014-F5-FIX-P5-001-IMPL-2026-09-30** | **FIX-P5-001 implemented + pushed, spec v2.5.1 landed** | 2026-09-30 | none (implementation burst) | `FIX-P5-001` implemented, HEAD `7d289d75`; lib 1,586 passed, full suite 5,845 passed. Demo evidence (19 files) in `.factory/demos/FIX-P5-001/`. process-gaps `#38`-`#39`. | 773 BCs / 98 VPs / 118 holdout / 194 stories LOCKED; no new `D-NNN` |

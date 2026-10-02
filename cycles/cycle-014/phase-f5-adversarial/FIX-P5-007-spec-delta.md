@@ -63,3 +63,21 @@ BC edit.
 Convert "NOT YET IMPLEMENTED (FIX-P5-007)" qualifiers in BC-X.14.004 (EC-X.14.004-10, taxonomy row,
 Preconditions) and BC-7.1.006 canonical list (a)6 to live citations (state-manager/product-owner
 post-merge PATCH, as for FIX-P5-005/006).
+
+## 5. Post-merge conversion (PR #899 merged as `ecbc5cda`, spec v2.8.1, PATCH)
+
+Mechanical; no human decision. Verified at `ecbc5cda` (`git show`):
+
+- BC-7.1.006 Canonical Sink Inventory (a)6 -> live: `src/cli/field.rs::field_not_available_for_type_msg`,
+  `field_not_available_on_request_type_msg`, `field_not_on_edit_screen_msg`, `field_not_found_msg`.
+- BC-X.14.004 EC-X.14.004-10 + error-table cross-ref -> live; tests present:
+  `src/cli/field.rs::test_bc_x_14_004_field_id_echo_is_sanitized_in_not_available_errors`,
+  `src/cli/field.rs::test_bc_x_14_004_not_found_query_echo_is_sanitized`,
+  `tests/field_options.rs::test_bc_x_14_004_not_available_field_id_echo_is_sanitized_in_stderr_and_json`.
+- BC-X.14.004 Preconditions hermetic-harness "Target" -> implemented: `Harness` uses
+  `common::hermetic::scrub_ambient_jr_env` and `assert_no_ancestor_jr_toml` (`tests/common/hermetic.rs`).
+- Anti-drift (section 3 rule 5): five `~L`/`:~N-M` line citations in BC-X.14.001 converted to symbol form;
+  no sink-membership prose outside the Canonical Sink Inventory found in BC-7.1.006 body or BC-X.14.*
+  (H1/BC-INDEX title retain dated history clauses, left as-is). Out-of-scope residual noted: BC-X.7.002
+  (`cross-cutting.md`) still carries `~L188`/`~L423-428` citations.
+- Version records: BC-7.1.006 row 1.7.1; BC-X.14 trace bullet; spec-changelog `[2.8.1]`.

@@ -7304,3 +7304,18 @@ _Tagged: [process-gap] [prd-delta] [dispositions] [per-round-checklist] [cv-chan
 - Session ended at 2026-10-02T05:21:51Z (awaiting /session-review)
 - Session ended at 2026-10-02T05:24:29Z (awaiting /session-review)
 - Session ended at 2026-10-02T05:26:12Z (awaiting /session-review)
+- Session ended at 2026-10-02T05:31:40Z (awaiting /session-review)
+- Session ended at 2026-10-02T06:02:08Z (awaiting /session-review)
+- Session ended at 2026-10-02T06:05:15Z (awaiting /session-review)
+- Session ended at 2026-10-02T06:06:02Z (awaiting /session-review)
+- Session ended at 2026-10-02T06:17:11Z (awaiting /session-review)
+- Session ended at 2026-10-02T14:17:57Z (awaiting /session-review)
+- Session ended at 2026-10-02T14:18:13Z (awaiting /session-review)
+- Session ended at 2026-10-02T14:20:14Z (awaiting /session-review)
+- Session ended at 2026-10-02T14:22:51Z (awaiting /session-review)
+
+## 2026-10-02 -- Local `oauth_flow_holdouts` hang is environmental (FIX-P5-007 / PR #899)
+
+- [test-environment] [lesson] During FIX-P5-007 delivery the local full-suite run hung ~28 min in `oauth_flow_holdouts`, inside a keychain-adjacent `jr auth list` subprocess. This was ENVIRONMENTAL, not a code defect: CI ran `oauth_flow_holdouts` on ubuntu, macos and windows and every Test job passed. Local full-suite runs on a dev host with a keychain may hang there; run with a timeout, or skip/target that test locally, and treat CI as the authority. Do not chase it as a product bug.
+- Session ended at 2026-10-02T14:24:12Z (awaiting /session-review)
+- Session ended at 2026-10-02T14:26:00Z (awaiting /session-review)
