@@ -1,11 +1,8 @@
-//! Shared hermeticity helpers for `jr user list` integration tests
-//! (cycle-014 STORY-A, `S-cycle14-user-list-project-resolution`, #862,
-//! Step 4.5 adversarial pass 1 findings F-002/F-005).
-//!
-//! Both helpers below were previously duplicated (with a stale, fixed-list
-//! variant) across `tests/user_commands.rs`, `tests/user_list_project_resolution.rs`,
-//! and `tests/user_pagination.rs`. They are consolidated here so a single
-//! location expresses what "hermetic" means for this test surface.
+//! Shared hermeticity helpers for tests that spawn the `jr` binary as a
+//! subprocess: scrubbing ambient `JR_`-prefixed environment variables and
+//! asserting that no stray `.jr.toml` exists in the test's working
+//! directory or any ancestor, so a developer's or CI's ambient
+//! configuration cannot leak into the resolved `Config` under test.
 
 use assert_cmd::Command;
 use std::path::Path;
@@ -14,7 +11,7 @@ use std::path::Path;
 /// except the names listed in `keep`.
 ///
 /// `Config::load_inner` (`src/config.rs` ~L262) merges
-/// `Env::prefixed("JR_")` directly onto `GlobalConfig`/`ProfileConfig` with
+/// `Env::prefixed("JR_")` directly onto `GlobalConfig` with
 /// no closed enumeration of recognized keys — ANY ambient `JR_*` variable
 /// that maps onto a config field (e.g. `JR_PROFILES`, `JR_DEFAULTS`,
 /// `JR_INSTANCE`, `JR_FIELDS`, or any future field) can leak a
