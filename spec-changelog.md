@@ -9,6 +9,21 @@ Track all spec version changes. Most recent version first.
 
 > **Type legend:** Type classifies the SPEC document delta: MINOR = new BCs/VPs/sections; PATCH = amendments to existing bodies/ACs/ECs. Product-semver impact is recorded in the Summary line, independent of Type.
 
+## [2.8.7] - 2026-10-03
+
+### Type: PATCH
+
+### Summary
+
+FIX-P5-011 (human decision D-405, cycle-014 F5 pass-10, P10-001 MEDIUM; spec-only). Corrects BC-X.14.001 Invariant 3, which claimed `src/cli/field.rs`'s field resolution is a mirrored copy of `src/cli/issue/field_resolve.rs::resolve_edit_fields` and that "a change to one must be mirrored in the other"; D-399 (FIX-P5-005) made that false by adding the exact case-insensitive field-ID step, `FIELD_ID_HINT` and candidate sanitization to `field.rs` only. No behavior change; BC count unchanged (98 in-file / 54 individually-bodied in bc-7; 773 cumulative); VP count unchanged.
+
+1. **BC-X.14.001 Invariant 3 reworded.** The `customfield_` bypass, cache-first load/fetch and refresh-once contract are shared semantics (a change to those is applied to both resolvers); the search step deliberately diverges (field-ID step, `FIELD_ID_HINT`, sanitization on `jr field options` only; `--field` matches by name only, exact then substring). Rationale: write-path silent-retarget risk, and `--field`'s type dispatch (D-379) rejects most system-typed fields anyway. A change to the search step need not be mirrored. The JSM `--request-type --field` path (exact request-type field ID match) is noted as a third, independent lookup.
+2. **Present-tense "mirrored" claims removed** from the BC-X.14.001 Behavior paragraph, the BC-X.14 Source line and the BC-INDEX BC-X.14.001 row. The dated cycle-014 F2 (spec 2.4.0) history note is retained and annotated as superseded.
+3. **BC-7.1.006 NOT amended.** `src/cli/issue/field_resolve.rs` is absent from `git diff --name-only 204b1fb5..b2b8ee3b -- src/`, so it is outside the cycle-014 changed-file scope of sink-inventory claim (i).
+4. **Follow-up (not scheduled):** system-ID support for `--field`, as one shared pure search function, bundled with the human-deferred `FIELD-SYSTEM-TYPES-UNSUPPORTED` (D-379).
+
+Research: `.factory/research/P10-001-field-resolution-divergence.md`. Hand-off: `.factory/cycles/cycle-014/phase-f5-adversarial/FIX-P5-011-spec-delta.md`.
+
 ## [2.8.6] - 2026-10-02
 
 ### Type: PATCH

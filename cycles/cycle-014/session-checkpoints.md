@@ -212,3 +212,7 @@ F5-pass-1 checkpoint.
 ## Archived checkpoint: STATE v5.38 (2026-10-02, superseded by v5.39)
 
 **Position:** cycle-014 F5 IN PROGRESS; Pass 9 over `204b1fb5..f72255cd` NOT CLEAN (`pass-9.md`); `D-404` decided (`FIX-P5-010` splits the sink-inventory completeness claim); spec `2.8.6` (`BC-7.1.006` v1.7.6) committed. `FIX-P5-010` in delivery (`.worktrees/FIX-P5-010`, branch `fix/fix-p5-010-pass9-findings`, base `f72255cd`). Counter 0/3, 9 of 15 used. NEXT was: `FIX-P5-010` PR -> human merge -> post-merge spec sync -> Pass 10. Resume: `/vsdd-factory:rehydrate-wave`, then `/vsdd-factory:next-step`.
+
+## Archived checkpoint: STATE v5.39 (2026-10-03, superseded by v5.40)
+
+**Position:** cycle-014 F5 IN PROGRESS; `FIX-P5-010` (#903, doc-comment only) merged @ `b2b8ee3b`; no post-merge spec change needed (`BC-7.1.006` v1.7.6, spec `2.8.6`). Pass 10 over `204b1fb5..b2b8ee3b` DISPATCHED (adversary + code-reviewer + security-reviewer), results pending. Counter 0/3, 10th of 15; no open PRs, no fix worktrees. NEXT was: await the Pass 10 verdicts. Resume: `/vsdd-factory:rehydrate-wave`, then `/vsdd-factory:next-step`.

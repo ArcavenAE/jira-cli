@@ -7,7 +7,7 @@ producer: state-manager
 timestamp: 2026-09-26T00:01:34Z
 cycle: "cycle-014-issue-triage-quickfixes"
 inputs: [STATE.md]
-input-hash: "7392247"
+input-hash: "42e8a58"
 traces_to: STATE.md
 ---
 
@@ -708,6 +708,23 @@ dispositioned — dispositioning happens at cycle close per S-7.02).
     a test whose body no longer matches. Source: F5 Pass 7 finding `P7-001`
     (LOW). Handled by `FIX-P5-008` (`D-402`). Recorded 2026-10-02. (Item `#51`
     is recorded in the Disposition notes below.)
+
+53. **[process-gap] [spec-code-parity]** No mechanical parity guard between
+    hand-copied resolvers. `BC-X.14.001` Invariant 3 asserted that
+    `src/cli/field.rs` and `src/cli/issue/field_resolve.rs` are mirrored copies
+    ("a change to one must be mirrored"), but `D-399`/`FIX-P5-005` added the
+    field-ID step, `FIELD_ID_HINT` and sanitization to `field.rs` only, and
+    nothing flagged the divergence for several passes. User-visible effect:
+    `jr field options fixVersions` resolves while
+    `jr issue edit --field fixVersions=` exits 64. Resolved spec-only by `D-405`
+    (option (a): divergence documented as deliberate, Invariant 3 reworded,
+    spec `2.8.7`); the shared contract (`customfield_` bypass, cache-first
+    load/fetch, refresh-once) is now explicit. Candidate: either unify the
+    search step into one shared function (feature request `FIELD-ID-RESOLUTION-
+    UNIFY` -> #904) or add a test/guard that pins the intended shared-vs-
+    divergent behavior of the two resolvers so a spec "mirrored" claim cannot
+    silently go stale. Source: F5 Pass 10 finding `P10-001` (MEDIUM). Recorded
+    2026-10-03.
 
 ## Disposition
 

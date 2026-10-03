@@ -1,1 +1,1 @@
-{"status":"pass","timestamp":"2026-10-02T22:06:59Z","command":"cd /Users/zious/Documents/GITHUB/jira-cli/.worktrees/FIX-P5-010 && sed -n 84,106p src/output.rs; sed -n 1938,1950p src/output.rs; grep -rniE \"stdout (is|isn't|is not) (a )?(tty|terminal)|non-?tty|not a tty\" src tests | grep -iE \"cargo test|capture|harness|libtest\" | head"}
+{"status":"pass","timestamp":"2026-10-03T14:47:16Z","command":"git status --short | head; (timeout 580 cargo test --lib 2>&1 | tail -15)"}

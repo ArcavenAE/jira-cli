@@ -3,9 +3,10 @@ context: bc-x
 title: "Cross-cutting (HTTP client, Runtime, Users, Teams, Worklogs, Projects, Queues, JQL, Partial-match, JSM Request Types, CI Guards, Field Option Discovery, API Query Parameters)"
 total_bcs: 162   # cumulative claim (incl. range-collapsed); definitional_count below is individually-bodied headings; +2 added 2026-09-25 (BC-X.16.001..002, cycle-014 `issue-triage-quickfixes` F2 spec evolution, issue #583 — new `## BC-X.16: API Query Parameters` subsection: `jr api --query-param NAME=VALUE` percent-encoded query-string composition + malformed-value error taxonomy; same-burst amendments to BC-X.7.002 (issue #862, project-resolution order) and BC-X.14.001/003 (issue #861, M1/M2 label-resolution fallback, READ-SIDE ONLY per D-378) are COUNT-NEUTRAL; BC-X.14.004 gains one documentation-only cross-reference row (empty `<field>`), COUNT-NEUTRAL; the §BC-X.14 intro is reworded (count-neutral)); was 160 before this addition; prior: +1 added 2026-09-17 (BC-X.15.001, cycle-008 `oauth-surface-correctness` F2 spec evolution, ADR-0026 Decision 3, VP-OAUTH-GW-003 — new `## BC-X.15: OAuth Agile-Command Error-Mapping` subsection: `jr board`/`jr sprint` 401 auth-scheme-conditional call-site rewrite disambiguating scope-mismatch vs. expired-token vs. (regression-guard) wrong-host, modeled on `require_service_desk`/BC-X.8.006..007); was 159 before this addition; prior: +4 added 2026-09-06 (BC-X.7.007..010, cycle-005 `adf-mentions` F2 spec evolution, issue #674 — `@Name` mention resolution: unique-match (007), ambiguous-match disambiguation (008), zero-match HARD ERROR exit 64 (009, human-approved override of the architect's pass-through recommendation); bracket-form accountId mandatory preflight validation (010)); was 155 before that addition
 definitional_count: 96   # count of `#### BC-` headings in this file
-last_updated: 2026-10-02
+last_updated: 2026-10-03
 source_pass: 3
 trace: |
+  - FIX-P5-011 (2026-10-03, spec v2.8.7, PATCH, human decision D-405, cycle-014 F5 pass-10, P10-001 MEDIUM; spec-only, COUNT-NEUTRAL, no new BC/VP): BC-X.14.001 Invariant 3, its Behavior paragraph, the BC-X.14 Source line and the BC-INDEX BC-X.14.001 row no longer claim `src/cli/field.rs`'s resolution is a mirrored copy of `resolve_edit_fields`; the cache/bypass/refresh-once contract is shared semantics (changes applied to both) while the search step deliberately diverges (field-ID step, `FIELD_ID_HINT`, sanitization on `jr field options` only; `--field` stays name-only). Research: `.factory/research/P10-001-field-resolution-divergence.md`. Follow-up (system-ID `--field` support) is bundled with the human-deferred `FIELD-SYSTEM-TYPES-UNSUPPORTED` (D-379). Hand-off: `.factory/cycles/cycle-014/phase-f5-adversarial/FIX-P5-011-spec-delta.md`.
   - FIX-P5-005 (2026-10-01, spec v2.7.0, human decision D-399, cycle-014 F5 pass-4, issue #861 / CR4-002; spec-only at authoring; IMPLEMENTED in FIX-P5-005, merged in PR #897, `0a4dc062`, citations converted to live by spec v2.7.1): amended BC-X.14.001 (field-ID match step before name matching for `jr field options <NAME>`: system ids such as `issuetype` resolve; ID wins name/ID collisions; EC-X.14.001-16..21, VP-580-014) and BC-X.14.004 (ambiguity hint wording, EC-X.14.004-8). COUNT-NEUTRAL (no new BC).
   - FIX-P5-006 (2026-10-01, spec v2.7.2, PATCH, human decision D-400, cycle-014 F5 pass-5, SEC5-002/P5-001/P5-004; spec-only at authoring; IMPLEMENTED in FIX-P5-006, merged in PR #898, `ce6be7ad`, citations converted to live by spec v2.7.3): BC-X.14.004 new EC-X.14.004-9 (ambiguity-error candidates sanitized via `output::sanitize_terminal_line`); BC-X.14.001 new EC-X.14.001-22 (help text must name system field IDs) and EC-X.14.001-15 line refs converted to symbol-form. COUNT-NEUTRAL (no new BC).
   - FIX-P5-005 post-merge (2026-10-01, spec v2.7.1, PATCH, mechanical): BC-X.14.001/BC-X.14.004 "NOT YET IMPLEMENTED / target" qualifiers converted to live citations in `src/cli/field.rs` (`resolve_field_id`, `search_field_list`, `FIELD_ID_HINT`) and `tests/field_options.rs` (PR #897, `0a4dc062`); added EC-X.14.001-21 for the case-insensitive duplicate-field-ID ambiguity branch (`test_bc_x_14_001_search_field_list_duplicate_case_insensitive_ids_is_ambiguous`). BC-X.14.* carry no per-BC version table in this file; this trace bullet and the `.factory/spec-changelog.md` `[2.7.1]` entry are the version record. COUNT-NEUTRAL.
@@ -22,7 +23,8 @@ trace: |
     `resolve_user_list_project`), amended BC-X.14.001/003 (#861 M1/M2 label value→name fallback,
     read-side only; BC-X.14.001's field-name resolution text corrected from `partial_match`/
     BC-X.10.001 to `search_field_list` — aligns spec with existing code/tests; no behavior
-    change; Invariant 3 corrected: `src/cli/field.rs`'s customfield bypass and cache-first name
+    change; Invariant 3 corrected (SUPERSEDED by spec v2.8.7/D-405, see FIX-P5-011 bullet above — the "mirrored copy" claim
+    was later narrowed): `src/cli/field.rs`'s customfield bypass and cache-first name
     resolution is a mirrored copy of `src/cli/issue/field_resolve.rs::resolve_edit_fields`'s
     Step 1 (customfield bypass) and Step 2 (cache-first load/fetch plus its nested
     `search_field`), not a shared function — they share only
@@ -2657,8 +2659,8 @@ existing code and tests; no behavior change]**. Otherwise, `<field>` accepts EIT
 same regex/case-sensitivity convention as BC-3.4.015 Step 1) OR a human field name, resolved
 via `GET /rest/api/3/field` (`list_fields()`, same cache-first `fields.json` contract as
 BC-3.4.015 Step 2/2b — shared cache and shared `list_fields`/`read_fields_cache`/
-`write_fields_cache`, no new cache family; the resolution logic itself is mirrored, not shared
-(Invariant 3)) followed by
+`write_fields_cache`, no new cache family; the cache/bypass contract is shared semantics, but
+the search step diverges deliberately from `--field`'s name-only search (Invariant 3)) followed by
 `src/cli/field.rs::search_field_list` for case-insensitive disambiguation **[CORRECTED
 cycle-014: aligns with existing code and tests; no behavior change]** — a single case-insensitive
 EXACT name match resolves; two or more exact matches exit 64 (ambiguous, naming the candidates);
@@ -2917,14 +2919,33 @@ CONFIRMed read shape here does not imply a verified write shape there.
    `--project` is VALID (M3 with an explicit service-desk project) — NOT a pairing error. See
    BC-X.14.004 for the full error taxonomy and precedence rules.
 2. This command is READ-ONLY — zero mutating HTTP calls under any invocation.
-3. The `customfield_NNNNN` bypass and `fields.json` cache-first contract use the SAME algorithm
-   and the SAME cache file/functions (`read_fields_cache`/`write_fields_cache`/`list_fields`),
-   implemented in `src/cli/field.rs` as a mirrored copy of
-   `src/cli/issue/field_resolve.rs::resolve_edit_fields`'s Step 1 (customfield bypass) and Step 2
-   (cache-first load/fetch plus its nested `search_field`) — not a shared function; a change to
-   one must be mirrored in the other (corrected cycle-014:
-   aligns with existing code; no behavior change),
-   same profile-scoped isolation as BC-3.4.015.
+3. The `customfield_NNNNN` literal bypass, the cache-first `fields.json` load/fetch, and the
+   refresh-once-on-miss contract are SHARED SEMANTICS between `src/cli/field.rs`
+   (`resolve_field_id`) and `src/cli/issue/field_resolve.rs::resolve_edit_fields` (BC-3.4.015
+   Steps 1-2): the same cache file and functions (`read_fields_cache`/`write_fields_cache`/
+   `list_fields`), the same `customfield_` + one-or-more-digits predicate
+   (`field.rs::is_customfield_literal` / `resolve_edit_fields`'s inline `is_literal_bypass`),
+   and the same profile-scoped isolation. They are two separate implementations, not a shared
+   function, so a change to any of those shared semantics MUST be applied to both. The SEARCH
+   step DELIBERATELY DIVERGES as of D-399 (FIX-P5-005) / D-405 (FIX-P5-011): `jr field options`
+   (`field.rs::search_field_list`, read-only) tries an exact ASCII-case-insensitive field-ID
+   match first (system IDs such as `issuetype`/`fixVersions` resolve; ID wins on collision,
+   EC-X.14.001-16..21), then exact name, then substring; it uses the `FIELD_ID_HINT`
+   ambiguity wording (BC-X.14.004) and sanitizes echoed candidates and queries
+   (EC-X.14.004-9/-10). `jr issue edit --field` and platform `jr issue create --field` (write
+   path; `resolve_edit_fields`'s nested `search_field`, BC-3.4.015 Step 2b / BC-3.3.010) match
+   by display NAME only (exact, then substring) with no field-ID step, so a system field ID
+   whose display name differs (e.g. `fixVersions` vs "Fix versions") is "not found" there and
+   must be addressed by display name; its ambiguity hint names only `customfield_NNNNN`, and
+   its messages are not sanitized. Rationale: (i) on the write path an ID-first rule could
+   silently retarget a write when a custom field's display name equals, or uniquely contains,
+   a system field ID; (ii) most system-typed/array fields are rejected by `--field`'s type
+   dispatch regardless (`unsupported_field_type_error`, D-379,
+   `FIELD-SYSTEM-TYPES-UNSUPPORTED`), so an ID step would add little. A change to the search
+   step therefore need NOT be mirrored. (Scope note: this invariant concerns the platform
+   resolvers only; the JSM `issue create --request-type --field` path,
+   `jsm_create.rs::resolve_jsm_adf_extra_fields`, is a third, independent lookup that matches
+   by exact request-type field ID only.)
 4. Field-NAME resolution uses `search_field_list` (`src/cli/field.rs`), NOT `partial_match`/
    BC-X.10.001 — a distinct algorithm, pinned by `test_bc_x_14_001_search_field_list_*`: an
    empty `<field>` (`""`) exits 64 after the mode-selector arity check (Invariant 1) and before
@@ -3189,7 +3210,7 @@ claims 1-4; ADR-0019 §1 (context-mechanism arity model — mode-selector/compan
 adversary pass-20 M1); ADR-0019 § Amendment (2026-08-26) D1 (M2 default-project resolution
 parity — narrows the pure arity function to 3 booleans, adds the sibling `resolve_m2_project`
 post-arity step); BC-3.4.015 (cache contract shared via `read_fields_cache`/`write_fields_cache`/
-`list_fields`; field-name resolution algorithm mirrored, not shared — see Invariant 3);
+`list_fields`; cache/bypass contract shared semantics; the search step deliberately diverges (D-399/D-405) — see Invariant 3);
 BC-X.12.003/005 (JSM requesttype-fields call + cache + `--project` companion resolution via
 `require_service_desk`/`get_or_fetch_project_meta`, reused); `src/cli/field.rs::search_field_list`
 (field-name resolution — NOT BC-X.10.001/`partial_match`, see Invariant 4); BC-3.3.010 Step 3

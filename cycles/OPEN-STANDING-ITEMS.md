@@ -2478,3 +2478,25 @@ vulnerability.
 **Disposition:** RECORDED, not scheduled (2026-10-02): no effect on the F5 strict verdict.
 **Target: next maintenance sweep** (decide whether to map line/paragraph separators to a
 space like `\t`, updating `BC-7.1.006`'s per-character policy and tests together).
+
+## Unify field-ID/name resolution between `jr field options` and `issue edit/create --field` — NEW, OPEN, enhancement LOW (P10-001 / D-405), 2026-10-03
+
+**ID:** `FIELD-ID-RESOLUTION-UNIFY` -> GitHub issue **#904**
+(https://github.com/Zious11/jira-cli/issues/904, label `enhancement`). Severity **LOW**
+(capability gap / consistency, not a defect). Source: F5 Pass 10 adversary `P10-001` (MEDIUM
+spec-vs-code contradiction, resolved spec-only by `D-405` option (a)). Research:
+`.factory/research/P10-001-field-resolution-divergence.md`.
+
+`src/cli/field.rs` (`jr field options`) has an exact case-insensitive field-ID step,
+`FIELD_ID_HINT` and sanitized candidates (`D-399`); `src/cli/issue/field_resolve.rs`
+(`--field`) is name-only. So `jr field options fixVersions` resolves while
+`jr issue edit --field fixVersions=` exits 64. `D-405` documents the divergence as deliberate
+(`BC-X.14.001` Invariant 3 reworded; spec `2.8.7`). Option (c), the feature request: a unified
+shared field-search function with collision-safe write-path behavior (no silent retarget of a
+write), paired with the human-deferred `FIELD-SYSTEM-TYPES-UNSUPPORTED` (`D-379`) since
+system/array-typed fields are rejected by the `--field` type dispatch regardless. Bringing
+`field_resolve.rs` in would also add its ~26 unsanitized echoes to the changed-file set.
+
+**Disposition:** RECORDED, not scheduled (2026-10-03, human decision `D-405`): no effect on the
+F5 strict verdict. **Target:** human-directed feature work together with
+`FIELD-SYSTEM-TYPES-UNSUPPORTED`; tracked at #904.
