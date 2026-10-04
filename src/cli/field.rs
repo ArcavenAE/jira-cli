@@ -664,7 +664,7 @@ async fn resolve_request_type_id(
 /// Pure arity check over the three MODE-SELECTOR booleans ONLY.
 ///
 /// `has_project` is deliberately NOT a parameter (ADR-0019 §Amendment D1) —
-/// project resolvability is a separate, post-arity, M2-only step handled by
+/// project resolvability is a separate, post-arity, M2/M3 step handled by
 /// [`resolve_m2_project`]. Exactly one of the three booleans present →
 /// `Ok(Mode)`; zero or two-or-more present → `Err(ArityError)`.
 ///
@@ -686,13 +686,24 @@ pub(crate) fn resolve_field_context(
     }
 }
 
-/// Post-arity, M2-only project resolution step (ADR-0019 §Amendment D1).
+/// Post-arity, M2/M3 project resolution step (ADR-0019 §Amendment D1).
 ///
-/// Resolves the project to use for `get_createmeta_fields` as: the explicit
-/// `--project` flag value, OR the active profile/config default — the same
-/// source BC-3.3.010's create-path project resolution and M3's optional
-/// `--project` companion fallback already read. `None` means neither is
-/// available (caller maps this to the incomplete-M2 exit-64 error).
+/// Called by `handle` from both the M2 (`--type`, [`Mode::Createmeta`]) and
+/// M3 (`--request-type`, [`Mode::RequestType`]) arms; the function name is
+/// historical.
+///
+/// Resolves the project key as: the explicit `--project` flag value, OR the
+/// active profile/config default — the same source BC-3.3.010's create-path
+/// project resolution already reads. Each mode uses the result differently:
+/// M2 (`--type`) uses it for the createmeta lookups
+/// (`get_issue_types_for_project` / `get_createmeta_fields`), M3
+/// (`--request-type`) uses it for `require_service_desk` and request-type
+/// resolution. `None` means neither source supplied a project; each caller
+/// then raises its own mode-specific exit-64 `UserError`: M2's
+/// `--type needs a resolvable project …` or M3's
+/// `--request-type needs a resolvable project …` (both followed by
+/// "pass --project <P> or configure a default."). M1 (`--issue`) does not
+/// call this function.
 ///
 /// Sibling pure function to [`resolve_field_context`], not a widened Step 1
 /// — reads only already-loaded in-process `Config` state, no HTTP
@@ -890,7 +901,7 @@ fn render_rows_recursive(options: &[FieldOption], depth: usize, rows: &mut Vec<V
 }
 
 // ─────────────────────────────────────────────────────────────────────────
-// Red Gate test suite (S-580-1, Step 3 — test-writer pass).
+// Unit test suite (S-580-1).
 //
 // These tests cover the PURE-CORE functions in this module:
 // `resolve_field_context`, `resolve_m2_project`, `normalize_from_allowed_values`,
@@ -1393,7 +1404,7 @@ mod tests {
         let resolved = resolve_m2_project(None, &config);
         assert_eq!(
             resolved, None,
-            "neither an explicit flag nor a profile default -> None (caller maps to incomplete-M2 error)"
+            "neither an explicit flag nor a profile default -> None (each caller maps this to its mode-specific exit-64 error)"
         );
     }
 
@@ -1597,24 +1608,10 @@ mod tests {
     /// AC-010 / EC-X.14.001-4: M1/M2's `allowedValues[].children[]` must
     /// round-trip into `FieldOption.children` identically to M3's shape.
     ///
-    /// KNOWN GAP (flagged for implementer/orchestrator, DONE_WITH_CONCERNS):
-    /// as of this Red Gate pass, `types::jira::editmeta::AllowedValue`
-    /// (`src/types/jira/editmeta.rs`) has NO `children` field — confirmed by
-    /// reading the as-built struct (`{id, value, name}` only) and by
-    /// ADR-0019 §D4's own text ("verified as-built to currently carry no
-    /// `children` field"). This story's own File Structure Requirements list
-    /// `src/types/jira/editmeta.rs` as "MUST NOT change... the `children`
-    /// field extension belongs to S-578-2 (D4)" — but D4 pins that extension
-    /// for the WRITE-side cascading `:option` composer, not for THIS story's
-    /// READ-side enumeration normalizer. Because `AllowedValue` cannot carry
-    /// `children` data at all today, this test constructs its fixture via
-    /// `serde_json::from_value::<AllowedValue>` over JSON that INCLUDES a
-    /// `children` key — that key is silently dropped by serde (no
-    /// `deny_unknown_fields` on `AllowedValue`), so this test can only pass
-    /// once `AllowedValue` gains `#[serde(default)] pub children:
-    /// Vec<AllowedValue>` (or equivalent). This is therefore RED for a
-    /// second, structural reason beyond `normalize_from_allowed_values`
-    /// being a stub — see the test-writer's final report for this concern.
+    /// The fixture is built via `serde_json::from_value::<AllowedValue>`
+    /// over JSON that includes a `children` key, so the test also pins that
+    /// `types::jira::editmeta::AllowedValue` deserializes `children` (a
+    /// dropped key would leave `FieldOption.children` empty).
     #[test]
     fn test_bc_x_14_001_cascading_children_round_trip_m1_m2() {
         let parent: AllowedValue = serde_json::from_value(serde_json::json!({
@@ -1632,8 +1629,8 @@ mod tests {
         assert_eq!(
             result[0].children.len(),
             2,
-            "M1/M2 cascading children must round-trip into FieldOption.children — \
-             requires AllowedValue to gain a `children` field (see KNOWN GAP doc comment above)"
+            "M1/M2 cascading children must round-trip into FieldOption.children \
+             (AllowedValue deserializes `children`)"
         );
     }
 
