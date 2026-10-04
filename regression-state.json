@@ -1,1 +1,1 @@
-{"status":"pass","timestamp":"2026-10-04T23:31:10Z","command":"timeout 580 cargo test --lib -- output:: cli::field cli::user cli::api 2>&1 | tail -8"}
+{"status":"pass","timestamp":"2026-10-04T23:35:19Z","command":"timeout 500 cargo test --test claude_md_citations --test mutants_glob_existence --test hermetic_helper 2>&1 | grep -E \"test result|FAILED|failed\" | head; bash scripts/check-cargo-mutants-policy-citations.sh 2>&1 | tail -3"}

@@ -2544,3 +2544,43 @@ integration-level regression in the Cf/bidi policy for a covered sink would not 
 **Disposition:** RECORDED, not scheduled (2026-10-04, human decision `D-407(c)`): no effect on the
 F5 verdict. **Target:** extend `assert_no_esc_or_c1` to also reject Cf/bidi/tag characters, or add
 one end-to-end bidi fixture per covered sink family.
+
+---
+
+## Non-`Cf` invisible/blank characters pass through the sanitizers — NEW, OPEN, INFO (SEC14-N1), 2026-10-04
+
+**ID:** `SANITIZE-NON-CF-INVISIBLES`. Severity **INFO** (CWE-451). Source: F5 Pass 14
+security-reviewer `SEC14-N1`. Characters that are invisible or blank but not General_Category `Cf`
+are not stripped, e.g. U+17B4/U+17B5 (Mn), U+2800 (Braille blank), U+FFFC (object replacement).
+This is within the documented category-based policy class `EC-23`/`EC-24` (`D-399`/`D-400`), which is
+intentionally not extended per pass.
+
+**Disposition:** RECORDED, not scheduled (2026-10-04): no effect on the F5 verdict (Pass 14 CLEAN).
+**Target:** human-directed; see also `OUTPUT-INVISIBLE-FORMAT-CHARS-RESIDUAL`.
+
+---
+
+## Fix PRs have no Step-4.5-style adversary convergence record — NEW, OPEN, process-gap, engine-side (Pass 1 observation), 2026-10-04
+
+**ID:** `FIX-PR-NO-ADVERSARY-CONVERGENCE`. Severity **LOW**, process-gap, vsdd-factory engine. Source:
+F5 Pass 1 adversary process-gap observation; `cycles/cycle-014/process-gaps.md` item `#46`.
+`FIX-P5-001` grew scope three times (`D-393`/`D-394`/`D-395`) with only PR-review/security-review
+verdicts and no dedicated convergence artifact, so doc/test drift (`F-001`/`F-002`) escaped until
+Pass 1. Candidate: apply the BC-5.39.001 Step-4.5 adversary convergence gate to fix PRs delivered via
+`fix-pr-delivery`.
+
+**Disposition:** RECORDED (2026-10-04). **Target:** vsdd-factory self-improvement follow-up (a
+`SELF-IMPROVEMENT` epic story may be warranted; human decision deferred to the cycle-014 F7 gate).
+Tracked in STATE.md's Drift Items table.
+
+---
+
+## No guard for post-merge "NOT YET IMPLEMENTED" spec qualifiers or fix-propagation closure — NEW, OPEN, process-gap (Pass 2 observation), 2026-10-04
+
+**ID:** `SPEC-QUALIFIER-PROPAGATION-GUARD`. Severity **LOW**, process-gap, tooling. Source: F5 Pass 2
+adversary process-gap observation (`pass-2.md`). No guard flags a spec "NOT YET IMPLEMENTED"
+qualifier that is stale after the implementing PR merges, and no grep-closure check verifies a
+fix-propagation claim.
+
+**Disposition:** RECORDED (2026-10-04). **Target:** next maintenance sweep (a spec-guard script
+addition). Tracked in STATE.md's Drift Items table.
