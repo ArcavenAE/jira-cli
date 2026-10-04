@@ -216,3 +216,7 @@ F5-pass-1 checkpoint.
 ## Archived checkpoint: STATE v5.39 (2026-10-03, superseded by v5.40)
 
 **Position:** cycle-014 F5 IN PROGRESS; `FIX-P5-010` (#903, doc-comment only) merged @ `b2b8ee3b`; no post-merge spec change needed (`BC-7.1.006` v1.7.6, spec `2.8.6`). Pass 10 over `204b1fb5..b2b8ee3b` DISPATCHED (adversary + code-reviewer + security-reviewer), results pending. Counter 0/3, 10th of 15; no open PRs, no fix worktrees. NEXT was: await the Pass 10 verdicts. Resume: `/vsdd-factory:rehydrate-wave`, then `/vsdd-factory:next-step`.
+
+## Archived checkpoint: STATE v5.40 (2026-10-03, superseded by v5.41)
+
+**Position:** cycle-014 F5 IN PROGRESS; Pass 10 over `204b1fb5..b2b8ee3b` NOT CLEAN (`pass-10.md`); `D-405` decided (option (a), `BC-X.14.001` Invariant 3 reworded, spec `2.8.7`); #904 filed. `FIX-P5-011` (docs only) in delivery (`.worktrees/FIX-P5-011`, branch `fix/fix-p5-011-pass10-findings`, base `b2b8ee3b`). Counter 0/3, 10 of 15 used. NEXT was: `FIX-P5-011` PR -> human merge -> Pass 11. Resume: `/vsdd-factory:rehydrate-wave`, then `/vsdd-factory:next-step`.

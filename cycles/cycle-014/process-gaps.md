@@ -7,7 +7,7 @@ producer: state-manager
 timestamp: 2026-09-26T00:01:34Z
 cycle: "cycle-014-issue-triage-quickfixes"
 inputs: [STATE.md]
-input-hash: "42e8a58"
+input-hash: "21a2ccc"
 traces_to: STATE.md
 ---
 
@@ -730,7 +730,7 @@ dispositioned — dispositioning happens at cycle close per S-7.02).
 
 Not yet dispositioned. F2 is CONVERGED per human decision `D-383` and
 APPROVED at the F2 human gate (`D-384`) — the S-7.02 cycle-closing checklist
-dispositions each of these 50 items when cycle-014 itself closes, not
+dispositions each of these 53 items when cycle-014 itself closes, not
 before. **Human decision `D-389` (2026-09-29)** closed F3 adversarial
 convergence directly (bypassing further dispositioning of `#1`-`#25` as a
 precondition) and directed that items `#26`-`#31` above be recorded now,
