@@ -99,9 +99,22 @@ pub(crate) struct FieldOption {
 
 /// Top-level dispatch for `jr field options <field>`.
 ///
-/// Mirrors `requesttype::handle`'s signature shape. Effectful shell: HTTP
-/// (M2/M3 paths), cache reads (M3 path only, via `require_service_desk`/
-/// `get_or_fetch_project_meta`), stdout/stderr rendering.
+/// Mirrors `requesttype::handle`'s signature shape. Effectful shell:
+/// - Mode HTTP in every mode that gets past field resolution (M1
+///   `get_editmeta`, M2 issue-type/createmeta calls, M3 request-type
+///   calls).
+/// - Field resolution (`resolve_field_id`) runs before mode dispatch. A
+///   `customfield_NNNNN` literal skips it entirely (no cache, no HTTP); an
+///   empty `<field>` is rejected with exit 64 before any cache read or
+///   HTTP. Every other `<field>` reads the per-profile `fields.json` cache
+///   and issues `GET /field` (`list_fields`) when the cache is missing or
+///   unreadable, stale (older than the cache TTL), or fresh but has no
+///   match for the query. An ambiguity error from the cached list returns
+///   at once, with no refetch. The refetch is written back best-effort
+///   (a failed write only warns on stderr).
+/// - Project-meta cache read/write in the M3 path only, via
+///   `require_service_desk`/`get_or_fetch_project_meta`.
+/// - stdout/stderr rendering.
 ///
 /// Per BC-X.14.001 Invariant 2, this command is strictly read-only — zero
 /// mutating HTTP under any invocation.
@@ -474,7 +487,9 @@ async fn resolve_field_id(
 /// server-supplied id (name lookup), so it is sanitized once here — the
 /// `UserError` Display feeds both stderr and the JSON `"error"` field
 /// (SEC6-002, EC-X.14.004-10, CWE-150/CWE-116).
-/// Only `field_id` is sanitized here; the other interpolated values (`type_name`, `project_key`) are unsanitized user/config echoes, documented residuals (BC-7.1.006 Canonical Sink Inventory).
+/// Only `field_id` is sanitized here; the other interpolated values
+/// (`type_name`, `project_key`) are unsanitized user/config echoes,
+/// documented residuals (BC-7.1.006 Canonical Sink Inventory).
 fn field_not_available_for_type_msg(field_id: &str, type_name: &str, project_key: &str) -> String {
     let field_id = crate::output::sanitize_terminal_line(field_id);
     format!(
@@ -484,14 +499,18 @@ fn field_not_available_for_type_msg(field_id: &str, type_name: &str, project_key
 }
 
 /// M3 "field not available" message; `field_id` sanitized (SEC6-002).
-/// Only `field_id` is sanitized here; the other interpolated values (`rt_query`) are unsanitized user/config echoes, documented residuals (BC-7.1.006 Canonical Sink Inventory).
+/// Only `field_id` is sanitized here; the other interpolated values
+/// (`rt_query`) are unsanitized user/config echoes, documented residuals
+/// (BC-7.1.006 Canonical Sink Inventory).
 fn field_not_available_on_request_type_msg(field_id: &str, rt_query: &str) -> String {
     let field_id = crate::output::sanitize_terminal_line(field_id);
     format!("Field '{field_id}' is not available on request type '{rt_query}'.")
 }
 
 /// M1 "not on the Edit screen" message; `field_id` sanitized (SEC6-002).
-/// Only `field_id` is sanitized here; the other interpolated values (`issue_key`) are unsanitized user/config echoes, documented residuals (BC-7.1.006 Canonical Sink Inventory).
+/// Only `field_id` is sanitized here; the other interpolated values
+/// (`issue_key`) are unsanitized user/config echoes, documented residuals
+/// (BC-7.1.006 Canonical Sink Inventory).
 fn field_not_on_edit_screen_msg(field_id: &str, issue_key: &str) -> String {
     let field_id = crate::output::sanitize_terminal_line(field_id);
     format!(
