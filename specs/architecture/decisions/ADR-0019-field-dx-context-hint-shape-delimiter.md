@@ -118,16 +118,20 @@ selector as stale.
 
 **The enumeration MODE is selected by exactly one of three MODE-SELECTOR flags:
 `--type`, `--request-type`, `--issue`.** `--project` is never a mode selector — it is a
-*companion* flag whose role (required, optional, or forbidden) is determined by which mode
-selector is present:
+*companion* flag whose role (required-or-defaulted for `--type`/`--request-type`, ignored for
+`--issue`) is determined by which mode selector is present **[CORRECTED 2026-10-04, FIX-P5-013, R14-001 — previously
+"(required, optional, or forbidden)"; no mode forbids `--project` and none treats it as merely optional;
+see § Amendment (2026-10-04) item 7]**:
 
 - **`--issue <KEY>` → M1, editmeta.** Reuses `JiraClient::get_editmeta` verbatim (already
   called by `resolve_edit_fields`). No new API-layer code. `--type` and `--request-type` MUST
   be absent (mode-selector exclusivity, below); `--project` alongside `--issue` is NOT
   CONSULTED (the issue key alone supplies project context; a stray `--project` is harmlessly
   ignored, not rejected).
-- **`--type <T>` → M2, createmeta.** REQUIRES `--project <P>` as its companion (needed for
-  name→issueTypeId resolution, per the pass-16 fix): `GET
+- **`--type <T>` → M2, createmeta.** ~~REQUIRES `--project <P>` as its companion~~ **[SUPERSEDED 2026-08-26 by
+  Amendment D1; wording CORRECTED 2026-10-04, FIX-P5-013, R14-001]** the companion is required-or-defaulted: an
+  explicit `--project <P>`, else `.jr.toml`, else the profile default, resolved via `resolve_m2_project(cli_project, config)`
+  (a project is needed for name→issueTypeId resolution, per the pass-16 fix): `GET
   /rest/api/3/issue/createmeta/{projectIdOrKey}/issuetypes/{issueTypeId}` (the current,
   non-deprecated form — CHANGE-1304 deprecated the old `createmeta?expand=` shape). New method
   `JiraClient::get_createmeta_fields(project_key, issue_type_id)` in `src/api/jira/issues.rs`,
@@ -136,8 +140,10 @@ selector is present:
   the existing sibling `get_issue_types_for_project`, which already establishes the
   createmeta-family precedent of defining its response types *inline in `issues.rs`*, not under
   `types::jira::`). Only documented project permission: **Create issues** — no admin, no
-  existing issue. `--type` present without its `--project` companion → the **incomplete-M2
-  error**. (A bare `--project` with NO mode selector present is NOT the incomplete-M2 case — it
+  existing issue. ~~`--type` present without its `--project` companion → the **incomplete-M2
+  error**.~~ **[SUPERSEDED 2026-08-26 by Amendment D1 for the trigger; CORRECTED 2026-10-04, FIX-P5-013, R14-001]**
+  the incomplete-M2 error fires only when NO project is resolvable (no `--project`, no `.jr.toml`, no profile
+  default) — see error case (3). (A bare `--project` with NO mode selector present is NOT the incomplete-M2 case — it
   fails the zero-mode-selector arity check first, per error case (2); `--project` selects no mode
   on its own.)
 - **`--request-type <RT> [--project <P>]` → M3, JSM requesttype fields.** Reuses `jr`'s
@@ -148,7 +154,8 @@ selector is present:
   M3 field-enumeration call is uncached on every invocation. Only the `project_meta.json`
   project/service-desk lookup inside `require_service_desk`/`get_or_fetch_project_meta` is 7-day
   cached (BC-X.14.001 context-mechanism decision).
-  `--project` is an **optional** companion naming the service-desk project explicitly; when
+  `--project` is a required-or-defaulted companion naming the service-desk project explicitly
+  **[CORRECTED 2026-10-04, FIX-P5-013, R13-003 — previously "an optional companion"; see § Amendment (2026-10-04) item 7]**; when
   absent, the ambient project (global `--project` — same flag, so this is simply "supplied or
   not" — or profile/config default) is used, resolved via `require_service_desk` /
   `get_or_fetch_project_meta` exactly as `jr requesttype fields` already does. **`--project
@@ -185,8 +192,7 @@ selector is present:
   boolean `has_project` in the context of the M2 (createmeta) arity check specifically, it means
   "`--project` is present *as M2's companion*, i.e. accompanying `--type`" — not "`--project` is
   present at all" (which is also true, harmlessly, in the M3-with-explicit-project case, but
-  that case is evaluated under M3's own optional-companion rule, not M2's required-companion
-  rule).
+  that case is evaluated under M3's own companion rule, not M2's — **[CORRECTED 2026-10-04, FIX-P5-013, R13-003]** both are required-or-defaulted, so the two rules do not differ on project resolvability).
 
 **Rationale:** M1 (editmeta) is what `jr` already calls for `issue edit --field`, but it is
 structurally the *wrong primary* for #580 — it requires an issue that does not yet exist for the
@@ -411,7 +417,7 @@ types instead of one shared `normalize_from_allowed_values`.
 - Four flags now exist on one command (`--type`, `--request-type`, `--issue` as mode selectors
   under mutual-exclusion, plus `--project` as a mode-dependent companion — required for
   `--type` [as amended by D1: required-or-defaulted, i.e. an explicit flag OR a profile/config default],
-  optional for `--request-type`, ignored for `--issue` (unconstrained companion; not
+  required-or-defaulted for `--request-type` too **[CORRECTED 2026-10-04, FIX-P5-013, R13-003 — previously "optional for `--request-type`"]**, ignored for `--issue` (unconstrained companion; not
   rejected)) — a small but real increase in `jr field options`'s own surface-area/error-taxonomy
   complexity (BC-X.14.004), consistent with (not novel relative to) `jr issue create
   --request-type`'s existing dispatch-fork pattern.
@@ -1027,6 +1033,25 @@ and a BC differ on the as-built behavior, the BC governs.
    `field_resolve::detect_flag_field_overlap` is called from `create.rs` with
    `CREATE_D2_GOVERNED_KEYS` (ten members), and the architecture-compliance rule keeps edit-path Gate B's
    five-member set distinct (shared mechanism, never a shared key set).
+
+7. **M3 `--project` is required-or-defaulted, not optional (R13-003, FIX-P5-013, rehearsal R13).** Every
+   present-tense statement in this ADR that calls `--project` an "optional companion" for M3
+   (`--request-type`) is superseded: `src/cli/field.rs::handle`'s M3 (`Mode::RequestType`) arm calls
+   `resolve_m2_project(cli_project, config).ok_or_else(...)` exactly as the M2 arm does and exits 64 with
+   `--request-type needs a resolvable project — pass --project <P> or configure a default.` when neither the
+   flag nor a configured default supplies a project, before `require_service_desk` is called. The companion
+   is therefore required-or-defaulted for BOTH M2 and M3; it is only ignored for M1. `--project --request-type`
+   remains a VALID pairing. The in-place markers carry this (R13-003 + R14-001): §1's companion-role lead-in
+   ("required, optional, or forbidden" → required-or-defaulted for `--type`/`--request-type`, ignored for `--issue`),
+   the M2 bullet ("REQUIRES `--project`" struck as superseded by D1), the M2 bullet's incomplete-M2 sentence (struck;
+   trigger is "no resolvable project"), the M3 bullet, error case (3), the `has_project` note, and the § Consequences
+   "Four flags" bullet. A full read of §1-§2 and every other present-tense `--project` passage found no further stale
+   statements (§2 and the remaining sections do not discuss `--project` semantics);
+   the historical D1 text (§ Amendment D1 items 2-3, which speak of "M3's optional-companion fallback" and
+   "M3's optional-companion UX") is dated history and left unchanged — read "optional" there as "the default
+   fallback", not as "may be absent". Verified against develop `470f0967`. The remaining product-repo
+   wording fixes (the `--project` clap help in `src/cli/mod.rs`, README) are listed in
+   `.factory/cycles/cycle-014/phase-f5-adversarial/FIX-P5-013-spec-delta.md`.
 
 ## Source / Origin
 

@@ -9,6 +9,20 @@ Track all spec version changes. Most recent version first.
 
 > **Type legend:** Type classifies the SPEC document delta: MINOR = new BCs/VPs/sections; PATCH = amendments to existing bodies/ACs/ECs. Product-semver impact is recorded in the Summary line, independent of Type.
 
+## [2.8.9] - 2026-10-04
+
+### Type: PATCH
+
+### Summary
+
+FIX-P5-013 (rehearsal R13, run before counted F5 pass-12; R13-001/R13-002/R13-003; spec-only). BC count unchanged (98 in-file / 54 individually-bodied in bc-7; 773 cumulative); VP count unchanged. All claims re-verified against develop `470f0967`.
+
+1. **R13-001 — `jr user search` also uses the styled Active column.** `src/cli/user.rs::handle_search` ends in `print_user_list`, which calls `output::print_output_with_styles` with `format_user_row_styled` rows; `jr user view` reaches the same function via `handle_view`. BC-7.1.006 v1.7.8: the "jr's own styling is preserved" paragraph now lists `jr user list`, `jr user search` and `jr user view`. A grep of all of `.factory/specs/` for `StyledCell`/`print_output_with_styles`/`format_active`/`active_cell`/`format_user_row_styled` found no other caller list (CANONICAL-COUNTS and the BC-7.1.006 Trace already name `print_user_list`/`user view` correctly). The Canonical Sink Inventory picker-row note also states which fields each `disambiguate_user` branch shows.
+2. **R13-002 — BC-X.7.008 Behavior 1/2 made branch-precise.** Old text: each candidate listed with "display name + email (or accountId when email is hidden)". As built: `ExactMultiple` non-interactive lines are `  {display_name} ({email}, account: {account_id})`, or `  {display_name} (account: {account_id})` when `email_address` is `None`; `Ambiguous` lists sanitized display names only (comma-joined; no email, no accountId; F-005, BC-7.1.006 residual (b)15); interactive `ExactMultiple` items come from `disambiguation_labels` (`{display_name} ({email})`, or `{display_name} ({account_id})` when the email is `None`), interactive `Ambiguous` items are bare names. The other cycle-touched BCs (BC-7.1.006, BC-X.7.002, BC-X.14.*, BC-X.16.*) were swept: none claims the `Ambiguous` branch shows an email or accountId (BC-7.1.006 EC-16a and (b)15 already say it does not).
+3. **R13-003 — `--project` is required-or-defaulted for M3, not optional.** `src/cli/field.rs::handle`'s `Mode::RequestType` arm calls `resolve_m2_project(...).ok_or_else(...)` and exits 64 with `--request-type needs a resolvable project — pass --project <P> or configure a default.`, like M2. Corrected with dated `[CORRECTED 2026-10-04, FIX-P5-013]` markers: BC-X.14.001 (intro line, M3 service-desk-resolution paragraph, Preconditions bullet, the arity-precedence paragraph, and the M2-resolution-step sentence that cited M3's "optional" fallback) and ADR-0019 (§1 M3 bullet, the §1 `has_project` note, § Consequences "Four flags" bullet, plus a new Amendment (2026-10-04) item 7). Dated history (the 2026-08-25 pass-20 changelog bullet in the cross-cutting frontmatter; ADR-0019 § Amendment D1 narrative) is unchanged.
+4. **R14-001 (rehearsal R14, folded into this entry) — ADR-0019 §1 pre-D1 present-tense leftovers.** Three spots still stated the pre-D1 model without markers: the companion-role lead-in ("required, optional, or forbidden"), the M2 bullet ("REQUIRES `--project <P>` as its companion"), and its "`--type` present without its `--project` companion → incomplete-M2 error" sentence. Each now carries a dated `[SUPERSEDED/CORRECTED 2026-10-04, FIX-P5-013, R14-001]` marker (required-or-defaulted for `--type`/`--request-type` via `resolve_m2_project`: flag, `.jr.toml`, profile default; error only when none resolve; ignored for `--issue`). Amendment item 7 now lists every corrected §1 spot. Full read of §1-§2 and all other `--project` passages found nothing further; D1 history left unchanged. `field.rs::handle` unchanged.
+5. **Implementer items (no spec change, product-repo wording only):** listed in `.factory/cycles/cycle-014/phase-f5-adversarial/FIX-P5-013-spec-delta.md`.
+
 ## [2.8.8] - 2026-10-04
 
 ### Type: PATCH

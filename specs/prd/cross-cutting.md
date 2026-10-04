@@ -8,6 +8,7 @@ source_pass: 3
 trace: |
   - FIX-P5-011 (2026-10-03, spec v2.8.7, PATCH, human decision D-405, cycle-014 F5 pass-10, P10-001 MEDIUM; spec-only, COUNT-NEUTRAL, no new BC/VP): BC-X.14.001 Invariant 3, its Behavior paragraph, the BC-X.14 Source line and the BC-INDEX BC-X.14.001 row no longer claim `src/cli/field.rs`'s resolution is a mirrored copy of `resolve_edit_fields`; the cache/bypass/refresh-once contract is shared semantics (changes applied to both) while the search step deliberately diverges (field-ID step, `FIELD_ID_HINT`, sanitization on `jr field options` only; `--field` stays name-only). Research: `.factory/research/P10-001-field-resolution-divergence.md`. Follow-up (system-ID `--field` support) is bundled with the human-deferred `FIELD-SYSTEM-TYPES-UNSUPPORTED` (D-379). Hand-off: `.factory/cycles/cycle-014/phase-f5-adversarial/FIX-P5-011-spec-delta.md`.
   - FIX-P5-012 (2026-10-04, spec v2.8.8, PATCH, human decision D-406, cycle-014 F5 pass-11, P11-001 MEDIUM; spec-only, COUNT-NEUTRAL, no new BC/VP): BC-X.14.002 and BC-X.14.004 H1 titles now carry the full title text that the BC-INDEX rows already used (the index cells are unchanged), and the BC-X.7.008 H1 gains `; zero-POST guarantee` with its BC-INDEX row updated to match, so each index title cell equals its H1 title verbatim (`bc_h1_is_title_source_of_truth`). No behavior or postcondition change. Rehearsal R12B (same version): ADR-0019's F-B label text reconciled with the #861 `value`-else-`name` label fallback (BC-X.14.001 already carried the correct wording; no BC change); no BC-X.14 behavior change. Hand-off (the `scripts/check-bc-index-h1-sync.sh` H1/BC-INDEX guard script was NOT added this cycle: DEFERRED by human decision D-406, tracked as a follow-up issue): `.factory/cycles/cycle-014/phase-f5-adversarial/FIX-P5-012-spec-delta.md`.
+  - FIX-P5-013 (2026-10-04, spec v2.8.9, PATCH, rehearsal R13, before counted F5 pass-12; spec-only, COUNT-NEUTRAL, no new BC/VP): BC-X.7.008 Behavior 1/2 now describe each `disambiguate_user` branch precisely (R13-002: `ExactMultiple` non-interactive lines carry display name + email + `account: <id>`, or display name + `account: <id>` when email is absent; `Ambiguous` lists display names ONLY, F-005; pickers via `disambiguation_labels` for `ExactMultiple`, bare names for `Ambiguous`); BC-X.14.001 and the §BC-X.14 intro no longer call `--project` OPTIONAL for M3 (R13-003: `src/cli/field.rs::handle`'s M3 arm exits 64 via `resolve_m2_project(...).ok_or_else(...)` exactly like M2, so the companion is required-or-defaulted for both). Version record: this bullet and `.factory/spec-changelog.md` [2.8.9].
   - FIX-P5-005 (2026-10-01, spec v2.7.0, human decision D-399, cycle-014 F5 pass-4, issue #861 / CR4-002; spec-only at authoring; IMPLEMENTED in FIX-P5-005, merged in PR #897, `0a4dc062`, citations converted to live by spec v2.7.1): amended BC-X.14.001 (field-ID match step before name matching for `jr field options <NAME>`: system ids such as `issuetype` resolve; ID wins name/ID collisions; EC-X.14.001-16..21, VP-580-014) and BC-X.14.004 (ambiguity hint wording, EC-X.14.004-8). COUNT-NEUTRAL (no new BC).
   - FIX-P5-006 (2026-10-01, spec v2.7.2, PATCH, human decision D-400, cycle-014 F5 pass-5, SEC5-002/P5-001/P5-004; spec-only at authoring; IMPLEMENTED in FIX-P5-006, merged in PR #898, `ce6be7ad`, citations converted to live by spec v2.7.3): BC-X.14.004 new EC-X.14.004-9 (ambiguity-error candidates sanitized via `output::sanitize_terminal_line`); BC-X.14.001 new EC-X.14.001-22 (help text must name system field IDs) and EC-X.14.001-15 line refs converted to symbol-form. COUNT-NEUTRAL (no new BC).
   - FIX-P5-005 post-merge (2026-10-01, spec v2.7.1, PATCH, mechanical): BC-X.14.001/BC-X.14.004 "NOT YET IMPLEMENTED / target" qualifiers converted to live citations in `src/cli/field.rs` (`resolve_field_id`, `search_field_list`, `FIELD_ID_HINT`) and `tests/field_options.rs` (PR #897, `0a4dc062`); added EC-X.14.001-21 for the case-insensitive duplicate-field-ID ambiguity branch (`test_bc_x_14_001_search_field_list_duplicate_case_insensitive_ids_is_ambiguous`). BC-X.14.* carry no per-BC version table in this file; this trace bullet and the `.factory/spec-changelog.md` `[2.7.1]` entry are the version record. COUNT-NEUTRAL.
@@ -230,8 +231,8 @@ trace: |
     selects its enumeration mode by exactly one of three MODE-SELECTOR flags {`--type`,
     `--request-type`, `--issue`} (`--type` → createmeta PRIMARY for platform fields;
     `--request-type` → JSM requesttype-fields PRIMARY for JSM fields; `--issue <KEY>` → editmeta
-    FALLBACK); `--project` is a companion (REQUIRED for M2/`--type`, OPTIONAL for
-    M3/`--request-type` so `--project --request-type` is VALID, IGNORED for M1/`--issue`) — see
+    FALLBACK); `--project` is a companion (required-or-defaulted for BOTH M2/`--type` and
+    M3/`--request-type` — an explicit flag OR a configured default, else exit 64 — so `--project --request-type` is VALID; IGNORED for M1/`--issue`; [CORRECTED 2026-10-04, FIX-P5-013, R13-003] this line previously said OPTIONAL for M3) — see
     ADR-0019 §1 / adversary pass-20 M1, settling the F1 open design fork per
     `.factory/research/field-dx-context-mechanism-2026-08-25.md`'s ranked recommendation.
     BC-X.14.005 (the issue's own "nice-to-have" `jr requesttype fields --enumerate-options`
@@ -1029,8 +1030,8 @@ Pass 3 BC-704
 **Description**: When `@Name`'s user-search result disambiguates to `MatchResult::ExactMultiple` (two or more users share the exact same display name, case-insensitive) or `MatchResult::Ambiguous` (one or more non-exact substring hits), the mention resolver reuses `disambiguate_user`'s EXISTING behavior verbatim — no new disambiguation UX is invented for mentions.
 
 **Behavior**:
-1. **Non-interactive** (`no_input == true`): exit 64 (`JrError::UserError`), stderr lists each duplicate/ambiguous candidate with display name + email (or accountId when email is hidden) — the identical wording `disambiguate_user`'s `ExactMultiple`/`Ambiguous` branches already produce for `resolve_user`/`resolve_assignee`/`resolve_assignee_by_project` (`"Multiple users named \"{name}\" found:\n{lines}\nSpecify the accountId directly or use a more specific name."` for `ExactMultiple`; `"Multiple users match \"{name}\": {matches}. Use a more specific name."` for `Ambiguous`; as of FIX-P5-009 (merged in PR #902, `f72255cd`) the echoed `{name}` is a `sanitize_terminal_line` copy (`name_echo`) while matching still uses the raw name — BC-7.1.006 EC-25).
-2. **Interactive** (TTY, `no_input == false`): `dialoguer::Select` prompt listing the candidates, identical mechanics to every other `disambiguate_user` caller.
+1. **Non-interactive** (`no_input == true`): exit 64 (`JrError::UserError`), stderr lists the candidates, and what each candidate line shows DIFFERS BY BRANCH (verified against `src/cli/issue/helpers.rs::disambiguate_user` at `470f0967`): the `ExactMultiple` message lists one line per duplicate, `  {display_name} ({email}, account: {account_id})`, or `  {display_name} (account: {account_id})` when `email_address` is absent (so display name + email + accountId, accountId always present); the `Ambiguous` message lists sanitized display names ONLY, comma-joined, with NO email and NO accountId (the F-005 known limitation, BC-7.1.006 residual (b)15 — two accounts with the same display name are indistinguishable there). All values go through `sanitize_terminal_line`. This is the identical wording `disambiguate_user`'s `ExactMultiple`/`Ambiguous` branches already produce for `resolve_user`/`resolve_assignee`/`resolve_assignee_by_project` (`"Multiple users named \"{name}\" found:\n{lines}\nSpecify the accountId directly or use a more specific name."` for `ExactMultiple`; `"Multiple users match \"{name}\": {matches}. Use a more specific name."` for `Ambiguous`; as of FIX-P5-009 (merged in PR #902, `f72255cd`) the echoed `{name}` is a `sanitize_terminal_line` copy (`name_echo`) while matching still uses the raw name — BC-7.1.006 EC-25).
+2. **Interactive** (TTY, `no_input == false`): `dialoguer::Select` prompt listing the candidates, identical mechanics to every other `disambiguate_user` caller. `ExactMultiple` items are built by `disambiguation_labels`: `{display_name} ({email})`, or `{display_name} ({account_id})` when `email_address` is `None` (no `account:` prefix in the picker, unlike the non-interactive message); `Ambiguous` items are the sanitized display names only.
 3. **Zero-POST guarantee — non-interactive (or otherwise unresolvable) ambiguity only** (corrected, pass-1 adversarial review MED-3 — this point previously contradicted point 2 above): exactly like BC-3.3.005's assignee-not-found precedent, a NON-INTERACTIVE (or otherwise unresolvable — e.g. an interactive prompt that is aborted/produces no selection) ambiguous `@Name` mention candidate stops the whole comment/description write SHORT of the POST/PUT — the entire body's mention resolution is all-or-nothing (mirrors the field-resolution "all-or-nothing" convention already established for BC-3.3.010/BC-3.4.015's `--field` resolution). This is NOT in tension with point 2: an INTERACTIVE ambiguous match PROCEEDS to a resolved mention once the `dialoguer::Select` prompt is answered, and the write continues normally. A single ambiguous `@Name` among several otherwise-resolvable candidates fails the WHOLE write, not just that one mention, only in the write-stopping (non-interactive/unresolved) case.
 4. **`--no-mentions` bypass**: this entire resolution step (and therefore this BC) is skipped when `--no-mentions` is passed — see BC-7.2.016 point 7.
 
@@ -2686,8 +2687,8 @@ mode-selector arity check (Invariant 1) is a pure function over `(has_type, has_
 has_issue)` ONLY — `--project`'s presence plays no role in mode arity at all. Once M2 is
 selected, a SEPARATE, non-HTTP resolution step determines the project to use: an explicit
 `--project <P>` flag value, OR the active profile/config default project — the SAME source
-BC-3.3.010's create-path project resolution and M3's optional-`--project`-companion fallback
-already read (no new resolution mechanism, no new `Config`/`ProfileConfig` accessor). If neither
+BC-3.3.010's create-path project resolution and M3's `--project`-companion default fallback
+already read (**[REWORDED 2026-10-04, FIX-P5-013, R13-003]** formerly "optional-`--project`-companion"; M3 is required-or-defaulted like M2; no new resolution mechanism, no new `Config`/`ProfileConfig` accessor). If neither
 is available, M2 fails with the incomplete-M2 exit-64 error (message UNCHANGED; only the trigger
 condition widens from "no flag" to "no flag AND no default"). This resolution step runs BEFORE
 the issue-type name→id resolution below (which needs a resolved project) and BEFORE
@@ -2717,8 +2718,8 @@ project) → exit 64 listing valid issue types for the resolved project, BEFORE
 `get_createmeta_fields` is called — see BC-X.14.004's error taxonomy
 for the exact row.
 
-**M3 (`--request-type <RT> [--project <P>]`) service-desk resolution step**: `--project` is an
-OPTIONAL companion on the M3 path, never a mode selector — `--project --request-type` together
+**M3 (`--request-type <RT> [--project <P>]`) service-desk resolution step**: `--project` is a
+required-or-defaulted companion on the M3 path (same rule as M2: an explicit flag OR a configured default, else exit 64 — **[CORRECTED 2026-10-04, FIX-P5-013, R13-003]** this previously said OPTIONAL), never a mode selector — `--project --request-type` together
 is a VALID invocation (M3 with an explicit service-desk project), NOT a pairing error. When
 `--project <P>` is supplied, it names the service-desk project explicitly; when absent, the
 ambient profile/config-default project supplies it. Either way, the resolved project key is
@@ -2832,8 +2833,8 @@ CONFIRMed read shape here does not imply a verified write shape there.
   `--type` (requiring a RESOLVABLE PROJECT as its companion — an explicit `--project <P>` flag
   OR the active profile/config default; **[CORRECTED 2026-08-26, ADR-0019 § Amendment D1]** see
   the "M2 project resolution step" paragraph above — the flag itself is not strictly required,
-  only a resolvable project is), `--request-type <RT>` (with an OPTIONAL `--project <P>`
-  companion), or `--issue <KEY>` (`--project` not consulted — **[REWORDED 2026-08-26, A-LOW-2]**
+  only a resolvable project is), `--request-type <RT>` (with a required-or-defaulted `--project <P>`
+  companion — an explicit flag OR a configured default, like M2; neither → exit 64, **[CORRECTED 2026-10-04, FIX-P5-013, R13-003]** previously OPTIONAL), or `--issue <KEY>` (`--project` not consulted — **[REWORDED 2026-08-26, A-LOW-2]**
   a stray `--project` alongside `--issue` is harmlessly ignored, not rejected; this is a
   "not consulted" statement, not a prohibition).
 - `<field>` resolves to exactly one field (via `customfield_NNNNN` bypass, **[AMENDED D-399, FIX-P5-005, IMPLEMENTED in FIX-P5-005, merged in PR #897, `0a4dc062`]** an exact case-insensitive field-ID match against the cached/fetched `(id, name)` list tried BEFORE name matching, or unambiguous
@@ -3443,12 +3444,12 @@ in the sense that "a project must be resolvable" (`--type` with no resolvable pr
 an explicit `--project` flag NOR a profile/config default — → the incomplete-M2 error;
 **[CORRECTED 2026-08-26, ADR-0019 § Amendment D1]** this is evaluated by a separate,
 post-arity, M2/M3 resolution step, not by the pure mode-selector arity function itself — see
-BC-X.14.001's "M2 project resolution step" paragraph and VP-580-006), OPTIONAL for M3
-(`--request-type` with or without
-`--project` is valid; when `--project` is absent on M3, resolution falls through to the ambient
-profile/config-default project, which may itself fail via `require_service_desk`'s "project
-required" error if no project resolves at all — a DISTINCT, LATER failure from the
-mode-selector-arity rows), and inapplicable for M1 (`--issue` supplies project context on its
+BC-X.14.001's "M2 project resolution step" paragraph and VP-580-006), and equally required-or-defaulted for M3
+(**[CORRECTED 2026-10-04, FIX-P5-013, R13-003]** previously "OPTIONAL for M3"; `--request-type` with or without
+an explicit `--project` is a valid pairing, but when `--project` is absent resolution falls through to the ambient
+profile/config-default project, and if no project resolves at all `src/cli/field.rs::handle`'s own exit-64 error
+fires via `resolve_m2_project` BEFORE `require_service_desk` is called — a DISTINCT, LATER failure from the
+mode-selector-arity rows, identical to M2's), and inapplicable for M1 (`--issue` supplies project context on its
 own, no `--project` companion is consulted). Exit code is 64 for every taxonomy-table row; this
 paragraph pins evaluation ORDER only, so a caller fixing one reported error deterministically
 encounters the next-in-order error on a following attempt, never a silent flip between two error
