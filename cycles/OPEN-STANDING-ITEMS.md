@@ -2500,3 +2500,35 @@ system/array-typed fields are rejected by the `--field` type dispatch regardless
 **Disposition:** RECORDED, not scheduled (2026-10-03, human decision `D-405`): no effect on the
 F5 strict verdict. **Target:** human-directed feature work together with
 `FIELD-SYSTEM-TYPES-UNSUPPORTED`; tracked at #904.
+
+## BC-INDEX row titles are not mechanically synced to BC H1s — NEW, OPEN, process-gap MEDIUM-origin / deferred (P11-001 / D-406), 2026-10-04
+
+**ID:** `BC-INDEX-H1-SYNC-GUARD` -> GitHub issue **#906**
+(https://github.com/Zious11/jira-cli/issues/906). Source: F5 Pass 11 adversary `P11-001`
+(MEDIUM process-gap: the BC-INDEX rows for `BC-X.14.002` and `BC-X.14.004` did not mirror their
+H1s, and nothing guards H1↔index sync). The two instances were fixed in `FIX-P5-012`'s spec side
+(spec `2.8.8`); the guard script itself was DEFERRED by human decision `D-406(b)`: a sweep found
+240 pre-existing H1↔index mismatches outside the cycle-014 touched set, and wiring a guard into
+CI would touch the CI-gate review-scope files. Baseline:
+`cycles/cycle-014/phase-f5-adversarial/FIX-P5-012-h1-sync-baseline.txt`.
+
+**Disposition:** RECORDED, not scheduled (2026-10-04, human decision `D-406(b)`): no effect on the
+F5 strict verdict. **Target:** human-directed; tracked at #906.
+
+## Stale `§ "..."` comment-anchor citations outside cycle-014's touched set — NEW, OPEN, LOW (D-406(d)), 2026-10-04
+
+**ID:** `STALE-SECTION-ANCHORS-OUT-OF-SCOPE`. Severity **LOW**. Source: the `FIX-P5-012`
+rehearsal sweeps. Five `§ "..."` comment-anchor citations outside cycle-014's touched set quote
+text that does not exist verbatim in the cited source:
+
+1. ADR-0024 -> `edit.rs` "--markdown requires --description guard"
+2. `bc-3-issue-write.md` -> `edit.rs` "--no-parent 400 path"
+3. `bc-3-issue-write.md` -> `jsm_create.rs` "project-key resolution"
+4. `bc-3-issue-write.md` -> `jsm_create.rs` "map_err auth-rewrite"
+5. `cross-cutting.md` -> `src/file.rs` "some section" (a generic example, not a real citation)
+
+These are probably descriptive labels rather than verbatim quotes.
+
+**Disposition:** RECORDED, not scheduled (2026-10-04, human decision `D-406(d)`): no effect on the
+F5 strict verdict. **Target:** next maintenance sweep (convert to symbol form or relabel as
+descriptive).

@@ -3,7 +3,7 @@ document_type: adr
 adr_id: ADR-0019
 status: Accepted
 date: 2026-08-25
-amended: 2026-08-26
+amended: 2026-10-04
 subsystems_affected: ["SS-02", "SS-04", "SS-05"]
 supersedes: null
 superseded_by: null
@@ -24,6 +24,11 @@ resolved here" §1 and §3).
 defects surfaced by fresh-context adversary passes — M2 default-project resolution parity (D1),
 create-path `--field`/dedicated-flag collision precedence (D2), and cascading `>`-split multibyte
 safety (D3). See § Amendment (2026-08-26) below.
+**Amended** (2026-10-04, cycle-014 F5 / FIX-P5-012, rehearsal finding R12B-001 plus a full audit
+against the as-built `src/cli/field.rs`): reconciles this ADR's present-tense text with the code
+that shipped in cycle-014 (#861 label fallback; FIX-P5-005..011 system-field-ID resolution and
+sanitization) — see § Amendment (2026-10-04) at the end of the Amendment sections. No decision is
+reversed; the 2026-08-25/26 history below is retained as history.
 **Amended further** (2026-08-26, adversary finding F-NEW-1): D2's create-path governed field set
 was itself under-scoped — it reused Gate B's five-member EDIT-derived set rather than
 `issue create`'s own larger dedicated-flag surface. Corrected to a ten-member set (5 original Gate
@@ -32,6 +37,11 @@ story-points customfield id and the team customfield id, two DISTINCT `customfie
 keys, not one combined "resolved-id category") in § "D2 correction (adversary F-NEW-1)"
 immediately following D2 below.
 
+> **[HISTORICAL as of 2026-10-04]** the placement note below, and the F2-stage LOC figures cited in
+> §2 ("`edit.rs` ~3,187 LOC", "`field_resolve.rs` 914-LOC", "`create.rs` 394 LOC"), describe the tree as it
+> stood at F2 authoring; `src/cli/field.rs` and the other named artifacts now exist, and current LOC
+> is tracked in CLAUDE.md "Known Size Deviations".
+>
 > **NOTE — factory-artifact placement, not yet an F4 code artifact:** This ADR governs
 > `src/cli/field.rs` (new), an extension to `src/api/jira/issues.rs`, and the `parse_field_kv`
 > signature in `src/cli/issue/create.rs` — none of which exist in this shape in `src/` as of
@@ -131,8 +141,13 @@ selector is present:
   fails the zero-mode-selector arity check first, per error case (2); `--project` selects no mode
   on its own.)
 - **`--request-type <RT> [--project <P>]` → M3, JSM requesttype fields.** Reuses `jr`'s
-  existing `jr requesttype fields` plumbing (`api::jsm::request_types`,
-  `{read,write}_request_type_fields_cache`, 7-day TTL) verbatim. No new API-layer code.
+  existing `jr requesttype fields` plumbing (`api::jsm::request_types`) verbatim. No new API-layer code.
+  **[CORRECTED 2026-10-04, cycle-014 audit]** the original text here also named
+  `{read,write}_request_type_fields_cache` (7-day TTL) as reused plumbing. As built, `src/cli/field.rs::handle`'s
+  M3 arm calls `client.get_request_type_fields` directly and uses NO request-type-fields cache: the
+  M3 field-enumeration call is uncached on every invocation. Only the `project_meta.json`
+  project/service-desk lookup inside `require_service_desk`/`get_or_fetch_project_meta` is 7-day
+  cached (BC-X.14.001 context-mechanism decision).
   `--project` is an **optional** companion naming the service-desk project explicitly; when
   absent, the ambient project (global `--project` — same flag, so this is simply "supplied or
   not" — or profile/config default) is used, resolved via `require_service_desk` /
@@ -154,10 +169,18 @@ selector is present:
      zero-mode-selectors, not incomplete-M2; case (3) below does NOT also claim this input, since
      it requires `--type` to be present.
   3. `--type` present without `--project` → exit 64, incomplete-M2 error ("`--type` requires
-     `--project`").
+     `--project`"). **[SUPERSEDED 2026-08-26 by Amendment D1 for the trigger; wording CORRECTED
+     2026-10-04]** the trigger is "no resolvable project" (no `--project` AND no profile/config
+     default), and the as-built message is `--type needs a resolvable project — pass --project <P>
+     or configure a default.` (`src/cli/field.rs::handle`, Mode::Createmeta arm).
   4. `--request-type` present with no resolvable ambient project (no `--project`, no
      profile/config default) → the existing `require_service_desk` "project required" error,
      unchanged from `jr requesttype fields`'s own behavior.
+     **[CORRECTED 2026-10-04, cycle-014 audit]** as built, this error is NOT `require_service_desk`'s:
+     `require_service_desk` takes a concrete `project_key: &str` and has no "project required"
+     error. `src/cli/field.rs::handle`'s M3 arm raises its own exit-64 `UserError` (`--request-type
+     needs a resolvable project — pass --project <P> or configure a default.`, via
+     `resolve_m2_project`) BEFORE `require_service_desk` is called (BC-X.14.001 M3 paragraph; BC-X.14.004).
 - **`has_project` note for the M2 arity check** **[superseded 2026-08-26 — see Amendment D1]:** where implementation or test code refers to a
   boolean `has_project` in the context of the M2 (createmeta) arity check specifically, it means
   "`--project` is present *as M2's companion*, i.e. accompanying `--type`" — not "`--project` is
@@ -387,7 +410,8 @@ types instead of one shared `normalize_from_allowed_values`.
 
 - Four flags now exist on one command (`--type`, `--request-type`, `--issue` as mode selectors
   under mutual-exclusion, plus `--project` as a mode-dependent companion — required for
-  `--type`, optional for `--request-type`, ignored for `--issue` (unconstrained companion; not
+  `--type` [as amended by D1: required-or-defaulted, i.e. an explicit flag OR a profile/config default],
+  optional for `--request-type`, ignored for `--issue` (unconstrained companion; not
   rejected)) — a small but real increase in `jr field options`'s own surface-area/error-taxonomy
   complexity (BC-X.14.004), consistent with (not novel relative to) `jr issue create
   --request-type`'s existing dispatch-fork pattern.
@@ -477,6 +501,14 @@ pure arity function into a distinct, post-arity resolution step, executed only o
    log which project was used) remains a legitimate question elsewhere in the command, but it plays
    no role in M2's arity validity — only in Step 2's resolution outcome.
 
+**[AS-BUILT NOTE 2026-10-04, cycle-014 audit — known ordering drift `FIELD-OPTIONS-RESOLUTION-ORDER`]**
+`src/cli/field.rs::handle` resolves `<field>` (`resolve_field_id`) BEFORE Step 2's project
+resolution runs, so a human-name `<field>` on a cold cache issues one `GET /rest/api/3/field`
+before the incomplete-M2/M3 project error can fire. Step 2 itself still performs no HTTP, and the
+pure mode-selector arity check (Step 1) still runs before any HTTP call; the "before any HTTP call"
+contract therefore holds for Step 1 but not for the project-unresolvable error (BC-X.14.001 notes
+this drift as out of scope for cycle-014). `resolve_m2_project` is called from both the M2 and M3 arms.
+
 **Why parity, not divergence.** There is no functional reason M2's createmeta call needs a project
 id/key sourced differently than BC-3.3.010's createmeta call for `issue create --field`, or than
 M3's requesttype-fields call — all three ultimately need "some project," and `jr` already has one
@@ -487,8 +519,8 @@ deliberate design choice worth preserving.
 **Downstream implication for VP-580-006 (flagged for the verifier, not resolved here):**
 VP-580-006's `resolve_field_context` proptest must be updated for the narrowed 3-bool pure
 signature (drop the `has_project` axis entirely from that proptest's input space). A new,
-separate verification target is needed for Step 2 — project resolution for M2 specifically,
-covering `{--project flag present, profile default present, neither present} × M2-only`,
+separate verification target is needed for Step 2 — project resolution for M2 and M3 (`resolve_m2_project` is called from both arms),
+covering `{--project flag present, profile default present, neither present} × {M2, M3}`,
 structurally mirroring whatever existing VP already covers BC-3.3.010's flag-or-default project
 resolution on the create path (reuse that VP's shape/fixture pattern rather than inventing a new
 one). This is a verifier-owned addition; not authored in this ADR.
@@ -732,7 +764,12 @@ pub(crate) struct FieldOption {
 
 - **Faithful translation of an already-optional input, not a new sentinel invented at this layer.**
   `AllowedValue.id`/`.value` are already `Option<String>` one layer below `FieldOption` — the
-  normalizer's job is to carry that same absence through, not to invent a lossy encoding of it. A
+  normalizer's job is to carry that same absence through, not to invent a lossy encoding of it.
+  **[CORRECTED 2026-10-04, cycle-014 #861 — see the Amendment (2026-10-04) note below]** "that same
+  absence" is carried through exactly for `id` (all sources) and for M3's `label`. For M1/M2 the
+  normalizer's `label` is NOT a plain pass-through of `AllowedValue.value`: it is `value`, else
+  `name`, else `None`, so a `FieldOption.label` is `None` for M1/M2 only when BOTH `value` and
+  `name` are absent. A
   `""`-sentinel would be a SECOND representation of "absent" this codebase does not otherwise use
   for this exact "wire says the field is missing" concept.
 - **Scripted-consumer correctness is the deciding weight.** #580's stated purpose is a caller
@@ -764,7 +801,8 @@ per-field *value* state). A source entry missing `id` renders:
 ```json
 {"id": null, "label": "Some Label", "children": []}
 ```
-A source entry missing `label`/`value` renders:
+A source entry missing its label source (**as amended 2026-10-04, cycle-014 #861**: for M1/M2 that
+means missing BOTH `value` and `name`; for M3 it means missing `label`) renders:
 ```json
 {"id": "10042", "label": null, "children": []}
 ```
@@ -776,8 +814,9 @@ in the array at all rather than being silently absent from it.
 
 **Invariant (new, extends VP-580-005 §2's "never unwrap a missing field"):** both normalizers MUST
 emit exactly one `FieldOption` for every source item they are given, regardless of which fields
-that source item carries. A missing `id` and/or missing `label`/`value` degrades that entry's own
-`id`/`label` field to `None` — it MUST NEVER cause the entry to be omitted from the returned
+that source item carries. A missing `id` and/or a missing label source (**as amended 2026-10-04,
+cycle-014 #861**: M1/M2 — both `value` and `name` absent; M3 — `label` absent) degrades that
+entry's own `id`/`label` field to `None` — it MUST NEVER cause the entry to be omitted from the returned
 `Vec<FieldOption>`. Discoverability (#580's whole reason for existing) requires every enumerable
 option to be shown, even one `jr` cannot fully identify; silently dropping it is strictly worse
 than showing an entry the user can visually recognize as degenerate and follow up on (e.g. via `jr
@@ -789,7 +828,8 @@ directly in the Jira UI).
   already established by `src/cli/issue/changelog.rs::NULL_GLYPH` and reused by `src/cli/user.rs`
   and `src/cli/requesttype.rs` for "this field is genuinely absent from the source data," not a new
   glyph invented for this command.
-- **Missing `label`** → the Label column renders the literal string `"(unnamed)"`, deliberately
+- **Missing `label`** (**as amended 2026-10-04, cycle-014 #861**: `FieldOption.label == None`, i.e. M1/M2
+  with BOTH `value` and `name` absent, or M3 with `label` absent) → the Label column renders the literal string `"(unnamed)"`, deliberately
   distinct from `"—"` and from the sibling id's own rendering: an absent id is inert (nothing
   actionable for the user), but an absent label still names a real, selectable option — a
   distinguishing placeholder keeps the row visibly present and signals "resolve this one via its
@@ -856,6 +896,10 @@ during `allowedValues` resolution, not by the parser inspecting `schema.type`.**
   parent's `children` collection is empty. This is read at the SAME point EC-3.4.027-3's existing
   "unresolvable child" check already inspects `children` — a new branch inserted alongside that
   check, not a second resolution pass or a new dependency on `EditMetaField.schema.field_type`.
+- **[AS-BUILT NOTE 2026-10-04]** the "currently `{id, value, name}` only … no `children` field exists
+  there yet" remark in the bullet below described the F2-stage tree; `children` has since been added
+  (S-580-1, `#[serde(default)] pub children: Vec<AllowedValue>`, `src/types/jira/editmeta.rs`),
+  exactly as pinned.
 - **Type-level prerequisite (implicit in §3 already, made explicit here):** resolving a cascading
   child at all requires the write-path `AllowedValue` type
   (`src/types/jira/editmeta.rs::AllowedValue`, currently `{id, value, name}` only — verified against
@@ -939,6 +983,50 @@ value. This is now a STATED contract, not an accident.**
   cell (b)'s bare-form-treats-`>`-as-literal behavior — a wiremock/fixture assertion that bare
   `--field cf=Parent>Child` against a cascading field never attempts a split and instead falls
   through to the existing EC-3.4.016-2 unresolvable-value error shape.
+
+## Amendment (2026-10-04) — cycle-014 as-built reconciliation (R12B-001 + full audit)
+
+Scope: reconciles this ADR with `src/cli/field.rs` and its helpers as they stand after cycle-014
+(#861 PR #888 `2ee422e0`; FIX-P5-005..011). Verified against the FIX-P5-012 worktree (HEAD
+`60533894`). BC-X.14.001..004 are the normative contract for everything below; where this ADR
+and a BC differ on the as-built behavior, the BC governs.
+
+1. **M1/M2 label resolution (R12B-001, #861).** `normalize_from_allowed_values_at_depth` sets
+   `label = value.or_else(|| name)` for M1 and M2. "Missing label" for M1/M2 therefore means BOTH
+   `value` and `name` are absent; the F-B text above that said a missing `value` yields
+   `label: null` described the pre-#861 normalizer and is corrected in place (see the
+   `[CORRECTED 2026-10-04]` markers in § F-B). M3 is unchanged: `label` is read from the wire
+   `.label` key, with no `name` fallback, and `id` from `.value`. Rationale: system-typed fields
+   (`priority`, `components`, `versions`/`fixVersions`, `security`, `issuetype`) return `name`, not
+   `value`; the fallback is presence-based, not emptiness-based (EC-X.14.001-7 never-drop
+   invariant unchanged). READ-side only: the WRITE-side `--field` option matching
+   (`find_option_match`) still matches on `value` only (D-378; BC-3.4.016), so §2/§3/D4 are
+   unaffected. F-B's "Rejected: fall back to `id` for a missing label" stands — the fallback is to
+   `name`, never to `id`.
+2. **`<field>` resolution (not specified by this ADR; recorded for completeness).** `jr field options
+   <field>` accepts a `customfield_NNNNN` literal (zero HTTP), or resolves via the shared `fields.json`
+   cache / `list_fields()`: exact case-insensitive field-ID match first (system ids such as
+   `issuetype`; wins on collision), then exact case-insensitive name, then case-insensitive
+   substring on names (`search_field_list`). `--field` on `issue create/edit` stays name-only. Ambiguity errors
+   use the shared `FIELD_ID_HINT` ("the field ID (e.g. customfield_NNNNN or a system id like
+   issuetype)"). Normative text: BC-X.14.001 Invariant 3 / EC-X.14.001-14..22, BC-X.14.004.
+3. **Sanitization.** Server-supplied text echoed in `jr field options` error messages — resolved
+   field ids in the three "field not available" messages, the not-found query, and ambiguity
+   candidates and echoed query — goes through `output::sanitize_terminal_line` (BC-X.14.004
+   EC-X.14.004-9/-10). The other interpolated values (`type_name`, `project_key`, `rt_query`,
+   `issue_key`) are unsanitized user/config echoes, documented residuals in the BC-7.1.006
+   Canonical Sink Inventory. The graceful-degrade hint is also not covered by this ADR.
+4. **Help text and arity error.** The `jr field options` help names system field ids (EC-X.14.001-22);
+   the arity error text is `You must specify exactly one of --type, --request-type, --issue.` (exit 64,
+   before any HTTP). The M2/M3 no-project errors are `field.rs`'s own (see §1 corrections above).
+5. **M3 is uncached** (see the §1 correction above).
+6. **`--field` hint/delimiter shapes (§2, §3, D2, D2-correction, D3, D4): NOT touched by cycle-014.** The
+   cycle diff (`204b1fb5..HEAD`) changes none of `parse_field_kv`/`field_resolve.rs`/`create.rs`/`edit.rs`/`jsm_create.rs`/`requests.rs`
+   behavior; those sections remain accurate as written. One historical-wording note: D2's "reused by both
+   `edit.rs`'s Gate B and the new create-path guard" describes the intended sharing; as built,
+   `field_resolve::detect_flag_field_overlap` is called from `create.rs` with
+   `CREATE_D2_GOVERNED_KEYS` (ten members), and the architecture-compliance rule keeps edit-path Gate B's
+   five-member set distinct (shared mechanism, never a shared key set).
 
 ## Source / Origin
 

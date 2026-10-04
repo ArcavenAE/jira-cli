@@ -7382,3 +7382,31 @@ _Tagged: [process-gap] [prd-delta] [dispositions] [per-round-checklist] [cv-chan
 - Session ended at 2026-10-04T13:42:11Z (awaiting /session-review)
 - Session ended at 2026-10-04T13:43:06Z (awaiting /session-review)
 - Session ended at 2026-10-04T13:46:04Z (awaiting /session-review)
+- Session ended at 2026-10-04T13:48:44Z (awaiting /session-review)
+- Session ended at 2026-10-04T13:54:03Z (awaiting /session-review)
+- Session ended at 2026-10-04T13:54:47Z (awaiting /session-review)
+- Session ended at 2026-10-04T14:17:19Z (awaiting /session-review)
+- Session ended at 2026-10-04T14:17:31Z (awaiting /session-review)
+- Session ended at 2026-10-04T14:18:48Z (awaiting /session-review)
+- Session ended at 2026-10-04T14:22:00Z (awaiting /session-review)
+- Session ended at 2026-10-04T14:22:41Z (awaiting /session-review)
+- Session ended at 2026-10-04T14:29:59Z (awaiting /session-review)
+- Session ended at 2026-10-04T14:30:47Z (awaiting /session-review)
+- Session ended at 2026-10-04T14:32:38Z (awaiting /session-review)
+- Session ended at 2026-10-04T14:34:39Z (awaiting /session-review)
+- Session ended at 2026-10-04T14:36:33Z (awaiting /session-review)
+- Session ended at 2026-10-04T14:40:55Z (awaiting /session-review)
+- Session ended at 2026-10-04T14:41:15Z (awaiting /session-review)
+- Session ended at 2026-10-04T14:45:55Z (awaiting /session-review)
+- Session ended at 2026-10-04T14:53:09Z (awaiting /session-review)
+- Session ended at 2026-10-04T14:53:36Z (awaiting /session-review)
+- Session ended at 2026-10-04T14:54:42Z (awaiting /session-review)
+
+## 2026-10-04 -- Uncounted fresh-adversary "rehearsals" before each counted pass (F5 Pass 11, D-406(c))
+
+- [process] [rehearsal] Pass 11 was NOT CLEAN on doc/spec drift again (P11-001 MEDIUM process-gap, P11-002 LOW, P11-003 NIT), with only 1 more non-clean pass allowed. The human approved a NEW PROCESS: before each COUNTED pass, run an UNCOUNTED fresh-adversary rehearsal over the fix branch plus current specs and fix whatever it finds, so drift is caught cheaply instead of burning a counted pass.
+- Evidence (FIX-P5-012, three rehearsals): R12 found 1 LOW + 2 NIT ((b)9 request-type IDs; (b)33 errors-value escaping; U+2066..206F class names). R12B found 1 MEDIUM + 1 LOW + 1 NIT (ADR-0019 never amended for the #861 label fallback and a full audit found 3 more stale ADR-0019 claims plus ADR-0023 drift; ApiError messages are control-escaped by sanitize_for_stderr, not raw; CHANGELOG residual examples). R12C was CLEAN-with-nits, 2 spec nits (BC-X.16.002 section-anchor quote; EC-21/EC-24 test attributions), fixed.
+- Rule: rehearsals catch drift cheaply before a counted pass; run them until a rehearsal comes back clean, then dispatch the counted pass.
+- Session ended at 2026-10-04T14:57:27Z (awaiting /session-review)
+- Session ended at 2026-10-04T14:57:41Z (awaiting /session-review)
+- Session ended at 2026-10-04T14:58:34Z (awaiting /session-review)

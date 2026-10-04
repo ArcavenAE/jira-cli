@@ -3,6 +3,7 @@ document_type: adr
 adr_id: ADR-0023
 status: Accepted
 date: 2026-09-06
+amended: 2026-10-04
 subsystems_affected: ["SS-02", "SS-04", "SS-05", "SS-08"]
 supersedes: null
 superseded_by: null
@@ -1131,6 +1132,28 @@ re-verifying both detection grammars' example-anchor tests in `src/adf.rs::tests
    Rejected — would fork BC-X.7.007/008/009's "reuses `disambiguate_user` verbatim" contract into
    a second, independently-maintained copy of the same `Exact`/`ExactMultiple`/`Ambiguous`/`None`
    decision logic. See §7's "Why NOT option (c)."
+
+## Amendment (2026-10-04) — cycle-014 note on `disambiguate_user` (FIX-P5-012)
+
+Dated clarification; no decision in this ADR is reversed. This ADR's present-tense statements that
+`disambiguate_user` is "left completely UNCHANGED", that the visibility bump "carries zero behavior
+change" and that it has "three existing callers" (§7, Consequences) describe the cycle-005 mention-wiring
+change in isolation and are corrected for the code as it stands after cycle-014:
+
+- **Output text is no longer unmodified.** Under BC-7.1.006 (D-395/D-396, FIX-P5-002/FIX-P5-009), every
+  server-echoed value `disambiguate_user` surfaces (`display_name`, `email_address`, `account_id` in the
+  `ExactMultiple`/`Ambiguous` messages and picker labels, the `None`-branch candidate list) and the echoed
+  `name` argument go through `output::sanitize_terminal_line` (`src/cli/issue/helpers.rs::disambiguate_user`;
+  matching still uses the raw `name`). The decision logic this ADR relies on (the `users.len() == 1`
+  short-circuit, the `Exact`/`ExactMultiple`/`Ambiguous`/`None` contract) is unchanged — so §7's
+  caller-side pre-filter design stands as written.
+- **Caller count.** The three pre-existing callers are `resolve_user`, `resolve_assignee` and
+  `resolve_assignee_by_project`; `mentions::resolve_at_name_candidate` (this ADR's addition) is the fourth.
+  "Existing three-way `Exact`/`ExactMultiple`/`None`" (Context, item 2) is the four-way
+  `Exact`/`ExactMultiple`/`Ambiguous`/`None` contract this ADR names elsewhere.
+- On the `@Name` path `name` can be a raw server `display_name` (`resolve_at_name_candidate`'s single-name
+  path), which is why the `name` echo is sanitized; `empty_msg`/`none_msg_fn` stay caller-built (BC-7.1.006
+  residual items (b)20/(b)21).
 
 ## Source / Origin
 

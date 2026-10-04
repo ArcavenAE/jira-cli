@@ -3,10 +3,11 @@ context: bc-x
 title: "Cross-cutting (HTTP client, Runtime, Users, Teams, Worklogs, Projects, Queues, JQL, Partial-match, JSM Request Types, CI Guards, Field Option Discovery, API Query Parameters)"
 total_bcs: 162   # cumulative claim (incl. range-collapsed); definitional_count below is individually-bodied headings; +2 added 2026-09-25 (BC-X.16.001..002, cycle-014 `issue-triage-quickfixes` F2 spec evolution, issue #583 — new `## BC-X.16: API Query Parameters` subsection: `jr api --query-param NAME=VALUE` percent-encoded query-string composition + malformed-value error taxonomy; same-burst amendments to BC-X.7.002 (issue #862, project-resolution order) and BC-X.14.001/003 (issue #861, M1/M2 label-resolution fallback, READ-SIDE ONLY per D-378) are COUNT-NEUTRAL; BC-X.14.004 gains one documentation-only cross-reference row (empty `<field>`), COUNT-NEUTRAL; the §BC-X.14 intro is reworded (count-neutral)); was 160 before this addition; prior: +1 added 2026-09-17 (BC-X.15.001, cycle-008 `oauth-surface-correctness` F2 spec evolution, ADR-0026 Decision 3, VP-OAUTH-GW-003 — new `## BC-X.15: OAuth Agile-Command Error-Mapping` subsection: `jr board`/`jr sprint` 401 auth-scheme-conditional call-site rewrite disambiguating scope-mismatch vs. expired-token vs. (regression-guard) wrong-host, modeled on `require_service_desk`/BC-X.8.006..007); was 159 before this addition; prior: +4 added 2026-09-06 (BC-X.7.007..010, cycle-005 `adf-mentions` F2 spec evolution, issue #674 — `@Name` mention resolution: unique-match (007), ambiguous-match disambiguation (008), zero-match HARD ERROR exit 64 (009, human-approved override of the architect's pass-through recommendation); bracket-form accountId mandatory preflight validation (010)); was 155 before that addition
 definitional_count: 96   # count of `#### BC-` headings in this file
-last_updated: 2026-10-03
+last_updated: 2026-10-04
 source_pass: 3
 trace: |
   - FIX-P5-011 (2026-10-03, spec v2.8.7, PATCH, human decision D-405, cycle-014 F5 pass-10, P10-001 MEDIUM; spec-only, COUNT-NEUTRAL, no new BC/VP): BC-X.14.001 Invariant 3, its Behavior paragraph, the BC-X.14 Source line and the BC-INDEX BC-X.14.001 row no longer claim `src/cli/field.rs`'s resolution is a mirrored copy of `resolve_edit_fields`; the cache/bypass/refresh-once contract is shared semantics (changes applied to both) while the search step deliberately diverges (field-ID step, `FIELD_ID_HINT`, sanitization on `jr field options` only; `--field` stays name-only). Research: `.factory/research/P10-001-field-resolution-divergence.md`. Follow-up (system-ID `--field` support) is bundled with the human-deferred `FIELD-SYSTEM-TYPES-UNSUPPORTED` (D-379). Hand-off: `.factory/cycles/cycle-014/phase-f5-adversarial/FIX-P5-011-spec-delta.md`.
+  - FIX-P5-012 (2026-10-04, spec v2.8.8, PATCH, human decision D-406, cycle-014 F5 pass-11, P11-001 MEDIUM; spec-only, COUNT-NEUTRAL, no new BC/VP): BC-X.14.002 and BC-X.14.004 H1 titles now carry the full title text that the BC-INDEX rows already used (the index cells are unchanged), and the BC-X.7.008 H1 gains `; zero-POST guarantee` with its BC-INDEX row updated to match, so each index title cell equals its H1 title verbatim (`bc_h1_is_title_source_of_truth`). No behavior or postcondition change. Rehearsal R12B (same version): ADR-0019's F-B label text reconciled with the #861 `value`-else-`name` label fallback (BC-X.14.001 already carried the correct wording; no BC change); no BC-X.14 behavior change. Hand-off (the `scripts/check-bc-index-h1-sync.sh` H1/BC-INDEX guard script was NOT added this cycle: DEFERRED by human decision D-406, tracked as a follow-up issue): `.factory/cycles/cycle-014/phase-f5-adversarial/FIX-P5-012-spec-delta.md`.
   - FIX-P5-005 (2026-10-01, spec v2.7.0, human decision D-399, cycle-014 F5 pass-4, issue #861 / CR4-002; spec-only at authoring; IMPLEMENTED in FIX-P5-005, merged in PR #897, `0a4dc062`, citations converted to live by spec v2.7.1): amended BC-X.14.001 (field-ID match step before name matching for `jr field options <NAME>`: system ids such as `issuetype` resolve; ID wins name/ID collisions; EC-X.14.001-16..21, VP-580-014) and BC-X.14.004 (ambiguity hint wording, EC-X.14.004-8). COUNT-NEUTRAL (no new BC).
   - FIX-P5-006 (2026-10-01, spec v2.7.2, PATCH, human decision D-400, cycle-014 F5 pass-5, SEC5-002/P5-001/P5-004; spec-only at authoring; IMPLEMENTED in FIX-P5-006, merged in PR #898, `ce6be7ad`, citations converted to live by spec v2.7.3): BC-X.14.004 new EC-X.14.004-9 (ambiguity-error candidates sanitized via `output::sanitize_terminal_line`); BC-X.14.001 new EC-X.14.001-22 (help text must name system field IDs) and EC-X.14.001-15 line refs converted to symbol-form. COUNT-NEUTRAL (no new BC).
   - FIX-P5-005 post-merge (2026-10-01, spec v2.7.1, PATCH, mechanical): BC-X.14.001/BC-X.14.004 "NOT YET IMPLEMENTED / target" qualifiers converted to live citations in `src/cli/field.rs` (`resolve_field_id`, `search_field_list`, `FIELD_ID_HINT`) and `tests/field_options.rs` (PR #897, `0a4dc062`); added EC-X.14.001-21 for the case-insensitive duplicate-field-ID ambiguity branch (`test_bc_x_14_001_search_field_list_duplicate_case_insensitive_ids_is_ambiguous`). BC-X.14.* carry no per-BC version table in this file; this trace bullet and the `.factory/spec-changelog.md` `[2.7.1]` entry are the version record. COUNT-NEUTRAL.
@@ -1019,7 +1020,7 @@ Pass 3 BC-704
 
 ---
 
-#### BC-X.7.008: `@Name` mention candidate resolving to TWO OR MORE candidates → disambiguation, reusing BC-X.7.004's contract shape verbatim (interactive `dialoguer::Select` prompt / `--no-input` exit 64 with candidate list)
+#### BC-X.7.008: `@Name` mention candidate resolving to TWO OR MORE candidates → disambiguation, reusing BC-X.7.004's contract shape verbatim (interactive `dialoguer::Select` prompt / `--no-input` exit 64 with candidate list); zero-POST guarantee
 
 **Confidence**: HIGH
 **Source**: `src/cli/issue/helpers.rs::disambiguate_user` (`MatchResult::ExactMultiple`/`MatchResult::Ambiguous` arms); BC-X.7.004 (contract-shape precedent); issue #674
@@ -2585,7 +2586,7 @@ parity]**: an earlier revision of this decision pinned the mode-selector arity C
 Bug` exited 64 even when the active profile had a default project configured, contradicting
 BC-3.3.010 (create-path `--field` resolves project as "flag OR profile default") and M3's own
 optional-`--project`-companion fallback. **Fix: the "is a project resolvable at all?" question
-moves OUT of the pure arity function into a separate, post-arity, M2-only resolution step.** The
+moves OUT of the pure arity function into a separate, post-arity, M2/M3 resolution step (`resolve_m2_project`, called from both the M2 `--type` and M3 `--request-type` arms of `src/cli/field.rs::handle`).** The
 pure arity check (`resolve_field_context`) is narrowed to a 3-boolean signature —
 `(has_type, has_request_type, has_issue) -> Result<Mode, ArityError>` — and no longer takes
 `has_project` as an argument at all; it is solely about mode-selector COMBINATION validity. A
@@ -2911,7 +2912,7 @@ CONFIRMed read shape here does not imply a verified write shape there.
    ADR-0019 § Amendment D1]**: the pure mode-selector arity check itself (`resolve_field_context`)
    is a function of `has_type`/`has_request_type`/`has_issue` ONLY and does not evaluate
    `--project` or project-resolvability at all — project resolvability is a separate, post-arity,
-   M2-only step (see the "M2 project resolution step" paragraph above and VP-580-006 below). A
+   M2/M3 step (see the "M2 project resolution step" paragraph above and VP-580-006 below). A
    bare `--project` with no mode selector at all is a ZERO-mode-selector invocation
    (`--project` is never counted as a mode selector), so it lands in the zero-mode-selector row
    above, NOT the incomplete-M2 row — the two conditions are distinct and must not be conflated.
@@ -3149,7 +3150,7 @@ CONFIRMed read shape here does not imply a verified write shape there.
   --request-type` VALID-pairing regression guard is VP-580-009; per-error-message shape is
   covered by VP-580-004's taxonomy rows. **[NEW 2026-08-26, ADR-0019 § Amendment D1]** VP-580-010:
   a sibling verification target for `resolve_m2_project` specifically, covering `{--project flag
-  present, profile default present, neither present} × M2-only`, structurally mirroring whatever
+  present, profile default present, neither present} × {M2, M3}`, structurally mirroring whatever
   existing VP covers BC-3.3.010's flag-or-default project resolution on the create path. **Prior
   wording (superseded, retained for audit trail):** "the arity decision is extracted to a pure
   function over the context-flag booleans (`has_type`, `has_request_type`, `has_issue`,
@@ -3235,7 +3236,7 @@ change to the struct itself)
 
 ---
 
-#### BC-X.14.002: `--value <substring>` client-side filter narrows the enumerated option list to matching id/label(s)
+#### BC-X.14.002: `--value <substring>` client-side case-insensitive filter narrows the enumerated option list to matching id/label(s); cascading children filtered independently; empty result is exit 0 success, not an error
 
 **Confidence**: HIGH
 **Subject**: Field option discovery — `--value` filter (issue #580)
@@ -3403,7 +3404,7 @@ Profile 2 (Read-only)
 
 ---
 
-#### BC-X.14.004: Error taxonomy — field not found, no enumerable options (graceful degrade), ambiguous name, context-flag mutual-exclusion violations
+#### BC-X.14.004: Error taxonomy — field not found/ambiguous, context-flag mutual-exclusion violations, non-JSM/unknown `--request-type`; graceful degradation (exit 0, NOT an error) for fields with no enumerable options (Assets/CMDB, user-picker, labels, free-text/number/date) — prints a hint + `autoCompleteUrl`/Assets pointer instead of erroring
 
 **Confidence**: HIGH
 **Subject**: Field option discovery — error taxonomy (issue #580)
@@ -3441,7 +3442,7 @@ companion role is validated against THAT mode only: for M2, a resolvable project
 in the sense that "a project must be resolvable" (`--type` with no resolvable project — neither
 an explicit `--project` flag NOR a profile/config default — → the incomplete-M2 error;
 **[CORRECTED 2026-08-26, ADR-0019 § Amendment D1]** this is evaluated by a separate,
-post-arity, M2-only resolution step, not by the pure mode-selector arity function itself — see
+post-arity, M2/M3 resolution step, not by the pure mode-selector arity function itself — see
 BC-X.14.001's "M2 project resolution step" paragraph and VP-580-006), OPTIONAL for M3
 (`--request-type` with or without
 `--project` is valid; when `--project` is absent on M3, resolution falls through to the ambient
@@ -3870,8 +3871,8 @@ section file). `url = "2"` and `urlencoding = "2"` are already direct dependenci
 **Subject**: `jr api` — query-parameter composition (issue #583)
 **Source**: IMPLEMENTED (cycle-014, issue #583, PR #887 merged as `e54be670`):
 `src/cli/api.rs::append_query_params` (pure function); `src/cli/api.rs::handle_api`
-(`query_param: Vec<String>` parameter; § "`-q` parse after `normalize_path`, before
-`resolve_body` and `-H`"); `src/cli/mod.rs::Command::Api` (`-q`/`--query-param` field);
+(`query_param: Vec<String>` parameter; § "Every `-q`/`--query-param` value is parsed and merged here, right
+after `normalize_path` and before `resolve_body`/`-H` parsing"); `src/cli/mod.rs::Command::Api` (`-q`/`--query-param` field);
 `src/main.rs`'s `Command::Api` dispatch arm (threads `query_param` into `handle_api`);
 `src/cli/api.rs::normalize_path` (pre-existing, unmodified — runs before this step). `urlencoding::encode` (existing dependency,
 production encoder for this BC's assembly — no new dependency); `url::form_urlencoded::parse`
@@ -4268,8 +4269,8 @@ before `handle_api` is ever invoked — and `src/cli/api.rs::normalize_path`'s o
    `-H`/`--header` parsing (`parse_header`). Concretely, in `handle_api` (`src/cli/api.rs`),
    `--query-param` parsing runs immediately after the `normalize_path(&path)?` call and BEFORE
    the `resolve_body(data.as_deref(), std::io::stdin().lock())` call (symbol-form anchor:
-   `src/cli/api.rs::handle_api` § "`-q` parse after `normalize_path`, before `resolve_body`
-   and `-H`") — i.e. `-q` parsing is the SECOND pre-flight step, right after path
+   `src/cli/api.rs::handle_api` § "Every `-q`/`--query-param` value is parsed and merged here, right
+   after `normalize_path` and before `resolve_body`/`-H` parsing") — i.e. `-q` parsing is the SECOND pre-flight step, right after path
    normalization and strictly ahead of both the body read and the `-H`/`--header` →
    `parse_header` mapping. Zero HTTP calls, symmetric with
    `parse_header`'s existing pre-flight validation.
