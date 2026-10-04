@@ -224,3 +224,11 @@ F5-pass-1 checkpoint.
 ## Archived checkpoint: STATE v5.41 (2026-10-04, superseded by v5.42)
 
 **Position:** cycle-014 F5 IN PROGRESS; `FIX-P5-011` (#905, docs only) merged @ `c33f5d44`; no post-merge spec change needed (spec `2.8.7`). Pass 11 over `204b1fb5..c33f5d44` DISPATCHED (adversary + code-reviewer + security-reviewer), results pending. Counter 0/3, 11th of 15; no open PRs, no fix worktrees. NEXT was: await the Pass 11 verdicts. Resume: `/vsdd-factory:rehydrate-wave`, then `/vsdd-factory:next-step`.
+
+## Archived checkpoint: STATE v5.42 (2026-10-04, superseded by v5.43)
+
+**Position:** cycle-014 F5 IN PROGRESS; Pass 11 over `204b1fb5..c33f5d44` NOT CLEAN (`pass-11.md`); `D-406` decided; spec `2.8.8` and ADR-0019/ADR-0023 reconciliation committed. `develop` @ `c33f5d44`. In flight: `FIX-P5-012` PR #907 (branch `fix/fix-p5-012-pass11-findings`, head `e296c34a`), review in progress. Counter 0/3, 11 of 15 used; at most 1 more non-clean pass. NEXT was: PR #907 review -> CI -> human merge -> post-merge spec sync if needed -> uncounted rehearsal(s) -> counted Pass 12 (all clean -> 1/3; not clean -> `D-407` scoping; escalate if the single remaining slip is exhausted). Resume: `/vsdd-factory:rehydrate-wave`, then `/vsdd-factory:next-step`.
+
+## Archived checkpoint: STATE v5.43 (2026-10-04, superseded by v5.44)
+
+**Position:** cycle-014 F5 IN PROGRESS; `FIX-P5-012` (#907) MERGED @ `470f0967`; uncounted rehearsals R13 (2 LOW + 1 NIT) and R14 (1 LOW) fixed as `FIX-P5-013` (spec `2.8.9` committed). In flight: `FIX-P5-013` PR #908 (docs/help only, commit `06916d63`), CI in progress. Counter 0/3, 11 of 15 used. NEXT was: PR #908 CI -> human merge -> counted Pass 12 over the new develop tip. Resume: `/vsdd-factory:rehydrate-wave`, then `/vsdd-factory:next-step`.
