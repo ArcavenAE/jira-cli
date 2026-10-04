@@ -1,1 +1,1 @@
-{"status":"pass","timestamp":"2026-10-04T21:36:23Z","command":"cd /Users/zious/Documents/GITHUB/jira-cli/.worktrees/FIX-P5-014 && (cargo fmt --all -- --check && cargo clippy --all-targets -- -D warnings && cargo test --lib field && cargo test --test field_options && cargo test --doc) 2>&1 | grep -E \"^(error|warning)|test result|Diff\" | head -20"}
+{"status":"pass","timestamp":"2026-10-04T22:42:25Z","command":"timeout 580 cargo test --lib 2>&1 | tail -15"}

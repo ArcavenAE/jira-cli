@@ -240,3 +240,7 @@ F5-pass-1 checkpoint.
 ## Archived checkpoint: STATE v5.45 (2026-10-04, superseded by v5.46)
 
 **Position:** cycle-014 F5 IN PROGRESS; Pass 12 over `204b1fb5..eb52643b` CLEAN (counter 1/3, 12 of 15 used; `D-407`: NIT-only counts clean, `FIX-P5-014` scoped for `P12-001`/`P12-002`/`CR12-001`). `develop` @ `eb52643b`. In flight: `FIX-P5-014` (comment/rustdoc only), PR not yet recorded. NEXT was: `FIX-P5-014` PR -> CI -> human merge -> (uncounted rehearsal) -> counted Pass 13. Note: this checkpoint's "at most 1 slip" wording was later corrected in v5.46 (with counter 1/3 and Passes 13-15 remaining there are ZERO slips). Resume: `/vsdd-factory:rehydrate-wave`, then `/vsdd-factory:next-step`.
+
+## Archived checkpoint: STATE v5.46 (2026-10-04, superseded by v5.47)
+
+**Position:** cycle-014 F5 IN PROGRESS; `FIX-P5-014` (#909, comment/rustdoc only) MERGED @ `0a579ad5`; the counted Pass 13 over `204b1fb5..0a579ad5` DISPATCHED (adversary + code-reviewer + security-reviewer), verdicts pending. No open PRs, no fix worktrees. Counter 1/3, 12 of 15 recorded, Pass 13 in flight; ZERO slips left (Passes 13 and 14 must both be clean). NEXT was: await the Pass 13 verdicts (clean -> 2/3 and Pass 14 must also be clean; not clean -> `D-408` and escalate). Resume: `/vsdd-factory:rehydrate-wave`, then `/vsdd-factory:next-step`.

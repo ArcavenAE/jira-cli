@@ -7407,6 +7407,10 @@ _Tagged: [process-gap] [prd-delta] [dispositions] [per-round-checklist] [cv-chan
 - [process] [rehearsal] Pass 11 was NOT CLEAN on doc/spec drift again (P11-001 MEDIUM process-gap, P11-002 LOW, P11-003 NIT), with only 1 more non-clean pass allowed. The human approved a NEW PROCESS: before each COUNTED pass, run an UNCOUNTED fresh-adversary rehearsal over the fix branch plus current specs and fix whatever it finds, so drift is caught cheaply instead of burning a counted pass.
 - Evidence (FIX-P5-012, three rehearsals): R12 found 1 LOW + 2 NIT ((b)9 request-type IDs; (b)33 errors-value escaping; U+2066..206F class names). R12B found 1 MEDIUM + 1 LOW + 1 NIT (ADR-0019 never amended for the #861 label fallback and a full audit found 3 more stale ADR-0019 claims plus ADR-0023 drift; ApiError messages are control-escaped by sanitize_for_stderr, not raw; CHANGELOG residual examples). R12C was CLEAN-with-nits, 2 spec nits (BC-X.16.002 section-anchor quote; EC-21/EC-24 test attributions), fixed.
 - Rule: rehearsals catch drift cheaply before a counted pass; run them until a rehearsal comes back clean, then dispatch the counted pass.
+
+## 2026-10-04 -- Do not enumerate a function's full effect matrix in a caller's rustdoc (F5 Pass 13, FIX-P5-015)
+
+- [process] [rustdoc] [anti-drift] Don't enumerate a function's full effect matrix in a caller's rustdoc; summarize and defer to the callee's own docs. The exhaustive effects list on `src/cli/field.rs::handle` drifted three passes in a row (P12-001, PR #909 NB-1, then P13-001/CR13-001: M2/M3 `resolve_m2_project` can exit 64 before any mode HTTP; `require_service_desk` project-meta HTTP omitted; `read_cache` Ok(None) only for NotFound/unparseable/stale, other I/O errors propagate). FIX-P5-015 simplifies it to a high-level summary deferring to `resolve_field_id` and each mode arm.
 - Session ended at 2026-10-04T14:57:27Z (awaiting /session-review)
 - Session ended at 2026-10-04T14:57:41Z (awaiting /session-review)
 - Session ended at 2026-10-04T14:58:34Z (awaiting /session-review)
@@ -7438,3 +7442,9 @@ _Tagged: [process-gap] [prd-delta] [dispositions] [per-round-checklist] [cv-chan
 - Session ended at 2026-10-04T22:29:02Z (awaiting /session-review)
 - Session ended at 2026-10-04T22:30:11Z (awaiting /session-review)
 - Session ended at 2026-10-04T22:32:26Z (awaiting /session-review)
+- Session ended at 2026-10-04T22:36:21Z (awaiting /session-review)
+- Session ended at 2026-10-04T22:36:33Z (awaiting /session-review)
+- Session ended at 2026-10-04T22:43:21Z (awaiting /session-review)
+- Session ended at 2026-10-04T22:45:12Z (awaiting /session-review)
+- Session ended at 2026-10-04T22:45:58Z (awaiting /session-review)
+- Session ended at 2026-10-04T22:47:09Z (awaiting /session-review)
