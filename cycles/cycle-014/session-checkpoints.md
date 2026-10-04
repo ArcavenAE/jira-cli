@@ -232,3 +232,7 @@ F5-pass-1 checkpoint.
 ## Archived checkpoint: STATE v5.43 (2026-10-04, superseded by v5.44)
 
 **Position:** cycle-014 F5 IN PROGRESS; `FIX-P5-012` (#907) MERGED @ `470f0967`; uncounted rehearsals R13 (2 LOW + 1 NIT) and R14 (1 LOW) fixed as `FIX-P5-013` (spec `2.8.9` committed). In flight: `FIX-P5-013` PR #908 (docs/help only, commit `06916d63`), CI in progress. Counter 0/3, 11 of 15 used. NEXT was: PR #908 CI -> human merge -> counted Pass 12 over the new develop tip. Resume: `/vsdd-factory:rehydrate-wave`, then `/vsdd-factory:next-step`.
+
+## Archived checkpoint: STATE v5.44 (2026-10-04, superseded by v5.45)
+
+**Position:** cycle-014 F5 IN PROGRESS; `FIX-P5-013` (#908) MERGED @ `eb52643b`; the counted Pass 12 over `204b1fb5..eb52643b` DISPATCHED (adversary + code-reviewer + security-reviewer), verdicts pending. No open PRs, no fix worktrees. Counter 0/3, 11 of 15 recorded, Pass 12 in flight; at most 1 more slip (if Pass 12 clean, Passes 13 and 14 must also be clean, Pass 15 the only spare). NEXT was: await the Pass 12 verdicts (all clean -> 1/3; not clean -> `D-407` scoping; escalate if the single remaining slip is exhausted). Resume: `/vsdd-factory:rehydrate-wave`, then `/vsdd-factory:next-step`.

@@ -2532,3 +2532,15 @@ These are probably descriptive labels rather than verbatim quotes.
 **Disposition:** RECORDED, not scheduled (2026-10-04, human decision `D-406(d)`): no effect on the
 F5 strict verdict. **Target:** next maintenance sweep (convert to symbol form or relabel as
 descriptive).
+
+---
+
+**ID:** `INTEGRATION-SANITIZE-ASSERT-CF-BIDI`. Severity **LOW/INFO** (CWE-451, test coverage only).
+Source: F5 Pass 12 security-reviewer `SEC12-001`. `tests/table_output_sanitization.rs::assert_no_esc_or_c1`
+checks only ESC/C1 characters at the integration level, not Cf/bidi/tag characters, so an
+integration-level regression in the Cf/bidi policy for a covered sink would not be caught there
+(the unit-level `output.rs` sanitizer suites do cover the policy).
+
+**Disposition:** RECORDED, not scheduled (2026-10-04, human decision `D-407(c)`): no effect on the
+F5 verdict. **Target:** extend `assert_no_esc_or_c1` to also reject Cf/bidi/tag characters, or add
+one end-to-end bidi fixture per covered sink family.
