@@ -211,7 +211,8 @@ pub fn print_error(msg: &str) {
 ///
 /// Strips ASCII control characters (`0x00`-`0x1F`, `0x7F`), the Unicode
 /// terminal-injection controls `display_sanitize_filename` also handles "in
-/// class" (bidi overrides `U+202A..=U+202E`/`U+2066..=U+2069`, LINE/
+/// class" (bidi embeddings/overrides `U+202A..=U+202E` and bidi isolates
+/// `U+2066..=U+2069`, LINE/
 /// PARAGRAPH SEPARATOR `U+2028`/`U+2029`, NEL `U+0085`), and ANSI CSI/OSC
 /// escape sequences outright (not replaced with a placeholder — distinct
 /// in behavior from `cli::issue::attachments::display_sanitize_filename`,
@@ -227,16 +228,16 @@ pub fn print_error(msg: &str) {
 /// asymmetry). Ordinary strings with no control chars/ANSI escapes and
 /// under the length cap pass through unchanged.
 ///
-/// **Pinned cap + marker (Red Gate step 2, S-cycle3-env-tag — neither is
-/// BC-pinned; these are the test-writer's chosen concrete values, matching
+/// **Pinned cap + marker (S-cycle3-env-tag — neither is BC-pinned; these
+/// are concrete values chosen to match
 /// the existing `src/cli/queue.rs::collapse_and_truncate`/`MAX_CAUSE_LEN`
 /// truncation convention in this codebase):**
 /// `MAX_ENV_DISPLAY_LEN = 40` (chars, post-strip). When the stripped value's
 /// char count exceeds 40, take the first 40 chars and append the single
 /// truncation marker `\u{2026}` (`…`) — total rendered length 41 chars. A
 /// stripped value of exactly 40 chars or fewer is NOT truncated (no marker
-/// appended). The implementer must match these exact values — see
-/// `output::tests::test_sanitize_env_display_*` for the pinned assertions.
+/// appended). These exact values are pinned by
+/// `output::tests::test_sanitize_env_display_*`.
 pub(crate) fn sanitize_env_display(value: &str) -> String {
     const MAX_ENV_DISPLAY_LEN: usize = 40;
 
@@ -253,7 +254,8 @@ pub(crate) fn sanitize_env_display(value: &str) -> String {
 /// Strips ASCII control characters (`0x00`-`0x1F`, `0x7F`), the Unicode
 /// terminal-injection controls also handled "in class" by
 /// `cli::issue::attachments::display_sanitize_filename` (BC-6.1.015 EC-4) —
-/// bidi overrides `U+202A..=U+202E` and `U+2066..=U+2069`, LINE SEPARATOR
+/// bidi embeddings/overrides `U+202A..=U+202E` and bidi isolates
+/// `U+2066..=U+2069`, LINE SEPARATOR
 /// `U+2028`, PARAGRAPH SEPARATOR `U+2029`, and NEL `U+0085` — and ANSI
 /// CSI/OSC escape sequences from `value`, dropping them outright (no
 /// placeholder substitution; `display_sanitize_filename` substitutes `?`,
@@ -429,7 +431,8 @@ fn sanitize_control_and_ansi_core(
 ///   sequence started by a stripped C1 introducer are NOT consumed as
 ///   part of that sequence — they survive in the output as inert literal
 ///   text.
-/// - Bidi override characters `U+202A`-`U+202E` and `U+2066`-`U+2069`,
+/// - Bidi embedding/override characters `U+202A`-`U+202E` and bidi isolates
+///   `U+2066`-`U+2069`,
 ///   plus `U+2028` (LINE SEPARATOR), `U+2029` (PARAGRAPH SEPARATOR), and
 ///   `U+0085` (NEL) are STRIPPED — the same Unicode terminal-injection
 ///   code-point set `strip_control_and_ansi` already strips for
@@ -542,12 +545,14 @@ fn is_cf(code: u32) -> bool {
 /// D-399, CWE-451). Every character other than the three whitespace
 /// controls (`\n`, `\r`, `\t`, which each function classifies itself) is
 /// DROPPED if it is:
-/// - a C0 control, DEL, a C1 control, a bidi override/isolate, a Unicode
+/// - a C0 control, DEL, a C1 control, a bidi embedding/override
+///   (`U+202A..=U+202E`) or isolate (`U+2066..=U+2069`), a Unicode
 ///   line/paragraph separator, or NEL; or
 /// - any Unicode 17.0.0 `General_Category=Cf` format character
 ///   ([`CF_RANGES`]: soft hyphen, Arabic prepended marks, ZWSP/ZWNJ/ZWJ/
-///   LRM/RLM, word joiner and invisible operators, all bidi controls
-///   `U+2066..=U+206F`, BOM, interlinear annotation, Egyptian/Kaithi/
+///   LRM/RLM, word joiner and invisible operators, the bidi isolates
+///   `U+2066..=U+2069` and the deprecated format controls
+///   `U+206A..=U+206F`, BOM, interlinear annotation, Egyptian/Kaithi/
 ///   musical format controls, `U+E0001`, `U+E0020..=U+E007F`); or
 /// - the combining grapheme joiner `U+034F` or a blank-rendering Hangul
 ///   filler (`U+115F`, `U+1160`, `U+3164`, `U+FFA0`); or
@@ -783,7 +788,8 @@ mod tests {
         assert_eq!(got, format!("{}\u{2026}", "x".repeat(40)));
     }
 
-    /// Unicode bidi-override controls (U+202A-U+202E, U+2066-U+2069) must
+    /// Unicode bidi embedding/override controls (U+202A-U+202E) and bidi
+    /// isolates (U+2066-U+2069) must
     /// be stripped outright — same code-point set
     /// `cli::issue::attachments::display_sanitize_filename` treats "in
     /// class" (BC-6.1.015 EC-4), mirrored here for the ENV display
@@ -1358,13 +1364,11 @@ mod tests {
     // `render_table_with_styles` is the ONLY production table-mode
     // rendering path for `jr user list`/`jr user view` (`src/cli/user.rs`)
     // — both commands render server-supplied display names and emails
-    // through `StyledCell`s. Before this test group, nothing called
-    // `render_table_with_styles` directly: a regression that dropped the
-    // `sanitize_table_cell(&c.text)` call inside it (e.g. reverting to
-    // `Cell::new(&c.text)`) would silently reopen SEC-001 for every user
-    // command while the whole rest of the suite kept passing, since the
-    // plain-`String` `render_table` chokepoint tests above don't exercise
-    // this sibling function at all.
+    // through `StyledCell`s. These tests call `render_table_with_styles`
+    // directly: a regression that dropped the `sanitize_table_cell(&c.text)`
+    // call inside it (e.g. reverting to `Cell::new(&c.text)`) would reopen
+    // SEC-001 for every user command, and the plain-`String` `render_table`
+    // chokepoint tests above do not exercise this sibling function.
 
     /// A hostile `StyledCell::plain` cell's TEXT must be sanitized
     /// identically to `render_table`'s plain `String` cells — no raw ESC
@@ -1489,10 +1493,10 @@ mod tests {
 
     // ── sanitize_terminal_line (BC-7.1.006, CR-1, D-396/FIX-P5-002) ─────
     //
-    // `sanitize_terminal_line` is implemented and wired into its call
-    // sites (e.g. `handle_comment_view`, `handle_assign`, `disambiguate_user`).
-    // These tests pin its behavior (identical to `sanitize_table_cell`,
-    // except `\n` maps to a single space) and are expected to pass.
+    // `sanitize_terminal_line` is wired into its call sites (e.g.
+    // `handle_comment_view`, `handle_assign`, `disambiguate_user`). These
+    // tests pin its behavior: identical to `sanitize_table_cell`, except
+    // `\n` maps to a single space.
 
     /// EC-17a: an `Author`-field-shaped fixture (modeled on
     /// `handle_comment_view`'s labeled output). A hostile value with an embedded `\n` and no
