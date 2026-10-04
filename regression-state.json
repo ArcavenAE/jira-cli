@@ -1,1 +1,1 @@
-{"status":"pass","timestamp":"2026-10-04T22:42:25Z","command":"timeout 580 cargo test --lib 2>&1 | tail -15"}
+{"status":"pass","timestamp":"2026-10-04T23:31:10Z","command":"timeout 580 cargo test --lib -- output:: cli::field cli::user cli::api 2>&1 | tail -8"}
