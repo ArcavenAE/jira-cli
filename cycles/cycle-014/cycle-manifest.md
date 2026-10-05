@@ -3,7 +3,7 @@ document_type: cycle-manifest
 cycle_id: cycle-014-issue-triage-quickfixes
 cycle_type: bug-fix
 version: TBD — human decision D-390 (2026-09-29, F3 gate) confirms STORY-A (#862) ships as a BREAKING CHANGE; STORY-C (#583) and STORY-B (#861) remain non-breaking. This makes the release bump shape MINOR-or-breaking-flagged rather than three PATCH-shaped fixes as originally proposed at F1. Final version-bump decision stays at release.
-status: f7-in-progress
+status: f7-approved
 started: 2026-09-24
 completed: null
 producer: architect (F1 delta analysis)
@@ -694,3 +694,12 @@ cycle 2):**
   cycle-2 bookkeeping burst (STATE v5.52). **NEXT:** F7 cycle 3, then the
   HUMAN F7 gate and release. Report:
   `phase-f7-convergence/delta-convergence-report.md`.
+- **F7 cycles 3-4 and the human gate** (2026-10-05): cycle 3 dims 1-6
+  converged (F7C3-001 fixed); cycle 4 confirmation run converged all 7
+  dimensions (F7C4-001 fixed). **D-410 (2026-10-05, human): F7 gate
+  APPROVED; cycle-014 closed for release as dev pre-release 0.8.0-dev.2
+  (branch + PR to develop).** The 2 SELF-IMPROVEMENT stories stay draft
+  (backlog); the FUEL_EXHAUSTED cap stays as-is (workaround retained;
+  handed to vsdd-factory as process-gaps #3/#44); `strict: true` branch
+  protection stays deferred. `completed` stays null until the release is
+  done.

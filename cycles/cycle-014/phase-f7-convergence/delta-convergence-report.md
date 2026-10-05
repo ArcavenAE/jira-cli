@@ -110,7 +110,7 @@ Dims 1-6 **CONVERGED**, re-verified on a fresh run. Dim 7 had one LOW finding, `
 | `F7C4-001` | LOW | STATE.md's own burst label, Phase Progress top row and size-budget comment were stale (still described cycle 2/3 as current) | Fixed by a full STATE.md rewrite (v5.54): every position claim (frontmatter, Pipeline Status, Blocking Issues, Convergence Status, Session Resume Checkpoint) now says F7 CONVERGED, human gate next |
 
 Verdict: **ALL 7 DIMENSIONS CONVERGED** after the `F7C4-001` fix. Product unchanged since develop `3fb4cf3b`.
-Next: HUMAN APPROVAL gate, then release.
+Human gate: APPROVED 2026-10-05 (D-410). Next: release as dev pre-release 0.8.0-dev.2 (branch + PR to develop).
 
 ## References
 

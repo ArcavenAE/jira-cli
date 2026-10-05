@@ -268,3 +268,7 @@ F5-pass-1 checkpoint.
 ## Archived checkpoint: STATE v5.53 (2026-10-05, superseded by v5.54)
 
 **Position:** cycle-014 F5 CONVERGED; F6 PASS; F7 cycles 1-3 NOT ALL CONVERGED (bookkeeping findings `F7C1-001`..`005`, `F7C2-001`..`005`, `F7C3-001` all fixed; cycle 3 had dims 1-6 converged). `develop` @ `3fb4cf3b`. LOCKED counts: 773 BCs / 100 VPs / 118 holdout / 196 stories. NEXT was: F7 cycle 4 confirmation run (fresh consistency-validator re-run), then, if all 7 dimensions converge, the HUMAN F7 gate and release. (The v5.52 checkpoint was not separately archived; v5.53 carried the same position plus `F7C3-001`.) Resume: `/vsdd-factory:rehydrate-wave`, then `/vsdd-factory:next-step`.
+
+## Archived checkpoint: STATE v5.54 (2026-10-05, superseded by v5.55)
+
+**Position:** cycle-014 F5 CONVERGED; F6 PASS; F7 CONVERGED (4 cycles; all 7 dimensions; `F7C4-001` fixed by the v5.54 rewrite). `develop` @ `3fb4cf3b`. LOCKED counts: 773 BCs / 100 VPs / 118 holdout / 196 stories. NEXT was: the HUMAN F7 APPROVAL gate. Pending then: (1) whether the 2 DRAFT `SELF-IMPROVEMENT` stories move to `ready`; (2) `S-PG-BC-INDEX-H1-SYNC-1` Decision Point 1 (allowlist vs sweep of 240 mismatches); (3) validator `fuel_cap` / `sidecar-learning.md` compaction; (4) `strict: true` branch protection (DEFERRED); (5) the release version bump. All answered by `D-410`. Resume: `/vsdd-factory:rehydrate-wave`, then `/vsdd-factory:next-step`.
