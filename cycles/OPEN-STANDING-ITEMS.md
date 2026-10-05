@@ -2584,3 +2584,33 @@ fix-propagation claim.
 
 **Disposition:** RECORDED (2026-10-04). **Target:** next maintenance sweep (a spec-guard script
 addition). Tracked in STATE.md's Drift Items table.
+
+---
+
+## F6 follow-ups (cycle-014 Targeted Hardening, 2026-10-05) — NEW, OPEN, target: next maintenance sweep
+
+Source: `cycles/cycle-014/phase-f6-hardening/F6-report.md`. All tracked in STATE.md's Drift Items table.
+
+### `MUTANTS-EXAMINE-GLOBS-HELPERS-WORKFLOW` — LOW, tooling
+
+`src/cli/issue/helpers.rs` and `src/cli/issue/workflow.rs` are changed source files in the cycle-014
+delta but are missing from `.cargo/mutants.toml` `examine_globs`, so they are outside the gated
+mutation scope (8 mutants ran as an ADVISORY pass only). **Target:** next maintenance sweep.
+
+### `MUTANTS-TIMEOUT-HEADROOM` — LOW, tooling
+
+The full test suite takes ~227s against the 240s per-mutant timeout in
+`docs/specs/cargo-mutants-policy.md`, so late kills or survivors report as TIMEOUT rather than a
+definite outcome (two timeouts this cycle had to be resolved by hand or a re-run). **Target:** next
+maintenance sweep (raise the timeout or speed up the baseline).
+
+### `OAUTH-HOLDOUT-KEYCHAIN-HANG` — LOW, test-env, pre-existing (outside the delta)
+
+`tests/oauth_flow_holdouts.rs::test_s_1_06_h_003_profile_precedence_chain` (`jr auth list`) probes
+the real macOS keychain and intermittently hangs. Isolate it via `JR_SERVICE_NAME` or a probe seam.
+**Target:** next maintenance sweep.
+
+### `API-SEPARATOR-ORACLE-NOT-INDEPENDENT` — NIT, test-quality
+
+The `VP-API-QP-001` proptest oracle mirrors the production case split, so it is not an independent
+oracle; the pinned examples carry the independent kill power. **Target:** next maintenance sweep.

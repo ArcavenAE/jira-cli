@@ -252,3 +252,7 @@ F5-pass-1 checkpoint.
 ## Archived checkpoint: STATE v5.48 (2026-10-04, superseded by v5.49)
 
 **Position:** cycle-014 F5 IN PROGRESS; `FIX-P5-015` (#910, comment/rustdoc only) MERGED @ `3fb4cf3b`; the counted Pass 14 over `204b1fb5..3fb4cf3b` DISPATCHED (adversary + code-reviewer + security-reviewer), verdicts pending. Counter 2/3, 13 of 15 recorded, ZERO slips left (Pass 14 must be clean -> F5 CONVERGED 3/3; not clean -> `D-408`, escalate). No open PRs, no fix worktrees. NEXT was: await the Pass 14 verdicts. Resume: `/vsdd-factory:rehydrate-wave`, then `/vsdd-factory:next-step`.
+
+## Archived checkpoint: STATE v5.49 (2026-10-05, superseded by v5.50)
+
+**Position:** cycle-014 F5 CONVERGED (Passes 12, 13, 14 CLEAN, counter 3/3, 14 of 15 used; `D-407`); Phase F6 (targeted hardening) IN PROGRESS -- formal-verifier on the new/changed VPs and security-reviewer final delta scan DISPATCHED, results pending. `develop` @ `3fb4cf3b`. No open PRs, no fix worktrees. NEXT was: collect the F6 results, then F7 delta convergence (consistency-validator 7-dimension loop), then the HUMAN F7 gate and release. Resume: `/vsdd-factory:rehydrate-wave`, then `/vsdd-factory:next-step`.
