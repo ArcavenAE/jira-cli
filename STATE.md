@@ -1,18 +1,18 @@
 ---
 document_type: pipeline-state
 level: ops
-version: "5.52"
+version: "5.53"
 status: active
 producer: state-manager
-timestamp: 2026-10-05T04:17:11Z
-phase: "cycle-014 F7 (Delta Convergence) IN PROGRESS: cycle 2 NOT ALL CONVERGED. Dims 1-5 converged (full evidence recorded); dims 6 and 7 had bookkeeping-only findings F7C2-001..005, all now fixed (F6 report Verdict line, cycle-manifest status + condensed progress block, input-hash refresh on 4 artifacts, new F7 delta-convergence-report.md, STATE open-PR wording). Cycle 1 (F7C1-001..005) was fixed in 6b913096. F6 PASS earlier (mutation 116 mutants: 107 killed / 0 missed / 7 unviable / 2 equivalent); F5 CONVERGED (Passes 12, 13, 14 CLEAN, 3/3). NEXT: F7 cycle 3 (fresh consistency-validator re-run); if all 7 dimensions converge, the HUMAN APPROVAL gate follows, then release. develop @ 3fb4cf3b."
+timestamp: 2026-10-05T04:34:26Z
+phase: "cycle-014 F7 (Delta Convergence) IN PROGRESS: cycle 3 dims 1-6 CONVERGED; dim 7 had F7C3-001 (LOW, wording of a tracked Drift row), now fixed. Cycle 2 (F7C2-001..005) and cycle 1 (F7C1-001..005, 6b913096) were bookkeeping-only fixes. F6 PASS earlier (mutation 116 mutants: 107 killed / 0 missed / 7 unviable / 2 equivalent); F5 CONVERGED (Passes 12, 13, 14 CLEAN, 3/3). NEXT: confirmation run of F7 cycle 4 (fresh consistency-validator re-run); if all 7 dimensions converge, the HUMAN APPROVAL gate follows, then release. develop @ 3fb4cf3b."
 pipeline: ACTIVE
 inputs: []
 input-hash: "[live-state]"
 traces_to: ""
 project: jira-cli
 mode: brownfield
-last_amended: "2026-10-05, v5.51->v5.52, state-manager -- F7 cycle-2 bookkeeping fixes recorded (F7C2-001..005): F6 report header, cycle-manifest refresh, input-hash refresh, F7 delta-convergence-report created, open-PR wording corrected."
+last_amended: "2026-10-05, v5.52->v5.53, state-manager -- F7 cycle 3 recorded (dims 1-6 converged); F7C3-001 fixed (S-PG-OLDER-STORIES-INPUT-HASH-DRIFT Drift row reworded to verified counts)."
 current_step: "CYCLE-014-F7-CYCLE2-BOOKKEEPING-2026-10-05: cycle-014 (issue-triage-quickfixes) ACTIVE, F4 COMPLETE, F5 CONVERGED, F6 PASS, F7 IN PROGRESS (cycle 2 NOT ALL CONVERGED; dims 1-5 converged, dims 6-7 bookkeeping findings F7C2-001..005 all fixed). F7C2-001 F6-report.md Verdict line reworded (advisory pass COMPLETED 8/8). F7C2-002 cycle-manifest.md status f7-in-progress plus one condensed progress block (F5 passes 2-14 through F7 cycle 2). F7C2-003 input-hash refreshed on wave-integration-gate.md, wave-schedule.md, dependency-graph-extended.md, wave-holdout-scenarios.md (session-checkpoints.md and lessons.md keep the deliberate [live-state] sentinel). F7C2-004 phase-f7-convergence/delta-convergence-report.md created. F7C2-005 'No open PRs' reworded (8 Dependabot PRs outside cycle scope). NEXT: F7 cycle 3, then the human F7 gate and release. D-2026 false-positive note (carried): a validate-dispatch-advance hook class can mis-parse Phase Progress row-name date substrings as a phantom D-2026; no such decision exists. trajectory-tail →0→0→0→0 (carried forward unchanged)."
 trajectory_tail: "→0→0→0→0"
 maintenance_run:
@@ -62,9 +62,9 @@ activation_version: "v0.7.0"
 | **Product** | jr (Jira CLI) |
 | **Mode** | BROWNFIELD / Rust |
 | **Target Workspace** | develop to main |
-| **Pipeline Status** | **ACTIVE** -- cycle-014 (`issue-triage-quickfixes`) Phase F4 COMPLETE, Phase F5 CONVERGED (Passes 12, 13, 14 CLEAN, 3/3; 14 of 15 used; `FIX-P5-001` #891 through `FIX-P5-015` #910 MERGED, `develop` @ `3fb4cf3b`), Phase F6 (targeted hardening) PASS, Phase **F7 (delta convergence) IN PROGRESS** (cycles 1 and 2 not all converged; dims 1-5 converged, dims 6-7 bookkeeping findings fixed). NEXT: F7 cycle 3, human approval, release. |
+| **Pipeline Status** | **ACTIVE** -- cycle-014 (`issue-triage-quickfixes`) Phase F4 COMPLETE, Phase F5 CONVERGED (Passes 12, 13, 14 CLEAN, 3/3; 14 of 15 used; `FIX-P5-001` #891 through `FIX-P5-015` #910 MERGED, `develop` @ `3fb4cf3b`), Phase F6 (targeted hardening) PASS, Phase **F7 (delta convergence) IN PROGRESS** (cycles 1 and 2 not all converged; cycle 3 dims 1-6 converged, F7C3-001 fixed). NEXT: confirmation run of F7 cycle 4, human approval, release. |
 | **trajectory-tail** | `→0→0→0→0` (cycle-009's F5 trajectory, carried forward unchanged -- unrelated to cycle-014's own delivery, tracked separately in its own JSON record) |
-| **Last Updated** | 2026-10-05: v5.51->v5.52; F7 cycle-2 bookkeeping fixes recorded (F7C2-001..005). trajectory-tail →0→0→0→0 (carried forward unchanged). |
+| **Last Updated** | 2026-10-05: v5.52->v5.53; F7 cycle 3 dims 1-6 converged, F7C3-001 fixed. trajectory-tail →0→0→0→0 (carried forward unchanged). |
 | **Current Phase** | cycle-014 (`issue-triage-quickfixes`) **F4 COMPLETE, F5 CONVERGED, F6 PASS, F7 IN PROGRESS (cycle 2 done, cycle 3 next)** (`D-392`-`D-409`). cycle-009 remains CLOSED in full (F1-F7, `D-375`). `v0.7.0` remains the current STABLE release on `main`. cycle-010 remains `PARKED/DEFERRED-AT-F1` (`D-377`); cycle-011 remains `PARKED`. |
 | **Activation HEAD** | `86c3ac1f` (`main`'s `--no-ff` merge commit for the `v0.7.0` GA release; matches tag `v0.7.0`) -- **UNCHANGED.** `develop`'s tip is `3fb4cf3b`. |
 
@@ -132,7 +132,7 @@ S-7.02 process-gap checklist for `[process-gap]`-tagged F5 findings (run at F5 c
 | PG `#5` | `JR_AUTH_HEADER` missing from CLAUDE.md `JR_*` table | JR-TOOLING, recorded | next maintenance sweep | `D-408`; add a row or cross-reference |
 | PG `#6` | No guard for the BC-INDEX Coverage Statistics table or CANONICAL-COUNTS Breakdown block | JR-TOOLING, recorded | next maintenance sweep | `D-408`; extend `check-bc-cumulative-counts.sh` or document out of scope |
 | PG `#8` | Nothing compares `cargo-mutants-policy.md`'s "Current examine_globs count" with `.cargo/mutants.toml` | JR-TOOLING, recorded | next maintenance sweep | `D-408`; small guard script |
-| `S-PG-OLDER-STORIES-INPUT-HASH-DRIFT` | 11 pre-cycle-014 `stories/S-PG-*` files are input-hash DRIFT (shared stored hash `c3fc19a` vs computed `70d1caa`); `S-PG-MERGE-AUTH-BYPASS.md` has no `input-hash` field. Outside cycle-014 scope | Recorded; structural class process-gap `#12` | next maintenance sweep | refresh with `compute-input-hash <file> --update`; add the missing field |
+| `S-PG-OLDER-STORIES-INPUT-HASH-DRIFT` | 10 pre-cycle-014 `stories/S-PG-*` files are input-hash DRIFT per `compute-input-hash --check` (8 with stored hash `c3fc19a`: DELTA-DOC-RESYNC, FIX-SCOPE-VERIFY, PRMANAGER-AWAIT, RED-GREEN-SWEEP, REVIEW-DISTINCT, VERBATIM-PIN, VP-CITATION-RECONCILE, VP-REGISTRY; 2 with stored hash `6949e71`: F5-HEADSHA-PREFLIGHT-1, FILTER-ENUM-SYNC-1; computed hashes differ from stored per file); `S-PG-MERGE-AUTH-BYPASS.md` has no `inputs:` or `input-hash:` field. The 2 cycle-014 S-PG stories (`BC-INDEX-H1-SYNC-1`, `FIX-PR-ADV-CONVERGENCE-1`) pass. Outside cycle-014 scope | Recorded; structural class process-gap `#12` | next maintenance sweep | refresh with `compute-input-hash <file> --update`; add the missing field |
 | story-writer note | Existing `S-PG-F5-HEADSHA-PREFLIGHT-1` fails `validate-template-compliance` (missing Architecture Mapping and Purity Classification) | JR-TOOLING, recorded | next maintenance sweep | `D-408`; conform the story to its template |
 
 **`cycles/cycle-014/process-gaps.md` items `#1`-`#53`** are DISPOSITIONED (`D-408`): 45 ENGINE in `cycles/cycle-014/engine-handoff-vsdd-factory.md`, 8 JR-TOOLING in the rows above (`#50`/`#52`/`#53` and `#46` via earlier rows).
@@ -181,9 +181,9 @@ All prior per-cycle constraints narrative is either historical/resolved or dupli
 
 **Date & position:** 2026-10-05. Pipeline **ACTIVE** -- cycle-014 (`issue-triage-quickfixes`), Phase **F4 COMPLETE**, Phase **F5 CONVERGED**, Phase **F6 PASS**, Phase **F7 IN PROGRESS**. Delivered PRs this cycle: STORY-A **#886**, STORY-C **#887**, STORY-B **#888**, `FIX-P5-001`..`FIX-P5-015` **#891..#910** (see `cycle_014_status`). `develop` @ `3fb4cf3b`. No open cycle-014/fix PRs (8 Dependabot PRs open -- #900, #893, #892, #885, #883, #855, #854, #842 -- outside cycle scope), no fix worktrees. LOCKED counts: 773 BCs / 100 VPs / 118 holdout / 196 stories.
 
-**(a) Position and next steps.** NEXT on resume: F7 cycle 3 -- a fresh consistency-validator re-run over the 7 dimensions. If all 7 converge, the HUMAN F7 approval gate follows, then release.
+**(a) Position and next steps.** F7 cycle 3: dims 1-6 CONVERGED; dim 7 had `F7C3-001` (LOW, wording of a tracked Drift row), FIXED in v5.53. NEXT on resume: a confirmation run of F7 cycle 4 (fresh consistency-validator re-run over the 7 dimensions). If all 7 converge, the HUMAN F7 approval gate follows, then release.
 
-**(b) Convergence.** F5 clean-pass counter **3/3** (14 recorded; Pass 15 unused). F6: security PASS, formal PASS, mutation 116 mutants = 107 killed / 0 missed / 7 unviable / 2 equivalent. F7 cycle 1: dims 1-5 converged; `F7C1-001`..`005` fixed in `6b913096` (VP total re-tally `D-409`, process-gap disposition `D-408`, input-hash refresh). F7 cycle 2: dims 1-5 converged (lib 1627, integration suites green, 4 guards pass, VP 100 re-derived, 196 stories); `F7C2-001`..`005` fixed (F6 report header, cycle-manifest, input-hash refresh, F7 report, open-PR wording). Standing leftovers (not blocking): see `cycles/OPEN-STANDING-ITEMS.md` and Drift Items.
+**(b) Convergence.** F5 clean-pass counter **3/3** (14 recorded; Pass 15 unused). F6: security PASS, formal PASS, mutation 116 mutants = 107 killed / 0 missed / 7 unviable / 2 equivalent. F7 cycle 1: dims 1-5 converged; `F7C1-001`..`005` fixed in `6b913096` (VP total re-tally `D-409`, process-gap disposition `D-408`, input-hash refresh). F7 cycle 2: dims 1-5 converged (lib 1627, integration suites green, 4 guards pass, VP 100 re-derived, 196 stories); `F7C2-001`..`005` fixed (F6 report header, cycle-manifest, input-hash refresh, F7 report, open-PR wording). F7 cycle 3: dims 1-6 converged; `F7C3-001` (LOW, Drift-row wording) fixed; cycle 4 is the confirmation run. Standing leftovers (not blocking): see `cycles/OPEN-STANDING-ITEMS.md` and Drift Items.
 
 **(c) In-flight work.** None.
 

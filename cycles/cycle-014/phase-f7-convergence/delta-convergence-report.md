@@ -7,7 +7,7 @@ timestamp: "2026-10-05T00:00:00Z"
 status: in-progress
 delta_ref: "git diff 204b1fb5..3fb4cf3b (STORY-A #886, STORY-C #887, STORY-B #888, FIX-P5-001..015 #891..#910)"
 develop_at: 3fb4cf3b
-recommendation: PENDING (cycle 3)
+recommendation: PENDING (cycle 4 confirmation)
 ---
 
 # Phase F7 Delta-Convergence Report: cycle-014 (`issue-triage-quickfixes`)
@@ -16,8 +16,8 @@ recommendation: PENDING (cycle 3)
 The F7 loop is a fresh consistency-validator re-run over 7 dimensions per cycle (max 10 cycles); the
 cycle closes only when ALL 7 converge in a cycle, followed by the HUMAN F7 approval gate.
 
-**Status: IN PROGRESS.** Cycles 1 and 2 were NOT ALL CONVERGED (bookkeeping findings only, dims 6/7);
-cycle 3 PENDING.
+**Status: IN PROGRESS.** Cycles 1-3 were NOT ALL CONVERGED (bookkeeping findings only); cycle 3 had
+dims 1-6 converged and one LOW dim-7 finding. Cycle 4 PENDING (confirmation).
 
 ## Convergence-cycle history
 
@@ -25,7 +25,8 @@ cycle 3 PENDING.
 |-------|----------|----------|----------|----------|---------|
 | 1 | CONVERGED | findings | `F7C1-001`..`005` | factory-artifacts `6b913096` (`D-408`, `D-409`) | NOT ALL CONVERGED |
 | 2 | CONVERGED (full evidence below) | findings | `F7C2-001`..`005` | cycle-2 bookkeeping burst (STATE v5.52) | NOT ALL CONVERGED (bookkeeping only) |
-| 3 | PENDING | PENDING | PENDING | PENDING | PENDING |
+| 3 | CONVERGED (dims 1-6) | dim 7 finding | `F7C3-001` (LOW) | cycle-3 burst (STATE v5.53) | NOT ALL CONVERGED (wording only) |
+| 4 | PENDING | PENDING | PENDING | PENDING | PENDING (confirmation) |
 
 ## Cycle 1
 
@@ -71,8 +72,27 @@ STATE bumped to **v5.52**. Fixed in the cycle-2 bookkeeping burst.
 
 ## Cycle 3
 
-**PENDING.** A fresh consistency-validator re-run over all 7 dimensions. If all 7 converge: HUMAN F7
-approval gate, then release. The cycle-3 outcome will be appended here.
+Dims 1-6 **CONVERGED**. Dim 7 had one LOW finding, `F7C3-001`, fixed in the cycle-3 burst (STATE v5.53).
+
+### Evidence
+
+- `cargo test --lib`: **1627 passed / 0 failed / 48 ignored**.
+- Suites: `api_query_param` 50, `field_options` 88, `table_output_sanitization` 54, `user_commands` 43, `user_list_project_resolution` 34, `user_pagination` 39, `hermetic_helper` 30, `mutants_glob_existence` 9, `claude_md_citations` 61, `all_flag_behavior` 38, `e2e_cli_surface_guard` 10 (run alone).
+- The 4 guard scripts pass. 196 stories; 773 BCs / 100 VPs.
+- All cycle-014 input hashes match except the 3 deliberate `[live-state]` sentinels.
+
+### Dim 7 finding and fix
+
+| ID | Severity | Finding | Fix |
+|----|----------|---------|-----|
+| `F7C3-001` | LOW | STATE Drift Items row `S-PG-OLDER-STORIES-INPUT-HASH-DRIFT` misstated the observed drift (11 files, shared hash `c3fc19a` vs `70d1caa`) | Reworded to the verified state: 10 pre-cycle-014 `S-PG-*` files DRIFT (8 stored `c3fc19a`; 2 stored `6949e71`), `S-PG-MERGE-AUTH-BYPASS.md` has no `inputs:`/`input-hash:`; the 2 cycle-014 S-PG stories pass. Target (next maintenance sweep) and class (process-gap `#12`) unchanged |
+
+Verdict: NOT ALL CONVERGED (LOW bookkeeping wording only; fixed).
+
+## Cycle 4
+
+**PENDING (confirmation).** A fresh consistency-validator re-run over all 7 dimensions. If all 7
+converge: HUMAN F7 approval gate, then release.
 
 ## References
 
