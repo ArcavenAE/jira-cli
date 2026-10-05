@@ -402,6 +402,7 @@ All use 7-day TTL. Root path (platform-conditional per BC-6.2.016): `~/.cache/jr
 | Bounded contexts | 8 (bc-1..bc-8) + 1 cross-cutting | README.md Document Map |
 | HTTP method types | 11 (Pass 2 R1 verified) | Pass 2 deep R1 §inventory |
 | API resource files | 18 (`api/jira/*`, `api/jsm/*`, `api/assets/*`) | adr-index.md ADR-0001 harmonization |
+| Verification Properties (VP) total | 100 (re-tallied 2026-10-05, F7C1-001, human decision: 89 -> 97 at cycle-014 F2 per `cycles/cycle-014/phase-f2-spec-evolution/verification-delta.md`; +1 VP-SEC-001-001 (FIX-P5-001) = 98; +1 VP-SEC-001-002 (FIX-P5-004) = 99; +1 VP-SEC-001-003 (FIX-P5-005) = 100) | inline VPs in `specs/prd/*.md` BC bodies; `cycles/cycle-014/phase-f6-hardening/F6-report.md` lists all three VP-SEC-001-00N as PROVEN |
 | list.rs LOC (post-split) | 1,256 | `wc -l src/cli/issue/list.rs` |
 | auth.rs LOC | 1,875 | `wc -l src/api/auth.rs` |
 

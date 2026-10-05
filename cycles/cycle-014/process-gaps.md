@@ -2,12 +2,12 @@
 document_type: process-gaps
 level: ops
 version: "1.0"
-status: in-progress
+status: dispositioned
 producer: state-manager
 timestamp: 2026-09-26T00:01:34Z
 cycle: "cycle-014-issue-triage-quickfixes"
 inputs: [STATE.md]
-input-hash: "21a2ccc"
+input-hash: "154b0f6"
 traces_to: STATE.md
 ---
 
@@ -728,7 +728,17 @@ dispositioned — dispositioning happens at cycle close per S-7.02).
 
 ## Disposition
 
-Not yet dispositioned. F2 is CONVERGED per human decision `D-383` and
+**Dispositioned 2026-10-05 (human decision `D-408`, "split by owner").** 53
+items (`#51` has no numbered entry above; it is recorded only in the notes
+below): **45 ENGINE** (`#3 #4 #7 #9 #10 #11 #12 #13 #14`-`#49 #51`) consolidated
+in `cycles/cycle-014/engine-handoff-vsdd-factory.md` for the vsdd-factory repo;
+**8 JR-TOOLING** (`#1 #2 #5 #6 #8 #50 #52 #53`) tracked as STATE.md Drift Items
+(target next maintenance sweep; `#50`/`#52`/`#53` already had rows). Stories:
+`#46` -> `S-PG-FIX-PR-ADV-CONVERGENCE-1` (draft, engine-side), and
+`P11-001`/#906 -> `S-PG-BC-INDEX-H1-SYNC-1` (draft). Nothing left undispositioned.
+History of how the items were recorded follows (original text, unchanged).
+
+Original text: F2 is CONVERGED per human decision `D-383` and
 APPROVED at the F2 human gate (`D-384`) — the S-7.02 cycle-closing checklist
 dispositions each of these 53 items when cycle-014 itself closes, not
 before. **Human decision `D-389` (2026-09-29)** closed F3 adversarial

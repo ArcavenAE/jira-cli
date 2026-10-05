@@ -9,6 +9,32 @@ Track all spec version changes. Most recent version first.
 
 > **Type legend:** Type classifies the SPEC document delta: MINOR = new BCs/VPs/sections; PATCH = amendments to existing bodies/ACs/ECs. Product-semver impact is recorded in the Summary line, independent of Type.
 
+## [2.8.10] - 2026-10-05
+
+### Type: PATCH
+
+### Summary
+
+F7C1-001 (cycle-014 F7 convergence check, finding F7C1-001; human decision: RE-TALLY to 100 VPs; count-record correction only, no spec behavior or content change). The cycle-014 VP total is **100**, not 98. verification-delta.md moved 89 -> 97 at F2; FIX-P5-001 minted VP-SEC-001-001 (98); FIX-P5-004 minted VP-SEC-001-002 (`bc-7-output-render.md` BC-7.1.006) and FIX-P5-005 minted VP-SEC-001-003 — neither was counted, so entries [2.5.x]..[2.8.9] that say "VP count unchanged" after 98 are known-wrong from the FIX-P5-004 entry onward. Those entries are left as dated history; this entry is the correction. BC counts (773 cumulative; 98 / 54 in bc-7) are unaffected. F6 lists VP-SEC-001-001..003 as three separate PROVEN VPs.
+
+### Changed Requirements
+
+- None for the VP re-tally. No BC, VP, or EC behavior changed. **F7C1-004 (NIT, wording accuracy only, folded into this entry):** BC-X.7.002 Fix item 1 no longer says "Pinned exact new string" for the `jr user list --help` project text; clap strips the doc comment's trailing period so `--help` prints it without one, and `tests/user_list_project_resolution.rs::test_bc_x_7_002_help_pins_project_resolution_wording` pins only two whitespace-collapsed substrings (`Project key (overrides the configured default project). Required when no project is configured in` and `or the active profile`). Dated `[CORRECTED 2026-10-05, F7C1-004]` markers added in `specs/prd/cross-cutting.md` (BC-X.7.002 Fix 1) and in story S-cycle14-user-list-project-resolution (AC-008 x2, Task 8).
+
+### Impact Assessment
+
+| Artifact | Change Type | Notes |
+|----------|-------------|-------|
+| `specs/prd/CANONICAL-COUNTS.md` | MODIFIED | New "Verification Properties (VP) total" row = 100 in Other Counts |
+| `cycles/cycle-014/cycle-manifest.md`, `phase-f5-adversarial/{pass-1,F5-convergence-report,FIX-P5-004-spec-delta,FIX-P5-005-spec-delta}.md`, `phase-f2-spec-evolution/verification-delta.md` | MODIFIED | Dated `[CORRECTED 2026-10-05, F7C1-001: ...]` notes beside historical VP-count statements |
+| `specs/prd/cross-cutting.md` | MODIFIED | F7C1-004: dated `[CORRECTED 2026-10-05, F7C1-004]` marker on BC-X.7.002 Fix item 1 (wording accuracy only) |
+| `cycles/cycle-014/phase-f3-stories/S-cycle14-user-list-project-resolution.md` | MODIFIED | F7C1-004: AC-008 x2 and Task 8 corrected-wording markers (bookkeeping only) |
+| STATE.md | NOT TOUCHED by spec-steward | state-manager updates the locked VP count 98 -> 100 (STATE v5.51) |
+
+- **Affected stories:** None. **Migration needed:** NO.
+
+---
+
 ## [2.8.9] - 2026-10-04
 
 ### Type: PATCH

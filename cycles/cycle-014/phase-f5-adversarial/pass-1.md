@@ -68,7 +68,7 @@ underlying limitation behind `F-005` (`AMBIGUOUS-PICKER-ACCOUNT-LABELS`), `CR-3`
 
 `BC-7.1.006`/`VP-SEC-001-001` amended in place, spec `v2.5.5 -> v2.5.6` (PATCH — no new BC/VP ID).
 Full delta: `cycles/cycle-014/phase-f5-adversarial/FIX-P5-002-spec-delta.md`. BC count unchanged
-(773 cumulative, 98/54 in bc-7); VP count unchanged (98). All 4 spec-guard scripts
+(773 cumulative, 98/54 in bc-7); VP count unchanged (98). [CORRECTED 2026-10-05, F7C1-001: 98 was correct at this point; the cycle-014 total later became 100 via VP-SEC-001-002/003.] All 4 spec-guard scripts
 (`check-spec-counts.sh`, `check-bc-cumulative-counts.sh`, `check-bc-citation-symbols.sh`,
 `check-bc-no-numeric-test-counts.sh`) re-run and PASS.
 

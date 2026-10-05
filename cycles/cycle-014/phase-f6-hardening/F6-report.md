@@ -52,7 +52,7 @@ All **PROVEN**: `VP-USER-LIST-PROJECT-001`, `VP-580-013`, `VP-API-QP-001..006`, 
 - The 2 equivalents are `output.rs:474:9` and `output.rs:624:9`, each deleting the `'\r'` match arm: `classify_default_char` already drops C0 controls. Confirmed by hand.
 - Two timeouts were resolved as kills: `field.rs:119` `handle` -> `Ok(())` was caught in run 3; `user.rs:115` `handle_view` -> `Ok(())` was confirmed by hand (7 `user_view` tests fail).
 - It took three runs: run 1 hit the 2h background limit, and the run 2 baseline hung.
-- **ADVISORY pass pending:** 8 mutants in `helpers.rs` / `workflow.rs` (outside `examine_globs`) are in flight. Results to be appended.
+- **ADVISORY pass (completed 2026-10-05):** Advisory pass on helpers.rs/workflow.rs (8 mutants, `--no-config --in-diff`, `--all-features`, skipping the keychain-hanging holdout test): 8/8 CAUGHT (disambiguation_labels ×3, disambiguate_user ×4, handle_assign ×1). Cycle mutation total: 116 mutants, 107 killed, 0 missed, 7 unviable, 2 equivalent.
 
 ## 4. Follow-ups (target: next maintenance sweep)
 

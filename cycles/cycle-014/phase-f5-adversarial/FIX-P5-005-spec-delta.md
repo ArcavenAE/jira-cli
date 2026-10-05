@@ -176,5 +176,5 @@ Mechanical citation conversion; no human decision required except where noted.
   (`src/cli/field.rs::test_bc_x_14_001_search_field_list_duplicate_case_insensitive_ids_is_ambiguous`,
   added in PR #897's review round). Fixture note: the unit exact-not-substring test probes `issue`
   (resolves via NAME substring) and `issuet` (not found); the integration test uses `issuet`.
-- Counts unchanged (98/54 bc-7; 162/96 cross-cutting; 773 cumulative).
+- Counts unchanged (98/54 bc-7; 162/96 cross-cutting; 773 cumulative). [CORRECTED 2026-10-05, F7C1-001: BC counts stand, but VP count was NOT unchanged: VP-SEC-001-003 raised the VP total 99 -> 100.]
 

@@ -256,3 +256,7 @@ F5-pass-1 checkpoint.
 ## Archived checkpoint: STATE v5.49 (2026-10-05, superseded by v5.50)
 
 **Position:** cycle-014 F5 CONVERGED (Passes 12, 13, 14 CLEAN, counter 3/3, 14 of 15 used; `D-407`); Phase F6 (targeted hardening) IN PROGRESS -- formal-verifier on the new/changed VPs and security-reviewer final delta scan DISPATCHED, results pending. `develop` @ `3fb4cf3b`. No open PRs, no fix worktrees. NEXT was: collect the F6 results, then F7 delta convergence (consistency-validator 7-dimension loop), then the HUMAN F7 gate and release. Resume: `/vsdd-factory:rehydrate-wave`, then `/vsdd-factory:next-step`.
+
+## Archived checkpoint: STATE v5.50 (2026-10-05, superseded by v5.51)
+
+**Position:** cycle-014 F5 CONVERGED; Phase F6 PASS (formal + security PASS; mutation 99 killed / 0 missed / 7 unviable / 2 equivalent of 108); an ADVISORY helpers.rs/workflow.rs mutation pass (8 mutants) was in flight, results to be appended to `F6-report.md`. `develop` @ `3fb4cf3b`. No open PRs, no fix worktrees. NEXT was: F7 delta convergence (consistency-validator 7-dimension loop, max 10 cycles), then the HUMAN F7 gate and release. Pending then: formal disposition of process-gap items `#1`-`#53`; whether BC-INDEX H1 sync guard (#906) and fix-PR adversary-convergence gate (`#46`) become `SELF-IMPROVEMENT` stories. Resume: `/vsdd-factory:rehydrate-wave`, then `/vsdd-factory:next-step`.

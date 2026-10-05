@@ -782,10 +782,16 @@ Fix:
    calls `Config::project_key` (`src/config.rs::Config::project_key`), which also falls back to the
    active profile's configured `project` default, so `component list` behaves the same way;
    only its help text understates that. `user list`'s new help text names both sources
-   explicitly. Pinned exact new string:
+   explicitly. Intended help wording **[CORRECTED 2026-10-05, F7C1-004]** (previously "Pinned exact new string", which overstated what is enforced):
    "Project key (overrides the configured default project). Required when no project is
-   configured in `.jr.toml` or the active profile." — asserted by VP-USER-LIST-PROJECT-001's
-   `--help` cell.
+   configured in `.jr.toml` or the active profile" — the source doc comment
+   (`src/cli/mod.rs::UserCommand::List.project`) ends with a period, but clap strips the trailing
+   period of an argument's doc-comment help, so `jr user list --help` prints the text WITHOUT it. Only
+   two substrings are pinned (whitespace-collapsed `--help` stdout), by VP-USER-LIST-PROJECT-001(d)'s `--help` cell
+   (`tests/user_list_project_resolution.rs::test_bc_x_7_002_help_pins_project_resolution_wording`):
+   `Project key (overrides the configured default project). Required when no project is configured in`
+   and `or the active profile`. The remainder of the wording (including `.jr.toml` and the trailing
+   period question) is not test-pinned.
 2. Once required-argument validation no longer blocks it, clap's existing global-value propagation (`fill_in_global_values`) fills the local field automatically whenever only the global `--project` is given; when both local and global are given, the local (child) value wins and that value propagates back up to the shared global-position arg. Both behaviors are clap's own mechanism — no `jr`-level local-vs-global merge code is written for this half of the resolution.
 3. `cli::user::handle` gains a `&Config` parameter, threaded through to `handle_list` for the config-default fallback step. `src/main.rs`'s `Command::User` arm passes the `config` binding it already constructs (`Config::load_with(cli.profile.as_deref())`) through unchanged. `handle`/`handle_list` MUST NOT call `Config::load`/`Config::load_with` themselves — reloading would ignore the `--profile`/`JR_PROFILE` selection already resolved into that binding.
 4. A pure resolver is extracted in `src/cli/user.rs`, matching `src/cli/field.rs::resolve_m2_project`'s signature style:

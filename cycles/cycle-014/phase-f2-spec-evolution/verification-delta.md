@@ -38,7 +38,7 @@ updated_vps: []   # VP-580-008 (BC-X.14.003 JSON/table shape) deliberately NOT m
 kani_proofs_new: []
 fuzz_targets_new: []
 related_bcs: [BC-X.7.002, BC-X.14.001, BC-X.14.003, BC-X.16.001, BC-X.16.002]
-input-hash: "99d177c"
+input-hash: "136912e"
 ---
 
 # Verification Delta: issue-triage-quickfixes (cycle-014)
@@ -391,6 +391,6 @@ throughout):
 2. `--project ""` passes through as `Some("")` (VP-USER-LIST-PROJECT-001's empty-string cells).
 3. A `-q` NAME colliding with an existing query sends both pairs, existing first (VP-API-QP-001/002).
 
-Remaining hand-offs: state-manager sets the VP count to 97 at F2 close; F3 anchors STORY-A
+Remaining hand-offs: state-manager sets the VP count to 97 at F2 close [CORRECTED 2026-10-05, F7C1-001: 97 was correct at F2 close; the cycle-014 total is now 100 after FIX-P5-001/004/005 minted VP-SEC-001-001..003]; F3 anchors STORY-A
 (#862) → VP-USER-LIST-PROJECT-001, STORY-B (#861) → VP-580-013, STORY-C (#583) →
 VP-API-QP-001..006.

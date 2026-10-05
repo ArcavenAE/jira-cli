@@ -111,4 +111,4 @@ dispositions for the F5 pass findings are in STATE.md's Drift Items table.
 ## Final State
 
 F5 CONVERGED at 3/3 (Passes 12, 13, 14); 14 of 15 passes used; `develop` @ `3fb4cf3b`; locked
-counts unchanged (773 BCs / 98 VPs / 118 holdout scenarios / 194 stories). Cycle-014 proceeds to F6.
+counts unchanged (773 BCs / 98 VPs / 118 holdout scenarios / 194 stories) [CORRECTED 2026-10-05, F7C1-001: VP total is 100, not 98: VP-SEC-001-002 (FIX-P5-004) and VP-SEC-001-003 (FIX-P5-005) were never counted; BC/holdout/story counts stand]. Cycle-014 proceeds to F6.

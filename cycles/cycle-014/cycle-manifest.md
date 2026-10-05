@@ -39,7 +39,7 @@ comment view / SEC-003, `D-394` `jr issue assign` / re-review residual, `D-395` 
 `disambiguate_user` resolver / SEC-891-2, which also froze the PR's scope) — full round-by-round
 review narrative: `code-delivery/FIX-P5-001/review-summary.md`. Final CI head `2973ef65`:
 24/24 checks green. Spec `bc-7-output-render.md` `v2.5.1` -> `v2.5.5`; BC count unchanged 773,
-VP count unchanged 98.
+VP count unchanged 98. [CORRECTED 2026-10-05, F7C1-001: the cycle-wide VP total is 100, not 98 — VP-SEC-001-002 (FIX-P5-004) and VP-SEC-001-003 (FIX-P5-005) were minted later but never counted; 98 was correct only at FIX-P5-001 merge.]
 
 ## Summary
 
@@ -614,7 +614,7 @@ message string. Spec `bc-7-output-render.md` progressed
 `-> v2.5.4` (D-395, EC-16, JSON decision) `-> v2.5.5` (post-merge:
 `**Trace**` citations made live, EC-15/EC-16 pinned-test names
 corrected, new `resolve_asset` Out-of-scope residual added). BC count
-unchanged 773; VP count unchanged 98 throughout. Full round-by-round
+unchanged 773; VP count unchanged 98 throughout. [CORRECTED 2026-10-05, F7C1-001: 98 holds only through FIX-P5-001..002; the cycle-014 VP total is 100 after FIX-P5-004/005.] Full round-by-round
 review narrative: `code-delivery/FIX-P5-001/review-summary.md`. The
 original security-reviewer dispatch for this PR hung indefinitely and
 never returned; the orchestrator dispatched a fresh one, which is the

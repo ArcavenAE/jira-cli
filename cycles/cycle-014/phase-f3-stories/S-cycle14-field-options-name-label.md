@@ -35,7 +35,7 @@ inputs:
   - "Cargo.toml"
   - ".factory/specs/architecture/ARCH-INDEX.md"
   - ".factory/cycles/cycle-014/cycle-manifest.md"
-input-hash: "a014e70"
+input-hash: "7473385"
 traces_to: "BC-X.14.001, BC-X.14.003, BC-X.14.004"
 cycle: cycle-014-issue-triage-quickfixes
 estimated_effort: medium

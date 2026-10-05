@@ -81,7 +81,7 @@ policy list and `output.rs` LOC note. Run the four spec guards after any spec ed
 - this file
 
 Stories affected by BC changes: none (no `bcs:` array changes). VP citations changed in: BC-7.1.006
-(new VP-SEC-001-002; architect should add it to VP-INDEX if VP-SEC-001-001 is indexed there).
+(new VP-SEC-001-002; architect should add it to VP-INDEX if VP-SEC-001-001 is indexed there). [CORRECTED 2026-10-05, F7C1-001: this mint raised the VP total 98 -> 99; it was not counted at the time (no VP-INDEX exists in this repo).]
 
 ## 7. Post-merge conversion (spec v2.6.1, BC-7.1.006 v1.5.1)
 

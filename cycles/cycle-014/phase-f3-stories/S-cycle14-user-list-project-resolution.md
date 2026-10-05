@@ -42,7 +42,7 @@ inputs:
   - "scripts/check-cargo-mutants-policy-citations.sh"
   - "Cargo.toml"
   - "CHANGELOG.md"
-input-hash: "a2f38ad"
+input-hash: "bcc01d6"
 traces_to: "BC-X.7.002"
 cycle: cycle-014-issue-triage-quickfixes
 estimated_effort: small
@@ -394,8 +394,8 @@ file's existing non-hermetic `tests/user_pagination.rs::jr_cmd_json` helper, whi
 global-flag variant is WIRING-EXEMPT / GREEN-at-stub (resolves via clap propagation alone);
 the configured-default variant is RED-at-stub (hits the `None` arm, Task 7(b)).
 ### AC-008 (traces to BC-X.7.002 Fix step 1 [CC:L759-774] (pinned help text portion), VP-USER-LIST-PROJECT-001(d) [CC:L895-901])
-`jr user list --help` exits 0 and its stdout (whitespace-collapsed) contains the VP(d) test substrings: `"Project key (overrides the configured default project). Required when no project is configured in"` and `"or the active profile"`. These two substrings are (O) observed by this AC's own `--help` test, below. The test's own pin is not the full pinned wording -- the exact full-string match (BC-X.7.002 Fix step 1's pinned exact string, `cross-cutting.md` ~L772-773) is (U) runtime-observable via `--help`; no full-string cell by design -- VP(d) pins two
-substrings; exact full string enforced at PR review.
+`jr user list --help` exits 0 and its stdout (whitespace-collapsed) contains the VP(d) test substrings: `"Project key (overrides the configured default project). Required when no project is configured in"` and `"or the active profile"`. These two substrings are (O) observed by this AC's own `--help` test, below. The test's own pin is not the full pinned wording -- the full-string match (BC-X.7.002 Fix step 1's intended help wording, `cross-cutting.md` ~L772-773; **[CORRECTED 2026-10-05, F7C1-004]** no longer called "pinned exact" -- clap strips the doc comment's trailing period, so `--help` prints it without one, and only the two substrings are test-pinned) is (U) runtime-observable via `--help`; no full-string cell by design -- VP(d) pins two
+substrings; full string enforced at PR review (**[CORRECTED 2026-10-05, F7C1-004]** the two substrings are the only pin; the full string is not exact-matched).
 **Test:** Implements VP-USER-LIST-PROJECT-001(d) in full [CC:L895-901] (O) observed by this AC's
 own `--help` test, below; this
 AC's own body above states BC-X.7.002 Fix step 1's pinned help text, not a VP-cell paraphrase,
@@ -743,8 +743,8 @@ token estimates are load-bearing for the budget-usage row below.)
 
    Denominator is nonzero (11), so this is not the Full-Exception Path, and RED_RATIO clears the
    threshold without invoking either Remediation Option A or B.
-8. [ ] Finalize the `help` text to BC-X.7.002 Fix step 1's pinned exact string
-   (cross-cutting.md ~L772-773), byte-for-byte; AC-008's two substrings are the test pin, not
+8. [ ] Finalize the `help` text to BC-X.7.002 Fix step 1's intended wording
+   (cross-cutting.md ~L772-773) **[CORRECTED 2026-10-05, F7C1-004: was "pinned exact string ... byte-for-byte"; the doc comment keeps the trailing period, clap strips it from `--help`, only the two AC-008 substrings are pinned]**; AC-008's two substrings are the test pin, not
    the full wording (the `String` -> `Option<String>` type change already landed in Task 1)
    (AC-008) -- `implementer`
 9. [ ] Replace `resolve_user_list_project`'s `todo!()` with its real body

@@ -41,7 +41,7 @@ inputs:
   - "CHANGELOG.md"
   - "Cargo.toml"
   - "scripts/check-cargo-mutants-policy-citations.sh"
-input-hash: "43194e9"
+input-hash: "e0e2f9e"
 traces_to: "BC-X.16.001, BC-X.16.002"
 cycle: cycle-014-issue-triage-quickfixes
 estimated_effort: large
