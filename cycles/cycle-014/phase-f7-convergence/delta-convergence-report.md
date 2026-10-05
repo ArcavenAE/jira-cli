@@ -4,10 +4,10 @@ cycle: cycle-014-issue-triage-quickfixes
 phase: phase-f7-delta-convergence
 producer: state-manager (F7 delta-convergence record, from orchestrator-supplied cycle results)
 timestamp: "2026-10-05T00:00:00Z"
-status: in-progress
+status: converged
 delta_ref: "git diff 204b1fb5..3fb4cf3b (STORY-A #886, STORY-C #887, STORY-B #888, FIX-P5-001..015 #891..#910)"
 develop_at: 3fb4cf3b
-recommendation: PENDING (cycle 4 confirmation)
+recommendation: APPROVE (all 7 dimensions converged; awaiting the HUMAN approval gate)
 ---
 
 # Phase F7 Delta-Convergence Report: cycle-014 (`issue-triage-quickfixes`)
@@ -16,8 +16,9 @@ recommendation: PENDING (cycle 4 confirmation)
 The F7 loop is a fresh consistency-validator re-run over 7 dimensions per cycle (max 10 cycles); the
 cycle closes only when ALL 7 converge in a cycle, followed by the HUMAN F7 approval gate.
 
-**Status: IN PROGRESS.** Cycles 1-3 were NOT ALL CONVERGED (bookkeeping findings only); cycle 3 had
-dims 1-6 converged and one LOW dim-7 finding. Cycle 4 PENDING (confirmation).
+**Status: ALL 7 DIMENSIONS CONVERGED** after the `F7C4-001` fix. Cycles 1-4 produced bookkeeping-only
+findings (all fixed); cycle 4 confirmed dims 1-6 on a fresh run and had one LOW dim-7 finding. Product
+unchanged since develop `3fb4cf3b`. Ready for the HUMAN APPROVAL gate.
 
 ## Convergence-cycle history
 
@@ -26,7 +27,7 @@ dims 1-6 converged and one LOW dim-7 finding. Cycle 4 PENDING (confirmation).
 | 1 | CONVERGED | findings | `F7C1-001`..`005` | factory-artifacts `6b913096` (`D-408`, `D-409`) | NOT ALL CONVERGED |
 | 2 | CONVERGED (full evidence below) | findings | `F7C2-001`..`005` | cycle-2 bookkeeping burst (STATE v5.52) | NOT ALL CONVERGED (bookkeeping only) |
 | 3 | CONVERGED (dims 1-6) | dim 7 finding | `F7C3-001` (LOW) | cycle-3 burst (STATE v5.53) | NOT ALL CONVERGED (wording only) |
-| 4 | PENDING | PENDING | PENDING | PENDING | PENDING (confirmation) |
+| 4 | CONVERGED (dims 1-6, re-verified fresh) | dim 7 finding | `F7C4-001` (LOW) | cycle-4 burst (STATE v5.54) | **ALL 7 CONVERGED** after the fix |
 
 ## Cycle 1
 
@@ -89,10 +90,27 @@ Dims 1-6 **CONVERGED**. Dim 7 had one LOW finding, `F7C3-001`, fixed in the cycl
 
 Verdict: NOT ALL CONVERGED (LOW bookkeeping wording only; fixed).
 
-## Cycle 4
+## Cycle 4 (confirmation)
 
-**PENDING (confirmation).** A fresh consistency-validator re-run over all 7 dimensions. If all 7
-converge: HUMAN F7 approval gate, then release.
+Dims 1-6 **CONVERGED**, re-verified on a fresh run. Dim 7 had one LOW finding, `F7C4-001`, fixed in the cycle-4 burst (STATE v5.54).
+
+### Evidence
+
+- `cargo test --lib`: **1627 passed / 0 failed / 48 ignored**.
+- All integration suites pass: `api_query_param` 50, `field_options` 88, `table_output_sanitization` 54, `user_commands` 43, `user_list_project_resolution` 34, `user_pagination` 39, `hermetic_helper` 30, `mutants_glob_existence` 9, `claude_md_citations` 61, `all_flag_behavior` 38, `e2e_cli_surface_guard` 10 (run alone).
+- `cargo fmt` and `cargo clippy` clean.
+- The 4 guard scripts pass. LOCKED counts 773 BCs / 100 VPs / 196 stories / 118 holdout.
+- Input hashes clean except the deliberate `[live-state]` sentinels.
+- Drift-row counts re-verified: 10 older `S-PG-*` stories with input-hash drift, 8 Dependabot PRs, 240 H1<->BC-INDEX mismatches out of 528.
+
+### Dim 7 finding and fix
+
+| ID | Severity | Finding | Fix |
+|----|----------|---------|-----|
+| `F7C4-001` | LOW | STATE.md's own burst label, Phase Progress top row and size-budget comment were stale (still described cycle 2/3 as current) | Fixed by a full STATE.md rewrite (v5.54): every position claim (frontmatter, Pipeline Status, Blocking Issues, Convergence Status, Session Resume Checkpoint) now says F7 CONVERGED, human gate next |
+
+Verdict: **ALL 7 DIMENSIONS CONVERGED** after the `F7C4-001` fix. Product unchanged since develop `3fb4cf3b`.
+Next: HUMAN APPROVAL gate, then release.
 
 ## References
 
