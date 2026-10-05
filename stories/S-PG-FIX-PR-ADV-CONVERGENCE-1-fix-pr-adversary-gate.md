@@ -44,7 +44,7 @@ inputs:
   - ".factory/STATE.md"
   - ".factory/cycles/OPEN-STANDING-ITEMS.md"
   - ".factory/cycles/cycle-014/process-gaps.md"
-input-hash: "488fcfd"
+input-hash: "7d4d689"
 traces_to: "cycle-014 process-gap #46 (F5 Pass 1 adversary observation); standing item FIX-PR-NO-ADVERSARY-CONVERGENCE; human decision D-406(c) (uncounted rehearsal pass adopted)"
 spec_source: "Human F7-gate disposition of cycle-014 process-gap items (STATE.md Pending human decisions (d)). Engine-side hand-off story: implementation lives in the vsdd-factory repo. Drafted for human review; NOT approved for delivery."
 implementation_strategy: tdd

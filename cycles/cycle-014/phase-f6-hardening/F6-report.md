@@ -13,7 +13,7 @@ traces_to: ""
 # cycle-014 F6 Targeted Hardening Report
 
 **Delta:** `204b1fb5..3fb4cf3b` (develop @ `3fb4cf3b`)
-**Verdict:** **PASS** (formal + security). One ADVISORY mutation pass (helpers.rs / workflow.rs) is still in flight; its results will be appended here later.
+**Verdict:** **PASS** (formal + security). advisory helpers/workflow pass COMPLETED 8/8 caught; cycle total 116 mutants, 107 killed, 0 missed, 7 unviable, 2 equivalent — see section 3.
 **Not applicable:** dtu-validator, accessibility audit, demo (no DTU clones, no UI).
 
 ## 1. Security final scan: PASS, no findings

@@ -3,7 +3,7 @@ document_type: cycle-manifest
 cycle_id: cycle-014-issue-triage-quickfixes
 cycle_type: bug-fix
 version: TBD — human decision D-390 (2026-09-29, F3 gate) confirms STORY-A (#862) ships as a BREAKING CHANGE; STORY-C (#583) and STORY-B (#861) remain non-breaking. This makes the release bump shape MINOR-or-breaking-flagged rather than three PATCH-shaped fixes as originally proposed at F1. Final version-bump decision stays at release.
-status: f5-in-progress
+status: f7-in-progress
 started: 2026-09-24
 completed: null
 producer: architect (F1 delta analysis)
@@ -662,3 +662,35 @@ PROGRESS, pass 1 NOT CLEAN, fix implemented but not yet merged.** **NEXT:**
 security review) -> human merges -> worktree cleanup -> F5 **Pass 2**
 (fresh adversary + code-reviewer + security-reviewer) over
 `204b1fb5..<new develop HEAD>`. See `STATE.md` v5.23 for full detail.
+
+**2026-10-01..2026-10-05 (condensed progress, F5 passes 2-14 through F7
+cycle 2):**
+
+- **F5 passes 2-14.** Passes 1-11 NOT CLEAN (doc/spec drift after pass 4;
+  MEDIUMs at passes 9, 10, 11). Passes 12, 13, 14 CLEAN (NIT-only counts
+  clean, D-407(a)): **F5 CONVERGED 3/3**, 14 of 15 passes used, develop @
+  `3fb4cf3b`. Detail: `phase-f5-adversarial/pass-2.md` .. `pass-14.md`,
+  `phase-f5-adversarial/F5-convergence-report.md`.
+- **Fix PRs FIX-P5-003..015** (all MERGED by the human): FIX-P5-003 #895
+  (D-397), -004 #896 (D-398), -005 #897 (D-399), -006 #898 (D-400), -007
+  #899 (D-401), -008 #901 (D-402), -009 #902 (D-403), -010 #903 (D-404),
+  -011 #905 (D-405), -012 #907 (D-406), -013 #908 (rehearsal fixes,
+  docs/help only), -014 #909 (D-407, comment-only), -015 #910 (D-407(b),
+  comment-only). Spec deltas: `phase-f5-adversarial/FIX-P5-NNN-spec-delta.md`.
+- **Decisions D-397..D-409** minted (D-403 raised the pass cap 10 -> 15;
+  D-406(c) adopted the uncounted fresh-adversary **rehearsal process**
+  before each counted pass; D-407 NIT-only passes count clean; D-408
+  process-gap disposition by owner; D-409 VP total re-tallied to 100).
+- **F6 PASS** (2026-10-05, over `204b1fb5..3fb4cf3b`): security PASS, formal
+  PASS, mutation 116 mutants = 107 killed / 0 missed / 7 unviable / 2
+  equivalent (advisory helpers/workflow pass 8/8 caught). Report:
+  `phase-f6-hardening/F6-report.md`.
+- **F7 cycle 1** (2026-10-05): dims 1-5 CONVERGED; dims 6/7 had
+  F7C1-001..005 (VP total re-tally, input-hash drift, wording note,
+  advisory pass); all fixed in factory-artifacts `6b913096` (D-408/D-409).
+- **F7 cycle 2** (2026-10-05): dims 1-5 CONVERGED; dims 6/7 had
+  F7C2-001..005 (stale F6 header, stale manifest, input-hash drift, missing
+  F7 report, STATE open-PR wording), bookkeeping only; fixed in the
+  cycle-2 bookkeeping burst (STATE v5.52). **NEXT:** F7 cycle 3, then the
+  HUMAN F7 gate and release. Report:
+  `phase-f7-convergence/delta-convergence-report.md`.
