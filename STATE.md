@@ -4,7 +4,7 @@ level: ops
 version: "5.52"
 status: active
 producer: state-manager
-timestamp: 2026-10-05T04:15:39Z
+timestamp: 2026-10-05T04:17:11Z
 phase: "cycle-014 F7 (Delta Convergence) IN PROGRESS: cycle 2 NOT ALL CONVERGED. Dims 1-5 converged (full evidence recorded); dims 6 and 7 had bookkeeping-only findings F7C2-001..005, all now fixed (F6 report Verdict line, cycle-manifest status + condensed progress block, input-hash refresh on 4 artifacts, new F7 delta-convergence-report.md, STATE open-PR wording). Cycle 1 (F7C1-001..005) was fixed in 6b913096. F6 PASS earlier (mutation 116 mutants: 107 killed / 0 missed / 7 unviable / 2 equivalent); F5 CONVERGED (Passes 12, 13, 14 CLEAN, 3/3). NEXT: F7 cycle 3 (fresh consistency-validator re-run); if all 7 dimensions converge, the HUMAN APPROVAL gate follows, then release. develop @ 3fb4cf3b."
 pipeline: ACTIVE
 inputs: []
@@ -50,7 +50,7 @@ activation_version: "v0.7.0"
 <!-- STATE.md SIZE BUDGET (2026-10-05, v5.52):
      F7 cycle-2 bookkeeping fixes recorded (F7C2-001..005); no new D-NNN.
      v5.51 checkpoint superseded (archived to cycles/cycle-014/session-checkpoints.md).
-     soft target 200 lines; hard cap 500 lines. 197 lines (wc-l); margin from soft-target = 3 (200 - 197); margin from actual = 303 (500 - 197).
+     soft target 200 lines; hard cap 500 lines. 198 lines (wc-l); margin from soft-target = 2 (200 - 198); margin from actual = 302 (500 - 198).
 -->
 
 # Pipeline State: jira-cli
@@ -132,6 +132,7 @@ S-7.02 process-gap checklist for `[process-gap]`-tagged F5 findings (run at F5 c
 | PG `#5` | `JR_AUTH_HEADER` missing from CLAUDE.md `JR_*` table | JR-TOOLING, recorded | next maintenance sweep | `D-408`; add a row or cross-reference |
 | PG `#6` | No guard for the BC-INDEX Coverage Statistics table or CANONICAL-COUNTS Breakdown block | JR-TOOLING, recorded | next maintenance sweep | `D-408`; extend `check-bc-cumulative-counts.sh` or document out of scope |
 | PG `#8` | Nothing compares `cargo-mutants-policy.md`'s "Current examine_globs count" with `.cargo/mutants.toml` | JR-TOOLING, recorded | next maintenance sweep | `D-408`; small guard script |
+| `S-PG-OLDER-STORIES-INPUT-HASH-DRIFT` | 11 pre-cycle-014 `stories/S-PG-*` files are input-hash DRIFT (shared stored hash `c3fc19a` vs computed `70d1caa`); `S-PG-MERGE-AUTH-BYPASS.md` has no `input-hash` field. Outside cycle-014 scope | Recorded; structural class process-gap `#12` | next maintenance sweep | refresh with `compute-input-hash <file> --update`; add the missing field |
 | story-writer note | Existing `S-PG-F5-HEADSHA-PREFLIGHT-1` fails `validate-template-compliance` (missing Architecture Mapping and Purity Classification) | JR-TOOLING, recorded | next maintenance sweep | `D-408`; conform the story to its template |
 
 **`cycles/cycle-014/process-gaps.md` items `#1`-`#53`** are DISPOSITIONED (`D-408`): 45 ENGINE in `cycles/cycle-014/engine-handoff-vsdd-factory.md`, 8 JR-TOOLING in the rows above (`#50`/`#52`/`#53` and `#46` via earlier rows).

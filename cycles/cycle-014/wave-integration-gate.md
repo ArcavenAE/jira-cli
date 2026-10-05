@@ -9,7 +9,7 @@ status: PASSED
 inputs:
   - "STATE.md"
   - "cycles/cycle-014/cycle-manifest.md"
-input-hash: "170a35a"
+input-hash: "cc83f85"
 ---
 
 # cycle-014 Combined Wave Integration Gate — PASSED

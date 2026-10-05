@@ -44,7 +44,7 @@ inputs:
   - ".factory/STATE.md"
   - ".factory/cycles/cycle-014/phase-f5-adversarial/FIX-P5-012-spec-delta.md"
   - ".factory/cycles/cycle-014/phase-f5-adversarial/FIX-P5-012-h1-sync-baseline.txt"
-input-hash: "153ab4e"
+input-hash: "e635313"
 traces_to: "GitHub issue #906; cycle-014 F5 Pass 11 process-gap P11-001; human decision D-406(b); standing item BC-INDEX-H1-SYNC-GUARD (OPEN-STANDING-ITEMS)"
 spec_source: "Human F7-gate disposition of cycle-014 process-gap items (STATE.md Pending human decisions (d)): open SELF-IMPROVEMENT-epic stories for BC-INDEX-H1-SYNC-GUARD and FIX-PR-NO-ADVERSARY-CONVERGENCE. Drafted for human review; NOT approved for delivery."
 implementation_strategy: tdd

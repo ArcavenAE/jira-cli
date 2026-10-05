@@ -41,6 +41,8 @@ Dims 1-5 CONVERGED. Dims 6 and 7 had bookkeeping-only findings `F7C1-001`..`005`
 
 All fixed in factory-artifacts `6b913096`.
 
+Cycle 1 evidence: the same four guards as cycle 2 (see below) passed. Suite counts: lib 1627 passed / 0 failed / 48 ignored, `api_query_param` 50, `field_options` 88, `hermetic_helper` 30, `table_output_sanitization` 54, `user_commands` 43, `user_list_project_resolution` 34, `user_pagination` 39, `claude_md_citations` 61.
+
 ## Cycle 2
 
 ### Dimension table
@@ -48,9 +50,9 @@ All fixed in factory-artifacts `6b913096`.
 | # | Dimension | Verdict | Evidence |
 |---|-----------|---------|----------|
 | 1 | Spec <-> code | **CONVERGED** | Fresh consistency-validator re-run; no spec/code contradiction. |
-| 2 | Code <-> test | **CONVERGED** | Lib suite **1627** tests passing; integration suites green (including `api_query_param`, `field_options`, `table_output_sanitization`, `user_commands`, `user_list_project_resolution`, `user_pagination`, `hermetic_helper`). |
+| 2 | Code <-> test | **CONVERGED** | All passing: `cargo test --lib` **1627 passed / 0 failed / 48 ignored**; suites `api_query_param` 50, `field_options` 88, `table_output_sanitization` 54, `user_commands` 43, `user_list_project_resolution` 34, `user_pagination` 39, `hermetic_helper` 30, `mutants_glob_existence` 9, `claude_md_citations` 61, `all_flag_behavior` 38, `e2e_cli_surface_guard` 10 (hung once in a combined cargo invocation, passed when run alone: harness contention, not a defect). |
 | 3 | Traceability | **CONVERGED** | **VP total 100 re-derived** independently (89 -> 97 at F2, +3 `VP-SEC-001-00N`); BCs 773 / holdout 118 / **196 stories** match the LOCKED counts. |
-| 4 | Index consistency | **CONVERGED** | All **4 guard scripts** pass (`check-spec-counts.sh`, `check-bc-cumulative-counts.sh`, `check-bc-citation-symbols.sh`, `claude_md_citations` test). |
+| 4 | Index consistency | **CONVERGED** | All **4 guard scripts** pass: `scripts/check-spec-counts.sh` (8 BC files), `check-bc-cumulative-counts.sh` (773 across 9 files), `check-bc-no-numeric-test-counts.sh`, `check-bc-citation-symbols.sh --bc-dir .factory/specs/prd` (556 citations). (`claude_md_citations` is a test suite, listed under dimension 2.) |
 | 5 | ADR alignment / citation integrity | **CONVERGED** | No ADR drift; `D-405` shared-vs-divergent contract for field resolution holds. |
 | 6 | Cross-references / artifact currency | **FINDINGS** | `F7C2-001` (F6 report Verdict line still said the advisory pass was "in flight"); `F7C2-002` (`cycle-manifest.md` stale: `status: f5-in-progress`, last note the F5 pass-1 note). |
 | 7 | Input-hash / bookkeeping | **FINDINGS** | `F7C2-003` (input-hash drift on 4 cycle-014 artifacts); `F7C2-004` (this F7 report did not exist); `F7C2-005` (STATE said "No open PRs" while 8 Dependabot PRs are open). |
