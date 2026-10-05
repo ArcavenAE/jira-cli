@@ -2,10 +2,10 @@
 document_type: cycle-manifest
 cycle_id: cycle-014-issue-triage-quickfixes
 cycle_type: bug-fix
-version: TBD — human decision D-390 (2026-09-29, F3 gate) confirms STORY-A (#862) ships as a BREAKING CHANGE; STORY-C (#583) and STORY-B (#861) remain non-breaking. This makes the release bump shape MINOR-or-breaking-flagged rather than three PATCH-shaped fixes as originally proposed at F1. Final version-bump decision stays at release.
-status: f7-approved
+version: "0.8.0-dev.2 -- RELEASED 2026-10-05 as a dev pre-release (PR #911 @ fb9d015c, tag v0.8.0-dev.2). Includes the D-390 BREAKING change (STORY-A #862); STORY-C (#583) and STORY-B (#861) non-breaking."
+status: complete
 started: 2026-09-24
-completed: null
+completed: 2026-10-05
 producer: architect (F1 delta analysis)
 ---
 
@@ -703,3 +703,19 @@ cycle 2):**
   handed to vsdd-factory as process-gaps #3/#44); `strict: true` branch
   protection stays deferred. `completed` stays null until the release is
   done.
+- **Release, Feature Cycle Handoff and session review -- cycle CLOSED**
+  (2026-10-05). **Release DONE:** PR #911 merged as `fb9d015c`; annotated tag
+  `v0.8.0-dev.2` (object `1412f910`) points at `fb9d015c`, pushed with the
+  human's explicit authorization; `release.yml` run 37324389051 succeeded,
+  with attestation; GitHub prerelease published 2026-10-05T14:29:10Z with 5
+  archives plus their `.sha256` files (aarch64/x86_64 apple-darwin,
+  aarch64/x86_64 linux-gnu, x86_64 windows-msvc zip). No `v0.8.0-dev.1` tag
+  ever existed (that version was bumped but never released). **Handoff:**
+  cycle artifacts live under `cycles/cycle-014/`; `CYCLE-SUMMARY.md` has a
+  `cycle_014_status` entry; STATE.md v5.56 records the cycle CLOSED and
+  RELEASED, pipeline steady-state / between cycles. **Session review:**
+  `session-review.md` (session-reviewer; conformed to the engine template,
+  12 proposals + lessons L-007..L-015 + evidence gaps preserved). The
+  proposals and L-007..L-015 are PENDING HUMAN REVIEW (72h); none has been
+  applied and L-007..L-015 are not yet in `lessons.md`. `status` is now
+  `complete` and `completed` is `2026-10-05`.

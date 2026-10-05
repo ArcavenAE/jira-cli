@@ -272,3 +272,7 @@ F5-pass-1 checkpoint.
 ## Archived checkpoint: STATE v5.54 (2026-10-05, superseded by v5.55)
 
 **Position:** cycle-014 F5 CONVERGED; F6 PASS; F7 CONVERGED (4 cycles; all 7 dimensions; `F7C4-001` fixed by the v5.54 rewrite). `develop` @ `3fb4cf3b`. LOCKED counts: 773 BCs / 100 VPs / 118 holdout / 196 stories. NEXT was: the HUMAN F7 APPROVAL gate. Pending then: (1) whether the 2 DRAFT `SELF-IMPROVEMENT` stories move to `ready`; (2) `S-PG-BC-INDEX-H1-SYNC-1` Decision Point 1 (allowlist vs sweep of 240 mismatches); (3) validator `fuel_cap` / `sidecar-learning.md` compaction; (4) `strict: true` branch protection (DEFERRED); (5) the release version bump. All answered by `D-410`. Resume: `/vsdd-factory:rehydrate-wave`, then `/vsdd-factory:next-step`.
+
+## Archived checkpoint: STATE v5.55 (2026-10-05, superseded by v5.56)
+
+**Position:** cycle-014 F5 CONVERGED; F6 PASS; F7 CONVERGED and the F7 HUMAN APPROVAL gate APPROVED (`D-410`); closed for release as dev pre-release `0.8.0-dev.2`. `develop` @ `3fb4cf3b`. LOCKED counts: 773 BCs / 100 VPs / 118 holdout / 196 stories. NEXT was: (1) Release (release PR -> CI -> human merge -> tag/publish), (2) Feature Cycle Handoff, (3) Session Review. In flight then: the `0.8.0-dev.2` release PR (devops-engineer, preparing). All three steps completed 2026-10-05 (release PR #911 @ `fb9d015c`, tag `v0.8.0-dev.2`, handoff, session review) and are recorded in STATE v5.56. Resume: `/vsdd-factory:rehydrate-wave`, then `/vsdd-factory:next-step`.
