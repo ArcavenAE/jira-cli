@@ -99,9 +99,13 @@ pub(crate) struct FieldOption {
 
 /// Top-level dispatch for `jr field options <field>`.
 ///
-/// Mirrors `requesttype::handle`'s signature shape. Effectful shell: HTTP
-/// (M2/M3 paths), cache reads (M3 path only, via `require_service_desk`/
-/// `get_or_fetch_project_meta`), stdout/stderr rendering.
+/// Mirrors `requesttype::handle`'s signature shape. Effectful shell: resolves
+/// `<field>` to a field id via `resolve_field_id` (which may read or refresh
+/// the per-profile fields cache and call `GET /field`; see its docs), then
+/// dispatches on the mode flag — M1 editmeta, M2 createmeta, M3 JSM
+/// request-type fields. Each mode path may resolve a project, read or write
+/// caches, and make HTTP calls, as documented on that path's own helpers,
+/// before rendering to stdout/stderr.
 ///
 /// Per BC-X.14.001 Invariant 2, this command is strictly read-only — zero
 /// mutating HTTP under any invocation.
@@ -474,7 +478,9 @@ async fn resolve_field_id(
 /// server-supplied id (name lookup), so it is sanitized once here — the
 /// `UserError` Display feeds both stderr and the JSON `"error"` field
 /// (SEC6-002, EC-X.14.004-10, CWE-150/CWE-116).
-/// Only `field_id` is sanitized here; the other interpolated values (`type_name`, `project_key`) are unsanitized user/config echoes, documented residuals (BC-7.1.006 Canonical Sink Inventory).
+/// Only `field_id` is sanitized here; the other interpolated values
+/// (`type_name`, `project_key`) are unsanitized user/config echoes,
+/// documented residuals (BC-7.1.006 Canonical Sink Inventory).
 fn field_not_available_for_type_msg(field_id: &str, type_name: &str, project_key: &str) -> String {
     let field_id = crate::output::sanitize_terminal_line(field_id);
     format!(
@@ -484,14 +490,18 @@ fn field_not_available_for_type_msg(field_id: &str, type_name: &str, project_key
 }
 
 /// M3 "field not available" message; `field_id` sanitized (SEC6-002).
-/// Only `field_id` is sanitized here; the other interpolated values (`rt_query`) are unsanitized user/config echoes, documented residuals (BC-7.1.006 Canonical Sink Inventory).
+/// Only `field_id` is sanitized here; the other interpolated values
+/// (`rt_query`) are unsanitized user/config echoes, documented residuals
+/// (BC-7.1.006 Canonical Sink Inventory).
 fn field_not_available_on_request_type_msg(field_id: &str, rt_query: &str) -> String {
     let field_id = crate::output::sanitize_terminal_line(field_id);
     format!("Field '{field_id}' is not available on request type '{rt_query}'.")
 }
 
 /// M1 "not on the Edit screen" message; `field_id` sanitized (SEC6-002).
-/// Only `field_id` is sanitized here; the other interpolated values (`issue_key`) are unsanitized user/config echoes, documented residuals (BC-7.1.006 Canonical Sink Inventory).
+/// Only `field_id` is sanitized here; the other interpolated values
+/// (`issue_key`) are unsanitized user/config echoes, documented residuals
+/// (BC-7.1.006 Canonical Sink Inventory).
 fn field_not_on_edit_screen_msg(field_id: &str, issue_key: &str) -> String {
     let field_id = crate::output::sanitize_terminal_line(field_id);
     format!(
