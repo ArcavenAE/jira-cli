@@ -42,7 +42,7 @@ inputs:
   - "scripts/check-cargo-mutants-policy-citations.sh"
   - "Cargo.toml"
   - "CHANGELOG.md"
-input-hash: "205cf2d"
+input-hash: "ef12e96"
 traces_to: "BC-X.7.002"
 cycle: cycle-014-issue-triage-quickfixes
 estimated_effort: small
