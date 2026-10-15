@@ -75,7 +75,10 @@ jobs:
           # Read protected files list before merge attempt
           PROTECTED=""
           if [[ -f .github/local-workflows.txt ]]; then
-            PROTECTED=$(grep -v '^#' .github/local-workflows.txt | grep -v '^[[:space:]]*$')
+            # An empty list (no entries, only comments or blanks) makes the last
+            # grep exit 1; under pipefail that would end the step before the
+            # merge. No entries means no protected files.
+            PROTECTED=$(grep -v '^#' .github/local-workflows.txt | grep -v '^[[:space:]]*$' || true)
           fi
 
           # Attempt merge
