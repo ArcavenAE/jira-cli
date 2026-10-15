@@ -307,3 +307,28 @@ F5-pass-1 checkpoint.
 
 **(f) Resume command.** Open a new session in `/Users/zious/Documents/GITHUB/jira-cli` and run `/vsdd-factory:rehydrate-wave`, then `/vsdd-factory:next-step`. This repo has no `wave-state.yaml`; this checkpoint is the authoritative resume source.
 
+
+## Archived checkpoint v5.58 (2026-10-15, superseded by v5.59)
+
+**BUDGET -- READ FIRST:** MAINTENANCE SWEEP 2026-10-15 IN PROGRESS at steady-state between cycles. No pass-budget concern; the sweep is blocked on an external Actions runner stall and human merges.
+
+**(a) Date and position.** 2026-10-15, maintenance sweep IN PROGRESS (human-requested, Dependabot-focused; follows the 2026-09-21/09-23 precedent). No active cycle; cycle-014 stays CLOSED + RELEASED (`v0.8.0-dev.2`). `develop` @ `fb9d015c`, which FAILS `cargo deny check advisories` (rustls 0.23.45, RUSTSEC-2026-0346..0349). 10-05 leftovers already committed (`f76d1699`). LOCKED counts: 773 BCs / 100 VPs / 118 holdout / 196 stories. No new `D-NNN` (latest D-410).
+
+**(b) Convergence counter.** None active.
+
+**(c) In-flight.**
+- **PR #919** (`fix/maint-20261015-rustls-advisories` @ `d670e263`, MAINT-20261015-01): lockfile-only rustls 0.23.46; pr-reviewer + security-reviewer 0 findings; CI NOT RUN (Actions stall; runs re-run as attempt 2, still queued). Next: human merge once CI is green.
+- **PR #920** (`chore/maint-20261015-comfy-table-8` @ `b16c4b9b`, MAINT-20261015-02): comfy-table `=8.0.0`, `load_preset -> load_style`; 2 review rounds, 0 blocking; no user-visible change; Windows build unverified locally. Next: rebase onto develop after #919 merges, re-run CI (`strict: false`), human merge, human closes Dependabot #855.
+- Worktrees `.worktrees/maint-20261015-01` and `-02` (remove after merge). Dependabot queue: APPLY after CI unblocks #918, #917, #915, #892, #885, #883; WAIT #914 (soak eligible 2026-10-16); HELD #854/#842.
+
+**(d) Pending human decisions.**
+- Merge #919, then #920; close #855.
+- Review #917's `ci-gate` job `uses:` value before merging (CI-gate review-scope file).
+- v0.7.x patch-release decision (v0.7.0 on main ships rustls 0.23.45; triage recommends no dedicated v0.7.1).
+- GitHub Actions stall: check account Actions settings/limits/status (no githubstatus incident).
+- Keep #854/#842 held (stated); delete leftover temp dirs (Drift Items).
+- Carried: session-review proposals 1-12 and L-007..L-015; DRAFT stories `S-PG-BC-INDEX-H1-SYNC-1`/`S-PG-FIX-PR-ADV-CONVERGENCE-1`; `engine-handoff-vsdd-factory.md`; `strict: true` deferred; GitHub #904/#906; stale `cycles/CURRENT` pointer; `CLAUDE_AUTOCOMPACT_PCT_OVERRIDE` advisory.
+
+**(e) WIP branches.** `fix/maint-20261015-rustls-advisories`, `chore/maint-20261015-comfy-table-8` (product repo, open PRs).
+
+**(f) Resume command.** Open a new session in `/Users/zious/Documents/GITHUB/jira-cli`, run `/vsdd-factory:rehydrate-wave`, then `/vsdd-factory:next-step`; first `gh run list` to see whether Actions recovered and `gh pr checks 919`. This repo has no `wave-state.yaml`; this checkpoint is the authoritative resume source.
