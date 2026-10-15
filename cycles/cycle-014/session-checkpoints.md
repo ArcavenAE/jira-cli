@@ -280,3 +280,30 @@ F5-pass-1 checkpoint.
 ## Archived checkpoint: STATE v5.56 (2026-10-05, superseded by v5.57)
 
 **Position:** cycle-014 CLOSED + RELEASED as dev pre-release `v0.8.0-dev.2` (PR #911 @ `fb9d015c`; annotated tag object `1412f910`; `release.yml` run 37324389051 success with attestation; prerelease published 2026-10-05T14:29:10Z). Feature Cycle Handoff DONE; session review written (`cycles/cycle-014/session-review.md`; 12 proposals + L-007..L-015 pending human review, none applied). Pipeline STEADY-STATE / between cycles, no active cycle. `develop` @ `fb9d015c`. LOCKED counts: 773 BCs / 100 VPs / 118 holdout / 196 stories. F5 counter 3/3 (14 of 15 used). In flight: none. Pending human: session-review proposals (72h); DRAFT stories `S-PG-BC-INDEX-H1-SYNC-1` and `S-PG-FIX-PR-ADV-CONVERGENCE-1`; engine hand-off file for vsdd-factory; Drift Items; 8 Dependabot PRs (#900, #893, #892, #885, #883, #855, #854, #842); `strict: true` deferred; GitHub #904/#906. Resume: `/vsdd-factory:rehydrate-wave`, then `/vsdd-factory:next-step`.
+
+## Archived checkpoint: STATE v5.57 (2026-10-05, superseded by v5.58)
+
+
+**BUDGET -- READ FIRST:** PAUSED 2026-10-05 at steady-state between cycles. No pass-budget concern and no pipeline step in flight; what remains is HUMAN review and direction.
+
+**(a) Date and position.** 2026-10-05, PAUSED. cycle-014 is CLOSED and RELEASED: the `v0.8.0-dev.2` prerelease, tag object `1412f910` on `fb9d015c`, `release.yml` run 37324389051 success. Pipeline is steady-state with no active cycle. `develop` @ `fb9d015c`. Next work is the human's choice: review the session-review proposals, start a maintenance sweep, or start a new feature cycle.
+
+**(b) Convergence counter.** None active. cycle-014 F5 converged 3/3 (passes 12-14); F7 converged after 4 cycles.
+
+**(c) In-flight.** None: no open cycle/fix PRs, no fix or release worktrees, no abandoned sub-agent steps. The product repo has only the pre-existing untracked local `.claude/` items (`hooks/`, `pr-reviews/`, `settings.local.json.bak`, `spec-config.json`), which are local tooling, not pipeline WIP.
+
+**(d) Pending human decisions.**
+- `cycles/cycle-014/session-review.md` proposals 1-12 and lessons L-007..L-015 (72h review).
+- Draft stories `S-PG-BC-INDEX-H1-SYNC-1` (baseline-vs-sweep decision) and `S-PG-FIX-PR-ADV-CONVERGENCE-1` (engine).
+- `cycles/cycle-014/engine-handoff-vsdd-factory.md` (45 items) for the vsdd-factory repo.
+- Drift Items for the next maintenance sweep.
+- 8 open Dependabot PRs (#900, #893, #892, #885, #883, #855, #854, #842).
+- `strict: true` branch protection deferred.
+- GitHub issues #904 and #906.
+- The stale `cycles/CURRENT` pointer (reads cycle-013).
+- The `CLAUDE_AUTOCOMPACT_PCT_OVERRIDE` advisory (key missing from `.claude/settings.json`; recommended value 70), a user settings decision.
+
+**(e) WIP branches.** none.
+
+**(f) Resume command.** Open a new session in `/Users/zious/Documents/GITHUB/jira-cli` and run `/vsdd-factory:rehydrate-wave`, then `/vsdd-factory:next-step`. This repo has no `wave-state.yaml`; this checkpoint is the authoritative resume source.
+
