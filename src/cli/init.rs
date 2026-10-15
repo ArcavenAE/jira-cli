@@ -27,15 +27,15 @@ pub async fn handle() -> Result<()> {
         Ok(c) => Some(c),
         Err(e) => {
             let path = crate::config::global_config_path();
-            if let Some(je) = e.downcast_ref::<crate::error::JrError>() {
-                if matches!(je, crate::error::JrError::UserError(_)) {
-                    return Err(e.context(
-                        "config refused to load due to a user-input issue. \
+            if let Some(je) = e.downcast_ref::<crate::error::JrError>()
+                && matches!(je, crate::error::JrError::UserError(_))
+            {
+                return Err(e.context(
+                    "config refused to load due to a user-input issue. \
                          If JR_PROFILE points to a profile that doesn't exist, \
                          unset it; or run 'jr auth list' to see configured \
                          profiles.",
-                    ));
-                }
+                ));
             }
             if path.exists() {
                 return Err(e.context(format!(
@@ -47,41 +47,41 @@ pub async fn handle() -> Result<()> {
         }
     };
     let mut new_profile_override: Option<String> = None;
-    if let Some(c) = existing.as_ref() {
-        if !c.global.profiles.is_empty() {
-            let names: Vec<String> = c.global.profiles.keys().cloned().collect();
-            eprintln!("Profiles already configured: {}", names.join(", "));
-            let add = Confirm::new()
-                .with_prompt("Add another profile?")
-                .default(false)
-                .interact()
-                .context("failed to prompt for additional profile")?;
-            if !add {
-                return Ok(());
-            }
-            // Re-prompt on collision so a typo matching an existing profile
-            // name doesn't silently overwrite that profile's URL/auth
-            // settings later in the flow.
-            let profile_name: String = loop {
-                let candidate: String = Input::new()
-                    .with_prompt("Name for the new profile")
-                    .interact_text()
-                    .context("failed to read profile name")?;
-                if let Err(e) = crate::config::validate_profile_name(&candidate) {
-                    eprintln!("invalid profile name: {e}");
-                    continue;
-                }
-                if c.global.profiles.contains_key(&candidate) {
-                    eprintln!(
-                        "profile {candidate:?} already exists. Pick a different name, or run \
-                         'jr auth remove {candidate}' first to overwrite."
-                    );
-                    continue;
-                }
-                break candidate;
-            };
-            new_profile_override = Some(profile_name);
+    if let Some(c) = existing.as_ref()
+        && !c.global.profiles.is_empty()
+    {
+        let names: Vec<String> = c.global.profiles.keys().cloned().collect();
+        eprintln!("Profiles already configured: {}", names.join(", "));
+        let add = Confirm::new()
+            .with_prompt("Add another profile?")
+            .default(false)
+            .interact()
+            .context("failed to prompt for additional profile")?;
+        if !add {
+            return Ok(());
         }
+        // Re-prompt on collision so a typo matching an existing profile
+        // name doesn't silently overwrite that profile's URL/auth
+        // settings later in the flow.
+        let profile_name: String = loop {
+            let candidate: String = Input::new()
+                .with_prompt("Name for the new profile")
+                .interact_text()
+                .context("failed to read profile name")?;
+            if let Err(e) = crate::config::validate_profile_name(&candidate) {
+                eprintln!("invalid profile name: {e}");
+                continue;
+            }
+            if c.global.profiles.contains_key(&candidate) {
+                eprintln!(
+                    "profile {candidate:?} already exists. Pick a different name, or run \
+                         'jr auth remove {candidate}' first to overwrite."
+                );
+                continue;
+            }
+            break candidate;
+        };
+        new_profile_override = Some(profile_name);
     }
 
     // Step 1: Instance URL
@@ -146,7 +146,24 @@ pub async fn handle() -> Result<()> {
         // [profiles.<name>] internally — no additional load+save needed
         // here. (Doing a redundant reload + write is also a last-writer-
         // wins race against any concurrent jr invocation.)
-        crate::cli::auth::login_token(&profile_name, None, None, false).await?;
+        //
+        // Task 1 verification (S-cycle4-cloud-id-correctness): `jr init`'s
+        // API-token branch calls this same `login_token` function directly
+        // — no second, independent tenant_info call site (BC-1.2.052
+        // Postcondition 4, AC-004). `jr init` has no `--cloud-id` flag, so
+        // the override is hardcoded `None`, mirroring the `login_oauth`
+        // call above. `jr init` is inherently interactive (human-run setup,
+        // no `--output json` mode of its own), so the soft-fail diagnostic
+        // output mode is hardcoded `OutputFormat::Table`.
+        crate::cli::auth::login_token(
+            &profile_name,
+            None,
+            None,
+            None,
+            false,
+            crate::cli::OutputFormat::Table,
+        )
+        .await?;
     }
 
     // Step 4: Per-project setup
@@ -160,7 +177,32 @@ pub async fn handle() -> Result<()> {
         .context("failed to prompt for project setup")?;
 
     if setup_project {
-        let boards = client.list_boards(None, None).await?;
+        // F-WG-1 (S-cycle8-agile-scope-mismatch-error-mapping, AC-015): mirrors
+        // `board.rs::handle_list`'s `list_boards` wrap mechanically — same
+        // endpoint, same required scopes, regardless of which command reaches it.
+        //
+        // FIX-F5-001 F1 (cycle-008 F5 Pass 1) test-coverage residual: this
+        // exact `.map_err` wiring is exercised end-to-end only by the
+        // keyring-gated, `#[ignore]`d `tests/init_oauth_scope.rs::
+        // test_init_list_boards_401_scope_mismatch_names_missing_scopes`
+        // (never run in CI/PR-diff mutation runs — see that file's module
+        // doc for why `jr init`'s interactive+OAuth+keychain flow is hard to
+        // reach non-interactively). CI-running coverage is limited to the
+        // shared `rewrite_agile_scope_error`/`is_insufficient_scope_error`
+        // helpers themselves, unit-tested with this exact scope string in
+        // `src/cli/board.rs::tests::
+        // test_rewrite_agile_scope_error_fires_for_init_list_boards_scope_string`.
+        // A mutant deleting this `.map_err(...)` call would therefore still
+        // survive `cargo test` — a known, justified deferral, not a gap this
+        // fix closes. Do not remove this `.map_err` without re-checking that
+        // residual.
+        let boards = client.list_boards(None, None).await.map_err(|e| {
+            crate::cli::board::rewrite_agile_scope_error(
+                e,
+                &client,
+                "read:board-scope:jira-software and read:project:jira",
+            )
+        })?;
         if boards.is_empty() {
             eprintln!("No boards found. You can configure .jr.toml manually.");
         } else {
@@ -192,7 +234,7 @@ pub async fn handle() -> Result<()> {
     // Step 5: Discover team field
     if let Ok(Some(team_id)) = client.find_team_field_id().await {
         let mut config = Config::load_with(Some(&profile_name))?;
-        let active = config.active_profile_name.clone();
+        let active = config.active_profile_name.to_string();
         config
             .global
             .profiles
@@ -235,7 +277,7 @@ pub async fn handle() -> Result<()> {
 
             if let Some(id) = field_id {
                 let mut config = Config::load_with(Some(&profile_name))?;
-                let active = config.active_profile_name.clone();
+                let active = config.active_profile_name.to_string();
                 config
                     .global
                     .profiles
@@ -257,9 +299,26 @@ pub async fn handle() -> Result<()> {
         .trim_end_matches('/');
     if let Ok(metadata) = client.get_org_metadata(hostname).await {
         let mut config = Config::load_with(Some(&profile_name))?;
-        let active = config.active_profile_name.clone();
+        let active = config.active_profile_name.to_string();
         let entry = config.global.profiles.entry(active).or_default();
-        entry.cloud_id = Some(metadata.cloud_id.clone());
+        // FIX-F5-CYCLE4-2 finding #3: this GraphQL call always runs (org_id
+        // has no other source, and Step 7's team-list prefetch below needs
+        // it), but on the API-token branch `login_token` (Step 3, via
+        // `resolve_and_apply_cloud_id` -> `fetch_cloud_id`'s tenant_info
+        // lookup, BC-1.2.052/053) has ALREADY resolved and persisted
+        // `cloud_id` for this exact profile+site. `cloudId` is one
+        // canonical value per Jira Cloud tenant, so re-fetching it here via
+        // GraphQL and unconditionally overwriting would be a second,
+        // redundant network round-trip for the identical value — not a
+        // more-authoritative one. Only set it here when it is not already
+        // present: this preserves login_token's fetch for the API-token
+        // branch (no BC pins the GraphQL value as authoritative over
+        // tenant_info's) while still being the sole source for the OAuth
+        // branch (`login_oauth` never touches `cloud_id`) and acting as a
+        // fallback if Step 3's tenant_info fetch soft-failed.
+        if entry.cloud_id.is_none() {
+            entry.cloud_id = Some(metadata.cloud_id.clone());
+        }
         entry.org_id = Some(metadata.org_id.clone());
         config.save_global()?;
 

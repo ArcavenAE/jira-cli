@@ -71,6 +71,8 @@ When `--public` or `--internal` is set, the upload routes through the JSM two-st
 
 **`--public` gates:** Non-interactive (`--no-input`/non-TTY, no `--yes`): exit 64 with "Use --yes to confirm uploading …" message. `--public + --replace-existing` → combined message. Interactive: `eprint!` + read_line single prompt (VP-576-005 — ONE prompt, not two). Cancel → exit 0; EOF → exit 130.
 
+**`--internal + --replace-existing` gate (BC-3.9.017):** when ≥1 filename match exists, consumer-2 (the replace-only confirmation prompt, `attachment_replace_confirmation_gate`) fires — no combined-visibility prompt, since `--internal` carries no visibility confirmation of its own. When zero matches exist, no gate fires at all (nothing to confirm). Non-interactive without `--yes` exits 64 "Use --yes to confirm deletion of existing same-filename attachments." VP-576-005.
+
 **`--public` on non-JSM (BC-3.9.005):** exit 64 "--public is only supported on Jira Service Management (JSM) issues."
 
 **`--internal` on non-JSM (OQ-9):** silent no-op — falls through to the platform POST path (no error, no warning, no servicedeskapi calls).
@@ -79,7 +81,7 @@ When `--public` or `--internal` is set, the upload routes through the JSM two-st
 
 **SEC-576-006 stale-ID self-heal:** on 404/403 from step-1, `invalidate_project_meta_cache` + re-fetch + retry ONCE only. Second failure: 404 → exit 64 "Service desk for {key} not found after refresh." (P1-001); 401 → exit 2; others propagate as-is.
 
-**BC-3.9.006 step-2 error taxonomy:** 401 → exit 2; 403 → exit 1; other 4xx → exit 64; 5xx → exit 1. All append retry hint "Temporary attachment IDs may have expired. Try the upload again."
+**BC-3.9.006 step-2 error taxonomy:** 401 → exit 2; 403 → exit 1; other 4xx → exit 64; 5xx → exit 1. All append retry hint "Temporary attachment IDs may have expired. Try the upload again." A step-2 transport/network error (e.g. unreachable host) maps instead to `JrError::NetworkError` ("Could not reach {host} — check your connection", exit 1) and does NOT carry the retry hint — parity with step-1's (`attach_temporary_file`) transport mapping (F5-R1-007/FIX-F5-006). Regression test: `src/api/jsm/attachments.rs::tests::test_f5_r1_007_step2_network_error_uses_canonical_network_error_variant`.
 
 **`--public --dry-run` (EC-3.9.020-7):** `wouldUpload` entries include `"visibility":"public"`; human mode prints `"Would upload N file(s) [public]."`. Non-JSM guard fires before dry-run (EC-3.9.020-8).
 
@@ -94,13 +96,13 @@ Deletes attachments by AID or by age filter.
 - `jr issue attachment delete AID1 AID2 … --yes` — multi-AID bulk (always requires `--yes`).
 - `jr issue attachment delete --issue KEY --older-than DURATION --yes` — age-based bulk.
 
-**Single-AID gate (BC-3.9.015; DEC-174):** Without `--yes`, fetches attachment metadata (GET
+**Single-AID gate (BC-3.9.015; D-174):** Without `--yes`, fetches attachment metadata (GET
 `/rest/api/3/attachment/{id}`) to get filename, then prompts `"Delete attachment <name> (AID)? [y/N]"`
 via `eprint!` + flush + `stdin().lock().read_line()`. `"y"/"yes"` → proceed; other input → cancelled
 (exit 0); EOF → `JrError::Interrupted` (exit 130). Non-interactive (`--no-input` / non-TTY stdin)
 without `--yes` exits 64 `"Use --yes to confirm deletion without a prompt."`.
 
-**DEC-168 targeted 404:** Single-AID DELETE that returns 404 exits 64 with canonical prefix
+**D-168 targeted 404:** Single-AID DELETE that returns 404 exits 64 with canonical prefix
 `"Attachment <AID> not found or not accessible."` followed by the raw Jira error body.
 Uses `delete_attachment_targeted` (separate from the benign-skip `delete_attachment` used by S-576-3).
 
@@ -121,12 +123,12 @@ JSON dry-run shape: `{"attachments":[{id[,filename]}],"dryRun":true,"ids":[…]}
 - Bulk: `{"count":N,"deleted":bool,"ids":[…]}`.
 
 Implemented: `src/cli/issue/attachments.rs::handle_attachment_delete`. API:
-`src/api/jira/attachments.rs::delete_attachment_targeted` (single-AID DEC-168),
+`src/api/jira/attachments.rs::delete_attachment_targeted` (single-AID D-168),
 `src/api/jira/attachments.rs::delete_attachment` (bulk benign-skip).
 
 ## See Also
 
 - `docs/specs/json-output-shapes.md` — canonical JSON shapes for all four subcommands
-- `CLAUDE.md` — Gotchas: `sanitize_attachment_filename`, redirect behavior, upload multipart retry, SEC-576-004, JRACLOUD-96384, `allow_hyphen_values` variadic caveat, DEC-168 targeted-vs-bulk 404 asymmetry, JSM two-step upload (SEC-576-006, BC-3.9.006)
+- `CLAUDE.md` — Gotchas: `sanitize_attachment_filename`, redirect behavior, upload multipart retry, SEC-576-004, JRACLOUD-96384, `allow_hyphen_values` variadic caveat, D-168 targeted-vs-bulk 404 asymmetry, JSM two-step upload (SEC-576-006, BC-3.9.006)
 - `.factory/specs/prd/bc-2-issue-read.md` — list/download behavioral contracts
 - `.factory/specs/prd/bc-3-issue-write.md` — upload/delete behavioral contracts

@@ -39,7 +39,16 @@ pub async fn resolve_board_id(
     })?;
 
     let type_filter = if require_scrum { Some("scrum") } else { None };
-    let boards = client.list_boards(Some(&project_key), type_filter).await?;
+    let boards = client
+        .list_boards(Some(&project_key), type_filter)
+        .await
+        .map_err(|e| {
+            rewrite_agile_scope_error(
+                e,
+                client,
+                "read:board-scope:jira-software and read:project:jira",
+            )
+        })?;
 
     match boards.len() {
         0 => {
@@ -89,6 +98,75 @@ pub async fn resolve_board_id(
     }
 }
 
+/// Rewrite an OAuth granular-scope-mismatch 401 (`JrError::InsufficientScope`)
+/// into an actionable `JrError::NotAuthenticated` hint naming the specific
+/// Agile/Jira-Software scope(s) missing for the failing `jr board`/`jr sprint`
+/// command family (BC-X.15.001, ADR-0026 Decision 3,
+/// S-cycle8-agile-scope-mismatch-error-mapping).
+///
+/// Modeled on `require_service_desk`'s auth-conditional-hint pattern
+/// (`src/api/jsm/servicedesks.rs::require_service_desk`), but narrower: only
+/// `JrError::InsufficientScope` is intercepted here — `NotAuthenticated`
+/// (the non-scope-mismatch 401 shape, including the transparent OAuth
+/// auto-refresh fall-through that happens inside `send_inner` before this
+/// call site ever sees the error) is left completely unchanged (AC-002).
+///
+/// Under Basic (API-token) auth, `client.is_oauth_auth()` is `false` and this
+/// function is a no-op passthrough — the pre-existing generic
+/// `InsufficientScope` Display template (issue #185) continues to surface
+/// unchanged (AC-004). `src/error.rs`'s `InsufficientScope` Display template
+/// and its two construction sites in `client.rs` are never modified by this
+/// function (AC-007) — it only matches on the existing variant and
+/// constructs a new `NotAuthenticated` in its place.
+///
+/// `missing_scopes` should read naturally in the sentence "...missing the
+/// required scope(s): {missing_scopes}." (e.g. a single scope, or an
+/// `", "`/`"and"`-joined list of scopes).
+///
+/// **Chain-aware (FIX-F5-001 F3, cycle-008 F5 Pass 1):** matches
+/// `JrError::InsufficientScope` ANYWHERE in `err`'s anyhow chain, not only at
+/// the top. Today every Agile API function (`list_boards`, `get_board_config`,
+/// `list_sprints`, `get_sprint_issues`, `add_issues_to_sprint`,
+/// `move_issues_to_backlog`) returns the error raw via `?` with no
+/// `.context()`, so `InsufficientScope` already sits at chain-top and this is
+/// behaviorally byte-identical to a top-level-only downcast. The chain scan
+/// exists so that if a future maintainer adds `.context(...)` to any of those
+/// six functions, the hint keeps firing instead of silently reverting to the
+/// generic template with no test failure. See
+/// `is_insufficient_scope_error` below.
+pub(crate) fn rewrite_agile_scope_error(
+    err: anyhow::Error,
+    client: &JiraClient,
+    missing_scopes: &str,
+) -> anyhow::Error {
+    if !client.is_oauth_auth() {
+        return err;
+    }
+    if is_insufficient_scope_error(&err) {
+        return anyhow::anyhow!(JrError::NotAuthenticated {
+            hint: format!(
+                "Your OAuth token is missing the required scope(s): {missing_scopes}. \
+                 Run `jr auth login` to re-consent with the required scopes — \
+                 `jr auth refresh` alone cannot add missing scopes (it re-mints with \
+                 the same granted scope set)."
+            ),
+        });
+    }
+    err
+}
+
+/// True if `err`'s anyhow chain contains a `JrError::InsufficientScope`
+/// anywhere — not only as the top-level error (FIX-F5-001 F3, cycle-008 F5
+/// Pass 1). Shared by `rewrite_agile_scope_error` above and by the two
+/// `issue/list.rs` scope-hint call sites (`handle_list`'s board-config and
+/// sprint-list scope checks) so both stay chain-aware without duplicating the
+/// traversal logic.
+pub(crate) fn is_insufficient_scope_error(err: &anyhow::Error) -> bool {
+    err.chain()
+        .find_map(|cause| cause.downcast_ref::<JrError>())
+        .is_some_and(|jr_err| matches!(jr_err, JrError::InsufficientScope { .. }))
+}
+
 /// Handle all board subcommands.
 pub async fn handle(
     command: BoardCommand,
@@ -130,7 +208,14 @@ async fn handle_list(
 ) -> Result<()> {
     let boards = client
         .list_boards(project_override, board_type_filter)
-        .await?;
+        .await
+        .map_err(|e| {
+            rewrite_agile_scope_error(
+                e,
+                client,
+                "read:board-scope:jira-software and read:project:jira",
+            )
+        })?;
 
     let rows: Vec<Vec<String>> = boards
         .iter()
@@ -184,7 +269,13 @@ async fn handle_view(
     let board_id =
         resolve_board_id(config, client, board_override, project_override, false).await?;
 
-    let board_config = client.get_board_config(board_id).await?;
+    let board_config = client.get_board_config(board_id).await.map_err(|e| {
+        rewrite_agile_scope_error(
+            e,
+            client,
+            "read:board-scope.admin:jira-software and read:project:jira",
+        )
+    })?;
     let board_type = board_config.board_type.to_lowercase();
 
     // Request the team field alongside issues so handle_view can surface a
@@ -195,14 +286,20 @@ async fn handle_view(
 
     let (issues, has_more) = if board_type == "scrum" {
         // For scrum boards, fetch the active sprint's issues
-        let sprints = client.list_sprints(board_id, Some("active")).await?;
+        let sprint_scope_hint =
+            "read:sprint:jira-software, read:issue-details:jira, and read:jql:jira";
+        let sprints = client
+            .list_sprints(board_id, Some("active"))
+            .await
+            .map_err(|e| rewrite_agile_scope_error(e, client, sprint_scope_hint))?;
         if sprints.is_empty() {
             bail!("No active sprint found for board {}.", board_id);
         }
         let sprint = &sprints[0];
         let result = client
             .get_sprint_issues(sprint.id, None, effective_limit, &extra)
-            .await?;
+            .await
+            .map_err(|e| rewrite_agile_scope_error(e, client, sprint_scope_hint))?;
         (result.issues, result.has_more)
     } else {
         let project_key = config.project_key(project_override);
@@ -228,30 +325,27 @@ async fn handle_view(
     // Team cache read is best-effort for display — a miss falls back to
     // rendering the raw UUID.
     let client_verbose = client.verbose();
-    // Nested if (not a let-chain): let-chains require Rust >= 1.88 + edition 2024; MSRV is 1.85. See CLAUDE.md Conventions — No let-chains.
-    let team_displays: Vec<String> = if matches!(output_format, OutputFormat::Table) {
-        if let Some(field_id) = team_field_id {
-            let uuids: Vec<Option<String>> = issues
+    let team_displays: Vec<String> = if matches!(output_format, OutputFormat::Table)
+        && let Some(field_id) = team_field_id
+    {
+        let uuids: Vec<Option<String>> = issues
+            .iter()
+            .map(|i| i.fields.team_id(field_id, client_verbose))
+            .collect();
+        if uuids.iter().any(|u| u.is_some()) {
+            let team_map: std::collections::HashMap<String, String> =
+                crate::cache::read_team_cache(&config.active_profile_name)
+                    .ok()
+                    .flatten()
+                    .map(|c| c.teams.into_iter().map(|t| (t.id, t.name)).collect())
+                    .unwrap_or_default();
+            uuids
                 .iter()
-                .map(|i| i.fields.team_id(field_id, client_verbose))
-                .collect();
-            if uuids.iter().any(|u| u.is_some()) {
-                let team_map: std::collections::HashMap<String, String> =
-                    crate::cache::read_team_cache(&config.active_profile_name)
-                        .ok()
-                        .flatten()
-                        .map(|c| c.teams.into_iter().map(|t| (t.id, t.name)).collect())
-                        .unwrap_or_default();
-                uuids
-                    .iter()
-                    .map(|u| match u {
-                        Some(uuid) => team_map.get(uuid).cloned().unwrap_or_else(|| uuid.clone()),
-                        None => "-".to_string(),
-                    })
-                    .collect()
-            } else {
-                Vec::new()
-            }
+                .map(|u| match u {
+                    Some(uuid) => team_map.get(uuid).cloned().unwrap_or_else(|| uuid.clone()),
+                    None => "-".to_string(),
+                })
+                .collect()
         } else {
             Vec::new()
         }
@@ -269,10 +363,10 @@ async fn handle_view(
             } else {
                 None
             };
-            super::issue::format_issue_row(issue, None, None, team)
+            super::issue::format_issue_row(issue, None, None, None, team)
         })
         .collect();
-    let headers = super::issue::issue_table_headers(false, false, show_team_col);
+    let headers = super::issue::issue_table_headers(false, false, false, show_team_col);
     output::print_output(output_format, &headers, &rows, &issues)?;
 
     if has_more && !all {
@@ -334,5 +428,170 @@ mod tests {
             jql,
             "project = \"FOO\\\"BAR\" AND statusCategory != Done ORDER BY rank ASC"
         );
+    }
+
+    // -----------------------------------------------------------------
+    // F2 gap (S-cycle8-agile-scope-mismatch-error-mapping): mutation-
+    // coverage guard for `rewrite_agile_scope_error`'s OAuth pass-through
+    // arms. These exercise the helper directly at unit level (no subprocess,
+    // no OS keychain, no `send_inner` refresh path) and assert that a
+    // non-`InsufficientScope` `JrError` and a non-`JrError` `anyhow::Error`
+    // both pass through completely UNCHANGED under an OAuth-shaped client
+    // (`is_oauth_auth() == true`). These are expected to PASS against
+    // today's implementation — the pass-through arms already exist in
+    // `rewrite_agile_scope_error`'s `match`; this closes the gap where
+    // those arms had no direct test (a mutation that swapped/deleted an
+    // `Ok(other) => ...` or `Err(other) => ...` arm would previously have
+    // gone undetected).
+    // -----------------------------------------------------------------
+
+    /// AC (F2 gap): a non-`InsufficientScope` `JrError` (here,
+    /// `NotAuthenticated`) passed through an OAuth-constructed client must
+    /// come back byte-for-byte unchanged — no scope hint is added, and the
+    /// original hint text is preserved verbatim.
+    #[test]
+    fn test_rewrite_agile_scope_error_passes_through_non_insufficient_scope_jrerror_unchanged() {
+        let client =
+            JiraClient::new_for_test("http://example.invalid".into(), "Bearer test-token".into());
+        assert!(
+            client.is_oauth_auth(),
+            "test client must be OAuth-shaped (Bearer) for this pass-through guard to be meaningful"
+        );
+        let original_hint = "some pre-existing NotAuthenticated hint text";
+        let err = anyhow::anyhow!(JrError::NotAuthenticated {
+            hint: original_hint.to_string(),
+        });
+
+        let result = rewrite_agile_scope_error(err, &client, "read:board-scope:jira-software");
+
+        match result.downcast::<JrError>() {
+            Ok(JrError::NotAuthenticated { hint }) => assert_eq!(hint, original_hint),
+            other => panic!("expected unchanged NotAuthenticated variant, got: {other:?}"),
+        }
+    }
+
+    /// AC (F2 gap): a non-`JrError` `anyhow::Error` passed through an
+    /// OAuth-constructed client must also pass through completely
+    /// unchanged — the helper only intercepts `JrError::InsufficientScope`
+    /// values reachable via `downcast::<JrError>()`; every other error type
+    /// takes the `Err(other) => other` arm.
+    #[test]
+    fn test_rewrite_agile_scope_error_passes_through_non_jrerror_unchanged() {
+        let client =
+            JiraClient::new_for_test("http://example.invalid".into(), "Bearer test-token".into());
+        assert!(
+            client.is_oauth_auth(),
+            "test client must be OAuth-shaped (Bearer) for this pass-through guard to be meaningful"
+        );
+        let err = anyhow::anyhow!("some generic non-JrError failure");
+
+        let result = rewrite_agile_scope_error(err, &client, "read:board-scope:jira-software");
+
+        assert_eq!(result.to_string(), "some generic non-JrError failure");
+    }
+
+    // -----------------------------------------------------------------
+    // FIX-F5-001 (cycle-008 F5 Pass 1)
+    // -----------------------------------------------------------------
+
+    /// F3: `rewrite_agile_scope_error` must fire the granular scope hint
+    /// even when `JrError::InsufficientScope` is wrapped with `.context(...)`
+    /// rather than sitting at the top of the anyhow chain. This would FAIL
+    /// against the old `err.downcast::<JrError>()` (top-level-only) — that
+    /// downcast fails whenever the top of the chain is the `Context` wrapper
+    /// anyhow's `.context()` produces, not the original `JrError` value, so
+    /// the hint would silently revert to a plain pass-through. Guards
+    /// against a future maintainer adding `.context()` to any of the six
+    /// Agile API functions and silently defeating the hint with no test
+    /// failure.
+    #[test]
+    fn test_rewrite_agile_scope_error_fires_through_context_wrapped_chain() {
+        let client =
+            JiraClient::new_for_test("http://example.invalid".into(), "Bearer test-token".into());
+        assert!(
+            client.is_oauth_auth(),
+            "test client must be OAuth-shaped (Bearer) for this chain-traversal guard to be meaningful"
+        );
+
+        let raw_err = anyhow::anyhow!(JrError::InsufficientScope {
+            message: "Unauthorized; scope does not match".to_string(),
+            required_scope: None,
+        });
+        // Simulate a future maintainer adding `.context(...)` to one of the
+        // six Agile API functions — this wraps the `JrError` so it is no
+        // longer the top-level error in the chain.
+        let wrapped_err =
+            raw_err.context("Failed to list sprints for board 42. Use --jql to query directly.");
+
+        let result = rewrite_agile_scope_error(wrapped_err, &client, "read:sprint:jira-software");
+
+        match result.downcast::<JrError>() {
+            Ok(JrError::NotAuthenticated { hint }) => {
+                assert!(
+                    hint.contains("read:sprint:jira-software"),
+                    "expected granular scope hint to survive context-wrapping, got: {hint}"
+                );
+                assert!(
+                    hint.contains("jr auth login"),
+                    "expected re-consent guidance in hint, got: {hint}"
+                );
+            }
+            other => panic!(
+                "expected the granular hint to fire even through a context-wrapped chain, got: {other:?}"
+            ),
+        }
+    }
+
+    /// F1 (cycle-008 F5 Pass 1): pins the exact scope-hint string used at
+    /// `src/cli/init.rs`'s `list_boards` call site
+    /// (`"read:board-scope:jira-software and read:project:jira"`, byte-for-
+    /// byte identical to `handle_list`'s call). `jr init`'s own call site is
+    /// covered end-to-end only by the keyring-gated, `#[ignore]`d
+    /// `tests/init_oauth_scope.rs::
+    /// test_init_list_boards_401_scope_mismatch_names_missing_scopes` (never
+    /// run in CI) — this CI-running unit test exercises the shared rewrite
+    /// helper directly with the init-relevant scope string so the mapping
+    /// logic itself has always-on coverage. It does NOT close the residual
+    /// gap where a mutant deleting init.rs's `.map_err(...)` call would
+    /// still survive `cargo test`/PR-diff mutation runs — that gap is
+    /// tracked as a justified, documented deferral (see the guard comment at
+    /// the `list_boards` call site in `src/cli/init.rs`).
+    #[test]
+    fn test_rewrite_agile_scope_error_fires_for_init_list_boards_scope_string() {
+        let client =
+            JiraClient::new_for_test("http://example.invalid".into(), "Bearer test-token".into());
+        assert!(
+            client.is_oauth_auth(),
+            "test client must be OAuth-shaped (Bearer) for this guard to be meaningful"
+        );
+
+        let err = anyhow::anyhow!(JrError::InsufficientScope {
+            message: "Unauthorized; scope does not match".to_string(),
+            required_scope: None,
+        });
+
+        let result = rewrite_agile_scope_error(
+            err,
+            &client,
+            "read:board-scope:jira-software and read:project:jira",
+        );
+
+        match result.downcast::<JrError>() {
+            Ok(JrError::NotAuthenticated { hint }) => {
+                assert!(
+                    hint.contains("read:board-scope:jira-software"),
+                    "expected 'read:board-scope:jira-software' in hint, got: {hint}"
+                );
+                assert!(
+                    hint.contains("read:project:jira"),
+                    "expected 'read:project:jira' in hint, got: {hint}"
+                );
+                assert!(
+                    hint.contains("jr auth login"),
+                    "expected 'jr auth login' re-consent guidance in hint, got: {hint}"
+                );
+            }
+            other => panic!("expected the granular hint to fire, got: {other:?}"),
+        }
     }
 }

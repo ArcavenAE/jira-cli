@@ -1,3 +1,4 @@
+use crate::profile::Profile;
 use anyhow::Result;
 use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize, de::DeserializeOwned};
@@ -13,7 +14,10 @@ pub(crate) trait Expiring {
 
 /// Read a whole-file cache. Returns `Ok(None)` on missing, expired, or corrupt
 /// (unparseable) files. Propagates I/O errors.
-fn read_cache<T: DeserializeOwned + Expiring>(profile: &str, filename: &str) -> Result<Option<T>> {
+fn read_cache<T: DeserializeOwned + Expiring>(
+    profile: &Profile,
+    filename: &str,
+) -> Result<Option<T>> {
     let path = cache_dir(profile).join(filename);
     let content = match std::fs::read_to_string(&path) {
         Ok(c) => c,
@@ -37,7 +41,7 @@ fn read_cache<T: DeserializeOwned + Expiring>(profile: &str, filename: &str) -> 
 // NFR-R-G: Non-atomic cache write — direct std::fs::write means a crash mid-write leaves
 // indeterminate file state. Self-healing via deserialization-failure → cache-miss path;
 // LOW severity for single-user CLI. Optional improvement: temp-file + atomic rename pattern.
-fn write_cache<T: Serialize>(profile: &str, filename: &str, data: &T) -> Result<()> {
+fn write_cache<T: Serialize>(profile: &Profile, filename: &str, data: &T) -> Result<()> {
     let dir = cache_dir(profile);
     std::fs::create_dir_all(&dir)?;
     let content = serde_json::to_string_pretty(data)?;
@@ -114,13 +118,39 @@ pub fn cache_root() -> PathBuf {
 }
 
 /// Per-profile cache directory: `<cache_root>/v1/<profile>/`.
-pub fn cache_dir(profile: &str) -> PathBuf {
-    cache_root().join("v1").join(profile)
+///
+/// # Empty-profile landmine (F2-05, defense-in-depth)
+///
+/// `Profile::from` performs no validation (ADR-0011) — an empty-string
+/// `Profile` is constructible. `PathBuf::join("")` appends no new path
+/// segment, so `cache_dir` given an empty profile would resolve to
+/// `<cache_root>/v1/` itself — the shared root every profile's cache lives
+/// under — rather than one profile's own subdirectory. This function has
+/// no validated way to refuse that (it isn't fallible, and every existing
+/// caller already validates the profile name before reaching here), so the
+/// hard guard against acting on that path lives at
+/// [`clear_profile_cache`], the one caller where silently resolving to the
+/// shared root would be destructive.
+pub fn cache_dir(profile: &Profile) -> PathBuf {
+    cache_root().join("v1").join(profile.as_ref())
 }
 
 /// Remove all cached data for a single profile. No-op if the directory does
 /// not exist; other profiles are untouched.
-pub fn clear_profile_cache(profile: &str) -> Result<()> {
+///
+/// Defense-in-depth (F2-05): refuses an empty-string profile outright,
+/// unconditionally (not just in debug builds — this is a destructive
+/// filesystem operation, not a test seam). Without this guard, an empty
+/// `Profile` (constructible per [`cache_dir`]'s doc note — `Profile::from`
+/// performs no validation, ADR-0011) would resolve to `<cache_root>/v1/`
+/// itself, and `remove_dir_all` on that path would wipe every profile's
+/// cache in one call. Not currently reachable — every caller validates the
+/// profile name first — but this is a one-line boundary guard on a
+/// "delete the whole cache" landmine, not a response to an observed bug.
+pub fn clear_profile_cache(profile: &Profile) -> Result<()> {
+    if profile.as_ref().is_empty() {
+        anyhow::bail!("refusing to clear cache: profile name is empty");
+    }
     let dir = cache_dir(profile);
     if dir.exists() {
         std::fs::remove_dir_all(dir)?;
@@ -128,11 +158,11 @@ pub fn clear_profile_cache(profile: &str) -> Result<()> {
     Ok(())
 }
 
-pub fn read_team_cache(profile: &str) -> Result<Option<TeamCache>> {
+pub fn read_team_cache(profile: &Profile) -> Result<Option<TeamCache>> {
     read_cache(profile, "teams.json")
 }
 
-pub fn write_team_cache(profile: &str, teams: &[CachedTeam]) -> Result<()> {
+pub fn write_team_cache(profile: &Profile, teams: &[CachedTeam]) -> Result<()> {
     write_cache(
         profile,
         "teams.json",
@@ -156,7 +186,7 @@ pub struct ProjectMeta {
 ///
 /// Keyed cache — not genericized because TTL is checked per-entry
 /// (`ProjectMeta.fetched_at`), unlike whole-file caches.
-pub fn read_project_meta(profile: &str, project_key: &str) -> Result<Option<ProjectMeta>> {
+pub fn read_project_meta(profile: &Profile, project_key: &str) -> Result<Option<ProjectMeta>> {
     let path = cache_dir(profile).join("project_meta.json");
     if !path.exists() {
         return Ok(None);
@@ -187,7 +217,7 @@ pub fn read_project_meta(profile: &str, project_key: &str) -> Result<Option<Proj
 /// Write cached project metadata for a specific project key.
 ///
 /// Merges into the existing map file, preserving entries for other projects.
-pub fn write_project_meta(profile: &str, project_key: &str, meta: &ProjectMeta) -> Result<()> {
+pub fn write_project_meta(profile: &Profile, project_key: &str, meta: &ProjectMeta) -> Result<()> {
     let dir = cache_dir(profile);
     std::fs::create_dir_all(&dir)?;
 
@@ -223,7 +253,7 @@ pub fn write_project_meta(profile: &str, project_key: &str, meta: &ProjectMeta) 
 ///
 /// Model-b cache writer: disk errors are swallowed with a warning so a failed
 /// invalidation never breaks the upload command. Returns `()` unconditionally.
-pub fn invalidate_project_meta_cache(profile: &str, project_key: &str) {
+pub fn invalidate_project_meta_cache(profile: &Profile, project_key: &str) {
     let path = cache_dir(profile).join("project_meta.json");
     if !path.exists() {
         return;
@@ -269,11 +299,11 @@ impl Expiring for WorkspaceCache {
     }
 }
 
-pub fn read_workspace_cache(profile: &str) -> Result<Option<WorkspaceCache>> {
+pub fn read_workspace_cache(profile: &Profile) -> Result<Option<WorkspaceCache>> {
     read_cache(profile, "workspace.json")
 }
 
-pub fn write_workspace_cache(profile: &str, workspace_id: &str) -> Result<()> {
+pub fn write_workspace_cache(profile: &Profile, workspace_id: &str) -> Result<()> {
     write_cache(
         profile,
         "workspace.json",
@@ -304,11 +334,11 @@ impl Expiring for ResolutionsCache {
     }
 }
 
-pub fn read_resolutions_cache(profile: &str) -> Result<Option<ResolutionsCache>> {
+pub fn read_resolutions_cache(profile: &Profile) -> Result<Option<ResolutionsCache>> {
     read_cache(profile, "resolutions.json")
 }
 
-pub fn write_resolutions_cache(profile: &str, resolutions: &[CachedResolution]) -> Result<()> {
+pub fn write_resolutions_cache(profile: &Profile, resolutions: &[CachedResolution]) -> Result<()> {
     write_cache(
         profile,
         "resolutions.json",
@@ -331,7 +361,7 @@ impl Expiring for CmdbFieldsCache {
     }
 }
 
-pub fn read_cmdb_fields_cache(profile: &str) -> Result<Option<CmdbFieldsCache>> {
+pub fn read_cmdb_fields_cache(profile: &Profile) -> Result<Option<CmdbFieldsCache>> {
     read_cache(profile, "cmdb_fields.json")
 }
 
@@ -343,7 +373,7 @@ pub fn read_cmdb_fields_cache(profile: &str) -> Result<Option<CmdbFieldsCache>> 
 /// shortcut, not a correctness-critical store. The call site in
 /// `src/api/assets/linked.rs` does NOT use `let _ =`; errors are absorbed
 /// inside this writer. Do not re-introduce `let _ =` or `?` at the call site.
-pub fn write_cmdb_fields_cache(profile: &str, fields: &[(String, String)]) -> Result<()> {
+pub fn write_cmdb_fields_cache(profile: &Profile, fields: &[(String, String)]) -> Result<()> {
     let result = write_cache(
         profile,
         "cmdb_fields.json",
@@ -379,7 +409,7 @@ impl Expiring for FieldsCache {
     }
 }
 
-pub fn read_fields_cache(profile: &str) -> Result<Option<FieldsCache>> {
+pub fn read_fields_cache(profile: &Profile) -> Result<Option<FieldsCache>> {
     read_cache(profile, "fields.json")
 }
 
@@ -390,7 +420,7 @@ pub fn read_fields_cache(profile: &str) -> Result<Option<FieldsCache>> {
 /// See "best-effort writer" pattern in CLAUDE.md Gotchas (request-type cache
 /// writers). Chosen model: (b) swallow + warn — this cache is a read-
 /// acceleration shortcut, not a correctness-critical store.
-pub fn write_fields_cache(profile: &str, fields: &[(String, String)]) -> Result<()> {
+pub fn write_fields_cache(profile: &Profile, fields: &[(String, String)]) -> Result<()> {
     let result = write_cache(
         profile,
         "fields.json",
@@ -431,7 +461,7 @@ pub struct ObjectTypeAttrCache {
 /// (`ObjectTypeAttrCache.fetched_at`) but lookup is per-key, with a different
 /// return type (`Vec<CachedObjectTypeAttr>`) than the stored wrapper struct.
 pub fn read_object_type_attr_cache(
-    profile: &str,
+    profile: &Profile,
     object_type_id: &str,
 ) -> Result<Option<Vec<CachedObjectTypeAttr>>> {
     let path = cache_dir(profile).join("object_type_attrs.json");
@@ -469,7 +499,7 @@ pub fn read_object_type_attr_cache(
 /// `src/api/assets/objects.rs` does NOT use `let _ =`; errors are absorbed
 /// inside this writer. Do not re-introduce `let _ =` or `?` at the call site.
 pub fn write_object_type_attr_cache(
-    profile: &str,
+    profile: &Profile,
     object_type_id: &str,
     attrs: &[CachedObjectTypeAttr],
 ) -> Result<()> {
@@ -527,7 +557,7 @@ impl Expiring for RequestTypeCache {
 }
 
 pub fn read_request_type_cache(
-    profile: &str,
+    profile: &Profile,
     service_desk_id: &str,
 ) -> Result<Option<Vec<crate::types::jsm::RequestType>>> {
     debug_assert!(
@@ -552,7 +582,7 @@ pub fn read_request_type_cache(
 /// cache where a write failure could leak a confusing exit code into a
 /// scripted pipeline like `jr requesttype list --output json | jq ...`.)
 pub fn write_request_type_cache(
-    profile: &str,
+    profile: &Profile,
     service_desk_id: &str,
     types: &[crate::types::jsm::RequestType],
 ) -> Result<()> {
@@ -592,7 +622,7 @@ impl Expiring for RequestTypeFieldsCache {
 }
 
 pub fn read_request_type_fields_cache(
-    profile: &str,
+    profile: &Profile,
     service_desk_id: &str,
     request_type_id: &str,
 ) -> Result<Option<crate::types::jsm::RequestTypeFieldsResponse>> {
@@ -624,7 +654,7 @@ pub fn read_request_type_fields_cache(
 /// cache where a write failure could leak a confusing exit code into a
 /// scripted pipeline like `jr requesttype fields <NAME> --output json | jq ...`.)
 pub fn write_request_type_fields_cache(
-    profile: &str,
+    profile: &Profile,
     service_desk_id: &str,
     request_type_id: &str,
     response: &crate::types::jsm::RequestTypeFieldsResponse,
@@ -661,6 +691,190 @@ pub fn write_request_type_fields_cache(
         eprintln!("warning: failed to write request type fields cache: {e}");
     }
     Ok(())
+}
+
+/// Slim representation of a project component stored in the cache.
+///
+/// Holds only `id` and `name` — just enough for name-based resolution
+/// (`resolve_component`) without round-tripping the full resource on every
+/// resolver invocation. ADR-0018 Decision §2.
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct CachedComponent {
+    pub id: String,
+    pub name: String,
+}
+
+/// One project's component list plus the timestamp for TTL checks.
+///
+/// Stored as a map entry: `components_<profile>.json` →
+/// `HashMap<project_key, ComponentsCacheEntry>`. Mirrors the `ProjectMeta`
+/// keyed-cache pattern — TTL is checked per-entry. ADR-0018 Decision §2.
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct ComponentsCacheEntry {
+    pub components: Vec<CachedComponent>,
+    pub fetched_at: DateTime<Utc>,
+}
+
+/// Read the cached component list for a single project.
+///
+/// Returns `Ok(None)` on missing file, missing key, expired entry, or corrupt
+/// JSON (self-heal via cache-miss → re-fetch). ADR-0018 Decision §2.
+/// Profile is FIRST arg per ADR-0007 multi-profile invariant.
+///
+/// **FOUNDATION, not yet wired (F5-A-L1/C-003):** as of this cycle, no
+/// production code path calls this function — `helpers::resolve_component`
+/// and every `jr component`/`jr issue list --component` resolver always
+/// performs a fresh `list_components` GET, never consulting this cache. It
+/// exists ahead of its consumer per ADR-0018 §2, laid down for `jr component
+/// rename` (S-608-1), which is expected to read through it. Do not treat its
+/// presence as evidence that component resolution is currently cached.
+pub fn read_components_cache(
+    profile: &Profile,
+    project_key: &str,
+) -> Result<Option<ComponentsCacheEntry>> {
+    let path = cache_dir(profile).join(format!("components_{profile}.json"));
+    if !path.exists() {
+        return Ok(None);
+    }
+
+    let content = std::fs::read_to_string(&path)?;
+    let map: HashMap<String, ComponentsCacheEntry> = match serde_json::from_str(&content) {
+        Ok(m) => m,
+        Err(e) => {
+            eprintln!("warning: components_{profile}.json unreadable ({e}); will refetch");
+            return Ok(None);
+        }
+    };
+
+    match map.get(project_key) {
+        Some(entry) => {
+            let age = Utc::now() - entry.fetched_at;
+            if age.num_days() >= CACHE_TTL_DAYS {
+                Ok(None)
+            } else {
+                Ok(Some(entry.clone()))
+            }
+        }
+        None => Ok(None),
+    }
+}
+
+/// Write the component list for a project into the components cache.
+///
+/// Merges into the existing `components_<profile>.json` map, preserving
+/// entries for other projects (same merge strategy as `write_project_meta`).
+///
+/// **Model-b writer (ADR-0018 Decision §2):** a failed disk write is swallowed
+/// with `eprintln!("warning: …")` and `Ok(())` is returned unconditionally — a
+/// failed cache write must never break a successful `component list`. Callers
+/// MUST use `.ok()` to discard the infallible return value.
+/// Profile is FIRST arg per ADR-0007 multi-profile invariant.
+///
+/// **FOUNDATION, not yet wired (F5-A-L1/C-003):** no production code path
+/// calls this function today — `jr component list` and every `--component`
+/// resolver fetch fresh from the API on every invocation rather than
+/// populating this cache. It is laid down ahead of its consumer per ADR-0018
+/// §2, intended for `jr component rename` (S-608-1). Only
+/// `invalidate_components_cache` has real production call sites right now
+/// (`cli/component.rs` create/edit/delete), and since nothing writes this
+/// cache in production those calls currently have no cached entry to remove
+/// — see that function's doc comment.
+pub fn write_components_cache(
+    profile: &Profile,
+    project_key: &str,
+    components: &[CachedComponent],
+) -> Result<()> {
+    let dir = cache_dir(profile);
+
+    let result = (|| -> Result<()> {
+        std::fs::create_dir_all(&dir)?;
+        let path = dir.join(format!("components_{profile}.json"));
+
+        let mut map: HashMap<String, ComponentsCacheEntry> = if path.exists() {
+            let content = std::fs::read_to_string(&path)?;
+            serde_json::from_str(&content).unwrap_or_else(|e| {
+                eprintln!(
+                    "warning: components_{profile}.json unreadable ({e}); starting fresh — other cached projects will be lost"
+                );
+                HashMap::new()
+            })
+        } else {
+            HashMap::new()
+        };
+
+        map.insert(
+            project_key.to_string(),
+            ComponentsCacheEntry {
+                components: components.to_vec(),
+                fetched_at: Utc::now(),
+            },
+        );
+
+        let content = serde_json::to_string_pretty(&map)?;
+        std::fs::write(&path, content)?;
+        Ok(())
+    })();
+
+    // Model-b writer: swallow disk errors, never propagate (ADR-0018 Decision §2).
+    if let Err(e) = result {
+        eprintln!("warning: failed to write components cache: {e}");
+    }
+    Ok(())
+}
+
+/// Invalidate the cached component list for a specific project.
+///
+/// Removes the `project_key` entry from `components_<profile>.json`.
+/// Called by S-604-2 / S-604-3 / S-608-1 mutating commands before or after
+/// they change components on the project, so the next `list` fetches fresh data.
+///
+/// **Model-b invalidator:** disk errors are swallowed with `eprintln!` so a
+/// failed invalidation never breaks the mutating command. Returns `()`.
+/// Profile is FIRST arg per ADR-0007 multi-profile invariant.
+///
+/// **Currently a no-op in practice (F5-A-L1/C-003):** this function DOES have
+/// real production call sites (`cli/component.rs`'s create/edit/delete
+/// handlers, S-604-2/S-604-3) and does execute on every mutating command —
+/// but because `write_components_cache` has no production caller, there is
+/// never an on-disk entry for it to find and remove; `map.remove(project_key)`
+/// returns `None` and the function short-circuits before rewriting the file.
+/// It is FOUNDATION for `jr component rename` (S-608-1) per ADR-0018 §2: once
+/// a future read path starts populating this cache via `write_components_cache`,
+/// these already-wired invalidation call sites make it correct immediately,
+/// with no further caller-side changes needed. Do not read its call sites as
+/// evidence that component list results are cached today.
+pub fn invalidate_components_cache(profile: &Profile, project_key: &str) {
+    let path = cache_dir(profile).join(format!("components_{profile}.json"));
+    if !path.exists() {
+        return;
+    }
+    let content = match std::fs::read_to_string(&path) {
+        Ok(c) => c,
+        Err(e) => {
+            eprintln!("warning: failed to invalidate components cache for {project_key}: {e}");
+            return;
+        }
+    };
+    let mut map: HashMap<String, ComponentsCacheEntry> = match serde_json::from_str(&content) {
+        Ok(m) => m,
+        Err(e) => {
+            eprintln!("warning: failed to invalidate components cache for {project_key}: {e}");
+            return;
+        }
+    };
+    if map.remove(project_key).is_none() {
+        return;
+    }
+    let new_content = match serde_json::to_string_pretty(&map) {
+        Ok(c) => c,
+        Err(e) => {
+            eprintln!("warning: failed to invalidate components cache for {project_key}: {e}");
+            return;
+        }
+    };
+    if let Err(e) = std::fs::write(&path, new_content) {
+        eprintln!("warning: failed to invalidate components cache for {project_key}: {e}");
+    }
 }
 
 #[cfg(test)]
@@ -719,7 +933,7 @@ mod tests {
     #[test]
     fn cache_dir_includes_v1_and_profile_subdir() {
         with_temp_cache(|| {
-            let dir = cache_dir("default");
+            let dir = cache_dir(&Profile::from("default"));
             assert!(dir.ends_with("v1/default"), "got: {}", dir.display());
         });
     }
@@ -728,7 +942,7 @@ mod tests {
     fn cross_profile_isolation_team_cache() {
         with_temp_cache(|| {
             write_team_cache(
-                "prod",
+                &Profile::from("prod"),
                 &[CachedTeam {
                     id: "t1".into(),
                     name: "Prod Team".into(),
@@ -736,10 +950,14 @@ mod tests {
             )
             .unwrap();
 
-            let prod = read_team_cache("prod").unwrap().unwrap();
+            let prod = read_team_cache(&Profile::from("prod")).unwrap().unwrap();
             assert_eq!(prod.teams[0].name, "Prod Team");
 
-            assert!(read_team_cache("sandbox").unwrap().is_none());
+            assert!(
+                read_team_cache(&Profile::from("sandbox"))
+                    .unwrap()
+                    .is_none()
+            );
         });
     }
 
@@ -747,7 +965,7 @@ mod tests {
     fn clear_profile_cache_removes_only_that_profile() {
         with_temp_cache(|| {
             write_team_cache(
-                "prod",
+                &Profile::from("prod"),
                 &[CachedTeam {
                     id: "p".into(),
                     name: "P".into(),
@@ -755,7 +973,7 @@ mod tests {
             )
             .unwrap();
             write_team_cache(
-                "sandbox",
+                &Profile::from("sandbox"),
                 &[CachedTeam {
                     id: "s".into(),
                     name: "S".into(),
@@ -763,15 +981,64 @@ mod tests {
             )
             .unwrap();
 
-            clear_profile_cache("prod").unwrap();
+            clear_profile_cache(&Profile::from("prod")).unwrap();
 
             assert!(
-                read_team_cache("prod").unwrap().is_none(),
+                read_team_cache(&Profile::from("prod")).unwrap().is_none(),
                 "prod cache cleared"
             );
             assert!(
-                read_team_cache("sandbox").unwrap().is_some(),
+                read_team_cache(&Profile::from("sandbox"))
+                    .unwrap()
+                    .is_some(),
                 "sandbox cache preserved"
+            );
+        });
+    }
+
+    /// F2-05: an empty-string `Profile` (constructible per ADR-0011 —
+    /// `Profile::from` performs no validation) resolves via `cache_dir` to
+    /// `<cache_root>/v1/` itself (`PathBuf::join("")` appends no new
+    /// segment), the shared root every profile's cache lives under.
+    /// `clear_profile_cache` must refuse this outright rather than
+    /// `remove_dir_all`-ing the entire `v1/` tree — verified here by
+    /// seeding two other profiles' caches and asserting both survive an
+    /// (errored) empty-profile clear attempt.
+    #[test]
+    fn clear_profile_cache_refuses_empty_profile_and_preserves_other_profiles() {
+        with_temp_cache(|| {
+            write_team_cache(
+                &Profile::from("prod"),
+                &[CachedTeam {
+                    id: "p".into(),
+                    name: "P".into(),
+                }],
+            )
+            .unwrap();
+            write_team_cache(
+                &Profile::from("sandbox"),
+                &[CachedTeam {
+                    id: "s".into(),
+                    name: "S".into(),
+                }],
+            )
+            .unwrap();
+
+            let result = clear_profile_cache(&Profile::from(String::new()));
+
+            assert!(
+                result.is_err(),
+                "clear_profile_cache must refuse an empty-string profile"
+            );
+            assert!(
+                read_team_cache(&Profile::from("prod")).unwrap().is_some(),
+                "prod cache must survive a refused empty-profile clear"
+            );
+            assert!(
+                read_team_cache(&Profile::from("sandbox"))
+                    .unwrap()
+                    .is_some(),
+                "sandbox cache must survive a refused empty-profile clear"
             );
         });
     }
@@ -779,7 +1046,7 @@ mod tests {
     #[test]
     fn read_missing_cache_returns_none() {
         with_temp_cache(|| {
-            let result = read_team_cache("default").unwrap();
+            let result = read_team_cache(&Profile::from("default")).unwrap();
             assert!(result.is_none());
         });
     }
@@ -797,9 +1064,9 @@ mod tests {
                     name: "Beta".into(),
                 },
             ];
-            write_team_cache("default", &teams).unwrap();
+            write_team_cache(&Profile::from("default"), &teams).unwrap();
 
-            let cache = read_team_cache("default")
+            let cache = read_team_cache(&Profile::from("default"))
                 .unwrap()
                 .expect("cache should exist");
             assert_eq!(cache.teams.len(), 2);
@@ -818,12 +1085,12 @@ mod tests {
                     name: "Old".into(),
                 }],
             };
-            let dir = cache_dir("default");
+            let dir = cache_dir(&Profile::from("default"));
             std::fs::create_dir_all(&dir).unwrap();
             let content = serde_json::to_string_pretty(&expired).unwrap();
             std::fs::write(dir.join("teams.json"), content).unwrap();
 
-            let result = read_team_cache("default").unwrap();
+            let result = read_team_cache(&Profile::from("default")).unwrap();
             assert!(result.is_none(), "expired cache should return None");
         });
     }
@@ -838,12 +1105,12 @@ mod tests {
                     name: "Recent".into(),
                 }],
             };
-            let dir = cache_dir("default");
+            let dir = cache_dir(&Profile::from("default"));
             std::fs::create_dir_all(&dir).unwrap();
             let content = serde_json::to_string_pretty(&recent).unwrap();
             std::fs::write(dir.join("teams.json"), content).unwrap();
 
-            let cache = read_team_cache("default")
+            let cache = read_team_cache(&Profile::from("default"))
                 .unwrap()
                 .expect("cache should be valid");
             assert_eq!(cache.teams.len(), 1);
@@ -854,7 +1121,7 @@ mod tests {
     #[test]
     fn read_missing_project_meta_returns_none() {
         with_temp_cache(|| {
-            let result = read_project_meta("default", "NOEXIST").unwrap();
+            let result = read_project_meta(&Profile::from("default"), "NOEXIST").unwrap();
             assert!(result.is_none());
         });
     }
@@ -869,9 +1136,9 @@ mod tests {
                 service_desk_id: Some("15".into()),
                 fetched_at: Utc::now(),
             };
-            write_project_meta("default", "HELPDESK", &meta).unwrap();
+            write_project_meta(&Profile::from("default"), "HELPDESK", &meta).unwrap();
 
-            let loaded = read_project_meta("default", "HELPDESK")
+            let loaded = read_project_meta(&Profile::from("default"), "HELPDESK")
                 .unwrap()
                 .expect("should exist");
             assert_eq!(loaded.project_type, "service_desk");
@@ -891,9 +1158,9 @@ mod tests {
                 service_desk_id: Some("15".into()),
                 fetched_at: Utc::now() - chrono::Duration::days(8),
             };
-            write_project_meta("default", "HELPDESK", &meta).unwrap();
+            write_project_meta(&Profile::from("default"), "HELPDESK", &meta).unwrap();
 
-            let result = read_project_meta("default", "HELPDESK").unwrap();
+            let result = read_project_meta(&Profile::from("default"), "HELPDESK").unwrap();
             assert!(result.is_none(), "expired project meta should return None");
         });
     }
@@ -915,15 +1182,15 @@ mod tests {
                 service_desk_id: None,
                 fetched_at: Utc::now(),
             };
-            write_project_meta("default", "HELPDESK", &jsm).unwrap();
-            write_project_meta("default", "DEV", &software).unwrap();
+            write_project_meta(&Profile::from("default"), "HELPDESK", &jsm).unwrap();
+            write_project_meta(&Profile::from("default"), "DEV", &software).unwrap();
 
-            let jsm_loaded = read_project_meta("default", "HELPDESK")
+            let jsm_loaded = read_project_meta(&Profile::from("default"), "HELPDESK")
                 .unwrap()
                 .expect("should exist");
             assert_eq!(jsm_loaded.project_type, "service_desk");
 
-            let sw_loaded = read_project_meta("default", "DEV")
+            let sw_loaded = read_project_meta(&Profile::from("default"), "DEV")
                 .unwrap()
                 .expect("should exist");
             assert_eq!(sw_loaded.project_type, "software");
@@ -934,7 +1201,7 @@ mod tests {
     #[test]
     fn read_missing_workspace_cache_returns_none() {
         with_temp_cache(|| {
-            let result = read_workspace_cache("default").unwrap();
+            let result = read_workspace_cache(&Profile::from("default")).unwrap();
             assert!(result.is_none());
         });
     }
@@ -942,9 +1209,9 @@ mod tests {
     #[test]
     fn write_then_read_workspace_cache() {
         with_temp_cache(|| {
-            write_workspace_cache("default", "abc-123-def").unwrap();
+            write_workspace_cache(&Profile::from("default"), "abc-123-def").unwrap();
 
-            let cache = read_workspace_cache("default")
+            let cache = read_workspace_cache(&Profile::from("default"))
                 .unwrap()
                 .expect("should exist");
             assert_eq!(cache.workspace_id, "abc-123-def");
@@ -958,12 +1225,12 @@ mod tests {
                 workspace_id: "old-id".into(),
                 fetched_at: Utc::now() - chrono::Duration::days(8),
             };
-            let dir = cache_dir("default");
+            let dir = cache_dir(&Profile::from("default"));
             std::fs::create_dir_all(&dir).unwrap();
             let content = serde_json::to_string_pretty(&expired).unwrap();
             std::fs::write(dir.join("workspace.json"), content).unwrap();
 
-            let result = read_workspace_cache("default").unwrap();
+            let result = read_workspace_cache(&Profile::from("default")).unwrap();
             assert!(
                 result.is_none(),
                 "expired workspace cache should return None"
@@ -974,7 +1241,7 @@ mod tests {
     #[test]
     fn read_missing_cmdb_fields_cache_returns_none() {
         with_temp_cache(|| {
-            let result = read_cmdb_fields_cache("default").unwrap();
+            let result = read_cmdb_fields_cache(&Profile::from("default")).unwrap();
             assert!(result.is_none());
         });
     }
@@ -983,7 +1250,7 @@ mod tests {
     fn write_then_read_cmdb_fields_cache() {
         with_temp_cache(|| {
             write_cmdb_fields_cache(
-                "default",
+                &Profile::from("default"),
                 &[
                     ("customfield_10191".into(), "Client".into()),
                     ("customfield_10245".into(), "Hardware".into()),
@@ -991,7 +1258,7 @@ mod tests {
             )
             .unwrap();
 
-            let cache = read_cmdb_fields_cache("default")
+            let cache = read_cmdb_fields_cache(&Profile::from("default"))
                 .unwrap()
                 .expect("should exist");
             assert_eq!(
@@ -1011,12 +1278,12 @@ mod tests {
                 fields: vec![("customfield_10191".into(), "Client".into())],
                 fetched_at: Utc::now() - chrono::Duration::days(8),
             };
-            let dir = cache_dir("default");
+            let dir = cache_dir(&Profile::from("default"));
             std::fs::create_dir_all(&dir).unwrap();
             let content = serde_json::to_string_pretty(&expired).unwrap();
             std::fs::write(dir.join("cmdb_fields.json"), content).unwrap();
 
-            let result = read_cmdb_fields_cache("default").unwrap();
+            let result = read_cmdb_fields_cache(&Profile::from("default")).unwrap();
             assert!(
                 result.is_none(),
                 "expired cmdb fields cache should return None"
@@ -1054,7 +1321,7 @@ mod tests {
         }
         let result = std::panic::catch_unwind(std::panic::AssertUnwindSafe(|| {
             write_fields_cache(
-                "test-m2-swallow",
+                &Profile::from("test-m2-swallow"),
                 &[("customfield_10001".to_string(), "Severity".to_string())],
             )
         }));
@@ -1089,7 +1356,7 @@ mod tests {
         }
         let result = std::panic::catch_unwind(std::panic::AssertUnwindSafe(|| {
             write_cmdb_fields_cache(
-                "test-cmdb-swallow",
+                &Profile::from("test-cmdb-swallow"),
                 &[("customfield_10191".to_string(), "Client".to_string())],
             )
         }));
@@ -1120,7 +1387,7 @@ mod tests {
             std::env::set_var("JR_CACHE_DIR", &fake_cache_home);
         }
         let result = std::panic::catch_unwind(std::panic::AssertUnwindSafe(|| {
-            write_object_type_attr_cache("test-objattr-swallow", "99", &[])
+            write_object_type_attr_cache(&Profile::from("test-objattr-swallow"), "99", &[])
         }));
         unsafe {
             std::env::remove_var("XDG_CACHE_HOME");
@@ -1138,7 +1405,7 @@ mod tests {
     #[test]
     fn read_missing_object_type_attr_cache_returns_none() {
         with_temp_cache(|| {
-            let result = read_object_type_attr_cache("default", "23").unwrap();
+            let result = read_object_type_attr_cache(&Profile::from("default"), "23").unwrap();
             assert!(result.is_none());
         });
     }
@@ -1164,9 +1431,9 @@ mod tests {
                     position: 1,
                 },
             ];
-            write_object_type_attr_cache("default", "23", &attrs).unwrap();
+            write_object_type_attr_cache(&Profile::from("default"), "23", &attrs).unwrap();
 
-            let loaded = read_object_type_attr_cache("default", "23")
+            let loaded = read_object_type_attr_cache(&Profile::from("default"), "23")
                 .unwrap()
                 .expect("should exist");
             assert_eq!(loaded.len(), 2);
@@ -1198,12 +1465,12 @@ mod tests {
                     m
                 },
             };
-            let dir = cache_dir("default");
+            let dir = cache_dir(&Profile::from("default"));
             std::fs::create_dir_all(&dir).unwrap();
             let content = serde_json::to_string_pretty(&expired).unwrap();
             std::fs::write(dir.join("object_type_attrs.json"), content).unwrap();
 
-            let result = read_object_type_attr_cache("default", "23").unwrap();
+            let result = read_object_type_attr_cache(&Profile::from("default"), "23").unwrap();
             assert!(result.is_none(), "expired cache should return None");
         });
     }
@@ -1227,15 +1494,15 @@ mod tests {
                 label: false,
                 position: 3,
             }];
-            write_object_type_attr_cache("default", "23", &attrs_a).unwrap();
-            write_object_type_attr_cache("default", "45", &attrs_b).unwrap();
+            write_object_type_attr_cache(&Profile::from("default"), "23", &attrs_a).unwrap();
+            write_object_type_attr_cache(&Profile::from("default"), "45", &attrs_b).unwrap();
 
-            let loaded_a = read_object_type_attr_cache("default", "23")
+            let loaded_a = read_object_type_attr_cache(&Profile::from("default"), "23")
                 .unwrap()
                 .expect("type 23 should exist");
             assert_eq!(loaded_a[0].name, "Key");
 
-            let loaded_b = read_object_type_attr_cache("default", "45")
+            let loaded_b = read_object_type_attr_cache(&Profile::from("default"), "45")
                 .unwrap()
                 .expect("type 45 should exist");
             assert_eq!(loaded_b[0].name, "Hostname");
@@ -1245,11 +1512,11 @@ mod tests {
     #[test]
     fn object_type_attr_cache_corrupt_returns_none() {
         with_temp_cache(|| {
-            let dir = cache_dir("default");
+            let dir = cache_dir(&Profile::from("default"));
             std::fs::create_dir_all(&dir).unwrap();
             std::fs::write(dir.join("object_type_attrs.json"), "not json").unwrap();
 
-            let result = read_object_type_attr_cache("default", "23").unwrap();
+            let result = read_object_type_attr_cache(&Profile::from("default"), "23").unwrap();
             assert!(result.is_none(), "corrupt cache should return None");
         });
     }
@@ -1257,17 +1524,17 @@ mod tests {
     #[test]
     fn corrupt_team_cache_returns_none() {
         with_temp_cache(|| {
-            let dir = cache_dir("default");
+            let dir = cache_dir(&Profile::from("default"));
             std::fs::create_dir_all(&dir).unwrap();
 
             // Garbage data
             std::fs::write(dir.join("teams.json"), "not json").unwrap();
-            let result = read_team_cache("default").unwrap();
+            let result = read_team_cache(&Profile::from("default")).unwrap();
             assert!(result.is_none(), "garbage data should return None");
 
             // Valid JSON, wrong shape
             std::fs::write(dir.join("teams.json"), r#"{"unexpected": true}"#).unwrap();
-            let result = read_team_cache("default").unwrap();
+            let result = read_team_cache(&Profile::from("default")).unwrap();
             assert!(result.is_none(), "wrong-shape JSON should return None");
         });
     }
@@ -1275,17 +1542,17 @@ mod tests {
     #[test]
     fn corrupt_workspace_cache_returns_none() {
         with_temp_cache(|| {
-            let dir = cache_dir("default");
+            let dir = cache_dir(&Profile::from("default"));
             std::fs::create_dir_all(&dir).unwrap();
 
             // Garbage data
             std::fs::write(dir.join("workspace.json"), "not json").unwrap();
-            let result = read_workspace_cache("default").unwrap();
+            let result = read_workspace_cache(&Profile::from("default")).unwrap();
             assert!(result.is_none(), "garbage data should return None");
 
             // Valid JSON, wrong shape
             std::fs::write(dir.join("workspace.json"), r#"{"unexpected": true}"#).unwrap();
-            let result = read_workspace_cache("default").unwrap();
+            let result = read_workspace_cache(&Profile::from("default")).unwrap();
             assert!(result.is_none(), "wrong-shape JSON should return None");
         });
     }
@@ -1293,17 +1560,17 @@ mod tests {
     #[test]
     fn corrupt_project_meta_returns_none() {
         with_temp_cache(|| {
-            let dir = cache_dir("default");
+            let dir = cache_dir(&Profile::from("default"));
             std::fs::create_dir_all(&dir).unwrap();
 
             // Garbage data
             std::fs::write(dir.join("project_meta.json"), "not json").unwrap();
-            let result = read_project_meta("default", "ANY").unwrap();
+            let result = read_project_meta(&Profile::from("default"), "ANY").unwrap();
             assert!(result.is_none(), "garbage data should return None");
 
             // Valid JSON, wrong shape
             std::fs::write(dir.join("project_meta.json"), r#"{"unexpected": true}"#).unwrap();
-            let result = read_project_meta("default", "ANY").unwrap();
+            let result = read_project_meta(&Profile::from("default"), "ANY").unwrap();
             assert!(result.is_none(), "wrong-shape JSON should return None");
         });
     }
@@ -1549,7 +1816,7 @@ mod tests {
             std::env::remove_var("JR_CONFIG_DIR");
         }
         let root = cache_root();
-        let profile_dir = cache_dir("default");
+        let profile_dir = cache_dir(&Profile::from("default"));
 
         // Must be: cache_root().join("v1").join("default")
         let expected = root.join("v1").join("default");
@@ -1638,7 +1905,7 @@ mod tests {
             group_ids: vec![],
         }];
         let result = std::panic::catch_unwind(std::panic::AssertUnwindSafe(|| {
-            write_request_type_cache("p3-swallow-test", "10", &types)
+            write_request_type_cache(&Profile::from("p3-swallow-test"), "10", &types)
         }));
         unsafe {
             std::env::remove_var("XDG_CACHE_HOME");
@@ -1687,10 +1954,16 @@ mod tests {
                 default_values: None,
                 valid_values: None,
                 jira_schema: serde_json::json!({"type": "string", "system": "summary"}),
+                auto_complete_url: None,
             }],
         };
         let result = std::panic::catch_unwind(std::panic::AssertUnwindSafe(|| {
-            write_request_type_fields_cache("p3-swallow-test", "10", "200", &response)
+            write_request_type_fields_cache(
+                &Profile::from("p3-swallow-test"),
+                "10",
+                "200",
+                &response,
+            )
         }));
         unsafe {
             std::env::remove_var("XDG_CACHE_HOME");
@@ -1703,6 +1976,96 @@ mod tests {
             result.is_ok(),
             "write_request_type_fields_cache must return Ok(()) on I/O error \
              (model-b best-effort writer, BC-X.12.008); got: {result:?}"
+        );
+    }
+
+    // ── S-604-1: AC-019 / ADR-0018 Decision §2 — components cache round-trip ─
+
+    /// AC-019 / ADR-0018 Decision §2: write then read returns the same component set
+    /// within the 7-day TTL; invalidate removes it; a failed write (model-b) returns
+    /// Ok(()) and does NOT propagate an Err.
+    ///
+    /// `read_components_cache` / `write_components_cache` / `invalidate_components_cache`
+    /// are implemented (ADR-0018 §2, see src/cache.rs). Part 1 asserts a successful
+    /// write→read→invalidate round-trip within TTL; Part 2 asserts the model-b writer
+    /// swallows an I/O error and returns `Ok(())`.
+    #[test]
+    fn test_adr_0018_components_cache_round_trip_and_model_b_writer() {
+        // Part 1: round-trip write → read → invalidate
+        with_temp_cache(|| {
+            let components = vec![
+                CachedComponent {
+                    id: "10001".to_string(),
+                    name: "Backend".to_string(),
+                },
+                CachedComponent {
+                    id: "10002".to_string(),
+                    name: "Frontend".to_string(),
+                },
+            ];
+
+            write_components_cache(&Profile::from("default"), "FOO", &components)
+                .expect("write_components_cache must succeed in a writable temp dir");
+
+            let entry = read_components_cache(&Profile::from("default"), "FOO")
+                .expect("read_components_cache must not error");
+            assert!(
+                entry.is_some(),
+                "read_components_cache must return Some after a write (within TTL)"
+            );
+            let entry = entry.unwrap();
+            assert_eq!(
+                entry.components.len(),
+                2,
+                "Round-trip must preserve both components"
+            );
+            assert_eq!(entry.components[0].id, "10001");
+            assert_eq!(entry.components[0].name, "Backend");
+            assert_eq!(entry.components[1].id, "10002");
+            assert_eq!(entry.components[1].name, "Frontend");
+
+            // Invalidate must clear the cache
+            invalidate_components_cache(&Profile::from("default"), "FOO");
+            let after = read_components_cache(&Profile::from("default"), "FOO")
+                .expect("read_components_cache must not error after invalidation");
+            assert!(
+                after.is_none(),
+                "read_components_cache must return None after invalidation"
+            );
+        });
+
+        // Part 2: model-b writer — I/O error must NOT propagate (swallow + warn)
+        // Force an I/O error by pointing JR_CACHE_DIR at a file (not a directory),
+        // causing create_dir_all to fail with ENOTDIR — same pattern used by
+        // test_write_cmdb_fields_cache_swallow_io_error_returns_ok above.
+        let outer_dir = tempfile::TempDir::new().unwrap();
+        let fake_cache_home = outer_dir.path().join("i_am_a_file");
+        std::fs::write(&fake_cache_home, "file, not a dir").unwrap();
+
+        let guard = ENV_MUTEX.lock().unwrap_or_else(|e| e.into_inner());
+        // SAFETY: ENV_MUTEX serialises all tests that touch XDG_CACHE_HOME / JR_CACHE_DIR.
+        unsafe {
+            std::env::set_var("XDG_CACHE_HOME", &fake_cache_home);
+            std::env::set_var("JR_CACHE_DIR", &fake_cache_home);
+        }
+        let components = vec![CachedComponent {
+            id: "10001".to_string(),
+            name: "Backend".to_string(),
+        }];
+        let result = std::panic::catch_unwind(std::panic::AssertUnwindSafe(|| {
+            write_components_cache(&Profile::from("default"), "FOO", &components)
+        }));
+        unsafe {
+            std::env::remove_var("XDG_CACHE_HOME");
+            std::env::remove_var("JR_CACHE_DIR");
+        }
+        drop(guard);
+
+        let result = result.expect("write_components_cache must not panic on I/O error");
+        assert!(
+            result.is_ok(),
+            "Model-b writer must return Ok(()) on I/O error (ADR-0018 Decision §2 swallow-+warn); \
+             got: {result:?}"
         );
     }
 }
@@ -1727,8 +2090,10 @@ mod resolution_cache_tests {
                     description: None,
                 },
             ];
-            write_resolutions_cache("default", &input).unwrap();
-            let loaded = read_resolutions_cache("default").unwrap().unwrap();
+            write_resolutions_cache(&Profile::from("default"), &input).unwrap();
+            let loaded = read_resolutions_cache(&Profile::from("default"))
+                .unwrap()
+                .unwrap();
 
             assert_eq!(loaded.resolutions.len(), 2);
             assert_eq!(loaded.resolutions[0].name, "Done");
@@ -1739,7 +2104,7 @@ mod resolution_cache_tests {
     #[test]
     fn resolution_cache_missing_returns_none() {
         with_temp_cache(|| {
-            let loaded = read_resolutions_cache("default").unwrap();
+            let loaded = read_resolutions_cache(&Profile::from("default")).unwrap();
             assert!(loaded.is_none());
         });
     }
@@ -1779,10 +2144,10 @@ mod cache_profile_isolation_tests {
     #[test]
     fn test_workspace_cache_cross_profile_isolation() {
         with_temp_cache(|| {
-            write_workspace_cache("prod", "workspace-prod-abc").unwrap();
-            write_workspace_cache("sandbox", "workspace-sandbox-xyz").unwrap();
+            write_workspace_cache(&Profile::from("prod"), "workspace-prod-abc").unwrap();
+            write_workspace_cache(&Profile::from("sandbox"), "workspace-sandbox-xyz").unwrap();
 
-            let prod = read_workspace_cache("prod")
+            let prod = read_workspace_cache(&Profile::from("prod"))
                 .unwrap()
                 .expect("prod workspace cache must exist");
             assert_eq!(
@@ -1790,7 +2155,7 @@ mod cache_profile_isolation_tests {
                 "prod profile must return 'workspace-prod-abc', not sandbox data"
             );
 
-            let sandbox = read_workspace_cache("sandbox")
+            let sandbox = read_workspace_cache(&Profile::from("sandbox"))
                 .unwrap()
                 .expect("sandbox workspace cache must exist");
             assert_eq!(
@@ -1799,8 +2164,8 @@ mod cache_profile_isolation_tests {
             );
 
             // Verify on-disk paths are distinct — path leak would make these identical.
-            let prod_path = cache_dir("prod").join("workspace.json");
-            let sandbox_path = cache_dir("sandbox").join("workspace.json");
+            let prod_path = cache_dir(&Profile::from("prod")).join("workspace.json");
+            let sandbox_path = cache_dir(&Profile::from("sandbox")).join("workspace.json");
             assert!(
                 prod_path.exists(),
                 "prod workspace.json must exist at {prod_path:?}"
@@ -1836,10 +2201,10 @@ mod cache_profile_isolation_tests {
                 description: None,
             }];
 
-            write_resolutions_cache("prod", &prod_res).unwrap();
-            write_resolutions_cache("sandbox", &sandbox_res).unwrap();
+            write_resolutions_cache(&Profile::from("prod"), &prod_res).unwrap();
+            write_resolutions_cache(&Profile::from("sandbox"), &sandbox_res).unwrap();
 
-            let prod = read_resolutions_cache("prod")
+            let prod = read_resolutions_cache(&Profile::from("prod"))
                 .unwrap()
                 .expect("prod resolutions cache must exist");
             assert_eq!(
@@ -1847,7 +2212,7 @@ mod cache_profile_isolation_tests {
                 "prod profile must return 'Fixed', not sandbox data"
             );
 
-            let sandbox = read_resolutions_cache("sandbox")
+            let sandbox = read_resolutions_cache(&Profile::from("sandbox"))
                 .unwrap()
                 .expect("sandbox resolutions cache must exist");
             assert_eq!(
@@ -1855,8 +2220,8 @@ mod cache_profile_isolation_tests {
                 "sandbox profile must return 'Resolved', not prod data"
             );
 
-            let prod_path = cache_dir("prod").join("resolutions.json");
-            let sandbox_path = cache_dir("sandbox").join("resolutions.json");
+            let prod_path = cache_dir(&Profile::from("prod")).join("resolutions.json");
+            let sandbox_path = cache_dir(&Profile::from("sandbox")).join("resolutions.json");
             assert!(prod_path.exists());
             assert!(sandbox_path.exists());
             assert_ne!(
@@ -1882,18 +2247,22 @@ mod cache_profile_isolation_tests {
             // disk errors internally and always returns Ok(()).  The .unwrap() here
             // is therefore trivially infallible.  To catch a silent write no-op we
             // assert the cache files exist immediately after each call.
-            write_cmdb_fields_cache("prod", &prod_fields).unwrap();
+            write_cmdb_fields_cache(&Profile::from("prod"), &prod_fields).unwrap();
             assert!(
-                cache_dir("prod").join("cmdb_fields.json").exists(),
+                cache_dir(&Profile::from("prod"))
+                    .join("cmdb_fields.json")
+                    .exists(),
                 "write_cmdb_fields_cache did not create the cache file for 'prod'"
             );
-            write_cmdb_fields_cache("sandbox", &sandbox_fields).unwrap();
+            write_cmdb_fields_cache(&Profile::from("sandbox"), &sandbox_fields).unwrap();
             assert!(
-                cache_dir("sandbox").join("cmdb_fields.json").exists(),
+                cache_dir(&Profile::from("sandbox"))
+                    .join("cmdb_fields.json")
+                    .exists(),
                 "write_cmdb_fields_cache did not create the cache file for 'sandbox'"
             );
 
-            let prod = read_cmdb_fields_cache("prod")
+            let prod = read_cmdb_fields_cache(&Profile::from("prod"))
                 .unwrap()
                 .expect("prod cmdb_fields cache must exist");
             assert_eq!(
@@ -1901,7 +2270,7 @@ mod cache_profile_isolation_tests {
                 "prod profile must return customfield_10191, not sandbox's customfield_20001"
             );
 
-            let sandbox = read_cmdb_fields_cache("sandbox")
+            let sandbox = read_cmdb_fields_cache(&Profile::from("sandbox"))
                 .unwrap()
                 .expect("sandbox cmdb_fields cache must exist");
             assert_eq!(
@@ -1909,8 +2278,8 @@ mod cache_profile_isolation_tests {
                 "sandbox profile must return customfield_20001, not prod's customfield_10191"
             );
 
-            let prod_path = cache_dir("prod").join("cmdb_fields.json");
-            let sandbox_path = cache_dir("sandbox").join("cmdb_fields.json");
+            let prod_path = cache_dir(&Profile::from("prod")).join("cmdb_fields.json");
+            let sandbox_path = cache_dir(&Profile::from("sandbox")).join("cmdb_fields.json");
             assert!(prod_path.exists());
             assert!(sandbox_path.exists());
             assert_ne!(
@@ -1936,18 +2305,22 @@ mod cache_profile_isolation_tests {
             // disk errors internally and always returns Ok(()).  The .unwrap() here
             // is therefore trivially infallible.  To catch a silent write no-op we
             // assert the cache files exist immediately after each call.
-            write_fields_cache("prod", &prod_fields).unwrap();
+            write_fields_cache(&Profile::from("prod"), &prod_fields).unwrap();
             assert!(
-                cache_dir("prod").join("fields.json").exists(),
+                cache_dir(&Profile::from("prod"))
+                    .join("fields.json")
+                    .exists(),
                 "write_fields_cache did not create the cache file for 'prod'"
             );
-            write_fields_cache("sandbox", &sandbox_fields).unwrap();
+            write_fields_cache(&Profile::from("sandbox"), &sandbox_fields).unwrap();
             assert!(
-                cache_dir("sandbox").join("fields.json").exists(),
+                cache_dir(&Profile::from("sandbox"))
+                    .join("fields.json")
+                    .exists(),
                 "write_fields_cache did not create the cache file for 'sandbox'"
             );
 
-            let prod = read_fields_cache("prod")
+            let prod = read_fields_cache(&Profile::from("prod"))
                 .unwrap()
                 .expect("prod fields cache must exist");
             assert_eq!(
@@ -1955,7 +2328,7 @@ mod cache_profile_isolation_tests {
                 "prod profile must return customfield_10016, not sandbox's customfield_10028"
             );
 
-            let sandbox = read_fields_cache("sandbox")
+            let sandbox = read_fields_cache(&Profile::from("sandbox"))
                 .unwrap()
                 .expect("sandbox fields cache must exist");
             assert_eq!(
@@ -1963,8 +2336,8 @@ mod cache_profile_isolation_tests {
                 "sandbox profile must return customfield_10028, not prod's customfield_10016"
             );
 
-            let prod_path = cache_dir("prod").join("fields.json");
-            let sandbox_path = cache_dir("sandbox").join("fields.json");
+            let prod_path = cache_dir(&Profile::from("prod")).join("fields.json");
+            let sandbox_path = cache_dir(&Profile::from("sandbox")).join("fields.json");
             assert!(prod_path.exists());
             assert!(sandbox_path.exists());
             assert_ne!(
@@ -1999,10 +2372,10 @@ mod cache_profile_isolation_tests {
                 position: 0,
             }];
 
-            write_object_type_attr_cache("prod", "23", &prod_attrs).unwrap();
-            write_object_type_attr_cache("sandbox", "23", &sandbox_attrs).unwrap();
+            write_object_type_attr_cache(&Profile::from("prod"), "23", &prod_attrs).unwrap();
+            write_object_type_attr_cache(&Profile::from("sandbox"), "23", &sandbox_attrs).unwrap();
 
-            let prod = read_object_type_attr_cache("prod", "23")
+            let prod = read_object_type_attr_cache(&Profile::from("prod"), "23")
                 .unwrap()
                 .expect("prod object_type_attrs cache must exist");
             assert_eq!(
@@ -2010,7 +2383,7 @@ mod cache_profile_isolation_tests {
                 "prod profile must return attr id '134', not sandbox's '999'"
             );
 
-            let sandbox = read_object_type_attr_cache("sandbox", "23")
+            let sandbox = read_object_type_attr_cache(&Profile::from("sandbox"), "23")
                 .unwrap()
                 .expect("sandbox object_type_attrs cache must exist");
             assert_eq!(
@@ -2018,8 +2391,8 @@ mod cache_profile_isolation_tests {
                 "sandbox profile must return attr id '999', not prod's '134'"
             );
 
-            let prod_path = cache_dir("prod").join("object_type_attrs.json");
-            let sandbox_path = cache_dir("sandbox").join("object_type_attrs.json");
+            let prod_path = cache_dir(&Profile::from("prod")).join("object_type_attrs.json");
+            let sandbox_path = cache_dir(&Profile::from("sandbox")).join("object_type_attrs.json");
             assert!(prod_path.exists());
             assert!(sandbox_path.exists());
             // The path-distinctness check below is trivially true (paths always
@@ -2057,10 +2430,10 @@ mod cache_profile_isolation_tests {
                 fetched_at: Utc::now(),
             };
 
-            write_project_meta("prod", "HELPDESK", &prod_meta).unwrap();
-            write_project_meta("sandbox", "HELPDESK", &sandbox_meta).unwrap();
+            write_project_meta(&Profile::from("prod"), "HELPDESK", &prod_meta).unwrap();
+            write_project_meta(&Profile::from("sandbox"), "HELPDESK", &sandbox_meta).unwrap();
 
-            let prod = read_project_meta("prod", "HELPDESK")
+            let prod = read_project_meta(&Profile::from("prod"), "HELPDESK")
                 .unwrap()
                 .expect("prod project_meta must exist");
             assert_eq!(
@@ -2070,7 +2443,7 @@ mod cache_profile_isolation_tests {
             );
             assert_eq!(prod.project_id, "10042");
 
-            let sandbox = read_project_meta("sandbox", "HELPDESK")
+            let sandbox = read_project_meta(&Profile::from("sandbox"), "HELPDESK")
                 .unwrap()
                 .expect("sandbox project_meta must exist");
             assert_eq!(
@@ -2080,8 +2453,8 @@ mod cache_profile_isolation_tests {
             );
             assert_eq!(sandbox.project_id, "99999");
 
-            let prod_path = cache_dir("prod").join("project_meta.json");
-            let sandbox_path = cache_dir("sandbox").join("project_meta.json");
+            let prod_path = cache_dir(&Profile::from("prod")).join("project_meta.json");
+            let sandbox_path = cache_dir(&Profile::from("sandbox")).join("project_meta.json");
             assert!(prod_path.exists());
             assert!(sandbox_path.exists());
             assert_ne!(
@@ -2127,7 +2500,7 @@ mod fields_cache_format_drift_tests {
     #[test]
     fn test_fields_cache_legacy_id_only_format_self_heals() {
         with_temp_cache(|| {
-            let dir = cache_dir("default");
+            let dir = cache_dir(&Profile::from("default"));
             std::fs::create_dir_all(&dir).unwrap();
 
             // Old/legacy shape: bare string array instead of FieldsCache struct.
@@ -2139,7 +2512,7 @@ mod fields_cache_format_drift_tests {
             )
             .unwrap();
 
-            let result = read_fields_cache("default").unwrap();
+            let result = read_fields_cache(&Profile::from("default")).unwrap();
             assert!(
                 result.is_none(),
                 "legacy ID-only fields.json must self-heal as Ok(None), not return Err or Some; \
@@ -2160,14 +2533,14 @@ mod fields_cache_format_drift_tests {
     #[test]
     fn test_corrupt_fields_cache_returns_none() {
         with_temp_cache(|| {
-            let dir = cache_dir("default");
+            let dir = cache_dir(&Profile::from("default"));
             std::fs::create_dir_all(&dir).unwrap();
 
             // --- Case 1: garbage bytes — not JSON at all ---
             // Verifies that a completely unparseable file returns Ok(None)
             // rather than propagating a serde error.
             std::fs::write(dir.join("fields.json"), b"not json {{{{ garbage").unwrap();
-            let result = read_fields_cache("default").unwrap();
+            let result = read_fields_cache(&Profile::from("default")).unwrap();
             assert!(
                 result.is_none(),
                 "garbage fields.json must return Ok(None), not Err or Some"
@@ -2181,7 +2554,7 @@ mod fields_cache_format_drift_tests {
                 b"{\"unexpected_key\": true, \"no_fields_array\": null}",
             )
             .unwrap();
-            let result = read_fields_cache("default").unwrap();
+            let result = read_fields_cache(&Profile::from("default")).unwrap();
             assert!(
                 result.is_none(),
                 "wrong-shape fields.json must return Ok(None), not Err or Some"
@@ -2225,6 +2598,7 @@ mod request_type_cache_tests {
                 default_values: None,
                 valid_values: None,
                 jira_schema: serde_json::json!({"type": "string", "system": "summary"}),
+                auto_complete_url: None,
             }],
         }
     }
@@ -2240,11 +2614,11 @@ mod request_type_cache_tests {
             let prod_types = vec![make_request_type("1", "Prod RT")];
             let sandbox_types = vec![make_request_type("2", "Sandbox RT")];
 
-            write_request_type_cache("prod", "10", &prod_types).unwrap();
-            write_request_type_cache("sandbox", "10", &sandbox_types).unwrap();
+            write_request_type_cache(&Profile::from("prod"), "10", &prod_types).unwrap();
+            write_request_type_cache(&Profile::from("sandbox"), "10", &sandbox_types).unwrap();
 
             // Prod profile reads prod data.
-            let prod_read = read_request_type_cache("prod", "10")
+            let prod_read = read_request_type_cache(&Profile::from("prod"), "10")
                 .unwrap()
                 .expect("prod cache must exist");
             assert_eq!(
@@ -2253,7 +2627,7 @@ mod request_type_cache_tests {
             );
 
             // Sandbox profile reads sandbox data.
-            let sandbox_read = read_request_type_cache("sandbox", "10")
+            let sandbox_read = read_request_type_cache(&Profile::from("sandbox"), "10")
                 .unwrap()
                 .expect("sandbox cache must exist");
             assert_eq!(
@@ -2262,8 +2636,8 @@ mod request_type_cache_tests {
             );
 
             // Verify on-disk paths are distinct.
-            let prod_path = cache_dir("prod").join("request_types_10.json");
-            let sandbox_path = cache_dir("sandbox").join("request_types_10.json");
+            let prod_path = cache_dir(&Profile::from("prod")).join("request_types_10.json");
+            let sandbox_path = cache_dir(&Profile::from("sandbox")).join("request_types_10.json");
             assert!(
                 prod_path.exists(),
                 "prod cache file must exist at {prod_path:?}"
@@ -2289,11 +2663,18 @@ mod request_type_cache_tests {
             let prod_fields = make_fields_response("Prod Field Name");
             let sandbox_fields = make_fields_response("Sandbox Field Name");
 
-            write_request_type_fields_cache("prod", "10", "200", &prod_fields).unwrap();
-            write_request_type_fields_cache("sandbox", "10", "200", &sandbox_fields).unwrap();
+            write_request_type_fields_cache(&Profile::from("prod"), "10", "200", &prod_fields)
+                .unwrap();
+            write_request_type_fields_cache(
+                &Profile::from("sandbox"),
+                "10",
+                "200",
+                &sandbox_fields,
+            )
+            .unwrap();
 
             // Prod profile reads prod fields.
-            let prod_read = read_request_type_fields_cache("prod", "10", "200")
+            let prod_read = read_request_type_fields_cache(&Profile::from("prod"), "10", "200")
                 .unwrap()
                 .expect("prod fields cache must exist");
             assert_eq!(
@@ -2302,17 +2683,20 @@ mod request_type_cache_tests {
             );
 
             // Sandbox profile reads sandbox fields.
-            let sandbox_read = read_request_type_fields_cache("sandbox", "10", "200")
-                .unwrap()
-                .expect("sandbox fields cache must exist");
+            let sandbox_read =
+                read_request_type_fields_cache(&Profile::from("sandbox"), "10", "200")
+                    .unwrap()
+                    .expect("sandbox fields cache must exist");
             assert_eq!(
                 sandbox_read.request_type_fields[0].name, "Sandbox Field Name",
                 "sandbox profile must return 'Sandbox Field Name', not prod data"
             );
 
             // Verify on-disk paths are distinct.
-            let prod_path = cache_dir("prod").join("request_type_fields_10_200.json");
-            let sandbox_path = cache_dir("sandbox").join("request_type_fields_10_200.json");
+            let prod_path =
+                cache_dir(&Profile::from("prod")).join("request_type_fields_10_200.json");
+            let sandbox_path =
+                cache_dir(&Profile::from("sandbox")).join("request_type_fields_10_200.json");
             assert!(
                 prod_path.exists(),
                 "prod fields cache file must exist at {prod_path:?}"
@@ -2339,14 +2723,14 @@ mod request_type_cache_tests {
     #[test]
     fn test_corrupt_request_type_cache_returns_none_self_heals() {
         with_temp_cache(|| {
-            let dir = cache_dir("test");
+            let dir = cache_dir(&Profile::from("test"));
             std::fs::create_dir_all(&dir).unwrap();
 
             // Write malformed JSON bytes to the cache file for service desk "10".
             std::fs::write(dir.join("request_types_10.json"), b"not valid json{").unwrap();
 
             // Must return Ok(None) — corrupt cache must self-heal as a miss, not Err.
-            let result = read_request_type_cache("test", "10").unwrap();
+            let result = read_request_type_cache(&Profile::from("test"), "10").unwrap();
             assert!(
                 result.is_none(),
                 "corrupt request_types cache must self-heal as Ok(None), not propagate an error"
@@ -2364,7 +2748,7 @@ mod request_type_cache_tests {
     #[test]
     fn test_corrupt_request_type_fields_cache_returns_none_self_heals() {
         with_temp_cache(|| {
-            let dir = cache_dir("test");
+            let dir = cache_dir(&Profile::from("test"));
             std::fs::create_dir_all(&dir).unwrap();
 
             // Write malformed JSON bytes to the fields cache file for (sid="10", rtId="200").
@@ -2375,7 +2759,8 @@ mod request_type_cache_tests {
             .unwrap();
 
             // Must return Ok(None) — corrupt cache must self-heal as a miss, not Err.
-            let result = read_request_type_fields_cache("test", "10", "200").unwrap();
+            let result =
+                read_request_type_fields_cache(&Profile::from("test"), "10", "200").unwrap();
             assert!(
                 result.is_none(),
                 "corrupt request_type_fields cache must self-heal as Ok(None), not propagate an error"

@@ -55,7 +55,7 @@ pub struct IssueLinkTypesResponse {
 
 #[derive(Debug, Default, Deserialize, Serialize)]
 pub struct IssueFields {
-    pub summary: String,
+    pub summary: Option<String>,
     pub description: Option<Value>,
     pub status: Option<Status>,
     #[serde(rename = "issuetype")]
@@ -66,6 +66,7 @@ pub struct IssueFields {
     pub project: Option<IssueProject>,
     pub created: Option<String>,
     pub updated: Option<String>,
+    pub duedate: Option<String>,
     pub resolution: Option<Resolution>,
     #[serde(default)]
     pub components: Option<Vec<Component>>,
@@ -189,6 +190,13 @@ pub struct Resolution {
 #[derive(Debug, Deserialize, PartialEq, Serialize)]
 pub struct Component {
     pub name: String,
+    /// Component id — present when the API returns the full component resource
+    /// inside `fields.components[]`; absent on older or stripped responses.
+    /// BC-2.3.040: `Option<String>` so a fixture omitting `id` still deserializes
+    /// successfully. **Distinct from `types/jira/component::Component.id` which is
+    /// a required `String` for the full-resource type (§8.4 resolver dependency).**
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub id: Option<String>,
 }
 
 #[derive(Debug, Deserialize, PartialEq, Serialize)]
@@ -484,7 +492,8 @@ mod tests {
             "reporter": {"accountId": "abc123", "displayName": "Jane Smith"},
             "resolution": {"name": "Fixed"},
             "components": [{"name": "Backend"}, {"name": "API"}],
-            "fixVersions": [{"name": "v2.0", "released": false, "releaseDate": "2026-04-01"}]
+            "fixVersions": [{"name": "v2.0", "released": false, "releaseDate": "2026-04-01"}],
+            "duedate": "2027-07-30"
         });
         let fields: IssueFields = serde_json::from_value(json).unwrap();
         assert_eq!(
@@ -508,13 +517,15 @@ mod tests {
         assert_eq!(versions[0].name, "v2.0");
         assert_eq!(versions[0].released, Some(false));
         assert_eq!(versions[0].release_date.as_deref(), Some("2026-04-01"));
-        // New typed fields should NOT appear in extra
+        assert_eq!(fields.duedate.as_deref(), Some("2027-07-30"));
+        // New typed fields should NOT appear in extra (AC-14)
         assert!(!fields.extra.contains_key("created"));
         assert!(!fields.extra.contains_key("updated"));
         assert!(!fields.extra.contains_key("reporter"));
         assert!(!fields.extra.contains_key("resolution"));
         assert!(!fields.extra.contains_key("components"));
         assert!(!fields.extra.contains_key("fixVersions"));
+        assert!(!fields.extra.contains_key("duedate"));
     }
 
     #[test]
@@ -527,6 +538,7 @@ mod tests {
         assert!(fields.resolution.is_none());
         assert!(fields.components.is_none());
         assert!(fields.fix_versions.is_none());
+        assert!(fields.duedate.is_none());
     }
 
     #[test]
@@ -538,7 +550,8 @@ mod tests {
             "reporter": null,
             "resolution": null,
             "components": null,
-            "fixVersions": null
+            "fixVersions": null,
+            "duedate": null
         });
         let fields: IssueFields = serde_json::from_value(json).unwrap();
         assert!(fields.created.is_none());
@@ -547,6 +560,7 @@ mod tests {
         assert!(fields.resolution.is_none());
         assert!(fields.components.is_none());
         assert!(fields.fix_versions.is_none());
+        assert!(fields.duedate.is_none());
     }
 
     #[test]
@@ -634,5 +648,36 @@ mod tests {
         assert_eq!(r.name, "Fixed");
         assert!(r.id.is_none());
         assert!(r.description.is_none());
+    }
+
+    // ── S-604-1: BC-2.3.040 tests (AC-016, AC-017) ───────────────────────────
+
+    /// AC-016 / BC-2.3.040 postcondition 1: fixture WITH "id" key → id == Some(…).
+    /// The embedded `Component` in `issue.rs` gains `id: Option<String>` so that
+    /// existing fixtures omitting `id` still deserialize successfully (non-breaking).
+    #[test]
+    fn test_bc_2_3_040_embedded_component_id_present_deserializes_some() {
+        let json = json!({"id": "10001", "name": "Backend"});
+        let component: Component = serde_json::from_value(json).unwrap();
+        assert_eq!(
+            component.id,
+            Some("10001".to_string()),
+            "id key present in JSON must deserialize to Some(\"10001\")"
+        );
+        assert_eq!(component.name, "Backend");
+    }
+
+    /// AC-017 / BC-2.3.040 postcondition 2: fixture WITHOUT "id" key → id == None.
+    /// No serde failure — backward-compatible with pre-BC-2.3.040 fixtures.
+    #[test]
+    fn test_bc_2_3_040_embedded_component_id_absent_deserializes_none() {
+        let json = json!({"name": "Backend"});
+        let component: Component =
+            serde_json::from_value(json).expect("Absent id must deserialize successfully");
+        assert_eq!(
+            component.id, None,
+            "Missing id key must deserialize to None (Option::None)"
+        );
+        assert_eq!(component.name, "Backend");
     }
 }

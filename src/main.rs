@@ -66,18 +66,18 @@ async fn main() {
             if under_issue_comment {
                 // Pull the attempted token from the InvalidSubcommand context entry.
                 let attempted_token = err.context().find_map(|(kind, value)| {
-                    if kind == ContextKind::InvalidSubcommand {
-                        if let ContextValue::String(s) = value {
-                            return Some(s.clone());
-                        }
+                    if kind == ContextKind::InvalidSubcommand
+                        && let ContextValue::String(s) = value
+                    {
+                        return Some(s.clone());
                     }
                     None
                 });
-                if let Some(ref token) = attempted_token {
-                    if token.eq_ignore_ascii_case("list") || token.eq_ignore_ascii_case("ls") {
-                        eprintln!("error: to list all comments, use `jr issue comments` (plural)");
-                        std::process::exit(2);
-                    }
+                if let Some(ref token) = attempted_token
+                    && (token.eq_ignore_ascii_case("list") || token.eq_ignore_ascii_case("ls"))
+                {
+                    eprintln!("error: to list all comments, use `jr issue comments` (plural)");
+                    std::process::exit(2);
                 }
                 eprintln!("error: use `jr issue comment add` instead");
                 eprintln!(
@@ -148,6 +148,67 @@ async fn main() {
     }
 }
 
+/// Outcome of racing a work future against a shutdown-signal future via
+/// [`run_until_shutdown`]. See BC-X.3.006 (`run()`'s Ctrl+C/SIGINT contract).
+pub(crate) enum RunOutcome<T> {
+    /// `work` resolved first; carries its result.
+    Completed(T),
+    /// `shutdown` resolved first; `work` was abandoned mid-flight.
+    Interrupted,
+}
+
+/// Races `work` against `shutdown`, returning whichever resolves first.
+///
+/// Deliberately contains NO side effects (no `eprintln!`, no
+/// `std::process::exit`) — those stay at the `run()` call site so this
+/// function can be unit-tested in-process via injected
+/// `std::future::{ready, pending}` without tearing down the test harness
+/// (BC-X.3.006 VP-MUTANTS-SCOPE-1-002).
+pub(crate) async fn run_until_shutdown<W, S, T>(work: W, shutdown: S) -> RunOutcome<T>
+where
+    W: std::future::Future<Output = T>,
+    S: std::future::Future<Output = ()>,
+{
+    tokio::pin!(work);
+    tokio::pin!(shutdown);
+    tokio::select! {
+        v = &mut work => RunOutcome::Completed(v),
+        _ = &mut shutdown => RunOutcome::Interrupted,
+    }
+}
+
+/// VP-MUTANTS-SCOPE-1-001 (BC-X.3.006 EC-1) readiness-handshake seam. Debug+Unix only.
+///
+/// `tokio::signal::ctrl_c()` (the production signal future used by `run()`'s
+/// normal ctrl_c fork, below) only registers its OS-level listener on first
+/// poll — that makes it unsuitable for guaranteeing "listener installed"
+/// ordering to an external test process without a fixed `sleep` (forbidden,
+/// BC-X.3.006 EC-1). `tokio::signal::unix::signal(...)` registers its
+/// listener synchronously at call time, before this function ever awaits
+/// anything, so printing the readiness marker immediately afterward is a
+/// genuine ordering guarantee rather than a race. This function is used only
+/// by the `JR_TEST_BLOCK_UNTIL_SIGINT` seam in `run()` below — production
+/// dispatch is untouched and continues to use `tokio::signal::ctrl_c()`.
+#[cfg(all(debug_assertions, unix))]
+async fn block_until_sigint_test_seam() {
+    use std::io::Write;
+    use tokio::signal::unix::{SignalKind, signal};
+
+    let mut sig = signal(SignalKind::interrupt())
+        .expect("failed to register SIGINT handler for JR_TEST_BLOCK_UNTIL_SIGINT seam");
+
+    // The listener above is registered synchronously (see doc comment), so
+    // it is safe to print the readiness marker now — the caller is
+    // guaranteed the signal will be observed once sent.
+    println!("JR-TEST-READY");
+    // Ensure the marker reaches the reading test process promptly: stdout is
+    // piped (not a TTY) under the test harness, where line-buffering is not
+    // guaranteed.
+    let _ = std::io::stdout().flush();
+
+    sig.recv().await;
+}
+
 async fn run(cli: Cli) -> anyhow::Result<()> {
     // Validate --profile here (not in main) so a bad name flows through
     // the unified error-reporting block — `--output json` callers get
@@ -190,6 +251,7 @@ async fn run(cli: Cli) -> anyhow::Result<()> {
                     profile,
                     url,
                     oauth,
+                    api_token,
                     email,
                     token,
                     client_id,
@@ -201,6 +263,7 @@ async fn run(cli: Cli) -> anyhow::Result<()> {
                         profile: effective_profile,
                         url,
                         oauth,
+                        api_token,
                         email,
                         token,
                         client_id,
@@ -213,11 +276,12 @@ async fn run(cli: Cli) -> anyhow::Result<()> {
                 }
                 cli::AuthCommand::Status { profile } => {
                     let effective_profile = profile.or_else(|| cli.profile.clone());
-                    cli::auth::status(effective_profile.as_deref()).await
+                    cli::auth::status(effective_profile.as_deref(), &cli.output).await
                 }
                 cli::AuthCommand::Refresh {
                     profile,
                     oauth,
+                    api_token,
                     email,
                     token,
                     client_id,
@@ -227,6 +291,7 @@ async fn run(cli: Cli) -> anyhow::Result<()> {
                     cli::auth::refresh_credentials(cli::auth::RefreshArgs {
                         profile: effective_profile.as_deref(),
                         oauth,
+                        api_token,
                         email,
                         token,
                         client_id,
@@ -237,7 +302,31 @@ async fn run(cli: Cli) -> anyhow::Result<()> {
                     .await
                 }
                 cli::AuthCommand::Switch { name } => {
-                    cli::auth::handle_switch(&name, cli.profile.as_deref(), &cli.output).await
+                    // BC-1.2.047 (issue #663): the global `--profile` flag has no
+                    // subcommand-level field to compose against on `auth switch` —
+                    // its only observable effect was forcing an extra, confusing
+                    // existence-check on `--profile`'s own value (the "jr auth
+                    // switch --profile X X" incantation the issue reports). Reject
+                    // it outright, before `handle_switch`/`Config::load_with` runs,
+                    // rather than silently ignoring it. Keyed ONLY on the CLI flag
+                    // (`cli.profile.is_some()`) — never on `JR_PROFILE` or any other
+                    // stage of profile resolution (EC-1.2.047-4). Runtime guard, not
+                    // clap `conflicts_with`: unreliable for `global = true` args
+                    // (clap #5335/#5358) and would yield exit 2, not the required
+                    // exit-64 UserError.
+                    if cli.profile.is_some() {
+                        return Err(error::JrError::UserError(
+                            "--profile is not valid for 'auth switch'. The profile to activate is the positional argument. Try: jr auth switch <NAME>".to_string(),
+                        )
+                        .into());
+                    }
+                    // Past the guard above, `cli.profile` is provably `None` —
+                    // pass `None` explicitly rather than `cli.profile.as_deref()`
+                    // so the dead argument doesn't read as though this arm still
+                    // composes a caller-supplied profile (it never did; see
+                    // handle_switch's `cli_profile` param, used only for
+                    // `Config::load_with`'s active-profile resolution).
+                    cli::auth::handle_switch(&name, None, &cli.output).await
                 }
                 cli::AuthCommand::List => {
                     cli::auth::handle_list(&cli.output, cli.profile.as_deref()).await
@@ -374,6 +463,33 @@ async fn run(cli: Cli) -> anyhow::Result<()> {
                 )
                 .await
             }
+            cli::Command::Field { command } => {
+                let config = config::Config::load_with(cli.profile.as_deref())?;
+                let client =
+                    api::client::JiraClient::from_config(&config, cli.verbose, cli.verbose_bodies)?;
+                cli::field::handle(
+                    command,
+                    &cli.output,
+                    &config,
+                    &client,
+                    cli.project.as_deref(),
+                )
+                .await
+            }
+            cli::Command::Component { command } => {
+                let config = config::Config::load_with(cli.profile.as_deref())?;
+                let client =
+                    api::client::JiraClient::from_config(&config, cli.verbose, cli.verbose_bodies)?;
+                cli::component::handle(
+                    command,
+                    &cli.output,
+                    &config,
+                    &client,
+                    cli.project.as_deref(),
+                    cli.no_input,
+                )
+                .await
+            }
             cli::Command::Api {
                 path,
                 method,
@@ -388,11 +504,129 @@ async fn run(cli: Cli) -> anyhow::Result<()> {
         }
     };
 
-    tokio::select! {
-        result = main_task => result,
-        _ = tokio::signal::ctrl_c() => {
+    // VP-MUTANTS-SCOPE-1-001 readiness-handshake seam (debug+unix only). See
+    // tests/interrupt_signal.rs module doc for the full contract.
+    //
+    // This gates only WHICH shutdown/work futures are selected below — there
+    // is exactly one `RunOutcome::Interrupted` arm in this function (the
+    // `match` at the bottom), reached by both the seam path and the
+    // production path. That is deliberate: it is what lets VP-001's SIGINT
+    // exercise the real `eprintln!("\nInterrupted")` + `std::process::exit(130)`
+    // lines instead of a parallel seam-only copy of them.
+    //
+    // Always `false` outside debug+unix builds, so release/non-unix builds
+    // always take the production branches below with zero behavior change.
+    #[cfg(all(debug_assertions, unix))]
+    let test_seam_active = std::env::var("JR_TEST_BLOCK_UNTIL_SIGINT")
+        .map(|v| v == "1")
+        .unwrap_or(false);
+    #[cfg(not(all(debug_assertions, unix)))]
+    let test_seam_active = false;
+
+    // WORK future: the seam blocks forever (`pending()`, typed to match
+    // `main_task`'s `anyhow::Result<()>` output so both branches share one
+    // type) so the process can only end via the shutdown/interrupt arm below;
+    // production dispatches the real command via `main_task`. Boxed because
+    // the two branches are different concrete future types.
+    let work: std::pin::Pin<Box<dyn std::future::Future<Output = anyhow::Result<()>>>> =
+        if test_seam_active {
+            Box::pin(std::future::pending())
+        } else {
+            Box::pin(main_task)
+        };
+
+    // SHUTDOWN future: the seam's unix-signal future prints the
+    // `JR-TEST-READY` marker immediately after synchronously registering its
+    // listener (see `block_until_sigint_test_seam`'s doc comment for why that
+    // ordering is race-free); production uses the real `ctrl_c()` adapter.
+    #[cfg(all(debug_assertions, unix))]
+    let shutdown: std::pin::Pin<Box<dyn std::future::Future<Output = ()>>> = if test_seam_active {
+        Box::pin(block_until_sigint_test_seam())
+    } else {
+        Box::pin(async {
+            let _ = tokio::signal::ctrl_c().await;
+        })
+    };
+    #[cfg(not(all(debug_assertions, unix)))]
+    let shutdown = async {
+        let _ = tokio::signal::ctrl_c().await;
+    };
+
+    // The ONE interrupt branch, reached by both the seam and production
+    // paths — see the comment above `test_seam_active`.
+    match run_until_shutdown(work, shutdown).await {
+        RunOutcome::Completed(result) => result,
+        RunOutcome::Interrupted => {
             eprintln!("\nInterrupted");
+            // 130 is the conventional exit code for a SIGINT-terminated process
+            // (128 + SIGINT's signal number, 2). This is an explicit literal
+            // chosen to match that convention, not a value the OS computes for
+            // us — `std::process::exit` always takes exactly the code given.
             std::process::exit(130);
         }
+    }
+}
+
+// VP-MUTANTS-SCOPE-1-002 (BC-X.3.006): portable, cross-platform coverage of the
+// `run_until_shutdown` arm-selection decision. This module is inline (not in
+// `tests/`) because `src/main.rs` is the binary crate's entry point — a
+// separate compilation unit from the `jr` library crate that `tests/*.rs`
+// files link against via `lib.rs`. Items here, even `pub(crate)`, are not
+// reachable from `tests/`.
+//
+// IMPLEMENTED (S-MUTANTS-SCOPE-1, F4 Test Writer -> implementer): `run_until_shutdown`
+// and `RunOutcome` above match the interface contract this module was written
+// against, and `run()` is now their sole production call site (see the single
+// `RunOutcome::Interrupted` arm at the bottom of `run()`, shared by both the
+// debug+unix test seam and real production dispatch):
+//
+//     pub(crate) enum RunOutcome<T> { Completed(T), Interrupted }
+//
+//     pub(crate) async fn run_until_shutdown<W, S, T>(work: W, shutdown: S) -> RunOutcome<T>
+//     where
+//         W: std::future::Future<Output = T>,
+//         S: std::future::Future<Output = ()>,
+//     { ... }
+//
+// `run_until_shutdown` contains NO `eprintln!` and NO `std::process::exit`
+// call — both stay at the `run()` call site (AC-006), which is what lets the
+// tests below inject `std::future::{ready, pending}` and assert on
+// `RunOutcome` in-process without tearing down the test harness.
+#[cfg(test)]
+mod tests {
+    use super::RunOutcome;
+
+    /// AC-008 (1/2): when `work` resolves first, `run_until_shutdown` returns
+    /// `RunOutcome::Completed(value)` — the shutdown arm must NOT be selected
+    /// even though it is also injected (as a never-resolving future).
+    #[tokio::test]
+    async fn test_run_until_shutdown_returns_completed_when_work_finishes_first() {
+        let work = std::future::ready(42_u32);
+        let shutdown = std::future::pending::<()>();
+
+        let outcome = super::run_until_shutdown(work, shutdown).await;
+
+        match outcome {
+            RunOutcome::Completed(value) => assert_eq!(value, 42),
+            RunOutcome::Interrupted => panic!(
+                "expected RunOutcome::Completed(42) when work resolves first, got Interrupted"
+            ),
+        }
+    }
+
+    /// AC-008 (2/2): when `shutdown` resolves first, `run_until_shutdown`
+    /// returns `RunOutcome::Interrupted` — a mutant that always returns
+    /// `Completed` regardless of which arm won must be killable by this test.
+    #[tokio::test]
+    async fn test_run_until_shutdown_returns_interrupted_when_shutdown_fires_first() {
+        let work = std::future::pending::<()>();
+        let shutdown = std::future::ready(());
+
+        let outcome = super::run_until_shutdown(work, shutdown).await;
+
+        assert!(
+            matches!(outcome, RunOutcome::Interrupted),
+            "expected RunOutcome::Interrupted when shutdown resolves first"
+        );
     }
 }

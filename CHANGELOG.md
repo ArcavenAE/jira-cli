@@ -4,6 +4,1305 @@ All notable changes to jr will be documented here.
 
 ## [Unreleased]
 
+## [0.7.0] - 2026-09-23
+
+First stable release of the 0.7.0 line, consolidating the `0.7.0-dev.1`
+through `0.7.0-dev.9` pre-releases. Highlights below; see the per-dev
+sections for full detail.
+
+### Breaking Changes
+
+- **`jr issue list --recent`/`--updated-recent` now reject month (`M`) and year (`y`)
+  relative-date units instead of silently mis-sending them to Jira** (issue #859).
+  `-2M`/`-1y` previously reached Jira mis-parsed (as minutes) or erroring outright.
+  Only `w`/`d`/`h`/`m` are accepted now; exits 64 with a migration hint. Migrate to
+  `--created-after`/`--created-before` or `--updated-after`/`--updated-before` for
+  month/year ranges.
+- **API-token credentials are now stored per-profile in the OS keychain**
+  (`<profile>:email` / `<profile>:api-token`), mirroring the existing per-profile
+  OAuth layout (S-cycle3-percred-storage, BC-1.4.031). **Action required on
+  upgrade:** every profile that authenticates with an API token — including every
+  single-profile `"default"` user — must re-run `jr auth login [--profile <NAME>]`
+  once; there is no legacy-key fallback. Until then, the profile fails with a
+  detect-and-instruct exit-64 error naming the fix.
+- **`jr auth refresh --oauth`/`--api-token` no longer override a profile's stored
+  auth mechanism** (D-321, BC-1.2.048/051) — `refresh` always follows the
+  profile's own `auth_method` now; the only way to change mechanism is
+  `jr auth login` re-declaration.
+- **`jr auth switch --profile <X> <NAME>` now exits 64** (S-663-1, BC-1.2.047) —
+  `--profile` had no effect on the switch target; drop it and use the positional
+  `jr auth switch <NAME>`.
+- **`load_api_token`'s credential-absence errors now exit 2, not 64** (BC-1.4.032/033,
+  issues #784/#786), matching the existing `NotAuthenticated` taxonomy, and the
+  suggested remediation now reads the real flag form (`jr auth login --profile=<profile>`).
+- **`jr auth list` (table mode) gains a new `ENV` column** between `URL` and `AUTH`
+  (BC-1.6.046/047) — breaking for any script parsing the table by column position;
+  `--output json` is additive-only and unaffected.
+- **`jr issue edit --dry-run` now performs a blocking stdin read for
+  `--description-stdin`** and renders a real ADF preview instead of a fixed
+  placeholder (S-692-1) — pipe input or redirect from `/dev/null`.
+- **`--field` gains opt-in `NAME:kind=VALUE` hint syntax** (S-578-1) — a field name
+  containing a colon immediately followed by a non-whitespace token may now parse
+  as a hinted pair rather than literal text; names with `: ` (colon-space) are
+  unaffected.
+
+### Added
+
+- **OAuth-first `jr auth login`** (S-cycle3-oauth-default-creation, BC-1.1.013):
+  interactive sessions now default to an OAuth-vs-API-token picker (OAuth
+  pre-selected); a new symmetric `--api-token` flag and an airtight
+  non-interactive OAuth guard (exits 64 before any network call) ship alongside.
+  `--oauth` is deprecated in favor of the picker/`--api-token`.
+- **`jr auth status --output json`** (BC-1.6.050) and corrected, keychain-probed
+  `jr auth list` STATUS values (BC-1.6.048/049) for real auth-state visibility.
+- **Mention resolution in Markdown bodies:** `@Name`/`[~accountid:X]` mentions in
+  `--markdown` bodies now resolve against real Jira users before any write
+  (`issue create`/`edit`, `comment add`/`edit`, JSM create), hard-failing the
+  whole write on an unresolvable target; `--no-mentions` opts out. (issue #674,
+  ADR-0023)
+- **ADF auto-conversion for `--field`** on rich-text fields across
+  `issue edit`/`issue create`/JSM create — plain text is auto-converted to ADF
+  when the target field's schema calls for it (ADR-0024).
+- **`--field` kind-hint dispatch** (`:option`/`:id`/`:name`/`:asset`) on
+  `issue edit`/`issue create`/JSM create, plus the new **`jr field options <field>`**
+  command for discovering a field's allowed values (S-578 series, #578).
+- **`jr issue create --field`** on the platform (non-JSM) path now resolves against
+  the project's Create screen instead of exiting 64 (D-310) — purely
+  permission-widening.
+- **Component management:** `jr component list/create/edit/delete/rename`, plus
+  `jr issue list/create/edit --component` filtering (S-604/S-605/S-606/S-608 series,
+  #604–#608).
+- **Read ergonomics:** `--fields <CSV>` opt-in field selection, `--updated-recent`,
+  and `--sort field:asc|desc` on `jr issue list`/`view` (#724–#726).
+- **`jr queue view`** surfaces queue-configured custom fields in JSON; `jr issue view`
+  and `list --duedate` gain due-date visibility.
+- **CI: build provenance attestations** for release archives (opt-in via
+  `ATTESTATIONS_ENABLED`, verifiable with `gh attestation verify`).
+
+### Changed
+
+- **MSRV raised to 1.88** (ADR-0025) — the `msrv` CI job now genuinely validates
+  `--all-targets`, 73 let-chain call sites were retrofitted, and `comfy-table` is
+  re-pinned to `=7.2.2`. Source-builders now need Rust ≥1.88; binary/Homebrew users
+  are unaffected.
+- **`DEFAULT_OAUTH_SCOPES` grows from 8 to 16 scopes**, closing Agile
+  (`jr board`/`jr sprint`) and `jr component` write gaps under OAuth (ADR-0026).
+  Existing OAuth users see a one-time re-consent prompt on next login/refresh.
+- **CI: sharded mutation-testing gate** replaces the single long-running `mutants`
+  job with an 8-shard pipeline plus a nightly full-scope advisory run
+  (internal only; no `jr` binary behavior change).
+- Auth lifecycle semantics hardened throughout: `jr auth remove` now deletes both
+  credential kinds and aborts (rather than warns) on a genuine keychain error;
+  `jr auth logout` on an API-token profile prints an informational notice instead
+  of a silent no-op.
+
+### Fixed
+
+- **JSM and Assets commands now work under OAuth (3LO) profiles**
+  (ADR-0026, issue #831): `jr queue`, `jr requesttype`, `jr issue create
+  --request-type`, `jr assets search/view/schemas/tickets`, and `--field :asset`
+  all previously 401'd under OAuth because seven call sites addressed the site
+  host instead of the OAuth gateway.
+- **OAuth "double-fault" 401s (expired *and* under-scoped) now surface the
+  correct scope-mismatch error** instead of a misleading "run `jr auth refresh`"
+  hint; `jr board`/`jr sprint` 401s now name the specific missing granular scope.
+- **Windows:** OAuth tokens too large for Credential Manager now fall back to a
+  DPAPI-encrypted file instead of failing login outright, with accurate,
+  non-misleading error messages when that fallback itself fails (ADR-0021, #759).
+- **API-token profiles now acquire a `cloud_id`** at login/init/refresh time, fixing
+  "Cloud ID not configured" on Assets/CMDB commands (ADR-0022).
+- **Security:** rustls bumped to 0.23.45 (RUSTSEC-2026-0285, TLS 1.3 handshake
+  vulnerability).
+- `validate_duration` no longer panics on multibyte input; several component
+  command-family adversarial-hardening fixes (numeric-ID resolution, `--project`
+  as a global flag, URL-encoding, case-only duplicate component names).
+
+## [0.7.0-dev.9] - 2026-09-23
+
+### Fixed
+
+- **`jr issue list --recent`/`--updated-recent` now reject month (`M`) and year (`y`)
+  relative-date units instead of silently mis-sending them to Jira (breaking change,
+  issue #859):** `jql::validate_duration` previously accepted `y`/`M` as valid duration
+  units, but Jira's JQL relative-date syntax does not treat `M`/`y` the way `jr` assumed
+  -- `-2M` was silently mis-parsed by Jira as 2 *minutes* rather than 2 months, and `-1y`
+  errored outright. Both failure modes reached the Jira API before surfacing (or silently
+  producing wrong results), instead of being caught client-side. `validate_duration` now
+  accepts only lowercase `w`/`d`/`h`/`m` (weeks/days/hours/minutes); any `M` or `y` unit
+  exits 64 with `Invalid duration '<value>'. Use a number followed by w, d, h, or m (e.g.,
+  7d, 4w, 12h). For month or year ranges, use --created-after/--created-before or
+  --updated-after/--updated-before.` **Migration:** replace `--recent 2M` / `--recent 1y`
+  (and the `--updated-recent` equivalents) with `--created-after`/`--created-before` (or
+  `--updated-after`/`--updated-before`) date-range flags. Adopts and extends external PR
+  #863's approach (credit: Deepanshu Pal) with the additional migration hint.
+
+### Changed
+
+- **CI: `release` now waits for and is gated on the `attest` job, fail-closed when
+  attestations are enabled; `actions/attest-build-provenance` bumped to v4.2.2
+  (ci-attest-provenance-v4.2.2-linearize):** `.github/workflows/release.yml`'s `release`
+  job now declares `needs: [build, attest]` with an explicit
+  `if: ${{ !cancelled() && needs.build.result == 'success' && (needs.attest.result == 'success' || needs.attest.result == 'skipped') }}`,
+  replacing the prior parallel `needs: build`-only design where `attest` ran alongside
+  `release` with no ordering relationship between them. This closes the gap where a
+  release could publish even if provenance attestation failed while
+  `ATTESTATIONS_ENABLED` is set. The gate is an ALLOW-LIST on `attest`'s result
+  (`success`/`skipped`), not a deny-list on `failure` alone — a deny-list form would let
+  a `cancelled` `attest` (e.g. its 15-minute timeout firing on a Sigstore Fulcio/Rekor
+  hang) through silently, since GitHub Actions job results have exactly four possible
+  values and the top-level `!cancelled()` guard reflects only the overall workflow run's
+  cancellation, not one dependency job's own timeout (SEC-002, fixed same-PR before
+  merge). The `if:` is fail-closed but fork-safe: a `skipped` `attest` (the default —
+  `ATTESTATIONS_ENABLED` unset on every fork and on the canonical repo today) still lets
+  `release` proceed, so forks and the current canonical config are unaffected; only an
+  actual `attest` FAILURE or CANCELLATION now blocks publication. Internal release-infra
+  only — no user-facing `jr` binary behavior changed. Also bumps
+  `actions/attest-build-provenance` from `v4.1.1`
+  (`0f67c3f4856b2e3261c31976d6725780e5e4c373`) to `v4.2.2`
+  (`4d101475d8b20a2381f78447822ac1eab6504dd8`) — an embedded `actions/attest`
+  4.2.0→4.2.1 tar/OCI update, irrelevant to this non-container Rust release.
+
+## [0.7.0-dev.8] - 2026-09-20
+
+### Fixed
+
+- **OAuth "double-fault" (expired token AND under-scoped) no longer surfaces a misleading
+  `jr auth refresh` hint (BC-X.15.001 EC-X.15.001-2, ADR-0026, S-cycle8-wave-gate-double-fault-fix):**
+  when a request's *first* 401 triggered an auto-refresh, and the *retry* after that refresh
+  also came back 401 because the underlying OAuth grant is missing a required scope (not just
+  because the token had expired), `jr` previously always reported the retry's 401 as
+  `NotAuthenticated` with a "run `jr auth refresh`" hint — masking the real problem, since
+  refreshing a correctly-scoped-but-expired token would never fix a scope gap. The post-refresh
+  401 body is now re-classified through the same pure `classify_401_body` helper used
+  pre-refresh: a body containing `"scope does not match"` (case-insensitive) now surfaces
+  `InsufficientScope` with its granular per-command scope hint, exactly as an initial-request
+  scope-mismatch 401 already did. Refresh semantics (single-flight coordination, single-use
+  refresh tokens, one-attempt cap, `invalid_grant` handling) are unchanged; `src/error.rs` is
+  untouched. Covered by 7 new pure unit tests on `classify_401_body` plus an updated
+  keyring-gated integration test.
+- **`jr sprint`'s `get_board_config` scope hint widened to match `jr board`'s
+  (BC-X.15.001, ADR-0026, oauth-scope-matrix #53, S-cycle8-wave-gate-double-fault-fix):**
+  `src/cli/board.rs::handle_view` and `src/cli/sprint.rs::resolve_scrum_board` now both hint
+  `read:board-scope.admin:jira-software and read:project:jira` on a `get_board_config`
+  scope-mismatch 401 — previously only one of the two call sites named the full pair of
+  scopes actually required by that endpoint.
+- **`jr board`/`jr sprint` surface an actionable scope hint on an OAuth granular-scope
+  401, instead of the generic POST-framed `InsufficientScope` message
+  (BC-X.15.001, ADR-0026 Decision 3, S-cycle8-agile-scope-mismatch-error-mapping):** when a
+  `jr board list`/`jr board view`/`jr sprint list`/`jr sprint current`/`jr sprint add`/`jr
+  sprint remove` command hits a 401 with a `"scope does not match"` body under OAuth (3LO)
+  auth, the error is now rewritten to a `Not authenticated` message naming the specific
+  missing Jira-Software/Agile scope(s) (e.g. `read:board-scope:jira-software`,
+  `read:board-scope.admin:jira-software`, `read:sprint:jira-software`,
+  `write:board-scope:jira-software`) and directing the user to `jr auth login` to
+  re-consent, rather than the generic, POST-specific `InsufficientScope` template
+  (issue #185) that was misleading for this Agile GET/write scope-mismatch case.
+  **Coverage widened (same-day v1.1 scope expansion, 2026-09-17, AC-009..012):** the
+  same shared rewrite now also covers every *internal* Agile HTTP call reachable within
+  a `jr board`/`jr sprint` invocation, not only the 4 top-level command handlers —
+  `board.rs::resolve_board_id`'s auto-discovery `list_boards` call (shared by both
+  command families), `board.rs::handle_view`'s scrum-branch `list_sprints`/
+  `get_sprint_issues` calls, and `sprint.rs::resolve_scrum_board`'s `get_board_config`
+  call plus `sprint add --current`'s `list_sprints` lookup — each surfacing the same
+  hint as its top-level sibling that calls the identical endpoint. No
+  change to Basic-auth (API-token) 401 behavior, to the non-scope-mismatch OAuth
+  auto-refresh fall-through, or to any other command family's 401 handling —
+  `src/error.rs`'s shared `InsufficientScope` template and
+  `src/cli/issue/jsm_create.rs`'s existing OAuth rewrite (BC-3.8.015) are unchanged.
+  **Coverage widened a second time (wave-level finding F-WG-1, human-approved scope
+  amendment, same day, 2026-09-17, AC-013..015):** the same shared rewrite now also
+  covers two command families entirely outside the `jr board`/`jr sprint` boundary that
+  make the identical Agile HTTP calls — `jr issue list`'s board-resolution/board-based-JQL
+  path (`src/cli/issue/list.rs::handle_list`'s `get_board_config` and `list_sprints`
+  calls, reached when `--jql` is absent and `board_id` is configured) and `jr init`'s
+  per-project setup prompt (`src/cli/init.rs::handle`'s `list_boards` call for the board
+  selection list). Each site surfaces the same granular hint as its `board.rs`/`sprint.rs`
+  sibling calling the identical endpoint — no new scope strings, no new detection rule.
+  Non-scope-mismatch failures at these two `issue list` call sites keep their pre-existing
+  "Failed to fetch config for board..."/"Failed to list sprints..." context messages
+  unchanged; `jr init`'s `list_boards` call had no prior error mapping to preserve.
+
+### Changed
+
+- **`DEFAULT_OAUTH_SCOPES` grows from 8 to 16 scopes — closes the Agile and component-write
+  OAuth gaps (S-cycle8-agile-oauth-scope-gap, BC-1.3.023, ADR-0026 Decision 2/2a):** the
+  embedded `jr` OAuth app's default scope set gains `manage:jira-project` and the 7 granular
+  Jira-Software/Agile scopes (`read:board-scope:jira-software`,
+  `read:board-scope.admin:jira-software`, `read:sprint:jira-software`,
+  `write:board-scope:jira-software`, `read:project:jira`, `read:issue-details:jira`,
+  `read:jql:jira`), on top of the 8 existing classic/CMDB scopes (unchanged in position, no
+  scope removed). Existing OAuth users will see a re-consent (`prompt=consent`) prompt on
+  their next login or token refresh — this is expected: a new OAuth grant always overrides
+  the prior grant's scopes with the full requested union. This unblocks `jr board`,
+  `jr sprint`, and `jr component create/edit/delete/rename` under OAuth (pending the
+  routing/error-mapping fixes in this cycle's sibling stories where applicable).
+  **Re-consent behavior:** existing access tokens keep working with their
+  previously-granted scopes until expiry — the re-consent prompt above fires on the next
+  `jr auth login` or token refresh on an OAuth profile, not immediately on upgrade.
+  API-token profiles are unaffected.
+  **RELEASE GATE:** the Atlassian Developer Console registration for the embedded `jr` OAuth
+  app MUST be updated to include all 8 new scopes before this change ships in a tagged
+  release — shipping without the Console update hard-fails `invalid_scope` for every OAuth
+  login/refresh, not just Agile/component-command users.
+- **`mutants-nightly.yml` gated behind `vars.MUTANTS_NIGHTLY_ENABLED` (fork-friendly-release-ops):**
+  the advisory full mutation nightly now runs only where the repository variable
+  `MUTANTS_NIGHTLY_ENABLED` is set to `'true'`, matching the fail-safe opt-in pattern of
+  `JR_E2E_ENABLED` and `SIGNING_ENABLED`. A publishing fork inherits the workflow file but
+  does not spend runner-minutes on a full mutation run it did not ask for. The canonical
+  repo sets the variable to `'true'` to keep the nightly it has always run.
+  See `docs/specs/fork-friendly-release-ops.md`.
+
+### Fixed
+
+- **`jr queue`, `jr requesttype`, and `jr issue create --request-type` now work under
+  OAuth (3LO) profiles (S-cycle8-jsm-servicedeskapi-oauth-routing, cycle-008, BC-4.2.001,
+  ADR-0026, issue #831):** the six JSM `servicedeskapi` call sites
+  (`list_service_desks`, `list_request_types`, `get_request_type_fields`, `list_queues`,
+  `get_queue_issue_keys`, `create_jsm_request`) now route through `base_url` (the OAuth
+  API gateway) via `get`/`post`, instead of `instance_url` (the site host) via
+  `get_from_instance`/`post_to_instance`. Under OAuth, the two hosts diverge and the old
+  routing 401'd; under API-token auth `base_url() == instance_url()`, so this is a no-op
+  for that auth scheme — no payload/response-shape change anywhere.
+  **Verified end-to-end (S-cycle8-jsm-attachments-oauth-verification, BC-4.2.001,
+  verification-only, no `src/` change):** a new regression test proves the JSM two-step
+  servicedeskapi *upload* flow (`jr issue attachment upload --public/--internal` on JSM
+  issues) succeeds end-to-end under an OAuth-constructed client, closing the last piece
+  of the JSM OAuth-routing dependency chain. (Download/delete use the platform
+  `/rest/api/3/attachment` endpoints and were unaffected by the servicedeskapi routing
+  bug.)
+- **`jr assets search/view/schemas/tickets`, `issue list --asset`/`--assets`, and `issue
+  create/edit --field :asset` (including JSM `create --request-type ... --field :asset`) now
+  work under OAuth (3LO) profiles (S-cycle8-assets-workspace-oauth-routing,
+  cycle-008, BC-4.2.001, ADR-0026 Decision 1):** `get_or_fetch_workspace_id`
+  (`src/api/assets/workspace.rs`) — the sole prerequisite workspace-ID discovery call for the
+  entire Assets command family — routed its `GET /rest/servicedeskapi/assets/workspace` request
+  through `instance_url` (the real `*.atlassian.net` site host) instead of `base_url` (the OAuth
+  API gateway). Under OAuth, those two hosts diverge and the site host rejects the gateway
+  bearer token with a 401, breaking every downstream Assets command before it could even reach
+  the (already gateway-correct) AQL/object layer. The call now routes through `base_url`, same
+  as every other gateway-scoped Jira Cloud REST call. No behavior change for API-token profiles,
+  where `base_url() == instance_url()`.
+
+## [0.7.0-dev.7] - 2026-09-16
+
+### Changed
+
+- **MSRV raised to 1.88, `msrv` CI job widened to `--all-targets`, `comfy-table` re-pinned
+  to 7.2.2 (S-cycle13-msrv-cargo-ci-atomic-bump, cycle-013, ADR-0025):** `Cargo.toml`'s
+  `rust-version` moves from `"1.85"` to `"1.88"`, closing the false-MSRV gap the S-626-1
+  `comfy-table = "=7.2.1"` pin worked around (`comfy-table` 7.2.2 uses let-chains requiring
+  Rust ≥1.88 and ships no `rust-version` manifest field of its own). `comfy-table` is
+  re-pinned from the stale `=7.2.1` to an exact, human-reviewed `=7.2.2` — the current latest
+  `7.x` release — mirroring the `saphyr-parser = "=0.0.11"` exact-pin-with-review convention
+  rather than a caret range. The `msrv` CI job's name moves to `MSRV (1.88.0)`, its
+  `dtolnay/rust-toolchain` `toolchain:`/`cargo check`'s `RUSTUP_TOOLCHAIN:` values move to
+  `"1.88.0"` (action SHA unchanged), and its `cargo check` invocation widens from
+  `--all-features --locked` (an implicit `lib + bins`-only scope) to
+  `--all-targets --all-features --locked` — the stale wiremock-scope-carve-out comment
+  explaining the narrower scope is removed, since `wiremock`'s ≥1.88 requirement (the sole
+  reason for the carve-out) no longer applies once the floor itself is 1.88. This is the
+  first time this repo's `tests/`/inline `#[cfg(test)]` code is validated against the MSRV
+  floor rather than just `lib + bins`; doing so surfaced one genuine 1.88-only borrow-checker
+  pattern in a proptest in `src/cli/issue/create.rs` (a temporary-value-lifetime issue newer
+  rustc's borrow checker accepts but 1.88 rejects), fixed by binding the value to a `let`
+  first — no behavior change. `tests/ci_gate_completeness.rs`'s pinned literals (toolchain
+  version, `cargo check` run-line selector) were updated in the same atomic commit as the
+  `ci.yml` changes, per the CI-Gate six-file review-scope convention (CLAUDE.md), so the
+  `ci-gate` required check never goes red from a self-test/workflow-file mismatch. The
+  comfy-table re-pin's one table-rendering insta snapshot
+  (`src/cli/auth/tests/snapshots/jr__cli__auth__tests__list_table_snapshot.snap`) showed no
+  diff under 7.2.2. User impact: None for binary/Homebrew users; source-builders need
+  Rust ≥1.88.
+
+- **Let-chain retrofit across `src/` and 4 test files; CLAUDE.md's "No let-chains"
+  convention retired (S-cycle13-letchain-retrofit-convention-cleanup, cycle-013,
+  ADR-0025):** Raising `rust-version` to 1.88 (previous entry) made clippy's
+  MSRV-aware `collapsible_if` lint fire on every nested-`if`-without-`else` site
+  that a let-chain (`if let … && …`) could now express in one condition — 73
+  sites across `src/` and several integration test files. All were collapsed,
+  either via `cargo clippy --fix` (the mechanical majority, each diff manually
+  reviewed for behavior preservation — no dropped `else` branches, no reordered
+  side effects) or by hand for the four call sites CLAUDE.md's own convention
+  entry had explicitly carved out as workarounds:
+  `src/cli/auth/keychain.rs::resolve_credential` (simple two-level collapse),
+  `tests/common/wf.rs::WfDoc::parse` (simple two-level collapse), and
+  the structurally-identical three-level Team-column gating sites in
+  `src/cli/board.rs::handle_view` / `src/cli/issue/list.rs::handle_list`, where
+  only the outer two gates (`output_format == Table` and `team_field_id.is_some()`)
+  fold into the let-chain condition — the third gate
+  (`uuids.iter().any(|u| u.is_some())`) stays a separate nested `if` after the
+  `let uuids = …` statement, preserving lazy evaluation of both the in-memory
+  `uuids` allocation and the `crate::cache::read_team_cache` filesystem read
+  (BC-5.3.001/BC-5.3.002 outcome-level behavior unchanged; full
+  `tests/team_column_parity.rs` + `tests/cli_handler.rs` team-column suites
+  verified red→green around the change). The now-fulfilled "No let-chains"
+  Conventions entry and its three citing `// Nested if (not a let-chain)` marker
+  comments are removed. `tests/common/wf.rs`'s `collapsible_if` site
+  (`WfDoc::parse`) is converted in this same PR, not left as an exception — an
+  earlier draft of this entry incorrectly described it as deliberately
+  untouched. No behavior change anywhere in this entry; syntax-only.
+
+Also includes two docs-only reconciliation PRs (#819, #820/#822) that updated
+README/CLAUDE.md/design-spec/ci-gate-completeness.md references to the new MSRV
+floor and `--all-targets` scope — no additional user-facing behavior, and no
+separate CHANGELOG entries beyond the two above (per #818/#819's own commit
+messages, the MSRV-bump entry already covers their content in full).
+
+## [0.7.0-dev.6] - 2026-09-15
+
+### Added
+
+- **CI: build provenance attestations for release artifacts (opt-in):** `release.yml` gains an `attest` job that produces a GitHub Artifact Attestation with SLSA build provenance for the `.tar.gz`/`.zip` release archives, verifiable with `gh attestation verify` and natively by mise's `github:` backend. Attestation is created from the built artifacts (parallel to `release`, fanning in from the same `build` job outputs), so it covers the exact bytes users download without a publish-then-attest window. Gated on `vars.ATTESTATIONS_ENABLED` so forks carry it as a no-op. See `docs/specs/fork-friendly-release-ops.md`.
+
+- **`jr auth status --output json` (S-cycle7-auth-status-json, BC-1.6.050, retires
+  NFR-O-N):** `auth status` now supports `--output json`, emitting a 6-key object
+  `{profile, url, env, auth_method, status, oauth_app}` to stdout (pretty-printed,
+  #526 invariant). `status` is a 3-value vocabulary (`"unset"` / `"no-credentials"` /
+  `"configured"`) derived via the shared `derive_auth_state` helper introduced in
+  cycle-007 Wave-1 (BC-1.6.048) — the same helper used by `auth list --output json`
+  for parity. `oauth_app` is the OAuth app source label (`"embedded"` / `"keychain"` /
+  `"(none)"`) when `auth_method` is `"oauth"`, `null` otherwise (key always present).
+  Human-text output (`Profile:`, `Instance:`, `Env:`, `Auth method:`, `Credentials:`,
+  `OAuth app:` lines) is byte-for-byte unchanged. Error paths (unknown profile → exit
+  64 `{"error":…,"code":64}`) follow the standard project JSON-error envelope. The
+  fresh-install early-return (no profiles configured) emits no JSON — human-text only,
+  exit 0 (BC-1.6.050 EC-1.6.050-2, explicitly out of scope for a JSON shape).
+
+- **Pure markdown-mention conversion in `adf.rs` (S-cycle5-mention-pure-conversion,
+  issue #674, ADR-0023, BC-7.2.016/017/018/019):** `src/adf.rs` gains three new
+  pure, synchronous, zero-HTTP entrypoints — `find_mention_candidates`
+  (bracket-form `[~accountid:<id>]` + `@Name` candidate detection),
+  `markdown_to_adf_with_mentions` (the extended real emitter, taking a
+  caller-supplied `MentionResolutions` map), and `markdown_to_adf_no_mentions`
+  (byte-for-byte pre-#674 bypass, the pure half of a future `--no-mentions`
+  flag). `markdown_to_adf` becomes a one-line wrapper delegating to
+  `markdown_to_adf_with_mentions` with an empty resolutions map — its public
+  signature and behavior are unchanged for every pre-#674 caller. Bracket-form
+  mentions convert unconditionally (opaque, never UUID-validated);
+  unresolved `@Name` tokens are left as literal text. A `\@` escape
+  (odd/even backslash-parity, PUA-sentinel protect/restore) suppresses
+  mention detection for an intentionally-escaped `@Name`. `AdfRenderer`
+  gains a new `"mention"` reverse-render arm: `attrs.text` (verbatim) ->
+  `"@" + attrs.id` -> literal `"@?"` three-way fallback — closing the
+  long-standing `mention`-dropped gap (issue #202/NFR-O-I). This is the pure
+  half only; effectful `@Name`->accountId resolution and CLI wiring
+  (`--no-mentions` flag, the four write-command call sites) are
+  `S-cycle5-mention-resolution-wiring`'s scope.
+
+- **Effectful mention resolution + write-path wiring (S-cycle5-mention-resolution-wiring,
+  issue #674, ADR-0023, BC-X.7.007/008/009/010, BC-3.3.012/3.4.032/3.5.013/3.8.018):**
+  a new `src/cli/issue/mentions.rs::resolve_mentions` resolves every unique
+  `@Name`/bracket-form `[~accountid:<id>]` mention candidate in a
+  `--markdown` body against real Jira users before the write is sent — a
+  hard-error, notify-safe policy, not a silent pass-through. Bracket-form
+  ids are mandatory-preflight-validated via `GET /rest/api/3/user?accountId=`
+  (404/400 -> "not found", exit 64); `@Name` tokens resolve via
+  `GET /rest/api/3/user/search`, an active-only filter, a new
+  `filter_by_name_match` name-match tightening pre-filter, then the
+  existing `disambiguate_user` (`Exact`/`ExactMultiple`/`Ambiguous`/empty-list
+  contract, reused verbatim). Deduplicated per unique candidate before any
+  network call. Resolution is all-or-nothing: any failure among an
+  otherwise-resolvable body fails the WHOLE write with zero mutation HTTP
+  call. Wired into all four write-command call sites: `issue create`
+  (platform), `issue edit` (both the live PUT and the `--dry-run` preview,
+  which forces non-interactive resolution unconditionally), `issue comment
+  add`/`issue comment edit`, and JSM `issue create --request-type` (resolved
+  before the synchronous `JsmRequestBuilder::build()` runs). A new
+  `--no-mentions` flag (on `issue create`/`issue edit`/`issue comment
+  add`/`issue comment edit`) skips resolution entirely and falls back to
+  `adf::markdown_to_adf_no_mentions` — zero resolver HTTP calls, mention
+  syntax survives as literal text.
+
+### Changed
+
+- **CI: sharded mutation-testing gate replaces the single 240-minute `mutants` job
+  (S-cycle6-mutants-ci-sharding, cycle-006).** Internal CI/CD infrastructure only —
+  no user-facing `jr` binary behavior changed. The required mutation-testing gate is
+  now a three-job pipeline (`mutants-plan` → an 8-shard `mutants` matrix →
+  `mutants-aggregate`) plus a new advisory nightly full-scope workflow
+  (`.github/workflows/mutants-nightly.yml`, N=24 shards, never blocks a merge).
+  `mutants-aggregate` (implemented in the new `scripts/mutants-aggregate.sh`)
+  replaces `mutants` as the `ci-gate.needs` member and computes a POOLED,
+  sum-not-average kill rate across all 8 shards, with an exact-equality
+  `MUTANT_COUNT` reconciliation hard fail (both over- and under-count directions)
+  against `mutants-plan`'s independent pre-count. Fail-closed, per-shard status
+  sentinels (reading `steps.run-mutants.outcome`, never `.conclusion`, which
+  `continue-on-error: true` would otherwise force to always read `success`) replace
+  the old single-job artifact-count proxy for completeness, closing an
+  all-shards-crash false-green and an empty-shard false-red the single-job design
+  was never exposed to. A `>120`-in-diff-mutant escape hatch routes oversized PRs to
+  an ordinary, actionable CI failure (never a silent skip or pass) — resolved by
+  splitting the diff or an admin branch-protection bypass with an explicit
+  PR-description acknowledgment. This unblocks any PR with ≤120 in-diff mutants from
+  hitting the old 240-minute wall-clock ceiling (the trigger: PR #778, 281 mutants);
+  it does not itself make a PR that size "pass within budget" — it still escalates.
+  `cargo-mutants` pin tightened from major-only `@27` to the exact release
+  `@27.1.0`. `scripts/check-ci-gate.sh` and the new `scripts/mutants-aggregate.sh`
+  now share a common `scripts/lib/trusted-jq.sh` jq-trust resolver. Governed
+  policy-doc-only (D-348/D-349), no new PRD BC — see
+  `docs/specs/cargo-mutants-policy.md` §"Sharded Mutation Gate (cycle-006)".
+
+- **README: add per-profile-credential migration note** (S-cycle7-readme-migration-note,
+  issue #783). API-token profiles created before per-profile credential storage shipped
+  (pre-cycle-003) do not have their `email`/`api-token` credentials lazy-migrated to the
+  new per-profile keychain layout the way OAuth tokens are. After upgrading, the first
+  command that contacts Jira on any such profile exits 2 (not authenticated) with a
+  remediation hint. The migration section of README.md now documents this asymmetry and
+  directs users to run `jr auth login --profile=<name>` once (equals form, so
+  leading-hyphen profile names are not misread as flags). Doc-only; no `src/` changes.
+
+- **CI: nightly full-scope mutation workflow rebalanced to 24 shards + a completeness
+  guard (`ci/mutants-nightly-rebalance`).** Investigated run 34478602590 (the first
+  N=16 nightly run) `cancelled`: only 4/16 shards finished inside the old
+  `timeout-minutes: 240` job cap, the other 12 were killed mid-run by that cap, and
+  the report job pooled the partial outcomes into an ordinary "88% kill rate, below
+  90% target" `::warning::` with no signal that the run was incomplete — a partial
+  run was indistinguishable from a full one. Fix: (1) the matrix widened from N=16 to
+  N=24 shards (`--shard <k>/24`) so each shard's slice is smaller and more reliably
+  finishes in-budget; (2) the shard job's `timeout-minutes` raised 240 → 300 (still
+  safely under GitHub's 360-minute job max); (3) each shard now writes a completion
+  sentinel (`mutants-nightly-shard-status-<k>`) ONLY when its `cargo mutants`
+  invocation genuinely exits 0 — mirroring the shape (not the full
+  `run_outcome`/`has_outcomes` contract) of the per-PR sharded gate's own status
+  sentinel — so a cancelled or failed shard produces none; (4)
+  `mutants-nightly-report` counts sentinels, prints "N/24 shards completed" to both
+  the log and the job summary, and when N < 24 annotates the summary as PARTIAL and
+  suppresses the below-90% `::warning::` in favor of an explicit "advisory-incomplete,
+  not comparable to the 90% target" note. The report job remains advisory-only and
+  still never exits non-zero, regardless of completeness or kill rate.
+
+### Fixed
+
+- **ADF auto-conversion for `--field` on rich-text fields (S-cycle12-platform-adf-autoconvert,
+  S-cycle12-jsm-adf-autoconvert, BC-3.4.033/035/036, BC-3.3.013/014/015, BC-3.4.035 AC-011,
+  BC-3.8.019/020/021/022, ADR-0024):** `issue edit --field NAME=VALUE`, `issue create --field
+  NAME=VALUE`, and `issue create --request-type RT --field NAME=VALUE` (JSM) now auto-convert
+  plain text to ADF (`text_to_adf`) when the target field has ADF schema (`schema.system ==
+  "description"` / `schema.system == "environment"` / `schema.custom` ends with `":textarea"`).
+  Table output shows `(adf)` marker (not raw value) on the platform paths; JSON
+  `changed_fields[field_id]` carries the raw user-supplied input string (lossless, BC-3.4.035
+  AC-011 / #398 invariant). Empty-value clear (`--field description=`) sends
+  `{"type":"doc","version":1,"content":[]}` on the platform edit path (BC-3.4.036); the JSM
+  create path OMITS an empty ADF-backed field entirely instead (BC-3.8.021, distinct create-omit
+  semantics). `--markdown + --field description` exits 64 uniformly across all three write paths
+  (platform create: BC-3.3.014 AC-006; platform edit: AC-007; JSM create: BC-3.8.017, unchanged).
+  System fields resolved via `--field` use the field_id (`"description"`) as the JSON
+  `changed_fields` key, matching the `--description` path convention. On the JSM create path,
+  `isAdfRequest: true` is now accumulated whenever any `--field` extra field is ADF-converted, in
+  addition to the pre-existing `--description` channel (BC-3.8.022); a `GET
+  .../requesttype/{id}/field` metadata fetch (cache-first, 7-day TTL) is added when at least one
+  bare `--field` pair is present, failing open (a single stderr warning, plain-string fallback,
+  never exit 64) if the fetch itself fails (BC-3.8.019 EC-3.8.019-2). On the JSM create path,
+  when both `--description` and a `--field description=` extra-field entry are supplied together
+  (no `--markdown`), assembly order is deterministic — `--description`'s ADF insert supersedes
+  the `--field description=` extra-field entry, so the created issue's description is always
+  `--description`'s value (EC-3.8.019-4, AC-006, ADR-0024 §L-3).
+
+- **`jr auth login --help` and `jr auth refresh --help` `--oauth` flag help text
+  accuracy fixes** (S-cycle7-oauth-help-text-fix, issue #790, BC-1.2.049
+  EC-1.2.049-3; adversary pass-1 OBS-1, adversary pass-2 F1).
+  *Login:* the text previously stated "(requires your own OAuth app)" — factually
+  wrong since jr ships an embedded OAuth app by default (ADR-0006); corrected. The
+  login text also overclaimed the deprecation notice prints unconditionally in
+  human-output mode; it is now qualified to note that the non-interactive guard may
+  fire first and suppress the notice on non-interactive runs (the guard keys on
+  `--oauth` + non-TTY/`--no-input`, so interactive runs are unaffected).
+  *Refresh (adversary pass-1 OBS-1 + pass-2 F1):* the refresh `--oauth` doc
+  previously claimed the notice prints unconditionally "to stderr in human-output
+  mode"; corrected to note the guard may fire. A subsequent adversary pass found the
+  interim reword ("may be emitted on interactive runs") was also inaccurate for
+  Refresh: unlike Login, Refresh's guard keys on the profile's stored `auth_method`,
+  not the `--oauth` flag — a non-interactive `jr auth refresh --oauth` on an
+  api-token-method profile does NOT trip the guard and the notice IS emitted in
+  human-output mode. The final wording is now output-format-gated rather than
+  interactivity-gated: "A deprecation notice is printed in human-output (Table) mode
+  unless the non-interactive OAuth guard rejects the refresh first."
+  No functional change — doc-comment accuracy fixes only.
+- **`jr auth list` STATUS column now reflects actual credential state, not URL presence**
+  (S-cycle7-auth-state-derivation, BC-1.6.048/BC-1.6.049, issue #788). The STATUS column
+  (table output) and `"status"` field (JSON output) previously showed `configured` for any
+  profile that had a URL set, regardless of whether credentials were actually stored. They
+  now derive from a real keychain probe:
+
+  - `unset` — profile has no URL configured.
+  - `no-credentials` — URL is set but no matching credentials found in the keychain.
+  - `configured` — URL is set and a matching credential (OAuth tokens or API token,
+    selected by the profile's `auth_method`) is present in the keychain.
+
+  The renderers (`render_list_table`, `render_list_json`) are now pure — they receive
+  pre-computed probe results from `collect_probe_results` in `handle_list` and perform no
+  keychain access themselves (BC-1.6.048 F-1 fix). JSON `"status"` serializes with
+  kebab-case: `"unset"`, `"no-credentials"`, `"configured"`.
+
+  **macOS note:** because `jr auth list` now probes the keychain for each URL-configured
+  profile, macOS users may see a Keychain Access consent dialog ("jr wants to use your
+  confidential information stored in jr in your keychain") after upgrading if the rebuilt
+  binary is not yet on the keychain item's ACL. Grant access once; subsequent invocations
+  are silent. This prompt does not appear on Linux or Windows.
+
+- **Breaking: `load_api_token` credential-absence branches now exit 2 (not 64) and
+  suggest the correct `--profile` flag form** (S-cycle7-credential-absence-fix,
+  BC-1.4.032/BC-1.4.033, issues #784 + #786). Two fixes in one story, same two lines
+  of `src/api/auth.rs::load_api_token`:
+
+  1. **Exit-code reclassification (exit 64 → exit 2, breaking change):** both the
+     both-namespaced-keys-absent branch (`(None, None)`) and the
+     exactly-one-namespaced-key-present branch (`_` catch-all) previously returned
+     `JrError::UserError` (exit 64), indistinguishable from an ordinary usage error.
+     They now return `JrError::NotAuthenticated` (exit 2), the existing variant
+     `error-taxonomy.md` already defines for "no token in keychain" — scripts and
+     agents that grep exit codes to distinguish "unauthenticated" from "bad flags" must
+     be updated.
+
+  2. **Remediation command fix (issue #784):** both branches' suggested fix previously
+     read `` `jr auth login <profile>` `` (positional), which does not parse against
+     the real clap surface (the subcommand-local `profile` flag is `#[arg(long)]`-only,
+     never a positional). The remediation now correctly reads
+     `` `jr auth login --profile=<profile>` `` (equals form — required so that
+     profile names beginning with a hyphen, e.g. `-prod`, are not misread by
+     clap as unknown short flags; EC-1.4.032-6).
+
+  **Scope:** only `load_api_token`'s two credential-absence branches are changed.
+  `src/cli/auth/status.rs`'s unrelated unknown-profile branch (`profile does not exist
+  in config`) is NOT affected — that site remains `JrError::UserError` (exit 64, BC-1.1.004,
+  unchanged). "Profile exists but has no stored credentials" (exit 2) is categorically
+  distinct from "profile does not exist" (exit 64).
+
+### Security
+
+- **Bump rustls to 0.23.45 (RUSTSEC-2026-0285):** Resolves a TLS 1.3 handshake
+  vulnerability in rustls where certain handshake messages were not properly rejected.
+  The handshake transcript remains authenticated (no MITM, no attacker handshake
+  completion); the practical risk is low but the fix is straightforward. Also bumps
+  aws-lc-rs 1.16.2 → 1.18.1 and aws-lc-sys 0.39.0 → 0.45.0 (Cargo.lock-only,
+  no source changes). Verified clean under MSRV 1.85 at the time of this fix — the MSRV
+  floor was subsequently raised to 1.88 in the 0.7.0-dev.7 release (see that section
+  above); this bump remains verified clean under the new floor too, since raising a
+  floor cannot reintroduce a lower-Rust-version incompatibility.
+
+## [0.7.0-dev.5] - 2026-09-06
+
+### Changed
+
+- **CI: mutation-test scope gap closed for `tenant.rs`; body-cap boundary
+  hardened (FIX-F6-1, cycle-004 F6 hardening):** `src/api/jira/tenant.rs`
+  (S-cycle4-cloud-id-correctness's `fetch_cloud_id` cloud_id acquisition —
+  21 mutants) is now in `examine_globs` (21 → 22 entries). The file was
+  omitted since creation, meaning the required `mutants` CI gate generated
+  zero mutants for the entire cycle-004 auth/tenant delta on any PR to date
+  — the same drift class as the prior `field.rs`/`field_resolve.rs` gap
+  (FIX-F6-MUTANTS-SCOPE). Two new tests
+  (`test_fetch_cloud_id_succeeds_on_body_exactly_at_cap` /
+  `test_fetch_cloud_id_soft_fails_on_body_one_byte_over_cap` in
+  `tests/cloud_id_tenant_info.rs`) plus an inline
+  `test_max_tenant_info_response_bytes_is_64_kib` regression pin kill 5
+  previously-surviving mutants on the `MAX_TENANT_INFO_RESPONSE_BYTES`
+  64 KiB response-body size cap (the constant itself, and the `>`/`>=`/`==`
+  boundary on both the Content-Length fast-path guard and the streamed-read
+  guard) — tenant.rs now kills 21/21 mutants (100%). `src/api/auth.rs` and
+  `src/cli/auth/login.rs` remain deliberately out of `examine_globs`
+  (dominated by keyring-gated and Windows-`#[cfg]` code unreachable under
+  default `cargo test`; needs a keychain-injection seam or a broad
+  documented `exclude_re`, tracked as a follow-up).
+  `src/api/auth_windows_store.rs` was attempted but SKIPPED: a fresh scoped
+  re-run to confirm the mutation-results.md-reported single equivalent
+  survivor (`fsync_parent_dir_best_effort with ()`) proved too slow to
+  complete and independently verify within this session (~60-90s/mutant,
+  71 mutants); rather than add an `exclude_re` pinned to a result not
+  freshly reconfirmed end-to-end, the addition is deferred to a follow-up
+  pass with a longer time budget. See `docs/specs/cargo-mutants-policy.md`
+  and `.factory/phase-f6-hardening/cycle-004/mutation-results.md`.
+- **README: corrected Windows install/config/cloud_id documentation**
+  (S-cycle4-windows-docs, issue #760). Added a `Unblock-File` mark-of-the-web
+  step to the Windows install instructions (a browser-downloaded `.zip` can
+  otherwise trigger a SmartScreen warning or silently refuse to run), a
+  per-platform config/cache path table (Windows: `%APPDATA%\jr\config.toml`,
+  `%LOCALAPPDATA%\jr\v1\<profile>\`; Unix: `~/.config/jr/config.toml`,
+  `~/.cache/jr/v1/<profile>/`, replacing the previous Unix-only reference),
+  and rewrote the `cloud_id` caveat to describe the corrected, both-auth-methods
+  auto-discovery behavior shipped by `S-cycle4-cloud-id-correctness` rather than
+  the pre-fix OAuth-only limitation. Doc-only; no `src/` changes.
+- **README: corrected 3 credential-storage/auth-default consistency defects**
+  (FIX-W2-INT-README, cycle-004, F4 Wave 2 integration gate findings
+  W2-INT-MED-001/W2-INT-LOW-001/W2-INT-LOW-002). (1) W2-INT-MED-001: the
+  claim that a classic API token's `email`/`api-token` pair is "stored once
+  ... and shared by all `api_token` profiles" was false — `store_api_token`
+  (`src/api/auth.rs`) writes per-profile namespaced keychain keys
+  (`<profile>:email`/`<profile>:api-token`, S-cycle3-percred-storage,
+  BC-1.4.031), confirmed isolated by `load_api_token_cross_profile_isolation`
+  and `load_api_token_default_profile_has_no_legacy_fallback`; corrected to
+  state per-profile storage, symmetric with the adjacent OAuth-per-profile
+  sentence (also fixed the same false "shared API token" phrasing in the
+  `jr auth logout` command-table row). (2) W2-INT-LOW-001: the Windows
+  storage narrative omitted the DPAPI-encrypted-file fallback
+  (`%LOCALAPPDATA%\jr\secrets\<profile>\oauth-tokens.dat`) that oversized
+  OAuth tokens exceeding Windows Credential Manager's ~2560-byte cap engage
+  (ADR-0021, `src/api/auth_windows_store.rs`); added a short note describing
+  the fallback location and trigger condition. (3) W2-INT-LOW-002: "Authenticate
+  with API token (default) or `--oauth` for OAuth 2.0" was stale as of
+  [0.7.0-dev.4]'s S-cycle3-oauth-default-creation/BC-1.1.013 — bare
+  interactive `jr auth login` now shows an OAuth-first picker (OAuth
+  pre-selected), non-interactive invocations default to API token, and
+  `--oauth` is deprecated in favor of the picker or the new `--api-token`
+  flag; corrected the `jr auth login` command-table row and the Quick Start
+  comment to match. Doc-only; no `src/` changes.
+
+### Fixed
+
+- **Windows: `jr auth login --oauth` no longer fails deterministically on
+  oversized OAuth tokens** (S-cycle4-dpapi-storage-fix, ADR-0021, issue
+  #759). `store_oauth_tokens` writes to the system keyring first,
+  unconditionally, on every platform; on Windows, when a token exceeds
+  Windows Credential Manager's ~2560-byte blob-size ceiling
+  (`keyring::Error::TooLong`), the whole access/refresh pair now falls back
+  to a new, user-scope DPAPI-encrypted file under
+  `%LOCALAPPDATA%\jr\secrets\<profile>\` instead of failing the login
+  outright. The existing keyring pair (if any) is deleted before the DPAPI
+  file is written, so a process kill mid-fallback never leaves both
+  backends holding a copy of the pair. `load_oauth_tokens` and
+  `auth remove`/`auth logout` gain matching read and delete-both-backends
+  branches, and a host-independent profile-name guard rejects path-traversal
+  and reserved-device-name vectors before any file is touched. macOS/Linux
+  behavior is unchanged. (Message-text differentiation for the two new
+  failure modes — DPAPI-fallback failure and rejected profile names — ships
+  separately in a fast-follow story.)
+- **API-token profiles now acquire a `cloud_id` at login/init/refresh time**
+  (S-cycle4-cloud-id-correctness, ADR-0022, BC-1.2.052/053/054,
+  A-PA-LOW-001). Previously, `jr auth login`'s API-token branch (and `jr
+  init`'s API-token picker choice) never obtained a `cloud_id`, so
+  Assets/CMDB commands against an API-token profile always failed with
+  "Cloud ID not configured" even immediately after a successful login. `jr
+  auth login`, `jr init`, and `jr auth refresh` (whenever they resolve to
+  the API-token flow) now attempt to discover the site's `cloud_id` via the
+  unauthenticated `GET {site}/_edge/tenant_info` endpoint, with an ordered
+  fallback chain: an explicit `--cloud-id` override (highest precedence,
+  persisted immediately) → the `tenant_info` fetch → a soft-fail that never
+  blocks login and leaves any existing `cloud_id` untouched. An
+  oauth→api_token mechanism switch now refreshes (rather than leaves stale)
+  a previously-acquired `cloud_id` on fetch success, and preserves it
+  (never bare-clears it) on fetch failure. `Config::base_url()`'s existing
+  `auth_method == "oauth"` gateway guard is unchanged — core Jira REST v3
+  requests remain unaffected either way.
+- **Windows: accurate error messages when the DPAPI-encrypted-file fallback
+  itself fails** (S-cycle4-honest-fail-message, ADR-0021 §6, BC-1.4.039,
+  issue #759). The fast-follow promised by S-cycle4-dpapi-storage-fix above:
+  when BOTH Windows Credential Manager AND the DPAPI fallback fail to store
+  an oversized OAuth token, `jr auth login --oauth` and the internal OAuth
+  refresh path no longer report the misleading "Unlock your keychain"
+  message — they now name the 2560-byte Credential Manager limit and the
+  fallback failure detail, and instruct the user to check disk space/file
+  permissions and re-authenticate. The two sites' messages are intentionally
+  distinct: `jr auth login`'s message recommends jr's own scoped cleanup
+  (`jr auth logout --profile <profile>` / `jr auth remove <profile>`) as the
+  default remediation (`jr auth remove <profile>` applies once the profile
+  is no longer the active/default profile — `jr auth remove` refuses to
+  delete either, and a brand-new profile is always both), and presents
+  revoking jr's Atlassian OAuth grant at
+  `https://id.atlassian.com/manage-profile/apps` as an OPTIONAL extra step
+  carrying an explicit warning that it is ACCOUNT-WIDE — jr uses one shared
+  embedded OAuth app, so revoking the grant signs out every `jr` profile on
+  that Atlassian account, not just this one (D-334; corrected 2026-09-05
+  after Perplexity-validated research showed the original "safe cleanup, no
+  other consumer" framing was false and harmful — see
+  `.factory/research/atlassian-3lo-revoke-granularity-2026-09-05.md`). This
+  same scoped-cleanup-default / optional-account-wide-warned-revoke
+  correction ALSO replaces the final sentence of `jr auth login`'s
+  pre-existing GENERIC "Unlock your keychain" message (any ordinary keyring
+  failure, e.g. a locked keychain) — that message is reachable on EVERY
+  platform, not just Windows, so this text correction is NOT limited to the
+  DPAPI-fallback failure mode described below (PR #771 review Finding B-2).
+  `jr auth login` also now records the target profile's `auth_method`
+  BEFORE attempting the login flow (previously only after it succeeded)
+  whenever the profile has no `auth_method` on record yet, so `jr auth
+  logout` — the message's default recommended cleanup command — correctly
+  recognizes and clears a brand-new profile's OAuth state instead of
+  misreporting "This profile uses API-token auth — nothing to log out",
+  even when the login fails at the credential-store step described below
+  (PR #771 review Finding B-1); a mechanism SWITCH away from an existing,
+  working `auth_method` is unaffected and still records the new mechanism
+  only after a successful login. The internal refresh path's message omits
+  any grant-revoke instruction entirely (the grant may still back other
+  active sessions for the profile) and proactively clears the profile's
+  now-stale stored OAuth pair so the
+  next command sees a clean "no stored OAuth token" state instead of a
+  confusing `invalid_grant`. An invalid profile name (rejected by the
+  DPAPI-fallback's path-traversal guard) continues to render as its own
+  distinct, actionable error at both sites. The Windows DPAPI-fallback
+  failure MODE itself (both message sites' distinct honest-fail text) is
+  unreachable on macOS/Linux by construction; the generic keychain-failure
+  message correction described above is NOT platform-limited.
+- **Three LOW findings from the cycle-004 F5 scoped adversarial review**
+  (FIX-F5-CYCLE4-1). (1) LOW-1: `jr auth login` no longer orphans a
+  credential pair when switching mechanisms on a profile migrated from the
+  legacy `[instance]` config shape (`auth_method: None` on record, but
+  still holding a working credential pair under some label). Previously,
+  `switching`/`clear_outgoing_mechanism_on_switch` only ever consulted
+  `current_auth_method`, which is `None` for such a profile regardless of
+  what's actually stored — so a successful login under a DIFFERENT
+  mechanism stored the new pair and set `auth_method`, but silently left
+  the old pair behind in the keychain. `handle_login` now probes WHICH
+  credential kind (if any) is stored under the `None` label BEFORE
+  attempting the new login (`auth::probe_stored_credential_kind`, a new
+  crate-public probe `profile_has_stored_credentials` is now expressed in
+  terms of), and — only AFTER the new login succeeds — clears that kind if
+  it differs from the newly-selected mechanism
+  (`reconcile_legacy_none_outgoing_credentials`, sharing its per-kind clear
+  dispatch with `clear_outgoing_mechanism_on_switch`). A genuinely brand-new
+  profile, a same-kind re-declaration, and a FAILED login all remain
+  no-ops/unaffected — the reconcile step runs only after both the login and
+  the pre-existing switch-clear have succeeded (relogin-then-replace,
+  unchanged). (2) LOW-2: `src/api/auth.rs`'s D-334 source-scan guard
+  (`normalize_for_phrase_scan`, `test_no_account_wide_harmful_revoke_framing_in_auth_source`)
+  stripped a leading `///` doc-comment prefix but not `//!` (inner-doc) or
+  a plain `//` line comment, so a forbidden revoke-framing phrase wrapped
+  across two `//!`- or `//`-prefixed lines evaded detection (the unstripped
+  marker sat between the two halves of the phrase after line-joining). Now
+  strips the longest matching marker (`///`, then `//!`, then bare `//`)
+  before whitespace-collapsing. (3) LOW-3: `auth_windows_store.rs`'s
+  `atomic_write` fsynced the renamed-into-place file's tmp sibling before
+  `rename`, but never fsynced the PARENT DIRECTORY afterward — so its doc
+  comment's crash-safety claim didn't actually cover the rename's own
+  directory-entry update surviving a power loss on POSIX filesystems. Added
+  `fsync_parent_dir_best_effort` (model-b: swallow any error, matching
+  `src/cache.rs`'s documented cache-write convention) and call it after
+  `rename`; softened `atomic_write`'s doc comment to state the durability
+  scope precisely — best-effort, not a proven guarantee, a documented
+  silent no-op on Windows (this module's only real production target,
+  since `std::fs::File::open` fails on a directory path there without
+  `FILE_FLAG_BACKUP_SEMANTICS`), with `jr auth login` as the expected
+  recovery path if a crash still corrupts the file despite these steps.
+- **Actionable LOW findings from the cycle-004 F5 scoped adversarial review,
+  second pass** (FIX-F5-CYCLE4-2). (1) `fetch_cloud_id`
+  (`src/api/jira/tenant.rs`) gains three hardening changes to the
+  tenant_info path, none changing any F2-approved BC-1.2.052/053/054
+  behavior: (a) a fetched `cloudId` is now validated (non-empty, no
+  whitespace, ASCII-alphanumeric-and-hyphen only) before being returned —
+  an empty or garbage value is treated as a fetch failure and flows into
+  the existing documented soft-fail path, never persisted; (b) the request
+  base is now derived from the SAME `site_url.trim()` the `https://`
+  precondition validates, closing a whitespace inconsistency where a
+  leading/trailing-whitespace `site_url` could pass the precondition but
+  build a malformed request URL from the untrimmed string; (c) the
+  response body is now bounded (64 KiB, Content-Length fast-path plus an
+  authoritative streamed-read cap) before being buffered and parsed,
+  closing an unbounded-memory-read vector on an oversized or hostile
+  response. (2) `clear_profile_api_token_pair` (`src/api/auth.rs`) now
+  attempts BOTH the email and api-token keychain deletes unconditionally,
+  returning the first genuine error encountered — the same attempt-all
+  pattern already used by its siblings `clear_profile_oauth_pair`/
+  `clear_profile_creds` — instead of early-aborting via `?` after the
+  first step, which previously left the api-token entry completely
+  un-attempted (and therefore orphaned) whenever the email delete hit a
+  genuine backend error on the mechanism-switch/reconcile path. (3) `jr
+  init`'s Step 6 GraphQL org-metadata call no longer unconditionally
+  overwrites a `cloud_id` the API-token branch's `login_token` call
+  (Step 3) already fetched via `tenant_info` — it now only sets `cloud_id`
+  when the profile doesn't already have one, eliminating a redundant
+  double-fetch-and-overwrite of the identical value for API-token
+  profiles while remaining the sole `cloud_id` source for the OAuth branch
+  (which never calls `tenant_info`) and a fallback when Step 3's fetch
+  soft-failed. `org_id` is unaffected — the GraphQL call still runs on
+  every invocation, since `org_id` and the Step 7 team-cache prefetch have
+  no other source. (4) A stale doc-comment sweep updated
+  `tests/cloud_id_tenant_info.rs`, `tests/auth_chosen_flow_reconcile.rs`,
+  and `tests/auth_oauth_default_creation.rs`'s module headers, which still
+  described their subjects as `todo!()` stubs "expected to FAIL" from
+  their original Two-Step Red Gate authoring — all three are shipped,
+  reviewed, and green today; the historical RED narrative is retained
+  for context, not presented as current behavior. (5) The legacy-`None`
+  orphan-clear dispatch decision in
+  `reconcile_legacy_none_outgoing_credentials`
+  (`src/cli/auth/login.rs`) is now backed by a small, host-pure helper,
+  `legacy_none_orphan_clear_target`, extracted so this branch's decision
+  logic (no-op on nothing-probed, no-op on same-mechanism, clear on a
+  differing probed kind) is directly unit-testable without a keychain
+  backend — a code-reviewer suggestion from the F5 pass, applied as a
+  clean, behavior-preserving refactor. Two items were assessed and left
+  unchanged, reported here rather than silently skipped: reducing the
+  soft-fail warning noise on the API-token cloud_id path was NOT done —
+  the exact warning text (`"warning: could not look up cloud_id for
+  profile ..."` / `"warning: could not refresh cloud_id for profile
+  ..."`) is pinned byte-for-byte by existing tests in
+  `src/cli/auth/login.rs`, so trimming it would break a pinned
+  BC-1.2.053-adjacent contract rather than merely tidy cosmetics; `--
+  cloud-id` remaining unvalidated on the API-token path and API-token
+  `cloud_id` being unused by `base_url()` are both unchanged, documented
+  by-design behavior (BC-1.2.052 PC1, BC-1.2.054) with no server
+  round-trip available to validate against and Assets/CMDB as the actual
+  consumer, respectively.
+
+## [0.7.0-dev.4] - 2026-09-03
+
+### Added
+
+- **`jr auth login` defaults to an OAuth-first interactive picker, mirroring
+  `jr init`** (S-cycle3-oauth-default-creation, BC-1.1.013, D-313). Bare
+  `jr auth login` on an interactive TTY now presents `["OAuth 2.0
+  (recommended)", "API Token"]` with OAuth as the default selection —
+  identical items and default index to `jr init`'s existing picker.
+  Non-interactive invocations (`--no-input`, or stdin not a TTY) skip the
+  picker entirely and always default to `api_token` (BC-1.1.014); presence
+  of `JR_EMAIL`/`JR_API_TOKEN` env vars alone does NOT suppress the picker
+  on an otherwise-interactive session. A mechanism-switching re-declaration
+  (picker or non-interactive) clears the outgoing mechanism's stored
+  credentials before/alongside writing the new ones.
+- **New, symmetric `--api-token` flag on `jr auth login`/`jr auth refresh`**
+  (S-cycle3-oauth-default-creation, BC-1.2.050, D-323), mutually exclusive
+  with `--oauth`. On `login`, `--api-token` selects the `api_token`
+  mechanism directly, skipping the interactive picker. On `refresh` it is
+  accepted for symmetry but has no effect on mechanism selection
+  (BC-1.2.051) — `refresh` always follows the profile's own stored
+  `auth_method` — and prints an informational stderr notice (human-mode
+  only) explaining that it's inert there.
+- **Airtight non-interactive OAuth guard** (S-cycle3-oauth-default-creation,
+  BC-1.1.016). An explicit `--oauth` under any non-interactive trigger, or
+  a non-interactive `jr auth refresh` against a profile whose stored
+  `auth_method` is already `oauth`, now exits 64 immediately — before any
+  network call, callback-listener bind, or browser-open attempt — with
+  `OAuth requires an interactive terminal; use --api-token for
+  non-interactive auth.` This closes a class of CI/automation hangs where a
+  non-interactive invocation could previously reach the OAuth flow and
+  block waiting on a browser redirect that could never complete.
+
+### Deprecated
+
+- **`--oauth` on `jr auth login`/`jr auth refresh` is deprecated** in favor
+  of letting the interactive picker default to OAuth, or passing the new
+  `--api-token` flag explicitly (S-cycle3-oauth-default-creation,
+  BC-1.2.049, D-323). `--oauth` continues to work exactly as before and
+  now prints a stderr-only, human-mode-only deprecation notice on every
+  functional (non-guard-rejected) use; the notice never appears under
+  `--output json`.
+
+### Changed
+
+- **Breaking:** `jr auth refresh --oauth`/`--api-token` no longer override
+  the target profile's stored mechanism (S-cycle3-chosen-flow-reconcile,
+  BC-1.2.048, BC-1.2.051, D-321). Previously, `jr auth refresh --oauth
+  <profile>` on a profile whose stored `auth_method` was `api_token` forced
+  an OAuth relogin regardless of the profile's actual mechanism — this was
+  the sole remaining exception to "`auth_method` is intrinsic." As of this
+  change, `refresh` always follows the target profile's own stored
+  `auth_method`; `--oauth`/`--api-token` remain syntactically accepted (no
+  clap error) but have zero effect on which mechanism is used. Migration:
+  the only way to change a profile's mechanism is `auth login`
+  re-declaration (`jr auth login --profile <name> --oauth` or
+  `--api-token`), mirroring the BC-1.2.047/S-663-1 precedent
+  (`jr auth switch --profile` removal). See also the accompanying I-6
+  "relogin-then-replace" ordering fix, which ensures a failed `refresh`
+  never clears existing credentials before a replacement is confirmed
+  obtainable. As an intentional consequence of relogin-then-replace, `jr
+  auth refresh` no longer clears ANY credentials before re-obtaining them —
+  it no longer wipes the shared BYO OAuth app credentials
+  (`oauth_client_id`/`oauth_client_secret`), legacy flat keys, or a
+  profile's other-mechanism token pair, resolving the previously-tracked F1
+  data-loss issue.
+
+### Fixed
+
+- **A locked/backend keychain error during OAuth token refresh no longer
+  surfaces as a misleading "embedded app rotated" hint** (FIX-F5-refinement,
+  F2-01/F2-02, adversary-surfaced MEDIUM finding). `refresh_oauth_token_with_url`
+  (`src/api/auth.rs`) used to coerce ANY error from
+  `resolve_refresh_app_credentials` — including a locked/permission-denied
+  keychain, which that resolver deliberately returns as a distinct `Err`
+  from "no credentials stored" — into empty embedded OAuth app credentials.
+  The refresh would then POST with an empty client_id/client_secret, get
+  back `invalid_client` from Atlassian, and tell the user their embedded
+  app credentials may have been rotated — actively hiding the real cause
+  (a locked keychain) on the hourly auto-refresh hot path. The same class
+  of bug also swallowed a genuine backend error reading the stored refresh
+  token into an empty string via `unwrap_or_default()`. Both call sites now
+  propagate a genuine backend/permission error as-is; only the truly-absent
+  case (no BYO keychain entry and no embedded build, or no stored refresh
+  token at all) still falls back to an empty-credential attempt, preserving
+  existing test/mock-environment behavior.
+- **`jr auth logout` on a profile with no `auth_method` recorded now takes
+  the api-token informational-notice branch, not the OAuth-clear branch**
+  (FIX-F5-refinement, LOW-4, BC-1.1.015). An unset `auth_method` defaults to
+  `"api_token"` at runtime (`from_config`'s `.unwrap_or("api_token")`), but
+  `handle_logout`'s branch condition only recognized an *explicit*
+  `auth_method = "api_token"` — an unset value fell through to the OAuth
+  branch and printed a misleading "Logged out of profile ..." success
+  message even though there was never an OAuth session for that profile.
+  Fixed by keying the branch on "not oauth" rather than "is api_token",
+  matching the documented runtime default.
+
+- **`jr auth login`'s mechanism-switching re-declaration no longer clears
+  the outgoing mechanism's credentials before the new login has succeeded**
+  (FIX-F5-login-switch, a Wave-5 adversary-surfaced MEDIUM data-loss
+  finding). Previously, `handle_login` called
+  `clear_outgoing_mechanism_on_switch` — which deletes the profile's
+  outgoing credential pair — BEFORE dispatching to `login_oauth`/
+  `login_token`. If the new login then failed (browser cancel, network
+  error, a missing `--no-input` value), the profile's prior WORKING
+  credentials had already been deleted and were never replaced, leaving the
+  profile credential-less — strictly worse than its state before the
+  command ran. This mirrors the exact "clear-then-login" antipattern the
+  accompanying I-6 fix (D-321, above) had just removed from `auth
+  refresh`, but it had not yet been applied to this `auth login`
+  mechanism-switch path. Fixed via the same relogin-then-replace ordering:
+  `login_oauth`/`login_token` now run FIRST, and the outgoing mechanism's
+  credentials are cleared ONLY after the new mechanism's credentials are
+  confirmed obtained and stored; a failed login leaves the prior
+  credentials completely untouched. As part of this fix,
+  `clear_outgoing_mechanism_on_switch` also narrowed from clearing BOTH
+  credential kinds unconditionally (via `clear_profile_creds`) to clearing
+  ONLY the outgoing kind (via the new `clear_profile_api_token_pair`,
+  symmetric with the existing `clear_profile_oauth_pair`) — under the new
+  ordering, the combined clear would otherwise delete the new mechanism's
+  credentials this same call just stored. A successful switch still leaves
+  no orphaned outgoing-mechanism credentials behind.
+
+### Internal
+
+- **Un-deferred ADR-0011 (Status: Deferred → Accepted, D-317) and completed the
+  compile-time type-level `Profile` fence** (`src/profile.rs`, `S-cycle3-adr0011-newtype`,
+  BC-6.2.015). No user-visible behavior change — this is a pure, compile-time-only refactor:
+  `Profile(String)` (`From<String>`, `From<&str>`, `AsRef<str>`, `Display`, and equality/debug
+  impls that keep existing `{:?}`/comparison call sites unchanged) is now threaded through
+  every `src/cache.rs` per-profile function, `src/api/auth.rs`'s per-profile credential
+  functions (`store_api_token`/`load_api_token`/`store_oauth_tokens`/`load_oauth_tokens`/
+  `clear_profile_creds`/`clear_profile_oauth_pair`/`clear_all_credentials`),
+  `Config::active_profile_name`, and `JiraClient::profile_name`/`profile_name()` — a
+  profile-unaware call site (a bare `&str`/hardcoded string literal passed where a real
+  profile name is expected) is now a compile error instead of a silent cross-profile
+  leakage risk. See `docs/adr/0011-type-level-profile-fence.md` for the full design.
+
+### Fixed
+
+- **`jr auth remove` no longer reports success while a genuine keychain
+  backend error silently leaves stale credentials behind**
+  (S-cycle3-remove-logout-semantics, BC-1.2.014). Credential-deletion
+  errors were previously aggregated and downgraded to a warning after the
+  config entry had already been removed; a real (non-`NoEntry`) keychain
+  failure now aborts the command before the cache-clear and config-removal
+  steps run, surfaces the error to the user, and leaves `[profiles.<name>]`
+  in place so a re-run of `jr auth remove <name>` is the recovery path.
+
+### Changed
+
+- **`jr auth remove <name>` now deletes BOTH credential kinds — the OAuth
+  pair AND the per-profile API-token pair — and reorders its steps to
+  credentials-before-config-entry** (S-cycle3-remove-logout-semantics,
+  BC-1.2.014, D-322). New order: (1) OAuth-pair delete, (2) API-token-pair
+  delete (NEW — targets the namespaced `<profile>:email`/`<profile>:api-token`
+  keys introduced by S-cycle3-percred-storage), (3) cache clear, (4)
+  config-entry removal LAST. This is a deliberate reversal of the prior
+  ordering (which persisted the config removal first) — see the Fixed entry
+  above for why.
+
+- **`jr auth logout` on an API-token profile now prints an informational
+  notice instead of silently no-op-ing** (S-cycle3-remove-logout-semantics,
+  BC-1.2.013, D-322). Running `jr auth logout` against a profile whose
+  `auth_method` is `api_token` previously succeeded silently with no visible
+  effect. It now prints, to stderr, and exits 0 (this is an expected,
+  successful outcome, not an error):
+  `This profile uses API-token auth — nothing to log out; use \`jr auth
+  remove <profile>\` to delete stored credentials.` The profile entry and
+  its credentials remain untouched — `logout` stays OAuth-specific by
+  design; use `jr auth remove <profile>` to actually delete an API-token
+  profile's stored credentials. `oauth`-method profiles are unaffected:
+  `logout` still deletes the OAuth pair and prints the ordinary success
+  message.
+
+- **API-token credential absence now produces an actionable, exit-64
+  "detect-and-instruct" error instead of a generic auth failure**
+  (S-cycle3-credential-absence-guard, BC-1.4.032/BC-1.4.033/BC-1.4.034,
+  D-326). When a profile has no per-profile `<profile>:email` /
+  `<profile>:api-token` keychain entries — the state every pre-cycle-003
+  API-token profile is in after the S-cycle3-percred-storage breaking
+  change above — `jr` now exits 64 with:
+  `No credentials stored for profile '<profile>'. This version of jr
+  requires per-profile credentials — run \`jr auth login <profile>\` to set
+  them up.` A single `jr auth login <profile>` permanently resolves it; no
+  second re-login is ever required. If only one of the two per-profile keys
+  is present (a partial write), a distinct message fires instead:
+  `Incomplete credentials stored for profile '<profile>' — run
+  \`jr auth login <profile>\` to fix this.` Neither message ever suggests
+  `jr auth logout` (a no-op for API-token profiles). **No-copy guarantee
+  (D-326):** `jr` detects whether the old shared flat `email`/`api-token`
+  keychain pair still exists purely to keep this code path symmetric with
+  OAuth's migration-detection step — it never reads, copies, or deletes
+  that legacy pair, and the error text is byte-identical whether or not the
+  legacy pair is present. This applies uniformly to `"default"` and every
+  other profile name — there is no profile-specific special case.
+
+- **BREAKING — Action required on upgrade: API-token credentials
+  (`email` / `api-token`) are now stored per-profile in the OS keychain,
+  under namespaced `<profile>:email` / `<profile>:api-token` keys**
+  (S-cycle3-percred-storage, BC-1.4.031). This mirrors the existing
+  per-profile OAuth token layout (`<profile>:oauth-access-token` /
+  `<profile>:oauth-refresh-token`) rather than the old shared flat
+  `email` / `api-token` keys. **Every profile that previously authenticated
+  with an API token — including every single-profile `"default"` user, the
+  majority auth path — must re-run `jr auth login [--profile <NAME>]` once**
+  after upgrading: existing credentials under the old flat `email`/
+  `api-token` keys are not migrated or read (there is no legacy-key
+  fallback for any profile, including `"default"`). Until you re-login, the
+  next command using that profile's API-token auth will fail with the
+  detect-and-instruct error described in the entry above
+  (S-cycle3-credential-absence-guard, BC-1.4.032):
+  `No credentials stored for profile '<name>'. This version of jr requires
+  per-profile credentials — run \`jr auth login <name>\` to set them up.`
+
+- **`jr auth list` (table mode) now renders a 5-column table — `NAME`, `URL`,
+  `ENV`, `AUTH`, `STATUS` — adding a new `ENV` column between `URL` and
+  `AUTH`** (S-cycle3-env-tag, BC-1.6.046, BC-1.6.047, BC-6.1.015, D-324).
+  Every profile now carries an optional free-form `env` tag
+  (`ProfileConfig.env`, e.g. `"prod"`/`"sandbox"`); the table cell shows the
+  tag when set (routed through a shared control-char/ANSI-escape-stripping,
+  length-capped display sanitizer — `output::sanitize_env_display`), a blank
+  cell for `Some("")`, and a `-` placeholder when unset. This is a
+  **breaking change for anything that parses `jr auth list`'s table output
+  by column position or snapshot** — the pinned insta snapshot
+  (`src/cli/auth/tests/snapshots/jr__cli__auth__tests__list_table_snapshot.snap`)
+  changes shape accordingly. `--output json` is unaffected in shape (already
+  additive: `env` is verbatim/lossless, `null` when unset — no
+  sanitization applied on the JSON channel, mirroring issue #398's
+  description-echo asymmetry) but now carries real values for tagged
+  profiles. `jr auth status`'s text `Env:` line uses the identical shared
+  sanitizer via `render_env_line`. Migration: any script scraping the table
+  by column index must account for the new `ENV` column; `--output json`
+  consumers are unaffected beyond the new non-null `env` values.
+  **How to set it:** `env` is hand-edit-only in this release — add
+  `env = "sandbox"` under the relevant `[profiles.<name>]` block in
+  `~/.config/jr/config.toml` (see the README's config example). There is no
+  `--env` flag or `jr init`/`jr auth login` prompt yet; that is tracked as a
+  follow-up.
+
+## [0.7.0-dev.3] - 2026-09-01
+
+### Breaking Changes
+
+- **`--field` now parses opt-in `NAME:kind=VALUE` hint syntax** (S-578-1,
+  BC-3.4.026, BC-3.4.031). `parse_field_kv` (shared by `issue create`,
+  `issue edit`, and JSM `issue create`) now recognizes a trailing
+  `:option`/`:id`/`:name`/`:asset` kind tag before the `=`, in addition to the
+  existing bare `NAME=VALUE` form. This story ships the **parser only** —
+  real dispatch on the parsed `kind` lands in S-578-2/3/4. Until then, an
+  interim guard (`reject_unsupported_hint_kinds`) rejects any hinted
+  `NAME:kind=VALUE` pair on `issue edit` and JSM `issue create` with an exit-64
+  "field-value kind hints (:option/:id/:name/:asset) are not yet supported on
+  this command" error.
+  Bare `NAME=VALUE` is unaffected, **except**: a field NAME containing a colon
+  immediately followed by a short token that happens to match one of the four
+  kind names, or by a non-whitespace token with no space before the `=`, is
+  now parsed as a (possibly invalid) hinted pair rather than treated as
+  literal name text — e.g. `--field "Region:X=val"` (no space after the
+  colon) now exits 64 with "unknown field-value kind 'X'". A field NAME
+  containing a colon **followed by whitespace** — e.g.
+  `--field "Region: EMEA=val"` — is unaffected and continues to parse exactly
+  as it did before this story (name `"Region: EMEA"`, `kind: None`), because
+  none of the four valid kind tags contain whitespace.
+
+### Added
+
+- **`jr field options <field>`** (S-580-1, #578, #740): new command that lists a
+  field's allowed options. Resolves field context via M1/M2/M3 mechanism
+  resolution — `createmeta`, `editmeta`, or JSM requesttype-fields, depending
+  on where the field is discovered — and normalizes the result into a single
+  option model. Supports `--value <substring>` filtering and both table and
+  `--output json` rendering.
+
+### Changed
+
+- **`issue edit --field NAME:kind=VALUE` now dispatches real resolution for
+  the `:option`/`:id`/`:name`/`:asset` kind hints** (S-578-2,
+  BC-3.4.015/016/021/027-031, #578, #741). S-578-1 shipped the hint-syntax
+  *parser* only, guarded behind an interim exit-64 "not yet supported" error;
+  that guard is now removed. `:option` resolves a non-cascading option
+  selection; `:id`/`:name`/`:asset` resolve cascading, `>`-split composers
+  (including workspace-scoped CMDB `:asset` references). `--dry-run` renders
+  a preview of the resolved value alongside the other planned changes.
+- **JSM `issue create --field` now dispatches the same kind-hint resolution
+  as `issue edit --field`** (S-578-3, BC-3.8.008, #578, #742): `:option`,
+  `:id`, `:name`, and `:asset` (including `:asset`'s workspace-scoped CMDB
+  L2 resolution) are now honored on the JSM request-creation path, closing
+  the dispatch gap S-578-1's interim guard left on this command.
+- **`jr issue create --field NAME=VALUE` (platform, non-JSM path) no longer
+  exits 64 pre-flight — it now resolves via the project's Create screen
+  (`createmeta`)** (S-578-4, BC-3.3.010/BC-3.3.011, D-310 — registered
+  2026-08-26, reverses D-188 from S-639-1). Previously, supplying `--field`
+  without `--request-type` exited 64 with "`--field` is only valid with
+  `--request-type`". That guard is removed: `--field` now resolves each pair
+  against the target project/issue-type's Create screen using the SAME
+  resolution machinery as `issue edit --field` (customfield_NNNNN bypass,
+  cache-first field-name resolution, hint-kind dispatch), merging the result
+  into the create POST body. `--on-behalf-of` is UNCHANGED — it still exits 64
+  without `--request-type` (BC-3.8.013). A new ten-member dedicated-flag ×
+  `--field` collision guard (D2) rejects a `--field` pair that targets the
+  same wire key as a dedicated flag (e.g. `--priority X --field
+  priority=Y`) before any HTTP call. This is purely permission-widening — no
+  previously-working invocation is broken; an invocation that used to exit 64
+  now either succeeds or fails later with a more specific resolution error.
+  See CLAUDE.md's `jr issue create --field`/`--on-behalf-of` gotcha entry
+  (updated by this story) and `docs/adr/0014-jsm-request-type-dispatch.md`.
+
+- **CI: mutation-test scope gap closed for `field.rs` + `field_resolve.rs`
+  (FIX-F6-MUTANTS-SCOPE):** `src/cli/field.rs` (~91 mutants — `jr field options
+  <field>`'s M1/M2/M3 context-mechanism resolution) and
+  `src/cli/issue/field_resolve.rs` (~45 mutants — the shared `--field`
+  resolution/dispatch hub for `issue edit --field` and `issue create --field`)
+  are now in `examine_globs` (18 → 20 entries). Both files were omitted since
+  creation, meaning the required `mutants` CI gate generated zero mutants for
+  either file across every field-dx PR to date (S-580-1, #578 parts 1-5). See
+  `docs/specs/cargo-mutants-policy.md`.
+
+## [0.7.0-dev.2] - 2026-08-25
+
+### Added
+
+- **`jr issue list`/`jr issue view --fields <CSV>`** (S-575-1, #724): opt-in
+  field selection lets you request a specific comma-separated set of fields
+  in `--output json` responses instead of the full default payload.
+- **`jr issue list --updated-recent <duration>`** (S-579-1, #725): filters
+  issues updated within a rolling duration window (e.g. `1h`, `2d`), mirroring
+  the existing `--recent` (created-within) filter but scoped to `updated`.
+- **`jr issue list --sort <field>:asc|desc` shorthand** (S-588-1,
+  BC-2.1.024/025, #726): a compact `field:direction` form for specifying sort
+  order, alongside the existing sort flags.
+
+### Changed
+
+- **`--fields comment` now preserves raw ADF structure** on `issue list`/`issue
+  view` instead of flattening it (S-584-1, #732).
+- **`jr issue list --updated-recent` supplied alone now proceeds like
+  `--recent`** rather than requiring a companion filter (F5 reconciliation,
+  D-306, #733).
+
+### Fixed
+
+- **`validate_duration` returns `Err` instead of panicking on multibyte
+  input** (FIX-F6-LRE-1, #734): malformed duration strings containing
+  multibyte UTF-8 characters (e.g. `--updated-recent`) are now rejected with
+  a proper error instead of crashing on a byte-index panic.
+
+### Internal
+
+- **Live E2E coverage for the component command family** (S-COMP-E2E-1,
+  #719), with two follow-up poll-budget widenings to fix index-lag flakiness
+  in `poll_component_filter`/`poll_jql` (#720, #721), and an orphaned
+  component-fixture sweeper added to `e2e-sweeper.yml` (S-COMP-E2E-SWEEP-1,
+  #722).
+- **Dependency bumps:** `step-security/harden-runner` 2.20.1→2.21.0 (#723),
+  `clap_complete` 4.6.7→4.6.9 (#687), `Swatinem/rust-cache` (#711),
+  `taiki-e/install-action` 2.85.8→2.85.13 (#717),
+  `github/codeql-action/upload-sarif` (#718).
+
+## [0.7.0-dev.1] - 2026-08-19
+
+### Breaking Changes
+
+- **`jr auth switch --profile <X> <NAME>` now exits 64** (S-663-1,
+  BC-1.2.047). `--profile` was previously *accepted* and had no effect on
+  which profile was activated — the positional `<NAME>` always won — though
+  it did force an active-profile existence check via `Config::load_with`,
+  producing the confusing "both values must be real profiles, only one
+  matters" incantation the issue reports. Migration: drop `--profile` and
+  run `jr auth switch <NAME>`. All other `auth` subcommands (`list`, `remove`,
+  `login`, `status`, `refresh`, `logout`) continue to honor `--profile`
+  unchanged. (#663)
+- **`jr issue edit --dry-run` now reads stdin and renders an ADF preview
+  (S-692-1, D-274).** Previously `--dry-run --description-stdin` never read
+  stdin and emitted a fixed placeholder string
+  (`"<from stdin — not yet read in dry-run>"`) for
+  `plannedChanges.description`, and bare `--description` had no ADF preview at
+  all. Both `--description` and `--description-stdin` now render the actual
+  ADF document via the same `markdown_to_adf`/`text_to_adf` conversion the
+  live (non-dry-run) path uses, exposed as a new additive
+  `plannedChanges.descriptionAdf` field (`--output json`) / a
+  `"  description (ADF): rendered OK"` line (table mode).
+  `plannedChanges.description` still carries the raw input string verbatim
+  (BC-3.4.013/#398 unaffected). A `markdown_to_adf` `MAX_ADF_DEPTH` recursion
+  failure now exits 64 from `--dry-run` too, closing a false-OK regression
+  where a pathologically nested description previously returned exit 0 under
+  `--dry-run` while the corresponding live edit would exit 64. Any automation
+  asserting on the old literal placeholder string will observe a different
+  value. Note: `--dry-run --description-stdin` now performs a blocking read
+  of stdin (matching the live path). Invocations that previously returned
+  immediately without stdin attached will now wait for EOF — pipe input, or
+  redirect from /dev/null. (#692)
+
+### Added
+
+- **`jr queue view` surfaces queue-configured custom fields in `--output json`**
+  (S-693-1, BC-X.8.009 AMENDED): the resolved queue's declared `fields[]`
+  (filtered to `customfield_<digits>` tokens only) now flow into the batch
+  issue fetch, so `customfield_*` values configured as queue columns appear
+  in JSON output via the existing `IssueFields` flatten mechanism. Table
+  output is unchanged (no new column; render-side work tracked separately as
+  #575). The `--id` path incurs one additional `list_queues` call to obtain
+  this field config that the `<name>` path already has in hand; on failure
+  it degrades to base fields only with a stderr warning rather than failing
+  the command. (#693)
+- **Due date visibility (S-668-1):** `jr issue view` and `jr issue list --output json`
+  now include the `duedate` field. `jr issue view` shows a Due Date row; `jr issue list
+  --duedate` adds an opt-in Due Date column. (#668)
+- **`jr component list`** (S-604-1, BC-8.1.001/002/003/004): lists a project's
+  components in table or `--output json` form; `--counts` enriches each row
+  with `relatedIssueCounts` via fail-soft N+1 GETs (per-component failure
+  degrades to `-`/`null` with a stderr warning rather than failing the
+  command). Foundation piece for the new component-management command family
+  (types, API, cache, resolver). (#604)
+- **`jr component create` and `jr component edit`** (S-604-2, BC-8.1.005/006/007):
+  two new subcommands for managing Jira project components.
+  `jr component create --project KEY NAME [--description …] [--lead …] [--assignee-type …]`
+  creates a component; `jr component edit NAME_OR_ID [--project KEY] [--name …]
+  [--description …] [--lead …]` renames or updates an existing one. Numeric component IDs
+  bypass the project-component list lookup. Leading-dash component names (e.g. `-legacy`)
+  are accepted on both subcommands. (#604)
+- **`jr component delete`** (S-604-3, BC-8.2.001-008): deletes a project
+  component; refuses (exit 64) unless either `--move-to <NAME_OR_ID>`
+  (reassigns affected issues to another component before the DELETE) or
+  `--orphan` (interactive confirmation, or `--yes` non-interactively, naming
+  the affected-issue count) is supplied. Affected issue keys are snapshotted
+  via JQL *before* the DELETE fires. `--output json` reports `deleted`,
+  `movedIssuesTo`, `affectedIssueCount`, and `affectedIssues`. (#604)
+- **`jr component rename OLD NEW`** (S-608-1, BC-8.3.001-007): renames a
+  component in place (its `id` is unchanged by the rename). The
+  single-project form requires `--project KEY`; `--all-projects` fans the
+  rename out across every project with a component named `OLD`, per-project
+  fail-soft; `--dry-run` previews the change set (including the
+  `--all-projects` fan-out) without issuing any mutating HTTP call. (#608)
+- **`jr issue list --component`** (S-606-1, BC-2.1.018-022): filters issues
+  by component name. Bare `--component NAME` (repeatable) OR-combines;
+  `--component not:NAME` excludes (EMPTY-inclusive, since JQL `NOT IN`
+  excludes issues with no component); `--component none` matches issues with
+  no component (zero resolver HTTP calls); `--component all:NAME1,NAME2`
+  AND-combines. Names are resolved to ids up front; an unresolvable or
+  ambiguous name exits 64 before any JQL search fires. (#606)
+- **`jr issue create --component` and `jr issue edit --component`, single-key
+  path** (S-605-1, BC-3.4.022/024/025): `issue create --component NAME`
+  (repeatable) sets the issue's initial `components` on creation.
+  `issue edit KEY --component add:NAME --component remove:NAME` (single key)
+  sends native Jira `update`-verb PUT operations (`{"add":{"name":…}}` /
+  `{"remove":{"name":…}}`), with an editmeta-gated read-modify-write
+  fallback. Component name resolution is a single project-scoped
+  component-list GET; unknown/ambiguous names exit 64 pre-flight. (#605)
+- **`jr issue edit --component`, multi-key/`--jql` bulk path** (S-605-2,
+  BC-3.4.023): bulk `--component add:`/`remove:` across multiple keys or a
+  `--jql`-resolved set uses `POST /bulk/issues/fields` with a
+  `multiselectComponents` object and integer `componentId`s, issuing up to
+  two sequential POSTs when both `add:` and `remove:` are present in the
+  same invocation. (#605)
+
+### Fixed
+
+- **Component command family — F5 adversarial-hardening fixes** (#709,
+  #715): consolidated numeric component-ID resolution onto a single
+  codepath; `--project` is now accepted as a global flag (not just a
+  subcommand-local one) on `component create`; component names are
+  URL-encoded in outgoing API calls; `jr issue list --component`'s read path
+  now unions matches for case-only duplicate component names (e.g.
+  `Backend`/`backend`) instead of silently keeping only one; `jr component
+  rename --all-projects` now returns the correct exit code when no project
+  contains a matching component.
+
+### Internal
+
+- chore(git): reconnect the v0.6.0 release commit (93d422fd) into develop's ancestry — graph-only, no code change (#699).
+
 ## [0.6.0] - 2026-08-13
 
 First stable release of the 0.6.0 line, consolidating the `0.6.0-dev.1`
@@ -13,7 +1312,7 @@ sections for full detail.
 ### Breaking Changes
 
 - **`jr issue create --field`/`--on-behalf-of` without `--request-type` now exit 64
-  pre-flight instead of warning and proceeding** (S-639-1, DEC-188, BC-3.8.012/013
+  pre-flight instead of warning and proceeding** (S-639-1, D-188, BC-3.8.012/013
   [AMENDED]). These flags are JSM-only; supplying them on the platform create path
   now fails fast, before any HTTP call, project-key resolution, interactive prompt,
   or `--description-stdin` read. Migration: add `--request-type <NAME>` or drop the
@@ -67,7 +1366,7 @@ sections for full detail.
   live Jira responses, RFC 3339 fractional-second parsing, Content-Disposition
   CRLF/quote/backslash injection guards (CWE-93), disk-write error
   classification with remediation hints, and 404 body-surfacing asymmetries
-  between targeted and bulk paths (DEC-168). (#576, #644, #646, #647, #649)
+  between targeted and bulk paths (D-168). (#576, #644, #646, #647, #649)
 - ADF code-mark exclusivity (inline code inside bold/superscript no longer
   emits HTTP-400-rejected ADF), listItem/footnote/panel content-model
   conformance, and multi-line inline/block HTML no longer emitting raw `\n`
@@ -98,12 +1397,12 @@ sections for full detail.
 ### Breaking Changes
 
 - **`jr issue create --field`/`--on-behalf-of` without `--request-type` now exit 64
-  pre-flight instead of warning and proceeding (S-639-1, closes #639, DEC-188,
+  pre-flight instead of warning and proceeding (S-639-1, closes #639, D-188,
   BC-3.8.012/013 [AMENDED]):** Previously (S-383), supplying `--field NAME=VALUE` or
   `--on-behalf-of <accountId>` on the platform create path (i.e. without
   `--request-type`) emitted a `warning: … is ignored on the platform create path`
   line to stderr and the platform issue was still created (exit 0). These flags are
-  self-declared JSM-only flags, and DEC-188 promotes this to a categorical user
+  self-declared JSM-only flags, and D-188 promotes this to a categorical user
   error: `jr issue create` now exits 64 BEFORE any HTTP call, project-key resolution,
   interactive prompt, or `--description-stdin` read. If both flags are supplied
   together, ONE combined error fires (not two). **Migration:** add `--request-type
@@ -169,7 +1468,7 @@ sections for full detail.
 
 - **`jr issue attachment delete` — interactive single-AID 404 surfaces Jira error body (FIX-F5-006, #644):**
   The interactive confirmation gate (`handle_attachment_delete`) now appends the raw Jira error
-  body to the canonical `"Attachment <AID> not found or not accessible."` prefix (DEC-168
+  body to the canonical `"Attachment <AID> not found or not accessible."` prefix (D-168
   body-surfacing contract). The download path (`handle_single_download`) retains
   canonical-only output per BC-2.7.012.
 
@@ -197,7 +1496,7 @@ sections for full detail.
   itself, causing the download path to include the raw Jira body in its 404 message. The
   BC-2.7.012 asymmetry is restored: `handle_single_download` emits the canonical-only prefix
   `"Attachment <id> not found or not accessible."`; the delete interactive gate continues to
-  append `\n{body}` per DEC-168. Also fixed: `batch_path_is_within_dir` now canonicalizes
+  append `\n{body}` per D-168. Also fixed: `batch_path_is_within_dir` now canonicalizes
   the resolved directory before the containment check, preventing false rejections on paths
   containing `..` components.
 
@@ -282,7 +1581,7 @@ sections for full detail.
   `jr issue attachment delete AID [--yes]` deletes a single attachment by numeric ID.
   Without `--yes`, an interactive gate prompts `"Delete attachment <name> (AID)? [y/N]"`
   (metadata GET fetches the filename; CWE-116 `display_sanitize_filename` applied to prompt).
-  DEC-168: targeted single-AID 404 → exit 64 + canonical prefix
+  D-168: targeted single-AID 404 → exit 64 + canonical prefix
   `"Attachment <AID> not found or not accessible."` + Jira error body (surfaced, not silent).
   Non-interactive mode (`--no-input` or non-TTY stdin) without `--yes` → exit 64
   `"Use --yes to confirm deletion without a prompt."`. EOF on gate stdin → exit 130.
@@ -325,7 +1624,7 @@ sections for full detail.
   fires to stderr on either flag (best-effort on JSM; no-op on non-JSM). JSON
   response includes `changed_fields.jsm_internal: true/false` only when a visibility
   flag was passed; absent in the default body-only path.
-  `--yes` without `--public` is accepted as a silent no-op (DEC-169 leniency convention — no clap `requires` pairing).
+  `--yes` without `--public` is accepted as a silent no-op (D-169 leniency convention — no clap `requires` pairing).
   This is the last story of bundle SOH-COMMENT-CRUD-1 (wave D).
 
 - **`jr issue comment edit` — body sources + body-only PUT (S-577-4, issue #577):**
@@ -359,13 +1658,13 @@ sections for full detail.
   exits 64 with Jira's error body surfaced. (Over-deep comment bodies are
   rejected at the JSON parse layer, exit 1.)
 
-- **CI: BC-body Trace/Source citation guard (Guard 1) (DEC-148):** adds
+- **CI: BC-body Trace/Source citation guard (Guard 1) (D-148):** adds
   `scripts/check-bc-citation-symbols.sh` (BC-CITE-001; validates `src/` file and symbol
   citations in `**Trace**:`/`**Source**:` fields of all `bc-*.md` bodies; definition-anchored
   symbol grep; self-test fixtures; coverage-floor guard) as a step in the `spec-guard` CI job.
-  Prevents the Seam-extraction citation-drift class (DEC-147/148/149).
+  Prevents the Seam-extraction citation-drift class (D-147/148/149).
   Calibration: measured N=309 citations (304 `.rs` + 5 `.snap`) on factory-artifacts @ 2b09313; FLOOR=231 = floor(0.75 × 309); non-.rs `src/` citations receive file-existence-only validation (tier ii).
-- **CI: mutants-policy citation guard (Guard 2) + examine_globs existence guard (Guard 3) (DEC-150):** adds `scripts/check-cargo-mutants-policy-citations.sh` (validates §Scope function-location bulleted list; CI-MUTANTS-CITE-001; self-test fixtures; SCOPE-EMPTY guard) and `tests/mutants_glob_existence.rs` (validates examine_globs entries resolve to real files; coverage floor; MUTANTS-GLOBS-KEY-MISSING guard).
+- **CI: mutants-policy citation guard (Guard 2) + examine_globs existence guard (Guard 3) (D-150):** adds `scripts/check-cargo-mutants-policy-citations.sh` (validates §Scope function-location bulleted list; CI-MUTANTS-CITE-001; self-test fixtures; SCOPE-EMPTY guard) and `tests/mutants_glob_existence.rs` (validates examine_globs entries resolve to real files; coverage floor; MUTANTS-GLOBS-KEY-MISSING guard).
 
 ### Security
 
@@ -397,7 +1696,7 @@ sections for full detail.
 ### Changed
 
 - **CI: mutation-test scope restored for `edit.rs` + `jsm_create.rs` after ADR-0012
-  Seam A/B split (DEC-149):** `src/cli/issue/edit.rs` (~99 mutants) and
+  Seam A/B split (D-149):** `src/cli/issue/edit.rs` (~99 mutants) and
   `src/cli/issue/jsm_create.rs` (~9 mutants) are now in `examine_globs`. These
   behavior-dense surfaces — bulk routing forks, C-1 guard, label endpoint fork, JSM
   dispatch — were outside mutation coverage since the ADR-0012 Seam A (PR #556) and

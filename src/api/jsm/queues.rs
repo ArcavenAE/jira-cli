@@ -21,7 +21,7 @@ impl JiraClient {
                 "{}?includeCount=true&start={}&limit={}",
                 base, start, page_size
             );
-            let page: ServiceDeskPage<Queue> = self.get_from_instance(&path).await?;
+            let page: ServiceDeskPage<Queue> = self.get(&path).await?;
             let has_more = page.has_more();
             let next = page.next_start();
             all.extend(page.values);
@@ -64,16 +64,16 @@ impl JiraClient {
                 None => max_page_size,
             };
             let path = format!("{}?start={}&limit={}", base, start, page_size);
-            let page: ServiceDeskPage<QueueIssueKey> = self.get_from_instance(&path).await?;
+            let page: ServiceDeskPage<QueueIssueKey> = self.get(&path).await?;
             let has_more = page.has_more();
             let next = page.next_start();
             all.extend(page.values.into_iter().map(|ik| ik.key));
 
-            if let Some(cap) = limit {
-                if all.len() >= cap as usize {
-                    all.truncate(cap as usize);
-                    break;
-                }
+            if let Some(cap) = limit
+                && all.len() >= cap as usize
+            {
+                all.truncate(cap as usize);
+                break;
             }
             if !has_more {
                 break;

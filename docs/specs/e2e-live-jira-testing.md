@@ -80,7 +80,7 @@ GET succeeding immediately.
 ### Read coverage (assert exit 0 + JSON shape)
 | Command family | E2E assertion |
 |---|---|
-| `issue list --jql "project=<E2E>" --output json` | valid JSON array — **also the auth-seam validator** (first real network call; a 401 means the `JR_AUTH_HEADER` seam/credential is broken). `auth status` is intentionally NOT tested: it emits no JSON and makes no API call (see story AC-004-v2). |
+| `issue list --jql "project=<E2E>" --output json` | valid JSON array — **also the auth-seam validator** (first real network call; a 401 means the `JR_AUTH_HEADER` seam/credential is broken). `auth status` is intentionally NOT tested: it now supports `--output json` (BC-1.6.050) but makes no Jira API call, so the E2E exclusion still stands (see story AC-004-v2). |
 | `issue search` / list with JQL | filters apply |
 | `issue view <seed-or-created-key> --output json` | issue fields present |
 | `board list --output json` | the Scrum board appears |
@@ -104,6 +104,35 @@ required). Steps: upload → list (table + JSON) → download → delete → pos
 Uses `seed_issue` for issue creation (label ensures CI sweeper pick-up). Teardown:
 `attachment delete <AID>` (step 7) + `best_effort_close` (step 9) run before assertions
 (collect-results-then-assert pattern). Covers BC-2.7.001/002/007, BC-3.9.001/008/009/010.
+
+### Component command family (S-COMP-E2E-1)
+Five tests closing the live-Jira coverage gap for `jr component *` and the
+`--component` issue-command surfaces. No new env vars — every scenario uses
+`JR_E2E_PROJECT` plus auto-discovery (`jr component list --project <proj>
+--output json`, take first, clean-skip on empty/403/404) or self-created
+throwaway component fixtures. Teardown for created components uses
+`ComponentDropGuard` (modeled verbatim on `AttachmentDropGuard`, S-576-6 —
+see the JSM attachment bullets below and CLAUDE.md's `AttachmentDropGuard`
+note) — a `Drop`-based best-effort `component delete --orphan --yes` that
+fires on both normal return and panic-unwind.
+- `test_e2e_component_lifecycle_roundtrip` — `component create` → `list` →
+  `edit` → `list` → `delete` → `list` full round-trip; exact JSON key-shape
+  assertions at each step (BC-8.1.001/002/005/007, BC-8.2.001/006/008)
+- `test_e2e_component_rename_roundtrip` — `component rename OLD NEW
+  --project` round-trip against a throwaway fixture; id-preservation across
+  the rename (BC-8.3.001)
+- `test_e2e_issue_create_component_single_key_roundtrip` — `issue create
+  --component <NAME>` sets the initial `components` array (BC-3.4.024/025)
+- `test_e2e_issue_edit_component_single_key_roundtrip` — `issue edit <KEY>
+  --component add:/remove:` on EXACTLY one key, the single-key native
+  `update`-verb wire shape (BC-3.4.022) — distinct from
+  `test_e2e_issue_edit_component_multikey_bulk_roundtrip` above, which always
+  supplies 2+ keys and only exercises the bulk `multiselectComponents` shape
+  (BC-3.4.023)
+- `test_e2e_issue_list_component_filter_grammar` — `issue list --component`
+  bare/`not:`/`none` filter grammar composed against a live JQL search
+  (BC-2.1.018/019/020); a bounded backoff poll (`poll_component_filter`)
+  absorbs JQL search indexing lag before the assertions
 
 ### Optional / feature-flagged
 - **JSM** (gated on `JR_E2E_JSM_PROJECT`; value `EJ`; skip cleanly when unset): thirteen-function
@@ -316,6 +345,10 @@ jobs:
 | `JR_E2E_JSM_RESOLUTION` | variable (optional) | `Done` | resolution name override for `jsm_self_close` teardown and `test_e2e_jsm_resolution_enforcement` (S-JSM-E2E-3). When set, overrides the auto-discovered first resolution from `jr issue resolutions`. Useful when the instance has multiple resolutions and a specific one must be used (e.g., "Fixed" vs "Won't Fix"). When unset, the helper uses the first resolution in the list. If the instance has no resolutions configured, teardown falls back to moving without `--resolution`. |
 | `JR_E2E_STATUS_DONE` | variable (optional) | `Done` | workflow status name for "closed/done"; default `"Done"`. Set if the provisioned Scrum project uses a different status name (e.g. `"Closed"`). Used in write-flow step 6 and teardown. |
 | `JR_E2E_STATUS_IN_PROGRESS` | variable (optional) | `In Progress` | workflow status name for "in progress"; default `"In Progress"`. Set if the provisioned Scrum project uses a different status name. Used in write-flow step 6. |
+| `JR_E2E_MENTION_ACCOUNT_ID` | variable (optional override) | `5b10ac8d82e05b22cc7d4349` | S-cycle5-mention-resolution-wiring (issue #674, self-mention default added test-infra-only in a follow-up): the four `test_e2e_mention_*` round-trip tests (VP-674-014/015/016/017) mention an accountId via bracket-form `[~accountid:<id>]` (not `@Name`) for determinism against a real, possibly multi-user Jira org — an `@Name` mention risks an ambiguous `ExactMultiple`/`Ambiguous` ONLY-MATCH failure the bracket form sidesteps entirely, since it needs only the accountId, not an exact-match-free display name. **Default (this var unset):** the tests self-discover the mention target at runtime via `GET /rest/api/3/myself` and mention the authenticated CI account's own accountId — a self-mention. This needs no separately-configured seam and runs in CI out of the box; self-mentioning still fully validates the round trip (real Jira accepting and persisting the `mention` node with that accountId is what's being proven, independent of whose accountId it is). **Set this var** only to mention a different CONTROLLED test account instead (never a real person's) — it takes precedence over the `/myself` lookup when non-empty. Tests clean-skip (early return, `[SKIP]` notice) only if the env var is unset AND the `/myself` lookup fails or returns no `accountId`. `test_e2e_mention_jsm_create_roundtrip` is additionally gated on `JR_E2E_JSM_PROJECT`. |
+| `JR_E2E_PARENT_KEY` | variable (optional override) | `E2E-1` | S-E2E-DYNAMIC (test-infra-only, no story): `test_e2e_issue_parent_roundtrip` (E2E-HV-2) needs a parent issue to create a child under via `issue create --parent`. **Default (this var unset):** the test seeds a fresh, throwaway parent issue itself (via the existing `seed_issue` helper, default issue type) and self-closes it on teardown alongside the child — no separately-configured seam required. **Set this var** only to parent under a specific EXISTING issue instead (e.g. a permanent epic) — when set and non-empty it takes precedence over dynamic seeding, and because it is presumed permanent/caller-owned, teardown never closes it (only the created child is closed). Paired independently with `JR_E2E_CHILD_TYPE` below — either may be overridden without the other. |
+| `JR_E2E_CHILD_TYPE` | variable (optional override) | `Sub-task` | S-E2E-DYNAMIC (test-infra-only, no story): `test_e2e_issue_parent_roundtrip`'s child issue type. **Default (this var unset):** discovered dynamically via `GET /rest/api/3/project/<key>` (`jr api`), selecting the first issue type with `subtask == true`. The test clean-skips (early return, `[SKIP]` notice) only if this var is unset AND the project has no sub-task issue type. **Set this var** to force a specific child type instead (e.g. when the desired parent/child combination is not a sub-task relationship). |
+| `JR_E2E_EDIT_FIELD` | variable (optional override) | `Environment=staging` | S-E2E-DYNAMIC (test-infra-only, no story): `test_e2e_issue_edit_custom_field`'s (E2E-HV-2) `--field NAME=VALUE` argument. **Default (this var unset):** a safe string field is discovered dynamically via `GET /rest/api/3/issue/<key>/editmeta` (`jr api`) — the standard `"Environment"` field if present with `schema.type == "string"`, else the first other editable string field (excluding `summary`/`description`); a benign generated value is written and the test verifies it via a fresh `GET` on the issue. The test clean-skips (early return, `[SKIP]` notice) only if this var is unset AND no safe field is discoverable. **Set this var** (`NAME=VALUE` form) to exercise a specific custom field instead — the override path asserts only `updated == true` and a non-empty `changed_fields` map, since this test does not attempt to re-derive an arbitrary override's wire key for the fresh-GET check. |
 
 ## 9. Maintenance
 

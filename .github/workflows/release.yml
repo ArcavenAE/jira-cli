@@ -28,14 +28,14 @@ jobs:
             os: windows-latest
     steps:
       - name: Harden the runner (Audit all outbound calls)
-        uses: step-security/harden-runner@b09bb98e06d4d774595224525879c09bc6e98c40 # v2.20.1
+        uses: step-security/harden-runner@e14015d583714f6e62063499dc959a02595150a1 # v2.21.1
         with:
           egress-policy: audit
 
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
 
       - name: Install Rust
-        uses: dtolnay/rust-toolchain@6c977a6ca4077a0ceb28ffbe03f59d46e9ac8772  # stable
+        uses: dtolnay/rust-toolchain@02cb101ec7c40f2c49e1d9714d64511d8e1b74de  # stable
         with:
           toolchain: stable
           targets: ${{ matrix.target }}
@@ -214,12 +214,31 @@ jobs:
 
   release:
     name: Create Release
-    needs: build
+    needs: [build, attest]
+    # Fail-closed gate on `attest` without breaking disabled-attestation
+    # releases: `attest` is skipped whenever ATTESTATIONS_ENABLED is unset
+    # (the default on every fork and on the canonical repo today) — a
+    # skipped `attest` must NOT block the release. A bare `needs: [build,
+    # attest]` would cascade-skip `release` whenever `attest` is skipped,
+    # since the implicit "all needs succeeded" gate treats `skipped` as a
+    # failure. The explicit `if:` below replaces that implicit gate, so it
+    # must re-assert build success itself. This is an ALLOW-LIST on
+    # `attest`'s result (`success` or `skipped`), not a deny-list on
+    # `failure` alone: GitHub Actions job results have exactly four
+    # possible values (success/failure/cancelled/skipped), and a deny-list
+    # form (`!= 'failure'`) would let a `cancelled` `attest` (e.g. its
+    # `timeout-minutes: 15` firing on a Sigstore Fulcio/Rekor hang) through
+    # silently — the top-level `!cancelled()` guard reflects only the
+    # overall workflow run's cancellation, not one dependency job's own
+    # timeout-driven cancellation (SEC-002). The allow-list blocks both
+    # `failure` and `cancelled` while still letting `success` and the
+    # fork-safe/attestations-disabled `skipped` default through.
+    if: ${{ !cancelled() && needs.build.result == 'success' && (needs.attest.result == 'success' || needs.attest.result == 'skipped') }}
     runs-on: ubuntu-latest
     timeout-minutes: 30
     steps:
       - name: Harden the runner (Audit all outbound calls)
-        uses: step-security/harden-runner@b09bb98e06d4d774595224525879c09bc6e98c40 # v2.20.1
+        uses: step-security/harden-runner@e14015d583714f6e62063499dc959a02595150a1 # v2.21.1
         with:
           egress-policy: audit
 
@@ -228,7 +247,7 @@ jobs:
           merge-multiple: true
 
       - name: Create GitHub Release
-        uses: softprops/action-gh-release@3d0d9888cb7fd7b750713d6e236d1fcb99157228  # v3.0.2
+        uses: softprops/action-gh-release@efb35369e0ad2afab669f228072c1b0d510eae64  # v3.0.3
         with:
           generate_release_notes: true
           prerelease: ${{ contains(github.ref_name, '-') }}
@@ -236,3 +255,65 @@ jobs:
             jr-*.tar.gz
             jr-*.zip
             jr-*.sha256
+
+  attest:
+    name: Attest build provenance
+    needs: build
+    # Fork opt-in gate, matching this repo's release-ops convention
+    # (SIGNING_ENABLED, HOMEBREW_TAP_REPO, RELEASE_GAP_FILL_ENABLED,
+    # SYNC_UPSTREAM_REPO — see docs/specs/fork-friendly-release-ops.md).
+    # Forks carry this file verbatim as a no-op unless they opt in.
+    # Attestations require `id-token: write` and publish the workflow's
+    # commit SHA to the public Rekor transparency log; they are
+    # unavailable on GHES and on private forks without GitHub Enterprise
+    # Cloud. Gating keeps the file byte-identical downstream while never
+    # hard-failing a fork's release.
+    if: vars.ATTESTATIONS_ENABLED == 'true'
+    # Both this job and `release` fan in from the same immutable `build`
+    # artifacts, so the attested bytes are identical to what `release`
+    # uploads verbatim (softprops copies them unchanged) — the attestation
+    # is created from the built bytes, not re-downloaded from the release
+    # page, so there is no publish-then-attest window (TOCTOU / CWE-362).
+    # `release` now declares `needs: [build, attest]` with a fail-closed
+    # `if:` (see that job): it waits for this job to complete, proceeds
+    # once this job succeeds OR is skipped (attestations disabled), and is
+    # blocked only when this job actually FAILS. This preserves the fork
+    # opt-in gate above — a skipped `attest` never blocks a fork's release
+    # — while ensuring an enabled-but-failing attestation blocks
+    # publication instead of racing ahead of it.
+    permissions:
+      # attest-build-provenance needs exactly these two; neither is
+      # inherited. contents: read is NOT needed — the artifact download
+      # goes through the Actions artifacts API, not the repo contents API.
+      id-token: write
+      attestations: write
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: Harden the runner (Audit all outbound calls)
+        uses: step-security/harden-runner@e14015d583714f6e62063499dc959a02595150a1 # v2.21.1
+        with:
+          egress-policy: audit
+
+      - name: Fan in the built artifacts (same objects `release` uploads)
+        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c  # v8
+        with:
+          merge-multiple: true
+          path: release-assets
+
+      # Attest the archives only. The `.sha256` sidecars are integrity
+      # metadata already covered by the archive attestation; attesting
+      # them would be circular.
+      #
+      # Coverage boundary: this attests the bytes produced by release.yml.
+      # The fork-optional `sign-and-publish.yml` re-signs the darwin
+      # binaries and emits `.pkg`/`.dmg` with DIFFERENT digests after
+      # notarization — those are not covered here and need their own attest
+      # step in that workflow (after codesign/notarize, before upload),
+      # gated on the same variable. Out of scope for this PR.
+      - name: Attest build provenance
+        uses: actions/attest-build-provenance@4d101475d8b20a2381f78447822ac1eab6504dd8 # v4.2.2
+        with:
+          subject-path: |
+            release-assets/*.tar.gz
+            release-assets/*.zip

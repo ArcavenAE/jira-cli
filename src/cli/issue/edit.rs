@@ -5,15 +5,23 @@ use serde_json::json;
 
 use crate::adf;
 use crate::api::client::JiraClient;
-use crate::api::jira::bulk::{BULK_MAX_KEYS, resolve_bulk_await_timeout};
+use crate::api::jira::bulk::{
+    BULK_MAX_KEYS, BulkMultiSelectFieldOption, build_component_edited_fields,
+    resolve_bulk_await_timeout,
+};
+use crate::api::jira::issues::ComponentRef;
 use crate::cli::{IssueCommand, OutputFormat};
 use crate::config::Config;
 use crate::error::JrError;
 use crate::output;
+use crate::partial_match::MatchResult;
 
 use super::create::parse_field_kv;
+use super::field_resolve::{FieldMetaSource, FieldResolutionOutputs};
+use super::format;
 use super::helpers;
 use super::json_output;
+use super::mentions;
 
 /// Number of issues above which a `--jql`-driven bulk edit requires explicit
 /// `--yes` (or `--no-input` implicit-yes) to proceed. Below this threshold the
@@ -23,6 +31,16 @@ use super::json_output;
 /// issues from a saved JQL filter, so users will hit this prompt routinely. If
 /// product feedback indicates the threshold is too aggressive, raise to 25-50.
 const JQL_CONFIRM_THRESHOLD: usize = 5;
+
+/// Sanity ceiling on `--max`/the resolved `--jql` match-set size for the
+/// `--component` bulk path only (Step-4.5 Round-1 F3 fix, BC-3.4.023
+/// Postcondition 6). Mirrors the `num_args = 0..=10000` widening already
+/// applied to the positional `keys` argument in `src/cli/mod.rs` for the
+/// same reason: `--component`'s bulk path chunks internally into
+/// `<=BULK_MAX_KEYS`-key POSTs, so it can safely accept a much larger
+/// resolved key set than every other bulk field path, which issues a
+/// single un-chunked POST and stays hard-capped at `BULK_MAX_KEYS`.
+const JQL_MAX_CEILING: u32 = 10_000;
 
 pub(super) async fn handle_edit(
     command: IssueCommand,
@@ -41,6 +59,7 @@ pub(super) async fn handle_edit(
         issue_type,
         priority,
         label: labels,
+        component: components,
         team,
         points,
         no_points,
@@ -50,6 +69,7 @@ pub(super) async fn handle_edit(
         description_stdin,
         markdown,
         field: field_raw,
+        no_mentions,
     } = command
     else {
         unreachable!()
@@ -81,6 +101,29 @@ pub(super) async fn handle_edit(
         .into());
     }
 
+    // AC-007 guard (BC-3.4.035, S-cycle12): --field description=VALUE is
+    // incompatible with --markdown; both would write to the description field,
+    // but via different rendering paths (ADF raw text vs. markdown→ADF).
+    // Checked BEFORE the --markdown guard so users get the most specific error.
+    //
+    // Match the RAW token (substring before the first '='), CASE-SENSITIVE,
+    // equal to exactly "description" — mirrors the JSM guard in jsm_create.rs
+    // for uniform behavior across all three write paths (ADR-0024 §uniform-exit-64,
+    // D-359). "Description" (capital D) does NOT fire this guard.
+    if markdown
+        && field_raw.iter().any(|pair| {
+            pair.find('=')
+                .is_some_and(|pos| &pair[..pos] == "description")
+        })
+    {
+        return Err(JrError::UserError(
+            "--field description cannot be combined with `--markdown`. \
+             Pass `--description` with `--markdown`, or omit `--markdown`."
+                .into(),
+        )
+        .into());
+    }
+
     // Validate: --markdown is a modifier on --description/--description-stdin, NOT a
     // standalone field change.  Reject it early (before any HTTP calls) so the user
     // gets a clear error instead of a wasted JQL search followed by "No fields specified".
@@ -107,6 +150,7 @@ pub(super) async fn handle_edit(
             || priority.is_some()
             || issue_type.is_some()
             || !labels.is_empty()
+            || !components.is_empty() // BC-3.4.022: --component add:/remove:
             || team.is_some()
             || points.is_some()
             || no_points
@@ -118,8 +162,8 @@ pub(super) async fn handle_edit(
         if !has_any_field_change {
             return Err(JrError::UserError(
                 "No fields specified to update. Use --summary, --type, --priority, --label, \
-                 --team, --points, --no-points, --parent, --no-parent, --description, \
-                 --description-stdin, or --field NAME=VALUE."
+                 --component, --team, --points, --no-points, --parent, --no-parent, \
+                 --description, --description-stdin, or --field NAME=VALUE."
                     .into(),
             )
             .into());
@@ -128,10 +172,11 @@ pub(super) async fn handle_edit(
 
     // --- Gate B: flag-overlap detection (BC-3.4.017). ---
     // Fires before any HTTP call when a dedicated flag AND --field target the same
-    // system field. Covers exactly 4 first-party flags: summary, description,
-    // issuetype (--type flag), priority. Team and points use dynamically-resolved
-    // IDs; overlap detection for those is deferred to v2 (requires an API call,
-    // breaking the "no HTTP before the guard" invariant).
+    // system field. Covers exactly 5 first-party flags: summary, description,
+    // issuetype (--type flag), priority, components (BC-3.4.017 amendment,
+    // S-605-1, extended from four fields to five). Team and points use
+    // dynamically-resolved IDs; overlap detection for those is deferred to v2
+    // (requires an API call, breaking the "no HTTP before the guard" invariant).
     if !field_pairs.is_empty() {
         let field_keys_lower: std::collections::HashSet<String> =
             field_pairs.keys().map(|k| k.to_lowercase()).collect();
@@ -159,6 +204,15 @@ pub(super) async fn handle_edit(
         if priority.is_some() && field_keys_lower.contains("priority") {
             return Err(JrError::UserError(
                 "priority is set by both --priority and --field; use only one.".into(),
+            )
+            .into());
+        }
+        // BC-3.4.017 amendment (AC-014): `components` joins the flag-overlap
+        // set as the 5th member. `--field Components=Y` (any case) also
+        // trips this guard — field_keys_lower is already lowercased above.
+        if !components.is_empty() && field_keys_lower.contains("components") {
+            return Err(JrError::UserError(
+                "components is set by both --component and --field; use only one.".into(),
             )
             .into());
         }
@@ -212,8 +266,20 @@ pub(super) async fn handle_edit(
         if markdown {
             conflicting.push("--markdown");
         }
+        if no_mentions {
+            conflicting.push("--no-mentions");
+        }
         if !field_pairs.is_empty() {
             conflicting.push("--field");
+        }
+        // BC-3.4.020 amendment (AC-015): --component joins the 13-flag
+        // conflict list --label cannot be combined with, on ANY key count.
+        // Without this guard the --label-bulk routing fork below would
+        // silently drop a concurrent --component write (data-loss hazard,
+        // VP-COMPONENT-027) — the same silent-drop shape the rest of this
+        // block already guards against for the other 12 flags.
+        if !components.is_empty() {
+            conflicting.push("--component");
         }
         if !conflicting.is_empty() {
             return Err(JrError::UserError(format!(
@@ -232,7 +298,34 @@ pub(super) async fn handle_edit(
     // clap's `requires` attribute interacts poorly with the keys/jql `conflicts_with`
     // relationship. By the time we reach this branch we know jql.is_some() so the
     // unwrap_or(50) default is the right behavior.
-    let effective_max = max.unwrap_or(50).min(BULK_MAX_KEYS as u32);
+    //
+    // Step-4.5 Round-1 F3 fix: --component's bulk path chunks internally into
+    // <=1000-key POSTs (BC-3.4.023 Postcondition 6) and therefore accepts a
+    // --jql match set larger than the per-POST Atlassian limit, up to the
+    // same sanity ceiling the positional `keys` argument already allows
+    // (JQL_MAX_CEILING, mirroring src/cli/mod.rs's `num_args = 0..=10000`).
+    // Every other bulk field path issues a single un-chunked POST, so --max
+    // stays hard-capped at BULK_MAX_KEYS for them. clap's value_parser alone
+    // cannot see whether --component is present, so it now accepts up to
+    // JQL_MAX_CEILING unconditionally (src/cli/mod.rs); this runtime check
+    // is what actually enforces the tighter ceiling for every other flag.
+    if let Some(m) = max
+        && components.is_empty()
+        && m > BULK_MAX_KEYS as u32
+    {
+        return Err(JrError::UserError(format!(
+            "--max {m} exceeds the {BULK_MAX_KEYS}-issue hard ceiling for this edit. \
+                 --component bulk edits chunk internally and accept up to {JQL_MAX_CEILING}; \
+                 every other bulk field is capped at {BULK_MAX_KEYS} per Atlassian's bulk \
+                 API limit."
+        ))
+        .into());
+    }
+    let effective_max = max.unwrap_or(50).min(if components.is_empty() {
+        BULK_MAX_KEYS as u32
+    } else {
+        JQL_MAX_CEILING
+    });
 
     // Resolve the working set of keys.
     // For --jql: execute the search (read-only), then enforce --max cap.
@@ -262,20 +355,29 @@ pub(super) async fn handle_edit(
         }
 
         if matched_keys.len() > effective_max as usize {
+            let ceiling = if components.is_empty() {
+                BULK_MAX_KEYS as u32
+            } else {
+                JQL_MAX_CEILING
+            };
             return Err(JrError::UserError(format!(
                 "JQL matched at least {} issues, which exceeds --max {}. \
                  Use --max <N> to allow up to {} issues, or refine your JQL.",
                 matched_keys.len(),
                 effective_max,
-                BULK_MAX_KEYS,
+                ceiling,
             ))
             .into());
         }
 
         matched_keys
     } else {
-        // Positional keys: enforce the Atlassian hard ceiling.
-        if keys.len() > BULK_MAX_KEYS {
+        // Positional keys: enforce the Atlassian hard ceiling -- EXCEPT for
+        // `--component`, whose bulk path (S-605-2, BC-3.4.023 Postcondition 6)
+        // chunks internally into <=1000-key POSTs and therefore accepts a
+        // larger resolved key set. Every other bulk field path below issues
+        // a single un-chunked POST, so the hard ceiling still applies to them.
+        if keys.len() > BULK_MAX_KEYS && components.is_empty() {
             return Err(JrError::UserError(format!(
                 "Too many issue keys: {} provided, maximum is {}. \
                  Split into batches of {} or fewer and run multiple times.",
@@ -319,14 +421,103 @@ pub(super) async fn handle_edit(
         if markdown {
             unsupported.push("--markdown");
         }
+        if no_mentions {
+            unsupported.push("--no-mentions");
+        }
         if !field_pairs.is_empty() {
             unsupported.push("--field");
         }
+        // BC-3.4.022/BC-3.4.023: --component on 2+ keys no longer falls into
+        // this "unsupported on bulk" bucket (S-605-2) — it now routes to its
+        // own bulk multiselectComponents path (`handle_edit_bulk_components`,
+        // dispatched below, near the --label routing). Intentionally NOT
+        // added to `unsupported` here.
         if !unsupported.is_empty() {
             return Err(JrError::UserError(format!(
                 "Multi-key bulk edit doesn't yet support: {}. \
                  Use a single key, or open an issue if this matters for your workflow.",
                 unsupported.join(", ")
+            ))
+            .into());
+        }
+    }
+
+    // --- Step-4.5 Round-1 F1 fix: --component bulk route mutual exclusion. ---
+    // `handle_edit_bulk_components` (dispatched near the --label routing,
+    // below) issues its OWN, separate multiselectComponents POST sequence
+    // and returns immediately -- it never reaches `handle_edit_bulk_fields`,
+    // which is the only place --summary/--priority/--type are honored on a
+    // multi-key edit. Without this guard, `--component add:X --summary Y`
+    // on 2+ keys would silently drop `--summary` (exit 0, data loss) because
+    // the --component routing check (below) returns before the bulk-fields
+    // routing is ever reached. --label is already covered by the
+    // BC-3.4.020 amendment conflict block above (fires unconditionally on
+    // any key count) -- included here too for defense-in-depth documentation
+    // parity, though it is unreachable in practice (that earlier block
+    // already returns before this point whenever both --label and
+    // --component are set).
+    //
+    // NOTE: deliberately NOT named `conflicting` -- that identifier is
+    // reserved by the `--label` conflict block above for
+    // `test_label_conflict_block_lists_every_relevant_flag`'s global
+    // `conflicting.push("--...")` source scan (see that block's own
+    // guard comment). A second `conflicting` here would be picked up by
+    // that scan and desync it from the `--label` block it actually audits.
+    if !components.is_empty() && effective_keys.len() > 1 {
+        let mut component_bulk_conflicts: Vec<&str> = Vec::new();
+        if summary.is_some() {
+            component_bulk_conflicts.push("--summary");
+        }
+        if priority.is_some() {
+            component_bulk_conflicts.push("--priority");
+        }
+        if issue_type.is_some() {
+            component_bulk_conflicts.push("--type");
+        }
+        if !labels.is_empty() {
+            component_bulk_conflicts.push("--label");
+        }
+        if !component_bulk_conflicts.is_empty() {
+            return Err(JrError::UserError(format!(
+                "--component on multiple issues cannot be combined with {} in the \
+                 same call -- the bulk component path issues its own, separate POST \
+                 sequence and cannot also carry those fields. Run separate \
+                 `jr issue edit` commands.",
+                component_bulk_conflicts.join(", ")
+            ))
+            .into());
+        }
+    }
+
+    // --- BC-3.4.023 cross-project guard for --component (fires in BOTH live
+    // and dry-run; Step-4.5 Round-2 fix). Mirrors the `--type` guard
+    // directly below -- component ids are project-scoped, and the bulk
+    // `multiselectComponents` endpoint takes a single project's ids for the
+    // entire batch. Before this hoist, this check lived ONLY inside
+    // `handle_edit_bulk_components` (the live path), which the `--dry-run`
+    // short-circuit below never reaches -- so a multi-key
+    // `--component --dry-run` spanning 2+ projects previewed success
+    // (resolved against only `effective_keys[0]`'s project) for an input
+    // the live run refuses with exit 64. The check inside
+    // `handle_edit_bulk_components` itself is KEPT as defense-in-depth --
+    // this hoisted copy and that one are deliberately duplicated, not
+    // shared, mirroring the `--type` guard's own precedent one block below.
+    if !components.is_empty() && effective_keys.len() > 1 {
+        let mut project_keys: Vec<&str> = effective_keys
+            .iter()
+            .map(|k| project_key_from_issue_key(k))
+            .collect();
+        project_keys.sort_unstable();
+        project_keys.dedup();
+        if project_keys.len() > 1 {
+            return Err(JrError::UserError(format!(
+                "--component requires all issues to be in the same project; \
+                 the provided keys span {} distinct projects: {}. \
+                 Component IDs differ per project, so a single bulk edit cannot \
+                 target all of them — split the keys by project and run separate \
+                 `jr issue edit` commands.",
+                project_keys.len(),
+                project_keys.join(", "),
             ))
             .into());
         }
@@ -380,19 +571,142 @@ pub(super) async fn handle_edit(
         // H-3(a): table-mode --field echo uses println! (stdout), NOT eprintln!
         // (stderr), so the entire planned-changes preview is on one stream.
         let mut dr_changed: BTreeMap<String, String> = BTreeMap::new();
+        // AC-012: dr_planned carries the per-field dry-run preview — the
+        // composed wire shape for a hinted `--field` (:option/:id/:name/
+        // :asset), or the same simplified display string dr_changed carries
+        // for a bare field (documented exception to the general rule).
+        let mut dr_planned: BTreeMap<String, serde_json::Value> = BTreeMap::new();
+        // dr_field_markers carries ADF display sentinels ("(adf)" / "(adf-clear)")
+        // keyed by human_name for the dry-run table-emit loop (AC-003,
+        // S-cycle12-platform-adf-autoconvert).
+        let mut dr_field_markers: BTreeMap<String, String> = BTreeMap::new();
         if !field_pairs.is_empty() {
             let dr_key = &effective_keys[0];
             let mut dr_fields = json!({});
+            // S-578-2: `resolve_edit_fields` reads `FieldValueSpec.kind` and
+            // dispatches to the real hinted-bypass composer BEFORE falling
+            // through to the bare-form editmeta type-dispatch (AC-001, AC-013
+            // — the :asset cold-cache side effect runs here, unconditionally,
+            // even under --dry-run).
             helpers::resolve_edit_fields(
                 client,
                 &config.active_profile_name,
-                dr_key,
+                FieldMetaSource::Edit { key: dr_key },
                 &field_pairs,
-                &mut dr_fields,
-                &mut dr_changed,
+                FieldResolutionOutputs {
+                    fields: &mut dr_fields,
+                    changed_fields: &mut dr_changed,
+                    planned_preview: &mut dr_planned,
+                    field_markers: &mut dr_field_markers,
+                },
             )
             .await?;
         }
+
+        // BC-3.4.021 (D-274, scope extended by adversary pass-3 MEDIUM-1):
+        // resolve the description input — for `--description-stdin`, read
+        // stdin via the same `spawn_blocking` + `read_to_string` idiom the
+        // live path uses (see `desc_text` below, ~line 642); for bare
+        // `--description`, the text is already available synchronously —
+        // then render it to ADF via the identical `markdown_to_adf`/
+        // `text_to_adf` selection the live path uses. This is a single,
+        // unconditional PRE-STEP that MUST complete — including a possible
+        // `markdown_to_adf` `Err` (MAX_ADF_DEPTH, BC-7.2.012) propagating as
+        // an exit-64 error — BEFORE the `match output_format` block below
+        // begins emitting ANY output. This ordering is load-bearing, not
+        // cosmetic: `--output table`'s preview lines are printed
+        // INCREMENTALLY via per-field `println!` calls, so performing this
+        // read+conversion interleaved with (or after) that sequence would
+        // risk a depth-guard `Err` leaking partial stdout before the exit-64
+        // return, contradicting the "stdout EMPTY on error, in both modes"
+        // postcondition (EC-3.4.021-15/-19, VP-692-002/-004). `--dry-run`
+        // suppresses mutation HTTP calls only — it does NOT suppress this
+        // resolution error (Invariant 2/3).
+        let dr_desc_text: Option<String> = if description_stdin {
+            let buf = tokio::task::spawn_blocking(|| {
+                let mut buf = String::new();
+                std::io::Read::read_to_string(&mut std::io::stdin(), &mut buf)?;
+                Ok::<_, std::io::Error>(buf)
+            })
+            .await??;
+            Some(buf)
+        } else {
+            description.clone()
+        };
+        // S-cycle5-mention-resolution-wiring (AC-009/AC-010): the dry-run
+        // preview forces `no_input = true` UNCONDITIONALLY when resolving
+        // mentions, regardless of the invocation's own ambient `no_input` —
+        // an ambiguous `@Name` during `--dry-run` always takes the
+        // non-interactive exit-64-with-candidates path, never a
+        // `dialoguer::Select` prompt, even at an interactive TTY. This
+        // `Err` propagates via `?` BEFORE any per-field `println!` below,
+        // preserving the "stdout EMPTY on error, in both modes"
+        // postcondition (VP-692-002/-004).
+        let dr_desc_adf: Option<serde_json::Value> = match &dr_desc_text {
+            Some(text) => Some(if markdown {
+                if no_mentions {
+                    adf::markdown_to_adf_no_mentions(text)?
+                } else {
+                    let resolutions = mentions::resolve_mentions(client, text, true).await?;
+                    adf::markdown_to_adf_with_mentions(text, &resolutions)?
+                }
+            } else {
+                adf::text_to_adf(text)
+            }),
+            None => None,
+        };
+
+        // Step-4.5 Round 1, F1 fix (BC-3.4.021 EC-3.4.021-20): --component
+        // name resolution (BC-8.4) still fires during dry-run -- it is a
+        // read-only GET -- and an unresolvable/ambiguous name still exits 64
+        // BEFORE any plannedChanges output, same as resolve_edit_fields and
+        // the description ADF conversion above. This is another single,
+        // unconditional PRE-STEP that MUST complete before the `match
+        // output_format` block below emits ANY output (same load-bearing
+        // ordering rationale as dr_desc_text/dr_desc_adf). The preview then
+        // renders the RESOLVED canonical name -- parity with the live echo,
+        // which also renders resolved names, never the raw CLI input.
+        let dr_component_changes: Option<Vec<format::ComponentChange>> = if !components.is_empty() {
+            let dr_key = &effective_keys[0];
+            let dr_project_key = project_key_from_issue_key(dr_key);
+            let dr_changes = format::normalize_component_changes(&components);
+            // Step-4.5 Round-3 fix (F2): fetch the project's component
+            // candidate list ONCE and reuse it for both the name-resolution
+            // preview below and the numeric-id/parse validation that
+            // follows -- previously each call independently re-fetched the
+            // SAME `GET …/project/{key}/components` for the SAME project,
+            // doubling the dry-run's HTTP cost on every multi-key
+            // `--component --dry-run` invocation for no behavioral benefit.
+            let dr_component_list = client.list_components(dr_project_key).await?;
+            let resolved = resolve_component_change_names_with_list(
+                &dr_component_list,
+                dr_project_key,
+                &dr_changes,
+            )?;
+            // Step-4.5 Round-2 fix (F2): the multi-key bulk LIVE path
+            // additionally resolves each change to a numeric componentId via
+            // `resolve_bulk_component_ids` (Invariant 2), which performs an
+            // explicit `String -> u64` parse that can fail on an
+            // oversized/non-parseable numeric-bypass id (e.g.
+            // `add:99999999999999999999999999`) even when the NAME-only
+            // resolution above succeeds. The dry-run preview must exercise
+            // the SAME check -- by the cross-project guard hoisted above
+            // this block, `effective_keys` is guaranteed single-project here
+            // -- so it never promises success for an input the live run
+            // rejects. Single-key dry-run doesn't need this: the single-key
+            // live path wires a NAME, never a numeric id (see
+            // `resolve_bulk_component_ids`'s doc comment).
+            if effective_keys.len() > 1 {
+                resolve_bulk_component_ids_with_list(
+                    &dr_component_list,
+                    dr_project_key,
+                    &dr_changes,
+                )?;
+            }
+            Some(resolved)
+        } else {
+            None
+        };
 
         match output_format {
             OutputFormat::Json => {
@@ -442,6 +756,18 @@ pub(super) async fn handle_edit(
                         .collect();
                     planned.insert("labels".into(), json!(label_entries));
                 }
+                if let Some(ref component_changes) = dr_component_changes {
+                    // BC-3.4.021 amendment (AC-016): structured
+                    // `[{"action":"ADD","name":"X"},{"action":"REMOVE","name":"Y"}]`
+                    // array — DIFFERENT shape from the comma-joined live-echo
+                    // string (format::format_component_changes_echo). Renders
+                    // resolved (canonical) names, in CLI input order (F1/F2
+                    // fixes) -- resolved above, before this match arm.
+                    planned.insert(
+                        "components".into(),
+                        json!(format::component_changes_dry_run_json(component_changes)),
+                    );
+                }
                 if let Some(ref t) = issue_type {
                     planned.insert("issueType".into(), json!(t));
                 }
@@ -463,22 +789,27 @@ pub(super) async fn handle_edit(
                 if let Some(ref t) = team {
                     planned.insert("team".into(), json!(t));
                 }
-                if let Some(ref d) = description {
-                    planned.insert("description".into(), json!(d));
-                } else if description_stdin {
-                    // --dry-run does NOT read stdin; document this as a known limitation.
-                    planned.insert(
-                        "description".into(),
-                        json!("<from stdin — not yet read in dry-run>"),
-                    );
+                // BC-3.4.021 (D-274): `description` carries the RAW input string
+                // verbatim (BC-3.4.013/#398 unaffected) for EITHER description-input
+                // flag; the additive `descriptionAdf` key (nested inside
+                // `plannedChanges`, never top-level) carries the real rendered ADF
+                // document — byte-identical to what the live path would POST — and
+                // is present iff a description input flag was supplied.
+                if let Some(ref text) = dr_desc_text {
+                    planned.insert("description".into(), json!(text));
+                }
+                if let Some(ref adf_val) = dr_desc_adf {
+                    planned.insert("descriptionAdf".into(), adf_val.clone());
                 }
                 if markdown {
                     planned.insert("markdown".into(), json!(true));
                 }
                 // H-3(b): merge resolved --field entries into plannedChanges BEFORE
                 // emitting the JSON object (resolve ran above, before this match arm).
-                for (field, value) in &dr_changed {
-                    planned.insert(field.clone(), json!(value));
+                // AC-012: dr_planned carries the composed wire shape for a hinted
+                // field, or the simplified display string for a bare field.
+                for (field, value) in &dr_planned {
+                    planned.insert(field.clone(), value.clone());
                 }
 
                 let payload = json!({
@@ -505,6 +836,17 @@ pub(super) async fn handle_edit(
                 if !labels.is_empty() {
                     println!("  labels → {}", labels.join(", "));
                 }
+                if let Some(ref component_changes) = dr_component_changes {
+                    // BC-3.4.021 amendment (AC-017): identical normalization
+                    // to the live-edit echo (AC-012) — bare `X` renders as
+                    // `add:X`, never bare. Resolved (canonical) names, in CLI
+                    // input order (F1/F2 fixes) -- resolved above, before
+                    // this match arm.
+                    println!(
+                        "  components → {}",
+                        format::format_component_changes_echo(component_changes)
+                    );
+                }
                 if let Some(ref t) = issue_type {
                     println!("  type → {t}");
                 }
@@ -526,33 +868,46 @@ pub(super) async fn handle_edit(
                 if let Some(ref t) = team {
                     println!("  team → {t}");
                 }
-                if let Some(ref d) = description {
+                if let Some(ref text) = dr_desc_text {
                     // Truncate long descriptions to 60 codepoints for readability.
                     // Use chars().count() / chars().take(60) — NOT byte slicing —
                     // to avoid panics on multi-byte UTF-8 codepoints (Cyrillic,
                     // CJK, emoji, accented chars). Codepoint-aware is the correct
                     // Rust-stdlib idiom; grapheme clusters (unicode_segmentation)
                     // would be overkill for a display truncation.
-                    let char_count = d.chars().count();
+                    let char_count = text.chars().count();
                     let preview = if char_count > 60 {
-                        let truncated: String = d.chars().take(60).collect();
+                        let truncated: String = text.chars().take(60).collect();
                         format!("{truncated}...")
                     } else {
-                        d.clone()
+                        text.clone()
                     };
                     println!("  description → {preview}");
-                } else if description_stdin {
-                    // --dry-run does NOT read stdin; document this as a known limitation.
-                    println!("  description → (read from stdin — not yet read in dry-run)");
                 }
                 if markdown {
                     println!("  markdown rendering: enabled");
                 }
+                // BC-3.4.021 (D-274): unconditional render-OK indicator — emitted
+                // whenever a description input was supplied, regardless of whether
+                // truncation fired (Postconditions-table item 2, adversary pass-5
+                // LOW-1). Table mode never dumps the raw ADF JSON (poor UX); this
+                // validated-indicator line confirms the same conversion succeeded.
+                // MUST be printed AFTER the "markdown rendering: enabled" line
+                // (pinned relative order, adversary pass-5 INFO-2).
+                if dr_desc_adf.is_some() {
+                    println!("  description (ADF): rendered OK");
+                }
                 // H-3(a): emit resolved --field entries to stdout (not stderr) so the
                 // entire planned-changes preview is on a single coherent stream.
                 // resolve ran above (before this match arm), so dr_changed is ready.
+                // AC-003: ADF fields show their marker ("(adf)" / "(adf-clear)") from
+                // dr_field_markers instead of the raw input value in dr_changed.
                 for (field, value) in &dr_changed {
-                    println!("  {} \u{2192} {}", field, value);
+                    if let Some(marker) = dr_field_markers.get(field) {
+                        println!("  {} \u{2192} {}", field, marker);
+                    } else {
+                        println!("  {} \u{2192} {}", field, value);
+                    }
                 }
             }
         }
@@ -605,6 +960,20 @@ pub(super) async fn handle_edit(
             .await;
     }
 
+    // --- Route: --component on 2+ keys → BC-3.4.023 bulk multiselectComponents
+    // path (S-605-2). Entirely separate from `handle_edit_bulk_fields` below —
+    // the `multiselectComponents` wire shape requires its own POST sequencing
+    // (two sequential POSTs for mixed add:/remove:, plus 1000-issue chunking)
+    // that cannot be folded into that function's generic
+    // {summary,priority,issueType} single-POST composition (BC-3.4.023
+    // Postcondition 2/3). A single effective key falls through to the
+    // existing single-key `update`-verb path below (EC-3.4.023-3,
+    // BC-3.4.022) — this branch only fires for 2+ keys.
+    if !components.is_empty() && effective_keys.len() > 1 {
+        return handle_edit_bulk_components(&effective_keys, &components, output_format, client)
+            .await;
+    }
+
     // Routing for non-label edits:
     // - 2+ keys (positional or --jql-resolved) → POST /rest/api/3/bulk/issues/fields (bulk API)
     // - 1 key (positional or single-match --jql) → PUT /rest/api/3/issue/{key} (legacy single-key)
@@ -653,7 +1022,12 @@ pub(super) async fn handle_edit(
 
     if let Some(ref text) = desc_text {
         let adf_body = if markdown {
-            adf::markdown_to_adf(text)?
+            if no_mentions {
+                adf::markdown_to_adf_no_mentions(text)?
+            } else {
+                let resolutions = mentions::resolve_mentions(client, text, no_input).await?;
+                adf::markdown_to_adf_with_mentions(text, &resolutions)?
+            }
         } else {
             adf::text_to_adf(text)
         };
@@ -724,93 +1098,160 @@ pub(super) async fn handle_edit(
     // BC-3.4.015 invariant 10 (live path): resolve_edit_fields on the live path.
     // Errors here (field not found, absent from editmeta, bad type, etc.) exit 64
     // BEFORE the PUT is issued (all-or-nothing semantics per EC-3.4.015-12).
+    //
+    // Step-4.5 Round 3, F2 fix (superseded in spirit, not reverted, by the
+    // Round-7 MEDIUM-1 single-PUT merge below): this block still runs
+    // BEFORE the --component block, so a client-side --field validation
+    // failure (unknown field, bad type) exits 64 before any HTTP mutation
+    // at all -- unaffected by whether components ends up merged into the
+    // same PUT.
+    // field_markers carries ADF display sentinels ("(adf)" / "(adf-clear)")
+    // keyed by human_name for the table-emit loop (AC-003,
+    // S-cycle12-platform-adf-autoconvert). Declared before the if-block so it
+    // is in scope at the emit loop below.
+    let mut field_markers: BTreeMap<String, String> = BTreeMap::new();
     if !field_pairs.is_empty() {
+        // S-578-2: real hinted-bypass dispatch (see the dry-run block above);
+        // the live path doesn't render a plannedChanges preview, so the new
+        // output map is a throwaway.
         helpers::resolve_edit_fields(
             client,
             &config.active_profile_name,
-            key,
+            FieldMetaSource::Edit { key },
             &field_pairs,
-            &mut fields,
-            &mut changed_fields,
+            FieldResolutionOutputs {
+                fields: &mut fields,
+                changed_fields: &mut changed_fields,
+                planned_preview: &mut BTreeMap::new(),
+                field_markers: &mut field_markers,
+            },
         )
         .await?;
         has_updates = true;
     }
 
+    // BC-3.4.022 (single-key path ONLY — effective_keys.len() == 1 is
+    // guaranteed here by the C-1 rejection block above): components use a
+    // DEDICATED wire shape (native `update` verb, or the RMW fallback's
+    // full `fields.components` array) that `edit_issue_components` COMPUTES
+    // but does NOT PUT itself (Step-4.5 Round 7, MEDIUM-1 fix). Its
+    // contribution is merged into the SAME single PUT as every other field
+    // change below: a native contribution becomes this PUT's `update`
+    // object; a fallback contribution is folded directly into `fields`.
+    // Merging into ONE PUT closes the partial-write window a prior
+    // two-PUT design had (research: `.factory/research/S-605-1-atomic-
+    // component-field-put.md` -- Jira officially supports `update` and
+    // `fields` together in one PUT for DISTINCT fields, and validates all
+    // fields up front, so a field-validation error, e.g. an invalid
+    // priority, rejects the WHOLE edit -- component change included --
+    // instead of the component change having already landed via its own,
+    // separate, earlier PUT. This is a single-request guarantee scoped to
+    // validation errors, per the research -- Atlassian publishes no
+    // broader atomic/transactional/rollback guarantee for other failure
+    // modes.
+    let mut update_obj: Option<serde_json::Value> = None;
+    if !components.is_empty() {
+        let (component_changes, contribution) =
+            edit_issue_components(client, key, &components).await?;
+        has_updates = true;
+        changed_fields.insert(
+            "components".into(),
+            format::format_component_changes_echo(&component_changes),
+        );
+        match contribution {
+            ComponentContribution::Native(ops) => {
+                // GUARD (research Q3 -- Jira rejects a field present in
+                // both `update` and `fields`): `components` lands under
+                // `update` here and is NEVER also written into `fields` in
+                // this branch -- the fallback branch below is the only
+                // other place `fields["components"]` is ever set, and the
+                // two are mutually exclusive per invocation (one editmeta
+                // gate picks exactly one path).
+                update_obj = Some(json!({ "components": ops }));
+            }
+            ComponentContribution::Fallback(arr) => {
+                fields["components"] = json!(arr);
+            }
+        }
+    }
+
     if !has_updates {
         bail!(
-            "No fields specified to update. Use --summary, --type, --priority, --label, --team, --points, --no-points, --parent, --no-parent, --description, --description-stdin, or --field NAME=VALUE."
+            "No fields specified to update. Use --summary, --type, --priority, --label, --component, --team, --points, --no-points, --parent, --no-parent, --description, --description-stdin, or --field NAME=VALUE."
         );
     }
 
-    let edit_result = client.edit_issue(key, fields).await;
+    // Step-4.5 Round 7, MEDIUM-1: ONE PUT, combining the optional native
+    // `update` object with `fields` (`edit_issue_combined` omits `update`
+    // when `None` and omits `fields` entirely when empty, so a
+    // --component-only edit still sends exactly the same minimal body as
+    // before -- AC-001/004/005 continue to assert exactly one PUT).
+    let edit_result = client.edit_issue_combined(key, fields, update_obj).await;
     if let Err(ref e) = edit_result {
         // --type arm: evaluated FIRST (dual-gate precedence, BC-3.4.010 invariant).
         // HTTP-400 gate: downcast to JrError::ApiError { status: 400, .. }.
         // Non-400 (401, 403, 5xx, network) → R0b: no enrichment, fall through.
-        if let Some(ref type_name) = issue_type {
-            if let Some(JrError::ApiError {
+        if let Some(ref type_name) = issue_type
+            && let Some(JrError::ApiError {
                 status: 400,
                 message: api_msg,
             }) = e.downcast_ref::<JrError>()
-            {
-                let api_msg = api_msg.clone();
-                let type_name_lower = type_name.to_ascii_lowercase();
+        {
+            let api_msg = api_msg.clone();
+            let type_name_lower = type_name.to_ascii_lowercase();
 
-                // Call ordering (BC-3.4.010 precondition):
-                // 1. get_issue first; on Err → Indeterminate immediately (no project-types call).
-                // 2. get_project_issue_types next; on Err → Indeterminate.
-                // 3. Case-insensitive exact name match; not found → typo hint.
-                // 4. Found → classify with is_cross_hierarchy_type_error.
-                //
-                // Fetch failure gate uses Result::is_err() (not a status downcast) so
-                // JrError::NotAuthenticated, InsufficientScope, and all other Err variants
-                // correctly trigger Indeterminate (BC-3.4.010 invariant 3).
-                let issue_res = client.get_issue(key, &[]).await;
-                if let Ok(issue) = issue_res {
-                    let src_subtask = issue.fields.issue_type.as_ref().and_then(|t| t.subtask);
-                    let project_key = issue
-                        .fields
-                        .project
-                        .as_ref()
-                        .map(|p| p.key.clone())
-                        .unwrap_or_default();
+            // Call ordering (BC-3.4.010 precondition):
+            // 1. get_issue first; on Err → Indeterminate immediately (no project-types call).
+            // 2. get_project_issue_types next; on Err → Indeterminate.
+            // 3. Case-insensitive exact name match; not found → typo hint.
+            // 4. Found → classify with is_cross_hierarchy_type_error.
+            //
+            // Fetch failure gate uses Result::is_err() (not a status downcast) so
+            // JrError::NotAuthenticated, InsufficientScope, and all other Err variants
+            // correctly trigger Indeterminate (BC-3.4.010 invariant 3).
+            let issue_res = client.get_issue(key, &[]).await;
+            if let Ok(issue) = issue_res {
+                let src_subtask = issue.fields.issue_type.as_ref().and_then(|t| t.subtask);
+                let project_key = issue
+                    .fields
+                    .project
+                    .as_ref()
+                    .map(|p| p.key.clone())
+                    .unwrap_or_default();
 
-                    let types_res = client.get_project_issue_types(&project_key).await;
-                    if let Ok(project_types) = types_res {
-                        if let Some(target) = project_types
-                            .iter()
-                            .find(|t| t.name.to_ascii_lowercase() == type_name_lower)
-                        {
-                            let tgt_subtask = target.subtask;
-                            match is_cross_hierarchy_type_error(src_subtask, tgt_subtask, &api_msg)
-                            {
-                                Classification::CrossHierarchy => {
-                                    eprintln!("{CROSS_HIERARCHY_HINT}");
-                                    bail!("{api_msg}");
-                                }
-                                Classification::SameCategory => {
-                                    eprintln!("{TYPO_HINT}");
-                                    bail!("{api_msg}");
-                                }
-                                Classification::Indeterminate => {
-                                    // src or tgt subtask field absent; surface raw
-                                    // 400 unchanged — fall through to edit_result?.
-                                }
+                let types_res = client.get_project_issue_types(&project_key).await;
+                if let Ok(project_types) = types_res {
+                    if let Some(target) = project_types
+                        .iter()
+                        .find(|t| t.name.to_ascii_lowercase() == type_name_lower)
+                    {
+                        let tgt_subtask = target.subtask;
+                        match is_cross_hierarchy_type_error(src_subtask, tgt_subtask, &api_msg) {
+                            Classification::CrossHierarchy => {
+                                eprintln!("{CROSS_HIERARCHY_HINT}");
+                                bail!("{api_msg}");
                             }
-                        } else {
-                            // Type name not in project's list → unresolvable-name
-                            // sub-path: typo hint (classifier is NOT invoked).
-                            eprintln!("{TYPO_HINT}");
-                            bail!("{api_msg}");
+                            Classification::SameCategory => {
+                                eprintln!("{TYPO_HINT}");
+                                bail!("{api_msg}");
+                            }
+                            Classification::Indeterminate => {
+                                // src or tgt subtask field absent; surface raw
+                                // 400 unchanged — fall through to edit_result?.
+                            }
                         }
+                    } else {
+                        // Type name not in project's list → unresolvable-name
+                        // sub-path: typo hint (classifier is NOT invoked).
+                        eprintln!("{TYPO_HINT}");
+                        bail!("{api_msg}");
                     }
-                    // types_res.is_err() → Indeterminate Cause-1 R2: fall through.
                 }
-                // issue_res.is_err() → Indeterminate Cause-1 R1: fall through.
+                // types_res.is_err() → Indeterminate Cause-1 R2: fall through.
             }
-            // Non-400 → R0b: fall through.
+            // issue_res.is_err() → Indeterminate Cause-1 R1: fall through.
         }
+        // Non-400 → R0b: fall through.
 
         // --no-parent arm: only reached when --type arm emitted no hint
         // (dual-gate first-hint-wins: if --type arm bailed, we never reach here).
@@ -836,9 +1277,18 @@ pub(super) async fn handle_edit(
             // BC-3.4.012: emit one "  field → value" line per changed field, alphabetical.
             // Description asymmetry (AC-016 / CLAUDE.md Gotcha): table shows "(updated)" marker;
             // JSON changed_fields carries the raw input string (see the description insertion above).
+            // AC-003: ADF fields show their marker from field_markers before the legacy description
+            // check, so --field description=VALUE shows "(adf)" not "(updated)".
             for (field, value) in &changed_fields {
-                if field == "description" {
-                    // Table mode: marker only — content never echoed (BC-3.4.012, AC-003).
+                if let Some(marker) = field_markers.get(field) {
+                    // ADF field: emit marker on stderr, same stream as sibling
+                    // non-ADF echoes (Symmetric output-channel convention).
+                    // Dry-run output is all-stdout (data); live echoes are
+                    // all-stderr (diagnostic). Do NOT use println! here.
+                    eprintln!("  {} \u{2192} {}", field, marker);
+                } else if field == "description" {
+                    // Non-ADF description (--description / --description-stdin path):
+                    // table mode shows marker only — content never echoed (BC-3.4.012).
                     eprintln!("  {} \u{2192} (updated)", field);
                 } else {
                     eprintln!("  {} \u{2192} {}", field, value);
@@ -848,6 +1298,342 @@ pub(super) async fn handle_edit(
     }
 
     Ok(())
+}
+
+/// The single-key `--component` edit's wire CONTRIBUTION (Step-4.5 Round 7,
+/// MEDIUM-1 fix): `edit_issue_components` no longer PUTs anything itself --
+/// it COMPUTES this and returns it so `handle_edit` can merge it into the
+/// SAME single PUT as every other field change. `components` lands in
+/// EXACTLY ONE of the two top-level PUT keys (`update` or `fields`), never
+/// both -- Jira rejects a field present in both (research Q3) -- and this
+/// enum's two variants structurally guarantee that: the caller matches on
+/// it and merges into the ONE corresponding top-level key.
+enum ComponentContribution {
+    /// Native update-verb path (editmeta advertises add+remove): the
+    /// `update.components` ops array, e.g.
+    /// `[{"add":{"name":"X"}},{"remove":{"id":"20002"}}]`.
+    Native(Vec<serde_json::Value>),
+    /// RMW fallback path (editmeta lacks add/remove): the full computed
+    /// `fields.components` array to fold into the caller's `fields` object.
+    Fallback(Vec<serde_json::Value>),
+}
+
+/// Single-key `--component` add:/remove: wire-shape COMPUTATION (BC-3.4.022).
+///
+/// Called ONLY from the single-key path of [`handle_edit`] (`effective_keys.len()
+/// == 1` is guaranteed by the caller's C-1 rejection block, which rejects
+/// multi-key + `--component` upfront — 2+ keys route to S-605-2's
+/// BC-3.4.023 bulk wire shape, out of scope here).
+///
+/// Behavior (BC-3.4.022):
+/// 1. Parse/normalize `components` via [`format::normalize_component_changes`]
+///    (add:/remove: prefix grammar, bare → ADD, CLI input order preserved --
+///    Step-4.5 Round 1 F2 fix).
+/// 2. Resolve each component NAME via [`resolve_component_change_names`]
+///    (`helpers::resolve_component`, BC-8.4.001), scoped to the issue's own
+///    project — extracted from `key` via the last-hyphen split (BC-3.4.018
+///    Invariant 4 precedent) — using the project component-list GET
+///    (BC-3.4.025), never editmeta, for name validation. Unknown name →
+///    exit 64, zero HTTP mutation (AC-006).
+/// 3. Evaluate the editmeta gate ONCE (`client.get_editmeta(key)`,
+///    `fields.components.operations` containing `add`/`remove`):
+///    - Present → build the native `update.components` ops array, zero
+///      extra GET for current components (AC-004). `adds`/`removes` are
+///      derived by filtering the resolved changes by `action` -- NOT by
+///      relying on any pre-grouped order -- so the ops array stays
+///      ADD-before-REMOVE regardless of CLI input order (AC-003).
+///    - Absent → read-modify-write fallback: GET current `fields.components`,
+///      compute the new full array client-side (AC-005).
+///      No retry-with-different-shape on a subsequent 400 (Invariant 2).
+///
+/// Does NOT issue any PUT (Step-4.5 Round 7, MEDIUM-1 fix) -- the caller
+/// (`handle_edit`) merges the returned [`ComponentContribution`] into ONE
+/// combined PUT alongside every other field change, closing the two-PUT
+/// partial-write window a prior design had: a field-validation error (e.g.
+/// an invalid priority) now rejects the whole edit in one request instead
+/// of a separate, earlier component-only PUT having already landed.
+///
+/// Returns the resolved changes in CLI input order (F2 fix) so the caller
+/// can build `changed_fields`/table echo via
+/// [`format::format_component_changes_echo`] without re-deriving the order.
+async fn edit_issue_components(
+    client: &JiraClient,
+    key: &str,
+    components: &[String],
+) -> Result<(Vec<format::ComponentChange>, ComponentContribution)> {
+    // Step 1: parse/normalize add:/remove: entries, CLI input order preserved.
+    let changes = format::normalize_component_changes(components);
+
+    // Step 2: resolve each component NAME via BC-8.4.001/BC-3.4.025, scoped
+    // to the issue's own project (last-hyphen split, BC-3.4.018 Invariant 4).
+    let project_key = project_key_from_issue_key(key);
+    let resolved_changes = resolve_component_change_names(client, project_key, &changes).await?;
+
+    // F1 fix: carry the id-vs-name discriminator into the wire-body
+    // construction as a ComponentRef, not a bare String -- a numeric
+    // resolved value wires as {"id":...}, a name wires as {"name":...}.
+    let to_component_ref = |c: &format::ComponentChange| match c.ref_kind {
+        format::ComponentRefKind::Id => ComponentRef::Id(c.name.clone()),
+        format::ComponentRefKind::Name => ComponentRef::Name(c.name.clone()),
+    };
+    let adds: Vec<ComponentRef> = resolved_changes
+        .iter()
+        .filter(|c| c.action == format::ComponentAction::Add)
+        .map(to_component_ref)
+        .collect();
+    let removes: Vec<ComponentRef> = resolved_changes
+        .iter()
+        .filter(|c| c.action == format::ComponentAction::Remove)
+        .map(to_component_ref)
+        .collect();
+
+    // Step 3: evaluate the editmeta gate ONCE -- no retry-with-different-shape
+    // on a subsequent 400 (Invariant 2).
+    let editmeta = client.get_editmeta(key).await?;
+    let native_supported = editmeta.fields.get("components").is_some_and(|f| {
+        f.operations.iter().any(|op| op == "add") && f.operations.iter().any(|op| op == "remove")
+    });
+
+    if native_supported {
+        let mut component_ops: Vec<serde_json::Value> = Vec::new();
+        for r in &adds {
+            component_ops.push(json!({"add": r.to_wire_object()}));
+        }
+        for r in &removes {
+            component_ops.push(json!({"remove": r.to_wire_object()}));
+        }
+        Ok((
+            resolved_changes,
+            ComponentContribution::Native(component_ops),
+        ))
+    } else {
+        // Read-modify-write fallback: GET current fields.components,
+        // compute the new full array client-side.
+        //
+        // HIGH-1 fix (Step-4.5 Round 6, DEFINITIVE -- this is the third
+        // fix-chain regression in this exact remove-matching logic; see the
+        // superseded MED-1/B-LOW-1 history below for what NOT to do again).
+        // The matching rule, precisely:
+        //
+        // 1. An EXISTING component `c` (which has BOTH `id: Option<String>`
+        //    AND `name: String`) is REMOVED iff any remove target matches
+        //    it against `c`'s OWN fields -- `ComponentRef::Id(id)` against
+        //    `c.id`, `ComponentRef::Name(name)` against `c.name` -- checked
+        //    directly on the embedded `Component`, never by first
+        //    collapsing `c` to a single `ComponentRef` variant. Surviving
+        //    existing components are re-emitted by IDENTITY (MED-1,
+        //    Round 4): `{"id": ...}` when `c.id` is `Some`, else
+        //    `{"name": c.name}` (Jira allows multiple same-named
+        //    components -- a bare name is ambiguous when a same-named
+        //    sibling also survives).
+        // 2. An ADD target `a` is INCLUDED unless (a) a remove target is
+        //    the SAME `ComponentRef` (same variant + value, i.e.
+        //    `removes.contains(a)`) -- this gives `add:X --component
+        //    remove:X` net-ABSENT parity with the native path (B-LOW-1,
+        //    Round 5) for BOTH name and numeric X -- OR (b) it already
+        //    matches a SURVIVING existing component by id-OR-name (LOW-2,
+        //    Step-4.5 Round 7) -- deduped so `add:Backend` against an
+        //    issue that already carries an id-bearing "Backend" does not
+        //    emit it twice (Jira dedupes server-side regardless, but a
+        //    clean payload is better). Condition (b) matches against the
+        //    embedded `Component`'s OWN fields (id-OR-name), same as the
+        //    remove predicate -- NOT `ComponentRef` equality, because a
+        //    NAME add and an id-bearing existing component of that same
+        //    name are different `ComponentRef` values that still refer to
+        //    the SAME real component.
+        // 3. Final `fields.components` = (existing survivors, by identity)
+        //    followed by (add survivors, by their own wire shape). Order is
+        //    irrelevant to Jira (components is a set-valued field) -- only
+        //    the net SET matters.
+        // 4. ACCEPTED DIVERGENCE (Step-4.5 Round 8, F-LOW-001): same-
+        //    IDENTIFIER add==remove (point 2's `removes.contains(a)` half)
+        //    is reconciled to net-ABSENT on BOTH the native and this RMW
+        //    path (B-LOW-1). CROSS-identifier add/remove of the SAME
+        //    component (e.g. `remove:100` + `add:Backend`, where numeric
+        //    id 100 IS the component named Backend) is NOT reconciled
+        //    between the two paths, and this divergence is INTENTIONAL,
+        //    ACCEPTED, contradictory-input behavior -- not a bug:
+        //      - Native path: Jira applies the ops array add-then-remove
+        //        (Post 2) -> net ABSENT.
+        //      - This RMW fallback: `add_survivors`'s filter only excludes
+        //        an add matching a remove target by the SAME `ComponentRef`
+        //        variant+value (point 2's same-identifier check) or a
+        //        SURVIVING existing component by id-OR-name (point 2's
+        //        LOW-2 dedup check) -- neither condition catches a
+        //        cross-identifier collision, because "id 100" and "name
+        //        Backend" are never resolved to each other here -- so the
+        //        Backend add survives -> net PRESENT.
+        //    Rationale for accepting rather than reconciling: (a) the
+        //    input is self-contradictory -- the user names the SAME
+        //    component by two different identifiers with opposite verbs in
+        //    one command; there is no single "correct" outcome. (b)
+        //    native's "absent" result is Jira-determined by its FIXED
+        //    add-before-remove ops ordering (Post 2) -- this fallback
+        //    cannot be made to match it without violating that ordering
+        //    elsewhere (or reordering ops, which Post 2 forbids). (c)
+        //    matching native here would require resolving a NAME add to
+        //    its id (or vice versa) purely to detect a same-target
+        //    collision -- fragile cross-identifier resolution added to a
+        //    code path that has already regressed three times (Rounds 4,
+        //    5, 6) -- not worth the risk for a nonsensical input. (d) no
+        //    UNRELATED component is ever lost on either path. Pinned (both
+        //    sides of the divergence) by
+        //    `test_bc_3_4_022_issue_edit_component_rmw_cross_identifier_add_remove_accepted_divergence`
+        //    and
+        //    `test_bc_3_4_022_issue_edit_component_native_cross_identifier_add_remove_nets_absent`.
+        //
+        // THE BUG THIS SUPERSEDES: the Round-5 code collapsed each existing
+        // component to ONE `ComponentRef` (`Id` when it had one, else
+        // `Name`) BEFORE matching against `removes`. Since live Jira ALWAYS
+        // returns an id for an issue's embedded components, every existing
+        // component became `ComponentRef::Id(...)`. A NAME remove target
+        // (`ComponentRef::Name(...)`) can never equal an `Id`-variant value
+        // under `ComponentRef`'s derived, variant-sensitive `PartialEq` --
+        // so `jr issue edit FOO-1 --component remove:Backend` against a
+        // live, id-bearing Backend silently failed to remove it: exit 0,
+        // false success echo, the component stayed on the issue. The old
+        // code's comment claiming this "mirrors the per-kind matching the
+        // old [pre-B-LOW-1] code spelled out explicitly" was WRONG -- the
+        // pre-B-LOW-1 code matched removes against the embedded `Component`
+        // directly (which has BOTH id and name), so a name-remove matched
+        // by name regardless of the component's id; B-LOW-1's refactor
+        // silently narrowed that to id-OR-name depending on which field
+        // happened to be `Some`, not id-OR-name checked independently. The
+        // fix above restores independent id-OR-name matching against the
+        // embedded component while KEEPING B-LOW-1's add-before-remove
+        // parity for the add side.
+        let issue = client.get_issue(key, &[]).await?;
+        let current: Vec<crate::types::jira::issue::Component> =
+            issue.fields.components.unwrap_or_default();
+
+        let existing_survivor_components: Vec<&crate::types::jira::issue::Component> = current
+            .iter()
+            .filter(|c| {
+                !removes.iter().any(|r| match r {
+                    ComponentRef::Id(id) => c.id.as_deref() == Some(id.as_str()),
+                    ComponentRef::Name(name) => c.name == *name,
+                })
+            })
+            .collect();
+
+        let existing_survivors: Vec<serde_json::Value> = existing_survivor_components
+            .iter()
+            .map(|c| match &c.id {
+                Some(id) => json!({"id": id}),
+                None => json!({"name": &c.name}),
+            })
+            .collect();
+
+        let add_survivors: Vec<serde_json::Value> = adds
+            .iter()
+            .filter(|a| {
+                !removes.contains(a)
+                    && !existing_survivor_components.iter().any(|c| match a {
+                        ComponentRef::Id(id) => c.id.as_deref() == Some(id.as_str()),
+                        ComponentRef::Name(name) => &c.name == name,
+                    })
+            })
+            .map(ComponentRef::to_wire_object)
+            .collect();
+
+        let mut new_components = existing_survivors;
+        new_components.extend(add_survivors);
+
+        Ok((
+            resolved_changes,
+            ComponentContribution::Fallback(new_components),
+        ))
+    }
+}
+
+/// Resolve component change NAMES against the project's component list
+/// (BC-8.4.001, BC-3.4.025) — shared by the live single-key wire-shape
+/// handler ([`edit_issue_components`]) and the `--dry-run` preview path in
+/// [`handle_edit`] (Step-4.5 Round 1, F1 fix: BC-3.4.021 EC-3.4.021-20 --
+/// "Component NAME resolution (BC-8.4) still fires during dry-run (it is a
+/// read-only GET…) — an unresolvable/ambiguous component name still exits
+/// 64 before any plannedChanges output, --dry-run does not suppress this
+/// resolution error." — `--dry-run` suppresses mutation HTTP calls only,
+/// never this read-only resolution).
+///
+/// Returns `changes` with each `name` replaced by its resolved canonical
+/// name, in the SAME order as the input `changes` (F2 fix: CLI input order
+/// is preserved end-to-end through this function — ADD/REMOVE wire
+/// reordering happens only at the wire-body construction site in
+/// [`edit_issue_components`], never here).
+async fn resolve_component_change_names(
+    client: &JiraClient,
+    project_key: &str,
+    changes: &[format::ComponentChange],
+) -> Result<Vec<format::ComponentChange>> {
+    let component_list = client.list_components(project_key).await?;
+    resolve_component_change_names_with_list(&component_list, project_key, changes)
+}
+
+/// Core of [`resolve_component_change_names`], parameterized on an
+/// already-fetched `component_list` so a caller that needs BOTH this
+/// resolution AND [`resolve_bulk_component_ids_with_list`] (the `--dry-run`
+/// multi-key preview, Step-4.5 Round-3 F2) can fetch
+/// `GET …/project/{key}/components` exactly ONCE and reuse the result for
+/// both, instead of each function independently re-fetching the identical
+/// list for the identical project.
+fn resolve_component_change_names_with_list(
+    component_list: &[crate::types::jira::component::Component],
+    project_key: &str,
+    changes: &[format::ComponentChange],
+) -> Result<Vec<format::ComponentChange>> {
+    let candidate_names: Vec<String> = component_list.iter().map(|c| c.name.clone()).collect();
+
+    let mut resolved_changes: Vec<format::ComponentChange> = Vec::with_capacity(changes.len());
+    for change in changes {
+        let matched_name =
+            match helpers::resolve_component(&change.name, project_key, &candidate_names) {
+                MatchResult::Exact(matched) => matched,
+                MatchResult::ExactMultiple(matched_name) => {
+                    let ids: Vec<String> = component_list
+                        .iter()
+                        .filter(|c| c.name.to_lowercase() == matched_name.to_lowercase())
+                        .map(|c| c.id.clone())
+                        .collect();
+                    return Err(JrError::UserError(format!(
+                        "Multiple components named \"{}\" found (IDs: {}). \
+                         Pass the numeric ID directly.",
+                        matched_name,
+                        ids.join(", ")
+                    ))
+                    .into());
+                }
+                MatchResult::Ambiguous(mut candidates) => {
+                    candidates.sort_by_key(|s| s.to_lowercase());
+                    return Err(JrError::UserError(format!(
+                        "Ambiguous component '{}'. Matches: {}.",
+                        change.name,
+                        candidates.join(", ")
+                    ))
+                    .into());
+                }
+                MatchResult::None(mut available) => {
+                    available.sort_by_key(|s| s.to_lowercase());
+                    return Err(JrError::UserError(format!(
+                        "Component '{}' not found in project {}. Available: {}.",
+                        change.name,
+                        project_key,
+                        available.join(", ")
+                    ))
+                    .into());
+                }
+            };
+        resolved_changes.push(format::ComponentChange {
+            action: change.action.clone(),
+            name: matched_name,
+            // F1 fix: ref_kind is carried forward unchanged from the raw
+            // input (determined at parse time in
+            // format::normalize_component_changes) -- resolution never
+            // changes whether a value is a name or a numeric id.
+            ref_kind: change.ref_kind,
+        });
+    }
+    Ok(resolved_changes)
 }
 
 /// Build the `editedFieldsInput` JSON object for a multi-key bulk-labels edit.
@@ -1034,6 +1820,432 @@ fn project_key_from_issue_key(key: &str) -> &str {
         Some(pos) => &key[..pos],
         None => key,
     }
+}
+
+/// `jr issue edit KEY1 KEY2 ... --component add:X` — multi-key/`--jql` bulk
+/// `--component` edit (BC-3.4.023, S-605-2). Entirely separate wire path from
+/// `handle_edit_bulk_fields`: the `multiselectComponents` schema holds only
+/// ONE `bulkEditMultiSelectFieldOption` per POST (unlike `labelsFields`'
+/// array-of-elements shape), so mixed `add:`/`remove:` specs require TWO
+/// sequential POSTs rather than one coalesced POST (Postcondition 3).
+///
+/// Precondition (enforced by the caller, `handle_edit`): `keys.len() > 1`.
+/// A single effective key is routed to the existing single-key `update`-verb
+/// path (`edit_issue_components`, BC-3.4.022) instead — EC-3.4.023-3.
+///
+/// What this function does, step by step:
+///
+/// 1. **EC-3.4.023-1 cross-project guard**: `keys` spanning 2+ distinct
+///    projects (via [`project_key_from_issue_key`]) → exit 64
+///    (`JrError::UserError`) BEFORE any HTTP call — component ids are
+///    project-scoped, mirroring `handle_edit_bulk_fields`'s `--type` guard
+///    (BC-3.4.019).
+/// 2. **Postcondition 4 / Invariant 2 — resolve + parse**: parse `components`
+///    via [`format::normalize_component_changes`], resolve each NAME to a
+///    numeric id via §8.4 ([`resolve_bulk_component_ids`],
+///    `helpers::resolve_component`), then an explicit `String` -> `u64`
+///    parse (`id.parse::<u64>()`) immediately before body assembly — the
+///    bulk endpoint requires a JSON integer `componentId`, never a string or
+///    `{"name":...}` object. A parse failure on the numeric-id-bypass path
+///    (user input) surfaces as `JrError::UserError`; a parse failure on a
+///    resolver-returned name's looked-up id (which should be unreachable)
+///    surfaces as `JrError::Internal` (Step-4.5 Round-1 F4 fix).
+/// 3. **Postcondition 1/2 — wire shape**: build the `editedFieldsInput` body
+///    via [`crate::api::jira::bulk::build_component_edited_fields`] with
+///    `selectedActions == ["components"]` (lowercase field id).
+/// 4. **Postcondition 3 — two sequential POSTs for mixed add:/remove:**: when
+///    both `add:` and `remove:` specs are present, the ADD POST is issued
+///    first (fully polled via `await_bulk_task` to completion), THEN the
+///    REMOVE POST — never coalesced into one POST.
+/// 5. **Postcondition 6 / EC-3.4.023-4 — 1000-issue chunking**: `keys` is
+///    split into sequential chunks of <= [`crate::api::jira::bulk::BULK_MAX_KEYS`],
+///    each fully polled to completion before the next chunk's POST fires
+///    (chunk-major, action-minor ordering when combined with item 4 above —
+///    `2 * ceil(N/1000)` POSTs total for N>1000 issues with mixed
+///    add:/remove:). A chunk failure ABORTS the remaining sequence (no
+///    continue-on-error, unlike `component rename --all-projects`) —
+///    surfaced via the existing `await_bulk_task` error path. Already-
+///    successful earlier chunks are NOT rolled back.
+/// 6. Every (chunk, action) cycle's outcome is accumulated into a
+///    [`BulkComponentOpResult`] and rendered ONCE, after the loop, via
+///    [`render_bulk_component_results`] — a single coherent `--output json`
+///    document (or table-mode row sequence) for the whole invocation,
+///    never one document per cycle (Step-4.5 Round-1 F2 fix).
+///
+/// **Mutual exclusion (Step-4.5 Round-1 F1 fix):** the caller (`handle_edit`)
+/// rejects `--component` on 2+ keys combined with `--summary`/`--priority`/
+/// `--type`/`--label` before this function is ever reached — this path's
+/// POST sequence has no way to also carry those fields, so silently
+/// proceeding would drop them.
+///
+/// **Release gate (D-280, BC-3.4.023 Delivery note):** this path MUST NOT
+/// ship to release until a live smoke test (one ADD, one REMOVE, >= 2 issues,
+/// one project with >= 1 component already defined) confirms the
+/// `multiselectComponents` wire shape documented above (AC-010).
+async fn handle_edit_bulk_components(
+    keys: &[String],
+    components: &[String],
+    output_format: &OutputFormat,
+    client: &JiraClient,
+) -> Result<()> {
+    // 1. EC-3.4.023-1: cross-project guard, BEFORE any HTTP call. Mirrors
+    // `handle_edit_bulk_fields`'s `--type` guard (BC-3.4.019) exactly --
+    // component ids are project-scoped.
+    let mut project_keys: Vec<&str> = keys.iter().map(|k| project_key_from_issue_key(k)).collect();
+    project_keys.sort_unstable();
+    project_keys.dedup();
+    if project_keys.len() > 1 {
+        return Err(JrError::UserError(format!(
+            "--component requires all issues to be in the same project; \
+             the provided keys span {} distinct projects: {}. \
+             Component IDs differ per project, so a single bulk edit cannot \
+             target all of them — split the keys by project and run separate \
+             `jr issue edit` commands.",
+            project_keys.len(),
+            project_keys.join(", "),
+        ))
+        .into());
+    }
+    // `keys.len() > 1` is guaranteed by the caller (`handle_edit`'s routing
+    // block), so `project_keys` is non-empty here.
+    let project_key = project_keys[0];
+
+    // 2. Postcondition 4 / Invariant 2: resolve NAMEs to numeric componentIds
+    // via §8.4 BEFORE any bulk POST is built (AC-004: an unknown/ambiguous
+    // name must produce ZERO bulk POSTs).
+    let (add_ids, remove_ids) = resolve_bulk_component_ids(client, project_key, components).await?;
+
+    if add_ids.is_empty() && remove_ids.is_empty() {
+        bail!("No component changes specified.");
+    }
+
+    // 3. Postcondition 6: split `keys` into sequential <= BULK_MAX_KEYS
+    // chunks, chunk-major ordering. Within each chunk, ADD is issued (fully
+    // polled) BEFORE REMOVE when both are present (Postcondition 3) -- never
+    // coalesced into one POST, unlike the label bulk path. A chunk (or
+    // action-within-chunk) failure propagates immediately via `?`, aborting
+    // the remaining sequence (EC-3.4.023-4) -- already-successful earlier
+    // chunks are NOT rolled back.
+    //
+    // Step-4.5 Round-1 F2 fix: each (chunk, action) cycle used to call
+    // `render_bulk_edit_results` directly, which prints its own top-level
+    // JSON document via `println!` -- a mixed add:/remove: edit (or a
+    // >1000-issue chunked edit) therefore printed MULTIPLE concatenated
+    // JSON documents on stdout, which no single `serde_json::from_str` call
+    // can parse, and doubled up the table-mode success lines. Results are
+    // now accumulated across every (chunk, action) cycle and rendered ONCE,
+    // after the loop, as a single coherent output.
+    let mut ops: Vec<BulkComponentOpResult> = Vec::new();
+    for chunk in keys.chunks(BULK_MAX_KEYS) {
+        if !add_ids.is_empty() {
+            ops.push(
+                run_bulk_component_action(chunk, &add_ids, BulkMultiSelectFieldOption::Add, client)
+                    .await?,
+            );
+        }
+        if !remove_ids.is_empty() {
+            ops.push(
+                run_bulk_component_action(
+                    chunk,
+                    &remove_ids,
+                    BulkMultiSelectFieldOption::Remove,
+                    client,
+                )
+                .await?,
+            );
+        }
+    }
+
+    render_bulk_component_results(&ops, output_format)
+}
+
+/// One (chunk, action) bulk POST + poll cycle's outcome, accumulated across
+/// the whole `handle_edit_bulk_components` invocation (Step-4.5 Round-1 F2
+/// fix) so the caller can render a single, coherent result once every cycle
+/// has completed, instead of once per cycle.
+struct BulkComponentOpResult {
+    task_id: String,
+    action: BulkMultiSelectFieldOption,
+    keys: Vec<String>,
+    progress: crate::types::jira::bulk::BulkOperationProgress,
+}
+
+/// Resolve `--component` add:/remove: specs to numeric `componentId`s for
+/// the bulk `multiselectComponents` wire shape (BC-3.4.023 Postcondition 4,
+/// Invariant 2). Returns `(add_ids, remove_ids)`, each in CLI input order
+/// within its own action bucket.
+///
+/// Distinct from [`resolve_component_change_names`] (the single-key path's
+/// resolver): that function returns canonical NAMEs (or a passed-through
+/// numeric id string) for the `update`-verb wire shape, which wires a name
+/// as `{"name": ...}` and never needs the id. This bulk path needs a numeric
+/// `componentId` for EVERY resolved change -- name-resolved or
+/// id-passed-through alike -- so it performs the name -> id lookup inline
+/// against the SAME fetched candidate list, then the explicit `String` ->
+/// `u64` parse Invariant 2 requires. A parse failure's error type depends on
+/// WHICH branch produced the id string (Step-4.5 Round-1 F4 fix): a
+/// resolver-returned NAME whose looked-up id is non-numeric is a genuine
+/// internal-invariant violation (every candidate list entry's id is itself
+/// a digit-only string on the wire) -- surfaced as `JrError::Internal`.
+/// A value from the §8.4 numeric-id bypass (BC-8.4.001 step 1 --
+/// all-ASCII-digit CLI input forwarded verbatim, skipping `partial_match`
+/// entirely) IS user input, and CAN overflow `u64` (e.g.
+/// `--component add:99999999999999999999999999`) -- that failure surfaces
+/// as `JrError::UserError` (exit 64), never `JrError::Internal`.
+async fn resolve_bulk_component_ids(
+    client: &JiraClient,
+    project_key: &str,
+    components: &[String],
+) -> Result<(Vec<u64>, Vec<u64>)> {
+    let changes = format::normalize_component_changes(components);
+    let component_list = client.list_components(project_key).await?;
+    resolve_bulk_component_ids_with_list(&component_list, project_key, &changes)
+}
+
+/// Core of [`resolve_bulk_component_ids`], parameterized on an
+/// already-fetched `component_list` and already-normalized `changes` so a
+/// caller that needs BOTH this AND [`resolve_component_change_names_with_list`]
+/// (the `--dry-run` multi-key preview, Step-4.5 Round-3 F2) can fetch
+/// `GET …/project/{key}/components` exactly ONCE and reuse the result for
+/// both, instead of each function independently re-fetching the identical
+/// list for the identical project.
+fn resolve_bulk_component_ids_with_list(
+    component_list: &[crate::types::jira::component::Component],
+    project_key: &str,
+    changes: &[format::ComponentChange],
+) -> Result<(Vec<u64>, Vec<u64>)> {
+    let candidate_names: Vec<String> = component_list.iter().map(|c| c.name.clone()).collect();
+
+    let mut add_ids: Vec<u64> = Vec::new();
+    let mut remove_ids: Vec<u64> = Vec::new();
+
+    for change in changes {
+        let matched_name =
+            match helpers::resolve_component(&change.name, project_key, &candidate_names) {
+                MatchResult::Exact(matched) => matched,
+                MatchResult::ExactMultiple(matched_name) => {
+                    let ids: Vec<String> = component_list
+                        .iter()
+                        .filter(|c| c.name.to_lowercase() == matched_name.to_lowercase())
+                        .map(|c| c.id.clone())
+                        .collect();
+                    return Err(JrError::UserError(format!(
+                        "Multiple components named \"{}\" found (IDs: {}). \
+                         Pass the numeric ID directly.",
+                        matched_name,
+                        ids.join(", ")
+                    ))
+                    .into());
+                }
+                MatchResult::Ambiguous(mut candidates) => {
+                    candidates.sort_by_key(|s| s.to_lowercase());
+                    return Err(JrError::UserError(format!(
+                        "Ambiguous component '{}'. Matches: {}.",
+                        change.name,
+                        candidates.join(", ")
+                    ))
+                    .into());
+                }
+                MatchResult::None(mut available) => {
+                    available.sort_by_key(|s| s.to_lowercase());
+                    return Err(JrError::UserError(format!(
+                        "Component '{}' not found in project {}. Available: {}.",
+                        change.name,
+                        project_key,
+                        available.join(", ")
+                    ))
+                    .into());
+                }
+            };
+
+        // `matched_name` is either the passed-through numeric id
+        // (BC-8.4.001 step-1 bypass -- USER input, verbatim) or the resolved
+        // canonical component NAME (resolver output). The bulk wire shape
+        // needs a numeric componentId either way (Invariant 2) -- resolve a
+        // name to its id via the same fetched candidate list.
+        //
+        // Step-4.5 Round-1 F4 fix: track WHICH of the two branches produced
+        // `id_str` so a subsequent parse failure can be attributed
+        // correctly. The numeric bypass forwards raw user input verbatim
+        // (an all-ASCII-digit CLI value can still overflow u64, e.g.
+        // `--component add:99999999999999999999999999`) -- that failure
+        // came from user input and must be a `JrError::UserError` (exit
+        // 64), not `JrError::Internal`. `JrError::Internal` is reserved for
+        // the OTHER branch: a resolver-returned NAME whose looked-up id is
+        // somehow non-numeric, which genuinely should be unreachable.
+        let (id_str, id_is_user_input) = if helpers::is_numeric_component_id(&matched_name) {
+            (matched_name, true)
+        } else {
+            let id = component_list
+                .iter()
+                .find(|c| c.name.eq_ignore_ascii_case(&matched_name))
+                .map(|c| c.id.clone())
+                .ok_or_else(|| {
+                    JrError::Internal(format!(
+                        "Internal error: resolved component name {matched_name:?} was not \
+                             found in the fetched component list for project {project_key} -- \
+                             this should be unreachable (the resolver only returns names present \
+                             in the same list)."
+                    ))
+                })?;
+            (id, false)
+        };
+
+        let id: u64 = id_str.parse().map_err(|e| {
+            if id_is_user_input {
+                JrError::UserError(format!(
+                    "component id out of range or not found: {id_str} ({e})"
+                ))
+            } else {
+                JrError::Internal(format!(
+                    "Internal error: resolved componentId {id_str:?} is not numeric ({e}) -- \
+                     every resolver-returned component id should be a digit-only string on the \
+                     wire (BC-3.4.023 Invariant 2)."
+                ))
+            }
+        })?;
+
+        match change.action {
+            format::ComponentAction::Add => add_ids.push(id),
+            format::ComponentAction::Remove => remove_ids.push(id),
+        }
+    }
+
+    Ok((add_ids, remove_ids))
+}
+
+/// Issue ONE bulk `multiselectComponents` POST for `chunk_keys` + `option`
+/// and poll it to completion via the existing `await_bulk_task` machinery.
+/// Returns the raw [`BulkComponentOpResult`] for the caller to accumulate --
+/// this function does NOT render anything itself. Rendering is deferred to
+/// a single call to [`render_bulk_component_results`], made once every
+/// (chunk, action) cycle in `handle_edit_bulk_components` has completed
+/// (Step-4.5 Round-1 F2 fix), so a multi-cycle invocation (a mixed
+/// add:/remove: edit, or a >1000-issue chunked edit) never emits more than
+/// one coherent result document. Shared by every (chunk, action) pair
+/// `handle_edit_bulk_components` iterates over (BC-3.4.023 Postcondition 3
+/// / Postcondition 6).
+async fn run_bulk_component_action(
+    chunk_keys: &[String],
+    ids: &[u64],
+    option: BulkMultiSelectFieldOption,
+    client: &JiraClient,
+) -> Result<BulkComponentOpResult> {
+    let edited_fields = build_component_edited_fields(ids, option);
+    let task_id = client
+        .bulk_edit_fields(chunk_keys, vec!["components".to_string()], edited_fields)
+        .await?;
+    let progress = client
+        .await_bulk_task(&task_id, resolve_bulk_await_timeout())
+        .await?;
+    Ok(BulkComponentOpResult {
+        task_id,
+        action: option,
+        keys: chunk_keys.to_vec(),
+        progress,
+    })
+}
+
+/// Render every accumulated (chunk, action) cycle's outcome as ONE coherent
+/// result (Step-4.5 Round-1 F2 fix) -- a single top-level JSON document in
+/// `--output json` mode, or a single flat sequence of per-key table rows in
+/// table mode. Distinct from [`render_bulk_edit_results`] (used by the
+/// labels and generic-fields bulk paths, which only ever issue ONE bulk
+/// POST + poll cycle per invocation and therefore have no multi-cycle
+/// aggregation concern).
+fn render_bulk_component_results(
+    ops: &[BulkComponentOpResult],
+    output_format: &OutputFormat,
+) -> Result<()> {
+    let mut any_failed = false;
+    let mut operations_json: Vec<serde_json::Value> = Vec::new();
+
+    for op in ops {
+        let processed: std::collections::HashSet<&str> = op
+            .progress
+            .processed_accessible_issues
+            .iter()
+            .map(String::as_str)
+            .collect();
+
+        let mut results: Vec<serde_json::Value> = Vec::new();
+        for key in &op.keys {
+            if let Some(err) = op.progress.failed_accessible_issues.get(key.as_str()) {
+                results.push(json!({
+                    "key": key,
+                    "status": "error",
+                    "error": err.summary(),
+                }));
+                any_failed = true;
+            } else if processed.contains(key.as_str()) {
+                results.push(json!({
+                    "key": key,
+                    "status": "success",
+                }));
+            } else {
+                results.push(json!({
+                    "key": key,
+                    "status": "inaccessible",
+                }));
+            }
+        }
+        // Also capture any failed keys that weren't in this op's chunk
+        // (shouldn't happen, but Atlassian may return unexpected keys).
+        for (failed_key, err) in &op.progress.failed_accessible_issues {
+            if !op.keys.iter().any(|k| k == failed_key) {
+                results.push(json!({
+                    "key": failed_key,
+                    "status": "error",
+                    "error": err.summary(),
+                }));
+                any_failed = true;
+            }
+        }
+
+        let action_str = match op.action {
+            BulkMultiSelectFieldOption::Add => "ADD",
+            BulkMultiSelectFieldOption::Remove => "REMOVE",
+        };
+        operations_json.push(json!({
+            "taskId": op.task_id,
+            "action": action_str,
+            "results": results,
+        }));
+    }
+
+    match output_format {
+        OutputFormat::Json => {
+            // Single top-level JSON document for the ENTIRE invocation --
+            // never one `println!` per (chunk, action) cycle (Step-4.5
+            // Round-1 F2 fix; JSON render invariant #526).
+            let payload = json!({ "operations": operations_json });
+            println!("{}", output::render_json(&payload)?);
+        }
+        OutputFormat::Table => {
+            for op in &operations_json {
+                for entry in op["results"]
+                    .as_array()
+                    .expect("results is always an array")
+                {
+                    let key = entry["key"].as_str().unwrap_or("?");
+                    match entry["status"].as_str().unwrap_or("?") {
+                        "success" => output::print_success(&format!("Updated {key}")),
+                        "error" => {
+                            let err_msg = entry["error"].as_str().unwrap_or("unknown error");
+                            eprintln!("error: {key}: {err_msg}");
+                        }
+                        status => eprintln!("warning: {key}: {status}"),
+                    }
+                }
+            }
+        }
+    }
+
+    if any_failed {
+        bail!("One or more issues failed during bulk edit. See output above for details.");
+    }
+
+    Ok(())
 }
 
 /// Supports 2..=1000 keys with --summary, --priority, --type.
@@ -1420,7 +2632,10 @@ mod tests {
             "description",
             "description_stdin",
             "markdown",
-            "field", // --field NAME=VALUE (S-396): single-key only (BC-3.4.017 Gate A)
+            "no_mentions", // --no-mentions (S-cycle5-mention-resolution-wiring): only meaningful
+            // alongside --markdown/--description, both single-key-only
+            "field",     // --field NAME=VALUE (S-396): single-key only (BC-3.4.017 Gate A)
+            "component", // --component add:/remove: (S-605-1): single-key only (BC-3.4.022)
         ]
         .into_iter()
         .collect();
@@ -1705,12 +2920,11 @@ pub enum IssueCommand {
             .filter_map(|line| {
                 let trimmed = line.trim();
                 // Match lines of the form: conflicting.push("--<flag>");
-                if let Some(rest) = trimmed.strip_prefix("conflicting.push(\"") {
-                    if let Some(flag) = rest.strip_suffix("\");") {
-                        if flag.starts_with("--") {
-                            return Some(flag.to_string());
-                        }
-                    }
+                if let Some(rest) = trimmed.strip_prefix("conflicting.push(\"")
+                    && let Some(flag) = rest.strip_suffix("\");")
+                    && flag.starts_with("--")
+                {
+                    return Some(flag.to_string());
                 }
                 None
             })
@@ -1733,7 +2947,9 @@ pub enum IssueCommand {
             "--description",
             "--description-stdin", // description_stdin → description-stdin
             "--markdown",
+            "--no-mentions", // no_mentions → no-mentions (S-cycle5-mention-resolution-wiring)
             "--field",
+            "--component", // component (S-605-1): BC-3.4.020 amendment, AC-015
         ]
         .iter()
         .map(|s| s.to_string())
@@ -1757,38 +2973,41 @@ pub enum IssueCommand {
         );
     }
 
-    /// R2 pin: the `conflicting.push` extractor correctly identifies exactly 12 flags
+    /// R2 pin: the `conflicting.push` extractor correctly identifies exactly 14 flags
     /// from the current source of edit.rs. This test pins the extractor against the
     /// actual file — if the extraction logic regresses (e.g., formatting drift changes
     /// the pattern), this fails distinctly from the set-equality meta-test.
     ///
-    /// The 12 expected members are:
+    /// The 14 expected members are:
     ///   --field, --summary, --priority, --type, --team, --points, --no-points,
-    ///   --parent, --no-parent, --description, --description-stdin, --markdown
+    ///   --parent, --no-parent, --description, --description-stdin, --markdown,
+    ///   --no-mentions, --component
     ///
-    /// Closes EC-3.4.017-14 (R2 pin, S-407 AC-013).
+    /// Closes EC-3.4.017-14 (R2 pin, S-407 AC-013). Extended to 13 by S-605-1
+    /// (BC-3.4.020 amendment, AC-015); extended to 14 by
+    /// S-cycle5-mention-resolution-wiring (`--no-mentions`, AC-014/AC-015).
     #[test]
-    fn test_label_conflict_block_extractor_pin_12_members() {
+    fn test_label_conflict_block_extractor_pin_14_members() {
         let source = include_str!("edit.rs");
 
         let extracted: BTreeSet<String> = source
             .lines()
             .filter_map(|line| {
                 let trimmed = line.trim();
-                if let Some(rest) = trimmed.strip_prefix("conflicting.push(\"") {
-                    if let Some(flag) = rest.strip_suffix("\");") {
-                        if flag.starts_with("--") {
-                            return Some(flag.to_string());
-                        }
-                    }
+                if let Some(rest) = trimmed.strip_prefix("conflicting.push(\"")
+                    && let Some(flag) = rest.strip_suffix("\");")
+                    && flag.starts_with("--")
+                {
+                    return Some(flag.to_string());
                 }
                 None
             })
             .collect();
 
-        // The 12 current --label conflict block entries (as of S-407).
-        // If the count changes, update both this test AND the meta-test above.
-        let expected_12: BTreeSet<String> = [
+        // The 14 current --label conflict block entries (as of
+        // S-cycle5-mention-resolution-wiring). If the count changes, update
+        // both this test AND the meta-test above.
+        let expected_14: BTreeSet<String> = [
             "--field",
             "--summary",
             "--priority",
@@ -1801,6 +3020,8 @@ pub enum IssueCommand {
             "--description",
             "--description-stdin",
             "--markdown",
+            "--no-mentions",
+            "--component",
         ]
         .iter()
         .map(|s| s.to_string())
@@ -1808,18 +3029,18 @@ pub enum IssueCommand {
 
         assert_eq!(
             extracted.len(),
-            12,
-            "R2 pin: expected exactly 12 conflicting.push entries in edit.rs, found {}.\n\
+            14,
+            "R2 pin: expected exactly 14 conflicting.push entries in edit.rs, found {}.\n\
              Current extracted set: {:?}",
             extracted.len(),
             extracted,
         );
 
         assert_eq!(
-            extracted, expected_12,
-            "R2 pin: extracted flag set does not match the 12 expected members.\n\
+            extracted, expected_14,
+            "R2 pin: extracted flag set does not match the 14 expected members.\n\
              Extracted: {:?}\nExpected: {:?}",
-            extracted, expected_12,
+            extracted, expected_14,
         );
     }
 }
@@ -1992,10 +3213,9 @@ mod is_cross_hierarchy_type_error_proptests {
 
 // ---------------------------------------------------------------------------
 // AC-006 (BC-3.4.018 invariant 4): project key extraction unit tests.
-// RED GATE: `project_key_from_issue_key` does not yet exist. These tests will
-// fail to compile until the Green step adds the helper. The integration test
-// binaries (tests/*.rs) compile separately and are unaffected by this compile
-// failure — only `cargo test --lib` / `cargo test --doc` will fail to compile.
+// `project_key_from_issue_key` is defined above and used by the BC-3.4.019
+// `--type` cross-project guard, the BC-3.4.023 `--component` bulk-edit
+// cross-project guard (S-605-2), and the dry-run preview path.
 // ---------------------------------------------------------------------------
 #[cfg(test)]
 mod test_project_key_extraction {
