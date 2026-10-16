@@ -332,3 +332,9 @@ F5-pass-1 checkpoint.
 **(e) WIP branches.** `fix/maint-20261015-rustls-advisories`, `chore/maint-20261015-comfy-table-8` (product repo, open PRs).
 
 **(f) Resume command.** Open a new session in `/Users/zious/Documents/GITHUB/jira-cli`, run `/vsdd-factory:rehydrate-wave`, then `/vsdd-factory:next-step`; first `gh run list` to see whether Actions recovered and `gh pr checks 919`. This repo has no `wave-state.yaml`; this checkpoint is the authoritative resume source.
+
+## Archived checkpoint v5.59 (2026-10-15, maintenance sweep day 1; superseded by v5.60 on 2026-10-16)
+
+- Position: sweep IN PROGRESS, develop tip `1ec0caf2`, CI green (run 38790189558). Merged: #919 (`eaaea80c`), #920 (`52a41d29`), #885 (`be51d922`), #883 (`c35e7479`), #892 (`fc12df13`), #918 (`7d999628`), #915 (`fb48fa5a`), #917 (`1ec0caf2`).
+- Open then: #855 (comfy-table =8.0.1; decision MAINT-20261015-03 vs merge as-is), #914 (soak-eligible 2026-10-16), #854/#842 HELD, v0.7.x patch decision, CLAUDE.md msrv action-SHA doc drift (fix after #914).
+- Resolution at v5.60: #855 and #926 superseded by #921 (also fixed the msrv SHA drift); #914 merged as `6b71cae3`.

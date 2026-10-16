@@ -578,3 +578,9 @@ tracked as a `NONTABLE-SERVER-TEXT-SANITIZE` entry instead — see the
 current (updated) version of that item in
 `cycles/OPEN-STANDING-ITEMS.md`. Also updated in `.factory/STATE.md`'s
 Decisions Log (`D-393`/`D-394`/`D-395`) and Phase Progress table.
+
+## Resolved 2026-10-16 (MAINT-SWEEP-2026-10-15 day 2)
+
+- `CLAUDE-MD-MSRV-ACTION-SHA`: CLAUDE.md msrv gotcha SHA updated to `e2a55d2f` in #921 (`a64749c8`) after #914 (`6b71cae3`) moved the pin.
+- `COMFY-TABLE-8-0-1-PIN-COMMENT`: comfy-table `=8.0.1` bump and corrected `Cargo.toml` pin comment (rust-version 1.88) in #921 (`a64749c8`); supersedes #855 and #926.
+- `MAINT-20261015-TEMP-DIRS` (housekeeping): worktrees, branches and temp dirs for MAINT-20261015-01/-02 (2026-10-15) and -03, MAINT-20261016-01/-02 (2026-10-16) removed.
